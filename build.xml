@@ -1,0 +1,61 @@
+<project name="scalanlp.core" default="compile" basedir=".">
+  <property name="src.dir" value="src/"/>
+  <property name="test.src.dir" value="test/src/"/>
+  <property name="build.dir" value="classes"/>
+  <property name="docs.dir" value="../../scaladoc"/>
+
+
+  <!-- 3. Define project CLASSPATH. -->
+
+  <property environment="env"/>
+  <path id="project.classpath">
+    <fileset dir="${env.SCALA_HOME}/lib/">
+      <include name="*.jar"/>
+    </fileset>
+    <pathelement location="${build.dir}"/>
+    <pathelement location="lib/fastutil.jar"/>
+    <pathelement location="lib/counters.jar"/>
+    <pathelement location="lib/ScalaCheck-1.3.jar"/>
+    <pathelement location="lib/scalatest-0.9.3.jar"/>
+  </path>
+
+  <!-- 4. Define scala compiler command. -->
+
+  <taskdef resource="scala/tools/ant/antlib.xml"/>
+  <!-- 5. Compiles sources by using "scalac" command. -->
+
+  <target name="compile">
+    <mkdir dir="${build.dir}"/>
+
+    <fsc srcdir="${src.dir}" destdir="${build.dir}" classpathref="project.classpath" force="changed">
+      <include name="**/*.scala"/>
+    </fsc>
+  </target>
+
+  <target name="compile-test" depends="compile">
+    <mkdir dir="${build.dir}"/>
+
+    <fsc srcdir="${test.src.dir}" destdir="${build.dir}" classpathref="project.classpath" force="changed">
+      <include name="**/*.scala"/>
+    </fsc>
+  </target>
+
+ <target name="test" depends="compile-test">
+   <taskdef name="scalatest" classname="org.scalatest.tools.ScalaTestTask">
+     <classpath refid="project.classpath"/>
+   </taskdef>
+
+   <scalatest wildcard="scalanlp." runpath="classes/" />
+ </target>
+ <target name="docs">
+   <mkdir dir="${docs.dir}"/>
+   <scaladoc
+     srcdir="${src.dir}"
+     destdir="${docs.dir}"
+     windowtitle="ScalaNLP core documentation"
+     doctitle="ScalaNLP API"
+     classpathref="project.classpath">
+     <include name="**/*.scala"/>
+   </scaladoc>
+ </target>
+</project>

@@ -1,0 +1,48 @@
+package scalanlp.math;
+object Numerics {
+  // based on radford neal's c implementation
+  def digamma(xx: Double) = {
+    var x = xx;
+    var r = 0.0;
+
+    while(x<=5) {
+      r -= 1/x;
+      x += 1;
+    }
+
+    var f = 1/(x * x);
+    var t = f*(-1/12.0 + f*(1/120.0 + f*(-1/252.0 + f*(1/240.0 + f*(-1/132.0 + f*(691/32760.0 + f*(-1/12.0 + f*3617/8160.0)))))));
+    r + Math.log(x) - 0.5/x + t;
+  }
+
+  // From freebsd implementation:
+  /**
+  * @return an approximation of the log of the Gamma function * of x.  Laczos Approximation
+  * Reference: Numerical Recipes in C
+  * http://www.library.cornell.edu/nr/cbookcpdf.html
+  */
+  private val cof =  Array(76.18009172947146, -86.50532032941677,
+    24.01409824083091,-1.231739572450155,
+    0.1208650973866179e-2,-0.5395239384953e-5
+  );
+  
+  def lgamma(x : Double) = {
+    var y = x;
+    var tmp = x + 5.5;
+    tmp -= ((x + 0.5) * Math.log(tmp));
+    var ser = 1.000000000190015;
+    var j = 0;
+    while(j < 6) {
+      ser += (cof(j)/y);
+      j +=1;
+      y += 1;
+    }
+    (-tmp + Math.log(2.5066282746310005*ser / x));
+  }
+
+  def logSum(a : Double, b : Double) = {
+    if(a < b) b + Math.log(1 + Math.exp(a-b))
+    else a + Math.log(1+Math.exp(b-a));    
+  }
+
+}
