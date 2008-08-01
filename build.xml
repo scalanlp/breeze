@@ -27,17 +27,17 @@
   <target name="compile">
     <mkdir dir="${build.dir}"/>
 
-    <fsc srcdir="${src.dir}" destdir="${build.dir}" classpathref="project.classpath" force="changed">
+    <scalac srcdir="${src.dir}" destdir="${build.dir}" classpathref="project.classpath" force="changed">
       <include name="**/*.scala"/>
-    </fsc>
+    </scalac>
   </target>
 
   <target name="compile-test" depends="compile">
     <mkdir dir="${build.dir}"/>
 
-    <fsc srcdir="${test.src.dir}" destdir="${build.dir}" classpathref="project.classpath" force="changed">
+    <scalac srcdir="${test.src.dir}" destdir="${build.dir}" classpathref="project.classpath" force="changed">
       <include name="**/*.scala"/>
-    </fsc>
+    </scalac>
   </target>
 
  <target name="test" depends="compile-test">
