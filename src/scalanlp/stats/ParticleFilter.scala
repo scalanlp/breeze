@@ -10,12 +10,14 @@ import scalanlp.counters.Counters._;
  * The identify method is requried to ensure the particles aren't variants of the same particle.
  * i.e. in a DirMult model that topics 1 and 2 are topics 2 and 1 in another particle.
  * The identify method should enforce a constraint like (p_1 > p_2 > ,,, p_K)
+ * 
+ * Still in progress!
+ *
  * @author(dlwh)
  *
  */
 class ParticleFilter[T](val particles : Seq[(T,Double)], transition : Seq[(T,Double)] => T => Rand[T],
   identify: T => T, numParticles : Int) extends Rand[T] {
-
 
   def this(initialParticle : Distribution[T], transition : Seq[(T,Double)] => T => Rand[T],
     identify : T=>T, numParticles : Int) =  {

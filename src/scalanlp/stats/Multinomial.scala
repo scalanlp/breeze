@@ -2,13 +2,15 @@ package scalanlp.stats;
 import scalanlp.counters.Counters._;
 import scalanlp.counters._;
 
+/**
+ * Represents a multinomial Distribution over elements.
+ */
 trait Multinomial[T] extends Distribution[T] {
   def elements : Iterator[T];
   protected def total : Double;
-  protected val r : Rand[Double]
 
   def get = {
-    var prob = r.get() * total;
+    var prob = Rand.uniform.get() * total;
     var elems = elements;
     var e = elems.next;
     prob  = prob - unnormalizedProbabilityOf(e);
@@ -19,6 +21,9 @@ trait Multinomial[T] extends Distribution[T] {
     e
   }
 
+  /**
+   * Returns a Multinomial(x) \propto  this(x) * that(x);
+   */
   def *[U>:T](that : Multinomial[U]) = {
     val c :DoubleCounter[U] = aggregate(that.elements.map(x => (x,that.probabilityOf(x))))
     for(x <- elements
@@ -29,34 +34,42 @@ trait Multinomial[T] extends Distribution[T] {
   }
 }
 
+/** 
+ * Provides routines to create Multinomial
+ * @author(dlwh)
+ */
 object Multinomial {
-  def fromCounter[T](c:DoubleCounter[T]) = apply(c);
-  def apply[T](rx : Rand[Double], c : DoubleCounter[T])  = new Multinomial[T] {
-    val r = rx;
+
+  /**
+   * Returns a Multinomial where the probability of each element in the counter
+   * is proportional to its count.
+   */
+  def apply[T](c : DoubleCounter[T])  = new Multinomial[T] {
     def total = c.total;
     def elements = c.keys;
     def probabilityOf(t : T) = c(t)/c.total();
-    override def unnormalizedProbabilityOf(t:T) = c(t);
+    override def unnormalizedProbabilityOf(t: T) = c(t);
   }
 
+  /**
+   * Returns a Multinomial where the probability of each element in the counter
+   * is proportional to its count.
+   */
+  def fromCounter[T](c:DoubleCounter[T]) = apply(c);
 
+  /**
+   * Returns a Multinomial where the probability is proportional to a(i)
+   */
+  def apply(a : Array[Double]) : Multinomial[Int] = apply(a,a.foldLeft(0.0)(_+_));
 
-  def apply(a : Array[Double]) : Multinomial[Int] = new Multinomial[Int] {
-    val r= Rand.uniform;
-    val total = a.foldLeft(0.0)(_+_);
-    val mult = a.map(_ / total).force;
-    def elements = (0 until a.length).elements
-    def apply( i : Int) = mult(i);
-    def probabilityOf(t : Int) = a(t)/total;
-  }
-
-  def apply[T](c : DoubleCounter[T])  : Multinomial[T]= this(Rand.uniform,c);
-
-  def apply(arr : Array[Double], t: Double) = new Multinomial[Int]{
+  /**
+   * Returns a Multinomial where the probability is proportional to a(i).
+   * Takes the total for speed.
+   */
+  def apply(arr : Array[Double], t: Double) = new Multinomial[Int] {
     def elements = (0 until arr.length ). elements;
     def total = t;
-    protected val r = Rand.uniform;
     def probabilityOf(x : Int) = arr(x)/t
-    override def unnormalizedProbabilityOf(x:Int) = arr(x);
+    override def unnormalizedProbabilityOf(x: Int) = arr(x);
   }
 }

@@ -1,6 +1,11 @@
 package scalanlp.stats;
 import scalanlp.math.Numerics;
 
+
+/**
+ * Represents a Gamma distribution
+ * E[X] = shape * scale
+ */
 // Stolen from javanlp, which was stolen froma Teh 
 class Gamma(shape : Double, scale : Double) extends Distribution[Double] {
   if(shape <= 0.0 || scale <= 0.0)
