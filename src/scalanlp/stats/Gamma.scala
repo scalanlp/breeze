@@ -41,7 +41,6 @@ class Gamma(shape : Double, scale : Double) extends Distribution[Double] {
         xx = Math.pow(Rand.uniform.get(), cc);
         yy = xx + Math.pow(Rand.uniform.get(), dd);
         if (yy <= 1.0) {
-          assert( yy != 0 && xx / yy > 0);
           return scale * -Math.log(Rand.uniform.get()) * xx / yy;
         }
       }
@@ -58,7 +57,6 @@ class Gamma(shape : Double, scale : Double) extends Distribution[Double] {
         xx = bb + yy;
         if (xx >= 0) {
           zz = 64.0 * ww * ww * ww * vv * vv;
-          assert (zz > 0 && bb != 0 && xx / bb > 0);
           if ((zz <= (1.0 - 2.0 * yy * yy / xx))
               || (Math.log(zz) <= 2.0 * (bb * Math.log(xx / bb) - yy))) {
             return xx * scale;
