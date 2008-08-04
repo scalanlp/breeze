@@ -64,9 +64,9 @@ object MarkovChain {
     * @param init guess
     * @return a slice sampler
     */
-    def slice(logMeasure : Double=>Double) = {
-      val WINDOW = 0.4;
-      val M = 1;
+    def slice(logMeasure : Double=>Double, valid : Double=>Boolean) = {
+      val WINDOW = 2;
+      val M = 10;
       (last:Double)=> {
         new Rand[Double] {
           def get() = {
@@ -75,21 +75,32 @@ object MarkovChain {
             val u = uniform.get;
             // Find the boundaries
             var left = last - WINDOW * u;
-            var right = last + WINDOW * u;
-            while( prop < logMeasure(left)) {
+            if(!valid(left))
+              left = last;
+            var right = left + WINDOW;
+
+            var j : Int =  (uniform.get() * M).asInstanceOf[Int];
+            var k  = (M-1)-j;
+
+            while( prop < logMeasure(left) && j > 0 && valid(left-WINDOW)) {
               left = left - WINDOW;
-            }
-            while( prop < logMeasure(right)) {
-              right = right + WINDOW;
-            }
+              j -= 1;
+            } 
+
+            if(!valid(right)) 
+               right = last;
+            else 
+              while( prop < logMeasure(right) && k > 0 && valid(right+WINDOW)) {
+                right = right + WINDOW;
+                k-=1;
+              }
             var happy = false;
             var next = Double.NaN;
-            val gen = for(x <- uniform) yield left + x * (right-left);
             while(!happy) {
-                next = gen.get;
-                if(prop < logMeasure(next)) {
-                  happy = true;
-                } else if(next <= last) { //close the window
+              next = left + uniform.get * (right - left);
+              if(prop <= logMeasure(next)) {
+                happy = true;
+              } else if(next < last) { //close the window
                 left = next;
               } else {
                 right = next;
@@ -129,13 +140,13 @@ object MarkovChain {
 
    
   /**
-   * Creates a slice sampler for a function. logMeasure should be an (unnormalized) log pdf.
-   * @param logMeasure an unnormalized probability measure
-   * @param init guess
-   * @return a slice sampler
-   */
-  def slice(init : Double,logMeasure : Double=>Double) = {
-    MarkovChain(init)(Kernels.slice(logMeasure));
+  * Creates a slice sampler for a function. logMeasure should be an (unnormalized) log pdf.
+  * @param logMeasure an unnormalized probability measure
+  * @param init guess
+  * @return a slice sampler
+  */
+  def slice(init : Double,logMeasure : Double=>Double, valid : Double=>Boolean) = {
+    MarkovChain(init)(Kernels.slice(logMeasure,valid));
 
   }
 }

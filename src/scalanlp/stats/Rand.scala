@@ -4,7 +4,7 @@ package scalanlp.stats;
  * A trait for monadic sampling. Provides support for use in for-comprehensions
  * @author(dlwh)
  */
-trait Rand[T] { outer : Rand[T] =>
+trait Rand[+T] { outer : Rand[T] =>
   /**
    * Gets one sample from the distribution. Equivalent to sample()
    */
@@ -95,15 +95,46 @@ object Rand {
     }
   }
 
-  private val r = new java.util.Random;
 
   /**
-   * The trivial random generator: always returns itself
+   * The trivial random generator: always returns the argument
    */
   def always[T](t : T) = new Rand[T] {
     def get = t;
   }
 
+  
+  /**
+  * Simply reevaluate the body every time get is called
+  */ 
+  def fromBody[T](f : =>T) = new Rand[T] {
+    def get = f;
+  }
+
+  /**
+  * Convert a Collection of Rand[T] into a Rand[Collection[T]]
+  */
+  def promote[U](col : Collection[Rand[U]]) = fromBody(col.map(_.get));
+  /**
+  * Convert an Iterable of Rand[T] into a Rand[Iterable[T]]
+  */
+  def promote[U](col : Iterable[Rand[U]]) = fromBody(col.map(_.get));
+  /**
+  * Convert a List of Rand[T] into a Rand[List[T]]
+  */
+  def promote[U](col : List[Rand[U]]) = fromBody(col.map(_.get));
+  /**
+  * Convert an Array of Rand[T] into a Rand[Array[T]]
+  */
+  def promote[U](col : Array[Rand[U]]) = fromBody(col.map(_.get));
+
+  def promote[T1,T2](t : (Rand[T1],Rand[T2])) = fromBody( (t._1.get,t._2.get));
+  def promote[T1,T2,T3](t : (Rand[T1],Rand[T2],Rand[T3])) = fromBody( (t._1.get,t._2.get,t._3.get));
+  def promote[T1,T2,T3,T4](t : (Rand[T1],Rand[T2],Rand[T3],Rand[T4])) = 
+    fromBody( (t._1.get,t._2.get,t._3.get,t._4.get));
+
+  // Time-seeded random generators should be shared.
+  private val r = new java.util.Random;
   /**
    * Uniformly samples in [0,1]
    */
