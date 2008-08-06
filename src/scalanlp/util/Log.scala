@@ -2,7 +2,9 @@ package scalanlp.util;
 import java.io._;
 
 /**
-* Class for making logs. Has different levels that can be tuend by setting the log level.
+* Class for making logs. Has different levels that can be tuned by setting the
+* log level.
+* 
 * @author dlwh
 */
 class Log(os : =>OutputStream, @volatile var level : Log.Level) {
