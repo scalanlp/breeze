@@ -122,12 +122,12 @@ trait Double2DoubleCounter extends DoubleCounter[Double] {
 
 
 object Double2DoubleCounter {
-  import it.unimi.dsi.fastutil.objects._
   import it.unimi.dsi.fastutil.ints._
   import it.unimi.dsi.fastutil.shorts._
   import it.unimi.dsi.fastutil.longs._
   import it.unimi.dsi.fastutil.floats._
   import it.unimi.dsi.fastutil.doubles._
+  import it.unimi.dsi.fastutil.objects._
 
 
   import scala.collection.jcl.MapWrapper;
