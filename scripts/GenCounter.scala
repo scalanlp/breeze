@@ -244,6 +244,8 @@ else ""
 }
 
   import scala.collection.jcl.MapWrapper;
+  @serializable
+  @SerialVersionUID(1L)
   class FastMapCounter{G} extends MapWrapper[{T},{V}] with {COUNTER} {{
     private val under = new {mkFastMap(key,value)};
     def underlying() = under.asInstanceOf[java.util.Map[{T},{V}]];

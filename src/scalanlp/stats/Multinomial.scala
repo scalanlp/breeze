@@ -11,6 +11,9 @@ trait Multinomial[T] extends Distribution[T] {
 
   def get = {
     var prob = Rand.uniform.get() * total;
+    if(prob.isNaN) {
+      println("You got a NaN!");
+    }
     var elems = elements;
     var e = elems.next;
     prob  = prob - unnormalizedProbabilityOf(e);
