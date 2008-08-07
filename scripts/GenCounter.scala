@@ -184,9 +184,10 @@ trait {COUNTER} extends {superClass} {{
   {ov} def normalized() : {DOUBLE_COUNTER} = {{
     val normalized = new HashMap[{T},Double]() with {DOUBLE_COUNTER};
     val total : Double = this.total
-    for (pair &lt;- elements) {{
-      normalized.put(pair._1,pair._2 / total)
-    }}
+    if(total != 0.0)
+      for (pair &lt;- elements) {{
+        normalized.put(pair._1,pair._2 / total)
+      }}
     normalized
   }}
 

@@ -1,6 +1,9 @@
 package scalanlp.scalaql
 
-/** Database-like operations on iterators */
+/** 
+* Database-like operations on iterators 
+* @author(dramage)
+*/
 object ScalaQL {
   
   /**
@@ -35,8 +38,8 @@ object ScalaQL {
     
     // if have matches, return them
     if (incA > 0 || incB > 0) {
-      return ((1 to incA).map(_ => iterA.next).toList,
-              (1 to incB).map(_ => iterB.next).toList)
+      return ((1 to incA).map((x:Int) => iterA.next).toList,
+              (1 to incB).map((x:Int) => iterB.next).toList)
     }
     
     // need to increment one or the other by itself
