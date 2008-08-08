@@ -21,6 +21,15 @@ trait Rand[+T] { outer : Rand[T] =>
   def sample(n : Int) = List.tabulate(n,x => get);
 
   /**
+   * An infinitely long iterator that samples repeatedly from the Rand
+   * @return an iterator that repeatedly samples
+   */
+  def elements:Iterator[T] = new Iterator[T] {
+    def hasNext() = true;
+    def next() = get();
+  }
+
+  /**
    * Converts a random sampler of one type to a random sampler of another type.
    * Examples:
    * randInt(10).flatMap(x => randInt(3 * x.asInstanceOf[Int]) gives a Rand[Int] in the range [0,30]
@@ -61,7 +70,7 @@ trait Rand[+T] { outer : Rand[T] =>
 
   def filter(p: T=>Boolean) = condition(p);
 
-  // Not the most efficient implementation efver, but meh.
+  // Not the most efficient implementation ever, but meh.
   def condition(p : T => Boolean) = new Rand[T] {
     def get() = {
       var x = get;
