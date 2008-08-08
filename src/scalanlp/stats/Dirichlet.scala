@@ -15,7 +15,7 @@ trait Dirichlet[T] extends ConjugatePrior[Multinomial[T],T] {
   /**
    * Provides access to the components of the Dirichlet, for inspection.
    */
-  def elements = prior.elements;
+  def components = prior.elements;
 
   /**
    * Returns a Multinomial distribution over the elements;
