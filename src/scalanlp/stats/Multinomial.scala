@@ -2,19 +2,21 @@ package scalanlp.stats;
 import scalanlp.counters.Counters._;
 import scalanlp.counters._;
 
+import scalanlp.util.Log;
+
 /**
  * Represents a multinomial Distribution over elements.
  */
 trait Multinomial[T] extends Distribution[T] {
-  def elements : Iterator[T];
+  def components() : Iterator[T];
   protected def total : Double;
 
   def get = {
     var prob = Rand.uniform.get() * total;
     if(prob.isNaN) {
-      println("You got a NaN!");
+      Log(Log.ERROR)("You got a NaN!");
     }
-    var elems = elements;
+    val elems = components();
     var e = elems.next;
     prob  = prob - unnormalizedProbabilityOf(e);
     while(prob > 0) {
@@ -28,8 +30,8 @@ trait Multinomial[T] extends Distribution[T] {
    * Returns a Multinomial(x) \propto  this(x) * that(x);
    */
   def *[U>:T](that : Multinomial[U]) = {
-    val c :DoubleCounter[U] = aggregate(that.elements.map(x => (x,that.probabilityOf(x))))
-    for(x <- elements
+    val c :DoubleCounter[U] = aggregate(that.components.map(x => (x,that.probabilityOf(x))))
+    for(x <- components
       if c.keys contains x;
       p = probabilityOf(x))
         c(x) *= p;
@@ -49,7 +51,7 @@ object Multinomial {
    */
   def apply[T](c : DoubleCounter[T])  = new Multinomial[T] {
     def total = c.total;
-    def elements = c.keys;
+    def components = c.keys;
     def probabilityOf(t : T) = c(t)/c.total();
     override def unnormalizedProbabilityOf(t: T) = c(t);
   }
@@ -70,7 +72,7 @@ object Multinomial {
    * Takes the total for speed.
    */
   def apply(arr : Array[Double], t: Double) = new Multinomial[Int] {
-    def elements = (0 until arr.length ). elements;
+    def components = (0 until arr.length ). elements;
     def total = t;
     def probabilityOf(x : Int) = arr(x)/t
     override def unnormalizedProbabilityOf(x: Int) = arr(x);

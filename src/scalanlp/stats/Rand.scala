@@ -24,7 +24,7 @@ trait Rand[+T] { outer : Rand[T] =>
    * An infinitely long iterator that samples repeatedly from the Rand
    * @return an iterator that repeatedly samples
    */
-  def elements:Iterator[T] = new Iterator[T] {
+  def samples:Iterator[T] = new Iterator[T] {
     def hasNext() = true;
     def next() = get();
   }
