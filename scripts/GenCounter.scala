@@ -224,6 +224,19 @@ trait {COUNTER} extends {superClass} {{
     }}
   }}
 
+  def -=(that : {COUNTER}) {{
+    for(val (k,v) &lt;- that.elements) {{
+      update(k,(this(k) - v).asInstanceOf[{V}]);
+    }}
+  }}
+
+  {ov} def *=(scale : {V}) {{
+    transform {{ (k,v) => (v * scale).asInstanceOf[{V}]}}
+  }}
+
+  {ov} def /=(scale : {V}) {{
+    transform {{ (k,v) => (v / scale).asInstanceOf[{V}]}}
+  }}
 }}
 
 
