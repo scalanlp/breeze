@@ -33,23 +33,31 @@ class Log(os : =>OutputStream, @volatile var level : Log.Level) {
   /**
    * Override to suit your needs.
    */
-  def prefix(lvl : Level) = "("+ lvl + ") " + CALLER(2) + ": "
+  def prefix(lvl : Level) = "("+ lvl + ") (" + CALLER(2) + ") "
 
   /**
    * Writes the log message if the severity is high enough. 
    * Otherwise, don't even compute the string.
    */
   def log(lvl : Level)(msg: =>Any) {
-    if(level.severity >= lvl.severity)
+    if(level.severity >= lvl.severity) {
       out.println(prefix(lvl) + msg.toString);
+      out.flush();
+    }
   }
 
-  def apply(lvl: Level)(msg: =>Any) = log(lvl)(msg)
+  def apply(lvl: Level)(msg: =>Any) = {
+    if(level.severity >= lvl.severity) {
+      out.println(prefix(lvl) + msg.toString);
+      out.flush();
+    }
+  }
+
 
   private val out = new PrintWriter(os);
 }
 
-object Log extends Log(System.err) {
+object Log extends Log(System.err,Log.INFO) {
   case class Level(severity : Int);
   case object FATAL extends Level(1);
   case object ERROR extends Level(2);
