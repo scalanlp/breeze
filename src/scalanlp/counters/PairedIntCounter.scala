@@ -28,28 +28,28 @@ class PairedIntCounter[K1,K2] extends HashMap[K1,IntCounter[K2]] with Function2[
   /**
    * Ternary version of transform that modifies each element of a counter
    */ 
-  def transform(f : (K1,K2,Double)=>Double) = foreach { case (k1,c) =>
+  def transform(f : (K1,K2,Int)=>Int) = foreach { case (k1,c) =>
     c.transform{ case (k2,v) => f(k1,k2,v)}
   };
 
   /** 
    * Returns an iterator over each (K1,K2,Value) pair
    */ 
-  def triples : Iterator[(K1,K2,Double)] = {
+  def triples : Iterator[(K1,K2,Int)] = {
     for( (k1,c) <- elements;
       (k2,v) <- c.elements)
     yield (k1,k2,v);
   }
 
-  def +=(that : PairedDoubleCounter[K1,K2]) {
+  def +=(that : PairedIntCounter[K1,K2]) {
     this += that.triples;
   }
 
-  def +=(that : Iterable[(K1,K2,Double)]) {
+  def +=(that : Iterable[(K1,K2,Int)]) {
     this += that.elements;
   }
 
-  def +=(that : Iterator[(K1,K2,Double)]) {
+  def +=(that : Iterator[(K1,K2,Int)]) {
     for( (k1,k2,v) <- that) {
       this(k1,k2) += v;
     }
