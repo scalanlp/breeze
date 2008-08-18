@@ -104,6 +104,8 @@ object Rand {
     }
   }
 
+  def choose[T](c : Seq[T]) = Rand.randInt(c.size).map( c(_));
+
 
   /**
    * The trivial random generator: always returns the argument

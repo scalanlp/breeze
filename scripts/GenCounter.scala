@@ -95,6 +95,7 @@ import scala.collection.mutable.HashMap;
  *
  * @author dlwh
  */
+@serializable 
 trait {COUNTER} extends {superClass} {{
 {if(!hasCounterParent) {
   <x>
