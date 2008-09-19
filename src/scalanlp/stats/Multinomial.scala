@@ -51,6 +51,7 @@ object Multinomial {
    */
   def apply[T](c : DoubleCounter[T])  = new Multinomial[T] {
     def total = c.total;
+    if(total.isNaN || total <= 0.) throw new IllegalArgumentException("total is " + total);
     def components = c.keys;
     def probabilityOf(t : T) = c(t)/c.total();
     override def unnormalizedProbabilityOf(t: T) = c(t);
