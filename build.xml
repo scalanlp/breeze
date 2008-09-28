@@ -47,6 +47,12 @@
 
    <scalatest wildcard="scalanlp." runpath="classes/" />
  </target>
+
+ <pathconvert property="mf.classpath" pathsep=" ">
+   <path refid="project.classpath" />
+   <flattenmapper />
+ </pathconvert>
+
  <target name="docs">
    <mkdir dir="${docs.dir}"/>
    <scaladoc

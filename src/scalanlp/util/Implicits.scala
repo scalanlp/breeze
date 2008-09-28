@@ -38,7 +38,7 @@ object Implicits {
           d(0)(i) = i;
         for(i <- 1 to s.length;
           j <- 1 to s2.length) {
-            val cost = if(s(i) == s2(j)) 0 else 1;
+            val cost = if(s(i-1) == s2(j-1)) 0 else 1;
             d(i)(j) = Math.min( d(i-1)(j)+1, Math.min(d(i)(j-1)+1,d(i-1)(j-1) + cost));
         }
         d(s.length)(s2.length);
