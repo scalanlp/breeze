@@ -1,6 +1,7 @@
 package scalanlp.util
 
 import java.io._;
+import scala.collection.mutable.ArrayBuffer;
 
 /**
  * This contains several convenience routines that wrap file
@@ -50,6 +51,16 @@ object FileUtils {
       }
       false;
     }
+  }
+
+  def readIntoArray(file:File):Seq[String] = {
+    var ret = new ArrayBuffer[String]();
+    readByLine(file) {
+      (line) => {
+	ret += line;
+      }
+    }
+    ret.toList;
   }
 
   /**
