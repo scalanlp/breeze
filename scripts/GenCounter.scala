@@ -206,7 +206,7 @@ trait {COUNTER} extends {superClass} {{
   /**
    * Return a List the top k elements, along with their counts
    */
-  {ov} def topK(k : Int) = Counters.topK[({T},{V})](k,(x,y) => (x._2-y._2).asInstanceOf[Int])(this);
+  {ov} def topK(k : Int) = Counters.topK[({T},{V})](k,(x,y) => if(x._2 &lt; y._2) -1 else if (x._2 == y._2) 0 else 1)(this);
 
   /**
    * Return \sum_(t) C1(t) * C2(t). 
