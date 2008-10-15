@@ -6,6 +6,16 @@ package scalanlp.scalaql
 */
 object ScalaQL {
   
+  /** Groups the elements of the given sequence into a map by the given key function. */
+  def groupBy[E,K](seq : Seq[E], keyF : (E=>K)) : scala.collection.Map[K,List[E]] = {
+    val map = new scala.collection.mutable.HashMap[K,List[E]];
+    for (elem <- seq) {
+      val key = keyF(elem);
+      map(key) = elem :: map.getOrElse(key, List[E]());
+    }
+    map;
+  }
+  
   /**
    * Returns the next group of elements from A and B that are all equivalent
    * with eachother.
