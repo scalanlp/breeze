@@ -4,6 +4,36 @@ package scalanlp.util;
 * Useful implicit conversions that Scala forgot.
 */
 object Implicits {
+  
+  //
+  // Exploding arrays
+  //
+    
+  implicit def explode2[E](s : Array[E]) : (E,E) = {
+    assert(s.length == 2)
+    return (s(0),s(1))
+  }
+  implicit def explode3[E](s : Array[E]) : (E,E,E) = {
+    assert(s.length == 3)
+    return (s(0),s(1),s(2))
+  }
+  implicit def explode4[E](s : Array[E]) : (E,E,E,E) = {
+    assert(s.length == 4)
+    return (s(0),s(1),s(2),s(3))
+  }
+  implicit def explode5[E](s : Array[E]) : (E,E,E,E,E) = {
+    assert(s.length == 5)
+    return (s(0),s(1),s(2),s(3),s(4))
+  }
+  implicit def explode6[E](s : Array[E]) : (E,E,E,E,E,E) = {
+    assert(s.length == 6)
+    return (s(0),s(1),s(2),s(3),s(4),s(5))
+  }
+  
+  //
+  // Extra convenience methods on Scala builtins
+  //
+  
   class ListExtra[T](list:List[T]) {
     def tails = new Seq[List[T]] {
       def length = list.length;
