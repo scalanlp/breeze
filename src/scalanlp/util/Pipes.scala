@@ -185,6 +185,8 @@ class PipesException(message : String) extends RuntimeException;
 object Pipes {
   implicit def File(path : String) = new java.io.File(path);
 
+  implicit val _context = new PipesContext();
+  
   def sh(command : String)(implicit context : PipesContext) : java.lang.Process = {
     val os = System.getProperty("os.name");
     val pb = new ProcessBuilder().directory(context.cwd);
@@ -220,27 +222,18 @@ object Pipes {
 
   def cd(folder : String)(implicit context : PipesContext) : Unit = {
     if (!folder.startsWith(java.io.File.pathSeparator)) {
-      cd(new File(cwd,folder));
+      cd(new File(cwd(context),folder))(context);
     } else {
-      cd(new File(folder));
+      cd(new File(folder))(context);
     }
   }
 
   def waitFor(process : PipeProcess) = process.waitFor;
 
-  /*
-  implicit def iPiper(stream : InputStream) =
-    new Piper(stream);
-
-  implicit def iPiper(process : Process) =
-    new Piper(process.getInputStream);
-  */
-
   implicit def iPipeProcess(process : Process) = new PipeProcess(process);
   implicit def iPipeInputStream(stream : InputStream) = new PipeInputStream(stream);
   
   def main(argv : Array[String]) {
-    implicit val context = new PipesContext();
     sh("sleep 1; echo '(sleep 1 async) prints 2nd'") > System.out;
     sh("echo '(no sleep async) prints 1st'") > System.out;
     waitFor(sh("sleep 2; echo '(sleep 2 sync) prints 3rd after pause'") > System.out);
