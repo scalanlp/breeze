@@ -2,6 +2,8 @@ package scalanlp.util;
 
 /**
 * Useful implicit conversions that Scala forgot.
+* 
+* @author(dlwh)
 */
 object Implicits {
   
