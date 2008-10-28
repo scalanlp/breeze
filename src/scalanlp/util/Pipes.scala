@@ -1,6 +1,5 @@
 package scalanlp.util
 
-
 import java.io.File
 import java.io.RandomAccessFile
 import java.io.InputStream
@@ -12,6 +11,8 @@ import scala.concurrent.ops._
 
 /**
  * Helper methods for PipeProcess
+ * 
+ * @author dramage
  */
 object PipeProcess {
   protected sealed abstract case class PipeSource();
@@ -44,6 +45,8 @@ object PipeProcess {
 
 /**
  * A richer Process object used for linking together in pipes.
+ * 
+ * @author dramage
  */
 class PipeProcess(val process : Process) {
   import PipeProcess._
@@ -149,6 +152,8 @@ class PipeProcess(val process : Process) {
 /**
  * An alternative richer InputStream that can be piped to an OutputStream,
  * Process, or function.
+ * 
+ * @author dramage
  */
 class PipeInputStream(var stream : InputStream) {
   import PipeProcess.drain;
@@ -175,13 +180,22 @@ class PipeInputStream(var stream : InputStream) {
     func(stream);
 }
 
-
+/**
+ * Conext for pipes, holds current working directory
+ * 
+ * @author dramage
+ */
 class PipesContext {
   var cwd : File = new File(new File("").getAbsolutePath);
 }
 
 class PipesException(message : String) extends RuntimeException;
 
+/**
+ * Utilities for executing shell scripts, etc.
+ * 
+ * @author dramage
+ */
 object Pipes {
   implicit def File(path : String) = new java.io.File(path);
 

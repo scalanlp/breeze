@@ -2,6 +2,7 @@ package scalanlp.scalaql
 
 /** 
 * Database-like operations on iterators 
+* 
 * @author(dramage)
 */
 object ScalaQL {
