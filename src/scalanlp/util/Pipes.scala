@@ -189,7 +189,7 @@ class PipesContext {
   var cwd : File = new File(new File("").getAbsolutePath);
 }
 
-class PipesException(message : String) extends RuntimeException;
+class PipesException(message : String) extends RuntimeException(message);
 
 /**
  * Utilities for executing shell scripts, etc.
