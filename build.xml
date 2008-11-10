@@ -35,7 +35,9 @@
   <target name="compile-test" depends="compile">
     <mkdir dir="${build.dir}"/>
 
-    <scalac srcdir="${test.src.dir}" destdir="${build.dir}" classpathref="project.classpath" force="changed">
+    <scalac srcdir="${test.src.dir}" destdir="${build.dir}"
+      classpathref="project.classpath" force="changed"
+      unchecked="yes">
       <include name="**/*.scala"/>
     </scalac>
   </target>

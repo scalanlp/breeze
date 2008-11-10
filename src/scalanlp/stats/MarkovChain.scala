@@ -147,6 +147,5 @@ object MarkovChain {
   */
   def slice(init : Double,logMeasure : Double=>Double, valid : Double=>Boolean) = {
     MarkovChain(init)(Kernels.slice(logMeasure,valid));
-
   }
 }
