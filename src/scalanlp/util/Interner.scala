@@ -5,7 +5,9 @@ import java.lang.ref.WeakReference;
 
 /**
  * Class that mimics Java's string interner, but for anything.
- * Threadsafe;
+ * Threadsafe.
+ *
+ * @author dlwh
  */
 class Interner[T] extends (T=>T) {
   def apply(t :T) = intern(t);
