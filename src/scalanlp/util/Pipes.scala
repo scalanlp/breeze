@@ -10,6 +10,179 @@ import java.lang.ProcessBuilder
 import scala.concurrent.ops._
 
 /**
+ * Utilities for executing shell scripts, etc.
+ * 
+ * To get started with a global pipes shell, use:
+ * 
+ * import scalanlp.util.Pipes.global._
+ * 
+ * @author dramage
+ */
+class Pipes {
+
+  //
+  // state variables
+  //
+  
+  private var _cwd : File = new File(new File("").getAbsolutePath);
+  private var _stdout : OutputStream = java.lang.System.out;
+  private var _stderr : OutputStream = java.lang.System.err;
+  private var _stdin  : InputStream  = java.lang.System.in;
+
+  //
+  // context properties
+  //
+  
+  /** Returns the default stdout used in this context. */
+  def stdout = _stdout;
+  
+  /** Returns the default stderr used in this context. */
+  def stderr = _stderr;
+  
+  /** Returns the default stdin used in this context. */
+  def stdin  = _stdin;
+  
+  /**
+   * Runs the given command (via the system command shell if found)
+   * in the current directory.
+   */
+  def sh(command : String) : java.lang.Process = {
+    val os = System.getProperty("os.name");
+    val pb = new ProcessBuilder().directory(_cwd);
+    
+    if (os == "Windows 95" || os == "Windows 98" || os == "Windows ME") {
+      pb.command("command.exe", "/C", command);
+    } else if (os.startsWith("Windows")) {
+      pb.command("cmd.exe", "/C", command);
+    } else {
+      pb.command("/bin/sh", "-c", command);
+    };
+    
+    return pb.start();
+  }
+
+  /**
+   * Returns the current working directory.
+   */
+  def pwd : File = _cwd;
+
+  /**
+   * Changes to the given directory.
+   */
+  def cd(folder : File) = {
+    if (!folder.exists) {
+      error("Folder "+folder+" does not exist.");
+    } else if (!folder.isDirectory) {
+      error("Folder "+folder+" is not a directory");
+    } else if (!folder.canRead) {
+      error("Cannot access folder "+folder);
+    }
+    _cwd = folder;
+  }
+  
+  /** Waits for the tiven process to finish. */
+  def waitFor(process : PipeProcess) = process.waitFor;
+
+  //
+  //  implicit conversions
+  //
+  
+  implicit def iPipeProcess(process : Process) =
+    new PipeProcess(process)(this);
+  
+  implicit def iPipeInputStream(stream : InputStream) =
+    new PipeInputStream(stream);
+  
+  implicit def iPipeInputStream(file : File) =
+    new PipeInputStream(iInputStream(file));
+  
+  /**
+   * Gets a FileInputStream for the given file.  If the filename
+   * ends with .gz, automatically wraps the returned stream with
+   * a java.util.zip.GZIPInputStream.
+   */
+  implicit def iInputStream(file : File) : InputStream = {
+    val fis = new java.io.BufferedInputStream(new java.io.FileInputStream(file));
+    if (file.getName.toLowerCase.endsWith(".gz")) {
+      return new java.util.zip.GZIPInputStream(fis);
+    } else {
+      return fis;
+    }
+  }
+  
+  /**
+   * Gets a FileOutputStream for the given file.  If the filename
+   * ends with .gz, automatically wraps the returned stream with
+   * a java.util.zip.GZIPOutputStream.
+   */
+  implicit def iOutputStream(file : File) : OutputStream = {
+    val fos = new java.io.BufferedOutputStream(new java.io.FileOutputStream(file));
+    if (file.getName.toLowerCase.endsWith(".gz")) {
+      return new java.util.zip.GZIPOutputStream(fos);
+    } else {
+      return fos;
+    }
+  }
+  
+  /**
+   * Returns a file with the given name, relative to the current
+   * directory (if found and path does not start with 
+   */
+  implicit def File(path : String) : File = {
+    if (!path.startsWith(java.io.File.pathSeparator)) {
+      new File(_cwd,path);
+    } else {
+      new File(path);
+    }
+  }
+  
+  implicit def iPipeIterator[E](lines : Iterator[E]) =
+    new PipeIterator(lines.map(_.toString))(this);
+  
+  implicit def iPipeIterator[E](lines : Iterable[E]) =
+    new PipeIterator(lines.elements.map(_.toString))(this);
+  
+  private def error(message : String) : Unit = {
+    throw new PipesException(message);
+  }
+}
+
+/**
+ * To get started with a global pipes shell, use:
+ * 
+ * import scalanlp.util.Pipes.global._
+ * 
+ * And take a look at the example code in the Pipes object's main method.
+ */
+object Pipes {
+  /** A global instance for easy imports */
+  val global = new Pipes();
+  
+  def apply() = {
+    new Pipes();
+  }
+  
+  def main(argv : Array[String]) {
+    import global._;
+    
+    sh("sleep 1; echo '(sleep 1 async) prints 2nd'") | stdout;
+    sh("echo '(no sleep async) prints 1st'") | stdout;
+    waitFor(sh("sleep 2; echo '(sleep 2 sync) prints 3rd after pause'") | stdout);
+    sh("echo '(stderr redirect) should show up on stdout' | cat >&2") |& stdout;
+    sh("echo '(stderr redirect) should also show up on stdout' | cat >&2") |& sh("cat") | stdout;
+    sh("echo '(pipe test line 1) should be printed'; echo '(pipe test line 2) should not be printed'") | sh("grep 1") | stdout;
+    sh("echo '(translation test) should sound funny'") | sh("perl -pe 's/(a|e|i|o|u)+/oi/g';") | stdout;
+    stdin | sh("egrep '[0-9]'") | stdout;
+    
+    (1 to 10) | stderr;
+    
+    for (line <- sh("ls").getLines) {
+      println(line.toUpperCase);
+    }
+  }
+}
+
+/**
  * Helper methods for PipeProcess
  * 
  * @author dramage
@@ -245,168 +418,3 @@ class PipeIterator(lines : Iterator[String])(implicit pipes : Pipes) {
  * @author dramage
  */
 class PipesException(message : String) extends RuntimeException(message);
-
-
-/**
- * Utilities for executing shell scripts, etc.
- * 
- * To get started with a global pipes shell, use:
- * 
- * import scalanlp.util.Pipes.global._
- * 
- * @author dramage
- */
-class Pipes {
-  private var _cwd : File = new File(new File("").getAbsolutePath);
-  private var _stdout : OutputStream = java.lang.System.out;
-  private var _stderr : OutputStream = java.lang.System.err;
-  private var _stdin  : InputStream  = java.lang.System.in;
-
-  /** Returns the default stdout used in this context. */
-  def stdout = _stdout;
-  
-  /** Returns the default stderr used in this context. */
-  def stderr = _stderr;
-  
-  /** Returns the default stdin used in this context. */
-  def stdin  = _stdin;
-  
-  /**
-   * Runs the given command (via the system command shell if found)
-   * in the current directory.
-   */
-  def sh(command : String) : java.lang.Process = {
-    val os = System.getProperty("os.name");
-    val pb = new ProcessBuilder().directory(_cwd);
-    
-    if (os == "Windows 95" || os == "Windows 98" || os == "Windows ME") {
-      pb.command("command.exe", "/C", command);
-    } else if (os.startsWith("Windows")) {
-      pb.command("cmd.exe", "/C", command);
-    } else {
-      pb.command("/bin/sh", "-c", command);
-    };
-    
-    return pb.start();
-  }
-
-  /**
-   * Returns the current working directory.
-   */
-  def pwd : File = _cwd;
-
-  /**
-   * Changes to the given directory.
-   */
-  def cd(folder : File) = {
-    if (!folder.exists) {
-      error("Folder "+folder+" does not exist.");
-    } else if (!folder.isDirectory) {
-      error("Folder "+folder+" is not a directory");
-    } else if (!folder.canRead) {
-      error("Cannot access folder "+folder);
-    }
-    _cwd = folder;
-  }
-  
-  /** Waits for the tiven process to finish. */
-  def waitFor(process : PipeProcess) = process.waitFor;
-
-  //
-  //  implicit conversions
-  //
-  
-  implicit def iPipeProcess(process : Process) =
-    new PipeProcess(process)(this);
-  
-  implicit def iPipeInputStream(stream : InputStream) =
-    new PipeInputStream(stream);
-  
-  implicit def iPipeInputStream(file : File) =
-    new PipeInputStream(file);
-  
-  /**
-   * Gets a FileInputStream for the given file.  If the filename
-   * ends with .gz, automatically wraps the returned stream with
-   * a java.util.zip.GZIPInputStream.
-   */
-  implicit def iInputStream(file : File) : InputStream = {
-    val fis = new java.io.BufferedInputStream(new java.io.FileInputStream(file));
-    if (file.getName.toLowerCase.endsWith(".gz")) {
-      return new java.util.zip.GZIPInputStream(fis);
-    } else {
-      return fis;
-    }
-  }
-  
-  /**
-   * Gets a FileOutputStream for the given file.  If the filename
-   * ends with .gz, automatically wraps the returned stream with
-   * a java.util.zip.GZIPOutputStream.
-   */
-  implicit def iOutputStream(file : File) : OutputStream = {
-    val fos = new java.io.BufferedOutputStream(new java.io.FileOutputStream(file));
-    if (file.getName.toLowerCase.endsWith(".gz")) {
-      return new java.util.zip.GZIPOutputStream(fos);
-    } else {
-      return fos;
-    }
-  }
-  
-  /**
-   * Returns a file with the given name, relative to the current
-   * directory (if found and path does not start with 
-   */
-  implicit def File(path : String) : File = {
-    if (!path.startsWith(java.io.File.pathSeparator)) {
-      new File(_cwd,path);
-    } else {
-      new File(path);
-    }
-  }
-  
-  implicit def iPipeIterator[E](lines : Iterator[E]) =
-    new PipeIterator(lines.map(_.toString))(this);
-  
-  implicit def iPipeIterator[E](lines : Iterable[E]) =
-    new PipeIterator(lines.elements.map(_.toString))(this);
-  
-  private def error(message : String) : Unit = {
-    throw new PipesException(message);
-  }
-}
-  
-/**
- * To get started with a global pipes shell, use:
- * 
- * import scalanlp.util.Pipes.global._
- * 
- * And take a look at the example code in the Pipes object's main method.
- */
-object Pipes {
-  /** A global instance for easy imports */
-  val global = new Pipes();
-  
-  def apply() = {
-    new Pipes();
-  }
-  
-  def main(argv : Array[String]) {
-    import global._;
-    
-    sh("sleep 1; echo '(sleep 1 async) prints 2nd'") | stdout;
-    sh("echo '(no sleep async) prints 1st'") | stdout;
-    waitFor(sh("sleep 2; echo '(sleep 2 sync) prints 3rd after pause'") | stdout);
-    sh("echo '(stderr redirect) should show up on stdout' | cat >&2") |& stdout;
-    sh("echo '(stderr redirect) should also show up on stdout' | cat >&2") |& sh("cat") | stdout;
-    sh("echo '(pipe test line 1) should be printed'; echo '(pipe test line 2) should not be printed'") | sh("grep 1") | stdout;
-    sh("echo '(translation test) should sound funny'") | sh("perl -pe 's/(a|e|i|o|u)+/oi/g';") | stdout;
-    stdin | sh("egrep '[0-9]'") | stdout;
-    
-    (1 to 10).map(_.toString) | stdout;
-    
-    for (line <- sh("ls").getLines) {
-      println(line.toUpperCase);
-    }
-  }
-}
