@@ -181,6 +181,36 @@ class PipeInputStream(var stream : InputStream) {
 }
 
 /**
+ * A pipeable iterator of Strings, to be written as lines to a stream.
+ */
+class PipeIterator(lines : Iterator[String]) {
+  /**
+   * Writes all lines to the given process.  Returns immediately.
+   */
+  def |(process : PipeProcess) : PipeProcess = {
+    val pipeIn  = new java.io.PipedInputStream();
+    val pipeOut = new java.io.PipedOutputStream(pipeIn);
+    spawn { this > pipeOut; }
+    process < pipeIn;
+  }
+  
+  /**
+   * Writes all lines to the given OutputStream, closing it when done
+   * if it is not System.out or System.err.
+   */
+  def >(outstream : OutputStream) = {
+    val ps = new java.io.PrintStream(outstream);
+    for (line <- lines) {
+      ps.println(line);
+    }
+    
+    if (!(outstream == Pipes.stdout || outstream == Pipes.stderr)) {
+      ps.close;
+    }
+  }
+}
+
+/**
  * Conext for pipes, holds current working directory
  * 
  * @author dramage
@@ -197,9 +227,11 @@ class PipesException(message : String) extends RuntimeException(message);
  * @author dramage
  */
 object Pipes {
-  implicit def File(path : String) = new java.io.File(path);
-
   implicit val _context = new PipesContext();
+  
+  def stdout = java.lang.System.out;
+  def stderr = java.lang.System.err;
+  def stdin  = java.lang.System.in;
   
   def sh(command : String)(implicit context : PipesContext) : java.lang.Process = {
     val os = System.getProperty("os.name");
@@ -220,7 +252,7 @@ object Pipes {
     throw new PipesException(message);
   }
 
-  def cwd(implicit context : PipesContext) : File =
+  def pwd(implicit context : PipesContext) : File =
     context.cwd;
 
   def cd(folder : File)(implicit context : PipesContext) = {
@@ -236,16 +268,59 @@ object Pipes {
 
   def cd(folder : String)(implicit context : PipesContext) : Unit = {
     if (!folder.startsWith(java.io.File.pathSeparator)) {
-      cd(new File(cwd(context),folder))(context);
+      cd(new File(context.cwd,folder))(context);
     } else {
       cd(new File(folder))(context);
     }
   }
-
+  
   def waitFor(process : PipeProcess) = process.waitFor;
 
-  implicit def iPipeProcess(process : Process) = new PipeProcess(process);
-  implicit def iPipeInputStream(stream : InputStream) = new PipeInputStream(stream);
+  //
+  //  implicit conversions
+  //
+  
+  implicit def iPipeProcess(process : Process) =
+    new PipeProcess(process);
+  
+  implicit def iPipeInputStream(stream : InputStream) =
+    new PipeInputStream(stream);
+  
+  /**
+   * Gets a FileInputStream for the given file.  If the filename
+   * ends with .gz, automatically wraps the returned stream with
+   * a java.util.zip.GZIPInputStream.
+   */
+  implicit def iInputStream(file : File) : InputStream = {
+    val fis = new java.io.BufferedInputStream(new java.io.FileInputStream(file));
+    if (file.getName.toLowerCase.endsWith(".gz")) {
+      return new java.util.zip.GZIPInputStream(fis);
+    } else {
+      return fis;
+    }
+  }
+  
+  /**
+   * Gets a FileOutputStream for the given file.  If the filename
+   * ends with .gz, automatically wraps the returned stream with
+   * a java.util.zip.GZIPOutputStream.
+   */
+  implicit def iOutputStream(file : File) : OutputStream = {
+    val fos = new java.io.BufferedOutputStream(new java.io.FileOutputStream(file));
+    if (file.getName.toLowerCase.endsWith(".gz")) {
+      return new java.util.zip.GZIPOutputStream(fos);
+    } else {
+      return fos;
+    }
+  }
+  
+  implicit def File(path : String) = new java.io.File(path);
+  
+  implicit def iPipeIterator(lines : Iterator[String]) =
+    new PipeIterator(lines.map(_.toString));
+  
+  implicit def iPipeIterator(lines : Iterable[String]) = new
+    PipeIterator(lines.elements.map(_.toString));
   
   def main(argv : Array[String]) {
     sh("sleep 1; echo '(sleep 1 async) prints 2nd'") > System.out;
@@ -256,5 +331,6 @@ object Pipes {
     sh("echo '(pipe test line 1) should be printed'; echo '(pipe test line 2) should not be printed'") | sh("grep 1") > System.out;
     sh("echo '(translation test) should sound funny'") | sh("perl -pe 's/(a|e|i|o|u)+/oi/g';") > System.out;
     System.in | sh("egrep '[0-9]'") > System.out;
+    (1 to 10).map(_.toString) > System.out;
   }
 }
