@@ -94,13 +94,6 @@ class PipeProcess(val process : Process) {
     return next;
   }
 
-  /**
-   * Does this process, then the next in series.
-   */
-  def && (followup : PipeProcess) : PipeProcess = {
-    throw new UnsupportedOperationException;
-  }
-
   /** Redirects the given input stream as the source for the process */
   def <  (instream : InputStream) : PipeProcess = {
     this.source = InputStreamPipeSource(instream);
@@ -115,7 +108,7 @@ class PipeProcess(val process : Process) {
   }
 
   /** Redirects output from the process to the given output stream */
-  def >  (outstream : OutputStream) : PipeProcess = {
+  def |  (outstream : OutputStream) : PipeProcess = {
     this.stdout = outstream;
 
     spawn {
@@ -129,7 +122,7 @@ class PipeProcess(val process : Process) {
   }
 
   /** Redirects stdout and stderr from the process to the given output stream */
-  def >& (outstream : OutputStream) : PipeProcess = {
+  def |& (outstream : OutputStream) : PipeProcess = {
     this.stdout = outstream;
     this.stderr = outstream;
 
@@ -183,14 +176,14 @@ class PipeInputStream(var stream : InputStream) {
 /**
  * A pipeable iterator of Strings, to be written as lines to a stream.
  */
-class PipeIterator(lines : Iterator[String]) {
+class PipeIterator(lines : Iterator[String])(implicit context : PipesContext) {
   /**
    * Writes all lines to the given process.  Returns immediately.
    */
   def |(process : PipeProcess) : PipeProcess = {
     val pipeIn  = new java.io.PipedInputStream();
     val pipeOut = new java.io.PipedOutputStream(pipeIn);
-    spawn { this > pipeOut; }
+    spawn { this | pipeOut; }
     process < pipeIn;
   }
   
@@ -198,7 +191,7 @@ class PipeIterator(lines : Iterator[String]) {
    * Writes all lines to the given OutputStream, closing it when done
    * if it is not System.out or System.err.
    */
-  def >(outstream : OutputStream) = {
+  def |(outstream : OutputStream) = {
     val ps = new java.io.PrintStream(outstream);
     for (line <- lines) {
       ps.println(line);
@@ -217,8 +210,14 @@ class PipeIterator(lines : Iterator[String]) {
  */
 class PipesContext {
   var cwd : File = new File(new File("").getAbsolutePath);
+  var stdout : OutputStream = java.lang.System.out;
+  var stderr : OutputStream = java.lang.System.err;
+  var stdin  : InputStream  = java.lang.System.in;
 }
 
+/**
+ * Runtime exception thrown by the Pipes framework.
+ */
 class PipesException(message : String) extends RuntimeException(message);
 
 /**
@@ -229,9 +228,9 @@ class PipesException(message : String) extends RuntimeException(message);
 object Pipes {
   implicit val _context = new PipesContext();
   
-  def stdout = java.lang.System.out;
-  def stderr = java.lang.System.err;
-  def stdin  = java.lang.System.in;
+  def stdout(implicit context : PipesContext) = context.stdout;
+  def stderr(implicit context : PipesContext) = context.stderr;
+  def stdin(implicit context : PipesContext)  = context.stdin;
   
   def sh(command : String)(implicit context : PipesContext) : java.lang.Process = {
     val os = System.getProperty("os.name");
@@ -316,21 +315,21 @@ object Pipes {
   
   implicit def File(path : String) = new java.io.File(path);
   
-  implicit def iPipeIterator(lines : Iterator[String]) =
-    new PipeIterator(lines.map(_.toString));
+  implicit def iPipeIterator[E](lines : Iterator[E])(implicit context : PipesContext) =
+    new PipeIterator(lines.map(_.toString))(context);
   
-  implicit def iPipeIterator(lines : Iterable[String]) = new
-    PipeIterator(lines.elements.map(_.toString));
+  implicit def iPipeIterator[E](lines : Iterable[E])(implicit context : PipesContext) =
+    new PipeIterator(lines.elements.map(_.toString))(context);
   
   def main(argv : Array[String]) {
-    sh("sleep 1; echo '(sleep 1 async) prints 2nd'") > System.out;
-    sh("echo '(no sleep async) prints 1st'") > System.out;
-    waitFor(sh("sleep 2; echo '(sleep 2 sync) prints 3rd after pause'") > System.out);
-    sh("echo '(stderr redirect) should show up on stdout' | cat >&2") >& System.out;
-    sh("echo '(stderr redirect) should also show up on stdout' | cat >&2") |& sh("cat") > System.out;
-    sh("echo '(pipe test line 1) should be printed'; echo '(pipe test line 2) should not be printed'") | sh("grep 1") > System.out;
-    sh("echo '(translation test) should sound funny'") | sh("perl -pe 's/(a|e|i|o|u)+/oi/g';") > System.out;
-    System.in | sh("egrep '[0-9]'") > System.out;
-    (1 to 10).map(_.toString) > System.out;
+    sh("sleep 1; echo '(sleep 1 async) prints 2nd'") | System.out;
+    sh("echo '(no sleep async) prints 1st'") | System.out;
+    waitFor(sh("sleep 2; echo '(sleep 2 sync) prints 3rd after pause'") | System.out);
+    sh("echo '(stderr redirect) should show up on stdout' | cat >&2") |& System.out;
+    sh("echo '(stderr redirect) should also show up on stdout' | cat >&2") |& sh("cat") | System.out;
+    sh("echo '(pipe test line 1) should be printed'; echo '(pipe test line 2) should not be printed'") | sh("grep 1") | System.out;
+    sh("echo '(translation test) should sound funny'") | sh("perl -pe 's/(a|e|i|o|u)+/oi/g';") | System.out;
+    System.in | sh("egrep '[0-9]'") | System.out;
+    (1 to 10).map(_.toString) | System.out;
   }
 }
