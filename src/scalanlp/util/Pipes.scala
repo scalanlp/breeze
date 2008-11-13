@@ -68,12 +68,6 @@ object PipeIO {
   }
 }
 
-object PipeProcess {
-  protected sealed abstract case class PipeSource();
-  protected sealed case class PipeProcessPipeSource(process : PipeProcess) extends PipeSource();
-  protected sealed case class InputStreamPipeSource(stream : InputStream) extends PipeSource();
-}
-
 /**
  * A richer Process object used for linking together in pipes.
  * 
@@ -81,10 +75,8 @@ object PipeProcess {
  */
 class PipeProcess(val process : Process)(implicit pipes : Pipes) {
   import PipeIO._
-  import PipeProcess._
 
-  /** which process feeds stding. */
-  protected var source : PipeSource = InputStreamPipeSource(pipes.stdin);
+  /** where stdout and stderr go. */
   protected var out : OutputStream = pipes.stdout;
   protected var err : OutputStream = pipes.stderr;
 
@@ -101,8 +93,6 @@ class PipeProcess(val process : Process)(implicit pipes : Pipes) {
   }
   
   def |  (next : PipeProcess) : PipeProcess = {
-    next.source = PipeProcessPipeSource(this);
-
     // stdout goes to the next process
     this.out = next.process.getOutputStream;
 
@@ -118,8 +108,6 @@ class PipeProcess(val process : Process)(implicit pipes : Pipes) {
   }
 
   def |& (next : PipeProcess) : PipeProcess = {
-    next.source = PipeProcessPipeSource(this);
-
     // stdout and stderr both go to the next process
     this.out = next.process.getOutputStream;
     this.err = next.process.getOutputStream;
@@ -138,8 +126,6 @@ class PipeProcess(val process : Process)(implicit pipes : Pipes) {
 
   /** Redirects the given input stream as the source for the process */
   def <  (instream : InputStream) : PipeProcess = {
-    this.source = InputStreamPipeSource(instream);
-
     spawn {
       val out = process.getOutputStream;
       drain(instream, process.getOutputStream);
@@ -186,7 +172,8 @@ class PipeProcess(val process : Process)(implicit pipes : Pipes) {
     func(process.getInputStream);
   
   /** Reads the lines from this file. */
-  def getLines : Iterator[String] = this | readLines _;
+  def getLines : Iterator[String] =
+    readLines(process.getInputStream);
 }
 
 /**
@@ -202,25 +189,24 @@ class PipeInputStream(var stream : InputStream) {
    * Pipe to an OutputStream.  Returns when all bytes have been
    * written to out.  Does not close out.
    */
-  def |(out : OutputStream) : Unit = {
+  def |(out : OutputStream) : Unit =
     drain(stream, out);
-  }
 
   /**
    * Pipe to Process, returning that Process instance.  Returns
    * immediately.  Spawns a background job to write all bytes
    * from the incoming stream to the process.
    */
-  def |(process : PipeProcess) : PipeProcess = {
+  def |(process : PipeProcess) : PipeProcess =
     process < stream;
-  }
 
   /** Pipes to a function that accepts an InputStream. */
   def |[T](func : (InputStream => T)) : T =
     func(stream);
   
   /** Returns all lines in this Stream. */
-  def getLines : Iterator[String] = readLines(stream);
+  def getLines : Iterator[String] =
+    readLines(stream);
 }
 
 /**
@@ -391,6 +377,8 @@ class Pipes {
  * To get started with a global pipes shell, use:
  * 
  * import scalanlp.util.Pipes.global._
+ * 
+ * And take a look at the example code in the Pipes object's main method.
  */
 object Pipes {
   /** A global instance for easy imports */
