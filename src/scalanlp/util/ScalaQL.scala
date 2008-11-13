@@ -1,4 +1,4 @@
-package scalanlp.scalaql
+package scalanlp.util
 
 /** 
 * Database-like operations on iterators 
