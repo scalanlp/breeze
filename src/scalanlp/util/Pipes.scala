@@ -322,6 +322,9 @@ class Pipes {
   implicit def iPipeInputStream(stream : InputStream) =
     new PipeInputStream(stream);
   
+  implicit def iPipeInputStream(file : File) =
+    new PipeInputStream(file);
+  
   /**
    * Gets a FileInputStream for the given file.  If the filename
    * ends with .gz, automatically wraps the returned stream with
