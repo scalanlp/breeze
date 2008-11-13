@@ -14,11 +14,7 @@ import scala.concurrent.ops._
  * 
  * @author dramage
  */
-object PipeProcess {
-  protected sealed abstract case class PipeSource();
-  protected sealed case class PipeProcessPipeSource(process : PipeProcess) extends PipeSource();
-  protected sealed case class InputStreamPipeSource(stream : InputStream) extends PipeSource();
-
+object PipeIO {
   /**
    * Read all bytes from the given input stream to the given output
    * stream, closing the input stream when finished reading.  Does
@@ -41,6 +37,41 @@ object PipeProcess {
 
     in.close();
   }
+  
+  /**
+   * Reads all lines in the given input stream using Java's
+   * BufferedReader.  The returned lines do not have a trailing
+   * newline character.
+   */
+  def readLines(in : InputStream) : Iterator[String] = {
+    val reader = new java.io.BufferedReader(new java.io.InputStreamReader(in));
+    return new Iterator[String]() {
+      var line = prepare();
+      
+      override def hasNext =
+        line != null;
+      
+      override def next = {
+        val rv = line;
+        line = prepare();
+        rv;
+      }
+      
+      def prepare() = {
+        val rv = reader.readLine();
+        if (rv == null) {
+          reader.close();
+        }
+        rv;
+      }
+    };
+  }
+}
+
+object PipeProcess {
+  protected sealed abstract case class PipeSource();
+  protected sealed case class PipeProcessPipeSource(process : PipeProcess) extends PipeSource();
+  protected sealed case class InputStreamPipeSource(stream : InputStream) extends PipeSource();
 }
 
 /**
@@ -48,28 +79,39 @@ object PipeProcess {
  * 
  * @author dramage
  */
-class PipeProcess(val process : Process) {
+class PipeProcess(val process : Process)(implicit pipes : Pipes) {
+  import PipeIO._
   import PipeProcess._
 
   /** which process feeds stding. */
-  protected var source : PipeSource = InputStreamPipeSource(System.in);
-  protected var stdout : OutputStream = System.out;
-  protected var stderr : OutputStream = System.err;
+  protected var source : PipeSource = InputStreamPipeSource(pipes.stdin);
+  protected var out : OutputStream = pipes.stdout;
+  protected var err : OutputStream = pipes.stderr;
 
   def waitFor : Int = process.waitFor();
 
+  /** Close output pipes (on finish) if they are not stdout and stderr */
+  private def closePipes() {
+      if (out != pipes.stdout && out != pipes.stderr) {
+        out.close();
+      }
+      if (err != pipes.stdout && err != pipes.stderr) {
+        err.close();
+      }
+  }
+  
   def |  (next : PipeProcess) : PipeProcess = {
     next.source = PipeProcessPipeSource(this);
 
     // stdout goes to the next process
-    this.stdout = next.process.getOutputStream;
+    this.out = next.process.getOutputStream;
 
     spawn {
-      val waitForStdin  = future { drain(process.getInputStream, stdout); }
-      val waitForStderr = future { drain(process.getErrorStream, stderr); }
+      val waitForStdin  = future { drain(process.getInputStream, out); }
+      val waitForStderr = future { drain(process.getErrorStream, err); }
 
       waitForStdin();
-      stdout.close();
+      closePipes();
     }
 
     return next;
@@ -79,16 +121,16 @@ class PipeProcess(val process : Process) {
     next.source = PipeProcessPipeSource(this);
 
     // stdout and stderr both go to the next process
-    this.stdout = next.process.getOutputStream;
-    this.stderr = next.process.getOutputStream;
+    this.out = next.process.getOutputStream;
+    this.err = next.process.getOutputStream;
 
     spawn {
-      val waitForStdin  = future { drain(process.getInputStream, stdout); }
-      val waitForStderr = future { drain(process.getErrorStream, stderr); }
+      val waitForStdin  = future { drain(process.getInputStream, out); }
+      val waitForStderr = future { drain(process.getErrorStream, err); }
 
       waitForStdin();
       waitForStderr();
-      stdout.close();
+      closePipes();
     }
 
     return next;
@@ -109,13 +151,14 @@ class PipeProcess(val process : Process) {
 
   /** Redirects output from the process to the given output stream */
   def |  (outstream : OutputStream) : PipeProcess = {
-    this.stdout = outstream;
+    this.out = outstream;
 
     spawn {
-      val waitForStdin  = future { drain(process.getInputStream, stdout); }
-      val waitForStderr = future { drain(process.getErrorStream, stderr); }
+      val waitForStdin  = future { drain(process.getInputStream, out); }
+      val waitForStderr = future { drain(process.getErrorStream, err); }
 
       waitForStdin();
+      closePipes();
     }
 
     return this;
@@ -123,15 +166,16 @@ class PipeProcess(val process : Process) {
 
   /** Redirects stdout and stderr from the process to the given output stream */
   def |& (outstream : OutputStream) : PipeProcess = {
-    this.stdout = outstream;
-    this.stderr = outstream;
+    this.out = outstream;
+    this.err = outstream;
 
     spawn {
-      val waitForStdin  = future { drain(process.getInputStream, stdout); }
-      val waitForStderr = future { drain(process.getErrorStream, stderr); }
+      val waitForStdin  = future { drain(process.getInputStream, out); }
+      val waitForStderr = future { drain(process.getErrorStream, err); }
 
       waitForStdin();
       waitForStderr();
+      closePipes();
     }
 
     return this;
@@ -140,6 +184,9 @@ class PipeProcess(val process : Process) {
   /** Pipes to a function that accepts an InputStream. */
   def |[T](func : (InputStream => T)) : T =
     func(process.getInputStream);
+  
+  /** Reads the lines from this file. */
+  def getLines : Iterator[String] = this | readLines _;
 }
 
 /**
@@ -149,7 +196,7 @@ class PipeProcess(val process : Process) {
  * @author dramage
  */
 class PipeInputStream(var stream : InputStream) {
-  import PipeProcess.drain;
+  import PipeIO._;
 
   /**
    * Pipe to an OutputStream.  Returns when all bytes have been
@@ -171,12 +218,15 @@ class PipeInputStream(var stream : InputStream) {
   /** Pipes to a function that accepts an InputStream. */
   def |[T](func : (InputStream => T)) : T =
     func(stream);
+  
+  /** Returns all lines in this Stream. */
+  def getLines : Iterator[String] = readLines(stream);
 }
 
 /**
  * A pipeable iterator of Strings, to be written as lines to a stream.
  */
-class PipeIterator(lines : Iterator[String])(implicit context : PipesContext) {
+class PipeIterator(lines : Iterator[String])(implicit pipes : Pipes) {
   /**
    * Writes all lines to the given process.  Returns immediately.
    */
@@ -197,44 +247,51 @@ class PipeIterator(lines : Iterator[String])(implicit context : PipesContext) {
       ps.println(line);
     }
     
-    if (!(outstream == Pipes.stdout || outstream == Pipes.stderr)) {
+    if (!(outstream == pipes.stdout || outstream == pipes.stderr)) {
       ps.close;
     }
   }
 }
 
 /**
- * Conext for pipes, holds current working directory
+ * Runtime exception thrown by the Pipes framework.
  * 
  * @author dramage
  */
-class PipesContext {
-  var cwd : File = new File(new File("").getAbsolutePath);
-  var stdout : OutputStream = java.lang.System.out;
-  var stderr : OutputStream = java.lang.System.err;
-  var stdin  : InputStream  = java.lang.System.in;
-}
-
-/**
- * Runtime exception thrown by the Pipes framework.
- */
 class PipesException(message : String) extends RuntimeException(message);
+
 
 /**
  * Utilities for executing shell scripts, etc.
  * 
+ * To get started with a global pipes shell, use:
+ * 
+ * import scalanlp.util.Pipes.global._
+ * 
  * @author dramage
  */
-object Pipes {
-  implicit val _context = new PipesContext();
+class Pipes {
+  private var _cwd : File = new File(new File("").getAbsolutePath);
+  private var _stdout : OutputStream = java.lang.System.out;
+  private var _stderr : OutputStream = java.lang.System.err;
+  private var _stdin  : InputStream  = java.lang.System.in;
+
+  /** Returns the default stdout used in this context. */
+  def stdout = _stdout;
   
-  def stdout(implicit context : PipesContext) = context.stdout;
-  def stderr(implicit context : PipesContext) = context.stderr;
-  def stdin(implicit context : PipesContext)  = context.stdin;
+  /** Returns the default stderr used in this context. */
+  def stderr = _stderr;
   
-  def sh(command : String)(implicit context : PipesContext) : java.lang.Process = {
+  /** Returns the default stdin used in this context. */
+  def stdin  = _stdin;
+  
+  /**
+   * Runs the given command (via the system command shell if found)
+   * in the current directory.
+   */
+  def sh(command : String) : java.lang.Process = {
     val os = System.getProperty("os.name");
-    val pb = new ProcessBuilder().directory(context.cwd);
+    val pb = new ProcessBuilder().directory(_cwd);
     
     if (os == "Windows 95" || os == "Windows 98" || os == "Windows ME") {
       pb.command("command.exe", "/C", command);
@@ -247,14 +304,15 @@ object Pipes {
     return pb.start();
   }
 
-  private def error(message : String) : Unit = {
-    throw new PipesException(message);
-  }
+  /**
+   * Returns the current working directory.
+   */
+  def pwd : File = _cwd;
 
-  def pwd(implicit context : PipesContext) : File =
-    context.cwd;
-
-  def cd(folder : File)(implicit context : PipesContext) = {
+  /**
+   * Changes to the given directory.
+   */
+  def cd(folder : File) = {
     if (!folder.exists) {
       error("Folder "+folder+" does not exist.");
     } else if (!folder.isDirectory) {
@@ -262,17 +320,10 @@ object Pipes {
     } else if (!folder.canRead) {
       error("Cannot access folder "+folder);
     }
-    context.cwd = folder;
-  }
-
-  def cd(folder : String)(implicit context : PipesContext) : Unit = {
-    if (!folder.startsWith(java.io.File.pathSeparator)) {
-      cd(new File(context.cwd,folder))(context);
-    } else {
-      cd(new File(folder))(context);
-    }
+    _cwd = folder;
   }
   
+  /** Waits for the tiven process to finish. */
   def waitFor(process : PipeProcess) = process.waitFor;
 
   //
@@ -280,7 +331,7 @@ object Pipes {
   //
   
   implicit def iPipeProcess(process : Process) =
-    new PipeProcess(process);
+    new PipeProcess(process)(this);
   
   implicit def iPipeInputStream(stream : InputStream) =
     new PipeInputStream(stream);
@@ -313,23 +364,58 @@ object Pipes {
     }
   }
   
-  implicit def File(path : String) = new java.io.File(path);
+  /**
+   * Returns a file with the given name, relative to the current
+   * directory (if found and path does not start with 
+   */
+  implicit def File(path : String) : File = {
+    if (!path.startsWith(java.io.File.pathSeparator)) {
+      new File(_cwd,path);
+    } else {
+      new File(path);
+    }
+  }
   
-  implicit def iPipeIterator[E](lines : Iterator[E])(implicit context : PipesContext) =
-    new PipeIterator(lines.map(_.toString))(context);
+  implicit def iPipeIterator[E](lines : Iterator[E]) =
+    new PipeIterator(lines.map(_.toString))(this);
   
-  implicit def iPipeIterator[E](lines : Iterable[E])(implicit context : PipesContext) =
-    new PipeIterator(lines.elements.map(_.toString))(context);
+  implicit def iPipeIterator[E](lines : Iterable[E]) =
+    new PipeIterator(lines.elements.map(_.toString))(this);
+  
+  private def error(message : String) : Unit = {
+    throw new PipesException(message);
+  }
+}
+  
+/**
+ * To get started with a global pipes shell, use:
+ * 
+ * import scalanlp.util.Pipes.global._
+ */
+object Pipes {
+  /** A global instance for easy imports */
+  val global = new Pipes();
+  
+  def apply() = {
+    new Pipes();
+  }
   
   def main(argv : Array[String]) {
-    sh("sleep 1; echo '(sleep 1 async) prints 2nd'") | System.out;
-    sh("echo '(no sleep async) prints 1st'") | System.out;
-    waitFor(sh("sleep 2; echo '(sleep 2 sync) prints 3rd after pause'") | System.out);
-    sh("echo '(stderr redirect) should show up on stdout' | cat >&2") |& System.out;
-    sh("echo '(stderr redirect) should also show up on stdout' | cat >&2") |& sh("cat") | System.out;
-    sh("echo '(pipe test line 1) should be printed'; echo '(pipe test line 2) should not be printed'") | sh("grep 1") | System.out;
-    sh("echo '(translation test) should sound funny'") | sh("perl -pe 's/(a|e|i|o|u)+/oi/g';") | System.out;
-    System.in | sh("egrep '[0-9]'") | System.out;
-    (1 to 10).map(_.toString) | System.out;
+    import global._;
+    
+    sh("sleep 1; echo '(sleep 1 async) prints 2nd'") | stdout;
+    sh("echo '(no sleep async) prints 1st'") | stdout;
+    waitFor(sh("sleep 2; echo '(sleep 2 sync) prints 3rd after pause'") | stdout);
+    sh("echo '(stderr redirect) should show up on stdout' | cat >&2") |& stdout;
+    sh("echo '(stderr redirect) should also show up on stdout' | cat >&2") |& sh("cat") | stdout;
+    sh("echo '(pipe test line 1) should be printed'; echo '(pipe test line 2) should not be printed'") | sh("grep 1") | stdout;
+    sh("echo '(translation test) should sound funny'") | sh("perl -pe 's/(a|e|i|o|u)+/oi/g';") | stdout;
+    stdin | sh("egrep '[0-9]'") | stdout;
+    
+    (1 to 10).map(_.toString) | stdout;
+    
+    for (line <- sh("ls").getLines) {
+      println(line.toUpperCase);
+    }
   }
 }
