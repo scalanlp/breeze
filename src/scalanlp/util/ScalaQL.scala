@@ -21,7 +21,7 @@ object ScalaQL {
    * Returns the next group of elements from A and B that are all equivalent
    * with eachother.
    */
-  def nextGroup[A,B](iterA : BufferedIterator.Advanced[A], iterB : BufferedIterator.Advanced[B], compare : ((A,B) => Int)) : (List[A],List[B]) = {
+  def nextGroup[A,B](iterA : BufferedIterator.Advanced[A], iterB : BufferedIterator.Advanced[B])(compare : ((A,B) => Int)) : (List[A],List[B]) = {
     if (!iterA.hasNext && !iterB.hasNext) {
       // neither iterator has more elements
       throw new IllegalAccessException("Both iterators empty");
@@ -70,23 +70,60 @@ object ScalaQL {
    * Returns an iterator over groups of consecutive elements in iterA and iterB
    * that are equal to eachother according to the given comparator.
    */
-  def groups[A,B](iterA : Iterator[A], iterB : Iterator[B], compare : ((A,B) => Int)) : Iterator[(List[A],List[B])] = {
+  def groups[A,B](iterA : Iterator[A], iterB : Iterator[B])(compare : ((A,B) => Int)) : Iterator[(List[A],List[B])] = {
     val _iterA = iterA.buffered.advanced;
     val _iterB = iterB.buffered.advanced;
     
     new Iterator[(List[A],List[B])] {
       override def hasNext = _iterA.hasNext || _iterB.hasNext;
-      override def next = nextGroup(_iterA, _iterB, compare);
+      override def next = nextGroup(_iterA, _iterB)(compare);
     }
   }
   
-  def joinInner[A,B](iterA : Iterator[A], iterB : Iterator[B], compare : ((A,B) => Int)) : Iterator[(A,B)] = {
-    for (group <- groups(iterA, iterB, compare); a <- group._1.elements; b <- group._2.elements)
+  def joinInner[A,B](iterA : Iterator[A], iterB : Iterator[B])(compare : ((A,B) => Int)) : Iterator[(A,B)] = {
+    for (group <- groups(iterA, iterB)(compare); a <- group._1.elements; b <- group._2.elements)
       yield (a,b);
+  }
+  
+  /**
+   * Merges (ordered) iterators by returning the lesser element at the
+   * head of each, according to the given comparator.  Ties go to the element
+   * from the first iterator.
+   */
+  def merge[T](iters : Iterator[T]*)(compare : ((T,T) => Int)) : Iterator[T] =
+    new Iterator[T] {
+      /** Keep track of the top of each list. */
+      val heads = iters.map(get _).toArray;
+
+      /** The merged iterator has more if any head is not None. */
+      override def hasNext : Boolean =
+        heads.map(_ != None).reduceLeft(_ || _);
+      
+      /** Return the smallest element that is currently a list head. */
+      override def next : T = {
+        val top = heads.zipWithIndex.foldLeft((None.asInstanceOf[Option[T]],-1)) {
+          (headA : (Option[T],Int), headB : (Option[T],Int)) =>
+            (headA, headB) match {
+              case ((Some(a),i), (Some(b),j)) => if (compare(a,b) <= 0) headA else headB;
+              case ((Some(a),i), (None,j))    => headA;
+              case ((None,i), (Some(b),j))    => headB;
+              case ((None,i), (None,j))       => headA;
+              case x:Any => throw new IllegalStateException(x.toString);
+              }
+            }
+        
+        // update the top list and return its value
+        heads(top._2) = get(iters(top._2));
+        return top._1.get;
+      }
+      
+      def get(iter : Iterator[T]) : Option[T] =
+        if (iter.hasNext) Some(iter.next) else None;
   }
   
   def main(argv : Array[String]) {
     def compare(a:Int,b:Int) = a.compare(b);
-    groups(List(-1,0,1,2,3,4,6).elements, List(0,1,2,2,2,2,4,5,6).elements, compare).foreach(println)
+    groups(List(-1,0,1,2,3,4,6).elements, List(0,1,2,2,2,2,4,5,6).elements)(compare).foreach(println)
+    println(merge(List(0,2,3).elements,List(1,1,3).elements,List(-1,5).elements)(compare).mkString(" "))
   }
 }

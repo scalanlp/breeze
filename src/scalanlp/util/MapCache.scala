@@ -1,14 +1,9 @@
 package scalanlp.util
 
 import java.lang.ref.SoftReference;
-import java.util.AbstractMap;
-import java.util.AbstractSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.WeakHashMap;
 
-import JavaCollections._;
+import scala.collection.mutable.Map;
+
 
 /**
  * Provides a cache where both keys and values are only weakly referenced
@@ -19,60 +14,87 @@ import JavaCollections._;
  * 
  * @author dramage
  */
-class MapCache[K,V] extends AbstractMap[K,V] {
-  
-  def getOrNull[V](reference : SoftReference[V]) : V = {
-    if (reference != null) reference.get() else null.asInstanceOf[V];
-  }
+class MapCache[K,V] extends Map[K,V] {
   
   /** cache of values */
-  private val map = new WeakHashMap[K, SoftReference[V]]();
+  protected val inner =
+    new java.util.HashMap[HashableSoftReference, SoftReference[Option[V]]];
 
-  /** Clears this map. */
-  override def clear = map.clear();
+  /** queue of objects to remove */
+  protected val removalQueue =
+    new scala.collection.mutable.Queue[HashableSoftReference];
 
-  /**
-   * Returns true if a non-null value is associated with the given key
-   * (and has not yet been garbage collected).
-   */
-  override def containsKey(key : AnyRef) : Boolean =
-    getOrNull(map.get(key)) != null;
-
-  /**
-   * Returns true if the given non-null value is present in the map.
-   */
-  override def containsValue(value : AnyRef) : Boolean = {
-    if (value == null) {
-      throw new IllegalArgumentException("SoftCache does not support null values");
+  /** Removes all objects in the removal queue */
+  protected def dequeue() = {
+    while (!removalQueue.isEmpty) {
+      inner.remove(removalQueue.dequeue);
     }
-    
-    for (valRef <- map.values()) {
-      if (valRef.get() != null && value.equals(valRef.get())) {
-        return true;
+  }
+  
+  /**
+   * Resolves the soft reference, returning None if the reference
+   * has dissappeared or Some(value) or Some(null) depending on whether
+   * null was the stored value.
+   */
+  private def resolve(key : K, ref : SoftReference[Option[V]]) : Option[V] = {
+    val got = ref.get;
+    if (ref.get == null) {
+      // value has been gc'd, free key
+      inner.remove(new HashableSoftReference(key));
+      None
+    } else {
+      got match {
+        case Some(value) => Some(value);
+        case None        => Some(null.asInstanceOf[V]);
       }
     }
-    return false;
+  }
+  
+  override def clear = {
+    dequeue();
+    removalQueue.clear;
+    inner.clear();
   }
 
+  override def contains(key : K) = {
+    dequeue();
+    inner.containsKey(new HashableSoftReference(key));
+  }
+  
   /**
    * Returns the value currently associated with the given key if one
    * has been set with put and not been subsequently garbage collected.
    */
-  override def get(key : Any) : V = getOrNull(map.get(key));
+  override def get(key : K) : Option[V] = {
+    dequeue();
+    val ref = inner.get(new HashableSoftReference(key));
+    if (ref != null) {
+      resolve(key, ref);
+    } else {
+      None;
+    }
+  };
 
   /**
-   * Returns true if the map is empty.  Note that some values may have
-   * been garbage collected resulting in effectively empty maps still
-   * returning true.
+   * Returns the expected size of the cache.  Note that this may over-report
+   * as objects may have been garbage collected.
    */
-  override def isEmpty() = map.isEmpty();
-
+  override def size() : Int = {
+    dequeue();
+    inner.size;
+  }
+  
   /**
-   * Returns the set of keys currently in this map -- some keys
-   * may reference values that have been garbage collected, so
-   * callers should be sure to re-check the value of a call to get.
+   * Iterates the elements of the cache that are currently present.
    */
-  override def keySet() = map.keySet();
+  override def elements : Iterator[(K,V)] = {
+    dequeue();
+    for (pair <- JavaCollections.iScalaIterator(inner.entrySet.iterator);
+         val k = pair.getKey.get;
+         val v = resolve(k, pair.getValue);
+         if k != null && v != None)
+      yield (k, v.asInstanceOf[Some[V]].get);
+  }
 
   /**
    * Associates the given key with a weak reference to the given value.
@@ -80,72 +102,48 @@ class MapCache[K,V] extends AbstractMap[K,V] {
    * Returns the previously associated value or null if none was
    * associated. Value must be non-null.
    */
-  override def put(key : K, value : V) : V = {
-    if (value == null) {
-      throw new IllegalArgumentException("WeakCache does not support null values");
-    }
-    return getOrNull(map.put(key, new SoftReference[V](value)));
+  override def update(key : K, value : V) : Unit = {
+    dequeue();
+    inner.put(new HashableSoftReference(key), new SoftReference(Some(value)));
   }
 
   /**
    * Removes the given key from the map.
    */
-  override def remove(key : Any) : V = getOrNull(map.remove(key));
+  override def -=(key : K) : Unit = {
+    dequeue();
+    inner.remove(new HashableSoftReference(key));
+  }
 
   /**
-   * Returns the expected size of the cache.  Note that this may over-report
-   * as objects may have been garbage collected.
+   * A SoftReference with equality and hashcode based on the underlying
+   * object.  Automatically removes itself from the containing map if the
+   * reference has been gc'd.
+   * 
+   * @author dramage
    */
-  override def size() : Int = map.size;
-	
-  /**
-   * Returns an immutable set of entries backed by this cache.  Attempts
-   * to modify or remove values in this map will fail.
-   */
-  override def entrySet() : Set[Map.Entry[K,V]] = {
-    return new AbstractSet[Map.Entry[K,V]]() {
-      override def iterator() : Iterator[Map.Entry[K,V]] = {
-        return new Iterator[Map.Entry[K,V]]() {
-          val _iter = map.entrySet().iterator();
-          var _next = prepare();
-          
-          override def hasNext() = _next != null;
-
-          override def next() : Map.Entry[K,V] = {
-            val rv = _next;
-            _next = prepare();
-            return rv;
-          }
-
-          // we would need to call iterator.remove() on the *previous* entry
-          // in iterator, because iterator has already advanced in prepare()
-          override def remove() =
-            throw new UnsupportedOperationException("Cannot remove from" +
-            		" iterator on a SoftCache because of map consistency issues.");
-          
-          def prepare() : Map.Entry[K,V] = {
-            while (_iter.hasNext) {
-              val ref = _iter.next();
-              val value : V = getOrNull(ref.getValue());
-              if (value != null) {
-                return new Map.Entry[K,V]() {
-                  override def getKey = ref.getKey;
-                  override def getValue = value;
-                  override def setValue(value : V) =
-                    getOrNull(ref.setValue(new SoftReference[V](value)));
-                  }
-                }
-              }
-            return null;
-          }
-        };
+  class HashableSoftReference(key : K) extends SoftReference[K](key) {
+    val hash = key.hashCode;
+    var removing = false;
+    
+    override def get = {
+      val got = super.get;
+      if (!removing && got == null) {
+        removing = true;
+        MapCache.this.removalQueue += this;
       }
-
-      /**
-       * Returns a possibly tight (over-)estimate of the number of entries
-       * in the map.
-       */
-      override def size() = map.size();
-    };
+      got;
+    }
+    
+    override def hashCode = hash;
+    
+    override def equals(other : Any) = {
+      if (other.isInstanceOf[HashableSoftReference]) {
+        val otherref = other.asInstanceOf[HashableSoftReference];
+        (this eq otherref) || (this.get == otherref.get);
+      } else {
+        false;
+      }
+    }
   }
 }
