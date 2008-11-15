@@ -12,7 +12,7 @@ package scalanlp.util
 object Memoize {
   /** Function that creates a new cache */
   private def createCache[K,V]() =
-    scala.collection.jcl.Conversions.convertMap(new MapCache[K,Option[V]]());
+    new MapCache[K,Option[V]]();
   
   /**
    * Returns a memoized version of the given 1-arg input function,
@@ -31,15 +31,11 @@ object Memoize {
     
     // returns a function that checks the cache
     return ((arg1:A1) => {
-      if (cache.contains(arg1)) {
-        val cached = cache(arg1);
-        if (cached == null) {
-          fresh(arg1);
-        } else {
-          cached match {
-            case Some(x) => x;
-            case None => null.asInstanceOf[V];
-          }
+      val cached = cache.get(arg1);
+      if (cached != null) {
+        cached match {
+          case Some(x) => x;
+          case None => null.asInstanceOf[V];
         }
       } else {
         fresh(arg1);
@@ -64,15 +60,11 @@ object Memoize {
     
     // returns a function that checks the cache
     return ((arg1:A1, arg2:A2) => {
-      if (cache.contains((arg1,arg2))) {
-        val cached = cache((arg1,arg2));
-        if (cached == null) {
-          fresh(arg1,arg2);
-        } else {
-          cached match {
-            case Some(x) => x;
-            case None => null.asInstanceOf[V];
-          }
+      val cached = cache.get(arg1);
+      if (cached != null) {
+        cached match {
+          case Some(x) => x;
+          case None => null.asInstanceOf[V];
         }
       } else {
         fresh(arg1,arg2);
