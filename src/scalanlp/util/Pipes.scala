@@ -36,11 +36,20 @@ class Pipes {
   /** Returns the default stdout used in this context. */
   def stdout = _stdout;
   
+  /** Sets the default stdout used in this context. */
+  def stdout(stream : OutputStream) : Unit = _stdout = stream;
+  
   /** Returns the default stderr used in this context. */
   def stderr = _stderr;
   
+  /** Sets the default stderr used in this context. */
+  def stderr(stream : OutputStream) : Unit = _stderr = stream;
+  
   /** Returns the default stdin used in this context. */
   def stdin  = _stdin;
+  
+  /** Sets the default stdin used in this context. */
+  def stderr(stream : InputStream) : Unit = _stdin = stream;
   
   /**
    * Runs the given command (via the system command shell if found)
