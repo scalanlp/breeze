@@ -31,6 +31,7 @@ class Index[T] extends (T=>Int) {
   def clear() = synchronized { indices.clear(); }
   def size = indices.size;
 
+  def indexAll(c : Iterator[T]) = c map apply
   def indexAll(c : Iterable[T]) = c map apply
   def indexAll(c : Collection[T]) = c map apply
   def indexAll(c : List[T]) = c map apply
