@@ -138,7 +138,7 @@ class Pipes {
    * directory (if found and path does not start with 
    */
   implicit def File(path : String) : File = {
-    if (!path.startsWith(java.io.File.pathSeparator)) {
+    if (!path.startsWith(java.io.File.separator)) {
       new File(_cwd,path);
     } else {
       new File(path);
