@@ -21,7 +21,13 @@
 
   <!-- 4. Define scala compiler command. -->
 
-  <taskdef resource="scala/tools/ant/antlib.xml"/>
+  <taskdef resource="scala/tools/ant/antlib.xml">
+    <classpath>
+      <pathelement location="${env.SCALA_HOME}/lib/scala-compiler.jar"  />
+      <pathelement location="${env.SCALA_HOME}/lib/scala-library.jar" />
+    </classpath>
+  </taskdef>
+
   <!-- 5. Compiles sources by using "scalac" command. -->
 
   <target name="compile">

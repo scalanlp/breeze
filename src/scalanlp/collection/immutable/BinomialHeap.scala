@@ -1,38 +1,40 @@
 package scalanlp.collection.immutable;
 
-import  scala.collection.mutable.Stack; // For iterator
+import util.ScalaQL;
 
 /**
 * From Okasaki's Functional Data Structures. Represents a functional heap
 */
 @serializable
-class BinomialHeap[T<%Ordered[T]] {
+class BinomialHeap[T<%Ordered[T]] extends Collection[T] {
   import BinomialHeap._;
   protected val trees: List[Node[T]] = Nil;
+  val size = 0;
 
-  def +(x : T) = mkHeap(insertTree(Node(0,x,Nil),trees));
+  def +(x : T) = mkHeap(insertTree(Node(0,x,Nil),trees),size+1);
   private def insertTree(n : Node[T], t : List[Node[T]]) : List[Node[T]] = {
-    println(n + " " + t);
     if (t.isEmpty) List(n);
     else if(n.rank < t.head.rank) n :: t;
     else insertTree( n.link(t.head),t.tail);
   }
 
-  def ++(other : BinomialHeap[T]) = mkHeap(merge(trees,other.trees));
-  // TODO: make tail recursive
-  private def merge(l1 : List[Node[T]], l2 : List[Node[T]]) : List[Node[T]] = (l1,l2) match {
-    case (Nil,l2) => l2;
-    case (l1,Nil) => l1
+  def ++(other : BinomialHeap[T]) = mkHeap(merge(trees,other.trees,Nil),size + other.size);
+  // TODO: make somewhat tail recursive
+  private def merge(l1 : List[Node[T]], l2 : List[Node[T]], acc : List[Node[T]]) : List[Node[T]] = (l1,l2) match {
+    case (Nil,l2) => acc.reverse ++ l2;
+    case (l1,Nil) => acc.reverse ++ l1
     case (n1 :: r1 , n2 :: r2 )  => 
-      if(n1.rank < n2.rank) n1 :: merge(r1,l2)
-      else if (n2.rank < n1.rank) n2 :: merge(l1,r2);
-      else insertTree(n1 link n2, merge(r1,r2));
+      if(n1.rank < n2.rank) merge(r1,l2, n1 :: acc)
+      else if (n2.rank < n1.rank) merge(l1,r2, n2 :: acc);
+      else insertTree(n1 link n2, merge(r1,r2,acc));
   }
 
   def ++(other: Iterator[T]): BinomialHeap[T] = other.foldLeft(this)(_+_);
   def ++(other: Iterable[T]): BinomialHeap[T] = this ++ other.elements
 
-  lazy val min = if(trees.isEmpty) None else Some(findMin(trees));
+  def min = get.get;
+
+  lazy val get = if(trees.isEmpty) None else Some(findMin(trees));
   private def findMin(trees : List[Node[T]]): T = {
     trees match {
       case (t :: Nil) => t.x
@@ -44,9 +46,9 @@ class BinomialHeap[T<%Ordered[T]] {
     }
   }
 
-  def deleteMin() = {
+  def delMin() = {
     if(trees.isEmpty) this;
-    else mkHeap {
+    else {
       def getMin(t : List[Node[T]]) : (Node[T],List[Node[T]]) = t match {
         case (n :: Nil) => (n,Nil);
         case (n :: ts) => {
@@ -56,22 +58,16 @@ class BinomialHeap[T<%Ordered[T]] {
         case _ => throw new IllegalArgumentException("Shouldn't get Nil!");
       }
       val (Node(_,x,t1),t2) = getMin(trees);
-      merge(t1.reverse,t2);
+      merge(t1.reverse,t2,Nil);
+      mkHeap (merge(t1.reverse,t2,Nil), size -1);
     }
   }
 
-  def debug = trees.toString;
+  private val comp = {(x : T, y :T) => x compare y}
+  def elements :Iterator[T] = ScalaQL.merge( (trees map treeIterator):_*)(comp) 
 
-  def elements = new Iterator[T] { 
-    private var state = trees.elements;
-    def next : T = {
-      val n = state.next;
-      n.children match {
-        case Nil => n.x; 
-        case s => state = state ++ s.elements; n.x;
-      }
-    }
-    def hasNext = state.hasNext;
+  private def treeIterator(n : Node[T]) : Iterator[T] = {
+    ScalaQL.merge((Iterator.single(n.x) :: (n.children map treeIterator)):_*)(comp);
   }
 
   override def toString() = elements.mkString("Heap(",",",")");
@@ -80,7 +76,7 @@ class BinomialHeap[T<%Ordered[T]] {
 object BinomialHeap {
   private case class Node[T<%Ordered[T]](rank : Int, x : T, children: List[Node[T]]) {
     def link(n :Node[T]) = {
-      if(x <= n.x) Node(rank+1,x,n::children) else Node(rank+1,n.x,this :: n.children)
+      if(x <= n.x) Node(rank+1,x,n :: children) else Node(rank+1,n.x,this :: n.children)
     }
   }
 
@@ -88,7 +84,10 @@ object BinomialHeap {
     override val trees = Nil;
   }
 
-  private def mkHeap[T<%Ordered[T]](ns : List[Node[T]]) = new BinomialHeap[T] {
+  private def mkHeap[T<%Ordered[T]](ns : List[Node[T]],sz : Int) = new BinomialHeap[T] {
     override val trees = ns;
+    override val size = sz;
   }
+
+  def apply[T<%Ordered[T]](t:T*) = empty[T] ++ t;
 }
