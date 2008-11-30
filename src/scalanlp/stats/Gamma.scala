@@ -3,11 +3,13 @@ import scalanlp.math.Numerics;
 
 
 /**
- * Represents a Gamma distribution
+ * Represents a Gamma distribution.
  * E[X] = shape * scale
+ *
+ * @author dlwh
  */
-// Stolen from javanlp, which was stolen froma Teh 
-class Gamma(shape : Double, scale : Double) extends Distribution[Double] {
+// Stolen from javanlp, which was stolen from Teh 
+class Gamma(val shape : Double, val scale : Double) extends Distribution[Double] {
   if(shape <= 0.0 || scale <= 0.0)
     throw new IllegalArgumentException("Shape and scale must be positive");
 
@@ -67,4 +69,33 @@ class Gamma(shape : Double, scale : Double) extends Distribution[Double] {
     }
   }
 
+}
+
+object Gamma {
+  type PoissonPosterior = Gamma with PoissonPrior;
+  trait PoissonPrior extends ConjugatePrior[Double,Int] { self: Gamma =>
+    // negative binomial distribution
+    def predictive() = new Distribution[Int] {
+      def get() = {
+        new Poisson(self.get).get
+      }
+
+      def probabilityOf(k :Int) = Math.exp(logProbabilityOf(k));
+      private val p = 1. / (1. + scale);
+      override def logProbabilityOf(k:Int) = {
+        import math.Numerics._;
+        import Math._;
+        lgamma(shape + k) - lgamma(k) - lgamma(shape) + shape * log(p) + k * log(1-p);
+      }
+    }
+
+    def posterior(ev: Iterator[(Int,Double)]) : PoissonPosterior = {
+      val (tot,count) = ev.foldLeft( (0.0,0.0) ) { (tup,d) =>
+        (tup._1 + d._1 * d._2, tup._2 +  d._2)
+      }
+      new Gamma(shape + tot, 1/(1/scale + count)) with PoissonPrior;
+    }
+
+    override def posterior(ev:Iterable[(Int,Double)]) : PoissonPosterior = posterior(ev.elements);
+  }
 }
