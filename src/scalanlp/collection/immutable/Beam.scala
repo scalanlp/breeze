@@ -6,14 +6,20 @@ class Beam[T](val maxSize:Int, xs : T*)(implicit o : T=>Ordered[T]) { outer =>
   assert(maxSize >= 0)
   val heap = trim(BinomialHeap(xs:_*));
 
-  def size = heap.size;
+  val size = heap.size;
 
   private def trim(h2 : BinomialHeap[T]) = {
     var h = h2;
     while(h.size > maxSize) {
-      h = h.delMin; 
+      h = h.delMin;
     }
     h
+  }
+
+  private def cat(h : BinomialHeap[T], x : T) = {
+    if(h.size < maxSize) h + x;
+    else if (h.min < x) h.delMin + x;
+    else h;
   }
 
   def map[U<%Ordered[U]](f: T=>U) = new Beam[U](maxSize) { 
@@ -39,6 +45,15 @@ class Beam[T](val maxSize:Int, xs : T*)(implicit o : T=>Ordered[T]) { outer =>
   def filter(f : T=>Boolean) = new Beam[T](maxSize) {
     override val heap = BinomialHeap[T]() ++ outer.heap.filter(f);
   }
+
+
+  def +(x:T) = new Beam[T](maxSize) {
+    override val heap = cat(outer.heap,x);
+  }
+  def ++(x:Iterator[T]) : Beam[T] = new Beam[T](maxSize) {
+    override val heap = x.foldLeft(outer.heap)(cat);
+  }
+  def ++(x:Iterable[T]) : Beam[T] = {this ++ x.elements;}
 
   private def reverseOrder[U](o : U=>Ordered[U]) = {x : U =>
     val oReal = o(x);
