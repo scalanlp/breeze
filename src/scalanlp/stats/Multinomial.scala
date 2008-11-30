@@ -8,7 +8,7 @@ import scalanlp.util.Log;
  * Represents a multinomial Distribution over elements.
  */
 trait Multinomial[T] extends Distribution[T] {
-  def components() : Iterator[T];
+  protected def components : scala.collection.Map[T,Double];
   protected def total : Double;
 
   def get = {
@@ -16,12 +16,13 @@ trait Multinomial[T] extends Distribution[T] {
     if(prob.isNaN) {
       Log(Log.ERROR)("You got a NaN!");
     }
-    val elems = components();
-    var e = elems.next;
-    prob  = prob - unnormalizedProbabilityOf(e);
+    val elems = components.elements;
+    var (e,w) = elems.next;
+    prob  = prob - w;
     while(prob > 0) {
-      e  = elems.next;
-      prob = prob - (unnormalizedProbabilityOf(e));
+      val t  = elems.next;
+      e = t._1;
+      prob = prob - t._2;
     }
     e
   }
@@ -30,13 +31,15 @@ trait Multinomial[T] extends Distribution[T] {
    * Returns a Multinomial(x) \propto  this(x) * that(x);
    */
   def *[U>:T](that : Multinomial[U]) = {
-    val c :DoubleCounter[U] = aggregate(that.components.map(x => (x,that.probabilityOf(x))))
-    for(x <- components
-      if c.keys contains x;
-      p = probabilityOf(x))
-        c(x) *= p;
+    val c :DoubleCounter[U] = aggregate(that.components);
+    for((x,w) <- components
+      if c.get(x) != None)
+        c(x) *= w/ (c.total * total);
     Multinomial(c);    
   }
+
+  def probabilityOf(e : T) = components.apply(e) / total;
+  override def unnormalizedProbabilityOf(e:T) = components.apply(e);
 }
 
 /** 
@@ -52,9 +55,7 @@ object Multinomial {
   def apply[T](c : DoubleCounter[T])  = new Multinomial[T] {
     def total = c.total;
     if(total.isNaN || total <= 0.) throw new IllegalArgumentException("total is " + total);
-    def components = c.keys;
-    def probabilityOf(t : T) = c(t)/c.total();
-    override def unnormalizedProbabilityOf(t: T) = c(t);
+    protected def components = c;
   }
 
   /**
@@ -73,9 +74,11 @@ object Multinomial {
    * Takes the total for speed.
    */
   def apply(arr : Array[Double], t: Double) = new Multinomial[Int] {
-    def components = (0 until arr.length ). elements;
+    def components = new scala.collection.Map[Int,Double] {
+      def elements = arr.elements.zipWithIndex.map{ case (x,y) => (y,x)}
+      def get(x : Int) = if(x < arr.length) Some(arr(x)) else None;
+      def size = arr.length;
+    }
     def total = t;
-    def probabilityOf(x : Int) = arr(x)/t
-    override def unnormalizedProbabilityOf(x: Int) = arr(x);
   }
 }
