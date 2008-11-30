@@ -29,11 +29,12 @@ class PitmanYorProcess(val theta: Double, val alpha:Double) extends Distribution
       case -1 => c += 1; c;
       case x => x;
     }
-    if(drawn.get(d) == None) {
+
+    if(drawn.get(d) == None)
       drawn.incrementCount(d,1.0-alpha);
-    } else {
+    else
       drawn.incrementCount(d,1.0);
-    }
+
     drawn.incrementCount(-1,alpha);
     d   
   }
@@ -46,12 +47,27 @@ class PitmanYorProcess(val theta: Double, val alpha:Double) extends Distribution
     }
   }
 
-  def probabilityOfUnobserved() = drawn(-1);
+  def probabilityOfUnobserved() = drawn(-1) / drawn.total;
 
   def observe(c: IntCounter[Int]) {
     for( (k,v) <- c) {
       if(k < 0) throw new IllegalArgumentException(k + " is not a valid draw from the PitmanYorProcess");
-      drawn.incrementCount(k,v);
+
+      observeOne(k,v);
+    }
+  }
+
+  private def observeOne(k : Int, v: Int) {
+    val newCount = drawn(k) + v;
+
+    if (Math.abs(newCount - v) <= 1E-4) {
+      drawn.incrementCount(k,newCount - alpha);
+      drawn.incrementCount(-1,-alpha);
+    } else if( newCount + alpha <= 1E-4) {
+      drawn -= k;
+      drawn.incrementCount(-1,v * alpha);
+    } else {
+      drawn(k) = newCount;
     }
   }
 
@@ -71,4 +87,14 @@ class PitmanYorProcess(val theta: Double, val alpha:Double) extends Distribution
       getWithCounter(c2);
     }
   }
+
+  override def toString() = {
+    "PY(" + alpha + "," + theta + ")";
+  }
+
+  def debugString() = {
+    val str = drawn.elements.filter(_._1 != -1).map(kv => kv._1 + " -> " + kv._2).mkString("draws = (", ", ", ")");
+    toString + "\n{newClass=" + drawn(-1) + ", " + str + "}";
+  }
+
 }
