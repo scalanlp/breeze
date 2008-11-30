@@ -2,9 +2,15 @@ package scalanlp.stats;
 
 import scalanlp.counters.ints.Int2DoubleCounter;
 import scalanlp.counters._;
+import scalanlp.counters.Counters._;
 
 /**
-* CRP over the non-negative integers.
+* Models the CRP over the non-negative integers. 
+*
+* @param theta the prior probability of a new class
+* @param alpha the amount of discounting to current draws.
+*
+* @author dlwh
 */
 class PitmanYorProcess(val theta: Double, val alpha:Double) extends Distribution[Int] {
   def this(theta: Double) = this(theta,0.0);
@@ -49,6 +55,13 @@ class PitmanYorProcess(val theta: Double, val alpha:Double) extends Distribution
     }
   }
 
+  def observe(t : Int*) { observe(count(t))}
+  def unobserve(t: Int*) {
+    val c = count(t);
+    c.transform { (k,v) => v * -1};
+    observe(c);
+  }
+
   def withLikelihood(p : Option[Int]=>Double) = new Rand[Int] {
     def get = {
       val c2 = Int2DoubleCounter();
@@ -58,5 +71,4 @@ class PitmanYorProcess(val theta: Double, val alpha:Double) extends Distribution
       getWithCounter(c2);
     }
   }
-
 }
