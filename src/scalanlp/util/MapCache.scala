@@ -122,12 +122,13 @@ class MapCache[K,V] extends Map[K,V] {
    * 
    * @author dramage
    */
-  class HashableSoftReference(key : K) extends SoftReference[K](key) {
-    val hash = key.hashCode;
+  class HashableSoftReference(ref : SoftReference[K], hash : Int) {
+    def this(key : K) = this(new SoftReference(key), key.hashCode);
+    
     var removing = false;
     
-    override def get = {
-      val got = super.get;
+    def get = {
+      val got = ref.get;
       if (!removing && got == null) {
         removing = true;
         MapCache.this.removalQueue += this;
