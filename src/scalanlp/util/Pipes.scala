@@ -10,11 +10,13 @@ import java.lang.ProcessBuilder
 import scala.concurrent.ops._
 
 /**
- * Utilities for executing shell scripts, etc.
- * 
- * To get started with a global pipes shell, use:
+ * Utilities for executing shell scripts and reading from file in
+ * a similar way to unix shell piping.  To get started with a global
+ * pipes shell, use:
  * 
  * import scalanlp.util.Pipes.global._
+ * 
+ * and see examples in the main method.
  * 
  * @author dramage
  */
@@ -24,10 +26,10 @@ class Pipes {
   // state variables
   //
   
-  private var _cwd : File = new File(new File("").getAbsolutePath);
-  private var _stdout : OutputStream = java.lang.System.out;
-  private var _stderr : OutputStream = java.lang.System.err;
-  private var _stdin  : InputStream  = java.lang.System.in;
+  protected var _cwd : File = new File(new File("").getAbsolutePath);
+  protected var _stdout : OutputStream = java.lang.System.out;
+  protected var _stderr : OutputStream = java.lang.System.err;
+  protected var _stdin  : InputStream  = java.lang.System.in;
 
   //
   // context properties
