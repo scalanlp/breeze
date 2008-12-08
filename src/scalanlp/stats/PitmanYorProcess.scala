@@ -24,9 +24,14 @@ class PitmanYorProcess(val theta: Double, val alpha:Double) extends Distribution
 
   override def get() = getWithCounter(drawn);
 
+  private def nextClass = {
+    do { c += 1; } while(drawn.get(c) != None)
+    c;
+  }
+
   private def getWithCounter(cn : DoubleCounter[Int]) = {
      val d : Int = Multinomial(cn).get match {
-      case -1 => c += 1; c;
+      case -1 => nextClass;
       case x => x;
     }
 
@@ -58,17 +63,15 @@ class PitmanYorProcess(val theta: Double, val alpha:Double) extends Distribution
   }
 
   private def observeOne(k : Int, v: Int) {
-    val newCount = drawn(k) + v;
-
-    if (Math.abs(newCount - v) <= 1E-4) {
-      drawn.incrementCount(k,newCount - alpha);
-      drawn.incrementCount(-1,-alpha);
-    } else if( newCount + alpha <= 1E-4) {
+    val newCount = drawn(k) + (1 - alpha) * v;
+    if( newCount < -1E-5) { 
+      throw new IllegalArgumentException("Class " +k + "would be reduced below 0 count!" + newCount);
+    } else if( Math.abs(newCount) < 1E-5) {
       drawn -= k;
-      drawn.incrementCount(-1,v * alpha);
     } else {
       drawn(k) = newCount;
     }
+    drawn(-1) += alpha * v;
   }
 
   def observe(t : Int*) { observe(count(t))}
@@ -91,7 +94,7 @@ class PitmanYorProcess(val theta: Double, val alpha:Double) extends Distribution
   def drawWithLikelihood(p: Option[Int]=>Double) = withLikelihood(p).get;
 
   override def toString() = {
-    "PY(" + alpha + "," + theta + ")";
+    "PY(" + theta + "," + alpha + ")";
   }
 
   def debugString() = {
