@@ -85,7 +85,7 @@ class PitmanYorProcess(val theta: Double, val alpha:Double) extends Distribution
     def get = {
       val c2 = Int2DoubleCounter();
       for( (k,v) <- drawn) {
-        c2.incrementCount(k, v * p(Some(k) filter(_!= -1))); //None if == -1
+        c2.incrementCount(k, v * p(if(k == -1) None else Some(k)));
       }
       getWithCounter(c2);
     }

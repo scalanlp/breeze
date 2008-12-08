@@ -73,9 +73,9 @@ trait Rand[+T] { outer : Rand[T] =>
   // Not the most efficient implementation ever, but meh.
   def condition(p : T => Boolean) = new Rand[T] {
     def get() = {
-      var x = get;
+      var x = outer.get;
       while(!p(x)) {
-        x = get;
+        x = outer.get;
       }
       x
     }

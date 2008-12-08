@@ -2,19 +2,19 @@ import scalanlp.stats._;
 import scalanlp.stats.Rand._;
 import scalanlp.counters._;
 import java.io.File;
-import scala.io.File;
+import scala.io.Source;
 import scalanlp.counters.Counters;
-import scalanlp.collection.mutable.Map;
-import scalanlp.collection.mutable.ArrayBuffer;
+import scala.collection.mutable.Map;
+import scala.collection.mutable._;
 
 type RAS[T] = RandomAccessSeq[T];
 
 // topic CRP params
-val topicTheta = 0.5;
-val topicAlpha = 0.1;
+val topicTheta = 0.05;
+val topicAlpha = 0.001;
 
-val leftBias = 3;
-val rightBias = 3;
+val leftBias = 1;
+val rightBias = 1;
 
 val wordSmoothing = 0.1;
 
@@ -25,34 +25,94 @@ case class Params(topicCRP: Map[(Int,Int),PitmanYorProcess], // p(t)
   def this() = this(mkBiasedPY(), new PairedIntCounter());
 }
 
-def mkBiasedPY() = new HashMap[(Int,Int),PitmanYorProcess]().withDefault{ case(k1,k2) => 
-  val py = new PitmanYorProcess(topicTheta,topicAlpha);
-  py.observe( ((1 to leftBias) map (_ =>  k1)) :_*);
-  py.observe( ((1 to rightBias) map (_ =>  k2)) :_*);
-  // HACK:
-  if(k2 != -1) this((k1,k2) = py;
-  py;
+def mkBiasedPY() = new HashMap[(Int,Int),PitmanYorProcess](){ 
+  override def default(o : (Int,Int)) = o match { case(k1,k2) => 
+    val py = new PitmanYorProcess(topicTheta,topicAlpha);
+    // HACK:
+    if(k2 != -1) {
+      py.observe( ((1 to leftBias) map (_ =>  k1)) :_*);
+      py.observe( ((1 to rightBias) map (_ =>  k2)) :_*);
+      this((k1,k2)) = py;
+    } 
+    py;
+  }
 }
+
+println("loading...");
+val rawSents = (for( f <- (new File(args(0))).listFiles().elements;
+                    val src = Source.fromFile(f);
+                    line <- src.getLines) yield {
+                    line.split("[^A-Za-z]").filter(""!=_);
+                  }).filter(_.length != 0).collect.toArray
+
+val initParams = new Params();
+val words = Set[String]();
+
+println("initiailizing...");
+val sents = for(s <- rawSents) yield {
+  val topics = (new ArrayBuffer[Int]:Buffer[Int]) ++ Array(0,0);  
+  for(i <- 0 until s.length) {
+    val w = s(i);
+    words += w;
+    val t2 = topics(i)
+    val t1 = topics(i+1)
+    val t = initParams.topicCRP( (t2,t1)).get
+    initParams.wCounts(t,w) += 1;
+    topics += t;
+  }
+  new Sentence(s,topics.drop(2).toArray);
+}
+
+println("sampling");
+val numWords = words.size;
+words.clear;
 
 
 def resample(params: Params, s:Sentence) = { 
   val newTopics = resampleTopics(params,s).toArray;
-  Sentence(words,newTopics);
+  Sentence(s.words,newTopics);
 }
 
 def resampleTopics(params:Params, s:Sentence) = {
-  val Sentence(words,topics,edges) = s;
-  val previousTs = new ArrayBuffer[Int]() + 0 + 0;
+  val Sentence(words,topics) = s;
+  val newTopics = (new ArrayBuffer[Int]():Buffer[Int]) ++ List(0,0)
   for(i <- 0 until words.length;
       w = words(i);
-      t = topics(i)
-      pT1 = previousTs(i+1)
-      pT2 = previousTs(i)) {
+      t = topics(i);
+      pT2 = newTopics(i);
+      pT1 = newTopics(i+1)) {
       //unobserve all things having to do with t.
-      params.topicCRP( (pT1,pT2)).unobserve(t);
+      try {
+        params.topicCRP( (pT2,pT1)).unobserve(t);
+      } catch {
+        case e:Exception => 
+          e.printStackTrace;
+          println(params.topicCRP);
+          println( (pT2,pT1));
+          println( params.topicCRP((pT2,pT1)).debugString);
+          exit(1);
+      }
       params.wCounts(t,w) -= 1;
+      if(i+1 < words.length) {
+        try {
+          params.topicCRP((pT1,t)).unobserve(topics(i+1));
+        } catch {
+          case e:Exception => 
+          e.printStackTrace;
+          println(topics);
+          println(i);
+          println(newTopics);
+          println(params.topicCRP);
+          println( (pT2,pT1));
+          println( params.topicCRP((pT2,pT1)).debugString);
+          exit(1);
+        }
+        if(i+2 < words.length) {
+          params.topicCRP((t,topics(i+1))).unobserve(topics(i+2));
+        }
+      }
       // resample T
-      val newT = params.topicCRP((pT1,pT2)).drawWithLikelihood {
+      val newT = params.topicCRP((pT2,pT1)).drawWithLikelihood {
         case Some(tNew) => 
           val pWordGivenT = (params.wCounts(tNew)(w) + wordSmoothing) / (params.wCounts(tNew).total + wordSmoothing * numWords);
           if(i+1 < words.length) {
@@ -71,9 +131,16 @@ def resampleTopics(params:Params, s:Sentence) = {
           }
       };
       params.wCounts(newT,w) += 1;
-      previousTs += newT;
+      if(i+1 < words.length) {
+        params.topicCRP((pT1,newT)).observe(topics(i+1));
+       // println(params.topicCRP((pT1,newT)).debugString);
+       if(i+2 < words.length) {
+         params.topicCRP((newT,topics(i+1))).observe(topics(i+2));
+       }
+      }
+      newTopics += newT;
   }
-  previousTs.drop(2).toArray;
+  newTopics.drop(2).toArray;
 }
 
 def probNextTopic(params: Params, pT1: Int, pT:Int, t:Int) = {
@@ -87,27 +154,12 @@ def probNextTopic(params: Params, pT1: Int, pT:Int, t:Int) = {
 
 // Main
 
-val rawSents = (new File(args(0))).listFiles().map(Source.fromFile.getLines()).flatMap{ lines =>
- (Array[String]() ++ lines).map(_.split("[^A-Za-z]")).filter(""==_);
-}
-
-val initParams = new Params();
-
-val sents = for(s <- rawSents) yield {
-  val topics = new ArrayBuffer[Int] ++ Array(0,0);  
-  for(i <- 0 until s.length) {
-    val w = s(i);
-    val t1 = topics(i)
-    val t2 = topics(i+1)
-    val t = initParams.topicCRP( (t1,t2)).get
-    topics.wCounts(t,w) += 1;
-    topics += t;
-  }
-  new Sentence(s,topics.drop(2).toArray);
-}
-
-
 val mc = MarkovChain(initParams) { params => 
-  val sentences = sentences.map(resample(params,_));
+  val sentences = sents.map(resample(params,_));
   Rand.fromBody { params }
+}
+
+mc.samples.take(100) foreach { case Params(crp,counts) =>
+  println(crp.map{ case (k,v) => k + " " + v.debugString}.mkString("{",",","}"));
+  println(counts);
 }

@@ -25,6 +25,7 @@ object MarkovChain {
    * Provides Markov transition kernels for a few common MCMC techniques
    */
   object Kernels {
+
     /**
     * Note this is not Metropolis-Hastings
     *
