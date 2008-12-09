@@ -11,6 +11,13 @@ trait Multinomial[T] extends Distribution[T] {
   protected def components : scala.collection.Map[T,Double];
   protected def total : Double;
 
+  // check rep
+  for ((k,v) <- components.elements) {
+    if (v <= 0) {
+      throw new IllegalArgumentException("Multinomial has negative mass on "+k);
+    }
+  }
+  
   def get = {
     var prob = Rand.uniform.get() * total;
     if(prob.isNaN) {
