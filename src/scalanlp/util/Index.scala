@@ -11,7 +11,7 @@ import scala.collection.mutable._;
  *
  * @author dlwh, dramage
  */
-class Index[T] extends (T=>Int) with Collection[T] {
+@serializable class Index[T] extends (T=>Int) with Collection[T] {
   /** Forward map from int to object */
   private val objects = new ArrayBuffer[T];
   
