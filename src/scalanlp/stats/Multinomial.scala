@@ -13,8 +13,8 @@ trait Multinomial[T] extends Distribution[T] {
 
   // check rep
   for ((k,v) <- components.elements) {
-    if (v <= 0) {
-      throw new IllegalArgumentException("Multinomial has negative mass on "+k);
+    if (v < 0) {
+      throw new IllegalArgumentException("Multinomial has negative mass at index "+k);
     }
   }
   
