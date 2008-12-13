@@ -15,7 +15,7 @@
     <pathelement location="${build.dir}"/>
     <pathelement location="lib/fastutil.jar"/>
     <pathelement location="lib/counters.jar"/>
-    <pathelement location="lib/ScalaCheck-1.3.jar"/>
+    <pathelement location="lib/ScalaCheck-1.5.jar"/>
     <pathelement location="lib/scalatest-0.9.3.jar"/>
   </path>
 

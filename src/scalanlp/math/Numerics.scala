@@ -61,4 +61,13 @@ object Numerics {
     else a + log(1+exp(b-a));    
   }
 
+  /*
+  * @return log(exp(a) - exp(b))
+  */
+  def logDiff(a : Double, b : Double) = {
+    if(a < b) b + log(exp(a-b) - 1)
+    else a + log( 1- exp(b-a) );    
+  }
+
+
 }
