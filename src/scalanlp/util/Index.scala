@@ -49,6 +49,9 @@ import scala.collection.mutable._;
     indices.getOrElseUpdate(t,nextMax);
   }
   
+  /** Override indexOf's slow, deprecated behavior. */
+  override def indexOf[B >: T](elem: B): Int = index(elem.asInstanceOf[T]);
+  
   /**
    * Clears the index.
    */
