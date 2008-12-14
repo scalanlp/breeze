@@ -39,7 +39,7 @@ object LogDouble {
 
   implicit def logDoubleToDouble(d : LogDouble) = d.value;
 
-  def log(d : LogDouble) = this;
+  def log(d : LogDouble) = new LogDouble(Math.log(d.logValue));
   def exp(d : LogDouble) = new LogDouble(d.value);
   def pow(d : LogDouble, p:Double) = new LogDouble(d.logValue * p);
   def pow(d : LogDouble, p:LogDouble) = new LogDouble(d.logValue * p.value);
