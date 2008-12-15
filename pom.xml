@@ -28,7 +28,7 @@
     <pluginRepository>
       <id>scalanlp.org</id>
       <name>ScalaNLP Maven2</name>
-      <url>http://repo.scalanlp.org/maven2/</url>
+      <url>http://repo.scalanlp.org/repo/</url>
     </pluginRepository>
   </pluginRepositories>
 
@@ -71,6 +71,13 @@
   <build>
     <sourceDirectory>src/main/scala</sourceDirectory>
     <testSourceDirectory>src/test/scala</testSourceDirectory>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-webdav</artifactId>
+        <version>1.0-beta-2</version>
+      </extension>
+    </extensions>
     <plugins>
       <plugin>
         <groupId>org.scala-tools</groupId>
