@@ -13,9 +13,9 @@
       <url>http://scala-tools.org/repo-releases</url>
     </repository>
     <repository>
-      <id>scala-tools.org</id>
-      <name>Scala-Tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
+      <id>scalanlp.org</id>
+      <name>ScalaNLP Maven2</name>
+      <url>http://repo.scalanlp.org/repo/</url>
     </repository>
   </repositories>
 
