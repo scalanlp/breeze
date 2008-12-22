@@ -78,4 +78,8 @@ object Implicits {
     }
   }
   implicit def stringExtras(s : String) = new StringExtras(s);
+
+  implicit def tExtras[T<:AnyRef](t : T) = new {
+    def ?:[U>:T](u: =>U) = if(t eq null) u else t;
+  }
 }
