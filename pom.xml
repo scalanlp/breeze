@@ -39,6 +39,11 @@
       <version>2.7.2</version>
     </dependency>
     <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-compiler</artifactId>
+      <version>2.7.2</version>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>3.8.1</version>
@@ -90,6 +95,9 @@
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <displayCmd>true</displayCmd>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

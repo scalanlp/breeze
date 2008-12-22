@@ -29,9 +29,11 @@ object Bag {
   def fromFile(file: File) = {
     val words = 
       for( line <- file.lines;
-           word <- line.split("[^A-Za-z0-9]"))
+           word <- line.split("[^A-Za-z0-9]")
+         if word != "")
          yield word.toLowerCase;
     val cter = words.elements.acquireFor(count(_));
     new Bag(file.getName,file.getParentFile.getName,cter);
   }
+
 }
