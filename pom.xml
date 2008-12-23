@@ -13,6 +13,11 @@
       <url>http://scala-tools.org/repo-releases</url>
     </repository>
     <repository>
+      <id>scala-tools.org Snapshots</id>
+      <name>Scala-Tools Maven2 Snapshot Repository</name>
+      <url>http://scala-tools.org/repo-snapshots</url>
+    </repository>
+    <repository>
       <id>scalanlp.org</id>
       <name>ScalaNLP Maven2</name>
       <url>http://repo.scalanlp.org/repo/</url>
