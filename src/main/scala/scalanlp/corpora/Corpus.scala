@@ -12,7 +12,7 @@ import scala.collection.mutable.ArrayBuffer;
 */
 trait Corpus[+T] {
   def name : String;
-  def splits : Map[String,Collection[T]];
+  def splits : Map[String,Seq[T]];
   def license = "Unknown";
   def author = "Unknown";
 }
@@ -40,7 +40,7 @@ trait JarCorpus[+T] extends Corpus[T] {
       val t = mapFun(entry.getName,Source.fromInputStream(jarFile.getInputStream(entry)));
       m.getOrElseUpdate(directory,new ArrayBuffer[T]) += t;
     }
-    Map[String,Collection[T]]() ++ m;
+    Map[String,Seq[T]]() ++ m;
   }
 
   protected lazy val classLocation = {
