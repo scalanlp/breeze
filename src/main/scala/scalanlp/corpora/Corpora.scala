@@ -34,7 +34,7 @@ import scala.xml.XML;
 */
 class Corpora(val repositories: Seq[URL]) {
   import Corpora._;
-  def this(remoteURL: String) = this( Array(Corpora.defaultCorpusRepo, new URL(remoteURL)));
+  def this(remoteURL: String) = this( Array(CorpusUtils.defaultCorpusRepo, new URL(remoteURL)));
 
   /**
   * Create a new instance of the corpus.
@@ -60,17 +60,15 @@ class Corpora(val repositories: Seq[URL]) {
   */
   def locateCorpus[T](name: String) : Corpus[T] = {
     val jarLocation = findJar(name);
-    // find the scalanlp-corpus.xml definition
-    val jarURL = new URL("jar:"+jarLocation.toString + "!/scalanlp-corpus.xml").openConnection.asInstanceOf[JarURLConnection]; 
-    val className = {
-      val jarFile = jarURL.getJarFile();
-      val ent = jarFile.getEntry("scalanlp-corpus.xml");
-      val inBytes = jarFile.getInputStream(ent);
-      val xml = XML.load(inBytes);
-      inBytes.close()
-      (xml \ "corpus" \ "classname").text.trim();
-    }
     val cl = new URLClassLoader(Array(jarLocation));
+    val className = {
+      val strm = cl.getResourceAsStream("scalanlp-corpus.xml");
+      val xml = XML.load(strm);
+      println(xml);
+      strm.close();
+      (xml \ "classname").text.trim();
+    }
+    println(className + " " + jarLocation);
     load(cl.loadClass(className).asSubclass(classOf[Corpus[T]]));
   }
 
@@ -84,6 +82,7 @@ class Corpora(val repositories: Seq[URL]) {
       try { // is it a directory?
         val f = new File(url.toURI);
         val location = f / "org/scalanlp/corpora/" / lowerName;
+        println(location);
         if(location.exists && location.isDirectory) {
           val latestVersion = location.listFiles.filter(_.isDirectory).reduceLeft( (x,y) =>
             new File(lexicographicOrder(x.getName,y.getName))
@@ -133,6 +132,9 @@ class Corpora(val repositories: Seq[URL]) {
 }
 
 object Corpora extends Corpora("http://repo.scalanlp.org/repo/") {
+}
+
+object CorpusUtils {
   protected[corpora] def defaultCorpusRepo = {
     val repoFile = ( 
       System.getenv("SCALANLP_CORPORA") 
@@ -140,4 +142,5 @@ object Corpora extends Corpora("http://repo.scalanlp.org/repo/") {
         ?: System.getenv("HOME") + "/.m2/") + "repository/");
     new File(repoFile).toURL;
   }
+
 }

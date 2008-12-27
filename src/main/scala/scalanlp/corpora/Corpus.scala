@@ -1,8 +1,11 @@
 package scalanlp.corpora;
 
 import scala.io._;
+import java.io.Reader;
 import scalanlp.util.JavaCollections._;
 import java.net._;
+import scalax.io.Implicits._;
+import java.io._;
 import scala.collection.mutable.ArrayBuffer;
 
 /**
@@ -29,7 +32,7 @@ trait Corpus[+T] {
 * @author dlwh
 */
 trait JarCorpus[+T] extends Corpus[T] {
-  protected def mapFun(category:String, path:String, s: scala.io.Source): T
+  protected def mapFun(category:String, path:String, s: Reader):T
 
   // Utility to read "k v" pairs from a resource.
   protected def stringsFromFile(cl: ClassLoader, s : String) = {
@@ -56,17 +59,17 @@ trait JarCorpus[+T] extends Corpus[T] {
     (res(0),res(1));
   };
 
-  def splits = {
+  lazy val splits = {
     Map[String,Seq[T]]() ++ categories.map { case(cat,res) =>
-      val data = for{ path <- stringsFromFile(classLoader,res);
-                      strm = classLoader.getResourceAsStream(path);
-                      src = Source.fromInputStream(strm)
+      val paths = stringsFromFile(classLoader,res).projection;
+      val data = for{ path <- paths;
+                      strm = classLoader.getResourceAsStream(path)
                     } yield {
-                      val result = mapFun(cat,path,src);
+                      val result = mapFun(cat,path,new InputStreamReader(strm).ensureBuffered);
                       strm.close();
                       result;
                     }
-      (cat,data);
+      (cat,data)
     }
   }
 
