@@ -81,5 +81,6 @@ object Implicits {
 
   implicit def tExtras[T<:AnyRef](t : T) = new {
     def ?:[U>:T](u: =>U) = if(t eq null) u else t;
+    def intern() = Interner(t).asInstanceOf[T];
   }
 }

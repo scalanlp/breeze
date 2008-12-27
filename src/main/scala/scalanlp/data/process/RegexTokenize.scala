@@ -12,5 +12,3 @@ class RegexTokenize(val regex: Regex) extends (String=>Iterator[String]) {
     regex.findAllIn(s);
   }
 }
-
-object AlphanumericTokenize extends RegexTokenize("[A-Za-z0-9]+");

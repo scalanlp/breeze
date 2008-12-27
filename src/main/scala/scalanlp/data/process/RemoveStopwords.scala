@@ -1,4 +1,4 @@
-package scalanlp.data.filter;
+package scalanlp.data.process;
 
 import scala.io.Source;
 import java.util.Locale;

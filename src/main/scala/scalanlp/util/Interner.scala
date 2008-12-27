@@ -10,9 +10,9 @@ import java.lang.ref.WeakReference;
  * @author dlwh
  */
 class Interner[T] extends (T=>T) {
-  def apply(t :T) = intern(t);
+  override def apply(t :T) = intern(t);
 
-  def intern(t : T) = synchronized {
+  def intern(t : T):T = synchronized {
     inner.getOrElseUpdate(t,new WeakReference[T](t)).get;
   }
 
