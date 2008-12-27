@@ -3,9 +3,11 @@ import counters._;
 import Math._;
 import data._;
 
-class NaiveBayes[W,L](c: =>Collection[Example[L,W,Int]],
+import scala.collection.Map;
+
+class NaiveBayes[W,L](c: =>Collection[Example[L,Map[W,Int]]],
     val wordSmoothing:Double,
-    val classSmoothing:Double)  extends Classifier[L,W,Int] {
+    val classSmoothing:Double)  extends Classifier[L,Map[W,Int]] {
 
   private val classCounts = IntCounter[L]();
   private val wordCounts = new PairedIntCounter[L,W]();
@@ -23,7 +25,7 @@ class NaiveBayes[W,L](c: =>Collection[Example[L,W,Int]],
     allWords.size;
   }
 
-  def scores(o : Observation[W,Int]) = {
+  def scores(o : Observation[Map[W,Int]]) = {
     val res = DoubleCounter[L]();
     for( (l,prior) <- classCounts) {
       res(l) += log(prior + classSmoothing);
@@ -38,9 +40,9 @@ class NaiveBayes[W,L](c: =>Collection[Example[L,W,Int]],
 
 
 
-class BinomialNaiveBayes[W,L](c: =>Collection[Example[L,W,Int]],
+class BinomialNaiveBayes[W,L](c: =>Collection[Example[L,Map[W,Int]]],
     val wordSmoothing:Double,
-    val classSmoothing:Double)  extends Classifier[L,W,Int] {
+    val classSmoothing:Double)  extends Classifier[L,Map[W,Int]] {
 
   private val classCounts = IntCounter[L]();
   private val wordCounts = new PairedIntCounter[L,W]();
@@ -58,7 +60,7 @@ class BinomialNaiveBayes[W,L](c: =>Collection[Example[L,W,Int]],
     allWords.size;
   }
 
-  def scores(o : Observation[W,Int]) = {
+  def scores(o : Observation[Map[W,Int]]) = {
     val res = DoubleCounter[L]();
     for( (l,prior) <- classCounts) {
       res(l) += log(prior + classSmoothing);

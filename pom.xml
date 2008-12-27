@@ -102,6 +102,10 @@
         </executions>
         <configuration>
           <displayCmd>true</displayCmd>
+          <jvmArgs>
+           <jvmArg>-Xmx1G</jvmArg>
+           <jvmArg>-Xms64m</jvmArg>
+          </jvmArgs>
         </configuration>
       </plugin>
       <plugin>

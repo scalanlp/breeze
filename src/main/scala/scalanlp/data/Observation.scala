@@ -8,10 +8,17 @@ import counters._;
 *
 * @author dlwh
 */
-trait Observation[Fk,+Fv] {
+trait Observation[+T] { outer=>
   def id : String;
-  // How do we marry real-valued features and categorial features? By being overly general.
-  def features: Map[Fk, Fv];
+  def features: T;
+
+  def map[U](f: T=>U) = new Observation[U] {
+    def id = outer.id;
+    def features = f(outer.features);
+  }
+
+  def flatMap[U](f: T=>U) = map(f);
+
   override def toString = {
     "Observation { ids =" + id + ", features = " + features + "}"; 
   }

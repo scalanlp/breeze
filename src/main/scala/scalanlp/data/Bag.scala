@@ -13,7 +13,7 @@ import counters.Counters._;
 *
 * @author dlwh
 */
-class Bag[L,W](val id:String, val label:L, words: Map[W,Int]) extends Example.IntValued[L,W] {
+class Bag[L,W](val id:String, val label:L, words: Map[W,Int]) extends Example[L,Map[W,Int]] {
   def features = words;
 }
 
@@ -33,7 +33,7 @@ object Bag {
          if word != "")
          yield word.toLowerCase;
     val cter = words.elements.acquireFor(count(_));
-    new Bag(file.getName,file.getParentFile.getName,cter);
+    new Bag[String,String](file.getName,file.getParentFile.getName,cter);
   }
 
 }
