@@ -36,4 +36,18 @@ object Bag {
     new Bag[String,String](file.getName,file.getParentFile.getName,cter);
   }
 
+  /** Converts a Document to a Bag by taking each (field,words)
+  * pair and converting it to a sequence of "field/word" strings.
+  * The result is then aggregated into a counter.
+  */
+  def fromDocument[L](doc: LabeledDocument[L,String], sep:String): Bag[L,String] = {
+    val words = 
+      for((field,words) <- doc.fields;
+          w <- words)
+          yield field + sep + w;
+    new Bag(doc.id,doc.label, count(words));
+    
+  }
+
+  def fromDocument[L](doc:LabeledDocument[L,String]): Bag[L,String] = fromDocument(doc,"/");
 }
