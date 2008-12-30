@@ -2,6 +2,8 @@ package scalanlp.stats;
 
 import ContingencyStats._;
 import DescriptiveStats._;
+import classify.Classifier;
+import data._;
 
 /** Provides precision, recall and f-score for labellings.
 * @author dlwh
@@ -9,9 +11,11 @@ import DescriptiveStats._;
 class ContingencyStats[L] private (private val classWise: Map[L,Table]) {
   def this() = this(Map[L,Table]().withDefaultValue(Table(0,0,0)));
 
+  def +(l :(L,L)) = apply(l._1,l._2);
+
   /** Takes a guess and a gold standard set of labelings.
   */
-  def apply(l: (Set[L],Set[L])):ContingencyStats[L] = this(l._1,l._2);
+  def apply(l: (L,L)):ContingencyStats[L] = this(l._1,l._2);
 
   /** Takes a guess and a gold standard set of labelings.
   */
@@ -54,10 +58,33 @@ class ContingencyStats[L] private (private val classWise: Map[L,Table]) {
     def f(beta:Double) = mean(classWise.values.map(_.f(beta)))
   }
 
+  private def r(x:Double) = "%.4f" format x;
+
+  override def toString() = {
+    val buf = new StringBuilder;
+    buf ++= "Contingency Statistics:\n";
+    buf ++= "==========================\n";
+    buf ++= "Macro: Prec " + r(macroaveraged.precision) + " Recall: " + r(macroaveraged.recall) + " F1: " + r(macroaveraged.f) + "\n";
+    buf ++= "Micro: Prec " + r(microaveraged.precision) + " Recall: " + r(microaveraged.recall) + " F1: " + r(microaveraged.f) + "\n";
+    buf ++= "==========================\n";
+
+    for( (l,tbl) <- classWise) {
+      buf ++= l + ": Prec " + r(tbl.precision) + " Recall: " + r(tbl.recall) + " F1: " + r(tbl.f) + "\n";
+    }
+    buf.toString;
+  }
+
 }
 
 object ContingencyStats {
-  def apply[L]() = new ContingencyStats;
+  def apply[L]():ContingencyStats[L] = new ContingencyStats[L];
+
+  /**
+  * Classify every example and compute its statistics
+  */
+  def apply[L,T](classifier: Classifier[L,T], dataset: Seq[Example[L,T]]):ContingencyStats[L] = {
+    dataset.map(_.label).elements.zip(dataset.map(classifier).elements).foldLeft(ContingencyStats[L]())(_+_);
+  }
   // true positive, false positive, false negative. TN is only used
   // in Accuracy, which is unreliable and requires access to the label
   // set.
@@ -71,8 +98,18 @@ object ContingencyStats {
       Table(tp + otp, fp + ofp, fn + ofn);
     }
 
-    def precision = tp * 1. / (tp + fp);
-    def recall = tp * 1. / (tp + fn);
+    def precision = { 
+      val denom = tp + fp;
+      if(denom == 0) 0.0
+      else tp * 1.0 / denom;
+    }
+
+    def recall = { 
+      val denom = tp + fn;
+      if(denom == 0) 1.0
+      else tp * 1.0 / denom;
+    }
+
 
     /** F-Score
     */
