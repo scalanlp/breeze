@@ -83,4 +83,9 @@ object Implicits {
     def ?:[U>:T](u: =>U) = if(t eq null) u else t;
     def intern() = Interner(t).asInstanceOf[T];
   }
+
+  implicit def RASExtras[T](s: RandomAccessSeq[T]) = new {
+    // useful subset selection
+    def apply(x: RandomAccessSeq[Int]) = x.projection.map(s);  
+  }
 }

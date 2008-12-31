@@ -4,6 +4,7 @@ import scala.collection.Map;
 import scalax.io.Implicits._;
 import java.io.File;
 import counters.Counters._;
+import process._;
 
 
 /**
@@ -20,9 +21,8 @@ class Bag[L,W](val id:String, val label:L, words: Map[W,Int]) extends Example[L,
 object Bag {
   /**
   * Reads in a file as a bag of lower case words. Only alphanumeric characters
-  * are read, and word breaks are all those characters that are not those
-  * characters. Strings are lowercased. The label is set as the
-  * name of the directory containing the file.
+  * are read. Strings are lowercased and locale stopwords are removed.
+  * The label is set as the name of the directory containing the file.
   *
   * @author dlwh
   */
@@ -30,7 +30,7 @@ object Bag {
     val words = 
       for( line <- file.lines;
            word <- line.split("[^A-Za-z0-9]")
-         if word != "")
+         if word != "" && RemoveStopwords(word) )
          yield word.toLowerCase;
     val cter = words.elements.acquireFor(count(_));
     new Bag[String,String](file.getName,file.getParentFile.getName,cter);

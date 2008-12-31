@@ -3,6 +3,7 @@ import counters._;
 import Math._;
 import data._;
 
+
 import scala.collection.Map;
 
 class NaiveBayes[W,L](c: =>Collection[Example[L,Map[W,Int]]],
@@ -73,10 +74,12 @@ class BinomialNaiveBayes[W,L](c: =>Collection[Example[L,Map[W,Int]]],
   }
 }
 
-object NaiveBayes {
+object RunNaiveBayes {
   def main(args : Array[String]) {
     import java.io._;
     import scalanlp.data._;
+    import scalanlp.stats._;
+    
     val trainData = 
       for( dir <- new File(args(0)).listFiles;
       file <- dir.listFiles)
@@ -88,18 +91,13 @@ object NaiveBayes {
 
     val nb = new NaiveBayes(trainData,3,0.1);
 
-    val trainRight = for(ex <- trainData;
-      label = nb(ex))
-    yield if(label == ex.label) 1.0 else 0.0;
+    val trainStats = ContingencyStats(nb,trainData);
+    println("Train");
+    println(trainStats);
 
-    val trainAcc = trainRight.reduceLeft(_+_) / trainData.size;
+    val testStats = ContingencyStats(nb,testData);
+    println("Test");
+    println(testStats);
 
-    val testRight = for(ex <- testData;
-      label = nb(ex))
-    yield if(label == ex.label) 1.0 else 0.0;
-
-    val testAcc = testRight.reduceLeft(_+_) / testData.size;
-
-    println(trainAcc + " " + testAcc);
   }
 }
