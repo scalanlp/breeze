@@ -10,10 +10,22 @@ import counters.Counters._;
 *
 * @author dlwh
 */
-class Text(val id:String, val text: String) extends Observation[String] {
-  def features = text;
+case class Text(val id:String, val contents: String) extends Observation[String] {
+  def features = contents;
    
-  def withLabel[L](l:L) = new LabeledText[L](id,l,text);
+  def withLabel[L](l:L) = new LabeledText[L](id,l,contents);
 }
 
-class LabeledText[L](id:String,val label:L, fields: String) extends Text(id,fields) with Example[L,String];
+object Text {
+ def fromFile(f :File) = {
+   new Text(f.getName,f.slurp);
+ }
+}
+
+class LabeledText[L](id:String,val label:L, contents: String) extends Text(id,contents) with Example[L,String];
+
+object LabeledText {
+  def fromFile(f:File) = {
+    new Text(f.getName,f.slurp).withLabel(f.getParentFile.getName);
+  }
+}
