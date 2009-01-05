@@ -99,5 +99,12 @@ object RunNaiveBayes {
     println("Test");
     println(testStats);
 
+    val nb2 = new NaiveBayes(trainData,0.1,0.1);
+
+    val trainStats2 = ContingencyStats(nb2,trainData);
+    println("Train2");
+    println(trainStats2);
+
+    println(RandomizationTest(trainData,nb,nb2));
   }
 }

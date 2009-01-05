@@ -15,12 +15,12 @@ class ContingencyStats[L] private (private val classWise: Map[L,Table]) {
 
   /** Takes a guess and a gold standard set of labelings.
   */
-  def apply(l: (L,L)):ContingencyStats[L] = this(l._1,l._2);
+  def apply(guessgold: (L,L)):ContingencyStats[L] = this(guessgold._1,guessgold._2);
 
   /** Takes a guess and a gold standard set of labelings.
   */
   def apply(guess: Set[L], gold: Set[L]):ContingencyStats[L] = {
-    val tps = (guess intersect gold).foldLeft(classWise) { (m,l) => m + (l->m(l).incTP)};
+    val tps = (guess intersect gold).foldLeft(classWise) { (m,l) => m + (l -> m(l).incTP)};
     val fps = (guess -- gold).foldLeft(tps) { (m,l) => m + (l -> m(l).incFP)};
     val fns = (gold -- guess).foldLeft(fps) { (m,l) => m + (l -> m(l).incFN)};
     new ContingencyStats(fns)
@@ -83,8 +83,14 @@ object ContingencyStats {
   * Classify every example and compute its statistics
   */
   def apply[L,T](classifier: Classifier[L,T], dataset: Seq[Example[L,T]]):ContingencyStats[L] = {
-    dataset.map(_.label).elements.zip(dataset.map(classifier).elements).foldLeft(ContingencyStats[L]())(_+_);
+    apply(dataset.map(classifier),dataset.map(_.label));
   }
+
+  def apply[L](guessed: Seq[L], gold: Seq[L]):ContingencyStats[L] = {
+    assume(guessed.length == gold.length);
+    (guessed.elements zip gold.elements).foldLeft(ContingencyStats[L]())(_+_);
+  }
+
   // true positive, false positive, false negative. TN is only used
   // in Accuracy, which is unreliable and requires access to the label
   // set.

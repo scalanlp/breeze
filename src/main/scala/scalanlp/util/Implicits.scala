@@ -3,7 +3,7 @@ package scalanlp.util;
 /**
 * Useful implicit conversions that Scala forgot.
 * 
-* @author(dlwh)
+* @author dlwh 
 */
 object Implicits {
   
@@ -81,7 +81,8 @@ object Implicits {
 
   implicit def tExtras[T<:AnyRef](t : T) = new {
     def ?:[U>:T](u: =>U) = if(t eq null) u else t;
-    def intern() = Interner(t).asInstanceOf[T];
+
+    def intern = Interner.forClass(t.getClass).intern(t);
   }
 
   implicit def RASExtras[T](s: RandomAccessSeq[T]) = new {
