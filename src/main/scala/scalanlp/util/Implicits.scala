@@ -82,7 +82,10 @@ object Implicits {
   implicit def tExtras[T<:AnyRef](t : T) = new {
     def ?:[U>:T](u: =>U) = if(t eq null) u else t;
 
-    def intern = Interner.forClass(t.getClass).intern(t);
+    def intern : T= {
+      val in : Interner[T] = Interner.forClass(t.getClass.asInstanceOf[Class[T]])
+      in(t);
+    }
   }
 
   implicit def RASExtras[T](s: RandomAccessSeq[T]) = new {

@@ -70,14 +70,22 @@ import scala.collection.mutable._;
   def indexAll(c : List[T]) = c map apply;
   def indexAll(c : Array[T]) = c map apply;
   def indexAll(c : Set[T]) = c map apply;
+
+  def indexKeys[V](c: scala.collection.Map[T,V]) = {
+    Map[T,V]() ++ c.map{ case (a,b) => (this(a),b)}
+  }
   
+  def indexValues[K](c: scala.collection.Map[K,T]) = {
+    Map[K,T]() ++ c.map{ case (a,b) => (a,this(b))}
+  }
+
   def getAll(c : Iterator[Int]) = c map unapply;
   def getAll(c : Iterable[Int]) = c map unapply;
   def getAll(c : Collection[Int]) = c map unapply;
   def getAll(c : List[Int]) = c map unapply;
   def getAll(c : Array[Int]) = c map unapply;
   def getAll(c : Set[Int]) = c map unapply;
-  
+
   //
   // Index views.
   //
