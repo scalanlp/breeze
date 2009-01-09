@@ -34,6 +34,14 @@ object JavaCollections {
       override def next = iterator.next();
     }
   }
+
+  implicit def iScalaEnumeration[T](iterator : java.util.Enumeration[T]) : scala.Iterator[T] = {
+    new scala.Iterator[T] {
+      override def hasNext = iterator.hasMoreElements;
+      override def next = iterator.nextElement;
+    }
+  }
+  
   
   implicit def iJavaIterator[T](iterator : scala.Iterator[T]) : java.util.Iterator[T] = {
     new java.util.Iterator[T] {

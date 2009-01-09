@@ -61,6 +61,23 @@ object Numerics {
     else a + log(1+exp(b-a));    
   }
 
+  /**
+  * @return log(\sum exp(a_i))
+  */
+  def logSum(a: Double, b:Double, c: Double*):Double ={
+    logSum(Array(a,b) ++ c);
+  }
+
+  def logSum(a:Seq[Double]):Double = {
+    val iter = a.elements;
+    if(a.length == 1) a(0)
+    else if(a.length ==2) logSum(iter.next,iter.next);
+    else {
+      val m = a reduceLeft(_ max _);
+      m + log(a.foldLeft(0.)( (a,b) => a+exp( b - m )))
+    }
+  }
+
   /*
   * @return log(exp(a) - exp(b))
   */

@@ -1,4 +1,5 @@
 package scalanlp.stats;
+import scala.collection.mutable.ArrayBuffer;
 
 /**
  * A trait for monadic sampling. Provides support for use in for-comprehensions
@@ -179,6 +180,25 @@ object Rand {
    */
   def gaussian(m : Double, s : Double) :Rand[Double] = new Rand[Double] {
     def get = m + s * gaussian.get
+  }
+
+  /**
+   * Implements the Knuth shuffle
+   */
+  def permutation(n : Int) = new Rand[RandomAccessSeq[Int]] {
+    def get = {
+      val arr = new ArrayBuffer[Int]();
+      arr ++= (0 until n);
+      var i = n;
+      while(i > 1) {
+        val k = r.nextInt(i);
+        i -= 1;
+        val tmp = arr(i);
+        arr(i) = arr(k);
+        arr(k) = tmp;
+      }
+      arr;
+    }
   }
 
 }
