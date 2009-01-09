@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.scalanlp</groupId>
   <artifactId>scalanlp-core</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.1-SNAPSHOT</version>
   <inceptionYear>2008</inceptionYear>
 
   <repositories>
@@ -13,9 +13,9 @@
       <url>http://scala-tools.org/repo-releases</url>
     </repository>
     <repository>
-      <id>scala-tools.org</id>
-      <name>Scala-Tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
+      <id>scalanlp.org</id>
+      <name>ScalaNLP Maven2</name>
+      <url>http://repo.scalanlp.org/repo/</url>
     </repository>
   </repositories>
 
@@ -25,12 +25,16 @@
       <name>Scala-Tools Maven2 Repository</name>
       <url>http://scala-tools.org/repo-releases</url>
     </pluginRepository>
-    <pluginRepository>
-      <id>scalanlp.org</id>
-      <name>ScalaNLP Maven2</name>
-      <url>http://repo.scalanlp.org/repo/</url>
-    </pluginRepository>
   </pluginRepositories>
+
+  <distributionManagement>
+    <repository>
+      <id>scalanlp.org</id>
+      <name>Scalanlp Repository</name>
+      <url>dav:http://repo.scalanlp.org/repo/</url>
+    </repository>
+  </distributionManagement>
+
 
   <dependencies>
     <dependency>
@@ -70,7 +74,7 @@
 
   <build>
     <sourceDirectory>src/main/scala</sourceDirectory>
-    <testSourceDirectory>src/test/scala</testSourceDirectory>
+    <testSourceDirectory>src/test/test</testSourceDirectory>
     <extensions>
       <extension>
         <groupId>org.apache.maven.wagon</groupId>
