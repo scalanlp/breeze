@@ -14,7 +14,7 @@ object Datasets {
   * 1/kth of the data and training sets the rest of it. Returns a Seq of results,
   * one for each execution.
   *
-  * Syntax: crossValidate(K, myDataSet)( (trainSet,testSet) => {produce a result} ) 
+  * Syntax: crossValidate(K, myDataSet)( (trainSet,testSet) =&gt; {produce a result} ) 
   */
   def crossValidate[T](k : Int, dataset: Seq[T]) = new {
     require(k < dataset.size);

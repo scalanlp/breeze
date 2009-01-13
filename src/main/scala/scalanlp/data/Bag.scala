@@ -8,9 +8,8 @@ import process._;
 
 
 /**
-* Represents a Bag of (Words). Interfaces should prefer to use
-* Example.IntValued[L,W] instead of Bag. This is intended as a
-* convenience class.
+* Represents a Bag of (Words). Interfaces should prefer to use Example[L,Map[W,Int]].
+* This is intended as a convenience class.
 *
 * @author dlwh
 */
@@ -37,7 +36,7 @@ object Bag {
   }
 
   /** Converts a Document to a Bag by taking each (field,words)
-  * pair and converting it to a sequence of "field/word" strings.
+  * pair and converting it to a sequence of "field&lt;sep&gt;word" strings.
   * The result is then aggregated into a counter.
   */
   def fromDocument[L](doc: LabeledDocument[L,String], sep:String): Bag[L,String] = {
