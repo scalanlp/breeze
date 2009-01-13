@@ -6,6 +6,7 @@ package scalanlp.data;
 * 
 * @author dlwh
 */
-trait Multilabeled[L] {
+trait Multilabeled[L] extends Labeled[Set[L]] {
   def labels : Set[L];
+  def label = labels;
 }

@@ -8,7 +8,7 @@ import scala.collection.Map;
 *
 * @author dlwh
 */
-trait MultilabeledExample[L,+T] extends Observation[T] with Multilabeled[L] { outer =>
+trait MultilabeledExample[L,+T] extends Example[Set[L],T] with Multilabeled[L] { outer =>
   def id : String;
   // How do we marry real-valued features and categorial features? By being overly general.
   override def toString = {

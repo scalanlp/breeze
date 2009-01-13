@@ -13,7 +13,7 @@ import process._;
 *
 * @author dlwh
 */
-class Bag[L,W](val id:String, val label:L, words: Map[W,Int]) extends Example[L,Map[W,Int]] {
+class Bag[+L,W](val id:String, val label:L, words: Map[W,Int]) extends Example[L,Map[W,Int]] {
   def features = words;
 }
 
