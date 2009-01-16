@@ -33,8 +33,9 @@ class ArrayMap[V](private val arr: ArrayBuffer[V]) extends scala.collection.muta
   def -=(i : Int) { arr remove i;}
   def size = arr.size;
   def elements = keys zip values
-  override def keys = (1 to arr.length).elements;
+  override def keys = (0 until arr.length).elements;
   override def values = arr.elements;
+
 
   def innerArray:Array[V] =  arr.toArray;
 }
