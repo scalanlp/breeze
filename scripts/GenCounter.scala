@@ -141,6 +141,9 @@ trait {COUNTER} extends {superClass} {{
      update(t,(this(t) + v).asInstanceOf[{V}]);
    }}
 
+
+  override def ++=(kv: Iterable[({T},{V})]) = kv.foreach(+=);
+
   /**
    * Increments the count associated with {T} by {V}.
    * Note that this is different from the default Map behavior.
@@ -183,11 +186,11 @@ trait {COUNTER} extends {superClass} {{
    * Return a new {DOUBLE_COUNTER} with each {V} divided by the total;
    */
   {ov} def normalized() : {DOUBLE_COUNTER} = {{
-    val normalized = new HashMap[{T},Double]() with {DOUBLE_COUNTER};
+    val normalized = {DOUBLE_COUNTER}();
     val total : Double = this.total
     if(total != 0.0)
       for (pair &lt;- elements) {{
-        normalized.put(pair._1,pair._2 / total)
+        normalized(pair._1) = pair._2 / total;
       }}
     normalized
   }}
