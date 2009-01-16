@@ -56,8 +56,8 @@ class PitmanYorProcess(val theta: Double, val alpha:Double) extends Distribution
   }
   
   def probabilityOf(e: Int) = {
-    if (e >= 0 && drawn.get(e) != None) {
-      drawn(e-1) / total;
+    if (e >= 0 && drawn.get(e+1) != None) {
+      drawn(e+1) / total;
     } else {
       0.0;
     }
@@ -69,11 +69,12 @@ class PitmanYorProcess(val theta: Double, val alpha:Double) extends Distribution
     for( (k,v) <- c) {
       if(k < 0) throw new IllegalArgumentException(k + " is not a valid draw from the PitmanYorProcess");
       if(v != 0)
-        observeOne(k+1,v);
+        observeOne(k,v);
     }
   }
 
-  private def observeOne(k : Int, v: Int) {
+  private def observeOne(k_ : Int, v: Int) {
+    val k = k_ + 1;
     var newCount = drawn(k) + v;
     if(drawn(k) == 0 && v != 0) {
       newCount -= alpha;
@@ -113,8 +114,8 @@ class PitmanYorProcess(val theta: Double, val alpha:Double) extends Distribution
 
   def drawWithLikelihood(p: Option[Int]=>Double) = withLikelihood(p).get;
 
-  def withBaseMeasure[T](r: Rand[T]):Distribution[T] = new Distribution[T] {
-    val forward = new HashMap[Int,T] {
+  class Mapped[T](r: Rand[T]) extends Distribution[T] {
+  val forward = new HashMap[Int,T] {
       override def default(k:Int) ={
         val draw = r.get;
         update(k,draw);
@@ -132,44 +133,75 @@ class PitmanYorProcess(val theta: Double, val alpha:Double) extends Distribution
     def get = { 
       forward(outer.get);
     }
+
+    def observe(t : T*) { observe(count(t))}
+    def unobserve(t: T*) {
+      val c = count(t);
+      c.transform { (k,v) => v * -1};
+      observe(c);
+    }
+
+    def observe(c: IntCounter[T]) {
+      for( (k,v) <- c) {
+        if(v != 0) {
+          backward.get(k) match {
+            case None => 
+              if(v < 0)  {
+                throw new IllegalArgumentException(k + " is not a valid draw from the PitmanYorProcess");
+              } else {
+                val n = nextClass;
+                forward(n) = k;
+                backward(k) += v;
+                observeOne(n,v);
+              }
+
+            case Some(buf) if buf.length == 0 => 
+              if(v < 0)  {
+                throw new IllegalArgumentException(k + " is not a valid draw from the PitmanYorProcess");
+              } else {
+                val n = nextClass;
+                forward(n) = k;
+                backward(k) += v;
+                observeOne(n,v);
+              }
+
+            case Some(buf) if buf.length == 1 =>
+              observeOne(buf(0),v); 
+
+            case Some(buf) =>
+              val sign = v < 0;
+              for(i <- 1 to v.abs) {
+                val idx = Multinomial(buf.map(outer probabilityOf _).toArray).get; 
+                observeOne(buf(idx), if(sign) -1 else 1);
+                if(outer.probabilityOf(buf(idx)) == 0) buf -= idx;
+              }
+          }
+        }
+      }
+    }
+
 
     def probabilityOf(t: T) = backward(t).map(outer.probabilityOf _).foldLeft(0.0)(_+_);
   }
 
-
-  def withBaseMeasure[T](r: Distribution[T]):Distribution[T] = new Distribution[T] {
-    val forward = new HashMap[Int,T] {
-      override def default(k:Int) ={
-        val draw = r.get;
-        update(k,draw);
-        backward(draw) += k;
-        draw;
-      }
-    }
-
-    val backward = new HashMap[T,ArrayBuffer[Int]]() {
-      override def default(k:T) = {
-        this.getOrElseUpdate(k,new ArrayBuffer[Int]);
-      }
-    }
-
-    def get = { 
-      forward(outer.get);
-    }
-
-    def probabilityOf(t: T) = {
+  def withBaseMeasure[T](r: Rand[T])= new Mapped[T](r);
+  
+  def withBaseMeasure[T](r: Distribution[T]) = new Mapped[T](r) {
+    override def probabilityOf(t: T) = {
       val fromDraws = backward(t).map(outer.probabilityOf _).foldLeft(0.0)(_+_);
       val pDraw = r.probabilityOf(t) 
-      pDraw * outer.probabilityOfUnobserved + fromDraws;
+        pDraw * outer.probabilityOfUnobserved + fromDraws;
     }
   }
+
+
 
   override def toString() = {
     "PY(" + theta + "," + alpha + ")";
   }
 
   def debugString() = {
-    val str = drawn.elements.filter(_._1 != -1).map(kv => (kv._1 +1)+ " -> " + kv._2).mkString("draws = (", ", ", ")");
+    val str = drawn.elements.filter(_._1 != 0).map(kv => (kv._1 -1)+ " -> " + kv._2).mkString("draws = (", ", ", ")");
     toString + "\n{newClass=" + drawn(0) + ", " + str + "}";
   }
 
