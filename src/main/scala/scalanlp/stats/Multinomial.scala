@@ -82,7 +82,7 @@ object Multinomial {
    */
   def apply(arr : Array[Double], t: Double) = new Multinomial[Int] {
     def components = new scala.collection.Map[Int,Double] {
-      def elements = arr.elements.zipWithIndex.map{ case (x,y) => (y,x)}
+      def elements =  (0 until arr.length).map(x => (x,arr(x))).elements;
       def get(x : Int) = if(x < arr.length) Some(arr(x)) else None;
       def size = arr.length;
     }
