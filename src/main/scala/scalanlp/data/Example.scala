@@ -8,7 +8,7 @@ import counters._;
 *
 * @author dlwh
 */
-trait Example[L,+T] extends MultilabeledExample[L,T] with Labeled[L] {outer=>
+trait Example[+L,+T] extends Observation[T] with Labeled[L] {outer=>
   def id : String;
   def label: L
 
