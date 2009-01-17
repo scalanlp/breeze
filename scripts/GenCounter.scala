@@ -90,7 +90,7 @@ import scala.collection.mutable.HashMap;
 
 /**
  * Count objects of type {T} with type {V}.
- * This trait is a wraooer around Scala's Map trait
+ * This trait is a wrapper around Scala's Map trait
  * and can work with any scala Map. 
  *
  * @author dlwh
@@ -141,6 +141,9 @@ trait {COUNTER} extends {superClass} {{
      update(t,(this(t) + v).asInstanceOf[{V}]);
    }}
 
+
+  override def ++=(kv: Iterable[({T},{V})]) = kv.foreach(+=);
+
   /**
    * Increments the count associated with {T} by {V}.
    * Note that this is different from the default Map behavior.
@@ -183,11 +186,11 @@ trait {COUNTER} extends {superClass} {{
    * Return a new {DOUBLE_COUNTER} with each {V} divided by the total;
    */
   {ov} def normalized() : {DOUBLE_COUNTER} = {{
-    val normalized = new HashMap[{T},Double]() with {DOUBLE_COUNTER};
+    val normalized = {DOUBLE_COUNTER}();
     val total : Double = this.total
     if(total != 0.0)
       for (pair &lt;- elements) {{
-        normalized.put(pair._1,pair._2 / total)
+        normalized(pair._1) = pair._2 / total;
       }}
     normalized
   }}
@@ -281,12 +284,14 @@ else ""
     if(!hasCounterParent) 
       <x>
   private def runtimeClass[T](x : Any) = x.asInstanceOf[AnyRef].getClass
-  def apply[T](x : T) : {V}Counter[T] = {{
-    val INT = runtimeClass(3);
-    val LNG = runtimeClass(3l);
-    val FLT = runtimeClass(3.0f);
-    val SHR = runtimeClass(3.asInstanceOf[Short]);
-    val DBL = runtimeClass(3.0);
+
+  private val INT = runtimeClass(3);
+  private val LNG = runtimeClass(3l);
+  private val FLT = runtimeClass(3.0f);
+  private val SHR = runtimeClass(3.asInstanceOf[Short]);
+  private val DBL = runtimeClass(3.0);
+
+  private def apply[T](x : T) : {V}Counter[T] = {{
     runtimeClass(x) match {{
       case INT => Int2{V}Counter().asInstanceOf[{V}Counter[T]];
       case DBL => Double2{V}Counter().asInstanceOf[{V}Counter[T]];

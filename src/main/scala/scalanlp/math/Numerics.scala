@@ -37,7 +37,7 @@ object Numerics {
   * @return an approximation of the log of the Gamma function * of x.  Laczos Approximation
   * Reference: Numerical Recipes in C
   * http://www.library.cornell.edu/nr/cbookcpdf.html
-  * From freebsd implementation
+  * www.cs.berkeley.edu/~milch/blog/versions/blog-0.1.3/blog/distrib 
   */ 
   def lgamma(x : Double) = {
     var y = x;
@@ -46,9 +46,9 @@ object Numerics {
     var ser = 1.000000000190015;
     var j = 0;
     while(j < 6) {
+      y += 1;
       ser += (cof(j)/y);
       j +=1;
-      y += 1;
     }
     (-tmp + log(2.5066282746310005*ser / x));
   }
