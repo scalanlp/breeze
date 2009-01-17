@@ -242,6 +242,7 @@ class PitmanYorProcess(val theta: Double, val alpha:Double) extends Distribution
 
     /** Some over all classes that may have your draw */
     def probabilityOf(t: T) = backward(t).map(outer.probabilityOf _).foldLeft(0.0)(_+_);
+    def probabilityOfUnobserved() = outer.probabilityOfUnobserved();
   }
 
   /** Returns a Mapped[T] */
