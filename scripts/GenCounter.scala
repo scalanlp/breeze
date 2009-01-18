@@ -291,7 +291,7 @@ else ""
   private val SHR = runtimeClass(3.asInstanceOf[Short]);
   private val DBL = runtimeClass(3.0);
 
-  private def apply[T](x : T) : {V}Counter[T] = {{
+  def apply[T](x : T) : {V}Counter[T] = {{
     runtimeClass(x) match {{
       case INT => Int2{V}Counter().asInstanceOf[{V}Counter[T]];
       case DBL => Double2{V}Counter().asInstanceOf[{V}Counter[T]];
