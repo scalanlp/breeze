@@ -7,6 +7,6 @@ package scalanlp.data.process;
 * @author dlwh
 */
 object SegmentSentences extends (String=>Iterator[String]) {
-  private val r = "(.+?)(((?<=[a-z0-9)][.?!])|(?<=[a-z0-9][.?!]\"))(\\s|\r?\n)(?=\"?[A-Z])|$)".r
+  private val r = "(?s:.+?)(?<=[a-z0-9)][.?!]\"?)(?=\\s+['\"]?([A-Z]|\\s*$))".r
   def apply(s:String):Iterator[String] = r findAllIn s;
 }

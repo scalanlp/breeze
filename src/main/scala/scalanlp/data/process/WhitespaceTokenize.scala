@@ -73,6 +73,6 @@ object WhitespaceTokenize extends (String=>Iterator[String]) {
 */
 object AlphaTokenize extends (String=>Array[String]) {
   def apply(s:String) = {
-    s.split("[^A-Za-z]");
+    s.split("[^A-Za-z]").filter(""!=);
   }
 }
