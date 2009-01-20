@@ -14,7 +14,7 @@ trait Observation[+T] { outer=>
 
   def map[U](f: T=>U) = new Observation[U] {
     def id = outer.id;
-    def features = f(outer.features);
+    lazy val features = f(outer.features);
   }
 
   def flatMap[U](f: T=>U) = map(f);
@@ -24,3 +24,9 @@ trait Observation[+T] { outer=>
   }
 }
 
+object Observation {
+  def apply[T]( _id: String, what: T ) = new Observation[T] {
+    def id = _id;
+    def features = what;
+  }
+}

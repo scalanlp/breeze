@@ -1,7 +1,7 @@
 package scalanlp.data;
 
 import scala.collection.mutable._;
-import scalanlp.stats.Rand;
+import scalanlp.stats.sampling.Rand;
 
 /**
 * Provides useful utilties for dealing with datasets that have a defined order.
