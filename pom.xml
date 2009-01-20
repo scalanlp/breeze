@@ -1,13 +1,38 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8"?><project>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.scalanlp</groupId>
   <artifactId>scalanlp-core</artifactId>
+  <name>ScalaNLP Core</name>
   <version>0.1-SNAPSHOT</version>
-  <inceptionYear>2008</inceptionYear>
-  <name> ScalaNLP Core </name>
   <url>http://www.scalanlp.org</url>
-
+  <issueManagement>
+    <system>redmine</system>
+    <url>http://bugs.scalanlp.org/projects/show/core</url>
+  </issueManagement>
+  <inceptionYear>2008</inceptionYear>
+  <mailingLists>
+    <mailingList>
+      <name>User and Dev</name>
+      <post>http://code.google.com/p/liftweb/</post>
+      <archive>http://lists.scalanlp.org/pipermail/scalanlp-scalanlp.org/</archive>
+    </mailingList>
+  </mailingLists>
+  <developers>
+    <developer>
+      <id>dlwh</id>
+      <name>David Leo Wright Hall</name>
+      <email>dlwh [at] cs stanford edu</email>
+      <organization>Stanford University</organization>
+      <timezone>-8</timezone>
+    </developer>
+    <developer>
+      <id>dramage</id>
+      <name>Daniel Ramage</name>
+      <email>dramage [at] cs stanford edu</email>
+      <organization>Stanford University</organization>
+      <timezone>-8</timezone>
+    </developer>
+  </developers>
   <licenses>
     <license>
       <name>The Apache License, ASL Version 2.0</name>
@@ -15,44 +40,87 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
-
-  <developers>
-    <developer>
-      <id>dlwh</id>
-      <name>David Leo Wright Hall</name>
-      <timezone>-8</timezone>
-      <email>dlwh [at] cs stanford edu </email>
-      <organization>Stanford University</organization>
-    </developer>
-    <developer>
-      <id>dramage</id>
-      <name>Daniel Ramage</name>
-      <timezone>-8</timezone>
-      <email>dramage [at] cs stanford edu </email>
-      <organization>Stanford University</organization>
-    </developer>
-  </developers>
-
-
   <scm>
     <connection>scm:git:git://scalanlp.org/git/core.git</connection>
     <developerConnection>scm:git:ssh://scalanlp.org/home/dlwhall/git/core.git</developerConnection>
     <url>http://bugs.scalanlp.org/repositories/show/core</url>
   </scm>
-
-  <issueManagement>
-    <system>redmine</system>
-    <url>http://bugs.scalanlp.org/projects/show/core</url>
-  </issueManagement>
-
-  <mailingLists>
-    <mailingList>
-      <name>User and Dev</name>
-      <archive>http://lists.scalanlp.org/pipermail/scalanlp-scalanlp.org/</archive>
-      <post>http://code.google.com/p/liftweb/</post>
-    </mailingList>
-  </mailingLists>
-
+  <build>
+    <sourceDirectory>src/main/scala</sourceDirectory>
+    <testSourceDirectory>src/test/scala</testSourceDirectory>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-webdav</artifactId>
+        <version>1.0-beta-2</version>
+      </extension>
+    </extensions>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.4.2</version>
+        <configuration>
+          <excludes>
+            <exclude>**/RandomizationTest*</exclude>
+            <exclude>**/MemoizeTest*</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.scala-tools</groupId>
+        <artifactId>maven-scala-plugin</artifactId>
+        <version>2.9.1</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <displayCmd>true</displayCmd>
+          <jvmArgs>
+            <jvmArg>-Xmx1G</jvmArg>
+            <jvmArg>-Xms64m</jvmArg>
+          </jvmArgs>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-eclipse-plugin</artifactId>
+        <configuration>
+          <downloadSources>true</downloadSources>
+          <buildcommands>
+            <buildcommand>ch.epfl.lamp.sdt.core.scalabuilder</buildcommand>
+          </buildcommands>
+          <additionalProjectnatures>
+            <projectnature>ch.epfl.lamp.sdt.core.scalanature</projectnature>
+          </additionalProjectnatures>
+          <classpathContainers>
+            <classpathContainer>org.eclipse.jdt.launching.JRE_CONTAINER</classpathContainer>
+            <classpathContainer>ch.epfl.lamp.sdt.launching.SCALA_CONTAINER</classpathContainer>
+          </classpathContainers>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.0-beta-7</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-scm-plugin</artifactId>
+            <version>1.1</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.maven.scm</groupId>
+            <artifactId>maven-scm-api</artifactId>
+            <version>1.1</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+    </plugins>
+  </build>
   <repositories>
     <repository>
       <id>scala-tools.org</id>
@@ -70,7 +138,6 @@
       <url>http://repo.scalanlp.org/repo/</url>
     </repository>
   </repositories>
-
   <pluginRepositories>
     <pluginRepository>
       <id>scala-tools.org</id>
@@ -78,31 +145,21 @@
       <url>http://scala-tools.org/repo-releases</url>
     </pluginRepository>
   </pluginRepositories>
-
-  <distributionManagement>
-    <repository>
-      <id>scalanlp.org</id>
-      <name>Scalanlp Repository</name>
-      <url>dav:http://repo.scalanlp.org/repo/</url>
-    </repository>
-  </distributionManagement>
-
-
   <dependencies>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <version>2.7.2</version>
+      <version>2.7.3.RC2</version>
     </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-compiler</artifactId>
-      <version>2.7.2</version>
+      <version>2.7.3.RC2</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
+      <version>4.5</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -122,87 +179,17 @@
       <version>0.1</version>
     </dependency>
     <dependency>
-      <groupId>org.scalatest</groupId>
-      <artifactId>scalatest</artifactId>
-      <version>0.9.3</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.scala-tools</groupId>
       <artifactId>vscaladoc</artifactId>
       <version>1.1</version>
       <scope>reporting</scope>
     </dependency>
+    <dependency>
+      <groupId>org.specs</groupId>
+      <artifactId>specs</artifactId>
+      <version>1.4.1</version>
+    </dependency>
   </dependencies>
-
-  <build>
-    <sourceDirectory>src/main/scala</sourceDirectory>
-    <testSourceDirectory>src/test/test</testSourceDirectory>
-    <extensions>
-      <extension>
-        <groupId>org.apache.maven.wagon</groupId>
-        <artifactId>wagon-webdav</artifactId>
-        <version>1.0-beta-2</version>
-      </extension>
-    </extensions>
-    <plugins>
-      <plugin>
-        <groupId>org.scala-tools</groupId>
-        <artifactId>maven-scala-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>compile</goal>
-              <goal>testCompile</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <displayCmd>true</displayCmd>
-          <jvmArgs>
-           <jvmArg>-Xmx1G</jvmArg>
-           <jvmArg>-Xms64m</jvmArg>
-          </jvmArgs>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-eclipse-plugin</artifactId>
-        <configuration>
-          <downloadSources>true</downloadSources>
-          <buildcommands>
-            <buildcommand>ch.epfl.lamp.sdt.core.scalabuilder</buildcommand>
-          </buildcommands>
-          <additionalProjectnatures>
-            <projectnature>ch.epfl.lamp.sdt.core.scalanature</projectnature>
-          </additionalProjectnatures>
-          <classpathContainers>
-            <classpathContainer>org.eclipse.jdt.launching.JRE_CONTAINER</classpathContainer>
-            <classpathContainer>ch.epfl.lamp.sdt.launching.SCALA_CONTAINER</classpathContainer>
-          </classpathContainers>
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>2.0-beta-7</version>
-        <dependencies>
-          <dependency>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-scm-plugin</artifactId>
-            <version>1.1</version>
-          </dependency>
-          <dependency>
-            <groupId>org.apache.maven.scm</groupId>
-            <artifactId>maven-scm-api</artifactId>
-            <version>1.1</version>
-          </dependency>          
-        </dependencies>
-      </plugin>
-
-    </plugins>
-  </build>
   <reporting>
     <plugins>
       <plugin>
@@ -214,4 +201,11 @@
       </plugin>
     </plugins>
   </reporting>
+  <distributionManagement>
+    <repository>
+      <id>scalanlp.org</id>
+      <name>Scalanlp Repository</name>
+      <url>dav:http://repo.scalanlp.org/repo/</url>
+    </repository>
+  </distributionManagement>
 </project>
