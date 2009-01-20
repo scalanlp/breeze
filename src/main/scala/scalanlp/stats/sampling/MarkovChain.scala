@@ -1,4 +1,4 @@
-package scalanlp.stats;
+package scalanlp.stats.sampling;
 import Rand._;
 import Math._;
 
@@ -12,12 +12,15 @@ object MarkovChain {
   * Given an initial state and an arbitrary Markov transition, return a sampler 
   * for doing mcmc
   */
-  def apply[T]( init : T)(resample : T=>Rand[T]) = new Rand[T] {
-    var inner = resample(init);
-    def get() = {
-      val next = inner.get();
-      inner = resample(next);
+  def apply[T]( init : T)(resample : T=>Rand[T]):Process[T] = new Process[T] {
+    val inner = resample(init);
+    def draw() = {
+      val next = inner.draw();
       next
+    }
+    
+    override def observe(x:T) = {
+      MarkovChain(x)(resample)
     }
   }
 
@@ -47,13 +50,13 @@ object MarkovChain {
     * @param proposal the proposal distribution generator
     *
     */
-    def metropolisHastings[T](proposal: T =>Distribution[T])(logMeasure: T=>Double)= { t:T =>
+    def metropolisHastings[T](proposal: T =>Measure[T])(logMeasure: T=>Double)= { t:T =>
       val prop = proposal(t);
       for(next <- prop;
         newLL = logMeasure(next);
-        newP = prop.unnormalizedLogProbabilityOf(next);
+        newP = prop.logApply(next);
         oldLL = logMeasure(t);
-        oldP = prop.unnormalizedLogProbabilityOf(t);
+        oldP = prop.logApply(t);
         a = min(1,exp(newLL + newP - oldLL - oldP));
         u <- uniform)
       yield if(u < a) next else t;
@@ -70,17 +73,17 @@ object MarkovChain {
       val M = 10;
       (last:Double)=> {
         new Rand[Double] {
-          def get() = {
+          def draw() = {
             // How bad are we willing to tolerate?
-            val prop = log(uniform.get) + logMeasure(last);
-            val u = uniform.get;
+            val prop = log(uniform.draw) + logMeasure(last);
+            val u = uniform.draw;
             // Find the boundaries
             var left = last - WINDOW * u;
             if(!valid(left))
               left = last;
             var right = left + WINDOW;
 
-            var j : Int =  (uniform.get() * M).asInstanceOf[Int];
+            var j : Int =  (uniform.draw() * M).asInstanceOf[Int];
             var k  = (M-1)-j;
 
             while( prop < logMeasure(left) && j > 0 && valid(left-WINDOW)) {
@@ -98,7 +101,7 @@ object MarkovChain {
             var happy = false;
             var next = Double.NaN;
             while(!happy) {
-              next = left + uniform.get * (right - left);
+              next = left + uniform.draw * (right - left);
               if(prop <= logMeasure(next)) {
                 happy = true;
               } else if(next < last) { //close the window
@@ -135,7 +138,7 @@ object MarkovChain {
   * @param proposal the proposal distribution generator
   *
   */
-  def metropolisHastings[T](init : T, proposal : T =>Distribution[T])(logMeasure: T=>Double) = {
+  def metropolisHastings[T](init : T, proposal : T =>Measure[T])(logMeasure: T=>Double) = {
     MarkovChain(init) { Kernels.metropolisHastings(proposal){logMeasure}};
   }
 

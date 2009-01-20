@@ -1,4 +1,4 @@
-package scalanlp.stats;
+package scalanlp.stats.sampling;
 import scalanlp.math.Numerics;
 
 
@@ -8,20 +8,22 @@ import scalanlp.math.Numerics;
  *
  * @author dlwh
  */
-// Stolen from javanlp, which was stolen from Teh 
-class Gamma(val shape : Double, val scale : Double) extends Distribution[Double] {
+class Gamma(val shape : Double, val scale : Double) extends ContinuousDistr[Double] {
   if(shape <= 0.0 || scale <= 0.0)
     throw new IllegalArgumentException("Shape and scale must be positive");
 
-  def probabilityOf(x : Double) = Math.exp(logProbabilityOf(x));
+  def pdf(x : Double) = Math.exp(logPdf(x));
 
-  override def logProbabilityOf(x : Double) = {
-    unnormalizedLogProbabilityOf(x) - Numerics.lgamma(shape) - shape * Math.log(scale);
+  override def logPdf(x : Double) = {
+    unnormalizedLogPdf(x) + logNormalizer;
   }
+  
+  val logNormalizer = - Numerics.lgamma(shape) - shape * Math.log(scale);
 
-  override def unnormalizedLogProbabilityOf(x : Double) = (shape - 1) * Math.log(x) - x/scale;
+  override def unnormalizedLogPdf(x : Double) = (shape - 1) * Math.log(x) - x/scale;
 
-  def get() : Double = { 
+  //From javanlp, which was stolen from Teh 
+  def draw() : Double = { 
     var aa = 0.0;
     var bb = 0.0;
     var cc = 0.0;
@@ -75,8 +77,8 @@ object Gamma {
   type PoissonPosterior = Gamma with PoissonPrior;
   trait PoissonPrior extends ConjugatePrior[Double,Int] { self: Gamma =>
     // negative binomial distribution
-    def predictive() = new Distribution[Int] {
-      def get() = {
+    def predictive() = new DiscreteDistr[Int] {
+      def draw() = {
         new Poisson(self.get).get
       }
 
@@ -89,13 +91,13 @@ object Gamma {
       }
     }
 
-    def posterior(ev: Iterator[(Int,Double)]) : PoissonPosterior = {
+    def posterior(ev: Iterator[(Int,Int)]) : PoissonPosterior = {
       val (tot,count) = ev.foldLeft( (0.0,0.0) ) { (tup,d) =>
         (tup._1 + d._1 * d._2, tup._2 +  d._2)
       }
       new Gamma(shape + tot, 1/(1/scale + count)) with PoissonPrior;
     }
 
-    override def posterior(ev:Iterable[(Int,Double)]) : PoissonPosterior = posterior(ev.elements);
+    override def posterior(ev:Iterable[(Int,Int)]) : PoissonPosterior = posterior(ev.elements);
   }
 }

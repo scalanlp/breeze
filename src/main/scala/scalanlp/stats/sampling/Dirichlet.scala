@@ -1,4 +1,4 @@
-package scalanlp.stats;
+package scalanlp.stats.sampling;
 import scalanlp.counters._;
 import scalanlp.counters.DoubleCounter;
 import scalanlp.counters.Counters._;
@@ -9,17 +9,17 @@ import scalanlp.math.Arrays._;
  * Represents a Dirichlet distribution, the conjugate prior to the multinomial.
  * @author dlwh
  */
-trait Dirichlet[P,T] extends ConjugatePrior[P,T] {
+trait Dirichlet[P,T] extends ContinuousDistr[P] with ConjugatePrior[P,T] {
   protected val prior : Iterable[(T,Double)];
   protected def pFromDraw(it : Iterator[(T,Double)]) : P;
   protected def componentsFromP(p : P) : Function[T,Double]
   /**
    * Returns a new Dirichlet after observing the evidence. 
    */
-  override def posterior(evidence : Iterator[(T,Double)]): Dirichlet[P,T];
+  override def posterior(evidence : Iterator[(T,Int)]): Dirichlet[P,T];
 
 
-  private lazy val generators : Iterable[(T,Gamma)] = prior.map { e => (e._1,new Gamma(e._2,1)) }
+  private val generators : Iterable[(T,Gamma)] = prior.map { e => (e._1,new Gamma(e._2,1)) }
 
   /**
    * Provides access to the components of the Dirichlet, for inspection.
@@ -29,14 +29,14 @@ trait Dirichlet[P,T] extends ConjugatePrior[P,T] {
   /**
    * Returns a Multinomial distribution over the elements;
    */
-  def get() = {
+  def draw() = {
     pFromDraw(generators.map(e => (e._1,e._2.get)).elements);
   }
 
   /**
    * Returns the log pdf function of the Dirichlet up to a constant evaluated at m
    */
-  override def unnormalizedLogProbabilityOf(m : P) = {
+  override def unnormalizedLogPdf(m : P) = {
     val f = componentsFromP(m);
     prior.map( e => (e._2-1) * f(e._1) ).
           foldLeft(0.0)(_+_);
@@ -45,15 +45,16 @@ trait Dirichlet[P,T] extends ConjugatePrior[P,T] {
   /**
    * Returns the log pdf of the Dirichlet evaluated at m.
    */
-  override def logProbabilityOf(m: P) = {
-    unnormalizedLogProbabilityOf(m) + prior.map(e => lgamma(e._2))
-      .foldLeft(0.0)(_+_) - lgamma(prior.foldLeft(0.0)(_+_._2));
+  override def logPdf(m: P) = {
+    unnormalizedLogPdf(m) + logNormalizer;
   }
+
+  val logNormalizer = prior.map(e => lgamma(e._2)).foldLeft(0.0)(_+_) - lgamma(prior.foldLeft(0.0)(_+_._2));
 
   /**
    * Returns the pdf of the Dirichlet evaluated at m.
    */
-  def probabilityOf(m : P) = Math.exp(logProbabilityOf(m));
+  def pdf(m : P) = Math.exp(logPdf(m));
 
   /**
    * Returns a multinomial over T's. Each draw is drawn from E[Dir]
@@ -76,8 +77,8 @@ object Dirichlet {
     protected val prior = c.elements.toList; 
     protected def pFromDraw(it : Iterator[(T,Double)]) = aggregate(it);
     protected def componentsFromP(p : DoubleCounter[T]) = p;
-    def posterior(it : Iterator[(T,Double)]) : Dirichlet[DoubleCounter[T],T] = {
-      Dirichlet( (DoubleCounter[T]() ++ it ++ prior).asInstanceOf[DoubleCounter[T]]);
+    def posterior(it : Iterator[(T,Int)]) : Dirichlet[DoubleCounter[T],T] = {
+      Dirichlet( (DoubleCounter[T]() ++ it.map{ case (a,b) => (a,b.toDouble)} ++ prior).asInstanceOf[DoubleCounter[T]]);
     }
   }
 
@@ -100,7 +101,7 @@ object Dirichlet {
       p;
     }
 
-    def posterior(it : Iterator[(Int,Double)]) = { 
+    def posterior(it : Iterator[(Int,Int)]) = { 
       val ret = new Array[Double](prior.length);
       System.arraycopy(arr,0,ret,0,ret.length);
       for( (t,d) <- it) {

@@ -1,4 +1,4 @@
-package scalanlp.stats;
+package scalanlp.stats.sampling;
 import scalanlp.counters.Counters._;
 
 /**
@@ -19,16 +19,16 @@ import scalanlp.counters.Counters._;
 class ParticleFilter[T](val particles : Seq[(T,Double)], transition : Seq[(T,Double)] => T => Rand[T],
   identify: T => T, numParticles : Int) extends Rand[T] {
 
-  def this(initialParticle : Distribution[T], transition : Seq[(T,Double)] => T => Rand[T],
+  def this(initialParticle : Measure[T], transition : Seq[(T,Double)] => T => Rand[T],
     identify : T=>T, numParticles : Int) =  {
     this(Array.fromFunction(x => initialParticle.get)(numParticles)
-        .map(identify).map(p => (p,initialParticle.unnormalizedLogProbabilityOf(p)))
+        .map(identify).map(p => (p,initialParticle.logApply(p)))
       ,transition,identify,numParticles);    
   }
 
   private val m = Multinomial(  aggregate(particles).normalized);
 
-  def get() = m.get();
+  def draw() = m.get();
   def resample(f : T => Double) = {
     // init (particle,weight)
       val reweightedParts  = particles.map( p => (p._1,p._2 * f(p._1)))

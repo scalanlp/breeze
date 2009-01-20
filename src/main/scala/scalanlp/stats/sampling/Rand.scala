@@ -1,4 +1,4 @@
-package scalanlp.stats;
+package scalanlp.stats.sampling;
 import scala.collection.mutable.ArrayBuffer;
 
 /**
@@ -9,7 +9,9 @@ trait Rand[+T] { outer : Rand[T] =>
   /**
    * Gets one sample from the distribution. Equivalent to sample()
    */
-  def get() : T
+  def draw() : T
+  
+  def get() = draw;
 
   /**
    * Gets one sample from the distribution. Equivalent to get()
@@ -41,7 +43,7 @@ trait Rand[+T] { outer : Rand[T] =>
    */
   def flatMap[E](f : T => Rand[E] ) =  {
     new Rand[E] {
-      def get = f(outer.get).get
+      def draw = f(outer.get).get
     }
   }
 
@@ -56,7 +58,7 @@ trait Rand[+T] { outer : Rand[T] =>
    */
   def map[E](f : T=>E) =  { 
     new Rand[E] {
-      def get = f(outer.get);
+      def draw = f(outer.get);
     }
   }
 
@@ -73,7 +75,7 @@ trait Rand[+T] { outer : Rand[T] =>
 
   // Not the most efficient implementation ever, but meh.
   def condition(p : T => Boolean) = new Rand[T] {
-    def get() = {
+    def draw() = {
       var x = outer.get;
       while(!p(x)) {
         x = outer.get;
@@ -92,7 +94,7 @@ object Rand {
    * Chooses an element from a collection. 
    */
   def choose[T](c :Collection[T]) = new Rand[T] { 
-    def get() = {
+    def draw() = {
       val sz = uniform.get * c.size;
       val elems = c.elements;
       var i = 1;
@@ -112,7 +114,7 @@ object Rand {
    * The trivial random generator: always returns the argument
    */
   def always[T](t : T) = new Rand[T] {
-    def get = t;
+    def draw = t;
   }
 
   
@@ -120,7 +122,7 @@ object Rand {
   * Simply reevaluate the body every time get is called
   */ 
   def fromBody[T](f : =>T) = new Rand[T] {
-    def get = f;
+    def draw = f;
   }
 
   /**
@@ -151,42 +153,42 @@ object Rand {
    * Uniformly samples in [0,1]
    */
   val uniform = new Rand[Double] {
-    def get = r.nextDouble;
+    def draw = r.nextDouble;
   }
 
   /**
    * Uniformly samples an integer in [0,MAX_INT]
    */
   val randInt = new Rand[Int] {
-    def get = r.nextInt;
+    def draw = r.nextInt;
   }
 
   /**
    * Uniformly samples an integer in [0,n]
    */
   def randInt(n : Int) = new Rand[Int] {
-    def get = r.nextInt(n);
+    def draw = r.nextInt(n);
   }
 
   /**
    * Samples a gaussian with 0 mean and 1 std
    */
   val gaussian :Rand[Double] = new Rand[Double] {
-    def get = r.nextGaussian;
+    def draw = r.nextGaussian;
   }
 
   /**
    * Samples a gaussian with m mean and s std
    */
   def gaussian(m : Double, s : Double) :Rand[Double] = new Rand[Double] {
-    def get = m + s * gaussian.get
+    def draw = m + s * gaussian.get
   }
 
   /**
    * Implements the Knuth shuffle
    */
   def permutation(n : Int) = new Rand[RandomAccessSeq[Int]] {
-    def get = {
+    def draw = {
       val arr = new ArrayBuffer[Int]();
       arr ++= (0 until n);
       var i = n;

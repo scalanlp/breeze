@@ -1,4 +1,4 @@
-package scalanlp.stats;
+package scalanlp.stats.sampling;
 import scalanlp.counters.Counters._;
 import scalanlp.counters._;
 
@@ -7,7 +7,7 @@ import scalanlp.util.Log;
 /**
  * Represents a multinomial Distribution over elements.
  */
-trait Multinomial[T] extends Distribution[T] {
+trait Multinomial[T] extends DiscreteDistr[T] {
   protected def components : scala.collection.Map[T,Double];
   protected def total : Double;
 
@@ -18,7 +18,7 @@ trait Multinomial[T] extends Distribution[T] {
     }
   }
   
-  def get = {
+  def draw() = {
     var prob = Rand.uniform.get() * total;
     if(prob.isNaN) {
       Log(Log.ERROR)("You got a NaN!");

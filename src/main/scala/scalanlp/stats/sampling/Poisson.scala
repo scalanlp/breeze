@@ -1,10 +1,11 @@
-package scalanlp.stats;
+package scalanlp.stats.sampling;
 import math.Numerics._;
 import Math._;
-class Poisson(val mean: Double) extends Distribution[Int] {
+
+class Poisson(val mean: Double) extends DiscreteDistr[Int] {
   private val ell = Math.exp(-mean);
   //  TODO: this is from Knuth, but it's linear in mean.
-  def get() = {
+  def draw() = {
     var k = 0;
     var p = 1.;
     do { 
