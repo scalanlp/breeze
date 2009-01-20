@@ -25,6 +25,7 @@ import counters._;
 *
 * @author dlwh
 */
+@serializable
 trait Example[+L,+T] extends Observation[T] with Labeled[L] {outer=>
   def id : String;
   def label: L
@@ -33,7 +34,6 @@ trait Example[+L,+T] extends Observation[T] with Labeled[L] {outer=>
   override def map[U](f: T=>U) = new Example[L,U] {
     def label = outer.label;
     def id = outer.id;
-    /** lazy */
     lazy val features = f(outer.features);
   }
 
