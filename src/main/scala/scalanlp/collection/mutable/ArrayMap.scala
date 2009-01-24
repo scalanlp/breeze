@@ -30,9 +30,9 @@ import scala.collection.mutable.ArrayBuffer;
 * @author dlwh
 */
 class ArrayMap[V](private val arr: ArrayBuffer[V]) extends scala.collection.mutable.Map[Int,V] {
+  def this() = this(new ArrayBuffer[V]())
   override def default(i: Int): V = defaultValue;
   def defaultValue:V = throw new NoSuchElementException("");
-  def this() = this(new ArrayBuffer[V]())
   override def apply(i: Int) = get(i).getOrElse(default(i));
   def get(i : Int) = if(i < arr.length) Some(arr(i)) else None;
   def update(i : Int, v : V) {

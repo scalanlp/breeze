@@ -18,21 +18,25 @@ package scalanlp.stats.sampling
 
 import org.scalacheck._
 import org.specs._;
+import org.specs.matcher._;
 
 import scalanlp.counters.Counters._;
 
-object PitmanYorProcessSpec extends Specification with ScalaCheck {
+object PitmanYorProcessSpec extends Specification with ScalaCheckMatchers {
   val arbPy = for {
     theta <- Gen.choose(0.0,20.0);
-    alpha <- Gen.choose(0.0,1.0)
+    //alpha <- Gen.choose(0.0,1.0)
+    alpha = 0
   } yield {
     new PitmanYorProcess(theta,alpha);
   }
   
   val arbPyWithDraw = for(py <- arbPy; n <- Gen.choose(0,5)) yield (py,n);
+  val arbPyWithDraw2 = for(py <- arbPy; n <- Gen.choose(0,5); m <- Gen.choose(0,5)) yield (py,n,m);
   
   val arbObsPy = for(py <- arbPy; list <- Gen.listOf(Gen.choose(0,5))) yield py.observe(count(list));
   val arbObsPyWithDraw = for(py <- arbObsPy; n <- Gen.choose(0,5)) yield (py,n);
+  val arbObsPyWithDraw2 = for(py <- arbObsPy; n <- Gen.choose(0,5); m <- Gen.choose(0,5)) yield (py,n,m);
   
   "observe increases probability" in {
     arbPyWithDraw must pass { pyn: (PitmanYorProcess,Int) =>
@@ -57,6 +61,15 @@ object PitmanYorProcessSpec extends Specification with ScalaCheck {
       else py.probabilityOf(n) == py.observe(n).unobserve(n).probabilityOf(n);
     }
   }
+  
+  "observe/unobserve has no effect" in {
+    arbPyWithDraw2 must pass { pyn: (PitmanYorProcess,Int,Int) =>
+      val (py,n,m) = pyn;
+      if(n == py.nextClass) true
+      else py.probabilityOf(m) == py.observe(n).unobserve(n).probabilityOf(m);
+    }(set (minTestsOk -> 100))
+  } 
+  
   /*
   "observe/unobserve has no effect even after many observations" in {
     arbObsPyWithDraw must pass { pyn: (PitmanYorProcess,Int) =>
