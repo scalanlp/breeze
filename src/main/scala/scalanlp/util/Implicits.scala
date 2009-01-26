@@ -104,6 +104,10 @@ object Implicits {
       in(t);
     }
   }
+  
+  implicit def doubleExtras(d: Double) = new {
+    def =~=(e: Double) = d ==e ||  Math.abs(d - e)/d < 1E-4;
+  }
 
   implicit def RASExtras[T](s: RandomAccessSeq[T]) = new {
     // useful subset selection

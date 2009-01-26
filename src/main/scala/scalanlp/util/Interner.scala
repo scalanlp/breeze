@@ -53,12 +53,12 @@ class Interner[T] extends (T=>T) {
   private val inner = new WeakHashMap[T,WeakReference[T]];
 }
 
-object Interner extends Interner[Any] {
+object Interner {
   private val typedInterners = new scala.collection.mutable.HashMap[Class[_],Interner[_]] {
     override def default(c: Class[_]) = getOrElseUpdate(c,new Interner[Any]);
   }
-
-  def forClass[T](implicit m:scala.reflect.Manifest[T]):Interner[T] = forClass[T](m.erasure.asInstanceOf[Class[T]]);
+  
+  def apply[T](implicit m: scala.reflect.Manifest[T]) = forClass[T](m.erasure.asInstanceOf[Class[T]]);
 
   def forClass[T](c: Class[T]) = typedInterners(c).asInstanceOf[Interner[T]];
 }
