@@ -72,30 +72,41 @@ class PitmanYorProcess private (
     val ret = new ArrayMap[Double] with Int2DoubleCounter;
     
     for( (k,v) <- drawn) {
-      if(k != unobservedIndex)
+      if(k != unobservedIndex && v != 0.0) {
         ret(k) += v;
-    }
-    
-    var deletedclasses = 0;
-    for( (k,v) <- c) {
-      ret(k) += v;
-      if( Math.abs(ret(k)) < Math.abs(alpha)) {
-        ret(k) = 0;
-        deletedclasses += 1;
-      } else if (ret(k) < 0) {
-        throw new IllegalArgumentException("Reducing class " + k +"  to less than 0")
+        ret(k) += alpha;
       }
     }
     
-    val numKeys = (Set() ++ drawn.keys.filter(unobservedIndex!=) ++ c.keys).size
-    
-    val index0 = {
-      val idx = ret.elements.findIndexOf( (x:(Int,Double)) => x._2 == 0.0);
-      if(idx == -1) drawn.size;
-      else idx;
+    for( (k,v) <- c) {
+      ret(k) += v;
+      if( Math.abs(ret(k)) < Math.abs(1 - alpha - 1E-4) || ret(k) < 0 && Math.abs(ret(k)) == Math.abs(alpha)) {
+        ret(k) = 0;
+      } else if (ret(k) < 0) {
+        throw new IllegalArgumentException("Reducing class " + k +"  to less than 0 " + ret(k))
+      }
     }
     
-    ret(index0) = (numKeys-deletedclasses) *alpha;
+    val index0 = {
+        if(!(c contains unobservedIndex)) unobservedIndex 
+        else {
+          val idx = ret.elements.findIndexOf( (x:(Int,Double)) => x._2 == 0.0);
+          if(idx == -1) ret.size;
+          else idx;
+      }
+    }
+    
+    val numKeys = ret.elements.filter( (x:(Int,Double)) => x._2 > 0.0).collect.size;
+    
+    ret.transform{ (k,v) =>
+      if( k == index0) {
+        numKeys * alpha;
+      } else if(v > 0)  {
+        v - alpha;
+      } else {
+        v
+      }
+    }
     
     new PitmanYorProcess(ret,index0,theta,alpha)
   }
@@ -219,7 +230,7 @@ class PitmanYorProcess private (
 
   override def toString() = {
     val str = drawn.elements.map(kv => (kv._1)+ " -> " + kv._2).mkString("draws = (", ", ", ")");
-    "PY(" + theta + "," + alpha + ")" + "\n{newClass=" + drawn(0) + ", " + str + "}";
+    "PY(" + theta + "," + alpha + ")" + "\n{newClass=" + drawn(unobservedIndex) + ", " + str + "}";
   }
 
 }

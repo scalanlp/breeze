@@ -21,12 +21,12 @@ import org.specs._;
 import org.specs.matcher._;
 
 import scalanlp.counters.Counters._;
+import scalanlp.util.Implicits._;
 
 object PitmanYorProcessSpec extends Specification with ScalaCheckMatchers {
   val arbPy = for {
     theta <- Gen.choose(0.0,20.0);
-    //alpha <- Gen.choose(0.0,1.0)
-    alpha = 0
+    alpha <- Gen.choose(0.0,1.0)
   } yield {
     new PitmanYorProcess(theta,alpha);
   }
@@ -34,9 +34,9 @@ object PitmanYorProcessSpec extends Specification with ScalaCheckMatchers {
   val arbPyWithDraw = for(py <- arbPy; n <- Gen.choose(0,5)) yield (py,n);
   val arbPyWithDraw2 = for(py <- arbPy; n <- Gen.choose(0,5); m <- Gen.choose(0,5)) yield (py,n,m);
   
-  val arbObsPy = for(py <- arbPy; list <- Gen.listOf(Gen.choose(0,5))) yield py.observe(count(list));
-  val arbObsPyWithDraw = for(py <- arbObsPy; n <- Gen.choose(0,5)) yield (py,n);
-  val arbObsPyWithDraw2 = for(py <- arbObsPy; n <- Gen.choose(0,5); m <- Gen.choose(0,5)) yield (py,n,m);
+  val arbObsPy:Gen[(PitmanYorProcess,List[Int])] = for(py <- arbPy; list <- Gen.listOf(Gen.choose(0,5))) yield (py,list)
+  val arbObsPyWithDraw :Gen[(PitmanYorProcess,List[Int],Int)] = for(py <- arbObsPy; n <- Gen.choose(0,5)) yield (py._1,py._2,n);
+  val arbObsPyWithDraw2 :Gen[((PitmanYorProcess,List[Int]),Int,Int)] = for(py <- arbObsPy; n <- Gen.choose(0,5); m <- Gen.choose(0,5)) yield (py,n,m);
   
   "observe increases probability" in {
     arbPyWithDraw must pass { pyn: (PitmanYorProcess,Int) =>
@@ -47,8 +47,8 @@ object PitmanYorProcessSpec extends Specification with ScalaCheckMatchers {
   };
    
   "observe increases probability even after many observations" in {
-    arbObsPyWithDraw must pass { pyn: (PitmanYorProcess,Int) =>
-      val (py,n) = pyn;
+    arbObsPyWithDraw must pass { pyn: (PitmanYorProcess,List[Int],Int) =>
+      val (py,list,n) = pyn;
       if(n == py.nextClass) true
       else py.probabilityOf(n) < py.observe(n).probabilityOf(n);
     }
@@ -62,31 +62,18 @@ object PitmanYorProcessSpec extends Specification with ScalaCheckMatchers {
     }
   }
   
-  "observe/unobserve has no effect" in {
-    arbPyWithDraw2 must pass { pyn: (PitmanYorProcess,Int,Int) =>
-      val (py,n,m) = pyn;
-      if(n == py.nextClass) true
-      else py.probabilityOf(m) == py.observe(n).unobserve(n).probabilityOf(m);
-    }(set (minTestsOk -> 100))
-  } 
-  
-  /*
   "observe/unobserve has no effect even after many observations" in {
-    arbObsPyWithDraw must pass { pyn: (PitmanYorProcess,Int) =>
-      val (py,n) = pyn;
-      if(n == py.nextClass) true
+    arbObsPyWithDraw must pass { pyn: (PitmanYorProcess,List[Int],Int) =>
+      val (py,list,n) = pyn;
+      val opy = py.observe(count(list));
+      if(n == opy.nextClass) true
       else {
-        println();
-        println(py);
-        println(py.probabilityOf(n));
-        println(py.observe(n).unobserve(n));
-        println(py.observe(n).unobserve(n).probabilityOf(n));
-        py.probabilityOf(n) == py.observe(n).unobserve(n).probabilityOf(n);
+        opy.probabilityOf(n) =~= opy.observe(n).unobserve(n).probabilityOf(n);
       }
     }
   }
-   */
 }
 
 import org.specs.runner._;
 class PitmanYorProcessTest extends JUnit4(PitmanYorProcessSpec);
+class PitmanYorProcessTest2 extends JUnit3(PitmanYorProcessSpec);
