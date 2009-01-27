@@ -15,13 +15,36 @@ package scalanlp.math;
  See the License for the specific language governing permissions and
  limitations under the License. 
 */
+import org.scalacheck._
+import org.specs._;
+import org.specs.matcher._;
 
-/*import org.scalacheck._;
-import org.scalatest.prop._;
-import org.scalacheck.Arbitrary._
-import org.scalacheck.Prop._
-object LogDoubleSpecification extends PropSuite with Checkers {
+import scalanlp.counters.Counters._;
+import scalanlp.util.Implicits._;
+import LogDouble._;
 
-  test("add", (d:Double, e:Double)  => { (new LogDouble(d) + new LogDouble(e)).value == d + e})
+object LogDoubleSpecification extends Specification("LogDouble") with ScalaCheckMatchers {
+  import Arbitrary._;
+  val dPair = for { 
+    d <- arbitrary[Double] suchThat {_ > 0};
+    e <- arbitrary[Double] suchThat {_> 0}
+  } yield {
+    (d,e);
+  }
+  
+  "addition" in {
+    dPair must pass {(dp:(Double,Double)) => val (d,e) = dp; { (d.toLogDouble + e.toLogDouble).value =~= d + e}}
+  }
+  "subtraction" in {
+    dPair must pass { (dp:(Double,Double)) => val (d,e) = dp;{ d < e || (d.toLogDouble - e.toLogDouble).value =~= d - e}}
+  }
+  "multiplication" in {
+    dPair must pass { (dp:(Double,Double)) => val (d,e) = dp;{  (d.toLogDouble * e.toLogDouble).value =~= d * e}}
+  }
+  "division" in { 
+    dPair must pass {(dp:(Double,Double)) => val (d,e) = dp;{ (d.toLogDouble / e.toLogDouble).value =~= d / e}}
+  }
 }
-*/
+
+import org.specs.runner._;
+class LogDoubleTest extends JUnit4(LogDoubleSpecification);

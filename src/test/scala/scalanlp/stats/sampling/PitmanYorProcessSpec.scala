@@ -76,4 +76,3 @@ object PitmanYorProcessSpec extends Specification with ScalaCheckMatchers {
 
 import org.specs.runner._;
 class PitmanYorProcessTest extends JUnit4(PitmanYorProcessSpec);
-class PitmanYorProcessTest2 extends JUnit3(PitmanYorProcessSpec);
