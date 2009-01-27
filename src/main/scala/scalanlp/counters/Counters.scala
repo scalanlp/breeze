@@ -120,7 +120,7 @@ object Counters {
     var elem = iter.next;
     val firstClass = elem.asInstanceOf[AnyRef].getClass;
     var borked = false;
-    var counter = IntCounter[T](elem);
+    var counter = IntCounter.fromClass[T](firstClass.asInstanceOf[Class[T]]);
     counter(elem) += 1;
     while(iter.hasNext) {
       elem = iter.next;
@@ -148,7 +148,7 @@ object Counters {
     var elem = iter.next;
     val firstClass = elem.asInstanceOf[AnyRef].getClass;
     var borked = false;
-    var counter = IntCounter[T](elem._1);
+    var counter = IntCounter.fromClass[T](firstClass.asInstanceOf[Class[T]]);
     counter(elem._1) += elem._2;
     while(iter.hasNext) {
       elem = iter.next;
@@ -171,7 +171,7 @@ object Counters {
     var elem = iter.next;
     val firstClass = elem._1.asInstanceOf[AnyRef].getClass;
     var borked = false;
-    var counter = DoubleCounter[T](elem._1);
+    var counter = DoubleCounter.fromClass[T](firstClass.asInstanceOf[Class[T]]);
     counter(elem._1) += elem._2;
     while(iter.hasNext) {
       elem = iter.next;
