@@ -25,11 +25,17 @@ package scalanlp.util
 object ScalaQL {
   
   /** Groups the elements of the given sequence into a map by the given key function. */
-  def groupBy[E,K](seq : Seq[E], keyF : (E=>K)) : scala.collection.Map[K,List[E]] = {
-    val map = new scala.collection.mutable.HashMap[K,List[E]];
-    for (elem <- seq) {
+  def groupBy[E,K](seq : Seq[E], keyF : (E=>K))  : scala.collection.mutable.Map[K,List[E]] =
+    groupBy(seq.elements, keyF, (a:E) => a);
+  
+  /** Groups the elements of the given sequence into a map by the given key function. */
+  def groupBy[E,K,V](elements : Iterator[E],
+                     keyF : (E=>K),
+                     valF : (E=>V)) : scala.collection.mutable.Map[K,List[V]] = {
+    val map = new scala.collection.mutable.HashMap[K,List[V]];
+    for (elem <- elements) {
       val key = keyF(elem);
-      map(key) = elem :: map.getOrElse(key, List[E]());
+      map(key) = valF(elem) :: map.getOrElse(key, List[V]());
     }
     map;
   }
