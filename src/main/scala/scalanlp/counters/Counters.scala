@@ -215,9 +215,7 @@ object Counters {
    * Returns the top k elements in the collection by the given comparator
    */
   def topK[T](k : Int, comparator : ((T,T) => Int))(data : Iterable[T]) : Seq[T] = {
-    val topk = new TopKQueue[T](k, comparator)
-    topk ++= data
-    return topk
+    (new TopKQueue[T](k, comparator) ++ data).reverse.filter(_!=null);
   }
   
   /**
