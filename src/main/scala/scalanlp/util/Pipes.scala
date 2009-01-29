@@ -39,6 +39,9 @@ import scala.concurrent.ops._
  */
 class Pipes {
 
+  // Pipes instance for auto-importing into called contexts.
+  implicit val pipes = this;
+  
   //
   // state variables
   //
@@ -70,6 +73,16 @@ class Pipes {
   /** Sets the default stdin used in this context. */
   def stderr(stream : InputStream) : Unit = _stdin = stream;
   
+  /** Returns a copy of the pipes context. */
+  def copy : Pipes = {
+    val _pipes = new Pipes;
+    _pipes._cwd = _cwd;
+    _pipes._stdout = _stdout;
+    _pipes._stderr = _stderr;
+    _pipes._stdin = _stdin;
+    return _pipes;
+  }
+  
   /**
    * Runs the given command (via the system command shell if found)
    * in the current directory.
@@ -92,7 +105,7 @@ class Pipes {
   /**
    * Returns the current working directory.
    */
-  def pwd : File = _cwd;
+  def cwd : File = _cwd;
 
   /**
    * Changes to the given directory.
@@ -107,9 +120,6 @@ class Pipes {
     }
     _cwd = folder;
   }
-  
-  /** Waits for the tiven process to finish. */
-  def waitFor(process : PipeProcess) = process.waitFor;
 
   //
   //  implicit conversions
@@ -164,11 +174,13 @@ class Pipes {
     }
   }
   
-  implicit def iPipeIterator[E](lines : Iterator[E]) =
-    new PipeIterator(lines.map(_.toString))(this);
+  def File(base : java.io.File, path : String) = new File(base, path);
   
-  implicit def iPipeIterator[E](lines : Iterable[E]) =
-    new PipeIterator(lines.elements.map(_.toString))(this);
+  implicit def iPipeIterator(lines : Iterator[String]) =
+    new PipeIterator(lines)(this);
+  
+  implicit def iPipeIterator(lines : Iterable[String]) =
+    new PipeIterator(lines.elements)(this);
   
   private def error(message : String) : Unit = {
     throw new PipesException(message);
@@ -183,26 +195,31 @@ class Pipes {
  * And take a look at the example code in the Pipes object's main method.
  */
 object Pipes {
+  type HasLines = {
+    def getLines() : Iterator[String];
+  }
+
   /** A global instance for easy imports */
   val global = new Pipes();
   
   def apply() = {
     new Pipes();
   }
-  
-  def main(argv : Array[String]) {
-    import global._;
+}
+ 
+object PipesExample {
+  import Pipes.global._;
     
-    sh("sleep 1; echo '(sleep 1 async) prints 2nd'") | stdout;
-    sh("echo '(no sleep async) prints 1st'") | stdout;
-    waitFor(sh("sleep 2; echo '(sleep 2 sync) prints 3rd after pause'") | stdout);
+  def main(argv : Array[String]) {
+    sh("echo '(no sleep) prints 1st'") | stdout;
+    sh("sleep 1; echo '(sleep 1) prints 2nd'") | stdout;
     sh("echo '(stderr redirect) should show up on stdout' | cat >&2") |& stdout;
     sh("echo '(stderr redirect) should also show up on stdout' | cat >&2") |& sh("cat") | stdout;
     sh("echo '(pipe test line 1) should be printed'; echo '(pipe test line 2) should not be printed'") | sh("grep 1") | stdout;
     sh("echo '(translation test) should sound funny'") | sh("perl -pe 's/(a|e|i|o|u)+/oi/g';") | stdout;
     stdin | sh("egrep '[0-9]'") | stdout;
     
-    (1 to 10) | stderr;
+    (1 to 10).map(_.toString) | stderr;
     
     for (line <- sh("ls").getLines) {
       println(line.toUpperCase);
@@ -325,47 +342,65 @@ class PipeProcess(val process : Process)(implicit pipes : Pipes) {
     return next;
   }
 
+  /** Piping to a process happens immediately via spawning. */
+  def |  (process : Process) : PipeProcess = {
+    spawn {
+      this | process.getOutputStream;
+    }
+    return new PipeProcess(process);
+  }
+  
+  /** Piping to a process happens immediately via spawning. */
+  def |& (process : Process) : PipeProcess = {
+    spawn {
+      this |& process.getOutputStream;
+    }
+    return new PipeProcess(process);
+  }
+
   /** Redirects the given input stream as the source for the process */
-  def <  (instream : InputStream) : PipeProcess = {
+  def <  (instream : InputStream) : Process = {
     spawn {
       val out = process.getOutputStream;
       drain(instream, process.getOutputStream);
       out.close();
     }
 
-    return this;
+    return process;
   }
-
-  /** Redirects output from the process to the given output stream */
-  def |  (outstream : OutputStream) : PipeProcess = {
+  
+  /**
+   * Redirects output from the process to the given output stream.
+   * Blocks until the process completes.
+   */
+  def |  (outstream : OutputStream) : Process = {
     this.out = outstream;
 
-    spawn {
-      val waitForStdin  = future { drain(process.getInputStream, out); }
-      val waitForStderr = future { drain(process.getErrorStream, err); }
+    val waitForStdin  = future { drain(process.getInputStream, out); }
+    val waitForStderr = future { drain(process.getErrorStream, err); }
 
-      waitForStdin();
-      closePipes();
-    }
-
-    return this;
+    waitForStdin();
+    closePipes();
+    
+    process;
   }
 
-  /** Redirects stdout and stderr from the process to the given output stream */
-  def |& (outstream : OutputStream) : PipeProcess = {
+  /**
+   * Redirects stdout and stderr from the process to the given output stream.
+   * Blocks until the process completes.
+   */
+  def |& (outstream : OutputStream) : Process = {
     this.out = outstream;
     this.err = outstream;
 
-    spawn {
-      val waitForStdin  = future { drain(process.getInputStream, out); }
-      val waitForStderr = future { drain(process.getErrorStream, err); }
+    val waitForStdin  = future { drain(process.getInputStream, out); }
+    val waitForStderr = future { drain(process.getErrorStream, err); }
+    
+    waitForStdin();
+    waitForStderr();
+    closePipes();
 
-      waitForStdin();
-      waitForStderr();
-      closePipes();
-    }
-
-    return this;
+    process;
   }
 
   /** Pipes to a function that accepts an InputStream. */
@@ -398,7 +433,7 @@ class PipeInputStream(var stream : InputStream) {
    * immediately.  Spawns a background job to write all bytes
    * from the incoming stream to the process.
    */
-  def |(process : PipeProcess) : PipeProcess =
+  def |(process : PipeProcess) : Process =
     process < stream;
 
   /** Pipes to a function that accepts an InputStream. */
@@ -417,7 +452,7 @@ class PipeIterator(lines : Iterator[String])(implicit pipes : Pipes) {
   /**
    * Writes all lines to the given process.  Returns immediately.
    */
-  def |(process : PipeProcess) : PipeProcess = {
+  def |(process : PipeProcess) : Process = {
     val pipeIn  = new java.io.PipedInputStream();
     val pipeOut = new java.io.PipedOutputStream(pipeIn);
     spawn { this | pipeOut; }
