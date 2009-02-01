@@ -36,19 +36,19 @@ import scala.collection.mutable._;
   private val indices = Map[T,Int]();
   
   override def apply(t : T) = index(t);
-  def unapply(pos : Int):Option[T] = get(pos);
+  def unapply(pos : Int):T = get(pos);
 
   override def elements = objects.elements;
   
   override def size = indices.size;
 
   /**
-   * Returns an object at the given position or None if that
-   * position is outside the range of the index.
+   * Returns an object at the given position or throws an exception if it's
+   * not found.
    */
-  def get(pos : Int) : Option[T] = {
-    if (pos < 0 || pos >= objects.length) None
-    else Some(objects(pos));
+  def get(pos : Int) : T = {
+    if (pos < 0 || pos >= objects.length) throw new IndexOutOfBoundsException("Index "+pos+" is out of range");
+    else objects(pos);
   }
 
   /**
@@ -152,7 +152,10 @@ object Index extends Index[Any] {
   /** Constructs an Index from some elements. */
   def apply[T](iterable : Iterable[T]) : Index[T] = {
     val index = new Index[T];
-    index.indexAll(iterable);
+    // read through all elements now -- don't lazily defer evaluation
+    for (element <- iterable) {
+      index.index(element);
+    }
     return index;
   }
   
@@ -160,7 +163,7 @@ object Index extends Index[Any] {
    * Loads a String index, one line per item with line
    * numbers (starting at 0) as the indices.
    */
-  def load(source : scala.io.Source) : Index[String] = {
+  def load(source : {def getLines : Iterator[String]}) : Index[String] = {
     apply(source.getLines.map(_.stripLineEnd));
   }
 }
