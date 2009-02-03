@@ -108,6 +108,16 @@ object ContingencyStats {
     (guessed.elements zip gold.elements).foldLeft(ContingencyStats[L]())(_+_);
   }
 
+  class Accuracy(val numRight: Int, val numTotal: Int) {
+    def this() = this(0,0)
+    def accuracy = if(numTotal == 0) 0. else numRight.asInstanceOf[Double]/ numTotal;
+    def + (b:Boolean) = new Accuracy(if(b) numRight + 1 else numRight, numTotal + 1);
+    def ++(b:Iterator[Boolean]) = b.foldLeft(this)(_+_);
+    def ++(b:Iterable[Boolean]) = b.foldLeft(this)(_+_);
+
+    override def toString = "Accuracy: " + accuracy;
+  }
+
   // true positive, false positive, false negative. TN is only used
   // in Accuracy, which is unreliable and requires access to the label
   // set.
