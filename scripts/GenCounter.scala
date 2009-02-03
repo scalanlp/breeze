@@ -248,7 +248,7 @@ trait {COUNTER} extends {superClass} {{
   def dot(that : {COUNTER}) : Double = {{
     var total = 0.0
     for (val (k,v) &lt;- that.elements) {{
-      total += get(k).asInstanceOf[Double] * v
+      total += apply(k).asInstanceOf[Double] * v
     }}
     return total
   }}
@@ -271,6 +271,12 @@ trait {COUNTER} extends {superClass} {{
 
   {ov} def /=(scale : {V}) {{
     transform {{ (k,v) => (v / scale).asInstanceOf[{V}]}}
+  }}
+
+  {ov} def unary_-() = {{
+      val rv : {if (hasCounterParent) superClass else COUNTER} = {COUNTER}();
+      rv -= this;
+      rv;
   }}
 }}
 
