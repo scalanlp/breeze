@@ -39,7 +39,7 @@ class Gamma(val shape : Double, val scale : Double) extends ContinuousDistr[Doub
 
   override def unnormalizedLogPdf(x : Double) = (shape - 1) * Math.log(x) - x/scale;
 
-  //From javanlp, which was stolen from Teh 
+  // Copied from Teh
   def draw() : Double = { 
     var aa = 0.0;
     var bb = 0.0;

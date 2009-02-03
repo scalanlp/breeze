@@ -16,9 +16,7 @@ package scalanlp.data.process;
  limitations under the License. 
 */
 
-
-
-/** Simple Regex-based sentence terminator. Very very from perfect.
+/** Simple Regex-based sentence terminator. Very very far from perfect.
 *
 * @author dlwh
 */
