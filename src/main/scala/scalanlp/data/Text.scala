@@ -23,7 +23,7 @@ import counters.Counters._;
 
 
 /**
-* Represents a sequence of text. This is just a string with an id, a nice map method.
+* Represents a sequence of text. This is just a string with an id, and a nice map method.
 *
 * @author dlwh
 */
@@ -39,9 +39,16 @@ object Text {
  }
 }
 
+/**
+ * A text with a label.
+ * @author dlwh
+ */
 class LabeledText[L](id:String,val label:L, contents: String) extends Text(id,contents) with Example[L,String];
 
 object LabeledText {
+  /**
+   * Creates a new text with the file as the id, and the directory name as the label.
+   */
   def fromFile(f:File) = {
     new Text(f.getName,f.slurp).withLabel(f.getParentFile.getName);
   }

@@ -84,7 +84,7 @@ object WhitespaceTokenize extends (String=>Iterator[String]) {
 
 
 /**
-* Breaks a string into alphabetic components. Uses StringTokenizer
+* Breaks a string into alphabetic components.
 *
 * @author dlwh
 */

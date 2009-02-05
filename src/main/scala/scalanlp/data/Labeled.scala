@@ -17,6 +17,11 @@ package scalanlp.data;
 */
 
 
+/**
+ * Something that has a label. 
+ * 
+ * @author dlwh
+ */
 trait Labeled[+L] {
   def label : L;
 }

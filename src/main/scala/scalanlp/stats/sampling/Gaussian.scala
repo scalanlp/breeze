@@ -20,6 +20,11 @@ package scalanlp.stats.sampling;
 import Rand._;
 import Math._;
 
+/**
+ * Represents a Gaussian distribution over a single real variable.
+ * 
+ * @author dlwh
+ */
 class Gaussian(val mu :Double, val sigma : Double) extends ContinuousDistr[Double] {
   private val inner = Rand.gaussian(mu,sigma);
   def draw() = inner.get();

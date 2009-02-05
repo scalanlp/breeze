@@ -17,6 +17,11 @@ package scalanlp.stats.sampling
 */
 
 
+/**
+ * A Rand that changes based on previous draws.
+ * 
+ * @author dlwh
+ */
 trait Process[T] extends Rand[T] {
   /** Force the "next" draw to be x, and return a new process. */
   def observe(x: T): Process[T];

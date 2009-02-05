@@ -32,6 +32,7 @@ import scala.collection.mutable.ArrayBuffer;
 */
 trait Corpus[+T] {
   def name : String;
+  /** Splits could be "train" "test", or "small", "large", or whatever. */
   def splits : Map[String,Seq[T]];
   def license = "Unknown";
   def author = "Unknown";

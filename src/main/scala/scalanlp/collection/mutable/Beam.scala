@@ -18,7 +18,12 @@ package scalanlp.collection.mutable;
 
 
 import scala.collection.mutable.PriorityQueue;
-
+/**
+ * Represents a beam, which is essentially a priority queue
+ * with a maximum size.
+ * 
+ * @author dlwh
+ */
 class Beam[T](val maxSize:Int, xs:T*)(implicit o : T=>Ordered[T]) { outer =>
   assert(maxSize >= 0)
   val queue = new PriorityQueue[T]()(reverseOrder(o));

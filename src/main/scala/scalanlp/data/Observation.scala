@@ -31,11 +31,11 @@ trait Observation[+T] { outer=>
   def features: T;
 
   /**
-  * non-strict, but cached, transformation of features
+  * strict, but cached, transformation of features
   */
   def map[U](f: T=>U) = new Observation[U] {
     def id = outer.id;
-    lazy val features = f(outer.features);
+    val features = f(outer.features);
   }
 
   /**

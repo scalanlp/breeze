@@ -28,14 +28,15 @@ import data._;
 class ContingencyStats[L] private (private val classWise: Map[L,Table]) {
   def this() = this(Map[L,Table]().withDefaultValue(Table(0,0,0)));
 
+  /**
+   * Add an observation.
+   */
   def +(l :(L,L)) = apply(l._1,l._2);
 
-  /** Takes a guess and a gold standard set of labelings.
-  */
+  /** Takes a guess and a gold standard set of labelings. */
   def apply(guessgold: (L,L)):ContingencyStats[L] = this(guessgold._1,guessgold._2);
 
-  /** Takes a guess and a gold standard set of labelings.
-  */
+  /** Takes a guess and a gold standard set of labelings. */
   def apply(guess: Set[L], gold: Set[L]):ContingencyStats[L] = {
     val tps = (guess intersect gold).foldLeft(classWise) { (m,l) => m + (l -> m(l).incTP)};
     val fps = (guess -- gold).foldLeft(tps) { (m,l) => m + (l -> m(l).incFP)};
@@ -57,6 +58,7 @@ class ContingencyStats[L] private (private val classWise: Map[L,Table]) {
 
   def precision(l:L) = classWise(l).precision;
   def recall(l:L) = classWise(l).recall;
+  /** F1 score for this label. */
   def f(l:L) = classWise(l).f;
   def f(l:L,beta:Double) = classWise(l).f(beta);
 

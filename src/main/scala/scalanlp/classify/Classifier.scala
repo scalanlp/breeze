@@ -20,8 +20,19 @@ package scalanlp.classify;
 import counters._;
 import data._;
 
+/**
+ * Represents a classifier from observations of type T to labels of type L.
+ * Implementers should only need to implement score.
+ * 
+ * @author dlwh
+ */
 trait Classifier[L,-T] extends (Observation[T]=>L) {
+  /** Return the most likely label */
   def apply(o :Observation[T]) = classify(o);
+  /** Return the most likely label */
   def classify(o :Observation[T]) = scores(o).argmax;
+  /** For the observation, return the score for each label that has a nonzero 
+   *  score. 
+   */
   def scores(o: Observation[T]): DoubleCounter[L];
 }

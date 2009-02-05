@@ -23,7 +23,9 @@ package scalanlp.math;
 */
 object Numerics {
   import Math._;
-  // based on radford neal's c implementation
+  /**
+   * The standard digamma function.
+   */
   def digamma(xx: Double) = {
     var x = xx;
     var r = 0.0;
@@ -85,6 +87,9 @@ object Numerics {
     logSum(Array(a,b) ++ c);
   }
 
+  /**
+  * @return log(\sum exp(a_i))
+  */
   def logSum(a:Seq[Double]):Double = {
     val iter = a.elements;
     if(a.length == 1) a(0)

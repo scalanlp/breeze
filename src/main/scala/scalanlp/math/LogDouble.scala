@@ -43,7 +43,14 @@ class LogDouble(val logValue: Double) {
 
 object LogDouble {
   implicit def doubleExtra(d : Double) = new {
+    /**
+     * Assumes the double is already logged.
+     */
     def asLogDouble = new LogDouble(d);
+    
+    /**
+     * Stores the double in LogSpace
+     */
     def toLogDouble = new LogDouble(Math.log(d));
     def logValue = Math.log(d);
 

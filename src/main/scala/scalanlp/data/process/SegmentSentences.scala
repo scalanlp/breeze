@@ -17,6 +17,7 @@ package scalanlp.data.process;
 */
 
 /** Simple Regex-based sentence terminator. Very very far from perfect.
+ * Usage: SegmentSentences(text).foreach{println}
 *
 * @author dlwh
 */

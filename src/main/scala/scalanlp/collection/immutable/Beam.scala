@@ -19,6 +19,12 @@ package scalanlp.collection.immutable;
 
 import scala.collection.mutable.PriorityQueue;
 
+/**
+ * Represents a beam, which is essentially a priority queue
+ * with a maximum size.
+ * 
+ * @author dlwh
+ */
 class Beam[T](val maxSize:Int, xs : T*)(implicit o : T=>Ordered[T]) { outer =>
   assert(maxSize >= 0)
   val heap = trim(BinomialHeap(xs:_*));
@@ -39,6 +45,9 @@ class Beam[T](val maxSize:Int, xs : T*)(implicit o : T=>Ordered[T]) { outer =>
     else h;
   }
 
+  /** Just convert each element to the new value. Will trigger
+   * a reordering.
+   */
   def map[U<%Ordered[U]](f: T=>U) = new Beam[U](maxSize) { 
     override val heap = BinomialHeap[U]() ++ outer.heap.map(f);
   }
@@ -67,6 +76,7 @@ class Beam[T](val maxSize:Int, xs : T*)(implicit o : T=>Ordered[T]) { outer =>
   def +(x:T) = new Beam[T](maxSize) {
     override val heap = cat(outer.heap,x);
   }
+  
   def ++(x:Iterator[T]) : Beam[T] = new Beam[T](maxSize) {
     override val heap = x.foldLeft(outer.heap)(cat);
   }

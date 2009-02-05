@@ -27,12 +27,10 @@ import scala.collection.Map;
 */
 trait MultilabeledExample[L,+T] extends Example[Set[L],T] with Multilabeled[L] { outer =>
   def id : String;
-  // How do we marry real-valued features and categorial features? By being overly general.
   override def toString = {
     "Example { ids =" + id + ", labels = " + labels + ", features = " + features + "}"; 
   }
 
-  // How do we marry real-valued features and categorial features? By being overly general.
   override def map[U](f: T=>U) = new MultilabeledExample[L,U] {
     def labels = outer.labels;
     def id = outer.id;

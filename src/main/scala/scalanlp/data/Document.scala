@@ -31,6 +31,7 @@ import process._;
 class Document[W](val id:String, val fields: Map[String,Seq[W]]) extends Observation[Map[String,Seq[W]]] {
   def features = fields;
    
+  /** Returns a new labeled Document */
   def withLabel[L](l:L) = new LabeledDocument[L,W](id,l,fields);
 }
 

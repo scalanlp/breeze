@@ -30,13 +30,21 @@ trait Example[+L,+T] extends Observation[T] with Labeled[L] {outer=>
   def id : String;
   def label: L
 
-  // How do we marry real-valued features and categorial features? By being overly general.
+  /** 
+   * Converts the features in this example to a different one while still
+   * preserving label and id. 
+   */
   override def map[U](f: T=>U) = new Example[L,U] {
     def label = outer.label;
     def id = outer.id;
-    lazy val features = f(outer.features);
+    val features = f(outer.features);
   }
 
+  /** 
+   * Converts the features in this example to a different one while still
+   * 
+   * preserving label and id. 
+   */
   override def flatMap[U](f: T=>U) = map(f);
 
   override def toString = {

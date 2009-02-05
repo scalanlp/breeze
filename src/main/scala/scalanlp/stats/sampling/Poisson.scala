@@ -19,6 +19,9 @@ package scalanlp.stats.sampling;
 import math.Numerics._;
 import Math._;
 
+/**
+ * Represents a Poisson random variable.
+ */
 class Poisson(val mean: Double) extends DiscreteDistr[Int] {
   private val ell = Math.exp(-mean);
   //  TODO: this is from Knuth, but it's linear in mean.

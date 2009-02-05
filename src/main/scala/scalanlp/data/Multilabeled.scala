@@ -18,8 +18,7 @@ package scalanlp.data;
 
 
 /**
-* For any class that has one or more labels. Note that Label is a
-* kind of Multilabeled.
+* For any class that has one or more labels. 
 * 
 * @author dlwh
 */

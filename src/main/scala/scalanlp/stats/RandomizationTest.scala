@@ -26,7 +26,7 @@ import sampling._;
 * This system assumes they're on the same dataset, which changes the procedure.
 * Follows Teh, 2000 More accurate tests for the statistical significance of result differences.
 *
-* Labels must have equals.
+* Labels must have .equals.
 *
 * @author dlwh
 */

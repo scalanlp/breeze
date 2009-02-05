@@ -18,6 +18,11 @@ package scalanlp.collection.mutable;
 
 import scala.collection.mutable.Map;
 
+/** Represents a two dimensional array as a map. Mostly it's just a convenient wrapper.
+ * A default value is mandatory so that all elements of the array are properly initialized.
+ * 
+ * @author dlwh
+ */
 abstract class Grid2[V](k1Size : Int, k2Size: Int) extends Map[(Int,Int),V] with Function2[Int,Int,V] {
   override def default(key: (Int,Int)):V = default(key._1,key._2)
   def default(k1Size : Int, k2Size: Int): V;

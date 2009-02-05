@@ -17,6 +17,10 @@ package scalanlp.data.process;
 */
 
 
+/**
+ * Converts words to their stemmed form.
+ * @author dlwh
+ */
 object PorterStemmer extends (String=>String){
   def apply(w:String) = {
     if(w.length < 3) w.toLowerCase;
