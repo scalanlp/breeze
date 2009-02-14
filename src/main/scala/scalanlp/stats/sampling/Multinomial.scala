@@ -18,6 +18,7 @@ package scalanlp.stats.sampling;
 
 import scalanlp.counters.Counters._;
 import scalanlp.counters._;
+import math.Numerics._;
 
 import scalanlp.util.Log;
 
@@ -64,6 +65,8 @@ trait Multinomial[T] extends DiscreteDistr[T] {
 
   def probabilityOf(e : T) = components.apply(e) / total;
   override def unnormalizedProbabilityOf(e:T) = components.apply(e);
+  
+  override def toString = components.mkString("Multinomial{",",","}")
 }
 
 /** 
@@ -87,6 +90,25 @@ object Multinomial {
    * is proportional to its count.
    */
   def fromCounter[T](c:DoubleCounter[T]) = apply(c);
+  
+  /**
+   * Returns a Multinomial with the doubles assumed to be in log space: 
+   */
+  def withLogCounts(a: Array[Double]): Multinomial[Int] = withLogCounts(a,logSum(a));
+  
+  /**
+   * Returns a Multinomial with the doubles assumed to be in log space: 
+   */
+  def withLogCounts(arr: Array[Double], logTotal: Double) = new Multinomial[Int] {
+    lazy val components = new scala.collection.Map[Int,Double] {
+      def elements = (0 until arr.length).map(x => (x,Math.exp(arr(x) - logTotal))).elements;
+      def get(x:Int) = if(x < arr.length) Some(Math.exp(arr(x)-logTotal)) else None;
+      def size = arr.length;
+    }
+      
+    def total = 1.0;
+  }
+  
 
   /**
    * Returns a Multinomial where the probability is proportional to a(i)
@@ -98,7 +120,7 @@ object Multinomial {
    * Takes the total for speed.
    */
   def apply(arr : Array[Double], t: Double) = new Multinomial[Int] {
-    def components = new scala.collection.Map[Int,Double] {
+    lazy val components = new scala.collection.Map[Int,Double] {
       def elements =  (0 until arr.length).map(x => (x,arr(x))).elements;
       def get(x : Int) = if(x < arr.length) Some(arr(x)) else None;
       def size = arr.length;
