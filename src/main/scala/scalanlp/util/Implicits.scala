@@ -18,11 +18,11 @@ package scalanlp.util;
 
 
 /**
-* Useful implicit conversions that Scala forgot.
+* Useful implicit conversions and other utilities.
 * 
 * @author dlwh 
 */
-object Implicits {
+object Implicits extends Asserts {
   
   //
   // Exploding arrays
