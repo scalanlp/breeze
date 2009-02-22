@@ -103,6 +103,7 @@ object Implicits extends Asserts {
       val in : Interner[T] = Interner.forClass(t.getClass.asInstanceOf[Class[T]])
       in(t);
     }
+    
   }
   
   implicit def doubleExtras(d: Double) = new {

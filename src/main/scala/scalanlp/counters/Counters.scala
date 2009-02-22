@@ -140,6 +140,19 @@ object Counters {
   def count[T](iterable : Iterable[T]) : IntCounter[T] = {
     count(iterable.elements)
   }
+  
+  def countPairs[T1,T2](it: Iterator[(T1,T2)]): PairedIntCounter[T1,T2] = {
+    val result = new PairedIntCounter[T1,T2];
+    for( (k,v) <- it) {
+      result(k,v) += 1;  
+    } 
+    result;
+  }
+  
+  /** Count paired objects. */
+  def countPairs[T1,T2](iterable: Iterable[(T1,T2)]): PairedIntCounter[T1,T2] = {
+    countPairs(iterable.elements)
+  }
 
   /** Returns a counter that sums the counts associated with each key */
   def aggregate[T](iter : Iterator[(T,Int)]) : IntCounter[T] = {
