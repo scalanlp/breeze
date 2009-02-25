@@ -16,6 +16,7 @@ package scalanlp.math;
  limitations under the License. 
 */
 
+import counters._;
 
 /**
 * Provides some functions left out of java.lang.Math
@@ -51,6 +52,14 @@ object Numerics {
     24.01409824083091,-1.231739572450155,
     0.1208650973866179e-2,-0.5395239384953e-5
   );
+  
+  /**
+   * Evaluates the log of the generalized beta function.
+   *  = \sum_a lgamma(c(a))- lgamma(c.total)
+   */
+  def lbeta[T](c: DoubleCounter[T]) = {
+    c.values.foldLeft(-lgamma(c.total))( (acc,x)=> acc +lgamma(x));
+  }
 
   /**
   * @return an approximation of the log of the Gamma function * of x.  Laczos Approximation

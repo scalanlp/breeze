@@ -17,6 +17,8 @@ package scalanlp.stats.sampling;
 */
 
 import scalanlp.counters._;
+import collection.mutable.ArrayMap;
+import scala.collection.mutable.ArrayBuffer;
 import scalanlp.counters.DoubleCounter;
 import scalanlp.counters.Counters._;
 import scalanlp.math.Numerics._;
@@ -26,15 +28,15 @@ import scalanlp.math.Arrays._;
  * Represents a Dirichlet distribution, the conjugate prior to the multinomial.
  * @author dlwh
  */
-trait Dirichlet[P,T] extends ContinuousDistr[P] with ConjugatePrior[P,T] {
-  protected val prior : Iterable[(T,Double)];
-  protected def pFromDraw(it : Iterator[(T,Double)]) : P;
-  protected def componentsFromP(p : P) : Function[T,Double]
+class Dirichlet[T](prior: DoubleCounter[T]) extends ContinuousDistr[DoubleCounter[T]] with ConjugatePrior[DoubleCounter[T],T] {
   /**
    * Returns a new Dirichlet after observing the evidence. 
    */
-  override def posterior(evidence : Iterator[(T,Int)]): Dirichlet[P,T];
-
+  override def posterior(evidence : Iterator[(T,Int)]): Dirichlet[T] = {
+    val ctr = aggregate(evidence.map(x => (x._1,x._2.toDouble)));
+    ctr += prior;
+    new Dirichlet(prior);
+  }
 
   private val generators : Iterable[(T,Gamma)] = prior.map { e => (e._1,new Gamma(e._2,1)) }
 
@@ -47,22 +49,21 @@ trait Dirichlet[P,T] extends ContinuousDistr[P] with ConjugatePrior[P,T] {
    * Returns a Multinomial distribution over the elements;
    */
   def draw() = {
-    pFromDraw(generators.map(e => (e._1,e._2.get)).elements);
+    aggregate(generators.map(e => (e._1,e._2.get)).elements).normalized;
   }
 
   /**
    * Returns the log pdf function of the Dirichlet up to a constant evaluated at m
    */
-  override def unnormalizedLogPdf(m : P) = {
-    val f = componentsFromP(m);
-    prior.map( e => (e._2-1) * f(e._1) ).
+  override def unnormalizedLogPdf(m : DoubleCounter[T]) = {
+    prior.map( e => (e._2-1) * m(e._1) ).
           foldLeft(0.0)(_+_);
   }
 
   /**
    * Returns the log pdf of the Dirichlet evaluated at m.
    */
-  override def logPdf(m: P) = {
+  override def logPdf(m: DoubleCounter[T]) = {
     unnormalizedLogPdf(m) + logNormalizer;
   }
 
@@ -71,7 +72,7 @@ trait Dirichlet[P,T] extends ContinuousDistr[P] with ConjugatePrior[P,T] {
   /**
    * Returns the pdf of the Dirichlet evaluated at m.
    */
-  def pdf(m : P) = Math.exp(logPdf(m));
+  def pdf(m : DoubleCounter[T]) = Math.exp(logPdf(m));
 
   /**
    * Returns a multinomial over T's. Each draw is drawn from E[Dir]
@@ -90,47 +91,12 @@ object Dirichlet {
   /**
    * Creates a new Dirichlet with pseudocounts equal to the observed counts.
    */
-  def apply[T](c : DoubleCounter[T]): Dirichlet[DoubleCounter[T],T] = new Dirichlet[DoubleCounter[T],T] {
-    protected val prior = c.elements.toList; 
-    protected def pFromDraw(it : Iterator[(T,Double)]) = aggregate(it);
-    protected def componentsFromP(p : DoubleCounter[T]) = p;
-    def posterior(it : Iterator[(T,Int)]) : Dirichlet[DoubleCounter[T],T] = {
-      Dirichlet( (DoubleCounter[T]() ++ it.map{ case (a,b) => (a,b.toDouble)} ++ prior).asInstanceOf[DoubleCounter[T]]);
-    }
-  }
+  def apply[T](c : DoubleCounter[T]): Dirichlet[T] = new Dirichlet[T](c);
 
   /**
    * Creates a new symmetric Dirichlet of dimension k
    */
   def sym(alpha : Double, k : Int) = this(Array.fromFunction{ x => alpha }(k));
-
-  /**
-   * Creates a new Dirichlet with pseudocounts arr(i)
-   */
-  def apply(arr : Array[Double]) : Dirichlet[Array[Double],Int] = new Dirichlet[Array[Double], Int] {
-    val prior = arr.zipWithIndex.map{x => (x._2,x._1)};
-    def pFromDraw(it : Iterator[(Int,Double)]) = {
-      val m = Map() ++ it;
-      Array.fromFunction(m)(prior.length);
-    }
-
-    protected def componentsFromP(p : Array[Double]) = {
-      p;
-    }
-
-    def posterior(it : Iterator[(Int,Int)]) = { 
-      val ret = new Array[Double](prior.length);
-      System.arraycopy(arr,0,ret,0,ret.length);
-      for( (t,d) <- it) {
-        ret(t) += d;
-      }
-      Dirichlet(ret);
-    }
-
-    // a little faster
-    override def get() = {
-      val arr = generators.map(e => e._2.get)
-      normalize(arr.toSeq.toArray)
-    }
-  }
+  
+  def apply(arr: Array[Double]):Dirichlet[Int] = Dirichlet(new ArrayMap(new ArrayBuffer[Double] ++ arr) with DoubleCounter[Int])
 }

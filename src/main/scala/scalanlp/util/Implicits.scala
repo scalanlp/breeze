@@ -95,10 +95,21 @@ object Implicits extends Asserts {
     }
   }
   implicit def stringExtras(s : String) = new StringExtras(s);
-
-  implicit def tExtras[T<:AnyRef](t : T) = new {
+  
+  implicit def tExtras[T<:AnyRef](t : T) = new AnyExtras[T](t);
+  
+  /**
+   * Provides extensions to Any.
+   */
+  class AnyExtras[T<:AnyRef](t: T) {
+    /**
+     * if t is non-null, return it, otherwise, evaluate and return u.
+     */ 
     def ?:[U>:T](u: =>U) = if(t eq null) u else t;
 
+    /**
+     * Intern for arbitrary types
+     */ 
     def intern : T= {
       val in : Interner[T] = Interner.forClass(t.getClass.asInstanceOf[Class[T]])
       in(t);
