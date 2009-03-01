@@ -75,9 +75,9 @@ class Dirichlet[T](prior: DoubleCounter[T]) extends ContinuousDistr[DoubleCounte
   def pdf(m : DoubleCounter[T]) = Math.exp(logPdf(m));
 
   /**
-   * Returns a multinomial over T's. Each draw is drawn from E[Dir]
+   * Returns a Polya Distribution
    */
-  def predictive : Multinomial[T] = Multinomial(aggregate(prior.elements).normalized);
+  def predictive = new Polya(aggregate(prior.elements));
 
 }
 
