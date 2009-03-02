@@ -4,7 +4,7 @@ import math.Numerics.lgamma;
 import Math._;
 import counters._;
 
-class Binomial(a: Double, b: Double) extends ContinuousDistr[Double] with ConjugatePrior[Double, Boolean]{
+class Beta(a: Double, b: Double) extends ContinuousDistr[Double] with ConjugatePrior[Double, Boolean]{
   require(a > 0.0);
   require(b > 0.0);
   def pdf(x: Double) = exp(logPdf(x));
@@ -32,7 +32,7 @@ class Binomial(a: Double, b: Double) extends ContinuousDistr[Double] with Conjug
   
   def posterior(obs: Iterator[(Boolean,Int)]) = {
     val ctr = Counters.aggregate(obs);
-    new Binomial(ctr(true)+a, ctr(false)+b)
+    new Beta(ctr(true)+a, ctr(false)+b)
   }
   
   def predictive = {
