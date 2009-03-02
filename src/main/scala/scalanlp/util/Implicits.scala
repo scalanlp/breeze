@@ -114,6 +114,11 @@ object Implicits extends Asserts {
       val in : Interner[T] = Interner.forClass(t.getClass.asInstanceOf[Class[T]])
       in(t);
     }
+
+    /**
+    * if t is non-null return Some(t), otherwise None
+    */
+    def toOption = if(t eq null) None else Some(t);
     
   }
   
@@ -121,8 +126,8 @@ object Implicits extends Asserts {
     def =~=(e: Double) = d ==e ||  Math.abs(d - e)/d < 1E-4;
   }
 
-  implicit def RASExtras[T](s: RandomAccessSeq[T]) = new {
+  implicit def SeqExtras[T](s: Seq[T]) = new {
     // useful subset selection
-    def apply(x: RandomAccessSeq[Int]) = x.projection.map(s);  
+    def apply(x: Seq[Int]) = x.projection.map(s);  
   }
 }

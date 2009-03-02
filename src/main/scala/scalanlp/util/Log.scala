@@ -75,6 +75,7 @@ class Log(os : =>OutputStream, @volatile var level : Log.Level) {
 
 object Log extends Log(System.err,Log.INFO) {
   case class Level(severity : Int);
+  case object NEVER extends Level(-1000);
   case object FATAL extends Level(1);
   case object ERROR extends Level(2);
   case object WARN extends Level(4);
@@ -99,5 +100,27 @@ object Log extends Log(System.err,Log.INFO) {
     val e = new Exception().getStackTrace()(nth+1);
     e.getFileName() + ":" + e.getLineNumber();
   }
+}
 
+object NullLog extends Log(System.err,Log.NEVER) {
+  override def log(l:Log.Level)(x: =>Any) {}
+}
+
+/**
+* Uniform logging interface. By default, nothing happens.
+*
+* Clients of classes that extend Logged can mixin another trait, like ConsoleLogging,
+* or override log themselves
+* @author dlwh
+*/
+trait Logged {
+  val log: Log = NullLog;
+}
+
+/**
+* Logs all outputto System.err
+* @author dlwh
+*/
+trait ConsoleLogging extends Logged {
+  override val log = Log;
 }
