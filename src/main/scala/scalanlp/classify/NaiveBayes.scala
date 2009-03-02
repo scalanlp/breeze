@@ -29,7 +29,7 @@ import scala.collection.Map;
  * 
  * @param wordSmoothing: how much smoothing for each
  */
-class NaiveBayes[W,L](c: =>Collection[Example[L,Map[W,Int]]],
+class NaiveBayes[W,L](c: Collection[Example[L,Map[W,Int]]],
     val wordSmoothing:Double,
     val classSmoothing:Double)  extends Classifier[L,Map[W,Int]] {
 
@@ -38,10 +38,7 @@ class NaiveBayes[W,L](c: =>Collection[Example[L,Map[W,Int]]],
   // p(w|c)
   private val wordCounts = new PairedIntCounter[L,W]();
 
-  // numWords
-  private val vocabSize = train();
-
-  private def train() = {
+  private val vocabSize = {
     val myC = c;
     val allWords = scala.collection.mutable.Set[W]();
     for(e <- myC) {
