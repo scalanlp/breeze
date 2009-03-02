@@ -1,4 +1,4 @@
-package scalanlp.math;
+package scalanlp.optimize;
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
@@ -17,10 +17,10 @@ package scalanlp.math;
 */
 
 
+object NewtonRaphson {
 /** Implements NewtonRaphson for a single variable. Probably not that useful. 
  * @author dlwh.
  */
-object Newton {
   def optimize(df: Double=>Double, d2f : Double=>Double, x0 : Double, tol : Double) = { 
     var x = x0;
     var dfdx = df(x);
