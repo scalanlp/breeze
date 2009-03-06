@@ -48,7 +48,7 @@ class HTMap[+T] (private val map: Map[String,Any]) {
    * Replace a value with the corresponding *static* type to the map.
    * This is mostly to keep the inferred type as short as possible.
    */
-  def -+[U>:T](x:U)(implicit m: Manifest[U]) = new HTMap[U] (map + (m.toString->x));
+  def -+[U>:T](x:U)(implicit m: Manifest[U]) = new HTMap[T] (map + (m.toString->x));
   
   /**
    * Applys f to this and combines the result with this map.
