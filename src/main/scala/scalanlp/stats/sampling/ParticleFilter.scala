@@ -36,7 +36,7 @@ import scalanlp.counters.Counters._;
 class ParticleFilter[T](val particles : Seq[(T,Double)], transition : Seq[(T,Double)] => T => Rand[T],
   identify: T => T, numParticles : Int) extends Rand[T] {
 
-  def this(initialParticle : Measure[T], transition : Seq[(T,Double)] => T => Rand[T],
+  def this(initialParticle : Measure[T] with Rand[T], transition : Seq[(T,Double)] => T => Rand[T],
     identify : T=>T, numParticles : Int) =  {
     this(Array.fromFunction(x => initialParticle.get)(numParticles)
         .map(identify).map(p => (p,initialParticle.logApply(p)))

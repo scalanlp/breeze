@@ -49,7 +49,14 @@ class Dirichlet[T](prior: DoubleCounter[T]) extends ContinuousDistr[DoubleCounte
    * Returns a Multinomial distribution over the elements;
    */
   def draw() = {
-    aggregate(generators.map(e => (e._1,e._2.get)).elements).normalized;
+    aggregate(generators.map(e => (e._1,e._2.draw)).elements).normalized;
+  }
+
+  /**
+   * Returns unnormalized probabilities for a Multinomial distribution.
+   */
+  def unnormalizedDraw() = {
+    aggregate(generators.map(e => (e._1,e._2.draw)).elements)
   }
 
   /**

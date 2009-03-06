@@ -64,6 +64,14 @@ trait Multinomial[T] extends DiscreteDistr[T] {
   }
 
   def probabilityOf(e : T) = components.apply(e) / total;
+  def logProbabilityOf(c: IntCounter[T]) = {
+    val probs = for( (k,v) <- c) yield v * Math.log(components.apply(k) / total);
+    probs.foldLeft(0.0)(_+_);
+  }
+  def logProbabilityOf(c: DoubleCounter[T]) = {
+    val probs = for( (k,v) <- c) yield v * Math.log(components.apply(k) / total);
+    probs.foldLeft(0.0)(_+_);
+  }
   override def unnormalizedProbabilityOf(e:T) = components.apply(e);
   
   override def toString = components.mkString("Multinomial{",",","}")

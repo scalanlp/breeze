@@ -34,7 +34,7 @@ trait Measure[T] extends (T=>Double) {
  * Why T? just in case.
  * @author dlwh
  */
-trait ContinuousDistr[T] extends Measure[T] {
+trait ContinuousDistr[T] extends Measure[T] with Rand[T] {
   /** Returns the probability density function at that point.*/
   def pdf(x: T): Double; 
   def logPdf(x:T): Double = Math.log(pdf(x));
@@ -51,7 +51,7 @@ trait ContinuousDistr[T] extends Measure[T] {
  * Represents a discrete Distribution.
  * @author dlwh
  */
-trait DiscreteDistr[T] extends Measure[T] {
+trait DiscreteDistr[T] extends Measure[T] with Rand[T] {
   /** Returns the probability of that draw. */
   def probabilityOf(x: T): Double; 
   def logProbabilityOf(x:T): Double = Math.log(probabilityOf(x));

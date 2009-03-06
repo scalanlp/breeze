@@ -11,7 +11,7 @@ class Binomial(n: Int, p: Double) extends DiscreteDistr[Int] {
   override def logProbabilityOf(k: Int) = {
     require(n >= k);
     require(k >= 0);
-    lgamma(n+1) - lgamma(k+1) - lgamma(n-k+1) + k * log(p) + (n-k) * log(n-k)
+    lgamma(n+1) - lgamma(k+1) - lgamma(n-k+1) + k * log(p) + (n-k) * log(1-p)
   }
   
   override def draw() = {
