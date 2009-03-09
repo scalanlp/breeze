@@ -18,7 +18,7 @@ package scalanlp.math;
 
 
 /**
-* Utilities and implicits for iterators. Nothing major.
+* Utilities for doing math on arrays
 * @author dlwh
 */
 object Arrays {
@@ -26,5 +26,27 @@ object Arrays {
     val c = arr.foldLeft(0.0)(_+_);
     if(c == 0) arr;
     else arr.map( _ / c).force;
+  }
+
+  def dotProduct(x: Array[Double], y: Array[Double]) = {
+    require(x.length == y.length);
+    var i = 0;
+    var v = 0.0;
+    while(i < x.length) {
+      v += x(i) * y(i);
+      i += 1;
+    }
+    v;
+  }
+
+  def scaleAdd(x: Array[Double], scale: Double, y: Array[Double], sink: Array[Double]) = {
+    require(x.length == y.length);
+    require(x.length == sink.length);
+    var i = 0;
+    while(i < x.length) {
+      sink(i) = x(i) + scale * y(i);
+      i += 1; 
+    }
+    sink
   }
 }
