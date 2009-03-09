@@ -28,13 +28,15 @@ import stats.sampling._;
 */
 class StochasticGradientDescent(val alpha: Double,
     val scale: Double, 
+    val tol: Double,
+    val mxIter: Int,
     batchSize: Int) extends Minimizer[Seq[Double],BatchDiffFunction[Seq[Double]]] with Logged {
 
   /**
   * Runs SGD on f, for mxIter. It ignores tol.
   */
-  def minimize(f: BatchDiffFunction[Seq[Double]], init: Seq[Double], tol: Double, mxIter: Int) = {
-    val maxIter = if(mxIter < 0) {
+  def minimize(f: BatchDiffFunction[Seq[Double]], init: Seq[Double]) = {
+    val maxIter = if(mxIter <= 0) {
       1000 * f.fullRange.size / batchSize;
     } else {
       mxIter * f.fullRange.size / batchSize;

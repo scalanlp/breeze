@@ -22,7 +22,5 @@ package scalanlp.optimize;
 * @author dlwh
 */
 trait Minimizer[T<:Seq[Double],F<:Function[T,Double]] {
-  def minimize(f: F, initial: T):T = minimize(f,initial,1E-4)
-  def minimize(f: F, initial: T, tol: Double): T = minimize(f,initial, tol, -1)
-  def minimize(f: F, initial: T, tol: Double, maxIter: Int): T;
+  def minimize(f: F, initial: T):T
 }
