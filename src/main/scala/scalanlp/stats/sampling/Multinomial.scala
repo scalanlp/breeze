@@ -39,7 +39,7 @@ trait Multinomial[T] extends DiscreteDistr[T] {
   def draw() = {
     var prob = Rand.uniform.get() * total;
     if(prob.isNaN) {
-      Log(Log.ERROR)("You got a NaN!");
+      Log.globalLog(Log.ERROR)("You got a NaN!");
     }
     val elems = components.elements;
     var (e,w) = elems.next;

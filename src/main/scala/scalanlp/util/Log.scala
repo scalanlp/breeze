@@ -73,7 +73,10 @@ class Log(os : =>OutputStream, @volatile var level : Log.Level) {
   private val out = new PrintWriter(os);
 }
 
-object Log extends Log(System.err,Log.INFO) {
+object Log {
+  
+  val globalLog = new Log(System.err,Log.INFO)
+  
   case class Level(severity : Int);
   case object NEVER extends Level(-1000);
   case object FATAL extends Level(1);
@@ -107,7 +110,7 @@ object NullLog extends Log(System.err,Log.NEVER) {
 }
 
 /**
-* Uniform logging interface. By default, nothing happens.
+* Uniform logging interface. By default, nothing gets logged.
 *
 * Clients of classes that extend Logged can mixin another trait, like ConsoleLogging,
 * or override log themselves
@@ -118,9 +121,9 @@ trait Logged {
 }
 
 /**
-* Logs all outputto System.err
+* Logs all output to System.err
 * @author dlwh
 */
 trait ConsoleLogging extends Logged {
-  override val log = Log;
+  override val log = Log.globalLog;
 }
