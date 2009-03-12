@@ -14,9 +14,9 @@ class PTBTokenizer extends StdLexical with ImplicitConversions with Scanners {
   * Tokenize the input sentence using the PTBTokenizer.
   * Returns Left(List(tokens)) on success, and Right(error) on failure
   */
-  def tokenize(input: String) = {
+  def tokenize(input: String): Either[List[String],ParseResult[List[Token]]] = {
       phrase(words)(new CharSequenceReader(input)) match {
-        case Success(result, _) => Some(result.map(_.chars))
+        case Success(result, _) => Left(result.map(_.chars))
         case x => Right(x);
       }
   }
@@ -26,9 +26,13 @@ class PTBTokenizer extends StdLexical with ImplicitConversions with Scanners {
   */
   def apply(input: String) = tokenize(input);
 
+  private def word:Parser[Token] = ( (letter) ~ rep((letter))^^{ case x ~ y=> StringLit( (x::y).mkString("")) } ) | number;
 
-
-  private def word:Parser[Token] = ( (letter ~ rep(letter))^^{ case x ~ y=> StringLit( (x::y).mkString("")) } );
+  private def number: Parser[Token] = {
+    ( rep(accept('$')|'.'|'/'|'-') ~ digit ~ rep(number)) ^^ { case pref ~ d ~ tail => 
+                                                                 SL(pref.mkString("") + d + tail.projection.map(_.chars).mkString(""))
+                                                             }
+  }
 
 
   private def words:Parser[List[Token]] = (
@@ -53,6 +57,7 @@ class PTBTokenizer extends StdLexical with ImplicitConversions with Scanners {
     | '.' ~> '.' ~> '.' ~> words           ^^ {words => SL("...") :: words }
     | word ~ posessiveLike ~ (ws ~> words) ^^ {case w ~ x ~ words => w :: SL("'"+x) :: words}
     | word ~ '\'' ~ ws ~ words             ^^ {case w ~ '\'' ~ _ ~ words => w :: SL("'") :: words}
+    | number ~ (opt(ws) ~> words)          ^^ {case x ~ words => x :: words}
     | symbol ~ (opt(ws) ~> words)          ^^ {case x ~ words => SL(""+x) :: words}
     | word ~ contraction ~ ws ~ words      ^^ {case word ~ cont ~ _ ~ rest => word :: cont :: rest }
     | word ~ '.' ~ opt(ws ~> words)        ^^ {case word ~ _ ~ None => 
