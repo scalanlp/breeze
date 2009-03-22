@@ -80,7 +80,68 @@ object Numerics {
     }
     (-tmp + log(2.5066282746310005*ser / x));
   }
-  
+
+  private val SQRT_PI = sqrt(Pi);
+
+  private val ERF_A = 8. / (3. * Pi) * (Pi - 3) / (4 - Pi);
+  private val ERF_B = 4. / Pi;
+
+  /**
+  * Approximation to the ERF. Based on 
+  * homepages.physik.uni-muenchen.de/~Winitzki/erf-approx.pdf
+  */
+  def badApproxERF(x: Double) = {
+    val x2 = x * x;
+    val ax2 = ERF_A * x2;
+    sqrt(1 - exp(-x2 * (ERF_B + ax2) / (1 + ax2)));
+  }
+
+  /**
+  * Approximation to the inverse ERF. Based on 
+  * homepages.physik.uni-muenchen.de/~Winitzki/erf-approx.pdf
+  */
+  def erfi(x:Double) = {
+    val x2 = x*x;
+    val lg1mx2 = log(1- x2);
+    val c = 2 / Pi / ERF_A + lg1mx2/2;
+    val result =  sqrt(-c + sqrt( c*c - 1/ ERF_A * lg1mx2))
+    if(x < 0) -1 * result
+    else result
+  }
+
+  /**
+  * 1- erf(x)
+  */
+  def erfc(x: Double) =  1- erf(x);
+ 
+  /**
+  * approximation to the erf function, for gaussian integrals.
+  */
+  def erf(x: Double) = {
+    val mag = 1 - gamma(.5,x*x)/sqrt(Pi);
+    if(x < 0) -1.0 * mag // ERF is odd.
+    else mag
+  }
+
+  /**
+  * Incomplete gamma function. 
+  * <p/>
+  * based on http://216.80.120.13:8080/webMathematica/LC/gamma.jsp
+  */
+  def lgamma(a: Double, z:Double) = {
+    var res = 0.0;
+    var m = 20;
+    while(m >= 0) {
+      res=((-2*(1+m)*(3+2*m)*(2-a+2*m)*(3-a+2*m)*(9-a+4*m+z))/(5-a+4*m+z))/
+         (38-9*a+a*a+36*m-4*a*m+8*m*m-2*(a-4*(2+m))*z+z*z+(4*(-3+a-2*m)*(3+2*m))/(5-a+4*m+z)+res);
+      m -= 1;
+    }
+
+    a * log(z) + -z - log(1+z - a + ((a-1) * (5 - a + z))/(-2 * (2-a) + (3-a+z)*(5-a+z) + res));
+  }
+
+  def gamma(a: Double, z:Double) = exp(lgamma(a,z));
+
   /**
   * @return log(exp(a) + exp(b))
   */
@@ -109,8 +170,9 @@ object Numerics {
     }
   }
 
-  /*
+  /**
   * @return log(exp(a) - exp(b))
+  * requires a &gt; b
   */
   def logDiff(a : Double, b : Double) = {
     if(a < b) b + log(exp(a-b) - 1)

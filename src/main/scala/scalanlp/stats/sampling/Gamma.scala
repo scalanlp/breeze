@@ -17,6 +17,8 @@ package scalanlp.stats.sampling;
 */
 
 import scalanlp.math.Numerics;
+import Numerics._;
+import Math._;
 
 
 /**

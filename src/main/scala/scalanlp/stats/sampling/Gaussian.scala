@@ -19,6 +19,7 @@ package scalanlp.stats.sampling;
 
 import Rand._;
 import Math._;
+import math.Numerics._;
 
 /**
  * Represents a Gaussian distribution over a single real variable.
@@ -28,6 +29,26 @@ import Math._;
 class Gaussian(val mu :Double, val sigma : Double) extends ContinuousDistr[Double] {
   private val inner = Rand.gaussian(mu,sigma);
   def draw() = inner.get();
+
+  private val sqrt2 = Math.sqrt(2.0);
+
+  /**
+  * Computes the inverse cdf of the p-value for this gaussian.
+  * 
+  * @param p: a probability in [0,1]
+  * @return x s.t. cdf(x) = p
+  */
+  def icdf(p: Double) = {
+    require( p >= 0 );
+    require( p <= 1 );
+
+    mu + sigma * sqrt2 * erfi(2 * p - 1);
+  }
+
+  /**
+  * Computes the cumulative density function of the value x.
+  */
+  def cdf(x: Double) = .5 * (1 + erf( (x - mu)/sqrt2 / sigma));
 
   def pdf(t : Double) = exp(logPdf(t));
   override def logPdf(t :Double) =  unnormalizedLogPdf(t) + logNormalizer;
