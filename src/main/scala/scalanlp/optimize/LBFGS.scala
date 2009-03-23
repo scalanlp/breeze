@@ -38,8 +38,8 @@ import java.util.Arrays;
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
 class LBFGS(tol: Double, maxIter: Int, m: Int) extends Minimizer[Array[Double], DiffFunction[Array[Double]]] with Logged {
-  require(tol > 0) 
-  require(m > 0)
+  require(tol > 0);
+  require(m > 0);
   private val tolSquared = tol *tol;
   
   def minimize(f: DiffFunction[Array[Double]], init: Array[Double]) = {
@@ -57,7 +57,7 @@ class LBFGS(tol: Double, maxIter: Int, m: Int) extends Minimizer[Array[Double], 
     var (v,grad) = f.calculate(x);
 
     while( (maxIter <= 0 || k < maxIter) && !converged) {
-      log(INFO)("Starting iteration: " +maxIter);
+      log(INFO)("Starting iteration: " + k);
       log(INFO)("Current v:" + v);
       log(INFO)("Current grad:" + grad.mkString(","));
 

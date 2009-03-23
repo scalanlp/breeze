@@ -39,7 +39,11 @@ object Arrays {
     v;
   }
 
-  def scaleAdd(x: Array[Double], scale: Double, y: Array[Double], sink: Array[Double]) = {
+  def scaleAdd(x: Array[Double], scale: Double, y: Array[Double]):Array[Double] = {
+    scaleAdd(x,scale,y,new Array[Double](x.length));
+  }
+
+  def scaleAdd(x: Array[Double], scale: Double, y: Array[Double], sink: Array[Double]):Array[Double] = {
     require(x.length == y.length);
     require(x.length == sink.length);
     var i = 0;
