@@ -19,14 +19,18 @@ package scalanlp.counters;
 import scala.collection.mutable.HashMap;
 
 @serializable
-class PairedDoubleCounter[K1,K2] extends HashMap[K1,DoubleCounter[K2]] with Function2[K1,K2,Double] {
+class PairedDoubleCounter[K1,K2](defaultValue:Double) extends HashMap[K1,DoubleCounter[K2]] with Function2[K1,K2,Double] {
+  def this() = this(0.0);
+
   // may be overridden with other counters
-  override def default(k1 : K1) :DoubleCounter[K2] = DoubleCounter[K2]();
+  override def default(k1 : K1) :DoubleCounter[K2] = DoubleCounter.withDefaultValue[K2](defaultValue);
 
   override def apply(k1 : K1) = getOrElseUpdate(k1,default(k1));
   def get(k1 : K1, k2 : K2) : Option[Double] = get(k1).flatMap(_.get(k2))
   def apply(k1 : K1, k2: K2) : Double= apply(k1)(k2);
   def update(k1 : K1, k2: K2, v : Double) = apply(k1)(k2) = v;
+
+  def incrementCount(k1: K1, k2: K2, v: Double) = this(k1).incrementCount(k2,v);
 
   def total = map(_._2.total).foldLeft(0.0)(_+_)
 

@@ -181,7 +181,9 @@ trait {COUNTER} extends {superClass} {{
   */
   override def +=(kv: ({T},{V})) = incrementCount(kv._1,kv._2);
 
-  override def default(k : {T}) : {V} = 0;
+  override def default(k : {T}) : {V} = defaultValue;
+
+  {ov} protected def defaultValue: {V} = 0;
 
   override def apply(k : {T}) : {V} = super.apply(k);
 
@@ -300,8 +302,8 @@ else ""
 
   import scala.collection.jcl.MapWrapper;
   @serializable
-  @SerialVersionUID(1L)
-  class FastMapCounter{G} extends MapWrapper[{T},{V}] with {COUNTER} {{
+  @SerialVersionUID(2L)
+  class FastMapCounter{G}(override val defaultValue: {V}) extends MapWrapper[{T},{V}] with {COUNTER} {{
     private val under = new {mkFastMap(key,value)};
     def underlying() = under.asInstanceOf[java.util.Map[{T},{V}]];
     {// fastutil says getInt for Object2IntMap and just get for Int2IntMap
@@ -315,8 +317,9 @@ else ""
     }}
   }}
 
-  def apply{G}() = new FastMapCounter{G}();
+  def apply{G}() = new FastMapCounter{G}(0);
 
+  def withDefaultValue{G}(d: {V}) = new FastMapCounter{G}(d);
   {
     if(!hasCounterParent) 
       <x>

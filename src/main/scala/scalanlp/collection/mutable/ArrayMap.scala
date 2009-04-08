@@ -23,7 +23,7 @@ import scala.collection.mutable.ArrayBuffer;
 * 
 * The key must be positive.
 *
-* Chances are you want to change defaultValue, which is used to
+* Chances are you want to change defValue, which is used to
 * fill in blanks if you don't add things consecutively. Otherwise you
 * get an Exception.
 *
@@ -31,8 +31,8 @@ import scala.collection.mutable.ArrayBuffer;
 */
 class ArrayMap[V](private val arr: ArrayBuffer[V]) extends scala.collection.mutable.Map[Int,V] {
   def this() = this(new ArrayBuffer[V]())
-  override def default(i: Int): V = defaultValue;
-  def defaultValue:V = throw new NoSuchElementException("");
+  override def default(i: Int): V = defValue;
+  def defValue:V = throw new NoSuchElementException("");
   override def apply(i: Int) = get(i).getOrElse(default(i));
   def get(i : Int) = if(i < arr.length) Some(arr(i)) else None;
   def update(i : Int, v : V) {
