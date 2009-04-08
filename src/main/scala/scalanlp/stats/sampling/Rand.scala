@@ -158,6 +158,10 @@ object Rand {
   * Convert an Array of Rand[T] into a Rand[Array[T]]
   */
   def promote[U](col : Array[Rand[U]]) = fromBody(col.map(_.get));
+  /**
+  * Convert an Seq of Rand[T] into a Rand[Seq[T]]
+  */
+  def promote[U](col : Seq[Rand[U]]) = fromBody(col.map(_.get));
 
   def promote[T1,T2](t : (Rand[T1],Rand[T2])) = fromBody( (t._1.get,t._2.get));
   def promote[T1,T2,T3](t : (Rand[T1],Rand[T2],Rand[T3])) = fromBody( (t._1.get,t._2.get,t._3.get));

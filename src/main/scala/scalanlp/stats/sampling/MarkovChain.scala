@@ -16,6 +16,7 @@ package scalanlp.stats.sampling;
  limitations under the License. 
 */
 
+import scala.collection.mutable.ArrayBuffer;
 import Rand._;
 import Math._;
 
@@ -39,6 +40,134 @@ object MarkovChain {
     override def observe(x:T) = {
       MarkovChain(x)(resample)
     }
+  }
+
+  /**
+  * Combinators for creating transition kernels from other kernels or things 
+  * that are not quite transition kernels.
+  * A kernel is a fn of type T=&lt;Rand[T]
+  */
+  object Combinators {
+    /**
+    * Extension methods for kernels
+    */
+    class RichKernel[T,U](k1: T=>Rand[U]) {
+      /**
+      * Sequence two transitions together. This is Kliesli arrow composition.
+      */
+      def >=>[V](k2: U=>Rand[V]) = { (t: T) =>
+        k1(t).flatMap(k2);
+      }
+      /**
+      * Sequence two transitions together, in reverse order
+      * This is Kliesli arrow composition.
+      */
+      def <=<[V](k2: V=>Rand[T]) = { (t: V) =>
+        k2(t).flatMap(k1);
+      }
+
+      /**
+      * Promotes a kernel to map over sequence.
+      * T=&lt;Rand[U] becomes Seq[T]=&lt;Rand[Seq[U]]
+      */
+      def promoteSeq: Seq[T]=>Rand[Seq[U]] = { (t: Seq[T]) => promote(t.map(k1)); }
+      /**
+      * Promotes a kernel to map over collection.
+      * T=&lt;Rand[U] becomes Seq[T]=&lt;Rand[Collection[U]]
+      */
+      def promoteIterable: Iterable[T]=>Rand[Iterable[U]] = { (t: Iterable[T]) => promote(t.map(k1)); }
+    }
+
+    implicit def richKernel[T,U](k1: T=>Rand[U]) = new RichKernel(k1);
+
+    /**
+    * Extension methods for pseudo-kernels
+    * A pseudo-kernel is a method of type (C,T)=&lt;Rand[U], with C being a context type
+    */
+    class RichPseudoKernel[C,T,U](k1: (C,T)=>Rand[U]) {
+      /**
+      * Sequence two transitions together. This is Kliesli arrow composition.
+      */
+      def >=>[V](k2: (C,U)=>Rand[V]) = { (c: C, t: T) =>
+        k1(c,t).flatMap(u => k2(c,u) );
+      }
+      /**
+      * Sequence two transitions together, in reverse order
+      * This is Kliesli arrow composition.
+      */
+      def <=<[V](k2: (C,V)=>Rand[T]) = { (c: C, t: V) =>
+        k2(c,t).flatMap(t => k1(c,t));
+      }
+
+      /**
+      * Promotes a kernel to map over sequence.
+      * T=&lt;Rand[U] becomes Seq[T]=&lt;Rand[Seq[U]]
+      */
+      def promoteSeq: (C,Seq[T])=>Rand[Seq[U]] = { (c:C, t: Seq[T]) =>
+        promote(t.map(t => k1(c,t) )); 
+      }
+      /**
+      * Promotes a kernel to map over collection.
+      * T=&lt;Rand[U] becomes Seq[T]=&lt;Rand[Collection[U]]
+      */
+      def promoteIterable: (C,Iterable[T])=>Rand[Iterable[U]] = { (c: C, t: Iterable[T]) =>
+        promote(t.map( t=>k1(c,t)));
+      }
+    }
+
+    implicit def richPseudoKernel[C,T,U](k1: (C,T)=>Rand[U]) = new RichPseudoKernel(k1);
+
+    /**
+    * Tupleization of nearly-transition kernels to produce a transition kernel for tuples
+    */
+    def promoteTuple[A,B,C,D](k1: (A,B)=>Rand[C], k2: (C,B)=>Rand[D]) = {(t: (A,B)) =>
+      for(c <- k1(t._1,t._2);
+          d <- k2(c,t._2))
+        yield (c,d);
+    }
+
+    /**
+    * Tupleization of nearly-transition kernels to produce a kernel for tuples
+    */
+    def promoteTuple[T1,T2,T3,U1,U2,U3](k1: (T1,T2,T3)=>Rand[U1],
+                                        k2: (U1,T2,T3)=>Rand[U2], 
+                                        k3: (U1,U2,T3)=>Rand[U3]) = { (t: (T1,T2,T3)) =>
+      for(c <- k1(t._1,t._2,t._3);
+          d <- k2(c,t._2,t._3);
+          e <- k3(c,d,t._3))
+        yield (c,d,e);
+    }
+
+
+    /**
+    * Tupleization of nearly-transition kernels to produce a kernel for tuples
+    */
+    def promoteTuple[T1,T2,T3,U1,U2,U3,T4,U4](k1: (T1,T2,T3,T4)=>Rand[U1],
+                                        k2: (U1,T2,T3,T4)=>Rand[U2], 
+                                        k3: (U1,U2,T3,T4)=>Rand[U3], 
+                                        k4: (U1,U2,U3,T4)=>Rand[U4]) = { (t: (T1,T2,T3,T4)) =>
+      for(c <- k1(t._1,t._2,t._3,t._4);
+          d <- k2(c,t._2,t._3,t._4);
+          e <- k3(c,d,t._3,t._4);
+          f <- k4(c,d,e,t._4)
+        ) yield (c,d,e,f);
+    }
+
+    /**
+    * Creates a transition kernel over a sequence, given the ability to do one index at a time.
+    * Useful for sequence models with a markov assumption.
+    */
+    def seqKernel[T](trans: (Seq[T],Int)=>Rand[T]) : Seq[T]=>Rand[Seq[T]] = { (seq: Seq[T]) =>
+      fromBody {
+        val arrbuf = new ArrayBuffer[T];
+        arrbuf ++= seq;
+        (0 until seq.length).foldLeft(arrbuf) { (buf, i) =>
+          buf(i) = trans(buf,i).draw;
+          buf
+        }
+      }
+    }
+
   }
 
   /**
