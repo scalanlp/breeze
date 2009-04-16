@@ -52,6 +52,13 @@ import scala.collection.mutable._;
   }
 
   /**
+  * Returns Some(i) if the object has been indexed, or None
+  */
+  def indexOpt(t:T): Option[Int] = {
+    indices.get(t);
+  }
+
+  /**
    * Returns an integer index for the given object.  By default,
    * this method will allocate a new index (at the end) if the
    * object was not found, but an immutable view may return -1
