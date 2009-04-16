@@ -116,7 +116,20 @@ object Multinomial {
       
     def total = 1.0;
   }
-  
+
+  /**
+   * Returns a Multinomial with the doubles assumed to be in log space: 
+   */
+  def withLogCounts[T](arr: DoubleCounter[T]) = new Multinomial[T] {
+    private val logTotal = logSum(arr.values.collect);
+    lazy val components = new scala.collection.Map[T,Double] {
+      def elements = arr map { case (k,v) => (k,Math.exp(v- logTotal))} elements;
+      def get(x:T) = arr get x map (v => Math.exp(v - logTotal));
+      def size = arr.size;
+    }
+      
+   def total = 1.0;
+  }
 
   /**
    * Returns a Multinomial where the probability is proportional to a(i)
