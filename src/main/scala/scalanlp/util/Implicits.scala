@@ -95,13 +95,29 @@ object Implicits extends Asserts {
     }
   }
   implicit def stringExtras(s : String) = new StringExtras(s);
-  
-  implicit def tExtras[T<:AnyRef](t : T) = new AnyExtras[T](t);
+
+
+  implicit def anyExtras[T](a:T) = new AnyExtras[T](a);
+
+  class AnyExtras[T](x: T) {
+    /**
+    * Unfold creates a list starting from a seed value. It's meant to be the 
+    * opposite of List.foldr in that if there is an "inverse" of f,
+    * that has some stopping criterion, then we have something like
+    * list reduceRight ( f) unfoldr inversef == list
+    */
+    def unfoldr[R](f: T=>Option[(R,T)]): List[R] = f(x) match {
+      case None => Nil
+      case Some((r, v)) => r :: ( v unfoldr f )
+    }
+  }
+
+  implicit def tExtras[T<:AnyRef](t : T) = new AnyRefExtras[T](t);
   
   /**
    * Provides extensions to Any.
    */
-  class AnyExtras[T<:AnyRef](t: T) {
+  class AnyRefExtras[T<:AnyRef](t: T) {
     /**
      * if t is non-null, return it, otherwise, evaluate and return u.
      */ 
