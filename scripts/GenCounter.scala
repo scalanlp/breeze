@@ -183,7 +183,7 @@ trait {COUNTER} extends {superClass} {{
 
   override def default(k : {T}) : {V} = defaultValue;
 
-  {ov} protected def defaultValue: {V} = 0;
+  {ov} def defaultValue: {V} = 0;
 
   override def apply(k : {T}) : {V} = super.apply(k);
 
