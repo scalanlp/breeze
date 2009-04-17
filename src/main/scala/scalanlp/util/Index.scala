@@ -20,7 +20,7 @@ package scalanlp.util;
 import scala.collection.mutable._;
 
 /**
- * Class that mimics Java's string indexer, but for anything.
+ * Class to assign objects to ints.
  * 
  * Two extra views are provided: the index.synchronized view
  * enables threadsafe access and the index.immutable view keeps
@@ -36,7 +36,7 @@ import scala.collection.mutable._;
   private val indices = Map[T,Int]();
   
   override def apply(t : T) = index(t);
-  def unapply(pos : Int):T = get(pos);
+  def unapply(pos : Int):Option[T] = if(pos < 0 || pos >= objects.length) None else Some(objects(pos));
 
   override def elements = objects.elements;
   
@@ -49,13 +49,6 @@ import scala.collection.mutable._;
   def get(pos : Int) : T = {
     if (pos < 0 || pos >= objects.length) throw new IndexOutOfBoundsException("Index "+pos+" is out of range");
     else objects(pos);
-  }
-
-  /**
-  * Returns Some(i) if the object has been indexed, or None
-  */
-  def indexOpt(t:T): Option[Int] = {
-    indices.get(t);
   }
 
   /**
@@ -103,12 +96,12 @@ import scala.collection.mutable._;
     Map[K,T]() ++ c.map{ case (a,b) => (a,this(b))}
   }
 
-  def getAll(c : Iterator[Int]) = c map unapply;
-  def getAll(c : Iterable[Int]) = c map unapply;
-  def getAll(c : Collection[Int]) = c map unapply;
-  def getAll(c : List[Int]) = c map unapply;
-  def getAll(c : Array[Int]) = c map unapply;
-  def getAll(c : Set[Int]) = c map unapply;
+  def getAll(c : Iterator[Int]) = c map get;
+  def getAll(c : Iterable[Int]) = c map get;
+  def getAll(c : Collection[Int]) = c map get;
+  def getAll(c : List[Int]) = c map get;
+  def getAll(c : Array[Int]) = c map get;
+  def getAll(c : Set[Int]) = c map get;
 
   //
   // Index views.

@@ -19,7 +19,8 @@ import java.io._;
 import java.util.zip._;
 
 /**
-* Provides rudimentary serialization for scala types. Inspired by SBinary, which seems kind of defunct.
+* Provides rudimentary serialization for scala types.
+* Inspired by SBinary, which seems kind of defunct.
 */
 object Serialization {
   @serializable
@@ -30,14 +31,14 @@ object Serialization {
 
   trait VersionedHandler[T] extends Handler[T] {
     def currentVersion: Long
-    def read(in: DataInput): T = {
+    final def read(in: DataInput): T = {
       val ver = in.readLong;
       read(ver,in);
     }
 
     def read(version: Long, in: DataInput):T;
 
-    def write(t: T, out: DataOutput) {
+    final def write(t: T, out: DataOutput) {
       out.writeLong(currentVersion);
       writeCurrent(t,out);
     }
@@ -117,6 +118,25 @@ object Serialization {
       }
     }
 
+    implicit def tuple4Handler[T1,T2,T3,T4](implicit t1H: Handler[T1],
+                                            t2H: Handler[T2],
+                                            t3H: Handler[T3],
+                                            t4H: Handler[T4]) = new Handler[(T1,T2,T3,T4)] {
+      def read(in: DataInput) = {
+        val t1 = t1H.read(in);
+        val t2 = t2H.read(in);
+        val t3 = t3H.read(in);
+        val t4 = t4H.read(in);
+        (t1,t2,t3,t4)
+      }
+      def write(t: (T1,T2,T3,T4), out: DataOutput) {
+        t1H.write(t._1, out);
+        t2H.write(t._2, out);
+        t3H.write(t._3, out);
+        t4H.write(t._4, out);
+      }
+    }
+
     implicit def arrayHandler[T](implicit tH: Handler[T]) = new Handler[Array[T]] {
       def read(in: DataInput) = {
         val sz = in.readInt;
@@ -144,7 +164,7 @@ object Serialization {
 
     implicit def imMapHandler[K,V](implicit h: Handler[(K,V)]) = collectionFromElements[(K,V),Map[K,V]](Map() ++ _);
 
-    implicit def mmMapHandler[K,V](implicit h: Handler[(K,V)]) = {
+    implicit def mMapHandler[K,V](implicit h: Handler[(K,V)]) = {
       collectionFromElements[(K,V),scala.collection.mutable.Map[K,V]]{ elems => 
         scala.collection.mutable.Map() ++ elems
       };
@@ -155,6 +175,10 @@ object Serialization {
   * Contains methods to make Handlers from other handlers
   */
   object Builders {
+    /**
+    * Serializes the elements of the collection, and builds the collection back 
+    * using inflate, which must create a collection from the members.
+    */
     def collectionFromElements[T,C<:Collection[T]](inflate: Iterator[T]=>C)(implicit hT: Handler[T]) = new Handler[C] {
       def write(c: C, out: DataOutput) = {
         out writeInt c.size;
@@ -213,6 +237,9 @@ object Serialization {
     h.read(in);
   }
 
+  /**
+  * Marshalls the object using the implicit Handler to a byte array
+  */
   def toBytes[T](x: T)(implicit h: Handler[T]) = {
     val bout = new ByteArrayOutputStream();
     val out = new DataOutputStream(bout);
@@ -221,14 +248,16 @@ object Serialization {
     bout.toByteArray;
   }
 
+  /**
+  * Unmarshalls the object using the implicit Handler
+  * Usage: Serialization.fromBytes[T](bytes);
+  */
   def fromBytes[T](bytes: Array[Byte])(implicit h: Handler[T]) = {
     val in = new DataInputStream(new ByteArrayInputStream(bytes));
     val x = h.read(in);
     in.close;
     x;
   }
-
-  
 
   object ScalanlpHandlers {
     import scalanlp.counters._;
