@@ -16,6 +16,8 @@ package scalanlp.util;
  limitations under the License. 
 */
 
+import scala.collection.mutable._;
+
 
 /**
 * Useful implicit conversions and other utilities.
@@ -106,9 +108,16 @@ object Implicits extends Asserts {
     * that has some stopping criterion, then we have something like
     * list reduceRight ( f) unfoldr inversef == list
     */
-    def unfoldr[R](f: T=>Option[(R,T)]): List[R] = f(x) match {
-      case None => Nil
-      case Some((r, v)) => r :: ( v unfoldr f )
+    def unfoldr[R](f: T=>Option[(R,T)]): Seq[R] = {
+      var result = new ArrayBuffer[R];
+      var current = f(x);
+      while( current != None ) {
+        val next = current.asInstanceOf[Some[(R,T)]].get._2;
+        val r = current.asInstanceOf[Some[(R,T)]].get._1;
+        result += r;
+        current = f(next);
+      }
+      result.reverse;
     }
   }
 

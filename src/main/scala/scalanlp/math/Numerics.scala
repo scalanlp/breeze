@@ -146,7 +146,9 @@ object Numerics {
   * @return log(exp(a) + exp(b))
   */
   def logSum(a : Double, b : Double) = {
-    if(a < b) b + log(1 + exp(a-b))
+    if(a == NEG_INF_DOUBLE) b
+    else if (b == NEG_INF_DOUBLE) a
+    else if(a < b) b + log(1 + exp(a-b))
     else a + log(1+exp(b-a));    
   }
 
