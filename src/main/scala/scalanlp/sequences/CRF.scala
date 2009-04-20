@@ -24,7 +24,6 @@ import stats.sampling._
 import Math._;
 import util.Implicits._;
 import scala.collection.mutable.ArrayBuffer;
-import scalala.tensor.sparse._;
 
 /**
 * Represents a single-markov CRF, can score sequences and such.
@@ -40,12 +39,16 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
                val weights: Seq[Double],
                val numStates: Int,
                val start: Int,
-               val validStatesForObservation: Map[Int,Collection[Int]],
+               val validStatesForObservation: Int=>Seq[Int],
                val window: Int) {
   require(features.length == weights.length);
   require(window > 0)
 
   def calibrate(words: Seq[Int]) = new Calibration(words);
+
+  import CRF._;
+  private val factorSize = pow(numStates,window).toInt;
+  private val messageSize = pow(numStates,window-1).toInt;
 
   class Calibration(val words:Seq[Int]) {
     private lazy val fScores : Seq[Message] = {
@@ -62,13 +65,12 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
     private lazy val bScores: Seq[Message] = {
       val firstMessage = new Message(-1,words.length-1);
       // first message is: p(x|w) \propto 1 forall valid state sequences x
-      for(seq <- 0 until firstMessage.scores.length;
+      for(seq <- 0 until messageSize;
           states = decode(seq,window-1)) {
         val allowed = states.elements.zipWithIndex forall { case(state,i) => 
-          validStatesFor(words.length - window + i) contains state
+          validStatesFor(words.length - window + i + 1) contains state
         }
         if(allowed) firstMessage.scores(seq) = 0.0;
-        else firstMessage.scores(seq) = NEG_INF_DOUBLE;
       }
       val messages = new ArrayBuffer[Message];
       messages += firstMessage;
@@ -84,8 +86,9 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       assert(pos <= words.length);
       assert(pos >= 0,pos + "");
 
-      val cache = new Array[Double](pow(numStates,window).toInt);
-      Arrays.fill(cache,Double.NaN);
+      private val cache = new SparseVector(factorSize) {
+        override val default = Double.NaN;
+      };
 
       def compute(stateSeq: Int) = {
         if(!cache(stateSeq).isNaN) {
@@ -104,13 +107,11 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         }
       }
 
-      def  leftMessage(incoming: Message) = {
+      private[CRF] def leftMessage(incoming: Message) = {
         val outgoing = new Message(pos,pos+1);
         for { 
           // for each prior sequence of states  x_i,... x_{i+window}
-          stateSeq <- 0 until incoming.scores.length;
-          val initScore = incoming.scores(stateSeq);
-          if initScore != NEG_INF_DOUBLE 
+          (stateSeq,initScore) <- incoming.scores.activeElements;
           // and for each next state x_{i+window+1}
           nextState <- validStatesFor(pos)
         } /* do */ { // sum out the x_i
@@ -123,27 +124,17 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         outgoing
       }
 
-      def rightMessage(incoming: Message) = {
+      private[CRF] def rightMessage(incoming: Message) = {
         val outgoing = new Message(pos,pos-1);
         for { 
           // for each future sequence of states  x_{i+1},... x_{i+window}
-          stateSeq <- 0 until incoming.scores.length;
-          val initScore = incoming.scores(stateSeq);
-          if initScore != NEG_INF_DOUBLE 
+          (stateSeq,initScore) <- incoming.scores.activeElements;
           // and for each next state x_{i}
           nextState <- validStatesFor(pos-window+1)
         } /* do */ { // sum out the x_{i+window}
           val nextStateSeq = shiftLeft(stateSeq,nextState);
           val score = initScore + compute(nextStateSeq);
           val outgoingAssignment = shiftLeft(nextStateSeq,0) / numStates;
-          if(pos == 38) {
-            println("i38")
-            println(decode(nextStateSeq));
-            println(decode(stateSeq,window-1));
-            println(decode(outgoingAssignment,window-1));
-            println(score);
-            println();
-          }
           outgoing.scores(outgoingAssignment) = logSum(outgoing.scores(outgoingAssignment),score);
           assert(!outgoing.scores(outgoingAssignment).isNaN);
         }
@@ -151,14 +142,9 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       }
     }
 
-    def validStatesFor(pos: Int) = {
-      if(pos < 0) Iterator.single(start);
-      else validStatesForObservation(words(pos)).elements;
-    }
 
-    case class Message(src: Int, dest: Int) {
-      val scores = new Array[Double](pow(numStates,window-1).toInt);
-      Arrays.fill(scores,NEG_INF_DOUBLE);
+    private[CRF] case class Message(src: Int, dest: Int) {
+      val scores = new SparseVector(messageSize);
     }
 
     lazy val partition = exp(logPartition);
@@ -166,8 +152,8 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       logSum(fScores.last.scores);
     }
 
-    def renderMessage(arr: Array[Double]) = {
-      arr.zipWithIndex foreach { case(v,seq) =>
+    private def renderMessage(arr: SparseVector) = {
+      arr.activeElements foreach { case(seq,v) =>
         if(!v.isInfinite) {
           val states = decode(seq,window-1);
           println(states + " =>  " + v);
@@ -175,15 +161,20 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       }
     }
 
+    private val startArray = Array(start);
+    private def validStatesFor(pos: Int) = {
+      if(pos < 0) startArray;
+      else validStatesForObservation(words(pos));
+    }
+
     lazy val calibratedFactors = {
-      println(factors.length,bScores.length,fScores.length);
-      println(words.length);
       assert(factors.length == bScores.length);
       assert(factors.length == fScores.length);
       for(i <- 0 until factors.length) yield {
-        val output = new Array[Double](pow(numStates,window).toInt);
+        val output = new SparseVector(factorSize);
         val left = fScores(i).scores;
         val right = bScores(i).scores;
+        /*
         println(fScores(i) + " " + bScores(i));
         println("Left {");
         renderMessage(left);
@@ -191,15 +182,15 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         println("Right {");
         renderMessage(right);
         println("}");
-        var seq = 0; //22% of time spent here if it's a forloop.
-        while(seq < output.length) {
-          val ls = shiftLeft(seq,0) / numStates;
-          val rs = shiftRight(seq,0);
-          output(seq)  = left(ls) + right(rs);
-          if(!output(seq).isInfinite) {
-            output(seq) += factors(i).compute(seq);
-          }
-          seq += 1;
+        */
+        for( (ls,lScore) <- left.activeElements;
+              nextState <- validStatesFor(i)) {
+            val seq = appendRight(ls,nextState);
+            val rs = shiftRight(seq,0);
+            output(seq)  = left(ls) + right(rs);
+            if(!output(seq).isInfinite) {
+              output(seq) += factors(i).compute(seq);
+            }
         }
         output;
       }
@@ -214,8 +205,8 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       }
       for(i <- 0 until words.length;
           factor = calibratedFactors(i);
-          stateSeq <- 0 until factor.size) { // each possible assignment to the left and right message
-          val head = stateSeq % numStates; // trigram XYZ, get X
+          (stateSeq,score) <- factor.activeElements) { // each possible assignment to the left and right message
+          val head = stateSeq / rightShifter; // trigram XYZ, get Z
           // sum out this contribution
           preResult(i)(head) = logSum(preResult(i)(head),factor(stateSeq));
       }
@@ -223,7 +214,7 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       val result = for(arr <- preResult) yield {
         val c = Int2DoubleCounter();
         // subtract out the log partition function.
-        c ++= arr.zipWithIndex filter { case (v,_) => println(v); !v.isInfinite } map {case (v,k) => (k,v - z)}
+        c ++= arr.zipWithIndex filter { case (v,_) => !v.isInfinite } map {case (v,k) => (k,v - z)}
         assert(c.size > 0)
         c;
       }
@@ -231,82 +222,6 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       result;
     }
   }
-
-/*
-  private def forwardScores(words: Seq[Int]) = {
-    var prevLogProbs = new Array[Double](pow(numStates,window).toInt);
-    Arrays.fill(prevLogProbs,NEG_INF_DOUBLE);
-    prevLogProbs( encode( (1 to window).map( _ => start))) = 0.0;
-
-    val result = new Array[Array[Double]](words.length,prevLogProbs.size);
-
-    for {
-      i <- 0 until words.length
-    } {
-      val nextLogProbs = result(i);
-      Arrays.fill(nextLogProbs,NEG_INF_DOUBLE);
-      for { 
-        // for each prior sequence of states  x_i,... x_{i+window}
-        stateSeq <- 0 until prevLogProbs.length;
-        val initScore = prevLogProbs(stateSeq);
-        if initScore != NEG_INF_DOUBLE 
-        // and for each next state x_{i+window+1}
-        nextState <- validStatesForObservation(words(i))
-      } { // sum out the x_i
-        var score = initScore;
-        assert(!score.isNaN);
-        val nextStateSeq = shiftRight(stateSeq,nextState);
-        val nextStates = decode(nextStateSeq);
-        for( (f,w) <- features.elements zip weights.elements) {
-          score += w * f(nextStates,i,words);
-          assert(!score.isNaN);
-        }
-        assert(!score.isNaN);
-        println(score + " " + nextLogProbs(nextStateSeq) + " " + logSum(nextLogProbs(nextStateSeq),score));
-        nextLogProbs(nextStateSeq) = logSum(nextLogProbs(nextStateSeq),score);
-        assert(!nextLogProbs(nextStateSeq).isNaN);
-      }
-      prevLogProbs = nextLogProbs;
-    }
-
-    result;
-  }
-
-
-  private def backwardScores(words: Seq[Int]) = {
-    val result = new Array[Array[Double]](words.length,pow(numStates,window).toInt);
-    var prevLogProbs = null;
-    for(i <- 1 until window) {
-      prevLogProbs = result(result.length-i)
-      Arrays.fill(prevLogProbs,0.0);
-    }
-
-    for {
-      i <- (words.length-window) to 0 by -1
-    }  {
-      val nextLogProbs = result(i);
-      Arrays.fill(nextLogProbs,NEG_INF_DOUBLE);
-      for {
-        stateSeq <- 0 until prevLogProbs.length;
-        val initScore = prevLogProbs(stateSeq);
-        if initScore != NEG_INF_DOUBLE 
-        nextState <- validStatesForObservation(words(i))
-        val nextStateSeq = shiftLeft(stateSeq,nextState);
-        val nextStates = decode(nextStateSeq)
-      }  {
-        var score = initScore;
-        assert(!score.isNaN);
-        for( (f,w) <- features.elements zip weights.elements) {
-          score += w * f(nextStates,i,words);
-        }
-        nextLogProbs(nextStateSeq) = logSum(nextLogProbs(nextStateSeq),score);
-      }
-      prevLogProbs = nextLogProbs;
-    }
-
-    result;
-  }
-  */
 
   val rightShifter = pow(numStates,window-1).toInt;
   def shiftRight(s: Int, next: Int) = {
@@ -326,20 +241,26 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
     s.foldRight(0)(_ + _ * numStates);
   }
 
-  def decode(s: Int):ArrayBuffer[Int] = decode(s,window)
+  def decode(s: Int):Array[Int] = decode(s,window)
     
-  def decode(s: Int, window: Int): ArrayBuffer[Int] = {
-    val result = new ArrayBuffer[Int];
+  def decode(s: Int, window: Int): Array[Int] = {
+    val result = new Array[Int](window);
     var acc = s;
+    var i = 0;
     while(acc != 0) {
       val r = acc % numStates;
       acc /= numStates;
-      result += r;
+      result(i) = r;
+      i += 1;
     }
-    while(result.size < window) {
-      result += 0;
-    }
+    require(result.size <= window);
     result;
   }
 
+}
+
+object CRF {
+  class SparseVector(domainSize: Int) extends scalala.tensor.sparse.SparseVector(domainSize) {
+    override val default = NEG_INF_DOUBLE;
+  }
 }

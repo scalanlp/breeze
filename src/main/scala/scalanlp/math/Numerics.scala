@@ -163,12 +163,24 @@ object Numerics {
   * @return log(\sum exp(a_i))
   */
   def logSum(a:Seq[Double]):Double = {
-    val iter = a.elements;
     if(a.length == 1) a(0)
-    else if(a.length ==2) logSum(iter.next,iter.next);
+    else if(a.length ==2) logSum(a(0),a(1));
     else {
       val m = a reduceLeft(_ max _);
       m + log(a.foldLeft(0.)( (a,b) => a+exp( b - m )))
+    }
+  }
+
+  import scalala.tensor.Vector;
+  /**
+  * @return log(\sum exp(a_i))
+  */
+  def logSum(a:Vector):Double = {
+    if(a.size == 1) a(0)
+    else if(a.size ==2) logSum(a(0),a(1));
+    else {
+      val m = a.activeValues reduceLeft(_ max _);
+      m + log(a.activeValues.foldLeft(0.)( (a,b) => a+exp( b - m )))
     }
   }
 
