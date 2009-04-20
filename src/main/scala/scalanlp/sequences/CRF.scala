@@ -16,6 +16,7 @@ package scalanlp.sequences
 */
 
 import java.util.Arrays;
+import scala.collection.mutable.ArrayBuffer;
 import counters._;
 import counters.ints._;
 import util.Index;
@@ -23,7 +24,8 @@ import math.Numerics._;
 import stats.sampling._
 import Math._;
 import util.Implicits._;
-import scala.collection.mutable.ArrayBuffer;
+import scalanlp.util.Lazy;
+import scalanlp.util.Lazy.Implicits._;
 
 /**
 * Represents a single-markov CRF, can score sequences and such.
@@ -51,40 +53,42 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
   private val messageSize = pow(numStates,window-1).toInt;
 
   class Calibration(val words:Seq[Int]) {
-    private lazy val fScores : Seq[Message] = {
-      val firstMessage = new Message(-1,0);
-      firstMessage.scores(encode(Array.make(window-1,start))) = 0.0;
-      val messages = new ArrayBuffer[Message];
-      messages += firstMessage;
-      for(f <- factors) {
-        messages += f.leftMessage(messages.last);
-      }
-      messages.take(words.length);
+    lazy val partition = exp(logPartition);
+    lazy val logPartition = {
+      logSum(leftMessages.last.scores);
     }
 
-    private lazy val bScores: Seq[Message] = {
-      val firstMessage = new Message(-1,words.length-1);
-      // first message is: p(x|w) \propto 1 forall valid state sequences x
-      for(seq <- 0 until messageSize;
-          states = decode(seq,window-1)) {
-        val allowed = states.elements.zipWithIndex forall { case(state,i) => 
-          validStatesFor(words.length - window + i + 1) contains state
+    lazy val logMarginals : Seq[Lazy[DoubleCounter[Int]]] = {
+      (for { 
+        i:Int <- (0 until words.length).toArray;
+      } yield Lazy.delay {
+        val factor = factors(i).calibrated;
+        val accum = new Array[Double](numStates);
+        Arrays.fill(accum,NEG_INF_DOUBLE)
+
+        // for each possible assignment to the left and right message
+        for ( (stateSeq,score) <- factor.activeElements) {
+          val head = stateSeq / rightShifter; // trigram XYZ, get Z
+          // sum out this contribution
+          accum(head) = logSum(accum(head),factor(stateSeq));
         }
-        if(allowed) firstMessage.scores(seq) = 0.0;
-      }
-      val messages = new ArrayBuffer[Message];
-      messages += firstMessage;
-      for(f <- factors.reverse) {
-        messages += f.rightMessage(messages.last);
-      }
-      messages.reverse.drop(1)
+
+        val c = Int2DoubleCounter();
+        // subtract out the log partition function.
+        c ++= ( for( (v,i) <- accum.zipWithIndex
+                    if !v.isInfinite) 
+                  yield (i,v - logPartition)
+              );
+        assert(c.size > 0)
+        c;
+      }).force
     }
 
-    private val factors = (0 until words.length).toArray.map( (i:Int) => new Factor(i));
+    private val factors = Array.range(0,words.length).map( (i:Int) => new Factor(i));
 
     class Factor(pos: Int) {
-      assert(pos <= words.length);
-      assert(pos >= 0,pos + "");
+      require(pos <= words.length);
+      require(pos >= 0,pos + "");
 
       private val cache = new SparseVector(factorSize) {
         override val default = Double.NaN;
@@ -107,7 +111,8 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         }
       }
 
-      private[CRF] def leftMessage(incoming: Message) = {
+      private[CRF] lazy val leftMessage = {
+        val incoming = leftMessages(pos);
         val outgoing = new Message(pos,pos+1);
         for { 
           // for each prior sequence of states  x_i,... x_{i+window}
@@ -124,7 +129,8 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         outgoing
       }
 
-      private[CRF] def rightMessage(incoming: Message) = {
+      private[CRF] lazy val rightMessage = {
+        val incoming = rightMessages(pos);
         val outgoing = new Message(pos,pos-1);
         for { 
           // for each future sequence of states  x_{i+1},... x_{i+window}
@@ -140,40 +146,11 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         }
         outgoing;
       }
-    }
 
-
-    private[CRF] case class Message(src: Int, dest: Int) {
-      val scores = new SparseVector(messageSize);
-    }
-
-    lazy val partition = exp(logPartition);
-    lazy val logPartition = {
-      logSum(fScores.last.scores);
-    }
-
-    private def renderMessage(arr: SparseVector) = {
-      arr.activeElements foreach { case(seq,v) =>
-        if(!v.isInfinite) {
-          val states = decode(seq,window-1);
-          println(states + " =>  " + v);
-        }
-      }
-    }
-
-    private val startArray = Array(start);
-    private def validStatesFor(pos: Int) = {
-      if(pos < 0) startArray;
-      else validStatesForObservation(words(pos));
-    }
-
-    lazy val calibratedFactors = {
-      assert(factors.length == bScores.length);
-      assert(factors.length == fScores.length);
-      for(i <- 0 until factors.length) yield {
+      private[CRF] lazy val calibrated = {
         val output = new SparseVector(factorSize);
-        val left = fScores(i).scores;
-        val right = bScores(i).scores;
+        val left = leftMessages(pos).scores;
+        val right = rightMessages(pos).scores;
         /*
         println(fScores(i) + " " + bScores(i));
         println("Left {");
@@ -184,66 +161,81 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         println("}");
         */
         for( (ls,lScore) <- left.activeElements;
-              nextState <- validStatesFor(i)) {
+              nextState <- validStatesFor(pos)) {
             val seq = appendRight(ls,nextState);
             val rs = shiftRight(seq,0);
             output(seq)  = left(ls) + right(rs);
             if(!output(seq).isInfinite) {
-              output(seq) += factors(i).compute(seq);
+              output(seq) += compute(seq);
             }
         }
         output;
       }
     }
 
-    lazy val logMarginals = {
-      val z = logPartition;
+    private[CRF] case class Message(src: Int, dest: Int) {
+      val scores = new SparseVector(messageSize);
+    }
 
-      val preResult = new Array[Array[Double]](words.length, numStates);
-      for(arr <- preResult) {
-        Arrays.fill(arr,NEG_INF_DOUBLE);
+    private val leftMessages  : Seq[Lazy[Message]] = {
+      val firstMessage = new Message(-1,0);
+      firstMessage.scores(encode(Array.make(window-1,start))) = 0.0;
+      val messages = new ArrayBuffer[Lazy[Message]];
+      messages += Lazy.delay { firstMessage };
+      for(f <- factors) {
+        messages += Lazy.delay { f.leftMessage };
       }
-      for(i <- 0 until words.length;
-          factor = calibratedFactors(i);
-          (stateSeq,score) <- factor.activeElements) { // each possible assignment to the left and right message
-          val head = stateSeq / rightShifter; // trigram XYZ, get Z
-          // sum out this contribution
-          preResult(i)(head) = logSum(preResult(i)(head),factor(stateSeq));
-      }
+      messages.take(words.length);
+    }
 
-      val result = for(arr <- preResult) yield {
-        val c = Int2DoubleCounter();
-        // subtract out the log partition function.
-        c ++= arr.zipWithIndex filter { case (v,_) => !v.isInfinite } map {case (v,k) => (k,v - z)}
-        assert(c.size > 0)
-        c;
+    private lazy val rightMessages: Seq[Lazy[Message]] = {
+      val firstMessage = new Message(-1,words.length-1);
+      // first message is: p(x|w) \propto 1 forall valid state sequences x
+      for(seq <- 0 until messageSize;
+          states = decode(seq,window-1)) {
+        val allowed = states.elements.zipWithIndex forall { case(state,i) => 
+          validStatesFor(words.length - window + i + 1) contains state
+        }
+        if(allowed) firstMessage.scores(seq) = 0.0;
       }
+      val messages = new ArrayBuffer[Lazy[Message]];
+      messages += Lazy.delay { firstMessage };
+      for(f <- factors.reverse) {
+        messages += Lazy.delay { f.rightMessage };
+      }
+      messages.reverse.drop(1)
+    }
 
-      result;
+    private val startArray = Array(start);
+    private def validStatesFor(pos: Int) = {
+      if(pos < 0) startArray;
+      else validStatesForObservation(words(pos));
     }
   }
 
-  val rightShifter = pow(numStates,window-1).toInt;
-  def shiftRight(s: Int, next: Int) = {
-    s / numStates + rightShifter * next;
+  private def renderMessage(arr: SparseVector) = {
+    arr.activeElements foreach { case(seq,v) =>
+      if(!v.isInfinite) {
+        val states = decode(seq,window-1);
+        println(states + " =>  " + v);
+      }
+    }
   }
 
-  def appendRight(s: Int, next:Int) = {
-    assert(s < rightShifter);
-    s + rightShifter * next;
-  }
 
-  def shiftLeft(s:Int, prev: Int) = {
-    s % rightShifter * numStates + prev;
-  }
-
-  def encode(s: Seq[Int]) = {
+  // Utility stuff for decoding/encoding sequences of ints as a single Int.
+  // Basic idea:
+  // if there are numStates, then we can encode a sequence x_0, ..., x_{window-1}
+  // as a window digit number in base numStates. 
+  // 
+  private def encode(s: Seq[Int]) = {
     s.foldRight(0)(_ + _ * numStates);
   }
 
-  def decode(s: Int):Array[Int] = decode(s,window)
+  private def decode(s: Int):Array[Int] = decode(s,window)
     
-  def decode(s: Int, window: Int): Array[Int] = {
+  // could use unfoldr, but it's too slow.
+  private def decode(s: Int, window: Int): Array[Int] = {
     val result = new Array[Int](window);
     var acc = s;
     var i = 0;
@@ -253,8 +245,23 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       result(i) = r;
       i += 1;
     }
-    require(result.size <= window);
+    assert(result.size <= window);
     result;
+  }
+
+  // TODO: decompose this into a pretty interface in another class.
+  private val rightShifter = pow(numStates,window-1).toInt;
+  private def shiftRight(s: Int, next: Int) = {
+    s / numStates + rightShifter * next;
+  }
+
+  private def appendRight(s: Int, next:Int) = {
+    assert(s < rightShifter);
+    s + rightShifter * next;
+  }
+
+  private def shiftLeft(s:Int, prev: Int) = {
+    s % rightShifter * numStates + prev;
   }
 
 }
