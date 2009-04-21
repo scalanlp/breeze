@@ -28,14 +28,13 @@ import scalanlp.util.Lazy;
 import scalanlp.util.Lazy.Implicits._;
 
 /**
-* Represents a single-markov CRF, can score sequences and such.
+* Represents a CRF with arbitrary window size, can score sequences and such.
 *
-* @param features, functions of the form (previousState,nextState,i,observations)=&lt;Double
+* @param features, functions of the form ([states],i,observations)=&lt;Double
 * @param weights, to go with the features
 * @param stateDict: a set of allowed states
-* @param start: an initial state, that seq's implicitly start with. Must be in stateDict
+* @param start: an initial state, that seq's implicitly start with.
 * @param window: how wide of a window the features are over.
-*                You're to be on your best behavior not to violate this.
 */
 final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
                val weights: Seq[Double],
@@ -46,13 +45,13 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
   require(features.length == weights.length);
   require(window > 0)
 
-  def calibrate(words: Seq[Int]) = new Calibration(words);
+  def calibrate(words: Seq[Int]) = new Calibration(words, Map());
 
   import CRF._;
   private val factorSize = pow(numStates,window).toInt;
   private val messageSize = pow(numStates,window-1).toInt;
 
-  class Calibration(val words:Seq[Int]) {
+  class Calibration(val words:Seq[Int], conditioning: Map[Int,Int]) { baseCalibration =>
     lazy val partition = exp(logPartition);
     lazy val logPartition = {
       logSum(leftMessages.last.scores);
@@ -60,60 +59,103 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
 
     lazy val logMarginals : Seq[Lazy[DoubleCounter[Int]]] = {
       (for { 
-        i:Int <- (0 until words.length).toArray;
+        i:Int <- (0 until words.length).toArray
       } yield Lazy.delay {
-        val factor = factors(i).calibrated;
-        val accum = new Array[Double](numStates);
-        Arrays.fill(accum,NEG_INF_DOUBLE)
+        if(conditioning.contains(i)) {
+          val result = Int2DoubleCounter();
+          result(conditioning(i)) = 0.0;
+          result;
+        } else {
+          val factor = factors(i).calibrated;
+          val accum = new Array[Double](numStates);
+          Arrays.fill(accum,NEG_INF_DOUBLE)
 
-        // for each possible assignment to the left and right message
-        for ( (stateSeq,score) <- factor.activeElements) {
-          val head = stateSeq / rightShifter; // trigram XYZ, get Z
-          // sum out this contribution
-          accum(head) = logSum(accum(head),factor(stateSeq));
+          // for each possible assignment to the left and right message
+          for ( (stateSeq,score) <- factor.activeElements) {
+            val head = stateSeq / rightShifter; // trigram XYZ, get Z
+            // sum out this contribution
+            accum(head) = logSum(accum(head),factor(stateSeq));
+          }
+
+          val c = Int2DoubleCounter();
+          // subtract out the log partition function.
+          c ++= ( for( (v,i) <- accum.zipWithIndex
+                      if !v.isInfinite) 
+                    yield (i,v - logPartition)
+                );
+          assert(c.size > 0)
+          c;
         }
-
-        val c = Int2DoubleCounter();
-        // subtract out the log partition function.
-        c ++= ( for( (v,i) <- accum.zipWithIndex
-                    if !v.isInfinite) 
-                  yield (i,v - logPartition)
-              );
-        assert(c.size > 0)
-        c;
       }).force
     }
 
-    private val factors = Array.range(0,words.length).map( (i:Int) => new Factor(i));
+    def condition(m: Map[Int,Int]) = new Calibration(words,conditioning ++ m) {
+      val minChanged = m.keys.foldLeft(words.length)(_ min _);
+      val maxChanged = m.keys.foldLeft(0)(_ max _ );
+      override val factors = Array.range(0,words.length) map { i => 
+        new Factor(i) {
+          override protected def computeLeftMessage = {
+            if(i < minChanged) baseCalibration.factors(i).leftMessage
+            else super.computeLeftMessage
+          }
+          
+          override protected def computeRightMessage: Calibration#Message = {
+            if(i > maxChanged) baseCalibration.factors(i).rightMessage
+            else super.computeRightMessage
+          }
+        }
+      }
+    }
+
+    protected val factors = Array.range(0,words.length).map( (i:Int) => new Factor(i)).force;
 
     class Factor(pos: Int) {
       require(pos <= words.length);
-      require(pos >= 0,pos + "");
+      require(pos >= 0);
 
       private val cache = new SparseVector(factorSize) {
         override val default = Double.NaN;
       };
 
+      val conditionedComponents = (pos-window +1) to pos map ( conditioning get _ );
+      val anyConditioned = conditionedComponents.exists(_ != None);
+
+      def validStates(states: Seq[Int]) = (!anyConditioned) || {
+        var i = 0;
+        var ok = true;
+        while(i < states.length && ok) {
+          ok = (conditionedComponents(i) == None || conditionedComponents(i).get == states(i))
+        }
+        ok;
+      }
+
       def compute(stateSeq: Int) = {
         if(!cache(stateSeq).isNaN) {
           cache(stateSeq)
-        } else {
+        } else { 
           var i = 0;
           var score = 0.0;
           val states = decode(stateSeq);
-          while(i < features.length && !score.isInfinite) {
-            score += weights(i) * features(i)(states,pos,words);
-            i += 1;
+          if(!validStates(states)) {
+            NEG_INF_DOUBLE
+          } else {
+            while(i < features.length && !score.isInfinite) {
+              score += weights(i) * features(i)(states,pos,words);
+              i += 1;
+            }
+            assert(!score.isNaN);
+            cache(stateSeq) = score;
+            score;
           }
-          assert(!score.isNaN);
-          cache(stateSeq) = score;
-          score;
         }
       }
 
-      private[CRF] lazy val leftMessage = {
+      private[CRF] lazy val leftMessage: Calibration#Message = computeLeftMessage;
+      
+      protected def computeLeftMessage: Calibration#Message = {
         val incoming = leftMessages(pos);
         val outgoing = new Message(pos,pos+1);
+        println("Left Using " + incoming + " to compute " + outgoing);
         for { 
           // for each prior sequence of states  x_i,... x_{i+window}
           (stateSeq,initScore) <- incoming.scores.activeElements;
@@ -129,9 +171,12 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         outgoing
       }
 
-      private[CRF] lazy val rightMessage = {
+      private[CRF] lazy val rightMessage: Calibration#Message = computeRightMessage
+      
+      protected def computeRightMessage: Calibration#Message = {
         val incoming = rightMessages(pos);
         val outgoing = new Message(pos,pos-1);
+        println("Right Using " + incoming + " to compute " + outgoing);
         for { 
           // for each future sequence of states  x_{i+1},... x_{i+window}
           (stateSeq,initScore) <- incoming.scores.activeElements;
@@ -177,10 +222,10 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       val scores = new SparseVector(messageSize);
     }
 
-    private val leftMessages  : Seq[Lazy[Message]] = {
+    private val leftMessages  : Seq[Lazy[Calibration#Message]] = {
       val firstMessage = new Message(-1,0);
       firstMessage.scores(encode(Array.make(window-1,start))) = 0.0;
-      val messages = new ArrayBuffer[Lazy[Message]];
+      val messages = new ArrayBuffer[Lazy[Calibration#Message]];
       messages += Lazy.delay { firstMessage };
       for(f <- factors) {
         messages += Lazy.delay { f.leftMessage };
@@ -188,7 +233,7 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       messages.take(words.length);
     }
 
-    private lazy val rightMessages: Seq[Lazy[Message]] = {
+    private lazy val rightMessages: Seq[Lazy[Calibration#Message]] = {
       val firstMessage = new Message(-1,words.length-1);
       // first message is: p(x|w) \propto 1 forall valid state sequences x
       for(seq <- 0 until messageSize;
@@ -198,7 +243,7 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         }
         if(allowed) firstMessage.scores(seq) = 0.0;
       }
-      val messages = new ArrayBuffer[Lazy[Message]];
+      val messages = new ArrayBuffer[Lazy[Calibration#Message]];
       messages += Lazy.delay { firstMessage };
       for(f <- factors.reverse) {
         messages += Lazy.delay { f.rightMessage };
