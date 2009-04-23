@@ -153,9 +153,9 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       private[CRF] lazy val leftMessage: Calibration#Message = computeLeftMessage;
       
       protected def computeLeftMessage: Calibration#Message = {
-        val incoming = leftMessages(pos);
+        val incoming = leftMessages(pos).result;
         val outgoing = new Message(pos,pos+1);
-        println("Left Using " + incoming + " to compute " + outgoing);
+       // println("Left Using " + incoming + " to compute " + outgoing);
         for { 
           // for each prior sequence of states  x_i,... x_{i+window}
           (stateSeq,initScore) <- incoming.scores.activeElements;
@@ -174,9 +174,9 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       private[CRF] lazy val rightMessage: Calibration#Message = computeRightMessage
       
       protected def computeRightMessage: Calibration#Message = {
-        val incoming = rightMessages(pos);
+        val incoming = rightMessages(pos).result;
         val outgoing = new Message(pos,pos-1);
-        println("Right Using " + incoming + " to compute " + outgoing);
+      //  println("Right Using " + incoming + " to compute " + outgoing);
         for { 
           // for each future sequence of states  x_{i+1},... x_{i+window}
           (stateSeq,initScore) <- incoming.scores.activeElements;
@@ -197,7 +197,7 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         val left = leftMessages(pos).scores;
         val right = rightMessages(pos).scores;
         /*
-        println(fScores(i) + " " + bScores(i));
+        println("Calibrating " + pos + "based on " + leftMessages(pos).result + " " + rightMessages(pos).result);
         println("Left {");
         renderMessage(left);
         println("}");
@@ -262,7 +262,7 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
     arr.activeElements foreach { case(seq,v) =>
       if(!v.isInfinite) {
         val states = decode(seq,window-1);
-        println(states + " =>  " + v);
+        println(states.mkString("[",",","]") + " =>  " + v);
       }
     }
   }
