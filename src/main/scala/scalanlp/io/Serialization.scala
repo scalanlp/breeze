@@ -324,7 +324,7 @@ object Serialization {
 
     import scalanlp.util._;
     implicit def indexHandler[T](implicit h: Handler[T]) = collectionFromElements[T,Index[T]] { elems =>
-      val ind = new Index[T]();
+      val ind = Index[T]();
       elems foreach (ind apply _);
       ind
     }
