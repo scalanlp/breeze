@@ -22,10 +22,12 @@ import counters.ints._;
 import util.Index;
 import math.Numerics._;
 import stats.sampling._
-import Math._;
 import util.Implicits._;
 import scalanlp.util.Lazy;
 import scalanlp.util.Lazy.Implicits._;
+import scalala.Scalala._;
+import scalala.tensor.Vector;
+import scala.Math.NEG_INF_DOUBLE;
 
 /**
 * Represents a CRF with arbitrary window size, can score sequences and such.
@@ -54,7 +56,8 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
   class Calibration(val words:Seq[Int], conditioning: Map[Int,Int]) { baseCalibration =>
     lazy val partition = exp(logPartition);
     lazy val logPartition = {
-      logSum(leftMessages.last.scores);
+      val result = logSum(factors.last.calibrated);
+      result;
     }
 
     lazy val logMarginals : Seq[Lazy[DoubleCounter[Int]]] = {
@@ -74,7 +77,7 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
           for ( (stateSeq,score) <- factor.activeElements) {
             val head = stateSeq / rightShifter; // trigram XYZ, get Z
             // sum out this contribution
-            accum(head) = logSum(accum(head),factor(stateSeq));
+            accum(head) = logSum(accum(head),score);
           }
 
           val c = Int2DoubleCounter();
@@ -87,6 +90,52 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
           c;
         }
       }).force
+    }
+
+    def expectedSufficientStatistics = { 
+
+      val result: Vector = zeros(weights.length)
+
+      // for each feature f, E[f(states,pos,words)]
+      for(pos <- 0 until words.length) {
+        // log p(tag_pos-window-1,...,tag_pos), up to a constant
+        val caliFactor = factors(pos).calibrated;
+        for( (stateSeq,score) <- caliFactor.activeElements;
+          stateWindow = decode(stateSeq);
+          w <- 0 until weights.length
+        ) {
+          result(w) += exp(caliFactor(stateSeq) - logPartition)* features(w)(stateWindow,pos,words);
+          assert(!result(w).isInfinite);
+        }
+      }
+
+      result
+    }
+
+    def gradientAt(states: Seq[Int]) = {
+      val fixedStates = (1 until window).map( (i:Int) => start) ++ states;
+      val derivs = zeros(weights.length);
+      for(pos <- 0 until states.length) {
+        val stateWindow = fixedStates.drop(pos).take(window);
+        for(w <- 0 until weights.length) {
+          derivs(w) += features(w)(stateWindow,pos,words);
+        }
+      }
+
+      (derivs - expectedSufficientStatistics)/states.length
+    }
+
+    def logProbabilityOf(states: Seq[Int]) = {
+      val fixedStates = (1 until window).map( (i:Int) => start) ++ states;
+      val score = ( for {
+        pos <- 0 until states.length
+        stateWindow = fixedStates.drop(pos).take(window)
+        stateSeq = encode(stateWindow) 
+      } yield {
+        factors(pos).compute(stateSeq);
+      } ).foldLeft(0.0)(_ + _) 
+
+      score  - logPartition;
     }
 
     def condition(m: Map[Int,Int]) = new Calibration(words,conditioning ++ m) {
@@ -129,6 +178,9 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         ok;
       }
 
+      /**
+      * Computes the value of this factor at this point.
+      */
       def compute(stateSeq: Int) = {
         if(!cache(stateSeq).isNaN) {
           cache(stateSeq)
@@ -152,6 +204,9 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
 
       private[CRF] lazy val leftMessage: Calibration#Message = computeLeftMessage;
       
+      /**
+      * For factor (x_i,...,x_i+window)  get the message (x_i,...,x_i+window-1) and sum out x_i.
+      */
       protected def computeLeftMessage: Calibration#Message = {
         val incoming = leftMessages(pos).result;
         val outgoing = new Message(pos,pos+1);
@@ -172,7 +227,10 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       }
 
       private[CRF] lazy val rightMessage: Calibration#Message = computeRightMessage
-      
+
+      /**
+      * For factor (x_i,...,x_i+window)  get the message (x_i+1,...,x_i+window) and sum out x_i+window.
+      */
       protected def computeRightMessage: Calibration#Message = {
         val incoming = rightMessages(pos).result;
         val outgoing = new Message(pos,pos-1);
@@ -315,4 +373,44 @@ object CRF {
   class SparseVector(domainSize: Int) extends scalala.tensor.sparse.SparseVector(domainSize) {
     override val default = NEG_INF_DOUBLE;
   }
+
+  import scalanlp.optimize._;
+  class ObjectiveFunction(
+      val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
+      val numStates: Int,
+      val start: Int,
+      val validStatesForObservation: Int=>Seq[Int],
+      // TODO: reintroduce type parameters
+      //data._1 is words, data._2 is tags
+      val window: Int)(data: Seq[(Seq[Int],Seq[Int])]) extends DiffFunction[Array[Double]] {
+
+    private def mkCRF(weights: Array[Double]) = {
+      new CRF(features,weights,numStates,start, validStatesForObservation, window);
+    }
+
+    override def calculate(weights: Array[Double]) = {
+      val crf = mkCRF(weights);
+      
+      val gradVals = ( for {
+        (words,tags) <- data;
+        cal = crf.calibrate(words)
+      } yield (cal.gradientAt(tags),cal.logProbabilityOf(tags))) toArray;
+
+      val gradients = gradVals map (_._1 );
+      val values = gradVals map ( _._2 );
+
+      val gradient = (gradients.foldLeft(zeros(weights.length)) { (z,grad) =>
+        z += grad;
+        z
+      } / -gradients.length).toArray;
+
+      val value = -mean(values);
+
+      (value,gradient);
+    }
+
+    override def valueAt(weights: Array[Double]) = calculate(weights)._1
+    override def gradientAt(weights: Array[Double]) = calculate(weights)._2
+  }
 }
+
