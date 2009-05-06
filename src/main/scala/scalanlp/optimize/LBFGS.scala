@@ -51,7 +51,7 @@ class LBFGS(tol: Double, maxIter: Int, m: Int) extends Minimizer[DiffFunction] w
     var converged = false;
     val n = init.size; // number of parameters
     
-    val x = zeros(n);
+    val x = init.copy;
 
     val memStep = new ArrayBuffer[Vector];
     val memGradDelta = new ArrayBuffer[Vector];
@@ -246,8 +246,12 @@ object TestLBFGS {
         (x * 2) - 6;
       }
     }
+
+    val v = ones(2);
+    v(0) = 30.
+    v(1) = 40.
     
-    lbfgs.minimize(f,Array(30.0,40.0)) foreach println
+    lbfgs.minimize(f,v) foreach println
   }
   
 }
