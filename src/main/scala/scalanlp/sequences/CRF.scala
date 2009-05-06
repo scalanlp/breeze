@@ -82,10 +82,12 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
 
           val c = Int2DoubleCounter();
           // subtract out the log partition function.
-          c ++= ( for( (v,i) <- accum.zipWithIndex
-                      if !v.isInfinite) 
-                    yield (i,v - logPartition)
-                );
+          var j = 0;
+          while(j < accum.length) {
+            if(!accum(j).isInfinite)
+              c(j) = accum(j) - logPartition;
+            j += 1;
+          }
           assert(c.size > 0)
           c;
         }
@@ -122,7 +124,7 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         }
       }
 
-      (derivs - expectedSufficientStatistics)/states.length
+      (derivs - expectedSufficientStatistics)
     }
 
     def logProbabilityOf(states: Seq[Int]) = {
@@ -291,15 +293,34 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       messages.take(words.length);
     }
 
+    private def seqAllowed(states: Seq[Int]) = {
+      var i = 0;
+
+      var ok = true;
+      while(i < states.length && ok) {
+        val state = states(i);
+        val allowedStates = validStatesFor(words.length - window + i + 1);
+        if(allowedStates.length != numStates) { // i.e. it's all ok
+          var j = 0;
+          var innerOk = false;
+          while(j < allowedStates.length && !innerOk) {
+            innerOk = allowedStates(j) == state;
+            j += 1;
+          }
+          ok = innerOk;
+        }
+        i+= 1;
+      }
+
+      ok;
+    }
+
     private lazy val rightMessages: Seq[Lazy[Calibration#Message]] = {
       val firstMessage = new Message(-1,words.length-1);
       // first message is: p(x|w) \propto 1 forall valid state sequences x
       for(seq <- 0 until messageSize;
           states = decode(seq,window-1)) {
-        val allowed = states.elements.zipWithIndex forall { case(state,i) => 
-          validStatesFor(words.length - window + i + 1) contains state
-        }
-        if(allowed) firstMessage.scores(seq) = 0.0;
+        if(seqAllowed(states)) firstMessage.scores(seq) = 0.0;
       }
       val messages = new ArrayBuffer[Lazy[Calibration#Message]];
       messages += Lazy.delay { firstMessage };
@@ -409,7 +430,18 @@ object CRF {
       (value,gradient);
     }
 
-    override def valueAt(weights: Array[Double]) = calculate(weights)._1
+    override def valueAt(weights: Array[Double]) = {
+      val crf = mkCRF(weights);
+      
+      val values = ( for {
+        (words,tags) <- data;
+        cal = crf.calibrate(words)
+      } yield (cal.logProbabilityOf(tags))) toArray;
+
+      val value = -mean(values);
+
+      value
+    }
     override def gradientAt(weights: Array[Double]) = calculate(weights)._2
   }
 }

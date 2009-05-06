@@ -33,6 +33,38 @@ trait DiffFunction[T<:Seq[Double]] extends (T=>Double) {
   def calculate(x:T) = (apply(x),gradientAt(x));
 }
 
+object DiffFunction {
+  def withL2Regularization(d: DiffFunction[Array[Double]],weight: Double) = new DiffFunction[Array[Double]] {
+    def gradientAt(x:Array[Double]) = {
+      val grad = d.gradientAt(x);
+      adjustGradient(grad);
+    }
+
+    private def adjustGradient(grad: Array[Double]) = {
+      grad map ( _ + 2);
+    }
+
+    def valueAt(x:Array[Double]) = {
+      var v = d.valueAt(x);
+      v + myValueAt(x);
+    }
+
+    private def myValueAt(x:Array[Double]) = {
+      var i = 0;
+      var v = 0.0;
+      while(i < x.length) {
+        v += weight / 2 * x(i);
+        i+=1;
+      }
+      v;
+    }
+    override def calculate(x: Array[Double]) = {
+      val (v,grad) = d.calculate(x);
+      (v + myValueAt(x), adjustGradient(grad));
+    }
+  }
+}
+
 /**
 * A diff function that supports subsets of the data
 */

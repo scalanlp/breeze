@@ -125,7 +125,7 @@ class LBFGS(tol: Double, maxIter: Int, m: Int) extends Minimizer[Array[Double], 
       val sy = dotProduct(prevStep, prevGrad);
       val yy = dotProduct(prevGrad, prevGrad);
       val syyy = if(sy < 0 || sy.isNaN) {
-        1.0
+        throw new NaNHistory;
       } else {
         sy/yy;
       }
@@ -221,7 +221,10 @@ class LBFGS(tol: Double, maxIter: Int, m: Int) extends Minimizer[Array[Double], 
       }
     }
 
-    val c1 = 0.5;
+    val MAX_ITER = 20;
+    var myIter = 0;
+
+    val c1 = 0.1;
     var alpha = if(iter < 3) 0.05 else 1.0;
 
     val c = 0.001 * normGradInDir;
@@ -230,10 +233,11 @@ class LBFGS(tol: Double, maxIter: Int, m: Int) extends Minimizer[Array[Double], 
 
     var currentVal = f.valueAt(scaleAdd(x,alpha,dir,newX));
 
-    while( currentVal > prevVal + alpha * c) {
+    while( currentVal > prevVal + alpha * c && myIter < MAX_ITER) {
       alpha *= c1;
       currentVal = f.valueAt(scaleAdd(x,alpha,dir,newX));
       log(INFO)(".");
+      myIter += 1;
     }
     log(INFO)("Step size: " + alpha);
     (alpha,currentVal)
