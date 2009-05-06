@@ -4,6 +4,8 @@ import scala.collection.mutable._;
 import util._;
 import util.Implicits._;
 import stats.sampling._;
+import scalala.Scalala._;
+import scalala.tensor._;
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
@@ -30,12 +32,12 @@ class StochasticGradientDescent(val alpha: Double,
     val scale: Double, 
     val tol: Double,
     val mxIter: Int,
-    batchSize: Int) extends Minimizer[Seq[Double],BatchDiffFunction[Seq[Double]]] with Logged {
+    batchSize: Int) extends Minimizer[BatchDiffFunction] with Logged {
 
   /**
   * Runs SGD on f, for mxIter. It ignores tol.
   */
-  def minimize(f: BatchDiffFunction[Seq[Double]], init: Seq[Double]) = {
+  def minimize(f: BatchDiffFunction, init: Vector) = {
     val maxIter = if(mxIter <= 0) {
       1000 * f.fullRange.size / batchSize;
     } else {
@@ -55,10 +57,10 @@ class StochasticGradientDescent(val alpha: Double,
 
       val grad = f.gradientAt(guess,sample);
       log(Log.INFO)("SGD gradient: " + grad);
-      assert(grad.forall(!_.isInfinite));
+      assert(grad.forall(!_._2.isInfinite));
 
       guess = update(guess,grad,temp);
-      assert(guess.forall(!_.isInfinite));
+      assert(guess.forall(!_._2.isInfinite));
       log(Log.INFO)("SGD update: " + guess);
 
       temp = alpha/(alpha + i); 
@@ -70,17 +72,17 @@ class StochasticGradientDescent(val alpha: Double,
   /**
   * Applies the update given the gradient. By default, it executes:
   *
-  * guess -= temp * grad;
+  * guess - temp * grad;
   */
-  def update(guess: Seq[Double], grad: Seq[Double], temp: Double):Seq[Double] = {
-    guess.elements.zip(grad.elements).map( tup => tup._1 - temp * tup._2).collect;
+  def update(guess: Vector, grad: Vector, temp: Double):Vector = {
+    guess - grad * temp;
   }
 
   /**
   * Selects a sample of the data to evalute on. By default, it selects
   * a random sample without replacement.
   */
-  def selectSample(f: BatchDiffFunction[Seq[Double]], iter: Int) : Seq[Int] = {
+  def selectSample(f: BatchDiffFunction, iter: Int) : Seq[Int] = {
     Rand.permutation(f.fullRange.size).draw.map(f.fullRange).take(batchSize);
   }
 }

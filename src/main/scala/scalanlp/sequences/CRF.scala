@@ -39,12 +39,12 @@ import scala.Math.NEG_INF_DOUBLE;
 * @param window: how wide of a window the features are over.
 */
 final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
-               val weights: Seq[Double],
+               val weights: Vector,
                val numStates: Int,
                val start: Int,
                val validStatesForObservation: Int=>Seq[Int],
                val window: Int) {
-  require(features.length == weights.length);
+  require(features.length == weights.size);
   require(window > 0)
 
   def calibrate(words: Seq[Int]) = new Calibration(words, Map());
@@ -70,8 +70,7 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
           result;
         } else {
           val factor = factors(i).calibrated;
-          val accum = new Array[Double](numStates);
-          Arrays.fill(accum,NEG_INF_DOUBLE)
+          val accum :Vector = ones(numStates) * NEG_INF_DOUBLE;
 
           // for each possible assignment to the left and right message
           for ( (stateSeq,score) <- factor.activeElements) {
@@ -83,7 +82,7 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
           val c = Int2DoubleCounter();
           // subtract out the log partition function.
           var j = 0;
-          while(j < accum.length) {
+          while(j < accum.size) {
             if(!accum(j).isInfinite)
               c(j) = accum(j) - logPartition;
             j += 1;
@@ -96,7 +95,7 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
 
     def expectedSufficientStatistics = { 
 
-      val result: Vector = zeros(weights.length)
+      val result: Vector = zeros(weights.size)
 
       // for each feature f, E[f(states,pos,words)]
       for(pos <- 0 until words.length) {
@@ -104,7 +103,7 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         val caliFactor = factors(pos).calibrated;
         for( (stateSeq,score) <- caliFactor.activeElements;
           stateWindow = decode(stateSeq);
-          w <- 0 until weights.length
+          w <- 0 until weights.size
         ) {
           result(w) += exp(caliFactor(stateSeq) - logPartition)* features(w)(stateWindow,pos,words);
           assert(!result(w).isInfinite);
@@ -116,10 +115,10 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
 
     def gradientAt(states: Seq[Int]) = {
       val fixedStates = (1 until window).map( (i:Int) => start) ++ states;
-      val derivs = zeros(weights.length);
+      val derivs = zeros(weights.size);
       for(pos <- 0 until states.length) {
         val stateWindow = fixedStates.drop(pos).take(window);
-        for(w <- 0 until weights.length) {
+        for(w <- 0 until weights.size) {
           derivs(w) += features(w)(stateWindow,pos,words);
         }
       }
@@ -403,13 +402,13 @@ object CRF {
       val validStatesForObservation: Int=>Seq[Int],
       // TODO: reintroduce type parameters
       //data._1 is words, data._2 is tags
-      val window: Int)(data: Seq[(Seq[Int],Seq[Int])]) extends DiffFunction[Array[Double]] {
+      val window: Int)(data: Seq[(Seq[Int],Seq[Int])]) extends DiffFunction {
 
-    private def mkCRF(weights: Array[Double]) = {
+    private def mkCRF(weights: Vector) = {
       new CRF(features,weights,numStates,start, validStatesForObservation, window);
     }
 
-    override def calculate(weights: Array[Double]) = {
+    override def calculate(weights: Vector) = {
       val crf = mkCRF(weights);
       
       val gradVals = ( for {
@@ -420,17 +419,17 @@ object CRF {
       val gradients = gradVals map (_._1 );
       val values = gradVals map ( _._2 );
 
-      val gradient = (gradients.foldLeft(zeros(weights.length)) { (z,grad) =>
+      val gradient = (gradients.foldLeft(zeros(weights.size)) { (z,grad) =>
         z += grad;
         z
-      } / -gradients.length).toArray;
+      } / -gradients.length);
 
       val value = -mean(values);
 
       (value,gradient);
     }
 
-    override def valueAt(weights: Array[Double]) = {
+    override def valueAt(weights: Vector) = {
       val crf = mkCRF(weights);
       
       val values = ( for {
@@ -442,7 +441,7 @@ object CRF {
 
       value
     }
-    override def gradientAt(weights: Array[Double]) = calculate(weights)._2
+    override def gradientAt(weights: Vector) = calculate(weights)._2
   }
 }
 

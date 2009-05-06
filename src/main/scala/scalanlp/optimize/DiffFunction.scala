@@ -16,49 +16,48 @@ package scalanlp.optimize;
  limitations under the License. 
 */
 
+import scalala._;
+import scalala.Scalala._;
+import scalala.tensor.Vector;
+
 /**
 * Represents a differentiable function.
 *
 * @author dlwh
 */
-trait DiffFunction[T<:Seq[Double]] extends (T=>Double) {
+trait DiffFunction extends (Vector=>Double) {
   /** calculates the gradient at a point */
-  def gradientAt(x: T): T;
+  def gradientAt(x: Vector): Vector;
   /** calculates the value at a point */
-  def valueAt(x:T): Double;
+  def valueAt(x:Vector): Double;
 
-  def apply(x:T) = valueAt(x);
+  def apply(x:Vector) = valueAt(x);
 
   /** Calculates both the value and the gradient at a point */
-  def calculate(x:T) = (apply(x),gradientAt(x));
+  def calculate(x:Vector) = (apply(x),gradientAt(x));
 }
 
 object DiffFunction {
-  def withL2Regularization(d: DiffFunction[Array[Double]],weight: Double) = new DiffFunction[Array[Double]] {
-    def gradientAt(x:Array[Double]) = {
+  def withL2Regularization(d: DiffFunction,weight: Double) = new DiffFunction {
+    def gradientAt(x:Vector) = {
       val grad = d.gradientAt(x);
       adjustGradient(grad);
     }
 
-    private def adjustGradient(grad: Array[Double]) = {
-      grad map ( _ + 2);
+    private def adjustGradient(grad: Vector) = {
+      grad + 2
     }
 
-    def valueAt(x:Array[Double]) = {
+    def valueAt(x:Vector) = {
       var v = d.valueAt(x);
       v + myValueAt(x);
     }
 
-    private def myValueAt(x:Array[Double]) = {
-      var i = 0;
-      var v = 0.0;
-      while(i < x.length) {
-        v += weight / 2 * x(i);
-        i+=1;
-      }
-      v;
+    private def myValueAt(x:Vector) = {
+      sum( x * weight / 2);
     }
-    override def calculate(x: Array[Double]) = {
+
+    override def calculate(x: Vector) = {
       val (v,grad) = d.calculate(x);
       (v + myValueAt(x), adjustGradient(grad));
     }
@@ -68,24 +67,24 @@ object DiffFunction {
 /**
 * A diff function that supports subsets of the data
 */
-trait BatchDiffFunction[T<:Seq[Double]] extends DiffFunction[T] with ((T,Seq[Int])=>Double) {
+trait BatchDiffFunction extends DiffFunction with ((Vector,Seq[Int])=>Double) {
   /**
   * Calculates the gradient of the function on a subset of the data
   */
-  def gradientAt(x:T, batch: Seq[Int]) : T
+  def gradientAt(x:Vector, batch: Seq[Int]) : Vector
   /**
   * Calculates the value of the function on a subset of the data
   */
-  def valueAt(x:T, batch: Seq[Int]) : Double
+  def valueAt(x:Vector, batch: Seq[Int]) : Double
   /**
   * Calculates the value and gradient of the function on a subset of the data;
   */
-  def calculate(x:T, batch: Seq[Int]) = (apply(x,batch),gradientAt(x,batch));
+  def calculate(x:Vector, batch: Seq[Int]) = (apply(x,batch),gradientAt(x,batch));
 
-  override def gradientAt(x:T):T = gradientAt(x,fullRange);
-  override def valueAt(x:T):Double = valueAt(x,fullRange);
+  override def gradientAt(x:Vector):Vector = gradientAt(x,fullRange);
+  override def valueAt(x:Vector):Double = valueAt(x,fullRange);
 
-  def apply(x:T, batch:Seq[Int]) = valueAt(x,batch);
+  def apply(x:Vector, batch:Seq[Int]) = valueAt(x,batch);
 
   /**
   * The full size of the data

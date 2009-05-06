@@ -16,11 +16,13 @@ package scalanlp.optimize;
  limitations under the License. 
 */
 
+import scalala.tensor.Vector;
+
 /**
 * Anything that can minimize a Diff Function
 *
 * @author dlwh
 */
-trait Minimizer[T<:Seq[Double],F<:Function[T,Double]] {
-  def minimize(f: F, initial: T):T
+trait Minimizer[F<:Function[Vector,Double]] {
+  def minimize(f: F, initial: Vector): Vector
 }

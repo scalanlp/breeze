@@ -21,6 +21,8 @@ import math.Arrays._;
 
 import util._;
 import Log._;
+import scalala.tensor.Vector;
+import scalala.Scalala._;
 
 /**
 * Implements Contrastive Divergence for maximizing the probability of parameters.
@@ -33,15 +35,15 @@ import Log._;
 * @param learningRate: to slow the gradient descent, or whatever.
 * @author dlwh
 */
-class ContrastiveDivergenceOptimizer[X](trans: Array[Double]=>X=>Rand[X],
-        deriv: Array[Double]=>X=>Array[Double],
+class ContrastiveDivergenceOptimizer[X](trans: Vector=>X=>Rand[X],
+        deriv: Vector=>X=>Vector,
         learningRate: Double) extends Logged {
   /**
   * Run CD to convergence on the given data with initial parameters.
   */
-  def maximize(data: Seq[X], init: Array[Double]) = {
-    var cur: Array[Double] = init;
-    var next: Array[Double] = null;
+  def maximize(data: Seq[X], init: Vector) = {
+    var cur: Vector = init;
+    var next: Vector = null;
     var i = 0;
     do {
       log(INFO)("Starting iteration: " +i);
@@ -58,32 +60,24 @@ class ContrastiveDivergenceOptimizer[X](trans: Array[Double]=>X=>Rand[X],
   /**
   * True if the 2 norm of the difference is sufficiently small
   */
-  def converged(currentTheta: Array[Double], nextTheta: Array[Double]) = {
-    val diff = scaleAdd(currentTheta,-1,nextTheta);
-    val dot = dotProduct(diff,diff);
-    dot < (1E-4 * 1E-4)
+  def converged(currentTheta: Vector, nextTheta: Vector) = {
+   norm(currentTheta - nextTheta,2)< (1E-4 * 1E-4)
   }
 
   /**
   * Take a single step using CD.
   */
-  def step(data: Seq[X], theta: Array[Double]) = {
+  def step(data: Seq[X], theta: Vector) = {
     val perturbedData = data map (trans(theta)) map (_.draw);
     val thetaDeriv = deriv(theta);
-    val normalGrad = (data map thetaDeriv).foldLeft(new Array[Double](theta.length)){ (x,y) => 
-      scaleAdd(x,1.0/data.length,y,x)
+    val normalGrad = (data map thetaDeriv).foldLeft(zeros(theta.size)){ (x,y) => 
+      x + y / data.length;
     } 
-    val perturbedGrad = (perturbedData map thetaDeriv).foldLeft(new Array[Double](theta.length)){ (x,y) => 
-      scaleAdd(x,1.0/data.length,y,x)
-    }
-    val result = new Array[Double](theta.length);
-    var i = 0;
-    while(i < result.length) {
-      result(i) = theta(i) + learningRate * (normalGrad(i) - perturbedGrad(i));
-      i += 1
+    val perturbedGrad = (perturbedData map thetaDeriv).foldLeft(zeros(theta.size)){ (x,y) => 
+      x + y / data.length;
     }
 
-    result;
+    theta - (normalGrad - perturbedGrad) * learningRate;
   }
 }
 
@@ -91,11 +85,11 @@ class ContrastiveDivergenceOptimizer[X](trans: Array[Double]=>X=>Rand[X],
 object TestCD {
   def main(arg: Array[String]) {
     val data = (new Gaussian(3,1).samples take 1000).collect;
-    def trans(mean: Array[Double]) = { (x:Double) =>
+    def trans(mean: Vector) = { (x:Double) =>
       new Gaussian(mean(0),1)
     }
-    def deriv(theta: Array[Double]) = { (x:Double) => 
-      Array((x-theta(0)))
+    def deriv(theta: Vector) = { (x:Double) => 
+      (Array((x-theta(0))) : Vector)
     }
     val opt = new ContrastiveDivergenceOptimizer[Double](trans _ ,deriv _ ,0.01) with ConsoleLogging;
     
