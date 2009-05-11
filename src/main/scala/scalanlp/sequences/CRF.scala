@@ -28,6 +28,7 @@ import scalanlp.util.Lazy.Implicits._;
 import scalala.Scalala._;
 import scalala.tensor.Vector;
 import scalala.tensor.dense._;
+import scalala.tensor.sparse._;
 import scala.Math.NEG_INF_DOUBLE;
 
 /**
@@ -55,7 +56,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
   private val messageSize = pow(numStates,window-1).toInt;
 
   protected def mkVector(size:Int):Vector = {
-    val v = new DenseVector(size);
+    val v = new SparseVector(size);
     v.default = NEG_INF_DOUBLE;
     v;
   }
@@ -80,7 +81,8 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
           val accum :Vector = mkVector(numStates);
 
           // for each possible assignment to the left and right message
-          for ( (stateSeq,score) <- factor.activeElements) {
+          for ( (stateSeq,score) <- factor.activeElements
+                if score != NEG_INF_DOUBLE) {
             val head = stateSeq / rightShifter; // trigram XYZ, get Z
             // sum out this contribution
             accum(head) = logSum(accum(head),score);
@@ -109,6 +111,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         // log p(tag_pos-window-1,...,tag_pos), up to a constant
         val caliFactor = factors(pos).calibrated;
         for( (stateSeq,score) <- caliFactor.activeElements;
+          if score != NEG_INF_DOUBLE;
           stateWindow = decode(stateSeq);
           w <- 0 until weights.size
         ) {
@@ -170,7 +173,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       require(pos <= words.length);
       require(pos >= 0);
 
-      private val cache = new scalala.tensor.sparse.SparseVector(factorSize);
+      private val cache = mkVector(factorSize);
       cache.default = NaN;
 
       val conditionedComponents = (pos-window +1) to pos map ( conditioning get _ );
@@ -203,7 +206,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
               i += 1;
             }
             assert(!score.isNaN);
-            cache(stateSeq) = score;
+            // cache(stateSeq) = score;
             score;
           }
         }
@@ -221,6 +224,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         for { 
           // for each prior sequence of states  x_i,... x_{i+window}
           (stateSeq,initScore) <- incoming.scores.activeElements;
+          if initScore != NEG_INF_DOUBLE;
           // and for each next state x_{i+window+1}
           nextState <- validStatesFor(pos)
         } /* do */ { // sum out the x_i
@@ -245,6 +249,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         for { 
           // for each future sequence of states  x_{i+1},... x_{i+window}
           (stateSeq,initScore) <- incoming.scores.activeElements;
+          if initScore != NEG_INF_DOUBLE;
           // and for each next state x_{i}
           nextState <- validStatesFor(pos-window+1)
         } /* do */ { // sum out the x_{i+window}
@@ -271,6 +276,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         println("}");
         */
         for( (ls,lScore) <- left.activeElements;
+            if lScore != NEG_INF_DOUBLE;
               nextState <- validStatesFor(pos)) {
             val seq = appendRight(ls,nextState);
             val rs = shiftRight(seq,0);
@@ -399,7 +405,7 @@ object CRF {
       //data._1 is words, data._2 is tags
       val window: Int)(data: Seq[(Seq[Int],Seq[Int])]) extends DiffFunction {
 
-    private def mkCRF(weights: Vector) = {
+    protected def mkCRF(weights: Vector) = {
       new CRF(features,weights,numStates,start, validStatesForObservation, window);
     }
 
@@ -408,7 +414,6 @@ object CRF {
       
       val gradVals = ( for {
         (words,tags) <- data.elements;
-        () = println("!");
         cal = crf.calibrate(words)
       } yield { println(cal); (cal.gradientAt(tags),cal.logProbabilityOf(tags)); })
 
@@ -418,16 +423,16 @@ object CRF {
         (gradientPart, valPart) 
       } );
         
-      (value / data.length, gradient / - data.length); // gradient should be negative
+      (-value / data.length, gradient / - data.length); // gradient should be negative
     }
 
     override def valueAt(weights: Vector) = {
       val crf = mkCRF(weights);
       
       val values = ( for {
-        (words,tags) <- data;
+        (words,tags) <- data.elements;
         cal = crf.calibrate(words)
-      } yield (cal.logProbabilityOf(tags))) toArray;
+      } yield (cal.logProbabilityOf(tags))) collect;
 
       val value = -mean(values);
 
