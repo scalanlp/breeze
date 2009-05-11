@@ -27,6 +27,7 @@ import scalanlp.util.Lazy;
 import scalanlp.util.Lazy.Implicits._;
 import scalala.Scalala._;
 import scalala.tensor.Vector;
+import scalala.tensor.dense._;
 import scala.Math.NEG_INF_DOUBLE;
 
 /**
@@ -38,7 +39,7 @@ import scala.Math.NEG_INF_DOUBLE;
 * @param start: an initial state, that seq's implicitly start with.
 * @param window: how wide of a window the features are over.
 */
-final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
+class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
                val weights: Vector,
                val numStates: Int,
                val start: Int,
@@ -52,6 +53,12 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
   import CRF._;
   private val factorSize = pow(numStates,window).toInt;
   private val messageSize = pow(numStates,window-1).toInt;
+
+  protected def mkVector(size:Int):Vector = {
+    val v = new DenseVector(size);
+    v.default = NEG_INF_DOUBLE;
+    v;
+  }
 
   class Calibration(val words:Seq[Int], conditioning: Map[Int,Int]) { baseCalibration =>
     lazy val partition = exp(logPartition);
@@ -70,7 +77,7 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
           result;
         } else {
           val factor = factors(i).calibrated;
-          val accum :Vector = ones(numStates) * NEG_INF_DOUBLE;
+          val accum :Vector = mkVector(numStates);
 
           // for each possible assignment to the left and right message
           for ( (stateSeq,score) <- factor.activeElements) {
@@ -163,9 +170,8 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       require(pos <= words.length);
       require(pos >= 0);
 
-      private val cache = new SparseVector(factorSize) {
-        override val default = Double.NaN;
-      };
+      private val cache = new scalala.tensor.sparse.SparseVector(factorSize);
+      cache.default = NaN;
 
       val conditionedComponents = (pos-window +1) to pos map ( conditioning get _ );
       val anyConditioned = conditionedComponents.exists(_ != None);
@@ -252,7 +258,7 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       }
 
       private[CRF] lazy val calibrated = {
-        val output = new SparseVector(factorSize);
+        val output = mkVector(factorSize);
         val left = leftMessages(pos).scores;
         val right = rightMessages(pos).scores;
         /*
@@ -278,7 +284,7 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
     }
 
     private[CRF] case class Message(src: Int, dest: Int) {
-      val scores = new SparseVector(messageSize);
+      val scores = mkVector(messageSize);
     }
 
     private val leftMessages  : Seq[Lazy[Calibration#Message]] = {
@@ -317,10 +323,13 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
     private lazy val rightMessages: Seq[Lazy[Calibration#Message]] = {
       val firstMessage = new Message(-1,words.length-1);
       // first message is: p(x|w) \propto 1 forall valid state sequences x
-      for(seq <- 0 until messageSize;
-          states = decode(seq,window-1)) {
+      var seq = 0;
+      while(seq < messageSize) { // this loop is a bottleneck.
+        val states = decode(seq,window-1);
         if(seqAllowed(states)) firstMessage.scores(seq) = 0.0;
+        seq += 1;
       }
+
       val messages = new ArrayBuffer[Lazy[Calibration#Message]];
       messages += Lazy.delay { firstMessage };
       for(f <- factors.reverse) {
@@ -335,16 +344,6 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       else validStatesForObservation(words(pos));
     }
   }
-
-  private def renderMessage(arr: SparseVector) = {
-    arr.activeElements foreach { case(seq,v) =>
-      if(!v.isInfinite) {
-        val states = decode(seq,window-1);
-        println(states.mkString("[",",","]") + " =>  " + v);
-      }
-    }
-  }
-
 
   // Utility stuff for decoding/encoding sequences of ints as a single Int.
   // Basic idea:
@@ -390,10 +389,6 @@ final class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
 }
 
 object CRF {
-  class SparseVector(domainSize: Int) extends scalala.tensor.sparse.SparseVector(domainSize) {
-    override val default = NEG_INF_DOUBLE;
-  }
-
   import scalanlp.optimize._;
   class ObjectiveFunction(
       val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
@@ -412,21 +407,18 @@ object CRF {
       val crf = mkCRF(weights);
       
       val gradVals = ( for {
-        (words,tags) <- data;
+        (words,tags) <- data.elements;
+        () = println("!");
         cal = crf.calibrate(words)
-      } yield (cal.gradientAt(tags),cal.logProbabilityOf(tags))) toArray;
+      } yield { println(cal); (cal.gradientAt(tags),cal.logProbabilityOf(tags)); })
 
-      val gradients = gradVals map (_._1 );
-      val values = gradVals map ( _._2 );
-
-      val gradient = (gradients.foldLeft(zeros(weights.size)) { (z,grad) =>
-        z += grad;
-        z
-      } / -gradients.length);
-
-      val value = -mean(values);
-
-      (value,gradient);
+      val (gradient,value) = ( gradVals.foldLeft( (zeros(weights.size),0.0)) { (acc,gradVal) => 
+        val gradientPart = acc._1 + gradVal._1; // gradient of the below
+        val valPart = acc._2 + gradVal._2; // p(tags| w) for that sequence
+        (gradientPart, valPart) 
+      } );
+        
+      (value / data.length, gradient / - data.length); // gradient should be negative
     }
 
     override def valueAt(weights: Vector) = {
