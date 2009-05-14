@@ -118,6 +118,7 @@ class Index[T] extends (T=>Int) with Collection[T] {
       override def get(pos : Int) = outer.get(pos);
       override def index(t : T) = outer.indices.getOrElse(t,-1);
       override def clear = {};
+      override def immutable = this;
     }
   }
   
@@ -130,6 +131,7 @@ class Index[T] extends (T=>Int) with Collection[T] {
       override def get(pos : Int) = synchronized { outer.get(pos); }
       override def index(t : T) = synchronized { outer.index(t); }
       override def clear = synchronized { outer.clear; }
+      override def immutable = outer.immutable.synchronized;
     }
   }
 }
