@@ -241,19 +241,21 @@ object PipeIO {
   def drain(in : InputStream, out : OutputStream) {
     val buffer = new Array[byte](1024);
 
-    var numRead = 0;
-    do {
-      numRead = in.read(buffer,0,buffer.length);
-      if (numRead > 0) {
-        // read some bytes
-        out.write(buffer,0,numRead);
-      } else if (numRead == 0) {
-        // read no bytes, but not yet EOF
-        Thread.sleep(100l);
-      }
-    } while (numRead >= 0)
-
-    in.close();
+    try {
+      var numRead = 0;
+      do {
+        numRead = in.read(buffer,0,buffer.length);
+        if (numRead > 0) {
+          // read some bytes
+          out.write(buffer,0,numRead);
+        } else if (numRead == 0) {
+          // read no bytes, but not yet EOF
+          Thread.sleep(100l);
+        }
+      } while (numRead >= 0)
+    } finally {
+      in.close();
+    }
   }
   
   /**
