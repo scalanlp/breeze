@@ -17,22 +17,70 @@ package scalanlp.counters;
 */
 
 import scala.collection.mutable.HashMap;
+import scalala.Scalala._;
+import scalala.tensor._;
+import scalala.collection._;
 
-@serializable
-class PairedDoubleCounter[K1,K2](defaultValue:Double) extends HashMap[K1,DoubleCounter[K2]] with Function2[K1,K2,Double] {
-  def this() = this(0.0);
+/**
+* Base class for classes like {#link PairedDoubleCounter}. Roughly, it is a 
+* two-dimensional map/tensor/matrix with other counters as "rows."
+*
+* @author dlwh
+*/
+abstract class BasePairedDoubleCounter[K1,K2] 
+    extends PairedDoubleCounter.CounterFactory[K1,K2] 
+    with Tensor2[K1,K2] with TrackedStatistics[(K1,K2)] { outer =>
 
-  // may be overridden with other counters
-  override def default(k1 : K1) :DoubleCounter[K2] = DoubleCounter.withDefaultValue[K2](defaultValue);
+  private val theMap = new HashMap[K1,DoubleCounter] {
+    override def default(k1:K1) = getOrElseUpdate(k1,mkDoubleCounter(k1));
+  }
 
-  override def apply(k1 : K1) = getOrElseUpdate(k1,default(k1));
-  def get(k1 : K1, k2 : K2) : Option[Double] = get(k1).flatMap(_.get(k2))
+  private val k1Set = scala.collection.mutable.Set[K1]();
+  private val k2Set = scala.collection.mutable.Set[K2]();
+
+  // Keep track of size, and what keys we know of.
+  statistics += { (k1k2: (K1,K2), oldV: Double, newV: Double) =>
+    val DEFAULT = default;
+    (oldV,newV) match {
+      case (DEFAULT,DEFAULT) => (); 
+      case (_,DEFAULT) => size_ -= 1;
+      case (DEFAULT,_) => size_ += 1; k1Set += k1k2._1; k2Set += k1k2._2;
+      case (_,_) =>
+    }
+  }
+
+  /**
+  * Returns the total number of nondefault entries in the counter.
+  */
+  def size = size_ ;
+  private var size_ = 0;
+
+  def domain = {
+    ProductSet(MergeableSet(k1Set),MergeableSet(k2Set));
+  }
+
+  // todo: make this faster.
+  def activeDomain = theMap.foldLeft[MergeableSet[(K1,K2)]](EmptySet()) { (set,kc) =>
+    val (k1,c) = kc;
+    val s2 =Set() ++ (for(k2 <- c.activeKeys) yield (k1,k2) )
+    UnionSet(set,MergeableSet(s2));
+  }
+
+  def create[J](d: MergeableSet[J]) = d match {
+    case ProductSet(_,_) => mkPairCounter.asInstanceOf[Tensor[J]]
+    case _ => mkStandardCounter[J];
+  }
+
+  override def elements = {
+    for( (k1,c) <-theMap.elements;
+      (k2,v) <- c.elements)
+    yield ( (k1,k2),v);
+  }
+
+  def apply(k1 : K1) = getRow(k1);
+  def get(k1 : K1, k2 : K2) : Option[Double] = theMap.get(k1).flatMap(_.get(k2))
   def apply(k1 : K1, k2: K2) : Double= apply(k1)(k2);
   def update(k1 : K1, k2: K2, v : Double) = apply(k1)(k2) = v;
-
-  def incrementCount(k1: K1, k2: K2, v: Double) = this(k1).incrementCount(k2,v);
-
-  def total = map(_._2.total).foldLeft(0.0)(_+_)
 
   override def toString = {
     val b = new StringBuilder;
@@ -46,24 +94,25 @@ class PairedDoubleCounter[K1,K2](defaultValue:Double) extends HashMap[K1,DoubleC
 
   }
 
-  /**
-   * Ternary version of transform that modifies each element of a counter
-   */ 
-  def transform(f : (K1,K2,Double)=>Double) = foreach { case (k1,c) =>
-    c.transform{ case (k2,v) => f(k1,k2,v)}
-  };
+  def getRow(k1:K1) = theMap(k1);
+  def getCol(k2:K2) = {
+    val result = Counters.DoubleCounter[K1]();
+    for( (k1,c) <- theMap) {
+      val v = c(k2);
+      if(v != 0.0) {
+        result(k1) = v;
+      }
+    }
+    result;
+  }
 
   /** 
    * Returns an iterator over each (K1,K2,Value) pair
    */ 
   def triples : Iterator[(K1,K2,Double)] = {
-    for( (k1,c) <- elements;
+    for( (k1,c) <- theMap.elements;
       (k2,v) <- c.elements)
     yield (k1,k2,v);
-  }
-
-  def +=(that : PairedDoubleCounter[K1,K2]) {
-    this += that.triples;
   }
 
   def +=(that : Iterable[(K1,K2,Double)]) {
@@ -73,6 +122,64 @@ class PairedDoubleCounter[K1,K2](defaultValue:Double) extends HashMap[K1,DoubleC
   def +=(that : Iterator[(K1,K2,Double)]) {
     for( (k1,k2,v) <- that) {
       this(k1,k2) += v;
+    }
+  }
+}
+
+import PairedDoubleCounter._;
+
+class PairedDoubleCounter[K1,K2] extends BasePairedDoubleCounter[K1,K2] 
+    with TrackedStatistics.Total[(K1,K2)]
+    with TotaledCounterFactory[K1,K2];
+
+object PairedDoubleCounter {
+  trait CounterFactory[K1,K2] { outer: BasePairedDoubleCounter[K1,K2] =>
+
+    protected type SelfType[T1,T2] <: BasePairedDoubleCounter[T1,T2];
+    protected type StandardCounter[T] <: BaseDoubleCounter[T];
+    protected def mkPairCounter[T1,T2] : SelfType[T1,T2];
+    protected def mkStandardCounter[T] : StandardCounter[T];
+
+    type DoubleCounter = StandardCounter[K2] with PairStatsTracker;
+    protected def mkDoubleCounter(k1:K1): DoubleCounter;
+
+    trait PairStatsTracker extends TrackedStatistics[K2] { 
+      protected def k1: K1;
+      statistics += { (k2: K2, oldV: Double, newV: Double) =>
+        outer.updateStatistics( (k1,k2), oldV, newV); 
+      }
+    }
+
+
+  }
+
+  trait BareCounterFactory[K1,K2] extends CounterFactory[K1,K2] {outer: BasePairedDoubleCounter[K1,K2] =>
+    protected def mkDoubleCounter(k1:K1): DoubleCounter = new TDoubleCounter(k1);
+
+    protected type SelfType[T1,T2] = BasePairedDoubleCounter[T1,T2];
+    type StandardCounter[T] = BaseDoubleCounter[T];
+    protected def mkPairCounter[T1,T2] : SelfType[T1,T2] = new BasePairedDoubleCounter[T1,T2] with BareCounterFactory[T1,T2];
+    protected def mkStandardCounter[T] : BaseDoubleCounter[T] = Counters.DoubleCounter[T]();
+
+    class TDoubleCounter(protected val k1: K1) 
+      extends BaseDoubleCounter[K2] with PairStatsTracker {
+      def create[J](set: MergeableSet[J]) = Counters.mkDoubleCounter[J](set);
+    }
+  }
+
+  trait TotaledCounterFactory[K1,K2] extends CounterFactory[K1,K2] {
+    outer: BasePairedDoubleCounter[K1,K2] =>
+     type StandardCounter[T] = Counters.DoubleCounter[T];
+     override protected def mkDoubleCounter(k1:K1) = new TDoubleCounter(k1); 
+
+     protected type SelfType[T1,T2] = PairedDoubleCounter[T1,T2];
+     protected def mkPairCounter[T1,T2] : SelfType[T1,T2] = new PairedDoubleCounter[T1,T2];
+     protected def mkStandardCounter[T] : StandardCounter[T] = Counters.DoubleCounter[T]();
+
+
+     class TDoubleCounter(protected val k1: K1) 
+        extends BaseDoubleCounter[K2] with PairStatsTracker with TrackedStatistics.Total[K2] {
+      def create[J](set: MergeableSet[J]) = Counters.mkDoubleCounter[J](set);
     }
   }
 }

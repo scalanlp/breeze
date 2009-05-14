@@ -17,7 +17,6 @@ package scalanlp.stats.sampling;
 */
 
 
-import scalanlp.counters.ints.Int2DoubleCounter;
 import scalanlp.counters._;
 import util._;
 import scalanlp.counters.Counters._;
@@ -34,11 +33,11 @@ import scala.collection.mutable._;
 * @author dlwh
 */
 class PitmanYorProcess private (
-                       private val drawn: ArrayMap[Double] with Int2DoubleCounter,
+                       private val drawn: DoubleCounter[Int],
                        unobservedIndex: Int,
                        val theta: Double,
                        val alpha:Double) extends DiscreteDistr[Int] with Process[Int] { outer =>
-  def this(theta: Double, alpha: Double) = this(new ArrayMap[Double] with Int2DoubleCounter, 0, theta,alpha);
+  def this(theta: Double, alpha: Double) = this(DoubleCounter[Int](), 0, theta,alpha);
   def this(theta: Double) = this(theta,0.0);
 
   assert( (alpha < 0 && theta % alpha == 0.0) || (0 <= alpha && alpha <= 1.0 && theta > -alpha));
@@ -51,7 +50,7 @@ class PitmanYorProcess private (
   
   val nextClass = unobservedIndex;
 
-  private def getWithCounter(cn : ArrayMap[Double] with Int2DoubleCounter) = {
+  private def getWithCounter(cn : DoubleCounter[Int]) = {
     Multinomial(cn).draw
   }
   
@@ -68,8 +67,8 @@ class PitmanYorProcess private (
   def probabilityOfUnobserved() = drawn(unobservedIndex) / drawn.total;
 
   /** Add or subtract some number of observations. Useful for sampling.*/
-  def observe(c: IntCounter[Int]):PitmanYorProcess = {
-    val ret = new ArrayMap[Double] with Int2DoubleCounter;
+  def observe(c: DoubleCounter[Int]):PitmanYorProcess = {
+    val ret = DoubleCounter[Int]();
     
     for( (k,v) <- drawn) {
       if(k != unobservedIndex && v != 0.0) {
@@ -127,7 +126,7 @@ class PitmanYorProcess private (
   indicates that you should consider the probability of a new class. */
   def withLikelihood(p : Option[Int]=>Double) = new Rand[Int] {
     def draw = {
-      val c2 = new ArrayMap[Double]() with Int2DoubleCounter;
+      val c2 = DoubleCounter[Int]();
       for( (k,v) <- drawn) {
         c2(k) = (v * p(if(k == 0) None else Some(k-1)));
       }
@@ -168,8 +167,9 @@ class PitmanYorProcess private (
     def observe(x:T):PitmanYorProcess#Mapped[T] = observe(count(List(x)));
     def observe(x:T, xs:T*):PitmanYorProcess#Mapped[T] = observe(count(List(x)++xs));
     
-    def observe(c: IntCounter[T]):PitmanYorProcess#Mapped[T] = {
-      val classes = c.elements.filter(_._2 != 0).flatMap { case (t,v) =>
+    def observe(c: DoubleCounter[T]):PitmanYorProcess#Mapped[T] = {
+      val classes = c.elements.filter(_._2 != 0).flatMap { case (t,vD) =>
+        val v = vD.toInt;
         var firstValidClass = 0;
         def nextValidClass = {
           while(drawn(firstValidClass) != 0) firstValidClass +=1;
@@ -190,7 +190,7 @@ class PitmanYorProcess private (
         }
       }
       
-      val py = outer.observe(aggregate(classes));
+      val py = outer.observe(aggregate(classes map { case (k,v) => (k,v.toDouble)}));
       
       val myF = forward;
       new py.Mapped(r) {

@@ -17,6 +17,7 @@ package scalanlp.math;
 */
 
 import counters._;
+import Counters._;
 
 /**
 * Provides some functions left out of java.lang.Math

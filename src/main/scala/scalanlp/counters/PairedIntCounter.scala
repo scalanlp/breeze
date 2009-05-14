@@ -17,22 +17,68 @@ package scalanlp.counters;
 */
 
 import scala.collection.mutable.HashMap;
-import scala.collection.jcl.MapWrapper;
-import ints._;
-import it.unimi.dsi.fastutil.objects._
-import it.unimi.dsi.fastutil.ints._
+import scalala.Scalala._;
+import scalala.tensor._;
+import scalala.collection._;
 
-@serializable
-class PairedIntCounter[K1,K2] extends HashMap[K1,IntCounter[K2]] with Function2[K1,K2,Int] {
-  // may be overridden with other counters
-  override def default(k1 : K1) :IntCounter[K2] = IntCounter[K2]();
+/**
+* Base class for classes like {#link PairedIntCounter}. Roughly, it is a 
+* two-dimensional map/tensor/matrix with other counters as "rows."
+*
+* @author dlwh
+*/
+abstract class BasePairedIntCounter[K1,K2] 
+    extends PairedIntCounter.CounterFactory[K1,K2] 
+    with PartialMap[(K1,K2),Int] with TrackedIntStatistics[(K1,K2)] { outer =>
 
-  override def apply(k1 : K1) = getOrElseUpdate(k1, default(k1));
-  def get(k1 : K1, k2 : K2) : Option[Int] = get(k1).flatMap(_.get(k2))
+  private val theMap = new HashMap[K1,IntCounter] {
+    override def default(k1:K1) = getOrElseUpdate(k1,mkIntCounter(k1));
+  }
+
+  private val k1Set = scala.collection.mutable.Set[K1]();
+  private val k2Set = scala.collection.mutable.Set[K2]();
+
+  // Keep track of size, and what keys we know of.
+  statistics += { (k1k2: (K1,K2), oldV: Int, newV: Int) =>
+    val DEFAULT = default;
+    (oldV,newV) match {
+      case (DEFAULT,DEFAULT) => (); 
+      case (_,DEFAULT) => size_ -= 1;
+      case (DEFAULT,_) => size_ += 1; k1Set += k1k2._1; k2Set += k1k2._2;
+      case (_,_) =>
+    }
+  }
+
+  /**
+  * Returns the total number of nondefault entries in the counter.
+  */
+  def size = size_ ;
+  private var size_ = 0;
+
+  def default = 0;
+
+  def domain = {
+    ProductSet(MergeableSet(k1Set),MergeableSet(k2Set));
+  }
+
+  // todo: make this faster.
+  def activeDomain = theMap.foldLeft[MergeableSet[(K1,K2)]](EmptySet()) { (set,kc) =>
+    val (k1,c) = kc;
+    val s2 =Set() ++ (for(k2 <- c.activeKeys) yield (k1,k2) )
+    UnionSet(set,MergeableSet(s2));
+  }
+
+  override def elements = {
+    for( (k1,c) <-theMap.elements;
+      (k2,v) <- c.elements)
+    yield ( (k1,k2),v);
+  }
+
+  def apply(k1 : K1) = getRow(k1);
+  def get(k1 : K1, k2 : K2) : Option[Int] = theMap.get(k1).flatMap(_.get(k2))
   def apply(k1 : K1, k2: K2) : Int= apply(k1)(k2);
+  def apply(k : (K1,K2)) : Int= apply(k._1)(k._2);
   def update(k1 : K1, k2: K2, v : Int) = apply(k1)(k2) = v;
-
-  def total = map(_._2.total).foldLeft(0.0)(_+_)
 
   override def toString = {
     val b = new StringBuilder;
@@ -46,24 +92,25 @@ class PairedIntCounter[K1,K2] extends HashMap[K1,IntCounter[K2]] with Function2[
 
   }
 
-  /**
-   * Ternary version of transform that modifies each element of a counter
-   */ 
-  def transform(f : (K1,K2,Int)=>Int) = foreach { case (k1,c) =>
-    c.transform{ case (k2,v) => f(k1,k2,v)}
-  };
+  def getRow(k1:K1) = theMap(k1);
+  def getCol(k2:K2) = {
+    val result = Counters.IntCounter[K1]();
+    for( (k1,c) <- theMap) {
+      val v = c(k2);
+      if(v != 0.0) {
+        result(k1) = v;
+      }
+    }
+    result;
+  }
 
   /** 
    * Returns an iterator over each (K1,K2,Value) pair
    */ 
   def triples : Iterator[(K1,K2,Int)] = {
-    for( (k1,c) <- elements;
+    for( (k1,c) <- theMap.elements;
       (k2,v) <- c.elements)
     yield (k1,k2,v);
-  }
-
-  def +=(that : PairedIntCounter[K1,K2]) {
-    this += that.triples;
   }
 
   def +=(that : Iterable[(K1,K2,Int)]) {
@@ -77,89 +124,60 @@ class PairedIntCounter[K1,K2] extends HashMap[K1,IntCounter[K2]] with Function2[
   }
 }
 
-@serializable
-class IntPairCounter extends scala.collection.mutable.Map[Int,Int2IntCounter] with Function2[Int,Int,Int] {
-  private val underlying = new Int2ObjectOpenHashMap[Int2IntCounter]();
+import PairedIntCounter._;
 
-  final override def default(k1 : Int) :Int2IntCounter = getOrElseUpdate(k1,Int2IntCounter());
+class PairedIntCounter[K1,K2] extends BasePairedIntCounter[K1,K2] 
+    with TrackedIntStatistics.Total[(K1,K2)]
+    with TotaledCounterFactory[K1,K2];
 
-  override def apply(k1 : Int) = getOrElse(k1, default(k1));
-  def get(k1 : Int, k2 : Int) : Option[Int] = get(k1).flatMap(_.get(k2))
-  def apply(k1 : Int, k2: Int) : Int= {
-    if(underlying.containsKey(k1)) {
-      underlying.get(k1)(k2)   
-    } else {
-      0
+object PairedIntCounter {
+  trait CounterFactory[K1,K2] { outer: BasePairedIntCounter[K1,K2] =>
+
+    protected type SelfType[T1,T2] <: BasePairedIntCounter[T1,T2];
+    protected type StandardCounter[T] <: BaseIntCounter[T];
+    protected def mkPairCounter[T1,T2] : SelfType[T1,T2];
+    protected def mkStandardCounter[T] : StandardCounter[T];
+
+    type IntCounter = StandardCounter[K2] with PairStatsTracker;
+    protected def mkIntCounter(k1:K1): IntCounter;
+
+    trait PairStatsTracker extends TrackedIntStatistics[K2] { 
+      protected def k1: K1;
+      statistics += { (k2: K2, oldV: Int, newV: Int) =>
+        outer.updateStatistics( (k1,k2), oldV, newV); 
+      }
+    }
+
+
+  }
+
+  trait BareCounterFactory[K1,K2] extends CounterFactory[K1,K2] {outer: BasePairedIntCounter[K1,K2] =>
+    protected def mkIntCounter(k1:K1): IntCounter = new TIntCounter(k1);
+
+    protected type SelfType[T1,T2] = BasePairedIntCounter[T1,T2];
+    type StandardCounter[T] = BaseIntCounter[T];
+    protected def mkPairCounter[T1,T2] : SelfType[T1,T2] = new BasePairedIntCounter[T1,T2] with BareCounterFactory[T1,T2];
+    protected def mkStandardCounter[T] : BaseIntCounter[T] = Counters.IntCounter[T]();
+
+    class TIntCounter(protected val k1: K1) 
+      extends BaseIntCounter[K2] with PairStatsTracker {
+      def create[J](set: MergeableSet[J]) = Counters.mkIntCounter[J](set);
     }
   }
 
-  override def contains(k: Int) = underlying.containsKey(k);
+  trait TotaledCounterFactory[K1,K2] extends CounterFactory[K1,K2] {
+    outer: BasePairedIntCounter[K1,K2] =>
+     type StandardCounter[T] = Counters.IntCounter[T];
+     override protected def mkIntCounter(k1:K1) = new TIntCounter(k1); 
 
-  def update(k1 : Int, k2: Int, v : Int) = apply(k1)(k2) = v;
-
-  def -=(k: Int) = underlying.remove(k);
-  def update(k:Int, c: Int2IntCounter) = underlying.put(k,c);
-
-  def get(k:Int) = underlying.get(k) match {
-    case null => None
-    case v => Some(v);
-  }
-
-  def size = underlying.size;
-
-  def elements = new Iterator[(Int,Int2IntCounter)] {
-    val fastIter = underlying.entrySet.iterator();
-    def next = {
-      val x = fastIter.next
-      (x.getKey().intValue, x.getValue())
-    }
-
-    def hasNext = fastIter.hasNext;
-  }
+     protected type SelfType[T1,T2] = PairedIntCounter[T1,T2];
+     protected def mkPairCounter[T1,T2] : SelfType[T1,T2] = new PairedIntCounter[T1,T2];
+     protected def mkStandardCounter[T] : StandardCounter[T] = Counters.IntCounter[T]();
 
 
-
-  def total = map(_._2.total).foldLeft(0.0)(_+_)
-
-  override def toString = {
-    val b = new StringBuilder;
-    b append "["
-    foreach {  x=>
-      b append x
-      b append ",\n"
-    }
-    b append "]"
-    b.toString
-
-  }
-
-  /**
-   * Ternary version of transform that modifies each element of a counter
-  def transform(f : (Int,Int,Int)=>Int) = foreach { case (k1,c) =>
-    c.transform{ case (k2,v) => f(k1,k2,v)}
-  };
-   */ 
-
-  /** 
-   * Returns an iterator over each (Int,Int,Value) pair
-   */ 
-  def triples : Iterator[(Int,Int,Int)] = {
-    for( (k1,c) <- elements;
-      (k2,v) <- c.elements)
-    yield (k1.intValue(),k2,v);
-  }
-
-  def +=(that : PairedIntCounter[Int,Int]) {
-    this += that.triples;
-  }
-
-  def +=(that : Iterable[(Int,Int,Int)]) {
-    this += that.elements;
-  }
-
-  def +=(that : Iterator[(Int,Int,Int)]) {
-    for( (k1,k2,v) <- that) {
-      this(k1,k2) += v;
+     class TIntCounter(protected val k1: K1) 
+        extends BaseIntCounter[K2] with PairStatsTracker with TrackedIntStatistics.Total[K2] {
+      def create[J](set: MergeableSet[J]) = Counters.mkIntCounter[J](set);
     }
   }
 }

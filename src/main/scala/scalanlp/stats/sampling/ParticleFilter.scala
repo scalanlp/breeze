@@ -43,14 +43,14 @@ class ParticleFilter[T](val particles : Seq[(T,Double)], transition : Seq[(T,Dou
       ,transition,identify,numParticles);    
   }
 
-  private val m = Multinomial(  aggregate(particles).normalized);
+  private val m = Multinomial(  aggregate(particles));
 
   def draw() = m.get();
   def resample(f : T => Double) = {
     // init (particle,weight)
       val reweightedParts  = particles.map( p => (p._1,p._2 * f(p._1)))
       // resample and perturb
-      val mult = Multinomial(aggregate(reweightedParts.elements).normalized);
+      val mult = Multinomial(aggregate(reweightedParts.elements));
       val parts = mult.flatMap(transition(reweightedParts)).map(identify);
       new ParticleFilter(parts.map( x => (x,f(x))).sample(numParticles), transition, identify, numParticles);
   }

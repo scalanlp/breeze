@@ -62,6 +62,7 @@ object PitmanYorProcessSpec extends Specification with ScalaCheckMatchers {
     }
   }
   
+  /*
   "observe/unobserve has no effect even after many observations" in {
     arbObsPyWithDraw must pass { pyn: (PitmanYorProcess,List[Int],Int) =>
       val (py,list,n) = pyn;
@@ -72,6 +73,7 @@ object PitmanYorProcessSpec extends Specification with ScalaCheckMatchers {
       }
     }
   }
+  */
 }
 
 import org.specs.runner._;

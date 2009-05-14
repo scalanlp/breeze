@@ -19,7 +19,6 @@ package scalanlp.stats.sampling;
 import scalanlp.counters._;
 import collection.mutable.ArrayMap;
 import scala.collection.mutable.ArrayBuffer;
-import scalanlp.counters.DoubleCounter;
 import scalanlp.counters.Counters._;
 import scalanlp.math.Numerics._;
 import scalanlp.math.Arrays._;
@@ -38,7 +37,7 @@ class Dirichlet[T](prior: DoubleCounter[T]) extends ContinuousDistr[DoubleCounte
     new Dirichlet(prior);
   }
 
-  private val generators : Iterable[(T,Gamma)] = prior.map { e => (e._1,new Gamma(e._2,1)) }
+  private val generators : Iterable[(T,Gamma)] = prior.elements.map { (e:(T,Double)) => (e._1,new Gamma(e._2,1)) } collect;
 
   /**
    * Provides access to the components of the Dirichlet, for inspection.
@@ -49,7 +48,7 @@ class Dirichlet[T](prior: DoubleCounter[T]) extends ContinuousDistr[DoubleCounte
    * Returns a Multinomial distribution over the elements;
    */
   def draw() = {
-    aggregate(generators.map(e => (e._1,e._2.draw)).elements).normalized;
+    aggregate(generators.map(e => (e._1,e._2.draw)).elements);
   }
 
   /**
@@ -63,8 +62,7 @@ class Dirichlet[T](prior: DoubleCounter[T]) extends ContinuousDistr[DoubleCounte
    * Returns the log pdf function of the Dirichlet up to a constant evaluated at m
    */
   override def unnormalizedLogPdf(m : DoubleCounter[T]) = {
-    prior.map( e => (e._2-1) * m(e._1) ).
-          foldLeft(0.0)(_+_);
+    prior.elements.map( e => (e._2-1) * m(e._1) ).foldLeft(0.0)(_+_);
   }
 
   /**
@@ -74,7 +72,7 @@ class Dirichlet[T](prior: DoubleCounter[T]) extends ContinuousDistr[DoubleCounte
     unnormalizedLogPdf(m) + logNormalizer;
   }
 
-  val logNormalizer = prior.map(e => lgamma(e._2)).foldLeft(0.0)(_+_) - lgamma(prior.foldLeft(0.0)(_+_._2));
+  val logNormalizer = prior.map( (e:(T,Double)) => lgamma(e._2)).foldLeft(0.0)(_+_) - lgamma(prior.foldLeft(0.0)(_+_._2));
 
   /**
    * Returns the pdf of the Dirichlet evaluated at m.
@@ -105,5 +103,5 @@ object Dirichlet {
    */
   def sym(alpha : Double, k : Int) = this(Array.fromFunction{ x => alpha }(k));
   
-  def apply(arr: Array[Double]):Dirichlet[Int] = Dirichlet(new ArrayMap(new ArrayBuffer[Double] ++ arr) with DoubleCounter[Int])
+  def apply(arr: Array[Double]):Dirichlet[Int] = Dirichlet( aggregate(arr.zipWithIndex.map(_.swap)));
 }

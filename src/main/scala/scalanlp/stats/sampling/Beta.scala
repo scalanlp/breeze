@@ -3,6 +3,7 @@ package scalanlp.stats.sampling
 import math.Numerics.lgamma;
 import Math._;
 import counters._;
+import Counters._
 
 class Beta(a: Double, b: Double) extends ContinuousDistr[Double] with ConjugatePrior[Double, Boolean]{
   require(a > 0.0);
@@ -30,8 +31,8 @@ class Beta(a: Double, b: Double) extends ContinuousDistr[Double] with ConjugateP
     (ad) / (ad + bd);
   }
   
-  def posterior(obs: Iterator[(Boolean,Int)]) = {
-    val ctr = Counters.aggregate(obs);
+  override def posterior(obs: Iterator[(Boolean,Int)]) = {
+    val ctr = Counters.aggregate(obs.map{ case (k,v) => (k,v.toDouble)});
     new Beta(ctr(true)+a, ctr(false)+b)
   }
   

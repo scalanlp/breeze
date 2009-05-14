@@ -26,7 +26,7 @@ import scalanlp.util.Log;
  * Represents a multinomial Distribution over elements.
  */
 trait Multinomial[T] extends DiscreteDistr[T] {
-  protected def components : scala.collection.Map[T,Double];
+  protected def components : DoubleCounter[T];
   protected def total : Double;
 
   // check rep
@@ -64,10 +64,6 @@ trait Multinomial[T] extends DiscreteDistr[T] {
   }
 
   def probabilityOf(e : T) = components.apply(e) / total;
-  def logProbabilityOf(c: IntCounter[T]) = {
-    val probs = for( (k,v) <- c) yield v * Math.log(components.apply(k) / total);
-    probs.foldLeft(0.0)(_+_);
-  }
   def logProbabilityOf(c: DoubleCounter[T]) = {
     val probs = for( (k,v) <- c) yield v * Math.log(components.apply(k) / total);
     probs.foldLeft(0.0)(_+_);
@@ -100,38 +96,6 @@ object Multinomial {
   def fromCounter[T](c:DoubleCounter[T]) = apply(c);
   
   /**
-   * Returns a Multinomial with the doubles assumed to be in log space: 
-   */
-  def withLogCounts(a: Array[Double]): Multinomial[Int] = withLogCounts(a,logSum(a));
-  
-  /**
-   * Returns a Multinomial with the doubles assumed to be in log space: 
-   */
-  def withLogCounts(arr: Array[Double], logTotal: Double) = new Multinomial[Int] {
-    lazy val components = new scala.collection.Map[Int,Double] {
-      def elements = (0 until arr.length).map(x => (x,Math.exp(arr(x) - logTotal))).elements;
-      def get(x:Int) = if(x < arr.length) Some(Math.exp(arr(x)-logTotal)) else None;
-      def size = arr.length;
-    }
-      
-    def total = 1.0;
-  }
-
-  /**
-   * Returns a Multinomial with the doubles assumed to be in log space: 
-   */
-  def withLogCounts[T](arr: DoubleCounter[T]) = new Multinomial[T] {
-    private val logTotal = logSum(arr.values.collect);
-    lazy val components = new scala.collection.Map[T,Double] {
-      def elements = arr map { case (k,v) => (k,Math.exp(v- logTotal))} elements;
-      def get(x:T) = arr get x map (v => Math.exp(v - logTotal));
-      def size = arr.size;
-    }
-      
-   def total = 1.0;
-  }
-
-  /**
    * Returns a Multinomial where the probability is proportional to a(i)
    */
   def apply(a : Array[Double]) : Multinomial[Int] = apply(a,a.foldLeft(0.0)(_+_));
@@ -141,10 +105,10 @@ object Multinomial {
    * Takes the total for speed.
    */
   def apply(arr : Array[Double], t: Double) = new Multinomial[Int] {
-    lazy val components = new scala.collection.Map[Int,Double] {
-      def elements =  (0 until arr.length).map(x => (x,arr(x))).elements;
-      def get(x : Int) = if(x < arr.length) Some(arr(x)) else None;
-      def size = arr.length;
+    lazy val components = {
+      val c = DoubleCounter[Int];
+      c ++= arr.zipWithIndex.map(_.swap);
+      c;
     }
     def total = t;
   }

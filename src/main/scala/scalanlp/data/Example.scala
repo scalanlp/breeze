@@ -58,4 +58,9 @@ object Example {
   * Rather than the contained object.
   */
   def lift[T,U,L](f: T=>U) = (o : Example[L,T]) => o.map(f);
+  def apply[L,T](l: L, data: T): Example[L,T] = new Example[L,T] {
+    def id = "";
+    def label = l;
+    def features = data;
+  }
 }

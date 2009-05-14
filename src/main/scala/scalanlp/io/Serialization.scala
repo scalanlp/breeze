@@ -260,16 +260,15 @@ object Serialization {
   }
 
   object ScalanlpHandlers {
-    import scalanlp.counters._;
+    import scalanlp.counters.Counters._;
     import Serialization.Handlers._;
     import Builders._;
     implicit def doubleCounterHandler[T](implicit h: Handler[T]) = new VersionedHandler[DoubleCounter[T]] {
-      def currentVersion = 2L;
+      def currentVersion = 3L;
       def read(v: Long, in: DataInput) = {
-        val default = in.readDouble;
         val sz = in.readInt;
 
-        val c = DoubleCounter.withDefaultValue[T](default);
+        val c = DoubleCounter[T]();
         val elems = (1 to sz) map {_ => 
           val k = h read in;
           val v = doubleHandler read in
@@ -280,7 +279,6 @@ object Serialization {
       }
 
       def writeCurrent(c: DoubleCounter[T], out: DataOutput) = {
-        out writeDouble c.defaultValue;
         out writeInt c.size;
         for((k,v) <- c) {
           h.write(k,out);
@@ -289,6 +287,7 @@ object Serialization {
       }
     }
 
+/*
     implicit def intCounterHandler[T](implicit h: Handler[T]) = new VersionedHandler[IntCounter[T]] {
       def currentVersion = 2L;
       def read(v: Long, in: DataInput) = {
@@ -314,7 +313,6 @@ object Serialization {
         }
       }
     }
-
     implicit def pairedIntCounterHandler[T,U](implicit h: Handler[T], hu: Handler[U]) = {
       collectionFromElements[(T,IntCounter[U]),PairedIntCounter[T,U]] { elems =>
         val result = new PairedIntCounter[T,U]; 
@@ -322,6 +320,7 @@ object Serialization {
         result;
       }
     }
+*/
 
     import scalanlp.util._;
     implicit def indexHandler[T](implicit h: Handler[T]) = collectionFromElements[T,Index[T]] { elems =>

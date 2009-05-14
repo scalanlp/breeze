@@ -28,11 +28,11 @@ object LBFGSSpecification extends Specification("LBFGS")  with ScalaCheckMatcher
     d <- arbitrary[Double]
   } yield ( (rand(n) * d value) : Vector);
 
-  val lbfgs = new LBFGS(1E-4,100,4);
+  val lbfgs = new LBFGS[Int,Vector](1E-4,100,4);
   "optimize a simple multivariate gaussian" in {
 
     def optimizeThis(init: Vector) = {
-      val f = new DiffFunction {
+      val f = new DiffFunction[Int,Vector] {
         def valueAt(x: Vector) = {
           norm((x -3) :^ 2,1)
         }

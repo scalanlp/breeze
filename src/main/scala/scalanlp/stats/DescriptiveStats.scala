@@ -18,6 +18,7 @@ package scalanlp.stats;
 
 
 import scalanlp.counters._;
+import Counters._
 import util.Iterators;
 
 /**
@@ -46,8 +47,7 @@ object DescriptiveStats {
   def mean[T](it : Iterator[T])(implicit f: T=>Double): Double = mean(it.map(f));
   def mean[T <% Double](it : Iterable[T]):Double = mean(it.elements);
   
-  def mean[T <% Double](c : DoubleCounter[T]) :Double = mean(c map { case(k,v) => k*v}) / c.total;
-  def mean[T <% Double](c : IntCounter[T]) :Double = mean(c map { case(k,v) => k*v}) / c.total;
+  def mean[T <% Double](c : DoubleCounter[T]) :Double = mean(c map { (k,v) => k*v}) / c.total;
 
   def variance[T](it : Iterator[T])(implicit f: T=>Double): Double = meanAndVariance(it.map(f))._2
   def variance[T<%Double](it : Iterable[T]): Double = variance(it.elements);

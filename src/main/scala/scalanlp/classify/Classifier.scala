@@ -17,7 +17,7 @@ package scalanlp.classify;
 */
 
 
-import counters._;
+import counters.Counters._;
 import data._;
 
 /**

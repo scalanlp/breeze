@@ -17,7 +17,6 @@ package scalanlp.data;
 */
 
 
-import scala.collection.Map;
 import scalax.io.Implicits._;
 import java.io.File;
 import counters.Counters._;
@@ -25,12 +24,12 @@ import process._;
 
 
 /**
-* Represents a Bag of (Words). Interfaces should prefer to use Example[L,Map[W,Int]].
+* Represents a Bag of (Words). Classes that use it should prefer to use Example[L,DoubleCounter[W]].
 * This is intended as a convenience class.
 *
 * @author dlwh
 */
-class Bag[+L,W](val id:String, val label:L, words: Map[W,Int]) extends Example[L,Map[W,Int]] {
+class Bag[+L,W](val id:String, val label:L, words: DoubleCounter[W]) extends Example[L,DoubleCounter[W]] {
   def features = words;
 }
 
@@ -68,7 +67,7 @@ object Bag {
   def fromDocument[L](doc:LabeledDocument[L,String]): Bag[L,String] = fromDocument(doc,"/");
 
   def fromLabeledText[L](text:LabeledText[L]): Bag[L,String] = {
-    val ctr = count(AlphaTokenize(text.contents) filter RemoveStopwords map(_.toLowerCase));
+    val ctr = count( (AlphaTokenize(text.contents) filter RemoveStopwords map(_.toLowerCase)));
     new Bag[L,String](text.id,text.label,ctr);
   }
 }

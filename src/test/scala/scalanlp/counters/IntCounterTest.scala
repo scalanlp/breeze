@@ -21,6 +21,7 @@ import org.specs._;
 import org.specs.matcher._;
 import scalanlp.util.Implicits._;
 
+/*
 object IntCounterSpec extends Specification("IntCounter") with ScalaCheckMatchers {
   val arbitraryCounter = for(x <- Gen.listOf(Arbitrary.arbitrary[Int])) yield Counters.count(x);
   val arbitraryCounterPair = for(c1 <- arbitraryCounter; c2 <- arbitraryCounter) yield (c1,c2);
@@ -80,3 +81,4 @@ object IntCounterSpec extends Specification("IntCounter") with ScalaCheckMatcher
 
 import org.specs.runner._;
 class IntCounterTest extends JUnit4(IntCounterSpec);
+*/

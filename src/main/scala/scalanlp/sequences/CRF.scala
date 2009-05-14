@@ -18,7 +18,7 @@ package scalanlp.sequences
 import java.util.Arrays;
 import scala.collection.mutable.ArrayBuffer;
 import counters._;
-import counters.ints._;
+import Counters._;
 import util.Index;
 import math.Numerics._;
 import stats.sampling._
@@ -75,7 +75,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         i:Int <- (0 until words.length).toArray
       } yield Lazy.delay {
         if(conditioning.contains(i)) {
-          val result = Int2DoubleCounter();
+          val result = DoubleCounter[Int]();
           result(conditioning(i)) = 0.0;
           result;
         } else {
@@ -90,7 +90,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
             accum(head) = logSum(accum(head),score);
           }
 
-          val c = Int2DoubleCounter();
+          val c = DoubleCounter[Int]();
           // subtract out the log partition function.
           var j = 0;
           while(j < accum.size) {
