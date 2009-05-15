@@ -81,6 +81,9 @@
         </executions>
         <configuration>
           <displayCmd>true</displayCmd>
+          <args>
+            <arg>-deprecation</arg>
+          </args>
           <jvmArgs>
             <jvmArg>-Xmx1G</jvmArg>
             <jvmArg>-Xms64m</jvmArg>
