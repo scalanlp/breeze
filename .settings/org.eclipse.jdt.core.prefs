@@ -1,0 +1,7 @@
+#Wed Mar 11 18:53:04 PDT 2009
+eclipse.preferences.version=1
+org.eclipse.jdt.core.builder.cleanOutputFolder=ignore
+org.eclipse.jdt.core.builder.resourceCopyExclusionFilter=*.scala
+org.eclipse.jdt.core.compiler.codegen.targetPlatform=1.2
+org.eclipse.jdt.core.compiler.compliance=1.4
+org.eclipse.jdt.core.compiler.source=1.3
