@@ -55,9 +55,10 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
   private val factorSize = pow(numStates,window).toInt;
   private val messageSize = pow(numStates,window-1).toInt;
 
-  protected def mkVector(size:Int):Vector = {
-    val v = new SparseVector(size);
-    v.default = NEG_INF_DOUBLE;
+  protected def mkVector(size:Int, fill: Double):Vector = {
+    val data = new Array[Double](size);
+    java.util.Arrays.fill(data,fill);
+    val v = new DenseVector(data);
     v;
   }
 
@@ -65,6 +66,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
     lazy val partition = exp(logPartition);
     lazy val logPartition = {
       val result = logSum(factors.last.calibrated);
+      assert(!result.isNaN);
       result;
     }
 
@@ -78,7 +80,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
           result;
         } else {
           val factor = factors(i).calibrated;
-          val accum :Vector = mkVector(numStates);
+          val accum :Vector = mkVector(numStates, NEG_INF_DOUBLE);
 
           // for each possible assignment to the left and right message
           for ( (stateSeq,score) <- factor.activeElements
@@ -117,23 +119,28 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         ) {
           result(w) += exp(caliFactor(stateSeq) - logPartition)* features(w)(stateWindow,pos,words);
           assert(!result(w).isInfinite);
+          assert(!result(w).isNaN);
         }
       }
 
       result
     }
 
-    def gradientAt(states: Seq[Int]) = {
+    def sufficientStatistics(states: Seq[Int]) = {
       val fixedStates = (1 until window).map( (i:Int) => start) ++ states;
       val derivs = zeros(weights.size);
       for(pos <- 0 until states.length) {
         val stateWindow = fixedStates.drop(pos).take(window);
         for(w <- 0 until weights.size) {
           derivs(w) += features(w)(stateWindow,pos,words);
+          assert(!derivs(w).isNaN);
         }
       }
 
-      (derivs - expectedSufficientStatistics)
+    }
+
+    def gradientAt(states: Seq[Int]) = {
+      (sufficientStatistics(states) - expectedSufficientStatistics)
     }
 
     def logProbabilityOf(states: Seq[Int]) = {
@@ -146,6 +153,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         factors(pos).compute(stateSeq);
       } ).foldLeft(0.0)(_ + _) 
 
+      assert(!score.isNaN);
       score  - logPartition;
     }
 
@@ -173,8 +181,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       require(pos <= words.length);
       require(pos >= 0);
 
-      private val cache = mkVector(factorSize);
-      cache.default = NaN;
+      private val cache = mkVector(factorSize, Double.NaN);
 
       val conditionedComponents = (pos-window +1) to pos map ( conditioning get _ );
       val anyConditioned = conditionedComponents.exists(_ != None);
@@ -206,7 +213,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
               i += 1;
             }
             assert(!score.isNaN);
-            // cache(stateSeq) = score;
+             cache(stateSeq) = score;
             score;
           }
         }
@@ -263,7 +270,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       }
 
       private[CRF] lazy val calibrated = {
-        val output = mkVector(factorSize);
+        val output = mkVector(factorSize, NEG_INF_DOUBLE);
         val left = leftMessages(pos).scores;
         val right = rightMessages(pos).scores;
         /*
@@ -290,7 +297,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
     }
 
     private[CRF] case class Message(src: Int, dest: Int) {
-      val scores = mkVector(messageSize);
+      val scores = mkVector(messageSize, NEG_INF_DOUBLE);
     }
 
     private val leftMessages  : Seq[Lazy[Calibration#Message]] = {
@@ -415,7 +422,7 @@ object CRF {
       val gradVals = ( for {
         (words,tags) <- data.elements;
         cal = crf.calibrate(words)
-      } yield { println(cal); (cal.gradientAt(tags),cal.logProbabilityOf(tags)); })
+      } yield { (cal.gradientAt(tags),cal.logProbabilityOf(tags)); })
 
       val (gradient,value) = ( gradVals.foldLeft( (zeros(weights.size),0.0)) { (acc,gradVal) => 
         val gradientPart = acc._1 + gradVal._1; // gradient of the below

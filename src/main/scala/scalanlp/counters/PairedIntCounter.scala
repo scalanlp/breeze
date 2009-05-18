@@ -17,6 +17,10 @@ package scalanlp.counters;
 */
 
 import scala.collection.mutable.HashMap;
+import scala.collection.jcl.MapWrapper;
+import ints._;
+import it.unimi.dsi.fastutil.objects._
+import it.unimi.dsi.fastutil.ints._
 
 @serializable
 class PairedIntCounter[K1,K2] extends HashMap[K1,IntCounter[K2]] with Function2[K1,K2,Int] {
@@ -67,6 +71,93 @@ class PairedIntCounter[K1,K2] extends HashMap[K1,IntCounter[K2]] with Function2[
   }
 
   def +=(that : Iterator[(K1,K2,Int)]) {
+    for( (k1,k2,v) <- that) {
+      this(k1,k2) += v;
+    }
+  }
+}
+
+@serializable
+class IntPairCounter extends scala.collection.mutable.Map[Int,Int2IntCounter] with Function2[Int,Int,Int] {
+  private val underlying = new Int2ObjectOpenHashMap[Int2IntCounter]();
+
+  final override def default(k1 : Int) :Int2IntCounter = getOrElseUpdate(k1,Int2IntCounter());
+
+  override def apply(k1 : Int) = getOrElse(k1, default(k1));
+  def get(k1 : Int, k2 : Int) : Option[Int] = get(k1).flatMap(_.get(k2))
+  def apply(k1 : Int, k2: Int) : Int= {
+    if(underlying.containsKey(k1)) {
+      underlying.get(k1)(k2)   
+    } else {
+      0
+    }
+  }
+
+  override def contains(k: Int) = underlying.containsKey(k);
+
+  def update(k1 : Int, k2: Int, v : Int) = apply(k1)(k2) = v;
+
+  def -=(k: Int) = underlying.remove(k);
+  def update(k:Int, c: Int2IntCounter) = underlying.put(k,c);
+
+  def get(k:Int) = underlying.get(k) match {
+    case null => None
+    case v => Some(v);
+  }
+
+  def size = underlying.size;
+
+  def elements = new Iterator[(Int,Int2IntCounter)] {
+    val fastIter = underlying.entrySet.iterator();
+    def next = {
+      val x = fastIter.next
+      (x.getKey().intValue, x.getValue())
+    }
+
+    def hasNext = fastIter.hasNext;
+  }
+
+
+
+  def total = map(_._2.total).foldLeft(0.0)(_+_)
+
+  override def toString = {
+    val b = new StringBuilder;
+    b append "["
+    foreach {  x=>
+      b append x
+      b append ",\n"
+    }
+    b append "]"
+    b.toString
+
+  }
+
+  /**
+   * Ternary version of transform that modifies each element of a counter
+  def transform(f : (Int,Int,Int)=>Int) = foreach { case (k1,c) =>
+    c.transform{ case (k2,v) => f(k1,k2,v)}
+  };
+   */ 
+
+  /** 
+   * Returns an iterator over each (Int,Int,Value) pair
+   */ 
+  def triples : Iterator[(Int,Int,Int)] = {
+    for( (k1,c) <- elements;
+      (k2,v) <- c.elements)
+    yield (k1.intValue(),k2,v);
+  }
+
+  def +=(that : PairedIntCounter[Int,Int]) {
+    this += that.triples;
+  }
+
+  def +=(that : Iterable[(Int,Int,Int)]) {
+    this += that.elements;
+  }
+
+  def +=(that : Iterator[(Int,Int,Int)]) {
     for( (k1,k2,v) <- that) {
       this(k1,k2) += v;
     }
