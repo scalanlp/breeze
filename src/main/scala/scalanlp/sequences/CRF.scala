@@ -41,11 +41,11 @@ import scala.Math.NEG_INF_DOUBLE;
 * @param window: how wide of a window the features are over.
 */
 class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
-               val weights: Vector,
-               val numStates: Int,
-               val start: Int,
-               val validStatesForObservation: Int=>Seq[Int],
-               val window: Int) {
+          val weights: Vector,
+          val numStates: Int,
+          val start: Int,
+          val validStatesForObservation: Int=>Seq[Int],
+          val window: Int) {
   require(features.length == weights.size);
   require(window > 0)
 
@@ -136,7 +136,26 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
           assert(!derivs(w).isNaN);
         }
       }
+      derivs
+    }
 
+    def computeExpectation[T](f: (Seq[Int],Int,Seq[Int])=>T) = {
+      val result = DoubleCounter[T]();
+      // for each feature f, E[f(states,pos,words)]
+      for(pos <- 0 until words.length) {
+        // log p(tag_pos-window-1,...,tag_pos), up to a constant
+        val caliFactor = factors(pos).calibrated;
+        for( (stateSeq,score) <- caliFactor.activeElements;
+          if score != NEG_INF_DOUBLE;
+          stateWindow = decode(stateSeq)
+        ) {
+          val t = f(stateWindow,pos,words);
+          result(t) += exp(caliFactor(stateSeq) - logPartition)
+          assert(!result(t).isInfinite);
+          assert(!result(t).isNaN);
+        }
+      }
+      result;
     }
 
     def gradientAt(states: Seq[Int]) = {

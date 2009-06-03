@@ -25,7 +25,9 @@ import counters._;
 object Numerics {
   import Math._;
   /**
-   * The standard digamma function.
+   * The standard digamma function. Cribbed from Radford Neal
+   *
+   * http://google.com/codesearch/p?hl=en#EbB356_xxkI/fbm.2003-06-29/util/digamma.c
    */
   def digamma(xx: Double) = {
     var x = xx;
