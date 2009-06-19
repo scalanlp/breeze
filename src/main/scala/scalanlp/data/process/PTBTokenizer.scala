@@ -9,7 +9,7 @@ import scala.util.parsing.input._;
 * PTBTokenizer tokenizes sentences into treebank style sentences.
 * Input must be a single sentence.
 */
-class PTBTokenizer extends StdLexical with ImplicitConversions with Scanners {
+object PTBTokenizer extends StdLexical with ImplicitConversions with Scanners {
   /**
   * Tokenize the input sentence using the PTBTokenizer.
   * Returns Left(List(tokens)) on success, and Right(error) on failure
