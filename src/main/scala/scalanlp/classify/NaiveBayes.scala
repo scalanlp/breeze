@@ -43,20 +43,20 @@ class NaiveBayes[W,L](c: Collection[Example[L,Map[W,Int]]],
     val allWords = scala.collection.mutable.Set[W]();
     for(e <- myC) {
        classCounts(e.label) += 1;
-       wordCounts(e.label) ++= e.features;
+       wordCounts(e.label) ++= e.features
        allWords ++= e.features.keys;
     }
     allWords.size;
   }
 
   /** Returns the unnormalized log probability of each class for the given document. */
-  def scores(o : Observation[Map[W,Int]]) = {
+  def scores(o : Map[W,Int]) = {
     val res = DoubleCounter[L]();
     for( (l,prior) <- classCounts) {
       res(l) += log(prior + classSmoothing);
       val probWC = wordCounts(l);
       val logDenom = log(probWC.total  + vocabSize * wordSmoothing);
-      val logWordProbabilities = o.features.map{ case (k,v) => v * (log(probWC(k) + wordSmoothing) - logDenom)}
+      val logWordProbabilities = o.map{ case (k,v) => v * (log(probWC(k) + wordSmoothing) - logDenom)}
       res(l) += logWordProbabilities.foldLeft(0.0)(_+_);
     }
     res;

@@ -69,7 +69,7 @@ object RandomizationTest {
   def apply[L,T](dataset: Seq[Example[L,T]], c1: Classifier[L,T], c2: Classifier[L,T], error: ContingencyStats[L]=>Double):Double = {
     new RandomizationTest[L]( l1=> 
       error(ContingencyStats(l1,dataset.map(_.label)))
-    ) apply (dataset.projection.map(c1).force,dataset.projection.map(c2).force);
+    ) apply (dataset.projection.map(Example.lift(c1)).map(_.label).force,dataset.projection.map(Example.lift(c2)).map(_.features).force);
   }
 
   /** Classify the dataset according to the two classifiers, and then use f1

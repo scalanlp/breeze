@@ -51,3 +51,11 @@ trait Example[+L,+T] extends Observation[T] with Labeled[L] {outer=>
     "Example { ids =" + id + ", label = " + label + ", features = " + features + "}"; 
   }
 }
+
+object Example {
+  /**
+  * Lifts a function to operate over Examples,
+  * Rather than the contained object.
+  */
+  def lift[T,U,L](f: T=>U) = (o : Example[L,T]) => o.map(f);
+}

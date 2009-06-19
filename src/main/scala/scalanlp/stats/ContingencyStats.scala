@@ -102,11 +102,11 @@ object ContingencyStats {
   * Classify every example and compute its statistics
   */
   def apply[L,T](classifier: Classifier[L,T], dataset: Seq[Example[L,T]]):ContingencyStats[L] = {
-    apply(dataset.map(classifier),dataset.map(_.label));
+    apply(dataset.map(Example.lift(classifier)) map (_.features),dataset.map(_.label));
   }
 
   def apply[L](guessed: Seq[L], gold: Seq[L]):ContingencyStats[L] = {
-    assume(guessed.length == gold.length);
+    require(guessed.length == gold.length);
     (guessed.elements zip gold.elements).foldLeft(ContingencyStats[L]())(_+_);
   }
 

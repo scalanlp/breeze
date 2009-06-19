@@ -53,4 +53,10 @@ object Observation {
    val id = _id;
    val features = _features;
   }
+
+  /**
+  * Lifts a function to operate over Observations,
+  * Rather than the contained object.
+  */
+  def lift[T,U](f: T=>U) = (o : Observation[T]) => o.map(f);
 }

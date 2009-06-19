@@ -26,13 +26,13 @@ import data._;
  * 
  * @author dlwh
  */
-trait Classifier[L,-T] extends (Observation[T]=>L) {
+trait Classifier[L,-T] extends (T=>L) {
   /** Return the most likely label */
-  def apply(o :Observation[T]) = classify(o);
+  def apply(o :T) = classify(o);
   /** Return the most likely label */
-  def classify(o :Observation[T]) = scores(o).argmax;
+  def classify(o :T) = scores(o).argmax;
   /** For the observation, return the score for each label that has a nonzero 
    *  score. 
    */
-  def scores(o: Observation[T]): DoubleCounter[L];
+  def scores(o: T): DoubleCounter[L];
 }
