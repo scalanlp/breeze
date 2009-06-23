@@ -4,6 +4,5 @@
 	<classpathentry kind="con" path="ch.epfl.lamp.sdt.launching.SCALA_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/scalala"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/ScalaNLP-core"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

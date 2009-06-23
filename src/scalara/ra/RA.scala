@@ -148,16 +148,60 @@ object RA {
   /** Simple empty method to ensure the static initializer runs. */
   protected[ra] def init() { }
   
-  trait Main {
-    private var _ra : RA = null;
-    def ra = _ra;
+  protected case class Action(name : String, help : String, body : ()=>Unit);
   
+  trait Main {
+    implicit val ra = new RA(
+      new Pipes(), null, System.err.println,
+      new Parameters(new scala.collection.immutable.Stack + new scala.collection.mutable.HashMap[String,Any]),
+      RA.nextRandom);
+      
+    private var _argv : Array[String] = null;
+    def argv = _argv;
+    
     def main(args : Array[String]) {
-      _ra = new RA(new Pipes(),
-                   null,
-                   System.err.println,
-                   new Parameters(new scala.collection.immutable.Stack + new scala.collection.mutable.HashMap[String,Any]),
-                   RA.nextRandom);
+      _argv = args;
+    }
+  }
+  
+  trait ActionsMain extends Main {
+  
+    protected var actions = List[Action]();
+    
+    def action[A](name : String, help : String)(body : =>Unit) {
+      actions ::= Action(name,help,body _);
+    }
+    
+    action("help", "displays usage information") {
+      for (action <- actions) {
+        println(action.name);
+        println("  "+action.help);
+      }
+    }
+    
+    override def main(args : Array[String]) {
+      def doHelp() {
+        actions.filter(_.name=="help").take(1)(0).body();
+        System.exit(-1);
+      }
+      
+      if (args.length == 0) {
+        doHelp();
+      }
+      
+      val action = actions.filter(_.name==args(0)).take(1);
+      if (action.size == 0) {
+        println("No action found for name "+args(0));
+        println();
+        doHelp();
+      } else if (action.size > 1) {
+        println("Multiple actions found with name "+args(0));
+        println();
+        doHelp();
+      }
+      
+      super.main(args);
+      action(0).body();
     }
   }
 }

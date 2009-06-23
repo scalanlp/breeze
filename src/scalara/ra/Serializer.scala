@@ -60,10 +60,10 @@ object Serializer {
   
   
   /** Savers with default implementation that use ObjectOutputStream. */
-  protected var savers = new scala.collection.mutable.ArrayBuffer[Saver]();
+  protected val savers = new scala.collection.mutable.ArrayBuffer[Saver]();
   
   /** Loaders with default implementation that use ObjectInputStream. */
-  protected var loaders = new scala.collection.mutable.ArrayBuffer[Loader]();
+  protected val loaders = new scala.collection.mutable.ArrayBuffer[Loader]();
   
   registerSave(Saver.default);
   registerLoad(Loader.default);
@@ -153,10 +153,24 @@ object Serializer {
     }
   }
   
+  registerSave {
+    (file : java.io.File, iter : Iterator[String]) => (ra : RA) => {
+      import ra.pipes._;
+      iter | file;
+    }
+  }
+  
   registerLoad[String] {
     (file : java.io.File) => (ra : RA) => {
       import ra.pipes._;
       file.getLines.mkString("\n");
+    }
+  }
+  
+  registerLoad[Iterator[String]] {
+    (file : java.io.File) => (ra : RA) => {
+      import ra.pipes._;
+      file.getLines;
     }
   }
 }
