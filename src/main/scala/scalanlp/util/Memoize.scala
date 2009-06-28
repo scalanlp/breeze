@@ -79,6 +79,29 @@ object Memoize {
     });
   }
 
+  /**
+   * Returns a memoized version of the given 3-arg input function,
+   * backed by a MapCache.
+   */
+  def memoize[A1,A2,A3,V](func : ((A1,A2,A3) => V)) : ((A1,A2,A3) => V) = {
+    val cache = createCache[(A1,A2,A3),V]();
+    // returns a fresh version of the given function call, storing
+    // an option for its return value in the cache.
+    def fresh(arg1:A1, arg2:A2, arg3:A3) : V = {
+      val value = func(arg1, arg2, arg3);
+      cache.put((arg1,arg2,arg3), value);
+      value;
+    }
+    
+    // returns a function that checks the cache
+    return ((arg1:A1, arg2:A2, arg3:A3) => {
+      cache.get(arg1,arg2,arg3) match {
+        case Some(x) => x;
+        case None => fresh(arg1,arg2,arg3);
+      }
+    });
+  }
+
   //
   // memoized versions of the memoize functions.
   //

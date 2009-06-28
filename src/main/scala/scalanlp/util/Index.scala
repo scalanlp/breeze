@@ -28,7 +28,9 @@ import scala.collection.mutable._;
  *
  * @author dlwh, dramage
  */
-@serializable class Index[T] extends (T=>Int) with Collection[T] {
+@serializable
+@SerialVersionUID(-447184846322506350l)
+class Index[T] extends (T=>Int) with Collection[T] {
   /** Forward map from int to object */
   private val objects = new ArrayBuffer[T];
   
@@ -116,6 +118,7 @@ import scala.collection.mutable._;
       override def get(pos : Int) = outer.get(pos);
       override def index(t : T) = outer.indices.getOrElse(t,-1);
       override def clear = {};
+      override def immutable = this;
     }
   }
   
@@ -128,6 +131,7 @@ import scala.collection.mutable._;
       override def get(pos : Int) = synchronized { outer.get(pos); }
       override def index(t : T) = synchronized { outer.index(t); }
       override def clear = synchronized { outer.clear; }
+      override def immutable = outer.immutable.synchronized;
     }
   }
 }

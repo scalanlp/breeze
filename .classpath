@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry including="**/*.scala" kind="src" path="src/main/scala"/>
-	<classpathentry including="**/*.scala" kind="src" output="target/test-classes" path="src/test/scala"/>
-	<classpathentry kind="con" path="org.devzuz.q.maven.jdt.core.mavenClasspathContainer"/>
+	<classpathentry including="**/*.scala" kind="src" path="src/test/scala"/>
+	<classpathentry exported="true" kind="con" path="org.devzuz.q.maven.jdt.core.mavenClasspathContainer"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="ch.epfl.lamp.sdt.launching.SCALA_CONTAINER"/>
-	<classpathentry kind="output" path="target/classes"/>
+	<classpathentry kind="output" path="target/test-classes"/>
+>>>>>>> scalanlp/master:.classpath
 </classpath>
