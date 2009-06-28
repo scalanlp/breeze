@@ -80,7 +80,7 @@ class LBFGS(tol: Double, maxIter: Int, m: Int) extends Minimizer[DiffFunction] w
         val newGrad = f.gradientAt(x);
 
         memStep += step;
-        val gradDelta = newGrad - grad; 
+        val gradDelta : Vector = newGrad - grad value; 
 
         memGradDelta += gradDelta;
         memRho += 1/(step dot gradDelta);
@@ -128,7 +128,7 @@ class LBFGS(tol: Double, maxIter: Int, m: Int) extends Minimizer[DiffFunction] w
       } else {
         sy/yy;
       }
-      ones(grad.size) * sy/yy;
+      ones(grad.size) * sy/yy value;
     }
   }
    
@@ -152,7 +152,7 @@ class LBFGS(tol: Double, maxIter: Int, m: Int) extends Minimizer[DiffFunction] w
 
     for(i <- (memStep.length-1) to 0 by -1) {
       as(i) = memRho(i) * (memStep(i) dot dir);
-      dir -= as(i) * memGradStep(i);
+      dir -= memGradStep(i) * as(i);
     }
 
     dir :*= diag;
@@ -205,13 +205,13 @@ class LBFGS(tol: Double, maxIter: Int, m: Int) extends Minimizer[DiffFunction] w
 
     val c = 0.001 * normGradInDir;
 
-    val newX = x + alpha * dir;
+    val newX = x + dir * alpha value;
 
     var currentVal = f.valueAt(newX);
 
     while( currentVal > prevVal + alpha * c && myIter < MAX_ITER) {
       alpha *= c1;
-      newX := x + alpha * dir;
+      newX := x + dir * alpha;
       currentVal = f.valueAt(newX);
       log(INFO)(".");
       myIter += 1;
@@ -243,7 +243,7 @@ object TestLBFGS {
         norm((x -3) :^ 2,1)
       }
       def gradientAt(x: Vector):Vector = {
-        (x * 2) - 6;
+        (x * 2) - 6 value;
       }
     }
 

@@ -26,7 +26,7 @@ object LBFGSSpecification extends Specification("LBFGS")  with ScalaCheckMatcher
   val arbVector = for {
     n <- arbitrary[Int] suchThat { _ > 0 };
     d <- arbitrary[Double]
-  } yield ( (rand(n) * d).copy : Vector);
+  } yield ( (rand(n) * d value) : Vector);
 
   val lbfgs = new LBFGS(1E-4,100,4);
   "optimize a simple multivariate gaussian" in {
@@ -37,7 +37,7 @@ object LBFGSSpecification extends Specification("LBFGS")  with ScalaCheckMatcher
           norm((x -3) :^ 2,1)
         }
         def gradientAt(x: Vector):Vector = {
-          (x * 2) - 6;
+          (x * 2) - 6 value;
         }
       }
 

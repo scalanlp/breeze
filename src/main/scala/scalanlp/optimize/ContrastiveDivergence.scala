@@ -71,13 +71,13 @@ class ContrastiveDivergenceOptimizer[X](trans: Vector=>X=>Rand[X],
     val perturbedData = data map (trans(theta)) map (_.draw);
     val thetaDeriv = deriv(theta);
     val normalGrad = (data map thetaDeriv).foldLeft(zeros(theta.size)){ (x,y) => 
-      x + y / data.length;
+      x + y / data.length value;
     } 
     val perturbedGrad = (perturbedData map thetaDeriv).foldLeft(zeros(theta.size)){ (x,y) => 
-      x + y / data.length;
+      x + y / data.length value;
     }
 
-    theta - (normalGrad - perturbedGrad) * learningRate;
+    theta - (normalGrad - perturbedGrad) * learningRate value;
   }
 }
 

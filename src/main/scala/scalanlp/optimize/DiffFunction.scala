@@ -45,7 +45,7 @@ object DiffFunction {
     }
 
     private def adjustGradient(grad: Vector) = {
-      grad + 2
+      grad + 2 value
     }
 
     def valueAt(x:Vector) = {

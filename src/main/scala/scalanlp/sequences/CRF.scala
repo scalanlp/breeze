@@ -444,12 +444,12 @@ object CRF {
       } yield { (cal.gradientAt(tags),cal.logProbabilityOf(tags)); })
 
       val (gradient,value) = ( gradVals.foldLeft( (zeros(weights.size),0.0)) { (acc,gradVal) => 
-        val gradientPart = acc._1 + gradVal._1; // gradient of the below
+        val gradientPart = acc._1 + gradVal._1 value; // gradient of the below
         val valPart = acc._2 + gradVal._2; // p(tags| w) for that sequence
         (gradientPart, valPart) 
       } );
         
-      (-value / data.length, gradient / - data.length); // gradient should be negative
+      (-value / data.length, gradient / -data.length value); // gradient should be negative
     }
 
     override def valueAt(weights: Vector) = {

@@ -75,7 +75,7 @@ class StochasticGradientDescent(val alpha: Double,
   * guess - temp * grad;
   */
   def update(guess: Vector, grad: Vector, temp: Double):Vector = {
-    guess - grad * temp;
+    guess - grad * temp value;
   }
 
   /**
