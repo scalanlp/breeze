@@ -34,8 +34,7 @@ class PTBTokenizer extends StdLexical with ImplicitConversions with Scanners {
                                                              }
   }
 
-
-  private def words:Parser[List[Token]] = (
+  private def tokens:Parser[List[Token]] = (
       seg("cannot","an","not") 
     | seg("d'ye","'","ye") 
     | seg("gimme","im","me")
@@ -48,42 +47,46 @@ class PTBTokenizer extends StdLexical with ImplicitConversions with Scanners {
     | seg("Wanna","an","na")
     | seg("Whaddya","ha","dd","ya")
     | seg("Whatcha","ha","t","cha")
-    | '"' ~ words ~ opt('"')               ^^ {case '"' ~ words ~ Some('"') =>
+    | '.' ~> '.' ~> '.'              ^^ { _ => List(SL("..."))}
+    | word ~ posessiveLike           ^^ {case w ~ xs => List(w, SL("'" + xs))}
+    | word ~ '\''                    ^^ {case w ~ '\'' => List(w,SL("'"))}
+    | number                         ^^ {case x => List(x) }
+    | symbol                         ^^ {case x => List(SL(""+x))}
+    | word ~ contraction             ^^ {case word ~ cont => List(word, cont) }
+    | title <~ '.'                   ^^ {case word => List(SL(word + ".")) }
+    | word <~ '.'                    ^^ {case word => List(word,SL(".")) }
+    | word                           ^^ {case word => List(word) }
+  )
+
+
+
+  private def words:Parser[List[Token]] = (
+    '"' ~ words ~ opt('"')               ^^ {case '"' ~ words ~ Some('"') =>
                                                  SL("``") :: (words ++  List(SL("''")))
                                                case '"' ~ words ~ None =>
                                                  SL("``") :: words
                                               }
-    // ellipsis
-    | '.' ~> '.' ~> '.' ~> words           ^^ {words => SL("...") :: words }
-    | word ~ posessiveLike ~ (ws ~> words) ^^ {case w ~ x ~ words => w :: SL("'"+x) :: words}
-    | word ~ '\'' ~ ws ~ words             ^^ {case w ~ '\'' ~ _ ~ words => w :: SL("'") :: words}
-    | number ~ (opt(ws) ~> words)          ^^ {case x ~ words => x :: words}
-    | symbol ~ (opt(ws) ~> words)          ^^ {case x ~ words => SL(""+x) :: words}
-    | word ~ contraction ~ ws ~ words      ^^ {case word ~ cont ~ _ ~ rest => word :: cont :: rest }
-    | word ~ '.' ~ opt(ws ~> words)        ^^ {case word ~ _ ~ None => 
-                                                  word :: SL(".") :: Nil
-                                               case word ~ _ ~ Some(Nil) =>
-                                                   word :: SL(".") :: Nil
-                                               case word ~ _ ~ Some(x) =>
-                                                   SL(word.chars + ".") :: x
-                                              }
-    | word ~ '.' ~ (accept('[')|']'|')'|'}'|'>'|'"'|'\'') ~ ws ~ words ^^ {case w ~ '.' ~ x ~ _ ~ words => w :: SL(".") :: SL(""+x) :: words }
-    | word ~ (ws ~> words)                 ^^ {case w ~ words =>  w :: words }
+    //| word ~ '.' ~ (accept('[')|']'|')'|'}'|'>'|'"'|'\'') ~ ws ~ words ^^ {case w ~ '.' ~ x ~ _ ~ words => w :: SL(".") :: SL(""+x) :: words }
+    | repsep(tokens,ws)                    ^^ { _.foldLeft[List[Token]](Nil)(_++_) }
     | ws ^^ {x => Nil}
   )
 
   private def posessiveLike = '\'' ~> elem("something","smdSMD" contains _);
 
+  private def title: Parser[String] = {
+    acceptSeq("Dr") | acceptSeq("Mr") | acceptSeq("Prof") | acceptSeq("Mrs") | acceptSeq("Ms") 
+  } ^^ { _.mkString("") }
+
   private def seg(s: String, m1: String, m2: String) = {
     val init :Parser[Char]= accept(s(0).toLowerCase) | s(0).toUpperCase;
     val rest = acceptSeq(s.drop(1));
-    init ~ (rest ~> ws ~> words) ^^ { case i ~ words =>  SL(i + m1) :: SL(m2) :: words }
+    init <~ rest ^^ { case i  =>  List(SL(i + m1), SL(m2)) }
   }
 
   private def seg(s: String, m1: String, m2: String, m3:String) = {
     val init : Parser[Char] = accept(s(0).toLowerCase) | accept( s(0).toUpperCase);
     val rest = acceptSeq(s.drop(1));
-    init ~ (rest ~> words) ^^ { case i ~ words =>  SL(i + m1) :: SL(m2) :: SL(m3) :: words }
+    init <~ rest ^^ { case i => List(SL(i + m1), SL(m2), SL(m3)) }
   }
 
 
