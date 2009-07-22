@@ -18,8 +18,8 @@ case class FileResourceSet(roots : String*)(implicit val pipes : Pipes) {
    * otherwise returning the the implicit pipes' name.
    */
   def apply(name : String) : java.io.File = {
-    val files = _roots.map(root => root + separator + name).filter(f => File(f).exists);
-    if (files.length == 0) File(name) else files(0);
+    val files = _roots.map(root => root + separator + name).filter(f => file(f).exists);
+    if (files.length == 0) file(name) else file(files(0));
   }
 }
 
@@ -93,16 +93,16 @@ case class RA(
   
   /** Gets a (named) child context in a new (named) subdirectory. */
   def subRA(name : String) = {
-    val _pipes = pipes.copy;
+    val _pipes = Pipes(pipes);
     import _pipes._;
     
-    if (File(name).exists && !File(name).isDirectory) {
-      throw new IllegalArgumentException(File(name)+" already exists and is not a directory");
+    if (file(name).exists && !file(name).isDirectory) {
+      throw new IllegalArgumentException(file(name)+" already exists and is not a directory");
     }
-    if (!File(name).exists) {
-      File(name).mkdir();
+    if (!file(name).exists) {
+      file(name).mkdir();
     }
-    _pipes.cd(name);
+    _pipes.cd(file(name));
     
     RA(_pipes, this, log,
        new Parameters(parameters.stack + scala.collection.mutable.Map[String,Any]()),

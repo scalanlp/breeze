@@ -38,9 +38,10 @@ import scala.concurrent.ops._
  * @author dramage
  */
 class Pipes {
-
-  // Pipes instance for auto-importing into called contexts.
-  implicit val pipes = this;
+  /** Throws an exception with the given errors message. */
+  protected def error(message : String) : Unit = {
+    throw new PipesException(message);
+  }
   
   //
   // state variables
@@ -51,6 +52,16 @@ class Pipes {
   protected var _stderr : OutputStream = java.lang.System.err;
   protected var _stdin  : InputStream  = java.lang.System.in;
 
+  /**
+   * Mutable map containing the current environmental variables
+   * as seen by invoked processes.  Based initially on the
+   * system environment.
+   */
+  protected val _env : scala.collection.mutable.Map[String,String] = {
+    import scala.collection.jcl.Conversions._;
+    scala.collection.mutable.Map() ++ java.lang.System.getenv();
+  }
+  
   //
   // context properties
   //
@@ -73,38 +84,11 @@ class Pipes {
   /** Sets the default stdin used in this context. */
   def stderr(stream : InputStream) : Unit = _stdin = stream;
   
-  /** Returns a copy of the pipes context. */
-  def copy : Pipes = {
-    val _pipes = new Pipes;
-    _pipes._cwd = _cwd;
-    _pipes._stdout = _stdout;
-    _pipes._stderr = _stderr;
-    _pipes._stdin = _stdin;
-    return _pipes;
-  }
+  //
+  // path and directory access and update
+  //
   
-  /**
-   * Runs the given command (via the system command shell if found)
-   * in the current directory.
-   */
-  def sh(command : String) : java.lang.Process = {
-    val os = System.getProperty("os.name");
-    val pb = new ProcessBuilder().directory(_cwd);
-    
-    if (os == "Windows 95" || os == "Windows 98" || os == "Windows ME") {
-      pb.command("command.exe", "/C", command);
-    } else if (os.startsWith("Windows")) {
-      pb.command("cmd.exe", "/C", command);
-    } else {
-      pb.command("/bin/sh", "-c", command);
-    };
-    
-    return pb.start();
-  }
-
-  /**
-   * Returns the current working directory.
-   */
+  /** Returns the current working directory. */
   def cwd : File = _cwd;
 
   /**
@@ -121,6 +105,79 @@ class Pipes {
     _cwd = folder;
   }
 
+  /**
+   * Returns a file referring to the given name.  The returned file
+   * is relative to the current directory (cwd) if the path is not absolute.
+   */
+  implicit def file(path : String) : File = {
+    val abs = new File(path);
+    if (abs.isAbsolute) abs else new File(_cwd,path);
+  }
+
+  /**
+   * Returns a file relative to the given base, which itself is either
+   * absolute or relative to the current working directory.
+   */
+  def file(base : String, path : String) : File =
+    file(file(base), path);
+  
+  /**
+   * Returns a file relative to the given base file.  This method is
+   * not affected by the current working directory.
+   */
+  def file(base : java.io.File, path : String) : File =
+    new File(base, path);
+  
+  //
+  // environmental variables
+  //
+
+  /** An immutable map view of the current system environment. */
+  def env : Map[String,String] =
+    Map() ++ _env;
+
+  /** Sets the given environmental variable key to the given value. */
+  def env(key : String, value : String) =
+    _env(key) = value;
+  
+  /** Returns the current value associated with the given environmental variable. */
+  def env(key : String) =
+    _env(key);
+  
+  //
+  // process invocation
+  //
+  
+  /**
+   * Runs the given command (via the system command shell if found)
+   * in the current directory.  Because the system command shell is
+   * used to parse the arguments, all standard escaping and quoting
+   * mechanims of the system are used to determine how to split
+   * the command string into the appropriate arguments for invoking
+   * the program.  Uses this instance's environment as the full process
+   * execution environment.
+   */
+  def sh(command : String) : java.lang.Process = {
+    val pb = new ProcessBuilder().directory(_cwd);
+    
+    val m = pb.environment();
+    m.clear();
+    for ((k,v) <- env) {
+      m.put(k,v);
+    }
+
+    val os = System.getProperty("os.name");
+    if (os == "Windows 95" || os == "Windows 98" || os == "Windows ME") {
+      pb.command("command.exe", "/C", command);
+    } else if (os.startsWith("Windows")) {
+      pb.command("cmd.exe", "/C", command);
+    } else {
+      pb.command("/bin/sh", "-c", command);
+    };
+    
+    return pb.start();
+  }
+  
   //
   //  implicit conversions
   //
@@ -162,29 +219,11 @@ class Pipes {
     }
   }
   
-  /**
-   * Returns a file with the given name, relative to the current
-   * directory (if found and path does not start with 
-   */
-  implicit def File(path : String) : File = {
-    if (!path.startsWith(java.io.File.separator)) {
-      new File(_cwd,path);
-    } else {
-      new File(path);
-    }
-  }
-  
-  def File(base : java.io.File, path : String) = new File(base, path);
-  
   implicit def iPipeIterator(lines : Iterator[String]) =
     new PipeIterator(lines)(this);
   
   implicit def iPipeIterator(lines : Iterable[String]) =
     new PipeIterator(lines.elements)(this);
-  
-  private def error(message : String) : Unit = {
-    throw new PipesException(message);
-  }
 }
 
 /**
@@ -195,18 +234,34 @@ class Pipes {
  * And take a look at the example code in the Pipes object's main method.
  */
 object Pipes {
-  type HasLines = {
+  private[pipes] type HasLines = {
     def getLines() : Iterator[String];
   }
 
   /** A global instance for easy imports */
-  val global = new Pipes();
+  val global = Pipes();
   
-  def apply() = {
+  def apply() : Pipes = {
     new Pipes();
   }
+  
+  /** Copy constructor. */
+  def apply(ref : Pipes) : Pipes = {
+    val pipes = Pipes();
+    pipes._cwd    = ref._cwd;
+    pipes._stdout = ref._stdout;
+    pipes._stderr = ref._stderr;
+    pipes._stdin  = ref._stdin;
+    
+    pipes._env.clear;
+    for ((k,v) <- ref._env) {
+      pipes._env(k) = v;
+    }
+    
+    pipes;
+  }
 }
- 
+
 object PipesExample {
   import Pipes.global._;
     
@@ -218,6 +273,8 @@ object PipesExample {
     sh("echo '(pipe test line 1) should be printed'; echo '(pipe test line 2) should not be printed'") | sh("grep 1") | stdout;
     sh("echo '(translation test) should sound funny'") | sh("perl -pe 's/(a|e|i|o|u)+/oi/g';") | stdout;
     stdin | sh("egrep '[0-9]'") | stdout;
+ 
+    sh("ls") | ((x : String) => x.toUpperCase) | stdout;
     
     (1 to 10).map(_.toString) | stderr;
     
@@ -408,6 +465,10 @@ class PipeProcess(val process : Process)(implicit pipes : Pipes) {
   /** Pipes to a function that accepts an InputStream. */
   def |[T](func : (InputStream => T)) : T =
     func(process.getInputStream);
+  
+  /** Pipes to a function that maps each line to.  */
+  def |[T](func : (String => T)) : Iterator[T] =
+    for (line <- getLines) yield func(line);
   
   /** Reads the lines from this file. */
   def getLines : Iterator[String] =
