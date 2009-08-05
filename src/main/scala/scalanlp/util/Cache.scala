@@ -104,7 +104,7 @@ class SoftMemCache[K,V] extends Map[K,V] with Cache[K,V] {
   /**
    * Iterates the elements of the cache that are currently present.
    */
-  override def elements : Iterator[(K,V)] = {
+  override def iterator : Iterator[(K,V)] = {
     dequeue();
     for (pair <- JavaCollections.iScalaIterator(inner.entrySet.iterator);
          val k = pair.getKey.get;
@@ -124,12 +124,24 @@ class SoftMemCache[K,V] extends Map[K,V] with Cache[K,V] {
     inner.put(new HashableSoftReference(key), new SoftReference(Some(value)));
   }
 
+
+  /**
+   * Removes the given pair to the map.
+   */
+  override def +=(k : (K,V)) : this.type = {
+    dequeue();
+    update(k._1,k._2);
+    this
+  }
+
+
   /**
    * Removes the given key from the map.
    */
-  override def -=(key : K) : Unit = {
+  override def -=(key : K) : this.type = {
     dequeue();
     inner.remove(new HashableSoftReference(key));
+    this
   }
 
   /**

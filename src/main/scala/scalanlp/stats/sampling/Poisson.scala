@@ -16,7 +16,7 @@ package scalanlp.stats.sampling;
  limitations under the License. 
 */
 
-import math.Numerics._;
+import scalanlp.math.Numerics._;
 import Math._;
 
 /**

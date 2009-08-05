@@ -20,8 +20,9 @@ import org.scalacheck._
 import org.specs._;
 import org.specs.matcher._;
 import scalanlp.util.Implicits._;
+import scalanlp.counters._;
+import Counters._;
 
-/*
 object IntCounterSpec extends Specification("IntCounter") with ScalaCheckMatchers {
   val arbitraryCounter = for(x <- Gen.listOf(Arbitrary.arbitrary[Int])) yield Counters.count(x);
   val arbitraryCounterPair = for(c1 <- arbitraryCounter; c2 <- arbitraryCounter) yield (c1,c2);
@@ -52,11 +53,13 @@ object IntCounterSpec extends Specification("IntCounter") with ScalaCheckMatcher
     }
   }
 
+/*
   "normalize has total 1" in {
     arbitraryCounter must pass { (c:(IntCounter[Int]))  =>
       c.total == 0 || c.normalized.total =~= 1.0
     }
   }
+  */
 
   "scale preserves total" in {
     arbIntCounterPair must pass { (cp:(IntCounter[Int],Int))  => 
@@ -81,4 +84,3 @@ object IntCounterSpec extends Specification("IntCounter") with ScalaCheckMatcher
 
 import org.specs.runner._;
 class IntCounterTest extends JUnit4(IntCounterSpec);
-*/

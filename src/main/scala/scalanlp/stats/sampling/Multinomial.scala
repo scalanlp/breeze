@@ -18,7 +18,7 @@ package scalanlp.stats.sampling;
 
 import scalanlp.counters.Counters._;
 import scalanlp.counters._;
-import math.Numerics._;
+import scalanlp.math.Numerics._;
 
 import scalanlp.util.Log;
 
@@ -30,7 +30,7 @@ trait Multinomial[T] extends DiscreteDistr[T] {
   protected def total : Double;
 
   // check rep
-  for ((k,v) <- components.elements) {
+  for ((k,v) <- components.iterator) {
     if (v < 0) {
       throw new IllegalArgumentException("Multinomial has negative mass at index "+k);
     }
@@ -41,8 +41,8 @@ trait Multinomial[T] extends DiscreteDistr[T] {
     if(prob.isNaN) {
       Log.globalLog(Log.ERROR)("You got a NaN!");
     }
-    val elems = components.elements;
-    var (e,w) = elems.next;
+    val elems = components.iterator;
+    var (e,w:Double) = elems.next;
     prob  = prob - w;
     while(prob > 0) {
       val t  = elems.next;

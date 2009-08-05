@@ -17,16 +17,16 @@ package scalanlp.collection.immutable;
 */
 
 
-import util.ScalaQL;
+import scalanlp.util.ScalaQL;
 
 /**
 * From Okasaki's Functional Data Structures. Represents a functional heap
 */
 @serializable
-class BinomialHeap[T<%Ordered[T]] extends Collection[T] {
+class BinomialHeap[T<%Ordered[T]] extends Iterable[T] {
   import BinomialHeap._;
   protected val trees: List[Node[T]] = Nil;
-  val size = 0;
+  override val size = 0;
 
   def +(x : T) = mkHeap(insertTree(Node(0,x,Nil),trees),size+1);
   private def insertTree(n : Node[T], t : List[Node[T]]) : List[Node[T]] = {
@@ -47,7 +47,7 @@ class BinomialHeap[T<%Ordered[T]] extends Collection[T] {
   }
 
   def ++(other: Iterator[T]): BinomialHeap[T] = other.foldLeft(this)(_+_);
-  def ++(other: Iterable[T]): BinomialHeap[T] = this ++ other.elements
+  def ++(other: Iterable[T]): BinomialHeap[T] = this ++ other.iterator
 
   def min = get.get;
 
@@ -81,13 +81,13 @@ class BinomialHeap[T<%Ordered[T]] extends Collection[T] {
   }
 
   private val comp = {(x : T, y :T) => x compare y}
-  def elements :Iterator[T] = ScalaQL.merge( (trees map treeIterator):_*)(comp) 
+  def iterator :Iterator[T] = ScalaQL.merge( (trees map treeIterator):_*)(comp) 
 
   private def treeIterator(n : Node[T]) : Iterator[T] = {
     ScalaQL.merge((Iterator.single(n.x) :: (n.children map treeIterator)):_*)(comp);
   }
 
-  override def toString() = elements.mkString("Heap(",",",")");
+  override def toString() = iterator.mkString("Heap(",",",")");
 }
 
 object BinomialHeap {

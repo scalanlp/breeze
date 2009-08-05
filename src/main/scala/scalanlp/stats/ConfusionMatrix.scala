@@ -19,8 +19,8 @@ package scalanlp.stats;
 
 import ConfusionMatrix._;
 import DescriptiveStats._;
-import classify.Classifier;
-import data._;
+import scalanlp.classify.Classifier;
+import scalanlp.data._;
 
 /** Provides precision, recall and f-score for labellings.
 * @author dlwh
@@ -45,7 +45,7 @@ class ConfusionMatrix[L] private (private val classWise: Map[L,Map[L,Int]]) {
   private def r(x:Double) = "%.4f" format x;
 
   override def toString() = {
-    val canonical = (Set()  ++ classWise.values.flatMap(_.keys)).elements.collect
+    val canonical = (Set()  ++ classWise.valuesIterator.flatMap(_.keysIterator)).iterator.toSequence
     val buf = new StringBuilder;
     buf ++= "======================================================\n";
     buf ++= canonical.mkString("\t","\t","\n");

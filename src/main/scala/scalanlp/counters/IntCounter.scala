@@ -32,7 +32,7 @@ import scalanlp.util._;
 *
 * @author dlwh
 */
-trait BaseIntCounter[T] extends PartialMap[T,Int] with TrackedIntStatistics[T] { outer =>
+trait BaseIntCounter[T] extends MutablePartialMap[T,Int] with TrackedIntStatistics[T] { outer =>
   /**
   * A counter should be backed by a IntValuedMap, of any sort.
   * (We use IntValuedMap to get around excessive boxing.)
@@ -44,9 +44,9 @@ trait BaseIntCounter[T] extends PartialMap[T,Int] with TrackedIntStatistics[T] {
 
   val activeDomain : MergeableSet[T] = new MergeableSet[T] {
     def contains(t:T) = counts.contains(t);
-    def elements = counts.keys;
-    
+    def iterator = counts.keysIterator;
   }
+
   val domain : MergeableSet[T] = activeDomain;
 
   /**
@@ -59,11 +59,19 @@ trait BaseIntCounter[T] extends PartialMap[T,Int] with TrackedIntStatistics[T] {
   }
 
   def default = 0;
+  def default_=(default: Int) = {
+    throw new UnsupportedOperationException("Cannot set default of IntCounter");
+  }
+
+  /**
+  * This should create a default counter that is a copy of this.
+  */
+  def copy: BaseIntCounter[T];
 
   /**
   * Returns the number of keys with stored values.
   */
-  def size = counts.size;
+  override def size = counts.size;
 
   /**
   * Returns Some(v) if this.contains(t), else None
@@ -126,12 +134,12 @@ trait BaseIntCounter[T] extends PartialMap[T,Int] with TrackedIntStatistics[T] {
   /**
    * Return the largest count
    */
-  def max: Int = counts.values reduceLeft (_ max _)
+  def max: Int = counts.valuesIterator reduceLeft (_ max _)
 
   /**
    * Return the smallest count
    */
-  def min: Int = counts.values reduceLeft (_ min _)
+  def min: Int = counts.valuesIterator reduceLeft (_ min _)
 
   /**
   * For each k,v in the map, it sets this(k) = f(k,v)
@@ -142,11 +150,33 @@ trait BaseIntCounter[T] extends PartialMap[T,Int] with TrackedIntStatistics[T] {
     }
   }
 
-  override def map[U](f: ((T,Int))=>U):Iterable[U] = {
-    activeElements.map{ kv => f(kv)} collect; 
+  def clear() {
+    counts.clear(); 
+  }
+
+  def /=(div: Int) = {
+    val c = this
+    for( (k,v) <- this) {
+      c(k) = v/div;
+    }
+    this
+  }
+
+
+  def *=(mul: Int) = {
+    val c = this
+    for( (k,v) <- this) {
+      c(k) = v*mul;
+    }
+    this
+  }
+
+
+  def map[U](f: ((T,Int))=>U):Iterable[U] = {
+    activeElements.map{ kv => f(kv)} toSequence; 
   }
 
   def map[U](f: (T,Int)=>U):Iterable[U] = {
-    activeElements.map{ case (k,v) => f(k,v)} collect; 
+    activeElements.map{ case (k,v) => f(k,v)} toSequence; 
   }
 }

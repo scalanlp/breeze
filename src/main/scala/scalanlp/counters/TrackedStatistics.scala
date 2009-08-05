@@ -1,7 +1,10 @@
 package scalanlp.counters;
+
 import scala.collection.mutable.ArrayBuffer;
 
 import scalala.tensor._;
+
+import scalanlp._;
 
 /**
 * Mixin for tracking various statistics in things like counters.
@@ -18,7 +21,7 @@ trait TrackedStatistics[T] {
   /**
   * Called by implementing classes when a new key's value is changed in some way.
   */
-  protected final def updateStatistics(t: T, oldV: Double, newV: Double) {
+  protected[counters] final def updateStatistics(t: T, oldV: Double, newV: Double) {
     statistics foreach ( _.apply(t,oldV,newV) );
   }
 }

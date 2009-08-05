@@ -17,8 +17,6 @@ package scalanlp.data;
 */
 
 
-import scalax.io.Implicits._;
-
 import process._;
 
 
@@ -49,12 +47,12 @@ object Document {
       } else {
         val colon = line.indexOf(':');
         val category = line.substring(0,colon);
-        val tokens = WhitespaceTokenize(line.substring(colon+1)).collect;
+        val tokens = WhitespaceTokenize(line.substring(colon+1)).toSequence;
         result += (category->tokens);
       }
     }
 
-    if(lines.hasNext) result += ("body"->lines.flatMap(WhitespaceTokenize).collect);
+    if(lines.hasNext) result += ("body"->lines.flatMap(WhitespaceTokenize).toSequence);
 
     new Document(id, result);
   }

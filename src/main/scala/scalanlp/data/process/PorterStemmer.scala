@@ -58,17 +58,17 @@ object PorterStemmer extends (String=>String){
         w.substring(0,w.length-1);
       else w;
     } else if(w.endsWith("ed")) {
-      if(w.findIndexOf(isVowel) < (w.length - 2)) extra(w.substring(0,w.length-2));
+      if(w.indexWhere(isVowel) < (w.length - 2)) extra(w.substring(0,w.length-2));
       else w;
     } else if(w.endsWith("ing")) {
-      if(w.findIndexOf(isVowel) < (w.length - 3)) extra(w.substring(0,w.length-3));
+      if(w.indexWhere(isVowel) < (w.length - 3)) extra(w.substring(0,w.length-3));
       else w;
     } else w;
   }
 
   def step1c(w: String) = {
     //println(w + " " + m(w));;
-    if( (w.last == 'y' || w.last == 'Y') && w.findIndexOf(isVowel) < w.length -1) {
+    if( (w.last == 'y' || w.last == 'Y') && w.indexWhere(isVowel) < w.length -1) {
       w.substring(0,w.length-1) + 'i'
     } else w;
   }
@@ -201,7 +201,7 @@ object PorterStemmer extends (String=>String){
   }
 
   def m(w:String):Int = {
-    val firstV = w.findIndexOf(isVowel);
+    val firstV = w.indexWhere(isVowel);
     if(firstV == -1) 0;
     else {
       var m = 0;

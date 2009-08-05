@@ -1,11 +1,11 @@
 package scalanlp.stats.sampling
 
-import math.Numerics._;
+import scala.collection.mutable.ArrayBuffer;
 
+import scalanlp.math.Numerics._;
 import scalanlp.counters._;
 import scalanlp.counters.Counters._;
 import scalanlp.collection.mutable.ArrayMap;
-import scala.collection.mutable.ArrayBuffer;
 
 /**
  * Represents a Polya distribution, a.k.a Dirichlet compound Multinomial distribution
@@ -33,7 +33,7 @@ class Polya[T](prior: DoubleCounter[T]) extends DiscreteDistr[T] {
   
   def unnormalizedLogProbabilityOf(x: DoubleCounter[T]):Double = {
     val ctr = aggregate(x.map( (x: (T,Double)) => (x._1, x._2)));
-    val adjustForCount = x.values.foldLeft(lgamma(x.total+1))( (acc,v) => acc-lgamma(v+1))
+    val adjustForCount = x.valuesIterator.foldLeft(lgamma(x.total+1))( (acc,v) => acc-lgamma(v+1))
     ctr += prior;
     adjustForCount + lbeta(ctr);
   }
@@ -45,7 +45,7 @@ object Polya {
   /**
   * Creates a new symmetric Polya of dimension k
   */
-  def sym(alpha : Double, k : Int) = this(Array.fromFunction{ x => alpha }(k));
+  def sym(alpha : Double, k : Int) = this(Array.tabulate(k){ x => alpha });
   
   /**
   * Creates a new Polya of dimension k with the given parameters

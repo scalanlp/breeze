@@ -249,20 +249,20 @@ trait {COUNTER} extends {superClass} {{
    */
   def dot(that : {COUNTER}) : Double = {{
     var total = 0.0
-    for (val (k,v) &lt;- that.elements) {{
+    for (val (k,v) &lt;- that.iterator) {{
       total += apply(k).asInstanceOf[Double] * v
     }}
     return total
   }}
 
   def +=(that : {COUNTER}) {{
-    for(val (k,v) &lt;- that.elements) {{
+    for(val (k,v) &lt;- that.iterator) {{
       update(k,(this(k) + v).asInstanceOf[{V}]);
     }}
   }}
 
   def -=(that : {COUNTER}) {{
-    for(val (k,v) &lt;- that.elements) {{
+    for(val (k,v) &lt;- that.iterator) {{
       update(k,(this(k) - v).asInstanceOf[{V}]);
     }}
   }}

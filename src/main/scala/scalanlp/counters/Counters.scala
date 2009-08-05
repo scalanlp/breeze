@@ -24,39 +24,48 @@ import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
 import scalanlp.util._;
 
 
-object Counters extends CounterFactory {
-  // Various utility types you might want:
-
-  /**
-  * Abstract type representing the standard counter.
-  */
-  type DoubleCounter[T] = BaseDoubleCounter[T] with TrackedStatistics.Total[T]
-
-  /**
-  * Abstract type representing the standard counter.
-  */
-  type IntCounter[T] = BaseIntCounter[T] with TrackedIntStatistics.Total[T]
-
-
+object Counters extends DoubleCounterFactory with IntCounterFactory {
   class DefaultDoubleCounter[T] extends 
     AbstractDoubleCounter[T] with TrackedStatistics.Total[T];
 
   class DefaultIntCounter[T] extends 
     AbstractIntCounter[T] with TrackedIntStatistics.Total[T];
 
-  type TDoubleCounter[T] = DefaultDoubleCounter[T];
+  class DefaultPairedDoubleCounter[T1,T2] extends 
+    AbstractPairedDoubleCounter[T1,T2] with TrackedStatistics.Total[(T1,T2)];
 
-  def mkDoubleCounter[T](set: MergeableSet[T]) = {
+  protected abstract class DefaultInternalDoubleCounter[T1,T2] extends 
+    DefaultDoubleCounter[T2] with PairStatsTracker[T1,T2];
+
+
+  type DoubleCounter[T] = DefaultDoubleCounter[T];
+  type IntCounter[T] = DefaultIntCounter[T];
+  type PairedDoubleCounter[T1,T2] = DefaultPairedDoubleCounter[T1,T2];
+  protected type InternalDoubleCounter[T1,T2] = DefaultInternalDoubleCounter[T1,T2];
+
+
+  def mkDoubleCounter[T] = {
     val c = new DefaultDoubleCounter[T];
     c;
   }
 
-  def mkIntCounter[T](set: MergeableSet[T]) = {
+  def mkIntCounter[T] = {
     val c = new DefaultIntCounter[T];
     c;
   }
 
-  type TIntCounter[T] = DefaultIntCounter[T];
+  def mkPairedDoubleCounter[T1,T2]: PairedDoubleCounter[T1,T2] = {
+    new DefaultPairedDoubleCounter[T1,T2];
+  }
+
+  protected def mkDoubleCounterFor[T1,T2](key: T1, pc: PairedDoubleCounter[T1,T2])
+      : InternalDoubleCounter[T1,T2] = {
+    new DefaultInternalDoubleCounter[T1,T2] { 
+      def outer = pc;
+      def k1 = key;
+    }
+  }
+
 
   /**
   * Object for easily creating "default" DoubleCounters
@@ -73,8 +82,17 @@ object Counters extends CounterFactory {
   */
   object IntCounter {
     /**
-    * Create a new DoubleCounter .
+    * Create a new IntCounter.
     */
     def apply[T]():IntCounter[T] = mkIntCounter[T];
   }
+
+  object PairedDoubleCounter {
+    /**
+    * Create a new PairedDoubleCounter;
+    */
+    def apply[T1,T2]():PairedDoubleCounter[T1,T2] = new PairedDoubleCounter[T1,T2];
+  }
 }
+
+

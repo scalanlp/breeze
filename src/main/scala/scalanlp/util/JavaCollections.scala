@@ -70,13 +70,13 @@ object JavaCollections {
   
   implicit def iScalaIterable[T](iterable : java.lang.Iterable[T]) : scala.Iterable[T] = {
     new scala.Iterable[T] {
-      override def elements = iterable.iterator();
+      override def iterator = iterable.iterator();
     }
   }
   
   implicit def iJavaIterable[T](iterable : scala.Iterable[T]) : java.lang.Iterable[T] = {
     new java.lang.Iterable[T] {
-      override def iterator = iterable.elements;
+      override def iterator = iterable.iterator;
     }
   }
 }

@@ -104,7 +104,7 @@ object Gamma {
       def probabilityOf(k :Int) = Math.exp(logProbabilityOf(k));
       private val p = 1. / (1. + scale);
       override def logProbabilityOf(k:Int) = {
-        import math.Numerics._;
+        import scalanlp.math.Numerics._;
         import Math._;
         lgamma(shape + k) - lgamma(k) - lgamma(shape) + shape * log(p) + k * log(1-p);
       }
@@ -117,6 +117,6 @@ object Gamma {
       new Gamma(shape + tot, 1/(1/scale + count)) with PoissonPrior;
     }
 
-    override def posterior(ev:Iterable[(Int,Int)]) : PoissonPosterior = posterior(ev.elements);
+    override def posterior(ev:Iterable[(Int,Int)]) : PoissonPosterior = posterior(ev.iterator);
   }
 }

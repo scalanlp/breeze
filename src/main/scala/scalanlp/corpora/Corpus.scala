@@ -21,7 +21,6 @@ import scala.io._;
 import java.io.Reader;
 import scalanlp.util.JavaCollections._;
 import java.net._;
-import scalax.io.Implicits._;
 import java.io._;
 import scala.collection.mutable.ArrayBuffer;
 
@@ -58,7 +57,7 @@ trait JarCorpus[+T] extends Corpus[T] {
     val src = Source.fromInputStream(strm);
     val result = (for{ line <- src.getLines;
                       trimmed = line.trim} 
-                      yield trimmed).collect;
+                      yield trimmed).toSequence;
     strm.close();
     result;
   }
@@ -79,11 +78,11 @@ trait JarCorpus[+T] extends Corpus[T] {
 
   lazy val splits = {
     Map[String,Seq[T]]() ++ categories.map { case(cat,res) =>
-      val paths = stringsFromFile(classLoader,res).projection;
+      val paths = stringsFromFile(classLoader,res).view;
       val data = for{ path <- paths;
                       strm = classLoader.getResourceAsStream(path)
                     } yield {
-                      val result = mapFun(cat,path,new InputStreamReader(strm).ensureBuffered);
+                      val result = mapFun(cat,path,new BufferedReader(new InputStreamReader(strm)));
                       strm.close();
                       result;
                     }

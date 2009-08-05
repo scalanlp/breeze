@@ -17,6 +17,14 @@ package scalanlp.sequences
 
 import java.util.Arrays;
 import scala.collection.mutable.ArrayBuffer;
+import scala.Math.NEG_INF_DOUBLE;
+
+import scalala.Scalala._;
+import scalala.tensor.Vector;
+import scalala.tensor.dense._;
+import scalala.tensor.sparse._;
+
+import scalanlp._;
 import counters._;
 import Counters._;
 import util.Index;
@@ -25,11 +33,7 @@ import stats.sampling._
 import util.Implicits._;
 import scalanlp.util.Lazy;
 import scalanlp.util.Lazy.Implicits._;
-import scalala.Scalala._;
-import scalala.tensor.Vector;
-import scalala.tensor.dense._;
-import scalala.tensor.sparse._;
-import scala.Math.NEG_INF_DOUBLE;
+
 
 /**
 * Represents a CRF with arbitrary window size, can score sequences and such.
@@ -101,7 +105,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
           assert(c.size > 0)
           c;
         }
-      }).force
+      })
     }
 
     def expectedSufficientStatistics = { 
@@ -177,8 +181,8 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
     }
 
     def condition(m: Map[Int,Int]) = new Calibration(words,conditioning ++ m) {
-      val minChanged = m.keys.foldLeft(words.length)(_ min _);
-      val maxChanged = m.keys.foldLeft(0)(_ max _ );
+      val minChanged = m.keysIterator.foldLeft(words.length)(_ min _);
+      val maxChanged = m.keysIterator.foldLeft(0)(_ max _ );
       override val factors = Array.range(0,words.length) map { i => 
         new Factor(i) {
           override protected def computeLeftMessage = {
@@ -194,7 +198,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       }
     }
 
-    protected val factors = Array.range(0,words.length).map( (i:Int) => new Factor(i)).force;
+    protected val factors = Array.range(0,words.length).map( (i:Int) => new Factor(i));
 
     class Factor(pos: Int) {
       require(pos <= words.length);
@@ -321,7 +325,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
 
     private val leftMessages  : Seq[Lazy[Calibration#Message]] = {
       val firstMessage = new Message(-1,0);
-      firstMessage.scores(encode(Array.make(window-1,start))) = 0.0;
+      firstMessage.scores(encode(Array.fill(window-1)(start))) = 0.0;
       val messages = new ArrayBuffer[Lazy[Calibration#Message]];
       messages += Lazy.delay { firstMessage };
       for(f <- factors) {
@@ -429,7 +433,7 @@ object CRF {
       val validStatesForObservation: Int=>Seq[Int],
       // TODO: reintroduce type parameters
       //data._1 is words, data._2 is tags
-      val window: Int)(data: Seq[(Seq[Int],Seq[Int])]) extends DiffFunction {
+      val window: Int)(data: Seq[(Seq[Int],Seq[Int])]) extends DiffFunction[Int,Vector] {
 
     protected def mkCRF(weights: Vector) = {
       new CRF(features,weights,numStates,start, validStatesForObservation, window);
@@ -439,7 +443,7 @@ object CRF {
       val crf = mkCRF(weights);
       
       val gradVals = ( for {
-        (words,tags) <- data.elements;
+        (words,tags) <- data.iterator;
         cal = crf.calibrate(words)
       } yield { (cal.gradientAt(tags),cal.logProbabilityOf(tags)); })
 
@@ -456,9 +460,9 @@ object CRF {
       val crf = mkCRF(weights);
       
       val values = ( for {
-        (words,tags) <- data.elements;
+        (words,tags) <- data.iterator;
         cal = crf.calibrate(words)
-      } yield (cal.logProbabilityOf(tags))) collect;
+      } yield (cal.logProbabilityOf(tags))) toSequence;
 
       val value = -mean(values);
 

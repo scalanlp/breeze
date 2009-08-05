@@ -180,7 +180,7 @@ class Pipes {
     new PipeIterator(lines)(this);
   
   implicit def iPipeIterator(lines : Iterable[String]) =
-    new PipeIterator(lines.elements)(this);
+    new PipeIterator(lines.iterator)(this);
   
   private def error(message : String) : Unit = {
     throw new PipesException(message);

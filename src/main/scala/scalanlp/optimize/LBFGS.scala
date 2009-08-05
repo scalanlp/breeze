@@ -16,12 +16,16 @@ package scalanlp.optimize
  limitations under the License. 
 */
 
-import util._;
-import Log._;
+import scalanlp.util._;
+import scalanlp.util.Log._;
 import java.util.Arrays;
 import scala.collection.mutable.ArrayBuffer;
 import scalala.Scalala._;
-import scalala.tensor.Vector;
+import scalala.tensor._;
+import scalala.tensor.operators._;
+import TensorShapes._;
+import scalala.tensor.dense._;
+
 
 /**
  * Port of LBFGS to Scala.
@@ -36,25 +40,27 @@ import scalala.tensor.Vector;
  *  * 
  * 
  * @param tol: tolerance of the gradient's l2 norm.
- * @param maxIter: maximum number of iterations, or <= 0 for unlimited
+ * @param maxIter: maximum number of iterations, or &lt;= 0 for unlimited
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
-class LBFGS(tol: Double, maxIter: Int, m: Int) extends Minimizer[DiffFunction] with Logged {
+class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](tol: Double, maxIter: Int, m: Int)
+  (implicit private val op: TensorBuilder[T], arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col])
+  extends Minimizer[T,DiffFunction[K,T]] with Logged {
   require(tol > 0);
   require(m > 0);
   private val tolSquared = tol *tol;
 
   import LBFGS._;
   
-  def minimize(f: DiffFunction, init: Vector) = {
+  def minimize(f: DiffFunction[K,T], init: T) = {
     var iter = 0; 
     var converged = false;
-    val n = init.size; // number of parameters
+    val n = init.domain.size; // number of parameters
     
-    val x = init.copy;
+    val x : T = init.copy;
 
-    val memStep = new ArrayBuffer[Vector];
-    val memGradDelta = new ArrayBuffer[Vector];
+    val memStep = new ArrayBuffer[T];
+    val memGradDelta = new ArrayBuffer[T];
     val memRho = new ArrayBuffer[Double];
     var (v,grad) = f.calculate(x);
 
@@ -66,9 +72,11 @@ class LBFGS(tol: Double, maxIter: Int, m: Int) extends Minimizer[DiffFunction] w
         val diag = if(memStep.size > 0) {
           computeDiag(iter,grad,memStep.last,memGradDelta.last);
         } else {
-          ones(n);
+          val ones : T = grad.like;
+          ones += 1;
+          ones
         }
-        val step = computeDirection(iter,diag, grad, memStep, memGradDelta, memRho);
+        val step = computeDirection(iter, diag, grad, memStep, memGradDelta, memRho);
         log(INFO)("Step:" + step);
 
         val (stepScale,newVal) = chooseStepSize(iter,f, step, x, grad, v);
@@ -80,12 +88,11 @@ class LBFGS(tol: Double, maxIter: Int, m: Int) extends Minimizer[DiffFunction] w
         val newGrad = f.gradientAt(x);
 
         memStep += step;
-        val gradDelta : Vector = newGrad - grad value; 
+        val gradDelta : T = newGrad.like;
+        gradDelta :-= grad;
 
         memGradDelta += gradDelta;
         memRho += 1/(step dot gradDelta);
-
-   //     printHistory(memRho, memGradDelta, memStep);
 
         if(memStep.length > m) {
           memStep.remove(0);
@@ -100,9 +107,9 @@ class LBFGS(tol: Double, maxIter: Int, m: Int) extends Minimizer[DiffFunction] w
       } catch {
         case e: NaNHistory => 
           log(ERROR)("Something in the history is giving NaN's, clearing it!");
-          memStep.clear;
-          memGradDelta.clear;
-          memRho.clear;
+          memStep.clear();
+          memGradDelta.clear();
+          memRho.clear();
       }
 
       iter += 1;
@@ -110,16 +117,9 @@ class LBFGS(tol: Double, maxIter: Int, m: Int) extends Minimizer[DiffFunction] w
     x
   }
 
-  /*
-  def printHistory(memRho: ArrayBuffer[Double], memGradDelta: Seq[Vector], memStep: Seq[Vector]) = {
-    log(INFO)("History:");
-    memRho.elements zip memGradDelta.elements zip memStep.elements foreach  (x =>log(INFO)(x))
-  }
-  */
-
-  def computeDiag(iter: Int, grad: Vector, prevStep: Vector, prevGrad: Vector):Vector = {
+  def computeDiag(iter: Int, grad: T, prevStep: T, prevGrad: T):T = {
     if(iter == 0) {
-      ones(grad.size);
+      grad :== grad value;
     } else {
       val sy = prevStep dot prevGrad;
       val yy = prevGrad dot prevGrad;
@@ -128,7 +128,7 @@ class LBFGS(tol: Double, maxIter: Int, m: Int) extends Minimizer[DiffFunction] w
       } else {
         sy/yy;
       }
-      ones(grad.size) * sy/yy value;
+     (((grad :== grad) * sy/yy) value);
     }
   }
    
@@ -142,12 +142,13 @@ class LBFGS(tol: Double, maxIter: Int, m: Int) extends Minimizer[DiffFunction] w
    * @param memRho: 1 over the dotproduct of step and gradStep
    */
    def computeDirection(iter: Int,
-      diag: Vector,
-      grad: Vector,
-      memStep: ArrayBuffer[Vector],
-      memGradStep: ArrayBuffer[Vector],
-      memRho: ArrayBuffer[Double]): Vector = {
-    val dir = grad.copy;
+      diag: T,
+      grad: T,
+      memStep: ArrayBuffer[T],
+      memGradStep: ArrayBuffer[T],
+      memRho: ArrayBuffer[Double]): T = {
+    val dir = op.like(grad);
+    dir := grad;
     val as = new Array[Double](m);
 
     for(i <- (memStep.length-1) to 0 by -1) {
@@ -179,10 +180,10 @@ class LBFGS(tol: Double, maxIter: Int, m: Int) extends Minimizer[DiffFunction] w
    * @return (stepSize, newValue)
    */
   def chooseStepSize(iter: Int,
-                     f: DiffFunction,
-                     dir: Vector,
-                     x: Vector,
-                     grad: Vector, 
+                     f: DiffFunction[K,T],
+                     dir: T,
+                     x: T,
+                     grad: T, 
                      prevVal: Double) = {
     val normGradInDir = {
       val possibleNorm = dir dot grad;
@@ -211,7 +212,7 @@ class LBFGS(tol: Double, maxIter: Int, m: Int) extends Minimizer[DiffFunction] w
 
     while( currentVal > prevVal + alpha * c && myIter < MAX_ITER) {
       alpha *= c1;
-      newX := x + dir * alpha;
+      newX := (x :+ (dir * alpha));
       currentVal = f.valueAt(newX);
       log(INFO)(".");
       myIter += 1;
@@ -225,7 +226,7 @@ class LBFGS(tol: Double, maxIter: Int, m: Int) extends Minimizer[DiffFunction] w
    * 
    * @param grad the current gradient
    */
-  def checkConvergence(grad: Vector): Boolean = {
+  def checkConvergence(grad: T): Boolean = {
     norm(grad,2) < tolSquared;
   }
 }
@@ -237,12 +238,12 @@ object LBFGS {
 
 object TestLBFGS {
   def main(arg: Array[String]) {
-    val lbfgs = new LBFGS(1E-8,0,7) with ConsoleLogging;
-    val f = new DiffFunction {
-      def valueAt(x: Vector) = {
+    val lbfgs = new LBFGS[Int,DenseVector](1E-8,0,7) with ConsoleLogging;
+    val f = new DiffFunction[Int,DenseVector] {
+      def valueAt(x: DenseVector) = {
         norm((x -3) :^ 2,1)
       }
-      def gradientAt(x: Vector):Vector = {
+      def gradientAt(x: DenseVector):DenseVector = {
         (x * 2) - 6 value;
       }
     }
@@ -252,6 +253,27 @@ object TestLBFGS {
     v(1) = 40.
     
     lbfgs.minimize(f,v) foreach println
+    test2();
+  }
+
+  def test2() {
+    import scalanlp.counters.Counters._
+    val lbfgs = new LBFGS[String,DoubleCounter[String]](1E-8,0,7) with ConsoleLogging;
+    val f = new DiffFunction[String,DoubleCounter[String]] {
+      def valueAt(x: DoubleCounter[String]) = {
+        norm((x -3) :^ 2,1)
+      }
+      def gradientAt(x: DoubleCounter[String]):DoubleCounter[String] = {
+       ( (x * 2) - 6 ).value.asInstanceOf[DoubleCounter[String]];
+      }
+    }
+
+    val v = DoubleCounter[String];
+    v("0") = 30.
+    v("1") = 40.
+    
+    lbfgs.minimize(f,v) foreach println
+
   }
   
 }

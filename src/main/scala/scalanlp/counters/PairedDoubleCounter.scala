@@ -28,8 +28,10 @@ import scalala.collection._;
 * @author dlwh
 */
 abstract class BasePairedDoubleCounter[K1,K2] 
-    extends PairedDoubleCounter.CounterFactory[K1,K2] 
-    with Tensor2[K1,K2] with TrackedStatistics[(K1,K2)] { outer =>
+    extends Tensor2[K1,K2] with TrackedStatistics[(K1,K2)] { outer =>
+
+  type DoubleCounter <: BaseDoubleCounter[K2] with PairStatsTracker[K1,K2];
+  protected def mkDoubleCounter(k1:K1): DoubleCounter;
 
   private val theMap = new HashMap[K1,DoubleCounter] {
     override def default(k1:K1) = getOrElseUpdate(k1,mkDoubleCounter(k1));
@@ -52,7 +54,7 @@ abstract class BasePairedDoubleCounter[K1,K2]
   /**
   * Returns the total number of nondefault entries in the counter.
   */
-  def size = size_ ;
+  override def size = size_ ;
   private var size_ = 0;
 
   def domain = {
@@ -66,14 +68,9 @@ abstract class BasePairedDoubleCounter[K1,K2]
     UnionSet(set,MergeableSet(s2));
   }
 
-  def create[J](d: MergeableSet[J]) = d match {
-    case ProductSet(_,_) => mkPairCounter.asInstanceOf[Tensor[J]]
-    case _ => mkStandardCounter[J];
-  }
-
-  override def elements = {
-    for( (k1,c) <-theMap.elements;
-      (k2,v) <- c.elements)
+  override def iterator = {
+    for( (k1,c) <-theMap.iterator;
+      (k2,v) <- c.iterator)
     yield ( (k1,k2),v);
   }
 
@@ -91,7 +88,6 @@ abstract class BasePairedDoubleCounter[K1,K2]
     }
     b append "]"
     b.toString
-
   }
 
   def getRow(k1:K1) = theMap(k1);
@@ -110,13 +106,13 @@ abstract class BasePairedDoubleCounter[K1,K2]
    * Returns an iterator over each (K1,K2,Value) pair
    */ 
   def triples : Iterator[(K1,K2,Double)] = {
-    for( (k1,c) <- theMap.elements;
-      (k2,v) <- c.elements)
+    for( (k1,c) <- theMap.iterator;
+      (k2,v) <- c.iterator)
     yield (k1,k2,v);
   }
 
   def +=(that : Iterable[(K1,K2,Double)]) {
-    this += that.elements;
+    this += that.iterator;
   }
 
   def +=(that : Iterator[(K1,K2,Double)]) {
@@ -126,60 +122,11 @@ abstract class BasePairedDoubleCounter[K1,K2]
   }
 }
 
-import PairedDoubleCounter._;
+trait PairStatsTracker[K1,K2] extends TrackedStatistics[K2] {
+  protected def outer: TrackedStatistics[(K1,K2)];
+  protected def k1: K1;
 
-class PairedDoubleCounter[K1,K2] extends BasePairedDoubleCounter[K1,K2] 
-    with TrackedStatistics.Total[(K1,K2)]
-    with TotaledCounterFactory[K1,K2];
-
-object PairedDoubleCounter {
-  trait CounterFactory[K1,K2] { outer: BasePairedDoubleCounter[K1,K2] =>
-
-    protected type SelfType[T1,T2] <: BasePairedDoubleCounter[T1,T2];
-    protected type StandardCounter[T] <: BaseDoubleCounter[T];
-    protected def mkPairCounter[T1,T2] : SelfType[T1,T2];
-    protected def mkStandardCounter[T] : StandardCounter[T];
-
-    type DoubleCounter = StandardCounter[K2] with PairStatsTracker;
-    protected def mkDoubleCounter(k1:K1): DoubleCounter;
-
-    trait PairStatsTracker extends TrackedStatistics[K2] { 
-      protected def k1: K1;
-      statistics += { (k2: K2, oldV: Double, newV: Double) =>
-        outer.updateStatistics( (k1,k2), oldV, newV); 
-      }
-    }
-
-
-  }
-
-  trait BareCounterFactory[K1,K2] extends CounterFactory[K1,K2] {outer: BasePairedDoubleCounter[K1,K2] =>
-    protected def mkDoubleCounter(k1:K1): DoubleCounter = new TDoubleCounter(k1);
-
-    protected type SelfType[T1,T2] = BasePairedDoubleCounter[T1,T2];
-    type StandardCounter[T] = BaseDoubleCounter[T];
-    protected def mkPairCounter[T1,T2] : SelfType[T1,T2] = new BasePairedDoubleCounter[T1,T2] with BareCounterFactory[T1,T2];
-    protected def mkStandardCounter[T] : BaseDoubleCounter[T] = Counters.DoubleCounter[T]();
-
-    class TDoubleCounter(protected val k1: K1) 
-      extends BaseDoubleCounter[K2] with PairStatsTracker {
-      def create[J](set: MergeableSet[J]) = Counters.mkDoubleCounter[J](set);
-    }
-  }
-
-  trait TotaledCounterFactory[K1,K2] extends CounterFactory[K1,K2] {
-    outer: BasePairedDoubleCounter[K1,K2] =>
-     type StandardCounter[T] = Counters.DoubleCounter[T];
-     override protected def mkDoubleCounter(k1:K1) = new TDoubleCounter(k1); 
-
-     protected type SelfType[T1,T2] = PairedDoubleCounter[T1,T2];
-     protected def mkPairCounter[T1,T2] : SelfType[T1,T2] = new PairedDoubleCounter[T1,T2];
-     protected def mkStandardCounter[T] : StandardCounter[T] = Counters.DoubleCounter[T]();
-
-
-     class TDoubleCounter(protected val k1: K1) 
-        extends BaseDoubleCounter[K2] with PairStatsTracker with TrackedStatistics.Total[K2] {
-      def create[J](set: MergeableSet[J]) = Counters.mkDoubleCounter[J](set);
-    }
+  statistics += { (k2: K2, oldV: Double, newV: Double) =>
+    outer.updateStatistics( (k1,k2),oldV,newV);
   }
 }

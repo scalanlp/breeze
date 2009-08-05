@@ -35,7 +35,8 @@ class ArrayMap[V](private val arr: ArrayBuffer[V]) extends scala.collection.muta
   def defValue:V = throw new NoSuchElementException("");
   override def apply(i: Int) = get(i).getOrElse(default(i));
   def get(i : Int) = if(i < arr.length) Some(arr(i)) else None;
-  def update(i : Int, v : V) {
+  def += (k: (Int,V)): this.type = { update(k._1,k._2); this};
+  override def update(i : Int, v : V) {
     if(i > arr.length)
       arr ++= (arr.length until i) map (default _)
 
@@ -47,11 +48,11 @@ class ArrayMap[V](private val arr: ArrayBuffer[V]) extends scala.collection.muta
   * Note that removing an element in the array <b>downshifts</b>
   * all elements after it.
   */
-  def -=(i : Int) { arr remove i;}
-  def size = arr.size;
-  def elements = keys zip values
-  override def keys = (0 until arr.length).elements;
-  override def values = arr.elements;
+  def -=(i : Int):this.type = { arr remove i; this}
+  override val size = arr.size;
+  def iterator = keys zip values
+  override def keys = (0 until arr.length).iterator;
+  override def values = arr.iterator;
 
 
   def innerArray:Array[V] =  arr.toArray;

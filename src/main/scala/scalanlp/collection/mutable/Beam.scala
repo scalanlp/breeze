@@ -18,24 +18,30 @@ package scalanlp.collection.mutable;
 
 
 import scala.collection.mutable.PriorityQueue;
+import scala.collection.generic.BuilderFactory;
+
 /**
  * Represents a beam, which is essentially a priority queue
  * with a maximum size.
  * 
  * @author dlwh
  */
-class Beam[T](val maxSize:Int, xs:T*)(implicit o : T=>Ordered[T]) { outer =>
+class Beam[T](val maxSize:Int, xs:T*)(implicit o : Ordering[T]) { outer =>
   assert(maxSize >= 0)
-  val queue = new PriorityQueue[T]()(reverseOrder(o));
+  private val queue = new PriorityQueue[T]()(o.reverse);
   queue ++= xs;
 
   def size = queue.size;
 
-  def map[U<%Ordered[U]](f: T=>U) = new Beam[U](maxSize)  {
-    queue ++= outer.queue.map(f);
+  def map[U](f: T=>U)(implicit oU: Ordering[U]) = {
+    val q = new PriorityQueue[U]()(oU.reverse);
+    for(t <- queue) q += f(t);
+    new Beam[U](maxSize) {
+      queue ++= q;
+    }
   }
 
-  def flatMap[U](f: T=>Collection[U])(implicit oU: U =>Ordered[U]) = new Beam[U](maxSize) {
+  def flatMap[U](f: T=>Iterable[U])(implicit oU: Ordering[U]) = new Beam[U](maxSize) {
       for(x <- outer.queue;
           y <- f(x)) {
         if(queue.size < maxSize) {
@@ -47,11 +53,9 @@ class Beam[T](val maxSize:Int, xs:T*)(implicit o : T=>Ordered[T]) { outer =>
       }
   }
 
-
   def filter[U](f: T=>Boolean) = new Beam[T](maxSize)  {
     queue ++= outer.queue.filter(f);
   }
-
 
   def +(x:T) = {this += x; this}
   def ++(x:Iterator[T]) = {this ++= x; this};
@@ -72,19 +76,11 @@ class Beam[T](val maxSize:Int, xs:T*)(implicit o : T=>Ordered[T]) { outer =>
     else if (h.max < x) {h.dequeue(); h += x;}
   }
 
-
-  private def reverseOrder[U](o : U=>Ordered[U]) = {x : U =>
-    val oReal = o(x);
-    new Ordered[U] {
-      def compare(x2 : U) = -oReal.compare(x2);
-    }
-  }
-
-  def elements = queue.elements;
-  override def toString() = elements.mkString("Beam(",",",")");
+  def iterator = queue.iterator;
+  override def toString() = iterator.mkString("Beam(",",",")");
 
 }
 
 object Beam {
-  def apply[T<%Ordered[T]](maxSize:Int, xs:T*) = new Beam[T](maxSize, xs:_*);
+  def apply[T](maxSize:Int, xs:T*)(implicit ordering: Ordering[T]) = new Beam[T](maxSize, xs:_*);
 }

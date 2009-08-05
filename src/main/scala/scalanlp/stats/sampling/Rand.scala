@@ -38,7 +38,7 @@ trait Rand[+T] { outer : Rand[T] =>
   /**
    * Gets n samples from the distribution. 
    */
-  def sample(n : Int) = List.tabulate(n,x => get);
+  def sample(n : Int) = List.tabulate(n)(x => get);
 
   /**
    * An infinitely long iterator that samples repeatedly from the Rand
@@ -110,10 +110,10 @@ object Rand {
   /**
    * Chooses an element from a collection. 
    */
-  def choose[T](c :Collection[T]) = new Rand[T] { 
+  def choose[T](c: Iterable[T]) = new Rand[T] { 
     def draw() = {
       val sz = uniform.get * c.size;
-      val elems = c.elements;
+      val elems = c.iterator;
       var i = 1;
       var e = elems.next;
       while(i < sz) {
@@ -145,19 +145,18 @@ object Rand {
   /**
   * Convert a Collection of Rand[T] into a Rand[Collection[T]]
   */
-  def promote[U](col : Collection[Rand[U]]) = fromBody(col.map(_.get));
-  /**
-  * Convert an Iterable of Rand[T] into a Rand[Iterable[T]]
-  */
   def promote[U](col : Iterable[Rand[U]]) = fromBody(col.map(_.get));
+
   /**
   * Convert a List of Rand[T] into a Rand[List[T]]
   */
   def promote[U](col : List[Rand[U]]) = fromBody(col.map(_.get));
+
   /**
   * Convert an Array of Rand[T] into a Rand[Array[T]]
   */
   def promote[U](col : Array[Rand[U]]) = fromBody(col.map(_.get));
+
   /**
   * Convert an Seq of Rand[T] into a Rand[Seq[T]]
   */

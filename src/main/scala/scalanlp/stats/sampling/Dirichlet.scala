@@ -17,7 +17,7 @@ package scalanlp.stats.sampling;
 */
 
 import scalanlp.counters._;
-import collection.mutable.ArrayMap;
+import scalanlp.collection.mutable.ArrayMap;
 import scala.collection.mutable.ArrayBuffer;
 import scalanlp.counters.Counters._;
 import scalanlp.math.Numerics._;
@@ -37,32 +37,32 @@ class Dirichlet[T](prior: DoubleCounter[T]) extends ContinuousDistr[DoubleCounte
     new Dirichlet(prior);
   }
 
-  private val generators : Iterable[(T,Gamma)] = prior.elements.map { (e:(T,Double)) => (e._1,new Gamma(e._2,1)) } collect;
+  private val generators : Iterable[(T,Gamma)] = prior.iterator.map { (e:(T,Double)) => (e._1,new Gamma(e._2,1)) } toSequence;
 
   /**
    * Provides access to the components of the Dirichlet, for inspection.
    */
-  def components = prior.elements;
+  def components = prior.iterator;
 
   /**
-   * Returns a Multinomial distribution over the elements;
+   * Returns a Multinomial distribution over the iterator;
    */
   def draw() = {
-    aggregate(generators.map(e => (e._1,e._2.draw)).elements);
+    aggregate(generators.map(e => (e._1,e._2.draw)).iterator);
   }
 
   /**
    * Returns unnormalized probabilities for a Multinomial distribution.
    */
   def unnormalizedDraw() = {
-    aggregate(generators.map(e => (e._1,e._2.draw)).elements)
+    aggregate(generators.map(e => (e._1,e._2.draw)).iterator)
   }
 
   /**
    * Returns the log pdf function of the Dirichlet up to a constant evaluated at m
    */
   override def unnormalizedLogPdf(m : DoubleCounter[T]) = {
-    prior.elements.map( e => (e._2-1) * m(e._1) ).foldLeft(0.0)(_+_);
+    prior.iterator.map( e => (e._2-1) * m(e._1) ).foldLeft(0.0)(_+_);
   }
 
   /**
@@ -82,7 +82,7 @@ class Dirichlet[T](prior: DoubleCounter[T]) extends ContinuousDistr[DoubleCounte
   /**
    * Returns a Polya Distribution
    */
-  def predictive = new Polya(aggregate(prior.elements));
+  def predictive = new Polya(aggregate(prior.iterator));
 
 }
 
@@ -101,7 +101,7 @@ object Dirichlet {
   /**
    * Creates a new symmetric Dirichlet of dimension k
    */
-  def sym(alpha : Double, k : Int) = this(Array.fromFunction{ x => alpha }(k));
+  def sym(alpha : Double, k : Int) = this(Array.tabulate(k){ x => alpha });
   
   def apply(arr: Array[Double]):Dirichlet[Int] = Dirichlet( aggregate(arr.zipWithIndex.map(_.swap)));
 }

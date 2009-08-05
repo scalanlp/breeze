@@ -28,7 +28,7 @@ trait ConjugatePrior[P,T] extends Measure[P] {
   /**
    * Gives a new ConjugatePrior after observing the evidence. See Dirichlet for an example.
    */
-  def posterior(evidence : Iterable[(T,Int)]) : ConjugatePrior[P,T] = posterior(evidence.elements);
+  def posterior(evidence : Iterable[(T,Int)]) : ConjugatePrior[P,T] = posterior(evidence.iterator);
   /**
    * Gives a new ConjugatePrior after observing the evidence. See Dirichlet for an example.
    */

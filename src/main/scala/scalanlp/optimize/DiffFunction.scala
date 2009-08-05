@@ -18,46 +18,47 @@ package scalanlp.optimize;
 
 import scalala._;
 import scalala.Scalala._;
-import scalala.tensor.Vector;
+import scalala.tensor._;
 
 /**
 * Represents a differentiable function.
 *
 * @author dlwh
 */
-trait DiffFunction extends (Vector=>Double) {
+trait DiffFunction[K,T<:Tensor1[K]] extends (T=>Double) {
   /** calculates the gradient at a point */
-  def gradientAt(x: Vector): Vector;
+  def gradientAt(x: T): T;
   /** calculates the value at a point */
-  def valueAt(x:Vector): Double;
+  def valueAt(x:T): Double;
 
-  def apply(x:Vector) = valueAt(x);
+  def apply(x:T) = valueAt(x);
 
   /** Calculates both the value and the gradient at a point */
-  def calculate(x:Vector) = (apply(x),gradientAt(x));
+  def calculate(x:T) = (apply(x),gradientAt(x));
 }
 
 object DiffFunction {
-  def withL2Regularization(d: DiffFunction,weight: Double) = new DiffFunction {
-    def gradientAt(x:Vector) = {
+  def withL2Regularization[K,T<:Tensor1[K]](d: DiffFunction[K,T],weight: Double) = new DiffFunction[K,T] {
+    def gradientAt(x:T):T = {
       val grad = d.gradientAt(x);
       adjustGradient(grad);
     }
 
-    private def adjustGradient(grad: Vector) = {
-      grad + 2 value
+    private def adjustGradient(grad: T) = {
+      grad += 2
+      grad;
     }
 
-    def valueAt(x:Vector) = {
+    def valueAt(x:T) = {
       var v = d.valueAt(x);
       v + myValueAt(x);
     }
 
-    private def myValueAt(x:Vector) = {
-      sum( x * weight / 2);
+    private def myValueAt(x:T) = {
+      sum( x * weight / 2 value);
     }
 
-    override def calculate(x: Vector) = {
+    override def calculate(x: T) = {
       val (v,grad) = d.calculate(x);
       (v + myValueAt(x), adjustGradient(grad));
     }
@@ -67,27 +68,27 @@ object DiffFunction {
 /**
 * A diff function that supports subsets of the data
 */
-trait BatchDiffFunction extends DiffFunction with ((Vector,Seq[Int])=>Double) {
+trait BatchDiffFunction[K,T<:Tensor1[K]] extends DiffFunction[K,T] with ((T,Seq[K])=>Double) {
   /**
   * Calculates the gradient of the function on a subset of the data
   */
-  def gradientAt(x:Vector, batch: Seq[Int]) : Vector
+  def gradientAt(x:T, batch: Seq[K]) : T
   /**
   * Calculates the value of the function on a subset of the data
   */
-  def valueAt(x:Vector, batch: Seq[Int]) : Double
+  def valueAt(x:T, batch: Seq[K]) : Double
   /**
   * Calculates the value and gradient of the function on a subset of the data;
   */
-  def calculate(x:Vector, batch: Seq[Int]) = (apply(x,batch),gradientAt(x,batch));
+  def calculate(x:T, batch: Seq[K]) = (apply(x,batch),gradientAt(x,batch));
 
-  override def gradientAt(x:Vector):Vector = gradientAt(x,fullRange);
-  override def valueAt(x:Vector):Double = valueAt(x,fullRange);
+  override def gradientAt(x:T):T = gradientAt(x,fullRange);
+  override def valueAt(x:T):Double = valueAt(x,fullRange);
 
-  def apply(x:Vector, batch:Seq[Int]) = valueAt(x,batch);
+  def apply(x:T, batch:Seq[K]) = valueAt(x,batch);
 
   /**
   * The full size of the data
   */
-  def fullRange: Seq[Int];
+  def fullRange: Seq[K];
 }

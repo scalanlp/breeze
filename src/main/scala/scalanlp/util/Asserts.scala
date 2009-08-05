@@ -7,17 +7,17 @@ package scalanlp.util;
 */
 trait Asserts {
   /** == */
-  def assertEq[A,B](a: A, b: B) = assert(a==b, a + "is not == " + b);
+  def assertEq[A,B](a: A, b: B):Unit = assert(a==b, a + "is not == " + b);
   /** != */
-  def assertNe[A<%Ordered[B],B](a: A, b: B) = assert(a!=b, a + "is not != " + b);
+  def assertNe[A<%Ordered[B],B](a: A, b: B):Unit = assert(a!=b, a + "is not != " + b);
   /** &lt; */
-  def assertLt[A<%Ordered[B],B](a: A, b: B) = assert(a< b, a + "is not < " + b);
+  def assertLt[A<%Ordered[B],B](a: A, b: B):Unit = assert(a< b, a + "is not < " + b);
   /** &lt;= */
-  def assertLe[A<%Ordered[B],B](a: A, b: B) = assert(a<=b, a + "is not <= " + b);
+  def assertLe[A<%Ordered[B],B](a: A, b: B):Unit = assert(a<=b, a + "is not <= " + b);
   /** &gt; */
-  def assertGt[A<%Ordered[B],B](a: A, b: B) = assert(a> b, a + "is not > " + b);
+  def assertGt[A<%Ordered[B],B](a: A, b: B):Unit = assert(a> b, a + "is not > " + b);
   /** &gt;= */
-  def assertGe[A<%Ordered[B],B](a: A, b: B) = assert(a>=b, a + "is not >= " + b);
+  def assertGe[A<%Ordered[B],B](a: A, b: B):Unit = assert(a>=b, a + "is not >= " + b);
 }
 
 

@@ -1,6 +1,6 @@
 package scalanlp.stats.sampling
 
-import math.Numerics.lgamma;
+import scalanlp.math.Numerics.lgamma;
 import Math._;
 
 class Binomial(n: Int, p: Double) extends DiscreteDistr[Int] {

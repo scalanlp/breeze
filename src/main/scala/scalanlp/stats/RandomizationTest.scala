@@ -38,8 +38,8 @@ class RandomizationTest[L](val numSamples:Int, val errorMeasure: Seq[L]=>Double)
   def apply(labeling1: Seq[L], labeling2: Seq[L]) = {
     assume(labeling1.length == labeling2.length);
     // git rid of any overlapping labels
-    val lpairs = (labeling1.elements zip labeling2.elements).filter( a => a._1 != a._2).collect;
-    val baseDiff = diff(lpairs.projection.map(_._1),lpairs.projection.map(_._2));
+    val lpairs = (labeling1.iterator zip labeling2.iterator).filter( a => a._1 != a._2).toSequence;
+    val baseDiff = diff(lpairs.view.map(_._1),lpairs.view.map(_._2));
     var numBetter = 0;
     for(i <- 1 to numSamples) {
       val l1 = new ArrayBuffer[L]();
@@ -69,7 +69,7 @@ object RandomizationTest {
   def apply[L,T](dataset: Seq[Example[L,T]], c1: Classifier[L,T], c2: Classifier[L,T], error: ContingencyStats[L]=>Double):Double = {
     new RandomizationTest[L]( l1=> 
       error(ContingencyStats(l1,dataset.map(_.label)))
-    ) apply (dataset.projection.map(Example.lift(c1)).map(_.label).force,dataset.projection.map(Example.lift(c2)).map(_.features).force);
+    ) apply (dataset.view.map(Example.lift(c1)).map(_.label).force,dataset.view.map(Example.lift(c2)).map(_.features).force);
   }
 
   /** Classify the dataset according to the two classifiers, and then use f1

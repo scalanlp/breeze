@@ -30,9 +30,9 @@ import scala.collection.Map;
  * 
  * @param wordSmoothing: how much smoothing for each
  */
-class NaiveBayes[W,L](c: Collection[Example[L,DoubleCounter[W]]],
+class NaiveBayes[W,L](c: Iterable[Example[L,IntCounter[W]]],
     val wordSmoothing:Double,
-    val classSmoothing:Double)  extends Classifier[L,DoubleCounter[W]] {
+    val classSmoothing:Double)  extends Classifier[L,IntCounter[W]] {
 
   // p(c)
   private val classCounts = DoubleCounter[L]();
@@ -44,20 +44,21 @@ class NaiveBayes[W,L](c: Collection[Example[L,DoubleCounter[W]]],
     val allWords = scala.collection.mutable.Set[W]();
     for(e <- myC) {
        classCounts(e.label) += 1;
-       wordCounts(e.label) ++= e.features
-       allWords ++= e.features.keys;
+       for( (k,count) <- e.features)
+	       wordCounts(e.label)(k) += count;
+       allWords ++= e.features.keysIterator;
     }
     allWords.size;
   }
 
   /** Returns the unnormalized log probability of each class for the given document. */
-  def scores(o : DoubleCounter[W]) = {
+  def scores(o : IntCounter[W]) = {
     val res = DoubleCounter[L]();
     for( (l,prior) <- classCounts) {
       res(l) += log(prior + classSmoothing);
       val probWC = wordCounts(l);
       val logDenom = log(probWC.total  + vocabSize * wordSmoothing);
-      val logWordProbabilities = o.map{ (e:(W,Double)) => val (k,v) = e; v * (log(probWC(k) + wordSmoothing) - logDenom)}
+      val logWordProbabilities = o.map{ (e:(W,Int)) => val (k,v) = e; v * (log(probWC(k) + wordSmoothing) - logDenom)}
       res(l) += logWordProbabilities.foldLeft(0.0)(_+_);
     }
     res;

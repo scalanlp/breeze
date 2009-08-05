@@ -52,7 +52,7 @@ abstract class BasePairedIntCounter[K1,K2]
   /**
   * Returns the total number of nondefault entries in the counter.
   */
-  def size = size_ ;
+  override def size = size_ ;
   private var size_ = 0;
 
   def default = 0;
@@ -68,9 +68,9 @@ abstract class BasePairedIntCounter[K1,K2]
     UnionSet(set,MergeableSet(s2));
   }
 
-  override def elements = {
-    for( (k1,c) <-theMap.elements;
-      (k2,v) <- c.elements)
+  override def iterator = {
+    for( (k1,c) <-theMap.iterator;
+      (k2,v) <- c.iterator)
     yield ( (k1,k2),v);
   }
 
@@ -108,13 +108,13 @@ abstract class BasePairedIntCounter[K1,K2]
    * Returns an iterator over each (K1,K2,Value) pair
    */ 
   def triples : Iterator[(K1,K2,Int)] = {
-    for( (k1,c) <- theMap.elements;
-      (k2,v) <- c.elements)
+    for( (k1,c) <- theMap.iterator;
+      (k2,v) <- c.iterator)
     yield (k1,k2,v);
   }
 
   def +=(that : Iterable[(K1,K2,Int)]) {
-    this += that.elements;
+    this += that.iterator;
   }
 
   def +=(that : Iterator[(K1,K2,Int)]) {
@@ -134,11 +134,9 @@ object PairedIntCounter {
   trait CounterFactory[K1,K2] { outer: BasePairedIntCounter[K1,K2] =>
 
     protected type SelfType[T1,T2] <: BasePairedIntCounter[T1,T2];
-    protected type StandardCounter[T] <: BaseIntCounter[T];
     protected def mkPairCounter[T1,T2] : SelfType[T1,T2];
-    protected def mkStandardCounter[T] : StandardCounter[T];
 
-    type IntCounter = StandardCounter[K2] with PairStatsTracker;
+    type IntCounter <: BaseIntCounter[K2] with PairStatsTracker;
     protected def mkIntCounter(k1:K1): IntCounter;
 
     trait PairStatsTracker extends TrackedIntStatistics[K2] { 
@@ -155,29 +153,27 @@ object PairedIntCounter {
     protected def mkIntCounter(k1:K1): IntCounter = new TIntCounter(k1);
 
     protected type SelfType[T1,T2] = BasePairedIntCounter[T1,T2];
-    type StandardCounter[T] = BaseIntCounter[T];
+    type IntCounter = TIntCounter;
     protected def mkPairCounter[T1,T2] : SelfType[T1,T2] = new BasePairedIntCounter[T1,T2] with BareCounterFactory[T1,T2];
-    protected def mkStandardCounter[T] : BaseIntCounter[T] = Counters.IntCounter[T]();
 
     class TIntCounter(protected val k1: K1) 
-      extends BaseIntCounter[K2] with PairStatsTracker {
-      def create[J](set: MergeableSet[J]) = Counters.mkIntCounter[J](set);
+        extends BaseIntCounter[K2] with PairStatsTracker {
+      def copy = new TIntCounter(k1);
     }
   }
 
   trait TotaledCounterFactory[K1,K2] extends CounterFactory[K1,K2] {
     outer: BasePairedIntCounter[K1,K2] =>
-     type StandardCounter[T] = Counters.IntCounter[T];
-     override protected def mkIntCounter(k1:K1) = new TIntCounter(k1); 
 
      protected type SelfType[T1,T2] = PairedIntCounter[T1,T2];
      protected def mkPairCounter[T1,T2] : SelfType[T1,T2] = new PairedIntCounter[T1,T2];
-     protected def mkStandardCounter[T] : StandardCounter[T] = Counters.IntCounter[T]();
+     def mkIntCounter(k1: K1) = new TIntCounter(k1);
+     type IntCounter = TIntCounter;
 
 
      class TIntCounter(protected val k1: K1) 
         extends BaseIntCounter[K2] with PairStatsTracker with TrackedIntStatistics.Total[K2] {
-      def create[J](set: MergeableSet[J]) = Counters.mkIntCounter[J](set);
-    }
+        def copy = new TIntCounter(k1);
+     }
   }
 }

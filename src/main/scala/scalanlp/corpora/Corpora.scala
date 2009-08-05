@@ -17,9 +17,7 @@ package scalanlp.corpora;
 */
 
 
-import scalax.data.Implicits._;
-import scalax.io.Implicits._;
-import util.Implicits._;
+import scalanlp.util.Implicits._;
 import java.net._;
 import java.io.File;
 import scala.xml.XML;
@@ -91,14 +89,14 @@ class Corpora(val repositories: Seq[URL]) {
 
   private def findJar(name: String) = {
     val lowerName = name.toLowerCase;
-    val urls = repositories.elements;
+    val urls = repositories.iterator;
 
     var jar: URL = null;
     while(urls.hasNext && (jar eq null)) {
       val url = urls.next;
       try { // is it a directory?
         val f = new File(url.toURI);
-        val location = f / "org/scalanlp/corpora/" / lowerName;
+        val location = new File(new File(f, "org/scalanlp/corpora/"), lowerName);
         println(location);
         if(location.exists && location.isDirectory) {
           val latestVersion = location.listFiles.filter(_.isDirectory).reduceLeft( (x,y) =>

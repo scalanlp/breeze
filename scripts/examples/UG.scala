@@ -56,11 +56,11 @@ def mkBiasedPY() = new HashMap[(Int,Int),PitmanYorProcess](){
 }
 
 println("loading...");
-val rawSents = (for( f <- (new File(args(0))).listFiles().elements;
+val rawSents = (for( f <- (new File(args(0))).listFiles().iterator;
                     val src = Source.fromFile(f);
                     line <- src.getLines) yield {
                     line.split("[^A-Za-z]").filter(""!=_);
-                  }).filter(_.length != 0).collect.toArray
+                  }).filter(_.length != 0).toSequence.toArray
 
 val initParams = new Params();
 val words = Set[String]();

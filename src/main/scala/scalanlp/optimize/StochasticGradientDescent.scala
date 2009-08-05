@@ -1,11 +1,12 @@
 package scalanlp.optimize;
 
-import scala.collection.mutable._;
-import util._;
-import util.Implicits._;
-import stats.sampling._;
+import scala.collection.mutable.{Vector=>_,_};
 import scalala.Scalala._;
 import scalala.tensor._;
+
+import scalanlp.util._;
+import scalanlp.util.Implicits._;
+import scalanlp.stats.sampling._;
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
@@ -32,12 +33,12 @@ class StochasticGradientDescent(val alpha: Double,
     val scale: Double, 
     val tol: Double,
     val mxIter: Int,
-    batchSize: Int) extends Minimizer[BatchDiffFunction] with Logged {
+    batchSize: Int) extends Minimizer[Vector,BatchDiffFunction[Int,Vector]] with Logged {
 
   /**
   * Runs SGD on f, for mxIter. It ignores tol.
   */
-  def minimize(f: BatchDiffFunction, init: Vector) = {
+  def minimize(f: BatchDiffFunction[Int,Vector], init: Vector) = {
     val maxIter = if(mxIter <= 0) {
       1000 * f.fullRange.size / batchSize;
     } else {
@@ -82,7 +83,7 @@ class StochasticGradientDescent(val alpha: Double,
   * Selects a sample of the data to evalute on. By default, it selects
   * a random sample without replacement.
   */
-  def selectSample(f: BatchDiffFunction, iter: Int) : Seq[Int] = {
+  def selectSample(f: BatchDiffFunction[Int,Vector], iter: Int) : Seq[Int] = {
     Rand.permutation(f.fullRange.size).draw.map(f.fullRange).take(batchSize);
   }
 }

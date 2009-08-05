@@ -29,10 +29,11 @@ object DoubleValuedMap {
     val underlying = new Object2DoubleOpenHashMap[K];
     def get(k: K) = if(underlying.containsKey(k)) Some(underlying.getDouble(k)) else None;
     override def apply(k:K) = if(underlying.containsKey(k)) underlying.getDouble(k) else default(k);
-    def -=(k:K) { underlying.remove(k); }
-    def size = underlying.size;
-    def update(k:K, d:Double) = underlying.put(k,d);
-    def elements = new Iterator[(K,Double)] {
+    def -=(k:K):this.type = { underlying.remove(k); this}
+    def +=(k: (K,Double)) :this.type = { update(k._1,k._2); this }
+    override def size = underlying.size;
+    override def update(k:K, d:Double) = underlying.put(k,d);
+    def iterator = new Iterator[(K,Double)] {
       val outer = underlying.object2DoubleEntrySet.iterator;
       def next = { 
         val n = outer.next;

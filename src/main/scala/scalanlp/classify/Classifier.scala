@@ -17,8 +17,8 @@ package scalanlp.classify;
 */
 
 
-import counters.Counters._;
-import data._;
+import scalanlp.counters.Counters._;
+import scalanlp.data._;
 
 /**
  * Represents a classifier from observations of type T to labels of type L.

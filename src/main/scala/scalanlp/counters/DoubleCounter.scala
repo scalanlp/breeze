@@ -45,7 +45,7 @@ trait BaseDoubleCounter[T] extends Tensor1[T] with TrackedStatistics[T] { outer 
 
   val activeDomain : MergeableSet[T] = new MergeableSet[T] {
     def contains(t:T) = counts.contains(t);
-    def elements = counts.keys;
+    def iterator = counts.keysIterator;
     
   }
   val domain : MergeableSet[T] = activeDomain;
@@ -62,7 +62,7 @@ trait BaseDoubleCounter[T] extends Tensor1[T] with TrackedStatistics[T] { outer 
   /**
   * Returns the number of keys with stored values.
   */
-  def size = counts.size;
+  override def size = counts.size;
 
   /**
   * Returns Some(v) if this.contains(t), else None
@@ -119,12 +119,12 @@ trait BaseDoubleCounter[T] extends Tensor1[T] with TrackedStatistics[T] { outer 
   /**
    * Return the largest count
    */
-  def max: Double = counts.values reduceLeft (_ max _)
+  def max: Double = counts.valuesIterator reduceLeft (_ max _)
 
   /**
    * Return the smallest count
    */
-  def min: Double = counts.values reduceLeft (_ min _)
+  def min: Double = counts.valuesIterator reduceLeft (_ min _)
 
   protected[counters] override def ensure(otherDomain: PartialMap[T,Double]) {
     // no need to do anything here.
@@ -139,11 +139,11 @@ trait BaseDoubleCounter[T] extends Tensor1[T] with TrackedStatistics[T] { outer 
     }
   }
 
-  override def map[U](f: ((T,Double))=>U):Iterable[U] = {
-    activeElements.map{ kv => f(kv)} collect; 
+  def map[U](f: ((T,Double))=>U):Iterable[U] = {
+    activeElements.map{ kv => f(kv)} toSequence; 
   }
 
   def map[U](f: (T,Double)=>U):Iterable[U] = {
-    activeElements.map{ case (k,v) => f(k,v)} collect; 
+    activeElements.map{ case (k,v) => f(k,v)} toSequence; 
   }
 }

@@ -1,8 +1,9 @@
 package scalanlp.stats.sampling
 
-import math.Numerics.lgamma;
 import Math._;
-import counters._;
+
+import scalanlp.math.Numerics.lgamma;
+import scalanlp.counters._;
 import Counters._
 
 class Beta(a: Double, b: Double) extends ContinuousDistr[Double] with ConjugatePrior[Double, Boolean]{

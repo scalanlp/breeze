@@ -17,9 +17,9 @@ package scalanlp.data;
 */
 
 
-import scalax.io.Implicits._;
 import java.io.File;
-import counters.Counters._;
+import scala.io.Source;
+import scalanlp.counters.Counters._;
 import process._;
 
 
@@ -29,7 +29,7 @@ import process._;
 *
 * @author dlwh
 */
-class Bag[+L,W](val id:String, val label:L, words: DoubleCounter[W]) extends Example[L,DoubleCounter[W]] {
+class Bag[+L,W](val id:String, val label:L, words: IntCounter[W]) extends Example[L,IntCounter[W]] {
   def features = words;
 }
 
@@ -43,12 +43,12 @@ object Bag {
   */
   def fromFile(file: File) = {
     val words = 
-      for( line <- file.lines;
-           word <- line.split("[^A-Za-z0-9]")
+      for( line <- Source.fromFile(file).getLines;
+           word <- line.split("[^A-Za-z0-9]").iterator
          if word != "" && RemoveStopwords(word) )
          yield word.toLowerCase;
-    val cter = words.elements.acquireFor(count(_));
-    new Bag[String,String](file.getName,file.getParentFile.getName,cter);
+    val ctr = count(words);
+    new Bag[String,String](file.getName,file.getParentFile.getName,ctr);
   }
 
   /** Converts a Document to a Bag by taking each (field,words)

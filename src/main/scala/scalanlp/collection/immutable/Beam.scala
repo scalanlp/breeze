@@ -25,7 +25,7 @@ import scala.collection.mutable.PriorityQueue;
  * 
  * @author dlwh
  */
-class Beam[T](val maxSize:Int, xs : T*)(implicit o : T=>Ordered[T]) { outer =>
+class Beam[T](val maxSize:Int, xs : T*)(implicit o : Ordering[T]) { outer =>
   assert(maxSize >= 0)
   val heap = trim(BinomialHeap(xs:_*));
 
@@ -48,13 +48,13 @@ class Beam[T](val maxSize:Int, xs : T*)(implicit o : T=>Ordered[T]) { outer =>
   /** Just convert each element to the new value. Will trigger
    * a reordering.
    */
-  def map[U<%Ordered[U]](f: T=>U) = new Beam[U](maxSize) { 
+  def map[U](f: T=>U)(implicit ordering: Ordering[U]) = new Beam[U](maxSize) { 
     override val heap = BinomialHeap[U]() ++ outer.heap.map(f);
   }
 
-  def flatMap[U](f: T=>Collection[U])(implicit oU: U =>Ordered[U]) = new Beam[U](maxSize) {
+  def flatMap[U](f: T=>Iterable[U])(implicit oU: Ordering[U]) = new Beam[U](maxSize) {
     override val heap = {
-      val queue = new PriorityQueue[U]()(reverseOrder(oU));
+      val queue = new PriorityQueue[U]()(oU.reverse);
       for(x <- outer.heap;
           y <- f(x)) {
         if(queue.size < maxSize) {
@@ -80,15 +80,8 @@ class Beam[T](val maxSize:Int, xs : T*)(implicit o : T=>Ordered[T]) { outer =>
   def ++(x:Iterator[T]) : Beam[T] = new Beam[T](maxSize) {
     override val heap = x.foldLeft(outer.heap)(cat);
   }
-  def ++(x:Iterable[T]) : Beam[T] = {this ++ x.elements;}
+  def ++(x:Iterable[T]) : Beam[T] = {this ++ x.iterator;}
 
-  private def reverseOrder[U](o : U=>Ordered[U]) = {x : U =>
-    val oReal = o(x);
-    new Ordered[U] {
-      def compare(x2 : U) = -oReal.compare(x2);
-    }
-  }
-
-  def elements = heap.elements;
-  override def toString() = elements.mkString("Beam(",",",")");
+  def iterator = heap.iterator;
+  override def toString() = iterator.mkString("Beam(",",",")");
 }

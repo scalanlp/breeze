@@ -59,7 +59,7 @@ object Implicits extends Asserts {
     def tails = new Seq[List[T]] {
       def length = list.length;
       def apply(i : Int) = list.drop(i);
-      def elements = new Iterator[List[T]] {
+      def iterator = new Iterator[List[T]] {
         private var n = list;
         def next = {
           val ret = n;
@@ -82,7 +82,7 @@ object Implicits extends Asserts {
       if(s.length == 0) s2.length;
       else if(s2.length ==0) s.length;
       else {
-        val d = new Array[Array[Int]](s.length+1,s2.length+1);
+        val d: Array[Array[Int]] = Array.ofDim(s.length+1,s2.length+1);
         for(i <- 0 to s.length)
           d(i)(0) = i;
         for(i <- 0 to s2.length)
@@ -153,6 +153,6 @@ object Implicits extends Asserts {
 
   implicit def SeqExtras[T](s: Seq[T]) = new {
     // useful subset selection
-    def apply(x: Seq[Int]) = x.projection.map(s);  
+    def apply(x: Seq[Int]) = x.view.map(s);  
   }
 }

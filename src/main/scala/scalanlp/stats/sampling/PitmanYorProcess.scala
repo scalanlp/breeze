@@ -67,7 +67,7 @@ class PitmanYorProcess private (
   def probabilityOfUnobserved() = drawn(unobservedIndex) / drawn.total;
 
   /** Add or subtract some number of observations. Useful for sampling.*/
-  def observe(c: DoubleCounter[Int]):PitmanYorProcess = {
+  def observe(c: IntCounter[Int]):PitmanYorProcess = {
     val ret = DoubleCounter[Int]();
     
     for( (k,v) <- drawn) {
@@ -89,13 +89,13 @@ class PitmanYorProcess private (
     val index0 = {
         if(!(c contains unobservedIndex)) unobservedIndex 
         else {
-          val idx = ret.elements.findIndexOf( (x:(Int,Double)) => x._2 == 0.0);
+          val idx = ret.iterator.indexWhere( (x:(Int,Double)) => x._2 == 0.0);
           if(idx == -1) ret.size;
           else idx;
       }
     }
     
-    val numKeys = ret.elements.filter( (x:(Int,Double)) => x._2 > 0.0).collect.size;
+    val numKeys = ret.iterator.filter( (x:(Int,Double)) => x._2 > 0.0).toSequence.size;
     
     ret.transform{ (k,v) =>
       if( k == index0) {
@@ -167,8 +167,8 @@ class PitmanYorProcess private (
     def observe(x:T):PitmanYorProcess#Mapped[T] = observe(count(List(x)));
     def observe(x:T, xs:T*):PitmanYorProcess#Mapped[T] = observe(count(List(x)++xs));
     
-    def observe(c: DoubleCounter[T]):PitmanYorProcess#Mapped[T] = {
-      val classes = c.elements.filter(_._2 != 0).flatMap { case (t,vD) =>
+    def observe(c: IntCounter[T]):PitmanYorProcess#Mapped[T] = {
+      val classes = c.iterator.filter(_._2 != 0).flatMap { case (t,vD) =>
         val v = vD.toInt;
         var firstValidClass = 0;
         def nextValidClass = {
@@ -180,17 +180,20 @@ class PitmanYorProcess private (
           case Some(buf) =>
             val chooser = Rand.choose(buf);
 	          if(v < 0) {
-	            (0 until v.abs).elements map ( _ => (chooser.get,-1))
+	            (0 until v.abs).iterator map ( _ => (chooser.get,-1))
 	          } else {
-	            (0 until v).elements map ( _ => (chooser.get,1))
+	            (0 until v).iterator map ( _ => (chooser.get,1))
 	          }
           case None =>
             val clss = firstValidClass;
-            List((clss->v)).elements
+            List((clss->v)).iterator
         }
       }
       
-      val py = outer.observe(aggregate(classes map { case (k,v) => (k,v.toDouble)}));
+      val countedClasses = IntCounter[Int]();
+      countedClasses ++= classes;
+      
+      val py = outer.observe(countedClasses);
       
       val myF = forward;
       new py.Mapped(r) {
@@ -229,7 +232,7 @@ class PitmanYorProcess private (
   }
 
   override def toString() = {
-    val str = drawn.elements.map(kv => (kv._1)+ " -> " + kv._2).mkString("draws = (", ", ", ")");
+    val str = drawn.iterator.map(kv => (kv._1)+ " -> " + kv._2).mkString("draws = (", ", ", ")");
     "PY(" + theta + "," + alpha + ")" + "\n{newClass=" + drawn(unobservedIndex) + ", " + str + "}";
   }
 

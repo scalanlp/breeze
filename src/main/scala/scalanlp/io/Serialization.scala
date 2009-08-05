@@ -140,9 +140,9 @@ object Serialization {
     implicit def arrayHandler[T](implicit tH: Handler[T]) = new Handler[Array[T]] {
       def read(in: DataInput) = {
         val sz = in.readInt;
-        Array.fromFunction { i => 
+        Array.tabulate(sz) { i => 
         tH read in;
-        } (sz);
+        }
       }
 
       def write(x: Array[T], o: DataOutput) {
@@ -154,19 +154,19 @@ object Serialization {
     import Builders._;
     implicit def listHandler[T](implicit tH: Handler[T]) = collectionFromElements[T,List[T]](_.toList);
 
-    implicit def seqHandler[T](implicit tH: Handler[T]) = collectionFromElements[T,Seq[T]](_.collect);
+    implicit def seqHandler[T](implicit tH: Handler[T]) = collectionFromElements[T,Seq[T]](_.toSequence);
 
     implicit def imSetHandler[T](implicit tH: Handler[T]) = collectionFromElements[T,Set[T]](Set() ++ _);
 
     implicit def mSetHandler[T](implicit tH: Handler[T]) = collectionFromElements[T,scala.collection.mutable.Set[T]]{ elems => 
-      scala.collection.mutable.Set() ++ elems
+      scala.collection.mutable.Set() ++= elems
     };
 
     implicit def imMapHandler[K,V](implicit h: Handler[(K,V)]) = collectionFromElements[(K,V),Map[K,V]](Map() ++ _);
 
     implicit def mMapHandler[K,V](implicit h: Handler[(K,V)]) = {
       collectionFromElements[(K,V),scala.collection.mutable.Map[K,V]]{ elems => 
-        scala.collection.mutable.Map() ++ elems
+        scala.collection.mutable.Map() ++= elems
       };
     }
   }
@@ -179,7 +179,7 @@ object Serialization {
     * Serializes the elements of the collection, and builds the collection back 
     * using inflate, which must create a collection from the members.
     */
-    def collectionFromElements[T,C<:Collection[T]](inflate: Iterator[T]=>C)(implicit hT: Handler[T]) = new Handler[C] {
+    def collectionFromElements[T,C<:Iterable[T]](inflate: Iterator[T]=>C)(implicit hT: Handler[T]) = new Handler[C] {
       def write(c: C, out: DataOutput) = {
         out writeInt c.size;
         for(e <- c) {
@@ -189,7 +189,7 @@ object Serialization {
 
       def read(in: DataInput) = {
         val sz = in.readInt
-        val elems = (1 to sz) map (_ => hT read in ) elements;
+        val elems = (1 to sz) map (_ => hT read in ) iterator;
         inflate(elems);
       }
     }
@@ -273,7 +273,7 @@ object Serialization {
           val k = h read in;
           val v = doubleHandler read in
           (k,v)
-        } elements;
+        } iterator;
         c ++= elems;
         c
       }
@@ -299,7 +299,7 @@ object Serialization {
           val k = h read in;
           val v = intHandler read in
           (k,v)
-        } elements;
+        } iterator;
         c ++= elems;
         c
       }

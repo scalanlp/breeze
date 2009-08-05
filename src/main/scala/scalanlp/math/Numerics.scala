@@ -16,7 +16,7 @@ package scalanlp.math;
  limitations under the License. 
 */
 
-import counters._;
+import scalanlp.counters._;
 import Counters._;
 
 /**
@@ -61,7 +61,7 @@ object Numerics {
    *  = \sum_a lgamma(c(a))- lgamma(c.total)
    */
   def lbeta[T](c: DoubleCounter[T]) = {
-    c.values.foldLeft(-lgamma(c.total))( (acc,x)=> acc +lgamma(x));
+    c.valuesIterator.foldLeft(-lgamma(c.total))( (acc,x)=> acc +lgamma(x));
   }
 
   /**

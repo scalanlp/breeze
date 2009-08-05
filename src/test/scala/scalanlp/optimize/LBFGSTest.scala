@@ -20,6 +20,7 @@ import org.specs.matcher._;
 
 import scalala.Scalala._;
 import scalala.tensor.Vector;
+import scalanlp.counters.Counters._;
 
 object LBFGSSpecification extends Specification("LBFGS")  with ScalaCheckMatchers {
   import Arbitrary._;
@@ -28,7 +29,19 @@ object LBFGSSpecification extends Specification("LBFGS")  with ScalaCheckMatcher
     d <- arbitrary[Double]
   } yield ( (rand(n) * d value) : Vector);
 
+  val arbDoubleCounter = for {
+    v <- arbVector
+  } yield {
+    val c = DoubleCounter[String]();
+    for(i <- 0 until v.size) {
+      c(i + "") = v(i);
+    }
+    c
+  }
+
+
   val lbfgs = new LBFGS[Int,Vector](1E-4,100,4);
+
   "optimize a simple multivariate gaussian" in {
 
     def optimizeThis(init: Vector) = {
@@ -46,6 +59,29 @@ object LBFGSSpecification extends Specification("LBFGS")  with ScalaCheckMatcher
     }
 
     arbVector must pass { optimizeThis _ }
+
+  }
+
+  val lbfgsString = new LBFGS[String,DoubleCounter[String]](1E-4,100,4);
+  "optimize a simple multivariate gaussian with counters" in {
+
+    def optimizeThis(init: DoubleCounter[String]) = {
+      val f = new DiffFunction[String,DoubleCounter[String]] {
+        def valueAt(x: DoubleCounter[String]) = {
+          norm((x -3) :^ 2,1)
+        }
+        def gradientAt(x: DoubleCounter[String]):DoubleCounter[String] = {
+          (x * 2) - 6 value;
+        }
+      }
+
+      val result = lbfgsString.minimize(f,init);
+      println(result);
+      (!result.exists{ case(k,v) => Math.abs(v - 3.0) > 1E-10}
+     && !result.exists(_._2.isNaN));
+    }
+
+    arbDoubleCounter must pass { optimizeThis _ }
 
   }
 }

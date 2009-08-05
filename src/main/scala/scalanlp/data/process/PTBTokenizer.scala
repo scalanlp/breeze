@@ -30,7 +30,7 @@ object PTBTokenizer extends StdLexical with ImplicitConversions with Scanners {
 
   private def number: Parser[Token] = {
     ( rep(accept('$')|'.'|'/'|'-') ~ digit ~ rep(number)) ^^ { case pref ~ d ~ tail => 
-                                                                 SL(pref.mkString("") + d + tail.projection.map(_.chars).mkString(""))
+                                                                 SL(pref.mkString("") + d + tail.view.map(_.chars).mkString(""))
                                                              }
   }
 

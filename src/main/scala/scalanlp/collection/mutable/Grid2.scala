@@ -27,7 +27,7 @@ abstract class Grid2[V](k1Size : Int, k2Size: Int) extends Map[(Int,Int),V] with
   override def default(key: (Int,Int)):V = default(key._1,key._2)
   def default(k1Size : Int, k2Size: Int): V;
 
-  private val arr = Array.fromFunction { idx => default(idx/k2Size, idx%k2Size) } (k1Size  * k2Size);
+  private val arr = Array.tabulate(k1Size * k2Size) { idx => default(idx/k2Size, idx%k2Size) };
   
   override def apply(key: (Int,Int)):V = apply(key._1,key._2);
 
@@ -39,15 +39,15 @@ abstract class Grid2[V](k1Size : Int, k2Size: Int) extends Map[(Int,Int),V] with
     arr(i*k2Size+j) = v;
   }
 
-  def update(key: (Int,Int), v:V) {
+  override def update(key: (Int,Int), v:V) {
     update(key._1,key._2,v);
   }
   
-  def -=(key : (Int,Int)) { this(key._1,key._2) = default(key._1,key._2) }
+  def -=(key : (Int,Int))  = { this(key._1,key._2) = default(key._1,key._2); this; }
 
-  val size = arr.size;
+  override val size = arr.size;
 
-  def elements = arr.elements.zipWithIndex map { case (v,i) => ((i/k2Size,i%k2Size),v)}
-  override def keys = (0 until arr.length).elements map (i => (i/k2Size,i%k2Size));
-  override def values = arr.elements;
+  def iterator = arr.iterator.zipWithIndex map { case (v,i) => ((i/k2Size,i%k2Size),v)}
+  override def keys = (0 until arr.length).iterator map (i => (i/k2Size,i%k2Size));
+  override def values = arr.iterator;
 }

@@ -17,7 +17,7 @@ class LinearClassifier[L,F](val featureIndex: Index[F],
                             extends Classifier[L,Map[F,Double]] {
   def scores(o: Map[F,Double]) = {
     val c = DoubleCounter[L]();
-    for( (l,i) <- labels.elements.zipWithIndex) {
+    for( (l,i) <- labels.iterator.zipWithIndex) {
       val lWeights = featureWeights(i);
       var score = intercepts(i);
       for( (f,v) <- o;
@@ -31,18 +31,18 @@ class LinearClassifier[L,F](val featureIndex: Index[F],
 }
 
 object LinearClassifier {
-  def fromRegression[F](data: Collection[Example[Boolean,Map[F,Double]]]) = {
+  def fromRegression[F](data: Iterable[Example[Boolean,Map[F,Double]]]) = {
     val featureIndex = Index[F]();
-    val idata = ( for(e <- data.elements) yield { 
+    val idata = ( for(e <- data.iterator) yield { 
         for( map <- e;
              fv <- map) yield {
         (featureIndex(fv._1),fv._2);
       }
-    } ).collect
+    } ).toSequence
 
     val vdata = new DenseMatrix(data.size,featureIndex.size+1);
     val y = new DenseVector(data.size);
-    for( (e,i) <- idata.elements.zipWithIndex ) {
+    for( (e,i) <- idata.iterator.zipWithIndex ) {
       y(i) = if(e.label) 1 else -1; 
       vdata(i,featureIndex.size) = 1;
       for( (f,v) <- e.features) {
@@ -51,21 +51,24 @@ object LinearClassifier {
     }
 
     val lI = DenseMatrix(featureIndex.size+1,featureIndex.size+1)();
-    lI := diag(featureIndex.size+1) * 1E-6;
+    lI := diag(featureIndex.size+1)
+    lI *= 1E-6;
 
     val xtx = lI;
     xtx :+= vdata.transpose * vdata;
 
     val xty = vdata.transpose * y value;
-    val beta = xtx \ xty;
-    val betaArray = beta.values.collect.toArray;
+    val denseXtY = DenseVector(xty.size)(0);
+    denseXtY := xty;
+    val beta = xtx \ denseXtY;
+    val betaArray = beta.valuesIterator.toSequence.toArray;
     val trueWeights = betaArray.take(betaArray.size-1).toArray;
-    val falseWeights = Array.make(trueWeights.size,0.0);
+    val falseWeights = Array.fill(trueWeights.size)(0.0);
     new LinearClassifier(featureIndex,List(true,false),Array(trueWeights,falseWeights),Array(betaArray.last,0));
   }
 
   def testLR = {
-    import stats.sampling.Rand;
+    import scalanlp.stats.sampling.Rand;
     
     val trueDataGen = for { 
       x <- Rand.gaussian(4,1);

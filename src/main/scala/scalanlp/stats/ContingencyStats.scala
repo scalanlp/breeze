@@ -16,11 +16,11 @@ package scalanlp.stats;
  limitations under the License. 
 */
 
+import scalanlp.classify.Classifier;
+import scalanlp.data._;
 
 import ContingencyStats._;
 import DescriptiveStats._;
-import classify.Classifier;
-import data._;
 
 /** Provides precision, recall and f-score for labellings.
 * @author dlwh
@@ -63,7 +63,7 @@ class ContingencyStats[L] private (private val classWise: Map[L,Table]) {
   def f(l:L,beta:Double) = classWise(l).f(beta);
 
   lazy val microaveraged = new {
-    private val tbl = classWise.values.foldLeft(Table(0,0,0))(_+_);
+    private val tbl = classWise.valuesIterator.foldLeft(Table(0,0,0))(_+_);
     val precision = tbl.precision;
     val recall = tbl.recall;
     val f = tbl.f;
@@ -71,10 +71,10 @@ class ContingencyStats[L] private (private val classWise: Map[L,Table]) {
   }
 
   lazy val macroaveraged = new {
-    val precision = mean(classWise.values.map(_.precision))
-    val recall = mean(classWise.values.map(_.recall))
-    val f = mean(classWise.values.map(_.f))
-    def f(beta:Double) = mean(classWise.values.map(_.f(beta)))
+    val precision = mean(classWise.valuesIterator.map(_.precision))
+    val recall = mean(classWise.valuesIterator.map(_.recall))
+    val f = mean(classWise.valuesIterator.map(_.f))
+    def f(beta:Double) = mean(classWise.valuesIterator.map(_.f(beta)))
   }
 
   private def r(x:Double) = "%.4f" format x;
@@ -107,7 +107,7 @@ object ContingencyStats {
 
   def apply[L](guessed: Seq[L], gold: Seq[L]):ContingencyStats[L] = {
     require(guessed.length == gold.length);
-    (guessed.elements zip gold.elements).foldLeft(ContingencyStats[L]())(_+_);
+    (guessed.iterator zip gold.iterator).foldLeft(ContingencyStats[L]())(_+_);
   }
 
   class Accuracy(val numRight: Int, val numTotal: Int) {

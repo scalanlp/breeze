@@ -16,13 +16,14 @@ package scalanlp.optimize
  limitations under the License. 
 */
 
-import stats.sampling._;
-import math.Arrays._;
-
-import util._;
-import Log._;
 import scalala.tensor.Vector;
 import scalala.Scalala._;
+
+import scalanlp.stats.sampling._;
+import scalanlp.math.Arrays._;
+
+import scalanlp.util._;
+import Log._;
 
 /**
 * Implements Contrastive Divergence for maximizing the probability of parameters.
@@ -61,7 +62,7 @@ class ContrastiveDivergenceOptimizer[X](trans: Vector=>X=>Rand[X],
   * True if the 2 norm of the difference is sufficiently small
   */
   def converged(currentTheta: Vector, nextTheta: Vector) = {
-   norm(currentTheta - nextTheta,2)< (1E-4 * 1E-4)
+    norm(currentTheta :- nextTheta,2)< (1E-4 * 1E-4) 
   }
 
   /**
@@ -84,7 +85,7 @@ class ContrastiveDivergenceOptimizer[X](trans: Vector=>X=>Rand[X],
 
 object TestCD {
   def main(arg: Array[String]) {
-    val data = (new Gaussian(3,1).samples take 1000).collect;
+    val data = (new Gaussian(3,1).samples take 1000).toSequence;
     def trans(mean: Vector) = { (x:Double) =>
       new Gaussian(mean(0),1)
     }

@@ -16,10 +16,11 @@ package scalanlp.data;
  limitations under the License. 
 */
 
+import scala.collection.mutable.StringBuilder;
+import scala.io.Source;
 
-import scalax.io.Implicits._;
 import java.io.File;
-import counters.Counters._;
+import scalanlp.counters.Counters._;
 
 
 /**
@@ -35,7 +36,7 @@ case class Text(val id:String, val contents: String) extends Observation[String]
 
 object Text {
  def fromFile(f :File) = {
-   new Text(f.getName,f.slurp);
+   new Text(f.getName,Source.fromFile(f).getLines.toSequence.foldLeft(new StringBuilder)( _ append _).toString);
  }
 }
 
@@ -50,6 +51,6 @@ object LabeledText {
    * Creates a new text with the file as the id, and the directory name as the label.
    */
   def fromFile(f:File) = {
-    new Text(f.getName,f.slurp).withLabel(f.getParentFile.getName);
+    new Text(f.getName,Source.fromFile(f).getLines.toSequence.foldLeft(new StringBuffer)(_ append _).toString).withLabel(f.getParentFile.getName);
   }
 }
