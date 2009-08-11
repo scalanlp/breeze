@@ -16,8 +16,8 @@ package scalanlp.collection.immutable;
  limitations under the License. 
 */
 
-
 import scala.collection.mutable.PriorityQueue;
+import scala.collection.generic._;
 
 /**
  * Represents a beam, which is essentially a priority queue
@@ -25,11 +25,13 @@ import scala.collection.mutable.PriorityQueue;
  * 
  * @author dlwh
  */
-class Beam[T](val maxSize:Int, xs : T*)(implicit o : Ordering[T]) { outer =>
+class Beam[T](val maxSize:Int, xs : T*)(implicit o : Ordering[T]) extends Iterable[T] 
+  with IterableTemplate[T,Beam[T]] with Addable[T,Beam[T]] { outer =>
   assert(maxSize >= 0)
   val heap = trim(BinomialHeap(xs:_*));
 
-  val size = heap.size;
+  override val size = heap.size;
+  def this(maxSize: Int)(implicit o: Ordering[T]) = this(maxSize,Nil:_*)(o);
 
   private def trim(h2 : BinomialHeap[T]) = {
     var h = h2;
@@ -68,20 +70,17 @@ class Beam[T](val maxSize:Int, xs : T*)(implicit o : Ordering[T]) { outer =>
     }
   }
   
-  def filter(f : T=>Boolean) = new Beam[T](maxSize) {
+  override def filter(f : T=>Boolean) = new Beam[T](maxSize) {
     override val heap = BinomialHeap[T]() ++ outer.heap.filter(f);
   }
+
+  override protected[this] def newBuilder = new AddingBuilder[T,Beam[T]](new Beam[T](maxSize));
 
 
   def +(x:T) = new Beam[T](maxSize) {
     override val heap = cat(outer.heap,x);
   }
   
-  def ++(x:Iterator[T]) : Beam[T] = new Beam[T](maxSize) {
-    override val heap = x.foldLeft(outer.heap)(cat);
-  }
-  def ++(x:Iterable[T]) : Beam[T] = {this ++ x.iterator;}
-
   def iterator = heap.iterator;
   override def toString() = iterator.mkString("Beam(",",",")");
 }
