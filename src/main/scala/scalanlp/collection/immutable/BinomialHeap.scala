@@ -16,6 +16,10 @@ package scalanlp.collection.immutable;
  limitations under the License. 
 */
 
+import scala.collection.generic.Addable;
+import scala.collection.generic.AddingBuilder;
+import scala.collection.generic.IterableTemplate;
+
 
 import scalanlp.util.ScalaQL;
 
@@ -23,7 +27,8 @@ import scalanlp.util.ScalaQL;
 * From Okasaki's Functional Data Structures. Represents a functional heap
 */
 @serializable
-class BinomialHeap[T<%Ordered[T]] extends Iterable[T] {
+class BinomialHeap[T<%Ordered[T]] extends Iterable[T] with IterableTemplate[T,BinomialHeap[T]] 
+    with Addable[T,BinomialHeap[T]] {
   import BinomialHeap._;
   protected val trees: List[Node[T]] = Nil;
   override val size = 0;
@@ -46,10 +51,9 @@ class BinomialHeap[T<%Ordered[T]] extends Iterable[T] {
       else insertTree(n1 link n2, merge(r1,r2,acc));
   }
 
-  def ++(other: Iterator[T]): BinomialHeap[T] = other.foldLeft(this)(_+_);
-  def ++(other: Iterable[T]): BinomialHeap[T] = this ++ other.iterator
-
   def min = get.get;
+
+  protected[this] override def newBuilder = new AddingBuilder[T,BinomialHeap[T]](new BinomialHeap);
 
   lazy val get = if(trees.isEmpty) None else Some(findMin(trees));
   private def findMin(trees : List[Node[T]]): T = {
