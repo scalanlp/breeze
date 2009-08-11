@@ -19,6 +19,8 @@ package scalanlp.optimize;
 import scalala._;
 import scalala.Scalala._;
 import scalala.tensor._;
+import scalala.tensor.operators._;
+import TensorShapes._;
 
 /**
 * Represents a differentiable function.
@@ -38,7 +40,7 @@ trait DiffFunction[K,T<:Tensor1[K]] extends (T=>Double) {
 }
 
 object DiffFunction {
-  def withL2Regularization[K,T<:Tensor1[K]](d: DiffFunction[K,T],weight: Double) = new DiffFunction[K,T] {
+  def withL2Regularization[K,T<:TensorSelfOp[K,T,Shape1Col] with Tensor1[K]](d: DiffFunction[K,T],weight: Double) = new DiffFunction[K,T] {
     def gradientAt(x:T):T = {
       val grad = d.gradientAt(x);
       adjustGradient(grad);
