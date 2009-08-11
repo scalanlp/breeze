@@ -17,6 +17,7 @@ package scalanlp.collection.mutable;
 */
 
 import scala.collection.mutable.ArrayBuffer;
+import scala.collection.generic._;
 
 /**
 * Wraps an ArrayBuffer with a Map. Note the odd behavior for -=
@@ -29,13 +30,14 @@ import scala.collection.mutable.ArrayBuffer;
 *
 * @author dlwh
 */
-class ArrayMap[V](private val arr: ArrayBuffer[V]) extends scala.collection.mutable.Map[Int,V] {
+class ArrayMap[V](private val arr: ArrayBuffer[V]) extends scala.collection.mutable.Map[Int,V]
+    with MutableMapTemplate[Int,V,ArrayMap[V]] {
   def this() = this(new ArrayBuffer[V]())
   override def default(i: Int): V = defValue;
   def defValue:V = throw new NoSuchElementException("");
   override def apply(i: Int) = get(i).getOrElse(default(i));
-  def get(i : Int) = if(i < arr.length) Some(arr(i)) else None;
-  def += (k: (Int,V)): this.type = { update(k._1,k._2); this};
+  override def get(i : Int) = if(i < arr.length) Some(arr(i)) else None;
+  override def += (k: (Int,V)): this.type = { update(k._1,k._2); this};
   override def update(i : Int, v : V) {
     if(i > arr.length)
       arr ++= (arr.length until i) map (default _)
@@ -44,6 +46,9 @@ class ArrayMap[V](private val arr: ArrayBuffer[V]) extends scala.collection.muta
       arr += v;
     else arr(i) = v; 
   }
+
+  override def empty = new ArrayMap();
+
   /**
   * Note that removing an element in the array <b>downshifts</b>
   * all elements after it.

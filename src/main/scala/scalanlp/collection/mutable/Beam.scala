@@ -18,7 +18,7 @@ package scalanlp.collection.mutable;
 
 
 import scala.collection.mutable.PriorityQueue;
-import scala.collection.generic.BuilderFactory;
+import scala.collection.generic._;
 
 /**
  * Represents a beam, which is essentially a priority queue
@@ -26,12 +26,14 @@ import scala.collection.generic.BuilderFactory;
  * 
  * @author dlwh
  */
-class Beam[T](val maxSize:Int, xs:T*)(implicit o : Ordering[T]) { outer =>
+class Beam[T](val maxSize:Int, xs:T*)(implicit o : Ordering[T]) extends Iterable[T] 
+    with IterableTemplate[T,Beam[T]] with Addable[T,Beam[T]] 
+    with Growable[T] { outer =>
   assert(maxSize >= 0)
   private val queue = new PriorityQueue[T]()(o.reverse);
   queue ++= xs;
 
-  def size = queue.size;
+  override def size = queue.size;
 
   def map[U](f: T=>U)(implicit oU: Ordering[U]) = {
     val q = new PriorityQueue[U]()(oU.reverse);
@@ -58,12 +60,7 @@ class Beam[T](val maxSize:Int, xs:T*)(implicit o : Ordering[T]) { outer =>
   }
 
   def +(x:T) = {this += x; this}
-  def ++(x:Iterator[T]) = {this ++= x; this};
-  def ++(x:Iterable[T]) = {this ++= x; this};
-
-  def +=(x:T) = { cat(queue,x); }
-  def ++=(x:Iterator[T]) = { x.foreach{cat(queue,_)}}
-  def ++=(x:Iterable[T]) = { x.foreach(cat(queue,_))}
+  def +=(x:T) = { cat(queue,x); this }
 
   private def trim() {
     while(queue.size > maxSize) {
@@ -78,7 +75,9 @@ class Beam[T](val maxSize:Int, xs:T*)(implicit o : Ordering[T]) { outer =>
 
   def iterator = queue.iterator;
   override def toString() = iterator.mkString("Beam(",",",")");
+  def clear = queue.clear;
 
+  override protected[this] def newBuilder = new AddingBuilder[T,Beam[T]](new Beam[T](maxSize));
 }
 
 object Beam {
