@@ -15,6 +15,8 @@ package scalanlp.math;
  See the License for the specific language governing permissions and
  limitations under the License. 
 */
+
+/*
 import org.scalacheck._
 import org.specs._;
 import org.specs.matcher._;
@@ -48,3 +50,4 @@ object LogDoubleSpecification extends Specification("LogDouble") with ScalaCheck
 
 import org.specs.runner._;
 class LogDoubleTest extends JUnit4(LogDoubleSpecification);
+*/

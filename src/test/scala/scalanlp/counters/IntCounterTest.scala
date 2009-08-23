@@ -16,18 +16,17 @@ package scalanlp.counters;
  limitations under the License. 
 */
 
+/*
 import org.scalacheck._
-import org.specs._;
-import org.specs.matcher._;
+import org.scalatest._;
 import scalanlp.util.Implicits._;
 import scalanlp.counters._;
 import Counters._;
-
-object IntCounterSpec extends Specification("IntCounter") with ScalaCheckMatchers {
+class IntCounterSuite extends JUnitSuite with Checkers {
   val arbitraryCounter = for(x <- Gen.listOf(Arbitrary.arbitrary[Int])) yield Counters.count(x);
   val arbitraryCounterPair = for(c1 <- arbitraryCounter; c2 <- arbitraryCounter) yield (c1,c2);
   val arbIntCounterPair = for(c1 <- arbitraryCounter; i <- Arbitrary.arbitrary[Int]) yield (c1,i)
-  "clear" in {
+  test("clear") {
     arbitraryCounter must pass  {(c : IntCounter[Int])  => c.clear(); c.size == 0 && c.total == 0}
     arbIntCounterPair must pass  {(cp : (IntCounter[Int],Int))  => 
       val (c,i) = cp;
@@ -35,7 +34,7 @@ object IntCounterSpec extends Specification("IntCounter") with ScalaCheckMatcher
       c.get(i) == None && c(i) == 0 
     }
   }
-  "sum and clear" in {
+  test("sum and clear") {
     arbitraryCounterPair must pass {(cp:(IntCounter[Int],IntCounter[Int])) =>
       val (c,c2) = cp;
       c += c2; 
@@ -43,7 +42,7 @@ object IntCounterSpec extends Specification("IntCounter") with ScalaCheckMatcher
       c.size == 0 && c.total == 0
     }
   }
-  "sum preserves total" in {
+  test("sum preserves total") {
     arbitraryCounterPair must pass { (cp:(IntCounter[Int],IntCounter[Int]))  => 
       val (c,c2) = cp; 
       val expTotal = c.total + c2.total;
@@ -53,16 +52,8 @@ object IntCounterSpec extends Specification("IntCounter") with ScalaCheckMatcher
     }
   }
 
-/*
-  "normalize has total 1" in {
-    arbitraryCounter must pass { (c:(IntCounter[Int]))  =>
-      c.total == 0 || c.normalized.total =~= 1.0
-    }
-  }
-  */
-
-  "scale preserves total" in {
-    arbIntCounterPair must pass { (cp:(IntCounter[Int],Int))  => 
+  test("scale preserves total") {
+    check { (cp:(IntCounter[Int],Int))  => 
       val (c,i) = cp;
       (i == 0) ||  {
         val expTotal = c.total/i;
@@ -71,7 +62,7 @@ object IntCounterSpec extends Specification("IntCounter") with ScalaCheckMatcher
         c.total.abs <= expTotal.abs;
       }
     }
-    arbIntCounterPair must pass { (cp:(IntCounter[Int],Int))  => 
+    check { (cp:(IntCounter[Int],Int))  => 
       val (c,i) = cp;
       (i == 0) || {
         val expTotal = c.total*i;
@@ -81,6 +72,4 @@ object IntCounterSpec extends Specification("IntCounter") with ScalaCheckMatcher
     }
   }
 }
-
-import org.specs.runner._;
-class IntCounterTest extends JUnit4(IntCounterSpec);
+*/

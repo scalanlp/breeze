@@ -15,7 +15,7 @@ package scalanlp.stats.sampling
  See the License for the specific language governing permissions and
  limitations under the License. 
 */
-
+/*
 import org.scalacheck._
 import org.specs._;
 import org.specs.matcher._;
@@ -78,3 +78,4 @@ object PitmanYorProcessSpec extends Specification with ScalaCheckMatchers {
 
 import org.specs.runner._;
 class PitmanYorProcessTest extends JUnit4(PitmanYorProcessSpec);
+*/
