@@ -8,10 +8,6 @@
   <properties>
     <scala.version>2.8.0.r18462-b20090811081019</scala.version>
   </properties>
-  <issueManagement>
-    <system>redmine</system>
-    <url>http://bugs.scalanlp.org/projects/show/core</url>
-  </issueManagement>
   <inceptionYear>2008</inceptionYear>
   <mailingLists>
     <mailingList>
@@ -24,8 +20,8 @@
     <developer>
       <id>dlwh</id>
       <name>David Leo Wright Hall</name>
-      <email>dlwh [at] cs stanford edu</email>
-      <organization>Stanford University</organization>
+      <email>dlwh [at] cs berkeley edu</email>
+      <organization>University of California, Berkeley</organization>
       <timezone>-8</timezone>
     </developer>
     <developer>
