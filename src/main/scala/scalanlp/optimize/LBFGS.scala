@@ -44,7 +44,7 @@ import scalala.tensor.dense._;
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
 class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](tol: Double, maxIter: Int, m: Int)
-  (implicit private val op: TensorBuilder[T], arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col])
+  (implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col])
   extends Minimizer[T,DiffFunction[K,T]] with Logged {
   require(tol > 0);
   require(m > 0);
@@ -147,8 +147,7 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](tol: Double, maxIt
       memStep: ArrayBuffer[T],
       memGradStep: ArrayBuffer[T],
       memRho: ArrayBuffer[Double]): T = {
-    val dir = op.like(grad);
-    dir := grad;
+    val dir = grad.copy;
     val as = new Array[Double](m);
 
     for(i <- (memStep.length-1) to 0 by -1) {

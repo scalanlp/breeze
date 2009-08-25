@@ -48,13 +48,6 @@ trait DoubleCounterFactory {
   protected type InternalDoubleCounter[T1,T2] <: DoubleCounter[T2] with PairStatsTracker[T1,T2];
 
   // Many many implicits to make all the math work.
-  implicit def counterBuilder[T] = new TensorBuilder[DoubleCounter[T]] {
-    def like(c: DoubleCounter[T]) = mkDoubleCounter[T];
-  }
-
-  implicit def pairedCounterBuilder[T,U] = new TensorBuilder[PairedDoubleCounter[T,U]] {
-    def like(c: PairedDoubleCounter[T,U]) = mkPairedDoubleCounter[T,U];
-  }
   implicit def doubleCounterArith[T] = new Tensor1Arith[T,DoubleCounter[T],Tensor1[T],Shape1Col];
   implicit def doubleCounterArithR[T] = new Tensor1Arith[T,DoubleCounter[T],Tensor1[T],Shape1Row];
   implicit def pDoubleCounterArith[T1,T2] = 
