@@ -22,7 +22,7 @@ import scalala.tensor._;
 import scalala.collection._;
 
 /**
-* Base class for classes like {#link PairedDoubleCounter}. Roughly, it is a 
+* Base class for classes like {#link Counters#PairedDoubleCounter}. Roughly, it is a 
 * two-dimensional map/tensor/matrix with other counters as "rows."
 *
 * @author dlwh
@@ -60,6 +60,8 @@ abstract class BasePairedDoubleCounter[K1,K2]
   def domain = {
     ProductSet(MergeableSet(k1Set),MergeableSet(k2Set));
   }
+
+  def counters = theMap.valuesIterator;
 
   // todo: make this faster.
   def activeDomain = theMap.foldLeft[MergeableSet[(K1,K2)]](EmptySet()) { (set,kc) =>
