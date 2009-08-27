@@ -55,7 +55,10 @@ trait BaseDoubleCounter[T] extends Tensor1[T] with TrackedStatistics[T] { outer 
   */
   def update(t: T, v: Double) {
     val oldV = counts(t);
-    counts(t) = v;
+    if(v == default)
+      counts -= t;
+    else 
+      counts(t) = v;
     updateStatistics(t,oldV,v);
   }
 
