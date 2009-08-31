@@ -67,7 +67,7 @@ trait TrackedIntStatistics[T] {
   /**
   * Called by implementing classes when a new key's value is changed in some way.
   */
-  protected final def updateStatistics(t: T, oldV: Int, newV: Int) {
+  protected[counters] final def updateStatistics(t: T, oldV: Int, newV: Int) {
     statistics foreach ( _.apply(t,oldV,newV) );
   }
 }

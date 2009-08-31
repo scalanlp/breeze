@@ -28,8 +28,10 @@ import scalala.collection._;
 * @author dlwh
 */
 abstract class BasePairedIntCounter[K1,K2] 
-    extends PairedIntCounter.CounterFactory[K1,K2] 
-    with PartialMap[(K1,K2),Int] with TrackedIntStatistics[(K1,K2)] { outer =>
+    extends PartialMap[(K1,K2),Int] with TrackedIntStatistics[(K1,K2)] { outer =>
+
+  type IntCounter <: BaseIntCounter[K2] with PairIntStatsTracker[K1,K2];
+  protected def mkIntCounter(k1:K1): IntCounter;
 
   private val theMap = new HashMap[K1,IntCounter] {
     override def default(k1:K1) = getOrElseUpdate(k1,mkIntCounter(k1));
@@ -74,7 +76,7 @@ abstract class BasePairedIntCounter[K1,K2]
     yield ( (k1,k2),v);
   }
 
-  def apply(k1 : K1) = getRow(k1);
+  def apply(k1 : K1):IntCounter = getRow(k1);
   def get(k1 : K1, k2 : K2) : Option[Int] = theMap.get(k1).flatMap(_.get(k2))
   def apply(k1 : K1, k2: K2) : Int= apply(k1)(k2);
   def apply(k : (K1,K2)) : Int= apply(k._1)(k._2);
@@ -92,7 +94,7 @@ abstract class BasePairedIntCounter[K1,K2]
 
   }
 
-  def getRow(k1:K1) = theMap(k1);
+  def getRow(k1:K1):IntCounter = theMap(k1);
   def getCol(k2:K2) = {
     val result = Counters.IntCounter[K1]();
     for( (k1,c) <- theMap) {
@@ -104,6 +106,9 @@ abstract class BasePairedIntCounter[K1,K2]
     result;
   }
 
+
+  def rows = theMap.iterator;
+
   /** 
    * Returns an iterator over each (K1,K2,Value) pair
    */ 
@@ -113,67 +118,29 @@ abstract class BasePairedIntCounter[K1,K2]
     yield (k1,k2,v);
   }
 
-  def +=(that : Iterable[(K1,K2,Int)]) {
-    this += that.iterator;
+  def ++=(that : Iterable[(K1,K2,Int)]) {
+    this ++= that.iterator;
   }
 
-  def +=(that : Iterator[(K1,K2,Int)]) {
+  def ++=(that : Iterator[(K1,K2,Int)]) {
     for( (k1,k2,v) <- that) {
       this(k1,k2) += v;
     }
   }
+
+  // Replication of some operators from Tensor we want here:
+  def +=(pc: BasePairedIntCounter[K1,K2]) {
+    for( (k1,c) <- pc.rows) {
+      this(k1) += c;
+    }
+  }
 }
 
-import PairedIntCounter._;
+trait PairIntStatsTracker[K1,K2] extends TrackedIntStatistics[K2] {
+  protected def outer: TrackedIntStatistics[(K1,K2)];
+  protected def k1: K1;
 
-class PairedIntCounter[K1,K2] extends BasePairedIntCounter[K1,K2] 
-    with TrackedIntStatistics.Total[(K1,K2)]
-    with TotaledCounterFactory[K1,K2];
-
-object PairedIntCounter {
-  trait CounterFactory[K1,K2] { outer: BasePairedIntCounter[K1,K2] =>
-
-    protected type SelfType[T1,T2] <: BasePairedIntCounter[T1,T2];
-    protected def mkPairCounter[T1,T2] : SelfType[T1,T2];
-
-    type IntCounter <: BaseIntCounter[K2] with PairStatsTracker;
-    protected def mkIntCounter(k1:K1): IntCounter;
-
-    trait PairStatsTracker extends TrackedIntStatistics[K2] { 
-      protected def k1: K1;
-      statistics += { (k2: K2, oldV: Int, newV: Int) =>
-        outer.updateStatistics( (k1,k2), oldV, newV); 
-      }
-    }
-
-
-  }
-
-  trait BareCounterFactory[K1,K2] extends CounterFactory[K1,K2] {outer: BasePairedIntCounter[K1,K2] =>
-    protected def mkIntCounter(k1:K1): IntCounter = new TIntCounter(k1);
-
-    protected type SelfType[T1,T2] = BasePairedIntCounter[T1,T2];
-    type IntCounter = TIntCounter;
-    protected def mkPairCounter[T1,T2] : SelfType[T1,T2] = new BasePairedIntCounter[T1,T2] with BareCounterFactory[T1,T2];
-
-    class TIntCounter(protected val k1: K1) 
-        extends BaseIntCounter[K2] with PairStatsTracker {
-      def copy = new TIntCounter(k1);
-    }
-  }
-
-  trait TotaledCounterFactory[K1,K2] extends CounterFactory[K1,K2] {
-    outer: BasePairedIntCounter[K1,K2] =>
-
-     protected type SelfType[T1,T2] = PairedIntCounter[T1,T2];
-     protected def mkPairCounter[T1,T2] : SelfType[T1,T2] = new PairedIntCounter[T1,T2];
-     def mkIntCounter(k1: K1) = new TIntCounter(k1);
-     type IntCounter = TIntCounter;
-
-
-     class TIntCounter(protected val k1: K1) 
-        extends BaseIntCounter[K2] with PairStatsTracker with TrackedIntStatistics.Total[K2] {
-        def copy = new TIntCounter(k1);
-     }
+  statistics += { (k2: K2, oldV: Int, newV: Int) =>
+    outer.updateStatistics( (k1,k2),oldV,newV);
   }
 }

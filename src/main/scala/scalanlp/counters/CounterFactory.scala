@@ -172,10 +172,25 @@ trait IntCounterFactory {
   */
   type IntCounter[T] <: AbstractIntCounter[T];
 
+  type PairedIntCounter[K1,K2] <: AbstractPairedIntCounter[K1,K2];
+
   /**
   * Given a domain (in the form of a mergeable set) create a new IntCounter.
   */
   protected def mkIntCounter[T]: IntCounter[T];
+
+  protected type InternalIntCounter[T1,T2] <: IntCounter[T2] with PairIntStatsTracker[T1,T2];
+
+  /**
+  * Factory method supplied by implementors
+  */
+  protected def mkIntCounterFor[T1,T2](key: T1, pc: PairedIntCounter[T1,T2])
+      : InternalIntCounter[T1,T2];
+
+  /**
+  * Factory method supplied by implementors
+  */
+  protected def mkPairedIntCounter[T,U]: PairedIntCounter[T,U];
 
 
   /**
@@ -187,6 +202,23 @@ trait IntCounterFactory {
       c += this;
       c;
     }
+  }
+
+
+  /**
+  * Trait that implementors of IntCounterFactory should implement.
+  */
+  abstract trait AbstractPairedIntCounter[T1,T2] extends BasePairedIntCounter[T1,T2] { this: PairedIntCounter[T1,T2] =>
+
+    type IntCounter = InternalIntCounter[T1,T2];
+    protected def mkIntCounter(k1:T1): IntCounter = mkIntCounterFor(k1,this);
+
+    def copy = { 
+      val c = mkPairedIntCounter[T1,T2];
+      c += this;
+      c;
+    }
+    def like = mkPairedIntCounter[T1,T2];
   }
 
 

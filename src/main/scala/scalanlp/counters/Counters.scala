@@ -37,11 +37,18 @@ object Counters extends DoubleCounterFactory with IntCounterFactory {
   protected abstract class DefaultInternalDoubleCounter[T1,T2] extends 
     DefaultDoubleCounter[T2] with PairStatsTracker[T1,T2];
 
+  class DefaultPairedIntCounter[T1,T2] extends 
+    AbstractPairedIntCounter[T1,T2] with TrackedIntStatistics.Total[(T1,T2)];
+
+  protected abstract class DefaultInternalIntCounter[T1,T2] extends 
+    DefaultIntCounter[T2] with PairIntStatsTracker[T1,T2];
 
   type DoubleCounter[T] = DefaultDoubleCounter[T];
   type IntCounter[T] = DefaultIntCounter[T];
   type PairedDoubleCounter[T1,T2] = DefaultPairedDoubleCounter[T1,T2];
   protected type InternalDoubleCounter[T1,T2] = DefaultInternalDoubleCounter[T1,T2];
+  type PairedIntCounter[T1,T2] = DefaultPairedIntCounter[T1,T2];
+  protected type InternalIntCounter[T1,T2] = DefaultInternalIntCounter[T1,T2];
 
 
   def mkDoubleCounter[T] = {
@@ -66,6 +73,17 @@ object Counters extends DoubleCounterFactory with IntCounterFactory {
     }
   }
 
+  def mkPairedIntCounter[T1,T2]: PairedIntCounter[T1,T2] = {
+    new DefaultPairedIntCounter[T1,T2];
+  }
+
+  protected def mkIntCounterFor[T1,T2](key: T1, pc: PairedIntCounter[T1,T2])
+      : InternalIntCounter[T1,T2] = {
+    new DefaultInternalIntCounter[T1,T2] { 
+      def outer = pc;
+      def k1 = key;
+    }
+  }
 
   /**
   * Object for easily creating "default" DoubleCounters
@@ -93,6 +111,14 @@ object Counters extends DoubleCounterFactory with IntCounterFactory {
     */
     def apply[T1,T2]():PairedDoubleCounter[T1,T2] = new PairedDoubleCounter[T1,T2];
   }
+
+  object PairedIntCounter {
+    /**
+    * Create a new PairedIntCounter;
+    */
+    def apply[T1,T2]():PairedIntCounter[T1,T2] = new PairedIntCounter[T1,T2];
+  }
+
 }
 
 

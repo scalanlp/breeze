@@ -61,7 +61,7 @@ abstract class BasePairedDoubleCounter[K1,K2]
     ProductSet(MergeableSet(k1Set),MergeableSet(k2Set));
   }
 
-  def counters = theMap.valuesIterator;
+  def rows = theMap.iterator;
 
   // todo: make this faster.
   def activeDomain = theMap.foldLeft[MergeableSet[(K1,K2)]](EmptySet()) { (set,kc) =>
