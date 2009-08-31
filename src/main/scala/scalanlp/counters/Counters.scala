@@ -23,9 +23,8 @@ import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
 
 import scalanlp.util._;
 
-
 object Counters extends DoubleCounterFactory with IntCounterFactory {
-  class DefaultDoubleCounter[T] extends 
+  class DefaultDoubleCounter[T] extends
     AbstractDoubleCounter[T] with TrackedStatistics.Total[T];
 
   class DefaultIntCounter[T] extends 
@@ -50,18 +49,17 @@ object Counters extends DoubleCounterFactory with IntCounterFactory {
   type PairedIntCounter[T1,T2] = DefaultPairedIntCounter[T1,T2];
   protected type InternalIntCounter[T1,T2] = DefaultInternalIntCounter[T1,T2];
 
-
-  def mkDoubleCounter[T] = {
+  protected def mkDoubleCounter[T] = {
     val c = new DefaultDoubleCounter[T];
     c;
   }
 
-  def mkIntCounter[T] = {
+  protected def mkIntCounter[T] = {
     val c = new DefaultIntCounter[T];
     c;
   }
 
-  def mkPairedDoubleCounter[T1,T2]: PairedDoubleCounter[T1,T2] = {
+  protected def mkPairedDoubleCounter[T1,T2]: PairedDoubleCounter[T1,T2] = {
     new DefaultPairedDoubleCounter[T1,T2];
   }
 
@@ -73,7 +71,7 @@ object Counters extends DoubleCounterFactory with IntCounterFactory {
     }
   }
 
-  def mkPairedIntCounter[T1,T2]: PairedIntCounter[T1,T2] = {
+  protected def mkPairedIntCounter[T1,T2]: PairedIntCounter[T1,T2] = {
     new DefaultPairedIntCounter[T1,T2];
   }
 
