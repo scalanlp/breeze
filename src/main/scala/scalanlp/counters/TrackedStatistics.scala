@@ -45,7 +45,7 @@ object TrackedStatistics {
   */
   trait LogTotal[T] extends TrackedStatistics[T] {
     def logTotal = logTotal_;
-    private var logTotal_ = 0.0;
+    private var logTotal_ = Math.NEG_INF_DOUBLE;
     statistics += { (t :T, oldV: Double, newV: Double) =>
       logTotal_ = math.Numerics.logSum(logTotal_, (newV - oldV));
     }
