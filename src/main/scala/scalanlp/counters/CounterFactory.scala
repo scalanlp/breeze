@@ -70,7 +70,7 @@ trait DoubleCounterFactory {
     }
   }
 
-  implicit def matrixVPBuilder[T,U]: TensorProductBuilder[PairedDoubleCounter[T,U],DoubleCounter[U],DoubleCounter[T],Shape2,Shape1Col,Shape1Col] = {
+  implicit def pCounterVPBuilder[T,U]: TensorProductBuilder[PairedDoubleCounter[T,U],DoubleCounter[U],DoubleCounter[T],Shape2,Shape1Col,Shape1Col] = {
     new TensorProductBuilder[PairedDoubleCounter[T,U],DoubleCounter[U],DoubleCounter[T],Shape2,Shape1Col,Shape1Col] {
       def create(t: PairedDoubleCounter[T,U], t2: DoubleCounter[U]):DoubleCounter[T] = mkDoubleCounter[T];
       def makeProduct(t: Tensor2Op[PairedDoubleCounter[T,U]], t2: ColTensor1Op[DoubleCounter[U]]) = {
@@ -79,7 +79,7 @@ trait DoubleCounterFactory {
     }
   }
 
-  implicit def matrixPBuilder[T,U,V]: TensorProductBuilder[PairedDoubleCounter[T,U],PairedDoubleCounter[U,V],PairedDoubleCounter[T,V],Shape2,Shape2,Shape2] = {
+  implicit def pCounterPBuilder[T,U,V]: TensorProductBuilder[PairedDoubleCounter[T,U],PairedDoubleCounter[U,V],PairedDoubleCounter[T,V],Shape2,Shape2,Shape2] = {
     new TensorProductBuilder[PairedDoubleCounter[T,U],PairedDoubleCounter[U,V],PairedDoubleCounter[T,V],Shape2,Shape2,Shape2] {
       def create(t: PairedDoubleCounter[T,U], t2: PairedDoubleCounter[U,V]):PairedDoubleCounter[T,V] = mkPairedDoubleCounter[T,V];
       def makeProduct(t: Tensor2Op[PairedDoubleCounter[T,U]], t2: Tensor2Op[PairedDoubleCounter[U,V]]) = {
