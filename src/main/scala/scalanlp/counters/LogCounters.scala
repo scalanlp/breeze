@@ -73,4 +73,33 @@ object LogCounters extends DoubleCounterFactory {
     */
     def apply[T1,T2]():PairedDoubleCounter[T1,T2] = mkPairedDoubleCounter[T1,T2];
   }
+
+  /**
+  * Returns a Counters.DoubleCounter that has (approximately) total 1.
+  * Each entry (k,v) has a new entry in the map (k,exp(v - logTotal))
+  */
+  def normalize[T](ctr: LogDoubleCounter[T]) = {
+    val result = Counters.DoubleCounter[T]();
+
+    for( (k,v) <- ctr) {
+      result(k) = Math.exp(v - ctr.logTotal);
+    }
+
+    result;
+  }
+
+  /**
+  * Returns a Counters.PairedDoubleCounter that has (approximately) total 1.
+  * Each entry ( (k1,k2),v) has a new entry in the map (k,exp(v - logTotal))
+  */
+  def normalize[T1,T2](ctr: LogPairedDoubleCounter[T1,T2]) = {
+    val result = Counters.PairedDoubleCounter[T1,T2]();
+
+    for( ((k1,k2),v) <- ctr) {
+      result(k1,k2) = Math.exp(v - ctr.logTotal);
+    }
+
+    result;
+  }
+
 }
