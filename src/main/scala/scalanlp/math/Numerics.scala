@@ -21,7 +21,7 @@ import Counters._;
 
 /**
 * Provides some functions left out of java.lang.Math
-* @author (dlwh)
+* @author dlwh
 */
 object Numerics {
   import Math._;
@@ -65,10 +65,12 @@ object Numerics {
   }
 
   /**
-  * @return an approximation of the log of the Gamma function * of x.  Laczos Approximation
+  * Computes the log of the gamma function. 
+  *
   * Reference: Numerical Recipes in C
   * http://www.library.cornell.edu/nr/cbookcpdf.html
   * www.cs.berkeley.edu/~milch/blog/versions/blog-0.1.3/blog/distrib 
+  * @return an approximation of the log of the Gamma function * of x.  Laczos Approximation
   */ 
   def lgamma(x : Double) = {
     var y = x;
@@ -88,16 +90,6 @@ object Numerics {
 
   private val ERF_A = 8. / (3. * Pi) * (Pi - 3) / (4 - Pi);
   private val ERF_B = 4. / Pi;
-
-  /**
-  * Approximation to the ERF. Based on 
-  * homepages.physik.uni-muenchen.de/~Winitzki/erf-approx.pdf
-  */
-  def badApproxERF(x: Double) = {
-    val x2 = x * x;
-    val ax2 = ERF_A * x2;
-    sqrt(1 - exp(-x2 * (ERF_B + ax2) / (1 + ax2)));
-  }
 
   /**
   * Approximation to the inverse ERF. Based on 
@@ -127,7 +119,7 @@ object Numerics {
   }
 
   /**
-  * Incomplete gamma function. 
+  * Incomplete lgamma function. 
   * <p/>
   * based on http://216.80.120.13:8080/webMathematica/LC/gamma.jsp
   */
@@ -143,9 +135,13 @@ object Numerics {
     a * log(z) + -z - log(1+z - a + ((a-1) * (5 - a + z))/(-2 * (2-a) + (3-a+z)*(5-a+z) + res));
   }
 
+  /**
+  * Incomplete gamma function, the exp of lgamma(a,z)
+  */
   def gamma(a: Double, z:Double) = exp(lgamma(a,z));
 
   /**
+  * Sums together things in log space.
   * @return log(exp(a) + exp(b))
   */
   def logSum(a : Double, b : Double) = {
@@ -156,6 +152,7 @@ object Numerics {
   }
 
   /**
+  * Sums together things in log space.
   * @return log(\sum exp(a_i))
   */
   def logSum(a: Double, b:Double, c: Double*):Double ={
@@ -163,6 +160,7 @@ object Numerics {
   }
 
   /**
+  * Sums together things in log space.
   * @return log(\sum exp(a_i))
   */
   def logSum(a:Seq[Double]):Double = {
@@ -176,6 +174,7 @@ object Numerics {
 
   import scalala.tensor.Vector;
   /**
+  * Sums together things in log space.
   * @return log(\sum exp(a_i))
   */
   def logSum(a:Vector):Double = {
@@ -188,6 +187,7 @@ object Numerics {
   }
 
   /**
+  * Sums together things in log space.
   * @return log(exp(a) - exp(b))
   * requires a &gt; b
   */

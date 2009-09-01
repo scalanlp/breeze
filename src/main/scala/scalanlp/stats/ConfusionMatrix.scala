@@ -22,21 +22,23 @@ import DescriptiveStats._;
 import scalanlp.classify.Classifier;
 import scalanlp.data._;
 
-/** Provides precision, recall and f-score for labellings.
+/** Provides a string representation of common errors from a classifier.
 * @author dlwh
 */
 class ConfusionMatrix[L] private (private val classWise: Map[L,Map[L,Int]]) {
   def this() = this(Map[L,Map[L,Int]]().withDefaultValue(Map[L,Int]().withDefaultValue(0)));
 
   /**
-   * Add an observation.
+   * Add an observation to the confusion matrix. The pair is a guess label and a gold label
    */
-  def +(l :(L,L)) = apply(l._1,l._2);
+  def +(l :(L,L)) = {
+    add(l._1,l._2);
+  }
 
-  /** Takes a guess label and a gold standard label. */
-  def apply(guessgold: (L,L)):ConfusionMatrix[L] = this(guessgold._1,guessgold._2);
-
-  def apply(guess: L, gold: L): ConfusionMatrix[L] = {
+  /**
+   * Add an observation to the confusion matrix. The pair is a guess label and a gold label
+   */
+  def add(guess: L, gold: L) = {
     var tbl = classWise(gold);
     tbl += (guess -> (tbl(guess) + 1))
     new ConfusionMatrix[L](classWise + (gold->tbl));
