@@ -24,7 +24,7 @@ import scala.collection.generic._;
  * 
  * @author dlwh
  */
-abstract class Grid2[V](k1Size : Int, k2Size: Int) extends Map[(Int,Int),V] with Function2[Int,Int,V] {
+abstract class Grid2[V:ClassManifest](k1Size : Int, k2Size: Int) extends Map[(Int,Int),V] with Function2[Int,Int,V] {
 
   /**
   * Users should override this class.

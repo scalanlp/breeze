@@ -43,7 +43,7 @@ object Bag {
   */
   def fromFile(file: File) = {
     val words = 
-      for( line <- Source.fromFile(file).getLines;
+      for( line <- Source.fromFile(file).getLines();
            word <- line.split("[^A-Za-z0-9]").iterator
          if word != "" && RemoveStopwords(word) )
          yield word.toLowerCase;

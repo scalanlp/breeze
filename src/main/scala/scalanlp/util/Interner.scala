@@ -19,6 +19,7 @@ package scalanlp.util;
 
 import scala.collection.mutable.WeakHashMap;
 import scala.collection.generic._;
+import scala.collection.Traversable;
 import java.lang.ref.WeakReference;
 
 /**
@@ -37,7 +38,7 @@ class Interner[T] extends (T=>T) {
   def clear() = inner.clear();
   def size = inner.size;
 
-  def internAll[C<:TraversableTemplate[T,C],That](c : C)(implicit bf:scala.collection.generic.BuilderFactory[T,That,C]) = c map apply
+  def internAll[C<:TraversableTemplate[T,C] with Traversable[T],That](c : C)(implicit bf:scala.collection.generic.BuilderFactory[T,That,C]) = c map apply
   def internAll(c : List[T]) = c map apply
   def internAll(c : Array[T]) = c map apply
   def internAll(c : Set[T]) = c map apply

@@ -137,7 +137,7 @@ object Serialization {
       }
     }
 
-    implicit def arrayHandler[T](implicit tH: Handler[T]) = new Handler[Array[T]] {
+    implicit def arrayHandler[T](implicit tH: Handler[T], man: ClassManifest[T]) = new Handler[Array[T]] {
       def read(in: DataInput) = {
         val sz = in.readInt;
         Array.tabulate(sz) { i => 
@@ -194,7 +194,7 @@ object Serialization {
       }
     }
 
-    private val byteArrayHandler = Handlers.arrayHandler[Byte](Handlers.byteHandler);
+    private val byteArrayHandler = Handlers.arrayHandler[Byte](Handlers.byteHandler,reflect.Manifest.Byte);
 
     /**
     * Uses Java serialization. It's *very* inefficient, and should be avoided.

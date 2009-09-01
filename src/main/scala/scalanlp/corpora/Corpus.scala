@@ -55,7 +55,7 @@ trait JarCorpus[+T] extends Corpus[T] {
   protected def stringsFromFile(cl: ClassLoader, s : String) = {
     val strm = cl.getResourceAsStream(s)
     val src = Source.fromInputStream(strm);
-    val result = (for{ line <- src.getLines;
+    val result = (for{ line <- src.getLines();
                       trimmed = line.trim} 
                       yield trimmed).toSequence;
     strm.close();

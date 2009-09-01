@@ -40,7 +40,7 @@ class RemoveStopwords(val language: String) extends (String=>Boolean) {
     }
     val src = Source.fromInputStream(strm);
 
-    val ret = Set() ++ src.getLines.filter(!_.startsWith("#")).map(_.trim);
+    val ret = Set() ++ src.getLines().filter(!_.startsWith("#")).map(_.trim);
     strm.close();
     ret
   }

@@ -36,7 +36,7 @@ case class Text(val id:String, val contents: String) extends Observation[String]
 
 object Text {
  def fromFile(f :File) = {
-   new Text(f.getName,Source.fromFile(f).getLines.toSequence.foldLeft(new StringBuilder)( _ append _).toString);
+   new Text(f.getName,Source.fromFile(f).getLines().toSequence.foldLeft(new StringBuilder)( _ append _).toString);
  }
 }
 
@@ -51,6 +51,6 @@ object LabeledText {
    * Creates a new text with the file as the id, and the directory name as the label.
    */
   def fromFile(f:File) = {
-    new Text(f.getName,Source.fromFile(f).getLines.toSequence.foldLeft(new StringBuffer)(_ append _).toString).withLabel(f.getParentFile.getName);
+    new Text(f.getName,Source.fromFile(f).getLines().toSequence.foldLeft(new StringBuffer)(_ append _).toString).withLabel(f.getParentFile.getName);
   }
 }

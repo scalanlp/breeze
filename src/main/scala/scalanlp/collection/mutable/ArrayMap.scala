@@ -30,7 +30,7 @@ import scala.collection.generic._;
 *
 * @author dlwh
 */
-class ArrayMap[V](private val arr: ArrayBuffer[V]) extends scala.collection.mutable.Map[Int,V]
+class ArrayMap[V:ClassManifest](private val arr: ArrayBuffer[V]) extends scala.collection.mutable.Map[Int,V]
     with MutableMapTemplate[Int,V,ArrayMap[V]] {
   def this() = this(new ArrayBuffer[V]())
   override def default(i: Int): V = defValue;
