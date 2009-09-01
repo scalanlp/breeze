@@ -26,6 +26,7 @@ import scalala.tensor.sparse._;
 
 import scalanlp._;
 import counters._;
+import LogCounters._;
 import Counters._;
 import util.Index;
 import math.Numerics._;
@@ -53,6 +54,10 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
   require(features.length == weights.size);
   require(window > 0)
 
+  /**
+  * Conditions the CRF on an input sequence, which gives you access
+  * to the marginals for each hidden state.
+  */
   def calibrate(words: Seq[Int]) = new Calibration(words, Map());
 
   import CRF._;
@@ -66,20 +71,35 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
     v;
   }
 
-  class Calibration(val words:Seq[Int], conditioning: Map[Int,Int]) { baseCalibration =>
+  /**
+  * A calibration is a class that represents the CRF being conditioned on some input.
+  */
+  class Calibration protected[CRF] (val words:Seq[Int], conditioning: Map[Int,Int]) { baseCalibration =>
+    /** 
+    * returns the value of the partition function for this sequence of words. This is the normalizer for the distribution.
+    */
     lazy val partition = exp(logPartition);
+
+    /**
+    * returns the value of the log partition function for this sequence of words.
+    */
     lazy val logPartition = {
       val result = logSum(factors.last.calibrated);
       assert(!result.isNaN);
       result;
     }
 
-    lazy val logMarginals : Seq[Lazy[DoubleCounter[Int]]] = {
+    /**
+    * Returns a sequence of lazy LogCounters at each position,
+    * representing the normalized log-probability of a given state
+    *being at a given position.
+    */
+    lazy val logMarginals : Seq[Lazy[LogDoubleCounter[Int]]] = {
       (for { 
         i:Int <- (0 until words.length).toArray
       } yield Lazy.delay {
         if(conditioning.contains(i)) {
-          val result = DoubleCounter[Int]();
+          val result = LogDoubleCounter[Int]();
           result(conditioning(i)) = 0.0;
           result;
         } else {
@@ -94,7 +114,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
             accum(head) = logSum(accum(head),score);
           }
 
-          val c = DoubleCounter[Int]();
+          val c = LogDoubleCounter[Int]();
           // subtract out the log partition function.
           var j = 0;
           while(j < accum.size) {
@@ -108,6 +128,9 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       })
     }
 
+    /**
+    * Returns the expected value of each feature.
+    */
     def expectedSufficientStatistics = { 
 
       val result: Vector = zeros(weights.size)
@@ -130,6 +153,9 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       result
     }
 
+    /**
+    * Returns the counts for each feature. Used in the Objective Function.
+    */
     def sufficientStatistics(states: Seq[Int]) = {
       val fixedStates = (1 until window).map( (i:Int) => start) ++ states;
       val derivs = zeros(weights.size);
@@ -143,6 +169,9 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       derivs
     }
 
+    /**
+    * Returns the expected value of a feature under this CRF calibration.
+    */
     def computeExpectation[T](f: (Seq[Int],Int,Seq[Int])=>T) = {
       val result = DoubleCounter[T]();
       // for each feature f, E[f(states,pos,words)]
@@ -162,10 +191,16 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       result;
     }
 
+    /**
+    * The gradient for this observation, == suffStats(states) - expectedSufficientStatistics;
+    */
     def gradientAt(states: Seq[Int]) = {
       (sufficientStatistics(states) - expectedSufficientStatistics)
     }
 
+    /**
+    * What is the log probability of this sequence of states under this calibration?
+    */
     def logProbabilityOf(states: Seq[Int]) = {
       val fixedStates = (1 until window).map( (i:Int) => start) ++ states;
       val score = ( for {
@@ -180,6 +215,9 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       score  - logPartition;
     }
 
+    /**
+    * Observe the given states at the given indices. Input is a (position,state) pair.
+    */
     def condition(m: Map[Int,Int]) = new Calibration(words,conditioning ++ m) {
       val minChanged = m.keysIterator.foldLeft(words.length)(_ min _);
       val maxChanged = m.keysIterator.foldLeft(0)(_ max _ );
@@ -198,9 +236,9 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       }
     }
 
-    protected val factors = Array.range(0,words.length).map( (i:Int) => new Factor(i));
+    protected val factors = Array.tabulate(words.length)(i => new Factor(i));
 
-    class Factor(pos: Int) {
+    private[CRF] class Factor(pos: Int) {
       require(pos <= words.length);
       require(pos >= 0);
 
@@ -426,6 +464,10 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
 
 object CRF {
   import scalanlp.optimize._;
+
+  /**
+  * Represents an objective function for training the weights in a CRF based on a sequence of examples.
+  */
   class ObjectiveFunction(
       val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       val numStates: Int,
