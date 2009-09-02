@@ -88,6 +88,24 @@ object LogCounters extends DoubleCounterFactory {
     result;
   }
 
+
+  /**
+  * Returns a LogCounters.LogDoubleCounter that has (approximately) total 1.
+  * Each entry (k,v) has a new entry in the map (k,exp(v - logTotal))
+  */
+  def logNormalize[T](ctr: LogDoubleCounter[T]) = {
+    val result = LogDoubleCounter[T]();
+
+    for( (k,v) <- ctr) {
+      result(k) = v - ctr.logTotal;
+    }
+
+    result;
+  }
+
+
+
+
   /**
   * Returns a Counters.PairedDoubleCounter that has (approximately) total 1.
   * Each entry ( (k1,k2),v) has a new entry in the map (k,exp(v - logTotal))
