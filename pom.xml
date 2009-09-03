@@ -183,6 +183,11 @@
       <artifactId>scalala</artifactId>
       <version>0.3-SNAPSHOT</version>
     </dependency>
+    <dependency>
+      <groupId>colt</groupId>
+      <artifactId>colt</artifactId>
+      <version>1.2.0</version>
+    </dependency>
     <!--
     <dependency>
       <groupId>org.scalacheck</groupId>
