@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>core</name>
+	<name>scalanlp-core</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -11,15 +11,14 @@
 			</arguments>
 		</buildCommand>
 		<buildCommand>
-			<name>org.eclipse.iam.jdt.core.mavenIncrementalBuilder</name>
+			<name>org.maven.ide.eclipse.maven2Builder</name>
 			<arguments>
 			</arguments>
 		</buildCommand>
 	</buildSpec>
 	<natures>
-		<nature>org.eclipse.iam.jdt.core.mavenNature</nature>
-		<nature>org.eclipse.jdt.core.javanature</nature>
 		<nature>ch.epfl.lamp.sdt.core.scalanature</nature>
-		<nature>org.devzuz.q.maven.jdt.core.mavenNature</nature>
+		<nature>org.maven.ide.eclipse.maven2Nature</nature>
+		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
 </projectDescription>
