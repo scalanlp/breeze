@@ -9,11 +9,6 @@ import Counters._
 class Beta(a: Double, b: Double) extends ContinuousDistr[Double] with ConjugatePrior[Double, Boolean]{
   require(a > 0.0);
   require(b > 0.0);
-  def pdf(x: Double) = exp(logPdf(x));
-  
-  override def logPdf(x: Double) = {
-    logNormalizer + unnormalizedLogPdf(x);
-  }
   
   override def unnormalizedLogPdf(x: Double) = {
     require(x >= 0);
@@ -21,7 +16,7 @@ class Beta(a: Double, b: Double) extends ContinuousDistr[Double] with ConjugateP
     (a-1) * log(x) + (b-1) * log(1-x)
   }
   
-  val logNormalizer = lgamma(a+b) - lgamma(a) - lgamma(b)
+  val logNormalizer =  lgamma(a) + lgamma(b) - lgamma(a+b)
   
   private val aGamma = new Gamma(a,1);
   private val bGamma = new Gamma(b,1.);

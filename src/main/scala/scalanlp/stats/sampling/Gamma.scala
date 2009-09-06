@@ -31,13 +31,7 @@ class Gamma(val shape : Double, val scale : Double) extends ContinuousDistr[Doub
   if(shape <= 0.0 || scale <= 0.0)
     throw new IllegalArgumentException("Shape and scale must be positive");
 
-  def pdf(x : Double) = Math.exp(logPdf(x));
-
-  override def logPdf(x : Double) = {
-    unnormalizedLogPdf(x) + logNormalizer;
-  }
-  
-  val logNormalizer = - Numerics.lgamma(shape) - shape * Math.log(scale);
+  val logNormalizer = Numerics.lgamma(shape) + shape * Math.log(scale);
 
   override def unnormalizedLogPdf(x : Double) = (shape - 1) * Math.log(x) - x/scale;
 
@@ -94,8 +88,15 @@ class Gamma(val shape : Double, val scale : Double) extends ContinuousDistr[Doub
 
 object Gamma {
   type PoissonPosterior = Gamma with PoissonPrior;
+  /**
+  * This turns a Gamma distribution into the Conjugate Prior for a Poisson
+  * distribution would suitably mixed in. We separate it because a Gamma
+  * distribution can also be the conjugate prior for the Precision of a Gaussian.
+  */
   trait PoissonPrior extends ConjugatePrior[Double,Int] { self: Gamma =>
-    // negative binomial distribution
+    /**
+    * The predictive distribution is just a Negative Binomial distribution
+    */
     def predictive() = new DiscreteDistr[Int] {
       def draw() = {
         new Poisson(self.get).get

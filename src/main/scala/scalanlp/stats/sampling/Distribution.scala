@@ -36,11 +36,12 @@ trait Measure[T] extends (T=>Double) {
  */
 trait ContinuousDistr[T] extends Measure[T] with Rand[T] {
   /** Returns the probability density function at that point.*/
-  def pdf(x: T): Double; 
-  def logPdf(x:T): Double = Math.log(pdf(x));
+  def pdf(x: T): Double  = Math.exp(logPdf(x))
+  def logPdf(x:T): Double = unnormalizedLogPdf(x) - logNormalizer;
   /** Returns the probability density function up to a constant at that point.*/
-  def unnormalizedPdf(x:T): Double = pdf(x);
-  def unnormalizedLogPdf(x:T): Double = Math.log(unnormalizedPdf(x));
+  def unnormalizedPdf(x:T): Double = Math.exp(unnormalizedPdf(x))
+  
+  def unnormalizedLogPdf(x:T): Double;
   def logNormalizer : Double;
   
   def apply(x:T) = unnormalizedPdf(x);

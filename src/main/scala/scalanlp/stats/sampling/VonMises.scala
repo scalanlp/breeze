@@ -35,10 +35,8 @@ case class VonMises(val mu: Double, val k: Double) extends ContinuousDistr[Doubl
   require( k >= 0, "K must be postive");
   require(mu <= Math.Pi * 2 && mu >= 0, "Mu must be in the range [0,2pi]");
 
-  def pdf(theta: Double) = exp(logPdf(theta));
-  override def logPdf(theta: Double) = unnormalizedLogPdf(theta) + logNormalizer;
   override def unnormalizedLogPdf(theta:Double) = cos(theta - mu) * k;
-  val logNormalizer = - Math.log(Bessel.i0(k) * 2* Pi);
+  val logNormalizer = Math.log(Bessel.i0(k) * 2* Pi);
 
   private val r = { 
     val tau = 1.0 + sqrt(1.0 + 4.0 * k *k);

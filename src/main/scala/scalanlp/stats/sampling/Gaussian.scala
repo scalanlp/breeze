@@ -50,14 +50,11 @@ class Gaussian(val mu :Double, val sigma : Double) extends ContinuousDistr[Doubl
   */
   def cdf(x: Double) = .5 * (1 + erf( (x - mu)/sqrt2 / sigma));
 
-  def pdf(t : Double) = exp(logPdf(t));
-  override def logPdf(t :Double) =  unnormalizedLogPdf(t) + logNormalizer;
   override def unnormalizedLogPdf(t: Double) = { 
     val d = (t - mu)/sigma; 
     d *d 
   } 
-  override def unnormalizedPdf(t: Double) = exp(unnormalizedLogPdf(t));
   
   val normalizer = 1.0/sqrt(2 * Pi) / sigma;
-  val logNormalizer = log(1.0/sqrt(2 * Pi)) - log(sigma);
+  val logNormalizer = log(sqrt(2 * Pi)) + log(sigma);
 }

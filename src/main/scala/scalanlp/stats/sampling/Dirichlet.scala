@@ -65,19 +65,7 @@ class Dirichlet[T](prior: DoubleCounter[T]) extends ContinuousDistr[DoubleCounte
     prior.iterator.map( e => (e._2-1) * m(e._1) ).foldLeft(0.0)(_+_);
   }
 
-  /**
-   * Returns the log pdf of the Dirichlet evaluated at m.
-   */
-  override def logPdf(m: DoubleCounter[T]) = {
-    unnormalizedLogPdf(m) + logNormalizer;
-  }
-
-  val logNormalizer = prior.map( (e:(T,Double)) => lgamma(e._2)).foldLeft(0.0)(_+_) - lgamma(prior.foldLeft(0.0)(_+_._2));
-
-  /**
-   * Returns the pdf of the Dirichlet evaluated at m.
-   */
-  def pdf(m : DoubleCounter[T]) = Math.exp(logPdf(m));
+  val logNormalizer = lgamma(prior.foldLeft(0.0)(_+_._2))  - prior.map( (e:(T,Double)) => lgamma(e._2)).foldLeft(0.0)(_+_) 
 
   /**
    * Returns a Polya Distribution
