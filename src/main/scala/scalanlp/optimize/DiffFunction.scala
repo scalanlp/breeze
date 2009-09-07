@@ -74,23 +74,23 @@ trait BatchDiffFunction[K,T<:Tensor1[K]] extends DiffFunction[K,T] with ((T,Seq[
   /**
   * Calculates the gradient of the function on a subset of the data
   */
-  def gradientAt(x:T, batch: Seq[K]) : T
+  def gradientAt(x:T, batch: Seq[Int]) : T
   /**
   * Calculates the value of the function on a subset of the data
   */
-  def valueAt(x:T, batch: Seq[K]) : Double
+  def valueAt(x:T, batch: Seq[Int]) : Double
   /**
   * Calculates the value and gradient of the function on a subset of the data;
   */
-  def calculate(x:T, batch: Seq[K]) = (apply(x,batch),gradientAt(x,batch));
+  def calculate(x:T, batch: Seq[Int]) = (apply(x,batch),gradientAt(x,batch));
 
   override def gradientAt(x:T):T = gradientAt(x,fullRange);
   override def valueAt(x:T):Double = valueAt(x,fullRange);
 
-  def apply(x:T, batch:Seq[K]) = valueAt(x,batch);
+  def apply(x:T, batch:Seq[Int]) = valueAt(x,batch);
 
   /**
   * The full size of the data
   */
-  def fullRange: Seq[K];
+  def fullRange: Seq[Int];
 }

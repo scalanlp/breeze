@@ -18,6 +18,9 @@ package scalanlp.optimize
 
 import scalala.tensor.Vector;
 import scalala.Scalala._;
+import scalala.tensor._;
+import scalala.tensor.operators._;
+import TensorShapes._;
 
 import scalanlp.stats.sampling._;
 import scalanlp.math.Arrays._;
@@ -31,54 +34,50 @@ import Log._;
 * see www.robots.ox.ac.uk/~ojw/files/NotesOnCD.pdf 
 *
 * @param X the type of the data
+* @param K the type of parameters
+* @param T the type of the tensor
 * @param trans: transition kernel from X to a new X, given parameters Array[Double
 * @param deriv: derivative of the energy function f, where f = log p(x), up to some constant.
 * @param learningRate: to slow the gradient descent, or whatever.
 * @author dlwh
 */
-class ContrastiveDivergenceOptimizer[X](trans: Vector=>X=>Rand[X],
-        deriv: Vector=>X=>Vector,
-        learningRate: Double) extends Logged {
+class ContrastiveDivergenceOptimizer[X,K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](trans: T=>X=>Rand[X],
+        deriv: T=>X=>T,
+        learningRate: Double)(implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col]) 
+        extends GradientNormConvergence[K,T] with Logged {
   /**
   * Run CD to convergence on the given data with initial parameters.
   */
-  def maximize(data: Seq[X], init: Vector) = {
-    var cur: Vector = init;
-    var next: Vector = null;
+  def maximize(data: Seq[X], init: T) = {
+    val cur: T = init;
+	  var converged = false;
     var i = 0;
     do {
       log(INFO)("Starting iteration: " +i);
-      log(INFO)("Current v:" + cur.mkString("[",",","]"));
-      next = step(data,cur);
-      val temp = cur;
-      cur = next;
-      next = temp;
+      log(INFO)("Current v:" + cur);
+      val grad = computeGradient(data,cur);
+      cur += grad * learningRate;
       i += 1;
-    } while(!converged(cur,next))
+      converged = checkConvergence(grad);
+    } while(!converged);
     cur
   }
 
-  /**
-  * True if the 2 norm of the difference is sufficiently small
-  */
-  def converged(currentTheta: Vector, nextTheta: Vector) = {
-    norm(currentTheta :- nextTheta,2)< (1E-4 * 1E-4) 
-  }
 
   /**
   * Take a single step using CD.
   */
-  def step(data: Seq[X], theta: Vector) = {
+  def computeGradient(data: Seq[X], theta: T) = {
     val perturbedData = data map (trans(theta)) map (_.draw);
     val thetaDeriv = deriv(theta);
-    val normalGrad = (data map thetaDeriv).foldLeft(zeros(theta.size)){ (x,y) => 
+    val normalGrad = (data map thetaDeriv).foldLeft(theta.like){ (x,y) => 
       x + y / data.length value;
     } 
-    val perturbedGrad = (perturbedData map thetaDeriv).foldLeft(zeros(theta.size)){ (x,y) => 
+    val perturbedGrad = (perturbedData map thetaDeriv).foldLeft(theta.like){ (x,y) => 
       x + y / data.length value;
     }
 
-    theta - (normalGrad - perturbedGrad) * learningRate value;
+    (normalGrad - perturbedGrad) value
   }
 }
 
@@ -92,7 +91,7 @@ object TestCD {
     def deriv(theta: Vector) = { (x:Double) => 
       (Array((x-theta(0))) : Vector)
     }
-    val opt = new ContrastiveDivergenceOptimizer[Double](trans _ ,deriv _ ,0.01) with ConsoleLogging;
+    val opt = new ContrastiveDivergenceOptimizer[Double,Int,Vector](trans _ ,deriv _ ,0.01) with ConsoleLogging;
     
     opt.maximize(data,Array(-100.0));
   }

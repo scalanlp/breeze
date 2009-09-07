@@ -43,12 +43,10 @@ import scalala.tensor.dense._;
  * @param maxIter: maximum number of iterations, or &lt;= 0 for unlimited
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
-class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](tol: Double, maxIter: Int, m: Int)
+class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: Int)
   (implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col])
-  extends Minimizer[T,DiffFunction[K,T]] with Logged {
-  require(tol > 0);
+  extends Minimizer[T,DiffFunction[K,T]] with GradientNormConvergence[K,T] with Logged {
   require(m > 0);
-  private val tolSquared = tol *tol;
 
   import LBFGS._;
   
@@ -219,16 +217,8 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](tol: Double, maxIt
     log(INFO)("Step size: " + alpha);
     (alpha,currentVal)
   }
-
-  /**
-   * Return true if the algorithm should be considered to have converged.
-   * 
-   * @param grad the current gradient
-   */
-  def checkConvergence(grad: T): Boolean = {
-    norm(grad,2) < tolSquared;
-  }
 }
+
 
 object LBFGS {
   private sealed class LBFGSException extends RuntimeException;
@@ -237,7 +227,7 @@ object LBFGS {
 
 object TestLBFGS {
   def main(arg: Array[String]) {
-    val lbfgs = new LBFGS[Int,DenseVector](1E-8,0,7) with ConsoleLogging;
+    val lbfgs = new LBFGS[Int,DenseVector](0,7) with ConsoleLogging;
     val f = new DiffFunction[Int,DenseVector] {
       def valueAt(x: DenseVector) = {
         norm((x -3) :^ 2,1)
@@ -257,7 +247,7 @@ object TestLBFGS {
 
   def test2() {
     import scalanlp.counters.Counters._
-    val lbfgs = new LBFGS[String,DoubleCounter[String]](1E-8,0,7) with ConsoleLogging;
+    val lbfgs = new LBFGS[String,DoubleCounter[String]](0,7) with ConsoleLogging;
     val f = new DiffFunction[String,DoubleCounter[String]] {
       def valueAt(x: DoubleCounter[String]) = {
         norm((x -3) :^ 2,1)

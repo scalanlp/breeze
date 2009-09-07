@@ -3,6 +3,8 @@ package scalanlp.optimize;
 import scala.collection.mutable.{Vector=>_,_};
 import scalala.Scalala._;
 import scalala.tensor._;
+import scalala.tensor.operators._;
+import TensorShapes._;
 
 import scalanlp.util._;
 import scalanlp.util.Implicits._;
@@ -29,16 +31,18 @@ import scalanlp.stats.sampling._;
 *
 * @author dlwh
 */
-class StochasticGradientDescent(val alpha: Double,
+class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](val alpha: Double,
     val scale: Double, 
-    val tol: Double,
     val mxIter: Int,
-    batchSize: Int) extends Minimizer[Vector,BatchDiffFunction[Int,Vector]] with Logged {
+    batchSize: Int)(implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col]) 
+																	    extends Minimizer[T,BatchDiffFunction[K,T]] 
+                                      with GradientNormConvergence[K,T]
+                                      with Logged {
 
   /**
   * Runs SGD on f, for mxIter. It ignores tol.
   */
-  def minimize(f: BatchDiffFunction[Int,Vector], init: Vector) = {
+  def minimize(f: BatchDiffFunction[K,T], init: T) = {
     val maxIter = if(mxIter <= 0) {
       1000 * f.fullRange.size / batchSize;
     } else {
@@ -52,7 +56,9 @@ class StochasticGradientDescent(val alpha: Double,
     log(Log.INFO)("SGD init: " + init);
     log(Log.INFO)("SGD maxIter: " + maxIter);
 
-    for(i <- 1 to maxIter) {
+    var i = 0;
+    var converged = false;
+    while(!converged && i < maxIter) {
       log(Log.INFO)("SGD iteration: " + i);
       val sample = selectSample(f,i);
 
@@ -64,10 +70,19 @@ class StochasticGradientDescent(val alpha: Double,
       assert(guess.forall(!_._2.isInfinite));
       log(Log.INFO)("SGD update: " + guess);
 
-      temp = alpha/(alpha + i); 
+      i+=1;
+      converged = checkConvergence(grad);
+      temp = updateTemperature(alpha,i);
       log(Log.INFO)("SGD temp: " + temp);
     }
     guess;
+  }
+  
+  /**
+   * Updates the temperature based on a step size and the current iteration
+   */
+  def updateTemperature(alpha: Double, iter: Int) = {
+    alpha / (alpha + iter);
   }
 
   /**
@@ -75,7 +90,7 @@ class StochasticGradientDescent(val alpha: Double,
   *
   * guess - temp * grad;
   */
-  def update(guess: Vector, grad: Vector, temp: Double):Vector = {
+  def update(guess: T, grad: T, temp: Double):T = {
     guess - grad * temp value;
   }
 
@@ -83,7 +98,7 @@ class StochasticGradientDescent(val alpha: Double,
   * Selects a sample of the data to evalute on. By default, it selects
   * a random sample without replacement.
   */
-  def selectSample(f: BatchDiffFunction[Int,Vector], iter: Int) : Seq[Int] = {
+  def selectSample(f: BatchDiffFunction[K,T], iter: Int) : Seq[Int] = {
     Rand.permutation(f.fullRange.size).draw.map(f.fullRange).take(batchSize);
   }
 }
