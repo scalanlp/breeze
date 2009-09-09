@@ -24,7 +24,7 @@ import java.io._;
 *
 * @author dlwh
 */
-class Log(os : =>OutputStream, @volatile var level : Log.Level) {
+class Log(os : =>OutputStream, var level : Log.Level) {
   import Log._;
 
   /**
