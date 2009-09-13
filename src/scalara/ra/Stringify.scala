@@ -1,8 +1,6 @@
-package scalara.stringify;
+package scalara.ra;
 
 import scala.reflect.Manifest;
-
-import scalara.ra.RA;
 
 object ReflectionUtils {
   import java.io.File;
