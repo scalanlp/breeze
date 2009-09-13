@@ -4,10 +4,10 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.scalanlp</groupId>
   <artifactId>scalara</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.1-SNAPSHOT</version>
   <inceptionYear>2009</inceptionYear>
   <properties>
-    <scala.version>2.7.4</scala.version>
+    <scala.version>2.7.5</scala.version>
   </properties>
   <build>
     <sourceDirectory>src</sourceDirectory>
@@ -62,11 +62,6 @@
     </pluginRepository>
   </pluginRepositories>
   <dependencies>
-    <dependency>
-      <groupId>org.scalanlp</groupId>
-      <artifactId>scalala</artifactId>
-      <version>1.0-SNAPSHOT</version>
-    </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>

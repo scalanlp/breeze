@@ -4,6 +4,84 @@ import scala.reflect.Manifest;
 
 import scalara.ra.RA;
 
+object ReflectionUtils {
+  import java.io.File;
+  
+  /** Returns the companion object for the given valType. */
+  def companion[V](implicit valType : Manifest[V]) : Option[Class[_]] = {
+    try {
+      Some(valType.erasure.getClassLoader.loadClass(valType.erasure.getName+"$"));
+    } catch {
+      case _ => None;
+    }
+  }
+  
+  /**
+   * Lists the fully qualified names of classes contained in the given path
+   * (either a folder or a jar).
+   */
+  def listClasses(path : File) : List[String] = {
+    def recurseFolders(prefix : String, root : File) : List[String] = {
+      assert(root.isDirectory);
+      val lists = (
+        for (file <- root.listFiles) yield {
+          if (file.isDirectory) {
+            recurseFolders(prefix+file.getName+".", file);
+          } else if (file.getName.endsWith(".class")) {
+            List(prefix+file.getName.substring(0, file.getName.length - ".class".length));
+          } else {
+            List[String]();
+          }
+        }
+      ).toList;
+      
+      for (l <- lists; e <- l) yield e;
+    }
+    
+    def listJar(jarPath : File) : List[String] = {
+      assert(jarPath.isFile);
+      try {
+        val jar = new java.util.jar.JarFile(jarPath);
+        val iter = new Iterator[String] {
+          val en = jar.entries;
+          override def hasNext = en.hasMoreElements;
+          override def next = en.nextElement.getName;
+        }
+        ( for (entry <- iter; if (entry.endsWith(".class"))) yield
+            entry.replaceAll("/",".").substring(0, entry.length - ".class".length)
+        ).toList;
+      } catch {
+        case ioe : java.io.IOException => List[String]();
+      }
+    }
+    
+    if (path.isDirectory) {
+      recurseFolders("", path);
+    } else {
+      listJar(path);
+    }
+  }
+  
+  /** The list of all accessible class names in the default "env.classpath" environment. */
+  lazy val classNames : List[String] = (
+    for (path <- System.getProperty("env.classpath").split(System.getProperty("path.separator"));
+         fullName <- listClasses(new File(path)))
+      yield fullName
+    ).toList;
+  
+  /** Returns a set of classes with the given name that may be in different packages. */
+  def getClassesForName(name : String) : Set[Class[_]] = {
+    Set() ++ (
+      for (full <- classNames; if full.endsWith(name);
+           val preceding = full(full.length - name.length - 1);
+           if preceding == '$' || preceding == '.')
+        yield Class.forName(full)
+    );
+  }
+}
+
+case class Test(x : Int);
+
 /**
  * Custom flexibly conversion to and from Strings.
  * 
@@ -18,7 +96,21 @@ object Stringify {
   
   trait FromString {
     def isDefinedAt[V](implicit valType : Manifest[V]) : Boolean;
-    def apply[V](in : String)(implicit valType : Manifest[V]) : V;
+    
+    /** Consume the prefix of in as an instance of V, returning remainder. */
+    def partial[V](in : String)(implicit valType : Manifest[V]) : Option[(V,CharSequence)];
+  
+    /** Consume all of in as an instance of V, throwing an exception if there is a remainder. */
+    def apply[V](in : String)(implicit valType : Manifest[V]) : V = {
+      partial[V](in) match {
+        case Some((value, remainder)) =>
+          if (remainder.length > 0) throw new StringifyException("Unexpected remainder when parsing "+valType+":\n  "+in);
+          value;
+        case None =>
+          throw new StringifyException("Could not parse as "+valType+":\n  "+in);
+      }
+    }
+    
   }
   
   object ToString {
@@ -32,39 +124,103 @@ object Stringify {
   }
   
   object FromString {
-    val default = new FromString {
-      override def isDefinedAt[V](implicit valType : Manifest[V]) : Boolean = {
-        val companion = try {
-          valType.erasure.getClassLoader.loadClass(valType.erasure.getName+"$");
-        } catch {
-          case _ =>
-            return false;
-        }
+    import ReflectionUtils._;
+    import java.lang.reflect.Method;
+
+    /** Returns true if the given method is a FromString method. */
+    def isFromString[V](method : Method)(implicit valType : Manifest[V]) : Boolean = {
+      method.getName == "apply" &&
+      method.getReturnType == valType.erasure &&
+      method.getParameterTypes.forall(typ => hasFromString(Manifest.classType(typ)));
+    }
+    
+    /**
+     * A FromString for primitive data types.
+     */
+    val primitives = new FromString {
+      
+      private val prefix = "^\\s*";
+      private val suffix = "(?=(,|\\s|$)).*";
+      
+      val constructors = Map[Class[_],(scala.util.matching.Regex, String => Any)](
+        classOf[String]  -> ((prefix+"(\"([^\"\\\\]|\\\\.)*\")"+suffix).r,
+                             (x : String) => x),
         
-        for (method <- companion.getMethods;
-             if method.getReturnType == valType.erasure;
-             if method.getName == "apply";
-             if method.getParameterTypes.toList == List(classOf[String])) {
-          
-          return true;
-        }
+        classOf[Int]     -> ((prefix+"(-?(\\d+))"+suffix).r,
+                             (x : String) => x.toInt),
         
-        false;
+        classOf[Long]    -> ((prefix+"(-?(\\d+))l"+suffix).r,
+                             (x : String) => x.toLong),
+        
+        classOf[Short]   -> ((prefix+"(-?(\\d+))s"+suffix).r,
+                             (x : String) => x.toShort),
+        
+        classOf[Boolean] -> ((prefix+"(t|true|f|false)"+suffix).r,
+                             (x : String) => x.toLowerCase == "true" || x.toLowerCase == "t"),
+                             
+        classOf[Double]  -> ((prefix+"(NaN|nan|([+-]?(Inf|inf|((?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?))))"+suffix).r,
+                             (x : String) => x.toLowerCase match {
+                               case "nan"  => Double.NaN;
+                               case "inf"  => Double.PositiveInfinity;
+                               case "+inf" => Double.PositiveInfinity;
+                               case "-inf" => Double.NegativeInfinity;
+                               case _ => x.toDouble
+                             }),
+                             
+        classOf[Float]   -> ((prefix+"((NaN|nan|([+-]?(Inf|inf|((?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?))))f)"+suffix).r,
+                             (x : String) => x.substring(0,x.length-1).toLowerCase match {
+                               case "nan"  => Float.NaN;
+                               case "inf"  => Float.PositiveInfinity;
+                               case "+inf" => Float.PositiveInfinity;
+                               case "-inf" => Float.NegativeInfinity;
+                               case _ => x.toFloat
+                             })
+      );
+      
+      override def isDefinedAt[V](implicit valType : Manifest[V]) : Boolean =
+        constructors.contains(valType.erasure);
+      
+      override def partial[V](in : String)(implicit valType : Manifest[V]) : Option[(V,CharSequence)] = {
+        val (pattern, constructor) = constructors(valType.erasure);
+      
+        pattern.findFirstMatchIn(in) match {
+          case Some(m) => Some((constructor(m.group(1)).asInstanceOf[V], m.after(1)));
+          case None => None;
+        }
       }
       
       override def apply[V](in : String)(implicit valType : Manifest[V]) : V = {
-        val companion = try {
-          valType.erasure.getClassLoader.loadClass(valType.erasure.getName+"$");
-        } catch {
-          case _ => throw new UnsupportedOperationException("No companion object for "+valType);
+        constructors(valType.erasure)._2(in).asInstanceOf[V];
+      }
+    }
+    
+    /**
+     * A default FromString that uses reflection on the companion object.
+     */
+    val default = new FromString {
+      override def isDefinedAt[V](implicit valType : Manifest[V]) : Boolean = {
+        if (primitives.isDefinedAt[V])
+          return true;
+        
+        for (c <- companion[V]; method <- c.getMethods; if isFromString[V](method))
+          return true;
+        
+        return false;
+      }
+      
+      override def partial[V](in : String)(implicit valType : Manifest[V]) : Option[(V,CharSequence)] = {
+        if (primitives.isDefinedAt[V])
+          return primitives.partial[V](in);
+        
+        val c = companion[V] match {
+          case Some(cls) => cls;
+          case None => throw new UnsupportedOperationException("No companion object for "+valType);
         }
         
-        for (method <- companion.getMethods;
-             if method.getReturnType == valType.erasure;
-             if method.getName == "apply";
-             if method.getParameterTypes.toList == List(classOf[String])) {
-          
-          return method.invoke(companion.getField("MODULE$").get(), in).asInstanceOf[V];
+        for (c <- companion[V]; method <- c.getMethods; if isFromString[V](method)) {
+          // TODO this works with only a single arg, doesn't work off partial
+          val arg = fromString(in)(Manifest.classType(method.getParameterTypes()(0))).asInstanceOf[Object];
+          return Some(method.invoke(c.getField("MODULE$").get(), arg).asInstanceOf[V], "");
         }
         
         throw new UnsupportedOperationException("No string argument constructor found");
@@ -95,6 +251,13 @@ object Stringify {
     } catch { case _ => () }
   }
   
+  def hasFromString[V](implicit valType : Manifest[V]) : Boolean = {
+    getFromString[V] match {
+      case Some(x) => true;
+      case None => false;
+    }
+  }
+  
   def getFromString[V](implicit valType : Manifest[V]) : Option[FromString] = {
     prepare(valType);
     for (fromString <- fromStrings; if fromString.isDefinedAt(valType)) {
@@ -103,7 +266,7 @@ object Stringify {
     return None;
   }
   
-  def fromString[V](string : String)(implicit valType : Manifest[V], ra : RA) : V = {
+  def fromString[V](string : String)(implicit valType : Manifest[V]) : V = {
     getFromString[V] match {
       case Some(f) =>
         f[V](string);

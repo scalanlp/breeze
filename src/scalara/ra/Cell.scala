@@ -8,9 +8,8 @@ package scalara.ra;
  * 
  * @author dramage
  */
-class Cell[V](
-  cache : java.io.File, eval : => V)(
-  implicit valType : scala.reflect.Manifest[V], ra : RA) {
+class Cell[V](cache : java.io.File, eval : => V)
+(implicit valType : scala.reflect.Manifest[V], ra : RA) {
   
   import ra.pipes._;
   
@@ -80,7 +79,7 @@ class Cell[V](
             
           
           case Cell.Pending =>
-            throw new RuntimeException("Unexpected Pending state for "+cache);
+            throw new CellException("Unexpected Pending state for "+cache);
         }
         
         value = Some(v);
@@ -100,6 +99,9 @@ object Cell {
   case object Missing extends Status;
   case object Partial extends Status;
   
-  def apply[V](cache : java.io.File)(eval : => V)(implicit valType : scala.reflect.Manifest[V], ra : RA) =
+  def apply[V](cache : java.io.File)(eval : => V)
+  (implicit valType : scala.reflect.Manifest[V], ra : RA) =
     new Cell(cache, eval)(valType,ra);
 }
+
+class CellException(msg : String) extends RuntimeException(msg);
