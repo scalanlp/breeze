@@ -41,7 +41,7 @@ trait DoubleCounterFactory {
   * Abstract type that implementers must define. It must be a 
   * subtype of the AbstractDoubleCounter[T] trait.
   */
-  type DoubleCounter[T] <: AbstractDoubleCounter[T];
+  type DoubleCounter[T] <: AbstractDoubleCounter[T] with TensorSelfOp[T,DoubleCounter[T],Shape1Col];
 
   type PairedDoubleCounter[T,U] <: AbstractPairedDoubleCounter[T,U];
 
@@ -107,8 +107,7 @@ trait DoubleCounterFactory {
   /**
   * Trait that implementors of DoubleCounterFactory should implement.
   */
-  abstract trait AbstractDoubleCounter[T] extends BaseDoubleCounter[T] 
-      with TensorSelfOp[T,DoubleCounter[T],Shape1Col] { this: DoubleCounter[T] =>
+  abstract trait AbstractDoubleCounter[T] extends BaseDoubleCounter[T]  { 
     override def copy = { 
       val c = mkDoubleCounter[T];
       c += this;

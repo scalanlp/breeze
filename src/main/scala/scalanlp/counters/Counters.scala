@@ -18,6 +18,8 @@ package scalanlp.counters;
 import scalala.Scalala._;
 import scalala.tensor._;
 import scalala.tensor.sparse._;
+import scalala.tensor.operators._;
+import TensorShapes._;
 import scalala.collection._;
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
 
@@ -25,7 +27,8 @@ import scalanlp.util._;
 
 object Counters extends DoubleCounterFactory with IntCounterFactory {
   class DefaultDoubleCounter[T] extends
-    AbstractDoubleCounter[T] with TrackedStatistics.Total[T];
+    AbstractDoubleCounter[T] with TrackedStatistics.Total[T]
+    with TensorSelfOp[T,DefaultDoubleCounter[T],Shape1Col];
 
   class DefaultIntCounter[T] extends 
     AbstractIntCounter[T] with TrackedIntStatistics.Total[T];

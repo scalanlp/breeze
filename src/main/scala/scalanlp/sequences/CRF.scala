@@ -100,7 +100,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       } yield Lazy.delay {
         if(conditioning.contains(i)) {
           val result = LogDoubleCounter[Int]();
-          result(conditioning(i)) = 0.0;
+          result(conditioning(i) ) = 0.0;
           result;
         } else {
           val factor = factors(i).calibrated;
@@ -122,7 +122,8 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
               c(j) = accum(j) - logPartition;
             j += 1;
           }
-          assert(c.size > 0)
+          
+          assert(c.size > 0);
           c;
         }
       })

@@ -17,6 +17,8 @@ package scalanlp.counters;
 
 import scalala.Scalala._;
 import scalala.tensor._;
+import scalala.tensor.operators._;
+import TensorShapes._;
 import scalala.tensor.sparse._;
 import scalala.collection._;
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
@@ -24,15 +26,15 @@ import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
 import scalanlp.util._;
 
 object LogCounters extends DoubleCounterFactory {
-  class LogDoubleCounter[T] extends 
-    AbstractDoubleCounter[T] with TrackedStatistics.LogTotal[T];
+  class LogDoubleCounter[T] extends AbstractDoubleCounter[T]
+      with TrackedStatistics.LogTotal[T] 
+      with TensorSelfOp[T,LogDoubleCounter[T],Shape1Col];
 
   class LogPairedDoubleCounter[T1,T2] extends 
     AbstractPairedDoubleCounter[T1,T2] with TrackedStatistics.LogTotal[(T1,T2)];
 
   protected abstract class LogInternalDoubleCounter[T1,T2] extends 
     LogDoubleCounter[T2] with PairStatsTracker[T1,T2];
-
 
   type DoubleCounter[T] = LogDoubleCounter[T];
   type PairedDoubleCounter[T1,T2] = LogPairedDoubleCounter[T1,T2];
