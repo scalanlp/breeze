@@ -54,7 +54,7 @@ object DiffFunction {
     }
 
     private def myValueAt(x:Vector) = {
-      sum( x * weight / 2);
+      sum( x * weight / 2 value);
     }
 
     override def calculate(x: Vector) = {
