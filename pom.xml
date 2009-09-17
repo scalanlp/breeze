@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.scalanlp</groupId>
   <artifactId>scalara</artifactId>
-  <version>0.1-SNAPSHOT</version>
+  <version>0.1</version>
   <inceptionYear>2009</inceptionYear>
   <properties>
     <scala.version>2.7.5</scala.version>
