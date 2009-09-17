@@ -9,6 +9,38 @@
   <properties>
     <scala.version>2.7.5</scala.version>
   </properties>
+  
+  <developers>
+    <developer>
+      <id>dramage</id>
+      <name>Daniel Ramage</name>
+      <email>dramage [at] cs stanford edu</email>
+      <organization>Stanford University</organization>
+      <timezone>-8</timezone>
+    </developer>
+    <developer>
+      <id>dlwh</id>
+      <name>David Leo Wright Hall</name>
+      <email>dlwh [at] cs berkeley edu</email>
+      <organization>University of California, Berkeley</organization>
+      <timezone>-8</timezone>
+    </developer>
+  </developers>
+
+  <licenses>
+    <license>
+      <name>Lesser General Public License (LGPL)</name>
+      <url>http://www.gnu.org/copyleft/lesser.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:git:git://scalanlp.org/git/scalara.git</connection>
+    <developerConnection>scm:git:ssh://scalanlp.org/home/dlwhall/git/scalara.git</developerConnection>
+    <url>http://bugs.scalanlp.org/repositories/show/scalara</url>
+  </scm>
+  
   <build>
     <sourceDirectory>src</sourceDirectory>
     <testSourceDirectory>src/test/scala</testSourceDirectory>
