@@ -40,6 +40,35 @@
     <developerConnection>scm:git:ssh://scalanlp.org/home/dlwhall/git/scalara.git</developerConnection>
     <url>http://bugs.scalanlp.org/repositories/show/scalara</url>
   </scm>
+
+  <repositories>
+    <repository>
+      <id>scala-tools.org</id>
+      <name>Scala-Tools Maven2 Repository</name>
+      <url>http://scala-tools.org/repo-releases</url>
+    </repository>
+    <repository>
+      <id>ondex_repro</id>
+      <name>ondex_repro</name>
+      <url>http://ondex.rothamsted.bbsrc.ac.uk/nexus/content/groups/public</url>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>scala-tools.org</id>
+      <name>Scala-Tools Maven2 Repository</name>
+      <url>http://scala-tools.org/repo-releases</url>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <version>${scala.version}</version>
+    </dependency>
+  </dependencies>
   
   <build>
     <sourceDirectory>src</sourceDirectory>
@@ -79,27 +108,7 @@
       </plugin>
     </plugins>
   </build>
-  <repositories>
-    <repository>
-      <id>scala-tools.org</id>
-      <name>Scala-Tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
-    </repository>
-  </repositories>
-  <pluginRepositories>
-    <pluginRepository>
-      <id>scala-tools.org</id>
-      <name>Scala-Tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
-    </pluginRepository>
-  </pluginRepositories>
-  <dependencies>
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-library</artifactId>
-      <version>${scala.version}</version>
-    </dependency>
-  </dependencies>
+
   <reporting>
     <plugins>
       <plugin>
@@ -111,5 +120,12 @@
       </plugin>
     </plugins>
   </reporting>
+  
+  <distributionManagement>
+    <repository>
+      <id>scalanlp.org</id>
+      <name>Scalanlp Repository</name>
+      <url>dav:http://repo.scalanlp.org/repo/</url>
+    </repository>
+  </distributionManagement>
 </project>
-
