@@ -23,7 +23,11 @@ import java.net.URI;
 
 import SocketService._;
 
-/** Messages for the hub. */
+/**
+ * Messages for the hub.
+ * 
+ * @author dramage
+ */
 object HubMessages {
   /** Register an entry. */
   case class HubRegister(entry : URI);
@@ -38,8 +42,15 @@ object HubMessages {
   case class HubListResponse(registry : List[URI]);
 }
 
+/**
+ * A HubService is a service that allows remote SocketService instances
+ * to register.  See companion object for convenience construtcors.
+ * 
+ * @author dramage
+ */
 class HubService(dispatch : SocketServiceDispatch) extends SocketService(dispatch, "/hub") {
   import HubMessages._;
+  import ServiceMessages.Reply;
   
   protected var registry =
     new scala.collection.mutable.ArrayBuffer[URI];
@@ -74,13 +85,17 @@ class HubService(dispatch : SocketServiceDispatch) extends SocketService(dispatc
     case HubListRequest =>
       cleanup();
       info("Hub: listing");
-      reply { HubListResponse(registry.toList); }
+      Reply { HubListResponse(registry.toList); }
     case x:Any =>
       info("Hub: other message(?) "+x);
   }
 }
 
-/** A hub stores a list of active Workers. */
+/**
+ * Companion constructors for HubService.
+ * 
+ * @author dramage
+ */
 object HubService {
   import HubMessages._;
   
@@ -98,8 +113,13 @@ object HubService {
     new HubService(new SocketServiceDispatch(port));
 }
 
-/** Programmatic interface to a hub. */
-@serializable class HubClient(uri : URI) {
+/**
+ * Connection to a HubService.
+ * 
+ * @author dramage
+ */
+@serializable
+class HubClient(uri : URI) {
   import HubMessages._;
   
   @transient lazy val remote = SocketClient(uri);
@@ -120,7 +140,11 @@ object HubService {
   def stop = remote.stop;
 }
 
-/** Connects to a HubService. */
+/**
+ * Constructors for HubService.
+ * 
+ * @author dramage
+ */
 object HubClient {
   /** Constructs a hub instance form a machine and port. */
   def apply(uri : URI) : HubClient =
@@ -128,7 +152,9 @@ object HubClient {
 }
 
 /**
- * Utility functions for classes that interact with hubs.
+ * Network utility functions for classes that interact with hubs.
+ * 
+ * @author dramage
  */
 object HubUtils {
   def freePort() : Int = {
@@ -143,6 +169,11 @@ object HubUtils {
   }
 }
 
+/**
+ * Main method for starting a new hub.
+ * 
+ * @author dramage
+ */
 object HubStart {
   def main(argv : Array[String]) {
     val service = if (argv.length == 1) {
@@ -157,7 +188,9 @@ object HubStart {
 }
 
 /**
- * Entry point to list registered actors.
+ * Main method to list registered services on a hub.
+ * 
+ * @author dramage
  */
 object HubListRegistry {
   def main(argv : Array[String]) {
@@ -177,7 +210,9 @@ object HubListRegistry {
 }
 
 /**
- * Shut down all clients in the hub.
+ * Main method to stop all clients in a hub.
+ * 
+ * @author dramage
  */
 object HubStopAll {
   def main(argv : Array[String]) {

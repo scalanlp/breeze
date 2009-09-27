@@ -51,6 +51,8 @@ object Logger {
 
 /**
  * A PrintStream that redirects lines to the given function.
+ * 
+ * @author dramage
  */
 object FlexPrintStream {
   def apply(tline : (String => Unit), tclose : (() => Unit)) = {

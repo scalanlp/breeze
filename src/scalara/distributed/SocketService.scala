@@ -98,11 +98,6 @@ class RemoteServiceException(ex : Throwable) extends RuntimeException(ex);
 private[distributed] object ServiceUtil {
   import ServiceMessages._;
   
-  /** Quietly do the given function discarding any exceptions. */
-  def justDoIt(function : () => Unit) {
-    try { function(); } catch { case _ => (); }
-  }
-  
   def daemon(p: => Unit) = {
     val t = new Thread() { override def run() = p }
     t.setDaemon(true);
@@ -116,23 +111,13 @@ private[distributed] object ServiceUtil {
     out.writeUnshared(message);
     out.flush;
   }
-      
-  /**
-   * Evaluate the function, closing the session on
-   * IOException and returning the given default.
-   */
-  def closeOnEOF[E](f : () => E, default : E, close : () => Unit) : E = {
-    try {
-      f()
-    } catch {
-      case eof : java.io.EOFException => {
-        close();
-        default;
-      }
-    }
-  }
 }
 
+/**
+ * Enriches runnables with extra background job options.
+ * 
+ * @author dramage
+ */
 trait Threadable extends Runnable {
   /** Runs this service in a new thread. */
   def runAsThread : Thread = {
@@ -155,9 +140,7 @@ trait Threadable extends Runnable {
  * A connection to a remote SocketService.  Supports actor-like
  * methods ! and !? as well as remote stop.
  * 
- * URI should be:
- * 
- *   socket://machine:port/name
+ * URI should be of the form <pre>socket://machine:port/name</pre>
  * 
  * @author dramage
  */
@@ -294,11 +277,8 @@ class SocketClient(uri : URI) {
   /** Launch the daemon thread to watch the connection. */
   daemon {
     while (sessionActive) {
-//      val rid = try { in.readInt }          catch { case eof : java.io.EOFException => close(); -1; }
-//      val control = try { in.readUnshared } catch { case eof : java.io.EOFException => close(); None; }
-      
-      val rid = closeOnEOF(in.readInt, -1, close);
-      val control = closeOnEOF(in.readUnshared, None, close);
+      val rid     = try { in.readInt }      catch { case eof : java.io.EOFException => close(); -1; }
+      val control = try { in.readUnshared } catch { case eof : java.io.EOFException => close(); None; }
       
       if (rid >= 0) {
         info("received "+rid);
@@ -344,9 +324,9 @@ class SocketClient(uri : URI) {
       }
     }
     
-    justDoIt { in.close; }
-    justDoIt { out.close; }
-    justDoIt { socket.close; }
+    try { in.close; }     catch { case _ => (); }
+    try { out.close; }    catch { case _ => (); }
+    try { socket.close; } catch { case _ => (); }
   }
   
   // Ensure connection to correct path
@@ -379,7 +359,12 @@ object SocketClient {
     new SocketClient(new URI(uri));
 }
 
-object SocketServiceDispatch {
+/**
+ * Companion object containing control messages used internally to the package.
+ * 
+ * @author dramage
+ */
+private object SocketServiceDispatch {
   sealed trait Incoming;
   case object IncomingShutdown extends Incoming;
   case class IncomingMessage(rid : Int, message : Any, reply : Channel[Outgoing]) extends Incoming;
@@ -553,18 +538,18 @@ class SocketServiceDispatch(val port : Int) extends Runnable with Threadable {
                   } catch {
                     case ex : Exception => {
                       active = false;
-                      justDoIt { in.close; }
-                      justDoIt { out.close; }
-                      justDoIt { socket.close; }
+                      try { in.close; }     catch { case _ => (); }
+                      try { out.close; }    catch { case _ => (); }
+                      try { socket.close; } catch { case _ => (); }
                       throw(ex);
                     }
                   }
             
                 case SocketServiceDispatch.OutgoingShutdown =>
                   active = false;
-                  justDoIt { in.close; }
-                  justDoIt { out.close; }
-                  justDoIt { socket.close; }
+                  try { in.close; }     catch { case _ => (); }
+                  try { out.close; }    catch { case _ => (); }
+                  try { socket.close; } catch { case _ => (); }
               }
             }
           }
@@ -592,10 +577,10 @@ extends Runnable with Threadable {
   protected def info(msg : String) = SocketService.log("SocketService: "+msg);
   
   /** Incoming message queue. */
-  val incoming = new Channel[SocketServiceDispatch.Incoming]();
+  protected[distributed] val incoming = new Channel[SocketServiceDispatch.Incoming]();
 
   /** Active state of this service. */
-  var active = true;
+  protected var active = true;
   
   /** Abstract method for getting reaction. */
   def react : PartialFunction[Any,Any];
@@ -643,6 +628,12 @@ extends Runnable with Threadable {
   override def toString = uri.toString;
 }
 
+/**
+ * Companion object with static constructor and convenience
+ * methods for SocketService.
+ * 
+ * @author dramage
+ */
 object SocketService {
   import ServiceMessages._;
   import ServiceUtil._;
@@ -669,8 +660,6 @@ object SocketService {
    */
   def apply(name : String)(body : PartialFunction[Any,Any]) =
     dispatch.service(name)(body);
-  
-  def reply(x : Any) = Reply(x);
   
   /**
    * Return a future that ping a remote host.  The
@@ -706,21 +695,26 @@ object SocketService {
   }
 }
 
+/**
+ * A simple example service.
+ * 
+ * @author dramage
+ */
 object SampleService {
-  import SocketService._;
+  import ServiceMessages.Reply;
   
   /** A test main method */
   def main(argv : Array[String]) {
     val service = SocketService("/test") {
       case x : String =>
-        reply { x.toUpperCase }
+        Reply { x.toUpperCase }
           
       case y : Int =>
         throw new RuntimeException("I don't like Ints!")
           
       case z : Double => {
         Thread.sleep(200l);
-        reply { z * 2; }
+        Reply { z * 2; }
       }
           
       case _ => None;
