@@ -5,6 +5,7 @@
   <groupId>org.scalanlp</groupId>
   <artifactId>scalara</artifactId>
   <version>0.2-SNAPSHOT</version>
+  <name>ScalaRA</name>
   <inceptionYear>2009</inceptionYear>
   <properties>
     <scala.version>2.7.5</scala.version>
