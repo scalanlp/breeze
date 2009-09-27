@@ -25,7 +25,7 @@ import stats.sampling._
 import util.Implicits._;
 import scalanlp.util.Lazy;
 import scalanlp.util.Lazy.Implicits._;
-import scalala.Scalala._;
+import scalala.library.Vectors._;
 import scalala.tensor.Vector;
 import scalala.tensor.dense._;
 import scalala.tensor.sparse._;

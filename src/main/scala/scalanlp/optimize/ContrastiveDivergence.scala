@@ -22,7 +22,8 @@ import math.Arrays._;
 import util._;
 import Log._;
 import scalala.tensor.Vector;
-import scalala.Scalala._;
+import scalala.library.Vectors._;
+import scalala.library.Implicits._;
 
 /**
 * Implements Contrastive Divergence for maximizing the probability of parameters.

@@ -20,7 +20,7 @@ import util._;
 import Log._;
 import java.util.Arrays;
 import scala.collection.mutable.ArrayBuffer;
-import scalala.Scalala._;
+import scalala.library.Vectors._;
 import scalala.tensor.Vector;
 
 /**

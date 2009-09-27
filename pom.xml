@@ -3,7 +3,7 @@
   <groupId>org.scalanlp</groupId>
   <artifactId>scalanlp-core</artifactId>
   <name>ScalaNLP Core</name>
-  <version>0.1.2</version>
+  <version>0.1.3</version>
   <url>http://www.scalanlp.org</url>
   <issueManagement>
     <system>redmine</system>
@@ -174,7 +174,7 @@
     <dependency>
       <groupId>org.scalanlp</groupId>
       <artifactId>scalala</artifactId>
-      <version>0.2</version>
+      <version>0.2.1</version>
     </dependency>
     <dependency>
       <groupId>org.scalanlp</groupId>

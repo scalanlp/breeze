@@ -18,7 +18,8 @@ import org.scalacheck._
 import org.specs._;
 import org.specs.matcher._;
 
-import scalala.Scalala._;
+import scalala.library.Vectors._;
+import scalala.library.Random._;
 import scalala.tensor.Vector;
 
 object LBFGSSpecification extends Specification("LBFGS")  with ScalaCheckMatchers {

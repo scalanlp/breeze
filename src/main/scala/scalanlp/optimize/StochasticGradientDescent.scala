@@ -4,7 +4,7 @@ import scala.collection.mutable._;
 import util._;
 import util.Implicits._;
 import stats.sampling._;
-import scalala.Scalala._;
+import scalala.library.Vectors._;
 import scalala.tensor._;
 
 /*

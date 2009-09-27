@@ -16,8 +16,7 @@ package scalanlp.optimize;
  limitations under the License. 
 */
 
-import scalala._;
-import scalala.Scalala._;
+import scalala.library.Vectors._;
 import scalala.tensor.Vector;
 
 /**
