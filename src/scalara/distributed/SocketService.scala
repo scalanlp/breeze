@@ -19,6 +19,7 @@
  */
 package scalara.distributed;
 
+import scala.concurrent.Channel;
 import scala.concurrent.ops.spawn;
   
 import java.net.{ServerSocket,Socket,URI};
@@ -31,28 +32,47 @@ import java.io.{IOException,NotSerializableException};
  * @author dramage
  */
 object ServiceMessages {
-  abstract class ServiceMessage;
+  @serializable sealed trait ServiceMessage;
+  
+  /** A request made of a service. */
+  @serializable sealed trait ServiceRequest extends ServiceMessage;
+  
+  /** Requests a connection to the given path. */
+  case class Connect(path : String) extends ServiceRequest;
   
   /** Request for alive state. */
-  case object Ping extends ServiceMessage;
-  
-  /** Reply for alive state. */
-  case object Pong extends ServiceMessage;
+  case object Ping extends ServiceRequest;
   
   /** Request to exit. */
-  case object Stop extends ServiceMessage;
-  
-  /** Reply for exit. */
-  case object Bye extends ServiceMessage;
-  
-  /** An error. */
-  case class ExceptionWrapper(ex : Throwable) extends ServiceMessage;
+  case object Stop extends ServiceRequest;
   
   /** A user defined message. */
-  case class Message(message : Any) extends ServiceMessage;
+  case class Message(message : Any) extends ServiceRequest;
+  
+  
+  /** A reply returned by a service. */
+  @serializable sealed trait ServiceReply extends ServiceMessage;
+  
+  /** Reply for alive state. */
+  case object Pong extends ServiceReply;
+  
+  /** Reply for exit. */
+  case object Bye extends ServiceReply;
+  
+  /** Connection successfully established to the given path. */
+  case class ConnectionMade(path : String) extends ServiceReply;
+  
+  /** No object was found with the given path. */
+  case class ConnectionFailed(path : String) extends ServiceReply;
+  
+  /** A user defined message. */
+  case class Reply(message : Any) extends ServiceReply;
   
   /** No reply provided. */
-  case object NoReply extends ServiceMessage;
+  case object NoReply extends ServiceReply;
+  
+  /** An error. */
+  case class ExceptionWrapper(ex : Throwable) extends ServiceReply;
 }
 
 /**
@@ -111,8 +131,25 @@ private[distributed] object ServiceUtil {
       }
     }
   }
-
 }
+
+trait Threadable extends Runnable {
+  /** Runs this service in a new thread. */
+  def runAsThread : Thread = {
+    val thread = new Thread(this);
+    thread.start;
+    thread;
+  }
+  
+  /** Runs this service in a new daemon thread (does not prevent JVM shutdown). */
+  def runAsDaemon : Thread = {
+    val thread = new Thread(this);
+    thread.setDaemon(true);
+    thread.start;
+    thread;
+  }
+}
+
 
 /**
  * A connection to a remote SocketService.  Supports actor-like
@@ -128,11 +165,10 @@ class SocketClient(uri : URI) {
   import ServiceMessages._;
   import ServiceUtil._;
   
-  import scala.concurrent.Channel;
   import scala.collection.mutable.{HashMap,SynchronizedMap,HashSet,SynchronizedSet};
   
   /** Private logger method */
-  private def log(msg : String) = SocketService.log("SocketClient: "+msg);
+  private def info(msg : String) = SocketService.log("SocketClient: "+msg);
   
   if (uri.getScheme != "socket") {
     throw new IllegalArgumentException("Wrong scheme for URI: "+uri);
@@ -150,13 +186,14 @@ class SocketClient(uri : URI) {
   private var sessionActive = true;
   
   /** Received message replies. */
-  private val channels = new HashMap[Int,Option[Channel[ServiceMessage]]] with SynchronizedMap[Int,Option[Channel[ServiceMessage]]];
+  private val channels = new HashMap[Int,Option[Channel[ServiceReply]]] with
+    SynchronizedMap[Int,Option[Channel[ServiceReply]]];
   
   /** Close the session */
   def close() {
     if (sessionActive) {
       sessionActive = false;
-      log("closing");
+      info("closing");
     }
   }
   
@@ -164,13 +201,15 @@ class SocketClient(uri : URI) {
   private var rid = -1;
 
   /** Sends a message to the client, with reply going to the given channel. */
-  private def send(message : ServiceMessage, consumer : Option[Channel[ServiceMessage]]) : Unit = synchronized {
+  private def send(message : ServiceRequest, consumer : Option[Channel[ServiceReply]]) : Unit = synchronized {
     if (!sessionActive) {
       throw new ServiceException("Cannot send message on inactive session");
     }
     
     // next request id
     rid = if (rid == Int.MaxValue) 0 else rid + 1;
+    
+    info("sending message "+rid+" "+message.toString);
     
     channels(rid) = consumer;
     
@@ -193,26 +232,26 @@ class SocketClient(uri : URI) {
       case ex : Throwable => {
         // this is some other error, which might not be critical?
         channels -= rid;
-        log("Error while writing: "+ex);
+        info("Error while writing: "+ex);
         close;
         throw(ex);
       }
     }
 
-    log("sent "+rid);
     return rid;
   }
   
   /** Sends a message to the service and awaits a reply. */
-  def query(msg : ServiceMessage) : ServiceMessage = {
-    val channel = new Channel[ServiceMessage];
+  def query(msg : ServiceRequest) : ServiceReply = {
+    val channel = new Channel[ServiceReply];
     val id = send(msg,Some(channel));
     
     val received : ServiceMessage = channel.read;
     
     received match {
       case ExceptionWrapper(ex) => throw new RemoteServiceException(ex);
-      case x : ServiceMessage => x;
+      case x : ServiceReply => x;
+      case o : Any => throw new ServiceException("Unexpected message: "+o);
     }
   }
   
@@ -224,7 +263,7 @@ class SocketClient(uri : URI) {
   /** Sends a message, blocking and returning its reply. */
   def !? (msg : Any) : Any = {
     query(Message(msg)) match {
-      case Message(reply) => reply;
+      case Reply(reply) => reply;
       case x : Any => {
         throw new ServiceException("Unexpected reply: "+x);
       }
@@ -255,12 +294,15 @@ class SocketClient(uri : URI) {
   /** Launch the daemon thread to watch the connection. */
   daemon {
     while (sessionActive) {
+//      val rid = try { in.readInt }          catch { case eof : java.io.EOFException => close(); -1; }
+//      val control = try { in.readUnshared } catch { case eof : java.io.EOFException => close(); None; }
+      
       val rid = closeOnEOF(in.readInt, -1, close);
       val control = closeOnEOF(in.readUnshared, None, close);
       
       if (rid >= 0) {
-        log("received "+rid);
-      
+        info("received "+rid);
+        
         if (!channels.contains(rid)) {
           throw new ServiceException("SocketService error: missing channel for "+rid);
         }
@@ -269,7 +311,7 @@ class SocketClient(uri : URI) {
           case Some(channel) => {
             // some channel wants to consume the reply
             control match {
-              case msg : ServiceMessage => {
+              case msg : ServiceReply => {
                 channel.write(msg);
               }
               
@@ -278,7 +320,7 @@ class SocketClient(uri : URI) {
               }
             }
           }
-        
+          
           case None => {
             // this is a message whose reply we ignore.  still check for and throw
             // exceptions, however.
@@ -306,12 +348,26 @@ class SocketClient(uri : URI) {
     justDoIt { out.close; }
     justDoIt { socket.close; }
   }
+  
+  // Ensure connection to correct path
+  query(Connect(uri.getPath)) match {
+    case ConnectionMade(path) => 
+      (); // good!
+      
+    case ConnectionFailed(path) => {
+      close();
+      throw new ServiceException("Could not connect to "+uri);
+    }
+    
+    case _ => {
+      close();
+      throw new ServiceException("Unexpected error while connecting to "+uri);
+    }
+  } 
 }
 
 /**
  * Extra constructors for SocketClient.
- * 
- * TODO: add name check
  * 
  * @author dramage
  */
@@ -319,8 +375,203 @@ object SocketClient {
   def apply(uri : URI) =
     new SocketClient(uri);
   
-  def apply(host : String, port : Int) =
-    new SocketClient(new java.net.URI("socket",null,host,port,null,null,null));
+  def apply(uri : String) =
+    new SocketClient(new URI(uri));
+}
+
+object SocketServiceDispatch {
+  sealed trait Incoming;
+  case object IncomingShutdown extends Incoming;
+  case class IncomingMessage(rid : Int, message : Any, reply : Channel[Outgoing]) extends Incoming;
+  
+  sealed trait Outgoing;
+  case object OutgoingShutdown extends Outgoing;
+  case class OutgoingMessage(rid : Int, message : ServiceMessages.ServiceMessage) extends Outgoing;
+}
+
+
+/**
+ * A listens on a port, dispatching connections to SocketService instances.
+ * 
+ * @author dramage
+ */
+class SocketServiceDispatch(val port : Int) extends Runnable with Threadable {
+  import ServiceMessages._;
+  import ServiceUtil._;
+
+  /** This services registered on this dispatcher. */
+  val services = new scala.collection.mutable.HashMap[String, SocketService];
+  
+  /** Private logger method */
+  protected def info(msg : String) = SocketService.log("SocketServiceDispatch: "+msg);
+  
+  /** The server socket we accept connections from. */
+  protected val listener = new ServerSocket(port);
+  
+  // timeout is 200ms -- how often we check to see if still active.
+  // listener.setSoTimeout(200);
+  
+  /** Tells the connection daemon to stop. */
+  def stop() = {
+    listener.close();
+  }
+
+  /** Registers a service with the given name. */
+  def service(name : String)(body : PartialFunction[Any,Any]) : SocketService = {
+    info("registering "+name);
+    
+    val service = new SocketService(this, name) {
+      override def info(msg : String) = info(msg);
+      override def react = body;
+    };
+    
+    service;
+  }
+  
+  def register(name : String, service : SocketService) {
+    if (services.contains(name)) {
+      throw new ServiceException("Unable to register service: "+name+" already in use");
+    }
+    services(name) = service;
+  }
+  
+  /** Establishes new connections, forwarding to SocketService instances. */
+  override def run() {
+    info("listening on port "+port);
+    
+    while (!listener.isClosed) {
+      val socket =
+        try {
+          listener.accept();
+        } catch {
+          case se : java.net.SocketException => null;
+        }
+      
+      // if socket is null, we've closed and will back out of loop
+      // gracefully on the next pass.  if it's non-null, launch
+      // connection deamons for it.
+          
+      if (socket != null) {
+        // important: always create out before in.
+        val out = new ObjectOutputStream(socket.getOutputStream);
+        val in = new ObjectInputStream(socket.getInputStream);
+
+        val service = try {
+          // consume request for service by name
+          val rid = in.readInt;
+          val path = in.readUnshared.asInstanceOf[ServiceMessages.Connect].path;
+          
+          if (services.contains(path)) {
+            out.writeInt(rid);
+            out.writeUnshared(ServiceMessages.ConnectionMade(path));
+          } else {
+            out.writeInt(rid);
+            out.writeUnshared(ServiceMessages.ConnectionFailed(path));
+          }
+          
+          services(path);
+        } catch {
+          case _ =>
+            info("Invalid request from "+socket.getInetAddress);
+            null;
+        }
+        
+        // if service is null, we don't have a valid incoming connection
+        
+        if (service != null) {
+          // the channel that processes incoming requests
+          val incoming = service.incoming;
+          
+          // the return channel passed to the relevant SocketService
+          val outgoing = new Channel[SocketServiceDispatch.Outgoing];
+        
+          // 1st deamon: incoming message dispatch for this connection
+          daemon {
+            var active = true;
+          
+            while(active) {
+              // read request id
+              val rid : Int = try {
+                in.readInt;
+              } catch {
+                case ex : Throwable =>
+                  // in particular, this is often java.io.EOFException
+                  active = false;
+                  try { in.close     } catch { case _ => (); }
+                  try { out.close    } catch { case _ => (); }
+                  try { socket.close } catch { case _ => (); }
+                  outgoing.write(SocketServiceDispatch.OutgoingShutdown);
+                  -1;
+              }
+            
+              if (active) {
+                // read control message
+                val control = try {
+                  in.readUnshared
+                } catch {
+                  case ex : Throwable =>
+                    outgoing.write(SocketServiceDispatch.OutgoingMessage(rid, ExceptionWrapper(ex)));
+                    outgoing.write(SocketServiceDispatch.OutgoingShutdown);
+                    throw(ex);
+                }
+            
+                control match {
+                  case Ping => {
+                    info(""+Ping);
+                    outgoing.write(SocketServiceDispatch.OutgoingMessage(rid, Pong));
+                  }
+        
+                  case Stop => {
+                    info(""+Stop);
+                    outgoing.write(SocketServiceDispatch.OutgoingMessage(rid, Bye));
+                    incoming.write(SocketServiceDispatch.IncomingShutdown);
+                  }
+          
+                  case Message(message) => {
+                    info(""+Message+" "+rid+" @ " +out);
+                    incoming.write(SocketServiceDispatch.IncomingMessage(rid,message,outgoing));
+                  }
+          
+                  case x : Any => {
+                    throw new ServiceException("Unknown message "+x);
+                  }
+                }
+              }
+            }
+          }
+      
+          // 2nd deamon: outgoing message writer for this connection
+          daemon {
+            var active = true;
+          
+            while(active) {
+              outgoing.read match {
+                case SocketServiceDispatch.OutgoingMessage(rid, message) =>
+                  info("Session "+out+" writing "+rid);
+                  try {
+                    write(rid, message, out);
+                  } catch {
+                    case ex : Exception => {
+                      active = false;
+                      justDoIt { in.close; }
+                      justDoIt { out.close; }
+                      justDoIt { socket.close; }
+                      throw(ex);
+                    }
+                  }
+            
+                case SocketServiceDispatch.OutgoingShutdown =>
+                  active = false;
+                  justDoIt { in.close; }
+                  justDoIt { out.close; }
+                  justDoIt { socket.close; }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -329,22 +580,22 @@ object SocketClient {
  * 
  * @author dramage
  */
-abstract class SocketService(val path : String, val port : Int) extends Runnable {
+abstract class SocketService(val dispatch : SocketServiceDispatch, val path : String)
+extends Runnable with Threadable {
+  
   import ServiceMessages._;
   import ServiceUtil._;
   
+  dispatch.register(path, this);
+  
   /** Private logger method */
-  private def info(msg : String) = SocketService.log("SocketService: "+msg);
-  
-  /** The server socket we accept connections from. */
-  private val listener = new ServerSocket(port);
-  
-  /** Active state of this service. */
-  // private var serviceActive = true;
+  protected def info(msg : String) = SocketService.log("SocketService: "+msg);
   
   /** Incoming message queue. */
-  private val incoming = java.util.Collections.synchronizedList(
-    new java.util.LinkedList[(Int,Any,java.util.List[(Int,ServiceMessage)])]);
+  val incoming = new Channel[SocketServiceDispatch.Incoming]();
+
+  /** Active state of this service. */
+  var active = true;
   
   /** Abstract method for getting reaction. */
   def react : PartialFunction[Any,Any];
@@ -355,7 +606,7 @@ abstract class SocketService(val path : String, val port : Int) extends Runnable
   
   /** Returns a URI describing how to connect to this service. */
   val uri = try {
-    new java.net.URI("socket",null,host,port,path,null,null)
+    new java.net.URI("socket",null,host,dispatch.port,path,null,null)
   } catch {
     case ue : java.net.URISyntaxException =>
       throw new IllegalArgumentException("Invalid path name "+path+": should start with /");
@@ -365,161 +616,26 @@ abstract class SocketService(val path : String, val port : Int) extends Runnable
   def register(hub : HubClient) =
     hub.register(uri);
   
-  /** Tells the connection daemon to stop. */
-  def stop() = {
-    listener.close();
-  }
-  
-  /** Runs this service in a new thread. */
-  def runAsThread : Thread = {
-    val thread = new Thread(this);
-    thread.start;
-    thread;
-  }
-  
-  /** Runs this service in a new daemon thread (does not prevent JVM shutdown). */
-  def runAsDaemon : Thread = {
-    val thread = new Thread(this);
-    thread.setDaemon(true);
-    thread.start;
-    thread;
-  }
-  
   /**
    * Process and return incoming requests within the current thread.
    * Spawns additional daemon threads to manage socket i/o per session.
    */
   override def run() {
-    // timeout is 200ms -- how often we check to see if still active.
-    // listener.setSoTimeout(200);
-    
-    // Primary daemon: establishes new connections
-    daemon {
-      while (!listener.isClosed) {
-        val socket =
+    while (active) {
+      incoming.read match {
+        case SocketServiceDispatch.IncomingMessage(rid, message, outgoing) =>
           try {
-            listener.accept();
+            react(message) match {
+              case reply : ServiceMessage => outgoing.write(SocketServiceDispatch.OutgoingMessage(rid, reply));
+              case _ => outgoing.write(SocketServiceDispatch.OutgoingMessage(rid, NoReply));
+            }
           } catch {
-            case se : java.net.SocketException => null;
-          }
-      
-        // if socket is null, we've closed and will back out of loop
-        // gracefully on the next pass.  if it's non-null, launch
-        // connection deamons for it.
-          
-        if (socket != null) {
-          // a new daemon thread to handle this client
-          var sessionActive = true;
-        
-          // important: always create out before in.
-          val out = new ObjectOutputStream(socket.getOutputStream);
-          val in = new ObjectInputStream(socket.getInputStream);
-        
-          val outgoing = java.util.Collections.synchronizedList(new java.util.LinkedList[(Int,ServiceMessage)]);
-          
-          // reply puts things into the outgoing mailbox
-          def reply(rid : Int, message : ServiceMessage) =
-            outgoing.add((rid,message));
-          
-        
-          def closeSession() {
-            if (!sessionActive) {
-              info("Session "+out+" closing");
-              sessionActive = false;
-            }
-          }
-      
-          // 2nd deamon: per-connection outgoing message writer
-          daemon {
-            while (sessionActive || !outgoing.isEmpty) {
-              Thread.sleep(20l);
-            
-              while (!outgoing.isEmpty) {
-                val (rid,message) = outgoing.remove(0);
-                info("Session "+out+" writing "+rid);
-                try {
-                  write(rid, message, out);
-                } catch {
-                  case ex : Exception => {
-                    closeSession();
-                    throw(ex);
-                  }
-                }
-              }
-            }
-            
-            justDoIt { in.close; }
-            justDoIt { out.close; }
-            justDoIt { socket.close; }
+            case ex : Throwable =>
+              outgoing.write(SocketServiceDispatch.OutgoingMessage(rid, ExceptionWrapper(ex)));
           }
         
-          // 3rd deamon: per-connection incoming message reader
-          daemon {
-            while (sessionActive) {
-              Thread.sleep(20l);
-            
-              val rid = closeOnEOF(in.readInt,-1,closeSession);
-              val control =
-                try {
-                  closeOnEOF(in.readUnshared, None, closeSession);
-                } catch {
-                  case ex : Throwable => {
-                    // non-eof error: return and throw it
-                    reply(rid, ExceptionWrapper(ex));
-                    closeSession();
-                    throw(ex);
-                  }
-                };
-              
-              control match {
-                case Ping => {
-                  info("pinged");
-                  reply(rid, Pong);
-                }
-          
-                case Stop => {
-                  info("stopping");
-                  reply(rid, Bye);
-                  closeSession();
-                  stop();
-                }
-          
-                case Message(message) => {
-                  info("enqueueing message "+rid+" @ " +out);
-                  incoming.add((rid,message,outgoing));
-                }
-          
-                case None => {
-                  // error, safe to ignore
-                }
-          
-                case x : Any => {
-                  throw new ServiceException("Unknown message "+x);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  
-    // do actual processing in only caller's thread
-    while (!listener.isClosed) {
-      Thread.sleep(20l);
-      
-      if (!incoming.isEmpty) {
-        val (rid,message,outgoing) = incoming.remove(0);
-      
-        try {
-          react(message) match {
-            case reply : ServiceMessage => outgoing.add((rid, reply));
-            case _ => outgoing.add((rid, NoReply));
-          }
-        } catch {
-          case ex : Throwable => {
-            outgoing.add((rid, ExceptionWrapper(ex)));
-          }
-        }
+        case SocketServiceDispatch.IncomingShutdown =>
+          active = false;
       }
     }
   }
@@ -539,16 +655,22 @@ object SocketService {
   }
   
   /**
+   * Global default dispatcher for this process.
+   */
+  lazy val dispatch = {
+    val _dispatch = new SocketServiceDispatch(HubUtils.freePort);
+    _dispatch.runAsDaemon;
+    _dispatch;
+  }
+  
+  /**
    * Spawns a service on the given port with the given body
    * to do actual request processing.  Needs to be started.
    */
-  def apply(name : String)(body : PartialFunction[Any,Any]) = {
-    new SocketService(name, HubUtils.freePort) {
-      override def react = body;
-    };
-  }
+  def apply(name : String)(body : PartialFunction[Any,Any]) =
+    dispatch.service(name)(body);
   
-  def reply(x : Any) = Message(x);
+  def reply(x : Any) = Reply(x);
   
   /**
    * Return a future that ping a remote host.  The
@@ -589,7 +711,7 @@ object SampleService {
   
   /** A test main method */
   def main(argv : Array[String]) {
-    val server = SocketService("test") {
+    val service = SocketService("/test") {
       case x : String =>
         reply { x.toUpperCase }
           
@@ -604,11 +726,11 @@ object SampleService {
       case _ => None;
     };
     
-    spawn { server.run; }
+    service.runAsThread;
     
     Thread.sleep(1000l);
     
-    val client = SocketClient(server.host,server.port);
+    val client = SocketClient(service.uri);
     
     // should print 4.0 last
     spawn { System.err.println(client !? 2.0); }

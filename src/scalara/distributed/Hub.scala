@@ -38,7 +38,7 @@ object HubMessages {
   case class HubListResponse(registry : List[URI]);
 }
 
-class HubService(port : Int) extends SocketService("/hub",port) {
+class HubService(dispatch : SocketServiceDispatch) extends SocketService(dispatch, "/hub") {
   import HubMessages._;
   
   protected var registry =
@@ -58,25 +58,25 @@ class HubService(port : Int) extends SocketService("/hub",port) {
     val newSize = registry.size;
       
     if (origSize != newSize) {
-      System.err.println("Hub: removed "+(origSize-newSize)+" entries");
+      info("Hub: removed "+(origSize-newSize)+" entries");
     }
   }
   
   override def react = synchronized {
     case HubRegister(entry) =>
       cleanup();
-      System.err.println("Hub: registering "+entry);
+      info("Hub: registering "+entry);
       registry += entry;
     case HubUnregister(entry) =>
       cleanup();
-      System.err.println("Hub: unregistering "+entry);
+      info("Hub: unregistering "+entry);
       registry -= entry;
     case HubListRequest =>
       cleanup();
-      println("Hub: listing");
+      info("Hub: listing");
       reply { HubListResponse(registry.toList); }
     case x:Any =>
-      println("Hub: other message(?) "+x);
+      info("Hub: other message(?) "+x);
   }
 }
 
@@ -88,14 +88,14 @@ object HubService {
    * Calls apply using a new unique free port.
    */
   def apply() =
-    new HubService(HubUtils.freePort);
+    new HubService(SocketService.dispatch);
   
   /**
    * Creates and starts a new hub service (in this thread)
    * using the given port.
    */
   def apply(port : Int) =
-    new HubService(port);
+    new HubService(new SocketServiceDispatch(port));
 }
 
 /** Programmatic interface to a hub. */
@@ -162,12 +162,12 @@ object HubStart {
 object HubListRegistry {
   def main(argv : Array[String]) {
     if (argv.length != 1) {
-      System.err.println("Usage: socket://host:port");
+      System.err.println("Usage: host:port");
       System.exit(1);
     }
     
     val uri = if (!argv(0).startsWith("socket://")) {
-      new URI("socket://" + argv(0));
+      new URI("socket://" + argv(0) + "/hub");
     } else {
       new URI(argv(0));
     }
@@ -182,12 +182,12 @@ object HubListRegistry {
 object HubStopAll {
   def main(argv : Array[String]) {
     if (argv.length != 1) {
-      System.err.println("Usage: socket://host:port");
+      System.err.println("Usage: host:port");
       System.exit(1);
     }
     
     val uri = if (!argv(0).startsWith("socket://")) {
-      new URI("socket://" + argv(0));
+      new URI("socket://" + argv(0) + "/hub");
     } else {
       new URI(argv(0));
     }
