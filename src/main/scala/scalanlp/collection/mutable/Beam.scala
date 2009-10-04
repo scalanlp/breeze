@@ -18,6 +18,8 @@ package scalanlp.collection.mutable;
 
 
 import scala.collection.mutable.PriorityQueue;
+import scala.collection.mutable.AddingBuilder;
+import scala.collection._;
 import scala.collection.generic._;
 
 /**
@@ -27,7 +29,7 @@ import scala.collection.generic._;
  * @author dlwh
  */
 class Beam[T](val maxSize:Int, xs:T*)(implicit o : Ordering[T]) extends Iterable[T] 
-    with IterableTemplate[T,Beam[T]] with Addable[T,Beam[T]] 
+    with IterableLike[T,Beam[T]] with Addable[T,Beam[T]] 
     with Growable[T] { outer =>
   assert(maxSize >= 0)
   private val queue = new PriorityQueue[T]()(o.reverse);

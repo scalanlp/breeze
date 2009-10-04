@@ -143,10 +143,10 @@ trait BaseDoubleCounter[T] extends Tensor1[T] with TrackedStatistics[T] { outer 
   }
 
   def map[U](f: ((T,Double))=>U):Iterable[U] = {
-    activeElements.map{ kv => f(kv)} toSequence; 
+    activeElements.map{ kv => f(kv)} toSeq; 
   }
 
   def map[U](f: (T,Double)=>U):Iterable[U] = {
-    activeElements.map{ case (k,v) => f(k,v)} toSequence; 
+    activeElements.map{ case (k,v) => f(k,v)} toSeq; 
   }
 }

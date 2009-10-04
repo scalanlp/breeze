@@ -67,7 +67,7 @@ object Bag {
   def fromDocument[L](doc:LabeledDocument[L,String]): Bag[L,String] = fromDocument(doc,"/");
 
   def fromLabeledText[L](text:LabeledText[L]): Bag[L,String] = {
-    val ctr = count( (AlphaTokenize(text.contents) filter RemoveStopwords map(_.toLowerCase)));
+    val ctr = count( AlphaTokenize(text.contents) filter RemoveStopwords map(_.toLowerCase) iterator);
     new Bag[L,String](text.id,text.label,ctr);
   }
 }

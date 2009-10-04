@@ -95,7 +95,7 @@ class PitmanYorProcess private (
       }
     }
     
-    val numKeys = ret.iterator.filter( (x:(Int,Double)) => x._2 > 0.0).toSequence.size;
+    val numKeys = ret.iterator.filter( (x:(Int,Double)) => x._2 > 0.0).toSeq.size;
     
     ret.transform{ (k,v) =>
       if( k == index0) {

@@ -84,7 +84,7 @@ class ContrastiveDivergenceOptimizer[X,K,T<:Tensor1[K] with TensorSelfOp[K,T,Sha
 
 object TestCD {
   def main(arg: Array[String]) {
-    val data = (new Gaussian(3,1).samples take 1000).toSequence;
+    val data = (new Gaussian(3,1).samples take 1000).toSeq;
     def trans(mean: Vector) = { (x:Double) =>
       new Gaussian(mean(0),1)
     }

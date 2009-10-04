@@ -77,7 +77,7 @@ object Log {
   
   val globalLog = new Log(System.err,Log.INFO)
   
-  case class Level(severity : Int);
+  class Level(val severity : Int);
   case object NEVER extends Level(-1000);
   case object FATAL extends Level(1);
   case object ERROR extends Level(2);
@@ -85,7 +85,7 @@ object Log {
   case object INFO extends Level(8);
   case object DEBUG extends Level(10);
 
-  implicit def levelFromInt(x :Int) = Level(x);
+  implicit def levelFromInt(x :Int) = new Level(x);
 
   /**
   * Computes the current source file and line number.

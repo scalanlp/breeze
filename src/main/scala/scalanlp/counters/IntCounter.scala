@@ -173,10 +173,10 @@ trait BaseIntCounter[T] extends MutablePartialMap[T,Int] with TrackedIntStatisti
 
 
   def map[U](f: ((T,Int))=>U):Iterable[U] = {
-    activeElements.map{ kv => f(kv)} toSequence; 
+    activeElements.map{ kv => f(kv)} toSeq; 
   }
 
   def map[U](f: (T,Int)=>U):Iterable[U] = {
-    activeElements.map{ case (k,v) => f(k,v)} toSequence; 
+    activeElements.map{ case (k,v) => f(k,v)} toSeq; 
   }
 }

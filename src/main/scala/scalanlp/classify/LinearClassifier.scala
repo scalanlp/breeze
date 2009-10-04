@@ -6,7 +6,7 @@ import scalanlp.counters._;
 import Counters._
 
 import scalala.tensor.dense._;
-import scalala.Scalala._;
+import scalala.Scalala.{iArrayToVector=>_,_};
 
 @serializable
 @SerialVersionUID(1L)
@@ -38,7 +38,7 @@ object LinearClassifier {
              fv <- map) yield {
         (featureIndex(fv._1),fv._2);
       }
-    } ).toSequence
+    } ).toSeq
 
     val vdata = new DenseMatrix(data.size,featureIndex.size+1);
     val y = new DenseVector(data.size);
@@ -61,7 +61,7 @@ object LinearClassifier {
     val denseXtY = DenseVector(xty.size)(0);
     denseXtY := xty;
     val beta = xtx \ denseXtY;
-    val betaArray = beta.valuesIterator.toSequence.toArray;
+    val betaArray = beta.valuesIterator.toSeq.toArray;
     val trueWeights = betaArray.take(betaArray.size-1).toArray;
     val falseWeights = Array.fill(trueWeights.size)(0.0);
     new LinearClassifier(featureIndex,List(true,false),Array(trueWeights,falseWeights),Array(betaArray.last,0));

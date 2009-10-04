@@ -47,12 +47,12 @@ object Document {
       } else {
         val colon = line.indexOf(':');
         val category = line.substring(0,colon);
-        val tokens = WhitespaceTokenize(line.substring(colon+1)).toSequence;
+        val tokens = WhitespaceTokenize(line.substring(colon+1)).toSeq;
         result += (category->tokens);
       }
     }
 
-    if(lines.hasNext) result += ("body"->lines.flatMap(WhitespaceTokenize).toSequence);
+    if(lines.hasNext) result += ("body"->lines.flatMap(WhitespaceTokenize).toSeq);
 
     new Document(id, result);
   }

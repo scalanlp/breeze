@@ -19,7 +19,7 @@ import java.util.Arrays;
 import scala.collection.mutable.ArrayBuffer;
 import scala.Math.NEG_INF_DOUBLE;
 
-import scalala.Scalala._;
+import scalala.Scalala.{iArrayToVector=>_,iArrayToPartialMap=>_,_};
 import scalala.tensor.Vector;
 import scalala.tensor.dense._;
 import scalala.tensor.sparse._;
@@ -414,7 +414,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
     }
 
     private val startArray = Array(start);
-    private def validStatesFor(pos: Int) = {
+    private def validStatesFor(pos: Int): Seq[Int] = {
       if(pos < 0) startArray;
       else validStatesForObservation(words(pos));
     }
@@ -505,7 +505,7 @@ object CRF {
       val values = ( for {
         (words,tags) <- data.iterator;
         cal = crf.calibrate(words)
-      } yield (cal.logProbabilityOf(tags))) toSequence;
+      } yield (cal.logProbabilityOf(tags))) toSeq;
 
       val value = -mean(values);
 

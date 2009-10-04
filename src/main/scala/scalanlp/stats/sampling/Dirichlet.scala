@@ -37,7 +37,7 @@ class Dirichlet[T](prior: DoubleCounter[T]) extends ContinuousDistr[DoubleCounte
     new Dirichlet(prior);
   }
 
-  private val generators : Iterable[(T,Gamma)] = prior.iterator.map { (e:(T,Double)) => (e._1,new Gamma(e._2,1)) } toSequence;
+  private val generators : Iterable[(T,Gamma)] = prior.iterator.map { (e:(T,Double)) => (e._1,new Gamma(e._2,1)) } toSeq;
 
   /**
    * Provides access to the components of the Dirichlet, for inspection.

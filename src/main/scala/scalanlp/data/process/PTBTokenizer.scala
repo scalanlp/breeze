@@ -78,13 +78,13 @@ object PTBTokenizer extends StdLexical with ImplicitConversions with Scanners {
   } ^^ { _.mkString("") }
 
   private def seg(s: String, m1: String, m2: String) = {
-    val init :Parser[Char]= accept(s(0).toLowerCase) | s(0).toUpperCase;
+    val init :Parser[Char]= accept(s(0).toLower) | s(0).toUpper;
     val rest = acceptSeq(s.drop(1));
     init <~ rest ^^ { case i  =>  List(SL(i + m1), SL(m2)) }
   }
 
   private def seg(s: String, m1: String, m2: String, m3:String) = {
-    val init : Parser[Char] = accept(s(0).toLowerCase) | accept( s(0).toUpperCase);
+    val init : Parser[Char] = accept(s(0).toLower) | accept( s(0).toUpper);
     val rest = acceptSeq(s.drop(1));
     init <~ rest ^^ { case i => List(SL(i + m1), SL(m2), SL(m3)) }
   }

@@ -57,7 +57,7 @@ trait JarCorpus[+T] extends Corpus[T] {
     val src = Source.fromInputStream(strm);
     val result = (for{ line <- src.getLines();
                       trimmed = line.trim} 
-                      yield trimmed).toSequence;
+                      yield trimmed).toSeq;
     strm.close();
     result;
   }

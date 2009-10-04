@@ -154,7 +154,7 @@ object Serialization {
     import Builders._;
     implicit def listHandler[T](implicit tH: Handler[T]) = collectionFromElements[T,List[T]](_.toList);
 
-    implicit def seqHandler[T](implicit tH: Handler[T]) = collectionFromElements[T,Seq[T]](_.toSequence);
+    implicit def seqHandler[T](implicit tH: Handler[T]) = collectionFromElements[T,Seq[T]](_.toSeq);
 
     implicit def imSetHandler[T](implicit tH: Handler[T]) = collectionFromElements[T,Set[T]](Set() ++ _);
 

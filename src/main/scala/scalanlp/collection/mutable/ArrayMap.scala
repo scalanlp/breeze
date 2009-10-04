@@ -17,6 +17,7 @@ package scalanlp.collection.mutable;
 */
 
 import scala.collection.mutable.ArrayBuffer;
+import scala.collection.mutable.MapLike;
 import scala.collection.generic._;
 
 /**
@@ -31,7 +32,7 @@ import scala.collection.generic._;
 * @author dlwh
 */
 class ArrayMap[@specialized V:ClassManifest](private val arr: ArrayBuffer[V]) extends scala.collection.mutable.Map[Int,V]
-    with MutableMapTemplate[Int,V,ArrayMap[V]] {
+    with MapLike[Int,V,ArrayMap[V]] {
   def this() = this(new ArrayBuffer[V]())
   override def default(i: Int): V = defValue;
   def defValue:V = throw new NoSuchElementException("");

@@ -47,7 +47,7 @@ class ConfusionMatrix[L] private (private val classWise: Map[L,Map[L,Int]]) {
   private def r(x:Double) = "%.4f" format x;
 
   override def toString() = {
-    val canonical = (Set()  ++ classWise.valuesIterator.flatMap(_.keysIterator)).iterator.toSequence
+    val canonical = (Set()  ++ classWise.valuesIterator.flatMap(_.keysIterator)).iterator.toSeq
     val buf = new StringBuilder;
     buf ++= "======================================================\n";
     buf ++= canonical.mkString("\t","\t","\n");

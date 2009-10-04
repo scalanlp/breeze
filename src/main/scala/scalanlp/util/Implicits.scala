@@ -16,7 +16,7 @@ package scalanlp.util;
  limitations under the License. 
 */
 
-import scala.collection.mutable._;
+import scala.collection.mutable.ArrayBuffer;
 
 
 /**

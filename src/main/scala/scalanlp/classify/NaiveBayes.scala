@@ -106,6 +106,6 @@ object RunNaiveBayes {
     println("Train2");
     println(trainStats2);
 
-    println(RandomizationTest(trainData,nb,nb2));
+    println(RandomizationTest(trainData.toSeq,nb,nb2));
   }
 }

@@ -17,8 +17,8 @@ package scalanlp.collection.immutable;
 */
 
 import scala.collection.generic.Addable;
-import scala.collection.generic.AddingBuilder;
-import scala.collection.generic.IterableTemplate;
+import scala.collection.mutable.AddingBuilder;
+import scala.collection.IterableLike;
 
 
 import scalanlp.util.ScalaQL;
@@ -27,7 +27,7 @@ import scalanlp.util.ScalaQL;
 * From Okasaki's Functional Data Structures. Represents a functional heap
 */
 @serializable
-class BinomialHeap[T<%Ordered[T]] extends Iterable[T] with IterableTemplate[T,BinomialHeap[T]] 
+class BinomialHeap[T<%Ordered[T]] extends Iterable[T] with IterableLike[T,BinomialHeap[T]] 
     with Addable[T,BinomialHeap[T]] {
   import BinomialHeap._;
   protected val trees: List[Node[T]] = Nil;
