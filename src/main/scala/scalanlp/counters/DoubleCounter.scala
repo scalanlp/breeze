@@ -29,7 +29,7 @@ import scalanlp.util._;
 * A Counter is a Tensor1 with type T, backed by a an Index (hence, Indexed[T])
 * and a scalala.Vector (default: SparseHashVector). 
 *
-* Normally you will want to use object Counters's for creating Counters.
+* Normally you will want to use object Counters for creating Counters.
 *
 * @author dlwh
 */
