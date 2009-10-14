@@ -59,9 +59,11 @@ trait BaseIntCounter[T] extends MutablePartialMap[T,Int] with TrackedIntStatisti
   }
 
   def default = 0;
+  /*
   def default_=(default: Int) = {
     throw new UnsupportedOperationException("Cannot set default of IntCounter");
   }
+  */
 
   /**
   * This should create a default counter that is a copy of this.
@@ -151,6 +153,7 @@ trait BaseIntCounter[T] extends MutablePartialMap[T,Int] with TrackedIntStatisti
   }
 
   def clear() {
+    resetStatistics();
     counts.clear(); 
   }
 

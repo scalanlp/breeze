@@ -55,7 +55,8 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
     var converged = false;
     val n = init.domain.size; // number of parameters
     
-    val x : T = init.copy;
+    val x : T = init.like;
+    x :+= init;
 
     val memStep = new ArrayBuffer[T];
     val memGradDelta = new ArrayBuffer[T];
@@ -87,10 +88,10 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
 
         memStep += step;
         val gradDelta : T = newGrad.like;
-        gradDelta :-= grad;
+        gradDelta :+= (newGrad :- grad);
 
         memGradDelta += gradDelta;
-        memRho += 1/(step dot gradDelta);
+        memRho += (step dot gradDelta);
 
         if(memStep.length > m) {
           memStep.remove(0);
@@ -149,14 +150,14 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
     val as = new Array[Double](m);
 
     for(i <- (memStep.length-1) to 0 by -1) {
-      as(i) = memRho(i) * (memStep(i) dot dir);
+      as(i) = (memStep(i) dot dir)/memRho(i);
       dir -= memGradStep(i) * as(i);
     }
 
     dir :*= diag;
 
     for(i <- 0 until memStep.length) {
-      val beta = memRho(i) * (memGradStep(i) dot dir);
+      val beta = (memGradStep(i) dot dir)/memRho(i);
       dir += memStep(i) * (as(i) - beta);
     }
 
@@ -199,7 +200,7 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
     var myIter = 0;
 
     val c1 = 0.1;
-    var alpha = if(iter < 3) 0.05 else 1.0;
+    var alpha = if(iter < 1) 0.05 else 1.0;
 
     val c = 0.001 * normGradInDir;
 

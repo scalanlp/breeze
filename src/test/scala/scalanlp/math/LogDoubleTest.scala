@@ -16,38 +16,39 @@ package scalanlp.math;
  limitations under the License. 
 */
 
-/*
-import org.scalacheck._
-import org.specs._;
-import org.specs.matcher._;
+import org.scalatest._;
+import org.scalatest.junit._;
+import org.scalatest.prop._;
+import org.scalacheck._;
+import org.junit.runner.RunWith
 
 import scalanlp.counters.Counters._;
-import scalanlp.util.Implicits._;
 import LogDouble._;
 
-object LogDoubleSpecification extends Specification("LogDouble") with ScalaCheckMatchers {
+@RunWith(classOf[JUnitRunner])
+class LogDoubleTest extends FunSuite with Checkers {
   import Arbitrary._;
-  val dPair = for { 
+  implicit val dPair :Arbitrary[(Double,Double)] = Arbitrary(for { 
     d <- arbitrary[Double] suchThat {_ > 0};
     e <- arbitrary[Double] suchThat {_> 0}
   } yield {
     (d,e);
+  });
+
+  implicit def ae(x: Double) = new {
+    def =~=(y: Double) = Math.abs(x-y)/x < 1E-6;
   }
   
-  "addition" in {
-    dPair must pass {(dp:(Double,Double)) => val (d,e) = dp; { (d.toLogDouble + e.toLogDouble).value =~= d + e}}
+  test("addition") {
+    check { Prop.forAll {(dp:(Double,Double)) => val (d,e) = dp; { (d.toLogDouble + e.toLogDouble).value =~= d + e}}}
   }
-  "subtraction" in {
-    dPair must pass { (dp:(Double,Double)) => val (d,e) = dp;{ d < e || (d.toLogDouble - e.toLogDouble).value =~= d - e}}
+  test("subtraction") {
+    check { Prop.forAll {(dp:(Double,Double)) => val (d,e) = dp;{ d < e || (d.toLogDouble - e.toLogDouble).value =~= d - e}}}
   }
-  "multiplication" in {
-    dPair must pass { (dp:(Double,Double)) => val (d,e) = dp;{  (d.toLogDouble * e.toLogDouble).value =~= d * e}}
+  test("multiplication") {
+    check { Prop.forAll {(dp:(Double,Double)) => val (d,e) = dp;{  (d.toLogDouble * e.toLogDouble).value =~= d * e}}}
   }
-  "division" in { 
-    dPair must pass {(dp:(Double,Double)) => val (d,e) = dp;{ (d.toLogDouble / e.toLogDouble).value =~= d / e}}
+  test("division") { 
+    check {Prop.forAll {(dp:(Double,Double)) => val (d,e) = dp;{ (d.toLogDouble / e.toLogDouble).value =~= d / e}}}
   }
 }
-
-import org.specs.runner._;
-class LogDoubleTest extends JUnit4(LogDoubleSpecification);
-*/

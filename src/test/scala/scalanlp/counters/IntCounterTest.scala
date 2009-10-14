@@ -16,60 +16,84 @@ package scalanlp.counters;
  limitations under the License. 
 */
 
-/*
 import org.scalacheck._
 import org.scalatest._;
-import scalanlp.util.Implicits._;
+import org.scalatest.junit._;
+import org.scalatest.prop._;
 import scalanlp.counters._;
 import Counters._;
-class IntCounterSuite extends JUnitSuite with Checkers {
-  val arbitraryCounter = for(x <- Gen.listOf(Arbitrary.arbitrary[Int])) yield Counters.count(x);
-  val arbitraryCounterPair = for(c1 <- arbitraryCounter; c2 <- arbitraryCounter) yield (c1,c2);
-  val arbIntCounterPair = for(c1 <- arbitraryCounter; i <- Arbitrary.arbitrary[Int]) yield (c1,i)
+import org.junit.runner.RunWith
+
+@RunWith(classOf[JUnitRunner])
+class IntCounterTest extends FunSuite with Checkers {
+  import Arbitrary._;
+  implicit val arbitraryCounter = Arbitrary(for(x <- Gen.listOf(Arbitrary.arbitrary[Int])) yield Counters.count(x));
+
+  test("copy is a deep copy") {
+    check(Prop.forAll { (c:IntCounter[Int]) =>
+      val oldSize = c.size;
+      val oldTotal = c.total;
+      val oldElems = Map() ++ c.iterator;
+      val c2 = c.copy;
+      c2.clear;
+      c.size == oldSize && c.total == oldTotal;
+    });
+  }
+
+  test("Adding to a counter makes it contain it") {
+    check(Prop.forAll { (c: IntCounter[Int], a: Int) =>
+      val c2 = c.copy;
+      c2.incrementCount(a,1);
+      c2.contains(a) && c2.activeDomain.contains(a);
+    });
+  }
+
   test("clear") {
-    arbitraryCounter must pass  {(c : IntCounter[Int])  => c.clear(); c.size == 0 && c.total == 0}
-    arbIntCounterPair must pass  {(cp : (IntCounter[Int],Int))  => 
+    check(Prop.forAll{(c : IntCounter[Int])  => c.clear(); c.size == 0 && c.total == 0});
+    check(Prop.forAll {(cp : (IntCounter[Int],Int))  => 
       val (c,i) = cp;
       c.clear();
-      c.get(i) == None && c(i) == 0 
-    }
+      c.get(i) == None && c(i) == 0 && !c.contains(i);
+    });
   }
   test("sum and clear") {
-    arbitraryCounterPair must pass {(cp:(IntCounter[Int],IntCounter[Int])) =>
+    check(Prop.forAll{(cp:(IntCounter[Int],IntCounter[Int])) =>
       val (c,c2) = cp;
       c += c2; 
       c.clear(); 
       c.size == 0 && c.total == 0
-    }
+    })
   }
   test("sum preserves total") {
-    arbitraryCounterPair must pass { (cp:(IntCounter[Int],IntCounter[Int]))  => 
+    check( Prop.forAll { (cp:(IntCounter[Int],IntCounter[Int]))  => 
       val (c,c2) = cp; 
       val expTotal = c.total + c2.total;
       val maxSize = c.size + c2.size; 
       c+=c2;
       expTotal == c.total && c.size <= maxSize
-    }
+    })
   }
 
   test("scale preserves total") {
-    check { (cp:(IntCounter[Int],Int))  => 
-      val (c,i) = cp;
+    check ( Prop.forAll { (cp:(IntCounter[Int],Int))  => 
+      val (c2,i) = cp;
+      val c = c2.copy;
+
       (i == 0) ||  {
         val expTotal = c.total/i;
         c /=  i
         // truncation can cause weirdnesses.
         c.total.abs <= expTotal.abs;
       }
-    }
-    check { (cp:(IntCounter[Int],Int))  => 
-      val (c,i) = cp;
+    })
+    check ( Prop.forAll { (cp:(IntCounter[Int],Int))  => 
+      val (c2,i) = cp;
+      val c = c2.copy;
       (i == 0) || {
         val expTotal = c.total*i;
         c *=  i
         c.total == expTotal;
       }
-    }
+    })
   }
 }
-*/

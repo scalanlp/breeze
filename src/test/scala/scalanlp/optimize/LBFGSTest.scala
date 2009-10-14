@@ -15,36 +15,38 @@ package scalanlp.optimize
  limitations under the License. 
 */
 
-/*
-import org.scalacheck._
-import org.specs._;
-import org.specs.matcher._;
+import org.scalatest._;
+import org.scalatest.junit._;
+import org.scalatest.prop._;
+import org.scalacheck._;
+import org.junit.runner.RunWith
 
 import scalala.Scalala._;
 import scalala.tensor.Vector;
 import scalanlp.counters.Counters._;
 
-object LBFGSSpecification extends Specification("LBFGS")  with ScalaCheckMatchers {
+@RunWith(classOf[JUnitRunner])
+class LBFGSTest extends FunSuite with Checkers {
   import Arbitrary._;
-  val arbVector = for {
-    n <- arbitrary[Int] suchThat { _ > 0 };
+  implicit val arbVector : Arbitrary[Vector] = Arbitrary(for {
+    n <- arbitrary[Int] suchThat { _ > 0 } suchThat { _ < 4000};
     d <- arbitrary[Double]
-  } yield ( (rand(n) * d value) : Vector);
+  } yield ( (rand(n) * d value) : Vector));
 
-  val arbDoubleCounter = for {
-    v <- arbVector
+  implicit val arbDoubleCounter: Arbitrary[DoubleCounter[String]] = Arbitrary(for {
+    v <- arbitrary[Vector]
   } yield {
     val c = DoubleCounter[String]();
     for(i <- 0 until v.size) {
       c(i + "") = v(i);
     }
     c
-  }
+  });
 
 
-  val lbfgs = new LBFGS[Int,Vector](1E-4,100,4);
 
-  "optimize a simple multivariate gaussian" in {
+  test("optimize a simple multivariate gaussian") {
+    val lbfgs = new LBFGS[Int,Vector](100,4);
 
     def optimizeThis(init: Vector) = {
       val f = new DiffFunction[Int,Vector] {
@@ -57,15 +59,15 @@ object LBFGSSpecification extends Specification("LBFGS")  with ScalaCheckMatcher
       }
 
       val result = lbfgs.minimize(f,init) 
-      norm(result - ones(init.size) * 3,2) < 1E-10
+      norm(result :- ones(init.size) * 3,2) < 1E-10
     }
 
-    arbVector must pass { optimizeThis _ }
+    check(Prop.forAll(optimizeThis _));
 
   }
 
-  val lbfgsString = new LBFGS[String,DoubleCounter[String]](1E-4,100,4);
-  "optimize a simple multivariate gaussian with counters" in {
+  test("optimize a simple multivariate gaussian with counters") {
+    val lbfgsString = new LBFGS[String,DoubleCounter[String]](100,4);
 
     def optimizeThis(init: DoubleCounter[String]) = {
       val f = new DiffFunction[String,DoubleCounter[String]] {
@@ -78,16 +80,11 @@ object LBFGSSpecification extends Specification("LBFGS")  with ScalaCheckMatcher
       }
 
       val result = lbfgsString.minimize(f,init);
-      println(result);
-      (!result.exists{ case(k,v) => Math.abs(v - 3.0) > 1E-10}
+      (!result.exists{ case(k,v) => Math.abs(v - 3.0) > 1E-6}
      && !result.exists(_._2.isNaN));
     }
 
-    arbDoubleCounter must pass { optimizeThis _ }
+    check(Prop.forAll(optimizeThis _ ));
 
   }
 }
-
-import org.specs.runner._;
-class LBFGSTest extends JUnit4(LBFGSSpecification);
-*/
