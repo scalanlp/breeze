@@ -21,7 +21,6 @@ import scalanlp.collection.mutable.ArrayMap;
 import scala.collection.mutable.ArrayBuffer;
 import scalanlp.counters.Counters._;
 import scalanlp.math.Numerics._;
-import scalanlp.math.Arrays._;
 
 /**
  * Represents a Dirichlet distribution, the conjugate prior to the multinomial.
