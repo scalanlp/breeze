@@ -48,26 +48,21 @@ object PTBTokenizer extends StdLexical with ImplicitConversions with Scanners {
     | seg("Whaddya","ha","dd","ya")
     | seg("Whatcha","ha","t","cha")
     | '.' ~> '.' ~> '.'              ^^ { _ => List(SL("..."))}
-    | word ~ posessiveLike           ^^ {case w ~ xs => List(w, SL("'" + xs))}
-    | word ~ '\''                    ^^ {case w ~ '\'' => List(w,SL("'"))}
-    | number                         ^^ {case x => List(x) }
-    | symbol                         ^^ {case x => List(SL(""+x))}
+    | '"' ~> word                    ^^ { w => List(SL("\""),w) }
     | word ~ contraction             ^^ {case word ~ cont => List(word, cont) }
-    | title <~ '.'                   ^^ {case word => List(SL(word + ".")) }
-    | word <~ '.'                    ^^ {case word => List(word,SL(".")) }
-    | word                           ^^ {case word => List(word) }
+    | word ~ posessiveLike           ^^ {case w ~ xs => List(w, SL("'" + xs))}
+    | number                         ^^ {x => List(x) }
+    | rep1(symbol)                   ^^ {x => List(SL(x.mkString)) }
+    | title <~ '.'                   ^^ {word => List(SL(word + ".")) }
+    | word <~ '.'                    ^^ {word => List(word,SL(".")) }
+    | word ~ rep1(symbol)            ^^ {case w ~ s => List(w,SL(s.mkString))}
+    | word                           ^^ {word => List(word) }
   )
 
 
 
   private def words:Parser[List[Token]] = (
-    '"' ~ words ~ opt('"')               ^^ {case '"' ~ words ~ Some('"') =>
-                                                 SL("``") :: (words ++  List(SL("''")))
-                                               case '"' ~ words ~ None =>
-                                                 SL("``") :: words
-                                              }
-    //| word ~ '.' ~ (accept('[')|']'|')'|'}'|'>'|'"'|'\'') ~ ws ~ words ^^ {case w ~ '.' ~ x ~ _ ~ words => w :: SL(".") :: SL(""+x) :: words }
-    | repsep(tokens,ws)                    ^^ { _.foldLeft[List[Token]](Nil)(_++_) }
+    repsep(tokens,ws)                    ^^ { _.foldLeft[List[Token]](Nil)(_++_) }
     | ws ^^ {x => Nil}
   )
 
@@ -106,6 +101,6 @@ object PTBTokenizer extends StdLexical with ImplicitConversions with Scanners {
 	    'R' ~ 'E' |
 	    'V' ~ 'E'
    }
-  } ^^ { case x ~ (y ~ z) => StringLit("" + x + y)}
+  } ^^ { case x ~ (y ~ z) => StringLit("" + x + y + z)}
 
 }
