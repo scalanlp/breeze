@@ -122,6 +122,11 @@ abstract class BasePairedDoubleCounter[K1,K2]
       this(k1,k2) += v;
     }
   }
+
+  protected[counters] override def ensure(otherDomain: PartialMap[(K1,K2),Double]) {
+    // no need to do anything here.
+  }
+
 }
 
 trait PairStatsTracker[K1,K2] extends TrackedStatistics[K2] {
