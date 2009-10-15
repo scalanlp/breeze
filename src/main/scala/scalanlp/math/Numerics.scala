@@ -194,8 +194,7 @@ object Numerics {
   * requires a &gt; b
   */
   def logDiff(a : Double, b : Double) = {
-    if(a < b) b + log(exp(a-b) - 1)
-    else a + log( 1- exp(b-a) );    
+    a + log( 1- exp(b-a) );    
   }
 
 
