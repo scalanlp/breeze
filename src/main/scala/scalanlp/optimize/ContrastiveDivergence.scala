@@ -23,7 +23,6 @@ import scalala.tensor.operators._;
 import TensorShapes._;
 
 import scalanlp.stats.sampling._;
-import scalanlp.math.Arrays._;
 
 import scalanlp.util._;
 import Log._;
