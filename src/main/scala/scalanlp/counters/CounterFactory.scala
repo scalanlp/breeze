@@ -148,7 +148,10 @@ trait DoubleCounterFactory {
   */ 
   def aggregate[T](xs: Iterator[(T,Double)]) = {
     val c = mkDoubleCounter[T];
-    c ++= xs;
+    for( (x,v) <- xs) {
+      if(!c.contains(x)) c(x) = v;
+      else c(x) += v;
+    }
     c;
   }
 

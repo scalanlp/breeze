@@ -28,7 +28,9 @@ import scalanlp.util._;
 object LogCounters extends DoubleCounterFactory {
   class LogDoubleCounter[T] extends AbstractDoubleCounter[T]
       with TrackedStatistics.LogTotal[T] 
-      with TensorSelfOp[T,LogDoubleCounter[T],Shape1Col];
+      with TensorSelfOp[T,LogDoubleCounter[T],Shape1Col] {
+    default = Math.NEG_INF_DOUBLE;
+  }
 
   class LogPairedDoubleCounter[T1,T2] extends 
     AbstractPairedDoubleCounter[T1,T2] with TrackedStatistics.LogTotal[(T1,T2)];
@@ -93,7 +95,7 @@ object LogCounters extends DoubleCounterFactory {
 
   /**
   * Returns a LogCounters.LogDoubleCounter that has (approximately) total 1.
-  * Each entry (k,v) has a new entry in the map (k,exp(v - logTotal))
+  * Each entry (k,v) has a new entry in the map (k,(v - logTotal))
   */
   def logNormalize[T](ctr: LogDoubleCounter[T]) = {
     val result = LogDoubleCounter[T]();

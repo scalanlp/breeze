@@ -164,11 +164,13 @@ object Numerics {
   * @return log(\sum exp(a_i))
   */
   def logSum(a:Seq[Double]):Double = {
-    if(a.length == 1) a(0)
-    else if(a.length ==2) logSum(a(0),a(1));
-    else {
-      val m = a reduceLeft(_ max _);
-      m + log(a.foldLeft(0.)( (a,b) => a+exp( b - m )))
+    a.length match {
+      case 0 => Math.NEG_INF_DOUBLE;
+      case 1 => a(0)
+      case 2 => logSum(a(0),a(1));
+      case _ =>
+        val m = a reduceLeft(_ max _);
+        m + log(a.foldLeft(0.)( (a,b) => a+exp( b - m )))
     }
   }
 

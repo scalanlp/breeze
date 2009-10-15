@@ -54,7 +54,9 @@ object TrackedStatistics {
     def logTotal = logTotal_;
     private var logTotal_ = Math.NEG_INF_DOUBLE;
     statistics += { (t :T, oldV: Double, newV: Double) =>
-      logTotal_ = math.Numerics.logSum(logTotal_, (newV - oldV));
+      logTotal_ = math.Numerics.logSum(logTotal_,newV);
+      if(oldV != Math.NEG_INF_DOUBLE)
+        logTotal_ = math.Numerics.logDiff(logTotal_,oldV);
     }
     reset += { () => logTotal_ = Math.NEG_INF_DOUBLE}
   }
