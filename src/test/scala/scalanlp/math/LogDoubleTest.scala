@@ -27,12 +27,11 @@ import LogDouble._;
 
 @RunWith(classOf[JUnitRunner])
 class LogDoubleTest extends FunSuite with Checkers {
-  import Arbitrary._;
-  implicit val dPair :Arbitrary[(Double,Double)] = Arbitrary(for { 
-    d <- arbitrary[Double] suchThat {_ > 0};
-    e <- arbitrary[Double] suchThat {_> 0}
+  import Arbitrary.arbitrary;
+  implicit val ad :Arbitrary[Double] = Arbitrary(for { 
+    d <- arbitrary[Double](Arbitrary.arbDouble) suchThat {_ > 0}
   } yield {
-    (d,e);
+    d
   });
 
   implicit def ae(x: Double) = new {
@@ -40,15 +39,35 @@ class LogDoubleTest extends FunSuite with Checkers {
   }
   
   test("addition") {
-    check { Prop.forAll {(dp:(Double,Double)) => val (d,e) = dp; { (d.toLogDouble + e.toLogDouble).value =~= d + e}}}
+    check { Prop.forAll {(d: Double, e:Double) =>  
+      (d.toLogDouble + e.toLogDouble).value =~= d + e
+    }}
+    check { Prop.forAll {(d: Double, e:Double) =>  
+      e <= 0 ||(d.toLogDouble + e).value =~= d + e
+    }}
   }
   test("subtraction") {
-    check { Prop.forAll {(dp:(Double,Double)) => val (d,e) = dp;{ d < e || (d.toLogDouble - e.toLogDouble).value =~= d - e}}}
+    check { Prop.forAll {(d: Double, e:Double) => 
+      d < e || (d.toLogDouble - e.toLogDouble).value =~= d - e
+    }}
+    check { Prop.forAll {(d: Double, e:Double) => 
+     e <= 0 || d < e || (d.toLogDouble - e).value =~= d - e
+    }}
   }
   test("multiplication") {
-    check { Prop.forAll {(dp:(Double,Double)) => val (d,e) = dp;{  (d.toLogDouble * e.toLogDouble).value =~= d * e}}}
+    check { Prop.forAll {(d: Double, e:Double) => 
+      (d.toLogDouble * e.toLogDouble).value =~= d * e
+    }}
+    check { Prop.forAll {(d: Double, e:Double) => 
+     e <= 0 || (d.toLogDouble * e).value =~= d * e
+    }}
   }
   test("division") { 
-    check {Prop.forAll {(dp:(Double,Double)) => val (d,e) = dp;{ (d.toLogDouble / e.toLogDouble).value =~= d / e}}}
+    check {Prop.forAll {(d: Double, e:Double) =>
+      (d.toLogDouble / e.toLogDouble).value =~= d / e
+    }}
+    check {Prop.forAll {(d: Double, e:Double) =>
+      e <= 0 ||(d.toLogDouble / e).value =~= d / e
+    }}
   }
 }
