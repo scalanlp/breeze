@@ -32,8 +32,7 @@ import scalanlp.stats.sampling._;
 * @author dlwh
 */
 class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](val alpha: Double,
-    val scale: Double, 
-    val mxIter: Int,
+    val maxIter: Int,
     batchSize: Int)(implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col]) 
 																	    extends Minimizer[T,BatchDiffFunction[K,T]] 
                                       with GradientNormConvergence[K,T]
@@ -43,12 +42,6 @@ class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]
   * Runs SGD on f, for mxIter. It ignores tol.
   */
   def minimize(f: BatchDiffFunction[K,T], init: T) = {
-    val maxIter = if(mxIter <= 0) {
-      1000 * f.fullRange.size / batchSize;
-    } else {
-      mxIter * f.fullRange.size / batchSize;
-    }
-
     var temp = 1.0;
     var guess = init;
 
@@ -63,12 +56,12 @@ class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]
       val sample = selectSample(f,i);
 
       val grad = f.gradientAt(guess,sample);
-      log(Log.INFO)("SGD gradient: " + grad);
+      log(Log.INFO)("SGD gradient: " + grad.mkString("[",",","]"));
       assert(grad.forall(!_._2.isInfinite));
 
       guess = update(guess,grad,temp);
       assert(guess.forall(!_._2.isInfinite));
-      log(Log.INFO)("SGD update: " + guess);
+      log(Log.INFO)("SGD update: " + guess.mkString("[",",","]"));
 
       i+=1;
       converged = checkConvergence(grad);

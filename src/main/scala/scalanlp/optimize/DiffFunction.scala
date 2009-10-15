@@ -70,7 +70,7 @@ object DiffFunction {
 /**
 * A diff function that supports subsets of the data
 */
-trait BatchDiffFunction[K,T<:Tensor1[K]] extends DiffFunction[K,T] with ((T,Seq[K])=>Double) {
+trait BatchDiffFunction[K,T<:Tensor1[K]] extends DiffFunction[K,T] with ((T,Seq[Int])=>Double) {
   /**
   * Calculates the gradient of the function on a subset of the data
   */
