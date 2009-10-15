@@ -26,7 +26,6 @@ import scalala.tensor.sparse._;
 
 import scalanlp._;
 import counters._;
-import LogCounters._;
 import Counters._;
 import util.Index;
 import math.Numerics._;
@@ -94,12 +93,13 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
     * representing the normalized log-probability of a given state
     *being at a given position.
     */
-    lazy val logMarginals : Seq[Lazy[LogDoubleCounter[Int]]] = {
+    lazy val logMarginals : Seq[Lazy[DoubleCounter[Int]]] = {
       (for { 
         i:Int <- (0 until words.length).toArray
       } yield Lazy.delay {
         if(conditioning.contains(i)) {
-          val result = LogDoubleCounter[Int]();
+          val result = DoubleCounter[Int]();
+          result.default = NEG_INF_DOUBLE;
           result(conditioning(i) ) = 0.0;
           result;
         } else {
@@ -114,7 +114,8 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
             accum(head) = logSum(accum(head),score);
           }
 
-          val c = LogDoubleCounter[Int]();
+          val c = DoubleCounter[Int]();
+          c.default = NEG_INF_DOUBLE;
           // subtract out the log partition function.
           var j = 0;
           while(j < accum.size) {

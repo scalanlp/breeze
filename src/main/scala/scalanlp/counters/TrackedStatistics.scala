@@ -46,20 +46,6 @@ object TrackedStatistics {
 
     reset += { () => total_ = 0}
   }
-
-  /**
-  * Tracks the log of sum of values in the tracked object.
-  */
-  trait LogTotal[T] extends TrackedStatistics[T] {
-    def logTotal = logTotal_;
-    private var logTotal_ = Math.NEG_INF_DOUBLE;
-    statistics += { (t :T, oldV: Double, newV: Double) =>
-      logTotal_ = math.Numerics.logSum(logTotal_,newV);
-      if(oldV != Math.NEG_INF_DOUBLE)
-        logTotal_ = math.Numerics.logDiff(logTotal_,oldV);
-    }
-    reset += { () => logTotal_ = Math.NEG_INF_DOUBLE}
-  }
 }
 
 /**
