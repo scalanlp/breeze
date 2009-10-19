@@ -6,10 +6,11 @@ import scalanlp.math.Numerics.lgamma;
 import scalanlp.counters._;
 import Counters._
 
-class Beta(a: Double, b: Double) extends ContinuousDistr[Double] with ConjugatePrior[Double, Boolean]{
+class Beta(a: Double, b: Double) extends ContinuousDistr[Double] 
+    with ConjugatePrior[Double, Boolean] with Moments[Double] {
   require(a > 0.0);
   require(b > 0.0);
-  
+
   override def unnormalizedLogPdf(x: Double) = {
     require(x >= 0);
     require(x <= 1)
@@ -38,6 +39,9 @@ class Beta(a: Double, b: Double) extends ContinuousDistr[Double] with ConjugateP
     ctr(false) = b;
     new Polya(ctr);
   }
+
+  def mean = a / (a + b);
+  def variance = (a * b) / ( (a + b) * (a+b) * (a+b+1));
   
 
 }

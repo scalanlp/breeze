@@ -26,7 +26,7 @@ import scalanlp.math.Numerics._;
  * 
  * @author dlwh
  */
-class Gaussian(val mu :Double, val sigma : Double) extends ContinuousDistr[Double] {
+class Gaussian(val mu :Double, val sigma : Double) extends ContinuousDistr[Double] with Moments[Double] {
   private val inner = Rand.gaussian(mu,sigma);
   def draw() = inner.get();
 
@@ -57,4 +57,7 @@ class Gaussian(val mu :Double, val sigma : Double) extends ContinuousDistr[Doubl
   
   val normalizer = 1.0/sqrt(2 * Pi) / sigma;
   val logNormalizer = log(sqrt(2 * Pi)) + log(sigma);
+
+  def mean = mu;
+  def variance = sigma * sigma;
 }

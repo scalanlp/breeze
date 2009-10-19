@@ -63,3 +63,8 @@ trait DiscreteDistr[T] extends Measure[T] with Rand[T] {
   def apply(x:T) = unnormalizedProbabilityOf(x);
   override def logApply(x:T) = unnormalizedLogProbabilityOf(x);
 }
+
+trait Moments[T] {
+  def mean: T;
+  def variance: T;
+}

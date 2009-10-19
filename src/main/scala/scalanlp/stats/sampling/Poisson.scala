@@ -22,7 +22,7 @@ import Math._;
 /**
  * Represents a Poisson random variable.
  */
-class Poisson(val mean: Double) extends DiscreteDistr[Int] {
+class Poisson(val mean: Double) extends DiscreteDistr[Int] with Moments[Double] {
   private val ell = Math.exp(-mean);
   //  TODO: this is from Knuth, but it's linear in mean.
   def draw() = {
@@ -39,4 +39,6 @@ class Poisson(val mean: Double) extends DiscreteDistr[Int] {
   override def logProbabilityOf(k:Int) = {
     -mean + k * log(mean) - lgamma(k);
   }
+
+  def variance = mean;
 }
