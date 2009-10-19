@@ -3,9 +3,9 @@ package scalanlp.stats.sampling
 import scalanlp.math.Numerics.lgamma;
 import Math._;
 
-class Binomial(n: Int, p: Double) extends DiscreteDistr[Int] {
+class Binomial(n: Int, p: Double) extends DiscreteDistr[Int] with Moments[Double] {
   require(n > 0);
-  require(p > 0.0);
+  require(p >= 0.0);
   def probabilityOf(k: Int) = exp(logProbabilityOf(k));
   
   override def logProbabilityOf(k: Int) = {
@@ -17,5 +17,8 @@ class Binomial(n: Int, p: Double) extends DiscreteDistr[Int] {
   override def draw() = {
     (1 to n).map(_ => if(Rand.uniform.get < p) 1 else 0).foldLeft(0)(_+_);
   }
+
+  def mean = n * p;
+  def variance = mean * (1 - p);
 
 }

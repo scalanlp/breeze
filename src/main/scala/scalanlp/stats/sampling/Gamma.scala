@@ -27,7 +27,7 @@ import Math._;
  *
  * @author dlwh
  */
-class Gamma(val shape : Double, val scale : Double) extends ContinuousDistr[Double] {
+class Gamma(val shape : Double, val scale : Double) extends ContinuousDistr[Double] with Moments[Double] {
   if(shape <= 0.0 || scale <= 0.0)
     throw new IllegalArgumentException("Shape and scale must be positive");
 
@@ -61,7 +61,7 @@ class Gamma(val shape : Double, val scale : Double) extends ContinuousDistr[Doub
           return scale * -Math.log(Rand.uniform.get()) * xx / yy;
         }
       }
-      0.0; // silly;
+      error("shouldn't get here");
     } else { /* shape > 1.0 */
       /* Use bests algorithm */
       bb = shape - 1.0;
@@ -80,10 +80,12 @@ class Gamma(val shape : Double, val scale : Double) extends ContinuousDistr[Doub
           }
         }
       }
-      0.0; // silly;
+      error("shouldn't get here");
     }
   }
 
+  def mean = shape * scale;
+  def variance = mean * scale;
 }
 
 object Gamma {
@@ -120,4 +122,5 @@ object Gamma {
 
     override def posterior(ev:Iterable[(Int,Int)]) : PoissonPosterior = posterior(ev.iterator);
   }
+
 }
