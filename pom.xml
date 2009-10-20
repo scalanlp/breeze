@@ -200,9 +200,9 @@
       <version>1.2.0</version>
     </dependency>
     <dependency>
-      <groupId>org.scalacheck</groupId>
-      <artifactId>scalacheck</artifactId>
-      <version>1.7dev</version>
+      <groupId>org.scala-tools.testing</groupId>
+      <artifactId>scalacheck_2.8.0-20091013.004057</artifactId>
+      <version>1.7-SNAPSHOT</version>
       <scope>test</scope>
       <!--
       <groupId>org.scala-tools.testing</groupId>
