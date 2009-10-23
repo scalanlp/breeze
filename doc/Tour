@@ -165,3 +165,80 @@ and most things you can do to a Vector you can do to a DoubleCounter.
 
 == stats.sampling ==
 
+The sampling package is perhaps misnamed: it includes probability distributions as well as sampling routines. The approach taken is to encode 
+random number generators as a "monad", which means that they can be used in Scala for-comprehensions to create new random generators and compose them together. For example:
+
+<code>
+  scala> val negativeUniform = for( u <- Rand.uniform) yield -u;
+  negativeUniform: java.lang.Object with scalanlp.stats.sampling.Rand[Double] = scalanlp.stats.sampling.Rand$$anon$2@7464fb1c
+
+  scala> negativeUniform.sample(10);      
+  res2: List[Double] = List(-0.9948667414804051, -0.764770938027298, -0.27058341922450935, -0.5039489357855411, -0.5015343989361816, -0.8086984114692559, -0.33986204710236756, -0.525708716460873, -0.7617271434909493, -0.3807598326703686)
+
+  scala> val gaussian = for( u <- Rand.uniform; y <- Rand.gaussian(u*10,3.1)) yield y;
+  gaussian: java.lang.Object with scalanlp.stats.sampling.Rand[Double] = scalanlp.stats.sampling.Rand$$anon$1@71f2ba86
+
+  scala> gaussian.sample(10);                                                         
+  res4: List[Double] = List(3.601680497677195, 9.641105620362563, 13.517084845628528, 5.1039313703021225, 9.603679995565999, 1.2025990320986235, -3.3313072838776305, -1.4768403442753342, 5.619392993190006, 4.803988692726058)
+</code>
+
+For those of you used to the concept, for comprehensions let you
+write "generative stories" for new random data. If you're not, just
+think of these comprehensions as ways of writing little programs for generating random numbers.
+
+Rejection sampling (or conditioning) is also easy. For instance, to sample a random odd number:
+<code>
+  scala> val odd = for(x <- Rand.randInt if x % 2 == 1) yield x;         
+  odd: java.lang.Object with scalanlp.stats.sampling.Rand[Int] = scalanlp.stats.sampling.Rand$$anon$2@69b56985
+
+  scala> odd.sample(10) 
+  res20: List[Int] = List(2081979581, 729930353, 51800603, 1265418507, 1793688113, 1424445529, 1552890847, 97942263, 275586065, 1748560459)
+</code>
+
+=== Distributions ===
+
+ScalaNLP also provides a fairly large number of probability distributions built
+in. These come with access to either probability density function (for discrete
+distributions) or pdf functions (for continuous distributions). Many
+distributions also have methods for giving the mean and the variance.
+
+<code>
+  scala> val poi = new Poisson(3.0);
+  poi: scalanlp.stats.sampling.Poisson = <function1>
+
+  scala> poi.sample(10);
+  res21: List[Int] = List(3, 5, 5, 2, 2, 1, 1, 2, 4, 1)
+
+  scala> res21 map { poi.probabilityOf(_) }
+  res23: List[Double] = List(0.6721254229661636, 0.504094067224622, 0.504094067224622, 0.44808361531077556, 0.44808361531077556, 0.1493612051035918, 0.1493612051035918, 0.44808361531077556, 0.6721254229661628, 0.1493612051035918)
+  
+  scala> val doublePoi = for(x <- poi) yield x.toDouble; // meanAndVariance requires doubles, but Poisson samples over Ints
+  doublePoi: java.lang.Object with scalanlp.stats.sampling.Rand[Double] = scalanlp.stats.sampling.Rand$$anon$2@2c98070c
+
+  scala> scalanlp.stats.DescriptiveStats.meanAndVariance(doublePoi.samples.take(1000));
+  res29: (Double, Double) = (3.018,2.9666426426426447)
+
+  scala> (poi.mean,poi.variance)
+  res30: (Double, Double) = (3.0,3.0)
+</code>
+
+The sampling package also has limited support for conjugate priors:
+
+<code>
+
+scala> val gam = new Gamma(2.0,1.0) with Gamma.PoissonPrior;
+gam: scalanlp.stats.sampling.Gamma with scalanlp.stats.sampling.Gamma.PoissonPrior = <function1>
+
+scala> gam.mean
+res32: Double = 2.0
+
+scala> val poiSamples = poi.sample(10);
+poiSamples: List[Int] = List(2, 2, 1, 3, 6, 3, 2, 3, 3, 3)
+
+scala> val posterior = gam.posterior(scalanlp.counters.Counters.count(poiSamples))
+posterior: scalanlp.stats.sampling.Gamma.PoissonPosterior = <function1>
+
+scala> posterior.mean
+res41: Double = 2.7272727272727275
+
+</code>
