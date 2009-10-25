@@ -50,7 +50,7 @@ class Beam[T](val maxSize:Int, xs:T*)(implicit o : Ordering[T]) extends Iterable
           y <- f(x)) {
         if(queue.size < maxSize) {
           queue += y;
-        } else if (queue.max < y) { // q.max is the smallest element.
+        } else if (oU.compare(queue.max,y) < 0) { // q.max is the smallest element.
           queue.dequeue();
           queue += y;
         }
@@ -72,7 +72,7 @@ class Beam[T](val maxSize:Int, xs:T*)(implicit o : Ordering[T]) extends Iterable
 
   private def cat(h : PriorityQueue[T], x : T) {
     if(h.size < maxSize) h += x;
-    else if (h.max < x) {h.dequeue(); h += x;}
+    else if (o.compare(h.max,x) < 0) {h.dequeue(); h += x;}
   }
 
   def iterator = queue.iterator;

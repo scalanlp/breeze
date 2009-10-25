@@ -1,6 +1,6 @@
 package scalanlp.optimize;
 
-import scala.collection.mutable.{Vector=>_,_};
+import scala.collection.mutable.{_};
 import scalala.Scalala._;
 import scalala.tensor._;
 import scalala.tensor.operators._;

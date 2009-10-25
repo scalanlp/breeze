@@ -45,7 +45,7 @@ class Beam[T](val maxSize:Int, xs : T*)(implicit o : Ordering[T]) extends Iterab
 
   private def cat(h : BinomialHeap[T], x : T) = {
     if(h.size < maxSize) h + x;
-    else if (h.min < x) h.delMin + x;
+    else if (o.compare(h.min,x) < 0) h.delMin + x;
     else h;
   }
 
@@ -63,7 +63,7 @@ class Beam[T](val maxSize:Int, xs : T*)(implicit o : Ordering[T]) extends Iterab
           y <- f(x)) {
         if(queue.size < maxSize) {
           queue += y;
-        } else if (queue.max < y) { // q.max is the smallest element.
+        } else if (oU.compare(queue.max,y) < 0) { // q.max is the smallest element.
           queue.dequeue();
           queue += y;
         }

@@ -207,7 +207,7 @@ object Rand {
   /**
    * Implements the Knuth shuffle
    */
-  def permutation(n : Int) = new Rand[Vector[Int]] {
+  def permutation(n : Int) = new Rand[Seq[Int]] {
     def draw = {
       val arr = new ArrayBuffer[Int]();
       arr ++= (0 until n);
