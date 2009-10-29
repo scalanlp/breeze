@@ -52,17 +52,6 @@ trait Multinomial[T] extends DiscreteDistr[T] {
     e
   }
 
-  /**
-   * Returns a Multinomial(x) \propto  this(x) * that(x);
-   */
-  def *[U>:T](that : Multinomial[U]) = {
-    val c :DoubleCounter[U] = aggregate(that.components);
-    for((x,w) <- components
-      if c.get(x) != None)
-        c(x) *= w/ (c.total * total);
-    Multinomial(c);    
-  }
-
   def probabilityOf(e : T) = components.apply(e) / total;
   def logProbabilityOf(c: DoubleCounter[T]) = {
     val probs = for( (k,v) <- c) yield v * Math.log(components.apply(k) / total);
@@ -93,7 +82,48 @@ object Multinomial {
    * Returns a Multinomial where the probability of each element in the counter
    * is proportional to its count.
    */
+  def apply[T](c : LogCounters.DoubleCounter[T])  = new Multinomial[T] {
+    import Math._;
+    if(total.isNaN ) throw new IllegalArgumentException("total is " + total);
+    def total = exp(c.logTotal);
+    protected lazy val components = LogCounters.normalize(c);
+    override def draw() = {
+      var prob = Math.log(Rand.uniform.get())+ c.logTotal;
+      if(prob.isNaN) {
+        Log.globalLog(Log.ERROR)("You got a NaN!");
+      }
+      val elems = c.iterator;
+      var (e,w:Double) = elems.next;
+      prob  = scalanlp.math.Numerics.logDiff(prob,w);
+      while(prob > Math.NEG_INF_DOUBLE) {
+        val t  = elems.next;
+        e = t._1;
+        prob  = scalanlp.math.Numerics.logDiff(prob,t._2);
+      }
+      e
+    }
+
+    override def probabilityOf(e : T) = exp(logProbabilityOf(e));
+    override def logProbabilityOf(e: T) = c(e) - c.logTotal;
+    override def unnormalizedLogProbabilityOf(e:T) = c(e);
+    override def unnormalizedProbabilityOf(e:T) = exp(unnormalizedLogProbabilityOf(e));
+    override def toString = c.mkString("LogMultinomial{",",","}")
+  }
+
+
+  /**
+   * Returns a Multinomial where the probability of each element in the counter
+   * is proportional to its count.
+   */
   def fromCounter[T](c:DoubleCounter[T]) = apply(c);
+
+
+  /**
+   * Returns a Multinomial where the probability of each element in the counter
+   * is proportional to its count.
+   */
+  def fromLogCounter[T](c:LogCounters.DoubleCounter[T]) = apply(c);
+  
   
   /**
    * Returns a Multinomial where the probability is proportional to a(i)
