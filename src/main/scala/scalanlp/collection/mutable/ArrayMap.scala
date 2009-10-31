@@ -31,7 +31,7 @@ import scala.collection.generic._;
 *
 * @author dlwh
 */
-class ArrayMap[@specialized V:ClassManifest](private val arr: ArrayBuffer[V]) extends scala.collection.mutable.Map[Int,V]
+class ArrayMap[@specialized V](private val arr: ArrayBuffer[V]) extends scala.collection.mutable.Map[Int,V]
     with MapLike[Int,V,ArrayMap[V]] {
   def this() = this(new ArrayBuffer[V]())
   override def default(i: Int): V = defValue;
@@ -64,5 +64,5 @@ class ArrayMap[@specialized V:ClassManifest](private val arr: ArrayBuffer[V]) ex
   /**
    * Returns the array we're holding on to.
    */
-  def innerArray:Array[V] =  arr.toArray;
+  def innerArray(implicit w: ClassManifest[V]):Array[V] =  arr.toArray;
 }
