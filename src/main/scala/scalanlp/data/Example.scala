@@ -41,6 +41,17 @@ trait Example[+L,+T] extends Observation[T] with Labeled[L] {outer=>
   }
 
   /** 
+   * Converts the label in this example to a different one while still
+   * preserving features and id. 
+   */
+  def relabel[L2](f: L=>L2) = new Example[L2,T] {
+    def label = f(outer.label);
+    def id = outer.id;
+    val features = outer.features;
+  }
+
+
+  /** 
    * Converts the features in this example to a different one while still
    * 
    * preserving label and id. 
@@ -58,9 +69,14 @@ object Example {
   * Rather than the contained object.
   */
   def lift[T,U,L](f: T=>U) = (o : Example[L,T]) => o.map(f);
-  def apply[L,T](l: L, data: T): Example[L,T] = new Example[L,T] {
-    def id = "";
-    def label = l;
-    def features = data;
+  def apply[L,T](label: L, features: T, id:String=""): Example[L,T] = {
+    val l = label;
+    val f = features;
+    val i = id;
+    new Example[L,T] {
+      def id = i;
+      def label = l;
+      def features = f;
+    }
   }
 }

@@ -16,12 +16,12 @@ import scalala.tensor.operators.TensorShapes._;
 @serializable
 @SerialVersionUID(1L)
 class LinearClassifier[L,F,T2<:Tensor2[L,F] with TensorSelfOp[(L,F),T2,Shape2],
-                       TL<:Tensor1[L] with TensorSelfOp[L,TL,Shape1Col],
-                       TF<:Tensor1[F] with TensorSelfOp[F,TF,Shape1Col]]
-                          (val featureWeights: T2, val intercepts: TL)
-                            (implicit tpb: TensorProductBuilder[T2,TF,TL,Shape2,Shape1Col,Shape1Col],
-                             tla: Tensor1Arith[L,TL,TL,Shape1Col])
-                            extends Classifier[L,TF] {
+    TL<:Tensor1[L] with TensorSelfOp[L,TL,Shape1Col],
+    TF<:Tensor1[F] with TensorSelfOp[F,TF,Shape1Col]]
+    (val featureWeights: T2, val intercepts: TL)
+    (implicit tpb: TensorProductBuilder[T2,TF,TL,Shape2,Shape1Col,Shape1Col],
+      tla: Tensor1Arith[L,TL,TL,Shape1Col])
+    extends Classifier[L,TF] {
   def scores(o: TF) = {
     aggregate(featureWeights * o + intercepts);
   }

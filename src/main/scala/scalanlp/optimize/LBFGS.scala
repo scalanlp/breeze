@@ -150,6 +150,8 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
 
     for(i <- (memStep.length-1) to 0 by -1) {
       as(i) = (memStep(i) dot dir)/memRho(i);
+      assert(!as(i).isNaN);
+      assert(!as(i).isInfinite);
       dir -= memGradStep(i) * as(i);
     }
 
@@ -198,10 +200,11 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
     val MAX_ITER = 20;
     var myIter = 0;
 
-    val c1 = 0.1;
-    var alpha = if(iter < 1) 0.05 else 1.0;
+    val c1 = 0.2;
+    val initAlpha = if(iter < 1) 0.5 else 1.0;
+    var alpha = initAlpha;
 
-    val c = 0.001 * normGradInDir;
+    val c = 0.0001 * normGradInDir;
 
     val newX = x + dir * alpha value;
 
@@ -214,6 +217,9 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
       log(INFO)(".");
       myIter += 1;
     }
+    // Give up.
+    if(myIter >= MAX_ITER)
+      alpha = initAlpha;
     log(INFO)("Step size: " + alpha);
     (alpha,currentVal)
   }
@@ -262,7 +268,6 @@ object TestLBFGS {
     v("1") = 40.
     
     lbfgs.minimize(f,v) foreach println
-
   }
   
 }

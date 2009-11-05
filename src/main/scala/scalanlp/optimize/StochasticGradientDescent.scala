@@ -55,9 +55,10 @@ class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]
       log(Log.INFO)("SGD iteration: " + i);
       val sample = selectSample(f,i);
 
-      val grad = f.gradientAt(guess,sample);
-      log(Log.INFO)("SGD gradient: " + grad.mkString("[",",","]"));
+      val (value,grad) = f.calculate(guess,sample);
+      //log(Log.INFO)("SGD gradient: " + grad.mkString("[",",","]"));
       assert(grad.forall(!_._2.isInfinite));
+      log(Log.INFO)("SGD value: " + value);
 
       guess = update(guess,grad,temp);
       assert(guess.forall(!_._2.isInfinite));
