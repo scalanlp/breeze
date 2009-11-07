@@ -39,6 +39,7 @@ class ArrayMap[@specialized V](private val arr: ArrayBuffer[V]) extends scala.co
   override def apply(i: Int) = get(i).getOrElse(default(i));
   override def get(i : Int) = if(i < arr.length) Some(arr(i)) else None;
   override def += (k: (Int,V)): this.type = { update(k._1,k._2); this};
+  override def clear = arr.clear();
   override def update(i : Int, v : V) {
     if(i > arr.length)
       arr ++= (arr.length until i) map (default _)
@@ -51,11 +52,10 @@ class ArrayMap[@specialized V](private val arr: ArrayBuffer[V]) extends scala.co
   override def empty = new ArrayMap();
 
   /**
-  * Note that removing an element in the array <b>downshifts</b>
-  * all elements after it.
+  * Note that removing an element in the array simply replaces it with the default(i)
   */
-  def -=(i : Int):this.type = { arr remove i; this}
-  override val size = arr.size;
+  def -=(i : Int):this.type = { arr(i) = default(i); this}
+  override def size = arr.size;
   def iterator = keys zip values
   override def keys = (0 until arr.length).iterator;
   override def values = arr.iterator;
