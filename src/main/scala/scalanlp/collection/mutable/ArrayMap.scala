@@ -35,14 +35,23 @@ class ArrayMap[@specialized V](private val arr: ArrayBuffer[V]) extends scala.co
     with MapLike[Int,V,ArrayMap[V]] {
   def this() = this(new ArrayBuffer[V]())
   override def default(i: Int): V = defValue;
-  def defValue:V = throw new NoSuchElementException("");
+  def defValue:V = throw new NoSuchElementException("Key not found, and not default value");
   override def apply(i: Int) = get(i).getOrElse(default(i));
   override def get(i : Int) = if(i < arr.length) Some(arr(i)) else None;
   override def += (k: (Int,V)): this.type = { update(k._1,k._2); this};
   override def clear = arr.clear();
+
+  override def getOrElseUpdate(i: Int, v: =>V) = {
+    if(i >= arr.length) {
+      update(i,v);
+    }
+    arr(i)
+  }
+
   override def update(i : Int, v : V) {
-    if(i > arr.length)
-      arr ++= (arr.length until i) map (default _)
+    while(i > arr.length) {
+      arr += default(arr.length);
+    }
 
     if(i == arr.length) 
       arr += v;
