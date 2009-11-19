@@ -6,7 +6,7 @@
   <version>0.2-SNAPSHOT</version>
   <url>http://www.scalanlp.org</url>
   <properties>
-    <scala.version>2.8.0-SNAPSHOT</scala.version>
+    <scala.version>2.8.0.Beta1-RC1</scala.version>
   </properties>
   <inceptionYear>2008</inceptionYear>
   <mailingLists>
@@ -201,7 +201,7 @@
     </dependency>
     <dependency>
       <groupId>org.scala-tools.testing</groupId>
-      <artifactId>scalacheck_2.8.0-20091013.004057</artifactId>
+      <artifactId>scalacheck_2.8.0.Beta1-RC1</artifactId>
       <version>1.7-SNAPSHOT</version>
       <scope>test</scope>
       <!--
@@ -222,7 +222,7 @@
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest</artifactId>
-      <version>1.0-for-scala-2.8.0.20091026-SNAPSHOT</version>
+      <version>1.0.1-for-scala-2.8.0.Beta1-RC1-SNAPSHOT</version>
     </dependency>
   </dependencies>
   <reporting>
