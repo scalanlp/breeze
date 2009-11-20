@@ -66,7 +66,11 @@ trait Batch[+V] {
    */
   def size : Int;
   
-  /** Transforms the items of the batch according to the given function. */
+  /**
+   * Transforms the items of the batch according to the given function.
+   * This is non-strict by default, i.e. the computation is done again
+   * each time the returned batch is iterated.
+   */
   def map[O](f : V => O) : Batch[O] = {
     def mapper(item : Item[V]) = {
       try {
@@ -107,6 +111,10 @@ trait Batch[+V] {
               seq(1).asInstanceOf[Option[O]]
     ));
   }
+  
+  /** Creates a list-backed view of this batch (i.e. makes it strict). */
+  def strict : Batch[V] =
+    Batch.fromItems(items.toList, size);
 }
 
 /**
@@ -129,15 +137,17 @@ object Batch {
   }
   
   def fromIterable[V](inItems : Iterable[V]) = new Batch[V] {
-  /** Number of items in this batch. */
-  // TODO: in scala 2.8.0 this can just delegate to items.size
-  override lazy val size = {
-    var s = 0;
-    for (item <- items.elements) {
-      s += 1;
+    // TODO: in scala 2.8.0 this can just delegate to items.size
+    private lazy val cachedSize = {
+      var s = 0;
+      for (item <- items.elements) {
+        s += 1;
+      }
+      s;
     }
-    s;
-  }
+    
+    override def size =
+      cachedSize;
 
     override def items = new Iterable[Item[V]] {
       override def elements = {
