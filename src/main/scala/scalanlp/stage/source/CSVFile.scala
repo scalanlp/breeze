@@ -29,6 +29,14 @@ import scalanlp.stage.{Parcel,Batch,History};
  * @author dramage
  */
 object CSVFile {
+  /** CSVFile that points to the given file. */
+  def apply(file : File) =
+    new CSVFile(file.getPath);
+  
+  /** CSVFile that points to a file within the given base folder. */
+  def apply(base : File, name : String) =
+    new CSVFile(new File(base, name).getPath); 
+  
   /** Converts a CSV file into a parcel that acts as a source of strings. */
   implicit def iCSVFileToParcel(file : CSVFile) : Parcel[Unit,Batch[Seq[String]]] = {
     Parcel(History.Origin(file.toString), Batch.fromIterable(file.rows));

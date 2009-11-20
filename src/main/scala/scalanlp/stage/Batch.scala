@@ -33,16 +33,38 @@ trait Batch[+V] {
   /** An iterable of the values in this map (unboxes items). */
   def values : Iterable[V] =
     items.projection.map(_.value);
-  
-  /** Number of items in this batch. */
-  // TODO: in scala 2.8.0 this can just delegate to items.size
-  lazy val size = {
-    var s = 0;
-    for (item <- items.elements) {
-      s += 1;
+
+  /**
+   * Returns an iterable of options of values in this map of
+   * length this.size.  The iterable returns Some(item.value)
+   * for items present in this.items, but returns None for
+   * offsets that have no corresponding item.
+   */
+  def options : Iterable[Option[V]] = new Iterable[Option[V]] {
+    override def elements = new Iterator[Option[V]] {
+      var itemNum = 0;
+      val itemIter = items.elements.buffered.advanced;
+      
+      override def hasNext =
+        itemNum < size;
+      
+      override def next : Option[V] = {
+        val rv = if (itemIter.hasNext && itemIter.peek(0).number == itemNum)
+          Some(itemIter.next.value) else None;
+        itemNum += 1;
+        return rv;
+      }
     }
-    s;
   }
+    
+  
+  /**
+   * The total number of items undelrying this batch, which is 
+   * greater* than or equal to the size of this.items and
+   * this.values (because some items may have been filtered
+   * from another underlying batch).
+   */
+  def size : Int;
   
   /** Transforms the items of the batch according to the given function. */
   def map[O](f : V => O) : Batch[O] = {
@@ -54,7 +76,7 @@ trait Batch[+V] {
           throw new BatchException(item, ex);
       }
     }
-    Batch.fromItems[O](items.projection.map(mapper));
+    Batch.fromItems[O](items.projection.map(mapper), size);
   }
   
   /** Filters out items from the batch according to the given funciton. */
@@ -67,16 +89,16 @@ trait Batch[+V] {
           throw new BatchException(item, ex);
       }
     }
-    Batch.fromItems(items.projection.filter(filterer));
+    Batch.fromItems(items.projection.filter(filterer), size);
   }
   
   /** Takes the first n elements. */
   def take(n : Int) : Batch[V] =
-    Batch.fromItems(items.projection.take(n));
+    Batch.fromItems(items.projection.takeWhile(_.number < n), n);
 
   /** Drops the first n elements. */
   def drop(n : Int) : Batch[V] =
-    Batch.fromItems(items.projection.drop(n));
+    Batch.fromItems(items.projection.dropWhile(_.number < n), size-n);
   
   /** Zips together two batches. */
   def zip[O](that : Batch[O]) = {
@@ -101,11 +123,22 @@ extends RuntimeException("Unable to process " + item +
  * Static constructors for creating batches.
  */
 object Batch {
-  def fromItems[V](inItems : Iterable[Item[V]]) = new Batch[V] {
+  def fromItems[V](inItems : Iterable[Item[V]], numItems : Int) = new Batch[V] {
+    override def size = numItems;
     override def items = inItems;
   }
   
   def fromIterable[V](inItems : Iterable[V]) = new Batch[V] {
+  /** Number of items in this batch. */
+  // TODO: in scala 2.8.0 this can just delegate to items.size
+  override lazy val size = {
+    var s = 0;
+    for (item <- items.elements) {
+      s += 1;
+    }
+    s;
+  }
+
     override def items = new Iterable[Item[V]] {
       override def elements = {
         for ((v,i) <- inItems.elements.zipWithIndex) yield
@@ -138,6 +171,12 @@ object Batch {
    * @author dramage
    */
   class Zip[V](batches : Batch[V] *) extends Batch[Seq[Option[V]]] {
+    for (batch <- batches; if batch.size != this.size) {
+      throw new IllegalArgumentException("Can only zip batches with the same total number of items");
+    }
+    
+    override def size = batches(0).size;
+    
     override def items = new Iterable[Item[Seq[Option[V]]]] {
       override def elements = new Iterator[Item[Seq[Option[V]]]] {
         val iterators = batches.map(_.items.elements.buffered.advanced);

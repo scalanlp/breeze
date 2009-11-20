@@ -72,4 +72,8 @@ object ColumnDataSource {
   def apply(data : =>Iterator[Seq[String]]) = new ColumnDataSource {
     override def elements = data;
   }
+  
+  def apply(data : Iterable[Seq[String]]) = new ColumnDataSource {
+    override def elements = data.elements;
+  }
 }

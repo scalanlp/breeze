@@ -42,7 +42,7 @@ case class RegexTokenizer(pattern : String) extends Tokenizer {
  * 
  * @author dramage
  */
-case object SimpleWhitespaceTokenizer extends RegexTokenizer("\\s+");
+case object WhitespaceTokenizer extends RegexTokenizer("\\s+");
 
 
 /**
