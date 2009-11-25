@@ -110,7 +110,7 @@ trait DoubleCounterFactory {
   abstract trait AbstractDoubleCounter[T] extends BaseDoubleCounter[T]  { 
     override def copy = { 
       val c = mkDoubleCounter[T];
-      c += this;
+      c := this;
       c;
     }
     def like = mkDoubleCounter[T];
@@ -127,7 +127,7 @@ trait DoubleCounterFactory {
 
     override def copy = { 
       val c = mkPairedDoubleCounter[T1,T2];
-      c += this;
+      c := this;
       c;
     }
     def like = mkPairedDoubleCounter[T1,T2];
