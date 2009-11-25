@@ -90,6 +90,8 @@ trait Rand[+T] { outer : Rand[T] =>
 
   def filter(p: T=>Boolean) = condition(p);
 
+  def withFilter(p: T=>Boolean) = condition(p);
+
   // Not the most efficient implementation ever, but meh.
   def condition(p : T => Boolean) = new Rand[T] {
     def draw() = {
