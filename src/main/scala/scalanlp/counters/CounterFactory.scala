@@ -36,7 +36,7 @@ import scalanlp.util._;
 *
 * @author dlwh
 */
-trait DoubleCounterFactory {
+trait DoubleCounterFactory { factory =>
   /**
   * Abstract type that implementers must define. It must be a 
   * subtype of the AbstractDoubleCounter[T] trait.
@@ -131,7 +131,10 @@ trait DoubleCounterFactory {
       c;
     }
     def like = mkPairedDoubleCounter[T1,T2];
+
   }
+
+
 
   /**
   * Return a counter after adding in all the tuples.

@@ -136,4 +136,18 @@ object LogCounters extends DoubleCounterFactory {
     result;
   }
 
+  /**
+  * Returns a LogDoubleCounter over T1's, where the T1 counts are
+  * the logTotals of their counters in the passsed-in counter.
+  */
+  def marginalize[T1,T2](ctr: LogPairedDoubleCounter[T1,T2]) = {
+    val result = LogDoubleCounter[T1]();
+
+    for( (k1,c) <- ctr.rows) {
+      result(k1) = c.logTotal;
+    }
+
+    result;
+  }
+
 }

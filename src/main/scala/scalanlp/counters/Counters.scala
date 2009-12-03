@@ -120,6 +120,66 @@ object Counters extends DoubleCounterFactory with IntCounterFactory {
     def apply[T1,T2]():PairedIntCounter[T1,T2] = new PairedIntCounter[T1,T2];
   }
 
+  /**
+  * Returns a LogDoubleCounter over T1's, where the T1 counts are
+  * the logTotals of their counters in the passsed-in counter.
+  */
+  def marginalize[T1,T2](ctr: PairedDoubleCounter[T1,T2]) = {
+    val result = DoubleCounter[T1]();
+
+    for( (k1,c) <- ctr.rows) {
+      result(k1) = c.total;
+    }
+
+    result;
+  }
+
+
+  /**
+  * Returns a Counters.DoubleCounter that has (approximately) total 1.
+  * Each entry (k,v) has a new entry in the map (k,v/total)
+  */
+  def normalize[T](ctr: DoubleCounter[T]):Counters.DoubleCounter[T] = {
+    val result = Counters.DoubleCounter[T]();
+
+    for( (k,v) <- ctr) {
+      result(k) = v /ctr.total;
+    }
+
+    result;
+  }
+
+
+  
+  /**
+  * Returns a Counters.PairedDoubleCounter that has (approximately) total 1.
+  * Each entry ( (k1,k2),v) has a new entry in the map (k,v/total)
+  */
+  def normalize[T1,T2](ctr: PairedDoubleCounter[T1,T2]) = {
+    val result = Counters.PairedDoubleCounter[T1,T2]();
+
+    for( ((k1,k2),v) <- ctr) {
+      result(k1,k2) = v / ctr.total;
+    }
+
+    result;
+  }
+  
+  import scalanlp.counters.LogCounters.LogPairedDoubleCounter;
+  /** Returns a Counters.PairedDoubleCounter that has (approximately) total 1.
+  * Each entry ( (k1,k2),v) has a new entry in the map (k,exp(v - logTotal))
+  */
+  def normalize[T1,T2](ctr: LogPairedDoubleCounter[T1,T2]) = {
+    val result = Counters.PairedDoubleCounter[T1,T2]();
+
+    for( ((k1,k2),v) <- ctr) {
+      result(k1,k2) = Math.exp(v - ctr.logTotal);
+    }
+
+    result;
+  }
+
+
 }
 
 
