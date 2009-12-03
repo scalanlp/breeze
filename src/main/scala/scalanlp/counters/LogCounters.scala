@@ -150,4 +150,26 @@ object LogCounters extends DoubleCounterFactory {
     result;
   }
 
+  /**
+  * Returns KL(c1||c2)
+  */
+  def klDivergence[T1](c1: LogDoubleCounter[T1], c2: LogDoubleCounter[T1]) = {
+    import scala.util.control.Breaks._;
+    var result = 0.0;
+
+    breakable {
+      for( (k1,logV1) <- c1) {
+        val logV2 = c2(k1);
+        if(logV2 == Double.NegativeInfinity) {
+          result = Double.PositiveInfinity;
+          break;
+        }
+        result += Math.exp(logV1-c1.logTotal) * (logV1 - c1.logTotal - logV2 + c2.logTotal);  
+      }
+    }
+
+    result;
+  }
+
+
 }
