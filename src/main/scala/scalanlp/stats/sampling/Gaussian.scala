@@ -26,8 +26,9 @@ import scalanlp.math.Numerics._;
  * 
  * @author dlwh
  */
-class Gaussian(val mu :Double, val sigma : Double) extends ContinuousDistr[Double] with Moments[Double] {
-  private val inner = Rand.gaussian(mu,sigma);
+class Gaussian(val mu :Double, val sigma : Double)(implicit rand: RandBasis = Rand)
+    extends ContinuousDistr[Double] with Moments[Double] {
+  private val inner = rand.gaussian(mu,sigma);
   def draw() = inner.get();
 
   private val sqrt2 = Math.sqrt(2.0);

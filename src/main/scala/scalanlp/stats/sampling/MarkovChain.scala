@@ -182,12 +182,13 @@ object MarkovChain {
     * @param proposal the <b>symmetric</b> proposal distribution generator
     *
     */
-    def metropolis[T](proposal : T=> Rand[T])(logMeasure : T=>Double) = { t:T =>
+    def metropolis[T](proposal : T=> Rand[T])
+                     (logMeasure : T=>Double)(implicit rand:RandBasis=Rand) = { t:T =>
       for(next <- proposal(t);
           newLL = logMeasure(next);
           oldLL = logMeasure(t);
           a = min(1,exp(newLL - oldLL));
-          u <- uniform)
+          u <- rand.uniform) 
         yield if(u < a) next else t;
     }
 
@@ -196,7 +197,8 @@ object MarkovChain {
     * @param proposal the proposal distribution generator
     *
     */
-    def metropolisHastings[T](proposal: T =>(Measure[T] with Rand[T]))(logMeasure: T=>Double)= { t:T =>
+    def metropolisHastings[T](proposal: T =>(Measure[T] with Rand[T]))
+                             (logMeasure: T=>Double)(implicit rand:RandBasis=Rand)= { t:T =>
       val prop = proposal(t);
       for(next <- prop;
         newLL = logMeasure(next);
@@ -204,7 +206,7 @@ object MarkovChain {
         oldLL = logMeasure(t);
         oldP = prop.logApply(t);
         a = min(1,exp(newLL + newP - oldLL - oldP));
-        u <- uniform)
+        u <- rand.uniform)
       yield if(u < a) next else t;
     }
 
@@ -214,22 +216,22 @@ object MarkovChain {
     * @param init guess
     * @return a slice sampler
     */
-    def slice(logMeasure : Double=>Double, valid : Double=>Boolean) = {
+    def slice(logMeasure : Double=>Double, valid : Double=>Boolean)(implicit rand: RandBasis = Rand) = {
       val WINDOW = 2;
       val M = 10;
       (last:Double)=> {
         new Rand[Double] {
           def draw() = {
             // How bad are we willing to tolerate?
-            val prop = log(uniform.draw) + logMeasure(last);
-            val u = uniform.draw;
+            val prop = log(rand.uniform.draw) + logMeasure(last);
+            val u = rand.uniform.draw;
             // Find the boundaries
             var left = last - WINDOW * u;
             if(!valid(left))
               left = last;
             var right = left + WINDOW;
 
-            var j : Int =  (uniform.draw() * M).asInstanceOf[Int];
+            var j : Int =  (rand.uniform.draw() * M).asInstanceOf[Int];
             var k  = (M-1)-j;
 
             while( prop < logMeasure(left) && j > 0 && valid(left-WINDOW)) {
@@ -247,7 +249,7 @@ object MarkovChain {
             var happy = false;
             var next = Double.NaN;
             while(!happy) {
-              next = left + uniform.draw * (right - left);
+              next = left + rand.uniform.draw * (right - left);
               if(prop <= logMeasure(next)) {
                 happy = true;
               } else if(next < last) { //close the window

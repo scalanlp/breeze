@@ -26,7 +26,7 @@ import scalanlp.math.Numerics._;
  * Represents a Dirichlet distribution, the conjugate prior to the multinomial.
  * @author dlwh
  */
-class Dirichlet[T](prior: DoubleCounter[T]) extends ContinuousDistr[DoubleCounter[T]] with ConjugatePrior[DoubleCounter[T],T] {
+class Dirichlet[T](prior: DoubleCounter[T])(implicit rand: RandBasis = Rand) extends ContinuousDistr[DoubleCounter[T]] with ConjugatePrior[DoubleCounter[T],T] {
   /**
    * Returns a new Dirichlet after observing the evidence. 
    */

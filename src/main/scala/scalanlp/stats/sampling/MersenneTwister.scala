@@ -16,7 +16,17 @@ package scalanlp.stats.sampling;
 */
 
 
+/**
+* The Mersenne Twister is a random generator with a period of 2^19937-1,
+* which is absurdly long. It's known to be fairly fast, too.
+* 
+* It needs a 32-bit integer seed.
+*/
 class MersenneTwister(seed: Int) extends RandomGenerator {
+  /**
+  * Seeds the generator with System.currentTimeMillis.toInt
+  */
+  def this() = this(System.currentTimeMillis.toInt);
 
   // Create a length 624 array to store the state of the generator
   private val MT = new Array[Int](624);

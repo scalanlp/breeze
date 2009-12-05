@@ -31,7 +31,7 @@ import Math._;
  *
  * @author dlwh
  */
-case class VonMises(val mu: Double, val k: Double) extends ContinuousDistr[Double] {
+case class VonMises(val mu: Double, val k: Double)(implicit rand: RandBasis=Rand) extends ContinuousDistr[Double] {
   require( k >= 0, "K must be postive");
   require(mu <= Math.Pi * 2 && mu >= 0, "Mu must be in the range [0,2pi]");
 
@@ -46,14 +46,14 @@ case class VonMises(val mu: Double, val k: Double) extends ContinuousDistr[Doubl
 
   // rejection sampler based on the colt implementation
   private val myRandom = for {
-    u <- Rand.uniform;
-    v <- Rand.uniform;
+    u <- rand.uniform;
+    v <- rand.uniform;
     z = cos(Pi * u);
     w = (1.0 + r* z) / (r+z);
     c = k * (r - w);
     reject = (c * (2.0 - c) < v) && (log(c/v) + 1.0 < c)
     if !reject
-    choice <- Rand.uniform
+    choice <- rand.uniform
     theta = if(choice > 0.5) mu + acos(w) else mu -acos(w)
   } yield theta % (2 * Pi);
 

@@ -27,7 +27,8 @@ import Math._;
  *
  * @author dlwh
  */
-class Gamma(val shape : Double, val scale : Double) extends ContinuousDistr[Double] with Moments[Double] {
+class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasis = Rand)
+    extends ContinuousDistr[Double] with Moments[Double] {
   if(shape <= 0.0 || scale <= 0.0)
     throw new IllegalArgumentException("Shape and scale must be positive");
 
@@ -49,16 +50,16 @@ class Gamma(val shape : Double, val scale : Double) extends ContinuousDistr[Doub
     var zz = 0.0;
     if (shape == 1.0) {
       /* Exponential */
-      return scale * -Math.log(Rand.uniform.get);
+      return scale * -Math.log(rand.uniform.get);
     } else if (shape < 1.0) {
       /* Use Johnks generator */
       cc = 1.0 / shape;
       dd = 1.0 / (1.0 - shape);
       while (true) {
-        xx = Math.pow(Rand.uniform.get(), cc);
-        yy = xx + Math.pow(Rand.uniform.get(), dd);
+        xx = Math.pow(rand.uniform.get(), cc);
+        yy = xx + Math.pow(rand.uniform.get(), dd);
         if (yy <= 1.0) {
-          return scale * -Math.log(Rand.uniform.get()) * xx / yy;
+          return scale * -Math.log(rand.uniform.get()) * xx / yy;
         }
       }
       error("shouldn't get here");
@@ -67,8 +68,8 @@ class Gamma(val shape : Double, val scale : Double) extends ContinuousDistr[Doub
       bb = shape - 1.0;
       cc = 3.0 * shape - 0.75;
       while (true) {
-        uu = Rand.uniform.get();
-        vv = Rand.uniform.get();
+        uu = rand.uniform.get();
+        vv = rand.uniform.get();
         ww = uu * (1.0 - uu);
         yy = Math.sqrt(cc / ww) * (uu - 0.5);
         xx = bb + yy;

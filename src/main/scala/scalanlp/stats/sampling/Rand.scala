@@ -106,9 +106,10 @@ trait Rand[+T] { outer : Rand[T] =>
 }
 
 /**
- * Provides a number of random generators.
- */
-object Rand {
+* Provides standard combinators and such to use
+* to compose new Rands.
+*/ 
+class RandBasis(r: RandomGenerator) {
   /**
    * Chooses an element from a collection. 
    */
@@ -169,8 +170,6 @@ object Rand {
   def promote[T1,T2,T3,T4](t : (Rand[T1],Rand[T2],Rand[T3],Rand[T4])) = 
     fromBody( (t._1.get,t._2.get,t._3.get,t._4.get));
 
-  // Time-seeded random generators should be shared.
-  private val r = new java.util.Random;
   /**
    * Uniformly samples in [0,1]
    */
@@ -202,12 +201,12 @@ object Rand {
   /**
    * Samples a gaussian with m mean and s std
    */
-  def gaussian(m : Double, s : Double) :Rand[Double] = new Rand[Double] {
+  def gaussian(m : Double, s : Double): Rand[Double] = new Rand[Double] {
     def draw = m + s * gaussian.get
   }
 
   /**
-   * Implements the Knuth shuffle
+   * Implements the Knuth shuffle of numbers from 0 to n.
    */
   def permutation(n : Int) = new Rand[Seq[Int]] {
     def draw = {
@@ -224,5 +223,9 @@ object Rand {
       arr;
     }
   }
-
 }
+
+/**
+ * Provides a number of random generators.
+ */
+object Rand extends RandBasis(new MersenneTwister());

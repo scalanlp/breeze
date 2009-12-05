@@ -36,8 +36,9 @@ class PitmanYorProcess private (
                        private val drawn: DoubleCounter[Int],
                        unobservedIndex: Int,
                        val theta: Double,
-                       val alpha:Double) extends DiscreteDistr[Int] with Process[Int] { outer =>
-  def this(theta: Double, alpha: Double) = this(DoubleCounter[Int](), 0, theta,alpha);
+                       val alpha:Double)(implicit rand: RandBasis)
+                       extends DiscreteDistr[Int] with Process[Int] { outer =>
+  def this(theta: Double, alpha: Double)(implicit rand: RandBasis=Rand) = this(DoubleCounter[Int](), 0, theta,alpha);
   def this(theta: Double) = this(theta,0.0);
 
   assert( (alpha < 0 && theta % alpha == 0.0) || (0 <= alpha && alpha <= 1.0 && theta > -alpha));
@@ -178,7 +179,7 @@ class PitmanYorProcess private (
         
         backward.get(t) match {
           case Some(buf) =>
-            val chooser = Rand.choose(buf);
+            val chooser = rand.choose(buf);
 	          if(v < 0) {
 	            (0 until v.abs).iterator map ( _ => (chooser.get,-1))
 	          } else {

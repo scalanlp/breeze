@@ -6,7 +6,7 @@ import scalanlp.math.Numerics.lgamma;
 import scalanlp.counters._;
 import Counters._
 
-class Beta(a: Double, b: Double) extends ContinuousDistr[Double] 
+class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double] 
     with ConjugatePrior[Double, Boolean] with Moments[Double] {
   require(a > 0.0);
   require(b > 0.0);
@@ -20,7 +20,7 @@ class Beta(a: Double, b: Double) extends ContinuousDistr[Double]
   val logNormalizer =  lgamma(a) + lgamma(b) - lgamma(a+b)
   
   private val aGamma = new Gamma(a,1);
-  private val bGamma = new Gamma(b,1.);
+  private val bGamma = new Gamma(b,1);
   
   override def draw() = {
     val ad = aGamma.get;
