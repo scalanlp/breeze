@@ -32,7 +32,7 @@ class Beam[T](val maxSize:Int, xs : T*)(implicit o : Ordering[T]) extends Iterab
   assert(maxSize >= 0)
   val heap = trim(BinomialHeap(xs:_*));
 
-  override val size = heap.size;
+  override def size = heap.size;
   def this(maxSize: Int)(implicit o: Ordering[T]) = this(maxSize,Nil:_*)(o);
 
   private def trim(h2 : BinomialHeap[T]) = {
