@@ -33,7 +33,7 @@ class Beam[T](val maxSize:Int, xs:T*)(implicit o : Ordering[T]) extends Iterable
     with Growable[T] { outer =>
   assert(maxSize >= 0)
   private val queue = new PriorityQueue[T]()(o.reverse);
-  queue ++= xs;
+  xs foreach (cat(queue,_));
 
   override def size = queue.size;
 
