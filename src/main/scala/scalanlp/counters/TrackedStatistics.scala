@@ -12,22 +12,14 @@ import scalanlp._;
 * @author dlwh
 */
 trait TrackedStatistics[T] { 
-  /**
-  * The statistics we're tracking. Subtraits should add functions of the form
-  * (T,newValue,oldValue)=&gt;Unit in their constructor.
-  */
-  protected val statistics  = new ArrayBuffer[(T,Double,Double)=>Unit]
-  protected val reset  = new ArrayBuffer[()=>Unit]
 
   /**
   * Called by implementing classes when a new key's value is changed in some way.
   */
-  protected[counters] final def updateStatistics(t: T, oldV: Double, newV: Double) {
-    statistics foreach ( _.apply(t,oldV,newV) );
+  protected[counters] def updateStatistics(t: T, oldV: Double, newV: Double) {
   }
 
-  protected[counters] final def resetStatistics() {
-    reset foreach (_ apply ());
+  protected[counters] def resetStatistics() {
   }
 }
 
@@ -40,11 +32,15 @@ object TrackedStatistics {
 
     private var total_ = 0.0;
 
-    statistics += { (t :T, oldV: Double, newV: Double) =>
+    override protected[counters] def updateStatistics(t :T, oldV: Double, newV: Double) = {
       total_ += (newV - oldV);
+      super.updateStatistics(t,oldV,newV);
     }
 
-    reset += { () => total_ = 0}
+    override protected[counters] def resetStatistics() {
+      total_ = 0
+      super.resetStatistics();
+    }
   }
 
   /**
@@ -52,13 +48,19 @@ object TrackedStatistics {
   */
   trait LogTotal[T] extends TrackedStatistics[T] {
     def logTotal = logTotal_;
-    private var logTotal_ = Math.NEG_INF_DOUBLE;
-    statistics += { (t :T, oldV: Double, newV: Double) =>
+    private var logTotal_ = Double.NegativeInfinity;
+
+    override protected[counters] def updateStatistics(t :T, oldV: Double, newV: Double) = {
       logTotal_ = math.Numerics.logSum(logTotal_,newV);
       if(oldV != Math.NEG_INF_DOUBLE)
         logTotal_ = math.Numerics.logDiff(logTotal_,oldV);
+      super.updateStatistics(t,oldV,newV);
     }
-    reset += { () => logTotal_ = Math.NEG_INF_DOUBLE}
+
+    override protected[counters] def resetStatistics() {
+      logTotal_ = Double.NegativeInfinity
+      super.resetStatistics();
+    }
   }
 }
 

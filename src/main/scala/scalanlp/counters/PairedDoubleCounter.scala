@@ -41,7 +41,7 @@ abstract class BasePairedDoubleCounter[K1,K2]
   private val k2Set = scala.collection.mutable.Set[K2]();
 
   // Keep track of size, and what keys we know of.
-  statistics += { (k1k2: (K1,K2), oldV: Double, newV: Double) =>
+  override protected[counters] def updateStatistics(k1k2: (K1,K2), oldV: Double, newV: Double) = {
     val DEFAULT = default;
     (oldV,newV) match {
       case (DEFAULT,DEFAULT) => (); 
@@ -49,6 +49,7 @@ abstract class BasePairedDoubleCounter[K1,K2]
       case (DEFAULT,_) => size_ += 1; k1Set += k1k2._1; k2Set += k1k2._2;
       case (_,_) =>
     }
+    super.updateStatistics(k1k2, oldV, newV);
   }
 
   /**
@@ -64,10 +65,17 @@ abstract class BasePairedDoubleCounter[K1,K2]
   def rows = theMap.iterator;
 
   // todo: make this faster.
-  def activeDomain = theMap.foldLeft[MergeableSet[(K1,K2)]](EmptySet()) { (set,kc) =>
-    val (k1,c) = kc;
-    val s2 =Set() ++ (for(k2 <- c.activeKeys) yield (k1,k2) )
-    UnionSet(set,MergeableSet(s2));
+  val activeDomain = new MergeableSet[(K1,K2)] {
+    def contains(c: (K1,K2)) = theMap.contains(c._1) && theMap(c._1).contains(c._2);
+
+    def iterator = {
+      for( (k1,c) <-theMap.iterator;
+        k2 <- c.keysIterator)
+      yield ( (k1,k2));
+    }
+
+    override def size = outer.size;
+    
   }
 
   override def iterator = {
@@ -133,7 +141,8 @@ trait PairStatsTracker[K1,K2] extends TrackedStatistics[K2] {
   protected def outer: TrackedStatistics[(K1,K2)];
   protected def k1: K1;
 
-  statistics += { (k2: K2, oldV: Double, newV: Double) =>
+  override protected[counters] def updateStatistics(k2: K2, oldV: Double, newV: Double) = {
     outer.updateStatistics( (k1,k2),oldV,newV);
+    super.updateStatistics(k2,oldV,newV);
   }
 }
