@@ -45,8 +45,8 @@ abstract class BasePairedDoubleCounter[K1,K2]
     val DEFAULT = default;
     (oldV,newV) match {
       case (DEFAULT,DEFAULT) => (); 
-      case (_,DEFAULT) => size_ -= 1;
-      case (DEFAULT,_) => size_ += 1; k1Set += k1k2._1; k2Set += k1k2._2;
+      case (_,DEFAULT) => 
+      case (DEFAULT,_) => k1Set += k1k2._1; k2Set += k1k2._2;
       case (_,_) =>
     }
     super.updateStatistics(k1k2, oldV, newV);
@@ -55,8 +55,7 @@ abstract class BasePairedDoubleCounter[K1,K2]
   /**
   * Returns the total number of nondefault entries in the counter.
   */
-  override def size = size_ ;
-  private var size_ = 0;
+  override def size = theMap.valuesIterator.foldLeft(0)(_+_.size);
 
   def domain = {
     ProductSet(MergeableSet(k1Set),MergeableSet(k2Set));
@@ -66,7 +65,6 @@ abstract class BasePairedDoubleCounter[K1,K2]
 
   def rows = theMap.iterator;
 
-  // todo: make this faster.
   val activeDomain = new MergeableSet[(K1,K2)] {
     def contains(c: (K1,K2)) = theMap.contains(c._1) && theMap(c._1).contains(c._2);
 
