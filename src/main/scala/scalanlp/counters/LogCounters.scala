@@ -27,7 +27,7 @@ import scalanlp.util._;
 
 object LogCounters extends DoubleCounterFactory {
   class LogDoubleCounter[T] extends AbstractDoubleCounter[T]
-      with TrackedStatistics.LogTotal[T] 
+      with TrackedStatistics.LogTotal[T]
       with TensorSelfOp[T,LogDoubleCounter[T],Shape1Col] {
     default = Math.NEG_INF_DOUBLE;
   }

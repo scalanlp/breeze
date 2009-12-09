@@ -26,9 +26,6 @@ import scalanlp.util._;
 /**
 * The basic interface for Counters, which are sort of likes maps from T to Double.
 *
-* A Counter is a Tensor1 with type T, backed by a an Index (hence, Indexed[T])
-* and a scalala.Vector (default: SparseHashVector). 
-*
 * Normally you will want to use object Counters for creating Counters.
 *
 * @author dlwh
@@ -49,6 +46,8 @@ trait BaseDoubleCounter[T] extends Tensor1[T] with TrackedStatistics[T] { outer 
     
   }
   val domain : MergeableSet[T] = activeDomain;
+
+  override def valuesIterator = counts.valuesIterator
 
   /**
   * Sets the count for t to be v, and calls updateStatistics.

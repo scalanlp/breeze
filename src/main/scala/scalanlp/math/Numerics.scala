@@ -159,13 +159,23 @@ object Numerics {
     logSum(Array(a,b) ++ c);
   }
 
+
+  /**
+  * Sums together things in log space.
+  * @return log(\sum exp(a_i))
+  */
+  def logSum(iter:Iterator[Double], max: Double):Double = {
+    max + log(iter.foldLeft(0.)( (a,b) => a+exp( b - max )))
+  }
+
+
   /**
   * Sums together things in log space.
   * @return log(\sum exp(a_i))
   */
   def logSum(a:Seq[Double]):Double = {
     a.length match {
-      case 0 => Math.NEG_INF_DOUBLE;
+      case 0 => Double.NegativeInfinity;
       case 1 => a(0)
       case 2 => logSum(a(0),a(1));
       case _ =>

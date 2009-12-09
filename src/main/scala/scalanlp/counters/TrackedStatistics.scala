@@ -21,6 +21,7 @@ trait TrackedStatistics[T] {
 
   protected[counters] def resetStatistics() {
   }
+
 }
 
 object TrackedStatistics {
@@ -43,25 +44,39 @@ object TrackedStatistics {
     }
   }
 
+
   /**
   * Tracks the log of sum of values in the tracked object.
+  * 
+  * It turns out to be inefficient to actually track the log total, so we
+  * just track whether or not we can keep using it.
   */
   trait LogTotal[T] extends TrackedStatistics[T] {
-    def logTotal = logTotal_;
+    private var logTotalOk = true;
     private var logTotal_ = Double.NegativeInfinity;
 
-    override protected[counters] def updateStatistics(t :T, oldV: Double, newV: Double) = {
-      logTotal_ = math.Numerics.logSum(logTotal_,newV);
-      if(oldV != Math.NEG_INF_DOUBLE)
-        logTotal_ = math.Numerics.logDiff(logTotal_,oldV);
-      super.updateStatistics(t,oldV,newV);
+    def logTotal = if(logTotalOk) {
+      logTotal_
+    } else {
+      val max = valuesIterator.foldLeft(Double.NegativeInfinity)(_ max _);
+      logTotal_ = scalanlp.math.Numerics.logSum(valuesIterator,max);
+      logTotalOk = true;
+      logTotal_
     }
 
+    def valuesIterator: Iterator[Double];
+
+    override protected[counters] def updateStatistics(t: T, oldV: Double, newV: Double) {
+      logTotalOk = false;
+      super.updateStatistics(t,oldV,newV);
+    }
+    
     override protected[counters] def resetStatistics() {
-      logTotal_ = Double.NegativeInfinity
+      logTotalOk = false;
       super.resetStatistics();
     }
   }
+
 }
 
 /**

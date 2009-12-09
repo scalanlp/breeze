@@ -62,6 +62,8 @@ abstract class BasePairedDoubleCounter[K1,K2]
     ProductSet(MergeableSet(k1Set),MergeableSet(k2Set));
   }
 
+  override def valuesIterator = theMap.valuesIterator.flatMap(_.valuesIterator); 
+
   def rows = theMap.iterator;
 
   // todo: make this faster.
