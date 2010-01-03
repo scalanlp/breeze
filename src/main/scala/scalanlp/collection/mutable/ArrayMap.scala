@@ -65,9 +65,9 @@ class ArrayMap[@specialized V](private val arr: ArrayBuffer[V]) extends scala.co
   */
   def -=(i : Int):this.type = { arr(i) = default(i); this}
   override def size = arr.size;
-  def iterator = keys zip values
-  override def keys = (0 until arr.length).iterator;
-  override def values = arr.iterator;
+  def iterator = keysIterator zip valuesIterator
+  override def keysIterator = (0 until arr.length).iterator;
+  override def valuesIterator = arr.iterator;
 
 
   /**
