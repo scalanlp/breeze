@@ -13,9 +13,9 @@ import scalanlp.collection.mutable.ArrayMap;
  * http://en.wikipedia.org/wiki/Multivariate_Polya_distribution
  */
 class Polya[T](prior: DoubleCounter[T])(implicit rand: RandBasis=Rand) extends DiscreteDistr[T] {
-  private val innerDirichlet = new Dirichlet(prior);
+  private val innerDirichlet = new Dirichlet(prior)(rand);
   def draw() = {
-    Multinomial(prior).get;
+    Multinomial(innerDirichlet.draw)(rand).get;
   }
   
   val logNormalizer = -lbeta(prior);

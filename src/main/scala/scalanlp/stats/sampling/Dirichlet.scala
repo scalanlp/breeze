@@ -33,10 +33,10 @@ class Dirichlet[T](prior: DoubleCounter[T])(implicit rand: RandBasis = Rand) ext
   override def posterior(evidence : Iterator[(T,Int)]): Dirichlet[T] = {
     val ctr = aggregate(evidence.map(x => (x._1,x._2.toDouble)));
     ctr += prior;
-    new Dirichlet(prior);
+    new Dirichlet(prior)(rand);
   }
 
-  private val generators : Iterable[(T,Gamma)] = prior.iterator.map { (e:(T,Double)) => (e._1,new Gamma(e._2,1)) } toSeq;
+  private val generators : Iterable[(T,Gamma)] = prior.iterator.map { (e:(T,Double)) => (e._1,new Gamma(e._2,1)(rand)) } toSeq;
 
   /**
    * Provides access to the components of the Dirichlet, for inspection.
@@ -69,7 +69,7 @@ class Dirichlet[T](prior: DoubleCounter[T])(implicit rand: RandBasis = Rand) ext
   /**
    * Returns a Polya Distribution
    */
-  def predictive = new Polya(aggregate(prior.iterator));
+  def predictive = new Polya(aggregate(prior.iterator))(rand);
 
 }
 

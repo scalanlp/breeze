@@ -19,8 +19,8 @@ class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends Contin
   
   val logNormalizer =  lgamma(a) + lgamma(b) - lgamma(a+b)
   
-  private val aGamma = new Gamma(a,1);
-  private val bGamma = new Gamma(b,1);
+  private val aGamma = new Gamma(a,1)(rand);
+  private val bGamma = new Gamma(b,1)(rand);
   
   override def draw() = {
     val ad = aGamma.get;
@@ -30,14 +30,14 @@ class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends Contin
   
   override def posterior(obs: Iterator[(Boolean,Int)]) = {
     val ctr = Counters.aggregate(obs.map{ case (k,v) => (k,v.toDouble)});
-    new Beta(ctr(true)+a, ctr(false)+b)
+    new Beta(ctr(true)+a, ctr(false)+b)(rand)
   }
   
   def predictive = {
     val ctr = DoubleCounter[Boolean]();
     ctr(true) = a;
     ctr(false) = b;
-    new Polya(ctr);
+    new Polya(ctr)(rand);
   }
 
   def mean = a / (a + b);

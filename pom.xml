@@ -6,7 +6,7 @@
   <version>0.2-SNAPSHOT</version>
   <url>http://www.scalanlp.org</url>
   <properties>
-    <scala.version>2.8.0.Beta1-RC5</scala.version>
+    <scala.version>2.8.0.Beta1-RC7</scala.version>
   </properties>
   <inceptionYear>2008</inceptionYear>
   <mailingLists>
@@ -93,6 +93,7 @@
           <displayCmd>true</displayCmd>
           <args>
             <arg>-deprecation</arg>
+            <arg>-optimize</arg>
           </args>
           <jvmArgs>
             <jvmArg>-Xmx1G</jvmArg>

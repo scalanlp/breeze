@@ -52,7 +52,7 @@ class PitmanYorProcess private (
   val nextClass = unobservedIndex;
 
   private def getWithCounter(cn : DoubleCounter[Int]) = {
-    Multinomial(cn).draw
+    Multinomial(cn)(rand).draw
   }
   
   /** Returns the probability of a class if it's been observed, 0 otherwise. */
@@ -108,7 +108,7 @@ class PitmanYorProcess private (
       }
     }
     
-    new PitmanYorProcess(ret,index0,theta,alpha)
+    new PitmanYorProcess(ret,index0,theta,alpha)(rand)
   }
   
   override def observe(c: Int):PitmanYorProcess = observe(Counters.count(List(c)));

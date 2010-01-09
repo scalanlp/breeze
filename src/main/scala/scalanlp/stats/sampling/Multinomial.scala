@@ -120,20 +120,20 @@ object Multinomial {
    * Returns a Multinomial where the probability of each element in the counter
    * is proportional to its count.
    */
-  def fromCounter[T](c:DoubleCounter[T])(implicit rand: RandBasis=Rand) = apply(c);
+  def fromCounter[T](c:DoubleCounter[T])(implicit rand: RandBasis=Rand) = apply(c)(rand);
 
 
   /**
    * Returns a Multinomial where the probability of each element in the counter
    * is proportional to its count.
    */
-  def fromLogCounter[T](c:LogCounters.DoubleCounter[T])(implicit r: RandBasis=Rand) = apply(c);
+  def fromLogCounter[T](c:LogCounters.DoubleCounter[T])(implicit r: RandBasis=Rand) = apply(c)(r);
   
   
   /**
    * Returns a Multinomial where the probability is proportional to a(i)
    */
-  def apply(a : Array[Double])(implicit rand: RandBasis) : Multinomial[Int] = apply(a,a.foldLeft(0.0)(_+_));
+  def apply(a : Array[Double])(implicit rand: RandBasis) : Multinomial[Int] = apply(a,a.foldLeft(0.0)(_+_))(rand);
 
   /**
    * Returns a Multinomial where the probability is proportional to a(i).
