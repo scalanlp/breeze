@@ -180,7 +180,8 @@ object Numerics {
       case 2 => logSum(a(0),a(1));
       case _ =>
         val m = a reduceLeft(_ max _);
-        m + log(a.foldLeft(0.)( (a,b) => a+exp( b - m )))
+        if(m.isInfinite) m
+        else m + log(a.foldLeft(0.)( (a,b) => a+exp( b - m )))
     }
   }
 
@@ -194,7 +195,8 @@ object Numerics {
     else if(a.size ==2) logSum(a(0),a(1));
     else {
       val m = a.activeValues reduceLeft(_ max _);
-      m + log(a.activeValues.foldLeft(0.)( (a,b) => a+exp( b - m )))
+      if(m.isInfinite) m
+      else m + log(a.activeValues.foldLeft(0.)( (a,b) => a+exp( b - m )))
     }
   }
 
