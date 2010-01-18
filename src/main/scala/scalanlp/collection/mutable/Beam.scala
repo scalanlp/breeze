@@ -37,6 +37,8 @@ class Beam[T](val maxSize:Int, xs:T*)(implicit o : Ordering[T]) extends Iterable
 
   override def size = queue.size;
 
+  def min = queue.max;
+
   def map[U](f: T=>U)(implicit oU: Ordering[U]) = {
     val q = new PriorityQueue[U]()(oU.reverse);
     for(t <- queue) q += f(t);
