@@ -40,5 +40,8 @@ class Poisson(val mean: Double)(implicit rand: RandBasis=Rand) extends DiscreteD
     -mean + k * log(mean) - lgamma(k);
   }
 
+  def logCdf(k: Int) = lgamma(k+1,mean) - lgamma(k+1);
+  def cdf(k:Int) = exp(logCdf(k));
+
   def variance = mean;
 }
