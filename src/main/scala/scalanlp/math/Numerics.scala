@@ -16,6 +16,7 @@ package scalanlp.math;
  limitations under the License. 
 */
 
+import cern.jet.stat.Gamma
 import scalanlp.counters._;
 import Counters._;
 
@@ -120,19 +121,16 @@ object Numerics {
 
   /**
   * Incomplete lgamma function. 
-  * <p/>
-  * based on http://216.80.120.13:8080/webMathematica/LC/gamma.jsp
   */
   def lgamma(a: Double, z:Double) = {
-    var res = 0.0;
-    var m = 20;
-    while(m >= 0) {
-      res=((-2*(1+m)*(3+2*m)*(2-a+2*m)*(3-a+2*m)*(9-a+4*m+z))/(5-a+4*m+z))/
-         (38-9*a+a*a+36*m-4*a*m+8*m*m-2*(a-4*(2+m))*z+z*z+(4*(-3+a-2*m)*(3+2*m))/(5-a+4*m+z)+res);
-      m -= 1;
+    var res = 0.;
+    var m = 21
+    while( m > 1) {
+      res = ((1.0-m)*(m-1.0-a)) / (2*m -1+z -a + res);
+      m -= 1
     }
 
-    a * log(z) + -z - log(1+z - a + ((a-1) * (5 - a + z))/(-2 * (2-a) + (3-a+z)*(5-a+z) + res));
+    a * log(z) -z - log(1+z-a+res);
   }
 
   /**
@@ -145,8 +143,8 @@ object Numerics {
   * @return log(exp(a) + exp(b))
   */
   def logSum(a : Double, b : Double) = {
-    if(a == NEG_INF_DOUBLE) b
-    else if (b == NEG_INF_DOUBLE) a
+    if(a == Double.NegativeInfinity) b
+    else if (b == Double.NegativeInfinity) a
     else if(a < b) b + log(1 + exp(a-b))
     else a + log(1+exp(b-a));    
   }

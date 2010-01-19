@@ -42,7 +42,7 @@ class PoissonTest extends FunSuite with Checkers {
   test("cdf") {
     val mean = 5.0
     val poi = new Poisson(mean);
-    assert( (poi.cdf(0) - poi.probabilityOf(0)).abs < TOL);
+    assert( (poi.cdf(0) - poi.probabilityOf(0)).abs < TOL,poi.cdf(0));
   }
 
 }  
