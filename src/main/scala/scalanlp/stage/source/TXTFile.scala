@@ -19,7 +19,7 @@ import java.io.File;
 
 import scalara.ra.RA;
 
-import scalanlp.collection.immutable.HTMap;
+import scalanlp.collection.immutable.DHMap;
 
 import scalanlp.stage.{Parcel,Batch,History};
 

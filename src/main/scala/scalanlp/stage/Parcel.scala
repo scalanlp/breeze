@@ -19,7 +19,7 @@ import scala.reflect.Manifest;
 
 import scalara.ra.Signature;
 
-import scalanlp.collection.immutable.HTMap;
+import scalanlp.collection.immutable.DHMap;
 
 /**
  * A parcel is a paired piece of data with some meta information about
@@ -29,7 +29,7 @@ import scalanlp.collection.immutable.HTMap;
  */
 @serializable
 @SerialVersionUID(2)
-case class Parcel[D](history : History, meta : HTMap, data : D)
+case class Parcel[D](history : History, meta : DHMap, data : D)
 (implicit mD : Manifest[D]) extends Signature {
   
   /** Applies the given stage to this parcel, returning the output of stage.process(this). */
@@ -73,11 +73,11 @@ object Parcel {
     val currentClass = stack(0).getClassName;
     val currentPackage = currentClass.substring(0, currentClass.lastIndexOf("."));
     val caller = stack.dropWhile(_.getClassName.startsWith(currentPackage))(0);
-    new Parcel(History.Origin(caller.toString), HTMap(), data);
+    new Parcel(History.Origin(caller.toString), DHMap(), data);
   }
 
   def apply[D](origin : History, data : D)(implicit mD : Manifest[D]) : Parcel[D] =
-    new Parcel(origin, HTMap(), data);
+    new Parcel(origin, DHMap(), data);
 }
 
 
