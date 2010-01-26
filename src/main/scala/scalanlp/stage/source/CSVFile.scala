@@ -41,7 +41,7 @@ case class CSVFile(path : String) extends File(path) {
 
   def rows : Iterable[Seq[String]] = {
     new Iterable[Seq[String]] {
-      override def elements =
+      override def iterator =
         new CSVIterator(reader());
     };
   }

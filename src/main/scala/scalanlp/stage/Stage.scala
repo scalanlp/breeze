@@ -39,11 +39,11 @@ abstract class Stage[I,O] extends (Parcel[I] => Parcel[O]) { stage =>
  * @author dramage
  */
 object Stage {
-  implicit def apply[I,O](f : I=>O) : Stage[I,O] =
+  implicit def apply[I,O](f : I=>O)(implicit m : Manifest[O]) : Stage[I,O] =
     apply(f.toString)(f);
 
-  implicit def apply[I,O](name : String)(f : I=>O) = new Stage[I,O] {
-    override def apply(parcel : Parcel[I])(implicit m : Manifest[O]) : Parcel[O] =
+  implicit def apply[I,O](name : String)(f : I=>O)(implicit m : Manifest[O]) = new Stage[I,O] {
+    override def apply(parcel : Parcel[I]) : Parcel[O] =
       Parcel(parcel.history + this, parcel.meta, f(parcel.data));
 
     override def toString =

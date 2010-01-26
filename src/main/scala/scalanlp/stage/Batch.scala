@@ -39,7 +39,7 @@ trait Batch[+V] {
    * offsets that have no corresponding item.
    */
   def options : Iterable[Option[V]] = new Iterable[Option[V]] {
-    override def elements = new Iterator[Option[V]] {
+    override def iterator = new Iterator[Option[V]] {
       var itemNum = 0;
       val itemIter = items.iterator.buffered;
       
@@ -138,7 +138,7 @@ object Batch {
     // TODO: in scala 2.8.0 this can just delegate to items.size
     private lazy val cachedSize = {
       var s = 0;
-      for (item <- items.elements) {
+      for (item <- items.iterator) {
         s += 1;
       }
       s;
@@ -148,8 +148,8 @@ object Batch {
       cachedSize;
 
     override def items = new Iterable[Item[V]] {
-      override def elements = {
-        for ((v,i) <- inItems.elements.zipWithIndex) yield
+      override def iterator = {
+        for ((v,i) <- inItems.iterator.zipWithIndex) yield
           Item(i, v);
       }
     }
@@ -186,7 +186,7 @@ object Batch {
     override def size = batches(0).size;
     
     override def items = new Iterable[Item[Seq[Option[V]]]] {
-      override def elements = new Iterator[Item[Seq[Option[V]]]] {
+      override def iterator = new Iterator[Item[Seq[Option[V]]]] {
         val iterators = batches.map(_.items.iterator.buffered);
       
         override def hasNext =

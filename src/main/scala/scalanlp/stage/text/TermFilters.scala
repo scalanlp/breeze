@@ -87,7 +87,7 @@ extends Mapper[Seq[String],Seq[String]] {
  * 
  * @author dramage
  */
-case class TermStopListFilter(stops : Set[String])
+case class TermStopListFilter(stops : List[String])
 extends Stage[Batch[Seq[String]],Batch[Seq[String]]] {
   override def apply(parcel : Parcel[Batch[Seq[String]]]) : Parcel[Batch[Seq[String]]] = {
     Parcel(parcel.history + this, parcel.meta + this,
@@ -107,7 +107,7 @@ extends Stage[Batch[Seq[String]],Batch[Seq[String]]] {
   override def apply(parcel : Parcel[Batch[Seq[String]]]) : Parcel[Batch[Seq[String]]] = {
     parcel.meta.require[TermCounts]("TermCounter must be run before TermMinimumDocumentCountFilter");
     val freq = parcel.meta[TermCounts].termCounts;
-    val stops = Set() ++ freq.topK(numTerms).map(_._1);
+    val stops = List() ++ freq.maxk(numTerms);
 
     Parcel(parcel.history + this, parcel.meta + TermStopListFilter(stops),
            parcel.data.map(

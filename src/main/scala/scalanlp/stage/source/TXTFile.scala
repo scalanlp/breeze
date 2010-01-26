@@ -19,8 +19,6 @@ import java.io.File;
 
 import scalara.ra.RA;
 
-import scalanlp.collection.immutable.DHMap;
-
 import scalanlp.stage.{Parcel,Batch,History};
 
 /**
@@ -33,7 +31,7 @@ case class TXTFile(path : String) extends File(path) {
   
   def lines : Iterable[String] = {
     new Iterable[String] {
-      override def elements =
+      override def iterator =
         for (line <- TXTFile.this.getLines) yield line;
     };
   }
