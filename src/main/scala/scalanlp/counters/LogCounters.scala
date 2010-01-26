@@ -33,7 +33,8 @@ object LogCounters extends DoubleCounterFactory {
   }
 
   class LogPairedDoubleCounter[T1,T2] extends 
-    AbstractPairedDoubleCounter[T1,T2] with TrackedStatistics.LogTotal[(T1,T2)];
+    AbstractPairedDoubleCounter[T1,T2] with TrackedStatistics.LogTotal[(T1,T2)]
+    with TensorSelfOp[(T1,T2),LogPairedDoubleCounter[T1,T2],Shape2];
 
   protected abstract class LogInternalDoubleCounter[T1,T2] extends 
     LogDoubleCounter[T2] with PairStatsTracker[T1,T2];
