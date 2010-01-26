@@ -37,7 +37,7 @@ class Poisson(val mean: Double)(implicit rand: RandBasis=Rand) extends DiscreteD
 
   def probabilityOf(k:Int) = Math.exp(logProbabilityOf(k));
   override def logProbabilityOf(k:Int) = {
-    -mean + k * log(mean) - lgamma(k);
+    -mean + k * log(mean) - lgamma(k+1);
   }
 
   def logCdf(k: Int) = lgamma(k+1,mean) - lgamma(k+1);

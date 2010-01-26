@@ -34,7 +34,8 @@ object Counters extends DoubleCounterFactory with IntCounterFactory {
     AbstractIntCounter[T] with TrackedIntStatistics.Total[T];
 
   class DefaultPairedDoubleCounter[T1,T2] extends 
-    AbstractPairedDoubleCounter[T1,T2] with TrackedStatistics.Total[(T1,T2)];
+    AbstractPairedDoubleCounter[T1,T2] with TrackedStatistics.Total[(T1,T2)]
+    with TensorSelfOp[(T1,T2),DefaultPairedDoubleCounter[T1,T2],Shape2];
 
   protected abstract class DefaultInternalDoubleCounter[T1,T2] extends 
     DefaultDoubleCounter[T2] with PairStatsTracker[T1,T2];

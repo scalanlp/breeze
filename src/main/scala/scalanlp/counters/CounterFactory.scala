@@ -107,7 +107,7 @@ trait DoubleCounterFactory { factory =>
   /**
   * Trait that implementors of DoubleCounterFactory should implement.
   */
-  abstract trait AbstractDoubleCounter[T] extends BaseDoubleCounter[T]  { 
+  trait AbstractDoubleCounter[T] extends BaseDoubleCounter[T]  { 
     override def copy = { 
       val c = mkDoubleCounter[T];
       c := this;
@@ -119,8 +119,8 @@ trait DoubleCounterFactory { factory =>
   /**
   * Trait that implementors of DoubleCounterFactory should implement.
   */
-  abstract trait AbstractPairedDoubleCounter[T1,T2] extends BasePairedDoubleCounter[T1,T2] 
-      with TensorSelfOp[(T1,T2),PairedDoubleCounter[T1,T2],Shape2] { this: PairedDoubleCounter[T1,T2] =>
+  trait AbstractPairedDoubleCounter[T1,T2] extends BasePairedDoubleCounter[T1,T2] 
+      { this: PairedDoubleCounter[T1,T2] =>
 
     type DoubleCounter = InternalDoubleCounter[T1,T2];
     protected def mkDoubleCounter(k1:T1): DoubleCounter = mkDoubleCounterFor(k1,this);
@@ -201,7 +201,7 @@ trait IntCounterFactory {
   /**
   * Trait that implementors of IntCounterFactory should implement.
   */
-  abstract trait AbstractIntCounter[T] extends BaseIntCounter[T] {
+  trait AbstractIntCounter[T] extends BaseIntCounter[T] {
     def copy() = { 
       val c = mkIntCounter[T];
       c += this;
@@ -213,7 +213,7 @@ trait IntCounterFactory {
   /**
   * Trait that implementors of IntCounterFactory should implement.
   */
-  abstract trait AbstractPairedIntCounter[T1,T2] extends BasePairedIntCounter[T1,T2] { this: PairedIntCounter[T1,T2] =>
+  trait AbstractPairedIntCounter[T1,T2] extends BasePairedIntCounter[T1,T2] { this: PairedIntCounter[T1,T2] =>
 
     type IntCounter = InternalIntCounter[T1,T2];
     protected def mkIntCounter(k1:T1): IntCounter = mkIntCounterFor(k1,this);
