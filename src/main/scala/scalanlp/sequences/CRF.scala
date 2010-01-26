@@ -35,7 +35,6 @@ import util.Implicits._;
 import scalanlp.util.Lazy;
 import scalanlp.util.Lazy.Implicits._;
 
-
 /**
 * Represents a CRF with arbitrary window size, can score sequences and such.
 *
