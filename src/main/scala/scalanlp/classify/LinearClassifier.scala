@@ -6,7 +6,7 @@ import scalanlp.counters._;
 import Counters._
 
 import scalala.tensor.dense._;
-import scalala.Scalala.{iArrayToVector=>_,_};
+import scalala.Scalala._;
 
 @serializable
 @SerialVersionUID(1L)
