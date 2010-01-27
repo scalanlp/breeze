@@ -71,15 +71,6 @@ object CSVFile {
     Parcel(History.Origin(file.toString), Batch.fromIterable(file.rows));
   }
   
-  /** Converts a CSV file into a stage that acts as a net sink. */
-  implicit def iCSVFileToStage(f : CSVFile) : Stage[Batch[Seq[String]],Batch[Seq[String]]] = {
-    import scalara.ra.RA.global.pipes._;
-      (input : Batch[Seq[String]]) => {
-        input.values.iterator.map(format) | f;
-        input;
-      }
-  }
-  
   /** Formats the given sequence of strings as well-formed line of CSV. */
   def format(seq : Seq[String]) : String = {
     ( for (field <- seq) yield {
