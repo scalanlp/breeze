@@ -25,7 +25,7 @@ import scala.collection.mutable._;
 * 
 * @author dlwh
 */
-class SparseArray[@specialized T:ClassManifest](val length: Int, initialLength:Int = 3) extends Map[Int,T] with MapLike[Int,T,SparseArray[T]] {
+class SparseArray[@specialized T:ClassManifest](val maxSize: Int, initialLength:Int = 3) extends Map[Int,T] with MapLike[Int,T,SparseArray[T]] {
   private var data = new Array[T](initialLength);
   private var index = new Array[Int](initialLength);
 
@@ -81,8 +81,8 @@ class SparseArray[@specialized T:ClassManifest](val length: Int, initialLength:I
   private def findOffset(i : Int) : Int = {
     if (i < 0)
       throw new IndexOutOfBoundsException("index is negative (" + index + ")");
-    if (i >= size)
-      throw new IndexOutOfBoundsException("index >= size (" + index + " >= " + size + ")");
+    if (i >= maxSize)
+      throw new IndexOutOfBoundsException("index >= maxSize (" + index + " >= " + maxSize + ")");
 
     if (i == lastIndex) {
       // previous element; don't need to update lastOffset
