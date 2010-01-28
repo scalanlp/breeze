@@ -93,7 +93,7 @@ object TestCD {
     }
     val opt = new ContrastiveDivergenceOptimizer[Double,Int,Vector](trans _ ,deriv _ ,0.01) with ConsoleLogging;
     
-    opt.maximize(data,Array(-100.0).toVector);
+    opt.maximize(data,Array(-100.0).asVector);
   }
   
 }
