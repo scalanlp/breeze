@@ -50,7 +50,7 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
 
   import LBFGS._;
   
-  def minimize(f: DiffFunction[K,T], init: T) = {
+  def minimize(f: DiffFunction[K,T], init: T):T = {
     var iter = 0; 
     var converged = false;
     val n = init.domain.size; // number of parameters
