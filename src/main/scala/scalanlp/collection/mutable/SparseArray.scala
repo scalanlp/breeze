@@ -242,13 +242,13 @@ class SparseArray[@specialized T:ClassManifest](val maxSize: Int, initialLength:
 
   /** Use the given index and data arrays, of which the first inUsed are valid. */
   private def use(inIndex : Array[Int], inData : Array[T], inUsed : Int) = {
+    if (inIndex == null || inData == null)
+      throw new IllegalArgumentException("Index and data must be non-null");
     if (inIndex.size != inData.size)
       throw new IllegalArgumentException("Index and data sizes do not match");
     // I spend 7% of my time in this call. It's gotta go.
     //if (inIndex.contains((x:Int) => x < 0 || x > size))
     //  throw new IllegalArgumentException("Index array contains out-of-range index");
-    if (inIndex == null || inData == null)
-      throw new IllegalArgumentException("Index and data must be non-null");
     if (inIndex.size < inUsed)
       throw new IllegalArgumentException("Used is greater than provided array");
     // I spend 7% of my time in this call. It's gotta go. and this one.
