@@ -67,7 +67,7 @@ class LBFGSTest extends FunSuite with Checkers {
   }
 
   test("optimize a simple multivariate gaussian with counters") {
-    val lbfgsString = new LBFGS[String,DoubleCounter[String]](100,4);
+    val lbfgsString = new LBFGS[String,DoubleCounter[String]](1000,4);
 
     def optimizeThis(init: DoubleCounter[String]) = {
       val f = new DiffFunction[String,DoubleCounter[String]] {
