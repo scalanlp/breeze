@@ -16,7 +16,7 @@ package scalanlp.util;
  limitations under the License. 
 */
 
-
+import it.unimi.dsi.fastutil.chars.Char2IntOpenHashMap
 import scala.collection.mutable._;
 import scalala.collection._;
 
@@ -99,6 +99,62 @@ trait Index[T] extends Injection[T,Int] with Iterable[T] {
     }
   }
 }
+
+/**
+ * Class that builds a 1-to-1 mapping between Ints and T's, which
+ * is very useful for efficiency concerns.
+ *
+ * Two extra views are provided: the index.synchronized view
+ * enables threadsafe access and the index.immutable view keeps
+ * prevents the (view) from being updated.
+ *
+ * @author dlwh, dramage
+ */
+@serializable class CharIndex extends Index[Char] {
+  /** Forward map from int to object */
+  private val objects = new ArrayBuffer[Char];
+
+  /** Map from object back to int index */
+  private val indices = new Char2IntOpenHashMap();
+  indices.defaultReturnValue(-1);
+
+  override def iterator = objects.iterator;
+
+  override def size = indices.size;
+
+  def contains(t:Char) = indices containsKey t;
+
+  /**
+  * Returns the integer corresponding to Char, or creates a new one if it's not there.
+  */
+  def index(t: Char) = {
+    val i = indices.get(t);
+    if(i == -1) {
+      val m = objects.size;
+      objects += t;
+      indices.put(t,m);
+      m;
+    } else {
+      i;
+    }
+  }
+
+  def unapply(pos : Int):Option[Char] = {
+    if(pos >= 0 && pos < objects.length)
+      Some(objects(pos))
+    else None
+  }
+
+  /**
+  * Returns Some(i) if the object has been indexed, or None
+  */
+  def indexOpt(t:Char): Option[Int] = {
+    val i = indices.get(t)
+    if(i >= 0) Some(i) else None;
+  }
+
+}
+
 
 /**
  * Class that builds a 1-to-1 mapping between Ints and T's, which
@@ -189,10 +245,15 @@ trait SynchronouslyIndexed[T] extends Indexed[T] {
  */
 object Index {
   /** Constructs an empty index. */
-  def apply[T]() : Index[T] = new HashIndex[T];
+  import scala.reflect.ClassManifest.{Char=>MChar};
+  import scala.reflect.OptManifest;
+  def apply[T:OptManifest]() : Index[T] = implicitly[OptManifest[T]] match {
+    case MChar => new CharIndex().asInstanceOf[Index[T]];
+    case _ => new HashIndex[T]; 
+  }
   
   /** Constructs an Index from some iterator. */
-  def apply[T](iterator : Iterator[T]) : Index[T] = {
+  def apply[T:OptManifest](iterator : Iterator[T]) : Index[T] = {
     val index = Index[T]();
     // read through all iterator now -- don't lazily defer evaluation
     for (element <- iterator) {
@@ -202,7 +263,7 @@ object Index {
   }
   
   /** Constructs an Index from some iterator. */
-  def apply[T](iterable : Iterable[T]) : Index[T] = {
+  def apply[T:OptManifest](iterable : Iterable[T]) : Index[T] = {
     val index = Index[T]();
     // read through all iterator now -- don't lazily defer evaluation
     for (element <- iterable) {
