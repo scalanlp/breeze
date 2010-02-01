@@ -16,7 +16,6 @@ object CompetitiveLinking {
     val predsIt = for( (arr,i) <- matchingPotentials.iterator.zipWithIndex;
                       (w,j) <- arr.iterator.zipWithIndex) yield Prediction(i,j,w);
     val preds = predsIt.toSeq.sortWith(_.v > _.v);
-    // Side Effect Prediction has comparable
     val leftSet = new BitSet(n);
     val rightSet = new BitSet(m);
     val matching = Array.fill(n)(-1);
