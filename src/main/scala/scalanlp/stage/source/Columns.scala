@@ -29,6 +29,9 @@ case class Column(col : Int) extends Mapper[Seq[String],String] {
   
   override def map(in : Seq[String]) =
     in(col-1);
+
+  override def toString =
+    "Column("+col+")";
 }
 
 /**
@@ -39,6 +42,9 @@ case class Column(col : Int) extends Mapper[Seq[String],String] {
 case class Columns(cols : Int*) extends Mapper[Seq[String],Seq[String]] {
   override def map(in : Seq[String]) =
     cols.map(_ - 1).map(in);
+
+  override def toString =
+    "Columns("+cols.mkString(",")+")";
 }
 
 /**
@@ -50,6 +56,9 @@ case class Columns(cols : Int*) extends Mapper[Seq[String],Seq[String]] {
 case class Join(glue : String) extends Mapper[Seq[String],String] {
   override def map(in : Seq[String]) =
     in.mkString(glue);
+
+  override def toString =
+    "Join("+glue+")";
 }
 
 /**

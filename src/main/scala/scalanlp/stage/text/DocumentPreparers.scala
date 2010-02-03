@@ -25,4 +25,6 @@ import scalanlp.stage.Mapper;
 case object CaseFolder extends Mapper[String,String] {
   override def map(in : String) : String =
     in.toLowerCase;
+
+  override def toString = "CaseFolder";
 }

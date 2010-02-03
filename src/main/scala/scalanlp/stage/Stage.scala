@@ -57,7 +57,8 @@ object Stage {
  * 
  * @author dramage
  */
-abstract class MetaBuilder[Meta,Data](implicit m : Manifest[Meta], mD : Manifest[Data]) extends Stage[Data,Data] {
+abstract class MetaBuilder[Meta,Data](implicit m : Manifest[Meta], mD : Manifest[Data])
+extends Stage[Data,Data] {
   /** Builds new metadata for the Parcel as a function of the data. */
   def build(data : Data) : Meta;
 

@@ -27,4 +27,7 @@ case class DocumentMinimumLengthFilter(minTokens : Int)
 extends Filter[Seq[String]] {
   override def filter(doc : Seq[String]) =
     doc.length >= minTokens;
+
+  override def toString =
+    "DocumentMinimumLengthFilter("+minTokens+")";
 }

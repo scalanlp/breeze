@@ -25,9 +25,17 @@ import scala.reflect.Manifest;
  * @author dramage
  */
 trait Batch[+V] {
+  /**
+   * The total number of items undelrying this batch, which is
+   * greater* than or equal to the size of this.items and
+   * this.values (because some items may have been filtered
+   * from another underlying batch).
+   */
+  def size : Int;
+  
   /** An iterable of items ordered by their number. */
   def items : Iterable[Item[V]];
-  
+
   /** An iterable of the values in this map (unboxes items). */
   def values : Iterable[V] =
     items.view.map(_.value);
@@ -39,9 +47,11 @@ trait Batch[+V] {
    * offsets that have no corresponding item.
    */
   def options : Iterable[Option[V]] = new Iterable[Option[V]] {
+    override def size = Batch.this.size;
+
     override def iterator = new Iterator[Option[V]] {
       var itemNum = 0;
-      val itemIter = items.iterator.buffered;
+      val itemIter = Batch.this.items.iterator.buffered;
       
       override def hasNext =
         itemNum < size;
@@ -54,15 +64,6 @@ trait Batch[+V] {
       }
     }
   }
-    
-  
-  /**
-   * The total number of items undelrying this batch, which is 
-   * greater* than or equal to the size of this.items and
-   * this.values (because some items may have been filtered
-   * from another underlying batch).
-   */
-  def size : Int;
   
   /**
    * Transforms the items of the batch according to the given function.
@@ -135,23 +136,15 @@ object Batch {
   }
   
   def fromIterable[V](inItems : Iterable[V]) = new Batch[V] {
-    // TODO: in scala 2.8.0 this can just delegate to items.size
-    private lazy val cachedSize = {
-      var s = 0;
-      for (item <- items.iterator) {
-        s += 1;
-      }
-      s;
-    }
+    private lazy val cachedSize = inItems.size;
     
-    override def size =
-      cachedSize;
+    override def size = cachedSize;
 
     override def items = new Iterable[Item[V]] {
-      override def iterator = {
-        for ((v,i) <- inItems.iterator.zipWithIndex) yield
-          Item(i, v);
-      }
+      override def size = cachedSize;
+      
+      override def iterator =
+        for ((v,i) <- inItems.iterator.zipWithIndex) yield Item(i, v);
     }
   }
   
@@ -179,13 +172,16 @@ object Batch {
    * @author dramage
    */
   class Zip[V](batches : Batch[V] *) extends Batch[Seq[Option[V]]] {
-    for (batch <- batches; if batch.size != this.size) {
-      throw new IllegalArgumentException("Can only zip batches with the same total number of items");
+    for ((batch,i) <- batches.zipWithIndex; if batch.size != batches(0).size) {
+      throw new IllegalArgumentException("Can only zip batches with the same" +
+        "total number of items: batch "+i+" has "+batch.size+" != expected "+batches(0).size);
     }
     
     override def size = batches(0).size;
     
     override def items = new Iterable[Item[Seq[Option[V]]]] {
+      override def size = batches(0).size;
+
       override def iterator = new Iterator[Item[Seq[Option[V]]]] {
         val iterators = batches.map(_.items.iterator.buffered);
       
@@ -296,6 +292,7 @@ case class Take[I](n : Int)(implicit mI : Manifest[I])
 extends Stage[Batch[I],Batch[I]] {
   override def apply(parcel : Parcel[Batch[I]]) : Parcel[Batch[I]] =
     Parcel(parcel.history + this, parcel.meta, parcel.data.take(n));
+  override def toString = "Take("+n+")";
 }
 
 /**
@@ -307,4 +304,5 @@ case class Drop[I](n : Int)(implicit mI : Manifest[I])
 extends Stage[Batch[I],Batch[I]] {
   override def apply(parcel : Parcel[Batch[I]]) : Parcel[Batch[I]] =
     Parcel(parcel.history + this, parcel.meta, parcel.data.drop(n));
+  override def toString = "Drop("+n+")";
 }

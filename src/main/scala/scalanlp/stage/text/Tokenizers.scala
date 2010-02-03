@@ -34,6 +34,9 @@ abstract class Tokenizer extends Mapper[String,Seq[String]];
 case class RegexTokenizer(pattern : String) extends Tokenizer {
   override def map(doc : String) =
     doc.split(pattern);
+
+  override def toString =
+    "RegexTokenizer("+pattern+")";
 }
 
 /**
@@ -63,4 +66,6 @@ case object SimpleEnglishTokenizer extends Mapper[String,Seq[String]] {
     string = string.replaceAll("(?! )(\\p{P})(?=\\W)", " $1");
     return string.split("\\s+");
   }
+
+  override def toString = "SimpleEnglishTokenizer";
 }

@@ -51,6 +51,8 @@ class TermCounts(docs : Iterator[Seq[String]]) {
 case object TermCounter extends MetaBuilder[TermCounts,Batch[Seq[String]]] {
   override def build(data : Batch[Seq[String]]) =
     new TermCounts(data.values.iterator);
+
+  override def toString = "TermCounter";
 }
 
 /**
@@ -69,6 +71,9 @@ extends Stage[Batch[Seq[String]],Batch[Seq[String]]] {
              (doc : Seq[String]) => (doc.filter(term => df(term) >= minDF))
           ));
   }
+
+  override def toString =
+    "TermMinimumDocumentCountFilter("+minDF+")";
 }
 
 /**
@@ -80,6 +85,9 @@ case class TermMinimumLengthFilter(minLength : Int)
 extends Mapper[Seq[String],Seq[String]] {
   override def map(doc : Seq[String]) =
     doc.filter(_.length >= minLength);
+
+  override def toString =
+    "TermMinimumLengthFilter("+minLength+")";
 }
 
 /**
@@ -95,6 +103,9 @@ extends Stage[Batch[Seq[String]],Batch[Seq[String]]] {
              (doc : Seq[String]) => (doc.filter(term => !stops.contains(term)))
            ));
   }
+
+  override def toString =
+    "TermStopListFilter("+stops+")";
 }
   
 /**
@@ -114,6 +125,9 @@ extends Stage[Batch[Seq[String]],Batch[Seq[String]]] {
             (doc : Seq[String]) => (doc.filter(term => !stops.contains(term)))
           ));
   }
+
+  override def toString =
+    "TermDynamicStopListFilter("+numTerms+")";
 }
 
 
@@ -157,4 +171,7 @@ case object WordsAndNumbersOnlyFilter extends Mapper[Seq[String],Seq[String]] {
   override def map(doc : Seq[String]) : Seq[String] = {
     for (term <- doc; if ok.contains(TokenType(term))) yield term;
   }
+
+  override def toString =
+    "WordsAndNumbersOnlyFilter";
 }
