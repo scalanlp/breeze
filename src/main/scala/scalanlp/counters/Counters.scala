@@ -95,6 +95,11 @@ object Counters extends DoubleCounterFactory with IntCounterFactory {
     * Create a new DoubleCounter .
     */
     def apply[T]():DoubleCounter[T] = mkDoubleCounter[T];
+    def apply[T](pairs : (T,Double)*) = {
+      val counter = mkDoubleCounter[T];
+      for (pair <- pairs) counter(pair._1) = pair._2;
+      counter;
+    }
   }
 
   /**
@@ -105,6 +110,11 @@ object Counters extends DoubleCounterFactory with IntCounterFactory {
     * Create a new IntCounter.
     */
     def apply[T]():IntCounter[T] = mkIntCounter[T];
+    def apply[T](pairs : (T,Int)*) = {
+      val counter = mkIntCounter[T];
+      for (pair <- pairs) counter(pair._1) = pair._2;
+      counter;
+    }
   }
 
   object PairedDoubleCounter {
