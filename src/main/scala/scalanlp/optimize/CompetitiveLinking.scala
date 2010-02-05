@@ -2,10 +2,10 @@ package scalanlp.optimize
 
 import collection.mutable.BitSet;
 
-object CompetitiveLinking {
+object CompetitiveLinking extends BipartiteMatching {
 
   /**
-   * Performs greedy bipartite matching (aka competitive linking).
+   * Performs greedy bipartite matching (aka competitive linking). Finds maximum matches
    * @params matchingPotentials <n,m> matrix, m >= n
    * @return matching of size n, with values in 0..m-1, along with the score of the matching
    */
