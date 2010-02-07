@@ -43,8 +43,8 @@ object KuhnMunkres extends BipartiteMatching {
       val minSlack = for( y <- Array.range(0,size) ) yield (slack(root,y),root);
       while(true) {
         val ( (w,x),y) = (for ( y <- 0 until size if !yTree.contains(y)) yield (minSlack(y),y)).min
-        if(w > 0) improveLabels(w,xTree, yTree, minSlack);
-        assert(slack(x,y)==0,slack(x,y));
+        if(w != 0) improveLabels(w,xTree, yTree, minSlack);
+        //assert(slack(x,y).abs < 1E-8,slack(x,y));
         yTree += (y -> x);
         if(yxMatches contains y) {
           val oldX = yxMatches(y);
