@@ -5,7 +5,7 @@ import collection.mutable.BitSet;
 object CompetitiveLinking extends BipartiteMatching {
 
   /**
-   * Performs greedy bipartite matching (aka competitive linking). Finds maximum matches
+   * Performs greedy bipartite matching (aka competitive linking). Finds min matches
    * @params matchingPotentials <n,m> matrix, m >= n
    * @return matching of size n, with values in 0..m-1, along with the score of the matching
    */
@@ -15,7 +15,7 @@ object CompetitiveLinking extends BipartiteMatching {
     require (m >= n, "Column dimension must be at least the size of row dim.");
     val predsIt = for( (arr,i) <- matchingPotentials.iterator.zipWithIndex;
                       (w,j) <- arr.iterator.zipWithIndex) yield Prediction(i,j,w);
-    val preds = predsIt.toSeq.sortWith(_.v > _.v);
+    val preds = predsIt.toSeq.sortWith(_.v < _.v);
     val leftSet = new BitSet(n);
     val rightSet = new BitSet(m);
     val matching = Array.fill(n)(-1);

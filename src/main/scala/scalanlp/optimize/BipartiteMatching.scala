@@ -5,7 +5,7 @@ package scalanlp.optimize
  * We include one optimal algorithm (KuhnMunkres)
  * and one greedy algorithm (competitive linking).
  *
- * Algorithms find <b> maximum </b> matchings.
+ * Algorithms find <b> minimum </b> matchings.
  * 
  */
 trait BipartiteMatching {
