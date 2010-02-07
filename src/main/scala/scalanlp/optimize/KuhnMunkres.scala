@@ -17,74 +17,139 @@ object KuhnMunkres extends BipartiteMatching {
    * with the total score of the matching.
    */
   def extractMatching(weights: Seq[Seq[Double]]) = {
-    require(weights forall (_.forall(_ >= 0)));
     val size = weights.length max weights(0).length;
     val arr = Array.tabulate(size,size) { (x,y) =>
       if(x < weights.length && y < weights(x).length) weights(x)(y) else 0.0;
     }
-    val xLabels = arr.map { _ min }
-    val yLabels = Array.fill(size)(0.0);
-
-    def slack(x: Int, y: Int) = xLabels(x) + yLabels(y) - arr(x)(y);
-
-    val xyMatches = collection.mutable.Map[Int,Int]();
-    val yxMatches = collection.mutable.Map[Int,Int]();
-
-    while(xyMatches.size < size) {
-      // first free var
-      val freeVar = 0 until size filter (!xyMatches.contains (_)) head;
-      augment(freeVar);
+    for( row <- arr;
+         min = row.min;
+         i <- 0 until size) {
+       row(i) -= min; 
+    }
+    for(
+      c <- 0 until size;
+      min = (0 until size) map { r => arr(r)(c) } min;
+      r <- 0 until size
+    ) {
+       arr(r)(c) -= min; 
     }
 
-    def augment(root: Int) {
-      val xTree = collection.mutable.Set[Int]();
-      xTree += root;
-      var yTree = Map[Int,Int]();
-      val maxSlack = for( y <- Array.range(0,size) ) yield (slack(root,y),root);
-      while(true) {
-        val ( (w,x),y) = (for ( y <- 0 until size if !yTree.contains(y)) yield (maxSlack(y),y)).max
-        if(w != 0) improveLabels(w,xTree, yTree, maxSlack);
-        //assert(slack(x,y).abs < 1E-8,slack(x,y));
-        yTree += (y -> x);
-        if(yxMatches contains y) {
-          val oldX = yxMatches(y);
-          assert(!xTree.contains(oldX))
-          xTree += oldX;
-          val oldSlack = slack(oldX,y);
-          for( y <- 0 until size if !yTree.contains(y) && maxSlack(y)._1 < oldSlack) {
-            maxSlack(y) = (slack(oldX,y), oldX);
-          }
-        } else {
-          improve(y, yTree)
-          return;
+    // find initial zeros
+    val xyMatches = Array.fill(size)(-1);
+    val xCovered = new collection.mutable.BitSet(size);
+    val yxMatches = Array.fill(size)(-1);
+    val yCovered = new collection.mutable.BitSet(size);
+    val primes = Array.fill(size)(-1);
+    initialize(); 
+    coverZeros();
+
+    while(yCovered.size < size) {
+    println("iter" + xCovered + yCovered);
+      var zero: Option[(Int,Int)] = nextZero;
+      // find a zero
+      while(zero.isEmpty) {
+        val minValue = (for { 
+          x <- 0 until size; 
+          if !xCovered(x)
+          y <- 0 until size;
+          if !yCovered(y)
+        } yield arr(x)(y)).min;
+
+        for(x <- 0 until size if xCovered(x); y <- 0 until size) {
+          arr(x)(y) += minValue
         }
+
+        for(y <- 0 until size if !yCovered(y); x <- 0 until size) {
+          arr(x)(y) -= minValue
+        }
+
+        zero = nextZero;
+      }
+
+      val root@(x,y) = zero.get;
+      primes(x) = y;
+      val oldY = xyMatches(x);
+      if (oldY == -1) {
+        alternatingPath(root);
+        java.util.Arrays.fill(primes,-1);
+        xCovered.clear();
+        yCovered.clear();
+        coverZeros();
+      } else {
+        xCovered += x;
+        yCovered -= oldY;
       }
     }
 
-    def improveLabels(w: Double, xTree: collection.Set[Int], yTree: Map[Int,Int], maxSlack: Array[(Double,Int)]) {
-      for( x <- xTree) xLabels(x) -= w;
-      for( y <- 0 until size)
-        if(yTree.contains(y))
-          yLabels(y) += w
-        else {
-          maxSlack(y) = maxSlack(y).copy(_1 = maxSlack(y)._1 - w)
+    def initialize() {
+      val xDone = new collection.mutable.BitSet(size);
+      val yDone = new collection.mutable.BitSet(size);
+
+      for (x <- 0 until size;
+           y <- 0 until size;
+           if !xDone(x) && !yDone(y) && arr(x)(y).abs < 1E-5) {
+        xyMatches(x) = y;
+        yxMatches(y) = x;
+        xDone += x
+        yDone += y;
+      }
+    }
+
+    // BEGIN SUPPORT METHODS
+    def coverZeros() {
+      for ( y <- 0 until size) {
+        if(yxMatches(y) != -1) yCovered += y;
+        else yCovered -= y;
+      }
+    }
+
+    def nextZero = {
+      val iter = (for {
+        x <- 0 until size iterator;
+        if !xCovered(x)
+        y <- 0 until size iterator;
+        if arr(x)(y).abs < 1E-5 && !yCovered(y)
+      } yield (x,y));
+      if(iter.hasNext) Some(iter.next);
+      else None;
+    }
+
+    def alternatingPath(root: (Int,Int)) {
+      var (x,y) = root;
+      val path = collection.mutable.Set[(Int,Int)]();
+      path += (x -> y);
+      while(y != -1 && yxMatches(y) != -1) {
+        x = yxMatches(y);
+        path += (x->y);
+        y = primes(x);
+        if(y != -1) {
+          path += (x -> y);
         }
+      }
+
+      for( (xx,yy) <- path) {
+        if(yxMatches(yy) == xx) {
+          yxMatches(yy) = -1;
+          xyMatches(xx) = -1
+        }
+        if(primes(xx) == yy) {
+          xyMatches(xx) = yy;
+          yxMatches(yy) = xx;
+        }
+      }
+    }
+    // END SUPPORT METHODS
+
+
+    val xResult = Array.fill(weights.length)(-1)
+    for( (x,y) <- yxMatches.zipWithIndex if x < weights.length) {
+      xResult(x) = y;
     }
 
-    def improve(y: Int, yTree: Map[Int,Int]) {
-      val x = yTree(y);
-      if(xyMatches contains x) improve(xyMatches(x),yTree);
-      xyMatches(x) = y
-      yxMatches(y) = x;
-    }
-
-    val xResult = Array.tabulate(weights.length) { x =>
-      val y = xyMatches(x)
-      if(y >= weights(0).length) -1
-      else y;
-    }
-
-    val cost = xLabels.reduceLeft(_+_) + yLabels.reduceLeft(_+_);
+    val cost = xyMatches.zipWithIndex.iterator map { case (y,x) =>
+      if(x < weights.length && y < weights(x).length && y != -1) weights(x)(y)
+      else 0.0
+    } reduceLeft(_+_);
     (xResult toSeq,cost);
 
   }
