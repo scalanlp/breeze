@@ -44,12 +44,30 @@ object KuhnMunkres extends BipartiteMatching {
     coverZeros();
 
     while(yCovered.size < size) {
-    println("iter" + xCovered + yCovered);
+
       var zero: Option[(Int,Int)] = nextZero;
       // find a zero
-      while(zero.isEmpty) {
-        val minValue = (for { 
-          x <- 0 until size; 
+      while(!zero.isEmpty) {
+        val root@(x,y) = zero.get;
+        primes(x) = y;
+        val oldY = xyMatches(x);
+        if (oldY == -1) {
+          alternatingPath(root);
+          java.util.Arrays.fill(primes,-1);
+          xCovered.clear();
+          yCovered.clear();
+          coverZeros();
+        } else {
+          xCovered += x;
+          yCovered -= oldY;
+        }
+
+        zero = nextZero;
+      }
+
+      if(yCovered.size < size) {
+        val minValue = (for {
+          x <- 0 until size;
           if !xCovered(x)
           y <- 0 until size;
           if !yCovered(y)
@@ -62,40 +80,19 @@ object KuhnMunkres extends BipartiteMatching {
         for(y <- 0 until size if !yCovered(y); x <- 0 until size) {
           arr(x)(y) -= minValue
         }
-
-        zero = nextZero;
-      }
-
-      val root@(x,y) = zero.get;
-      primes(x) = y;
-      val oldY = xyMatches(x);
-      if (oldY == -1) {
-        alternatingPath(root);
-        java.util.Arrays.fill(primes,-1);
-        xCovered.clear();
-        yCovered.clear();
-        coverZeros();
-      } else {
-        xCovered += x;
-        yCovered -= oldY;
-      }
-    }
-
-    def initialize() {
-      val xDone = new collection.mutable.BitSet(size);
-      val yDone = new collection.mutable.BitSet(size);
-
-      for (x <- 0 until size;
-           y <- 0 until size;
-           if !xDone(x) && !yDone(y) && arr(x)(y).abs < 1E-5) {
-        xyMatches(x) = y;
-        yxMatches(y) = x;
-        xDone += x
-        yDone += y;
       }
     }
 
     // BEGIN SUPPORT METHODS
+    def initialize() {
+      for (x <- 0 until size;
+           y <- 0 until size;
+           if xyMatches(x) == -1 && yxMatches(y) == -1 && arr(x)(y).abs < 1E-5) {
+        xyMatches(x) = y;
+        yxMatches(y) = x;
+      }
+    }
+
     def coverZeros() {
       for ( y <- 0 until size) {
         if(yxMatches(y) != -1) yCovered += y;
@@ -143,8 +140,10 @@ object KuhnMunkres extends BipartiteMatching {
 
     val xResult = Array.fill(weights.length)(-1)
     for( (x,y) <- yxMatches.zipWithIndex if x < weights.length) {
+      assert(xResult(x) == -1);
       xResult(x) = y;
     }
+    assert(xResult.count(_ != -1) == weights(0).length.min(xResult.length));
 
     val cost = xyMatches.zipWithIndex.iterator map { case (y,x) =>
       if(x < weights.length && y < weights(x).length && y != -1) weights(x)(y)
