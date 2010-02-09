@@ -4,11 +4,11 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.scalanlp</groupId>
   <artifactId>scalara</artifactId>
-  <version>0.2</version>
+  <version>0.3-SNAPSHOT</version>
   <name>ScalaRA</name>
   <inceptionYear>2009</inceptionYear>
   <properties>
-    <scala.version>2.7.5</scala.version>
+    <scala.version>2.8.0</scala.version>
   </properties>
   
   <developers>

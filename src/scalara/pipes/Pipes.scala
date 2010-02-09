@@ -61,8 +61,8 @@ class Pipes {
    * system environment.
    */
   protected val _env : scala.collection.mutable.Map[String,String] = {
-    import scala.collection.jcl.Conversions._;
-    scala.collection.mutable.Map() ++ java.lang.System.getenv();
+    import scala.collection.JavaConversions._;
+    scala.collection.mutable.Map() ++ java.lang.System.getenv;
   }
   
   //
@@ -299,7 +299,7 @@ object PipeIO {
    * not close the output stream.
    */
   def drain(in : InputStream, out : OutputStream) {
-    val buffer = new Array[byte](1024);
+    val buffer = new Array[Byte](1024);
 
     try {
       var numRead = 0;
