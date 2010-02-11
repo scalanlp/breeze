@@ -33,7 +33,16 @@ trait Batch[+V] {
    */
   def size : Int;
   
-  /** An iterable of items ordered by their number. */
+  /** The smallest valid item number to return. */
+  def minItemNum : Int;
+
+  /** The largest valid item number to return. */
+  def maxItemNum : Int;
+
+  /**
+   * An iterable of items ordered by their number.  The first returned
+   * item.number must be >= minItemNum and the last must be <= maxItemNum.
+   */
   def items : Iterable[Item[V]];
 
   /** An iterable of the values in this map (unboxes items). */
@@ -50,11 +59,11 @@ trait Batch[+V] {
     override def size = Batch.this.size;
 
     override def iterator = new Iterator[Option[V]] {
-      var itemNum = 0;
+      var itemNum = minItemNum;
       val itemIter = Batch.this.items.iterator.buffered;
       
       override def hasNext =
-        itemNum < size;
+        itemNum < maxItemNum;
       
       override def next : Option[V] = {
         val rv = if (itemIter.hasNext && itemIter.head.number == itemNum)
@@ -79,7 +88,7 @@ trait Batch[+V] {
           throw new BatchException(item, ex);
       }
     }
-    Batch.fromItems[O](items.view.map(mapper), size);
+    Batch.fromItems[O](items.view.map(mapper), size, minItemNum, maxItemNum);
   }
   
   /** Filters out items from the batch according to the given funciton. */
@@ -92,16 +101,30 @@ trait Batch[+V] {
           throw new BatchException(item, ex);
       }
     }
-    Batch.fromItems(items.view.filter(filterer), size);
+    Batch.fromItems(items.view.filter(filterer), size, minItemNum, maxItemNum);
   }
   
-  /** Takes the first n elements. */
-  def take(n : Int) : Batch[V] =
-    Batch.fromItems(items.view.takeWhile(_.number < n), n);
+  /**
+   * A view of this batch that is the same size, except only the first
+   * (at most) defined n items will be return.
+   */
+  def take(n : Int) : Batch[V] = {
+    val newMin = minItemNum;
+    val newMax = Math.min(minItemNum + n, maxItemNum);
+    
+    Batch.fromItems(items.view.takeWhile(_.number < newMax), size, newMin, newMax);
+  }
 
-  /** Drops the first n elements. */
-  def drop(n : Int) : Batch[V] =
-    Batch.fromItems(items.view.dropWhile(_.number < n), size-n);
+  /**
+   * A view of this batch that is the same size, except that the first
+   * n defined items will be dropped.
+   */
+  def drop(n : Int) : Batch[V] = {
+    val newMin = Math.min(minItemNum + n, maxItemNum);
+    val newMax = maxItemNum
+
+    Batch.fromItems(items.view.dropWhile(_.number < newMin), size, newMin, newMax);
+  }
   
   /** Zips together two batches. */
   def zip[O](that : Batch[O]) = {
@@ -113,7 +136,7 @@ trait Batch[+V] {
   
   /** Creates a list-backed view of this batch (i.e. makes it strict). */
   def strict : Batch[V] =
-    Batch.fromItems(items.toList, size);
+    Batch.fromItems(items.toList, size, minItemNum, maxItemNum);
 }
 
 /**
@@ -130,8 +153,10 @@ extends RuntimeException("Unable to process " + item +
  * Static constructors for creating batches.
  */
 object Batch {
-  def fromItems[V](inItems : Iterable[Item[V]], numItems : Int) = new Batch[V] {
+  def fromItems[V](inItems : Iterable[Item[V]], numItems : Int, inMinItemNum : Int, inMaxItemNum : Int) = new Batch[V] {
     override def size = numItems;
+    override def minItemNum = inMinItemNum;
+    override def maxItemNum = inMaxItemNum;
     override def items = inItems;
   }
   
@@ -139,6 +164,10 @@ object Batch {
     private lazy val cachedSize = inItems.size;
     
     override def size = cachedSize;
+
+    override def minItemNum = 0;
+    
+    override def maxItemNum = size;
 
     override def items = new Iterable[Item[V]] {
       override def size = cachedSize;
@@ -178,7 +207,11 @@ object Batch {
     }
     
     override def size = batches(0).size;
+
+    override def minItemNum = batches.map(_.minItemNum).reduceLeft(Math.min);
     
+    override def maxItemNum = batches.map(_.maxItemNum).reduceLeft(Math.max);
+
     override def items = new Iterable[Item[Seq[Option[V]]]] {
       override def size = batches(0).size;
 
