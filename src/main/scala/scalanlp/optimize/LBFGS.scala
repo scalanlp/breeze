@@ -26,7 +26,6 @@ import scalala.tensor.operators._;
 import TensorShapes._;
 import scalala.tensor.dense._;
 
-
 /**
  * Port of LBFGS to Scala.
  * 

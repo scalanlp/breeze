@@ -19,6 +19,7 @@ package scalanlp.optimize
 import scalala.tensor.Vector;
 import scalala.Scalala._;
 import scalala.tensor._;
+import scalala.tensor.dense.DenseVector;
 import scalala.tensor.operators._;
 import TensorShapes._;
 
@@ -88,11 +89,11 @@ object TestCD {
       new Gaussian(mean(0),1)
     }
     def deriv(theta: Vector) = { (x:Double) => 
-      (Array((x-theta(0))) : Vector)
+      (DenseVector(1)(x-theta(0)))
     }
     val opt = new ContrastiveDivergenceOptimizer[Double,Int,Vector](trans _ ,deriv _ ,0.01) with ConsoleLogging;
     
-    opt.maximize(data,Array(-100.0));
+    opt.maximize(data,Array(-100.0).asVector);
   }
   
 }

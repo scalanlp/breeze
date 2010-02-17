@@ -21,7 +21,8 @@ import org.scalatest.prop._;
 import org.scalacheck._;
 import org.junit.runner.RunWith
 
-import scalala.Scalala._;
+import scalala.library.Vectors._;
+import scalala.library.Random._;
 import scalala.tensor.Vector;
 import scalanlp.counters.Counters._;
 

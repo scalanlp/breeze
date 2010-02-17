@@ -141,6 +141,10 @@ trait BaseIntCounter[T] extends MutablePartialMap[T,Int] with TrackedIntStatisti
    */
   def min: Int = counts.valuesIterator reduceLeft (_ min _)
 
+  /** Returns the top k values in this counter */
+  def maxk(k : Int) : Iterable[T] =
+    scalanlp.util.TopK(k, this.keysIterator, this.apply _);
+
   /**
   * For each k,v in the map, it sets this(k) = f(k,v)
   */

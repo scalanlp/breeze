@@ -3,10 +3,10 @@
   <groupId>org.scalanlp</groupId>
   <artifactId>scalanlp-core</artifactId>
   <name>ScalaNLP Core</name>
-  <version>0.2-SNAPSHOT</version>
+  <version>0.2.1-SNAPSHOT</version>
   <url>http://www.scalanlp.org</url>
   <properties>
-    <scala.version>2.8.0.Beta1-RC8</scala.version>
+    <scala.version>2.8.0.Beta1</scala.version>
   </properties>
   <inceptionYear>2008</inceptionYear>
   <mailingLists>
@@ -193,6 +193,11 @@
     <dependency>
       <groupId>org.scalanlp</groupId>
       <artifactId>scalala</artifactId>
+      <version>0.3-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scalanlp</groupId>
+      <artifactId>scalara</artifactId>
       <version>0.3-SNAPSHOT</version>
     </dependency>
     <dependency>

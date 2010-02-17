@@ -17,87 +17,124 @@ package scalanlp.util;
 */
 
 import it.unimi.dsi.fastutil.chars.Char2IntOpenHashMap
-import scala.collection.mutable._;
 import scalala.collection._;
 
+import scala.collection.IterableProxy;
+import scala.collection.mutable.{ArrayBuffer,HashMap};
+
 /**
- * Trait that builds a 1-to-1 mapping between Ints and T's, which
- * is very useful for efficiency concerns.
+ * Trait that marks an O(1) bidirection map between Ints (increasing from 0)
+ * and T's.  This class is used, for example, to efficiently build unique
+ * vector space mappings for strings.  The methods in this trait do not mutate
+ * the underlying index.  Use either a MutableIndex or one of the companion
+ * object constructor methods to build an index.
  * 
- * Two extra views are provided: the index.synchronized view
- * enables threadsafe access and the index.immutable view keeps
- * prevents the (view) from being updated. 
- *
- * See the companion object for easy ways to create these.
- *
  * @author dlwh, dramage
  */
 trait Index[T] extends Injection[T,Int] with Iterable[T] {
-  override def apply(t : T) = index(t);
 
-  def contains(t:T): Boolean;
+  /** Number of elements in this index. */
+  def size : Int;
+
+  /**
+   * Returns the int id of the given element (0-based) or -1 if not
+   * found in the index.  This method never changes the index (even
+   * in MutableIndex).
+   */
+  def apply(t : T) : Int;
 
   /**
   * Returns Some(t) if this int corresponds to some object,
   * and None otherwise.
   */
-  def unapply(pos : Int):Option[T];
+  def unapply(i : Int) : Option[T];
 
-  /**
-   * Returns an object at the given position or throws an exception if it's
-   * not found.
-   */
-  def get(pos : Int) : T = unapply(pos).getOrElse(throw new IndexOutOfBoundsException());
+  /** Returns true if this index contains the element t. */
+  def contains(t : T) : Boolean
+    = apply(t) >= 0;
 
-  /**
-   * Returns an integer index for the given object.
-   */
-  def index(t : T): Int;
+  /** Returns Some(i) if the object has been indexed, or None. */
+  def indexOpt(t : T) : Option[Int] = {
+    val i = apply(t);
+    if (i >= 0) Some(i) else None;
+  }
 
-  /**
-  * Returns Some(i) if the object has been indexed, or None.
-  */
-  def indexOpt(t:T): Option[Int];
+  /** Override Iterable's linear-scan indexOf to use our apply method. */
+  def indexOf(t: T) : Int =
+    apply(t);
   
-  /** Override indexOf's slow, deprecated behavior. */
-  def indexOf[B >: T](elem: B): Int = index(elem.asInstanceOf[T]);
+  /**
+   * Returns an object at the given position or throws
+   * IndexOutOfBoundsException if it's not found.
+   */
+  def get(i : Int) : T =
+    unapply(i).getOrElse(throw new IndexOutOfBoundsException());
+}
 
-  //
-  // these accessors are kept separate to preserve collection subtype
-  //
-  def indexAll(c : Iterator[T]) = c map apply;
-  def indexAll(c : Iterable[T]) = c map apply;
-  def indexAll(c : List[T]) = c map apply;
-  def indexAll(c : Array[T]) = c map apply;
-  def indexAll(c : Set[T]) = c map apply;
-  def indexAll(c : Seq[T]) = c map apply;
+/**
+ * A proxy passing all calls to the underlying index instance.
+ *
+ * @author dramage
+ */
+trait IndexProxy[T] extends Index[T] with IterableProxy[T] {
+  override def self : Index[T];
 
-  def indexKeys[V](c: scala.collection.Map[T,V]) = {
-    Map[T,V]() ++ c.map{ case (a,b) => (this(a),b)}
-  }
-  
-  def indexValues[K](c: scala.collection.Map[K,T]) = {
-    Map[K,T]() ++ c.map{ case (a,b) => (a,this(b))}
-  }
+  override def size = self.size;
+  override def apply(t : T) = self.apply(t);
+  override def unapply(i : Int) = self.unapply(i);
+  override def contains(t : T) = self.contains(t);
+  override def indexOpt(t : T) = self.indexOpt(t);
+  override def indexOf(t : T) = self.indexOf(t);
+  override def get(i : Int) = self.get(i);
+}
 
-  def getAll(c : Iterator[Int]) = c map get;
-  def getAll(c : Iterable[Int]) = c map get;
-  def getAll(c : List[Int]) = c map get;
-  def getAll(c : Array[Int]) = c map get;
-  def getAll(c : Set[Int]) = c map get;
+/**
+ * Synchronized view of an Index for thread-safe access.
+ *
+ * @author dramage
+ */
+trait SynchronizedIndex[T] extends Index[T] {
+  abstract override def size = this synchronized super.size;
+  abstract override def apply(t : T) = this synchronized super.apply(t);
+  abstract override def unapply(pos : Int) = this synchronized super.unapply(pos);
+  abstract override def contains(t : T) = this synchronized super.contains(t);
+  abstract override def indexOpt(t : T) = this synchronized super.indexOpt(t);
+  abstract override def indexOf(t : T) = this synchronized super.indexOf(t);
+  abstract override def get(pos : Int) = this synchronized super.get(pos);
+}
 
-  /** Returns a synchronized view of the index. */
-  def synchronized : Index[T] = {
-    val outer = this;
-    new Index[T] {
-      override def iterator = outer.iterator;
-      override def size = outer.size;
-      override def contains(t:T) = outer synchronized{ outer.contains(t); }
-      override def unapply(pos : Int) = outer synchronized { outer.unapply(pos); }
-      override def index(t : T) = outer synchronized { outer.index(t); }
-      override def indexOpt(t : T) = outer synchronized { outer.indexOpt(t); }
-    }
-  }
+/**
+ * An Index that contains an extra method: <em>index</em> that adds the
+ * given element (if necessary), returning its (possibly new) position in
+ * the index.
+ *
+ * @author dramage
+ */
+trait MutableIndex[T] extends Index[T] {
+  /**
+   * Returns an integer index for the given object, adding it to the
+   * index if it is not already present.
+   */
+  def index(t : T) : Int;
+}
+
+/**
+ * A proxy for MutableIndex instances.
+ *
+ * @author dramage
+ */
+trait MutableIndexProxy[T] extends IndexProxy[T] with MutableIndex[T] {
+  override def self : MutableIndex[T];
+  override def index(t : T) = self.index(t);
+}
+
+/**
+ * A synchronized view of a MutableIndex.
+ *
+ * @author dramage
+ */
+trait SynchronizedMutableIndex[T] extends MutableIndex[T] with SynchronizedIndex[T] {
+  abstract override def index(t : T) = this synchronized super.index(t);
 }
 
 /**
@@ -122,7 +159,7 @@ trait Index[T] extends Injection[T,Int] with Iterable[T] {
 
   override def size = indices.size;
 
-  def contains(t:Char) = indices containsKey t;
+  override def contains(t:Char) = indices containsKey t;
 
   /**
   * Returns the integer corresponding to Char, or creates a new one if it's not there.
@@ -139,6 +176,8 @@ trait Index[T] extends Injection[T,Int] with Iterable[T] {
     }
   }
 
+  def apply(t: Char): Int= indices.get(t);
+
   def unapply(pos : Int):Option[Char] = {
     if(pos >= 0 && pos < objects.length)
       Some(objects(pos))
@@ -148,7 +187,7 @@ trait Index[T] extends Injection[T,Int] with Iterable[T] {
   /**
   * Returns Some(i) if the object has been indexed, or None
   */
-  def indexOpt(t:Char): Option[Int] = {
+  override def indexOpt(t:Char): Option[Int] = {
     val i = indices.get(t)
     if(i >= 0) Some(i) else None;
   }
@@ -162,27 +201,40 @@ trait Index[T] extends Injection[T,Int] with Iterable[T] {
  * 
  * Two extra views are provided: the index.synchronized view
  * enables threadsafe access and the index.immutable view keeps
- * prevents the (view) from being updated. 
+ * prevents the (view) from being updated.
  *
  * @author dlwh, dramage
  */
-@serializable private class HashIndex[T] extends Index[T] {
+@serializable class HashIndex[T] extends MutableIndex[T] {
   /** Forward map from int to object */
   private val objects = new ArrayBuffer[T];
-  
+
   /** Map from object back to int index */
-  private val indices = Map[T,Int]();
-  
-  override def iterator = objects.iterator;
-  
-  override def size = indices.size;
+  private val indices = new HashMap[T,Int]();
 
-  def contains(t:T) = indices contains t;
+  override def size =
+    indices.size;
 
-  /**
-  * Returns the integer corresponding to T, or creates a new one if it's not there.
-  */
-  def index(t: T) = {
+  override def apply(t : T) : Int =
+    indices.getOrElseUpdate(t,-1);
+
+  override def unapply(pos : Int) : Option[T] =
+    if (pos >= 0 && pos < objects.length) Some(objects(pos)) else None;
+
+  override def contains(t : T) =
+    indices contains t;
+
+  override def indexOpt(t : T): Option[Int] =
+    indices.get(t);
+
+  override def get(pos : Int) =
+    objects(pos); // throws IndexOutOfBoundsException as required
+
+  override def iterator =
+    objects.iterator;
+
+  /** Returns the position of T, adding it to the index if it's not there. */
+  override def index(t: T) = {
     def nextMax = {
       val m = objects.size;
       objects += t;
@@ -190,46 +242,41 @@ trait Index[T] extends Injection[T,Int] with Iterable[T] {
     }
     indices.getOrElseUpdate(t,nextMax);
   }
-
-  def unapply(pos : Int):Option[T] = {
-    if(pos >= 0 && pos < objects.length)
-      Some(objects(pos))
-    else None
-  }
-
-  /**
-  * Returns Some(i) if the object has been indexed, or None
-  */
-  def indexOpt(t:T): Option[Int] = {
-    indices.get(t);
-  }
-
 }
 
 /**
 * For use when we need an index, but we already have (densely packed) positive
 * ints and don't want hash overhead.
 *
-* @author dlwh
+* @author dlwh, dramage
 */
-class DenseIntIndex extends Index[Int] {
-  override def size = maxSeen;
+class DenseIntIndex extends MutableIndex[Int] {
   private var maxSeen = 0;
-  override def contains(t:Int)= t < maxSeen && t >= 0;
 
-  def index(t: Int) = {
+  override def size = maxSeen;
+
+  override def apply(t : Int) =
+    if (contains(t)) t else -1;
+
+  override def unapply(i : Int) =
+    if (contains(i)) Some(i) else None;
+
+  override def contains(t : Int) =
+    t < maxSeen && t >= 0;
+
+  override def indexOpt(t : Int) =
+    if (contains(t)) Some(t) else None;
+
+  override def get(i : Int) =
+    if (contains(i)) i else throw new IndexOutOfBoundsException();
+
+  override def iterator =
+    (0 to maxSeen).iterator;
+
+  override def index(t: Int) = {
     maxSeen = maxSeen max t;
     t
   }
-
-  def indexOpt(t: Int) = {
-    maxSeen = maxSeen max t;
-    Some(t)
-  }
-
-  def unapply(t: Int) = Some(t);
-
-  def iterator = (0 to maxSeen).iterator;
 }
 
 trait Indexed[T] {
@@ -237,7 +284,7 @@ trait Indexed[T] {
 }
 
 trait SynchronouslyIndexed[T] extends Indexed[T] {
-  override val index: Index[T] = new HashIndex[T].synchronized;
+  override val index: Index[T] = new HashIndex[T] with SynchronizedMutableIndex[T];
 }
 
 /**
@@ -247,8 +294,8 @@ object Index {
   /** Constructs an empty index. */
   import scala.reflect.ClassManifest.{Char=>MChar};
   import scala.reflect.OptManifest;
-  def apply[T:OptManifest]() : Index[T] = implicitly[OptManifest[T]] match {
-    case MChar => new CharIndex().asInstanceOf[Index[T]];
+  def apply[T:OptManifest]() : MutableIndex[T] = implicitly[OptManifest[T]] match {
+    case MChar => new CharIndex().asInstanceOf[MutableIndex[T]];
     case _ => new HashIndex[T]; 
   }
   
@@ -259,19 +306,19 @@ object Index {
     for (element <- iterator) {
       index.index(element);
     }
-    return index;
+    index;
   }
-  
+
   /** Constructs an Index from some iterator. */
-  def apply[T:OptManifest](iterable : Iterable[T]) : Index[T] = {
+  def apply[T](iterable : Iterable[T]) : Index[T] = {
     val index = Index[T]();
     // read through all iterator now -- don't lazily defer evaluation
     for (element <- iterable) {
       index.index(element);
     }
-    return index;
+    index;
   }
-  
+
   /**
    * Loads a String index, one line per item with line
    * numbers (starting at 0) as the indices.

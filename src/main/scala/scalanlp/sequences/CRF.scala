@@ -19,7 +19,7 @@ import java.util.Arrays;
 import scala.collection.mutable.ArrayBuffer;
 import scala.Math.NEG_INF_DOUBLE;
 
-import scalala.Scalala.{iArrayToVector=>_,iArrayToPartialMap=>_,_};
+import scalala.Scalala._;
 import scalala.tensor.Vector;
 import scalala.tensor.dense._;
 import scalala.tensor.sparse._;
@@ -34,7 +34,6 @@ import stats.sampling._
 import util.Implicits._;
 import scalanlp.util.Lazy;
 import scalanlp.util.Lazy.Implicits._;
-
 
 /**
 * Represents a CRF with arbitrary window size, can score sequences and such.

@@ -125,6 +125,10 @@ trait BaseDoubleCounter[T] extends Tensor1[T] with TrackedStatistics[T] { outer 
    */
   def min: Double = counts.valuesIterator reduceLeft (_ min _)
 
+  /** Returns the top k values in this counter */
+  def maxk(k : Int) : Iterable[T] =
+    scalanlp.util.TopK(k, this.keysIterator, this.apply _);
+
   protected[counters] override def ensure(otherDomain: PartialMap[T,Double]) {
     // no need to do anything here.
   }

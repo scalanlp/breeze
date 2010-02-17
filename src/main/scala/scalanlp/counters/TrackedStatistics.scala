@@ -44,6 +44,55 @@ object TrackedStatistics {
     }
   }
 
+  /**
+   * Tracks the minimum of the values in the counter.
+   * @author dramage
+   */
+  trait Minimum[T] extends TrackedStatistics[T] {
+    private var _minK : Option[T] = None;
+    private var _minV : Double = Double.MaxValue;
+
+    override protected[counters] def updateStatistics(t : T, oldV : Double, newV : Double) = {
+      if (newV < _minV) {
+        _minK = Some(t);
+        _minV = newV;
+      }
+      super.updateStatistics(t, oldV, newV);
+    }
+
+    override protected[counters] def resetStatistics() {
+      _minK = None;
+      _minV = Double.MaxValue;
+    }
+
+    def min = _minK;
+    def argmin = _minV;
+  }
+
+  /**
+   * Tracks the maximum of the values in the counter
+   * @author dramage
+   */
+  trait Maximum[T] extends TrackedStatistics[T] {
+    private var _maxK : Option[T] = None;
+    private var _maxV : Double = Double.MinValue;
+
+    override protected[counters] def updateStatistics(t : T, oldV : Double, newV : Double) = {
+      if (newV > _maxV) {
+        _maxK = Some(t);
+        _maxV = newV;
+      }
+      super.updateStatistics(t, oldV, newV);
+    }
+
+    override protected[counters] def resetStatistics() {
+      _maxK = None;
+      _maxV = Double.MinValue;
+    }
+
+    def max = _maxK;
+    def argmax = _maxV;
+  }
 
   /**
   * Tracks the log of sum of values in the tracked object.

@@ -34,7 +34,7 @@ import scala.collection.immutable._;
  * 
  * @author dlwh
  */
-class HTMap[+T] (private val map: Map[String,Any]) {
+class HMap[+T] (private val map: Map[String,Any]) {
   /** Get a value corresponding to the given type from the map.*/
   def get[U>:T](implicit m: Manifest[U]) = map.get(m.toString).asInstanceOf[Option[U]].get;
   
@@ -42,25 +42,25 @@ class HTMap[+T] (private val map: Map[String,Any]) {
   def apply[U>:T]()(implicit m: Manifest[U]) = get[U];
   
   /** Add or replace a value with the corresponding *static* type to the map. */
-  def +[U](x: U)(implicit m: Manifest[U]) = new HTMap[T with U](map + (m.toString->x))
+  def +[U](x: U)(implicit m: Manifest[U]) = new HMap[T with U](map + (m.toString->x))
   
   /** 
    * Replace a value with the corresponding *static* type to the map.
    * This is mostly to keep the inferred type as short as possible.
    */
-  def -+[U>:T](x:U)(implicit m: Manifest[U]) = new HTMap[T] (map + (m.toString->x));
+  def -+[U>:T](x:U)(implicit m: Manifest[U]) = new HMap[T] (map + (m.toString->x));
   
   /**
    * Applys f to this and combines the result with this map.
    */
-  def and[U](f: HTMap[T]=>U)(implicit m: Manifest[U]): HTMap[T with U] = {
+  def and[U](f: HMap[T]=>U)(implicit m: Manifest[U]): HMap[T with U] = {
     val newPart = f(this); 
     this.+[U](newPart);
   }
   
   /** Concatenates two maps. values in "other" override values in "this" */
-  def ++[U](other: HTMap[U]): HTMap[T with U] = {
-    new HTMap[T with U](this.map ++ other.map);
+  def ++[U](other: HMap[U]): HMap[T with U] = {
+    new HMap[T with U](this.map ++ other.map);
   }
   
   override def toString = map.mkString("HTMap(",",",")");
@@ -69,30 +69,30 @@ class HTMap[+T] (private val map: Map[String,Any]) {
 /**
  * Utilities for constructing HTMaps
  */
-object HTMap {
+object HMap {
   /**
    * Construct an empty HTMap. Note that this allows you to successfully
    * compile an extraction of "Any" from this map, but it won't succeed 
    * at run time.
    */
-  def apply() = new HTMap[Any](Map.empty);
+  def apply() = new HMap[Any](Map.empty);
   
   /**
    * Construct an HTMap with one initial value
    */
-  def apply[T](x:T)(implicit m: Manifest[T]) = new HTMap[T](Map.empty + (m.toString->x))
+  def apply[T](x:T)(implicit m: Manifest[T]) = new HMap[T](Map.empty + (m.toString->x))
   
   /**
    * Construct an HTMap with two initial values
    */
   def apply[T,T2](x:T, x2:T2)(implicit m: Manifest[T], m2: Manifest[T2]) = {
-    new HTMap[T with T2](Map.empty ++ List( (m.toString->x) , (m2.toString->x2)))
+    new HMap[T with T2](Map.empty ++ List( (m.toString->x) , (m2.toString->x2)))
   }
   
   /**
    * Construct an HTMap with three initial values
    */
   def apply[T,T2,T3](x:T, x2:T2, x3: T3)(implicit m: Manifest[T], m2: Manifest[T2], m3: Manifest[T3]) = {
-    new HTMap[T with T2 with T3](Map.empty ++ List( (m.toString->x) , (m2.toString->x2), (m3.toString->x3)))
+    new HMap[T with T2 with T3](Map.empty ++ List( (m.toString->x) , (m2.toString->x2), (m3.toString->x3)))
   }
 }
