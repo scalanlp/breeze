@@ -20,10 +20,10 @@ import scala.collection.mutable.ArrayBuffer;
 
 
 /**
+* This class breaks the compiler. Taking it out to see what breaks.
 * Useful implicit conversions and other utilities.
 * 
 * @author dlwh 
-*/
 object Implicits extends Asserts {
   
   //
@@ -49,31 +49,6 @@ object Implicits extends Asserts {
 
   implicit def listExtras[T](list : List[T]) = new ListExtra(list);
 
-  class StringExtras(s : String) {
-    /**
-    * Implements Levenshtein Distance. 
-    */
-    def editDistance(s2 : String) = {
-      if(s.length == 0) s2.length;
-      else if(s2.length ==0) s.length;
-      else {
-        val d: Array[Array[Int]] = Array.ofDim(s.length+1,s2.length+1);
-        for(i <- 0 to s.length)
-          d(i)(0) = i;
-        for(i <- 0 to s2.length)
-          d(0)(i) = i;
-        for(i <- 1 to s.length;
-          j <- 1 to s2.length) {
-            val cost = if(s(i-1) == s2(j-1)) 0 else 1;
-            d(i)(j) = Math.min( d(i-1)(j)+1, Math.min(d(i)(j-1)+1,d(i-1)(j-1) + cost));
-        }
-        d(s.length)(s2.length);
-      }
-    }
-  }
-  implicit def stringExtras(s : String) = new StringExtras(s);
-
-
   implicit def anyExtras[T](a:T) = new AnyExtras[T](a);
 
   class AnyExtras[T](x: T) {
@@ -96,38 +71,10 @@ object Implicits extends Asserts {
     }
   }
 
-  implicit def tExtras[T<:AnyRef](t : T) = new AnyRefExtras[T](t);
-  
-  /**
-   * Provides extensions to Any.
-   */
-  class AnyRefExtras[T<:AnyRef](t: T) {
-    /**
-     * if t is non-null, return it, otherwise, evaluate and return u.
-     */ 
-    def ?:[U>:T](u: =>U) = if(t eq null) u else t;
-
-    /**
-     * Intern for arbitrary types
-     */ 
-    def intern : T= {
-      val in : Interner[T] = Interner.forClass(t.getClass.asInstanceOf[Class[T]])
-      in(t);
-    }
-
-    /**
-    * if t is non-null return Some(t), otherwise None
-    */
-    def toOption = if(t eq null) None else Some(t);
-    
-  }
-  
   implicit def doubleExtras(d: Double) = new {
     def =~=(e: Double) = d ==e ||  Math.abs(d - e)/d < 1E-4;
   }
 
-  implicit def SeqExtras[T](s: Seq[T]) = new {
-    // useful subset selection
-    def apply(x: Seq[Int]) = x.view.map(s);  
-  }
 }
+
+*/
