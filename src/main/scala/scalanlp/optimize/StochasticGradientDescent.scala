@@ -7,7 +7,6 @@ import scalala.tensor.operators._;
 import TensorShapes._;
 
 import scalanlp.util._;
-import scalanlp.util.Implicits._;
 import scalanlp.stats.sampling._;
 
 /*
@@ -51,18 +50,17 @@ class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]
 
     var i = 0;
     var converged = false;
-    while(!converged && i < maxIter) {
+    while(!converged && (i < maxIter || maxIter <= 0)) {
       log(Log.INFO)("SGD iteration: " + i);
       val sample = selectSample(f,i);
 
       val (value,grad) = f.calculate(guess,sample);
-      //log(Log.INFO)("SGD gradient: " + grad.mkString("[",",","]"));
+      log(Log.INFO)("SGD gradient: " + norm(grad,2));
       assert(grad.forall(!_._2.isInfinite));
       log(Log.INFO)("SGD value: " + value);
-
       guess = update(guess,grad,temp);
       assert(guess.forall(!_._2.isInfinite));
-      log(Log.INFO)("SGD update: " + guess.mkString("[",",","]"));
+      //log(Log.INFO)("SGD update: " + guess.mkString("[",",","]"));
 
       i+=1;
       converged = checkConvergence(grad);

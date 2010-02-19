@@ -65,7 +65,7 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
     while( (maxIter <= 0 || iter < maxIter) && !converged) {
       log(INFO)("Starting iteration: " + iter);
       log(INFO)("Current v:" + v);
-      log(INFO)("Current grad:" + grad.mkString(","));
+      log(INFO)("Current grad norm:" + norm(grad,2));
       try {
         val diag = if(memStep.size > 0) {
           computeDiag(iter,grad,memStep.last,memGradDelta.last);
@@ -75,13 +75,12 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
           ones
         }
         val step = computeDirection(iter, diag, grad, memStep, memGradDelta, memRho);
-        log(INFO)("Step:" + step);
+        //log(INFO)("Step:" + step);
 
         val (stepScale,newVal) = chooseStepSize(iter,f, step, x, grad, v);
         log(INFO)("Scale:" +  stepScale);
         step *= stepScale;
         x += step;
-        log(INFO)("Current X:" + x.mkString("{",",","}"));
 
         val newGrad = f.gradientAt(x);
 
