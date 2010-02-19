@@ -14,51 +14,41 @@ package scalanlp.data.process;
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License. 
-*/
+ */
 
-/** Simple Regex-based sentence terminator. Very very far from perfect.
- * Usage: SegmentSentences(text).foreach{println}
-*
-* @author dlwh
-*/
-class SegmentSentences extends (String=>Iterator[String] ) {
- // private val r = "(?s)\\s*((?:[^!?.]|(?:\\.((?=\\s*[0-9a-z]))|\\.(?<=Dr|Mrs|Mr|Ms|Prof))?)+)".r
-  private val r = "(?s)\\s*((?:[^!?.])+\\s*[.!?]?)".r 
-  def apply(s:String):Iterator[String] = new Iterator[String] {
-    val m =  (r findAllIn s);
-    var buffer:Option[String] = None;
-    def hasNext = m.hasNext;
-    
-    def next: String = {
-      val n = quickNext.replaceAll("^\\s*","");
-      if(!m.hasNext) n;
-      
-      if(n endsWith ".") {
-        buffer = Some(m.next);
-        if(n.endsWith("Dr.") ||
-           n.endsWith("Mr.")  ||
-           n.endsWith("Mrs.") ||
-           n.endsWith("Ms.") ||
-           n.endsWith("Prof.")) {
-         n + ' ' + next;       
-       } else if(buffer.get.apply(0).isDigit 
-          || !buffer.get.apply(0).isWhitespace) {
-          n + next; 
-        } else {
-          n;
-        }
-      } else {
-        n
-      }
-        
-    }
-    
-    private def quickNext = buffer match {
-      case Some(s) => buffer = None; s;
-      case None => m.next; m.group(1);
-    }
-    
+import java.text.BreakIterator;
+import java.util.Locale
+
+/**
+ * A Sentence Segmenter backed by Java's BreakIterator.
+ * Given an input string, it will return an iterator over sentences
+ *
+ * @author dlwh
+ */
+class SegmentSentences(locale:Locale) extends (String=>Iterator[String] ) {
+  def this() = this(Locale.getDefault);
+  def apply(s: String):Iterator[String] = {
+    val breaker = BreakIterator.getSentenceInstance(locale);
+    breaker.setText(s);
+    new SegmentingIterator(breaker,s);
   }
 }
 
 object SegmentSentences extends SegmentSentences;
+
+
+ /**
+  * Given a BreakIterator and a string, iterate over the breaks returned by the breakiterator and index into that string
+  * for substrings
+  */
+ class SegmentingIterator(inner: BreakIterator,str: String) extends Iterator[String] {
+    private var start = inner.first;
+    private var end = inner.next;
+    def hasNext= (end != BreakIterator.DONE);
+    def next = {
+      val res = str.substring(start,end);
+      start = end;
+      end = inner.next;
+      res
+    }
+  }
