@@ -14,9 +14,19 @@ import Math._;
 
 
 object SVM {
+
+  /**
+   * Trains an SVM using the Pegsasos Algorithm.
+   */
+  def apply[F,TF<:Tensor1[F] with TensorSelfOp[F,TF,Shape1Col]](data:Seq[Example[Boolean,TF]],numIterations:Int=1000)
+                                                               (implicit arith: Tensor1Arith[_,TF,TF,Shape1Col]) = {
+
+    new Pegasos(numIterations).train[F,TF](data);
+  }
+
   class Pegasos(numIterations: Int, regularization: Double=0.1, batchSize: Int = 100) extends Logged {
     def train[F,TF<:Tensor1[F] with TensorSelfOp[F,TF,Shape1Col]](data: Seq[Example[Boolean,TF]])
-                                  (implicit arith: Tensor1Arith[_,TF,TF,Shape1Col]) = {
+                                  (implicit arith: Tensor1Arith[_,TF,TF,Shape1Col]):Classifier[Boolean,TF] = {
       val w = data(0).features.like;
       var intercept = 0.0;
       for(iter <- 0 until numIterations) {
