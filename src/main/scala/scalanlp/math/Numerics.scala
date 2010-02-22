@@ -163,7 +163,7 @@ object Numerics {
   * @return log(\sum exp(a_i))
   */
   def logSum(iter:Iterator[Double], max: Double):Double = {
-    max + log(iter.foldLeft(0.)( (a,b) => a+exp( b - max )))
+    max + log(iter.foldLeft(0.)( (a,b) => if(b == Double.NegativeInfinity) a else a+exp( b - max )))
   }
 
 

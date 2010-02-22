@@ -5,32 +5,30 @@ import scalanlp.data._;
 import scalanlp.counters._;
 import Counters._
 
+import scalala.Scalala._;
+import scalala.tensor._;
+import scalala.tensor.operators._;
 import scalala.tensor.dense._;
 import scalala.Scalala._;
 
+import scalala.tensor.operators.TensorShapes._;
+
 @serializable
 @SerialVersionUID(1L)
-class LinearClassifier[L,F](val featureIndex: Index[F], 
-                            val labels: Seq[L],
-                            val featureWeights: Array[Array[Double]],
-                            val intercepts: Array[Double]) 
-                            extends Classifier[L,Map[F,Double]] {
-  def scores(o: Map[F,Double]) = {
-    val c = DoubleCounter[L]();
-    for( (l,i) <- labels.iterator.zipWithIndex) {
-      val lWeights = featureWeights(i);
-      var score = intercepts(i);
-      for( (f,v) <- o;
-           fi <- featureIndex.indexOpt(f) ) {
-        score += lWeights(fi) * v; 
-      }
-      c(l) = score;
-    }
-    c
+class LinearClassifier[L,F,T2<:Tensor2[L,F] with TensorSelfOp[(L,F),T2,Shape2],
+    TL<:Tensor1[L] with TensorSelfOp[L,TL,Shape1Col],
+    TF<:Tensor1[F] with TensorSelfOp[F,TF,Shape1Col]]
+    (val featureWeights: T2, val intercepts: TL)
+    (implicit tpb: TensorProductBuilder[T2,TF,TL,Shape2,Shape1Col,Shape1Col],
+      tla: Tensor1Arith[L,TL,TL,Shape1Col])
+    extends Classifier[L,TF] {
+  def scores(o: TF) = {
+    aggregate(featureWeights * o + intercepts);
   }
 }
 
 object LinearClassifier {
+/*
   def fromRegression[F](data: Iterable[Example[Boolean,Map[F,Double]]]) = {
     val featureIndex = Index[F]();
     val idata = ( for(e <- data.iterator) yield { 
@@ -88,4 +86,5 @@ object LinearClassifier {
 
     LinearClassifier.fromRegression(data);
   }
+  */
 }
