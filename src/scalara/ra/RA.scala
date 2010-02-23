@@ -19,9 +19,10 @@
  */
 package scalara.ra;
 
-import scalara.pipes.Pipes;
-
 import java.io.File;
+
+import scalara.pipes.Pipes;
+import scalara.serializer.{Loadable,Saveable};
 
 //
 // ResearchAssistant for Scala
@@ -83,11 +84,11 @@ case class RA(
   }
   
   /** Returns a cached view of the given value, loading from a cell if possible. */
-  def cache[V](cacheFile : java.io.File)(p : =>V)(implicit valType : scala.reflect.Manifest[V]) =
+  def cache[V](cacheFile : java.io.File)(p : =>V)(implicit loadable : Loadable[V,File], saveable : Saveable[V,File]) =
     cell(cacheFile)(p).get;
   
-  def cell[V](cacheFile : java.io.File)(p : =>V)(implicit valType : scala.reflect.Manifest[V]) =
-    new Cell(cacheFile,p)(valType,this);
+  def cell[V](cacheFile : java.io.File)(p : =>V) =
+    new Cell(cacheFile,p)(this);
   
   /** Gets a (named) child context in a named folder, creating it if necessary. */
   def branch(dir : File) : RA = {

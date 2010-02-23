@@ -19,6 +19,10 @@
  */
 package scalara.ra;
 
+import java.io.File;
+
+import scalara.serializer.{Loadable,Saveable};
+
 /**
  * A Cell represents a cached computation on disk.  Cells are safe to be
  * used by multiple processes -- a cell value that is pending won't be
@@ -27,15 +31,14 @@ package scalara.ra;
  * 
  * @author dramage
  */
-class Cell[V](cache : java.io.File, eval : => V)
-(implicit valType : scala.reflect.Manifest[V], ra : RA) {
+class Cell[V](cache : File, eval : => V)(ra : RA) {
   
   import ra.pipes._;
   
   var value : Option[V] = None;
 
   /** The lock file on disk marks this cell as being computed. */
-  protected val lock = new java.io.File(cache + ".status");
+  protected val lock = new File(cache + ".status");
   
   /**
    * Returns the status of the cell as a function of its lock state.
@@ -50,7 +53,7 @@ class Cell[V](cache : java.io.File, eval : => V)
     }
   } 
   
-  def get : V = {
+  def get(implicit loadable : Loadable[V,File], saveable : Saveable[V,File]) : V = {
     value match {
       // value already loaded
       case Some(v) => v;
@@ -69,7 +72,9 @@ class Cell[V](cache : java.io.File, eval : => V)
             // value is ready, load and return it
             
             ra.log("RA.Cell: loading "+cache);
-            Serializer.load(cache)(valType,ra);
+
+            loadable.load(cache);
+            // Serializer.load(cache)(valType,ra);
           }
           
           case Cell.Missing => {
@@ -83,7 +88,8 @@ class Cell[V](cache : java.io.File, eval : => V)
             ra.log("RA.Cell: creating "+cache);
             List(RA.pid) | lock;
             val rv = eval;
-            Serializer.save(cache, rv)(valType,ra);
+            // Serializer.save(cache, rv)(valType,ra);
+            saveable.save(rv, cache);
             lock.delete();
             rv;
           }
@@ -118,9 +124,8 @@ object Cell {
   case object Missing extends Status;
   case object Partial extends Status;
   
-  def apply[V](cache : java.io.File)(eval : => V)
-  (implicit valType : scala.reflect.Manifest[V], ra : RA) =
-    new Cell(cache, eval)(valType,ra);
+  def apply[V](cache : File)(eval : => V)(ra : RA) =
+    new Cell(cache, eval)(ra);
 }
 
 class CellException(msg : String) extends RuntimeException(msg);
