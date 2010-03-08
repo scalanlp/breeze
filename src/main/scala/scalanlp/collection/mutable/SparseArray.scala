@@ -60,14 +60,23 @@ class SparseArray[@specialized T:ClassManifest](val maxSize: Int, initialLength:
     if(ind < 0) None else Some(data(ind));
   }
 
-  override def iterator = index.iterator zip data.iterator take used;
+
+  final override def foreach[U](f: Function1[(Int,T),U]) {
+    var i = 0;
+    while(i < used) {
+      f(index(i),data(i));
+      i += 1;
+    }
+  }
+
+  override final def iterator = (0 until used).iterator map { i => (index(i),data(i)) };
   override def keysIterator = index.iterator;
   override def valuesIterator = data.iterator;
 
   // Taken from Scalala
 
   /** Records that the given index was found at this.index(offset). */
-  final def found(index : Int, offset : Int) : Int = {
+  final private def found(index : Int, offset : Int) : Int = {
     lastOffset = offset;
     lastIndex = index;
     return offset;
