@@ -69,6 +69,19 @@ trait Index[T] extends Injection[T,Int] with Iterable[T] {
    */
   def get(i : Int) : T =
     unapply(i).getOrElse(throw new IndexOutOfBoundsException());
+
+  override def equals(other : Any) : Boolean = {
+    other match {
+      case that : Index[_] if this.size == that.size =>
+        this sameElements that;
+      case _ => false;
+    }
+  }
+
+  protected lazy val defaultHashCode =
+    (17 /: this)(_ * 41 + _.hashCode);
+
+  override def hashCode = defaultHashCode;
 }
 
 /**
@@ -86,6 +99,8 @@ trait IndexProxy[T] extends Index[T] with IterableProxy[T] {
   override def indexOpt(t : T) = self.indexOpt(t);
   override def indexOf(t : T) = self.indexOf(t);
   override def get(i : Int) = self.get(i);
+  override def equals(other : Any) = self.equals(other);
+  override def hashCode = self.hashCode;
 }
 
 /**
@@ -101,6 +116,8 @@ trait SynchronizedIndex[T] extends Index[T] {
   abstract override def indexOpt(t : T) = this synchronized super.indexOpt(t);
   abstract override def indexOf(t : T) = this synchronized super.indexOf(t);
   abstract override def get(pos : Int) = this synchronized super.get(pos);
+  abstract override def equals(other : Any) = this synchronized super.equals(other);
+  abstract override def hashCode = this synchronized super.hashCode;
 }
 
 /**
