@@ -97,6 +97,50 @@ object LogCounters extends DoubleCounterFactory {
   * Returns a LogCounters.LogPairedDoubleCounter whose rows have
   * (approximately) logTotal log(1).
   */
+  def logNormalize[T,U](ctr: Counters.PairedDoubleCounter[T,U]) = {
+    val result = LogPairedDoubleCounter[T,U]();
+
+    val logTotal = Math.log(ctr.total);
+    for( (k1,c) <- ctr.rows;
+         (k2,v) <- c ) {
+      result(k1,k2) = Math.log(v) - logTotal;
+    }
+
+    result;
+  }
+
+  /**
+  * Returns a LogCounters.LogPairedDoubleCounter whose rows have
+  * (approximately) logTotal log(1).
+  */
+  def logNormalize[T,U](ctr: LogPairedDoubleCounter[T,U]) = {
+    val result = LogPairedDoubleCounter[T,U]();
+
+    for( (k,v) <- ctr.rows) {
+      result(k) := v - ctr.logTotal;
+    }
+
+    result;
+  }
+
+  /**
+  * Returns a LogCounters.LogPairedDoubleCounter whose rows have
+  * (approximately) logTotal log(1).
+  */
+  def logNormalizeRows[T,U](ctr: Counters.PairedDoubleCounter[T,U]) = {
+    val result = LogPairedDoubleCounter[T,U]();
+    for( (k,v) <- ctr.rows) {
+      result(k) := logNormalize(v);
+    }
+
+    result;
+  }
+
+
+  /**
+  * Returns a LogCounters.LogPairedDoubleCounter whose rows have
+  * (approximately) logTotal log(1).
+  */
   def logNormalizeRows[T,U](ctr: LogPairedDoubleCounter[T,U]) = {
     val result = LogPairedDoubleCounter[T,U]();
 
@@ -130,8 +174,9 @@ object LogCounters extends DoubleCounterFactory {
   def logNormalize[T](ctr: Counters.DoubleCounter[T]) = {
     val result = LogDoubleCounter[T]();
 
+    val logTotal = Math.log(ctr.total);
     for( (k,v) <- ctr) {
-      result(k) = Math.log(v - ctr.total);
+      result(k) = Math.log(v) - logTotal;
     }
 
     result;
