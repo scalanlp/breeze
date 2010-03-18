@@ -22,6 +22,7 @@ import TensorShapes._;
 import scalala.tensor.sparse._;
 import scalala.collection._;
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
+import scalanlp.math.Numerics;
 
 import scalanlp.util._;
 
@@ -160,11 +161,44 @@ object LogCounters extends DoubleCounterFactory {
     val result = LogDoubleCounter[T]();
 
     for( (k,v) <- ctr) {
+      assert(!(v - ctr.logTotal).isNaN,k + " " + v + " " + ctr.logTotal);
       result(k) = v - ctr.logTotal;
     }
+    assert(result.logTotal < 1E-10);
 
     result;
   }
+
+
+  /**
+  * Returns a LogCounters.LogDoubleCounter that is just the log of these counts.
+  */
+  def log[T,U](ctr: Counters.PairedDoubleCounter[T,U]) = {
+    val result = LogPairedDoubleCounter[T,U]();
+
+    for( (k,v) <- ctr) {
+      result(k) = Math.log(v);
+    }
+
+    result
+  }
+
+
+
+
+  /**
+  * Returns a LogCounters.LogDoubleCounter that is just the log of these counts.
+  */
+  def log[T](ctr: Counters.DoubleCounter[T]) = {
+    val result = LogDoubleCounter[T]();
+
+    for( (k,v) <- ctr) {
+      result(k) = Math.log(v);
+    }
+
+    result
+  }
+
 
 
   /**
@@ -178,6 +212,23 @@ object LogCounters extends DoubleCounterFactory {
     for( (k,v) <- ctr) {
       result(k) = Math.log(v) - logTotal;
     }
+
+    result;
+  }
+
+  /**
+  * Returns a LogCounters.LogDoubleCounter that has (approximately) total 1.
+  * Each entry (k,v) has a new entry in the map (k,(v - logTotal))
+  */
+  def logSum[T,U](ctr: LogPairedDoubleCounter[T,U], ctr2: LogPairedDoubleCounter[T,U]) = {
+    val result = LogPairedDoubleCounter[T,U]();
+
+    for( k <- ctr.activeDomain ++ ctr2.activeDomain) {
+      val res =  Numerics.logSum(ctr(k),ctr2(k));
+      if(res != Double.NegativeInfinity)
+        result(k) = res
+    }
+
 
     result;
   }
