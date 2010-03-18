@@ -32,4 +32,14 @@ class TopKTest extends FunSuite {
       expect(sampled.sortWith(_ > _).take(20).toList)(sampled.topk(20).toList);
     }
   }
+
+  test("Test we get proper output ordering if we don't have enough") {
+    val random = new java.util.Random();
+    val values = Array.tabulate(10)(i => random.nextDouble);
+    for (i <- 0 until 100) {
+      val sampled = Array.tabulate(10)(i => values(random.nextInt(values.length))).toList;
+      expect(sampled.sortWith(_ > _).take(20).toList)(sampled.topk(20).toList);
+    }
+  }
+
 }

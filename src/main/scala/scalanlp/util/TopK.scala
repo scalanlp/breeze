@@ -33,8 +33,9 @@ class TopK[T](k : Int)(implicit ord : Ordering[T]) extends Iterable[T] {
     }
   }
 
-  override def iterator : Iterator[T] =
-    Iterator.range(1, k + 1).map(i => keys(k - i));
+  override def iterator : Iterator[T] = {
+    keys.view.reverse.iterator
+  }
 
   override def size =
     keys.size;
