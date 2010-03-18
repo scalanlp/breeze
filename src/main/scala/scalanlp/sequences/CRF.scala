@@ -17,7 +17,6 @@ package scalanlp.sequences
 
 import java.util.Arrays;
 import scala.collection.mutable.ArrayBuffer;
-import scala.Math.NEG_INF_DOUBLE;
 
 import scalala.Scalala._;
 import scalala.tensor.Vector;
@@ -26,12 +25,11 @@ import scalala.tensor.sparse._;
 
 import scalanlp._;
 import counters._;
-import LogCounters._;
+import LogCounters.{logSum=>_,_};
 import Counters._;
 import util.Index;
 import math.Numerics._;
 import stats.sampling._
-import util.Implicits._;
 import scalanlp.util.Lazy;
 import scalanlp.util.Lazy.Implicits._;
 
@@ -103,11 +101,11 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
           result;
         } else {
           val factor = factors(i).calibrated;
-          val accum :Vector = mkVector(numStates, NEG_INF_DOUBLE);
+          val accum :Vector = mkVector(numStates, Double.NegativeInfinity);
 
           // for each possible assignment to the left and right message
           for ( (stateSeq,score) <- factor.activeElements
-                if score != NEG_INF_DOUBLE) {
+                if score != Double.NegativeInfinity) {
             val head = stateSeq / rightShifter; // trigram XYZ, get Z
             // sum out this contribution
             accum(head) = logSum(accum(head),score);
@@ -140,7 +138,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         // log p(tag_pos-window-1,...,tag_pos), up to a constant
         val caliFactor = factors(pos).calibrated;
         for( (stateSeq,score) <- caliFactor.activeElements;
-          if score != NEG_INF_DOUBLE;
+          if score != Double.NegativeInfinity;
           stateWindow = decode(stateSeq);
           w <- 0 until weights.size
         ) {
@@ -179,7 +177,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         // log p(tag_pos-window-1,...,tag_pos), up to a constant
         val caliFactor = factors(pos).calibrated;
         for( (stateSeq,score) <- caliFactor.activeElements;
-          if score != NEG_INF_DOUBLE;
+          if score != Double.NegativeInfinity;
           stateWindow = decode(stateSeq)
         ) {
           val t = f(stateWindow,pos,words);
@@ -267,7 +265,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
           var score = 0.0;
           val states = decode(stateSeq);
           if(!validStates(states)) {
-            NEG_INF_DOUBLE
+            Double.NegativeInfinity
           } else {
             while(i < features.length && !score.isInfinite) {
               score += weights(i) * features(i)(states,pos,words);
@@ -292,7 +290,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         for { 
           // for each prior sequence of states  x_i,... x_{i+window}
           (stateSeq,initScore) <- incoming.scores.activeElements;
-          if initScore != NEG_INF_DOUBLE;
+          if initScore != Double.NegativeInfinity;
           // and for each next state x_{i+window+1}
           nextState <- validStatesFor(pos)
         } /* do */ { // sum out the x_i
@@ -317,7 +315,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         for { 
           // for each future sequence of states  x_{i+1},... x_{i+window}
           (stateSeq,initScore) <- incoming.scores.activeElements;
-          if initScore != NEG_INF_DOUBLE;
+          if initScore != Double.NegativeInfinity;
           // and for each next state x_{i}
           nextState <- validStatesFor(pos-window+1)
         } /* do */ { // sum out the x_{i+window}
@@ -331,7 +329,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
       }
 
       private[CRF] lazy val calibrated = {
-        val output = mkVector(factorSize, NEG_INF_DOUBLE);
+        val output = mkVector(factorSize, Double.NegativeInfinity);
         val left = leftMessages(pos).scores;
         val right = rightMessages(pos).scores;
         /*
@@ -344,7 +342,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
         println("}");
         */
         for( (ls,lScore) <- left.activeElements;
-            if lScore != NEG_INF_DOUBLE;
+            if lScore != Double.NegativeInfinity;
               nextState <- validStatesFor(pos)) {
             val seq = appendRight(ls,nextState);
             val rs = shiftRight(seq,0);
@@ -358,7 +356,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
     }
 
     private[CRF] case class Message(src: Int, dest: Int) {
-      val scores = mkVector(messageSize, NEG_INF_DOUBLE);
+      val scores = mkVector(messageSize, Double.NegativeInfinity);
     }
 
     private val leftMessages  : Seq[Lazy[Calibration#Message]] = {
