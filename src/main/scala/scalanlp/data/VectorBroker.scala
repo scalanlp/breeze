@@ -64,6 +64,7 @@ trait VectorBroker[T] {
     }
     arr
   }
+
   def decode[V](array: SparseArray[V]):Map[T,V] = {
     Map.empty ++ array.map{ case (i,v) => (index.get(i),v)}
   }
