@@ -19,8 +19,16 @@
  */
 package scalara.serializer;
 
+import scala.collection.generic.{TraversableFactory,GenericTraversableTemplate};
+import scala.collection.mutable.{Builder};
+
 import java.io.{DataInputStream,DataOutputStream};
 
+class SerFile(path : String) extends java.io.File(path);
+
+class TxtFile(path : String) extends java.io.File(path);
+
+class CsvFile(path : String) extends java.io.File(path);
 
 /**
  * Represents a builder for constructing instances of Repr from the
@@ -40,7 +48,74 @@ object Loadable {
   }
 
   //
-  // Primitive types
+  // File backings
+  //
+
+  implicit def iSerFile2Serializable[X] : Loadable[X,SerFile] = {
+    import java.io.FileInputStream;
+    import java.io.ObjectInputStream;
+
+    Loadable[X,SerFile]((source : SerFile) => {
+      val stream = new ObjectInputStream(new FileInputStream(source));
+      val rv = try { stream.readObject.asInstanceOf[X]; } finally { stream.close; }
+      rv;
+    });
+  }
+
+  implicit def iTxtFile2Items[X](implicit conversion : (String => X))
+  : Loadable[Iterable[X],TxtFile] = {
+    import java.io.FileInputStream;
+
+    Loadable[Iterable[X],TxtFile]((source : TxtFile) =>
+      new Iterable[X] {
+        override def iterator =
+          scalara.pipes.PipeIO.readLines(new FileInputStream(source)).map(conversion);
+
+        override def toString =
+          source.toString;
+      }
+    );
+  }
+
+//  implicit def iTxtFile2Traversable[Item,CC[X]<:Traversable[X] with GenericTraversableTemplate[X,CC]]
+//  (implicit conversion : (String => Item), companion : TraversableFactory[CC])
+//  : Loadable[CC[Item],TxtFile] = {
+//    import java.io.FileInputStream;
+//
+//    Loadable[CC[Item],TxtFile]((source : TxtFile) => {
+//      val builder = companion.newBuilder[Item];
+//      val stream = new FileInputStream(source);
+//      try {
+//        for (line <- scalara.pipes.PipeIO.readLines(stream)) {
+//          builder += conversion(line);
+//        }
+//        builder.result;
+//      } finally {
+//        stream.close();
+//      }
+//    });
+//  }
+//
+//  implicit def iTxtFile2Traversable[String,CC<:Traversable[String]]
+//  (implicit builder : Builder[String,CC])
+//  : Loadable[CC,TxtFile] = {
+//    import java.io.FileInputStream;
+//
+//    Loadable[CC,TxtFile]((source : TxtFile) => {
+//      val stream = new FileInputStream(source);
+//      try {
+//        for (line <- scalara.pipes.PipeIO.readLines(stream)) {
+//          builder += line;
+//        }
+//        builder.result;
+//      } finally {
+//        stream.close();
+//      }
+//    });
+//  }
+
+  //
+  // DataInputStream
   //
 
   implicit def iStream2Double = Loadable[Double,DataInputStream](
@@ -63,10 +138,6 @@ object Loadable {
 
   implicit def iStream2Boolean = Loadable[Boolean,DataInputStream](
     (source : DataInputStream) => source.readBoolean());
-
-  //
-  // Array types
-  //
 
   implicit def iStream2Array[T](implicit loadable : Loadable[T,DataInputStream], m : ClassManifest[T]) = {
     Loadable[Array[T],DataInputStream] {
@@ -105,7 +176,57 @@ object Saveable {
   }
 
   //
-  // Primitive types
+  // File backings
+  //
+
+  implicit def iSerializable2SerFile[X] : Saveable[X,SerFile] = {
+    import java.io.FileOutputStream;
+    import java.io.ObjectOutputStream;
+
+    Saveable[X,SerFile]((value : X, target : SerFile) => {
+      val stream = new ObjectOutputStream(new FileOutputStream(target));
+      try {
+        stream.writeObject(value);
+      } finally {
+        stream.close;
+      }
+    });
+  }
+
+  implicit def iIterable2TxtFile[X](implicit conversion : (X => String))
+  : Saveable[Iterable[X],TxtFile] = {
+    import java.io.{FileOutputStream,PrintStream};
+
+    Saveable[Iterable[X],TxtFile]((value : Iterable[X], target : TxtFile) => {
+      val stream = new PrintStream(new FileOutputStream(target));
+      try {
+        for (item <- value) {
+          stream.println(conversion(item));
+        }
+      } finally {
+        stream.close;
+      }
+    });
+  }
+
+  implicit def iTraversable2TxtFile[Collection<:Traversable[String]]
+  : Saveable[Collection,TxtFile] = {
+    import java.io.{FileOutputStream,PrintStream};
+
+    Saveable[Collection,TxtFile]((value : Collection, target : TxtFile) => {
+      val stream = new PrintStream(new FileOutputStream(target));
+      try {
+        for (item <- value) {
+          stream.println(item);
+        }
+      } finally {
+        stream.close();
+      }
+    });
+  }
+
+  //
+  // DataOutputStream
   //
 
   implicit def iDouble2Stream = Saveable[Double,DataOutputStream](
@@ -129,10 +250,6 @@ object Saveable {
   implicit def iBoolean2Stream = Saveable[Boolean,DataOutputStream](
     (value : Boolean, target : DataOutputStream) => target.writeBoolean(value));
 
-  //
-  // Array types
-  //
-
   implicit def iArray2Stream[T](implicit saveable : Saveable[T,DataOutputStream], m : ClassManifest[T]) = {
     Saveable[Array[T],DataOutputStream] {
       (value : Array[T], target : DataOutputStream) => {
@@ -141,15 +258,6 @@ object Saveable {
       }
     }
   }
-
-//  implicit def iIterable2Stream[T](implicit saveable : Saveable[T,DataOutputStream], m : ClassManifest[T]) = {
-//    Saveable[Iterable[T],DataOutputStream] {
-//      (value : Iterable[T], target : DataOutputStream) => {
-//        target.writeInt(value.size);
-//        for (v <- value) saveable.save(v,target);
-//      }
-//    }
-//  }
 }
 
 /**
@@ -184,10 +292,26 @@ object SerializerTest {
     Serializer.load[T,DataInputStream](new DataInputStream(bis));
   }
 
+  def testTxtFile() {
+    val tmpFile = new TxtFile("scalara.tmp");
+    val data = List("line 1","line 2", "line 3");
+    Serializer.save(data, tmpFile); // (Saveable.iTraversable2TxtFile[String,List[String]]);
+    val loaded = Serializer.load[List[String],TxtFile](tmpFile)(Loadable.iTxtFile2Traversable[List[String]]);
+    println(data.mkString(" __ "));
+    println(loaded.mkString(" __ "));
+    if (data sameElements loaded) {
+      println("[TestTxtFile] OK");
+    } else {
+      println("[TestTxtFile] FAIL");
+    }
+    tmpFile.delete;
+  }
+
   def main(args : Array[String]) {
     println(3.14 + " " + loop(3.14));
     println(27 + " " + loop(27));
     println(Array(1.0,2.0,3.0).deep + " " + loop(Array(1.0,2.0,3.0)).deep);
+    testTxtFile();
     // println(List(1,2,3) + " " + loop(List(1,2,3)));
   }
 }
