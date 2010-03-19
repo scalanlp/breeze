@@ -141,11 +141,6 @@
   </build>
   <repositories>
     <repository>
-      <id>ondex_repro</id>
-      <name>ondex_repro</name>
-      <url>http://ondex.rothamsted.bbsrc.ac.uk/nexus/content/groups/public</url>
-    </repository>
-    <repository>
       <id>scala-tools.org</id>
       <name>Scala-Tools Maven2 Repository</name>
       <url>http://scala-tools.org/repo-releases</url>
@@ -159,6 +154,11 @@
       <id>scalanlp.org</id>
       <name>ScalaNLP Maven2</name>
       <url>http://repo.scalanlp.org/repo/</url>
+    </repository>
+    <repository>
+      <id>ondex_repro</id>
+      <name>ondex_repro</name>
+      <url>http://ondex.rothamsted.bbsrc.ac.uk/nexus/content/groups/public</url>
     </repository>
   </repositories>
   <pluginRepositories>
@@ -193,12 +193,12 @@
     <dependency>
       <groupId>org.scalanlp</groupId>
       <artifactId>scalala</artifactId>
-      <version>0.3-SNAPSHOT</version>
+      <version>0.3.0</version>
     </dependency>
     <dependency>
       <groupId>org.scalanlp</groupId>
       <artifactId>scalara</artifactId>
-      <version>0.3-SNAPSHOT</version>
+      <version>0.3.0</version>
     </dependency>
     <dependency>
       <groupId>colt</groupId>
