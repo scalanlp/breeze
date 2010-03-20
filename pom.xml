@@ -3,7 +3,7 @@
   <groupId>org.scalanlp</groupId>
   <artifactId>scalanlp-core</artifactId>
   <name>ScalaNLP Core</name>
-  <version>0.2.1-SNAPSHOT</version>
+  <version>0.2.1</version>
   <url>http://www.scalanlp.org</url>
   <properties>
     <scala.version>2.8.0.Beta1</scala.version>
