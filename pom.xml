@@ -205,18 +205,14 @@
       <artifactId>colt</artifactId>
       <version>1.2.0</version>
     </dependency>
+    <!--
     <dependency>
       <groupId>org.scala-tools.testing</groupId>
       <artifactId>scalacheck_2.8.0.Beta1-RC5</artifactId>
       <version>1.7-SNAPSHOT</version>
       <scope>test</scope>
-      <!--
-      <groupId>org.scala-tools.testing</groupId>
-      <artifactId>scalacheck_2.8.0-20091013.004057-+</artifactId>
-      <version>1.7-SNAPSHOT</version>
-      <scope>test</scope>
-      -->
     </dependency>
+      -->
     <!--
     <dependency>
       <groupId>org.scala-tools</groupId>
@@ -225,11 +221,13 @@
       <scope>reporting</scope>
     </dependency>
     -->
+    <!--
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest</artifactId>
       <version>1.0.1-for-scala-2.8.0.Beta1-RC5-with-test-interfaces-0.2-SNAPSHOT</version>
     </dependency>
+    -->
   </dependencies>
   <reporting>
     <plugins>
