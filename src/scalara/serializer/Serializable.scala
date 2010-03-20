@@ -292,6 +292,7 @@ object SerializerTest {
     Serializer.load[T,DataInputStream](new DataInputStream(bis));
   }
 
+  /*
   def testTxtFile() {
     val tmpFile = new TxtFile("scalara.tmp");
     val data = List("line 1","line 2", "line 3");
@@ -306,12 +307,13 @@ object SerializerTest {
     }
     tmpFile.delete;
   }
+  */
 
   def main(args : Array[String]) {
     println(3.14 + " " + loop(3.14));
     println(27 + " " + loop(27));
     println(Array(1.0,2.0,3.0).deep + " " + loop(Array(1.0,2.0,3.0)).deep);
-    testTxtFile();
+    // testTxtFile();
     // println(List(1,2,3) + " " + loop(List(1,2,3)));
   }
 }

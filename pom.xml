@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.scalanlp</groupId>
   <artifactId>scalara</artifactId>
-  <version>0.3-SNAPSHOT</version>
+  <version>0.3.0</version>
   <name>ScalaRA</name>
   <inceptionYear>2009</inceptionYear>
   <properties>
