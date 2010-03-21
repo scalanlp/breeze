@@ -32,6 +32,10 @@ object ArgumentParser {
     def parse(arg:String) = arg.toString;
   }
 
+  implicit val classParser: ArgumentParser[Class[_]] = new ArgumentParser[Class[_]] {
+    override def parse(arg: String):Class[_] = Class.forName(arg.trim);
+  }
+
   implicit def seqParser[T:ArgumentParser]:ArgumentParser[Seq[T]] = new ArgumentParser[Seq[T]] {
     def parse(arg:String) = arg.split(",").map( implicitly[ArgumentParser[T]] parse _).toSeq;
   }
@@ -47,6 +51,7 @@ object ArgumentParser {
   addArgumentParser(stringParser);
 
   protected[config] def getArgumentParser[T:ClassManifest]:Option[ArgumentParser[T]] = {
-    argumentParsers.get(implicitly[ClassManifest[T]].toString).asInstanceOf[Option[ArgumentParser[T]]];
+    if(implicitly[ClassManifest[T]].erasure == classOf[Class[_]]) Some(classParser.asInstanceOf[ArgumentParser[T]])
+    else argumentParsers.get(implicitly[ClassManifest[T]].toString).asInstanceOf[Option[ArgumentParser[T]]];
   }
 }

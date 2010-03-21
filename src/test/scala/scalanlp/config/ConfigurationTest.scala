@@ -73,6 +73,15 @@ class ConfigurationTest extends FunSuite {
     assert(my.boolean === false);
   }
 
+  test("we can read in a class object") {
+    val p = new Properties();
+    p.put("some","scalanlp.config.DemoConfigurationClass");
+    val reader = Configuration.fromProperties(p);
+    val my = reader.readIn[Class[ConfigurationDemoIFace]]("some");
+  }
+
+
+
 
 
   test("we can read a generic with a class inside") {
