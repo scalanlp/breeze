@@ -13,12 +13,16 @@ import scala.reflect.NoManifest;
 trait Configuration {
   def getProperty(property:String):Option[String]
 
+  final def readIn[T:Manifest](prefix:String, default : =>T):T = {
+    try(readIn[T](prefix)) catch { case (e:NoParameterException) => default };
+  }
+
   final def readIn[T:Manifest](prefix:String):T = {
     ArgumentParser.getArgumentParser[T] match {
       case Some(parser) =>
         val property = recursiveGetProperty(prefix);
         if(property.isEmpty)
-          throw new ConfigurationException("Could not find matching property for " + prefix);
+          throw new NoParameterException("Could not find matching property for " + prefix,prefix);
         parser.parse(property.get);
       case None => reflectiveReadIn[T](prefix);
     }
@@ -46,7 +50,7 @@ trait Configuration {
       ctor.newInstance(paramValues:_*).asInstanceOf[T];
     } catch {
       case e: ParameterNamesNotFoundException =>
-        throw new ConfigurationException("Could not find parameters for "+ dynamicClass.getName + " ("+prefix + ")");
+        throw new ConfigurationException("Could not find parameter names for "+ dynamicClass.getName + " ("+prefix + ")");
     }
   }
 
@@ -127,6 +131,7 @@ trait Configuration {
 }
 
 class ConfigurationException(msg:String) extends Exception(msg);
+class NoParameterException(msg: String,param: String) extends ConfigurationException(msg);
 
 object Configuration {
   def fromProperties(prop: Properties) = new Configuration {
