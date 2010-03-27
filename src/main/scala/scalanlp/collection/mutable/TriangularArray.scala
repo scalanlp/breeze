@@ -8,7 +8,7 @@ class TriangularArray[T:ClassManifest](dim: Int, fill: =>T) { outer =>
 
   @inline
   private def index(r: Int, c: Int) = {
-    require(r <= c, "row must be less than column!");
+    if(r <= c) require(r <= c, "row must be less than column!");
     (c * (c-1) /2 + r);
   }
 
