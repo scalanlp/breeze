@@ -17,7 +17,7 @@ package scalanlp.corpora;
 */
 
 
-import scalanlp.util.Implicits._;
+//import scalanlp.util.Implicits._;
 import java.net._;
 import java.io.File;
 import scala.xml.XML;
@@ -151,10 +151,11 @@ object Corpora extends Corpora("http://repo.scalanlp.org/repo/") {
 
 object CorpusUtils {
   protected[corpora] def defaultCorpusRepo = {
-    val repoFile = ( 
-      System.getenv("SCALANLP_CORPORA") 
-      ?: (System.getenv("MAVEN_HOME") 
-        ?: System.getenv("HOME") + "/.m2/") + "repository/");
+    val repoFile = {
+      var a = System.getenv("SCALANLP_CORPORA");
+      if(a == null) a = System.getenv("MAVEN_HOME");
+      if(a == null) a = System.getenv("HOME") + "/.m2/"
+    a } + "repository/";
     new File(repoFile).toURL;
   }
 
