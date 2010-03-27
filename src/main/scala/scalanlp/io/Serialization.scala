@@ -83,8 +83,12 @@ object Serialization {
     }
 
     implicit val stringHandler = new Handler[String] {
-      def read(in: DataInput) = in.readUTF();
-      def write(t: String, out: DataOutput) = out.writeUTF(t);
+      def read(in: DataInput) = {
+        in.readUTF();
+      }
+      def write(t: String, out: DataOutput) = {
+          out.writeUTF(t);
+      }
     }
 
     implicit val booleanHandler = new Handler[Boolean] {
@@ -175,21 +179,25 @@ object Serialization {
   * Contains methods to make Handlers from other handlers
   */
   object Builders {
+    import Handlers._;
     /**
     * Serializes the elements of the collection, and builds the collection back 
     * using inflate, which must create a collection from the members.
     */
-    def collectionFromElements[T,C<:Iterable[T]](inflate: Iterator[T]=>C)(implicit hT: Handler[T]) = new Handler[C] {
+    def collectionFromElements[T:Handler,C<:Iterable[T]](inflate: Iterator[T]=>C):Handler[C] = new Handler[C] {
       def write(c: C, out: DataOutput) = {
-        out writeInt c.size;
+        Serialization.write(c.size,out);
         for(e <- c) {
-          hT.write(e,out);
+          Serialization.write(e,out);
         }
       }
 
       def read(in: DataInput) = {
-        val sz = in.readInt
-        val elems = (1 to sz) map (_ => hT read in ) iterator;
+        val sz = Serialization.read[Int](in);
+        val elems = for( i <- Iterator.range(0,sz) ) yield { 
+          val a = Serialization.read[T](in);
+          a
+        }
         inflate(elems);
       }
     }
@@ -219,6 +227,16 @@ object Serialization {
 
   }
 
+  def write[T:Handler](x: T, o: DataOutput) {
+    implicitly[Handler[T]].write(x,o);
+  }
+
+
+  def read[T:Handler](i: DataInput) = {
+    implicitly[Handler[T]].read(i);
+  }
+
+
   def writeToFile[T](x: T, f: File)(implicit h: Handler[T]) {
     val out = new DataOutputStream(new FileOutputStream(f));
     h.write(x,out);
@@ -230,11 +248,6 @@ object Serialization {
     val r = h.read(in);
     in.close();
     r
-  }
-
-  def readFromStream[T](strm: InputStream)(implicit h: Handler[T]) = {
-    val in = new DataInputStream(strm);
-    h.read(in);
   }
 
   /**
@@ -287,45 +300,10 @@ object Serialization {
       }
     }
 
-/*
-    implicit def intCounterHandler[T](implicit h: Handler[T]) = new VersionedHandler[IntCounter[T]] {
-      def currentVersion = 2L;
-      def read(v: Long, in: DataInput) = {
-        val default = in.readInt;
-        val sz = in.readInt;
-
-        val c = IntCounter.withDefaultValue[T](default);
-        val elems = (1 to sz) map {_ => 
-          val k = h read in;
-          val v = intHandler read in
-          (k,v)
-        } iterator;
-        c ++= elems;
-        c
-      }
-
-      def writeCurrent(c: IntCounter[T], out: DataOutput) = {
-        out writeInt c.defaultValue;
-        out writeInt c.size;
-        for((k,v) <- c) {
-          h.write(k,out);
-          intHandler.write(v,out);
-        }
-      }
-    }
-    implicit def pairedIntCounterHandler[T,U](implicit h: Handler[T], hu: Handler[U]) = {
-      collectionFromElements[(T,IntCounter[U]),PairedIntCounter[T,U]] { elems =>
-        val result = new PairedIntCounter[T,U]; 
-        result ++= elems;
-        result;
-      }
-    }
-*/
-
     import scalanlp.util._;
     implicit def indexHandler[T](implicit h: Handler[T]) = collectionFromElements[T,Index[T]] { elems =>
       val ind = Index[T]();
-      elems foreach (ind apply _);
+      elems foreach {s =>  ind.index(s)};
       ind
     }
   }
