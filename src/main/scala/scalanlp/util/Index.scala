@@ -164,7 +164,7 @@ trait SynchronizedMutableIndex[T] extends MutableIndex[T] with SynchronizedIndex
  *
  * @author dlwh, dramage
  */
-@serializable class CharIndex extends Index[Char] {
+@serializable class CharIndex extends MutableIndex[Char] {
   /** Forward map from int to object */
   private val objects = new ArrayBuffer[Char];
 
