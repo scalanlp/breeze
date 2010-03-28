@@ -26,6 +26,14 @@ import scalanlp.math.Numerics;
 
 import scalanlp.util._;
 
+/**
+ * LogCounters are much like Counters, except they track
+ * logTotal instead of total. LogTotal is also the softmax of
+ * the elements in the counter. These are useful when you
+ * need to deal with log-probabilities, which is frequent in NLP settings.
+ *
+ * @author dlwh
+ */
 object LogCounters extends DoubleCounterFactory {
   class LogDoubleCounter[T] extends AbstractDoubleCounter[T]
       with TrackedStatistics.LogTotal[T]

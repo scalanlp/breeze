@@ -26,7 +26,22 @@ import scalanlp.data._;
 import scalanlp.math.Numerics._;
 import scalanlp.optimize._;
 
+/**
+ * A multi-class logistic/softmax/maxent classifier. It's currently unsmoothed (no regularization)
+ * but I hope to fix that at some point.
+ *
+ * @author dlwh
+ */
 object LogisticClassifier {
+  /**
+   * @param L: the label type
+   * @param F: the feature type
+   * @param: T2: the Matrix with labels as "rows" and features as "column"
+   * @param TL: A "vector" from labels to scores
+   * @param TF feature vectors, which are the input vectors to the classifer
+   * @param data: a sequence of labeled examples
+   * @return a LinearClassifier based on the fitted model
+   */
   def apply[L,F,T2<:Tensor2[L,F] with TensorSelfOp[(L,F),T2,Shape2],
       TL<:Tensor1[L] with TensorSelfOp[L,TL,Shape1Col],
       TF<:Tensor1[F] with TensorSelfOp[F,TF,Shape1Col]]

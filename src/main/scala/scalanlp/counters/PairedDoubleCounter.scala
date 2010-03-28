@@ -23,7 +23,7 @@ import scalala.collection._;
 
 /**
 * Base class for classes like {#link Counters#PairedDoubleCounter}. Roughly, it is a 
-* two-dimensional map/tensor/matrix with other counters as "rows."
+* two-dimensional map/tensor2/matrix with other counters as "rows."
 *
 * @author dlwh
 */

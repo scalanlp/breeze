@@ -10,18 +10,6 @@ import java.lang.ref.SoftReference;
 
 import scala.collection.mutable.Map;
 
-/*
-case class FileCacheDescriptor[K](name : String, key : K)
-
-class FileCache[D <: FileCacheDescriptor[K],K,V](pipes : Pipes) extends Cache[K,V] {
-  import pipes._;
-  
-  def isDefinedAt(key : K) = {
-    
-  }
-}
-*/
-
 /**
  * Provides a cache where both keys and values are only weakly referenced
  * allowing garbage collection of either at any time, backed by a WeakHashMap.

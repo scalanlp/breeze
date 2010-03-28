@@ -30,6 +30,10 @@ import scalanlp.counters.Counters._;
 import Math._;
 
 
+/**
+ * Object for creating SupportVectorMachines
+ * @author dlwh
+ */
 object SVM {
 
   /**
@@ -41,6 +45,17 @@ object SVM {
     new Pegasos(numIterations).train[F,TF](data);
   }
 
+  /**
+   * An online optimizer for an SVM based on Pegasos: Primal Estimated sub-GrAdient SOlver for SVM
+   *
+   * The optimizer runs a stochastic subgradient descent on the primal objective using
+   * batches provided.
+   *
+   * @author dlwh
+   * @param numIterations
+   * @param regularization sort of a 2-norm penalty on the weights. Higher means more smoothing
+   * @param batchSize: how many elements per iteration to use.
+   */
   class Pegasos(numIterations: Int, regularization: Double=0.1, batchSize: Int = 100) extends Logged {
     def train[F,TF<:Tensor1[F] with TensorSelfOp[F,TF,Shape1Col]](data: Seq[Example[Boolean,TF]])
                                   (implicit arith: Tensor1Arith[_,TF,TF,Shape1Col]):Classifier[Boolean,TF] = {

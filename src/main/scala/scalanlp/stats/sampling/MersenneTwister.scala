@@ -21,6 +21,8 @@ package scalanlp.stats.sampling;
 * which is absurdly long. It's known to be fairly fast, too.
 * 
 * It needs a 32-bit integer seed.
+*
+* @author dlwh
 */
 class MersenneTwister(seed: Int) extends RandomGenerator {
   /**

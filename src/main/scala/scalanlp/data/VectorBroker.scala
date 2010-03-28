@@ -35,18 +35,27 @@ import scalala.Scalala._;
 trait VectorBroker[T] {
   val index: Index[T]
 
+  /**
+   * Creates a Vector of some sort with the index's size.
+   */
   def mkVector(default: Double=0.0):Vector = {
     val vec = new AdaptiveVector(index.size)
     vec.default = default;
     vec
   }
 
+  /**
+   * Creates a DenseVector with the index's size
+   */
   final def mkDenseVector(default: Double=0.0):DenseVector = {
     val vec = new DenseVector(index.size)
     Arrays.fill(vec.data,default);
     vec
   }
 
+  /**
+   * Decodes a vector back to a DoubleCounter[T]
+   */
   def decode(v: Vector):DoubleCounter[T] = {
     val ctr = DoubleCounter[T]();
     for( (i,v) <- v.activeElements) {
@@ -55,6 +64,9 @@ trait VectorBroker[T] {
     ctr
   }
 
+  /**
+   * Encodes a DoubleCounter as a Vector. All elements in the counter must be in the index.
+   */
   def encode(c: DoubleCounter[T]):Vector = {
     val vec = mkVector(c.default);
     for( (k,v) <- c) {
@@ -63,9 +75,18 @@ trait VectorBroker[T] {
     vec
   }
 
+  /**
+   * Creates an array of arbitrary type with the index's size.
+   */
   def mkArray[V:ClassManifest] = new Array[V](index.size);
+  /**
+   * Fills an array of arbitrary type with the value provideda and with the index's size.
+   */
   def fillArray[V:ClassManifest](default : => V) = Array.fill(index.size)(default);
 
+  /**
+   * Converts an array into a Map from T's to whatever was in the array.
+   */
   def decode[V](array: Array[V]):Map[T,V] = {
     Map.empty ++ array.zipWithIndex.map{ case (v,i) => (index.get(i),v)}
   }

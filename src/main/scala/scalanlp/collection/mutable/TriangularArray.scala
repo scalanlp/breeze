@@ -19,6 +19,16 @@ package scalanlp.collection.mutable
 
 import scala.collection.mutable.Seq
 
+/**
+ * A TriangularArray is a jagged 2-d array where for every row r,
+ * we have an array of size dim - r.
+ *
+ * These are useful for parse charts.
+ *
+ * @author dlwh
+ * @param dim: The size of the array
+ * @param fill: what initial value should we put in the array
+ */
 class TriangularArray[T:ClassManifest](dim: Int, fill: =>T) { outer =>
   private val numElems = dim * (dim+1) / 2
   private val data = Array.fill(numElems)(fill);

@@ -27,12 +27,14 @@ import scala.collection.Map;
 /** Implements a Naive-Bayes Classifer over bags of words.
  * It automatically trains itself given the collection c of
  * learning examples.
- * 
- * @param wordSmoothing: how much smoothing for each
+ *
+ * @param c: a collection of example documents
+ * @param wordSmoothing: how much smoothing for each word
+ * @param classSmoothing: how much smoothing for the class.
  */
 class NaiveBayes[W,L](c: Iterable[Example[L,IntCounter[W]]],
-    val wordSmoothing:Double,
-    val classSmoothing:Double)  extends Classifier[L,IntCounter[W]] {
+    val wordSmoothing:Double=0.05,
+    val classSmoothing:Double=0.01)  extends Classifier[L,IntCounter[W]] {
 
   // p(c)
   private val classCounts = DoubleCounter[L]();

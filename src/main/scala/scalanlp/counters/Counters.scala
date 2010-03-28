@@ -25,6 +25,17 @@ import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
 
 import scalanlp.util._;
 
+/**
+ * Counters are a core abstraction in ScalaNLP, and can be thought of
+ * as maps whose values are always doubles, and who maintain their total.
+ * They also implement the Tensor interfaces from Scalala, so they can be
+ * used as tensors. There are also IntCounters, which have a more limited
+ * set of functionality and are not tensors.
+ *
+ * We provide two kinds of counters: DoubleCounters (Tensor1's) and PairedDoubleCounter (Tensor2's)
+ *
+ * @author dlwh
+ */
 object Counters extends DoubleCounterFactory with IntCounterFactory {
   class DefaultDoubleCounter[T] extends
     AbstractDoubleCounter[T] with TrackedStatistics.Total[T]

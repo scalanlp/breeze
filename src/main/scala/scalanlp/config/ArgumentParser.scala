@@ -16,7 +16,6 @@ package scalanlp.config
 */
 
 
-
 trait ArgumentParser[T] { outer =>
   def parse(arg:String):T
   def map[U](f: T=>U): ArgumentParser[U] = new ArgumentParser[U] {

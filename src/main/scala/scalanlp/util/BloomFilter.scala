@@ -19,7 +19,9 @@ package scalanlp.util
 import scala.collection.mutable.BitSet
 
 /**
- * A BloomFilter is an approximate set.
+ * A BloomFilter is an approximate set that sometimes gives false positives. That is,
+ * if bf(x) returns true, then it might have been added to the set. If it returns false, then
+ * it definitely has not. This is useful for caching and approximation.
  *
  * @author dlwh
  */

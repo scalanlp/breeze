@@ -75,6 +75,9 @@ object Datasets {
     }
   }
 
+  /**
+   * Returns a permutation of the dataset
+   */
   def randomize[T](dataset: Seq[T]) = {
     val perm = Rand.permutation(dataset.size).sample;
     (0 until dataset.size) map (perm) map (dataset);
