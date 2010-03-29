@@ -40,6 +40,11 @@ class LogDouble(val logValue: Double) {
   def -(d : Double) = new LogDouble(logDiff(logValue,Math.log(d)));
 
   override def toString = "LogDouble(" + logValue + ")"
+  override def equals(o: Any) = o match {
+    case ld: LogDouble => logValue == ld.logValue;
+    case _ => false;
+  }
+  override def hashCode = logValue.hashCode;
 }
 
 object LogDouble {
