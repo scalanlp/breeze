@@ -234,6 +234,7 @@
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest</artifactId>
       <version>1.0.1-for-scala-2.8.0.Beta1-RC5-with-test-interfaces-0.2-SNAPSHOT</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <reporting>
