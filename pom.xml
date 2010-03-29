@@ -201,11 +201,6 @@
       <version>0.3.0</version>
     </dependency>
     <dependency>
-      <groupId>colt</groupId>
-      <artifactId>colt</artifactId>
-      <version>1.2.0</version>
-    </dependency>
-    <dependency>
       <groupId>com.thoughtworks.paranamer</groupId>
       <artifactId>paranamer</artifactId>
       <version>2.2</version>

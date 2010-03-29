@@ -16,7 +16,7 @@ package scalanlp.stats.sampling;
  limitations under the License. 
 */
 
-import cern.jet.math.Bessel;
+import scalanlp.math.Bessel;
 import scalanlp.math.Numerics;
 import scalanlp.counters.Counters._;
 import Numerics._;

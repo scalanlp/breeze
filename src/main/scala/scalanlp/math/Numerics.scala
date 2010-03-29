@@ -207,5 +207,19 @@ object Numerics {
     a + log( 1- exp(b-a) );    
   }
 
+  /**
+   * Computes the polynomial P(x) with coefficients given in the passed in array.
+   * coefs(i) is the coef for the x^i term.
+   */
+  def poly(coefs: Array[Double], x: Double) = {
+    var i = coefs.length-1;
+    var p = coefs(i);
+    while (i>0) {
+      i -= 1;
+      p = p*x + coefs(i);
+    }
+    p
+  }
+
 
 }
