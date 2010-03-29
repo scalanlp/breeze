@@ -192,6 +192,18 @@ object LogCounters extends DoubleCounterFactory {
   }
 
 
+  /**
+  * Returns a Counters.PairedDoubleCounter that is just the exp of these log-counts.
+  */
+  def exp[T,U](ctr: LogPairedDoubleCounter[T,U]) = {
+    val result = Counters.PairedDoubleCounter[T,U]();
+
+    for( (k,v) <- ctr) {
+      result(k) = Math.exp(v);
+    }
+
+    result
+  }
 
 
   /**
