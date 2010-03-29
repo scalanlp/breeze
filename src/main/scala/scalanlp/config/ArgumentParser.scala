@@ -16,6 +16,8 @@ package scalanlp.config
 */
 
 
+import java.io.File
+
 trait ArgumentParser[T] { outer =>
   def parse(arg:String):T
   def map[U](f: T=>U): ArgumentParser[U] = new ArgumentParser[U] {
@@ -52,6 +54,10 @@ object ArgumentParser {
     override def parse(arg: String):Class[_] = Class.forName(arg.trim);
   }
 
+  implicit val fileParser: ArgumentParser[File] = new ArgumentParser[File] {
+    override def parse(arg: String) = new File(arg.trim);
+  }
+
   implicit def seqParser[T:ArgumentParser]:ArgumentParser[Seq[T]] = new ArgumentParser[Seq[T]] {
     def parse(arg:String) = arg.split(",").map( implicitly[ArgumentParser[T]] parse _).toSeq;
   }
@@ -61,10 +67,12 @@ object ArgumentParser {
   def addArgumentParser[T:ClassManifest](ap: ArgumentParser[T]) = {
     argumentParsers += (implicitly[ClassManifest[T]].toString -> ap);
   }
+
   addArgumentParser(intParser);
   addArgumentParser(doubleParser);
   addArgumentParser(booleanParser);
   addArgumentParser(stringParser);
+  addArgumentParser(fileParser);
 
   protected[config] def getArgumentParser[T:ClassManifest]:Option[ArgumentParser[T]] = {
     if(implicitly[ClassManifest[T]].erasure == classOf[Class[_]]) Some(classParser.asInstanceOf[ArgumentParser[T]])
