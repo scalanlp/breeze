@@ -26,13 +26,29 @@ import scalanlp.data._;
  * 
  * @author dlwh
  */
-trait Classifier[L,-T] extends (T=>L) {
+trait Classifier[L,-T] extends (T=>L) { outer =>
   /** Return the most likely label */
   def apply(o :T) = classify(o);
   /** Return the most likely label */
   def classify(o :T) = scores(o).argmax;
+
   /** For the observation, return the score for each label that has a nonzero 
    *  score. 
    */
   def scores(o: T): DoubleCounter[L];
+
+  /**
+   * Transforms output labels L=>M. if f(x) is not one-to-one then the max of score
+   * from the L's are used.
+   */
+  def map[M](f: L=>M):Classifier[M,T] = new Classifier[M,T] {
+    def scores(o: T): DoubleCounter[M] = {
+      val ctr = DoubleCounter[M]();
+      for( (x,v) <- outer.scores(o)) {
+        val y = f(x);
+        ctr(y) = ctr(y) max v;
+      }
+      ctr;
+    }
+  }
 }
