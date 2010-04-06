@@ -29,7 +29,7 @@ import scala.collection.mutable.Seq
  * @param dim: The size of the array
  * @param fill: what initial value should we put in the array
  */
-class TriangularArray[T:ClassManifest](dim: Int, fill: =>T) { outer =>
+final class TriangularArray[T:ClassManifest](dim: Int, fill: =>T) { outer =>
   private val numElems = dim * (dim+1) / 2
   private val data = Array.fill(numElems)(fill);
 
@@ -39,11 +39,11 @@ class TriangularArray[T:ClassManifest](dim: Int, fill: =>T) { outer =>
     (c * (c-1) /2 + r);
   }
 
-  def update(r: Int, c: Int, t: T) { data(index(r,c))  = t }
+  @inline final def update(r: Int, c: Int, t: T) { data(index(r,c))  = t }
 
-  def apply(r: Int, c: Int)  = data(index(r,c));
+  @inline final def apply(r: Int, c: Int)  = data(index(r,c));
 
-  def apply(r: Int) = slice(r);
+  @inline final def apply(r: Int) = slice(r);
 
 
   private def slice(r: Int):Seq[T] = new Seq[T] {
