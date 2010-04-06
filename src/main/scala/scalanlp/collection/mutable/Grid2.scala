@@ -24,31 +24,33 @@ import scala.collection.generic._;
  * 
  * @author dlwh
  */
-abstract class Grid2[V:ClassManifest](k1Size : Int, k2Size: Int) extends Map[(Int,Int),V] with Function2[Int,Int,V] {
+class Grid2[V:ClassManifest](k1Size : Int, k2Size: Int, default: (Int,Int)=>V) extends Map[(Int,Int),V] with Function2[Int,Int,V] {
 
-  /**
-  * Users should override this class.
-  */
-  def default(k1Size : Int, k2Size: Int): V;
-
-  override def default(key: (Int,Int)):V = default(key._1,key._2)
+  def this(k1Size: Int, k2Size: Int, fill: =>V) = this(k1Size, k2Size, {(a,b) => fill });
 
   private val arr = Array.tabulate(k1Size * k2Size) { idx => default(idx/k2Size, idx%k2Size) };
   
-  override def apply(key: (Int,Int)):V = apply(key._1,key._2);
+  override final def apply(key: (Int,Int)):V = apply(key._1,key._2);
 
-  def apply(i :Int, j: Int):V = arr(i * k2Size + j);
+  final def apply(i :Int, j: Int):V = arr(i * k2Size + j);
   
   def get( key: (Int,Int)) = Some(apply(key._1,key._2));
   
-  def update(i:Int, j: Int, v: V) {
+  final def update(i:Int, j: Int, v: V) {
     arr(i*k2Size+j) = v;
   }
+
 
   override def update(key: (Int,Int), v:V) {
     update(key._1,key._2,v);
   }
   
+  def +=(k1k2v: ((Int,Int),V)) = {
+    val ((k1,k2),v) = k1k2v;
+    update(k1,k2,v);
+    this;
+  }
+
   def -=(key : (Int,Int))  = { this(key._1,key._2) = default(key._1,key._2); this; }
 
   override val size = arr.size;
