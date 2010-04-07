@@ -52,31 +52,51 @@ object LogisticClassifier {
         datasetModel: DatasetModel[L,F,T2,TL,TF]) = {
 
     require(data.length > 0);
+
+    val guess = datasetModel.emptyParameterMatrix(data);
+
+    val maker = new ObjectiveFunctionMaker[L,F,T2,TL,TF];
+    import maker.linearizer._;
+    val objective = maker.objective(data);
+
+    val opt = new LBFGS[(L,F),ProjectedTensor](-1,5) with scalanlp.util.ConsoleLogging;
+    //val opt = new StochasticGradientDescent[(L,F),ProjectedTensor](0.05,0,100000) with scalanlp.util.ConsoleLogging;
+    val flatWeights = opt.minimize(objective,linearize(guess));
+    val weights = reshape(flatWeights);
+    new LinearClassifier[L,F,T2,TL,TF](weights,datasetModel.emptyLabelVector(data));
+  }
+
+  class ObjectiveFunctionMaker[L,F,T2<:Tensor2[L,F] with TensorSelfOp[(L,F),T2,Shape2],
+      TL<:Tensor1[L] with TensorSelfOp[L,TL,Shape1Col],
+      TF<:Tensor1[F] with TensorSelfOp[F,TF,Shape1Col]]
+      (implicit tpb: TensorProductBuilder[T2,TF,TL,Shape2,Shape1Col,Shape1Col],
+       ta: TensorArith[(L,F),T2,Tensor2[L,F],Shape2],
+       tla: Tensor1Arith[L,TL,TL,Shape1Col],
+       datasetModel: DatasetModel[L,F,T2,TL,TF]) {
+
     val linearizer = new Tensor2Linearizer[L,F,T2,Tensor2[L,F]];
     import linearizer._;
 
-    val basisLabel = data.head.label;
-    val labelSet = Set.empty ++ data.iterator.map(_.label);
-    val featureSet = Set.empty ++ ( 
-      for( d <- data.iterator;
-        f <- d.features.activeDomain.iterator)
-      yield f
-    );
-    val allLabels = labelSet.toSeq;
+    def objective(data: Seq[Example[L,TF]]) = new ObjectiveFunction(data);
 
     // preliminaries: an objective function
-    class ObjectiveFunction(data: Seq[Example[L,TF]]) extends BatchDiffFunction[(L,F),ProjectedTensor] {
+    class ObjectiveFunction(data: Seq[Example[L,TF]]) extends BatchDiffFunction[(L,F),linearizer.ProjectedTensor] {
+
+      val basisLabel = data.head.label;
+      val labelSet = Set.empty ++ data.iterator.map(_.label);
+      val allLabels = labelSet.toSeq;
+
       def gradientAt(x: ProjectedTensor, range: Seq[Int]) = calculate(x,range)._2;
       def valueAt(x: ProjectedTensor, range: Seq[Int]) = calculate(x,range)._1;
 
 
       // Computes the dot product for each label
       def logScores(weights: T2, datum: TF) = {
-        val logScores = Map.empty ++ (for(label <- allLabels) 
+        val logScores = Map.empty ++ (for(label <- allLabels)
                             yield (label,weights.getRow(label) dot datum));
         logScores;
       }
-      
+
       val fullRange = (0 until data.size)
 
       override def calculate(flatWeights: ProjectedTensor, range: Seq[Int]) = {
@@ -89,9 +109,9 @@ object LogisticClassifier {
           val logNormalizer = logSum(logScores.valuesIterator.toSeq);
           ll -= (logScores(datum.label) - logNormalizer);
           assert(!ll.isNaN);
-        
-          // d ll/d weight_kj = \sum_i x_ij ( I(group_i = k) - p_k(x_i;Beta)) 
-          for { 
+
+          // d ll/d weight_kj = \sum_i x_ij ( I(group_i = k) - p_k(x_i;Beta))
+          for {
             label <- allLabels
             if label != basisLabel
             prob_k = Math.exp(logScores(label) - logNormalizer)
@@ -105,18 +125,8 @@ object LogisticClassifier {
         (ll,linearize(grad));
       }
     }
-
-
-    val guess = datasetModel.emptyParameterMatrix(data);
-
-    val objective = new ObjectiveFunction(data);
-
-    val opt = new LBFGS[(L,F),ProjectedTensor](-1,5) with scalanlp.util.ConsoleLogging;
-    //val opt = new StochasticGradientDescent[(L,F),ProjectedTensor](0.05,0,100000) with scalanlp.util.ConsoleLogging;
-    val flatWeights = opt.minimize(objective,linearize(guess));
-    val weights = reshape(flatWeights);
-    new LinearClassifier[L,F,T2,TL,TF](weights,datasetModel.emptyLabelVector(data));
   }
+
 
   def main(args: Array[String]) {
     import scalala.Scalala._
