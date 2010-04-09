@@ -97,6 +97,8 @@ object LogisticClassifier {
         logScores;
       }
 
+
+
       val fullRange = (0 until data.size)
 
       override def calculate(flatWeights: ProjectedTensor, range: Seq[Int]) = {
@@ -104,7 +106,7 @@ object LogisticClassifier {
         val weights = reshape(flatWeights);
         val grad = weights.like;
 
-        for( datum <- range map data) {
+        for( datum <- range.view map data) {
           val logScores = this.logScores(weights,datum.features);
           val logNormalizer = logSum(logScores.valuesIterator.toSeq);
           ll -= (logScores(datum.label) - logNormalizer);
