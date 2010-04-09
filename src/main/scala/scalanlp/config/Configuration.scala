@@ -158,4 +158,9 @@ object Configuration {
       else Some(v);
     }
   }
+
+  def fromMap(map: Map[String,String]) = new Configuration {
+    def getProperty(p: String) = map.get(p);
+  }
+
 }
