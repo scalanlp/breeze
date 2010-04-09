@@ -29,6 +29,8 @@ import scala.reflect.Manifest;
 abstract class Stage[I,O] extends (Parcel[I] => Parcel[O]) { stage =>
   def ~>[X](g : Parcel[O]=>Parcel[X]) = new Stage[I,X] {
     override def apply(parcel : Parcel[I]) : Parcel[X] = g(stage(parcel));
+
+    override def toString = stage.toString + "~>" + g.toString;
   }
 }
 
@@ -49,6 +51,9 @@ object Stage {
     override def toString =
       name;
   }
+  
+  implicit def unapply[I,O](stage : Stage[I,O])(implicit mI : Manifest[I]) : (I=>O) =
+    (value : I) => stage(Parcel(data = value)).data;
 }
 
 
