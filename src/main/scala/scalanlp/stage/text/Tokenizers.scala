@@ -16,6 +16,23 @@
 package scalanlp.stage.text;
 
 import scalanlp.stage.Mapper;
+import scalanlp.stage.Stage._;
+
+case class TokenizeWith(tokenizer : String => Array[String])
+extends Mapper[String,Seq[String]] {
+  override def map(doc : String) =
+    tokenizer(doc);
+}
+
+
+object Test {
+  val _split : (String => Array[String]) =
+    (v : String) => v.split("\\s+");
+  val _filter : (Array[String] => Array[String]) =
+    (v : Array[String]) => v.filter(_.charAt(0).isLetterOrDigit);
+
+  val x = TokenizeWith(_split ~> _filter);
+}
 
 /**
  * A tokenizer is a mapper stage that turns Strings into
@@ -56,7 +73,7 @@ object WhitespaceTokenizer extends RegexTokenizer("\\s+") {
  * 
  * @author dramage
  */
-case object SimpleEnglishTokenizer extends Mapper[String,Seq[String]] {
+object SimpleEnglishTokenizer extends Mapper[String,Seq[String]] {
   override def map(in : String) : Seq[String] = {
     var string = in;
     // delete word-final hyphens when followed by newlines
