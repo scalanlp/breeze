@@ -1,0 +1,26 @@
+#Fri Apr 24 22:14:52 PDT 2009
+<file>=false
+Xcheck-null=false
+Xcheckinit=false
+Xdisable-assertions=false
+Xexperimental=false
+Xfuture=false
+Xlog-implicits=false
+Xno-uescape=false
+Xno-varargs-conversion=false
+Yclosure-elim=false
+Ydead-code=false
+Ydetach=false
+Yinline=false
+Ylinearizer=rpo
+Yno-generic-signatures=false
+Yno-imports=false
+Yno-predefs=false
+Yself-in-annots=false
+Ysuppress-vt-typer-warnings=false
+Ywarn-dead-code=false
+eclipse.preferences.version=1
+g=vars
+optimise=false
+scala.compiler.useProjectSettings=false
+target=jvm-1.5

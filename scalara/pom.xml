@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.scalanlp</groupId>
+  <artifactId>scalara</artifactId>
+  <version>0.3.0</version>
+  <name>ScalaRA</name>
+  <inceptionYear>2009</inceptionYear>
+  <properties>
+    <scala.version>2.8.0.Beta1</scala.version>
+  </properties>
+  
+  <developers>
+    <developer>
+      <id>dramage</id>
+      <name>Daniel Ramage</name>
+      <email>dramage [at] cs stanford edu</email>
+      <organization>Stanford University</organization>
+      <timezone>-8</timezone>
+    </developer>
+    <developer>
+      <id>dlwh</id>
+      <name>David Leo Wright Hall</name>
+      <email>dlwh [at] cs berkeley edu</email>
+      <organization>University of California, Berkeley</organization>
+      <timezone>-8</timezone>
+    </developer>
+  </developers>
+
+  <licenses>
+    <license>
+      <name>Lesser General Public License (LGPL)</name>
+      <url>http://www.gnu.org/copyleft/lesser.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:git:git://scalanlp.org/git/scalara.git</connection>
+    <developerConnection>scm:git:ssh://scalanlp.org/home/dlwhall/git/scalara.git</developerConnection>
+    <url>http://bugs.scalanlp.org/repositories/show/scalara</url>
+  </scm>
+
+  <repositories>
+    <repository>
+      <id>scala-tools.org</id>
+      <name>Scala-Tools Maven2 Repository</name>
+      <url>http://scala-tools.org/repo-releases</url>
+    </repository>
+    <repository>
+      <id>ondex_repro</id>
+      <name>ondex_repro</name>
+      <url>http://ondex.rothamsted.bbsrc.ac.uk/nexus/content/groups/public</url>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>scala-tools.org</id>
+      <name>Scala-Tools Maven2 Repository</name>
+      <url>http://scala-tools.org/repo-releases</url>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <version>${scala.version}</version>
+    </dependency>
+  </dependencies>
+  
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+    <testSourceDirectory>src/test/scala</testSourceDirectory>
+    <plugins>
+      <plugin>
+        <groupId>org.scala-tools</groupId>
+        <artifactId>maven-scala-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <scalaVersion>${scala.version}</scalaVersion>
+          <displayCmd>true</displayCmd>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-eclipse-plugin</artifactId>
+        <configuration>
+          <downloadSources>true</downloadSources>
+          <buildcommands>
+            <buildcommand>ch.epfl.lamp.sdt.core.scalabuilder</buildcommand>
+          </buildcommands>
+          <additionalProjectnatures>
+            <projectnature>ch.epfl.lamp.sdt.core.scalanature</projectnature>
+          </additionalProjectnatures>
+          <classpathContainers>
+            <classpathContainer>ch.epfl.lamp.sdt.launching.SCALA_CONTAINER</classpathContainer>
+            <classpathContainer>org.eclipse.jdt.launching.JRE_CONTAINER</classpathContainer>
+          </classpathContainers>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.scala-tools</groupId>
+        <artifactId>maven-scala-plugin</artifactId>
+        <configuration>
+          <scalaVersion>${scala.version}</scalaVersion>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
+  
+  <distributionManagement>
+    <repository>
+      <id>scalanlp.org</id>
+      <name>Scalanlp Repository</name>
+      <url>dav:http://repo.scalanlp.org/repo/</url>
+    </repository>
+  </distributionManagement>
+</project>
