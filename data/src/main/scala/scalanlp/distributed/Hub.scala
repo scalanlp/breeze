@@ -61,7 +61,7 @@ class HubService(dispatch : SocketServiceDispatch) extends SocketService(dispatc
   def cleanup() = synchronized {
     val origSize = registry.size;
     val valid = registry.map(entry => ping(uri));
-    val newRegistry = (registry.elements zip valid.elements).filter(_._2()).map(_._1).toList;
+    val newRegistry = (registry.iterator zip valid.iterator).filter(_._2()).map(_._1).toList;
     
     registry.clear;
     registry ++= newRegistry;

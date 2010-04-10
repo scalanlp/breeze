@@ -181,11 +181,6 @@
       <version>${scala.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-compiler</artifactId>
-      <version>${scala.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.scalanlp</groupId>
       <artifactId>scalanlp-data</artifactId>
       <version>0.3.1-SNAPSHOT</version>
@@ -206,12 +201,6 @@
       <artifactId>scalacheck_2.8.0.Beta1-RC5</artifactId>
       <version>1.7-SNAPSHOT</version>
       <scope>test</scope>
-      <!--
-      <groupId>org.scala-tools.testing</groupId>
-      <artifactId>scalacheck_2.8.0-20091013.004057-+</artifactId>
-      <version>1.7-SNAPSHOT</version>
-      <scope>test</scope>
-      -->
     </dependency>
     <!--
     <dependency>

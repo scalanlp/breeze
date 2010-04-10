@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project>
+  <parent>
+    <artifactId>scalanlp-core</artifactId>
+    <groupId>org.scalanlp</groupId>
+    <version>0.3.1-SNAPSHOT</version>
+  </parent>
+
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.scalanlp</groupId>
-  <artifactId>scalara</artifactId>
-  <version>0.3.0</version>
-  <name>ScalaRA</name>
+  <artifactId>scalanlp-data</artifactId>
+  <version>0.3.1-SNAPSHOT</version>
+  <name>ScalaNLP Data</name>
   <inceptionYear>2009</inceptionYear>
   <properties>
     <scala.version>2.8.0.Beta1</scala.version>
@@ -30,17 +36,11 @@
 
   <licenses>
     <license>
-      <name>Lesser General Public License (LGPL)</name>
-      <url>http://www.gnu.org/copyleft/lesser.txt</url>
+      <name>The Apache License, ASL Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
       <distribution>repo</distribution>
     </license>
   </licenses>
-
-  <scm>
-    <connection>scm:git:git://scalanlp.org/git/scalara.git</connection>
-    <developerConnection>scm:git:ssh://scalanlp.org/home/dlwhall/git/scalara.git</developerConnection>
-    <url>http://bugs.scalanlp.org/repositories/show/scalara</url>
-  </scm>
 
   <repositories>
     <repository>
@@ -69,15 +69,49 @@
       <artifactId>scala-library</artifactId>
       <version>${scala.version}</version>
     </dependency>
+    <dependency>
+      <groupId>fastutil</groupId>
+      <artifactId>fastutil</artifactId>
+      <version>5.1.5</version>
+    </dependency>
+    <dependency>
+      <groupId>com.thoughtworks.paranamer</groupId>
+      <artifactId>paranamer</artifactId>
+      <version>2.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scalanlp</groupId>
+      <artifactId>scalala</artifactId>
+      <version>0.3.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-tools.testing</groupId>
+      <artifactId>scalacheck_2.8.0.Beta1-RC5</artifactId>
+      <version>1.7-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest</artifactId>
+      <version>1.0.1-for-scala-2.8.0.Beta1-RC5-with-test-interfaces-0.2-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.5</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   
   <build>
-    <sourceDirectory>src</sourceDirectory>
+    <sourceDirectory>src/main/scala/</sourceDirectory>
     <testSourceDirectory>src/test/scala</testSourceDirectory>
     <plugins>
       <plugin>
         <groupId>org.scala-tools</groupId>
         <artifactId>maven-scala-plugin</artifactId>
+        <version>2.12</version>
         <executions>
           <execution>
             <goals>
@@ -89,6 +123,14 @@
         <configuration>
           <scalaVersion>${scala.version}</scalaVersion>
           <displayCmd>true</displayCmd>
+          <args>
+            <arg>-deprecation</arg>
+            <arg>-optimize</arg>
+          </args>
+          <jvmArgs>
+            <jvmArg>-Xmx1G</jvmArg>
+            <jvmArg>-Xms64m</jvmArg>
+          </jvmArgs>
         </configuration>
       </plugin>
       <plugin>
@@ -115,6 +157,7 @@
       <plugin>
         <groupId>org.scala-tools</groupId>
         <artifactId>maven-scala-plugin</artifactId>
+        <version>2.12</version>
         <configuration>
           <scalaVersion>${scala.version}</scalaVersion>
         </configuration>
