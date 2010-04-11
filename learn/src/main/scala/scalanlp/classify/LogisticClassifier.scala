@@ -17,7 +17,6 @@ package scalanlp.classify;
 
 
 
-import scalala.tensor.Tensor2Linearizer;
 import scalala.tensor._;
 import scalala.tensor.operators.TensorShapes._;
 import scalala.tensor.operators._;
@@ -59,7 +58,7 @@ object LogisticClassifier {
     import maker.linearizer._;
     val objective = maker.objective(data);
 
-    val opt = new LBFGS[(L,F),ProjectedTensor](-1,5) with scalanlp.util.ConsoleLogging;
+    val opt = new LBFGS[(L,F),ProjectedTensor](-1,5)(maker.linearizer.ops) with scalanlp.util.ConsoleLogging;
     //val opt = new StochasticGradientDescent[(L,F),ProjectedTensor](0.05,0,100000) with scalanlp.util.ConsoleLogging;
     val flatWeights = opt.minimize(objective,linearize(guess));
     val weights = reshape(flatWeights);
@@ -74,7 +73,7 @@ object LogisticClassifier {
        tla: Tensor1Arith[L,TL,TL,Shape1Col],
        datasetModel: DatasetModel[L,F,T2,TL,TF]) {
 
-    val linearizer = new Tensor2Linearizer[L,F,T2,Tensor2[L,F]];
+    val linearizer = TensorLinearizer[(L,F),T2]();
     import linearizer._;
 
     def objective(data: Seq[Example[L,TF]]) = new ObjectiveFunction(data);

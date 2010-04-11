@@ -18,7 +18,7 @@ package scalanlp.data;
 
 
 import scala.collection.Map;
-import scalanlp.counters._;
+import scalala.tensor.counters._;
 
 /**
 * Represents a single unlabeled example from a collection of data. Intentionally overly general.

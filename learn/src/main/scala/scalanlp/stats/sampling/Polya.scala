@@ -3,8 +3,8 @@ package scalanlp.stats.sampling
 import scala.collection.mutable.ArrayBuffer;
 
 import scalanlp.math.Numerics._;
-import scalanlp.counters._;
-import scalanlp.counters.Counters._;
+import scalala.tensor.counters._;
+import Counters._;
 import scalanlp.collection.mutable.ArrayMap;
 
 /**

@@ -81,6 +81,7 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
         log(INFO)("Scale:" +  stepScale);
         step *= stepScale;
         x += step;
+        assert(norm(step,2) != 0, (stepScale,step,x,grad,diag));
 
         val newGrad = f.gradientAt(x);
 
@@ -136,7 +137,7 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
    * @param grad the gradient 
    * @param memStep the history of step sizes
    * @param memGradStep the history of chagnes in gradients
-   * @param memRho: 1 over the dotproduct of step and gradStep
+   * @param memRho: the dotproduct of step and gradStep
    */
    def computeDirection(iter: Int,
       diag: T,
@@ -149,7 +150,9 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
 
     for(i <- (memStep.length-1) to 0 by -1) {
       as(i) = (memStep(i) dot dir)/memRho(i);
-      assert(!as(i).isNaN);
+      if(as(i).isNaN) {
+        error("NaN!" + (memStep(i) dot dir) + " " + memRho(i));
+      }
       assert(!as(i).isInfinite);
       dir -= memGradStep(i) * as(i);
     }
@@ -228,45 +231,4 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
 object LBFGS {
   private sealed class LBFGSException extends RuntimeException;
   private class NaNHistory extends LBFGSException;
-}
-
-object TestLBFGS {
-  def main(arg: Array[String]) {
-    val lbfgs = new LBFGS[Int,DenseVector](0,7) with ConsoleLogging;
-    val f = new DiffFunction[Int,DenseVector] {
-      def valueAt(x: DenseVector) = {
-        norm((x -3) :^ 2,1)
-      }
-      def gradientAt(x: DenseVector):DenseVector = {
-        (x * 2) - 6 value;
-      }
-    }
-
-    val v = ones(2);
-    v(0) = 30.
-    v(1) = 40.
-    
-    lbfgs.minimize(f,v) foreach println
-    test2();
-  }
-
-  def test2() {
-    import scalanlp.counters.Counters._
-    val lbfgs = new LBFGS[String,DoubleCounter[String]](0,7) with ConsoleLogging;
-    val f = new DiffFunction[String,DoubleCounter[String]] {
-      def valueAt(x: DoubleCounter[String]) = {
-        norm((x -3) :^ 2,1)
-      }
-      def gradientAt(x: DoubleCounter[String]):DoubleCounter[String] = {
-       ( (x * 2) - 6 ).value.asInstanceOf[DoubleCounter[String]];
-      }
-    }
-
-    val v = DoubleCounter[String];
-    v("0") = 30.
-    v("1") = 40.
-    
-    lbfgs.minimize(f,v) foreach println
-  }
-  
 }

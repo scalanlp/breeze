@@ -19,7 +19,7 @@ package scalanlp.classify;
 
 import scalanlp.util.Index;
 import scalanlp.data._;
-import scalanlp.counters._;
+import scalala.tensor.counters._;
 import Counters._
 
 import scalala.Scalala._;

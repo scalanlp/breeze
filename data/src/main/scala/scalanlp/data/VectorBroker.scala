@@ -20,7 +20,7 @@ package scalanlp.data
 import scalanlp.util.Index;
 import scalala.tensor.dense.DenseVector
 import scalanlp.collection.mutable.SparseArray
-import scalanlp.counters.Counters._;
+import scalala.tensor.counters.Counters._;
 import scalala.tensor._;
 import scalala.tensor.adaptive._;
 import java.util.Arrays

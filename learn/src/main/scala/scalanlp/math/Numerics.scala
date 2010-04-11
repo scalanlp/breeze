@@ -16,7 +16,7 @@ package scalanlp.math;
  limitations under the License. 
 */
 
-import scalanlp.counters._;
+import scalala.tensor.counters._;
 import Counters._;
 
 /**

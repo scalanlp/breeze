@@ -16,9 +16,9 @@ package scalanlp.stats.sampling;
  limitations under the License. 
 */
 
+import scalala.tensor.counters.Counters.DoubleCounter
 import scalanlp.math.Bessel;
 import scalanlp.math.Numerics;
-import scalanlp.counters.Counters._;
 import Numerics._;
 import Math._;
 

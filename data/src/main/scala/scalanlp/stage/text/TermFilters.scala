@@ -16,7 +16,7 @@
 package scalanlp.stage.text;
 
 import scala.reflect.Manifest;
-import scalanlp.counters.Counters._;
+import scalala.tensor.counters.Counters._;
 
 import scalanlp.stage.{Parcel,Batch,Stage,Mapper,MetaBuilder};
 

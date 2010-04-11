@@ -20,7 +20,7 @@ import scala.collection.mutable.StringBuilder;
 import scala.io.Source;
 
 import java.io.File;
-import scalanlp.counters.Counters._;
+import scalala.tensor.counters.Counters._;
 
 
 /**

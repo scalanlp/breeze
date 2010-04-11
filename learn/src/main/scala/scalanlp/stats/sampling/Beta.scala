@@ -3,7 +3,7 @@ package scalanlp.stats.sampling
 import Math._;
 
 import scalanlp.math.Numerics.lgamma;
-import scalanlp.counters._;
+import scalala.tensor.counters._;
 import Counters._
 
 class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double] 

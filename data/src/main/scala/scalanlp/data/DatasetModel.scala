@@ -18,9 +18,9 @@ package scalanlp.data;
 
 
 import scalala.tensor._;
+import scalala.tensor.counters.Counters._;
 import scalala.tensor.operators._;
 import scalala.tensor.operators.TensorShapes._;
-import scalala.tensor.Tensor2Linearizer;
 
 /**
 * Class that can provide support operations for datasets.
@@ -36,7 +36,6 @@ trait DatasetModel[L,F,T2<:Tensor2[L,F] with TensorSelfOp[(L,F),T2,Shape2],
 }
 
 object DatasetModel {
-  import scalanlp.counters.Counters._;
   implicit def counterModel[L,F] = new DatasetModel[L,F,PairedDoubleCounter[L,F],DoubleCounter[L],DoubleCounter[F]] {
     def emptyParameterMatrix(data: Seq[Example[L,DoubleCounter[F]]]) = PairedDoubleCounter[L,F]();
     def emptyLabelVector(data: Seq[Example[L,DoubleCounter[F]]]) = DoubleCounter[L]();

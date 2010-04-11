@@ -39,11 +39,11 @@ final class TriangularArray[T:ClassManifest](dim: Int, fill: =>T) { outer =>
     (c * (c-1) /2 + r);
   }
 
-  @inline final def update(r: Int, c: Int, t: T) { data(index(r,c))  = t }
+  final def update(r: Int, c: Int, t: T) { data(index(r,c))  = t }
 
-  @inline final def apply(r: Int, c: Int)  = data(index(r,c));
+  final def apply(r: Int, c: Int)  = data(index(r,c));
 
-  @inline final def apply(r: Int) = slice(r);
+  final def apply(r: Int) = slice(r);
 
 
   private def slice(r: Int):Seq[T] = new Seq[T] {

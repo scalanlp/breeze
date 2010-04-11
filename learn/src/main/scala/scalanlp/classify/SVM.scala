@@ -26,7 +26,7 @@ import scalala.tensor.operators.TensorShapes._;
 import scalanlp.util._
 import scalanlp.data.Example
 import scalanlp.stats.sampling.Rand;
-import scalanlp.counters.Counters._;
+import scalala.tensor.counters.Counters._;
 import Math._;
 
 

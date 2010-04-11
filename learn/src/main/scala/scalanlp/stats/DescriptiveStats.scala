@@ -17,7 +17,7 @@ package scalanlp.stats;
 */
 
 
-import scalanlp.counters._;
+import scalala.tensor.counters._;
 import Counters._
 import scalanlp.util.Iterators;
 

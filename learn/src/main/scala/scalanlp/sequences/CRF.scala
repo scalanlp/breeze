@@ -24,11 +24,10 @@ import scalala.tensor.dense._;
 import scalala.tensor.sparse._;
 
 import scalanlp._;
-import counters._;
+import scalala.tensor.counters._;
 import LogCounters.{logSum=>_,exp=>_,_};
 import Counters._;
 import util.Index;
-import math.Numerics._;
 import stats.sampling._
 import scalanlp.util.Lazy;
 import scalanlp.util.Lazy.Implicits._;
@@ -81,7 +80,7 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
     * returns the value of the log partition function for this sequence of words.
     */
     lazy val logPartition = {
-      val result = logSum(factors.last.calibrated);
+      val result = logSum(factors.last.calibrated.activeValues.toSeq);
       assert(!result.isNaN);
       result;
     }

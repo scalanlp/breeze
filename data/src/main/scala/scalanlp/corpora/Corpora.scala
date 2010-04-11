@@ -103,7 +103,7 @@ class Corpora(val repositories: Seq[URL]) {
             new File(lexicographicOrder(x.getName,y.getName))
           );
           println(latestVersion);
-          jar = latestVersion.listFiles.filter(_.getName.endsWith(".jar"))(0).toURL
+          jar = latestVersion.listFiles.filter(_.getName.endsWith(".jar"))(0).toURI.toURL
         }
       } catch { // not a file, so we'll hope it's a maven repo
         case _ => 
@@ -156,7 +156,7 @@ object CorpusUtils {
       if(a == null) a = System.getenv("MAVEN_HOME");
       if(a == null) a = System.getenv("HOME") + "/.m2/"
     a } + "repository/";
-    new File(repoFile).toURL;
+    new File(repoFile).toURI.toURL;
   }
 
 }

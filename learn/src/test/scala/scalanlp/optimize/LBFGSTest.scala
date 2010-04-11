@@ -24,7 +24,7 @@ import org.junit.runner.RunWith
 import scalala.library.Vectors._;
 import scalala.library.Random._;
 import scalala.tensor.Vector;
-import scalanlp.counters.Counters._;
+import scalala.tensor.counters.Counters._;
 
 @RunWith(classOf[JUnitRunner])
 class LBFGSTest extends FunSuite with Checkers {

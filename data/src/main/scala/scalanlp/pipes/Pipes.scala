@@ -62,7 +62,7 @@ class Pipes {
    */
   protected val _env : scala.collection.mutable.Map[String,String] = {
     import scala.collection.JavaConversions._;
-    scala.collection.mutable.Map() ++ java.lang.System.getenv;
+    scala.collection.mutable.Map() ++= java.lang.System.getenv;
   }
   
   //

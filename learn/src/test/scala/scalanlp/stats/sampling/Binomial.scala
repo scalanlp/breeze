@@ -28,7 +28,7 @@ import scalanlp.stats.DescriptiveStats._;
 class BinomialTest extends FunSuite with Checkers {
   import Arbitrary.arbitrary;
   test("mode") {
-    check( Prop.forAll { (n: Int, d2: Double, n2: Int)=>  n == Math.MAX_INT || n <=  0 || n2 <= 0 || n.abs <= n2.abs || {
+    check( Prop.forAll { (n: Int, d2: Double, n2: Int)=>  n == Int.MaxValue || n <=  0 || n2 <= 0 || n.abs <= n2.abs || {
         val d = d2.abs % 1.0;
         val posn = n.abs;
         val posn2 = n2.abs;

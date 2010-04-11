@@ -1,7 +1,7 @@
 package scalanlp.data.process;
 
 import scalanlp.data._;
-import scalanlp.counters._
+import scalala.tensor.counters._
 import Counters._
 
 /**

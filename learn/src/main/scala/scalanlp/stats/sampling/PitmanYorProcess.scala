@@ -17,9 +17,8 @@ package scalanlp.stats.sampling;
 */
 
 
-import scalanlp.counters._;
-import util._;
-import scalanlp.counters.Counters._;
+import scalala.tensor.counters._;
+import scalala.tensor.counters.Counters._;
 import util._;
 import scalanlp.collection.mutable.ArrayMap;
 import scala.collection.mutable._;

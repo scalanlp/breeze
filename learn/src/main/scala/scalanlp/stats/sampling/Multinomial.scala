@@ -16,8 +16,8 @@ package scalanlp.stats.sampling;
  limitations under the License. 
 */
 
-import scalanlp.counters.Counters._;
-import scalanlp.counters._;
+import scalala.tensor.counters._;
+import scalala.tensor.counters.Counters._;
 import scalanlp.math.Numerics._;
 
 import scalanlp.util.Log;

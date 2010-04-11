@@ -273,7 +273,7 @@ object Serialization {
   }
 
   object ScalanlpHandlers {
-    import scalanlp.counters.Counters._;
+    import scalala.tensor.counters.Counters._;
     import Serialization.Handlers._;
     import Builders._;
     implicit def doubleCounterHandler[T](implicit h: Handler[T]) = new VersionedHandler[DoubleCounter[T]] {

@@ -23,7 +23,7 @@ import org.junit.runner.RunWith
 
 import scalala.Scalala._;
 import scalala.tensor.Vector;
-import scalanlp.counters.Counters._;
+import scalala.tensor.counters.Counters._;
 
 @RunWith(classOf[JUnitRunner])
 class StochasticGradientDescentTest extends FunSuite with Checkers {

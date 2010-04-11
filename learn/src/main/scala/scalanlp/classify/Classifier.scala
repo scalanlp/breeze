@@ -17,7 +17,7 @@ package scalanlp.classify;
 */
 
 
-import scalanlp.counters.Counters._;
+import scalala.tensor.counters.Counters._;
 import scalanlp.data._;
 
 /**

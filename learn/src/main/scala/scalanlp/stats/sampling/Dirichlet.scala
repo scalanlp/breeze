@@ -16,10 +16,10 @@ package scalanlp.stats.sampling;
  limitations under the License. 
 */
 
-import scalanlp.counters._;
+import scalala.tensor.counters._;
 import scalanlp.collection.mutable.ArrayMap;
 import scala.collection.mutable.ArrayBuffer;
-import scalanlp.counters.Counters._;
+import Counters._;
 import scalanlp.math.Numerics._;
 
 /**
