@@ -22,8 +22,6 @@ import org.scalatest.prop._;
 import org.scalacheck._;
 import org.junit.runner.RunWith
 
-import scalanlp.counters.Counters._;
-
 @RunWith(classOf[JUnitRunner])
 class PTBTokenizerTest extends FunSuite with Checkers {
   import Arbitrary.arbitrary;

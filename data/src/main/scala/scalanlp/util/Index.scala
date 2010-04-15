@@ -28,7 +28,7 @@ import scala.collection.mutable.{ArrayBuffer,HashMap};
  * 
  * @author dlwh, dramage
  */
-trait Index[T] extends Iterable[T] {
+trait Index[T] extends Iterable[T] with (T=>Int) {
 
   /** Number of elements in this index. */
   def size : Int;

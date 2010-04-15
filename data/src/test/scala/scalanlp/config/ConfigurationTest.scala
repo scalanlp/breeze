@@ -4,8 +4,6 @@ import org.scalacheck._
 import org.scalatest._;
 import org.scalatest.junit._;
 import org.scalatest.prop._;
-import scalanlp.counters._;
-import Counters._;
 import org.junit.runner.RunWith
 
 import java.util.Properties;

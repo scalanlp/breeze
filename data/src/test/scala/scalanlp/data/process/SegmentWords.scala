@@ -22,8 +22,6 @@ import org.scalatest.prop._;
 import org.scalacheck._;
 import org.junit.runner.RunWith
 
-import scalanlp.counters.Counters._;
-
 @RunWith(classOf[JUnitRunner])
 class SegmentWordsTest extends FunSuite {
   val text = """But, in a larger sense, we can not dedicate -- we can not consecrate -- we can not hallow -- this ground.""";
