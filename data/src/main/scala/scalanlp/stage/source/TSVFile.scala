@@ -17,7 +17,7 @@ package scalanlp.stage.source;
 
 import java.io.File;
 
-import scalara.ra.RA;
+import scalanlp.ra.RA;
 
 import scalanlp.stage.{Parcel,Batch,History,Stage};
 

@@ -1,4 +1,19 @@
-package scalanlp.io
+/*
+ Copyright 2009 David Hall, Daniel Ramage
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+*/
+package scalanlp.serialization
 
 import org.scalatest._;
 import org.scalatest.junit._;
@@ -8,12 +23,10 @@ import org.junit.runner.RunWith
 import scalanlp.util.Index;
 
 @RunWith(classOf[JUnitRunner])
-class SerializationTest extends FunSuite with Checkers {
-  import Serialization._;
-  import Handlers._;
-  import ScalanlpHandlers._;
+class JavaDataSerializationTest extends FunSuite with Checkers {
+  import JavaDataSerialization._;
 
-  def basicTest[T:Arbitrary:Handler]() = check( Prop.forAll { (a:T) =>
+  def basicTest[T:Arbitrary:ReadWritable]() = check( Prop.forAll { (a:T) =>
     val bytes = toBytes[T](a);
     val b = fromBytes[T](bytes);
     a == b
@@ -31,9 +44,9 @@ class SerializationTest extends FunSuite with Checkers {
     basicTest[Char]();
   }
 
-  def tuple2Test[T1:Arbitrary:Handler,T2:Arbitrary:Handler]() = basicTest[(T1,T2)]();
-  def tuple3Test[T1:Arbitrary:Handler,T2:Arbitrary:Handler,T3:Arbitrary:Handler]() = basicTest[(T1,T2,T3)]();
-  def tuple4Test[T1:Arbitrary:Handler,T2:Arbitrary:Handler,T3:Arbitrary:Handler,T4:Arbitrary:Handler]() = basicTest[(T1,T2,T3,T4)]();
+  def tuple2Test[T1:Arbitrary:ReadWritable,T2:Arbitrary:ReadWritable]() = basicTest[(T1,T2)]();
+  def tuple3Test[T1:Arbitrary:ReadWritable,T2:Arbitrary:ReadWritable,T3:Arbitrary:ReadWritable]() = basicTest[(T1,T2,T3)]();
+  def tuple4Test[T1:Arbitrary:ReadWritable,T2:Arbitrary:ReadWritable,T3:Arbitrary:ReadWritable,T4:Arbitrary:ReadWritable]() = basicTest[(T1,T2,T3,T4)]();
 
   test("Some primitive tuples") {
     tuple4Test[Int,Boolean,Long,Double]();
@@ -64,7 +77,7 @@ class SerializationTest extends FunSuite with Checkers {
     };
   }
 
-  def indexTest[T:Handler:Arbitrary]() = { 
+  def indexTest[T:ReadWritable:Arbitrary]() = {
     basicTest[Index[T]]();
     tuple2Test[Index[T],Index[T]]()
   };

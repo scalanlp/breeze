@@ -68,7 +68,7 @@ case class Join(glue : String) extends Mapper[Seq[String],String] {
  * @author dramage
  */
 trait ColumnDataSource extends Iterable[Seq[String]] {
-  import scalara.pipes.Pipes.global._;
+  import scalanlp.pipes.Pipes.global._;
   
   def | (f : CSVFile) =
     iterator.map(CSVFile.format) | f;

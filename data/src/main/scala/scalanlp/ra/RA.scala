@@ -1,28 +1,28 @@
 /*
- * Distributed as part of ScalaRA, a scientific research tool.
- * 
- * Copyright (C) 2007 Daniel Ramage
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ Copyright 2009 David Hall, Daniel Ramage
 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
- */
-package scalara.ra;
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+*/
+
+package scalanlp.ra;
 
 import java.io.File;
 
-import scalara.pipes.Pipes;
-import scalara.serializer.{Loadable,Saveable};
+import scalanlp.pipes.Pipes;
+import scalanlp.serialization.JavaDataSerialization
+import scalanlp.serialization.SerializationFormat
+
+
 
 //
 // ResearchAssistant for Scala
@@ -56,10 +56,15 @@ case class RA(
   val random : java.util.Random,
   
   /** Returns the parent of this context or null if it is the root context. */
-  val parent : Option[RA]
-) {
+  val parent : Option[RA] = None,
+
+  /** The kind of serialization to use */
+  val serializer: SerializationFormat = JavaDataSerialization
+) extends CellBroker {
   
   RA.init();
+
+  protected val ra : this.type = this;
   
   /** Source of where this context was created. */
   val source = Thread.currentThread.getStackTrace.dropWhile(
@@ -82,13 +87,13 @@ case class RA(
     log("RA: "+name+" done");
     rv;
   }
-  
+
   /** Returns a cached view of the given value, loading from a cell if possible. */
-  def cache[V](cacheFile : java.io.File)(p : =>V)(implicit loadable : Loadable[V,File], saveable : Saveable[V,File]) =
+  def cache[V](cacheFile : java.io.File)(p : =>V)(implicit readable : serializer.Readable[V], writable : serializer.Writable[V]) =
     cell(cacheFile)(p).get;
   
   def cell[V](cacheFile : java.io.File)(p : =>V) =
-    new Cell(cacheFile,p)(this);
+    new Cell(cacheFile,p) { val ra = RA.this };
   
   /** Gets a (named) child context in a named folder, creating it if necessary. */
   def branch(dir : File) : RA = {

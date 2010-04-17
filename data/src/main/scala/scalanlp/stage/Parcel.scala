@@ -15,9 +15,9 @@
 */
 package scalanlp.stage;
 
-import scala.reflect.Manifest;
+import scalanlp.ra.Signature;
 
-import scalara.ra.Signature;
+import scala.reflect.Manifest;
 
 import scalanlp.collection.immutable.DHMap;
 
