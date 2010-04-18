@@ -17,7 +17,7 @@ package scalanlp.serialization
 
 import scala.collection.mutable.Builder;
 
-trait StringSerialization extends SerializationFormat
+object StringSerialization extends SerializationFormat
 with SerializationFormat.PrimitiveTypes with SerializationFormat.CompoundTypes
 with ByteSerialization {
 
@@ -260,7 +260,7 @@ with ByteSerialization {
     str.flatMap(escapeChar)
 
   /** Throws an exception if the input does not start with the given "expected" string. */
-  protected def expect(in : Input, expected : String, caseFold : Boolean) : Unit = {
+  def expect(in : Input, expected : String, caseFold : Boolean) : Unit = {
     var got = consume(in, expected.length).mkString;
     if (caseFold) got = got.toLowerCase;
     if (got != expected)
@@ -268,7 +268,7 @@ with ByteSerialization {
   }
 
   /** Throws an exception if the input does not start with the given "expected" char. */
-  protected def expect(in : Input, expected : Char, caseFold : Boolean) : Unit = {
+  def expect(in : Input, expected : Char, caseFold : Boolean) : Unit = {
     var got = in.next;
     if (caseFold) got = got.toLower;
     if (got != expected)
@@ -294,9 +294,30 @@ with ByteSerialization {
     }
     rv.toString;
   }
-}
 
-object StringSerialization extends StringSerialization;
+  //
+  // scratch
+  // 
+
+//  def typedCompanion1ReadWritable[P1,T<:TypedCompanion1[P1,T]]
+//  (implicit c : TypedCompanion1[P1,T], p1H : ReadWritable[P1])
+//  : ReadWritable[T] = new ReadWritable[T] {
+//    override def read(in : Input) = {
+//      expect(in, c.name, false);
+//      expect(in, '(', false);
+//      val p1 = p1H.read(in);
+//      expect(in, ')', false);
+//      c.apply(p1);
+//    }
+//
+//    override def write(out : Output, value : T) = {
+//      out.append(c.name);
+//      out.append('(');
+//      p1H.write(out, c.unpack(value));
+//      out.append(')');
+//    }
+//  }
+}
 
 class StringSerializationException(msg : String) extends RuntimeException(msg);
 
