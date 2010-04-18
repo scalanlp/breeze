@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.serialization
+package scalanlp.serialization;
 
 import scala.collection.mutable.Builder;
 
@@ -39,14 +39,21 @@ with ByteSerialization {
   // from SerializationFormat
   //
 
-  override protected def readTupleStart(in : Input) =
-    if (in.next != '(') throw new StringSerializationException("Expected tuple start");
+  override protected def readTupleStart(in : Input) = {
+    expect(in,'(',false);
+    skipWhitespace(in);
+  }
 
-  override protected def readTupleGlue(in : Input) =
-    if (in.next != ',') throw new StringSerializationException("Expected tuple glue");
+  override protected def readTupleGlue(in : Input) = {
+    skipWhitespace(in);
+    expect(in,',',false);
+    skipWhitespace(in);
+  }
 
-  override protected def readTupleEnd(in : Input) =
-    if (in.next != ')') throw new StringSerializationException("Expected tuple end");
+  override protected def readTupleEnd(in : Input) = {
+    skipWhitespace(in);
+    expect(in,')',false);
+  }
 
   override protected def writeTupleStart(out : Output) =
     out.append('(');
@@ -202,11 +209,14 @@ with ByteSerialization {
   (src : Input, builder : Builder[T,To]) : To = {
     val name = readName(src);
     expect(src, '(', false);
+    skipWhitespace(src);
 
     while (src.buffered.head != ')') {
       builder += implicitly[Readable[T]].read(src);
+      skipWhitespace(src);
       if (src.buffered.head != ')') {
         expect(src,',',false);
+        skipWhitespace(src);
       }
     }
 
@@ -234,12 +244,11 @@ with ByteSerialization {
   // Utility methods
   //
 
-  protected def assertNonEmpty(src : Input, msg : String) =
-    if (!src.hasNext) throw new StringSerializationException("No more characters in string.  Expected "+msg+".");
-
   protected def readName(src : Input) : String = {
-    assertNonEmpty(src, "type name");
-    consumeWhile(src, c => c.isLetterOrDigit || c == '_' || c == '.' || c == '$');
+    val rv = consumeWhile(src, c => c.isLetterOrDigit || c == '_' || c == '.' || c == '$');
+    if (rv.length == 0)
+      throw new StringSerializationException("Expected symbol name");
+    rv;
   }
 
   protected def escapeChar(c : Char) : String = c match {
@@ -276,7 +285,7 @@ with ByteSerialization {
   }
 
   /** Consumes exactly numChars characters from input. */
-  protected def consume(in : Input, numChars : Int) : String = {
+  def consume(in : Input, numChars : Int) : String = {
     val rv = new StringBuilder();
     var i = 0;
     while (i < numChars) {
@@ -287,7 +296,7 @@ with ByteSerialization {
   }
 
   /** Consumes the characters from input while available and while the predicate matches. */
-  protected def consumeWhile(in : Input, p : Char => Boolean) : String = {
+  def consumeWhile(in : Input, p : Char => Boolean) : String = {
     val rv = new StringBuilder();
     while (in.hasNext && p(in.buffered.head)) {
       rv += in.next;
@@ -295,28 +304,12 @@ with ByteSerialization {
     rv.toString;
   }
 
-  //
-  // scratch
-  // 
+  /** Skips characters while the given predicate is true. */
+  def skipWhile(in : Input, p : Char => Boolean) : Unit =
+    while (in.hasNext && p(in.buffered.head)) in.next;
 
-//  def typedCompanion1ReadWritable[P1,T<:TypedCompanion1[P1,T]]
-//  (implicit c : TypedCompanion1[P1,T], p1H : ReadWritable[P1])
-//  : ReadWritable[T] = new ReadWritable[T] {
-//    override def read(in : Input) = {
-//      expect(in, c.name, false);
-//      expect(in, '(', false);
-//      val p1 = p1H.read(in);
-//      expect(in, ')', false);
-//      c.apply(p1);
-//    }
-//
-//    override def write(out : Output, value : T) = {
-//      out.append(c.name);
-//      out.append('(');
-//      p1H.write(out, c.unpack(value));
-//      out.append(')');
-//    }
-//  }
+  def skipWhitespace(in : Input) : Unit =
+    skipWhile(in, _.isWhitespace);
 }
 
 class StringSerializationException(msg : String) extends RuntimeException(msg);
