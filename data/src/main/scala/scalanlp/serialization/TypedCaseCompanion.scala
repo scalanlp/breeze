@@ -127,7 +127,7 @@ trait TypedCaseCompanion2[P1,P2,This<:AnyRef] {
 // *
 // * @author dramage
 // */
-//trait TypedCompanion[T<:Product,This<:AnyRef] {
+//trait TypedCaseCompanion[T<:Product,This<:AnyRef] {
 //  import StringSerialization._;
 //
 //  protected def getApplyMethod(args : Int) =
@@ -165,7 +165,7 @@ trait TypedCaseCompanion2[P1,P2,This<:AnyRef] {
 //  /**
 //   * Constructs a ReadWritable for the primary type T.
 //   */
-//  implicit def typedCompanion1ReadWritable
+//  implicit def typedCaseCompanionReadWritable
 //  (implicit p1H : ReadWritable[P1])
 //  = new ReadWritable[This] {
 //    override def read(in : Input) = {
@@ -214,7 +214,6 @@ object Test {
   }
 
   def main(args : Array[String]) {
-    // StringSerialization.toString(MyCaseClass1("hi!"));
     loop(MyCaseClass1("hi"));
     loop(MyCaseClass2(1,"hi"));
     loop(MyCompoundCaseClass1((1,2.0)))(MyCompoundCaseClass1.typedCaseCompanion1ReadWritable);
