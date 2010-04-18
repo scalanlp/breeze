@@ -69,7 +69,7 @@ trait CellBroker {
 
                   ra.log("RA.Cell: loading "+cache);
 
-                  val input = ra.serializer.inputFromFile(cache);
+                  val input = ra.serializer.openInput(cache);
                   val rv = loadable.read(input);
                   ra.serializer.closeInput(input);
                   rv
@@ -88,7 +88,7 @@ trait CellBroker {
                   List(RA.pid) | lock;
                   val rv = eval;
                   // Serializer.save(cache, rv)(valType,ra);
-                  val output = ra.serializer.outputFromFile(cache);
+                  val output = ra.serializer.openOutput(cache);
                   saveable.write(output,rv);
                   ra.serializer.closeOutput(output);
                   lock.delete();

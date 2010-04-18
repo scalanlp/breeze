@@ -15,30 +15,21 @@
 */
 package scalanlp.serialization;
 
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.DataInput
-import java.io.DataInputStream
-import java.io.DataOutput
-import java.io.DataOutputStream
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.InputStream
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
-import java.io.OutputStream
+import java.io.File;
+
 import scala.collection.MapLike
-import scala.collection.generic.{TraversableFactory, GenericCompanion, MapFactory};import scalanlp.util.Index
+import scala.collection.generic.{GenericCompanion, MapFactory}
+
+import scala.collection.mutable.{ArrayBuilder,Builder};
+
+import scalanlp.util.Index
 
 
-class SerFile(path : String) extends java.io.File(path);
+class SerFile(path : String) extends File(path);
 
-class TxtFile(path : String) extends java.io.File(path);
+class TxtFile(path : String) extends File(path);
 
-class CsvFile(path : String) extends java.io.File(path);
+class CsvFile(path : String) extends File(path);
 
 /**
  * A base trait for brokers of serialization. See JavaDataSerialization for a good example.
@@ -49,305 +40,250 @@ class CsvFile(path : String) extends java.io.File(path);
  * you get a lot of functionality for almost free.
  *
  * @author dlwh
+ * @author dramage
  */
 trait SerializationFormat {
-  /**
-   * The place to read data from
-   */
+  /** The place to read data from. */
   type Input;
-  /**
-   * The place to write data to
-   */
+
+  /** The place to write data to. */
   type Output;
+
+  /** Inner trait for reading from Input. */
   trait Readable[T] {
     def read(source: Input): T
   }
+
+  /** Inner trait for writing to Output. */
   trait Writable[T] {
-    def write(sink: Output, what: T):Unit
+    def write(sink: Output, what: T): Unit
   }
 
-  /**
-   * A convenient wrapper
-   */
+  /** A convenience wrapper for Readable and Writable. */
   trait ReadWritable[T] extends Readable[T] with Writable[T];
 
-  /**
-   * Sugar for implicitly[Readable[T]].read(source);
-   */
-  def read[T:Readable](source: Input): T = implicitly[Readable[T]].read(source);
-  /**
-   * Sugar for implicitly[Writable[T]].write(sink,what);
-   */
-  def write[T:Writable](sink: Output, what:T):Unit = implicitly[Writable[T]].write(sink, what);
+  /** Sugar for implicitly[Readable[T]].read(source); */
+  def read[T:Readable](source: Input): T =
+    implicitly[Readable[T]].read(source);
 
-  /**
-   * Implementors should provide a way of creating an Input instance from a java.util.File
-   */
-  def inputFromFile(f: File): Input;
-  /**
-   * Implementors should provide a way of creating an Output instance from a java.util.File
-   */
-  def outputFromFile(f: File): Output;
-  /**
-   * Implementors should provide a way to close an Input instance. May do nothing, if it's not
-   * necessary
-   */
-  def closeInput(i: Input);
-  /**
-   * Implementors should provide a way to close an Output instance. May do nothing, if it's not
-   * necessary.
-   */
-  def closeOutput(o: Output);
+  /** Sugar for implicitly[Writable[T]].write(sink,what); */
+  def write[T:Writable](sink: Output, what:T):Unit =
+    implicitly[Writable[T]].write(sink, what);
 }
 
-object JavaDataSerialization extends SerializationFormat with StandardCombinators {
-  type Input = DataInput;
-  type Output = DataOutput;
-
-  def inputFromFile(f: File): DataInput = {
-    new DataInputStream(new BufferedInputStream(new FileInputStream(f)));
-  }
-  def outputFromFile(f: File): DataOutput = {
-    new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)));
-  }
-
-  def closeInput(i: Input) = i match {
-    case  i: InputStream  => i.close();
-    case _ =>
-  }
-
-  def closeOutput(i: Output) = i match {
-    case  i: OutputStream  => i.close();
-    case _ =>
-  }
-
+object SerializationFormat {
   /**
-  * Marshalls the object using the implicit Handler to a byte array
-  * Usage: JavaDataSerialization.toBytes(myData);
-  */
-  def toBytes[T:Writable](x: T) = {
-    val bout = new ByteArrayOutputStream();
-    val out = new DataOutputStream(bout);
-    implicitly[Writable[T]].write(out,x);
-    out.close;
-    bout.toByteArray;
-  }
-
-  /**
-  * Unmarshalls the object using the implicit Handler
-  * Usage: JavaDataSerialization.fromBytes[T](bytes);
-  */
-  def fromBytes[T:Readable](bytes: Array[Byte]) = {
-    val in = new DataInputStream(new ByteArrayInputStream(bytes));
-    val x = implicitly[Readable[T]].read(in);
-    in.close;
-    x;
-  }
-
-  protected def readInt(src: DataInput) = src.readInt;
-  protected def writeInt(sink: DataOutput, y: Int) = sink.writeInt(y);
-  protected def collectionFromElements[T:ReadWritable,CC[T]<:Iterable[T]](c: GenericCompanion[CC]) = new ReadWritable[CC[T]] {
-    def read(source: DataInput) = {
-      val sz = source.readInt;
-      val b = c.newBuilder[T];
-      for(i <- 0 until sz) {
-        b += implicitly[Readable[T]].read(source);
-      }
-      b.result;
-    }
-
-    def write(sink: DataOutput, what: CC[T]) {
-      sink.writeInt(what.size);
-      for(e <- what) {
-        implicitly[Writable[T]].write(sink,e);
-      }
-    }
-  }
-
-  protected def collectionFromElements[K:ReadWritable,V:ReadWritable,CC[K,V]<:Map[K,V] with MapLike[K,V,CC[K,V]]](c: MapFactory[CC]) = new ReadWritable[CC[K,V]] {
-    def read(source: DataInput) = {
-      val sz = source.readInt;
-      val b = c.newBuilder[K,V];
-      for(i <- 0 until sz) {
-        b += implicitly[Readable[(K,V)]](tuple2ReadWritable).read(source);
-      }
-      b.result;
-    }
-
-    def write(sink: DataOutput, what: CC[K,V]) {
-      sink.writeInt(what.size);
-      for( (e:(K,V)) <- what) {
-        implicitly[Writable[(K,V)]].write(sink,e);
-      }
-    }
-
-  }
-
-  implicit val doubleReadWritable = new ReadWritable[Double] {
-    def read(in: DataInput) = in.readDouble();
-    def write(out: DataOutput, t: Double) = out.writeDouble(t);
-  }
-
-  implicit val intReadWritable = new ReadWritable[Int] {
-    def read(in: DataInput) = in.readInt();
-    def write(out: DataOutput, t: Int) = out.writeInt(t);
-  }
-
-  implicit val floatReadWritable = new ReadWritable[Float] {
-    def read(in: DataInput) = in.readFloat();
-    def write(out: DataOutput, t: Float) = out.writeFloat(t);
-  }
-
-  implicit val byteReadWritable : ReadWritable[Byte] = new ReadWritable[Byte] {
-    def read(in: DataInput) = in.readByte();
-    def write(out: DataOutput, t: Byte) = out.writeByte(t);
-  }
-
-  implicit val longReadWritable = new ReadWritable[Long] {
-    def read(in: DataInput) = in.readLong();
-    def write(out: DataOutput, t: Long) = out.writeLong(t);
-  }
-
-  implicit val shortReadWritable: ReadWritable[Short] = new ReadWritable[Short] {
-    def read(in: DataInput) = in.readShort();
-    def write(out: DataOutput, t: Short) = out.writeShort(t);
-  }
-
-  implicit val charReadWritable:ReadWritable[Char] = new ReadWritable[Char] {
-    def read(in: DataInput) = in.readChar();
-    def write(out: DataOutput, t: Char) = out.writeChar(t);
-  }
-
-  implicit val stringReadWritable = new ReadWritable[String] {
-    def read(in: DataInput) = {
-      in.readUTF();
-    }
-    def write(out: DataOutput, t: String) = {
-      out.writeUTF(t);
-    }
-  }
-
-  implicit val booleanReadWritable = new ReadWritable[Boolean] {
-    def read(in: DataInput) = in.readBoolean;
-    def write(out: DataOutput, b: Boolean) = out.writeBoolean(b)
-  }
-
-  implicit val byteArrayReadWritable = arrayReadWritable[Byte];
-
-  /**
-   * Uses Java serialization. It's *very* inefficient, and should be avoided.
+   * Supports reading and writing standard primitive types and String.
+   * 
+   * @author dramage
    */
-  def naiveReadWritable[T] = new ReadWritable[T] {
-    def read(in: DataInput) = {
-      val ba = byteArrayReadWritable read in;
-      val oin = new ObjectInputStream(new ByteArrayInputStream(ba));
-      val x = oin.readObject().asInstanceOf[T];
-      oin.close;
-      x;
+  trait PrimitiveTypes { this : SerializationFormat =>
+    implicit val intReadWritable : ReadWritable[Int];
+    implicit val byteReadWritable : ReadWritable[Byte];
+    implicit val longReadWritable : ReadWritable[Long];
+    implicit val shortReadWritable: ReadWritable[Short];
+    implicit val doubleReadWritable : ReadWritable[Double];
+    implicit val floatReadWritable : ReadWritable[Float];
+    implicit val charReadWritable : ReadWritable[Char];
+    implicit val booleanReadWritable : ReadWritable[Boolean];
+    implicit val stringReadWritable : ReadWritable[String];
+  }
+
+  /**
+   * Supports reading and writing tuples, collections, maps, arrays, etc.,
+   * if their underlying key and value types are readable and writable.
+   *
+   * @author dlwh
+   * @author dramage
+   */
+  trait CompoundTypes extends SerializationFormat { this: SerializationFormat =>
+    /** Reads elements of type T into the given buildable. Inverse of writeIterable. */
+    protected def readBuildable[T:Readable,To]
+    (src: Input, builder : Builder[T,To]) : To;
+
+    /** Writes elements of the given collection. Inverse of readBuildable. */
+    protected def writeIterable[T:Writable,CC<:Iterable[T]]
+    (sink: Output, coll : CC, name : String);
+
+    protected def readTupleStart(in : Input) =
+      { /* do nothing */ }
+
+    protected def readTupleGlue(in : Input) =
+      { /* do nothing */ }
+
+    protected def readTupleEnd(in : Input) =
+      { /* do nothing */ }
+
+    protected def writeTupleStart(out : Output) =
+      { /* do nothing */ }
+
+    protected def writeTupleGlue(out : Output) =
+      { /* do nothing */ }
+
+    protected def writeTupleEnd(out : Output) =
+      { /* do nothing */ }
+
+    /** Standard collection types. */
+    protected def collectionFromElements
+    [T:ReadWritable,CC[T]<:Iterable[T]]
+    (c: GenericCompanion[CC], name : String)
+    = new ReadWritable[CC[T]] {
+      def read(source : Input) =
+        readBuildable[T,CC[T]](source, c.newBuilder[T]);
+
+      def write(sink : Output, coll : CC[T]) =
+        writeIterable[T,CC[T]](sink, coll, name);
     }
 
-    def write(out: DataOutput, x: T) {
-      val bout = new ByteArrayOutputStream();
-      val oout = new ObjectOutputStream(bout);
-      oout.writeObject(x);
-      oout.close;
-      byteArrayReadWritable.write(out, bout.toByteArray);
+    /** Map collection types. */
+    protected def collectionFromElements
+    [K:ReadWritable,V:ReadWritable,CC[K,V]<:Map[K,V] with MapLike[K,V,CC[K,V]]]
+    (c: MapFactory[CC], name : String)
+    = new ReadWritable[CC[K,V]] {
+      def read(source : Input) =
+        readBuildable[(K,V),CC[K,V]](source, c.newBuilder[K,V]);
+
+      def write(sink : Output, coll : CC[K,V]) =
+        writeIterable[(K,V),CC[K,V]](sink, coll, name);
+    }
+
+    implicit def tuple2ReadWritable[T1,T2]
+    (implicit t1H: ReadWritable[T1], t2H: ReadWritable[T2])
+    = new ReadWritable[(T1,T2)] {
+      def read(in: Input) = {
+        readTupleStart(in);
+        val t1 = t1H.read(in);
+        readTupleGlue(in);
+        val t2 = t2H.read(in);
+        readTupleEnd(in);
+        (t1,t2)
+      }
+      def write(out: Output, t: (T1,T2)) {
+        writeTupleStart(out);
+        t1H.write(out, t._1);
+        writeTupleGlue(out);
+        t2H.write(out, t._2);
+        writeTupleEnd(out);
+      }
+    }
+
+    implicit def tuple3ReadWritable[T1,T2,T3]
+    (implicit t1H: ReadWritable[T1], t2H: ReadWritable[T2], t3H: ReadWritable[T3])
+    = new ReadWritable[(T1,T2,T3)] {
+      def read(in: Input) = {
+        readTupleStart(in);
+        val t1 = t1H.read(in);
+        readTupleGlue(in);
+        val t2 = t2H.read(in);
+        readTupleGlue(in);
+        val t3 = t3H.read(in);
+        readTupleEnd(in);
+        (t1,t2,t3);
+      }
+      def write(out: Output, t: (T1,T2,T3)) {
+        writeTupleStart(out);
+        t1H.write(out, t._1);
+        writeTupleGlue(out);
+        t2H.write(out, t._2);
+        writeTupleGlue(out);
+        t3H.write(out, t._3);
+        writeTupleEnd(out);
+      }
+    }
+
+    implicit def tuple4ReadWritable[T1,T2,T3,T4]
+    (implicit t1H: ReadWritable[T1], t2H: ReadWritable[T2],
+     t3H: ReadWritable[T3], t4H: ReadWritable[T4])
+    = new ReadWritable[(T1,T2,T3,T4)] {
+      def read(in: Input) = {
+        readTupleStart(in);
+        val t1 = t1H.read(in);
+        readTupleGlue(in);
+        val t2 = t2H.read(in);
+        readTupleGlue(in);
+        val t3 = t3H.read(in);
+        readTupleGlue(in);
+        val t4 = t4H.read(in);
+        readTupleEnd(in);
+        (t1,t2,t3,t4)
+      }
+      def write(out: Output, t: (T1,T2,T3,T4)) {
+        writeTupleStart(out);
+        t1H.write(out, t._1);
+        writeTupleGlue(out);
+        t2H.write(out, t._2);
+        writeTupleGlue(out);
+        t3H.write(out, t._3);
+        writeTupleGlue(out);
+        t4H.write(out, t._4);
+        writeTupleEnd(out);
+      }
+    }
+
+    implicit def arrayReadWritable[T]
+    (implicit tH: ReadWritable[T], man: ClassManifest[T])
+    = new ReadWritable[Array[T]] {
+      def read(source: Input) =
+        readBuildable[T,Array[T]](source, ArrayBuilder.make[T]);
+
+      def write(sink: Output, value: Array[T]) =
+        writeIterable[T,Seq[T]](sink, value, "Array");
+    }
+
+    implicit def listReadWritable[T](implicit tH: ReadWritable[T]) =
+      collectionFromElements[T,List](List,"List");
+
+    implicit def seqReadWritable[T](implicit tH: ReadWritable[T]) =
+      collectionFromElements[T,Seq](Seq,"Seq");
+
+    implicit def setReadWritable[T](implicit tH: ReadWritable[T]) =
+      collectionFromElements[T,Set](Set,"Set");
+
+    implicit def mapReadWritable[K:ReadWritable,V:ReadWritable] =
+      collectionFromElements[K,V,Map](Map,"Map");
+
+    implicit def indexReadWritable[T:ReadWritable]
+    = new ReadWritable[Index[T]] {
+      def read(source: Input): Index[T] =
+        Index(seqReadWritable[T].read(source));
+
+      def write(sink: Output, value: Index[T]) =
+        writeIterable[T,Iterable[T]](sink, value, "Index");
     }
   }
 }
 
-trait StandardCombinators { this: SerializationFormat =>
 
-  protected def readInt(src: Input):Int;
-  protected def writeInt(sink: Output, t: Int):Unit;
-  protected def collectionFromElements[T:ReadWritable,CC[T]<:Iterable[T]](c: GenericCompanion[CC]):ReadWritable[CC[T]];
-  protected def collectionFromElements[K:ReadWritable,V:ReadWritable,CC[K,V]<:Map[K,V] with MapLike[K,V,CC[K,V]]](c: MapFactory[CC]): ReadWritable[CC[K,V]];
+/**
+ * Supports getting Input and Output objects from a File.
+ *
+ * @author dramage
+ * @author dlwh
+ */
+trait FileSerialization extends SerializationFormat {
+  /** Opens an input from the given backing. */
+  def openInput(source : File) : Input;
 
-  implicit def tuple3ReadWritable[T1,T2,T3](implicit t1H: ReadWritable[T1], t2H: ReadWritable[T2], t3H: ReadWritable[T3]) = new ReadWritable[(T1,T2,T3)] {
-    def read(in: Input) = {
-      val t1 = t1H.read(in);
-      val t2 = t2H.read(in);
-      val t3 = t3H.read(in);
-      (t1,t2,t3)
-    }
-    def write(out: Output, t: (T1,T2,T3)) {
-      t1H.write(out, t._1);
-      t2H.write(out, t._2);
-      t3H.write(out, t._3);
-    }
-  }
+  /** Closes the given (opened) input. */
+  def closeInput(input : Input);
 
-  implicit def tuple2ReadWritable[T1,T2](implicit t1H: ReadWritable[T1], t2H: ReadWritable[T2]) = new ReadWritable[(T1,T2)] {
-    def read(in: Input) = {
-      val t1 = t1H.read(in);
-      val t2 = t2H.read(in);
-      (t1,t2)
-    }
-    def write(out: Output, t: (T1,T2)) {
-      t1H.write(out, t._1);
-      t2H.write(out, t._2);
-    }
-  }
+  /** Opens an output for the given backing. */
+  def openOutput(target : File) : Output;
 
-  implicit def tuple4ReadWritable[T1,T2,T3,T4](implicit t1H: ReadWritable[T1],
-                                               t2H: ReadWritable[T2],
-                                               t3H: ReadWritable[T3],
-                                               t4H: ReadWritable[T4]) = new ReadWritable[(T1,T2,T3,T4)] {
-    def read(in: Input) = {
-      val t1 = t1H.read(in);
-      val t2 = t2H.read(in);
-      val t3 = t3H.read(in);
-      val t4 = t4H.read(in);
-      (t1,t2,t3,t4)
-    }
-    def write(out: Output, t: (T1,T2,T3,T4)) {
-      t1H.write(out, t._1);
-      t2H.write(out, t._2);
-      t3H.write(out, t._3);
-      t4H.write(out, t._4);
-    }
-  }
+  /** Closes the given (opened) output. */
+  def closeOutput(output : Output);
+}
 
+/**
+ * Supports marshalling to and from a byte array.
+ *
+ * @author dramage
+ * @author dlwh
+ */
+trait ByteSerialization extends SerializationFormat {
+  /** Marshalls the object to a byte array. */
+  def toBytes[T:Writable](value : T) : Array[Byte];
 
-  implicit def arrayReadWritable[T](implicit tH: ReadWritable[T], man: ClassManifest[T]) = new ReadWritable[Array[T]] {
-    def read(in: Input) = {
-      val sz = readInt(in);
-      Array.tabulate(sz) { i =>
-        tH read in;
-      }
-    }
-
-    def write(o: Output, x: Array[T]) {
-      writeInt(o,x.size);
-      x foreach { tH.write(o,_) }
-    }
-  }
-
-  implicit def listReadWritable[T](implicit tH: ReadWritable[T]) = collectionFromElements[T,List](List);
-
-  implicit def seqReadWritable[T](implicit tH: ReadWritable[T]) = collectionFromElements[T,Seq](Seq);
-
-  implicit def imSetReadWritable[T](implicit tH: ReadWritable[T]) = collectionFromElements[T,Set](Set);
-
-  implicit def imMapReadWritable[K:ReadWritable,V:ReadWritable] = collectionFromElements[K,V,Map](Map);
-
-  implicit def indexReadWritable[T:ReadWritable] = new ReadWritable[Index[T]] {
-    def read(in: Input):Index[T] = {
-      val sz = readInt(in);
-      val col = Index[T]();
-      for(i <- 0 until sz) {
-        col.index(implicitly[ReadWritable[T]].read(in));
-      }
-      col
-    }
-
-    def write(out: Output, ind: Index[T]) {
-      writeInt(out,ind.size);
-      for(i <- 0 until ind.size) {
-        implicitly[ReadWritable[T]].write(out,ind.get(i))
-      }
-    }
-  }
-
-
+  /** Unmarshalls the object from a byte array. */
+  def fromBytes[T:Readable](bytes : Array[Byte]) : T;
 }

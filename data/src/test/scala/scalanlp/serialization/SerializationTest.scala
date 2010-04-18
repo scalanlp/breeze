@@ -19,18 +19,27 @@ import org.scalatest._;
 import org.scalatest.junit._;
 import org.scalatest.prop._;
 import org.scalacheck._;
-import org.junit.runner.RunWith
+import org.junit.runner.RunWith;
 import scalanlp.util.Index;
 
-@RunWith(classOf[JUnitRunner])
-class JavaDataSerializationTest extends FunSuite with Checkers {
-  import JavaDataSerialization._;
+/**
+ * Abstract test trait for serializers that support primitive and compound
+ * types.
+ *
+ * @author dlwh
+ * @author dramage
+ */
+trait SerializationTestBase extends FunSuite with Checkers {
+  val serializer : ByteSerialization with SerializationFormat.PrimitiveTypes with SerializationFormat.CompoundTypes;
+
+  import serializer._;
 
   def basicTest[T:Arbitrary:ReadWritable]() = check( Prop.forAll { (a:T) =>
-    val bytes = toBytes[T](a);
-    val b = fromBytes[T](bytes);
+    val bytes = serializer.toBytes[T](a);
+    val b = serializer.fromBytes[T](bytes);
     a == b
   });
+
 
   test("Primitives") {
     basicTest[Int]();
@@ -68,6 +77,13 @@ class JavaDataSerializationTest extends FunSuite with Checkers {
     tuple2Test[String,String]();
   }
 
+  test("Compund tuples") {
+    tuple2Test[Int,List[Int]]();
+    tuple2Test[List[Int],String]();
+    tuple2Test[List[List[String]],Map[String,Int]]();
+    tuple2Test[List[List[String]],Map[(Int,String,Int),(String,Double)]]();
+  }
+
   implicit def arbIndex[T:Arbitrary]:Arbitrary[Index[T]] = Arbitrary {
     import Arbitrary.arbitrary;
     for( s <- arbitrary[List[T]]) yield {
@@ -87,5 +103,14 @@ class JavaDataSerializationTest extends FunSuite with Checkers {
     indexTest[Int]();
     indexTest[(String,String)]();
   }
+}
 
+@RunWith(classOf[JUnitRunner])
+class JavaSerializationTest extends SerializationTestBase {
+  override val serializer = JavaByteSerialization;
+}
+
+@RunWith(classOf[JUnitRunner])
+class StringSerializationTest extends SerializationTestBase {
+  override val serializer = StringSerialization;
 }
