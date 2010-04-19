@@ -62,6 +62,9 @@ trait SerializationFormat {
   /** A convenience wrapper for Readable and Writable. */
   trait ReadWritable[T] extends Readable[T] with Writable[T];
 
+  def getReadWritable[T:ReadWritable] : ReadWritable[T] =
+    implicitly[ReadWritable[T]];
+
   /** Sugar for implicitly[Readable[T]].read(source); */
   def read[T:Readable](source: Input): T =
     implicitly[Readable[T]].read(source);

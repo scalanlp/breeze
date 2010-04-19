@@ -21,19 +21,29 @@ import org.junit.runner.RunWith;
 
 package typedexamples {
   case class MyCaseClass1(b : String);
-  object MyCaseClass1 extends TypedCaseCompanion1[String,MyCaseClass1];
+  object MyCaseClass1 extends TypedCaseCompanion1[String,MyCaseClass1] {
+    prepare();
+  }
 
   case class MyCaseClass2(a : Int, b : String)
-  object MyCaseClass2 extends TypedCaseCompanion2[Int,String,MyCaseClass2];
+  object MyCaseClass2 extends TypedCaseCompanion2[Int,String,MyCaseClass2] {
+    prepare();
+  }
 
   case class MyCompoundCaseClass1(a : (Int,Double));
-  object MyCompoundCaseClass1 extends TypedCaseCompanion1[(Int,Double),MyCompoundCaseClass1];
+  object MyCompoundCaseClass1 extends TypedCaseCompanion1[(Int,Double),MyCompoundCaseClass1] {
+    prepare();
+  }
 
   case class MyCompoundCaseClass2(a : Int, b : MyCaseClass2)
-  object MyCompoundCaseClass2 extends TypedCaseCompanion2[Int,MyCaseClass2,MyCompoundCaseClass2]
+  object MyCompoundCaseClass2 extends TypedCaseCompanion2[Int,MyCaseClass2,MyCompoundCaseClass2] {
+    prepare();
+  }
 
   case class MyCompoundCaseClass3(a : List[Double]);
-  object MyCompoundCaseClass3 extends TypedCaseCompanion1[List[Double],MyCompoundCaseClass3];
+  object MyCompoundCaseClass3 extends TypedCaseCompanion1[List[Double],MyCompoundCaseClass3] {
+    prepare();
+  }
 }
 
 @RunWith(classOf[JUnitRunner])
@@ -49,13 +59,8 @@ class TypedCaseCompanionTest extends FunSuite {
   test("Check case class to and from string") {
     loop(MyCaseClass1("hi"));
     loop(MyCaseClass2(1,"hi"));
-
-    // todo: compile error if remove the explicit implicit
-    loop(MyCompoundCaseClass1((1,2.0)))(MyCompoundCaseClass1.tccReadWritable);
-
+    loop(MyCompoundCaseClass1((1,2.0)));
     loop(MyCompoundCaseClass2(1,MyCaseClass2(2,"yo")));
-
-    // todo: compile error if remove the explicit implicit
-    loop(MyCompoundCaseClass3(List(1.0,2.0)))(MyCompoundCaseClass3.tccReadWritable);
+    loop(MyCompoundCaseClass3(List(1.0,2.0)));
   }
 }
