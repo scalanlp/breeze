@@ -21,7 +21,7 @@ object TextSerialization extends SerializationFormat
 with SerializationFormat.PrimitiveTypes with SerializationFormat.CompoundTypes
 with ByteSerialization with StringSerialization {
 
-  type Input = Iterator[Char];
+  type Input = BufferedIterator[Char];
   type Output = StringBuilder;
 
   //
@@ -37,7 +37,7 @@ with ByteSerialization with StringSerialization {
 
   /** Demarshalls a value from the given string. */
   def fromString[T:Readable](str: String) : T =
-    implicitly[Readable[T]].read(str.iterator);
+    implicitly[Readable[T]].read(str.iterator.buffered);
 
   //
   // from ByteSerialization
@@ -74,7 +74,7 @@ with ByteSerialization with StringSerialization {
   }
   
   override implicit val doubleReadWritable : ReadWritable[Double] = new ReadWritable[Double] {
-    override def read(in : Input) = in.buffered.head.toLower match {
+    override def read(in : Input) = in.head.toLower match {
       case '-' => { in.next; -read(in); }
       case 'n' => { expect(in, "nan", true); Double.NaN; }
       case 'i' => { expect(in, "inf", true); Double.PositiveInfinity; }
@@ -91,7 +91,7 @@ with ByteSerialization with StringSerialization {
   }
 
   override implicit val floatReadWritable : ReadWritable[Float] = new ReadWritable[Float] {
-    override def read(in : Input) = in.buffered.head.toLower match {
+    override def read(in : Input) = in.head.toLower match {
       case '-' => { in.next; -read(in); }
       case 'n' => { expect(in, "nan", true); Float.NaN; }
       case 'i' => { expect(in, "inf", true); Float.PositiveInfinity; }
@@ -109,7 +109,7 @@ with ByteSerialization with StringSerialization {
 
   override implicit val booleanReadWritable : ReadWritable[Boolean]  = new ReadWritable[Boolean] {
     override def read(in : Input) = {
-      in.buffered.head match {
+      in.head match {
         case 't' => { expect(in, "true", true); true; }
         case 'f' => { expect(in, "false", true); false; }
         case _ => throw new TextSerializationException("Unexpected boolean value");
@@ -156,7 +156,7 @@ with ByteSerialization with StringSerialization {
     override def read(in : Input) = {
       expect(in, '"', false);
       val rv = new StringBuilder();
-      while (in.buffered.head != '"') {
+      while (in.head != '"') {
         rv += (in.next match {
           case '\\' => in.next match {
             case 'b'  => '\b';
@@ -219,10 +219,10 @@ with ByteSerialization with StringSerialization {
     expect(src, '(', false);
     skipWhitespace(src);
 
-    while (src.buffered.head != ')') {
+    while (src.head != ')') {
       builder += implicitly[Readable[T]].read(src);
       skipWhitespace(src);
-      if (src.buffered.head != ')') {
+      if (src.head != ')') {
         expect(src,',',false);
         skipWhitespace(src);
       }
@@ -235,7 +235,7 @@ with ByteSerialization with StringSerialization {
 
   override protected def writeIterable[T:Writable,CC<:Iterable[T]]
   (sink : Output, coll : CC, name : String) {
-    if (readName(name.iterator) != name)
+    if (readName(name.iterator.buffered) != name)
       throw new TextSerializationException("Not a valid name.");
 
     sink.append(name);
@@ -306,7 +306,7 @@ with ByteSerialization with StringSerialization {
   /** Consumes the characters from input while available and while the predicate matches. */
   def consumeWhile(in : Input, p : Char => Boolean) : String = {
     val rv = new StringBuilder();
-    while (in.hasNext && p(in.buffered.head)) {
+    while (in.hasNext && p(in.head)) {
       rv += in.next;
     }
     rv.toString;
@@ -314,7 +314,7 @@ with ByteSerialization with StringSerialization {
 
   /** Skips characters while the given predicate is true. */
   def skipWhile(in : Input, p : Char => Boolean) : Unit =
-    while (in.hasNext && p(in.buffered.head)) in.next;
+    while (in.hasNext && p(in.head)) in.next;
 
   def skipWhitespace(in : Input) : Unit =
     skipWhile(in, _.isWhitespace);

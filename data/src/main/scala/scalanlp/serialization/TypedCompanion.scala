@@ -19,18 +19,22 @@ import scala.collection.mutable.{HashMap,ArrayBuffer};
 
 import scala.reflect.ClassManifest;
 
+import scalanlp.ra.ReflectionUtils;
+
 import TextSerialization._;
 
-/**
- * Registers all TypedCompanion instances to enable subtype instantion.
- */
-object TypedCompanionRegistry {
-  val registry = HashMap[Class[_], ArrayBuffer[(String,TypedCompanion[_,_])]]();
-
-  def register(t : Class[_], name : String, cc : TypedCompanion[_,_]) : Unit = {
-    registry.getOrElseUpdate(t, ArrayBuffer[(String,TypedCompanion[_,_])]()) += ((name, cc));
-  }
-}
+///**
+// * Registers all TypedCompanion instances to enable subtype instantion.
+// *
+// * @author dramage
+// */
+//object TypedCompanionRegistry {
+//  val registry = HashMap[Class[_], ArrayBuffer[(String,TypedCompanion[_,_])]]();
+//
+//  def register(t : Class[_], name : String, cc : TypedCompanion[_,_]) : Unit = {
+//    registry.getOrElseUpdate(t, ArrayBuffer[(String,TypedCompanion[_,_])]()) += ((name, cc));
+//  }
+//}
 
 /**
  * Mix-in trait for companion object to case classes to automatically
@@ -53,9 +57,9 @@ trait TypedCompanion[Components,This] {
       throw new TypedCompanionException("Manifest already defined in TypeCompanion.");
     }
     _manifest = Some(m);
-    for (cls <- scalanlp.ra.ReflectionUtils.getSupertypes(manifest.erasure)) {
-      TypedCompanionRegistry.register(cls, name, this);
-    }
+//    for (cls <- ReflectionUtils.getSupertypes(manifest.erasure)) {
+//      TypedCompanionRegistry.register(cls, name, this);
+//    }
   }
 
   /** ReadWritable for each component needed during building. */
@@ -209,5 +213,75 @@ extends TypedCompanion[(ReadWritable[P1],ReadWritable[P2]),This] {
   }
 }
 
+/**
+ * Mix-in trait for companion objects to generic supertypes of TypedCompanions
+ * that will instantiate the correct subtype (from a fixed registry) at
+ * runtime.
+ */
+trait SubtypedCompanion[This] extends TypedCompanion[Unit,This] {
+  /** Registry of known sub-types. */
+  val registry = HashMap[String, (ClassManifest[_],ReadWritable[_])]();
+
+  /** This needs to be called first. */
+  def prepare()(implicit m : ClassManifest[This]) =
+    manifest = m;
+
+  /** All expected subtypes should be registered. */
+  def register[Subtype<:This](name : String)
+  (implicit mf : ClassManifest[Subtype], rw : ReadWritable[Subtype]) : Unit = {
+    if (registry.contains(name)) {
+      throw new TypedCompanionException("Name '"+name+"' already registered.");
+    }
+    registry(name) = (mf, rw);
+  }
+
+  override implicit def readWritable = _readWritable;
+
+  private val _readWritable = mkReadWritable;
+  private def mkReadWritable : ReadWritable[This] = new ReadWritable[This] {
+    override def read(in : Input) : This = {
+      val name : String = readName(in);
+      val rw = registry.getOrElse(name,
+        throw new TypedCompanionException("No companion registered for '"+name+"'"))._2;
+      return rw.read((name.iterator ++ in).buffered).asInstanceOf[This];
+    }
+
+    override def write(out : Output, value : This) = {
+      val valType = value.asInstanceOf[AnyRef].getClass;
+      val candidates = registry.valuesIterator.
+        filter(tup => tup._1.erasure.isAssignableFrom(valType));
+
+      if (!candidates.hasNext) {
+        throw new TypedCompanionException("No registered handler supports value type "+valType);
+      }
+
+      val rw = candidates.
+        reduceLeft((tupA,tupB) => if (tupA._1 <:< tupB._1) tupA else tupB).
+        _2.asInstanceOf[ReadWritable[This]];
+      
+      rw.write(out, value);
+      
+//      val name : String = try {
+//        value.asInstanceOf[AnyRef].getClass.getClassLoader.
+//          loadClass(value.asInstanceOf[AnyRef].getClass.getName+"$").
+//          getMethod("name").invoke(null).asInstanceOf[String];
+//      } catch {
+//        case e : Throwable =>
+//          throw new TypedCompanionException("Unable to get name from expected "+
+//           "companion object "+value.asInstanceOf[AnyRef].getClass.getName+"$");
+//      }
+//
+//      val tc = registry.getOrElse(name,
+//        throw new TypedCompanionException("No companion registered fro '"+name+"'")
+//      ).asInstanceOf[TypedCompanion[_,This]];
+//
+//      tc.readWritable.write(out, value);
+    }
+  }
+}
+
 /** Exception thrown by an improperly configured TypedCompanion. */
-class TypedCompanionException(msg : String) extends RuntimeException(msg);
+class TypedCompanionException(msg : String, cause : Throwable)
+extends RuntimeException(msg, cause) {
+  def this(msg : String) = this(msg, null);
+}
