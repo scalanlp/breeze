@@ -23,18 +23,6 @@ import scalanlp.ra.ReflectionUtils;
 
 import TextSerialization._;
 
-///**
-// * Registers all TypedCompanion instances to enable subtype instantion.
-// *
-// * @author dramage
-// */
-//object TypedCompanionRegistry {
-//  val registry = HashMap[Class[_], ArrayBuffer[(String,TypedCompanion[_,_])]]();
-//
-//  def register(t : Class[_], name : String, cc : TypedCompanion[_,_]) : Unit = {
-//    registry.getOrElseUpdate(t, ArrayBuffer[(String,TypedCompanion[_,_])]()) += ((name, cc));
-//  }
-//}
 
 /**
  * Mix-in trait for companion object to case classes to automatically
@@ -57,9 +45,6 @@ trait TypedCompanion[Components,This] {
       throw new TypedCompanionException("Manifest already defined in TypeCompanion.");
     }
     _manifest = Some(m);
-//    for (cls <- ReflectionUtils.getSupertypes(manifest.erasure)) {
-//      TypedCompanionRegistry.register(cls, name, this);
-//    }
   }
 
   /** ReadWritable for each component needed during building. */
@@ -143,7 +128,9 @@ extends TypedCompanion[ReadWritable[P1],This] {
     override def read(in : Input) = {
       expect(in, name, false);
       expect(in, '(', false);
+      skipWhitespace(in);
       val p1 = components.read(in);
+      skipWhitespace(in);
       expect(in, ')', false);
       apply(p1);
     }
@@ -194,9 +181,13 @@ extends TypedCompanion[(ReadWritable[P1],ReadWritable[P2]),This] {
     override def read(in : Input) = {
       expect(in, name, false);
       expect(in, '(', false);
+      skipWhitespace(in);
       val p1 = components._1.read(in);
+      skipWhitespace(in);
       expect(in, ',', false);
+      skipWhitespace(in);
       val p2 = components._2.read(in);
+      skipWhitespace(in);
       expect(in, ')', false);
       apply(p1, p2);
     }
@@ -235,10 +226,7 @@ trait SubtypedCompanion[This] extends TypedCompanion[Unit,This] {
     registry(name) = (mf, rw);
   }
 
-  override implicit def readWritable = _readWritable;
-
-  private val _readWritable = mkReadWritable;
-  private def mkReadWritable : ReadWritable[This] = new ReadWritable[This] {
+  override implicit val readWritable : ReadWritable[This] = new ReadWritable[This] {
     override def read(in : Input) : This = {
       val name : String = readName(in);
       val rw = registry.getOrElse(name,
@@ -260,22 +248,6 @@ trait SubtypedCompanion[This] extends TypedCompanion[Unit,This] {
         _2.asInstanceOf[ReadWritable[This]];
       
       rw.write(out, value);
-      
-//      val name : String = try {
-//        value.asInstanceOf[AnyRef].getClass.getClassLoader.
-//          loadClass(value.asInstanceOf[AnyRef].getClass.getName+"$").
-//          getMethod("name").invoke(null).asInstanceOf[String];
-//      } catch {
-//        case e : Throwable =>
-//          throw new TypedCompanionException("Unable to get name from expected "+
-//           "companion object "+value.asInstanceOf[AnyRef].getClass.getName+"$");
-//      }
-//
-//      val tc = registry.getOrElse(name,
-//        throw new TypedCompanionException("No companion registered fro '"+name+"'")
-//      ).asInstanceOf[TypedCompanion[_,This]];
-//
-//      tc.readWritable.write(out, value);
     }
   }
 }

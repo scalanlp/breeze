@@ -320,5 +320,10 @@ with ByteSerialization with StringSerialization {
     skipWhile(in, _.isWhitespace);
 }
 
+/**
+ * Exception thrown during text serialization or deserialization.
+ *
+ * @author dramage
+ */
 class TextSerializationException(msg : String) extends RuntimeException(msg);
 

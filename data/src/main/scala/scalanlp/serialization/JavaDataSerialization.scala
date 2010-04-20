@@ -29,6 +29,7 @@ import scala.collection.mutable.Builder;
  * binary formats where able, default Java serialization otherwise.
  * 
  * @author dlwh
+ * @author dramage
  */
 object JavaDataSerialization extends SerializationFormat
 with SerializationFormat.PrimitiveTypes with SerializationFormat.CompoundTypes
