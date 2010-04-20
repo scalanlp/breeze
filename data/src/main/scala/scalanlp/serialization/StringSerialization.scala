@@ -108,7 +108,11 @@ with ByteSerialization {
       }
     }
     
-    override def write(out : Output, v : Double) = out.append(v.toString);
+    override def write(out : Output, v : Double) = {
+      if (v == Double.PositiveInfinity) out.append("Inf")
+      else if (v == Double.NegativeInfinity) out.append("-Inf")
+      else out.append(v.toString);
+    }
   }
 
   override implicit val floatReadWritable : ReadWritable[Float] = new ReadWritable[Float] {
@@ -121,7 +125,11 @@ with ByteSerialization {
       }
     }
 
-    override def write(out : Output, v : Float) = out.append(v.toString);
+    override def write(out : Output, v : Float) = {
+      if (v == Float.PositiveInfinity) out.append("Inf")
+      else if (v == Float.NegativeInfinity) out.append("-Inf")
+      else out.append(v.toString);
+    }
   }
 
   override implicit val booleanReadWritable : ReadWritable[Boolean]  = new ReadWritable[Boolean] {
