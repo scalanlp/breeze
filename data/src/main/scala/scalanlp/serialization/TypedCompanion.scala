@@ -98,16 +98,20 @@ trait TypedCompanion0[This] extends TypedCompanion[Unit,This] {
 
 /**
  * Mix-in trait for companion object to case classes to automatically
- * support TextSerialization toString and fromString.
+ * support {@link TextSerialization} toString and fromString.
+ * 
+ * Subtypes can provide an unpack method that breaks apart the case class into
+ * its companions.  The default behavior is based on Scala 2.8's case class
+ * encoding.
  *
  * @author dramage
  */
-trait TypedCaseCompanion1[P1,This]
+trait TypedCompanion1[P1,This]
 extends TypedCompanion[ReadWritable[P1],This] {
   /** Static constructor. */
   def apply(p1 : P1) : This;
 
-  def prepare()(implicit m : ClassManifest[This], p1H : ReadWritable[P1]) = {
+  protected def prepare()(implicit m : ClassManifest[This], p1H : ReadWritable[P1]) = {
     manifest = m;
     components = p1H;
   }
@@ -117,8 +121,16 @@ extends TypedCompanion[ReadWritable[P1],This] {
    * method depends on the particulars of case class encoding.
    */
   def unpack(t : This) : P1 = {
-    val name = t.asInstanceOf[AnyRef].getClass.getDeclaredFields()(0).getName;
-    t.asInstanceOf[AnyRef].getClass.getMethod(name).invoke(t).asInstanceOf[P1];
+    try {
+      val name = t.asInstanceOf[AnyRef].getClass.getDeclaredFields()(0).getName;
+      t.asInstanceOf[AnyRef].getClass.getMethod(name).invoke(t).asInstanceOf[P1];
+    } catch {
+      case t : Throwable => throw new TypedCompanionException(
+        "Could not automatically recover components of "+
+        t.asInstanceOf[AnyRef].getClass+": you must provide a custom "+
+        "unpack() implementation in "+this.getClass, t);
+        
+    }
   }
 
   /**
@@ -150,28 +162,40 @@ extends TypedCompanion[ReadWritable[P1],This] {
  * Mix-in trait for companion object to case classes to automatically
  * support {@link TextSerialization} toString and fromString.
  *
+ * Subtypes can provide an unpack method that breaks apart the case class into
+ * its companions.  The default behavior is based on Scala 2.8's case class
+ * encoding.
+ *
  * @author dramage
  */
-trait TypedCaseCompanion2[P1,P2,This]
+trait TypedCompanion2[P1,P2,This]
 extends TypedCompanion[(ReadWritable[P1],ReadWritable[P2]),This] {
   /** Static constructor. */
   def apply(p1 : P1, p2 : P2) : This;
 
-  def prepare()(implicit m : ClassManifest[This], p1H : ReadWritable[P1], p2H : ReadWritable[P2]) {
+  protected def prepare()(implicit m : ClassManifest[This], p1H : ReadWritable[P1], p2H : ReadWritable[P2]) {
     manifest = m;
     components = (p1H, p2H);
   }
+
 
   /**
    * Returns the arguments given to the apply() static constructor.  This
    * method depends on the particulars of case class encoding.
    */
   def unpack(t : This) : (P1,P2) = {
-    val n1 = t.asInstanceOf[AnyRef].getClass.getDeclaredFields()(1).getName;
-    val p1 = t.asInstanceOf[AnyRef].getClass.getMethod(n1).invoke(t).asInstanceOf[P1];
-    val n2 = t.asInstanceOf[AnyRef].getClass.getDeclaredFields()(0).getName;
-    val p2 = t.asInstanceOf[AnyRef].getClass.getMethod(n2).invoke(t).asInstanceOf[P2];
-    (p1,p2);
+    try {
+      val n1 = t.asInstanceOf[AnyRef].getClass.getDeclaredFields()(1).getName;
+      val p1 = t.asInstanceOf[AnyRef].getClass.getMethod(n1).invoke(t).asInstanceOf[P1];
+      val n2 = t.asInstanceOf[AnyRef].getClass.getDeclaredFields()(0).getName;
+      val p2 = t.asInstanceOf[AnyRef].getClass.getMethod(n2).invoke(t).asInstanceOf[P2];
+      (p1,p2);
+    } catch {
+      case t : Throwable => throw new TypedCompanionException(
+        "Could not automatically recover components of "+
+        t.asInstanceOf[AnyRef].getClass+": you must provide a custom "+
+        "unpack() implementation in "+this.getClass, t);
+    }
   }
 
   /**
@@ -211,10 +235,10 @@ extends TypedCompanion[(ReadWritable[P1],ReadWritable[P2]),This] {
  */
 trait SubtypedCompanion[This] extends TypedCompanion[Unit,This] {
   /** Registry of known sub-types. */
-  val registry = HashMap[String, (ClassManifest[_],ReadWritable[_])]();
+  protected val registry = HashMap[String, (ClassManifest[_],ReadWritable[_])]();
 
   /** This needs to be called first. */
-  def prepare()(implicit m : ClassManifest[This]) =
+  protected def prepare()(implicit m : ClassManifest[This]) =
     manifest = m;
 
   /** All expected subtypes should be registered. */

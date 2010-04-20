@@ -15,7 +15,7 @@
 */
 package scalanlp.text.tokenizers;
 
-import scalanlp.serialization.{SubtypedCompanion,TypedCompanion0,TypedCaseCompanion1};
+import scalanlp.serialization.{SubtypedCompanion,TypedCompanion0,TypedCompanion1};
 
 /**
  * Abstract trait for tokenizers, which act as functions from a String
@@ -51,7 +51,7 @@ case class RegexSplitTokenizer(pattern : String) extends Tokenizer {
   override def apply(doc : String) = doc.split(pattern);
 }
 
-object RegexSplitTokenizer extends TypedCaseCompanion1[String,RegexSplitTokenizer] {
+object RegexSplitTokenizer extends TypedCompanion1[String,RegexSplitTokenizer] {
   prepare();
 }
 
@@ -68,7 +68,7 @@ case class RegexSearchTokenizer(pattern : String) extends Tokenizer {
   }
 }
 
-object RegexSearchTokenizer extends TypedCaseCompanion1[String,RegexSearchTokenizer] {
+object RegexSearchTokenizer extends TypedCompanion1[String,RegexSearchTokenizer] {
   prepare();
 }
 
