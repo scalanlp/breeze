@@ -290,3 +290,18 @@ trait ByteSerialization extends SerializationFormat {
   /** Unmarshalls the object from a byte array. */
   def fromBytes[T:Readable](bytes : Array[Byte]) : T;
 }
+
+/**
+ * Supports marshalling to and from a String.  See TextSerialization
+ * for the canonical interface.
+ * 
+ * @author dramage
+ * @author dlwh
+ */
+trait StringSerialization extends SerializationFormat {
+  /** Marshalls the given value as a string. */
+  def toString[T:Writable](value: T) : String;
+
+  /** Demarshalls a value from the given string. */
+  def fromString[T:Readable](str: String) : T;
+}

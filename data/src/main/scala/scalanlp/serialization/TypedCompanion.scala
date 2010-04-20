@@ -19,7 +19,7 @@ import scala.collection.mutable.{HashMap,ArrayBuffer};
 
 import scala.reflect.ClassManifest;
 
-import StringSerialization._;
+import TextSerialization._;
 
 /**
  * Registers all TypedCompanion instances to enable subtype instantion.
@@ -34,7 +34,7 @@ object TypedCompanionRegistry {
 
 /**
  * Mix-in trait for companion object to case classes to automatically
- * support StringSerialization toString and fromString.
+ * support {@link TextSerialization} toString and fromString.
  *
  * @author dramage
  */
@@ -79,6 +79,13 @@ trait TypedCompanion[Components,This] {
     manifest.erasure.getSimpleName;
 }
 
+/**
+ * Mix-in trait for companion object to a type that takes no arguments
+ * to instantiate for automatic support of {@link TextSerialization}
+ * toString and fromString.
+ *
+ * @author damage
+ */
 trait TypedCompanion0[This] extends TypedCompanion[Unit,This] {
   /** Static constructor. */
   def apply() : This;
@@ -102,7 +109,7 @@ trait TypedCompanion0[This] extends TypedCompanion[Unit,This] {
 
 /**
  * Mix-in trait for companion object to case classes to automatically
- * support StringSerialization toString and fromString.
+ * support TextSerialization toString and fromString.
  *
  * @author dramage
  */
@@ -150,7 +157,7 @@ extends TypedCompanion[ReadWritable[P1],This] {
 
 /**
  * Mix-in trait for companion object to case classes to automatically
- * support StringSerialization toString and fromString.
+ * support {@link TextSerialization} toString and fromString.
  *
  * @author dramage
  */

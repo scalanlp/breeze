@@ -19,8 +19,7 @@ package scalanlp.ra;
 import java.io.File;
 
 import scalanlp.pipes.Pipes;
-import scalanlp.serialization.JavaFileSerialization
-import scalanlp.serialization.FileSerialization
+import scalanlp.serialization.{FileSerialization, JavaDataSerialization}
 
 
 
@@ -59,7 +58,7 @@ case class RA(
   val parent : Option[RA] = None,
 
   /** The kind of serialization to use */
-  val serializer: FileSerialization = JavaFileSerialization
+  val serializer: FileSerialization = JavaDataSerialization
 ) extends CellBroker {
   
   RA.init();

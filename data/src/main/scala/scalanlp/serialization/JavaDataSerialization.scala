@@ -30,10 +30,61 @@ import scala.collection.mutable.Builder;
  * 
  * @author dlwh
  */
-trait JavaDataSerialization extends SerializationFormat
-with SerializationFormat.PrimitiveTypes with SerializationFormat.CompoundTypes {
+object JavaDataSerialization extends SerializationFormat
+with SerializationFormat.PrimitiveTypes with SerializationFormat.CompoundTypes
+with ByteSerialization with FileSerialization {
   type Input = DataInput;
   type Output = DataOutput;
+
+  //
+  // From ByteSerialization
+  // 
+
+  /**
+   * Marshalls the object using the implicit Handler to a byte array
+   * Usage: JavaDataSerialization.toBytes(myData);
+   */
+  override def toBytes[T:Writable](x: T) = {
+    val bout = new ByteArrayOutputStream();
+    val out = new DataOutputStream(bout);
+    implicitly[Writable[T]].write(out,x);
+    out.close;
+    bout.toByteArray;
+  }
+
+  /**
+   * Unmarshalls the object using the implicit Handler
+   * Usage: JavaDataSerialization.fromBytes[T](bytes);
+   */
+  override def fromBytes[T:Readable](bytes: Array[Byte]) = {
+    val in = new DataInputStream(new ByteArrayInputStream(bytes));
+    val x = implicitly[Readable[T]].read(in);
+    in.close;
+    x;
+  }
+  
+  //
+  // From FileSerialization
+  // 
+  override def openInput(f: File): DataInput =
+    new DataInputStream(new BufferedInputStream(new FileInputStream(f)));
+
+  override def openOutput(f: File): DataOutput =
+    new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)));
+
+  override def closeInput(i: Input) = i match {
+    case i: InputStream  => i.close();
+    case _ =>
+  }
+
+  override def closeOutput(o: Output) = o match {
+    case o: OutputStream  => o.close();
+    case _ =>
+  }
+
+  //
+  // From CompoundTypes
+  //
 
   override protected def readBuildable[T:Readable,To]
   (src : Input, builder : Builder[T,To]) : To = {
@@ -49,6 +100,10 @@ with SerializationFormat.PrimitiveTypes with SerializationFormat.CompoundTypes {
     sink.writeInt(coll.size);
     for (e <- coll) implicitly[Writable[T]].write(sink,e);
   }
+
+  //
+  // From PrimitiveTypes
+  //
 
   override implicit val intReadWritable = new ReadWritable[Int] {
     def read(in: DataInput) = in.readInt();
@@ -95,6 +150,10 @@ with SerializationFormat.PrimitiveTypes with SerializationFormat.CompoundTypes {
     def write(out: DataOutput, b: Boolean) = out.writeBoolean(b)
   }
 
+  //
+  // Builtins
+  //
+
   implicit val byteArrayReadWritable = arrayReadWritable[Byte];
 
   /**
@@ -116,48 +175,5 @@ with SerializationFormat.PrimitiveTypes with SerializationFormat.CompoundTypes {
       oout.close;
       byteArrayReadWritable.write(out, bout.toByteArray);
     }
-  }
-}
-
-object JavaByteSerialization extends JavaDataSerialization with ByteSerialization {
-  /**
-   * Marshalls the object using the implicit Handler to a byte array
-   * Usage: JavaDataSerialization.toBytes(myData);
-   */
-  override def toBytes[T:Writable](x: T) = {
-    val bout = new ByteArrayOutputStream();
-    val out = new DataOutputStream(bout);
-    implicitly[Writable[T]].write(out,x);
-    out.close;
-    bout.toByteArray;
-  }
-
-  /**
-   * Unmarshalls the object using the implicit Handler
-   * Usage: JavaDataSerialization.fromBytes[T](bytes);
-   */
-  override def fromBytes[T:Readable](bytes: Array[Byte]) = {
-    val in = new DataInputStream(new ByteArrayInputStream(bytes));
-    val x = implicitly[Readable[T]].read(in);
-    in.close;
-    x;
-  }
-}
-
-object JavaFileSerialization extends JavaDataSerialization with FileSerialization {
-  override def openInput(f: File): DataInput =
-    new DataInputStream(new BufferedInputStream(new FileInputStream(f)));
-
-  override def openOutput(f: File): DataOutput =
-    new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)));
-
-  override def closeInput(i: Input) = i match {
-    case i: InputStream  => i.close();
-    case _ =>
-  }
-
-  override def closeOutput(o: Output) = o match {
-    case o: OutputStream  => o.close();
-    case _ =>
   }
 }

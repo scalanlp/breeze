@@ -50,9 +50,9 @@ package typedexamples {
 class TypedCaseCompanionTest extends FunSuite {
   import typedexamples._;
 
-  def loop[T:StringSerialization.ReadWritable](value : T) = {
-    val string = StringSerialization.toString(value);
-    val parsed = StringSerialization.fromString[T](string);
+  def loop[T:TextSerialization.ReadWritable](value : T) = {
+    val string = TextSerialization.toString(value);
+    val parsed = TextSerialization.fromString[T](string);
     assert(parsed === value, "Failure on "+string);
   }
 

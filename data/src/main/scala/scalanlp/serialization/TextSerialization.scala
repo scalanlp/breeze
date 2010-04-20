@@ -17,12 +17,16 @@ package scalanlp.serialization;
 
 import scala.collection.mutable.Builder;
 
-object StringSerialization extends SerializationFormat
+object TextSerialization extends SerializationFormat
 with SerializationFormat.PrimitiveTypes with SerializationFormat.CompoundTypes
-with ByteSerialization {
+with ByteSerialization with StringSerialization {
 
   type Input = Iterator[Char];
   type Output = StringBuilder;
+
+  //
+  // from StringSerialization
+  //
 
   /** Marshalls the given value as a string. */
   def toString[T:Writable](value: T) : String = {
@@ -34,35 +38,6 @@ with ByteSerialization {
   /** Demarshalls a value from the given string. */
   def fromString[T:Readable](str: String) : T =
     implicitly[Readable[T]].read(str.iterator);
-
-  //
-  // from SerializationFormat
-  //
-
-  override protected def readTupleStart(in : Input) = {
-    expect(in,'(',false);
-    skipWhitespace(in);
-  }
-
-  override protected def readTupleGlue(in : Input) = {
-    skipWhitespace(in);
-    expect(in,',',false);
-    skipWhitespace(in);
-  }
-
-  override protected def readTupleEnd(in : Input) = {
-    skipWhitespace(in);
-    expect(in,')',false);
-  }
-
-  override protected def writeTupleStart(out : Output) =
-    out.append('(');
-
-  override protected def writeTupleGlue(out : Output) =
-    out.append(',');
-
-  override protected def writeTupleEnd(out : Output) =
-    out.append(')');
 
   //
   // from ByteSerialization
@@ -137,7 +112,7 @@ with ByteSerialization {
       in.buffered.head match {
         case 't' => { expect(in, "true", true); true; }
         case 'f' => { expect(in, "false", true); false; }
-        case _ => throw new StringSerializationException("Unexpected boolean value");
+        case _ => throw new TextSerializationException("Unexpected boolean value");
       }
     }
 
@@ -162,7 +137,7 @@ with ByteSerialization {
         }
         
         case '\'' =>
-          throw new StringSerializationException("Empty character");
+          throw new TextSerializationException("Empty character");
 
         case c => c;
       }
@@ -193,7 +168,7 @@ with ByteSerialization {
             case '\\' => '\\';
             case '/'  => '/';
             case 'u'  => java.lang.Integer.parseInt(consume(in, 4), 16).toChar;
-            case c    => throw new StringSerializationException("Unknown escape character "+escapeChar(c));
+            case c    => throw new TextSerializationException("Unknown escape character "+escapeChar(c));
           }
           case c : Char => c
         });
@@ -212,6 +187,31 @@ with ByteSerialization {
   //
   // from CompoundTypes
   //
+
+  override protected def readTupleStart(in : Input) = {
+    expect(in,'(',false);
+    skipWhitespace(in);
+  }
+
+  override protected def readTupleGlue(in : Input) = {
+    skipWhitespace(in);
+    expect(in,',',false);
+    skipWhitespace(in);
+  }
+
+  override protected def readTupleEnd(in : Input) = {
+    skipWhitespace(in);
+    expect(in,')',false);
+  }
+
+  override protected def writeTupleStart(out : Output) =
+    out.append('(');
+
+  override protected def writeTupleGlue(out : Output) =
+    out.append(',');
+
+  override protected def writeTupleEnd(out : Output) =
+    out.append(')');
 
   override protected def readBuildable[T:Readable,To]
   (src : Input, builder : Builder[T,To]) : To = {
@@ -236,7 +236,7 @@ with ByteSerialization {
   override protected def writeIterable[T:Writable,CC<:Iterable[T]]
   (sink : Output, coll : CC, name : String) {
     if (readName(name.iterator) != name)
-      throw new StringSerializationException("Not a valid name.");
+      throw new TextSerializationException("Not a valid name.");
 
     sink.append(name);
     sink.append('(');
@@ -252,14 +252,14 @@ with ByteSerialization {
   // Utility methods
   //
 
-  protected def readName(src : Input) : String = {
+  def readName(src : Input) : String = {
     val rv = consumeWhile(src, c => c.isLetterOrDigit || c == '_' || c == '.' || c == '$');
     if (rv.length == 0)
-      throw new StringSerializationException("Expected symbol name");
+      throw new TextSerializationException("Expected symbol name");
     rv;
   }
 
-  protected def escapeChar(c : Char) : String = c match {
+  def escapeChar(c : Char) : String = c match {
     case '"'  => "\\\"";
     case '\\' => "\\\\";
     case '/'  => "\\/";
@@ -281,7 +281,7 @@ with ByteSerialization {
     var got = consume(in, expected.length).mkString;
     if (caseFold) got = got.toLowerCase;
     if (got != expected)
-      throw new StringSerializationException("Got: "+escape(got)+" != "+escape(expected));
+      throw new TextSerializationException("Got: "+escape(got)+" != "+escape(expected));
   }
 
   /** Throws an exception if the input does not start with the given "expected" char. */
@@ -289,7 +289,7 @@ with ByteSerialization {
     var got = in.next;
     if (caseFold) got = got.toLower;
     if (got != expected)
-      throw new StringSerializationException("Got: "+escapeChar(got)+" != "+escapeChar(expected));
+      throw new TextSerializationException("Got: "+escapeChar(got)+" != "+escapeChar(expected));
   }
 
   /** Consumes exactly numChars characters from input. */
@@ -320,5 +320,5 @@ with ByteSerialization {
     skipWhile(in, _.isWhitespace);
 }
 
-class StringSerializationException(msg : String) extends RuntimeException(msg);
+class TextSerializationException(msg : String) extends RuntimeException(msg);
 

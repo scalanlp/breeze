@@ -106,11 +106,11 @@ trait SerializationTestBase extends FunSuite with Checkers {
 }
 
 @RunWith(classOf[JUnitRunner])
-class JavaSerializationTest extends SerializationTestBase {
-  override val serializer = JavaByteSerialization;
+class JavaDataSerializationTest extends SerializationTestBase {
+  override val serializer = JavaDataSerialization;
 }
 
 @RunWith(classOf[JUnitRunner])
-class StringSerializationTest extends SerializationTestBase {
-  override val serializer = StringSerialization;
+class TextSerializationTest extends SerializationTestBase {
+  override val serializer = TextSerialization;
 }
