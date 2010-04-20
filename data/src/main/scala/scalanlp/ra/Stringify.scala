@@ -98,8 +98,6 @@ object ReflectionUtils {
   }
 }
 
-case class Test(x : Int);
-
 /**
  * Custom flexibly conversion to and from Strings.
  * 
