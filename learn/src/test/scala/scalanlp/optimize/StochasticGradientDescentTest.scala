@@ -50,11 +50,8 @@ class StochasticGradientDescentTest extends FunSuite with Checkers {
 
     def optimizeThis(init: Vector) = {
       val f = new BatchDiffFunction[Int,Vector] {
-        def valueAt(x: Vector, r: Seq[Int]) = {
-          norm((x -3) :^ 2,1)
-        }
-        def gradientAt(x: Vector, batch:Seq[Int]):Vector = {
-          (x * 2) - 6 value;
+        def calculate(x: Vector, r: Seq[Int]) = {
+          (norm((x -3) :^ 2,1), (x * 2) - 6 value);
         }
         val fullRange = 0 to 1;
       }
@@ -72,11 +69,8 @@ class StochasticGradientDescentTest extends FunSuite with Checkers {
 
     def optimizeThis(init: DoubleCounter[String]) = {
       val f = new BatchDiffFunction[String,DoubleCounter[String]] {
-        def valueAt(x: DoubleCounter[String], r: Seq[Int]) = {
-          norm((x -3) :^ 2,1)
-        }
-        def gradientAt(x: DoubleCounter[String], batch: Seq[Int]):DoubleCounter[String] = {
-          (x * 2) - 6 value;
+        def calculate(x: DoubleCounter[String], r: Seq[Int]) = {
+          (norm((x -3) :^ 2,1) , (x * 2) - 6 value);
         }
         val fullRange = 0 to 1;
       }

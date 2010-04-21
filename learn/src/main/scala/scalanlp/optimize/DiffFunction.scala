@@ -29,19 +29,19 @@ import TensorShapes._;
 */
 trait DiffFunction[K,T<:Tensor1[K]] extends (T=>Double) {
   /** calculates the gradient at a point */
-  def gradientAt(x: T): T;
+  def gradientAt(x: T): T = calculate(x)._2;
   /** calculates the value at a point */
-  def valueAt(x:T): Double;
+  def valueAt(x:T): Double = calculate(x)._1;
 
   def apply(x:T) = valueAt(x);
 
   /** Calculates both the value and the gradient at a point */
-  def calculate(x:T) = (apply(x),gradientAt(x));
+  def calculate(x:T):(Double,T);
 }
 
 object DiffFunction {
   def withL2Regularization[K,T<:TensorSelfOp[K,T,Shape1Col] with Tensor1[K]](d: DiffFunction[K,T],weight: Double) = new DiffFunction[K,T] {
-    def gradientAt(x:T):T = {
+    override def gradientAt(x:T):T = {
       val grad = d.gradientAt(x);
       adjustGradient(grad);
     }
@@ -51,7 +51,7 @@ object DiffFunction {
       grad;
     }
 
-    def valueAt(x:T) = {
+    override def valueAt(x:T) = {
       var v = d.valueAt(x);
       v + myValueAt(x);
     }
@@ -74,18 +74,19 @@ trait BatchDiffFunction[K,T<:Tensor1[K]] extends DiffFunction[K,T] with ((T,Seq[
   /**
   * Calculates the gradient of the function on a subset of the data
   */
-  def gradientAt(x:T, batch: Seq[Int]) : T
+  def gradientAt(x:T, batch: Seq[Int]) : T = calculate(x,batch)._2;
   /**
   * Calculates the value of the function on a subset of the data
   */
-  def valueAt(x:T, batch: Seq[Int]) : Double
+  def valueAt(x:T, batch: Seq[Int]) : Double = calculate(x,batch)._1
   /**
   * Calculates the value and gradient of the function on a subset of the data;
   */
-  def calculate(x:T, batch: Seq[Int]) = (apply(x,batch),gradientAt(x,batch));
+  def calculate(x:T, batch: Seq[Int]): (Double,T)
 
-  override def gradientAt(x:T):T = gradientAt(x,fullRange);
-  override def valueAt(x:T):Double = valueAt(x,fullRange);
+  override def calculate(x:T):(Double,T) = calculate(x,fullRange);
+  override def valueAt(x:T):Double = valueAt(x,fullRange)
+  override def gradientAt(x:T):T = gradientAt(x,fullRange)
 
   def apply(x:T, batch:Seq[Int]) = valueAt(x,batch);
 

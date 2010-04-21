@@ -51,11 +51,8 @@ class LBFGSTest extends FunSuite with Checkers {
 
     def optimizeThis(init: Vector) = {
       val f = new DiffFunction[Int,Vector] {
-        def valueAt(x: Vector) = {
-          norm((x -3) :^ 2,1)
-        }
-        def gradientAt(x: Vector):Vector = {
-          (x * 2) - 6 value;
+        def calculate(x: Vector) = {
+          (norm((x -3) :^ 2,1),(x * 2) - 6 value);
         }
       }
 
@@ -72,11 +69,8 @@ class LBFGSTest extends FunSuite with Checkers {
 
     def optimizeThis(init: DoubleCounter[String]) = {
       val f = new DiffFunction[String,DoubleCounter[String]] {
-        def valueAt(x: DoubleCounter[String]) = {
-          norm((x -3) :^ 2,1)
-        }
-        def gradientAt(x: DoubleCounter[String]):DoubleCounter[String] = {
-          (x * 2) - 6 value;
+        def calculate(x: DoubleCounter[String]) = {
+          (norm((x -3) :^ 2,1), (x * 2) - 6 value);
         }
       }
 
