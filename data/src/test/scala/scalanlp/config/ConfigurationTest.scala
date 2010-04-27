@@ -21,6 +21,7 @@ trait ConfDemoHolderIFace[A] {
 }
 
 case class DemoConfHolder[A](value: A) extends ConfDemoHolderIFace[A];
+class SubDemoConfHolder[A](value: A) extends DemoConfHolder(value);
 
 @RunWith(classOf[JUnitRunner])
 class ConfigurationTest extends FunSuite {
@@ -74,10 +75,6 @@ class ConfigurationTest extends FunSuite {
     val my = reader.readIn[Class[ConfigurationDemoIFace]]("some");
   }
 
-
-
-
-
   test("we can read a generic with a class inside") {
     val p = new Properties();
     p.put("some.value.int","3");
@@ -104,5 +101,21 @@ class ConfigurationTest extends FunSuite {
     assert(my.double === 1E-4);
     assert(my.boolean === false);
   }
+
+  test("we can read a subclass of a generic with a class inside with a generic iface") {
+    val p = new Properties();
+    p.put("some","scalanlp.config.SubDemoConfHolder");
+    p.put("some.value.int","3");
+    p.put("value.double","1E-4");
+    p.put("boolean","false");
+    p.put("value.string","....");
+    val reader = Configuration.fromProperties(p);
+    val my = reader.readIn[ConfDemoHolderIFace[DemoConfigurationClass]]("some").value;
+    assert(my.int === 3);
+    assert(my.double === 1E-4);
+    assert(my.boolean === false);
+  }
+
+
 
 }
