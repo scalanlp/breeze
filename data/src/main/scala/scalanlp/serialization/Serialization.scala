@@ -32,7 +32,7 @@ class TxtFile(path : String) extends File(path);
 class CsvFile(path : String) extends File(path);
 
 /**
- * A base trait for brokers of serialization. See JavaDataSerialization for a good example.
+ * A base trait for brokers of serialization. See DataSerialization for a good example.
  *
  * Implementors should provide member types Input and Output which are the places the data
  * can be stored. Readable and Writable implicit instances should be created for types
@@ -254,27 +254,6 @@ object SerializationFormat {
         writeIterable[T,Iterable[T]](sink, value, "Index");
     }
   }
-}
-
-
-/**
- * Supports getting Input and Output objects from a File.
- *
- * @author dramage
- * @author dlwh
- */
-trait FileSerialization extends SerializationFormat {
-  /** Opens an input from the given backing. */
-  def openInput(source : File) : Input;
-
-  /** Closes the given (opened) input. */
-  def closeInput(input : Input);
-
-  /** Opens an output for the given backing. */
-  def openOutput(target : File) : Output;
-
-  /** Closes the given (opened) output. */
-  def closeOutput(output : Output);
 }
 
 /**

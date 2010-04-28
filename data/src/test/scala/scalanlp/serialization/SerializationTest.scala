@@ -106,11 +106,22 @@ trait SerializationTestBase extends FunSuite with Checkers {
 }
 
 @RunWith(classOf[JUnitRunner])
-class JavaDataSerializationTest extends SerializationTestBase {
-  override val serializer = JavaDataSerialization;
+class DataSerializationTest extends SerializationTestBase {
+  override val serializer = DataSerialization;
 }
 
 @RunWith(classOf[JUnitRunner])
 class TextSerializationTest extends SerializationTestBase {
   override val serializer = TextSerialization;
+}
+
+@RunWith(classOf[JUnitRunner])
+class FileSerializationTest extends FunSuite {
+  test("Read/write file") {
+    val file = java.io.File.createTempFile("scalanlp-file-serialization-", ".txt");
+      import FileSerialization.FromText._;
+    FileSerialization.write(file, List(1,2,3));
+    assert(FileSerialization.read[List[Int]](file) === List(1,2,3));
+    file.delete();
+  }
 }

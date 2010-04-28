@@ -15,11 +15,8 @@
 */
 package scalanlp.serialization
 
-import java.io.{BufferedInputStream,BufferedOutputStream}
 import java.io.{ByteArrayInputStream,ByteArrayOutputStream}
 import java.io.{DataInput,DataInputStream,DataOutput,DataOutputStream}
-import java.io.{File,FileInputStream,FileOutputStream}
-import java.io.{InputStream,OutputStream}
 import java.io.{ObjectInputStream,ObjectOutputStream}
 
 import scala.collection.mutable.Builder;
@@ -31,9 +28,9 @@ import scala.collection.mutable.Builder;
  * @author dlwh
  * @author dramage
  */
-object JavaDataSerialization extends SerializationFormat
+object DataSerialization extends SerializationFormat
 with SerializationFormat.PrimitiveTypes with SerializationFormat.CompoundTypes
-with ByteSerialization with FileSerialization {
+with ByteSerialization {
   type Input = DataInput;
   type Output = DataOutput;
 
@@ -43,7 +40,7 @@ with ByteSerialization with FileSerialization {
 
   /**
    * Marshalls the object using the implicit Handler to a byte array
-   * Usage: JavaDataSerialization.toBytes(myData);
+   * Usage: DataSerialization.toBytes(myData);
    */
   override def toBytes[T:Writable](x: T) = {
     val bout = new ByteArrayOutputStream();
@@ -55,7 +52,7 @@ with ByteSerialization with FileSerialization {
 
   /**
    * Unmarshalls the object using the implicit Handler
-   * Usage: JavaDataSerialization.fromBytes[T](bytes);
+   * Usage: DataSerialization.fromBytes[T](bytes);
    */
   override def fromBytes[T:Readable](bytes: Array[Byte]) = {
     val in = new DataInputStream(new ByteArrayInputStream(bytes));
@@ -64,24 +61,24 @@ with ByteSerialization with FileSerialization {
     x;
   }
   
-  //
-  // From FileSerialization
-  // 
-  override def openInput(f: File): DataInput =
-    new DataInputStream(new BufferedInputStream(new FileInputStream(f)));
-
-  override def openOutput(f: File): DataOutput =
-    new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)));
-
-  override def closeInput(i: Input) = i match {
-    case i: InputStream  => i.close();
-    case _ =>
-  }
-
-  override def closeOutput(o: Output) = o match {
-    case o: OutputStream  => o.close();
-    case _ =>
-  }
+//  //
+//  // From FileSerialization
+//  //
+//  override def openInput(f: File): DataInput =
+//    new DataInputStream(new BufferedInputStream(new FileInputStream(f)));
+//
+//  override def openOutput(f: File): DataOutput =
+//    new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)));
+//
+//  override def closeInput(i: Input) = i match {
+//    case i: InputStream  => i.close();
+//    case _ =>
+//  }
+//
+//  override def closeOutput(o: Output) = o match {
+//    case o: OutputStream  => o.close();
+//    case _ =>
+//  }
 
   //
   // From CompoundTypes

@@ -19,7 +19,7 @@ package scalanlp.ra;
 import java.io.File;
 
 import scalanlp.pipes.Pipes;
-import scalanlp.serialization.{FileSerialization, JavaDataSerialization}
+import scalanlp.serialization.FileSerialization;
 
 
 
@@ -55,10 +55,7 @@ case class RA(
   val random : java.util.Random,
   
   /** Returns the parent of this context or null if it is the root context. */
-  val parent : Option[RA] = None,
-
-  /** The kind of serialization to use */
-  val serializer: FileSerialization = JavaDataSerialization
+  val parent : Option[RA] = None
 ) extends CellBroker {
   
   RA.init();
@@ -88,7 +85,8 @@ case class RA(
   }
 
   /** Returns a cached view of the given value, loading from a cell if possible. */
-  def cache[V](cacheFile : java.io.File)(p : =>V)(implicit readable : serializer.Readable[V], writable : serializer.Writable[V]) =
+  def cache[V](cacheFile : java.io.File)(p : =>V)
+  (implicit readable : FileSerialization.Readable[V], writable : FileSerialization.Writable[V]) =
     cell(cacheFile)(p).get;
   
   def cell[V](cacheFile : java.io.File)(p : =>V) =

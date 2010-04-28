@@ -22,7 +22,8 @@ with SerializationFormat.PrimitiveTypes with SerializationFormat.CompoundTypes
 with ByteSerialization with StringSerialization {
 
   type Input = BufferedIterator[Char];
-  type Output = StringBuilder;
+//  type Output = StringBuilder;
+  type Output = TextWriter;
 
   //
   // from StringSerialization
@@ -292,11 +293,11 @@ with ByteSerialization with StringSerialization {
       throw new TextSerializationException("Got: "+escapeChar(got)+" != "+escapeChar(expected));
   }
 
-  /** Consumes exactly numChars characters from input. */
+  /** Consumes numChars characters from input, or fewer if at the end of input. */
   def consume(in : Input, numChars : Int) : String = {
     val rv = new StringBuilder();
     var i = 0;
-    while (i < numChars) {
+    while (i < numChars && in.hasNext) {
       rv += in.next;
       i += 1;
     }
@@ -327,3 +328,30 @@ with ByteSerialization with StringSerialization {
  */
 class TextSerializationException(msg : String) extends RuntimeException(msg);
 
+
+/**
+ * A simple append-based text writing interface used by TextSerialization
+ * as its Output type.  See implicit conversions in companion object.
+ *
+ * @author dramage
+ */
+trait TextWriter {
+  def append(char : Char);
+  def append(string : String);
+}
+
+object TextWriter {
+  implicit def fromStringBuilder(sb : StringBuilder) : TextWriter = {
+    new TextWriter() {
+      override def append(char : Char) = sb.append(char);
+      override def append(string : String) = sb.append(string);
+    }
+  }
+
+  implicit def fromPrintStream(ps : java.io.PrintStream) : TextWriter = {
+    new TextWriter() {
+      override def append(char : Char) = ps.append(char);
+      override def append(string : String) = ps.append(string);
+    }
+  }
+}

@@ -15,11 +15,9 @@
 */
 package scalanlp.serialization;
 
-import scala.collection.mutable.{HashMap,ArrayBuffer};
+import scala.collection.mutable.HashMap;
 
 import scala.reflect.ClassManifest;
-
-import scalanlp.ra.ReflectionUtils;
 
 import TextSerialization._;
 
@@ -85,7 +83,9 @@ trait TypedCompanion0[This] extends TypedCompanion[Unit,This] {
   override implicit val readWritable = new ReadWritable[This] {
     override def read(in : Input) = {
       expect(in, name, false);
-      expect(in, "()", false);
+      if (in.hasNext && in.head == '(') {
+        expect(in, "()", false);
+      }
       apply();
     }
 
@@ -155,8 +155,6 @@ extends TypedCompanion[ReadWritable[P1],This] {
     }
   }
 }
-
-
 
 /**
  * Mix-in trait for companion object to case classes to automatically
