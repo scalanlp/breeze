@@ -54,8 +54,8 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
     var converged = false;
     val n = init.domain.size; // number of parameters
     
-    val x : T = init.like;
-    x :+= init;
+    val x : T = init.copy;
+    //assert( norm((x - init),2) < 1E-4,x + " " + init);
 
     val memStep = new ArrayBuffer[T];
     val memGradDelta = new ArrayBuffer[T];
@@ -101,7 +101,7 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
         grad = newGrad;
         v = newVal;
 
-        converged = checkConvergence(grad);
+        converged = checkConvergence(v,grad);
       } catch {
         case e: NaNHistory => 
           log(ERROR)("Something in the history is giving NaN's, clearing it!");

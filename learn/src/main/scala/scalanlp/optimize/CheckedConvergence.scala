@@ -30,14 +30,14 @@ trait CheckedConvergence[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]] {
   /**
    * @return if we've converged
    */
-  def checkConvergence(grad: T)
+  def checkConvergence(v: Double, grad: T)
                       (implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col]): Boolean;
 }
 
 trait GradientNormConvergence[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]] extends CheckedConvergence[K,T] {
-  val TOLERANCE = 1E-4;
-  def checkConvergence(grad: T)
+  val TOLERANCE = 1E-6;
+  def checkConvergence(v: Double, grad: T)
                       (implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col]): Boolean = {
-    norm(grad,2) < TOLERANCE;
+    norm(grad,2)/v < TOLERANCE;
   }
 }
