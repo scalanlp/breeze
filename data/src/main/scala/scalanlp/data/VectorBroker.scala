@@ -1,5 +1,6 @@
 package scalanlp.data
 /*
+/*
  Copyright 2010 David Hall, Daniel Ramage
 
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -128,3 +129,4 @@ object VectorBroker {
     val index = ind;
   }
 }
+*/

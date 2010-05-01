@@ -29,8 +29,6 @@ class SparseArray[@specialized T:ClassManifest](val maxSize: Int, initialLength:
   private var data = new Array[T](initialLength);
   private var index = new Array[Int](initialLength);
 
-  require(data.length == index.length);
- 
   override def size = used;
   private var lastIndex = -1;
   private var lastOffset = -1;
@@ -87,7 +85,7 @@ class SparseArray[@specialized T:ClassManifest](val maxSize: Int, initialLength:
    * index.  If the requested index is not found, the return value is
    * negative and can be converted into an insertion point with -(rv+1).
    */
-  private def findOffset(i : Int) : Int = {
+  protected final def findOffset(i : Int) : Int = {
     if (i < 0)
       throw new IndexOutOfBoundsException("index is negative (" + index + ")");
     if (i >= maxSize)

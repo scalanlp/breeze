@@ -25,7 +25,7 @@ import scala.collection.mutable.BitSet
  *
  * @author dlwh
  */
-class BloomFilter[@specialized T] private (val numBuckets: Int, val numHashFunctions: Int, val bits: BitSet) extends (T=>Boolean) {
+class BloomFilter[/*@specialized*/ T] private (val numBuckets: Int, val numHashFunctions: Int, val bits: BitSet) extends (T=>Boolean) {
   def this(numBuckets: Int, numHashFunctions: Int) = this(numBuckets, numHashFunctions, new BitSet(numBuckets));
   def this(numBuckets: Int) = this(numBuckets, 3);
 
