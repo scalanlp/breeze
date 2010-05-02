@@ -28,7 +28,7 @@ object DescriptiveStats {
   /**
   * Returns the mean and variance of an iterator in a pair.
   */
-  def meanAndVariance[@specialized(Double, Float) T ](it :Iterator[T])(implicit frac: Fractional[T]) = {
+  def meanAndVariance[@specialized("Double, Float") T ](it :Iterator[T])(implicit frac: Fractional[T]) = {
     import frac.mkNumericOps;
     val (mu,s,n) = it.foldLeft( (frac.zero,frac.zero,0)) { (acc,y) =>
       val (oldMu,oldVar,n) = acc;
@@ -44,12 +44,12 @@ object DescriptiveStats {
   /**
   * Returns the mean of the sequence of numbers
   */
-  def mean[@specialized(Double, Float) T](it : Iterator[T])(implicit frac: Fractional[T]) = {
+  def mean[@specialized("Double, Float") T](it : Iterator[T])(implicit frac: Fractional[T]) = {
     val (sum,n) = accumulateAndCount(it);
     frac.div(sum , frac.fromInt(n));
   }
 
-  def variance[@specialized(Double,Float) T](it : Iterator[T])(implicit n: Fractional[T]) = meanAndVariance(it)._2
+  def variance[@specialized("Double, Float") T](it : Iterator[T])(implicit n: Fractional[T]) = meanAndVariance(it)._2
 
   /**
    * Return the total sum and the number of T's

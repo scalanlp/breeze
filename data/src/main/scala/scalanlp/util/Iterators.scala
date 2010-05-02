@@ -53,8 +53,9 @@ object Iterators {
     
     return new Iterator[E] {
       def waitIfNecessary() = {
+        val method = classOf[Thread].getMethod("yield");
         while (isRunning && !isPending) {
-          Thread.`yield`
+          method.invoke();
         }
         if (thrown != null) {
           throw new RuntimeException(thrown);

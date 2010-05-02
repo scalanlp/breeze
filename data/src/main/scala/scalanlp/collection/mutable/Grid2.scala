@@ -56,6 +56,6 @@ class Grid2[V:ClassManifest](k1Size : Int, k2Size: Int, default: (Int,Int)=>V) e
   override val size = arr.size;
 
   def iterator = arr.iterator.zipWithIndex map { case (v,i) => ((i/k2Size,i%k2Size),v)}
-  override def keys:Iterable[(Int,Int)] = (0 until arr.length) map (i => (i/k2Size,i%k2Size));
-  override def values:Iterable[V] = arr;
+  override def keys = (0 until arr.length).iterator map (i => (i/k2Size,i%k2Size));
+  override def values = arr.iterator;
 }

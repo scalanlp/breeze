@@ -31,7 +31,7 @@ import scala.collection.generic._;
 *
 * @author dlwh
 */
-class ArrayMap[/*@specialized*/ V](private val arr: ArrayBuffer[V]) extends scala.collection.mutable.Map[Int,V]
+class ArrayMap[@specialized V](private val arr: ArrayBuffer[V]) extends scala.collection.mutable.Map[Int,V]
     with MapLike[Int,V,ArrayMap[V]] {
   def this() = this(new ArrayBuffer[V]())
   override def default(i: Int): V = defValue;
