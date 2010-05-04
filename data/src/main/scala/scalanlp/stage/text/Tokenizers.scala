@@ -15,74 +15,67 @@
 */
 package scalanlp.stage.text;
 
-import scalanlp.stage.Mapper;
+import scalanlp.stage.{Batch,Parcel};
+import scalanlp.stage.Stage;
 import scalanlp.stage.Stage._;
 
-case class TokenizeWith(tokenizer : String => Array[String])
-extends Mapper[String,Seq[String]] {
-  override def map(doc : String) =
-    tokenizer(doc);
+import scalanlp.text.tokenize.Tokenizer;
+import scalanlp.serialization.TypedCompanion1;
+
+case class TokenizeWith(tokenizer : Tokenizer)
+extends Stage[Batch[String],Batch[Iterable[String]]] {
+  override def apply(parcel : Parcel[Batch[String]]) : Parcel[Batch[Iterable[String]]] =
+    Parcel(parcel.history + this, parcel.meta + this, parcel.data.map(tokenizer));
 }
 
-
-object Test {
-  val _split : (String => Array[String]) =
-    (v : String) => v.split("\\s+");
-  val _filter : (Array[String] => Array[String]) =
-    (v : Array[String]) => v.filter(_.charAt(0).isLetterOrDigit);
-
-  val x = TokenizeWith(_split ~> _filter);
+object TokenizeWith extends TypedCompanion1[Tokenizer,TokenizeWith] {
+  prepare();
 }
 
-/**
- * A tokenizer is a mapper stage that turns Strings into
- * sequences of Strings.
- * 
- * @author dramage
- */
-abstract class Tokenizer extends Mapper[String,Seq[String]];
-
-/**
- * A RegexTokenizer tokenizes a string by splitting according
- * to the given regular expression.
- * 
- * @author dramage
- */
-case class RegexTokenizer(pattern : String) extends Tokenizer {
-  override def map(doc : String) =
-    doc.split(pattern);
-
-  override def toString =
-    "RegexTokenizer("+pattern+")";
-}
-
-/**
- * The SimpleWhitespaceTokenizer tokenizes on one or more
- * space characters.
- * 
- * @author dramage
- */
-object WhitespaceTokenizer extends RegexTokenizer("\\s+") {
-  override def toString = "WhitespaceTokenizer";
-}
-
-
-/**
- * Simple English document tokenizer pre-processor based on regular
- * expressions from Steven Bethard.
- * 
- * @author dramage
- */
-object SimpleEnglishTokenizer extends Mapper[String,Seq[String]] {
-  override def map(in : String) : Seq[String] = {
-    var string = in;
-    // delete word-final hyphens when followed by newlines
-    string = string.replaceAll("(?<=\\w)-\\s*\n\\s*", "")
-    // add spaces around non-word-internal punctuation
-    string = string.replaceAll("(?<=\\W)(\\p{P})(?! )", "$1 ");
-    string = string.replaceAll("(?! )(\\p{P})(?=\\W)", " $1");
-    return string.split("\\s+");
-  }
-
-  override def toString = "SimpleEnglishTokenizer";
-}
+///**
+// * A RegexTokenizer tokenizes a string by splitting according
+// * to the given regular expression.
+// *
+// * @author dramage
+// */
+//@deprecated("Use TokenizeWith(scalanlp.text.tokenizers.RegexTokenizer(pattern))")
+//case class RegexTokenizer(pattern : String) extends Mapper[String,Seq[String]] {
+//  override def map(doc : String) =
+//    doc.split(pattern);
+//
+//  override def toString =
+//    "RegexTokenizer("+pattern+")";
+//}
+//
+///**
+// * The SimpleWhitespaceTokenizer tokenizes on one or more
+// * space characters.
+// *
+// * @author dramage
+// */
+//@deprecated("Use TokenizeWith(scalanlp.text.tokenizers.WhitespaceTokenizer())")
+//object WhitespaceTokenizer extends RegexTokenizer("\\s+") {
+//  override def toString = "WhitespaceTokenizer";
+//}
+//
+//
+///**
+// * Simple English document tokenizer pre-processor based on regular
+// * expressions from Steven Bethard.
+// *
+// * @author dramage
+// */
+//@deprecated("Use TokenizeWith(scalanlp.text.tokenizers.SimpleWhitesapceTokenizer)")
+//object SimpleEnglishTokenizer extends Mapper[String,Seq[String]] {
+//  override def map(in : String) : Seq[String] = {
+//    var string = in;
+//    // delete word-final hyphens when followed by newlines
+//    string = string.replaceAll("(?<=\\w)-\\s*\n\\s*", "")
+//    // add spaces around non-word-internal punctuation
+//    string = string.replaceAll("(?<=\\W)(\\p{P})(?! )", "$1 ");
+//    string = string.replaceAll("(?! )(\\p{P})(?=\\W)", " $1");
+//    return string.split("\\s+");
+//  }
+//
+//  override def toString = "SimpleEnglishTokenizer";
+//}

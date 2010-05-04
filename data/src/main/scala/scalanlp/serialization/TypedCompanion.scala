@@ -248,12 +248,27 @@ trait SubtypedCompanion[This] extends TypedCompanion[Unit,This] {
     registry(name) = (mf, rw);
   }
 
+  /** Registers using the given type's simple name. */
+  def register[Subtype<:This]()
+  (implicit mf : ClassManifest[Subtype], rw : ReadWritable[Subtype]) : Unit = {
+    register[Subtype](mf.erasure.getSimpleName);
+  }
+
+  /**
+   * Sub-types can provide a mechanism to continue parsing input to build
+   * a new (richer) version of This from the input stream.  By default, returns
+   * current and does not modify input.
+   */
+  protected def continueParsing(input : TextSerialization.Input, current : This) : This =
+    current;
+
   override implicit val readWritable : ReadWritable[This] = new ReadWritable[This] {
     override def read(in : Input) : This = {
       val name : String = readName(in);
       val rw = registry.getOrElse(name,
         throw new TypedCompanionException("No companion registered for '"+name+"'"))._2;
-      return rw.read((name.iterator ++ in).buffered).asInstanceOf[This];
+      val rv = rw.read((name.iterator ++ in).buffered).asInstanceOf[This];
+      return continueParsing(in, rv);
     }
 
     override def write(out : Output, value : This) = {

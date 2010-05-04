@@ -13,18 +13,19 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.stage.text;
+package scalanlp.text.tokenize
 
-import scalanlp.stage.Filter;
+import scalanlp.serialization.TypedCompanion0;
 
 /**
- * Filters a set of documents so that all documents contain
- * at least minTokens tokens.
- * 
+ * Tokenizes by splitting on the regular expression \s+.
+ *
  * @author dramage
  */
-case class DocumentMinimumLengthFilter(minTokens : Int)
-extends Filter[Iterable[String]] {
-  override def filter(doc : Iterable[String]) =
-    doc.size >= minTokens;
+class WhitespaceTokenizer() extends RegexSplitTokenizer("\\s+");
+
+object WhitespaceTokenizer extends TypedCompanion0[WhitespaceTokenizer] {
+  def apply() = new WhitespaceTokenizer;
+
+  prepare();
 }

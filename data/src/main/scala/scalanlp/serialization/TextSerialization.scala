@@ -22,7 +22,6 @@ with SerializationFormat.PrimitiveTypes with SerializationFormat.CompoundTypes
 with ByteSerialization with StringSerialization {
 
   type Input = BufferedIterator[Char];
-//  type Output = StringBuilder;
   type Output = TextWriter;
 
   //

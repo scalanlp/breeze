@@ -13,18 +13,21 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.stage.text;
+package scalanlp.text.transform;
 
-import scalanlp.stage.Filter;
+import scalanlp.serialization.TypedCompanion1;
 
 /**
- * Filters a set of documents so that all documents contain
- * at least minTokens tokens.
- * 
+ * Filters out tokens composed of fewer than minLength characters or more than
+ * maxLength characters.
+ *
  * @author dramage
  */
-case class DocumentMinimumLengthFilter(minTokens : Int)
-extends Filter[Iterable[String]] {
-  override def filter(doc : Iterable[String]) =
-    doc.size >= minTokens;
+case class TermMinLengthFilter(minLength : Int) extends Transformer {
+  override def apply(doc : Iterable[String]) : Iterable[String] =
+    doc.filter(token => token.length >= minLength);
+}
+
+object TermMinLengthFilter extends TypedCompanion1[Int,TermMinLengthFilter] {
+  prepare();
 }
