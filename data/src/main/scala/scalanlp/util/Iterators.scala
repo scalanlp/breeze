@@ -21,9 +21,10 @@ package scalanlp.util;
  * Utilities and implicits for iterators. Nothing major.
  *
  * @author dramage
- * @author dlwh
  */
 object Iterators {
+
+  def fromProducer[E](prod: =>Option[E]):Iterator[E] = Iterator.continually(prod).takeWhile(None !=).map(_.get);
 
   /**
    * Procedural iterator creation with an explicit callback.

@@ -59,7 +59,10 @@ trait Index[T] extends Iterable[T] with (T=>Int) {
   /** Override Iterable's linear-scan indexOf to use our apply method. */
   def indexOf(t: T) : Int =
     apply(t);
-  
+
+  /** Returns the indexed items along with their indicies */
+  def pairs: Iterator[(T,Int)];
+
   /**
    * Returns an object at the given position or throws
    * IndexOutOfBoundsException if it's not found.
@@ -79,6 +82,10 @@ trait Index[T] extends Iterable[T] with (T=>Int) {
     (17 /: this)(_ * 41 + _.hashCode);
 
   override def hashCode = defaultHashCode;
+
+  override def toString = {
+    iterator.mkString("Index(",",",")");
+  }
 }
 
 /**
@@ -98,6 +105,8 @@ trait IndexProxy[T] extends Index[T] with IterableProxy[T] {
   override def get(i : Int) = self.get(i);
   override def equals(other : Any) = self.equals(other);
   override def hashCode = self.hashCode;
+  /** Returns the indexed items along with their indicies */
+  def pairs: Iterator[(T,Int)] = self.pairs;
 }
 
 /**
@@ -172,7 +181,7 @@ trait SynchronizedMutableIndex[T] extends MutableIndex[T] with SynchronizedIndex
     indices.size;
 
   override def apply(t : T) : Int =
-    indices.getOrElseUpdate(t,-1);
+    indices.getOrElse(t,-1);
 
   override def unapply(pos : Int) : Option[T] =
     if (pos >= 0 && pos < objects.length) Some(objects(pos)) else None;
@@ -198,6 +207,8 @@ trait SynchronizedMutableIndex[T] extends MutableIndex[T] with SynchronizedIndex
     }
     indices.getOrElseUpdate(t,nextMax);
   }
+
+  def pairs = indices.iterator;
 }
 
 /**
@@ -228,6 +239,7 @@ class DenseIntIndex(max: Int) extends Index[Int] {
   override def iterator =
     (0 to max).iterator;
 
+  def pairs = iterator zip iterator;
 }
 
 trait Indexed[T] {

@@ -70,8 +70,8 @@ class SparseArray[@specialized T:ClassManifest](val maxSize: Int, initialLength:
   }
 
   override final def iterator = (0 until used).iterator map { i => (index(i),data(i)) };
-  override def keysIterator = index.iterator;
-  override def valuesIterator = data.iterator;
+  override def keysIterator = index.iterator.take(used);
+  override def valuesIterator = data.iterator.take(used);
 
   // Taken from Scalala
 

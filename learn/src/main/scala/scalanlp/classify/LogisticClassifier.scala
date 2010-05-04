@@ -85,10 +85,6 @@ object LogisticClassifier {
       val labelSet = Set.empty ++ data.iterator.map(_.label);
       val allLabels = labelSet.toSeq;
 
-      def gradientAt(x: ProjectedTensor, range: Seq[Int]) = calculate(x,range)._2;
-      def valueAt(x: ProjectedTensor, range: Seq[Int]) = calculate(x,range)._1;
-
-
       // Computes the dot product for each label
       def logScores(weights: T2, datum: TF) = {
         val logScores = Map.empty ++ (for(label <- allLabels)

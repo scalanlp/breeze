@@ -67,6 +67,19 @@ trait VectorBroker[T] {
   /**
    * Encodes a DoubleCounter as a Vector. All elements in the counter must be in the index.
    */
+  def encodeDense(c: DoubleCounter[T]):DenseVector = {
+    val vec = mkDenseVector(c.default);
+    for( (k,v) <- c) {
+      vec(index(k)) = v;
+    }
+    vec
+  }
+
+
+
+  /**
+   * Encodes a DoubleCounter as a Vector. All elements in the counter must be in the index.
+   */
   def encode(c: DoubleCounter[T]):Vector = {
     val vec = mkVector(c.default);
     for( (k,v) <- c) {

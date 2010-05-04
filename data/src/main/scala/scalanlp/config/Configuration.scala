@@ -73,36 +73,42 @@ trait Configuration {
 
   private def solveTypes(knownTypes: Map[String,OptManifest[_]], staticClass: Class[_], dynamicClass: Class[_]):Map[String,OptManifest[_]] = {
     val dynamicParams = dynamicClass.getTypeParameters;
-    val dynamicToStaticMapping: Map[String,OptManifest[_]] = if(staticClass.isInterface) {
-      val matchedIFace = dynamicClass.getGenericInterfaces.find { case x : ParameterizedType =>
+    
+    // iterate up the inheritance chain
+    def superTypes = (
+      Iterator.iterate(dynamicClass.asInstanceOf[Class[AnyRef]])(_.getSuperclass.asInstanceOf[Class[AnyRef]])
+      .takeWhile(staticClass.isAssignableFrom(_))
+     );
+    val highestType = superTypes.reduceLeft( (a,b) => b);
+    val dynamicToStaticMapping: Map[String,OptManifest[_]] = superTypes.sliding(2,1).foldRight(knownTypes) { (classPair,knownTypes) =>
+      if(classPair.length < 2) knownTypes
+      else {
+        val generic = classPair(0).getGenericSuperclass;
+        extendMapping(classPair(0), classPair(1), generic, knownTypes);
+      }
+    }
+    if(!staticClass.isInterface) {
+      dynamicToStaticMapping;
+    } else {
+      // solve for the interface too:
+      val matchedIFace = highestType.getGenericInterfaces.find {
+        case x : ParameterizedType =>
           x.getRawType == staticClass
         case x:Class[_] => x == staticClass
         case _ => false
       } get;
-      matchedIFace match {
-        case x : ParameterizedType =>
-          val mapping:Map[String,String] = matchImmediateSubclassToSuperClass(dynamicClass,x,x.getRawType.asInstanceOf[Class[_]]);
-          mapping.mapValues(knownTypes).toMap withDefaultValue NoManifest;
-        case _ => Map.empty withDefaultValue NoManifest;
-      }
-    } else {
-      // iterate up the inheritance chain
-      val superTypes = Iterator.iterate(dynamicClass.asInstanceOf[Class[AnyRef]])(_.getSuperclass.asInstanceOf[Class[AnyRef]]);
-      // i.e. take all types up to and including staticClass, then map the types
-      superTypes.takeWhile{staticClass.isAssignableFrom(_)}.sliding(2,1).foldRight(knownTypes) { (classPair,knownTypes) =>
-        if(classPair.length < 2) knownTypes
-        else {
-          val generic = classPair(0).getGenericSuperclass;
-          val mapping:Map[String,String] = generic match {
-            case x: ParameterizedType =>
-              matchImmediateSubclassToSuperClass(classPair(0),x,classPair(1));
-            case _ => Map.empty;
-          }
-          mapping.mapValues(knownTypes).toMap withDefaultValue NoManifest;
-        }
-      }
+      extendMapping(highestType,staticClass,matchedIFace,dynamicToStaticMapping);
     }
-    dynamicToStaticMapping;
+  }
+
+  private def extendMapping(subType: Class[_], superType: Class[_], genericSuper: Type, knownTypes: Map[String,OptManifest[_]]) = {
+    val mapping:Map[String,String] = genericSuper match {
+      case x: ParameterizedType =>
+        matchImmediateSubclassToSuperClass(subType,x,superType);
+      case _ => Map.empty;
+    }
+    mapping.mapValues(knownTypes).toMap withDefaultValue NoManifest;
+
   }
 
   /**

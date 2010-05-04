@@ -507,7 +507,6 @@ object CRF {
 
       value
     }
-    override def gradientAt(weights: Vector) = calculate(weights)._2
   }
 }
 
