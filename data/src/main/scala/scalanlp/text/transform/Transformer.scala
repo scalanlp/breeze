@@ -32,6 +32,7 @@ object Transformer extends SubtypedCompanion[Transformer] {
   register[WordsAndNumbersOnlyFilter];
   register[PorterStemmer];
   register[CaseFolder];
+  register[StopWordFilter];
 
   implicit def apply(f : Iterable[String] => Iterable[String]) : Transformer = {
     f match {

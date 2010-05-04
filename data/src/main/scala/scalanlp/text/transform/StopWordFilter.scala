@@ -1,5 +1,3 @@
-package scalanlp.data.process;
-
 /*
  Copyright 2009 David Hall, Daniel Ramage
  
@@ -16,6 +14,9 @@ package scalanlp.data.process;
  limitations under the License. 
 */
 
+package scalanlp.text.transform;
+
+import scalanlp.serialization.TypedCompanion1;
 
 import scala.io.Source;
 import java.util.Locale;
@@ -24,9 +25,10 @@ import java.util.Locale;
 * Filter that removes stop words. Use the two letter code. "en" or "fr"
 * Syntax: words.filter(new RemoveStopwords);
 *
+* @author dramage
 * @author dlwh
 */
-class RemoveStopwords(val language: String) extends (String=>Boolean) {
+case class StopWordFilter(language : String) extends Transformer {
   /**
   * Defaults to Locale's language.
   */
@@ -45,8 +47,15 @@ class RemoveStopwords(val language: String) extends (String=>Boolean) {
     ret
   }
 
+  override def apply(doc : Iterable[String]) =
+    doc.filter(word => !words.contains(word.toLowerCase));
+ 
   def apply(s: String) = !words(s.toLowerCase);
 
 }
 
-object RemoveStopwords extends RemoveStopwords;
+object StopWordFilter extends TypedCompanion1[String,StopWordFilter] {
+  prepare();
+
+  def apply() = new StopWordFilter();
+}

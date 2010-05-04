@@ -66,6 +66,10 @@ trait TypedCompanion[Components,This] {
     manifest.erasure.getSimpleName;
 }
 
+object TypedCompanion {
+  val paranamer = new com.thoughtworks.paranamer.BytecodeReadingParanamer();
+}
+
 /**
  * Mix-in trait for companion object to a type that takes no arguments
  * to instantiate for automatic support of {@link TextSerialization}
@@ -122,8 +126,9 @@ extends TypedCompanion[ReadWritable[P1],This] {
    */
   def unpack(t : This) : P1 = {
     try {
-      val name = t.asInstanceOf[AnyRef].getClass.getDeclaredFields()(0).getName;
-      t.asInstanceOf[AnyRef].getClass.getMethod(name).invoke(t).asInstanceOf[P1];
+      val constructor = t.asInstanceOf[AnyRef].getClass.getConstructors()(0);
+      val names = TypedCompanion.paranamer.lookupParameterNames(constructor);
+      t.asInstanceOf[AnyRef].getClass.getMethod(names(0)).invoke(t).asInstanceOf[P1];
     } catch {
       case t : Throwable => throw new TypedCompanionException(
         "Could not automatically recover components of "+
@@ -183,10 +188,10 @@ extends TypedCompanion[(ReadWritable[P1],ReadWritable[P2]),This] {
    */
   def unpack(t : This) : (P1,P2) = {
     try {
-      val n1 = t.asInstanceOf[AnyRef].getClass.getDeclaredFields()(1).getName;
-      val p1 = t.asInstanceOf[AnyRef].getClass.getMethod(n1).invoke(t).asInstanceOf[P1];
-      val n2 = t.asInstanceOf[AnyRef].getClass.getDeclaredFields()(0).getName;
-      val p2 = t.asInstanceOf[AnyRef].getClass.getMethod(n2).invoke(t).asInstanceOf[P2];
+      val constructor = t.asInstanceOf[AnyRef].getClass.getConstructors()(0);
+      val names = TypedCompanion.paranamer.lookupParameterNames(constructor);
+      val p1 = t.asInstanceOf[AnyRef].getClass.getMethod(names(0)).invoke(t).asInstanceOf[P1];
+      val p2 = t.asInstanceOf[AnyRef].getClass.getMethod(names(1)).invoke(t).asInstanceOf[P2];
       (p1,p2);
     } catch {
       case t : Throwable => throw new TypedCompanionException(
