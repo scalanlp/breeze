@@ -1,4 +1,3 @@
-package scalanlp.data.process
 /*
  Copyright 2010 David Hall, Daniel Ramage
 
@@ -15,18 +14,60 @@ package scalanlp.data.process
  limitations under the License.
 */
 
-
+package scalanlp.text.tokenize;
 
 import scala.util.parsing.combinator._
 import scala.util.parsing.combinator.syntactical._
 import scala.util.parsing.combinator.lexical._;
 import scala.util.parsing.input._;
 
+import scalanlp.serialization.{SubtypedCompanion,TypedCompanion0};
+
 /**
-* PTBTokenizer tokenizes sentences into treebank style sentences.
-* Input must be a single sentence.
-*/
-object PTBTokenizer extends StdLexical with ImplicitConversions with Scanners {
+ * PTBTokenizer tokenizes sentences into treebank style sentences.
+ * Input must be a single sentence.
+ *
+ * Because this class may improve over time in non-backwards-compatible ways,
+ * the default behavior of PTBTokenizer.apply() is to return an
+ * instance of PTBTokenizer.V0;
+ *
+ * @author dramage
+ * @author dlwh
+ */
+trait PTBTokenizer extends Tokenizer;
+
+object PTBTokenizer extends SubtypedCompanion[PTBTokenizer] {
+
+  prepare();
+
+  for (cc <- List(this, Tokenizer)) {
+    cc.register[V0]("PTBTokenizer.V0");
+  }
+
+  def apply() : PTBTokenizer = V0();
+
+  val _instance = apply();
+  def apply(in : String) : Iterable[String] = _instance.apply(in);
+
+  case class V0() extends PTBTokenizer {
+    override def apply(in : String) = new Iterable[String] {
+      val result = RawPTBTokenizer.tokenize(in).left.get;
+      override def iterator = result.iterator;
+    }
+  }
+
+  object V0 extends TypedCompanion0[V0] {
+    prepare();
+    override def name = "PTBTokenizer.V0"
+  }
+}
+
+/**
+ * Penn Treebank-style tokenization.
+ *
+ * @author dlwh
+ */
+private[tokenize] object RawPTBTokenizer extends StdLexical with ImplicitConversions with Scanners {
   /**
   * Tokenize the input sentence using the PTBTokenizer.
   * Returns Left(List(tokens)) on success, and Right(error) on failure

@@ -13,21 +13,23 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
+
 package scalanlp.text.transform;
 
-import scalanlp.serialization.TypedCompanion1;
+import scalanlp.serialization.TypedCompanion0;
 
 /**
- * Filters out tokens composed of fewer than minLength characters or more than
- * maxLength characters.
+ * Lowercases all strings in a batch of strings.
  *
  * @author dramage
  */
-case class TermMinLengthFilter(minLength : Int) extends Transformer {
-  override def apply(doc : Iterable[String]) : Iterable[String] =
-    doc.filter(token => token.length >= minLength);
+case class CaseFolder() extends Transformer {
+  override def apply(in : Iterable[String]) =
+    in.map(CaseFolder);
 }
 
-object TermMinLengthFilter extends TypedCompanion1[Int,TermMinLengthFilter] {
+object CaseFolder extends (String=>String) with TypedCompanion0[CaseFolder] {
   prepare();
+
+  override def apply(in : String) : String = in.toLowerCase;
 }

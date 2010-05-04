@@ -38,7 +38,7 @@ case class TSVFile(path : String) extends File(path) {
     };
   }
 
-  implicit def asParcel : Parcel[Batch[Seq[String]]] =
+  def asParcel : Parcel[Batch[Seq[String]]] =
     Parcel(History.Origin(toString), Batch.fromIterable(rows));
 
   override def toString =
@@ -53,6 +53,10 @@ case class TSVFile(path : String) extends File(path) {
  * @author dramage
  */
 object TSVFile {
+
+  /** Calls file.asParcel. */
+  implicit def TSVFileAsParcel(file : TSVFile) = file.asParcel;
+
   /** Formats the given sequence of strings as well-formed line of TSV. */
   def format(seq : Seq[String]) : String =
     seq.map(_.replaceAll("\\s"," ")).mkString("\t");

@@ -28,7 +28,10 @@ trait Transformer extends (Iterable[String] => Iterable[String]) {
 
 object Transformer extends SubtypedCompanion[Transformer] {
   prepare();
-  register[TermMinLengthFilter];
+  register[TermMinimumLengthFilter];
+  register[WordsAndNumbersOnlyFilter];
+  register[PorterStemmer];
+  register[CaseFolder];
 
   implicit def apply(f : Iterable[String] => Iterable[String]) : Transformer = {
     f match {

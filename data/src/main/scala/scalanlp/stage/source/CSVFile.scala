@@ -44,7 +44,7 @@ case class CSVFile(path : String) extends File(path) {
       new CSVIterator(reader());
   }
 
-  implicit def asParcel : Parcel[Batch[Seq[String]]] = {
+  def asParcel : Parcel[Batch[Seq[String]]] = {
     Parcel(History.Origin(toString), Batch.fromIterable(rows));
   }
 
@@ -68,6 +68,9 @@ object CSVFile {
   def apply(base : File, name : String) =
     new CSVFile(new File(base, name).getPath); 
   
+  /** Calls file.asParcel. */
+  implicit def CSVFileAsParcel(file : CSVFile) = file.asParcel;
+
   /** Formats the given sequence of strings as well-formed line of CSV. */
   def format(seq : Iterable[String]) : String = {
     ( for (field <- seq) yield {

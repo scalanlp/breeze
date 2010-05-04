@@ -1,5 +1,3 @@
-package scalanlp.data.process;
-
 /*
  Copyright 2009 David Hall, Daniel Ramage
  
@@ -15,6 +13,8 @@ package scalanlp.data.process;
  See the License for the specific language governing permissions and
  limitations under the License. 
 */
+
+package scalanlp.text.transform;
 
 import org.scalatest._;
 import org.scalatest.junit._;

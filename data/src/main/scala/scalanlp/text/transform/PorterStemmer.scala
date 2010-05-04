@@ -1,5 +1,3 @@
-package scalanlp.data.process;
-
 /*
  Copyright 2009 David Hall, Daniel Ramage
  
@@ -16,12 +14,34 @@ package scalanlp.data.process;
  limitations under the License. 
 */
 
+package scalanlp.text.transform;
+
+import scalanlp.serialization.TypedCompanion0;
 
 /**
- * Converts words to their stemmed form.
+ * Converts words to their stemmed form using the classic Porter stemming
+ * algorithm.
+ *
+ * @author dlwh
+ * @author dramage
+ */
+class PorterStemmer() extends Transformer {
+  override def apply(in : Iterable[String]) : Iterable[String] =
+    in.map(PorterStemmer);
+}
+
+/**
+ * Converts words to their stemmed form using the classic Porter stemming
+ * algorithm.
+ *
  * @author dlwh
  */
-object PorterStemmer extends (String=>String){
+object PorterStemmer extends (String=>String) with TypedCompanion0[PorterStemmer] {
+  prepare();
+
+  private val _instance = new PorterStemmer();
+  def apply() = _instance;
+
   def apply(w:String) = {
     if(w.length < 3) w.toLowerCase;
     else {

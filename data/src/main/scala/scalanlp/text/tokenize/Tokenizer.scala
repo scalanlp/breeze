@@ -51,6 +51,7 @@ object Tokenizer extends SubtypedCompanion[Tokenizer] {
   register[RegexSplitTokenizer];
   register[RegexSearchTokenizer];
   register[WhitespaceTokenizer];
+  register[PTBTokenizer];
   register[Chain]("Tokenizer.Chain");
   SimpleEnglishTokenizer;
 

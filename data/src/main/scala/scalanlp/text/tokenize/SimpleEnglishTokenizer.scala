@@ -19,10 +19,11 @@ import scalanlp.serialization.{SubtypedCompanion,TypedCompanion0};
 
 /**
  * Simple English document tokenizer pre-processor based on regular
- * expressions from Steven Bethard.  Because this class may improve
- * over time in non-backwards-compatible ways, the default behavior
- * of SimpleEnglishTokenizer.apply() is to return an instance of
- * SimpleEnglishTokenizer.V0;
+ * expressions from Steven Bethard.
+ * 
+ * Because this class may improve over time in non-backwards-compatible ways,
+ * the default behavior of SimpleEnglishTokenizer.apply() is to return an
+ * instance of SimpleEnglishTokenizer.V0;
  *
  * @author dramage
  */

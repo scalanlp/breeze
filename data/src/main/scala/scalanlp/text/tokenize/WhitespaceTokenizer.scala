@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.text.tokenize
+package scalanlp.text.tokenize;
 
 import scalanlp.serialization.TypedCompanion0;
 
@@ -25,7 +25,94 @@ import scalanlp.serialization.TypedCompanion0;
 class WhitespaceTokenizer() extends RegexSplitTokenizer("\\s+");
 
 object WhitespaceTokenizer extends TypedCompanion0[WhitespaceTokenizer] {
-  def apply() = new WhitespaceTokenizer;
+  def apply() : WhitespaceTokenizer = new WhitespaceTokenizer;
+
+  private val _instance : WhitespaceTokenizer = apply();
+  def apply(in : String) : Iterable[String] = _instance(in);
 
   prepare();
 }
+
+//
+// Contents below are orriginally from scalalnp.data.process.WhitespaceTokenize.
+//
+
+//
+//package scalanlp.text.tokenize;
+//
+//import scala.collection.mutable._;
+//
+//import scala.collection.JavaConversions._;
+//import scala.io.Source;
+//
+//
+///**
+//* Breaks a string into whitespace components. Uses StringTokenizer
+//*
+//* @author dlwh
+//*/
+//object WhitespaceTokenize extends (String=>Iterator[String]) {
+//  def apply(s:String): Iterator[String] = {
+//    new java.util.StringTokenizer(s).map(_.asInstanceOf[String]);
+//  }
+//
+//  def apply(src: Source): Iterator[String] = new Iterator[String] {
+//    private var nextString : Option[String] = None;
+//    def hasNext = {
+//      src.hasNext && !nextString.orElse(updateString).isEmpty;
+//    }
+//
+//    private def updateString = {
+//      if(!src.hasNext) {
+//        nextString = None;
+//        nextString;
+//      }
+//
+//      val b = new StringBuilder();
+//
+//      var stop = false;
+//
+//      while(src.hasNext && !stop) {
+//        val ch = src.next;
+//        if(!ch.isWhitespace) {
+//          stop = true;
+//          b += ch;
+//        }
+//      }
+//
+//      stop = false;
+//      while(src.hasNext && !stop) {
+//        val ch = src.next;
+//        if(ch.isWhitespace) {
+//          stop = true;
+//        } else {
+//          b += ch;
+//        }
+//      }
+//      if(b.isEmpty)
+//        nextString = None
+//      else nextString = Some(b.toString);
+//      nextString
+//    }
+//
+//    def next = {
+//      val ret = nextString.orElse(updateString).get
+//      nextString = None;
+//      ret;
+//    }
+//
+//
+//  }
+//}
+//
+//
+///**
+//* Breaks a string into alphabetic components.
+//*
+//* @author dlwh
+//*/
+//object AlphaTokenize extends (String=>Array[String]) {
+//  def apply(s:String) = {
+//    s.split("[^A-Za-z]").filter(""!=);
+//  }
+//}
