@@ -161,7 +161,13 @@ object Numerics {
   * @return log(\sum exp(a_i))
   */
   def logSum(iter:Iterator[Double], max: Double):Double = {
-    max + log(iter.foldLeft(0.)( (a,b) => if(b == Double.NegativeInfinity) a else a+exp( b - max )))
+    var accum = 0.0;
+    while(iter.hasNext) {
+      val b = iter.next;
+      if(b != Double.NegativeInfinity)
+        accum += exp(b - max);
+    }
+    max + log(accum);
   }
 
   /**
@@ -176,7 +182,15 @@ object Numerics {
       case _ =>
         val m = a reduceLeft(_ max _);
         if(m.isInfinite) m
-        else m + log(a.foldLeft(0.)( (a,b) => a+exp( b - m )))
+        else {
+          var i = 0;
+          var accum = 0.0;
+          while(i < a.length) {
+            accum += exp(a(i) - m);
+            i += 1;
+          }
+          m + log(accum);
+        }
     }
   }
 
