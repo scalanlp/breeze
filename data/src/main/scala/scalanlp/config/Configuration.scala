@@ -19,6 +19,8 @@ package scalanlp.config
 import com.thoughtworks.paranamer.AdaptiveParanamer;
 import com.thoughtworks.paranamer.ParameterNamesNotFoundException
 import java.lang.reflect.Type
+import java.io.File
+import java.io.FileInputStream
 import java.lang.reflect.ParameterizedType;
 import java.{lang=>jl}
 import java.lang.reflect.TypeVariable
@@ -167,6 +169,15 @@ object Configuration {
 
   def fromMap(map: Map[String,String]) = new Configuration {
     def getProperty(p: String) = map.get(p);
+  }
+
+  def fromPropertiesFiles(args: Seq[File]) = {
+    val props = args.foldLeft(System.getProperties){ (old,file) =>
+      val props = new Properties(old);
+      props.load(new FileInputStream(file));
+      props
+    }
+    Configuration.fromProperties(props);
   }
 
 }
