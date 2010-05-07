@@ -110,12 +110,10 @@ class DataSerializationTest extends SerializationTestBase {
   override val serializer = DataSerialization;
 }
 
-/*
 @RunWith(classOf[JUnitRunner])
 class TextSerializationTest extends SerializationTestBase {
   override val serializer = TextSerialization;
 }
-*/
 
 @RunWith(classOf[JUnitRunner])
 class FileSerializationTest extends FunSuite {
