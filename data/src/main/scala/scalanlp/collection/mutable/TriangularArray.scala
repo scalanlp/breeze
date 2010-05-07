@@ -30,24 +30,22 @@ import scala.collection.mutable.Seq
  * @param fill: what initial value should we put in the array
  */
 final class TriangularArray[T:ClassManifest](dim: Int, fill: (Int,Int)=>T) { outer =>
+  import TriangularArray._;
+
   def this(dim: Int, fill: => T) = this(dim, (_,_)=>fill);
-  private val numElems = dim * (dim+1) / 2
-  private val data = new Array[T](numElems);
+  private def numElems = dim * (dim+1) / 2
+  val data = new Array[T](numElems);
   for( c <- 0 until dim;
        r <- 0 to c) {
      data(index(r,c)) = fill(r,c);
   }
 
-  @inline
-  private def index(r: Int, c: Int) = {
-    if(r > c) require(r <= c, "row must be less than column!");
-    (c * (c-1) /2 + r);
-  }
-
   final def update(r: Int, c: Int, t: T) { data(index(r,c))  = t }
 
+  @inline
   final def apply(r: Int, c: Int)  = data(index(r,c));
 
+  @inline
   final def apply(r: Int) = slice(r);
 
 
@@ -70,5 +68,19 @@ final class TriangularArray[T:ClassManifest](dim: Int, fill: (Int,Int)=>T) { out
       buffer ++= columns.mkString("[",", ","]\n");
     }
     buffer.toString();
+  }
+}
+
+object TriangularArray {
+  @inline
+  def index(r: Int, c: Int) = {
+    if(r > c) require(r <= c, "row must be less than column!");
+    (c * (c-1) /2 + r);
+  }
+
+  def raw[T:ClassManifest](dim: Int, fill: =>T) = {
+    val numElems = dim * (dim+1) / 2
+    val data = Array.fill[T](numElems)(fill);
+    data;
   }
 }
