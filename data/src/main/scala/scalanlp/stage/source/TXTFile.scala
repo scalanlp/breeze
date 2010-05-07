@@ -17,7 +17,7 @@ package scalanlp.stage.source;
 
 import java.io.File;
 
-import scalanlp.ra.RA;
+import scalanlp.pipes.Pipes.global._;
 
 import scalanlp.stage.{Parcel,Batch,History};
 
@@ -27,15 +27,16 @@ import scalanlp.stage.{Parcel,Batch,History};
  * @author dramage
  */
 case class TXTFile(path : String) extends File(path) {
-  import RA.global.pipes._;
-  
   def lines : Iterable[String] = {
     new Iterable[String] {
       override def iterator =
         for (line <- TXTFile.this.getLines) yield line;
     };
   }
-  
+
+  def asParcel : Parcel[Batch[String]] =
+    Parcel(History.Origin(toString), Batch.fromIterable(lines));
+
   override def toString =
     "TXTFile(\""+path+"\")";
 }
@@ -47,7 +48,6 @@ case class TXTFile(path : String) extends File(path) {
  * @author dramage
  */
 object TXTFile {
-  implicit def iTXTFileToParcel(file : TXTFile) : Parcel[Batch[String]] = {
-    Parcel(History.Origin(file.toString), Batch.fromIterable(file.lines));
-  }
+  /** Calls file.asParcel. */
+  implicit def TXTFileAsParcel(file : TXTFile) = file.asParcel;
 }

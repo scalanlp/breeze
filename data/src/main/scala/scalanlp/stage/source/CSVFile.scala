@@ -17,7 +17,7 @@ package scalanlp.stage.source;
 
 import java.io.File;
 
-import scalanlp.stage.{Parcel,Batch,History,Stage};
+import scalanlp.stage.{Parcel,Batch,History};
 
 /**
  * A CSVFile acts as a source of Array[String].  Uses the scalax CSV parser
@@ -39,11 +39,13 @@ case class CSVFile(path : String) extends File(path) {
     new java.io.BufferedReader(new java.io.InputStreamReader(is));
   }
 
-  def rows : Iterable[Seq[String]] = {
-    new Iterable[Seq[String]] {
-      override def iterator =
-        new CSVIterator(reader());
-    };
+  def rows : Iterable[Seq[String]] = new Iterable[Seq[String]] {
+    override def iterator =
+      new CSVIterator(reader());
+  }
+
+  def asParcel : Parcel[Batch[Seq[String]]] = {
+    Parcel(History.Origin(toString), Batch.fromIterable(rows));
   }
 
   override def toString =
@@ -66,13 +68,11 @@ object CSVFile {
   def apply(base : File, name : String) =
     new CSVFile(new File(base, name).getPath); 
   
-  /** Converts a CSV file into a parcel that acts as a source of strings. */
-  implicit def iCSVFileToParcel(file : CSVFile) : Parcel[Batch[Seq[String]]] = {
-    Parcel(History.Origin(file.toString), Batch.fromIterable(file.rows));
-  }
-  
+  /** Calls file.asParcel. */
+  implicit def CSVFileAsParcel(file : CSVFile) = file.asParcel;
+
   /** Formats the given sequence of strings as well-formed line of CSV. */
-  def format(seq : Seq[String]) : String = {
+  def format(seq : Iterable[String]) : String = {
     ( for (field <- seq) yield {
         if (field.contains('\n') || field.contains('\r') || field.contains('\"') || field.contains(",")) {
           "\"" + field.replaceAll("\"","\"\"") + "\"";
@@ -151,7 +151,7 @@ class CSVIterator(csv : java.io.BufferedReader) extends Iterator[Seq[String]] {
             nextLine = csv.readLine();
             if(nextLine == null) {
               csv.close()
-              throw new ParseException(lineNo+":"+(i + 1)+": Mismatched quotes", lineNo)
+              throw new CSVParseException(lineNo+":"+(i + 1)+": Mismatched quotes", lineNo)
             }
             chars = nextLine.toCharArray()
             len = chars.length
@@ -167,7 +167,7 @@ class CSVIterator(csv : java.io.BufferedReader) extends Iterator[Seq[String]] {
         i += 1
         while(i < len && chars(i) != sep && !(comments && chars(i) == commentStart)) {
           if(!Character.isWhitespace(chars(i)))
-            throw new ParseException(lineNo+":"+(i + 1)+
+            throw new CSVParseException(lineNo+":"+(i + 1)+
                                      ": Garbage after close quote", lineNo)
           i += 1
         }
@@ -188,11 +188,11 @@ class CSVIterator(csv : java.io.BufferedReader) extends Iterator[Seq[String]] {
       }
     }
     if(arity != 0 && fields.length != arity)
-      throw new ParseException(lineNo+":1: Found "+fields.length+
+      throw new CSVParseException(lineNo+":1: Found "+fields.length+
                                " fields but was expecting "+arity, lineNo)
     getNext()
     fields;
   }
 }
 
-class ParseException(msg : String, val lineNo : Int) extends RuntimeException(msg);
+class CSVParseException(msg : String, val lineNo : Int) extends RuntimeException(msg);

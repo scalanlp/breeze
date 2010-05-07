@@ -27,6 +27,8 @@ import scala.reflect.Manifest;
  * @author dramage
  */
 abstract class Stage[I,O] extends (Parcel[I] => Parcel[O]) { stage =>
+  def andThen[X](g : Parcel[O]=>Parcel[X]) = this.~>(g);
+
   def ~>[X](g : Parcel[O]=>Parcel[X]) = new Stage[I,X] {
     override def apply(parcel : Parcel[I]) : Parcel[X] = g(stage(parcel));
 

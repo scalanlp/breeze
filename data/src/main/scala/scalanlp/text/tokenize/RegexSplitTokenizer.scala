@@ -13,18 +13,20 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.stage.text;
+package scalanlp.text.tokenize;
 
-import scalanlp.stage.Filter;
+import scalanlp.serialization.TypedCompanion1;
 
 /**
- * Filters a set of documents so that all documents contain
- * at least minTokens tokens.
- * 
+ * Splits the input document according to the given pattern.  Does not
+ * return the splits.
+ *
  * @author dramage
  */
-case class DocumentMinimumLengthFilter(minTokens : Int)
-extends Filter[Iterable[String]] {
-  override def filter(doc : Iterable[String]) =
-    doc.size >= minTokens;
+case class RegexSplitTokenizer(pattern : String) extends Tokenizer {
+  override def apply(doc : String) = doc.split(pattern);
+}
+
+object RegexSplitTokenizer extends TypedCompanion1[String,RegexSplitTokenizer] {
+  prepare();
 }

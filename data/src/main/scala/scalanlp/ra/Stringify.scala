@@ -91,9 +91,12 @@ object ReflectionUtils {
         yield Class.forName(full)
     );
   }
-}
 
-case class Test(x : Int);
+  def getSupertypes(c : Class[_]) : Set[Class[_]] = {
+    val parents = (c.getInterfaces.toSet + c.getSuperclass).filter(_ != null);
+    parents ++ parents.flatMap(getSupertypes);
+  }
+}
 
 /**
  * Custom flexibly conversion to and from Strings.

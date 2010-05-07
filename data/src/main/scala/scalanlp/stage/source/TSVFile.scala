@@ -19,7 +19,7 @@ import java.io.File;
 
 import scalanlp.ra.RA;
 
-import scalanlp.stage.{Parcel,Batch,History,Stage};
+import scalanlp.stage.{Parcel,Batch,History};
 
 /**
  * A TSV file acts as a source of Array[String] is a simple tab-delimited
@@ -37,7 +37,10 @@ case class TSVFile(path : String) extends File(path) {
         TSVFile.this.getLines.map(_.split("\t",-1));
     };
   }
-  
+
+  def asParcel : Parcel[Batch[Seq[String]]] =
+    Parcel(History.Origin(toString), Batch.fromIterable(rows));
+
   override def toString =
     "TSVFile(\""+path+"\")";
 }
@@ -50,9 +53,9 @@ case class TSVFile(path : String) extends File(path) {
  * @author dramage
  */
 object TSVFile {
-  implicit def iTSVFileToParcel(file : TSVFile) : Parcel[Batch[Seq[String]]] = {
-    Parcel(History.Origin(file.toString), Batch.fromIterable(file.rows));
-  }
+
+  /** Calls file.asParcel. */
+  implicit def TSVFileAsParcel(file : TSVFile) = file.asParcel;
 
   /** Formats the given sequence of strings as well-formed line of TSV. */
   def format(seq : Seq[String]) : String =

@@ -17,7 +17,7 @@ package scalanlp.data;
 */
 
 
-import process._;
+import scalanlp.text.tokenize.WhitespaceTokenizer;
 
 
 /**
@@ -47,12 +47,12 @@ object Document {
       } else {
         val colon = line.indexOf(':');
         val category = line.substring(0,colon);
-        val tokens = WhitespaceTokenize(line.substring(colon+1)).toSeq;
+        val tokens = WhitespaceTokenizer(line.substring(colon+1)).toSeq;
         result += (category->tokens);
       }
     }
 
-    if(lines.hasNext) result += ("body"->lines.flatMap(WhitespaceTokenize).toSeq);
+    if(lines.hasNext) result += ("body"->lines.flatMap(line => WhitespaceTokenizer(line).iterator).toSeq);
 
     new Document(id, result);
   }

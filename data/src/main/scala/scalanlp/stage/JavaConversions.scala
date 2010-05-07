@@ -13,18 +13,18 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.stage.text;
+package scalanlp.stage
 
-import scalanlp.stage.Filter;
+import scala.collection.JavaConversions._;
 
 /**
- * Filters a set of documents so that all documents contain
- * at least minTokens tokens.
- * 
+ * Support for creating parcels and batches from Java.
+ *
  * @author dramage
  */
-case class DocumentMinimumLengthFilter(minTokens : Int)
-extends Filter[Iterable[String]] {
-  override def filter(doc : Iterable[String]) =
-    doc.size >= minTokens;
+object JavaConversions {
+
+  def batchFromIterable[V](inItems : java.lang.Iterable[V]) : Batch[V] =
+    Batch.fromIterable(inItems);
+
 }

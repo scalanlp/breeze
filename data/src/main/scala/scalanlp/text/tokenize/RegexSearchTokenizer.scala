@@ -13,18 +13,23 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.stage.text;
+package scalanlp.text.tokenize
 
-import scalanlp.stage.Filter;
+import scalanlp.serialization.TypedCompanion1;
 
 /**
- * Filters a set of documents so that all documents contain
- * at least minTokens tokens.
- * 
+ * Finds all occurrences of the given pattern in the document.
+ *
+ * @author dlwh
  * @author dramage
  */
-case class DocumentMinimumLengthFilter(minTokens : Int)
-extends Filter[Iterable[String]] {
-  override def filter(doc : Iterable[String]) =
-    doc.size >= minTokens;
+case class RegexSearchTokenizer(pattern : String)
+extends Tokenizer {
+  override def apply(doc : String) = new Iterable[String] {
+    override def iterator = (pattern.r.findAllIn(doc));
+  }
+}
+
+object RegexSearchTokenizer extends TypedCompanion1[String,RegexSearchTokenizer] {
+  prepare();
 }

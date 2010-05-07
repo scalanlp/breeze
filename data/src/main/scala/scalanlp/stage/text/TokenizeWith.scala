@@ -15,16 +15,24 @@
 */
 package scalanlp.stage.text;
 
-import scalanlp.stage.Mapper;
+import scalanlp.stage.{Batch,Parcel};
+import scalanlp.stage.Stage;
+import scalanlp.stage.Stage._;
+
+import scalanlp.text.tokenize.Tokenizer;
+import scalanlp.serialization.TypedCompanion1;
 
 /**
- * Lowercases all strings in a batch of strings.
- * 
+ * Tokenizes the given input documents according to the given tokenizer.
+ *
  * @author dramage
  */
-case object CaseFolder extends Mapper[String,String] {
-  override def map(in : String) : String =
-    in.toLowerCase;
+case class TokenizeWith(tokenizer : Tokenizer)
+extends Stage[Batch[String],Batch[Iterable[String]]] {
+  override def apply(parcel : Parcel[Batch[String]]) : Parcel[Batch[Iterable[String]]] =
+    Parcel(parcel.history + this, parcel.meta + this, parcel.data.map(tokenizer));
+}
 
-  override def toString = "CaseFolder";
+object TokenizeWith extends TypedCompanion1[Tokenizer,TokenizeWith] {
+  prepare();
 }

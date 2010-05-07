@@ -1,5 +1,3 @@
-package scalanlp.data.process;
-
 /*
  Copyright 2009 David Hall, Daniel Ramage
  
@@ -16,6 +14,8 @@ package scalanlp.data.process;
  limitations under the License. 
 */
 
+package scalanlp.text.tokenize;
+
 import org.scalatest._;
 import org.scalatest.junit._;
 import org.scalatest.prop._;
@@ -26,9 +26,9 @@ import org.junit.runner.RunWith
 class PTBTokenizerTest extends FunSuite with Checkers {
   import Arbitrary.arbitrary;
   
-  private def isOneToken(w: String) = {
-    w === PTBTokenizer(w).left.get(0)
-  }
+  private def isOneToken(w: String) =
+    w === PTBTokenizer(w).head;
+  
   test("simple words") {
     val words = List("Hi","there","pilgrim","happy","Thanksgiving","there");
     for(w <- words) {
@@ -49,7 +49,7 @@ class PTBTokenizerTest extends FunSuite with Checkers {
       "Hi there, pilgrim; happy Thanksgiving there, pilgrim!" -> List("Hi","there",",","pilgrim",";","happy","Thanksgiving","there",",","pilgrim","!")
     );
     for( (s,toks) <- sents) {
-      assert(PTBTokenizer(s).left.get === toks)
+      assert(PTBTokenizer(s).toList === toks)
     }
   }
 
@@ -57,7 +57,7 @@ class PTBTokenizerTest extends FunSuite with Checkers {
     val sents = Map("\"Hi there\"" -> List("\"","Hi","there","\""),
       "\"Hi there.\"" -> List("\"","Hi","there",".","\""));
     for( (s,toks) <- sents) {
-      assert(PTBTokenizer(s).left.get === toks);
+      assert(PTBTokenizer(s).toList === toks);
     }
   }
 
@@ -73,7 +73,7 @@ class PTBTokenizerTest extends FunSuite with Checkers {
       "He's" -> List("He","'s")
     );
     for( (s,toks) <- sents) {
-      assert(PTBTokenizer(s).left.get === toks);
+      assert(PTBTokenizer(s).toList === toks);
     }
   }
 
@@ -100,7 +100,7 @@ class PTBTokenizerTest extends FunSuite with Checkers {
         "Whatcha"->List("Wha","t","cha")
     );
     for( (s,toks) <- words) {
-      assert(PTBTokenizer(s).left.get === toks);
+      assert(PTBTokenizer(s).toList === toks);
     }
 
   }

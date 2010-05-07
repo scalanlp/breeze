@@ -153,7 +153,8 @@ extends RuntimeException("Unable to process " + item +
  * Static constructors for creating batches.
  */
 object Batch {
-  def fromItems[V](inItems : Iterable[Item[V]], numItems : Int, inMinItemNum : Int, inMaxItemNum : Int) = new Batch[V] {
+  def fromItems[V](inItems : Iterable[Item[V]], numItems : Int,
+                   inMinItemNum : Int, inMaxItemNum : Int) = new Batch[V] {
     override def size = numItems;
     override def minItemNum = inMinItemNum;
     override def maxItemNum = inMaxItemNum;

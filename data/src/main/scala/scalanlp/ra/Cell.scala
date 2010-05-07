@@ -17,6 +17,8 @@ package scalanlp.ra;
 
 import java.io.File;
 
+import scalanlp.serialization.FileSerialization;
+
 trait CellBroker {
   protected val ra: RA;
   import ra._;
@@ -49,7 +51,7 @@ trait CellBroker {
       }
     }
 
-    def get(implicit loadable : ra.serializer.Readable[V], saveable : ra.serializer.Writable[V]) : V = {
+    def get(implicit loadable : FileSerialization.Readable[V], saveable : FileSerialization.Writable[V]) : V = {
       value match {
         // value already loaded
         case Some(v) => v;
@@ -66,14 +68,8 @@ trait CellBroker {
             val v : V = status match {
               case Ready   => {
                   // value is ready, load and return it
-
                   ra.log("RA.Cell: loading "+cache);
-
-                  val input = ra.serializer.inputFromFile(cache);
-                  val rv = loadable.read(input);
-                  ra.serializer.closeInput(input);
-                  rv
-                  // Serializer.load(cache)(valType,ra);
+                  implicitly[FileSerialization.Readable[V]].read(cache);
                 }
 
               case Missing => {
@@ -87,10 +83,7 @@ trait CellBroker {
                   ra.log("RA.Cell: creating "+cache);
                   List(RA.pid) | lock;
                   val rv = eval;
-                  // Serializer.save(cache, rv)(valType,ra);
-                  val output = ra.serializer.outputFromFile(cache);
-                  saveable.write(output,rv);
-                  ra.serializer.closeOutput(output);
+                  implicitly[FileSerialization.Writable[V]].write(cache, rv);
                   lock.delete();
                   rv;
                 }

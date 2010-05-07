@@ -25,7 +25,7 @@ import scalanlp.stage.{Parcel,Batch,Stage,Mapper,MetaBuilder};
  * 
  * @author dramage
  */
-class TermCounts(docs : Iterator[Seq[String]]) {
+class TermCounts(docs : Iterator[Iterable[String]]) {
   /** Number of documents each term occurs in. */
   val docCounts  = IntCounter[String]();
     
@@ -48,8 +48,8 @@ class TermCounts(docs : Iterator[Seq[String]]) {
  * 
  * @author dramage
  */
-case object TermCounter extends MetaBuilder[TermCounts,Batch[Seq[String]]] {
-  override def build(data : Batch[Seq[String]]) =
+case object TermCounter extends MetaBuilder[TermCounts,Batch[Iterable[String]]] {
+  override def build(data : Batch[Iterable[String]]) =
     new TermCounts(data.values.iterator);
 
   override def toString = "TermCounter";
@@ -61,14 +61,14 @@ case object TermCounter extends MetaBuilder[TermCounts,Batch[Seq[String]]] {
  * @author dramage
  */
 case class TermMinimumDocumentCountFilter(minDF : Int)
-extends Stage[Batch[Seq[String]],Batch[Seq[String]]] {
-  override def apply(parcel : Parcel[Batch[Seq[String]]]) : Parcel[Batch[Seq[String]]] = {
+extends Stage[Batch[Iterable[String]],Batch[Iterable[String]]] {
+  override def apply(parcel : Parcel[Batch[Iterable[String]]]) : Parcel[Batch[Iterable[String]]] = {
     parcel.meta.require[TermCounts]("TermCounter must be run before TermMinimumDocumentCountFilter");
     val df = parcel.meta[TermCounts].docCounts;
 
     Parcel(parcel.history + this, parcel.meta,
            parcel.data.map(
-             (doc : Seq[String]) => (doc.filter(term => df(term) >= minDF))
+             (doc : Iterable[String]) => (doc.filter(term => df(term) >= minDF))
           ));
   }
 
@@ -77,30 +77,16 @@ extends Stage[Batch[Seq[String]],Batch[Seq[String]]] {
 }
 
 /**
- * Filters out terms composed of fewer than minLength characters.
- * 
- * @author dramage
- */
-case class TermMinimumLengthFilter(minLength : Int)
-extends Mapper[Seq[String],Seq[String]] {
-  override def map(doc : Seq[String]) =
-    doc.filter(_.length >= minLength);
-
-  override def toString =
-    "TermMinimumLengthFilter("+minLength+")";
-}
-
-/**
  * Filters out terms from the given list.
  * 
  * @author dramage
  */
 case class TermStopListFilter(stops : List[String])
-extends Stage[Batch[Seq[String]],Batch[Seq[String]]] {
-  override def apply(parcel : Parcel[Batch[Seq[String]]]) : Parcel[Batch[Seq[String]]] = {
+extends Stage[Batch[Iterable[String]],Batch[Iterable[String]]] {
+  override def apply(parcel : Parcel[Batch[Iterable[String]]]) : Parcel[Batch[Iterable[String]]] = {
     Parcel(parcel.history + this, parcel.meta + this,
            parcel.data.map(
-             (doc : Seq[String]) => (doc.filter(term => !stops.contains(term)))
+             (doc : Iterable[String]) => (doc.filter(term => !stops.contains(term)))
            ));
   }
 
@@ -114,15 +100,15 @@ extends Stage[Batch[Seq[String]],Batch[Seq[String]]] {
  * @author dramage
  */
 case class TermDynamicStopListFilter(numTerms : Int)
-extends Stage[Batch[Seq[String]],Batch[Seq[String]]] {
-  override def apply(parcel : Parcel[Batch[Seq[String]]]) : Parcel[Batch[Seq[String]]] = {
+extends Stage[Batch[Iterable[String]],Batch[Iterable[String]]] {
+  override def apply(parcel : Parcel[Batch[Iterable[String]]]) : Parcel[Batch[Iterable[String]]] = {
     parcel.meta.require[TermCounts]("TermCounter must be run before TermMinimumDocumentCountFilter");
     val freq = parcel.meta[TermCounts].termCounts;
     val stops = List() ++ freq.maxk(numTerms);
 
     Parcel(parcel.history + this, parcel.meta + TermStopListFilter(stops),
            parcel.data.map(
-            (doc : Seq[String]) => (doc.filter(term => !stops.contains(term)))
+            (doc : Iterable[String]) => (doc.filter(term => !stops.contains(term)))
           ));
   }
 
@@ -130,48 +116,3 @@ extends Stage[Batch[Seq[String]],Batch[Seq[String]]] {
     "TermDynamicStopListFilter("+numTerms+")";
 }
 
-
-
-
-/**
- * An enumeration over token types (see inner objects to
- * TokenType companion object) based on regex patterns
- * originally defined by Steven Bethard.
- * 
- * @author dramage
- */
-sealed abstract case class TokenType();
-
-object TokenType {
-  case object Number;
-  case object Punctuation;
-  case object Word;
-  case object Other;
-
-  def apply(token : String) = {
-    if (token.matches("^.*\\p{N}.*$")) {
-      TokenType.Number;
-    } else if (token.matches("^[\\p{P}\\p{S}]+$")) {
-      TokenType.Punctuation;
-    } else if (token.matches("^.*\\p{L}+.*$")) {
-      TokenType.Word;
-    } else {
-      TokenType.Other;
-    }
-  }
-}
-
-/**
- * A filter that only accepts word and number tokens.
- * 
- * @author dramage
- */
-case object WordsAndNumbersOnlyFilter extends Mapper[Seq[String],Seq[String]] {
-  val ok = List(TokenType.Number, TokenType.Word);
-  override def map(doc : Seq[String]) : Seq[String] = {
-    for (term <- doc; if ok.contains(TokenType(term))) yield term;
-  }
-
-  override def toString =
-    "WordsAndNumbersOnlyFilter";
-}
