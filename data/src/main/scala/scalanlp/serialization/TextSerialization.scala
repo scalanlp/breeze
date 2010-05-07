@@ -262,7 +262,6 @@ with ByteSerialization with StringSerialization {
   def escapeChar(c : Char) : String = c match {
     case '"'  => "\\\"";
     case '\\' => "\\\\";
-    case '/'  => "\\/";
     case '\b' => "\\b";
     case '\f' => "\\f";
     case '\n' => "\\n";
