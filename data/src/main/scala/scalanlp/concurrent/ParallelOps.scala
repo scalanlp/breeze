@@ -43,6 +43,13 @@ object ParallelOps {
       DefaultPool.invokeAndGet(action);
     }
 
+    def mapReduce[U,B>:U](f: T=>U, r: (B,B)=>B) = {
+      val action = new BinaryRecursiveAction(r, { (start:Int,end:Int) =>
+          seq.view(start, end).map(f).reduceLeft(r);
+        });
+      DefaultPool.invokeAndGet(action);
+    }
+
     class BinaryRecursiveAction[T](val reduce: (T, T) => T, val executeSequentially: (Int, Int) => T,
                                    val start: Int, val end: Int) extends FunctionalRecursiveAction[T] {
 
