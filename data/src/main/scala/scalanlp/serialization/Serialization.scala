@@ -239,6 +239,9 @@ object SerializationFormat {
     implicit def seqReadWritable[T](implicit tH: ReadWritable[T]) =
       collectionFromElements[T,Seq](Seq,"Seq");
 
+    implicit def indexedSeqReadWritable[T](implicit tH: ReadWritable[T]) =
+      collectionFromElements[T,IndexedSeq](IndexedSeq,"IndexedSeq");
+
     implicit def setReadWritable[T](implicit tH: ReadWritable[T]) =
       collectionFromElements[T,Set](Set,"Set");
 
