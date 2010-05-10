@@ -80,6 +80,11 @@
       <version>2.2</version>
     </dependency>
     <dependency>
+      <groupId>org.coconut.forkjoin</groupId>
+      <artifactId>jsr166y</artifactId>
+      <version>070108</version>
+    </dependency>
+    <dependency>
       <groupId>org.scalanlp</groupId>
       <artifactId>scalala_${scala.version}</artifactId>
       <version>0.3.1-SNAPSHOT</version>
@@ -131,6 +136,14 @@
             <jvmArg>-Xmx1G</jvmArg>
             <jvmArg>-Xms64m</jvmArg>
           </jvmArgs>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>2.4.2</version>
+        <configuration>
+          <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
       <plugin>

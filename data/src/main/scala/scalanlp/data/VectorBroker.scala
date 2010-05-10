@@ -49,7 +49,8 @@ trait VectorBroker[T] {
    */
   final def mkDenseVector(default: Double=0.0):DenseVector = {
     val vec = new DenseVector(index.size)
-    Arrays.fill(vec.data,default);
+    if(default != 0.0)
+      Arrays.fill(vec.data,default);
     vec
   }
 

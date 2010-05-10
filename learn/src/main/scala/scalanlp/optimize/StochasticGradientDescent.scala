@@ -63,7 +63,7 @@ class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]
       //log(Log.INFO)("SGD update: " + guess.mkString("[",",","]"));
 
       i+=1;
-      converged = checkConvergence(grad);
+      converged = checkConvergence(value,grad);
       temp = updateTemperature(alpha,i);
       log(Log.INFO)("SGD temp: " + temp);
     }

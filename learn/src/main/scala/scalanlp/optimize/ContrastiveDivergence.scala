@@ -43,8 +43,7 @@ import Log._;
 */
 class ContrastiveDivergenceOptimizer[X,K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](trans: T=>X=>Rand[X],
         deriv: T=>X=>T,
-        learningRate: Double)(implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col]) 
-        extends GradientNormConvergence[K,T] with Logged {
+        learningRate: Double)(implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col]) extends Logged {
   /**
   * Run CD to convergence on the given data with initial parameters.
   */
@@ -58,7 +57,7 @@ class ContrastiveDivergenceOptimizer[X,K,T<:Tensor1[K] with TensorSelfOp[K,T,Sha
       val grad = computeGradient(data,cur);
       cur += grad * learningRate;
       i += 1;
-      converged = checkConvergence(grad);
+      converged = norm(grad,2) < 1E-4;
     } while(!converged);
     cur
   }

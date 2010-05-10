@@ -50,10 +50,10 @@ with ByteSerialization with StringSerialization {
   //
 
   override def toBytes[T:Writable](x: T) =
-    toString(x).getBytes;
+    toString(x).getBytes("utf8");
 
   override def fromBytes[T:Readable](bytes: Array[Byte]) : T =
-    fromString[T](new String(bytes));
+    fromString[T](new String(bytes,"utf8"));
 
   //
   // from PrimitiveTypes
