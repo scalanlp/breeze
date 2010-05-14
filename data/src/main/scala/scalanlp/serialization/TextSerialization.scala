@@ -36,8 +36,14 @@ with ByteSerialization with StringSerialization {
   }
 
   /** Demarshalls a value from the given string. */
-  def fromString[T:Readable](str: String) : T =
-    implicitly[Readable[T]].read(str.iterator.buffered);
+  def fromString[T:Readable](str: String) : T = {
+    val input = str.iterator.buffered;
+    val rv = implicitly[Readable[T]].read(input);
+    skipWhitespace(input);
+    if (input.hasNext)
+      throw new SerializationException("fromString did not consume whole string: \n"+toString(str));
+    rv;
+  }
 
   //
   // from ByteSerialization
@@ -262,7 +268,6 @@ with ByteSerialization with StringSerialization {
   def escapeChar(c : Char) : String = c match {
     case '"'  => "\\\"";
     case '\\' => "\\\\";
-    case '/'  => "\\/";
     case '\b' => "\\b";
     case '\f' => "\\f";
     case '\n' => "\\n";

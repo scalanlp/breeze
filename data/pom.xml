@@ -86,7 +86,7 @@
     </dependency>
     <dependency>
       <groupId>org.scalanlp</groupId>
-      <artifactId>scalala</artifactId>
+      <artifactId>scalala_${scala.version}</artifactId>
       <version>0.3.1-SNAPSHOT</version>
     </dependency>
     <dependency>
