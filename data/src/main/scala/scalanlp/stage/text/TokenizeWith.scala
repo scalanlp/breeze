@@ -31,6 +31,9 @@ case class TokenizeWith(tokenizer : Tokenizer)
 extends Stage[Batch[String],Batch[Iterable[String]]] {
   override def apply(parcel : Parcel[Batch[String]]) : Parcel[Batch[Iterable[String]]] =
     Parcel(parcel.history + this, parcel.meta + this, parcel.data.map(tokenizer));
+
+  override def toString =
+    TokenizeWith.toString(this);
 }
 
 object TokenizeWith extends TypedCompanion1[Tokenizer,TokenizeWith] {
