@@ -29,8 +29,6 @@ class SparseArray[@specialized T:ClassManifest](val maxSize: Int, initialLength:
   private var data = new Array[T](initialLength);
   private var index = new Array[Int](initialLength);
 
-  require(data.length == index.length);
- 
   override def size = used;
   private var lastIndex = -1;
   private var lastOffset = -1;

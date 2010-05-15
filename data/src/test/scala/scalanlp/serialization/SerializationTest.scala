@@ -19,6 +19,7 @@ import org.scalatest._;
 import org.scalatest.junit._;
 import org.scalatest.prop._;
 import org.scalacheck._;
+import org.scalacheck.util._;
 import org.junit.runner.RunWith;
 import scalanlp.util.Index;
 
@@ -34,10 +35,14 @@ trait SerializationTestBase extends FunSuite with Checkers {
 
   import serializer._;
 
+  implicit val arbString = Arbitrary(Gen.alphaStr);
+  implicit val arbChar = Arbitrary(Gen.alphaChar);
+
+
   def basicTest[T:Arbitrary:ReadWritable]() = check( Prop.forAll { (a:T) =>
     val bytes = serializer.toBytes[T](a);
     val b = serializer.fromBytes[T](bytes);
-    a == b
+    a == b 
   });
 
 
@@ -77,7 +82,7 @@ trait SerializationTestBase extends FunSuite with Checkers {
     tuple2Test[String,String]();
   }
 
-  test("Compund tuples") {
+  test("Compound tuples") {
     tuple2Test[Int,List[Int]]();
     tuple2Test[List[Int],String]();
     tuple2Test[List[List[String]],Map[String,Int]]();
