@@ -36,10 +36,10 @@ trait Measure[T] extends (T=>Double) {
  */
 trait ContinuousDistr[T] extends Measure[T] with Rand[T] {
   /** Returns the probability density function at that point.*/
-  def pdf(x: T): Double  = Math.exp(logPdf(x))
+  def pdf(x: T): Double  = math.exp(logPdf(x))
   def logPdf(x:T): Double = unnormalizedLogPdf(x) - logNormalizer;
   /** Returns the probability density function up to a constant at that point.*/
-  def unnormalizedPdf(x:T): Double = Math.exp(unnormalizedPdf(x))
+  def unnormalizedPdf(x:T): Double = math.exp(unnormalizedPdf(x))
   
   def unnormalizedLogPdf(x:T): Double;
   def logNormalizer : Double;
@@ -55,10 +55,10 @@ trait ContinuousDistr[T] extends Measure[T] with Rand[T] {
 trait DiscreteDistr[T] extends Measure[T] with Rand[T] {
   /** Returns the probability of that draw. */
   def probabilityOf(x: T): Double; 
-  def logProbabilityOf(x:T): Double = Math.log(probabilityOf(x));
+  def logProbabilityOf(x:T): Double = math.log(probabilityOf(x));
   /** Returns the probability of that draw up to a constant */
   def unnormalizedProbabilityOf(x:T): Double = probabilityOf(x);
-  def unnormalizedLogProbabilityOf(x:T): Double = Math.log(unnormalizedProbabilityOf(x));
+  def unnormalizedLogProbabilityOf(x:T): Double = math.log(unnormalizedProbabilityOf(x));
   
   def apply(x:T) = unnormalizedProbabilityOf(x);
   override def logApply(x:T) = unnormalizedLogProbabilityOf(x);

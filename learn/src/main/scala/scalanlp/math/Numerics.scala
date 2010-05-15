@@ -20,11 +20,11 @@ import scalala.tensor.counters._;
 import Counters._;
 
 /**
-* Provides some functions left out of java.lang.Math
+* Provides some functions left out of java.lang.math
 * @author dlwh
 */
 object Numerics {
-  import Math._;
+  import math._;
   /**
    * The standard digamma function. Cribbed from Radford Neal
    *

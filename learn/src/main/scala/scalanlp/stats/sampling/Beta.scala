@@ -1,6 +1,6 @@
 package scalanlp.stats.sampling
 
-import Math._;
+import math._;
 
 import scalanlp.math.Numerics.lgamma;
 import scalala.tensor.counters._;

@@ -24,7 +24,7 @@ object NewtonRaphson {
   def optimize(df: Double=>Double, d2f : Double=>Double, x0 : Double, tol : Double) = { 
     var x = x0;
     var dfdx = df(x);
-    while( Math.abs(dfdx) > tol) {
+    while( math.abs(dfdx) > tol) {
       x = x - dfdx/d2f(x);
       dfdx = df(x);
     }

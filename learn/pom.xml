@@ -7,7 +7,7 @@
   
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.scalanlp</groupId>
-  <artifactId>scalanlp-learn</artifactId>
+  <artifactId>scalanlp-learn_${scala.version}</artifactId>
   <name>ScalaNLP Learning</name>
   <version>0.3.1-SNAPSHOT</version>
   <url>http://www.scalanlp.org</url>
@@ -182,7 +182,7 @@
     </dependency>
     <dependency>
       <groupId>org.scalanlp</groupId>
-      <artifactId>scalanlp-data</artifactId>
+      <artifactId>scalanlp-data_${scala.version}</artifactId>
       <version>0.3.1-SNAPSHOT</version>
     </dependency>
     <dependency>
@@ -198,7 +198,7 @@
     </dependency>
     <dependency>
       <groupId>org.scala-tools.testing</groupId>
-      <artifactId>scalacheck_2.8.0.RC2</artifactId>
+      <artifactId>scalacheck_${scala.version}</artifactId>
       <version>1.8-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>

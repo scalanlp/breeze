@@ -111,7 +111,7 @@ object LogisticClassifier {
           for {
             label <- allLabels
             if label != basisLabel
-            prob_k = Math.exp(logScores(label) - logNormalizer)
+            prob_k = math.exp(logScores(label) - logNormalizer)
             () = assert(prob_k >= 0 && prob_k <= 1,prob_k);
             shift = if(label == datum.label) (1-prob_k) else -prob_k
             (feat,featValue) <- datum.features

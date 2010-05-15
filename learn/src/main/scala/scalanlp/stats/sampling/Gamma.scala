@@ -18,7 +18,7 @@ package scalanlp.stats.sampling;
 
 import scalanlp.math.Numerics;
 import Numerics._;
-import Math._;
+import math._;
 
 
 /**
@@ -32,9 +32,9 @@ class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasis = R
   if(shape <= 0.0 || scale <= 0.0)
     throw new IllegalArgumentException("Shape and scale must be positive");
 
-  val logNormalizer = Numerics.lgamma(shape) + shape * Math.log(scale);
+  val logNormalizer = Numerics.lgamma(shape) + shape * math.log(scale);
 
-  override def unnormalizedLogPdf(x : Double) = (shape - 1) * Math.log(x) - x/scale;
+  override def unnormalizedLogPdf(x : Double) = (shape - 1) * math.log(x) - x/scale;
 
   // Copied from Teh
   def draw() : Double = { 
@@ -50,16 +50,16 @@ class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasis = R
     var zz = 0.0;
     if (shape == 1.0) {
       /* Exponential */
-      return scale * -Math.log(rand.uniform.get);
+      return scale * -math.log(rand.uniform.get);
     } else if (shape < 1.0) {
       /* Use Johnks generator */
       cc = 1.0 / shape;
       dd = 1.0 / (1.0 - shape);
       while (true) {
-        xx = Math.pow(rand.uniform.get(), cc);
-        yy = xx + Math.pow(rand.uniform.get(), dd);
+        xx = math.pow(rand.uniform.get(), cc);
+        yy = xx + math.pow(rand.uniform.get(), dd);
         if (yy <= 1.0) {
-          return scale * -Math.log(rand.uniform.get()) * xx / yy;
+          return scale * -math.log(rand.uniform.get()) * xx / yy;
         }
       }
       error("shouldn't get here");
@@ -71,12 +71,12 @@ class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasis = R
         uu = rand.uniform.get();
         vv = rand.uniform.get();
         ww = uu * (1.0 - uu);
-        yy = Math.sqrt(cc / ww) * (uu - 0.5);
+        yy = math.sqrt(cc / ww) * (uu - 0.5);
         xx = bb + yy;
         if (xx >= 0) {
           zz = 64.0 * ww * ww * ww * vv * vv;
           if ((zz <= (1.0 - 2.0 * yy * yy / xx))
-              || (Math.log(zz) <= 2.0 * (bb * Math.log(xx / bb) - yy))) {
+              || (math.log(zz) <= 2.0 * (bb * math.log(xx / bb) - yy))) {
             return xx * scale;
           }
         }
@@ -105,11 +105,11 @@ object Gamma {
         new Poisson(self.get).get
       }
 
-      def probabilityOf(k :Int) = Math.exp(logProbabilityOf(k));
+      def probabilityOf(k :Int) = math.exp(logProbabilityOf(k));
       private val p = 1. / (1. + scale);
       override def logProbabilityOf(k:Int) = {
         import scalanlp.math.Numerics._;
-        import Math._;
+        import math._;
         lgamma(shape + k) - lgamma(k) - lgamma(shape) + shape * log(p) + k * log(1-p);
       }
     }

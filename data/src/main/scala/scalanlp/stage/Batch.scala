@@ -110,7 +110,7 @@ trait Batch[+V] {
    */
   def take(n : Int) : Batch[V] = {
     val newMin = minItemNum;
-    val newMax = Math.min(minItemNum + n, maxItemNum);
+    val newMax = math.min(minItemNum + n, maxItemNum);
     
     Batch.fromItems(items.view.takeWhile(_.number < newMax), size, newMin, newMax);
   }
@@ -120,7 +120,7 @@ trait Batch[+V] {
    * n defined items will be dropped.
    */
   def drop(n : Int) : Batch[V] = {
-    val newMin = Math.min(minItemNum + n, maxItemNum);
+    val newMin = math.min(minItemNum + n, maxItemNum);
     val newMax = maxItemNum
 
     Batch.fromItems(items.view.dropWhile(_.number < newMin), size, newMin, newMax);
@@ -209,9 +209,9 @@ object Batch {
     
     override def size = batches(0).size;
 
-    override def minItemNum = batches.map(_.minItemNum).reduceLeft(Math.min);
+    override def minItemNum = batches.map(_.minItemNum).reduceLeft(_ min _);
     
-    override def maxItemNum = batches.map(_.maxItemNum).reduceLeft(Math.max);
+    override def maxItemNum = batches.map(_.maxItemNum).reduceLeft(_ max _)
 
     override def items = new Iterable[Item[Seq[Option[V]]]] {
       override def size = batches(0).size;

@@ -1,7 +1,7 @@
 package scalanlp.stats.sampling
 
 import scalanlp.math.Numerics.lgamma;
-import Math._;
+import math._;
 
 /**
 * A binomial distribution returns how many coin flips out of n are heads,

@@ -26,9 +26,9 @@ class Polya[T](prior: DoubleCounter[T])(implicit rand: RandBasis=Rand) extends D
     probabilityOf(ctr);
   }
   
-  def probabilityOf(x: DoubleCounter[T]) = Math.exp(logProbabilityOf(x));
+  def probabilityOf(x: DoubleCounter[T]) = math.exp(logProbabilityOf(x));
   def logProbabilityOf(x: DoubleCounter[T]) = {
-    Math.exp(unnormalizedLogProbabilityOf(x) + logNormalizer);
+    math.exp(unnormalizedLogProbabilityOf(x) + logNormalizer);
   }
   
   def unnormalizedLogProbabilityOf(x: DoubleCounter[T]):Double = {

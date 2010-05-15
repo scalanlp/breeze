@@ -16,7 +16,7 @@ package scalanlp.classify;
  limitations under the License. 
 */
 
-import Math._;
+import math._;
 import scalala.tensor.counters._;
 import Counters._;
 import scalanlp.data._;
