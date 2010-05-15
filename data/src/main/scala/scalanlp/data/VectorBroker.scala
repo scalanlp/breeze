@@ -19,6 +19,7 @@ package scalanlp.data
 
 import scalanlp.util.Index;
 import scalala.tensor.dense.DenseVector
+import scalala.tensor.sparse.SparseVector
 import scalanlp.collection.mutable.SparseArray
 import scalala.tensor.counters.Counters._;
 import scalala.tensor._;
@@ -52,6 +53,15 @@ trait VectorBroker[T] {
     if(default != 0.0)
       Arrays.fill(vec.data,default);
     vec
+  }
+
+  /**
+   * Creates a DenseVector with the index's size
+   */
+  final def mkSparseVector(default: Double=0.0):SparseVector = {
+    val vec = new SparseVector(index.size)
+    vec.default = default;
+    vec;
   }
 
   /**
