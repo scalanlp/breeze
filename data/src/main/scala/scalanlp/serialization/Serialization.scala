@@ -287,3 +287,6 @@ trait StringSerialization extends SerializationFormat {
   /** Demarshalls a value from the given string. */
   def fromString[T:Readable](str: String) : T;
 }
+
+class SerializationException(msg : String)
+extends RuntimeException(msg);
