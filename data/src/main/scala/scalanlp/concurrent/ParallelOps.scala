@@ -27,8 +27,14 @@ object ParallelOps {
     def par(threshold: Int) = new ParallelSeqOps(seq,threshold);
   }
 
+  implicit def parallelArrayOps[T](seq: Array[T]) = new {
+    def par = new ParallelSeqOps(seq);
+    def par(threshold: Int) = new ParallelSeqOps(seq,threshold);
+  }
+
   final class ParallelSeqOps[T](seq: Seq[T], threshold: Int=16) {
     def withSequentialThreshold(threshold: Int) = new ParallelSeqOps(seq,threshold);
+    
     def fold[B](id: =>B)(sequentialFold: (B,T)=>B)(finalFold: (B,B)=>B):B = {
       val action = new BinaryRecursiveAction(finalFold, { (start:Int,end:Int) =>
           seq.view(start, end).foldLeft(id)(sequentialFold)
@@ -45,7 +51,7 @@ object ParallelOps {
 
     def mapReduce[U,B>:U](f: T=>U, r: (B,B)=>B) = {
       val action = new BinaryRecursiveAction(r, { (start:Int,end:Int) =>
-          seq.view(start, end).map(f).reduceLeft(r);
+          seq.view(start, end).iterator.map(f).reduceLeft(r);
         });
       DefaultPool.invokeAndGet(action);
     }
