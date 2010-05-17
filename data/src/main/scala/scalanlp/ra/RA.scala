@@ -21,14 +21,13 @@ import java.io.File;
 import scalanlp.pipes.Pipes;
 import scalanlp.serialization.FileSerialization;
 
-
-
-//
-// ResearchAssistant for Scala
-//
-
+/**
+ * Represents a set of paths to examine for files with a given name.
+ *
+ * @author dramage
+ */
 case class FileResourceSet(roots : String*)(implicit val pipes : Pipes) {
-  import java.io.File.separator;
+  import File.separator;
   import pipes._;
   
   val _roots = roots.map(root =>
@@ -38,12 +37,18 @@ case class FileResourceSet(roots : String*)(implicit val pipes : Pipes) {
    * Returns the existing resource with the given name if it exists in the path,
    * otherwise returning the the implicit pipes' name.
    */
-  def apply(name : String) : java.io.File = {
+  def apply(name : String) : File = {
     val files = _roots.map(root => root + separator + name).filter(f => file(f).exists);
     if (files.length == 0) file(name) else file(files(0));
   }
 }
 
+/**
+ * Runtime context object for experiments, providing a logging method, pipes context,
+ * and a random number generator.
+ *
+ * @author dramage
+ */
 case class RA(
   /** Returns the file system context of this branch. */
   val pipes : Pipes,
@@ -55,8 +60,8 @@ case class RA(
   val random : java.util.Random,
   
   /** Returns the parent of this context or null if it is the root context. */
-  val parent : Option[RA] = None
-) extends CellBroker {
+  val parent : Option[RA] = None)
+{
   
   RA.init();
 
@@ -69,29 +74,30 @@ case class RA(
   def parameter[E](name : String)(value : =>E) : E = {
     try {
       val v = value;
-      log("RA.parameter: "+name+" = "+v);
+      log("[RA.parameter] "+name+" = "+v);
       v;
     } catch {
       case ex : Throwable =>
         throw new ParameterException("Error getting value for "+name,ex);
     }
   }
-  
+
   def task[E](name : String)(exec : =>E) : E = {
-    log("RA: "+name+" started");
+    log("[RA.task] "+name+" started");
     val rv = exec;
-    log("RA: "+name+" done");
+    log("[RA.task] "+name+" done");
     rv;
   }
 
   /** Returns a cached view of the given value, loading from a cell if possible. */
-  def cache[V](cacheFile : java.io.File)(p : =>V)
+  def cache[V](cacheFile : File)(p : =>V)
   (implicit readable : FileSerialization.Readable[V], writable : FileSerialization.Writable[V]) =
     cell(cacheFile)(p).get;
-  
-  def cell[V](cacheFile : java.io.File)(p : =>V) =
-    new Cell(cacheFile,p) { val ra = RA.this };
-  
+
+  /** Returns a cell representing the state of computation backed by the given cache file. */
+  def cell[V](cacheFile : File)(p : =>V) =
+    new Cell(cacheFile,p)(this);
+
   /** Gets a (named) child context in a named folder, creating it if necessary. */
   def branch(dir : File) : RA = {
     val _pipes = Pipes(pipes);
@@ -113,15 +119,12 @@ case class RA(
     branch(pipes.file(name));
 }
   
-class ParameterException(msg : String, cause : Throwable)
-  extends RuntimeException(msg,cause);  
-
 object RA {
-  val bean = java.lang.management.ManagementFactory.getRuntimeMXBean();
+  protected val bean = java.lang.management.ManagementFactory.getRuntimeMXBean();
   
   val seed = new java.util.Random().nextLong;
   
-  val seeds = new scala.collection.mutable.HashMap[String,Int] with scala.collection.mutable.SynchronizedMap[String,Int] {
+  protected val seeds = new scala.collection.mutable.HashMap[String,Int] with scala.collection.mutable.SynchronizedMap[String,Int] {
     override def default(x : String) = 0;
   }
   
@@ -144,3 +147,6 @@ object RA {
   /** Simple empty method to ensure the static initializer runs. */
   protected[ra] def init() { }
 }
+
+class ParameterException(msg : String, cause : Throwable)
+  extends RuntimeException(msg,cause);
