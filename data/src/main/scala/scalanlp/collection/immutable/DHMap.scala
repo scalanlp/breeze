@@ -39,7 +39,10 @@ class DHMap (private val map: Map[String,Any]) {
   /** Get a value corresponding to the given type from the map.*/
   def get[U](implicit m: Manifest[U]) =
     map.get(m.toString).asInstanceOf[Option[U]].get;
-  
+
+  def contains[U](implicit m : Manifest[U]) : Boolean =
+    map.contains(m.toString);
+
   /** Get a value corresponding to the given type from the map.*/
   def apply[U]()(implicit m: Manifest[U]) = get[U];
   
