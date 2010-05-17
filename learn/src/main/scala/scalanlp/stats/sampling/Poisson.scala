@@ -21,6 +21,7 @@ import math._;
 
 /**
  * Represents a Poisson random variable.
+ * @author dlwh
  */
 class Poisson(val mean: Double)(implicit rand: RandBasis=Rand) extends DiscreteDistr[Int] with Moments[Double] {
   private val ell = math.exp(-mean);

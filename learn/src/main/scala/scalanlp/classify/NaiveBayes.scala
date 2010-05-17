@@ -28,6 +28,7 @@ import scala.collection.Map;
  * It automatically trains itself given the collection c of
  * learning examples.
  *
+ * @author dlwh
  * @param c: a collection of example documents
  * @param wordSmoothing: how much smoothing for each word
  * @param classSmoothing: how much smoothing for the class.

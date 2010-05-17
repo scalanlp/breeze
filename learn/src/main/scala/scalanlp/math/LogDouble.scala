@@ -21,7 +21,7 @@ import Numerics._;
 
 /**
 * Represents a double in log space, to prevent under/overflow
-* These guys are horribly slow right now, thanks to boxing in Java. Hopefully that will away one day.
+* These guys are horribly slow right now, thanks to boxing in Java. Hopefully that will go away one day.
 *
 * @author dlwh
 */

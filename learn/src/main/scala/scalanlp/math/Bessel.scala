@@ -22,6 +22,8 @@ import Numerics._;
 
 /**
  * Implementations of the Bessel functions, based on Numerical Recipes
+ *
+ * @author dlwh
  */
 object Bessel {
   private val i0p = Array(9.999999999999997e-1,2.466405579426905e-1, 1.478980363444585e-2,
