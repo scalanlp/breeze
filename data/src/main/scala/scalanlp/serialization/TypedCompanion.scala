@@ -130,7 +130,7 @@ extends TypedCompanion[ReadWritable[P1],This] {
       val names = TypedCompanion.paranamer.lookupParameterNames(constructor);
       t.asInstanceOf[AnyRef].getClass.getMethod(names(0)).invoke(t).asInstanceOf[P1];
     } catch {
-      case t : Throwable => throw new TypedCompanionException(
+      case ex : Throwable => throw new TypedCompanionException(
         "Could not automatically recover components of "+
         t.asInstanceOf[AnyRef].getClass+": you must provide a custom "+
         "unpack() implementation in "+this.getClass, t);
@@ -194,7 +194,7 @@ extends TypedCompanion[(ReadWritable[P1],ReadWritable[P2]),This] {
       val p2 = t.asInstanceOf[AnyRef].getClass.getMethod(names(1)).invoke(t).asInstanceOf[P2];
       (p1,p2);
     } catch {
-      case t : Throwable => throw new TypedCompanionException(
+      case ex : Throwable => throw new TypedCompanionException(
         "Could not automatically recover components of "+
         t.asInstanceOf[AnyRef].getClass+": you must provide a custom "+
         "unpack() implementation in "+this.getClass, t);
