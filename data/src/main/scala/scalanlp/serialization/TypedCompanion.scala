@@ -133,7 +133,7 @@ extends TypedCompanion[ReadWritable[P1],This] {
       case ex : Throwable => throw new TypedCompanionException(
         "Could not automatically recover components of "+
         t.asInstanceOf[AnyRef].getClass+": you must provide a custom "+
-        "unpack() implementation in "+this.getClass, t);
+        "unpack() implementation in "+this.getClass, ex);
         
     }
   }
@@ -197,7 +197,7 @@ extends TypedCompanion[(ReadWritable[P1],ReadWritable[P2]),This] {
       case ex : Throwable => throw new TypedCompanionException(
         "Could not automatically recover components of "+
         t.asInstanceOf[AnyRef].getClass+": you must provide a custom "+
-        "unpack() implementation in "+this.getClass, t);
+        "unpack() implementation in "+this.getClass, ex);
     }
   }
 
