@@ -60,9 +60,9 @@ class TopK[T](k : Int)(implicit ord : Ordering[T]) extends Iterable[T] {
 
     // no match found, return insertion point
     if (ord.lteq(key, keys(mid)))
-      return -(mid)-1;     // Insert here (before mid)
+      return ~mid;       // Insert here (before mid)
     else
-      return -(mid + 1)-1; // Insert after mid
+      return ~(mid + 1); // Insert after mid
   }
 }
 
