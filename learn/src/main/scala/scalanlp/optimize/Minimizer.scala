@@ -19,7 +19,7 @@ package scalanlp.optimize;
 import scalala.tensor.Vector;
 
 /**
-* Anything that can minimize a Diff Function
+* Anything that can minimize a function
 *
 * @author dlwh
 */
