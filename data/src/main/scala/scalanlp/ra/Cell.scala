@@ -27,7 +27,7 @@ import scalanlp.serialization.FileSerialization;
  *
  * @author dramage
  */
-class Cell[V](cache : File, eval : => V)(implicit ra : RA) {
+class Cell[V](val path : File, eval : => V)(implicit ra : RA) {
   import ra.pipes._;
   import Cell._;
 
@@ -35,21 +35,35 @@ class Cell[V](cache : File, eval : => V)(implicit ra : RA) {
   protected var value : Option[V] = None;
 
   /** The lock file on disk marks this cell as being computed. */
-  protected val lock = new File(cache + ".status");
+  protected val lock = new File(path + ".status");
 
   /**
    * Returns the status of the cell as a function of its lock state.
    */
   def status : Status = {
-    if (cache.exists && !lock.exists) {
+    if (path.exists && !lock.exists) {
       return Ready;
-    } else if (!cache.exists && !lock.exists) {
+    } else if (!path.exists && !lock.exists) {
       return Missing;
     } else { // lock exists
       return Pending;
     }
   }
 
+  /**
+   * Compute the value of this cell if it has not already been computed.
+   * The behavior of this function depends on the cell's status: if 
+   * status == Missing, then the cell is evaluated and stored by calling
+   * cell.get.  Otherwise this call does nothing.
+   */
+  def compute(implicit loadable : FileSerialization.Readable[V], saveable : FileSerialization.Writable[V]) : Unit = {
+    if (status == Missing) get;
+  }
+
+  /**
+   * Returns the value of this cell, either by loading it if status == Ready
+   * or by computing it fresh, in which case the value is saved.
+   */
   def get(implicit loadable : FileSerialization.Readable[V], saveable : FileSerialization.Writable[V]) : V = {
     value match {
       // value already loaded
@@ -58,7 +72,7 @@ class Cell[V](cache : File, eval : => V)(implicit ra : RA) {
         // value not yet loaded
       case None => {
         if (status == Pending) {
-          ra.log("[RA.cell] waiting for "+cache);
+          ra.log("[RA.cell] waiting for "+path);
           while (status == Pending) {
             Thread.sleep(500l);
           }
@@ -67,8 +81,8 @@ class Cell[V](cache : File, eval : => V)(implicit ra : RA) {
         val v : V = status match {
           case Ready   => {
             // value is ready, load and return it
-            ra.log("[RA.cell] loading "+cache);
-            implicitly[FileSerialization.Readable[V]].read(cache);
+            ra.log("[RA.cell] loading "+path);
+            implicitly[FileSerialization.Readable[V]].read(path);
           }
 
           case Missing => {
@@ -79,10 +93,10 @@ class Cell[V](cache : File, eval : => V)(implicit ra : RA) {
               return get;
             }
 
-            ra.log("[RA.cell] creating "+cache);
+            ra.log("[RA.cell] creating "+path);
             List(RA.pid) | lock;
             val rv = eval;
-            implicitly[FileSerialization.Writable[V]].write(cache, rv);
+            implicitly[FileSerialization.Writable[V]].write(path, rv);
             lock.delete();
             rv;
           }
@@ -90,13 +104,13 @@ class Cell[V](cache : File, eval : => V)(implicit ra : RA) {
           case Partial => {
             // partial computation that we can help complete
 
-            ra.log("[RA.cell] helping compute "+cache);
+            ra.log("[RA.cell] helping compute "+path);
             val rv = eval;
             rv;
           }
 
           case Pending =>
-            throw new CellException("Unexpected Pending state for "+cache);
+            throw new CellException("Unexpected Pending state for "+path);
         }
 
         value = Some(v);
@@ -106,7 +120,7 @@ class Cell[V](cache : File, eval : => V)(implicit ra : RA) {
   }
 
   override def toString =
-    "Cell("+cache+","+status+")";
+    "Cell("+path+","+status+")";
 }
 
 object Cell {
