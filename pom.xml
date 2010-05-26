@@ -9,6 +9,7 @@
   <modules>
     <module>./data</module>
     <module>./learn</module>
+    <module>./graphs</module>
   </modules>
   
   <inceptionYear>2008</inceptionYear>
