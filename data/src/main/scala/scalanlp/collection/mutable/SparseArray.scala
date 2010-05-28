@@ -21,22 +21,25 @@ import scala.reflect.ClassManifest;
 import scala.collection.mutable._;
 
 /**
-* Treats an array as a sparse array. Logarithm access time.
-* 
-* @author dlwh
-*/
-class SparseArray[@specialized T:ClassManifest](val maxSize: Int, initialLength:Int = 3) extends Map[Int,T] with MapLike[Int,T,SparseArray[T]] {
-  private var data = new Array[T](initialLength);
-  private var index = new Array[Int](initialLength);
+ * Treats an array as a sparse array.  Logarithmic access time.
+ *
+ * @param length The virtual length of the array.
+ * @param default The default value of elements not in the sparse array.
+ * @param initial The initial length of the sparse data structures.
+ *
+ * @author dlwh, dramage
+ */
+class SparseArray[@specialized T:ClassManifest]
+(val length : Int, val default : T, initial : Int = 3) {
 
-  require(data.length == index.length);
- 
-  override def size = used;
+  private var data = new Array[T](initial);
+  private var index = new Array[Int](initial);
+
   private var lastIndex = -1;
   private var lastOffset = -1;
   final var used : Int = 0;
 
-  override def empty = new SparseArray[T](0);
+  def size = used;
 
   def -=(ind: Int) = {
     val i = findOffset(ind);
@@ -49,19 +52,17 @@ class SparseArray[@specialized T:ClassManifest](val maxSize: Int, initialLength:
     this
   }
 
-
   def +=(kv: (Int,T)) = {
     this.update(kv._1,kv._2);
     this
   }
 
-  override def get(x: Int) = {
+  def get(x: Int) = {
     val ind = findOffset(x)
-    if(ind < 0) None else Some(data(ind));
+    if (ind < 0) None else Some(data(ind));
   }
 
-
-  final override def foreach[U](f: Function1[(Int,T),U]) {
+  def foreach[U](f: Function1[(Int,T),U]) {
     var i = 0;
     while(i < used) {
       f(index(i),data(i));
@@ -69,9 +70,9 @@ class SparseArray[@specialized T:ClassManifest](val maxSize: Int, initialLength:
     }
   }
 
-  override final def iterator = (0 until used).iterator map { i => (index(i),data(i)) };
-  override def keysIterator = index.iterator.take(used);
-  override def valuesIterator = data.iterator.take(used);
+  final def iterator = (0 until used).iterator map { i => (index(i),data(i)) };
+  def keysIterator = index.iterator.take(used);
+  def valuesIterator = data.iterator.take(used);
 
   // Taken from Scalala
 
@@ -90,8 +91,8 @@ class SparseArray[@specialized T:ClassManifest](val maxSize: Int, initialLength:
   private def findOffset(i : Int) : Int = {
     if (i < 0)
       throw new IndexOutOfBoundsException("index is negative (" + index + ")");
-    if (i >= maxSize)
-      throw new IndexOutOfBoundsException("index >= maxSize (" + index + " >= " + maxSize + ")");
+    if (i >= length)
+      throw new IndexOutOfBoundsException("index >= length (" + index + " >= " + length + ")");
 
     if (i == lastIndex) {
       // previous element; don't need to update lastOffset
@@ -143,15 +144,15 @@ class SparseArray[@specialized T:ClassManifest](val maxSize: Int, initialLength:
 
       // no match found, return insertion point
       if (i <= index(mid))
-        return -(mid)-1;     // Insert here (before mid)
+        return ~mid;     // Insert here (before mid)
       else
-        return -(mid + 1)-1; // Insert after mid
+        return ~(mid + 1); // Insert after mid
     }
   }
 
-  override def apply(i : Int) : T = {
+  def apply(i : Int) : T = {
     val offset = findOffset(i);
-    if (offset >= 0) data(offset) else default(i);
+    if (offset >= 0) data(offset) else default;
   }
 
   /**
@@ -167,14 +168,14 @@ class SparseArray[@specialized T:ClassManifest](val maxSize: Int, initialLength:
    * 196608 bytes, although more space is needed temporarily
    * while moving to the new arrays.
    */
-  override def update(i : Int, value : T) = {
+  def update(i : Int, value : T) = {
     val offset = findOffset(i);
     if (offset >= 0) {
       // found at offset
       data(offset) = value;
     } else if (value != null) {
       // need to insert at position -(offset+1)
-      val insertPos = -(offset+1);
+      val insertPos = ~offset;
 
       used += 1;
 
@@ -218,12 +219,11 @@ class SparseArray[@specialized T:ClassManifest](val maxSize: Int, initialLength:
 
   /** Compacts the vector by removing all stored default values. */
   def compact() {
-
     val nz = { // number of non-zeros
       var _nz = 0;
       var i = 0;
       while (i < used) {
-        if (data(i) != null) {
+        if (data(i) != default) {
           _nz += 1;
         }
         i += 1;
@@ -237,7 +237,7 @@ class SparseArray[@specialized T:ClassManifest](val maxSize: Int, initialLength:
     var i = 0;
     var o = 0;
     while (i < used) {
-      if (data(i) != null) {
+      if (data(i) != default) {
         newData(o) = data(i);
         newIndex(o) = index(i);
         o += 1;
@@ -253,12 +253,12 @@ class SparseArray[@specialized T:ClassManifest](val maxSize: Int, initialLength:
   private def use(inIndex : Array[Int], inData : Array[T], inUsed : Int) = {
     if (inIndex == null || inData == null)
       throw new IllegalArgumentException("Index and data must be non-null");
-    if (inIndex.size != inData.size)
+    if (inIndex.length != inData.length)
       throw new IllegalArgumentException("Index and data sizes do not match");
     // I spend 7% of my time in this call. It's gotta go.
     //if (inIndex.contains((x:Int) => x < 0 || x > size))
     //  throw new IllegalArgumentException("Index array contains out-of-range index");
-    if (inIndex.size < inUsed)
+    if (inIndex.length < inUsed)
       throw new IllegalArgumentException("Used is greater than provided array");
     // I spend 7% of my time in this call. It's gotta go. and this one.
     //for (i <- 1 until used; if (inIndex(i-1) > inIndex(i))) {
@@ -275,6 +275,87 @@ class SparseArray[@specialized T:ClassManifest](val maxSize: Int, initialLength:
     lastIndex = -1;
   }
 
+  override def hashCode = {
+    var rv = 0;
+    var i = 0;
+    while (i < used) {
+      if (data(i) != default) {
+        rv += 17*rv + data(i).hashCode*7 + index(i);
+      }
+      i += 1;
+    }
+    rv;
+  }
 
+  override def equals(other : Any) : Boolean = other match {
+    case that : SparseArray[_] =>
+      var thisI = 0;
+      var thatI = 0;
+      while (thisI < this.used && thatI < that.used) {
+        if (this.index(thisI) < that.index(thatI)) {
+          if (this.data(thisI) != that.default) return false;
+          thisI += 1;
+        } else if (that.index(thatI) < this.index(thisI)) {
+          if (that.data(thatI) != this.default) return false;
+          thatI += 1;
+        } else if (this.index(thisI) == that.index(thatI)) {
+          if (this.data(thisI) != that.data(thatI)) return false;
+          thisI += 1;
+          thatI += 1;
+        }
+      }
+      while (thisI < this.used) {
+        if (this.data(thisI) != that.default) return false;
+        thisI += 1;
+      }
+      while (thatI < that.used) {
+        if (that.data(thatI) != this.default) return false;
+        thatI += 1;
+      }
+      true;
+    case _ => false;
+  }
+}
 
+object SparseArray {
+
+  def apply[T:ClassManifest:DefaultValue](length : Int = Int.MaxValue, initial : Int = 3) =
+    new SparseArray[T](default = implicitly[DefaultValue[T]].value,
+                       length = length, initial = initial);
+
+  /** Default value of type T as used by SparseArray. */
+  trait DefaultValue[@specialized T] {
+    def value : T;
+  }
+
+  /** Default value of type T as used by SparseArray. */
+  object DefaultValue {
+    implicit val IntDefaultValue =
+      new DefaultValue[Int] { override def value = 0; }
+
+    implicit val LongDefaultValue =
+      new DefaultValue[Long] { override def value = 0l; }
+
+    implicit val ShortDefaultValue =
+      new DefaultValue[Short] { override def value = 0.toShort; }
+
+    implicit val CharDefaultValue =
+      new DefaultValue[Char] { override def value = 0.toChar; }
+
+    implicit val ByteDefaultValue =
+      new DefaultValue[Byte] { override def value = 0.toByte; }
+
+    implicit val FloatDefaultValue =
+      new DefaultValue[Float] { override def value = 0.0f; }
+
+    implicit val DoubleDefaultValue =
+      new DefaultValue[Double] { override def value = 0.0; }
+    
+    implicit val BooleanDefaultValue =
+      new DefaultValue[Boolean] { override def value = false; }
+    
+    implicit def ObjectDefaultValue[T<:AnyRef] = new DefaultValue[T] {
+      override def value : T = null.asInstanceOf[T];
+    }
+  }
 }
