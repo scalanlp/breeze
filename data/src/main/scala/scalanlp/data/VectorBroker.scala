@@ -86,8 +86,6 @@ trait VectorBroker[T] {
     vec
   }
 
-
-
   /**
    * Encodes a DoubleCounter as a Vector. All elements in the counter must be in the index.
    */
@@ -103,10 +101,16 @@ trait VectorBroker[T] {
    * Creates an array of arbitrary type with the index's size.
    */
   def mkArray[V:ClassManifest] = new Array[V](index.size);
+  
   /**
-   * Fills an array of arbitrary type with the value provideda and with the index's size.
+   * Fills an array of arbitrary type with the value provided and with the index's size.
    */
-  def fillArray[V:ClassManifest](default : => V) = Array.fill(index.size)(default);
+  def fillArray[V:ClassManifest](default : => V): Array[V] = Array.fill(index.size)(default);
+
+  /**
+   * Fills an array of arbitrary type by tabulating the function
+   */
+  def tabulateArray[V:ClassManifest](f: T=>V): Array[V] = Array.tabulate(index.size)(i => f(index.get(i)));
 
   /**
    * Converts an array into a Map from T's to whatever was in the array.
