@@ -119,20 +119,13 @@ trait VectorBroker[T] {
     Map.empty ++ array.zipWithIndex.map{ case (v,i) => (index.get(i),v)}
   }
 
-  def mkSparseArray[V:ClassManifest] = new SparseArray[V](index.size);
+  def mkSparseArray[V:ClassManifest:SparseArray.DefaultValue] = SparseArray[V](index.size);
   def fillSparseArray[V:ClassManifest](deflt : => V) = {
-    val arr = new SparseArray[V](index.size) {
-      override def default(k: Int) = {
-        val v = deflt;
-        update(k,v);
-        v
-      }
-    }
-    arr
+    new SparseArray[V](index.size,deflt);
   }
 
   def decode[V](array: SparseArray[V]):Map[T,V] = {
-    Map.empty ++ array.map{ case (i,v) => (index.get(i),v)}
+    Map.empty ++ array.iterator.map{ case (i,v) => (index.get(i),v)}
   }
 
 
