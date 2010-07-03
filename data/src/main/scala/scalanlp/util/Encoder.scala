@@ -1,4 +1,5 @@
-package scalanlp.data
+package scalanlp.util
+
 /*
  Copyright 2010 David Hall, Daniel Ramage
 
@@ -17,7 +18,6 @@ package scalanlp.data
 
 
 
-import scalanlp.util.Index;
 import scalala.tensor.dense.DenseVector
 import scalala.tensor.sparse.SparseVector
 import scalanlp.collection.mutable.SparseArray
@@ -33,13 +33,13 @@ import scalala.Scalala._;
  *
  * @author dlwh
  */
-trait VectorBroker[T] {
+trait Encoder[T] {
   val index: Index[T]
 
   /**
    * Creates a Vector of some sort with the index's size.
    */
-  def mkVector(default: Double=0.0):Vector = {
+  def mkVector(default: Double=0.0): Vector = {
     val vec = new AdaptiveVector(index.size)
     vec.default = default;
     vec
@@ -131,8 +131,16 @@ trait VectorBroker[T] {
 
 }
 
-object VectorBroker {
-  def fromIndex[T](ind: Index[T]):VectorBroker[T] = new VectorBroker[T] {
+/**
+ * For encoding counters as vectors and decoding vectors back to counters
+ *
+ * @author dlwh
+ */
+
+
+object Encoder {
+  def fromIndex[T](ind: Index[T]):Encoder[T] = new Encoder[T] {
     val index = ind;
   }
 }
+
