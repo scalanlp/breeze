@@ -71,6 +71,9 @@ class SparseArray[@specialized T:ClassManifest]
     }
   }
 
+  // XXX TODO: implement a real filter somehow.
+  def filter(f: ((Int,T))=>Boolean) = iterator filter f;
+
   final def iterator = (0 until used).iterator map { i => (index(i),data(i)) };
   def keysIterator = index.iterator.take(used);
   def valuesIterator = data.iterator.take(used);
