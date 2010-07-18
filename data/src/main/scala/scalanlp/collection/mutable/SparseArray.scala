@@ -158,7 +158,11 @@ class SparseArray[@specialized T:ClassManifest]
 
   def apply(i : Int) : T = {
     val offset = findOffset(i);
-    if (offset >= 0) data(offset) else default;
+    if (offset >= 0) data(offset) else {
+      val x = default;
+      update(i,x);
+      x
+    }
   }
 
   /**
