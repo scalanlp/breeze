@@ -78,6 +78,8 @@ class SparseArray[@specialized T:ClassManifest]
   def keysIterator = index.iterator.take(used);
   def valuesIterator = data.iterator.take(used);
 
+  def contains(i: Int) = findOffset(i) >= 0;
+
   // Taken from Scalala
 
   /** Records that the given index was found at this.index(offset). */
