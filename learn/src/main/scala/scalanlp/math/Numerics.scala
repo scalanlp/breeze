@@ -16,7 +16,10 @@ package scalanlp.math;
  limitations under the License. 
 */
 
-import scalala.tensor.counters._;
+import scalala.tensor.counters._
+import scalala.tensor.adaptive.AdaptiveVector
+import scalala.tensor.dense.DenseVector
+import scalala.tensor.sparse.SparseVector;
 import Counters._;
 
 /**
@@ -47,7 +50,7 @@ object Numerics {
             f*(-1/132.0 +
             f*(691/32760.0 +
             f*(-1/12.0 +
-            f*3617./8160.0)))))));
+            f*3617.0/8160.0)))))));
     r + log(x) - 0.5/x + t;
   }
 
@@ -199,14 +202,21 @@ object Numerics {
   * Sums together things in log space.
   * @return log(\sum exp(a_i))
   */
-  def logSum(a:Vector):Double = {
-    if(a.size == 1) a(0)
-    else if(a.size ==2) logSum(a(0),a(1));
-    else {
-      val m = a.activeValues reduceLeft(_ max _);
-      if(m.isInfinite) m
-      else m + log(a.activeValues.foldLeft(0.)( (a,b) => a+exp( b - m )))
-    }
+  def logSum(a:Vector):Double = a match {
+    case a: AdaptiveVector => logSum(a.innerVector);
+    case a: DenseVector => logSum(a.data);
+    case a: SparseVector => logSum(a.data.take(a.used));
+    case _ => logSum(a.activeValues,a.activeValues.reduceLeft(_ max _));
+  }
+
+  /**
+  * Sums together things in log space.
+  * @return log(\sum exp(a_i))
+  */
+  def logNormalize(a:Vector):Vector = {
+    val sum = logSum(a);
+    import scalala.Scalala.{logSum => _, _};
+    a - sum value;
   }
 
   /**
