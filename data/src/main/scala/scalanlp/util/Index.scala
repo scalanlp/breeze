@@ -288,4 +288,44 @@ object Index {
   def load(source : {def getLines : Iterator[String]}) : Index[String] = {
     apply(source.getLines.map(_.stripLineEnd));
   }
+
+  implicit object FileFormat extends scalanlp.serialization.FileSerialization.ReadWritable[Index[String]] {
+    import scalanlp.pipes.Pipes.global._;
+    
+    override def read(source : java.io.File) = {
+      Index(source.getLines);
+    }
+
+    override def write(target : java.io.File, index : Index[String]) = {
+      if (index.iterator.exists(_.contains("\n"))) {
+        throw new scalanlp.serialization.SerializationException("Cannot serialize index with strings that contain newline.");
+      }
+      index.iterator | target;
+    }
+  }
+
+  implicit object TextFormat extends scalanlp.serialization.TextSerialization.ReadWritable[Index[String]] {
+    import scalanlp.serialization.TextSerialization._;
+
+    override def read(source : Input) = {
+      expect(source, "Index[String]::");
+      val lines = readLine(source).toInt;
+      expect(source, "{\n");
+      val rv = Index(for (i <- 0 until lines) yield readLine(source));
+      expect(source, "}\n");
+      rv;
+    }
+
+    override def write(sink : Output, index : Index[String]) {
+      if (index.iterator.exists(_.contains("\n"))) {
+        throw new scalanlp.serialization.SerializationException("Cannot serialize index with strings that contain newline.");
+      }
+
+      sink.append("Index[String]::"+index.size+"\n{\n");
+      for (v <- index) {
+        sink.append(v + "\n");
+      }
+      sink.append("}\n");
+    }
+  }
 }
