@@ -28,7 +28,7 @@ import Numerics._;
 class NumericsTest extends FunSuite with Checkers {
   import Arbitrary._;
   implicit def ae(x: Double) = new {
-    def =~=(y: Double) = Math.abs(x-y)/x < 1E-6;
+    def =~=(y: Double) = (x-y).abs/x < 1E-6;
   }
 
   test("logsumming is approximately associative") {

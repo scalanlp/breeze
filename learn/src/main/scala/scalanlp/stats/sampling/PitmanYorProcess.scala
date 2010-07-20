@@ -79,7 +79,7 @@ class PitmanYorProcess private (
     
     for( (k,v) <- c) {
       ret(k) += v;
-      if( Math.abs(ret(k)) < Math.abs(1 - alpha - 1E-4) || ret(k) < 0 && Math.abs(ret(k)) == Math.abs(alpha)) {
+      if( math.abs(ret(k)) < math.abs(1 - alpha - 1E-4) || ret(k) < 0 && math.abs(ret(k)) == math.abs(alpha)) {
         ret(k) = 0;
       } else if (ret(k) < 0) {
         throw new IllegalArgumentException("Reducing class " + k +"  to less than 0 " + ret(k))

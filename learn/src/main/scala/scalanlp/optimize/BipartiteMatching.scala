@@ -23,7 +23,8 @@ package scalanlp.optimize
  * and one greedy algorithm (competitive linking).
  *
  * Algorithms find <b> minimum </b> matchings.
- * 
+ *
+ * @author dlwh
  */
 trait BipartiteMatching {
   def extractMatching(weights: Seq[Seq[Double]]): (Seq[Int],Double);

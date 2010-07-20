@@ -48,76 +48,80 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
   require(m > 0);
 
   import LBFGS._;
+
   
   def minimize(f: DiffFunction[K,T], init: T):T = {
-    var iter = 0; 
-    var converged = false;
-    val n = init.domain.size; // number of parameters
-    
-    val x : T = init.copy;
-    //assert( norm((x - init),2) < 1E-4,x + " " + init);
-
-    val memStep = new ArrayBuffer[T];
-    val memGradDelta = new ArrayBuffer[T];
-    val memRho = new ArrayBuffer[Double];
-    var (v,grad) = f.calculate(x);
-
-    while( (maxIter <= 0 || iter < maxIter) && !converged) {
-      log(INFO)("Starting iteration: " + iter);
+    val steps = iterations(f,init);
+    val convSteps = for( cur@State(x,v,grad,iter,memStep,memGradDelta,memRho)  <- steps) yield {
+      log(INFO)("Iteration: " + iter);
       log(INFO)("Current v:" + v);
       log(INFO)("Current grad norm:" + norm(grad,2));
-      try {
-        val diag = if(memStep.size > 0) {
-          computeDiag(iter,grad,memStep.last,memGradDelta.last);
-        } else {
-          val ones : T = grad.like;
-          ones += 1;
-          ones
-        }
-        val step = computeDirection(iter, diag, grad, memStep, memGradDelta, memRho);
-        //log(INFO)("Step:" + step);
+      (cur,checkConvergence(v,grad));
+    }
 
-        val (stepScale,newVal) = chooseStepSize(iter,f, step, x, grad, v);
-        log(INFO)("Scale:" +  stepScale);
-        step *= stepScale;
-        x += step;
-        assert(norm(step,2) != 0, (stepScale,step,x,grad,diag));
+    convSteps.dropWhile(state => !state._2 && state._1.iter < maxIter).next._1.x;
+  }
 
-        val newGrad = f.gradientAt(x);
+  case class State private[LBFGS] (val x: T, val value: Double, val grad: T, val iter: Int = 0,
+                       private[LBFGS] val memStep: IndexedSeq[T] = IndexedSeq.empty,
+                       private[LBFGS] val memGradDelta: IndexedSeq[T] = IndexedSeq.empty,
+                       private[LBFGS] val memRho: IndexedSeq[Double] = IndexedSeq.empty
+                       ) {
+  }
 
-        memStep += step;
-        val gradDelta : T = newGrad.like;
-        gradDelta :+= (newGrad :- grad);
 
-        memGradDelta += gradDelta;
-        memRho += (step dot gradDelta);
+  def iterations(f: DiffFunction[K,T],init: T): Iterator[State] = Iterator.iterate{
+    val (v,grad) = f.calculate(init);
+    new State(init,v,grad);
+  } { state =>
+    val n = init.domain.size; // number of parameters
+    
+    val x : T = state.x.copy;
 
-        if(memStep.length > m) {
-          memStep.remove(0);
-          memRho.remove(0);
-          memGradDelta.remove(0);
-        }
+    val grad = state.grad;
+    val v = state.value;
+    val iter = state.iter;
 
-        grad = newGrad;
-        v = newVal;
+    try {
+      val diag = if(state.memStep.size > 0) {
+        computeDiag(iter,grad,state.memStep.last,state.memGradDelta.last);
+      } else {
+        val ones : T = grad.like;
+        ones += 1;
+        ones
+      }
+      val step: T = computeDirection(iter, diag, grad, state.memStep, state.memGradDelta, state.memRho);
+      //log(INFO)("Step:" + step);
 
-        converged = checkConvergence(v,grad);
-      } catch {
-        case e: NaNHistory => 
-          log(ERROR)("Something in the history is giving NaN's, clearing it!");
-          memStep.clear();
-          memGradDelta.clear();
-          memRho.clear();
-        case e: StepSizeUnderflow =>
-          log(ERROR)("Something in the history is giving NaN's, clearing it!");
-          memStep.clear();
-          memGradDelta.clear();
-          memRho.clear();
+      val (stepScale,newVal) = chooseStepSize(iter,f, step, x, grad, v);
+      log(INFO)("Scale:" +  stepScale);
+      step *= stepScale;
+      x += step;
+      assert(norm(step,2) != 0, (stepScale,step,x,grad,diag));
+
+      val newGrad = f.gradientAt(x);
+
+      val gradDelta : T = newGrad.like;
+      gradDelta :+= (newGrad :- grad);
+
+      var memStep = state.memStep :+ step;
+      var memGradDelta = state.memGradDelta :+ gradDelta;
+      var memRho = state.memRho :+ (step dot gradDelta);
+
+      if(memStep.length > m) {
+        memStep = memStep.drop(1);
+        memRho = memRho.drop(1);
+        memGradDelta = memGradDelta.drop(1);
       }
 
-      iter += 1;
+      new State(x,newVal,newGrad,iter+1,memStep,memGradDelta,memRho);
+
+    } catch {
+      case _: LBFGSException =>
+        log(ERROR)("Something in the history is giving NaN's, clearing it!");
+        new State(x,v,grad,iter);
     }
-    x
+
   }
 
   def computeDiag(iter: Int, grad: T, prevStep: T, prevGrad: T):T = {
@@ -144,12 +148,12 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
    * @param memGradStep the history of chagnes in gradients
    * @param memRho: the dotproduct of step and gradStep
    */
-   def computeDirection(iter: Int,
+   protected def computeDirection(iter: Int,
       diag: T,
       grad: T,
-      memStep: ArrayBuffer[T],
-      memGradStep: ArrayBuffer[T],
-      memRho: ArrayBuffer[Double]): T = {
+      memStep: IndexedSeq[T],
+      memGradStep: IndexedSeq[T],
+      memRho: IndexedSeq[Double]): T = {
     val dir = grad.copy;
     val as = new Array[Double](m);
 

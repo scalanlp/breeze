@@ -43,12 +43,7 @@ object DiffFunction {
   def withL2Regularization[K,T<:TensorSelfOp[K,T,Shape1Col] with Tensor1[K]](d: DiffFunction[K,T],weight: Double) = new DiffFunction[K,T] {
     override def gradientAt(x:T):T = {
       val grad = d.gradientAt(x);
-      adjustGradient(grad);
-    }
-
-    private def adjustGradient(grad: T) = {
-      grad += 2
-      grad;
+      myGrad(grad,x);
     }
 
     override def valueAt(x:T) = {
@@ -57,12 +52,18 @@ object DiffFunction {
     }
 
     private def myValueAt(x:T) = {
-      sum( x * weight / 2 value);
+      weight * math.pow(norm(x,2),2);
+    }
+
+    private def myGrad(g: T, x: T) = {
+      val g2 = g.copy;
+      g2 += (x * 2 * weight);
+      g2
     }
 
     override def calculate(x: T) = {
       val (v,grad) = d.calculate(x);
-      (v + myValueAt(x), adjustGradient(grad));
+      (v + myValueAt(x), myGrad(grad,x));
     }
   }
 }

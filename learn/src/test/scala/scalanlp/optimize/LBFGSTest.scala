@@ -75,7 +75,7 @@ class LBFGSTest extends FunSuite with Checkers {
       }
 
       val result = lbfgsString.minimize(f,init);
-      if(!result.exists{ case(k,v) => Math.abs(v - 3.0) > 1E-3} && !result.exists(_._2.isNaN)) {
+      if(!result.exists{ case(k,v) => math.abs(v - 3.0) > 1E-3} && !result.exists(_._2.isNaN)) {
         true
       } else {
         throw new Exception(result.toString + " is not close enough to 3!");

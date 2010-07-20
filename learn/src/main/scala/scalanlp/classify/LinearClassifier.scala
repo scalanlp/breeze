@@ -37,6 +37,8 @@ import scalala.tensor.operators.TensorShapes._;
  * \hat y_i = \arg\max_y w_y^T x_i + b_y
  * </code>
  *
+ * @author dlwh
+ *
  */
 @serializable
 @SerialVersionUID(1L)

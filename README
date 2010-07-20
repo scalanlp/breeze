@@ -1,0 +1,12 @@
+ScalaNLP-Core consists of libraries for NLP and Machine Learning.
+The library consists of two parts: 
+
+* ScalaNLP-Data: Libraries for managing datasets and job pipelines.
+* ScalaNLP-Learn: Machine Learning and Optimization.
+
+(c) David Hall and Daniel Ramage, 2009 - 
+
+This project can be built with maven:
+  mvn compile
+
+See doc/Tour for some examples.

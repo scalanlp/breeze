@@ -76,7 +76,7 @@ class StochasticGradientDescentTest extends FunSuite with Checkers {
       }
 
       val result = sgd.minimize(f,init);
-      (!result.exists{ case(k,v) => Math.abs(v - 3.0) > 1E-3}
+      (!result.exists{ case(k,v) => math.abs(v - 3.0) > 1E-3}
      && !result.exists(_._2.isNaN));
     }
 

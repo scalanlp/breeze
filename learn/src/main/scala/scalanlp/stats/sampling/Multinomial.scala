@@ -57,7 +57,7 @@ trait Multinomial[T] extends DiscreteDistr[T] {
 
   def probabilityOf(e : T) = components.apply(e) / total;
   def logProbabilityOf(c: DoubleCounter[T]) = {
-    val probs = for( (k,v) <- c) yield v * Math.log(components.apply(k) / total);
+    val probs = for( (k,v) <- c) yield v * math.log(components.apply(k) / total);
     probs.foldLeft(0.0)(_+_);
   }
   override def unnormalizedProbabilityOf(e:T) = components.apply(e);
@@ -87,12 +87,12 @@ object Multinomial {
    * is proportional to its count.
    */
   def apply[T](c : LogCounters.DoubleCounter[T])(implicit r:RandBasis) = new Multinomial[T] {
-    import Math._;
+    import math._;
     if(total.isNaN ) throw new IllegalArgumentException("total is " + total);
     def total = exp(c.logTotal);
     protected lazy val components = LogCounters.normalize(c);
     override def draw() = {
-      var prob = Math.log(rand.uniform.get())+ c.logTotal;
+      var prob = math.log(rand.uniform.get())+ c.logTotal;
       if(prob.isNaN) {
         Log.globalLog(Log.ERROR)("You got a NaN!");
       }

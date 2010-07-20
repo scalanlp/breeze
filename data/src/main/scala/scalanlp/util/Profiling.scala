@@ -32,7 +32,27 @@ object Profiling {
     }
     return total / n;
   }
-  
+
+  /**
+   * Times a single run.  Not scientific, but designed for rough timings in real programs.
+   */
+  def time(fn : => Unit) : Long = {
+    val start = System.currentTimeMillis;
+    fn;
+    (System.currentTimeMillis - start);
+  }
+
+  /**
+   * Times a single run of the function, logging it to std out
+   */
+  def time[T](lbl: String)(fn : => T) : T = {
+    val start = System.currentTimeMillis;
+    val r = fn;
+    println(lbl + ": " + (System.currentTimeMillis - start));
+    r
+  }
+
+
   
   def main(args : Array[String]) {
     val n = 1000000;

@@ -1,4 +1,5 @@
-package scalanlp.data
+package scalanlp.util
+
 /*
  Copyright 2010 David Hall, Daniel Ramage
 
@@ -17,8 +18,8 @@ package scalanlp.data
 
 
 
-import scalanlp.util.Index;
 import scalala.tensor.dense.DenseVector
+import scalala.tensor.sparse.SparseVector
 import scalanlp.collection.mutable.SparseArray
 import scalala.tensor.counters.Counters._;
 import scalala.tensor._;
@@ -32,13 +33,13 @@ import scalala.Scalala._;
  *
  * @author dlwh
  */
-trait VectorBroker[T] {
+trait Encoder[T] {
   val index: Index[T]
 
   /**
    * Creates a Vector of some sort with the index's size.
    */
-  def mkVector(default: Double=0.0):Vector = {
+  def mkVector(default: Double=0.0): Vector = {
     val vec = new AdaptiveVector(index.size)
     vec.default = default;
     vec
@@ -52,6 +53,15 @@ trait VectorBroker[T] {
     if(default != 0.0)
       Arrays.fill(vec.data,default);
     vec
+  }
+
+  /**
+   * Creates a DenseVector with the index's size
+   */
+  final def mkSparseVector(default: Double=0.0):SparseVector = {
+    val vec = new SparseVector(index.size)
+    vec.default = default;
+    vec;
   }
 
   /**
@@ -76,8 +86,6 @@ trait VectorBroker[T] {
     vec
   }
 
-
-
   /**
    * Encodes a DoubleCounter as a Vector. All elements in the counter must be in the index.
    */
@@ -93,10 +101,16 @@ trait VectorBroker[T] {
    * Creates an array of arbitrary type with the index's size.
    */
   def mkArray[V:ClassManifest] = new Array[V](index.size);
+  
   /**
-   * Fills an array of arbitrary type with the value provideda and with the index's size.
+   * Fills an array of arbitrary type with the value provided and with the index's size.
    */
-  def fillArray[V:ClassManifest](default : => V) = Array.fill(index.size)(default);
+  def fillArray[V:ClassManifest](default : => V): Array[V] = Array.fill(index.size)(default);
+
+  /**
+   * Fills an array of arbitrary type by tabulating the function
+   */
+  def tabulateArray[V:ClassManifest](f: T=>V): Array[V] = Array.tabulate(index.size)(i => f(index.get(i)));
 
   /**
    * Converts an array into a Map from T's to whatever was in the array.
@@ -105,27 +119,28 @@ trait VectorBroker[T] {
     Map.empty ++ array.zipWithIndex.map{ case (v,i) => (index.get(i),v)}
   }
 
-  def mkSparseArray[V:ClassManifest] = new SparseArray[V](index.size);
+  def mkSparseArray[V:ClassManifest:SparseArray.DefaultValue] = SparseArray[V](index.size);
   def fillSparseArray[V:ClassManifest](deflt : => V) = {
-    val arr = new SparseArray[V](index.size) {
-      override def default(k: Int) = {
-        val v = deflt;
-        update(k,v);
-        v
-      }
-    }
-    arr
+    new SparseArray[V](index.size,deflt);
   }
 
   def decode[V](array: SparseArray[V]):Map[T,V] = {
-    Map.empty ++ array.map{ case (i,v) => (index.get(i),v)}
+    Map.empty ++ array.iterator.map{ case (i,v) => (index.get(i),v)}
   }
 
 
 }
 
-object VectorBroker {
-  def fromIndex[T](ind: Index[T]):VectorBroker[T] = new VectorBroker[T] {
+/**
+ * For encoding counters as vectors and decoding vectors back to counters
+ *
+ * @author dlwh
+ */
+
+
+object Encoder {
+  def fromIndex[T](ind: Index[T]):Encoder[T] = new Encoder[T] {
     val index = ind;
   }
 }
+

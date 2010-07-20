@@ -135,6 +135,13 @@ trait Configuration {
       override def typeArguments = tpe.getActualTypeArguments.map(mkManifest(typeMap,_)).toList;
       override def toString = erasure.getName + argString;
     }
+    case tpe: ParameterizedType =>
+      val innerMan = mkManifest(Map.empty,tpe.getRawType);
+      new Manifest[Object] {
+        def erasure = innerMan.erasure;
+        override def typeArguments = tpe.getActualTypeArguments.map(mkManifest(typeMap,_)).toList;
+        override def toString = erasure.getName + argString;
+      }
     case tpe:Class[_] => new Manifest[Object] {
       def erasure = tpe;
       override def toString = erasure.getName + argString;
@@ -143,7 +150,7 @@ trait Configuration {
       case x: Manifest[_] => x.asInstanceOf[Manifest[Object]];
       case _ => throw new ConfigurationException("Don't know how to deal with " + tpe + " yet! Add an ArgumentParser.");
     }
-    case _ => throw new ConfigurationException("Don't know how to deal with " + tpe + " yet! Add an ArgumentParser.");
+  case _ => throw new ConfigurationException("Don't know how to deal with " + tpe + " yet! Add an ArgumentParser." + tpe.getClass.getName);
   }
 
   private def recursiveGetProperty(prefix: String):Option[String] = getProperty(prefix) match {

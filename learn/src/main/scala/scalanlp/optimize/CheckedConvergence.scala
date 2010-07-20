@@ -22,7 +22,7 @@ import scalala.tensor.operators._;
 import TensorShapes._;
 
 /**
- * A trait for optimization procedures that need to see if they're converged.
+ * A trait for gradient-based optimization procedures that need to see if they're converged.
  * 
  * @author dlwh
  */

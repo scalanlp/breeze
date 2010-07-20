@@ -18,7 +18,7 @@ package scalanlp.stats.sampling;
 
 import scala.collection.mutable.ArrayBuffer;
 import Rand._;
-import Math._;
+import math._;
 
 /**
 * Provides methods for doing MCMC.

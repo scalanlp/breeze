@@ -17,13 +17,14 @@ package scalanlp.stats.sampling;
 */
 
 import scalanlp.math.Numerics._;
-import Math._;
+import math._;
 
 /**
  * Represents a Poisson random variable.
+ * @author dlwh
  */
 class Poisson(val mean: Double)(implicit rand: RandBasis=Rand) extends DiscreteDistr[Int] with Moments[Double] {
-  private val ell = Math.exp(-mean);
+  private val ell = math.exp(-mean);
   //  TODO: this is from Knuth, but it's linear in mean.
   def draw() = {
     var k = 0;
@@ -35,7 +36,7 @@ class Poisson(val mean: Double)(implicit rand: RandBasis=Rand) extends DiscreteD
     k - 1;
   }
 
-  def probabilityOf(k:Int) = Math.exp(logProbabilityOf(k));
+  def probabilityOf(k:Int) = math.exp(logProbabilityOf(k));
   override def logProbabilityOf(k:Int) = {
     -mean + k * log(mean) - lgamma(k+1);
   }

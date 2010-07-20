@@ -41,7 +41,6 @@ class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]
   * Runs SGD on f, for mxIter. It ignores tol.
   */
   def minimize(f: BatchDiffFunction[K,T], init: T) = {
-    var temp = 1.0;
     var guess = init;
 
     log(Log.INFO)("SGD starting");
@@ -58,32 +57,23 @@ class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]
       log(Log.INFO)("SGD gradient: " + norm(grad,2));
       assert(grad.forall(!_._2.isInfinite));
       log(Log.INFO)("SGD value: " + value);
-      guess = update(guess,grad,temp);
+      guess = update(guess,grad,i);
       assert(guess.forall(!_._2.isInfinite));
       //log(Log.INFO)("SGD update: " + guess.mkString("[",",","]"));
 
       i+=1;
       converged = checkConvergence(value,grad);
-      temp = updateTemperature(alpha,i);
-      log(Log.INFO)("SGD temp: " + temp);
     }
     guess;
   }
   
   /**
-   * Updates the temperature based on a step size and the current iteration
-   */
-  def updateTemperature(alpha: Double, iter: Int) = {
-    alpha / (alpha + iter);
-  }
-
-  /**
   * Applies the update given the gradient. By default, it executes:
   *
   * guess - temp * grad;
   */
-  def update(guess: T, grad: T, temp: Double):T = {
-    guess - grad * temp value;
+  def update(guess: T, grad: T, iter: Int):T = {
+    guess - grad * (alpha/(alpha + iter)) value;
   }
 
   /**

@@ -34,7 +34,7 @@ trait RandomGenerator {
     var result = 0;
     var bits = 0;
     do {
-      bits = Math.abs(nextInt)
+      bits = math.abs(nextInt)
       result = (bits) % n;
     } while(bits - result + (n-1) < 0);
     result
@@ -73,7 +73,7 @@ trait RandomGenerator {
         v2 = 2 * nextDouble - 1;   // between -1.0 and 1.0
         s = v1 * v1 + v2 * v2;
       } while (s >= 1 || s == 0);
-      val multiplier = Math.sqrt(-2 * Math.log(s)/s);
+      val multiplier = math.sqrt(-2 * math.log(s)/s);
       nextNextGaussian = v2 * multiplier;
       haveNextNextGaussian = true;
       v1 * multiplier;

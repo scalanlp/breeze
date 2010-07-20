@@ -16,12 +16,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import Math._;
+import math._;
 import Numerics._;
 
 
 /**
  * Implementations of the Bessel functions, based on Numerical Recipes
+ *
+ * @author dlwh
  */
 object Bessel {
   private val i0p = Array(9.999999999999997e-1,2.466405579426905e-1, 1.478980363444585e-2,

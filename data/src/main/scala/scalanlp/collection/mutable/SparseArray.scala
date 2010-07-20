@@ -30,13 +30,14 @@ import scala.collection.mutable._;
  * @author dlwh, dramage
  */
 class SparseArray[@specialized T:ClassManifest]
-(val length : Int, val default : T, initial : Int = 3) {
+(val length : Int, default : =>T, initial : Int = 3) {
 
   private var data = new Array[T](initial);
   private var index = new Array[Int](initial);
 
   private var lastIndex = -1;
   private var lastOffset = -1;
+  def defaultValue = default;
   final var used : Int = 0;
 
   def size = used;
@@ -70,9 +71,14 @@ class SparseArray[@specialized T:ClassManifest]
     }
   }
 
+  // XXX TODO: implement a real filter somehow.
+  def filter(f: ((Int,T))=>Boolean) = iterator filter f;
+
   final def iterator = (0 until used).iterator map { i => (index(i),data(i)) };
   def keysIterator = index.iterator.take(used);
   def valuesIterator = data.iterator.take(used);
+
+  def contains(i: Int) = findOffset(i) >= 0;
 
   // Taken from Scalala
 
@@ -152,7 +158,11 @@ class SparseArray[@specialized T:ClassManifest]
 
   def apply(i : Int) : T = {
     val offset = findOffset(i);
-    if (offset >= 0) data(offset) else default;
+    if (offset >= 0) data(offset) else {
+      val x = default;
+      update(i,x);
+      x
+    }
   }
 
   /**
@@ -293,10 +303,10 @@ class SparseArray[@specialized T:ClassManifest]
       var thatI = 0;
       while (thisI < this.used && thatI < that.used) {
         if (this.index(thisI) < that.index(thatI)) {
-          if (this.data(thisI) != that.default) return false;
+          if (this.data(thisI) != that.defaultValue) return false;
           thisI += 1;
         } else if (that.index(thatI) < this.index(thisI)) {
-          if (that.data(thatI) != this.default) return false;
+          if (that.data(thatI) != this.defaultValue) return false;
           thatI += 1;
         } else if (this.index(thisI) == that.index(thatI)) {
           if (this.data(thisI) != that.data(thatI)) return false;
@@ -305,11 +315,11 @@ class SparseArray[@specialized T:ClassManifest]
         }
       }
       while (thisI < this.used) {
-        if (this.data(thisI) != that.default) return false;
+        if (this.data(thisI) != that.defaultValue) return false;
         thisI += 1;
       }
       while (thatI < that.used) {
-        if (that.data(thatI) != this.default) return false;
+        if (that.data(thatI) != this.defaultValue) return false;
         thatI += 1;
       }
       true;

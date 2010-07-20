@@ -27,7 +27,7 @@ import scalanlp.util._
 import scalanlp.data.Example
 import scalanlp.stats.sampling.Rand;
 import scalala.tensor.counters.Counters._;
-import Math._;
+import math._;
 
 
 /**

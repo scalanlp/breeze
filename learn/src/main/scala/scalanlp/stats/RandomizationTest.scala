@@ -34,7 +34,7 @@ import sampling._;
 class RandomizationTest[L](val numSamples:Int, val errorMeasure: Seq[L]=>Double) extends ((Seq[L],Seq[L])=>Double) {
   def this(errorMeasure: Seq[L]=>Double) = this(5000,errorMeasure);
 
-  def diff(l1: Seq[L], l2: Seq[L]) = Math.abs( errorMeasure(l1) - errorMeasure(l2));
+  def diff(l1: Seq[L], l2: Seq[L]) = math.abs( errorMeasure(l1) - errorMeasure(l2));
   def apply(labeling1: Seq[L], labeling2: Seq[L]) = {
     assume(labeling1.length == labeling2.length);
     // git rid of any overlapping labels

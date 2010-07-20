@@ -16,7 +16,7 @@ package scalanlp.classify;
  limitations under the License. 
 */
 
-import Math._;
+import math._;
 import scalala.tensor.counters._;
 import Counters._;
 import scalanlp.data._;
@@ -28,6 +28,7 @@ import scala.collection.Map;
  * It automatically trains itself given the collection c of
  * learning examples.
  *
+ * @author dlwh
  * @param c: a collection of example documents
  * @param wordSmoothing: how much smoothing for each word
  * @param classSmoothing: how much smoothing for the class.

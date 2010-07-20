@@ -7,12 +7,12 @@
   
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.scalanlp</groupId>
-  <artifactId>scalanlp-learn</artifactId>
+  <artifactId>scalanlp-learn_${scala.version}</artifactId>
   <name>ScalaNLP Learning</name>
   <version>0.3.1-SNAPSHOT</version>
   <url>http://www.scalanlp.org</url>
   <properties>
-    <scala.version>2.8.0.Beta1</scala.version>
+    <scala.version>2.8.0.RC6</scala.version>
   </properties>
   <inceptionYear>2008</inceptionYear>
   <mailingLists>
@@ -182,7 +182,7 @@
     </dependency>
     <dependency>
       <groupId>org.scalanlp</groupId>
-      <artifactId>scalanlp-data</artifactId>
+      <artifactId>scalanlp-data_${scala.version}</artifactId>
       <version>0.3.1-SNAPSHOT</version>
     </dependency>
     <dependency>
@@ -193,27 +193,19 @@
     </dependency>
     <dependency>
       <groupId>org.scalanlp</groupId>
-      <artifactId>scalala</artifactId>
+      <artifactId>scalala_${scala.version}</artifactId>
       <version>0.3.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.testing</groupId>
-      <artifactId>scalacheck_2.8.0.Beta1-RC5</artifactId>
-      <version>1.7-SNAPSHOT</version>
+      <artifactId>scalacheck_${scala.version}</artifactId>
+      <version>1.7</version>
       <scope>test</scope>
     </dependency>
-    <!--
-    <dependency>
-      <groupId>org.scala-tools</groupId>
-      <artifactId>vscaladoc</artifactId>
-      <version>1.1</version>
-      <scope>reporting</scope>
-    </dependency>
-    -->
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest</artifactId>
-      <version>1.0.1-for-scala-2.8.0.Beta1-RC5-with-test-interfaces-0.2-SNAPSHOT</version>
+      <version>1.2-for-scala-${scala.version}-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

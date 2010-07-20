@@ -36,7 +36,7 @@ class CsvFile(path : String) extends File(path);
  *
  * Implementors should provide member types Input and Output which are the places the data
  * can be stored. Readable and Writable implicit instances should be created for types
- * that can be serialized in this format. If you also inherit from StandardCombinators,
+ * that can be serialized in this format. If you also inherit from CompoundTypes,
  * you get a lot of functionality for almost free.
  *
  * @author dlwh
@@ -236,8 +236,11 @@ object SerializationFormat {
     implicit def listReadWritable[T](implicit tH: ReadWritable[T]) =
       collectionFromElements[T,List](List,"List");
 
-    implicit def seqReadWritable[T](implicit tH: ReadWritable[T]) =
+    implicit def seqReadWritable[T](implicit tH: ReadWritable[T]):ReadWritable[Seq[T]] =
       collectionFromElements[T,Seq](Seq,"Seq");
+
+    implicit def indexedSeqReadWritable[T](implicit tH: ReadWritable[T]) =
+      collectionFromElements[T,IndexedSeq](IndexedSeq,"IndexedSeq");
 
     implicit def setReadWritable[T](implicit tH: ReadWritable[T]) =
       collectionFromElements[T,Set](Set,"Set");

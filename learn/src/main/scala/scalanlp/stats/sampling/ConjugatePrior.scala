@@ -19,6 +19,8 @@ package scalanlp.stats.sampling;
 
 /**
  * Trait representing conjugate priors. See Dirichlet for an example.
+ *
+ * @author dlwh
  */
 trait ConjugatePrior[P,T] extends Measure[P] {
   /**

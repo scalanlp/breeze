@@ -20,7 +20,7 @@ import scalala.tensor.counters.Counters.DoubleCounter
 import scalanlp.math.Bessel;
 import scalanlp.math.Numerics;
 import Numerics._;
-import Math._;
+import math._;
 
 /**
  * Represents a Von Mises distribution, which is
@@ -33,10 +33,10 @@ import Math._;
  */
 case class VonMises(val mu: Double, val k: Double)(implicit rand: RandBasis=Rand) extends ContinuousDistr[Double] {
   require( k >= 0, "K must be postive");
-  require(mu <= Math.Pi * 2 && mu >= 0, "Mu must be in the range [0,2pi]");
+  require(mu <= math.Pi * 2 && mu >= 0, "Mu must be in the range [0,2pi]");
 
   override def unnormalizedLogPdf(theta:Double) = cos(theta - mu) * k;
-  val logNormalizer = Math.log(Bessel.i0(k) * 2* Pi);
+  val logNormalizer = math.log(Bessel.i0(k) * 2* Pi);
 
   private val r = { 
     val tau = 1.0 + sqrt(1.0 + 4.0 * k *k);

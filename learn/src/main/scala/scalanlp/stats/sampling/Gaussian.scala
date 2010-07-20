@@ -18,7 +18,7 @@ package scalanlp.stats.sampling;
 
 
 import Rand._;
-import Math._;
+import math._;
 import scalanlp.math.Numerics._;
 
 /**
@@ -31,7 +31,7 @@ class Gaussian(val mu :Double, val sigma : Double)(implicit rand: RandBasis = Ra
   private val inner = rand.gaussian(mu,sigma);
   def draw() = inner.get();
 
-  private val sqrt2 = Math.sqrt(2.0);
+  private val sqrt2 = math.sqrt(2.0);
 
   /**
   * Computes the inverse cdf of the p-value for this gaussian.
