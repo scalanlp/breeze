@@ -34,7 +34,7 @@ import scalala.Scalala._;
  * @author dlwh
  */
 trait Encoder[T] {
-  val index: Index[T]
+  protected val index: Index[T]
 
   /**
    * Creates a Vector of some sort with the index's size.
@@ -110,7 +110,18 @@ trait Encoder[T] {
   /**
    * Fills an array of arbitrary type by tabulating the function
    */
-  def tabulateArray[V:ClassManifest](f: T=>V): Array[V] = Array.tabulate(index.size)(i => f(index.get(i)));
+  def tabulateArray[V:ClassManifest](f: T=>V): Array[V] = {
+    val arr = new Array[V](index.size);
+    for((e,i) <- index.pairs) {
+      arr(i) = f(e);
+    }
+    arr;
+  }
+
+  /**
+   * Fills a DenseVector with each index given by the result of the function.
+   */
+  def tabulateDenseVector(f: T=>Double): DenseVector = new DenseVector(tabulateArray[Double](f));
 
   /**
    * Converts an array into a Map from T's to whatever was in the array.
