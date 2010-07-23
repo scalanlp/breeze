@@ -39,7 +39,7 @@ trait GradientNormConvergence[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]] 
   def checkConvergence(v: Double, grad: T)
                       (implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col]): Boolean = {
                         
-    val vv = if(v == 0) 1.0 else v;
-    norm(grad,2) < TOLERANCE;
+    val vv = if(v.abs < 1E-6) 1E-6 else v.abs;
+    norm(grad,2)/vv < TOLERANCE;
   }
 }
