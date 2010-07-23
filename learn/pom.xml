@@ -183,7 +183,7 @@
     <dependency>
       <groupId>org.scalanlp</groupId>
       <artifactId>scalanlp-data_${scala.version}</artifactId>
-      <version>0.3.1-SNAPSHOT</version>
+      <version>0.3.2-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -194,7 +194,7 @@
     <dependency>
       <groupId>org.scalanlp</groupId>
       <artifactId>scalala_${scala.version}</artifactId>
-      <version>0.4.0</version>
+      <version>0.4.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.testing</groupId>
