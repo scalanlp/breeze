@@ -124,7 +124,6 @@ class TextSerializationTest extends SerializationTestBase {
 class FileSerializationTest extends FunSuite {
   test("Read/write file") {
     val file = java.io.File.createTempFile("scalanlp-file-serialization-", ".txt");
-      import FileSerialization.FromText._;
     FileSerialization.write(file, List(1,2,3));
     assert(FileSerialization.read[List[Int]](file) === List(1,2,3));
     file.delete();
