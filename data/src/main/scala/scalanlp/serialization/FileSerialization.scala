@@ -82,17 +82,17 @@ with LowPriorityFileSerializationImplicits {
         throw(ex);
     }
   }
+}
 
+/** Mix-in trait used by FileSerialization to prioritize Text before Data.  @author dramage */
+trait LowPriorityFileSerializationImplicits
+extends GenericFileSerializationFromData {
   implicit def fromTextReadable[T:TextSerialization.Readable] =
     GenericFileSerializationFromText.fromTextReadable;
 
   implicit def fromTextWritable[T:TextSerialization.Writable] =
     GenericFileSerializationFromText.fromTextWritable;
 }
-
-/** Mix-in trait used by FileSerialization to prioritize Text before Data.  @author dramage */
-trait LowPriorityFileSerializationImplicits
-extends GenericFileSerializationFromData;
 
 
 /**
@@ -115,7 +115,7 @@ trait FileSerializationFromText[T] {
  */
 trait GenericFileSerializationFromText {
 
-  implicit def fromTextReadable[T:TextSerialization.Readable] =
+  implicit def fromTextReadable[T:TextSerialization.Readable] : FileSerialization.Readable[T] =
   new FileSerialization.Readable[T] {
     val MISSING = -2;
 
@@ -151,7 +151,7 @@ trait GenericFileSerializationFromText {
     }
   }
 
-  implicit def fromTextWritable[T:TextSerialization.Writable] =
+  implicit def fromTextWritable[T:TextSerialization.Writable] : FileSerialization.Writable[T]  =
   new FileSerialization.Writable[T] {
     override def write(sink : File, value : T) = {
       val output = new PrintStream(FileSerialization.openWrite(sink));
@@ -187,15 +187,8 @@ trait FileSerializationFromData[T] {
  * @author dramage
  */
 trait GenericFileSerializationFromData {
-  def fromData[T](implicit rw : DataSerialization.ReadWritable[T]) =
-  new FileSerialization.ReadWritable[T] {
-    override def read(source : File) =
-      fromDataReadable[T].read(source);
-    override def write(sink : File, v : T) =
-      fromDataWritable[T].write(sink, v);
-  }
 
-  implicit def fromDataReadable[T](implicit dr : DataSerialization.Readable[T]) =
+  implicit def fromDataReadable[T](implicit dr : DataSerialization.Readable[T]) : FileSerialization.Readable[T]  =
   new FileSerialization.Readable[T] {
     override def read(source : File) = {
       val input = new DataInputStream(FileSerialization.openRead(source));
@@ -208,7 +201,7 @@ trait GenericFileSerializationFromData {
     }
   }
 
-  implicit def fromDataWritable[T](implicit dw : DataSerialization.Writable[T]) =
+  implicit def fromDataWritable[T](implicit dw : DataSerialization.Writable[T]) : FileSerialization.Writable[T]  =
   new FileSerialization.Writable[T] {
     override def write(sink : File, value : T) = {
       val output = new DataOutputStream(FileSerialization.openWrite(sink));
@@ -243,7 +236,8 @@ trait FileSerializationFromJava[T] {
  * @author dramage
  */
 object GenericFileSerializationFromJava {
-  implicit def fromJava[T] = new FileSerialization.ReadWritable[T] {
+  implicit def fromJava[T] : FileSerialization.ReadWritable[T] =
+  new FileSerialization.ReadWritable[T] {
     override def read(source : File) = {
       val input = new ObjectInputStream(new BufferedInputStream(new FileInputStream(source)));
       val rv = try {
