@@ -120,8 +120,6 @@ case class TermDynamicStopListFilter(numTerms : Int)
 extends Stage[Batch[Iterable[String]],Batch[Iterable[String]]] {
   override def apply(parcel : Parcel[Batch[Iterable[String]]]) : Parcel[Batch[Iterable[String]]] = {
     parcel.meta.require[TermCounts]("TermCounter must be run before TermMinimumDocumentCountFilter");
-//  override def apply(_parcel : Parcel[Batch[Iterable[String]]]) : Parcel[Batch[Iterable[String]]] = {
-//    val parcel = TermCounter.runIfMissing(_parcel);
 
     val freq = parcel.meta[TermCounts].termCounts;
     val stops = List() ++ freq.maxk(numTerms);
