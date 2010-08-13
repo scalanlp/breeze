@@ -42,17 +42,22 @@ object SimpleEnglishTokenizer extends SubtypedCompanion[SimpleEnglishTokenizer] 
   class V0 extends SimpleEnglishTokenizer {
     override def apply(in : String) : Iterable[String] = {
       var string = in;
-      // delete word-final hyphens when followed by newlines
-      string = string.replaceAll("(?<=\\w)-\\s*\n\\s*", "")
-      // add spaces around non-word-internal punctuation
-      string = string.replaceAll("(?<=\\W)(\\p{P})(?! )", "$1 ");
-      string = string.replaceAll("(?! )(\\p{P})(?=\\W)", " $1");
+      string = V0.r1.replaceAllIn(string, "");
+      string = V0.r2.replaceAllIn(string, "$1 ");
+      string = V0.r3.replaceAllIn(string, " $1");
       string.split("\\s+");
     }
   }
 
   object V0 extends TypedCompanion0[V0] {
     prepare();
+
+    // delete word-final hyphens when followed by newlines
+    val r1 = "(?<=\\w)-\\s*\n\\s*".r;
+
+    // add spaces around non-word-internal punctuation
+    val r2 = "(?<=\\W)(\\p{P})(?! )".r;
+    val r3 = "(?! )(\\p{P})(?=\\W)".r;
 
     private val _instance = new V0();
     def apply() = _instance;

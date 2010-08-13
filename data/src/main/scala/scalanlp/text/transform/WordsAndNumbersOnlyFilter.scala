@@ -24,23 +24,28 @@ import scalanlp.serialization.TypedCompanion0;
  *
  * @author dramage
  */
-sealed abstract case class TokenType();
+sealed trait TokenType;
 
 object TokenType {
-  case object Number;
-  case object Punctuation;
-  case object Word;
-  case object Other;
+  abstract class RegexToken(private[transform] val pattern : java.util.regex.Pattern) extends TokenType {
+    def matches(token : String) =
+      pattern.matcher(token).matches;
+  }
 
-  def apply(token : String) = {
-    if (token.matches("^.*\\p{N}.*$")) {
-      TokenType.Number;
-    } else if (token.matches("^[\\p{P}\\p{S}]+$")) {
-      TokenType.Punctuation;
-    } else if (token.matches("^.*\\p{L}+.*$")) {
-      TokenType.Word;
+  case object Number extends RegexToken("^.*\\p{N}.*$".r.pattern);
+  case object Punctuation extends RegexToken("^[\\p{P}\\p{S}]+$".r.pattern)
+  case object Word extends RegexToken("^.*\\p{L}+.*$".r.pattern);
+  case object Other extends TokenType;
+
+  def apply(token : String) : TokenType = {
+    if (Word.matches(token)) {
+      Word;
+    } else if (Number.matches(token)) {
+      Number;
+    } else if (Punctuation.matches(token)) {
+      Punctuation;
     } else {
-      TokenType.Other;
+      Other;
     }
   }
 }
@@ -51,9 +56,8 @@ object TokenType {
  * @author dramage
  */
 case class WordsAndNumbersOnlyFilter() extends Transformer {
-  val accept = Set(TokenType.Number, TokenType.Word);
   override def apply(terms : Iterable[String]) =
-    terms.filter(term => accept.contains(TokenType(term)));
+    terms.filter(term => TokenType.Word.matches(term) || TokenType.Number.matches(term));
 }
 
 object WordsAndNumbersOnlyFilter extends TypedCompanion0[WordsAndNumbersOnlyFilter] {
