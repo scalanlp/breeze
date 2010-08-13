@@ -13,7 +13,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.stage.text;
+package scalanlp.stage;
+package text;
 
 import java.io.File;
 
@@ -24,27 +25,62 @@ import scalanlp.collection.immutable.DHMap;
 import scalanlp.serialization.FileSerialization;
 
 import scalanlp.stage.{Parcel,Batch,Stage,Mapper,MetaBuilder};
+import scalanlp.util.Index;
+import scalanlp.util.TopK;
 
 /**
  * Holds basic statistics from a sequence of documents.
  * 
  * @author dramage
  */
-class TermCounts(docs : Iterator[Iterable[String]]) {
-  /** Number of documents each term occurs in. */
-  val docCounts  = IntCounter[String]();
-    
-  /** Number of times each term occurs (across documents). */
-  val termCounts = IntCounter[String]();
-    
-  // initialize counts
-  for (terms <- docs) {
-    for (term <- terms) {
-      termCounts(term) += 1;
+class TermCounts(val index : Index[String], val tf : Array[Int], val df : Array[Int]) {
+  def reindexed(oindex : Index[String]) : TermCounts = {
+    try {
+      val otf = Array.tabulate(oindex.size)(i => tf(index(oindex.get(i))));
+      val odf = Array.tabulate(oindex.size)(i => df(index(oindex.get(i))));
+      new TermCounts(oindex, otf, odf);
+    } catch {
+      case ex : ArrayIndexOutOfBoundsException =>
+        throw new IllegalArgumentException("Cannot reindex TermCounts with new terms", ex);
     }
-    for (term <- Set() ++ terms) {
-      docCounts(term) += 1;
+  }
+
+  def getDF(term : String) = df(index(term));
+  def getTF(term : String) = tf(index(term));
+
+  def filterDF(p : Int=>Boolean) =
+    reindexed(Index(index.filter(t => p(df(index(t))))));
+
+  def filterTF(p : Int=>Boolean) =
+    reindexed(Index(index.filter(t => p(tf(index(t))))));
+
+  def filterIndex(p : String=>Boolean) =
+    reindexed(Index(index.filter(p)));
+}
+
+object TermCounts {
+  def apply(docs : Iterator[Iterable[String]]) = {
+    val ctf = IntCounter[String]();
+    val cdf = IntCounter[String]();
+
+    val docTermSet = new scala.collection.mutable.HashSet[String]();
+
+    for (terms <- docs) {
+      docTermSet.clear();
+      for (term <- terms) {
+        ctf(term) += 1;
+        docTermSet.add(term);
+      }
+      for (term <- docTermSet) {
+        cdf(term) += 1;
+      }
     }
+
+    val index = Index(ctf.keysIterator);
+    val tf = Array.tabulate(index.size)(i => ctf(index.get(i)));
+    val df = Array.tabulate(index.size)(i => cdf(index.get(i)));
+
+    new TermCounts(index, tf, df)
   }
 }
 
@@ -55,20 +91,9 @@ class TermCounts(docs : Iterator[Iterable[String]]) {
  */
 case class TermCounter() extends MetaBuilder[TermCounts,Batch[Iterable[String]]] {
   override def build(data : Batch[Iterable[String]]) =
-    new TermCounts(data.values.iterator);
+    TermCounts(data.values.iterator);
 
   override def toString = "TermCounter()";
-}
-
-object TermCounter extends TermCounter {
-  /** Runs the TermCounter() stage if TermCounts are not already in the metadata. */
-  def runIfMissing(parcel : Parcel[Batch[Iterable[String]]]) : Parcel[Batch[Iterable[String]]] = {
-    if (parcel.meta.contains[TermCounts]) {
-      parcel;
-    } else {
-      parcel ~> TermCounter();
-    }
-  }
 }
 
 /**
@@ -80,13 +105,11 @@ case class TermMinimumDocumentCountFilter(minDF : Int)
 extends Stage[Batch[Iterable[String]],Batch[Iterable[String]]] {
   override def apply(parcel : Parcel[Batch[Iterable[String]]]) : Parcel[Batch[Iterable[String]]] = {
     parcel.meta.require[TermCounts]("TermCounter must be run before TermMinimumDocumentCountFilter");
-    val df = parcel.meta[TermCounts].docCounts;
-//  override def apply(_parcel : Parcel[Batch[Iterable[String]]]) : Parcel[Batch[Iterable[String]]] = {
-//    val parcel = TermCounter.runIfMissing(_parcel);
-//    val df = parcel.meta[TermCounts].docCounts;
+    val tc = parcel.meta[TermCounts];
 
-    Parcel(parcel.history + this, parcel.meta,
-           parcel.data.map((doc : Iterable[String]) => (doc.filter(term => df(term) >= minDF))));
+    Parcel(parcel.history + this,
+      parcel.meta + tc.filterDF(_ >= minDF),
+      parcel.data.map((doc : Iterable[String]) => (doc.filter(term => tc.getDF(term) >= minDF))));
   }
 
   override def toString =
@@ -101,10 +124,16 @@ extends Stage[Batch[Iterable[String]],Batch[Iterable[String]]] {
 case class TermStopListFilter(stops : List[String])
 extends Stage[Batch[Iterable[String]],Batch[Iterable[String]]] {
   override def apply(parcel : Parcel[Batch[Iterable[String]]]) : Parcel[Batch[Iterable[String]]] = {
-    Parcel(parcel.history + this, parcel.meta + this,
-           parcel.data.map(
-             (doc : Iterable[String]) => (doc.filter(term => !stops.contains(term)))
-           ));
+    val newMeta = {
+      if (parcel.meta.contains[TermCounts]) {
+        parcel.meta + parcel.meta[TermCounts].filterIndex(term => !stops.contains(term)) + this
+      } else {
+        parcel.meta + this;
+      }
+    }
+
+    Parcel(parcel.history + this, newMeta,
+      parcel.data.map((doc : Iterable[String]) => (doc.filter(term => !stops.contains(term)))));
   }
 
   override def toString =
@@ -121,10 +150,11 @@ extends Stage[Batch[Iterable[String]],Batch[Iterable[String]]] {
   override def apply(parcel : Parcel[Batch[Iterable[String]]]) : Parcel[Batch[Iterable[String]]] = {
     parcel.meta.require[TermCounts]("TermCounter must be run before TermMinimumDocumentCountFilter");
 
-    val freq = parcel.meta[TermCounts].termCounts;
-    val stops = List() ++ freq.maxk(numTerms);
+    val tc = parcel.meta[TermCounts];
+    val stops = TopK(numTerms, tc.index, tc.getTF _).toList;
 
-    Parcel(parcel.history + this, parcel.meta + TermStopListFilter(stops),
+    Parcel(parcel.history + this,
+           parcel.meta + tc.filterIndex(term => !stops.contains(term)) + TermStopListFilter(stops),
            parcel.data.map((doc : Iterable[String]) => (doc.filter(term => !stops.contains(term)))));
   }
 
