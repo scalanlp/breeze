@@ -15,6 +15,7 @@
 */
 package scalanlp.stage
 
+import scalanlp.collection.LazyIterable;
 import scala.collection.JavaConversions._;
 
 /**
@@ -25,6 +26,6 @@ import scala.collection.JavaConversions._;
 object JavaConversions {
 
   def batchFromIterable[V](inItems : java.lang.Iterable[V]) : Batch[V] =
-    Batch.fromIterable(inItems);
+    Batch.fromIterable(LazyIterable(() => inItems.iterator));
 
 }

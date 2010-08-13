@@ -17,6 +17,8 @@ package scalanlp.stage;
 
 import scala.reflect.Manifest;
 
+import scalanlp.collection.LazyIterable;
+
 /**
  * Represents a batch of elements that can be treated as just
  * an iterable of V.  Use the static constructors in Batch
@@ -43,11 +45,11 @@ trait Batch[+V] {
    * An iterable of items ordered by their number.  The first returned
    * item.number must be >= minItemNum and the last must be <= maxItemNum.
    */
-  def items : Iterable[Item[V]];
+  def items : LazyIterable[Item[V]];
 
   /** An iterable of the values in this map (unboxes items). */
-  def values : Iterable[V] =
-    items.view.map(_.value);
+  def values : LazyIterable[V] =
+    items.map(_.value);
 
   /**
    * Returns an iterable of options of values in this map of
@@ -55,10 +57,8 @@ trait Batch[+V] {
    * for items present in this.items, but returns None for
    * offsets that have no corresponding item.
    */
-  def options : Iterable[Option[V]] = new Iterable[Option[V]] {
-    override def size = Batch.this.size;
-
-    override def iterator = new Iterator[Option[V]] {
+  def options : LazyIterable[Option[V]] = LazyIterable[Option[V]](Batch.this.size) {
+    new Iterator[Option[V]] {
       var itemNum = minItemNum;
       val itemIter = Batch.this.items.iterator.buffered;
       
@@ -88,7 +88,7 @@ trait Batch[+V] {
           throw new BatchException(item, ex);
       }
     }
-    Batch.fromItems[O](items.view.map(mapper), size, minItemNum, maxItemNum);
+    Batch.fromItems[O](items.map(mapper), size, minItemNum, maxItemNum);
   }
   
   /** Filters out items from the batch according to the given funciton. */
@@ -101,7 +101,7 @@ trait Batch[+V] {
           throw new BatchException(item, ex);
       }
     }
-    Batch.fromItems(items.view.filter(filterer), size, minItemNum, maxItemNum);
+    Batch.fromItems(items.filter(filterer), size, minItemNum, maxItemNum);
   }
   
   /**
@@ -112,7 +112,7 @@ trait Batch[+V] {
     val newMin = minItemNum;
     val newMax = math.min(minItemNum + n, maxItemNum);
     
-    Batch.fromItems(items.view.takeWhile(_.number < newMax), size, newMin, newMax);
+    Batch.fromItems(items.takeWhile(_.number < newMax), size, newMin, newMax);
   }
 
   /**
@@ -123,7 +123,7 @@ trait Batch[+V] {
     val newMin = math.min(minItemNum + n, maxItemNum);
     val newMax = maxItemNum
 
-    Batch.fromItems(items.view.dropWhile(_.number < newMin), size, newMin, newMax);
+    Batch.fromItems(items.dropWhile(_.number < newMin), size, newMin, newMax);
   }
   
   /** Zips together two batches. */
@@ -133,10 +133,6 @@ trait Batch[+V] {
               seq(1).asInstanceOf[Option[O]]
     ));
   }
-  
-  /** Creates a list-backed view of this batch (i.e. makes it strict). */
-  def strict : Batch[V] =
-    Batch.fromItems(items.toList, size, minItemNum, maxItemNum);
 }
 
 /**
@@ -153,15 +149,15 @@ extends RuntimeException("Unable to process " + item +
  * Static constructors for creating batches.
  */
 object Batch {
-  def fromItems[V](inItems : Iterable[Item[V]], numItems : Int,
+  def fromItems[V](inItems : LazyIterable[Item[V]], numItems : Int,
                    inMinItemNum : Int, inMaxItemNum : Int) = new Batch[V] {
     override def size = numItems;
     override def minItemNum = inMinItemNum;
     override def maxItemNum = inMaxItemNum;
     override def items = inItems;
   }
-  
-  def fromIterable[V](inItems : Iterable[V]) = new Batch[V] {
+
+  def fromIterable[V](inItems : LazyIterable[V]) = new Batch[V] {
     private lazy val cachedSize = inItems.size;
     
     override def size = cachedSize;
@@ -170,13 +166,12 @@ object Batch {
     
     override def maxItemNum = size;
 
-    override def items = new Iterable[Item[V]] {
-      override def size = cachedSize;
-      
-      override def iterator =
-        for ((v,i) <- inItems.iterator.zipWithIndex) yield Item(i, v);
-    }
+    override def items =
+      inItems.zipWithIndex.map(tup => Item(tup._2,tup._1));
   }
+
+  def fromIterator[V](inItems : ()=>Iterator[V]) =
+    fromIterable[V](LazyIterable(inItems));
   
   /** Zips together two batches. */
   def zip[A,B](batchA : Batch[A], batchB : Batch[B]) =
@@ -213,10 +208,8 @@ object Batch {
     
     override def maxItemNum = batches.map(_.maxItemNum).reduceLeft(_ max _)
 
-    override def items = new Iterable[Item[Seq[Option[V]]]] {
-      override def size = batches(0).size;
-
-      override def iterator = new Iterator[Item[Seq[Option[V]]]] {
+    override def items = LazyIterable[Item[Seq[Option[V]]]](batches(0).size) {
+      new Iterator[Item[Seq[Option[V]]]] {
         val iterators = batches.map(_.items.iterator.buffered);
       
         override def hasNext =
@@ -234,7 +227,7 @@ object Batch {
           Item(nextNum, values);
         }
       }
-    }
+    };
   }
 
   object Zip {

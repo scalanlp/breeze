@@ -26,16 +26,17 @@ import scalanlp.stage.{Parcel,Batch,History};
  * 
  * @author dramage
  */
-case class TXTFile(path : String) extends File(path) {
+case class TXTFile(path : String) extends File(path) { self =>
+  def iterator = this.getLines;
+
   def lines : Iterable[String] = {
     new Iterable[String] {
-      override def iterator =
-        for (line <- TXTFile.this.getLines) yield line;
+      override def iterator = self.iterator;
     };
   }
 
   def asParcel : Parcel[Batch[String]] =
-    Parcel(History.Origin(toString), Batch.fromIterable(lines));
+    Parcel(History.Origin(toString), Batch.fromIterator(() => iterator));
 
   override def toString =
     "TXTFile(\""+path+"\")";
