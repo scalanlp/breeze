@@ -28,18 +28,20 @@ import scalanlp.stage.{Parcel,Batch,History};
  * 
  * @author dramage
  */
-case class TSVFile(path : String) extends File(path) {
+case class TSVFile(path : String) extends File(path) { self =>
   import RA.global.pipes._;
-  
+
+  def iterator : Iterator[Seq[String]] =
+    TSVFile.this.getLines.map(_.split("\t",-1));
+
   def rows : Iterable[Seq[String]] = {
     new Iterable[Seq[String]] {
-      override def iterator =
-        TSVFile.this.getLines.map(_.split("\t",-1));
+      override def iterator = self.iterator;
     };
   }
 
   def asParcel : Parcel[Batch[Seq[String]]] =
-    Parcel(History.Origin(toString), Batch.fromIterable(rows));
+    Parcel(History.Origin(toString), Batch.fromIterator(() => iterator));
 
   override def toString =
     "TSVFile(\""+path+"\")";

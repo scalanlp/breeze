@@ -59,6 +59,11 @@ with ByteSerialization with StringSerialization {
   // from PrimitiveTypes
   //
 
+  implicit val unitReadWritable : ReadWritable[Unit] = new ReadWritable[Unit] {
+    override def read(in : Input) = expect(in, "()", false);
+    override def write(out : Output, v : Unit) = out.append("()");
+  }
+
   override implicit val intReadWritable : ReadWritable[Int] = new ReadWritable[Int] {
     override def read(in : Input) = consumeWhile(in, c => c.isDigit || c=='-').toInt;
     override def write(out : Output, v : Int) = out.append(v.toString);
@@ -258,10 +263,19 @@ with ByteSerialization with StringSerialization {
   // Utility methods
   //
 
+  /** Reads a name from the input, consisting of letters, digits, underscore, period, and dollar sign. */
   def readName(src : Input) : String = {
     val rv = consumeWhile(src, c => c.isLetterOrDigit || c == '_' || c == '.' || c == '$');
     if (rv.length == 0)
       throw new TextSerializationException("Expected symbol name");
+    rv;
+  }
+
+  /** Reads the next line from the input. */
+  def readLine(src : Input) : String = {
+    val rv = consumeWhile(src, c => c != '\r' && c != '\n');
+    if (!src.isEmpty && src.head == '\r') src.next;
+    if (!src.isEmpty && src.head == '\n') src.next;
     rv;
   }
 
@@ -282,7 +296,7 @@ with ByteSerialization with StringSerialization {
     str.flatMap(escapeChar)
 
   /** Throws an exception if the input does not start with the given "expected" string. */
-  def expect(in : Input, expected : String, caseFold : Boolean) : Unit = {
+  def expect(in : Input, expected : String, caseFold : Boolean = false) : Unit = {
     var got = consume(in, expected.length).mkString;
     if (caseFold) got = got.toLowerCase;
     if (got != expected)

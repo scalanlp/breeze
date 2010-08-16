@@ -13,20 +13,24 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.stage.text;
 
-import scalanlp.stage.Filter;
+package scalanlp.util;
 
-/**
- * Filters a set of documents so that all documents contain
- * at least minTokens tokens.
- * 
- * @author dramage
- */
-case class DocumentMinimumLengthFilter(minTokens : Int)
-extends Filter[Iterable[String]] {
-  override def filter(doc : Iterable[String]) =
-    doc.size >= minTokens;
+import org.scalatest._;
+import org.scalatest.junit._;
+import org.scalatest.prop._;
+import org.junit.runner.RunWith;
 
-  override def toString = "DocumentMinimumLengthFilter("+minTokens+")";
+import scalanlp.serialization.FileSerialization;
+
+@RunWith(classOf[JUnitRunner])
+class IndexTest extends FunSuite with Checkers {
+
+  test("Index serialization") {
+    val tmpFile = java.io.File.createTempFile("index-", ".txt");
+    val index = Index(List("a","b","c","d"));
+    FileSerialization.write(tmpFile, index);
+    assert(FileSerialization.read[Index[String]](tmpFile) == index);
+    tmpFile.delete();
+  }
 }

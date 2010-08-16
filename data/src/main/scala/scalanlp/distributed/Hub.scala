@@ -1,242 +1,227 @@
 /*
- * Distributed as part of ScalaRA, a scientific research tool.
- * 
- * Copyright (C) 2007 Daniel Ramage
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ Copyright 2009 David Hall, Daniel Ramage
 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
- */
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+*/
 package scalanlp.distributed;
 
 import java.net.URI;
 
+import scala.concurrent.ops.future;
+
 import SocketService._;
 
 /**
- * Messages for the hub.
- * 
+ * A Hub represents a central registry of active socket URIs as a starting
+ * point for groups of objects that need to interact.
+ *
  * @author dramage
  */
-object HubMessages {
-  /** Register an entry. */
-  case class HubRegister(entry : URI);
-  
-  /** Unregister an entry. */
-  case class HubUnregister(entry : URI);
-  
-  /** Request the registry. */
-  case object HubListRequest;
-  
-  /** Registry response. */
-  case class HubListResponse(registry : List[URI]);
-}
+object Hub {
+  /** Messages used internally by the Hub. */
+  protected object Messages {
+    /** Register an entry. */
+    case class HubRegister(entry : URI);
 
-/**
- * A HubService is a service that allows remote SocketService instances
- * to register.  See companion object for convenience construtcors.
- * 
- * @author dramage
- */
-class HubService(dispatch : SocketServiceDispatch) extends SocketService(dispatch, "/hub") {
-  import HubMessages._;
-  import ServiceMessages.Reply;
-  
-  protected var registry =
-    new scala.collection.mutable.ArrayBuffer[URI];
-    
+    /** Unregister an entry. */
+    case class HubUnregister(entry : URI);
+
+    /** Request the registry. */
+    case object HubListRequest;
+
+    /** Registry response. */
+    case class HubListResponse(registry : List[URI]);
+
+    /** A message for the log. */
+    case class HubLogMessage(message : String);
+  }
+  import Messages._;
+
+  class Service
+  (dispatch : SocketDispatch = SocketDispatch(),
+   log : (String=>Unit) = System.err.println)
+  extends SocketService("/hub", dispatch) {
+    import ServiceMessages.Reply;
+
+    protected val registry =
+      new scala.collection.mutable.ArrayBuffer[URI];
+
+    protected val loggers =
+      new scala.collection.mutable.ArrayBuffer[SocketClient];
+
+    /**
+     * Removes all unpingable entries from the registry.
+     */
+    def cleanup() = synchronized {
+      val origSize = registry.size;
+      val valid = registry.map(uri => future { SocketClient.ping(uri, 3000l) });
+
+      val newRegistry = (registry zip valid).filter(_._2()).map(_._1).toList;
+
+      registry.clear;
+      registry ++= newRegistry;
+
+      val newSize = registry.size;
+
+      if (origSize != newSize) {
+        log("[hub] removed "+(origSize-newSize)+" entries");
+      }
+    }
+
+    override def react = synchronized {
+      case HubRegister(uri) =>
+        cleanup();
+        log("[hub] registering "+uri);
+        registry += uri;
+        // register as a logger
+        if (uri.getPath == "/logger") {
+          loggers += SocketClient(uri);
+        }
+      case HubUnregister(uri) =>
+        cleanup();
+        log("[hub] unregistering "+uri);
+        registry -= uri;
+        // unregister as a logger
+        if (uri.getPath == "/logger") {
+          for (connection <- loggers.find(_.uri == uri)) loggers -= connection;
+        }
+      case HubListRequest =>
+        cleanup();
+        log("[hub] listing");
+        Reply { HubListResponse(registry.toList); }
+      case HubLogMessage(msg) =>
+        log(msg);
+        for (logger <- loggers) try { log(msg); } catch { case _ => (); }
+      case x:Any =>
+        throw new ServiceException("Unexpected message: "+x);
+    }
+  }
+
   /**
-   * Removes all unpingable entries from the registry.
+   * Connection to a HubService.
+   *
+   * @author dramage
    */
-  def cleanup() = synchronized {
-    val origSize = registry.size;
-    val valid = registry.map(entry => ping(uri));
-    val newRegistry = (registry.iterator zip valid.iterator).filter(_._2()).map(_._1).toList;
-    
-    registry.clear;
-    registry ++= newRegistry;
-    
-    val newSize = registry.size;
-      
-    if (origSize != newSize) {
-      info("Hub: removed "+(origSize-newSize)+" entries");
+  class Client(uri : URI) {
+    lazy val remote = SocketClient(uri);
+
+    def register(entry : URI) =
+      remote ! HubRegister(entry);
+
+    def unregister(entry : URI) =
+      remote ! HubUnregister(entry);
+
+    def registry : List[URI] =
+      (remote !? HubListRequest).asInstanceOf[HubListResponse].registry;
+
+    def stop = remote.stop;
+
+    def select(group : (URI => Boolean)) : List[SocketClient] =
+      registry.filter(uri => group(uri)).map(uri => SocketClient(uri));
+
+    def log(msg : String) =
+      remote ! HubLogMessage(msg);
+
+    def addLogger(logger : String => Unit) : SocketService = {
+      val dispatch = SocketDispatch(SocketUtils.freePort);
+      val service = SocketService("/logger", dispatch) {
+        case msg : String => logger(msg);
+        case _ => throw new ServiceException("Unexpected message");
+      }
+      register(service.uri);
+      service.runAsDaemon;
+      service;
     }
   }
-  
-  override def react = synchronized {
-    case HubRegister(entry) =>
-      cleanup();
-      info("Hub: registering "+entry);
-      registry += entry;
-    case HubUnregister(entry) =>
-      cleanup();
-      info("Hub: unregistering "+entry);
-      registry -= entry;
-    case HubListRequest =>
-      cleanup();
-      info("Hub: listing");
-      Reply { HubListResponse(registry.toList); }
-    case x:Any =>
-      info("Hub: other message(?) "+x);
-  }
-}
 
-/**
- * Companion constructors for HubService.
- * 
- * @author dramage
- */
-object HubService {
-  import HubMessages._;
-  
-  /**
-   * Calls apply using a new unique free port.
-   */
-  def apply() =
-    new HubService(SocketService.dispatch);
-  
-  /**
-   * Creates and starts a new hub service (in this thread)
-   * using the given port.
-   */
-  def apply(port : Int) =
-    new HubService(new SocketServiceDispatch(port));
-}
 
-/**
- * Connection to a HubService.
- * 
- * @author dramage
- */
-@serializable
-class HubClient(uri : URI) {
-  import HubMessages._;
-  
-  @transient lazy val remote = SocketClient(uri);
-  
-  def select(group : (URI => Boolean)) : List[SocketClient] = {
-    registry.filter(uri => group(uri)).map(uri => SocketClient(uri));
-  }
-  
-  def register(entry : URI) =
-    remote ! HubRegister(entry);
-  
-  def unregister(entry : URI) =
-    remote ! HubUnregister(entry);
-  
-  def registry : List[URI] =
-    (remote !? HubListRequest).asInstanceOf[HubListResponse].registry;
-  
-  def stop = remote.stop;
-}
+  //
+  // Static methods
+  //
 
-/**
- * Constructors for HubService.
- * 
- * @author dramage
- */
-object HubClient {
-  /** Constructs a hub instance form a machine and port. */
-  def apply(uri : URI) : HubClient =
-    new HubClient(uri);
-}
+  /** Constructs a new service instance. */
+  def service() =
+    new Service();
 
-/**
- * Network utility functions for classes that interact with hubs.
- * 
- * @author dramage
- */
-object HubUtils {
-  def freePort() : Int = {
-    val server = new java.net.ServerSocket(0);
-    val port = server.getLocalPort();
-    server.close();
-    return port;
-  }
-  
-  def hostName() : String = {
-    java.net.InetAddress.getLocalHost().getHostName();
-  }
-}
+  /** Constructs a new service instance on the given port. */
+  def service(port : Int) =
+    new Service(SocketDispatch(port));
 
-/**
- * Main method for starting a new hub.
- * 
- * @author dramage
- */
-object HubStart {
-  def main(argv : Array[String]) {
-    val service = if (argv.length == 1) {
-      HubService(argv(0).toInt);
-    } else {
-      HubService();
+  def connect(uri : URI) =
+    new Client(uri);
+
+  def main(args : Array[String]) {
+    def usage() {
+      println("Usage: " + this.getClass.getName + "(start|stop|list) [args]");
+      println();
+      println("  start [PORT]");
+      println("    Start a service on this machine, optionally using the given port.");
+      println();
+      println("  stop HUB_URI");
+      println("    Stop the hub at the given URI and all of its registered clients");
+      println();
+      println("  list HUB_URI");
+      println("    List all registered entries and their status");
     }
 
-    println("Starting hub at "+service);
-    service.run;
-  }
-}
+    def require(condition : Boolean, msg : String) {
+      if (!condition) {
+        println("Hub invocation error: " + msg);
+        System.exit(-1);
+      }
+    }
 
-/**
- * Main method to list registered services on a hub.
- * 
- * @author dramage
- */
-object HubListRegistry {
-  def main(argv : Array[String]) {
-    if (argv.length != 1) {
-      System.err.println("Usage: host:port");
-      System.exit(1);
+    if (args.length == 0) {
+      usage;
+      System.exit(-1);
     }
-    
-    val uri = if (!argv(0).startsWith("socket://")) {
-      new URI("socket://" + argv(0) + "/hub");
-    } else {
-      new URI(argv(0));
-    }
-    
-    HubClient(uri).registry.foreach(println);
-  }
-}
 
-/**
- * Main method to stop all clients in a hub.
- * 
- * @author dramage
- */
-object HubStopAll {
-  def main(argv : Array[String]) {
-    if (argv.length != 1) {
-      System.err.println("Usage: host:port");
-      System.exit(1);
+    args(0) match {
+      case "start" =>
+        require(args.length <= 2, "Too many arguments to start");
+        val service = if (args.length == 2) {
+          Hub.service(args(1).toInt);
+        } else {
+          Hub.service;
+        }
+
+        System.err.println("[hub] running at "+service.uri);
+        service.run;
+
+      case "list" =>
+        require(args.length == 2, "list must be given one HUB_URI");
+
+        val uri = if (!args(1).startsWith("socket://")) {
+          URI.create("socket://" + args(1) + "/hub");
+        } else {
+          URI.create(args(1));
+        }
+
+        connect(uri).registry.foreach(println);
+
+      case "stop" =>
+        require(args.length == 2, "stop must be given one HUB_URI");
+
+        val uri = if (!args(1).startsWith("socket://")) {
+          URI.create("socket://" + args(1) + "/hub");
+        } else {
+          URI.create(args(1));
+        }
+
+        val hub = connect(uri);
+
+        hub.registry.map(entry => future(SocketClient(entry).stop)).map(_.apply());
+        hub.stop;
     }
-    
-    val uri = if (!argv(0).startsWith("socket://")) {
-      new URI("socket://" + argv(0) + "/hub");
-    } else {
-      new URI(argv(0));
-    }
-    
-    val hub = HubClient(uri);
-    
-    for (entry <- hub.registry) {
-      println("Stopping "+entry);
-      SocketClient(entry).stop;
-    }
-    
-    println("Stopping hub");
-    hub.stop;
-    
-    println("Done");
   }
 }

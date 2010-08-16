@@ -45,7 +45,7 @@ case class CSVFile(path : String) extends File(path) {
   }
 
   def asParcel : Parcel[Batch[Seq[String]]] = {
-    Parcel(History.Origin(toString), Batch.fromIterable(rows));
+    Parcel(History.Origin(toString), Batch.fromIterator(() => new CSVIterator(reader())));
   }
 
   override def toString =

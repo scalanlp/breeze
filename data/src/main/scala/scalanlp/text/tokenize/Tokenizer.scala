@@ -29,7 +29,7 @@ import scalanlp.serialization.TextSerialization;
  * @author dramage
  */
 trait Tokenizer extends (String => Iterable[String]) {
-  def andThen(g : Transformer) =
+  def andThen(g : Transformer) : Tokenizer =
     this ~> g;
 
   def ~> (g : Transformer) =
@@ -88,10 +88,21 @@ object Tokenizer extends SubtypedCompanion[Tokenizer] {
   }
 
 
-  /** A tokenizer chained with a Transformer. */
+  /**
+   * A tokenizer chained with a Transformer. If the given tokenizer is
+   * not itself already a transformer, then this method will create a
+   * view of the output of the tokenizer before applying transformation
+   * to prevent proliferating itnermediate results.
+   * 
+   * @author dramage
+   */
   class Chain(val f : Tokenizer, val g : Transformer) extends Tokenizer {
-    override def apply(txt : String) = g(f(txt));
+    protected val tokenize : (String => Iterable[String]) =
+      if (f.isInstanceOf[Transformer]) f else f.andThen((i : Iterable[String]) => i.view);
+
+    override def apply(txt : String) = g(tokenize(txt));
     override def toString = f.toString + " ~> " + g.toString;
+
     override def equals(other : Any) = other match {
       case that : Chain => this.f == that.f && this.g == that.g;
       case _ => false;
@@ -135,86 +146,3 @@ object Tokenizer extends SubtypedCompanion[Tokenizer] {
     }
   }
 }
-
-
-//
-//trait Function1Like[@specialized A,@specialized B,+This<:Function1Like[A,B,This]]
-//extends (A=>B) {
-//  protected def repr = this.asInstanceOf[This];
-//
-//  def ~>[C,G<:Function1Like[B,C,G]](g : G) =
-//    new ChainedFunction[A,B,C,This,G](repr, g);
-//
-//  def ~>[C](g : (B=>C)) =
-//    new ChainedFunction[A,B,C,This,WrappedFunction1[B,C]](repr, new WrappedFunction1(g));
-//}
-//
-////trait Function1[@specialized A, @specialized B] extends Function1Like[A,B,Function1[A,B]];
-////object Function1 extends SubtypedCompanion2[Function1[A,B]] {
-////  override def continueParsing(input : TextSerialization.Input, current : Function1[A,B]) = {
-////    TextSerialization.skipWhitespace(input);
-////    if (input.head == '~') {
-////      TextSerialization.expect(input,"~>",true);
-////    }
-////
-////  }
-////}
-//
-//class WrappedFunction1[@specialized A, @specialized B](val func : (A=>B))
-//extends Function1Like[A,B,WrappedFunction1[A,B]] {
-//  override def apply(a : A) = func(a);
-//}
-//
-//class ChainedFunction[@specialized A, @specialized B, @specialized C,
-//                      +F<:Function1Like[A,B,F], G<:Function1Like[B,C,G]]
-//(val f : F, val g : G) extends Function1Like[A,C,ChainedFunction[A,B,C,F,G]] {
-//  override def apply(in : A) = g(f(in));
-//  override def toString = f.toString + " ~> " + g.toString;
-//}
-//
-//object ChainedFunction {
-//  implicit def textReadWritable[A,B,C,F<:Function1Like[A,B,F],G<:Function1Like[B,C,G]]
-//  (cf : ChainedFunction[A,B,C,F,G])
-//  (implicit rwF : TextSerialization.ReadWritable[F], rwG : TextSerialization.ReadWritable[G]) =
-//  new TextSerialization.ReadWritable[ChainedFunction[A,B,C,F,G]] {
-//    override def read(input : TextSerialization.Input) = {
-//      val f = TextSerialization.read[F](input);
-//      TextSerialization.skipWhitespace(input);
-//      TextSerialization.expect(input, "~>", false);
-//      TextSerialization.skipWhitespace(input);
-//      val g = TextSerialization.read[G](input);
-//      f ~> g;
-//    }
-//
-//    override def write(out : TextSerialization.Output, fn : ChainedFunction[A,B,C,F,G]) {
-//      TextSerialization.write(out, fn.f);
-//      out.append(" ~> ");
-//      TextSerialization.write(out, fn.g);
-//    }
-//  }
-//}
-
-///**
-// * TokenizerLike extends Function1Like with chaining that keeps the function
-// * signature as a Tokenizer.
-// *
-// * @author dramage
-// */
-//trait TokenizerLike[+This<:TokenizerLike[This]]
-//extends Function1Like[String,Iterable[String],This] {
-//
-//  def ~>[G<:Function1Like[Iterable[String],Iterable[String],G]](g : G) =
-//    new ChainedTokenizer[This,G](repr, g);
-//
-//  def ~>(g : (Iterable[String] => Iterable[String])) =
-//    new ChainedTokenizer[This,WrappedFunction1[Iterable[String],Iterable[String]]](repr, new WrappedFunction1(g));
-//}
-//
-///**
-// * Abstract trait for tokenizers, which act as functions from a String
-// * to an Iterable[String].  See companion object for instructions on
-// * registering new subtypes outside of the current package.
-// *
-// * @author dramage
-// */
-//trait Tokenizer extends TokenizerLike[Tokenizer];

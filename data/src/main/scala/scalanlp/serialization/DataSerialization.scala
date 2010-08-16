@@ -152,14 +152,75 @@ with ByteSerialization {
   // Builtins
   //
 
-  implicit val byteArrayReadWritable = arrayReadWritable[Byte];
+  implicit object ByteArrayReadWritable extends ReadWritable[Array[Byte]] {
+    override def read(in : DataInput) = {
+      var rv = new Array[Byte](in.readInt);
+      var i = 0;
+      while (i < rv.length) {
+        rv(i) = in.readByte();
+        i += 1;
+      }
+      rv;
+    }
+
+    override def write(out : Output, v : Array[Byte]) = {
+      out.writeInt(v.length);
+      var i = 0;
+      while (i < v.length) {
+        out.writeByte(v(i));
+        i += 1;
+      }
+    }
+  }
+
+  implicit object IntArrayReadWritable extends ReadWritable[Array[Int]] {
+    override def read(in : DataInput) = {
+      var rv = new Array[Int](in.readInt);
+      var i = 0;
+      while (i < rv.length) {
+        rv(i) = in.readInt();
+        i += 1;
+      }
+      rv;
+    }
+
+    override def write(out : Output, v : Array[Int]) = {
+      out.writeInt(v.length);
+      var i = 0;
+      while (i < v.length) {
+        out.writeInt(v(i));
+        i += 1;
+      }
+    }
+  }
+
+  implicit object DoubleArrayReadWritable extends ReadWritable[Array[Double]] {
+    override def read(in : DataInput) = {
+      var rv = new Array[Double](in.readInt);
+      var i = 0;
+      while (i < rv.length) {
+        rv(i) = in.readDouble();
+        i += 1;
+      }
+      rv;
+    }
+
+    override def write(out : Output, v : Array[Double]) = {
+      out.writeInt(v.length);
+      var i = 0;
+      while (i < v.length) {
+        out.writeDouble(v(i));
+        i += 1;
+      }
+    }
+  }
 
   /**
    * Uses Java serialization. It's *very* inefficient, and should be avoided.
    */
   def naiveReadWritable[T] = new ReadWritable[T] {
     def read(in: DataInput) = {
-      val ba = byteArrayReadWritable read in;
+      val ba = ByteArrayReadWritable read in;
       val oin = new ObjectInputStream(new ByteArrayInputStream(ba));
       val x = oin.readObject().asInstanceOf[T];
       oin.close;
@@ -171,7 +232,7 @@ with ByteSerialization {
       val oout = new ObjectOutputStream(bout);
       oout.writeObject(x);
       oout.close;
-      byteArrayReadWritable.write(out, bout.toByteArray);
+      ByteArrayReadWritable.write(out, bout.toByteArray);
     }
   }
 }
