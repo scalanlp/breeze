@@ -61,6 +61,30 @@
       </extension>
     </extensions>
     <plugins>
+      <plugin> <!-- for building the distributable jar -->
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+            <descriptorRef>src</descriptorRef>
+          </descriptorRefs>
+          <executions>
+            <execution>
+              <id>make-assembly</id> <!-- this is used for inheritance merges -->
+              <phase>package</phase> <!-- append to the packaging phase. -->
+              <goals>
+                <goal>single</goal> <!-- goals == mojos -->
+              </goals>
+            </execution>
+          </executions>
+          <archive>
+            <manifest>
+              <mainClass>scalala.ScalalaConsole</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
