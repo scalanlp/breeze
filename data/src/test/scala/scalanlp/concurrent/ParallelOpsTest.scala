@@ -18,4 +18,8 @@ class ParallelOpsTest extends FunSuite with Checkers {
   test("map preserves order") {
     assert( (1 to 100).par.map(2*_).toIndexedSeq == (1 to 100).map(2*_).toIndexedSeq)
   }
+
+  test("flatmap preserves order") {
+    assert( (1 to 100).par.flatMap(0 until _).toIndexedSeq == (1 to 100).flatMap(0 until _).toIndexedSeq)
+  }
 }

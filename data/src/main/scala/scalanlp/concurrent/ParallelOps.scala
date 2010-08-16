@@ -111,6 +111,13 @@ object ParallelOps {
      DefaultPool.invokeAndGet(action);
     }
 
+    def flatMap[U](f: T=>Traversable[U]) = {
+      val action = new BinaryRecursiveAction[IndexedSeq[U]](_ ++ _, { (start:Int, end:Int) =>
+        seq.view(start,end).flatMap(f).toIndexedSeq
+      });
+      DefaultPool.invokeAndGet(action);
+    }
+
     /**
      * Transforms each element, and then reduces them using r.
      */
