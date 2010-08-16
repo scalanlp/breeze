@@ -62,7 +62,7 @@ object ParallelOps {
    * mySeq.par(sequentialThreshold).reduce(_ + _);
    * }}}
    */
-  implicit def parallelOps[T](seq: Seq[T]) = new {
+  implicit def parallelOps[T](seq: IndexedSeq[T]) = new {
     def par = new ParallelSeqOps(seq);
     def par(threshold: Int) = new ParallelSeqOps(seq,threshold);
   }
@@ -75,7 +75,7 @@ object ParallelOps {
   /**
    * The class that houses all the parallel ops. Usually created by the parallelOps implicit.
    */
-  final class ParallelSeqOps[T](seq: Seq[T], threshold: Int=16) {
+  final class ParallelSeqOps[T](seq: IndexedSeq[T], threshold: Int=16) {
 
     /**
      * Specifies a new threshold at which point the operation is calculated sequentially. Default is 16.
@@ -101,6 +101,14 @@ object ParallelOps {
           seq.view(start, end).reduceLeft(f);
       });
       DefaultPool.invokeAndGet(action);
+    }
+
+    def map[U](f: T=>U) = {
+     val action = new BinaryRecursiveAction[IndexedSeq[U]](_ ++ _, { (start: Int, end: Int) =>
+       val r = seq.view(start,end).map(f).toIndexedSeq
+       r
+     });
+     DefaultPool.invokeAndGet(action);
     }
 
     /**
