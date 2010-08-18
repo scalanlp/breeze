@@ -58,4 +58,6 @@ object StopWordFilter extends TypedCompanion1[String,StopWordFilter] {
   prepare();
 
   def apply() = new StopWordFilter();
+
+  override def unpack(swf : StopWordFilter) = swf.language;
 }
