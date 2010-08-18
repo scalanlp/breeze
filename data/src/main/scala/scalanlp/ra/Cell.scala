@@ -13,9 +13,12 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.ra;
+package scalanlp;
+package ra;
 
 import java.io.File;
+
+import pipes.Pipes;
 
 import scalanlp.serialization.FileSerialization;
 
@@ -27,8 +30,8 @@ import scalanlp.serialization.FileSerialization;
  *
  * @author dramage
  */
-class Cell[V](val path : File, eval : => V)(implicit ra : RA) {
-  import ra.pipes._;
+class Cell[V](val path : File, eval : => V, log : (String=>Unit)=System.err.println) {
+  import Pipes.global._;
   import Cell._;
 
   /** The computed (or loaded) value. */
@@ -72,7 +75,7 @@ class Cell[V](val path : File, eval : => V)(implicit ra : RA) {
         // value not yet loaded
       case None => {
         if (status == Pending) {
-          ra.log("[RA.cell] waiting for "+path);
+          log("[cell] waiting for "+path);
           while (status == Pending) {
             Thread.sleep(500l);
           }
@@ -81,7 +84,7 @@ class Cell[V](val path : File, eval : => V)(implicit ra : RA) {
         val v : V = status match {
           case Ready   => {
             // value is ready, load and return it
-            ra.log("[RA.cell] loading "+path);
+            log("[cell] loading "+path);
             implicitly[FileSerialization.Readable[V]].read(path);
           }
 
@@ -93,7 +96,7 @@ class Cell[V](val path : File, eval : => V)(implicit ra : RA) {
               return get;
             }
 
-            ra.log("[RA.cell] creating "+path);
+            log("[cell] creating "+path);
             List(RA.pid) | lock;
             val rv = eval;
             implicitly[FileSerialization.Writable[V]].write(path, rv);
@@ -104,7 +107,7 @@ class Cell[V](val path : File, eval : => V)(implicit ra : RA) {
           case Partial => {
             // partial computation that we can help complete
 
-            ra.log("[RA.cell] helping compute "+path);
+            log("[cell] helping compute "+path);
             val rv = eval;
             rv;
           }
@@ -130,6 +133,19 @@ object Cell {
   case object Pending extends Status;
   case object Missing extends Status;
   case object Partial extends Status;
+
+  def apply[V]
+  (name : String, pipes : Pipes = Pipes.global,
+   log : (String=>Unit) = System.err.println)
+  (eval : => V) : Cell[V] =
+    new Cell(pipes.file(name), eval, log);
+
+  /** Returns the value of the cell with the given name in the given folder. */
+  def cache[V:FileSerialization.Readable:FileSerialization.Writable]
+  (name : String, pipes : Pipes = Pipes.global,
+   log : (String=>Unit) = System.err.println)
+  (eval : => V) : V =
+    new Cell(pipes.file(name), eval, log).get;
 }
 
 class CellException(msg : String) extends RuntimeException(msg);

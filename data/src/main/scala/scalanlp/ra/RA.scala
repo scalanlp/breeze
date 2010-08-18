@@ -96,7 +96,7 @@ case class RA(
 
   /** Returns a cell representing the state of computation backed by the given cache file. */
   def cell[V](cacheFile : File)(p : =>V) =
-    new Cell(cacheFile,p)(this);
+    new Cell(cacheFile,p,log);
 
   /** Gets a (named) child context in a named folder, creating it if necessary. */
   def branch(dir : File) : RA = {

@@ -17,15 +17,53 @@
 package scalanlp.ra
 
 /**
- * A mix-in trait that provides a short signature of an object based on
- * the hash of its toString.  This method should only be mixed in to
- * immutable classes with a reasonable toString defined.
- * 
+ * Mix-in trait that provides a .signature method on classes based
+ * on computing a hash of toString.
+ *
  * @author dramage
  */
 trait Signature {
-  def signature : String = {
-    val hex = this.toString.hashCode.toHexString;
-    "0"*(8-hex.length)+hex;
+  def signature =
+    HasSignature.StringHasSignature.signatureFor(this.toString);
+}
+
+object Signature {
+  def apply[X:HasSignature](x : X) =
+    implicitly[HasSignature[X]].signatureFor(x);
+}
+
+/**
+ * A marker trait for types that support returning a simple signature
+ * of their contents.
+ * 
+ * @author dramage
+ */
+trait HasSignature[-X] {
+  def signatureFor(x : X) : String;
+}
+
+trait LowPriorityHasSignature {
+  implicit object AnyHasSignature extends HasSignature[Any] {
+    override def signatureFor(x : Any) = {
+      HasSignature.StringHasSignature.signatureFor(x.toString);
+    }
+  }
+}
+
+object HasSignature extends LowPriorityHasSignature {
+  implicit object StringHasSignature extends HasSignature[String] {
+    override def signatureFor(x : String) = {
+      val hex = x.toString.hashCode.toHexString;
+      "0"*(8-hex.length)+hex;
+    }
+  }
+
+  implicit object SignatureHasSignature extends HasSignature[Signature] {
+    override def signatureFor(x : Signature) =
+      x.signature
+  }
+
+  implicit object IntHasSignature extends HasSignature[Int] {
+    override def signatureFor(x : Int) = x.toString;
   }
 }
