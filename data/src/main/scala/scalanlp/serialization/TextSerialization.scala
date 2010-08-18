@@ -162,12 +162,15 @@ with ByteSerialization with StringSerialization {
       out.append('\'');
     }
   }
-  
-  override implicit val stringReadWritable : ReadWritable[String] = new ReadWritable[String] {
+
+  def mkStringReadWritable(quote : Option[Char] = Some('"')) : ReadWritable[String] = new ReadWritable[String] {
     override def read(in : Input) = {
-      expect(in, '"', false);
+      quote match {
+        case Some(ch) => expect(in, ch, false);
+        case None => ();
+      }
       val rv = new StringBuilder();
-      while (in.head != '"') {
+      while (in.hasNext && quote.isDefined && in.head != quote.get) {
         rv += (in.next match {
           case '\\' => in.next match {
             case 'b'  => '\b';
@@ -184,16 +187,28 @@ with ByteSerialization with StringSerialization {
           case c : Char => c
         });
       }
-      expect(in, '"', false);
+      quote match {
+        case Some(ch) => expect(in, ch, false);
+        case None => ();
+      }
       rv.toString;
     }
 
     override def write(out : Output, v : String) = {
-      out.append('"');
+      quote match {
+        case Some(ch) => out.append(ch);
+        case None => ();
+      }
       out.append(escape(v));
-      out.append('"');
+      quote match {
+        case Some(ch) => out.append(ch);
+        case None => ();
+      }
     }
   }
+
+  override implicit val stringReadWritable : ReadWritable[String] =
+    mkStringReadWritable(Some('"'));
 
   //
   // from CompoundTypes
