@@ -17,9 +17,10 @@
 package scalanlp;
 package collection;
 
-import scala.collection.{IterableLike,IterableViewLike,IterableView};
-import scala.collection.TraversableView;
-import scala.collection.generic.CanBuildFrom;
+import scala.collection.{IterableLike,TraversableView};
+import scala.collection.mutable.Builder;
+import scala.collection.generic.{GenericCompanion,CanBuildFrom};
+
 import TraversableView.NoBuilder;
 
 /**
@@ -29,16 +30,21 @@ import TraversableView.NoBuilder;
  *
  * @author dramage
  */
-trait LazyIterableLike[+A,+This<:LazyIterable[A] with LazyIterableLike[A,This]] {
+trait LazyIterableLike[+A,+This<:LazyIterable[A] with LazyIterableLike[A,This]]
+extends Iterable[A] with IterableLike[A,This] {
   self =>
 
-  def repr : This = self.asInstanceOf[This];
+  /** Cannot build new LazyIterables. */
+  override protected[this] def newBuilder : Builder[A,This] =
+    throw new UnsupportedOperationException(this+".newBuilder");
 
-  def iterator : Iterator[A];
+  override def repr : This = self.asInstanceOf[This];
 
-  val toIterable : Iterable[A] = LazyIterable.toIterable(repr);
+  override def iterator : Iterator[A];
 
-  def foreach[U](f: A => U): Unit =
+  override def toIterable : Iterable[A] = LazyIterable.toIterable(repr);
+
+  override def foreach[U](f: A => U): Unit =
     iterator.foreach(f);
 
   lazy val sizeCache = {
@@ -46,7 +52,7 @@ trait LazyIterableLike[+A,+This<:LazyIterable[A] with LazyIterableLike[A,This]] 
     for (x <- self) result += 1
     result
   }
-  def size = sizeCache;
+  override def size = sizeCache;
 
   def force[B >: A, That](implicit bf: CanBuildFrom[Iterable[A], B, That]) = {
     val b = bf(toIterable);
@@ -190,46 +196,49 @@ trait LazyIterableLike[+A,+This<:LazyIterable[A] with LazyIterableLike[A,This]] 
 
   // implementation methods
 
-  def ++[B >: A](xs: TraversableOnce[B]): LazyIterable[B] =
-    newAppended(xs.toTraversable);
+  override def ++[B >: A, That](xs: TraversableOnce[B])(implicit bf: CanBuildFrom[This, B, That]): That =
+    newAppended(xs.toTraversable).asInstanceOf[That];
 
-  def map[B](f: A => B): LazyIterable[B] =
-    newMapped(f);
+  override def map[B, That](f: A => B)(implicit bf: CanBuildFrom[This, B, That]): That =
+    newMapped(f).asInstanceOf[That];
 
-  def collect[B](pf: PartialFunction[A, B]) : LazyIterable[B] =
-    filter(pf.isDefinedAt).map(pf);
+  override def collect[B, That](pf: PartialFunction[A, B])(implicit bf: CanBuildFrom[This, B, That]): That =
+    filter(pf.isDefinedAt).map(pf)(bf);
 
-  def flatMap[B](f: A => Traversable[B]): LazyIterable[B] =
-    newFlatMapped(f);
+  override def flatMap[B, That](f: A => Traversable[B])(implicit bf: CanBuildFrom[This, B, That]): That =
+    newFlatMapped(f).asInstanceOf[That];
 
-  def filter(p: A => Boolean): This = newFiltered(p).asInstanceOf[This]
-  def withFilter(p: A => Boolean): This = newFiltered(p).asInstanceOf[This]
-  def partition(p: A => Boolean): (This, This) = (filter(p), filter(!p(_)))
-  def init: This = newSliced(0, size - 1).asInstanceOf[This]
-  def drop(n: Int): This = newSliced(n max 0, Int.MaxValue).asInstanceOf[This]
-  def take(n: Int): This = newSliced(0, n).asInstanceOf[This]
-  def slice(from: Int, until: Int): This = newSliced(from max 0, until).asInstanceOf[This]
-  def dropWhile(p: A => Boolean): This = newDroppedWhile(p).asInstanceOf[This]
-  def takeWhile(p: A => Boolean): This = newTakenWhile(p).asInstanceOf[This]
-  def span(p: A => Boolean): (This, This) = (takeWhile(p), dropWhile(p))
-  def splitAt(n: Int): (This, This) = (take(n), drop(n))
+  override def filter(p: A => Boolean): This = newFiltered(p).asInstanceOf[This]
+  override def withFilter(p: A => Boolean): This = newFiltered(p).asInstanceOf[This]
+  override def partition(p: A => Boolean): (This, This) = (filter(p), filter(!p(_)))
+  override def init: This = newSliced(0, size - 1).asInstanceOf[This]
+  override def drop(n: Int): This = newSliced(n max 0, Int.MaxValue).asInstanceOf[This]
+  override def take(n: Int): This = newSliced(0, n).asInstanceOf[This]
+  override def slice(from: Int, until: Int): This = newSliced(from max 0, until).asInstanceOf[This]
+  override def dropWhile(p: A => Boolean): This = newDroppedWhile(p).asInstanceOf[This]
+  override def takeWhile(p: A => Boolean): This = newTakenWhile(p).asInstanceOf[This]
+  override def span(p: A => Boolean): (This, This) = (takeWhile(p), dropWhile(p))
+  override def splitAt(n: Int): (This, This) = (take(n), drop(n))
 
-  def grouped(size: Int): Iterator[This] =
+  override def grouped(size: Int): Iterator[This] =
     self.iterator.grouped(size).map(xs => newForced(xs).asInstanceOf[This]);
 
-  def sliding[B >: A](size: Int, step: Int): Iterator[This] =
+  override def sliding[B >: A](size: Int, step: Int): Iterator[This] =
     self.iterator.sliding(size).map(xs => newForced(xs).asInstanceOf[This]);
 
-  def zip[A1 >: A, B](that: Iterable[B]): LazyIterable[(A1,B)] =
-    newZipped(that);
 
-  def zipWithIndex: LazyIterable[(A,Int)] =
-    zip[A, Int](Stream from 0);
+  override def zip[A1 >: A, B, That](that: Iterable[B])(implicit bf: CanBuildFrom[This, (A1, B), That]): That =
+    newZipped(that).asInstanceOf[That];
 
-  def zipAll[B, A1 >: A](that: Iterable[B], thisElem: A1, thatElem: B): LazyIterable[(A1,B)] =
-    newZippedAll(that, thisElem, thatElem);
+  override def zipWithIndex[A1 >: A, That](implicit bf: CanBuildFrom[This, (A1, Int), That]): That =
+    zip[A1, Int, That](Stream from 0)(bf);
 
-  def stringPrefix = "LazyIterable"
+  override def zipAll[B, A1 >: A, That](that: Iterable[B], thisElem: A1, thatElem: B)(implicit bf: CanBuildFrom[This, (A1, B), That]): That =
+    newZippedAll(that, thisElem, thatElem).asInstanceOf[That];
+
+  override def stringPrefix = "LazyIterable"
+
+  override def toString = stringPrefix;
 }
 
 /**
@@ -238,9 +247,13 @@ trait LazyIterableLike[+A,+This<:LazyIterable[A] with LazyIterableLike[A,This]] 
  *
  * @author dramage
  */
-trait LazyIterable[+A] extends LazyIterableLike[A,LazyIterable[A]];
+trait LazyIterable[+A] extends LazyIterableLike[A,LazyIterable[A]] {
+  override def companion : GenericCompanion[LazyIterable] = LazyIterable;
+}
 
-object LazyIterable {
+object LazyIterable extends GenericCompanion[LazyIterable] {
+  protected val noBuilder = new NoBuilder();
+
   /** Creates a lazily evaluated iterable from the given iterator-generating function .*/
   def apply[A](iterator : ()=>Iterator[A]) : LazyIterable[A] = {
     val inIterator : (()=>Iterator[A]) = iterator;
@@ -265,4 +278,21 @@ object LazyIterable {
 
   implicit def fromSeq[A](seq : Seq[A]) : LazyIterable[A] =
     LazyIterable(seq.length)(seq.iterator);
+
+  //
+  // Methods to play nice with scala collections framework
+  //
+
+  /** Cannot build new instances of LazyIterable. */
+  override def newBuilder[A]: Builder[A, LazyIterable[A]] =
+    noBuilder.asInstanceOf[Builder[A,LazyIterable[A]]];
+
+  implicit def canBuildFrom[A]: CanBuildFrom[LazyIterable[_], A, LazyIterable[A]] = {
+    new CanBuildFrom[LazyIterable[_], A, LazyIterable[A]] {
+      def apply(from: LazyIterable[_]) =
+        noBuilder.asInstanceOf[Builder[A,LazyIterable[A]]];
+      def apply() =
+        noBuilder.asInstanceOf[Builder[A,LazyIterable[A]]];
+    }
+  }
 }
