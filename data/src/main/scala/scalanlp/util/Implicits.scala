@@ -9,6 +9,7 @@ trait DoubleImplicits {
     def closeTo(y: Double, tol: Double=1E-5) = {
       (math.abs(x - y) / (math.abs(x) + math.abs(y) + 1e-10) < tol);
     }
+    def isDangerous = math.isNaN(x) || math.isInfinite(y);
   }
 
   implicit def scEnrichDouble(x: Double) = new RichDouble(x);
