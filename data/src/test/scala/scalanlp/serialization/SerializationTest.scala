@@ -108,6 +108,11 @@ trait SerializationTestBase extends FunSuite with Checkers {
     indexTest[Int]();
     indexTest[(String,String)]();
   }
+
+  test("Options") {
+    basicTest[Option[Int]]();
+    basicTest[Option[(Int,String)]]();
+  }
 }
 
 @RunWith(classOf[JUnitRunner])

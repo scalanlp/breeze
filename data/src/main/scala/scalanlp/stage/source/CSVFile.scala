@@ -17,7 +17,11 @@ package scalanlp.stage.source;
 
 import java.io.File;
 
-import scalanlp.stage.{Parcel,Batch,History};
+import scalanlp.pipes.Pipes;
+
+import scalanlp.collection.LazyIterable;
+import scalanlp.stage.{Parcel,Item,History};
+import scalanlp.serialization._;
 
 /**
  * A CSVFile acts as a source of Array[String].  Uses the scalax CSV parser
@@ -26,27 +30,30 @@ import scalanlp.stage.{Parcel,Batch,History};
  *
  * @author dramage
  */
-case class CSVFile(path : String) extends File(path) {
-  private def reader() = {
-    val fis = new java.io.BufferedInputStream(
-      new java.io.FileInputStream(this));
-
-    val is =
-      if (path.toLowerCase.endsWith(".gz")) {
-        new java.util.zip.GZIPInputStream(fis)
-      } else { fis };
-
-    new java.io.BufferedReader(new java.io.InputStreamReader(is));
+class CSVFile(path : String) extends File(path)
+with LazyIterable[Seq[String]] with FileStreams with ColumnSource with ColumnSink {
+  override def write[V:ColumnWritable](items : Iterable[V]) = {
+    val ps = printer();
+    try {
+      for (item <- items) {
+        val iter = implicitly[ColumnWritable[V]].strings(item);
+        if (iter.hasNext) ps.print(CSVFile.format(iter.next));
+        while (iter.hasNext) {
+          ps.print(',');
+          ps.print(CSVFile.format(iter.next));
+        }
+        ps.println;
+      }
+    } finally {
+      ps.close();
+    }
   }
 
-  def rows : Iterable[Seq[String]] = new Iterable[Seq[String]] {
-    override def iterator =
-      new CSVIterator(reader());
-  }
+  override def read[V:ColumnReadable] : LazyIterable[V] =
+    this.map(implicitly[ColumnReadable[V]].value);
 
-  def asParcel : Parcel[Batch[Seq[String]]] = {
-    Parcel(History.Origin(toString), Batch.fromIterator(() => new CSVIterator(reader())));
-  }
+  override def iterator =
+    new CSVIterator(reader());
 
   override def toString =
     "CSVFile(\""+path+"\")";
@@ -60,6 +67,10 @@ case class CSVFile(path : String) extends File(path) {
  * @author dramage
  */
 object CSVFile {
+  /** CSVFile in the current folder. */
+  def apply(name : String)(implicit pipes : Pipes = Pipes.global) =
+    new CSVFile(pipes.file(name).getPath);
+
   /** CSVFile that points to the given file. */
   def apply(file : File) =
     new CSVFile(file.getPath);
@@ -69,19 +80,23 @@ object CSVFile {
     new CSVFile(new File(base, name).getPath); 
   
   /** Calls file.asParcel. */
-  implicit def CSVFileAsParcel(file : CSVFile) = file.asParcel;
+  implicit def CSVFileAsParcel(file : CSVFile) =
+    Parcel(history = History.Origin(file.toString),
+           meta = scalanlp.collection.immutable.DHMap() + (file : File),
+           data = file.zipWithIndex.map(tup => Item(tup._2, tup._1)));
+
+  /** Formats the given value as a CSV cell by quoting. */
+  def format(cell : String) : String = {
+    if (cell.contains("\n") || cell.contains("\r") || cell.contains("\"") || cell.contains(",")) {
+      "\"" + cell.replaceAll("\"","\"\"") + "\"";
+    } else {
+      cell;
+    }
+  }
 
   /** Formats the given sequence of strings as well-formed line of CSV. */
-  def format(seq : Iterable[String]) : String = {
-    ( for (field <- seq) yield {
-        if (field.contains('\n') || field.contains('\r') || field.contains('\"') || field.contains(",")) {
-          "\"" + field.replaceAll("\"","\"\"") + "\"";
-        } else {
-          field;
-        }
-      }
-    ).mkString(",");
-  }
+  def format(seq : Iterator[String]) : String =
+    seq.map(format).mkString(",");
 }
 
 

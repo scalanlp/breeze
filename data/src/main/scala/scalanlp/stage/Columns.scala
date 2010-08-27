@@ -13,9 +13,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.stage.source;
-
-import scalanlp.stage.Mapper;
+package scalanlp.stage;
 
 /**
  * Selects the given column from a sequence of Strings (e.g. fields in a record).
@@ -59,30 +57,4 @@ case class Join(glue : String) extends Mapper[Seq[String],String] {
 
   override def toString =
     "Join("+glue+")";
-}
-
-/**
- * A rich iterable of sequences of strings that can be written to
- * a CSV or TSV file. See constructor methods in companion object.
- * 
- * @author dramage
- */
-trait ColumnDataSource extends Iterable[Seq[String]] {
-  import scalanlp.pipes.Pipes.global._;
-  
-  def | (f : CSVFile) =
-    iterator.map(CSVFile.format) | f;
-  
-  def | (f : TSVFile) =
-    iterator.map(TSVFile.format) | f;
-}
-
-object ColumnDataSource {
-  def apply(data : =>Iterator[Seq[String]]) = new ColumnDataSource {
-    override def iterator = data;
-  }
-  
-  def apply(data : Iterable[Seq[String]]) = new ColumnDataSource {
-    override def iterator = data.iterator;
-  }
 }

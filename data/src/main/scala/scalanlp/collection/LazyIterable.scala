@@ -255,10 +255,9 @@ object LazyIterable extends GenericCompanion[LazyIterable] {
   protected val noBuilder = new NoBuilder();
 
   /** Creates a lazily evaluated iterable from the given iterator-generating function .*/
-  def apply[A](iterator : ()=>Iterator[A]) : LazyIterable[A] = {
-    val inIterator : (()=>Iterator[A]) = iterator;
+  def apply[A](mkIterator : =>Iterator[A]) : LazyIterable[A] = {
     new LazyIterable[A] {
-      override def iterator = inIterator();
+      override def iterator = mkIterator;
     }
   }
 

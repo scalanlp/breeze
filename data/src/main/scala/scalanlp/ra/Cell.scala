@@ -140,12 +140,22 @@ object Cell {
   (eval : => V) : Cell[V] =
     new Cell(pipes.file(name), eval, log);
 
-  /** Returns the value of the cell with the given name in the given folder. */
+  /** Evaluates the given eval function if no cache exists; otherwise loads value. */
   def cache[V:FileSerialization.Readable:FileSerialization.Writable]
   (name : String, pipes : Pipes = Pipes.global,
    log : (String=>Unit) = System.err.println)
   (eval : => V) : V =
     new Cell(pipes.file(name), eval, log).get;
+
+  /** Evaluates the given eval function if no cache exists; otherwise loads value. */
+  def cache[V:FileSerialization.Readable:FileSerialization.Writable]
+  (path : File)(eval : => V) : V =
+    new Cell(path, eval).get;
+
+  /** Evaluates the given eval function if no cache exists; otherwise loads value. */
+  def cache[V:FileSerialization.Readable:FileSerialization.Writable]
+  (path : File, log : (String => Unit))(eval : => V) : V =
+    new Cell(path, eval, log).get;
 }
 
 class CellException(msg : String) extends RuntimeException(msg);

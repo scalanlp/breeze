@@ -1,3 +1,4 @@
+
 /*
  Copyright 2009 David Hall, Daniel Ramage
 
@@ -13,19 +14,16 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.stage
+
+package scalanlp.serialization;
 
 import scalanlp.collection.LazyIterable;
-import scala.collection.JavaConversions._;
 
-///**
-// * Support for creating parcels and batches from Java.
-// *
-// * @author dramage
-// */
-//object JavaConversions {
-//
-//  def batchFromIterable[V](inItems : java.lang.Iterable[V]) : Batch[V] =
-//    Batch.fromIterable(LazyIterable(inItems.iterator));
-//
-//}
+/**
+ * Source of column data.
+ *
+ * @author dramage
+ */
+trait ColumnSource {
+  def read[V:ColumnReadable] : LazyIterable[V];
+}

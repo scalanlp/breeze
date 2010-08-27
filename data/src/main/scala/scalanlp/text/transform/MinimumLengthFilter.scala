@@ -18,16 +18,15 @@ package scalanlp.text.transform;
 import scalanlp.serialization.TypedCompanion1;
 
 /**
- * Filters out tokens composed of fewer than minLength characters or more than
- * maxLength characters.
+ * Filters out tokens composed of fewer than minLength characters.
  *
  * @author dramage
  */
-case class TermMinimumLengthFilter(minLength : Int) extends Transformer {
+case class MinimumLengthFilter(minLength : Int) extends Transformer {
   override def apply(doc : Iterable[String]) : Iterable[String] =
     doc.filter(token => token.length >= minLength);
 }
 
-object TermMinimumLengthFilter extends TypedCompanion1[Int,TermMinimumLengthFilter] {
+object MinimumLengthFilter extends TypedCompanion1[Int,MinimumLengthFilter] {
   prepare();
 }

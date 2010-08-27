@@ -28,7 +28,7 @@ trait Transformer extends (Iterable[String] => Iterable[String]) {
 
 object Transformer extends SubtypedCompanion[Transformer] {
   prepare();
-  register[TermMinimumLengthFilter];
+  register[MinimumLengthFilter];
   register[WordsAndNumbersOnlyFilter];
   register[PorterStemmer];
   register[CaseFolder];

@@ -68,7 +68,7 @@ case class Parcel[D](history : History, meta : DHMap, data : D)
  * @author dramage
  */
 object Parcel {
-  implicit def apply[D](data : D)(implicit mD : Manifest[D]) : Parcel[D] = {
+  def apply[D](data : D)(implicit mD : Manifest[D]) : Parcel[D] = {
     val stack = Thread.currentThread.getStackTrace;
     val currentClass = stack(0).getClassName;
     val currentPackage = currentClass.substring(0, currentClass.lastIndexOf("."));

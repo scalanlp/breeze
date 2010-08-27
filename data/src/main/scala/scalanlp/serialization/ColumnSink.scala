@@ -13,19 +13,18 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.stage
 
-import scalanlp.collection.LazyIterable;
-import scala.collection.JavaConversions._;
+package scalanlp.serialization;
 
-///**
-// * Support for creating parcels and batches from Java.
-// *
-// * @author dramage
-// */
-//object JavaConversions {
-//
-//  def batchFromIterable[V](inItems : java.lang.Iterable[V]) : Batch[V] =
-//    Batch.fromIterable(LazyIterable(inItems.iterator));
-//
-//}
+/**
+ * Marker trait for data sinks that can consume column data.
+ *
+ * @author dramage
+ */
+trait ColumnSink {
+  def write[V:ColumnWritable](source : Iterable[V]);
+
+  /** Writes the given column data to this sink. */
+  final def <~[V:ColumnWritable](source : Iterable[V]) =
+    write(source);
+}

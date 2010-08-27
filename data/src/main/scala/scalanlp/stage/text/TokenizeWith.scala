@@ -15,8 +15,8 @@
 */
 package scalanlp.stage.text;
 
-import scalanlp.stage.{Batch,Parcel};
-import scalanlp.stage.Stage;
+import scalanlp.collection.LazyIterable;
+import scalanlp.stage.{Parcel,Stage,Item};
 import scalanlp.stage.Stage._;
 
 import scalanlp.text.tokenize.Tokenizer;
@@ -28,9 +28,9 @@ import scalanlp.serialization.TypedCompanion1;
  * @author dramage
  */
 case class TokenizeWith(tokenizer : Tokenizer)
-extends Stage[Batch[String],Batch[Iterable[String]]] {
-  override def apply(parcel : Parcel[Batch[String]]) : Parcel[Batch[Iterable[String]]] =
-    Parcel(parcel.history + this, parcel.meta + this, parcel.data.map(tokenizer));
+extends Stage[LazyIterable[Item[String]],LazyIterable[Item[Iterable[String]]]] {
+  override def apply(parcel : Parcel[LazyIterable[Item[String]]]) : Parcel[LazyIterable[Item[Iterable[String]]]] =
+    Parcel(parcel.history + this, parcel.meta + this, parcel.data.map(_.map(tokenizer)));
 
   override def toString =
     scalanlp.serialization.TextSerialization.toString(this);

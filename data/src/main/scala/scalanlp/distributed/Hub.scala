@@ -150,15 +150,22 @@ object Hub {
   //
 
   /** Constructs a new service instance. */
-  def service() =
-    new Service();
+  def service(port : Int = -1, log : (String=>Unit) = System.err.println) =
+    new Service(dispatch = SocketDispatch(port), log = log);
 
-  /** Constructs a new service instance on the given port. */
-  def service(port : Int) =
-    new Service(SocketDispatch(port));
-
-  def connect(uri : URI) =
+  /** Connects to the hub at the given URI. */
+  def connect(uri : URI) = {
     new Client(uri);
+  }
+
+  /** Connects to the hub at the URI specified in the scalanlp.distributed.hub system property. */
+  def connect() = {
+    val uri = System.getProperty("scalanlp.distributed.hub");
+    if (uri == null) {
+      throw new IllegalArgumentException("System property scalanlp.distributed.hub not defined.")
+    }
+    new Client(URI.create(uri));
+  }
 
   def main(args : Array[String]) {
     def usage() {
@@ -192,7 +199,7 @@ object Hub {
         val service = if (args.length == 2) {
           Hub.service(args(1).toInt);
         } else {
-          Hub.service;
+          Hub.service();
         }
 
         System.err.println("[hub] running at "+service.uri);

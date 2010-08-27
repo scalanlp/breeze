@@ -84,6 +84,12 @@ with ByteSerialization {
   // From CompoundTypes
   //
 
+  override protected def readName(src : Input) =
+    src.readUTF;
+
+  override protected def writeName(sink : Output, value : String) =
+    sink.writeUTF(value);
+
   override protected def readBuildable[T:Readable,To]
   (src : Input, builder : Builder[T,To]) : To = {
     val sz = src.readInt;

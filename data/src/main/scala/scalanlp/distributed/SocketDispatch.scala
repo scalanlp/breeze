@@ -56,8 +56,13 @@ object SocketDispatch {
   /**
    * Returns a dispatch for the given port, creating it if necessary.
    */
-  def apply(port : Int) : SocketDispatch =
-    registry.getOrElseUpdate(port, { val rv = new Impl(port); rv.runAsDaemon; rv; } );
+  def apply(port : Int) : SocketDispatch = {
+    if (port == -1) {
+      global
+    } else {
+      registry.getOrElseUpdate(port, { val rv = new Impl(port); rv.runAsDaemon; rv; } );
+    }
+  }
 
   protected[distributed] object Messages {
     sealed trait Incoming;

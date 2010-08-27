@@ -214,6 +214,18 @@ with ByteSerialization with StringSerialization {
   // from CompoundTypes
   //
 
+  /** Reads a name from the input, consisting of letters, digits, underscore, period, and dollar sign. */
+  override def readName(src : Input) : String = {
+    val rv = consumeWhile(src, c => c.isLetterOrDigit || c == '_' || c == '.' || c == '$');
+    if (rv.length == 0)
+      throw new TextSerializationException("Expected symbol name");
+    rv;
+  }
+
+  override def writeName(out : Output, name : String) = {
+    out.append(name);
+  }
+
   override protected def readTupleStart(in : Input) = {
     expect(in,'(',false);
     skipWhitespace(in);
@@ -277,14 +289,6 @@ with ByteSerialization with StringSerialization {
   //
   // Utility methods
   //
-
-  /** Reads a name from the input, consisting of letters, digits, underscore, period, and dollar sign. */
-  def readName(src : Input) : String = {
-    val rv = consumeWhile(src, c => c.isLetterOrDigit || c == '_' || c == '.' || c == '$');
-    if (rv.length == 0)
-      throw new TextSerializationException("Expected symbol name");
-    rv;
-  }
 
   /** Reads the next line from the input. */
   def readLine(src : Input) : String = {

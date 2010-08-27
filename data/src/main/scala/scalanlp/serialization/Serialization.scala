@@ -15,8 +15,6 @@
 */
 package scalanlp.serialization;
 
-import java.io.File;
-
 import scala.collection.MapLike
 import scala.collection.generic.{GenericCompanion, MapFactory}
 
@@ -24,12 +22,6 @@ import scala.collection.mutable.{ArrayBuilder,Builder};
 
 import scalanlp.util.Index
 
-
-class SerFile(path : String) extends File(path);
-
-class TxtFile(path : String) extends File(path);
-
-class CsvFile(path : String) extends File(path);
 
 /**
  * A base trait for brokers of serialization. See DataSerialization for a good example.
@@ -100,6 +92,11 @@ object SerializationFormat {
    * @author dramage
    */
   trait CompoundTypes extends SerializationFormat { this: SerializationFormat =>
+
+    protected def readName(in : Input) : String;
+
+    protected def writeName(out : Output, name : String);
+
     /** Reads elements of type T into the given buildable. Inverse of writeIterable. */
     protected def readBuildable[T:Readable,To]
     (src: Input, builder : Builder[T,To]) : To;
@@ -255,6 +252,64 @@ object SerializationFormat {
 
       def write(sink: Output, value: Index[T]) =
         writeIterable[T,Iterable[T]](sink, value, "Index");
+    }
+
+    implicit def optionReadWritable[T:ReadWritable] : ReadWritable[Option[T]]
+    = new ReadWritable[Option[T]] {
+      override def read(in : Input) = {
+        readName(in) match {
+          case "Some" =>
+            readTupleStart(in);
+            val rv = implicitly[ReadWritable[T]].read(in);
+            readTupleEnd(in);
+            Some(rv);
+          case "None" =>
+            None;
+        }
+      }
+
+      override def write(out : Output, option : Option[T]) = {
+        option match {
+          case Some(v) =>
+            writeName(out, "Some");
+            writeTupleStart(out);
+            implicitly[ReadWritable[T]].write(out, v);
+            writeTupleEnd(out);
+          case None =>
+            writeName(out, "None");
+        }
+      }
+    }
+
+    /**
+     * Constructable provides a simple way to add serialization support to
+     * a more basic type.  In a companion object, extend a SerializationFormat's
+     * Constructable as an implicit object.
+     *
+     * @author dramage
+     */
+    abstract class Constructible[V:ClassManifest,RW:ReadWritable] extends ReadWritable[V] {
+      /** Name written and read. */
+      def name : String;
+
+      /** Packs the given value into a representation. */
+      def pack(value : V) : RW;
+
+      /** Unpacks the given value from a representation. */
+      def unpack(rep : RW) : V;
+
+      override def read(in : Input) = {
+        val seen = readName(in);
+        if (seen != name) {
+          throw new SerializationException("Expected: "+name+" but got "+seen);
+        }
+        unpack(implicitly[ReadWritable[RW]].read(in));
+      }
+
+      override def write(out : Output, value : V) = {
+        writeName(out,name);
+        implicitly[ReadWritable[RW]].write(out,pack(value));
+      }
     }
   }
 }

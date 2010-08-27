@@ -28,6 +28,7 @@ import scalanlp.serialization.TextSerialization;
  *
  * @author dramage
  */
+@serializable @SerialVersionUID(1)
 trait Tokenizer extends (String => Iterable[String]) {
   def andThen(g : Transformer) : Tokenizer =
     this ~> g;

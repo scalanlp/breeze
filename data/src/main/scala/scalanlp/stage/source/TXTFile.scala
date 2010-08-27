@@ -17,29 +17,51 @@ package scalanlp.stage.source;
 
 import java.io.File;
 
-import scalanlp.pipes.Pipes.global._;
-
-import scalanlp.stage.{Parcel,Batch,History};
+import scalanlp.pipes.Pipes;
+import scalanlp.collection.LazyIterable;
+import scalanlp.stage.{Parcel,Item,History};
+import scalanlp.serialization._;
 
 /**
  * A TXTFile acts as a source of Strings.
  * 
  * @author dramage
  */
-case class TXTFile(path : String) extends File(path) { self =>
-  def iterator = this.getLines;
-
-  def lines : Iterable[String] = {
-    new Iterable[String] {
-      override def iterator = self.iterator;
-    };
-  }
-
-  def asParcel : Parcel[Batch[String]] =
-    Parcel(History.Origin(toString), Batch.fromIterator(() => iterator));
+class TXTFile(path : String) extends File(path) with LazyIterable[String] {
+  import Pipes.global._;
+  
+  override def iterator = this.getLines;
 
   override def toString =
     "TXTFile(\""+path+"\")";
+}
+
+trait FileStreams {
+  this : File =>
+
+  def reader() = {
+    val fis = new java.io.BufferedInputStream(
+      new java.io.FileInputStream(this));
+
+    val is =
+      if (getPath.toLowerCase.endsWith(".gz")) {
+        new java.util.zip.GZIPInputStream(fis)
+      } else { fis };
+
+    new java.io.BufferedReader(new java.io.InputStreamReader(is));
+  }
+
+  def printer() = {
+    val fos = new java.io.BufferedOutputStream(
+      new java.io.FileOutputStream(this));
+
+    val os =
+      if (getPath.toLowerCase.endsWith(".gz")) {
+        new java.util.zip.GZIPOutputStream(fos)
+      } else { fos };
+
+    new java.io.PrintStream(os);
+  }
 }
 
 /**
@@ -49,6 +71,21 @@ case class TXTFile(path : String) extends File(path) { self =>
  * @author dramage
  */
 object TXTFile {
+  /** Named file in the current folder. */
+  def apply(name : String)(implicit pipes : Pipes = Pipes.global) =
+    new TSVFile(pipes.file(name).getPath);
+
+  /** From file. */
+  def apply(file : File) =
+    new TSVFile(file.getPath);
+
+  /** From file in directory. */
+  def apply(file : File, name : String) =
+    new TSVFile(new File(file, name).getPath);
+
   /** Calls file.asParcel. */
-  implicit def TXTFileAsParcel(file : TXTFile) = file.asParcel;
+  implicit def TXTFileAsParcel(file : TXTFile) =
+    Parcel(history = History.Origin(file.toString),
+           meta = scalanlp.collection.immutable.DHMap() + (file : File),
+           data = file.zipWithIndex.map(tup => Item(tup._2, tup._1)));
 }

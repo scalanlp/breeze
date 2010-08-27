@@ -21,7 +21,6 @@ import scala.reflect.ClassManifest;
 
 import TextSerialization._;
 
-
 /**
  * Mix-in trait for companion object to case classes to automatically
  * support {@link TextSerialization} toString and fromString.
@@ -226,6 +225,82 @@ extends TypedCompanion[(ReadWritable[P1],ReadWritable[P2]),This] {
       components._1.write(out, p1);
       out.append(',');
       components._2.write(out, p2);
+      out.append(')');
+    }
+  }
+}
+
+/**
+ * Mix-in trait for companion object to case classes to automatically
+ * support {@link TextSerialization} toString and fromString.
+ *
+ * Subtypes can provide an unpack method that breaks apart the case class into
+ * its companions.  The default behavior is based on Scala 2.8's case class
+ * encoding.
+ *
+ * @author dramage
+ */
+trait TypedCompanion3[P1,P2,P3,This]
+extends TypedCompanion[(ReadWritable[P1],ReadWritable[P2],ReadWritable[P3]),This] {
+  /** Static constructor. */
+  def apply(p1 : P1, p2 : P2, p3 : P3) : This;
+
+  protected def prepare()(implicit m : ClassManifest[This], p1H : ReadWritable[P1], p2H : ReadWritable[P2], p3H : ReadWritable[P3]) {
+    manifest = m;
+    components = (p1H, p2H, p3H);
+  }
+
+
+  /**
+   * Returns the arguments given to the apply() static constructor.  This
+   * method depends on the particulars of case class encoding.
+   */
+  def unpack(t : This) : (P1,P2, P3) = {
+    try {
+      val constructor = t.asInstanceOf[AnyRef].getClass.getConstructors()(0);
+      val names = TypedCompanion.paranamer.lookupParameterNames(constructor);
+      val p1 = t.asInstanceOf[AnyRef].getClass.getMethod(names(0)).invoke(t).asInstanceOf[P1];
+      val p2 = t.asInstanceOf[AnyRef].getClass.getMethod(names(1)).invoke(t).asInstanceOf[P2];
+      val p3 = t.asInstanceOf[AnyRef].getClass.getMethod(names(2)).invoke(t).asInstanceOf[P3];
+      (p1,p2,p3);
+    } catch {
+      case ex : Throwable => throw new TypedCompanionException(
+        "Could not automatically recover components of "+
+        t.asInstanceOf[AnyRef].getClass+": you must provide a custom "+
+        "unpack() implementation in "+this.getClass, ex);
+    }
+  }
+
+  /**
+   * Constructs a ReadWritable for the primary type T.
+   */
+  override implicit val readWritable = new ReadWritable[This] {
+    override def read(in : Input) = {
+      expect(in, name, false);
+      expect(in, '(', false);
+      skipWhitespace(in);
+      val p1 = components._1.read(in);
+      skipWhitespace(in);
+      expect(in, ',', false);
+      skipWhitespace(in);
+      val p2 = components._2.read(in);
+      skipWhitespace(in);
+      expect(in, ')', false);
+      val p3 = components._3.read(in);
+      skipWhitespace(in);
+      expect(in, ')', false);
+      apply(p1, p2, p3);
+    }
+
+    override def write(out : Output, value : This) = {
+      out.append(name);
+      out.append('(');
+      val (p1,p2,p3) = unpack(value);
+      components._1.write(out, p1);
+      out.append(',');
+      components._2.write(out, p2);
+      out.append(',');
+      components._3.write(out, p3);
       out.append(')');
     }
   }
