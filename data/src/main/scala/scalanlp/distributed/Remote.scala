@@ -23,33 +23,21 @@ import java.net.URI;
  * Use Remote.service to start a service that hosts objects.  Create
  * an object on a remote service using Remote.create or connect using
  * Remote.connect.  Functions are applied to the object using the
- * returned client's .apply method, and the results are returned.
+ * client's ! (asynchronous) and !? (reply) methods.
  *
  * @author dramage
  */
 object Remote {
 
   protected object Messages {
-    /** Requests that a remote object be created. */
+    /** Requests that a remote object be created. Returns Long. */
     case class Create[R](fn : () => R);
 
-    /** Returns the id for a created object. */
-    case class CreateReply(id : Long);
+    /** Apply the function to the object with the given id.  Returns nothing. */
+    case class Invoke[R,V](fn : R => V);
 
-    /** Dereference the object at the given id. */
-    case class Free(id : Long);
-
-    /** Reply to Free. */
-    case object FreeReply;
-
-    /** Apply fn to the object with the given id, returning InvokeReply at V. */
-    case class Invoke[R,V](id : Long, fn : R => V);
-
-    /** Success on calling a function on a path. */
-    case class InvokeReply[V](value : V);
-
-    /** Error - no id found. */
-    case object InvokeErrorNotFound;
+    /** Apply fn to the object with the given id, returning result V. */
+    case class Query[R,V](fn : R => V);
   }
 
   import Messages._;
@@ -59,43 +47,38 @@ object Remote {
    dispatch : SocketDispatch = SocketDispatch(),
    log : (String=>Unit) = System.err.println)
   extends SocketService(name, dispatch) {
-    import ServiceMessages.Reply;
+    var instance : AnyRef = null;
 
-    val instances = scala.collection.mutable.Map[Long,Any]();
-    var uid = 0l;
-
+    def create[R](fn : () => R) = {
+      if (instance != null && instance.isInstanceOf[java.io.Closeable]) {
+        instance.asInstanceOf[java.io.Closeable].close();
+      }
+      instance = fn().asInstanceOf[AnyRef];
+    }
+    
     override def react = synchronized {
       case Create(fn) => {
-        while (instances contains uid) {
-          uid += 1;
-        }
-        log("[remote] adding "+uid+" to "+instances.size+" active instances");
-        instances(uid) = fn();
-        Reply { CreateReply(uid); }
+        log("[remote] create");
+        create(fn);
       }
 
-      case Free(id) => {
-        log("[remote] freeing "+uid+" from "+instances.size+" active instances");
-        instances.remove(id);
-        Reply { FreeReply; }
-      }
+      case Invoke(fn) =>
+        fn(instance);
 
-      case Invoke(id, fn) => {
-        Reply { InvokeReply(fn(instances(id))); }
-      }
+      case Query(fn) =>
+        SocketService.reply(fn(instance));
     }
   }
 
-  class Client[R](val remote : SocketClient, val id : Long, free : Boolean = false) {
-    override def finalize() =
-      if (free) { try { remote ! Free(id) } finally { } }
+  class Client[R](val remote : SocketClient) {
+    def create(fn : () => R) : Unit =
+      (remote ! Create(fn));
 
-    def apply[V](fn : R => V) = {
-      (remote !? Invoke(id, fn)) match {
-        case InvokeReply(rv)     => rv.asInstanceOf[V];
-        case InvokeErrorNotFound => throw new RemoteInvokeObjectNotFound();
-      }
-    }
+    def invoke[V](fn : R => V) : Unit =
+      (remote ! Invoke(fn));
+
+    def query[V](fn : R => V) : V =
+      (remote !? Query(fn)).asInstanceOf[V];
   }
 
   //
@@ -103,26 +86,18 @@ object Remote {
   //
 
   /** Constructs a new service instance. */
-  def service(name : String = "/remote", port : Int = -1, log : (String=>Unit) = System.err.println) =
+  def service(name : String, port : Int = -1, log : (String=>Unit) = System.err.println) =
     new Service(name = name, dispatch = SocketDispatch(port), log = log);
 
   /** Connects to the given id. */
-  def connect[R](uri : URI, id : Long) : Client[R] = {
-    new Client[R] (SocketClient(uri), id, false);
-  }
-
-  /** Create a new remote instance. */
-  def create[R](uri : URI, fn : () => R) : Client[R] = {
-    val socket = SocketClient(uri);
-    val id = (socket !? Create(fn)).asInstanceOf[CreateReply].id;
-    new Client[R](socket, id, true);
-  }
+  def client[R](uri : URI) : Client[R] =
+    new Client[R](SocketClient(uri));
 
   def main(args : Array[String]) {
     def usage() {
       println("Usage: " + this.getClass.getName + "(start|...) [args]");
       println();
-      println("  start HUB_URI [NAME=/remote] [PORT]");
+      println("  start HUB_URI NAME [PORT]");
       println("    Start a service on this machine, optionally using the given port.");
     }
 
@@ -141,10 +116,10 @@ object Remote {
     args(0) match {
       case "start" =>
         require(args.length <= 4, "Too many arguments to start");
-        require(args.length >= 2, "Not enough arguments to start");
+        require(args.length >= 3, "Not enough arguments to start");
 
         val hub = Hub.connect(URI.create(args(1)));
-        val name = if (args.length > 2) args(2) else "/remote";
+        val name = args(2);
         val port = if (args.length > 3) args(3).toInt else -1;
 
         val service = new Service(name = name, dispatch = SocketDispatch(port));
