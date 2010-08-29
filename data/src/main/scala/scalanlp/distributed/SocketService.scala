@@ -132,7 +132,10 @@ extends Runnable with Threadable {
       }
     }
   }
-  
+
+  def stop() =
+    active = false;
+
   override def toString = uri.toString;
 }
 
