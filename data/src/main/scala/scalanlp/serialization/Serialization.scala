@@ -34,7 +34,7 @@ import scalanlp.util.Index
  * @author dlwh
  * @author dramage
  */
-trait SerializationFormat {
+@serializable trait SerializationFormat {
   /** The place to read data from. */
   type Input;
 
@@ -42,12 +42,12 @@ trait SerializationFormat {
   type Output;
 
   /** Inner trait for reading from Input. */
-  trait Readable[T] {
+  @serializable trait Readable[T] {
     def read(source: Input): T
   }
 
   /** Inner trait for writing to Output. */
-  trait Writable[T] {
+  @serializable trait Writable[T] {
     def write(sink: Output, what: T): Unit
   }
 
