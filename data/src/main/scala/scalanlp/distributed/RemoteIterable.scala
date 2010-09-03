@@ -15,7 +15,8 @@
 */
 package scalanlp.distributed;
 
-import java.net.URI;
+import java.net.{URI,Socket,ServerSocket};
+import java.io.{DataInputStream,DataOutputStream};
 
 import scala.collection.generic.{GenericCompanion,CanBuildFrom}
 import scala.collection.mutable.Builder;
@@ -39,15 +40,6 @@ object RemoteIterator {
   }
 
   import Messages._;
-
-  private var _uid = 0l;
-  private def nextUID : Long = synchronized {
-    _uid += 1;
-    _uid - 1;
-  }
-
-  import java.net._;
-  import java.io.{DataInputStream,DataOutputStream};
 
   class Service[V](iterator : Iterator[V])(implicit writer : DataSerialization.Writable[V])
   extends Threadable {
@@ -110,6 +102,12 @@ object RemoteIterator {
   }
 }
 
+/**
+ * Implementation trait for remotely-hosted Iterable instances.  Transformations
+ * done by Map are performed on the remote end.
+ *
+ * @author dramage
+ */
 trait RemoteIterableLike[A,+This<:RemoteIterable[A] with RemoteIterableLike[A,This]]
 extends LazyIterable[A] with LazyIterableLike[A,This] { self =>
   // server-side mapping
@@ -152,9 +150,14 @@ extends LazyIterable[A] with LazyIterableLike[A,This] { self =>
   }
 
   override def stringPrefix = "RemoteIterable";
-
 }
 
+/**
+ * A remotely hosted iterable.  Use service and client methods in the
+ * companion object to create instances.
+ *
+ * @author dramage
+ */
 trait RemoteIterable[A] extends RemoteIterableLike[A,RemoteIterable[A]] {
   override def companion = RemoteIterable;
 }
@@ -242,12 +245,3 @@ trait CanBuildReadWritableFrom[-From,Elem,+To] extends CanBuildFrom[From,Elem,To
   override def apply(from : From) =
     inner.apply(from);
 }
-
-//object CanBuildReadWritableFrom {
-//  implicit def canBuildReadWritableFrom[From,Elem,To]
-//  (implicit bf : CanBuildFrom[From,Elem,To], rw : DataSerialization.ReadWritable[Elem])
-//  : CanBuildReadWritableFrom[From,Elem,To] = new CanBuildReadWritableFrom[From,Elem,To] {
-//    override val inner = bf;
-//    override val format = rw;
-//  }
-//}
