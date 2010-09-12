@@ -23,19 +23,10 @@ import scalanlp.stage.{Parcel,Item,History};
 import scalanlp.serialization._;
 
 /**
- * A TXTFile acts as a source of Strings.
- * 
+ * Get readers and printers for dealing for accessing file contents.
+ *
  * @author dramage
  */
-class TXTFile(path : String) extends File(path) with LazyIterable[String] {
-  import Pipes.global._;
-  
-  override def iterator = this.getLines;
-
-  override def toString =
-    "TXTFile(\""+path+"\")";
-}
-
 trait FileStreams {
   this : File =>
 
@@ -62,6 +53,22 @@ trait FileStreams {
 
     new java.io.PrintStream(os);
   }
+}
+
+
+/**
+ * A TXTFile acts as a source of Strings.
+ * 
+ * @author dramage
+ */
+class TXTFile(path : String) extends File(path)
+with LazyIterable[String] with FileStreams {
+  import Pipes.global._;
+  
+  override def iterator = this.getLines;
+
+  override def toString =
+    "TXTFile(\""+path+"\")";
 }
 
 /**

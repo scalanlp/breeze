@@ -31,7 +31,7 @@ import scalanlp.util.Index;
  * @author dramage
  */
 trait SerializationTestBase extends FunSuite with Checkers {
-  val serializer : ByteSerialization with SerializationFormat.PrimitiveTypes with SerializationFormat.CompoundTypes;
+  val serializer : ByteSerialization with SerializationFormat.PrimitiveTypes;
 
   import serializer._;
 
@@ -45,7 +45,6 @@ trait SerializationTestBase extends FunSuite with Checkers {
     a == b 
   });
 
-
   test("Primitives") {
     basicTest[Int]();
     basicTest[Boolean]();
@@ -57,10 +56,20 @@ trait SerializationTestBase extends FunSuite with Checkers {
     basicTest[Float]();
     basicTest[Char]();
   }
+}
+
+trait CompoundSerializationTestBase extends SerializationTestBase {
+  override val serializer : ByteSerialization with SerializationFormat.PrimitiveTypes with SerializationFormat.CompoundTypes;
+  
+  import serializer._;
 
   def tuple2Test[T1:Arbitrary:ReadWritable,T2:Arbitrary:ReadWritable]() = basicTest[(T1,T2)]();
   def tuple3Test[T1:Arbitrary:ReadWritable,T2:Arbitrary:ReadWritable,T3:Arbitrary:ReadWritable]() = basicTest[(T1,T2,T3)]();
   def tuple4Test[T1:Arbitrary:ReadWritable,T2:Arbitrary:ReadWritable,T3:Arbitrary:ReadWritable,T4:Arbitrary:ReadWritable]() = basicTest[(T1,T2,T3,T4)]();
+
+  test("Strings") {
+    basicTest[String];
+  }
 
   test("Some primitive tuples") {
     tuple4Test[Int,Boolean,Long,Double]();
@@ -116,12 +125,12 @@ trait SerializationTestBase extends FunSuite with Checkers {
 }
 
 @RunWith(classOf[JUnitRunner])
-class DataSerializationTest extends SerializationTestBase {
+class DataSerializationTest extends CompoundSerializationTestBase {
   override val serializer = DataSerialization;
 }
 
 @RunWith(classOf[JUnitRunner])
-class TextSerializationTest extends SerializationTestBase {
+class TextSerializationTest extends CompoundSerializationTestBase {
   override val serializer = TextSerialization;
 }
 

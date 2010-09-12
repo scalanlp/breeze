@@ -85,9 +85,9 @@ trait TypedCompanion0[This] extends TypedCompanion[Unit,This] {
 
   override implicit val readWritable = new ReadWritable[This] {
     override def read(in : Input) = {
-      expect(in, name, false);
-      if (in.hasNext && in.head == '(') {
-        expect(in, "()", false);
+      in.expect(name);
+      if (in.peek == '(') {
+        in.expect("()");
       }
       apply();
     }
@@ -142,12 +142,12 @@ extends TypedCompanion[ReadWritable[P1],This] {
    */
   override implicit val readWritable = new ReadWritable[This] {
     override def read(in : Input) = {
-      expect(in, name, false);
-      expect(in, '(', false);
-      skipWhitespace(in);
+      in.expect(name);
+      in.expect('(');
+      in.skipWhitespace;
       val p1 = components.read(in);
-      skipWhitespace(in);
-      expect(in, ')', false);
+      in.skipWhitespace;
+      in.expect(')');
       apply(p1);
     }
 
@@ -205,16 +205,16 @@ extends TypedCompanion[(ReadWritable[P1],ReadWritable[P2]),This] {
    */
   override implicit val readWritable = new ReadWritable[This] {
     override def read(in : Input) = {
-      expect(in, name, false);
-      expect(in, '(', false);
-      skipWhitespace(in);
+      in.expect(name);
+      in.expect('(');
+      in.skipWhitespace;
       val p1 = components._1.read(in);
-      skipWhitespace(in);
-      expect(in, ',', false);
-      skipWhitespace(in);
+      in.skipWhitespace;
+      in.expect(',');
+      in.skipWhitespace;
       val p2 = components._2.read(in);
-      skipWhitespace(in);
-      expect(in, ')', false);
+      in.skipWhitespace;
+      in.expect(')');
       apply(p1, p2);
     }
 
@@ -276,19 +276,19 @@ extends TypedCompanion[(ReadWritable[P1],ReadWritable[P2],ReadWritable[P3]),This
    */
   override implicit val readWritable = new ReadWritable[This] {
     override def read(in : Input) = {
-      expect(in, name, false);
-      expect(in, '(', false);
-      skipWhitespace(in);
+      in.expect(name);
+      in.expect('(');
+      in.skipWhitespace;
       val p1 = components._1.read(in);
-      skipWhitespace(in);
-      expect(in, ',', false);
-      skipWhitespace(in);
+      in.skipWhitespace;
+      in.expect(',');
+      in.skipWhitespace;
       val p2 = components._2.read(in);
-      skipWhitespace(in);
-      expect(in, ')', false);
+      in.skipWhitespace;
+      in.expect(')');
       val p3 = components._3.read(in);
-      skipWhitespace(in);
-      expect(in, ')', false);
+      in.skipWhitespace;
+      in.expect(')');
       apply(p1, p2, p3);
     }
 
@@ -347,7 +347,7 @@ trait SubtypedCompanion[This] extends TypedCompanion[Unit,This] {
       val name : String = readName(in);
       val rw = registry.getOrElse(name,
         throw new TypedCompanionException("No companion registered for '"+name+"'"))._2;
-      val rv = rw.read((name.iterator ++ in).buffered).asInstanceOf[This];
+      val rv = rw.read(TextReader.fromString(name) ++ in).asInstanceOf[This];
       return continueParsing(in, rv);
     }
 

@@ -22,6 +22,23 @@ import scala.collection.mutable.{ArrayBuilder,Builder};
 
 import scalanlp.util.Index
 
+/**
+ * Reads type V from input Input.
+ *
+ * @author dramage
+ */
+trait Readable[-Input,V] {
+  def read(input : Input) : V;
+}
+
+/**
+ * Writes type V to Output.
+ *
+ * @author dramage
+ */
+trait Writable[-Output,V] {
+  def write(output : Output, value : V);
+}
 
 /**
  * A base trait for brokers of serialization. See DataSerialization for a good example.
@@ -329,18 +346,30 @@ trait ByteSerialization extends SerializationFormat {
 }
 
 /**
- * Supports marshalling to and from a String.  See TextSerialization
- * for the canonical interface.
+ * Abstract serialization format that supports marshalling to and from a String.
+ * TextSerialization extends this trait with functionality to actually read
+ * and write values as text..
  * 
  * @author dramage
  * @author dlwh
  */
-trait StringSerialization extends SerializationFormat {
+trait StringSerialization extends SerializationFormat with ByteSerialization {
+  /** Encoding used by this StringSerialization instance.  Defaults to UTF8, independent of platform. */
+  def encoding = "UTF8";
+
   /** Marshalls the given value as a string. */
   def toString[T:Writable](value: T) : String;
 
   /** Demarshalls a value from the given string. */
   def fromString[T:Readable](str: String) : T;
+
+  /** Returns a byte array using the this.encoding as the byte encoding of the value returned by toString. */
+  override def toBytes[T:Writable](x: T) =
+    toString(x).getBytes(encoding);
+
+  /** Returns fromString called on the string created using the this.encoding as the byte encoding of given bytes. */
+  override def fromBytes[T:Readable](bytes: Array[Byte]) : T =
+    fromString[T](new String(bytes,encoding));
 }
 
 class SerializationException(msg : String)

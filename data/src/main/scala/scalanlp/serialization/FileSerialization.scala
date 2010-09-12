@@ -121,30 +121,8 @@ trait GenericFileSerializationFromText {
 
     override def read(source : File) = {
       val input = new InputStreamReader(FileSerialization.openRead(source));
-      val iterator = new Iterator[Char] {
-        var queue : Int = MISSING;
-
-        @inline final def prepare() {
-          if (queue == MISSING) queue = input.read();
-        }
-
-        override def hasNext = {
-          prepare();
-          queue >= 0;
-        }
-
-        override def next = {
-          prepare();
-          val rv = queue;
-          queue = MISSING;
-          if (rv < 0) throw new EOFException();
-          rv.toChar;
-        }
-
-        override def toString = source.toString;
-      }
       try {
-        implicitly[TextSerialization.Readable[T]].read(iterator.buffered);
+        implicitly[TextSerialization.Readable[T]].read(input);
       } finally {
         input.close();
       }

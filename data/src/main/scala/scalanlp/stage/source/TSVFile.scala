@@ -21,6 +21,7 @@ import scalanlp.pipes.Pipes;
 import scalanlp.collection.LazyIterable;
 import scalanlp.stage.{Parcel,Item,History};
 import scalanlp.serialization._;
+import scalanlp.ra.Cell;
 
 /**
  * A TSV file acts as a source of Array[String] is a simple tab-delimited
@@ -30,31 +31,28 @@ import scalanlp.serialization._;
  * @author dramage
  */
 class TSVFile(path : String) extends File(path)
-with LazyIterable[Seq[String]] with FileStreams with ColumnSource with ColumnSink {
-  override def write[V:ColumnWritable](items : Iterable[V]) = {
+with LazyIterable[Seq[String]] with FileStreams {
+
+  def write[V:TableWritable](table : V) = {
     val ps = printer();
     try {
-      for (item <- items) {
-        val iter = implicitly[ColumnWritable[V]].strings(item);
-        if (iter.hasNext) ps.print(TSVFile.format(iter.next));
-        while (iter.hasNext) {
-          ps.print('\t');
-          ps.print(TSVFile.format(iter.next));
-        }
-        ps.println;
-      }
+      TSVTableSerialization.write(ps, table);
     } finally {
       ps.close();
     }
   }
 
-  override def read[V:ColumnReadable] : LazyIterable[V] =
-    this.map(implicitly[ColumnReadable[V]].value);
-
-  override def iterator = {
-    import Pipes.global._;
-    TSVFile.this.getLines.map(_.split("\t",-1));
+  def read[V:TableReadable] : V = {
+    val r = reader();
+    try {
+      TSVTableSerialization.read[V](r);
+    } finally {
+      reader.close;
+    }
   }
+
+  override def iterator =
+    TSVTableSerialization.read[Iterator[List[String]]](this);
 
   override def toString =
     "TSVFile(\""+path+"\")";

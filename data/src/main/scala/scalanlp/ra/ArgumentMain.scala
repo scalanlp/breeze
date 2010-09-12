@@ -76,7 +76,7 @@ trait ArgumentMain {
   private val CustomStringReadable : TextSerialization.Readable[String] =
   new TextSerialization.Readable[String] {
     override def read(in : TextSerialization.Input) = {
-      if (in.head != '"') in.mkString("");
+      if (in.peek != '"') in.readRemaining;
       else TextSerialization.stringReadWritable.read(in);
     }
   }

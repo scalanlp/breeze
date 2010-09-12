@@ -19,9 +19,9 @@ import scala.collection.mutable.Builder;
 
 object TextSerialization extends SerializationFormat
 with SerializationFormat.PrimitiveTypes with SerializationFormat.CompoundTypes
-with ByteSerialization with StringSerialization {
+with StringSerialization {
 
-  type Input = BufferedIterator[Char];
+  type Input = TextReader;
   type Output = TextWriter;
 
   //
@@ -37,60 +37,81 @@ with ByteSerialization with StringSerialization {
 
   /** Demarshalls a value from the given string. */
   def fromString[T:Readable](str: String) : T = {
-    val input = str.iterator.buffered;
-    val rv = implicitly[Readable[T]].read(input);
-    skipWhitespace(input);
-    if (input.hasNext)
+    val reader = TextReader.fromString(str);
+    val rv = implicitly[Readable[T]].read(reader);
+    reader.skipWhitespace;
+    if (reader.peek >= 0)
       throw new SerializationException("fromString did not consume whole string: \n"+toString(str));
     rv;
   }
-
-  //
-  // from ByteSerialization
-  //
-
-  override def toBytes[T:Writable](x: T) =
-    toString(x).getBytes("utf8");
-
-  override def fromBytes[T:Readable](bytes: Array[Byte]) : T =
-    fromString[T](new String(bytes,"utf8"));
 
   //
   // from PrimitiveTypes
   //
 
   implicit val unitReadWritable : ReadWritable[Unit] = new ReadWritable[Unit] {
-    override def read(in : Input) = expect(in, "()", false);
+    override def read(in : Input) = in.expect("()");
     override def write(out : Output, v : Unit) = out.append("()");
   }
 
   override implicit val intReadWritable : ReadWritable[Int] = new ReadWritable[Int] {
-    override def read(in : Input) = consumeWhile(in, c => c.isDigit || c=='-').toInt;
+    override def read(in : Input) = java.lang.Integer.parseInt(in.readNumber);
     override def write(out : Output, v : Int) = out.append(v.toString);
   }
 
   override implicit val byteReadWritable : ReadWritable[Byte] = new this.ReadWritable[Byte] {
-    override def read(in : Input) = consumeWhile(in, c => c.isDigit || c=='-').toByte;
+    override def read(in : Input) = java.lang.Byte.parseByte(in.readNumber);
     override def write(out : Output, v : Byte) = out.append(v.toString);
   }
 
   override implicit val longReadWritable : ReadWritable[Long] = new ReadWritable[Long] {
-    override def read(in : Input) = consumeWhile(in, c => c.isDigit || c=='-').toLong;
+    override def read(in : Input) = java.lang.Long.parseLong(in.readNumber);
     override def write(out : Output, v : Long) = out.append(v.toString);
   }
 
   override implicit val shortReadWritable : ReadWritable[Short] = new ReadWritable[Short] {
-    override def read(in : Input) = consumeWhile(in, c => c.isDigit || c=='-').toShort;
+    override def read(in : Input) = java.lang.Short.parseShort(in.readNumber);
     override def write(out : Output, v : Short) = out.append(v.toString);
   }
-  
+
   override implicit val doubleReadWritable : ReadWritable[Double] = new ReadWritable[Double] {
-    override def read(in : Input) = in.head.toLower match {
-      case '-' => { in.next; -read(in); }
-      case 'n' => { expect(in, "nan", true); Double.NaN; }
-      case 'i' => { expect(in, "inf", true); Double.PositiveInfinity; }
-      case _ => {
-        consumeWhile(in, c => c.isDigit || c.toLower == 'e' || c == '+' || c == '-' || c == '.').toDouble;
+    override def read(in : Input) = {
+      val switch = in.peek();
+      if (switch == '-') {
+        in.read(); -read(in);
+      } else if (switch == 'n' || switch == 'N') {
+        in.expectLower("nan"); Double.NaN;
+      } else if (switch == 'i' || switch == 'I') {
+        in.expectLower("inf"); Double.PositiveInfinity;
+      } else {
+        val sb = new java.lang.StringBuilder();
+
+        // read base
+        sb.append(in.readNumber);
+
+        // read decimal
+        if (in.peek() == '.') {
+          in.read();
+          sb.append('.');
+          sb.append(in.readNumber);
+        }
+
+        // read exponent
+        if (in.peek() == 'e' || in.peek() == 'E') {
+          in.read();
+          sb.append('e');
+          if (in.peek() == '-' || in.peek() == '+') {
+            sb.appendCodePoint(in.read());
+          }
+          sb.append(in.readNumber);
+          if (in.peek() == '.') {
+            in.read();
+            sb.append('.');
+            sb.append(in.readNumber);
+          }
+        }
+
+        sb.toString.toDouble;
       }
     }
     
@@ -102,14 +123,8 @@ with ByteSerialization with StringSerialization {
   }
 
   override implicit val floatReadWritable : ReadWritable[Float] = new ReadWritable[Float] {
-    override def read(in : Input) = in.head.toLower match {
-      case '-' => { in.next; -read(in); }
-      case 'n' => { expect(in, "nan", true); Float.NaN; }
-      case 'i' => { expect(in, "inf", true); Float.PositiveInfinity; }
-      case _ => {
-        consumeWhile(in, c => c.isDigit || c.toLower == 'e' || c == '+' || c == '-' || c == '.').toFloat;
-      }
-    }
+    override def read(in : Input) =
+      doubleReadWritable.read(in).toFloat;
 
     override def write(out : Output, v : Float) = {
       if (v == Float.PositiveInfinity) out.append("Inf")
@@ -120,10 +135,13 @@ with ByteSerialization with StringSerialization {
 
   override implicit val booleanReadWritable : ReadWritable[Boolean]  = new ReadWritable[Boolean] {
     override def read(in : Input) = {
-      in.head match {
-        case 't' => { expect(in, "true", true); true; }
-        case 'f' => { expect(in, "false", true); false; }
-        case _ => throw new TextSerializationException("Unexpected boolean value");
+      val switch = in.peek();
+      if (switch == 't' || switch == 'T') {
+        in.expectLower("true"); true;
+      } else if (switch == 'f' || switch == 'F') {
+        in.expectLower("false"); false;
+      } else {
+        throw new TextSerializationException("Unexpected boolean value");
       }
     }
 
@@ -134,16 +152,16 @@ with ByteSerialization with StringSerialization {
 
   override implicit val charReadWritable : ReadWritable[Char] = new ReadWritable[Char] {
     override def read(in : Input) = {
-      expect(in, '\'', false);
-      val rv = in.next match {
-        case '\\' => in.next match {
+      in.expect('\'');
+      val rv = in.read() match {
+        case '\\' => in.read() match {
           case 'b'  => '\b';
           case 'f'  => '\f';
           case 'n'  => '\n';
           case 'r'  => '\r';
           case 't'  => '\t';
           case '\'' => '\'';
-          case 'u'  => java.lang.Integer.parseInt(consume(in, 4), 16).toChar;
+          case 'u'  => java.lang.Integer.parseInt(in.read(4), 16).toChar;
           case c    => c;
         }
         
@@ -152,8 +170,8 @@ with ByteSerialization with StringSerialization {
 
         case c => c;
       }
-      expect(in, '\'', false);
-      rv;
+      in.expect('\'');
+      rv.toChar;
     }
 
     override def write(out : Output, c : Char) = {
@@ -163,52 +181,42 @@ with ByteSerialization with StringSerialization {
     }
   }
 
-  def mkStringReadWritable(quote : Option[Char] = Some('"')) : ReadWritable[String] = new ReadWritable[String] {
+  def mkStringReadWritable(quote : Char = '"') : ReadWritable[String] = new ReadWritable[String] {
     override def read(in : Input) = {
-      quote match {
-        case Some(ch) => expect(in, ch, false);
-        case None => ();
-      }
-      val rv = new StringBuilder();
-      while (in.hasNext && quote.isDefined && in.head != quote.get) {
-        rv += (in.next match {
-          case '\\' => in.next match {
-            case 'b'  => '\b';
-            case 'f'  => '\f';
-            case 'n'  => '\n';
-            case 'r'  => '\r';
-            case 't'  => '\t';
-            case '"'  => '"';
-            case '\\' => '\\';
-            case '/'  => '/';
-            case 'u'  => java.lang.Integer.parseInt(consume(in, 4), 16).toChar;
-            case c    => throw new TextSerializationException("Unknown escape character "+escapeChar(c));
+      val rv = new java.lang.StringBuilder();
+      in.expect(quote);
+      while (in.peek() >= 0 && in.peek() != quote) {
+        rv.appendCodePoint(
+          in.read() match {
+            case '\\' => in.read() match {
+              case 'b'  => '\b';
+              case 'f'  => '\f';
+              case 'n'  => '\n';
+              case 'r'  => '\r';
+              case 't'  => '\t';
+              case '"'  => '"';
+              case '\\' => '\\';
+              case '/'  => '/';
+              case 'u'  => java.lang.Integer.parseInt(in.read(4), 16).toChar;
+              case c    => throw new TextSerializationException("Unknown escape character "+escapeChar(c.toChar));
+            }
+            case c : Int => c
           }
-          case c : Char => c
-        });
+        );
       }
-      quote match {
-        case Some(ch) => expect(in, ch, false);
-        case None => ();
-      }
+      in.expect(quote);
       rv.toString;
     }
 
     override def write(out : Output, v : String) = {
-      quote match {
-        case Some(ch) => out.append(ch);
-        case None => ();
-      }
+      out.append(quote);
       out.append(escape(v));
-      quote match {
-        case Some(ch) => out.append(ch);
-        case None => ();
-      }
+      out.append(quote);
     }
   }
 
   override implicit val stringReadWritable : ReadWritable[String] =
-    mkStringReadWritable(Some('"'));
+    mkStringReadWritable('"');
 
   //
   // from CompoundTypes
@@ -216,7 +224,7 @@ with ByteSerialization with StringSerialization {
 
   /** Reads a name from the input, consisting of letters, digits, underscore, period, and dollar sign. */
   override def readName(src : Input) : String = {
-    val rv = consumeWhile(src, c => c.isLetterOrDigit || c == '_' || c == '.' || c == '$');
+    val rv = src.readWhile(c => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == '.' || c == '$');
     if (rv.length == 0)
       throw new TextSerializationException("Expected symbol name");
     rv;
@@ -227,19 +235,19 @@ with ByteSerialization with StringSerialization {
   }
 
   override protected def readTupleStart(in : Input) = {
-    expect(in,'(',false);
-    skipWhitespace(in);
+    in.expect('(');
+    in.skipWhitespace;
   }
 
   override protected def readTupleGlue(in : Input) = {
-    skipWhitespace(in);
-    expect(in,',',false);
-    skipWhitespace(in);
+    in.skipWhitespace;
+    in.expect(',');
+    in.skipWhitespace;
   }
 
   override protected def readTupleEnd(in : Input) = {
-    skipWhitespace(in);
-    expect(in,')',false);
+    in.skipWhitespace;
+    in.expect(')');
   }
 
   override protected def writeTupleStart(out : Output) =
@@ -252,28 +260,28 @@ with ByteSerialization with StringSerialization {
     out.append(')');
 
   override protected def readBuildable[T:Readable,To]
-  (src : Input, builder : Builder[T,To]) : To = {
-    val name = readName(src);
-    expect(src, '(', false);
-    skipWhitespace(src);
+  (in : Input, builder : Builder[T,To]) : To = {
+    val name = readName(in);
+    in.expect('(');
+    in.skipWhitespace;
 
-    while (src.head != ')') {
-      builder += implicitly[Readable[T]].read(src);
-      skipWhitespace(src);
-      if (src.head != ')') {
-        expect(src,',',false);
-        skipWhitespace(src);
+    while (in.peek() >= 0 && in.peek() != ')') {
+      builder += implicitly[Readable[T]].read(in);
+      in.skipWhitespace;
+      if (in.peek() != ')') {
+        in.expect(',');
+        in.skipWhitespace;
       }
     }
 
-    expect(src, ')', false);
+    in.expect(')');
 
     builder.result;
   }
 
   override protected def writeIterable[T:Writable,CC<:Iterable[T]]
   (sink : Output, coll : CC, name : String) {
-    if (readName(name.iterator.buffered) != name)
+    if (readName(name) != name)
       throw new TextSerializationException("Not a valid name.");
 
     sink.append(name);
@@ -290,14 +298,7 @@ with ByteSerialization with StringSerialization {
   // Utility methods
   //
 
-  /** Reads the next line from the input. */
-  def readLine(src : Input) : String = {
-    val rv = consumeWhile(src, c => c != '\r' && c != '\n');
-    if (!src.isEmpty && src.head == '\r') src.next;
-    if (!src.isEmpty && src.head == '\n') src.next;
-    rv;
-  }
-
+  /** Escapes the given string.  Unicode friendly, but only for code points that fit inside a Char. */
   def escapeChar(c : Char) : String = c match {
     case '"'  => "\\\"";
     case '\\' => "\\\\";
@@ -308,54 +309,35 @@ with ByteSerialization with StringSerialization {
     case '\t' => "\\t";
     case c if ((c >= '\u0000' && c <= '\u001F') || (c >= '\u007F' && c <= '\u009F') || (c >= '\u2000' && c <= '\u20FF')) =>
       { val hex = c.toHexString.toUpperCase; "\\u"+("0"*(4-hex.length))+hex; }
-    case c => ""+c;
+    case c => c.toString;
   }
 
-  protected def escape(str : String) : String =
-    str.flatMap(escapeChar)
+  /** Escapes the given string.  Unicode friendly. */
+  def escape(str : String) : String = {
+    val sb = new java.lang.StringBuilder;
 
-  /** Throws an exception if the input does not start with the given "expected" string. */
-  def expect(in : Input, expected : String, caseFold : Boolean = false) : Unit = {
-    var got = consume(in, expected.length).mkString;
-    if (caseFold) got = got.toLowerCase;
-    if (got != expected)
-      throw new TextSerializationException("Got: "+escape(got)+" != "+escape(expected));
-  }
-
-  /** Throws an exception if the input does not start with the given "expected" char. */
-  def expect(in : Input, expected : Char, caseFold : Boolean) : Unit = {
-    var got = in.next;
-    if (caseFold) got = got.toLower;
-    if (got != expected)
-      throw new TextSerializationException("Got: "+escapeChar(got)+" != "+escapeChar(expected));
-  }
-
-  /** Consumes numChars characters from input, or fewer if at the end of input. */
-  def consume(in : Input, numChars : Int) : String = {
-    val rv = new StringBuilder();
     var i = 0;
-    while (i < numChars && in.hasNext) {
-      rv += in.next;
-      i += 1;
+    while (i < str.length) {
+      val cp = str.codePointAt(i);
+
+      if (cp == '"') sb.append("\\\"");
+      else if (cp == '\\') sb.append("\\\\");
+      else if (cp == '\b') sb.append("\\b");
+      else if (cp == '\f') sb.append("\\f");
+      else if (cp == '\n') sb.append("\\n");
+      else if (cp == '\r') sb.append("\\r");
+      else if (cp == '\t') sb.append("\\t");
+      else if ((cp >= '\u0000' && cp <= '\u001F') || (cp >= '\u007F' && cp <= '\u009F') || (cp >= '\u2000' && cp <= '\u20FF')) {
+        val hex = cp.toHexString.toUpperCase;
+        sb.append("\\u"+("0"*(4-hex.length))+hex);
+      }
+      else sb.appendCodePoint(cp);
+
+      i += Character.charCount(cp);
     }
-    rv.toString;
+
+    sb.toString;
   }
-
-  /** Consumes the characters from input while available and while the predicate matches. */
-  def consumeWhile(in : Input, p : Char => Boolean) : String = {
-    val rv = new StringBuilder();
-    while (in.hasNext && p(in.head)) {
-      rv += in.next;
-    }
-    rv.toString;
-  }
-
-  /** Skips characters while the given predicate is true. */
-  def skipWhile(in : Input, p : Char => Boolean) : Unit =
-    while (in.hasNext && p(in.head)) in.next;
-
-  def skipWhitespace(in : Input) : Unit =
-    skipWhile(in, _.isWhitespace);
 }
 
 /**
@@ -364,31 +346,3 @@ with ByteSerialization with StringSerialization {
  * @author dramage
  */
 class TextSerializationException(msg : String) extends RuntimeException(msg);
-
-
-/**
- * A simple append-based text writing interface used by TextSerialization
- * as its Output type.  See implicit conversions in companion object.
- *
- * @author dramage
- */
-trait TextWriter {
-  def append(char : Char);
-  def append(string : String);
-}
-
-object TextWriter {
-  implicit def fromStringBuilder(sb : StringBuilder) : TextWriter = {
-    new TextWriter() {
-      override def append(char : Char) = sb.append(char);
-      override def append(string : String) = sb.append(string);
-    }
-  }
-
-  implicit def fromPrintStream(ps : java.io.PrintStream) : TextWriter = {
-    new TextWriter() {
-      override def append(char : Char) = ps.append(char);
-      override def append(string : String) = ps.append(string);
-    }
-  }
-}

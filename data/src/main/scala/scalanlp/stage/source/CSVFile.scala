@@ -19,6 +19,8 @@ import java.io.File;
 
 import scalanlp.pipes.Pipes;
 
+import scalanlp.ra.Cell;
+
 import scalanlp.collection.LazyIterable;
 import scalanlp.stage.{Parcel,Item,History};
 import scalanlp.serialization._;
@@ -31,29 +33,28 @@ import scalanlp.serialization._;
  * @author dramage
  */
 class CSVFile(path : String) extends File(path)
-with LazyIterable[Seq[String]] with FileStreams with ColumnSource with ColumnSink {
-  override def write[V:ColumnWritable](items : Iterable[V]) = {
+with LazyIterable[Seq[String]] with FileStreams {
+
+  def write[V:TableWritable](table : V) = {
     val ps = printer();
     try {
-      for (item <- items) {
-        val iter = implicitly[ColumnWritable[V]].strings(item);
-        if (iter.hasNext) ps.print(CSVFile.format(iter.next));
-        while (iter.hasNext) {
-          ps.print(',');
-          ps.print(CSVFile.format(iter.next));
-        }
-        ps.println;
-      }
+      CSVTableSerialization.write(ps, table);
     } finally {
       ps.close();
     }
   }
 
-  override def read[V:ColumnReadable] : LazyIterable[V] =
-    this.map(implicitly[ColumnReadable[V]].value);
+  def read[V:TableReadable] : V = {
+    val r = reader();
+    try {
+      CSVTableSerialization.read[V](r);
+    } finally {
+      reader.close;
+    }
+  }
 
   override def iterator =
-    new CSVIterator(reader());
+    CSVTableSerialization.read[Iterator[List[String]]](this);
 
   override def toString =
     "CSVFile(\""+path+"\")";
@@ -78,7 +79,7 @@ object CSVFile {
   /** CSVFile that points to a file within the given base folder. */
   def apply(base : File, name : String) =
     new CSVFile(new File(base, name).getPath); 
-  
+
   /** Calls file.asParcel. */
   implicit def CSVFileAsParcel(file : CSVFile) =
     Parcel(history = History.Origin(file.toString),
@@ -98,7 +99,6 @@ object CSVFile {
   def format(seq : Iterator[String]) : String =
     seq.map(format).mkString(",");
 }
-
 
 
 /**

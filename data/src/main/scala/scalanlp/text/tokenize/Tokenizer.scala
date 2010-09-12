@@ -66,12 +66,12 @@ object Tokenizer extends SubtypedCompanion[Tokenizer] {
   /** Load tokenizer chains. */
   override def continueParsing(input : TextSerialization.Input, current : Tokenizer) : Tokenizer = {
     var rv = current;
-    TextSerialization.skipWhitespace(input);
-    while (input.hasNext && input.head == '~') {
-      TextSerialization.expect(input,"~>",true);
-      TextSerialization.skipWhitespace(input);
+    input.skipWhitespace;
+    while (input.peek == '~') {
+      input.expect("~>");
+      input.skipWhitespace;
       val next = TextSerialization.read[Transformer](input);
-      TextSerialization.skipWhitespace(input);
+      input.skipWhitespace;
       rv = rv ~> next;
     }
     rv;
@@ -121,20 +121,19 @@ object Tokenizer extends SubtypedCompanion[Tokenizer] {
     new TextSerialization.ReadWritable[Chain] {
       override def read(in : Input) : Chain = {
         val tok : Tokenizer = TextSerialization.read[Tokenizer](in);
-        skipWhitespace(in);
-        expect(in, "~>", false);
-        skipWhitespace(in);
+        in.skipWhitespace;
+        in.expect( "~>");
+        in.skipWhitespace;
         val trn : Transformer = TextSerialization.read[Transformer](in);
-        skipWhitespace(in);
+        in.skipWhitespace;
 
         var rv = new Chain(tok, trn);
 
-        while (in.hasNext && in.head == '~') {
-          expect(in, "~>", false);
-          skipWhitespace(in);
-          skipWhitespace(in);
+        while (in.peek == '~') {
+          in.expect("~>");
+          in.skipWhitespace;
           val next = TextSerialization.read[Transformer](in);
-          skipWhitespace(in);
+          in.skipWhitespace;
           rv = new Chain(rv, next);
         }
 
