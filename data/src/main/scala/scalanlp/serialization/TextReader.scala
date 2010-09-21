@@ -29,6 +29,10 @@ trait TextReader { self =>
   /** Peeks at the next unicode code point without consuming it, or -1 if the end of input. */
   def peek() : Int;
 
+  /** Throws a TextReaderException at the current line and column. */
+  def die(msg : String) =
+    throw new TextReaderException(msg, lineNumber, columnNumber);
+
   /**
    * Peeks at the character at offset n.  With n == 0 is the same as peek().
    * This method might not be implemented for all n>0 in all TextReader
@@ -84,10 +88,12 @@ trait TextReader { self =>
     if (c == '\r' && peek() == '\n') {
       read();
       "\r\n";
+    } else if (c == '\r') {
+      "\r"
     } else if (c == '\n') {
       "\n"
     } else {
-      throw new TextSerializationException("Expected newline but got: '"+TextSerialization.escapeChar(c.toChar)+"'");
+      die("Expected newline but got: '"+TextSerialization.escapeChar(c.toChar)+"'");
     }
   }
 
@@ -135,7 +141,7 @@ trait TextReader { self =>
   def expect(literal : Char) : Unit = {
     val got = read();
     if (got != literal) {
-      throw new TextSerializationException("Got: "+TextSerialization.escapeChar(got.toChar)+" != "+TextSerialization.escapeChar(literal));
+      die("Got: "+TextSerialization.escapeChar(got.toChar)+" != "+TextSerialization.escapeChar(literal));
     }
   }
 
@@ -143,7 +149,7 @@ trait TextReader { self =>
   def expectLower(literal : Char) : Unit = {
     val got = Character.toLowerCase(read());
     if (got != literal) {
-      throw new TextSerializationException("Got: "+TextSerialization.escapeChar(got.toChar)+" != "+TextSerialization.escapeChar(literal));
+      die("Got: "+TextSerialization.escapeChar(got.toChar)+" != "+TextSerialization.escapeChar(literal));
     }
   }
 
@@ -151,7 +157,7 @@ trait TextReader { self =>
   def expect(literal : String) : Unit = {
     val got = read(literal.length);
     if (got != literal) {
-      throw new TextSerializationException("Got: "+TextSerialization.escape(got)+" != "+TextSerialization.escape(literal));
+      die("Got: "+TextSerialization.escape(got)+" != "+TextSerialization.escape(literal));
     }
   }
 
@@ -159,7 +165,7 @@ trait TextReader { self =>
   def expectLower(literal : String) : Unit = {
     val got = read(literal.length).toLowerCase;
     if (got != literal) {
-      throw new TextSerializationException("Got: "+TextSerialization.escape(got)+" != "+TextSerialization.escape(literal));
+      die("Got: "+TextSerialization.escape(got)+" != "+TextSerialization.escape(literal));
     }
   }
 
@@ -282,4 +288,15 @@ object TextReader {
     override def peek(n : Int) =
       if (n == 1) queue1 else if (n == 0) queue0 else throw new IllegalArgumentException("Can only peek(0) or peek(1)");
   }
+}
+
+/**
+ * Thrown when encountering a problem while reading from a TextReader.
+ *
+ * @author dramage
+ */
+class TextReaderException(msg : String, cause : Throwable, val lineNo : Int, val colNo : Int)
+extends RuntimeException(msg + " at line " + lineNo + " column " + colNo, cause) {
+  def this(msg : String, lineNo : Int, colNo : Int) =
+    this(msg, null, lineNo, colNo);
 }

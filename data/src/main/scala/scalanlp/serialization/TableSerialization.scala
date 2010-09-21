@@ -222,14 +222,13 @@ object TextTableSerialization {
 }
 
 
-
 /**
  * Thrown when encountering a problem during parsing a table.
  *
  * @author dramage
  */
-class TextTableParseException(msg : String, cause : Throwable, val lineNo : Int, val colNo : Int)
-extends RuntimeException(msg + " at line " + lineNo + " column " + colNo, cause) {
+class TextTableParseException(msg : String, cause : Throwable, lineNo : Int, colNo : Int)
+extends TextReaderException(msg, cause, lineNo, colNo) {
   def this(msg : String, lineNo : Int, colNo : Int) =
     this(msg, null, lineNo, colNo);
 }
@@ -248,20 +247,22 @@ extends RuntimeException(msg + " at line " + lineNo + " column " + colNo, cause)
 class TextTableReader
 (val source : TextReader, val separator : Int, val quote : Int)
 extends TableReader
-{
+{ self =>
 
-  /** True if we are awaiting a new line start. */
-  var awaitingLine = true;
+  /** Row state: true if we are awaiting a new line start. */
+  protected var awaitingLine = true;
 
-  /** True if we are awaiting a new cell start. */
-  var awaitingCell = false;
+  /** Row state: true if we are awaiting a new cell start. */
+  protected var awaitingCell = false;
 
-  /** True if we are in a quoted cell. */
-  var inQuotedCell = false;
+  /** Cell state: true if we are in a quoted cell. */
+  protected var inQuotedCell = false;
 
-  /** True if we are in an unquoted cell. */
-  var inRawCell = false;
+  /** Cell state: true if we are in an unquoted cell. */
+  protected var inRawCell = false;
 
+  /** Cell state: true if we are in an empty cell. */
+  protected var inEmptyCell = false;
 
   def hasNext = {
     if (!awaitingLine)
@@ -281,25 +282,13 @@ extends TableReader
 
   object RowReader extends TableRowReader {
     def hasNext = {
-      if (awaitingLine)
-        false;
-      else if (!awaitingCell)
+      if (!awaitingLine && !awaitingCell) {
         throw new TableAccessException("hasNext called before previous TableCellReader complete");
-      else {
-        val cp = source.peek;
-        if (cp == '\r' || cp == '\n') {
-          source.readNewline;
-          awaitingLine = true;
-          awaitingCell = false;
-          false;
-        } else if (cp == -1) {
-          awaitingLine = true;
-          awaitingCell = false;
-          false;
-        } else {
-          true;
-        }
+      } else if (awaitingLine && awaitingCell) {
+        throw new AssertionError("Unexpected table reader state - this is a bug in "+self.getClass);
       }
+      
+      awaitingCell;
     }
 
     def next = {
@@ -308,12 +297,18 @@ extends TableReader
 
       val cp = source.peek;
       if (cp == quote) {
+        // quoted cell
         source.read();
         awaitingCell = false;
         inQuotedCell = true;
-      } else if (cp != '\r' && cp != '\n' && cp != -1) {
+      } else if (cp != separator && cp != '\r' && cp != '\n' && cp != -1) {
+        // unquoted, non-empty cell
         awaitingCell = false;
         inRawCell = true;
+      } else {
+        // empty cell, possibly line-final
+        awaitingCell = false;
+        inEmptyCell = true;
       }
 
       CellReader;
@@ -364,7 +359,7 @@ extends TableReader
               -1;
             }
           } else if (cp == -1) {
-            // unexpected end of line or file
+            // unexpected end of file
             throw new TextTableParseException("Runaway quote", source.lineNumber, source.columnNumber);
           } else {
             // normal value
@@ -374,7 +369,7 @@ extends TableReader
           val cp = source.peek();
           if (cp == quote) {
             // unexpected quote
-            throw new TextTableParseException("Unexpected quote in raw cell", source.lineNumber, source.columnNumber);
+            throw new TextTableParseException("Unexpected quote in unquoted cell", source.lineNumber, source.columnNumber);
           } else if (cp == separator || cp == '\r' || cp == '\n' || cp == -1) {
             // end of cell
             inRawCell = false;
@@ -384,9 +379,18 @@ extends TableReader
             // normal value
             source.read();
           }
+        } else if (inEmptyCell) {
+          val cp = source.peek();
+          if (cp == separator || cp == '\r' || cp == '\n' || cp == -1) {
+            // end of cell
+            inEmptyCell = false;
+            consumeEndCell();
+            -1;
+          } else {
+            throw new TextTableParseException("Unexpected contents in cell", source.lineNumber, source.columnNumber);
+          }
         } else {
-          // not in a cell, so pretend there are no more values
-          -1;
+          throw new AssertionError("Unexpected table reader state - this is a bug in "+self.getClass);
         }
       }
 
