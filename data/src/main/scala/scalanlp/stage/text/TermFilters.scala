@@ -23,93 +23,106 @@ import java.io.File;
 
 import scalanlp.collection.LazyIterable;
 import scalanlp.ra.Cell;
-import scalanlp.stage.{Parcel,Stage,MetaBuilder};
+import scalanlp.stage.{Parcel,Stage};
 import scalanlp.util.Index;
 import scalanlp.util.TopK;
 
 
 /**
- * Holds basic statistics about a sequence of documents.
- *
+ * Basic term count statistics for a collection of documents.
+ * 
  * @author dramage
  */
-trait TermCounts {
+trait TermCounts { self =>
+  /** Number of documents in corpus. */
+  def numDocs : Int;
+
+  /** Index of terms seen in the corpus. */
   def index : Index[String];
+
+  /** Number of times each term has been seen. */
   def tf : Array[Int];
+
+  /** Number of documents in which each term occurs. */
   def df : Array[Int];
 
+  /** View of this collection using a new (possibly smaller) term index. */
   def reindexed(oindex : Index[String]) : TermCounts = {
     try {
       val otf = Array.tabulate(oindex.size)(i => tf(index(oindex.get(i))));
       val odf = Array.tabulate(oindex.size)(i => df(index(oindex.get(i))));
-      new TermCounts.LiteralTermCounts(oindex, otf, odf);
+      new TermCounts {
+        def numDocs = self.numDocs;
+        def index = oindex;
+        def tf = otf;
+        def df = odf;
+      };
     } catch {
       case ex : ArrayIndexOutOfBoundsException =>
         throw new IllegalArgumentException("Cannot reindex TermCounts with new terms", ex);
     }
   }
 
+  /** Returns the number of documents the given term occurs in. */
   def getDF(term : String) = df(index(term));
+
+  /** Returns the number of times the given term occurs accross all documents. */
   def getTF(term : String) = tf(index(term));
 
+  /** Filters this TermCounts by removing terms whose df matches the predicate. */
   def filterDF(p : Int=>Boolean) =
     reindexed(Index(index.filter(t => p(df(index(t))))));
 
+  /** Filters this TermCounts by removing terms whose tf matches the predicate. */
   def filterTF(p : Int=>Boolean) =
     reindexed(Index(index.filter(t => p(tf(index(t))))));
 
+  /** Filters this TermCounts by removing terms that match the predicate. */
   def filterIndex(p : String=>Boolean) =
     reindexed(Index(index.filter(p)));
 }
 
 object TermCounts {
-  class LiteralTermCounts(
-    override val index : Index[String],
-    override val tf : Array[Int],
-    override val df : Array[Int])
-  extends TermCounts;
+  def apply(docs : Iterator[Iterable[String]], cache : Option[File] = None) : TermCounts = {
+    new TermCounts {
+      private def compute : (Int,Index[String],Array[Int],Array[Int]) = {
+        val index = new scalanlp.util.HashIndex[String]();
+        val ctf = IntCounter[Int]();
+        val cdf = IntCounter[Int]();
 
-  class LazyTermCounts(docs : Iterator[Iterable[String]], cache : Option[File])
-  extends TermCounts {
-    private def compute : (Int,Index[String],Array[Int],Array[Int]) = {
-      val index = new scalanlp.util.HashIndex[String]();
-      val ctf = IntCounter[Int]();
-      val cdf = IntCounter[Int]();
+        val docTermSet = scala.collection.mutable.HashSet[Int]();
 
-      val docTermSet = scala.collection.mutable.HashSet[Int]();
-
-      var numDocs = 0;
-      for (terms <- docs) {
-        docTermSet.clear();
-        for (term <- terms) {
-          val tI = index.index(term);
-          ctf(tI) += 1;
-          docTermSet.add(tI);
+        var numDocs = 0;
+        for (terms <- docs) {
+          docTermSet.clear();
+          for (term <- terms) {
+            val tI = index.index(term);
+            ctf(tI) += 1;
+            docTermSet.add(tI);
+          }
+          for (tI <- docTermSet) {
+            cdf(tI) += 1;
+          }
+          numDocs += 1;
         }
-        for (tI <- docTermSet) {
-          cdf(tI) += 1;
-        }
-        numDocs += 1;
+
+        val tf = Array.tabulate(index.size)(i => ctf(i));
+        val df = Array.tabulate(index.size)(i => cdf(i));
+        (numDocs, index, tf, df)
       }
 
-      //val index = Index(ctf.keysIterator);
-      val tf = Array.tabulate(index.size)(i => ctf(i));
-      val df = Array.tabulate(index.size)(i => cdf(i));
-      (numDocs, index, tf, df)
-    }
-
-    /** Generate the actual term counts. */
-    protected lazy val literal : LiteralTermCounts = {
-      val computed =
+      /** Generate the actual term counts. */
+      protected lazy val literal : (Int,Index[String],Array[Int],Array[Int]) =
         if (cache.isDefined) Cell.cache(cache.get)(compute) else compute;
-      new LiteralTermCounts(computed._2, computed._3, computed._4);
+
+      override def numDocs = literal._1;
+
+      override def index = literal._2;
+
+      override def tf = literal._3;
+
+      override def df = literal._4;
     }
-
-    override def index = literal.index;
-
-    override def tf = literal.tf;
-
-    override def df = literal.df;
   }
 }
 
@@ -127,7 +140,7 @@ case class TermCounter() extends Stage[LazyIterable[Item[Iterable[String]]],Lazy
         None;
       }
     }
-    val tc : TermCounts = new TermCounts.LazyTermCounts(parcel.data.iterator.map(_.value), cache);
+    val tc = TermCounts(parcel.data.iterator.map(_.value), cache);
 
     Parcel(parcel.history + this,
            parcel.meta + tc,
