@@ -163,9 +163,14 @@ extends Iterable[A] with IterableLike[A,This] {
 
   trait Zipped[B] extends Transformed[(A, B)] {
     protected[this] val other: Iterable[B]
-    override def iterator: Iterator[(A, B)] = self.iterator zip other.iterator
-    override def stringPrefix = self.stringPrefix+"Z"
-    override def size = math.min(self.size, other.size);
+    override def iterator: Iterator[(A, B)] = self.iterator zip other.iterator;
+    override def stringPrefix = self.stringPrefix+"Z";
+    override def size = {
+      if (other.hasDefiniteSize)
+        math.min(self.size, other.size);
+      else
+        self.size;
+    }
   }
 
   trait ZippedAll[A1 >: A, B] extends Transformed[(A1, B)] {
@@ -231,7 +236,7 @@ extends Iterable[A] with IterableLike[A,This] {
     newZipped(that).asInstanceOf[That];
 
   override def zipWithIndex[A1 >: A, That](implicit bf: CanBuildFrom[This, (A1, Int), That]): That =
-    zip[A1, Int, That](Stream from 0)(bf);
+    newZipped(Stream from 0).asInstanceOf[That];
 
   override def zipAll[B, A1 >: A, That](that: Iterable[B], thisElem: A1, thatElem: B)(implicit bf: CanBuildFrom[This, (A1, B), That]): That =
     newZippedAll(that, thisElem, thatElem).asInstanceOf[That];
