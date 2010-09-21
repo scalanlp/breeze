@@ -21,7 +21,6 @@ package scalanlp.pipes;
 
 
 import java.io.File
-import java.io.RandomAccessFile
 import java.io.InputStream
 import java.io.OutputStream
 import java.lang.Process
@@ -49,8 +48,12 @@ class Pipes {
   //
   // state variables
   //
-  
-  protected var _cwd : File = new File(new File("").getAbsolutePath);
+
+  /** Current directory the java process launched in. */
+  protected val _sysCwd : File = new File(new File("").getAbsolutePath);
+
+  /** Current directory for our pipes instance. */
+  protected var _cwd : File = _sysCwd;
   protected var _stdout : OutputStream = java.lang.System.out;
   protected var _stderr : OutputStream = java.lang.System.err;
   protected var _stdin  : InputStream  = java.lang.System.in;
@@ -73,19 +76,19 @@ class Pipes {
   def stdout = _stdout;
   
   /** Sets the default stdout used in this context. */
-  def stdout(stream : OutputStream) : Unit = _stdout = stream;
+  def setStdout(stream : OutputStream) : Unit = _stdout = stream;
   
   /** Returns the default stderr used in this context. */
   def stderr = _stderr;
   
   /** Sets the default stderr used in this context. */
-  def stderr(stream : OutputStream) : Unit = _stderr = stream;
+  def setStderr(stream : OutputStream) : Unit = _stderr = stream;
   
   /** Returns the default stdin used in this context. */
   def stdin  = _stdin;
   
   /** Sets the default stdin used in this context. */
-  def stderr(stream : InputStream) : Unit = _stdin = stream;
+  def setStdin(stream : InputStream) : Unit = _stdin = stream;
   
   //
   // path and directory access and update
@@ -105,7 +108,11 @@ class Pipes {
     } else if (!folder.canRead) {
       error("Cannot access folder "+folder);
     }
-    _cwd = folder;
+    if (folder.getAbsolutePath == _sysCwd.getAbsolutePath) {
+      _cwd = _sysCwd;
+    } else {
+      _cwd = folder;
+    }
   }
 
   /**
@@ -113,8 +120,16 @@ class Pipes {
    * is relative to the current directory (cwd) if the path is not absolute.
    */
   implicit def file(path : String) : File = {
-    val abs = new File(path);
-    if (abs.isAbsolute) abs else new File(_cwd,path);
+    val f = new File(path);
+    if (f.isAbsolute) {
+      f
+    } else if (_cwd == _sysCwd) {
+      new File(path);
+    } else if (_cwd.getAbsolutePath.startsWith(_sysCwd.getAbsolutePath)) {
+      new File(_cwd.getAbsolutePath.substring(_sysCwd.getAbsolutePath.length+1), path);
+    } else {
+      new File(cwd,path);
+    }
   }
 
   /**
