@@ -13,9 +13,9 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.stage;
+package scalanlp;
+package stage;
 package text;
-
 
 import scalala.tensor.counters.Counters.IntCounter;
 
@@ -23,9 +23,7 @@ import java.io.File;
 
 import scalanlp.collection.LazyIterable;
 import scalanlp.ra.Cell;
-import scalanlp.stage.{Parcel,Stage};
-import scalanlp.util.Index;
-import scalanlp.util.TopK;
+import scalanlp.util.{Index,TopK};
 
 
 /**

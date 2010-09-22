@@ -13,17 +13,25 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.text.tokenize
+package scalanlp;
+package text;
+package tokenize;
+
+import scalanlp.io.TextReader;
+import scalanlp.collection.LazyIterable;
 
 import scalanlp.serialization.{SubtypedCompanion,TypedCompanion0};
 
 /**
- * Simple English document tokenizer pre-processor based on regular
- * expressions from Steven Bethard.
+ * Simple English document tokenizer that splits up words on whitespace
+ * or punctuation, but keeps word-internal punctuation within the word.
+ * Skips whitespace.
  * 
  * Because this class may improve over time in non-backwards-compatible ways,
  * the default behavior of SimpleEnglishTokenizer.apply() is to return an
- * instance of SimpleEnglishTokenizer.V0;
+ * instance of SimpleEnglishTokenizer.V1.  To get an instance of the
+ * old version (based on patterns by Steven Bethard), you can call
+ * SimpleEnglishTokenizer.V0().
  *
  * @author dramage
  */
@@ -34,9 +42,10 @@ object SimpleEnglishTokenizer extends SubtypedCompanion[SimpleEnglishTokenizer] 
 
   for (cc <- List(this, Tokenizer)) {
     cc.register[V0]("SimpleEnglishTokenizer.V0");
+    cc.register[V1]("SimpleEnglishTokenizer.V1");
   }
 
-  def apply() = V0();
+  def apply() = V1();
 
   /** Version 0 of the SimpleEnglishTokenizer. */
   class V0 extends SimpleEnglishTokenizer {
@@ -64,5 +73,65 @@ object SimpleEnglishTokenizer extends SubtypedCompanion[SimpleEnglishTokenizer] 
 
     override def name = "SimpleEnglishTokenizer.V0"
   }
-}
 
+  /**
+   * Version 1 of the SimpleEnglishTokenizer.  This version has great speed
+   * advantages over the regex-based V0.
+   *
+   * @author dramage
+   */
+  class V1 extends SimpleEnglishTokenizer {
+    def apply(in : String) : Iterable[String] =
+      LazyIterable[String](apply(TextReader.fromString(in)));
+
+    def apply(in : TextReader) : Iterator[String] = new Iterator[String] {
+      var nv : String = null;
+      var sb = new java.lang.StringBuilder();
+
+      prepare();
+
+      private def prepare() {
+        in.skipWhitespace();
+
+        val cp = in.peek();
+
+        if (cp == -1) {
+          nv = null;
+        } else if (Character.isLetterOrDigit(cp)) {
+          nv = in.readWhile(Character.isLetterOrDigit);
+          if (Unicode.isPunctuation(in.peek(0)) && Character.isLetterOrDigit(in.peek(1))) {
+            sb.setLength(0);
+            sb.append(nv);
+            do {
+              sb.append(Character.toChars(in.read));
+              sb.append(in.readWhile(Character.isLetterOrDigit));
+            } while (Unicode.isPunctuation(in.peek(0)) && Character.isLetterOrDigit(in.peek(1)));
+            nv = sb.toString;
+          }
+        } else if (Unicode.isPunctuation(cp)) {
+          nv = in.readWhile(Unicode.isPunctuation);
+        } else {
+          nv = in.readWhile((c : Int) => !Character.isWhitespace(c));
+        }
+      }
+
+      def hasNext =
+        nv != null;
+
+      def next = {
+        val rv = nv;
+        prepare();
+        rv;
+      }
+    }
+  }
+
+  object V1 extends TypedCompanion0[V1] {
+    prepare();
+
+    private val _instance = new V1();
+    def apply() = _instance;
+
+    override def name = "SimpleEnglishTokenizer.V1";
+  }
+}

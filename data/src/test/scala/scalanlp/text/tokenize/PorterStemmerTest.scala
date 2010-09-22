@@ -14,7 +14,7 @@
  limitations under the License. 
 */
 
-package scalanlp.text.transform;
+package scalanlp.text.tokenize;
 
 import org.scalatest._;
 import org.scalatest.junit._;

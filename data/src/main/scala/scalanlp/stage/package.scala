@@ -13,20 +13,13 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.text.transform;
 
-import scalanlp.serialization.TypedCompanion1;
+package scalanlp;
 
-/**
- * Filters out tokens composed of fewer than minLength characters.
- *
- * @author dramage
- */
-case class MinimumLengthFilter(minLength : Int) extends Transformer {
-  override def apply(doc : Iterable[String]) : Iterable[String] =
-    doc.filter(token => token.length >= minLength);
-}
+import scalanlp.collection.LazyIterable;
 
-object MinimumLengthFilter extends TypedCompanion1[Int,MinimumLengthFilter] {
-  prepare();
+package object stage {
+  type Batch[X] = Parcel[LazyIterable[Item[X]]];
+
+  
 }

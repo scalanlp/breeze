@@ -16,9 +16,9 @@
 package scalanlp.serialization;
 
 import scala.collection.mutable.HashMap;
-
 import scala.reflect.ClassManifest;
 
+import scalanlp.io.TextReader;
 import TextSerialization._;
 
 /**

@@ -15,6 +15,7 @@
 */
 package scalanlp.serialization;
 
+import scalanlp.io.{TextReader,TextWriter};
 import scala.collection.mutable.Builder;
 
 object TextSerialization extends SerializationFormat

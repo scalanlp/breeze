@@ -17,6 +17,8 @@
 package scalanlp;
 package serialization;
 
+import scalanlp.io.{TextReader,TextWriter};
+
 /**
  * Reads a cell in a table.
  *

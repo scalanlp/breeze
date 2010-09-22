@@ -13,15 +13,14 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.stage.source;
+package scalanlp;
+package io;
 
 import java.io.File;
 
 import scalanlp.pipes.Pipes;
 import scalanlp.collection.LazyIterable;
-import scalanlp.stage.{Parcel,Item,History};
 import scalanlp.serialization._;
-import scalanlp.ra.Cell;
 
 /**
  * A TSV file acts as a source of Array[String] is a simple tab-delimited
@@ -30,32 +29,19 @@ import scalanlp.ra.Cell;
  * 
  * @author dramage
  */
-class TSVFile(path : String) extends File(path)
-with LazyIterable[Seq[String]] with FileStreams {
+class TSVFile(path : String) extends File(path) with LazyIterable[Seq[String]] {
 
-  def write[V:TableWritable](table : V) = {
-    val ps = printer();
-    try {
-      TSVTableSerialization.write(ps, table);
-    } finally {
-      ps.close();
-    }
-  }
+  def write[V:TableWritable](table : V) =
+    TSVTableSerialization.write(this, table);
 
-  def read[V:TableReadable] : V = {
-    val r = reader();
-    try {
-      TSVTableSerialization.read[V](r);
-    } finally {
-      reader.close;
-    }
-  }
+  def read[V:TableReadable] : V =
+    TSVTableSerialization.read[V](this);
 
   override def iterator =
     TSVTableSerialization.read[Iterator[List[String]]](this);
 
   override def toString =
-    "TSVFile(\""+path+"\")";
+    "TSVFile(" + TextSerialization.toString(path) + ")";
 }
 
 /**
@@ -80,15 +66,8 @@ object TSVFile {
 
   /** Calls file.asParcel. */
   implicit def TSVFileAsParcel(file : TSVFile) =
-    Parcel(history = History.Origin(file.toString),
-           meta = scalanlp.collection.immutable.DHMap() + (file : File),
-           data = file.zipWithIndex.map(tup => Item(tup._2, tup._1)));
-
-  /** Converts each whitespace character to a space. */
-  def format(string : String) : String =
-    string.replaceAll("\\s", " ");
-
-  /** Formats the given sequence of strings as well-formed line of TSV. */
-  def format(seq : Iterator[String]) : String =
-    seq.map(format).mkString("\t");
+    scalanlp.stage.Parcel(
+      history = scalanlp.stage.History.Origin(file.toString),
+      meta = scalanlp.collection.immutable.DHMap() + (file : File),
+      data = file.zipWithIndex.map(tup => scalanlp.stage.Item(tup._2, tup._1)));
 }

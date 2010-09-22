@@ -13,7 +13,10 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.stage;
+package scalanlp;
+package stage;
+
+import generic.Mapper;
 
 /**
  * Selects the given column from a sequence of Strings (e.g. fields in a record).

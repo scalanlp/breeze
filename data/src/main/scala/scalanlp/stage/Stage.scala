@@ -15,8 +15,6 @@
 */
 package scalanlp.stage;
 
-import scala.reflect.Manifest;
-
 /**
  * A pipeline consists of a series of stages that each operate on a
  * parcel, possibly updating its metadata and changing its data type.
@@ -56,20 +54,4 @@ object Stage {
   
   implicit def unapply[I,O](stage : Stage[I,O])(implicit mI : Manifest[I]) : (I=>O) =
     (value : I) => stage(Parcel(data = value)).data;
-}
-
-
-/**
- * Builds metadata statistics from the given data.
- * 
- * @author dramage
- */
-abstract class MetaBuilder[Meta,Data](implicit m : Manifest[Meta], mD : Manifest[Data])
-extends Stage[Data,Data] {
-  /** Builds new metadata for the Parcel as a function of the data. */
-  def build(data : Data) : Meta;
-
-  /** Calls build, adding the returned metadata to the parcel. */
-  override def apply(parcel : Parcel[Data]) : Parcel[Data] =
-    Parcel(parcel.history + this, parcel.meta + build(parcel.data), parcel.data);
 }

@@ -13,23 +13,21 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-
-package scalanlp.text.transform;
-
-import scalanlp.serialization.TypedCompanion0;
+package scalanlp;
+package stage;
+package generic;
 
 /**
- * Lowercases all strings in a batch of strings.
+ * Builds metadata statistics from the given data.
  *
  * @author dramage
  */
-case class CaseFolder() extends Transformer {
-  override def apply(in : Iterable[String]) =
-    in.map(CaseFolder);
-}
+abstract class MetaBuilder[Meta,Data](implicit m : Manifest[Meta], mD : Manifest[Data])
+extends Stage[Data,Data] {
+  /** Builds new metadata for the Parcel as a function of the data. */
+  def build(data : Data) : Meta;
 
-object CaseFolder extends (String=>String) with TypedCompanion0[CaseFolder] {
-  prepare();
-
-  override def apply(in : String) : String = in.toLowerCase;
+  /** Calls build, adding the returned metadata to the parcel. */
+  override def apply(parcel : Parcel[Data]) : Parcel[Data] =
+    Parcel(parcel.history + this, parcel.meta + build(parcel.data), parcel.data);
 }

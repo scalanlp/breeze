@@ -13,7 +13,10 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.serialization;
+package scalanlp;
+package io;
+
+import serialization.TextSerialization;
 
 /**
  * Reader for consuming unicode code points from a stream.  See implicit
@@ -66,7 +69,7 @@ trait TextReader { self =>
   }
 
   /** Reads the next line from the input. Does not return the newline, which is left in the stream.  Returns null if there are no more lines. */
-  def readLine : String = {
+  def readLine() : String = {
     builder.setLength(0);
     var c = peek();
 
@@ -83,7 +86,7 @@ trait TextReader { self =>
   }
 
   /** Reads and returns a newline character at the current position.  Throws an exception if a newline does not follow. */
-  def readNewline : String = {
+  def readNewline() : String = {
     val c = read();
     if (c == '\r' && peek() == '\n') {
       read();
@@ -114,7 +117,7 @@ trait TextReader { self =>
   }
 
   /** Returns the rest of the characters in the input as a String. */
-  def readRemaining : String = {
+  def readRemaining() : String = {
     builder.setLength(0);
     var c = read();
     while(c >= 0) {
@@ -134,7 +137,7 @@ trait TextReader { self =>
   }
 
   /** Skips whitespace characters. */
-  def skipWhitespace : Unit =
+  def skipWhitespace() : Unit =
     skipWhile((cp : Int) => { val ch = cp.toChar; ch == cp && ch.isWhitespace; });
 
   /** Expect the given literal, throwing an exception on mismatch. */
@@ -171,7 +174,7 @@ trait TextReader { self =>
 
 
   /** Read a sequence of character consisting of the digits '0' to '9'.  Returns null if there are no more characters. */
-  def readNumber : String = {
+  def readNumber() : String = {
     builder.setLength(0);
     var c = peek();
 

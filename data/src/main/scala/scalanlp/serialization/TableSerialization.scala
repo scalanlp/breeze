@@ -18,6 +18,8 @@ package scalanlp;
 package serialization;
 
 import java.io.File;
+
+import scalanlp.io.{TextReader,TextWriter,TextReaderException};
 import scalanlp.ra.Cell;
 import scalanlp.pipes.Pipes;
 

@@ -20,18 +20,15 @@ package tokenize;
 import scalanlp.serialization.TypedCompanion1;
 
 /**
- * Finds all occurrences of the given pattern in the document.
+ * Filters out tokens composed of fewer than minLength characters.
  *
- * @author dlwh
  * @author dramage
  */
-case class RegexSearchTokenizer(pattern : String)
-extends Tokenizer {
-  override def apply(doc : String) = new Iterable[String] {
-    override def iterator = (pattern.r.findAllIn(doc));
-  }
+case class MinimumLengthFilter(minLength : Int) extends Transformer {
+  override def apply(doc : Iterable[String]) : Iterable[String] =
+    doc.filter(token => token.length >= minLength);
 }
 
-object RegexSearchTokenizer extends TypedCompanion1[String,RegexSearchTokenizer] {
+object MinimumLengthFilter extends TypedCompanion1[Int,MinimumLengthFilter] {
   prepare();
 }

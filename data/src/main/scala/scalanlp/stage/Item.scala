@@ -13,19 +13,20 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.stage
+package scalanlp.stage;
 
 import scalanlp.collection.LazyIterable;
-import scala.collection.JavaConversions._;
 
-///**
-// * Support for creating parcels and batches from Java.
-// *
-// * @author dramage
-// */
-//object JavaConversions {
-//
-//  def batchFromIterable[V](inItems : java.lang.Iterable[V]) : Batch[V] =
-//    Batch.fromIterable(LazyIterable(inItems.iterator));
-//
-//}
+/**
+ * An item represents a single item corresponding to the
+ * given numbered item from the origin.
+ *
+ * @param number The number of this item.
+ * @param value The value of this item.
+ *
+ * @author dramage
+ */
+case class Item[+V](number : Int, value : V) {
+  def map[O](f : V => O) =
+    Item[O](number, f(value));
+}

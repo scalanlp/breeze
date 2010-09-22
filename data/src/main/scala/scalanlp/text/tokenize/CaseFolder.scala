@@ -17,21 +17,20 @@ package scalanlp;
 package text;
 package tokenize;
 
-import scalanlp.serialization.TypedCompanion1;
+import scalanlp.serialization.TypedCompanion0;
 
 /**
- * Finds all occurrences of the given pattern in the document.
+ * Lowercases all strings in a batch of strings.
  *
- * @author dlwh
  * @author dramage
  */
-case class RegexSearchTokenizer(pattern : String)
-extends Tokenizer {
-  override def apply(doc : String) = new Iterable[String] {
-    override def iterator = (pattern.r.findAllIn(doc));
-  }
+case class CaseFolder() extends Transformer {
+  override def apply(in : Iterable[String]) =
+    in.map(CaseFolder);
 }
 
-object RegexSearchTokenizer extends TypedCompanion1[String,RegexSearchTokenizer] {
+object CaseFolder extends (String=>String) with TypedCompanion0[CaseFolder] {
   prepare();
+
+  override def apply(in : String) : String = in.toLowerCase;
 }

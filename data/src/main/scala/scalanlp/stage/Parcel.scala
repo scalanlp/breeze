@@ -13,11 +13,10 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.stage;
+package scalanlp;
+package stage;
 
 import scalanlp.ra.Signature;
-
-import scala.reflect.Manifest;
 
 import scalanlp.collection.immutable.DHMap;
 

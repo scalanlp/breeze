@@ -13,9 +13,11 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.stage.text;
+package scalanlp;
+package stage;
+package text;
 
-import scalanlp.stage.Filter;
+import generic.Filter;
 
 /**
  * Filters a set of documents so that all documents contain

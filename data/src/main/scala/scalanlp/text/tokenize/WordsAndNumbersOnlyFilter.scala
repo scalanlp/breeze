@@ -13,7 +13,9 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.text.transform;
+package scalanlp;
+package text;
+package tokenize;
 
 import scalanlp.serialization.TypedCompanion0;
 
@@ -27,7 +29,7 @@ import scalanlp.serialization.TypedCompanion0;
 sealed trait TokenType;
 
 object TokenType {
-  abstract class RegexToken(private[transform] val pattern : java.util.regex.Pattern) extends TokenType {
+  abstract class RegexToken(val pattern : java.util.regex.Pattern) extends TokenType {
     def matches(token : String) =
       pattern.matcher(token).matches;
   }

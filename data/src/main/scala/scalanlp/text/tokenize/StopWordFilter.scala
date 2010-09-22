@@ -13,8 +13,9 @@
  See the License for the specific language governing permissions and
  limitations under the License. 
 */
-
-package scalanlp.text.transform;
+package scalanlp;
+package text;
+package tokenize;
 
 import scalanlp.serialization.TypedCompanion1;
 
