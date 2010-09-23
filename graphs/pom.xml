@@ -2,17 +2,17 @@
   <parent>
     <artifactId>scalanlp-core</artifactId>
     <groupId>org.scalanlp</groupId>
-    <version>0.3.1-SNAPSHOT</version>
+    <version>0.3.2-SNAPSHOT</version>
   </parent>
   
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.scalanlp</groupId>
-  <artifactId>scalanlp-learn_${scala.version}</artifactId>
+  <artifactId>scalanlp-graphs_${scala.version}</artifactId>
   <name>ScalaNLP Graphs</name>
   <version>0.1-SNAPSHOT</version>
   <url>http://www.scalanlp.org</url>
   <properties>
-    <scala.version>2.8.0.RC2</scala.version>
+    <scala.version>2.8.0</scala.version>
   </properties>
   <inceptionYear>2008</inceptionYear>
   <mailingLists>
@@ -93,6 +93,7 @@
           <args>
             <arg>-deprecation</arg>
             <arg>-optimize</arg>
+            <arg>-Xexperimental</arg>
           </args>
           <jvmArgs>
             <jvmArg>-Xmx1G</jvmArg>
@@ -172,11 +173,6 @@
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
       <version>${scala.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.scalanlp</groupId>
-      <artifactId>scalanlp-data_${scala.version}</artifactId>
-      <version>0.3.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
