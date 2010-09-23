@@ -21,40 +21,6 @@ import org.scalatest.prop._;
 import org.scalacheck._;
 import org.scalacheck.util._;
 import org.junit.runner.RunWith;
-import scalanlp.util.Index;
-
-///**
-// * Abstract test trait for table serializers.
-// *
-// * @author dramage
-// */
-//trait TableSerializationTestBase extends FunSuite with Checkers {
-//
-//  implicit val arbString = Arbitrary(Gen.alphaStr);
-//  implicit val arbChar = Arbitrary(Gen.alphaChar);
-//
-//  def basicTest[T:Arbitrary:TableRowReadable:TableRowWritable]() = {
-//    check( Prop.forAll { (a:T) =>
-//      val bytes = TableRowSerialization.;
-//      val b = serializer.fromBytes[T](bytes);
-//      a == b
-//    });
-//  }
-//
-//  test("Primitives") {
-//    basicTest[Int]();
-//    basicTest[Boolean]();
-//    basicTest[Double]();
-//    basicTest[Long]();
-//    basicTest[String]();
-//    basicTest[Byte]();
-//    basicTest[Short]();
-//    basicTest[Float]();
-//    basicTest[Char]();
-//  }
-//
-//}
-
 
 @RunWith(classOf[JUnitRunner])
 class TableSerializationTest extends FunSuite with Checkers {
@@ -71,4 +37,40 @@ class TableSerializationTest extends FunSuite with Checkers {
     checkCSV(List(("a","b"),("c","d")));
     checkCSV(List((1,List("a\n\"b","\r\n\"bb")),(2,List("c,","d"))));
   }
+
+  test("Options") {
+    val values : List[(String,Option[Int])] = List(("a",Some(2)), ("b",None));
+    val sb = new StringBuilder();
+    CSVTableSerialization.write(sb, values);
+    
+    assert(sb.toString.trim === "a,2\nb,");
+    
+    assert(CSVTableSerialization.read[List[(String,Option[Int])]](sb.toString) === values);
+  }
+
+  test("Headers") {
+    val values : List[(String,Option[Int])] = List(("a",Some(2)), ("b",None));
+    val sb = new StringBuilder();
+    CSVTableSerialization.write(sb, values, List("Column 1", "Column 2"));
+    
+    assert(sb.toString.trim === "Column 1,Column 2\na,2\nb,");
+  }
+
+  //
+  // TODO: work out why this gives a diverging implicit expansion error
+  //
+
+//  test("RowCompanion") {
+//    val values = List(
+//      ExampleRow("a",13,Array(1.0,2.0)),
+//      ExampleRow("b",27,Array(2.0,3.0)));
+//
+//    val sb = new StringBuilder();
+//    CSVTableSerialization.write(sb, values);
+//
+//    assert(sb.toString.trim === "id,count,values\na,13,1.0,2.0\nb,27,2.0,3.0");
+//  }
 }
+
+//case class ExampleRow(id : String, count : Int, values : Array[Double]);
+//object ExampleRow extends TableRowCompanion[ExampleRow,(String,Int,Array[Double])];

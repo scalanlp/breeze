@@ -31,6 +31,9 @@ trait TextWriter {
 
   /** Appends the given unicode code point and returns this. */
   def appendCodePoint(codePoint: Int) : TextWriter;
+
+  /** Closes the output. */
+  def close();
 }
 
 object TextWriter {
@@ -60,6 +63,7 @@ object TextWriter {
         sb.append(new String(Character.toChars(cp)));
       this;
     }
+    override def close() = { /* do nothing */ }
   }
 
   /**
@@ -79,6 +83,8 @@ object TextWriter {
         ps.append(new String(Character.toChars(cp)));
       this;
     }
+    override def close() =
+      ps.close();
   }
 
   /**

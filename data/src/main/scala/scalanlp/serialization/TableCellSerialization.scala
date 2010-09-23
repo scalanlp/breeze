@@ -24,7 +24,10 @@ import scalanlp.io.{TextReader,TextWriter};
  *
  * @author dramage
  */
-trait TableCellReader extends TextReader;
+trait TableCellReader extends TextReader {
+  override def close() =
+    { /* do nothing */ }
+}
 
 object TableCellReader {
   implicit def fromString(string : String) =
@@ -65,6 +68,28 @@ object TableCellReadable extends LowPriorityTableCellReadableImplicits {
     override def read(in : TableCellReader) =
       in.readRemaining;
   }
+
+  implicit def forOption[V:TableCellReadable] : TableCellReadable[Option[V]] = new TableCellReadable[Option[V]] {
+    override def read(in : TableCellReader) = {
+      if (in.peek() == -1) {
+        // NB: this has to be an in.read to make sure we consume the
+        // separator if reader only peeked at it
+        in.read();
+        None
+      } else {
+        Some(implicitly[TableCellReadable[V]].read(in));
+      }
+    }
+  }
+
+  implicit def forOptionSome[V:TableCellReadable] : TableCellReadable[Some[V]] = new TableCellReadable[Some[V]] {
+    override def read(in : TableCellReader) = {
+      if (in.peek() == -1)
+        throw new SerializationException("Expected a value while parsing Some()");
+
+      Some(implicitly[TableCellReadable[V]].read(in));
+    }
+  }
 }
 
 /**
@@ -74,6 +99,9 @@ object TableCellReadable extends LowPriorityTableCellReadableImplicits {
  * @author dramage
  */
 trait TableCellWriter extends TextWriter {
+  override def close() =
+    { /* do nothing */ }
+    
   def finish();
 }
 
@@ -116,6 +144,20 @@ object TableCellWritable extends LowPriorityTableCellWritableImplicits {
       writer.append(string);
       writer.finish();
     }
+  }
+
+  implicit def forOption[V:TableCellWritable] : TableCellWritable[Option[V]] = new TableCellWritable[Option[V]] {
+    override def write(writer : TableCellWriter, value : Option[V]) = {
+      value match {
+        case Some(v) => implicitly[TableCellWritable[V]].write(writer,v);
+        case None => writer.finish;
+      }
+    }
+  }
+
+  implicit def forOptionSome[V:TableCellWritable] : TableCellWritable[Some[V]] = new TableCellWritable[Some[V]] {
+    override def write(writer : TableCellWriter, value : Some[V]) =
+      implicitly[TableCellWritable[V]].write(writer,value.get);
   }
 }
 

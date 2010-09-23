@@ -262,6 +262,9 @@ object SerializationFormat {
     implicit def mapReadWritable[K:ReadWritable,V:ReadWritable] =
       collectionFromElements[K,V,Map](Map,"Map");
 
+    implicit def iterableReadWritable[T](implicit tH: ReadWritable[T]) =
+      collectionFromElements[T,Iterable](Iterable,"Iterable");
+
     implicit def indexReadWritable[T:ReadWritable]
     = new ReadWritable[Index[T]] {
       def read(source: Input): Index[T] =

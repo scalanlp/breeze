@@ -32,6 +32,9 @@ trait TextReader { self =>
   /** Peeks at the next unicode code point without consuming it, or -1 if the end of input. */
   def peek() : Int;
 
+  /** Closes the input. */
+  def close();
+
   /** Throws a TextReaderException at the current line and column. */
   def die(msg : String) =
     throw new TextReaderException(msg, lineNumber, columnNumber);
@@ -214,6 +217,11 @@ trait TextReader { self =>
 
       override def peek(n : Int) =
         if (n == 0) peek() else throw new IllegalArgumentException("Can only peek(0)");
+
+      override def close() = {
+        curr.close();
+        next.close();
+      }
     }
   }
 }
@@ -290,6 +298,9 @@ object TextReader {
 
     override def peek(n : Int) =
       if (n == 1) queue1 else if (n == 0) queue0 else throw new IllegalArgumentException("Can only peek(0) or peek(1)");
+
+    override def close() =
+      reader.close();
   }
 }
 

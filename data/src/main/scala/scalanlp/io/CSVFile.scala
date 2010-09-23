@@ -34,6 +34,9 @@ class CSVFile(path : String) extends File(path) with LazyIterable[Seq[String]] {
   def write[V:TableWritable](table : V) =
     CSVTableSerialization.write(this, table);
 
+  def write[V:TableWritable](table : V, columns : List[String]) =
+    CSVTableSerialization.write(this, table, columns);
+
   def read[V:TableReadable] : V =
     CSVTableSerialization.read[V](this);
 
