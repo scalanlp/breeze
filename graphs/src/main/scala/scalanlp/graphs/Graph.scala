@@ -40,7 +40,7 @@ trait Graph[Node,Edge] {
   /**
    * Returns an iterator of all edges that touch a node.
    */
-  def edgesTouching(n: Node): Iterator[Edge];
+  def edgesFrom(n: Node): Iterator[Edge];
 
   /**
    * Returns all nodes that are "Successors" of the current node.
@@ -66,10 +66,6 @@ trait Graph[Node,Edge] {
 trait Digraph[Node,Edge] extends Graph[Node,Edge] {
   def source(e: Edge): Node
   def sink(e: Edge): Node
-
-  def edgesFrom(n: Node): Iterator[Edge];
-  def edgesTo(n: Node): Iterator[Edge];
-  def edgesTouching(n: Node) = edgesFrom(n) ++ edgesTo(n);
 
   override def endpoints(e: Edge) = (source(e),sink(e));
 }
@@ -103,7 +99,6 @@ object Digraph {
    */
   def fromAdjacencyList[N](adjacencyList: Map[N,Seq[N]]):Digraph[N,(N,N)] = {
     val reversed: IndexedSeq[(N,N)] = (for( (n,adj) <- adjacencyList.iterator; m <- adj.iterator) yield (n,m)).toIndexedSeq;
-    val groupedReversed = reversed.groupBy(_._1).mapValues(_ map (_._2));
     type Node = N;
     type Edge = (N,N);
     new Digraph[N,(N,N)] {
@@ -121,7 +116,6 @@ object Digraph {
       def sink(e: Edge): Node = e._2;
 
       def edgesFrom(n: Node): Iterator[Edge] = adjacencyList.getOrElse(n,Seq.empty).iterator.map(n2 => (n,n2));
-      def edgesTo(n: Node): Iterator[Edge] = groupedReversed.getOrElse(n,Seq.empty).iterator.map(n2 => (n2,n));
 
       override def toString() = "Graph[" + adjacencyList + "]";
     }
