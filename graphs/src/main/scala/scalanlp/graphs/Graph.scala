@@ -112,7 +112,7 @@ object Digraph {
       override def endpoints(e: Edge):(Node,Node) = e;
       lazy val nodes = (adjacencyList.keys ++ adjacencyList.values.flatten).toSet
       def successors(n: Node) = {
-        toNeighbors.iterator
+        adjacencyList.getOrElse(n, Seq.empty).iterator
       }
       def getEdge(n1: Node, n2: Node) = {
         for(adj <- adjacencyList.get(n1); m <- adj.find(_ == n2)) yield (n1,n2);
