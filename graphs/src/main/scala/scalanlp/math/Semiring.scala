@@ -14,7 +14,7 @@ trait Semiring[T] {
    * reuse t1's storage to do the addition inplace, and
    * not at all of closeTo(t1,plus(t1,t2)) would return true.
    *
-   * @returns ( plus(t1,t2),closeTo(t1,plus(t1,t2))
+   * @return something equivalent to ( plus(t1,t2),closeTo(t1,plus(t1,t2))
    */
   def maybe_+=(t1: T, t2: T): (T,Boolean) = {
     val res = plus(t1,t2);
@@ -28,9 +28,13 @@ trait Semiring[T] {
   def closure(t: T):T
 }
 
+/**
+ * Models a Weakly-Left-Divisible Semiring, which means that
+ * there is some operation leftDivide s.t. leftDivide(z,times(z,x)) = x
+ */
 trait WLDSemiring[T] extends Semiring[T] {
   /**
-  * Return z^-1 times x
+  * @return z^-1 times x
   */
   def leftDivide(z: T, x: T): T;
 }
@@ -101,7 +105,6 @@ object Semiring {
    * Provides access to the logspace algebra. The implicit is segregated because it conflicts with numericIsSemiring
    */
   object LogSpace {
-    import scalanlp.math.Numerics._;
     implicit val doubleIsLogSpace:WLDSemiring[Double] = new WLDSemiring[Double] {
       def plus(t1: Double, t2: Double) = logSum(t1,t2);
       def leftDivide(t1: Double, t2: Double) = t2 - t1;
@@ -123,7 +126,21 @@ object Semiring {
         assert(!t_*.isNaN,t + " gives NaN!");
         t_*
       }
+
+      /**
+       * Sums together things in log space.
+       * @return log(exp(a) + exp(b))
+       */
+      def logSum(a : Double, b : Double) = {
+        import math._
+        if(a == Double.NegativeInfinity) b
+        else if (b == Double.NegativeInfinity) a
+        else if(a < b) b + log(1 + exp(a-b))
+        else a + log(1+exp(b-a));
+      }
+
     }
+
   }
   
 }
