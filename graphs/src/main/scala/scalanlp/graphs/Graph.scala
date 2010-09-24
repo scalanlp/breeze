@@ -18,18 +18,50 @@ package scalanlp.graphs
 
 /**
  * Represents a graph, which consists of Nodes, Edges, and ways to go from Edges to Nodes, and vice-versa.
+ *
+ * @author dlwh
  */
 trait Graph[Node,Edge] {
+  /**
+   * Returns an iterator over all edges in the graph.
+   */
   def edges: Iterator[Edge];
+
+  /**
+   * Returns the nodes that are on either side of a graph.
+   */
   def endpoints(e: Edge):(Node,Node);
+
+  /**
+   * Returns all nodes in the graph.
+   */
   def nodes: Iterable[Node];
+
+  /**
+   * Returns an iterator of all edges that touch a node.
+   */
   def edgesTouching(n: Node): Iterator[Edge];
-  def neighbors(n: Node): Iterator[Node]
+
+  /**
+   * Returns all nodes that are "Successors" of the current node.
+   * In an undirected graph, this will return all neighbors. In a directed
+   * graph, it will return only those nodes that are connnected by an edge
+   * where its source is the passed-in node.
+   */
+  def successors(n: Node): Iterator[Node]
+
+  /**
+   * Returns the edge associated with a node, if any exists.
+   *
+   * TODO: maybe should make it an Iterable or something.
+   */
   def getEdge(n1: Node, n2: Node): Option[Edge];
 }
 
 /**
  * A Digraph refines the notion of a graph, adding sources and sinks to edges.
+ *
+ * @author dlwh
  */
 trait Digraph[Node,Edge] extends Graph[Node,Edge] {
   def source(e: Edge): Node
@@ -38,16 +70,16 @@ trait Digraph[Node,Edge] extends Graph[Node,Edge] {
   def edgesFrom(n: Node): Iterator[Edge];
   def edgesTo(n: Node): Iterator[Edge];
   def edgesTouching(n: Node) = edgesFrom(n) ++ edgesTo(n);
+
+  override def endpoints(e: Edge) = (source(e),sink(e));
 }
 
 object Graph {
-  /**
-   * Constructs a graph from an edge list. The edgelist is the primary data
-   * structure, so it's not recommended.
-   */
+  /* Constructs a graph from an edge list. */
   def fromEdges[N](edges: (N,N)*):Graph[N,(N,N)] = Digraph.fromEdges(edges:_*);
   /**
-   * Constructs a graph from an adjacency list. The list must be symmetric.
+   * Constructs a graph from an adjacency list. The list must be symmetric for it to
+   * be an undirected graph.
    */
   def fromAdjacencyList[N](adjacencyList: Map[N,Seq[N]]): Graph[N,(N,N)] = {
     Digraph.fromAdjacencyList(adjacencyList);
@@ -77,12 +109,10 @@ object Digraph {
     new Digraph[N,(N,N)] {
 
       def edges = for( (n,adj) <- adjacencyList iterator; m <- adj iterator) yield (n,m);
-      def endpoints(e: Edge):(Node,Node) = e;
+      override def endpoints(e: Edge):(Node,Node) = e;
       lazy val nodes = (adjacencyList.keys ++ adjacencyList.values.flatten).toSet
-      def neighbors(n: Node) = {
-        val toNeighbors = adjacencyList.getOrElse(n, Seq.empty)
-        val fromNeighbors = groupedReversed.getOrElse(n, Seq.empty)
-        (toNeighbors.toSet ++ fromNeighbors).iterator
+      def successors(n: Node) = {
+        toNeighbors.iterator
       }
       def getEdge(n1: Node, n2: Node) = {
         for(adj <- adjacencyList.get(n1); m <- adj.find(_ == n2)) yield (n1,n2);
