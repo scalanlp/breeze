@@ -16,32 +16,24 @@ package scalanlp.graphs
 */
 
 /**
- * Provides views on graphs.
+ * Provides transformations on graphs.
  * @author dlwh
  */
 trait Transformations {
-  def reverse[Node,Edge](g: Graph[Node,Edge])(implicit reverser: EdgeReverser[Edge]): Graph[Node,Edge] = new Graph[Node,Edge] {
-    def edges = g.edges.map(reverser);
-    def endpoints(e: Edge) = g.endpoints(reverser(e));
-    def nodes = g.nodes;
-    def edgesTouching(n: Node) = g.edgesTouching(n).map(reverser);
-    def successors(n: Node) = g.successors(n);
-    def getEdge(n1: Node, n2: Node) = g.getEdge(n2,n1) map reverser;
-  }
-
-
-  def reverse[Node,Edge](g: Digraph[Node,Edge])(implicit reverser: EdgeReverser[Edge]):Digraph[Node,Edge] = new Digraph[Node,Edge] {
-    def edges = g.edges.map(reverser);
-    override def endpoints(e: Edge) = g.endpoints(e).swap;
-    def nodes = g.nodes;
-    override def edgesTouching(n: Node) = g.edgesTouching(n).map(reverser);
-    def successors(n: Node) = g.successors(n);
-    def getEdge(n1: Node, n2: Node) = g.getEdge(n2,n1) map reverser;
-
-    def source(e: Edge) = g.sink(e);
-    def sink(e: Edge) = g.source(e);
-    def edgesFrom(n: Node):Iterator[Edge] = g.edgesTo(n).map(reverser);
-    def edgesTo(n: Node) = g.edgesFrom(n).map(reverser);
+  def reverse[Node,Edge](g: Digraph[Node,Edge])(implicit reverser: EdgeReverser[Edge]):Digraph[Node,Edge] = {
+    val reversedEdges = g.edges.map(reverser).toIndexedSeq;
+    val groupedBySource = reversedEdges.groupBy(g.source _);
+    new Digraph[Node,Edge] {
+      def edges = reversedEdges.iterator;
+      def nodes = g.nodes;
+      def endPoints(e: Edge) = g.endpoints(e).swap;
+      def edgesFrom(n: Node) = groupedBySource.getOrElse(n, Seq.empty).iterator;
+      def successors(n: Node) = groupedBySource.getOrElse(n, Seq.empty).map(sink).toSet.iterator;
+      def getEdge(n: Node, n2: Node) = groupedBySource.get(n).flatMap(_.find(e => sink(e) == n2));
+      // edges are already reversed, so use actual source/sink
+      def sink(e: Edge) = g.sink(e);
+      def source(e: Edge) = g.source(e);
+    }
   }
 
 }
