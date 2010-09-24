@@ -7,15 +7,17 @@
     <version>0.3.2-SNAPSHOT</version>
   </parent>
 
+  <properties>
+    <scala.compile.version>2.8.1.RC1</scala.compile.version>
+    <scala.library.version>2.8.0</scala.library.version>
+  </properties>
+
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.scalanlp</groupId>
-  <artifactId>scalanlp-data_${scala.version}</artifactId>
+  <artifactId>scalanlp-data_${scala.library.version}</artifactId>
   <version>0.3.2-SNAPSHOT</version>
   <name>ScalaNLP Data</name>
   <inceptionYear>2009</inceptionYear>
-  <properties>
-    <scala.version>2.8.0</scala.version>
-  </properties>
   
   <developers>
     <developer>
@@ -67,7 +69,7 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <version>${scala.version}</version>
+      <version>${scala.compile.version}</version>
     </dependency>
     <dependency>
       <groupId>fastutil</groupId>
@@ -86,12 +88,12 @@
     </dependency>
     <dependency>
       <groupId>org.scalanlp</groupId>
-      <artifactId>scalala_${scala.version}</artifactId>
+      <artifactId>scalala_${scala.library.version}</artifactId>
       <version>0.4.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.testing</groupId>
-      <artifactId>scalacheck_${scala.version}</artifactId>
+      <artifactId>scalacheck_${scala.library.version}</artifactId>
       <version>1.7</version>
       <scope>test</scope>
     </dependency>
@@ -134,7 +136,7 @@
           </execution>
         </executions>
         <configuration>
-          <scalaVersion>${scala.version}</scalaVersion>
+          <scalaVersion>${scala.compile.version}</scalaVersion>
           <displayCmd>true</displayCmd>
           <args>
             <arg>-deprecation</arg>
@@ -180,7 +182,7 @@
         <artifactId>maven-scala-plugin</artifactId>
         <version>2.14</version>
         <configuration>
-          <scalaVersion>${scala.version}</scalaVersion>
+          <scalaVersion>${scala.compile.version}</scalaVersion>
         </configuration>
       </plugin>
     </plugins>
