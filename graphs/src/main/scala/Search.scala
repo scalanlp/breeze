@@ -20,7 +20,7 @@ trait Search {
         if(!visited(n)) {
           visited += n;
           f(n);
-          for(n2 <- g.neighbors(n)) {
+          for(n2 <- g.successors(n)) {
             rec(n2);
           }
         }
@@ -51,7 +51,7 @@ trait Search {
         if(!visited(n)) {
           f(n);
           visited += n;
-          for(n2 <- g neighbors n if !visited(n2))
+          for(n2 <- g successors n if !visited(n2))
             queue += n2;
         }
       }
