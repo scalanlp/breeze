@@ -70,6 +70,10 @@ trait Digraph[Node,Edge] extends Graph[Node,Edge] {
   override def endpoints(e: Edge) = (source(e),sink(e));
 }
 
+trait Weighted[Edge,W] { this:(Graph[N,Edge] forSome {type N}) =>
+  def weight(e: Edge):W
+}
+
 object Graph {
   /* Constructs a graph from an edge list. */
   def fromEdges[N](edges: (N,N)*):Graph[N,(N,N)] = Digraph.fromEdges(edges:_*);
