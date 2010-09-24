@@ -13,26 +13,23 @@ trait Search {
    *
    * Use dfs(g,source).find(goalTest) to find a node, dfs(g,source).foreach(f) to just evaluate.
    */
-  def dfs[N,E](g: Graph[N,E], source: N*):Traversable[N] = new Traversable[N] {
-    def foreach[U](f:  N=>U) {
+  def dfs[N,E](g: Graph[N,E], source: N*):Iterable[N] = new Iterable[N] {
+    def iterator:Iterator[N] = new Iterator[N] {
       val visited = collection.mutable.Set[N]();
-      def rec(n: N) {
+      val stack = new collection.mutable.Stack[N]();
+      stack.pushAll(source);
+
+      override def hasNext = !stack.isEmpty;
+
+      override def next = {
+        val n = stack.pop();
         if(!visited(n)) {
           visited += n;
-          f(n);
-          for(n2 <- g.successors(n)) {
-            rec(n2);
-          }
+          stack.pushAll(g.successors(n).filterNot(visited));
         }
+        n
       }
 
-      source foreach rec;
-    }
-
-    override def toStream = {
-      val res = new scala.collection.mutable.ArrayBuffer[N];
-      foreach(res += _);
-      res.toStream;
     }
   }
 
@@ -41,26 +38,23 @@ trait Search {
    *
    * Use bfs(g,source).find(goalTest) to find a node, bfs(g,source).foreach(f) to just evaluate.
    */
-  def bfs[N,E](g: Graph[N,E], source: N*): Traversable[N] = new Traversable[N] {
-    def foreach[U](f: N=>U) {
+  def bfs[N,E](g: Graph[N,E], source: N*): Iterable[N] = new Iterable[N] {
+    def iterator:Iterator[N] = new Iterator[N] {
       val visited = collection.mutable.Set[N]();
       val queue = new collection.mutable.Queue[N]();
       queue ++= source;
-      while(!queue.isEmpty) {
-        val n = queue.dequeue;
-        if(!visited(n)) {
-          f(n);
-          visited += n;
-          for(n2 <- g successors n if !visited(n2))
-            queue += n2;
-        }
-      }
-    }
 
-    override def toStream = {
-      val res = new scala.collection.mutable.ArrayBuffer[N];
-      foreach(res += _);
-      res.toStream;
+      override def hasNext = !queue.isEmpty;
+
+      override def next = {
+        val n = queue.dequeue();
+        if(!visited(n)) {
+          visited += n;
+          queue ++= g.successors(n).filterNot(visited);
+        }
+        n;
+      }
+
     }
   }
 
