@@ -79,7 +79,11 @@ object Digraph {
       def edges = for( (n,adj) <- adjacencyList iterator; m <- adj iterator) yield (n,m);
       def endpoints(e: Edge):(Node,Node) = e;
       lazy val nodes = (adjacencyList.keys ++ adjacencyList.values.flatten).toSet
-      def neighbors(n: Node) = adjacencyList.get(n).map(_.iterator).getOrElse(Iterator.empty);
+      def neighbors(n: Node) = {
+        val toNeighbors = adjacencyList.getOrElse(n, Seq.empty)
+        val fromNeighbors = groupedReversed.getOrElse(n, Seq.empty)
+        (toNeighbors.toSet ++ fromNeighbors).iterator
+      }
       def getEdge(n1: Node, n2: Node) = {
         for(adj <- adjacencyList.get(n1); m <- adj.find(_ == n2)) yield (n1,n2);
       }
