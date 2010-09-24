@@ -48,6 +48,18 @@ class TableSerializationTest extends FunSuite with Checkers {
     assert(CSVTableSerialization.read[List[(String,Option[Int])]](sb.toString) === values);
   }
 
+  test("Embedded Tuples") {
+    val values : List[((Int,String),(Double,Double))] =
+      List(((1,"a"),(3.0,4.0)),
+           ((2,"b"),(1.0,2.0)));
+    val sb = new StringBuilder();
+    CSVTableSerialization.write(sb, values);
+
+    assert(sb.toString.trim === "1,a,3.0,4.0\n2,b,1.0,2.0");
+
+    assert(CSVTableSerialization.read[List[((Int,String),(Double,Double))]](sb.toString) === values);
+  }
+
   test("Headers") {
     val values : List[(String,Option[Int])] = List(("a",Some(2)), ("b",None));
     val sb = new StringBuilder();
@@ -60,17 +72,17 @@ class TableSerializationTest extends FunSuite with Checkers {
   // TODO: work out why this gives a diverging implicit expansion error
   //
 
-//  test("RowCompanion") {
-//    val values = List(
-//      ExampleRow("a",13,Array(1.0,2.0)),
-//      ExampleRow("b",27,Array(2.0,3.0)));
-//
-//    val sb = new StringBuilder();
-//    CSVTableSerialization.write(sb, values);
-//
-//    assert(sb.toString.trim === "id,count,values\na,13,1.0,2.0\nb,27,2.0,3.0");
-//  }
+  test("RowCompanion") {
+    val values = List(
+      ExampleRow("a",13,Array(1.0,2.0)),
+      ExampleRow("b",27,Array(2.0,3.0)));
+
+    val sb = new StringBuilder();
+    CSVTableSerialization.write(sb, values);
+
+    assert(sb.toString.trim === "id,count,values\na,13,1.0,2.0\nb,27,2.0,3.0");
+  }
 }
 
-//case class ExampleRow(id : String, count : Int, values : Array[Double]);
-//object ExampleRow extends TableRowCompanion[ExampleRow,(String,Int,Array[Double])];
+case class ExampleRow(id : String, count : Int, values : Array[Double]);
+object ExampleRow extends TableRowCompanion[ExampleRow,(String,Int,Array[Double])];

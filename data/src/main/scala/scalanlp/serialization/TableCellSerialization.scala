@@ -56,7 +56,7 @@ trait LowPriorityTableCellReadableImplicits {
       if (in.read != -1) {
         // NB: this has to be an in.read to make sure we consume the
         // separator if reader only peeked at it
-        throw new SerializationException("Reader not fully consume cell in row.");
+        in.die("Reader did not fully consume cell in row");
       }
       rv;
     }
@@ -64,6 +64,19 @@ trait LowPriorityTableCellReadableImplicits {
 }
 
 object TableCellReadable extends LowPriorityTableCellReadableImplicits {
+  implicit object forUnit extends TableCellReadable[Unit] {
+    override def read(in : TableCellReader) = {
+      if (in.peek() != -1) {
+        in.die("Expected empty cell while parsing Unit");
+      }
+      
+      // NB: this has to be an in.read to make sure we consume the
+      // separator if reader only peeked at it
+      in.read();
+      ();
+    }
+  }
+
   implicit object forString extends TableCellReadable[String] {
     override def read(in : TableCellReader) =
       in.readRemaining;
@@ -85,7 +98,7 @@ object TableCellReadable extends LowPriorityTableCellReadableImplicits {
   implicit def forOptionSome[V:TableCellReadable] : TableCellReadable[Some[V]] = new TableCellReadable[Some[V]] {
     override def read(in : TableCellReader) = {
       if (in.peek() == -1)
-        throw new SerializationException("Expected a value while parsing Some()");
+        in.die("Expected a value while parsing Some()");
 
       Some(implicitly[TableCellReadable[V]].read(in));
     }
@@ -169,21 +182,15 @@ object TableCellWritable extends LowPriorityTableCellWritableImplicits {
  */
 object TableCellSerialization {
 
-  type Input = TableCellReader;
-  type Output = TableCellWriter;
-
-  type Readable[T] = TableCellReadable[T];
-  type Writable[T] = TableCellWritable[T];
-
   /** Marshalls the given value as a string. */
-  def toString[T:Writable](value: T) : String = {
+  def toString[T:TableCellWritable](value: T) : String = {
     val sb = new StringBuilder();
-    implicitly[Writable[T]].write(sb, value);
+    implicitly[TableCellWritable[T]].write(sb, value);
     sb.toString;
   }
 
   /** Demarshalls a value from the given string. */
-  def fromString[T:Readable](str: String) : T = {
-    implicitly[Readable[T]].read(new TextReader.StringReader(str) with TableCellReader);
+  def fromString[T:TableCellReadable](str: String) : T = {
+    implicitly[TableCellReadable[T]].read(new TextReader.StringReader(str) with TableCellReader);
   }
 }

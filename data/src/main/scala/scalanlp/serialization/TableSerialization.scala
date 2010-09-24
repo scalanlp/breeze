@@ -23,93 +23,6 @@ import scalanlp.io.{TextReader,TextWriter,TextReaderException};
 import scalanlp.ra.Cell;
 import scalanlp.pipes.Pipes;
 
-import scalanlp.util.CanPack;
-
-/**
- * Marker trait for if a type has an associated table header.
- *
- * @author dramage
- */
-trait HasTableHeader[V] {
-  def header : Option[List[String]];
-}
-
-/**
- * Default implicit NoTableHeader returns an empty header for all types,
- * unless they have specified their own HasTableHeader in a companion
- * object, such as by inheriting from TableRowCompanion.
- *
- * @author dramage
- */
-object HasTableHeader {
-  object NoTableHeader extends HasTableHeader[Any] {
-    override def header = None;
-  }
-  
-  implicit def noTableHeader[V] : HasTableHeader[V] =
-    NoTableHeader.asInstanceOf[HasTableHeader[V]];
-}
-
-/**
- * A trait for companion objects to case classes that want to support
- * reading and writing table headers.
- *
- * Example:
- *
- * case class MyRow(id : String, count : Int, values : Array[Double]);
- * object MyRow extends TableRowCompanion[MyRow,(String,Int,Array[Double])];
- *
- * @author dramage
- */
-trait TableRowCompanion[This,Format] { self =>
-  import com.thoughtworks.paranamer.BytecodeReadingParanamer;
-
-  private val method = try {
-    this.getClass.getMethods.filter(_.getName == "apply").head;
-  } catch {
-    case ex : Throwable =>
-      throw new IllegalArgumentException("No apply method.");
-  }
-
-  private val names : List[String] =
-    new com.thoughtworks.paranamer.BytecodeReadingParanamer().lookupParameterNames(method).toList;
-
-  implicit object CompanionHeader extends HasTableHeader[This] {
-    override def header = Some(names);
-  }
-
-  class CompanionReadable(implicit trr : TableRowReadable[Format], cp : CanPack[Format])
-  extends TableRowReadable[This] {
-    override def read(in : TableRowReader) = {
-      val packed = implicitly[TableRowReadable[Format]].read(in);
-      val unpacked = implicitly[CanPack[Format]].unpack(packed);
-      method.invoke(null, unpacked.asInstanceOf[List[Object]].toArray[Object] :_*).asInstanceOf[This];
-    }
-  }
-
-  private var _readable : CompanionReadable = null;
-  implicit def readable(implicit trr : TableRowReadable[Format], cp : CanPack[Format]) : TableRowReadable[This] = {
-    if (_readable == null) synchronized { _readable = new CompanionReadable(); }
-    _readable;
-  }
-
-  class CompanionWritable(implicit trw : TableRowWritable[Format], cp : CanPack[Format], cm : Manifest[This])
-  extends TableRowWritable[This] {
-    override def write(out : TableRowWriter, value : This) = {
-      val unpacked : List[Any] =
-        names.map(name => implicitly[Manifest[This]].erasure.getMethod(name).invoke(value));
-      val packed = implicitly[CanPack[Format]].pack(unpacked);
-      implicitly[TableRowWritable[Format]].write(out, packed);
-    }
-  }
-
-  private var _writable : CompanionWritable = null;
-  implicit def writable(implicit trw : TableRowWritable[Format], cp : CanPack[Format], cm : Manifest[This]) : TableRowWritable[This] = {
-    if (_writable == null) synchronized { _writable = new CompanionWritable(); }
-    _writable;
-  }
-}
-
 /**
  * Reads a table as a series of TableRowReader.  Note that the returned
  * readers cannot be cached or accessed out of order, because they are a
@@ -125,23 +38,35 @@ trait TableReader extends Iterator[TableRowReader];
  *
  * @author dramage
  */
-trait TableReadable[V] extends Readable[TableReader,V];
+trait TableReadable[V] extends Readable[TableReader,V] {
+  /** Header row describing this table. */
+  def header : Option[List[String]];
+}
 
 object TableReadable {
   implicit def toIterator[V:TableRowReadable]
   : TableReadable[Iterator[V]] = new TableReadable[Iterator[V]] {
+    override def header =
+      implicitly[TableRowReadable[V]].header;
+
     override def read(tr : TableReader) =
       tr.map(implicitly[TableRowReadable[V]].read);
   }
 
   implicit def toArray[V:ClassManifest:TableRowReadable]
   : TableReadable[Array[V]] = new TableReadable[Array[V]] {
+    override def header =
+      implicitly[TableRowReadable[V]].header;
+
     override def read(tr : TableReader) =
       tr.map(implicitly[TableRowReadable[V]].read).toArray;
   }
 
   implicit def toList[V:TableRowReadable]
   : TableReadable[List[V]] = new TableReadable[List[V]] {
+    override def header =
+      implicitly[TableRowReadable[V]].header;
+
     override def read(tr : TableReader) =
       tr.map(implicitly[TableRowReadable[V]].read).toList;
   }
@@ -165,11 +90,17 @@ trait TableWriter {
  *
  * @author dramage
  */
-trait TableWritable[V] extends Writable[TableWriter,V];
+trait TableWritable[V] extends Writable[TableWriter,V] {
+  /** Header row describing this table. */
+  def header : Option[List[String]];
+}
 
 object TableWritable {
   implicit def forIterator[V:TableRowWritable]
   : TableWritable[Iterator[V]] = new TableWritable[Iterator[V]] {
+    override def header =
+      implicitly[TableRowWritable[V]].header;
+
     override def write(tw : TableWriter, vv : Iterator[V]) = {
       for (v <- vv) {
         implicitly[TableRowWritable[V]].write(tw.next(), v);
@@ -180,6 +111,9 @@ object TableWritable {
 
   implicit def forTraversable[V:TableRowWritable]
   : TableWritable[Traversable[V]] = new TableWritable[Traversable[V]] {
+    override def header =
+      implicitly[TableRowWritable[V]].header;
+
     override def write(tw : TableWriter, vv : Traversable[V]) = {
       for (v <- vv) {
         implicitly[TableRowWritable[V]].write(tw.next(), v);
@@ -190,6 +124,9 @@ object TableWritable {
 
   implicit def forIterable[V:TableRowWritable]
   : TableWritable[Iterable[V]] = new TableWritable[Iterable[V]] {
+    override def header =
+      implicitly[TableRowWritable[V]].header;
+
     override def write(tw : TableWriter, vv : Iterable[V]) = {
       for (v <- vv) {
         implicitly[TableRowWritable[V]].write(tw.next(), v);
@@ -200,6 +137,9 @@ object TableWritable {
 
   implicit def forList[V:TableRowWritable]
   : TableWritable[List[V]] = new TableWritable[List[V]] {
+    override def header =
+      implicitly[TableRowWritable[V]].header;
+
     override def write(tw : TableWriter, vv : List[V]) = {
       for (v <- vv) {
         implicitly[TableRowWritable[V]].write(tw.next(), v);
@@ -210,6 +150,9 @@ object TableWritable {
 
   implicit def forArray[V:TableRowWritable]
   : TableWritable[Array[V]] = new TableWritable[Array[V]] {
+    override def header =
+      implicitly[TableRowWritable[V]].header;
+
     override def write(tw : TableWriter, vv : Array[V]) = {
       for (v <- vv) {
         implicitly[TableRowWritable[V]].write(tw.next(), v);
@@ -235,9 +178,9 @@ trait TextTableSerialization { self =>
     implicitly[TableReadable[V]].read(mkReader(source));
 
   /** Writes the given table to the given text stream, with a header if appropriate. */
-  def write[V:TableWritable:HasTableHeader](sink : TextWriter, value : V) : Unit = {
+  def write[V:TableWritable](sink : TextWriter, value : V) : Unit = {
     // write table header if given
-    implicitly[HasTableHeader[V]].header match {
+    implicitly[TableWritable[V]].header match {
       case Some(hr) =>
         write(sink, value, hr);
       case None =>
@@ -247,10 +190,9 @@ trait TextTableSerialization { self =>
 
   /** Writes the given table to the given text stream, with a header. */
   def write[V:TableWritable](sink : TextWriter, value : V, columns : List[String]) : Unit = {
-    val header = new StringBuilder();
-    implicitly[TableWritable[List[List[String]]]].write(mkWriter(header), List(columns));
-    sink.append(header.toString);
-    implicitly[TableWritable[V]].write(mkWriter(sink), value);
+    val writer = mkWriter(sink);
+    implicitly[TableRowWritable[List[String]]].write(writer.next, columns);
+    implicitly[TableWritable[V]].write(writer, value);
   }
 
   /** Evaluates the given eval function if no cache exists; otherwise loads value. */
@@ -260,10 +202,10 @@ trait TextTableSerialization { self =>
   def cache[V:TableReadable:TableWritable](name : String, pipes : Pipes = Pipes.global)(eval : => V) : V =
     new Cell(pipes.file(name), eval).get;
 
-  implicit def fileReadWritable[V:TableReadable:TableWritable:HasTableHeader] : FileSerialization.ReadWritable[V] =
+  implicit def fileReadWritable[V:TableReadable:TableWritable] : FileSerialization.ReadWritable[V] =
     new FileReadWritable[V];
 
-  class FileReadWritable[V:TableReadable:TableWritable:HasTableHeader] extends FileSerialization.ReadWritable[V] {
+  class FileReadWritable[V:TableReadable:TableWritable] extends FileSerialization.ReadWritable[V] {
     override def read(file : java.io.File) =
       self.read[V](file);
     override def write(file : java.io.File, value : V) =

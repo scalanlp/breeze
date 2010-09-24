@@ -24,7 +24,15 @@ package serialization;
  *
  * @author dramage
  */
-trait TableRowReader extends Iterator[TableCellReader];
+trait TableRowReader extends Iterator[TableCellReader] {
+  override def take(n : Int) : TableRowReader = {
+    val took = super.take(n);
+    new TableRowReader {
+      override def hasNext = took.hasNext;
+      override def next = took.next;
+    }
+  }
+}
 
 object TableRowReader {
   implicit def fromStrings(strings : Iterable[String]) : TableRowReader = {
@@ -41,7 +49,10 @@ object TableRowReader {
  * 
  * @author dramage
  */
-trait TableRowReadable[V] extends Readable[TableRowReader,V];
+trait TableRowReadable[V] extends Readable[TableRowReader,V] {
+  /** Returns a header describing this row. */
+  def header : Option[List[String]] = None;
+}
 
 /**
  * Low priority conversions of cell readable to row readable.
@@ -49,10 +60,10 @@ trait TableRowReadable[V] extends Readable[TableRowReader,V];
  * @author dramage
  */
 trait LowPriorityTableRowReadableImplicits {
-  implicit def anyTableCellReadable[V](implicit rc : TableCellReadable[V])
+  implicit def anyTableMultiCellReadable[V](implicit rc : TableMultiCellReadable[V])
   : TableRowReadable[V] = new TableRowReadable[V] {
     override def read(row : TableRowReader) = {
-      val rv = rc.read(row.next);
+      val rv = rc.read(row.take(rc.size));
       require(!row.hasNext, "Wrong number of cells in row.");
       rv;
     }
@@ -63,63 +74,77 @@ object TableRowReadable extends LowPriorityTableRowReadableImplicits {
   type Input = TableRowReader;
 
   implicit def forTuple2[A,B]
-  (implicit ra : TableCellReadable[A], rb : TableRowReadable[B])
+  (implicit ra : TableMultiCellReadable[A], rb : TableRowReadable[B])
   : TableRowReadable[(A,B)] = new TableRowReadable[(A,B)] {
     override def read(row : Input) =
-      (ra.read(row.next),
+      (ra.read(row.take(ra.size)),
        rb.read(row));
   }
 
   implicit def forTuple3[A,B,C]
-  (implicit ra : TableCellReadable[A], rb : TableCellReadable[B],
+  (implicit ra : TableMultiCellReadable[A], rb : TableMultiCellReadable[B],
    rc : TableRowReadable[C])
   : TableRowReadable[(A,B,C)] = new TableRowReadable[(A,B,C)] {
     override def read(row : Input) =
-      (ra.read(row.next),
-       rb.read(row.next),
+      (ra.read(row.take(ra.size)),
+       rb.read(row.take(rb.size)),
        rc.read(row));
   }
 
   implicit def forTuple4[A,B,C,D]
-  (implicit ra : TableCellReadable[A], rb : TableCellReadable[B],
-   rc : TableCellReadable[C], rd : TableRowReadable[D])
+  (implicit ra : TableMultiCellReadable[A], rb : TableMultiCellReadable[B],
+   rc : TableMultiCellReadable[C], rd : TableRowReadable[D])
   : TableRowReadable[(A,B,C,D)] = new TableRowReadable[(A,B,C,D)] {
     override def read(row : Input) =
-      (ra.read(row.next),
-       rb.read(row.next),
-       rc.read(row.next),
+      (ra.read(row.take(ra.size)),
+       rb.read(row.take(rb.size)),
+       rc.read(row.take(rc.size)),
        rd.read(row));
   }
 
   implicit def forTuple5[A,B,C,D,E]
-  (implicit ra : TableCellReadable[A], rb : TableCellReadable[B],
-   rc : TableCellReadable[C], rd : TableCellReadable[D], re : TableRowReadable[E])
+  (implicit ra : TableMultiCellReadable[A], rb : TableMultiCellReadable[B],
+   rc : TableMultiCellReadable[C], rd : TableMultiCellReadable[D], re : TableRowReadable[E])
   : TableRowReadable[(A,B,C,D,E)] = new TableRowReadable[(A,B,C,D,E)] {
     override def read(row : Input) =
-      (ra.read(row.next),
-       rb.read(row.next),
-       rc.read(row.next),
-       rd.read(row.next),
+      (ra.read(row.take(ra.size)),
+       rb.read(row.take(rb.size)),
+       rc.read(row.take(rc.size)),
+       rd.read(row.take(rd.size)),
        re.read(row));
   }
 
-  implicit def forArray[A:TableCellReadable:ClassManifest]
+  implicit def forArray[A](implicit cr : TableMultiCellReadable[A], cm : ClassManifest[A])
   : TableRowReadable[Array[A]] = new TableRowReadable[Array[A]] {
     override def read(row : Input) = {
-      row.map(implicitly[TableCellReadable[A]].read).toArray
+      val builder = scala.collection.mutable.ArrayBuilder.make[A];
+      while (row.hasNext) {
+        builder += cr.read(row.take(cr.size));
+      }
+      builder.result;
     }
   }
 
-  implicit def forIterable[A:TableCellReadable]
+  implicit def forIterable[A](implicit cr : TableMultiCellReadable[A])
   : TableRowReadable[Iterable[A]] = new TableRowReadable[Iterable[A]] {
-    override def read(row : Input) =
-      row.map(implicitly[TableCellReadable[A]].read).toIterable;
+    override def read(row : Input) = {
+      val builder = Iterable.newBuilder[A];
+      while (row.hasNext) {
+        builder += cr.read(row.take(cr.size));
+      }
+      builder.result;
+    }
   }
 
-  implicit def forList[A:TableCellReadable]
+  implicit def forList[A](implicit cr : TableMultiCellReadable[A])
   : TableRowReadable[List[A]] = new TableRowReadable[List[A]] {
-    override def read(row : Input) =
-      row.map(implicitly[TableCellReadable[A]].read).toList;
+    override def read(row : Input) = {
+      val builder = List.newBuilder[A];
+      while (row.hasNext) {
+        builder += cr.read(row.take(cr.size));
+      }
+      builder.result;
+    }
   }
 }
 
@@ -140,7 +165,10 @@ trait TableRowWriter {
  *
  * @author dramage
  */
-trait TableRowWritable[V] extends Writable[TableRowWriter, V];
+trait TableRowWritable[V] extends Writable[TableRowWriter, V] {
+  /** Returns a header describing this row. */
+  def header : Option[List[String]] = None;
+}
 
 /**
  * Low priority Writable conversions.
@@ -148,10 +176,10 @@ trait TableRowWritable[V] extends Writable[TableRowWriter, V];
  * @author dramage
  */
 trait LowPriorityTableRowWritableImplicits {
-  implicit def anyTableCellWritable[V](implicit wc : TableCellWritable[V])
+  implicit def anyTableMultiCellWritable[V](implicit wc : TableMultiCellWritable[V])
   : TableRowWritable[V] = new TableRowWritable[V] {
     def write(writer : TableRowWriter, value : V) = {
-      wc.write(writer.next, value);
+      wc.write(writer, value);
       writer.finish;
     }
   }
@@ -161,108 +189,155 @@ object TableRowWritable extends LowPriorityTableRowWritableImplicits {
   type Output = TableRowWriter
 
   implicit def forTuple2[A,B]
-  (implicit wa : TableCellWritable[A],
+  (implicit wa : TableMultiCellWritable[A],
    wb : TableRowWritable[B])
   : TableRowWritable[(A,B)] = new TableRowWritable[(A,B)] {
     def write(writer : Output, v : (A,B)) = {
-      wa.write(writer.next, v._1);
+      wa.write(writer, v._1);
       wb.write(writer, v._2);
     }
   }
 
   implicit def forTuple3[A,B,C]
-  (implicit wa : TableCellWritable[A],
-   wb : TableCellWritable[B],
+  (implicit wa : TableMultiCellWritable[A],
+   wb : TableMultiCellWritable[B],
    wc : TableRowWritable[C])
   : TableRowWritable[(A,B,C)] = new TableRowWritable[(A,B,C)] {
     def write(writer : Output, v : (A,B,C)) = {
-      wa.write(writer.next, v._1);
-      wb.write(writer.next, v._2);
+      wa.write(writer, v._1);
+      wb.write(writer, v._2);
       wc.write(writer, v._3);
     }
   }
 
   implicit def forTuple4[A,B,C,D]
-  (implicit wa : TableCellWritable[A],
-   wb : TableCellWritable[B],
-   wc : TableCellWritable[C],
+  (implicit wa : TableMultiCellWritable[A],
+   wb : TableMultiCellWritable[B],
+   wc : TableMultiCellWritable[C],
    wd : TableRowWritable[D])
   : TableRowWritable[(A,B,C,D)] = new TableRowWritable[(A,B,C,D)] {
     def write(writer : Output, v : (A,B,C,D)) = {
-      wa.write(writer.next, v._1);
-      wb.write(writer.next, v._2);
-      wc.write(writer.next, v._3);
+      wa.write(writer, v._1);
+      wb.write(writer, v._2);
+      wc.write(writer, v._3);
       wd.write(writer, v._4);
     }
   }
 
   implicit def forTuple5[A,B,C,D,E]
-  (implicit wa : TableCellWritable[A],
-   wb : TableCellWritable[B],
-   wc : TableCellWritable[C],
-   wd : TableCellWritable[D],
+  (implicit wa : TableMultiCellWritable[A],
+   wb : TableMultiCellWritable[B],
+   wc : TableMultiCellWritable[C],
+   wd : TableMultiCellWritable[D],
    we : TableRowWritable[E])
   : TableRowWritable[(A,B,C,D,E)] = new TableRowWritable[(A,B,C,D,E)] {
     def write(writer : Output, v : (A,B,C,D,E)) = {
-      wa.write(writer.next, v._1);
-      wb.write(writer.next, v._2);
-      wc.write(writer.next, v._3);
-      wd.write(writer.next, v._4);
+      wa.write(writer, v._1);
+      wb.write(writer, v._2);
+      wc.write(writer, v._3);
+      wd.write(writer, v._4);
       we.write(writer, v._5);
     }
   }
 
-  implicit def forArray[A:TableCellWritable]
+  implicit def forArray[A:TableMultiCellWritable]
   : TableRowWritable[Array[A]] = new TableRowWritable[Array[A]] {
     override def write(writer : Output, coll : Array[A]) = {
       for (v <- coll) {
-        implicitly[TableCellWritable[A]].write(writer.next, v);
+        implicitly[TableMultiCellWritable[A]].write(writer, v);
       }
       writer.finish;
     }
   }
 
-  implicit def forIterable[A:TableCellWritable]
+  implicit def forIterable[A:TableMultiCellWritable]
   : TableRowWritable[Iterable[A]] = new TableRowWritable[Iterable[A]] {
     override def write(writer : Output, coll : Iterable[A]) = {
       for (v <- coll) {
-        implicitly[TableCellWritable[A]].write(writer.next, v);
+        implicitly[TableMultiCellWritable[A]].write(writer, v);
       }
       writer.finish;
     }
   }
 
-  implicit def forTraversable[A:TableCellWritable]
+  implicit def forTraversable[A:TableMultiCellWritable]
   : TableRowWritable[Traversable[A]] = new TableRowWritable[Traversable[A]] {
     override def write(writer : Output, coll : Traversable[A]) = {
       for (v <- coll) {
-        implicitly[TableCellWritable[A]].write(writer.next, v);
+        implicitly[TableMultiCellWritable[A]].write(writer, v);
       }
       writer.finish;
     }
   }
 
-  implicit def forList[A:TableCellWritable]
+  implicit def forList[A:TableMultiCellWritable]
   : TableRowWritable[List[A]] = new TableRowWritable[List[A]] {
     override def write(writer : Output, coll : List[A]) = {
       for (v <- coll) {
-        implicitly[TableCellWritable[A]].write(writer.next, v);
+        implicitly[TableMultiCellWritable[A]].write(writer, v);
       }
       writer.finish;
     }
   }
 }
 
-
 /**
- * Serialization format for reading and writing rows of a table.
+ * A trait for companion objects to case classes that want to support
+ * reading and writing table headers.
+ *
+ * Example:
+ *
+ * case class MyRow(id : String, count : Int, values : Array[Double]);
+ * object MyRow extends TableRowCompanion[MyRow,(String,Int,Array[Double])];
  *
  * @author dramage
  */
-object TableRowSerialization {
-  type Input = TableRowReader;
-  type Output = TableRowWriter;
+trait TableRowCompanion[This,Format] { self =>
+  import scalanlp.util.CanPack;
+  import com.thoughtworks.paranamer.BytecodeReadingParanamer;
 
-  type Readable[V] = TableRowReadable[V];
-  type Writable[V] = TableRowWritable[V];
+  private val method = try {
+    this.getClass.getMethods.filter(_.getName == "apply").head;
+  } catch {
+    case ex : Throwable =>
+      throw new IllegalArgumentException("No apply method.");
+  }
+
+  private val names : List[String] =
+    new com.thoughtworks.paranamer.BytecodeReadingParanamer().lookupParameterNames(method).toList;
+
+  class CompanionReadable(implicit trr : TableRowReadable[Format], cp : CanPack[Format])
+  extends TableRowReadable[This] {
+    override def header = Some(names);
+
+    override def read(in : TableRowReader) = {
+      val packed = implicitly[TableRowReadable[Format]].read(in);
+      val unpacked = implicitly[CanPack[Format]].unpack(packed);
+      method.invoke(null, unpacked.asInstanceOf[List[Object]].toArray[Object] :_*).asInstanceOf[This];
+    }
+  }
+
+  private var _readable : CompanionReadable = null;
+  implicit def readable(implicit trr : TableRowReadable[Format], cp : CanPack[Format]) : TableRowReadable[This] = {
+    if (_readable == null) synchronized { _readable = new CompanionReadable(); }
+    _readable;
+  }
+
+  class CompanionWritable(implicit trw : TableRowWritable[Format], cp : CanPack[Format], cm : Manifest[This])
+  extends TableRowWritable[This] {
+    override def header = Some(names);
+
+    override def write(out : TableRowWriter, value : This) = {
+      val unpacked : List[Any] =
+        names.map(name => implicitly[Manifest[This]].erasure.getMethod(name).invoke(value));
+      val packed = implicitly[CanPack[Format]].pack(unpacked);
+      implicitly[TableRowWritable[Format]].write(out, packed);
+    }
+  }
+
+  private var _writable : CompanionWritable = null;
+  implicit def writable(implicit trw : TableRowWritable[Format], cp : CanPack[Format], cm : Manifest[This]) : TableRowWritable[This] = {
+    if (_writable == null) synchronized { _writable = new CompanionWritable(); }
+    _writable;
+  }
 }
