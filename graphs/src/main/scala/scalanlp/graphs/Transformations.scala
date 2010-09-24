@@ -19,23 +19,23 @@ package scalanlp.graphs
  * Provides views on graphs.
  * @author dlwh
  */
-trait Views {
+trait Transformations {
   def reverse[Node,Edge](g: Graph[Node,Edge])(implicit reverser: EdgeReverser[Edge]): Graph[Node,Edge] = new Graph[Node,Edge] {
     def edges = g.edges.map(reverser);
     def endpoints(e: Edge) = g.endpoints(reverser(e));
     def nodes = g.nodes;
     def edgesTouching(n: Node) = g.edgesTouching(n).map(reverser);
-    def neighbors(n: Node) = g.neighbors(n);
+    def successors(n: Node) = g.successors(n);
     def getEdge(n1: Node, n2: Node) = g.getEdge(n2,n1) map reverser;
   }
 
 
   def reverse[Node,Edge](g: Digraph[Node,Edge])(implicit reverser: EdgeReverser[Edge]):Digraph[Node,Edge] = new Digraph[Node,Edge] {
     def edges = g.edges.map(reverser);
-    def endpoints(e: Edge) = g.endpoints(e).swap;
+    override def endpoints(e: Edge) = g.endpoints(e).swap;
     def nodes = g.nodes;
     override def edgesTouching(n: Node) = g.edgesTouching(n).map(reverser);
-    def neighbors(n: Node) = g.neighbors(n);
+    def successors(n: Node) = g.successors(n);
     def getEdge(n1: Node, n2: Node) = g.getEdge(n2,n1) map reverser;
 
     def source(e: Edge) = g.sink(e);
