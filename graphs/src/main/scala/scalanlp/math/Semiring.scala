@@ -40,6 +40,9 @@ trait WLDSemiring[T] extends Semiring[T] {
 }
 
 object Semiring {
+
+  def apply[W:Semiring]() = implicitly[Semiring[W]];
+
   implicit val booleanSemiring = new Semiring[Boolean] {
     def plus(t1: Boolean, t2: Boolean) = t1 || t2;
     def times(t1:Boolean, t2: Boolean) = t1 && t2;
