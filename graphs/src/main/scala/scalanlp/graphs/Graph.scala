@@ -70,9 +70,6 @@ trait Digraph[Node,Edge] extends Graph[Node,Edge] {
   override def endpoints(e: Edge) = (source(e),sink(e));
 }
 
-trait Weighted[Edge,W] { this:(Graph[N,Edge] forSome {type N}) =>
-  def weight(e: Edge):W
-}
 
 object Graph {
   /* Constructs a graph from an edge list. */
@@ -102,7 +99,6 @@ object Digraph {
    * Constructs a graph from an adjacency list.
    */
   def fromAdjacencyList[N](adjacencyList: Map[N,Seq[N]]):Digraph[N,(N,N)] = {
-    val reversed: IndexedSeq[(N,N)] = (for( (n,adj) <- adjacencyList.iterator; m <- adj.iterator) yield (n,m)).toIndexedSeq;
     type Node = N;
     type Edge = (N,N);
     new Digraph[N,(N,N)] {
