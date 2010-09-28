@@ -103,6 +103,25 @@ object Semiring {
       val zero = Double.PositiveInfinity;
     }
   }
+
+  /**
+   * Provides access to the viterbi semiring. The implicit is segregated because it conflicts with numericIsSemiring
+   */
+  object Viterbi {
+    implicit val doubleIsViterbi:WLDSemiring[Double] = new WLDSemiring[Double] {
+      def plus(t1: Double, t2: Double) = t1 max t2;
+      def leftDivide(t1: Double, t2: Double) = t2 - t1;
+      def times(t1: Double, t2: Double) = t1 + t2;
+      override def closeTo(x: Double, y: Double) = {
+        if(x == y) true
+        else if(x == 0) math.abs(y)  < 1E-10;
+        else math.abs( (x-y)/x)  < 1E-8;
+      }
+      def closure(t: Double) = if(t <= 0.0) 0.0 else Double.NegativeInfinity;
+      val one = 0.0;
+      val zero = Double.NegativeInfinity;
+    }
+  }
   
   /**
    * Provides access to the logspace algebra. The implicit is segregated because it conflicts with numericIsSemiring
