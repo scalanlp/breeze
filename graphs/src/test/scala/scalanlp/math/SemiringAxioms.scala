@@ -76,6 +76,12 @@ class ProbabilitySemiringTest extends SemiringAxioms[Double] {
   def makeRing = Semiring.Probability.semiring;   
 }
 
+@RunWith(classOf[JUnitRunner])
+class ViterbiSemiringTest extends SemiringAxioms[Double] {
+  def arb = Arbitrary.arbDouble;
+  def makeRing = Semiring.Viterbi.doubleIsViterbi;
+}
+
 
 @RunWith(classOf[JUnitRunner])
 class TropicalSemiringTest extends SemiringAxioms[Double] {
