@@ -13,29 +13,25 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.stage.text;
+package scalanlp;
+package stage;
+package text;
 
+import scalanlp.serialization.TextSerialization;
 import scalanlp.collection.LazyIterable;
-import scalanlp.stage.{Parcel,Stage,Item};
-import scalanlp.stage.Stage._;
 
 import scalanlp.text.tokenize.Tokenizer;
-import scalanlp.serialization.TypedCompanion1;
 
 /**
  * Tokenizes the given input documents according to the given tokenizer.
  *
  * @author dramage
  */
-case class TokenizeWith(tokenizer : Tokenizer)
-extends Stage[LazyIterable[Item[String]],LazyIterable[Item[Iterable[String]]]] {
-  override def apply(parcel : Parcel[LazyIterable[Item[String]]]) : Parcel[LazyIterable[Item[Iterable[String]]]] =
-    Parcel(parcel.history + this, parcel.meta + this, parcel.data.map(_.map(tokenizer)));
+case class TokenizeWith[ID:Manifest:TextSerialization.Writable](tokenizer : Tokenizer)
+extends Stage[LazyIterable[Item[ID,String]],LazyIterable[Item[ID,Iterable[String]]]] {
+  override def apply(parcel : Parcel[LazyIterable[Item[ID,String]]]) : Parcel[LazyIterable[Item[ID,Iterable[String]]]] =
+    Parcel(parcel.history + this, parcel.meta + tokenizer, parcel.data.map(_.map(tokenizer)));
 
   override def toString =
-    scalanlp.serialization.TextSerialization.toString(this);
-}
-
-object TokenizeWith extends TypedCompanion1[Tokenizer,TokenizeWith] {
-  prepare();
+    "TokenizeWith(" + scalanlp.serialization.TextSerialization.toString(tokenizer) + ")";
 }

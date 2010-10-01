@@ -13,7 +13,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.stage;
+package scalanlp;
+package stage;
 
 /**
  * A pipeline consists of a series of stages that each operate on a

@@ -26,13 +26,13 @@ import scalanlp.collection.LazyIterable;
  *
  * @author dramage
  */
-abstract class Mapper[I,O](implicit mO : Manifest[LazyIterable[Item[O]]])
-extends Stage[LazyIterable[Item[I]],LazyIterable[Item[O]]] {
+abstract class Mapper[ID,I,O](implicit mO : Manifest[LazyIterable[Item[ID,O]]])
+extends Stage[LazyIterable[Item[ID,I]],LazyIterable[Item[ID,O]]] {
   /** Transforms the input data without using metadata. */
   def map(row : I) : O;
 
   /** Calls map. */
-  override def apply(parcel : Parcel[LazyIterable[Item[I]]]) : Parcel[LazyIterable[Item[O]]] =
+  override def apply(parcel : Parcel[LazyIterable[Item[ID,I]]]) : Parcel[LazyIterable[Item[ID,O]]] =
     Parcel(parcel.history + this, parcel.meta, parcel.data.map(_.map(map)));
 }
 
@@ -42,7 +42,7 @@ extends Stage[LazyIterable[Item[I]],LazyIterable[Item[O]]] {
  * @author dramage
  */
 object Mapper {
-  def apply[I,O](f : I => O)(implicit mO : Manifest[O]) = new Mapper[I,O] {
+  def apply[ID:Manifest,I,O:Manifest](f : I => O) = new Mapper[ID,I,O] {
     override def map(row : I) : O = f(row);
     override def toString = "Mapper("+f.toString+")";
   }

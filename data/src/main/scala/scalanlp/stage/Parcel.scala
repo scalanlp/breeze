@@ -77,70 +77,7 @@ object Parcel {
 
   def apply[D](origin : History, data : D)(implicit mD : Manifest[D]) : Parcel[D] =
     new Parcel(origin, DHMap(), data);
-}
 
-
-/**
- * Object describing the history of a compuation in the pipeline.
- * See concrete implementations in companion object.
- * 
- * @author dramage
- */
-@serializable
-trait History extends Signature {
-  def + (stage : Stage[_,_]) =
-    History.Continuation(this, stage);
-  
-  def description : String =
-    toString;
-}
-
-/**
- * Companion object for History with concrete instantiations.
- * 
- * @author dramage
- */
-object History {
-  private val sep = System.getProperty("line.separator");
-  private[stage] def prefixLines(content : String, prefix : String) =
-    prefix + content.replaceAll(sep, sep+prefix);
-  
-  /**
-   * A named origin of a computation.
-   * 
-   * @author dramage
-   */
-  case class Origin(name : String) extends History {
-    override def toString =
-      name;
-  }
-
-  /**
-   * The continuation of a chain of computation.
-   * 
-   * @author dramage
-   */
-  case class Continuation(parent : History, stage : Stage[_,_]) extends History {
-    override def toString =
-      parent.toString + " ~> " + stage;
-    
-    override def description =
-      parent.description + " ~> " + sep + "  " + stage; 
-  }
-  
-  /**
-   * A compound history with a particular name and a given set of
-   * contributing histories.
-   * 
-   * @author dramage
-   */
-  case class Compound(name : String, arguments : Seq[History]) extends History {
-    override def toString =
-      name + "(" + arguments.mkString(", ") + ")";
-    
-    override def description =
-      name + " " + arguments.map(_.signature).mkString(" ") +
-      ( for (arg <- arguments) yield prefixLines(arg.description, "  ")
-      ).mkString(sep);
-  }
+  implicit def data[D](parcel : Parcel[D]) =
+    parcel.data;
 }

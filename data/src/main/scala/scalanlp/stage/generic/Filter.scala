@@ -25,8 +25,8 @@ import scalanlp.collection.LazyIterable;
  * and filter(x) is false, replaces that element with None.  Otherwise it
  * reutrns Some(x) unchanged.
  */
-abstract class Filter[I](implicit mI : Manifest[LazyIterable[Item[I]]])
-extends Stage[LazyIterable[Item[I]],LazyIterable[Item[I]]] {
+abstract class Filter[ID,I](implicit mI : Manifest[LazyIterable[Item[ID,I]]])
+extends Stage[LazyIterable[Item[ID,I]],LazyIterable[Item[ID,I]]] {
   /**
    * Filters the input data without using metadata.  If the return value is
    * true, keeps the record.  If false, filters it.
@@ -34,7 +34,7 @@ extends Stage[LazyIterable[Item[I]],LazyIterable[Item[I]]] {
   def filter(row : I) : Boolean;
 
   /** Calls filter. */
-  override def apply(parcel : Parcel[LazyIterable[Item[I]]])  : Parcel[LazyIterable[Item[I]]] =
+  override def apply(parcel : Parcel[LazyIterable[Item[ID,I]]])  : Parcel[LazyIterable[Item[ID,I]]] =
     Parcel(parcel.history + this, parcel.meta, parcel.data.filter(item => filter(item.value)));
 }
 
@@ -44,7 +44,7 @@ extends Stage[LazyIterable[Item[I]],LazyIterable[Item[I]]] {
  * @author dramage
  */
 object Filter {
-  def apply[I](f : I => Boolean)(implicit mI : Manifest[I]) = new Filter[I] {
+  def apply[ID:Manifest,I:Manifest](f : I => Boolean) = new Filter[ID,I] {
     override def filter(row : I) = f(row);
     override def toString = "Filter("+f.toString+")";
   }
