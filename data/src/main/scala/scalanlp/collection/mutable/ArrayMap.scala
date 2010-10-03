@@ -23,7 +23,7 @@ import scala.collection.generic._;
 /**
 * Wraps an ArrayBuffer with a Map. Note the odd behavior for -=
 * 
-* The key must be positive.
+* The key must be nonnegative
 *
 * Chances are you want to change defValue, which is used to
 * fill in blanks if you don't add things consecutively. Otherwise you
@@ -31,11 +31,10 @@ import scala.collection.generic._;
 *
 * @author dlwh
 */
-class ArrayMap[@specialized V](private val arr: ArrayBuffer[V]) extends scala.collection.mutable.Map[Int,V]
+class ArrayMap[@specialized V](defValue: =>V,  private val arr: ArrayBuffer[V]) extends scala.collection.mutable.Map[Int,V]
     with MapLike[Int,V,ArrayMap[V]] {
-  def this() = this(new ArrayBuffer[V]())
+  def this(defValue: =>V = ArrayMap.error) = this(defValue, new ArrayBuffer[V]())
   override def default(i: Int): V = defValue;
-  def defValue:V = throw new NoSuchElementException("Key not found, and no default value");
   override def apply(i: Int) = {
     if(i < arr.length) {
      arr(i)
@@ -65,7 +64,7 @@ class ArrayMap[@specialized V](private val arr: ArrayBuffer[V]) extends scala.co
     else arr(i) = v; 
   }
 
-  override def empty = new ArrayMap();
+  override def empty = new ArrayMap(defValue);
 
   /**
   * Note that removing an element in the array simply replaces it with the default(i)
@@ -81,4 +80,8 @@ class ArrayMap[@specialized V](private val arr: ArrayBuffer[V]) extends scala.co
    * Returns the array we're holding on to.
    */
   def innerArray(implicit w: ClassManifest[V]):Array[V] =  arr.toArray;
+}
+
+object ArrayMap {
+  def error = throw new NoSuchElementException("Key not found, and no default value");
 }
