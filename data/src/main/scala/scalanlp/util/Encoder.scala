@@ -87,6 +87,17 @@ trait Encoder[T] {
   }
 
   /**
+   * Encodes a DoubleCounter as a SparseVector. All elements in the counter must be in the index.
+   */
+  def encodeSparse(c: DoubleCounter[T]):SparseVector = {
+    val vec = mkSparseVector(c.default);
+    for( (k,v) <- c) {
+      vec(index(k)) = v;
+    }
+    vec
+  }
+
+  /**
    * Encodes a DoubleCounter as a Vector. All elements in the counter must be in the index.
    */
   def encode(c: DoubleCounter[T]):Vector = {
