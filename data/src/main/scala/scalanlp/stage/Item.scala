@@ -13,9 +13,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalanlp.stage;
-
-import scalanlp.collection.LazyIterable;
+package scalanlp;
+package stage;
 
 /**
  * An item represents a single item corresponding to the
@@ -26,7 +25,7 @@ import scalanlp.collection.LazyIterable;
  *
  * @author dramage
  */
-case class Item[+V](number : Int, value : V) {
+case class Item[ID,+V](id : ID, value : V) {
   def map[O](f : V => O) =
-    Item[O](number, f(value));
+    Item[ID,O](id, f(value));
 }

@@ -25,8 +25,8 @@ import generic.Filter;
  * 
  * @author dramage
  */
-case class DocumentMinimumLengthFilter(minTokens : Int)
-extends Filter[Iterable[String]] {
+case class DocumentMinimumLengthFilter[ID:Manifest](minTokens : Int)
+extends Filter[ID,Iterable[String]] {
   override def filter(doc : Iterable[String]) =
     doc.size >= minTokens;
 

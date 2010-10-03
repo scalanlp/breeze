@@ -125,15 +125,24 @@ object TermCounts {
 }
 
 /**
+ * Stop list of terms filtered out from the text.
+ *
+ * @author dramage
+ */
+case class TermStopList(stops : List[String]) extends Iterable[String] {
+  override def iterator = stops.iterator;
+}
+
+/**
  * Computes basic statistics from a sequence of documents.
  *
  * @author dramage
  */
-case class TermCounter() extends Stage[LazyIterable[Item[Iterable[String]]],LazyIterable[Item[Iterable[String]]]] {
-  override def apply(parcel : Parcel[LazyIterable[Item[Iterable[String]]]]) : Parcel[LazyIterable[Item[Iterable[String]]]] = {
+case class TermCounter[ID:Manifest]() extends Stage[LazyIterable[Item[ID,Iterable[String]]],LazyIterable[Item[ID,Iterable[String]]]] {
+  override def apply(parcel : Parcel[LazyIterable[Item[ID,Iterable[String]]]]) : Parcel[LazyIterable[Item[ID,Iterable[String]]]] = {
     val cache : Option[File] = {
       if (parcel.meta.contains[File]) {
-        Some(new File(parcel.meta[File].getPath + ".cache." + parcel.history.signature + ".gz"));
+        Some(new File(parcel.meta[File].getPath + ".term-counts.cache." + parcel.history.signature + ".gz"));
       } else {
         None;
       }
@@ -153,15 +162,15 @@ case class TermCounter() extends Stage[LazyIterable[Item[Iterable[String]]],Lazy
  * 
  * @author dramage
  */
-case class TermMinimumDocumentCountFilter(minDF : Int)
-extends Stage[LazyIterable[Item[Iterable[String]]],LazyIterable[Item[Iterable[String]]]] {
-  override def apply(parcel : Parcel[LazyIterable[Item[Iterable[String]]]]) : Parcel[LazyIterable[Item[Iterable[String]]]] = {
+case class TermMinimumDocumentCountFilter[ID:Manifest](minDF : Int)
+extends Stage[LazyIterable[Item[ID,Iterable[String]]],LazyIterable[Item[ID,Iterable[String]]]] {
+  override def apply(parcel : Parcel[LazyIterable[Item[ID,Iterable[String]]]]) : Parcel[LazyIterable[Item[ID,Iterable[String]]]] = {
     parcel.meta.require[TermCounts]("TermCounter must be run before TermMinimumDocumentCountFilter");
     val tc = parcel.meta[TermCounts];
 
     Parcel(parcel.history + this,
       parcel.meta + tc.filterDF(_ >= minDF),
-      parcel.data.map((doc : Item[Iterable[String]]) => doc.map(_.filter(term => tc.getDF(term) >= minDF))));
+      parcel.data.map((doc : Item[ID,Iterable[String]]) => doc.map(_.filter(term => tc.getDF(term) >= minDF))));
   }
 
   override def toString =
@@ -173,19 +182,19 @@ extends Stage[LazyIterable[Item[Iterable[String]]],LazyIterable[Item[Iterable[St
  * 
  * @author dramage
  */
-case class TermStopListFilter(stops : List[String])
-extends Stage[LazyIterable[Item[Iterable[String]]],LazyIterable[Item[Iterable[String]]]] {
-  override def apply(parcel : Parcel[LazyIterable[Item[Iterable[String]]]]) : Parcel[LazyIterable[Item[Iterable[String]]]] = {
+case class TermStopListFilter[ID:Manifest](stops : List[String])
+extends Stage[LazyIterable[Item[ID,Iterable[String]]],LazyIterable[Item[ID,Iterable[String]]]] {
+  override def apply(parcel : Parcel[LazyIterable[Item[ID,Iterable[String]]]]) : Parcel[LazyIterable[Item[ID,Iterable[String]]]] = {
     val newMeta = {
       if (parcel.meta.contains[TermCounts]) {
-        parcel.meta + parcel.meta[TermCounts].filterIndex(term => !stops.contains(term)) + this
+        parcel.meta + parcel.meta[TermCounts].filterIndex(term => !stops.contains(term)) + TermStopList(stops)
       } else {
         parcel.meta + this;
       }
     }
 
     Parcel(parcel.history + this, newMeta,
-      parcel.data.map((doc : Item[Iterable[String]]) => (doc.map(_.filter(term => !stops.contains(term))))));
+      parcel.data.map((doc : Item[ID,Iterable[String]]) => (doc.map(_.filter(term => !stops.contains(term))))));
   }
 
   override def toString =
@@ -197,17 +206,17 @@ extends Stage[LazyIterable[Item[Iterable[String]]],LazyIterable[Item[Iterable[St
  * 
  * @author dramage
  */
-case class TermDynamicStopListFilter(numTerms : Int)
-extends Stage[LazyIterable[Item[Iterable[String]]],LazyIterable[Item[Iterable[String]]]] {
-  override def apply(parcel : Parcel[LazyIterable[Item[Iterable[String]]]]) : Parcel[LazyIterable[Item[Iterable[String]]]] = {
+case class TermDynamicStopListFilter[ID:Manifest](numTerms : Int)
+extends Stage[LazyIterable[Item[ID,Iterable[String]]],LazyIterable[Item[ID,Iterable[String]]]] {
+  override def apply(parcel : Parcel[LazyIterable[Item[ID,Iterable[String]]]]) : Parcel[LazyIterable[Item[ID,Iterable[String]]]] = {
     parcel.meta.require[TermCounts]("TermCounter must be run before TermMinimumDocumentCountFilter");
 
     val tc = parcel.meta[TermCounts];
     val stops = TopK(numTerms, tc.index, tc.getTF _).toList;
 
     Parcel(parcel.history + this,
-           parcel.meta + tc.filterIndex(term => !stops.contains(term)) + TermStopListFilter(stops),
-           parcel.data.map((doc : Item[Iterable[String]]) => (doc.map(_.filter(term => !stops.contains(term))))));
+           parcel.meta + tc.filterIndex(term => !stops.contains(term)) + TermStopList(stops),
+           parcel.data.map((doc : Item[ID,Iterable[String]]) => (doc.map(_.filter(term => !stops.contains(term))))));
   }
 
   override def toString =
