@@ -35,8 +35,7 @@ class SparseArray[@specialized T:ClassManifest]
   private var data = new Array[T](initial);
   private var index = new Array[Int](initial);
 
-  // if we do it this way it's thread safe.
-  private def lastIndex = if(lastOffset < 0) lastOffset else index(lastOffset);
+  private var lastIndex = -1;
   private var lastOffset = -1;
   def defaultValue = default;
   final var used : Int = 0;
@@ -86,6 +85,7 @@ class SparseArray[@specialized T:ClassManifest]
   /** Records that the given index was found at this.index(offset). */
   final private def found(index : Int, offset : Int) : Int = {
     lastOffset = offset;
+    lastIndex = index;
     return offset;
   }
 
@@ -162,13 +162,6 @@ class SparseArray[@specialized T:ClassManifest]
       val x = default;
       update(i,x);
       x
-    }
-  }
-
-  def getOrElse[U>:T](i: Int, u: =>U): U = {
-    val offset = findOffset(i);
-    if (offset >= 0) data(offset) else {
-      u
     }
   }
 
@@ -289,6 +282,7 @@ class SparseArray[@specialized T:ClassManifest]
     index = inIndex;
     used = inUsed;
     lastOffset = -1;
+    lastIndex = -1;
   }
 
   override def hashCode = {
