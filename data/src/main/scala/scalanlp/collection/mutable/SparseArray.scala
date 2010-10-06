@@ -165,6 +165,11 @@ class SparseArray[@specialized T:ClassManifest]
     }
   }
 
+  def getOrElse(i: Int, t: =>T):T = {
+    val offset = findOffset(i);
+    if(offset >= 0) data(offset) else t;
+  }
+
   /**
    * Sets the given value at the given index if the value is not
    * equal to the current default.  The data and
