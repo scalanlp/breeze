@@ -63,7 +63,7 @@ final class TriangularArray[T:ClassManifest](dim: Int, fill: (Int,Int)=>T) { out
     val buffer = new StringBuilder();
     for ( r <- 0 until dim )  {
       val columns = for(c <- 0 until dim) yield {
-        if(c < r) "----" else apply(r,c).toString
+        if(c <= r) "----" else apply(r,c).toString
       }
       buffer ++= columns.mkString("[",", ","]\n");
     }
