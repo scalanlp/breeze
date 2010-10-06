@@ -52,6 +52,7 @@ trait Configuration {
     val dynamicClass:Class[_] = recursiveGetProperty(prefix).map {
       Class.forName(_)
     } getOrElse (staticManifest.erasure);
+    if(dynamicClass.getConstructors.isEmpty) throw new NoParameterException("Could not find a constructor for type " + dynamicClass.getName, prefix);
 
     val staticTypeVars:Seq[String] = staticManifest.erasure.getTypeParameters.map(_.toString);
     val staticTypeVals:Seq[OptManifest[_]] = staticManifest.typeArguments;
@@ -79,7 +80,7 @@ trait Configuration {
     // iterate up the inheritance chain
     def superTypes = (
       Iterator.iterate(dynamicClass.asInstanceOf[Class[AnyRef]])(_.getSuperclass.asInstanceOf[Class[AnyRef]])
-      .takeWhile(staticClass.isAssignableFrom(_))
+      .takeWhile(clss => clss != null && staticClass.isAssignableFrom(clss))
      );
     val highestType = superTypes.reduceLeft( (a,b) => b);
     val dynamicToStaticMapping: Map[String,OptManifest[_]] = superTypes.sliding(2,1).foldRight(knownTypes) { (classPair,knownTypes) =>
@@ -98,7 +99,7 @@ trait Configuration {
           x.getRawType == staticClass
         case x:Class[_] => x == staticClass
         case _ => false
-      } get;
+      } getOrElse(highestType)
       extendMapping(highestType,staticClass,matchedIFace,dynamicToStaticMapping);
     }
   }
