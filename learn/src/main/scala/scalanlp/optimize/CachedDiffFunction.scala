@@ -1,12 +1,14 @@
 package scalanlp.optimize
 
 import scalala.tensor.Tensor1
+import scalala.tensor.operators.TensorSelfOp
+import scalala.tensor.operators.TensorShapes._;
 
 /**
  * 
  * @author dlwh
  */
-class CachedDiffFunction[K,T<:Tensor1[K]](obj: DiffFunction[K,T]) extends DiffFunction[K,T] {
+class CachedDiffFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](obj: DiffFunction[K,T]) extends DiffFunction[K,T] {
   /** calculates the gradient at a point */
   override def gradientAt(x: T): T = calculate(x)._2;
   /** calculates the value at a point */
@@ -19,7 +21,7 @@ class CachedDiffFunction[K,T<:Tensor1[K]](obj: DiffFunction[K,T]) extends DiffFu
   def calculate(x:T):(Double,T) = {
     if(x != lastX) {
       lastGradVal = obj.calculate(x);
-      lastX = x;
+      lastX = x.copy;
     }
 
     lastGradVal;
