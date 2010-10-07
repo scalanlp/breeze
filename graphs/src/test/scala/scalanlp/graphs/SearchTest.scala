@@ -60,6 +60,33 @@ class SearchTest extends FunSuite with Checkers {
     assert(trav.sameElements(Seq('A,'D,'E,'B,'F,'H)),trav);
   }
 
+  // from http://www.cs.utah.edu/~hal/courses/2009S_AI/Walkthrough/UCS/ucs.html
+  test("A* traversal with no heuristic") {
+    val g = simpleWeightedDigraph;
+    import scalanlp.math.Semiring.Tropical._;
+    val trav = astar(g, (n:Symbol) => 0.0, 'A).takeWhile(_ != 'G).toSeq;
+    assert(trav.sameElements(Seq('A,'D,'E,'B,'F,'H)),trav);
+  }
+
+  // from http://www.cs.utah.edu/~hal/courses/2009S_AI/Walkthrough/UCS/ucs.html
+  test("A* traversal with enough heuristic") {
+    val g = simpleWeightedDigraph;
+    def heuristic(n: Symbol) = n match {
+      case 'A => 11.0
+      case 'B => 6.0
+      case 'C => 1.0
+      case 'D => 9.0
+      case 'E => 6.0
+      case 'F => 3.0
+      case 'G => 0.0
+      case 'H => 4.0
+      case _ => Double.PositiveInfinity;
+    }
+    import scalanlp.math.Semiring.Tropical._;
+    val trav = astar(g, heuristic _, 'A).takeWhile(_ != 'G).toSeq;
+    assert(trav.sameElements(Seq('A,'D,'E,'F)),trav);
+  }
+
   def simpleWeightedDigraph =  WeightedDigraphs.fromEdgeList(
     ('A,'B,7.),
     ('B,'C,5.),
