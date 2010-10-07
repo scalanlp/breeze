@@ -51,4 +51,23 @@ class SearchTest extends FunSuite with Checkers {
     assert( !dfs(g,'A).find(_ == 'D).isEmpty);
     assert( dfs(g,'B).find(_ == 'D).isEmpty);
   }
+
+  // from http://www.cs.utah.edu/~hal/courses/2009S_AI/Walkthrough/UCS/ucs.html
+  test("UCS traversal") {
+    val g = simpleWeightedDigraph;
+    import scalanlp.math.Semiring.Tropical._;
+    val trav = ucs(g,'A).takeWhile(_ != 'G).toSeq;
+    assert(trav.sameElements(Seq('A,'D,'E,'B,'F,'H)),trav);
+  }
+
+  def simpleWeightedDigraph =  WeightedDigraphs.fromEdgeList(
+    ('A,'B,7.),
+    ('B,'C,5.),
+    ('C,'G,1.),
+    ('A,'D,2.),
+    ('D,'E,3.),
+    ('E,'F,3.),
+    ('F,'G,3.),
+    ('E,'H,4.0)
+  );
 }

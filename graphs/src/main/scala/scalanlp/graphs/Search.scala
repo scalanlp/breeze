@@ -15,11 +15,12 @@ trait Search {
    *
    * Use dfs(g,source).find(goalTest) to find a node, dfs(g,source).foreach(f) to just evaluate.
    */
-  def dfs[N,E](g: Graph[N,E], source: N*):Iterable[N] = new Iterable[N] {
+  def dfs[N,E](g: Graph[N,E], source: N, sources: N*):Iterable[N] = new Iterable[N] {
     def iterator:Iterator[N] = new Iterator[N] {
       val visited = collection.mutable.Set[N]();
       val stack = new collection.mutable.Stack[N]();
-      stack.pushAll(source);
+      stack.push(source);
+      stack.pushAll(sources)
 
       override def hasNext = !stack.isEmpty;
 
@@ -40,11 +41,12 @@ trait Search {
    *
    * Use bfs(g,source).find(goalTest) to find a node, bfs(g,source).foreach(f) to just evaluate.
    */
-  def bfs[N,E](g: Graph[N,E], source: N*): Iterable[N] = new Iterable[N] {
+  def bfs[N,E](g: Graph[N,E], source: N, sources: N*): Iterable[N] = new Iterable[N] {
     def iterator:Iterator[N] = new Iterator[N] {
       val visited = collection.mutable.Set[N]();
       val queue = new collection.mutable.Queue[N]();
-      queue ++= source;
+      queue += source;
+      queue ++= sources;
 
       override def hasNext = !queue.isEmpty;
 
@@ -68,12 +70,12 @@ trait Search {
    * If you want an actual traversal of all nodes including the full distance
    * costs for non-idempotent semirings, see Distance#SingleSourceShortestPaths
    */
-  def ucs[N,E,W:Ordering:Semiring](g: WeightedGraph[N,E,W], source: N*): Iterable[N] = new Iterable[N] {
+  def ucs[N,E,W:Ordering:Semiring](g: WeightedGraph[N,E,W], source: N, sources: N*): Iterable[N] = new Iterable[N] {
     def iterator:Iterator[N] = new Iterator[N] {
       val visited = collection.mutable.Set[N]();
       val queue = new collection.mutable.PriorityQueue[(N,W)]()(Ordering[W].on((pair:(N,W)) => pair._2).reverse);
-      for( src <- source) {
-        queue += (src -> Semiring[W].zero);
+      for( src <- Iterator.single(source) ++ sources.iterator) {
+        queue += (src -> Semiring[W].one);
       }
 
       override def hasNext = !queue.isEmpty;
