@@ -116,9 +116,15 @@ object Distance {
     import ring._;
     val distances = neighborDistances(graph)
 
-    for {
-      k <- graph.nodes
-    } {
+    val reverseReachable = new collection.mutable.HashMap[N,collection.mutable.HashSet[N]] {
+      override def default(k: N) = getOrElseUpdate(k,new HashSet());
+    }
+
+    for( (i,reachable) <- distances; j <- reachable.keys) {
+      reverseReachable(j) += i;
+    }
+
+    for (k <- graph.nodes) {
       // cache some commonly used values
       val dkk = distances(k)(k);
       val dkkStar = closure(dkk);
@@ -126,17 +132,20 @@ object Distance {
       for {
         (j,dkj) <- distances(k).iterator
         if j != k && !closeTo(dkj,zero)
-        i <- graph.nodes if i != k
+        i <- reverseReachable(k) if i != k
         dik = distances(i)(k)
         if !closeTo(dik,zero)
       } {
         val current = distances(i)(j);
         val pathsThroughK = times(dik,times(dkkStar,dkj));
         distances(i)(j) = maybe_+=(current,pathsThroughK)._1;
+        reverseReachable(j) += i;
       }
 
-      for (i <- graph.nodes if i != k) {
-        distances(k)(i) = times(dkkStar,distances(k)(i));
+      for ( (i,v) <- distances(k) if i != k) {
+        distances(k)(i) = times(dkkStar,v);
+      }
+      for( i <- reverseReachable(k) if i != k) {
         distances(i)(k) = times(distances(i)(k),dkkStar);
       }
       distances(k)(k) = dkkStar;
