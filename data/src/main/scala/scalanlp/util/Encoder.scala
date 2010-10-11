@@ -19,10 +19,10 @@ package scalanlp.util
 
 
 import scalala.tensor.dense.DenseVector
-import scalala.tensor.sparse.SparseVector
 import scalanlp.collection.mutable.SparseArray
-import scalala.tensor.counters.Counters._;
+import scalala.tensor.counters.Counters._
 import scalala.tensor._;
+import scalala.tensor.sparse.{SparseHashVector, SparseVector};
 import scalala.tensor.adaptive._;
 import java.util.Arrays
 import scalala.Scalala._;
@@ -56,10 +56,19 @@ trait Encoder[T] {
   }
 
   /**
-   * Creates a DenseVector with the index's size
+   * Creates a SparseVector with the index's size
    */
   final def mkSparseVector(default: Double=0.0):SparseVector = {
     val vec = new SparseVector(index.size)
+    vec.default = default;
+    vec;
+  }
+
+  /**
+   * Creates a SparseHashVector with the index's size
+   */
+  final def mkSparseHashVector(default: Double=0.0):SparseHashVector = {
+    val vec = new SparseHashVector(index.size)
     vec.default = default;
     vec;
   }
