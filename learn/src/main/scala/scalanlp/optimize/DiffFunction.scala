@@ -47,7 +47,7 @@ object DiffFunction {
     }
 
     override def valueAt(x:T) = {
-      var v = d.valueAt(x);
+      val v = d.valueAt(x);
       v + myValueAt(x);
     }
 

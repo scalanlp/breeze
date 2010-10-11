@@ -35,8 +35,7 @@ class SparseArray[@specialized T:ClassManifest]
   private var data = new Array[T](initial);
   private var index = new Array[Int](initial);
 
-  private var lastIndex = -1;
-  private var lastOffset = -1;
+  @volatile private var lastOffset = -1;
   def defaultValue = default;
   final var used : Int = 0;
 
@@ -85,7 +84,6 @@ class SparseArray[@specialized T:ClassManifest]
   /** Records that the given index was found at this.index(offset). */
   final private def found(index : Int, offset : Int) : Int = {
     lastOffset = offset;
-    lastIndex = index;
     return offset;
   }
 
@@ -100,6 +98,9 @@ class SparseArray[@specialized T:ClassManifest]
     if (i >= length)
       throw new IndexOutOfBoundsException("index >= length (" + index + " >= " + length + ")");
 
+    val lastOffset = this.lastOffset;
+    val lastIndex = if(lastOffset >= 0) index(lastOffset) else -1;
+
     if (i == lastIndex) {
       // previous element; don't need to update lastOffset
       return lastOffset;
@@ -112,7 +113,7 @@ class SparseArray[@specialized T:ClassManifest]
       var end = used - 1;
 
       // narrow the search if we have a previous reference
-      if (lastIndex >= 0 && lastOffset >= 0) {
+      if (lastIndex >= 0) {
         if (i < lastIndex) {
           // in range preceding last request
           end = lastOffset;
@@ -159,15 +160,22 @@ class SparseArray[@specialized T:ClassManifest]
   def apply(i : Int) : T = {
     val offset = findOffset(i);
     if (offset >= 0) data(offset) else {
-      val x = default;
-      update(i,x);
-      x
+      defaultValue
     }
   }
 
   def getOrElse(i: Int, t: =>T):T = {
     val offset = findOffset(i);
     if(offset >= 0) data(offset) else t;
+  }
+
+  def getOrElseUpdate(i: Int, t: =>T):T = {
+    val offset = findOffset(i);
+    if(offset >= 0) data(offset) else {
+      val res = t;
+      update(i,res);
+      res
+    }
   }
 
   /**
@@ -287,7 +295,6 @@ class SparseArray[@specialized T:ClassManifest]
     index = inIndex;
     used = inUsed;
     lastOffset = -1;
-    lastIndex = -1;
   }
 
   override def hashCode = {
