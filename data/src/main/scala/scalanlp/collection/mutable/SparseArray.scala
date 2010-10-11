@@ -178,6 +178,8 @@ class SparseArray[@specialized T:ClassManifest]
     }
   }
 
+  def getOrElseUpdate(i: Int):T =  getOrElseUpdate(i,default);
+
   /**
    * Sets the given value at the given index if the value is not
    * equal to the current default.  The data and
