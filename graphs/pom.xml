@@ -12,7 +12,7 @@
   <version>0.1-SNAPSHOT</version>
   <url>http://www.scalanlp.org</url>
   <properties>
-    <scala.version>2.8.0</scala.version>
+    <scala.version>2.8.1.RC2</scala.version>
   </properties>
   <inceptionYear>2008</inceptionYear>
   <mailingLists>
@@ -182,7 +182,7 @@
     </dependency>
     <dependency>
       <groupId>org.scala-tools.testing</groupId>
-      <artifactId>scalacheck_${scala.version}</artifactId>
+      <artifactId>scalacheck_2.8.0</artifactId>
       <version>1.7</version>
       <scope>test</scope>
     </dependency>
