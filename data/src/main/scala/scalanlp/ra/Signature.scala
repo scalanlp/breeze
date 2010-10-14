@@ -66,4 +66,19 @@ object HasSignature extends LowPriorityHasSignature {
   implicit object IntHasSignature extends HasSignature[Int] {
     override def signatureFor(x : Int) = x.toString;
   }
+
+  implicit def arrayHasSignature[V:HasSignature]()
+  : HasSignature[Array[V]] = new HasSignature[Array[V]] {
+    override def signatureFor(x : Array[V]) = {
+      var i = 0;
+      var hash = 0l;
+      while (i < x.length) {
+        hash *= 37;
+        hash += implicitly[HasSignature[V]].signatureFor(x(i)).hashCode;
+        i += 1;
+      }
+      val hex = hash.toHexString;
+      "0"*(8-hex.length)+hex;
+    };
+  }
 }
