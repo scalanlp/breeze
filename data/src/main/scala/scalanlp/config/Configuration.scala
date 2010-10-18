@@ -78,10 +78,14 @@ trait Configuration {
     val dynamicParams = dynamicClass.getTypeParameters;
     
     // iterate up the inheritance chain
-    def superTypes = (
+    def superTypes = if(dynamicClass.isInterface) (
+     dynamicClass.getInterfaces.iterator
+    ) else /* class*/ (
       Iterator.iterate(dynamicClass.asInstanceOf[Class[AnyRef]])(_.getSuperclass.asInstanceOf[Class[AnyRef]])
       .takeWhile(clss => clss != null && staticClass.isAssignableFrom(clss))
-     );
+    );
+    println(dynamicClass + " " + superTypes.toList + " " + Iterator.iterate(dynamicClass.asInstanceOf[Class[AnyRef]])(_.getSuperclass.asInstanceOf[Class[AnyRef]]).takeWhile(_ != null).toList);
+    println(staticClass + " " + superTypes.toList + " " + Iterator.iterate(dynamicClass.asInstanceOf[Class[AnyRef]])(_.getSuperclass.asInstanceOf[Class[AnyRef]]).takeWhile(_ != null).toList.map(staticClass.isAssignableFrom _));
     val highestType = superTypes.reduceLeft( (a,b) => b);
     val dynamicToStaticMapping: Map[String,OptManifest[_]] = superTypes.sliding(2,1).foldRight(knownTypes) { (classPair,knownTypes) =>
       if(classPair.length < 2) knownTypes
@@ -154,7 +158,8 @@ trait Configuration {
   case _ => throw new ConfigurationException("Don't know how to deal with " + tpe + " yet! Add an ArgumentParser." + tpe.getClass.getName);
   }
 
-  private def recursiveGetProperty(prefix: String):Option[String] = getProperty(prefix) match {
+  private def recursiveGetProperty(prefix: String):Option[String] = if(prefix.isEmpty) None
+    else getProperty(prefix) match {
     case opt@Some(p) => opt
     case None =>
       var next = prefix.dropWhile('.'!=);
