@@ -16,8 +16,10 @@ package scalanlp.optimize
  limitations under the License. 
 */
 
-import scalanlp.util._;
-import scalanlp.util.Log._;
+import scalanlp.util._
+import scalanlp.util.Log._
+import scalanlp.optimize.QuasiNewtonMinimizer.{NaNHistory, StepSizeUnderflow}
+
 import java.util.Arrays;
 import scala.collection.mutable.ArrayBuffer;
 import scalala.Scalala._;
@@ -44,69 +46,56 @@ import scalala.tensor.dense._;
  */
 class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: Int)
   (implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col])
-  extends Minimizer[T,DiffFunction[K,T]] with GradientNormConvergence[K,T] with Logged {
+  extends QuasiNewtonMinimizer[K,T] with GradientNormConvergence[K,T] with Logged {
   require(m > 0);
 
-  import LBFGS._;
+  case class History(private[LBFGS] val memStep: IndexedSeq[T] = IndexedSeq.empty,
+                     private[LBFGS] val memGradDelta: IndexedSeq[T] = IndexedSeq.empty,
+                     private[LBFGS] val memRho: IndexedSeq[Double] = IndexedSeq.empty);
 
-  
-  def minimize(f: DiffFunction[K,T], init: T):T = {
-    val steps = iterations(f,init);
-    val convSteps = for( cur@State(x,v,grad,iter,memStep,memGradDelta,memRho)  <- steps) yield {
-      log(INFO)("Iteration: " + iter);
-      log(INFO)("Current v:" + v);
-      log(INFO)("Current grad norm:" + norm(grad,2));
-      (cur,checkConvergence(v,grad));
+
+  protected def initialHistory(grad: T):History = new History();
+  protected def chooseDescentDirection(grad: T, state: State):T = {
+    val memStep = state.history.memStep;
+    val memGradDelta = state.history.memGradDelta;
+    val memRho = state.history.memRho;
+    val diag = if(memStep.size > 0) {
+      computeDiag(state.iter,grad,memStep.last,memGradDelta.last);
+    } else {
+      val ones : T = grad.like;
+      ones += 1;
+      ones
     }
 
-    convSteps.dropWhile(state => !state._2 && state._1.iter < maxIter).next._1.x;
-  }
+    val dir = grad.copy;
+    val as = new Array[Double](m);
 
-  case class State private[LBFGS] (val x: T, val value: Double, val grad: T, val iter: Int = 0,
-                       private[LBFGS] val memStep: IndexedSeq[T] = IndexedSeq.empty,
-                       private[LBFGS] val memGradDelta: IndexedSeq[T] = IndexedSeq.empty,
-                       private[LBFGS] val memRho: IndexedSeq[Double] = IndexedSeq.empty
-                       ) {
-  }
-
-
-  def iterations(f: DiffFunction[K,T],init: T): Iterator[State] = Iterator.iterate{
-    val (v,grad) = f.calculate(init);
-    new State(init,v,grad);
-  } { state =>
-    val n = init.domain.size; // number of parameters
-    
-    val x : T = state.x.copy;
-
-    val grad = state.grad;
-    val v = state.value;
-    val iter = state.iter;
-
-    try {
-      val diag = if(state.memStep.size > 0) {
-        computeDiag(iter,grad,state.memStep.last,state.memGradDelta.last);
-      } else {
-        val ones : T = grad.like;
-        ones += 1;
-        ones
+    for(i <- (memStep.length-1) to 0 by -1) {
+      as(i) = (memStep(i) dot dir)/memRho(i);
+      if(as(i).isNaN) {
+        error("NaN!" + (memStep(i) dot dir) + " " + memRho(i));
       }
-      val step: T = computeDirection(iter, diag, grad, state.memStep, state.memGradDelta, state.memRho);
-      //log(INFO)("Step:" + step);
+      assert(!as(i).isInfinite);
+      dir -= memGradDelta(i) * as(i);
+    }
 
-      val (stepScale,newVal) = chooseStepSize(iter,f, step, x, grad, v);
-      log(INFO)("Scale:" +  stepScale);
-      step *= stepScale;
-      x += step;
-      assert(norm(step,2) != 0, (stepScale,step,x,grad,diag));
+    dir :*= diag;
 
-      val newGrad = f.gradientAt(x);
+    for(i <- 0 until memStep.length) {
+      val beta = (memGradDelta(i) dot dir)/memRho(i);
+      dir += memStep(i) * (as(i) - beta);
+    }
 
-      val gradDelta : T = newGrad.like;
-      gradDelta :+= (newGrad :- grad);
+    dir *= -1;
+    dir;
+  }
+  protected def updateHistory(oldState: State, newGrad: T, newVal: Double, step: T): History = {
+    val gradDelta : T = newGrad.like;
+      gradDelta :+= (newGrad :- oldState.grad);
 
-      var memStep = state.memStep :+ step;
-      var memGradDelta = state.memGradDelta :+ gradDelta;
-      var memRho = state.memRho :+ (step dot gradDelta);
+      var memStep = oldState.history.memStep :+ step;
+      var memGradDelta = oldState.history.memGradDelta :+ gradDelta;
+      var memRho = oldState.history.memRho :+ (step dot gradDelta);
 
       if(memStep.length > m) {
         memStep = memStep.drop(1);
@@ -114,17 +103,10 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
         memGradDelta = memGradDelta.drop(1);
       }
 
-      new State(x,newVal,newGrad,iter+1,memStep,memGradDelta,memRho);
-
-    } catch {
-      case _: LBFGSException =>
-        log(ERROR)("Something in the history is giving NaN's, clearing it!");
-        new State(x,v,grad,iter);
-    }
-
+      new History(memStep,memGradDelta,memRho);
   }
 
-  def computeDiag(iter: Int, grad: T, prevStep: T, prevGrad: T):T = {
+  private def computeDiag(iter: Int, grad: T, prevStep: T, prevGrad: T):T = {
     if(iter == 0) {
       grad :== grad value;
     } else {
@@ -140,46 +122,6 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
   }
    
   /**
-   * Find a descent direction for the current point.
-   * 
-   * @param iter: The iteration
-   * @param grad the gradient 
-   * @param memStep the history of step sizes
-   * @param memGradStep the history of chagnes in gradients
-   * @param memRho: the dotproduct of step and gradStep
-   */
-   protected def computeDirection(iter: Int,
-      diag: T,
-      grad: T,
-      memStep: IndexedSeq[T],
-      memGradStep: IndexedSeq[T],
-      memRho: IndexedSeq[Double]): T = {
-    val dir = grad.copy;
-    val as = new Array[Double](m);
-
-    for(i <- (memStep.length-1) to 0 by -1) {
-      as(i) = (memStep(i) dot dir)/memRho(i);
-      if(as(i).isNaN) {
-        error("NaN!" + (memStep(i) dot dir) + " " + memRho(i));
-      }
-      assert(!as(i).isInfinite);
-      dir -= memGradStep(i) * as(i);
-    }
-
-    dir :*= diag;
-
-    for(i <- 0 until memStep.length) {
-      val beta = (memGradStep(i) dot dir)/memRho(i);
-      dir += memStep(i) * (as(i) - beta);
-    }
-
-    dir *= -1;
-    dir;
-  }
-
-  
-  
-  /**
    * Given a direction, perform a line search to find 
    * a direction to descend. At the moment, this just executes
    * backtracking, so it does not fulfill the wolfe conditions.
@@ -189,12 +131,12 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
    * @param x: The location
    * @return (stepSize, newValue)
    */
-  def chooseStepSize(iter: Int,
-                     f: DiffFunction[K,T],
-                     dir: T,
-                     x: T,
-                     grad: T, 
-                     prevVal: Double) = {
+  def chooseStepSize(f: DiffFunction[K,T], dir: T, state: State) = {
+    val iter = state.iter;
+    val x = state.x;
+    val grad = state.grad;
+    val prevVal = state.value;
+
     val normGradInDir = {
       val possibleNorm = dir dot grad;
       if (possibleNorm > 0) { // hill climbing is not what we want. Bad LBFGS.
@@ -239,9 +181,3 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
   }
 }
 
-
-object LBFGS {
-  private sealed class LBFGSException extends RuntimeException;
-  private class NaNHistory extends LBFGSException;
-  private class StepSizeUnderflow extends LBFGSException;
-}
