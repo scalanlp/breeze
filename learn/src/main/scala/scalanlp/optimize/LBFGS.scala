@@ -44,14 +44,14 @@ import scalala.tensor.dense._;
  * @param maxIter: maximum number of iterations, or &lt;= 0 for unlimited
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
-class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: Int)
+class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](override val maxIter: Int, m: Int)
   (implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col])
   extends QuasiNewtonMinimizer[K,T] with GradientNormConvergence[K,T] with Logged {
   require(m > 0);
 
-  case class History(private[LBFGS] val memStep: IndexedSeq[T] = IndexedSeq.empty,
-                     private[LBFGS] val memGradDelta: IndexedSeq[T] = IndexedSeq.empty,
-                     private[LBFGS] val memRho: IndexedSeq[Double] = IndexedSeq.empty);
+  class History(private[LBFGS] val memStep: IndexedSeq[T] = IndexedSeq.empty,
+                private[LBFGS] val memGradDelta: IndexedSeq[T] = IndexedSeq.empty,
+                private[LBFGS] val memRho: IndexedSeq[Double] = IndexedSeq.empty);
 
 
   protected def initialHistory(grad: T):History = new History();
@@ -89,6 +89,9 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
     dir *= -1;
     dir;
   }
+
+  protected def adjustGradient(grad: T, x: T) = grad;
+
   protected def updateHistory(oldState: State, newGrad: T, newVal: Double, step: T): History = {
     val gradDelta : T = newGrad.like;
       gradDelta :+= (newGrad :- oldState.grad);
@@ -131,10 +134,9 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
    * @param x: The location
    * @return (stepSize, newValue)
    */
-  def chooseStepSize(f: DiffFunction[K,T], dir: T, state: State) = {
+  def chooseStepSize(f: DiffFunction[K,T], dir: T, grad: T, state: State) = {
     val iter = state.iter;
     val x = state.x;
-    val grad = state.grad;
     val prevVal = state.value;
 
     val normGradInDir = {
@@ -179,5 +181,6 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
     log(INFO)("Step size: " + alpha);
     (alpha,currentVal)
   }
+
 }
 
