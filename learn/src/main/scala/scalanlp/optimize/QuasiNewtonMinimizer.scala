@@ -35,11 +35,11 @@ trait QuasiNewtonMinimizer[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]]
 
   def minimize(f: DiffFunction[K,T], init: T):T = {
     val steps = iterations(f,init);
-    val convSteps = for( cur@State(x,v,grad,iter,history)  <- steps) yield {
+    val convSteps = for( cur@State(x,v,grad, adjGradient, iter,history)  <- steps) yield {
       log(INFO)("Iteration: " + iter);
       log(INFO)("Current v:" + v);
-      log(INFO)("Current grad norm:" + norm(grad,2));
-      (cur,checkConvergence(v,grad));
+      log(INFO)("Current grad norm:" + norm(adjGradient,2));
+      (cur,checkConvergence(v,adjGradient));
     }
 
     convSteps.dropWhile(state => !state._2 && (state._1.iter < maxIter || maxIter < 0)).next._1.x;
@@ -47,17 +47,20 @@ trait QuasiNewtonMinimizer[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]]
 
   type History;
   case class State protected[QuasiNewtonMinimizer](x: T, value: Double,
-                                                   grad: T, iter: Int,
+                                                   grad: T,
+                                                   adjustedGradient: T,iter: Int,
                                                    history: History);
 
   protected def initialState(f: DiffFunction[K,T], init: T):State = {
     val (v,grad) = f.calculate(init);
-    new State(init,v,grad,0,initialHistory(grad));
+    new State(init,v,grad,adjustGradient(grad,init),0,initialHistory(grad));
   }
 
   protected def initialHistory(grad: T):History;
+  /** Changes the gradient for each iteration before search is started. */
+  protected def adjustGradient(grad: T, x: T): T;
   protected def chooseDescentDirection(grad: T, state: State):T;
-  protected def chooseStepSize(f: DiffFunction[K,T], dir: T, state: State):(Double,Double);
+  protected def chooseStepSize(f: DiffFunction[K,T], dir: T, grad: T, state: State):(Double,Double);
   protected def updateHistory(oldState: State, newGrad: T, newVal: Double, step: T): History;
 
   def iterations(f: DiffFunction[K,T],init: T): Iterator[State] = Iterator.iterate(initialState(f,init)) {state =>
@@ -65,10 +68,11 @@ trait QuasiNewtonMinimizer[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]]
      val grad = state.grad;
      val v = state.value;
      val iter = state.iter;
+     val adjGrad = state.adjustedGradient
 
      try {
-       val dir = chooseDescentDirection(grad, state);
-       val (stepScale,newVal) = chooseStepSize(f, dir, state);
+       val dir = chooseDescentDirection(adjGrad, state);
+       val (stepScale,newVal) = chooseStepSize(f, dir, adjGrad, state);
        log(INFO)("Scale:" +  stepScale);
        dir *= stepScale;
        x += dir;
@@ -80,15 +84,15 @@ trait QuasiNewtonMinimizer[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]]
 
        val newHistory = updateHistory(state, newGrad, newVal, dir);
 
-       new State(x,newVal,newGrad,iter+1,newHistory);
+       new State(x,newVal,newGrad,adjustGradient(newGrad,x),iter+1,newHistory);
 
      } catch {
        case _:StepSizeUnderflow =>
         log(ERROR)("Step size underflow! Clearing history.");
-        new State(x,v,grad,iter, initialHistory(grad));
+        state.copy(history=initialHistory(state.grad), iter = iter+1)
        case _: QNException =>
          log(ERROR)("Something in the history is giving NaN's, clearing it!");
-         new State(x,v,grad,iter, initialHistory(grad));
+         state.copy(history=initialHistory(state.grad), iter=iter+1);
      }
 
    }
