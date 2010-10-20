@@ -145,7 +145,8 @@ object Semiring {
       */ 
       def closure(t: Double) = {
         val t_* = -math.log(1 - math.exp(t));
-        assert(!t_*.isNaN,t + " gives NaN!");
+        if(t_*.isNaN)
+          throw new ArithmeticException("Cannot compute the log-closure of a quantity > 0, but got: " + t);
         t_*
       }
 
