@@ -103,4 +103,5 @@ object QuasiNewtonMinimizer {
   class QNException extends RuntimeException;
   class NaNHistory extends QNException;
   class StepSizeUnderflow extends QNException;
+  class LineSearchFailed extends QNException;
 }

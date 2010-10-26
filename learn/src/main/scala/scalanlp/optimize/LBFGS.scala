@@ -18,9 +18,8 @@ package scalanlp.optimize
 
 import scalanlp.util._
 import scalanlp.util.Log._
-import scalanlp.optimize.QuasiNewtonMinimizer.{NaNHistory, StepSizeUnderflow}
-
-import java.util.Arrays;
+import java.util.Arrays
+import scalanlp.optimize.QuasiNewtonMinimizer.{LineSearchFailed, NaNHistory, StepSizeUnderflow};
 import scala.collection.mutable.ArrayBuffer;
 import scalala.Scalala._;
 import scalala.tensor._;
@@ -174,7 +173,7 @@ class LBFGS[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](override val maxIt
     }
     // Give up.
     if(myIter >= MAX_ITER)
-      alpha = initAlpha;
+      throw new LineSearchFailed;
 
     if(alpha * norm(grad,Double.PositiveInfinity) < 1E-10)
       throw new StepSizeUnderflow;
