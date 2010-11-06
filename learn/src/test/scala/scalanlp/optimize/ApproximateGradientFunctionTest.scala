@@ -19,7 +19,7 @@ class ApproximateGradientFunctionTest extends FunSuite with Checkers {
   import Arbitrary._;
 
   implicit val arbVector : Arbitrary[Vector] = Arbitrary(for {
-    n <- arbitrary[Int]
+    n <- arbitrary[Int] suchThat { _ > 0 }
     d <- arbitrary[Double]
   } yield ( (rand(n.abs%40+1) * d value) : Vector));
 

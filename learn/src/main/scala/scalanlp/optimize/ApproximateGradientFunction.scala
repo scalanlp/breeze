@@ -26,6 +26,28 @@ class ApproximateGradientFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Co
   }
 }
 
+class GradientCheckingDiffFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]]
+          (f: DiffFunction[K,T], epsilons: Seq[Double] = Array(1E-5))
+          extends DiffFunction[K,T] {
+  val approxes =  for( eps <- epsilons) yield {
+    val fapprox = new ApproximateGradientFunction[K,T](f,eps);
+    fapprox
+  }
+
+  override def valueAt(x: T) = f(x);
+
+  def calculate(x:T) = {
+    val (v,predicted) = f.calculate(x);
+    for { (fap,eps) <- approxes zip epsilons } {
+      val empirical = fap.gradientAt(x);
+      empirical -= predicted
+      println("diff : " + eps + " norm: " + norm(empirical,2));
+    }
+    (v,predicted);
+  }
+
+}
+
 object ApproximateGradientTester {
   def apply[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](f:DiffFunction[K,T], x:T,
                                                               epsilons:Seq[Double]=Array(0.01,0.001,1E-4,1E-5,1E-6)) = {
@@ -33,8 +55,9 @@ object ApproximateGradientTester {
     for( eps <- epsilons) yield {
       val fapprox = new ApproximateGradientFunction[K,T](f,eps);
       val empirical = fapprox.gradientAt(x);
+      val normPredicted = norm(predicted,2);
       predicted -= empirical
-      norm(predicted, 2)
+      norm(predicted, 2) / normPredicted;
     }
   }
 }
