@@ -42,8 +42,8 @@ extends Stage[LazyIterable[Item[ID,I]],LazyIterable[Item[ID,O]]] {
  * @author dramage
  */
 object Mapper {
-  def apply[ID:Manifest,I,O:Manifest](f : I => O) = new Mapper[ID,I,O] {
+  def apply[ID:Manifest,I,O:Manifest](name : String, f : I => O) = new Mapper[ID,I,O] {
     override def map(row : I) : O = f(row);
-    override def toString = "Mapper("+f.toString+")";
+    override def toString = "Mapper("+serialization.TextSerialization.toString(name)+")";
   }
 }
