@@ -8,7 +8,7 @@
   </parent>
 
   <properties>
-    <scala.version>2.8.1.RC1</scala.version>
+    <scala.version>2.8.1</scala.version>
   </properties>
 
   <modelVersion>4.0.0</modelVersion>
