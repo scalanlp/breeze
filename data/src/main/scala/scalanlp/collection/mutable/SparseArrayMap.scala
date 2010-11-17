@@ -8,6 +8,8 @@ import scala.collection.mutable._;
  * SparseArrayMap is a mutable Int=>T Map backed by a SparseArray.
  * Unlike most maps, it automatically adds keys when an apply returns the default value.
  */
+@serializable
+@SerialVersionUID(1)
 class SparseArrayMap[T:ClassManifest](default: =>T, initial:Int=3) extends Map[Int,T] {
 
   private val arr = new SparseArray[T](Int.MaxValue,default,initial);

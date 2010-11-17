@@ -16,7 +16,11 @@ package scalanlp.collection.mutable;
  limitations under the License. 
 */
 
-import scala.collection.generic._;
+import scala.collection.generic._
+import scalanlp.serialization.DataSerialization;
+import DataSerialization.Readable
+import DataSerialization.Writable
+import java.io.DataInput;
 import scala.reflect.ClassManifest;
 import scala.collection.mutable._;
 
@@ -29,6 +33,8 @@ import scala.collection.mutable._;
  *
  * @author dlwh, dramage
  */
+@serializable
+@SerialVersionUID(1)
 class SparseArray[@specialized T:ClassManifest]
 (val length : Int, default : =>T, initial : Int = 3) {
 

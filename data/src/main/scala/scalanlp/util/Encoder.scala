@@ -170,8 +170,9 @@ trait Encoder[T] {
 
 
 object Encoder {
-  def fromIndex[T](ind: Index[T]):Encoder[T] = new Encoder[T] {
-    val index = ind;
-  }
+  def fromIndex[T](ind: Index[T]):Encoder[T] = new SimpleEncoder(ind);
+
+  @serializable @SerialVersionUID(1)
+  private class SimpleEncoder[T](val index: Index[T]) extends Encoder[T];
 }
 
