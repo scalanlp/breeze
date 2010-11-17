@@ -34,7 +34,7 @@ import scalala.Scalala._;
  * @author dlwh
  */
 trait Encoder[T] {
-  protected val index: Index[T]
+  val index: Index[T]
 
   /**
    * Creates a Vector of some sort with the index's size.
