@@ -37,34 +37,34 @@ class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]
                                       with GradientNormConvergence[K,T]
                                       with Logged {
 
-  /**
-  * Runs SGD on f, for mxIter. It ignores tol.
-  */
-  def minimize(f: BatchDiffFunction[K,T], init: T) = {
-    var guess = init;
 
-    log(Log.INFO)("SGD starting");
-    log(Log.INFO)("SGD init: " + init);
-    log(Log.INFO)("SGD maxIter: " + maxIter);
+  case class State protected[StochasticGradientDescent](x: T, value: Double,
+                                                   grad: T,
+                                                   iter: Int);
 
-    var i = 0;
-    var converged = false;
-    while(!converged && (i < maxIter || maxIter <= 0)) {
-      log(Log.INFO)("SGD iteration: " + i);
-      val sample = selectSample(f,i);
+  def iterations(f: BatchDiffFunction[K,T], init: T):Iterator[State] = {
+    val it = Iterator.iterate(State(init,Double.NegativeInfinity,init.like,0)) { case State(oldX, oldV, _, iter) =>
+      val sample = selectSample(f,iter);
 
-      val (value,grad) = f.calculate(guess,sample);
+      val (value,grad) = f.calculate(oldX,sample);
       log(Log.INFO)("SGD gradient: " + norm(grad,2));
       assert(grad.forall(!_._2.isInfinite));
       log(Log.INFO)("SGD value: " + value);
-      guess = update(guess,grad,i);
-      assert(guess.forall(!_._2.isInfinite));
+      val guess = update(oldX,grad,iter);
       //log(Log.INFO)("SGD update: " + guess.mkString("[",",","]"));
+      val newState = State(guess, value, grad, iter + 1)
+      println(iter, checkConvergence(value,grad));
+      newState
+    };
 
-      i+=1;
-      converged = checkConvergence(value,grad);
-    }
-    guess;
+    it.drop(1).takeWhile { case State(x,v,g,i) => i < maxIter && !checkConvergence(v,g)}
+  }
+
+  /**
+  * Runs SGD on f, for maxIter.
+  */
+  def minimize(f: BatchDiffFunction[K,T], init: T) = {
+    iterations(f,init).reduceLeft((a,b) => b).x;
   }
   
   /**

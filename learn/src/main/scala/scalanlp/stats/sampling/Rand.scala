@@ -208,7 +208,7 @@ class RandBasis(r: RandomGenerator) {
   /**
    * Implements the Knuth shuffle of numbers from 0 to n.
    */
-  def permutation(n : Int) = new Rand[Seq[Int]] {
+  def permutation(n : Int) = new Rand[IndexedSeq[Int]] {
     def draw = {
       val arr = new ArrayBuffer[Int]();
       arr ++= (0 until n);
