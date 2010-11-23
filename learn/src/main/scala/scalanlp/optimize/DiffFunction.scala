@@ -71,28 +71,28 @@ object DiffFunction {
 /**
 * A diff function that supports subsets of the data
 */
-trait BatchDiffFunction[K,T<:Tensor1[K]] extends DiffFunction[K,T] with ((T,Seq[Int])=>Double) {
+trait BatchDiffFunction[K,T<:Tensor1[K]] extends DiffFunction[K,T] with ((T,IndexedSeq[Int])=>Double) {
   /**
   * Calculates the gradient of the function on a subset of the data
   */
-  def gradientAt(x:T, batch: Seq[Int]) : T = calculate(x,batch)._2;
+  def gradientAt(x:T, batch: IndexedSeq[Int]) : T = calculate(x,batch)._2;
   /**
   * Calculates the value of the function on a subset of the data
   */
-  def valueAt(x:T, batch: Seq[Int]) : Double = calculate(x,batch)._1
+  def valueAt(x:T, batch: IndexedSeq[Int]) : Double = calculate(x,batch)._1
   /**
   * Calculates the value and gradient of the function on a subset of the data;
   */
-  def calculate(x:T, batch: Seq[Int]): (Double,T)
+  def calculate(x:T, batch: IndexedSeq[Int]): (Double,T)
 
   override def calculate(x:T):(Double,T) = calculate(x,fullRange);
   override def valueAt(x:T):Double = valueAt(x,fullRange)
   override def gradientAt(x:T):T = gradientAt(x,fullRange)
 
-  def apply(x:T, batch:Seq[Int]) = valueAt(x,batch);
+  def apply(x:T, batch:IndexedSeq[Int]) = valueAt(x,batch);
 
   /**
   * The full size of the data
   */
-  def fullRange: Seq[Int];
+  def fullRange: IndexedSeq[Int];
 }

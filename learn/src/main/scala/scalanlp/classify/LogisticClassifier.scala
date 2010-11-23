@@ -44,7 +44,7 @@ object LogisticClassifier {
   def apply[L,F,T2<:Tensor2[L,F] with TensorSelfOp[(L,F),T2,Shape2],
       TL<:Tensor1[L] with TensorSelfOp[L,TL,Shape1Col],
       TF<:Tensor1[F] with TensorSelfOp[F,TF,Shape1Col]]
-      (data: Seq[Example[L,TF]])
+      (data: IndexedSeq[Example[L,TF]])
       (implicit tpb: TensorProductBuilder[T2,TF,TL,Shape2,Shape1Col,Shape1Col],
         ta: TensorArith[(L,F),T2,Tensor2[L,F],Shape2],
         tla: Tensor1Arith[L,TL,TL,Shape1Col],
@@ -76,10 +76,10 @@ object LogisticClassifier {
     val linearizer = TensorLinearizer[(L,F),T2]();
     import linearizer._;
 
-    def objective(data: Seq[Example[L,TF]]) = new ObjectiveFunction(data);
+    def objective(data: IndexedSeq[Example[L,TF]]) = new ObjectiveFunction(data);
 
     // preliminaries: an objective function
-    class ObjectiveFunction(data: Seq[Example[L,TF]]) extends BatchDiffFunction[(L,F),linearizer.ProjectedTensor] {
+    class ObjectiveFunction(data: IndexedSeq[Example[L,TF]]) extends BatchDiffFunction[(L,F),linearizer.ProjectedTensor] {
 
       val basisLabel = data.head.label;
       val labelSet = Set.empty ++ data.iterator.map(_.label);
@@ -96,7 +96,7 @@ object LogisticClassifier {
 
       val fullRange = (0 until data.size)
 
-      override def calculate(flatWeights: ProjectedTensor, range: Seq[Int]) = {
+      override def calculate(flatWeights: ProjectedTensor, range: IndexedSeq[Int]) = {
         var ll = 0.0;
         val weights = reshape(flatWeights);
         val grad = weights.like;
@@ -135,7 +135,7 @@ object LogisticClassifier {
     val data = DataMatrix.fromURL(new java.net.URL("http://www-stat.stanford.edu/~tibs/ElemStatLearn/datasets/spam.data"),-1);
     val vectors = data.rows.map(e => e map ((a:Seq[Double]) => new DenseVector(a.toArray)) relabel (_.toInt))
 
-    val classifier = LogisticClassifier[Int,Int,DenseMatrix,DenseVector,DenseVector](vectors);
+    val classifier = LogisticClassifier[Int,Int,DenseMatrix,DenseVector,DenseVector](vectors.toIndexedSeq);
     for( ex <- vectors) {
       val guessed = classifier.classify(ex.features);
       println(guessed,ex.label);

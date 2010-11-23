@@ -53,7 +53,6 @@ class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]
       val guess = update(oldX,grad,iter);
       //log(Log.INFO)("SGD update: " + guess.mkString("[",",","]"));
       val newState = State(guess, value, grad, iter + 1)
-      println(iter, checkConvergence(value,grad));
       newState
     };
 
@@ -80,7 +79,7 @@ class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]
   * Selects a sample of the data to evalute on. By default, it selects
   * a random sample without replacement.
   */
-  def selectSample(f: BatchDiffFunction[K,T], iter: Int) : Seq[Int] = {
+  def selectSample(f: BatchDiffFunction[K,T], iter: Int) : IndexedSeq[Int] = {
     Rand.permutation(f.fullRange.size).draw.map(f.fullRange).take(batchSize);
   }
 }
