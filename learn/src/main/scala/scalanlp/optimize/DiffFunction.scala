@@ -66,6 +66,36 @@ object DiffFunction {
       (v + myValueAt(x), myGrad(grad,x));
     }
   }
+
+  // TODO: probably only want to shrink parameters that are "on"
+  def withL2Regularization[K,T<:TensorSelfOp[K,T,Shape1Col] with Tensor1[K]](d: BatchDiffFunction[K,T],weight: Double):BatchDiffFunction[K,T] = new BatchDiffFunction[K,T] {
+    override def gradientAt(x:T, batch: IndexedSeq[Int]):T = {
+      val grad = d.gradientAt(x, batch);
+      myGrad(grad,x, batch.size);
+    }
+
+    override def valueAt(x:T, batch: IndexedSeq[Int]) = {
+      val v = d.valueAt(x, batch);
+      v + myValueAt(x) * batch.size / fullRange.size;
+    }
+
+    private def myValueAt(x:T) = {
+      weight * math.pow(norm(x,2),2);
+    }
+
+    private def myGrad(g: T, x: T, batchSize:Int) = {
+      val g2 = g.copy;
+      g2 += (x * 2 * weight * batchSize / d.fullRange.size);
+      g2
+    }
+
+    override def calculate(x: T, batch: IndexedSeq[Int]) = {
+      val (v,grad) = d.calculate(x, batch);
+      (v + myValueAt(x), myGrad(grad,x, batch.size));
+    }
+
+    def fullRange = d.fullRange;
+  }
 }
 
 /**
