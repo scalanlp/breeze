@@ -118,6 +118,13 @@ object ParallelOps {
       DefaultPool.invokeAndGet(action);
     }
 
+    def foreach(f: T=>Unit) = {
+      val action = new BinaryRecursiveAction[Unit]( (a,b)=>b, { (start:Int, end:Int) =>
+        seq.view(start,end).foreach(f);
+      });
+      DefaultPool.invokeAndGet(action);
+    }
+
     /**
      * Transforms each element, and then reduces them using r.
      */
