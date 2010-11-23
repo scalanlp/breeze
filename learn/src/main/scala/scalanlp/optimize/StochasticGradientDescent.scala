@@ -72,8 +72,10 @@ class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]
   * guess - temp * grad;
   */
   def update(guess: T, grad: T, iter: Int):T = {
-    guess - grad * (alpha/(alpha + iter)) value;
+    guess - grad * (alpha*math.pow(decay,iter)) value;
   }
+
+  val decay = 0.99
 
   /**
   * Selects a sample of the data to evalute on. By default, it selects
