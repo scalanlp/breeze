@@ -121,6 +121,7 @@
         </executions>
         <configuration>
           <displayCmd>true</displayCmd>
+          <recompileMode>modified-only</recompileMode>
           <args>
             <arg>-deprecation</arg>
             <arg>-optimize</arg>
