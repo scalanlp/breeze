@@ -46,7 +46,7 @@ class StochasticGradientDescentTest extends FunSuite with Checkers {
 
 
   test("optimize a simple multivariate gaussian") {
-    val sgd = new StochasticGradientDescent[Int,Vector](1.,100,1);
+    val sgd = StochasticGradientDescent[Int,Vector](1.,100,1);
 
     def optimizeThis(init: Vector) = {
       val f = new BatchDiffFunction[Int,Vector] {
@@ -65,7 +65,7 @@ class StochasticGradientDescentTest extends FunSuite with Checkers {
   }
 
   test("optimize a simple multivariate gaussian with counters") {
-    val sgd = new StochasticGradientDescent[String,DoubleCounter[String]](1.,100,1);
+    val sgd =  StochasticGradientDescent[String,DoubleCounter[String]](1.,100,1);
 
     def optimizeThis(init: DoubleCounter[String]) = {
       val f = new BatchDiffFunction[String,DoubleCounter[String]] {
