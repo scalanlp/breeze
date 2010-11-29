@@ -32,7 +32,7 @@ import scalanlp.stats.sampling._;
 */
 abstract class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](val eta: Double,
     val maxIter: Int,
-    val batchSize: Int)(implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col])
+    val batchSize: Int)(implicit protected val arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col])
 																	    extends Minimizer[T,BatchDiffFunction[K,T]] 
                                       with GradientNormConvergence[K,T]
                                       with Logged {
@@ -103,20 +103,24 @@ abstract class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,S
    * but seems to work ok.
    */
   def chooseStepSize(state: State) = {
-    eta * math.pow(defaultDecay,state.iter)
+    eta / math.sqrt(state.iter + 1)
   }
 
-  private val defaultDecay = 0.99
 
 }
 
 object StochasticGradientDescent {
-  def apply[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](eta: Double=0.05, maxIter: Int=100, batchSize: Int = 50)
+  def apply[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](eta: Double=4, maxIter: Int=100, batchSize: Int = 50)
     (implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col]):StochasticGradientDescent[K,T]  = {
-    new StochasticGradientDescent[K,T](eta,maxIter,batchSize) {
+      new SimpleSGD(eta,maxIter,batchSize);
+  }
+
+  class SimpleSGD[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]]
+      (eta: Double=4, maxIter: Int=100, batchSize: Int = 50)(implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col])
+          extends StochasticGradientDescent[K,T](eta,maxIter,batchSize) {
       type History = Unit
       def initialHistory(f: BatchDiffFunction[K,T],init: T)= ()
       def updateHistory(oldState: State,newX: T,curValue: Double,curGrad: T) = ()
-    }
   }
+
 }

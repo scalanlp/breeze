@@ -1,4 +1,5 @@
 package scalanlp.optimize
+
 /*
  Copyright 2009 David Hall, Daniel Ramage
  
@@ -26,12 +27,12 @@ import scalala.tensor.Vector;
 import scalala.tensor.counters.Counters._;
 
 @RunWith(classOf[JUnitRunner])
-class StochasticGradientDescentTest extends FunSuite with Checkers {
+class FobosTest extends FunSuite with Checkers {
   import Arbitrary._;
   implicit val arbVector : Arbitrary[Vector] = Arbitrary(for {
-    n <- arbitrary[Int] suchThat { _ > 0 } suchThat { _ < 4000};
+    n <- arbitrary[Int] suchThat { _ > 0 }
     d <- arbitrary[Double]
-  } yield ( (rand(n) * d value) : Vector));
+  } yield ( (rand(n % 200  + 1) * d value) : Vector));
 
   implicit val arbDoubleCounter: Arbitrary[DoubleCounter[String]] = Arbitrary(for {
     v <- arbitrary[Vector]
@@ -45,10 +46,12 @@ class StochasticGradientDescentTest extends FunSuite with Checkers {
 
 
 
-  test("optimize a simple multivariate gaussian") {
-    val sgd = StochasticGradientDescent[Int,Vector](2.,100,1);
+  test("optimize a simple multivariate gaussian, l2") {
 
-    def optimizeThis(init: Vector) = {
+    def optimizeThis(init: Vector, reg: Double) = {
+      val sgd = new StochasticGradientDescent.SimpleSGD[Int,Vector](2.,100,1) with Fobos.L2Regularization[Int,Vector] {
+        override val lambda = reg.abs;
+      }
       val f = new BatchDiffFunction[Int,Vector] {
         def calculate(x: Vector, r: IndexedSeq[Int]) = {
           (norm((x -3) :^ 2,1), (x * 2) - 6 value);
@@ -56,31 +59,44 @@ class StochasticGradientDescentTest extends FunSuite with Checkers {
         val fullRange = 0 to 1;
       }
 
-      val result = sgd.minimize(f,init) 
-      norm(result :- ones(init.size) * 3,2) < 1E-10
+      val result = sgd.minimize(f,init)
+      val targetValue = 3 / (reg.abs / 2 + 1);
+      val ok = norm(result :- ones(init.size) * targetValue,2) < 1E-10
+      if(!ok) {
+        error("min " + init + " with reg: " + reg + "gives " + result);
+      }
+      ok
     }
 
-    check(Prop.forAll(optimizeThis _));
+    check(Prop.forAll( optimizeThis _))
 
   }
 
-  test("optimize a simple multivariate gaussian with counters") {
-    val sgd =  StochasticGradientDescent[String,DoubleCounter[String]](1.,100,1);
+  test("optimize a simple multivariate gaussian, l1") {
 
-    def optimizeThis(init: DoubleCounter[String]) = {
-      val f = new BatchDiffFunction[String,DoubleCounter[String]] {
-        def calculate(x: DoubleCounter[String], r: IndexedSeq[Int]) = {
-          (norm((x -3) :^ 2,1) , (x * 2) - 6 value);
+    def optimizeThis(init: Vector, reg: Double) = {
+      val sgd = new StochasticGradientDescent.SimpleSGD[Int,Vector](2.,100,1) with Fobos.L1Regularization[Int,Vector] {
+        override val lambda = reg.abs;
+      }
+      val f = new BatchDiffFunction[Int,Vector] {
+        def calculate(x: Vector, r: IndexedSeq[Int]) = {
+          (norm((x -3) :^ 2,1), (x * 2) - 6 value);
         }
         val fullRange = 0 to 1;
       }
 
-      val result = sgd.minimize(f,init);
-      (!result.exists{ case(k,v) => math.abs(v - 3.0) > 1E-3}
-     && !result.exists(_._2.isNaN));
+      val result = sgd.minimize(f,init)
+      val targetValue = if(sgd.lambda/2 > 3) 0.0 else  3 - sgd.lambda / 2;
+      val ok = norm(result :- ones(init.size) * targetValue,2) < 1E-10
+      if(!ok) {
+        error("min " + init + " with reg: " + reg + "gives " + result);
+      }
+      ok
     }
 
-    check(Prop.forAll(optimizeThis _ ));
+    check(Prop.forAll( optimizeThis _))
 
   }
+
+
 }
