@@ -25,8 +25,8 @@ object Fobos {
      */
     val lambda: Double = 1.0;
 
-    override def projectVector(newX: T, stepSize: Double):T = {
-      newX / (1 + lambda * stepSize) value;
+    override def projectVector(state: State, oldX: T, gradient: T, stepSize: Double):T = {
+      (oldX - gradient * stepSize) / (1 + lambda * stepSize) value;
     }
   }
 
@@ -39,10 +39,10 @@ object Fobos {
      */
     val lambda: Double = 1.0;
 
-    override def projectVector(newX: T, stepSize: Double):T = {
-      val res = newX.like;
+    override def projectVector(state: State, oldX: T, gradient: T, stepSize: Double):T = {
+      val res:T = oldX - gradient * stepSize value;
       val tlambda = lambda * stepSize;
-      for( (k,v) <- newX.activeElements) {
+      for( (k,v) <- res.activeElements) {
         if(v.abs < tlambda) {
           res(k) = 0;
         } else {

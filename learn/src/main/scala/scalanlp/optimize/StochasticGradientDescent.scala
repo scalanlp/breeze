@@ -33,7 +33,7 @@ import scalanlp.stats.sampling._;
 abstract class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](val eta: Double,
     val maxIter: Int,
     val batchSize: Int)(implicit protected val arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col])
-																	    extends Minimizer[T,BatchDiffFunction[K,T]] 
+																	    extends Minimizer[T,BatchDiffFunction[K,T]]
                                       with GradientNormConvergence[K,T]
                                       with Logged {
 
@@ -62,7 +62,7 @@ abstract class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,S
       assert(grad.forall(!_._2.isInfinite));
       log(Log.INFO)("SGD value: " + value);
       val stepSize = chooseStepSize(state.copy(value=value,grad=grad));
-      val newX = projectVector(oldX - grad * stepSize,stepSize);
+      val newX = projectVector(state, oldX, grad, stepSize);
       val newState = State(newX, value, grad, iter + 1, updateHistory(state,newX,value,grad))
       newState
     };
@@ -94,7 +94,7 @@ abstract class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,S
    *
    * Default does nothing.
    */
-  def projectVector(newX: T, stepSize: Double) = newX;
+  def projectVector(state: State, oldX: T, gradient: T, stepSize: Double):T = oldX - gradient * stepSize value;
 
   /**
    * Choose a step size scale for this iteration.
