@@ -13,6 +13,7 @@ object AdaptiveGradientDescent {
   trait L2Regularization[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]] extends StochasticGradientDescent[K,T] {
 
     val lambda: Double = 1.0;
+    val delta = 1E-4;
 
     case class History(sumOfSquaredGradients: T);
     def initialHistory(f: BatchDiffFunction[K,T],init: T)= History(init.like);
@@ -24,7 +25,7 @@ object AdaptiveGradientDescent {
 
     override def projectVector(state: State, oldX: T, gradient: T, stepSize: Double):T = {
       val s = root(state.history.sumOfSquaredGradients :+ (gradient :* gradient));
-      val res = (( (s :* oldX) - gradient * stepSize) :/ (s + (lambda * stepSize))) value;
+      val res = (( (s :* oldX) - gradient * stepSize) :/ (s + (delta + lambda * stepSize))) value;
       res
     }
 
@@ -42,8 +43,8 @@ object AdaptiveGradientDescent {
   }
 
   trait L1Regularization[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]] extends StochasticGradientDescent[K,T] {
-
     val lambda: Double = 1.0;
+    val delta = 1E-5;
 
     case class History(sumOfSquaredGradients: T);
     def initialHistory(f: BatchDiffFunction[K,T],init: T)= History(init.like);
@@ -54,7 +55,7 @@ object AdaptiveGradientDescent {
     }
 
     override def projectVector(state: State, oldX: T, gradient: T, stepSize: Double):T = {
-      val s = root(state.history.sumOfSquaredGradients :+ (gradient :* gradient));
+      val s = root(state.history.sumOfSquaredGradients :+ (gradient :* gradient), delta);
       val res:T = oldX - (gradient * stepSize :/ s) value;
       val tlambda = lambda * stepSize;
       for( (k,v) <- res.activeElements) {
@@ -69,10 +70,10 @@ object AdaptiveGradientDescent {
 
     override def chooseStepSize(state: State) = eta;
 
-    private def root(x: T) = {
+    private def root(x: T, delta: Double) = {
       val res = x.like;
       for( (k,v) <- x.activeElements) {
-        res(k) = math.sqrt(v);
+        res(k) = math.sqrt(v + delta);
       }
 
       res;

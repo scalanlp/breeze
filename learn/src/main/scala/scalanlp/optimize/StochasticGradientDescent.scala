@@ -59,10 +59,11 @@ abstract class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,S
 
       val (value,grad: T) = f.calculate(oldX,sample);
       log(Log.INFO)("SGD gradient norm: " + norm(grad,2));
-      assert(grad.forall(!_._2.isInfinite));
+      assert(grad.forall(v => !v._2.isInfinite && !v._2.isNaN));
       log(Log.INFO)("SGD value: " + value);
       val stepSize = chooseStepSize(state.copy(value=value,grad=grad));
       val newX = projectVector(state, oldX, grad, stepSize);
+      assert(newX.forall(v => !v._2.isInfinite && !v._2.isNaN));
       val newState = State(newX, value, grad, iter + 1, updateHistory(state,newX,value,grad))
       newState
     };
@@ -99,8 +100,7 @@ abstract class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,S
   /**
    * Choose a step size scale for this iteration.
    *
-   * Default is eta * math.pow(defaultDecay,state.iter), which doesn't guarantee convergence,
-   * but seems to work ok.
+   * Default is eta * math.sqrt(state.iter + 1)
    */
   def chooseStepSize(state: State) = {
     eta / math.sqrt(state.iter + 1)
