@@ -56,6 +56,7 @@ trait Graph[Node,Edge] {
    * TODO: maybe should make it an Iterable or something.
    */
   def getEdge(n1: Node, n2: Node): Option[Edge];
+
 }
 
 /**
@@ -66,6 +67,8 @@ trait Graph[Node,Edge] {
 trait Digraph[Node,Edge] extends Graph[Node,Edge] {
   def source(e: Edge): Node
   def sink(e: Edge): Node
+
+  def filter(f: Edge=>Boolean) = new Digraph.Filtered(this,f);
 
   override def endpoints(e: Edge) = (source(e),sink(e));
 }
@@ -120,4 +123,20 @@ object Digraph {
       override def toString() = "Graph[" + adjacencyList + "]";
     }
   }
+
+  class Filtered[N,E](g: Digraph[N,E], f: E=>Boolean) extends Digraph[N,E] {
+    def sink(e: E) = g.sink(e);
+
+    def source(e: E) = g.source(e);
+
+    def getEdge(n1: N, n2: N) = g.getEdge(n1,n2).filter(f);
+
+    def successors(n: N) = g.edgesFrom(n).filter(e => f(e) && source(e) == n).map(sink _);
+
+    def edgesFrom(n: N) = g.edgesFrom(n).filter(f)
+
+    def nodes = g.nodes
+
+    def edges = g.edges.filter(f);
+  };
 }
