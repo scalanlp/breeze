@@ -1,0 +1,53 @@
+package scalanlp.optimize.linear
+/*
+ Copyright 2010 David Hall, Daniel Ramage
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+*/
+
+import org.scalatest._;
+import org.scalatest.junit._;
+import org.scalatest.prop._;
+import org.scalacheck._;
+import org.junit.runner.RunWith
+
+
+import scalala.Scalala._;
+import scalala.tensor.dense._;
+
+/**
+ * 
+ * @author dlwh
+ */
+@RunWith(classOf[JUnitRunner])
+class AffineScalingTest extends FunSuite {
+  // from: http://en.wikipedia.org/wiki/Karmarkar's_algorithm
+  test("Small example") {
+    val x0 = new DenseVector(2);
+    val c = DenseVector(2)(1,1);
+    val A = new DenseMatrix(11,2);
+    val b = new DenseVector(11);
+
+    for(i <- 0 to 10) {
+      val p = i / 10.0
+      A(i,0) = 2 * p;
+      A(i,1) = 1;
+      b(i) = p * p + 1;
+    }
+
+    val x = AffineScaling.maximize(A=A,b=b,c=c,x0=x0);
+    assert( (A * x - b).value.activeValues.forall(_ < 0), (A * x value));
+    assert( (x(0) - 0.5).abs < 1E-3, x(0));
+    assert( (x(1) - 0.75).abs < 1E-3, x(1));
+  }
+}
