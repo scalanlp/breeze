@@ -16,6 +16,8 @@
 package scalanlp;
 package stage;
 
+import serialization.DataSerialization;
+
 /**
  * An item represents a single item corresponding to the
  * given numbered item from the origin.
@@ -28,4 +30,24 @@ package stage;
 case class Item[ID,+V](id : ID, value : V) {
   def map[O](f : V => O) =
     Item[ID,O](id, f(value));
+}
+
+object Item {
+  implicit def dataReadable[ID:DataSerialization.Readable,V:DataSerialization.Readable]
+  : DataSerialization.Readable[Item[ID,V]]
+  = new DataSerialization.Readable[Item[ID,V]] {
+    override def read(from : DataSerialization.Input) = {
+      Item(implicitly[DataSerialization.Readable[ID]].read(from),
+           implicitly[DataSerialization.Readable[V]].read(from));
+    }
+  }
+
+  implicit def dataWritable[ID:DataSerialization.Writable,V:DataSerialization.Writable]
+  : DataSerialization.Writable[Item[ID,V]]
+  = new DataSerialization.Writable[Item[ID,V]] {
+    override def write(to : DataSerialization.Output, value : Item[ID,V]) = {
+      implicitly[DataSerialization.Writable[ID]].write(to, value.id);
+      implicitly[DataSerialization.Writable[V]].write(to, value.value);
+    }
+  }
 }

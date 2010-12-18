@@ -76,6 +76,14 @@ with StringSerialization {
   }
 
   override implicit val doubleReadWritable : ReadWritable[Double] = new ReadWritable[Double] {
+    // thread-local string-builder for reading floating point numbers.
+    val tlsb = new java.lang.ThreadLocal[StringBuilder]() {
+      override def initialValue = new StringBuilder(50);
+    }
+  
+    @inline private final def isDigit(c : Int) =
+      c >= '0' && c <= '9';
+  
     override def read(in : Input) = {
       val switch = in.peek();
       if (switch == '-') {
@@ -85,34 +93,35 @@ with StringSerialization {
       } else if (switch == 'i' || switch == 'I') {
         in.expectLower("inf"); Double.PositiveInfinity;
       } else {
-        val sb = new java.lang.StringBuilder();
+        // get thread-local string value
+        val sb = tlsb.get;
 
+        // clear current builder
+        sb.setLength(0);
+        
         // read base
-        sb.append(in.readNumber);
+        while (isDigit(in.peek())) { sb.append(in.read().asInstanceOf[Char]); }
 
         // read decimal
         if (in.peek() == '.') {
-          in.read();
-          sb.append('.');
-          sb.append(in.readNumber);
+          sb.append(in.read().asInstanceOf[Char]);
+          while (isDigit(in.peek())) { sb.append(in.read().asInstanceOf[Char]); }
         }
 
         // read exponent
         if (in.peek() == 'e' || in.peek() == 'E') {
-          in.read();
-          sb.append('e');
+          sb.append(in.read().asInstanceOf[Char]);
           if (in.peek() == '-' || in.peek() == '+') {
-            sb.appendCodePoint(in.read());
+            sb.append(in.read().asInstanceOf[Char]);
           }
-          sb.append(in.readNumber);
+          while (isDigit(in.peek())) { sb.append(in.read().asInstanceOf[Char]); }
           if (in.peek() == '.') {
-            in.read();
-            sb.append('.');
-            sb.append(in.readNumber);
+            sb.append(in.read().asInstanceOf[Char]);
+            while (isDigit(in.peek())) { sb.append(in.read().asInstanceOf[Char]); }
           }
         }
 
-        sb.toString.toDouble;
+        java.lang.Double.parseDouble(sb.toString)
       }
     }
     

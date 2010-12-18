@@ -44,8 +44,8 @@ extends Stage[LazyIterable[Item[ID,I]],LazyIterable[Item[ID,I]]] {
  * @author dramage
  */
 object Filter {
-  def apply[ID:Manifest,I:Manifest](f : I => Boolean) = new Filter[ID,I] {
+  def apply[ID:Manifest,I:Manifest](name : String, f : I => Boolean) = new Filter[ID,I] {
     override def filter(row : I) = f(row);
-    override def toString = "Filter("+f.toString+")";
+    override def toString = "Filter("+serialization.TextSerialization.toString(name)+")";
   }
 }

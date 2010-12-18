@@ -306,9 +306,12 @@ trait TableRowCompanion[This,Format] { self =>
   private val names : List[String] =
     new com.thoughtworks.paranamer.BytecodeReadingParanamer().lookupParameterNames(method).toList;
 
+  val header : Option[List[String]] =
+    Some(names);
+
   class CompanionReadable(implicit trr : TableRowReadable[Format], cp : CanPack[Format])
   extends TableRowReadable[This] {
-    override def header = Some(names);
+    override def header = self.header;
 
     override def read(in : TableRowReader) = {
       val packed = implicitly[TableRowReadable[Format]].read(in);
@@ -325,7 +328,7 @@ trait TableRowCompanion[This,Format] { self =>
 
   class CompanionWritable(implicit trw : TableRowWritable[Format], cp : CanPack[Format], cm : Manifest[This])
   extends TableRowWritable[This] {
-    override def header = Some(names);
+    override def header = self.header;
 
     override def write(out : TableRowWriter, value : This) = {
       val unpacked : List[Any] =

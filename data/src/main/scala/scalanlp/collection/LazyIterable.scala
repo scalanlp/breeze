@@ -21,6 +21,8 @@ import scala.collection.{IterableLike,TraversableView};
 import scala.collection.mutable.Builder;
 import scala.collection.generic.{GenericCompanion,CanBuildFrom};
 
+import scalanlp.serialization.{DataSerialization,FileSerialization};
+
 import TraversableView.NoBuilder;
 
 /**
@@ -297,6 +299,53 @@ object LazyIterable extends GenericCompanion[LazyIterable] {
         noBuilder.asInstanceOf[Builder[A,LazyIterable[A]]];
       def apply() =
         noBuilder.asInstanceOf[Builder[A,LazyIterable[A]]];
+    }
+  }
+
+  /** Reader for cached files on disk to avoid computing the iterable. */
+  implicit def fileReadable[A](implicit r : DataSerialization.Readable[A])
+  : FileSerialization.Readable[LazyIterable[A]]
+  = new FileSerialization.Readable[LazyIterable[A]] {
+    override def read(path : java.io.File) = LazyIterable[A] {
+      new Iterator[A] {
+        val from = new java.io.DataInputStream(io.FileStreams.input(path));
+        var remaining = 0;
+
+        override def hasNext = {
+          while (remaining == 0) {
+            remaining = from.readByte;
+            if (remaining < 0) {
+              from.close();
+            }
+          }
+          remaining > 0;
+        }
+
+        override def next = {
+          require(hasNext, "Next called on empty iterator");
+          remaining -= 1;
+          r.read(from);
+        }
+      }
+    }
+  }
+
+  /** Writer for cached files on disk to avoid computing the iterable. */
+  implicit def fileWritable[A](implicit w : DataSerialization.Writable[A])
+  : FileSerialization.Writable[LazyIterable[A]]
+  = new FileSerialization.Writable[LazyIterable[A]] {
+    override def write(path : java.io.File, coll : LazyIterable[A]) = {
+      val to = new java.io.DataOutputStream(io.FileStreams.output(path));
+      val iter = coll.iterator;
+      while (iter.hasNext) {
+        val values = iter.take(100).toList;
+        to.writeShort(values.length.toByte);
+        for (value <- values) {
+          w.write(to, value);
+        }
+      }
+      to.writeByte(-1);
+      to.close();
     }
   }
 }

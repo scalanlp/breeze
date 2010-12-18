@@ -38,7 +38,7 @@ object AdaptiveGradientDescent {
       res;
     }
 
-    override def chooseStepSize(state: State) = eta;
+    override def chooseStepSize(state: State) = if(state.iter < 2) 0.001 * eta else eta;
 
   }
 

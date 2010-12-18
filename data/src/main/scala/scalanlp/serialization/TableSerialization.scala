@@ -19,6 +19,7 @@ package serialization;
 
 import java.io.File;
 
+import scalanlp.collection.LazyIterable;
 import scalanlp.io.{TextReader,TextWriter,TextReaderException};
 import scalanlp.ra.Cell;
 import scalanlp.pipes.Pipes;
@@ -51,6 +52,15 @@ object TableReadable {
 
     override def read(tr : TableReader) =
       tr.map(implicitly[TableRowReadable[V]].read);
+  }
+
+  implicit def toLazyIterable[V:TableRowReadable]
+  : TableReadable[LazyIterable[V]] = new TableReadable[LazyIterable[V]] {
+    override def header =
+      implicitly[TableRowReadable[V]].header;
+
+    override def read(tr : TableReader) =
+      LazyIterable(tr.map(implicitly[TableRowReadable[V]].read));
   }
 
   implicit def toArray[V:ClassManifest:TableRowReadable]
@@ -102,6 +112,19 @@ object TableWritable {
       implicitly[TableRowWritable[V]].header;
 
     override def write(tw : TableWriter, vv : Iterator[V]) = {
+      for (v <- vv) {
+        implicitly[TableRowWritable[V]].write(tw.next(), v);
+      }
+      tw.finish();
+    }
+  }
+
+  implicit def forLazyIterable[V:TableRowWritable]
+  : TableWritable[LazyIterable[V]] = new TableWritable[LazyIterable[V]] {
+    override def header =
+      implicitly[TableRowWritable[V]].header;
+
+    override def write(tw : TableWriter, vv : LazyIterable[V]) = {
       for (v <- vv) {
         implicitly[TableRowWritable[V]].write(tw.next(), v);
       }
