@@ -4,27 +4,24 @@ package scalanlp.maxent
  * 
  * @author dlwh
  */
-import scalala.Scalala._;
-import scalala.tensor.Vector;
-import scalala.tensor.adaptive.AdaptiveVector;
+import scalala.tensor.mutable.Vector;
 import scalala.tensor.sparse.SparseVector;
 
-import scalala.tensor.counters.Counters
-import scalala.tensor.counters.Counters.DoubleCounter
-import scalala.tensor.counters.Counters.PairedDoubleCounter
-import scalala.tensor.counters.LogCounters
-import scalala.tensor.counters.LogCounters.LogPairedDoubleCounter
 import scalala.tensor.dense.DenseVector
 import scalanlp.concurrent.ParallelOps._;
 import scalanlp.util.Index
 import scalanlp.util.Encoder
-import scalanlp.math.Numerics;
-import scalanlp.collection.mutable.SparseArray
+import scalala.library.Library.softmax;
 import scalanlp.util.Log
 import scalanlp.util.Profiling
 import scalanlp.optimize.{FirstOrderMinimizer, DiffFunction}
+import scalala.collection.sparse.SparseArray
+import scalala.tensor.{Counter, Counter2}
+import scalala.tensor.::
+import scalala.library.Numerics
+import scalala.generic.math.CanSoftmax
 
-abstract class MaxEntObjectiveFunction extends DiffFunction[Int,DenseVector]  {
+abstract class MaxEntObjectiveFunction extends DiffFunction[DenseVector[Double]]  {
   type Context;
   type Decision;
   type Feature;
@@ -36,7 +33,7 @@ abstract class MaxEntObjectiveFunction extends DiffFunction[Int,DenseVector]  {
   protected def features(d: Decision, c: Context):IndexedSeq[Feature];
   protected def initialValueForFeature(f: Feature):Double;
   // (Context -> Decision -> log p(decision|context)) => (log prob, expected count of (context,decision)
-  protected def expectedCounts(logThetas: IndexedSeq[Vector]):(Double,IndexedSeq[Vector]);
+  protected def expectedCounts(logThetas: IndexedSeq[Vector[Double]]):(Double,IndexedSeq[Vector[Double]]);
 
   lazy val contextBroker = Encoder.fromIndex(contextIndex);
   protected lazy val decisionBroker = Encoder.fromIndex(decisionIndex);
@@ -44,7 +41,7 @@ abstract class MaxEntObjectiveFunction extends DiffFunction[Int,DenseVector]  {
   // feature grid is contextIndex -> decisionIndex -> Seq[feature index]
   lazy val (featureIndex: Index[Feature], featureGrid: Array[SparseArray[Array[Int]]]) = {
     val index = Index[Feature]();
-    val grid = contextBroker.fillArray(decisionBroker.fillSparseArray(Array[Int]()));
+    val grid = contextBroker.fillArray(decisionBroker.mkSparseArray[Array[Int]]);
     for(cI <- 0 until contextIndex.size;
         c = contextIndex.get(cI);
         dI <- indexedDecisionsForContext(cI)) {
@@ -60,23 +57,23 @@ abstract class MaxEntObjectiveFunction extends DiffFunction[Int,DenseVector]  {
   }
   lazy val featureEncoder = Encoder.fromIndex(featureIndex);
 
-  lazy val defaultInitWeights = Counters.aggregate(featureIndex.map{ f => (f,initialValueForFeature(f) + math.log(.02 * math.random + 0.99))});
+  lazy val defaultInitWeights = Counter(featureIndex.map{ f => (f,initialValueForFeature(f) + math.log(.02 * math.random + 0.99))});
   lazy val encodedInitialWeights = featureEncoder.encodeDense(defaultInitWeights);
 
-  protected def decodeThetas(m: IndexedSeq[Vector]): LogPairedDoubleCounter[Context,Decision] = {
-    val result = LogPairedDoubleCounter[Context,Decision];
+  protected def decodeThetas(m: IndexedSeq[Vector[Double]]): Counter2[Context,Decision,Double] = {
+    val result = Counter2[Context,Decision,Double];
     for( (vec,cI) <- m.iterator.zipWithIndex) {
-      result(contextIndex.get(cI)) := decisionBroker.decode(vec);
+      result(contextIndex.get(cI),::) := decisionBroker.decode(vec);
     }
     result;
   }
 
   // Context -> Decision -> log p(decision|context)
-  private def computeLogThetas(weights: DenseVector): IndexedSeq[Vector] = {
-    val thetas = contextBroker.mkArray[Vector];
+  private def computeLogThetas(weights: DenseVector[Double]): IndexedSeq[Vector[Double]] = {
+    val thetas = contextBroker.mkArray[Vector[Double]];
     for((dIs,cI) <- featureGrid.zipWithIndex) {
-      thetas(cI) = decisionBroker.mkVector(Double.NegativeInfinity);
-      for((dI,features) <- dIs) {
+      thetas(cI) = decisionBroker.mkDenseVector(Double.NegativeInfinity);
+      for((dI,features) <- dIs.activeIterator) {
         val score = sumWeights(features,weights);
         thetas(cI)(dI) = score;
       }
@@ -84,16 +81,16 @@ abstract class MaxEntObjectiveFunction extends DiffFunction[Int,DenseVector]  {
     logNormalizeRows(thetas);
   }
 
-  private def logNormalizeRows(thetas: IndexedSeq[Vector])  = {
+  private def logNormalizeRows(thetas: IndexedSeq[Vector[Double]])  = {
     for( vec <- thetas) {
-      vec -= Numerics.logSum(vec);
+      vec -= softmax(vec);
     }
     thetas;
   }
 
 
   // basically just a dot product
-  protected def sumWeights(indices: Array[Int], weights: DenseVector) = {
+  protected def sumWeights(indices: Array[Int], weights: DenseVector[Double]) = {
     var i = 0;
     var sum = 0.0;
     while(i < indices.length) {
@@ -104,43 +101,41 @@ abstract class MaxEntObjectiveFunction extends DiffFunction[Int,DenseVector]  {
     sum;
   }
 
-  override def calculate(weights: DenseVector) = {
+  override def calculate(weights: DenseVector[Double]) = {
     val encodedThetas = computeLogThetas(weights);
     val (marginalLogProb,eCounts) = expectedCounts(encodedThetas);
-    val encodedTotals = eCounts.map(Numerics.logSum _);
+    val sm = CanSoftmax.mkTensor1Softmax[Int,Vector[Double]];
+    val encodedTotals = eCounts.map(v => softmax(v)(sm));
     val (expCompleteLogProb,grad) = computeGradient(weights, encodedThetas, eCounts, encodedTotals);
     (-marginalLogProb,grad);
   }
 
 
-  override def valueAt(weights: DenseVector) = {
+  override def valueAt(weights: DenseVector[Double]) = {
     val encodedThetas = computeLogThetas(weights);
     val (marginalLogProb,eCounts) = expectedCounts(encodedThetas);
 
     -marginalLogProb
   }
 
-  protected def computeValue(featureWeights: Vector, logThetas: IndexedSeq[Vector], eCounts: IndexedSeq[Vector], eTotals: IndexedSeq[Double]) = {
+  // computes just the value
+  protected def computeValue(featureWeights: Vector[Double], logThetas: IndexedSeq[Vector[Double]], eCounts: IndexedSeq[Vector[Double]], eTotals: IndexedSeq[Double]) = {
     var logProb = 0.0;
 
     for( (vec,c) <- eCounts.zipWithIndex) {
       val cTheta = logThetas(c);
-      val vec2 = vec match {
-        case v: AdaptiveVector => v.innerVector;
-        case v => v
-      }
-      vec2 match {
-        case vec: SparseVector =>
+      vec match {
+        case vec: SparseVector[Double] =>
           var i = 0;
-          while(i < vec.used) {
-            val d = vec.index(i);
-            val e = vec.data(i);
+          while(i < vec.data.activeLength) {
+            val d = vec.data.indexArray(i);
+            val e = vec.data.valueArray(i);
             val lT = cTheta(d);
             logProb += e * lT;
             i += 1;
           }
         case _ =>
-          for((d,e) <- vec.activeElements) {
+          for((d,e) <- vec.pairsIteratorNonZero) {
             val lT = cTheta(d);
             logProb += e * lT;
           }
@@ -149,8 +144,8 @@ abstract class MaxEntObjectiveFunction extends DiffFunction[Int,DenseVector]  {
     -logProb
   }
 
-  // computes expComplete log Likelihood and gradient
-  protected def computeGradient(featureWeights: Vector, logThetas: IndexedSeq[Vector], eCounts: IndexedSeq[Vector], eTotals: IndexedSeq[Double]): (Double,DenseVector) = {
+  // computes expected complete log Likelihood and gradient
+  protected def computeGradient(featureWeights: Vector[Double], logThetas: IndexedSeq[Vector[Double]], eCounts: IndexedSeq[Vector[Double]], eTotals: IndexedSeq[Double]): (Double,DenseVector[Double]) = {
     // gradient is \sum_{d,c} e(d,c) * (f(d,c) - \sum_{d'} exp(logTheta(c,d')) f(d',c))
     // = \sum_{d,c} (e(d,c)  - e(*,c) exp(logTheta(d,c))) f(d,c)
     // = \sum_{d,c} margin(d,c) * f(d,c)
@@ -158,21 +153,17 @@ abstract class MaxEntObjectiveFunction extends DiffFunction[Int,DenseVector]  {
     // e(*,c) = \sum_d e(d,c) == eCounts(c).total
     def featureGrad = featureEncoder.mkDenseVector(0.0);
 
-    val (grad,prob) = eCounts.zipWithIndex.par(2000).fold( (featureGrad,0.0) ) { (gradObj,vecIndex) =>
+    val (grad: DenseVector[Double],prob: Double) = eCounts.zipWithIndex.par(2000).fold( (featureGrad,0.0) ) { (gradObj,vecIndex) =>
       val (vec,c) = vecIndex;
       var (featureGrad,logProb) = gradObj;
       val cTheta = logThetas(c);
       val logTotal = math.log(eTotals(c));
-      val vec2 = vec match {
-        case v: AdaptiveVector => v.innerVector;
-        case v => v
-      }
-      vec2 match {
-        case vec: SparseVector =>
+      vec match {
+        case vec: SparseVector[Double] =>
           var i = 0;
-          while(i < vec.used) {
-            val d = vec.index(i);
-            val e = vec.data(i);
+          while(i < vec.data.activeLength) {
+            val d = vec.data.indexArray(i);
+            val e = vec.data.valueArray(i);
             val lT = cTheta(d);
             logProb += e * lT;
 
@@ -180,21 +171,24 @@ abstract class MaxEntObjectiveFunction extends DiffFunction[Int,DenseVector]  {
 
             var j = 0;
             val grid = featureGrid(c)(d);
-            while(j < grid.size) {
-              val f = grid(j);
-              featureGrad(f) += margin;
-              j += 1;
-            }
+            if(grid != null)
+              while(j < grid.size) {
+                val f = grid(j);
+                featureGrad(f) += margin;
+                j += 1;
+              }
             i += 1;
           }
         case _ =>
-          for((d,e) <- vec.activeElements) {
+          for((d,e) <- vec.pairsIteratorNonZero) {
             val lT = cTheta(d);
             logProb += e * lT;
 
             val margin = e - math.exp(logTotal + lT);
 
-            for( f <- featureGrid(c)(d))
+            val grid = featureGrid(c)(d);
+            if(grid != null)
+            for( f <- grid)
               featureGrad(f) += margin;
           }
       }
@@ -206,32 +200,34 @@ abstract class MaxEntObjectiveFunction extends DiffFunction[Int,DenseVector]  {
     }
 
     val realProb = - prob
-    val finalGrad = -grad
+    val finalGrad = grad * -1;
 
-    (realProb,finalGrad value);
+    (realProb,finalGrad);
   }
 
-  class mStepObjective(encodedCounts: IndexedSeq[Vector]) extends DiffFunction[Int,DenseVector]   {
-    val encodedTotals = encodedCounts.map(Numerics.logSum _);
-    override def calculate(weights: DenseVector) = {
+  class mStepObjective(encodedCounts: IndexedSeq[Vector[Double]]) extends DiffFunction[DenseVector[Double]]   {
+    val sm = CanSoftmax.mkTensor1Softmax[Int,Vector[Double]];
+    val encodedTotals = encodedCounts.map(v => softmax(v)(sm));
+    override def calculate(weights: DenseVector[Double]) = {
       val logThetas = computeLogThetas(weights);
       computeGradient(weights,logThetas,encodedCounts,encodedTotals);
     }
 
-    override def valueAt(weights: DenseVector) = {
+    override def valueAt(weights: DenseVector[Double]) = {
       val logThetas = computeLogThetas(weights);
       computeValue(weights,logThetas,encodedCounts,encodedTotals);
     }
 
   }
 
-  final case class State(encodedWeights: DenseVector, marginalLikelihood: Double) {
+  final case class State(encodedWeights: DenseVector[Double], marginalLikelihood: Double) {
     private[MaxEntObjectiveFunction] lazy val encodedLogThetas =computeLogThetas(encodedWeights)
     lazy val logThetas = decodeThetas(encodedLogThetas);
     lazy val weights = featureEncoder.decode(encodedWeights);
   }
 
-  def emIterations(initialWeights: DoubleCounter[Feature] = defaultInitWeights,
+  /*
+  def emIterations(initialWeights: Counter[Feature,Double] = defaultInitWeights,
                    maxMStepIterations: Int=90,
                    optParams: FirstOrderMinimizer.OptParams): Iterator[State] = {
     val log = Log.globalLog;
@@ -247,6 +243,7 @@ abstract class MaxEntObjectiveFunction extends DiffFunction[Int,DenseVector]  {
 
     weightsIterator drop 1 // initial iteration is crap
   }
+  */
 
 
 }
@@ -266,26 +263,26 @@ trait EasyMaxEnt { maxent: MaxEntObjectiveFunction =>
   }
 
   /** Should compute marginal likelihood and expected counts for the data */
-  protected def expectedCounts(logThetas: LogPairedDoubleCounter[Context,Decision]):(Double,PairedDoubleCounter[Context,Decision]);
+  protected def expectedCounts(logThetas: Counter2[Context,Decision,Double]):(Double,Counter2[Context,Decision,Double]);
 
-  protected def expectedCounts(encodedThetas: IndexedSeq[Vector]):(Double,IndexedSeq[Vector]) = {
+  protected def expectedCounts(encodedThetas: IndexedSeq[Vector[Double]]):(Double,IndexedSeq[Vector[Double]]) = {
     val logThetas = decodeThetas(encodedThetas);
     val (marginalLogProb,eCounts) = expectedCounts(logThetas);
     (marginalLogProb,encodeCounts(eCounts));
   }
 
-  private def encodeCounts(eCounts: PairedDoubleCounter[Context,Decision]): Array[Vector] = {
-    val encCounts = contextBroker.mkArray[Vector];
-    for( (c,ctr) <- eCounts.rows;
-         cI = contextIndex(c);
-         encCtr = decisionBroker.encode(ctr)
-       ) {
+  private def encodeCounts(eCounts: Counter2[Context,Decision,Double]): Array[Vector[Double]] = {
+    val encCounts = contextBroker.mkArray[Vector[Double]];
+    for( c <- eCounts.domain._1) {
+      val ctr = eCounts(c,::);
+      val cI = contextIndex(c);
+      val encCtr = decisionBroker.encode(ctr)
       encCounts(cI) = encCtr;
     }
 
     encCounts
   }
 
-  class mStepObjective(eCounts: PairedDoubleCounter[Context,Decision]) extends maxent.mStepObjective(encodeCounts(eCounts));
+  class mStepObjective(eCounts: Counter2[Context,Decision,Double]) extends maxent.mStepObjective(encodeCounts(eCounts));
 
 }

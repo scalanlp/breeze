@@ -16,11 +16,9 @@ package scalanlp.math;
  limitations under the License. 
 */
 
-import scalala.tensor.counters._
-import scalala.tensor.adaptive.AdaptiveVector
 import scalala.tensor.dense.DenseVector
+import scalala.tensor._
 import scalala.tensor.sparse.SparseVector;
-import Counters._;
 
 /**
 * Provides some functions left out of java.lang.math
@@ -63,8 +61,8 @@ object Numerics {
    * Evaluates the log of the generalized beta function.
    *  = \sum_a lgamma(c(a))- lgamma(c.total)
    */
-  def lbeta[T](c: DoubleCounter[T]) = {
-    c.valuesIterator.foldLeft(-lgamma(c.total))( (acc,x)=> acc +lgamma(x));
+  def lbeta[T](c: Counter[T,Double]) = {
+    c.valuesIterator.foldLeft(-lgamma(c.sum))( (acc,x)=> acc +lgamma(x));
   }
 
   /**
@@ -148,7 +146,7 @@ object Numerics {
     if(a == Double.NegativeInfinity) b
     else if (b == Double.NegativeInfinity) a
     else if(a < b) b + log(1 + exp(a-b))
-    else a + log(1+exp(b-a));    
+    else a + log(1+exp(b-a));
   }
 
   /**
@@ -248,33 +246,6 @@ object Numerics {
   }
 
   import scalala.tensor.Vector;
-  /**
-  * Sums together things in log space.
-  * @return log(\sum exp(a_i))
-  */
-  def logSum(a:Vector):Double = a match {
-    case a: AdaptiveVector => logSum(a.innerVector);
-    case a: DenseVector => logSum(a.data);
-    case a: SparseVector => logSum(a.data.take(a.used));
-    case _ => logSum(a.activeValues,a.activeValues.reduceLeft(_ max _));
-  }
-
-  def max(a:Vector):Double = a match {
-    case a: AdaptiveVector => max(a.innerVector);
-    case a: DenseVector => max(a.data);
-    case a: SparseVector => max(a.data, a.used);
-    case _ => a.activeValues.reduceLeft(_ max _);
-  }
-
-  /**
-  * Sums together things in log space.
-  * @return log(\sum exp(a_i))
-  */
-  def logNormalize(a:Vector):Vector = {
-    val sum = logSum(a);
-    import scalala.Scalala.{logSum => _, _};
-    a - sum value;
-  }
 
   /**
   * Sums together things in log space.

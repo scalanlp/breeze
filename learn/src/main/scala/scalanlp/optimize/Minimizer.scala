@@ -16,13 +16,11 @@ package scalanlp.optimize;
  limitations under the License. 
 */
 
-import scalala.tensor.Vector;
-
 /**
 * Anything that can minimize a function
 *
 * @author dlwh
 */
-trait Minimizer[T,-F<:Function[T,Double]] {
+trait Minimizer[T,-F] {
   def minimize(f: F, initial: T): T
 }

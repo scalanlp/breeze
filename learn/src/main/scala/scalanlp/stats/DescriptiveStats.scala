@@ -17,10 +17,6 @@ package scalanlp.stats;
 */
 
 
-import scalala.tensor.counters._;
-import Counters._
-import scalanlp.util.Iterators;
-
 /**
 * Provides utilities for descriptive statistics, like the mean and variance.
 */

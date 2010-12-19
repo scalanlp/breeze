@@ -1,9 +1,8 @@
 package scalanlp.optimize
 
-import scalala.Scalala._;
-import scalala.tensor.Tensor1
-import scalala.tensor.operators.{TensorShapes, TensorSelfOp};
-import TensorShapes._
+import scalala._;
+import generic.collection.CanMapValues
+import scalala.tensor.Tensor
 
 /**
  * Traits for adding regularization and such to StochasticGradient in a way
@@ -19,37 +18,37 @@ object Fobos {
   /**
    * Implements l2 regularization where r(w) = lambda/2 norm(w,2)^2
    */
-  trait L2Regularization[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]] { this: StochasticGradientDescent[K,T] =>
+  trait L2Regularization[T] { this: StochasticGradientDescent[T] =>
     /**
      * Regularization Constant
      */
     val lambda: Double = 1.0;
 
     override def projectVector(state: State, oldX: T, gradient: T, stepSize: Double):T = {
-      (oldX - gradient * stepSize) / (1 + lambda * stepSize) value;
+      (oldX - gradient * stepSize) / (1 + lambda * stepSize)
     }
   }
 
   /**
-   * Implements L1 regularization where r(w) = lambda/2 norm(w,2)^2
+   * Implements L1 regularization where r(w) = lambda norm(w,1)
    */
-  trait L1Regularization[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]] { this: StochasticGradientDescent[K,T] =>
+  trait L1Regularization[K,T] { this: StochasticGradientDescent[T] =>
+    protected implicit val canMapValues: CanMapValues[T,Double,Double,T];
     /**
      * Regularization Constant
      */
     val lambda: Double = 1.0;
 
     override def projectVector(state: State, oldX: T, gradient: T, stepSize: Double):T = {
-      val res:T = oldX - gradient * stepSize value;
+      val res:T = oldX - gradient * stepSize;
       val tlambda = lambda * stepSize;
-      for( (k,v) <- res.activeElements) {
+      res.values.map { v =>
         if(v.abs < tlambda) {
-          res(k) = 0;
+          0;
         } else {
-          res(k) = v - tlambda;
+          v - math.signum(v) * tlambda;
         }
-      }
-      res
+      };
     }
   }
 }

@@ -128,27 +128,29 @@ trait CompoundSerializationTestBase extends SerializationTestBase {
 class DataSerializationTest extends CompoundSerializationTestBase {
   override val serializer = DataSerialization;
 
+/*
   import scalala.tensor.sparse._;
   test("SparseVector") {
-    val v = new SparseVector(4,0);
+    val v = SparseVector.zeros[Double](4);
     v(0) = 1;
     v(1) = 2;
     v(2) = 2;
-    val bytes = serializer.toBytes[SparseVector](v);
-    val b = serializer.fromBytes[SparseVector](bytes);
+    val bytes = serializer.toBytes[SparseVector[Double]](v);
+    val b = serializer.fromBytes[SparseVector[Double]](bytes);
     v == b
   }
 
   import scalala.tensor.dense._;
   test("DenseVector") {
-    val v = new DenseVector(4);
+    val v = DenseVector.zeros[Double](4);
     v(0) = 1;
     v(1) = 2;
     v(2) = 2;
     val bytes = serializer.toBytes(v);
-    val b = serializer.fromBytes[DenseVector](bytes);
+    val b = serializer.fromBytes[DenseVector[Double]](bytes);
     v == b
   }
+  */
 }
 
 @RunWith(classOf[JUnitRunner])

@@ -16,11 +16,8 @@ package scalanlp.stats.sampling;
  limitations under the License. 
 */
 
-import scalala.tensor.counters._;
-import scalala.tensor.counters.Counters._;
-import scalanlp.math.Numerics._;
-
-import scalanlp.util.Log;
+import scalanlp.util.Log
+import scalala.tensor.Counter
 
 /**
  * Represents a multinomial Distribution over elements.
@@ -28,23 +25,23 @@ import scalanlp.util.Log;
  * @author dlwh
  */
 trait Multinomial[T] extends DiscreteDistr[T] {
-  protected def components : DoubleCounter[T];
-  protected def total : Double;
+  protected def components : Counter[T,Double];
+  protected def sum : Double;
   protected implicit val rand: RandBasis;
 
   // check rep
-  for ((k,v) <- components.iterator) {
+  for ((k,v) <- components.pairsIterator) {
     if (v < 0) {
       throw new IllegalArgumentException("Multinomial has negative mass at index "+k);
     }
   }
   
   def draw() = {
-    var prob = rand.uniform.get() * total;
+    var prob = rand.uniform.get() * sum;
     if(prob.isNaN) {
       Log.globalLog(Log.ERROR)("You got a NaN!");
     }
-    val elems = components.iterator;
+    val elems = components.pairsIterator;
     var (e,w:Double) = elems.next;
     prob  = prob - w;
     while(prob > 0) {
@@ -55,14 +52,14 @@ trait Multinomial[T] extends DiscreteDistr[T] {
     e
   }
 
-  def probabilityOf(e : T) = components.apply(e) / total;
-  def logProbabilityOf(c: DoubleCounter[T]) = {
-    val probs = for( (k,v) <- c) yield v * math.log(components.apply(k) / total);
+  def probabilityOf(e : T) = components.apply(e) / sum;
+  def logProbabilityOf(c: Counter[T,Double]) = {
+    val probs = for( (k,v) <- c.pairs) yield v * math.log(components.apply(k) / sum);
     probs.foldLeft(0.0)(_+_);
   }
   override def unnormalizedProbabilityOf(e:T) = components.apply(e);
   
-  override def toString = components.mkString("Multinomial{",",","}")
+  override def toString = components.pairsIterator.mkString("Multinomial{",",","}")
 }
 
 /** 
@@ -75,9 +72,9 @@ object Multinomial {
    * Returns a Multinomial where the probability of each element in the counter
    * is proportional to its count.
    */
-  def apply[T](c : DoubleCounter[T])(implicit r: RandBasis=Rand)  = new Multinomial[T] {
-    def total = c.total;
-    if(total.isNaN || total <= 0.) throw new IllegalArgumentException("total is " + total);
+  def apply[T](c : Counter[T,Double])(implicit r: RandBasis=Rand)  = new Multinomial[T] {
+    val sum = c.sum;
+    if(sum.isNaN || sum <= 0.) throw new IllegalArgumentException("sum is " + sum);
     protected def components = c;
     protected val rand = r;
   }
@@ -86,66 +83,18 @@ object Multinomial {
    * Returns a Multinomial where the probability of each element in the counter
    * is proportional to its count.
    */
-  def apply[T](c : LogCounters.DoubleCounter[T])(implicit r:RandBasis) = new Multinomial[T] {
-    import math._;
-    if(total.isNaN ) throw new IllegalArgumentException("total is " + total);
-    def total = exp(c.logTotal);
-    protected lazy val components = LogCounters.normalize(c);
-    override def draw() = {
-      var prob = math.log(rand.uniform.get())+ c.logTotal;
-      if(prob.isNaN) {
-        Log.globalLog(Log.ERROR)("You got a NaN!");
-      }
-      val elems = c.iterator;
-      var (e,w:Double) = elems.next;
-      prob  = scalanlp.math.Numerics.logDiff(prob,w);
-      while(prob > Double.NegativeInfinity) {
-        val t  = elems.next;
-        e = t._1;
-        prob  = scalanlp.math.Numerics.logDiff(prob,t._2);
-      }
-      e
-    }
-
-    protected val rand = r;
-    override def probabilityOf(e : T) = exp(logProbabilityOf(e));
-    override def logProbabilityOf(e: T) = c(e) - c.logTotal;
-    override def unnormalizedLogProbabilityOf(e:T) = c(e);
-    override def unnormalizedProbabilityOf(e:T) = exp(unnormalizedLogProbabilityOf(e));
-    override def toString = c.mkString("LogMultinomial{",",","}")
-  }
-
-
-  /**
-   * Returns a Multinomial where the probability of each element in the counter
-   * is proportional to its count.
-   */
-  def fromCounter[T](c:DoubleCounter[T])(implicit rand: RandBasis=Rand) = apply(c)(rand);
-
-
-  /**
-   * Returns a Multinomial where the probability of each element in the counter
-   * is proportional to its count.
-   */
-  def fromLogCounter[T](c:LogCounters.DoubleCounter[T])(implicit r: RandBasis=Rand) = apply(c)(r);
-  
-  
-  /**
-   * Returns a Multinomial where the probability is proportional to a(i)
-   */
-  def apply(a : Array[Double])(implicit rand: RandBasis) : Multinomial[Int] = apply(a,a.foldLeft(0.0)(_+_))(rand);
+  def fromCounter[T](c:Counter[T,Double])(implicit rand: RandBasis=Rand) = apply(c)(rand);
 
   /**
    * Returns a Multinomial where the probability is proportional to a(i).
-   * Takes the total for speed.
+   * Takes the sum for speed.
    */
   def apply(arr : Array[Double], t: Double)(implicit r: RandBasis) = new Multinomial[Int] {
     lazy val components = {
-      val c = DoubleCounter[Int];
-      c ++= arr.zipWithIndex.map(_.swap);
+      val c = Counter[Int,Double](arr.zipWithIndex.map(_.swap):_*)
       c;
     }
     val rand = r;
-    def total = t;
+    def sum = t;
   }
 }

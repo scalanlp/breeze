@@ -1,14 +1,13 @@
 package scalanlp.optimize
 
-import scalala.tensor.Tensor1
-import scalala.tensor.operators.TensorSelfOp
-import scalala.tensor.operators.TensorShapes._;
+import scalala.generic.collection.CanCopy
+;
 
 /**
  * 
  * @author dlwh
  */
-class CachedDiffFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](obj: DiffFunction[K,T]) extends DiffFunction[K,T] {
+class CachedDiffFunction[T:CanCopy](obj: DiffFunction[T]) extends DiffFunction[T] {
   /** calculates the gradient at a point */
   override def gradientAt(x: T): T = calculate(x)._2;
   /** calculates the value at a point */
@@ -21,7 +20,7 @@ class CachedDiffFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](obj: 
   def calculate(x:T):(Double,T) = {
     if(x != lastX) {
       lastGradVal = obj.calculate(x);
-      lastX = x.copy;
+      lastX = implicitly[CanCopy[T]] apply (x);
     }
 
     lastGradVal;
@@ -32,7 +31,7 @@ class CachedDiffFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](obj: 
  *
  * @author dlwh
  */
-class CachedBatchDiffFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](obj: BatchDiffFunction[K,T]) extends BatchDiffFunction[K,T] {
+class CachedBatchDiffFunction[K,T:CanCopy](obj: BatchDiffFunction[T]) extends BatchDiffFunction[T] {
   /** calculates the gradient at a point */
   override def gradientAt(x: T, range: IndexedSeq[Int]): T = calculate(x,range)._2;
   /** calculates the value at a point */
@@ -48,7 +47,7 @@ class CachedBatchDiffFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](
   override def calculate(x:T, range: IndexedSeq[Int]):(Double,T) = {
     if(x != lastX || range != lastRange) {
       lastGradVal = obj.calculate(x, range);
-      lastX = x.copy;
+      lastX = implicitly[CanCopy[T]] apply (x);
       lastRange = range;
     }
 

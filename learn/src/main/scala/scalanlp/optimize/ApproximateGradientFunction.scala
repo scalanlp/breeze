@@ -1,23 +1,28 @@
 package scalanlp.optimize
 
-import scalala.tensor.Tensor1
-import scalala.Scalala._;
-import scalala.tensor.operators.TensorSelfOp
-import scalala.tensor.operators.TensorShapes._;
+import scalala._;
+import generic.collection.{CanCopy, CanCreateZerosLike}
+import generic.math.CanNorm
+import operators.{NumericOps, BinaryOp, OpSub}
+import scalala.tensor.mutable;
+import library.Library._;
 
 /**
  * 
  * @author dlwh
  */
-class ApproximateGradientFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]]
-              (f: T=>Double, epsilon: Double = 1E-5) extends DiffFunction[K,T] {
+class ApproximateGradientFunction[K,T](f: T=>Double,
+                                     epsilon: Double = 1E-5)
+                                    (implicit zeros: CanCreateZerosLike[T,T],
+                                     view: T<:< mutable.Tensor1[K,Double],
+                                     copy: CanCopy[T]) extends DiffFunction[T] {
   override def valueAt(x: T) = f(x);
 
-  def calculate(x:T) = {
+  def calculate(x:T): (Double, T) = {
     val fx = f(x);
-    val grad = x.like;
-    val xx = x.copy;
-    for((k,v) <- x) {
+    val grad: T = zeros(x);
+    val xx = copy(x)
+    for((k,v) <- x.pairsIterator) {
       xx(k) += epsilon;
       grad(k) = (f(xx) - fx) / epsilon;
       xx(k) -= epsilon;
@@ -27,9 +32,9 @@ class ApproximateGradientFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Co
 
   def calculateAndPrint(x: T, trueGrad: T) = {
     val fx = f(x);
-    val grad = x.like;
-    val xx = x.copy;
-    for((k,v) <- x) {
+    val grad = zeros(x)
+    val xx = copy(x)
+    for((k,v) <- x.pairsIteratorNonZero) {
       xx(k) += epsilon;
       grad(k) = (f(xx) - fx) / epsilon;
       xx(k) -= epsilon;
@@ -40,9 +45,15 @@ class ApproximateGradientFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Co
   }
 }
 
-class RandomizedGradientCheckingFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]]
-          (f: DiffFunction[K,T], randFraction:Double = 0.01, epsilons: Seq[Double] = Array(1E-5))
-          extends DiffFunction[K,T] {
+class RandomizedGradientCheckingFunction[K,T]
+          (f: DiffFunction[T], randFraction:Double = 0.01, epsilons: Seq[Double] = Array(1E-5))
+          (implicit zeros: CanCreateZerosLike[T,T],
+                                     view2: T <:< NumericOps[T],
+                                     view: T<:< mutable.Tensor1[K,Double],
+                                     copy: CanCopy[T],
+                                     canNorm: CanNorm[T],
+                                     opSub: BinaryOp[T,T,OpSub,T])
+          extends DiffFunction[T] {
   val approxes =  for( eps <- epsilons) yield {
     val fapprox = new ApproximateGradientFunction[K,T](f,eps);
     fapprox
@@ -60,9 +71,9 @@ class RandomizedGradientCheckingFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,S
 
   def calculateAndPrint(epsilon: Double, x: T, trueGrad: T) = {
     val fx = f(x);
-    val grad = x.like;
-    val xx = x.copy;
-    for((k,v) <- x if math.random < randFraction) {
+    val grad = zeros(x)
+    val xx = copy(x);
+    for((k,v) <- x.pairsIterator if math.random < randFraction) {
       xx(k) += epsilon;
       grad(k) = (f(xx) - fx) / epsilon;
       xx(k) -= epsilon;
@@ -74,9 +85,14 @@ class RandomizedGradientCheckingFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,S
 
 }
 
-class GradientCheckingDiffFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]]
-          (f: DiffFunction[K,T], epsilons: Seq[Double] = Array(1E-5))
-          extends DiffFunction[K,T] {
+class GradientCheckingDiffFunction[K,T](f: DiffFunction[T],
+                                      epsilons: Seq[Double] = Array(1E-5))
+                                    (implicit zeros: CanCreateZerosLike[T,T],
+                                     view2: T <:< NumericOps[T],
+                                     view: T<:< mutable.Tensor1[K,Double],
+                                     copy: CanCopy[T],
+                                     canNorm: CanNorm[T],
+                                     opSub: BinaryOp[T,T,OpSub,T]) extends DiffFunction[T] {
   val approxes =  for( eps <- epsilons) yield {
     val fapprox = new ApproximateGradientFunction[K,T](f,eps);
     fapprox
@@ -85,11 +101,10 @@ class GradientCheckingDiffFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1C
   override def valueAt(x: T) = f(x);
 
   def calculate(x:T) = {
-    val (v,predicted) = f.calculate(x);
+    val (v,predicted:T) = f.calculate(x);
     for { (fap,eps) <- approxes zip epsilons } {
       val empirical = fap.calculateAndPrint(x,predicted)._2;
-      empirical -= predicted
-      println("diff : " + eps + " norm: " + norm(empirical,2));
+      println("diff : " + eps + " norm: " + norm(view2(empirical) - predicted,2));
     }
     (v,predicted);
   }
@@ -97,15 +112,18 @@ class GradientCheckingDiffFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1C
 }
 
 object ApproximateGradientTester {
-  def apply[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](f:DiffFunction[K,T], x:T,
-                                                              epsilons:Seq[Double]=Array(0.01,0.001,1E-4,1E-5,1E-6)) = {
+  def apply[K,T](f:DiffFunction[T], x:T, epsilons:Seq[Double]=Array(1E-4))
+              (implicit zeros: CanCreateZerosLike[T,T],
+               view: T<:< mutable.Tensor1[K,Double],
+               view2: T <:< NumericOps[T],
+               copy: CanCopy[T],
+               canNorm: CanNorm[T],
+              opSub: BinaryOp[T,T,OpSub,T]) = {
     val predicted = f.gradientAt(x);
     for( eps <- epsilons) yield {
       val fapprox = new ApproximateGradientFunction[K,T](f,eps);
       val empirical = fapprox.gradientAt(x);
-      val normPredicted = norm(predicted,2);
-      predicted -= empirical
-      norm(predicted, 2) / normPredicted;
+      norm(view2(predicted) - empirical, 2) / norm(predicted,2);
     }
   }
 }

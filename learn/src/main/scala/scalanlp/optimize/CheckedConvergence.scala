@@ -15,29 +15,27 @@ See the License for the specific language governing permissions and
 limitations under the License. 
 */
 
-import scalala.tensor.Vector;
-import scalala.Scalala._;
-import scalala.tensor._;
-import scalala.tensor.operators._;
-import TensorShapes._;
+import scalala.library.Library._
+import scalala.generic.math.CanNorm
+;
 
 /**
  * A trait for gradient-based optimization procedures that need to see if they're converged.
  * 
  * @author dlwh
  */
-trait CheckedConvergence[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]] {
+trait CheckedConvergence[T] {
   /**
    * @return if we've converged
    */
   def checkConvergence(v: Double, grad: T): Boolean;
 }
 
-trait GradientNormConvergence[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]] extends CheckedConvergence[K,T] {
+trait GradientNormConvergence[T] extends CheckedConvergence[T] {
+  protected implicit val canNorm: CanNorm[T]
   val TOLERANCE = 1E-6;
   def checkConvergence(v: Double, grad: T): Boolean = {
-    val vv = if(v.abs < 1E-6) 1E-6 else v.abs;
-    val score =  norm(grad,2)/vv
-    score < TOLERANCE;
+    val vv = if(v.abs < 1E-3) 1E-3 else v.abs;
+    norm(grad,2)/vv < TOLERANCE;
   }
 }

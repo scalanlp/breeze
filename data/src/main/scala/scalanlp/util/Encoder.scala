@@ -1,3 +1,4 @@
+
 package scalanlp.util
 
 /*
@@ -16,17 +17,13 @@ package scalanlp.util
  limitations under the License.
 */
 
-
+import scalala.tensor.mutable._
+import scalala.tensor.{Counter=>imCounter};
+import scalala.collection.sparse.{DefaultArrayValue, SparseArray}
 
 import scalala.tensor.dense.DenseVector
-import scalala.tensor.counters.Counters._
-import scalala.tensor._;
-import scalala.tensor.sparse.{SparseHashVector, SparseVector};
-import scalala.tensor.adaptive._;
-import java.util.Arrays
-import scalala.Scalala._
-import scalanlp.collection.mutable.{SDArray, SparseArray}
-;
+import scalala.tensor.dense.DenseVectorCol
+import scalala.tensor.sparse._
 
 
 /**
@@ -38,81 +35,64 @@ trait Encoder[T] {
   val index: Index[T]
 
   /**
-   * Creates a Vector of some sort with the index's size.
+   * Creates a SparseVector[Double] with the index's size
    */
-  def mkVector(default: Double=0.0): Vector = {
-    val vec = new AdaptiveVector(index.size)
-    vec.default = default;
+  def mkSparseVector(): SparseVector[Double] = {
+    SparseVector.zeros[Double](index.size);
+  }
+
+  /**
+   * Creates a DenseVector[Double] with the index's size
+   */
+  final def mkDenseVector(default: Double=0.0):DenseVectorCol[Double] = {
+    val vec = DenseVector.fill[Double](index.size)(default);
     vec
   }
 
   /**
-   * Creates a DenseVector with the index's size
+   * Creates a Vector[Double] of some sort with the index's size.
    */
-  final def mkDenseVector(default: Double=0.0):DenseVector = {
-    val vec = new DenseVector(index.size)
-    if(default != 0.0)
-      Arrays.fill(vec.data,default);
-    vec
-  }
+  final def mkVector():Vector[Double] = mkSparseVector;
 
   /**
-   * Creates a SparseVector with the index's size
+   * Decodes a vector back to a Counter[T,Double]
    */
-  final def mkSparseVector(default: Double=0.0):SparseVector = {
-    val vec = new SparseVector(index.size)
-    vec.default = default;
-    vec;
-  }
-
-  /**
-   * Creates a SparseHashVector with the index's size
-   */
-  final def mkSparseHashVector(default: Double=0.0):SparseHashVector = {
-    val vec = new SparseHashVector(index.size)
-    vec.default = default;
-    vec;
-  }
-
-  /**
-   * Decodes a vector back to a DoubleCounter[T]
-   */
-  def decode(v: Vector):DoubleCounter[T] = {
-    val ctr = DoubleCounter[T]();
-    for( (i,v) <- v.activeElements) {
+  def decode(v: Vector[Double]):Counter[T,Double] = {
+    val ctr = Counter[T,Double]();
+    for( (i,v) <- v.nonzero.pairs) {
       ctr(index.get(i)) = v;
     }
     ctr
   }
 
   /**
-   * Encodes a DoubleCounter as a Vector. All elements in the counter must be in the index.
+   * Encodes a DoubleCounter as a Vector[Double]. All elements in the counter must be in the index.
    */
-  def encodeDense(c: DoubleCounter[T]):DenseVector = {
-    val vec = mkDenseVector(c.default);
-    for( (k,v) <- c) {
+  def encodeDense(c: imCounter[T,Double]):DenseVector[Double] = {
+    val vec = mkDenseVector();
+    for( (k,v) <- c.nonzero.pairs) {
       vec(index(k)) = v;
     }
     vec
   }
 
   /**
-   * Encodes a DoubleCounter as a SparseVector. All elements in the counter must be in the index.
+   * Encodes a DoubleCounter as a SparseVector[Double]. All elements in the counter must be in the index.
    */
-  def encodeSparse(c: DoubleCounter[T]):SparseVector = {
-    val vec = mkSparseVector(c.default);
-    for( (k,v) <- c) {
+  def encodeSparse(c: imCounter[T,Double]):SparseVector[Double] = {
+    val vec = mkSparseVector();
+    for( (k,v) <- c.nonzero.pairs) {
       vec(index(k)) = v;
     }
     vec
   }
 
   /**
-   * Encodes a DoubleCounter as a Vector. All elements in the counter must be in the index.
+   * Encodes a DoubleCounter as a Vector[Double]. All elements in the counter must be in the index.
    */
-  def encode(c: DoubleCounter[T]):Vector = {
-    val vec = mkVector(c.default);
-    for( (k,v) <- c) {
+  def encode(c: imCounter[T,Double]):Vector[Double] = {
+    val vec = mkVector();
+    for( (k,v) <- c.nonzero.pairs) {
       vec(index(k)) = v;
     }
     vec
@@ -140,9 +120,9 @@ trait Encoder[T] {
   }
 
   /**
-   * Fills a DenseVector with each index given by the result of the function.
+   * Fills a DenseVector[Double] with each index given by the result of the function.
    */
-  def tabulateDenseVector(f: T=>Double): DenseVector = new DenseVector(tabulateArray[Double](f));
+  def tabulateDenseVector(f: T=>Double)  = new DenseVectorCol[Double](tabulateArray[Double](f));
 
   /**
    * Converts an array into a Map from T's to whatever was in the array.
@@ -151,16 +131,7 @@ trait Encoder[T] {
     Map.empty ++ array.zipWithIndex.map{ case (v,i) => (index.get(i),v)}
   }
 
-  def mkSparseArray[V:ClassManifest:SparseArray.DefaultValue] = SparseArray[V](index.size);
-  def fillSparseArray[V:ClassManifest](deflt : => V) = {
-    new SparseArray[V](index.size,deflt);
-  }
-
-//  def mkSDArray[V:ClassManifest:SparseArray.DefaultValue] = new SDArray[V](index.size, implicitly[SparseArray.DefaultValue].value);
-  def fillSDArray[V:ClassManifest](deflt : => V) = {
-    new SDArray[V](index.size,deflt);
-  }
-
+  def mkSparseArray[V:ClassManifest:DefaultArrayValue] = new SparseArray[V](index.size);
   def decode[V](array: SparseArray[V]):Map[T,V] = {
     Map.empty ++ array.iterator.map{ case (i,v) => (index.get(i),v)}
   }

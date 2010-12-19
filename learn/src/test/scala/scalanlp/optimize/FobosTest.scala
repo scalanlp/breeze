@@ -22,22 +22,22 @@ import org.scalatest.prop._;
 import org.scalacheck._;
 import org.junit.runner.RunWith
 
-import scalala.Scalala._;
-import scalala.tensor.Vector;
-import scalala.tensor.counters.Counters._;
+import scalala.tensor.dense.DenseVector
+import scalala.tensor.mutable.Counter
+import scalala.library.Library.norm;
 
 @RunWith(classOf[JUnitRunner])
 class FobosTest extends FunSuite with Checkers {
   import Arbitrary._;
-  implicit val arbVector : Arbitrary[Vector] = Arbitrary(for {
+  implicit val arbVector : Arbitrary[DenseVector[Double]] = Arbitrary(for {
     n <- arbitrary[Int] suchThat { _ > 0 }
     d <- arbitrary[Double]
-  } yield ( (rand(n % 200  + 1) * d value) : Vector));
+  } yield (DenseVector.rand(n % 200  + 1) * d)) ;
 
-  implicit val arbDoubleCounter: Arbitrary[DoubleCounter[String]] = Arbitrary(for {
-    v <- arbitrary[Vector]
+  implicit val arbDoubleCounter: Arbitrary[Counter[String,Double]] = Arbitrary(for {
+    v <- arbitrary[DenseVector[Double]]
   } yield {
-    val c = DoubleCounter[String]();
+    val c = Counter[String,Double]();
     for(i <- 0 until v.size) {
       c(i + "") = v(i);
     }
@@ -48,20 +48,20 @@ class FobosTest extends FunSuite with Checkers {
 
   test("optimize a simple multivariate gaussian, l2") {
 
-    def optimizeThis(init: Vector, reg: Double) = {
-      val sgd = new StochasticGradientDescent.SimpleSGD[Int,Vector](2.,100,1) with Fobos.L2Regularization[Int,Vector] {
+    def optimizeThis(init: DenseVector[Double], reg: Double) = {
+      val sgd = new StochasticGradientDescent.SimpleSGD[DenseVector[Double]](2.,100,1) with Fobos.L2Regularization[DenseVector[Double]] {
         override val lambda = reg.abs;
       }
-      val f = new BatchDiffFunction[Int,Vector] {
-        def calculate(x: Vector, r: IndexedSeq[Int]) = {
-          (norm((x -3) :^ 2,1), (x * 2) - 6 value);
+      val f = new BatchDiffFunction[DenseVector[Double]] {
+        def calculate(x: DenseVector[Double], r: IndexedSeq[Int]) = {
+          (norm((x -3) :^ 2,1), (x * 2) - 6);
         }
         val fullRange = 0 to 1;
       }
 
       val result = sgd.minimize(f,init)
       val targetValue = 3 / (reg.abs / 2 + 1);
-      val ok = norm(result :- ones(init.size) * targetValue,2) < 1E-10
+      val ok = norm(result :- DenseVector.ones[Double](init.size) * targetValue,2) < 1E-10
       if(!ok) {
         error("min " + init + " with reg: " + reg + "gives " + result);
       }
@@ -74,20 +74,20 @@ class FobosTest extends FunSuite with Checkers {
 
   test("optimize a simple multivariate gaussian, l1") {
 
-    def optimizeThis(init: Vector, reg: Double) = {
-      val sgd = new StochasticGradientDescent.SimpleSGD[Int,Vector](2.,100,1) with Fobos.L1Regularization[Int,Vector] {
+    def optimizeThis(init: DenseVector[Double], reg: Double) = {
+      val sgd = new StochasticGradientDescent.SimpleSGD[DenseVector[Double]](2.,100,1) with Fobos.L1Regularization[Int,DenseVector[Double]] {
         override val lambda = reg.abs;
       }
-      val f = new BatchDiffFunction[Int,Vector] {
-        def calculate(x: Vector, r: IndexedSeq[Int]) = {
-          (norm((x -3) :^ 2,1), (x * 2) - 6 value);
+      val f = new BatchDiffFunction[DenseVector[Double]] {
+        def calculate(x: DenseVector[Double], r: IndexedSeq[Int]) = {
+          (norm((x -3) :^ 2,1), (x * 2) - 6);
         }
         val fullRange = 0 to 1;
       }
 
       val result = sgd.minimize(f,init)
       val targetValue = if(sgd.lambda/2 > 3) 0.0 else  3 - sgd.lambda / 2;
-      val ok = norm(result :- ones(init.size) * targetValue,2) < 1E-10
+      val ok = norm(result :- DenseVector.ones[Double](init.size) * targetValue,2) < 1E-10
       if(!ok) {
         error("min " + init + " with reg: " + reg + "gives " + result);
       }

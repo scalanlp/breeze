@@ -16,11 +16,12 @@ package scalanlp.stats.sampling;
  limitations under the License. 
 */
 
-import scalala.tensor.counters.Counters.DoubleCounter
 import scalanlp.math.Bessel;
 import scalanlp.math.Numerics;
 import Numerics._;
-import math._;
+import math._
+import scalala.tensor.Counter
+;
 
 /**
  * Represents a Von Mises distribution, which is
@@ -74,9 +75,9 @@ object VonMises {
    * Returns the maximum likelihood estimate of this distribution
    * For the given observations with (possibly pseudo-)counts
    */
-  def mle(obs: DoubleCounter[Double]) = {
+  def mle(obs: Counter[Double,Double]) = {
     val sufStats = for {
-      (o,count) <-  obs
+      (o,count) <- obs.pairs
     } yield {
       (count * cos(o),count * sin(o)) 
     }
@@ -89,7 +90,7 @@ object VonMises {
       else 0.0 
     } ) % (2 * Pi)
     
-    val t = sqrt(pow(cosineSum/obs.total,2) + pow(sineSum / obs.total,2));
+    val t = sqrt(pow(cosineSum/obs.sum,2) + pow(sineSum / obs.sum,2));
     val k = (1.28 - 0.53*pow(t,2)) * tan(Pi/2*t)
     
     /*

@@ -21,23 +21,25 @@ import org.scalatest.prop._;
 import org.scalacheck._;
 import org.junit.runner.RunWith
 
-import scalala.library.Vectors._;
-import scalala.library.Random._;
-import scalala.tensor.Vector;
-import scalala.tensor.counters.Counters._;
+import scalala.tensor.dense.DenseVector
+import scalala.tensor.mutable.Counter
+import scalala.library.Library.norm
+import scalala.generic.collection.CanCopy
+;
+
 
 @RunWith(classOf[JUnitRunner])
 class LBFGSTest extends FunSuite with Checkers {
   import Arbitrary._;
-  implicit val arbVector : Arbitrary[Vector] = Arbitrary(for {
-    n <- arbitrary[Int] suchThat { _ > 0 } suchThat { _ < 4000};
+  implicit val arbVector : Arbitrary[DenseVector[Double]] = Arbitrary(for {
+    n <- arbitrary[Int] suchThat { _ > 0 }
     d <- arbitrary[Double]
-  } yield ( (rand(n) * d value) : Vector));
+  } yield ( DenseVector.rand(n%40) *d));
 
-  implicit val arbDoubleCounter: Arbitrary[DoubleCounter[String]] = Arbitrary(for {
-    v <- arbitrary[Vector]
+  implicit val arbDoubleCounter: Arbitrary[Counter[String,Double]] = Arbitrary(for {
+    v <- arbitrary[DenseVector[Double]]
   } yield {
-    val c = DoubleCounter[String]();
+    val c = Counter[String,Double]();
     for(i <- 0 until v.size) {
       c(i + "") = v(i);
     }
@@ -47,17 +49,17 @@ class LBFGSTest extends FunSuite with Checkers {
 
 
   test("optimize a simple multivariate gaussian") {
-    val lbfgs = new LBFGS[Int,Vector](100,4);
+    val lbfgs = new LBFGS[DenseVector[Double]](100,4);
 
-    def optimizeThis(init: Vector) = {
-      val f = new DiffFunction[Int,Vector] {
-        def calculate(x: Vector) = {
-          (norm((x -3) :^ 2,1),(x * 2) - 6 value);
+    def optimizeThis(init: DenseVector[Double]) = {
+      val f = new DiffFunction[DenseVector[Double]] {
+        def calculate(x: DenseVector[Double]) = {
+          (norm((x -3) :^ 2,1),(x * 2) - 6);
         }
       }
 
       val result = lbfgs.minimize(f,init) 
-      norm(result :- ones(init.size) * 3,2) < 1E-10
+      norm(result - 3,2) < 1E-10
     }
 
     check(Prop.forAll(optimizeThis _));
@@ -65,21 +67,17 @@ class LBFGSTest extends FunSuite with Checkers {
   }
 
   test("optimize a simple multivariate gaussian with counters") {
-    val lbfgsString = new LBFGS[String,DoubleCounter[String]](1000,4);
+    val lbfgsString = new LBFGS[Counter[String,Double]](1000,4);
 
-    def optimizeThis(init: DoubleCounter[String]) = {
-      val f = new DiffFunction[String,DoubleCounter[String]] {
-        def calculate(x: DoubleCounter[String]) = {
-          (norm((x -3) :^ 2,1), (x * 2) - 6 value);
+    def optimizeThis(init: Counter[String,Double]) = {
+      val f = new DiffFunction[Counter[String,Double]] {
+        def calculate(x: Counter[String,Double]) = {
+          (norm((x -3) :^ 2,1), (x * 2) - 6);
         }
       }
 
       val result = lbfgsString.minimize(f,init);
-      if(!result.exists{ case(k,v) => math.abs(v - 3.0) > 1E-3} && !result.exists(_._2.isNaN)) {
-        true
-      } else {
-        throw new Exception(result.toString + " is not close enough to 3!");
-      }
+      norm(result - 3,2) < 1E-5;
     }
 
     check(Prop.forAll(optimizeThis _ ));

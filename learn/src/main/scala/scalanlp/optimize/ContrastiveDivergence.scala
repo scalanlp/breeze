@@ -17,16 +17,17 @@ package scalanlp.optimize
 */
 
 import scalala.tensor.Vector;
-import scalala.Scalala._;
 import scalala.tensor._;
 import scalala.tensor.dense.DenseVector;
-import scalala.tensor.operators._;
-import TensorShapes._;
+import scalala.library.Library._;
 
 import scalanlp.stats.sampling._;
 
 import scalanlp.util._;
-import Log._;
+import Log._
+import scalala.generic.collection.CanCreateZerosLike
+import scalala.operators._
+import scalala.generic.math.CanNorm
 
 /**
 * Implements Contrastive Divergence for maximizing the probability of parameters.
@@ -34,16 +35,24 @@ import Log._;
 * see www.robots.ox.ac.uk/~ojw/files/NotesOnCD.pdf 
 *
 * @param X the type of the data
-* @param K the type of parameters
 * @param T the type of the tensor
 * @param trans: transition kernel from X to a new X, given parameters Array[Double
 * @param deriv: derivative of the energy function f, where f = log p(x), up to some constant.
 * @param learningRate: to slow the gradient descent, or whatever.
 * @author dlwh
 */
-class ContrastiveDivergenceOptimizer[X,K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](trans: T=>X=>Rand[X],
+class ContrastiveDivergenceOptimizer[X,T](trans: T=>X=>Rand[X],
         deriv: T=>X=>T,
-        learningRate: Double)(implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col]) extends Logged {
+        learningRate: Double)
+        (implicit zeros: CanCreateZerosLike[T,T],
+        view: T <%< MutableNumericOps[T],
+        upAdd: BinaryUpdateOp[T,T,OpAdd],
+        opAdd: BinaryOp[T,T,OpAdd,T],
+        opSub: BinaryOp[T,T,OpSub,T],
+        opMulScalar: BinaryOp[T,Double,OpMul,T],
+        opDivScalar: BinaryOp[T,Double,OpDiv,T],
+        canNorm: CanNorm[T]
+        ) extends Logged {
   /**
   * Run CD to convergence on the given data with initial parameters.
   */
@@ -69,14 +78,14 @@ class ContrastiveDivergenceOptimizer[X,K,T<:Tensor1[K] with TensorSelfOp[K,T,Sha
   def computeGradient(data: Seq[X], theta: T) = {
     val perturbedData = data map (trans(theta)) map (_.draw);
     val thetaDeriv = deriv(theta);
-    val normalGrad = (data map thetaDeriv).foldLeft(theta.like){ (x,y) => 
-      x + y / data.length value;
+    val normalGrad = (data map thetaDeriv).foldLeft(zeros(theta)){ (x,y) =>
+      x + y / (1.0 * data.length);
     } 
-    val perturbedGrad = (perturbedData map thetaDeriv).foldLeft(theta.like){ (x,y) => 
-      x + y / data.length value;
+    val perturbedGrad = (perturbedData map thetaDeriv).foldLeft(zeros(theta)){ (x,y) =>
+      x + y / (1.0 * data.length);
     }
 
-    (normalGrad - perturbedGrad) value
+    (normalGrad - perturbedGrad)
   }
 }
 
@@ -84,15 +93,13 @@ class ContrastiveDivergenceOptimizer[X,K,T<:Tensor1[K] with TensorSelfOp[K,T,Sha
 object TestCD {
   def main(arg: Array[String]) {
     val data = (new Gaussian(3,1).samples take 1000).toSeq;
-    def trans(mean: Vector) = { (x:Double) =>
+    def trans(mean: DenseVector[Double]) = { (x:Double) =>
       new Gaussian(mean(0),1)
     }
-    def deriv(theta: Vector) = { (x:Double) => 
-      (DenseVector(1)(x-theta(0)))
-    }
-    val opt = new ContrastiveDivergenceOptimizer[Double,Int,Vector](trans _ ,deriv _ ,0.01) with ConsoleLogging;
+    def deriv(theta: DenseVector[Double]) = { (x:Double) => DenseVector(x-theta(0)) }
+    val opt = new ContrastiveDivergenceOptimizer[Double,DenseVector[Double]](trans _ ,deriv _ ,0.01) with ConsoleLogging;
     
-    opt.maximize(data,Array(-100.0).asVector);
+    opt.maximize(data,DenseVector(-100.0));
   }
   
 }

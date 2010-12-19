@@ -17,45 +17,43 @@ package scalanlp.optimize
 */
 
 import org.scalatest._
-import scalala.tensor.dense.{DenseVector}
-
 import org.scalatest.junit._;
 import org.scalatest.prop._;
 import org.scalacheck._;
 import org.junit.runner.RunWith
 
-import scalala.library.Vectors._;
-import scalala.library.Random._;
-import scalala.tensor.Vector;
-import scalala.tensor.counters.Counters._;
-
-import scalanlp.util._;
+import scalala.library.Library.norm;
+import scalala.tensor.mutable.Counter
+import scalala.tensor.dense.{DenseVectorCol, DenseVector}
+import scalala.tensor.Tensor
+import scalala.operators.OpEq
+import scalala.tensor.domain.IndexDomain
 
 @RunWith(classOf[JUnitRunner])
 class OWLQNTest extends FunSuite with Checkers {
   import Arbitrary._;
-  implicit val arbVector : Arbitrary[Vector] = Arbitrary(for {
-    n <- arbitrary[Int] suchThat { _ > 0 } suchThat { _ < 4000};
+  implicit val arbVector : Arbitrary[DenseVectorCol[Double]] = Arbitrary(for {
+    n <- arbitrary[Int] suchThat { _ > 0 }
     d <- arbitrary[Double]
-  } yield ( (rand(n) * d value) : Vector));
+  } yield (DenseVector.rand(n%40) * d) );
 
-  implicit val arbDoubleCounter: Arbitrary[DoubleCounter[String]] = Arbitrary(for {
-    v <- arbitrary[Vector]
+  implicit val arbDoubleCounter: Arbitrary[Counter[String,Double]] = Arbitrary(for {
+    v <- arbitrary[DenseVectorCol[Double]]
   } yield {
-    val c = DoubleCounter[String]();
-    for(i <- 0 until v.size) {
-      c(i + "") = v(i);
+    val c = Counter[String,Double]();
+      for(i <- 0 until v.size) {
+        c(i + "") = v(i);
     }
     c
   });
 
   test("super simple") {
-    val lbfgs = new OWLQN[Int,Vector](100,4);
+    val lbfgs = new OWLQN[Int,DenseVectorCol[Double]](100,4);
 
-    def optimizeThis(init: Vector) = {
-      val f = new DiffFunction[Int,Vector] {
-        def calculate(x: Vector) = {
-          (norm((x -3) :^ 2,1),(x * 2) - 6 value);
+    def optimizeThis(init: DenseVectorCol[Double]) = {
+      val f = new DiffFunction[DenseVectorCol[Double]] {
+        def calculate(x: DenseVectorCol[Double]) = {
+          (norm((x -3) :^ 2,1),(x * 2) - 6);
         }
       }
 
@@ -63,23 +61,23 @@ class OWLQNTest extends FunSuite with Checkers {
       result
     }
 
-    val result = optimizeThis(DenseVector(3)(-1.1053));
+    val result = optimizeThis(DenseVector(-1.1053,0.,0.0));
     assert((result(0) - 2.5) < 1E-4, result)
   }
 
 
   test("optimize a simple multivariate gaussian") {
-    val lbfgs = new OWLQN[Int,Vector](100,4,1.0);
+    val lbfgs = new OWLQN[Int,DenseVectorCol[Double]](100,4,1.0);
 
-    def optimizeThis(init: Vector) = {
-      val f = new DiffFunction[Int,Vector] {
-        def calculate(x: Vector) = {
-          (norm((x -3) :^ 2,1),(x * 2) - 6 value);
+    def optimizeThis(init: DenseVectorCol[Double]) = {
+      val f = new DiffFunction[DenseVectorCol[Double]] {
+        def calculate(x: DenseVectorCol[Double]) = {
+          (norm((x -3) :^ 2,1),(x * 2) - 6);
         }
       }
 
       val result = lbfgs.minimize(f,init)
-      val closeish = norm(result :- ones(init.size) * 2.5,2) < 1E-10
+      val closeish = norm(result - 2.5,2) < 1E-4
       if(closeish) {
         true
       } else {
@@ -92,20 +90,21 @@ class OWLQNTest extends FunSuite with Checkers {
   }
 
   test("optimize a simple multivariate gaussian with counters") {
-    val lbfgsString = new OWLQN[String,DoubleCounter[String]](100,4, 1.0);
+    val lbfgsString = new OWLQN[String,Counter[String,Double]](100,4, 1.0);
 
-    def optimizeThis(init: DoubleCounter[String]) = {
-      val f = new DiffFunction[String,DoubleCounter[String]] {
-        def calculate(x: DoubleCounter[String]) = {
-          (norm((x -3) :^ 2,1), (x * 2) - 6 value);
+    def optimizeThis(init: Counter[String,Double]) = {
+      val f = new DiffFunction[Counter[String,Double]] {
+        def calculate(x: Counter[String,Double]) = {
+          (norm((x -3) :^ 2,1), (x * 2) - 6);
         }
       }
 
       val result = lbfgsString.minimize(f,init);
-      if(!result.exists{ case(k,v) => math.abs(v - 2.5) > 1E-3} && !result.exists(_._2.isNaN)) {
+      val ok = norm(result - 2.5,2) < 1E-4
+      if(ok) {
         true
       } else {
-        throw new Exception(result.toString + " is not close enough to 2.5");
+        throw new Exception(result.toString + " is not close enough to 2.5" + norm(result - 2.5, 2));
       }
     }
 

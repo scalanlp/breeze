@@ -1,12 +1,9 @@
 package scalanlp.classify
 
-import scalala.tensor.Tensor1
-import scalala.tensor.operators.TensorSelfOp
-import scalala.tensor.operators.TensorShapes._
 import scalanlp.data.Example
-;
-import scalala.tensor.counters.Counters._;
-
+import scalala.tensor.Counter
+import scalala.generic.collection.CanCreateZerosLike
+import scalala.operators._
 
 /**
  *
@@ -17,13 +14,17 @@ trait Perceptron[L,-T] extends Classifier[L,T];
 
 
 object Perceptron {
-  class Trainer[L,F,T<:Tensor1[F] with TensorSelfOp[F,T,Shape1Col]] extends Classifier.Trainer[L,T] {
+  class Trainer[L,F,T](implicit dotProduct: BinaryOp[T,T,OpMulInner,Double],
+                       zeros: CanCreateZerosLike[T,T],
+                       numeric: T=>MutableNumericOps[T],
+                       upAdd: BinaryUpdateOp[T,T,OpAdd],
+                       upSub: BinaryUpdateOp[T,T,OpSub]) extends Classifier.Trainer[L,T] {
     type MyClassifier = Perceptron[L,T];
     def train(it: Iterable[Example[L,T]]) = {
       val weights = new collection.mutable.HashMap[L,T]();
       val result = new Perceptron[L,T] {
         def scores(o: T) = {
-          val r = DoubleCounter[L];
+          val r = Counter[L,Double];
           for((l,w) <- weights) {
             r(l) = w dot o;
           }
@@ -35,9 +36,9 @@ object Perceptron {
         val feats = ex.features;
         val ctr = result.scores(feats);
         if(ctr.size == 0 || ctr.argmax != l) {
-          weights.getOrElseUpdate(l,feats.like) += feats;
+          weights.getOrElseUpdate(l,zeros(feats)) += feats;
           if(ctr.size != 0) {
-            weights.getOrElseUpdate(ctr.argmax,feats.like) -= feats;
+            weights.getOrElseUpdate(ctr.argmax,zeros(feats)) -= feats;
           }
         }
         println(weights)

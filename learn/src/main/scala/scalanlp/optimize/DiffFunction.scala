@@ -16,18 +16,17 @@ package scalanlp.optimize;
  limitations under the License. 
 */
 
-import scalala._;
-import scalala.Scalala._;
-import scalala.tensor._;
-import scalala.tensor.operators._;
-import TensorShapes._;
+import scalala.generic.math.CanNorm
+import scalala.library.Library.norm
+import scalala.operators.{NumericOps, OpAdd, OpMul, BinaryOp}
+;
 
 /**
 * Represents a differentiable function.
 *
 * @author dlwh
 */
-trait DiffFunction[K,T<:Tensor1[K]] extends (T=>Double) {
+trait DiffFunction[T] extends (T=>Double) {
   /** calculates the gradient at a point */
   def gradientAt(x: T): T = calculate(x)._2;
   /** calculates the value at a point */
@@ -40,7 +39,11 @@ trait DiffFunction[K,T<:Tensor1[K]] extends (T=>Double) {
 }
 
 object DiffFunction {
-  def withL2Regularization[K,T<:TensorSelfOp[K,T,Shape1Col] with Tensor1[K]](d: DiffFunction[K,T],weight: Double) = new DiffFunction[K,T] {
+  def withL2Regularization[T](d: DiffFunction[T],weight: Double)
+                             (implicit canNorm: CanNorm[T],
+                              view: T <:< NumericOps[T],
+                              addVector: BinaryOp[T,T,OpAdd,T],
+                              mulScalar: BinaryOp[T,Double,OpMul,T]) = new DiffFunction[T] {
     override def gradientAt(x:T):T = {
       val grad = d.gradientAt(x);
       myGrad(grad,x);
@@ -56,9 +59,7 @@ object DiffFunction {
     }
 
     private def myGrad(g: T, x: T) = {
-      val g2 = g.copy;
-      g2 += (x * 2 * weight);
-      g2
+      view(g) + (x * (2 * weight))
     }
 
     override def calculate(x: T) = {
@@ -67,8 +68,11 @@ object DiffFunction {
     }
   }
 
-  // TODO: probably only want to shrink parameters that are "on"
-  def withL2Regularization[K,T<:TensorSelfOp[K,T,Shape1Col] with Tensor1[K]](d: BatchDiffFunction[K,T],weight: Double):BatchDiffFunction[K,T] = new BatchDiffFunction[K,T] {
+  def withL2Regularization[T](d: BatchDiffFunction[T],weight: Double)
+                             (implicit canNorm: CanNorm[T],
+                              view: T <%< NumericOps[T],
+                              addVector: BinaryOp[T,T,OpAdd,T],
+                              mulScalar: BinaryOp[T,Double,OpMul,T]):BatchDiffFunction[T] = new BatchDiffFunction[T] {
     override def gradientAt(x:T, batch: IndexedSeq[Int]):T = {
       val grad = d.gradientAt(x, batch);
       myGrad(grad,x, batch.size);
@@ -83,10 +87,8 @@ object DiffFunction {
       weight * math.pow(norm(x,2),2);
     }
 
-    private def myGrad(g: T, x: T, batchSize:Int) = {
-      val g2 = g.copy;
-      g2 += (x * 2 * weight * batchSize / d.fullRange.size);
-      g2
+    private def myGrad(g: T, x: T, batchSize: Int) = {
+      g + (x * (2 * weight * batchSize / d.fullRange.size));
     }
 
     override def calculate(x: T, batch: IndexedSeq[Int]) = {
@@ -101,7 +103,7 @@ object DiffFunction {
 /**
 * A diff function that supports subsets of the data
 */
-trait BatchDiffFunction[K,T<:Tensor1[K]] extends DiffFunction[K,T] with ((T,IndexedSeq[Int])=>Double) {
+trait BatchDiffFunction[T] extends DiffFunction[T] with ((T,IndexedSeq[Int])=>Double) {
   /**
   * Calculates the gradient of the function on a subset of the data
   */

@@ -18,8 +18,6 @@ package scalanlp.classify;
 
 
 import scalala.tensor._;
-import scalala.tensor.operators.TensorShapes._;
-import scalala.tensor.operators._;
 
 import scalanlp.data._;
 import scalanlp.math.Numerics._;
@@ -30,7 +28,6 @@ import scalanlp.optimize._;
  * but I hope to fix that at some point.
  *
  * @author dlwh
- */
 object LogisticClassifier {
 
 
@@ -139,3 +136,4 @@ object LogisticClassifier {
   }
 
 }
+*/

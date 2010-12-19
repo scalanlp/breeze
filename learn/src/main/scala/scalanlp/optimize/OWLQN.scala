@@ -3,14 +3,14 @@ package scalanlp.optimize
 import scalanlp.util._
 import scalanlp.util.Log._
 import scalanlp.optimize.QuasiNewtonMinimizer.{NaNHistory, StepSizeUnderflow}
+import scalala.library.Library.norm
+import scalala.generic.math.CanNorm
+import scalala.operators._
+import scalala.generic.collection.{CanMapValues, CanCreateZerosLike, CanCopy}
+import scalala.tensor.mutable.{Counter, Tensor1}
+import scalala.tensor.dense.DenseVector
+;
 
-import java.util.Arrays;
-import scala.collection.mutable.ArrayBuffer;
-import scalala.Scalala._;
-import scalala.tensor._;
-import scalala.tensor.operators._;
-import TensorShapes._;
-import scalala.tensor.dense._;
 
 /**
  * Implements the Orthant-wise Limited Memory QuasiNewton method,
@@ -20,10 +20,22 @@ import scalala.tensor.dense._;
  *
  * @author dlwh
  */
-class OWLQN[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: Int, l1reg: Double=1.0)
-  (implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col])
-  extends LBFGS[K,T](maxIter, m)(arith) with GradientNormConvergence[K,T] with Logged {
-
+class OWLQN[K,T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit canNorm: CanNorm[T],
+                                                  view: T <:< Tensor1[K,Double] with scalala.tensor.mutable.TensorLike[K,Double,_,T with Tensor1[K,Double]],
+                                                  canMapValues: CanMapValues[T,Double,Double,T],
+                                                  copy: CanCopy[T],
+                                                  zeros: CanCreateZerosLike[T,T],
+                                                  opAdd: BinaryOp[T,T,OpAdd,T],
+                                                  opAddScalar: BinaryOp[T,Double,OpAdd,T],
+                                                  upAdd: BinaryUpdateOp[T,T,OpAdd],
+                                                  opDivScalar: BinaryOp[T,Double,OpDiv,T],
+                                                  opMulScalar: BinaryOp[T,Double,OpMul,T],
+                                                  opMulPiece: BinaryOp[T,T,OpMul,T],
+                                                  upMulScalar: BinaryUpdateOp[T,Double,OpMul],
+                                                  upMul: BinaryUpdateOp[T,T,OpMul],
+                                                  hasInnerProduct: BinaryOp[T,T,OpMulInner,Double],
+                                                  upSub: BinaryUpdateOp[T,T,OpSub],
+                                                  opSub: BinaryOp[T,T,OpSub,T]) extends LBFGS[T](maxIter, m) with GradientNormConvergence[T] with Logged {
 
   require(m > 0);
   require(l1reg >= 0);
@@ -37,7 +49,7 @@ class OWLQN[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
    * @param x: The location
    * @return (stepSize, newValue)
    */
-  override def chooseStepSize(f: DiffFunction[K,T], dir: T, grad: T, state: State) = {
+  override def chooseStepSize(f: DiffFunction[T], dir: T, grad: T, state: State) = {
     val iter = state.iter;
     val x = state.x;
     val prevVal = state.value;
@@ -50,7 +62,7 @@ class OWLQN[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
         log(WARN)("Direction of positive gradient chosen!");
         log(WARN)("Direction is:" + possibleNorm)
         // Reverse the direction, clearly it's a bad idea to go up
-        dir *= -1;
+        dir *= -1.0;
         dir dot grad;
       } else {
         possibleNorm;
@@ -66,14 +78,14 @@ class OWLQN[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
 
     val c = 0.0001 * normGradInDir;
 
-    val newX = x + dir * alpha value;
+    var newX = x + dir * alpha;
 
-    var currentVal = f.valueAt(newX) + l1Part(newX);
+    var currentVal = f.valueAt(newX) + l1reg * norm(newX,1);
 
     while( currentVal > prevVal + alpha * c && myIter < MAX_ITER) {
       alpha *= c1;
-      newX := project(x :+ (dir * alpha),orthantVector);
-      currentVal = f.valueAt(newX) + l1Part(newX);
+      newX = project(x :+ (dir * alpha),orthantVector);
+      currentVal = f.valueAt(newX) + l1reg * norm(newX,1);
       log(INFO)(".");
       myIter += 1;
     }
@@ -81,6 +93,7 @@ class OWLQN[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
     if(myIter >= MAX_ITER)
       alpha = initAlpha;
 
+    println("newX?" + newX);
     if(alpha * norm(grad,Double.PositiveInfinity) < 1E-10)
       throw new StepSizeUnderflow;
     (alpha,currentVal)
@@ -88,24 +101,25 @@ class OWLQN[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
 
   // projects x to be on the same orthant as y
   // this basically requires that x'_i = x_i if sign(x_i) == sign(y_i), and 0 otherwise.
-  private def project(x: T, y: T) = {
-    val res = x.like;
-    for((i,v) <- x.activeElements) {
-      if(math.signum(v) == math.signum(y(i)))
-        res(i) = v;
+  private def project(x: T, y: T):T = {
+    val res = zeros(x);
+    for( (k,v) <- x.pairsIteratorNonZero) {
+      if(math.signum(v) == math.signum(y(k))) {
+        res(k) = v;
+      }
     }
     res;
   }
 
-  protected override def initialState(f: DiffFunction[K,T], init: T):State = {
+  protected override def initialState(f: DiffFunction[T], init: T):State = {
     val initState = super.initialState(f,init);
-    initState.copy(value = initState.value + l1Part(init));
+    initState.copy(value = initState.value + norm(init,1) * l1reg);
   }
 
   // Adds in the regularization stuff to the gradient
   protected override def adjustGradient(grad: T, x: T) = {
-    val res = grad.like;
-    for( (i,v) <- grad.activeElements) {
+    val res = zeros(grad);
+    for( (i,v) <- grad.nonzero.pairs) {
       val delta_+ = v + (if(x(i) == 0.0) l1reg else math.signum(x(i)) * l1reg);
       val delta_- = v + (if(x(i) == 0.0) -l1reg else math.signum(x(i)) * l1reg);
 
@@ -116,21 +130,36 @@ class OWLQN[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](maxIter: Int, m: I
   }
 
   private def computeOrthant(x: T, grad: T) = {
-    val orth = x.like;
-    for( (i,v) <- x.activeElements) {
+    val orth = zeros(x);
+    for( (i,v) <- x.nonzero.pairs) {
       if(v != 0) orth(i) = math.signum(v);
       else orth(i) = math.signum(-grad(i));
     }
     orth
   }
 
-  private def l1Part(x: T) = {
-    var result = 0.0;
-    for(v <- x.activeValues) {
-      result += v.abs;
-    }
-    result * l1reg;
-  }
+}
 
+
+object OWLQN {
+  def main(args: Array[String]) {
+    val lbfgs = new OWLQN[Int,DenseVector[Double]](100,4);
+
+    def optimizeThis(init: DenseVector[Double]) = {
+      val f = new DiffFunction[DenseVector[Double]] {
+        def calculate(x: DenseVector[Double]) = {
+          (norm((x -3) :^ 2,1),(x * 2) - 6);
+        }
+      }
+
+      val result = lbfgs.minimize(f,init)
+      println(norm(result - 3,2) < 1E-10)
+    }
+
+//    optimizeThis(Counter(1->1.,2->2.,3->3.))
+//    optimizeThis(Counter(3-> -2.,2->3.,1-> -10.))
+//        optimizeThis(DenseVector(1.,2.,3.))
+        optimizeThis(DenseVector( -2.,3., -10.))
+  }
 }
 

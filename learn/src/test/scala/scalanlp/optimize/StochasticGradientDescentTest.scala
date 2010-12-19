@@ -20,23 +20,23 @@ import org.scalatest.junit._;
 import org.scalatest.prop._;
 import org.scalacheck._;
 import org.junit.runner.RunWith
+import scalala.tensor.dense.DenseVector
+import scalala.tensor.mutable.Counter
+import scalala.library.Library.norm;
 
-import scalala.Scalala._;
-import scalala.tensor.Vector;
-import scalala.tensor.counters.Counters._;
 
 @RunWith(classOf[JUnitRunner])
 class StochasticGradientDescentTest extends FunSuite with Checkers {
   import Arbitrary._;
-  implicit val arbVector : Arbitrary[Vector] = Arbitrary(for {
+  implicit val arbVector : Arbitrary[DenseVector[Double]] = Arbitrary(for {
     n <- arbitrary[Int] suchThat { _ > 0 } suchThat { _ < 4000};
     d <- arbitrary[Double]
-  } yield ( (rand(n) * d value) : Vector));
+  } yield ( (DenseVector.rand(n) * d) : DenseVector[Double]));
 
-  implicit val arbDoubleCounter: Arbitrary[DoubleCounter[String]] = Arbitrary(for {
-    v <- arbitrary[Vector]
+  implicit val arbDoubleCounter: Arbitrary[Counter[String,Double]] = Arbitrary(for {
+    v <- arbitrary[DenseVector[Double]]
   } yield {
-    val c = DoubleCounter[String]();
+    val c = Counter[String,Double]();
     for(i <- 0 until v.size) {
       c(i + "") = v(i);
     }
@@ -46,18 +46,18 @@ class StochasticGradientDescentTest extends FunSuite with Checkers {
 
 
   test("optimize a simple multivariate gaussian") {
-    val sgd = StochasticGradientDescent[Int,Vector](2.,100,1);
+    val sgd = StochasticGradientDescent[DenseVector[Double]](2.,100,1);
 
-    def optimizeThis(init: Vector) = {
-      val f = new BatchDiffFunction[Int,Vector] {
-        def calculate(x: Vector, r: IndexedSeq[Int]) = {
-          (norm((x -3) :^ 2,1), (x * 2) - 6 value);
+    def optimizeThis(init: DenseVector[Double]) = {
+      val f = new BatchDiffFunction[DenseVector[Double]] {
+        def calculate(x: DenseVector[Double], r: IndexedSeq[Int]) = {
+          (norm((x -3) :^ 2,1), (x * 2) - 6);
         }
         val fullRange = 0 to 1;
       }
 
       val result = sgd.minimize(f,init) 
-      norm(result :- ones(init.size) * 3,2) < 1E-10
+      norm(result :- DenseVector.ones[Double](init.size) * 3,2) < 1E-10
     }
 
     check(Prop.forAll(optimizeThis _));
@@ -65,19 +65,18 @@ class StochasticGradientDescentTest extends FunSuite with Checkers {
   }
 
   test("optimize a simple multivariate gaussian with counters") {
-    val sgd =  StochasticGradientDescent[String,DoubleCounter[String]](1.,100,1);
+    val sgd =  StochasticGradientDescent[Counter[String,Double]](1.,100,1);
 
-    def optimizeThis(init: DoubleCounter[String]) = {
-      val f = new BatchDiffFunction[String,DoubleCounter[String]] {
-        def calculate(x: DoubleCounter[String], r: IndexedSeq[Int]) = {
-          (norm((x -3) :^ 2,1) , (x * 2) - 6 value);
+    def optimizeThis(init: Counter[String,Double]) = {
+      val f = new BatchDiffFunction[Counter[String,Double]] {
+        def calculate(x: Counter[String,Double], r: IndexedSeq[Int]) = {
+          (norm((x -3) :^ 2,1) , (x * 2) - 6);
         }
         val fullRange = 0 to 1;
       }
 
       val result = sgd.minimize(f,init);
-      (!result.exists{ case(k,v) => math.abs(v - 3.0) > 1E-3}
-     && !result.exists(_._2.isNaN));
+      norm(result - 3.0,2) < 1E-3;
     }
 
     check(Prop.forAll(optimizeThis _ ));

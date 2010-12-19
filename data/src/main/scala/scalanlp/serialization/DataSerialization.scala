@@ -222,34 +222,36 @@ with ByteSerialization {
   }
 
   // Scalala things
+  /*
   import scalala.tensor.dense._;
   import scalala.tensor.sparse._;
-  implicit object DenseVectorReadWritable extends ReadWritable[DenseVector] {
-     override def read(in : DataInput) =  new DenseVector(DataSerialization.read[Array[Double]](in));
+  implicit object DenseVectorReadWritable extends ReadWritable[DenseVector[Double]] {
+     override def read(in : DataInput) =  new DenseVectorCol(DataSerialization.read[Array[Double]](in));
 
-    override def write(out : Output, v : DenseVector) { DataSerialization.write(out,v.data); }
+    override def write(out : Output, v : DenseVector[Double]) { DataSerialization.write(out,v.data); }
   }
 
-  implicit object SparseVectorReadWritable extends ReadWritable[SparseVector] {
+  implicit object SparseVectorReadWritable extends ReadWritable[SparseVector[Double]] {
     override def read(in : DataInput) = {
       val size = in.readInt();
       val used = in.readInt();
       val data = DataSerialization.read[Array[Double]](in);
       val indices = DataSerialization.read[Array[Int]](in);
-      val vec = new SparseVector(size,0)
-      vec.data = data;
-      vec.index = indices;
-      vec.used = used;
+      val vec = SparseVector.zeros[Double](size);
+      vec.data.data = data;
+      vec.data.index = indices;
+      vec.data.used = used;
       vec
     }
 
-    override def write(out : DataOutput, v : SparseVector) {
+    override def write(out : DataOutput, v : SparseVector[Double]) {
       out.writeInt(v.size);
       out.writeInt(v.used);
       DataSerialization.write(out,v.data);
       DataSerialization.write(out,v.index);
     }
   }
+  */
 
   /**
    * Uses Java serialization. It's *very* inefficient, and should be avoided.

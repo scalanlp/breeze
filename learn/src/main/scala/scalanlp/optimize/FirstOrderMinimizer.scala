@@ -4,17 +4,14 @@ import scalanlp.util.Logged
 import scalanlp.util.Log._
 import scalanlp.util.ConsoleLogging
 import scalala.tensor._
-import scalala.Scalala._
-import scalala.tensor.operators._;
-import TensorShapes._;
 
 /**
  * 
  * @author dlwh
  */
 
-trait FirstOrderMinimizer[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col],-DF<:DiffFunction[K,T]]
-  extends Minimizer[T,DF] with Logged with CheckedConvergence[K,T] {
+trait FirstOrderMinimizer[T,-DF<:DiffFunction[T]]
+  extends Minimizer[T,DF] with Logged with CheckedConvergence[T] {
 
   type History;
   case class State protected[FirstOrderMinimizer](x: T, value: Double,
@@ -36,6 +33,7 @@ trait FirstOrderMinimizer[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col],-DF<:
 }
 
 object FirstOrderMinimizer {
+  /*
   case class OptParams(useStochastic:Boolean = true,
                        batchSize:Int = 512,
                        regularization: Double = 1.0,
@@ -44,7 +42,7 @@ object FirstOrderMinimizer {
                        useL1: Boolean = false, tolerance:Double = 1E-4) {
     def adjustedRegularization(numInstances: Int) = regularization * 0.01 * batchSize / numInstances;
 
-    def minimizer[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]]
+    def minimizer[K,T]
         (f: BatchDiffFunction[K,T], numInstances:Int)
         (implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col]): FirstOrderMinimizer[K,T,BatchDiffFunction[K,T]] = {
       if(useStochastic) {
@@ -83,4 +81,5 @@ object FirstOrderMinimizer {
       }
     }
   }
+  */
 }

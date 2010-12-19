@@ -19,16 +19,11 @@ package scalanlp.classify;
 
 import scalanlp.util.Index;
 import scalanlp.data._;
-import scalala.tensor.counters._;
-import Counters._
 
-import scalala.Scalala._;
 import scalala.tensor._;
-import scalala.tensor.operators._;
-import scalala.tensor.dense._;
-import scalala.Scalala._;
-
-import scalala.tensor.operators.TensorShapes._;
+import scalala.operators._
+import scalala.generic.collection.CanViewAsTensor1
+;
 
 /**
  * A LinearClassifier is a multi-class classifier with decision
@@ -42,15 +37,15 @@ import scalala.tensor.operators.TensorShapes._;
  */
 @serializable
 @SerialVersionUID(1L)
-class LinearClassifier[L,F,T2<:Tensor2[L,F] with TensorSelfOp[(L,F),T2,Shape2],
-    TL<:Tensor1[L] with TensorSelfOp[L,TL,Shape1Col],
-    TF<:Tensor1[F] with TensorSelfOp[F,TF,Shape1Col]]
+class LinearClassifier[L,F,T2, TL, TF]
     (val featureWeights: T2, val intercepts: TL)
-    (implicit tpb: TensorProductBuilder[T2,TF,TL,Shape2,Shape1Col,Shape1Col],
-      tla: Tensor1Arith[L,TL,TL,Shape1Col])
-    extends Classifier[L,TF] {
+    (implicit viewT2 : T2<:<MatrixOps[T2], viewTL: TL <:<NumericOps[TL],
+     vv: CanViewAsTensor1[TL,L,Double],
+     add : BinaryOp[TL,TL,OpAdd,TL],
+     mulTensors : BinaryOp[T2,TF,OpMulMatrixBy,TL]) extends Classifier[L,TF] {
   def scores(o: TF) = {
-    aggregate(featureWeights * o + intercepts);
+    val r:TL = featureWeights * o + intercepts;
+    vv(r)
   }
 }
 

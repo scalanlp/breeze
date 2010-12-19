@@ -17,9 +17,8 @@ package scalanlp.stats.sampling
 
 import math._;
 
-import scalanlp.math.Numerics.lgamma;
-import scalala.tensor.counters._;
-import Counters._
+import scalanlp.math.Numerics.lgamma
+import scalala.tensor.Counter
 
 /**
  * The Beta distribution, which is the conjugate prior for the Bernoulli distribution
@@ -51,12 +50,12 @@ class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends Contin
   }
   
   override def posterior(obs: Iterator[(Boolean,Int)]) = {
-    val ctr = Counters.aggregate(obs.map{ case (k,v) => (k,v.toDouble)});
+    val ctr = Counter(obs.map{ case (k,v) => (k,v.toDouble)}.toSeq:_*);
     new Beta(ctr(true)+a, ctr(false)+b)(rand)
   }
   
   def predictive = {
-    val ctr = DoubleCounter[Boolean]();
+    val ctr = Counter[Boolean,Double]();
     ctr(true) = a;
     ctr(false) = b;
     new Polya(ctr)(rand);
