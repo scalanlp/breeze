@@ -25,15 +25,45 @@ import math._;
  */
 class Poisson(val mean: Double)(implicit rand: RandBasis=Rand) extends DiscreteDistr[Int] with Moments[Double] {
   private val ell = math.exp(-mean);
-  //  TODO: this is from Knuth, but it's linear in mean.
-  def draw() = {
-    var k = 0;
-    var p = 1.;
-    do { 
-      k += 1;
-      p *= rand.uniform.get();
-    } while(p >= ell);
-    k - 1;
+  // impl from winrand
+  def draw():Int = {
+    if(mean == 0) 0
+    else if(mean < 10.0) { // small
+      var t = ell;
+      var k = 0;
+      val u = rand.uniform.get;
+      var s = t;
+      while(s < u) {
+        k += 1;
+        t *= mean / k;
+        s += t;
+      }
+      k
+    } else {
+      val k_start = mean.toInt;
+      val u = rand.uniform.get;
+      var t1 = exp(k_start * log(mean) - mean - lgamma(k_start+1));
+      if (t1 > u) k_start
+      else {
+        var k1 = k_start;
+        var k2 = k_start;
+        var t2 = t1;
+        var s = t1;
+        while(true) {
+          k1 += 1;
+          t1 *= mean / k1; s += t1;
+          if (s > u) return k1;
+          if (k2 > 0) {
+            t2 *= k2 / mean;
+            k2 -= 1;
+            s += t2;
+            if (s > u) return k2;
+          }
+        }
+        error("wtf");
+      }
+
+    }
   }
 
   def probabilityOf(k:Int) = math.exp(logProbabilityOf(k));

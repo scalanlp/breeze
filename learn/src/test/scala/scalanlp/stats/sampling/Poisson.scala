@@ -28,15 +28,15 @@ import scalanlp.stats.DescriptiveStats._;
 class PoissonTest extends FunSuite with Checkers {
   import Arbitrary.arbitrary;
 
-  val NUM_SAMPLES = 50000;
-  val TOL = 1E-1;
+  val NUM_SAMPLES = 30000;
+  val TOL = 1E-2;
 
   test("mean and variance -- sampling") {
     val mean = 5.0;
     val b = new Poisson(mean);
     val (m,v) = meanAndVariance(b.samples.take(NUM_SAMPLES).map(_.toDouble));
-    assert( (m - b.mean).abs < TOL, m + " vs " + b.mean)
-    assert((v - b.variance).abs < TOL, v + " vs " +  b.variance);
+    assert( (m - b.mean).abs/mean < TOL, m + " vs " + b.mean)
+    assert((v - b.variance).abs/mean < TOL, v + " vs " +  b.variance);
   }
 
   test("cdf") {
