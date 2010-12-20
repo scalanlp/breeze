@@ -36,6 +36,10 @@ trait Configuration {
     try(readIn[T](prefix)) catch { case (e:NoParameterException) => default };
   }
 
+  final def readOpt[T:Manifest](prefix: String) = {
+    try( Some(readIn[T](prefix))) catch { case (e:NoParameterException) => None };
+  }
+
   final def readIn[T:Manifest](prefix:String):T = {
     ArgumentParser.getArgumentParser[T] match {
       case Some(parser) =>
