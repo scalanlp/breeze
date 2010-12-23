@@ -32,7 +32,27 @@ import scalanlp.optimize._;
  * @author dlwh
  */
 object LogisticClassifier {
-  /**
+
+
+  def main(args: Array[String]) {
+    import scalala.Scalala._
+    import scalala.tensor.operators.DenseMatrixOps._
+    import scalala.Scalala._
+    import scalanlp.data._
+    import scalala.tensor.dense._;                                                                                           
+
+    val data = DataMatrix.fromURL(new java.net.URL("http://www-stat.stanford.edu/~tibs/ElemStatLearn/datasets/spam.data"),-1);
+    val vectors = data.rows.map(e => e map ((a:Seq[Double]) => new DenseVector(a.toArray)) relabel (_.toInt))
+
+    val classifier = new LogisticClassifier.Trainer[Int,Int,DenseMatrix,DenseVector,DenseVector].train(vectors);
+    for( ex <- vectors) {
+      val guessed = classifier.classify(ex.features);
+      println(guessed,ex.label);
+    }
+  }
+
+
+    /**
    * @param L: the label type
    * @param F: the feature type
    * @param: T2: the Matrix with labels as "rows" and features as "column"
@@ -41,45 +61,39 @@ object LogisticClassifier {
    * @param data: a sequence of labeled examples
    * @return a LinearClassifier based on the fitted model
    */
-  def apply[L,F,T2<:Tensor2[L,F] with TensorSelfOp[(L,F),T2,Shape2],
+  class Trainer[L,F,T2<:Tensor2[L,F] with TensorSelfOp[(L,F),T2,Shape2],
       TL<:Tensor1[L] with TensorSelfOp[L,TL,Shape1Col],
       TF<:Tensor1[F] with TensorSelfOp[F,TF,Shape1Col]]
-      (data: IndexedSeq[Example[L,TF]])
       (implicit tpb: TensorProductBuilder[T2,TF,TL,Shape2,Shape1Col,Shape1Col],
         ta: TensorArith[(L,F),T2,Tensor2[L,F],Shape2],
         tla: Tensor1Arith[L,TL,TL,Shape1Col],
-        datasetModel: DatasetModel[L,F,T2,TL,TF]) = {
+        datasetModel: DatasetModel[L,F,T2,TL,TF]) extends Classifier.Trainer[L,TF] {
 
-    require(data.length > 0);
+    type MyClassifier = LinearClassifier[L,F,T2,TL,TF];
 
-    val guess = datasetModel.emptyParameterMatrix(data);
-
-    val maker = new ObjectiveFunctionMaker[L,F,T2,TL,TF];
-    import maker.linearizer._;
-    val objective = maker.objective(data);
-
-    val opt = new LBFGS[(L,F),ProjectedTensor](-1,5)(maker.linearizer.ops) with scalanlp.util.ConsoleLogging;
-    //val opt = new StochasticGradientDescent[(L,F),ProjectedTensor](0.05,0,100000) with scalanlp.util.ConsoleLogging;
-    val flatWeights = opt.minimize(objective,linearize(guess));
-    val weights = reshape(flatWeights);
-    new LinearClassifier[L,F,T2,TL,TF](weights,datasetModel.emptyLabelVector(data));
-  }
-
-  class ObjectiveFunctionMaker[L,F,T2<:Tensor2[L,F] with TensorSelfOp[(L,F),T2,Shape2],
-      TL<:Tensor1[L] with TensorSelfOp[L,TL,Shape1Col],
-      TF<:Tensor1[F] with TensorSelfOp[F,TF,Shape1Col]]
-      (implicit tpb: TensorProductBuilder[T2,TF,TL,Shape2,Shape1Col,Shape1Col],
-       ta: TensorArith[(L,F),T2,Tensor2[L,F],Shape2],
-       tla: Tensor1Arith[L,TL,TL,Shape1Col],
-       datasetModel: DatasetModel[L,F,T2,TL,TF]) {
-
-    val linearizer = TensorLinearizer[(L,F),T2]();
+    protected val linearizer = TensorLinearizer[(L,F),T2]();
     import linearizer._;
 
-    def objective(data: IndexedSeq[Example[L,TF]]) = new ObjectiveFunction(data);
+    def train(data: Iterable[Example[L,TF]]) = {
+      require(data.size > 0);
+
+      val guess = datasetModel.emptyParameterMatrix(data.toSeq);
+
+      val obj = objective(data.toIndexedSeq);
+
+      val flatWeights = opt.minimize(obj,linearize(guess));
+      val weights = reshape(flatWeights);
+      new LinearClassifier[L,F,T2,TL,TF](weights,datasetModel.emptyLabelVector(data.toSeq));
+    }
+
+
+    protected def objective(data: IndexedSeq[Example[L,TF]]) = new ObjectiveFunction(data);
+    protected val opt:Minimizer[ProjectedTensor,BatchDiffFunction[(L,F),ProjectedTensor]] = {
+      new LBFGS[(L,F),ProjectedTensor](-1,5)(ops) with scalanlp.util.ConsoleLogging;
+    }
 
     // preliminaries: an objective function
-    class ObjectiveFunction(data: IndexedSeq[Example[L,TF]]) extends BatchDiffFunction[(L,F),linearizer.ProjectedTensor] {
+    protected class ObjectiveFunction(data: IndexedSeq[Example[L,TF]]) extends BatchDiffFunction[(L,F),ProjectedTensor] {
 
       val basisLabel = data.head.label;
       val labelSet = Set.empty ++ data.iterator.map(_.label);
@@ -124,22 +138,4 @@ object LogisticClassifier {
     }
   }
 
-
-  def main(args: Array[String]) {
-    import scalala.Scalala._
-    import scalala.tensor.operators.DenseMatrixOps._
-    import scalala.Scalala._
-    import scalanlp.data._
-    import scalala.tensor.dense._;                                                                                           
-
-    val data = DataMatrix.fromURL(new java.net.URL("http://www-stat.stanford.edu/~tibs/ElemStatLearn/datasets/spam.data"),-1);
-    val vectors = data.rows.map(e => e map ((a:Seq[Double]) => new DenseVector(a.toArray)) relabel (_.toInt))
-
-    val classifier = LogisticClassifier[Int,Int,DenseMatrix,DenseVector,DenseVector](vectors.toIndexedSeq);
-    for( ex <- vectors) {
-      val guessed = classifier.classify(ex.features);
-      println(guessed,ex.label);
-    }
-  }
-  
 }

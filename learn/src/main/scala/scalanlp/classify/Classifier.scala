@@ -52,3 +52,10 @@ trait Classifier[L,-T] extends (T=>L) { outer =>
     }
   }
 }
+
+object Classifier {
+  trait Trainer[L,T] {
+    type MyClassifier <: Classifier[L,T]
+    def train(data: Iterable[Example[L,T]]):MyClassifier;
+  }
+}

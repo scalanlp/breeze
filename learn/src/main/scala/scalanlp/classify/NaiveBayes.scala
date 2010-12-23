@@ -33,7 +33,9 @@ import scala.collection.Map;
  * @param wordSmoothing: how much smoothing for each word
  * @param classSmoothing: how much smoothing for the class.
  */
-class NaiveBayes[W,L](c: Iterable[Example[L,IntCounter[W]]],
+@serializable
+@SerialVersionUID(1L)
+class NaiveBayes[L,W](c: Iterable[Example[L,IntCounter[W]]],
     val wordSmoothing:Double=0.05,
     val classSmoothing:Double=0.01)  extends Classifier[L,IntCounter[W]] {
 
@@ -65,5 +67,15 @@ class NaiveBayes[W,L](c: Iterable[Example[L,IntCounter[W]]],
       res(l) += logWordProbabilities.foldLeft(0.0)(_+_);
     }
     res;
+  }
+}
+
+object NaiveBayes {
+  class Trainer[L,T](wordSmoothing: Double=0.05, classSmoothing: Double= 0.01) extends Classifier.Trainer[L,IntCounter[T]] {
+    type MyClassifier = NaiveBayes[L,T];
+
+    override def train(data: Iterable[Example[L,IntCounter[T]]]) = {
+      new NaiveBayes(data,wordSmoothing,classSmoothing);
+    }
   }
 }

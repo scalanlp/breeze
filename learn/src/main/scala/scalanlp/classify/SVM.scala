@@ -35,16 +35,6 @@ import math._;
  * @author dlwh
  */
 object SVM {
-
-  /**
-   * Trains an SVM using the Pegsasos Algorithm.
-   */
-  def apply[F,TF<:Tensor1[F] with TensorSelfOp[F,TF,Shape1Col]](data:Seq[Example[Boolean,TF]],numIterations:Int=1000)
-                                                               (implicit arith: Tensor1Arith[_,TF,TF,Shape1Col]) = {
-
-    new Pegasos(numIterations).train[F,TF](data);
-  }
-
   /**
    * An online optimizer for an SVM based on Pegasos: Primal Estimated sub-GrAdient SOlver for SVM
    *
@@ -56,13 +46,17 @@ object SVM {
    * @param regularization sort of a 2-norm penalty on the weights. Higher means more smoothing
    * @param batchSize: how many elements per iteration to use.
    */
-  class Pegasos(numIterations: Int, regularization: Double=0.1, batchSize: Int = 100) extends Logged {
-    def train[F,TF<:Tensor1[F] with TensorSelfOp[F,TF,Shape1Col]](data: Seq[Example[Boolean,TF]])
-                                  (implicit arith: Tensor1Arith[_,TF,TF,Shape1Col]):Classifier[Boolean,TF] = {
-      val w = data(0).features.like;
+  class Pegasos[F,TF<:Tensor1[F] with TensorSelfOp[F,TF,Shape1Col]](numIterations: Int,
+                                                                    regularization: Double=0.1,
+                                                                    batchSize: Int = 100)(implicit arith: Tensor1Arith[_,TF,TF,Shape1Col])
+                                                extends Classifier.Trainer[Boolean,TF] with Logged {
+    type MyClassifier = Classifier[Boolean,TF];
+    def train(data: Iterable[Example[Boolean,TF]]):Classifier[Boolean,TF] = {
+      val dataSeq = data.toIndexedSeq;
+      val w = data.head.features.like;
       var intercept = 0.0;
       for(iter <- 0 until numIterations) {
-        val subset = (Rand.permutation(data.length).get.take(batchSize)).view.map(data);
+        val subset = (Rand.permutation(dataSeq.size).get.take(batchSize)).view.map(dataSeq);
         // i.e. those we don't classify correctly
         val problemSubset = (for {
           ex <- subset.iterator
@@ -108,8 +102,8 @@ object SVM {
     val data = DataMatrix.fromURL(new java.net.URL("http://www-stat.stanford.edu/~tibs/ElemStatLearn/datasets/spam.data"),-1);
     val vectors = data.rows.map(e => e map ((a:Seq[Double]) => new DenseVector(a.toArray)) relabel (_ == 1.0));
 
-    val trainer = new SVM.Pegasos(10000,batchSize=1000) with ConsoleLogging;
-    val classifier = trainer.train[Int,DenseVector](vectors);
+    val trainer = new SVM.Pegasos[Int,DenseVector](10000,batchSize=1000) with ConsoleLogging;
+    val classifier = trainer.train(vectors);
     for( ex <- vectors) {
       val guessed = classifier.classify(ex.features);
       println(guessed,ex.label);

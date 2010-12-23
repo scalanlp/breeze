@@ -23,6 +23,6 @@ import scalala.tensor.Vector;
 *
 * @author dlwh
 */
-trait Minimizer[T,F<:Function[T,Double]] {
+trait Minimizer[T,-F<:Function[T,Double]] {
   def minimize(f: F, initial: T): T
 }
