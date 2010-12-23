@@ -24,11 +24,13 @@ import scala.collection.IterableLike;
 import scalanlp.util.ScalaQL;
 
 /**
-* From Okasaki's Functional Data Structures. Represents a functional heap
-*/
+ * From Okasaki's Functional Data Structures. Represents a functional heap
+ *
+ * @author dlwh
+ */
 @serializable
-class BinomialHeap[T<%Ordered[T]] extends Iterable[T] with IterableLike[T,BinomialHeap[T]] 
-    with Addable[T,BinomialHeap[T]] {
+class BinomialHeap[T<%Ordered[T]] extends Iterable[T] with IterableLike[T,BinomialHeap[T]]
+with Addable[T,BinomialHeap[T]] {
   import BinomialHeap._;
   protected val trees: List[Node[T]] = Nil;
   override val size = 0;
@@ -45,7 +47,7 @@ class BinomialHeap[T<%Ordered[T]] extends Iterable[T] with IterableLike[T,Binomi
   private def merge(l1 : List[Node[T]], l2 : List[Node[T]], acc : List[Node[T]]) : List[Node[T]] = (l1,l2) match {
     case (Nil,l2) => acc.reverse ++ l2;
     case (l1,Nil) => acc.reverse ++ l1
-    case (n1 :: r1 , n2 :: r2 )  => 
+    case (n1 :: r1 , n2 :: r2 )  =>
       if(n1.rank < n2.rank) merge(r1,l2, n1 :: acc)
       else if (n2.rank < n1.rank) merge(l1,r2, n2 :: acc);
       else insertTree(n1 link n2, merge(r1,r2,acc));
@@ -60,8 +62,8 @@ class BinomialHeap[T<%Ordered[T]] extends Iterable[T] with IterableLike[T,Binomi
     trees match {
       case (t :: Nil) => t.x
       case (t :: ts) =>
-        val x = t.x; 
-        val y = findMin(ts); 
+        val x = t.x;
+        val y = findMin(ts);
         if(x < y) x else y;
       case _ => throw new IllegalArgumentException("Shouldn't get Nil!");
     }
@@ -85,7 +87,7 @@ class BinomialHeap[T<%Ordered[T]] extends Iterable[T] with IterableLike[T,Binomi
   }
 
   private val comp = {(x : T, y :T) => x compare y}
-  def iterator :Iterator[T] = ScalaQL.merge( (trees map treeIterator):_*)(comp) 
+  def iterator :Iterator[T] = ScalaQL.merge( (trees map treeIterator):_*)(comp)
 
   private def treeIterator(n : Node[T]) : Iterator[T] = {
     ScalaQL.merge((Iterator.single(n.x) :: (n.children map treeIterator)):_*)(comp);

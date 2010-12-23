@@ -5,7 +5,7 @@ import util.{IteratorImplicits, DoubleImplicits}
 ;
 
 /**
- * 
+ * Adds a bunch of implicits and things that are generically useful.
  * @author dlwh
  */
 package object util extends DoubleImplicits with IteratorImplicits {
@@ -23,8 +23,18 @@ package object util extends DoubleImplicits with IteratorImplicits {
     stream.close();
   }
 
+  /**
+   * You can write TODO in your code, and get an exception at runtime for any expression.
+   */
   def TODO = error("TODO");
+
+  /**
+   * You can write XXX in your code and get an exception at runtime for any expression.
+   */
   def XXX = error("XXX");
+  /**
+   * Similar to the TODO expression, except this one is for types.
+   */
   type TODO = Nothing;
 
 

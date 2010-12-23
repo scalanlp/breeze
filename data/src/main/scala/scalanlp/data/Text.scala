@@ -28,7 +28,7 @@ import scalala.tensor.counters.Counters._;
 *
 * @author dlwh
 */
-case class Text(val id:String, val contents: String) extends Observation[String] {
+case class Text(id:String, contents: String) extends Observation[String] {
   def features = contents;
    
   def withLabel[L](l:L) = new LabeledText[L](id,l,contents);
