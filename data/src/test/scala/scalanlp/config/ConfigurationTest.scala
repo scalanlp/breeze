@@ -14,7 +14,7 @@ trait ConfigurationDemoIFace {
   def boolean:Boolean;
   def string:String;
 }
-case class DemoConfigurationClass(int: Int, double: Double, boolean: Boolean, string: String) extends ConfigurationDemoIFace;
+case class DemoConfigurationClass(int: Int, double: Double, boolean: Boolean, string: String= "woowoo") extends ConfigurationDemoIFace;
 
 trait ConfDemoHolderIFace[A] {
   def value: A
@@ -41,7 +41,7 @@ class ConfigurationTest extends FunSuite {
     assert(myBoolean === false);
   }
 
-  test("we can read things embedded in a class") {
+   test("we can read things embedded in a class") {
     val p = new Properties();
     p.put("some.int","3");
     p.put("some.double","1E-4");
@@ -52,6 +52,19 @@ class ConfigurationTest extends FunSuite {
     assert(my.int === 3);
     assert(my.double === 1E-4);
     assert(my.boolean === false);
+  }
+
+  test("we can read things embedded in a class with defaults") {
+    val p = new Properties();
+    p.put("some.int","3");
+    p.put("some.double","1E-4");
+    p.put("some.boolean","false");
+    val reader = Configuration.fromProperties(p);
+    val my = reader.readIn[DemoConfigurationClass]("some");
+    assert(my.int === 3);
+    assert(my.double === 1E-4);
+    assert(my.boolean === false);
+    assert(my.string === "woowoo")
   }
 
   test("we can read in an interface backed by a class") {
