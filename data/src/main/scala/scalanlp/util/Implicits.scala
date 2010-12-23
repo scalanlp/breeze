@@ -14,3 +14,22 @@ trait DoubleImplicits {
 
   implicit def scEnrichDouble(x: Double) = new RichDouble(x);
 }
+
+
+trait IteratorImplicits {
+  class RichIterator[T](iter: Iterator[T]) {
+    def tee(f: T=>Unit):Iterator[T] = new Iterator[T] {
+      def next = {
+        val n = iter.next;
+        f(n);
+        n
+      }
+
+      def hasNext = {
+        iter.hasNext;
+      }
+    }
+  }
+
+  implicit def scEnrichIterator[T](iter: Iterator[T]) = new RichIterator[T](iter);
+}
