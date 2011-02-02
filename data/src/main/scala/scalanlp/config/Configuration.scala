@@ -279,7 +279,7 @@ class ConfigurationException(msg: String) extends Exception(msg);
 /**
  * The exception thrown for a missing property in Configuration
  */
-class NoParameterException(msg: String, param: String) extends ConfigurationException(msg);
+class NoParameterException(msg: String, param: String) extends ConfigurationException("while searching for " + param + ": " + msg);
 
 object Configuration {
   /**
