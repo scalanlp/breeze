@@ -83,17 +83,19 @@ abstract class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,S
 
 
   /**
-  * Selects a sample of the data to evaluate on. By default, it selects
-  * a random sample without replacement.
+  * Selects a sample of the data to evaluate on. By default, it does
+  * repeated sweeps.
   */
   def chooseBatch(f: BatchDiffFunction[K,T], state: State) = {
-    Rand.permutation(f.fullRange.size).draw.map(f.fullRange).take(batchSize);
+    val offset = (batchSize * state.iter) % f.fullRange.size;
+    val batch = (offset until (offset + batchSize)) map (i =>f.fullRange(i%f.fullRange.size));
+    batch;
   }
 
   /**
    * Projects the vector onto whatever ball is needed. Can also incorporate regularization, or whatever.
    *
-   * Default does nothing.
+   * Default just takes a step
    */
   def projectVector(state: State, oldX: T, gradient: T, stepSize: Double):T = oldX - gradient * stepSize value;
 
