@@ -24,6 +24,20 @@ class ApproximateGradientFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Co
     }
     (fx,grad);
   }
+
+  def calculateAndPrint(x: T, trueGrad: T) = {
+    val fx = f(x);
+    val grad = x.like;
+    val xx = x.copy;
+    for((k,v) <- x) {
+      xx(k) += epsilon;
+      grad(k) = (f(xx) - fx) / epsilon;
+      xx(k) -= epsilon;
+      println("diff : " + epsilon + " val: " + (grad(k) - trueGrad(k)) + " comp: " + trueGrad(k) + " " + grad(k));
+    }
+    (fx,grad);
+
+  }
 }
 
 class GradientCheckingDiffFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]]
@@ -39,7 +53,7 @@ class GradientCheckingDiffFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1C
   def calculate(x:T) = {
     val (v,predicted) = f.calculate(x);
     for { (fap,eps) <- approxes zip epsilons } {
-      val empirical = fap.gradientAt(x);
+      val empirical = fap.calculateAndPrint(x,predicted)._2;
       empirical -= predicted
       println("diff : " + eps + " norm: " + norm(empirical,2));
     }
