@@ -76,6 +76,21 @@ class SparseArray[@specialized T:ClassManifest]
     }
   }
 
+
+  def activeLength = used;
+
+  /** Returns the index of the item stored at the given offset. */
+  final def indexAt(offset : Int) : Int = {
+    if (offset >= used) throw new ArrayIndexOutOfBoundsException();
+    index(offset);
+  }
+
+  /** Returns the value of the item stored at the given offset. */
+  final def valueAt(offset : Int) : T = {
+    if (offset >= used) throw new ArrayIndexOutOfBoundsException();
+    data(offset);
+  }
+
   // XXX TODO: implement a real filter somehow.
   def filter(f: ((Int,T))=>Boolean) = iterator filter f;
 
