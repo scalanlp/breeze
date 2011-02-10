@@ -1,14 +1,14 @@
 package scalanlp
 
 import java.io._
-import util.{IteratorImplicits, DoubleImplicits}
+import util.{IteratorImplicits, DoubleImplicits, SeqImplicits}
 ;
 
 /**
  * Adds a bunch of implicits and things that are generically useful.
  * @author dlwh
  */
-package object util extends DoubleImplicits with IteratorImplicits {
+package object util extends DoubleImplicits with IteratorImplicits with SeqImplicits {
   def readObject[T](loc: File) = {
     val oin = new ObjectInputStream(new BufferedInputStream(new FileInputStream(loc)));
     val result = oin.readObject().asInstanceOf[T]
@@ -36,6 +36,7 @@ package object util extends DoubleImplicits with IteratorImplicits {
    * Similar to the TODO expression, except this one is for types.
    */
   type TODO = Nothing;
+
 
 
 }
