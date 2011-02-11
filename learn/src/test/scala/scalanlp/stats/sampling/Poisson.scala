@@ -29,7 +29,7 @@ class PoissonTest extends FunSuite with Checkers {
   import Arbitrary.arbitrary;
 
   val NUM_SAMPLES = 30000;
-  val TOL = 1E-2;
+  val TOL = 1E-1;
 
   test("mean and variance -- sampling") {
     val mean = 5.0;
