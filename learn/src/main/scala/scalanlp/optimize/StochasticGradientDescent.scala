@@ -33,28 +33,17 @@ import scalanlp.stats.sampling._;
 abstract class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]](val eta: Double,
     val maxIter: Int,
     val batchSize: Int)(implicit protected val arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col])
-																	    extends Minimizer[T,BatchDiffFunction[K,T]]
+																	    extends FirstOrderMinimizer[K,T,BatchDiffFunction[K,T]]
                                       with GradientNormConvergence[K,T]
                                       with Logged {
-
-  /**
-  * Runs SGD on f, for maxIter.
-  */
-  def minimize(f: BatchDiffFunction[K,T], init: T) = {
-    iterations(f,init).reduceLeft((a,b) => b).x;
-  }
 
   type History;
   def initialHistory(f: BatchDiffFunction[K,T], init: T):History;
   def updateHistory(oldState: State, newX: T, curValue: Double, curGrad: T):History
-
-  case class State protected[StochasticGradientDescent](x: T, value: Double,
-                                                   grad: T,
-                                                   iter: Int,
-                                                   history: History);
+  def adjustGradient(grad:T, x: T):T = grad
 
   def iterations(f: BatchDiffFunction[K,T], init: T):Iterator[State] = {
-    val it = Iterator.iterate(initialState(f,init)) { case state @ State(oldX, oldV, _, iter, _) =>
+    val it = Iterator.iterate(initialState(f,init)) { case state @ State(oldX, oldV, _, _, iter, _) =>
       val sample = chooseBatch(f,state);
 
       val (value,grad: T) = f.calculate(oldX,sample);
@@ -64,11 +53,11 @@ abstract class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,S
       val stepSize = chooseStepSize(state.copy(value=value,grad=grad));
       val newX = projectVector(state, oldX, grad, stepSize);
       assert(newX.forall(v => !v._2.isInfinite && !v._2.isNaN));
-      val newState = State(newX, value, grad, iter + 1, updateHistory(state,newX,value,grad))
+      val newState = State(newX, value, grad, adjustGradient(grad,newX), iter + 1, updateHistory(state,newX,value,grad))
       newState
     };
 
-    it.drop(1).takeWhile { case State(x,v,g,i,_) => i < maxIter && !checkConvergence(v,g)}
+    it.drop(1).takeWhile { case State(x,v,g,_,i,_) => i < maxIter && !checkConvergence(v,g)}
   }
 
 
@@ -78,7 +67,7 @@ abstract class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,S
    * Chooses the initial state
    */
   def initialState(f: BatchDiffFunction[K,T], init: T): State = {
-    State(init,Double.PositiveInfinity,init.like, 0, initialHistory(f,init));
+    State(init,Double.PositiveInfinity,init.like, init.like, 0, initialHistory(f,init));
   }
 
 

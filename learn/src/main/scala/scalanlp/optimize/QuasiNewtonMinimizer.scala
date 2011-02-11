@@ -29,27 +29,9 @@ import TensorShapes._;
  * @author dlwh
  */
 trait QuasiNewtonMinimizer[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]]
-        extends Minimizer[T,DiffFunction[K,T]] with Logged with CheckedConvergence[K,T] {
+        extends FirstOrderMinimizer[K,T,DiffFunction[K,T]] with Logged with CheckedConvergence[K,T] {
 
   protected val maxIter: Int = -1;
-
-  def minimize(f: DiffFunction[K,T], init: T):T = {
-    val steps = iterations(f,init);
-    val convSteps = for( cur@State(x,v,grad, adjGradient, iter,history)  <- steps) yield {
-      log(INFO)("Iteration: " + iter);
-      log(INFO)("Current v:" + v);
-      log(INFO)("Current grad norm:" + norm(adjGradient,2));
-      (cur,checkConvergence(v,adjGradient));
-    }
-
-    convSteps.dropWhile(state => !state._2 && (state._1.iter < maxIter || maxIter < 0)).next._1.x;
-  }
-
-  type History;
-  case class State protected[QuasiNewtonMinimizer](x: T, value: Double,
-                                                   grad: T,
-                                                   adjustedGradient: T,iter: Int,
-                                                   history: History);
 
   protected def initialState(f: DiffFunction[K,T], init: T):State = {
     val (v,grad) = f.calculate(init);
@@ -63,39 +45,46 @@ trait QuasiNewtonMinimizer[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]]
   protected def chooseStepSize(f: DiffFunction[K,T], dir: T, grad: T, state: State):(Double,Double);
   protected def updateHistory(oldState: State, newGrad: T, newVal: Double, step: T): History;
 
-  def iterations(f: DiffFunction[K,T],init: T): Iterator[State] = Iterator.iterate(initialState(f,init)) {state =>
-     val x : T = state.x.copy;
-     val grad = state.grad;
-     val v = state.value;
-     val iter = state.iter;
-     val adjGrad = state.adjustedGradient
+  def iterations(f: DiffFunction[K,T],init: T): Iterator[State] ={
+    val it = Iterator.iterate(initialState(f,init)) {state =>
+      val x : T = state.x.copy;
+      val grad = state.grad;
+      val v = state.value;
+      val iter = state.iter;
+      val adjGrad = state.adjustedGradient
 
-     try {
-       val dir = chooseDescentDirection(adjGrad, state);
-       val (stepScale,newVal) = chooseStepSize(f, dir, adjGrad, state);
-       log(INFO)("Scale:" +  stepScale);
-       dir *= stepScale;
-       x += dir;
-       if (norm(dir,2) <= 1E-20) {
-         throw new StepSizeUnderflow;
-       }
+      try {
+        val dir = chooseDescentDirection(adjGrad, state);
+        val (stepScale,newVal) = chooseStepSize(f, dir, adjGrad, state);
+        log(INFO)("Scale:" +  stepScale);
+        dir *= stepScale;
+        x += dir;
+        if (norm(dir,2) <= 1E-20) {
+          throw new StepSizeUnderflow;
+        }
 
-       val newGrad = f.gradientAt(x);
+        val newGrad = f.gradientAt(x);
 
-       val newHistory = updateHistory(state, newGrad, newVal, dir);
+        val newHistory = updateHistory(state, newGrad, newVal, dir);
 
-       new State(x,newVal,newGrad,adjustGradient(newGrad,x),iter+1,newHistory);
+        new State(x,newVal,newGrad,adjustGradient(newGrad,x),iter+1,newHistory);
 
-     } catch {
-       case _:StepSizeUnderflow =>
-        log(ERROR)("Step size underflow! Clearing history.");
-        state.copy(history=initialHistory(state.grad), iter = iter+1)
-       case _: QNException =>
-         log(ERROR)("Something in the history is giving NaN's, clearing it!");
-         state.copy(history=initialHistory(state.grad), iter=iter+1);
-     }
+      } catch {
+        case _:StepSizeUnderflow =>
+          log(ERROR)("Step size underflow! Clearing history.");
+          state.copy(history=initialHistory(state.grad), iter = iter+1)
+        case _: QNException =>
+          log(ERROR)("Something in the history is giving NaN's, clearing it!");
+          state.copy(history=initialHistory(state.grad), iter=iter+1);
+      }
 
-   }
+    }
+
+    // These methods, unlike SGD, update gradient and the like after taking a step, so you should include the first step that converges.
+    it.sliding(2).takeWhile{ case Seq(state,state2) =>
+      (state.iter < maxIter || maxIter < 0) && !checkConvergence(state.value,state.adjustedGradient)
+    }.map(_(1));
+  }
 
 }
 
