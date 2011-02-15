@@ -57,7 +57,7 @@ abstract class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,S
       newState
     };
 
-    it.drop(1).takeWhile { case State(x,v,g,_,i,_) => i < maxIter && !checkConvergence(v,g)}
+    it.drop(1).takeWhile { case State(x,v,g,_,i,_) => (i < maxIter || maxIter < 0) && !checkConvergence(v,g)}
   }
 
 

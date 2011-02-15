@@ -56,18 +56,24 @@ trait QuasiNewtonMinimizer[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]]
       try {
         val dir = chooseDescentDirection(adjGrad, state);
         val (stepScale,newVal) = chooseStepSize(f, dir, adjGrad, state);
+        log(INFO)("Iteration: " + iter);
         log(INFO)("Scale:" +  stepScale);
+        log(INFO)("Current v:" + newVal);
+
         dir *= stepScale;
         x += dir;
         if (norm(dir,2) <= 1E-20) {
           throw new StepSizeUnderflow;
         }
 
-        val newGrad = f.gradientAt(x);
+        val newGrad = f.gradientAt(x) ;
+        val newAdjGrad = adjustGradient(newGrad,x)
+        log(INFO)("Current grad norm:" + norm(newAdjGrad,2));
+
 
         val newHistory = updateHistory(state, newGrad, newVal, dir);
 
-        new State(x,newVal,newGrad,adjustGradient(newGrad,x),iter+1,newHistory);
+        new State(x,newVal,newGrad,newAdjGrad,iter+1,newHistory);
 
       } catch {
         case _:StepSizeUnderflow =>

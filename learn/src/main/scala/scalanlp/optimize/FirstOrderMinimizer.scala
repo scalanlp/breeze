@@ -2,6 +2,7 @@ package scalanlp.optimize
 
 import scalanlp.util.Logged
 import scalanlp.util.Log._
+import scalanlp.util.ConsoleLogging
 import scalala.tensor._
 import scalala.Scalala._
 import scalala.tensor.operators._;
@@ -51,13 +52,13 @@ object FirstOrderMinimizer {
         (implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col]): FirstOrderMinimizer[K,T,BatchDiffFunction[K,T]] = {
       if(useStochastic) {
         if(regularization == 0.0) {
-          StochasticGradientDescent[K,T](alpha, maxIterations, batchSize);
+          new StochasticGradientDescent.SimpleSGD[K,T](alpha, maxIterations, batchSize) with ConsoleLogging;
         } else if(useL1) {
-          new StochasticGradientDescent[K,T](alpha, maxIterations, batchSize) with AdaptiveGradientDescent.L1Regularization[K,T] {
+          new StochasticGradientDescent[K,T](alpha, maxIterations, batchSize) with AdaptiveGradientDescent.L1Regularization[K,T] with ConsoleLogging {
             override val lambda = adjustedRegularization(numInstances);
           }
         } else { // L2
-          new StochasticGradientDescent[K,T](alpha,  maxIterations, batchSize) with AdaptiveGradientDescent.L2Regularization[K,T] {
+          new StochasticGradientDescent[K,T](alpha,  maxIterations, batchSize) with AdaptiveGradientDescent.L2Regularization[K,T] with ConsoleLogging {
             override val lambda = adjustedRegularization(numInstances);
           }
         }
@@ -69,8 +70,8 @@ object FirstOrderMinimizer {
     def minimizer[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]]
       (f: DiffFunction[K,T])
       (implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col]): FirstOrderMinimizer[K,T,BatchDiffFunction[K,T]] = {
-      if(useL1) new OWLQN[K,T](maxIterations, 5, regularization)
-      else new LBFGS[K,T](maxIterations, 5) {
+      if(useL1) new OWLQN[K,T](maxIterations, 5, regularization) with ConsoleLogging
+      else new LBFGS[K,T](maxIterations, 5) with ConsoleLogging {
         override def iterations(f: DiffFunction[K,T], init: T) = {
           super.iterations(DiffFunction.withL2Regularization(f,regularization),init);
         }
