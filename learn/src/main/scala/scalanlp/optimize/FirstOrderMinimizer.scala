@@ -28,9 +28,6 @@ trait FirstOrderMinimizer[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col],-DF<:
   def minimize(f: DF, init: T):T = {
     val steps = iterations(f,init);
     val convSteps = for( cur@State(x,v,grad, adjGradient, iter,history)  <- steps) yield {
-      log(INFO)("Iteration: " + iter);
-      log(INFO)("Current v:" + v);
-      log(INFO)("Current grad norm:" + norm(adjGradient,2));
       cur
     }
 

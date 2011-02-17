@@ -40,6 +40,40 @@ class ApproximateGradientFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Co
   }
 }
 
+class RandomizedGradientCheckingFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]]
+          (f: DiffFunction[K,T], randFraction:Double = 0.01, epsilons: Seq[Double] = Array(1E-5))
+          extends DiffFunction[K,T] {
+  val approxes =  for( eps <- epsilons) yield {
+    val fapprox = new ApproximateGradientFunction[K,T](f,eps);
+    fapprox
+  }
+
+  override def valueAt(x: T) = f(x);
+
+  def calculate(x:T) = {
+    val (v,predicted) = f.calculate(x);
+    for { (fap,eps) <- approxes zip epsilons } {
+      calculateAndPrint(eps, x,predicted)._2;
+    }
+    (v,predicted);
+  }
+
+  def calculateAndPrint(epsilon: Double, x: T, trueGrad: T) = {
+    val fx = f(x);
+    val grad = x.like;
+    val xx = x.copy;
+    for((k,v) <- x if math.random < randFraction) {
+      xx(k) += epsilon;
+      grad(k) = (f(xx) - fx) / epsilon;
+      xx(k) -= epsilon;
+      println(k + "diff : " + epsilon + " val: " + (grad(k) - trueGrad(k)) + " comp: " + trueGrad(k) + " " + grad(k));
+    }
+    (fx,grad);
+
+  }
+
+}
+
 class GradientCheckingDiffFunction[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]]
           (f: DiffFunction[K,T], epsilons: Seq[Double] = Array(1E-5))
           extends DiffFunction[K,T] {
