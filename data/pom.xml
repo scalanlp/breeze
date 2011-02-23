@@ -4,7 +4,7 @@
   <parent>
     <artifactId>scalanlp-core</artifactId>
     <groupId>org.scalanlp</groupId>
-    <version>0.3.2-SNAPSHOT</version>
+    <version>0.3.3-SNAPSHOT</version>
   </parent>
 
   <properties>
@@ -14,7 +14,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.scalanlp</groupId>
   <artifactId>scalanlp-data_${scala.version}</artifactId>
-  <version>0.3.2-SNAPSHOT</version>
+  <version>0.3.3-SNAPSHOT</version>
   <name>ScalaNLP Data</name>
   <inceptionYear>2009</inceptionYear>
   
@@ -82,8 +82,8 @@
     </dependency>
     <dependency>
       <groupId>org.scalanlp</groupId>
-      <artifactId>scalala_2.8.0</artifactId>
-      <version>0.4.1</version>
+      <artifactId>scalala_${scala.version}</artifactId>
+      <version>1.0.0.RC1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.testing</groupId>

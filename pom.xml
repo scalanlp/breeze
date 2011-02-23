@@ -4,11 +4,11 @@
   <groupId>org.scalanlp</groupId>
   <artifactId>scalanlp-core</artifactId>
   <name>ScalaNLP Core</name>
-  <version>0.3.2-SNAPSHOT</version>
+  <version>0.3.3-SNAPSHOT</version>
   <url>http://www.scalanlp.org</url>
   <modules>
     <module>./data</module>
-    <module>./learn</module>
+    <!-- <module>./learn</module> -->
   </modules>
   
   <inceptionYear>2008</inceptionYear>

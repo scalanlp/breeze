@@ -2,17 +2,17 @@
   <parent>
     <artifactId>scalanlp-core</artifactId>
     <groupId>org.scalanlp</groupId>
-    <version>0.3.2-SNAPSHOT</version>
+    <version>0.3.3-SNAPSHOT</version>
   </parent>
   
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.scalanlp</groupId>
   <artifactId>scalanlp-learn_${scala.version}</artifactId>
   <name>ScalaNLP Learning</name>
-  <version>0.3.2-SNAPSHOT</version>
+  <version>0.3.3-SNAPSHOT</version>
   <url>http://www.scalanlp.org</url>
   <properties>
-    <scala.version>2.8.0</scala.version>
+    <scala.version>2.8.1</scala.version>
   </properties>
   <inceptionYear>2008</inceptionYear>
   <mailingLists>
@@ -207,7 +207,7 @@
     <dependency>
       <groupId>org.scalanlp</groupId>
       <artifactId>scalanlp-data_${scala.version}</artifactId>
-      <version>0.3.2-SNAPSHOT</version>
+      <version>0.3.3-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -218,7 +218,7 @@
     <dependency>
       <groupId>org.scalanlp</groupId>
       <artifactId>scalala_${scala.version}</artifactId>
-      <version>0.4.1-SNAPSHOT</version>
+      <version>1.0.0.RC1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.testing</groupId>

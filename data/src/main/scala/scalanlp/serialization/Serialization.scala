@@ -108,7 +108,7 @@ object SerializationFormat {
    * @author dlwh
    * @author dramage
    */
-  trait CompoundTypes extends SerializationFormat { this: SerializationFormat =>
+  trait CompoundTypes { self : SerializationFormat with PrimitiveTypes =>
 
     protected def readName(in : Input) : String;
 
@@ -247,6 +247,30 @@ object SerializationFormat {
         writeIterable[T,Seq[T]](sink, value, "Array");
     }
 
+//    implicit def iteratorReadWritable[T](implicit tH: ReadWritable[T])
+//    = new ReadWritable[Iterator[T]] {
+//      def read(source : Input) = new Iterator[T] {
+//        var pending = self.read[Byte](source);
+//        override def hasNext = pending > 0;
+//        override def next = {
+//          val rv = tH.read(source);
+//          pending = (pending - 1) : Byte;
+//          if (pending == 0) {
+//            pending = self.read[Byte](source);
+//          }
+//          rv;
+//        }
+//      }
+//      
+//      def write(out : Output, iter : Iterator[T]) {
+//        while (iter.hasNext) {
+//          self.write(out, 1 : Byte);
+//          tH.write(out, iter.next);
+//        }
+//        self.write(out, 0 : Byte);
+//      }
+//    }
+      
     implicit def listReadWritable[T](implicit tH: ReadWritable[T]) =
       collectionFromElements[T,List](List,"List");
 
@@ -261,6 +285,7 @@ object SerializationFormat {
 
     implicit def mapReadWritable[K:ReadWritable,V:ReadWritable] =
       collectionFromElements[K,V,Map](Map,"Map");
+
 
     implicit def iterableReadWritable[T](implicit tH: ReadWritable[T]) =
       collectionFromElements[T,Iterable](Iterable,"Iterable");

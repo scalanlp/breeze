@@ -1,8 +1,7 @@
 package scalanlp.data.process;
 
 import scalanlp.data._;
-import scalala.tensor.counters._
-import Counters._
+import scalala.tensor.mutable.Tensor;
 
 /**
 * Filter that removes rare word that occur in fewer than threshold documents
@@ -12,10 +11,10 @@ import Counters._
 */
 class RemoveRareWords(threshold:Int) {
   def apply[T,Obs<:Observation[Seq[T]]](data: Seq[Obs]) = {
-    val c = DoubleCounter[T]();
+    val c = Tensor[T,Int]();
     for(d <- data;
-        w <- Set() ++ d.features) {
-        c.incrementCount(w,1);
+        w <- d.features.distinct) {
+      c(w) += 1;
     }
 
     for(d <- data) 
