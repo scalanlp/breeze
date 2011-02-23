@@ -13,8 +13,8 @@
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.scalanlp</groupId>
-  <artifactId>scalanlp-data_${scala.version}</artifactId>
-  <version>0.3.3-SNAPSHOT</version>
+  <artifactId>scalanlp-data_scalala-1.0.0.RC1_${scala.version}</artifactId>
+  <version>0.3.3</version>
   <name>ScalaNLP Data</name>
   <inceptionYear>2009</inceptionYear>
   
