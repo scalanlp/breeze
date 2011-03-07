@@ -36,7 +36,7 @@ import scala.collection.mutable._;
 @serializable
 @SerialVersionUID(1)
 class SparseArray[@specialized T:ClassManifest]
-(val length : Int, default : =>T, initial : Int = 3) {
+(val length : Int, default : =>T, initial : Int = 3) extends IntMap[T] {
 
   private var data = new Array[T](initial);
   private var index = new Array[Int](initial);
@@ -45,7 +45,7 @@ class SparseArray[@specialized T:ClassManifest]
   def defaultValue = default;
   final var used : Int = 0;
 
-  def size = used;
+  def activeSize: Int = used;
 
   def -=(ind: Int) = {
     val i = findOffset(ind);
@@ -89,6 +89,12 @@ class SparseArray[@specialized T:ClassManifest]
   final def valueAt(offset : Int) : T = {
     if (offset >= used) throw new ArrayIndexOutOfBoundsException();
     data(offset);
+  }
+
+  def map[U:ClassManifest](f: T=>U):SparseArray[U] = {
+    val r = new SparseArray[U](length,f(default));
+    r.use(index.take(used), data.take(used).map(f), used);
+    r
   }
 
   // XXX TODO: implement a real filter somehow.
@@ -296,7 +302,7 @@ class SparseArray[@specialized T:ClassManifest]
 
 
   /** Use the given index and data arrays, of which the first inUsed are valid. */
-  private def use(inIndex : Array[Int], inData : Array[T], inUsed : Int) = {
+  private[mutable] def use(inIndex : Array[Int], inData : Array[T], inUsed : Int) = {
     if (inIndex == null || inData == null)
       throw new IllegalArgumentException("Index and data must be non-null");
     if (inIndex.length != inData.length)

@@ -19,13 +19,14 @@ package scalanlp.util
 
 
 import scalala.tensor.dense.DenseVector
-import scalanlp.collection.mutable.SparseArray
 import scalala.tensor.counters.Counters._
 import scalala.tensor._;
 import scalala.tensor.sparse.{SparseHashVector, SparseVector};
 import scalala.tensor.adaptive._;
 import java.util.Arrays
-import scalala.Scalala._;
+import scalala.Scalala._
+import scalanlp.collection.mutable.{SDArray, SparseArray}
+;
 
 
 /**
@@ -153,6 +154,11 @@ trait Encoder[T] {
   def mkSparseArray[V:ClassManifest:SparseArray.DefaultValue] = SparseArray[V](index.size);
   def fillSparseArray[V:ClassManifest](deflt : => V) = {
     new SparseArray[V](index.size,deflt);
+  }
+
+//  def mkSDArray[V:ClassManifest:SparseArray.DefaultValue] = new SDArray[V](index.size, implicitly[SparseArray.DefaultValue].value);
+  def fillSDArray[V:ClassManifest](deflt : => V) = {
+    new SDArray[V](index.size,deflt);
   }
 
   def decode[V](array: SparseArray[V]):Map[T,V] = {

@@ -75,6 +75,15 @@ class ArrayMap[@specialized V](defValue: =>V,  private val arr: ArrayBuffer[V]) 
   override def size = arr.size;
   def iterator = keysIterator zip valuesIterator
   override def keysIterator = (0 until arr.length).iterator;
+  override def keys:Set[Int] = new Set[Int] {
+    def iterator = keysIterator;
+
+    def -(elem: Int) = if(!contains(elem)) this else Set.empty ++ keys - elem;
+
+    def +(elem: Int) = if(contains(elem)) this else Set.empty ++ keys + elem;
+
+    def contains(i: Int) = i < arr.length && i > 0;
+  }
   override def valuesIterator = arr.iterator;
 
 
