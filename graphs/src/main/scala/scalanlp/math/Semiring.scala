@@ -1,7 +1,8 @@
 package scalanlp.math
 
-trait Semiring[T] {
+trait Semiring[@specialized(Double) T] {
   def plus(t1: T, t2: T):T ;
+//  def sum(t: Iterable) = t.reduceLeft(plus _);
   def times(t1: T, t2: T): T;
   val zero : T
   val one: T
@@ -129,8 +130,9 @@ object Semiring {
   object LogSpace {
     implicit val doubleIsLogSpace:WLDSemiring[Double] = new WLDSemiring[Double] {
       def plus(t1: Double, t2: Double) = logSum(t1,t2);
+      //override def sum(t: Iterable[Double]) =
       def leftDivide(t1: Double, t2: Double) = t2 - t1;
-      def times(t1: Double, t2: Double) = t1 + t2;
+      def times(t1: Double, t2: Double) = if(t1 == Double.NegativeInfinity || t2 == Double.NegativeInfinity) Double.NegativeInfinity else t1 + t2;
       val one = 0.0;
       val zero = Double.NegativeInfinity;
       override def closeTo(x: Double, y: Double) = {
