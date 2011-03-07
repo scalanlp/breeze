@@ -3,6 +3,7 @@ package scalanlp.util
 import javax.management.MBeanServer;
 import java.lang.management.ManagementFactory;
 import com.sun.management.HotSpotDiagnosticMXBean
+import java.io.File
 ;
 /**
  * http://blogs.sun.com/sundararajan/entry/programmatically_dumping_heap_from_java
@@ -25,6 +26,7 @@ object HeapDump  {
    *             only the live objects
    */
   def dumpHeap(fileName: String, live: Boolean=false) {
+    if(new File(fileName).exists()) new File(fileName).delete;
     hotspotMBean.dumpHeap(fileName, live);
   }
 
