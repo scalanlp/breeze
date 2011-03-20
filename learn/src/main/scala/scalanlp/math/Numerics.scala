@@ -173,17 +173,18 @@ object Numerics {
     max + log(accum);
   }
 
+
   /**
   * Sums together things in log space.
   * @return log(\sum exp(a_i))
   */
-  def logSum(a:Seq[Double]):Double = {
+  def logSum(a:Array[Double]):Double = {
     a.length match {
       case 0 => Double.NegativeInfinity;
       case 1 => a(0)
       case 2 => logSum(a(0),a(1));
       case _ =>
-        val m = a reduceLeft(_ max _);
+        val m = max(a);
         if(m.isInfinite) m
         else {
           var i = 0;
@@ -195,6 +196,52 @@ object Numerics {
           m + log(accum);
         }
     }
+  }
+
+  /**
+  * Sums together things in log space.
+  * @return log(\sum exp(a_i))
+  */
+  def logSum(a:Seq[Double]):Double = {
+    a.length match {
+      case 0 => Double.NegativeInfinity;
+      case 1 => a(0)
+      case 2 => logSum(a(0),a(1));
+      case _ =>
+        val m = max(a);
+        if(m.isInfinite) m
+        else {
+          var i = 0;
+          var accum = 0.0;
+          while(i < a.length) {
+            accum += exp(a(i) - m);
+            i += 1;
+          }
+          m + log(accum);
+        }
+    }
+  }
+
+  def max(a: Seq[Double]) = {
+    var i = 1;
+    var max =  a(0);
+    while(i < a.size) {
+      if(a(i) > max) max = a(i);
+      i += 1;
+    }
+    max;
+
+  }
+
+  def max(a: Array[Double]) = {
+    var i = 1;
+    var max =  a(0);
+    while(i < a.size) {
+      if(a(i) > max) max = a(i);
+      i += 1;
+    }
+    max;
+
   }
 
   import scalala.tensor.Vector;
