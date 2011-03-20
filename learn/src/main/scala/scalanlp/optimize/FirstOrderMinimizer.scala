@@ -66,7 +66,7 @@ object FirstOrderMinimizer {
 
     def minimizer[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]]
       (f: DiffFunction[K,T])
-      (implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col]): FirstOrderMinimizer[K,T,BatchDiffFunction[K,T]] = {
+      (implicit arith: Tensor1Arith[K,T,Tensor1[K],Shape1Col]): FirstOrderMinimizer[K,T,DiffFunction[K,T]] = {
       if(useL1) new OWLQN[K,T](maxIterations, 5, regularization) with ConsoleLogging
       else new LBFGS[K,T](maxIterations, 5) with ConsoleLogging {
         override def iterations(f: DiffFunction[K,T], init: T) = {
