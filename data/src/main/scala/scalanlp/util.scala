@@ -26,17 +26,24 @@ package object util extends DoubleImplicits with IteratorImplicits with SeqImpli
   /**
    * You can write TODO in your code, and get an exception at runtime for any expression.
    */
-  def TODO = error("TODO");
+  def TODO = error("TODO (Not implemented)");
 
   /**
    * You can write XXX in your code and get an exception at runtime for any expression.
    */
-  def XXX = error("XXX");
+  def XXX = error("XXX Not Implemented");
   /**
    * Similar to the TODO expression, except this one is for types.
    */
   type TODO = Nothing;
 
+  def memoryString = {
+    val r = Runtime.getRuntime;
+    val free = r.freeMemory / (1024 * 1024);
+    val total = r.totalMemory / (1024 * 1024);
+    ((total - free) + "M used; " + free  + "M free; " + total  + "M total");
+  }
 
+  def trace[T](a: T) = {println(a); a}
 
 }
