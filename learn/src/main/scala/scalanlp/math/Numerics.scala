@@ -178,18 +178,20 @@ object Numerics {
   * Sums together things in log space.
   * @return log(\sum exp(a_i))
   */
-  def logSum(a:Array[Double]):Double = {
-    a.length match {
+  def logSum(a:Array[Double]):Double = logSum(a,a.length)
+
+  def logSum(a: Array[Double], length: Int):Double = {
+    length match {
       case 0 => Double.NegativeInfinity;
       case 1 => a(0)
       case 2 => logSum(a(0),a(1));
       case _ =>
-        val m = max(a);
+        val m = max(a, length);
         if(m.isInfinite) m
         else {
           var i = 0;
           var accum = 0.0;
-          while(i < a.length) {
+          while(i < length) {
             accum += exp(a(i) - m);
             i += 1;
           }
@@ -233,10 +235,11 @@ object Numerics {
 
   }
 
-  def max(a: Array[Double]) = {
+  def max(a: Array[Double]):Double = max(a,a.length);
+  def max(a: Array[Double], length: Int) = {
     var i = 1;
     var max =  a(0);
-    while(i < a.size) {
+    while(i < length) {
       if(a(i) > max) max = a(i);
       i += 1;
     }
@@ -254,6 +257,13 @@ object Numerics {
     case a: DenseVector => logSum(a.data);
     case a: SparseVector => logSum(a.data.take(a.used));
     case _ => logSum(a.activeValues,a.activeValues.reduceLeft(_ max _));
+  }
+
+  def max(a:Vector):Double = a match {
+    case a: AdaptiveVector => max(a.innerVector);
+    case a: DenseVector => max(a.data);
+    case a: SparseVector => max(a.data, a.used);
+    case _ => a.activeValues.reduceLeft(_ max _);
   }
 
   /**
@@ -288,6 +298,8 @@ object Numerics {
     }
     p
   }
+
+  def sigmoid(x: Double) = 1/(1+exp(-x));
 
 
 }
