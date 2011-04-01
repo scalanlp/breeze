@@ -78,17 +78,17 @@ trait QuasiNewtonMinimizer[K,T<:Tensor1[K] with TensorSelfOp[K,T,Shape1Col]]
       } catch {
         case _:StepSizeUnderflow =>
           log(ERROR)("Step size underflow! Clearing history.");
-          state.copy(history=initialHistory(state.grad), iter = iter+1)
+          state.copy(history=initialHistory(state.grad), iter = iter+1, failures = state.failures + 1)
         case _: QNException =>
           log(ERROR)("Something in the history is giving NaN's, clearing it!");
-          state.copy(history=initialHistory(state.grad), iter=iter+1);
+          state.copy(history=initialHistory(state.grad), iter=iter+1, failures = state.failures+1);
       }
 
     }
 
     // These methods, unlike SGD, update gradient and the like after taking a step, so you should include the first step that converges.
     it.sliding(2).takeWhile{ case Seq(state,state2) =>
-      (state.iter < maxIter || maxIter < 0) && !checkConvergence(state.value,state.adjustedGradient)
+      (state.iter < maxIter || maxIter < 0) && !checkConvergence(state.value,state.adjustedGradient) && state.failures < 5
     }.map(_(1));
   }
 

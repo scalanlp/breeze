@@ -43,7 +43,7 @@ abstract class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,S
   def adjustGradient(grad:T, x: T):T = grad
 
   def iterations(f: BatchDiffFunction[K,T], init: T):Iterator[State] = {
-    val it = Iterator.iterate(initialState(f,init)) { case state @ State(oldX, oldV, _, _, iter, _) =>
+    val it = Iterator.iterate(initialState(f,init)) { case state @ State(oldX, oldV, _, _, iter, _, _) =>
       val sample = chooseBatch(f,state);
 
       val (value,grad: T) = f.calculate(oldX,sample);
@@ -57,7 +57,7 @@ abstract class StochasticGradientDescent[K,T<:Tensor1[K] with TensorSelfOp[K,T,S
       newState
     };
 
-    it.drop(1).takeWhile { case State(x,v,g,_,i,_) => (i < maxIter || maxIter < 0) && !checkConvergence(v,g)}
+    it.drop(1).takeWhile { case State(x,v,g,_,i,_, _) => (i < maxIter || maxIter < 0) && !checkConvergence(v,g)}
   }
 
 
