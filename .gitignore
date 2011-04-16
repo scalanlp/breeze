@@ -2,4 +2,5 @@ target/*
 */target*
 .manager
 .*.swp
+*/lib_managed/*
 

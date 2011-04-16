@@ -54,7 +54,6 @@ class OWLQN[K,T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit canNorm: CanN
     val x = state.x;
     val prevVal = state.value;
 
-    val orthantVector = computeOrthant(state.x,grad);
 
     val normGradInDir = {
       val possibleNorm = dir dot grad;
@@ -78,13 +77,13 @@ class OWLQN[K,T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit canNorm: CanN
 
     val c = 0.0001 * normGradInDir;
 
-    var newX = x + dir * alpha;
+    var newX = project(x + dir * alpha,grad, state);
 
     var currentVal = f.valueAt(newX) + l1reg * norm(newX,1);
 
     while( currentVal > prevVal + alpha * c && myIter < MAX_ITER) {
       alpha *= c1;
-      newX = project(x :+ (dir * alpha),orthantVector);
+      newX = project(x :+ (dir * alpha),grad, state);
       currentVal = f.valueAt(newX) + l1reg * norm(newX,1);
       log(INFO)(".");
       myIter += 1;
@@ -93,7 +92,6 @@ class OWLQN[K,T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit canNorm: CanN
     if(myIter >= MAX_ITER)
       alpha = initAlpha;
 
-    println("newX?" + newX);
     if(alpha * norm(grad,Double.PositiveInfinity) < 1E-10)
       throw new StepSizeUnderflow;
     (alpha,currentVal)
@@ -101,10 +99,11 @@ class OWLQN[K,T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit canNorm: CanN
 
   // projects x to be on the same orthant as y
   // this basically requires that x'_i = x_i if sign(x_i) == sign(y_i), and 0 otherwise.
-  private def project(x: T, y: T):T = {
+  override protected def project(x: T, grad: T, state: State):T = {
+    val orthant = computeOrthant(state.x,grad);
     val res = zeros(x);
     for( (k,v) <- x.pairsIteratorNonZero) {
-      if(math.signum(v) == math.signum(y(k))) {
+      if(math.signum(v) == math.signum(orthant(k))) {
         res(k) = v;
       }
     }
@@ -153,13 +152,12 @@ object OWLQN {
       }
 
       val result = lbfgs.minimize(f,init)
-      println(norm(result - 3,2) < 1E-10)
     }
 
-//    optimizeThis(Counter(1->1.,2->2.,3->3.))
-//    optimizeThis(Counter(3-> -2.,2->3.,1-> -10.))
-//        optimizeThis(DenseVector(1.,2.,3.))
-        optimizeThis(DenseVector( -2.,3., -10.))
+    //    optimizeThis(Counter(1->1.,2->2.,3->3.))
+    //    optimizeThis(Counter(3-> -2.,2->3.,1-> -10.))
+    //        optimizeThis(DenseVector(1.,2.,3.))
+    optimizeThis(DenseVector( -2.,3., -10.))
   }
 }
 

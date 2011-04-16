@@ -47,6 +47,8 @@ trait QuasiNewtonMinimizer[T] extends FirstOrderMinimizer[T,DiffFunction[T]] wit
   protected def chooseDescentDirection(grad: T, state: State):T;
   protected def chooseStepSize(f: DiffFunction[T], dir: T, grad: T, state: State):(Double,Double);
   protected def updateHistory(oldState: State, newGrad: T, newVal: Double, step: T): History;
+  protected def project(newX: T, grad: T, state: State) = newX;
+
 
   def iterations(f: DiffFunction[T],init: T): Iterator[State] = {
     val it =  Iterator.iterate(initialState(f,init)) {state =>

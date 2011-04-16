@@ -105,8 +105,6 @@ class LBFGS[T](override val maxIter: Int, m: Int)(implicit protected val canNorm
     var memStep = oldState.history.memStep :+ step;
     var memGradDelta = oldState.history.memGradDelta :+ gradDelta;
     var memRho = oldState.history.memRho :+ (step dot gradDelta);
-    println(step -> gradDelta -> memRho.last -> newGrad -> oldState.grad);
-//    assert(memRho.last != 0.0, (step -> gradDelta -> memRho.last));
 
     if(memStep.length > m) {
       memStep = memStep.drop(1);
@@ -119,7 +117,7 @@ class LBFGS[T](override val maxIter: Int, m: Int)(implicit protected val canNorm
 
   private def computeDiag(iter: Int, grad: T, prevStep: T, prevGrad: T):T = {
     if(iter == 0) {
-      zeros(grad) + 1
+      zeros(grad) + 1.
     } else {
       val sy = prevStep dot prevGrad;
       val yy = prevGrad dot prevGrad;
@@ -128,7 +126,7 @@ class LBFGS[T](override val maxIter: Int, m: Int)(implicit protected val canNorm
       } else {
         sy/yy;
       }
-     (zeros(grad) + 1) * (sy/yy)
+     ((zeros(grad) + 1.)* sy/yy)
     }
   }
    
@@ -204,7 +202,6 @@ object LBFGS {
       }
 
       val result = lbfgs.minimize(f,init)
-      println(norm(result - 3,2) < 1E-10)
     }
 
     optimizeThis(Counter(1->1.,2->2.,3->3.))

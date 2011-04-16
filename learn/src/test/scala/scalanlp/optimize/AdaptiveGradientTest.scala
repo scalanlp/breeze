@@ -78,11 +78,7 @@ class AdaptiveGradientTest extends FunSuite with Checkers {
   test("optimize a simple multivariate gaussian, l1") {
 
     def optimizeThis(init: DenseVector[Double], reg: Double) = {
-      val sgd = new StochasticGradientDescent[DenseVector[Double]](50,200,1) with AdaptiveGradientDescent.L1Regularization[Int,DenseVector[Double]] {
-        override val lambda = reg.abs % 10;
-        implicit override protected val TKVPairs : CanMapKeyValuePairs[DenseVector[Double],Int,Double,(Int,Double),DenseVector[Double]] = implicitly;
-        implicit protected val TisTensor : CanViewAsTensor1[DenseVector[Double],Int,Double]= implicitly;
-      }
+      val sgd = new AdaptiveGradientDescent.L1Regularization[Int,DenseVector[Double]](reg.abs%10, 1E-5, 50,200,1);
       val f = new BatchDiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double], r: IndexedSeq[Int]) = {
           (norm((x -3) :^ 2,1), (x * 2) - 6);
