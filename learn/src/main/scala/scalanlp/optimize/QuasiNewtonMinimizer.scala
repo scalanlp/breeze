@@ -86,6 +86,15 @@ trait QuasiNewtonMinimizer[T] extends FirstOrderMinimizer[T,DiffFunction[T]] wit
 
     // These methods, unlike SGD, update gradient and the like after taking a step, so you should include the first step that converges.
     it.sliding(2).takeWhile{ case Seq(state,state2) =>
+      /*
+      println("state:" + state);
+      println("=====")
+      println("state2:" + state2)
+      println("========");
+      println(state.iter < maxIter);
+      println(maxIter < 0);
+      println(checkConvergence(state.value,state.adjustedGradient));
+      */
       (state.iter < maxIter || maxIter < 0) && !checkConvergence(state.value,state.adjustedGradient) && state.failures < 5
     }.map(_(1));
 

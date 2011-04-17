@@ -24,11 +24,7 @@ trait FirstOrderMinimizer[T,-DF<:DiffFunction[T]]
 
   def minimize(f: DF, init: T):T = {
     val steps = iterations(f,init);
-    val convSteps = for( cur@State(x,v,grad, adjGradient, iter,history, failures)  <- steps) yield {
-      cur
-    }
-
-    convSteps.reduceLeft( (a,b) => b).x;
+     steps.reduceLeft( (a,b) => b).x;
   }
 }
 

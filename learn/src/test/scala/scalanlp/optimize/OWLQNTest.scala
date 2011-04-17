@@ -35,7 +35,7 @@ class OWLQNTest extends FunSuite with Checkers {
   implicit val arbVector : Arbitrary[DenseVectorCol[Double]] = Arbitrary(for {
     n <- arbitrary[Int] suchThat { _ > 0 }
     d <- arbitrary[Double]
-  } yield (DenseVector.rand(n%40) * d) );
+  } yield (DenseVector.rand(n%40+1) * d) );
 
   implicit val arbDoubleCounter: Arbitrary[Counter[String,Double]] = Arbitrary(for {
     v <- arbitrary[DenseVectorCol[Double]]

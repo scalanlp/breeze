@@ -157,7 +157,7 @@ object OWLQN {
     //    optimizeThis(Counter(1->1.,2->2.,3->3.))
     //    optimizeThis(Counter(3-> -2.,2->3.,1-> -10.))
     //        optimizeThis(DenseVector(1.,2.,3.))
-    optimizeThis(DenseVector( -2.,3., -10.))
+    optimizeThis(DenseVector( -0.,0.0, -0.))
   }
 }
 
