@@ -115,16 +115,19 @@ trait FileSerializationFromText[T] {
  */
 trait GenericFileSerializationFromText {
 
-  implicit def fromTextReadable[T:TextSerialization.Readable] : FileSerialization.Readable[T] =
+  implicit def fromTextReadable[T](implicit tr :TextSerialization.Readable[T])
+  : FileSerialization.Readable[T] =
   new FileSerialization.Readable[T] {
     val MISSING = -2;
 
     override def read(source : File) = {
       val input = new InputStreamReader(FileSerialization.openRead(source));
       try {
-        implicitly[TextSerialization.Readable[T]].read(input);
+        tr.read(input);
       } finally {
-        input.close();
+        if (!tr.streaming) {
+          input.close();
+        }
       }
     }
   }
@@ -173,7 +176,9 @@ trait GenericFileSerializationFromData {
       val rv = try {
         DataSerialization.read[T](input);
       } finally {
-        input.close();
+        if (!dr.streaming) {
+          input.close();
+        }
       }
       rv;
     }

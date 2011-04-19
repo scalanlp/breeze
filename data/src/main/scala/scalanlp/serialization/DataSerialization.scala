@@ -60,25 +60,6 @@ with ByteSerialization {
     in.close;
     x;
   }
-  
-//  //
-//  // From FileSerialization
-//  //
-//  override def openInput(f: File): DataInput =
-//    new DataInputStream(new BufferedInputStream(new FileInputStream(f)));
-//
-//  override def openOutput(f: File): DataOutput =
-//    new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)));
-//
-//  override def closeInput(i: Input) = i match {
-//    case i: InputStream  => i.close();
-//    case _ =>
-//  }
-//
-//  override def closeOutput(o: Output) = o match {
-//    case o: OutputStream  => o.close();
-//    case _ =>
-//  }
 
   //
   // From CompoundTypes

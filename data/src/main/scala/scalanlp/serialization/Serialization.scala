@@ -61,6 +61,9 @@ trait Writable[-Output,V] {
   /** Inner trait for reading from Input. */
   @serializable trait Readable[T] {
     def read(source: Input): T
+    
+    // Returns true if this readable requires streaming
+    def streaming : Boolean = false;
   }
 
   /** Inner trait for writing to Output. */
@@ -247,29 +250,36 @@ object SerializationFormat {
         writeIterable[T,Seq[T]](sink, value, "Array");
     }
 
-//    implicit def iteratorReadWritable[T](implicit tH: ReadWritable[T])
-//    = new ReadWritable[Iterator[T]] {
-//      def read(source : Input) = new Iterator[T] {
-//        var pending = self.read[Byte](source);
-//        override def hasNext = pending > 0;
-//        override def next = {
-//          val rv = tH.read(source);
-//          pending = (pending - 1) : Byte;
-//          if (pending == 0) {
-//            pending = self.read[Byte](source);
-//          }
-//          rv;
-//        }
-//      }
-//      
-//      def write(out : Output, iter : Iterator[T]) {
-//        while (iter.hasNext) {
-//          self.write(out, 1 : Byte);
-//          tH.write(out, iter.next);
-//        }
-//        self.write(out, 0 : Byte);
-//      }
-//    }
+    implicit def iteratorReadWritable[T](implicit tH: ReadWritable[T])
+    = new ReadWritable[Iterator[T]] {
+      override def streaming = true;
+    
+      def read(source : Input) = new Iterator[T] {
+        var pending = self.read[Int](source);
+        override def hasNext = pending > 0;
+        override def next = {
+          require(pending > 0);
+          val rv = tH.read(source);
+          pending -= 1;
+          if (pending == 0) {
+            pending = self.read[Int](source);
+            if (pending == 0) {
+              // close source once there's a hook ...
+              // source.close;
+            }
+          }
+          rv;
+        }
+      }
+      
+      def write(out : Output, iter : Iterator[T]) {
+        for (group <- iter.grouped(10)) {
+          self.write(out, group.length);
+          for (item <- group) tH.write(out, item);
+        }
+        self.write(out, 0);
+      }
+    }
       
     implicit def listReadWritable[T](implicit tH: ReadWritable[T]) =
       collectionFromElements[T,List](List,"List");
