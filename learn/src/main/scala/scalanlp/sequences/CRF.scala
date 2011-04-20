@@ -22,7 +22,6 @@ import scalala.tensor.dense._;
 import scalala.tensor._;
 
 import scalanlp._;
-import math.Numerics
 import scalanlp.util.Lazy;
 import scalanlp.util.Lazy.Implicits._;
 import scala.math.{pow,exp,log}

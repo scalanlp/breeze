@@ -17,7 +17,7 @@ package scalanlp.stats.sampling;
 */
 
 import scalala.tensor._;
-import scalanlp.math.Numerics._;
+import scalala.library.Numerics._;
 
 /**
  * Represents a Dirichlet distribution, the conjugate prior to the multinomial.

@@ -19,7 +19,7 @@ package scalanlp.stats.sampling;
 
 import Rand._;
 import math._;
-import scalanlp.math.Numerics._;
+import scalala.library.Numerics._;
 
 /**
  * Represents a Gaussian distribution over a single real variable.

@@ -16,8 +16,7 @@ package scalanlp.stats.sampling;
  limitations under the License. 
 */
 
-import scalanlp.math.Numerics;
-import Numerics._;
+import scalala.library.Numerics._;
 import math._;
 
 
@@ -32,9 +31,9 @@ class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasis = R
   if(shape <= 0.0 || scale <= 0.0)
     throw new IllegalArgumentException("Shape and scale must be positive");
 
-  val logNormalizer = Numerics.lgamma(shape) + shape * math.log(scale);
+  val logNormalizer = lgamma(shape) + shape * log(scale);
 
-  override def unnormalizedLogPdf(x : Double) = (shape - 1) * math.log(x) - x/scale;
+  override def unnormalizedLogPdf(x : Double) = (shape - 1) * log(x) - x/scale;
 
   // Copied from Teh
   def draw() : Double = { 
@@ -56,10 +55,10 @@ class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasis = R
       cc = 1.0 / shape;
       dd = 1.0 / (1.0 - shape);
       while (true) {
-        xx = math.pow(rand.uniform.get(), cc);
-        yy = xx + math.pow(rand.uniform.get(), dd);
+        xx = pow(rand.uniform.get(), cc);
+        yy = xx + pow(rand.uniform.get(), dd);
         if (yy <= 1.0) {
-          return scale * -math.log(rand.uniform.get()) * xx / yy;
+          return scale * -log(rand.uniform.get()) * xx / yy;
         }
       }
       error("shouldn't get here");
@@ -108,7 +107,7 @@ object Gamma {
       def probabilityOf(k :Int) = math.exp(logProbabilityOf(k));
       private val p = 1. / (1. + scale);
       override def logProbabilityOf(k:Int) = {
-        import scalanlp.math.Numerics._;
+        import scalala.library.Numerics._;
         import math._;
         lgamma(shape + k) - lgamma(k) - lgamma(shape) + shape * log(p) + k * log(1-p);
       }

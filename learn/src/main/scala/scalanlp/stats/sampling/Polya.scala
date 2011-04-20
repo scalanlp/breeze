@@ -15,7 +15,7 @@ package scalanlp.stats.sampling
  limitations under the License.
 */
 
-import scalanlp.math.Numerics._;
+import scalala.library.Numerics._;
 import scalala.tensor._;
 import scalala.operators.{BinaryOp, OpAdd}
 ;

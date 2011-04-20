@@ -17,8 +17,7 @@ package scalanlp.stats.sampling;
 */
 
 import scalanlp.math.Bessel;
-import scalanlp.math.Numerics;
-import Numerics._;
+import scalala.library.Numerics;
 import math._
 import scalala.tensor.Counter
 ;
@@ -32,7 +31,7 @@ import scalala.tensor.Counter
  *
  * @author dlwh
  */
-case class VonMises(val mu: Double, val k: Double)(implicit rand: RandBasis=Rand) extends ContinuousDistr[Double] {
+case class VonMises(mu: Double, k: Double)(implicit rand: RandBasis=Rand) extends ContinuousDistr[Double] {
   require( k >= 0, "K must be postive");
   require(mu <= math.Pi * 2 && mu >= 0, "Mu must be in the range [0,2pi]");
 

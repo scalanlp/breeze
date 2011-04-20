@@ -16,8 +16,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import math._;
-import Numerics._;
+import scalala.library.Numerics._;
+import scala.math.{exp,sqrt}
 
 
 /**

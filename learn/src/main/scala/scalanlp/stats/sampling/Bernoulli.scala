@@ -15,9 +15,6 @@ package scalanlp.stats.sampling
  limitations under the License.
 */
 
-import scalanlp.math.Numerics.lgamma;
-import Math._;
-
 /*
  * A Bernoulli distribution represents a distribution over weighted coin flips, with p(true) = p, the
  *

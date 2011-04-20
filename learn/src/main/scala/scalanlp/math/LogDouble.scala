@@ -17,7 +17,8 @@ package scalanlp.math;
 */
 
 
-import Numerics._;
+import scalala.library.Numerics
+import Numerics._
 
 /**
 * Represents a double in log space, to prevent under/overflow

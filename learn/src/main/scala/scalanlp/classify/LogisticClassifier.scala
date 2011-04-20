@@ -20,7 +20,6 @@ package scalanlp.classify;
 import scalala.tensor._;
 
 import scalanlp.data._;
-import scalanlp.math.Numerics._;
 import scalanlp.optimize._;
 
 /**

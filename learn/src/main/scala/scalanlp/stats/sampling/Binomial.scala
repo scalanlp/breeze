@@ -15,7 +15,7 @@ package scalanlp.stats.sampling
  limitations under the License.
 */
 
-import scalanlp.math.Numerics.lgamma;
+import scalala.library.Numerics.lgamma;
 import math._;
 
 /**

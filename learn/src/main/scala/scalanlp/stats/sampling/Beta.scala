@@ -17,7 +17,7 @@ package scalanlp.stats.sampling
 
 import math._;
 
-import scalanlp.math.Numerics.lgamma
+import scalala.library.Numerics.lgamma
 import scalala.tensor.Counter
 
 /**
