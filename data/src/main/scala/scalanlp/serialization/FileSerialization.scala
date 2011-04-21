@@ -41,6 +41,9 @@ with LowPriorityFileSerializationImplicits {
   type Input = File;
   type Output = File;
 
+  /** Use a 16k buffer size. */
+  val BUFFER_SIZE = 16 * 1024;
+
   def readText[T:TextSerialization.Readable](source : Input) =
     read(source)(fromTextReadable);
 
@@ -59,11 +62,14 @@ with LowPriorityFileSerializationImplicits {
   def writeJava[T](sink : Output, what : T) =
     write(sink, what)(GenericFileSerializationFromJava.fromJava[T]);
 
-  protected[serialization] def openWrite(path : File) : OutputStream = {
+  def openWrite(path : File) : OutputStream = {
     val fos = new FileOutputStream(path);
     try {
-      val bos = new BufferedOutputStream(fos);
-      if (path.getName.endsWith(".gz")) new java.util.zip.GZIPOutputStream(bos) else bos;
+      if (path.getName.endsWith(".gz")) {
+        new GZIPOutputStream(fos, BUFFER_SIZE);
+      } else {
+        new BufferedOutputStream(fos, BUFFER_SIZE);
+      }
     } catch {
       case ex : Throwable =>
         fos.close();
@@ -71,11 +77,14 @@ with LowPriorityFileSerializationImplicits {
     }
   }
 
-  protected[serialization] def openRead(path : File) : InputStream = {
+  def openRead(path : File) : InputStream = {
     val fis = new FileInputStream(path);
     try {
-      val bis = new BufferedInputStream(fis);
-      if (path.getName.endsWith(".gz")) new java.util.zip.GZIPInputStream(bis) else bis;
+      if (path.getName.endsWith(".gz")) {
+        new GZIPInputStream(fis, BUFFER_SIZE);
+      } else {
+        new BufferedInputStream(fis, BUFFER_SIZE);
+      }
     } catch {
       case ex : Throwable =>
         fis.close();
