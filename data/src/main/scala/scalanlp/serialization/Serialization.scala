@@ -27,7 +27,7 @@ import scalanlp.util.Index
  *
  * @author dramage
  */
-trait Readable[-Input,V] {
+trait Readable[-Input,@specialized V] {
   def read(input : Input) : V;
 }
 
@@ -36,7 +36,7 @@ trait Readable[-Input,V] {
  *
  * @author dramage
  */
-trait Writable[-Output,V] {
+trait Writable[-Output,@specialized V] {
   def write(output : Output, value : V);
 }
 
@@ -59,15 +59,15 @@ trait Writable[-Output,V] {
   type Output;
 
   /** Inner trait for reading from Input. */
-  @serializable trait Readable[T] {
+  @serializable trait Readable[@specialized T] {
     def read(source: Input): T
     
-    // Returns true if this readable requires streaming
+    /** Returns true if this readable requires streaming. */
     def streaming : Boolean = false;
   }
 
   /** Inner trait for writing to Output. */
-  @serializable trait Writable[T] {
+  @serializable trait Writable[@specialized T] {
     def write(sink: Output, what: T): Unit
   }
 

@@ -466,7 +466,8 @@ extends TableReader
             throw new TextTableParseException("Unexpected contents in cell", source.lineNumber, source.columnNumber);
           }
         } else {
-          throw new AssertionError("Unexpected table reader state - this is a bug in "+self.getClass);
+          // read after end of cell - return -1
+          -1;
         }
       }
 

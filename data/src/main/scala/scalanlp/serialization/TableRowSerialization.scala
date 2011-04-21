@@ -114,17 +114,6 @@ object TableRowReadable extends LowPriorityTableRowReadableImplicits {
        re.read(row));
   }
 
-  implicit def forArray[A](implicit cr : TableMultiCellReadable[A], cm : ClassManifest[A])
-  : TableRowReadable[Array[A]] = new TableRowReadable[Array[A]] {
-    override def read(row : Input) = {
-      val builder = scala.collection.mutable.ArrayBuilder.make[A];
-      while (row.hasNext) {
-        builder += cr.read(row.take(cr.size));
-      }
-      builder.result;
-    }
-  }
-
   implicit def forIterable[A](implicit cr : TableMultiCellReadable[A])
   : TableRowReadable[Iterable[A]] = new TableRowReadable[Iterable[A]] {
     override def read(row : Input) = {
@@ -144,6 +133,71 @@ object TableRowReadable extends LowPriorityTableRowReadableImplicits {
         builder += cr.read(row.take(cr.size));
       }
       builder.result;
+    }
+  }
+
+  implicit def forArray[A](implicit cr : TableMultiCellReadable[A], cm : ClassManifest[A])
+  : TableRowReadable[Array[A]] = new TableRowReadable[Array[A]] {
+    override def read(row : Input) = {
+      val builder = scala.collection.mutable.ArrayBuilder.make[A];
+      while (row.hasNext) {
+        builder += cr.read(row.take(cr.size));
+      }
+      builder.result;
+    }
+  }
+  
+  /** Static readable for arrays of doubles. */
+  implicit object forArrayD extends TableRowReadable[Array[Double]] {
+    val reader = implicitly[TableCellReadable[Double]];
+    override def read(row : Input) = {
+      var target = new Array[Double](10);
+      var length = 0;
+      
+      while (row.hasNext) {
+        if (length == target.length) {
+          val source = target;
+          target = new Array[Double](length * 2);
+          System.arraycopy(source, 0, target, 0, length);
+        }
+        target(length) = reader.read(row.next);
+        length += 1;
+      }
+      
+      if (length > target.length) {
+        val source = target;
+        target = new Array[Double](length);
+        System.arraycopy(source, 0, target, 0, length);
+      }
+      
+      target;
+    }
+  }
+  
+  /** Static readable for arrays of ints. */
+  implicit object forArrayI extends TableRowReadable[Array[Int]] {
+    val reader = implicitly[TableCellReadable[Int]];
+    override def read(row : Input) = {
+      var target = new Array[Int](10);
+      var length = 0;
+      
+      while (row.hasNext) {
+        if (length == target.length) {
+          val source = target;
+          target = new Array[Int](length * 2);
+          System.arraycopy(source, 0, target, 0, length);
+        }
+        target(length) = reader.read(row.next);
+        length += 1;
+      }
+      
+      if (length > target.length) {
+        val source = target;
+        target = new Array[Int](length);
+        System.arraycopy(source, 0, target, 0, length);
+      }
+      
+      target;
     }
   }
 }
@@ -178,9 +232,9 @@ trait TableRowWritable[V] extends Writable[TableRowWriter, V] {
 trait LowPriorityTableRowWritableImplicits {
   implicit def anyTableMultiCellWritable[V](implicit wc : TableMultiCellWritable[V])
   : TableRowWritable[V] = new TableRowWritable[V] {
-    def write(writer : TableRowWriter, value : V) = {
-      wc.write(writer, value);
-      writer.finish;
+    def write(out : TableRowWriter, value : V) = {
+      wc.write(out, value);
+      out.finish;
     }
   }
 }
@@ -240,43 +294,65 @@ object TableRowWritable extends LowPriorityTableRowWritableImplicits {
     }
   }
 
-  implicit def forArray[A:TableMultiCellWritable]
-  : TableRowWritable[Array[A]] = new TableRowWritable[Array[A]] {
-    override def write(writer : Output, coll : Array[A]) = {
-      for (v <- coll) {
-        implicitly[TableMultiCellWritable[A]].write(writer, v);
-      }
-      writer.finish;
-    }
-  }
-
-  implicit def forIterable[A:TableMultiCellWritable]
+  implicit def forIterable[A](implicit writer : TableMultiCellWritable[A])
   : TableRowWritable[Iterable[A]] = new TableRowWritable[Iterable[A]] {
-    override def write(writer : Output, coll : Iterable[A]) = {
-      for (v <- coll) {
-        implicitly[TableMultiCellWritable[A]].write(writer, v);
-      }
-      writer.finish;
+    override def write(out : Output, coll : Iterable[A]) = {
+      for (v <- coll) writer.write(out, v);
+      out.finish;
     }
   }
 
-  implicit def forTraversable[A:TableMultiCellWritable]
+  implicit def forTraversable[A](implicit writer : TableMultiCellWritable[A])
   : TableRowWritable[Traversable[A]] = new TableRowWritable[Traversable[A]] {
-    override def write(writer : Output, coll : Traversable[A]) = {
-      for (v <- coll) {
-        implicitly[TableMultiCellWritable[A]].write(writer, v);
-      }
-      writer.finish;
+    override def write(out : Output, coll : Traversable[A]) = {
+      for (v <- coll) writer.write(out, v);
+      out.finish;
     }
   }
 
-  implicit def forList[A:TableMultiCellWritable]
+  implicit def forList[A](implicit writer : TableMultiCellWritable[A])
   : TableRowWritable[List[A]] = new TableRowWritable[List[A]] {
-    override def write(writer : Output, coll : List[A]) = {
-      for (v <- coll) {
-        implicitly[TableMultiCellWritable[A]].write(writer, v);
+    override def write(out : Output, coll : List[A]) = {
+      for (v <- coll) writer.write(out, v);
+      out.finish;
+    }
+  }
+
+  implicit def forArray[A](implicit writer : TableMultiCellWritable[A])
+  : TableRowWritable[Array[A]] = new TableRowWritable[Array[A]] {
+    override def write(out : Output, coll : Array[A]) = {
+      var i = 0;
+      while (i < coll.length) {
+        writer.write(out, coll(i));
+        i += 1;
       }
-      writer.finish;
+      out.finish;
+    }
+  }
+  
+  /** Static readable for arrays of doubles. */
+  implicit object forArrayD extends TableRowWritable[Array[Double]] {
+    val writer = implicitly[TableCellWritable[Double]];
+    override def write(out : Output, coll : Array[Double]) = {
+      var i = 0;
+      while (i < coll.length) {
+        writer.write(out.next, coll(i));
+        i += 1;
+      }
+      out.finish;
+    }
+  }
+  
+  /** Static readable for arrays of doubles. */
+  implicit object forArrayI extends TableRowWritable[Array[Int]] {
+    val writer = implicitly[TableCellWritable[Int]];
+    override def write(out : Output, coll : Array[Int]) = {
+      var i = 0;
+      while (i < coll.length) {
+        writer.write(out.next, coll(i));
+        i += 1;
+      }
+      out.finish;
     }
   }
 }

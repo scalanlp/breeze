@@ -27,6 +27,14 @@ import scalanlp.io.{TextReader,TextWriter};
 trait TableCellReader extends TextReader {
   override def close() =
     { /* do nothing */ }
+    
+  def finish() = {
+    // NB: this has to be an in.read to make sure we consume the
+    // separator if reader only peeked at it
+    if (read != -1) {
+      die("Reader did not fully consume cell in row");
+    }
+  }
 }
 
 object TableCellReader {
@@ -41,7 +49,7 @@ object TableCellReader {
  * 
  * @author dramage
  */
-trait TableCellReadable[V] extends Readable[TableCellReader, V];
+trait TableCellReadable[@specialized V] extends Readable[TableCellReader, V];
 
 /**
  * Low priority conversion of any to TextSerialization.Readable.
@@ -53,11 +61,7 @@ trait LowPriorityTableCellReadableImplicits {
   : TableCellReadable[V] = new TableCellReadable[V] {
     override def read(in : TableCellReader) = {
       val rv = tr.read(in);
-      if (in.read != -1) {
-        // NB: this has to be an in.read to make sure we consume the
-        // separator if reader only peeked at it
-        in.die("Reader did not fully consume cell in row");
-      }
+      in.finish();
       rv;
     }
   }
@@ -66,31 +70,28 @@ trait LowPriorityTableCellReadableImplicits {
 object TableCellReadable extends LowPriorityTableCellReadableImplicits {
   implicit object forUnit extends TableCellReadable[Unit] {
     override def read(in : TableCellReader) = {
-      if (in.peek() != -1) {
-        in.die("Expected empty cell while parsing Unit");
-      }
-      
-      // NB: this has to be an in.read to make sure we consume the
-      // separator if reader only peeked at it
-      in.read();
+      in.finish();
       ();
     }
   }
 
   implicit object forString extends TableCellReadable[String] {
-    override def read(in : TableCellReader) =
-      in.readRemaining;
+    override def read(in : TableCellReader) = {
+      val rv = in.readRemaining;
+      in.finish;
+      rv;
+    }
   }
 
   implicit def forOption[V:TableCellReadable] : TableCellReadable[Option[V]] = new TableCellReadable[Option[V]] {
     override def read(in : TableCellReader) = {
       if (in.peek() == -1) {
-        // NB: this has to be an in.read to make sure we consume the
-        // separator if reader only peeked at it
-        in.read();
-        None
+        in.finish();
+        None;
       } else {
-        Some(implicitly[TableCellReadable[V]].read(in));
+        val rv = Some(implicitly[TableCellReadable[V]].read(in));
+        in.finish();
+        rv;
       }
     }
   }
@@ -101,6 +102,26 @@ object TableCellReadable extends LowPriorityTableCellReadableImplicits {
         in.die("Expected a value while parsing Some()");
 
       Some(implicitly[TableCellReadable[V]].read(in));
+    }
+  }
+  
+  /** Static reader for doubles. */
+  implicit object forDouble extends TableCellReadable[Double] {
+    val reader = implicitly[TextSerialization.Readable[Double]];
+    override def read(in : TableCellReader) = {
+      val rv = reader.read(in);
+      in.finish();
+      rv;
+    }
+  }
+  
+  /** Static reader for ints. */
+  implicit object forInt extends TableCellReadable[Int] {
+    val reader = implicitly[TextSerialization.Readable[Int]];
+    override def read(in : TableCellReader) = {
+      val rv = reader.read(in);
+      in.finish();
+      rv;
     }
   }
 }
@@ -134,7 +155,7 @@ object TableCellWriter {
  *
  * @author dramage
  */
-trait TableCellWritable[V] extends Writable[TableCellWriter, V];
+trait TableCellWritable[@specialized V] extends Writable[TableCellWriter, V];
 
 /**
  * Low priority conversion of any TextWritable.
@@ -171,6 +192,24 @@ object TableCellWritable extends LowPriorityTableCellWritableImplicits {
   implicit def forOptionSome[V:TableCellWritable] : TableCellWritable[Some[V]] = new TableCellWritable[Some[V]] {
     override def write(writer : TableCellWriter, value : Some[V]) =
       implicitly[TableCellWritable[V]].write(writer,value.get);
+  }
+  
+  /** Static writer for doubles. */
+  implicit object forDouble extends TableCellWritable[Double] {
+    val fmt = implicitly[TextSerialization.Writable[Double]];
+    override def write(writer : TableCellWriter, value : Double) = {
+      fmt.write(writer, value);
+      writer.finish();
+    }
+  }
+  
+  /** Static writer for ints. */
+  implicit object forInt extends TableCellWritable[Int] {
+    val fmt = implicitly[TextSerialization.Writable[Int]];
+    override def write(writer : TableCellWriter, value : Int) = {
+      fmt.write(writer, value);
+      writer.finish();
+    }
   }
 }
 

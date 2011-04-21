@@ -22,7 +22,7 @@ package serialization;
  *
  * @author dramage
  */
-trait TableMultiCellReadable[V] extends Readable[TableRowReader,V] {
+trait TableMultiCellReadable[@specialized V] extends Readable[TableRowReader,V] {
   def size : Int;
 }
 
