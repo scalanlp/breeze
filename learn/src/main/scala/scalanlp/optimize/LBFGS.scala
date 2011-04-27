@@ -143,7 +143,6 @@ class LBFGS[T](override val maxIter: Int, m: Int)(implicit protected val canNorm
   def chooseStepSize(f: DiffFunction[T], dir: T, grad: T, state: State) = {
     val iter = state.iter;
     val x = state.x;
-    val prevVal = state.value;
 
     val normGradInDir = {
       val possibleNorm = dir dot grad;
@@ -158,29 +157,15 @@ class LBFGS[T](override val maxIter: Int, m: Int)(implicit protected val canNorm
       }
     }
 
-    val MAX_ITER = 20;
-    var myIter = 0;
+    def ff(alpha: Double) = f.valueAt(x + dir * alpha);
+    val search = new BacktrackingLineSearch(initAlpha = if (iter <= 1) 0.5 else 1.0)
+    val iterates = search.iterations(ff)
+    val targetState = iterates.find { case search.State(alpha,v) =>
+      // sufficient descent
+      v < state.value + alpha * 0.0001 * normGradInDir
 
-    val c1 = 0.2;
-    val initAlpha = if(iter < 1) 0.5 else 1.0;
-    var alpha = initAlpha;
-
-    val c = 0.0001 * normGradInDir;
-
-    var newX = x + dir * alpha;
-
-    var currentVal = f.valueAt(newX);
-
-    while( currentVal > prevVal + alpha * c && myIter < MAX_ITER) {
-      alpha *= c1;
-      newX = (x :+ (dir * alpha));
-      currentVal = f.valueAt(newX);
-      log(INFO)(".");
-      myIter += 1;
     }
-    // Give up.
-    if(myIter >= MAX_ITER)
-      throw new LineSearchFailed;
+    val search.State(alpha,currentVal) = targetState.getOrElse(throw new LineSearchFailed);
 
     if(alpha * norm(grad,Double.PositiveInfinity) < 1E-10)
       throw new StepSizeUnderflow;
@@ -192,20 +177,20 @@ class LBFGS[T](override val maxIter: Int, m: Int)(implicit protected val canNorm
 
 object LBFGS {
   def main(args: Array[String]) {
-    val lbfgs = new LBFGS[Counter[Int,Double]](100,4);
+    val lbfgs = new LBFGS[Counter[Int,Double]](5,4) with ConsoleLogging;
 
     def optimizeThis(init: Counter[Int,Double]) = {
       val f = new DiffFunction[Counter[Int,Double]] {
         def calculate(x: Counter[Int,Double]) = {
-          (norm((x -3) :^ 2,1),(x * 2) - 6);
+          (math.pow(norm((x -3),2),2),(x * 2) - 6);
         }
       }
 
       val result = lbfgs.minimize(f,init)
+      println(result);
     }
 
-    optimizeThis(Counter(1->1.,2->2.,3->3.))
-    optimizeThis(Counter(3-> -2.,2->3.,1-> -10.))
+    optimizeThis(Counter(1->0.,2->0.,3->0.,4->0.,5->0.))
   }
 }
 
