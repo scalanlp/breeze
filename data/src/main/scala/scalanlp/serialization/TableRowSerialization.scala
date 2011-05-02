@@ -139,11 +139,26 @@ object TableRowReadable extends LowPriorityTableRowReadableImplicits {
   implicit def forArray[A](implicit cr : TableMultiCellReadable[A], cm : ClassManifest[A])
   : TableRowReadable[Array[A]] = new TableRowReadable[Array[A]] {
     override def read(row : Input) = {
-      val builder = scala.collection.mutable.ArrayBuilder.make[A];
+      var target = new Array[A](10);
+      var length = 0;
+      
       while (row.hasNext) {
-        builder += cr.read(row.take(cr.size));
+        if (length == target.length) {
+          val source = target;
+          target = new Array[A](length * 2);
+          System.arraycopy(source, 0, target, 0, length);
+        }
+        target(length) = cr.read(row.take(cr.size));
+        length += 1;
       }
-      builder.result;
+      
+      if (target.length > length) {
+        val source = target;
+        target = new Array[A](length);
+        System.arraycopy(source, 0, target, 0, length);
+      }
+      
+      target;
     }
   }
   
@@ -164,7 +179,7 @@ object TableRowReadable extends LowPriorityTableRowReadableImplicits {
         length += 1;
       }
       
-      if (length > target.length) {
+      if (target.length > length) {
         val source = target;
         target = new Array[Double](length);
         System.arraycopy(source, 0, target, 0, length);
@@ -191,7 +206,7 @@ object TableRowReadable extends LowPriorityTableRowReadableImplicits {
         length += 1;
       }
       
-      if (length > target.length) {
+      if (target.length > length) {
         val source = target;
         target = new Array[Int](length);
         System.arraycopy(source, 0, target, 0, length);

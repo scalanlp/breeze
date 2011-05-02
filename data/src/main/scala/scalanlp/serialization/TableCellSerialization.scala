@@ -29,7 +29,7 @@ trait TableCellReader extends TextReader {
     { /* do nothing */ }
     
   def finish() = {
-    // NB: this has to be an in.read to make sure we consume the
+    // NB: this has to be a read to make sure we consume the
     // separator if reader only peeked at it
     if (read != -1) {
       die("Reader did not fully consume cell in row");

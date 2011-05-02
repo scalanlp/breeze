@@ -415,7 +415,8 @@ extends TableReader
           awaitingCell = false;
           awaitingLine = true;
         } else {
-          throw new TextTableParseException("Unexpected content", source.lineNumber, source.columnNumber);
+          throw new TextTableParseException("Unexpected content",
+            source.lineNumber, source.columnNumber);
         }
       }
 
@@ -436,7 +437,8 @@ extends TableReader
             }
           } else if (cp == -1) {
             // unexpected end of file
-            throw new TextTableParseException("Runaway quote", source.lineNumber, source.columnNumber);
+            throw new TextTableParseException("Runaway quote",
+              source.lineNumber, source.columnNumber);
           } else {
             // normal value
             source.read();
@@ -445,7 +447,8 @@ extends TableReader
           val cp = source.peek();
           if (cp == quote) {
             // unexpected quote
-            throw new TextTableParseException("Unexpected quote in unquoted cell", source.lineNumber, source.columnNumber);
+            throw new TextTableParseException("Unexpected quote in unquoted cell",
+              source.lineNumber, source.columnNumber);
           } else if (cp == separator || cp == '\r' || cp == '\n' || cp == -1) {
             // end of cell
             inRawCell = false;
@@ -463,7 +466,8 @@ extends TableReader
             consumeEndCell();
             -1;
           } else {
-            throw new TextTableParseException("Unexpected contents in cell", source.lineNumber, source.columnNumber);
+            throw new TextTableParseException("Unexpected contents in cell",
+              source.lineNumber, source.columnNumber);
           }
         } else {
           // read after end of cell - return -1
@@ -499,6 +503,7 @@ extends TableReader
             cp;
           }
         } else {
+          // read after end of cell - return -1
           -1;
         }
       }

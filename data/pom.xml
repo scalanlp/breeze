@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <!--
   <parent>
     <artifactId>scalanlp-core</artifactId>
     <groupId>org.scalanlp</groupId>
     <version>0.3.3-SNAPSHOT</version>
   </parent>
+  -->
 
   <properties>
     <scala.version>2.8.1</scala.version>
@@ -13,8 +15,8 @@
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.scalanlp</groupId>
-  <artifactId>scalanlp-data_scalala-1.0.0.RC1_${scala.version}</artifactId>
-  <version>0.3.3</version>
+  <artifactId>scalanlp-data_scalala-1.0.0.RC2_${scala.version}</artifactId>
+  <version>0.3.4-SNAPSHOT</version>
   <name>ScalaNLP Data</name>
   <inceptionYear>2009</inceptionYear>
   
@@ -81,9 +83,9 @@
       <version>070108</version>
     </dependency>
     <dependency>
-      <groupId>org.scalanlp</groupId>
+      <groupId>org.scalala</groupId>
       <artifactId>scalala_${scala.version}</artifactId>
-      <version>1.0.0.RC1-SNAPSHOT</version>
+      <version>1.0.0.RC2-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.testing</groupId>
@@ -167,6 +169,13 @@
         </configuration>
       </plugin>
     </plugins>
+    <extensions> 
+      <extension> 
+        <groupId>org.apache.maven.wagon</groupId> 
+         <artifactId>wagon-webdav-jackrabbit</artifactId> 
+         <version>1.0-beta-7</version> 
+      </extension> 
+    </extensions> 
   </build>
 
   <reporting>

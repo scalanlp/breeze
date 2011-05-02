@@ -283,8 +283,11 @@ object TextReader {
     override def lineNumber = lineNo;
     override def columnNumber = colNo;
 
+    var next = reader.read;
+
     override def read() = {
-      val rv = reader.read;
+      val rv = next;
+      next = reader.read;
 
       if (rv == '\n') {
         lineNo += 1;
@@ -297,14 +300,18 @@ object TextReader {
     }
 
     override def peek() =
-      peek(0);
+      next;
 
     override def peek(n : Int) = {
-      reader.mark(n+1);
-      reader.skip(n);
-      val rv = reader.read;
-      reader.reset();
-      rv;
+      if (n == 0) {
+        next;
+      } else {
+        reader.mark(n);
+        reader.skip(n-1);
+        val rv = reader.read;
+        reader.reset();
+        rv;
+      }
     }
 
     override def close() =

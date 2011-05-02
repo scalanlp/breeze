@@ -17,7 +17,7 @@ package scalanlp;
 package stage;
 package text;
 
-import scalala.tensor.mutable.Tensor;
+import scalala.tensor.mutable.Counter;
 
 import java.io.File;
 
@@ -85,8 +85,8 @@ object TermCounts {
     new TermCounts {
       private def compute : (Int,Index[String],Array[Int],Array[Int]) = {
         val index = new scalanlp.util.HashIndex[String]();
-        val ctf = Tensor[Int,Int]();
-        val cdf = Tensor[Int,Int]();
+        val ctf = Counter[Int,Int]();
+        val cdf = Counter[Int,Int]();
 
         val docTermSet = scala.collection.mutable.HashSet[Int]();
 
