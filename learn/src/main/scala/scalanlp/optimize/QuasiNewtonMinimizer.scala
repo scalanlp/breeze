@@ -38,14 +38,16 @@ trait QuasiNewtonMinimizer[T] extends FirstOrderMinimizer[T,DiffFunction[T]] wit
 
   protected def initialState(f: DiffFunction[T], init: T):State = {
     val (v,grad) = f.calculate(init);
-    new State(init,v,grad,adjustGradient(grad,init),0,initialHistory(grad));
+    new State(init,v,grad,adjustValue(v,init), adjustGradient(grad,init),0,initialHistory(grad));
   }
 
   protected def initialHistory(grad: T):History;
   /** Changes the gradient for each iteration before search is started. */
   protected def adjustGradient(grad: T, x: T): T;
+  /** Changes the value for each iteration before search is started. */
+  protected def adjustValue(value: Double, x: T): Double;
   protected def chooseDescentDirection(grad: T, state: State):T;
-  protected def chooseStepSize(f: DiffFunction[T], dir: T, grad: T, state: State):(Double,Double);
+  protected def chooseStepSize(f: DiffFunction[T], dir: T, grad: T, state: State):Double;
   protected def updateHistory(oldState: State, newGrad: T, newVal: Double, step: T): History;
   protected def project(newX: T, grad: T, state: State) = newX;
 
@@ -60,7 +62,7 @@ trait QuasiNewtonMinimizer[T] extends FirstOrderMinimizer[T,DiffFunction[T]] wit
 
      try {
        val dir = chooseDescentDirection(adjGrad, state);
-       val (stepScale,newVal) = chooseStepSize(f, dir, adjGrad, state);
+       val stepScale = chooseStepSize(f, dir, adjGrad, state);
        log(INFO)("Scale:" +  stepScale);
        val step = dir * stepScale
        val newX = x + step;
@@ -68,11 +70,11 @@ trait QuasiNewtonMinimizer[T] extends FirstOrderMinimizer[T,DiffFunction[T]] wit
          throw new StepSizeUnderflow;
        }
 
-       val newGrad = f.gradientAt(newX);
+       val (newVal,newGrad) = f.calculate(newX);
 
        val newHistory = updateHistory(state, newGrad, newVal, dir);
 
-       new State(newX,newVal,newGrad,adjustGradient(newGrad,newX),iter+1,newHistory);
+       new State(newX,newVal,newGrad,adjustValue(newVal, newX),adjustGradient(newGrad,newX),iter+1,newHistory);
 
      } catch {
        case _:StepSizeUnderflow =>

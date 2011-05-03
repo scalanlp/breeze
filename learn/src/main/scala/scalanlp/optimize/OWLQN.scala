@@ -39,21 +39,9 @@ class OWLQN[K,T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit canNorm: CanN
 
   require(m > 0);
   require(l1reg >= 0);
-  /**
-   * Given a direction, perform a line search to find
-   * a direction to descend. At the moment, this just executes
-   * backtracking, so it does not fulfill the wolfe conditions.
-   *
-   * @param f: The objective
-   * @param dir: The step direction
-   * @param x: The location
-   * @return (stepSize, newValue)
-   */
   override def chooseStepSize(f: DiffFunction[T], dir: T, grad: T, state: State) = {
     val iter = state.iter;
     val x = state.x;
-    val prevVal = state.value;
-
 
     val normGradInDir = {
       val possibleNorm = dir dot grad;
@@ -68,33 +56,27 @@ class OWLQN[K,T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit canNorm: CanN
       }
     }
 
-    val MAX_ITER = 20;
-    var myIter = 0;
-
-    val c1 = 0.2;
-    val initAlpha = if(iter < 1) 0.5 else 1.0;
-    var alpha = initAlpha;
-
-    val c = 0.0001 * normGradInDir;
-
-    var newX = project(x + dir * alpha,grad, state);
-
-    var currentVal = f.valueAt(newX) + l1reg * norm(newX,1);
-
-    while( currentVal > prevVal + alpha * c && myIter < MAX_ITER) {
-      alpha *= c1;
-      newX = project(x :+ (dir * alpha),grad, state);
-      currentVal = f.valueAt(newX) + l1reg * norm(newX,1);
+    def ff(alpha: Double) = {
+      val newX = project(x :+ (dir * alpha), grad, state)
+      val v =  f.valueAt(newX)
+      adjustValue(v, newX)
+    };
+    val search = new BacktrackingLineSearch(initAlpha = if (iter <= 1) 0.5 else 1.0)
+    val iterates = search.iterations(ff)
+    val targetState = iterates.find { case search.State(alpha,v) =>
       log(INFO)(".");
-      myIter += 1;
+      // sufficient descent
+      v < state.adjustedValue + alpha * 0.0001 * normGradInDir
     }
-    // Give up.
-    if(myIter >= MAX_ITER)
-      alpha = initAlpha;
 
-    if(alpha * norm(grad,Double.PositiveInfinity) < 1E-10)
-      throw new StepSizeUnderflow;
-    (alpha,currentVal)
+    val alpha = (for(search.State(alpha,currentVal) <- targetState) yield {
+      if(alpha > 0 && alpha * norm(grad,Double.PositiveInfinity) < 1E-10)
+        throw new StepSizeUnderflow;
+      log(INFO)("Step size: " + alpha);
+      alpha
+    }) getOrElse(0.0)
+
+    alpha
   }
 
   // projects x to be on the same orthant as y
@@ -126,6 +108,10 @@ class OWLQN[K,T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit canNorm: CanN
       res(i) = g;
     }
     res
+  }
+
+  override protected def adjustValue(value: Double, x: T) = {
+    value + l1reg * norm(x,1);
   }
 
   private def computeOrthant(x: T, grad: T) = {

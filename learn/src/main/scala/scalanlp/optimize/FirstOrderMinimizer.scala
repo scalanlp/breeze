@@ -15,9 +15,11 @@ trait FirstOrderMinimizer[T,-DF<:DiffFunction[T]]
 
   type History;
   case class State protected[FirstOrderMinimizer](x: T, value: Double,
-                                                   grad: T,
-                                                   adjustedGradient: T,iter: Int,
-                                                   history: History, failures: Int = 0);
+                                                  grad: T,
+                                                  adjustedValue: Double,
+                                                  adjustedGradient: T,
+                                                  iter: Int,
+                                                  history: History, failures: Int = 0);
 
 
   def iterations(f: DF,init: T): Iterator[State];

@@ -98,6 +98,7 @@ class LBFGS[T](override val maxIter: Int, m: Int)(implicit protected val canNorm
   }
 
   protected def adjustGradient(grad: T, x: T) = grad;
+  protected def adjustValue(value: Double, x: T) = value
 
   protected def updateHistory(oldState: State, newGrad: T, newVal: Double, step: T): History = {
     val gradDelta : T = (newGrad :- oldState.grad);
@@ -170,7 +171,7 @@ class LBFGS[T](override val maxIter: Int, m: Int)(implicit protected val canNorm
     if(alpha * norm(grad,Double.PositiveInfinity) < 1E-10)
       throw new StepSizeUnderflow;
     log(INFO)("Step size: " + alpha);
-    (alpha,currentVal)
+    alpha
   }
 
 }

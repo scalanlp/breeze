@@ -53,23 +53,24 @@ abstract class StochasticGradientDescent[T](val eta: Double,
   def initialHistory(f: BatchDiffFunction[T], init: T):History;
   def updateHistory(oldState: State, newX: T, curValue: Double, curGrad: T):History
   def adjustGradient(grad:T, x: T):T = grad
+  def adjustValue(v: Double, x: T) = v
 
   def iterations(f: BatchDiffFunction[T], init: T):Iterator[State] = {
-    val it = Iterator.iterate(initialState(f,init)) { case state @ State(oldX, oldV, _, _, iter, _, _) =>
+    val it = Iterator.iterate(initialState(f,init)) { state =>
+      val oldX = state.x
+      val iter = state.iter;
       val sample = chooseBatch(f,state);
 
       val (value,grad: T) = f.calculate(oldX,sample);
       log(Log.INFO)("SGD gradient norm: " + norm(grad,2));
-//      assert(grad.forall(v => !v._2.isInfinite && !v._2.isNaN));
       log(Log.INFO)("SGD value: " + value);
       val stepSize = chooseStepSize(state.copy(value=value,grad=grad));
       val newX = projectVector(state, oldX, grad, stepSize);
-      val newState = State(newX, value, grad, adjustGradient(grad,newX), iter + 1, updateHistory(state,newX,value,grad))
-//      assert(newX.forall(v => !v._2.isInfinite && !v._2.isNaN));
+      val newState = State(newX, value, grad, adjustValue(value,newX), adjustGradient(grad,newX), iter + 1, updateHistory(state,newX,value,grad))
       newState
     };
 
-    it.drop(1).takeWhile { case State(x,v,g,_,i,_, _) => (i < maxIter || maxIter < 0) && !checkConvergence(v,g)}
+    it.drop(1).takeWhile { state => (state.iter < maxIter || maxIter < 0) && !checkConvergence(state.value,state.grad)}
   }
 
 
@@ -79,7 +80,7 @@ abstract class StochasticGradientDescent[T](val eta: Double,
    * Chooses the initial state
    */
   def initialState(f: BatchDiffFunction[T], init: T): State = {
-    State(init,Double.PositiveInfinity,zeros(init), zeros(init), 0, initialHistory(f,init));
+    State(init,Double.PositiveInfinity,zeros(init), Double.PositiveInfinity, zeros(init), 0, initialHistory(f,init));
   }
 
 
