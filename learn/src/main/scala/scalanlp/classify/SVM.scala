@@ -21,6 +21,7 @@ import scalala.library.Library._;
 import scalanlp.util._
 import scalanlp.data.Example
 import scalala.operators._
+import bundles.MutableInnerProductSpace
 import scalala.tensor._
 import scalanlp.stats.sampling.Rand
 import scalala.generic.math.CanNorm
@@ -37,16 +38,8 @@ object SVM {
    * Trains an SVM using the Pegsasos Algorithm.
    */
   def apply[T](data:Seq[Example[Boolean,T]],numIterations:Int=1000)
-              (implicit view : T=>MutableNumericOps[T],
-               add : BinaryOp[T,T,OpAdd,T],
-               addScalar : BinaryOp[T,Double,OpAdd,T],
-               upAdd : BinaryUpdateOp[T,T,OpAdd],
-               mulScalar : BinaryOp[T,Double,OpMul,T],
-               mulScalarInto : BinaryUpdateOp[T,Double,OpMul],
-               opAssign : BinaryUpdateOp[T,T,OpSet],
-               hasInnerProduct: BinaryOp[T,T,OpMulInner,Double],
-               canNorm: CanNorm[T],
-               zeros: CanCreateZerosLike[T,T]):Classifier[Boolean,T] = {
+              (implicit vspace: MutableInnerProductSpace[Double,T],
+               opAssign : BinaryUpdateOp[T,T,OpSet], canNorm: CanNorm[T]):Classifier[Boolean,T] = {
 
     new Pegasos(numIterations).train(data);
   }
@@ -64,16 +57,9 @@ object SVM {
    */
   class Pegasos[T](numIterations: Int,
                    regularization: Double=0.1,
-                   batchSize: Int = 100)(implicit view : T=>MutableNumericOps[T],
-                                         add : BinaryOp[T,T,OpAdd,T],
-                                         addScalar : BinaryOp[T,Double,OpAdd,T],
-                                         upAdd : BinaryUpdateOp[T,T,OpAdd],
-                                         mulScalar : BinaryOp[T,Double,OpMul,T],
-                                         mulScalarInto : BinaryUpdateOp[T,Double,OpMul],
-                                         opAssign : BinaryUpdateOp[T,T,OpSet],
-                                         hasInnerProduct: BinaryOp[T,T,OpMulInner,Double],
-                                         canNorm: CanNorm[T],
-                                         zeros: CanCreateZerosLike[T,T])extends Classifier.Trainer[Boolean,T] with Logged {
+                   batchSize: Int = 100)(implicit vspace : MutableInnerProductSpace[Double,T],
+                                         opAssign : BinaryUpdateOp[T,T,OpSet], canNorm: CanNorm[T])extends Classifier.Trainer[Boolean,T] with Logged {
+    import vspace._;
     type MyClassifier = Classifier[Boolean,T];
     def train(data: Iterable[Example[Boolean,T]]):Classifier[Boolean,T] = {
       val dataSeq = data.toIndexedSeq;

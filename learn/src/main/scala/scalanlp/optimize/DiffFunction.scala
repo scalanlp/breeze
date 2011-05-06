@@ -19,6 +19,7 @@ package scalanlp.optimize;
 import scalala.generic.math.CanNorm
 import scalala.library.Library.norm
 import scalala.operators.{NumericOps, OpAdd, OpMul, BinaryOp}
+import scalala.operators.bundles.VectorSpace
 ;
 
 /**
@@ -40,10 +41,8 @@ trait DiffFunction[T] extends (T=>Double) {
 
 object DiffFunction {
   def withL2Regularization[T](d: DiffFunction[T],weight: Double)
-                             (implicit canNorm: CanNorm[T],
-                              view: T <:< NumericOps[T],
-                              addVector: BinaryOp[T,T,OpAdd,T],
-                              mulScalar: BinaryOp[T,Double,OpMul,T]) = new DiffFunction[T] {
+                             (implicit canNorm: CanNorm[T],vspace: VectorSpace[Double,T]) = new DiffFunction[T] {
+    import vspace._;
     override def gradientAt(x:T):T = {
       val grad = d.gradientAt(x);
       myGrad(grad,x);
@@ -59,7 +58,7 @@ object DiffFunction {
     }
 
     private def myGrad(g: T, x: T) = {
-      view(g) + (x * (2 * weight))
+      g + (x * (2 * weight))
     }
 
     override def calculate(x: T) = {

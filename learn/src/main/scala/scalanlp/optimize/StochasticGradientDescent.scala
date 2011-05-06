@@ -3,6 +3,7 @@ package scalanlp.optimize;
 import scalala._;
 import generic.collection.{CanMapValues, CanCreateZerosLike}
 import operators._
+import bundles.MutableInnerProductSpace
 import scalanlp.util._;
 import scalanlp.stats.sampling._
 import scalala.generic.math.{CanSqrt, CanNorm}
@@ -33,27 +34,18 @@ import scalala.tensor.mutable;
 abstract class StochasticGradientDescent[T](val eta: Double,
                                             val maxIter: Int,
                                             val batchSize: Int)
-                                            (implicit protected val view: T=>MutableNumericOps[T],
-                                             protected val view2: T=>HasValuesMonadic[T,Double],
-                                             protected val canMapValues: CanMapValues[T,Double,Double,T],
-                                             protected val canNorm: CanNorm[T],
-                                             protected val canAddScalar: BinaryOp[T,Double,OpAdd,T],
-                                             protected val canAdd: BinaryOp[T,T,OpAdd,T],
-                                             protected val canSub: BinaryOp[T,T,OpSub,T],
-                                             protected val canMulScalar: BinaryOp[T,Double,OpMul,T],
-                                             protected val canMulPiece: BinaryOp[T,T,OpMul,T],
-                                             protected val canDivScalar: BinaryOp[T,Double,OpDiv,T],
-                                             protected val canDivPiece: BinaryOp[T,T,OpDiv,T],
-                                             protected val zeros: CanCreateZerosLike[T,T])
+                                            (implicit protected val vspace: MutableInnerProductSpace[Double,T], protected val canNorm: CanNorm[T])
   extends FirstOrderMinimizer[T,BatchDiffFunction[T]]
                                       with GradientNormConvergence[T]
                                       with Logged {
 
+  import vspace._;
+
   type History;
   def initialHistory(f: BatchDiffFunction[T], init: T):History;
   def updateHistory(oldState: State, newX: T, curValue: Double, curGrad: T):History
-  def adjustGradient(grad:T, x: T):T = grad
-  def adjustValue(v: Double, x: T) = v
+  protected def adjustGradient(grad: T, x: T): T = grad
+  protected def adjustValue(value: Double, x: T): Double = value;
 
   def iterations(f: BatchDiffFunction[T], init: T):Iterator[State] = {
     val it = Iterator.iterate(initialState(f,init)) { state =>
@@ -114,36 +106,13 @@ abstract class StochasticGradientDescent[T](val eta: Double,
 }
 
 object StochasticGradientDescent {
-  def apply[T](eta: Double=4, maxIter: Int=100, batchSize: Int = 50) (implicit view: T=>MutableNumericOps[T],
-                                           view2: T=>HasValuesMonadic[T,Double],
-                                           canNormT: CanNorm[T],
-                                           canMapValues: CanMapValues[T,Double,Double,T],
-                                           canAddScalar: BinaryOp[T,Double,OpAdd,T],
-                                           canAdd: BinaryOp[T,T,OpAdd,T],
-                                           canSub: BinaryOp[T,T,OpSub,T],
-                                           canMulScalar: BinaryOp[T,Double,OpMul,T],
-                                           canDivScalar: BinaryOp[T,Double,OpDiv,T],
-                                           canMulPiece: BinaryOp[T,T,OpMul,T],
-                                           canDivPiece: BinaryOp[T,T,OpDiv,T],
-                                           zeros: CanCreateZerosLike[T,T]):StochasticGradientDescent[T]  = {
+  def apply[T](eta: Double=4, maxIter: Int=100, batchSize: Int = 50)(implicit vs: MutableInnerProductSpace[Double,T], canNorm: CanNorm[T]) :StochasticGradientDescent[T]  = {
       new SimpleSGD(eta,maxIter,batchSize);
   }
 
   class SimpleSGD[T] (eta: Double=4,
                       maxIter: Int=100,
-                      batchSize: Int = 50)(implicit view: T=>MutableNumericOps[T],
-                                           view2: T=>HasValuesMonadic[T,Double],
-                                           canNorm: CanNorm[T],
-                                           canMapValues: CanMapValues[T,Double,Double,T],
-                                           canAddScalar: BinaryOp[T,Double,OpAdd,T],
-                                           canAdd: BinaryOp[T,T,OpAdd,T],
-                                           canSub: BinaryOp[T,T,OpSub,T],
-                                           canMulScalar: BinaryOp[T,Double,OpMul,T],
-                                           canMulPiece: BinaryOp[T,T,OpMul,T],
-                                           canDivPiece: BinaryOp[T,T,OpDiv,T],
-                                           canDivScalar: BinaryOp[T,Double,OpDiv,T],
-                                           canSqrt: CanSqrt[T,T],
-                                           zeros: CanCreateZerosLike[T,T]) extends StochasticGradientDescent[T](eta,maxIter,batchSize) {
+                      batchSize: Int = 50)(implicit vs: MutableInnerProductSpace[Double,T], canNorm: CanNorm[T]) extends StochasticGradientDescent[T](eta,maxIter,batchSize) {
       type History = Unit
       def initialHistory(f: BatchDiffFunction[T],init: T)= ()
       def updateHistory(oldState: State,newX: T,curValue: Double,curGrad: T) = ()

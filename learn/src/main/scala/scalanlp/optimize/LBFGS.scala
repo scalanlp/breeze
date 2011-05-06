@@ -20,10 +20,11 @@ import scalanlp.util._
 import scalanlp.util.Log._
 import scalanlp.optimize.QuasiNewtonMinimizer.{LineSearchFailed, NaNHistory, StepSizeUnderflow};
 import scalala.generic.math.CanNorm
-import scalala.generic.collection.{CanCopy, CanCreateZerosLike}
 import scalala.operators._
+import bundles.{MutableInnerProductSpace, InnerProductSpace}
 import scalala.library.Library.norm
 import scalala.tensor.mutable.Counter
+import scalala.tensor.dense.DenseVector
 ;
 
 /**
@@ -42,20 +43,9 @@ import scalala.tensor.mutable.Counter
  * @param maxIter: maximum number of iterations, or &lt;= 0 for unlimited
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
-class LBFGS[T](override val maxIter: Int, m: Int)(implicit protected val canNorm: CanNorm[T],
-                                                  protected val view: T=>MutableNumericOps[T],
-                                                  copy: CanCopy[T],
-                                                  zeros: CanCreateZerosLike[T,T],
-                                                  protected val opAdd: BinaryOp[T,T,OpAdd,T],
-                                                  opAddScalar: BinaryOp[T,Double,OpAdd,T],
-                                                  upAdd: BinaryUpdateOp[T,T,OpAdd],
-                                                  opDivScalar: BinaryOp[T,Double,OpDiv,T],
-                                                  protected val opMulScalar: BinaryOp[T,Double,OpMul,T],
-                                                  upMulScalar: BinaryUpdateOp[T,Double,OpMul],
-                                                  upMul: BinaryUpdateOp[T,T,OpMul],
-                                                  innerProduct: BinaryOp[T,T,OpMulInner,Double],
-                                                  upSub: BinaryUpdateOp[T,T,OpSub],
-                                                  opSub: BinaryOp[T,T,OpSub,T]) extends QuasiNewtonMinimizer[T] with GradientNormConvergence[T] with Logged {
+class LBFGS[T](override val maxIter: Int, m: Int)(implicit protected val vspace: MutableInnerProductSpace[Double,T], protected val canNorm: CanNorm[T]) extends QuasiNewtonMinimizer[T] with GradientNormConvergence[T] with Logged {
+
+  import vspace._;
   require(m > 0);
 
   class History(private[LBFGS] val memStep: IndexedSeq[T] = IndexedSeq.empty,
@@ -74,7 +64,7 @@ class LBFGS[T](override val maxIter: Int, m: Int)(implicit protected val canNorm
       zeros(grad) + 1.;
     }
 
-    val dir = copy(grad)
+    val dir:T = copy(grad);
     val as = new Array[Double](m);
 
     for(i <- (memStep.length-1) to 0 by -1) {
@@ -188,7 +178,6 @@ object LBFGS {
       }
 
       val result = lbfgs.minimize(f,init)
-      println(result);
     }
 
     optimizeThis(Counter(1->0.,2->0.,3->0.,4->0.,5->0.))

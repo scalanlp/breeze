@@ -2,6 +2,7 @@ package scalanlp.optimize
 
 import scalala._;
 import operators._
+import bundles.MutableInnerProductSpace
 import scalala.tensor._
 import scalala.library.Library._
 import scalala.generic.math.CanNorm
@@ -16,7 +17,9 @@ object AdaptiveGradientDescent {
   trait L2Regularization[T] extends StochasticGradientDescent[T] {
 
     val lambda: Double = 1.0;
-    val delta = 1E-4;
+    val delta = 1E-4
+    import vspace._;
+
 
     case class History(sumOfSquaredGradients: T);
     def initialHistory(f: BatchDiffFunction[T],init: T) = History(zeros(init));
@@ -41,25 +44,15 @@ object AdaptiveGradientDescent {
                               delta: Double = 1E-5,
                               eta: Double=4,
                               maxIter: Int=100,
-                              batchSize: Int = 50)(implicit view: T=>MutableNumericOps[T],
-                                                   view2: T=>HasValuesMonadic[T,Double],
-                                                   canNormT: CanNorm[T],
-                                                   canMapValues: CanMapValues[T,Double,Double,T],
-                                                   canAddScalar: BinaryOp[T,Double,OpAdd,T],
-                                                   canAdd: BinaryOp[T,T,OpAdd,T],
-                                                   canSub: BinaryOp[T,T,OpSub,T],
-                                                   canMulScalar: BinaryOp[T,Double,OpMul,T],
-                                                   canDivScalar: BinaryOp[T,Double,OpDiv,T],
-                                                   canMulPiece: BinaryOp[T,T,OpMul,T],
-                                                   canDivPiece: BinaryOp[T,T,OpDiv,T],
+                              batchSize: Int = 50)(implicit vspace: MutableInnerProductSpace[Double,T],
                                                    TisTensor: CanViewAsTensor1[T,K,Double],
-                                                   TKVPairs: CanMapKeyValuePairs[T,K,Double,Double,T],
-                                                   zeros: CanCreateZerosLike[T,T]) extends StochasticGradientDescent[T](eta,maxIter,batchSize) {
+                                                   TKVPairs: CanMapKeyValuePairs[T,K,Double,Double,T], canNorm: CanNorm[T]) extends StochasticGradientDescent[T](eta,maxIter,batchSize) {
+    import vspace._;
     case class History(sumOfSquaredGradients: T);
     def initialHistory(f: BatchDiffFunction[T],init: T)= History(zeros(init));
     def updateHistory(oldState: State,newX: T,curValue: Double,curGrad: T) = {
       val oldHistory = oldState.history;
-      val newG = view(oldHistory.sumOfSquaredGradients) :+ (view(curGrad) :* curGrad)
+      val newG = oldHistory.sumOfSquaredGradients :+ (curGrad :* curGrad)
       new History(newG);
     }
 

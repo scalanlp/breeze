@@ -6,9 +6,9 @@ import scalanlp.optimize.QuasiNewtonMinimizer.{NaNHistory, StepSizeUnderflow}
 import scalala.library.Library.norm
 import scalala.generic.math.CanNorm
 import scalala.operators._
-import scalala.generic.collection.{CanMapValues, CanCreateZerosLike, CanCopy}
+import bundles.MutableInnerProductSpace
 import scalala.tensor.mutable.{Counter, Tensor1}
-import scalala.tensor.dense.DenseVector
+import scalala.tensor.dense.{DenseVectorCol, DenseVector}
 ;
 
 
@@ -20,23 +20,10 @@ import scalala.tensor.dense.DenseVector
  *
  * @author dlwh
  */
-class OWLQN[K,T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit canNorm: CanNorm[T],
+class OWLQN[K,T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit vspace: MutableInnerProductSpace[Double,T],
                                                   view: T <:< Tensor1[K,Double] with scalala.tensor.mutable.TensorLike[K,Double,_,T with Tensor1[K,Double]],
-                                                  canMapValues: CanMapValues[T,Double,Double,T],
-                                                  copy: CanCopy[T],
-                                                  zeros: CanCreateZerosLike[T,T],
-                                                  opAdd: BinaryOp[T,T,OpAdd,T],
-                                                  opAddScalar: BinaryOp[T,Double,OpAdd,T],
-                                                  upAdd: BinaryUpdateOp[T,T,OpAdd],
-                                                  opDivScalar: BinaryOp[T,Double,OpDiv,T],
-                                                  opMulScalar: BinaryOp[T,Double,OpMul,T],
-                                                  opMulPiece: BinaryOp[T,T,OpMul,T],
-                                                  upMulScalar: BinaryUpdateOp[T,Double,OpMul],
-                                                  upMul: BinaryUpdateOp[T,T,OpMul],
-                                                  hasInnerProduct: BinaryOp[T,T,OpMulInner,Double],
-                                                  upSub: BinaryUpdateOp[T,T,OpSub],
-                                                  opSub: BinaryOp[T,T,OpSub,T]) extends LBFGS[T](maxIter, m) with GradientNormConvergence[T] with Logged {
-
+                                                  canNorm: CanNorm[T]) extends LBFGS[T](maxIter, m) with GradientNormConvergence[T] with Logged {
+  import vspace._;
   require(m > 0);
   require(l1reg >= 0);
   override def chooseStepSize(f: DiffFunction[T], dir: T, grad: T, state: State) = {

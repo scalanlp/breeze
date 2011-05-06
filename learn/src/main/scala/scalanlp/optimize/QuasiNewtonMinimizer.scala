@@ -6,6 +6,7 @@ import scalanlp.optimize.QuasiNewtonMinimizer._
 import scalala.generic.math.CanNorm
 import scalala.library.Library.norm
 import scalala.operators._
+import bundles.InnerProductSpace
 ;
 
 /*
@@ -31,10 +32,9 @@ import scalala.operators._
 trait QuasiNewtonMinimizer[T] extends FirstOrderMinimizer[T,DiffFunction[T]] with Logged with CheckedConvergence[T] {
 
   protected val maxIter: Int = -1;
-  protected implicit val view: T => NumericOps[T];
-  protected implicit val opAdd: BinaryOp[T,T,OpAdd,T];
-  protected implicit val opMulScalar: BinaryOp[T,Double,OpMul,T];
+  protected implicit val vspace: InnerProductSpace[Double, T];
   protected implicit val canNorm: CanNorm[T];
+  import vspace._;
 
   protected def initialState(f: DiffFunction[T], init: T):State = {
     val (v,grad) = f.calculate(init);
