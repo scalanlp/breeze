@@ -46,7 +46,8 @@ object AdaptiveGradientDescent {
                               maxIter: Int=100,
                               batchSize: Int = 50)(implicit vspace: MutableInnerProductSpace[Double,T],
                                                    TisTensor: CanViewAsTensor1[T,K,Double],
-                                                   TKVPairs: CanMapKeyValuePairs[T,K,Double,Double,T], canNorm: CanNorm[T]) extends StochasticGradientDescent[T](eta,maxIter,batchSize) {
+                                                   TKVPairs: CanMapKeyValuePairs[T,K,Double,Double,T],
+                                                   canNorm: CanNorm[T]) extends StochasticGradientDescent[T](eta,maxIter,batchSize) {
     import vspace._;
     case class History(sumOfSquaredGradients: T);
     def initialHistory(f: BatchDiffFunction[T],init: T)= History(zeros(init));
