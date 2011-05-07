@@ -1,4 +1,5 @@
-package scalanlp.stats.sampling;
+package scalanlp.stats
+package sampling;
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
@@ -19,7 +20,10 @@ package scalanlp.stats.sampling;
 
 import Rand._;
 import math._;
-import scalala.library.Numerics._;
+import scalala.library.Numerics._
+import scalanlp.stats.expfam.ExponentialFamily
+import scalanlp.optimize.DiffFunction
+;
 
 /**
  * Represents a Gaussian distribution over a single real variable.
@@ -61,4 +65,37 @@ class Gaussian(val mu :Double, val sigma : Double)(implicit rand: RandBasis = Ra
 
   def mean = mu;
   def variance = sigma * sigma;
+}
+
+object Gaussian extends ExponentialFamily[Gaussian,Double,(Double,Double)] {
+  import expfam.{SufficientStatistic=>BaseSuffStat}
+  final case class SufficientStatistic(n: Double, mean: Double, M2: Double) extends BaseSuffStat[SufficientStatistic] {
+    def *(weight: Double) = SufficientStatistic(n * weight, sum * weight, M2 * weight)
+
+    // Due to Chan
+    def +(t: SufficientStatistic) = {
+      val delta = t.mean - mean;
+      val newMean = mean + delta * (t.n / (t.n + n));
+      val newM2 = M2 + t.M2 + delta * delta * (t.n * n) / (t.n + n);
+      SufficientStatistic(t.n + n, newMean, newM2);
+    }
+
+    def variance = M2/ (n-1);
+  }
+
+  val emptySufficientStatistic = SufficientStatistic(0,0,0)
+
+  def sufficientStatisticFor(t: Double) = {
+    SufficientStatistic(1,t,0);
+  }
+
+  def mle(stats: SufficientStatistic) = (stats.mean,stats.variance);
+
+  def distribution(p: (Double, Double)) = new Gaussian(p._1,p._2)
+
+  def likelihoodFunction(stats: SufficientStatistic):DiffFunction[(Double,Double)] = new DiffFunction[(Double,Double)] {
+    def calculate(x: (Double, Double)) = {
+      val objective =
+    }
+  }
 }
