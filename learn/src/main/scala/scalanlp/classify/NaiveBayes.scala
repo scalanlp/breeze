@@ -17,7 +17,7 @@ package scalanlp.classify;
 */
 
 import math._;
-import scalala.tensor.mutable._;
+import scalala.tensor._;
 import scalanlp.data._;
 import scalala.tensor.::
 
@@ -34,9 +34,9 @@ import scalala.tensor.::
  */
 @serializable
 @SerialVersionUID(1L)
-class NaiveBayes[L,W](c: Iterable[Example[L,Counter[W,Int]]],
+class NaiveBayes[L,W](c: Iterable[Example[L,Counter[W,Double]]],
     val wordSmoothing:Double=0.05,
-    val classSmoothing:Double=0.01)  extends Classifier[L,Counter[W,Int]] {
+    val classSmoothing:Double=0.01)  extends Classifier[L,Counter[W,Double]] {
 
 
   private val (wordCounts:Counter2[L,W,Double],classCounts: Counter[L,Double], vocabSize: Int) =  {
@@ -60,7 +60,7 @@ class NaiveBayes[L,W](c: Iterable[Example[L,Counter[W,Int]]],
   val wordTotals = { for(k <- classCounts.keysIterator) yield k -> wordCounts(k,::).sum} toMap
 
   /** Returns the unnormalized log probability of each class for the given document. */
-  def scores(o : Counter[W,Int]) = {
+  def scores(o : Counter[W,Double]) = {
     val res = Counter[L,Double]();
     for( l <- classCounts.domain) {
       val prior = classCounts(l);
@@ -75,10 +75,10 @@ class NaiveBayes[L,W](c: Iterable[Example[L,Counter[W,Int]]],
 }
 
 object NaiveBayes {
-  class Trainer[L,T](wordSmoothing: Double=0.05, classSmoothing: Double= 0.01) extends Classifier.Trainer[L,Counter[T,Int]] {
+  class Trainer[L,T](wordSmoothing: Double=0.05, classSmoothing: Double= 0.01) extends Classifier.Trainer[L,Counter[T,Double]] {
     type MyClassifier = NaiveBayes[L,T];
 
-    override def train(data: Iterable[Example[L,Counter[T,Int]]]) = {
+    override def train(data: Iterable[Example[L,Counter[T,Double]]]) = {
       new NaiveBayes(data,wordSmoothing,classSmoothing);
     }
   }
