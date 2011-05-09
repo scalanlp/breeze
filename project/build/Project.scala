@@ -111,12 +111,15 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
   override def packageToPublishActions =
     super.packageToPublishActions ++ Seq(packageDocs, packageSrc, packageTestSrc)
   
+  /*
   override def allDependencyJars = (
     super.allDependencyJars +++ 
     Path.fromFile(buildScalaInstance.compilerJar) +++ 
     Path.fromFile(buildScalaInstance.libraryJar)
   )
 
+*/
+/*
   override def proguardOptions = List(
     "-keep class scalala.** { *; }",
     "-keep class org.jfree.** { *; }",
@@ -129,6 +132,7 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
     "-keep class ch.epfl.** { *; }",
     "-keep interface scala.ScalaObject"
   )
+  */
 
   //
   // publishing
