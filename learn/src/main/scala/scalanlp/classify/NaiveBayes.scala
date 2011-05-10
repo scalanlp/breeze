@@ -17,7 +17,7 @@ package scalanlp.classify;
 */
 
 import math._;
-import scalala.tensor._;
+import scalala.tensor.mutable._;
 import scalanlp.data._;
 import scalala.tensor.::
 

@@ -2,7 +2,7 @@ package scalanlp.classify
 
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-import scalala.tensor.Counter
+import scalala.tensor.mutable.Counter
 
 /**
  * 

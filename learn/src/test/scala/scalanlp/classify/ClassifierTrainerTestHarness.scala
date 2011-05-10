@@ -1,6 +1,6 @@
 package scalanlp.classify
 
-import scalala.tensor.Counter
+import scalala.tensor.mutable.Counter
 import org.scalatest.FunSuite
 import scalanlp.data.Example
 
@@ -14,12 +14,12 @@ trait ClassifierTrainerTestHarness extends FunSuite {
 
   test("simple example") {
     val trainingData = Array (
-      Example("cat",Counter.count(Array("fuzzy","claws","small")).mapValues(_.toDouble)),
-      Example("bear",Counter.count(Array("fuzzy","claws","big")).mapValues(_.toDouble)),
-      Example("cat",Counter.count(Array("claws","medium")).mapValues(_.toDouble))
+      Example("cat",Counter.count("fuzzy","claws","small").mapValues(_.toDouble)),
+      Example("bear",Counter.count("fuzzy","claws","big").mapValues(_.toDouble)),
+      Example("cat",Counter.count("claws","medium").mapValues(_.toDouble))
     )
     val testData = Array(
-      Example("cat", Counter.count(Array("claws","small")).mapValues(_.toDouble))
+      Example("cat", Counter.count("claws","small").mapValues(_.toDouble))
     )
 
     val r = trainer[String].train(trainingData).classify(testData(0).features)
