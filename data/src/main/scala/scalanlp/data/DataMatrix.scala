@@ -35,13 +35,14 @@ object DataMatrix {
    * @param url: where
    * @param labelColumn which column (starting at 0) is the label. May be negative, in which case it starts from the end.
    */
-  def fromURL(url: URL, labelColumn:Int=0, separator: String="\\s+") : DataMatrix = {
-    fromSource(Source.fromURL(url),labelColumn,separator);
+  def fromURL(url: URL, labelColumn:Int=0, separator: String="\\s+", dropRow: Boolean = false) : DataMatrix = {
+    fromSource(Source.fromURL(url),labelColumn,separator,dropRow);
   }
 
-  def fromSource(src: Source, labelColumn:Int=0, separator: String="\\s+") : DataMatrix = {
+  def fromSource(src: Source, labelColumn:Int=0, separator: String="\\s+", dropRow: Boolean = false) : DataMatrix = {
     val rowsIterator = for {
       (line,i) <- src.getLines().zipWithIndex;
+      if !dropRow || i != 0
       allCols = line.split(separator) map (_.toDouble);
       lbl = allCols(if(labelColumn < 0) allCols.length + labelColumn else labelColumn);
       dataCols = allCols.patch(labelColumn,Seq.empty,1)
