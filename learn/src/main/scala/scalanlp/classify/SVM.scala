@@ -37,15 +37,16 @@ object SVM {
   /**
    * Trains an SVM using the Pegsasos Algorithm.
    */
-  def apply[T](data:Seq[Example[Boolean,T]],numIterations:Int=1000)
+  def apply[L,T](data:Seq[Example[L,T]],numIterations:Int=1000)
               (implicit vspace: MutableInnerProductSpace[Double,T],
-               opAssign : BinaryUpdateOp[T,T,OpSet], canNorm: CanNorm[T]):Classifier[Boolean,T] = {
+               opAssign : BinaryUpdateOp[T,T,OpSet], canNorm: CanNorm[T]):Classifier[L,T] = {
 
     new Pegasos(numIterations).train(data);
   }
 
   /**
    * An online optimizer for an SVM based on Pegasos: Primal Estimated sub-GrAdient SOlver for SVM
+   * Extended with Wang, Crammer, Vucetic's work for Multiclass
    *
    * The optimizer runs a stochastic subgradient descent on the primal objective using
    * batches provided.
@@ -55,50 +56,66 @@ object SVM {
    * @param regularization sort of a 2-norm penalty on the weights. Higher means more smoothing
    * @param batchSize: how many elements per iteration to use.
    */
-  class Pegasos[T](numIterations: Int,
-                   regularization: Double=0.1,
+  class Pegasos[L,T](numIterations: Int,
+                   regularization: Double=.1,
                    batchSize: Int = 100)(implicit vspace : MutableInnerProductSpace[Double,T],
-                                         opAssign : BinaryUpdateOp[T,T,OpSet], canNorm: CanNorm[T])extends Classifier.Trainer[Boolean,T] with Logged {
+                                         opAssign : BinaryUpdateOp[T,T,OpSet], canNorm: CanNorm[T])extends Classifier.Trainer[L,T] with Logged {
     import vspace._;
-    type MyClassifier = Classifier[Boolean,T];
-    def train(data: Iterable[Example[Boolean,T]]):Classifier[Boolean,T] = {
+    type MyClassifier = Classifier[L,T];
+    def train(data: Iterable[Example[L,T]]):Classifier[L,T] = {
       val dataSeq = data.toIndexedSeq;
-      val w = zeros(dataSeq(0).features);
-      var intercept = 0.0;
+      val default = dataSeq(0).label;
+
+      def guess(w: LFMatrix[L,T], x: T, y: L): L = {
+        val scores = w * x
+        if(scores.size == 0) {
+          default
+        } else {
+          val scoreY = scores(y);
+          scores(y) = Double.NegativeInfinity
+          val r = scores.argmax;
+          println(r,y,"rrrr",scores(r)+1,scoreY)
+          if(scores(r) + 1 > scoreY) r
+          else y;
+        }
+      }
+
+      var w = new LFMatrix[L,T](zeros(dataSeq(0).features));
       for(iter <- 0 until numIterations) {
-        val subset = (Rand.permutation(dataSeq.size).get.take(batchSize)).view.map(dataSeq);
+        val offset = (batchSize * iter) % dataSeq.size
+        val subset = (offset until (offset + batchSize)) map (i =>dataSeq(i%dataSeq.size));
         // i.e. those we don't classify correctly
         val problemSubset = (for {
           ex <- subset.iterator
-          decision = (w.dot(ex.features) +intercept ) * (if(ex.label) 1 else -1);
-          if decision < 1
-        } yield ex).toSeq;
+          r = guess(w,ex.features,ex.label)
+          if r != ex.label
+        } yield (ex,r)).toSeq;
+
+        println(problemSubset.size);
 
         val rate = 1 / (regularization * (iter.toDouble + 1));
         log(Log.INFO)("rate: " + rate);
         log(Log.INFO)("subset size: " + subset.size);
-        var w_half = w * (1-rate * regularization);
-        var bGradient = 0.0;
-        problemSubset.foreach { ex =>
-          w_half  +=  ex.features * rate * ((if(ex.label) 1.0 else -1.0) / subset.size);
-          bGradient +=  (if(ex.label) 1 else -1);
-        };
-        bGradient /= -problemSubset.size;
-
-        val w_norm = (1 / sqrt(regularization) / norm(w_half,2)) min 1;
-        w := w_half * w_norm;
-        intercept = (1-rate) * intercept + rate * bGradient;
-        log(Log.INFO)("iter: " + iter);
-        log(Log.INFO)("weights: " + w);
-      }
-      new Classifier[Boolean,T] {
-        def scores(f: T) = {
-          val ctr = Counter[Boolean,Double]();
-          ctr(false) = 0.0;
-          ctr(true) = w dot f + intercept;
-          ctr;
+        val w_half = problemSubset.foldLeft(w * (1-rate * regularization)) { (w,exr) =>
+          val (ex,r) = exr
+          val et = ex.features * (rate/subset.size);
+          println(exr);
+          println("pre:"+w)
+          w(ex.label) += et
+          println("mid:"+w)
+          w(r) -= et
+          println("post:"+w)
+          w
         }
+
+        val w_norm = (1 / (sqrt(regularization) * norm(w_half,2))) min 1;
+        println(w_norm);
+        w = w_half * w_norm;
+        log(Log.INFO)(w);
+        log(Log.INFO)("iter: " + iter);
+//        log(Log.INFO)("weights: " + w);
       }
+      new LinearClassifier(w,Counter[L,Double]());
     }
   }
 
@@ -106,12 +123,15 @@ object SVM {
     import scalanlp.data._
     import scalala.tensor.dense._;
 
-    val data = DataMatrix.fromURL(new java.net.URL("http://www-stat.stanford.edu/~tibs/ElemStatLearn/datasets/spam.data"),-1);
-    val vectors = data.rows.map(e => e map ((a:Seq[Double]) => DenseVector(a:_*)) relabel (_ == 1.0));
+    val data = DataMatrix.fromURL(new java.net.URL("http://www-stat.stanford.edu/~tibs/ElemStatLearn/datasets/spam.data"),-1,dropRow = true);
+    var vectors = data.rows.map(e => e map ((a:Seq[Double]) => DenseVector(a:_*)) relabel (_.toInt));
+    vectors = Rand.permutation(vectors.length).draw.map(vectors);
 
-    val trainer = new SVM.Pegasos[DenseVector[Double]](10000,batchSize=1000) with ConsoleLogging;
+    println(vectors.length);
+
+    val trainer = new SVM.Pegasos[Int,DenseVector[Double]](1000,batchSize=10) with ConsoleLogging;
     val classifier = trainer.train(vectors);
-    for( ex <- vectors) {
+    for( ex <- vectors.take(30)) {
       val guessed = classifier.classify(ex.features);
       println(guessed,ex.label);
     }
