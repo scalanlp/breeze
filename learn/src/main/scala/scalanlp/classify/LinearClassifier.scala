@@ -21,8 +21,10 @@ import scalanlp.util.Index;
 import scalanlp.data._;
 
 import scalala.tensor._;
+import mutable.Counter;
+import scalala.generic.collection.{CanCreateZerosLike, CanViewAsTensor1}
 import scalala.operators._
-import scalala.generic.collection.CanViewAsTensor1
+import scalala.generic.math.CanNorm
 ;
 
 /**
@@ -44,8 +46,87 @@ class LinearClassifier[L,F,T2, TL, TF]
      add : BinaryOp[TL,TL,OpAdd,TL],
      mulTensors : BinaryOp[T2,TF,OpMulMatrixBy,TL]) extends Classifier[L,TF] {
   def scores(o: TF) = {
-    val r:TL = featureWeights * o + intercepts;
-    vv(r)
+    val r:TL = featureWeights * o;
+    vv(r + intercepts)
+  }
+}
+
+class LFMatrix[L,TF](emptyTF: =>TF) extends MatrixOps[LFMatrix[L,TF]] {
+  def repr = this;
+  private val map = collection.mutable.Map[L,TF]();
+
+  private def empty = emptyTF
+
+  def apply(label: L) = {
+    map.getOrElseUpdate(label,empty);
+  }
+
+  def update(label: L, tf: TF) = {
+    map(label) = tf;
+  }
+
+  override def toString = {
+    map.mkString("Weight Matrix{\n  ","\n  ","\n}")
+  }
+
+
+}
+
+object LFMatrix {
+  implicit def lfMatrixTimesTF[L,TF]
+  (implicit inner: BinaryOp[TF,TF,OpMulInner,Double], numeric: TF=>NumericOps[TF])
+  : BinaryOp[LFMatrix[L,TF],TF,OpMulMatrixBy,mutable.Counter[L,Double]]  = {
+    new BinaryOp[LFMatrix[L,TF],TF,OpMulMatrixBy,mutable.Counter[L,Double]] {
+      def opType = OpMulMatrixBy;
+
+      def apply(v1: LFMatrix[L, TF], v2: TF) = {
+        val r = Counter[L,Double]();
+        for( (l,tf) <- v1.map) {
+          r(l) = tf dot v2;
+        }
+        r
+      }
+    }
+  }
+
+  implicit def lfBinaryOp[L,TF,Op<:OpType]
+  (implicit op: BinaryOp[TF,Double,Op,TF], numeric: TF=>NumericOps[TF])
+  : BinaryOp[LFMatrix[L,TF],Double,Op,LFMatrix[L,TF]]  = {
+    new BinaryOp[LFMatrix[L,TF],Double,Op,LFMatrix[L,TF]] {
+      def opType = op.opType;
+
+      def apply(v1: LFMatrix[L, TF], v2: Double) = {
+        val r = new LFMatrix[L,TF](v1.empty)
+        for( (l,tf) <- v1.map) {
+          r(l) = op(tf,v2);
+        }
+        r
+      }
+    }
+  }
+
+  implicit def lfBinaryOp2[L,TF]
+  (implicit op: BinaryOp[TF,Double,OpMul,TF], numeric: TF=>NumericOps[TF])
+  : BinaryOp[LFMatrix[L,TF],Double,OpMulMatrixBy,LFMatrix[L,TF]]  = {
+    new BinaryOp[LFMatrix[L,TF],Double,OpMulMatrixBy,LFMatrix[L,TF]] {
+      def opType = OpMulMatrixBy;
+
+      def apply(v1: LFMatrix[L, TF], v2: Double) = {
+        val r = new LFMatrix[L,TF](v1.empty)
+        for( (l,tf) <- v1.map) {
+          r(l) = tf * v2;
+        }
+        r
+      }
+    }
+  }
+
+  implicit def lfNorm[L,TF](implicit op: CanNorm[TF]) : CanNorm[LFMatrix[L,TF]] = {
+    new CanNorm[LFMatrix[L,TF]] {
+      def apply(v1: LFMatrix[L, TF], v2: Double) = {
+        v1.map.valuesIterator.map(op.apply(_,v2)).sum;
+      }
+    }
   }
 }
 
