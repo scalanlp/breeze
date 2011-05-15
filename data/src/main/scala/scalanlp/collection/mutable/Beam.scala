@@ -17,9 +17,10 @@ package scalanlp.collection.mutable;
 */
 
 
-import scala.collection.mutable.PriorityQueue;
-import scala.collection.mutable.AddingBuilder;
+
+
 import scala.collection._;
+import mutable.{GrowingBuilder, PriorityQueue, AddingBuilder}
 import scala.collection.generic._;
 
 /**
@@ -29,15 +30,14 @@ import scala.collection.generic._;
  * @author dlwh
  */
 class Beam[T](val maxSize:Int, xs:T*)(implicit o : Ordering[T]) extends Iterable[T] 
-    with IterableLike[T,Beam[T]] with Addable[T,Beam[T]] 
-    with Growable[T] { outer =>
+    with IterableLike[T,Beam[T]]  with Growable[T] { outer =>
   assert(maxSize >= 0)
   private val queue = new PriorityQueue[T]()(o.reverse);
   xs foreach (cat(queue,_));
 
   override def size = queue.size;
 
-  def min = queue.max;
+  def min = queue.head;
 
   def map[U](f: T=>U)(implicit oU: Ordering[U]) = {
     val q = new PriorityQueue[U]()(oU.reverse);
@@ -52,7 +52,7 @@ class Beam[T](val maxSize:Int, xs:T*)(implicit o : Ordering[T]) extends Iterable
           y <- f(x)) {
         if(queue.size < maxSize) {
           queue += y;
-        } else if (oU.compare(queue.max,y) < 0) { // q.max is the smallest element.
+        } else if (oU.compare(queue.head,y) < 0) { // q.head is the smallest element.
           queue.dequeue();
           queue += y;
         }
@@ -74,14 +74,14 @@ class Beam[T](val maxSize:Int, xs:T*)(implicit o : Ordering[T]) extends Iterable
 
   private def cat(h : PriorityQueue[T], x : T) {
     if(h.size < maxSize) h += x;
-    else if (o.compare(h.max,x) < 0) {h.dequeue(); h += x;}
+    else if (o.compare(h.head,x) < 0) {h.dequeue(); h += x;}
   }
 
   def iterator = queue.iterator;
   override def toString() = iterator.mkString("Beam(",",",")");
   def clear = queue.clear;
 
-  override protected[this] def newBuilder = new AddingBuilder[T,Beam[T]](new Beam[T](maxSize));
+  override protected[this] def newBuilder = new GrowingBuilder(new Beam[T](maxSize));
 }
 
 object Beam {

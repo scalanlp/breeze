@@ -26,10 +26,10 @@ import java.io.{ObjectOutputStream}
  * @author dramage
  */
 private[distributed] object ServiceMessages {
-  @serializable sealed trait ServiceMessage;
+  sealed trait ServiceMessage extends Serializable;
   
   /** A request made of a service. */
-  @serializable sealed trait ServiceRequest extends ServiceMessage;
+  sealed trait ServiceRequest extends ServiceMessage;
   
   /** Requests a connection to the given path. */
   case class Connect(path : String) extends ServiceRequest;
@@ -45,7 +45,7 @@ private[distributed] object ServiceMessages {
   
   
   /** A reply returned by a service. */
-  @serializable sealed trait ServiceReply extends ServiceMessage;
+  sealed trait ServiceReply extends ServiceMessage with Serializable;
   
   /** Reply for alive state. */
   case object Pong extends ServiceReply;

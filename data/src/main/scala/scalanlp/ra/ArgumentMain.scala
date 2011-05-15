@@ -141,7 +141,7 @@ trait ArgumentMain {
         }
         
         val value = args(argI+1);
-        val paramI = names.findIndexOf(_ == arg.substring(2));
+        val paramI = names.indexWhere(_ == arg.substring(2));
 
         if (processed(paramI).isDefined) {
           throw new ArgumentException("Value for "+arg+"already defined");

@@ -24,8 +24,8 @@ import scalanlp.serialization.{TextSerialization,SubtypedCompanion};
  *
  * @author dramage
  */
-@serializable @SerialVersionUID(1)
-trait Transformer extends (Iterable[String] => Iterable[String]) {
+@SerialVersionUID(1)
+trait Transformer extends (Iterable[String] => Iterable[String]) with Serializable {
   override def toString = TextSerialization.toString(this);
 }
 

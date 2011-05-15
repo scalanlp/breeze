@@ -51,7 +51,7 @@ trait Writable[-Output,V] {
  * @author dlwh
  * @author dramage
  */
-@serializable trait SerializationFormat {
+trait SerializationFormat extends Serializable {
   /** The place to read data from. */
   type Input;
 
@@ -59,12 +59,12 @@ trait Writable[-Output,V] {
   type Output;
 
   /** Inner trait for reading from Input. */
-  @serializable trait Readable[T] {
+  trait Readable[T] extends Serializable {
     def read(source: Input): T
   }
 
   /** Inner trait for writing to Output. */
-  @serializable trait Writable[T] {
+  trait Writable[T] extends Serializable {
     def write(sink: Output, what: T): Unit
   }
 

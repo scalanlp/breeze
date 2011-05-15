@@ -30,29 +30,13 @@ import scalala.operators.OpEq
 import scalala.tensor.domain.IndexDomain
 
 @RunWith(classOf[JUnitRunner])
-class OWLQNTest extends FunSuite with Checkers {
-  import Arbitrary._;
-  implicit val arbVector : Arbitrary[DenseVectorCol[Double]] = Arbitrary(for {
-    n <- arbitrary[Int] suchThat { _ > 0 }
-    d <- arbitrary[Double]
-  } yield (DenseVector.rand(n%40+1) * d) );
-
-  implicit val arbDoubleCounter: Arbitrary[Counter[String,Double]] = Arbitrary(for {
-    v <- arbitrary[DenseVectorCol[Double]]
-  } yield {
-    val c = Counter[String,Double]();
-      for(i <- 0 until v.size) {
-        c(i + "") = v(i);
-    }
-    c
-  });
-
+class OWLQNTest extends OptimizeTestBase {
   test("super simple") {
-    val lbfgs = new OWLQN[Int,DenseVectorCol[Double]](100,4);
+    val lbfgs = new OWLQN[Int,DenseVector[Double]](100,4);
 
-    def optimizeThis(init: DenseVectorCol[Double]) = {
-      val f = new DiffFunction[DenseVectorCol[Double]] {
-        def calculate(x: DenseVectorCol[Double]) = {
+    def optimizeThis(init: DenseVector[Double]) = {
+      val f = new DiffFunction[DenseVector[Double]] {
+        def calculate(x: DenseVector[Double]) = {
           (norm((x -3) :^ 2,1),(x * 2) - 6);
         }
       }
@@ -67,11 +51,11 @@ class OWLQNTest extends FunSuite with Checkers {
 
 
   test("optimize a simple multivariate gaussian") {
-    val lbfgs = new OWLQN[Int,DenseVectorCol[Double]](100,4,1.0);
+    val lbfgs = new OWLQN[Int,DenseVector[Double]](100,4,1.0);
 
-    def optimizeThis(init: DenseVectorCol[Double]) = {
-      val f = new DiffFunction[DenseVectorCol[Double]] {
-        def calculate(x: DenseVectorCol[Double]) = {
+    def optimizeThis(init: DenseVector[Double]) = {
+      val f = new DiffFunction[DenseVector[Double]] {
+        def calculate(x: DenseVector[Double]) = {
           (norm((x -3) :^ 2,1),(x * 2) - 6);
         }
       }

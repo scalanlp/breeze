@@ -30,30 +30,14 @@ import scalala.generic.collection.{CanViewAsTensor1, CanMapKeyValuePairs}
 ;
 
 @RunWith(classOf[JUnitRunner])
-class AdaptiveGradientTest extends FunSuite with Checkers {
-  import Arbitrary._;
-  implicit val arbVector : Arbitrary[DenseVector[Double]] = Arbitrary(for {
-    n <- arbitrary[Int] suchThat { _ > 0 }
-    d <- arbitrary[Double]
-  } yield DenseVector.rand(n % 200 + 1) * d);
-
-  implicit val arbDoubleCounter: Arbitrary[Counter[String,Double]] = Arbitrary(for {
-    v <- arbitrary[DenseVector[Double]]
-  } yield {
-    val c = Counter[String,Double]();
-    for(i <- 0 until v.size) {
-      c(i.toString) = v(i);
-    }
-    c
-  });
-
-
+class AdaptiveGradientTest extends OptimizeTestBase {
 
   test("optimize a simple multivariate gaussian, l2") {
 
-    def optimizeThis(init: DenseVector[Double], reg: Double) = {
+    def optimizeThis(init2: DenseVector[Double], reg: Double) = {
+      val init = init2 % 100;
       val sgd = new StochasticGradientDescent[DenseVector[Double]](20,200,1) with AdaptiveGradientDescent.L2Regularization[DenseVector[Double]] {
-        override val lambda = reg.abs;
+        override val lambda = reg.abs % 1E4;
       }
       val f = new BatchDiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double], r: IndexedSeq[Int]) = {
@@ -63,10 +47,10 @@ class AdaptiveGradientTest extends FunSuite with Checkers {
       }
 
       val result = sgd.minimize(f,init)
-      val targetValue = 3 / (reg.abs / 2 + 1);
+      val targetValue = 3 / (sgd.lambda / 2 + 1);
       val ok = norm(result :- DenseVector.ones[Double](init.size) * targetValue,2)/result.size < 1E-3
       if(!ok) {
-        error("min " + init + " with reg: " + reg + "gives " + result + " should be " + targetValue);
+        sys.error("min " + init + " with reg: " + sgd.lambda + "gives " + result + " should be " + targetValue);
       }
       ok
     }
@@ -77,7 +61,8 @@ class AdaptiveGradientTest extends FunSuite with Checkers {
 
   test("optimize a simple multivariate gaussian, l1") {
 
-    def optimizeThis(init: DenseVector[Double], reg: Double) = {
+    def optimizeThis(init2: DenseVector[Double], reg: Double) = {
+      val init = init2 % 100;
       val sgd = new AdaptiveGradientDescent.L1Regularization[Int,DenseVector[Double]](reg.abs%10, 1E-5, 50,200,1);
       val f = new BatchDiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double], r: IndexedSeq[Int]) = {
@@ -90,7 +75,7 @@ class AdaptiveGradientTest extends FunSuite with Checkers {
       val targetValue = if(sgd.lambda/2 > 3) 0.0 else  3 - sgd.lambda / 2;
       val ok = norm(result :- DenseVector.ones[Double](init.size) * targetValue,2)/result.size < 1E-3
       if(!ok) {
-        error("min " + init + " with reg: " + reg + "gives " + result + " " + " should be " + targetValue);
+        sys.error("min " + init + " with reg: " + sgd.lambda + "gives " + result + " " + " should be " + targetValue);
       }
       ok
     }

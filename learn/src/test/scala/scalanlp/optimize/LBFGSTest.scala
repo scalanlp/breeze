@@ -29,24 +29,7 @@ import scalala.generic.collection.CanCopy
 
 
 @RunWith(classOf[JUnitRunner])
-class LBFGSTest extends FunSuite with Checkers {
-  import Arbitrary._;
-  implicit val arbVector : Arbitrary[DenseVector[Double]] = Arbitrary(for {
-    n <- arbitrary[Int] suchThat { _ > 0 }
-    d <- arbitrary[Double]
-  } yield ( DenseVector.rand(n%40+1) *d));
-
-  implicit val arbDoubleCounter: Arbitrary[Counter[String,Double]] = Arbitrary(for {
-    v <- arbitrary[DenseVector[Double]]
-  } yield {
-    val c = Counter[String,Double]();
-    for(i <- 0 until v.size) {
-      c(i + "") = v(i);
-    }
-    c
-  });
-
-
+class LBFGSTest extends OptimizeTestBase {
 
   test("optimize a simple multivariate gaussian") {
     val lbfgs = new LBFGS[DenseVector[Double]](100,4);

@@ -16,9 +16,10 @@ package scalanlp.collection.immutable;
  limitations under the License. 
 */
 
-import scala.collection.mutable.PriorityQueue;
-import scala.collection.mutable.AddingBuilder;
+
+
 import scala.collection._;
+import mutable.{Builder, PriorityQueue}
 import scala.collection.generic._;
 
 /**
@@ -27,8 +28,7 @@ import scala.collection.generic._;
  * 
  * @author dlwh
  */
-class Beam[T](val maxSize:Int, xs : T*)(implicit o : Ordering[T]) extends Iterable[T] 
-  with IterableLike[T,Beam[T]] with Addable[T,Beam[T]] { outer =>
+class Beam[T](val maxSize:Int, xs : T*)(implicit o : Ordering[T]) extends Iterable[T] with IterableLike[T,Beam[T]] { outer =>
   assert(maxSize >= 0)
   val heap = trim(BinomialHeap(xs:_*));
 
@@ -63,7 +63,7 @@ class Beam[T](val maxSize:Int, xs : T*)(implicit o : Ordering[T]) extends Iterab
           y <- f(x)) {
         if(queue.size < maxSize) {
           queue += y;
-        } else if (oU.compare(queue.max,y) < 0) { // q.max is the smallest element.
+        } else if (oU.compare(queue.head,y) < 0) { // q.max is the smallest element.
           queue.dequeue();
           queue += y;
         }
@@ -76,7 +76,14 @@ class Beam[T](val maxSize:Int, xs : T*)(implicit o : Ordering[T]) extends Iterab
     override val heap = BinomialHeap[T]() ++ outer.heap.filter(f);
   }
 
-  override protected[this] def newBuilder = new AddingBuilder[T,Beam[T]](new Beam[T](maxSize));
+  override protected def newBuilder = new Builder[T,Beam[T]] {
+    var beam: Beam[T] = new Beam(maxSize);
+    def result() = beam;
+
+    def clear() = beam = new Beam(maxSize);
+
+    def +=(elem: T) = {beam += elem; this}
+  }
 
 
   def +(x:T) = new Beam[T](maxSize) {
@@ -85,4 +92,12 @@ class Beam[T](val maxSize:Int, xs : T*)(implicit o : Ordering[T]) extends Iterab
   
   def iterator = heap.iterator;
   override def toString() = iterator.mkString("Beam(",",",")");
+}
+
+object Beam {
+ implicit def canBuildFrom[T<%Ordered[T]] = new CanBuildFrom[Beam[T],T,Beam[T]] {
+   def apply() = error("Sorry, need a max size")
+
+   def apply(from: Beam[T]) = from.newBuilder;
+ }
 }

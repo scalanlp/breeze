@@ -24,8 +24,7 @@ import scala.collection.Map;
 *
 * @author dlwh
 */
-@serializable
-trait Example[+L,+T] extends Observation[T] with Labeled[L] {outer=>
+trait Example[+L,+T] extends Observation[T] with Labeled[L] with Serializable {outer=>
   def id : String;
   def label: L
 

@@ -38,7 +38,7 @@ trait QuasiNewtonMinimizer[T] extends FirstOrderMinimizer[T,DiffFunction[T]] wit
 
   protected def initialState(f: DiffFunction[T], init: T):State = {
     val (v,grad) = f.calculate(init);
-    new State(init,v,grad,adjustValue(v,init), adjustGradient(grad,init),0,initialHistory(grad));
+    State(init,v,grad,adjustValue(v,init), adjustGradient(grad,init),0,initialHistory(grad)):State;
   }
 
   protected def initialHistory(grad: T):History;
@@ -74,7 +74,7 @@ trait QuasiNewtonMinimizer[T] extends FirstOrderMinimizer[T,DiffFunction[T]] wit
 
        val newHistory = updateHistory(state, newGrad, newVal, dir);
 
-       new State(newX,newVal,newGrad,adjustValue(newVal, newX),adjustGradient(newGrad,newX),iter+1,newHistory);
+       State(newX,newVal,newGrad,adjustValue(newVal, newX),adjustGradient(newGrad,newX),iter+1,newHistory);
 
      } catch {
        case _:StepSizeUnderflow =>

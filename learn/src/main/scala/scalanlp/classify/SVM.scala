@@ -74,7 +74,6 @@ object SVM {
           val scoreY = scores(y);
           scores(y) = Double.NegativeInfinity
           val r = scores.argmax;
-          println(r,y,"rrrr",scores(r)+1,scoreY)
           if(scores(r) + 1 > scoreY) r
           else y;
         }
@@ -91,7 +90,6 @@ object SVM {
           if r != ex.label
         } yield (ex,r)).toSeq;
 
-        println(problemSubset.size);
 
         val rate = 1 / (regularization * (iter.toDouble + 1));
         log(Log.INFO)("rate: " + rate);
@@ -99,17 +97,12 @@ object SVM {
         val w_half = problemSubset.foldLeft(w * (1-rate * regularization)) { (w,exr) =>
           val (ex,r) = exr
           val et = ex.features * (rate/subset.size);
-          println(exr);
-          println("pre:"+w)
           w(ex.label) += et
-          println("mid:"+w)
           w(r) -= et
-          println("post:"+w)
           w
         }
 
         val w_norm = (1 / (sqrt(regularization) * norm(w_half,2))) min 1;
-        println(w_norm);
         w = w_half * w_norm;
         log(Log.INFO)(w);
         log(Log.INFO)("iter: " + iter);

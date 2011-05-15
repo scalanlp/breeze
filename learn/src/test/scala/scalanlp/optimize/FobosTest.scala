@@ -27,23 +27,7 @@ import scalala.tensor.mutable.Counter
 import scalala.library.Library.norm;
 
 @RunWith(classOf[JUnitRunner])
-class FobosTest extends FunSuite with Checkers {
-  import Arbitrary._;
-  implicit val arbVector : Arbitrary[DenseVector[Double]] = Arbitrary(for {
-    n <- arbitrary[Int] suchThat { _ > 0 }
-    d <- arbitrary[Double]
-  } yield (DenseVector.rand(n % 200  + 1) * d)) ;
-
-  implicit val arbDoubleCounter: Arbitrary[Counter[String,Double]] = Arbitrary(for {
-    v <- arbitrary[DenseVector[Double]]
-  } yield {
-    val c = Counter[String,Double]();
-    for(i <- 0 until v.size) {
-      c(i + "") = v(i);
-    }
-    c
-  });
-
+class FobosTest extends OptimizeTestBase {
 
 
   test("optimize a simple multivariate gaussian, l2") {

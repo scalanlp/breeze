@@ -70,7 +70,7 @@ class LBFGS[T](override val maxIter: Int, m: Int)(implicit protected val vspace:
     for(i <- (memStep.length-1) to 0 by -1) {
       as(i) = (memStep(i) dot dir)/memRho(i);
       if(as(i).isNaN) {
-        error("NaN!" + (memStep(i) dot dir) + " " + memRho(i));
+        throw new NaNHistory;
       }
       assert(!as(i).isInfinite, memRho(i) -> norm(grad,2));
       dir -= memGradDelta(i) * as(i);

@@ -115,7 +115,7 @@ object SocketClient {
     private var rid = -1;
 
     /** Sends a message to the client, with reply going to the given channel. */
-    protected def send(message : ServiceRequest, consumer : Option[Channel[ServiceReply]]) : Unit = synchronized {
+    protected def send(message : ServiceRequest, consumer : Option[Channel[ServiceReply]]) = synchronized {
       if (!sessionActive) {
         throw new ServiceException("Cannot send message on inactive session");
       }
@@ -152,7 +152,7 @@ object SocketClient {
         }
       }
 
-      return rid;
+      rid;
     }
 
     /** Sends a message to the service and awaits a reply. */

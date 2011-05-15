@@ -72,25 +72,25 @@ class BooleanSemiringTest extends SemiringAxioms[Boolean] {
 
 @RunWith(classOf[JUnitRunner])
 class ProbabilitySemiringTest extends SemiringAxioms[Double] {
-  def arb = Arbitrary.arbDouble;
+  def arb = Arbitrary(Arbitrary.arbDouble.arbitrary.map( x => x %1E10));
   def makeRing = Semiring.Probability.semiring;   
 }
 
 @RunWith(classOf[JUnitRunner])
 class ViterbiSemiringTest extends SemiringAxioms[Double] {
-  def arb = Arbitrary.arbDouble;
+  def arb = Arbitrary(Arbitrary.arbDouble.arbitrary.map( x => x % 1E10));
   def makeRing = Semiring.Viterbi.doubleIsViterbi;
 }
 
 
 @RunWith(classOf[JUnitRunner])
 class TropicalSemiringTest extends SemiringAxioms[Double] {
-  def arb = Arbitrary.arbDouble;
+  def arb = Arbitrary(Arbitrary.arbDouble.arbitrary.map( x => x % 1E10));
   def makeRing = Semiring.Tropical.doubleIsTropical;
 }
 
 @RunWith(classOf[JUnitRunner])
 class LogSpaceSemiringTest extends SemiringAxioms[Double] {
-  def arb = Arbitrary.arbDouble;
+  def arb = Arbitrary(Arbitrary.arbDouble.arbitrary.map( x => x % 1E10));
   def makeRing = Semiring.LogSpace.doubleIsLogSpace;
 }

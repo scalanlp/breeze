@@ -26,12 +26,12 @@ package object util extends DoubleImplicits with IteratorImplicits with SeqImpli
   /**
    * You can write TODO in your code, and get an exception at runtime for any expression.
    */
-  def TODO = error("TODO (Not implemented)");
+  def TODO = sys.error("TODO (Not implemented)");
 
   /**
    * You can write XXX in your code and get an exception at runtime for any expression.
    */
-  def XXX = error("XXX Not Implemented");
+  def XXX = sys.error("XXX Not Implemented");
   /**
    * Similar to the TODO expression, except this one is for types.
    */

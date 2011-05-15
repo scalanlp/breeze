@@ -14,13 +14,7 @@ import scalala.library.Library.norm;
  * @author dlwh
  */
 @RunWith(classOf[JUnitRunner])
-class ApproximateGradientFunctionTest extends FunSuite with Checkers {
-  import Arbitrary._;
-
-  implicit val arbVector : Arbitrary[DenseVector[Double]] = Arbitrary(for {
-    n <- arbitrary[Int] suchThat { _ > 0 }
-    d <- arbitrary[Double]
-  } yield ( (DenseVector.rand(n.abs%40+1) * d) : DenseVector[Double]));
+class ApproximateGradientFunctionTest extends OptimizeTestBase {
 
   test("simple quadratic function") {
     val f = new DiffFunction[DenseVector[Double]] {

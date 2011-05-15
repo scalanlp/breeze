@@ -24,8 +24,7 @@ import scala.collection.Map;
 *
 * @author dlwh
 */
-@serializable
-trait Observation[+T] { outer=>
+trait Observation[+T] extends Serializable { outer=>
   def id : String;
   def features: T;
 

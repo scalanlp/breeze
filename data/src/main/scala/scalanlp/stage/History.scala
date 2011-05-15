@@ -24,8 +24,7 @@ import scalanlp.ra.Signature;
  *
  * @author dramage
  */
-@serializable
-trait History extends Signature {
+trait History extends Signature with Serializable {
   def + (stage : Stage[_,_]) =
     History.Continuation(this, stage);
 

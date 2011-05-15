@@ -318,7 +318,7 @@ with StringSerialization {
     case '\r' => "\\r";
     case '\t' => "\\t";
     case c if ((c >= '\u0000' && c <= '\u001F') || (c >= '\u007F' && c <= '\u009F') || (c >= '\u2000' && c <= '\u20FF')) =>
-      { val hex = c.toHexString.toUpperCase; "\\u"+("0"*(4-hex.length))+hex; }
+      { val hex = c.toInt.toHexString.toUpperCase; "\\u"+("0"*(4-hex.length))+hex; }
     case c => c.toString;
   }
 
@@ -338,7 +338,7 @@ with StringSerialization {
       else if (cp == '\r') sb.append("\\r");
       else if (cp == '\t') sb.append("\\t");
       else if ((cp >= '\u0000' && cp <= '\u001F') || (cp >= '\u007F' && cp <= '\u009F') || (cp >= '\u2000' && cp <= '\u20FF')) {
-        val hex = cp.toHexString.toUpperCase;
+        val hex = cp.toInt.toHexString.toUpperCase;
         sb.append("\\u"+("0"*(4-hex.length))+hex);
       }
       else sb.appendCodePoint(cp);

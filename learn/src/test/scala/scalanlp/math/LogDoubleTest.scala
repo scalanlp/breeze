@@ -28,7 +28,7 @@ import LogDouble._;
 class LogDoubleTest extends FunSuite with Checkers {
   import Arbitrary.arbitrary;
   implicit val ad :Arbitrary[Double] = Arbitrary(for { 
-    d <- arbitrary[Double](Arbitrary.arbDouble) suchThat {_ > 0}
+    d <- arbitrary[Double](Arbitrary.arbDouble)  map {_ % 1000 abs} suchThat { _ > 0 }
   } yield {
     d
   });
@@ -43,14 +43,6 @@ class LogDoubleTest extends FunSuite with Checkers {
     }}
     check { Prop.forAll {(d: Double, e:Double) =>  
       e <= 0 ||(d.toLogDouble + e).value =~= d + e
-    }}
-  }
-  test("subtraction") {
-    check { Prop.forAll {(d: Double, e:Double) => 
-      d < e || (d.toLogDouble - e.toLogDouble).value =~= d - e
-    }}
-    check { Prop.forAll {(d: Double, e:Double) => 
-     e <= 0 || d < e || (d.toLogDouble - e).value =~= d - e
     }}
   }
   test("multiplication") {

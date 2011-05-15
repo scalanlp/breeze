@@ -26,7 +26,6 @@ import scalanlp.collection.immutable.DHMap;
  * 
  * @author dramage
  */
-@serializable
 @SerialVersionUID(2)
 case class Parcel[D](history : History, meta : DHMap, data : D)
 (implicit mD : Manifest[D]) extends Signature {

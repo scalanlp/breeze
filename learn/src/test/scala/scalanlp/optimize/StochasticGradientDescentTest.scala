@@ -26,23 +26,7 @@ import scalala.library.Library.norm;
 
 
 @RunWith(classOf[JUnitRunner])
-class StochasticGradientDescentTest extends FunSuite with Checkers {
-  import Arbitrary._;
-  implicit val arbVector : Arbitrary[DenseVector[Double]] = Arbitrary(for {
-    n <- arbitrary[Int] suchThat { _ > 0 } suchThat { _ < 4000};
-    d <- arbitrary[Double]
-  } yield ( (DenseVector.rand(n) * d) : DenseVector[Double]));
-
-  implicit val arbDoubleCounter: Arbitrary[Counter[String,Double]] = Arbitrary(for {
-    v <- arbitrary[DenseVector[Double]]
-  } yield {
-    val c = Counter[String,Double]();
-    for(i <- 0 until v.size) {
-      c(i + "") = v(i);
-    }
-    c
-  });
-
+class StochasticGradientDescentTest extends OptimizeTestBase {
 
 
   test("optimize a simple multivariate gaussian") {

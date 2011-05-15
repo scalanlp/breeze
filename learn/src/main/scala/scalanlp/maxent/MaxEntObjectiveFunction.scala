@@ -8,7 +8,6 @@ import scalala.tensor.mutable.Vector;
 import scalala.tensor.sparse.SparseVector;
 
 import scalala.tensor.dense.DenseVector
-import scalanlp.concurrent.ParallelOps._;
 import scalanlp.util.Index
 import scalanlp.util.Encoder
 import scalala.library.Library.softmax;
@@ -151,13 +150,13 @@ abstract class MaxEntObjectiveFunction extends DiffFunction[DenseVector[Double]]
     // = \sum_{d,c} margin(d,c) * f(d,c)
     //
     // e(*,c) = \sum_d e(d,c) == eCounts(c).total
-    def featureGrad = featureEncoder.mkDenseVector(0.0);
 
-    val (grad: DenseVector[Double],prob: Double) = eCounts.zipWithIndex.par(2000).fold( (featureGrad,0.0) ) { (gradObj,vecIndex) =>
-      val (vec,c) = vecIndex;
-      var (featureGrad,logProb) = gradObj;
+
+    val (grad: DenseVector[Double],prob: Double) = eCounts.zipWithIndex.par.view.map { case (vec,c) =>
       val cTheta = logThetas(c);
+      var logProb = 0.0;
       val logTotal = math.log(eTotals(c));
+      val featureGrad = featureEncoder.mkDenseVector(0.0);
       vec match {
         case vec: SparseVector[Double] =>
           var i = 0;
@@ -194,9 +193,9 @@ abstract class MaxEntObjectiveFunction extends DiffFunction[DenseVector[Double]]
       }
       (featureGrad,logProb)
 
-    } { (gradObj1,gradObj2) =>
-      gradObj1._1 += gradObj2._1
-      (gradObj1._1, gradObj1._2 + gradObj2._2)
+    }.fold((featureEncoder.mkDenseVector(0.0),0.0)) { (gradObj1,gradObj2) =>
+      gradObj2._1 += gradObj1._1
+      (gradObj2._1, gradObj1._2 + gradObj2._2)
     }
 
     val realProb = - prob

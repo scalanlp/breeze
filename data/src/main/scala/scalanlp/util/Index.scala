@@ -170,7 +170,7 @@ trait SynchronizedMutableIndex[T] extends MutableIndex[T] with SynchronizedIndex
  *
  * @author dlwh, dramage
  */
-@serializable class HashIndex[T] extends MutableIndex[T] {
+class HashIndex[T] extends MutableIndex[T] with Serializable {
   /** Forward map from int to object */
   private val objects = new ArrayBuffer[T];
 

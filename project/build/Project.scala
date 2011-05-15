@@ -32,8 +32,13 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
     val JFreeChart = "jfree" % "jfreechart" % "1.0.13"
     val XMLGraphicsCommons = "org.apache.xmlgraphics" % "xmlgraphics-commons" % "1.3.1"
     val IText = "com.lowagie" % "itext" % "2.1.5" intransitive()
-    val ScalaCheck = "org.scala-tools.testing" %% "scalacheck" % "1.7" % "test"
-    val ScalaTest = "org.scalatest" % "scalatest" % "1.2-for-scala-2.8.0.RC6-SNAPSHOT" % "test"
+    val ScalaCheck = "org.scala-tools.testing" %% "scalacheck" % "1.8" % "test"
+  val ScalaTest = buildScalaVersion match {
+    case "2.9.0"     => "org.scalatest" % "scalatest" % "1.4.RC2" % "test"
+    case "2.8.1"     => "org.scalatest" % "scalatest" % "1.3" % "test"
+    case x           => error("Unsupported Scala version " + x)
+  }
+
     val JUnit = "junit" % "junit" % "4.5" % "test"
   }
 
@@ -48,8 +53,12 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
     val JFreeChart = "jfree" % "jfreechart" % "1.0.13"
     val XMLGraphicsCommons = "org.apache.xmlgraphics" % "xmlgraphics-commons" % "1.3.1"
     val IText = "com.lowagie" % "itext" % "2.1.5" intransitive()
-    val ScalaCheck = "org.scala-tools.testing" %% "scalacheck" % "1.7" % "test"
-    val ScalaTest = "org.scalatest" % "scalatest" % "1.2-for-scala-2.8.0.RC6-SNAPSHOT" % "test"
+    val ScalaCheck = "org.scala-tools.testing" %% "scalacheck" % "1.8" % "test"
+      val ScalaTest = buildScalaVersion match {
+    case "2.9.0"     => "org.scalatest" % "scalatest" % "1.4.RC2" % "test"
+    case "2.8.1"     => "org.scalatest" % "scalatest" % "1.3" % "test"
+    case x           => error("Unsupported Scala version " + x)
+  }
     val JUnit = "junit" % "junit" % "4.5" % "test"
   }
 
@@ -64,8 +73,13 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
     val JFreeChart = "jfree" % "jfreechart" % "1.0.13"
     val XMLGraphicsCommons = "org.apache.xmlgraphics" % "xmlgraphics-commons" % "1.3.1"
     val IText = "com.lowagie" % "itext" % "2.1.5" intransitive()
-    val ScalaCheck = "org.scala-tools.testing" %% "scalacheck" % "1.7" % "test"
-    val ScalaTest = "org.scalatest" % "scalatest" % "1.2-for-scala-2.8.0.RC6-SNAPSHOT" % "test"
+    val ScalaCheck = "org.scala-tools.testing" %% "scalacheck" % "1.8" % "test"
+
+    val ScalaTest = buildScalaVersion match {
+      case "2.9.0"     => "org.scalatest" % "scalatest" % "1.4.RC2" % "test"
+      case "2.8.1"     => "org.scalatest" % "scalatest" % "1.3" % "test"
+      case x           => error("Unsupported Scala version " + x)
+    }
     val JUnit = "junit" % "junit" % "4.5" % "test"
   }
 

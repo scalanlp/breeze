@@ -22,7 +22,7 @@ object AffineScaling {
       val D = diag(vk :^ -2);
       val hx = (A.t * D * A).asInstanceOf[DenseMatrix[Double]] \ c.asCol;
       val hv:DenseVector[Double] = A * hx * -1.0;
-      if(hv.values.exists(_ >= 0)) error("unbounded");
+      if(hv.values.exists(_ >= 0)) throw UnboundedProblem
 
       val alpha = gamma * (for(i <- 0 until hv.length if hv(i) < 0) yield (- vk(i)/hv(i))).min;
       val xn = x + hx * alpha;
@@ -33,4 +33,6 @@ object AffineScaling {
     }
     x;
   }
+
+  object UnboundedProblem extends Exception;
 }

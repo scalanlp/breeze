@@ -6,9 +6,8 @@ package scalanlp.collection.mutable
  *
  * @author dlwh
  */
-@serializable
 @SerialVersionUID(1)
-final class SDArray[@specialized T:ClassManifest](_length: Int, default: =>T)  extends IntMap[T] {
+final class SDArray[@specialized T:ClassManifest](_length: Int, default: =>T)  extends IntMap[T] with Serializable {
   private val arr: Array[T] = Array.fill(_length)(default);
   private val active = collection.mutable.BitSet();
 

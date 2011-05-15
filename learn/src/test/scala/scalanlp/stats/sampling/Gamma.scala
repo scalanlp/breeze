@@ -27,11 +27,13 @@ import scalanlp.stats.DescriptiveStats._;
 @RunWith(classOf[JUnitRunner])
 class GammaTest extends FunSuite with Checkers {
   import Arbitrary.arbitrary;
+  val arbDouble = Arbitrary(Arbitrary.arbitrary[Double].map(_ % 10000))
   test("mode") {
-    check( Prop.forAll { (k1: Double, t: Double, k2: Double)=>  k1.abs < 1 || k1 == k2 || {
-        val b = new Gamma(k1.abs,t.abs);
+    implicit val ad = arbDouble;
+    check( Prop.forAll { (k1: Double, t: Double, k2: Double)=>  t == 0 || k1.abs < 1 || k1 == k2 || {
+        val b = new Gamma(k1.abs + 1,t.abs);
         // mode is floor( (n+1) * p)
-        b.pdf( (k1.abs-1) * (t.abs) ) >= b.pdf( k2.abs)
+        b.pdf( (k1.abs) * (t.abs) ) >= b.pdf( k2.abs)
       }
     })
   }

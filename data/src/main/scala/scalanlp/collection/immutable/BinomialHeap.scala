@@ -16,21 +16,23 @@ package scalanlp.collection.immutable;
  limitations under the License. 
 */
 
-import scala.collection.generic.Addable;
-import scala.collection.mutable.AddingBuilder;
-import scala.collection.IterableLike;
 
 
-import scalanlp.util.ScalaQL;
+
+
+
+import scalanlp.util.ScalaQL
+import collection.mutable.{Builder, GrowingBuilder, AddingBuilder}
+import collection.{GenTraversableOnce, IterableLike}
+import collection.generic.{CanBuildFrom, Growable, Addable}
+;
 
 /**
  * From Okasaki's Functional Data Structures. Represents a functional heap
  *
  * @author dlwh
  */
-@serializable
-class BinomialHeap[T<%Ordered[T]] extends Iterable[T] with IterableLike[T,BinomialHeap[T]]
-with Addable[T,BinomialHeap[T]] {
+class BinomialHeap[T<%Ordered[T]] extends Iterable[T] with IterableLike[T,BinomialHeap[T]] with Serializable {
   import BinomialHeap._;
   protected val trees: List[Node[T]] = Nil;
   override val size = 0;
@@ -55,7 +57,15 @@ with Addable[T,BinomialHeap[T]] {
 
   def min = get.get;
 
-  protected[this] override def newBuilder = new AddingBuilder[T,BinomialHeap[T]](new BinomialHeap);
+  protected override def newBuilder = new Builder[T,BinomialHeap[T]] {
+    var heap = BinomialHeap.empty[T]
+
+    def result() = heap;
+
+    def clear() = heap = BinomialHeap.empty[T]
+
+    def +=(elem: T) =  {heap += elem; this}
+  }
 
   lazy val get = if(trees.isEmpty) None else Some(findMin(trees));
   private def findMin(trees : List[Node[T]]): T = {
@@ -97,7 +107,7 @@ with Addable[T,BinomialHeap[T]] {
 }
 
 object BinomialHeap {
-  private case class Node[T<%Ordered[T]](rank : Int, x : T, children: List[Node[T]]) {
+  protected case class Node[T<%Ordered[T]](rank : Int, x : T, children: List[Node[T]]) {
     def link(n :Node[T]) = {
       if(x <= n.x) Node(rank+1,x,n :: children) else Node(rank+1,n.x,this :: n.children)
     }
@@ -112,5 +122,13 @@ object BinomialHeap {
     override val size = sz;
   }
 
-  def apply[T<%Ordered[T]](t:T*) = empty[T] ++ t;
+  def apply[T<%Ordered[T]](t:T*):BinomialHeap[T] = empty[T] ++ t;
+
+  implicit def cbfForBinomialHeap[T<:B,B<%Ordered[B]]: CanBuildFrom[BinomialHeap[T],B,BinomialHeap[B]] = new CanBuildFrom[BinomialHeap[T],B,BinomialHeap[B]]{
+    def apply():Builder[B,BinomialHeap[B]] = {
+      empty[B].newBuilder;
+    }
+
+    def apply(from: BinomialHeap[T]) = apply()
+  }
 }

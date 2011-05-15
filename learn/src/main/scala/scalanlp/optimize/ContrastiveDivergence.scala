@@ -45,7 +45,7 @@ class ContrastiveDivergenceOptimizer[X,T](trans: T=>X=>Rand[X],
         deriv: T=>X=>T,
         learningRate: Double)
         (implicit zeros: CanCreateZerosLike[T,T],
-        view: T <%< MutableNumericOps[T],
+        view: T => MutableNumericOps[T],
         upAdd: BinaryUpdateOp[T,T,OpAdd],
         opAdd: BinaryOp[T,T,OpAdd,T],
         opSub: BinaryOp[T,T,OpSub,T],

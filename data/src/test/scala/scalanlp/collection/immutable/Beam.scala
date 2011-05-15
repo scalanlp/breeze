@@ -33,7 +33,7 @@ class BeamTest extends FunSuite with Checkers {
   }
   test("addition doesn't go over size") {
     check( Prop.forAll{ (size: Int, cl: List[Int]) => (size <= 0) || {
-        val beam = new Beam[Int](size.abs) ++ cl;
+        val beam:Beam[Int] = new Beam[Int](size.abs) ++ cl;
         beam.size <= size.abs && (cl.size < size.abs || beam.size == size.abs);
       }
     })

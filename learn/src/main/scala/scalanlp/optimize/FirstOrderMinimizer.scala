@@ -17,12 +17,12 @@ trait FirstOrderMinimizer[T,-DF<:DiffFunction[T]]
   extends Minimizer[T,DF] with Logged with CheckedConvergence[T] {
 
   type History;
-  case class State protected[FirstOrderMinimizer](x: T, value: Double,
-                                                  grad: T,
-                                                  adjustedValue: Double,
-                                                  adjustedGradient: T,
-                                                  iter: Int,
-                                                  history: History, failures: Int = 0);
+  case class State(x: T, value: Double,
+                   grad: T,
+                   adjustedValue: Double,
+                   adjustedGradient: T,
+                   iter: Int,
+                   history: History, failures: Int = 0);
 
 
   def iterations(f: DF,init: T): Iterator[State];
