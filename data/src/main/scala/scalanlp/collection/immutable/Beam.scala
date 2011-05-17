@@ -96,7 +96,7 @@ class Beam[T](val maxSize:Int, xs : T*)(implicit o : Ordering[T]) extends Iterab
 
 object Beam {
  implicit def canBuildFrom[T<%Ordered[T]] = new CanBuildFrom[Beam[T],T,Beam[T]] {
-   def apply() = error("Sorry, need a max size")
+   def apply() = sys.error("Sorry, need a max size")
 
    def apply(from: Beam[T]) = from.newBuilder;
  }
