@@ -24,6 +24,7 @@ import scalala.collection.sparse.{DefaultArrayValue, SparseArray}
 import scalala.tensor.dense.DenseVector
 import scalala.tensor.dense.DenseVectorCol
 import scalala.tensor.sparse._
+import scalanlp.tensor.sparse.OldSparseVector
 
 
 /**
@@ -39,6 +40,11 @@ trait Encoder[T] {
    */
   def mkSparseVector(): SparseVector[Double] = {
     SparseVector.zeros[Double](index.size);
+  }
+
+  /** Creates an old style OldSparseVector with the given defaults */
+  def mkOldSparseVector(default: Double = 0.0):OldSparseVector = {
+    new OldSparseVector(index.size, default);
   }
 
   /**
@@ -64,6 +70,7 @@ trait Encoder[T] {
     }
     ctr
   }
+
 
   /**
    * Encodes a DoubleCounter as a Vector[Double]. All elements in the counter must be in the index.
