@@ -46,4 +46,6 @@ package object util extends DoubleImplicits with IteratorImplicits with SeqImpli
 
   def trace[T](a: T) = {println(a); a}
 
+  def I(b: Boolean) = if (b) 1.0 else 0.0
+
 }

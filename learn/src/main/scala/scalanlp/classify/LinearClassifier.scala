@@ -128,6 +128,7 @@ object LFMatrix {
       }
     }
   }
+
 }
 
 object LinearClassifier {

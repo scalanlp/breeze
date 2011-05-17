@@ -66,16 +66,16 @@ object SVM {
       val dataSeq = data.toIndexedSeq;
       val default = dataSeq(0).label;
 
-      def guess(w: LFMatrix[L,T], x: T, y: L): L = {
+      def guess(w: LFMatrix[L,T], x: T, y: L): (L, Double) = {
         val scores = w * x
         if(scores.size == 0) {
-          default
+          (default,I(default != y))
         } else {
           val scoreY = scores(y);
           scores(y) = Double.NegativeInfinity
           val r = scores.argmax;
-          if(scores(r) + 1 > scoreY) r
-          else y;
+          if(scores(r) + 1 > scoreY) (r,1.0 + scores(r) - scoreY)
+          else (y,0.0);
         }
       }
 
@@ -86,27 +86,43 @@ object SVM {
         // i.e. those we don't classify correctly
         val problemSubset = (for {
           ex <- subset.iterator
-          r = guess(w,ex.features,ex.label)
+          (r,loss) = guess(w,ex.features,ex.label)
           if r != ex.label
-        } yield (ex,r)).toSeq;
+        } yield (ex,r,loss)).toSeq;
 
+
+        val loss = problemSubset.iterator.map(_._3).sum;
 
         val rate = 1 / (regularization * (iter.toDouble + 1));
         log(Log.INFO)("rate: " + rate);
-        log(Log.INFO)("subset size: " + subset.size);
+        log(Log.INFO)("subset size: " + problemSubset.size);
         val w_half = problemSubset.foldLeft(w * (1-rate * regularization)) { (w,exr) =>
-          val (ex,r) = exr
+          val (ex,r, oldLoss) = exr
           val et = ex.features * (rate/subset.size);
+          println("Inner:" + norm(ex.features,2) + " " + (rate/subset.size));
           w(ex.label) += et
           w(r) -= et
+          println(oldLoss,guess(w,ex.features,ex.label));
           w
         }
 
+
         val w_norm = (1 / (sqrt(regularization) * norm(w_half,2))) min 1;
+        println("Pre:" + norm(w,2));
         w = w_half * w_norm;
-        log(Log.INFO)(w);
-        log(Log.INFO)("iter: " + iter);
-//        log(Log.INFO)("weights: " + w);
+        println("Post:" + norm(w,2));
+        log(Log.INFO)("iter: " + iter + " " + loss);
+
+
+        val problemSubset2 = (for {
+          ex <- subset.iterator
+          (r,loss) = guess(w,ex.features,ex.label)
+          if r != ex.label
+        } yield (ex,r,loss)).toSeq;
+
+
+        val loss2 = problemSubset2.iterator.map(_._3).sum;
+        log(Log.INFO)("Post loss: " + loss2);
       }
       new LinearClassifier(w,Counter[L,Double]());
     }
@@ -118,16 +134,19 @@ object SVM {
 
     val data = DataMatrix.fromURL(new java.net.URL("http://www-stat.stanford.edu/~tibs/ElemStatLearn/datasets/spam.data"),-1,dropRow = true);
     var vectors = data.rows.map(e => e map ((a:Seq[Double]) => DenseVector(a:_*)) relabel (_.toInt));
-    vectors = Rand.permutation(vectors.length).draw.map(vectors);
+    vectors = vectors.map { _.map{ v2 => v2 /norm(v2,2) }};
+    vectors = Rand.permutation(vectors.length).draw.map(vectors) take 10;
 
     println(vectors.length);
 
-    val trainer = new SVM.Pegasos[Int,DenseVector[Double]](1000,batchSize=10) with ConsoleLogging;
+    val trainer = new SVM.Pegasos[Int,DenseVector[Double]](100,batchSize=1000) with ConsoleLogging;
     val classifier = trainer.train(vectors);
     for( ex <- vectors.take(30)) {
       val guessed = classifier.classify(ex.features);
       println(guessed,ex.label);
     }
   }
+
+  class FobosTrainer()
 }
 
