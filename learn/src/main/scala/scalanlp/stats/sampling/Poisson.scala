@@ -60,7 +60,7 @@ class Poisson(val mean: Double)(implicit rand: RandBasis=Rand) extends DiscreteD
             if (s > u) return k2;
           }
         }
-        error("wtf");
+        sys.error("wtf");
       }
 
     }
@@ -75,4 +75,23 @@ class Poisson(val mean: Double)(implicit rand: RandBasis=Rand) extends DiscreteD
   def cdf(k:Int) = exp(logCdf(k));
 
   def variance = mean;
+  def mode = math.ceil(mean) - 1;
+
+  /** Approximate, slow to compute */
+  def entropy = {
+    val entr = mean * (1- log(mean))
+    var extra = 0.0
+    var correction = 0.0
+    var k = 0;
+    var meanmean = 1.0/mean;
+    do {
+      meanmean *= mean;
+      val ln_k_! = lgamma(k+1)
+      correction = meanmean * ln_k_! / exp(ln_k_!);
+      extra += correction;
+      k += 1
+    } while(correction > 1E-6)
+
+    entr + exp(-mean) * extra
+  }
 }

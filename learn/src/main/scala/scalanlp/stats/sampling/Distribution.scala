@@ -1,4 +1,4 @@
-package scalanlp.stats.sampling;
+package scalanlp.stats.sampling
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
@@ -67,4 +67,7 @@ trait DiscreteDistr[T] extends Measure[T] with Rand[T] {
 trait Moments[T] {
   def mean: T;
   def variance: T;
+  def entropy: Double
+  def mode: T
 }
+

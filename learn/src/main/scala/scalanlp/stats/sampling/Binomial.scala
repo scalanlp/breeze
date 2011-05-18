@@ -43,5 +43,8 @@ class Binomial(n: Int, p: Double)(implicit rand: RandBasis=Rand) extends Discret
 
   def mean = n * p;
   def variance = mean * (1 - p);
+  def mode = math.floor((n + 1)*p);
+  /** with an additive O(1/n) constant */
+  def entropy = .5 * math.log(2 * math.Pi * variance);
 
 }

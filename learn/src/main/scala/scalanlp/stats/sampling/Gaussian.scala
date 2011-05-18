@@ -65,12 +65,14 @@ class Gaussian(val mu :Double, val sigma : Double)(implicit rand: RandBasis = Ra
 
   def mean = mu;
   def variance = sigma * sigma;
+  def mode = mean;
+  def entropy = log(sigma) + .5 * log1p(log(math.Pi * 2));
 }
 
 object Gaussian extends ExponentialFamily[Gaussian,Double,(Double,Double)] {
   import expfam.{SufficientStatistic=>BaseSuffStat}
   final case class SufficientStatistic(n: Double, mean: Double, M2: Double) extends BaseSuffStat[SufficientStatistic] {
-    def *(weight: Double) = SufficientStatistic(n * weight, sum * weight, M2 * weight)
+    def *(weight: Double) = SufficientStatistic(n * weight, mean * weight, M2 * weight)
 
     // Due to Chan
     def +(t: SufficientStatistic) = {

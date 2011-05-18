@@ -17,7 +17,7 @@ package scalanlp.stats.sampling
 
 import math._;
 
-import scalala.library.Numerics.lgamma
+import scalala.library.Numerics.{lgamma,digamma}
 import scalala.tensor.Counter
 
 /**
@@ -63,6 +63,8 @@ class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends Contin
 
   def mean = a / (a + b);
   def variance = (a * b) / ( (a + b) * (a+b) * (a+b+1));
+  def mode = (a - 1) / (a+b - 2);
+  def entropy = logNormalizer - (a - 1) * digamma(a) - (b-1) * digamma(b) + (a + b - 2) * digamma(a + b);
   
 
 }

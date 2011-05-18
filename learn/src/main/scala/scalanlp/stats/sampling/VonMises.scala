@@ -31,7 +31,7 @@ import scalala.tensor.Counter
  *
  * @author dlwh
  */
-case class VonMises(mu: Double, k: Double)(implicit rand: RandBasis=Rand) extends ContinuousDistr[Double] {
+case class VonMises(mu: Double, k: Double)(implicit rand: RandBasis=Rand) extends ContinuousDistr[Double] with Moments[Double] {
   require( k >= 0, "K must be postive");
   require(mu <= math.Pi * 2 && mu >= 0, "Mu must be in the range [0,2pi]");
 
@@ -67,6 +67,11 @@ case class VonMises(mu: Double, k: Double)(implicit rand: RandBasis=Rand) extend
   }
   
   override lazy val toString = "VonMises(mu=" + mu + ", k=" + k + ")";
+
+  def mean = mu
+  def mode = mean
+  def variance = 1 - Bessel.i1(k) / Bessel.i0(k)
+  def entropy = -k * Bessel.i1(k) / Bessel.i0(k) + math.log(2 * math.Pi * Bessel.i0(k))
 }
 
 object VonMises {

@@ -66,7 +66,7 @@ class Dirichlet[T](prior: Counter[T,Double])(implicit rand: RandBasis = Rand) ex
   /**
    * Returns a Polya Distribution
    */
-  def predictive = new Polya(prior)(rand);
+  def predictive() = new Polya(prior)(rand);
 
 }
 

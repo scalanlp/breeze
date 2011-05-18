@@ -49,7 +49,7 @@ class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasis = R
     var zz = 0.0;
     if (shape == 1.0) {
       /* Exponential */
-      return scale * -math.log(rand.uniform.get);
+      scale * -math.log(rand.uniform.get);
     } else if (shape < 1.0) {
       /* Use Johnks generator */
       cc = 1.0 / shape;
@@ -61,7 +61,7 @@ class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasis = R
           return scale * -log(rand.uniform.get()) * xx / yy;
         }
       }
-      error("shouldn't get here");
+      sys.error("shouldn't get here");
     } else { /* shape > 1.0 */
       /* Use bests algorithm */
       bb = shape - 1.0;
@@ -80,12 +80,14 @@ class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasis = R
           }
         }
       }
-      error("shouldn't get here");
+      sys.error("shouldn't get here");
     }
   }
 
   def mean = shape * scale;
   def variance = mean * scale;
+  def mode = { require(shape >= 1); mean - shape}
+  def entropy = logNormalizer - (shape - 1) * digamma(shape) + shape
 }
 
 object Gamma {
