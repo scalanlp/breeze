@@ -93,9 +93,10 @@ object Gaussian extends ExponentialFamily[Gaussian,Double,(Double,Double)] {
 
   def distribution(p: (Double, Double)) = new Gaussian(p._1,p._2)
 
-  def likelihoodFunction(stats: SufficientStatistic):DiffFunction[(Double,Double)] = new DiffFunction[(Double,Double)] {
+  /*def likelihoodFunction(stats: SufficientStatistic):DiffFunction[(Double,Double)] = new DiffFunction[(Double,Double)] {
     def calculate(x: (Double, Double)) = {
       val objective =
     }
   }
+  */
 }

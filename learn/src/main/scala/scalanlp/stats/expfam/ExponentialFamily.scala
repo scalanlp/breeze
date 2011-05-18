@@ -15,6 +15,6 @@ trait ExponentialFamily[D<:Measure[T],T,Parameter]  {
   def emptySufficientStatistic:SufficientStatistic;
   def sufficientStatisticFor(t: T):SufficientStatistic;
   def mle(stats: SufficientStatistic):Parameter
-  def likelihoodFunction(stats: SufficientStatistic):DiffFunction[Parameter]
+//  def likelihoodFunction(stats: SufficientStatistic):DiffFunction[Parameter]
   def distribution(p: Parameter):D;
 }

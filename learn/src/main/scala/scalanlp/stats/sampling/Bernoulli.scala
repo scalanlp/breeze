@@ -1,4 +1,11 @@
 package scalanlp.stats.sampling
+
+import scalanlp.stats.expfam
+import scalanlp.stats.expfam.ExponentialFamily
+import scalanlp.util.I
+import scalanlp.stats.sampling.Gaussian.SufficientStatistic
+import java.lang.Math
+
 /*
  Copyright 2009 David Hall, Daniel Ramage
 
@@ -32,4 +39,21 @@ class Bernoulli(p: Double, rand: RandBasis = Rand) extends DiscreteDistr[Boolean
 
   def mean = p;
   def variance = p * (1-p);
+  def mode = I(p >= 0.5);
+  def entropy = -p * math.log(p) - (1 - p) * math.log1p(-p);
+}
+
+object Bernoulli extends ExponentialFamily[Bernoulli,Boolean,Double] {
+  case class SufficientStatistic(p: Double, n: Double) extends expfam.SufficientStatistic[SufficientStatistic] {
+    def *(weight: Double) = SufficientStatistic(p*weight,n*weight);
+    def +(t: SufficientStatistic) = SufficientStatistic(p + t.p,n+t.n);
+  }
+
+  def emptySufficientStatistic = SufficientStatistic(0,0);
+
+  def sufficientStatisticFor(t: Boolean) = SufficientStatistic(I(t),1);
+
+  def mle(stats: SufficientStatistic) = stats.p / stats.n;
+
+  def distribution(p: Double) = new Bernoulli(p);
 }
