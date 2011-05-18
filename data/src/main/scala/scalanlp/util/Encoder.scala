@@ -25,6 +25,7 @@ import scalala.tensor.dense.DenseVector
 import scalala.tensor.dense.DenseVectorCol
 import scalala.tensor.sparse._
 import scalanlp.tensor.sparse.OldSparseVector
+import scalanlp.collection.mutable.SparseArrayMap
 
 
 /**
@@ -137,6 +138,8 @@ trait Encoder[T] {
   def decode[V](array: Array[V]):Map[T,V] = {
     Map.empty ++ array.zipWithIndex.map{ case (v,i) => (index.get(i),v)}
   }
+
+  def fillSparseArrayMap[V:ClassManifest:DefaultArrayValue](default: =>V) = new SparseArrayMap[V](index.size, default)
 
   def mkSparseArray[V:ClassManifest:DefaultArrayValue] = new SparseArray[V](index.size);
   def decode[V](array: SparseArray[V]):Map[T,V] = {

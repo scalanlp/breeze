@@ -3,6 +3,9 @@ package scalanlp.tensor.sparse
 import scalala.scalar.Scalar
 import scalala.tensor.dense.DenseVector
 import scalala.tensor.mutable.{VectorLike, Vector}
+import java.util.Arrays
+import scalala.operators.{OpSub, OpAdd, BinaryOp}
+import scalala.generic.collection.CanMapValues
 
 /**
  *
@@ -73,7 +76,7 @@ class OldSparseVector(domainSize : Int, var default: Double = 0.0, initialNonzer
     data(offset)
   }
 
-  def activeElements = new Iterator[(Int,Double)] {
+  def activeIterator = new Iterator[(Int,Double)] {
     var offset = 0;
     override def hasNext = offset < used;
     override def next() = {
@@ -268,42 +271,46 @@ class OldSparseVector(domainSize : Int, var default: Double = 0.0, initialNonzer
     use(newIndex, newData, nz);
   }
 
-  def +=(c: Double) = {
+  def +=(c: Double):this.type = {
     default += c;
     var offset = 0;
     while(offset < used) {
       data(offset) += c;
       offset += 1;
     }
+    this
   }
 
-  def -=(c: Double) = {
+  def -=(c: Double):this.type = {
     default += c;
     var offset = 0;
     while(offset < used) {
       data(offset) -= c;
       offset += 1;
     }
+    this
   }
 
 
-  def *=(c: Double) = {
+  def *=(c: Double):this.type = {
     default += c;
     var offset = 0;
     while(offset < used) {
       data(offset) *= c;
       offset += 1;
     }
+    this
   }
 
 
-  def /=(c: Double) = {
+  def /=(c: Double):this.type = {
     default += c;
     var offset = 0;
     while(offset < used) {
       data(offset) /= c;
       offset += 1;
     }
+    this
   }
 
   /** Optimized implementation for SparseVector dot DenseVector. */
@@ -443,5 +450,56 @@ class OldSparseVector(domainSize : Int, var default: Double = 0.0, initialNonzer
     }
 
     sum;
+  }
+
+  def copy: OldSparseVector = {
+    val r = new OldSparseVector(length,default);
+    r.use(Arrays.copyOf(index,index.length),Arrays.copyOf(data,data.length), used);
+    r
+  }
+}
+
+object OldSparseVector {
+  implicit val canAddDouble: BinaryOp[OldSparseVector,Double,OpAdd,OldSparseVector] = new BinaryOp[OldSparseVector,Double,OpAdd,OldSparseVector] {
+    def opType = OpAdd;
+
+    def apply(v1: OldSparseVector, v2: Double) = {
+      v1.copy += v2
+    }
+  }
+
+  implicit val canSubDouble: BinaryOp[OldSparseVector,Double,OpSub,OldSparseVector] = new BinaryOp[OldSparseVector,Double,OpSub,OldSparseVector] {
+    def opType = OpSub;
+
+    def apply(v1: OldSparseVector, v2: Double) = {
+      v1.copy -= v2
+    }
+  }
+
+
+  implicit val canMapValues: CanMapValues[OldSparseVector,Double,Double,OldSparseVector] = new CanMapValues[OldSparseVector,Double,Double,OldSparseVector] {
+    def mapNonZero(from: OldSparseVector, fn: (Double) => Double) = {
+      val res = from.copy;
+      var offset = 0;
+      while(offset < res.activeSize) {
+        res(res.indexAt(offset)) = fn(res.valueAt(offset));
+        offset += 1;
+      }
+      if(res.default != 0.0) {
+        res.default = fn(res.default);
+      }
+      res
+    }
+
+    def map(from: OldSparseVector, fn: (Double) => Double) = {
+      val res = from.copy;
+      var offset = 0;
+      while(offset < res.activeSize) {
+        res(res.indexAt(offset)) = fn(res.valueAt(offset));
+        offset += 1;
+      }
+      res.default = fn(res.default);
+      res
+    }
   }
 }
