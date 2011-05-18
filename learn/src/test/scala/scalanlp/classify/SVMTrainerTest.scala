@@ -11,6 +11,6 @@ import scalanlp.util.ConsoleLogging
  * @author dlwh
  */
 @RunWith(classOf[JUnitRunner])
-class SVMTrainerTest extends ClassifierTrainerTestHarness {
-  def trainer[L]:Classifier.Trainer[L,Counter[String,Double]] = new Pegasos[L,Counter[String,Double]](10,batchSize=1);
+class SVMTrainerTest extends ClassifierTrainerTestHarness with ContinuousTestHarness {
+  def trainer[L,T]:Classifier.Trainer[L,Counter[T,Double]] = new Pegasos[L,Counter[T,Double]](200,batchSize=1);
 }

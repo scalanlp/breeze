@@ -10,5 +10,5 @@ import scalala.tensor.mutable.Counter
  */
 @RunWith(classOf[JUnitRunner])
 class NaiveBayesTrainerTest extends ClassifierTrainerTestHarness {
-  def trainer[L]:Classifier.Trainer[L,Counter[String,Double]] = new NaiveBayes.Trainer[L,String]();
+  def trainer[L,T]:Classifier.Trainer[L,Counter[T,Double]] = new NaiveBayes.Trainer[L,T]();
 }

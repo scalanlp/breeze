@@ -99,18 +99,14 @@ object SVM {
         val w_half = problemSubset.foldLeft(w * (1-rate * regularization)) { (w,exr) =>
           val (ex,r, oldLoss) = exr
           val et = ex.features * (rate/subset.size);
-          println("Inner:" + norm(ex.features,2) + " " + (rate/subset.size));
           w(ex.label) += et
           w(r) -= et
-          println(oldLoss,guess(w,ex.features,ex.label));
           w
         }
 
 
         val w_norm = (1 / (sqrt(regularization) * norm(w_half,2))) min 1;
-        println("Pre:" + norm(w,2));
         w = w_half * w_norm;
-        println("Post:" + norm(w,2));
         log(Log.INFO)("iter: " + iter + " " + loss);
 
 

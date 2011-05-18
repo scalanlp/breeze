@@ -14,7 +14,7 @@ trait Perceptron[L,-T] extends Classifier[L,T];
 
 
 object Perceptron {
-  class Trainer[L,F,T](implicit dotProduct: BinaryOp[T,T,OpMulInner,Double],
+  class Trainer[L,T](implicit dotProduct: BinaryOp[T,T,OpMulInner,Double],
                        zeros: CanCreateZerosLike[T,T],
                        numeric: T=>MutableNumericOps[T],
                        upAdd: BinaryUpdateOp[T,T,OpAdd],
@@ -41,7 +41,6 @@ object Perceptron {
             weights.getOrElseUpdate(ctr.argmax,zeros(feats)) -= feats;
           }
         }
-        println(weights)
       }
 
       result;
