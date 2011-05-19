@@ -14,7 +14,7 @@ trait Perceptron[L,-T] extends Classifier[L,T];
 
 
 object Perceptron {
-  class Trainer[L,T](implicit dotProduct: BinaryOp[T,T,OpMulInner,Double],
+  class Trainer[L,T](maxPasses: Int = 20)(implicit dotProduct: BinaryOp[T,T,OpMulInner,Double],
                        zeros: CanCreateZerosLike[T,T],
                        numeric: T=>MutableNumericOps[T],
                        upAdd: BinaryUpdateOp[T,T,OpAdd],
@@ -31,7 +31,7 @@ object Perceptron {
           r
         }
       };
-      for( ex <- it) {
+      for( i <- 0 until maxPasses;  ex <- it) {
         val l = ex.label;
         val feats = ex.features;
         val ctr = result.scores(feats);
