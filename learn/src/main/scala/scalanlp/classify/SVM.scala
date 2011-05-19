@@ -143,6 +143,50 @@ object SVM {
     }
   }
 
-  class FobosTrainer()
+  class SMOTrainer[L,T](maxIterations: Int=30, C: Double = 10.0)(implicit vspace: MutableInnerProductSpace[Double,T],
+               opAssign : BinaryUpdateOp[T,T,OpSet], canNorm: CanNorm[T]) extends Classifier.Trainer[L,T] {
+    type MyClassifier = LinearClassifier[L,LFMatrix[L,T],Counter[L,Double],T];
+
+    import vspace._;
+
+    def train( data: Iterable[Example[L, T]]) = {
+      val alphas = data.map { d => Counter[L,Double](d.label -> C)}.toArray
+      val weights = new LFMatrix[L,T](zeros(data.head.features));
+      val allLabels = data.iterator.map(_.label).toSet;
+      weights(data.head.label); // seed with one label
+      var largestChange = 10000.0;
+      for(iter <- 0 until maxIterations if largestChange > 1E-4) {
+        largestChange = 0.0
+        for{
+          (d,alpha) <- data zip alphas
+          label1 <- allLabels
+          label2 <- allLabels
+        } {
+          val oldA1 = alpha(label1);
+          val oldA2 = alpha(label2);
+          val loss1 = I(label1 != d.label)
+          val loss2 = I(label2 != d.label)
+          val feats = d.features
+          var t = ((loss1 - loss2) - (weights(label2).dot(feats) - weights(label1).dot(feats))) / (2 * feats.dot(feats));
+          if(!t.isNaN && t != 0.0) {
+            t = t max (-oldA1);
+            val newA1 = (oldA1 + t) min (oldA1 + oldA2);
+            val newA2 = (oldA2 - t) max 0;
+            alpha(label1) = newA1;
+            alpha(label2) = newA2;
+            weights(label1) += feats * (oldA1 - newA1)
+            weights(label2) += feats * (oldA2 - newA2)
+            largestChange = largestChange max (oldA1 - newA1).abs
+            largestChange = largestChange max (oldA2 - newA2).abs
+          }
+        }
+
+      }
+      new LinearClassifier(weights,Counter[L,Double]());
+    }
+  }
+
 }
+
+
 
