@@ -22,10 +22,12 @@ import org.scalatest.prop._;
 import org.scalacheck._;
 import org.junit.runner.RunWith
 
-import scalanlp.stats.DescriptiveStats._;
+import scalanlp.stats.DescriptiveStats._
 
 @RunWith(classOf[JUnitRunner])
-class GaussianTest extends FunSuite with Checkers {
+class GaussianTest extends FunSuite with Checkers with MomentsTestBase[Double] {
+
+
   import Arbitrary.arbitrary;
   test("Probability of mean") {
     check( Prop.forAll { (m: Double, s: Double)=> (s == 0) || {
@@ -35,13 +37,12 @@ class GaussianTest extends FunSuite with Checkers {
     })
   }
 
-  val NUM_SAMPLES = 20000;
-  val TOL = 1E-1;
-
-  test("mean and variance") {
-    val b = new Gaussian(mu=0,sigma=1.0);
-    val (m,v) = meanAndVariance(b.samples.take(NUM_SAMPLES));
-    assert(m < TOL && (v-1.0).abs < TOL);
+  implicit def arbDistr = Arbitrary {
+    for(mean <- arbitrary[Double].map{_.abs % 10000.0};
+        std <- arbitrary[Double].map {_.abs % 8.0 + .1}) yield new Gaussian(mean,std);
   }
 
-}  
+  def asDouble(x: Double) = x
+
+  def fromDouble(x: Double) = x
+}

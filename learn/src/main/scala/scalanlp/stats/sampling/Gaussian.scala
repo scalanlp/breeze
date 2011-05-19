@@ -30,12 +30,16 @@ import scalanlp.optimize.DiffFunction
  * 
  * @author dlwh
  */
-class Gaussian(val mu :Double, val sigma : Double)(implicit rand: RandBasis = Rand)
+case class Gaussian(mu :Double, sigma : Double)(implicit rand: RandBasis = Rand)
     extends ContinuousDistr[Double] with Moments[Double] {
   private val inner = rand.gaussian(mu,sigma);
   def draw() = inner.get();
 
   private val sqrt2 = math.sqrt(2.0);
+
+
+  override def toString() =  "Gaussian(" + mu + ", " + sigma + ")";
+
 
   /**
   * Computes the inverse cdf of the p-value for this gaussian.
@@ -57,7 +61,7 @@ class Gaussian(val mu :Double, val sigma : Double)(implicit rand: RandBasis = Ra
 
   override def unnormalizedLogPdf(t: Double) = { 
     val d = (t - mu)/sigma; 
-    d *d 
+    -d *d
   } 
   
   val normalizer = 1.0/sqrt(2 * Pi) / sigma;

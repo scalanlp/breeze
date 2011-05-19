@@ -16,7 +16,9 @@ package scalanlp.stats.sampling
 */
 
 import scalala.library.Numerics.lgamma;
-import math._;
+import math._
+import scalanlp.collection.immutable.BinomialHeap
+;
 
 /**
 * A binomial distribution returns how many coin flips out of n are heads,
@@ -27,10 +29,13 @@ import math._;
 * @param p the probability of any one being true
 */
 class Binomial(n: Int, p: Double)(implicit rand: RandBasis=Rand) extends DiscreteDistr[Int] with Moments[Double] {
-  require(n > 0);
-  require(p >= 0.0);
+  require(n > 0, "n must be positive!");
+  require(p >= 0.0, "p must be non-negative!");
   def probabilityOf(k: Int) = exp(logProbabilityOf(k));
-  
+
+  override def toString() = "Binomial(" + n + ", " + p + ")";
+
+
   override def logProbabilityOf(k: Int) = {
     require(n >= k);
     require(k >= 0);

@@ -39,7 +39,7 @@ trait ContinuousDistr[T] extends Measure[T] with Rand[T] {
   def pdf(x: T): Double  = math.exp(logPdf(x))
   def logPdf(x:T): Double = unnormalizedLogPdf(x) - logNormalizer;
   /** Returns the probability density function up to a constant at that point.*/
-  def unnormalizedPdf(x:T): Double = math.exp(unnormalizedPdf(x))
+  def unnormalizedPdf(x:T): Double = math.exp(unnormalizedLogPdf(x))
   
   def unnormalizedLogPdf(x:T): Double;
   def logNormalizer : Double;

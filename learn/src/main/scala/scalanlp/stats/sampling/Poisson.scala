@@ -25,6 +25,9 @@ import math._;
  */
 class Poisson(val mean: Double)(implicit rand: RandBasis=Rand) extends DiscreteDistr[Int] with Moments[Double] {
   private val ell = math.exp(-mean);
+
+  override def toString() = "Poisson(" + mean+")";
+
   // impl from winrand
   def draw():Int = {
     if(mean == 0) 0

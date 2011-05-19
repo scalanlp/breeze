@@ -25,28 +25,19 @@ import org.junit.runner.RunWith
 import scalanlp.stats.DescriptiveStats._;
 
 @RunWith(classOf[JUnitRunner])
-class GammaTest extends FunSuite with Checkers {
+class GammaTest extends FunSuite with Checkers with MomentsTestBase[Double] {
+
   import Arbitrary.arbitrary;
-  val arbDouble = Arbitrary(Arbitrary.arbitrary[Double].map(_ % 10000))
-  test("mode") {
-    implicit val ad = arbDouble;
-    check( Prop.forAll { (k1: Double, t: Double, k2: Double)=>  t == 0 || k1.abs < 1 || k1 == k2 || {
-        val b = new Gamma(k1.abs + 1,t.abs);
-        // mode is floor( (n+1) * p)
-        b.pdf( (k1.abs) * (t.abs) ) >= b.pdf( k2.abs)
-      }
-    })
+
+  def asDouble(x: Double) = x
+
+
+  def fromDouble(x: Double) = x
+
+  implicit def arbDistr = Arbitrary {
+    for(shape <- arbitrary[Double].map{_.abs % 10000.0 + 1.1}; // Gamma pdf at 0 not defined when shape == 1
+        scale <- arbitrary[Double].map {_.abs % 8.0 + 1.0}) yield new Gamma(shape,scale);
   }
 
-  val NUM_SAMPLES = 30000;
-  val TOL = 1E-2;
-
-  test("mean and variance -- sampling") {
-    val n = 10;
-    val d = 0.5;
-    val b = new Gamma(n,d);
-    val (m,v) = meanAndVariance(b.samples.take(NUM_SAMPLES).map(_.toDouble));
-    (m - b.mean).abs < TOL && (v - b.variance).abs < TOL;
-  }
 
 }  

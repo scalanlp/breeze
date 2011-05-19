@@ -35,6 +35,8 @@ class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasis = R
 
   override def unnormalizedLogPdf(x : Double) = (shape - 1) * log(x) - x/scale;
 
+  override def toString = "Gamma(" + shape + "," + scale + ")";
+
   // Copied from Teh
   def draw() : Double = { 
     var aa = 0.0;
@@ -86,7 +88,7 @@ class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasis = R
 
   def mean = shape * scale;
   def variance = mean * scale;
-  def mode = { require(shape >= 1); mean - shape}
+  def mode = { require(shape >= 1); mean - scale}
   def entropy = logNormalizer - (shape - 1) * digamma(shape) + shape
 }
 

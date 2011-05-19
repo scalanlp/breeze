@@ -22,29 +22,16 @@ import org.scalatest.prop._;
 import org.scalacheck._;
 import org.junit.runner.RunWith
 
-import scalanlp.stats.DescriptiveStats._;
+import scalanlp.util.I;
 
 @RunWith(classOf[JUnitRunner])
-class BernoulliTest extends FunSuite with Checkers {
+class BernoulliTest extends FunSuite with Checkers with MomentsTestBase[Boolean] {
   import Arbitrary.arbitrary;
-  test("Probability Of") {
-    check( Prop.forAll { (d2: Double)=> {
-        val d = d2.abs % 1.0;
-        val b = new Bernoulli(d);
-        b.probabilityOf(true) == d &&
-        b.probabilityOf(false) == (1-d)
-      }
-    })
+
+  implicit def arbDistr = Arbitrary {
+    for(p <- arbitrary[Double].map{_.abs % 1.0+1E-4}) yield new Bernoulli(p);
   }
 
-  val NUM_SAMPLES = 30000;
-  val TOL = 1E-2;
-
-  test("mean and variance -- sampling") {
-    val d = 0.5;
-    val b = new Bernoulli(d);
-    val (m,v) = meanAndVariance(b.samples.take(NUM_SAMPLES).map(x => if(x) 1.0 else 0.0));
-    (m - b.mean).abs < TOL && (v - b.variance).abs < TOL;
-  }
-
-}  
+  def asDouble(x: Boolean) = I(x)
+  def fromDouble(x: Double) = x != 0.0
+}

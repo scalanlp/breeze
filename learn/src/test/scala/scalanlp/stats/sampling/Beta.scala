@@ -25,18 +25,19 @@ import org.junit.runner.RunWith
 import scalanlp.stats.DescriptiveStats._;
 
 @RunWith(classOf[JUnitRunner])
-class BetaTest extends FunSuite with Checkers {
+class BetaTest extends FunSuite with Checkers with MomentsTestBase[Double] {
+
   import Arbitrary.arbitrary;
 
-  val NUM_SAMPLES = 30000;
-  val TOL = 1E-2;
+  def asDouble(x: Double) = x
 
-  test("mean and variance -- sampling") {
-    val alpha = 0.5;
-    val beta = 0.5;
-    val b = new Beta(alpha,beta);
-    val (m,v) = meanAndVariance(b.samples.take(NUM_SAMPLES));
-    (m - b.mean).abs < TOL && (v - b.variance).abs < TOL;
+
+  def fromDouble(x: Double) = x
+
+  implicit def arbDistr = Arbitrary {
+    for(a <- arbitrary[Double].map{_.abs % 10000.0 + 1.1};
+        b <- arbitrary[Double].map {_.abs % 8.0 + 1.1}) yield new Beta(a,b);
   }
+
 
 }  
