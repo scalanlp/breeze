@@ -153,7 +153,9 @@ class LBFGS[T](override val maxIter: Int, m: Int)(implicit protected val vspace:
     val iterates = search.iterations(ff)
     val targetState = iterates.find { case search.State(alpha,v) =>
       // sufficient descent
-      v < state.value + alpha * 0.0001 * normGradInDir
+      val r = v < state.value + alpha * 0.0001 * normGradInDir
+      if(!r) log(INFO)(".");
+      r
 
     }
     val search.State(alpha,currentVal) = targetState.getOrElse(throw new LineSearchFailed);

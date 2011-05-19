@@ -65,12 +65,14 @@ trait QuasiNewtonMinimizer[T] extends FirstOrderMinimizer[T,DiffFunction[T]] wit
        val stepScale = chooseStepSize(f, dir, adjGrad, state);
        log(INFO)("Scale:" +  stepScale);
        val step = dir * stepScale
-       val newX = x + step;
+       val newX:T = x + step;
        if (norm(step,2) <= 1E-20) {
          throw new StepSizeUnderflow;
        }
 
        val (newVal,newGrad) = f.calculate(newX);
+
+       log(INFO)("New Val: " + newVal);
 
        val newHistory = updateHistory(state, newGrad, newVal, dir);
 

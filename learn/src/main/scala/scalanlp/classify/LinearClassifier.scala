@@ -22,9 +22,10 @@ import scalanlp.data._;
 
 import scalala.tensor._;
 import mutable.Counter;
-import scalala.generic.collection.{CanCreateZerosLike, CanViewAsTensor1}
 import scalala.operators._
+import bundles.MutableInnerProductSpace
 import scalala.generic.math.CanNorm
+import scalala.generic.collection.{CanMapValues, CanCreateZerosLike, CanViewAsTensor1}
 ;
 
 /**
@@ -37,28 +38,27 @@ import scalala.generic.math.CanNorm
  * @author dlwh
  *
  */
-@serializable
 @SerialVersionUID(1L)
-class LinearClassifier[L,F,T2, TL, TF]
+class LinearClassifier[L,T2, TL, TF]
     (val featureWeights: T2, val intercepts: TL)
     (implicit viewT2 : T2<:<MatrixOps[T2], viewTL: TL <:<NumericOps[TL],
      vv: CanViewAsTensor1[TL,L,Double],
      add : BinaryOp[TL,TL,OpAdd,TL],
-     mulTensors : BinaryOp[T2,TF,OpMulMatrixBy,TL]) extends Classifier[L,TF] {
+     mulTensors : BinaryOp[T2,TF,OpMulMatrixBy,TL]) extends Classifier[L,TF] with Serializable {
   def scores(o: TF) = {
     val r:TL = featureWeights * o;
     vv(r + intercepts)
   }
 }
 
-class LFMatrix[L,TF](emptyTF: =>TF) extends MatrixOps[LFMatrix[L,TF]] {
+class LFMatrix[L,TF](emptyTF: =>TF) extends MutableNumericOps[LFMatrix[L,TF]] with MatrixOps[LFMatrix[L,TF]] {
   def repr = this;
   private val map = collection.mutable.Map[L,TF]();
 
-  private def empty = emptyTF
+  def empty = new LFMatrix[L,TF](emptyTF);
 
   def apply(label: L) = {
-    map.getOrElseUpdate(label,empty);
+    map.getOrElseUpdate(label,emptyTF);
   }
 
   def update(label: L, tf: TF) = {
@@ -96,7 +96,7 @@ object LFMatrix {
       def opType = op.opType;
 
       def apply(v1: LFMatrix[L, TF], v2: Double) = {
-        val r = new LFMatrix[L,TF](v1.empty)
+        val r = v1.empty;
         for( (l,tf) <- v1.map) {
           r(l) = op(tf,v2);
         }
@@ -105,18 +105,116 @@ object LFMatrix {
     }
   }
 
-  implicit def lfBinaryOp2[L,TF]
+  implicit def lfBinaryOpBackwards[L,TF,Op<:OpType]
+  (implicit op: BinaryOp[Double,TF,Op,TF], numeric: TF=>NumericOps[TF])
+  : BinaryOp[Double,LFMatrix[L,TF],Op,LFMatrix[L,TF]]  = {
+    new BinaryOp[Double,LFMatrix[L,TF],Op,LFMatrix[L,TF]] {
+      def opType = op.opType;
+
+      def apply(v2: Double, v1: LFMatrix[L, TF]) = {
+        val r = v1.empty;
+        for( (l,tf) <- v1.map) {
+          r(l) = op(v2,tf);
+        }
+        r
+      }
+    }
+  }
+
+  implicit def lfBinaryTFOp[L,TF,Op<:OpType]
+  (implicit op: BinaryOp[TF,TF,Op,TF], numeric: TF=>NumericOps[TF])
+  : BinaryOp[LFMatrix[L,TF],LFMatrix[L,TF],Op,LFMatrix[L,TF]]  = {
+    new BinaryOp[LFMatrix[L,TF],LFMatrix[L,TF],Op,LFMatrix[L,TF]] {
+      def opType = op.opType;
+
+      def apply(v2: LFMatrix[L,TF], v1: LFMatrix[L, TF]) = {
+        val r = v1.empty;
+        val visited = scala.collection.mutable.Set[L]()
+        for( (l,tf) <- v1.map) {
+          visited += l;
+          r(l) = op(v2(l),tf);
+        }
+
+        for( (l,tf) <- v2.map if !visited(l)) {
+          r(l) = op(tf,v1(l));
+        }
+
+        r
+      }
+    }
+  }
+
+  implicit def lfInnerOp[L,TF]
+  (implicit op: BinaryOp[TF,TF,OpMulInner,Double], numeric: TF=>NumericOps[TF])
+  : BinaryOp[LFMatrix[L,TF],LFMatrix[L,TF],OpMulInner,Double]  = {
+    new BinaryOp[LFMatrix[L,TF],LFMatrix[L,TF],OpMulInner,Double] {
+      def opType = op.opType;
+
+      def apply(v2: LFMatrix[L,TF], v1: LFMatrix[L, TF]) = {
+        val visited = scala.collection.mutable.Set[L]()
+        var r = 0.0
+        for( (l,tf) <- v1.map) {
+          visited += l;
+          r += op(v2(l),tf);
+        }
+
+        for( (l,tf) <- v2.map if !visited(l)) {
+          r += op(tf,v1(l));
+        }
+        r
+      }
+    }
+  }
+
+  implicit def lfBinaryOp2[L,TF,Op]
   (implicit op: BinaryOp[TF,Double,OpMul,TF], numeric: TF=>NumericOps[TF])
   : BinaryOp[LFMatrix[L,TF],Double,OpMulMatrixBy,LFMatrix[L,TF]]  = {
     new BinaryOp[LFMatrix[L,TF],Double,OpMulMatrixBy,LFMatrix[L,TF]] {
       def opType = OpMulMatrixBy;
 
       def apply(v1: LFMatrix[L, TF], v2: Double) = {
-        val r = new LFMatrix[L,TF](v1.empty)
+        val r = v1.empty;
         for( (l,tf) <- v1.map) {
           r(l) = tf * v2;
         }
         r
+      }
+    }
+  }
+
+  implicit def lfUpdateOp[L,TF,Op<:OpType]
+  (implicit op: BinaryUpdateOp[TF,Double,Op], numeric: TF=>NumericOps[TF])
+  : BinaryUpdateOp[LFMatrix[L,TF],Double,Op]  = {
+    new BinaryUpdateOp[LFMatrix[L,TF],Double,Op] {
+      def opType = op.opType;
+
+      def apply(v1: LFMatrix[L, TF], v2: Double) = {
+        val r = v1.empty;
+        for( (l,tf) <- v1.map) {
+          op(tf,v2);
+        }
+        r
+      }
+    }
+  }
+
+  implicit def lfBinaryTFUpdateOp[L,TF,Op<:OpType]
+  (implicit op: BinaryUpdateOp[TF,TF,Op], numeric: TF=>NumericOps[TF])
+  : BinaryUpdateOp[LFMatrix[L,TF],LFMatrix[L,TF],Op]  = {
+    new BinaryUpdateOp[LFMatrix[L,TF],LFMatrix[L,TF],Op] {
+      def opType = op.opType;
+
+      def apply(v2: LFMatrix[L,TF], v1: LFMatrix[L, TF]) {
+        val visited = scala.collection.mutable.Set[L]()
+        for( (l,tf) <- v1.map) {
+          visited += l;
+          op(v2(l),tf);
+        }
+
+        for( (l,tf) <- v2.map if !visited(l)) {
+          op(tf,v1(l));
+        }
+
       }
     }
   }
@@ -126,6 +224,33 @@ object LFMatrix {
       def apply(v1: LFMatrix[L, TF], v2: Double) = {
         v1.map.valuesIterator.map(op.apply(_,v2)).sum;
       }
+    }
+  }
+
+  implicit def hasValuesMonadic[L,TF](lfMatrix: LFMatrix[L,TF])(implicit hasValues: TF=>HasValuesMonadic[TF,Double])
+    : HasValuesMonadic[LFMatrix[L, TF], Double]  = {
+    new HasValuesMonadic[LFMatrix[L,TF],Double] {
+      def values = new ValuesMonadic[LFMatrix[L,TF],Double] {
+        def repr = lfMatrix;
+      }
+    }
+  }
+
+  implicit def canMapValues[L,TF](implicit cmf: CanMapValues[TF,Double,Double,TF]) = new CanMapValues[LFMatrix[L,TF],Double,Double,LFMatrix[L,TF]] {
+    def mapNonZero(from: LFMatrix[L, TF], fn: (Double) => Double) = {
+      val r = from.empty;
+      for( (l,tf) <- from.map) {
+        r(l) = cmf.mapNonZero(tf,fn);
+      }
+      r
+    }
+
+    def map(from: LFMatrix[L, TF], fn: (Double) => Double) = {
+      val r = from.empty;
+      for( (l,tf) <- from.map) {
+        r(l) = cmf.map(tf,fn);
+      }
+      r
     }
   }
 

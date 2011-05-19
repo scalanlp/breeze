@@ -19,28 +19,30 @@ package scalanlp.classify;
 
 import scalala.tensor._;
 
+import dense.{DenseVectorCol, DenseVector}
 import scalanlp.data._;
-import scalanlp.optimize._;
+import scalanlp.optimize._
+import scalala.operators.bundles.MutableInnerProductSpace
+import scalala.library.Numerics._
+import scalala.library.Library._;
+import scalala.generic.math.CanNorm
+import scalanlp.util.{ConsoleLogging, I}
+;
 
 /**
  * A multi-class logistic/softmax/maxent classifier. It's currently unsmoothed (no regularization)
  * but I hope to fix that at some point.
  *
  * @author dlwh
+ */
 object LogisticClassifier {
 
 
   def main(args: Array[String]) {
-    import scalala.Scalala._
-    import scalala.tensor.operators.DenseMatrixOps._
-    import scalala.Scalala._
-    import scalanlp.data._
-    import scalala.tensor.dense._;                                                                                           
-
     val data = DataMatrix.fromURL(new java.net.URL("http://www-stat.stanford.edu/~tibs/ElemStatLearn/datasets/spam.data"),-1);
-    val vectors = data.rows.map(e => e map ((a:Seq[Double]) => new DenseVector(a.toArray)) relabel (_.toInt))
+    val vectors = data.rows.map(e => e map ((a:Seq[Double]) => new DenseVectorCol(a.toArray)) relabel (_.toInt))
 
-    val classifier = new LogisticClassifier.Trainer[Int,Int,DenseMatrix,DenseVector,DenseVector].train(vectors);
+    val classifier = new LogisticClassifier.Trainer[Int,DenseVector[Double]].train(vectors);
     for( ex <- vectors) {
       val guessed = classifier.classify(ex.features);
       println(guessed,ex.label);
@@ -48,7 +50,7 @@ object LogisticClassifier {
   }
 
 
-    /**
+  /**
    * @param L: the label type
    * @param F: the feature type
    * @param: T2: the Matrix with labels as "rows" and features as "column"
@@ -57,82 +59,62 @@ object LogisticClassifier {
    * @param data: a sequence of labeled examples
    * @return a LinearClassifier based on the fitted model
    */
-  class Trainer[L,F,T2<:Tensor2[L,F] with TensorSelfOp[(L,F),T2,Shape2],
-      TL<:Tensor1[L] with TensorSelfOp[L,TL,Shape1Col],
-      TF<:Tensor1[F] with TensorSelfOp[F,TF,Shape1Col]]
-      (implicit tpb: TensorProductBuilder[T2,TF,TL,Shape2,Shape1Col,Shape1Col],
-        ta: TensorArith[(L,F),T2,Tensor2[L,F],Shape2],
-        tla: Tensor1Arith[L,TL,TL,Shape1Col],
-        datasetModel: DatasetModel[L,F,T2,TL,TF]) extends Classifier.Trainer[L,TF] {
+  class Trainer[L,TF]()(implicit arith: MutableInnerProductSpace[Double,TF], canNorm: CanNorm[TF]) extends Classifier.Trainer[L,TF] {
+    import arith._;
 
-    type MyClassifier = LinearClassifier[L,F,T2,TL,TF];
-
-    protected val linearizer = TensorLinearizer[(L,F),T2]();
-    import linearizer._;
+    type MyClassifier = LinearClassifier[L,LFMatrix[L,TF],Counter[L,Double],TF];
 
     def train(data: Iterable[Example[L,TF]]) = {
       require(data.size > 0);
+      val labelSet = Set.empty ++ data.iterator.map(_.label);
+      val allLabels = labelSet.toSeq;
 
-      val guess = datasetModel.emptyParameterMatrix(data.toSeq);
+      val guess = new LFMatrix[L,TF](zeros(data.head.features));
+      for(l <- labelSet) guess(l) = zeros(data.head.features);
 
-      val obj = objective(data.toIndexedSeq);
+      val obj = objective(data.toIndexedSeq)
 
-      val flatWeights = opt.minimize(obj,linearize(guess));
-      val weights = reshape(flatWeights);
-      new LinearClassifier[L,F,T2,TL,TF](weights,datasetModel.emptyLabelVector(data.toSeq));
+      val opt = new LBFGS[LFMatrix[L,TF]](100,7) with ConsoleLogging;
+
+      val weights = opt.minimize(obj,guess);
+      new LinearClassifier(weights,Counter[L,Double]());
     }
 
 
     protected def objective(data: IndexedSeq[Example[L,TF]]) = new ObjectiveFunction(data);
-    protected val opt:Minimizer[ProjectedTensor,BatchDiffFunction[(L,F),ProjectedTensor]] = {
-      new LBFGS[(L,F),ProjectedTensor](-1,5)(ops) with scalanlp.util.ConsoleLogging;
-    }
 
     // preliminaries: an objective function
-    protected class ObjectiveFunction(data: IndexedSeq[Example[L,TF]]) extends BatchDiffFunction[(L,F),ProjectedTensor] {
-
-      val basisLabel = data.head.label;
+    protected class ObjectiveFunction(data: IndexedSeq[Example[L,TF]]) extends BatchDiffFunction[LFMatrix[L,TF]] {
       val labelSet = Set.empty ++ data.iterator.map(_.label);
       val allLabels = labelSet.toSeq;
 
       // Computes the dot product for each label
-      def logScores(weights: T2, datum: TF) = {
-        val logScores = Map.empty ++ (for(label <- allLabels)
-                            yield (label,weights.getRow(label) dot datum));
-        logScores;
+      def logScores(weights: LFMatrix[L,TF], datum: TF): Counter[L,Double] = {
+        weights * datum;
       }
-
-
 
       val fullRange = (0 until data.size)
 
-      override def calculate(flatWeights: ProjectedTensor, range: IndexedSeq[Int]) = {
+      override def calculate(weights: LFMatrix[L,TF], range: IndexedSeq[Int]) = {
         var ll = 0.0;
-        val weights = reshape(flatWeights);
-        val grad = weights.like;
+        val grad = weights.empty;
 
         for( datum <- range.view map data) {
           val logScores = this.logScores(weights,datum.features);
-          val logNormalizer = logSum(logScores.valuesIterator.toSeq);
+          val logNormalizer = softmax(logScores);
           ll -= (logScores(datum.label) - logNormalizer);
           assert(!ll.isNaN);
 
           // d ll/d weight_kj = \sum_i x_ij ( I(group_i = k) - p_k(x_i;Beta))
-          for {
-            label <- allLabels
-            if label != basisLabel
-            prob_k = math.exp(logScores(label) - logNormalizer)
-            () = assert(prob_k >= 0 && prob_k <= 1,prob_k);
-            shift = if(label == datum.label) (1-prob_k) else -prob_k
-            (feat,featValue) <- datum.features
-          } {
-            grad(label,feat) -= featValue * shift;
+          for ( label <- allLabels ) {
+            val prob_k = math.exp(logScores(label) - logNormalizer)
+            assert(prob_k >= 0 && prob_k <= 1,prob_k);
+            grad(label) -= datum.features * (I(label == datum.label) - prob_k);
           }
         }
-        (ll,linearize(grad));
+        (ll,grad);
       }
     }
   }
 
 }
-*/
