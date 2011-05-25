@@ -113,7 +113,7 @@ class OldSparseVector(domainSize : Int, var default: Double = 0.0, initialNonzer
     if (i >= size)
       throw new IndexOutOfBoundsException("index >= size (" + index + " >= " + size + ")");
 
-    val lastIndex = index(lastOffset);
+    val lastIndex = if(lastOffset < 0) -1 else index(lastOffset);
 
     if (i == lastIndex) {
       // previous element; don't need to update lastOffset
