@@ -137,7 +137,7 @@ object Semiring {
       val zero = Double.NegativeInfinity;
       override def closeTo(x: Double, y: Double) = {
         if(x == y) true
-        else if(x == 0) math.abs(y)  < 1E-7;
+        else if(x.abs < 1E-7) math.abs(y)  < 1E-7;
         else math.abs( (x-y)/x)  < 1E-5;
       }
       /**
