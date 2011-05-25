@@ -21,7 +21,7 @@ import scalala.tensor._;
 import scalala.tensor.dense.DenseVector;
 import scalala.library.Library._;
 
-import scalanlp.stats.sampling._;
+import scalanlp.stats.distributions._;
 
 import scalanlp.util._;
 import Log._

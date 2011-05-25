@@ -5,7 +5,7 @@ import generic.collection.{CanMapValues, CanCreateZerosLike}
 import operators._
 import bundles.MutableInnerProductSpace
 import scalanlp.util._;
-import scalanlp.stats.sampling._
+import scalanlp.stats.distributions._
 import scalala.generic.math.{CanSqrt, CanNorm}
 import scalala.library.Library.norm;
 import scalala.tensor.mutable;

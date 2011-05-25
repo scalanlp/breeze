@@ -295,7 +295,7 @@ object LinearClassifier {
   }
 
   def testLR = {
-    import scalanlp.stats.sampling.Rand;
+    import scalanlp.stats.distributions.Rand;
     
     val trueDataGen = for { 
       x <- Rand.gaussian(4,1);

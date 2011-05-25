@@ -40,9 +40,9 @@ class NaiveBayes[L,W](c: Iterable[Example[L,Counter[W,Double]]],
 
 
   private val (wordCounts:Counter2[L,W,Double],classCounts: Counter[L,Double], vocabSize: Int) =  {
-    // p(c)
+    // numYes(c)
     val classCounts = Counter[L,Double]();
-    // p(w|c)
+    // numYes(w|c)
     val wordCounts = Counter2[L,W,Double]();
     val myC = c;
     val allWords = scala.collection.mutable.Set[W]();

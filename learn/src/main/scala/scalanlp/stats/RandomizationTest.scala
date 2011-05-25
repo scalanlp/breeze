@@ -20,7 +20,7 @@ package scalanlp.stats;
 import scala.collection.mutable.{Seq=>_,_};
 import scalanlp.data._;
 import scalanlp.classify._;
-import sampling._;
+import distributions._;
 
 /** Implements statistical significance testing for the output of two systems by randomization. 
 * This system assumes they're on the same dataset, which changes the procedure.

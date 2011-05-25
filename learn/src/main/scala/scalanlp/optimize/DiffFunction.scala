@@ -20,6 +20,7 @@ import scalala.generic.math.CanNorm
 import scalala.library.Library.norm
 import scalala.operators.{NumericOps, OpAdd, OpMul, BinaryOp}
 import scalala.operators.bundles.VectorSpace
+import scalanlp.util.Lens
 ;
 
 /**
@@ -27,7 +28,7 @@ import scalala.operators.bundles.VectorSpace
 *
 * @author dlwh
 */
-trait DiffFunction[T] extends (T=>Double) {
+trait DiffFunction[T] extends (T=>Double) { outer =>
   /** calculates the gradient at a point */
   def gradientAt(x: T): T = calculate(x)._2;
   /** calculates the value at a point */
@@ -37,6 +38,15 @@ trait DiffFunction[T] extends (T=>Double) {
 
   /** Calculates both the value and the gradient at a point */
   def calculate(x:T):(Double,T);
+
+  def throughLens[U](implicit l: Lens[T,U]) = new DiffFunction[U] {
+    def calculate(u: U) = {
+      val t = l.backward(u);
+      val (obj,gu) = outer.calculate(t);
+      (obj,l.forward(gu));
+    }
+  }
+
 }
 
 object DiffFunction {

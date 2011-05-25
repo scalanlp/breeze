@@ -23,7 +23,7 @@ import scalanlp.data.Example
 import scalala.operators._
 import bundles.MutableInnerProductSpace
 import scalala.tensor._
-import scalanlp.stats.sampling.Rand
+import scalanlp.stats.distributions.Rand
 import scalala.generic.math.CanNorm
 import scalala.generic.collection.CanCreateZerosLike
 
