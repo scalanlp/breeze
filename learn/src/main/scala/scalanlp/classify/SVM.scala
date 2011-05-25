@@ -143,8 +143,7 @@ object SVM {
     }
   }
 
-  class SMOTrainer[L,T](maxIterations: Int=30, C: Double = 10.0)(implicit vspace: MutableInnerProductSpace[Double,T],
-               opAssign : BinaryUpdateOp[T,T,OpSet], canNorm: CanNorm[T]) extends Classifier.Trainer[L,T] {
+  class SMOTrainer[L,T](maxIterations: Int=30, C: Double = 10.0)(implicit vspace: MutableInnerProductSpace[Double,T], canNorm: CanNorm[T]) extends Classifier.Trainer[L,T] {
     type MyClassifier = LinearClassifier[L,LFMatrix[L,T],Counter[L,Double],T];
 
     import vspace._;
