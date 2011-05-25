@@ -21,7 +21,7 @@ class SparseArrayMap[@specialized T:ClassManifest:DefaultArrayValue](val length:
 
   override def iterator = array.activeIterator;
 
-  override def apply(i: Int) = array(i);
+  override def apply(i: Int) = array.getOrElse(i,default);
 
   def getOrElseUpdate(i: Int): T = getOrElseUpdate(i, default);
 
