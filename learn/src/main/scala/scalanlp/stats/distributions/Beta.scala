@@ -1,4 +1,5 @@
-package scalanlp.stats.distributions
+package scalanlp.stats
+package distributions
 /*
  Copyright 2009 David Hall, Daniel Ramage
 
@@ -19,6 +20,8 @@ import math._;
 
 import scalala.library.Numerics.{lgamma,digamma}
 import scalala.tensor.Counter
+import scalala.tensor.dense.DenseVector
+import scalanlp.optimize.{DiffFunction, LBFGS}
 
 /**
  * The Beta distribution, which is the conjugate prior for the Bernoulli distribution
@@ -67,4 +70,45 @@ class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends Contin
   def entropy = logNormalizer - (a - 1) * digamma(a) - (b-1) * digamma(b) + (a + b - 2) * digamma(a + b);
   
 
+}
+
+object Beta extends ExponentialFamily[Beta,Double] {
+  type Parameter = (Double,Double)
+  case class SufficientStatistic(n: Double, meanLog: Double, meanLog1M: Double) extends distributions.SufficientStatistic[SufficientStatistic]  {
+    def *(weight: Double) = SufficientStatistic(n*weight,meanLog * weight, meanLog1M * weight);
+    def +(t: SufficientStatistic) = {
+      val delta = t.meanLog - meanLog;
+      val newMeanLog = meanLog + delta * (t.n /(t.n + n));
+      val logDelta = t.meanLog1M - meanLog1M
+      val newMeanLog1M = meanLog1M + logDelta * (t.n /(t.n + n));
+      SufficientStatistic(n+t.n, newMeanLog, newMeanLog1M)
+    }
+  }
+
+  def emptySufficientStatistic = SufficientStatistic(0,0,0);
+
+  def sufficientStatisticFor(t: Double) = SufficientStatistic(1,math.log(t),math.log1p(-t));
+
+  def mle(stats: SufficientStatistic): (Double, Double) = {
+    val lensed = likelihoodFunction(stats).throughLens[DenseVector[Double]];
+    val lbfgs = new LBFGS[DenseVector[Double]](100,3)
+    val startingA = stats.meanLog // MoM would include variance, meh.
+    val startingB = stats.meanLog1M // MoM would include variance, meh
+    val result = lbfgs.minimize(lensed,DenseVector(startingA,startingB));
+    val res@(a,b) = (result(0),result(1));
+    res
+  }
+
+  def distribution(ab: Parameter) = new Beta(ab._1,ab._2);
+
+  def likelihoodFunction(stats: SufficientStatistic):DiffFunction[(Double,Double)] = new DiffFunction[(Double,Double)]{
+    import stats.n
+    def calculate(x: (Double, Double)) = {
+      val (a,b) = x;
+      val obj = n * (lgamma(a) + lgamma(b) - lgamma(a+b) - (a-1)*stats.meanLog - (b-1) *stats.meanLog1M);
+      val gradA = n * (digamma(a) - digamma(a+b) - stats.meanLog)
+      val gradB = n * (digamma(b) - digamma(a+b) - stats.meanLog1M)
+      (obj,(gradA,gradB))
+    }
+  }
 }
