@@ -18,6 +18,9 @@ package scalanlp.stats.distributions
 import scalala.library.Numerics.lgamma;
 import math._
 import scalanlp.collection.immutable.BinomialHeap
+import scalanlp.stats.distributions
+import scalanlp.util._
+import scalanlp.optimize.DiffFunction
 ;
 
 /**
@@ -49,7 +52,8 @@ class Binomial(n: Int, p: Double)(implicit rand: RandBasis=Rand) extends Discret
   def mean = n * p;
   def variance = mean * (1 - p);
   def mode = math.floor((n + 1)*p);
-  /** with an additive O(1/n) constant */
+  /** with an additive O(1/n) term */
   def entropy = .5 * math.log(2 * math.Pi * variance);
 
 }
+
