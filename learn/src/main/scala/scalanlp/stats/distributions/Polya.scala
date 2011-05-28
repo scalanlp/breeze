@@ -30,7 +30,7 @@ import scalala.operators.{BinaryOp, OpAdd}
 class Polya[T](prior: Counter[T,Double])(implicit rand: RandBasis=Rand) extends DiscreteDistr[T] {
   private val innerDirichlet = new Dirichlet(prior)(rand);
   def draw() = {
-    Multinomial(innerDirichlet.draw)(rand).get;
+    Multinomial(innerDirichlet.draw).get;
   }
   
   lazy val logNormalizer = -lbeta(prior);

@@ -18,83 +18,101 @@ package scalanlp.stats.distributions;
 
 import scalanlp.util.Log
 import scalala.tensor.Counter
+import scalanlp.optimize.DiffFunction
+import scalala.generic.collection.{CanViewAsTensor1, CanMapValues, CanCreateZerosLike}
+import scalala.operators._
+import scalala.tensor.mutable.{Tensor1, Tensor}
+import scalala.generic.math.CanSoftmax
+import scalala.library.Library
 
 /**
  * Represents a multinomial Distribution over elements.
  *
  * @author dlwh
  */
-trait Multinomial[T] extends DiscreteDistr[T] {
-  protected def components : Counter[T,Double];
-  protected def sum : Double;
-  protected implicit val rand: RandBasis;
+case class Multinomial[T,@specialized(Int) I](params: T)(implicit ev: CanViewAsTensor1[T,I,Double], rand: RandBasis=Rand) extends DiscreteDistr[I] {
+  val sum = ev(params).sum;
+  require(sum != 0.0);
 
   // check rep
-  for ((k,v) <- components.pairsIterator) {
+  for ((k,v) <- ev(params).pairsIterator) {
     if (v < 0) {
       throw new IllegalArgumentException("Multinomial has negative mass at index "+k);
     }
   }
-  
-  def draw() = {
+
+  def draw():I = {
     var prob = rand.uniform.get() * sum;
-    if(prob.isNaN) {
-      Log.globalLog(Log.ERROR)("You got a NaN!");
+    assert(!prob.isNaN, "NaN Probability!");
+    for((i,w) <- ev(params).pairsIteratorNonZero) {
+      prob -= w;
+      if(prob <= 0) return i;
     }
-    val elems = components.pairsIterator;
-    var (e,w:Double) = elems.next;
-    prob  = prob - w;
-    while(prob > 0) {
-      val t  = elems.next;
-      e = t._1;
-      prob = prob - t._2;
-    }
-    e
+    ev(params).keysIteratorNonZero.next
   }
 
-  def probabilityOf(e : T) = components.apply(e) / sum;
-  def logProbabilityOf(c: Counter[T,Double]) = {
-    val probs = for( (k,v) <- c.pairs) yield v * math.log(components.apply(k) / sum);
-    probs.foldLeft(0.0)(_+_);
-  }
-  override def unnormalizedProbabilityOf(e:T) = components.apply(e);
-  
-  override def toString = components.pairsIterator.mkString("Multinomial{",",","}")
+  def probabilityOf(e : I) = ev(params)(e) / sum;
+  override def unnormalizedProbabilityOf(e:I) = ev(params)(e)/sum;
+
+  override def toString = ev(params).pairsIterator.mkString("Multinomial{",",","}")
+
+
 }
 
-/** 
+
+/**
  * Provides routines to create Multinomial
  * @author(dlwh)
  */
 object Multinomial {
 
-  /**
-   * Returns a Multinomial where the probability of each element in the counter
-   * is proportional to its count.
-   */
-  def apply[T](c : Counter[T,Double])(implicit r: RandBasis=Rand)  = new Multinomial[T] {
-    val sum = c.sum;
-    if(sum.isNaN || sum <= 0.) throw new IllegalArgumentException("sum is " + sum);
-    protected def components = c;
-    protected val rand = r;
-  }
-
-  /**
-   * Returns a Multinomial where the probability of each element in the counter
-   * is proportional to its count.
-   */
-  def fromCounter[T](c:Counter[T,Double])(implicit rand: RandBasis=Rand) = apply(c)(rand);
-
-  /**
-   * Returns a Multinomial where the probability is proportional to a(i).
-   * Takes the sum for speed.
-   */
-  def apply(arr : Array[Double], t: Double)(implicit r: RandBasis) = new Multinomial[Int] {
-    lazy val components = {
-      val c = Counter[Int,Double](arr.zipWithIndex.map(_.swap):_*)
-      c;
+  class ExpFam[T,I](exemplar: T)
+                   (implicit ev: T<:<NumericOps[T] with HasValuesMonadic[T,Double],
+                    view: T=>Tensor1[I,Double],
+                    opAdd: BinaryOp[T,T,OpAdd,T],
+                    opSubScalar: BinaryOp[T,Double,OpSub,T],
+                    opSubTensor: BinaryOp[T,T,OpSub,T],
+                    opMulScalar: BinaryOp[T,Double,OpMul,T],
+                    opMulTensor: BinaryOp[T,T,OpMul,T],
+                    zeros: CanCreateZerosLike[T,T],
+                    canMapValues: CanMapValues[T,Double,Double,T],
+                    softmax: CanSoftmax[T]) extends ExponentialFamily[Multinomial[T,I],I] {
+    type Parameter = T
+    case class SufficientStatistic(t: T) extends scalanlp.stats.distributions.SufficientStatistic[SufficientStatistic] {
+      def +(tt: SufficientStatistic) = SufficientStatistic(ev(t) + tt.t);
+      def *(w: Double) = SufficientStatistic(ev(t) * w);
     }
-    val rand = r;
-    def sum = t;
+
+    def emptySufficientStatistic = SufficientStatistic(zeros(exemplar));
+
+    def sufficientStatisticFor(t: I) = {
+      val r = zeros(exemplar)
+      r(t) = 1.0
+      SufficientStatistic(r);
+    }
+
+    def mle(stats: SufficientStatistic) = ev(stats.t).values.map(math.log _);
+
+    def likelihoodFunction(stats: SufficientStatistic) = new DiffFunction[T] {
+      def calculate(x: T) = {
+        val nn: T = Library.logNormalize(x);
+        val lp = nn :* stats.t sum;
+
+        val sum = stats.t.sum
+
+        val exped = ev(nn).values.map(math.exp _);
+        val grad = ev(ev(exped) * sum) - stats.t;
+
+        (-lp,grad)
+      }
+    }
+
+    def distribution(p: Parameter) = {
+      implicit val view2 = new CanViewAsTensor1[T,I,Double] {
+        def apply(from: T) = view(from);
+      }
+      new Multinomial(ev(p).values.map(math.exp _));
+    }
   }
+
 }
