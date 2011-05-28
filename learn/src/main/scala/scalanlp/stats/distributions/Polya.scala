@@ -28,24 +28,24 @@ import scalala.operators.{BinaryOp, OpAdd}
  * @author dlwh
  */
 class Polya[T](prior: Counter[T,Double])(implicit rand: RandBasis=Rand) extends DiscreteDistr[T] {
-  private val innerDirichlet = new Dirichlet(prior)(rand);
+  private val innerDirichlet = new Dirichlet(prior);
   def draw() = {
     Multinomial(innerDirichlet.draw).get;
   }
-  
+
   lazy val logNormalizer = -lbeta(prior);
-  
+
   def probabilityOf(x: T):Double = {
     val ctr = Counter[T,Double]();
     ctr(x) += 1;
     probabilityOf(ctr);
   }
-  
+
   def probabilityOf(x: Counter[T,Double]) = math.exp(logProbabilityOf(x));
   def logProbabilityOf(x: Counter[T,Double]) = {
     math.exp(unnormalizedLogProbabilityOf(x) + logNormalizer);
   }
-  
+
   def unnormalizedLogProbabilityOf(x: Counter[T,Double]):Double = {
     val adjustForCount = x.valuesIterator.foldLeft(lgamma(x.sum+1))( (acc,v) => acc-lgamma(v+1))
     adjustForCount + lbeta(x + prior);
