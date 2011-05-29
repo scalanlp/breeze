@@ -20,6 +20,8 @@ import scalanlp.math.Bessel;
 import scalala.library.Numerics;
 import math._
 import scalala.tensor.Counter
+import scalala.tensor.dense.DenseVector
+import scalanlp.optimize.{LBFGS, DiffFunction}
 ;
 
 /**
@@ -32,7 +34,7 @@ import scalala.tensor.Counter
  * @author dlwh
  */
 case class VonMises(mu: Double, k: Double)(implicit rand: RandBasis=Rand) extends ContinuousDistr[Double] with Moments[Double] {
-  require( k >= 0, "K must be postive");
+  require( k >= 0, "K must be positive");
   require(mu <= math.Pi * 2 && mu >= 0, "Mu must be in the range [0,2pi]");
 
   override def unnormalizedLogPdf(theta:Double) = cos(theta - mu) * k;
@@ -46,22 +48,17 @@ case class VonMises(mu: Double, k: Double)(implicit rand: RandBasis=Rand) extend
 
   // rejection sampler based on the colt implementation
   private val myRandom = for {
-    u <- rand.uniform;
     v <- rand.uniform;
+    u <- rand.uniform;
     z = cos(Pi * u);
     w = (1.0 + r* z) / (r+z);
     c = k * (r - w);
-    reject = (c * (2.0 - c) < v) && (log(c/v) + 1.0 < c)
-    if !reject
+    accept = v < (c * (2.0 - c)) || v <= c * exp(1.0-c)
+    if accept
     choice <- rand.uniform
     theta = if(choice > 0.5) mu + acos(w) else mu -acos(w)
-  } yield theta % (2 * Pi);
+  } yield theta
 
-  /**
-   * This RNG seems to over-disperse the draws, based on
-   * several different maximum likelihood estimates. The
-   * dispersion is worse for large k. 
-   */
   def draw = {
     myRandom.draw
   }
@@ -74,11 +71,65 @@ case class VonMises(mu: Double, k: Double)(implicit rand: RandBasis=Rand) extend
   def entropy = -k * Bessel.i1(k) / Bessel.i0(k) + math.log(2 * math.Pi * Bessel.i0(k))
 }
 
-object VonMises {
+object VonMises extends ExponentialFamily[VonMises,Double] {
+  type Parameter = (Double,Double)
+  case class SufficientStatistic(n: Double, sines: Double, cosines: Double) extends scalanlp.stats.distributions.SufficientStatistic[SufficientStatistic] {
+    def +(t: SufficientStatistic) = new SufficientStatistic(n + t.n, sines + t.sines, cosines + t.cosines);
+
+    def *(weight: Double) = SufficientStatistic(weight * n, weight * sines, weight * cosines);
+  }
+
+  def emptySufficientStatistic = SufficientStatistic(0,0,0);
+
+
+  def sufficientStatisticFor(t: Double) = SufficientStatistic(1,sin(t),cos(t));
+  def distribution(p: Parameter) = new VonMises(p._1,p._2)
+
+
+  def mle(stats: SufficientStatistic): (Double, Double) = {
+    val lensed = likelihoodFunction(stats).throughLens[DenseVector[Double]];
+    val lbfgs = new LBFGS[DenseVector[Double]](100,3)
+    // Starting points due to Sra, 2009)
+    // http://en.wikipedia.org/wiki/Von_Mises-Fisher_distribution
+    val startingMu = asin(stats.sines/stats.n);
+    val rhat = sqrt(stats.sines * stats.sines + stats.cosines * stats.cosines) / stats.n
+    val startingK = rhat * (2 - rhat * rhat) / (1-rhat * rhat);
+    println(startingMu,startingK);
+    val result = lbfgs.minimize(lensed,DenseVector(startingMu,startingK));
+    val res@(a,b) = (result(0),result(1));
+    res
+  }
+
+  def likelihoodFunction(stats: SufficientStatistic) = new DiffFunction[(Double,Double)] {
+    def calculate(x: (Double,Double)) = {
+      val DELTA = 1E-5
+      val (mu,k) = x;
+      if( mu < 0 || mu > 2*Pi || k < 0) (Double.PositiveInfinity,(0.0,0.0))
+      else {
+        val (sinx,cosx) = (sin(mu),cos(mu));
+        val bessel_k = Bessel.i0(k)
+        val logprob = stats.n * math.log(bessel_k * 2* Pi) - (stats.sines * sinx + stats.cosines * cosx)*k
+        val mugrad = -k * (stats.sines * cos(mu) - stats.cosines * sin(mu))
+        val kgrad = stats.n * (Bessel.i1(k)/bessel_k)  - (stats.sines * sinx + stats.cosines * cosx)
+
+        (logprob,(mugrad,kgrad));
+
+      }
+
+    }
+  }
+
+
+
+
+
+  /*
+
   /**
    * Returns the maximum likelihood estimate of this distribution
    * For the given observations with (possibly pseudo-)counts
    */
+
   def mle(obs: Counter[Double,Double]) = {
     val sufStats = for {
       (o,count) <- obs.pairs
@@ -105,5 +156,6 @@ object VonMises {
     } */
     VonMises(mu,k)
   }
+  */
 }
 
