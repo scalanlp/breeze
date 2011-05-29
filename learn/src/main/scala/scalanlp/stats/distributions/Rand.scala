@@ -16,7 +16,7 @@ package scalanlp.stats.distributions;
  limitations under the License. 
 */
 
-import scala.collection.mutable.ArrayBuffer;
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * A trait for monadic distributions. Provides support for use in for-comprehensions
@@ -28,7 +28,7 @@ trait Rand[+T] { outer : Rand[T] =>
    */
   def draw() : T
   
-  def get() = draw;
+  def get() = draw();
 
   /**
    * Gets one sample from the distribution. Equivalent to get()
@@ -38,14 +38,14 @@ trait Rand[+T] { outer : Rand[T] =>
   /**
    * Gets n samples from the distribution. 
    */
-  def sample(n : Int) = List.tabulate(n)(x => get);
+  def sample(n : Int) = IndexedSeq.fill(n)(draw());
 
   /**
    * An infinitely long iterator that samples repeatedly from the Rand
    * @return an iterator that repeatedly samples
    */
   def samples:Iterator[T] = new Iterator[T] {
-    def hasNext() = true;
+    def hasNext = true;
     def next() = get();
   }
 
@@ -58,10 +58,8 @@ trait Rand[+T] { outer : Rand[T] =>
    * @param f the transform to apply to the sampled value.
    *
    */
-  def flatMap[E](f : T => Rand[E] ) =  {
-    new Rand[E] {
-      def draw = f(outer.get).get
-    }
+  def flatMap[E](f : T => Rand[E] ) = new Rand[E] {
+    def draw() = f(outer.draw()).draw();
   }
 
   /**
@@ -75,7 +73,7 @@ trait Rand[+T] { outer : Rand[T] =>
    */
   def map[E](f : T=>E) =  { 
     new Rand[E] {
-      def draw = f(outer.get);
+      def draw() = f(outer.get());
     }
   }
 
@@ -86,7 +84,7 @@ trait Rand[+T] { outer : Rand[T] =>
    * 
    * @param f the function to be applied
    */
-  def foreach(f : T=>Unit) = f(get);
+  def foreach(f : T=>Unit) = f(get());
 
   def filter(p: T=>Boolean) = condition(p);
 
@@ -95,9 +93,9 @@ trait Rand[+T] { outer : Rand[T] =>
   // Not the most efficient implementation ever, but meh.
   def condition(p : T => Boolean) = new Rand[T] {
     def draw() = {
-      var x = outer.get;
+      var x = outer.get();
       while(!p(x)) {
-        x = outer.get;
+        x = outer.get();
       }
       x
     }
@@ -118,9 +116,9 @@ class RandBasis(r: RandomGenerator) {
       val sz = uniform.get * c.size;
       val elems = c.iterator;
       var i = 1;
-      var e = elems.next;
+      var e = elems.next();
       while(i < sz) {
-        e = elems.next;
+        e = elems.next();
         i += 1;
       }
       e
