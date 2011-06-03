@@ -40,13 +40,13 @@ final class TriangularArray[T:ClassManifest](dim: Int, fill: (Int,Int)=>T) { out
      data(index(r,c)) = fill(r,c);
   }
 
-  final def update(r: Int, c: Int, t: T) { data(index(r,c))  = t }
+  def update(r: Int, c: Int, t: T) { data(index(r,c))  = t }
 
   @inline
-  final def apply(r: Int, c: Int)  = data(index(r,c));
+  def apply(r: Int, c: Int)  = data(index(r,c));
 
   @inline
-  final def apply(r: Int) = slice(r);
+  def apply(r: Int) = slice(r);
 
 
   private def slice(r: Int):Seq[T] = new Seq[T] {
@@ -75,7 +75,7 @@ object TriangularArray {
   @inline
   def index(r: Int, c: Int) = {
     if(r > c) require(r <= c, "row must be less than column!");
-    (c * (c-1) /2 + r);
+    (c * (c+1) /2 + r);
   }
 
   def raw[T:ClassManifest](dim: Int, fill: =>T) = {
