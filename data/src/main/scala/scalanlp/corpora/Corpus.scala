@@ -48,7 +48,7 @@ trait Corpus[+T] {
 * @author dlwh
 */
 trait JarCorpus[+T] extends Corpus[T] {
-  protected def mapFun(category:String, path:String, s: Reader):T
+  protected def mapFun(category:String, path:String, s: InputStream):T
 
   // Utility to read "k v" pairs from a resource.
   protected def stringsFromFile(cl: ClassLoader, s : String) = {
@@ -56,7 +56,7 @@ trait JarCorpus[+T] extends Corpus[T] {
     val src = Source.fromInputStream(strm);
     val result = (for{ line <- src.getLines();
                       trimmed = line.trim} 
-                      yield trimmed).toSeq;
+                      yield trimmed).toIndexedSeq;
     strm.close();
     result;
   }
@@ -77,12 +77,10 @@ trait JarCorpus[+T] extends Corpus[T] {
 
   lazy val splits = {
     Map[String,Seq[T]]() ++ categories.map { case(cat,res) =>
-      val paths = stringsFromFile(classLoader,res).view;
-      val data = for{ 
-        path <- paths;
-        strm = classLoader.getResourceAsStream(path)
-      } yield {
-        val result = mapFun(cat,path,new BufferedReader(new InputStreamReader(strm)));
+      val paths = stringsFromFile(classLoader,res).toStream;
+      val data = for (path <- paths) yield {
+        val strm = classLoader.getResourceAsStream(path)
+        val result = mapFun(cat,path,new BufferedInputStream(strm));
         strm.close();
         result;
       }
