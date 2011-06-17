@@ -222,7 +222,6 @@ with ByteSerialization {
   }
 
   // Scalala things
-  /*
   import scalala.tensor.dense._;
   import scalala.tensor.sparse._;
   implicit object DenseVectorReadWritable extends ReadWritable[DenseVector[Double]] {
@@ -231,6 +230,7 @@ with ByteSerialization {
     override def write(out : Output, v : DenseVector[Double]) { DataSerialization.write(out,v.data); }
   }
 
+  /*
   implicit object SparseVectorReadWritable extends ReadWritable[SparseVector[Double]] {
     override def read(in : DataInput) = {
       val size = in.readInt();
