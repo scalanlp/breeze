@@ -8,7 +8,7 @@ import scalala.tensor.mutable;
 import library.Library._;
 
 /**
- * 
+ * Approximates a gradient by finite differences.
  * @author dlwh
  */
 class ApproximateGradientFunction[K,T](f: T=>Double,
