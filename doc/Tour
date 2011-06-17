@@ -2,206 +2,6 @@ This document describes several of the major components of the 0.2 release of Sc
 
 h1. Important Packages 
 
-h2. <tt>counters</tt>
-
-Note that counters have moved to Scalala, but that you still have access to them from ScalaNLP.
-
-The counters package provides one of the essential tools in NLP.  Counters are basicaly HashMaps with a numerically typed value.  (The current implementations support Doubles and Ints). They're used to represent high-dimensional but sparse values, such as statistics for particular words or other features. 
-
-Creating counters can be done in a number of ways.
-<pre>
-<code>
-  scala> import scalala.tensor.counters.Counters._;
-  import scalala.tensor.counters.Counters._
-</code>
-</pre>
-
-First, you can just count things:
-<pre>
-<code>
-  scala> count(1,2,3)
-  res0: scalala.tensor.counters.Counters.IntCounter[Int] = 
-  scalala.tensor.counters.Counters$DefaultIntCounter[domain=Set(1, 2, 3) active=3 default=0]
-  ((1,1)
-   (2,1)
-   (3,1))
- 
- scala> val a = List(1,2,3);
- a: List[Int] = List(1, 2, 3)
- 
- scala> count(a)
- res1: scalala.tensor.counters.Counters.IntCounter[Int] = 
- scalala.tensor.counters.Counters$DefaultIntCounter[domain=Set(1, 2, 3) active=3 default=0]
-  ((1,1)
-   (2,1)
-   (3,1))
-</code>
-</pre>
-  
-You can also aggregate pairs of doubles:
-
-<pre>
-<code>
- scala> aggregate( (1,2.0), (2,3.0), (3,4.0) )
- res2: scalala.tensor.counters.Counters.DoubleCounter[Int] = 
- scalala.tensor.counters.Counters$DefaultDoubleCounter[domain=Set(1, 2, 3) active=3 default=0.0]
-  ((1,2.0)
-   (2,3.0)
-   (3,4.0))
-</code>
-</pre>
-
-You can also just create a Double or IntCounter. (Note there is no 'new'!)
-
-<pre>
-<code>
-  scala> val c = IntCounter[String]()
-  c: scalala.tensor.counters.Counters.IntCounter[String] = 
-  scalala.tensor.counters.Counters$DefaultIntCounter[domain=Set() active=0 default=0]
-   ()
- 
-  scala> c("Hello") = 1
- 
-  scala> c
-  res5: scalala.tensor.counters.Counters.IntCounter[String] = 
-  scalala.tensor.counters.Counters$DefaultIntCounter[domain=Set(Hello) active=0 default=0]
-   ((Hello,1))
-</code>
-</pre>
-
-Counters know their size (number of non-default valued keys), default value, and the total of all values in the counter. Note that it's actually possible to create counters that know other statistics.
-
-<pre>
-<code>
-  scala> val b = count(1,2,3,4,1,1)
-  b: scalala.tensor.counters.Counters.IntCounter[Int] = 
-  scalala.tensor.counters.Counters$DefaultIntCounter[domain=Set(1, 2, 3, 4) active=4 default=0]
-   ((1,3)
-    (2,1)
-    (3,1)
-    (4,1))
- 
-  scala> b.total
-  res6: Double = 6.0
-</code>
-</pre>
-
-h3. PairedCounters
-
-A closely related class is PairedDoubleCounter, which is basically the same except that it is a map from pairs of something to another type: <tt>(K1,K2)=>V</tt>.
-
-<pre>
-<code>
-  scala> val mat = PairedDoubleCounter[String,Int]();
-  mat: scalala.tensor.counters.Counters.PairedDoubleCounter[String,Int] = []
-
-  scala> mat("3",4) = 5.0; mat("hi!",3) = 6.0
-
-  scala> mat
-  res8: scalala.tensor.counters.Counters.PairedDoubleCounter[String,Int] = 
-  [((3,4),5.0),
-  ((hi!,3),6.0),
-  ]
- 
-  scala> mat.total
-  res9: Double = 11.0
-</code>
-</pre>
-
-PairedCounters also provide access to a K2=>V
-counter, which modify the internals of the PairedDoubleCounter.
-
-<pre>
-<code>
-  scala> mat("hi!")
-  res10: mat.DoubleCounter = 
-  scalala.tensor.counters.Counters$$anon$1[domain=Set(3) active=1 default=0.0]
-   ((3,6.0))
- 
-  scala> res10(6) = 11.0
- 
-  scala> mat
-  res14: scalala.tensor.counters.Counters.PairedDoubleCounter[String,Int] = 
-  [((3,4),5.0),
-  ((hi!,3),6.0),
-  ((hi!,6),11.0),
-  ]
-</code>
-</pre>
- 
-h3. Matrix Operations
-
-Another important facet of (Double)Counters is that they are also Tensorsfrom the Scalala linear algebra library. This means that we get
-things like matrix multiplication (PairedCounter * PairedCounter) for free.  For instance:
-
-<pre>
-<code>
-  scala> val y = PairedDoubleCounter[Int,Double]();                     
-  y: scalala.tensor.counters.Counters.PairedDoubleCounter[Int,Double] = []
- 
-  scala> val x = PairedDoubleCounter[String,Int]();                     
-  x: scalala.tensor.counters.Counters.PairedDoubleCounter[String,Int] = []
- 
-  scala> x("4",2) = 5; x("hi!",2) = 7;                                  
-  scala> y(2,1.0) = 42; y(2,42.0) = 3                                   
- 
-  scala> x
-  res0: scalala.tensor.counters.Counters.PairedDoubleCounter[String,Int] = 
-  [((hi!,2),7.0),
-  ((4,2),5.0),
-  ]
- 
-  scala> y
-  res1: scalala.tensor.counters.Counters.PairedDoubleCounter[Int,Double] = 
-  [((2,1.0),42.0),
-  ((2,42.0),3.0),
-  ]
- 
-  scala> x * y value
-  res2: scalala.tensor.counters.Counters.PairedDoubleCounter[String,Double] = 
-  [((hi!,1.0),294.0),
-  ((hi!,42.0),21.0),
-  ((4,1.0),210.0),
-  ((4,42.0),15.0),
-  ]
-</code>
-</pre>
-
-Most operations you can do to a Matrix you can do a PairedDoubleCounter, and most things you can do to a Vector you can do to a DoubleCounter.
-
-h2. stats.sampling
-
-The sampling package is perhaps misnamed: it includes probability distributions as well as sampling routines. The approach taken is to encode random number generators as a "monad", which means that they can be used in Scala for-comprehensions to create new random generators and compose them together. For example:
-
-<pre>
-<code>
-  scala> val negativeUniform = for( u <- Rand.uniform) yield -u;
-  negativeUniform: java.lang.Object with scalanlp.stats.sampling.Rand[Double] = scalanlp.stats.sampling.Rand$$anon$2@7464fb1c
-
-  scala> negativeUniform.sample(10);      
-  res2: List[Double] = List(-0.9948667414804051, -0.764770938027298, -0.27058341922450935, -0.5039489357855411, -0.5015343989361816, -0.8086984114692559, -0.33986204710236756, -0.525708716460873, -0.7617271434909493, -0.3807598326703686)
-
-  scala> val gaussian = for( u <- Rand.uniform; y <- Rand.gaussian(u*10,3.1)) yield y;
-  gaussian: java.lang.Object with scalanlp.stats.sampling.Rand[Double] = scalanlp.stats.sampling.Rand$$anon$1@71f2ba86
-
-  scala> gaussian.sample(10);                                                         
-  res4: List[Double] = List(3.601680497677195, 9.641105620362563, 13.517084845628528, 5.1039313703021225, 9.603679995565999, 1.2025990320986235, -3.3313072838776305, -1.4768403442753342, 5.619392993190006, 4.803988692726058)
-</code>
-</pre>
-
-For those of you used to the concept, for comprehensions let you write "generative stories" for new random data. If you're not, just think of these comprehensions as ways of writing little programs for generating random numbers.
-
-Rejection sampling (or conditioning) is also easy. For instance, to sample a random odd number:
-<pre>
-<code>
-  scala> val odd = for(x <- Rand.randInt if x % 2 == 1) yield x;         
-  odd: java.lang.Object with scalanlp.stats.sampling.Rand[Int] = scalanlp.stats.sampling.Rand$$anon$2@69b56985
-
-  scala> odd.sample(10) 
-  res20: List[Int] = List(2081979581, 729930353, 51800603, 1265418507, 1793688113, 1424445529, 1552890847, 97942263, 275586065, 1748560459)
-</code>
-</pre>
-
 h3. Distributions
 
 ScalaNLP also provides a fairly large number of probability distributions built in. These come with access to either probability density function (for discrete distributions) or pdf functions (for continuous distributions). Many distributions also have methods for giving the mean and the variance.
@@ -209,7 +9,7 @@ ScalaNLP also provides a fairly large number of probability distributions built 
 <pre>
 <code>
   scala> val poi = new Poisson(3.0);
-  poi: scalanlp.stats.sampling.Poisson = <function1>
+  poi: scalanlp.stats.distributions.Poisson = <function1>
 
   scala> poi.sample(10);
   res21: List[Int] = List(3, 5, 5, 2, 2, 1, 1, 2, 4, 1)
@@ -218,7 +18,7 @@ ScalaNLP also provides a fairly large number of probability distributions built 
   res23: List[Double] = List(0.6721254229661636, 0.504094067224622, 0.504094067224622, 0.44808361531077556, 0.44808361531077556, 0.1493612051035918, 0.1493612051035918, 0.44808361531077556, 0.6721254229661628, 0.1493612051035918)
   
   scala> val doublePoi = for(x <- poi) yield x.toDouble; // meanAndVariance requires doubles, but Poisson samples over Ints
-  doublePoi: java.lang.Object with scalanlp.stats.sampling.Rand[Double] = scalanlp.stats.sampling.Rand$$anon$2@2c98070c
+  doublePoi: java.lang.Object with scalanlp.stats.distributions.Rand[Double] = scalanlp.stats.distributions.Rand$$anon$2@2c98070c
 
   scala> scalanlp.stats.DescriptiveStats.meanAndVariance(doublePoi.samples.take(1000));
   res29: (Double, Double) = (3.018,2.9666426426426447)
@@ -228,26 +28,94 @@ ScalaNLP also provides a fairly large number of probability distributions built 
 </code>
 </pre>
 
-The sampling package also has limited support for conjugate priors:
+TODO: exponential families
+
+h3. Optimization
+
+ScalaNLP's optimization package includes several convex optimization routines and a simple linear program solver. Convex optimization routines typically take a
+DiffFunction[T], which is a Function1 extended to have a gradientAt method, which returns the gradient at a particular point. Most routines will require
+a Scalala enabled type: something like a Vector or a Counter.
+
+Here's a simple DiffFunction: a parabola along each vector's coordinate.
 
 <pre>
 <code>
 
-scala> val gam = new Gamma(2.0,1.0) with Gamma.PoissonPrior;
-gam: scalanlp.stats.sampling.Gamma with scalanlp.stats.sampling.Gamma.PoissonPrior = <function1>
+scala> import scalanlp.optimize._
+import scalanlp.optimize._
 
-scala> gam.mean
-res32: Double = 2.0
+scala> import scalala.tensor.dense._
+import scalala.tensor.dense._
 
-scala> val poiSamples = poi.sample(10);
-poiSamples: List[Int] = List(2, 2, 1, 3, 6, 3, 2, 3, 3, 3)
+scala> import scalala.library.Library.norm
+import scalala.library.Library.norm
 
-scala> val posterior = gam.posterior(scalala.tensor.counters.Counters.count(poiSamples))
-posterior: scalanlp.stats.sampling.Gamma.PoissonPosterior = <function1>
+scala>       val f = new DiffFunction[DenseVector[Double]] {
+     |         def calculate(x: DenseVector[Double]) = {
+     |           (norm((x -3) :^ 2,1),(x * 2) - 6);
+     |         }
+     |       }
+f: java.lang.Object with scalanlp.optimize.DiffFunction[scalala.tensor.dense.DenseVector[Double]] = $anon$1@7593da36
 
-scala> posterior.mean
-res41: Double = 2.7272727272727275
+
+scala> f.valueAt(DenseVector(0,0,0))
+res0: Double = 27.0
+
+scala> f.valueAt(DenseVector(3,3,3))
+res1: Double = 0.0
+
+scala> f.gradientAt(DenseVector(3,0,1))
+res2: scalala.tensor.dense.DenseVector[Double] = 
+ 0.00000
+-6.00000
+-4.00000
+
+scala> f.calculate(DenseVector(0,0))
+res3: (Double, scalala.tensor.dense.DenseVector[Double]) = 
+(18.0,-6.00000
+-6.00000)
 
 </code>
 </pre>
 
+You can also use approximate derivatives, if your function is easy enough to compute:
+
+<pre>
+<code>
+scala> def g(x: DenseVector[Double]) = (x - 3.0):^2 sum
+g: (x: scalala.tensor.dense.DenseVector[Double])Double
+
+scala> g(DenseVector(0.,0.,0.))
+res5: Double = 27.0
+
+scala> val diffg = new ApproximateGradientFunction(g)
+diffg: scalanlp.optimize.ApproximateGradientFunction[Int,scalala.tensor.dense.DenseVector[Double]] = <function1>
+
+scala> diffg.gradientAt(DenseVector(3,0,1))
+res6: scalala.tensor.dense.DenseVector[Double] = 
+ 1.00000e-05
+-5.99999
+-3.99999
+</code>
+<pre>
+
+Ok, now let's optimize f. The easiest routine to use is just LBFGS, which is a quasi-Newton method that works well for most problems.
+
+<code>
+<pre>
+
+scala> val lbfgs = new LBFGS[DenseVector[Double]](maxIter=100, m=3) // m is the memory. anywhere between 3 and 7 is fine. The larger m, the more memory is needed.
+lbfgs: scalanlp.optimize.LBFGS[scalala.tensor.dense.DenseVector[Double]] = scalanlp.optimize.LBFGS@c7d97d5
+
+scala> lbfgs.minimize(f,DenseVector(0,0,0))
+res7: scalala.tensor.dense.DenseVector[Double] = 
+ 3.00000
+ 3.00000
+ 3.00000
+
+
+scala> f(res7)
+res8: Double = 0.0
+
+</code>
+</pre>
