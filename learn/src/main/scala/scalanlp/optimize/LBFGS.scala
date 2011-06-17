@@ -43,7 +43,7 @@ import scalala.tensor.dense.DenseVector
  * @param maxIter: maximum number of iterations, or &lt;= 0 for unlimited
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
-class LBFGS[T](override val maxIter: Int, m: Int)(implicit protected val vspace: MutableInnerProductSpace[Double,T], protected val canNorm: CanNorm[T]) extends QuasiNewtonMinimizer[T] with GradientNormConvergence[T] with Logged {
+class LBFGS[T](override val maxIter: Int, m: Int=3)(implicit protected val vspace: MutableInnerProductSpace[Double,T], protected val canNorm: CanNorm[T]) extends QuasiNewtonMinimizer[T] with GradientNormConvergence[T] with Logged {
 
   import vspace._;
   require(m > 0);
