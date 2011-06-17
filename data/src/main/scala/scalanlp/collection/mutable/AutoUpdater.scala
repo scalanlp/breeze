@@ -22,5 +22,9 @@ class AutoUpdater[M,K,V](val theMap: M, default: =>V)(implicit ev: M<:<Map[K,V])
 }
 
 object AutoUpdater {
-  def apply[M, K, V](map: M, default: =>V)(implicit ev: M<:<Map[K,V]) = new AutoUpdater[M,K,V](map, default);
+  def apply[M, K, V](map: M, default: =>V)(implicit ev: M<:<Map[K,V]): AutoUpdater[M, K, V] = new AutoUpdater[M,K,V](map, default);
+  def apply[K,V](default: =>V):AutoUpdater[Map[K,V],K,V] = apply(Map[K,V](),default);
+  def ofKeys[K] = new {
+    def andValues[V](v: =>V) = apply[K,V](v);
+  }
 }
