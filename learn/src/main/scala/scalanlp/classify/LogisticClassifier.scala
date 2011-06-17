@@ -74,7 +74,7 @@ object LogisticClassifier {
 
       val obj = objective(data.toIndexedSeq)
 
-      val opt = new LBFGS[LFMatrix[L,TF]](100,7) with ConsoleLogging;
+      val opt = new LBFGS[LFMatrix[L,TF]](100,7);
 
       val weights = opt.minimize(obj,guess);
       new LinearClassifier(weights,Counter[L,Double]());
