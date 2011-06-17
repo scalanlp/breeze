@@ -39,6 +39,10 @@ trait DiffFunction[T] extends (T=>Double) { outer =>
   /** Calculates both the value and the gradient at a point */
   def calculate(x:T):(Double,T);
 
+  /**
+   * Lenses provide a way of mapping between two types, which we typically
+   * use to convert something to a DenseVector or other Tensor for optimization purposes.
+   */
   def throughLens[U](implicit l: Lens[T,U]) = new DiffFunction[U] {
     def calculate(u: U) = {
       val t = l.backward(u);
