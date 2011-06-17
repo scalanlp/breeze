@@ -21,7 +21,7 @@ object InteriorPoint {
     val m = A.numRows;
     val n = A.numCols;
     val x = DenseVector.zeros[Double](n)
-    assert((A * x0.asCol - b).valuesIterator.forall(_ <= 0));
+//    assert((A * x0.asCol - b).valuesIterator.forall(_ <= 0));
     x += x0;
     val s = DenseVector.zeros[Double](m);
     s += 1;
@@ -49,8 +49,7 @@ object InteriorPoint {
 
       val gap = (c dot x) + (b dot z);
       converged = gap.abs < 1E-6
-      assert(gap > -1E-3,gap);
-      println(x);
+//      assert(gap > -1E-3,gap);
     }
 
     x
