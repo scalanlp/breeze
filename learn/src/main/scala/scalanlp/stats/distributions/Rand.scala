@@ -30,6 +30,9 @@ trait Rand[+T] { outer : Rand[T] =>
   
   def get() = draw();
 
+  // Overridden by filter/map/flatmap for monadic invocations
+  protected def drawOpt():Option[T] = Some(draw());
+
   /**
    * Gets one sample from the distribution. Equivalent to get()
    */
@@ -58,8 +61,9 @@ trait Rand[+T] { outer : Rand[T] =>
    * @param f the transform to apply to the sampled value.
    *
    */
-  def flatMap[E](f : T => Rand[E] ) = new Rand[E] {
-    def draw() = f(outer.draw()).draw();
+  def flatMap[E](f : T => Rand[E] ):Rand[E] = new Rand[E] {
+    def draw() = Iterator.continually(f(outer.draw()).drawOpt()).find(_.nonEmpty).get.get;
+    override def drawOpt() = outer.drawOpt().flatMap(t => f(t).drawOpt())
   }
 
   /**
@@ -71,9 +75,10 @@ trait Rand[+T] { outer : Rand[T] =>
    * @param f the transform to apply to the sampled value.
    *
    */
-  def map[E](f : T=>E) =  { 
+  def map[E](f : T=>E):Rand[E] =  {
     new Rand[E] {
       def draw() = f(outer.get());
+      override def drawOpt() = outer.drawOpt().map(f);
     }
   }
 
@@ -91,13 +96,17 @@ trait Rand[+T] { outer : Rand[T] =>
   def withFilter(p: T=>Boolean) = condition(p);
 
   // Not the most efficient implementation ever, but meh.
-  def condition(p : T => Boolean) = new Rand[T] {
+  def condition(p : T => Boolean):Rand[T] = new Rand[T] {
     def draw() = {
       var x = outer.get();
       while(!p(x)) {
         x = outer.get();
       }
       x
+    }
+
+    override def drawOpt() = {
+      Some(outer.get()).filter(p);
     }
   }
 
