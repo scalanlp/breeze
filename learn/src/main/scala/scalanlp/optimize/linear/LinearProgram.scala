@@ -11,7 +11,11 @@ import sparse.SparseVector
  * @author dlwh
  */
 class LinearProgram {
-  private var nextId = 0;
+  private var _nextId = 0;
+  private def nextId = {
+    _nextId += 1
+    _nextId - 1
+  }
   private val variables = new ArrayBuffer[Variable]();
 
   sealed trait Problem { outer =>
@@ -35,6 +39,9 @@ class LinearProgram {
     )
   }
 
+  /**
+   * Anything that can be built up from adding/subtracting/dividing and multiplying by constants
+   */
   sealed trait Expression extends Problem{ outer =>
     private[LinearProgram] def coefficients: Vector[Double];
     private[LinearProgram] def scalarComponent: Double = 0;
@@ -103,19 +110,39 @@ class LinearProgram {
   sealed trait Variable extends Expression {
     def name: String
     def id : Int
+    def size: Int = 1
+
+
+    override def toString = name
+  }
+
+  case class Positive(name: String = "x_" + nextId) extends Variable { variable =>
+    val id = variables.length
+    variables += this;
 
     private[LinearProgram] def coefficients = {
-      val v = SparseVector.zeros[Double](nextId)
-      v(id) = 1
+      val v = SparseVector.zeros[Double](variables.length)
+      for(i <- 0 until size) v(id + i) = 1.0
       v
     }
   }
 
-  case class Real(name: String = "x_" + nextId) extends Variable { variable =>
-    val id = { val id = nextId; nextId += 1; id}
-
+  case class Real(name: String="x_" + nextId) extends Variable {
+    val id = variables.length
     variables += this;
-    override def toString = name
+    variables += this;
+
+    private[LinearProgram] def coefficients = {
+      val v = SparseVector.zeros[Double](variables.length)
+      v(id) = 1
+      v(id+1) = -1
+      v
+    }
+  }
+
+  case class Result private[LinearProgram] (result: DenseVector[Double], problem: Problem) {
+    def valueOf(x: Expression) = {(x.coefficients dot result) + x.scalarComponent};
+    def value = valueOf(problem.objective);
   }
 
 
@@ -132,7 +159,8 @@ class LinearProgram {
       b(i) = cs.rhs.scalarComponent;
     }
 
-    InteriorPoint.minimize(A,b,-c, DenseVector.zeros[Double](variables.size) + 1.0);
+    val result = InteriorPoint.minimize(A,b,-c, DenseVector.zeros[Double](variables.size) + 1.0);
+    Result(result,objective)
   }
 
 }
@@ -141,8 +169,8 @@ class LinearProgram {
 /**
  * val lp = new LP;
  * import lp._;
- * val x = new Real("x");
- * val y = new Real("y");
+ * val x = new Positive("x");
+ * val y = new Positive("y");
  *
  * maximize ( (3 * x+ 4 * y)
  * subjectTo( x <= 3, y <= 1)
