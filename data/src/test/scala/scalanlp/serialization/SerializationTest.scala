@@ -95,7 +95,7 @@ trait CompoundSerializationTestBase extends SerializationTestBase {
     tuple2Test[Int,List[Int]]();
     tuple2Test[List[Int],String]();
     tuple2Test[List[List[String]],Map[String,Int]]();
-    tuple2Test[List[List[String]],Map[(Int,String,Int),(String,Double)]]();
+//    tuple2Test[List[List[String]],Map[(Int,String,Int),(String,Double)]]();
   }
 
   implicit def arbIndex[T:Arbitrary]:Arbitrary[Index[T]] = Arbitrary {
