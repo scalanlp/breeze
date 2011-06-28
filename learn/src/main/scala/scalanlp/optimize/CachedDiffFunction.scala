@@ -31,7 +31,7 @@ class CachedDiffFunction[T:CanCopy](obj: DiffFunction[T]) extends DiffFunction[T
  *
  * @author dlwh
  */
-class CachedBatchDiffFunction[K,T:CanCopy](obj: BatchDiffFunction[T]) extends BatchDiffFunction[T] {
+class CachedBatchDiffFunction[T:CanCopy](obj: BatchDiffFunction[T]) extends BatchDiffFunction[T] {
   /** calculates the gradient at a point */
   override def gradientAt(x: T, range: IndexedSeq[Int]): T = calculate(x,range)._2;
   /** calculates the value at a point */
