@@ -21,7 +21,6 @@ import scalanlp.collection.immutable.BinomialHeap
 import scalanlp.stats.distributions
 import scalanlp.util._
 import scalanlp.optimize.DiffFunction
-;
 
 /**
 * A binomial distribution returns how many coin flips out of n are heads,
