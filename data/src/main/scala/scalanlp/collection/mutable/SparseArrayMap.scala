@@ -13,6 +13,9 @@ class SparseArrayMap[@specialized T:ClassManifest:DefaultArrayValue](val length:
   val array = new SparseArray[T](length);
 
   def activeSize = array.activeLength;
+
+  def defaultValue = default
+
   override def size = activeSize;
 
   override def keysIterator = array.indexArray.iterator;
