@@ -20,38 +20,13 @@ import scalala.generic.math.CanNorm
 import scalala.library.Library.norm
 import scalala.operators.{NumericOps, OpAdd, OpMul, BinaryOp}
 import scalala.operators.bundles.VectorSpace
-import scalanlp.util.Lens
-;
 
 /**
-* Represents a differentiable function.
+* Represents a differentiable function whose output is guaranteed to be consistent
 *
 * @author dlwh
 */
-trait DiffFunction[T] extends (T=>Double) { outer =>
-  /** calculates the gradient at a point */
-  def gradientAt(x: T): T = calculate(x)._2;
-  /** calculates the value at a point */
-  def valueAt(x:T): Double = calculate(x)._1;
-
-  def apply(x:T) = valueAt(x);
-
-  /** Calculates both the value and the gradient at a point */
-  def calculate(x:T):(Double,T);
-
-  /**
-   * Lenses provide a way of mapping between two types, which we typically
-   * use to convert something to a DenseVector or other Tensor for optimization purposes.
-   */
-  def throughLens[U](implicit l: Lens[T,U]) = new DiffFunction[U] {
-    def calculate(u: U) = {
-      val t = l.backward(u);
-      val (obj,gu) = outer.calculate(t);
-      (obj,l.forward(gu));
-    }
-  }
-
-}
+trait DiffFunction[T] extends StochasticDiffFunction[T]
 
 object DiffFunction {
   def withL2Regularization[T](d: DiffFunction[T],weight: Double)
@@ -71,7 +46,7 @@ object DiffFunction {
       weight * math.pow(norm(x,2),2);
     }
 
-    private def myGrad(g: T, x: T) = {
+    private def myGrad(g: T, x: T):T = {
       g + (x * (2 * weight))
     }
 
@@ -83,7 +58,7 @@ object DiffFunction {
 
   def withL2Regularization[T](d: BatchDiffFunction[T],weight: Double)
                              (implicit canNorm: CanNorm[T],
-                              view: T <%< NumericOps[T],
+                              view: T => NumericOps[T],
                               addVector: BinaryOp[T,T,OpAdd,T],
                               mulScalar: BinaryOp[T,Double,OpMul,T]):BatchDiffFunction[T] = new BatchDiffFunction[T] {
     override def gradientAt(x:T, batch: IndexedSeq[Int]):T = {
@@ -113,31 +88,4 @@ object DiffFunction {
   }
 }
 
-/**
-* A diff function that supports subsets of the data
-*/
-trait BatchDiffFunction[T] extends DiffFunction[T] with ((T,IndexedSeq[Int])=>Double) {
-  /**
-  * Calculates the gradient of the function on a subset of the data
-  */
-  def gradientAt(x:T, batch: IndexedSeq[Int]) : T = calculate(x,batch)._2;
-  /**
-  * Calculates the value of the function on a subset of the data
-  */
-  def valueAt(x:T, batch: IndexedSeq[Int]) : Double = calculate(x,batch)._1
-  /**
-  * Calculates the value and gradient of the function on a subset of the data;
-  */
-  def calculate(x:T, batch: IndexedSeq[Int]): (Double,T)
 
-  override def calculate(x:T):(Double,T) = calculate(x,fullRange);
-  override def valueAt(x:T):Double = valueAt(x,fullRange)
-  override def gradientAt(x:T):T = gradientAt(x,fullRange)
-
-  def apply(x:T, batch:IndexedSeq[Int]) = valueAt(x,batch);
-
-  /**
-  * The full size of the data
-  */
-  def fullRange: IndexedSeq[Int];
-}

@@ -22,7 +22,7 @@ import scala.collection.mutable.ArrayBuffer
  * A trait for monadic distributions. Provides support for use in for-comprehensions
  * @author(dlwh)
  */
-trait Rand[+T] { outer : Rand[T] =>
+trait Rand[+T] { outer =>
   /**
    * Gets one sample from the distribution. Equivalent to sample()
    */
@@ -136,7 +136,6 @@ class RandBasis(r: RandomGenerator) {
 
   def choose[T](c : Seq[T]) = Rand.randInt(c.size).map( c(_));
 
-
   /**
    * The trivial random generator: always returns the argument
    */
@@ -192,10 +191,17 @@ class RandBasis(r: RandomGenerator) {
   }
 
   /**
-   * Uniformly samples an integer in [0,n]
+   * Uniformly samples an integer in [0,n)
    */
   def randInt(n : Int) = new Rand[Int] {
     def draw = r.nextInt(n);
+  }
+
+  /**
+   * Uniformly samples an integer in [n,m)
+   */
+  def randInt(n : Int, m: Int) = new Rand[Int] {
+    def draw = r.nextInt(m-n)+n;
   }
 
   /**
@@ -228,6 +234,24 @@ class RandBasis(r: RandomGenerator) {
         arr(k) = tmp;
       }
       arr;
+    }
+  }
+
+  /**
+   * Knuth shuffle of a subset of size n from a set
+   */
+  def subsetsOfSize(set: IndexedSeq[Int], n: Int) = new Rand[IndexedSeq[Int]] {
+    def draw = {
+      val arr = set.toArray
+      var i = 0
+      while( i < n.min(set.size)) {
+        val k = r.nextInt(set.size-i) + i
+        val temp = arr(i)
+        arr(i) = arr(k)
+        arr(k) = temp
+        i+=1
+      }
+      arr.take(n)
     }
   }
 }

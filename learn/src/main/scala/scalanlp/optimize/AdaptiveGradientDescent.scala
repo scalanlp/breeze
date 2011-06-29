@@ -22,7 +22,7 @@ object AdaptiveGradientDescent {
 
 
     case class History(sumOfSquaredGradients: T);
-    def initialHistory(f: BatchDiffFunction[T],init: T) = History(zeros(init));
+    def initialHistory(f: StochasticDiffFunction[T],init: T) = History(zeros(init));
     def updateHistory(oldState: State,newX: T,curValue: Double,curGrad: T) = {
       val oldHistory = oldState.history;
       val newG = oldHistory.sumOfSquaredGradients :+ (curGrad :* curGrad);
@@ -43,14 +43,13 @@ object AdaptiveGradientDescent {
   class L1Regularization[K,T](val lambda: Double=1.0,
                               delta: Double = 1E-5,
                               eta: Double=4,
-                              maxIter: Int=100,
-                              batchSize: Int = 50)(implicit vspace: MutableInnerProductSpace[Double,T],
+                              maxIter: Int=100)(implicit vspace: MutableInnerProductSpace[Double,T],
                                                    TisTensor: CanViewAsTensor1[T,K,Double],
                                                    TKVPairs: CanMapKeyValuePairs[T,K,Double,Double,T],
-                                                   canNorm: CanNorm[T]) extends StochasticGradientDescent[T](eta,maxIter,batchSize) {
+                                                   canNorm: CanNorm[T]) extends StochasticGradientDescent[T](eta,maxIter) {
     import vspace._;
     case class History(sumOfSquaredGradients: T);
-    def initialHistory(f: BatchDiffFunction[T],init: T)= History(zeros(init));
+    def initialHistory(f: StochasticDiffFunction[T],init: T)= History(zeros(init));
     def updateHistory(oldState: State,newX: T,curValue: Double,curGrad: T) = {
       val oldHistory = oldState.history;
       val newG = oldHistory.sumOfSquaredGradients :+ (curGrad :* curGrad)

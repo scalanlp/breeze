@@ -32,28 +32,26 @@ import scalala.tensor.mutable;
 * @author dlwh
 */
 abstract class StochasticGradientDescent[T](val eta: Double,
-                                            val maxIter: Int,
-                                            val batchSize: Int)
+                                            val maxIter: Int)
                                             (implicit protected val vspace: MutableInnerProductSpace[Double,T], protected val canNorm: CanNorm[T])
-  extends FirstOrderMinimizer[T,BatchDiffFunction[T]]
+  extends FirstOrderMinimizer[T,StochasticDiffFunction[T]]
                                       with GradientNormConvergence[T]
                                       with Logged {
 
   import vspace._;
 
   type History;
-  def initialHistory(f: BatchDiffFunction[T], init: T):History;
+  def initialHistory(f: StochasticDiffFunction[T], init: T):History;
   def updateHistory(oldState: State, newX: T, curValue: Double, curGrad: T):History
   protected def adjustGradient(grad: T, x: T): T = grad
   protected def adjustValue(value: Double, x: T): Double = value;
 
-  def iterations(f: BatchDiffFunction[T], init: T):Iterator[State] = {
+  def iterations(f: StochasticDiffFunction[T], init: T):Iterator[State] = {
     val it = Iterator.iterate(initialState(f,init)) { state =>
       val oldX = state.x
       val iter = state.iter;
-      val sample = chooseBatch(f,state);
 
-      val (value,grad: T) = f.calculate(oldX,sample);
+      val (value,grad: T) = f.calculate(oldX);
       log(Log.INFO)("SGD gradient norm: " + norm(grad,2));
       log(Log.INFO)("SGD value: " + value);
       val stepSize = chooseStepSize(state.copy(value=value,grad=grad));
@@ -71,20 +69,10 @@ abstract class StochasticGradientDescent[T](val eta: Double,
   /**
    * Chooses the initial state
    */
-  def initialState(f: BatchDiffFunction[T], init: T): State = {
+  def initialState(f: StochasticDiffFunction[T], init: T): State = {
     State(init,Double.PositiveInfinity,zeros(init), Double.PositiveInfinity, zeros(init), 0, initialHistory(f,init));
   }
 
-
-  /**
-  * Selects a sample of the data to evaluate on. By default, it does
-  * repeated sweeps.
-  */
-  def chooseBatch(f: BatchDiffFunction[T], state: State) = {
-    val offset = (batchSize * state.iter) % f.fullRange.size;
-    val batch = (offset until (offset + batchSize)) map (i =>f.fullRange(i%f.fullRange.size));
-    batch;
-  }
 
   /**
    * Projects the vector onto whatever ball is needed. Can also incorporate regularization, or whatever.
@@ -107,14 +95,15 @@ abstract class StochasticGradientDescent[T](val eta: Double,
 
 object StochasticGradientDescent {
   def apply[T](eta: Double=4, maxIter: Int=100, batchSize: Int = 50)(implicit vs: MutableInnerProductSpace[Double,T], canNorm: CanNorm[T]) :StochasticGradientDescent[T]  = {
-      new SimpleSGD(eta,maxIter,batchSize);
+      new SimpleSGD(eta,maxIter);
   }
 
-  class SimpleSGD[T] (eta: Double=4,
-                      maxIter: Int=100,
-                      batchSize: Int = 50)(implicit vs: MutableInnerProductSpace[Double,T], canNorm: CanNorm[T]) extends StochasticGradientDescent[T](eta,maxIter,batchSize) {
+  class SimpleSGD[T](eta: Double=4,
+                      maxIter: Int=100)
+                    (implicit vs: MutableInnerProductSpace[Double,T],
+                     canNorm: CanNorm[T]) extends StochasticGradientDescent[T](eta,maxIter) {
       type History = Unit
-      def initialHistory(f: BatchDiffFunction[T],init: T)= ()
+      def initialHistory(f: StochasticDiffFunction[T],init: T)= ()
       def updateHistory(oldState: State,newX: T,curValue: Double,curGrad: T) = ()
   }
 
