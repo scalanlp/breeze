@@ -20,7 +20,7 @@ import scalala.generic.collection.CanMapValues
  *
  * @author dramage, dlwh
  */
-class OldSparseVector(domainSize : Int, var default: Double = 0.0, initialNonzeros : Int = 0) extends Vector[Double] with VectorLike[Double,OldSparseVector] {
+class OldSparseVector(domainSize : Int, var default: Double = 0.0, initialNonzeros : Int = 0) extends Vector[Double] with VectorLike[Double,OldSparseVector] with Serializable {
   if (domainSize < 0)
     throw new IllegalArgumentException("Invalid domain size: "+domainSize);
 
