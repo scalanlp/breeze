@@ -21,6 +21,8 @@ import scala.collection.generic.{GenericCompanion, MapFactory}
 import scala.collection.mutable.{ArrayBuilder,Builder};
 
 import scalanlp.util.Index
+import scalala.tensor.{Counter2, Counter}
+import scalala.scalar.Scalar
 
 /**
  * Reads type V from input Input.
@@ -108,11 +110,23 @@ object SerializationFormat {
    * @author dlwh
    * @author dramage
    */
-  trait CompoundTypes extends SerializationFormat { this: SerializationFormat =>
+  trait CompoundTypes extends SerializationFormat { outer =>
 
     protected def readName(in : Input) : String;
 
     protected def writeName(out : Output, name : String);
+
+    /** writeNameOpt is like writeName, but Serialization formats aren't required to use it. Defaults
+     * to just calling writeName */
+    protected def writeNameOpt(out: Output, name: String) { writeName(out, name) }
+
+    /** If you override writeNameOpt to do nothing, override this */
+    protected def writesNames:Boolean = true
+
+    private def readNameOpt(in: Input): Option[String] = {
+      if(writesNames) Some(readName(in))
+      else None
+    }
 
     /** Reads elements of type T into the given buildable. Inverse of writeIterable. */
     protected def readBuildable[T:Readable,To]
@@ -274,6 +288,37 @@ object SerializationFormat {
         writeIterable[T,Iterable[T]](sink, value, "Index");
     }
 
+    implicit def counterReadWritable[T:ReadWritable, V:ReadWritable:Scalar]: ReadWritable[Counter[T,V]] = new ReadWritable[Counter[T,V]] {
+      def write(sink: Output, ctr: Counter[T,V]) = {
+        writeIterable[(T,V),Iterable[(T,V)]](sink, new Iterable[(T,V)] {
+          def iterator = ctr.pairsIterator
+        },"Counter")
+      }
+
+      def read(source: Input): Counter[T, V] = {
+        val map = readBuildable(source,Iterable.newBuilder[(T,V)])
+        val ctr = Counter(map)
+        ctr
+      }
+    }
+
+    implicit def counter2ReadWritable[T:ReadWritable, U:ReadWritable, V:ReadWritable:Scalar]: ReadWritable[Counter2[T,U,V]] = {
+      new ReadWritable[Counter2[T,U,V]] {
+        def write(sink: Output, ctr: Counter2[T,U,V]) = {
+          writeIterable[(T,U,V),Iterable[(T,U,V)]](sink, new Iterable[(T,U,V)] {
+            def iterator = ctr.triplesIteratorNonZero
+          },"Counter")
+        }
+
+        def read(source: Input): Counter2[T, U, V] = {
+          val map = readBuildable(source,Iterable.newBuilder[(T,U,V)])
+          val ctr = Counter2(map)
+          ctr
+        }
+      }
+    }
+
+
     implicit def optionReadWritable[T:ReadWritable] : ReadWritable[Option[T]]
     = new ReadWritable[Option[T]] {
       override def read(in : Input) = {
@@ -319,15 +364,15 @@ object SerializationFormat {
       def unpack(rep : RW) : V;
 
       override def read(in : Input) = {
-        val seen = readName(in);
-        if (seen != name) {
+        val seen = readNameOpt(in);
+        if (seen.exists(_ != name)) {
           throw new SerializationException("Expected: "+name+" but got "+seen);
         }
         unpack(implicitly[ReadWritable[RW]].read(in));
       }
 
       override def write(out : Output, value : V) = {
-        writeName(out,name);
+        writeNameOpt(out,name);
         implicitly[ReadWritable[RW]].write(out,pack(value));
       }
     }
