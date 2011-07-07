@@ -225,9 +225,34 @@ with ByteSerialization {
   import scalala.tensor.dense._;
   import scalala.tensor.sparse._;
   implicit object DenseVectorReadWritable extends ReadWritable[DenseVector[Double]] {
-     override def read(in : DataInput) =  new DenseVectorCol(DataSerialization.read[Array[Double]](in));
+    override def read(in : DataInput) =  {
+      val offset = DataSerialization.read[Int](in)
+      val stride = DataSerialization.read[Int](in)
+      val length = DataSerialization.read[Int](in)
+      val data = DataSerialization.read[Array[Double]](in)
+      new DenseVectorCol(data, offset,stride,length);
+    }
 
-    override def write(out : Output, v : DenseVector[Double]) { DataSerialization.write(out,v.data); }
+    override def write(out : Output, v : DenseVector[Double]) {
+      DataSerialization.write(out,v.offset)
+      DataSerialization.write(out,v.stride)
+      DataSerialization.write(out,v.length)
+      DataSerialization.write(out,v.data);
+    }
+  }
+
+  implicit object DenseMatrixReadWritable extends ReadWritable[DenseMatrix[Double]] {
+    override def read(in : DataInput) =  {
+      val numRows = DataSerialization.read[Int](in)
+      val numCols = DataSerialization.read[Int](in)
+      new DenseMatrix(numRows,numCols,DataSerialization.read[Array[Double]](in));
+    }
+
+    override def write(out : Output, v : DenseMatrix[Double]) {
+      DataSerialization.write(out,v.numRows)
+      DataSerialization.write(out,v.numCols)
+      DataSerialization.write(out,v.data);
+    }
   }
 
   /*

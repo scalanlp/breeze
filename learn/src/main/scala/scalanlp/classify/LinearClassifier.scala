@@ -20,12 +20,15 @@ package scalanlp.classify;
 import scalanlp.util.Index;
 import scalanlp.data._;
 
+import java.io.{DataOutput,DataInput}
 import scalala.tensor._;
 import mutable.Counter;
 import scalala.operators._
 import bundles.MutableInnerProductSpace
 import scalala.generic.math.CanNorm
 import scalala.generic.collection.{CanMapValues, CanCreateZerosLike, CanViewAsTensor1}
+import scalanlp.serialization.DataSerialization.ReadWritable
+import scalanlp.serialization.{SerializationFormat, DataSerialization}
 ;
 
 /**
@@ -257,6 +260,26 @@ object LFMatrix {
 }
 
 object LinearClassifier {
+  implicit def linearClassifierReadWritable[L,TF,T2,TL](implicit viewT2 : T2<:<MatrixOps[T2], viewTL: TL <:<NumericOps[TL],
+                                                     vv: CanViewAsTensor1[TL,L,Double],
+                                                     add : BinaryOp[TL,TL,OpAdd,TL],
+                                                     mulTensors : BinaryOp[T2,TF,OpMulMatrixBy,TL],
+                                                     tfW: DataSerialization.ReadWritable[T2],
+                                                     tlW: DataSerialization.ReadWritable[TL]) = {
+    new ReadWritable[LinearClassifier[L,T2,TL,TF]] {
+      def write(sink: DataSerialization.Output, what: LinearClassifier[L,T2,TL,TF]) = {
+        tfW.write(sink,what.featureWeights)
+        tlW.write(sink,what.intercepts)
+      }
+
+      def read(source: DataSerialization.Input) = {
+        val t2 = tfW.read(source)
+        val tl = tlW.read(source)
+        new LinearClassifier(t2,tl)
+      }
+    }
+  }
+
 /*
   def fromRegression[F](data: Iterable[Example[Boolean,Map[F,Double]]]) = {
     val featureIndex = Index[F]();
