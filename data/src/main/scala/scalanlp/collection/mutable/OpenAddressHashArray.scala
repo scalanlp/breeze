@@ -4,10 +4,11 @@ import collection.mutable.BitSet
 import scalala.collection.sparse.DefaultArrayValue
 
 /**
- * 
+ * Represents a sparse int->v assoc sequence.
+ * A companion to SparseArray based on hashing. Two parallel arrays, one of ints, one of keys.
  * @author dlwh
  */
-class OpenAddressHashArray[@specialized V:ClassManifest:DefaultArrayValue](val size: Int, initialSize:Int = 16) {
+class OpenAddressHashArray[@specialized V:ClassManifest:DefaultArrayValue](val size: Int, initialSize:Int = 16) extends Serializable {
   private var index : Array[Int] = new Array[Int](initialSize)
   private var values: Array[V] = new Array[V](initialSize)
   private var occupied = new BitSet()
