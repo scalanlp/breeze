@@ -5,7 +5,7 @@ import scalala.tensor.dense.DenseVector
 import scalala.tensor.mutable.{VectorLike, Vector}
 import java.util.Arrays
 import scalala.operators.{OpSub, OpAdd, BinaryOp}
-import scalala.generic.collection.CanMapValues
+import scalala.generic.collection.{CanMapKeyValuePairs, CanMapValues}
 
 /**
  *
@@ -502,4 +502,25 @@ object OldSparseVector {
       res
     }
   }
+
+
+  /** Optimized base class for mapping dense columns. */
+  implicit val canMapKeyValuePairsSparseVector = new CanMapKeyValuePairs[OldSparseVector,Int,Double,Double,OldSparseVector] {
+    def map(from: OldSparseVector, fn: (Int, Double) => Double) = {
+      val res = new OldSparseVector(from.size,from.default,from.activeSize)
+      for( (k,v) <- res.pairs) {
+        res(k) = fn(k,v)
+      }
+      res
+    }
+
+    def mapNonZero(from: OldSparseVector, fn: (Int, Double) => Double) = {
+      val res = new OldSparseVector(from.size,from.default,from.activeSize)
+      for( (k,v) <- res.pairsIteratorNonZero) {
+        res(k) = fn(k,v)
+      }
+      res
+    }
+  }
+
 }
