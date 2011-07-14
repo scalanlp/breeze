@@ -7,7 +7,6 @@ import scalala.tensor._
 import scalala.operators.bundles.MutableInnerProductSpace
 import scalala.generic.math.CanNorm
 import scalala.generic.collection.{CanMapKeyValuePairs, CanViewAsTensor1}
-import com.sun.org.apache.xerces.internal.impl.dv.xs.FullDVFactory
 
 /**
  * 
