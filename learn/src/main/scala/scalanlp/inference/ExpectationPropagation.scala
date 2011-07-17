@@ -10,8 +10,7 @@ import runtime.ScalaRunTime
  * @author dlwh
  */
 class ExpectationPropagation[F,Q](project: (Q,F)=>(Q,Double))
-                                 (implicit fFactor: F<:<FactorLike[F],
-                                  qFactor: Q <:<FactorLike[Q],
+                                 (implicit qFactor: Q <:<FactorLike[Q],
                                   qProd: FactorProduct[Q,Q,Q],
                                   qDiv: FactorQuotient[Q,Q,Q]) {
   case class State(f_~ : IndexedSeq[Q], q: Q) {
