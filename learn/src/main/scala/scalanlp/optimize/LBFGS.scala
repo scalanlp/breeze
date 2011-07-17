@@ -43,7 +43,7 @@ import scalala.tensor.dense.DenseVector
  * @param maxIter: maximum number of iterations, or &lt;= 0 for unlimited
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
-class LBFGS[T](override val maxIter: Int, m: Int=3)(implicit protected val vspace: MutableInnerProductSpace[Double,T], protected val canNorm: CanNorm[T]) extends QuasiNewtonMinimizer[T] with GradientNormConvergence[T] with Logged {
+class LBFGS[T](override val maxIter: Int, m: Int=5)(implicit protected val vspace: MutableInnerProductSpace[Double,T], protected val canNorm: CanNorm[T]) extends QuasiNewtonMinimizer[T] with GradientNormConvergence[T] with Logged {
 
   import vspace._;
   require(m > 0);
@@ -149,7 +149,7 @@ class LBFGS[T](override val maxIter: Int, m: Int=3)(implicit protected val vspac
     }
 
     def ff(alpha: Double) = f.valueAt(x + dir * alpha);
-    val search = new BacktrackingLineSearch(initAlpha = if (iter <= 1) 0.5 else 1.0)
+    val search = new BacktrackingLineSearch(cScale = if(iter <= 1) 0.01 else 0.2, initAlpha = if (iter <= 1) 0.5 else 1.0)
     val iterates = search.iterations(ff)
     val targetState = iterates.find { case search.State(alpha,v) =>
       // sufficient descent
