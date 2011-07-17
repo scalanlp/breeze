@@ -49,7 +49,18 @@ object FirstOrderMinimizer {
                        view:  <:<[T,scalala.tensor.mutable.Tensor1[K,Double] with scalala.tensor.mutable.TensorLike[K, Double, _, T with scalala.tensor.mutable.Tensor1[K,Double]]]): FirstOrderMinimizer[T, BatchDiffFunction[T]] = {
       if(useStochastic) {
         val adjustedRegularization = regularization * 0.01 * batchSize / f.fullRange.size
-        this.copy(regularization=adjustedRegularization).minimizer(f.withScanningBatches(batchSize))
+        val inner = this.copy(regularization=adjustedRegularization).minimizer(f.withScanningBatches(batchSize))
+        new FirstOrderMinimizer[T,BatchDiffFunction[T]] {
+          type History = inner.History
+
+          def iterations(f: BatchDiffFunction[T], init: T):Iterator[State] = {
+            for( state <- inner.iterations(f.withScanningBatches(batchSize),init)) yield {
+              State(state.x,state.value,state.grad,state.adjustedValue,state.adjustedGradient,state.iter,state.history)
+            }
+          }
+
+          def checkConvergence(v: Double, grad: T) = inner.checkConvergence(v,grad)
+        }
       } else {
         minimizer(f:DiffFunction[T])
       }
@@ -59,7 +70,7 @@ object FirstOrderMinimizer {
                       (implicit arith: MutableInnerProductSpace[Double,T], canNorm: CanNorm[T],
                        TisTensor: CanViewAsTensor1[T,K,Double],
                        TKVPairs: CanMapKeyValuePairs[T,K,Double,Double,T],
-                       view:  <:<[T,scalala.tensor.mutable.Tensor1[K,Double] with scalala.tensor.mutable.TensorLike[K, Double, _, T with scalala.tensor.mutable.Tensor1[K,Double]]]): FirstOrderMinimizer[T,BatchDiffFunction[T]] = {
+                       view:  <:<[T,scalala.tensor.mutable.Tensor1[K,Double] with scalala.tensor.mutable.TensorLike[K, Double, _, T with scalala.tensor.mutable.Tensor1[K,Double]]]): FirstOrderMinimizer[T,StochasticDiffFunction[T]] = {
       if(regularization == 0.0) {
         new StochasticGradientDescent.SimpleSGD[T](alpha, maxIterations) with ConsoleLogging {
           override val TOLERANCE = tolerance
