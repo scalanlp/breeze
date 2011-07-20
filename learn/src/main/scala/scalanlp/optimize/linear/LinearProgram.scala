@@ -7,7 +7,21 @@ import dense.{DenseMatrix, DenseVector}
 import sparse.SparseVector
 
 /**
- * DSL for LinearPrograms. Not thread-safe
+ * DSL for LinearPrograms. Not thread-safe per instance. Make multiple instances
+ *
+ * Basic example:
+ * {{{
+ * val lp = new LP;
+ * import lp._;
+ * val x = new Positive("x");
+ * val y = new Positive("y");
+ *
+ * val result = maximize ( (3 * x+ 4 * y)
+ * subjectTo( x <= 3, y <= 1))
+ *
+ * result.valueOf(x) // 3
+ *
+ * }}}
  * @author dlwh
  */
 class LinearProgram {
@@ -166,12 +180,3 @@ class LinearProgram {
 }
 
 
-/**
- * val lp = new LP;
- * import lp._;
- * val x = new Positive("x");
- * val y = new Positive("y");
- *
- * maximize ( (3 * x+ 4 * y)
- * subjectTo( x <= 3, y <= 1)
- */

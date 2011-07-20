@@ -8,15 +8,24 @@ import scalala.tensor.dense.{DenseVectorCol, DenseVector, DenseMatrix}
 ;
 
 /**
- * 
+ * InteriorPoint solver for LPs.
  * @author dlwh
  */
-
 object InteriorPoint {
   val TOLERANCE = 1E-4
   val tau = 0.9
-  //http://www.doc.ic.ac.uk/~br/berc/pdiplin.pdf
-  //  http://www.ee.ucla.edu/ee236a/lectures/mpc.pdf
+  /**
+   *
+   * Solves the LP:
+   *
+   * minimize_x c * x
+   * subject to A * x <= b and x >= 0
+   *
+   * with initial feasible point x0
+   *
+   * @see http://www.doc.ic.ac.uk/~br/berc/pdiplin.pdf
+   * @see http://www.ee.ucla.edu/ee236a/lectures/mpc.pdf
+   */
   def minimize(A: DenseMatrix[Double], b: DenseVector[Double], c: DenseVector[Double], x0: DenseVector[Double]) = {
     val m = A.numRows;
     val n = A.numCols;
