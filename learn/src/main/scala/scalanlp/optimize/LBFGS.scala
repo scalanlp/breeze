@@ -48,9 +48,9 @@ class LBFGS[T](override val maxIter: Int, m: Int=5)(implicit protected val vspac
   import vspace._;
   require(m > 0);
 
-  class History(private[LBFGS] val memStep: IndexedSeq[T] = IndexedSeq.empty,
-                private[LBFGS] val memGradDelta: IndexedSeq[T] = IndexedSeq.empty,
-                private[LBFGS] val memRho: IndexedSeq[Double] = IndexedSeq.empty);
+  case class History(private[LBFGS] val memStep: IndexedSeq[T] = IndexedSeq.empty,
+                     private[LBFGS] val memGradDelta: IndexedSeq[T] = IndexedSeq.empty,
+                     private[LBFGS] val memRho: IndexedSeq[Double] = IndexedSeq.empty);
 
 
   protected def initialHistory(grad: T):History = new History();
@@ -149,7 +149,7 @@ class LBFGS[T](override val maxIter: Int, m: Int=5)(implicit protected val vspac
     }
 
     def ff(alpha: Double) = f.valueAt(x + dir * alpha);
-    val search = new BacktrackingLineSearch(cScale = if(iter <= 1) 0.01 else 0.2, initAlpha = if (iter <= 1) 0.5 else 1.0)
+    val search = new BacktrackingLineSearch(cScale = if(iter < 1) 0.01 else 0.5, initAlpha = 1.0)
     val iterates = search.iterations(ff)
     val targetState = iterates.find { case search.State(alpha,v) =>
       // sufficient descent

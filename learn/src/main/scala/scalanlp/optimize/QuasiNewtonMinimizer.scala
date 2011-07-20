@@ -74,7 +74,7 @@ trait QuasiNewtonMinimizer[T] extends FirstOrderMinimizer[T,DiffFunction[T]] wit
 
        log(INFO)("New Val: " + newVal);
 
-       val newHistory = updateHistory(state, newGrad, newVal, dir);
+       val newHistory = updateHistory(state, newGrad, newVal, step);
 
        State(newX,newVal,newGrad,adjustValue(newVal, newX),adjustGradient(newGrad,newX),iter+1,newHistory);
 
