@@ -30,8 +30,7 @@ import scalanlp.optimize.{DiffFunction, LBFGS}
  * @param a the number of pseudo-observations for false
  * @param b the number of pseudo-observations for true
  */
-class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double] 
-    with ConjugatePrior[Double, Boolean] with Moments[Double] {
+class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double]  with Moments[Double] {
   require(a > 0.0);
   require(b > 0.0);
 
@@ -52,24 +51,10 @@ class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends Contin
     (ad) / (ad + bd);
   }
   
-  override def posterior(obs: Iterator[(Boolean,Int)]) = {
-    val ctr = Counter(obs.map{ case (k,v) => (k,v.toDouble)}.toSeq:_*);
-    new Beta(ctr(true)+a, ctr(false)+b)(rand)
-  }
-  
-  def predictive = {
-    val ctr = Counter[Boolean,Double]();
-    ctr(true) = a;
-    ctr(false) = b;
-    new Polya(ctr)(rand);
-  }
-
   def mean = a / (a + b);
   def variance = (a * b) / ( (a + b) * (a+b) * (a+b+1));
   def mode = (a - 1) / (a+b - 2);
   def entropy = logNormalizer - (a - 1) * digamma(a) - (b-1) * digamma(b) + (a + b - 2) * digamma(a + b);
-  
-
 }
 
 object Beta extends ExponentialFamily[Beta,Double] {

@@ -17,7 +17,9 @@ package scalanlp.stats.distributions
 
 import scalala.library.Numerics._;
 import scalala.tensor._;
-import scalala.operators.{BinaryOp, OpAdd}
+import scalala.generic.math.CanNorm
+import scalala.generic.collection.{CanMapValues, CanViewAsTensor1}
+import scalala.operators._
 ;
 
 /**
@@ -27,29 +29,33 @@ import scalala.operators.{BinaryOp, OpAdd}
  *
  * @author dlwh
  */
-class Polya[T](prior: Counter[T,Double])(implicit rand: RandBasis=Rand) extends DiscreteDistr[T] {
-  private val innerDirichlet = new Dirichlet(prior);
+class Polya[T,@specialized(Int) I](params: T)(implicit ev: CanViewAsTensor1[T,I,Double],
+                                              space: scalala.operators.bundles.MutableInnerProductSpace[Double,T],
+                                              numeric: T<:<NumericOps[T],
+                                              monadic: T=>HasValuesMonadic[T,Double],
+                                              norm: CanNorm[T],
+                                              rand: RandBasis=Rand) extends DiscreteDistr[I] {
+  import space._;
+  private val innerDirichlet = new Dirichlet(params);
   def draw() = {
     Multinomial(innerDirichlet.draw).get;
   }
 
-  lazy val logNormalizer = -lbeta(prior);
+  lazy val logNormalizer = -lbeta(ev(params));
 
-  def probabilityOf(x: T):Double = {
-    val ctr = Counter[T,Double]();
-    ctr(x) += 1;
-    probabilityOf(ctr);
-  }
+  def probabilityOf(x: I) = math.exp(lbeta2(ev(params).sum,1) - lbeta2(ev(params)(x),1))
 
-  def probabilityOf(x: Counter[T,Double]) = math.exp(logProbabilityOf(x));
-  def logProbabilityOf(x: Counter[T,Double]) = {
-    math.exp(unnormalizedLogProbabilityOf(x) + logNormalizer);
-  }
+  private def lbeta2(a: Double, b: Double) = lgamma(a) + lgamma(b) - lgamma(a+b)
 
-  def unnormalizedLogProbabilityOf(x: Counter[T,Double]):Double = {
-    val adjustForCount = x.valuesIterator.foldLeft(lgamma(x.sum+1))( (acc,v) => acc-lgamma(v+1))
-    adjustForCount + lbeta(x + prior);
-  }
+//  def probabilityOf(x: T) = math.exp(logProbabilityOf(x));
+//  def logProbabilityOf(x: T) = {
+//    math.exp(unnormalizedLogProbabilityOf(x) + logNormalizer);
+//  }
+//
+//  def unnormalizedLogProbabilityOf(x: T):Double = {
+//    val adjustForCount = ev(x).valuesIterator.foldLeft(lgamma(ev(x).sum+1))( (acc,v) => acc-lgamma(v+1))
+//    adjustForCount + lbeta(ev(x + params));
+//  }
 
 }
 
@@ -63,8 +69,8 @@ object Polya {
   /**
   * Creates a new Polya of dimension k with the given parameters
   */
-  def apply(arr: Array[Double]):Polya[Int] = {
+  def apply(arr: Array[Double]) = {
     val swapped: Array[(Int, Double)] = arr.zipWithIndex.map(_.swap)
-    new Polya[Int](Counter(swapped.toIndexedSeq:_*))
+    new Polya(Counter(swapped.toIndexedSeq:_*))
   }
 }

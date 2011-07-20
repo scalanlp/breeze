@@ -1,4 +1,7 @@
-package scalanlp.stats.distributions;
+package scalanlp.stats.distributions
+
+import scalanlp.inference.ExpectationPropagation.LikelihoodTerm
+;
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
@@ -22,17 +25,18 @@ package scalanlp.stats.distributions;
  *
  * @author dlwh
  */
-trait ConjugatePrior[P,T] extends Measure[P] {
+trait HasConjugatePrior[Likelihood <: Measure[T], T] extends ExponentialFamily[Likelihood,T] {
+
+  type ConjugatePrior <: Measure[Parameter]
+  val conjugateFamily: ExponentialFamily[ConjugatePrior,Parameter]
+
   /**
    * Returns a distribtution over T's after integrating out the intermediate distributions.
    */
-  def predictive() : Measure[T];
+  def predictive(parameter: conjugateFamily.Parameter) : Measure[T]
+
   /**
-   * Gives a new ConjugatePrior after observing the evidence. See Dirichlet for an example.
+   * Gives a new parameter for this conjugate prior after observing the evidence. See Dirichlet for an example.
    */
-  def posterior(evidence : Iterable[(T,Int)]) : ConjugatePrior[P,T] = posterior(evidence.iterator);
-  /**
-   * Gives a new ConjugatePrior after observing the evidence. See Dirichlet for an example.
-   */
-  def posterior(evidence : Iterator[(T,Int)]) : ConjugatePrior[P,T];
+  def posterior(prior: conjugateFamily.Parameter, evidence : TraversableOnce[T]): conjugateFamily.Parameter
 }

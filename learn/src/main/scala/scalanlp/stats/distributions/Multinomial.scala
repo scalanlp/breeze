@@ -22,8 +22,8 @@ import scalanlp.optimize.DiffFunction
 import scalala.generic.collection.{CanViewAsTensor1, CanMapValues, CanCreateZerosLike}
 import scalala.operators._
 import scalala.tensor.mutable.{Tensor1, Tensor}
-import scalala.generic.math.CanSoftmax
 import scalala.library.Library
+import scalala.generic.math.{CanNorm, CanSoftmax}
 
 /**
  * Represents a multinomial Distribution over elements.
@@ -61,22 +61,37 @@ case class Multinomial[T,@specialized(Int) I](params: T)(implicit ev: CanViewAsT
 
 
 /**
- * Provides routines to create Multinomial
+ * Provides routines to create Multinomials
  * @author(dlwh)
  */
 object Multinomial {
 
   class ExpFam[T,I](exemplar: T)
                    (implicit ev: T<:<NumericOps[T] with HasValuesMonadic[T,Double],
-                    view: T=>Tensor1[I,Double],
-                    opAdd: BinaryOp[T,T,OpAdd,T],
-                    opSubScalar: BinaryOp[T,Double,OpSub,T],
-                    opSubTensor: BinaryOp[T,T,OpSub,T],
-                    opMulScalar: BinaryOp[T,Double,OpMul,T],
-                    opMulTensor: BinaryOp[T,T,OpMul,T],
+                    space: scalala.operators.bundles.MutableInnerProductSpace[Double,T],
+                    norm: CanNorm[T],
+                    view2: T=>Tensor1[I,Double],
+                    view: CanViewAsTensor1[T,I,Double],
                     zeros: CanCreateZerosLike[T,T],
-                    canMapValues: CanMapValues[T,Double,Double,T],
-                    softmax: CanSoftmax[T]) extends ExponentialFamily[Multinomial[T,I],I] {
+                    softmax: CanSoftmax[T]) extends ExponentialFamily[Multinomial[T,I],I] with HasConjugatePrior[Multinomial[T,I],I] {
+
+    import space._
+    type ConjugatePrior = Dirichlet[T,I]
+    val conjugateFamily = new Dirichlet.ExpFam[T,I](exemplar)
+
+
+
+    def predictive(parameter: conjugateFamily.Parameter) = new Polya(parameter)
+
+    def posterior(prior: conjugateFamily.Parameter, evidence: TraversableOnce[I]) = {
+      val copy : T = space.addVS.apply(prior,0.0)
+      for( e <- evidence) {
+        copy(e)  += 1.0
+      }
+      copy
+
+    }
+
     type Parameter = T
     case class SufficientStatistic(t: T) extends scalanlp.stats.distributions.SufficientStatistic[SufficientStatistic] {
       def +(tt: SufficientStatistic) = SufficientStatistic(ev(t) + tt.t);
@@ -108,9 +123,6 @@ object Multinomial {
     }
 
     def distribution(p: Parameter) = {
-      implicit val view2 = new CanViewAsTensor1[T,I,Double] {
-        def apply(from: T) = view(from);
-      }
       new Multinomial(ev(p).values.map(math.exp _));
     }
   }

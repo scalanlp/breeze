@@ -4,6 +4,7 @@ package distributions
 import scalanlp.util.I
 import java.lang.Math
 import scalanlp.optimize.DiffFunction
+import scalala.tensor.Counter
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
@@ -44,7 +45,19 @@ class Bernoulli(p: Double, rand: RandBasis = Rand) extends DiscreteDistr[Boolean
   def entropy = -p * math.log(p) - (1 - p) * math.log1p(-p);
 }
 
-object Bernoulli extends ExponentialFamily[Bernoulli,Boolean] {
+object Bernoulli extends ExponentialFamily[Bernoulli,Boolean] with HasConjugatePrior[Bernoulli,Boolean] {
+  type ConjugatePrior = Beta
+  val conjugateFamily = Beta
+
+  def predictive(parameter: Beta.Parameter) = new Polya(Counter(true->parameter._1,false->parameter._2))
+
+  def posterior(prior: Beta.Parameter, evidence: TraversableOnce[Boolean]) = {
+    evidence.foldLeft(prior) { (acc,ev) =>
+      if(ev) acc.copy(_1 = acc._1 + 1)
+      else acc.copy(_2 = acc._2 + 1)
+    }
+  }
+
   type Parameter = Double
   case class SufficientStatistic(numYes: Double, n: Double) extends distributions.SufficientStatistic[SufficientStatistic] {
     def *(weight: Double) = SufficientStatistic(numYes*weight,n*weight);

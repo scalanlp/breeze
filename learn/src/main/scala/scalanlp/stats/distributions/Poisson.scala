@@ -1,4 +1,5 @@
-package scalanlp.stats.distributions;
+package scalanlp.stats
+package distributions;
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
@@ -17,7 +18,8 @@ package scalanlp.stats.distributions;
 */
 
 import scalala.library.Numerics._;
-import math._;
+import math._
+import scalanlp.optimize.DiffFunction
 
 /**
  * Represents a Poisson random variable.
@@ -97,4 +99,30 @@ class Poisson(val mean: Double)(implicit rand: RandBasis=Rand) extends DiscreteD
 
     entr + exp(-mean) * extra
   }
+}
+
+
+object Poisson extends ExponentialFamily[Poisson,Int] {
+  type Parameter = Double
+  case class SufficientStatistic(sum: Double, n: Double) extends distributions.SufficientStatistic[SufficientStatistic] {
+    def +(t: SufficientStatistic) = SufficientStatistic(t.sum + sum, t.n + n)
+
+    def *(weight: Double) = SufficientStatistic(sum * weight, n * weight)
+  }
+
+  def emptySufficientStatistic = SufficientStatistic(0,0)
+
+  def sufficientStatisticFor(t: Int) = SufficientStatistic(t,1)
+
+  def mle(stats: SufficientStatistic) = stats.sum / stats.n
+
+  def likelihoodFunction(stats: SufficientStatistic) = new DiffFunction[Double] {
+    def calculate(x: Double) = {
+      val obj = math.log(x) * stats.sum - x * stats.n
+      val grad = stats.sum / x - stats.n
+      (-obj,-grad)
+    }
+  }
+
+  def distribution(p: Poisson.Parameter) = new Poisson(p)
 }
