@@ -23,7 +23,7 @@ package scalanlp.optimize
  *
  * @author dlwh
  */
-object KuhnMunkres {
+object KuhnMunkres extends BipartiteMatching {
   // http://github.com/bmc/munkres/blob/master/munkres.py
   /**
    * Given a matrix of positive weights, finds the minimum weight bipartite matching between to arrays.

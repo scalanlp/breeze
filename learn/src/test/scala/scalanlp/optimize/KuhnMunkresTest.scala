@@ -91,8 +91,7 @@ class KuhnMunkresTest extends FunSuite with Checkers {
     val (result1, score1) = KuhnMunkres.extractMatching(testMatrix)
     val (result2, score2) = KuhnMunkres.extractMatching(testMatrixTranspose)
 
-    assert(result1_== Seq(1, 0))
-    assert(result2 == Seq(1,0,-1))
+    assert( result1 == Seq(1, 0) )
+    assert( result2 == Seq(1,0,-1) )
   }
-
 }
