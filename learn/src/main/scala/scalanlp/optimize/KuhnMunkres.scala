@@ -18,12 +18,12 @@ package scalanlp.optimize
 
 /**
  * Algorithm to find a minimum cost matching on a bipartite graph.
- * 
+ *
  * Implements the hungarian algorithm.
- * 
+ *
  * @author dlwh
  */
-object KuhnMunkres extends BipartiteMatching {
+object KuhnMunkres {
   // http://github.com/bmc/munkres/blob/master/munkres.py
   /**
    * Given a matrix of positive weights, finds the minimum weight bipartite matching between to arrays.
@@ -31,8 +31,22 @@ object KuhnMunkres extends BipartiteMatching {
    * (-1 for unmatched rows in the case of unbalanced entries) along
    * with the total score of the matching.
    */
-  def extractMatching(costs: Seq[Seq[Double]]) = {
-    val C : Array[Array[Double]] = padMatrix(costs);
+  def extractMatching(costs: Seq[Seq[Double]]): (Seq[Int], Double) = {
+
+    // swap rows and columns if num rows > num cols
+    val (costs2: Seq[Seq[Double]], inverted:Boolean) =
+      if (costs.length > costs(0).length) {
+        val newCosts = Array.fill(costs(0).length, costs.length)(0.0)
+        for(i <- 0 until costs.length;
+            j <- 0 until costs(0).length) {
+          newCosts(j)(i) = costs(i)(j)
+        }
+        (newCosts.map{ row => row.toSeq }.toSeq, true)
+      } else {
+        (costs, false)
+      }
+
+    val C : Array[Array[Double]] = padMatrix(costs2);
     val n = C.size;
     val rowCovered = Array.fill(n)(false);
     val colCovered = Array.fill(n)(false);
@@ -229,16 +243,28 @@ object KuhnMunkres extends BipartiteMatching {
       }
     }
 
-    val answers = Array.fill(costs.length)(-1);
+    var answers = Array.fill(costs2.length)(-1);
     var cost = 0.0;
     for(i <- 0 until answers.length) {
       val j = marked(i).indexWhere(_ == 1);
       if(j >= 0) {
-        cost += costs(i)(j);
+        cost += costs2(i)(j);
         answers(i) = j;
       }
     }
-    
+
+    // invert rows with columns to their original layout
+    if (inverted) {
+      val answers2 = Array.fill(costs2(0).length)(-1)
+      for (i <- 0 until answers.length) {
+        val j = answers(i)
+        if (j != -1) {
+          answers2(j) = i
+        }
+      }
+      answers = answers2
+    }
+
     (answers,cost)
   }
 

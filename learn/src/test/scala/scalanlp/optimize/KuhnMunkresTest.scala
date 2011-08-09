@@ -75,4 +75,24 @@ class KuhnMunkresTest extends FunSuite with Checkers {
     val (matching,weight) = KuhnMunkres.extractMatching(arr);
     assert(weight === 15.0);
   }
+
+  test("rectangular matrix test 3") {
+    val testMatrix = Seq(
+      Seq(1.0,0.0,3.0),
+      Seq(0.0,1.0,1.0)
+    )
+
+    val testMatrixTranspose = Seq(
+      Seq(1.0, 0.0),
+      Seq(0.0, 1.0),
+      Seq(3.0, 1.0)
+    )
+
+    val (result1, score1) = KuhnMunkres.extractMatching(testMatrix)
+    val (result2, score2) = KuhnMunkres.extractMatching(testMatrixTranspose)
+
+    assert(result1_== Seq(1, 0))
+    assert(result2 == Seq(1,0,-1))
+  }
+
 }
