@@ -31,7 +31,7 @@ object KuhnMunkres extends BipartiteMatching {
    * (-1 for unmatched rows in the case of unbalanced entries) along
    * with the total score of the matching.
    */
-  def extractMatching(costs: Seq[Seq[Double]]): (Seq[Int], Double) = {
+  def extractMatching(costs: Seq[Seq[Double]]) = {
 
     // swap rows and columns if num rows > num cols
     val (costs2: Seq[Seq[Double]], inverted:Boolean) =
