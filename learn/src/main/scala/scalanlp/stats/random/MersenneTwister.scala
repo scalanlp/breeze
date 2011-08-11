@@ -1,4 +1,5 @@
-package scalanlp.stats.distributions;
+package scalanlp.stats.random
+
 /*
  Copyright 2009 David Hall, Daniel Ramage
  

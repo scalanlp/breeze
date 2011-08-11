@@ -17,6 +17,7 @@ package scalanlp.stats.distributions;
 */
 
 import scala.collection.mutable.ArrayBuffer
+import scalanlp.stats.random.{MersenneTwister, RandomGenerator}
 
 /**
  * A trait for monadic distributions. Provides support for use in for-comprehensions
