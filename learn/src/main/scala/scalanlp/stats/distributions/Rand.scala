@@ -241,9 +241,9 @@ class RandBasis(r: RandomGenerator) {
   /**
    * Knuth shuffle of a subset of size n from a set
    */
-  def subsetsOfSize(set: IndexedSeq[Int], n: Int) = new Rand[IndexedSeq[Int]] {
+  def subsetsOfSize[T](set: IndexedSeq[T], n: Int):Rand[IndexedSeq[T]] = new Rand[IndexedSeq[T]] {
     def draw = {
-      val arr = set.toArray
+      val arr = ArrayBuffer(set:_*)
       var i = 0
       while( i < n.min(set.size)) {
         val k = r.nextInt(set.size-i) + i

@@ -31,7 +31,7 @@ import scalanlp.util.ConsoleLogging
  *
  * @author dlwh
  */
-class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasis = Rand)
+case class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasis = Rand)
     extends ContinuousDistr[Double] with Moments[Double] {
   if(shape <= 0.0 || scale <= 0.0)
     throw new IllegalArgumentException("Shape and scale must be positive");
