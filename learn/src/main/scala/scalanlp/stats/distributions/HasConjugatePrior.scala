@@ -1,8 +1,5 @@
 package scalanlp.stats.distributions
 
-import scalanlp.inference.ExpectationPropagation.LikelihoodTerm
-;
-
 /*
  Copyright 2009 David Hall, Daniel Ramage
  
