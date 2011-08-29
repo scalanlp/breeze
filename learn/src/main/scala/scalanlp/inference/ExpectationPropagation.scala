@@ -1,9 +1,12 @@
 package scalanlp.inference
 
 import math._
-import scalala.library.Numerics
-import scalanlp.stats.distributions.{Bernoulli, Gaussian}
+import scalala.library.{Numerics,Library}
+import Numerics._
 import runtime.ScalaRunTime
+import scalanlp.util._
+import scalala.tensor.dense._
+import scalanlp.stats.distributions.{Dirichlet, Bernoulli, Gaussian}
 
 /**
  * 
@@ -13,25 +16,27 @@ class ExpectationPropagation[F,Q](project: (Q,F)=>(Q,Double))
                                  (implicit qFactor: Q <:<FactorLike[Q],
                                   qProd: FactorProduct[Q,Q,Q],
                                   qDiv: FactorQuotient[Q,Q,Q]) {
-  case class State(f_~ : IndexedSeq[Q], q: Q) {
-    def logPartition = f_~.reduceLeft(_*_).logPartition
+  case class State(f_~ : IndexedSeq[Q], q: Q, prior: Q, partitions: IndexedSeq[Double]) {
+    def logPartition = f_~.foldLeft(prior)(_*_).logPartition + partitions.sum
   }
 
   def inference(prior: Q, f: IndexedSeq[F], initialF_~ : IndexedSeq[Q]):Iterator[State] = {
     val initQ: Q = initialF_~.foldLeft(prior)(_ * _)
 
+    val initPartitions = IndexedSeq.fill(f.length)(Double.NegativeInfinity)
+
     // pass through the data
-    Iterator.iterate(State(initialF_~, initQ * (1/initQ.logPartition))) { state =>
+    Iterator.iterate(State(initialF_~, initQ * (-initQ.logPartition), prior, initPartitions)) { state =>
       (0 until f.length).iterator.foldLeft(state) { (state,i) =>
-        val State(f_~, q) = state
+        val State(f_~, q, _, partitions) = state
         val fi = f(i)
         val fi_~ = f_~(i)
         val q_\  = q / fi_~
         val (new_q, new_partition) = project(q_\ , fi)
-        val newF_~ = f_~.updated(i,new_q / q_\ * new_partition)
-        State(newF_~, new_q)
+        val newF_~ = f_~.updated(i,new_q / q_\)
+        State(newF_~, new_q, prior, partitions.updated(i, new_partition))
       }
-    }
+    } drop(1)
   }
 
 
@@ -39,77 +44,63 @@ class ExpectationPropagation[F,Q](project: (Q,F)=>(Q,Double))
 }
 
 object ExpectationPropagation extends App {
-  val a = 10. // clutter variance
-  val b = 10. // prior on theta
-  val w = 0.4 // clutter percentage
-  sealed trait ClutterFactor extends Factor[Double] with FactorLike[ClutterFactor];
+  val prop = 0.5
+  val mean = 2
+  val gen = for {
+    a <- new Bernoulli(prop)
+    x <- Gaussian(I(a) * mean,3)
+  } yield x
 
-  case class LikelihoodTerm(point: Double, scale:Double=0.0) extends ClutterFactor {
-    def *(f: Double) = copy(point,scale + f)
+  val data = gen.sample(1000)
 
-    def logPartition = Double.PositiveInfinity
+  case class ApproxTerm(s: Double = 0.0, b: DenseVector[Double] = DenseVector.zeros(2)) extends FactorLike[ApproxTerm] {
+    def logPartition = s + Numerics.lbeta(b)
 
-    def apply(theta: Double) = Numerics.logSum(log(1-w) + new Gaussian(theta,1).logPdf(point),
-      log(w) + new Gaussian(0,a).logPdf(point))
+    def *(f: Double) = copy(s = s + f)
   }
 
-  case class ApproxFactor(mean: Double, variance: Double, scale: Double) extends ClutterFactor with FactorLike[ApproxFactor] {
-    def *(f: Double) = copy(scale=scale + f)
-
-    def logPartition = -scale
-
-    def apply(theta: Double) = new Gaussian(mean,variance).unnormalizedLogPdf(theta) + scale
-
-    override def toString() = ScalaRunTime._toString(this)
-  }
-
-  implicit val qProd = new FactorProduct[ApproxFactor,ApproxFactor,ApproxFactor] with FactorQuotient[ApproxFactor,ApproxFactor,ApproxFactor] {
-    def product(f1: ApproxFactor, f2: ApproxFactor) = if(f2.variance == Double.PositiveInfinity) f1 else {
-      val newMean = (f1.mean * f2.variance + f2.mean * f1.variance)/(f1.variance + f2.variance)
-      val newVariance = (f1.variance * f2.variance / (f1.variance + f2.variance))
-      ApproxFactor(newMean,newVariance,f1.scale + f2.scale)
+  implicit object QProduct extends FactorProduct[ApproxTerm,ApproxTerm, ApproxTerm] with FactorQuotient[ApproxTerm,ApproxTerm,ApproxTerm] {
+    def product(f1: ApproxTerm, f2: ApproxTerm) = {
+      ApproxTerm(f1.s + f2.s, f1.b + f2.b)
     }
 
-    def quotient(f1: ApproxFactor, f2: ApproxFactor) = if(f2.variance == Double.PositiveInfinity) f1 else {
-      val newVariance = 1/(1/f1.variance - 1/f2.variance)
-      val newMean = (f1.mean + newVariance / f2.variance * (f1.mean - f2.mean))
-      ApproxFactor(newMean,newVariance,f1.scale - f2.scale)
+    def quotient(f1: ApproxTerm, f2: ApproxTerm) = {
+      ApproxTerm(f1.s - f2.s, f1.b - f2.b)
     }
   }
 
-  def project(q: ApproxFactor, f: ClutterFactor) = f match {
-    case f @ LikelihoodTerm(point,scale) =>
-      val z = Numerics.logSum(log(1-w) + new Gaussian(q.mean,(1 + q.variance)).logPdf(point), log(w) + new Gaussian(0,a).logPdf(point))
-      val rho = 1-w * math.exp(new Gaussian(0,a).logPdf(point)-z)
-      val vn = q.variance - rho * q.variance * q.variance / (q.variance + 1) + rho * (1 - rho) *math.pow(q.variance * (point - q.mean)/(q.variance + 1),2)
-      val m = q.mean + rho * q.variance/(q.variance + 1) * rho * (point - q.mean)
-      assert(!m.isNaN,(q.mean,q.variance))
-      val qnew = new ApproxFactor(m,vn,-new Gaussian(m,vn).logNormalizer)
-      (qnew,z)
-    case f: ApproxFactor =>
-      (q * f,0.0)
+  def likelihood(x: Double):DenseVectorCol[Double] = {
+    DenseVector(Gaussian(0,3).pdf(x), Gaussian(mean,3).pdf(x))
   }
 
-  val mean = new Gaussian(0,b).draw()
-  println(mean)
-
-  val drawPoint = for {
-    isClutter <- new Bernoulli(w)
-    gaussian = if(isClutter) new Gaussian(0, a) else new Gaussian(mean,1)
-    draw <- gaussian
-  } yield {
-    draw
+  def solve(old: DenseVector[Double], target: DenseVector[Double]) = {
+    val guess = old + 0.0;
+    for(i <- 0 until 20) {
+      val t2 = target + digamma(guess.sum)
+      for(i <- 0 until 5) {
+        guess -= ((guess.map(digamma _ ) - t2) :/ (( (guess + 1E-4).map(digamma _) - guess.map(digamma _) )/1E-4))
+      }
+    }
+    guess
   }
 
-  val points = drawPoint.sample(1000)
-  val factors = points.map(new LikelihoodTerm(_))
-  val prior = new ApproxFactor(0,b,math.log(2 * math.Pi* b) * -.5)
-  val initialFactors = Array.fill(factors.length)(new ApproxFactor(0,Double.PositiveInfinity,0))
 
-  val ep = new ExpectationPropagation(project _).inference(prior,factors, initialFactors)
-  for( state <- ep.take(100)) {
-    println(state.q.mean,mean)
+  def project(q: ApproxTerm, x: Double): (ApproxTerm, Double) = {
+    val like = likelihood(x)
+    val target = q.b.map(Numerics.digamma) - Numerics.digamma(q.b.sum) +  (like / (like dot q.b)) - 1/q.b.sum
+    val normalizer = likelihood(x) dot Library.normalize(q.b, 1)
+    val mle = solve(q.b, target)
+    assert(!normalizer.isNaN,(mle,q.b,like,Library.normalize(q.b,1)))
+
+    ApproxTerm(-lbeta(mle+1), mle) -> math.log(normalizer)
   }
+
+  val ep = new ExpectationPropagation(project _)
+  for( state <- ep.inference(ApproxTerm(0.0,DenseVector.ones(2)), data, Array.fill(data.length)(ApproxTerm())) take 20) {
+    println(state.logPartition, state.q)
+    assert(!state.logPartition.isNaN, state.q.s + " " + state.q.b)
+  }
+
 
 
 }
