@@ -25,6 +25,7 @@ import bundles.MutableInnerProductSpace
 import scalala.generic.collection.{CanCreateZerosLike, CanMapValues, CanViewAsTensor1}
 import scalala.generic.math.{CanSoftmax, CanNorm}
 import scalanlp.optimize.{LBFGS, DiffFunction}
+import scalanlp.util.ConsoleLogging
 
 /**
  * Represents a Dirichlet distribution, the conjugate prior to the multinomial.
@@ -55,11 +56,11 @@ case class Dirichlet[T,@specialized(Int) I](params: T)(implicit ev: CanViewAsTen
    * Returns the log pdf function of the Dirichlet up to a constant evaluated at m
    */
   override def unnormalizedLogPdf(m : T) = {
-    val parts = for( (k,v) <- ev(params).pairsIteratorNonZero) yield (v-1) * ev(m)(k);
+    val parts = for( (k,v) <- ev(params).pairsIteratorNonZero) yield (v-1) * math.log(ev(m)(k));
     parts.sum
   }
 
-  val logNormalizer = lgamma(ev(params).sum)  - ev(params).valuesIterator.map( e => lgamma(e)).sum;
+  val logNormalizer = lbeta(ev(params))
 
   /**
    * Returns a Polya Distribution
@@ -104,21 +105,23 @@ object Dirichlet {
     def emptySufficientStatistic = SufficientStatistic(0,zeros(exemplar));
 
     def sufficientStatisticFor(t: T) = {
-      SufficientStatistic(1,ev(ev(t) * (1.0/t.sum)).values.map(math.log _));
+      SufficientStatistic(1,ev(Library.normalize(t,1)).values.map(math.log _))
     }
 
     def mle(stats: SufficientStatistic) = {
       val likelihood = likelihoodFunction(stats);
       val lbfgs = new LBFGS[T](100,3)
-      val result = lbfgs.minimize(likelihood,zeros(stats.t));
+      val result = lbfgs.minimize(likelihood,ev(zeros(stats.t)) + 1.0);
       result;
     }
 
     def likelihoodFunction(stats: SufficientStatistic) = new DiffFunction[T] {
+      val p = ev(stats.t) / stats.n
       def calculate(x: T) = {
-        val lp = -stats.n * (lgamma(x.sum) - x.valuesIterator.map(lgamma).sum) - (ev(ev(x)-1.0):*stats.t).sum;
-        val grad = ev(ev(ev(ev(x).values.map(digamma)) - digamma(x.sum)):*(stats.n)) - stats.t
-        (lp,grad)
+        val lp = -stats.n * (-lbeta(x)  + (ev(ev(x) - 1.0) dot p))
+        val grad: T = ev(ev(ev(ev(x).values.map(digamma))  - digamma(x.sum))  - p) * (stats.n)
+        if(lp.isNaN) (Double.PositiveInfinity,grad)
+        else (lp,grad)
       }
     }
 
