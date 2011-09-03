@@ -22,18 +22,11 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
   lazy val graphs = project("graphs","graphs",new Graphs(_), data);
 
   class Data(info: ProjectInfo) extends DefaultProject(info) {
-    val forkjoin = "org.coconut.forkjoin" % "jsr166y" % "070108"
     val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
     val JLine = "jline" % "jline" % "0.9.94"
     val Scalala = "org.scalala" %% "scalala" % "1.0.0.RC2-SNAPSHOT";
-    val NetlibJava = "netlib" % "netlib-java" % "0.9.2"
-    val ArpackCombo = "netlib" % "arpack-combo" % "0.1"
-    val JCommon = "jfree" % "jcommon" % "1.0.16"
-    val JFreeChart = "jfree" % "jfreechart" % "1.0.13"
-    val XMLGraphicsCommons = "org.apache.xmlgraphics" % "xmlgraphics-commons" % "1.3.1"
-    val IText = "com.lowagie" % "itext" % "2.1.5" intransitive()
     val ScalaCheck = "org.scala-tools.testing" %% "scalacheck" % "1.8" % "test"
-  val ScalaTest = buildScalaVersion match {
+    val ScalaTest = buildScalaVersion match {
     case "2.9.0"     => "org.scalatest" % "scalatest" % "1.4.RC2" % "test"
     case "2.8.1"     => "org.scalatest" % "scalatest" % "1.3" % "test"
     case x           => error("Unsupported Scala version " + x)
@@ -43,16 +36,9 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
   }
 
   class Learn(info: ProjectInfo) extends DefaultProject(info) {
-    val forkjoin = "org.coconut.forkjoin" % "jsr166y" % "070108"
     val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
     val JLine = "jline" % "jline" % "0.9.94"
     val Scalala = "org.scalala" %% "scalala" % "1.0.0.RC2-SNAPSHOT";
-    val NetlibJava = "netlib" % "netlib-java" % "0.9.2"
-    val ArpackCombo = "netlib" % "arpack-combo" % "0.1"
-    val JCommon = "jfree" % "jcommon" % "1.0.16"
-    val JFreeChart = "jfree" % "jfreechart" % "1.0.13"
-    val XMLGraphicsCommons = "org.apache.xmlgraphics" % "xmlgraphics-commons" % "1.3.1"
-    val IText = "com.lowagie" % "itext" % "2.1.5" intransitive()
     val ScalaCheck = "org.scala-tools.testing" %% "scalacheck" % "1.8" % "test"
       val ScalaTest = buildScalaVersion match {
     case "2.9.0"     => "org.scalatest" % "scalatest" % "1.4.RC2" % "test"
@@ -63,16 +49,9 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
   }
 
   class Graphs(info: ProjectInfo) extends DefaultProject(info) {
-    val forkjoin = "org.coconut.forkjoin" % "jsr166y" % "070108"
     val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
     val JLine = "jline" % "jline" % "0.9.94"
     val Scalala = "org.scalala" %% "scalala" % "1.0.0.RC2-SNAPSHOT";
-    val NetlibJava = "netlib" % "netlib-java" % "0.9.2"
-    val ArpackCombo = "netlib" % "arpack-combo" % "0.1"
-    val JCommon = "jfree" % "jcommon" % "1.0.16"
-    val JFreeChart = "jfree" % "jfreechart" % "1.0.13"
-    val XMLGraphicsCommons = "org.apache.xmlgraphics" % "xmlgraphics-commons" % "1.3.1"
-    val IText = "com.lowagie" % "itext" % "2.1.5" intransitive()
     val ScalaCheck = "org.scala-tools.testing" %% "scalacheck" % "1.8" % "test"
 
     val ScalaTest = buildScalaVersion match {
