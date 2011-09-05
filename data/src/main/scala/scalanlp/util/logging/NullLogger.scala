@@ -1,11 +1,25 @@
 package scalanlp.util.logging
 
+import scalanlp.util.logging.Logger.Level
+
 /**
  * 
  * @author dlwh
  */
-object NullLogger extends SimpleLogger {
-  protected[this] def rawLog(level: Logger.Level, t: => Any) {}
-  var level: Logger.Level = Logger.NEVER
+object NullLogger extends Logger {
+  def trace(f: => Any) {}
 
+  def debug(f: => Any) {}
+
+  def info(f: => Any) {}
+
+  def warn(f: => Any) {}
+
+  def error(f: => Any) {}
+
+  def fatal(f: => Any) {}
+
+  def level_=(level: Level) {}
+
+  def level = Logger.NEVER
 }

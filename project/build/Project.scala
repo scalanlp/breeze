@@ -37,6 +37,9 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
   }
 
   class Learn(info: ProjectInfo) extends DefaultProject(info) {
+    lazy val logLevel = system[String]("log.level")
+    // suprress INFO for tests
+    logLevel.update("WARN")
     val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
     val JLine = "jline" % "jline" % "0.9.94"
     val Scalala = "org.scalala" %% "scalala" % "1.0.0.RC2-SNAPSHOT";

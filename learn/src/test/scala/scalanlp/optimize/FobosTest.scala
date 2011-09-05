@@ -47,7 +47,7 @@ class FobosTest extends OptimizeTestBase {
       val targetValue = 3 / (reg.abs / 2 + 1);
       val ok = norm(result :- DenseVector.ones[Double](init.size) * targetValue,2) < 1E-10
       if(!ok) {
-        error("min " + init + " with reg: " + reg + "gives " + result);
+        sys.error("min " + init + " with reg: " + reg + "gives " + result);
       }
       ok
     }
@@ -73,7 +73,7 @@ class FobosTest extends OptimizeTestBase {
       val targetValue = if(sgd.lambda/2 > 3) 0.0 else  3 - sgd.lambda / 2;
       val ok = norm(result :- DenseVector.ones[Double](init.size) * targetValue,2) < 1E-10
       if(!ok) {
-        error("min " + init + " with reg: " + reg + "gives " + result);
+        sys.error("min " + init + " with reg: " + reg + "gives " + result);
       }
       ok
     }

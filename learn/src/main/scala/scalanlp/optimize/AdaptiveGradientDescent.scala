@@ -38,6 +38,9 @@ object AdaptiveGradientDescent {
 
     override def chooseStepSize(state: State) = if(state.iter < 2) 0.001 * eta else eta;
 
+    override protected def adjustGradient(grad: T, x: T) = grad + x * lambda
+
+    override protected def adjustValue(value: Double, x: T) = value + (x dot x) * lambda / 2
   }
 
   class L1Regularization[K,T](val lambda: Double=1.0,
@@ -70,6 +73,11 @@ object AdaptiveGradientDescent {
     }
 
     override def chooseStepSize(state: State) = eta;
+
+    override protected def adjustGradient(grad: T, x: T) = grad + x.values.map(math.signum) * lambda
+
+    override protected def adjustValue(value: Double, x: T) = value + norm(x,1) * lambda
+
 
   }
 }

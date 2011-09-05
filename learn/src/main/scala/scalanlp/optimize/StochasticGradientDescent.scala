@@ -53,15 +53,18 @@ abstract class StochasticGradientDescent[T](val eta: Double,
       val iter = state.iter;
 
       val (value,grad: T) = f.calculate(oldX);
-      log.info("SGD gradient norm: " + norm(grad,2));
-      log.info("SGD value: " + value);
-      val stepSize = chooseStepSize(state.copy(value=value,grad=grad));
+
+      val stepSize:Double = chooseStepSize(state.copy(value=value,grad=grad));
       val newX = projectVector(state, oldX, grad, stepSize);
-      val newState = State(newX, value, grad, adjustValue(value,newX), adjustGradient(grad,newX), iter + 1, updateHistory(state,newX,value,grad))
+      val adjustedGradient = adjustGradient(grad, newX)
+      val adjustedValue = adjustValue(value, newX)
+      log.info("SGD gradient norm: " + norm(grad,2) + " "+ norm(adjustedGradient,2));
+      log.info("SGD value: " + value + " " + adjustedValue);
+      val newState = State(newX, value, grad, adjustedValue, adjustedGradient, iter + 1, updateHistory(state,newX,value,grad))
       newState
     };
 
-    it.drop(1).takeWhile { state => (state.iter < maxIter || maxIter < 0) && !checkConvergence(state.value,state.grad)}
+    it.drop(1).takeWhile { state => (state.iter < maxIter || maxIter < 0) && !checkConvergence(state.adjustedValue,state.adjustedGradient)}
   }
 
 

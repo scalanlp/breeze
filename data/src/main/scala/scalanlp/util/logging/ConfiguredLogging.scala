@@ -15,19 +15,21 @@ trait ConfiguredLogging extends Logged {
 
 object ConfiguredLogging {
 
-  case class LogParams(output: LogOutput = ConsoleOutput, level: Logger.Level = Logger.DEBUG)
+  case class LogParams(output: LogOutput = ConsoleOutput, level: Logger.Level = Logger.INFO) {
+    def logger = output.logger(level)
+  }
 
-  sealed trait LogOutput { def logger: Logger}
+  sealed trait LogOutput { def logger(level: Level): Logger}
   private case object NoOutput extends LogOutput {
-    def logger = NullLogger
+    def logger(level: Level) = NullLogger
   }
 
   private case object ConsoleOutput extends LogOutput {
-    def logger = new OutputStreamLogger(System.err, level = Logger.TRACE)
+    def logger(level: Level) = new OutputStreamLogger(System.err, level)
   }
 
   private case class FileOutput(f: File) extends LogOutput {
-    def logger = new OutputStreamLogger(new FileOutputStream(f), level = Logger.TRACE);
+    def logger(level: Level) = new OutputStreamLogger(new FileOutputStream(f), level);
   }
 
   ArgumentParser addArgumentParser new ArgumentParser[LogOutput] {
@@ -53,11 +55,7 @@ object ConfiguredLogging {
   var configuration: Configuration = Configuration.fromPropertiesFiles(Seq.empty)
 
   def apply[T]()(implicit manifest: ClassManifest[T]):Logger = {
-    val params = configuration.readIn[LogParams](manifest.getClass.getName+".log")
-    val logger = params.output.logger
-    val level = params.level
-
-    new ForwardingLogger(logger, level)
+    configuration.readIn[LogParams](manifest.getClass.getName+".log").logger
   }
 
 }
