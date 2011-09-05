@@ -1,15 +1,14 @@
 package scalanlp.optimize
 
 import scalanlp.util._
-import scalanlp.util.Log._
-import scalanlp.optimize.QuasiNewtonMinimizer.{NaNHistory, StepSizeUnderflow}
+import logging.{ConfiguredLogging}
+import scalanlp.optimize.QuasiNewtonMinimizer.StepSizeUnderflow
 import scalala.library.Library.norm
 import scalala.generic.math.CanNorm
 import scalala.operators._
 import bundles.MutableInnerProductSpace
-import scalala.tensor.mutable.{Counter, Tensor1}
-import scalala.tensor.dense.{DenseVectorCol, DenseVector}
-;
+import scalala.tensor.mutable.Tensor1
+import scalala.tensor.dense.DenseVector
 
 
 /**
@@ -22,7 +21,7 @@ import scalala.tensor.dense.{DenseVectorCol, DenseVector}
  */
 class OWLQN[K,T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit vspace: MutableInnerProductSpace[Double,T],
                                                   view: T <:< Tensor1[K,Double] with scalala.tensor.mutable.TensorLike[K,Double,_,T with Tensor1[K,Double]],
-                                                  canNorm: CanNorm[T]) extends LBFGS[T](maxIter, m) with GradientNormConvergence[T] with Logged {
+                                                  canNorm: CanNorm[T]) extends LBFGS[T](maxIter, m) with GradientNormConvergence[T] with ConfiguredLogging {
   import vspace._;
   require(m > 0);
   require(l1reg >= 0);
@@ -33,8 +32,8 @@ class OWLQN[K,T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit vspace: Mutab
     val normGradInDir = {
       val possibleNorm = dir dot grad;
       if (possibleNorm > 0) { // hill climbing is not what we want. Bad LBFGS.
-        log(WARN)("Direction of positive gradient chosen!");
-        log(WARN)("Direction is:" + possibleNorm)
+        log.warn("Direction of positive gradient chosen!");
+        log.warn("Direction is:" + possibleNorm)
         // Reverse the direction, clearly it's a bad idea to go up
         dir *= -1.0;
         dir dot grad;
@@ -51,7 +50,7 @@ class OWLQN[K,T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit vspace: Mutab
     val search = new BacktrackingLineSearch(initAlpha = if (iter <= 1) 0.5 else 1.0)
     val iterates = search.iterations(ff)
     val targetState = iterates.find { case search.State(alpha,v) =>
-      log(INFO)(".");
+      log.info(".");
       // sufficient descent
       v < state.adjustedValue + alpha * 0.0001 * normGradInDir
     }
@@ -59,7 +58,7 @@ class OWLQN[K,T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit vspace: Mutab
     val alpha = (for(search.State(alpha,currentVal) <- targetState) yield {
       if(alpha > 0 && alpha * norm(grad,Double.PositiveInfinity) < 1E-10)
         throw new StepSizeUnderflow;
-      log(INFO)("Step size: " + alpha);
+      log.info("Step size: " + alpha);
       alpha
     }) getOrElse(0.0)
 

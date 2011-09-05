@@ -24,7 +24,8 @@ import scalala.library.Library._;
 import scalanlp.stats.distributions._;
 
 import scalanlp.util._;
-import Log._
+import logging.{ConsoleLogging, Logged}
+
 import scalala.generic.collection.CanCreateZerosLike
 import scalala.operators._
 import scalala.generic.math.CanNorm
@@ -61,8 +62,8 @@ class ContrastiveDivergenceOptimizer[X,T](trans: T=>X=>Rand[X],
 	  var converged = false;
     var i = 0;
     do {
-      log(INFO)("Starting iteration: " +i);
-      log(INFO)("Current v:" + cur);
+      log.info("Starting iteration: " +i);
+      log.info("Current v:" + cur);
       val grad = computeGradient(data,cur);
       cur += grad * learningRate;
       i += 1;

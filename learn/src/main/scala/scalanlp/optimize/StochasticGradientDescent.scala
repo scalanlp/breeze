@@ -5,6 +5,7 @@ import generic.collection.{CanMapValues, CanCreateZerosLike}
 import operators._
 import bundles.MutableInnerProductSpace
 import scalanlp.util._;
+import logging.ConfiguredLogging
 import scalanlp.stats.distributions._
 import scalala.generic.math.{CanSqrt, CanNorm}
 import scalala.library.Library.norm;
@@ -36,7 +37,7 @@ abstract class StochasticGradientDescent[T](val eta: Double,
                                             (implicit protected val vspace: MutableInnerProductSpace[Double,T], protected val canNorm: CanNorm[T])
   extends FirstOrderMinimizer[T,StochasticDiffFunction[T]]
                                       with GradientNormConvergence[T]
-                                      with Logged {
+                                      with ConfiguredLogging {
 
   import vspace._;
 
@@ -52,8 +53,8 @@ abstract class StochasticGradientDescent[T](val eta: Double,
       val iter = state.iter;
 
       val (value,grad: T) = f.calculate(oldX);
-      log(Log.INFO)("SGD gradient norm: " + norm(grad,2));
-      log(Log.INFO)("SGD value: " + value);
+      log.info("SGD gradient norm: " + norm(grad,2));
+      log.info("SGD value: " + value);
       val stepSize = chooseStepSize(state.copy(value=value,grad=grad));
       val newX = projectVector(state, oldX, grad, stepSize);
       val newState = State(newX, value, grad, adjustValue(value,newX), adjustGradient(grad,newX), iter + 1, updateHistory(state,newX,value,grad))

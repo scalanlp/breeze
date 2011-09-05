@@ -3,7 +3,7 @@ package scalanlp.optimize.linear
 import scalala.tensor.dense.{DenseMatrix, DenseVector}
 import scalala.library.LinearAlgebra.{diag,det,inv}
 import scalala.library.Library.norm
-import scalanlp.util.{Log, ConsoleLogging, Logged}
+import scalanlp.util.logging.{ConfiguredLogging, Logged}
 
 
 /**
@@ -11,7 +11,7 @@ import scalanlp.util.{Log, ConsoleLogging, Logged}
  * Note that this is not Karmarkar's algorithm.
  * @author dlwh
  */
-class AffineScaling extends Logged {
+class AffineScaling extends ConfiguredLogging {
   /**
    * Maximize c dot x s.t. Ax <= b
    */
@@ -36,7 +36,7 @@ class AffineScaling extends Logged {
       val alpha = if(constraints.size > 1) constraints.min * gamma else 0.0;
       val xn = x + hx * alpha;
       val cvn = xn dot c
-      log(Log.INFO)("Current obj: " + cvn);
+      log.info("Current obj: " + cvn);
       if( (cvn - cv).abs/(1.0 max cvn) < eps) converged = true;
       cv = cvn;
       x = xn;
@@ -47,4 +47,4 @@ class AffineScaling extends Logged {
   object UnboundedProblem extends Exception;
 }
 
-object AffineScaling extends AffineScaling with ConsoleLogging;
+object AffineScaling extends AffineScaling with ConfiguredLogging;

@@ -16,10 +16,8 @@ package scalanlp.stats.distributions;
  limitations under the License. 
 */
 
-import scalanlp.util.Log
-import scalala.tensor.Counter
 import scalanlp.optimize.DiffFunction
-import scalala.generic.collection.{CanViewAsTensor1, CanMapValues, CanCreateZerosLike}
+import scalala.generic.collection.{CanViewAsTensor1, CanCreateZerosLike}
 import scalala.operators._
 import scalala.tensor.mutable.{Tensor1, Tensor}
 import scalala.library.Library

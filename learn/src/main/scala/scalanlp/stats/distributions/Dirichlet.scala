@@ -17,15 +17,14 @@ package scalanlp.stats.distributions;
 */
 
 import scalala.tensor._;
-import dense.{DenseVector, DenseVectorCol}
+import dense.DenseVectorCol
 import scalala.library.Numerics._
 import scalala.library.Library
 import scalala.operators._
 import bundles.MutableInnerProductSpace
-import scalala.generic.collection.{CanCreateZerosLike, CanMapValues, CanViewAsTensor1}
+import scalala.generic.collection.{CanMapValues, CanViewAsTensor1}
 import scalala.generic.math.{CanSoftmax, CanNorm}
 import scalanlp.optimize.{LBFGS, DiffFunction}
-import scalanlp.util.ConsoleLogging
 
 /**
  * Represents a Dirichlet distribution, the conjugate prior to the multinomial.

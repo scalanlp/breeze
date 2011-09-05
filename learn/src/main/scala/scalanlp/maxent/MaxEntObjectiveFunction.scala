@@ -11,7 +11,6 @@ import scalala.tensor.dense.DenseVector
 import scalanlp.util.Index
 import scalanlp.util.Encoder
 import scalala.library.Library.softmax;
-import scalanlp.util.Log
 import scalanlp.util.Profiling
 import scalanlp.optimize.{FirstOrderMinimizer, DiffFunction}
 import scalala.collection.sparse.SparseArray

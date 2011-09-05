@@ -17,7 +17,8 @@ package scalanlp.optimize
 */
 
 import scalanlp.util._
-import scalanlp.util.Log._
+import scalanlp.util.logging._
+import scalanlp.util.logging.Logger._
 import scalanlp.optimize.QuasiNewtonMinimizer.{LineSearchFailed, NaNHistory, StepSizeUnderflow};
 import scalala.generic.math.CanNorm
 import scalala.operators._
@@ -43,7 +44,7 @@ import scalala.tensor.dense.DenseVector
  * @param maxIter: maximum number of iterations, or &lt;= 0 for unlimited
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
-class LBFGS[T](override val maxIter: Int, m: Int=5)(implicit protected val vspace: MutableInnerProductSpace[Double,T], protected val canNorm: CanNorm[T]) extends QuasiNewtonMinimizer[T] with GradientNormConvergence[T] with Logged {
+class LBFGS[T](override val maxIter: Int, m: Int=5)(implicit protected val vspace: MutableInnerProductSpace[Double,T], protected val canNorm: CanNorm[T]) extends QuasiNewtonMinimizer[T] with GradientNormConvergence[T] with ConfiguredLogging {
 
   import vspace._;
   require(m > 0);
@@ -138,8 +139,8 @@ class LBFGS[T](override val maxIter: Int, m: Int=5)(implicit protected val vspac
     val normGradInDir = {
       val possibleNorm = dir dot grad;
       if (possibleNorm > 0) { // hill climbing is not what we want. Bad LBFGS.
-        log(WARN)("Direction of positive gradient chosen!");
-        log(WARN)("Direction is:" + possibleNorm)
+        log.warn("Direction of positive gradient chosen!");
+        log.warn("Direction is:" + possibleNorm)
         // Reverse the direction, clearly it's a bad idea to go up
         dir *= -1.0;
         dir dot grad;
@@ -154,7 +155,7 @@ class LBFGS[T](override val maxIter: Int, m: Int=5)(implicit protected val vspac
     val targetState = iterates.find { case search.State(alpha,v) =>
       // sufficient descent
       val r = v < state.value + alpha * 0.0001 * normGradInDir
-      if(!r) log(INFO)(".");
+      if(!r) log.info(".");
       r
 
     }
@@ -162,7 +163,7 @@ class LBFGS[T](override val maxIter: Int, m: Int=5)(implicit protected val vspac
 
     if(alpha * norm(grad,Double.PositiveInfinity) < 1E-10)
       throw new StepSizeUnderflow;
-    log(INFO)("Step size: " + alpha);
+    log.info("Step size: " + alpha);
     alpha
   }
 

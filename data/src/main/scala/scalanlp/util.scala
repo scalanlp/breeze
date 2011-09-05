@@ -37,6 +37,23 @@ package object util extends DoubleImplicits with IteratorImplicits with SeqImpli
    */
   type TODO = Nothing;
 
+  /**
+   * Computes the current source file and line number.
+   */
+  @noinline def LOCATION = {
+    val e = new Exception().getStackTrace()(1);
+    e.getFileName() + ":" + e.getLineNumber();
+  }
+
+  /**
+   * Computes the source file location of the nth parent.
+   * 0 is equivalent to LOCATION
+   */
+  @noinline def CALLER(nth : Int) = {
+    val e = new Exception().getStackTrace()(nth+1);
+    e.getFileName() + ":" + e.getLineNumber();
+  }
+
   def memoryString = {
     val r = Runtime.getRuntime;
     val free = r.freeMemory / (1024 * 1024);

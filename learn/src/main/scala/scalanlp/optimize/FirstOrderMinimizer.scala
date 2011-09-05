@@ -1,12 +1,10 @@
 package scalanlp.optimize
 
-import scalanlp.util.Logged
-import scalanlp.util.Log._
-import scalanlp.util.ConsoleLogging
 import scalala.tensor._
 import scalala.operators.bundles.MutableInnerProductSpace
 import scalala.generic.math.CanNorm
 import scalala.generic.collection.{CanMapKeyValuePairs, CanViewAsTensor1}
+import scalanlp.util.logging.Logged
 
 /**
  * 
@@ -72,15 +70,15 @@ object FirstOrderMinimizer {
                        TKVPairs: CanMapKeyValuePairs[T,K,Double,Double,T],
                        view:  <:<[T,scalala.tensor.mutable.Tensor1[K,Double] with scalala.tensor.mutable.TensorLike[K, Double, _, T with scalala.tensor.mutable.Tensor1[K,Double]]]): FirstOrderMinimizer[T,StochasticDiffFunction[T]] = {
       if(regularization == 0.0) {
-        new StochasticGradientDescent.SimpleSGD[T](alpha, maxIterations) with ConsoleLogging {
+        new StochasticGradientDescent.SimpleSGD[T](alpha, maxIterations) {
           override val TOLERANCE = tolerance
         }
       } else if(useL1) {
-        new AdaptiveGradientDescent.L1Regularization[K,T](regularization, eta=alpha, maxIter = maxIterations)(arith,TisTensor,TKVPairs,canNorm)  with ConsoleLogging {
+        new AdaptiveGradientDescent.L1Regularization[K,T](regularization, eta=alpha, maxIter = maxIterations)(arith,TisTensor,TKVPairs,canNorm) {
           override val TOLERANCE = tolerance
         }
       } else { // L2
-        new StochasticGradientDescent[T](alpha,  maxIterations) with AdaptiveGradientDescent.L2Regularization[T] with ConsoleLogging {
+        new StochasticGradientDescent[T](alpha,  maxIterations) with AdaptiveGradientDescent.L2Regularization[T] {
           override val TOLERANCE = tolerance
           override val lambda = regularization;
         }
@@ -91,10 +89,10 @@ object FirstOrderMinimizer {
       (f: DiffFunction[T])(implicit vspace: MutableInnerProductSpace[Double,T],
                              view:  <:<[T,scalala.tensor.mutable.Tensor1[K,Double] with scalala.tensor.mutable.TensorLike[K, Double, _, T with scalala.tensor.mutable.Tensor1[K,Double]]],
                              canNorm: CanNorm[T]): FirstOrderMinimizer[T,DiffFunction[T]] = {
-      if(useL1) new OWLQN[K,T](maxIterations, 5, regularization) with ConsoleLogging {
+      if(useL1) new OWLQN[K,T](maxIterations, 5, regularization) {
         override val TOLERANCE = tolerance
       }
-      else new LBFGS[T](maxIterations, 5) with ConsoleLogging {
+      else new LBFGS[T](maxIterations, 5) {
         override val TOLERANCE = tolerance
         override def iterations(f: DiffFunction[T], init: T) = {
           super.iterations(DiffFunction.withL2Regularization(f,regularization),init);

@@ -1,12 +1,11 @@
 package scalanlp.optimize
 
-import scalanlp.util.Logged
-import scalanlp.util.Log._
 import scalanlp.optimize.QuasiNewtonMinimizer._
 import scalala.generic.math.CanNorm
 import scalala.library.Library.norm
 import scalala.operators._
 import bundles.InnerProductSpace
+import scalanlp.util.logging.Logged
 ;
 
 /*
@@ -63,7 +62,7 @@ trait QuasiNewtonMinimizer[T] extends FirstOrderMinimizer[T,DiffFunction[T]] wit
      try {
        val dir = chooseDescentDirection(adjGrad, state);
        val stepScale = chooseStepSize(f, dir, adjGrad, state);
-       log(INFO)("Scale:" +  stepScale);
+       log.info("Scale:" +  stepScale);
        val step = dir * stepScale
        val newX:T = x + step;
        if (norm(step,2) <= 1E-20) {
@@ -72,7 +71,7 @@ trait QuasiNewtonMinimizer[T] extends FirstOrderMinimizer[T,DiffFunction[T]] wit
 
        val (newVal,newGrad) = f.calculate(newX);
 
-       log(INFO)("New Val: " + newVal);
+       log.info("New Val: " + newVal);
 
        val newHistory = updateHistory(state, newGrad, newVal, step);
 
@@ -80,10 +79,10 @@ trait QuasiNewtonMinimizer[T] extends FirstOrderMinimizer[T,DiffFunction[T]] wit
 
      } catch {
        case _:StepSizeUnderflow =>
-        log(ERROR)("Step size underflow! Clearing history.");
+        log.error("Step size underflow! Clearing history.");
         state.copy(history=initialHistory(state.grad), iter = iter+1)
        case _: QNException =>
-         log(ERROR)("Something in the history is giving NaN's, clearing it!");
+         log.error("Something in the history is giving NaN's, clearing it!");
          state.copy(history=initialHistory(state.grad), iter=iter+1);
      }
     }

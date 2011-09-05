@@ -21,8 +21,6 @@ import scalala.library.Numerics._;
 import math._
 import scalala.tensor.dense.DenseVector
 import scalanlp.optimize.{LBFGS, DiffFunction}
-import scalanlp.util.ConsoleLogging
-;
 
 
 /**

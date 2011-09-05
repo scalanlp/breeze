@@ -26,8 +26,7 @@ import scalala.operators.bundles.MutableInnerProductSpace
 import scalala.library.Numerics._
 import scalala.library.Library._;
 import scalala.generic.math.CanNorm
-import scalanlp.util.{ConsoleLogging, I}
-;
+import scalanlp.util.{I}
 
 /**
  * A multi-class logistic/softmax/maxent classifier. It's currently unsmoothed (no regularization)

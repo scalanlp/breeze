@@ -19,6 +19,7 @@ package scalanlp.classify
 
 import scalala.library.Library._;
 import scalanlp.util._
+import scalanlp.util.logging._
 import scalanlp.data.Example
 import scalala.operators._
 import bundles.MutableInnerProductSpace
@@ -59,7 +60,7 @@ object SVM {
   class Pegasos[L,T](numIterations: Int,
                    regularization: Double=.1,
                    batchSize: Int = 100)(implicit vspace : MutableInnerProductSpace[Double,T],
-                                         opAssign : BinaryUpdateOp[T,T,OpSet], canNorm: CanNorm[T])extends Classifier.Trainer[L,T] with Logged {
+                                         opAssign : BinaryUpdateOp[T,T,OpSet], canNorm: CanNorm[T])extends Classifier.Trainer[L,T] with Logged with ConfiguredLogging {
     import vspace._;
     type MyClassifier = Classifier[L,T];
     def train(data: Iterable[Example[L,T]]):Classifier[L,T] = {
@@ -94,8 +95,8 @@ object SVM {
         val loss = problemSubset.iterator.map(_._3).sum;
 
         val rate = 1 / (regularization * (iter.toDouble + 1));
-        log(Log.INFO)("rate: " + rate);
-        log(Log.INFO)("subset size: " + problemSubset.size);
+        log.info("rate: " + rate);
+        log.info("subset size: " + problemSubset.size);
         val w_half = problemSubset.foldLeft(w * (1-rate * regularization)) { (w,exr) =>
           val (ex,r, oldLoss) = exr
           val et = ex.features * (rate/subset.size);
@@ -107,7 +108,7 @@ object SVM {
 
         val w_norm = (1 / (sqrt(regularization) * norm(w_half,2))) min 1;
         w = w_half * w_norm;
-        log(Log.INFO)("iter: " + iter + " " + loss);
+        log.info("iter: " + iter + " " + loss);
 
 
         val problemSubset2 = (for {
@@ -118,7 +119,7 @@ object SVM {
 
 
         val loss2 = problemSubset2.iterator.map(_._3).sum;
-        log(Log.INFO)("Post loss: " + loss2);
+        log.info("Post loss: " + loss2);
       }
       new LinearClassifier(w,Counter[L,Double]());
     }

@@ -24,8 +24,6 @@ import scalala.library.Numerics._
 import com.sun.xml.internal.ws.encoding.xml.XMLMessage.XMLMultiPart
 import scalanlp.optimize.{LBFGS, DiffFunction}
 import scalala.tensor.dense.DenseVector
-import scalanlp.util.ConsoleLogging
-;
 
 /**
  * Represents a Gaussian distribution over a single real variable.
@@ -126,5 +124,3 @@ object Gaussian extends ExponentialFamily[Gaussian,Double] {
     }
   }
 }
-
-object GlobalLBFGS extends LBFGS[DenseVector[Double]](10,6) with ConsoleLogging;
