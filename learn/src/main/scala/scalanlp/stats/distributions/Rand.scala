@@ -18,6 +18,8 @@ package scalanlp.stats.distributions;
 
 import scala.collection.mutable.ArrayBuffer
 import scalanlp.stats.random.{MersenneTwister, RandomGenerator}
+import collection.TraversableLike
+import collection.generic.CanBuildFrom
 
 /**
  * A trait for monadic distributions. Provides support for use in for-comprehensions
@@ -121,7 +123,7 @@ class RandBasis(r: RandomGenerator) {
   /**
    * Chooses an element from a collection. 
    */
-  def choose[T](c: Iterable[T]) = new Rand[T] { 
+  def choose[T](c: Iterable[T]):Rand[T] = new Rand[T] {
     def draw() = {
       val sz = uniform.get * c.size;
       val elems = c.iterator;
@@ -140,7 +142,7 @@ class RandBasis(r: RandomGenerator) {
   /**
    * The trivial random generator: always returns the argument
    */
-  def always[T](t : T) = new Rand[T] {
+  def always[T](t : T):Rand[T] = new Rand[T] {
     def draw = t;
   }
 
@@ -148,24 +150,15 @@ class RandBasis(r: RandomGenerator) {
   /**
   * Simply reevaluate the body every time get is called
   */ 
-  def fromBody[T](f : =>T) = new Rand[T] {
+  def fromBody[T](f : =>T):Rand[T] = new Rand[T] {
     def draw = f;
   }
 
   /**
   * Convert a Collection of Rand[T] into a Rand[Collection[T]]
   */
-  def promote[U](col : Iterable[Rand[U]]) = fromBody(col.map(_.get));
-
-  /**
-  * Convert a List of Rand[T] into a Rand[List[T]]
-  */
-  def promote[U](col : List[Rand[U]]) = fromBody(col.map(_.get));
-
-  /**
-  * Convert an Array of Rand[T] into a Rand[Array[T]]
-  */
-  def promote[U](col : Array[Rand[U]]) = fromBody(col.map(_.get));
+  def promote[T, CC[X] <: Traversable[X] with TraversableLike[X, CC[X]]]
+             (col : CC[Rand[T]])(implicit cbf: CanBuildFrom[CC[Rand[T]], T, CC[T]]):Rand[CC[T]] = fromBody(col.map(_.get));
 
   /**
   * Convert an Seq of Rand[T] into a Rand[Seq[T]]
@@ -180,28 +173,28 @@ class RandBasis(r: RandomGenerator) {
   /**
    * Uniformly samples in [0,1]
    */
-  val uniform = new Rand[Double] {
+  val uniform:Rand[Double] = new Rand[Double] {
     def draw = r.nextDouble;
   }
 
   /**
    * Uniformly samples an integer in [0,MAX_INT]
    */
-  val randInt = new Rand[Int] {
+  val randInt:Rand[Int] = new Rand[Int] {
     def draw = r.nextInt;
   }
 
   /**
    * Uniformly samples an integer in [0,n)
    */
-  def randInt(n : Int) = new Rand[Int] {
+  def randInt(n : Int):Rand[Int] = new Rand[Int] {
     def draw = r.nextInt(n);
   }
 
   /**
    * Uniformly samples an integer in [n,m)
    */
-  def randInt(n : Int, m: Int) = new Rand[Int] {
+  def randInt(n : Int, m: Int):Rand[Int] = new Rand[Int] {
     def draw = r.nextInt(m-n)+n;
   }
 
@@ -222,7 +215,7 @@ class RandBasis(r: RandomGenerator) {
   /**
    * Implements the Knuth shuffle of numbers from 0 to n.
    */
-  def permutation(n : Int) = new Rand[IndexedSeq[Int]] {
+  def permutation(n : Int):Rand[IndexedSeq[Int]] = new Rand[IndexedSeq[Int]] {
     def draw = {
       val arr = new ArrayBuffer[Int]();
       arr ++= (0 until n);
