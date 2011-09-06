@@ -65,18 +65,19 @@ trait QuasiNewtonMinimizer[T] extends FirstOrderMinimizer[T,DiffFunction[T]] wit
        log.info("Scale:" +  stepScale);
        val step = dir * stepScale
        val newX:T = x + step;
-       if (norm(step,2) <= 1E-20) {
+       if (norm(adjGrad,2) >= 1E-20 && norm(step,2) <= 1E-3) {
          throw new StepSizeUnderflow;
        }
 
        val (newVal,newGrad) = f.calculate(newX);
 
        log.info("New Val: " + newVal);
-       log.info("New Grad: " + norm(newGrad,2));
+       val newAdjGrad = adjustGradient(newGrad, newX)
+       log.info("New Grad: " + norm(newGrad,2) + " " + norm(newAdjGrad,2));
 
        val newHistory = updateHistory(state, newGrad, newVal, step);
 
-       State(newX,newVal,newGrad,adjustValue(newVal, newX),adjustGradient(newGrad,newX),iter+1,newHistory);
+       State(newX,newVal,newGrad,adjustValue(newVal, newX),newAdjGrad,iter+1,newHistory);
 
      } catch {
        case _:StepSizeUnderflow =>
@@ -99,7 +100,7 @@ trait QuasiNewtonMinimizer[T] extends FirstOrderMinimizer[T,DiffFunction[T]] wit
       println(maxIter < 0);
       println(checkConvergence(state.value,state.adjustedGradient));
       */
-      (state.iter < maxIter || maxIter < 0) && !checkConvergence(state.value,state.adjustedGradient) && state.failures < 5
+      (state.iter < maxIter || maxIter < 0) && !checkConvergence(state.adjustedValue,state.adjustedGradient) && state.failures < 5
     }.map(_(1));
 
    }

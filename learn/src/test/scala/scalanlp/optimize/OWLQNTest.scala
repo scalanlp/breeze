@@ -28,11 +28,13 @@ import scalala.tensor.dense.{DenseVectorCol, DenseVector}
 import scalala.tensor.Tensor
 import scalala.operators.OpEq
 import scalala.tensor.domain.IndexDomain
+import scalanlp.util.logging.ConsoleLogging
+
 
 @RunWith(classOf[JUnitRunner])
 class OWLQNTest extends OptimizeTestBase {
   test("super simple") {
-    val lbfgs = new OWLQN[Int,DenseVector[Double]](100,4);
+    val lbfgs = new OWLQN[Int,DenseVector[Double]](100,4)
 
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
@@ -51,7 +53,7 @@ class OWLQNTest extends OptimizeTestBase {
 
 
   test("optimize a simple multivariate gaussian") {
-    val lbfgs = new OWLQN[Int,DenseVector[Double]](100,4,1.0);
+    val lbfgs = new OWLQN[Int,DenseVector[Double]](100,4,1.0)
 
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {

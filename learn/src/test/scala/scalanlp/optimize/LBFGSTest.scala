@@ -25,6 +25,7 @@ import scalala.tensor.dense.DenseVector
 import scalala.tensor.mutable.Counter
 import scalala.library.Library.norm
 import scalala.generic.collection.CanCopy
+import scalanlp.util.logging.ConsoleLogging
 ;
 
 
@@ -32,7 +33,7 @@ import scalala.generic.collection.CanCopy
 class LBFGSTest extends OptimizeTestBase {
 
   test("optimize a simple multivariate gaussian") {
-    val lbfgs = new LBFGS[DenseVector[Double]](100,4);
+    val lbfgs = new LBFGS[DenseVector[Double]](100,4) with ConsoleLogging;
 
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {

@@ -1,7 +1,7 @@
 package scalanlp.optimize
 
 import scalanlp.util._
-import logging.{ConfiguredLogging}
+import logging.{ConsoleLogging, ConfiguredLogging}
 import scalanlp.optimize.QuasiNewtonMinimizer.StepSizeUnderflow
 import scalala.library.Library.norm
 import scalala.generic.math.CanNorm
@@ -25,9 +25,10 @@ class OWLQN[K,T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit vspace: Mutab
   import vspace._;
   require(m > 0);
   require(l1reg >= 0);
-  override def chooseStepSize(f: DiffFunction[T], dir: T, grad: T, state: State) = {
+  override def chooseStepSize(f: DiffFunction[T], dir: T, grad: T, state: State) = if(norm(grad,2) < 1E-6) 0.0 else {
     val iter = state.iter;
     val x = state.x;
+
 
     val normGradInDir = {
       val possibleNorm = dir dot grad;
