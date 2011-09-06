@@ -99,8 +99,9 @@ object TestCD {
     }
     def deriv(theta: DenseVector[Double]) = { (x:Double) => DenseVector(x-theta(0)) }
     val opt = new ContrastiveDivergenceOptimizer[Double,DenseVector[Double]](trans _ ,deriv _ ,0.01) with ConsoleLogging;
-    
-    opt.maximize(data,DenseVector(-100.0));
+
+    opt.maximize(data,DenseVector(-10.0));
+    println(mean(data))
   }
   
 }
