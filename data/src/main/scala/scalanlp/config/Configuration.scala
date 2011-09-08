@@ -69,7 +69,7 @@ import scala.reflect.NoManifest;
  * @author dlwh
  *
  */
-trait Configuration {
+trait Configuration { outer =>
   /**
    * Get a raw property without any processing. Returns None if it's not present.
    */
@@ -269,6 +269,11 @@ trait Configuration {
         if (next.isEmpty) None else recursiveGetProperty(next);
     }
   }
+
+  /** Use properties from that if not found in this */
+  def backoff(that: Configuration):Configuration = new Configuration {
+    def getProperty(property: String) = outer.getProperty(property).orElse(that.getProperty(property))
+  }
 }
 
 /** The exception thrown in case something goes wrong in Configuration
@@ -299,6 +304,7 @@ object Configuration {
   def fromMap(map: Map[String, String]) = new Configuration {
     def getProperty(p: String) = map.get(p);
   }
+
 
   /**
    * Creates a Configuration from a sequence of properties files, where later
