@@ -25,13 +25,21 @@ import org.junit.runner.RunWith
 import scalanlp.util.I;
 
 @RunWith(classOf[JUnitRunner])
-class BernoulliTest extends FunSuite with Checkers with MomentsTestBase[Boolean] {
+class BernoulliTest extends FunSuite with Checkers with MomentsTestBase[Boolean] with ExpFamTest[Bernoulli,Boolean] {
+  val expFam = Bernoulli
+
   import Arbitrary.arbitrary;
 
+  def arbParameter = Arbitrary(arbitrary[Double].map(x => math.abs(x) % 1.0))
+
+  def paramsClose(p: Double, b: Double) = if(b == 0.0) p < 1E-4 else (p -b).abs / b.abs.max(1E-4) < 1E-1
+
   implicit def arbDistr = Arbitrary {
-    for(p <- arbitrary[Double].map{_.abs % 1.0+1E-4}) yield new Bernoulli(p);
+    for(p <- arbitrary[Double].map{x => math.abs(x) % 1.0+1E-4}) yield new Bernoulli(p);
   }
 
   def asDouble(x: Boolean) = I(x)
   def fromDouble(x: Double) = x != 0.0
+
+
 }
