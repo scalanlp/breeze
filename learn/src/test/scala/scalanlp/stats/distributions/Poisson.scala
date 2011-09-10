@@ -25,12 +25,15 @@ import org.junit.runner.RunWith
 import scalanlp.stats.DescriptiveStats._;
 
 @RunWith(classOf[JUnitRunner])
-class PoissonTest extends FunSuite with Checkers with MomentsTestBase[Int] {
+class PoissonTest extends FunSuite with Checkers with MomentsTestBase[Int] with ExpFamTest[Poisson,Int] {
   import Arbitrary.arbitrary;
+  val expFam = Poisson
 
   implicit def arbDistr = Arbitrary {
     for(p <- arbitrary[Double].map{_.abs % 20 + 1}) yield new Poisson(p);
   }
+  def arbParameter = Arbitrary(arbitrary[Double].map(x => math.abs(x) % 20))
+  def paramsClose(p: Double, b: Double) = if(b == 0.0) p < 1E-4 else (p -b).abs / b.abs.max(1E-4) < 1E-1
 
   def asDouble(x: Int) = x.toDouble
   def fromDouble(x: Double) = x.toInt
