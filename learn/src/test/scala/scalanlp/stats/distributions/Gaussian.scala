@@ -25,10 +25,22 @@ import org.junit.runner.RunWith
 import scalanlp.stats.DescriptiveStats._
 
 @RunWith(classOf[JUnitRunner])
-class GaussianTest extends FunSuite with Checkers with MomentsTestBase[Double] {
-
-
+class GaussianTest extends FunSuite with Checkers with MomentsTestBase[Double] with ExpFamTest[Gaussian,Double] {
+  val expFam = Gaussian
   import Arbitrary.arbitrary;
+
+  def arbParameter = Arbitrary{
+    for( mean <- arbitrary[Double].map{_ % 10000.0};
+      std <- arbitrary[Double].map{x => math.abs(x) % 8.0 + .1}
+    ) yield (mean,std)
+  }
+
+  def paramsClose(p: (Double,Double), b: (Double,Double)) = {
+    val y1 = (p._1 - b._1).abs / (p._1.abs / 2 + b._1.abs / 2+ 1)  < 1E-1
+    val y2 = (p._2 - b._2).abs / (p._2.abs / 2 + b._2.abs / 2+ 1)  < 1E-1
+    y1 && y2
+  }
+
   test("Probability of mean") {
     check( Prop.forAll { (m: Double, s: Double)=> (s == 0) || {
         val b = new Gaussian(mu=m,sigma=s.abs);
@@ -38,8 +50,8 @@ class GaussianTest extends FunSuite with Checkers with MomentsTestBase[Double] {
   }
 
   implicit def arbDistr = Arbitrary {
-    for(mean <- arbitrary[Double].map{_.abs % 10000.0};
-        std <- arbitrary[Double].map {_.abs % 8.0 + .1}) yield new Gaussian(mean,std);
+    for(mean <- arbitrary[Double].map{x => math.abs(x) % 10000.0};
+        std <- arbitrary[Double].map {x => math.abs(x) % 8.0 + .1}) yield new Gaussian(mean,std);
   }
 
   def asDouble(x: Double) = x
