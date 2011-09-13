@@ -79,7 +79,10 @@ trait Encoder[T] {
   def encodeDense(c: imCounter[T,Double]):DenseVector[Double] = {
     val vec = mkDenseVector();
     for( (k,v) <- c.nonzero.pairs) {
-      vec(index(k)) = v;
+      val ki = index(k)
+      if(ki < 0) throw new RuntimeException("Error, not in index: " + k)
+
+      vec(ki) = v;
     }
     vec
   }
@@ -112,7 +115,10 @@ trait Encoder[T] {
   def encode(c: imCounter[T,Double]):Vector[Double] = {
     val vec = mkVector();
     for( (k,v) <- c.nonzero.pairs) {
-      vec(index(k)) = v;
+      val ki = index(k)
+      if(ki < 0) throw new RuntimeException("Error, not in index: " + k)
+
+      vec(ki) = v;
     }
     vec
   }
