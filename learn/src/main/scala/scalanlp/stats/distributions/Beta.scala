@@ -77,8 +77,8 @@ object Beta extends ExponentialFamily[Beta,Double] {
   def mle(stats: SufficientStatistic): (Double, Double) = {
     val lensed = likelihoodFunction(stats).throughLens[DenseVector[Double]];
     val lbfgs = new LBFGS[DenseVector[Double]](100,3)
-    val startingA = stats.meanLog // MoM would include variance, meh.
-    val startingB = stats.meanLog1M // MoM would include variance, meh
+    val startingA = stats.meanLog.abs // MoM would include variance, meh.
+    val startingB = stats.meanLog1M.abs // MoM would include variance, meh
     val result = lbfgs.minimize(lensed,DenseVector(startingA,startingB));
     val res@(a,b) = (result(0),result(1));
     res
@@ -90,10 +90,13 @@ object Beta extends ExponentialFamily[Beta,Double] {
     import stats.n
     def calculate(x: (Double, Double)) = {
       val (a,b) = x;
-      val obj = n * (lgamma(a) + lgamma(b) - lgamma(a+b) - (a-1)*stats.meanLog - (b-1) *stats.meanLog1M);
-      val gradA = n * (digamma(a) - digamma(a+b) - stats.meanLog)
-      val gradB = n * (digamma(b) - digamma(a+b) - stats.meanLog1M)
-      (obj,(gradA,gradB))
+      if(a < 0 || b < 0) (Double.PositiveInfinity,(0.,0.))
+      else {
+        val obj = n * (lgamma(a) + lgamma(b) - lgamma(a+b) - (a-1)*stats.meanLog - (b-1) *stats.meanLog1M);
+        val gradA = n * (digamma(a) - digamma(a+b) - stats.meanLog)
+        val gradB = n * (digamma(b) - digamma(a+b) - stats.meanLog1M)
+        (obj,(gradA,gradB))
+      }
     }
   }
 }

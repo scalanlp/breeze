@@ -25,7 +25,23 @@ import org.junit.runner.RunWith
 import scalanlp.stats.DescriptiveStats._;
 
 @RunWith(classOf[JUnitRunner])
-class BetaTest extends FunSuite with Checkers with MomentsTestBase[Double] {
+class BetaTest extends FunSuite with Checkers with MomentsTestBase[Double] with ExpFamTest[Beta,Double] {
+
+  val expFam = Beta
+  import Arbitrary.arbitrary;
+
+  def arbParameter = Arbitrary{
+    for( mean <- arbitrary[Double].map{x => math.abs(x) % 100.0 + 1.1};
+      std <- arbitrary[Double].map{x => math.abs(x) % 100 + 1.1}
+    ) yield (mean,std)
+  }
+
+  def paramsClose(p: (Double,Double), b: (Double,Double)) = {
+    val y1 = (p._1 - b._1).abs / (p._1.abs / 2 + b._1.abs / 2+ 1)  < 1E-1
+    val y2 = (p._2 - b._2).abs / (p._2.abs / 2 + b._2.abs / 2+ 1)  < 1E-1
+    y1 && y2
+  }
+
 
   import Arbitrary.arbitrary;
 
@@ -35,8 +51,8 @@ class BetaTest extends FunSuite with Checkers with MomentsTestBase[Double] {
   def fromDouble(x: Double) = x
 
   implicit def arbDistr = Arbitrary {
-    for(a <- arbitrary[Double].map{_.abs % 10000.0 + 1.1};
-        b <- arbitrary[Double].map {_.abs % 8.0 + 1.1}) yield new Beta(a,b);
+    for(a <- arbitrary[Double].map{x => math.abs(x) % 10000.0 + 1.1};
+        b <- arbitrary[Double].map {x => math.abs(x) % 8.0 + 1.1}) yield new Beta(a,b);
   }
 
 
