@@ -25,9 +25,22 @@ import org.junit.runner.RunWith
 import scalanlp.stats.DescriptiveStats._;
 
 @RunWith(classOf[JUnitRunner])
-class GammaTest extends FunSuite with Checkers with MomentsTestBase[Double] {
-
+class GammaTest extends FunSuite with Checkers with MomentsTestBase[Double] with ExpFamTest[Gamma,Double] {
   import Arbitrary.arbitrary;
+
+  val expFam = Gamma
+
+
+  implicit def arbParameter = Arbitrary {
+    for(shape <- arbitrary[Double].map{_.abs % 100.0 + 1.1}; // Gamma pdf at 0 not defined when shape == 1
+        scale <- arbitrary[Double].map {_.abs % 8.0 + 1.0}) yield (shape,scale);
+  }
+
+  def paramsClose(p: (Double,Double), b: (Double,Double)) = {
+    val y1 = (p._1 - b._1).abs / (p._1.abs / 2 + b._1.abs / 2+ 1)  < 1E-1
+    val y2 = (p._2 - b._2).abs / (p._2.abs / 2 + b._2.abs / 2+ 1)  < 1E-1
+    y1 && y2
+  }
 
   def asDouble(x: Double) = x
 
@@ -35,8 +48,8 @@ class GammaTest extends FunSuite with Checkers with MomentsTestBase[Double] {
   def fromDouble(x: Double) = x
 
   implicit def arbDistr = Arbitrary {
-    for(shape <- arbitrary[Double].map{_.abs % 10000.0 + 1.1}; // Gamma pdf at 0 not defined when shape == 1
-        scale <- arbitrary[Double].map {_.abs % 8.0 + 1.0}) yield new Gamma(shape,scale);
+    for(shape <- arbitrary[Double].map{x => math.abs(x) % 10000.0 + 1.1}; // Gamma pdf at 0 not defined when shape == 1
+        scale <- arbitrary[Double].map {x => math.abs(x) % 8.0 + 1.0}) yield new Gamma(shape,scale);
   }
 
 
