@@ -1,6 +1,9 @@
 package scalanlp.util
 
-object Implicits extends DoubleImplicits {
+/**
+ * Stores various implicits, also available by importing scalanlp.util._
+ */
+object Implicits extends DoubleImplicits with IteratorImplicits {
 
 }
 

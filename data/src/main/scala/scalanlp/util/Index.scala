@@ -242,6 +242,9 @@ class DenseIntIndex(max: Int) extends Index[Int] {
   def pairs = iterator zip iterator;
 }
 
+/**
+ * Adds an index to a type
+ */
 trait Indexed[T] {
   val index: Index[T] = Index[T]();
 }

@@ -3,10 +3,9 @@ package scalanlp.util.logging
 import scalanlp.util._
 
 /**
- * 
+ * Simple trait for emitting logging information
  * @author dlwh
  */
-
 trait SimpleLogger extends Logger {
   import Logger._
 

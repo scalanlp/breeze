@@ -22,5 +22,9 @@ package scalanlp.concurrent
  */
 class ThreadLocal[T](default: =>T) extends java.lang.ThreadLocal[T] with Function0[T] {
   override protected def initialValue: T = default;
+
+  /**
+   * Returns the stored value for this thread, creating a new one if necessary.
+   */
   def apply() = get();
 }

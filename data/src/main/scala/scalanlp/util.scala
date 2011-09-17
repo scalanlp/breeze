@@ -9,6 +9,9 @@ import util.{IteratorImplicits, DoubleImplicits, SeqImplicits}
  * @author dlwh
  */
 package object util extends DoubleImplicits with IteratorImplicits with SeqImplicits {
+  /**
+   * Deserializes an object using java serialization
+   */
   def readObject[T](loc: File) = {
     val oin = new ObjectInputStream(new BufferedInputStream(new FileInputStream(loc)));
     val result = oin.readObject().asInstanceOf[T]
@@ -16,7 +19,9 @@ package object util extends DoubleImplicits with IteratorImplicits with SeqImpli
     result;
   }
 
-
+  /**
+   * Serializes an object using java serialization
+   */
   def writeObject[T](out: File, parser: T): Unit = {
     val stream = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(out)));
     stream.writeObject(parser);
@@ -54,6 +59,9 @@ package object util extends DoubleImplicits with IteratorImplicits with SeqImpli
     e.getFileName() + ":" + e.getLineNumber();
   }
 
+  /**
+   * REturns a string with info about the available and used space.
+   */
   def memoryString = {
     val r = Runtime.getRuntime;
     val free = r.freeMemory / (1024 * 1024);
@@ -61,8 +69,14 @@ package object util extends DoubleImplicits with IteratorImplicits with SeqImpli
     ((total - free) + "M used; " + free  + "M free; " + total  + "M total");
   }
 
+  /**
+   * prints a and returns it.
+   */
   def trace[T](a: T) = {println(a); a}
 
+  /**
+   * The indicator function. 1.0 iff b, else 0.0
+   */
   def I(b: Boolean) = if (b) 1.0 else 0.0
 
 }

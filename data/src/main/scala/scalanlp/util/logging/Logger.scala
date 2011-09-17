@@ -19,6 +19,9 @@ package scalanlp.util.logging
 import Logger._
 
 
+/**
+ * A logger is anything that can emit log messages of varying severities.
+ */
 trait Logger {
   def trace(f: =>Any)
   def debug(f: =>Any)

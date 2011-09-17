@@ -20,7 +20,9 @@ import scala.io.Source;
 */
 
 /**
- * A DataMatrix stores
+ * A DataMatrix stores a double-valued label along with the double-valued features that go with it.
+ *
+ * TODO: change to DenseVector
  */
 trait DataMatrix {
   def rows: Seq[Example[Double,Seq[Double]]];
@@ -34,11 +36,21 @@ object DataMatrix {
    * with one column a label column.
    * @param url: where
    * @param labelColumn which column (starting at 0) is the label. May be negative, in which case it starts from the end.
+   * @param separator: a regex for delimeters. Defaults to \\s+
+   * @param dropRow: delete the first row
    */
   def fromURL(url: URL, labelColumn:Int=0, separator: String="\\s+", dropRow: Boolean = false) : DataMatrix = {
     fromSource(Source.fromURL(url),labelColumn,separator,dropRow);
   }
 
+  /**
+   * Reads a DataMatrix from a Source. The DataMatrix format is a space-separated values file of doubles
+   * with one column a label column.
+   * @param url: where
+   * @param labelColumn which column (starting at 0) is the label. May be negative, in which case it starts from the end.
+   * @param separator: a regex for delimeters. Defaults to \\s+
+   * @param dropRow: delete the first row
+   */
   def fromSource(src: Source, labelColumn:Int=0, separator: String="\\s+", dropRow: Boolean = false) : DataMatrix = {
     val rowsIterator = for {
       (line,i) <- src.getLines().zipWithIndex;

@@ -9,7 +9,7 @@ import scalanlp.serialization.{SerializationFormat, TextSerialization}
 import scalanlp.io.TextReader
 
 /**
- * Dataset of the form <output> [featureIndex:featureValue*]
+ * Dataset of the form <label> [featureIndex:featureValue*]
  * @author dlwh
  */
 trait SparseFeatureDataset[Output] {

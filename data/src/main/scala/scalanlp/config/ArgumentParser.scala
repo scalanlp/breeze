@@ -18,6 +18,13 @@ package scalanlp.config
 
 import java.io.File
 
+/**
+ * ArgumentParsers are used by Configuration objects to process special arguments.
+ * You can call ArgumentParser.addArgumentParser() to register a new one. By default,
+ * we have one for all primitives, their java boxed variants, strings, and Files.
+ *
+ * @author dlwh
+ */
 trait ArgumentParser[T] { outer =>
   def parse(arg:String):T
   def map[U](f: T=>U): ArgumentParser[U] = new ArgumentParser[U] {

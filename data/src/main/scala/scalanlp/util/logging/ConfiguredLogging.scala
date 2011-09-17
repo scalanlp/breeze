@@ -5,10 +5,9 @@ import scalanlp.config.{ArgumentParser, Configuration}
 import scalanlp.util.logging.Logger.Level
 
 /**
- * 
+ * Provides a log from ConfigueredLogging's factory for this type.
  * @author dlwh
  */
-
 trait ConfiguredLogging extends Logged {
   override val log = ConfiguredLogging[this.type]()
 }
@@ -52,6 +51,12 @@ object ConfiguredLogging {
     }
   }
 
+  /**
+   * Sets the configuration for future reads from the log.
+   *
+   * <class name>.log.output = {none,console,some file name}
+   * <class name>.log.level = (some level, e.g. never, fatal, debug)
+   */
   var configuration: Configuration = Configuration.fromPropertiesFiles(Seq.empty)
 
   def apply[T]()(implicit manifest: ClassManifest[T]):Logger = {

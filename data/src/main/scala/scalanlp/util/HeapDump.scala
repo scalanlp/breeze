@@ -6,6 +6,9 @@ import com.sun.management.HotSpotDiagnosticMXBean
 import java.io.File
 ;
 /**
+ *
+ * Outputs information about the heap
+ *
  * http://blogs.sun.com/sundararajan/entry/programmatically_dumping_heap_from_java
  * @author dlwh
  */

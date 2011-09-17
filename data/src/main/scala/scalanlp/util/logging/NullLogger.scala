@@ -3,7 +3,7 @@ package scalanlp.util.logging
 import scalanlp.util.logging.Logger.Level
 
 /**
- * 
+ * Doesn't output anything
  * @author dlwh
  */
 object NullLogger extends Logger {
