@@ -41,7 +41,7 @@ object Geometric extends ExponentialFamily[Geometric,Int] with HasConjugatePrior
 
   def sufficientStatisticFor(t: Int) = SufficientStatistic(t,1)
 
-  def mle(stats: SufficientStatistic) = stats.sum / stats.n
+  def mle(stats: SufficientStatistic) = stats.n / stats.sum
 
   def likelihoodFunction(stats: SufficientStatistic) = new DiffFunction[Geometric.Parameter] {
     def calculate(p: Geometric.Parameter) = {
