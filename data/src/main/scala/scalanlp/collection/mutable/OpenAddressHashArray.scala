@@ -8,27 +8,21 @@ import scalala.collection.sparse.DefaultArrayValue
  * A companion to SparseArray based on hashing. Two parallel arrays, one of ints, one of keys.
  * @author dlwh
  */
-class OpenAddressHashArray[@specialized V:ClassManifest:DefaultArrayValue](val size: Int, initialSize:Int = 16) extends Serializable {
+@SerialVersionUID(1)
+class OpenAddressHashArray[@specialized V:ClassManifest:DefaultArrayValue](val size: Int, initialSize:Int = 16) extends ArrayLike[V] with Serializable {
   private var index : Array[Int] = new Array[Int](initialSize)
   private var values: Array[V] = new Array[V](initialSize)
   private var occupied = new BitSet()
   private var load = 0;
 
+
+  def keysIterator = occupied.iterator
+  def length = size
+
   def activeSize = load
 
   def contains(i: Int) = occupied(locate(i))
   def apply(i: Int) = values(locate(i))
-  /*
-  def -=(i: Int):this.type = {
-    val pos = locate(i)
-    if(occupied(pos)) {
-      values(i) = implicitly[DefaultArrayValue[T]].value
-      load -= i
-      occupied -= pos
-    }
-    this
-  }
-  */
 
   def update(i: Int, v: V) {
     val pos = locate(i)
@@ -45,11 +39,9 @@ class OpenAddressHashArray[@specialized V:ClassManifest:DefaultArrayValue](val s
     }
   }
 
-  def foreach[U](f: V=>U) {
-    for(pos <- occupied) f(values(pos))
-  }
-
   def iterator = occupied.iterator.map(values)
+
+  def pairsIterator = occupied.iterator.map(i => (index(i),values(i)))
 
   private def locate(i: Int) = {
     if(i >= size) throw new IndexOutOfBoundsException(i + " greater than size of " + size)

@@ -9,7 +9,7 @@ import scalala.collection.sparse.{DefaultArrayValue, SparseArray}
  * @author dlwh
  */
 class SparseArrayMap[@specialized T:ClassManifest:DefaultArrayValue](val length: Int, default: =>T)
-  extends scala.collection.mutable.Map[Int,T] with IntMap[T] with MapLike[Int,T,SparseArrayMap[T]] with Serializable {
+  extends scala.collection.mutable.Map[Int,T] with MapLike[Int,T,SparseArrayMap[T]] with Serializable {
   val array = new SparseArray[T](length);
 
   def activeSize = array.activeLength;
@@ -22,7 +22,7 @@ class SparseArrayMap[@specialized T:ClassManifest:DefaultArrayValue](val length:
 
   override def update(i: Int, t: T) = { array.update(i, t); }
 
-  override def iterator = array.activeIterator;
+  override def iterator =  array.iterator
 
   override def apply(i: Int) = array.getOrElse(i,default);
 
