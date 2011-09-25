@@ -5,10 +5,10 @@ import java.lang.reflect.Type
 import collection.mutable.ArrayBuffer
 import java.{lang=>jl}
 import java.io.File
-import java.util.Arrays
 
 /**
- *  Generates a Help message from a case class
+ *  Generates a Help message from a case class. If a constructor parameter has a "Help" annotation
+ *  present, it will display that along with basic type information.
  * @author dlwh
  */
 object GenerateHelp {
