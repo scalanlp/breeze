@@ -62,8 +62,8 @@ object SVM {
                    batchSize: Int = 100)(implicit vspace : MutableInnerProductSpace[Double,T],
                                          opAssign : BinaryUpdateOp[T,T,OpSet], canNorm: CanNorm[T])extends Classifier.Trainer[L,T] with Logged with ConfiguredLogging {
     import vspace._;
-    type MyClassifier = Classifier[L,T];
-    def train(data: Iterable[Example[L,T]]):Classifier[L,T] = {
+    type MyClassifier = LinearClassifier[L,LFMatrix[L,T],Counter[L,Double],T];
+    def train(data: Iterable[Example[L,T]]) = {
       val dataSeq = data.toIndexedSeq;
       val default = dataSeq(0).label;
 

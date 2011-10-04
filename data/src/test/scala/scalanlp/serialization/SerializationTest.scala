@@ -122,19 +122,23 @@ trait CompoundSerializationTestBase extends SerializationTestBase {
     basicTest[Option[Int]]();
     basicTest[Option[(Int,String)]]();
   }
+
+  test("Maps") {
+    basicTest[Map[Int,Int]]();
+    basicTest[Map[String,(Int,String)]]();
+  }
 }
 
 @RunWith(classOf[JUnitRunner])
 class DataSerializationTest extends CompoundSerializationTestBase {
   override val serializer = DataSerialization;
 
-/*
   import scalala.tensor.sparse._;
   test("SparseVector") {
-    val v = SparseVector.zeros[Double](4);
+    val v = SparseVector.zeros[Double](10);
     v(0) = 1;
     v(1) = 2;
-    v(2) = 2;
+    v(8) = 2;
     val bytes = serializer.toBytes[SparseVector[Double]](v);
     val b = serializer.fromBytes[SparseVector[Double]](bytes);
     v == b
@@ -142,7 +146,7 @@ class DataSerializationTest extends CompoundSerializationTestBase {
 
   import scalala.tensor.dense._;
   test("DenseVector") {
-    val v = DenseVector.zeros[Double](4);
+    val v :DenseVector[Double]= DenseVector.zeros[Double](4);
     v(0) = 1;
     v(1) = 2;
     v(2) = 2;
@@ -150,7 +154,6 @@ class DataSerializationTest extends CompoundSerializationTestBase {
     val b = serializer.fromBytes[DenseVector[Double]](bytes);
     v == b
   }
-  */
 }
 
 @RunWith(classOf[JUnitRunner])

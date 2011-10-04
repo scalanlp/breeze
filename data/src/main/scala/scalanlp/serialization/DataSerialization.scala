@@ -19,7 +19,10 @@ import java.io.{ByteArrayInputStream,ByteArrayOutputStream}
 import java.io.{DataInput,DataInputStream,DataOutput,DataOutputStream}
 import java.io.{ObjectInputStream,ObjectOutputStream}
 
-import scala.collection.mutable.Builder;
+import scala.collection.mutable.Builder
+import scalala.tensor.sparse.SparseVectorCol
+import scalala.collection.sparse.SparseArray
+;
 
 /**
  * File-backed Serialization with standard combinators using optimized
@@ -200,22 +203,22 @@ with ByteSerialization {
     }
   }
 
-  implicit object DoubleArrayReadWritable extends ReadWritable[Array[Double]] {
+  implicit def ArrayReadWritable[T:ReadWritable:ClassManifest] = new ReadWritable[Array[T]] {
     override def read(in : DataInput) = {
-      var rv = new Array[Double](in.readInt);
+      var rv = new Array[T](in.readInt);
       var i = 0;
       while (i < rv.length) {
-        rv(i) = in.readDouble();
+        rv(i) = DataSerialization.read[T](in)
         i += 1;
       }
       rv;
     }
 
-    override def write(out : Output, v : Array[Double]) = {
+    override def write(out : Output, v : Array[T]) = {
       out.writeInt(v.length);
       var i = 0;
       while (i < v.length) {
-        out.writeDouble(v(i));
+        DataSerialization.write(out,v(i));
         i += 1;
       }
     }
@@ -255,28 +258,33 @@ with ByteSerialization {
     }
   }
 
-  /*
-  implicit object SparseVectorReadWritable extends ReadWritable[SparseVector[Double]] {
+  implicit object SparseArrayReadWritable extends ReadWritable[SparseArray[Double]] {
     override def read(in : DataInput) = {
       val size = in.readInt();
       val used = in.readInt();
-      val data = DataSerialization.read[Array[Double]](in);
-      val indices = DataSerialization.read[Array[Int]](in);
-      val vec = SparseVector.zeros[Double](size);
-      vec.data.data = data;
-      vec.data.index = indices;
-      vec.data.used = used;
-      vec
+      val index = DataSerialization.read[Array[Int]](in)
+      val data = DataSerialization.read[Array[Double]](in)
+      new SparseArray[Double](size,index,data,used,used)
+    }
+
+    override def write(out : DataOutput, v : SparseArray[Double]) {
+      out.writeInt(v.length);
+      out.writeInt(v.activeLength);
+      DataSerialization.write(out,v.indexArray)
+      DataSerialization.write(out,v.valueArray)
+    }
+  }
+
+  implicit object SparseVectorReadWritable extends ReadWritable[SparseVector[Double]] {
+    override def read(in : DataInput) = {
+      val data = DataSerialization.read[SparseArray[Double]](in);
+      new SparseVectorCol[Double](data)
     }
 
     override def write(out : DataOutput, v : SparseVector[Double]) {
-      out.writeInt(v.size);
-      out.writeInt(v.used);
       DataSerialization.write(out,v.data);
-      DataSerialization.write(out,v.index);
     }
   }
-  */
 
   /**
    * Uses Java serialization. It's *very* inefficient, and should be avoided.

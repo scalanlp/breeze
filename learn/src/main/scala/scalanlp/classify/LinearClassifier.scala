@@ -54,7 +54,29 @@ class LinearClassifier[L,T2, TL, TF]
   }
 }
 
-class LFMatrix[L,TF](emptyTF: =>TF) extends MutableNumericOps[LFMatrix[L,TF]] with MatrixOps[LFMatrix[L,TF]] {
+object LinearClassifier {
+  implicit def linearClassifierReadWritable[L,TF,T2,TL](implicit viewT2 : T2<:<MatrixOps[T2], viewTL: TL <:<NumericOps[TL],
+                                                     vv: CanViewAsTensor1[TL,L,Double],
+                                                     add : BinaryOp[TL,TL,OpAdd,TL],
+                                                     mulTensors : BinaryOp[T2,TF,OpMulMatrixBy,TL],
+                                                     tfW: DataSerialization.ReadWritable[T2],
+                                                     tlW: DataSerialization.ReadWritable[TL]) = {
+    new ReadWritable[LinearClassifier[L,T2,TL,TF]] {
+      def write(sink: DataSerialization.Output, what: LinearClassifier[L,T2,TL,TF]) = {
+        tfW.write(sink,what.featureWeights)
+        tlW.write(sink,what.intercepts)
+      }
+
+      def read(source: DataSerialization.Input) = {
+        val t2 = tfW.read(source)
+        val tl = tlW.read(source)
+        new LinearClassifier(t2,tl)
+      }
+    }
+  }
+}
+
+class LFMatrix[L,TF](emptyTF: =>TF) extends MutableNumericOps[LFMatrix[L,TF]] with MatrixOps[LFMatrix[L,TF]] with Serializable {
   def repr = this;
   private val map = collection.mutable.Map[L,TF]();
 
@@ -257,86 +279,25 @@ object LFMatrix {
     }
   }
 
+  implicit def lfReadWritable[L,TF](implicit formatL: DataSerialization.ReadWritable[L], formatTF: DataSerialization.ReadWritable[TF], zeros: CanCreateZerosLike[TF,TF]) = {
+     new ReadWritable[LFMatrix[L,TF]] {
+       def write(sink: DataSerialization.Output, what: LFMatrix[L,TF]) = {
+         DataSerialization.write(sink, what.map.toMap)
+       }
+
+       def read(source: DataSerialization.Input) = {
+         val map = DataSerialization.read[Map[L,TF]](source)
+         def default = zeros(map.head._2)
+         val ret = new LFMatrix[L,TF](default)
+         for( (k,v) <- map) {
+           ret(k) = v
+         }
+         ret
+       }
+     }
+   }
+
+
 }
 
-object LinearClassifier {
-  implicit def linearClassifierReadWritable[L,TF,T2,TL](implicit viewT2 : T2<:<MatrixOps[T2], viewTL: TL <:<NumericOps[TL],
-                                                     vv: CanViewAsTensor1[TL,L,Double],
-                                                     add : BinaryOp[TL,TL,OpAdd,TL],
-                                                     mulTensors : BinaryOp[T2,TF,OpMulMatrixBy,TL],
-                                                     tfW: DataSerialization.ReadWritable[T2],
-                                                     tlW: DataSerialization.ReadWritable[TL]) = {
-    new ReadWritable[LinearClassifier[L,T2,TL,TF]] {
-      def write(sink: DataSerialization.Output, what: LinearClassifier[L,T2,TL,TF]) = {
-        tfW.write(sink,what.featureWeights)
-        tlW.write(sink,what.intercepts)
-      }
 
-      def read(source: DataSerialization.Input) = {
-        val t2 = tfW.read(source)
-        val tl = tlW.read(source)
-        new LinearClassifier(t2,tl)
-      }
-    }
-  }
-
-/*
-  def fromRegression[F](data: Iterable[Example[Boolean,Map[F,Double]]]) = {
-    val featureIndex = Index[F]();
-    val idata = ( for(e <- data.iterator) yield { 
-        for( map <- e;
-             fv <- map) yield {
-        (featureIndex(fv._1),fv._2);
-      }
-    } ).toSeq
-
-    val vdata = new DenseMatrix(data.size,featureIndex.size+1);
-    val y = new DenseVector(data.size);
-    for( (e,i) <- idata.iterator.zipWithIndex ) {
-      y(i) = if(e.label) 1 else -1; 
-      vdata(i,featureIndex.size) = 1;
-      for( (f,v) <- e.features) {
-        vdata(i,f) = v;
-      }
-    }
-
-    val lI = DenseMatrix(featureIndex.size+1,featureIndex.size+1)();
-    lI := diag(featureIndex.size+1)
-    lI *= 1E-6;
-
-    val xtx = lI;
-    xtx :+= vdata.transpose * vdata;
-
-    val xty = vdata.transpose * y value;
-    val denseXtY = DenseVector(xty.size)(0);
-    denseXtY := xty;
-    val beta = xtx \ denseXtY;
-    val betaArray = beta.valuesIterator.toSeq.toArray;
-    val trueWeights = betaArray.take(betaArray.size-1).toArray;
-    val falseWeights = Array.fill(trueWeights.size)(0.0);
-    new LinearClassifier(featureIndex,List(true,false),Array(trueWeights,falseWeights),Array(betaArray.last,0));
-  }
-
-  def testLR = {
-    import scalanlp.stats.distributions.Rand;
-    
-    val trueDataGen = for { 
-      x <- Rand.gaussian(4,1);
-      y <- Rand.gaussian(-3,1)
-    } yield {
-      Example(true, Map(1->x,2->y));
-    }
-
-    val falseDataGen = for { 
-      x <- Rand.gaussian(-4,1);
-      y <- Rand.gaussian(2,1)
-    } yield {
-      Example(false, Map(1->x,2->y));
-    }
-
-    val data = trueDataGen.sample(1000) ++ falseDataGen.sample(1000);
-
-    LinearClassifier.fromRegression(data);
-  }
-  */
-}
