@@ -144,7 +144,7 @@ object SVM {
     }
   }
 
-  class SMOTrainer[L,T](maxIterations: Int=30, C: Double = 10.0)(implicit vspace: MutableInnerProductSpace[Double,T], canNorm: CanNorm[T]) extends Classifier.Trainer[L,T] {
+  class SMOTrainer[L,T](maxIterations: Int=30, C: Double = 10.0)(implicit vspace: MutableInnerProductSpace[Double,T], canNorm: CanNorm[T]) extends Classifier.Trainer[L,T] with ConfiguredLogging {
     type MyClassifier = LinearClassifier[L,LFMatrix[L,T],Counter[L,Double],T];
 
     import vspace._;
@@ -180,6 +180,7 @@ object SVM {
             largestChange = largestChange max (oldA2 - newA2).abs
           }
         }
+        log.info("Largest Change: " + largestChange)
 
       }
       new LinearClassifier(weights,Counter[L,Double]());
