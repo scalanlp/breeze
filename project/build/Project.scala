@@ -25,14 +25,16 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
     val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
     val JLine = "jline" % "jline" % "0.9.94"
     val Scalala = "org.scalala" %% "scalala" % "1.0.0.RC2-SNAPSHOT";
-    val ScalaCheck = "org.scala-tools.testing" %% "scalacheck" % "1.8" % "test"
+    val ScalaCheck = buildScalaVersion match {
+      case "2.9.1" => "org.scala-tools.testing" % "scalacheck_2.9.0" % "1.8" % "test"
+      case _       => "org.scala-tools.testing" %% "scalacheck" % "1.8" % "test"
+    }
     //val casbah = "com.mongodb.casbah" % "casbah_2.9.0-1" % "2.1.5.0"
     val ScalaTest = buildScalaVersion match {
-    case "2.9.0"     => "org.scalatest" % "scalatest" % "1.4.RC2" % "test"
-    case "2.8.1"     => "org.scalatest" % "scalatest" % "1.3" % "test"
-    case x           => error("Unsupported Scala version " + x)
-  }
-
+      case "2.9.1"     => "org.scalatest" % "scalatest" % "1.4.RC2" % "test"
+      case "2.8.1"     => "org.scalatest" % "scalatest" % "1.3" % "test"
+      case x           => error("Unsupported Scala version " + x)
+    }
     val JUnit = "junit" % "junit" % "4.5" % "test"
   }
 
@@ -43,12 +45,15 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
     val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
     val JLine = "jline" % "jline" % "0.9.94"
     val Scalala = "org.scalala" %% "scalala" % "1.0.0.RC2-SNAPSHOT";
-    val ScalaCheck = "org.scala-tools.testing" %% "scalacheck" % "1.8" % "test"
-      val ScalaTest = buildScalaVersion match {
-    case "2.9.0"     => "org.scalatest" % "scalatest" % "1.4.RC2" % "test"
-    case "2.8.1"     => "org.scalatest" % "scalatest" % "1.3" % "test"
-    case x           => error("Unsupported Scala version " + x)
-  }
+    val ScalaCheck = buildScalaVersion match {
+      case "2.9.1" => "org.scala-tools.testing" % "scalacheck_2.9.0" % "1.8" % "test"
+      case _       => "org.scala-tools.testing" %% "scalacheck" % "1.8" % "test"
+    }
+    val ScalaTest = buildScalaVersion match {
+      case "2.9.1"     => "org.scalatest" % "scalatest" % "1.4.RC2" % "test"
+      case "2.8.1"     => "org.scalatest" % "scalatest" % "1.3" % "test"
+      case x           => error("Unsupported Scala version " + x)
+    }
     val JUnit = "junit" % "junit" % "4.5" % "test"
   }
 
@@ -56,10 +61,12 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
     val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
     val JLine = "jline" % "jline" % "0.9.94"
     val Scalala = "org.scalala" %% "scalala" % "1.0.0.RC2-SNAPSHOT";
-    val ScalaCheck = "org.scala-tools.testing" %% "scalacheck" % "1.8" % "test"
-
+    val ScalaCheck = buildScalaVersion match {
+      case "2.9.1" => "org.scala-tools.testing" % "scalacheck_2.9.0" % "1.8" % "test"
+      case _       => "org.scala-tools.testing" %% "scalacheck" % "1.8" % "test"
+    }
     val ScalaTest = buildScalaVersion match {
-      case "2.9.0"     => "org.scalatest" % "scalatest" % "1.4.RC2" % "test"
+      case "2.9.1"     => "org.scalatest" % "scalatest" % "1.4.RC2" % "test"
       case "2.8.1"     => "org.scalatest" % "scalatest" % "1.3" % "test"
       case x           => error("Unsupported Scala version " + x)
     }
@@ -86,9 +93,9 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
 
   override def packageOptions = ManifestAttributes(
     MAIN_CLASS -> "scalala.ScalalaConsole",
-    IMPLEMENTATION_TITLE -> "Scalala",
-    IMPLEMENTATION_URL -> "http://scalala.org/",
-    IMPLEMENTATION_VENDOR -> "scalala.org",
+    IMPLEMENTATION_TITLE -> "ScalaNLP",
+    IMPLEMENTATION_URL -> "http://scalanlp.org/",
+    IMPLEMENTATION_VENDOR -> "scalanlp.org",
     SEALED -> "true") :: Nil
 
   override def managedStyle = ManagedStyle.Maven

@@ -2,7 +2,7 @@ package scalanlp.tensor.sparse
 
 import scalala.scalar.Scalar
 import scalala.tensor.dense.DenseVector
-import scalala.tensor.mutable.{VectorLike, Vector}
+import scalala.tensor.mutable.{VectorColLike, VectorCol}
 import java.util.Arrays
 import scalala.operators.{OpSub, OpAdd, BinaryOp}
 import scalala.generic.collection.{CanMapKeyValuePairs, CanMapValues}
@@ -20,7 +20,7 @@ import scalala.generic.collection.{CanMapKeyValuePairs, CanMapValues}
  *
  * @author dramage, dlwh
  */
-class OldSparseVector(domainSize : Int, var default: Double = 0.0, initialNonzeros : Int = 0) extends Vector[Double] with VectorLike[Double,OldSparseVector] with Serializable {
+class OldSparseVector(domainSize : Int, var default: Double = 0.0, initialNonzeros : Int = 0) extends VectorCol[Double] with VectorColLike[Double,OldSparseVector] with Serializable {
   if (domainSize < 0)
     throw new IllegalArgumentException("Invalid domain size: "+domainSize);
 
