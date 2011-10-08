@@ -1,4 +1,4 @@
-package scalanlp.optimize
+package scalanlp.optimize.linear
 /*
  Copyright 2010 David Hall, Daniel Ramage
 

@@ -1,9 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-package scalanlp.optimize
+package scalanlp.optimize.linear
 
 import org.scalatest._;
 import org.scalatest.junit._;
