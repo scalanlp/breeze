@@ -25,7 +25,7 @@ object Trainer extends App {
   val config = CommandLineParser.parseArguments(args)._1
   val params = config.readIn[TrainerParams]("");
   if(params.help) {
-    println(GenerateHelp[TrainerParams])
+    println(GenerateHelp[TrainerParams](config))
   } else {
     val input = SparseFeatureDataset.fromSource[Int](Source.fromFile(params.input),params.input.getName)
     type TheClassifier = LinearClassifier[Int,LFMatrix[Int,SparseVector[Double]],Counter[Int,Double],SparseVector[Double]]

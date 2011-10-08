@@ -19,16 +19,14 @@ package scalanlp.config
 
 import com.thoughtworks.paranamer.AdaptiveParanamer;
 import com.thoughtworks.paranamer.ParameterNamesNotFoundException
-import java.lang.reflect.Type
 import java.io.File
 import java.io.FileInputStream
-import java.lang.reflect.ParameterizedType;
-import java.{lang => jl}
-import java.lang.reflect.TypeVariable
 import java.util.Properties
 import scala.reflect.Manifest;
 import scala.reflect.OptManifest;
 import scala.reflect.NoManifest;
+
+import ReflectionUtils._
 
 /**
  * Configuration provides a way to read in parameters
@@ -88,16 +86,16 @@ trait Configuration { outer =>
   /**
    * Read in an object, boxing it if necessary.
    */
-  final def readOpt[T: Manifest](prefix: String) = {
+  final def readOpt[T: Manifest](prefix: String="") = {
     try (Some(readIn[T](prefix))) catch {
       case (e: NoParameterException) => None
     };
   }
 
   /**
-   * Read in, but throw an exception if not found.
+   * Reads in an object, but throw an exception if not found.
    */
-  final def readIn[T: Manifest](prefix: String): T = {
+  final def readIn[T: Manifest](prefix: String=""): T = {
     ArgumentParser.getArgumentParser[T] match {
       case Some(parser) =>
         val property = recursiveGetProperty(prefix);
@@ -109,7 +107,8 @@ trait Configuration { outer =>
   }
 
   // We have a static type, and a dynamic type.
-  // The dynamic type iwll be
+  // The dynamic type will have to be inferred.
+  // Some attempts are made to deal with generics
   private def reflectiveReadIn[T: Manifest](prefix: String): T = {
     val staticManifest = implicitly[Manifest[T]];
     val dynamicClass: Class[_] = recursiveGetProperty(prefix).map{
@@ -143,123 +142,7 @@ trait Configuration { outer =>
     }
   }
 
-  private def lookupDefaultValues(clazz: Class[_], paramNames: Seq[String]): Seq[() => AnyRef] = {
-    try {
-      val companion = Class.forName(clazz.getName() + "$").getField("MODULE$").get(null);
-      // defaults have the form  init$default$X, for X = 1...
-      paramNames.zipWithIndex.map{
-        case (name, idx) => () =>
-          try {
-            val method = companion.getClass.getMethod("init$default$" + (idx + 1))
-            method.invoke(companion);
-          } catch {
-            case e: java.lang.NoSuchMethodException =>
-              throw new NoParameterException("Could not find a matching property!", name)
-            case e: Exception =>
-              throw new RuntimeException("Problem processing default argument for " + name, e);
-          }
-
-      }
-    } catch {
-      case e: Exception =>
-        paramNames.map{
-          paramName => (() => throw new NoParameterException("Could not find a matching property!", paramName))
-        }
-    }
-  }
-
-  private def solveTypes(knownTypes: Map[String, OptManifest[_]], staticClass: Class[_], dynamicClass: Class[_]): Map[String, OptManifest[_]] = {
-    val dynamicParams = dynamicClass.getTypeParameters;
-
-    // iterate up the inheritance chain
-    def superTypes = if (dynamicClass.isInterface) (
-      dynamicClass.getInterfaces.iterator
-      )
-    else /* class*/ (
-      Iterator.iterate(dynamicClass.asInstanceOf[Class[AnyRef]])(_.getSuperclass.asInstanceOf[Class[AnyRef]])
-        .takeWhile(clss => clss != null && staticClass.isAssignableFrom(clss))
-      );
-    val highestType = superTypes.reduceLeft((a, b) => b);
-    val dynamicToStaticMapping: Map[String, OptManifest[_]] = superTypes.sliding(2, 1).foldRight(knownTypes) {
-      (classPair, knownTypes) =>
-        if (classPair.length < 2) knownTypes
-        else {
-          val generic = classPair(0).getGenericSuperclass;
-          extendMapping(classPair(0), classPair(1), generic, knownTypes);
-        }
-    }
-    if (!staticClass.isInterface) {
-      dynamicToStaticMapping;
-    } else {
-      // solve for the interface too:
-      val matchedIFace = highestType.getGenericInterfaces.find{
-        case x: ParameterizedType =>
-          x.getRawType == staticClass
-        case x: Class[_] => x == staticClass
-        case _ => false
-      } getOrElse (highestType)
-      extendMapping(highestType, staticClass, matchedIFace, dynamicToStaticMapping);
-    }
-  }
-
-  private def extendMapping(subType: Class[_], superType: Class[_], genericSuper: Type, knownTypes: Map[String, OptManifest[_]]) = {
-    val mapping: Map[String, String] = genericSuper match {
-      case x: ParameterizedType =>
-        matchImmediateSubclassToSuperClass(subType, x, superType);
-      case _ => Map.empty;
-    }
-    mapping.mapValues(knownTypes).toMap withDefaultValue NoManifest;
-
-  }
-
-  /*
-   * returns a map from subclass's type parameters to the super type's.
-   * Far from perfect, but works for simple cases, where there's an obvious match (no embedding in other types, and the like)
-   * TODO: more sophisticated mapping, e.g. if we have Foo[A] extends Bar[List[A]], and class Bar[X], with X=List[Int]. Need to
-   * infer A = Int
-   */
-  private def matchImmediateSubclassToSuperClass(sub: Class[_], genSup: ParameterizedType, sup: Class[_]): Map[String, String] = {
-    val superTypeParams = sup.getTypeParameters.map(_.toString);
-    genSup.getActualTypeArguments.map(_.toString) zip superTypeParams toMap;
-  }
-
-
-  // Tries to create the appropriate manifest for a jl.reflect.Type that has
-  // using typeMap as a way of handling type parameters.
-  private def mkManifest(typeMap: Map[String, OptManifest[_]], tpe: Type): Manifest[Object] = tpe match {
-    case jl.Integer.TYPE => Manifest.Int.asInstanceOf[Manifest[Object]];
-    case jl.Double.TYPE => Manifest.Double.asInstanceOf[Manifest[Object]];
-    case jl.Float.TYPE => Manifest.Float.asInstanceOf[Manifest[Object]];
-    case jl.Boolean.TYPE => Manifest.Boolean.asInstanceOf[Manifest[Object]];
-    case tpe: Class[_] with ParameterizedType => new Manifest[Object] {
-      def erasure = tpe;
-
-      override def typeArguments = tpe.getActualTypeArguments.map(mkManifest(typeMap, _)).toList;
-
-      override def toString = erasure.getName + argString;
-    }
-    case tpe: ParameterizedType =>
-      val innerMan = mkManifest(Map.empty, tpe.getRawType);
-      new Manifest[Object] {
-        def erasure = innerMan.erasure;
-
-        override def typeArguments = tpe.getActualTypeArguments.map(mkManifest(typeMap, _)).toList;
-
-        override def toString = erasure.getName + argString;
-      }
-    case tpe: Class[_] => new Manifest[Object] {
-      def erasure = tpe;
-
-      override def toString = erasure.getName + argString;
-    }
-    case tpe: TypeVariable[_] => typeMap(tpe.toString) match {
-      case x: Manifest[_] => x.asInstanceOf[Manifest[Object]];
-      case _ => throw new ConfigurationException("Don't know how to deal with " + tpe + " yet! Add an ArgumentParser.");
-    }
-    case _ => throw new ConfigurationException("Don't know how to deal with " + tpe + " yet! Add an ArgumentParser." + tpe.getClass.getName);
-  }
-
-  private def recursiveGetProperty(prefix: String): Option[String] = {
+  private[config] def recursiveGetProperty(prefix: String): Option[String] = {
     if (prefix.isEmpty) None
     else getProperty(prefix) match {
       case opt@Some(p) => opt
@@ -287,6 +170,9 @@ class ConfigurationException(msg: String) extends Exception(msg);
 class NoParameterException(msg: String, param: String) extends ConfigurationException("while searching for " + param + ": " + msg);
 
 object Configuration {
+
+  def empty = fromMap(Map.empty)
+
   /**
    * Creates a Configuration from a java.util.Properties.
    */
@@ -301,7 +187,7 @@ object Configuration {
   /**
    * Creates a Configuration from a Map.
    */
-  def fromMap(map: Map[String, String]) = new Configuration {
+  def fromMap(map: Map[String, String]):Configuration = new Configuration {
     def getProperty(p: String) = map.get(p);
   }
 
