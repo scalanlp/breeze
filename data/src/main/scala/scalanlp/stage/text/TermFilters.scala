@@ -17,7 +17,7 @@ package scalanlp;
 package stage;
 package text;
 
-import java.io.File
+import java.io.File;
 import scalala.tensor.mutable.Counter;
 
 import scalanlp.collection.LazyIterable;

@@ -233,8 +233,12 @@ object TextReader {
   implicit def fromInputStream(stream : java.io.InputStream) =
     new InputStreamReader(stream);
 
-  implicit def fromReader(reader : java.io.Reader) =
-    new ReaderReader(reader);
+  implicit def fromReader(reader : java.io.Reader) = {
+    if (reader.isInstanceOf[java.io.BufferedReader])
+      new ReaderReader(reader.asInstanceOf[java.io.BufferedReader])
+    else
+      new ReaderReader(new java.io.BufferedReader(reader));
+  }
 
   implicit def fromFile(file : java.io.File) =
     new FileReader(file);
@@ -245,7 +249,9 @@ object TextReader {
    * @author dramage
    */
   class StringReader(val string : String)
-  extends ReaderReader(new java.io.StringReader(string));
+  extends ReaderReader(
+    new java.io.BufferedReader(
+      new java.io.StringReader(string)));
 
   /**
    * A TextReader that reads from an InputStream.
@@ -253,7 +259,9 @@ object TextReader {
    * @author dramage
    */
   class InputStreamReader(val stream : java.io.InputStream)
-  extends ReaderReader(new java.io.InputStreamReader(stream));
+  extends ReaderReader(
+    new java.io.BufferedReader(
+      new java.io.InputStreamReader(stream)));
 
   /**
    * A TextReader that reads from a File.
@@ -268,24 +276,22 @@ object TextReader {
    *
    * @author dramage
    */
-  class ReaderReader(val reader : java.io.Reader) extends TextReader {
-    var queue0 : Int = reader.read();
-    var queue1 : Int = reader.read();
-
+  class ReaderReader(val reader : java.io.BufferedReader) extends TextReader {
     var lineNo : Int = 1;
     var colNo : Int = 0;
 
     override def lineNumber = lineNo;
     override def columnNumber = colNo;
 
-    override def read() = {
-      val rv = queue0;
-      queue0 = queue1;
-      queue1 = reader.read;
+    var next = reader.read;
 
-      if (rv == '\n' || (rv == '\r' && queue0 != '\n')) {
+    override def read() = {
+      val rv = next;
+      next = reader.read;
+
+      if (rv == '\n') {
         lineNo += 1;
-        colNo = 1;
+        colNo = 0;
       } else {
         colNo += 1;
       }
@@ -294,10 +300,19 @@ object TextReader {
     }
 
     override def peek() =
-      queue0;
+      next;
 
-    override def peek(n : Int) =
-      if (n == 1) queue1 else if (n == 0) queue0 else throw new IllegalArgumentException("Can only peek(0) or peek(1)");
+    override def peek(n : Int) = {
+      if (n == 0) {
+        next;
+      } else {
+        reader.mark(n);
+        reader.skip(n-1);
+        val rv = reader.read;
+        reader.reset();
+        rv;
+      }
+    }
 
     override def close() =
       reader.close();

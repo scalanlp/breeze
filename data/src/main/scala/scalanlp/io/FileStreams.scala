@@ -17,6 +17,7 @@ package scalanlp;
 package io;
 
 import java.io.File;
+import java.io.{InputStream,OutputStream};
 import java.io.{FileInputStream,FileOutputStream};
 import java.io.{BufferedInputStream,BufferedOutputStream};
 import java.util.zip.{GZIPInputStream,GZIPOutputStream};
@@ -28,20 +29,45 @@ import java.util.zip.{GZIPInputStream,GZIPOutputStream};
  * @author dramage
  */
 object FileStreams {
-  def input(file : File) = {
-    val fis = new BufferedInputStream(new FileInputStream(file));
-
-    if (file.getPath.toLowerCase.endsWith(".gz")) {
-      new GZIPInputStream(fis)
-    } else { fis };
+  /** Use a 16k buffer size. */
+  val BUFFER_SIZE = 16 * 1024;
+  
+  /**
+   * Gets an input stream with proper buffering (minimum 16k) for the given
+   * file, automatically gunziping if the file name ends in .gz.
+   */
+  def input(path : File) : InputStream = {
+    val fis = new FileInputStream(path);
+    try {
+      if (path.getName.endsWith(".gz")) {
+        new BufferedInputStream(new GZIPInputStream(fis, BUFFER_SIZE), BUFFER_SIZE);
+      } else {
+        new BufferedInputStream(fis, BUFFER_SIZE);
+      }
+    } catch {
+      case ex : Throwable =>
+        fis.close();
+        throw(ex);
+    }
   }
 
-  def output(file : File) = {
-    val fos = new BufferedOutputStream(
-      new FileOutputStream(file));
-
-    if (file.getPath.toLowerCase.endsWith(".gz")) {
-      new GZIPOutputStream(fos)
-    } else { fos };
+  /**
+   * Gets an output stream writing to the given file with proper buffering
+   * (minimum 16k), automatically gziping if the file name ends in .gz.
+   */
+  def output(path : File) : OutputStream = {
+    val fos = new FileOutputStream(path);
+    try {
+      if (path.getName.endsWith(".gz")) {
+        new BufferedOutputStream(new GZIPOutputStream(fos, BUFFER_SIZE), BUFFER_SIZE);
+      } else {
+        new BufferedOutputStream(fos, BUFFER_SIZE);
+      }
+    } catch {
+      case ex : Throwable =>
+        fos.close();
+        throw(ex);
+    }
   }
 }
+

@@ -15,6 +15,7 @@
 */
 package scalanlp.serialization
 
+import java.io.File;
 import java.io.{ByteArrayInputStream,ByteArrayOutputStream}
 import java.io.{DataInput,DataInputStream,DataOutput,DataOutputStream}
 import java.io.{ObjectInputStream,ObjectOutputStream}
@@ -36,6 +37,12 @@ with SerializationFormat.PrimitiveTypes with SerializationFormat.CompoundTypes
 with ByteSerialization {
   type Input = DataInput;
   type Output = DataOutput;
+
+  /** Caches the given value to the given path. */
+  def cache[V:Readable:Writable](path : File)(value : =>V) =
+    scalanlp.ra.Cell.cache(path)(value)(
+      FileSerialization.fromDataReadable[V],
+      FileSerialization.fromDataWritable[V]);
 
   //
   // From ByteSerialization
@@ -63,25 +70,6 @@ with ByteSerialization {
     in.close;
     x;
   }
-  
-//  //
-//  // From FileSerialization
-//  //
-//  override def openInput(f: File): DataInput =
-//    new DataInputStream(new BufferedInputStream(new FileInputStream(f)));
-//
-//  override def openOutput(f: File): DataOutput =
-//    new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)));
-//
-//  override def closeInput(i: Input) = i match {
-//    case i: InputStream  => i.close();
-//    case _ =>
-//  }
-//
-//  override def closeOutput(o: Output) = o match {
-//    case o: OutputStream  => o.close();
-//    case _ =>
-//  }
 
   //
   // From CompoundTypes
