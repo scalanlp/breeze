@@ -19,7 +19,6 @@ package scalanlp.optimize
 import scalanlp.util._
 import scalanlp.util.logging._
 import scalanlp.util.logging.Logger._
-import scalanlp.optimize.QuasiNewtonMinimizer.{LineSearchFailed, NaNHistory, StepSizeUnderflow};
 import scalala.generic.math.CanNorm
 import scalala.operators._
 import bundles.{MutableInnerProductSpace, InnerProductSpace}
@@ -44,7 +43,9 @@ import scalala.tensor.dense.DenseVector
  * @param maxIter: maximum number of iterations, or &lt;= 0 for unlimited
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
-class LBFGS[T](override val maxIter: Int, m: Int=5)(implicit protected val vspace: MutableInnerProductSpace[Double,T], protected val canNorm: CanNorm[T]) extends QuasiNewtonMinimizer[T] with GradientNormConvergence[T] with ConfiguredLogging {
+class LBFGS[T](maxIter: Int = -1, m: Int=5)
+              (implicit vspace: MutableInnerProductSpace[Double,T],
+               canNorm: CanNorm[T]) extends FirstOrderMinimizer[T,DiffFunction[T]](maxIter) with ConfiguredLogging {
 
   import vspace._;
   require(m > 0);
@@ -54,8 +55,10 @@ class LBFGS[T](override val maxIter: Int, m: Int=5)(implicit protected val vspac
                      private[LBFGS] val memRho: IndexedSeq[Double] = IndexedSeq.empty);
 
 
-  protected def initialHistory(grad: T):History = new History();
-  protected def chooseDescentDirection(grad: T, state: State):T = {
+  protected def takeStep(state: State, dir: T, stepSize: Double) = state.x + dir * stepSize
+  protected def initialHistory(f: DiffFunction[T], x: T):History = new History();
+  protected def chooseDescentDirection(state: State):T = {
+    val grad = state.grad
     val memStep = state.history.memStep;
     val memGradDelta = state.history.memGradDelta;
     val memRho = state.history.memRho;
@@ -71,7 +74,7 @@ class LBFGS[T](override val maxIter: Int, m: Int=5)(implicit protected val vspac
     for(i <- (memStep.length-1) to 0 by -1) {
       as(i) = (memStep(i) dot dir)/memRho(i);
       if(as(i).isNaN) {
-        throw new NaNHistory;
+        sys.error("NaNs in the history!")
       }
       assert(!as(i).isInfinite, memRho(i) -> norm(grad,2));
       dir -= memGradDelta(i) * as(i);
@@ -88,11 +91,9 @@ class LBFGS[T](override val maxIter: Int, m: Int=5)(implicit protected val vspac
     dir;
   }
 
-  protected def adjustGradient(grad: T, x: T) = grad;
-  protected def adjustValue(value: Double, x: T) = value
-
-  protected def updateHistory(oldState: State, newGrad: T, newVal: Double, step: T): History = {
+  protected def updateHistory(newX: T, newGrad: T, newVal: Double, oldState: State): History = {
     val gradDelta : T = (newGrad :- oldState.grad);
+    val step:T = (newX - oldState.x)
 
     var memStep = oldState.history.memStep :+ step;
     var memGradDelta = oldState.history.memGradDelta :+ gradDelta;
@@ -132,9 +133,11 @@ class LBFGS[T](override val maxIter: Int, m: Int=5)(implicit protected val vspac
    * @param x: The location
    * @return (stepSize, newValue)
    */
-  def chooseStepSize(f: DiffFunction[T], dir: T, grad: T, state: State) = {
+
+  protected def determineStepSize(state: State, f: DiffFunction[T], dir: T) = {
     val iter = state.iter;
     val x = state.x;
+    val grad = state.grad
 
     val normGradInDir = {
       val possibleNorm = dir dot grad;
@@ -163,7 +166,6 @@ class LBFGS[T](override val maxIter: Int, m: Int=5)(implicit protected val vspac
 
     if(alpha * norm(grad,Double.PositiveInfinity) < 1E-10)
       throw new StepSizeUnderflow;
-    log.info("Step size: " + alpha);
     alpha
   }
 

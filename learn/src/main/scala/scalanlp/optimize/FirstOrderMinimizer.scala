@@ -11,25 +11,58 @@ import scalanlp.util.logging.Logged
  * @author dlwh
  */
 
-trait FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]]
-  extends Minimizer[T,DF] with Logged with CheckedConvergence[T] {
+abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: Int = -1)(implicit norm: CanNorm[T]) extends Minimizer[T,DF] with Logged {
 
   type History;
-  case class State(x: T, value: Double,
-                   grad: T,
-                   adjustedValue: Double,
-                   adjustedGradient: T,
+  case class State(x: T,
+                   value: Double, grad: T,
+                   adjustedValue: Double, adjustedGradient: T,
                    iter: Int,
-                   history: History, failures: Int = 0);
+                   history: History);
 
+  protected def initialHistory(f: DF, init: T): History
+  protected def adjust(newX: T, newGrad: T, newVal: Double):(Double,T) = (newVal,newGrad)
+  protected def chooseDescentDirection(state: State):T
+  protected def determineStepSize(state: State, f: DF, direction: T):Double
+  protected def takeStep(state: State, dir: T, stepSize:Double):T
+  protected def updateHistory(newX: T, newGrad: T, newVal: Double, oldState: State):History
 
-  def iterations(f: DF,init: T): Iterator[State];
+  protected def initialState(f: DF, init: T) = {
+    val x = init
+    val (value,grad) = f.calculate(x)
+    val (adjValue,adjGrad) = adjust(x,grad,value)
+    val history = initialHistory(f,init)
+    State(x,value,grad,adjValue,adjGrad,0,history)
+  }
+
+  def iterations(f: DF,init: T): Iterator[State] = {
+    val it = Iterator.iterate(initialState(f,init)) { state =>
+      val dir = chooseDescentDirection(state)
+      val stepSize = determineStepSize(state, f, dir)
+      log.info("Step Size:" + stepSize)
+      val x = takeStep(state,dir,stepSize)
+      val (value,grad) = f.calculate(x)
+      log.info("Val and Grad Norm:" + value + " " + norm(grad,2))
+      val (adjValue,adjGrad) = adjust(x,grad,value)
+      log.info("Adj Val and Grad Norm:" + adjValue + " " + norm(adjGrad,2))
+      val history = updateHistory(x,grad,value,state)
+      State(x,value,grad,adjValue,adjGrad,state.iter + 1,history)
+    }
+    it:Iterator[State]
+  }
 
   def minimize(f: DF, init: T):T = {
-    val steps = iterations(f,init);
-     steps.reduceLeft( (a,b) => b).x;
+    iterations(f,init).find(state =>
+      (state.iter >= maxIter && maxIter >= 0)
+        || norm(state.adjustedGradient,2) <= math.max(1E-6 * state.adjustedValue.abs,1E-9)
+    ).get.x
   }
 }
+
+sealed trait FirstOrderException extends RuntimeException
+class NaNHistory extends FirstOrderException
+class StepSizeUnderflow extends FirstOrderException
+class LineSearchFailed extends FirstOrderException
 
 object FirstOrderMinimizer {
   case class OptParams(batchSize:Int = 512,
@@ -40,64 +73,44 @@ object FirstOrderMinimizer {
                        tolerance:Double = 1E-4,
                        useStochastic: Boolean= false) {
 
-    def minimizer[K,T](f: BatchDiffFunction[T])
+    def iterations[K,T](f: BatchDiffFunction[T], init: T)
                       (implicit arith: MutableInnerProductSpace[Double,T], canNorm: CanNorm[T],
                        TisTensor: CanViewAsTensor1[T,K,Double],
                        TKVPairs: CanMapKeyValuePairs[T,K,Double,Double,T],
-                       view:  <:<[T,scalala.tensor.mutable.Tensor1[K,Double] with scalala.tensor.mutable.TensorLike[K, Double, _, T with scalala.tensor.mutable.Tensor1[K,Double]]]): FirstOrderMinimizer[T, BatchDiffFunction[T]] = {
+                       view:  <:<[T,scalala.tensor.mutable.Tensor1[K,Double] with scalala.tensor.mutable.TensorLike[K, Double, _, T with scalala.tensor.mutable.Tensor1[K,Double]]]):Iterator[FirstOrderMinimizer[T,_]#State] = {
       if(useStochastic) {
         val adjustedRegularization = regularization * 0.01 * batchSize / f.fullRange.size
-        val inner = this.copy(regularization=adjustedRegularization).minimizer(f.withScanningBatches(batchSize))
-        new FirstOrderMinimizer[T,BatchDiffFunction[T]] {
-          type History = inner.History
-
-          def iterations(f: BatchDiffFunction[T], init: T):Iterator[State] = {
-            for( state <- inner.iterations(f.withScanningBatches(batchSize),init)) yield {
-              State(state.x,state.value,state.grad,state.adjustedValue,state.adjustedGradient,state.iter,state.history)
-            }
-          }
-
-          def checkConvergence(v: Double, grad: T) = inner.checkConvergence(v,grad)
-        }
+         this.copy(regularization=adjustedRegularization).iterations(f.withScanningBatches(batchSize), init)
       } else {
-        minimizer(f:DiffFunction[T])
+        iterations(f:DiffFunction[T], init)
       }
     }
 
-    def minimizer[K,T](f: StochasticDiffFunction[T])
+    def iterations[K,T](f: StochasticDiffFunction[T], init:T)
                       (implicit arith: MutableInnerProductSpace[Double,T], canNorm: CanNorm[T],
                        TisTensor: CanViewAsTensor1[T,K,Double],
                        TKVPairs: CanMapKeyValuePairs[T,K,Double,Double,T],
-                       view:  <:<[T,scalala.tensor.mutable.Tensor1[K,Double] with scalala.tensor.mutable.TensorLike[K, Double, _, T with scalala.tensor.mutable.Tensor1[K,Double]]]): FirstOrderMinimizer[T,StochasticDiffFunction[T]] = {
-      if(regularization == 0.0) {
+                       view:  <:<[T,scalala.tensor.mutable.Tensor1[K,Double] with scalala.tensor.mutable.TensorLike[K, Double, _, T with scalala.tensor.mutable.Tensor1[K,Double]]]) = {
+      val r = if(regularization == 0.0) {
         new StochasticGradientDescent.SimpleSGD[T](alpha, maxIterations) {
-          override val TOLERANCE = tolerance
         }
       } else if(useL1) {
         new AdaptiveGradientDescent.L1Regularization[K,T](regularization, eta=alpha, maxIter = maxIterations)(arith,TisTensor,TKVPairs,canNorm) {
-          override val TOLERANCE = tolerance
         }
       } else { // L2
         new StochasticGradientDescent[T](alpha,  maxIterations) with AdaptiveGradientDescent.L2Regularization[T] {
-          override val TOLERANCE = tolerance
           override val lambda = regularization;
         }
       }
+      r.iterations(f,init)
     }
 
-    def minimizer[K,T]
-      (f: DiffFunction[T])(implicit vspace: MutableInnerProductSpace[Double,T],
+    def iterations[K,T]
+      (f: DiffFunction[T], init:T)(implicit vspace: MutableInnerProductSpace[Double,T],
                              view:  <:<[T,scalala.tensor.mutable.Tensor1[K,Double] with scalala.tensor.mutable.TensorLike[K, Double, _, T with scalala.tensor.mutable.Tensor1[K,Double]]],
-                             canNorm: CanNorm[T]): FirstOrderMinimizer[T,DiffFunction[T]] = {
-      if(useL1) new OWLQN[K,T](maxIterations, 5, regularization) {
-        override val TOLERANCE = tolerance
-      }
-      else new LBFGS[T](maxIterations, 5) {
-        override val TOLERANCE = tolerance
-        override def iterations(f: DiffFunction[T], init: T) = {
-          super.iterations(DiffFunction.withL2Regularization(f,regularization),init);
-        }
-      }
+                             canNorm: CanNorm[T]) = {
+       if(useL1) new OWLQN[K,T](maxIterations, 5, regularization).iterations(f,init)
+      else new LBFGS[T](maxIterations, 5).iterations(DiffFunction.withL2Regularization(f,regularization),init);
     }
   }
 }

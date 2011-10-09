@@ -22,25 +22,30 @@ object AdaptiveGradientDescent {
 
 
     case class History(sumOfSquaredGradients: T);
-    def initialHistory(f: StochasticDiffFunction[T],init: T) = History(zeros(init));
-    def updateHistory(oldState: State,newX: T,curValue: Double,curGrad: T) = {
+    override def initialHistory(f: StochasticDiffFunction[T],init: T) = History(zeros(init));
+    override def updateHistory(newX: T, newGrad: T, newValue: Double, oldState: State) = {
       val oldHistory = oldState.history;
-      val newG = oldHistory.sumOfSquaredGradients :+ (curGrad :* curGrad);
+      val newG = oldHistory.sumOfSquaredGradients :+ (oldState.grad :* oldState.grad);
       new History(newG);
     }
 
-    override def projectVector(state: State, oldX: T, gradient: T, stepSize: Double):T = {
-      val s = (state.history.sumOfSquaredGradients :+ (gradient :* gradient)).values.map(math.sqrt);
-      val res = (( (s :* oldX) - gradient * stepSize) :/ (s + (delta + lambda * stepSize)));
+    override protected def takeStep(state: State, dir: T, stepSize: Double) = {
+      import state._
+      val s = (state.history.sumOfSquaredGradients :+ (state.grad :* state.grad)).values.map(math.sqrt);
+      val res = (( (s :* x) + dir * stepSize) :/ (s + (delta + lambda * stepSize)));
       res
     }
 
+    override def determineStepSize(state: State, f: StochasticDiffFunction[T], dir: T) = {
+      if(state.iter < 2) 0.001 * defaultStepSize else defaultStepSize;
+    }
 
-    override def chooseStepSize(state: State) = if(state.iter < 2) 0.001 * eta else eta;
+    override protected def adjust(newX: T, newGrad: T, newVal: Double) = {
+      val av = newVal + (newX dot newX) * lambda / 2.0
+      val ag = newGrad + newX * lambda
+      (av -> ag)
+    }
 
-    override protected def adjustGradient(grad: T, x: T) = grad + x * lambda
-
-    override protected def adjustValue(value: Double, x: T) = value + (x dot x) * lambda / 2
   }
 
   class L1Regularization[K,T](val lambda: Double=1.0,
@@ -53,15 +58,16 @@ object AdaptiveGradientDescent {
     import vspace._;
     case class History(sumOfSquaredGradients: T);
     def initialHistory(f: StochasticDiffFunction[T],init: T)= History(zeros(init));
-    def updateHistory(oldState: State,newX: T,curValue: Double,curGrad: T) = {
+    override def updateHistory(newX: T, newGrad: T, newValue: Double, oldState: State) = {
       val oldHistory = oldState.history;
-      val newG = oldHistory.sumOfSquaredGradients :+ (curGrad :* curGrad)
+      val newG = oldHistory.sumOfSquaredGradients :+ (oldState.grad :* oldState.grad)
       new History(newG);
     }
 
-    override def projectVector(state: State, oldX: T, gradient: T, stepSize: Double):T = {
-      val s:T = sqrt(state.history.sumOfSquaredGradients :+ (gradient :* gradient) :+ delta);
-      val res:T = oldX - (gradient * stepSize :/ s)
+    override protected def takeStep(state: State, dir: T, stepSize: Double) = {
+      import state._
+      val s:T = sqrt(state.history.sumOfSquaredGradients :+ (grad :* grad) :+ delta);
+      val res:T = x + (dir * stepSize :/ s)
       val tlambda = lambda * stepSize;
       TKVPairs.mapNonZero(res, { case (k,v) =>
         if(v.abs < tlambda / TisTensor(s)(k)) {
@@ -72,12 +78,15 @@ object AdaptiveGradientDescent {
       });
     }
 
-    override def chooseStepSize(state: State) = eta;
+    override def determineStepSize(state: State, f: StochasticDiffFunction[T], dir: T) = {
+      if(state.iter < 2) 0.001 * defaultStepSize else defaultStepSize;
+    }
 
-    override protected def adjustGradient(grad: T, x: T) = grad + x.values.map(math.signum) * lambda
-
-    override protected def adjustValue(value: Double, x: T) = value + norm(x,1) * lambda
-
+    override protected def adjust(newX: T, newGrad: T, newVal: Double) = {
+      val av = newVal + norm(newX,1) * lambda
+      val ag = newGrad + newX.values.map(math.signum) * lambda
+      (av -> ag)
+    }
 
   }
 }

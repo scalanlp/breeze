@@ -32,74 +32,39 @@ import scalala.tensor.mutable;
 *
 * @author dlwh
 */
-abstract class StochasticGradientDescent[T](val eta: Double,
+abstract class StochasticGradientDescent[T](val defaultStepSize: Double,
                                             val maxIter: Int)
-                                            (implicit protected val vspace: MutableInnerProductSpace[Double,T], protected val canNorm: CanNorm[T])
-  extends FirstOrderMinimizer[T,StochasticDiffFunction[T]]
-                                      with GradientNormConvergence[T]
-                                      with ConfiguredLogging {
+                                            (implicit protected val vspace: MutableInnerProductSpace[Double,T],
+                                             protected val canNorm: CanNorm[T])
+  extends FirstOrderMinimizer[T,StochasticDiffFunction[T]](maxIter) with ConfiguredLogging {
 
   import vspace._;
-
-  type History;
-  def initialHistory(f: StochasticDiffFunction[T], init: T):History;
-  def updateHistory(oldState: State, newX: T, curValue: Double, curGrad: T):History
-  protected def adjustGradient(grad: T, x: T): T = grad
-  protected def adjustValue(value: Double, x: T): Double = value;
-
-  def iterations(f: StochasticDiffFunction[T], init: T):Iterator[State] = {
-    val it = Iterator.iterate(initialState(f,init)) { state =>
-      val oldX = state.x
-      val iter = state.iter;
-
-      val (value,grad: T) = f.calculate(oldX);
-
-      val stepSize:Double = chooseStepSize(state.copy(value=value,grad=grad));
-      val newX = projectVector(state, oldX, grad, stepSize);
-      val adjustedGradient = adjustGradient(grad, newX)
-      val adjustedValue = adjustValue(value, newX)
-      log.info("SGD gradient norm: " + norm(grad,2) + " "+ norm(adjustedGradient,2));
-      log.info("SGD value: " + value + " " + adjustedValue);
-      val newState = State(newX, value, grad, adjustedValue, adjustedGradient, iter + 1, updateHistory(state,newX,value,grad))
-      newState
-    };
-
-    it.drop(1).takeWhile { state => (state.iter < maxIter || maxIter < 0) && !checkConvergence(state.adjustedValue,state.adjustedGradient)}
-  }
-
 
   // Optional hooks with reasonable defaults
 
   /**
-   * Chooses the initial state
-   */
-  def initialState(f: StochasticDiffFunction[T], init: T): State = {
-    State(init,Double.PositiveInfinity,zeros(init), Double.PositiveInfinity, zeros(init), 0, initialHistory(f,init));
-  }
-
-
-  /**
-   * Projects the vector onto whatever ball is needed. Can also incorporate regularization, or whatever.
+   * Projects the vector x onto whatever ball is needed. Can also incorporate regularization, or whatever.
    *
    * Default just takes a step
    */
-  def projectVector(state: State, oldX: T, gradient: T, stepSize: Double):T = oldX - gradient * stepSize;
+  protected def takeStep(state: State, dir: T, stepSize: Double) = state.x + dir * stepSize
+  protected def chooseDescentDirection(state: State) = state.grad * -1.0
 
   /**
    * Choose a step size scale for this iteration.
    *
-   * Default is eta * math.sqrt(state.iter + 1)
+   * Default is eta / math.pow(state.iter + 1,2.0 / 3.0)
    */
-  def chooseStepSize(state: State) = {
-    eta / math.sqrt(state.iter + 1)
+  def determineStepSize(state: State, f: StochasticDiffFunction[T], dir: T) = {
+    defaultStepSize / math.pow(state.iter + 1, 2.0 / 3.0)
   }
 
 
 }
 
 object StochasticGradientDescent {
-  def apply[T](eta: Double=4, maxIter: Int=100, batchSize: Int = 50)(implicit vs: MutableInnerProductSpace[Double,T], canNorm: CanNorm[T]) :StochasticGradientDescent[T]  = {
-      new SimpleSGD(eta,maxIter);
+  def apply[T](initialStepSize: Double=4, maxIter: Int=100)(implicit vs: MutableInnerProductSpace[Double,T], canNorm: CanNorm[T]) :StochasticGradientDescent[T]  = {
+      new SimpleSGD(initialStepSize,maxIter);
   }
 
   class SimpleSGD[T](eta: Double=4,
@@ -108,7 +73,7 @@ object StochasticGradientDescent {
                      canNorm: CanNorm[T]) extends StochasticGradientDescent[T](eta,maxIter) {
       type History = Unit
       def initialHistory(f: StochasticDiffFunction[T],init: T)= ()
-      def updateHistory(oldState: State,newX: T,curValue: Double,curGrad: T) = ()
+      def updateHistory(newX: T, newGrad: T, newValue: Double, oldState: State) = ()
   }
 
 }

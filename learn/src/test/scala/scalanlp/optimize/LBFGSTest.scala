@@ -33,7 +33,7 @@ import scalanlp.util.logging.ConsoleLogging
 class LBFGSTest extends OptimizeTestBase {
 
   test("optimize a simple multivariate gaussian") {
-    val lbfgs = new LBFGS[DenseVector[Double]](100,4) with ConsoleLogging;
+    val lbfgs = new LBFGS[DenseVector[Double]](100,4)
 
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {

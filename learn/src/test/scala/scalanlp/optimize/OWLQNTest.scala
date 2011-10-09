@@ -34,7 +34,7 @@ import scalanlp.util.logging.ConsoleLogging
 @RunWith(classOf[JUnitRunner])
 class OWLQNTest extends OptimizeTestBase {
   test("super simple") {
-    val lbfgs = new OWLQN[Int,DenseVector[Double]](100,4)
+    val lbfgs = new OWLQN[Int,DenseVector[Double]](100,4) with ConsoleLogging
 
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
