@@ -21,7 +21,8 @@ import scalala.library.Numerics;
 import math._
 import scalala.tensor.Counter
 import scalala.tensor.dense.DenseVector
-import scalanlp.optimize.{LBFGS, DiffFunction}
+import scalanlp.util.logging.ConsoleLogging
+import scalanlp.optimize.{GradientCheckingDiffFunction, LBFGS, DiffFunction}
 ;
 
 /**
@@ -89,13 +90,35 @@ object VonMises extends ExponentialFamily[VonMises,Double] {
   def mle(stats: SufficientStatistic): (Double, Double) = {
     val lensed = likelihoodFunction(stats).throughLens[DenseVector[Double]];
     val lbfgs = new LBFGS[DenseVector[Double]](100,3)
-    // Starting points due to Sra, 2009)
+    // Starting points due to Sra, 2009... not as good as these old ones that I forgot about
     // http://en.wikipedia.org/wiki/Von_Mises-Fisher_distribution
-    val startingMu = asin(stats.sines/stats.n);
-    val rhat = sqrt(stats.sines * stats.sines + stats.cosines * stats.cosines) / stats.n
-    val startingK = rhat * (2 - rhat * rhat) / (1-rhat * rhat);
-    println(startingMu,startingK);
-    val result = lbfgs.minimize(lensed,DenseVector(startingMu,startingK));
+//    val startingMu = {
+//      val m = asin(stats.sines/stats.n);
+//      if(m < 0)
+//        m + 2 * math.Pi
+//      else m
+//    }
+//    val rhat = sqrt(stats.sines * stats.sines + stats.cosines * stats.cosines) / stats.n
+//    val startingK = rhat * (2 - rhat * rhat) / (1-rhat * rhat);
+        val cosineSum = stats.cosines
+    val sineSum = stats.sines
+    val muPart = signum(cosineSum) * signum(sineSum) * atan(abs(sineSum/cosineSum));
+    val mu = (muPart + {
+      if(cosineSum < 0) Pi
+      else if (cosineSum > 0 && sineSum < 0) 2 * Pi;
+      else 0.0
+    } ) % (2 * Pi)
+
+    val t = sqrt(pow(cosineSum/stats.n,2) + pow(sineSum / stats.n,2));
+    val k = (1.28 - 0.53*pow(t,2)) * tan(Pi/2*t)
+
+    val kx = {
+      if(t < 0.53) t * (2 + t *t * (1 + 5 * t * t / 6))
+      else if(t < 0.85) -0.4 + 1.39 * t + (0.43)/(1-t);
+      else 1/( t* (3 + t * (-4 + t)));
+    }
+    println(mu,kx);
+    val result = lbfgs.minimize(lensed,DenseVector(mu,kx));
     val res@(a,b) = (result(0),result(1));
     res
   }
