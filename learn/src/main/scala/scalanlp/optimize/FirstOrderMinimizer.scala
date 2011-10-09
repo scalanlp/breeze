@@ -36,17 +36,25 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
   }
 
   def iterations(f: DF,init: T): Iterator[State] = {
-    val it = Iterator.iterate(initialState(f,init)) { state =>
-      val dir = chooseDescentDirection(state)
-      val stepSize = determineStepSize(state, f, dir)
-      log.info("Step Size:" + stepSize)
-      val x = takeStep(state,dir,stepSize)
-      val (value,grad) = f.calculate(x)
-      log.info("Val and Grad Norm:" + value + " " + norm(grad,2))
-      val (adjValue,adjGrad) = adjust(x,grad,value)
-      log.info("Adj Val and Grad Norm:" + adjValue + " " + norm(adjGrad,2))
-      val history = updateHistory(x,grad,value,state)
-      State(x,value,grad,adjValue,adjGrad,state.iter + 1,history)
+    var failedOnce = false
+    val it = Iterator.iterate(initialState(f,init)) { state => try {
+        val dir = chooseDescentDirection(state)
+        val stepSize = determineStepSize(state, f, dir)
+        log.info("Step Size:" + stepSize)
+        val x = takeStep(state,dir,stepSize)
+        val (value,grad) = f.calculate(x)
+        log.info("Val and Grad Norm:" + value + " " + norm(grad,2))
+        val (adjValue,adjGrad) = adjust(x,grad,value)
+        log.info("Adj Val and Grad Norm:" + adjValue + " " + norm(adjGrad,2))
+        val history = updateHistory(x,grad,value,state)
+        failedOnce = false
+        State(x,value,grad,adjValue,adjGrad,state.iter + 1,history)
+    } catch {
+      case x: FirstOrderException if !failedOnce =>
+        failedOnce = true
+        log.error("Failure! Resetting history: " + x)
+        state.copy(history = initialHistory(f,state.x))
+    }
     }
     it:Iterator[State]
   }
