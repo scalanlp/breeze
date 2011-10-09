@@ -2,5 +2,10 @@ target/*
 */target*
 .manager
 .*.swp
-*/lib_managed/*
+lib_managed
+src_managed
+*.class
+target
+project/boot
+project/build
 
