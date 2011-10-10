@@ -24,6 +24,7 @@ import java.io.{ObjectInputStream,ObjectOutputStream};
 import java.io.EOFException;
 import java.util.zip.{GZIPInputStream, GZIPOutputStream};
 
+import scalanlp.io.FileStreams;
 
 /**
  * Serialization to and from files.  Classes that wish to provide a
@@ -58,30 +59,6 @@ with LowPriorityFileSerializationImplicits {
 
   def writeJava[T](sink : Output, what : T) =
     write(sink, what)(GenericFileSerializationFromJava.fromJava[T]);
-
-  protected[serialization] def openWrite(path : File) : OutputStream = {
-    val fos = new FileOutputStream(path);
-    try {
-      val bos = new BufferedOutputStream(fos);
-      if (path.getName.endsWith(".gz")) new java.util.zip.GZIPOutputStream(bos) else bos;
-    } catch {
-      case ex : Throwable =>
-        fos.close();
-        throw(ex);
-    }
-  }
-
-  protected[serialization] def openRead(path : File) : InputStream = {
-    val fis = new FileInputStream(path);
-    try {
-      val bis = new BufferedInputStream(fis);
-      if (path.getName.endsWith(".gz")) new java.util.zip.GZIPInputStream(bis) else bis;
-    } catch {
-      case ex : Throwable =>
-        fis.close();
-        throw(ex);
-    }
-  }
 }
 
 /** Mix-in trait used by FileSerialization to prioritize Text before Data.  @author dramage */
@@ -115,16 +92,19 @@ trait FileSerializationFromText[T] {
  */
 trait GenericFileSerializationFromText {
 
-  implicit def fromTextReadable[T:TextSerialization.Readable] : FileSerialization.Readable[T] =
+  implicit def fromTextReadable[T](implicit tr :TextSerialization.Readable[T])
+  : FileSerialization.Readable[T] =
   new FileSerialization.Readable[T] {
     val MISSING = -2;
 
     override def read(source : File) = {
-      val input = new InputStreamReader(FileSerialization.openRead(source));
+      val input = new InputStreamReader(FileStreams.input(source));
       try {
-        implicitly[TextSerialization.Readable[T]].read(input);
+        tr.read(input);
       } finally {
-        input.close();
+        if (!tr.streaming) {
+          input.close();
+        }
       }
     }
   }
@@ -132,7 +112,7 @@ trait GenericFileSerializationFromText {
   implicit def fromTextWritable[T:TextSerialization.Writable] : FileSerialization.Writable[T]  =
   new FileSerialization.Writable[T] {
     override def write(sink : File, value : T) = {
-      val output = new PrintStream(FileSerialization.openWrite(sink));
+      val output = new PrintStream(FileStreams.output(sink));
       try {
         implicitly[TextSerialization.Writable[T]].write(output, value);
       } finally {
@@ -169,11 +149,13 @@ trait GenericFileSerializationFromData {
   implicit def fromDataReadable[T](implicit dr : DataSerialization.Readable[T]) : FileSerialization.Readable[T]  =
   new FileSerialization.Readable[T] {
     override def read(source : File) = {
-      val input = new DataInputStream(FileSerialization.openRead(source));
+      val input = new DataInputStream(FileStreams.input(source));
       val rv = try {
         DataSerialization.read[T](input);
       } finally {
-        input.close();
+        if (!dr.streaming) {
+          input.close();
+        }
       }
       rv;
     }
@@ -182,7 +164,7 @@ trait GenericFileSerializationFromData {
   implicit def fromDataWritable[T](implicit dw : DataSerialization.Writable[T]) : FileSerialization.Writable[T]  =
   new FileSerialization.Writable[T] {
     override def write(sink : File, value : T) = {
-      val output = new DataOutputStream(FileSerialization.openWrite(sink));
+      val output = new DataOutputStream(FileStreams.output(sink));
       try {
         DataSerialization.write[T](output, value);
       } finally {
@@ -217,7 +199,7 @@ object GenericFileSerializationFromJava {
   implicit def fromJava[T] : FileSerialization.ReadWritable[T] =
   new FileSerialization.ReadWritable[T] {
     override def read(source : File) = {
-      val input = new ObjectInputStream(new BufferedInputStream(new FileInputStream(source)));
+      val input = new ObjectInputStream(FileStreams.input(source));
       val rv = try {
         input.readObject().asInstanceOf[T];
       } finally {
@@ -227,7 +209,7 @@ object GenericFileSerializationFromJava {
     }
 
     override def write(sink : File, value : T) = {
-      val output = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(sink)));
+      val output = new ObjectOutputStream(FileStreams.output(sink));
       try {
         output.writeObject(value);
       } finally {

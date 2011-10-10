@@ -20,7 +20,6 @@ package scalanlp.classify;
 import scalanlp.data._
 import scalala.tensor.mutable.Counter
 import scalala.tensor.Tensor1
-;
 
 /**
  * Represents a classifier from observations of type T to labels of type L.

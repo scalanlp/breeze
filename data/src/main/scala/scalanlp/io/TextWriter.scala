@@ -67,6 +67,22 @@ object TextWriter {
   }
 
   /**
+   * A TextWriter that writes to a Writer.
+   *
+   * @author dramage
+   */
+  class WriterWriter(val osw : java.io.Writer) extends TextWriter {
+    override def append(char : Char) =
+      { osw.write(char); this; }
+    override def append(string : String) =
+      { osw.write(string); this; }
+    override def appendCodePoint(cp : Int) =
+      { osw.write(cp); this; }
+    override def close =
+      { osw.close; }
+  }
+
+  /**
    * A TextWriter that writes to a PrintStream.
    *
    * @author dramage
@@ -93,5 +109,9 @@ object TextWriter {
    * @author dramage
    */
   class FileWriter(val file : java.io.File)
-  extends PrintStreamWriter(new java.io.PrintStream(FileStreams.output(file)));
+  extends WriterWriter(
+    new java.io.BufferedWriter(
+      new java.io.OutputStreamWriter(
+        FileStreams.output(file))));
 }
+

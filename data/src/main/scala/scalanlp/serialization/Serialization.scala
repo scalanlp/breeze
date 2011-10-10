@@ -29,7 +29,7 @@ import scalala.scalar.Scalar
  *
  * @author dramage
  */
-trait Readable[-Input,V] {
+trait Readable[-Input,@specialized V] {
   def read(input : Input) : V;
 }
 
@@ -38,7 +38,7 @@ trait Readable[-Input,V] {
  *
  * @author dramage
  */
-trait Writable[-Output,V] {
+trait Writable[-Output,@specialized V] {
   def write(output : Output, value : V);
 }
 
@@ -61,12 +61,15 @@ trait SerializationFormat extends Serializable {
   type Output;
 
   /** Inner trait for reading from Input. */
-  trait Readable[T] extends Serializable {
+  trait Readable[@specialized T] extends Serializable {
     def read(source: Input): T
+    
+    /** Returns true if this readable requires streaming. */
+    def streaming : Boolean = false;
   }
 
   /** Inner trait for writing to Output. */
-  trait Writable[T] extends Serializable {
+  trait Writable[@specialized T] extends Serializable {
     def write(sink: Output, what: T): Unit
   }
 
@@ -110,7 +113,7 @@ object SerializationFormat {
    * @author dlwh
    * @author dramage
    */
-  trait CompoundTypes extends SerializationFormat { outer =>
+  trait CompoundTypes { self : SerializationFormat with PrimitiveTypes =>
 
     protected def readName(in : Input) : String;
 
@@ -261,6 +264,37 @@ object SerializationFormat {
         writeIterable[T,Seq[T]](sink, value, "Array");
     }
 
+    implicit def iteratorReadWritable[T](implicit tH: ReadWritable[T])
+    = new ReadWritable[Iterator[T]] {
+      override def streaming = true;
+    
+      def read(source : Input) = new Iterator[T] {
+        var pending = self.read[Int](source);
+        override def hasNext = pending > 0;
+        override def next = {
+          require(pending > 0);
+          val rv = tH.read(source);
+          pending -= 1;
+          if (pending == 0) {
+            pending = self.read[Int](source);
+            if (pending == 0) {
+              // close source once there's a hook ...
+              // source.close;
+            }
+          }
+          rv;
+        }
+      }
+      
+      def write(out : Output, iter : Iterator[T]) {
+        for (group <- iter.grouped(10)) {
+          self.write(out, group.length);
+          for (item <- group) tH.write(out, item);
+        }
+        self.write(out, 0);
+      }
+    }
+      
     implicit def listReadWritable[T](implicit tH: ReadWritable[T]) =
       collectionFromElements[T,List](List,"List");
 

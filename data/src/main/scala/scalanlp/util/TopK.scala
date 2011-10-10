@@ -15,7 +15,8 @@
 */
 package scalanlp.util;
 
-import scala.collection.mutable.ArrayBuffer;
+import java.util.TreeSet;
+import scala.collection.JavaConversions._;
 
 /**
  * A Top-K queue keeps a list of the top K elements seen so far as ordered
@@ -23,68 +24,38 @@ import scala.collection.mutable.ArrayBuffer;
  */
 class TopK[T](k : Int)(implicit ord : Ordering[T]) extends Iterable[T] {
 
-  final val keys = new ArrayBuffer[T](k+1);
+  private val keys = new TreeSet[T](ord);
 
-  private[util] def += (elem : T) : Unit = {
-    val pos = insertion(elem);
-    keys.insert(if (pos < 0) ~pos else pos, elem);
-    if (keys.size > k) {
-      keys.remove(0);
+  def +=(e : T) = {
+    if (keys.size < k) {
+      keys.add(e);
+    } else if (keys.size > 0 && ord.lt(keys.first, e) && !keys.contains(e)) {
+      keys.remove(keys.first);
+      keys.add(e);
     }
   }
 
-  override def iterator : Iterator[T] = {
-    keys.view.reverse.iterator
-  }
+  override def iterator : Iterator[T] =
+    keys.descendingIterator;
 
   override def size =
     keys.size;
-
-  @inline final def insertion(key : T) : Int = {
-    if (keys.length == 0) return -1;
-
-    var begin = 0;
-    var end = keys.length - 1;
-    var mid = (end + begin) >> 1;
-
-    while (begin <= end) {
-      mid = (end + begin) >> 1;
-      val cmp = ord.compare(key, keys(mid));
-      if (cmp > 0)
-        begin = mid + 1;
-      else if (cmp < 0)
-        end = mid - 1;
-      else
-        return mid;
-    }
-
-    // no match found, return insertion point
-    if (ord.lteq(key, keys(mid)))
-      return ~mid;       // Insert here (before mid)
-    else
-      return ~(mid + 1); // Insert after mid
-  }
 }
 
 object TopK {
-  def apply[T](k : Int, items : Iterator[T])(implicit ord : Ordering[T]) : TopK[T] = {
-    val topk = new TopK[T](k);
-    items.foreach(topk.+=);
+  def apply[T](k : Int, items : TraversableOnce[T])(implicit ord : Ordering[T]) : TopK[T] = {
+    val topk = new TopK[T](k)(ord);
+    items.foreach(topk += _);
     topk;
   }
 
-  def apply[T,U](k : Int, items : Iterator[T], scoreFn : (T => U))(implicit uord : Ordering[U]) : TopK[T] = {
+  def apply[T,U](k : Int, items : TraversableOnce[T], scoreFn : (T => U))
+  (implicit uord : Ordering[U]) : TopK[T] = {
     implicit val ord = new Ordering[T] {
       override def compare(x : T, y : T) = uord.compare(scoreFn(x), scoreFn(y));
     };
     apply(k, items)(ord);
   }
-
-  def apply[T](k : Int, items : Iterable[T])(implicit ord : Ordering[T]) : TopK[T] =
-    this.apply(k, items.iterator)(ord);
-
-  def apply[T,U](k : Int, items : Iterable[T], scoreFn : (T => U))(implicit uord : Ordering[U]) : TopK[T] =
-    this.apply(k, items.iterator, scoreFn)(uord);
 }
 
 /**
