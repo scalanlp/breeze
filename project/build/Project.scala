@@ -17,9 +17,9 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
   // subprojects
   //
 
-  lazy val data = project("data","data", new Data(_));
-  lazy val learn = project("learn","learn",new Learn(_), data);
-  lazy val graphs = project("graphs","graphs",new Graphs(_), data);
+  lazy val data = project("data","scalanlp-data", new Data(_));
+  lazy val learn = project("learn","scalanlp-learn", new Learn(_), data);
+  lazy val graphs = project("graphs","scalanlp-graphs", new Graphs(_), data);
 
   class Data(info: ProjectInfo) extends DefaultProject(info) {
     val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
