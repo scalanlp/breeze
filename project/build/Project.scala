@@ -13,6 +13,15 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
   val ivyLocal = "ivy local" at "file://" + Path.userHome +".ivy/local/"
   override def ivyRepositories = Resolver.withDefaultResolvers(repositories.toSeq, false)
 
+  // do not publish sub-projects with this marker trait
+  trait UnpublishedProject extends DefaultProject {
+    def doNothing = task { None }
+    override def publishLocalAction = doNothing
+    override def deliverLocalAction = doNothing
+    override def publishAction = doNothing
+    override def deliverAction = doNothing
+  }
+
   //
   // subprojects
   //
@@ -72,10 +81,6 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
     }
     val JUnit = "junit" % "junit" % "4.5" % "test"
   }
-
-
-
-
 
 
 
@@ -157,7 +162,5 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
     case _ =>
       Credentials(Path.userHome / ".ivy2" / ".credentials", log)
   }
-
-
 }
 
