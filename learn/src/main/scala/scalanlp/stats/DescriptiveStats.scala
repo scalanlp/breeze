@@ -1,4 +1,7 @@
-package scalanlp.stats;
+package scalanlp.stats
+
+import util.Sorting
+;
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
@@ -53,6 +56,23 @@ object DescriptiveStats {
   def accumulateAndCount[@specialized T](it : TraversableOnce[T])(implicit n: Numeric[T]) = it.foldLeft( (n.zero,0) ) { (tup,d) =>
     import n.mkNumericOps;
     (tup._1 + d, tup._2 + 1);
+  }
+
+  /**
+   * returns the estimate of it at p * it.size, where p in [0,1]
+   */
+  def percentile(it: TraversableOnce[Double], p: Double) = {
+    if(p > 1 || p < 0) throw new IllegalArgumentException("p must be in [0,1]")
+    val arr = it.toArray
+    Sorting.quickSort(arr)
+    // +1 so that the .5 == mean for even number of elements.
+    val f = (arr.length + 1) * p
+    val i = f.toInt
+    if(i == 0) arr.head
+    else if (i == arr.length) arr.last
+    else {
+      arr(i-1) + (f - i) * (arr(i) - arr(i-1))
+    }
   }
 
 }
