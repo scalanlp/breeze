@@ -22,40 +22,99 @@ import scalala.tensor.dense._;
 import scalala.tensor._;
 
 import scalanlp._;
-import scalanlp.util.Lazy;
+
 import scalanlp.util.Lazy.Implicits._;
 import scala.math.{pow,exp,log}
 import scalala.tensor.dense.DenseVector.zeros
 import scalala.library.Numerics._;
 import scalala.library.Library.{mean,norm,softmax}
+import sparse.SparseVector
+import tensor.sparse.OldSparseVector
+import util.{Index, Encoder, Lazy}
+import scala.collection.immutable.BitSet
+import scalala.library.Numerics
+
+trait CRFModel[L,W] extends Encoder[L] {
+  val index: Index[L]
+  def scoreTransition(pos: Int, w: W, l: L, ln: L):Double
+  def score(pos: Int, w: W, l: Int, ln: Int):Double
+  def validSymbols(pos: Int, w: W):BitSet
+  val startSymbol: L
+  lazy val start: Int = index(startSymbol)
+}
 
 /**
-* Represents a CRF with arbitrary window size, can score sequences and such.
-*
-* @param features, functions of the form ([states],i,observations)=&lt;Double
-* @param weights, to go with the features
-* @param stateDict: a set of allowed states
-* @param start: an initial state, that seq's implicitly start with.
-* @param window: how wide of a window the features are over.
-*/
-class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
-          val weights: Vector[Double],
-          val numStates: Int,
-          val start: Int,
-          val validStatesForObservation: Int=>Seq[Int],
-          val window: Int) {
-  require(features.length == weights.size);
-  require(window > 0)
+ * Represents a linear-chain CRF with a fixed window size (2), can score sequences and such.
+ *
+ * W is kept as an opaque object, which allows for you to condition on more than just the "outputs"
+ *
+ */
+class CRF[L,W](val transitions: CRFModel[L,W]) {
+  def numStates = transitions.index.size
 
   /**
-  * Conditions the CRF on an input sequence, which gives you access
+  * Conditions the CRF on an input and a length, which gives you access
   * to the marginals for each hidden state.
   */
-  def calibrate(words: Seq[Int]) = new Calibration(words, Map());
+  def calibrate(words: W, length: Int) = {
+    val forwardScores = Array.fill(length)(mkVector(numStates, Double.NegativeInfinity))
 
-  import CRF._;
-  private val factorSize = pow(numStates,window).toInt;
-  private val messageSize = pow(numStates,window-1).toInt;
+    var previous : Vector[Double] = initialMessage;
+
+    val cache = transitions.fillArray(0.0)
+    // forward
+    for(i <- 0 until length) {
+      val cur = forwardScores(i)
+      // TODO: add in active iterators to scalala?
+      for ( next <- transitions.validSymbols(i,words)) {
+        var offset = 0
+        for((previousLabel,prevScore) <- previous.pairsIterator) {
+          val score = transitions.score(i,words,previousLabel,next) + prevScore
+          if(score != Double.NegativeInfinity) {
+            cur(offset) = score
+            offset += 1
+          }
+        }
+        cur(next) = Numerics.logSum(cache,offset)
+
+      }
+
+
+      previous = cur
+    }
+
+    //backward
+    val backwardScores = Array.fill(length)(mkVector(numStates, Double.NegativeInfinity))
+    previous = initialMessage
+
+    for(i <- (length-1) to 0) {
+      val cur = backwardScores(i)
+      // TODO: add in active iterators to scalala?
+      for ( previousLabel <- transitions.validSymbols(i,words)) {
+        var offset = 0
+        for((next,prevScore) <- previous.pairsIterator) {
+          val score = transitions.score(i+1,words,previousLabel,next) + prevScore
+          if(score != Double.NegativeInfinity) {
+            cur(offset) = score
+            offset += 1
+          }
+        }
+        cur(previousLabel) = Numerics.logSum(cache,offset)
+
+      }
+      previous = cur
+    }
+
+
+    new Calibration(words, length, forwardScores, backwardScores)
+  }
+
+
+  protected def initialMessage:Vector[Double] = {
+    val r = new OldSparseVector(numStates,Double.NegativeInfinity)
+    r(transitions.start) = 0.0
+    r
+  }
 
   protected def mkVector(size:Int, fill: Double):Vector[Double] = {
     val data = new Array[Double](size);
@@ -67,441 +126,57 @@ class CRF(val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
   /**
   * A calibration is a class that represents the CRF being conditioned on some input.
   */
-  class Calibration protected[CRF] (val words:Seq[Int], conditioning: Map[Int,Int]) { baseCalibration =>
+  class Calibration protected[CRF] (val words:W, length: Int, forward: Array[Vector[Double]], backward: Array[Vector[Double]]) {
     /** 
     * returns the value of the partition function for this sequence of words. This is the normalizer for the distribution.
     */
-    lazy val partition = exp(logPartition);
+    def partition = exp(logPartition);
 
     /**
     * returns the value of the log partition function for this sequence of words.
     */
     lazy val logPartition = {
-      val result = softmax(factors.last.calibrated);
+      val result = softmax(forward.last + backward.last)
       assert(!result.isNaN);
       result;
     }
 
-    /**
-    * Returns a sequence of lazy LogCounters at each position,
-    * representing the normalized log-probability of a given state
-    *being at a given position.
-    */
-    lazy val logMarginals : Seq[Lazy[Counter[Int,Double]]] = {
-      (for { 
-        i:Int <- (0 until words.length).toArray
-      } yield Lazy.delay {
-        if(conditioning.contains(i)) {
-          val result = Counter[Int,Double]();
-          result(conditioning(i) ) = 0.0;
-          result;
-        } else {
-          val factor = factors(i).calibrated;
-          val accum = mkVector(numStates, Double.NegativeInfinity);
-
-          // for each possible assignment to the left and right message
-          for ( (stateSeq,score) <- factor.nonzero.pairs if score != Double.NegativeInfinity) {
-            val head = stateSeq / rightShifter; // trigram XYZ, get Z
-            // sum out this contribution
-            accum(head) = logSum(accum(head),score);
-          }
-
-          val c = Counter[Int,Double]();
-          // subtract out the log partition function.
-          var j = 0;
-          while(j < accum.size) {
-            if(!accum(j).isInfinite)
-              c(j) = accum(j) - logPartition;
-            j += 1;
-          }
-          
-          assert(c.size > 0);
-          c;
-        }
-      })
+    def marginalAt(pos: Int) = {
+      require(pos > 0 && pos < length, "pos must be in length, but got " + pos)
+      (forward(pos) + backward(pos)) - logPartition
     }
 
     /**
-    * Returns the expected value of each feature.
-    */
-    def expectedSufficientStatistics = { 
-
-      val result = DenseVector.zeros[Double](weights.size)
-
-      // for each feature f, E[f(states,pos,words)]
-      for(pos <- 0 until words.length) {
-        // log p(tag_pos-window-1,...,tag_pos), up to a constant
-        val caliFactor = factors(pos).calibrated;
-        for( (stateSeq,score) <- caliFactor.nonzero.pairs.iterator if score != Double.NegativeInfinity;
-          stateWindow = decode(stateSeq);
-          w <- 0 until weights.size
-        ) {
-          result(w) += exp(caliFactor(stateSeq) - logPartition)* features(w)(stateWindow,pos,words);
-          assert(!result(w).isInfinite);
-          assert(!result(w).isNaN);
-        }
+     * Returns the edge marginal for (pos-1,pos). pos <= length
+     */
+    def edgeMarginalAt(pos :Int) = {
+      require(pos > 0 && pos <= length, "pos must be <= length, but got " + pos)
+      val left = if(pos == 0) {
+        initialMessage
+      } else {
+        forward(pos)
       }
 
+      val right = if(pos == length) {
+        initialMessage
+      } else {
+        backward(pos)
+      }
+
+      val result = mkVector(numStates * numStates, Double.NegativeInfinity)
+      for( (l,ls) <- left.pairsIterator if ls != Double.NegativeInfinity;
+          (r,rs) <- right.pairsIterator if rs != Double.NegativeInfinity) {
+        result(encodeTransition(l,r)) = ls + rs + transitions.score(pos,words,l,r) -logPartition
+      }
       result
     }
 
-    /**
-    * Returns the counts for each feature. Used in the Objective Function.
-    */
-    def sufficientStatistics(states: Seq[Int]) = {
-      val fixedStates = (1 until window).map( (i:Int) => start) ++ states;
-      val derivs = DenseVector.zeros[Double](weights.size);
-      for(pos <- 0 until states.length) {
-        val stateWindow = fixedStates.drop(pos).take(window);
-        for(w <- 0 until weights.size) {
-          derivs(w) += features(w)(stateWindow,pos,words);
-          assert(!derivs(w).isNaN);
-        }
-      }
-      derivs
-    }
-
-    /**
-    * Returns the expected value of a feature under this CRF calibration.
-    */
-    def computeExpectation[T](f: (Seq[Int],Int,Seq[Int])=>T) = {
-      val result = Counter[T,Double]();
-      // for each feature f, E[f(states,pos,words)]
-      for(pos <- 0 until words.length) {
-        // log p(tag_pos-window-1,...,tag_pos), up to a constant
-        val caliFactor = factors(pos).calibrated;
-        for( (stateSeq,score) <- caliFactor.nonzero.pairs.iterator;
-          if score != Double.NegativeInfinity;
-          stateWindow = decode(stateSeq)
-        ) {
-          val t = f(stateWindow,pos,words);
-          result(t) += exp(caliFactor(stateSeq) - logPartition)
-          assert(!result(t).isInfinite);
-          assert(!result(t).isNaN);
-        }
-      }
-      result;
-    }
-
-    /**
-    * The gradient for this observation, == suffStats(states) - expectedSufficientStatistics;
-    */
-    def gradientAt(states: Seq[Int]) = {
-      (sufficientStatistics(states) - expectedSufficientStatistics)
-    }
-
-    /**
-    * What is the log probability of this sequence of states under this calibration?
-    */
-    def logProbabilityOf(states: Seq[Int]) = {
-      val fixedStates = (1 until window).map( (i:Int) => start) ++ states;
-      val score = ( for {
-        pos <- 0 until states.length
-        stateWindow = fixedStates.drop(pos).take(window)
-        stateSeq = encode(stateWindow) 
-      } yield {
-        factors(pos).compute(stateSeq);
-      } ).foldLeft(0.0)(_ + _) 
-
-      assert(!score.isNaN);
-      score  - logPartition;
-    }
-
-    /**
-    * Observe the given states at the given indices. Input is a (position,state) pair.
-    */
-    def condition(m: Map[Int,Int]) = new Calibration(words,conditioning ++ m) {
-      val minChanged = m.keysIterator.foldLeft(words.length)(_ min _);
-      val maxChanged = m.keysIterator.foldLeft(0)(_ max _ );
-      override val factors = Array.range(0,words.length) map { i => 
-        new Factor(i) {
-          override protected def computeLeftMessage = {
-            if(i < minChanged) baseCalibration.factors(i).leftMessage
-            else super.computeLeftMessage
-          }
-          
-          override protected def computeRightMessage: Calibration#Message = {
-            if(i > maxChanged) baseCalibration.factors(i).rightMessage
-            else super.computeRightMessage
-          }
-        }
-      }
-    }
-
-    protected val factors = Array.tabulate(words.length)(i => new Factor(i));
-
-    private[CRF] class Factor(pos: Int) {
-      require(pos <= words.length);
-      require(pos >= 0);
-
-      private val cache = mkVector(factorSize, Double.NaN);
-
-      val conditionedComponents = (pos-window +1) to pos map ( conditioning get _ );
-      val anyConditioned = conditionedComponents.exists(_ != None);
-
-      def validStates(states: Seq[Int]) = (!anyConditioned) || {
-        var i = 0;
-        var ok = true;
-        while(i < states.length && ok) {
-          ok = (conditionedComponents(i) == None || conditionedComponents(i).get == states(i))
-        }
-        ok;
-      }
-
-      /**
-      * Computes the value of this factor at this point.
-      */
-      def compute(stateSeq: Int) = {
-        if(!cache(stateSeq).isNaN) {
-          cache(stateSeq)
-        } else { 
-          var i = 0;
-          var score = 0.0;
-          val states = decode(stateSeq);
-          if(!validStates(states)) {
-            Double.NegativeInfinity
-          } else {
-            while(i < features.length && !score.isInfinite) {
-              score += weights(i) * features(i)(states,pos,words);
-              i += 1;
-            }
-            assert(!score.isNaN);
-             cache(stateSeq) = score;
-            score;
-          }
-        }
-      }
-
-      private[CRF] lazy val leftMessage: Calibration#Message = computeLeftMessage;
-      
-      /**
-      * For factor (x_i,...,x_i+window)  get the message (x_i,...,x_i+window-1) and sum out x_i.
-      */
-      protected def computeLeftMessage: Calibration#Message = {
-        val incoming = leftMessages(pos).result;
-        val outgoing = new Message(pos,pos+1);
-       // println("Left Using " + incoming + " to compute " + outgoing);
-        for { 
-          // for each prior sequence of states  x_i,... x_{i+window}
-          (stateSeq,initScore) <- incoming.scores.nonzero.pairs;
-          if initScore != Double.NegativeInfinity;
-          // and for each next state x_{i+window+1}
-          nextState <- validStatesFor(pos)
-        } /* do */ { // sum out the x_i
-          val nextStateSeq = appendRight(stateSeq, nextState);
-          val outgoingAssignment = shiftRight(nextStateSeq,0);
-          val score = initScore + compute(nextStateSeq);
-          outgoing.scores(outgoingAssignment) = logSum(outgoing.scores(outgoingAssignment),score);
-          assert(!outgoing.scores(outgoingAssignment).isNaN);
-        }
-        outgoing
-      }
-
-      private[CRF] lazy val rightMessage: Calibration#Message = computeRightMessage
-
-      /**
-      * For factor (x_i,...,x_i+window)  get the message (x_i+1,...,x_i+window) and sum out x_i+window.
-      */
-      protected def computeRightMessage: Calibration#Message = {
-        val incoming = rightMessages(pos).result;
-        val outgoing = new Message(pos,pos-1);
-      //  println("Right Using " + incoming + " to compute " + outgoing);
-        for { 
-          // for each future sequence of states  x_{i+1},... x_{i+window}
-          (stateSeq,initScore) <- incoming.scores.nonzero.pairs;
-          if initScore != Double.NegativeInfinity;
-          // and for each next state x_{i}
-          nextState <- validStatesFor(pos-window+1)
-        } /* do */ { // sum out the x_{i+window}
-          val nextStateSeq = shiftLeft(stateSeq,nextState);
-          val score = initScore + compute(nextStateSeq);
-          val outgoingAssignment = shiftLeft(nextStateSeq,0) / numStates;
-          outgoing.scores(outgoingAssignment) = logSum(outgoing.scores(outgoingAssignment),score);
-          assert(!outgoing.scores(outgoingAssignment).isNaN);
-        }
-        outgoing;
-      }
-
-      private[CRF] lazy val calibrated = {
-        val output = mkVector(factorSize, Double.NegativeInfinity);
-        val left = leftMessages(pos).scores;
-        val right = rightMessages(pos).scores;
-        /*
-        println("Calibrating " + pos + "based on " + leftMessages(pos).result + " " + rightMessages(pos).result);
-        println("Left {");
-        renderMessage(left);
-        println("}");
-        println("Right {");
-        renderMessage(right);
-        println("}");
-        */
-        for( (ls,lScore) <- left.nonzero.pairs;
-            if lScore != Double.NegativeInfinity;
-              nextState <- validStatesFor(pos)) {
-            val seq = appendRight(ls,nextState);
-            val rs = shiftRight(seq,0);
-            output(seq)  = left(ls) + right(rs);
-            if(!output(seq).isInfinite) {
-              output(seq) += compute(seq);
-            }
-        }
-        output;
-      }
-    }
-
-    private[CRF] case class Message(src: Int, dest: Int) {
-      val scores = mkVector(messageSize, Double.NegativeInfinity);
-    }
-
-    private val leftMessages  : Seq[Lazy[Calibration#Message]] = {
-      val firstMessage = new Message(-1,0);
-      firstMessage.scores(encode(Array.fill(window-1)(start))) = 0.0;
-      val messages = new ArrayBuffer[Lazy[Calibration#Message]];
-      messages += Lazy.delay { firstMessage };
-      for(f <- factors) {
-        messages += Lazy.delay { f.leftMessage };
-      }
-      messages.take(words.length);
-    }
-
-    private def seqAllowed(states: Seq[Int]) = {
-      var i = 0;
-
-      var ok = true;
-      while(i < states.length && ok) {
-        val state = states(i);
-        val allowedStates = validStatesFor(words.length - window + i + 1);
-        if(allowedStates.length != numStates) { // i.e. it's all ok
-          var j = 0;
-          var innerOk = false;
-          while(j < allowedStates.length && !innerOk) {
-            innerOk = allowedStates(j) == state;
-            j += 1;
-          }
-          ok = innerOk;
-        }
-        i+= 1;
-      }
-
-      ok;
-    }
-
-    private lazy val rightMessages: Seq[Lazy[Calibration#Message]] = {
-      val firstMessage = new Message(-1,words.length-1);
-      // first message is: p(x|w) \propto 1 forall valid state sequences x
-      var seq = 0;
-      while(seq < messageSize) { // this loop is a bottleneck.
-        val states = decode(seq,window-1);
-        if(seqAllowed(states)) firstMessage.scores(seq) = 0.0;
-        seq += 1;
-      }
-
-      val messages = new ArrayBuffer[Lazy[Calibration#Message]];
-      messages += Lazy.delay { firstMessage };
-      for(f <- factors.reverse) {
-        messages += Lazy.delay { f.rightMessage };
-      }
-      messages.reverse.drop(1)
-    }
-
-    private val startArray = Array(start);
-    private def validStatesFor(pos: Int): Seq[Int] = {
-      if(pos < 0) startArray;
-      else validStatesForObservation(words(pos));
-    }
   }
 
-  // Utility stuff for decoding/encoding sequences of ints as a single Int.
-  // Basic idea:
-  // if there are numStates, then we can encode a sequence x_0, ..., x_{window-1}
-  // as a window digit number in base numStates. 
-  // 
-  private def encode(s: Seq[Int]) = {
-    s.foldRight(0)(_ + _ * numStates);
-  }
+  private def encodeTransition(from: Int, to: Int) = from + (to * numStates)
+  private def decodeTransition(t: Int) = (t % numStates, t / numStates)
 
-  private def decode(s: Int):Array[Int] = decode(s,window)
-    
-  // could use unfoldr, but it's too slow.
-  private def decode(s: Int, window: Int): Array[Int] = {
-    val result = new Array[Int](window);
-    var acc = s;
-    var i = 0;
-    while(acc != 0) {
-      val r = acc % numStates;
-      acc /= numStates;
-      result(i) = r;
-      i += 1;
-    }
-    assert(result.size <= window);
-    result;
-  }
-
-  // TODO: decompose this into a pretty interface in another class.
-  private val rightShifter = pow(numStates,window-1).toInt;
-  private def shiftRight(s: Int, next: Int) = {
-    s / numStates + rightShifter * next;
-  }
-
-  private def appendRight(s: Int, next:Int) = {
-    assert(s < rightShifter);
-    s + rightShifter * next;
-  }
-
-  private def shiftLeft(s:Int, prev: Int) = {
-    s % rightShifter * numStates + prev;
-  }
 
 }
 
-object CRF {
-  import scalanlp.optimize._;
-
-  /**
-  * Represents an objective function for training the weights in a CRF based on a sequence of examples.
-  */
-  class ObjectiveFunction(
-      val features: Seq[(Seq[Int],Int,Seq[Int])=>Double],
-      val numStates: Int,
-      val start: Int,
-      val validStatesForObservation: Int=>Seq[Int],
-      // TODO: reintroduce type parameters
-      //data._1 is words, data._2 is tags
-      val window: Int)(data: Seq[(Seq[Int],Seq[Int])]) extends DiffFunction[Vector[Double]] {
-
-    protected def mkCRF(weights: Vector[Double]) = {
-      new CRF(features,weights,numStates,start, validStatesForObservation, window);
-    }
-
-    override def calculate(weights: Vector[Double]) = {
-      val crf = mkCRF(weights);
-      
-      val gradVals = ( for {
-        (words,tags) <- data.iterator;
-        cal = crf.calibrate(words)
-      } yield { (cal.gradientAt(tags),cal.logProbabilityOf(tags)); })
-
-      val (gradient,value) = ( gradVals.foldLeft( (zeros[Double](weights.size),0.0)) { (acc,gradVal) =>
-        val gradientPart = acc._1 + gradVal._1; // gradient of the below
-        val valPart = acc._2 + gradVal._2; // p(tags| w) for that sequence
-        (gradientPart, valPart) 
-      } );
-        
-      (-value / data.length, gradient / -data.length); // gradient should be negative
-    }
-
-    override def valueAt(weights: Vector[Double]) = {
-      val crf = mkCRF(weights);
-      
-      val values = ( for {
-        (words,tags) <- data.iterator;
-        cal = crf.calibrate(words)
-      } yield (cal.logProbabilityOf(tags))) toSeq;
-
-      val value = -mean(values);
-
-      value
-    }
-  }
-}
 
