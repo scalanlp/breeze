@@ -50,7 +50,7 @@ class GaussianTest extends FunSuite with Checkers with MomentsTestBase[Double] w
   }
 
   test("Probability of N(0,1)(1) propto exp(-.5))") {
-    new Gaussian(0,1).unnormalizedLogPdf(1.0) == -0.5
+    assert(new Gaussian(0,1).unnormalizedLogPdf(1.0) == -0.5)
   }
 
   implicit def arbDistr = Arbitrary {

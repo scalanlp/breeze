@@ -39,5 +39,9 @@ class UniformTest extends FunSuite with Checkers with MomentsTestBase[Double] {
         b <- arbitrary[Double].map {_.abs % 10000.0}) yield new Uniform(a min b,b min a);
   }
 
+  test("pdf outside range should be 0.0") {
+    assert(Uniform(0,1).pdf(1.2) === 0.0)
+  }
+
 
 }  
