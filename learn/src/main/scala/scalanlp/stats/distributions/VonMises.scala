@@ -117,7 +117,6 @@ object VonMises extends ExponentialFamily[VonMises,Double] {
       else if(t < 0.85) -0.4 + 1.39 * t + (0.43)/(1-t);
       else 1/( t* (3 + t * (-4 + t)));
     }
-    println(mu,kx);
     val result = lbfgs.minimize(lensed,DenseVector(mu,kx));
     val res@(a,b) = (result(0),result(1));
     res
