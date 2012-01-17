@@ -36,7 +36,7 @@ import scalala.generic.collection.CanCreateZerosLike
 object SVM {
 
   /**
-   * Trains an SVM using the Pegsasos Algorithm.
+   * Trains an SVM using the Pegasos Algorithm.
    */
   def apply[L,T](data:Seq[Example[L,T]],numIterations:Int=1000)
               (implicit vspace: MutableInnerProductSpace[Double,T],
@@ -149,7 +149,7 @@ object SVM {
 
     import vspace._;
 
-    def train( data: Iterable[Example[L, T]]) = {
+    def train(data: Iterable[Example[L, T]]) = {
       val alphas = data.map { d => Counter[L,Double](d.label -> C)}.toArray
       val weights = new LFMatrix[L,T](zeros(data.head.features));
       val allLabels = data.iterator.map(_.label).toSet;
