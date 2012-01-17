@@ -32,11 +32,10 @@ import scalala.tensor.::
  * @param wordSmoothing: how much smoothing for each word
  * @param classSmoothing: how much smoothing for the class.
  */
-@serializable
 @SerialVersionUID(1L)
 class NaiveBayes[L,W](c: Iterable[Example[L,Counter[W,Double]]],
     val wordSmoothing:Double=0.05,
-    val classSmoothing:Double=0.01)  extends Classifier[L,Counter[W,Double]] {
+    val classSmoothing:Double=0.01)  extends Classifier[L,Counter[W,Double]] with Serializable {
 
 
   private val (wordCounts:Counter2[L,W,Double],classCounts: Counter[L,Double], vocabSize: Int) =  {

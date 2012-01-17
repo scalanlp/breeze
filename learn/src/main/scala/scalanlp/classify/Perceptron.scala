@@ -9,8 +9,7 @@ import scalala.operators._
  *
  * @author dlwh
  */
-@serializable
-trait Perceptron[L,-T] extends Classifier[L,T];
+trait Perceptron[L,-T] extends Classifier[L,T] with Serializable;
 
 
 object Perceptron {
