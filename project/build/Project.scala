@@ -23,8 +23,7 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
 
   class Data(info: ProjectInfo) extends DefaultProject(info) {
     val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
-    val JLine = "jline" % "jline" % "0.9.94"
-    val Scalala = "org.scalala" %% "scalala" % "1.0.0.RC2-SNAPSHOT";
+    val Scalala = "org.scalala" %% "scalala" % "1.0.0.RC3-SNAPSHOT";
     val ScalaCheck = buildScalaVersion match {
       case "2.9.1" => "org.scala-tools.testing" % "scalacheck_2.9.0" % "1.8" % "test"
       case _       => "org.scala-tools.testing" %% "scalacheck" % "1.8" % "test"
@@ -44,7 +43,7 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
     logLevel.update("WARN")
     val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
     val JLine = "jline" % "jline" % "0.9.94"
-    val Scalala = "org.scalala" %% "scalala" % "1.0.0.RC2-SNAPSHOT";
+    val Scalala = "org.scalala" %% "scalala" % "1.0.0.RC3-SNAPSHOT";
     val ScalaCheck = buildScalaVersion match {
       case "2.9.1" => "org.scala-tools.testing" % "scalacheck_2.9.0" % "1.8" % "test"
       case _       => "org.scala-tools.testing" %% "scalacheck" % "1.8" % "test"
@@ -60,7 +59,7 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
   class Graphs(info: ProjectInfo) extends DefaultProject(info) {
     val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
     val JLine = "jline" % "jline" % "0.9.94"
-    val Scalala = "org.scalala" %% "scalala" % "1.0.0.RC2-SNAPSHOT";
+    val Scalala = "org.scalala" %% "scalala" % "1.0.0.RC3-SNAPSHOT";
     val ScalaCheck = buildScalaVersion match {
       case "2.9.1" => "org.scala-tools.testing" % "scalacheck_2.9.0" % "1.8" % "test"
       case _       => "org.scala-tools.testing" %% "scalacheck" % "1.8" % "test"
