@@ -49,6 +49,10 @@ class GaussianTest extends FunSuite with Checkers with MomentsTestBase[Double] w
     })
   }
 
+  test("Probability of N(0,1)(1) propto exp(-.5))") {
+    new Gaussian(0,1).unnormalizedLogPdf(1.0) == -0.5
+  }
+
   implicit def arbDistr = Arbitrary {
     for(mean <- arbitrary[Double].map{x => math.abs(x) % 10000.0};
         std <- arbitrary[Double].map {x => math.abs(x) % 8.0 + .1}) yield new Gaussian(mean,std);
