@@ -6,7 +6,6 @@ The library consists of two parts:
 
 (c) David Hall and Daniel Ramage, 2009 - 
 
-This project can be built with maven:
-  mvn compile
+This project can be built with sbt 0.7.7
 
 See doc/Tour for some examples.

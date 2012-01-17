@@ -23,9 +23,8 @@ import scalanlp.pipes.Pipes;
 import scalanlp.serialization._;
 
 /**
- * A CSVFile acts as a source of Array[String].  Uses the scalax CSV parser
- * under the hood, which correctly handles multi-line cells and embedded
- * &quot; markers.
+ * A CSVFile acts as a source of Array[String].  Uses scalanlp.serialization's
+ * CSVTableSerialization to correctly handle quoting, escaping, etc.
  *
  * @author dramage
  */

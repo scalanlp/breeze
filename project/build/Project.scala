@@ -13,13 +13,22 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
   val ivyLocal = "ivy local" at "file://" + Path.userHome +".ivy/local/"
   override def ivyRepositories = Resolver.withDefaultResolvers(repositories.toSeq, false)
 
+  // do not publish sub-projects with this marker trait
+  trait UnpublishedProject extends DefaultProject {
+    def doNothing = task { None }
+    override def publishLocalAction = doNothing
+    override def deliverLocalAction = doNothing
+    override def publishAction = doNothing
+    override def deliverAction = doNothing
+  }
+
   //
   // subprojects
   //
 
-  lazy val data = project("data","data", new Data(_));
-  lazy val learn = project("learn","learn",new Learn(_), data);
-  lazy val graphs = project("graphs","graphs",new Graphs(_), data);
+  lazy val data = project("data","scalanlp-data", new Data(_));
+  lazy val learn = project("learn","scalanlp-learn", new Learn(_), data);
+  lazy val graphs = project("graphs","scalanlp-graphs", new Graphs(_), data);
 
   class Data(info: ProjectInfo) extends DefaultProject(info) {
     val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
@@ -71,10 +80,6 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
     }
     val JUnit = "junit" % "junit" % "4.5" % "test"
   }
-
-
-
-
 
 
 
@@ -156,7 +161,5 @@ class Project(info: ProjectInfo) extends DefaultProject(info) {
     case _ =>
       Credentials(Path.userHome / ".ivy2" / ".credentials", log)
   }
-
-
 }
 
