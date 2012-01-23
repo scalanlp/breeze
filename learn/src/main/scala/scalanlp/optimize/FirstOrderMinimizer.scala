@@ -88,7 +88,7 @@ object FirstOrderMinimizer {
                        view:  <:<[T,scalala.tensor.mutable.Tensor1[K,Double] with scalala.tensor.mutable.TensorLike[K, Double, _, T with scalala.tensor.mutable.Tensor1[K,Double]]]): Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State] = {
       val it = if(useStochastic) {
         val adjustedRegularization = regularization * 0.01 * batchSize / f.fullRange.size
-         this.copy(regularization=adjustedRegularization).iterations(f.withScanningBatches(batchSize), init)
+         this.copy(regularization=adjustedRegularization).iterations(f.withRandomBatches(batchSize), init)
       } else {
         iterations(f:DiffFunction[T], init)
       }

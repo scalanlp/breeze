@@ -1,14 +1,13 @@
 package scalanlp
 
 import java.io._
-import util.{IteratorImplicits, DoubleImplicits, SeqImplicits}
-;
+import util.{IteratorImplicits, DoubleImplicits}
 
 /**
  * Adds a bunch of implicits and things that are generically useful.
  * @author dlwh
  */
-package object util extends DoubleImplicits with IteratorImplicits with SeqImplicits {
+package object util extends DoubleImplicits with IteratorImplicits {
   /**
    * Deserializes an object using java serialization
    */
@@ -60,7 +59,7 @@ package object util extends DoubleImplicits with IteratorImplicits with SeqImpli
   }
 
   /**
-   * REturns a string with info about the available and used space.
+   * Returns a string with info about the available and used space.
    */
   def memoryString = {
     val r = Runtime.getRuntime;
@@ -79,4 +78,36 @@ package object util extends DoubleImplicits with IteratorImplicits with SeqImpli
    */
   def I(b: Boolean) = if (b) 1.0 else 0.0
 
+  /**
+   * The indicator function in log space: 0.0 iff b else Double.NegativeInfinity
+   */
+  def logI(b: Boolean) = if(b) 0.0 else Double.NegativeInfinity
+
+  // this should be a separate trait but Scala is freaking out
+  class SeqExtras[T](s: Seq[T]) {
+    def argmax(implicit ordering: Ordering[T]) = {
+      s.zipWithIndex.reduceLeft( (a,b) => if(ordering.gt(a._1,b._1)) a else b)._2;
+    }
+    def argmin(implicit ordering: Ordering[T]) = {
+      s.zipWithIndex.reduceLeft( (a,b) => if(ordering.lt(a._1,b._1)) a else b)._2;
+    }
+
+    def asMap = new Map[Int,T] {
+      def -(key: Int) = Map() ++ this - key;
+
+      def +[B1 >: T](kv: (Int, B1)) = Map() ++ this + kv
+
+      def get(key: Int) = {
+        if(key >= 0 && key < s.length) Some(s(key))
+        else None
+      }
+
+      def iterator = 0 until s.length zip s iterator;
+
+    }
+  }
+
+  implicit def seqExtras[T](s: Seq[T]) = new SeqExtras(s);
+
+  implicit def arraySeqExtras[T](s: Array[T]) = new SeqExtras(s);
 }

@@ -23,13 +23,14 @@ import scala.collection.mutable.{ArrayBuilder,Builder};
 import scalanlp.util.Index
 import scalala.tensor.{Counter2, Counter}
 import scalala.scalar.Scalar
+import java.io.{IOException, ObjectStreamException}
 
 /**
  * Reads type V from input Input.
  *
  * @author dramage
  */
-trait Readable[-Input,@specialized V] {
+trait Readable[-Input,@specialized V] extends Serializable {
   def read(input : Input) : V;
 }
 
@@ -38,7 +39,7 @@ trait Readable[-Input,@specialized V] {
  *
  * @author dramage
  */
-trait Writable[-Output,@specialized V] {
+trait Writable[-Output,@specialized V] extends Serializable {
   def write(output : Output, value : V);
 }
 
@@ -172,7 +173,7 @@ object SerializationFormat {
     /** Map collection types. */
     protected def collectionFromElements
     [K:ReadWritable,V:ReadWritable,CC[K,V]<:Map[K,V] with MapLike[K,V,CC[K,V]]]
-    (c: MapFactory[CC], name : String)
+    (c: MapFactory[CC], name : String):ReadWritable[CC[K,V]]
     = new ReadWritable[CC[K,V]] {
       def read(source : Input) =
         readBuildable[(K,V),CC[K,V]](source, c.newBuilder[K,V]);

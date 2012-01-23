@@ -35,33 +35,31 @@ case class Gaussian(mu :Double, sigma : Double)(implicit rand: RandBasis = Rand)
   private val inner = rand.gaussian(mu,sigma);
   def draw() = inner.get();
 
-  private val sqrt2 = math.sqrt(2.0);
-
 
   override def toString() =  "Gaussian(" + mu + ", " + sigma + ")";
 
 
   /**
-  * Computes the inverse cdf of the numYes-value for this gaussian.
+  * Computes the inverse cdf of the p-value for this gaussian.
   * 
-  * @param numYes: a probability in [0,1]
+  * @param p: a probability in [0,1]
   * @return x s.t. cdf(x) = numYes
   */
   def icdf(p: Double) = {
     require( p >= 0 );
     require( p <= 1 );
 
-    mu + sigma * sqrt2 * erfi(2 * p - 1);
+    mu + sigma * Gaussian.sqrt2 * erfi(2 * p - 1);
   }
 
   /**
   * Computes the cumulative density function of the value x.
   */
-  def cdf(x: Double) = .5 * (1 + erf( (x - mu)/sqrt2 / sigma));
+  def cdf(x: Double) = .5 * (1 + erf( (x - mu)/Gaussian.sqrt2 / sigma));
 
   override def unnormalizedLogPdf(t: Double) = { 
-    val d = (t - mu)/sigma; 
-    -d *d
+    val d = (t - mu)/sigma;
+    -d *d / 2.0
   } 
   
   val normalizer = 1.0/sqrt(2 * Pi) / sigma;
@@ -74,6 +72,8 @@ case class Gaussian(mu :Double, sigma : Double)(implicit rand: RandBasis = Rand)
 }
 
 object Gaussian extends ExponentialFamily[Gaussian,Double] {
+  private val sqrt2 = math.sqrt(2.0);
+
   type Parameter = (Double,Double)
   import scalanlp.stats.distributions.{SufficientStatistic=>BaseSuffStat}
   final case class SufficientStatistic(n: Double, mean: Double, M2: Double) extends BaseSuffStat[SufficientStatistic] {

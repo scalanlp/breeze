@@ -67,7 +67,7 @@ object Semiring {
 
       def closure(t: Double) = {
         if(t < 1 && t >= 0) 1 / (1-t);
-        else if(t < 0) error("Closure arg must be in [0,1), not "  +t);
+        else if(t < 0) sys.error("Closure arg must be in [0,1), not "  +t);
         else Double.PositiveInfinity;
       }
       val one = 1.0;

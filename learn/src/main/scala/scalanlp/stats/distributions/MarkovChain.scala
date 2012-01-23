@@ -17,6 +17,7 @@ package scalanlp.stats.distributions;
 */
 
 import scala.collection.mutable.ArrayBuffer;
+import scalanlp.util.Lens
 import Rand._;
 import math._;
 
@@ -51,11 +52,11 @@ object MarkovChain {
     /**
     * Extension methods for kernels
     */
-    class RichKernel[T,U](k1: T=>Rand[U]) {
+    class RichKernel[T](k1: T=>Rand[T]) {
       /**
       * Sequence two transitions together. This is Kliesli arrow composition.
       */
-      def >=>[V](k2: U=>Rand[V]) = { (t: T) =>
+      def >=>[V](k2: T=>Rand[V]) = { (t: T) =>
         k1(t).flatMap(k2);
       }
       /**
@@ -70,15 +71,19 @@ object MarkovChain {
       * Promotes a kernel to map over sequence.
       * T=&lt;Rand[U] becomes Seq[T]=&lt;Rand[Seq[U]]
       */
-      def promoteSeq: Seq[T]=>Rand[Seq[U]] = { (t: Seq[T]) => promote(t.map(k1)); }
+      def promoteSeq: Seq[T]=>Rand[Seq[T]] = { (t: Seq[T]) => promote(t.map(k1)); }
       /**
       * Promotes a kernel to map over collection.
       * T=&lt;Rand[U] becomes Seq[T]=&lt;Rand[Collection[U]]
       */
-      def promoteIterable: Iterable[T]=>Rand[Iterable[U]] = { (t: Iterable[T]) => promote(t.map(k1)); }
+      def promoteIterable: Iterable[T]=>Rand[Iterable[T]] = { (t: Iterable[T]) => promote(t.map(k1)); }
+
+      def lensed[U](implicit lens: Lens[T,U]): U => Rand[U] = { (u: U) =>
+        k1(lens.backward(u)).map(lens.forward _)
+      }
     }
 
-    implicit def richKernel[T,U](k1: T=>Rand[U]) = new RichKernel(k1);
+    implicit def richKernel[T](k1: T=>Rand[T]) = new RichKernel(k1);
 
     /**
     * Extension methods for pseudo-kernels

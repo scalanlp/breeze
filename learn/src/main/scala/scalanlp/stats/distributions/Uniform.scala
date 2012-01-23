@@ -10,7 +10,7 @@ case class Uniform(low: Double, high: Double)(implicit rand: RandBasis = Rand) e
   def draw() = rand.uniform.get * (high - low) + low;
 
 
-  def unnormalizedLogPdf(x: Double) = 0.0
+  def unnormalizedLogPdf(x: Double) = scalanlp.util.logI(x >= low && x <= high)
 
   def logNormalizer = entropy;
 

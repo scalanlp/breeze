@@ -28,7 +28,6 @@ class AffineScaling extends ConfiguredLogging {
       val vk = b.asCol - A * x;
       val D = diag(vk :^ -2);
       val hx = (A.t * D * A).asInstanceOf[DenseMatrix[Double]] \ c.asCol;
-      println( det(A.t * D * A), inv(A.t * D * A), det(A.t * A))
       val hv:DenseVector[Double] = A * hx * -1.0;
       if(hv.values.exists(_ >= 0)) throw UnboundedProblem
 
