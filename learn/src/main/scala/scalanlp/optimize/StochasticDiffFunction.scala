@@ -1,6 +1,6 @@
 package scalanlp.optimize
 
-import scalanlp.util.Lens
+import scalanlp.util.Isomorphism
 
 /**
  * A differentiable function whose output is not guaranteed to be the same
@@ -22,7 +22,7 @@ trait StochasticDiffFunction[T] extends (T=>Double) { outer =>
    * Lenses provide a way of mapping between two types, which we typically
    * use to convert something to a DenseVector or other Tensor for optimization purposes.
    */
-  def throughLens[U](implicit l: Lens[T,U]) = new DiffFunction[U] {
+  def throughLens[U](implicit l: Isomorphism[T,U]) = new DiffFunction[U] {
     def calculate(u: U) = {
       val t = l.backward(u);
       val (obj,gu) = outer.calculate(t);

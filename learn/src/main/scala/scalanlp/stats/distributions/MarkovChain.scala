@@ -17,7 +17,7 @@ package scalanlp.stats.distributions;
 */
 
 import scala.collection.mutable.ArrayBuffer;
-import scalanlp.util.Lens
+import scalanlp.util.Isomorphism
 import Rand._;
 import math._;
 
@@ -78,7 +78,7 @@ object MarkovChain {
       */
       def promoteIterable: Iterable[T]=>Rand[Iterable[T]] = { (t: Iterable[T]) => promote(t.map(k1)); }
 
-      def lensed[U](implicit lens: Lens[T,U]): U => Rand[U] = { (u: U) =>
+      def lensed[U](implicit lens: Isomorphism[T,U]): U => Rand[U] = { (u: U) =>
         k1(lens.backward(u)).map(lens.forward _)
       }
     }
