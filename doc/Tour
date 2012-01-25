@@ -1,6 +1,46 @@
 This document describes several of the major components of the 0.2 release of ScalaNLP-Data and Scalanlp-Learn. It's intended as something of an overview, and not a reference, for that, see the scaladocs.
 
+h1. Getting started
+
+We use SBT 0.11.2 to build scalanlp. Just run ./sbt publish-local to install.
+
+To get a REPL, run ./sbt console, which will let you play around with Scalanlp.
+
 h1. Important Packages 
+
+h2. Scalanlp-Data
+
+h3. Configuration
+
+scalanlp.config.Configuration is a general mechanism for handling
+program configuration. It relies on reflection and bytecode munging
+to work. In particular, classes defined in the REPL won't work.
+
+Configurations can be made in three ways:
+
+# from a Map[String,String]: <pre><code>Configuration.fromMap(m)</code></pre>
+# from Java-style properties files: <pre><code>Configuration.fromPropertiesFiles(Seq(f1,f2,f3))</code></pre>
+# from command line arguments: <pre><code>CommandLineParser.parseArguments(args)</code></pre>
+
+For basic usage, you can read in a property with <pre><code>config.readIn[T]("property.name", [optional default])</code></pre>. If a property named "property.name" cannot be found, it will look for just "name". If that fails, it will use either the default or throw an exception, if none is provided.
+
+Configuration also supports reflectively processing case classes. For instance, the Trainer object in scalanlp.classify has the following parameters:
+
+<pre>
+<code>
+case class TrainerParams(
+  @Help(text="The kind of classifier to train. {Logistic,SVM,Pegasos}") `type`: String= "Logistic",
+  @Help(text="Input file in svm light format.") input: File= new java.io.File("train"),
+  @Help(text="Output file for the serialized classifier.") output: File = new File("classifier.ser"),
+  @Help(text="Prints this") help:Boolean = false)
+</code>
+</pre>
+We can read in a TrainerParams by saying config.readIn[TrainerParams]("prefix"). Nested parameters have ".${name}" appended to this prefix. 
+
+The listing also illustrates a few other features. We have the Help annotation for displaying usage information with the GenerateHelp object. Configuration also supports Files natively. Finally, though it's not used here, recursive case classes are supported.
+
+
+h2. Scalanlp-Learn
 
 h3. Distributions
 
@@ -57,6 +97,13 @@ scala>       val f = new DiffFunction[DenseVector[Double]] {
      |       }
 f: java.lang.Object with scalanlp.optimize.DiffFunction[scalala.tensor.dense.DenseVector[Double]] = $anon$1@7593da36
 
+</code>
+</pre>
+
+Note that this function takes its minimum when all values are 3. (It's just a parabola along each coordinate.)
+
+<code>
+<pre>
 
 scala> f.valueAt(DenseVector(0,0,0))
 res0: Double = 27.0
@@ -97,12 +144,12 @@ res6: scalala.tensor.dense.DenseVector[Double] =
 -5.99999
 -3.99999
 </code>
-<pre>
+</pre>
 
 Ok, now let's optimize f. The easiest routine to use is just LBFGS, which is a quasi-Newton method that works well for most problems.
 
-<code>
 <pre>
+<code>
 
 scala> val lbfgs = new LBFGS[DenseVector[Double]](maxIter=100, m=3) // m is the memory. anywhere between 3 and 7 is fine. The larger m, the more memory is needed.
 lbfgs: scalanlp.optimize.LBFGS[scalala.tensor.dense.DenseVector[Double]] = scalanlp.optimize.LBFGS@c7d97d5
@@ -117,5 +164,27 @@ res7: scalala.tensor.dense.DenseVector[Double] =
 scala> f(res7)
 res8: Double = 0.0
 
-</code>
+
 </pre>
+</code>
+
+You can also use a configurable optimizer, using FirstOrderMinimizer.OptParams. It takes several parameters:
+<pre>
+<code>
+ case class OptParams(batchSize:Int = 512,
+                      regularization: Double = 1.0,
+                      alpha: Double = 0.5,
+                      maxIterations:Int = -1,
+                      useL1: Boolean = false,
+                      tolerance:Double = 1E-4,
+                      useStochastic: Boolean= false) {
+  // ...
+ }
+ </pre>
+ </code>
+
+batchSize applies to BatchDiffFunctions, which support using small minibatches of a dataset. regularization integrates L2 or L1 (depending on useL1) regularization with constant lambda. alpha controls
+the initial stepsize for algorithms that need it. maxIterations is the maximum number of gradient steps to be taken (or -1 for until convergence). tolerance controls the sensitivity of the 
+convergence check. Finally, useStochastic determines whether or not batch functions should be optimized using a stochastic gradient algorithm (using small batches), or using LBFGS (using the entire dataset).
+
+OptParams can be controlled using scalanlp.config.Configuration, which we described earlier.
