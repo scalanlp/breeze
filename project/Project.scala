@@ -54,7 +54,7 @@ object ScalanlpBuild extends Build {
   // subprojects
   //
 
-  lazy val core = Project ( "core", file("."), settings = buildSettings) aggregate (data,learn,graphs)
+  lazy val core = Project ( "core", file("."), settings = buildSettings) aggregate (data,learn,graphs) dependsOn (data,learn,graphs)
 
   lazy val data = Project("scalanlp-data",file("data"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps)) 
   lazy val learn = Project("scalanlp-learn",file("learn") ,  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps)) dependsOn(data)
