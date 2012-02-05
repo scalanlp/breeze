@@ -18,14 +18,13 @@ package scalanlp.util
 */
 
 import scalala.tensor.mutable._
-import scalala.tensor.{Counter=>imCounter};
+import scalala.tensor.{Counter=>imCounter,Tensor2=>imTensor2};
 import scalala.collection.sparse.{DefaultArrayValue, SparseArray}
 
-import scalala.tensor.dense.DenseVector
-import scalala.tensor.dense.DenseVectorCol
 import scalala.tensor.sparse._
 import scalanlp.tensor.sparse.OldSparseVector
 import scalanlp.collection.mutable.SparseArrayMap
+import scalala.tensor.dense.{DenseMatrix, DenseVector, DenseVectorCol}
 
 
 /**
@@ -60,6 +59,13 @@ trait Encoder[T] {
    * Creates a Vector[Double] of some sort with the index's size.
    */
   final def mkVector():Vector[Double] = mkSparseVector;
+
+  /**
+   * makes a matrix of some sort with the index's size as rows and cols
+   */
+  final def mkMatrix():DenseMatrix[Double] = {
+    DenseMatrix.zeros(index.size,index.size)
+  }
 
   /**
    * Decodes a vector back to a Counter[T,Double]
@@ -119,6 +125,22 @@ trait Encoder[T] {
       if(ki < 0) throw new RuntimeException("Error, not in index: " + k)
 
       vec(ki) = v;
+    }
+    vec
+  }
+
+    /**
+   * Encodes a Tensor2[T,T,Double] as a DenseMatrix[Double]. All elements in the counter must be in the index.
+   */
+  def encode(c: imTensor2[T,T,Double]):DenseMatrix[Double] = {
+    val vec = mkMatrix();
+    for( ((k,l),v) <- c.nonzero.pairs) {
+      val ki = index(k)
+      val li = index(l)
+      if(ki < 0) throw new RuntimeException("Error, not in index: " + k)
+      if(li < 0) throw new RuntimeException("Error, not in index: " + k)
+
+      vec(ki,li) = v;
     }
     vec
   }

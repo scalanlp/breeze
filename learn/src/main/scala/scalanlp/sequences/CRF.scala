@@ -33,14 +33,17 @@ import tensor.sparse.OldSparseVector
 import util.{Index, Encoder, Lazy}
 import scala.collection.immutable.BitSet
 import scalala.library.Numerics
+import java.util.Arrays
 
 trait CRFModel[L,W] extends Encoder[L] {
   val index: Index[L]
-  def scoreTransition(pos: Int, w: W, l: L, ln: L):Double
+  def scoreTransition(pos: Int, w: W, l: L, ln: L):Double = {
+    score(pos,w,index(l),index(ln))
+  }
   def score(pos: Int, w: W, l: Int, ln: Int):Double
   def validSymbols(pos: Int, w: W):BitSet
   val startSymbol: L
-  lazy val start: Int = index(startSymbol)
+  val start: Int
 }
 
 /**
@@ -71,12 +74,11 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
         for((previousLabel,prevScore) <- previous.pairsIterator) {
           val score = transitions.score(i,words,previousLabel,next) + prevScore
           if(score != Double.NegativeInfinity) {
-            cur(offset) = score
+            cache(offset) = score
             offset += 1
           }
         }
         cur(next) = Numerics.logSum(cache,offset)
-
       }
 
 
@@ -85,9 +87,10 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
 
     //backward
     val backwardScores = Array.fill(length)(mkVector(numStates, Double.NegativeInfinity))
-    previous = initialMessage
+    backwardScores(length-1) =  DenseVector.fill(numStates)(0.0)
+    previous = backwardScores.last
 
-    for(i <- (length-1) to 0) {
+    for(i <- (length-2) to 0 by -1) {
       val cur = backwardScores(i)
       // TODO: add in active iterators to scalala?
       for ( previousLabel <- transitions.validSymbols(i,words)) {
@@ -95,7 +98,7 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
         for((next,prevScore) <- previous.pairsIterator) {
           val score = transitions.score(i+1,words,previousLabel,next) + prevScore
           if(score != Double.NegativeInfinity) {
-            cur(offset) = score
+            cache(offset) = score
             offset += 1
           }
         }
@@ -132,6 +135,7 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
     */
     def partition = exp(logPartition);
 
+
     /**
     * returns the value of the log partition function for this sequence of words.
     */
@@ -142,7 +146,7 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
     }
 
     def marginalAt(pos: Int) = {
-      require(pos > 0 && pos < length, "pos must be in length, but got " + pos)
+      require(pos >= 0 && pos < length, "pos must be in length, but got " + pos)
       (forward(pos) + backward(pos)) - logPartition
     }
 
@@ -163,19 +167,16 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
         backward(pos)
       }
 
-      val result = mkVector(numStates * numStates, Double.NegativeInfinity)
+      val result = DenseMatrix.zeros[Double](numStates,numStates)
+      Arrays.fill(result.data, Double.NegativeInfinity)
       for( (l,ls) <- left.pairsIterator if ls != Double.NegativeInfinity;
           (r,rs) <- right.pairsIterator if rs != Double.NegativeInfinity) {
-        result(encodeTransition(l,r)) = ls + rs + transitions.score(pos,words,l,r) -logPartition
+        result(l,r) = ls + rs + transitions.score(pos,words,l,r) -logPartition
       }
       result
     }
 
   }
-
-  private def encodeTransition(from: Int, to: Int) = from + (to * numStates)
-  private def decodeTransition(t: Int) = (t % numStates, t / numStates)
-
 
 }
 
