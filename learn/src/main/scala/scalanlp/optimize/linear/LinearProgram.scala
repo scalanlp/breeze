@@ -130,7 +130,7 @@ class LinearProgram {
     override def toString = name
   }
 
-  case class Positive(name: String = "x_" + nextId) extends Variable { variable =>
+  case class Real(name: String = "x_" + nextId) extends Variable { variable =>
     val id = variables.length
     variables += this;
 
@@ -141,6 +141,7 @@ class LinearProgram {
     }
   }
 
+  /* I thought that interior point defaulted to requiring all variables to be positive. I appear to be wrong.
   case class Real(name: String="x_" + nextId) extends Variable {
     val id = variables.length
     variables += this;
@@ -153,6 +154,7 @@ class LinearProgram {
       v
     }
   }
+  */
 
   case class Result private[LinearProgram] (result: DenseVector[Double], problem: Problem) {
     def valueOf(x: Expression) = {(x.coefficients dot result) + x.scalarComponent};

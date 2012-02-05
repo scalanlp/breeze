@@ -57,7 +57,7 @@ object InteriorPoint {
       z += dz * (.99 * scaleZF)
 
       val gap = (c dot x) + (b dot z);
-      converged = gap.abs < 1E-6
+      converged = gap.abs < 1E-7
 //      assert(gap > -1E-3,gap);
     }
 

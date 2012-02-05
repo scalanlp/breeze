@@ -55,9 +55,9 @@ class InteriorPointTest extends FunSuite {
 //    http://www.tu-chemnitz.de/mathematik/discrete/manuals/cplex/doc/getstart/html/cpxGSilocplex13.html
     val lp = new LinearProgram();
     import lp._;
-    val x0 = Positive();
-    val x1 = Positive();
-    val x2 = Positive();
+    val x0 = Real();
+    val x1 = Real();
+    val x2 = Real();
 
     val lpp =  ( (x0 +  x1 * 2 + x2 * 3 )
         subjectTo ( x0 * -1 + x1 + x2 <= 20)
