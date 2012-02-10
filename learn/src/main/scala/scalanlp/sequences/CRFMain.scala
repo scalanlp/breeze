@@ -13,7 +13,13 @@ import scalanlp.stats.ContingencyStats
 import scalanlp.text.tokenize.{EnglishWordClassGenerator, WordShapeGenerator}
 
 /**
- * 
+ * *Currently just does NER*.
+ *
+ * Reads in CoNLL-style input files (space separated columns of features, one row per word (blank line to delimit sentences).
+ * The last column is the output label.
+ *
+ * Builds a sequence model over those labels.
+ *
  * @author dlwh
  */
 object CRFMain extends App {
