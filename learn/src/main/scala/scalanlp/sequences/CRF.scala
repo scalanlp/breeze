@@ -38,7 +38,7 @@ import scalala.library.Numerics
 import java.util.Arrays
 import scala.collection.immutable.{Range, BitSet}
 
-trait CRFModel[L,W] extends Encoder[L] {
+trait CRFModel[L,W] extends Encoder[L] with Serializable {
   val index: Index[L]
   def scoreTransition(pos: Int, w: W, l: L, ln: L):Double = {
     score(pos,w,index(l),index(ln))
@@ -220,7 +220,7 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
 
 object CRF {
   trait Feature
-  trait Featurizer[L,W] extends Encoder[Feature] {
+  trait Featurizer[L,W] extends Encoder[Feature] with Serializable {
     def featuresFor(pos: Int, w: W, l: Int, ln: Int):Iterator[Int]
   }
 
