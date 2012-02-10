@@ -10,6 +10,7 @@ import collection.immutable.IndexedSeq
 import scalanlp.data.{Observation, Example}
 import collection.mutable.ArrayBuffer
 import scalanlp.stats.ContingencyStats
+import scalanlp.text.tokenize.{EnglishWordClassGenerator, WordShapeGenerator}
 
 /**
  * 
@@ -27,10 +28,9 @@ object CRFMain extends App {
   val labelIndex = Index(Iterator("START") ++ {for(ex <- train.iterator; l <- ex.label) yield l})
 
   trait SuffStat
-  case class ColumnStat(column: Int, offset: Int, value: Any) extends SuffStat
+  case class ColumnStat(column: Int, offset: Int, value: Any, tag: Symbol = 'Value) extends SuffStat
   case class LabelStat(lbl: Int) extends SuffStat
   case class ProductStat(stats: Seq[SuffStat]) extends SuffStat
-  case class Ngram(seq: String) extends SuffStat
 
   case class Feature(stat: SuffStat, lbl: Int) extends CRF.Feature
 
@@ -40,14 +40,16 @@ object CRFMain extends App {
     def extract(ex: Observation[IndexedSeq[IndexedSeq[String]]], pos: Int):Iterator[SuffStat]
   }
 
-  case class ColumnTemplate(column: Int, offset: Int, transform: String=>Any = identity) extends Template {
+  case class ColumnTemplate(column: Int, offset: Int,
+                            transform: String=>Any = identity,
+                            tag:Symbol= 'Value) extends Template {
     def extract(ex: Observation[IndexedSeq[IndexedSeq[String]]], pos: Int) = {
       val realpos = pos + offset
       import ex._
       if(realpos >= 0 && realpos < features.length) {
 //        println(features(realpos).length,column)
         if(features(realpos).length <= column) error("WTF:" + features(realpos) + " " + column + " " + ex + " " )
-        Iterator(ColumnStat(column,offset,transform(features(realpos)(column))))
+        Iterator(ColumnStat(column,offset,transform(features(realpos)(column)), tag))
       } else Iterator.empty
     }
   }
@@ -66,13 +68,23 @@ object CRFMain extends App {
     }
   }
 
-  case class NgramTemplate(column: Int = 0, order: Int = 4) extends Template {
+  case class NgramTemplate(column: Int = 0, offset: Int = 0, order: Int = 8) extends Template {
     def extract(ex: Observation[IndexedSeq[IndexedSeq[String]]], pos: Int) = {
-      val word = ex.features.apply(pos)(column)
-      val bracketed  = "#" + word +"#"
-      val pref = for(i <- 2 until order if bracketed.length <= order) yield Ngram(bracketed.substring(0,i))
-      val suff = for(i <- 2 until order if bracketed.length > i) yield Ngram(bracketed.substring(bracketed.length-i))
-      pref ++ suff iterator
+      val realpos = pos + offset
+      if(realpos >= 0 && realpos < ex.features.length) {
+        val word = ex.features.apply(realpos)(column)
+        val bracketed  = "#" + word +"#"
+        val pref = for(i <- 2 until order if i <= bracketed.length ) yield {
+          ColumnStat(column, offset, bracketed.substring(0,i), 'Prefix)
+        }
+        val suff = for(i <- 2 until order if bracketed.length > i) yield {
+          ColumnStat(column, offset, bracketed.substring(bracketed.length-i), 'Suffix)
+        }
+
+        pref ++ suff iterator
+      } else {
+        Iterator.empty
+      }
     }
   }
 
@@ -85,14 +97,22 @@ object CRFMain extends App {
   val columns = (0 until train(0).features.apply(0).length) map(ColumnTemplate(_,0))
   val backone = (0 until train(0).features.apply(0).length) map(ColumnTemplate(_,-1))
   val nextone = (0 until train(0).features.apply(0).length) map(ColumnTemplate(_,1))
-  val words = Seq(ColumnTemplate(0,-2),ColumnTemplate(0,2),NgramTemplate(),
+  val words = Seq(ColumnTemplate(0,-2),ColumnTemplate(0,2),
+    NgramTemplate(0,0),
+    NgramTemplate(0,offset= -1),
+    NgramTemplate(0,offset= 1),
     ProductTemplate(ColumnTemplate(0,-1),ColumnTemplate(0,1)),
+    ProductTemplate(ColumnTemplate(0,-1),ColumnTemplate(0,0),ColumnTemplate(0,1)),
     ProductTemplate(ColumnTemplate(0,0),ColumnTemplate(0,1)),
     ProductTemplate(ColumnTemplate(1,-1),ColumnTemplate(1,1)),
     ProductTemplate(ColumnTemplate(1,0),ColumnTemplate(1,1))
   )
+  val wordShape = (-1 to 1).map(ColumnTemplate(0,_,WordShapeGenerator,'Shape) )
+  val wordClass = (-1 to 1).map(ColumnTemplate(0,_,EnglishWordClassGenerator,'Class) )
+  val wordShapeComb = wordShape.combinations(2).map(ProductTemplate(_:_*))
+  val wordClassComb = wordClass.combinations(2).map(ProductTemplate(_:_*))
 
-  val template = new Composite( (columns ++ backone ++ nextone ++ words):_*)
+  val template = new Composite( (columns ++ backone ++ nextone ++ words ++ wordShape ++ wordClass ++ wordShapeComb ++ wordClassComb):_*)
 
   val statIndex = Index[SuffStat]()
   val transitionFeatures = Array.tabulate(labelIndex.size,labelIndex.size) { (prev,next) =>
