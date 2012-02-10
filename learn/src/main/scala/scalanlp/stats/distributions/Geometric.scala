@@ -19,9 +19,9 @@ case class Geometric(p: Double)(implicit rand: RandBasis=Rand) extends DiscreteD
 
   def probabilityOf(x: Int) = math.pow((1-p),x) * p
 
-  def mean = (1 - p) / p
+  def mean = (1) / p
 
-  def variance = mean / p
+  def variance = (1-p) / p / p
 
   def mode = 0
   def entropy = (-(1 - p) * math.log(1-p) - p * math.log(p)) / p

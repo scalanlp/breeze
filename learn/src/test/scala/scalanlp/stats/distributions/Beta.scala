@@ -25,7 +25,7 @@ import org.junit.runner.RunWith
 import scalanlp.stats.DescriptiveStats._;
 
 @RunWith(classOf[JUnitRunner])
-class BetaTest extends FunSuite with Checkers with MomentsTestBase[Double] with ExpFamTest[Beta,Double] {
+class BetaTest extends FunSuite with Checkers with MomentsTestBase[Double] /*with ExpFamTest[Beta,Double]*/ {
 
   val expFam = Beta
   import Arbitrary.arbitrary;

@@ -23,7 +23,13 @@ trait MomentsTestBase[T] extends FunSuite with Checkers {
     check(Prop.forAll { (distr: Measure[T] with Rand[T] with Moments[Double])=>
        val sample = distr.sample(numSamples).map(asDouble _)
        val mean = DescriptiveStats.mean(sample)
-       (mean - distr.mean).abs/(mean.abs max 1) < 1E-1
+       if ( (mean - distr.mean).abs/(mean.abs max 1) > 1E-1) {
+         println("MExpected " + distr.mean + " but got " + mean)
+         false
+       } else {
+         true
+       }
+
     })
   }
 
@@ -31,7 +37,11 @@ trait MomentsTestBase[T] extends FunSuite with Checkers {
     check(Prop.forAll { (distr: Measure[T] with Rand[T] with Moments[Double])=>
        val sample = distr.sample(numSamples).map(asDouble _)
        val variance = DescriptiveStats.variance(sample)
-       (variance - distr.variance).abs/(variance max 1) < 1E-1
+
+       if((variance - distr.variance).abs/(variance max 1) > 1E-1) {
+         println("Expected " + distr.variance + " but got " + variance)
+         false
+       } else true
     })
   }
 
