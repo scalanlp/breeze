@@ -30,6 +30,7 @@ object Trainer extends App {
     val input = SparseFeatureDataset.fromSource[Int](Source.fromFile(params.input),params.input.getName)
     type TheClassifier = LinearClassifier[Int,LFMatrix[Int,SparseVector[Double]],Counter[Int,Double],SparseVector[Double]]
     // TODO: put this in Scalala
+
     val trainer:Classifier.Trainer[Int,SparseVector[Double]] { type MyClassifier = TheClassifier } = params.`type`.toLowerCase match {
       case "logistic" => new LogisticClassifier.Trainer[Int,SparseVector[Double]]
       case "svm" => new SVM.SMOTrainer[Int,SparseVector[Double]]()
