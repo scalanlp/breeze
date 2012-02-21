@@ -1,7 +1,9 @@
 package scalanlp.optimize
 
 /**
- * 
+ * Implements a basic line search that returns iterates where
+ * each step is smaller than the last.
+ * f(alpha)... f(.2 * alpha) ...
  * @author dlwh
  */
 class BacktrackingLineSearch(cScale: Double = 0.2, initAlpha: Double = 1.0, maxIter: Int = 20) extends ApproximateLineSearch {
