@@ -1,4 +1,7 @@
-package scalanlp.data;
+package scalanlp.data
+
+import collection.mutable.ArrayBuffer
+;
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
@@ -17,8 +20,6 @@ package scalanlp.data;
 */
 
 
-import scala.collection.mutable._;
-
 /**
 * Provides useful utilties for dealing with datasets that have a defined order.
 *
@@ -27,15 +28,15 @@ import scala.collection.mutable._;
 object Datasets {
   /**
   * Split a training set into k-folds, with a test sets equal to
-  * 1/kth of the data and training sets the rest of it. Returns a Seq of results,
+  * 1/kth of the data and training sets the rest of it. Returns a IndexedSeq of results,
   * one for each execution.
   *
   * Syntax: crossValidate(K, myDataSet)( (trainSet,testSet) =&gt; {produce a result} ) 
   */
-  def crossValidate[T](k : Int, dataset: Seq[T]) = new {
+  def crossValidate[T](k : Int, dataset: IndexedSeq[T]) = new {
     require(k < dataset.size);
     require(k > 0);
-    def apply[R](f: (Seq[T], Seq[T])=>R): Seq[R] = {
+    def apply[R](f: (IndexedSeq[T], IndexedSeq[T])=>R): IndexedSeq[R] = {
       val chunkSize = dataset.size/k;
       val lastChunk = dataset.size % k;
       val result = new ArrayBuffer[R];
@@ -44,9 +45,9 @@ object Datasets {
       }
       val remK = if(lastChunk == 0) k else k - 1;
       for(i <- 0 until remK) {
-        val testSet = dataset drop (i * chunkSize) take (chunkSize);
-        val trainSet = (dataset take (i * chunkSize)) ++ (dataset drop ( (i+1) * chunkSize))
-          result += f(trainSet,testSet);
+        val testSet = dataset.slice(i * chunkSize, (i+1)*chunkSize min dataset.size)
+        val trainSet = (dataset.slice(0,i * chunkSize)) ++ (dataset.view(i+1* chunkSize,dataset.size))
+        result += f(trainSet,testSet);
       }
       result
     }
@@ -55,15 +56,15 @@ object Datasets {
   /**
   * Leave-one-out Cross validation
   * Split a training set into dataset.size-folds, with a test sets equal to
-  * 1 of the data and training sets for the rest of it. Returns a Seq of results,
+  * 1 of the data and training sets for the rest of it. Returns a IndexedSeq of results,
   * one for each execution.
   *
   * This is probably very slow!
   *
   * Syntax: loocv(myDataSet)( (trainSet,testSet) => {produce a result} ) 
   */
-  def loocv[T](dataset: Seq[T]) = new {
-    def apply[R](f: (Seq[T], Seq[T])=>R): Seq[R] = {
+  def loocv[T](dataset: IndexedSeq[T]) = new {
+    def apply[R](f: (IndexedSeq[T], IndexedSeq[T])=>R): IndexedSeq[R] = {
       val result = new ArrayBuffer[R];
       for(i <- 0 until dataset.size) {
         val testSet = dataset drop (i) take 1;
