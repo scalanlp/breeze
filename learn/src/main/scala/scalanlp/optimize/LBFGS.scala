@@ -74,7 +74,7 @@ class LBFGS[T](maxIter: Int = -1, m: Int=5)
     for(i <- (memStep.length-1) to 0 by -1) {
       as(i) = (memStep(i) dot dir)/memRho(i);
       if(as(i).isNaN) {
-        sys.error("NaNs in the history!")
+        throw new NaNHistory
       }
       assert(!as(i).isInfinite, memRho(i) -> norm(grad,2));
       dir -= memGradDelta(i) * as(i);
