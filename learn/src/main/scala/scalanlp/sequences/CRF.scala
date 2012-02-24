@@ -69,7 +69,6 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
       val cur = forwardScores(i)
       // TODO: add in active iterators to scalala?
       for ( next <- transitions.validSymbols(i,words)) {
-        var offset = 0
         for((previousLabel,prevScore) <- previous.pairsIterator) {
           val score = transitions.score(i,words,previousLabel,next) + prevScore
             if(score > cur(next)) {

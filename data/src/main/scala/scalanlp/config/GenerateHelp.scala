@@ -32,7 +32,6 @@ object GenerateHelp {
       val dynamicClass: Class[_] = conf.recursiveGetProperty(prefix).map{
         Class.forName(_)
       } getOrElse (clss);
-      println((dynamicClass,staticManifest,dynamicClass.getConstructors.mkString(",")))
       if (dynamicClass.getConstructors.isEmpty)
         return res
 
@@ -51,7 +50,6 @@ object GenerateHelp {
       val anns = ctor.getParameterAnnotations
       val typedParams = ctor.getGenericParameterTypes.map { mkManifest(dynamicTypeMap, _)}
 
-      println(typedParams)
       for( i <- 0 until paramNames.length) {
         val myAnns = anns(i)
         val tpe = typedParams(i)

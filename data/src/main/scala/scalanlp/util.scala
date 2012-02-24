@@ -2,6 +2,7 @@ package scalanlp
 
 import java.io._
 import util.{IteratorImplicits, DoubleImplicits}
+import java.util.zip.{GZIPOutputStream, GZIPInputStream}
 
 /**
  * Adds a bunch of implicits and things that are generically useful.
@@ -12,7 +13,7 @@ package object util extends DoubleImplicits with IteratorImplicits {
    * Deserializes an object using java serialization
    */
   def readObject[T](loc: File) = {
-    val oin = new ObjectInputStream(new BufferedInputStream(new FileInputStream(loc)));
+    val oin = new ObjectInputStream(new BufferedInputStream(new GZIPInputStream(new FileInputStream(loc))));
     val result = oin.readObject().asInstanceOf[T]
     oin.close();
     result;
@@ -22,7 +23,7 @@ package object util extends DoubleImplicits with IteratorImplicits {
    * Serializes an object using java serialization
    */
   def writeObject[T](out: File, parser: T): Unit = {
-    val stream = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(out)));
+    val stream = new ObjectOutputStream(new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(out))));
     stream.writeObject(parser);
     stream.close();
   }
