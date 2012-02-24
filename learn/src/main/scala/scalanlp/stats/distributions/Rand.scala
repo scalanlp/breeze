@@ -236,7 +236,7 @@ class RandBasis(r: RandomGenerator) {
    */
   def subsetsOfSize[T](set: IndexedSeq[T], n: Int):Rand[IndexedSeq[T]] = new Rand[IndexedSeq[T]] {
     def draw = {
-      val arr = ArrayBuffer(set:_*)
+      val arr = Array.range(0,set.size)
       var i = 0
       while( i < n.min(set.size)) {
         val k = r.nextInt(set.size-i) + i
@@ -245,7 +245,7 @@ class RandBasis(r: RandomGenerator) {
         arr(k) = temp
         i+=1
       }
-      arr.take(n)
+      arr.take(n).map(set)
     }
   }
 }
