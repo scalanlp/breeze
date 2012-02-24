@@ -69,6 +69,12 @@ class LinearProgram {
       override def toString = outer.toString + " + " + other
     }
 
+    def +(other: Double):Expression = new Expression {
+      private[LinearProgram] def coefficients: Vector[Double] = outer.coefficients
+      private[LinearProgram] override def scalarComponent: Double = outer.scalarComponent + other
+      override def toString = outer.toString + " + " + other
+    }
+
     def -(other: Expression):Expression = new Expression {
       private[LinearProgram] def coefficients: Vector[Double] = outer.coefficients - other.coefficients;
       private[LinearProgram] override def scalarComponent: Double = outer.scalarComponent - other.scalarComponent
