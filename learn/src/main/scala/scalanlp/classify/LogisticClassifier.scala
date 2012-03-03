@@ -52,7 +52,7 @@ object LogisticClassifier {
   /**
    * @param L: the label type
    * @param F: the feature type
-   * @param: T2: the Matrix with labels as "rows" and features as "column"
+   * @param T2: the Matrix with labels as "rows" and features as "column"
    * @param TL: A "vector" from labels to scores
    * @param TF feature vectors, which are the input vectors to the classifer
    * @param data: a sequence of labeled examples

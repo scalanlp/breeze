@@ -24,7 +24,7 @@ object CompetitiveLinking extends BipartiteMatching {
 
   /**
    * Performs greedy bipartite matching (aka competitive linking). Finds min matches
-   * @params matchingPotentials <n,m> matrix, m >= n
+   * @param matchingPotentials <n,m> matrix, m >= n
    * @return matching of size n, with values in 0..m-1, along with the score of the matching
    */
   def extractMatching(matchingPotentials: Seq[Seq[Double]]):(Seq[Int],Double) = {
