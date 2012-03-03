@@ -12,31 +12,45 @@ import scalanlp.stats.distributions.{Dirichlet, Bernoulli, Gaussian}
  * 
  * @author dlwh
  */
-class ExpectationPropagation[F,Q](project: (Q,F)=>(Q,Double))
-                                 (implicit qFactor: Q <:<FactorLike[Q],
-                                  qProd: FactorProduct[Q,Q,Q],
-                                  qDiv: FactorQuotient[Q,Q,Q]) {
+class ExpectationPropagation[F,Q](project: (Q,F)=>(Q,Double))(implicit qFactor: Q <:<Factor[Q]) {
   case class State(f_~ : IndexedSeq[Q], q: Q, prior: Q, partitions: IndexedSeq[Double]) {
-    def logPartition = f_~.foldLeft(prior)(_*_).logPartition + partitions.sum
+    lazy val logPartition = f_~.foldLeft(prior)(_*_).logPartition + partitions.sum
   }
 
   def inference(prior: Q, f: IndexedSeq[F], initialF_~ : IndexedSeq[Q]):Iterator[State] = {
-    val initQ: Q = initialF_~.foldLeft(prior)(_ * _)
+    val lastQ: Q = initialF_~.foldLeft(prior)(_ * _)
 
     val initPartitions = IndexedSeq.fill(f.length)(Double.NegativeInfinity)
 
     // pass through the data
-    Iterator.iterate(State(initialF_~, initQ * (-initQ.logPartition), prior, initPartitions)) { state =>
-      (0 until f.length).iterator.foldLeft(state) { (state,i) =>
-        val State(f_~, q, _, partitions) = state
-        val fi = f(i)
-        val fi_~ = f_~(i)
-        val q_\  = q / fi_~
-        val (new_q, new_partition) = project(q_\ , fi)
-        val newF_~ = f_~.updated(i,new_q / q_\)
-        State(newF_~, new_q, prior, partitions.updated(i, new_partition))
+    val it:Iterator[State] = new Iterator[State] {
+      var cur = State(initialF_~, lastQ * (-lastQ.logPartition), prior, initPartitions)
+      var consumed = true
+
+      def hasNext = !consumed || {
+        val next =  (0 until f.length).iterator.foldLeft(cur) { (state,i) =>
+          val State(f_~, q, _, partitions) = state
+          val fi = f(i)
+          val fi_~ = f_~(i)
+          val q_\  = q / fi_~
+          val (new_q, new_partition) = project(q_\ , fi)
+          val newF_~ = f_~.updated(i,new_q / q_\)
+          State(newF_~, new_q, prior, partitions.updated(i, new_partition))
+        }
+        val hasNext = (cur.q eq lastQ) || !next.q.isConvergedTo(cur.q)
+        consumed = !hasNext
+        cur = next
+        hasNext
       }
-    } drop(1)
+
+      def next() = {
+        if(consumed) hasNext
+        consumed = true
+        cur
+      }
+    }
+
+    it
   }
 
 
@@ -44,28 +58,32 @@ class ExpectationPropagation[F,Q](project: (Q,F)=>(Q,Double))
 }
 
 object ExpectationPropagation extends App {
-  val prop = 0.5
+  val prop = 0.9
   val mean = 2
   val gen = for {
     a <- new Bernoulli(prop)
     x <- Gaussian(I(a) * mean,3)
   } yield x
 
-  val data = gen.sample(1000)
+  val data = gen.sample(5000)
 
-  case class ApproxTerm(s: Double = 0.0, b: DenseVector[Double] = DenseVector.zeros(2)) extends FactorLike[ApproxTerm] {
+  case class ApproxTerm(s: Double = 0.0, b: DenseVector[Double] = DenseVector.zeros(2)) extends Factor[ApproxTerm] { f1 =>
     def logPartition = s + Numerics.lbeta(b)
 
     def *(f: Double) = copy(s = s + f)
-  }
-
-  implicit object QProduct extends FactorProduct[ApproxTerm,ApproxTerm, ApproxTerm] with FactorQuotient[ApproxTerm,ApproxTerm,ApproxTerm] {
-    def product(f1: ApproxTerm, f2: ApproxTerm) = {
+    def *(f2: ApproxTerm) = {
       ApproxTerm(f1.s + f2.s, f1.b + f2.b)
     }
-
-    def quotient(f1: ApproxTerm, f2: ApproxTerm) = {
+    def /(f2: ApproxTerm) = {
       ApproxTerm(f1.s - f2.s, f1.b - f2.b)
+    }
+
+    def apply(a: Double)  = {
+      0.0 // TODO
+    }
+
+    def isConvergedTo(f: ApproxTerm, diff: Double) = {
+      (b - f.b).norm(2) <= diff
     }
   }
 
