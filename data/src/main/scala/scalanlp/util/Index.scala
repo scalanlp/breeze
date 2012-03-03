@@ -17,7 +17,9 @@ package scalanlp.util;
 */
 
 import scala.collection.IterableProxy;
-import scala.collection.mutable.{ArrayBuffer,HashMap};
+import scala.collection.mutable.{ArrayBuffer,HashMap}
+import java.util.Arrays
+;
 
 /**
  * Trait that marks an O(1) bidirection map between Ints (increasing from 0)
@@ -86,6 +88,8 @@ trait Index[T] extends Iterable[T] with (T=>Int) {
   override def toString = {
     iterator.mkString("Index(",",",")");
   }
+
+  def |[U](right: Index[U]) = new EitherIndex(this,right)
 }
 
 /**
@@ -306,4 +310,65 @@ object Index {
       index.iterator | target;
     }
   }
+
+
+}
+
+/**
+ * An Index over two kinds of things
+ *
+ * @author dlwh
+ */
+class EitherIndex[L,R](left: Index[L], right: Index[R]) extends Index[Either[L,R]] {
+  def apply(t: Either[L, R]) = t match {
+    case Left(l) => left(l)
+    case Right(r) => right(r) + left.size
+  }
+
+  def unapply(i: Int) = {
+    if(i < 0 || i >= size) None
+    else if(i < left.size) Some(Left(left.get(i)))
+    else Some(Right(right.get(i-left.size)))
+  }
+
+  def pairs = left.pairs.map { case (l,i) => Left(l) -> i} ++ right.pairs.map { case (r,i) => Right(r) -> (i + left.size) }
+
+  def iterator = left.iterator.map{Left(_)} ++ right.map{Right(_)}
+
+  override def size:Int = left.size + right.size
+}
+
+/**
+ * An Index over N kinds of things. A little type unsafe.
+ *
+ * @author dlwh
+ */
+class CompositeIndex[U](indices: Index[_ <:U]*) extends Index[(Int,U)] {
+  private val offsets:Array[Int] = indices.unfold(0){ (n,i) => n + i.size}.toArray
+
+  def apply(t: (Int,U)) = {
+    if(t._1 >= indices.length || t._1 < 0) -1
+    else {
+      indices(t._1).asInstanceOf[Index[U]](t._2) + offsets(t._1)
+    }
+  }
+
+  def unapply(i: Int) = {
+    if(i < 0 || i >= size) None
+    else {
+      val index = {
+        val res = Arrays.binarySearch(offsets,i)
+        if(res >= 0) res
+        else -(res+2)
+      }
+
+      Some(index -> indices(index).get(i-offsets(index)))
+    }
+  }
+
+  def pairs = indices.iterator.zipWithIndex.flatMap { case (index,i) => index.iterator.map { t => (i,t:U)}}.zipWithIndex
+
+  def iterator = indices.iterator.zipWithIndex.flatMap { case (index,i) => index.iterator.map{ t => (i -> t)}}
+
+  override def size:Int = offsets.last
 }
