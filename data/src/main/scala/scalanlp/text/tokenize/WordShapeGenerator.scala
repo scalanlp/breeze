@@ -4,7 +4,7 @@ package scalanlp.text.tokenize
  * 
  * @author dlwh
  */
-object WordShapeGenerator extends (String=>String) {
+object WordShapeGenerator extends (String=>String) with Serializable {
 
   def apply(v1: String) = signatureFor(v1)
 

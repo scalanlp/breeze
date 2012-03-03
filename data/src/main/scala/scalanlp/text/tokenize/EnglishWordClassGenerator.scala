@@ -6,7 +6,7 @@ package scalanlp.text.tokenize
  * @author dlwh
  */
 @SerialVersionUID(1L)
-object EnglishWordClassGenerator extends (String=>String) {
+object EnglishWordClassGenerator extends (String=>String) with Serializable {
   def apply(x: String) = signatureFor(x)
 
   def signatureFor(word: String) = {
