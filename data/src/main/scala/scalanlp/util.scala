@@ -3,6 +3,7 @@ package scalanlp
 import java.io._
 import util.{IteratorImplicits, DoubleImplicits}
 import java.util.zip.{GZIPOutputStream, GZIPInputStream}
+import scala.collection.generic.CanBuildFrom
 
 /**
  * Adds a bunch of implicits and things that are generically useful.
@@ -105,6 +106,18 @@ package object util extends DoubleImplicits with IteratorImplicits {
 
       def iterator = 0 until s.length zip s iterator;
 
+    }
+
+    def unfold[U,To](init: U)(f: (U,T)=>U)(implicit cbf: CanBuildFrom[Seq[T], U, To]) = {
+      val builder = cbf.apply(s)
+      builder.sizeHint(s.size + 1)
+      var u = init
+      builder += u
+      for( t <- s) {
+        u = f(u,t)
+        builder += u
+      }
+      builder.result()
     }
   }
 
