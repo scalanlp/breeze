@@ -4,8 +4,9 @@ import scalala.scalar.Scalar
 import scalala.tensor.dense.DenseVector
 import scalala.tensor.mutable.{VectorColLike, VectorCol}
 import java.util.Arrays
-import scalala.operators.{OpSub, OpAdd, BinaryOp}
 import scalala.generic.collection.{CanMapKeyValuePairs, CanMapValues}
+import scalala.tensor.mutable
+import scalala.operators._
 
 /**
  *
@@ -520,6 +521,95 @@ object OldSparseVector {
         res(k) = fn(k,v)
       }
       res
+    }
+  }
+
+    implicit object SparseVectorDDotSparseVectorD
+  extends BinaryOp[OldSparseVector,OldSparseVector,OpMulInner,Double] {
+    override def opType = OpMulInner;
+    override def apply(a : OldSparseVector, b : OldSparseVector) = {
+      require(a.length == b.length, "Vectors must have same length");
+      val aData = a.data
+      val bData = b.data
+      val activeA = a.used
+      val activeB = b.used
+
+      var sum = 0.0
+      var ai = 0
+      var bi = 0
+      while(ai < activeA) {
+        while(bi < activeB && b.indexAt(bi) < a.indexAt(ai))
+          bi += 1
+        if(bi < activeB && b.indexAt(bi) == a.indexAt(ai))
+          sum += b.valueAt(bi) * a.valueAt(ai)
+        ai += 1
+      }
+      sum
+    }
+  }
+
+  implicit object SparseVectorDDotDenseVectorD
+  extends BinaryOp[OldSparseVector,DenseVector[Double],OpMulInner,Double] {
+    override def opType = OpMulInner;
+    override def apply(a : OldSparseVector, b : DenseVector[Double]) = {
+      require(a.length == b.length, "Vectors must have same length");
+      val aData = a.data
+      val bData = b.data
+      val activeA = a.used
+      val bStep = b.stride
+
+      var sum = 0.0
+      var ai = 0
+      var bPos = 0
+      while(ai < activeA) {
+        val aIndex = a.indexAt(ai)
+        bPos = bStep * aIndex + b.offset
+        sum += bData(bPos) * aData(ai)
+        ai += 1
+      }
+      sum
+    }
+  }
+
+  implicit object DenseVectorDDotSparseVectorD
+  extends BinaryOp[DenseVector[Double],OldSparseVector,OpMulInner,Double] {
+    override def opType = OpMulInner;
+    override def apply(a : DenseVector[Double], b : OldSparseVector) = {
+      require(a.length == b.length, "Vectors must have same length");
+        b dot a
+    }
+  }
+
+  implicit object VectorDAddSparseVectorDInto
+  extends BinaryUpdateOp[mutable.Vector[Double],OldSparseVector,OpAdd] {
+    override def opType = OpAdd;
+    override def apply(a : mutable.Vector[Double], b : OldSparseVector) {
+      require(a.length == b.length, "Vectors must have same length");
+      val bIndex = b.index
+      val bData = b.data
+      val activeB = b.used
+
+      var bi = 0
+      while(bi < activeB) {
+        a(bIndex(bi)) += bData(bi)
+        bi += 1
+      }
+    }
+  }
+
+  implicit object SparseVectorDMulDoubleInto
+  extends BinaryUpdateOp[OldSparseVector,Double,OpMul] {
+    override def opType = OpMul;
+    override def apply(a : OldSparseVector, b : Double) {
+      val bData = a.data
+      val activeB = a.used
+
+      var bi = 0
+      while(bi < activeB) {
+        bData(bi) *= b
+        bi += 1
+      }
+      a.default *= b
     }
   }
 
