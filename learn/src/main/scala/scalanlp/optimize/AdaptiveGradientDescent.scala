@@ -51,7 +51,7 @@ object AdaptiveGradientDescent {
     }
 
     override def determineStepSize(state: State, f: StochasticDiffFunction[T], dir: T) = {
-      if(state.iter < 2) 0.001 * defaultStepSize else defaultStepSize;
+      if(state.iter < 8) 0.001 * defaultStepSize else defaultStepSize;
     }
 
     override protected def adjust(newX: T, newGrad: T, newVal: Double) = {
@@ -103,7 +103,7 @@ object AdaptiveGradientDescent {
     }
 
     override def determineStepSize(state: State, f: StochasticDiffFunction[T], dir: T) = {
-      if(state.iter < 2) 0.001 * defaultStepSize else defaultStepSize;
+      if(state.iter < 8) 0.001 * defaultStepSize else defaultStepSize;
     }
 
     override protected def adjust(newX: T, newGrad: T, newVal: Double) = {
