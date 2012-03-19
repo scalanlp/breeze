@@ -40,7 +40,7 @@ class OldSparseVector(domainSize : Int, var default: Double = 0.0, initialNonzer
   private var lastOffset = -1;
 
   /** Use the given index and data arrays, of which the first inUsed are valid. */
-  private def use(inIndex : Array[Int], inData : Array[Double], inUsed : Int) = {
+  def use(inIndex : Array[Int], inData : Array[Double], inUsed : Int) = {
     if (inIndex.size != inData.size)
       throw new IllegalArgumentException("Index and data sizes do not match");
     // I spend 7% of my time in this call. It's gotta go.
