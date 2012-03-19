@@ -5,7 +5,9 @@ import generic.collection.{CanCopy, CanCreateZerosLike}
 import generic.math.CanNorm
 import operators.{NumericOps, BinaryOp, OpSub}
 import scalala.tensor.mutable;
-import library.Library._;
+import library.Library._
+import scalanlp.stats.distributions.Rand
+;
 
 /**
  * Approximates a gradient by finite differences.
@@ -73,7 +75,8 @@ class RandomizedGradientCheckingFunction[K,T]
     val fx = f(x);
     val grad = zeros(x)
     val xx = copy(x);
-    for((k,v) <- x.pairsIterator if math.random < randFraction) {
+    val subset = Rand.subsetsOfSize(x.keys.toIndexedSeq, (x.size * randFraction).toInt).get()
+    for(k <- subset) {
       xx(k) += epsilon;
       grad(k) = (f(xx) - fx) / epsilon;
       xx(k) -= epsilon;
