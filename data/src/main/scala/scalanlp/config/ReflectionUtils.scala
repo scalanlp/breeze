@@ -43,6 +43,7 @@ private[config] object ReflectionUtils {
    * class given the static class.
    */
   def solveTypes(knownTypes: Map[String, OptManifest[_]], staticClass: Class[_], dynamicClass: Class[_]): Map[String, OptManifest[_]] = {
+    if (!staticClass.isAssignableFrom(dynamicClass)) throw new RuntimeException(staticClass  + " is not assignable from " + dynamicClass + "!")
     // iterate up the inheritance chain
     def superTypes = if (dynamicClass.isInterface) (
       dynamicClass.getInterfaces.iterator
