@@ -6,7 +6,7 @@ package scalanlp.util
  * one component
  * @author dlwh
  */
-trait Lens[T,U] extends (T=>U) {
+trait Lens[T,U] {
   def apply(t: T): U = get(t)
   def get(t: T):U
   def set(t: T, u: U):T
