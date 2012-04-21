@@ -62,6 +62,7 @@ object ScalanlpBuild extends Build {
   lazy val data = Project("scalanlp-data",file("data"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings) 
   lazy val learn = Project("scalanlp-learn",file("learn") ,  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings) dependsOn(data)
   lazy val graphs = Project("scalanlp-graphs",file("graphs"),  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps)) dependsOn(data)
+  lazy val examples = Project("scalanlp-examples",file("examples"),  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps)) dependsOn(learn,graphs,data)
 
 }
 

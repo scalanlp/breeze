@@ -12,7 +12,7 @@ import scalanlp.stats.distributions.{Dirichlet, Bernoulli, Gaussian}
  * 
  * @author dlwh
  */
-class ExpectationPropagation[F,Q](project: (Q,F)=>(Q,Double))(implicit qFactor: Q <:<Factor[Q]) {
+class ExpectationPropagation[F,Q](project: (Q,F)=>(Q,Double), criterion: Double = 1E-4)(implicit qFactor: Q <:<Factor[Q]) {
   case class State(f_~ : IndexedSeq[Q], q: Q, prior: Q, partitions: IndexedSeq[Double]) {
     lazy val logPartition = f_~.foldLeft(prior)(_*_).logPartition + partitions.sum
   }
@@ -37,7 +37,7 @@ class ExpectationPropagation[F,Q](project: (Q,F)=>(Q,Double))(implicit qFactor: 
           val newF_~ = f_~.updated(i,new_q / q_\)
           State(newF_~, new_q, prior, partitions.updated(i, new_partition))
         }
-        val hasNext = (cur.q eq lastQ) || !next.q.isConvergedTo(cur.q)
+        val hasNext = (cur.q eq lastQ) || !next.q.isConvergedTo(cur.q, criterion)
         consumed = !hasNext
         cur = next
         hasNext
@@ -113,7 +113,7 @@ object ExpectationPropagation extends App {
     ApproxTerm(-lbeta(mle+1), mle) -> math.log(normalizer)
   }
 
-  val ep = new ExpectationPropagation(project _)
+  val ep = new ExpectationPropagation({project _}, 1E-8)
   for( state <- ep.inference(ApproxTerm(0.0,DenseVector.ones(2)), data, Array.fill(data.length)(ApproxTerm())) take 20) {
     println(state.logPartition, state.q)
     assert(!state.logPartition.isNaN, state.q.s + " " + state.q.b)
