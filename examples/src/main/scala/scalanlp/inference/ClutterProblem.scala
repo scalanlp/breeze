@@ -45,13 +45,18 @@ object ClutterProblem {
       def *(f: ApproxFactor) = if(f.v == Double.PositiveInfinity) this else {
         val vn = 1/(1/v + 1/f.v)
         val mn = (m * f.v + f.m * v)/(v + f.v)
+        assert(!mn.isNaN, (this, "*", f))
         ApproxFactor(mn, vn)
       }
 
       def /(f: ApproxFactor) = if(f.v == Double.PositiveInfinity) this else {
         val vn = 1/(1/v - 1/f.v)
         val mn = m + vn/f.v * (m - f.m)
-        ApproxFactor(mn, vn)
+        if(mn == Double.NaN) ApproxFactor(0.0, Double.PositiveInfinity)
+        else ApproxFactor(mn, vn)
+//        if(vn <= 0 || vn.isInfinite) this
+//        else {
+//        }
       }
 
       def *(f: Double) = this
@@ -88,17 +93,15 @@ object ClutterProblem {
       x <- Gaussian(I(notNoise) * trueMu, if(notNoise) 1 else v_noise)
     } yield x
 
-    val data = gen.sample(10000)
+    val data = gen.sample(1000)
     println(data)
 
-    val init = Array.fill(10000)(ApproxFactor(0.0,Double.PositiveInfinity))
-    val ep = new ExpectationPropagation({project _}, 1E-20)
+    val init = data.map(ApproxFactor(_,100000))
+    val ep = new ExpectationPropagation({project _}, 1E-8)
     for( state <- ep.inference(ApproxFactor(0.0, v_mu),data,init).take(50)) {
       println(state.logPartition, state.q)
       assert(!state.logPartition.isNaN, state.toString)
     }
-
-
 
 
   }
