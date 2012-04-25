@@ -41,7 +41,7 @@ object ClutterProblem {
 
     // Next, define the approximate factor f_~
     // Note that this is just a gaussian with factor product and division
-    case class ApproxFactor(m: Double, v: Double) extends Factor[ApproxFactor] {
+    case class ApproxFactor(m: Double, v: Double) extends ExpFactor[ApproxFactor] {
       def *(f: ApproxFactor) = if(f.v == Double.PositiveInfinity) this else {
         val vn = 1/(1/v + 1/f.v)
         val mn = (m * f.v + f.m * v)/(v + f.v)
@@ -61,6 +61,10 @@ object ClutterProblem {
 
       def *(f: Double) = this
 
+      def **(f: Double) = {
+        copy(v=v/f)
+      }
+
       def pdf(x: Double) = Gaussian(m,v).pdf(x)
 
       def logPartition = Gaussian(m,v).logNormalizer
@@ -71,7 +75,7 @@ object ClutterProblem {
       )
     }
 
-    def project(q: ApproxFactor, point: Double) = {
+    def project(q: ApproxFactor, point: Double, power: Double) = {
       val pdfNoise = Gaussian(0, v_noise).pdf(point)
       val Z_n = (1-w) * Gaussian(q.m, q.v + 1).pdf(point) + w * pdfNoise
       val r_n = 1 - w/Z_n * pdfNoise
@@ -82,6 +86,7 @@ object ClutterProblem {
           + r_n * (1-r_n) * math.pow(q.v * (point - q.m)/(q.v + 1), 2)
         )
 
+      assert(v >= 0, (v, power))
 
       ApproxFactor(m, v) -> math.log(Z_n)
     }
@@ -96,8 +101,9 @@ object ClutterProblem {
     val data = gen.sample(1000)
     println(data)
 
+
     val init = data.map(ApproxFactor(_,100000))
-    val ep = new ExpectationPropagation({project _}, 1E-8)
+    val ep = new ConvexEP({project _}, 1E-8)
     for( state <- ep.inference(ApproxFactor(0.0, v_mu),data,init).take(50)) {
       println(state.logPartition, state.q)
       assert(!state.logPartition.isNaN, state.toString)

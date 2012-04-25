@@ -15,3 +15,8 @@ trait Factor[F] { this: F =>
   def isConvergedTo(f: F, diff: Double=1E-4):Boolean
 }
 
+
+trait ExpFactor[F] extends Factor[F] { this: F =>
+  /** Exponentiation */
+  def **(f: Double):F
+}
