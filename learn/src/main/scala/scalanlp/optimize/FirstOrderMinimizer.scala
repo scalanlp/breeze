@@ -80,12 +80,16 @@ object FirstOrderMinimizer {
                        useL1: Boolean = false,
                        tolerance:Double = 1E-4,
                        useStochastic: Boolean= false) {
+    def minimize[T](f: BatchDiffFunction[T],
+                      init: T)(implicit arith: MutableInnerProductSpace[Double,T], canNorm: CanNorm[T]) = {
+      val iter = this.iterations(f, init)
+      import arith._
 
-    def iterations[K,T](f: BatchDiffFunction[T], init: T)
-                      (implicit arith: MutableInnerProductSpace[Double,T], canNorm: CanNorm[T],
-                       TisTensor: CanViewAsTensor1[T,K,Double],
-                       TKVPairs: CanMapKeyValuePairs[T,K,Double,Double,T],
-                       view:  <:<[T,scalala.tensor.mutable.Tensor1[K,Double] with scalala.tensor.mutable.TensorLike[K, Double, _, T with scalala.tensor.mutable.Tensor1[K,Double]]]): Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State] = {
+      iter.drop(maxIterations).next.x
+    }
+
+    def iterations[T](f: BatchDiffFunction[T], init: T)
+                      (implicit arith: MutableInnerProductSpace[Double,T], canNorm: CanNorm[T]): Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State] = {
       val it = if(useStochastic) {
          this.iterations(f.withRandomBatches(batchSize), init)
       } else {
@@ -95,16 +99,14 @@ object FirstOrderMinimizer {
       it.asInstanceOf[Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State]]
     }
 
-    def iterations[K,T](f: StochasticDiffFunction[T], init:T)
-                      (implicit arith: MutableInnerProductSpace[Double,T], canNorm: CanNorm[T],
-                       TisTensor: CanViewAsTensor1[T,K,Double],
-                       TKVPairs: CanMapKeyValuePairs[T,K,Double,Double,T],
-                       view:  <:<[T,scalala.tensor.mutable.Tensor1[K,Double] with scalala.tensor.mutable.TensorLike[K, Double, _, T with scalala.tensor.mutable.Tensor1[K,Double]]]):Iterator[FirstOrderMinimizer[T, StochasticDiffFunction[T]]#State] = {
+    def iterations[T](f: StochasticDiffFunction[T], init:T)
+                      (implicit arith: MutableInnerProductSpace[Double,T],
+                       canNorm: CanNorm[T]):Iterator[FirstOrderMinimizer[T, StochasticDiffFunction[T]]#State] = {
       val r = if(regularization == 0.0) {
         new StochasticGradientDescent.SimpleSGD[T](alpha, maxIterations) {
         }
       } else if(useL1) {
-        new AdaptiveGradientDescent.L1Regularization[K,T](regularization, eta=alpha, maxIter = maxIterations)(arith,TisTensor,TKVPairs,canNorm) {
+        new AdaptiveGradientDescent.L1Regularization[T](regularization, eta=alpha, maxIter = maxIterations)(arith,canNorm) {
         }
       } else { // L2
         new StochasticGradientDescent[T](alpha,  maxIterations) with AdaptiveGradientDescent.L2Regularization[T] {
@@ -114,11 +116,10 @@ object FirstOrderMinimizer {
       r.iterations(f,init)
     }
 
-    def iterations[K,T]
+    def iterations[T]
       (f: DiffFunction[T], init:T)(implicit vspace: MutableInnerProductSpace[Double,T],
-                             view:  <:<[T,scalala.tensor.mutable.Tensor1[K,Double] with scalala.tensor.mutable.TensorLike[K, Double, _, T with scalala.tensor.mutable.Tensor1[K,Double]]],
                              canNorm: CanNorm[T]): Iterator[LBFGS[T]#State] = {
-       if(useL1) new OWLQN[K,T](maxIterations, 5, regularization).iterations(f,init)
+       if(useL1) new OWLQN[T](maxIterations, 5, regularization).iterations(f,init)
       else new LBFGS[T](maxIterations, 5).iterations(DiffFunction.withL2Regularization(f,regularization),init);
     }
   }

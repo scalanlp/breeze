@@ -34,7 +34,7 @@ import scalanlp.util.logging.ConsoleLogging
 @RunWith(classOf[JUnitRunner])
 class OWLQNTest extends OptimizeTestBase {
   test("super simple") {
-    val lbfgs = new OWLQN[Int,DenseVector[Double]](100,4) with ConsoleLogging
+    val lbfgs = new OWLQN[DenseVector[Double]](100,4) with ConsoleLogging
 
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
@@ -53,7 +53,7 @@ class OWLQNTest extends OptimizeTestBase {
 
 
   test("optimize a simple multivariate gaussian") {
-    val lbfgs = new OWLQN[Int,DenseVector[Double]](100,4,1.0)
+    val lbfgs = new OWLQN[DenseVector[Double]](100,4,1.0)
 
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
@@ -76,7 +76,7 @@ class OWLQNTest extends OptimizeTestBase {
   }
 
   test("optimize a simple multivariate gaussian with counters") {
-    val lbfgsString = new OWLQN[String,Counter[String,Double]](100,4, 1.0);
+    val lbfgsString = new OWLQN[Counter[String,Double]](100,4, 1.0);
 
     def optimizeThis(init: Counter[String,Double]) = {
       val f = new DiffFunction[Counter[String,Double]] {

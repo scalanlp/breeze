@@ -1,6 +1,6 @@
 package scalanlp.optimize
 
-import scalala._;
+import scalala._
 import operators._
 import bundles.MutableInnerProductSpace
 import scalala.tensor._
@@ -30,28 +30,28 @@ object AdaptiveGradientDescent {
    */
   trait L2Regularization[T] extends StochasticGradientDescent[T] {
 
-    val lambda: Double = 1.0;
+    val lambda: Double = 1.0
     val delta = 1E-4
-    import vspace._;
+    import vspace._
 
 
-    case class History(sumOfSquaredGradients: T);
-    override def initialHistory(f: StochasticDiffFunction[T],init: T) = History(zeros(init));
+    case class History(sumOfSquaredGradients: T)
+    override def initialHistory(f: StochasticDiffFunction[T],init: T) = History(zeros(init))
     override def updateHistory(newX: T, newGrad: T, newValue: Double, oldState: State) = {
-      val oldHistory = oldState.history;
-      val newG = oldHistory.sumOfSquaredGradients :+ (oldState.grad :* oldState.grad);
-      new History(newG);
+      val oldHistory = oldState.history
+      val newG = oldHistory.sumOfSquaredGradients :+ (oldState.grad :* oldState.grad)
+      new History(newG)
     }
 
     override protected def takeStep(state: State, dir: T, stepSize: Double) = {
       import state._
-      val s = (state.history.sumOfSquaredGradients :+ (state.grad :* state.grad)).values.map(math.sqrt);
-      val res = (( (s :* x) + dir * stepSize) :/ (s + (delta + lambda * stepSize)));
+      val s = (state.history.sumOfSquaredGradients :+ (state.grad :* state.grad)).values.map(math.sqrt)
+      val res = (( (s :* x) + dir * stepSize) :/ (s + (delta + lambda * stepSize)))
       res
     }
 
     override def determineStepSize(state: State, f: StochasticDiffFunction[T], dir: T) = {
-      if(state.iter < 8) 0.001 * defaultStepSize else defaultStepSize;
+      if(state.iter < 8) 0.001 * defaultStepSize else defaultStepSize
     }
 
     override protected def adjust(newX: T, newGrad: T, newVal: Double) = {
@@ -72,38 +72,36 @@ object AdaptiveGradientDescent {
    *
    * where g_ti is the gradient and s_ti = \sqrt(\sum_t'^{t} g_ti^2)
    */
-  class L1Regularization[K,T](val lambda: Double=1.0,
-                              delta: Double = 1E-5,
-                              eta: Double=4,
-                              maxIter: Int=100)(implicit vspace: MutableInnerProductSpace[Double,T],
-                                                   TisTensor: CanViewAsTensor1[T,K,Double],
-                                                   TKVPairs: CanMapKeyValuePairs[T,K,Double,Double,T],
-                                                   canNorm: CanNorm[T]) extends StochasticGradientDescent[T](eta,maxIter) {
-    import vspace._;
-    case class History(sumOfSquaredGradients: T);
-    def initialHistory(f: StochasticDiffFunction[T],init: T)= History(zeros(init));
+  class L1Regularization[T](val lambda: Double=1.0,
+                            delta: Double = 1E-5,
+                            eta: Double=4,
+                            maxIter: Int=100)(implicit vspace: MutableInnerProductSpace[Double,T],
+                                              canNorm: CanNorm[T]) extends StochasticGradientDescent[T](eta,maxIter) {
+    import vspace._
+    case class History(sumOfSquaredGradients: T)
+    def initialHistory(f: StochasticDiffFunction[T],init: T)= History(zeros(init))
     override def updateHistory(newX: T, newGrad: T, newValue: Double, oldState: State) = {
-      val oldHistory = oldState.history;
+      val oldHistory = oldState.history
       val newG = oldHistory.sumOfSquaredGradients :+ (oldState.grad :* oldState.grad)
-      new History(newG);
+      new History(newG)
     }
 
     override protected def takeStep(state: State, dir: T, stepSize: Double) = {
       import state._
-      val s:T = sqrt(state.history.sumOfSquaredGradients :+ (grad :* grad) :+ delta);
+      val s:T = sqrt(state.history.sumOfSquaredGradients :+ (grad :* grad) :+ delta)
       val res:T = x + (dir * stepSize :/ s)
-      val tlambda = lambda * stepSize;
-      TKVPairs.mapNonZero(res, { case (k,v) =>
-        if(v.abs < tlambda / TisTensor(s)(k)) {
-          0.;
+      val tlambda = lambda * stepSize
+      vspace.zipMapValues.map(res, s, { case (v,v2) =>
+        if(v.abs < tlambda / v2) {
+          0.
         } else {
-          (v - math.signum(v) * tlambda / TisTensor(s)(k));
+          (v - math.signum(v) * tlambda / v2)
         }
-      });
+      })
     }
 
     override def determineStepSize(state: State, f: StochasticDiffFunction[T], dir: T) = {
-      if(state.iter < 8) 0.001 * defaultStepSize else defaultStepSize;
+      if(state.iter < 8) 0.001 * defaultStepSize else defaultStepSize
     }
 
     override protected def adjust(newX: T, newGrad: T, newVal: Double) = {

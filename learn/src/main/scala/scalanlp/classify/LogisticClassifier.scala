@@ -27,6 +27,7 @@ import scalala.library.Numerics._
 import scalala.library.Library._;
 import scalala.generic.math.CanNorm
 import scalanlp.util.{I}
+import scalanlp.optimize.FirstOrderMinimizer.OptParams
 
 /**
  * A multi-class logistic/softmax/maxent classifier. It's currently unsmoothed (no regularization)
@@ -50,15 +51,11 @@ object LogisticClassifier {
 
 
   /**
-   * @param L: the label type
-   * @param F: the feature type
-   * @param T2: the Matrix with labels as "rows" and features as "column"
-   * @param TL: A "vector" from labels to scores
-   * @param TF feature vectors, which are the input vectors to the classifer
-   * @param data: a sequence of labeled examples
+   * @tparam L: the label type
+   * @tparam TF feature vectors, which are the input vectors to the classifer
    * @return a LinearClassifier based on the fitted model
    */
-  class Trainer[L,TF]()(implicit arith: MutableInnerProductSpace[Double,TF], canNorm: CanNorm[TF]) extends Classifier.Trainer[L,TF] {
+  class Trainer[L,TF](opt: OptParams = OptParams())(implicit arith: MutableInnerProductSpace[Double,TF], canNorm: CanNorm[TF]) extends Classifier.Trainer[L,TF] {
     import arith._;
 
     type MyClassifier = LinearClassifier[L,LFMatrix[L,TF],Counter[L,Double],TF];
@@ -66,15 +63,13 @@ object LogisticClassifier {
     def train(data: Iterable[Example[L,TF]]) = {
       require(data.size > 0);
       val labelSet = Set.empty ++ data.iterator.map(_.label);
-      val allLabels = labelSet.toSeq;
 
       val guess = new LFMatrix[L,TF](zeros(data.head.features));
       for(l <- labelSet) guess(l) = zeros(data.head.features);
 
       val obj = objective(data.toIndexedSeq)
 
-      val opt = new LBFGS[LFMatrix[L,TF]](100,7);
-
+      MutableInnerProductSpace.make[Double, LFMatrix[L, TF]]
       val weights = opt.minimize(obj,guess);
       new LinearClassifier(weights,Counter[L,Double]());
     }

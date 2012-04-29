@@ -18,9 +18,8 @@ import scalala.tensor.dense.DenseVector
  *
  * @author dlwh
  */
-class OWLQN[K,T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit vspace: MutableInnerProductSpace[Double,T],
-                                                  view: T <:< Tensor1[K,Double] with scalala.tensor.mutable.TensorLike[K,Double,_,T with Tensor1[K,Double]],
-                                                  canNorm: CanNorm[T]) extends LBFGS[T](maxIter, m) with  ConfiguredLogging {
+class OWLQN[T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit vspace: MutableInnerProductSpace[Double,T],
+                                                        canNorm: CanNorm[T]) extends LBFGS[T](maxIter, m) with  ConfiguredLogging {
   import vspace._
   require(m > 0)
   require(l1reg >= 0)
@@ -75,35 +74,29 @@ class OWLQN[K,T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit vspace: Mutab
   override protected def takeStep(state: State, dir: T, stepSize: Double) = {
     val stepped = state.x + dir * stepSize
     val orthant = computeOrthant(state.x,state.grad)
-    val res = zeros(state.x)
-    for( (k,v) <- stepped.pairsIteratorNonZero) {
-      if(math.signum(v) == math.signum(orthant(k))) {
-        res(k) = v
-      }
-    }
-    res
+    vspace.zipMapValues.map(stepped, orthant, { case (v, ov) =>
+      v * I(math.signum(v) == math.signum(ov))
+    })
   }
 
   // Adds in the regularization stuff to the gradient
   override protected def adjust(newX: T, newGrad: T, newVal: Double) = {
-    val res = zeros(newGrad)
-    for( (i,v) <- newGrad.nonzero.pairs) {
-      val delta_+ = v + (if(newX(i) == 0.0) l1reg else math.signum(newX(i)) * l1reg)
-      val delta_- = v + (if(newX(i) == 0.0) -l1reg else math.signum(newX(i)) * l1reg)
+    val res = vspace.zipMapValues.map(newX, newGrad, {case (xv, v) =>
+      val delta_+ = v + (if(xv == 0.0) l1reg else math.signum(xv) * l1reg)
+      val delta_- = v + (if(xv == 0.0) -l1reg else math.signum(xv) * l1reg)
 
       val g = if(delta_- > 0) delta_- else if(delta_+ < 0) delta_+ else 0.0
-      res(i) = g
-    }
+      g
+    })
     val adjValue = newVal + l1reg * norm(newX,1)
     adjValue -> res
   }
 
   private def computeOrthant(x: T, grad: T) = {
-    val orth = zeros(x)
-    for( (i,v) <- x.nonzero.pairs) {
-      if(v != 0) orth(i) = math.signum(v)
-      else orth(i) = math.signum(-grad(i))
-    }
+    val orth = vspace.zipMapValues.map(x, grad, {case (v, gv) =>
+      if(v != 0) math.signum(v)
+      else math.signum(-gv)
+    })
     orth
   }
 
@@ -112,7 +105,7 @@ class OWLQN[K,T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit vspace: Mutab
 
 object OWLQN {
   def main(args: Array[String]) {
-    val lbfgs = new OWLQN[Int,DenseVector[Double]](100,4)
+    val lbfgs = new OWLQN[DenseVector[Double]](100,4)
 
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
