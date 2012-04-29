@@ -53,9 +53,9 @@ object SVM {
    * batches provided.
    *
    * @author dlwh
-   * @param numIterations
+   * @param numIterations number of passes through the dataset
    * @param regularization sort of a 2-norm penalty on the weights. Higher means more smoothing
-   * @param batchSize: how many elements per iteration to use.
+   * @param batchSize: how many elements per minibatch to use.
    */
   class Pegasos[L,T](numIterations: Int,
                    regularization: Double=.1,
@@ -81,7 +81,9 @@ object SVM {
       }
 
       var w = new LFMatrix[L,T](zeros(dataSeq(0).features));
-      for(iter <- 0 until numIterations) {
+      // force one to show up
+      w(default)
+      for(iter <- 0 until (numIterations * dataSeq.size/batchSize)) {
         val offset = (batchSize * iter) % dataSeq.size
         val subset = (offset until (offset + batchSize)) map (i =>dataSeq(i%dataSeq.size));
         // i.e. those we don't classify correctly
