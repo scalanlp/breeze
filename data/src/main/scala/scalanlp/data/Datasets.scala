@@ -33,24 +33,17 @@ object Datasets {
   *
   * Syntax: crossValidate(K, myDataSet)( (trainSet,testSet) =&gt; {produce a result} ) 
   */
-  def crossValidate[T](k : Int, dataset: IndexedSeq[T]) = new {
+  def crossValidate[T, R](k : Int, dataset: IndexedSeq[T])(f: (IndexedSeq[T], IndexedSeq[T])=>R): IndexedSeq[R] = {
     require(k < dataset.size);
     require(k > 0);
-    def apply[R](f: (IndexedSeq[T], IndexedSeq[T])=>R): IndexedSeq[R] = {
-      val chunkSize = dataset.size/k;
-      val lastChunk = dataset.size % k;
-      val result = new ArrayBuffer[R];
-      if(lastChunk != 0) {
-        result += f(dataset take (dataset.size - lastChunk), dataset drop (dataset.size - lastChunk) );
-      }
-      val remK = if(lastChunk == 0) k else k - 1;
-      for(i <- 0 until remK) {
-        val testSet = dataset.slice(i * chunkSize, (i+1)*chunkSize min dataset.size)
-        val trainSet = (dataset.slice(0,i * chunkSize)) ++ (dataset.view(i+1* chunkSize,dataset.size))
-        result += f(trainSet,testSet);
-      }
-      result
+    val chunkSize = dataset.size/k;
+    val result = new ArrayBuffer[R];
+    for(i <- 0 until k) {
+      val testSet = dataset.slice(i * chunkSize, (i+1)*chunkSize min dataset.size)
+      val trainSet =  (dataset.slice(0,i * chunkSize)) ++ (dataset.view( (i+1)* chunkSize,dataset.size))
+      result += f(trainSet,testSet);
     }
+    result
   }
 
   /**
