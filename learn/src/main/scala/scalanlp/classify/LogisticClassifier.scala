@@ -67,10 +67,12 @@ object LogisticClassifier {
       val guess = new LFMatrix[L,TF](zeros(data.head.features));
       for(l <- labelSet) guess(l) = zeros(data.head.features);
 
-      val obj = objective(data.toIndexedSeq)
+      val obj = new CachedBatchDiffFunction(objective(data.toIndexedSeq))
 
-      MutableInnerProductSpace.make[Double, LFMatrix[L, TF]]
       val weights = opt.minimize(obj,guess);
+
+      //val weights = new LBFGS[LFMatrix[L, TF]]().minimize(obj, guess)
+
       new LinearClassifier(weights,Counter[L,Double]());
     }
 
