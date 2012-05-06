@@ -67,4 +67,27 @@ class LBFGSTest extends OptimizeTestBase {
     check(Prop.forAll(optimizeThis _ ));
 
   }
+
+
+  test("optimize a simple multivariate gaussian with l2 regularization") {
+    val lbfgs = new LBFGS[DenseVector[Double]](100,4)
+
+    def optimizeThis(init: DenseVector[Double]) = {
+      val f = new DiffFunction[DenseVector[Double]] {
+        def calculate(x: DenseVector[Double]) = {
+          (norm((x -3) :^ 2,1),(x * 2) - 6);
+        }
+      }
+
+      val targetValue = 3 / (1.0 / 2 + 1);
+      val result = lbfgs.minimize(DiffFunction.withL2Regularization(f, 1.0),init)
+      val ok = norm(result :- DenseVector.ones[Double](init.size) * targetValue,2)/result.size < 3E-3
+      ok || error(init.toString + " " + result)
+    }
+
+    check(Prop.forAll(optimizeThis _));
+
+   }
+
+
 }

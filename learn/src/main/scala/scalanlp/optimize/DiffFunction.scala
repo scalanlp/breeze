@@ -1,9 +1,9 @@
-package scalanlp.optimize;
+package scalanlp.optimize
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
  
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at 
  
@@ -31,28 +31,28 @@ trait DiffFunction[T] extends StochasticDiffFunction[T]
 object DiffFunction {
   def withL2Regularization[T](d: DiffFunction[T],weight: Double)
                              (implicit canNorm: CanNorm[T],vspace: VectorSpace[Double,T]) = new DiffFunction[T] {
-    import vspace._;
+    import vspace._
     override def gradientAt(x:T):T = {
-      val grad = d.gradientAt(x);
-      myGrad(grad,x);
+      val grad = d.gradientAt(x)
+      myGrad(grad,x)
     }
 
     override def valueAt(x:T) = {
-      val v = d.valueAt(x);
-      v + myValueAt(x);
+      val v = d.valueAt(x)
+      myValueAt(v, x)
     }
 
-    private def myValueAt(x:T) = {
-      weight * math.pow(norm(x,2),2);
+    private def myValueAt(v: Double, x:T) = {
+      v + weight * math.pow(norm(x,2),2) / 2
     }
 
     private def myGrad(g: T, x: T):T = {
-      g + (x * (2 * weight))
+      g + (x * weight)
     }
 
     override def calculate(x: T) = {
-      val (v,grad) = d.calculate(x);
-      (v + myValueAt(x), myGrad(grad,x));
+      val (v,grad) = d.calculate(x)
+      (myValueAt(v, x), myGrad(grad,x))
     }
   }
 
@@ -62,29 +62,29 @@ object DiffFunction {
                               addVector: BinaryOp[T,T,OpAdd,T],
                               mulScalar: BinaryOp[T,Double,OpMul,T]):BatchDiffFunction[T] = new BatchDiffFunction[T] {
     override def gradientAt(x:T, batch: IndexedSeq[Int]):T = {
-      val grad = d.gradientAt(x, batch);
-      myGrad(grad,x, batch.size);
+      val grad = d.gradientAt(x, batch)
+      myGrad(grad,x)
     }
 
     override def valueAt(x:T, batch: IndexedSeq[Int]) = {
-      val v = d.valueAt(x, batch);
-      v + myValueAt(x) * batch.size / fullRange.size;
+      val v = d.valueAt(x, batch)
+      v + myValueAt(x)
     }
 
     private def myValueAt(x:T) = {
-      weight * math.pow(norm(x,2),2);
+      weight * math.pow(norm(x,2),2) / 2
     }
 
-    private def myGrad(g: T, x: T, batchSize: Int) = {
-      g + (x * (2 * weight * batchSize / d.fullRange.size));
+    private def myGrad(g: T, x: T) = {
+      g + (x * weight)
     }
 
     override def calculate(x: T, batch: IndexedSeq[Int]) = {
-      val (v,grad) = d.calculate(x, batch);
-      (v + myValueAt(x), myGrad(grad,x, batch.size));
+      val (v,grad) = d.calculate(x, batch)
+      (v + myValueAt(x), myGrad(grad,x))
     }
 
-    def fullRange = d.fullRange;
+    def fullRange = d.fullRange
   }
 }
 
