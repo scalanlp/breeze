@@ -17,19 +17,15 @@ package scalanlp.classify
 
 
 
-import scalanlp.util.Index
-import scalanlp.data._
-
-import java.io.{DataOutput,DataInput}
 import scalala.tensor._
 import mutable.Counter
 import scalala.operators._
-import bundles.MutableInnerProductSpace
 import scalala.generic.math.CanNorm
 import scalanlp.serialization.DataSerialization.ReadWritable
 import scalanlp.serialization.{SerializationFormat, DataSerialization}
 import scala.Double
 import scalala.generic.collection._
+import scalala.scalar.Scalar
 
 /**
  * A LinearClassifier is a multi-class classifier with decision
@@ -93,7 +89,6 @@ class LFMatrix[L,TF](emptyTF: =>TF) extends MutableNumericOps[LFMatrix[L,TF]] wi
   override def toString = {
     map.mkString("Weight Matrix{\n  ","\n  ","\n}")
   }
-
 
 }
 

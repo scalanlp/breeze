@@ -83,7 +83,6 @@ object FirstOrderMinimizer {
     def minimize[T](f: BatchDiffFunction[T],
                       init: T)(implicit arith: MutableInnerProductSpace[Double,T], canNorm: CanNorm[T]) = {
       this.iterations(f, init).find{state =>
-        println(canNorm(state.adjustedGradient, 2), tolerance * state.adjustedValue.abs);
             ((state.iter >= maxIterations && maxIterations >= 0)
               || canNorm(state.adjustedGradient,2) <= math.max(tolerance * state.adjustedValue.abs,1E-9))
           }.get.x

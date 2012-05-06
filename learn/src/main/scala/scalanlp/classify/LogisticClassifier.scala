@@ -70,8 +70,8 @@ object LogisticClassifier {
       val obj = new CachedBatchDiffFunction(objective(data.toIndexedSeq))
 
       val weights = opt.minimize(obj,guess);
-
-      //val weights = new LBFGS[LFMatrix[L, TF]]().minimize(obj, guess)
+//
+//      val weights = new LBFGS[LFMatrix[L, TF]]().minimize(obj, guess)
 
       new LinearClassifier(weights,Counter[L,Double]());
     }
