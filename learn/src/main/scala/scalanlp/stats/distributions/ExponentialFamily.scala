@@ -9,7 +9,7 @@ import optimize.DiffFunction
  * @author dlwh
  */
 
-trait ExponentialFamily[D<:Measure[T],T]  {
+trait ExponentialFamily[D,T]  {
   type Parameter;
   type SufficientStatistic <: distributions.SufficientStatistic[SufficientStatistic];
   def emptySufficientStatistic:SufficientStatistic;

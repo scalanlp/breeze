@@ -6,8 +6,6 @@ trait Factor[F] { this: F =>
   def *(f: F):F
   /** Pointwise division */
   def /(f: F):F
-  /** Scalar multiplication in log space (i.e. actually addition)*/
-  def *(f: Double):F
 
   /** May be infinite */
   def logPartition: Double

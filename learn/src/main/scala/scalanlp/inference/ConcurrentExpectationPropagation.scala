@@ -18,7 +18,7 @@ class ConcurrentExpectationPropagation[F, Q](project: (Q, F) => (Q, Double), cri
 
     // pass through the data
     val it: Iterator[State] = new Iterator[State] {
-      var cur = State(initialF_~, lastQ * (-lastQ.logPartition), prior, initPartitions)
+      var cur = State(initialF_~, lastQ, prior, initPartitions)
       var consumed = true
 
       def hasNext = !consumed || {
