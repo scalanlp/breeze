@@ -13,7 +13,7 @@ object BuildSettings {
     organization := buildOrganization,
     version      := buildVersion,
     scalaVersion := buildScalaVersion,
-    scalacOptions ++= Seq("-no-specialization","-optimize","-deprecation")
+    scalacOptions ++= Seq("-optimize","-deprecation")
   )
 }
 

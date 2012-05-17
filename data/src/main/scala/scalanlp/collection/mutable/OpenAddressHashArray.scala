@@ -12,14 +12,14 @@ import actors.threadpool.Arrays
  * @author dlwh
  */
 @SerialVersionUID(1)
-class OpenAddressHashArray[@specialized V] private (val size: Int,
-                                                    private var index : Array[Int],
-                                                    private var values: Array[V],
-                                                    default: ConfigurableDefault[V],
-                                                    private var occupied:BitSet = new BitSet(),
-                                                    private var load: Int = 0)
-                                                   (implicit man: ClassManifest[V],
-                                                    dav: DefaultArrayValue[V]) extends ArrayLike[V] with Serializable {
+class OpenAddressHashArray[@specialized V] private[mutable] (val size: Int,
+                                             private var index : Array[Int],
+                                             private var values: Array[V],
+                                             default: ConfigurableDefault[V],
+                                             private var occupied:BitSet = new BitSet(),
+                                             private var load: Int = 0)
+                                            (implicit man: ClassManifest[V],
+                                             dav: DefaultArrayValue[V]) extends ArrayLike[V] with Serializable {
 
   def this(size: Int,
            default: ConfigurableDefault[V] = ConfigurableDefault.default[V],
