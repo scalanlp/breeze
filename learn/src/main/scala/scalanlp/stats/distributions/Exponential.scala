@@ -10,6 +10,7 @@ import scalanlp.optimize.DiffFunction
 
 case class Exponential(rate: Double)(implicit basis: RandBasis=Rand) extends ContinuousDistr[Double] {
   override def toString() = ScalaRunTime._toString(this)
+  require(rate > 0)
 
   def unnormalizedLogPdf(x: Double) = - rate * x
 

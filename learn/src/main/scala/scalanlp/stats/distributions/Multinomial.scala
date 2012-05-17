@@ -1,9 +1,9 @@
-package scalanlp.stats.distributions;
+package scalanlp.stats.distributions
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
  
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at 
  
@@ -29,28 +29,28 @@ import scalala.generic.math.{CanNorm, CanSoftmax}
  * @author dlwh
  */
 case class Multinomial[T,@specialized(Int) I](params: T)(implicit ev: CanViewAsTensor1[T,I,Double], rand: RandBasis=Rand) extends DiscreteDistr[I] {
-  val sum = ev(params).sum;
-  require(sum != 0.0);
+  val sum = ev(params).sum
+  require(sum != 0.0, "There's no mass!")
 
   // check rep
   for ((k,v) <- ev(params).pairsIterator) {
     if (v < 0) {
-      throw new IllegalArgumentException("Multinomial has negative mass at index "+k);
+      throw new IllegalArgumentException("Multinomial has negative mass at index "+k)
     }
   }
 
   def draw():I = {
-    var prob = rand.uniform.get() * sum;
-    assert(!prob.isNaN, "NaN Probability!");
+    var prob = rand.uniform.get() * sum
+    assert(!prob.isNaN, "NaN Probability!")
     for((i,w) <- ev(params).pairsIteratorNonZero) {
-      prob -= w;
-      if(prob <= 0) return i;
+      prob -= w
+      if(prob <= 0) return i
     }
     ev(params).keysIteratorNonZero.next
   }
 
-  def probabilityOf(e : I) = ev(params)(e) / sum;
-  override def unnormalizedProbabilityOf(e:I) = ev(params)(e)/sum;
+  def probabilityOf(e : I) = ev(params)(e) / sum
+  override def unnormalizedProbabilityOf(e:I) = ev(params)(e)/sum
 
   override def toString = ev(params).pairsIterator.mkString("Multinomial{",",","}")
 
@@ -92,36 +92,36 @@ object Multinomial {
 
     type Parameter = T
     case class SufficientStatistic(t: T) extends scalanlp.stats.distributions.SufficientStatistic[SufficientStatistic] {
-      def +(tt: SufficientStatistic) = SufficientStatistic(ev(t) + tt.t);
-      def *(w: Double) = SufficientStatistic(ev(t) * w);
+      def +(tt: SufficientStatistic) = SufficientStatistic(ev(t) + tt.t)
+      def *(w: Double) = SufficientStatistic(ev(t) * w)
     }
 
-    def emptySufficientStatistic = SufficientStatistic(zeros(exemplar));
+    def emptySufficientStatistic = SufficientStatistic(zeros(exemplar))
 
     def sufficientStatisticFor(t: I) = {
       val r = zeros(exemplar)
       r(t) = 1.0
-      SufficientStatistic(r);
+      SufficientStatistic(r)
     }
 
-    def mle(stats: SufficientStatistic) = ev(stats.t).values.map(math.log _);
+    def mle(stats: SufficientStatistic) = ev(stats.t).values.map(math.log _)
 
     def likelihoodFunction(stats: SufficientStatistic) = new DiffFunction[T] {
       def calculate(x: T) = {
-        val nn: T = Library.logNormalize(x);
-        val lp = nn :* stats.t sum;
+        val nn: T = Library.logNormalize(x)
+        val lp = nn :* stats.t sum
 
         val sum = stats.t.sum
 
-        val exped = ev(nn).values.map(math.exp _);
-        val grad = ev(ev(exped) * sum) - stats.t;
+        val exped = ev(nn).values.map(math.exp _)
+        val grad = ev(ev(exped) * sum) - stats.t
 
         (-lp,grad)
       }
     }
 
     def distribution(p: Parameter) = {
-      new Multinomial(ev(p).values.map(math.exp _));
+      new Multinomial(ev(p).values.map(math.exp _))
     }
   }
 
