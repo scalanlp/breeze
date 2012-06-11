@@ -8,5 +8,8 @@ src_managed
 target
 project/boot
 project/build
+.idea
+.idea_modules/
+*.iml
 *~
 

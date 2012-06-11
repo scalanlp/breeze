@@ -6,7 +6,7 @@ import AssemblyKeys._
 
 object BuildSettings {
   val buildOrganization = "org.scalanlp"
-  val buildVersion      = "0.5-SNAPSHOT"
+  val buildVersion      = "0.1-SNAPSHOT"
   val buildScalaVersion = "2.9.1"
 
   val buildSettings = Defaults.defaultSettings ++ Seq (
@@ -18,27 +18,24 @@ object BuildSettings {
 }
 
 
-
-object ScalanlpBuild extends Build {
+object BreezeBuild extends Build {
   import BuildSettings._
   // 
   // repositories
   //
 
-  val ScalaNLPRepo = "ScalaNLP Maven2" at "http://repo.scalanlp.org/repo"
+  val BreezeRepo = "Breeze Maven2" at "http://repo.scalanlp.org/repo"
   val OndexRepo = "ondex" at "http://ondex.rothamsted.bbsrc.ac.uk/nexus/content/groups/public"
   val scalaToolsSnapshots = "Scala Tools Snapshots" at "http://scala-tools.org/repo-snapshots/"
   val ivyLocal = "ivy local" at "file://" + Path.userHome +".ivy/local/"
 
-  val repos = Seq(ScalaNLPRepo,OndexRepo,scalaToolsSnapshots,ivyLocal)
+  val repos = Seq(BreezeRepo,OndexRepo,scalaToolsSnapshots,ivyLocal)
 
   val p = System.getProperties();
   p.setProperty("log.level","WARN")
   
   // various deps
-  val shapeless =  "com.chuusai" %% "shapeless" % "1.2.0" 
   val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
-  val Scalala = "org.scalala" %% "scalala" % "1.0.0.RC3-SNAPSHOT";
   val ScalaCheck = buildScalaVersion match {
     case "2.9.1" => "org.scala-tools.testing" % "scalacheck_2.9.0" % "1.8" % "test"
     case _       => "org.scala-tools.testing" %% "scalacheck" % "1.8" % "test"
@@ -50,19 +47,21 @@ object ScalanlpBuild extends Build {
     case x           => error("Unsupported Scala version " + x)
   }
   val JUnit = "junit" % "junit" % "4.5" % "test"
+  val netlib = "com.googlecode.netlib-java" % "netlib-java" % "0.9.3"
 
-  val commonDeps = Seq(paranamer,Scalala,ScalaCheck,ScalaTest,JUnit, shapeless)
+
+  val commonDeps = Seq(paranamer,ScalaCheck,ScalaTest,JUnit, netlib)
 
   //
   // subprojects
   //
 
-  lazy val core = Project ( "core", file("."), settings = buildSettings) aggregate (data,learn,graphs) dependsOn (data,learn,graphs)
+  lazy val breeze = Project ( "breeze", file("."), settings = buildSettings) aggregate (math,data,learn,graphs) dependsOn (math,data,learn,graphs)
 
-  lazy val data = Project("scalanlp-data",file("data"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings) 
-  lazy val learn = Project("scalanlp-learn",file("learn") ,  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings) dependsOn(data)
-  lazy val graphs = Project("scalanlp-graphs",file("graphs"),  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps)) dependsOn(data)
-  lazy val examples = Project("scalanlp-examples",file("examples"),  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps)) dependsOn(learn,graphs,data)
-
+  lazy val math = Project("breeze-math",file("math"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings) 
+  lazy val data = Project("breeze-data",file("data"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings) dependsOn(math)
+  lazy val learn = Project("breeze-learn",file("learn") ,  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings) dependsOn(math,data)
+  lazy val graphs = Project("breeze-graphs",file("graphs"),  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps)) dependsOn(math,data)
+  lazy val examples = Project("breeze-examples",file("examples"),  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps)) dependsOn(math,learn,graphs,data)
 }
 
