@@ -13,7 +13,7 @@ object BuildSettings {
     organization := buildOrganization,
     version      := buildVersion,
     scalaVersion := buildScalaVersion,
-    scalacOptions ++= Seq("-optimize","-deprecation")
+    scalacOptions ++= Seq("-optimize","-deprecation", "-Ydependent-method-types")
   )
 }
 
@@ -35,8 +35,8 @@ object ScalanlpBuild extends Build {
   val p = System.getProperties();
   p.setProperty("log.level","WARN")
   
-
-  // variosu deps
+  // various deps
+  val shapeless =  "com.chuusai" %% "shapeless" % "1.2.0" 
   val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
   val Scalala = "org.scalala" %% "scalala" % "1.0.0.RC3-SNAPSHOT";
   val ScalaCheck = buildScalaVersion match {
@@ -51,7 +51,7 @@ object ScalanlpBuild extends Build {
   }
   val JUnit = "junit" % "junit" % "4.5" % "test"
 
-  val commonDeps = Seq(paranamer,Scalala,ScalaCheck,ScalaTest,JUnit)
+  val commonDeps = Seq(paranamer,Scalala,ScalaCheck,ScalaTest,JUnit, shapeless)
 
   //
   // subprojects

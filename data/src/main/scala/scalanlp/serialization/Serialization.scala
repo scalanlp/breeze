@@ -62,7 +62,7 @@ trait SerializationFormat extends Serializable {
   type Output;
 
   /** Inner trait for reading from Input. */
-  trait Readable[@specialized T] extends Serializable {
+  trait Readable[@specialized +T] extends Serializable {
     def read(source: Input): T
     
     /** Returns true if this readable requires streaming. */
@@ -70,7 +70,7 @@ trait SerializationFormat extends Serializable {
   }
 
   /** Inner trait for writing to Output. */
-  trait Writable[@specialized T] extends Serializable {
+  trait Writable[@specialized -T] extends Serializable {
     def write(sink: Output, what: T): Unit
   }
 

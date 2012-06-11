@@ -315,15 +315,23 @@ object Index {
 }
 
 /**
- * An Index over two kinds of things
+ * An Index over two kinds of things. Layout is straightforward:
+ * The first left.size entries are from the left index, while the next
+ * right.size are from the right index. Values are wrapped in Left/Right
  *
  * @author dlwh
  */
 class EitherIndex[L,R](left: Index[L], right: Index[R]) extends Index[Either[L,R]] {
   def apply(t: Either[L, R]) = t match {
     case Left(l) => left(l)
-    case Right(r) => right(r) + left.size
+    case Right(r) => right(r) + rightOffset
   }
+
+  /**
+   * What you add to the indices from the rightIndex to get indices into this index
+   * @return
+   */
+  def rightOffset = left.size
 
   def unapply(i: Int) = {
     if(i < 0 || i >= size) None

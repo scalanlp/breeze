@@ -124,7 +124,7 @@ trait Configuration { outer =>
     val dynamicTypeMap = solveTypes(staticTypeMap, staticManifest.erasure, dynamicClass);
 
     try {
-      val ctor = dynamicClass.getConstructors.apply(0);
+      val ctor = dynamicClass.getConstructors.last
       val reader = new AdaptiveParanamer();
       val paramNames = reader.lookupParameterNames(ctor);
       val typedParams = ctor.getGenericParameterTypes.map{
@@ -135,6 +135,10 @@ trait Configuration { outer =>
       val paramValues = namedParams.map{
         case (man, name, default) => readIn[Object](prefix + "." + name, default())(man)
       }
+      println(dynamicClass)
+      println(paramValues.mkString(", "))
+      println(ctor)
+//      println(paramValues.map(_.getClass).mkString(", "))
       ctor.newInstance(paramValues: _*).asInstanceOf[T];
     } catch {
       case e: ParameterNamesNotFoundException =>
