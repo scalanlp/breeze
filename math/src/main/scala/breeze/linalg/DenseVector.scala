@@ -113,7 +113,7 @@ object DenseVector extends VectorConstructors[DenseVector]
     }
   }
 
-  implicit def binaryOpFromBinaryUpdateOp[@specialized V, Other, Op<:OpType](implicit copy: CanCopy[DenseVector[V]], op: BinaryUpdateOp[DenseVector[V], Other, Op], man: ClassManifest[V]) = {
+  implicit def binaryOpFromBinaryUpdateOp[V, Other, Op<:OpType](implicit copy: CanCopy[DenseVector[V]], op: BinaryUpdateOp[DenseVector[V], Other, Op], man: ClassManifest[V]) = {
     new BinaryOp[DenseVector[V], Other, Op, DenseVector[V]] {
       override def apply(a : DenseVector[V], b : Other) = {
         val c = copy(a)

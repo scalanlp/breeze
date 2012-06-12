@@ -228,8 +228,9 @@ class DenseMatrixTest extends FunSuite with Checkers {
     val y = a.t * a
     assert(y === DenseMatrix((17.,22.,27.),(22.,29.,36.),(27.,36.,45.)))
 
-//    val z : DenseMatrix[Double] = b * (b + 1.0)
-//    assert(z === DenseMatrix((164.,5.,107.),(-5.,10.,-27.),(161.,-7.,138.)))
+
+    val z : DenseMatrix[Double] = b * (b.+(1.0))
+    assert(z === DenseMatrix((164.,5.,107.),(-5.,10.,-27.),(161.,-7.,138.)))
   }
 
   test("Trace") {
