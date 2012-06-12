@@ -56,12 +56,12 @@ object BreezeBuild extends Build {
   // subprojects
   //
 
-  lazy val breeze = Project ( "breeze", file("."), settings = buildSettings) aggregate (math,data,learn,graphs) dependsOn (math,data,learn,graphs)
+  lazy val breeze = Project ( "breeze", file("."), settings = buildSettings) aggregate (math,process,learn,graphs) dependsOn (math,process,learn,graphs)
 
   lazy val math = Project("breeze-math",file("math"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings) 
-  lazy val data = Project("breeze-data",file("data"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings) dependsOn(math)
-  lazy val learn = Project("breeze-learn",file("learn") ,  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings) dependsOn(math,data)
-  lazy val graphs = Project("breeze-graphs",file("graphs"),  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps)) dependsOn(math,data)
-  lazy val examples = Project("breeze-examples",file("examples"),  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps)) dependsOn(math,learn,graphs,data)
+  lazy val process = Project("breeze-process",file("process"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings) dependsOn(math)
+  lazy val learn = Project("breeze-learn",file("learn") ,  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings) dependsOn(math,process)
+  lazy val graphs = Project("breeze-graphs",file("graphs"),  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps)) dependsOn(math,process)
+  lazy val examples = Project("breeze-examples",file("examples"),  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps)) dependsOn(math,learn,graphs,process)
 }
 
