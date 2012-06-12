@@ -46,7 +46,7 @@ final class DenseMatrix[@specialized V](val data: Array[V],
   }
 }
 
-object DenseMatrix extends DenseMatrixMultiplyStuff {
+object DenseMatrix extends LowPriorityDenseMatrix with DenseMatrixMultiplyStuff {
   def zeros[V:ClassManifest](rows: Int, cols: Int) = {
     val data = new Array[V](rows * cols)
     new DenseMatrix(data, rows, cols)
@@ -72,9 +72,8 @@ object DenseMatrix extends DenseMatrixMultiplyStuff {
     rv
   }
 
-  /*
   /** Horizontally tiles some matrices. They must have the same number of rows */
-  def horzcat[V:ClassManifest](matrices: DenseMatrix[V]*) = {
+  def horzcat[V](matrices: DenseMatrix[V]*)(implicit opset: BinaryUpdateOp[DenseMatrix[V], DenseMatrix[V], OpSet], vman: ClassManifest[V]) = {
     if(matrices.isEmpty) zeros[V](0,0)
     else {
       require(matrices.forall(m => m.rows == matrices(0).rows),"Not all matrices have the same number of rows")
@@ -91,7 +90,7 @@ object DenseMatrix extends DenseMatrixMultiplyStuff {
   }
 
   /** Vertically tiles some matrices. They must have the same number of columns */
-  def vertcat[V:ClassManifest](matrices: DenseMatrix[V]*) = {
+  def vertcat[V](matrices: DenseMatrix[V]*)(implicit opset: BinaryUpdateOp[DenseMatrix[V], DenseMatrix[V], OpSet], vman: ClassManifest[V]) = {
     if(matrices.isEmpty) zeros[V](0,0)
     else {
       require(matrices.forall(m => m.cols == matrices(0).cols),"Not all matrices have the same number of columns")
@@ -106,7 +105,6 @@ object DenseMatrix extends DenseMatrixMultiplyStuff {
       res
     }
   }
-  */
 
 
   // slices
@@ -258,6 +256,38 @@ object DenseMatrix extends DenseMatrixMultiplyStuff {
   }
 
 
+
+
+  implicit val setMM_D: BinaryUpdateOp[DenseMatrix[Double], DenseMatrix[Double], OpSet] = new SetMMOp[Double]
+  implicit val setMM_F: BinaryUpdateOp[DenseMatrix[Float], DenseMatrix[Float], OpSet]  = new SetMMOp[Float]
+  implicit val setMM_I: BinaryUpdateOp[DenseMatrix[Int], DenseMatrix[Int], OpSet]  = new SetMMOp[Int]
+
+}
+
+trait LowPriorityDenseMatrix {
+  class SetMMOp[@specialized V] extends BinaryUpdateOp[DenseMatrix[V], DenseMatrix[V], OpSet] {
+    def apply(a: DenseMatrix[V], b: DenseMatrix[V]) = {
+      require(a.rows == b.rows, "Matrixs must have same number of rows")
+      require(a.cols == b.cols, "Matrixs must have same number of columns")
+      val ad = a.data
+      val bd = b.data
+      var c = 0
+      var aroff = a.offset
+      var broff = b.offset
+      while(c < a.cols) {
+        var r = 0
+        while(r < a.rows) {
+          ad(aroff + r) = bd(broff + r)
+          r += 1
+        }
+        aroff += a.majorStride
+        broff += b.majorStride
+        c += 1
+      }
+    }
+  }
+
+  implicit def setMM[V]: BinaryUpdateOp[DenseMatrix[V], DenseMatrix[V], OpSet] = new SetMMOp[V]
 }
 
 trait DenseMatrixMultiplyStuff {
@@ -296,7 +326,6 @@ trait DenseMatrixMultiplyStuff {
     override def apply(A : DenseMatrix[Double], V : DenseMatrix[Double]) = {
       require(A.rows == V.rows, "Non-conformant matrix sizes")
 
-      // from MTJ 0.9.9
       if (A.rows == A.cols) {
         // square: LUSolve
         val X = DenseMatrix.zeros[Double](V.rows, V.cols)
@@ -398,29 +427,7 @@ trait DenseMatrixMultiplyStuff {
     }
   }
 
-  implicit val canSetIntoVV_D: BinaryUpdateOp[DenseMatrix[Double], DenseMatrix[Double], OpSet] = {
-    new BinaryUpdateOp[DenseMatrix[Double], DenseMatrix[Double], OpSet] {
-      def apply(a: DenseMatrix[Double], b: DenseMatrix[Double]) = {
-        require(a.rows == b.rows, "Matrixs must have same length")
-        require(a.cols == b.cols, "Matrixs must have same length")
-        val ad = a.data
-        val bd = b.data
-        var r = 0
-        var aroff = a.offset
-        var broff = b.offset
-        while(r < a.rows) {
-          var c = 0
-          while(c < a.cols) {
-            ad(aroff + c) = bd(broff + c)
-            c += 1
-          }
-          aroff += a.majorStride
-          broff += b.majorStride
-          r += 1
-        }
-      }
-    }
-  }
+
 
   implicit val mulDVDM: BinaryOp[DenseVector[Double], DenseMatrix[Double], OpMulMatrix, DenseMatrix[Double]] = {
     new BinaryOp[DenseVector[Double], DenseMatrix[Double], OpMulMatrix, DenseMatrix[Double]] {
@@ -443,6 +450,7 @@ trait DenseMatrixMultiplyStuff {
       }
     }
   }
+
 }
 
 /**
