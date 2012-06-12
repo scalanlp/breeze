@@ -265,7 +265,7 @@ trait DenseMatrixMultiplyStuff {
   extends BinaryOp[DenseMatrix[Double],DenseMatrix[Double],OpMulMatrix,DenseMatrix[Double]] {
     def apply(a : DenseMatrix[Double], b : DenseMatrix[Double]) = {
       val rv = DenseMatrix.zeros[Double](a.rows, b.cols)
-      Dgemm.dgemm("n", "n",
+      Dgemm.dgemm(transposeString(a), transposeString(b),
         rv.rows, rv.cols, a.cols,
         1.0, a.data, a.offset, a.majorStride, b.data, b.offset, b.majorStride,
         0.0, rv.data, 0, rv.rows)
@@ -273,11 +273,16 @@ trait DenseMatrixMultiplyStuff {
     }
   }
 
+
+  def transposeString(a: DenseMatrix[Double]): String = {
+    if (a.isTranspose) "t" else "n"
+  }
+
   implicit object DenseMatrixDMulDenseVectorD
   extends BinaryOp[DenseMatrix[Double],DenseVector[Double],OpMulMatrix,DenseVector[Double]] {
     def apply(a : DenseMatrix[Double], b : DenseVector[Double]) = {
       val rv = DenseVector.zeros[Double](a.rows)
-      org.netlib.blas.Dgemv.dgemv("n",
+      org.netlib.blas.Dgemv.dgemv(transposeString(a),
         a.rows, a.cols,
         1.0, a.data, a.offset, a.majorStride,
              b.data, b.offset, b.stride,
@@ -301,7 +306,7 @@ trait DenseMatrixMultiplyStuff {
       } else {
         // non-square: QRSolve
         val X = DenseMatrix.zeros[Double](A.cols, V.cols)
-        QRSolve(X,A,V,transpose = false)
+        QRSolve(X,A,V)
         X
       }
     }
@@ -328,12 +333,13 @@ trait DenseMatrixMultiplyStuff {
     }
 
     /** X := A \ V */
-    def QRSolve(X : DenseMatrix[Double], A : DenseMatrix[Double], V : DenseMatrix[Double], transpose : Boolean) = {
+    def QRSolve(X : DenseMatrix[Double], A : DenseMatrix[Double], V : DenseMatrix[Double]) = {
       require(X.offset == 0)
       require(A.offset == 0)
       require(V.offset == 0)
       require(X.rows == A.cols, "Wrong number of rows in return value")
       require(X.cols == V.cols, "Wrong number of rows in return value")
+      val transpose = X.isTranspose
 
       val nrhs = V.cols
 

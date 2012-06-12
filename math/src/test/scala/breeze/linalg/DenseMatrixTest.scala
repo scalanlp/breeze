@@ -207,14 +207,13 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(a * c === DenseVector(19.,52.))
 
     // should be dense
-//    val x : DenseMatrix[Int] = a * a.t
-//    assert(x === DenseMatrix((14,32),(32,77)))
+    val x = a * a.t
+    assert(x === DenseMatrix((14.,32.),(32.,77.)))
 
     // should be dense
-//    val y : DenseMatrix[Int] = a.t * a
-//    assert(y === DenseMatrix((17,22,27),(22,29,36),(27,36,45)))
+    val y = a.t * a
+    assert(y === DenseMatrix((17.,22.,27.),(22.,29.,36.),(27.,36.,45.)))
 
-    // should promote
 //    val z : DenseMatrix[Double] = b * (b + 1.0)
 //    assert(z === DenseMatrix((164.,5.,107.),(-5.,10.,-27.),(161.,-7.,138.)))
   }
