@@ -1,7 +1,7 @@
 package breeze.linalg
 
 import breeze.linalg.operators._
-import breeze.hierarchy.{Field, VectorSpace}
+import breeze.math.{Field, VectorSpace}
 
 /**
  *

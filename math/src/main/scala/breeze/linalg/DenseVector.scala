@@ -5,7 +5,7 @@ import scala.{specialized=>spec}
 import breeze.storage.DenseStorage
 import breeze.util.ArrayUtil
 import support.{CanSlice, CanMapValues, CanCopy}
-import breeze.hierarchy.Field
+import breeze.math.Field
 import breeze.numerics.IntMath
 import java.util.Arrays
 

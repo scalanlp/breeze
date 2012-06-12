@@ -1,4 +1,4 @@
-package breeze.hierarchy
+package breeze.math
 
 import scala.annotation.implicitNotFound
 import breeze.storage.DefaultArrayValue

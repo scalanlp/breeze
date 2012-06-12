@@ -1,6 +1,6 @@
 package breeze.linalg.support
 
-import breeze.hierarchy.Field
+import breeze.math.Field
 import actors.threadpool.Arrays
 import breeze.util.ArrayUtil
 

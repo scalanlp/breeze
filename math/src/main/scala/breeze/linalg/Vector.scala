@@ -4,7 +4,7 @@ import operators._
 import scala.{specialized=>spec}
 import breeze.storage.Storage
 import support.{TensorValues, CanMapValues}
-import breeze.hierarchy.Field
+import breeze.math.Field
 
 /**
  *

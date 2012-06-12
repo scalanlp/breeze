@@ -1,10 +1,14 @@
 package breeze.storage
 
-sealed trait DefaultArrayValue[@specialized T] {
+trait DefaultArrayValue[@specialized T] {
   def value : T
 }
 
 object DefaultArrayValue {
+  def apply[T](v: T):DefaultArrayValue[T] = new DefaultArrayValue[T] {
+    def value = v
+  }
+
   implicit object IntDefaultArrayValue extends DefaultArrayValue[Int] {
     override def value = 0
   }

@@ -1,4 +1,4 @@
-package breeze.hierarchy
+package breeze.math
 
 /**
  *
