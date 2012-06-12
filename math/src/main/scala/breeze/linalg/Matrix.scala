@@ -40,25 +40,6 @@ trait StorageMatrix[@spec E] extends Matrix[E] with MatrixLike[E, StorageMatrix[
   def majorStride: Int
   def isTranspose: Boolean
 
-  @inline final def apply(row: Int, col: Int) = {
-    if(row < 0 || row > rows) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
-    if(col < 0 || col > cols) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
-      rawApply(linearIndex(row, col))
-  }
 
-
-  @inline final protected def linearIndex(row: Int, col: Int): Int = {
-    if(isTranspose)
-      offset + col + row * majorStride
-    else
-      offset + row + col * majorStride
-  }
-
-  @inline
-  final def update(row: Int, col: Int, v: E) {
-    if(row < 0 || row > rows) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
-    if(col < 0 || col > cols) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
-    rawUpdate(linearIndex(row, col), v)
-  }
 
 }

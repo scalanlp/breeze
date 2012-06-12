@@ -6,6 +6,7 @@ import org.netlib.util.intW
 import org.netlib.lapack.LAPACK
 import org.netlib.blas.{Dgemm, BLAS}
 import support.{CanMapKeyValuePairs, CanMapValues, CanSlice2, LiteralRow}
+import breeze.util.ArrayUtil
 
 /**
  *
@@ -20,6 +21,27 @@ final class DenseMatrix[@specialized V](val data: Array[V],
                                         val isTranspose: Boolean = false) extends StorageMatrix[V] with MatrixLike[V, DenseMatrix[V]] with DenseStorage[V] {
   def this(data: Array[V], rows: Int, cols: Int) = this(data, rows, cols, rows)
   def this(data: Array[V], rows: Int) = this(data, rows, {assert(data.length % rows == 0); data.length/rows})
+
+  @inline final def apply(row: Int, col: Int) = {
+    if(row < 0 || row > rows) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
+    if(col < 0 || col > cols) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
+      rawApply(linearIndex(row, col))
+  }
+
+
+  @inline final def linearIndex(row: Int, col: Int): Int = {
+    if(isTranspose)
+      offset + col + row * majorStride
+    else
+      offset + row + col * majorStride
+  }
+
+  @inline
+  final def update(row: Int, col: Int, v: V) {
+    if(row < 0 || row > rows) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
+    if(col < 0 || col > cols) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
+    rawUpdate(linearIndex(row, col), v)
+  }
 
   def repr = this
 
@@ -46,7 +68,7 @@ final class DenseMatrix[@specialized V](val data: Array[V],
   }
 }
 
-object DenseMatrix extends LowPriorityDenseMatrix with DenseMatrixMultiplyStuff {
+object DenseMatrix extends LowPriorityDenseMatrix with DenseMatrixOps_Int with DenseMatrixMultiplyStuff {
   def zeros[V:ClassManifest](rows: Int, cols: Int) = {
     val data = new Array[V](rows * cols)
     new DenseMatrix(data, rows, cols)
@@ -266,28 +288,55 @@ object DenseMatrix extends LowPriorityDenseMatrix with DenseMatrixMultiplyStuff 
 
 trait LowPriorityDenseMatrix {
   class SetMMOp[@specialized V] extends BinaryUpdateOp[DenseMatrix[V], DenseMatrix[V], OpSet] {
-    def apply(a: DenseMatrix[V], b: DenseMatrix[V]) = {
+    def apply(a: DenseMatrix[V], b: DenseMatrix[V]) {
       require(a.rows == b.rows, "Matrixs must have same number of rows")
       require(a.cols == b.cols, "Matrixs must have same number of columns")
+      if(a.data.length - a.offset == a.rows * a.cols
+        && b.data.length - b.offset == a.rows * a.cols
+        && a.majorStride == b.majorStride
+        && a.isTranspose == b.isTranspose) {
+        System.arraycopy(b.data, b.offset, a.data, a.offset, a.size)
+        return
+      }
+
+      // slow path when we don't have a trivial matrix
       val ad = a.data
       val bd = b.data
       var c = 0
-      var aroff = a.offset
-      var broff = b.offset
       while(c < a.cols) {
         var r = 0
         while(r < a.rows) {
-          ad(aroff + r) = bd(broff + r)
+          ad(a.linearIndex(r, c)) = bd(b.linearIndex(r, c))
           r += 1
         }
-        aroff += a.majorStride
-        broff += b.majorStride
+        c += 1
+      }
+    }
+  }
+
+  class SetMSOp[@specialized V] extends BinaryUpdateOp[DenseMatrix[V], V, OpSet] {
+    def apply(a: DenseMatrix[V], b: V) {
+      if(a.data.length - a.offset == a.rows * a.cols) {
+        ArrayUtil.fill(a.data, a.offset, a.size, b)
+        return
+      }
+
+      // slow path when we don't have a trivial matrix
+      val ad = a.data
+      var c = 0
+      while(c < a.cols) {
+        var r = 0
+        while(r < a.rows) {
+          ad(a.linearIndex(r, c)) = b
+          r += 1
+        }
         c += 1
       }
     }
   }
 
   implicit def setMM[V]: BinaryUpdateOp[DenseMatrix[V], DenseMatrix[V], OpSet] = new SetMMOp[V]
+  implicit def setMV[V]: BinaryUpdateOp[DenseMatrix[V], V, OpSet] = new SetMSOp[V]
 }
 
 trait DenseMatrixMultiplyStuff {
@@ -441,7 +490,7 @@ trait DenseMatrixMultiplyStuff {
 //          a.data
 //        }
         val rv = DenseMatrix.zeros[Double](a.length, b.cols)
-        Dgemm.dgemm("t", "n",
+        Dgemm.dgemm("t", transposeString(b),
           rv.rows, rv.cols, 1,
           1.0, a.data, a.offset, a.stride, b.data, b.offset, b.majorStride,
           0.0, rv.data, 0, rv.rows)
@@ -451,6 +500,173 @@ trait DenseMatrixMultiplyStuff {
     }
   }
 
+}
+
+
+trait DenseMatrixOps_Int {
+  implicit val canAddIntoMM_I: BinaryUpdateOp[DenseMatrix[Int], DenseMatrix[Int], OpAdd] = {
+    new BinaryUpdateOp[DenseMatrix[Int], DenseMatrix[Int], OpAdd] {
+      def apply(a: DenseMatrix[Int], b: DenseMatrix[Int]) = {
+        require(a.rows == b.rows, "Matrices must have same number of rows!")
+        require(a.cols == b.cols, "Matrices must have same number of cols!")
+        val ad = a.data
+        val bd = b.data
+        var c = 0
+        while(c < a.cols) {
+          var r = 0
+          while(r < a.rows) {
+            // TODO: this is likely to wreck havoc on the branch predictor? Do we care?
+            // we can hand unroll the loops if we want.
+            ad(a.linearIndex(r, c)) += bd(b.linearIndex(r, c))
+            r += 1
+          }
+          c += 1
+        }
+      }
+    }
+  }
+
+  implicit val canAddIntoMS_I: BinaryUpdateOp[DenseMatrix[Int], Int, OpAdd] = {
+    new BinaryUpdateOp[DenseMatrix[Int], Int, OpAdd] {
+      def apply(a: DenseMatrix[Int], b: Int) {
+        if (b == 0) return
+
+        val ad = a.data
+        var c = 0
+        while(c < a.cols) {
+          var r = 0
+          while(r < a.rows) {
+            ad(a.linearIndex(r, c)) += b
+            r += 1
+          }
+          c += 1
+        }
+      }
+    }
+  }
+
+  implicit val canSubIntoMM_I: BinaryUpdateOp[DenseMatrix[Int], DenseMatrix[Int], OpSub] = {
+    new BinaryUpdateOp[DenseMatrix[Int], DenseMatrix[Int], OpSub] {
+      def apply(a: DenseMatrix[Int], b: DenseMatrix[Int]) = {
+        require(a.rows == b.rows, "Matrices must have same number of rows!")
+        require(a.cols == b.cols, "Matrices must have same number of cols!")
+        val ad = a.data
+        val bd = b.data
+        var c = 0
+        while(c < a.cols) {
+          var r = 0
+          while(r < a.rows) {
+            // TODO: this is likely to wreck havoc on the branch predictor? Do we care?
+            // we can hand unroll the loops if we want.
+            ad(a.linearIndex(r, c)) -= bd(b.linearIndex(r, c))
+            r += 1
+          }
+          c += 1
+        }
+      }
+    }
+  }
+
+  implicit val canSubIntoMS_I: BinaryUpdateOp[DenseMatrix[Int], Int, OpSub] = {
+    new BinaryUpdateOp[DenseMatrix[Int], Int, OpSub] {
+      def apply(a: DenseMatrix[Int], b: Int) {
+        if (b == 0) return
+
+        val ad = a.data
+        var c = 0
+        while(c < a.cols) {
+          var r = 0
+          while(r < a.rows) {
+            ad(a.linearIndex(r, c)) -= b
+            r += 1
+          }
+          c += 1
+        }
+      }
+    }
+  }
+
+  implicit val canMulIntoMM_I: BinaryUpdateOp[DenseMatrix[Int], DenseMatrix[Int], OpMulScalar] = {
+    new BinaryUpdateOp[DenseMatrix[Int], DenseMatrix[Int], OpMulScalar] {
+      def apply(a: DenseMatrix[Int], b: DenseMatrix[Int]) = {
+        require(a.rows == b.rows, "Matrices must have same number of rows!")
+        require(a.cols == b.cols, "Matrices must have same number of cols!")
+        val ad = a.data
+        val bd = b.data
+        var c = 0
+        while(c < a.cols) {
+          var r = 0
+          while(r < a.rows) {
+            // TODO: this is likely to wreck havoc on the branch predictor? Do we care?
+            // we can hand unroll the loops if we want.
+            ad(a.linearIndex(r, c)) *= bd(b.linearIndex(r, c))
+            r += 1
+          }
+          c += 1
+        }
+      }
+    }
+  }
+
+  implicit val canMulIntoMS_I: BinaryUpdateOp[DenseMatrix[Int], Int, OpMulScalar] = {
+    new BinaryUpdateOp[DenseMatrix[Int], Int, OpMulScalar] {
+      def apply(a: DenseMatrix[Int], b: Int) {
+        if (b == 1) return
+
+        val ad = a.data
+        var c = 0
+        while(c < a.cols) {
+          var r = 0
+          while(r < a.rows) {
+            ad(a.linearIndex(r, c)) *= b
+            r += 1
+          }
+          c += 1
+        }
+      }
+    }
+  }
+
+  implicit val canDivIntoMM_I: BinaryUpdateOp[DenseMatrix[Int], DenseMatrix[Int], OpDiv] = {
+    new BinaryUpdateOp[DenseMatrix[Int], DenseMatrix[Int], OpDiv] {
+      def apply(a: DenseMatrix[Int], b: DenseMatrix[Int]) = {
+        require(a.rows == b.rows, "Matrices must have same number of rows!")
+        require(a.cols == b.cols, "Matrices must have same number of cols!")
+        val ad = a.data
+        val bd = b.data
+        var c = 0
+        while(c < a.cols) {
+          var r = 0
+          while(r < a.rows) {
+            // TODO: this is likely to wreck havoc on the branch predictor? Do we care?
+            // we can hand unroll the loops if we want.
+            ad(a.linearIndex(r, c)) /= bd(b.linearIndex(r, c))
+            r += 1
+          }
+          c += 1
+        }
+      }
+    }
+  }
+
+  implicit val canDivIntoMS_I: BinaryUpdateOp[DenseMatrix[Int], Int, OpDiv] = {
+    new BinaryUpdateOp[DenseMatrix[Int], Int, OpDiv] {
+      def apply(a: DenseMatrix[Int], b: Int) {
+        if (b == 1) return
+
+        val ad = a.data
+        var c = 0
+        while(c < a.cols) {
+          var r = 0
+          while(r < a.rows) {
+            ad(a.linearIndex(r, c)) /= b
+            r += 1
+          }
+          c += 1
+        }
+      }
+    }
+  }
 }
 
 /**

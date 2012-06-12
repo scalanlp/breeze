@@ -8,6 +8,20 @@ import java.util.Arrays
  */
 
 object ArrayUtil {
+  def fill[V](a: Array[V], offset: Int, length: Int, v: V) {
+    a match {
+      case x: Array[Int] => Arrays.fill(x, offset, offset + length, v.asInstanceOf[Int])
+      case x: Array[Long] => Arrays.fill(x, offset, offset + length, v.asInstanceOf[Long])
+      case x: Array[Short] => Arrays.fill(x, offset, offset + length, v.asInstanceOf[Short])
+      case x: Array[Double] => Arrays.fill(x, offset, offset + length, v.asInstanceOf[Double])
+      case x: Array[Float] => Arrays.fill(x, offset, offset + length, v.asInstanceOf[Float])
+      case x: Array[Char] => Arrays.fill(x, offset, offset + length, v.asInstanceOf[Char])
+      case x: Array[Byte] => Arrays.fill(x, offset, offset + length, v.asInstanceOf[Byte])
+      case x: Array[_] => Arrays.fill(x.asInstanceOf[Array[AnyRef]], offset, offset + length, v.asInstanceOf[AnyRef])
+      case _ => throw new RuntimeException("shouldn't be here!")
+    }
+  }
+
   def copyOf[V](a: Array[V], length: Int): Array[V] = {
     a match {
       case x: Array[Int] => Arrays.copyOf(x, length).asInstanceOf[Array[V]]
