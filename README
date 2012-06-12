@@ -4,7 +4,6 @@ It's primary focus is on being generic, clean, and powerful without sacrificing 
 The library currently consists of several parts: 
 
 * breeze-math: Linear algebra and numerics routines
-* breeze-stats: Probability distributions and basic statistics
 * breeze-process: Libraries for managing datasets and job pipelines.
 * breeze-learn: Machine Learning and Optimization.
 
