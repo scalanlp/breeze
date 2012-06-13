@@ -89,7 +89,7 @@ package object util extends DoubleImplicits with IteratorImplicits {
    * closeTo for Doubles.
    */
   def closeTo(a: Double, b: Double, relDiff: Double=1E-4) = {
-    a == b || (scala.math.abs(a-b)/math.max(a,b) < relDiff)
+    a == b || (scala.math.abs(a-b)/scala.math.max(a,b) < relDiff)
   }
 
   // this should be a separate trait but Scala is freaking out
