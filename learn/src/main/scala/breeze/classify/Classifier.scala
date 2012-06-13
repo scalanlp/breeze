@@ -18,8 +18,7 @@ package breeze.classify;
 
 
 import breeze.data._
-import scalala.tensor.mutable.Counter
-import scalala.tensor.Tensor1
+import breeze.linalg._
 
 /**
  * Represents a classifier from observations of type T to labels of type L.

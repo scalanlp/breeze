@@ -1,9 +1,8 @@
 package breeze.data
 
-import scalala.tensor.sparse.SparseVector
+import breeze.linalg.SparseVector
 import io.Source
 import collection.mutable.ArrayBuffer
-import scalala.collection.sparse.SparseArray
 import breeze.serialization.TextSerialization.Readable
 import breeze.serialization.{SerializationFormat, TextSerialization}
 import breeze.io.TextReader
@@ -49,7 +48,7 @@ object SparseFeatureDataset {
     val data = {for(line <- s.getLines()) yield dataReadable.read(TextReader.fromString(line))}.toIndexedSeq
 
     val processed = for( ((output,indices,values),id) <- data.zipWithIndex) yield {
-      val sparseVector = SparseVector.create(maxIndex+1)((indices zip values):_*)
+      val sparseVector = new SparseVector(indices.toArray,values.toArray,indices.length,maxIndex)
       Example(output, sparseVector, name + "-" + id)
     }
 

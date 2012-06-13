@@ -21,9 +21,9 @@ import scala.collection.generic.{GenericCompanion, MapFactory}
 import scala.collection.mutable.{ArrayBuilder,Builder};
 
 import breeze.util.Index
-import scalala.tensor.{Counter2, Counter}
-import scalala.scalar.Scalar
-import java.io.{IOException, ObjectStreamException}
+import breeze.storage.DefaultArrayValue
+import breeze.linalg.{Counter2, Counter}
+import breeze.math.Field
 
 /**
  * Reads type V from input Input.
@@ -176,7 +176,7 @@ object SerializationFormat {
     (c: MapFactory[CC], name : String):ReadWritable[CC[K,V]]
     = new ReadWritable[CC[K,V]] {
       def read(source : Input) =
-        readBuildable[(K,V),CC[K,V]](source, c.newBuilder[K,V]);
+        readBuildable[(K,V),CC[K,V]](source, c.newBuilder[K,V])(tuple2ReadWritable(implicitly[ReadWritable[K]], implicitly[ReadWritable[V]]))
 
       def write(sink : Output, coll : CC[K,V]) =
         writeIterable[(K,V),CC[K,V]](sink, coll, name);
@@ -324,31 +324,31 @@ object SerializationFormat {
         writeIterable[T,Iterable[T]](sink, value, "Index");
     }
 
-    implicit def counterReadWritable[T:ReadWritable, V:ReadWritable:Scalar]: ReadWritable[Counter[T,V]] = new ReadWritable[Counter[T,V]] {
+    implicit def counterReadWritable[T:ReadWritable, V:ReadWritable:DefaultArrayValue:Field]: ReadWritable[Counter[T,V]] = new ReadWritable[Counter[T,V]] {
       def write(sink: Output, ctr: Counter[T,V]) = {
         writeIterable[(T,V),Iterable[(T,V)]](sink, new Iterable[(T,V)] {
-          def iterator = ctr.pairsIterator
-        },"Counter")
+          def iterator = ctr.iterator
+        },"Counter")(tuple2ReadWritable(implicitly[ReadWritable[T]], implicitly[ReadWritable[V]]))
       }
 
       def read(source: Input): Counter[T, V] = {
-        val map = readBuildable(source,Iterable.newBuilder[(T,V)])
+        val map = readBuildable(source,Iterable.newBuilder[(T,V)])(tuple2ReadWritable(implicitly[ReadWritable[T]], implicitly[ReadWritable[V]]))
         val ctr = Counter(map)
         ctr
       }
     }
 
-    implicit def counter2ReadWritable[T:ReadWritable, U:ReadWritable, V:ReadWritable:Scalar]: ReadWritable[Counter2[T,U,V]] = {
+    implicit def counter2ReadWritable[T:ReadWritable, U:ReadWritable, V:ReadWritable:DefaultArrayValue:Field]: ReadWritable[Counter2[T,U,V]] = {
       new ReadWritable[Counter2[T,U,V]] {
         def write(sink: Output, ctr: Counter2[T,U,V]) = {
-          writeIterable[(T,U,V),Iterable[(T,U,V)]](sink, new Iterable[(T,U,V)] {
-            def iterator = ctr.triplesIteratorNonZero
+          writeIterable[((T,U),V),Iterable[((T,U),V)]](sink, new Iterable[((T,U),V)] {
+            def iterator = ctr.iterator
           },"Counter")
         }
 
         def read(source: Input): Counter2[T, U, V] = {
-          val map = readBuildable(source,Iterable.newBuilder[(T,U,V)])
-          val ctr = Counter2(map)
+          val map = readBuildable(source,Iterable.newBuilder[((T,U),V)])(tuple2ReadWritable(tuple2ReadWritable(implicitly[ReadWritable[T]], implicitly[ReadWritable[U]]), implicitly[ReadWritable[V]]))
+          val ctr = Counter2(map.map{case ((a,b),c) => (a,b,c)})
           ctr
         }
       }

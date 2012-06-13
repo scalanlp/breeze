@@ -18,7 +18,6 @@ package text;
 package tokenize;
 
 import breeze.io.TextReader;
-import breeze.collection.LazyIterable;
 
 import breeze.serialization.{SubtypedCompanion,TypedCompanion0};
 
@@ -82,7 +81,7 @@ object SimpleEnglishTokenizer extends SubtypedCompanion[SimpleEnglishTokenizer] 
    */
   class V1 extends SimpleEnglishTokenizer {
     def apply(in : String) : Iterable[String] =
-      LazyIterable[String](apply(TextReader.fromString(in)));
+      apply(TextReader.fromString(in)).toIterable
 
     def apply(in : TextReader) : Iterator[String] = new Iterator[String] {
       var nv : String = null;

@@ -1,6 +1,6 @@
 package breeze.util
 
-import scalala.tensor.dense.DenseVector
+import breeze.linalg.DenseVector
 
 /**
  * An Isomorphism is defined by a reversible transformation between two types. useful
