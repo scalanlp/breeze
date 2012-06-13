@@ -14,3 +14,12 @@ trait CanMapValues[-From, +A, -B, +To] {
   /**Maps all active key-value pairs from the given collection. */
   def mapActive(from: From, fn: (A => B)): To
 }
+
+object CanMapValues {
+  implicit def canMapSelf[V, V2]: CanMapValues[V, V, V2, V2] = {
+    new CanMapValues[V, V, V2, V2] {
+      def map(from: V, fn: (V) => V2) = fn(from)
+      def mapActive(from: V, fn: (V) => V2) = fn(from)
+    }
+  }
+}
