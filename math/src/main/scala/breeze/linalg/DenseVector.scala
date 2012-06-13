@@ -60,7 +60,7 @@ object DenseVector extends VectorConstructors[DenseVector]
         org.netlib.blas.Daxpy.daxpy(
           a.length, 1.0, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
-      setParent(Vector.canAddIntoD)
+      Vector.canAddIntoD.register(this)
     }
 
   }
@@ -72,7 +72,7 @@ object DenseVector extends VectorConstructors[DenseVector]
         org.netlib.blas.Daxpy.daxpy(
           a.length, -1.0, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
-      setParent(Vector.canSubIntoD)
+      Vector.canSubIntoD.register(this)
     }
 
   }
@@ -84,7 +84,7 @@ object DenseVector extends VectorConstructors[DenseVector]
         org.netlib.blas.Ddot.ddot(
           a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
-      Vector.canDotD.registerBinary(this)
+      Vector.canDotD.register(this)
     }
 
   }
@@ -95,7 +95,7 @@ object DenseVector extends VectorConstructors[DenseVector]
         org.netlib.blas.Dscal.dscal(
           a.length, b, a.data, a.offset, a.stride)
       }
-      setParent(Vector.canScaleD)
+      Vector.canScaleD.register(this)
     }
 
   }
