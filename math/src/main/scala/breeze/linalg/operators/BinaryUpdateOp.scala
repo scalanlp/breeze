@@ -1,5 +1,5 @@
 package breeze.linalg.operators
-import breeze.util.Multiproc2
+import breeze.generic.Multiproc2
 
 
 trait BinaryUpdateOp[A, B, Op<:OpType] extends ((A, B) => Unit) {

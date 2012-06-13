@@ -1,15 +1,14 @@
 package breeze
 
+import generic.UFunc
 import scala.math._
 
 /**
  * Provides some functions left out of java.lang.math.
  *
- * Borrowed from scalanlp.
- *
  * @author dlwh, afwlehmann
  */
-package object numerics {
+package object numerics extends UniversalFuncs {
 
 
   /**
@@ -209,7 +208,6 @@ package object numerics {
    */
   def sigmoid(x: Double) = 1/(1+exp(-x))
 
-
   /**
    * Takes the difference of two doubles in log space. Requires a &gt b.
    * Note that this only works if a and b are close in value. For a &gt;&gt; b,
@@ -255,4 +253,30 @@ package object numerics {
    * The indicator function in log space: 0.0 iff b else Double.NegativeInfinity
    */
   def logI(b: Boolean) = if(b) 0.0 else Double.NegativeInfinity
+}
+
+
+trait UniversalFuncs {
+  import scala.{math=>m}
+  val exp = UFunc(m.exp _)
+  val log = UFunc(m.log _)
+
+  val sqrt = UFunc(m.log _)
+
+  val sin = UFunc(m.sin _)
+  val cos = UFunc(m.cos _)
+  val tan = UFunc(m.tan _)
+
+  val asin = UFunc(m.asin _)
+  val acos = UFunc(m.acos _)
+  val atan = UFunc(m.atan _)
+  val toDegrees = UFunc(m.toDegrees _)
+  val toRadians = UFunc(m.toRadians _)
+
+  val floor = UFunc(m.floor _)
+  val ceil = UFunc(m.ceil _)
+  val round = UFunc(m.round _)
+  val rint = UFunc(m.rint _)
+
+
 }

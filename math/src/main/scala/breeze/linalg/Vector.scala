@@ -3,7 +3,7 @@ package breeze.linalg
 import operators._
 import scala.{specialized=>spec}
 import breeze.storage.Storage
-import support.{TensorValues, CanMapValues}
+import breeze.generic.CanMapValues
 import breeze.math.Field
 
 /**

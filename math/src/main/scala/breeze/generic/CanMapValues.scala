@@ -1,4 +1,4 @@
-package breeze.linalg.support
+package breeze.generic
 
 /**
  * Marker for being able to map the keys and values in a value collection

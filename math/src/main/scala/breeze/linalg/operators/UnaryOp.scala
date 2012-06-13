@@ -1,7 +1,7 @@
 package breeze.linalg.operators
 
 import collection.mutable.HashMap
-import breeze.util.{MethodImpl, Multimethod}
+import breeze.generic.{MethodImpl, Multimethod}
 
 /**
  *

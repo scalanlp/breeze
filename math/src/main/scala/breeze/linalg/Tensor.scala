@@ -2,6 +2,7 @@ package breeze.linalg
 
 import scala.{specialized=>spec}
 import support._
+import breeze.generic.CanMapValues
 
 /**
  * A Tensor defines a map from an index set to a set of values

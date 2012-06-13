@@ -1,6 +1,7 @@
 package breeze.linalg.support
 
 import breeze.math.Field
+import breeze.generic.CanMapValues
 
 /**
  *

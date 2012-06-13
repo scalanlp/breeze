@@ -8,6 +8,7 @@ import org.netlib.blas.{Dgemm, BLAS}
 import breeze.util.ArrayUtil
 import breeze.numerics.IntMath
 import support._
+import breeze.generic.CanMapValues
 
 /**
  *

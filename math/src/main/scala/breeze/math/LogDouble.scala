@@ -19,7 +19,7 @@ package math
 
 
 import scala.math._
-import numerics._
+import numerics.{logSum,logDiff}
 
 /**
  * Represents a double in log space, to prevent under/overflow

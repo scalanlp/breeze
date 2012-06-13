@@ -4,7 +4,8 @@ import operators._
 import scala.{specialized=>spec}
 import breeze.storage.DenseStorage
 import breeze.util.ArrayUtil
-import support.{CanSlice, CanMapValues, CanCopy}
+import breeze.generic.CanMapValues
+import support.{CanSlice, CanCopy}
 import breeze.math.Field
 import breeze.numerics.IntMath
 import java.util.Arrays

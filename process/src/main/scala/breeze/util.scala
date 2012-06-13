@@ -75,22 +75,7 @@ package object util extends DoubleImplicits with IteratorImplicits {
    */
   def trace[T](a: T) = {println(a); a}
 
-  /**
-   * The indicator function. 1.0 iff b, else 0.0
-   */
-  def I(b: Boolean) = if (b) 1.0 else 0.0
 
-  /**
-   * The indicator function in log space: 0.0 iff b else Double.NegativeInfinity
-   */
-  def logI(b: Boolean) = if(b) 0.0 else Double.NegativeInfinity
-
-  /**
-   * closeTo for Doubles.
-   */
-  def closeTo(a: Double, b: Double, relDiff: Double=1E-4) = {
-    a == b || (scala.math.abs(a-b)/scala.math.max(a,b) < relDiff)
-  }
 
   // this should be a separate trait but Scala is freaking out
   class SeqExtras[T](s: Seq[T]) {

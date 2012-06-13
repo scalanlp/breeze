@@ -1,6 +1,8 @@
 package breeze.linalg
 package support
 
+import breeze.generic.CanMapValues
+
 /**
  *
  * @author dlwh

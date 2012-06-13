@@ -1,4 +1,4 @@
-package breeze.util
+package breeze.generic
 
 import collection.mutable.HashMap
 
@@ -7,8 +7,9 @@ import collection.mutable.HashMap
  * @author dlwh
  */
 
-trait Multimethod[Method[AA,RR]<:MethodImpl[AA,RR],A<:AnyRef,R] extends MethodImpl[A, R] { this: Method[A, R] =>
-  protected def bindingMissing(a: A):R = throw new UnsupportedOperationException("Types not found!")
+trait Multimethod[Method[AA, RR] <: MethodImpl[AA, RR], A <: AnyRef, R] extends MethodImpl[A, R] {
+  this: Method[A, R] =>
+  protected def bindingMissing(a: A): R = throw new UnsupportedOperationException("Types not found!")
 
   def apply(a: A): R = {
     ops.get(a.getClass) match {
@@ -18,16 +19,17 @@ trait Multimethod[Method[AA,RR]<:MethodImpl[AA,RR],A<:AnyRef,R] extends MethodIm
   }
 
 
-  def register(a: Class[_<:A], op: Method[_ <: A,_ <: R]) {
-    ops(a) =  op
+  def register(a: Class[_ <: A], op: Method[_ <: A, _ <: R]) {
+    ops(a) = op
   }
 
-  def register[AA<:A](op: Method[AA, _ <: R])(implicit manA: Manifest[AA]) {
+  def register[AA <: A](op: Method[AA, _ <: R])(implicit manA: Manifest[AA]) {
     register(manA.erasure.asInstanceOf[Class[AA]], op)
   }
 
   private val ops = HashMap[Class[_], Method[_ <: A, _ <: R]]()
 }
+
 
 // Doesn't extend Function1 because of implicit silliness.
 trait MethodImpl[A,+R] {

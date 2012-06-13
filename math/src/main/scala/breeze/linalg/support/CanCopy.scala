@@ -3,6 +3,7 @@ package breeze.linalg.support
 import breeze.math.Field
 import actors.threadpool.Arrays
 import breeze.util.ArrayUtil
+import breeze.generic.CanMapValues
 
 /**
  *

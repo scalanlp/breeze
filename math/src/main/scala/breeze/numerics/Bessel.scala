@@ -16,8 +16,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import scala.math.{exp, sqrt}
-
 
 /**
  * Implementations of the Bessel functions, based on Numerical Recipes
