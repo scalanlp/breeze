@@ -143,4 +143,12 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(-a1 == DenseVector(-1.0, -2.0, -3.0))
 
   }
+
+  test("DV ops work as Vector") {
+    val a = DenseVector(1.0, 2.0, 3.0)
+    val b = DenseVector(3.0, 4.0, 5.0)
+    (a:Vector[Double]) += (b: Vector[Double])
+    assert(a === DenseVector(4.,6.,8.))
+    assert((a: Vector[Double]).dot (b: Vector[Double]) === (a dot b))
+  }
 }
