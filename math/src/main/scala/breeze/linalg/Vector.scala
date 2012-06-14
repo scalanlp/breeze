@@ -67,7 +67,7 @@ trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]] with 
 }
 
 object Vector {
-  val canScaleD: BinaryUpdateRegistry[Vector[Double], Double, OpMulScalar] = {
+  implicit val canScaleD: BinaryUpdateRegistry[Vector[Double], Double, OpMulScalar] = {
     new BinaryUpdateRegistry[Vector[Double], Double, OpMulScalar] {
       def doOp(a: Vector[Double], b: Double) = {
         throw new Exception("Not yet...")
