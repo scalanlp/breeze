@@ -108,7 +108,7 @@ object DenseVector extends VectorConstructors[DenseVector]
     }
   }
 
-  implicit def canCopyDenseVector[@specialized V:ClassManifest] = new CanCopy[DenseVector[V]] {
+  implicit def canCopyDenseVector[V:ClassManifest] = new CanCopy[DenseVector[V]] {
     def apply(v1: DenseVector[V]) = {
       new DenseVector(Array.tabulate(v1.length)(i => v1(i)))
     }

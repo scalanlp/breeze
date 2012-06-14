@@ -26,12 +26,11 @@ trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]] with 
   def length: Int
   override def size = length
 
-  @inline final def apply(i: Int) = {
+  final def apply(i: Int) = {
     if(i < 0 || i > size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
     rawApply(offset + i * stride)
   }
 
-  @inline
   final def update(i: Int, v: E) {
     if(i < 0 || i > size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
     rawUpdate(offset + i * stride, v)
@@ -108,7 +107,7 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
   def zeros[V:ClassManifest](size: Int):Vec[V]
   def apply[@spec(Double, Int, Float) V](values: Array[V]):Vec[V]
 
-  def apply[@spec(Double, Int, Float) V:ClassManifest](values: V*):Vec[V] = apply(values.toArray)
+  def apply[V:ClassManifest](values: V*):Vec[V] = apply(values.toArray)
   def fill[@spec(Double, Int, Float) V:ClassManifest](size: Int)(v: =>V):Vec[V] = apply(Array.fill(size)(v))
   def tabulate[@spec(Double, Int, Float) V:ClassManifest](size: Int)(f: Int=>V):Vec[V]= apply(Array.tabulate(size)(f))
 
