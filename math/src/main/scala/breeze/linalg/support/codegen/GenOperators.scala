@@ -67,38 +67,73 @@ object GenOperators {
     """.format(op("ad(aoff)","bd(boff)")).replaceAll("    ","        ")
   }
 
+  def binaryUpdateDM_scalar_loop(op: (String, String)=>String):String = {
+    """
+    val ad = a.data
+    var c = 0
+    while(c < a.cols) {
+       var r = 0
+       while(r < a.rows) {
+         ad(a.linearIndex(r, c)) = %s
+         r += 1
+       }
+       c += 1
+    }
+    """.format(op("ad(a.linearIndex(r,c))","b"))
+  }
+
+  def binaryUpdateDM_DM_loop(op: (String, String)=>String):String = {
+    """
+      |        require(a.rows == b.rows, "Matrices must have same number of rows!")
+      |        require(a.cols == b.cols, "Matrices must have same number of cols!")
+      |        val ad = a.data
+      |        val bd = b.data
+      |        var c = 0
+      |        while(c < a.cols) {
+      |          var r = 0
+      |          while(r < a.rows) {
+      |            ad(a.linearIndex(r, c)) = %s
+      |            r += 1
+      |          }
+      |          c += 1
+      |        }
+    """.stripMargin.format(op("ad(a.linearIndex(r,c))","bd(b.linearIndex(r,c))"))
+  }
 
   val ops = Map(
     "Double" -> Map[OpType,(String,String)=>String](OpAdd -> {_ + " + " + _},
       OpSub -> {_ + " - " + _},
-      OpMulScalar -> {_ + " % " + _},
+      OpMulScalar -> {_ + " * " + _},
       OpDiv -> {_ + " / " + _},
       OpMod -> {_ + " % " + _},
+      OpSet -> {(a,b) => b},
       OpPow -> {"scala.math.pow("+ _ + ", " + _ + ")"}
     ),
 
     "Float" -> Map[OpType,(String,String)=>String](OpAdd -> {_ + " + " + _},
       OpSub -> {_ + " - " + _},
-      OpMulScalar -> {_ + " % " + _},
+      OpMulScalar -> {_ + " * " + _},
       OpDiv -> {_ + " / " + _},
       OpMod -> {_ + " % " + _},
+      OpSet -> {(a,b) => b},
       OpPow -> {"scala.math.pow("+ _ + ", " + _ + ").toFloat"}
     ),
 
     "Int" -> Map[OpType,(String,String)=>String](OpAdd -> {_ + " + " + _},
         OpSub -> {_ + " - " + _},
-        OpMulScalar -> {_ + " % " + _},
+        OpMulScalar -> {_ + " * " + _},
         OpDiv -> {_ + " / " + _},
         OpMod -> {_ + " % " + _},
+        OpSet -> {(a,b) => b},
         OpPow -> {"IntMath.ipow("+ _ + ", " + _ + ")"}
       )
 
   )
 }
 
-object GenDVOps extends App {
+object GenDenseOps extends App {
 
-  def gen(pckg: String, f: File) {
+  def gen(tpe: String, pckg: String, f: File)(loop: ((String,String)=>String)=>String, loopS: ((String,String)=>String)=>String) {
     val out = new FileOutputStream(f)
     val print = new PrintStream(out)
     import print.println
@@ -110,9 +145,9 @@ object GenDVOps extends App {
 
     import GenOperators._
     for( (scalar,ops) <- GenOperators.ops) {
-      val vector = "DenseVector[%s]" format scalar
-      println("/** This is an auto-generated trait providing operators for DenseVectors. */")
-      println("trait DenseVectorOps_"+scalar +" { this: DenseVector.type =>")
+      val vector = "%s[%s]".format(tpe,scalar)
+      println("/** This is an auto-generated trait providing operators for " + tpe + ". */")
+      println("trait "+tpe+"Ops_"+scalar +" { this: "+tpe+".type =>")
 
       println(
         """
@@ -128,13 +163,16 @@ object GenDVOps extends App {
         """.format(scalar,vector, vector, vector, vector, vector, vector, vector))
 
       for( (op,fn) <- ops) {
-        val names = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_DV_S_"+scalar
-        println(genBinaryUpdateOperator(names, vector, scalar, op)(binaryUpdateDV_scalar_loop(fn)))
-        println()
         val name = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_DV_DV_"+scalar
-        println(genBinaryUpdateOperator(name, vector, vector, op)(binaryUpdateDV_DV_loop(fn)))
+        println(genBinaryUpdateOperator(name, vector, vector, op)(loop(fn)))
         println()
         println("  " +genBinaryAdaptor(name.replace("Into",""), vector, vector, op, vector, "pureFromUpdate_"+scalar+ "(" + name+ ")"))
+        println()
+        val names = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_DV_S_"+scalar
+        println(genBinaryUpdateOperator(names, vector, scalar, op)(loopS(fn)))
+        println()
+        println("  " +genBinaryAdaptor(names.replace("Into",""), vector, scalar, op, vector, "pureFromUpdate_"+scalar+ "(" + names+ ")"))
+        println()
 
 
       }
@@ -146,5 +184,7 @@ object GenDVOps extends App {
 
 
   val out = new File("math/src/main/scala/breeze/linalg/DenseVectorOps.scala")
-  gen("breeze.linalg", out)
+  gen("DenseVector","breeze.linalg", out)(GenOperators.binaryUpdateDV_DV_loop _, GenOperators.binaryUpdateDV_scalar_loop _)
+  val outM = new File("math/src/main/scala/breeze/linalg/DenseMatrixOps.scala")
+  gen("DenseMatrix","breeze.linalg", outM)(GenOperators.binaryUpdateDM_DM_loop _, GenOperators.binaryUpdateDM_scalar_loop _)
 }
