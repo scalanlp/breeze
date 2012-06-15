@@ -22,7 +22,7 @@ trait HashStorage[@specialized(Int, Double) V]  extends Storage[V] {
 
   protected def occupied:BitSet
   protected def occupied_=(oc:BitSet)
-  protected def load: Int = 0
+  protected def load: Int
   protected def load_=(load: Int)
 
   def valueAt(i: Int) = data(i)
@@ -39,13 +39,13 @@ trait HashStorage[@specialized(Int, Double) V]  extends Storage[V] {
 
   def allVisitableIndicesActive = false
 
-  def apply(i: Int) = data(locate(i))
+  protected def rawApply(i: Int) = data(locate(i))
 
-  def update(i: Int, v: V) {
+  protected def rawUpdate(i: Int, v: V) {
     val pos = locate(i)
     if(!occupied.contains(pos) && load * 4 >= index.size * 3) {
       rehash()
-      update(i,v)
+      rawUpdate(i,v)
     } else {
       index(pos) = i
       data(pos) = v
@@ -83,7 +83,7 @@ trait HashStorage[@specialized(Int, Double) V]  extends Storage[V] {
     default.fillArray(data, default.value)
     load = 0
     for(o <- oldOccupied) {
-      update(oldIndex(o),oldValues(o))
+      rawUpdate(oldIndex(o),oldValues(o))
     }
   }
 

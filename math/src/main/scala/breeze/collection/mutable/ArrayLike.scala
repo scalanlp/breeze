@@ -1,17 +1,18 @@
 package breeze.collection.mutable
 
 /**
- * 
+ *
  * @author dlwh
  */
-trait ArrayLike[T]  {
-  def apply(i: Int):T;
+trait ArrayLike[T] {
+  def apply(i: Int): T;
 
   /**
    * Only iterates "active" elements
    */
-  def iterator:Iterator[T];
-  def update(i: Int, t: T):Unit
+  def iterator: Iterator[T];
+
+  def update(i: Int, t: T): Unit
 
   /**
    * Only iterates "active" keys
@@ -19,6 +20,8 @@ trait ArrayLike[T]  {
   def keysIterator: Iterator[Int];
 
   def activeSize: Int;
+
   def size: Int
-  def foreach[U](f: (T)=>U) = iterator foreach f;
+
+  def foreach[U](f: (T) => U) = iterator foreach f;
 }
