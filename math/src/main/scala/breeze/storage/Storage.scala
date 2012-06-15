@@ -33,18 +33,24 @@ trait Storage[@specialized(Int,Double,Float) Elem] {
   def activeSize: Int
 
   /**
+   * How many elements must be iterated over using valueAt/indexAt.
+   * @return
+   */
+  def iterableSize: Int = activeSize
+
+  /**
    * same as data(i). Gives the value at the underlying offset.
    * @param i index into the data array
    * @return
    */
-  protected def valueAt(i: Int): Elem
+  def valueAt(i: Int): Elem
 
   /**
    * Gives the logical index from the physical index.
    * @param i
    * @return
    */
-  protected def indexAt(i: Int): Int
+  def indexAt(i: Int): Int
 
   /**
    * Some arrays

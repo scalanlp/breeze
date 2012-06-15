@@ -12,9 +12,9 @@ trait DenseStorage[@specialized(Int, Double) Elem] extends Storage[Elem] {
 
   final def activeSize = data.length
 
-  protected final def valueAt(i: Int) = data(i)
+  final def valueAt(i: Int) = data(i)
 
-  protected final def indexAt(i: Int) = i
+  final def indexAt(i: Int) = i
 
   protected final def rawUpdate(i: Int, v: Elem) {
     data(i) = v

@@ -40,4 +40,25 @@ class SparseArray[Elem](var index: Array[Int],
    */
   def keysIterator = index.iterator.take(used)
 
+
+  def get(i: Int) : Option[Elem] = {
+    val offset = findOffset(i)
+    if (offset >= 0) Some(data(offset)) else None
+  }
+
+  def getOrElse(i : Int, value : =>Elem) : Elem = {
+    val offset = findOffset(i)
+    if (offset >= 0) data(offset) else value
+  }
+
+  def getOrElseUpdate(i : Int, value : =>Elem) : Elem = {
+    val offset = findOffset(i)
+    if (offset >= 0) data(offset)
+    else {
+      val v = value
+      update(i,v)
+      v
+    }
+  }
+
 }

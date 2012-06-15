@@ -87,5 +87,10 @@ trait HashStorage[@specialized(Int, Double) V]  extends Storage[V] {
     }
   }
 
+  /**
+   * How many elements must be iterated over using valueAt/indexAt.
+   * @return
+   */
+  override def iterableSize = index.length
 }
 

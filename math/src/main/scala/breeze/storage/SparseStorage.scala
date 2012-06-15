@@ -26,16 +26,16 @@ trait SparseStorage[@specialized(Int, Double) Elem] extends Storage[Elem] {
 
   def activeSize = data.length
 
-  final protected def valueAt(i: Int) = data(i)
+  final def valueAt(i: Int) = data(i)
 
-  final protected def indexAt(i: Int) = index(i)
+  final def indexAt(i: Int) = index(i)
 
   /**
    * Returns the offset into index and data for the requested vector
    * index.  If the requested index is not found, the  value is
    * negative and can be converted into an insertion point with ~rv.
    */
-  private def findOffset(i : Int) : Int = {
+  protected final def findOffset(i : Int) : Int = {
     if (i < 0 || i >= size)
       throw new IndexOutOfBoundsException("Index "+i+" out of bounds [0,"+used+")")
 
