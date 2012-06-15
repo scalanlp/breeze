@@ -35,5 +35,6 @@ class OpenAddressHashArray[Elem](var index: Array[Int],
   /**
    * Only iterates "active" elements
    */
-  def iterator = super.activeValuesIterator
+  def valuesIterator = super.activeValuesIterator
+
 }

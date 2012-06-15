@@ -21,7 +21,7 @@ final class SDArray[@specialized T: ClassManifest](_length: Int, default: => T) 
 
   def length = arr.length
 
-  def iterator = active.iterator.map {
+  def valuesIterator = active.iterator.map {
     arr
   }
 
@@ -32,4 +32,5 @@ final class SDArray[@specialized T: ClassManifest](_length: Int, default: => T) 
   def innerArray = arr
 
   override def size = arr.length
+
 }

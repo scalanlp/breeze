@@ -1,6 +1,8 @@
 package breeze.collection.mutable
 
-import breeze.storage.SparseStorage
+import breeze.storage.{DefaultArrayValue, ConfigurableDefault, SparseStorage}
+import collection.mutable.BitSet
+
 
 /**
  *
@@ -13,6 +15,15 @@ class SparseArray[Elem](var index: Array[Int],
                         val size: Int,
                         val default: Elem) extends SparseStorage[Elem] with ArrayLike[Elem] {
 
+
+  def this(size: Int, default: Elem)(implicit manElem: Manifest[Elem], defaultArrayValue: DefaultArrayValue[Elem]) = {
+    this(Array.empty,Array.empty,0, size, default)
+  }
+
+  def this(size: Int)(implicit manElem: Manifest[Elem], defaultArrayValue: DefaultArrayValue[Elem]) = {
+    this(size, ConfigurableDefault.default[Elem].value(defaultArrayValue))
+  }
+
   def apply(x: Int):Elem = rawApply(x)
 
   def update(i: Int, value: Elem) {
@@ -22,7 +33,7 @@ class SparseArray[Elem](var index: Array[Int],
   /**
    * Only iterates "active" elements
    */
-  def iterator = data.iterator.take(used)
+  def valuesIterator = data.iterator.take(used)
 
   /**
    * Only iterates "active" keys
