@@ -1,12 +1,14 @@
 package breeze.storage
 
+import java.util.Arrays
+import breeze.util.ArrayUtil
+
 /**
  *
  * @author dlwh
  */
 
 trait SparseStorage[@specialized(Int, Double) Elem] extends Storage[Elem] {
-  protected implicit def manElem: ClassManifest[Elem]
   def index: Array[Int]
   protected def index_=(arr: Array[Int])
 
@@ -109,12 +111,10 @@ trait SparseStorage[@specialized(Int, Double) Elem] extends Storage[Elem] {
         }
 
         // allocate new arrays
-        val newIndex = new Array[Int](newLength)
-        val newData  = new Array[Elem](newLength)
+        val newIndex = Arrays.copyOf(index, newLength)
+        val newData  = ArrayUtil.copyOf(data, newLength)
 
         // copy existing data into new arrays
-        System.arraycopy(index, 0, newIndex, 0, insertPos)
-        System.arraycopy(data, 0, newData, 0, insertPos)
         System.arraycopy(index, insertPos, newIndex, insertPos + 1, used - insertPos - 1)
         System.arraycopy(data,  insertPos, newData,  insertPos + 1, used - insertPos - 1)
 

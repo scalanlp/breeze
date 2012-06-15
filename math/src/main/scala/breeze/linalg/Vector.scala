@@ -21,20 +21,9 @@ trait VectorLike[@spec E, +Self <: Vector[E]] extends Tensor[Int, E] with Tensor
 // Storage should be a self type, but specialization is broken for now.
 trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]] with Storage[E] { //storage: Storage[E] =>
 
-  def offset: Int
-  def stride: Int
   def length: Int
   override def size = length
 
-  final def apply(i: Int) = {
-    if(i < 0 || i > size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
-    rawApply(offset + i * stride)
-  }
-
-  final def update(i: Int, v: E) {
-    if(i < 0 || i > size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
-    rawUpdate(offset + i * stride, v)
-  }
 
   def iterator = Iterator.range(0, size).map{i => i -> apply(i)}
 
