@@ -16,11 +16,11 @@ class SparseArray[Elem](var index: Array[Int],
                         val default: Elem) extends SparseStorage[Elem] with ArrayLike[Elem] {
 
 
-  def this(size: Int, default: Elem)(implicit manElem: Manifest[Elem], defaultArrayValue: DefaultArrayValue[Elem]) = {
+  def this(size: Int, default: Elem)(implicit manElem: ClassManifest[Elem]) = {
     this(Array.empty,Array.empty,0, size, default)
   }
 
-  def this(size: Int)(implicit manElem: Manifest[Elem], defaultArrayValue: DefaultArrayValue[Elem]) = {
+  def this(size: Int)(implicit manElem: ClassManifest[Elem], defaultArrayValue: DefaultArrayValue[Elem]) = {
     this(size, ConfigurableDefault.default[Elem].value(defaultArrayValue))
   }
 
