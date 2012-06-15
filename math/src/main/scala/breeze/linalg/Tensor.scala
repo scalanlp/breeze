@@ -11,6 +11,7 @@ import breeze.generic.CanMapValues
  */
 trait TensorLike[@spec(Int) K, @specialized V, +This<:Tensor[K, V]] extends NumericOps[This] {
   def apply(i: K):V
+  def update(i: K, v: V)
 
   def size: Int
   def activeSize: Int

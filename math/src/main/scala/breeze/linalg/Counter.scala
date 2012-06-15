@@ -87,8 +87,7 @@ object Counter {
 
   def count[K](items: K*): Counter[K,Int] = count(items)
 
-  implicit def CanMapValuesCounter
-  [@specialized(Int) K, @specialized(Int,Double) V, @specialized(Int,Double) RV:Field:DefaultArrayValue]: CanMapValues[Counter[K, V], V, RV, Counter[K, RV]]
+  implicit def CanMapValuesCounter[K, V, RV:Field:DefaultArrayValue]: CanMapValues[Counter[K, V], V, RV, Counter[K, RV]]
   = new CanMapValues[Counter[K,V],V,RV,Counter[K,RV]] {
     override def map(from : Counter[K,V], fn : (V=>RV)) = {
       val rv = Counter[K,RV]()
