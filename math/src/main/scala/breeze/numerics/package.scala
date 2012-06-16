@@ -121,8 +121,8 @@ package object numerics extends UniversalFuncs {
   def logSum(a: Double, b: Double) = {
     if (a.isNegInfinity) b
     else if (b.isNegInfinity) a
-    else if (a < b) b + log1p(exp(a - b))
-    else a + log1p(exp(b - a))
+    else if (a < b) b + scala.math.log1p(exp(a - b))
+    else a + scala.math.log1p(exp(b - a))
   }
 
   /**
@@ -149,7 +149,7 @@ package object numerics extends UniversalFuncs {
         (acc, x) => if (x.isNegInfinity) acc else acc + exp(x-max)
       }
       if (aux != 0)
-        max + log(aux)
+        max + scala.math.log(aux)
       else
         max
     }
