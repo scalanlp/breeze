@@ -5,9 +5,9 @@ import scala.{specialized=>spec}
 import breeze.storage.DenseStorage
 import breeze.generic.CanMapValues
 import support.{CanSlice, CanCopy}
-import breeze.math.Field
 import breeze.numerics.IntMath
 import java.util.Arrays
+import breeze.math.{Ring, Field}
 
 /**
  *
@@ -168,10 +168,10 @@ object DenseVector extends VectorConstructors[DenseVector]
     }
   }
 
-  implicit def negFromScale[@specialized V, Double](implicit scale: BinaryOp[DenseVector[V], V, OpMulScalar, DenseVector[V]], field: Field[V]) = {
+  implicit def negFromScale[@specialized V, Double](implicit scale: BinaryOp[DenseVector[V], V, OpMulScalar, DenseVector[V]], field: Ring[V]) = {
     new UnaryOp[DenseVector[V], OpNeg, DenseVector[V]] {
       override def apply(a : DenseVector[V]) = {
-        scale(a, field.-(field.zero, field.one))
+        scale(a, field.negate(field.one))
       }
     }
   }

@@ -4,7 +4,7 @@ import operators._
 import scala.{specialized=>spec}
 import breeze.storage.Storage
 import breeze.generic.CanMapValues
-import breeze.math.Field
+import breeze.math.{Ring, Field}
 
 /**
  *
@@ -33,7 +33,7 @@ trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]] with 
 
 
   /** Returns the k-norm of this Vector. */
-  def norm(n : Double)(implicit field: Field[E]) : Double = {
+  def norm(n : Double)(implicit field: Ring[E]) : Double = {
     if (n == 1) {
       var sum = 0.0
       activeValuesIterator foreach (v => sum += field.norm(v))
