@@ -36,6 +36,19 @@ object GenOperators {
 """.replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getName.replaceAll("[$]","")).replaceAll("LOOP",loop)
   }
 
+
+  def genBinaryOperator(name: String, typeA: String, typeB: String, op: OpType, result: String)(loop: String) = {
+    """
+  implicit val Name: BinaryOp[TypeA, TypeB, TypeOp, Result] = {
+    new BinaryOp[TypeA, TypeB, TypeOp, Result] {
+      def apply(a: TypeA, b: TypeB) = {
+        LOOP
+      }
+    }
+  }
+""".replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("Result",result).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getName.replaceAll("[$]","")).replaceAll("LOOP",loop)
+  }
+
   def binaryUpdateDV_scalar_loop(op: (String,String)=>String):String = {
     """val ad = a.data
 
@@ -65,6 +78,15 @@ object GenOperators {
       i += 1
     }
     """.format(op("ad(aoff)","bd(boff)")).replaceAll("    ","        ")
+  }
+
+  def binaryUpdateDV_V_loop(op: (String,String)=>String, zeroIsIdempotent: Boolean):String = {
+    """require(b.length == a.length, "Vectors must be the same length!")
+
+    for( (i,v) <- b.%s) {
+      a(i) = %s
+    }
+    """.format(if(zeroIsIdempotent) "activeIterator" else "iterator", op("a(i)","v")).replaceAll("    ","        ")
   }
 
   def binaryUpdateDM_scalar_loop(op: (String, String)=>String):String = {
@@ -100,6 +122,24 @@ object GenOperators {
     """.stripMargin.format(op("ad(a.linearIndex(r,c))","bd(b.linearIndex(r,c))"))
   }
 
+
+  def binaryUpdateDM_M_loop(op: (String, String)=>String, ignored: Boolean):String = {
+    """
+      |        require(a.rows == b.rows, "Matrices must have same number of rows!")
+      |        require(a.cols == b.cols, "Matrices must have same number of cols!")
+      |        val ad = a.data
+      |        var c = 0
+      |        while(c < a.cols) {
+      |          var r = 0
+      |          while(r < a.rows) {
+      |            ad(a.linearIndex(r, c)) = %s
+      |            r += 1
+      |          }
+      |          c += 1
+      |        }
+    """.stripMargin.format(op("ad(a.linearIndex(r,c))","b(r,c)"))
+  }
+
   val ops = Map(
     "Double" -> Map[OpType,(String,String)=>String](OpAdd -> {_ + " + " + _},
       OpSub -> {_ + " - " + _},
@@ -133,7 +173,9 @@ object GenOperators {
 
 object GenDenseOps extends App {
 
-  def gen(tpe: String, pckg: String, f: File)(loop: ((String,String)=>String)=>String, loopS: ((String,String)=>String)=>String) {
+  def genHomogeneous(tpe: String, generic: String, pckg: String, f: File)(loop: ((String,String)=>String)=>String,
+                                                                         loopS: ((String,String)=>String)=>String,
+                                                                         loopG: (((String,String)=>String),Boolean)=>String) {
     val out = new FileOutputStream(f)
     val print = new PrintStream(out)
     import print.println
@@ -146,6 +188,7 @@ object GenDenseOps extends App {
     import GenOperators._
     for( (scalar,ops) <- GenOperators.ops) {
       val vector = "%s[%s]".format(tpe,scalar)
+      val gvector = "%s[%s]".format(generic,scalar)
       println("/** This is an auto-generated trait providing operators for " + tpe + ". */")
       println("trait "+tpe+"Ops_"+scalar +" { this: "+tpe+".type =>")
 
@@ -174,6 +217,12 @@ object GenDenseOps extends App {
         println("  " +genBinaryAdaptor(names.replace("Into",""), vector, scalar, op, vector, "pureFromUpdate_"+scalar+ "(" + names+ ")"))
         println()
 
+        val namegen = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_DV_V_"+scalar
+        println(genBinaryUpdateOperator(namegen, vector, gvector, op)(loopG(fn, op == OpAdd || op == OpSub)))
+        println()
+        println("  " +genBinaryAdaptor(namegen.replace("Into",""), vector, gvector, op, vector, "pureFromUpdate_"+scalar+ "(" + namegen+ ")"))
+        println()
+
 
       }
       println("}")
@@ -181,10 +230,106 @@ object GenDenseOps extends App {
     print.close()
   }
 
-
-
   val out = new File("math/src/main/scala/breeze/linalg/DenseVectorOps.scala")
-  gen("DenseVector","breeze.linalg", out)(GenOperators.binaryUpdateDV_DV_loop _, GenOperators.binaryUpdateDV_scalar_loop _)
+  genHomogeneous("DenseVector", "Vector", "breeze.linalg", out)(
+    GenOperators.binaryUpdateDV_DV_loop _,
+    GenOperators.binaryUpdateDV_scalar_loop _,
+    GenOperators.binaryUpdateDV_V_loop _
+  )
   val outM = new File("math/src/main/scala/breeze/linalg/DenseMatrixOps.scala")
-  gen("DenseMatrix","breeze.linalg", outM)(GenOperators.binaryUpdateDM_DM_loop _, GenOperators.binaryUpdateDM_scalar_loop _)
+  genHomogeneous("DenseMatrix", "Matrix", "breeze.linalg", outM)(
+    GenOperators.binaryUpdateDM_DM_loop _,
+    GenOperators.binaryUpdateDM_scalar_loop _,
+    GenOperators.binaryUpdateDM_M_loop _)
+}
+
+object GenDVSVSpecialOps extends App {
+  import GenOperators._
+
+  def fastLoop(op: (String,String)=>String):String = {
+    """require(b.length == a.length, "Vectors must be the same length!")
+
+    val bd = b.data
+    val bi = b.index
+    val bsize = b.iterableSize
+    var i = 0
+    while(i < bsize) {
+      if(b.isActive(i)) a(bi(i)) = %s
+      i += 1
+    }
+    """.format(op("a(bi(i))","bd(i)")).replaceAll("    ","        ")
+  }
+
+
+  def slowLoop(op: (String,String)=>String):String = {
+    """require(b.length == a.length, "Vectors must be the same length!")
+
+    var i = 0
+    while(i < b.length) {
+      a(i) = %s
+      i += 1
+    }
+    """.format(op("a(i)","b(i)")).replaceAll("    ","        ")
+  }
+
+  def gen(sparseType: String, out: PrintStream) {
+    import out._
+
+    println("package breeze.linalg")
+    println("import breeze.linalg.operators._")
+    println("import breeze.linalg.support._")
+    println("import breeze.numerics._")
+
+    for( (scalar,ops) <- GenOperators.ops) {
+      println()
+      val vector = "%s[%s]".format("DenseVector",scalar)
+      val svector = "%s[%s]".format(sparseType,scalar)
+      println("/** This is an auto-generated trait providing operators for DenseVector and " + sparseType + "*/")
+      println("trait DenseVectorOps_"+sparseType+"_"+scalar +" { this: DenseVector.type =>")
+      for( (op,fn) <- ops) {
+        val name = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_DV_" + sparseType + "_" + scalar
+        val loop = if(op == OpSub || op == OpAdd) fastLoop _ else slowLoop _
+
+        println(genBinaryUpdateOperator(name, vector, svector, op)(loop(fn)))
+        println()
+        println("  " +genBinaryAdaptor(name.replace("Into",""), vector, svector, op, vector, "pureFromUpdate_"+scalar+ "(" + name+ ")"))
+        println()
+
+      }
+
+
+
+      // dot product
+      val dotName = "canDotProductDV_SV_" + scalar
+      println(genBinaryOperator(dotName, vector, svector, OpMulInner, scalar){
+        """require(b.length == a.length, "Vectors must be the same length!")
+
+       var result: """ + scalar + """ = 0
+
+        val bd = b.data
+        val bi = b.index
+        val bsize = b.iterableSize
+        var i = 0
+        while(i < b.size) {
+          if(b.isActive(i)) result += a(bi(i)) * bd(i)
+          i += 1
+        }
+        result""".replaceAll("       ","        ")
+      })
+
+      println("}")
+
+
+    }
+  }
+
+  val out = new PrintStream(new FileOutputStream(new File("math/src/main/scala/breeze/linalg/DenseVectorSVOps.scala")))
+  gen("SparseVector", out)
+  out.close()
+
+}
+
+object GenAll extends App {
+  GenDenseOps.main(Array.empty)
+  GenDVSVSpecialOps.main(Array.empty)
 }

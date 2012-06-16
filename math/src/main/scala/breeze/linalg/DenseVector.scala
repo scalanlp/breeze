@@ -59,9 +59,43 @@ final class DenseVector[@spec(Double, Int, Float, Long) E](val data: Array[E],
 object DenseVector extends VectorConstructors[DenseVector]
                       with DenseVectorOps_Int
                       with DenseVectorOps_Float
-                      with DenseVectorOps_Double {
+                      with DenseVectorOps_Double
+                      with DenseVectorOps_SparseVector_Double
+                      with DenseVectorOps_SparseVector_Float
+                      with DenseVectorOps_SparseVector_Int {
   def zeros[@spec(Double, Float, Int) V: ClassManifest](size: Int) = apply(new Array[V](size))
   def apply[@spec(Double, Float, Int) V](values: Array[V]) = new DenseVector(values)
+
+    // concatenation
+  /**
+   * Horizontal concatenation of two or more row vectors into one matrix.
+   * @throws IllegalArgumentException if vectors have different sizes
+  def horzcat[V: ClassManifest](vectors: DenseVector[V]*): DenseMatrix[V] = {
+    val size = vectors.head.size
+    if (!(vectors forall (_.size == size)))
+      throw new IllegalArgumentException("All vectors must have the same size!")
+    val result = DenseMatrix.zeros[V](vectors.size, size)
+    for ((v, col) <- vectors zip (0 until vectors.size))
+      result(::, col) := v
+    result
+  }
+   */
+
+  /**
+   * Vertical concatenation of two or more column vectors into one large vector.
+   */
+  def vertcat[V](vectors: DenseVector[V]*)(implicit canSet: BinaryUpdateOp[DenseVector[V], DenseVector[V], OpSet], vman: ClassManifest[V]): DenseVector[V] = {
+    val size = vectors.foldLeft(0)(_ + _.size)
+    val result = zeros[V](size)
+    var offset = 0
+    for (v <- vectors) {
+      result(offset until (offset + v.size)) := v
+      offset += v.size
+    }
+    result
+  }
+
+  // hyperspecialized operators
 
   implicit val canAddIntoD: BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpAdd] = {
     new BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpAdd] {
@@ -168,34 +202,7 @@ object DenseVector extends VectorConstructors[DenseVector]
   }
 
 
-  // concatenation
-  /**
-   * Horizontal concatenation of two or more row vectors into one matrix.
-   * @throws IllegalArgumentException if vectors have different sizes
-  def horzcat[V: ClassManifest](vectors: DenseVector[V]*): DenseMatrix[V] = {
-    val size = vectors.head.size
-    if (!(vectors forall (_.size == size)))
-      throw new IllegalArgumentException("All vectors must have the same size!")
-    val result = DenseMatrix.zeros[V](vectors.size, size)
-    for ((v, col) <- vectors zip (0 until vectors.size))
-      result(::, col) := v
-    result
-  }
-   */
 
-  /**
-   * Vertical concatenation of two or more column vectors into one large vector.
-   */
-  def vertcat[V](vectors: DenseVector[V]*)(implicit canSet: BinaryUpdateOp[DenseVector[V], DenseVector[V], OpSet], vman: ClassManifest[V]): DenseVector[V] = {
-    val size = vectors.foldLeft(0)(_ + _.size)
-    val result = zeros[V](size)
-    var offset = 0
-    for (v <- vectors) {
-      result(offset until (offset + v.size)) := v
-      offset += v.size
-    }
-    result
-  }
 
   implicit def canTranspose[V]: CanTranspose[DenseVector[V], DenseMatrix[V]] = {
     new CanTranspose[DenseVector[V], DenseMatrix[V]] {
