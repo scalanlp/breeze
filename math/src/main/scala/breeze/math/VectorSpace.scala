@@ -52,6 +52,17 @@ trait MutableNormedSpace[V, S] extends NormedVectorSpace[V, S] with MutableVecto
 trait MutableInnerProductSpace[V, S] extends InnerProductSpace[V, S] with MutableVectorSpace[V, S]
 
 
+/**
+ * A coordinate space is like a [[breeze.math.InnerProductSpace]], but
+ * it supports the full suite of "Tensor-y" operations. The intuition
+ * is that anything that can work on a Tensor/Vector will work here.
+ *
+ * For example V + S doesn't work in a vector space, but it does in
+ * a coordinate space.
+ *
+ * @tparam V
+ * @tparam S
+ */
 trait CoordinateSpace[V, S] extends InnerProductSpace[V, S] {
   implicit def norm: CanNorm[V]
   implicit def mapValues: CanMapValues[V,S,S,V]
