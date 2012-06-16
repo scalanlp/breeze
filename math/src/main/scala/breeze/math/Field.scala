@@ -107,10 +107,5 @@ object Field {
 
     override def close(a: Double, b: Double, tolerance: Double) = (a-b).abs < math.max(a, b) * tolerance
   }
-
-
-  /** The default array value for a scalar is zero. */
-  implicit def defaultArrayValue[V:Field] : DefaultArrayValue[V] =
-    implicitly[Field[V]].defaultArrayValue
 }
 
