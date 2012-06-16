@@ -1,6 +1,7 @@
 package breeze
 
 import generic.UFunc
+import linalg.Tensor
 import scala.math._
 
 /**
@@ -49,9 +50,9 @@ package object numerics extends UniversalFuncs {
    * Evaluates the log of the generalized beta function.
    *  = \sum_a lgamma(c(a))- lgamma(c.sum)
    */
-//  def lbeta[T](c: Tensor1[T,Double]) = {
-//    c.valuesIterator.foldLeft(-lgamma(c.sum))( (acc,x)=> acc +lgamma(x))
-//  }
+  def lbeta[T](c: Tensor[T,Double]) = {
+    c.valuesIterator.foldLeft(-lgamma(c.sum))( (acc,x)=> acc +lgamma(x))
+  }
 
   /**
   * Computes the log of the gamma function.
