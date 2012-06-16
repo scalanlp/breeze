@@ -20,7 +20,7 @@ trait DenseStorage[@specialized(Int, Double) Elem] extends Storage[Elem] {
     data(i) = v
   }
 
-  protected final def isActive(i: Int) = true
-  protected final def allVisitableIndicesActive = true
+  final def isActive(i: Int) = true
+  final def allVisitableIndicesActive = true
 
 }

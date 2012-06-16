@@ -53,15 +53,17 @@ trait Storage[@specialized(Int,Double,Float) Elem] {
   def indexAt(i: Int): Int
 
   /**
-   * Some arrays
-   * @param i
+   * Some storages (namely HashStorage) won't have active
+   * indices packed. This lets you know if the bin is
+   * actively in use.
+   * @param i index into index/data arrays
    * @return
    */
-  protected def isActive(i: Int):Boolean
+  def isActive(i: Int):Boolean
 
   /**
    * Only gives true if isActive would return true for all i. (May be callde anyway)
    * @return
    */
-  protected def allVisitableIndicesActive:Boolean
+  def allVisitableIndicesActive:Boolean
 }

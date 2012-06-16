@@ -29,7 +29,6 @@ trait HashStorage[@specialized(Int, Double) V]  extends Storage[V] {
   def indexAt(i: Int) = index(i)
 
   def keysIterator = occupied.iterator.map(index)
-  def length = size
 
   def activeSize = load
 

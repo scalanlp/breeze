@@ -19,8 +19,6 @@ final class SDArray[@specialized T: ClassManifest](_length: Int, default: => T) 
     this
   }
 
-  def length = arr.length
-
   def valuesIterator = active.iterator.map {
     arr
   }

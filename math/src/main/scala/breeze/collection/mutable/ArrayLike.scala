@@ -23,6 +23,8 @@ trait ArrayLike[T] {
 
   def size: Int
 
+  def length = size
+
   def foreach[U](f: (T) => U) = valuesIterator foreach f
 
 
@@ -30,4 +32,12 @@ trait ArrayLike[T] {
    * Only iterates "active" elements
    */
   def iterator = keysIterator zip valuesIterator
+
+  def toArray[U>:T:ClassManifest] = Array.tabulate[U](length)(apply)
+
+  def toList = List.tabulate(length)(apply)
+
+  def toIndexedSeq = List.tabulate(length)(apply)
+
+  def toMap = (keysIterator zip valuesIterator).toMap
 }

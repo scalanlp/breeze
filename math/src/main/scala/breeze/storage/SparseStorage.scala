@@ -24,11 +24,13 @@ trait SparseStorage[@specialized(Int, Double) Elem] extends Storage[Elem] {
     if (offset >= 0) data(offset) else default
   }
 
-  def activeSize = data.length
+  def activeSize = used
 
   final def valueAt(i: Int) = data(i)
 
   final def indexAt(i: Int) = index(i)
+
+  private var lastReturnedPos = -1
 
   /**
    * Returns the offset into index and data for the requested vector
@@ -54,19 +56,51 @@ trait SparseStorage[@specialized(Int, Double) Elem] extends Storage[Elem] {
       if(end > i)
         end = i
 
+      var found = false
+
       var mid = (end + begin) >> 1
-      while (begin <= end) {
-        mid = (end + begin) >> 1
-        if (index(mid) < i)
-          begin = mid + 1
-        else if (index(mid) > i)
-          end = mid - 1
-        else
-          mid
+      // another optimization: cache the last found
+      // position and restart binary search from lastReturnedPos
+      // This is thread safe because writes of ints
+      // are atomic on the JVM.
+      // We actually don't want volatile here because
+      // we want a poor-man's threadlocal...
+      // be sure to make it a local though, so it doesn't
+      // change from under us.
+      val l = lastReturnedPos
+      if(l >= 0 && l < end) {
+        mid = l
       }
 
+      // a final stupid check:
+      // we're frequently iterating
+      // over all elements, so we should check if the next
+      // pos is the right one, just to see
+      if(mid < used-1 && index(mid+1) == i) {
+        mid = mid+1
+        found = true
+      }
+
+
+      while (!found && begin <= end) {
+        if (index(mid) < i) {
+          begin = mid + 1
+          mid = (end + begin) >> 1
+        }
+        else if (index(mid) > i) {
+          end = mid - 1
+          mid = (end + begin) >> 1
+        }
+        else
+          found = true
+      }
+
+      lastReturnedPos = mid
+
+      if (found || mid < 0)
+        mid
       // no match found,  insertion point
-      if (i <= index(mid))
+      else if (i <= index(mid))
         ~mid       // Insert here (before mid)
       else
         ~(mid + 1) // Insert after mid
@@ -133,7 +167,40 @@ trait SparseStorage[@specialized(Int, Double) Elem] extends Storage[Elem] {
     }
   }
 
-  protected def isActive(i: Int) = true
+  def isActive(i: Int) = true
 
-  protected def allVisitableIndicesActive = true
+  def allVisitableIndicesActive = true
+
+  /** Compacts the array by removing all stored default values. */
+  def compact()(implicit man: ClassManifest[Elem]) {
+    val nz = { // number of non-zeros
+      var _nz = 0
+      var i = 0
+      while (i < used) {
+        if (data(i) != default) {
+          _nz += 1
+        }
+        i += 1
+      }
+      _nz
+    }
+
+    val newData  = new Array[Elem](nz)
+    val newIndex = new Array[Int](nz)
+
+    var i = 0
+    var o = 0
+    while (i < used) {
+      if (data(i) != default) {
+        newData(o) = data(i)
+        newIndex(o) = index(i)
+        o += 1
+      }
+      i += 1
+    }
+
+    data = newData
+    index = newIndex
+    used = nz
+  }
 }
