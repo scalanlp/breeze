@@ -35,7 +35,7 @@ trait Classifier[L,-T] extends (T=>L) { outer =>
   /** For the observation, return the score for each label that has a nonzero 
    *  score. 
    */
-  def scores(o: T): Tensor1[L,Double];
+  def scores(o: T): Tensor[L,Double]
 
   /**
    * Transforms output labels L=>M. if f(x) is not one-to-one then the max of score
@@ -43,11 +43,11 @@ trait Classifier[L,-T] extends (T=>L) { outer =>
    */
   def map[M](f: L=>M):Classifier[M,T] = new Classifier[M,T] {
     def scores(o: T): Counter[M,Double] = {
-      val ctr = Counter[M,Double]();
-      val otherCtr = outer.scores(o);
-      for( x <- otherCtr.domain) {
-        val y = f(x);
-        ctr(y) = ctr(y) max otherCtr(x);
+      val ctr = Counter[M,Double]()
+      val otherCtr = outer.scores(o)
+      for( x <- otherCtr.keysIterator) {
+        val y = f(x)
+        ctr(y) = ctr(y) max otherCtr(x)
       }
       ctr;
     }

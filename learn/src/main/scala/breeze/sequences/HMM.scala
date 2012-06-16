@@ -2,9 +2,7 @@ package breeze.sequences
 
 import collection.immutable.BitSet
 import breeze.util.{Encoder, Index}
-import scalala.tensor.dense.DenseMatrix
-import scalala.library.Library
-import scalala.tensor.{Counter2, Tensor2, ::}
+import breeze.linalg.{DenseMatrix, Tensor}
 
 /**
  * 
@@ -13,7 +11,7 @@ import scalala.tensor.{Counter2, Tensor2, ::}
 
 case class HMM[L,W](states: Index[L],
                startSymbol: L,
-               transitions: Tensor2[L,L,Double], emissions: Tensor2[L,W,Double]) { hmm =>
+               transitions: Tensor[(L,L),Double], emissions: Tensor[(L,W),Double]) { hmm =>
 
   val enc = Encoder.fromIndex(states)
   val encodedTransitions:DenseMatrix[Double] = enc.encode(transitions)

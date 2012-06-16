@@ -3,7 +3,7 @@ package breeze.optimize
 /*
  Copyright 2009 David Hall, Daniel Ramage
  
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at 
  
@@ -16,16 +16,10 @@ package breeze.optimize
  limitations under the License. 
 */
 
-import breeze.util._
 import breeze.util.logging._
-import breeze.util.logging.Logger._
-import scalala.generic.math.CanNorm
-import scalala.operators._
-import bundles.{MutableInnerProductSpace, InnerProductSpace}
-import scalala.library.Library.norm
-import scalala.tensor.mutable.Counter
-import scalala.tensor.dense.DenseVector
-;
+import breeze.math.MutableCoordinateSpace
+import breeze.linalg._
+
 
 /**
  * Port of LBFGS to Scala.
@@ -39,85 +33,83 @@ import scalala.tensor.dense.DenseVector
  *    pp. 503-528.
  *  * 
  * 
- * @param tol: tolerance of the gradient's l2 norm.
  * @param maxIter: maximum number of iterations, or &lt;= 0 for unlimited
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
 class LBFGS[T](maxIter: Int = -1, m: Int=5)
-              (implicit vspace: MutableInnerProductSpace[Double,T],
-               canNorm: CanNorm[T]) extends FirstOrderMinimizer[T,DiffFunction[T]](maxIter) with ConfiguredLogging {
+              (implicit vspace: MutableCoordinateSpace[T, Double]) extends FirstOrderMinimizer[T,DiffFunction[T]](maxIter) with ConfiguredLogging {
 
-  import vspace._;
-  require(m > 0);
+  import vspace._
+  require(m > 0)
 
   case class History(private[LBFGS] val memStep: IndexedSeq[T] = IndexedSeq.empty,
                      private[LBFGS] val memGradDelta: IndexedSeq[T] = IndexedSeq.empty,
-                     private[LBFGS] val memRho: IndexedSeq[Double] = IndexedSeq.empty);
+                     private[LBFGS] val memRho: IndexedSeq[Double] = IndexedSeq.empty)
 
 
   protected def takeStep(state: State, dir: T, stepSize: Double) = state.x + dir * stepSize
-  protected def initialHistory(f: DiffFunction[T], x: T):History = new History();
+  protected def initialHistory(f: DiffFunction[T], x: T):History = new History()
   protected def chooseDescentDirection(state: State):T = {
     val grad = state.grad
-    val memStep = state.history.memStep;
-    val memGradDelta = state.history.memGradDelta;
-    val memRho = state.history.memRho;
+    val memStep = state.history.memStep
+    val memGradDelta = state.history.memGradDelta
+    val memRho = state.history.memRho
     val diag = if(memStep.size > 0) {
-      computeDiag(state.iter,grad,memStep.last,memGradDelta.last);
+      computeDiag(state.iter,grad,memStep.last,memGradDelta.last)
     } else {
-      zeros(grad) + 1.;
+      zeros(grad) + 1.
     }
 
-    val dir:T = copy(grad);
-    val as = new Array[Double](m);
+    val dir:T = copy(grad)
+    val as = new Array[Double](m)
 
     for(i <- (memStep.length-1) to 0 by -1) {
-      as(i) = (memStep(i) dot dir)/memRho(i);
+      as(i) = (memStep(i) dot dir)/memRho(i)
       if(as(i).isNaN) {
         throw new NaNHistory
       }
-      assert(!as(i).isInfinite, memRho(i) -> norm(grad,2));
-      dir -= memGradDelta(i) * as(i);
+      assert(!as(i).isInfinite, memRho(i) -> norm(grad,2))
+      dir -= memGradDelta(i) * as(i)
     }
 
-    dir :*= diag;
+    dir :*= diag
 
     for(i <- 0 until memStep.length) {
-      val beta = (memGradDelta(i) dot dir)/memRho(i);
-      dir += memStep(i) * (as(i) - beta);
+      val beta = (memGradDelta(i) dot dir)/memRho(i)
+      dir += memStep(i) * (as(i) - beta)
     }
 
-    dir *= -1.0;
-    dir;
+    dir *= -1.0
+    dir
   }
 
   protected def updateHistory(newX: T, newGrad: T, newVal: Double, oldState: State): History = {
-    val gradDelta : T = (newGrad :- oldState.grad);
+    val gradDelta : T = (newGrad :- oldState.grad)
     val step:T = (newX - oldState.x)
 
-    var memStep = oldState.history.memStep :+ step;
-    var memGradDelta = oldState.history.memGradDelta :+ gradDelta;
-    var memRho = oldState.history.memRho :+ (step dot gradDelta);
+    var memStep = oldState.history.memStep :+ step
+    var memGradDelta = oldState.history.memGradDelta :+ gradDelta
+    var memRho = oldState.history.memRho :+ (step dot gradDelta)
 
     if(memStep.length > m) {
-      memStep = memStep.drop(1);
-      memRho = memRho.drop(1);
-      memGradDelta = memGradDelta.drop(1);
+      memStep = memStep.drop(1)
+      memRho = memRho.drop(1)
+      memGradDelta = memGradDelta.drop(1)
     }
 
-    new History(memStep,memGradDelta,memRho);
+    new History(memStep,memGradDelta,memRho)
   }
 
   private def computeDiag(iter: Int, grad: T, prevStep: T, prevGrad: T):T = {
     if(iter == 0) {
       zeros(grad) + 1.
     } else {
-      val sy = prevStep dot prevGrad;
-      val yy = prevGrad dot prevGrad;
+      val sy = prevStep dot prevGrad
+      val yy = prevGrad dot prevGrad
       val syyy = if(sy < 0 || sy.isNaN) {
-        throw new NaNHistory;
+        throw new NaNHistory
       } else {
-        sy/yy;
+        sy/yy
       }
      ((zeros(grad) + 1.)* sy/yy)
     }
@@ -135,37 +127,37 @@ class LBFGS[T](maxIter: Int = -1, m: Int=5)
    */
 
   protected def determineStepSize(state: State, f: DiffFunction[T], dir: T) = {
-    val iter = state.iter;
-    val x = state.x;
+    val iter = state.iter
+    val x = state.x
     val grad = state.grad
 
     val normGradInDir = {
-      val possibleNorm = dir dot grad;
+      val possibleNorm = dir dot grad
       if (possibleNorm > 0) { // hill climbing is not what we want. Bad LBFGS.
-        log.warn("Direction of positive gradient chosen!");
+        log.warn("Direction of positive gradient chosen!")
         log.warn("Direction is:" + possibleNorm)
         // Reverse the direction, clearly it's a bad idea to go up
-        dir *= -1.0;
-        dir dot grad;
+        dir *= -1.0
+        dir dot grad
       } else {
-        possibleNorm;
+        possibleNorm
       }
     }
 
-    def ff(alpha: Double) = f.valueAt(x + dir * alpha);
+    def ff(alpha: Double) = f.valueAt(x + dir * alpha)
     val search = new BacktrackingLineSearch(cScale = if(iter < 1) 0.01 else 0.5, initAlpha = 1.0)
     val iterates = search.iterations(ff)
     val targetState = iterates.find { case search.State(alpha,v) =>
       // sufficient descent
       val r = v < state.value + alpha * 0.0001 * normGradInDir
-      if(!r) log.info(".");
+      if(!r) log.info(".")
       r
 
     }
-    val search.State(alpha,currentVal) = targetState.getOrElse(throw new LineSearchFailed);
+    val search.State(alpha,currentVal) = targetState.getOrElse(throw new LineSearchFailed)
 
     if(alpha * norm(grad,Double.PositiveInfinity) < 1E-10)
-      throw new StepSizeUnderflow;
+      throw new StepSizeUnderflow
     alpha
   }
 
@@ -173,12 +165,12 @@ class LBFGS[T](maxIter: Int = -1, m: Int=5)
 
 object LBFGS {
   def main(args: Array[String]) {
-    val lbfgs = new LBFGS[Counter[Int,Double]](5,4) with ConsoleLogging;
+    val lbfgs = new LBFGS[Counter[Int,Double]](5,4) with ConsoleLogging
 
     def optimizeThis(init: Counter[Int,Double]) = {
       val f = new DiffFunction[Counter[Int,Double]] {
         def calculate(x: Counter[Int,Double]) = {
-          (math.pow(norm((x -3),2),2),(x * 2) - 6);
+          (math.pow(norm((x -3),2),2),(x * 2) - 6)
         }
       }
 

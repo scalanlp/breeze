@@ -1,20 +1,15 @@
-package breeze.optimize;
+package breeze.optimize
 
-import scalala._;
-import generic.collection.{CanMapValues, CanCreateZerosLike}
-import operators._
-import bundles.MutableInnerProductSpace
-import breeze.util._;
+import breeze.util._
 import logging.ConfiguredLogging
 import breeze.stats.distributions._
-import scalala.generic.math.{CanSqrt, CanNorm}
-import scalala.library.Library.norm;
-import scalala.tensor.mutable;
+import breeze.math.MutableCoordinateSpace
+
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
  
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at 
  
@@ -34,11 +29,10 @@ import scalala.tensor.mutable;
 */
 abstract class StochasticGradientDescent[T](val defaultStepSize: Double,
                                             val maxIter: Int)
-                                            (implicit protected val vspace: MutableInnerProductSpace[Double,T],
-                                             protected val canNorm: CanNorm[T])
+                                            (implicit protected val vspace: MutableCoordinateSpace[T, Double])
   extends FirstOrderMinimizer[T,StochasticDiffFunction[T]](maxIter) with ConfiguredLogging {
 
-  import vspace._;
+  import vspace._
 
   // Optional hooks with reasonable defaults
 
@@ -63,17 +57,16 @@ abstract class StochasticGradientDescent[T](val defaultStepSize: Double,
 }
 
 object StochasticGradientDescent {
-  def apply[T](initialStepSize: Double=4, maxIter: Int=100)(implicit vs: MutableInnerProductSpace[Double,T], canNorm: CanNorm[T]) :StochasticGradientDescent[T]  = {
-      new SimpleSGD(initialStepSize,maxIter);
+  def apply[T](initialStepSize: Double=4, maxIter: Int=100)(implicit vs: MutableCoordinateSpace[T, Double]) :StochasticGradientDescent[T]  = {
+    new SimpleSGD(initialStepSize,maxIter)
   }
 
   class SimpleSGD[T](eta: Double=4,
-                      maxIter: Int=100)
-                    (implicit vs: MutableInnerProductSpace[Double,T],
-                     canNorm: CanNorm[T]) extends StochasticGradientDescent[T](eta,maxIter) {
-      type History = Unit
-      def initialHistory(f: StochasticDiffFunction[T],init: T)= ()
-      def updateHistory(newX: T, newGrad: T, newValue: Double, oldState: State) = ()
+                     maxIter: Int=100)
+                    (implicit vs: MutableCoordinateSpace[T, Double]) extends StochasticGradientDescent[T](eta,maxIter) {
+    type History = Unit
+    def initialHistory(f: StochasticDiffFunction[T],init: T)= ()
+    def updateHistory(newX: T, newGrad: T, newValue: Double, oldState: State) = ()
   }
 
 }

@@ -17,23 +17,22 @@ package breeze.stats.distributions
 */
 
 import breeze.optimize.DiffFunction
-import scalala.generic.collection.{CanViewAsTensor1, CanCreateZerosLike}
-import scalala.operators._
-import scalala.tensor.mutable.{Tensor1, Tensor}
-import scalala.library.Library
-import scalala.generic.math.{CanNorm, CanSoftmax}
+import breeze.linalg._
+import breeze.math.{TensorSpace, MutableCoordinateSpace}
+import breeze.numerics._
+import breeze.numerics
 
 /**
  * Represents a multinomial Distribution over elements.
  *
  * @author dlwh
  */
-case class Multinomial[T,@specialized(Int) I](params: T)(implicit ev: CanViewAsTensor1[T,I,Double], rand: RandBasis=Rand) extends DiscreteDistr[I] {
-  val sum = ev(params).sum
+case class Multinomial[T,@specialized(Int) I](params: T)(implicit ev: T=>QuasiTensor[I, Double], rand: RandBasis=Rand) extends DiscreteDistr[I] {
+  val sum = params.sum
   require(sum != 0.0, "There's no mass!")
 
   // check rep
-  for ((k,v) <- ev(params).pairsIterator) {
+  for ((k,v) <- params.iterator) {
     if (v < 0) {
       throw new IllegalArgumentException("Multinomial has negative mass at index "+k)
     }
@@ -42,17 +41,17 @@ case class Multinomial[T,@specialized(Int) I](params: T)(implicit ev: CanViewAsT
   def draw():I = {
     var prob = rand.uniform.get() * sum
     assert(!prob.isNaN, "NaN Probability!")
-    for((i,w) <- ev(params).pairsIteratorNonZero) {
+    for((i,w) <- params.activeIterator) {
       prob -= w
       if(prob <= 0) return i
     }
-    ev(params).keysIteratorNonZero.next
+    params.activeKeysIterator.next()
   }
 
-  def probabilityOf(e : I) = ev(params)(e) / sum
-  override def unnormalizedProbabilityOf(e:I) = ev(params)(e)/sum
+  def probabilityOf(e : I) = params(e) / sum
+  override def unnormalizedProbabilityOf(e:I) = params(e)
 
-  override def toString = ev(params).pairsIterator.mkString("Multinomial{",",","}")
+  override def toString = ev(params).activeIterator.mkString("Multinomial{",",","}")
 
 
 }
@@ -64,14 +63,7 @@ case class Multinomial[T,@specialized(Int) I](params: T)(implicit ev: CanViewAsT
  */
 object Multinomial {
 
-  class ExpFam[T,I](exemplar: T)
-                   (implicit ev: T<:<NumericOps[T] with HasValuesMonadic[T,Double],
-                    space: scalala.operators.bundles.MutableInnerProductSpace[Double,T],
-                    norm: CanNorm[T],
-                    view2: T=>Tensor1[I,Double],
-                    view: CanViewAsTensor1[T,I,Double],
-                    zeros: CanCreateZerosLike[T,T],
-                    softmax: CanSoftmax[T]) extends ExponentialFamily[Multinomial[T,I],I] with HasConjugatePrior[Multinomial[T,I],I] {
+  class ExpFam[T,I](exemplar: T)(implicit space: TensorSpace[T, I, Double]) extends ExponentialFamily[Multinomial[T,I],I] with HasConjugatePrior[Multinomial[T,I],I] {
 
     import space._
     type ConjugatePrior = Dirichlet[T,I]
@@ -82,7 +74,7 @@ object Multinomial {
     def predictive(parameter: conjugateFamily.Parameter) = new Polya(parameter)
 
     def posterior(prior: conjugateFamily.Parameter, evidence: TraversableOnce[I]) = {
-      val copy : T = space.addVS.apply(prior,0.0)
+      val copy : T = space.copy(prior)
       for( e <- evidence) {
         copy(e)  += 1.0
       }
@@ -92,8 +84,8 @@ object Multinomial {
 
     type Parameter = T
     case class SufficientStatistic(t: T) extends breeze.stats.distributions.SufficientStatistic[SufficientStatistic] {
-      def +(tt: SufficientStatistic) = SufficientStatistic(ev(t) + tt.t)
-      def *(w: Double) = SufficientStatistic(ev(t) * w)
+      def +(tt: SufficientStatistic) = SufficientStatistic(t + tt.t)
+      def *(w: Double) = SufficientStatistic(t * w)
     }
 
     def emptySufficientStatistic = SufficientStatistic(zeros(exemplar))
@@ -104,24 +96,24 @@ object Multinomial {
       SufficientStatistic(r)
     }
 
-    def mle(stats: SufficientStatistic) = ev(stats.t).values.map(math.log _)
+    def mle(stats: SufficientStatistic) = log(stats.t)
 
     def likelihoodFunction(stats: SufficientStatistic) = new DiffFunction[T] {
       def calculate(x: T) = {
-        val nn: T = Library.logNormalize(x)
-        val lp = nn :* stats.t sum
+        val nn: T = logNormalize(x)
+        val lp = nn dot stats.t
 
         val sum = stats.t.sum
 
-        val exped = ev(nn).values.map(math.exp _)
-        val grad = ev(ev(exped) * sum) - stats.t
+        val exped = numerics.exp(nn)
+        val grad = exped * sum - stats.t
 
         (-lp,grad)
       }
     }
 
     def distribution(p: Parameter) = {
-      new Multinomial(ev(p).values.map(math.exp _))
+      new Multinomial(numerics.exp(p))
     }
   }
 

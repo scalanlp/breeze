@@ -1,10 +1,10 @@
 package breeze.stats
-package distributions;
+package distributions
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
  
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at 
  
@@ -17,8 +17,7 @@ package distributions;
  limitations under the License. 
 */
 
-import scalala.library.Numerics._;
-import math._
+import breeze.numerics._
 import breeze.optimize.DiffFunction
 
 /**
@@ -26,74 +25,74 @@ import breeze.optimize.DiffFunction
  * @author dlwh
  */
 case class Poisson(val mean: Double)(implicit rand: RandBasis=Rand) extends DiscreteDistr[Int] with Moments[Double] {
-  private val ell = math.exp(-mean);
+  private val ell = math.exp(-mean)
 
-  override def toString() = "Poisson(" + mean+")";
+  override def toString() = "Poisson(" + mean+")"
 
   // impl from winrand
   def draw():Int = {
     if(mean == 0) 0
     else if(mean < 10.0) { // small
-      var t = ell;
-      var k = 0;
-      val u = rand.uniform.get;
-      var s = t;
+      var t = ell
+      var k = 0
+      val u = rand.uniform.get
+      var s = t
       while(s < u) {
-        k += 1;
-        t *= mean / k;
-        s += t;
+        k += 1
+        t *= mean / k
+        s += t
       }
       k
     } else {
-      val k_start = mean.toInt;
-      val u = rand.uniform.get;
-      var t1 = exp(k_start * log(mean) - mean - lgamma(k_start+1));
+      val k_start = mean.toInt
+      val u = rand.uniform.get
+      var t1 = exp(k_start * log(mean) - mean - lgamma(k_start+1))
       if (t1 > u) k_start
       else {
-        var k1 = k_start;
-        var k2 = k_start;
-        var t2 = t1;
-        var s = t1;
+        var k1 = k_start
+        var k2 = k_start
+        var t2 = t1
+        var s = t1
         while(true) {
-          k1 += 1;
-          t1 *= mean / k1; s += t1;
-          if (s > u) return k1;
+          k1 += 1
+          t1 *= mean / k1; s += t1
+          if (s > u) return k1
           if (k2 > 0) {
-            t2 *= k2 / mean;
-            k2 -= 1;
-            s += t2;
-            if (s > u) return k2;
+            t2 *= k2 / mean
+            k2 -= 1
+            s += t2
+            if (s > u) return k2
           }
         }
-        sys.error("wtf");
+        sys.error("wtf")
       }
 
     }
   }
 
-  def probabilityOf(k:Int) = math.exp(logProbabilityOf(k));
+  def probabilityOf(k:Int) = math.exp(logProbabilityOf(k))
   override def logProbabilityOf(k:Int) = {
-    -mean + k * log(mean) - lgamma(k+1);
+    -mean + k * log(mean) - lgamma(k+1)
   }
 
-  def logCdf(k: Int) = lgamma(k+1,mean) - lgamma(k+1);
-  def cdf(k:Int) = exp(logCdf(k));
+  def logCdf(k: Int) = lgamma(k+1,mean) - lgamma(k+1)
+  def cdf(k:Int) = exp(logCdf(k))
 
-  def variance = mean;
-  def mode = math.ceil(mean) - 1;
+  def variance = mean
+  def mode = math.ceil(mean) - 1
 
   /** Approximate, slow to compute */
   def entropy = {
     val entr = mean * (1- log(mean))
     var extra = 0.0
     var correction = 0.0
-    var k = 0;
-    var meanmean = 1.0/mean;
+    var k = 0
+    var meanmean = 1.0/mean
     do {
-      meanmean *= mean;
+      meanmean *= mean
       val ln_k_! = lgamma(k+1)
-      correction = meanmean * ln_k_! / exp(ln_k_!);
-      extra += correction;
+      correction = meanmean * ln_k_! / exp(ln_k_!)
+      extra += correction
       k += 1
     } while(correction > 1E-6)
 

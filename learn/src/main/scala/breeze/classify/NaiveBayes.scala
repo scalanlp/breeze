@@ -1,9 +1,9 @@
-package breeze.classify;
+package breeze.classify
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
  
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at 
  
@@ -16,11 +16,9 @@ package breeze.classify;
  limitations under the License. 
 */
 
-import math._;
-import scalala.tensor.mutable._;
-import breeze.data._;
-import scalala.tensor.::
-
+import math._
+import breeze.data._
+import breeze.linalg._
 
 
 /** Implements a Naive-Bayes Classifer over bags of words.
@@ -40,19 +38,19 @@ class NaiveBayes[L,W](c: Iterable[Example[L,Counter[W,Double]]],
 
   private val (wordCounts:Counter2[L,W,Double],classCounts: Counter[L,Double], vocabSize: Int) =  {
     // numYes(c)
-    val classCounts = Counter[L,Double]();
+    val classCounts = Counter[L,Double]()
     // numYes(w|c)
-    val wordCounts = Counter2[L,W,Double]();
-    val myC = c;
-    val allWords = scala.collection.mutable.Set[W]();
+    val wordCounts = Counter2[L,W,Double]()
+    val myC = c
+    val allWords = scala.collection.mutable.Set[W]()
     for(e <- myC) {
-       classCounts(e.label) += 1;
-       for( k <- e.features.domain)
-	       wordCounts(e.label,k) += e.features(k);
-       allWords ++= e.features.data.keys;
+       classCounts(e.label) += 1
+       for( k <- e.features.keysIterator)
+	       wordCounts(e.label,k) += e.features(k)
+       allWords ++= e.features.data.keys
     }
-    val vocabSize = allWords.size;
-    classCounts :+= classSmoothing;
+    val vocabSize = allWords.size
+    classCounts :+= classSmoothing
     (wordCounts,classCounts,vocabSize)
   }
 
@@ -60,25 +58,25 @@ class NaiveBayes[L,W](c: Iterable[Example[L,Counter[W,Double]]],
 
   /** Returns the unnormalized log probability of each class for the given document. */
   def scores(o : Counter[W,Double]) = {
-    val res = Counter[L,Double]();
-    for( l <- classCounts.domain) {
-      val prior = classCounts(l);
-      res(l) += log(prior + classSmoothing);
+    val res = Counter[L,Double]()
+    for( l <- classCounts.keysIterator) {
+      val prior = classCounts(l)
+      res(l) += log(prior + classSmoothing)
       val probWC = wordCounts(l,::)
-      val logDenom = log(wordTotals(l) + vocabSize * wordSmoothing);
-      val logWordProbabilities = o.pairsIterator.map { case (k,v) =>  v * (log(probWC(k) + wordSmoothing) - logDenom)}
-      res(l) += logWordProbabilities.sum;
+      val logDenom = log(wordTotals(l) + vocabSize * wordSmoothing)
+      val logWordProbabilities = o.iterator.map { case (k,v) =>  v * (log(probWC(k) + wordSmoothing) - logDenom)}
+      res(l) += logWordProbabilities.sum
     }
-    res;
+    res
   }
 }
 
 object NaiveBayes {
   class Trainer[L,T](wordSmoothing: Double=0.05, classSmoothing: Double= 0.01) extends Classifier.Trainer[L,Counter[T,Double]] {
-    type MyClassifier = NaiveBayes[L,T];
+    type MyClassifier = NaiveBayes[L,T]
 
     override def train(data: Iterable[Example[L,Counter[T,Double]]]) = {
-      new NaiveBayes(data,wordSmoothing,classSmoothing);
+      new NaiveBayes(data,wordSmoothing,classSmoothing)
     }
   }
 }

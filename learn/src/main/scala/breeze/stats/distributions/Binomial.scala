@@ -15,12 +15,8 @@ package breeze.stats.distributions
  limitations under the License.
 */
 
-import scalala.library.Numerics.lgamma;
+import breeze.numerics.lgamma
 import math._
-import breeze.collection.immutable.BinomialHeap
-import breeze.stats.distributions
-import breeze.util._
-import breeze.optimize.DiffFunction
 
 /**
 * A binomial distribution returns how many coin flips out of n are heads,

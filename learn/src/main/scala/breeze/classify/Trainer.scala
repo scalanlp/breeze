@@ -3,13 +3,10 @@ package breeze.classify
 import breeze.config._
 import breeze.data.SparseFeatureDataset
 import io.Source
-import scalala.tensor.Counter
 import breeze.stats.ContingencyStats
-import scalala.generic.collection.{CanCopy, CanCreateZerosLike}
-import scalala.collection.sparse.SparseArray
-import scalala.tensor.sparse.{SparseVectorCol, SparseVector}
 import breeze.serialization.DataSerialization
 import java.io._
+import breeze.linalg._
 
 case class TrainerParams(
   @Help(text="The kind of classifier to train. {Logistic,SVM,Pegasos}") `type`: String= "Logistic",

@@ -2,7 +2,7 @@ package breeze.sequences
 /*
  Copyright 2009 David Hall, Daniel Ramage
 
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
 
@@ -15,26 +15,16 @@ package breeze.sequences
  limitations under the License.
 */
 
-import scala.collection.mutable.ArrayBuffer;
+import scala.collection.mutable.ArrayBuffer
 
-import scalala.tensor.mutable.Vector;
-import scalala.tensor.dense._;
-import scalala.tensor._;
-
-import breeze._;
+import breeze._
+import linalg._
+import numerics._
 
 import data.Example
 import optimize.FirstOrderMinimizer.OptParams
 import optimize.{CachedBatchDiffFunction, RandomizedGradientCheckingFunction, BatchDiffFunction, DiffFunction}
-import breeze.util.Lazy.Implicits._;
-import scala.math.{pow,exp,log}
-import scalala.tensor.dense.DenseVector.zeros
-import scalala.library.Numerics._;
-import scalala.library.Library.{mean,norm,softmax}
-import sparse.SparseVector
-import tensor.sparse.OldSparseVector
 import util.{Index, Encoder, Lazy}
-import scalala.library.Numerics
 import java.util.Arrays
 import scala.collection.immutable.{Range, BitSet}
 
@@ -62,14 +52,14 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
     val forwardScores = Array.fill(length)(mkVector(numStates, Double.NegativeInfinity))
     val back = Array.fill(length,numStates)(-1)
 
-    var previous : Vector[Double] = initialMessage;
+    var previous : Vector[Double] = initialMessage
 
     // forward
     for(i <- 0 until length) {
       val cur = forwardScores(i)
       // TODO: add in active iterators to scalala?
       for ( next <- transitions.validSymbols(i,words)) {
-        for((previousLabel,prevScore) <- previous.pairsIterator) {
+        for((previousLabel,prevScore) <- previous.iterator) {
           val score = transitions.score(i,words,previousLabel,next) + prevScore
             if(score > cur(next)) {
               cur(next) = score
@@ -99,7 +89,7 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
   def calibrate(words: W, length: Int) = {
     val forwardScores = Array.fill(length)(mkVector(numStates, Double.NegativeInfinity))
 
-    var previous : Vector[Double] = initialMessage;
+    var previous : Vector[Double] = initialMessage
 
     val cache = transitions.fillArray(0.0)
     // forward
@@ -108,14 +98,14 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
       // TODO: add in active iterators to scalala?
       for ( next <- transitions.validSymbols(i,words)) {
         var offset = 0
-        for((previousLabel,prevScore) <- previous.pairsIterator) {
+        for((previousLabel,prevScore) <- previous.iterator) {
           val score = transitions.score(i,words,previousLabel,next) + prevScore
           if(score != Double.NegativeInfinity) {
             cache(offset) = score
             offset += 1
           }
         }
-        cur(next) = Numerics.logSum(cache,offset)
+        cur(next) = numerics.logSum(cache,offset)
       }
 
 
@@ -132,14 +122,14 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
       // TODO: add in active iterators to scalala?
       for ( previousLabel <- transitions.validSymbols(i,words)) {
         var offset = 0
-        for((next,prevScore) <- previous.pairsIterator) {
+        for((next,prevScore) <- previous.iterator) {
           val score = transitions.score(i+1,words,previousLabel,next) + prevScore
           if(score != Double.NegativeInfinity) {
             cache(offset) = score
             offset += 1
           }
         }
-        cur(previousLabel) = Numerics.logSum(cache,offset)
+        cur(previousLabel) = numerics.logSum(cache,offset)
 
       }
       previous = cur
@@ -157,10 +147,10 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
   }
 
   protected def mkVector(size:Int, fill: Double):Vector[Double] = {
-    val data = new Array[Double](size);
-    java.util.Arrays.fill(data,fill);
-    val v = new DenseVectorCol(data);
-    v;
+    val data = new Array[Double](size)
+    java.util.Arrays.fill(data,fill)
+    val v = new DenseVector(data)
+    v
   }
 
   /**
@@ -170,7 +160,7 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
     /** 
     * returns the value of the partition function for this sequence of words. This is the normalizer for the distribution.
     */
-    def partition = exp(logPartition);
+    def partition = exp(logPartition)
 
 
     /**
@@ -178,8 +168,8 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
     */
     lazy val logPartition = {
       val result = softmax(forward.last + backward.last)
-      assert(!result.isNaN);
-      result;
+      assert(!result.isNaN)
+      result
     }
 
     def marginalAt(pos: Int) = {
@@ -206,8 +196,8 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
 
       val result = DenseMatrix.zeros[Double](numStates,numStates)
       Arrays.fill(result.data, Double.NegativeInfinity)
-      for( (l,ls) <- left.pairsIterator if ls != Double.NegativeInfinity;
-          (r,rs) <- right.pairsIterator if rs != Double.NegativeInfinity) {
+      for( (l,ls) <- left.iterator if ls != Double.NegativeInfinity;
+          (r,rs) <- right.iterator if rs != Double.NegativeInfinity) {
         result(l,r) = ls + rs + transitions.score(pos,words,l,r) -logPartition
       }
       result
@@ -280,7 +270,7 @@ object CRF {
             (score + part - goldScore,counts)
           }, {(a,b) =>
             (a._1 + b._1, a._2 += b._2)
-          });
+          })
 
           println(r._1)
           r

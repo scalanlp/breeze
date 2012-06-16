@@ -1,12 +1,8 @@
 package breeze.optimize
 
-import scalala._
-import operators._
-import bundles.MutableInnerProductSpace
-import scalala.tensor._
-import scalala.library.Library._
-import scalala.generic.math.CanNorm
-import scalala.generic.collection.{CanMapKeyValuePairs, CanCreateZerosLike, CanMapValues, CanViewAsTensor1}
+import breeze.linalg._
+import breeze.numerics._
+import breeze.math.MutableCoordinateSpace
 
 /**
  * Implements the L2^2 and L1 updates from
@@ -45,7 +41,7 @@ object AdaptiveGradientDescent {
 
     override protected def takeStep(state: State, dir: T, stepSize: Double) = {
       import state._
-      val s = (state.history.sumOfSquaredGradients :+ (state.grad :* state.grad)).values.map(math.sqrt)
+      val s = (state.history.sumOfSquaredGradients :+ sqrt(state.grad :* state.grad))
       val res = (( (s :* x) + dir * stepSize) :/ (s + (delta + lambda * stepSize)))
       res
     }
@@ -75,8 +71,7 @@ object AdaptiveGradientDescent {
   class L1Regularization[T](val lambda: Double=1.0,
                             delta: Double = 1E-5,
                             eta: Double=4,
-                            maxIter: Int=100)(implicit vspace: MutableInnerProductSpace[Double,T],
-                                              canNorm: CanNorm[T]) extends StochasticGradientDescent[T](eta,maxIter) {
+                            maxIter: Int=100)(implicit vspace: MutableCoordinateSpace[T, Double]) extends StochasticGradientDescent[T](eta,maxIter) {
     import vspace._
     case class History(sumOfSquaredGradients: T)
     def initialHistory(f: StochasticDiffFunction[T],init: T)= History(zeros(init))
@@ -106,7 +101,7 @@ object AdaptiveGradientDescent {
 
     override protected def adjust(newX: T, newGrad: T, newVal: Double) = {
       val av = newVal + norm(newX,1) * lambda
-      val ag = newGrad + newX.values.map(math.signum) * lambda
+      val ag = newGrad + signum(newX) * lambda
       (av -> ag)
     }
 

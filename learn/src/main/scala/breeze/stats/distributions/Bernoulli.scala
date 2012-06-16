@@ -1,15 +1,14 @@
 package breeze.stats
 package distributions
 
-import breeze.util.I
-import java.lang.Math
+import breeze.linalg.Counter
+import breeze.numerics._
 import breeze.optimize.DiffFunction
-import scalala.tensor.Counter
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
 
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
 
@@ -29,8 +28,8 @@ import scalala.tensor.Counter
  * @param numYes the probability of true
  */
 class Bernoulli(p: Double, rand: RandBasis = Rand) extends DiscreteDistr[Boolean] with Moments[Double] {
-  require(p >= 0.0);
-  require(p <= 1.0);
+  require(p >= 0.0)
+  require(p <= 1.0)
   def probabilityOf(b: Boolean) = if(b) p else (1-p)
   
   override def draw() = {
@@ -39,10 +38,10 @@ class Bernoulli(p: Double, rand: RandBasis = Rand) extends DiscreteDistr[Boolean
 
   override def toString() = "Bernoulli(" + p +")"
 
-  def mean = p;
-  def variance = p * (1-p);
-  def mode = I(p >= 0.5);
-  def entropy = -p * math.log(p) - (1 - p) * math.log1p(-p);
+  def mean = p
+  def variance = p * (1-p)
+  def mode = I(p >= 0.5)
+  def entropy = -p * math.log(p) - (1 - p) * math.log1p(-p)
 }
 
 object Bernoulli extends ExponentialFamily[Bernoulli,Boolean] with HasConjugatePrior[Bernoulli,Boolean] {
@@ -60,26 +59,26 @@ object Bernoulli extends ExponentialFamily[Bernoulli,Boolean] with HasConjugateP
 
   type Parameter = Double
   case class SufficientStatistic(numYes: Double, n: Double) extends distributions.SufficientStatistic[SufficientStatistic] {
-    def *(weight: Double) = SufficientStatistic(numYes*weight,n*weight);
-    def +(t: SufficientStatistic) = SufficientStatistic(numYes + t.numYes,n+t.n);
+    def *(weight: Double) = SufficientStatistic(numYes*weight,n*weight)
+    def +(t: SufficientStatistic) = SufficientStatistic(numYes + t.numYes,n+t.n)
   }
 
-  def emptySufficientStatistic = SufficientStatistic(0,0);
+  def emptySufficientStatistic = SufficientStatistic(0,0)
 
-  def sufficientStatisticFor(t: Boolean) = SufficientStatistic(I(t),1);
+  def sufficientStatisticFor(t: Boolean) = SufficientStatistic(I(t),1)
 
-  def mle(stats: SufficientStatistic) = stats.numYes / stats.n;
+  def mle(stats: SufficientStatistic) = stats.numYes / stats.n
 
-  def distribution(p: Double) = new Bernoulli(p);
+  def distribution(p: Double) = new Bernoulli(p)
 
   def likelihoodFunction(stats: SufficientStatistic) = new DiffFunction[Double] {
-    val SufficientStatistic(yes,num) = stats;
-    val no = num-yes;
+    val SufficientStatistic(yes,num) = stats
+    val no = num-yes
     def calculate(p: Double) = {
-      import math._;
-      val obj = yes * log(p) + no * log1p(-p);
-      val grad = yes/p - no/(1-p);
-      (-obj,-grad);
+      import math._
+      val obj = yes * log(p) + no * log1p(-p)
+      val grad = yes/p - no/(1-p)
+      (-obj,-grad)
     }
   }
 }

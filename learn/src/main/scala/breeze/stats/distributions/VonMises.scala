@@ -19,6 +19,7 @@ package breeze.stats.distributions
 import breeze.numerics.Bessel
 import math._
 import breeze.optimize.{LBFGS, DiffFunction}
+import breeze.linalg.DenseVector
 
 
 /**

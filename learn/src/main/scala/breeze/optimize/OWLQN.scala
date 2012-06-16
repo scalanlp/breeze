@@ -2,12 +2,9 @@ package breeze.optimize
 
 import breeze.util._
 import logging.{ConsoleLogging, ConfiguredLogging}
-import scalala.library.Library.norm
-import scalala.generic.math.CanNorm
-import scalala.operators._
-import bundles.MutableInnerProductSpace
-import scalala.tensor.mutable.Tensor1
-import scalala.tensor.dense.DenseVector
+import breeze.linalg._
+import breeze.numerics._
+import breeze.math.MutableCoordinateSpace
 
 
 /**
@@ -18,8 +15,7 @@ import scalala.tensor.dense.DenseVector
  *
  * @author dlwh
  */
-class OWLQN[T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit vspace: MutableInnerProductSpace[Double,T],
-                                                        canNorm: CanNorm[T]) extends LBFGS[T](maxIter, m) with  ConfiguredLogging {
+class OWLQN[T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit vspace: MutableCoordinateSpace[T, Double]) extends LBFGS[T](maxIter, m) with  ConfiguredLogging {
   import vspace._
   require(m > 0)
   require(l1reg >= 0)
@@ -110,7 +106,7 @@ object OWLQN {
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
-          (norm((x -3) :^ 2,1),(x * 2) - 6)
+          (((x - 3.0) :^ 2.0).sum,(x * 2) - 6)
         }
       }
 

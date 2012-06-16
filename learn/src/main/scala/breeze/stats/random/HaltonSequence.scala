@@ -1,7 +1,7 @@
 package breeze.stats.random
 
 import breeze.stats.distributions.Rand
-import scalala.tensor.dense.{DenseVectorCol, DenseVector}
+import breeze.linalg.DenseVector
 
 /**
  * Generates a quasi-random sequence of dim-dimensional vectors
@@ -26,6 +26,6 @@ class HaltonSequence(dim: Int) extends Rand[DenseVector[Double]] {
       }
       h % 1.0
     }
-    new DenseVectorCol[Double](arr)
+    new DenseVector[Double](arr)
   }
 }

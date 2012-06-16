@@ -58,9 +58,9 @@ trait Encoder[T] {
   }
 
   /**
-   * Decodes a vector back to a Tensor[T,Double]
+   * Decodes a vector back to a Counter[T,Double]
    */
-  def decode(v: Vector[Double]):Tensor[T,Double] = {
+  def decode(v: Vector[Double]):Counter[T,Double] = {
     val ctr = Counter[T,Double]()
     for( (i,v) <- v.active.pairs) {
       ctr(index.get(i)) = v

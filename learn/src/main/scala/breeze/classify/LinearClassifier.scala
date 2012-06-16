@@ -17,15 +17,13 @@ package breeze.classify
 
 
 
-import scalala.tensor._
-import mutable.Counter
-import scalala.operators._
-import scalala.generic.math.CanNorm
 import breeze.serialization.DataSerialization.ReadWritable
 import breeze.serialization.{SerializationFormat, DataSerialization}
-import scala.Double
-import scalala.generic.collection._
-import scalala.scalar.Scalar
+import breeze.linalg.{Counter, NumericOps}
+import breeze.linalg.operators._
+import breeze.math.VectorSpace
+import breeze.linalg.support.{CanCopy, CanZipMapValues, CanNorm, CanCreateZerosLike}
+import breeze.generic.CanMapValues
 
 /**
  * A LinearClassifier is a multi-class classifier with decision
@@ -40,23 +38,20 @@ import scalala.scalar.Scalar
 @SerialVersionUID(1L)
 class LinearClassifier[L,T2, TL, TF]
     (val featureWeights: T2, val intercepts: TL)
-    (implicit viewT2 : T2<:<MatrixOps[T2], viewTL: TL <:<NumericOps[TL],
-     vv: CanViewAsTensor1[TL,L,Double],
-     add : BinaryOp[TL,TL,OpAdd,TL],
-     mulTensors : BinaryOp[T2,TF,OpMulMatrixBy,TL]) extends Classifier[L,TF] with Serializable {
+    (implicit viewT2 : T2<:<NumericOps[T2], vspace: VectorSpace[TL, Double],
+     mulTensors : BinaryOp[T2,TF,OpMulMatrix,TL]) extends Classifier[L,TF] with Serializable {
+  import vspace._
   def scores(o: TF) = {
     val r:TL = featureWeights * o
-    vv(r + intercepts)
+    r + intercepts
   }
 }
 
 object LinearClassifier {
-  implicit def linearClassifierReadWritable[L,TF,T2,TL](implicit viewT2 : T2<:<MatrixOps[T2], viewTL: TL <:<NumericOps[TL],
-                                                     vv: CanViewAsTensor1[TL,L,Double],
-                                                     add : BinaryOp[TL,TL,OpAdd,TL],
-                                                     mulTensors : BinaryOp[T2,TF,OpMulMatrixBy,TL],
-                                                     tfW: DataSerialization.ReadWritable[T2],
-                                                     tlW: DataSerialization.ReadWritable[TL]) = {
+  implicit def linearClassifierReadWritable[L,TF,T2,TL](implicit viewT2 : T2<:<NumericOps[T2], vspace: VectorSpace[TL, Double],
+                                                        mulTensors : BinaryOp[T2,TF,OpMulMatrix,TL],
+                                                        tfW: DataSerialization.ReadWritable[T2],
+                                                        tlW: DataSerialization.ReadWritable[TL]) = {
     new ReadWritable[LinearClassifier[L,T2,TL,TF]] {
       def write(sink: DataSerialization.Output, what: LinearClassifier[L,T2,TL,TF]) = {
         tfW.write(sink,what.featureWeights)
@@ -72,7 +67,7 @@ object LinearClassifier {
   }
 }
 
-class LFMatrix[L,TF](emptyTF: =>TF) extends MutableNumericOps[LFMatrix[L,TF]] with MatrixOps[LFMatrix[L,TF]] with Serializable {
+class LFMatrix[L,TF](emptyTF: =>TF) extends NumericOps[LFMatrix[L,TF]] with Serializable {
   def repr = this
   private val map = collection.mutable.Map[L,TF]()
 
@@ -95,9 +90,8 @@ class LFMatrix[L,TF](emptyTF: =>TF) extends MutableNumericOps[LFMatrix[L,TF]] wi
 object LFMatrix {
   implicit def lfMatrixTimesTF[L,TF]
   (implicit inner: BinaryOp[TF,TF,OpMulInner,Double], numeric: TF=>NumericOps[TF])
-  : BinaryOp[LFMatrix[L,TF],TF,OpMulMatrixBy,mutable.Counter[L,Double]]  = {
-    new BinaryOp[LFMatrix[L,TF],TF,OpMulMatrixBy,mutable.Counter[L,Double]] {
-      def opType = OpMulMatrixBy
+  : BinaryOp[LFMatrix[L,TF],TF,OpMulMatrix,Counter[L,Double]]  = {
+    new BinaryOp[LFMatrix[L,TF],TF,OpMulMatrix,Counter[L,Double]] {
 
       def apply(v1: LFMatrix[L, TF], v2: TF) = {
         val r = Counter[L,Double]()
@@ -113,7 +107,6 @@ object LFMatrix {
   (implicit op: BinaryOp[TF,Double,Op,TF], numeric: TF=>NumericOps[TF])
   : BinaryOp[LFMatrix[L,TF],Double,Op,LFMatrix[L,TF]]  = {
     new BinaryOp[LFMatrix[L,TF],Double,Op,LFMatrix[L,TF]] {
-      def opType = op.opType
 
       def apply(v1: LFMatrix[L, TF], v2: Double) = {
         val r = v1.empty
@@ -129,7 +122,6 @@ object LFMatrix {
   (implicit op: BinaryOp[Double,TF,Op,TF], numeric: TF=>NumericOps[TF])
   : BinaryOp[Double,LFMatrix[L,TF],Op,LFMatrix[L,TF]]  = {
     new BinaryOp[Double,LFMatrix[L,TF],Op,LFMatrix[L,TF]] {
-      def opType = op.opType
 
       def apply(v2: Double, v1: LFMatrix[L, TF]) = {
         val r = v1.empty
@@ -145,7 +137,6 @@ object LFMatrix {
   (implicit op: BinaryOp[TF,TF,Op,TF], numeric: TF=>NumericOps[TF])
   : BinaryOp[LFMatrix[L,TF],LFMatrix[L,TF],Op,LFMatrix[L,TF]]  = {
     new BinaryOp[LFMatrix[L,TF],LFMatrix[L,TF],Op,LFMatrix[L,TF]] {
-      def opType = op.opType
 
       def apply(v2: LFMatrix[L,TF], v1: LFMatrix[L, TF]) = {
         val r = v1.empty
@@ -168,8 +159,6 @@ object LFMatrix {
   (implicit op: BinaryOp[TF,TF,OpMulInner,Double], numeric: TF=>NumericOps[TF])
   : BinaryOp[LFMatrix[L,TF],LFMatrix[L,TF],OpMulInner,Double]  = {
     new BinaryOp[LFMatrix[L,TF],LFMatrix[L,TF],OpMulInner,Double] {
-      def opType = op.opType
-
       def apply(v2: LFMatrix[L,TF], v1: LFMatrix[L, TF]) = {
         val visited = scala.collection.mutable.Set[L]()
         var r = 0.0
@@ -187,10 +176,9 @@ object LFMatrix {
   }
 
   implicit def lfBinaryOp2[L,TF,Op]
-  (implicit op: BinaryOp[TF,Double,OpMul,TF], numeric: TF=>NumericOps[TF])
-  : BinaryOp[LFMatrix[L,TF],Double,OpMulMatrixBy,LFMatrix[L,TF]]  = {
-    new BinaryOp[LFMatrix[L,TF],Double,OpMulMatrixBy,LFMatrix[L,TF]] {
-      def opType = OpMulMatrixBy
+  (implicit op: BinaryOp[TF,Double,OpMulScalar,TF], numeric: TF=>NumericOps[TF])
+  : BinaryOp[LFMatrix[L,TF],Double,OpMulScalar,LFMatrix[L,TF]]  = {
+    new BinaryOp[LFMatrix[L,TF],Double, OpMulScalar, LFMatrix[L,TF]] {
 
       def apply(v1: LFMatrix[L, TF], v2: Double) = {
         val r = v1.empty
@@ -206,7 +194,6 @@ object LFMatrix {
   (implicit op: BinaryUpdateOp[TF,Double,Op], numeric: TF=>NumericOps[TF])
   : BinaryUpdateOp[LFMatrix[L,TF],Double,Op]  = {
     new BinaryUpdateOp[LFMatrix[L,TF],Double,Op] {
-      def opType = op.opType
 
       def apply(v1: LFMatrix[L, TF], v2: Double) = {
         val r = v1.empty
@@ -222,8 +209,6 @@ object LFMatrix {
   (implicit op: BinaryUpdateOp[TF,TF,Op], numeric: TF=>NumericOps[TF])
   : BinaryUpdateOp[LFMatrix[L,TF],LFMatrix[L,TF],Op]  = {
     new BinaryUpdateOp[LFMatrix[L,TF],LFMatrix[L,TF],Op] {
-      def opType = op.opType
-
       def apply(v2: LFMatrix[L,TF], v1: LFMatrix[L, TF]) {
         val visited = scala.collection.mutable.Set[L]()
         for( (l,tf) <- v1.map) {
@@ -247,20 +232,11 @@ object LFMatrix {
     }
   }
 
-  implicit def hasValuesMonadic[L,TF](lfMatrix: LFMatrix[L,TF])(implicit hasValues: TF=>HasValuesMonadic[TF,Double])
-    : HasValuesMonadic[LFMatrix[L, TF], Double]  = {
-    new HasValuesMonadic[LFMatrix[L,TF],Double] {
-      def values = new ValuesMonadic[LFMatrix[L,TF],Double] {
-        def repr = lfMatrix
-      }
-    }
-  }
-
   implicit def canMapValues[L,TF](implicit cmf: CanMapValues[TF,Double,Double,TF]) = new CanMapValues[LFMatrix[L,TF],Double,Double,LFMatrix[L,TF]] {
-    def mapNonZero(from: LFMatrix[L, TF], fn: (Double) => Double) = {
+    def mapActive(from: LFMatrix[L, TF], fn: (Double) => Double) = {
       val r = from.empty
       for( (l,tf) <- from.map) {
-        r(l) = cmf.mapNonZero(tf,fn)
+        r(l) = cmf.mapActive(tf,fn)
       }
       r
     }
@@ -281,6 +257,16 @@ object LFMatrix {
       val keys = from.map.keySet ++ other.map.keySet
       for( l <- keys) {
         r(l) = cmf.map(from(l), other(l), fn)
+      }
+      r
+    }
+  }
+
+  implicit def canCopy[L,TF](implicit copy: CanCopy[TF]) = new CanCopy[LFMatrix[L,TF]] {
+    def apply(from: LFMatrix[L, TF]) = {
+      val r = from.empty
+      for( (l,v) <- from.map) {
+        r(l) = copy(v)
       }
       r
     }

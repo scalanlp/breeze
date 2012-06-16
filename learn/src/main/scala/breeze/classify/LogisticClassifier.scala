@@ -1,8 +1,8 @@
-package breeze.classify;
+package breeze.classify
 /*
  Copyright 2010 David Hall, Daniel Ramage
 
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
 
@@ -17,17 +17,12 @@ package breeze.classify;
 
 
 
-import scalala.tensor._;
-
-import dense.{DenseVectorCol, DenseVector}
-import breeze.data._;
+import breeze.linalg._
+import breeze.numerics._
+import breeze.data._
 import breeze.optimize._
-import scalala.operators.bundles.MutableInnerProductSpace
-import scalala.library.Numerics._
-import scalala.library.Library._;
-import scalala.generic.math.CanNorm
-import breeze.util.{I}
 import breeze.optimize.FirstOrderMinimizer.OptParams
+import breeze.math.MutableCoordinateSpace
 
 /**
  * A multi-class logistic/softmax/maxent classifier. It's currently unsmoothed (no regularization)
@@ -39,13 +34,13 @@ object LogisticClassifier {
 
 
   def main(args: Array[String]) {
-    val data = DataMatrix.fromURL(new java.net.URL("http://www-stat.stanford.edu/~tibs/ElemStatLearn/datasets/spam.data"),-1);
-    val vectors = data.rows.map(e => e map ((a:Seq[Double]) => new DenseVectorCol(a.toArray)) relabel (_.toInt))
+    val data = DataMatrix.fromURL(new java.net.URL("http://www-stat.stanford.edu/~tibs/ElemStatLearn/datasets/spam.data"),-1)
+    val vectors = data.rows.map(e => e map ((a:Seq[Double]) => new DenseVector(a.toArray)) relabel (_.toInt))
 
-    val classifier = new LogisticClassifier.Trainer[Int,DenseVector[Double]].train(vectors);
+    val classifier = new LogisticClassifier.Trainer[Int,DenseVector[Double]].train(vectors)
     for( ex <- vectors) {
-      val guessed = classifier.classify(ex.features);
-      println(guessed,ex.label);
+      val guessed = classifier.classify(ex.features)
+      println(guessed,ex.label)
     }
   }
 
@@ -55,60 +50,60 @@ object LogisticClassifier {
    * @tparam TF feature vectors, which are the input vectors to the classifer
    * @return a LinearClassifier based on the fitted model
    */
-  class Trainer[L,TF](opt: OptParams = OptParams())(implicit arith: MutableInnerProductSpace[Double,TF], canNorm: CanNorm[TF]) extends Classifier.Trainer[L,TF] {
-    import arith._;
+  class Trainer[L,TF](opt: OptParams = OptParams())(implicit arith: MutableCoordinateSpace[TF, Double]) extends Classifier.Trainer[L,TF] {
+    import arith._
 
-    type MyClassifier = LinearClassifier[L,LFMatrix[L,TF],Counter[L,Double],TF];
+    type MyClassifier = LinearClassifier[L,LFMatrix[L,TF],Counter[L,Double],TF]
 
     def train(data: Iterable[Example[L,TF]]) = {
-      require(data.size > 0);
-      val labelSet = Set.empty ++ data.iterator.map(_.label);
+      require(data.size > 0)
+      val labelSet = Set.empty ++ data.iterator.map(_.label)
 
-      val guess = new LFMatrix[L,TF](zeros(data.head.features));
-      for(l <- labelSet) guess(l) = zeros(data.head.features);
+      val guess = new LFMatrix[L,TF](zeros(data.head.features))
+      for(l <- labelSet) guess(l) = zeros(data.head.features)
 
-      val obj = new CachedBatchDiffFunction(objective(data.toIndexedSeq))
+      val obj = new CachedBatchDiffFunction(objective(data.toIndexedSeq))(LFMatrix.canCopy(copy))
 
-      val weights = opt.minimize(obj,guess);
+      val weights = opt.minimize(obj,guess)
 //
 //      val weights = new LBFGS[LFMatrix[L, TF]]().minimize(obj, guess)
 
-      new LinearClassifier(weights,Counter[L,Double]());
+      new LinearClassifier(weights,Counter[L,Double]())
     }
 
 
-    protected def objective(data: IndexedSeq[Example[L,TF]]) = new ObjectiveFunction(data);
+    protected def objective(data: IndexedSeq[Example[L,TF]]) = new ObjectiveFunction(data)
 
     // preliminaries: an objective function
     protected class ObjectiveFunction(data: IndexedSeq[Example[L,TF]]) extends BatchDiffFunction[LFMatrix[L,TF]] {
-      val labelSet = Set.empty ++ data.iterator.map(_.label);
-      val allLabels = labelSet.toSeq;
+      val labelSet = Set.empty ++ data.iterator.map(_.label)
+      val allLabels = labelSet.toSeq
 
       // Computes the dot product for each label
       def logScores(weights: LFMatrix[L,TF], datum: TF): Counter[L,Double] = {
-        weights * datum;
+        weights * datum
       }
 
       val fullRange = (0 until data.size)
 
       override def calculate(weights: LFMatrix[L,TF], range: IndexedSeq[Int]) = {
-        var ll = 0.0;
-        val grad = weights.empty;
+        var ll = 0.0
+        val grad = weights.empty
 
         for( datum <- range.view map data) {
-          val logScores = this.logScores(weights,datum.features);
-          val logNormalizer = softmax(logScores);
-          ll -= (logScores(datum.label) - logNormalizer);
-          assert(!ll.isNaN);
+          val logScores = this.logScores(weights,datum.features)
+          val logNormalizer = softmax(logScores)
+          ll -= (logScores(datum.label) - logNormalizer)
+          assert(!ll.isNaN)
 
           // d ll/d weight_kj = \sum_i x_ij ( I(group_i = k) - p_k(x_i;Beta))
           for ( label <- allLabels ) {
             val prob_k = math.exp(logScores(label) - logNormalizer)
-            assert(prob_k >= 0 && prob_k <= 1,prob_k);
-            grad(label) -= datum.features * (I(label == datum.label) - prob_k);
+            assert(prob_k >= 0 && prob_k <= 1,prob_k)
+            grad(label) -= datum.features * (I(label == datum.label) - prob_k)
           }
         }
-        (ll,grad);
+        (ll,grad)
       }
     }
   }

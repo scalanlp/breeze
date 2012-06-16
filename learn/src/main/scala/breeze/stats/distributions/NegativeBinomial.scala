@@ -1,6 +1,6 @@
 package breeze.stats.distributions
 
-import scalala.library.Numerics.lgamma
+import breeze.numerics._
 
 /**
  * Negative Binomial Distribution

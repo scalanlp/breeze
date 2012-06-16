@@ -1,24 +1,21 @@
 package breeze.optimize
 
-import scalala.tensor._
-import scalala.operators.bundles.MutableInnerProductSpace
-import scalala.generic.math.CanNorm
-import scalala.generic.collection.{CanMapKeyValuePairs, CanViewAsTensor1}
 import breeze.util.logging.Logged
+import breeze.math.{NormedVectorSpace, MutableCoordinateSpace}
 
 /**
  * 
  * @author dlwh
  */
 
-abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: Int = -1)(implicit norm: CanNorm[T]) extends Minimizer[T,DF] with Logged {
+abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: Int = -1)(implicit vspace: NormedVectorSpace[T, Double]) extends Minimizer[T,DF] with Logged {
 
-  type History;
+  type History
   case class State(x: T,
                    value: Double, grad: T,
                    adjustedValue: Double, adjustedGradient: T,
                    iter: Int,
-                   history: History);
+                   history: History)
 
   protected def initialHistory(f: DF, init: T): History
   protected def adjust(newX: T, newGrad: T, newVal: Double):(Double,T) = (newVal,newGrad)
@@ -43,9 +40,9 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
         log.info("Step Size:" + stepSize)
         val x = takeStep(state,dir,stepSize)
         val (value,grad) = f.calculate(x)
-        log.info("Val and Grad Norm:" + value + " " + norm(grad,2))
+        log.info("Val and Grad Norm:" + value + " " + vspace.norm(grad))
         val (adjValue,adjGrad) = adjust(x,grad,value)
-        log.info("Adj Val and Grad Norm:" + adjValue + " " + norm(adjGrad,2))
+        log.info("Adj Val and Grad Norm:" + adjValue + " " + vspace.norm(adjGrad))
         val history = updateHistory(x,grad,value,state)
         failedOnce = false
         State(x,value,grad,adjValue,adjGrad,state.iter + 1,history)
@@ -62,7 +59,7 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
   def minimize(f: DF, init: T):T = {
     iterations(f,init).find(state =>
       (state.iter >= maxIter && maxIter >= 0)
-        || norm(state.adjustedGradient,2) <= math.max(1E-6 * state.adjustedValue.abs,1E-9)
+        || vspace.norm(state.adjustedGradient) <= math.max(1E-6 * state.adjustedValue.abs,1E-9)
     ).get.x
   }
 }
@@ -80,18 +77,16 @@ object FirstOrderMinimizer {
                        useL1: Boolean = false,
                        tolerance:Double = 1E-4,
                        useStochastic: Boolean= false) {
-    def minimize[T](f: BatchDiffFunction[T],
-                      init: T)(implicit arith: MutableInnerProductSpace[Double,T], canNorm: CanNorm[T]) = {
+    def minimize[T](f: BatchDiffFunction[T], init: T)(implicit arith: MutableCoordinateSpace[T, Double]) = {
       this.iterations(f, init).find{state =>
             ((state.iter >= maxIterations && maxIterations >= 0)
-              || canNorm(state.adjustedGradient,2) <= math.max(tolerance * state.adjustedValue.abs,1E-9))
+              || arith.norm(state.adjustedGradient) <= math.max(tolerance * state.adjustedValue.abs,1E-9))
           }.get.x
     }
 
-    def iterations[T](f: BatchDiffFunction[T], init: T)
-                      (implicit arith: MutableInnerProductSpace[Double,T], canNorm: CanNorm[T]): Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State] = {
+    def iterations[T](f: BatchDiffFunction[T], init: T)(implicit arith: MutableCoordinateSpace[T, Double]): Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State] = {
       val it = if(useStochastic) {
-         this.iterations(f.withRandomBatches(batchSize), init)
+         this.iterations(f.withRandomBatches(batchSize), init)(arith)
       } else {
         iterations(f:DiffFunction[T], init)
       }
@@ -99,28 +94,24 @@ object FirstOrderMinimizer {
       it.asInstanceOf[Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State]]
     }
 
-    def iterations[T](f: StochasticDiffFunction[T], init:T)
-                      (implicit arith: MutableInnerProductSpace[Double,T],
-                       canNorm: CanNorm[T]):Iterator[FirstOrderMinimizer[T, StochasticDiffFunction[T]]#State] = {
+    def iterations[T](f: StochasticDiffFunction[T], init:T)(implicit arith: MutableCoordinateSpace[T, Double]):Iterator[FirstOrderMinimizer[T, StochasticDiffFunction[T]]#State] = {
       val r = if(regularization == 0.0) {
-        new StochasticGradientDescent.SimpleSGD[T](alpha, maxIterations) {
+        new StochasticGradientDescent.SimpleSGD[T](alpha, maxIterations)(arith) {
         }
       } else if(useL1) {
-        new AdaptiveGradientDescent.L1Regularization[T](regularization, eta=alpha, maxIter = maxIterations)(arith,canNorm) {
+        new AdaptiveGradientDescent.L1Regularization[T](regularization, eta=alpha, maxIter = maxIterations)(arith) {
         }
       } else { // L2
-        new StochasticGradientDescent[T](alpha,  maxIterations) with AdaptiveGradientDescent.L2Regularization[T] {
-          override val lambda = regularization;
+        new StochasticGradientDescent[T](alpha,  maxIterations)(arith) with AdaptiveGradientDescent.L2Regularization[T] {
+          override val lambda = regularization
         }
       }
       r.iterations(f,init)
     }
 
-    def iterations[T]
-      (f: DiffFunction[T], init:T)(implicit vspace: MutableInnerProductSpace[Double,T],
-                             canNorm: CanNorm[T]): Iterator[LBFGS[T]#State] = {
-       if(useL1) new OWLQN[T](maxIterations, 5, regularization).iterations(f,init)
-      else new LBFGS[T](maxIterations, 5).iterations(DiffFunction.withL2Regularization(f,regularization),init);
+    def iterations[T](f: DiffFunction[T], init:T)(implicit vspace: MutableCoordinateSpace[T, Double]): Iterator[LBFGS[T]#State] = {
+       if(useL1) new OWLQN[T](maxIterations, 5, regularization)(vspace).iterations(f,init)
+      else new LBFGS[T](maxIterations, 5)(vspace).iterations(DiffFunction.withL2Regularization(f,regularization),init)
     }
   }
 }

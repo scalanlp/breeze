@@ -1,5 +1,7 @@
 package breeze.optimize
 
+import breeze.math.CoordinateSpace
+
 /*
  Copyright 2009 David Hall, Daniel Ramage
  
@@ -16,11 +18,6 @@ package breeze.optimize
  limitations under the License. 
 */
 
-import scalala.generic.math.CanNorm
-import scalala.library.Library.norm
-import scalala.operators.{NumericOps, OpAdd, OpMul, BinaryOp}
-import scalala.operators.bundles.VectorSpace
-
 /**
 * Represents a differentiable function whose output is guaranteed to be consistent
 *
@@ -29,8 +26,7 @@ import scalala.operators.bundles.VectorSpace
 trait DiffFunction[T] extends StochasticDiffFunction[T]
 
 object DiffFunction {
-  def withL2Regularization[T](d: DiffFunction[T],weight: Double)
-                             (implicit canNorm: CanNorm[T],vspace: VectorSpace[Double,T]) = new DiffFunction[T] {
+  def withL2Regularization[T](d: DiffFunction[T],weight: Double)(implicit vspace: CoordinateSpace[T, Double]) = new DiffFunction[T] {
     import vspace._
     override def gradientAt(x:T):T = {
       val grad = d.gradientAt(x)
@@ -56,11 +52,8 @@ object DiffFunction {
     }
   }
 
-  def withL2Regularization[T](d: BatchDiffFunction[T],weight: Double)
-                             (implicit canNorm: CanNorm[T],
-                              view: T => NumericOps[T],
-                              addVector: BinaryOp[T,T,OpAdd,T],
-                              mulScalar: BinaryOp[T,Double,OpMul,T]):BatchDiffFunction[T] = new BatchDiffFunction[T] {
+  def withL2Regularization[T](d: BatchDiffFunction[T],weight: Double)(implicit vspace: CoordinateSpace[T, Double]):BatchDiffFunction[T] = new BatchDiffFunction[T] {
+    import vspace._
     override def gradientAt(x:T, batch: IndexedSeq[Int]):T = {
       val grad = d.gradientAt(x, batch)
       myGrad(grad,x)
