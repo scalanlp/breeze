@@ -10,6 +10,9 @@ import scala.math._
  */
 package object numerics extends UniversalFuncs {
 
+  val inf, Inf = Double.PositiveInfinity
+  val nan, NaN = Double.NaN
+
 
   /**
    * The standard digamma function. Cribbed from Radford Neal
@@ -260,6 +263,7 @@ trait UniversalFuncs {
   import scala.{math=>m}
   val exp = UFunc(m.exp _)
   val log = UFunc(m.log _)
+  val log1p = UFunc(m.log1p _)
 
   val sqrt = UFunc(m.log _)
 
