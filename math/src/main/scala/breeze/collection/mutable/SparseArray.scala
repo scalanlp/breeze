@@ -88,7 +88,6 @@ class SparseArray[Elem](var index: Array[Int],
       new SparseArray[B](newIndex, newData, o, length, newDefault)
     } else {
       // no default values stored or f(default) is non-default
-      println("dense!")
       val newDefault = f(default)
       val newIndex = new Array[Int](length)
       val newData = new Array[B](length)
