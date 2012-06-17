@@ -26,6 +26,13 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(v.max === 3)
   }
 
+
+  test("Mean") {
+    assert(mean(DenseVector(0.0,1.0,2.0)) === 1.0)
+    assert(mean(DenseVector(0.0,3.0)) === 1.5)
+    assert(mean(DenseVector(3.0)) === 3.0)
+  }
+
   test("Norm") {
     val v = DenseVector(-0.4326, -1.6656, 0.1253, 0.2877, -1.1465)
     assertClose(v.norm(1), 3.6577)

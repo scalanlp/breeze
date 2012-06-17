@@ -4,6 +4,7 @@ import scala.{specialized=>spec}
 import breeze.storage.{DefaultArrayValue, SparseStorage}
 import support.{CanCopy, CanSlice}
 import breeze.util.ArrayUtil
+import breeze.generic.{URFunc, UReduceable}
 
 
 /**
@@ -76,4 +77,16 @@ object SparseVector {
 
   def canCopySparse[V: ClassManifest: DefaultArrayValue] = new CanCopySparseVector[V]
 
+
+  class SVUReduceable[@specialized(Int, Float, Double) V] extends UReduceable[SparseVector[V], V] {
+    def apply[Final](c: SparseVector[V], f: URFunc[V, Final]) = {
+      f(c.data, c.used)
+    }
+  }
+
+  implicit def ured[V] = new SVUReduceable[V]
+
+  implicit val ured_d = new SVUReduceable[Double]
+  implicit val ured_f = new SVUReduceable[Float]
+  implicit val ured_i = new SVUReduceable[Int]
 }

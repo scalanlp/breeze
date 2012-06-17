@@ -224,6 +224,8 @@ object DenseVector extends VectorConstructors[DenseVector]
     }
   }
 
+  implicit def ured[V] = new DVUReduceable[V]
+
   implicit val ured_d = new DVUReduceable[Double]
   implicit val ured_f = new DVUReduceable[Float]
   implicit val ured_i = new DVUReduceable[Int]
