@@ -329,6 +329,101 @@ object GenDVSVSpecialOps extends App {
 
 }
 
+/*
+object GenCounterOps extends App {
+  import GenOperators._
+
+  def plusSubIntoLoop(op: (String,String)=>String):String = {
+    """
+    for( (k,v) <- b.active.pairs) {
+      a(k) = %s
+    }
+    """.format(op("a(k)","v")).replaceAll("    ","        ")
+  }
+
+  def timesLoop(op: (String,String)=>String):String = {
+    """
+    val zero = implicitly[Semiring[V]].zero
+    val result = Counter[K, V]()
+    for( (k,v) <- b.active.pairs) {
+      val va =
+      r(k) = %s
+    }
+
+    r
+    """.format(op("a(k)","v")).replaceAll("    ","        ")
+  }
+
+
+  def slowLoop(op: (String,String)=>String):String = {
+    """require(b.length == a.length, "Vectors must be the same length!")
+
+    var i = 0
+    while(i < b.length) {
+      a(i) = %s
+      i += 1
+    }
+    """.format(op("a(i)","b(i)")).replaceAll("    ","        ")
+  }
+
+  def gen(sparseType: String, out: PrintStream) {
+    import out._
+
+    println("package breeze.linalg")
+    println("import breeze.linalg.operators._")
+    println("import breeze.linalg.support._")
+    println("import breeze.numerics._")
+
+    for( (scalar,ops) <- GenOperators.ops) {
+      println()
+      val vector = "%s[%s]".format("DenseVector",scalar)
+      val svector = "%s[%s]".format(sparseType,scalar)
+      println("/** This is an auto-generated trait providing operators for DenseVector and " + sparseType + "*/")
+      println("trait DenseVectorOps_"+sparseType+"_"+scalar +" { this: DenseVector.type =>")
+      for( (op,fn) <- ops) {
+        val name = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_DV_" + sparseType + "_" + scalar
+        val loop = if(op == OpSub || op == OpAdd) fastLoop _ else slowLoop _
+
+        println(genBinaryUpdateOperator(name, vector, svector, op)(loop(fn)))
+        println()
+        println("  " +genBinaryAdaptor(name.replace("Into",""), vector, svector, op, vector, "pureFromUpdate_"+scalar+ "(" + name+ ")"))
+        println()
+
+      }
+
+
+
+      // dot product
+      val dotName = "canDotProductDV_SV_" + scalar
+      println(genBinaryOperator(dotName, vector, svector, OpMulInner, scalar){
+        """require(b.length == a.length, "Vectors must be the same length!")
+
+       var result: """ + scalar + """ = 0
+
+        val bd = b.data
+        val bi = b.index
+        val bsize = b.iterableSize
+        var i = 0
+        while(i < b.size) {
+          if(b.isActive(i)) result += a(bi(i)) * bd(i)
+          i += 1
+        }
+        result""".replaceAll("       ","        ")
+      })
+
+      println("}")
+
+
+    }
+  }
+
+  val out = new PrintStream(new FileOutputStream(new File("math/src/main/scala/breeze/linalg/DenseVectorSVOps.scala")))
+  gen("SparseVector", out)
+  out.close()
+
+}
+*/
+
 object GenAll extends App {
   GenDenseOps.main(Array.empty)
   GenDVSVSpecialOps.main(Array.empty)

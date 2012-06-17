@@ -177,7 +177,6 @@ object DenseVector extends VectorConstructors[DenseVector]
   implicit val ured_f = new DVUReduceable[Float]
   implicit val ured_i = new DVUReduceable[Int]
 
-  /** Optimized base class for mapping a dense tensor. */
   class CanZipMapValuesDenseVector[@specialized V, @specialized RV:ClassManifest] extends CanZipMapValues[DenseVector[V],V,RV,DenseVector[RV]] {
     def create(length : Int) = new DenseVector(new Array[RV](length))
 

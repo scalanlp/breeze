@@ -5,6 +5,7 @@ import scala.{specialized=>spec}
 import breeze.storage.Storage
 import breeze.generic.CanMapValues
 import breeze.math.{Ring, Field}
+import collection.immutable.BitSet
 
 /**
  *
@@ -20,6 +21,8 @@ trait VectorLike[@spec E, +Self <: Vector[E]] extends Tensor[Int, E] with Tensor
 
 // Storage should be a self type, but specialization is broken for now.
 trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]] with Storage[E] { //storage: Storage[E] =>
+
+  def keySet: Set[Int] = BitSet( (0 until length) :_*)
 
   def length: Int
   override def size = length

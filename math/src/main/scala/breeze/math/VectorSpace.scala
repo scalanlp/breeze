@@ -73,10 +73,10 @@ trait CoordinateSpace[V, S] extends InnerProductSpace[V, S] {
   implicit def subVS: BinaryOp[V, S, OpSub, V]
   implicit def mulVV: BinaryOp[V, V, OpMulScalar, V]
   implicit def divVV: BinaryOp[V, V, OpDiv, V]
-  implicit def powVV: BinaryOp[V, V, OpPow, V]
-  implicit def powVS: BinaryOp[V, S, OpPow, V]
-  implicit def modVV: BinaryOp[V, V, OpMod, V]
-  implicit def modVS: BinaryOp[V, S, OpMod, V]
+//  implicit def powVV: BinaryOp[V, V, OpPow, V]
+//  implicit def powVS: BinaryOp[V, S, OpPow, V]
+//  implicit def modVV: BinaryOp[V, V, OpMod, V]
+//  implicit def modVS: BinaryOp[V, S, OpMod, V]
 }
 
 trait MutableCoordinateSpace[V, S] extends MutableInnerProductSpace[V, S]  with CoordinateSpace[V, S] {
@@ -85,11 +85,11 @@ trait MutableCoordinateSpace[V, S] extends MutableInnerProductSpace[V, S]  with 
   implicit def mulIntoVV: BinaryUpdateOp[V, V, OpMulScalar]
   implicit def divIntoVV: BinaryUpdateOp[V, V, OpDiv]
 
-  implicit def powIntoVV: BinaryUpdateOp[V, V, OpPow]
-  implicit def powIntoVS: BinaryUpdateOp[V, S, OpPow]
+//  implicit def powIntoVV: BinaryUpdateOp[V, V, OpPow]
+//  implicit def powIntoVS: BinaryUpdateOp[V, S, OpPow]
 
-  implicit def modIntoVV: BinaryUpdateOp[V, V, OpMod]
-  implicit def modIntoVS: BinaryUpdateOp[V, S, OpMod]
+//  implicit def modIntoVV: BinaryUpdateOp[V, V, OpMod]
+//  implicit def modIntoVS: BinaryUpdateOp[V, S, OpMod]
 }
 
 trait TensorSpace[V, I, S] extends MutableCoordinateSpace[V, S] {
@@ -107,10 +107,10 @@ object TensorSpace {
                    _subVS:  BinaryOp[V, S, OpSub, V],
                    _mulVV:  BinaryOp[V, V, OpMulScalar, V],
                    _divVV:  BinaryOp[V, V, OpDiv, V],
-                   _powVV:  BinaryOp[V, V, OpPow, V],
-                   _powVS:  BinaryOp[V, S, OpPow, V],
-                   _modVV:  BinaryOp[V, V, OpMod, V],
-                   _modVS:  BinaryOp[V, S, OpMod, V],
+//                   _powVV:  BinaryOp[V, V, OpPow, V],
+//                   _powVS:  BinaryOp[V, S, OpPow, V],
+//                   _modVV:  BinaryOp[V, V, OpMod, V],
+//                   _modVS:  BinaryOp[V, S, OpMod, V],
                    _copy:  CanCopy[V],
                    _mulIntoVS:  BinaryUpdateOp[V, S, OpMulScalar],
                    _divIntoVS:  BinaryUpdateOp[V, S, OpDiv],
@@ -120,10 +120,10 @@ object TensorSpace {
                    _subIntoVS:  BinaryUpdateOp[V, S, OpSub],
                    _mulIntoVV:  BinaryUpdateOp[V, V, OpMulScalar],
                    _divIntoVV:  BinaryUpdateOp[V, V, OpDiv],
-                   _powIntoVV:  BinaryUpdateOp[V, V, OpPow],
-                   _powIntoVS:  BinaryUpdateOp[V, S, OpPow],
-                   _modIntoVV:  BinaryUpdateOp[V, V, OpMod],
-                   _modIntoVS:  BinaryUpdateOp[V, S, OpMod],
+//                   _powIntoVV:  BinaryUpdateOp[V, V, OpPow],
+//                   _powIntoVS:  BinaryUpdateOp[V, S, OpPow],
+//                   _modIntoVV:  BinaryUpdateOp[V, V, OpMod],
+//                   _modIntoVS:  BinaryUpdateOp[V, S, OpMod],
                   _field:  Field[S],
                    _zeros:  CanCreateZerosLike[V, V],
                    _mulVS:  BinaryOp[V, S, OpMulScalar, V],
@@ -149,13 +149,13 @@ object TensorSpace {
 
     implicit def divVV: BinaryOp[V, V, OpDiv, V] = _divVV
 
-    implicit def powVV: BinaryOp[V, V, OpPow, V] = _powVV
-
-    implicit def powVS: BinaryOp[V, S, OpPow, V] = _powVS
-
-    implicit def modVV: BinaryOp[V, V, OpMod, V] = _modVV
-
-    implicit def modVS: BinaryOp[V, S, OpMod, V] = _modVS
+//    implicit def powVV: BinaryOp[V, V, OpPow, V] = _powVV
+//
+//    implicit def powVS: BinaryOp[V, S, OpPow, V] = _powVS
+//
+//    implicit def modVV: BinaryOp[V, V, OpMod, V] = _modVV
+//
+//    implicit def modVS: BinaryOp[V, S, OpMod, V] = _modVS
 
     implicit def copy: CanCopy[V] = _copy
 
@@ -175,13 +175,13 @@ object TensorSpace {
 
     implicit def divIntoVV: BinaryUpdateOp[V, V, OpDiv] = _divIntoVV
 
-    implicit def powIntoVV: BinaryUpdateOp[V, V, OpPow] = _powIntoVV
-
-    implicit def powIntoVS: BinaryUpdateOp[V, S, OpPow] = _powIntoVS
-
-    implicit def modIntoVV: BinaryUpdateOp[V, V, OpMod] = _modIntoVV
-
-    implicit def modIntoVS: BinaryUpdateOp[V, S, OpMod] = _modIntoVS
+//    implicit def powIntoVV: BinaryUpdateOp[V, V, OpPow] = _powIntoVV
+//
+//    implicit def powIntoVS: BinaryUpdateOp[V, S, OpPow] = _powIntoVS
+//
+//    implicit def modIntoVV: BinaryUpdateOp[V, V, OpMod] = _modIntoVV
+//
+//    implicit def modIntoVS: BinaryUpdateOp[V, S, OpMod] = _modIntoVS
 
     def field: Field[S] = _field
 

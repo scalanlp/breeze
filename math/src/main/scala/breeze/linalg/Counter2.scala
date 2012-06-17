@@ -5,7 +5,7 @@ import breeze.storage.DefaultArrayValue
 import collection.mutable.HashMap
 import breeze.math.Field
 import support.CanSlice2
-import collection.mutable
+import collection.{Set, mutable}
 
 /**
  *
@@ -81,6 +81,15 @@ object Counter2 {
   (implicit scalar : DefaultArrayValue[V])
   extends Counter2[K1,K2,V] with Serializable {
     def default = scalar.value
+
+    def keySet: Set[(K1, K2)] = new Set[(K1, K2)] {
+      def contains(k: (K1, K2)): Boolean = data.contains(k._1) && data(k._1).contains(k._2)
+
+      def +(elem: (K1, K2)): Set[(K1, K2)] = Set.empty ++ iterator + elem
+      def -(elem: (K1, K2)): Set[(K1, K2)] = Set.empty ++ iterator - elem
+
+      def iterator: Iterator[(K1, K2)] = for( (k1,m) <- data.iterator; k2 <- m.keysIterator) yield (k1, k2)
+    }
   }
 
   /** Returns a new empty counter. */

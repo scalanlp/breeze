@@ -13,6 +13,7 @@ import breeze.generic.CanMapValues
 sealed trait QuasiTensor[@specialized(Int) K, @specialized V] {
   def apply(i: K):V
   def update(i: K, v: V)
+  def keySet: scala.collection.Set[K]
 
     // Aggregators
   def max(implicit ord: Ordering[V]) = valuesIterator.max
