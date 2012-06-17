@@ -925,6 +925,8 @@ trait DenseVectorOps_Float { this: DenseVector.type =>
 
   implicit val canSet_DV_V_Float: BinaryOp[DenseVector[Float], Vector[Float], breeze.linalg.operators.OpSet, DenseVector[Float]] = pureFromUpdate_Float(canSetInto_DV_V_Float)
 
+
+
 }
 /** This is an auto-generated trait providing operators for DenseVector. */
 trait DenseVectorOps_Int { this: DenseVector.type =>
@@ -1386,5 +1388,7 @@ trait DenseVectorOps_Int { this: DenseVector.type =>
 
 
   implicit val canSet_DV_V_Int: BinaryOp[DenseVector[Int], Vector[Int], breeze.linalg.operators.OpSet, DenseVector[Int]] = pureFromUpdate_Int(canSetInto_DV_V_Int)
+
+
 
 }
