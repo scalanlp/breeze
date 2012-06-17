@@ -4,12 +4,40 @@ import scala.{specialized=>spec}
 import support._
 import breeze.generic.CanMapValues
 
+
+/**
+ * We occasionally need a Tensor that doesn't extend NumericOps directly. This is that tensor.
+ * @tparam K
+ * @tparam V
+ */
+sealed trait QuasiTensor[@specialized(Int) K, @specialized V] {
+  def apply(i: K):V
+  def update(i: K, v: V)
+
+    // Aggregators
+  def max(implicit ord: Ordering[V]) = valuesIterator.max
+  def min(implicit ord: Ordering[V]) = valuesIterator.min
+  def argmax(implicit ord: Ordering[V]) = keysIterator.maxBy( apply _)
+  def argmin(implicit ord: Ordering[V]) = keysIterator.minBy( apply _)
+  def sum(implicit num: Numeric[V]) = valuesIterator.sum
+
+
+  def iterator: Iterator[(K, V)]
+  def activeIterator: Iterator[(K, V)]
+
+  def valuesIterator: Iterator[V]
+  def activeValuesIterator: Iterator[V]
+
+  def keysIterator: Iterator[K]
+  def activeKeysIterator: Iterator[K]
+}
+
 /**
  * A Tensor defines a map from an index set to a set of values
  *
  * @author dlwh
  */
-trait TensorLike[@spec(Int) K, @specialized V, +This<:Tensor[K, V]] extends NumericOps[This] {
+trait TensorLike[@spec(Int) K, @specialized V, +This<:Tensor[K, V]] extends QuasiTensor[K,V] with NumericOps[This] {
   def apply(i: K):V
   def update(i: K, v: V)
 
@@ -22,14 +50,6 @@ trait TensorLike[@spec(Int) K, @specialized V, +This<:Tensor[K, V]] extends Nume
   def pairs: TensorPairs[K, V, This] = new TensorPairs[K, V, This](repr, false)
   def active: TensorActive[K, V, This] = new TensorActive[K, V, This](repr)
 
-  def iterator: Iterator[(K, V)]
-  def activeIterator: Iterator[(K, V)]
-
-  def valuesIterator: Iterator[V]
-  def activeValuesIterator: Iterator[V]
-
-  def keysIterator: Iterator[K]
-  def activeKeysIterator: Iterator[K]
 
   // slicing
   def apply[Slice, Result](slice: Slice)(implicit canSlice: CanSlice[This, Slice, Result]) = {
@@ -43,12 +63,7 @@ trait TensorLike[@spec(Int) K, @specialized V, +This<:Tensor[K, V]] extends Nume
     canSlice(repr, slice1, slice2)
   }
 
-  // Aggregators
-  def max(implicit ord: Ordering[V]) = valuesIterator.max
-  def min(implicit ord: Ordering[V]) = valuesIterator.min
-  def argmax(implicit ord: Ordering[V]) = keysIterator.maxBy( apply _)
-  def argmin(implicit ord: Ordering[V]) = keysIterator.minBy( apply _)
-  def sum(implicit num: Numeric[V]) = valuesIterator.sum
+
 
   /** Creates a new map containing a transformed copy of this map. */
   def mapPairs[TT>:This,O,That](f : (K,V) => O)(implicit bf : CanMapKeyValuePairs[TT, K, V, O, That]) : That = {
@@ -70,6 +85,7 @@ trait TensorLike[@spec(Int) K, @specialized V, +This<:Tensor[K, V]] extends Nume
     bf.mapActive(repr.asInstanceOf[TT], f)
   }
 }
+
 
 trait Tensor[@spec(Int) K, @specialized V] extends TensorLike[K, V, Tensor[K, V]]
 
