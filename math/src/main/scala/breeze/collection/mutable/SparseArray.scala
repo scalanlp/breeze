@@ -3,6 +3,7 @@ package breeze.collection.mutable
 import breeze.storage.{DefaultArrayValue, ConfigurableDefault, SparseStorage}
 import collection.mutable.BitSet
 import breeze.util.ArrayUtil
+import breeze.generic.{URFunc, UReduceable}
 
 
 /**
@@ -205,6 +206,14 @@ object SparseArray {
     }
     rv.compact()
     rv
+  }
+
+  implicit def sparseArrayIsUReduceable[A]:UReduceable[SparseArray[A], A] = {
+    new UReduceable[SparseArray[A], A] {
+      def apply[Final](c: SparseArray[A], f: URFunc[A, Final]) = {
+        f(c.data, c.used)
+      }
+    }
   }
 
 }
