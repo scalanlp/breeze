@@ -7,7 +7,8 @@ import breeze.generic.CanMapValues
 import support.{CanSlice, CanCopy}
 import breeze.numerics.IntMath
 import java.util.Arrays
-import breeze.math.{Ring, Field}
+import breeze.math.{Semiring, Ring, Field}
+import breeze.util.ArrayUtil
 
 /**
  *
@@ -65,6 +66,12 @@ object DenseVector extends VectorConstructors[DenseVector]
                       with DenseVectorOps_SparseVector_Int {
   def zeros[@spec(Double, Float, Int) V: ClassManifest](size: Int) = apply(new Array[V](size))
   def apply[@spec(Double, Float, Int) V](values: Array[V]) = new DenseVector(values)
+  def ones[@spec(Double, Float, Int) V: ClassManifest:Semiring](size: Int) = {
+    val r = apply(new Array[V](size))
+    assert(r.stride == 1)
+    ArrayUtil.fill(r.data, r.offset, r.length, implicitly[Semiring[V]].one)
+    r
+  }
 
     // concatenation
   /**
