@@ -10,7 +10,9 @@ package breeze.generic
  * @author dlwh
  */
 trait URFunc[@specialized A, +B] {
-  def apply(cc: Traversable[A]):B
+  def apply(cc: TraversableOnce[A]):B
+
+
   def apply[T](c: T)(implicit urable: UReduceable[T, A]):B = {
     urable(c, this)
   }
@@ -21,6 +23,7 @@ trait URFunc[@specialized A, +B] {
     apply(arr.toStream.take(length).zipWithIndex.collect { case (v, i) if isUsed(i) => v})
   }
 
+  def apply(as: A*):B = apply(as)
 
 }
 
