@@ -32,5 +32,8 @@ class TensorValues[K, V, +This](private val tensor: This, active: Boolean = fals
     tensor.mapValues(fn)(bf.asInstanceOf[CanMapValues[Tensor[K, V], V, O, That]])
   }
 
+  def exists(f: V=>Boolean) = iterator exists f
+  def forall(f: V=>Boolean) = iterator forall f
+
 
  }
