@@ -284,6 +284,7 @@ trait UniversalFuncs {
   val ceil = UFunc(m.ceil _)
   val round = UFunc(m.round _)
   val rint = UFunc(m.rint _)
+  val signum = UFunc(m.signum(_:Double))
 
 
 }
