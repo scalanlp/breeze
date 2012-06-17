@@ -4,6 +4,8 @@ import breeze.linalg.Counter2.Curried
 import breeze.storage.DefaultArrayValue
 import collection.mutable.HashMap
 import breeze.math.Field
+import support.CanSlice2
+import collection.mutable
 
 /**
  *
@@ -107,6 +109,51 @@ object Counter2 {
     values.foreach({ case (k1,k2) => rv(k1,k2) += 1; })
     rv
   }
+
+
+  // slicing
+
+
+  implicit def canSliceRow[K1,K2,V] : CanSlice2[Counter2[K1,K2,V],K1,::.type, Counter[K2,V]]
+  = new CanSlice2[Counter2[K1,K2,V],K1, ::.type, Counter[K2,V]] {
+    override def apply(from : Counter2[K1,K2,V], row : K1, unused: ::.type) = from.data(row)
+  }
+
+  implicit def canSliceCol[K1,K2,V]: CanSlice2[Counter2[K1,K2,V], ::.type, K2,Counter[K1,V]]
+  = new CanSlice2[Counter2[K1,K2,V],::.type, K2,Counter[K1,V]] {
+    def apply(from: Counter2[K1, K2, V], x: ::.type, col: K2) = new Counter[K1,V] {
+      def default = from.default
+
+      override val data = new scala.collection.mutable.Map[K1,V] {
+        override def apply(k1 : K1) =
+          from(k1,col)
+
+        override def update(k1 : K1, v : V) =
+          from(k1,col) = v
+
+        override def -=(k1 : K1) = {
+          from.data(k1)(col) = from.default
+          this
+        }
+
+        override def +=(tup : (K1,V)) = {
+          from.data(tup._1)(col) = (tup._2)
+          this
+        }
+
+        override def iterator =
+          for ((k1,map) <- from.data.iterator) yield (k1,map(col))
+
+        override def get(k1 : K1) =
+          from.data.get(k1).map(_(col))
+
+        override def keySet = from.data.keySet
+
+        override def size = from.data.size
+      }
+    }
+  }
+
 
   /**
    * This is just a curried version of scala.collection.Map.
