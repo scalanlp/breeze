@@ -236,14 +236,16 @@ object DenseMatrix extends LowPriorityDenseMatrix
     new CanMapValues[DenseMatrix[V],V,R,DenseMatrix[R]] {
       override def map(from : DenseMatrix[V], fn : (V=>R)) = {
         val data = new Array[R](from.size)
-        var i = 0
-        while (i < from.rows) {
-          var j = 0
-          while(j < from.cols) {
-            data(i + j * from.rows) = fn(from(i, j))
-            j += 1
+        var j = 0
+        var off = 0
+        while (j < from.cols) {
+          var i = 0
+          while(i < from.rows) {
+            data(off) = fn(from(i, j))
+            off += 1
+            i += 1
           }
-          i += 1
+          j += 1
         }
         new DenseMatrix[R](data, from.rows, from.cols)
       }
@@ -257,14 +259,16 @@ object DenseMatrix extends LowPriorityDenseMatrix
     new CanMapKeyValuePairs[DenseMatrix[V],(Int,Int),V,R,DenseMatrix[R]] {
       override def map(from : DenseMatrix[V], fn : (((Int,Int),V)=>R)) = {
         val data = new Array[R](from.data.length)
-        var i = 0
-        while (i < from.rows) {
-          var j = 0
-          while(j < from.cols) {
-            data(i + j * from.rows) = fn(i -> j, from(i, j))
-            j += 1
+        var j = 0
+        var off = 0
+        while (j < from.cols) {
+          var i = 0
+          while(i < from.rows) {
+            data(off) = fn(i -> j, from(i, j))
+            off += 1
+            i += 1
           }
-          i += 1
+          j += 1
         }
         new DenseMatrix(data, from.rows, from.cols)
       }
