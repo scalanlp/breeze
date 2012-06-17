@@ -1,8 +1,8 @@
 package breeze.math
 
 import breeze.linalg.operators._
-import breeze.linalg.support.{CanNorm, CanCopy, CanCreateZerosLike}
-import breeze.linalg.NumericOps
+import breeze.linalg.support.{CanZipMapValues, CanNorm, CanCopy, CanCreateZerosLike}
+import breeze.linalg.{QuasiTensor, TensorLike, Tensor, NumericOps}
 import breeze.generic.CanMapValues
 
 /**
@@ -36,7 +36,7 @@ trait NormedVectorSpace[V, S] extends VectorSpace[V, S] {
 }
 
 trait InnerProductSpace[V, S] extends NormedVectorSpace[V, S] {
-  def dot(a: V, b: V): S
+  implicit def dotVV: BinaryOp[V, V, OpMulInner, Double]
 }
 
 trait MutableVectorSpace[V, S] extends VectorSpace[V, S] {
@@ -66,23 +66,32 @@ trait MutableInnerProductSpace[V, S] extends InnerProductSpace[V, S] with Mutabl
 trait CoordinateSpace[V, S] extends InnerProductSpace[V, S] {
   implicit def norm: CanNorm[V]
   implicit def mapValues: CanMapValues[V,S,S,V]
+  implicit def zipMapValues: CanZipMapValues[V,S,S,V]
 
   implicit def addVS: BinaryOp[V, S, OpAdd, V]
   implicit def subVS: BinaryOp[V, S, OpSub, V]
-  implicit def mulVV: BinaryOp[V, S, OpMulScalar, V]
-  implicit def divVV: BinaryOp[V, S, OpDiv, V]
-  implicit def powVV: BinaryOp[V, V, OpDiv, V]
-  implicit def powVS: BinaryOp[V, S, OpDiv, V]
+  implicit def mulVV: BinaryOp[V, V, OpMulScalar, V]
+  implicit def divVV: BinaryOp[V, V, OpDiv, V]
+  implicit def powVV: BinaryOp[V, V, OpPow, V]
+  implicit def powVS: BinaryOp[V, S, OpPow, V]
+  implicit def modVV: BinaryOp[V, V, OpMod, V]
+  implicit def modVS: BinaryOp[V, S, OpMod, V]
 }
 
-trait MutableCoordinateSpace[V, S] extends MutableInnerProductSpace[V, S] {
-  implicit def norm: CanNorm[V]
-  implicit def mapValues: CanMapValues[V,S,S,V]
-
+trait MutableCoordinateSpace[V, S] extends MutableInnerProductSpace[V, S]  with CoordinateSpace[V, S] {
   implicit def addIntoVS: BinaryUpdateOp[V, S, OpAdd]
   implicit def subIntoVS: BinaryUpdateOp[V, S, OpSub]
-  implicit def mulIntoVV: BinaryUpdateOp[V, S, OpMulScalar]
-  implicit def divIntoVV: BinaryUpdateOp[V, S, OpDiv]
-  implicit def powIntoVV: BinaryUpdateOp[V, V, OpDiv]
-  implicit def powIntoVS: BinaryUpdateOp[V, S, OpDiv]
+  implicit def mulIntoVV: BinaryUpdateOp[V, V, OpMulScalar]
+  implicit def divIntoVV: BinaryUpdateOp[V, V, OpDiv]
+
+  implicit def powIntoVV: BinaryUpdateOp[V, V, OpPow]
+  implicit def powIntoVS: BinaryUpdateOp[V, S, OpPow]
+
+  implicit def modIntoVV: BinaryUpdateOp[V, V, OpMod]
+  implicit def modIntoVS: BinaryUpdateOp[V, S, OpMod]
+}
+
+trait TensorSpace[V, I, S] extends MutableCoordinateSpace[V, S] {
+  implicit def isNumericOps(v: V):NumericOps[V] with QuasiTensor[I, S]
+
 }
