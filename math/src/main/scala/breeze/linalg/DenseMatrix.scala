@@ -100,7 +100,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
   }
 
   /** Horizontally tiles some matrices. They must have the same number of rows */
-  def horzcat[V](matrices: DenseMatrix[V]*)(implicit opset: BinaryUpdateOp[DenseMatrix[V], DenseMatrix[V], OpSet], vman: ClassManifest[V]) = {
+  def horzcat[M,V](matrices: M*)(implicit ev: M <:< Matrix[V], opset: BinaryUpdateOp[DenseMatrix[V], M, OpSet], vman: ClassManifest[V]) = {
     if(matrices.isEmpty) zeros[V](0,0)
     else {
       require(matrices.forall(m => m.rows == matrices(0).rows),"Not all matrices have the same number of rows")
@@ -300,13 +300,61 @@ object DenseMatrix extends LowPriorityDenseMatrix
 
 
 
-  implicit val setMM_D: BinaryUpdateOp[DenseMatrix[Double], DenseMatrix[Double], OpSet] = new SetMMOp[Double]
-  implicit val setMM_F: BinaryUpdateOp[DenseMatrix[Float], DenseMatrix[Float], OpSet]  = new SetMMOp[Float]
-  implicit val setMM_I: BinaryUpdateOp[DenseMatrix[Int], DenseMatrix[Int], OpSet]  = new SetMMOp[Int]
+  implicit val setMM_D: BinaryUpdateOp[DenseMatrix[Double], DenseMatrix[Double], OpSet] = new SetDMDMOp[Double]
+  implicit val setMM_F: BinaryUpdateOp[DenseMatrix[Float], DenseMatrix[Float], OpSet]  = new SetDMDMOp[Float]
+  implicit val setMM_I: BinaryUpdateOp[DenseMatrix[Int], DenseMatrix[Int], OpSet]  = new SetDMDMOp[Int]
+
+  implicit val setMV_D: BinaryUpdateOp[DenseMatrix[Double], DenseVector[Double], OpSet] = new SetDMDVOp[Double]
+  implicit val setMV_F: BinaryUpdateOp[DenseMatrix[Float], DenseVector[Float], OpSet]  = new SetDMDVOp[Float]
+  implicit val setMV_I: BinaryUpdateOp[DenseMatrix[Int], DenseVector[Int], OpSet]  = new SetDMDVOp[Int]
 }
 
-trait LowPriorityDenseMatrix {
-  class SetMMOp[@specialized V] extends BinaryUpdateOp[DenseMatrix[V], DenseMatrix[V], OpSet] {
+trait LowPriorityDenseMatrix1 {
+  class SetMMOp[@specialized V] extends BinaryUpdateOp[DenseMatrix[V], Matrix[V], OpSet] {
+    def apply(a: DenseMatrix[V], b: Matrix[V]) {
+      require(a.rows == b.rows, "Matrixs must have same number of rows")
+      require(a.cols == b.cols, "Matrixs must have same number of columns")
+
+      // slow path when we don't have a trivial matrix
+      val ad = a.data
+      var c = 0
+      while(c < a.cols) {
+        var r = 0
+        while(r < a.rows) {
+          ad(a.linearIndex(r, c)) = b(r, c)
+          r += 1
+        }
+        c += 1
+      }
+    }
+  }
+
+
+
+  class SetDMVOp[@specialized V] extends BinaryUpdateOp[DenseMatrix[V], Vector[V], OpSet] {
+    def apply(a: DenseMatrix[V], b: Vector[V]) {
+      require(a.rows == b.length && a.cols == 1 || a.cols == b.length && a.rows == 1, "DenseMatrix must have same number of rows, or same number of columns, as DenseVector, and the other dim must be 1.")
+      val ad = a.data
+      var i = 0
+      var c = 0
+      while(c < a.cols) {
+        var r = 0
+        while(r < a.rows) {
+          ad(a.linearIndex(r, c)) = b(i)
+          r += 1
+          i += 1
+        }
+        c += 1
+      }
+    }
+  }
+
+  implicit def setMM[V]: BinaryUpdateOp[DenseMatrix[V], Matrix[V], OpSet] = new SetMMOp[V]
+  implicit def setMV[V]: BinaryUpdateOp[DenseMatrix[V], Vector[V], OpSet] = new SetDMVOp[V]
+}
+
+trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
+  class SetDMDMOp[@specialized V] extends BinaryUpdateOp[DenseMatrix[V], DenseMatrix[V], OpSet] {
     def apply(a: DenseMatrix[V], b: DenseMatrix[V]) {
       require(a.rows == b.rows, "Matrixs must have same number of rows")
       require(a.cols == b.cols, "Matrixs must have same number of columns")
@@ -333,6 +381,26 @@ trait LowPriorityDenseMatrix {
     }
   }
 
+  class SetDMDVOp[@specialized V] extends BinaryUpdateOp[DenseMatrix[V], DenseVector[V], OpSet] {
+    def apply(a: DenseMatrix[V], b: DenseVector[V]) {
+      require(a.rows == b.length && a.cols == 1 || a.cols == b.length && a.rows == 1, "DenseMatrix must have same number of rows, or same number of columns, as DenseVector, and the other dim must be 1.")
+      val ad = a.data
+      val bd = b.data
+      var c = 0
+      var boff = b.offset
+      while(c < a.cols) {
+        var r = 0
+        while(r < a.rows) {
+          ad(a.linearIndex(r, c)) = bd(boff)
+          r += 1
+          boff += b.stride
+        }
+        c += 1
+      }
+    }
+  }
+
+
   class SetMSOp[@specialized V] extends BinaryUpdateOp[DenseMatrix[V], V, OpSet] {
     def apply(a: DenseMatrix[V], b: V) {
       if(a.data.length - a.offset == a.rows * a.cols) {
@@ -354,8 +422,9 @@ trait LowPriorityDenseMatrix {
     }
   }
 
-  implicit def setMM[V]: BinaryUpdateOp[DenseMatrix[V], DenseMatrix[V], OpSet] = new SetMMOp[V]
-  implicit def setMV[V]: BinaryUpdateOp[DenseMatrix[V], V, OpSet] = new SetMSOp[V]
+  implicit def setDMDM[V]: BinaryUpdateOp[DenseMatrix[V], DenseMatrix[V], OpSet] = new SetDMDMOp[V]
+  implicit def setDMDV[V]: BinaryUpdateOp[DenseMatrix[V], DenseVector[V], OpSet] = new SetDMDVOp[V]
+  implicit def setDMS[V]: BinaryUpdateOp[DenseMatrix[V], V, OpSet] = new SetMSOp[V]
 }
 
 trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double { this: DenseMatrix.type =>
