@@ -20,25 +20,27 @@ package object numerics extends UniversalFuncs {
    *
    * http://google.com/codesearch/p?hl=en#EbB356_xxkI/fbm.2003-06-29/util/digamma.c
    */
-  def digamma(xx: Double) = {
-    var x = xx
-    var r = 0.0
+  val digamma = new UFunc[Double, Double] {
+    def apply(xx: Double) = {
+      var x = xx
+      var r = 0.0
 
-    while (x<=5) {
-      r -= 1/x
-      x += 1
-    }
+      while (x<=5) {
+        r -= 1/x
+        x += 1
+      }
 
-    val f = 1./(x * x)
-    val t = f*(-1/12.0 +
-            f*(1/120.0 +
-            f*(-1/252.0 +
+      val f = 1./(x * x)
+      val t = f*(-1/12.0 +
+        f*(1/120.0 +
+          f*(-1/252.0 +
             f*(1/240.0 +
-            f*(-1/132.0 +
-            f*(691/32760.0 +
-            f*(-1/12.0 +
-            f*3617.0/8160.0)))))))
-    r + log(x) - 0.5/x + t
+              f*(-1/132.0 +
+                f*(691/32760.0 +
+                  f*(-1/12.0 +
+                    f*3617.0/8160.0)))))))
+      r + log(x) - 0.5/x + t
+    }
   }
 
   private val cof =  Array(76.18009172947146, -86.50532032941677,
