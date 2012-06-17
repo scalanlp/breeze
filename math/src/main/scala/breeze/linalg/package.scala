@@ -1,5 +1,8 @@
 package breeze
 
+import linalg.operators.{BinaryOp, OpDiv}
+import linalg.support.{CanNorm, CanCopy}
+
 /**
  *
  * @author dlwh
@@ -24,6 +27,14 @@ package object linalg {
   def linspace(a : Double, b : Double, length : Int = 100) : DenseVector[Double] = {
     val increment = (b - a) / (length - 1)
     DenseVector.tabulate(length)(i => a + increment * i)
+  }
+
+  def copy[T](t: T)(implicit canCopy: CanCopy[T]): T = canCopy(t)
+
+  def norm[T](t: T, v: Double = 2)(implicit canNorm: CanNorm[T]) = canNorm(t, v)
+
+  def normalize[T, U](t: T, v: Double = 2)(implicit div: BinaryOp[T, Double, OpDiv, U], canNorm: CanNorm[T]): U = {
+    div(t,canNorm(t, v))
   }
 
 }
