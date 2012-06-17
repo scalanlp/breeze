@@ -79,16 +79,18 @@ package object linalg {
       (tup._1 + d, tup._2 + 1)
     }
 
-    override def apply(arr: Array[Double], length: Int, isUsed: (Int) => Boolean) = {
+    override def apply(arr: Array[Double], offset: Int, stride: Int, length: Int, isUsed: (Int) => Boolean) = {
       var i = 0
       var used = 0
       var sum = 0.0
+      var off = offset
       while(i < length) {
         if(isUsed(i)) {
-          sum += arr(i)
+          sum += arr(off)
           used += 1
         }
-       i += 1
+        i += 1
+        off += stride
       }
       sum / used
     }
@@ -108,19 +110,21 @@ package object linalg {
       (mu,s/(n-1))
     }
 
-    override def apply(arr: Array[Double], length: Int, isUsed: (Int) => Boolean) = {
+    override def apply(arr: Array[Double], offset: Int, stride: Int, length: Int, isUsed: (Int) => Boolean) = {
       var mu = 0.0
       var s = 0.0
       var n = 0
       var i = 0
+      var off = offset
       while(i < length) {
         if(isUsed(i)) {
-          val y = arr(i)
+          val y = arr(off)
           n += 1
           val d = y - mu
           mu = mu + 1.0/n * d
           s = s + (n-1) * d / n * d
         }
+        off += stride
         i += 1
       }
       (mu, s/(n-1))
@@ -134,8 +138,8 @@ package object linalg {
     }
 
 
-    override def apply(arr: Array[Double], length: Int, isUsed: (Int) => Boolean) = {
-      meanAndVariance(arr, length, isUsed)._2
+    override def apply(arr: Array[Double], offset: Int, stride: Int, length: Int, isUsed: (Int) => Boolean) = {
+      meanAndVariance(arr, offset, stride, length, isUsed)._2
     }
   }
 
@@ -144,8 +148,8 @@ package object linalg {
       scala.math.sqrt(variance(cc))
     }
 
-    override def apply(arr: Array[Double], length: Int, isUsed: (Int) => Boolean) = {
-      scala.math.sqrt(variance(arr, length, isUsed))
+    override def apply(arr: Array[Double], offset: Int, stride: Int, length: Int, isUsed: (Int) => Boolean) = {
+      scala.math.sqrt(variance(arr, offset, stride, length, isUsed))
     }
   }
 
@@ -154,14 +158,16 @@ package object linalg {
       cc.max
     }
 
-    override def apply(arr: Array[Double], length: Int, isUsed: (Int) => Boolean) = {
+    override def apply(arr: Array[Double], offset: Int, stride: Int,length: Int, isUsed: (Int) => Boolean) = {
       var max = Double.NegativeInfinity
       var i = 0
+      var off = offset
       while(i < length) {
         if(isUsed(i)) {
-          val m = arr(i)
+          val m = arr(off)
           if(max < m) max = m
         }
+        off += stride
         i += 1
       }
       max
@@ -174,14 +180,16 @@ package object linalg {
       cc.min
     }
 
-    override def apply(arr: Array[Double], length: Int, isUsed: (Int) => Boolean) = {
+    override def apply(arr: Array[Double], offset: Int, stride: Int, length: Int, isUsed: (Int) => Boolean) = {
       var min = Double.NegativeInfinity
       var i = 0
+      var off = offset
       while(i < length) {
         if(isUsed(i)) {
-          val m = arr(i)
+          val m = arr(off)
           if(min > m) min = m
         }
+        off += stride
         i += 1
       }
       min
@@ -200,7 +208,7 @@ package object linalg {
       numerics.logSum(a, length)
     }
 
-    override def apply(a: Array[Double], length: Int, isUsed: (Int) => Boolean) = {
+    override def apply(a: Array[Double], offset: Int, stride: Int, length: Int, isUsed: (Int) => Boolean) = {
       length match {
         case 0 => Double.NegativeInfinity
         case 1 => if(isUsed(0)) a(0) else Double.NegativeInfinity
@@ -212,15 +220,17 @@ package object linalg {
           else if(isUsed(1)) a(1)
           else Double.NegativeInfinity
         case _ =>
-          val m = max(a, length, isUsed)
+          val m = max(a, offset, stride, length, isUsed)
           if (m.isInfinite) m
           else {
             var i = 0
+            var off = offset
             var accum = 0.0
             while(i < length) {
               if(isUsed(i))
-                accum += scala.math.exp(a(i) - m)
+                accum += scala.math.exp(a(off) - m)
               i += 1
+              off += stride
             }
             if (i > 0)
               m + scala.math.log(accum)

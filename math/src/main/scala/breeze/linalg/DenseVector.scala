@@ -3,7 +3,7 @@ package breeze.linalg
 import operators._
 import scala.{specialized=>spec}
 import breeze.storage.DenseStorage
-import breeze.generic.CanMapValues
+import breeze.generic.{URFunc, UReduceable, CanMapValues}
 import support.{CanSlice, CanCopy}
 import breeze.numerics.IntMath
 import java.util.Arrays
@@ -209,8 +209,6 @@ object DenseVector extends VectorConstructors[DenseVector]
   }
 
 
-
-
   implicit def canTranspose[V]: CanTranspose[DenseVector[V], DenseMatrix[V]] = {
     new CanTranspose[DenseVector[V], DenseMatrix[V]] {
       def apply(from: DenseVector[V]) = {
@@ -218,5 +216,16 @@ object DenseVector extends VectorConstructors[DenseVector]
       }
     }
   }
+
+  class DVUReduceable[@specialized(Int, Float, Double) V] extends UReduceable[DenseVector[V], V] {
+    def apply[Final](c: DenseVector[V], f: URFunc[V, Final]) = {
+      if(c.offset == 0 && c.stride == 1) f(c.data, c.length)
+      else f(c.data, c.offset, c.stride, c.length, {(_:Int) => true})
+    }
+  }
+
+  implicit val ured_d = new DVUReduceable[Double]
+  implicit val ured_f = new DVUReduceable[Float]
+  implicit val ured_i = new DVUReduceable[Int]
 }
 

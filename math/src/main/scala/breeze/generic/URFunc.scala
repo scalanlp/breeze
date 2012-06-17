@@ -18,9 +18,9 @@ trait URFunc[@specialized A, +B] {
   }
 
   def apply(arr: Array[A]):B = apply(arr, arr.length)
-  def apply(arr: Array[A], length: Int):B = apply(arr, length, {_ => true})
-  def apply(arr: Array[A], length: Int, isUsed: Int=>Boolean):B = {
-    apply(arr.toStream.take(length).zipWithIndex.collect { case (v, i) if isUsed(i) => v})
+  def apply(arr: Array[A], length: Int):B = apply(arr, 0, 1, length, {_ => true})
+  def apply(arr: Array[A], offset: Int, stride: Int, length: Int, isUsed: Int=>Boolean):B = {
+    apply((0 until length).filter(isUsed).map(i => arr(offset + i * stride)))
   }
 
   def apply(as: A*):B = apply(as)
