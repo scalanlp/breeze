@@ -1,7 +1,7 @@
 package breeze
 
-import generic.URFunc
-import linalg.operators.{BinaryOp, OpDiv}
+import generic.{CanMapValues, UReduceable, URFunc}
+import linalg.operators.{OpSub, BinaryOp, OpDiv}
 import linalg.support.{CanNorm, CanCopy}
 
 /**
@@ -43,6 +43,29 @@ package object linalg {
     val norm = canNorm(t, n)
     if(norm == 0) t
     else div(t,norm)
+  }
+
+  /**
+   * logNormalizes the argument such that the softmax is 0.0.
+   * Returns value if value's softmax is -infinity
+   */
+  def logNormalize[V,K](value: V)(implicit view: V => NumericOps[V],
+                                  red: UReduceable[V, Double],
+                                  op : BinaryOp[V,Double,OpSub,V]): V = {
+    val max = softmax(value)
+    if(max.isInfinite) value
+    else value - max
+  }
+
+  /**
+   * logs and then logNormalizes the argument such that the softmax is 0.0.
+   * Returns value if value's softmax is -infinity
+   */
+  def logAndNormalize[V](value: V)(implicit view: V => NumericOps[V],
+                                   red: UReduceable[V, Double],
+                                   map: CanMapValues[V, Double, Double, V],
+                                   op : BinaryOp[V,Double,OpSub,V]):V = {
+    logNormalize(numerics.log(value))
   }
 
 
