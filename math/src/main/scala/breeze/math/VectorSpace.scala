@@ -3,7 +3,7 @@ package breeze.math
 import breeze.linalg.operators._
 import breeze.linalg.support.{CanZipMapValues, CanNorm, CanCopy, CanCreateZerosLike}
 import breeze.linalg.{QuasiTensor, TensorLike, Tensor, NumericOps}
-import breeze.generic.CanMapValues
+import breeze.generic.{UReduceable, CanMapValues}
 
 /**
  *
@@ -66,6 +66,7 @@ trait MutableInnerProductSpace[V, S] extends InnerProductSpace[V, S] with Mutabl
 trait CoordinateSpace[V, S] extends InnerProductSpace[V, S] {
   implicit def norm: CanNorm[V]
   implicit def mapValues: CanMapValues[V,S,S,V]
+  implicit def reduce: UReduceable[V,S]
   implicit def zipMapValues: CanZipMapValues[V,S,S,V]
 
   implicit def addVS: BinaryOp[V, S, OpAdd, V]
