@@ -555,7 +555,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double { this: DenseMatrix
 
       // extract solution
       val N = if (!transpose) A.cols else A.rows
-      for (j <- 0 until nrhs; i <- 0 until N) X(i,j) = Xtmp(i,j)
+      X(0 until N, 0 until nrhs) := Xtmp(0 until N, 0 until nrhs)
 
       X
     }
