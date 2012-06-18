@@ -120,7 +120,7 @@ object InteriorPoint {
     val n = A.cols
     val m = A.rows
     import DenseMatrix._
-    val mat:DenseMatrix[Double] = vertcat[Double](horzcat(zeros[Double](m,m), A, eye(m)),
+    val mat:DenseMatrix[Double] = vertcat[Double](horzcat(zeros[Double](m,m), A, eye[Double](m)),
                       horzcat(A.t, zeros[Double](n,n + m)),
                       horzcat(diag(s),zeros[Double](m,n),diag(z)))
 

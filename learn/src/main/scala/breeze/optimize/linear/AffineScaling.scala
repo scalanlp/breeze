@@ -24,7 +24,7 @@ class AffineScaling extends ConfiguredLogging {
     var cv = x dot c
     while(!converged) {
       val vk = b - A * x
-      val D = diag(vk :^ -2)
+      val D = diag(vk :^ -2.0)
       val hx = (A.t * D * A).asInstanceOf[DenseMatrix[Double]] \ c
       val hv:DenseVector[Double] = A * hx * -1.0
       if(hv.values.exists(_ >= 0)) throw UnboundedProblem

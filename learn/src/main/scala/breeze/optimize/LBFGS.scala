@@ -170,7 +170,7 @@ object LBFGS {
     def optimizeThis(init: Counter[Int,Double]) = {
       val f = new DiffFunction[Counter[Int,Double]] {
         def calculate(x: Counter[Int,Double]) = {
-          (math.pow(norm((x -3),2),2),(x * 2) - 6)
+          (math.pow(norm((x - 3.0),2),2),(x * 2.0) - 6.0)
         }
       }
 

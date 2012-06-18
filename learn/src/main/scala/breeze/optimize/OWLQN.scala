@@ -106,7 +106,7 @@ object OWLQN {
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
-          (((x - 3.0) :^ 2.0).sum,(x * 2) - 6)
+          (((x - 3.0) :^ 2.0).sum,(x * 2.0) - 6.0)
         }
       }
 
