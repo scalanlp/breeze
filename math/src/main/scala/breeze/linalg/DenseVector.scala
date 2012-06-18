@@ -53,11 +53,16 @@ final class DenseVector[@spec(Double, Int, Float, Long) E](val data: Array[E],
   override def toString = {
     valuesIterator.mkString("DenseVector(",", ", ")")
   }
+
+  override def ureduce[Final](f: URFunc[E, Final]) = {
+    if(offset == 0 && stride == 1) f(data, length)
+    else f(data, offset, stride, length, {(_:Int) => true})
+  }
 }
 
 
 
-object DenseVector extends VectorConstructors[DenseVector]
+object DenseVector extends VectorConstructors[DenseVector] with DenseVector_GenericOps
                       with DenseVectorOps_Int
                       with DenseVectorOps_Float
                       with DenseVectorOps_Double
@@ -163,20 +168,6 @@ object DenseVector extends VectorConstructors[DenseVector]
     }
   }
 
-  class DVUReduceable[@specialized(Int, Float, Double) V] extends UReduceable[DenseVector[V], V] {
-    def apply[Final](c: DenseVector[V], f: URFunc[V, Final]) = {
-      if(c.offset == 0 && c.stride == 1) f(c.data, c.length)
-      else f(c.data, c.offset, c.stride, c.length, {(_:Int) => true})
-    }
-  }
-
-
-  implicit def ured[V] = new DVUReduceable[V]
-
-  implicit val ured_d = new DVUReduceable[Double]
-  implicit val ured_f = new DVUReduceable[Float]
-  implicit val ured_i = new DVUReduceable[Int]
-
   class CanZipMapValuesDenseVector[@specialized V, @specialized RV:ClassManifest] extends CanZipMapValues[DenseVector[V],V,RV,DenseVector[RV]] {
     def create(length : Int) = new DenseVector(new Array[RV](length))
 
@@ -202,6 +193,32 @@ object DenseVector extends VectorConstructors[DenseVector]
   implicit val space_d = TensorSpace.make[DenseVector[Double], Int, Double]
   implicit val space_f = TensorSpace.make[DenseVector[Float], Int, Float]
   implicit val space_i = TensorSpace.make[DenseVector[Int], Int, Int]
+
+
+
+}
+
+trait DenseVector_GenericOps { this: DenseVector.type =>
+  implicit def canSet_DV_Generic[V]: BinaryUpdateOp[DenseVector[V], V, breeze.linalg.operators.OpSet] = {
+    new BinaryUpdateOp[DenseVector[V], V, breeze.linalg.operators.OpSet] {
+      def apply(a: DenseVector[V], b: V) {
+        val ad = a.data
+        if(a.stride == 1) {
+          ArrayUtil.fill(ad, a.offset, a.length, b)
+          return
+        }
+
+        var i = 0
+        var aoff = a.offset
+        while(i < a.length) {
+          ad(aoff) = b
+          aoff += a.stride
+          i += 1
+        }
+
+      }
+    }
+  }
 }
 
 trait DenseVector_SpecialOps extends DenseVectorOps_Double { this: DenseVector.type =>

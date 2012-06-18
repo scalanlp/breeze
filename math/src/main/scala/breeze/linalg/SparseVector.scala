@@ -58,6 +58,12 @@ final class SparseVector[@spec(Double,Int,Float) E](var index: Array[Int],
   override def toString = {
     activeIterator.mkString("SparseVector(",", ", ")")
   }
+
+  override def ureduce[Final](f: URFunc[E, Final]) = {
+    f(data, used)
+  }
+
+
 }
 
 object SparseVector {
@@ -77,16 +83,4 @@ object SparseVector {
 
   def canCopySparse[V: ClassManifest: DefaultArrayValue] = new CanCopySparseVector[V]
 
-
-  class SVUReduceable[@specialized(Int, Float, Double) V] extends UReduceable[SparseVector[V], V] {
-    def apply[Final](c: SparseVector[V], f: URFunc[V, Final]) = {
-      f(c.data, c.used)
-    }
-  }
-
-  implicit def ured[V] = new SVUReduceable[V]
-
-  implicit val ured_d = new SVUReduceable[Double]
-  implicit val ured_f = new SVUReduceable[Float]
-  implicit val ured_i = new SVUReduceable[Int]
 }

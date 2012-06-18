@@ -2,7 +2,7 @@ package breeze.linalg
 
 import scala.{specialized=>spec}
 import support._
-import breeze.generic.CanMapValues
+import breeze.generic.{UReduceable, URFunc, CanMapValues}
 
 
 /**
@@ -22,6 +22,7 @@ sealed trait QuasiTensor[@specialized(Int) K, @specialized V] {
   def argmin(implicit ord: Ordering[V]) = keysIterator.minBy( apply _)
   def sum(implicit num: Numeric[V]) = valuesIterator.sum
 
+  def ureduce[A](f: URFunc[V, A]) = f(this.valuesIterator)
 
   def iterator: Iterator[(K, V)]
   def activeIterator: Iterator[(K, V)]
@@ -89,4 +90,12 @@ trait TensorLike[@spec(Int) K, @specialized V, +This<:Tensor[K, V]] extends Quas
 
 
 trait Tensor[@spec(Int) K, @specialized V] extends TensorLike[K, V, Tensor[K, V]]
+
+object Tensor {
+  implicit def canUReduce[T, I, V](implicit ev: T<:<Tensor[I, V]):UReduceable[T, V] = {
+    new UReduceable[T, V] {
+      def apply[Final](c: T, f: URFunc[V, Final]): Final = c.ureduce(f)
+    }
+  }
+}
 
