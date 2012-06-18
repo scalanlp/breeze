@@ -25,22 +25,22 @@ final class DenseMatrix[@specialized V](val data: Array[V],
   def this(data: Array[V], rows: Int, cols: Int) = this(data, rows, cols, rows)
   def this(data: Array[V], rows: Int) = this(data, rows, {assert(data.length % rows == 0); data.length/rows})
 
-  @inline final def apply(row: Int, col: Int) = {
+  def apply(row: Int, col: Int) = {
     if(row < 0 || row > rows) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
     if(col < 0 || col > cols) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
       rawApply(linearIndex(row, col))
   }
 
 
-  @inline final def linearIndex(row: Int, col: Int): Int = {
+  @inline
+  final def linearIndex(row: Int, col: Int): Int = {
     if(isTranspose)
       offset + col + row * majorStride
     else
       offset + row + col * majorStride
   }
 
-  @inline
-  final def update(row: Int, col: Int, v: V) {
+  def update(row: Int, col: Int, v: V) {
     if(row < 0 || row > rows) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
     if(col < 0 || col > cols) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
     rawUpdate(linearIndex(row, col), v)
