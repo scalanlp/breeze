@@ -288,7 +288,9 @@ object DenseMatrix extends LowPriorityDenseMatrix
 
   implicit def canCopyDenseMatrix[V:ClassManifest] = new CanCopy[DenseMatrix[V]] {
     def apply(v1: DenseMatrix[V]) = {
-      new DenseMatrix(Array.tabulate(v1.size)(i => v1(i % v1.rows, i / v1.rows)), v1.rows, v1.cols)
+      val result = DenseMatrix.zeros(v1.rows, v1.cols)
+      result := v1
+      result
     }
   }
 
@@ -516,7 +518,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double { this: DenseMatrix
       // allocate temporary solution matrix
       val Xtmp = DenseMatrix.zeros[Double](math.max(A.rows, A.cols), nrhs)
       val M = if (!transpose) A.rows else A.cols
-      for (j <- 0 until nrhs; i <- 0 until M) { Xtmp(i,j) = V(i,j); }
+      Xtmp(0 until M,0 until nrhs) := V(0 until M, 0 until nrhs)
 
       val newData = A.data.clone()
 
