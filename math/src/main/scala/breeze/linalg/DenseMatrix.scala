@@ -9,6 +9,7 @@ import breeze.util.ArrayUtil
 import breeze.numerics.IntMath
 import support._
 import breeze.generic.CanMapValues
+import breeze.math.Semiring
 
 /**
  *
@@ -77,6 +78,12 @@ object DenseMatrix extends LowPriorityDenseMatrix
   def zeros[V:ClassManifest](rows: Int, cols: Int) = {
     val data = new Array[V](rows * cols)
     new DenseMatrix(data, rows, cols)
+  }
+
+  def eye[V: ClassManifest:Semiring](dim: Int) = {
+    val r = zeros[V](dim, dim)
+    diag(r) := implicitly[Semiring[V]].one
+    r
   }
 
   /** Creates a dense matrix of the given value repeated of the requested size. */
