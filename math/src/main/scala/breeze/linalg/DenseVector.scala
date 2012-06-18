@@ -219,6 +219,28 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
       }
     }
   }
+
+  implicit def canSet_DV_DV_Generic[V]: BinaryUpdateOp[DenseVector[V], DenseVector[V], breeze.linalg.operators.OpSet] = {
+    new BinaryUpdateOp[DenseVector[V], DenseVector[V], breeze.linalg.operators.OpSet] {
+      def apply(a: DenseVector[V], b: DenseVector[V]) {
+        require(b.length == a.length, "Vectors must be the same length!")
+
+        val ad = a.data
+        val bd = b.data
+        var aoff = a.offset
+        var boff = b.offset
+
+        var i = 0
+        while(i < a.length) {
+          ad(aoff) = bd(boff)
+          aoff += a.stride
+          boff += b.stride
+          i += 1
+        }
+
+      }
+    }
+  }
 }
 
 trait DenseVector_SpecialOps extends DenseVectorOps_Double { this: DenseVector.type =>

@@ -54,7 +54,7 @@ final class DenseMatrix[@specialized V](val data: Array[V],
 
   def activeKeysIterator = keysIterator
 
-  def trace(implicit numeric: Numeric[V]) = diag(this).sum
+  def trace(implicit numeric: Numeric[V]) = diagM(this:DenseMatrix[V]).sum
 
   override def equals(p1: Any) = p1 match {
     case x: DenseMatrix[_] =>
@@ -82,9 +82,12 @@ object DenseMatrix extends LowPriorityDenseMatrix
 
   def eye[V: ClassManifest:Semiring](dim: Int) = {
     val r = zeros[V](dim, dim)
-    diag(r) := implicitly[Semiring[V]].one
+    breeze.linalg.diag(r) := implicitly[Semiring[V]].one
     r
   }
+
+
+
 
   /** Creates a dense matrix of the given value repeated of the requested size. */
   def fill[V:ClassManifest](rows: Int, cols: Int)(value: =>V) = {

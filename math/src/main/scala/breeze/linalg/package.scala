@@ -1,7 +1,7 @@
 package breeze
 
 import generic.{CanMapValues, UReduceable, URFunc}
-import linalg.operators.{OpSub, BinaryOp, OpDiv}
+import linalg.operators._
 import linalg.support.{CanNorm, CanCopy}
 
 /**
@@ -16,9 +16,29 @@ package object linalg {
    * @param m the matrix
    * @tparam V
    */
-  def diag[V](m: DenseMatrix[V]) = {
+  def diag[V](m: DenseMatrix[V]): DenseVector[V] = {
     require(m.rows == m.cols, "m must be square")
     new DenseVector(m.data, m.offset, m.majorStride + 1, m.rows)
+  }
+
+  private[linalg] def diagM[V](m: DenseMatrix[V]): DenseVector[V] = {
+    diag(m)
+  }
+
+
+  /**
+   * Creates a Diagonal dense matrix from this vector.
+   *
+   * TODO make a real diagonal matrix class
+   * @param t
+   * @tparam V
+   * @return
+   */
+  // TODO: make a real diagonal matrix class
+  def diag[V](t: DenseVector[V])(implicit manV: ClassManifest[V]): DenseMatrix[V] = {
+    val r = DenseMatrix.zeros[V](t.length, t.length)
+    diag(r) := t
+    r
   }
 
   /**
