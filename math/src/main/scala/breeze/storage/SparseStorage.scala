@@ -30,6 +30,8 @@ trait SparseStorage[@specialized(Int, Double) Elem] extends Storage[Elem] {
 
   final def indexAt(i: Int) = index(i)
 
+  def contains(i: Int) = findOffset(i) >= 0
+
   private var lastReturnedPos = -1
 
   /**
@@ -44,66 +46,93 @@ trait SparseStorage[@specialized(Int, Double) Elem] extends Storage[Elem] {
     if (used == 0) {
       // empty list do nothing
       -1
-    } else if (i > index(used-1)) {
-      // special case for end of list - this is a big win for growing sparse arrays
-      ~used
     } else {
-      // regular binary search from begin to end (inclusive)
-      var begin = 0
-      var end = used - 1
+      val index = this.index
+      if (i > index(used - 1)) {
+        // special case for end of list - this is a big win for growing sparse arrays
+        ~used
+      } else {
+        // regular binary search from begin to end (inclusive)
+        var begin = 0
+        var end = used - 1
 
-      // Simple optimization: position i can't be after offset i.
-      if(end > i)
-        end = i
+        // Simple optimization: position i can't be after offset i.
+        if (end > i)
+          end = i
 
-      var found = false
+        var found = false
 
-      var mid = (end + begin) >> 1
-      // another optimization: cache the last found
-      // position and restart binary search from lastReturnedPos
-      // This is thread safe because writes of ints
-      // are atomic on the JVM.
-      // We actually don't want volatile here because
-      // we want a poor-man's threadlocal...
-      // be sure to make it a local though, so it doesn't
-      // change from under us.
-      val l = lastReturnedPos
-      if(l >= 0 && l < end) {
-        mid = l
-      }
-
-      // a final stupid check:
-      // we're frequently iterating
-      // over all elements, so we should check if the next
-      // pos is the right one, just to see
-      if(mid < used-1 && index(mid+1) == i) {
-        mid = mid+1
-        found = true
-      }
-
-
-      while (!found && begin <= end) {
-        if (index(mid) < i) {
-          begin = mid + 1
-          mid = (end + begin) >> 1
+        var mid = (end + begin) >> 1
+        // another optimization: cache the last found
+        // position and restart binary search from lastReturnedPos
+        // This is thread safe because writes of ints
+        // are atomic on the JVM.
+        // We actually don't want volatile here because
+        // we want a poor-man's threadlocal...
+        // be sure to make it a local though, so it doesn't
+        // change from under us.
+        val l = lastReturnedPos
+        if (l >= 0 && l < end) {
+          mid = l
         }
-        else if (index(mid) > i) {
-          end = mid - 1
-          mid = (end + begin) >> 1
-        }
-        else
+
+        // unroll the loop once. We're going to
+        // check mid and mid+1, because if we're
+        // iterating in order this will give us O(1) access
+        val mi = index(mid)
+        if (mi == i) {
           found = true
+        } else if (mi > i) {
+          end = mid - 1
+        } else {
+          // mi < i
+          begin = mid + 1
+        }
+
+        // a final stupid check:
+        // we're frequently iterating
+        // over all elements, so we should check if the next
+        // pos is the right one, just to see
+        if (!found && mid < end) {
+          val mi = index(mid + 1)
+          if (mi == i) {
+            mid = mid + 1
+            found = true
+          } else if (mi > i) {
+            end = mid
+          } else {
+            // mi < i
+            begin = mid + 2
+          }
+        }
+        if(!found)
+          mid = (end + begin) >> 1
+
+
+        // pick up search.
+        while (!found && begin <= end) {
+          if (index(mid) < i) {
+            begin = mid + 1
+            mid = (end + begin) >> 1
+          }
+          else if (index(mid) > i) {
+            end = mid - 1
+            mid = (end + begin) >> 1
+          }
+          else
+            found = true
+        }
+
+        lastReturnedPos = mid
+
+        if (found || mid < 0)
+          mid
+        // no match found,  insertion point
+        else if (i <= index(mid))
+          ~mid // Insert here (before mid)
+        else
+          ~(mid + 1) // Insert after mid
       }
-
-      lastReturnedPos = mid
-
-      if (found || mid < 0)
-        mid
-      // no match found,  insertion point
-      else if (i <= index(mid))
-        ~mid       // Insert here (before mid)
-      else
-        ~(mid + 1) // Insert after mid
     }
   }
 

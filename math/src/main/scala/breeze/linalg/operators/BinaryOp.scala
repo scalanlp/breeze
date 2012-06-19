@@ -1,6 +1,5 @@
 package breeze.linalg.operators
 
-import collection.mutable.HashMap
 import breeze.generic.Multimethod2
 
 /**

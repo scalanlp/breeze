@@ -424,7 +424,264 @@ object GenCounterOps extends App {
 }
 */
 
+object GenSVOps extends App {
+  import GenOperators._
+
+  def plusIntoLoop(tpe: String, op: (String,String)=>String, postProcessCopy: String=>String):String = {
+    """require(b.length == a.length, "Vectors must be the same length!")
+
+    // TODO: decide the appropriate value of 3 and 30 here.
+    if(b.used > a.used * 3 && b.used > 30) {
+      val c = copy(b)
+      apply(c, a)
+      %s
+      a.data = c.data
+      a.index = c.index
+      a.used = c.used
+      return
+    }
+
+    var buf:Array[Type] = null
+    var bufi:Array[Int] = null
+    var nused = 0
+
+    val bd = b.data
+    val bi = b.index
+    val bsize = b.iterableSize
+    var i = 0
+    while(i < bsize) {
+      if (a.contains(bi(i))) {
+        // just add it in if it's there
+        a(bi(i)) = %s
+      } else { // not there
+        if(buf eq null) {
+          buf = new Array[Type](b.used - i)
+          bufi = new Array[Int](b.used - i)
+        } else if(buf.length == nused) {
+          buf = Arrays.copyOf(buf, nused + b.used - i)
+          bufi = Arrays.copyOf(bufi, nused + b.used - i)
+        }
+
+        // append to buffer to merged in later
+        buf(nused) = %s
+        bufi(nused) = bi(i)
+        nused += 1
+      }
+      i += 1
+    }
+
+    // merge two disjoint sorted lists
+    if(buf != null) {
+      val result = new Array[Type](a.used + nused)
+      val resultI = new Array[Int](a.used + nused)
+      var ni = 0
+      var ai = 0
+      var out = 0
+
+      while(ni < nused) {
+        while(ai < a.used && a.index(ai) < bufi(ni) ) {
+          result(out) = a.data(ai)
+          resultI(out) = a.index(ai)
+          ai += 1
+          out += 1
+        }
+        result(out) = buf(ni)
+        resultI(out) = bufi(ni)
+        out += 1
+        ni += 1
+      }
+
+      System.arraycopy(a.data, ai, result, out, result.length - out)
+      System.arraycopy(a.index, ai, resultI, out, result.length - out)
+      out = result.length
+
+      a.data = result
+      a.index = resultI
+      a.used = out
+    }
+    """.replaceAll("Type",tpe).format(postProcessCopy("c"),op("a(bi(i))","bd(i)"), op("buf(nused)","bd(i)")).replaceAll("    ","        ")
+  }
+
+  def timesLoopTemplate(tpe: String, zero: String, finish: (String, String, String)=>String) = {
+    """require(b.length == a.length, "Vectors must be the same length!")
+
+    val outD = new Array[Type](a.used min b.used)
+    val outI = new Array[Int](a.used min b.used)
+    var out = 0
+
+    val looper = if(a.used < b.used) a else b
+    val other = if(a.used < b.used) b else a
+
+    var i = 0
+    val bd = looper.data
+    val bi = looper.index
+    val bsize = looper.iterableSize
+    while(i < bsize) {
+      if(looper.isActive(i)) {
+        val p = other(bi(i)) * bd(i)
+        if (p != Zero) {
+          outD(i) = p
+          outI(i) = bi(i)
+        }
+      }
+      i += 1
+    }
+
+    %s
+    """.replaceAll("Type",tpe).replaceAll("Zero", zero).format(finish("outD", "outI", "out"))
+  }
+
+  def timesIntoLoop(tpe: String, zero: String) = timesLoopTemplate(tpe, zero, {(data, index, used) =>
+    "a.data = %s; a.index = %s; a.used = %s".format(data, index, used)
+  })
+
+
+  def timesLoop(tpe: String, zero: String) = timesLoopTemplate(tpe, zero, {(data, index, used) =>
+    "new SparseVector(%s, %s, %s, a.length)".format(index, data, used)
+  })
+
+  def setLoop = """require(b.length == a.length, "Vectors must be the same length!")
+
+    a.data = Arrays.copyOf(b.data); a.index = Arrays.copyOf(b.index); a.used = b.used
+  """
+
+  def slowLoop(op: (String,String)=>String):String = {
+                """require(b.length == a.length, "Vectors must be the same length!")
+
+    var i = 0
+    while(i < b.length) {
+      a(i) = %s
+      i += 1
+    }
+    """.format(op("a(i)","b(i)")).replaceAll("    ","        ")
+  }
+
+
+  def scalarLoop(op: (String,String)=>String):String = {
+                """
+
+    var i = 0
+    while(i < a.length) {
+      a(i) = %s
+      i += 1
+    }
+    """.format(op("a(i)","b")).replaceAll("    ","        ")
+  }
+
+
+  def scalarMultLoop(op: (String,String)=>String) = {
+                """
+    var i = 0
+    while(i < a.used) {
+      a.data(i) = %s
+      i += 1
+    }
+    """.format(op("a.data(i)","b"))
+  }
+
+  def gen(out: PrintStream) {
+    import out._
+
+    println("package breeze.linalg")
+    println("import java.util._")
+    println("import breeze.linalg.operators._")
+    println("import breeze.linalg.support._")
+    println("import breeze.numerics._")
+
+    for( (scalar,ops) <- GenOperators.ops) {
+      println()
+      val vector = "SparseVector[%s]" format scalar
+      println("/** This is an auto-generated trait providing operators for SparseVector */")
+      println("trait SparseVectorOps_"+scalar +" { this: SparseVector.type =>")
+
+
+      println(
+        """
+  def pureFromUpdate_%s[Other,Op<:OpType](op: BinaryUpdateOp[%s, Other, Op])(implicit copy: CanCopy[%s]):BinaryOp[%s, Other, Op, %s] = {
+    new BinaryOp[%s, Other, Op, %s] {
+      override def apply(a : %s, b : Other) = {
+        val c = copy(a)
+        op(c, b)
+        c
+      }
+    }
+  }
+        """.format(scalar,vector, vector, vector, vector, vector, vector, vector))
+
+
+      for( (op,fn) <- ops if op != OpMulScalar) {
+        val name = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_VV_" + scalar
+        def postProcesscopy(c: String) = if(op == OpAdd) "" else if(op == OpSub) c + "*= (-1).to"+scalar else error(":(")
+        val loop = if(op == OpSub || op == OpAdd) plusIntoLoop(scalar, (_:(String,String)=>String), postProcesscopy _) else slowLoop _
+
+        println(genBinaryUpdateOperator(name, vector, vector, op)(loop(fn)))
+        println()
+        println("  " +genBinaryAdaptor(name.replace("Into",""), vector, vector, op, vector, "pureFromUpdate_"+scalar+ "(" + name+ ")"))
+        println()
+
+
+        val names = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_SV_S_"+scalar
+        val loopS = if(op == OpDiv) scalarMultLoop(fn) else scalarLoop(fn)
+        println(genBinaryUpdateOperator(names, vector, scalar, op)(loopS))
+        println()
+        println("  " +genBinaryAdaptor(names.replace("Into",""), vector, scalar, op, vector, "pureFromUpdate_"+scalar+ "(" + names+ ")"))
+        println()
+
+      };
+
+      { //mul
+        val op = OpMulScalar
+        val name = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_VV_" + scalar
+        val loop = timesIntoLoop(scalar, "0")
+
+        println(genBinaryUpdateOperator(name, vector, vector, op)(loop))
+        println()
+
+        val nonupdate = name.replace("Into","")
+        println(genBinaryOperator(nonupdate, vector, vector, OpMulScalar, vector){timesLoop(scalar, "0")})
+        println()
+
+        val names = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_SV_S_"+scalar
+        println(genBinaryUpdateOperator(names, vector, scalar, op)(scalarMultLoop(ops(OpMulScalar))))
+        println()
+        println("  " +genBinaryAdaptor(names.replace("Into",""), vector, scalar, op, vector, "pureFromUpdate_"+scalar+ "(" + names+ ")"))
+        println()
+      }
+
+
+
+      // dot product
+      val dotName = "canDotProductSV_" + scalar
+      println(genBinaryOperator(dotName, vector, vector, OpMulInner, scalar){
+        """require(b.length == a.length, "Vectors must be the same length!")
+
+       var result: """ + scalar + """ = 0
+
+        val bd = b.data
+        val bi = b.index
+        val bsize = b.iterableSize
+        var i = 0
+        while(i < bsize) {
+          if(b.isActive(i)) result += a(bi(i)) * bd(i)
+          i += 1
+        }
+        result""".replaceAll("       ","        ")
+      })
+
+      println("}")
+
+
+    }
+  }
+
+  val out = new PrintStream(new FileOutputStream(new File("math/src/main/scala/breeze/linalg/SparseVectorOps.scala")))
+  gen(out)
+  out.close()
+
+}
+
 object GenAll extends App {
   GenDenseOps.main(Array.empty)
   GenDVSVSpecialOps.main(Array.empty)
+  GenSVOps.main(Array.empty)
 }

@@ -6,69 +6,6 @@ import breeze.numerics._
 /** This is an auto-generated trait providing operators for DenseVector and SparseVector*/
 trait DenseVectorOps_SparseVector_Double { this: DenseVector.type =>
 
-  implicit val canDivInto_DV_SparseVector_Double: BinaryUpdateOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpDiv] = {
-    new BinaryUpdateOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpDiv] {
-      def apply(a: DenseVector[Double], b: SparseVector[Double]) {
-        require(b.length == a.length, "Vectors must be the same length!")
-
-        var i = 0
-        while(i < b.length) {
-          a(i) = a(i) / b(i)
-          i += 1
-        }
-        
-      }
-    }
-  }
-
-
-  implicit val canDiv_DV_SparseVector_Double: BinaryOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpDiv, DenseVector[Double]] = pureFromUpdate_Double(canDivInto_DV_SparseVector_Double)
-
-
-  implicit val canAddInto_DV_SparseVector_Double: BinaryUpdateOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpAdd] = {
-    new BinaryUpdateOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpAdd] {
-      def apply(a: DenseVector[Double], b: SparseVector[Double]) {
-        require(b.length == a.length, "Vectors must be the same length!")
-
-        val bd = b.data
-        val bi = b.index
-        val bsize = b.iterableSize
-        var i = 0
-        while(i < bsize) {
-          if(b.isActive(i)) a(bi(i)) = a(bi(i)) + bd(i)
-          i += 1
-        }
-        
-      }
-    }
-  }
-
-
-  implicit val canAdd_DV_SparseVector_Double: BinaryOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpAdd, DenseVector[Double]] = pureFromUpdate_Double(canAddInto_DV_SparseVector_Double)
-
-
-  implicit val canSubInto_DV_SparseVector_Double: BinaryUpdateOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpSub] = {
-    new BinaryUpdateOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpSub] {
-      def apply(a: DenseVector[Double], b: SparseVector[Double]) {
-        require(b.length == a.length, "Vectors must be the same length!")
-
-        val bd = b.data
-        val bi = b.index
-        val bsize = b.iterableSize
-        var i = 0
-        while(i < bsize) {
-          if(b.isActive(i)) a(bi(i)) = a(bi(i)) - bd(i)
-          i += 1
-        }
-        
-      }
-    }
-  }
-
-
-  implicit val canSub_DV_SparseVector_Double: BinaryOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpSub, DenseVector[Double]] = pureFromUpdate_Double(canSubInto_DV_SparseVector_Double)
-
-
   implicit val canPowInto_DV_SparseVector_Double: BinaryUpdateOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpPow] = {
     new BinaryUpdateOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpPow] {
       def apply(a: DenseVector[Double], b: SparseVector[Double]) {
@@ -126,6 +63,69 @@ trait DenseVectorOps_SparseVector_Double { this: DenseVector.type =>
   implicit val canMod_DV_SparseVector_Double: BinaryOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpMod, DenseVector[Double]] = pureFromUpdate_Double(canModInto_DV_SparseVector_Double)
 
 
+  implicit val canAddInto_DV_SparseVector_Double: BinaryUpdateOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpAdd] = {
+    new BinaryUpdateOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpAdd] {
+      def apply(a: DenseVector[Double], b: SparseVector[Double]) {
+        require(b.length == a.length, "Vectors must be the same length!")
+
+        val bd = b.data
+        val bi = b.index
+        val bsize = b.iterableSize
+        var i = 0
+        while(i < bsize) {
+          if(b.isActive(i)) a(bi(i)) = a(bi(i)) + bd(i)
+          i += 1
+        }
+        
+      }
+    }
+  }
+
+
+  implicit val canAdd_DV_SparseVector_Double: BinaryOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpAdd, DenseVector[Double]] = pureFromUpdate_Double(canAddInto_DV_SparseVector_Double)
+
+
+  implicit val canDivInto_DV_SparseVector_Double: BinaryUpdateOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpDiv] = {
+    new BinaryUpdateOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpDiv] {
+      def apply(a: DenseVector[Double], b: SparseVector[Double]) {
+        require(b.length == a.length, "Vectors must be the same length!")
+
+        var i = 0
+        while(i < b.length) {
+          a(i) = a(i) / b(i)
+          i += 1
+        }
+        
+      }
+    }
+  }
+
+
+  implicit val canDiv_DV_SparseVector_Double: BinaryOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpDiv, DenseVector[Double]] = pureFromUpdate_Double(canDivInto_DV_SparseVector_Double)
+
+
+  implicit val canSubInto_DV_SparseVector_Double: BinaryUpdateOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpSub] = {
+    new BinaryUpdateOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpSub] {
+      def apply(a: DenseVector[Double], b: SparseVector[Double]) {
+        require(b.length == a.length, "Vectors must be the same length!")
+
+        val bd = b.data
+        val bi = b.index
+        val bsize = b.iterableSize
+        var i = 0
+        while(i < bsize) {
+          if(b.isActive(i)) a(bi(i)) = a(bi(i)) - bd(i)
+          i += 1
+        }
+        
+      }
+    }
+  }
+
+
+  implicit val canSub_DV_SparseVector_Double: BinaryOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpSub, DenseVector[Double]] = pureFromUpdate_Double(canSubInto_DV_SparseVector_Double)
+
+
   implicit val canSetInto_DV_SparseVector_Double: BinaryUpdateOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpSet] = {
     new BinaryUpdateOp[DenseVector[Double], SparseVector[Double], breeze.linalg.operators.OpSet] {
       def apply(a: DenseVector[Double], b: SparseVector[Double]) {
@@ -169,69 +169,6 @@ trait DenseVectorOps_SparseVector_Double { this: DenseVector.type =>
 
 /** This is an auto-generated trait providing operators for DenseVector and SparseVector*/
 trait DenseVectorOps_SparseVector_Float { this: DenseVector.type =>
-
-  implicit val canDivInto_DV_SparseVector_Float: BinaryUpdateOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpDiv] = {
-    new BinaryUpdateOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpDiv] {
-      def apply(a: DenseVector[Float], b: SparseVector[Float]) {
-        require(b.length == a.length, "Vectors must be the same length!")
-
-        var i = 0
-        while(i < b.length) {
-          a(i) = a(i) / b(i)
-          i += 1
-        }
-        
-      }
-    }
-  }
-
-
-  implicit val canDiv_DV_SparseVector_Float: BinaryOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpDiv, DenseVector[Float]] = pureFromUpdate_Float(canDivInto_DV_SparseVector_Float)
-
-
-  implicit val canAddInto_DV_SparseVector_Float: BinaryUpdateOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpAdd] = {
-    new BinaryUpdateOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpAdd] {
-      def apply(a: DenseVector[Float], b: SparseVector[Float]) {
-        require(b.length == a.length, "Vectors must be the same length!")
-
-        val bd = b.data
-        val bi = b.index
-        val bsize = b.iterableSize
-        var i = 0
-        while(i < bsize) {
-          if(b.isActive(i)) a(bi(i)) = a(bi(i)) + bd(i)
-          i += 1
-        }
-        
-      }
-    }
-  }
-
-
-  implicit val canAdd_DV_SparseVector_Float: BinaryOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpAdd, DenseVector[Float]] = pureFromUpdate_Float(canAddInto_DV_SparseVector_Float)
-
-
-  implicit val canSubInto_DV_SparseVector_Float: BinaryUpdateOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpSub] = {
-    new BinaryUpdateOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpSub] {
-      def apply(a: DenseVector[Float], b: SparseVector[Float]) {
-        require(b.length == a.length, "Vectors must be the same length!")
-
-        val bd = b.data
-        val bi = b.index
-        val bsize = b.iterableSize
-        var i = 0
-        while(i < bsize) {
-          if(b.isActive(i)) a(bi(i)) = a(bi(i)) - bd(i)
-          i += 1
-        }
-        
-      }
-    }
-  }
-
-
-  implicit val canSub_DV_SparseVector_Float: BinaryOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpSub, DenseVector[Float]] = pureFromUpdate_Float(canSubInto_DV_SparseVector_Float)
-
 
   implicit val canPowInto_DV_SparseVector_Float: BinaryUpdateOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpPow] = {
     new BinaryUpdateOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpPow] {
@@ -290,6 +227,69 @@ trait DenseVectorOps_SparseVector_Float { this: DenseVector.type =>
   implicit val canMod_DV_SparseVector_Float: BinaryOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpMod, DenseVector[Float]] = pureFromUpdate_Float(canModInto_DV_SparseVector_Float)
 
 
+  implicit val canAddInto_DV_SparseVector_Float: BinaryUpdateOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpAdd] = {
+    new BinaryUpdateOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpAdd] {
+      def apply(a: DenseVector[Float], b: SparseVector[Float]) {
+        require(b.length == a.length, "Vectors must be the same length!")
+
+        val bd = b.data
+        val bi = b.index
+        val bsize = b.iterableSize
+        var i = 0
+        while(i < bsize) {
+          if(b.isActive(i)) a(bi(i)) = a(bi(i)) + bd(i)
+          i += 1
+        }
+        
+      }
+    }
+  }
+
+
+  implicit val canAdd_DV_SparseVector_Float: BinaryOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpAdd, DenseVector[Float]] = pureFromUpdate_Float(canAddInto_DV_SparseVector_Float)
+
+
+  implicit val canDivInto_DV_SparseVector_Float: BinaryUpdateOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpDiv] = {
+    new BinaryUpdateOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpDiv] {
+      def apply(a: DenseVector[Float], b: SparseVector[Float]) {
+        require(b.length == a.length, "Vectors must be the same length!")
+
+        var i = 0
+        while(i < b.length) {
+          a(i) = a(i) / b(i)
+          i += 1
+        }
+        
+      }
+    }
+  }
+
+
+  implicit val canDiv_DV_SparseVector_Float: BinaryOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpDiv, DenseVector[Float]] = pureFromUpdate_Float(canDivInto_DV_SparseVector_Float)
+
+
+  implicit val canSubInto_DV_SparseVector_Float: BinaryUpdateOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpSub] = {
+    new BinaryUpdateOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpSub] {
+      def apply(a: DenseVector[Float], b: SparseVector[Float]) {
+        require(b.length == a.length, "Vectors must be the same length!")
+
+        val bd = b.data
+        val bi = b.index
+        val bsize = b.iterableSize
+        var i = 0
+        while(i < bsize) {
+          if(b.isActive(i)) a(bi(i)) = a(bi(i)) - bd(i)
+          i += 1
+        }
+        
+      }
+    }
+  }
+
+
+  implicit val canSub_DV_SparseVector_Float: BinaryOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpSub, DenseVector[Float]] = pureFromUpdate_Float(canSubInto_DV_SparseVector_Float)
+
+
   implicit val canSetInto_DV_SparseVector_Float: BinaryUpdateOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpSet] = {
     new BinaryUpdateOp[DenseVector[Float], SparseVector[Float], breeze.linalg.operators.OpSet] {
       def apply(a: DenseVector[Float], b: SparseVector[Float]) {
@@ -333,69 +333,6 @@ trait DenseVectorOps_SparseVector_Float { this: DenseVector.type =>
 
 /** This is an auto-generated trait providing operators for DenseVector and SparseVector*/
 trait DenseVectorOps_SparseVector_Int { this: DenseVector.type =>
-
-  implicit val canDivInto_DV_SparseVector_Int: BinaryUpdateOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpDiv] = {
-    new BinaryUpdateOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpDiv] {
-      def apply(a: DenseVector[Int], b: SparseVector[Int]) {
-        require(b.length == a.length, "Vectors must be the same length!")
-
-        var i = 0
-        while(i < b.length) {
-          a(i) = a(i) / b(i)
-          i += 1
-        }
-        
-      }
-    }
-  }
-
-
-  implicit val canDiv_DV_SparseVector_Int: BinaryOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpDiv, DenseVector[Int]] = pureFromUpdate_Int(canDivInto_DV_SparseVector_Int)
-
-
-  implicit val canAddInto_DV_SparseVector_Int: BinaryUpdateOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpAdd] = {
-    new BinaryUpdateOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpAdd] {
-      def apply(a: DenseVector[Int], b: SparseVector[Int]) {
-        require(b.length == a.length, "Vectors must be the same length!")
-
-        val bd = b.data
-        val bi = b.index
-        val bsize = b.iterableSize
-        var i = 0
-        while(i < bsize) {
-          if(b.isActive(i)) a(bi(i)) = a(bi(i)) + bd(i)
-          i += 1
-        }
-        
-      }
-    }
-  }
-
-
-  implicit val canAdd_DV_SparseVector_Int: BinaryOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpAdd, DenseVector[Int]] = pureFromUpdate_Int(canAddInto_DV_SparseVector_Int)
-
-
-  implicit val canSubInto_DV_SparseVector_Int: BinaryUpdateOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpSub] = {
-    new BinaryUpdateOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpSub] {
-      def apply(a: DenseVector[Int], b: SparseVector[Int]) {
-        require(b.length == a.length, "Vectors must be the same length!")
-
-        val bd = b.data
-        val bi = b.index
-        val bsize = b.iterableSize
-        var i = 0
-        while(i < bsize) {
-          if(b.isActive(i)) a(bi(i)) = a(bi(i)) - bd(i)
-          i += 1
-        }
-        
-      }
-    }
-  }
-
-
-  implicit val canSub_DV_SparseVector_Int: BinaryOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpSub, DenseVector[Int]] = pureFromUpdate_Int(canSubInto_DV_SparseVector_Int)
-
 
   implicit val canPowInto_DV_SparseVector_Int: BinaryUpdateOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpPow] = {
     new BinaryUpdateOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpPow] {
@@ -452,6 +389,69 @@ trait DenseVectorOps_SparseVector_Int { this: DenseVector.type =>
 
 
   implicit val canMod_DV_SparseVector_Int: BinaryOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpMod, DenseVector[Int]] = pureFromUpdate_Int(canModInto_DV_SparseVector_Int)
+
+
+  implicit val canAddInto_DV_SparseVector_Int: BinaryUpdateOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpAdd] = {
+    new BinaryUpdateOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpAdd] {
+      def apply(a: DenseVector[Int], b: SparseVector[Int]) {
+        require(b.length == a.length, "Vectors must be the same length!")
+
+        val bd = b.data
+        val bi = b.index
+        val bsize = b.iterableSize
+        var i = 0
+        while(i < bsize) {
+          if(b.isActive(i)) a(bi(i)) = a(bi(i)) + bd(i)
+          i += 1
+        }
+        
+      }
+    }
+  }
+
+
+  implicit val canAdd_DV_SparseVector_Int: BinaryOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpAdd, DenseVector[Int]] = pureFromUpdate_Int(canAddInto_DV_SparseVector_Int)
+
+
+  implicit val canDivInto_DV_SparseVector_Int: BinaryUpdateOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpDiv] = {
+    new BinaryUpdateOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpDiv] {
+      def apply(a: DenseVector[Int], b: SparseVector[Int]) {
+        require(b.length == a.length, "Vectors must be the same length!")
+
+        var i = 0
+        while(i < b.length) {
+          a(i) = a(i) / b(i)
+          i += 1
+        }
+        
+      }
+    }
+  }
+
+
+  implicit val canDiv_DV_SparseVector_Int: BinaryOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpDiv, DenseVector[Int]] = pureFromUpdate_Int(canDivInto_DV_SparseVector_Int)
+
+
+  implicit val canSubInto_DV_SparseVector_Int: BinaryUpdateOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpSub] = {
+    new BinaryUpdateOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpSub] {
+      def apply(a: DenseVector[Int], b: SparseVector[Int]) {
+        require(b.length == a.length, "Vectors must be the same length!")
+
+        val bd = b.data
+        val bi = b.index
+        val bsize = b.iterableSize
+        var i = 0
+        while(i < bsize) {
+          if(b.isActive(i)) a(bi(i)) = a(bi(i)) - bd(i)
+          i += 1
+        }
+        
+      }
+    }
+  }
+
+
+  implicit val canSub_DV_SparseVector_Int: BinaryOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpSub, DenseVector[Int]] = pureFromUpdate_Int(canSubInto_DV_SparseVector_Int)
 
 
   implicit val canSetInto_DV_SparseVector_Int: BinaryUpdateOp[DenseVector[Int], SparseVector[Int], breeze.linalg.operators.OpSet] = {
