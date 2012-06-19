@@ -1,10 +1,12 @@
 package breeze.linalg
 
+import operators.{UnaryOp, OpNeg, BinaryOp, OpMulScalar}
 import scala.{specialized=>spec}
 import breeze.storage.{DefaultArrayValue, SparseStorage}
-import support.{CanCopy, CanSlice}
+import support.{CanZipMapValues, CanCopy, CanSlice}
 import breeze.util.ArrayUtil
-import breeze.generic.{URFunc, UReduceable}
+import breeze.generic.{CanMapValues, URFunc, UReduceable}
+import breeze.math.{Ring, TensorSpace}
 
 
 /**
@@ -82,5 +84,59 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
   }
 
   implicit def canCopySparse[V: ClassManifest: DefaultArrayValue] = new CanCopySparseVector[V]
+
+  implicit def canMapValues[V, V2: ClassManifest: DefaultArrayValue]:CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] = {
+    new CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] {
+      /**Maps all key-value pairs from the given collection. */
+      def map(from: SparseVector[V], fn: (V) => V2) = {
+        SparseVector.tabulate(from.length)(i => fn(from(i)))
+      }
+
+      /**Maps all active key-value pairs from the given collection. */
+      def mapActive(from: SparseVector[V], fn: (V) => V2) = {
+        val out = new Array[V2](from.used)
+        var i = 0
+        while(i < from.used) {
+          out(i) = fn(from.data(i))
+          i += 1
+        }
+        new SparseVector(from.index.take(from.used), out, from.used, from.length)
+      }
+    }
+  }
+
+  class CanZipMapValuesSparseVector[@specialized V, @specialized RV:ClassManifest:DefaultArrayValue] extends CanZipMapValues[SparseVector[V],V,RV,SparseVector[RV]] {
+    def create(length : Int) = zeros(length)
+
+    /**Maps all corresponding values from the two collection. */
+    def map(from: SparseVector[V], from2: SparseVector[V], fn: (V, V) => RV) = {
+      require(from.length == from2.length, "Vector lengths must match!")
+      val result = create(from.length)
+      var i = 0
+      while (i < from.length) {
+        result(i) = fn(from(i), from2(i))
+        i += 1
+      }
+      result
+    }
+  }
+  implicit def zipMap[V, R:ClassManifest:DefaultArrayValue] = new CanZipMapValuesSparseVector[V, R]
+  implicit val zipMap_d = new CanZipMapValuesSparseVector[Double, Double]
+  implicit val zipMap_f = new CanZipMapValuesSparseVector[Float, Float]
+  implicit val zipMap_i = new CanZipMapValuesSparseVector[Int, Int]
+
+
+  implicit def negFromScale[@specialized V, Double](implicit scale: BinaryOp[SparseVector[V], V, OpMulScalar, SparseVector[V]], field: Ring[V]) = {
+    new UnaryOp[SparseVector[V], OpNeg, SparseVector[V]] {
+      override def apply(a : SparseVector[V]) = {
+        scale(a, field.negate(field.one))
+      }
+    }
+  }
+
+
+  implicit val space_d = TensorSpace.make[SparseVector[Double], Int, Double]
+  implicit val space_f = TensorSpace.make[SparseVector[Float], Int, Float]
+  implicit val space_i = TensorSpace.make[SparseVector[Int], Int, Int]
 
 }
