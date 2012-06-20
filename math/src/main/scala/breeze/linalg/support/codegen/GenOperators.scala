@@ -356,8 +356,10 @@ object GenDVSVSpecialOps extends App {
         val loop = if(op == OpSub || op == OpAdd) fastLoop _ else slowLoop _
 
         println(genBinaryUpdateOperator(name, vector, svector, op)(loop(fn)))
+        println("  " + register("Vector", GenVectorRegistries.getVVIntoName(op, scalar), name))
         println()
         println("  " +genBinaryAdaptor(name.replace("Into",""), vector, svector, op, vector, "pureFromUpdate_"+scalar+ "(" + name+ ")"))
+        println("  " + register("Vector", GenVectorRegistries.getVVName(op, scalar), name.replace("Into","")))
         println()
 
       }
