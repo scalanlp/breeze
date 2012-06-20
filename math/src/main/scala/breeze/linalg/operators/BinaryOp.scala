@@ -19,6 +19,6 @@ object BinaryOp {
  * @author dlwh
  */
 
-trait BinaryRegistry[A<:AnyRef, B<:AnyRef, Op<:OpType, R] extends BinaryOp[A, B, Op, R] with Multimethod2[BinaryOp.Bind[Op]#Sig, A, B, R]{
+trait BinaryRegistry[A, B, Op<:OpType, R] extends BinaryOp[A, B, Op, R] with Multimethod2[BinaryOp.Bind[Op]#Sig, A, B, R]{
 
 }

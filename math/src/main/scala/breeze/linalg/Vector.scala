@@ -6,6 +6,7 @@ import breeze.storage.Storage
 import breeze.generic.CanMapValues
 import breeze.math.{Ring, Field}
 import collection.immutable.BitSet
+import support.CanCopy
 
 /**
  *
@@ -15,6 +16,8 @@ trait VectorLike[@spec E, +Self <: Vector[E]] extends Tensor[Int, E] with Tensor
   def map[E2, That](fn: E=>E2)(implicit canMapValues: CanMapValues[Self, E, E2, That]):That = values map fn
 
   def foreach[U](fn: E=>U) { values foreach fn }
+
+  def copy: Self
 
 }
 
@@ -58,41 +61,36 @@ trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]] with 
 
 }
 
-object Vector {
+object Vector extends VectorOps_Int with VectorOps_Double with VectorOps_Float {
+
+  implicit def canCopy[E]:CanCopy[Vector[E]] = new CanCopy[Vector[E]] {
+    // Should not inherit from T=>T because those get  used by the compiler.
+    def apply(t: Vector[E]): Vector[E] = t.copy
+  }
+
+  /*
   implicit val canScaleD: BinaryUpdateRegistry[Vector[Double], Double, OpMulScalar] = {
     new BinaryUpdateRegistry[Vector[Double], Double, OpMulScalar] {
-      def doOp(a: Vector[Double], b: Double) = {
-        throw new Exception("Not yet...")
-      }
     }
   }
 
   implicit val canDotD: BinaryRegistry[Vector[Double], Vector[Double], OpMulInner, Double] = {
     new BinaryRegistry[Vector[Double], Vector[Double], OpMulInner, Double] {
-      def doOp(a: Vector[Double], b: Vector[Double]) = {
-        throw new Exception("Not yet...")
-      }
     }
 
   }
 
   implicit val canAddIntoD: BinaryUpdateRegistry[Vector[Double], Vector[Double], OpAdd] = {
     new BinaryUpdateRegistry[Vector[Double], Vector[Double], OpAdd] {
-      def doOp(a: Vector[Double], b: Vector[Double]) {
-        throw new Exception("Not yet...")
-      }
     }
 
   }
 
   implicit val canSubIntoD: BinaryUpdateRegistry[Vector[Double], Vector[Double], OpSub] = {
     new BinaryUpdateRegistry[Vector[Double], Vector[Double], OpSub] {
-      def doOp(a: Vector[Double], b: Vector[Double]) {
-        throw new Exception("Not yet...")
-      }
     }
-
   }
+  */
 }
 
 trait VectorConstructors[Vec[T]<:Vector[T]] {
@@ -102,5 +100,7 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
   def apply[V:ClassManifest](values: V*):Vec[V] = apply(values.toArray)
   def fill[@spec(Double, Int, Float) V:ClassManifest](size: Int)(v: =>V):Vec[V] = apply(Array.fill(size)(v))
   def tabulate[@spec(Double, Int, Float) V:ClassManifest](size: Int)(f: Int=>V):Vec[V]= apply(Array.tabulate(size)(f))
+
+
 
 }

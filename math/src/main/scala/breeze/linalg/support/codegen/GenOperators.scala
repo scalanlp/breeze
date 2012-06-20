@@ -49,6 +49,32 @@ object GenOperators {
 """.replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("Result",result).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getName.replaceAll("[$]","")).replaceAll("LOOP",loop)
   }
 
+
+  def genBinaryUpdateRegistry(name: String, typeA: String, typeB: String, op: OpType)(loop: String) = {
+    """
+  implicit val Name: BinaryUpdateRegistry[TypeA, TypeB, TypeOp] = {
+    new BinaryUpdateRegistry[TypeA, TypeB, TypeOp] {
+      override def bindingMissing(a: TypeA, b: TypeB) {
+        LOOP
+      }
+    }
+  }
+""".replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getName.replaceAll("[$]","")).replaceAll("LOOP",loop)
+  }
+
+
+  def genBinaryRegistry(name: String, typeA: String, typeB: String, op: OpType, result: String)(loop: String) = {
+    """
+  implicit val Name: BinaryRegistry[TypeA, TypeB, TypeOp, Result] = {
+    new BinaryRegistry[TypeA, TypeB, TypeOp, Result] {
+      override def bindingMissing(a: TypeA, b: TypeB) = {
+        LOOP
+      }
+    }
+  }
+""".replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("Result",result).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getName.replaceAll("[$]","")).replaceAll("LOOP",loop)
+  }
+
   def binaryUpdateDV_scalar_loop(op: (String,String)=>String):String = {
     """val ad = a.data
 
@@ -87,6 +113,14 @@ object GenOperators {
       a(i) = %s
     }
     """.format(if(zeroIsIdempotent) "activeIterator" else "iterator", op("a(i)","v")).replaceAll("    ","        ")
+  }
+
+  def binaryUpdateV_S_loop(op: (String,String)=>String, zeroIsIdempotent: Boolean):String = {
+    """
+    for( (i,v) <- a.%s) {
+      a(i) = %s
+    }
+    """.format(if(zeroIsIdempotent) "activeIterator" else "iterator", op("v","b")).replaceAll("    ","        ")
   }
 
   def binaryUpdateDM_scalar_loop(op: (String, String)=>String):String = {
@@ -562,7 +596,7 @@ object GenSVOps extends App {
 
     var i = 0
     while(i < a.length) {
-      a(i) = %s
+      a(i) = %
       i += 1
     }
     """.format(op("a(i)","b")).replaceAll("    ","        ")
@@ -679,6 +713,81 @@ object GenSVOps extends App {
   out.close()
 
 }
+
+
+object GenVectorRegistries extends App {
+
+  def genHomogeneous(tpe: String, pckg: String, f: File)(loop: (((String,String)=>String), Boolean)=>String,
+                                                         loopS: (((String,String)=>String), Boolean)=>String) {
+    val out = new FileOutputStream(f)
+    val print = new PrintStream(out)
+    import print.println
+
+    println("package " + pckg)
+    println("import breeze.linalg.operators._")
+    println("import breeze.linalg.support._")
+    println("import breeze.numerics._")
+
+    import GenOperators._
+    for( (scalar,ops) <- GenOperators.ops) {
+      val vector = "%s[%s]".format(tpe,scalar)
+      println("/** This is an auto-generated trait providing operators for " + tpe + ". */")
+      println("trait "+tpe+"Ops_"+scalar +" { this: "+tpe+".type =>")
+
+      println(
+        """
+  def pureFromUpdate_%s[Other,Op<:OpType](op: BinaryUpdateOp[%s, Other, Op])(implicit copy: CanCopy[%s]):BinaryRegistry[%s, Other, Op, %s] = {
+    new BinaryRegistry[%s, Other, Op, %s] {
+      override def bindingMissing(a : %s, b : Other) = {
+        val c = copy(a)
+        op(c, b)
+        c
+      }
+    }
+  }
+        """.format(scalar,vector, vector, vector, vector, vector, vector, vector))
+
+      for( (op,fn) <- ops) {
+        val name = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_V_V_"+scalar
+        println(genBinaryUpdateRegistry(name, vector, vector, op)(loop(fn, op == OpAdd || op == OpSub)))
+        println()
+        println("  " +genBinaryAdaptor(name.replace("Into",""), vector, vector, op, vector, "pureFromUpdate_"+scalar+ "(" + name+ ")"))
+        println()
+        val names = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_V_S_"+scalar
+        println(genBinaryUpdateRegistry(names, vector, scalar, op)(loopS(fn, op == OpAdd || op == OpSub)))
+        println()
+        println("  " +genBinaryAdaptor(names.replace("Into",""), vector, scalar, op, vector, "pureFromUpdate_"+scalar+ "(" + names+ ")"))
+        println()
+
+
+      }
+
+
+      val dotName = "canDotProductV_" + scalar
+      println(genBinaryRegistry(dotName, vector, vector, OpMulInner, scalar){
+        """require(b.length == a.length, "Vectors must be the same length!")
+
+       var result: """ + scalar + """ = 0
+
+        for( (i, v) <- b.activeIterator) {
+          result += a(i) * v
+        }
+        result""".replaceAll("       ","        ")
+      })
+
+      println("}")
+    }
+    print.close()
+  }
+
+  val out = new File("math/src/main/scala/breeze/linalg/VectorOps.scala")
+  genHomogeneous("Vector", "breeze.linalg", out)(
+    GenOperators.binaryUpdateDV_V_loop _,
+    GenOperators.binaryUpdateV_S_loop _
+  )
+
+}
+
 
 object GenAll extends App {
   GenDenseOps.main(Array.empty)

@@ -58,6 +58,13 @@ final class DenseVector[@spec(Double, Int, Float, Long) E](val data: Array[E],
     if(offset == 0 && stride == 1) f(data, length)
     else f(data, offset, stride, length, {(_:Int) => true})
   }
+
+  def copy: DenseVector[E] = {
+    implicit val man = ClassManifest.fromClass[E](data.getClass.getComponentType.asInstanceOf[Class[E]])
+    val r = new DenseVector(new Array[E](length), 0, 1, length)
+    r := this
+    r
+  }
 }
 
 
@@ -253,7 +260,7 @@ trait DenseVector_SpecialOps extends DenseVectorOps_Double { this: DenseVector.t
           org.netlib.blas.Daxpy.daxpy(
             a.length, 1.0, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
         }
-        Vector.canAddIntoD.register(this)
+        Vector.canAddInto_V_V_Double.register(this)
       }
 
     }
@@ -265,7 +272,7 @@ trait DenseVector_SpecialOps extends DenseVectorOps_Double { this: DenseVector.t
           org.netlib.blas.Daxpy.daxpy(
             a.length, -1.0, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
         }
-        Vector.canSubIntoD.register(this)
+        Vector.canSubInto_V_V_Double.register(this)
       }
 
     }
@@ -277,7 +284,7 @@ trait DenseVector_SpecialOps extends DenseVectorOps_Double { this: DenseVector.t
           org.netlib.blas.Ddot.ddot(
             a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
         }
-        Vector.canDotD.register(this)
+        Vector.canDotProductV_Double.register(this)
       }
 
     }
@@ -288,7 +295,7 @@ trait DenseVector_SpecialOps extends DenseVectorOps_Double { this: DenseVector.t
           org.netlib.blas.Dscal.dscal(
             a.length, b, a.data, a.offset, a.stride)
         }
-        Vector.canScaleD.register(this)
+        Vector.canMulScalarInto_V_S_Double.register(this)
       }
 
     }
@@ -299,6 +306,7 @@ trait DenseVector_SpecialOps extends DenseVectorOps_Double { this: DenseVector.t
         org.netlib.blas.Dcopy.dcopy(
           a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
+      Vector.canSetInto_V_V_Double.register(this)
     }
 
 
@@ -323,6 +331,7 @@ trait DenseVector_SpecialOps extends DenseVectorOps_Double { this: DenseVector.t
           result
 
         }
+        Vector.canDotProductV_Int.register(this)
       }
     }
 
@@ -347,6 +356,7 @@ trait DenseVector_SpecialOps extends DenseVectorOps_Double { this: DenseVector.t
            result
 
          }
+         Vector.canDotProductV_Float.register(this)
        }
      }
 }

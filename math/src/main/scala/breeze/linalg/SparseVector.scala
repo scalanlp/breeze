@@ -65,7 +65,9 @@ final class SparseVector[@spec(Double,Int,Float) E](var index: Array[Int],
     f(data, used)
   }
 
-
+  def copy: SparseVector[E] = {
+    new SparseVector[E](ArrayUtil.copyOf(index, index.length), ArrayUtil.copyOf(data, index.length), used, length)
+  }
 }
 
 object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with SparseVectorOps_Double {
@@ -79,7 +81,7 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
 
   class CanCopySparseVector[@specialized V:ClassManifest:DefaultArrayValue] extends CanCopy[SparseVector[V]] {
     def apply(v1: SparseVector[V]) = {
-      new SparseVector[V](ArrayUtil.copyOf(v1.index, v1.index.length), ArrayUtil.copyOf(v1.data, v1.index.length), v1.used, v1.length)
+      v1.copy
     }
   }
 
