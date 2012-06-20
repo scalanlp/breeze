@@ -51,4 +51,14 @@ class SparseVectorTest extends FunSuite {
     assertClose(v.norm(Double.PositiveInfinity), 1.6656)
   }
 
+  test("SV ops work as Vector") {
+    val a = SparseVector(1.0, 2.0, 3.0)
+    val b = SparseVector(3.0, 4.0, 5.0)
+    (a:Vector[Double]) += (b: Vector[Double])
+    assert(a === SparseVector(4.,6.,8.))
+    assert((a: Vector[Double]).dot (b: Vector[Double]) === (a dot b))
+    (a:Vector[Double]) *= (b: Vector[Double])
+    assert(a === SparseVector(12.,24.,40.))
+  }
+
 }

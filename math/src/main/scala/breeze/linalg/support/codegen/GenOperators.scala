@@ -24,6 +24,20 @@ object GenOperators {
 
   )
 
+
+  def genBinaryRegistryAdaptor(name: String, typeA: String, typeB: String, op: OpType, typeR: String, from: String) = (
+    """implicit val %s: BinaryRegistry[%s, %s, %s, %s] = %s""".format(
+      name,
+      typeA,
+      typeB,
+      op.getClass.getName.replaceAll("[$]",""),
+      typeR,
+      from
+    )
+
+
+  )
+
   def genBinaryUpdateOperator(name: String, typeA: String, typeB: String, op: OpType)(loop: String) = {
     """
   implicit val Name: BinaryUpdateOp[TypeA, TypeB, TypeOp] = {
@@ -73,6 +87,11 @@ object GenOperators {
     }
   }
 """.replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("Result",result).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getName.replaceAll("[$]","")).replaceAll("LOOP",loop)
+  }
+
+
+  def register(owner: String, genName: String, myName: String) = {
+    "%s.%s.register(%s)".format(owner, genName, myName)
   }
 
   def binaryUpdateDV_scalar_loop(op: (String,String)=>String):String = {
@@ -242,19 +261,31 @@ object GenDenseOps extends App {
       for( (op,fn) <- ops) {
         val name = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_DV_DV_"+scalar
         println(genBinaryUpdateOperator(name, vector, vector, op)(loop(fn)))
+        if(generic == "Vector")
+        println("  " + register(generic, GenVectorRegistries.getVVIntoName(op, scalar), name))
         println()
         println("  " +genBinaryAdaptor(name.replace("Into",""), vector, vector, op, vector, "pureFromUpdate_"+scalar+ "(" + name+ ")"))
+        if(generic == "Vector")
+        println("  " + register(generic, GenVectorRegistries.getVVName(op, scalar), name.replace("Into", "")))
         println()
         val names = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_DV_S_"+scalar
         println(genBinaryUpdateOperator(names, vector, scalar, op)(loopS(fn)))
+        if(generic == "Vector")
+        println("  " + register(generic, GenVectorRegistries.getVSIntoName(op, scalar), names))
         println()
         println("  " +genBinaryAdaptor(names.replace("Into",""), vector, scalar, op, vector, "pureFromUpdate_"+scalar+ "(" + names+ ")"))
+        if(generic == "Vector")
+          println("  " + register(generic, GenVectorRegistries.getVSName(op, scalar), names.replaceAll("Into","")))
         println()
 
         val namegen = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_DV_V_"+scalar
         println(genBinaryUpdateOperator(namegen, vector, gvector, op)(loopG(fn, op == OpAdd || op == OpSub)))
+        if(generic == "Vector")
+          println("  " + register(generic, GenVectorRegistries.getVVIntoName(op, scalar), namegen))
         println()
         println("  " +genBinaryAdaptor(namegen.replace("Into",""), vector, gvector, op, vector, "pureFromUpdate_"+scalar+ "(" + namegen+ ")"))
+        if(generic == "Vector")
+          println("  " + register(generic, GenVectorRegistries.getVVName(op, scalar), namegen.replace("Into", "")))
         println()
 
 
@@ -596,7 +627,7 @@ object GenSVOps extends App {
 
     var i = 0
     while(i < a.length) {
-      a(i) = %
+      a(i) = %s
       i += 1
     }
     """.format(op("a(i)","b")).replaceAll("    ","        ")
@@ -649,16 +680,20 @@ object GenSVOps extends App {
         val loop = if(op == OpSub || op == OpAdd) plusIntoLoop(scalar, (_:(String,String)=>String), postProcesscopy _) else slowLoop _
 
         println(genBinaryUpdateOperator(name, vector, vector, op)(loop(fn)))
+        println("  " + register("Vector", GenVectorRegistries.getVVIntoName(op, scalar), name))
         println()
         println("  " +genBinaryAdaptor(name.replace("Into",""), vector, vector, op, vector, "pureFromUpdate_"+scalar+ "(" + name+ ")"))
+        println("  " + register("Vector", GenVectorRegistries.getVVName(op, scalar), name.replace("Into", "")))
         println()
 
 
         val names = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_SV_S_"+scalar
         val loopS = if(op == OpDiv) scalarMultLoop(fn) else scalarLoop(fn)
         println(genBinaryUpdateOperator(names, vector, scalar, op)(loopS))
+        println("  " + register("Vector", GenVectorRegistries.getVSIntoName(op, scalar), names))
         println()
         println("  " +genBinaryAdaptor(names.replace("Into",""), vector, scalar, op, vector, "pureFromUpdate_"+scalar+ "(" + names+ ")"))
+        println("  " + register("Vector", GenVectorRegistries.getVSName(op, scalar), names.replace("Into", "")))
         println()
 
       };
@@ -748,22 +783,22 @@ object GenVectorRegistries extends App {
         """.format(scalar,vector, vector, vector, vector, vector, vector, vector))
 
       for( (op,fn) <- ops) {
-        val name = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_V_V_"+scalar
+        val name = getVVIntoName(op, scalar)
         println(genBinaryUpdateRegistry(name, vector, vector, op)(loop(fn, op == OpAdd || op == OpSub)))
         println()
-        println("  " +genBinaryAdaptor(name.replace("Into",""), vector, vector, op, vector, "pureFromUpdate_"+scalar+ "(" + name+ ")"))
+        println("  " +genBinaryRegistryAdaptor(getVVName(op, scalar), vector, vector, op, vector, "pureFromUpdate_"+scalar+ "(" + name+ ")"))
         println()
-        val names = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_V_S_"+scalar
+        val names: String = getVSIntoName(op, scalar)
         println(genBinaryUpdateRegistry(names, vector, scalar, op)(loopS(fn, op == OpAdd || op == OpSub)))
         println()
-        println("  " +genBinaryAdaptor(names.replace("Into",""), vector, scalar, op, vector, "pureFromUpdate_"+scalar+ "(" + names+ ")"))
+        println("  " +genBinaryRegistryAdaptor(getVSName(op, scalar), vector, scalar, op, vector, "pureFromUpdate_"+scalar+ "(" + names+ ")"))
         println()
 
 
       }
 
 
-      val dotName = "canDotProductV_" + scalar
+      val dotName: String = getDotName(scalar)
       println(genBinaryRegistry(dotName, vector, vector, OpMulInner, scalar){
         """require(b.length == a.length, "Vectors must be the same length!")
 
@@ -778,6 +813,30 @@ object GenVectorRegistries extends App {
       println("}")
     }
     print.close()
+  }
+
+
+  def getDotName(scalar: String): String = {
+    val dotName = "canDotProductV_" + scalar
+    dotName
+  }
+
+  def getVSIntoName(op: OpType, scalar: String): String = {
+    val names = "can" + op.getClass.getSimpleName.drop(2).dropRight(1) + "Into_V_S_" + scalar
+    names
+  }
+
+  def getVVIntoName(op: OpType, scalar: String): String = {
+    "can" + op.getClass.getSimpleName.drop(2).dropRight(1) + "Into_V_V_" + scalar
+  }
+
+
+  def getVSName(op: OpType, scalar: String): String = {
+    getVSIntoName(op, scalar).replaceAll("Into", "")
+  }
+
+  def getVVName(op: OpType, scalar: String): String = {
+    getVVIntoName(op, scalar).replaceAll("Into", "")
   }
 
   val out = new File("math/src/main/scala/breeze/linalg/VectorOps.scala")
