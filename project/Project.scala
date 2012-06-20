@@ -2,6 +2,9 @@ import sbt._
 import Keys._
 import sbtassembly.Plugin._
 import AssemblyKeys._
+import de.johoop.jacoco4sbt._
+import JacocoPlugin._
+
 
 
 object BuildSettings {
@@ -57,10 +60,9 @@ object BreezeBuild extends Build {
   //
 
   lazy val breeze = Project ( "breeze", file("."), settings = buildSettings) aggregate (math,process,learn,graphs) dependsOn (math,process,learn,graphs)
-
-  lazy val math = Project("breeze-math",file("math"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings) 
-  lazy val process = Project("breeze-process",file("process"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings) dependsOn(math)
-  lazy val learn = Project("breeze-learn",file("learn") ,  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings) dependsOn(math,process)
+  lazy val math = Project("breeze-math",file("math"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings ++ jacoco.settings) 
+  lazy val process = Project("breeze-process",file("process"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings ++ jacoco.settings) dependsOn(math)
+  lazy val learn = Project("breeze-learn",file("learn") ,  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings ++ jacoco.settings) dependsOn(math,process)
   lazy val graphs = Project("breeze-graphs",file("graphs"),  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps)) dependsOn(math,process)
   lazy val examples = Project("breeze-examples",file("examples"),  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps)) dependsOn(math,learn,graphs,process)
 }
