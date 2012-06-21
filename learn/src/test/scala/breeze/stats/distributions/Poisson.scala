@@ -38,6 +38,8 @@ class PoissonTest extends FunSuite with Checkers with MomentsTestBase[Int] with 
   def asDouble(x: Int) = x.toDouble
   def fromDouble(x: Double) = x.toInt
 
+
+  override val VARIANCE_TOLERANCE: Double = 1E-1
   val TOL = 1E-1;
 
   test("cdf") {

@@ -41,6 +41,7 @@ case class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasi
   override def toString = "Gamma(" + shape + "," + scale + ")"
 
   // Copied from Teh
+  /*
   def draw() : Double = { 
     var aa = 0.0
     var bb = 0.0
@@ -86,6 +87,58 @@ case class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasi
         }
       }
       sys.error("shouldn't get here")
+    }
+  }
+  */
+
+  def draw() = {
+    if(shape == 1.0) {
+      scale * -math.log(rand.uniform.draw())
+    } else if (shape < 1.0) {
+      val c = 1.0 + shape/scala.math.E
+      var d = c * rand.uniform.draw()
+      var ok = false
+      var x = 0.0
+      while(!ok) {
+        if (d >= 1.0) {
+          x = -log((c - d) / shape)
+          if (-math.log(rand.uniform.draw()) >= (1.0 - shape) * log(x)) {
+            x = (scale * x)
+            ok = true
+          }
+        } else {
+          x = math.pow(d, 1.0/shape)
+          if (-math.log(rand.uniform.draw()) >= (1.0 - shape) * log(x)) {
+            x = scale * x
+            ok = true
+          }
+        }
+        d = c * rand.uniform.draw()
+      }
+      x
+    } else {
+      val d = shape-1.0/3.0
+      val c = 1.0 / math.sqrt(9.0* d)
+      var r = 0.0
+      var ok = false
+      while (!ok) {
+        var v = 0.0
+        var x = 0.0
+        do {
+          x = rand.gaussian(0, 1).draw()
+          v = 1.0 + c * x
+        } while(v < 0)
+
+        v = v*v*v
+        val x2 = x * x
+        val u = rand.uniform.draw()
+        if (  (x2 * x2) < 108 * d  *u
+          || log(u) < 0.5*x2 + d* (1.0 - v+log(v))) {
+          r = (scale*d*v)
+          ok = true
+        }
+      }
+      r
     }
   }
 
