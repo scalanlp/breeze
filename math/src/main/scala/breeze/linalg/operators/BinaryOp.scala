@@ -6,7 +6,7 @@ import breeze.generic.Multimethod2
  *
  * @author dlwh
  */
-trait BinaryOp[A, B, +Op<:OpType, R] extends ((A, B) => R) {
+trait BinaryOp[A, -B, +Op<:OpType, R] extends ((A, B) => R) {
   def apply(a: A, b: B): R
 }
 

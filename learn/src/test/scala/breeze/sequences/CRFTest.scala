@@ -1,14 +1,11 @@
 package breeze.sequences
 
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.scalacheck._;
+import org.scalatest._
+import org.scalatest.junit._
 import org.junit.runner.RunWith
-import breeze.util.Index._
-import scalala.tensor.Counter2._
 import breeze.util.Index
-import scalala.tensor.Counter2
+import breeze.linalg._
+import breeze.util.Index
 
 
 /**

@@ -60,7 +60,7 @@ trait NumericOps[+This] {
   final def :^^ [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpXor,That]) = op(repr,b)
 
   /** Inner product of this and b. */
-  final def dot [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulInner,That]) = op(repr,b)
+  final def dot [TT>:This,B,BB>:B, That](b : B)(implicit op : BinaryOp[TT,BB,OpMulInner,That]) = op(repr,b)
 
   //
   // Operator aliases

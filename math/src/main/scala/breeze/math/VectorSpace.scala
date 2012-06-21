@@ -66,7 +66,6 @@ trait MutableInnerProductSpace[V, S] extends InnerProductSpace[V, S] with Mutabl
 trait CoordinateSpace[V, S] extends InnerProductSpace[V, S] {
   implicit def norm: CanNorm[V]
   implicit def mapValues: CanMapValues[V,S,S,V]
-  implicit def reduce: UReduceable[V,S]
   implicit def zipMapValues: CanZipMapValues[V,S,S,V]
 
   implicit def addVS: BinaryOp[V, S, OpAdd, V]
@@ -92,8 +91,117 @@ trait MutableCoordinateSpace[V, S] extends MutableInnerProductSpace[V, S]  with 
 //  implicit def modIntoVS: BinaryUpdateOp[V, S, OpMod]
 }
 
+object MutableCoordinateSpace {
+  def make[V, S](implicit
+                    _norm:  CanNorm[V],
+                   _mapValues:  CanMapValues[V, S, S, V],
+//                   _reduce:  UReduceable[V, S],
+                   _zipMapValues:  CanZipMapValues[V, S, S, V],
+                   _addVS:  BinaryOp[V, S, OpAdd, V],
+                   _subVS:  BinaryOp[V, S, OpSub, V],
+                   _mulVV:  BinaryOp[V, V, OpMulScalar, V],
+                   _divVV:  BinaryOp[V, V, OpDiv, V],
+//                   _powVV:  BinaryOp[V, V, OpPow, V],
+//                   _powVS:  BinaryOp[V, S, OpPow, V],
+//                   _modVV:  BinaryOp[V, V, OpMod, V],
+//                   _modVS:  BinaryOp[V, S, OpMod, V],
+                   _copy:  CanCopy[V],
+                   _mulIntoVS:  BinaryUpdateOp[V, S, OpMulScalar],
+                   _divIntoVS:  BinaryUpdateOp[V, S, OpDiv],
+                   _addIntoVV:  BinaryUpdateOp[V, V, OpAdd],
+                   _subIntoVV:  BinaryUpdateOp[V, V, OpSub],
+                   _addIntoVS:  BinaryUpdateOp[V, S, OpAdd],
+                   _subIntoVS:  BinaryUpdateOp[V, S, OpSub],
+                   _mulIntoVV:  BinaryUpdateOp[V, V, OpMulScalar],
+                   _divIntoVV:  BinaryUpdateOp[V, V, OpDiv],
+//                   _powIntoVV:  BinaryUpdateOp[V, V, OpPow],
+//                   _powIntoVS:  BinaryUpdateOp[V, S, OpPow],
+//                   _modIntoVV:  BinaryUpdateOp[V, V, OpMod],
+//                   _modIntoVS:  BinaryUpdateOp[V, S, OpMod],
+                  _field:  Field[S],
+                   _zeros:  CanCreateZerosLike[V, V],
+                   _mulVS:  BinaryOp[V, S, OpMulScalar, V],
+                   _divVS:  BinaryOp[V, S, OpDiv, V],
+                   _addVV:  BinaryOp[V, V, OpAdd, V],
+                   _subVV:  BinaryOp[V, V, OpSub, V],
+                   _neg:  UnaryOp[V, OpNeg, V],
+                   _isNumericOps: V <:< NumericOps[V],
+                   _dotVV:  BinaryOp[V, V, OpMulInner, S]):MutableCoordinateSpace[V, S] = new MutableCoordinateSpace[V, S] {
+    implicit def norm: CanNorm[V] = _norm
+
+    implicit def mapValues: CanMapValues[V, S, S, V] = _mapValues
+
+//    implicit def reduce: UReduceable[V, S] = _reduce
+
+    implicit def zipMapValues: CanZipMapValues[V, S, S, V] = _zipMapValues
+
+    implicit def addVS: BinaryOp[V, S, OpAdd, V] = _addVS
+
+    implicit def subVS: BinaryOp[V, S, OpSub, V] = _subVS
+
+    implicit def mulVV: BinaryOp[V, V, OpMulScalar, V] = _mulVV
+
+    implicit def divVV: BinaryOp[V, V, OpDiv, V] = _divVV
+
+//    implicit def powVV: BinaryOp[V, V, OpPow, V] = _powVV
+//
+//    implicit def powVS: BinaryOp[V, S, OpPow, V] = _powVS
+//
+//    implicit def modVV: BinaryOp[V, V, OpMod, V] = _modVV
+//
+//    implicit def modVS: BinaryOp[V, S, OpMod, V] = _modVS
+
+    implicit def copy: CanCopy[V] = _copy
+
+    implicit def mulIntoVS: BinaryUpdateOp[V, S, OpMulScalar] = _mulIntoVS
+
+    implicit def divIntoVS: BinaryUpdateOp[V, S, OpDiv] = _divIntoVS
+
+    implicit def addIntoVV: BinaryUpdateOp[V, V, OpAdd] = _addIntoVV
+
+    implicit def subIntoVV: BinaryUpdateOp[V, V, OpSub] = _subIntoVV
+
+    implicit def addIntoVS: BinaryUpdateOp[V, S, OpAdd] = _addIntoVS
+
+    implicit def subIntoVS: BinaryUpdateOp[V, S, OpSub] = _subIntoVS
+
+    implicit def mulIntoVV: BinaryUpdateOp[V, V, OpMulScalar] = _mulIntoVV
+
+    implicit def divIntoVV: BinaryUpdateOp[V, V, OpDiv] = _divIntoVV
+
+//    implicit def powIntoVV: BinaryUpdateOp[V, V, OpPow] = _powIntoVV
+//
+//    implicit def powIntoVS: BinaryUpdateOp[V, S, OpPow] = _powIntoVS
+//
+//    implicit def modIntoVV: BinaryUpdateOp[V, V, OpMod] = _modIntoVV
+//
+//    implicit def modIntoVS: BinaryUpdateOp[V, S, OpMod] = _modIntoVS
+
+    def field: Field[S] = _field
+
+    implicit def zeros: CanCreateZerosLike[V, V] = _zeros
+
+    implicit def mulVS: BinaryOp[V, S, OpMulScalar, V] = _mulVS
+
+    implicit def divVS: BinaryOp[V, S, OpDiv, V] = _divVS
+
+    implicit def addVV: BinaryOp[V, V, OpAdd, V] = _addVV
+
+    implicit def subVV: BinaryOp[V, V, OpSub, V] = _subVV
+
+    implicit def neg: UnaryOp[V, OpNeg, V] = _neg
+
+    def norm(a: V): Double = norm.apply(a, 2)
+
+    implicit def isNumericOps(v: V): NumericOps[V] = _isNumericOps(v)
+
+    implicit def dotVV: BinaryOp[V, V, OpMulInner, S] = _dotVV
+ }
+}
+
 trait TensorSpace[V, I, S] extends MutableCoordinateSpace[V, S] {
   implicit def isNumericOps(v: V):NumericOps[V] with QuasiTensor[I, S]
+  implicit def reduce: UReduceable[V,S]
 
 }
 

@@ -84,6 +84,7 @@ object InteriorPoint {
     newC(c.size) = 1
     val newX = DenseVector.tabulate(x0.size + 1)(i => if(i < x0.size) x0(i) else s)
     if( (newA * newX - newB).values.exists(_ > 0)) {
+      println(newA * newX - newB)
       throw new RuntimeException("Problem seems to be infeasible!")
     }
     val r = minimize(newA,newB,newC,newX)

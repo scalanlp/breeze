@@ -19,11 +19,11 @@ package breeze.classify
 
 import breeze.serialization.DataSerialization.ReadWritable
 import breeze.serialization.{SerializationFormat, DataSerialization}
-import breeze.linalg.{Counter, NumericOps}
+import breeze.linalg.{Tensor, Counter, NumericOps}
 import breeze.linalg.operators._
-import breeze.math.VectorSpace
+import breeze.math.{MutableCoordinateSpace, TensorSpace, VectorSpace}
 import breeze.linalg.support.{CanCopy, CanZipMapValues, CanNorm, CanCreateZerosLike}
-import breeze.generic.CanMapValues
+import breeze.generic.{URFunc, UReduceable, CanMapValues}
 
 /**
  * A LinearClassifier is a multi-class classifier with decision
@@ -39,17 +39,19 @@ import breeze.generic.CanMapValues
 class LinearClassifier[L,T2, TL, TF]
     (val featureWeights: T2, val intercepts: TL)
     (implicit viewT2 : T2<:<NumericOps[T2], vspace: VectorSpace[TL, Double],
-     mulTensors : BinaryOp[T2,TF,OpMulMatrix,TL]) extends Classifier[L,TF] with Serializable {
+     mulTensors : BinaryOp[T2,TF,OpMulMatrix,TL],
+     view: TL <:< Tensor[L, Double]) extends Classifier[L,TF] with Serializable {
   import vspace._
   def scores(o: TF) = {
     val r:TL = featureWeights * o
-    r + intercepts
+    vspace.isNumericOps(r) + intercepts
   }
 }
 
 object LinearClassifier {
-  implicit def linearClassifierReadWritable[L,TF,T2,TL](implicit viewT2 : T2<:<NumericOps[T2], vspace: VectorSpace[TL, Double],
+  implicit def linearClassifierReadWritable[L, T2, TL, TF](implicit viewT2 : T2<:<NumericOps[T2], vspace: VectorSpace[TL, Double],
                                                         mulTensors : BinaryOp[T2,TF,OpMulMatrix,TL],
+                                                        view: TL <:< Tensor[L, Double],
                                                         tfW: DataSerialization.ReadWritable[T2],
                                                         tlW: DataSerialization.ReadWritable[TL]) = {
     new ReadWritable[LinearClassifier[L,T2,TL,TF]] {
@@ -224,6 +226,20 @@ object LFMatrix {
     }
   }
 
+  implicit def lfUnaryOp[L,TF,Op<:OpType]
+  (implicit op: UnaryOp[TF,Op,TF], numeric: TF=>NumericOps[TF])
+  : UnaryOp[LFMatrix[L,TF], Op, LFMatrix[L, TF]]  = {
+    new UnaryOp[LFMatrix[L,TF],Op, LFMatrix[L, TF]] {
+      def apply(v1: LFMatrix[L, TF]) = {
+        val r = v1.empty
+        for( (l,tf) <- v1.map) {
+          r(l) = op(tf)
+        }
+        r
+      }
+    }
+  }
+
   implicit def lfNorm[L,TF](implicit op: CanNorm[TF]) : CanNorm[LFMatrix[L,TF]] = {
     new CanNorm[LFMatrix[L,TF]] {
       def apply(v1: LFMatrix[L, TF], v2: Double) = {
@@ -232,8 +248,8 @@ object LFMatrix {
     }
   }
 
-  implicit def canMapValues[L,TF](implicit cmf: CanMapValues[TF,Double,Double,TF]) = new CanMapValues[LFMatrix[L,TF],Double,Double,LFMatrix[L,TF]] {
-    def mapActive(from: LFMatrix[L, TF], fn: (Double) => Double) = {
+  implicit def canMapValues[L,TF, V](implicit cmf: CanMapValues[TF,V,V,TF]) = new CanMapValues[LFMatrix[L,TF],V,V,LFMatrix[L,TF]] {
+    def mapActive(from: LFMatrix[L, TF], fn: (V) => V) = {
       val r = from.empty
       for( (l,tf) <- from.map) {
         r(l) = cmf.mapActive(tf,fn)
@@ -241,7 +257,7 @@ object LFMatrix {
       r
     }
 
-    def map(from: LFMatrix[L, TF], fn: (Double) => Double) = {
+    def map(from: LFMatrix[L, TF], fn: (V) => V) = {
       val r = from.empty
       for( (l,tf) <- from.map) {
         r(l) = cmf.map(tf,fn)
@@ -251,8 +267,8 @@ object LFMatrix {
   }
 
 
-  implicit def canZipMapValues[L,TF](implicit cmf: CanZipMapValues[TF,Double,Double,TF]) = new CanZipMapValues[LFMatrix[L,TF],Double,Double,LFMatrix[L,TF]] {
-    def map(from: LFMatrix[L, TF], other: LFMatrix[L, TF], fn: (Double, Double) => Double) = {
+  implicit def canZipMapValues[L,TF, S](implicit cmf: CanZipMapValues[TF,S,S,TF]) = new CanZipMapValues[LFMatrix[L,TF],S,S,LFMatrix[L,TF]] {
+    def map(from: LFMatrix[L, TF], other: LFMatrix[L, TF], fn: (S, S) => S) = {
       val r = from.empty
       val keys = from.map.keySet ++ other.map.keySet
       for( l <- keys) {
@@ -275,11 +291,11 @@ object LFMatrix {
   implicit def lfReadWritable[L,TF](implicit formatL: DataSerialization.ReadWritable[L], formatTF: DataSerialization.ReadWritable[TF], zeros: CanCreateZerosLike[TF,TF]) = {
      new ReadWritable[LFMatrix[L,TF]] {
        def write(sink: DataSerialization.Output, what: LFMatrix[L,TF]) = {
-         DataSerialization.write(sink, what.map.toMap)
+         DataSerialization.write(sink, what.map.toMap)(DataSerialization.mapReadWritable)
        }
 
        def read(source: DataSerialization.Input) = {
-         val map = DataSerialization.read[Map[L,TF]](source)
+         val map = DataSerialization.read[Map[L,TF]](source)(DataSerialization.mapReadWritable[L, TF])
          def default = zeros(map.head._2)
          val ret = new LFMatrix[L,TF](default)
          for( (k,v) <- map) {
@@ -289,6 +305,16 @@ object LFMatrix {
        }
      }
    }
+
+  implicit def ureduceable[L, TF, I, V](implicit space: TensorSpace[TF, I, V]) = new UReduceable[LFMatrix[L, TF], V] {
+    import space._
+    def apply[Final](c: LFMatrix[L, TF], f: URFunc[V, Final]): Final = f(c.map.valuesIterator.flatMap(_.valuesIterator))
+  }
+
+  implicit def coordSpace[L, V, I](implicit space: MutableCoordinateSpace[V, Double]) = {
+    import space._
+    MutableCoordinateSpace.make[LFMatrix[L, V], Double]
+  }
 
 
 }

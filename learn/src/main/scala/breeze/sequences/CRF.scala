@@ -141,7 +141,8 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
 
 
   protected def initialMessage:Vector[Double] = {
-    val r = new OldSparseVector(numStates,Double.NegativeInfinity)
+    val r = mkVector(numStates, Double.NegativeInfinity)
+//    val r = new OldSparseVector(numStates,Double.NegativeInfinity)
     r(transitions.start) = 0.0
     r
   }

@@ -47,15 +47,15 @@ object SparseFeatureDataset {
 
     val data = {for(line <- s.getLines()) yield dataReadable.read(TextReader.fromString(line))}.toIndexedSeq
 
+
     val processed = for( ((output,indices,values),id) <- data.zipWithIndex) yield {
-      val sparseVector = new SparseVector(indices.toArray,values.toArray,indices.length,maxIndex)
+      val sparseVector = new SparseVector(indices.toArray,values.toArray,indices.length,maxIndex + 1)
       Example(output, sparseVector, name + "-" + id)
     }
 
     new SparseFeatureDataset[Output] {
       def examples = processed
     }
-
 
   }
 }

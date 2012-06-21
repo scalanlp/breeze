@@ -466,7 +466,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double { this: DenseMatrix
     def apply(a : DenseMatrix[Double], b : DenseVector[Double]) = {
       val rv = DenseVector.zeros[Double](a.rows)
       org.netlib.blas.Dgemv.dgemv(transposeString(a),
-        a.rows, a.cols,
+        if(a.isTranspose) a.cols else a.rows, if(a.isTranspose) a.rows else a.cols,
         1.0, a.data, a.offset, a.majorStride,
              b.data, b.offset, b.stride,
         0.0, rv.data, rv.offset, rv.stride)

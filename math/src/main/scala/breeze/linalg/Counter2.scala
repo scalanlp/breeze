@@ -3,9 +3,10 @@ package breeze.linalg
 import breeze.linalg.Counter2.Curried
 import breeze.storage.DefaultArrayValue
 import collection.mutable.HashMap
-import breeze.math.Field
+import breeze.math.{Semiring, Field}
 import support.CanSlice2
 import collection.{Set, mutable}
+import breeze.generic.CanMapValues
 
 /**
  *
@@ -93,7 +94,7 @@ object Counter2 {
   }
 
   /** Returns a new empty counter. */
-  def apply[K1,K2,V:DefaultArrayValue:Field]() : Counter2[K1,K2,V] = {
+  def apply[K1,K2,V:DefaultArrayValue:Semiring]() : Counter2[K1,K2,V] = {
     val map = new HashMap[K1,Counter[K2,V]] {
       override def default(k: K1) = Counter[K2,V]()
     }
@@ -117,6 +118,25 @@ object Counter2 {
     val rv = apply[K1,K2,Int]()
     values.foreach({ case (k1,k2) => rv(k1,k2) += 1; })
     rv
+  }
+
+  implicit def CanMapValuesCounter[K1, K2, V, RV:Semiring:DefaultArrayValue]: CanMapValues[Counter2[K1, K2, V], V, RV, Counter2[K1, K2, RV]]
+  = new CanMapValues[Counter2[K1, K2, V],V,RV,Counter2[K1, K2, RV]] {
+    override def map(from : Counter2[K1, K2, V], fn : (V=>RV)) = {
+      val rv = Counter2[K1, K2, RV]()
+      for( (k,v) <- from.iterator) {
+        rv(k) = fn(v)
+      }
+      rv
+    }
+
+    override def mapActive(from : Counter2[K1, K2, V], fn : (V=>RV)) = {
+      val rv = Counter2[K1,K2, RV]()
+      for( (k,v) <- from.activeIterator) {
+        rv(k) = fn(v)
+      }
+      rv
+    }
   }
 
 

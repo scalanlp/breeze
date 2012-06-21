@@ -2,8 +2,8 @@ package breeze.classify
 
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-import scalala.tensor.mutable.Counter
 import breeze.optimize.FirstOrderMinimizer.OptParams
+import breeze.linalg._
 
 /**
  * 

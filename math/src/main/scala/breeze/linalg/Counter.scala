@@ -154,16 +154,16 @@ trait CounterOps {
   }
 
 
-  implicit def addIntoVV[K1, K2<:K1, V:Semiring]:BinaryUpdateOp[Counter[K1, V], Counter[K2, V], OpAdd] = new BinaryUpdateOp[Counter[K1, V], Counter[K2, V], OpAdd] {
+  implicit def addIntoVV[K1, V:Semiring]:BinaryUpdateOp[Counter[K1, V], Counter[K1, V], OpAdd] = new BinaryUpdateOp[Counter[K1, V], Counter[K1, V], OpAdd] {
     val field = implicitly[Semiring[V]]
-    def apply(a: Counter[K1, V], b: Counter[K2, V]) {
+    def apply(a: Counter[K1, V], b: Counter[K1, V]) {
       for( (k,v) <- b.activeIterator) {
         a(k) = field.+(a(k), v)
       }
     }
   }
 
-  implicit def addVV[K1, K2<:K1, V:Semiring:DefaultArrayValue]:BinaryOp[Counter[K1, V], Counter[K2, V], OpAdd, Counter[K1,V]] = {
+  implicit def addVV[K1, V:Semiring:DefaultArrayValue]:BinaryOp[Counter[K1, V], Counter[K1, V], OpAdd, Counter[K1,V]] = {
     binaryOpFromBinaryUpdateOp(canCopy, addIntoVV)
   }
 
@@ -177,13 +177,13 @@ trait CounterOps {
   }
 
 
-  implicit def addVS[K1, K2<:K1, V:Semiring:DefaultArrayValue]:BinaryOp[Counter[K1, V], V, OpAdd, Counter[K1,V]] = {
+  implicit def addVS[K1, V:Semiring:DefaultArrayValue]:BinaryOp[Counter[K1, V], V, OpAdd, Counter[K1,V]] = {
     binaryOpFromBinaryUpdateOp(canCopy, addIntoVS)
   }
 
-  implicit def subIntoVV[K1, K2<:K1, V:Ring]:BinaryUpdateOp[Counter[K1, V], Counter[K2, V], OpSub] = new BinaryUpdateOp[Counter[K1, V], Counter[K2, V], OpSub] {
+  implicit def subIntoVV[K1, V:Ring]:BinaryUpdateOp[Counter[K1, V], Counter[K1, V], OpSub] = new BinaryUpdateOp[Counter[K1, V], Counter[K1, V], OpSub] {
     val field = implicitly[Ring[V]]
-    def apply(a: Counter[K1, V], b: Counter[K2, V]) {
+    def apply(a: Counter[K1, V], b: Counter[K1, V]) {
       for( (k,v) <- b.activeIterator) {
         a(k) = field.-(a(k), v)
       }
@@ -191,7 +191,7 @@ trait CounterOps {
   }
 
 
-  implicit def subVV[K1, K2<:K1, V:Ring:DefaultArrayValue]:BinaryOp[Counter[K1, V], Counter[K2, V], OpSub, Counter[K1,V]] = {
+  implicit def subVV[K1, V:Ring:DefaultArrayValue]:BinaryOp[Counter[K1, V], Counter[K1, V], OpSub, Counter[K1,V]] = {
     binaryOpFromBinaryUpdateOp(canCopy, subIntoVV)
   }
 
@@ -221,12 +221,10 @@ trait CounterOps {
   implicit def canMulVV[K2, K1<:K2, V](implicit semiring: Semiring[V],
                                        d: DefaultArrayValue[V]):BinaryOp[Counter[K1, V], Counter[K2, V], OpMulScalar, Counter[K1, V]] = {
     new BinaryOp[Counter[K1, V], Counter[K2, V], OpMulScalar, Counter[K1, V]] {
-      val zero = semiring.zero
       override def apply(a : Counter[K1, V], b : Counter[K2, V]) = {
         val r = Counter[K1, V]()
         for( (k, v) <- a.activeIterator) {
           val vr = semiring.*(v, b(k))
-          if(vr != zero)
             r(k) = vr
         }
         r
@@ -247,12 +245,10 @@ trait CounterOps {
   implicit def canMulVS[K2, K1<:K2, V](implicit semiring: Semiring[V],
                                        d: DefaultArrayValue[V]):BinaryOp[Counter[K1, V], V, OpMulScalar, Counter[K1, V]] = {
     new BinaryOp[Counter[K1, V], V, OpMulScalar, Counter[K1, V]] {
-      val zero = semiring.zero
       override def apply(a : Counter[K1, V], b : V) = {
         val r = Counter[K1, V]()
         for( (k, v) <- a.activeIterator) {
           val vr = semiring.*(v, b)
-          if(vr != zero)
             r(k) = vr
         }
         r
@@ -274,12 +270,10 @@ trait CounterOps {
                                        semiring: Field[V],
                                        d: DefaultArrayValue[V]):BinaryOp[Counter[K1, V], Counter[K2, V], OpDiv, Counter[K1, V]] = {
     new BinaryOp[Counter[K1, V], Counter[K2, V], OpDiv, Counter[K1, V]] {
-      val zero = semiring.zero
       override def apply(a : Counter[K1, V], b : Counter[K2, V]) = {
         val r = Counter[K1, V]()
         for( (k, v) <- a.activeIterator) {
           val vr = semiring./(v, b(k))
-          if(vr != zero)
             r(k) = vr
         }
         r
@@ -292,12 +286,10 @@ trait CounterOps {
                                semiring: Field[V],
                                d: DefaultArrayValue[V]):BinaryOp[Counter[K1, V], V, OpDiv, Counter[K1, V]] = {
     new BinaryOp[Counter[K1, V], V, OpDiv, Counter[K1, V]] {
-      val zero = semiring.zero
       override def apply(a : Counter[K1, V], b : V) = {
         val r = Counter[K1, V]()
         for( (k, v) <- a.activeIterator) {
           val vr = semiring./(v, b)
-          if(vr != zero)
             r(k) = vr
         }
         r
@@ -326,7 +318,6 @@ trait CounterOps {
 
   implicit def canNegate[K1, V](implicit  ring: Ring[V], d: DefaultArrayValue[V]):UnaryOp[Counter[K1, V], OpNeg, Counter[K1, V]] = {
     new UnaryOp[Counter[K1, V], OpNeg, Counter[K1, V]] {
-      val zero = ring.zero
       override def apply(a : Counter[K1, V]) = {
         val result = Counter[K1, V]()
         for( (k, v) <- a.activeIterator) {
@@ -348,7 +339,6 @@ trait CounterOps {
         var result = zero
         for( (k, v) <- a.activeIterator) {
           val vr = semiring.*(v, b(k))
-          if(vr != zero)
             result  = semiring.+(result, vr)
         }
         result

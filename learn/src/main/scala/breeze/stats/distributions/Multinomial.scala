@@ -27,7 +27,7 @@ import breeze.numerics
  *
  * @author dlwh
  */
-case class Multinomial[T,@specialized(Int) I](params: T)(implicit ev: T=>QuasiTensor[I, Double], rand: RandBasis=Rand) extends DiscreteDistr[I] {
+case class Multinomial[T,I](params: T)(implicit ev: T=>QuasiTensor[I, Double], rand: RandBasis=Rand) extends DiscreteDistr[I] {
   val sum = params.sum
   require(sum != 0.0, "There's no mass!")
 

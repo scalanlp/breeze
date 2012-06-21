@@ -70,7 +70,7 @@ trait SerializationFormat extends Serializable {
   }
 
   /** Inner trait for writing to Output. */
-  trait Writable[@specialized -T] extends Serializable {
+  trait Writable[@specialized T] extends Serializable {
     def write(sink: Output, what: T): Unit
   }
 

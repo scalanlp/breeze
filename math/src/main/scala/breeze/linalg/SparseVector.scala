@@ -51,9 +51,8 @@ final class SparseVector[@spec(Double,Int,Float) E](var index: Array[Int],
 //      )  ||  (
         this.length == x.length &&
         this.default == x.default &&
-          (activeValuesIterator sameElements x.activeValuesIterator)
+          (valuesIterator sameElements x.valuesIterator)
 //        ))
-
     case _ => false
   }
 

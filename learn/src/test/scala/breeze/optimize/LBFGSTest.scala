@@ -2,7 +2,7 @@ package breeze.optimize
 /*
  Copyright 2009 David Hall, Daniel Ramage
  
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at 
  
@@ -15,19 +15,13 @@ package breeze.optimize
  limitations under the License. 
 */
 
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.scalacheck._;
+import org.scalatest._
+import org.scalatest.junit._
+import org.scalatest.prop._
+import org.scalacheck._
 import org.junit.runner.RunWith
 
-import scalala.tensor.dense.DenseVector
-import scalala.tensor.mutable.Counter
-import scalala.library.Library.norm
-import scalala.generic.collection.CanCopy
-import breeze.util.logging.ConsoleLogging
-;
-
+import breeze.linalg._
 
 @RunWith(classOf[JUnitRunner])
 class LBFGSTest extends OptimizeTestBase {
@@ -38,33 +32,33 @@ class LBFGSTest extends OptimizeTestBase {
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
-          (norm((x -3) :^ 2,1),(x * 2) - 6);
+          (((x - 3.0) :^ 2.0).sum,(x * 2.0) - 6.0)
         }
       }
 
       val result = lbfgs.minimize(f,init) 
-      norm(result - 3,2) < 1E-10
+      norm(result - 3.0,2) < 1E-10
     }
 
-    check(Prop.forAll(optimizeThis _));
+    check(Prop.forAll(optimizeThis _))
 
   }
 
   test("optimize a simple multivariate gaussian with counters") {
-    val lbfgsString = new LBFGS[Counter[String,Double]](1000,4);
+    val lbfgsString = new LBFGS[Counter[String,Double]](1000,4)
 
     def optimizeThis(init: Counter[String,Double]) = {
       val f = new DiffFunction[Counter[String,Double]] {
         def calculate(x: Counter[String,Double]) = {
-          (norm((x -3) :^ 2,1), (x * 2) - 6);
+          (((x - 3.0) dot (x - 3.0)),(x * 2.0) - 6.0)
         }
       }
 
-      val result = lbfgsString.minimize(f,init);
-      norm(result - 3,2) < 1E-5;
+      val result = lbfgsString.minimize(f,init)
+      norm(result - 3.0,2) < 1E-5
     }
 
-    check(Prop.forAll(optimizeThis _ ));
+    check(Prop.forAll(optimizeThis _ ))
 
   }
 
@@ -75,17 +69,17 @@ class LBFGSTest extends OptimizeTestBase {
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
-          (norm((x -3) :^ 2,1),(x * 2) - 6);
+          (norm((x -3.0) :^ 2.0,1), (x * 2.0) - 6.0)
         }
       }
 
-      val targetValue = 3 / (1.0 / 2 + 1);
+      val targetValue = 3 / (1.0 / 2 + 1)
       val result = lbfgs.minimize(DiffFunction.withL2Regularization(f, 1.0),init)
       val ok = norm(result :- DenseVector.ones[Double](init.size) * targetValue,2)/result.size < 3E-3
       ok || error(init.toString + " " + result)
     }
 
-    check(Prop.forAll(optimizeThis _));
+    check(Prop.forAll(optimizeThis _))
 
    }
 

@@ -4,7 +4,7 @@ import operators._
 import scala.{specialized=>spec}
 import breeze.storage.DenseStorage
 import breeze.generic.{URFunc, UReduceable, CanMapValues}
-import support.{CanZipMapValues, CanSlice, CanCopy}
+import support.{CanCreateZerosLike, CanZipMapValues, CanSlice, CanCopy}
 import breeze.numerics.IntMath
 import java.util.Arrays
 import breeze.math.{TensorSpace, Semiring, Ring, Field}
@@ -113,6 +113,12 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
       offset += v.size
     }
     result
+  }
+
+  implicit def canCreateZerosLike[V:ClassManifest] = new CanCreateZerosLike[DenseVector[V], DenseVector[V]] {
+    def apply(v1: DenseVector[V]) = {
+      zeros[V](v1.length)
+    }
   }
 
 

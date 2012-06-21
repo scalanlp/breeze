@@ -175,6 +175,7 @@ object LBFGS {
       }
 
       val result = lbfgs.minimize(f,init)
+      println(result)
     }
 
     optimizeThis(Counter(1->0.,2->0.,3->0.,4->0.,5->0.))

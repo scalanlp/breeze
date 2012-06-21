@@ -73,7 +73,7 @@ object FirstOrderMinimizer {
   case class OptParams(batchSize:Int = 512,
                        regularization: Double = 1.0,
                        alpha: Double = 0.5,
-                       maxIterations:Int = -1,
+                       maxIterations:Int = 1000,
                        useL1: Boolean = false,
                        tolerance:Double = 1E-4,
                        useStochastic: Boolean= false) {
