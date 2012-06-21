@@ -2,7 +2,6 @@ package breeze.classify
 
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-import breeze.classify.SVM.Pegasos
 import breeze.linalg._
 
 /**

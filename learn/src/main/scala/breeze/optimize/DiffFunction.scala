@@ -1,6 +1,6 @@
 package breeze.optimize
 
-import breeze.math.CoordinateSpace
+import breeze.math.{InnerProductSpace, CoordinateSpace}
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
@@ -26,7 +26,7 @@ import breeze.math.CoordinateSpace
 trait DiffFunction[T] extends StochasticDiffFunction[T]
 
 object DiffFunction {
-  def withL2Regularization[T](d: DiffFunction[T],weight: Double)(implicit vspace: CoordinateSpace[T, Double]) = new DiffFunction[T] {
+  def withL2Regularization[T](d: DiffFunction[T],weight: Double)(implicit vspace: InnerProductSpace[T, Double]) = new DiffFunction[T] {
     import vspace._
     override def gradientAt(x:T):T = {
       val grad = d.gradientAt(x)
@@ -39,7 +39,7 @@ object DiffFunction {
     }
 
     private def myValueAt(v: Double, x:T) = {
-      v + weight * math.pow(norm(x,2),2) / 2
+      v + weight * (x dot x)/2
     }
 
     private def myGrad(g: T, x: T):T = {

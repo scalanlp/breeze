@@ -23,6 +23,7 @@ import org.scalacheck._
 import org.junit.runner.RunWith
 
 import breeze.linalg._
+import breeze.util.logging.ConsoleLogging
 
 
 @RunWith(classOf[JUnitRunner])
@@ -32,7 +33,7 @@ class AdaptiveGradientTest extends OptimizeTestBase {
 
     def optimizeThis(init2: DenseVector[Double], reg: Double) = {
       val init = init2 % 100.0
-      val sgd = new StochasticGradientDescent[DenseVector[Double]](20,200) with AdaptiveGradientDescent.L2Regularization[DenseVector[Double]] {
+      val sgd = new StochasticGradientDescent[DenseVector[Double]](1,500) with AdaptiveGradientDescent.L2Regularization[DenseVector[Double]] {
         override val lambda = reg.abs % 1E4
       }
       val f = new BatchDiffFunction[DenseVector[Double]] {
@@ -59,7 +60,7 @@ class AdaptiveGradientTest extends OptimizeTestBase {
 
     def optimizeThis(init2: DenseVector[Double], reg: Double) = {
       val init = init2 % 100.0
-      val sgd = new AdaptiveGradientDescent.L1Regularization[DenseVector[Double]](reg.abs%10, 1E-5, 50,200)
+      val sgd = new AdaptiveGradientDescent.L1Regularization[DenseVector[Double]](reg.abs%10, 1E-5, 1,200)
       val f = new BatchDiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double], r: IndexedSeq[Int]) = {
           (((x - 3.0) :^ 2.0).sum,(x * 2.0) - 6.0)

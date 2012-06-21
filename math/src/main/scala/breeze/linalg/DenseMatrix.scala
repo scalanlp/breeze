@@ -65,10 +65,6 @@ final class DenseMatrix[@specialized V](val data: Array[V],
   }
 
 
-  override def toString() = {
-    // TODO:
-    valuesIterator.mkString("DenseMatrix(",", ", ")")
-  }
 }
 
 object DenseMatrix extends LowPriorityDenseMatrix
@@ -233,7 +229,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
       def apply(m: DenseMatrix[V], rows: Range, col: Int) = {
         if(rows.isEmpty) new DenseVector(m.data, 0, 0, 0)
         else if(!m.isTranspose) {
-          new DenseVector(m.data, m.offset + rows.head, rows.step, rows.length)
+          new DenseVector(m.data, col * m.rows + m.offset + rows.head, rows.step, rows.length)
         } else {
           val m2 = canSlicePartOfRow(m.t, col, rows).t
           m2(::, 0)

@@ -22,7 +22,7 @@ import breeze.data.Example
 import breeze.linalg._
 import breeze.numerics._
 import breeze.stats.distributions.Rand
-import breeze.math.MutableCoordinateSpace
+import breeze.math.{MutableInnerProductSpace, MutableCoordinateSpace}
 
 
 /**
@@ -37,7 +37,7 @@ object SVM {
   def apply[L,T](data:Seq[Example[L,T]],numIterations:Int=1000)
               (implicit vspace: MutableCoordinateSpace[T, Double]):Classifier[L,T] = {
 
-    new Pegasos(numIterations).train(data)
+    new SMOTrainer(numIterations).train(data)
   }
 
   /**
@@ -51,71 +51,78 @@ object SVM {
    * @param numIterations number of passes through the dataset
    * @param regularization sort of a 2-norm penalty on the weights. Higher means more smoothing
    * @param batchSize: how many elements per minibatch to use.
-   */
   class Pegasos[L,T](numIterations: Int,
-                   regularization: Double=.1,
-                   batchSize: Int = 100)(implicit vspace: MutableCoordinateSpace[T, Double]) extends Classifier.Trainer[L,T] with Logged with ConfiguredLogging {
-    import vspace._
-    type MyClassifier = LinearClassifier[L,LFMatrix[L,T],Counter[L,Double],T]
-    def train(data: Iterable[Example[L,T]]) = {
-      val dataSeq = data.toIndexedSeq
-      val default = dataSeq(0).label
+                    regularization: Double=.1,
+                    batchSize: Int = 100)(implicit vspace : MutableCoordinateSpace[T, Double])extends Classifier.Trainer[L,T] with Logged with ConfiguredLogging {
+     import vspace._
+     type MyClassifier = LinearClassifier[L,LFMatrix[L,T],Counter[L,Double],T]
+     def train(data: Iterable[Example[L,T]]) = {
+       val dataSeq = data.toIndexedSeq
+       val default = dataSeq(0).label
 
-      def guess(w: LFMatrix[L,T], x: T, y: L): (L, Double) = {
-        val scores = w * x
-        val scoreY = scores(y)
-        scores(y) = Double.NegativeInfinity
-        val r = scores.argmax
-        if(scores(r) + 1 > scoreY) (r,1.0 + scores(r) - scoreY)
-        else (y,0.0)
-      }
+       def guess(w: LFMatrix[L,T], x: T, y: L): (L, Double) = {
+         val scores = w * x
+         println(scores, y)
+         if(scores.size == 0) {
+           (default,I(default != y))
+         } else {
+           val scoreY = scores(y)
+           scores(y) = Double.NegativeInfinity
+           val r = scores.argmax
+           if(scores(r) + 1 > scoreY) (r,1.0 + scores(r) - scoreY)
+           else (y,0.0)
+         }
+       }
 
-      var w = new LFMatrix[L,T](zeros(dataSeq(0).features))
-      // force one to show up
-      w(default)
-      for(iter <- 0 until (numIterations * dataSeq.size/batchSize)) {
-        val offset = (batchSize * iter) % dataSeq.size
-        val subset = (offset until (offset + batchSize)) map (i =>dataSeq(i%dataSeq.size))
-        // i.e. those we don't classify correctly
-        val problemSubset = (for {
-          ex <- subset.iterator
-          (r,loss) = guess(w,ex.features,ex.label)
-          if r != ex.label
-        } yield (ex,r,loss)).toSeq
-
-
-        val loss = problemSubset.iterator.map(_._3).sum
-
-        val rate = 1 / (regularization * (iter.toDouble + 1))
-        log.info("rate: " + rate)
-        log.info("subset size: " + problemSubset.size)
-        val w_half = problemSubset.foldLeft(w * (1-rate * regularization)) { (w,exr) =>
-          val (ex,r, oldLoss) = exr
-          val et = ex.features * (rate/subset.size)
-          w(ex.label) += et
-          w(r) -= et
-          w
-        }
+       var w = new LFMatrix[L,T](zeros(dataSeq(0).features))
+       // force one to show up
+       w(default)
+       for(iter <- 0 until (numIterations * dataSeq.size/batchSize)) {
+         val offset = (batchSize * iter) % dataSeq.size
+         val subset = (offset until (offset + batchSize)) map (i =>dataSeq(i%dataSeq.size))
+         // i.e. those we don't classify correctly
+         val problemSubset = (for {
+           ex <- subset.iterator
+           (r,loss) = guess(w,ex.features,ex.label)
+           if r != ex.label
+         } yield (ex,r,loss)).toSeq
 
 
-        val w_norm = (1 / (sqrt(regularization) * breeze.linalg.norm(w_half,2))) min 1
-        w = w_half * w_norm
-        log.info("iter: " + iter + " " + loss)
+         val loss = problemSubset.iterator.map(_._3).sum
+
+         val rate = 1 / (regularization * (iter.toDouble + 1))
+         log.info("rate: " + rate)
+         log.info("subset size: " + problemSubset.size)
+         val w_half = problemSubset.foldLeft(w * (1-rate * regularization)) { (w,exr) =>
+           val (ex,r, oldLoss) = exr
+           val et = ex.features * (rate/subset.size)
+           w(ex.label) += et
+           w(r) -= et
+           w
+         }
 
 
-        val problemSubset2 = (for {
-          ex <- subset.iterator
-          (r,loss) = guess(w,ex.features,ex.label)
-          if r != ex.label
-        } yield (ex,r,loss)).toSeq
+         val w_norm = (1 / (sqrt(regularization) * breeze.linalg.norm(w_half,2))) min 1
+         w = w_half * w_norm
+         println(w, w_half)
+         log.info("iter: " + iter + " " + loss)
 
 
-        val loss2 = problemSubset2.iterator.map(_._3).sum
-        log.info("Post loss: " + loss2)
-      }
-      new LinearClassifier(w,Counter[L,Double]())
-    }
-  }
+         val problemSubset2 = (for {
+           ex <- subset.iterator
+           (r,loss) = guess(w,ex.features,ex.label)
+           if r != ex.label
+         } yield (ex,r,loss)).toSeq
+
+
+         val loss2 = problemSubset2.iterator.map(_._3).sum
+         log.info("Post loss: " + loss2)
+       }
+       new LinearClassifier(w,Counter[L,Double]())
+     }
+   }
+
+   */
 
   def main(args: Array[String]) {
     import breeze.data._
@@ -127,7 +134,7 @@ object SVM {
 
     println(vectors.length)
 
-    val trainer = new SVM.Pegasos[Int,DenseVector[Double]](100,batchSize=1000) with ConsoleLogging
+    val trainer = new SVM.SMOTrainer[Int,DenseVector[Double]](100) with ConsoleLogging
     val classifier = trainer.train(vectors)
     for( ex <- vectors.take(30)) {
       val guessed = classifier.classify(ex.features)

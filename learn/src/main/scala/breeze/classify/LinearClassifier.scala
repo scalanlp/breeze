@@ -243,7 +243,7 @@ object LFMatrix {
   implicit def lfNorm[L,TF](implicit op: CanNorm[TF]) : CanNorm[LFMatrix[L,TF]] = {
     new CanNorm[LFMatrix[L,TF]] {
       def apply(v1: LFMatrix[L, TF], v2: Double) = {
-        v1.map.valuesIterator.map(op.apply(_,v2)).sum
+        math.pow(v1.map.valuesIterator.map(op.apply(_,v2)).map(math.pow(_,v2)).sum, 1/v2)
       }
     }
   }

@@ -11,5 +11,5 @@ import breeze.linalg._
  */
 @RunWith(classOf[JUnitRunner])
 class LogisticClassifierTest extends ClassifierTrainerTestHarness with ContinuousTestHarness {
-  def trainer[L,T]:Classifier.Trainer[L,Counter[T,Double]] = new LogisticClassifier.Trainer[L,Counter[T,Double]](OptParams(useStochastic=true,tolerance=1E-3))
+  def trainer[L,T]:Classifier.Trainer[L,Counter[T,Double]] = new LogisticClassifier.Trainer[L,Counter[T,Double]](OptParams(tolerance=1E-2,regularization = 1.0))
 }

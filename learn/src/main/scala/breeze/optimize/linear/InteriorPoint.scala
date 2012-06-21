@@ -26,8 +26,9 @@ object InteriorPoint {
   def minimize(A: DenseMatrix[Double], b: DenseVector[Double], c: DenseVector[Double], x0: DenseVector[Double], tol: Double = TOLERANCE): DenseVector[Double] = {
     val m = A.rows
     val n = A.cols
-    val x = copy(x0)
-    if( (A * x0 - b).valuesIterator.exists(_ > 0)) {
+    val x = DenseVector.zeros[Double](n)
+    x += x0
+    if( (A * x0 - b).values.exists(_ > 0)) {
       x := phase1(A,b,c,x0)
     }
 //    assert((A * x0 - b).valuesIterator.forall(_ <= 0))
@@ -84,7 +85,6 @@ object InteriorPoint {
     newC(c.size) = 1
     val newX = DenseVector.tabulate(x0.size + 1)(i => if(i < x0.size) x0(i) else s)
     if( (newA * newX - newB).values.exists(_ > 0)) {
-      println(newA * newX - newB)
       throw new RuntimeException("Problem seems to be infeasible!")
     }
     val r = minimize(newA,newB,newC,newX)
@@ -99,16 +99,15 @@ object InteriorPoint {
     alpha
   }
 
-  private def computeAffineScalingDir(A: DenseMatrix[Double], b: DenseVector[Double], c: DenseVector[Double], x: DenseVector[Double], s: DenseVector[Double], z: DenseVector[Double]): (DenseVector[Double], DenseVector[Double], DenseVector[Double]) = {
-    val XiZ:DenseMatrix[Double] = diag(z :/ s)
+  private def computeAffineScalingDir(A: DenseMatrix[Double], b: DenseVector[Double], c: DenseVector[Double], x: DenseVector[Double], s: DenseVector[Double], z: DenseVector[Double]) = {
+    val XiZ = diag(z :/ s)
 
-    val AtXiZ:DenseMatrix[Double] = (A.t * XiZ)
+    val AtXiZ = (A.t * XiZ).asInstanceOf[DenseMatrix[Double]]
 
-    val rx: DenseVector[Double] = A * x + s - b
-    val rz: DenseVector[Double] = A.t * z + c
+    val rx = A * x + s - b
+    val rz = A.t * z + c
 
-    val mat:DenseMatrix[Double] = AtXiZ * A
-//    mat += diag(DenseVector.fill(mat.rows)(1E-20))
+    val mat = AtXiZ * A
 
     val dx = (mat) \ (A.t * z - rz - AtXiZ * rx)
     val ds = -rx - A * dx
@@ -121,7 +120,7 @@ object InteriorPoint {
     val n = A.cols
     val m = A.rows
     import DenseMatrix._
-    val mat:DenseMatrix[Double] = vertcat[Double](horzcat(zeros[Double](m,m), A, eye[Double](m)),
+    val mat = vertcat[Double](horzcat(zeros[Double](m,m), A, eye[Double](m)),
                       horzcat(A.t, zeros[Double](n,n + m)),
                       horzcat(diag(s),zeros[Double](m,n),diag(z)))
 

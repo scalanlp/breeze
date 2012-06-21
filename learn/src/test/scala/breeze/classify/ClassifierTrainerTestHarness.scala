@@ -37,8 +37,7 @@ trait ContinuousTestHarness extends ClassifierTrainerTestHarness {
   test("prml") {
     val classifier = trainer[Int,Int].train(PRMLData.classification)
     val contingencyStats = ContingencyStats(classifier, PRMLData.classification)
-    println(contingencyStats)
-    assert(contingencyStats.microaveraged.precision > 0.65,ContingencyStats(classifier,PRMLData.classification))
+    assert(contingencyStats.microaveraged.precision > 0.65,contingencyStats)
   }
 }
 

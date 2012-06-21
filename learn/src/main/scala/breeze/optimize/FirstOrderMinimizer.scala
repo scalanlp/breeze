@@ -1,6 +1,6 @@
 package breeze.optimize
 
-import breeze.util.logging.Logged
+import breeze.util.logging.{ConsoleLogging, Logged}
 import breeze.math.{NormedVectorSpace, MutableCoordinateSpace}
 
 /**
@@ -111,7 +111,7 @@ object FirstOrderMinimizer {
 
     def iterations[T](f: DiffFunction[T], init:T)(implicit vspace: MutableCoordinateSpace[T, Double]): Iterator[LBFGS[T]#State] = {
        if(useL1) new OWLQN[T](maxIterations, 5, regularization)(vspace).iterations(f,init)
-      else new LBFGS[T](maxIterations, 5)(vspace).iterations(DiffFunction.withL2Regularization(f,regularization),init)
+      else (new LBFGS[T](maxIterations, 5)(vspace) with ConsoleLogging).iterations(DiffFunction.withL2Regularization(f,regularization),init)
     }
   }
 }

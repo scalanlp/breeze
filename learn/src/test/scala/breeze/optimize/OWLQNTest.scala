@@ -29,7 +29,7 @@ import breeze.linalg._
 @RunWith(classOf[JUnitRunner])
 class OWLQNTest extends OptimizeTestBase {
   test("super simple") {
-    val lbfgs = new OWLQN[DenseVector[Double]](100,4) with ConsoleLogging
+    val lbfgs = new OWLQN[DenseVector[Double]](100,4)
 
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {

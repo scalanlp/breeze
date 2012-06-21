@@ -89,12 +89,13 @@ object LogisticClassifier {
       override def calculate(weights: LFMatrix[L,TF], range: IndexedSeq[Int]) = {
         var ll = 0.0
         val grad = weights.empty
+        assert(!breeze.linalg.norm(weights).isNaN, weights)
 
         for( datum <- range.view map data) {
           val logScores = this.logScores(weights,datum.features)
           val logNormalizer = softmax(logScores)
           ll -= (logScores(datum.label) - logNormalizer)
-          assert(!ll.isNaN)
+          assert(!ll.isNaN, logNormalizer + " " + logScores + " " + weights + " " + datum + " " + (weights * datum.features))
 
           // d ll/d weight_kj = \sum_i x_ij ( I(group_i = k) - p_k(x_i;Beta))
           for ( label <- allLabels ) {
@@ -103,6 +104,7 @@ object LogisticClassifier {
             grad(label) -= datum.features * (I(label == datum.label) - prob_k)
           }
         }
+        assert(!breeze.linalg.norm(grad).isNaN, grad)
         (ll,grad)
       }
     }
