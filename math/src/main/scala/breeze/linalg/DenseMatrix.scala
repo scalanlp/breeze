@@ -310,6 +310,14 @@ object DenseMatrix extends LowPriorityDenseMatrix
     }
   }
 
+  implicit def binaryLeftMulOpFromBinaryRightOp[V, Op<:OpType](implicit op: BinaryOp[DenseMatrix[V], V, OpMulScalar, DenseMatrix[V]]) = {
+    new BinaryOp[V, DenseMatrix[V], Op, DenseMatrix[V]] {
+      override def apply(a : V, b: DenseMatrix[V]) = {
+        op(b, a)
+      }
+    }
+  }
+
 
 
   implicit val setMM_D: BinaryUpdateOp[DenseMatrix[Double], DenseMatrix[Double], OpSet] = new SetDMDMOp[Double]

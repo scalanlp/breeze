@@ -86,6 +86,42 @@ trait TensorLike[@spec(Int) K, @specialized V, +This<:Tensor[K, V]] extends Quas
   def mapActiveValues[TT>:This,O,That](f : V => O)(implicit bf : CanMapValues[TT, V, O, That]) : That = {
     bf.mapActive(repr.asInstanceOf[TT], f)
   }
+
+  def argsort(implicit ord : Ordering[V]) : IndexedSeq[K] =
+    keysIterator.toIndexedSeq.sorted(ord.on[K](apply _))
+
+
+  /** Applies the given function to each key in the tensor. */
+  def foreachKey[U](fn: K => U) : Unit =
+    keysIterator.foreach[U](fn)
+
+  /**
+   * Applies the given function to each key and its corresponding value.
+   */
+  def foreachPair[U](fn: (K,V) => U) : Unit =
+    foreachKey[U](k => fn(k,apply(k)))
+
+
+  /**
+   * Applies the given function to each value in the map (one for
+   * each element of the domain, including zeros).
+   */
+  def foreachValue[U](fn : (V=>U)) =
+    foreachKey[U](k => fn(apply(k)))
+
+
+  /** Returns true if and only if the given predicate is true for all elements. */
+  def forall(fn : (K,V) => Boolean) : Boolean = {
+    foreachPair((k,v) => if (!fn(k,v)) return false)
+    true
+  }
+
+  /** Returns true if and only if the given predicate is true for all elements. */
+  def forallValues(fn : V => Boolean) : Boolean = {
+    foreachValue(v => if (!fn(v)) return false)
+    true
+  }
+
 }
 
 
