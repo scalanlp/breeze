@@ -70,14 +70,20 @@ trait Multimethod2[Method[AA,BB,RR]<:Function2[AA,BB,RR],A, B, R] extends ((A, B
 
     val cached = cache.get(ac -> bc)
     if(cached != null) {
-      cached.asInstanceOf[Method[A, B, R]].apply(a, b)
+      cached match {
+        case None => bindingMissing(a, b)
+        case Some(m) =>
+          m.asInstanceOf[Method[A, B, R]].apply(a, b)
+      }
     } else {
       val options = resolve(ac, bc.asInstanceOf[Class[_<:B]])
       options.size match {
-        case 0 => bindingMissing(a, b)
+        case 0 =>
+          cache.put(ac -> bc, None)
+          bindingMissing(a, b)
         case 1 =>
           val method = options.values.head
-          cache.put(ac -> bc, method)
+          cache.put(ac -> bc, Some(method))
           method.asInstanceOf[Method[A, B, R]].apply(a, b)
         case _ =>
           val selected = selectBestOption(options)
@@ -85,7 +91,7 @@ trait Multimethod2[Method[AA,BB,RR]<:Function2[AA,BB,RR],A, B, R] extends ((A, B
             multipleOptions(a, b, options)
           else {
             val method = selected.values.head
-            cache.put(ac -> bc, method)
+            cache.put(ac -> bc, Some(method))
             method.asInstanceOf[Method[A, B, R]].apply(a, b)
           }
       }
@@ -111,14 +117,18 @@ trait Multiproc2[Method[AA,BB]<:(AA, BB) => Unit,A<:AnyRef,B] extends ((A, B) =>
 
     val cached = cache.get(ac -> bc)
     if(cached != null) {
-      cached.asInstanceOf[Method[A, B]].apply(a, b)
+      cached match {
+        case None => bindingMissing(a, b)
+        case Some(m) =>
+          m.asInstanceOf[Method[A, B]].apply(a, b)
+      }
     } else {
       val m = resolve(a.getClass, b.asInstanceOf[AnyRef].getClass.asInstanceOf[Class[_<:B]])
       m.size match {
         case 0 => bindingMissing(a, b)
         case 1 =>
           val method = m.values.head
-          cache.put(ac -> bc, method)
+          cache.put(ac -> bc, Some(method))
           method.asInstanceOf[Method[A, B]].apply(a, b)
         case _ =>
           val selected = selectBestOption(m)
@@ -126,7 +136,7 @@ trait Multiproc2[Method[AA,BB]<:(AA, BB) => Unit,A<:AnyRef,B] extends ((A, B) =>
             multipleOptions(a, b, m)
           else {
             val method = selected.values.head
-            cache.put(ac -> bc, method)
+            cache.put(ac -> bc, Some(method))
             selected.values.head.asInstanceOf[Method[A, B]].apply(a, b)
           }
       }
@@ -142,7 +152,7 @@ trait Multiproc2[Method[AA,BB]<:(AA, BB) => Unit,A<:AnyRef,B] extends ((A, B) =>
 
 trait MMRegistry2[R] {
   protected val ops = HashMap[(Class[_],Class[_]), R]()
-  protected val cache = new ConcurrentHashMap[(Class[_], Class[_]), R]()
+  protected val cache = new ConcurrentHashMap[(Class[_], Class[_]), Option[R]]()
 
   def register(a: Class[_], b: Class[_], op: R) {
     ops(a -> b) = op
