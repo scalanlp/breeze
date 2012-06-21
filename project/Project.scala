@@ -59,7 +59,7 @@ object BreezeBuild extends Build {
   // subprojects
   //
 
-  lazy val breeze = Project ( "breeze", file("."), settings = buildSettings) aggregate (math,process,learn,graphs) dependsOn (math,process,learn,graphs)
+  lazy val breeze = Project ( "breeze", file("."), settings = buildSettings ++ jacoco.settings) aggregate (math,process,learn,graphs) dependsOn (math,process,learn,graphs)
   lazy val math = Project("breeze-math",file("math"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings ++ jacoco.settings) 
   lazy val process = Project("breeze-process",file("process"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings ++ jacoco.settings) dependsOn(math)
   lazy val learn = Project("breeze-learn",file("learn") ,  settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ assemblySettings ++ jacoco.settings) dependsOn(math,process)
