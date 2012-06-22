@@ -5,7 +5,7 @@ package breeze.storage
  * @author dlwh
  */
 
-trait DenseStorage[@specialized(Int, Double) Elem] extends Storage[Elem] {
+trait DenseStorage[@specialized(Int, Float, Double) Elem] extends Storage[Elem] {
   def data: Array[Elem]
   final protected def rawApply(i: Int) = data(i)
   protected def size: Int

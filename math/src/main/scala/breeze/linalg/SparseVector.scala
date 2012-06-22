@@ -115,7 +115,7 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
   }
 
   // There's a bizarre error from @specializing Float here.
-  class CanZipMapValuesSparseVector[@specialized(Int, Double) V, @specialized(Int, Double) RV:ClassManifest:DefaultArrayValue] extends CanZipMapValues[SparseVector[V],V,RV,SparseVector[RV]] {
+  class CanZipMapValuesSparseVector[@specialized(Int, Double, Float) V, @specialized(Int, Double) RV:ClassManifest:DefaultArrayValue] extends CanZipMapValues[SparseVector[V],V,RV,SparseVector[RV]] {
     def create(length : Int) = zeros(length)
 
     /**Maps all corresponding values from the two collection. */

@@ -8,7 +8,7 @@ import breeze.util.ArrayUtil
  * @author dlwh
  */
 
-trait SparseStorage[@specialized(Int, Double) Elem] extends Storage[Elem] {
+trait SparseStorage[@specialized(Int, Float, Double) Elem] extends Storage[Elem] {
   def index: Array[Int]
   protected def index_=(arr: Array[Int])
 

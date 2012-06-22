@@ -77,7 +77,7 @@ trait Counter2
 extends Tensor[(K1,K2),V] with Counter2Like[K1,K2,V,Curried[scala.collection.mutable.Map,K1]#Result,Counter[K2,V],Counter2[K1,K2,V]]
 
 object Counter2 {
-  class Impl[K1, @specialized(Int,Long) K2, @specialized(Int,Long,Float,Double) V]
+  class Impl[K1, K2, V]
   (override val data : scala.collection.mutable.Map[K1,Counter[K2,V]])
   (implicit scalar : DefaultArrayValue[V])
   extends Counter2[K1,K2,V] with Serializable {

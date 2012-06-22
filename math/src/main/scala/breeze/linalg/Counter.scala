@@ -13,11 +13,8 @@ import support.{CanZipMapValues, CanNorm, CanCopy}
  *
  * @author dramage, dlwh
  */
-trait CounterLike
-[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
- +M<:scala.collection.mutable.Map[K,V],
- +This<:Counter[K,V]]
-extends TensorLike[K,V,This] with Serializable { self =>
+@SerialVersionUID(1)
+trait CounterLike[K, V, +M<:scala.collection.mutable.Map[K,V], +This<:Counter[K,V]] extends TensorLike[K,V,This] with Serializable {
   def data : M
   def default: V
 
@@ -67,12 +64,12 @@ extends TensorLike[K,V,This] with Serializable { self =>
   def toMap = data.toMap
 }
 
-trait Counter[@specialized(Int, Long) K, @specialized(Int, Float, Double) V] extends Tensor[K,V] with CounterLike[K, V, collection.mutable.Map[K, V], Counter[K,V]] {
+trait Counter[K, V] extends Tensor[K,V] with CounterLike[K, V, collection.mutable.Map[K, V], Counter[K,V]] {
 
 }
 
 object Counter extends CounterOps {
-  class Impl[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V]
+  class Impl[K, V]
   (override val data : scala.collection.mutable.Map[K,V])
   (implicit defaultArrayValue : DefaultArrayValue[V])
   extends Counter[K,V] {

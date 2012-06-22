@@ -363,7 +363,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
 }
 
 trait LowPriorityDenseMatrix1 {
-  class SetMMOp[@specialized V] extends BinaryUpdateOp[DenseMatrix[V], Matrix[V], OpSet] {
+  class SetMMOp[@specialized(Int, Double, Float) V] extends BinaryUpdateOp[DenseMatrix[V], Matrix[V], OpSet] {
     def apply(a: DenseMatrix[V], b: Matrix[V]) {
       require(a.rows == b.rows, "Matrixs must have same number of rows")
       require(a.cols == b.cols, "Matrixs must have same number of columns")
@@ -384,7 +384,7 @@ trait LowPriorityDenseMatrix1 {
 
 
 
-  class SetDMVOp[@specialized V] extends BinaryUpdateOp[DenseMatrix[V], Vector[V], OpSet] {
+  class SetDMVOp[@specialized(Int, Double, Float) V] extends BinaryUpdateOp[DenseMatrix[V], Vector[V], OpSet] {
     def apply(a: DenseMatrix[V], b: Vector[V]) {
       require(a.rows == b.length && a.cols == 1 || a.cols == b.length && a.rows == 1, "DenseMatrix must have same number of rows, or same number of columns, as DenseVector, and the other dim must be 1.")
       val ad = a.data
@@ -407,7 +407,7 @@ trait LowPriorityDenseMatrix1 {
 }
 
 trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
-  class SetDMDMOp[@specialized V] extends BinaryUpdateOp[DenseMatrix[V], DenseMatrix[V], OpSet] {
+  class SetDMDMOp[@specialized(Int, Double, Float) V] extends BinaryUpdateOp[DenseMatrix[V], DenseMatrix[V], OpSet] {
     def apply(a: DenseMatrix[V], b: DenseMatrix[V]) {
       require(a.rows == b.rows, "Matrixs must have same number of rows")
       require(a.cols == b.cols, "Matrixs must have same number of columns")
@@ -434,7 +434,7 @@ trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
     }
   }
 
-  class SetDMDVOp[@specialized V] extends BinaryUpdateOp[DenseMatrix[V], DenseVector[V], OpSet] {
+  class SetDMDVOp[@specialized(Int, Double, Float) V] extends BinaryUpdateOp[DenseMatrix[V], DenseVector[V], OpSet] {
     def apply(a: DenseMatrix[V], b: DenseVector[V]) {
       require(a.rows == b.length && a.cols == 1 || a.cols == b.length && a.rows == 1, "DenseMatrix must have same number of rows, or same number of columns, as DenseVector, and the other dim must be 1.")
       val ad = a.data
@@ -454,7 +454,7 @@ trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
   }
 
 
-  class SetMSOp[@specialized V] extends BinaryUpdateOp[DenseMatrix[V], V, OpSet] {
+  class SetMSOp[@specialized(Int, Double, Float) V] extends BinaryUpdateOp[DenseMatrix[V], V, OpSet] {
     def apply(a: DenseMatrix[V], b: V) {
       if(a.data.length - a.offset == a.rows * a.cols) {
         ArrayUtil.fill(a.data, a.offset, a.size, b)

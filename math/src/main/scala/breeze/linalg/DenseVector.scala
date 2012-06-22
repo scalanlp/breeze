@@ -182,7 +182,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   }
 
   // There's a bizarre error specializing float's here.
-  class CanZipMapValuesDenseVector[@specialized(Int, Double) V, @specialized(Int, Double) RV:ClassManifest] extends CanZipMapValues[DenseVector[V],V,RV,DenseVector[RV]] {
+  class CanZipMapValuesDenseVector[@specialized(Int, Double, Float) V, @specialized(Int, Double) RV:ClassManifest] extends CanZipMapValues[DenseVector[V],V,RV,DenseVector[RV]] {
     def create(length : Int) = new DenseVector(new Array[RV](length))
 
     /**Maps all corresponding values from the two collection. */
