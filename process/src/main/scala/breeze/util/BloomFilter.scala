@@ -33,7 +33,7 @@ class BloomFilter[@specialized T](val numBuckets: Int, val numHashFunctions: Int
     var h = 0;
     while(h < numHashFunctions) {
       val hash = computeHash(h,o);
-      if(!bits(hash%numBuckets)) return false;
+      if(!bits.contains(hash%numBuckets)) return false;
       h+= 1
     }
     return true;
@@ -80,64 +80,4 @@ class BloomFilter[@specialized T](val numBuckets: Int, val numHashFunctions: Int
 
 }
 
-/**
- * Once Specialization works we'll get rid of this class.
- *
- * @author dlwh
- */
-class IntBloomFilter private (val numBuckets: Int, val numHashFunctions: Int, val bits: BitSet) extends (Int=>Boolean) {
-  def this(numBuckets: Int, numHashFunctions: Int) = this(numBuckets, numHashFunctions, new BitSet(numBuckets));
-  def this(numBuckets: Int) = this(numBuckets, 3);
 
-  def apply(o: Int): Boolean = {
-    var h = 0;
-    while(h < numHashFunctions) {
-      val hash = computeHash(h,o);
-      if(!bits.contains(hash%numBuckets)) return false;
-      h+= 1
-    }
-    return true;
-  }
-
-  def contains(o: Int) = apply(o);
-
-  override def equals(other: Any) = other match {
-    case that: BloomFilter[_] =>
-      this.numBuckets == that.numBuckets && this.numHashFunctions == that.numHashFunctions && this.bits == that.bits
-    case _ => false
-  }
-
-  def +=(o: Int): this.type = {
-    var h = 0;
-    while(h < numHashFunctions) {
-      val hash = computeHash(h,o);
-      bits(hash%numBuckets) = true;
-      h+= 1
-    }
-    this
-  }
-
-  def &(that: IntBloomFilter) = {
-    require(that.numBuckets == this.numBuckets,"Must have the same number of buckets to intersect");
-    require(that.numHashFunctions == this.numHashFunctions, "Must have the same number of hash functions to intersect");
-    new IntBloomFilter(this.numBuckets,this.numHashFunctions,this.bits & that.bits);
-  }
-
-  def |(that: IntBloomFilter) = {
-    require(that.numBuckets == this.numBuckets,"Must have the same number of buckets to compute union");
-    require(that.numHashFunctions == this.numHashFunctions, "Must have the same number of hash functions to compute union");
-    new IntBloomFilter(this.numBuckets,this.numHashFunctions,this.bits | that.bits);
-  }
-
-  def &~(that: IntBloomFilter) = {
-    require(that.numBuckets == this.numBuckets,"Must have the same number of buckets to intersect");
-    require(that.numHashFunctions == this.numHashFunctions, "Must have the same number of hash functions to intersect");
-    new IntBloomFilter(this.numBuckets,this.numHashFunctions,this.bits &~ that.bits);
-  }
-
-
-  private def computeHash(h: Int, o: Int) = {
-    h ^ o
-  }
-
-}
