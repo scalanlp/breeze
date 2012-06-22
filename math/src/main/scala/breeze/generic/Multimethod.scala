@@ -125,7 +125,9 @@ trait Multiproc2[Method[AA,BB]<:(AA, BB) => Unit,A<:AnyRef,B] extends ((A, B) =>
     } else {
       val m = resolve(a.getClass, b.asInstanceOf[AnyRef].getClass.asInstanceOf[Class[_<:B]])
       m.size match {
-        case 0 => bindingMissing(a, b)
+        case 0 =>
+          cache.put(ac -> bc, None)
+          bindingMissing(a, b)
         case 1 =>
           val method = m.values.head
           cache.put(ac -> bc, Some(method))
@@ -173,8 +175,8 @@ trait MMRegistry2[R] {
     ops.get(a -> b) match {
       case Some(m) => Map((a->b) -> m)
       case None =>
-        val newCA = checkedA ++ a.getInterfaces
-        val newCB = checkedB ++ b.getInterfaces
+        val newCA = if(checkedA.nonEmpty) checkedA else a.getInterfaces.toSet
+        val newCB = if(checkedB.nonEmpty) checkedB else b.getInterfaces.toSet
         val sa = a.getSuperclass +: a.getInterfaces.filterNot(checkedA)
         val sb = b.getSuperclass +: b.getInterfaces.filterNot(checkedB)
         val oneParent = for(bb <- sb if bb != null; m <- resolve(a, bb, checkedA, newCB)) yield {

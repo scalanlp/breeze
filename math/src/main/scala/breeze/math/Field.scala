@@ -86,7 +86,7 @@ object Field {
     val manifest = implicitly[ClassManifest[Float]]
     val defaultArrayValue = implicitly[DefaultArrayValue[Float]]
 
-    override def close(a: Float, b: Float, tolerance: Double) = (a-b).abs < math.max(a, b) * tolerance
+    override def close(a: Float, b: Float, tolerance: Double) = (a-b).abs <= math.max(a.abs, b.abs) * tolerance
   }
 
   implicit object fieldD extends Field[Double] {
@@ -105,7 +105,7 @@ object Field {
     val manifest = implicitly[ClassManifest[Double]]
     val defaultArrayValue = implicitly[DefaultArrayValue[Double]]
 
-    override def close(a: Double, b: Double, tolerance: Double) = (a-b).abs < math.max(a, b) * tolerance
+    override def close(a: Double, b: Double, tolerance: Double) = (a-b).abs <= math.max(a.abs, b.abs) * tolerance
   }
 }
 

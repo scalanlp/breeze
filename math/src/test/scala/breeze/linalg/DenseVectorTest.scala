@@ -5,6 +5,7 @@ import org.scalatest._
 import org.scalatest.junit._
 import org.scalatest.prop._
 import org.junit.runner.RunWith
+import breeze.math.{DoubleValuedTensorSpaceTestBase, TensorSpace, TensorSpaceTestBase}
 
 /**
  *
@@ -94,6 +95,37 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(emptySlice === DenseVector[Double]())
   }
 
+  test("Slice and Transpose Int") {
+    val x = DenseVector[Int](1, 2, 3, 4, 5)
+
+    val s: DenseVector[Int] = x(2 to 3)
+
+    assert(s === DenseVector(3, 4))
+
+    val t = s.t
+
+    assert(t === DenseVector(3, 4).t)
+
+    val emptySlice = x(2 until 2)
+    assert(emptySlice === DenseVector[Int]())
+  }
+
+
+  test("Slice and Transpose Float") {
+    val x = DenseVector[Float](1, 2, 3, 4, 5)
+
+    val s: DenseVector[Float] = x(2 to 3)
+
+    assert(s === DenseVector(3f, 4f))
+
+    val t = s.t
+
+    assert(t === DenseVector(3f, 4f).t)
+
+    val emptySlice = x(2 until 2)
+    assert(emptySlice === DenseVector[Float]())
+  }
+
   test("Transpose") {
     val x: DenseVector[Double] = DenseVector(1, 2, 3)
 
@@ -107,6 +139,18 @@ class DenseVectorTest extends FunSuite with Checkers {
     val a: DenseVector[Double] = DenseVector(1, 2, 3, 4, 5)
     val m: DenseVector[Double] = a.mapValues(_ + 1)
     assert(m === DenseVector(2., 3., 4., 5., 6.))
+  }
+
+  test("MapValues Int") {
+    val a: DenseVector[Int] = DenseVector(1, 2, 3, 4, 5)
+    val m: DenseVector[Int] = a.mapValues(_ + 1)
+    assert(m === DenseVector(2, 3, 4, 5, 6))
+  }
+
+  test("MapValues Float") {
+    val a: DenseVector[Float] = DenseVector(1f, 2f, 3f, 4f, 5f)
+    val m: DenseVector[Float] = a.mapValues(_ + 1f)
+    assert(m === DenseVector(2f, 3f, 4f, 5f, 6f))
   }
 
   test("ForComprehensions") {
@@ -160,4 +204,88 @@ class DenseVectorTest extends FunSuite with Checkers {
     (a:Vector[Double]) *= (b: Vector[Double])
     assert(a === DenseVector(12.,24.,40.))
   }
+
+  test("Generic DV ops") {
+    // mostly for coverage
+    val a = DenseVector("SSS")
+    assert(a.copy === a)
+    intercept[IndexOutOfBoundsException] {
+      a(3) = ":("
+      assert(false, "Shouldn't be here!")
+    }
+    assert(a(0) === "SSS")
+    intercept[IndexOutOfBoundsException] {
+      a(3)
+      assert(false, "Shouldn't be here!")
+    }
+
+
+  }
+}
+
+/**
+ *
+ * @author dlwh
+ */
+@RunWith(classOf[JUnitRunner])
+class DenseVectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[DenseVector[Double], Int] {
+ val space: TensorSpace[DenseVector[Double], Int, Double] = implicitly
+
+  val N = 30
+  implicit def genTriple: Arbitrary[(DenseVector[Double], DenseVector[Double], DenseVector[Double])] = {
+    Arbitrary {
+      for{x <- Arbitrary.arbitrary[Double].map { _  % 1E100}
+          y <- Arbitrary.arbitrary[Double].map { _ % 1E100 }
+          z <- Arbitrary.arbitrary[Double].map { _ % 1E100 }
+      } yield {
+        (DenseVector.fill(N)(math.random * x),
+          DenseVector.fill(N)(math.random * y),
+          DenseVector.fill(N)(math.random * z))
+      }
+    }
+  }
+
+  def genScalar: Arbitrary[Double] = Arbitrary(Arbitrary.arbitrary[Double].map{ _ % 1E10 })
+}
+
+@RunWith(classOf[JUnitRunner])
+class DenseVectorOps_IntTest extends TensorSpaceTestBase[DenseVector[Int], Int, Int] {
+ val space: TensorSpace[DenseVector[Int], Int, Int] = implicitly
+
+  val N = 30
+  implicit def genTriple: Arbitrary[(DenseVector[Int], DenseVector[Int], DenseVector[Int])] = {
+    Arbitrary {
+      for{x <- Arbitrary.arbitrary[Int].map { _  % 1000}
+          y <- Arbitrary.arbitrary[Int].map { _ % 1000}
+          z <- Arbitrary.arbitrary[Int].map { _ % 1000}
+      } yield {
+        (DenseVector.fill(N)(math.random * x toInt),
+          DenseVector.fill(N)(math.random * y toInt),
+          DenseVector.fill(N)(math.random * z toInt))
+      }
+    }
+  }
+
+  def genScalar: Arbitrary[Int] = Arbitrary(Arbitrary.arbitrary[Int].map{ _ % 1000 })
+}
+
+@RunWith(classOf[JUnitRunner])
+class DenseVectorOps_FloatTest extends TensorSpaceTestBase[DenseVector[Float], Int, Float] {
+ val space: TensorSpace[DenseVector[Float], Int, Float] = implicitly
+
+  val N = 30
+  implicit def genTriple: Arbitrary[(DenseVector[Float], DenseVector[Float], DenseVector[Float])] = {
+    Arbitrary {
+      for{x <- Arbitrary.arbitrary[Float].map { _  % 1000}
+          y <- Arbitrary.arbitrary[Float].map { _ % 1000}
+          z <- Arbitrary.arbitrary[Float].map { _ % 1000}
+      } yield {
+        (DenseVector.fill(N)(math.random * x toFloat),
+          DenseVector.fill(N)(math.random * y toFloat),
+          DenseVector.fill(N)(math.random * z toFloat))
+      }
+    }
+  }
+
+  def genScalar: Arbitrary[Float] = Arbitrary(Arbitrary.arbitrary[Float].map{ _ % 1000 })
 }

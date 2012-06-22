@@ -4,9 +4,9 @@ import operators._
 import scala.{specialized=>spec}
 import breeze.storage.Storage
 import breeze.generic.CanMapValues
-import breeze.math.{Ring, Field}
+import breeze.math.{TensorSpace, Ring, Field}
 import collection.immutable.BitSet
-import support.CanCopy
+import support.{CanZipMapValues, CanCopy}
 
 /**
  *
@@ -67,6 +67,56 @@ object Vector extends VectorOps_Int with VectorOps_Double with VectorOps_Float {
     // Should not inherit from T=>T because those get  used by the compiler.
     def apply(t: Vector[E]): Vector[E] = t.copy
   }
+
+  // There's a bizarre error specializing float's here.
+  class CanZipMapValuesVector[@specialized(Int, Double) V, @specialized(Int, Double) RV:ClassManifest] extends CanZipMapValues[Vector[V],V,RV,Vector[RV]] {
+    def create(length : Int) = new DenseVector(new Array[RV](length))
+
+    /**Maps all corresponding values from the two collection. */
+    def map(from: Vector[V], from2: Vector[V], fn: (V, V) => RV) = {
+      require(from.length == from2.length, "Vector lengths must match!")
+      val result = create(from.length)
+      var i = 0
+      while (i < from.length) {
+        result.data(i) = fn(from(i), from2(i))
+        i += 1
+      }
+      result
+    }
+  }
+
+  implicit def canMapValues[V, V2](implicit man: ClassManifest[V2]):CanMapValues[Vector[V], V, V2, Vector[V2]] = {
+    new CanMapValues[Vector[V], V, V2, Vector[V2]] {
+      /**Maps all key-value pairs from the given collection. */
+      def map(from: Vector[V], fn: (V) => V2) = {
+        DenseVector.tabulate(from.length)(i => fn(from(i)))
+      }
+
+      /**Maps all active key-value pairs from the given collection. */
+      def mapActive(from: Vector[V], fn: (V) => V2) = {
+        map(from, fn)
+      }
+    }
+  }
+
+  implicit def negFromScale[@specialized V, Double](implicit scale: BinaryOp[Vector[V], V, OpMulScalar, Vector[V]], field: Ring[V]) = {
+    new UnaryOp[Vector[V], OpNeg, Vector[V]] {
+      override def apply(a : Vector[V]) = {
+        scale(a, field.negate(field.one))
+      }
+    }
+  }
+
+
+  implicit def zipMap[V, R:ClassManifest] = new CanZipMapValuesVector[V, R]
+  implicit val zipMap_d = new CanZipMapValuesVector[Double, Double]
+  implicit val zipMap_f = new CanZipMapValuesVector[Float, Float]
+  implicit val zipMap_i = new CanZipMapValuesVector[Int, Int]
+
+
+  implicit val space_d = TensorSpace.make[Vector[Double], Int, Double]
+  implicit val space_f = TensorSpace.make[Vector[Float], Int, Float]
+  implicit val space_i = TensorSpace.make[Vector[Int], Int, Int]
 
   /*
   implicit val canScaleD: BinaryUpdateRegistry[Vector[Double], Double, OpMulScalar] = {

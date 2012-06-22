@@ -10,7 +10,7 @@ import breeze.generic.{UReduceable, URFunc, CanMapValues}
  * @tparam K
  * @tparam V
  */
-sealed trait QuasiTensor[@specialized(Int) K, @specialized V] {
+sealed trait QuasiTensor[@specialized(Int) K, @specialized(Int, Float, Double) V] {
   def apply(i: K):V
   def update(i: K, v: V)
   def keySet: scala.collection.Set[K]
@@ -39,7 +39,7 @@ sealed trait QuasiTensor[@specialized(Int) K, @specialized V] {
  *
  * @author dlwh
  */
-trait TensorLike[@spec(Int) K, @specialized V, +This<:Tensor[K, V]] extends QuasiTensor[K,V] with NumericOps[This] {
+trait TensorLike[@spec(Int) K, @specialized(Int, Float, Double) V, +This<:Tensor[K, V]] extends QuasiTensor[K,V] with NumericOps[This] {
   def apply(i: K):V
   def update(i: K, v: V)
 

@@ -14,10 +14,10 @@ import breeze.util.ArrayUtil
  *
  * @author dlwh
  */
-final class DenseVector[@spec(Double, Int, Float, Long) E](val data: Array[E],
-                                                         val offset: Int,
-                                                         val stride: Int,
-                                                         val length: Int) extends Vector[E] with DenseStorage[E] with VectorLike[E, DenseVector[E]] {
+final class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
+                                                     val offset: Int,
+                                                     val stride: Int,
+                                                     val length: Int) extends Vector[E] with DenseStorage[E] with VectorLike[E, DenseVector[E]] {
   def this(data: Array[E]) = this(data, 0, 1, data.length)
   def repr = this
 
@@ -38,7 +38,7 @@ final class DenseVector[@spec(Double, Int, Float, Long) E](val data: Array[E],
   def activeKeysIterator = keysIterator
 
   override def equals(p1: Any) = p1 match {
-    case x: DenseVector[_] =>
+    case x: Vector[_] =>
 //      length == x.length && (( stride == x.stride
 //        && offset == x.offset
 //        && data.length == x.data.length
@@ -181,7 +181,8 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     }
   }
 
-  class CanZipMapValuesDenseVector[@specialized V, @specialized RV:ClassManifest] extends CanZipMapValues[DenseVector[V],V,RV,DenseVector[RV]] {
+  // There's a bizarre error specializing float's here.
+  class CanZipMapValuesDenseVector[@specialized(Int, Double) V, @specialized(Int, Double) RV:ClassManifest] extends CanZipMapValues[DenseVector[V],V,RV,DenseVector[RV]] {
     def create(length : Int) = new DenseVector(new Array[RV](length))
 
     /**Maps all corresponding values from the two collection. */
@@ -190,7 +191,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
       val result = create(from.length)
       var i = 0
       while (i < from.length) {
-        result(i) = fn(from(i), from2(i))
+        result.data(i) = fn(from(i), from2(i))
         i += 1
       }
       result

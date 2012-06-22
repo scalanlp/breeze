@@ -13,7 +13,8 @@ import breeze.math.{Ring, TensorSpace}
  *
  * @author dlwh
  */
-final class SparseVector[@spec(Double,Int,Float) E](var index: Array[Int],
+// Float specialization causes a crash for some bizarre reason...
+final class SparseVector[@spec(Double,Int, Float) E](var index: Array[Int],
                                                     var data: Array[E],
                                                     var used: Int,
                                                     val length: Int)(
@@ -43,14 +44,13 @@ final class SparseVector[@spec(Double,Int,Float) E](var index: Array[Int],
   def default = value.value
 
   override def equals(p1: Any) = p1 match {
-    case x: SparseVector[_] =>
+    case x: Vector[_] =>
 //      length == x.length && (( stride == x.stride
 //        && offset == x.offset
 //        && data.length == x.data.length
 //        && ArrayUtil.equals(data, x.data)
 //      )  ||  (
         this.length == x.length &&
-        this.default == x.default &&
           (valuesIterator sameElements x.valuesIterator)
 //        ))
     case _ => false
@@ -76,6 +76,14 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
   def apply[V:ClassManifest:DefaultArrayValue](values: V*):SparseVector[V] = apply(values.toArray)
   def fill[@spec(Double, Int, Float) V:ClassManifest:DefaultArrayValue](size: Int)(v: =>V):SparseVector[V] = apply(Array.fill(size)(v))
   def tabulate[@spec(Double, Int, Float) V:ClassManifest:DefaultArrayValue](size: Int)(f: Int=>V):SparseVector[V]= apply(Array.tabulate(size)(f))
+
+  def apply[V:ClassManifest:DefaultArrayValue](length: Int)(values: (Int, V)*) = {
+    val r = zeros[V](length)
+    for( (i, v) <- values) {
+      r(i) = v
+    }
+    r
+  }
 
 
   class CanCopySparseVector[@specialized V:ClassManifest:DefaultArrayValue] extends CanCopy[SparseVector[V]] {
@@ -106,7 +114,8 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
     }
   }
 
-  class CanZipMapValuesSparseVector[@specialized V, @specialized RV:ClassManifest:DefaultArrayValue] extends CanZipMapValues[SparseVector[V],V,RV,SparseVector[RV]] {
+  // There's a bizarre error from @specializing Float here.
+  class CanZipMapValuesSparseVector[@specialized(Int, Double) V, @specialized(Int, Double) RV:ClassManifest:DefaultArrayValue] extends CanZipMapValues[SparseVector[V],V,RV,SparseVector[RV]] {
     def create(length : Int) = zeros(length)
 
     /**Maps all corresponding values from the two collection. */

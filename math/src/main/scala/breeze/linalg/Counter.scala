@@ -63,6 +63,8 @@ extends TensorLike[K,V,This] with Serializable { self =>
   }
 
   override def hashCode(): Int = data.hashCode()
+
+  def toMap = data.toMap
 }
 
 trait Counter[@specialized(Int, Long) K, @specialized(Int, Float, Double) V] extends Tensor[K,V] with CounterLike[K, V, collection.mutable.Map[K, V], Counter[K,V]] {
@@ -313,6 +315,15 @@ trait CounterOps {
       a.data.clear()
       for( (k,v) <- b.activeIterator) {
         a(k) = v
+      }
+    }
+  }
+
+
+  implicit def canSetIntoVS[K1, V]:BinaryUpdateOp[Counter[K1, V], V, OpSet] = new BinaryUpdateOp[Counter[K1, V], V, OpSet] {
+    def apply(a: Counter[K1, V], b: V) {
+      for( k <- a.keysIterator) {
+        a(k) = b
       }
     }
   }

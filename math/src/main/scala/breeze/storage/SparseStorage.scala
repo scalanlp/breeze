@@ -150,7 +150,8 @@ trait SparseStorage[@specialized(Int, Double) Elem] extends Storage[Elem] {
    * although more space is needed temporarily while moving to the
    * new arrays.
    */
-  protected def rawUpdate(i : Int, value : Elem) {
+  @inline
+  protected final def rawUpdate(i : Int, value : Elem) {
     val offset = findOffset(i)
     if (offset >= 0) {
       // found at offset

@@ -32,7 +32,7 @@ trait VectorSpace[V, S] {
 
 trait NormedVectorSpace[V, S] extends VectorSpace[V, S] {
   def norm(a: V):Double
-  def close(a: V, b: V, tolerance: Double):Boolean = norm(a - b) < tolerance
+  def close(a: V, b: V, tolerance: Double):Boolean = norm(a - b) <= tolerance * math.max(norm(a), norm(b))
 }
 
 trait InnerProductSpace[V, S] extends NormedVectorSpace[V, S] {
@@ -46,6 +46,8 @@ trait MutableVectorSpace[V, S] extends VectorSpace[V, S] {
 
   implicit def addIntoVV: BinaryUpdateOp[V, V, OpAdd]
   implicit def subIntoVV: BinaryUpdateOp[V, V, OpSub]
+
+  implicit def setIntoVV: BinaryUpdateOp[V, V, OpSet]
 }
 
 trait MutableNormedSpace[V, S] extends NormedVectorSpace[V, S] with MutableVectorSpace[V, S]
@@ -83,6 +85,7 @@ trait MutableCoordinateSpace[V, S] extends MutableInnerProductSpace[V, S]  with 
   implicit def subIntoVS: BinaryUpdateOp[V, S, OpSub]
   implicit def mulIntoVV: BinaryUpdateOp[V, V, OpMulScalar]
   implicit def divIntoVV: BinaryUpdateOp[V, V, OpDiv]
+  implicit def setIntoVS: BinaryUpdateOp[V, S, OpSet]
 
 //  implicit def powIntoVV: BinaryUpdateOp[V, V, OpPow]
 //  implicit def powIntoVS: BinaryUpdateOp[V, S, OpPow]
@@ -114,6 +117,8 @@ object MutableCoordinateSpace {
                    _subIntoVS:  BinaryUpdateOp[V, S, OpSub],
                    _mulIntoVV:  BinaryUpdateOp[V, V, OpMulScalar],
                    _divIntoVV:  BinaryUpdateOp[V, V, OpDiv],
+                   _setIntoVV:  BinaryUpdateOp[V, V, OpSet],
+                   _setIntoVS:  BinaryUpdateOp[V, S, OpSet],
 //                   _powIntoVV:  BinaryUpdateOp[V, V, OpPow],
 //                   _powIntoVS:  BinaryUpdateOp[V, S, OpPow],
 //                   _modIntoVV:  BinaryUpdateOp[V, V, OpMod],
@@ -169,7 +174,11 @@ object MutableCoordinateSpace {
 
     implicit def divIntoVV: BinaryUpdateOp[V, V, OpDiv] = _divIntoVV
 
-//    implicit def powIntoVV: BinaryUpdateOp[V, V, OpPow] = _powIntoVV
+    implicit def setIntoVV: BinaryUpdateOp[V, V, OpSet] = _setIntoVV
+
+    implicit def setIntoVS: BinaryUpdateOp[V, S, OpSet] = _setIntoVS
+
+    //    implicit def powIntoVV: BinaryUpdateOp[V, V, OpPow] = _powIntoVV
 //
 //    implicit def powIntoVS: BinaryUpdateOp[V, S, OpPow] = _powIntoVS
 //
@@ -228,6 +237,8 @@ object TensorSpace {
                    _subIntoVS:  BinaryUpdateOp[V, S, OpSub],
                    _mulIntoVV:  BinaryUpdateOp[V, V, OpMulScalar],
                    _divIntoVV:  BinaryUpdateOp[V, V, OpDiv],
+                   _setIntoVV:  BinaryUpdateOp[V, V, OpSet],
+                   _setIntoVS:  BinaryUpdateOp[V, S, OpSet],
 //                   _powIntoVV:  BinaryUpdateOp[V, V, OpPow],
 //                   _powIntoVS:  BinaryUpdateOp[V, S, OpPow],
 //                   _modIntoVV:  BinaryUpdateOp[V, V, OpMod],
@@ -310,5 +321,10 @@ object TensorSpace {
     implicit def isNumericOps(v: V): NumericOps[V] with QuasiTensor[I, S] = _isNumericOps(v)
 
     implicit def dotVV: BinaryOp[V, V, OpMulInner, S] = _dotVV
+
+
+    implicit def setIntoVV: BinaryUpdateOp[V, V, OpSet] = _setIntoVV
+
+    implicit def setIntoVS: BinaryUpdateOp[V, S, OpSet] = _setIntoVS
   }
 }

@@ -16,7 +16,7 @@ import breeze.math.Semiring
  * @author dlwh
  */
 
-final class DenseMatrix[@specialized V](val data: Array[V],
+final class DenseMatrix[@specialized(Int, Float, Double) V](val data: Array[V],
                                         val rows: Int,
                                         val cols: Int,
                                         val majorStride: Int,

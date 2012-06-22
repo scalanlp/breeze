@@ -10,11 +10,11 @@ import breeze.util.Terminal
  * @author dlwh
  */
 
-trait MatrixLike[@spec E, +Self <: Matrix[E]] extends Tensor[(Int, Int), E] with TensorLike[(Int, Int), E, Self] {
+trait MatrixLike[@spec(Int, Float, Double) E, +Self <: Matrix[E]] extends Tensor[(Int, Int), E] with TensorLike[(Int, Int), E, Self] {
 
 }
 
-trait Matrix[@spec E] extends MatrixLike[E, Matrix[E]] {
+trait Matrix[@spec(Int, Float, Double) E] extends MatrixLike[E, Matrix[E]] {
 
 
 
@@ -68,7 +68,7 @@ trait Matrix[@spec E] extends MatrixLike[E, Matrix[E]] {
       }
     }
 
-    val newline = System.getProperty("line.separator")
+    val newline = Terminal.newline
 
     val rv = new scala.StringBuilder
     for (row <- 0 until showRows; col <- 0 until colWidths.length) {
@@ -105,7 +105,7 @@ trait Matrix[@spec E] extends MatrixLike[E, Matrix[E]] {
 }
 
 
-trait StorageMatrix[@spec E] extends Matrix[E] with MatrixLike[E, StorageMatrix[E]] with Storage[E] {
+trait StorageMatrix[@spec(Int, Float, Double) E] extends Matrix[E] with MatrixLike[E, StorageMatrix[E]] with Storage[E] {
   def offset: Int
   def majorStride: Int
   def isTranspose: Boolean

@@ -15,13 +15,13 @@ object Terminal {
         getMethod("create").invoke(null).asInstanceOf[Terminal]
       terminal.getWidth()
     } catch {
-      case _ => try {
+      case _ : Throwable => try {
         type Terminal = { def getTerminalWidth() : Int; def getTerminalHeight() : Int; }
         val terminal = Class.forName("jline.Terminal").
           getMethod("getInstance").invoke(null).asInstanceOf[Terminal]
         terminal.getTerminalWidth()
       } catch {
-        case _ => 80
+        case _ : Throwable => 80
       }
     }
   }
@@ -36,14 +36,16 @@ object Terminal {
         getMethod("create").invoke(null).asInstanceOf[Terminal]
       terminal.getHeight()
     } catch {
-      case _ => try {
+      case _ :Throwable => try {
         type Terminal = { def getTerminalWidth() : Int; def getTerminalHeight() : Int; }
         val terminal = Class.forName("jline.Terminal").
           getMethod("getInstance").invoke(null).asInstanceOf[Terminal]
         terminal.getTerminalHeight()
       } catch {
-        case _ => 24
+        case _ :Throwable => 24
       }
     }
   }
+
+  val newline = System.getProperty("line.separator")
 }

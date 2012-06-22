@@ -4,6 +4,8 @@ import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 import org.junit.runner.RunWith
 import org.scalatest.prop.Checkers
+import breeze.math.{TensorSpace, TensorSpaceTestBase}
+import org.scalacheck.Arbitrary
 
 /**
  * @author dlwh
@@ -53,3 +55,23 @@ class CounterTest extends FunSuite with Checkers {
   }
 }
 
+
+@RunWith(classOf[JUnitRunner])
+class CounterOps_IntTest extends TensorSpaceTestBase[Counter[Int, Int], Int, Int] {
+ val space: TensorSpace[Counter[Int, Int], Int, Int] = implicitly
+
+  val N = 30
+  def genTriple: Arbitrary[(Counter[Int, Int], Counter[Int, Int], Counter[Int, Int])] = {
+    implicitly
+  }
+
+  implicit def genS: Arbitrary[Counter[Int, Int]] = {
+    Arbitrary {
+      for{l <- Arbitrary.arbitrary[List[Int]] } yield {
+        Counter.count(l)
+      }
+    }
+  }
+
+  def genScalar: Arbitrary[Int] = Arbitrary(Arbitrary.arbitrary[Int].map{ _ % 1000 })
+}
