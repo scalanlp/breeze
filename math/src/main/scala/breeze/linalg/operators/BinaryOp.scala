@@ -40,6 +40,7 @@ trait BinaryRegistry[A, B, Op<:OpType, R] extends BinaryOp[A, B, Op, R] with MMR
       }
     } else {
       val options = resolve(ac, bc.asInstanceOf[Class[_<:B]])
+
       options.size match {
         case 0 =>
           cache.put(ac -> bc, None)

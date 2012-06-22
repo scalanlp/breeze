@@ -1,8 +1,9 @@
 package breeze.generic
 
-import collection.mutable.HashMap
+import collection.mutable.{ArrayBuffer, HashMap}
 import java.util.concurrent.ConcurrentHashMap
 import breeze.util.ReflectionUtil
+import collection.mutable
 
 /**
  *
@@ -170,30 +171,40 @@ trait MMRegistry2[R] {
     cache.clear()
   }
 
+  private def closeSupertypes(a: Class[_]) = {
+    val result = collection.mutable.Set[Class[_]]()
+    val queue = new mutable.Queue[Class[_]]()
+    queue.enqueue(a)
+    while(queue.nonEmpty) {
+      val t = queue.dequeue()
+      result += t
+      val s = t.getSuperclass
+      if(s != null) {
+        queue += s
+      }
+      for(i <- t.getInterfaces) {
+        if(!result(i)) {
+          queue += i
+        }
+      }
+    }
+    result
+  }
 
-  protected def resolve(a: Class[_], b: Class[_], checkedA: Set[Class[_]] = Set.empty, checkedB: Set[Class[_]] = Set.empty):Map[(Class[_], Class[_]), R] = {
+
+  protected def resolve(a: Class[_], b: Class[_]):Map[(Class[_], Class[_]), R] = {
     ops.get(a -> b) match {
       case Some(m) => Map((a->b) -> m)
       case None =>
-        val newCA = if(checkedA.nonEmpty) checkedA else a.getInterfaces.toSet
-        val newCB = if(checkedB.nonEmpty) checkedB else b.getInterfaces.toSet
-        val sa = a.getSuperclass +: a.getInterfaces.filterNot(checkedA)
-        val sb = b.getSuperclass +: b.getInterfaces.filterNot(checkedB)
-        val oneParent = for(bb <- sb if bb != null; m <- resolve(a, bb, checkedA, newCB)) yield {
-          m
+        val newCA = a.getInterfaces
+        val newCB = b.getInterfaces
+        val sa = closeSupertypes(a)
+        val sb = closeSupertypes(b)
+        val candidates = ArrayBuffer[((Class[_], Class[_]), R)]()
+        for( aa <- sa; bb <- sb; op <- ops.get(aa -> bb)) {
+          candidates += ((aa -> bb) -> op)
         }
-        val otherParent = for(aa <- sa if aa != null; m <- resolve(aa, b, newCA, checkedB)) yield {
-          m
-        }
-        if(oneParent.isEmpty && otherParent.isEmpty) {
-          val allParents = for(aa <- sa; bb <- sb if aa != null && bb != null; m <- resolve(aa, bb, newCA, newCB)) yield{
-            m
-          }
-          allParents.toMap[(Class[_], Class[_]), R]
-        } else {
-          val rs = (oneParent ++ otherParent).toMap[(Class[_], Class[_]), R]
-          rs
-        }
+        candidates.toMap[(Class[_], Class[_]), R]
     }
 
   }
