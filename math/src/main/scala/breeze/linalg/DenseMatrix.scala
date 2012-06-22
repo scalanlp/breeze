@@ -8,7 +8,7 @@ import org.netlib.blas.{Dgemm, BLAS}
 import breeze.util.ArrayUtil
 import breeze.numerics.IntMath
 import support._
-import breeze.generic.CanMapValues
+import breeze.generic.{CanCollapseAxis, CanMapValues}
 import breeze.math.Semiring
 
 /**
@@ -315,6 +315,39 @@ object DenseMatrix extends LowPriorityDenseMatrix
       override def apply(a : V, b: DenseMatrix[V]) = {
         op(b, a)
       }
+    }
+  }
+
+  /**
+   * Returns a 1xnumCols DenseMatrix
+   * @tparam V
+   * @tparam R
+   * @return
+   */
+  implicit def canCollapseRows[V, R:ClassManifest]: CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], R, DenseMatrix[R]]  = new CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], R, DenseMatrix[R]] {
+    def apply(from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => R): DenseMatrix[R] = {
+      val result = DenseMatrix.zeros[R](1, from.cols)
+      for(c <- 0 until from.cols) {
+        result(0, c) = f(from(::, c))
+      }
+      result
+    }
+  }
+
+  /**
+   * Returns a numRows DenseVector
+   * @tparam V
+   * @tparam R
+   * @return
+   */
+  implicit def canCollapseCols[V, R:ClassManifest] = new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], R, DenseVector[R]] {
+    def apply(from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => R): DenseVector[R] = {
+      val result = DenseVector.zeros[R](from.rows)
+      val t = from.t
+      for(r <- 0 until from.cols) {
+        result(r) = f(t(::, r))
+      }
+      result
     }
   }
 

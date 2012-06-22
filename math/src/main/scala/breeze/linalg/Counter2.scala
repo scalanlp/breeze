@@ -6,7 +6,7 @@ import collection.mutable.HashMap
 import breeze.math.{Semiring, Field}
 import support.CanSlice2
 import collection.{Set, mutable}
-import breeze.generic.CanMapValues
+import breeze.generic.{CanCollapseAxis, CanMapValues}
 
 /**
  *
@@ -180,6 +180,38 @@ object Counter2 {
 
         override def size = from.data.size
       }
+    }
+  }
+
+
+  /**
+   * Returns a Counter[K2, V]
+   * @tparam V
+   * @tparam R
+   * @return
+   */
+  implicit def canCollapseRows[K1, K2, V, R:ClassManifest:DefaultArrayValue:Semiring]: CanCollapseAxis[Counter2[K1, K2,V], Axis._0.type, Counter[K1, V], R, Counter[K2, R]]  = new CanCollapseAxis[Counter2[K1, K2,V], Axis._0.type, Counter[K1, V], R, Counter[K2,R]] {
+    def apply(from: Counter2[K1, K2,V], axis: Axis._0.type)(f: (Counter[K1, V]) => R): Counter[K2, R] = {
+      val result = Counter[K2, R]()
+      for( dom <- from.keySet.map(_._2)) {
+        result(dom) = f(from(::, dom))
+      }
+      result
+    }
+  }
+  /**
+   * Returns a Counter[K1, V]
+   * @tparam V
+   * @tparam R
+   * @return
+   */
+  implicit def canCollapseCols[K1, K2, V, R:ClassManifest:DefaultArrayValue:Semiring]: CanCollapseAxis[Counter2[K1, K2,V], Axis._1.type, Counter[K2, V], R, Counter[K1, R]]  = new CanCollapseAxis[Counter2[K1, K2,V], Axis._1.type, Counter[K2, V], R, Counter[K1,R]] {
+    def apply(from: Counter2[K1, K2,V], axis: Axis._1.type)(f: (Counter[K2, V]) => R): Counter[K1, R] = {
+      val result = Counter[K1, R]()
+      for( (dom,c) <- from.data) {
+        result(dom) = f(c)
+      }
+      result
     }
   }
 

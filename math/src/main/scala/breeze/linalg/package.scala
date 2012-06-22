@@ -120,6 +120,27 @@ package object linalg extends LinearAlgebra {
   }
 
 
+  val sum:URFunc[Double, Double] = new URFunc[Double, Double] {
+    def apply(cc: TraversableOnce[Double]) =  {
+      cc.sum
+    }
+
+    override def apply(arr: Array[Double], offset: Int, stride: Int, length: Int, isUsed: (Int) => Boolean) = {
+      var i = 0
+      var sum = 0.0
+      var off = offset
+      while(i < length) {
+        if(isUsed(i)) {
+          sum += arr(off)
+        }
+        i += 1
+        off += stride
+      }
+      sum
+    }
+  }
+
+
   val meanAndVariance:URFunc[Double, (Double,Double)] = new URFunc[Double, (Double,Double)] {
     def apply(it: TraversableOnce[Double]) = {
       val (mu,s,n) = it.foldLeft( (0.0,0.0,0)) { (acc,y) =>

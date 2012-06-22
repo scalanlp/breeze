@@ -272,5 +272,11 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(r4 === DenseMatrix((0.9166666666666667,    1.9166666666666672),
                              (-0.08333333333333352, -0.08333333333333436)))
   }
+
+
+  test("sum") {
+    assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._0) === DenseMatrix((3., 7.)))
+    assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._1) === DenseVector(4., 6.))
+  }
 }
 

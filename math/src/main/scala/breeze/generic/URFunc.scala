@@ -1,5 +1,8 @@
 package breeze.generic
 
+import breeze.linalg.Axis
+import breeze.linalg.support.CanSlice2
+
 /**
  * A "Universal Reducer" Function that can support reduction-type operations
  * on a collection or some such.
@@ -15,6 +18,10 @@ trait URFunc[@specialized A, +B] {
 
   def apply[T](c: T)(implicit urable: UReduceable[T, A]):B = {
     urable(c, this)
+  }
+
+  def apply[T2, Axis, TA, R](c: T2, axis: Axis)(implicit collapse: CanCollapseAxis[T2, Axis, TA, B, R], ured: UReduceable[TA, A]): R = {
+    collapse(c,axis)(ta => this.apply[TA](ta))
   }
 
   def apply(arr: Array[A]):B = apply(arr, arr.length)
