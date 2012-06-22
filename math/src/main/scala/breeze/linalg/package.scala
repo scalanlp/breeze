@@ -277,7 +277,7 @@ import math.Ring
  * @author dlwh,dramage,retronym,afwlehmann,lancelet
  */
 trait LinearAlgebra {
-//  import breeze.linalg._
+  //  import breeze.linalg._
 
   @inline private def requireNonEmptyMatrix[V](mat: Matrix[V]) =
     if (mat.cols == 0 || mat.rows == 0)
@@ -374,11 +374,11 @@ trait LinearAlgebra {
     val Vt = DenseMatrix.zeros[Double](n,n)
     val iwork = new Array[Int](8 * (m min n) )
     val workSize = ( 3
-                    * scala.math.min(m, n)
-                    * scala.math.min(m, n)
-                    + scala.math.max(scala.math.max(m, n), 4 * scala.math.min(m, n)
-                               * scala.math.min(m, n) + 4 * scala.math.min(m, n))
-                   )
+      * scala.math.min(m, n)
+      * scala.math.min(m, n)
+      + scala.math.max(scala.math.max(m, n), 4 * scala.math.min(m, n)
+      * scala.math.min(m, n) + 4 * scala.math.min(m, n))
+      )
     val work = new Array[Double](workSize)
     val info = new intW(0)
     val cm = copy(mat)
@@ -402,8 +402,8 @@ trait LinearAlgebra {
    * usually denoted a ⊗ b.
    */
   def kron[V1,V2, M,RV](a : DenseMatrix[V1], b : M)(implicit mul : BinaryOp[V1, M, OpMulScalar,DenseMatrix[RV]],
-                                                asMat: M<:<Matrix[V2],
-                                                man: ClassManifest[RV]) : DenseMatrix[RV] = {
+                                                    asMat: M<:<Matrix[V2],
+                                                    man: ClassManifest[RV]) : DenseMatrix[RV] = {
     val result: DenseMatrix[RV] = DenseMatrix.zeros[RV](a.rows * b.rows, a.cols * b.cols)
     for( ((r,c),av) <- a.activeIterator) {
       result((r*b.rows) until ((r+1)*b.rows), (c * b.cols) until ((c+1) * b.cols)) := mul(av, b)
@@ -516,16 +516,16 @@ trait LinearAlgebra {
     A
   }
 
- /**
-  * QR Factorization with pivoting
-  *
-  * input: A m x n matrix
-  * output: (Q,R,P,pvt) where AP = QR
-  *   Q: m x m
-  *   R: m x n
-  *   P: n x n : permutation matrix (P(pvt(i),i) = 1)
-  *   pvt : pivot indices
-  */
+  /**
+   * QR Factorization with pivoting
+   *
+   * input: A m x n matrix
+   * output: (Q,R,P,pvt) where AP = QR
+   *   Q: m x m
+   *   R: m x n
+   *   P: n x n : permutation matrix (P(pvt(i),i) = 1)
+   *   pvt : pivot indices
+   */
   def qrp(A: DenseMatrix[Double]): (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Int], Array[Int]) = {
     val m = A.rows
     val n = A.cols
@@ -548,7 +548,7 @@ trait LinearAlgebra {
     val pvt = new Array[Int](n)
     val tau = new Array[Double](scala.math.min(m,n))
     for(r <- 0 until m; c <- 0 until n) AFact(r,c) = A(r,c)
-      lapack.dgeqp3(m, n, AFact.data, m, pvt, tau, workspace, workspace.length, info)
+    lapack.dgeqp3(m, n, AFact.data, m, pvt, tau, workspace, workspace.length, info)
 
     //Error check
     if (info.`val` > 0)
@@ -560,13 +560,13 @@ trait LinearAlgebra {
     val R = DenseMatrix.zeros[Double](m,n)
 
     for(c <- 0 until maxd if(c < n); r <- 0 until m if(r <= c))
-        R(r,c) = AFact(r,c)
+      R(r,c) = AFact(r,c)
 
     //Get Q from the matrix returned by dgep3
     val Q = DenseMatrix.zeros[Double](m,m)
     lapack.dorgqr(m, m, scala.math.min(m,n), AFact.data, m, tau, workspace, workspace.length, info)
     for(r <- 0 until m; c <- 0 until maxd if(c < m))
-        Q(r,c) = AFact(r,c)
+      Q(r,c) = AFact(r,c)
 
     //Error check
     if (info.`val` > 0)
@@ -575,7 +575,8 @@ trait LinearAlgebra {
       throw new IllegalArgumentException()
 
     //Get P
-    for(i <- 0 until pvt.length) pvt(i)-=1
+    import NumericOps.Arrays._
+    pvt -= 1
     val P = DenseMatrix.zeros[Int](n,n)
     for(i <- 0 until n)
       P(pvt(i), i) = 1
@@ -584,14 +585,14 @@ trait LinearAlgebra {
   }
 
   /**
-  * QR Factorization
-  *
-  * input: A m x n matrix
-  * optional: skipQ - if true, don't reconstruct orthogonal matrix Q (instead returns (null,R))
-  * output: (Q,R)
-  *   Q: m x m
-  *   R: m x n
-  */
+   * QR Factorization
+   *
+   * input: A m x n matrix
+   * optional: skipQ - if true, don't reconstruct orthogonal matrix Q (instead returns (null,R))
+   * output: (Q,R)
+   *   Q: m x m
+   *   R: m x n
+   */
   def qr(A: DenseMatrix[Double], skipQ : Boolean = false): (DenseMatrix[Double], DenseMatrix[Double]) = {
     val m = A.rows
     val n = A.cols
@@ -655,7 +656,7 @@ trait LinearAlgebra {
    * real symmetric matrix X.
    */
   def eigSym(X: Matrix[Double], rightEigenvectors: Boolean):
-    (DenseVector[Double], Option[DenseMatrix[Double]]) =
+  (DenseVector[Double], Option[DenseMatrix[Double]]) =
   {
     requireNonEmptyMatrix(X)
 
@@ -842,7 +843,7 @@ object LinearAlgebra extends LinearAlgebra
  * Exception thrown if a routine has not converged.
  */
 class NotConvergedException(val reason: NotConvergedException.Reason, msg: String = "")
-extends RuntimeException(msg)
+  extends RuntimeException(msg)
 
 object NotConvergedException {
   trait Reason

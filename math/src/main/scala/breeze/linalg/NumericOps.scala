@@ -182,3 +182,34 @@ trait NumericOps[+This] {
   def \ [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpSolveMatrixBy,That]) =
     op.apply(repr,b)
 }
+
+object NumericOps {
+  object Arrays {
+    implicit def arrayIsNumericOps[V](arr: Array[V]):NumericOps[Array[V]] = new NumericOps[Array[V]] {
+      def repr = arr
+    }
+
+    implicit def binaryOpFromDVOp[V,Other,Op<:OpType,U](implicit op: BinaryOp[DenseVector[V], Other, Op, DenseVector[U]], man: ClassManifest[U]) = {
+      new BinaryOp[Array[V], Other, Op, Array[U]] {
+        def apply(a: Array[V], b: Other): Array[U] = {
+          val r = op(new DenseVector(a),b)
+          if(r.offset != 0 || r.stride != 1) {
+            val z = DenseVector.zeros[U](r.length)
+            z := r
+            z.data
+          } else {
+            r.data
+          }
+        }
+      }
+    }
+
+    implicit def binaryUpdateOpFromDVOp[V,Other,Op<:OpType, U](implicit op: BinaryUpdateOp[DenseVector[V], Other, Op], man: ClassManifest[U]) = {
+      new BinaryUpdateOp[Array[V], Other, Op] {
+        def apply(a: Array[V], b: Other){
+          op(new DenseVector(a),b)
+        }
+      }
+    }
+  }
+}

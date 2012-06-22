@@ -136,5 +136,11 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
     _R.cols should  be (expectedR.cols)
     _R foreachPair { case ((i,j), v) => v should be (expectedR(i,j) plusOrMinus 1e-8) }
   }
+  test("qrp") {
+    val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
+    val (_QQ, _RR, _P, _) = qrp(A)
+    val ap = A * _P.values.map(_.toDouble)
+    _QQ * _RR foreachPair { case ((i,j), v) => v should be (ap(i,j) plusOrMinus 1e-8) }
+  }
 
 }
