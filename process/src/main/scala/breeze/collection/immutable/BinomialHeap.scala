@@ -21,10 +21,10 @@ package breeze.collection.immutable;
 
 
 
-import breeze.util.ScalaQL
 import collection.mutable.{Builder, GrowingBuilder, AddingBuilder}
 import collection.{GenTraversableOnce, IterableLike}
 import collection.generic.{CanBuildFrom, Growable, Addable}
+import breeze.util.Iterators
 ;
 
 /**
@@ -97,10 +97,10 @@ class BinomialHeap[T<%Ordered[T]] extends Iterable[T] with IterableLike[T,Binomi
   }
 
   private val comp = {(x : T, y :T) => x compare y}
-  def iterator :Iterator[T] = ScalaQL.merge( (trees map treeIterator):_*)(comp)
+  def iterator :Iterator[T] = Iterators.merge( (trees map treeIterator):_*)(comp)
 
   private def treeIterator(n : Node[T]) : Iterator[T] = {
-    ScalaQL.merge((Iterator.single(n.x) :: (n.children map treeIterator)):_*)(comp);
+    Iterators.merge((Iterator.single(n.x) :: (n.children map treeIterator)):_*)(comp);
   }
 
   override def toString() = iterator.mkString("Heap(",",",")");

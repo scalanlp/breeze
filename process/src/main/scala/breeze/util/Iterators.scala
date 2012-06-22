@@ -1,9 +1,9 @@
-package breeze.util;
+package breeze.util
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
  
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at 
  
@@ -20,11 +20,11 @@ package breeze.util;
 /**
  * Utilities and implicits for iterators. Nothing major.
  *
- * @author dramage
+ * @author dlwh, dramage
  */
 object Iterators {
 
-  def fromProducer[E](prod: =>Option[E]):Iterator[E] = Iterator.continually(prod).takeWhile(None !=).map(_.get);
+  def fromProducer[E](prod: =>Option[E]):Iterator[E] = Iterator.continually(prod).takeWhile(None !=).map(_.get)
 
   /**
    * Procedural iterator creation with an explicit callback.
@@ -33,47 +33,83 @@ object Iterators {
    * and waiting.
    */
   def iterator[E](func : ((E=>Unit)=>Unit)) : Iterator[E] = {
-    import scala.concurrent.ops._;
+    import scala.concurrent.ops._
     
-    val queue = new java.util.concurrent.LinkedBlockingQueue[E](1);
-    var running = true;
-    var thrown : Throwable = null;
+    val queue = new java.util.concurrent.LinkedBlockingQueue[E](1)
+    var running = true
+    var thrown : Throwable = null
     
-    def isRunning = running;
-    def isPending = queue.size >= 1;
+    def isRunning = running
+    def isPending = queue.size >= 1
     
     spawn {
       try {
         func(queue.put)
       } catch {
-        case x : Throwable => thrown = x;
-      };
-      running = false;
+        case x : Throwable => thrown = x
+      }
+      running = false
     }
     
     return new Iterator[E] {
       def waitIfNecessary() = {
         while (isRunning && !isPending) {
-          Thread.`yield`;
+          Thread.`yield`
         }
         if (thrown != null) {
-          throw new RuntimeException(thrown);
+          throw new RuntimeException(thrown)
         }
       }
       
       override def hasNext = {
-        waitIfNecessary();
-        isPending;
+        waitIfNecessary()
+        isPending
       }
       
       override def next = {
-        waitIfNecessary();
+        waitIfNecessary()
         if (!isPending) {
-          throw new RuntimeException("Called next on empty iterator");
+          throw new RuntimeException("Called next on empty iterator")
         }
-        queue.take;
+        queue.take
       }
     }
+  }
+
+  /**
+   * Merges (ordered) iterators by returning the lesser element at the
+   * head of each, according to the given comparator.  Ties go to the element
+   * from the first iterator.
+   */
+  def merge[T](iters : Iterator[T]*)(compare : ((T,T) => Int)) : Iterator[T] =
+    new Iterator[T] {
+      /** Keep track of the top of each list. */
+      val heads = iters.map(get _).toArray
+
+      /** The merged iterator has more if any head is not None. */
+      override def hasNext : Boolean =
+        heads.map(_ != None).foldLeft(false)(_||_)
+
+      /** Return the smallest element that is currently a list head. */
+      override def next : T = {
+        val top = heads.zipWithIndex.foldLeft((None.asInstanceOf[Option[T]],-1)) {
+          (headA : (Option[T],Int), headB : (Option[T],Int)) =>
+            (headA, headB) match {
+              case ((Some(a),i), (Some(b),j)) => if (compare(a,b) <= 0) headA else headB
+              case ((Some(a),i), (None,j))    => headA
+              case ((None,i), (Some(b),j))    => headB
+              case ((None,i), (None,j))       => headA
+              case x:Any => throw new IllegalStateException(x.toString)
+              }
+            }
+
+        // update the top list and return its value
+        heads(top._2) = get(iters(top._2))
+        return top._1.get
+      }
+
+      def get(iter : Iterator[T]) : Option[T] =
+        if (iter.hasNext) Some(iter.next) else None
   }
   
 }
