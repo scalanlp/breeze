@@ -189,10 +189,10 @@ package object numerics extends UniversalFuncs {
           var i = 0
           var accum = 0.0
           while(i < length) {
-            accum += exp(a(i) - m)
+            accum += scala.math.exp(a(i) - m)
             i += 1
           }
-          m + log(accum)
+          m + scala.math.log(accum)
         }
     }
   }
@@ -211,6 +211,8 @@ package object numerics extends UniversalFuncs {
 
   /**
    * The sigmoid function: 1/(1 + exp(-x))
+   *
+   *
    */
   def sigmoid(x: Double) = 1/(1+exp(-x))
 
@@ -264,6 +266,7 @@ package object numerics extends UniversalFuncs {
 
 trait UniversalFuncs {
   import scala.{math=>m}
+  // TODO: these probably need to be manually specced out because boxing hurts so much
   val exp = UFunc(m.exp _)
   val log = UFunc(m.log _)
   val log1p = UFunc(m.log1p _)

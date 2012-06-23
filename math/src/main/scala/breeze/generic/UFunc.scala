@@ -4,7 +4,7 @@ package breeze.generic
  * "Universal" Functions that mimic numpy's. A universal function is defined
  * on anything that supports elementwise maps
  *
- * For example, exp is an UFunc: it just calls exp on all components of the passed in
+ * For example, exp is a UFunc: it just calls exp on all components of the passed in
  * object.
  * @author dlwh
  */
@@ -15,7 +15,7 @@ trait UFunc[@specialized -V, @specialized +V2] {
 }
 
 object UFunc {
-  def apply[V, V2](f: V=>V2):UFunc[V, V2] = new UFunc[V, V2] {
+  def apply[@specialized V, @specialized V2](f: V=>V2):UFunc[V, V2] = new UFunc[V, V2] {
     def apply(v: V) = f(v)
   }
 }
