@@ -271,7 +271,7 @@ trait UniversalFuncs {
   val log = UFunc(m.log _)
   val log1p = UFunc(m.log1p _)
 
-  val sqrt = UFunc(m.log _)
+  val sqrt = UFunc(m.sqrt _)
 
   val sin = UFunc(m.sin _)
   val cos = UFunc(m.cos _)
