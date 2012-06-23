@@ -50,7 +50,7 @@ package object numerics extends UniversalFuncs {
 
   /**
    * Evaluates the log of the generalized beta function.
-   *  = \sum_a lgamma(c(a))- lgamma(c.sum)
+   *  \sum_a lgamma(c(a))- lgamma(c.sum)
    */
   def lbeta[T](c: QuasiTensor[T,Double]) = {
     c.valuesIterator.foldLeft(-lgamma(c.sum))( (acc,x)=> acc +lgamma(x))

@@ -7,6 +7,7 @@ import breeze.generic.CanMapValues
 import breeze.math.{TensorSpace, Ring, Field}
 import collection.immutable.BitSet
 import support.{CanZipMapValues, CanCopy}
+import util.Random
 
 /**
  *
@@ -150,6 +151,10 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
   def apply[V:ClassManifest](values: V*):Vec[V] = apply(values.toArray)
   def fill[@spec(Double, Int, Float) V:ClassManifest](size: Int)(v: =>V):Vec[V] = apply(Array.fill(size)(v))
   def tabulate[@spec(Double, Int, Float) V:ClassManifest](size: Int)(f: Int=>V):Vec[V]= apply(Array.tabulate(size)(f))
+
+  def rand(size: Int, rand: Random = new Random()) = {
+    fill(size)(rand.nextDouble())
+  }
 
 
 

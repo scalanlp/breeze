@@ -118,4 +118,13 @@ class Counter2Test extends FunSuite with Checkers {
     assert(sum(Counter2((1,'a,1.0),(1, 'b, 3.0), (2, 'a, 2.0), (2, 'b, 4.0)), Axis._0) === Counter('a -> 3., 'b -> 7.))
     assert(sum(Counter2((1,'a,1.0),(1, 'b, 3.0), (2, 'a, 2.0), (2, 'b, 4.0)), Axis._1) === Counter(1 -> 4., 2 -> 6.))
   }
+
+  test("normalize Rows and columns") {
+    assert(normalize(Counter2((1,'a,1.0),(1, 'b, 3.0), (2, 'a, 2.0), (2, 'b, 4.0)), Axis._0, 1) ===
+      Counter2((1,'a,1.0/3.0),(1, 'b, 3.0/7.0), (2, 'a, 2.0/3.0), (2, 'b, 4.0/7.0)) )
+    assert(normalize(Counter2((1,'a,1.0),(1, 'b, 3.0), (2, 'a, 2.0), (2, 'b, 4.0)), Axis._1, 1) ===
+      Counter2((1,'a,1.0/4.0),(1, 'b, 3.0/4.0), (2, 'a, 2.0/6.0), (2, 'b, 4.0/6.0)) )
+  }
+
+
 }

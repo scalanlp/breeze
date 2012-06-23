@@ -55,7 +55,6 @@ trait Counter2Like
     m.getOrElseUpdate(k,m.default(k))
   }
 
-
   override def keysIterator = for ((k1,m) <- data.iterator; k2 <- m.keysIterator) yield (k1,k2)
 
   override def valuesIterator = for (m <- data.valuesIterator; v <- m.valuesIterator) yield v
@@ -69,6 +68,18 @@ trait Counter2Like
   def activeValuesIterator = valuesIterator
 
   def repr = this.asInstanceOf[This]
+
+  override def toString: String = {
+    data.iterator.map { case (k1, c) => k1 + " -> " + c.toString}.mkString("Counter2(",",\n",")")
+  }
+
+  override def equals(p1: Any): Boolean = p1 match {
+    case x:Counter2[_, _, _] =>
+      x.activeIterator.toSet == activeIterator.toSet
+    case _ => false
+  }
+
+
 }
 
 
@@ -76,7 +87,8 @@ trait Counter2
 [K1, K2, V]
 extends Tensor[(K1,K2),V] with Counter2Like[K1,K2,V,Curried[scala.collection.mutable.Map,K1]#Result,Counter[K2,V],Counter2[K1,K2,V]]
 
-object Counter2 {
+object Counter2 extends LowPriorityCounter2 {
+
   class Impl[K1, K2, V]
   (override val data : scala.collection.mutable.Map[K1,Counter[K2,V]])
   (implicit scalar : DefaultArrayValue[V])
@@ -139,13 +151,12 @@ object Counter2 {
     }
   }
 
-
   // slicing
 
 
   implicit def canSliceRow[K1,K2,V] : CanSlice2[Counter2[K1,K2,V],K1,::.type, Counter[K2,V]]
   = new CanSlice2[Counter2[K1,K2,V],K1, ::.type, Counter[K2,V]] {
-    override def apply(from : Counter2[K1,K2,V], row : K1, unused: ::.type) = from.data(row)
+    override def apply(from : Counter2[K1,K2,V], row : K1, unused: ::.type) = from.innerGetOrElseUpdate(row, from.data)
   }
 
   implicit def canSliceCol[K1,K2,V]: CanSlice2[Counter2[K1,K2,V], ::.type, K2,Counter[K1,V]]
@@ -190,6 +201,54 @@ object Counter2 {
    * @tparam R
    * @return
    */
+  implicit def canMapRows[K1, K2, V:ClassManifest:DefaultArrayValue:Semiring]: CanCollapseAxis[Counter2[K1, K2,V], Axis._0.type, Counter[K1, V], Counter[K1, V], Counter2[K1, K2, V]]  = new CanCollapseAxis[Counter2[K1, K2,V], Axis._0.type, Counter[K1, V], Counter[K1, V], Counter2[K1,K2,V]] {
+    def apply(from: Counter2[K1, K2,V], axis: Axis._0.type)(f: (Counter[K1, V]) => Counter[K1, V]): Counter2[K1, K2, V] = {
+      val result = Counter2[K1, K2, V]()
+      for( dom <- from.keySet.map(_._2)) {
+        result(::, dom) := f(from(::, dom))
+      }
+      result
+    }
+  }
+  /**
+   * Returns a Counter[K1, V]
+   * @tparam V
+   * @tparam R
+   * @return
+   */
+  implicit def canMapCols[K1, K2, V:ClassManifest:DefaultArrayValue:Semiring]: CanCollapseAxis[Counter2[K1, K2,V], Axis._1.type, Counter[K2, V], Counter[K2, V], Counter2[K1, K2, V]]  = new CanCollapseAxis[Counter2[K1, K2,V], Axis._1.type, Counter[K2, V], Counter[K2, V], Counter2[K1,K2,V]] {
+    def apply(from: Counter2[K1, K2,V], axis: Axis._1.type)(f: (Counter[K2, V]) => Counter[K2, V]): Counter2[K1, K2, V] = {
+      val result = Counter2[K1, K2, V]()
+      for( (dom,c) <- from.data) {
+        result(dom, ::) := f(c)
+      }
+      result
+    }
+  }
+
+
+
+
+  /**
+   * This is just a curried version of scala.collection.Map.
+   * Used to get around Scala's lack of partially applied types.
+   *
+   * @author dlwh
+   */
+  trait Curried[M[_,_],K] {
+    type Result[V] = M[K,V]
+  }
+}
+
+
+trait LowPriorityCounter2 {
+
+  /**
+   * Returns a Counter[K2, V]
+   * @tparam V
+   * @tparam R
+   * @return
+   */
   implicit def canCollapseRows[K1, K2, V, R:ClassManifest:DefaultArrayValue:Semiring]: CanCollapseAxis[Counter2[K1, K2,V], Axis._0.type, Counter[K1, V], R, Counter[K2, R]]  = new CanCollapseAxis[Counter2[K1, K2,V], Axis._0.type, Counter[K1, V], R, Counter[K2,R]] {
     def apply(from: Counter2[K1, K2,V], axis: Axis._0.type)(f: (Counter[K1, V]) => R): Counter[K2, R] = {
       val result = Counter[K2, R]()
@@ -215,15 +274,4 @@ object Counter2 {
     }
   }
 
-
-  /**
-   * This is just a curried version of scala.collection.Map.
-   * Used to get around Scala's lack of partially applied types.
-   *
-   * @author dlwh
-   */
-  trait Curried[M[_,_],K] {
-    type Result[V] = M[K,V]
-  }
 }
-

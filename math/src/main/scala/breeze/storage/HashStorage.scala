@@ -38,9 +38,15 @@ trait HashStorage[@specialized(Int, Double) V]  extends Storage[V] {
 
   def allVisitableIndicesActive = false
 
-  protected def rawApply(i: Int) = data(locate(i))
+  protected def rawApply(i: Int) = {
+    if(index.length == 0) default.value
+    else data(locate(i))
+  }
 
   protected def rawUpdate(i: Int, v: V) {
+    if(index.length == 0) {
+      rehash()
+    }
     val pos = locate(i)
     if(!occupied.contains(pos) && load * 4 >= index.size * 3) {
       rehash()

@@ -1,6 +1,6 @@
 package breeze
 
-import generic.{CanMapValues, UReduceable, URFunc}
+import generic.{CanCollapseAxis, CanMapValues, UReduceable, URFunc}
 import linalg.operators._
 import linalg.support.{CanNorm, CanCopy}
 import math.Semiring
@@ -69,6 +69,15 @@ package object linalg extends LinearAlgebra {
   }
 
   /**
+   * Normalizes the argument along each axis such that each row along the axis has norm 1.0 (with respect to the argument n).
+   * Each column is unchanged if it's norm is 0
+   */
+  def normalize[T, Axis, V, Result](value: T, axis: Axis, n: Double)(implicit  collapse: CanCollapseAxis[T, Axis, V, V, Result],
+                                                                     div: BinaryOp[V, Double, OpDiv, V], canNorm: CanNorm[V]):Result = {
+    collapse(value, axis)(v => normalize[V, V](v, n))
+  }
+
+  /**
    * logNormalizes the argument such that the softmax is 0.0.
    * Returns value if value's softmax is -infinity
    */
@@ -89,6 +98,18 @@ package object linalg extends LinearAlgebra {
                                    map: CanMapValues[V, Double, Double, V],
                                    op : BinaryOp[V,Double,OpSub,V]):V = {
     logNormalize(numerics.log(value))
+  }
+
+  /**
+   * logs and then logNormalizes the argument along axis such that each softmax is 0.0.
+   * Returns value if value's softmax is -infinity
+   */
+  def logAndNormalize[T, Axis, V, Result](value: T, axis: Axis)(implicit  collapse: CanCollapseAxis[T, Axis, V, V, Result],
+                                  view: V => NumericOps[V],
+                                  red: UReduceable[V, Double],
+                                  map: CanMapValues[V, Double, Double, V],
+                                  op : BinaryOp[V,Double,OpSub,V]):Result = {
+    collapse(value, axis)(v => logAndNormalize(v))
   }
 
 
