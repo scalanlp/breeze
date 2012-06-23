@@ -9,7 +9,7 @@ import breeze.storage.{ConfigurableDefault, DefaultArrayValue, HashStorage}
  * @author dlwh
  */
 
-class OpenAddressHashArray[Elem](var index: Array[Int],
+final class OpenAddressHashArray[@specialized Elem](var index: Array[Int],
                                  var data: Array[Elem],
                                  protected var occupied: BitSet,
                                  protected var load: Int,
@@ -18,17 +18,22 @@ class OpenAddressHashArray[Elem](var index: Array[Int],
                                 (implicit protected val manElem: Manifest[Elem],
                                  protected val defaultArrayValue: DefaultArrayValue[Elem]) extends HashStorage[Elem] with ArrayLike[Elem] {
 
+
+  def this(size: Int, default: ConfigurableDefault[Elem], initialSize: Int)(implicit manElem: Manifest[Elem], defaultArrayValue: DefaultArrayValue[Elem]) = {
+    this(new Array[Int](initialSize),default.makeArray(initialSize), BitSet.empty,0, size, default)
+  }
+
   def this(size: Int, default: ConfigurableDefault[Elem])(implicit manElem: Manifest[Elem], defaultArrayValue: DefaultArrayValue[Elem]) = {
-    this(Array.empty,Array.empty,BitSet.empty,0, size, default)
+    this(size, default, 16)
   }
 
   def this(size: Int)(implicit manElem: Manifest[Elem], defaultArrayValue: DefaultArrayValue[Elem]) = {
     this(size, ConfigurableDefault.default[Elem])
   }
 
-  def apply(x: Int): Elem = rawApply(x)
+  final def apply(x: Int): Elem = rawApply(x)
 
-  def update(i: Int, value: Elem) {
+  final def update(i: Int, value: Elem) {
     super.rawUpdate(i, value)
   }
 

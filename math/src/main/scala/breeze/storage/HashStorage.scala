@@ -69,8 +69,10 @@ trait HashStorage[@specialized(Int, Double) V]  extends Storage[V] {
   private def locate(i: Int) = {
     if(i >= size) throw new IndexOutOfBoundsException(i + " greater than size of " + size)
     if(i < 0) throw new IndexOutOfBoundsException(i + " less than 0")
+    val index = this.index
     var hash = i.## % index.length
     val len = index.length
+    val occupied = this.occupied
     while(index(hash) != i && occupied.contains(hash)) {
       hash += 1
       hash %= len
@@ -78,7 +80,7 @@ trait HashStorage[@specialized(Int, Double) V]  extends Storage[V] {
     hash
   }
 
-  private def rehash() {
+  final protected def rehash() {
     val oldOccupied = occupied
     occupied = new BitSet()
     val oldIndex = index
