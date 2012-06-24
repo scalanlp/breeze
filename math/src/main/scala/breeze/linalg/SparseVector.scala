@@ -2,7 +2,7 @@ package breeze.linalg
 
 import operators.{UnaryOp, OpNeg, BinaryOp, OpMulScalar}
 import scala.{specialized=>spec}
-import breeze.storage.{DefaultArrayValue, SparseStorage}
+import breeze.storage.{DefaultArrayValue}
 import support.{CanZipMapValues, CanMapKeyValuePairs, CanCopy, CanSlice}
 import breeze.util.ArrayUtil
 import breeze.generic.{CanMapValues, URFunc, UReduceable}
