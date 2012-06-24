@@ -89,6 +89,7 @@ extends Tensor[(K1,K2),V] with Counter2Like[K1,K2,V,Curried[scala.collection.mut
 
 object Counter2 extends LowPriorityCounter2 {
 
+  @SerialVersionUID(1L)
   class Impl[K1, K2, V]
   (override val data : scala.collection.mutable.Map[K1,Counter[K2,V]])
   (implicit scalar : DefaultArrayValue[V])

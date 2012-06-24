@@ -11,16 +11,29 @@ import breeze.generic.{CanCollapseAxis, CanMapValues}
 import breeze.math.Semiring
 
 /**
+ * A DenseMatrix is a matrix with all elements found in an array. It is column major unless isTranspose is true,
+ * It is designed to be fast: Double- (and potentially Float-)valued DenseMatrices
+ * can be used with blas, and support operations to that effect.
  *
  * @author dlwh
  */
-
-final class DenseMatrix[@specialized(Int, Float, Double) V](val data: Array[V],
-                                        val rows: Int,
-                                        val cols: Int,
-                                        val majorStride: Int,
-                                        val offset: Int = 0,
-                                        val isTranspose: Boolean = false) extends StorageMatrix[V] with MatrixLike[V, DenseMatrix[V]] {
+@SerialVersionUID(1L)
+final class DenseMatrix[@specialized(Int, Float, Double) V](/** The underlying data. Mutate at your own risk.
+                                                             Note that this matrix may be a view of the data.
+                                                            Use linearIndex(r,c) to calculate indices.*/
+                                                            val data: Array[V],
+                                                            /** number of rows */
+                                                            val rows: Int,
+                                                            /** number of columns */
+                                                            val cols: Int,
+                                                            /**distance separating columns (or rows, for isTranspose)
+                                                             * Should be >= rows (or cols, for isTranspose)
+                                                             */
+                                                            val majorStride: Int,
+                                                            /** starting point into array */
+                                                            val offset: Int = 0,
+                                                            val isTranspose: Boolean = false)
+extends StorageMatrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
   def this(data: Array[V], rows: Int, cols: Int) = this(data, rows, cols, rows)
   def this(data: Array[V], rows: Int) = this(data, rows, {assert(data.length % rows == 0); data.length/rows})
 

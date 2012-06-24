@@ -11,11 +11,14 @@ import breeze.collection.mutable.SparseArray
 
 
 /**
- *
+ * A Binary-search backed vector
  * @author dlwh
  */
+@SerialVersionUID(1)
 final class SparseVector[@spec(Double,Int, Float) E](val array: SparseArray[E])
-                                                    (implicit value: DefaultArrayValue[E]) extends StorageVector[E] with VectorLike[E, SparseVector[E]] {
+                                                    (implicit value: DefaultArrayValue[E])
+                                                    extends StorageVector[E]
+                                                    with VectorLike[E, SparseVector[E]] with Serializable {
 
   def this(index: Array[Int], data: Array[E], activeSize: Int, length: Int)(implicit value: DefaultArrayValue[E])  = this(new SparseArray(index, data, activeSize, length, value.value))
   def this(index: Array[Int], data: Array[E], length: Int)(implicit value: DefaultArrayValue[E])  = this(index, data, index.length, length)

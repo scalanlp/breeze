@@ -11,12 +11,12 @@ import java.util
  *
  * @author dlwh
  */
-
+@SerialVersionUID(1L)
 final class SparseArray[@specialized Elem](var index: Array[Int],
                         var data: Array[Elem],
                         private var used: Int,
                         val size: Int,
-                        val default: Elem) extends ArrayLike[Elem] with Storage[Elem] {
+                        val default: Elem) extends ArrayLike[Elem] with Storage[Elem] with Serializable {
 
 
 
