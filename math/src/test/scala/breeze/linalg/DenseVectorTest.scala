@@ -19,6 +19,24 @@ class DenseVectorTest extends FunSuite with Checkers {
   def assertClose(a: Double, b: Double) =
     assert(math.abs(a - b) < TOLERANCE)
 
+  test("Can raise IntegerVector by Integer") {
+    val v = DenseVector(2, 0, 3, 2, -1)
+    val w = v :^ 2
+    assert(w == DenseVector(4, 0, 9, 4, 1))
+  }
+
+  test("Can raise DoubleVector by Double") {
+    val v = DenseVector(2d, 0d, 3d, 2d, -1d)
+    val w = v :^ 2d
+    assert(w == DenseVector(4d, 0d, 9d, 4d, 1d))
+  }
+
+  test("Can raise FloatVector by Float") {
+    val v = DenseVector(2f, 0f, 3f, 2f, -1f)
+    val w = v :^ 2f
+    assert(w == DenseVector(4f, 0f, 9f, 4f, 1f))
+  }
+
   test("Min/Max") {
     val v = DenseVector(2, 0, 3, 2, -1)
     assert(v.argmin === 4)
@@ -135,22 +153,52 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(x === DenseVector(0., 2., 3.))
   }
 
-  test("MapValues") {
+  test("Map(Active)Pairs Double") {
     val a: DenseVector[Double] = DenseVector(1, 2, 3, 4, 5)
-    val m: DenseVector[Double] = a.mapValues(_ + 1)
-    assert(m === DenseVector(2., 3., 4., 5., 6.))
+    val mv: DenseVector[Double] = a.mapPairs((i,x) => x + 1)
+    val mav: DenseVector[Double] = a.mapActivePairs((i,x) => x + 1)
+    assert(mv === DenseVector(2., 3., 4., 5., 6.))
+    assert(mav === DenseVector(2., 3., 4., 5., 6.))
   }
 
-  test("MapValues Int") {
+  test("Map(Active)Values Double") {
+    val a: DenseVector[Double] = DenseVector(1, 2, 3, 4, 5)
+    val mv: DenseVector[Double] = a.mapValues(_ + 1)
+    val mav: DenseVector[Double] = a.mapActiveValues(_ + 1)
+    assert(mv === DenseVector(2., 3., 4., 5., 6.))
+    assert(mav === DenseVector(2., 3., 4., 5., 6.))
+  }
+
+  test("Map(Active)Pairs Int") {
     val a: DenseVector[Int] = DenseVector(1, 2, 3, 4, 5)
-    val m: DenseVector[Int] = a.mapValues(_ + 1)
-    assert(m === DenseVector(2, 3, 4, 5, 6))
+    val mv: DenseVector[Int] = a.mapPairs((i,x) => x + 1)
+    val mav: DenseVector[Int] = a.mapActivePairs((i,x) => x + 1)
+    assert(mv === DenseVector(2, 3, 4, 5, 6))
+    assert(mav === DenseVector(2, 3, 4, 5, 6))
   }
 
-  test("MapValues Float") {
+  test("Map(Active)Values Int") {
+    val a: DenseVector[Int] = DenseVector(1, 2, 3, 4, 5)
+    val mv: DenseVector[Int] = a.mapValues(_ + 1)
+    val mav: DenseVector[Int] = a.mapActiveValues(_ + 1)
+    assert(mv === DenseVector(2, 3, 4, 5, 6))
+    assert(mav === DenseVector(2, 3, 4, 5, 6))
+  }
+
+  test("Map(Active)Pairs Float") {
+    val a: DenseVector[Float] = DenseVector(1, 2, 3, 4, 5)
+    val mv: DenseVector[Float] = a.mapPairs((i,x) => x + 1)
+    val mav: DenseVector[Float] = a.mapActivePairs((i,x) => x + 1)
+    assert(mv === DenseVector(2f, 3f, 4f, 5f, 6f))
+    assert(mav === DenseVector(2f, 3f, 4f, 5f, 6f))
+  }
+
+  test("Map(Active)Values Float") {
     val a: DenseVector[Float] = DenseVector(1f, 2f, 3f, 4f, 5f)
-    val m: DenseVector[Float] = a.mapValues(_ + 1f)
-    assert(m === DenseVector(2f, 3f, 4f, 5f, 6f))
+    val mv: DenseVector[Float] = a.mapValues(_ + 1f)
+    val mav: DenseVector[Float] = a.mapActiveValues(_ + 1f)
+    assert(mv === DenseVector(2f, 3f, 4f, 5f, 6f))
+    assert(mav === DenseVector(2f, 3f, 4f, 5f, 6f))
   }
 
   test("ForComprehensions") {

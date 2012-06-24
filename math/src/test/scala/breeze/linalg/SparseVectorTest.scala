@@ -87,12 +87,49 @@ class SparseVectorTest extends FunSuite {
     assert(m === SparseVector(1, 2, 3, 4, 5))
   }
 
+  test("MapPairs Double") {
+    val a: SparseVector[Double] = SparseVector(1, 2, 3, 4, 5)
+    val m: SparseVector[Double] = a.mapPairs( (i, x) => x + 1)
+    assert(m === SparseVector(2., 3., 4., 5., 6.))
+  }
 
-
-  test("MapValues") {
+  test("MapActivePairs only touches non-zero entries: Double") {
+    val a: SparseVector[Double] = SparseVector(5)()
+    a(0) = 1
+    a(2) = 3
+    a(4) = 5
+    val m: SparseVector[Double] = a.mapActivePairs( (i,x) => x+1)
+    assert(m === SparseVector(2., 0., 4., 0., 6.))
+  }
+ 
+  test("MapValues Double") {
     val a: SparseVector[Double] = SparseVector(1, 2, 3, 4, 5)
     val m: SparseVector[Double] = a.mapValues(_ + 1)
     assert(m === SparseVector(2., 3., 4., 5., 6.))
+  }
+
+  test("MapActiveValues only touches non-zero entries: Double") {
+    val a: SparseVector[Double] = SparseVector(5)()
+    a(0) = 1
+    a(2) = 3
+    a(4) = 5
+    val m: SparseVector[Double] = a.mapActiveValues(_+1)
+    assert(m === SparseVector(2., 0., 4., 0., 6.))
+  }
+
+  test("MapPairs Int") {
+    val a: SparseVector[Int] = SparseVector(1, 2, 3, 4, 5)
+    val m: SparseVector[Int] = a.mapPairs( (i, x) => x + 1)
+    assert(m === SparseVector(2, 3, 4, 5, 6))
+  }
+
+  test("MapActivePairs only touches non-zero entries: Int") {
+    val a: SparseVector[Int] = SparseVector(5)()
+    a(0) = 1
+    a(2) = 3
+    a(4) = 5
+    val m: SparseVector[Int] = a.mapActivePairs( (i,x) => x+1)
+    assert(m === SparseVector(2, 0, 4, 0, 6))
   }
 
   test("MapValues Int") {
@@ -101,12 +138,44 @@ class SparseVectorTest extends FunSuite {
     assert(m === SparseVector(2, 3, 4, 5, 6))
   }
 
+  test("MapActiveValues only touches non-zero entries: Int") {
+    val a: SparseVector[Int] = SparseVector(5)()
+    a(0) = 1
+    a(2) = 3
+    a(4) = 5
+    val m: SparseVector[Int] = a.mapActiveValues(_+1)
+    assert(m === SparseVector(2, 0, 4, 0, 6))
+  }
+
+  test("MapPairs Float") {
+    val a: SparseVector[Float] = SparseVector(1, 2, 3, 4, 5)
+    val m: SparseVector[Float] = a.mapPairs( (i, x) => x + 1)
+    assert(m === SparseVector(2f, 3f, 4f, 5f, 6f))
+  }
+
+  test("MapActivePairs only touches non-zero entries: Float") {
+    val a: SparseVector[Float] = SparseVector(5)()
+    a(0) = 1
+    a(2) = 3
+    a(4) = 5
+    val m: SparseVector[Float] = a.mapActivePairs( (i,x) => x+1)
+    assert(m === SparseVector(2f, 0f, 4f, 0f, 6f))
+  }
+
   test("MapValues Float") {
     val a: SparseVector[Float] = SparseVector(1f, 2f, 3f, 4f, 5f)
     val m: SparseVector[Float] = a.mapValues(_ + 1f)
     assert(m === SparseVector(2f, 3f, 4f, 5f, 6f))
   }
 
+  test("MapActiveValues only touches non-zero entries: Float") {
+    val a: SparseVector[Float] = SparseVector(5)()
+    a(0) = 1
+    a(2) = 3
+    a(4) = 5
+    val m: SparseVector[Float] = a.mapActiveValues(_+1)
+    assert(m === SparseVector(2f, 0f, 4f, 0f, 6f))
+  }
 
   test("Generic SV ops") {
     // mostly for coverage

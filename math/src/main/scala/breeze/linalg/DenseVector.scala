@@ -4,7 +4,7 @@ import operators._
 import scala.{specialized=>spec}
 import breeze.storage.DenseStorage
 import breeze.generic.{URFunc, UReduceable, CanMapValues}
-import support.{CanCreateZerosLike, CanZipMapValues, CanSlice, CanCopy}
+import support.{CanCreateZerosLike, CanMapKeyValuePairs, CanZipMapValues, CanSlice, CanCopy}
 import breeze.numerics.IntMath
 import java.util.Arrays
 import breeze.math.{TensorSpace, Semiring, Ring, Field}
@@ -156,6 +156,20 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
 
       /**Maps all active key-value pairs from the given collection. */
       def mapActive(from: DenseVector[V], fn: (V) => V2) = {
+        map(from, fn)
+      }
+    }
+  }
+
+  implicit def canMapPairs[V, V2](implicit man: ClassManifest[V2]):CanMapKeyValuePairs[DenseVector[V], Int, V, V2, DenseVector[V2]] = {
+    new CanMapKeyValuePairs[DenseVector[V], Int, V, V2, DenseVector[V2]] {
+      /**Maps all key-value pairs from the given collection. */
+      def map(from: DenseVector[V], fn: (Int, V) => V2) = {
+        DenseVector.tabulate(from.length)(i => fn(i, from(i)))
+      }
+
+      /**Maps all active key-value pairs from the given collection. */
+      def mapActive(from: DenseVector[V], fn: (Int, V) => V2) = {
         map(from, fn)
       }
     }

@@ -3,7 +3,7 @@ package breeze.linalg
 import operators.{UnaryOp, OpNeg, BinaryOp, OpMulScalar}
 import scala.{specialized=>spec}
 import breeze.storage.{DefaultArrayValue, SparseStorage}
-import support.{CanZipMapValues, CanCopy, CanSlice}
+import support.{CanZipMapValues, CanMapKeyValuePairs, CanCopy, CanSlice}
 import breeze.util.ArrayUtil
 import breeze.generic.{CanMapValues, URFunc, UReduceable}
 import breeze.math.{Ring, TensorSpace}
@@ -107,6 +107,26 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
         var i = 0
         while(i < from.used) {
           out(i) = fn(from.data(i))
+          i += 1
+        }
+        new SparseVector(from.index.take(from.used), out, from.used, from.length)
+      }
+    }
+  }
+
+  implicit def canMapPairs[V, V2: ClassManifest: DefaultArrayValue]:CanMapKeyValuePairs[SparseVector[V], Int, V, V2, SparseVector[V2]] = {
+    new CanMapKeyValuePairs[SparseVector[V], Int, V, V2, SparseVector[V2]] {
+      /**Maps all key-value pairs from the given collection. */
+      def map(from: SparseVector[V], fn: (Int, V) => V2) = {
+        SparseVector.tabulate(from.length)(i => fn(i, from(i)))
+      }
+
+      /**Maps all active key-value pairs from the given collection. */
+      def mapActive(from: SparseVector[V], fn: (Int, V) => V2) = {
+        val out = new Array[V2](from.used)
+        var i = 0
+        while(i < from.used) {
+          out(i) = fn(i, from.data(i))
           i += 1
         }
         new SparseVector(from.index.take(from.used), out, from.used, from.length)
