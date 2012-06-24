@@ -7,66 +7,105 @@ import support.{CanZipMapValues, CanMapKeyValuePairs, CanCopy, CanSlice}
 import breeze.util.ArrayUtil
 import breeze.generic.{CanMapValues, URFunc, UReduceable}
 import breeze.math.{Ring, TensorSpace}
+import breeze.collection.mutable.SparseArray
 
 
 /**
- *
+ * A Binary-search backed vector
  * @author dlwh
  */
-// Float specialization causes a crash for some bizarre reason...
-final class SparseVector[@spec(Double,Int, Float) E](var index: Array[Int],
-                                                    var data: Array[E],
-                                                    var used: Int,
-                                                    val length: Int)(
-                                                    implicit value: DefaultArrayValue[E]) extends Vector[E] with SparseStorage[E] with VectorLike[E, SparseVector[E]] {
+@SerialVersionUID(1)
+final class SparseVector[@spec(Double,Int, Float) E](val array: SparseArray[E])
+                                                    (implicit value: DefaultArrayValue[E])
+                                                    extends StorageVector[E]
+                                                    with VectorLike[E, SparseVector[E]] with Serializable {
 
+  def this(index: Array[Int], data: Array[E], activeSize: Int, length: Int)(implicit value: DefaultArrayValue[E])  = this(new SparseArray(index, data, activeSize, length, value.value))
+  def this(index: Array[Int], data: Array[E], length: Int)(implicit value: DefaultArrayValue[E])  = this(index, data, index.length, length)
+
+  def data  = array.data
+  def index = array.index
+  def activeSize = array.activeSize
+  def used = activeSize
+  def length = array.length
 
   def repr = this
 
+  def contains(i: Int) = array.contains(i)
+
   def apply(i: Int) = {
     if(i < 0 || i > size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
-    rawApply(i)
+    array(i)
   }
 
   def update(i: Int, v: E) {
     if(i < 0 || i > size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
-    rawUpdate(i, v)
+    array(i) = v
   }
 
   def activeIterator = activeKeysIterator zip activeValuesIterator
 
-  def activeValuesIterator = data.iterator.take(used)
+  def activeValuesIterator = data.iterator.take(activeSize)
 
-  def activeKeysIterator = index.iterator.take(used)
+  def activeKeysIterator = index.iterator.take(activeSize)
 
   // TODO: allow this to vary
-  // This is always assumed to be equal to 0, for now.
+  /** This is always assumed to be equal to 0, for now. */
   def default = value.value
 
   override def equals(p1: Any) = p1 match {
     case x: Vector[_] =>
-//      length == x.length && (( stride == x.stride
-//        && offset == x.offset
-//        && data.length == x.data.length
-//        && ArrayUtil.equals(data, x.data)
-//      )  ||  (
         this.length == x.length &&
           (valuesIterator sameElements x.valuesIterator)
-//        ))
     case _ => false
   }
+
+  def isActive(rawIndex: Int) = array.isActive(rawIndex)
 
   override def toString = {
     activeIterator.mkString("SparseVector(",", ", ")")
   }
 
   override def ureduce[Final](f: URFunc[E, Final]) = {
-    f(data, used)
+    f(data, activeSize)
   }
 
   def copy: SparseVector[E] = {
-    new SparseVector[E](ArrayUtil.copyOf(index, index.length), ArrayUtil.copyOf(data, index.length), used, length)
+    new SparseVector[E](ArrayUtil.copyOf(index, index.length), ArrayUtil.copyOf(data, index.length), activeSize, length)
   }
+
+  /**
+   * Sets the underlying sparse array to use this data
+   * @param index must be a sorted list of indices
+   * @param data values corresponding to the index
+   * @param activeSize number of active elements. The first activeSize will be used.
+   */
+  def use(index: Array[Int], data: Array[E], activeSize: Int) {
+    require(activeSize <= size, "Can't have more elements in the array than length!")
+    require(activeSize >= 0, "activeSize must be non-negative")
+    require(data.length >= activeSize, "activeSize must be no greater than array length...")
+    array.use(index, data, activeSize)
+  }
+
+  /**
+   * same as data(i). Gives the value at the underlying offset.
+   * @param i index into the data array
+   * @return
+   */
+  def valueAt(i: Int): E = data(i)
+
+  /**
+   * Gives the logical index from the physical index.
+   * @param i
+   * @return
+   */
+  def indexAt(i: Int): Int = index(i)
+
+  /**
+   * Only gives true if isActive would return true for all i. (May be false anyway)
+   * @return
+   */
+  def allVisitableIndicesActive: Boolean = true
 }
 
 object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with SparseVectorOps_Double {
@@ -103,13 +142,13 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
 
       /**Maps all active key-value pairs from the given collection. */
       def mapActive(from: SparseVector[V], fn: (V) => V2) = {
-        val out = new Array[V2](from.used)
+        val out = new Array[V2](from.activeSize)
         var i = 0
-        while(i < from.used) {
+        while(i < from.activeSize) {
           out(i) = fn(from.data(i))
           i += 1
         }
-        new SparseVector(from.index.take(from.used), out, from.used, from.length)
+        new SparseVector(from.index.take(from.activeSize), out, from.activeSize, from.length)
       }
     }
   }

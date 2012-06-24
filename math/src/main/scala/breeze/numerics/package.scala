@@ -50,7 +50,7 @@ package object numerics extends UniversalFuncs {
 
   /**
    * Evaluates the log of the generalized beta function.
-   *  = \sum_a lgamma(c(a))- lgamma(c.sum)
+   *  \sum_a lgamma(c(a))- lgamma(c.sum)
    */
   def lbeta[T](c: QuasiTensor[T,Double]) = {
     c.valuesIterator.foldLeft(-lgamma(c.sum))( (acc,x)=> acc +lgamma(x))
@@ -189,10 +189,10 @@ package object numerics extends UniversalFuncs {
           var i = 0
           var accum = 0.0
           while(i < length) {
-            accum += exp(a(i) - m)
+            accum += scala.math.exp(a(i) - m)
             i += 1
           }
-          m + log(accum)
+          m + scala.math.log(accum)
         }
     }
   }
@@ -211,6 +211,8 @@ package object numerics extends UniversalFuncs {
 
   /**
    * The sigmoid function: 1/(1 + exp(-x))
+   *
+   *
    */
   def sigmoid(x: Double) = 1/(1+exp(-x))
 
@@ -264,11 +266,12 @@ package object numerics extends UniversalFuncs {
 
 trait UniversalFuncs {
   import scala.{math=>m}
+  // TODO: these probably need to be manually specced out because boxing hurts so much
   val exp = UFunc(m.exp _)
   val log = UFunc(m.log _)
   val log1p = UFunc(m.log1p _)
 
-  val sqrt = UFunc(m.log _)
+  val sqrt = UFunc(m.sqrt _)
 
   val sin = UFunc(m.sin _)
   val cos = UFunc(m.cos _)

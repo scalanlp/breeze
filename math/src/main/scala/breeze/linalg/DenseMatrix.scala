@@ -1,6 +1,5 @@
 package breeze.linalg
 
-import breeze.storage.DenseStorage
 import operators._
 import org.netlib.util.intW
 import org.netlib.lapack.LAPACK
@@ -12,23 +11,36 @@ import breeze.generic.{CanCollapseAxis, CanMapValues}
 import breeze.math.Semiring
 
 /**
+ * A DenseMatrix is a matrix with all elements found in an array. It is column major unless isTranspose is true,
+ * It is designed to be fast: Double- (and potentially Float-)valued DenseMatrices
+ * can be used with blas, and support operations to that effect.
  *
  * @author dlwh
  */
-
-final class DenseMatrix[@specialized(Int, Float, Double) V](val data: Array[V],
-                                        val rows: Int,
-                                        val cols: Int,
-                                        val majorStride: Int,
-                                        val offset: Int = 0,
-                                        val isTranspose: Boolean = false) extends StorageMatrix[V] with MatrixLike[V, DenseMatrix[V]] with DenseStorage[V] {
+@SerialVersionUID(1L)
+final class DenseMatrix[@specialized(Int, Float, Double) V](/** The underlying data. Mutate at your own risk.
+                                                             Note that this matrix may be a view of the data.
+                                                            Use linearIndex(r,c) to calculate indices.*/
+                                                            val data: Array[V],
+                                                            /** number of rows */
+                                                            val rows: Int,
+                                                            /** number of columns */
+                                                            val cols: Int,
+                                                            /**distance separating columns (or rows, for isTranspose)
+                                                             * Should be >= rows (or cols, for isTranspose)
+                                                             */
+                                                            val majorStride: Int,
+                                                            /** starting point into array */
+                                                            val offset: Int = 0,
+                                                            val isTranspose: Boolean = false)
+extends StorageMatrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
   def this(data: Array[V], rows: Int, cols: Int) = this(data, rows, cols, rows)
   def this(data: Array[V], rows: Int) = this(data, rows, {assert(data.length % rows == 0); data.length/rows})
 
   def apply(row: Int, col: Int) = {
     if(row < 0 || row > rows) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
     if(col < 0 || col > cols) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
-      rawApply(linearIndex(row, col))
+      data(linearIndex(row, col))
   }
 
 
@@ -43,7 +55,7 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val data: Array[V],
   def update(row: Int, col: Int, v: V) {
     if(row < 0 || row > rows) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
     if(col < 0 || col > cols) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
-    rawUpdate(linearIndex(row, col), v)
+    data(linearIndex(row, col)) = v
   }
 
   def repr = this
@@ -64,7 +76,14 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val data: Array[V],
     case _ => false
   }
 
+  def activeSize = data.length
 
+  def valueAt(i: Int) = data(i)
+
+  def indexAt(i: Int) = i
+
+  def isActive(i: Int) = true
+  def allVisitableIndicesActive = true
 }
 
 object DenseMatrix extends LowPriorityDenseMatrix
@@ -319,6 +338,65 @@ object DenseMatrix extends LowPriorityDenseMatrix
   }
 
   /**
+   * Maps the columns into a new dense matrix
+   * @tparam V
+   * @tparam R
+   * @return
+   */
+  implicit def canMapRows[V:ClassManifest]: CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], DenseVector[V], DenseMatrix[V]]  = new CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], DenseVector[V], DenseMatrix[V]] {
+    def apply(from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => DenseVector[V]): DenseMatrix[V] = {
+      var result:DenseMatrix[V] = null
+      for(c <- 0 until from.cols) {
+        val col = f(from(::, c))
+        if(result eq null) {
+          result = DenseMatrix.zeros[V](col.length, from.cols)
+        }
+        result(::, c) := col
+      }
+      if(result eq null){
+        DenseMatrix.zeros[V](0, from.cols)
+      } else {
+        result
+      }
+    }
+  }
+
+  /**
+   * Returns a numRows DenseVector
+   * @tparam V
+   * @tparam R
+   * @return
+   */
+  implicit def canMapCols[V:ClassManifest] = new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], DenseVector[V], DenseMatrix[V]] {
+    def apply(from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => DenseVector[V]): DenseMatrix[V] = {
+      var result:DenseMatrix[V] = null
+      val t = from.t
+      for(r <- 0 until from.cols) {
+        val row = f(t(::, r))
+        if(result eq null) {
+          result = DenseMatrix.zeros[V](from.rows, row.length)
+        }
+        result.t apply (::, r) := row
+      }
+      result
+    }
+  }
+
+
+
+
+
+  implicit val setMM_D: BinaryUpdateOp[DenseMatrix[Double], DenseMatrix[Double], OpSet] = new SetDMDMOp[Double]
+  implicit val setMM_F: BinaryUpdateOp[DenseMatrix[Float], DenseMatrix[Float], OpSet]  = new SetDMDMOp[Float]
+  implicit val setMM_I: BinaryUpdateOp[DenseMatrix[Int], DenseMatrix[Int], OpSet]  = new SetDMDMOp[Int]
+
+  implicit val setMV_D: BinaryUpdateOp[DenseMatrix[Double], DenseVector[Double], OpSet] = new SetDMDVOp[Double]
+  implicit val setMV_F: BinaryUpdateOp[DenseMatrix[Float], DenseVector[Float], OpSet]  = new SetDMDVOp[Float]
+  implicit val setMV_I: BinaryUpdateOp[DenseMatrix[Int], DenseVector[Int], OpSet]  = new SetDMDVOp[Int]
+}
+
+trait LowPriorityDenseMatrix1 {
+  /**
    * Returns a 1xnumCols DenseMatrix
    * @tparam V
    * @tparam R
@@ -352,17 +430,6 @@ object DenseMatrix extends LowPriorityDenseMatrix
   }
 
 
-
-  implicit val setMM_D: BinaryUpdateOp[DenseMatrix[Double], DenseMatrix[Double], OpSet] = new SetDMDMOp[Double]
-  implicit val setMM_F: BinaryUpdateOp[DenseMatrix[Float], DenseMatrix[Float], OpSet]  = new SetDMDMOp[Float]
-  implicit val setMM_I: BinaryUpdateOp[DenseMatrix[Int], DenseMatrix[Int], OpSet]  = new SetDMDMOp[Int]
-
-  implicit val setMV_D: BinaryUpdateOp[DenseMatrix[Double], DenseVector[Double], OpSet] = new SetDMDVOp[Double]
-  implicit val setMV_F: BinaryUpdateOp[DenseMatrix[Float], DenseVector[Float], OpSet]  = new SetDMDVOp[Float]
-  implicit val setMV_I: BinaryUpdateOp[DenseMatrix[Int], DenseVector[Int], OpSet]  = new SetDMDVOp[Int]
-}
-
-trait LowPriorityDenseMatrix1 {
   class SetMMOp[@specialized(Int, Double, Float) V] extends BinaryUpdateOp[DenseMatrix[V], Matrix[V], OpSet] {
     def apply(a: DenseMatrix[V], b: Matrix[V]) {
       require(a.rows == b.rows, "Matrixs must have same number of rows")

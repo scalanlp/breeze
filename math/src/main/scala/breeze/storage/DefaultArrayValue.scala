@@ -1,6 +1,7 @@
 package breeze.storage
 
-trait DefaultArrayValue[@specialized T] {
+@SerialVersionUID(1l)
+trait DefaultArrayValue[@specialized T] extends Serializable {
   def value : T
 }
 

@@ -28,7 +28,7 @@ class OptimizeTestBase extends FunSuite with Checkers {
   import Arbitrary._
   implicit val arbVector : Arbitrary[DenseVector[Double]] = Arbitrary(for {
     n <- arbitrary[Int] suchThat { _ > 0 }
-    d <- arbitrary[Double] map { _ % 10000 }
+    d <- arbitrary[Double] map { _ % 10 }
   } yield ( DenseVector.tabulate(n%3 + 1)(i => scala.math.random *d )))
 
   implicit val arbDoubleCounter: Arbitrary[Counter[String,Double]] = Arbitrary(for {

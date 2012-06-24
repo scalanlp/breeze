@@ -2,7 +2,6 @@ package breeze.linalg
 
 import operators._
 import scala.{specialized=>spec}
-import breeze.storage.DenseStorage
 import breeze.generic.{URFunc, UReduceable, CanMapValues}
 import support.{CanCreateZerosLike, CanMapKeyValuePairs, CanZipMapValues, CanSlice, CanCopy}
 import breeze.numerics.IntMath
@@ -14,21 +13,25 @@ import breeze.util.ArrayUtil
  *
  * @author dlwh
  */
+@SerialVersionUID(1L)
 final class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
                                                      val offset: Int,
                                                      val stride: Int,
-                                                     val length: Int) extends Vector[E] with DenseStorage[E] with VectorLike[E, DenseVector[E]] {
+                                                     val length: Int) extends StorageVector[E]
+                                                    with VectorLike[E, DenseVector[E]] with Serializable{
   def this(data: Array[E]) = this(data, 0, 1, data.length)
   def repr = this
 
+  def activeSize = length
+
   def apply(i: Int) = {
     if(i < 0 || i > size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
-    rawApply(offset + i * stride)
+    data(offset + i * stride)
   }
 
   def update(i: Int, v: E) {
     if(i < 0 || i > size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
-    rawUpdate(offset + i * stride, v)
+    data(offset + i * stride) = v
   }
 
   def activeIterator = iterator
@@ -65,6 +68,35 @@ final class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
     r := this
     r
   }
+
+  /**
+   * same as data(i). Gives the value at the underlying offset.
+   * @param i index into the data array
+   * @return data(i)
+   */
+  def valueAt(i: Int): E = data(i)
+
+  /**
+   * Gives the logical index from the physical index.
+   * @param i
+   * @return i
+   */
+  def indexAt(i: Int): Int = i
+
+  /**
+   * Some storages (namely HashStorage) won't have active
+   * indices packed. This lets you know if the bin is
+   * actively in use.
+   * @param i index into index/data arrays
+   * @return
+   */
+  def isActive(i: Int): Boolean = true
+
+  /**
+   * Only gives true if isActive would return true for all i. (May be false anyway)
+   * @return
+   */
+  def allVisitableIndicesActive: Boolean = true
 }
 
 

@@ -31,21 +31,21 @@ class GeometricTest extends FunSuite with Checkers with MomentsTestBase[Int] wit
 
   val expFam = Geometric
 
-  override val numSamples = 60000
+  override val numSamples = 70000
 
 
-  override val VARIANCE_TOLERANCE: Double = 7E-2
+  override val VARIANCE_TOLERANCE: Double = 1E-1
 
   def paramsClose(p: Double, q: Double) = {
      (p - q).abs / (p.abs / 2 + q.abs / 2+ 1)  < 1E-1
   }
 
   implicit def arbParameter = Arbitrary {
-    for(p <- arbitrary[Double].map{m => val r = math.abs(m % 1.0); if (r < 5E-2) 0.1 + r else r}) yield p
+    for(p <- arbitrary[Double].map{m =>.5 + (m % 1.0)/2.0}) yield p
   }
 
   implicit def arbDistr = Arbitrary {
-    for(p <- arbitrary[Double].map{m => .5 + (math.abs(m) % 1.0)/2.0}) yield new Geometric(p)
+    for(p <- arbitrary[Double].map{m => .5 + (m % 1.0)/2.0}) yield new Geometric(p)
   }
 
 

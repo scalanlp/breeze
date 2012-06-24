@@ -278,5 +278,11 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._0) === DenseMatrix((3., 7.)))
     assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._1) === DenseVector(4., 6.))
   }
+
+  test("normalize rows and columns") {
+    assert(normalize(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._0, 1) === DenseMatrix((1.0/3.0, 3.0/7.0), (2.0/3.0,4.0/7.0)))
+    assert(normalize(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._1, 1) === DenseMatrix((1.0/4.0, 3.0/4.0), (2.0/6.0,4.0/6.0)))
+
+  }
 }
 

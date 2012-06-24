@@ -5,25 +5,33 @@ import breeze.optimize.DiffFunction
 import breeze.util._
 
 /**
- * 
+ * The Geometric distribution calculates the number of trials until the first success, which
+ * happens with probability p.
  * @author dlwh
  */
-
 case class Geometric(p: Double)(implicit rand: RandBasis=Rand) extends DiscreteDistr[Int] with Moments[Double] {
   require(p >= 0)
   require(p <= 1)
 
-  // from "Random Number Generation and Monte CArlo Methods"
-  def draw() = math.ceil(math.log(rand.uniform.get) / math.log(1-p)).toInt
+  def draw() = {
+    // from "Random Number Generation and Monte CArlo Methods"
+    if(p < 1.0/3.0) math.ceil(math.log(rand.uniform.get) / math.log(1-p)).toInt
+    else {
+      // look at the cmf
+      var i = 0
+      do i += 1 while(rand.uniform.draw() > p)
+      i
+    }
+  }
 
 
   def probabilityOf(x: Int) = math.pow((1-p),x) * p
 
   def mean = (1) / p
 
-  def variance = (1-p) / p / p
+  def variance = (1-p) / (p * p)
 
-  def mode = 0
+  def mode = 1
   def entropy = (-(1 - p) * math.log(1-p) - p * math.log(p)) / p
 
   override def toString() = ScalaRunTime._toString(this)

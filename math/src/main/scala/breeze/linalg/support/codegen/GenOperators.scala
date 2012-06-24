@@ -498,19 +498,17 @@ object GenSVOps extends App {
     """require(b.length == a.length, "Vectors must be the same length!")
 
     // TODO: decide the appropriate value of 3 and 30 here.
-    if(b.used > a.used * 3 && b.used > 30) {
+    if(b.activeSize > a.activeSize * 3 && b.activeSize > 30) {
       val c = copy(b)
       apply(c, a)
       %s
-      a.data = c.data
-      a.index = c.index
-      a.used = c.used
+      a.use(c.index, c.data, c.activeSize)
       return
     }
 
     var buf:Array[Type] = null
     var bufi:Array[Int] = null
-    var nused = 0
+    var nactiveSize = 0
 
     val bd = b.data
     val bi = b.index
@@ -522,31 +520,31 @@ object GenSVOps extends App {
         a(bi(i)) = %s
       } else { // not there
         if(buf eq null) {
-          buf = new Array[Type](b.used - i)
-          bufi = new Array[Int](b.used - i)
-        } else if(buf.length == nused) {
-          buf = Arrays.copyOf(buf, nused + b.used - i)
-          bufi = Arrays.copyOf(bufi, nused + b.used - i)
+          buf = new Array[Type](b.activeSize - i)
+          bufi = new Array[Int](b.activeSize - i)
+        } else if(buf.length == nactiveSize) {
+          buf = Arrays.copyOf(buf, nactiveSize + b.activeSize - i)
+          bufi = Arrays.copyOf(bufi, nactiveSize + b.activeSize - i)
         }
 
         // append to buffer to merged in later
-        buf(nused) = %s
-        bufi(nused) = bi(i)
-        nused += 1
+        buf(nactiveSize) = %s
+        bufi(nactiveSize) = bi(i)
+        nactiveSize += 1
       }
       i += 1
     }
 
     // merge two disjoint sorted lists
     if(buf != null) {
-      val result = new Array[Type](a.used + nused)
-      val resultI = new Array[Int](a.used + nused)
+      val result = new Array[Type](a.activeSize + nactiveSize)
+      val resultI = new Array[Int](a.activeSize + nactiveSize)
       var ni = 0
       var ai = 0
       var out = 0
 
-      while(ni < nused) {
-        while(ai < a.used && a.index(ai) < bufi(ni) ) {
+      while(ni < nactiveSize) {
+        while(ai < a.activeSize && a.index(ai) < bufi(ni) ) {
           result(out) = a.data(ai)
           resultI(out) = a.index(ai)
           ai += 1
@@ -562,22 +560,20 @@ object GenSVOps extends App {
       System.arraycopy(a.index, ai, resultI, out, result.length - out)
       out = result.length
 
-      a.data = result
-      a.index = resultI
-      a.used = out
+      a.use(resultI, result, out)
     }
-    """.replaceAll("Type",tpe).format(postProcessCopy("c"),op("a(bi(i))","bd(i)"), op("buf(nused)","bd(i)")).replaceAll("    ","        ")
+    """.replaceAll("Type",tpe).format(postProcessCopy("c"),op("a(bi(i))","bd(i)"), op("buf(nactiveSize)","bd(i)")).replaceAll("    ","        ")
   }
 
   def timesLoopTemplate(tpe: String, zero: String, finish: (String, String, String)=>String) = {
     """require(b.length == a.length, "Vectors must be the same length!")
 
-    val outD = new Array[Type](a.used min b.used)
-    val outI = new Array[Int](a.used min b.used)
+    val outD = new Array[Type](a.activeSize min b.activeSize)
+    val outI = new Array[Int](a.activeSize min b.activeSize)
     var out = 0
 
-    val looper = if(a.used < b.used) a else b
-    val other = if(a.used < b.used) b else a
+    val looper = if(a.activeSize < b.activeSize) a else b
+    val other = if(a.activeSize < b.activeSize) b else a
 
     var i = 0
     val bd = looper.data
@@ -587,8 +583,9 @@ object GenSVOps extends App {
       if(looper.isActive(i)) {
         val p = other(bi(i)) * bd(i)
         if (p != Zero) {
-          outD(i) = p
-          outI(i) = bi(i)
+          outD(out) = p
+          outI(out) = bi(i)
+          out += 1
         }
       }
       i += 1
@@ -598,19 +595,17 @@ object GenSVOps extends App {
     """.replaceAll("Type",tpe).replaceAll("Zero", zero).format(finish("outD", "outI", "out"))
   }
 
-  def timesIntoLoop(tpe: String, zero: String) = timesLoopTemplate(tpe, zero, {(data, index, used) =>
-    "a.data = %s; a.index = %s; a.used = %s".format(data, index, used)
+  def timesIntoLoop(tpe: String, zero: String) = timesLoopTemplate(tpe, zero, {(data, index, activeSize) =>
+    "a.use(%s, %s, %s)".format(index, data, activeSize)
   })
 
 
-  def timesLoop(tpe: String, zero: String) = timesLoopTemplate(tpe, zero, {(data, index, used) =>
-    "new SparseVector(%s, %s, %s, a.length)".format(index, data, used)
+  def timesLoop(tpe: String, zero: String) = timesLoopTemplate(tpe, zero, {(data, index, activeSize) =>
+    "new SparseVector(%s, %s, %s, a.length)".format(index, data, activeSize)
   })
 
   def setLoop = """require(b.length == a.length, "Vectors must be the same length!")
-
-    a.data = Arrays.copyOf(b.data); a.index = Arrays.copyOf(b.index); a.used = b.used
-  """
+      a.use(Arrays.copyOf(b.index), Arrays.copyOf(b.data), b.activeSize)"""
 
   def slowLoop(op: (String,String)=>String):String = {
                 """require(b.length == a.length, "Vectors must be the same length!")
@@ -639,7 +634,7 @@ object GenSVOps extends App {
   def scalarMultLoop(op: (String,String)=>String) = {
                 """
     var i = 0
-    while(i < a.used) {
+    while(i < a.activeSize) {
       a.data(i) = %s
       i += 1
     }
