@@ -6,4 +6,4 @@ libraryDependencies ++= Seq(
 
 addSbtPlugin("de.johoop" % "jacoco4sbt" % "1.2.2")
 
-
+scalacOptions in Global += "-deprecation"
