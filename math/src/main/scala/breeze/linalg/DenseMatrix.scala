@@ -1,6 +1,5 @@
 package breeze.linalg
 
-import breeze.storage.DenseStorage
 import operators._
 import org.netlib.util.intW
 import org.netlib.lapack.LAPACK
@@ -21,14 +20,14 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val data: Array[V],
                                         val cols: Int,
                                         val majorStride: Int,
                                         val offset: Int = 0,
-                                        val isTranspose: Boolean = false) extends StorageMatrix[V] with MatrixLike[V, DenseMatrix[V]] with DenseStorage[V] {
+                                        val isTranspose: Boolean = false) extends StorageMatrix[V] with MatrixLike[V, DenseMatrix[V]] {
   def this(data: Array[V], rows: Int, cols: Int) = this(data, rows, cols, rows)
   def this(data: Array[V], rows: Int) = this(data, rows, {assert(data.length % rows == 0); data.length/rows})
 
   def apply(row: Int, col: Int) = {
     if(row < 0 || row > rows) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
     if(col < 0 || col > cols) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
-      rawApply(linearIndex(row, col))
+      data(linearIndex(row, col))
   }
 
 
@@ -43,7 +42,7 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val data: Array[V],
   def update(row: Int, col: Int, v: V) {
     if(row < 0 || row > rows) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
     if(col < 0 || col > cols) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
-    rawUpdate(linearIndex(row, col), v)
+    data(linearIndex(row, col)) = v
   }
 
   def repr = this
@@ -64,7 +63,14 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val data: Array[V],
     case _ => false
   }
 
+  def activeSize = data.length
 
+  def valueAt(i: Int) = data(i)
+
+  def indexAt(i: Int) = i
+
+  def isActive(i: Int) = true
+  def allVisitableIndicesActive = true
 }
 
 object DenseMatrix extends LowPriorityDenseMatrix

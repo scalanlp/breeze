@@ -2,7 +2,6 @@ package breeze.linalg
 
 import operators._
 import scala.{specialized=>spec}
-import breeze.storage.DenseStorage
 import breeze.generic.{URFunc, UReduceable, CanMapValues}
 import support.{CanCreateZerosLike, CanZipMapValues, CanSlice, CanCopy}
 import breeze.numerics.IntMath

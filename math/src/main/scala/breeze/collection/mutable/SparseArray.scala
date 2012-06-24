@@ -1,6 +1,6 @@
 package breeze.collection.mutable
 
-import breeze.storage.{DefaultArrayValue, ConfigurableDefault}
+import breeze.storage.{Storage, DefaultArrayValue, ConfigurableDefault}
 import collection.mutable.BitSet
 import breeze.util.ArrayUtil
 import breeze.generic.{URFunc, UReduceable}
@@ -16,7 +16,7 @@ final class SparseArray[@specialized Elem](var index: Array[Int],
                         var data: Array[Elem],
                         private var used: Int,
                         val size: Int,
-                        val default: Elem) extends ArrayLike[Elem] {
+                        val default: Elem) extends ArrayLike[Elem] with Storage[Elem] {
 
 
 
