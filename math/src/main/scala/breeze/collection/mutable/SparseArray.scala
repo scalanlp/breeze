@@ -9,7 +9,7 @@ import java.util
 
 /**
  *
- * @author dlwh
+ * @author dlwh, dramage
  */
 @SerialVersionUID(1L)
 final class SparseArray[@specialized Elem](var index: Array[Int],
