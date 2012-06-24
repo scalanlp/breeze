@@ -31,7 +31,7 @@ class GeometricTest extends FunSuite with Checkers with MomentsTestBase[Int] wit
 
   val expFam = Geometric
 
-  override val numSamples = 70000
+  override val numSamples = 100000
 
 
   override val VARIANCE_TOLERANCE: Double = 1E-1
