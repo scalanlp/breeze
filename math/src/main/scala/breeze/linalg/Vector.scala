@@ -2,12 +2,12 @@ package breeze.linalg
 
 import operators._
 import scala.{specialized=>spec}
-import breeze.storage.Storage
 import breeze.generic.CanMapValues
 import breeze.math.{TensorSpace, Ring, Field}
 import collection.immutable.BitSet
 import support.{CanZipMapValues, CanCopy}
 import util.Random
+import breeze.storage.Storage
 
 /**
  *
@@ -23,20 +23,20 @@ trait VectorLike[@spec E, +Self <: Vector[E]] extends Tensor[Int, E] with Tensor
 }
 
 
-// Storage should be a self type, but specialization is broken for now.
-trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]] with Storage[E] { //storage: Storage[E] =>
+trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]]{
 
   def keySet: Set[Int] = BitSet( (0 until length) :_*)
 
   def length: Int
   override def size = length
 
-
   def iterator = Iterator.range(0, size).map{i => i -> apply(i)}
 
   def valuesIterator = Iterator.range(0, size).map{i => apply(i)}
 
   def keysIterator = Iterator.range(0, size)
+
+
 
 
   /** Returns the k-norm of this Vector. */
@@ -119,29 +119,6 @@ object Vector extends VectorOps_Int with VectorOps_Double with VectorOps_Float {
   implicit val space_f = TensorSpace.make[Vector[Float], Int, Float]
   implicit val space_i = TensorSpace.make[Vector[Int], Int, Int]
 
-  /*
-  implicit val canScaleD: BinaryUpdateRegistry[Vector[Double], Double, OpMulScalar] = {
-    new BinaryUpdateRegistry[Vector[Double], Double, OpMulScalar] {
-    }
-  }
-
-  implicit val canDotD: BinaryRegistry[Vector[Double], Vector[Double], OpMulInner, Double] = {
-    new BinaryRegistry[Vector[Double], Vector[Double], OpMulInner, Double] {
-    }
-
-  }
-
-  implicit val canAddIntoD: BinaryUpdateRegistry[Vector[Double], Vector[Double], OpAdd] = {
-    new BinaryUpdateRegistry[Vector[Double], Vector[Double], OpAdd] {
-    }
-
-  }
-
-  implicit val canSubIntoD: BinaryUpdateRegistry[Vector[Double], Vector[Double], OpSub] = {
-    new BinaryUpdateRegistry[Vector[Double], Vector[Double], OpSub] {
-    }
-  }
-  */
 }
 
 trait VectorConstructors[Vec[T]<:Vector[T]] {
@@ -159,3 +136,5 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
 
 
 }
+
+trait StorageVector[E] extends Vector[E] with Storage[E]

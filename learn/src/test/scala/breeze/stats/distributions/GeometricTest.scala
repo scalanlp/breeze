@@ -31,10 +31,10 @@ class GeometricTest extends FunSuite with Checkers with MomentsTestBase[Int] wit
 
   val expFam = Geometric
 
-  override val numSamples = 60000
+  override val numSamples = 70000
 
 
-  override val VARIANCE_TOLERANCE: Double = 7E-2
+  override val VARIANCE_TOLERANCE: Double = 1E-1
 
   def paramsClose(p: Double, q: Double) = {
      (p - q).abs / (p.abs / 2 + q.abs / 2+ 1)  < 1E-1

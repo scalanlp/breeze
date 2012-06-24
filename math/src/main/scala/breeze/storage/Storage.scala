@@ -1,7 +1,9 @@
 package breeze.storage
 
 /**
- * Interface for underlying storage used by Vectors
+ * Interface for an unboxed iterable, of sorts, for
+ * things backed by a flat array of elements.
+ *
  * @author dlwh
  */
 trait Storage[@specialized(Int,Double,Float) Elem] {
@@ -10,14 +12,6 @@ trait Storage[@specialized(Int,Double,Float) Elem] {
    * @return
    */
   def data: Array[Elem]
-
-  /**
-   *
-   * @param i the logical index to look up
-   * @return
-   */
-  protected def rawApply(i: Int): Elem
-  protected def rawUpdate(i: Int, v: Elem)
 
   /**
    * How many elements are logically stored here. This may be <= activeSize.
@@ -62,7 +56,7 @@ trait Storage[@specialized(Int,Double,Float) Elem] {
   def isActive(i: Int):Boolean
 
   /**
-   * Only gives true if isActive would return true for all i. (May be callde anyway)
+   * Only gives true if isActive would return true for all i. (May be false anyway)
    * @return
    */
   def allVisitableIndicesActive:Boolean

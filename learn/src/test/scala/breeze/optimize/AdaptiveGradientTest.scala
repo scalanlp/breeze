@@ -60,7 +60,7 @@ class AdaptiveGradientTest extends OptimizeTestBase {
 
     def optimizeThis(init2: DenseVector[Double], reg: Double) = {
       val init = init2 % 100.0
-      val sgd = new AdaptiveGradientDescent.L1Regularization[DenseVector[Double]](reg.abs%10, 1E-5, 1,200)
+      val sgd = new AdaptiveGradientDescent.L1Regularization[DenseVector[Double]](reg.abs%10, 1E-7, 1,600)
       val f = new BatchDiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double], r: IndexedSeq[Int]) = {
           (((x - 3.0) :^ 2.0).sum,(x * 2.0) - 6.0)
