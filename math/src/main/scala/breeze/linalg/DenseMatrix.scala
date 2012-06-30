@@ -9,6 +9,7 @@ import breeze.numerics.IntMath
 import support._
 import breeze.generic.{CanCollapseAxis, CanMapValues}
 import breeze.math.Semiring
+import breeze.storage.DefaultArrayValue
 
 /**
  * A DenseMatrix is a matrix with all elements found in an array. It is column major unless isTranspose is true,
@@ -93,46 +94,25 @@ extends StorageMatrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
 object DenseMatrix extends LowPriorityDenseMatrix
                            with DenseMatrixOps_Int
                            with DenseMatrixOps_Float
-                           with DenseMatrixOps_Double with DenseMatrixMultiplyStuff {
+                           with DenseMatrixOps_Double
+                           with DenseMatrixMultiplyStuff with MatrixConstructors[DenseMatrix]  {
   /**
    * The standard way to create an empty matrix, size is rows * cols
    */
-  def zeros[V:ClassManifest](rows: Int, cols: Int) = {
+  def zeros[@specialized(Int, Float, Double) V:ClassManifest:DefaultArrayValue](rows: Int, cols: Int) = {
     val data = new Array[V](rows * cols)
     new DenseMatrix(data, rows, cols)
   }
 
+  def apply[@specialized(Int, Float, Double) V:DefaultArrayValue](rows: Int, cols: Int)(data: Array[V]): DenseMatrix[V] = new DenseMatrix(data, rows, cols)
+
   /**
    * Creates a square diagonal array of size dim x dim, with 1's along the diagonal.
    */
-  def eye[V: ClassManifest:Semiring](dim: Int) = {
+  def eye[@specialized(Int, Float, Double) V: ClassManifest:Semiring](dim: Int) = {
     val r = zeros[V](dim, dim)
     breeze.linalg.diag(r) := implicitly[Semiring[V]].one
     r
-  }
-
-
-  /** Creates a dense matrix of the given value repeated of the requested size. */
-  def fill[V:ClassManifest](rows: Int, cols: Int)(value: =>V) = {
-    new DenseMatrix[V](Array.fill(rows * cols)(value), rows, cols)
-  }
-
-  /**
-   * Creates a matrix with entries (i,j) the result of the function.
-   */
-  def tabulate[V:ClassManifest](rows : Int, cols : Int)(fn : (Int, Int) => V) = {
-    new DenseMatrix(Array.tabulate(rows * cols)(i => fn(i % rows, i / rows)), rows, cols)
-  }
-
-  /** Static constructor for a literal matrix. */
-  def apply[R,V](rows : R*)(implicit rl : LiteralRow[R,V], man : ClassManifest[V]) = {
-    val nRows = rows.length
-    val ns = rl.length(rows(0))
-    val rv = zeros(nRows, ns)
-    for ((row,i) <- rows.zipWithIndex) {
-      rl.foreach(row, {(j, v) => rv(i,j) = v})
-    }
-    rv
   }
 
   /** Horizontally tiles some matrices. They must have the same number of rows */
@@ -404,6 +384,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
 }
 
 trait LowPriorityDenseMatrix1 {
+  protected implicit def dontNeedDefaultArrayValue[V]: DefaultArrayValue[V] = null.asInstanceOf[DefaultArrayValue[V]]
   /**
    * Returns a 1xnumCols DenseMatrix
    * @tparam V
@@ -482,6 +463,7 @@ trait LowPriorityDenseMatrix1 {
 }
 
 trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
+
   class SetDMDMOp[@specialized(Int, Double, Float) V] extends BinaryUpdateOp[DenseMatrix[V], DenseMatrix[V], OpSet] {
     def apply(a: DenseMatrix[V], b: DenseMatrix[V]) {
       require(a.rows == b.rows, "Matrixs must have same number of rows")
@@ -560,6 +542,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double { this: DenseMatrix
   extends BinaryOp[DenseMatrix[Double],DenseMatrix[Double],OpMulMatrix,DenseMatrix[Double]] {
     def apply(a : DenseMatrix[Double], b : DenseMatrix[Double]) = {
       val rv = DenseMatrix.zeros[Double](a.rows, b.cols)
+      require(a.cols == b.rows, "Dimension mismatch!")
       Dgemm.dgemm(transposeString(a), transposeString(b),
         rv.rows, rv.cols, a.cols,
         1.0, a.data, a.offset, a.majorStride, b.data, b.offset, b.majorStride,
@@ -576,6 +559,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double { this: DenseMatrix
   implicit object DenseMatrixDMulDenseVectorD
   extends BinaryOp[DenseMatrix[Double],DenseVector[Double],OpMulMatrix,DenseVector[Double]] {
     def apply(a : DenseMatrix[Double], b : DenseVector[Double]) = {
+      require(a.cols == b.length, "Dimension mismatch!")
       val rv = DenseVector.zeros[Double](a.rows)
       org.netlib.blas.Dgemv.dgemv(transposeString(a),
         if(a.isTranspose) a.cols else a.rows, if(a.isTranspose) a.rows else a.cols,

@@ -1,9 +1,11 @@
 package breeze.linalg
 
 import scala.{specialized=>spec}
-import breeze.storage.Storage
+import breeze.storage.{DefaultArrayValue, Storage}
 import org.netlib.blas.Dgemm
 import breeze.util.Terminal
+import support.LiteralRow
+import util.Random
 
 /**
  *
@@ -101,6 +103,42 @@ trait Matrix[@spec(Int, Float, Double) E] extends MatrixLike[E, Matrix[E]] {
   }
 
   override def toString : String = toString(Terminal.terminalHeight, Terminal.terminalWidth)
+
+}
+
+object Matrix extends MatrixConstructors[Matrix] {
+  def zeros[@specialized(Int, Float, Double) V: ClassManifest:DefaultArrayValue](rows: Int, cols: Int): Matrix[V] = DenseMatrix.zeros(rows, cols)
+
+  def apply[@specialized(Int, Float, Double) V:DefaultArrayValue](rows: Int, cols: Int)(data: Array[V]): Matrix[V] = DenseMatrix.apply(rows, cols)(data)
+}
+
+trait MatrixConstructors[Vec[T]<:Matrix[T]] {
+  def zeros[@specialized(Int, Float, Double) V:ClassManifest:DefaultArrayValue](rows: Int, cols: Int):Vec[V]
+  def apply[@specialized(Int, Float, Double) V:DefaultArrayValue](rows: Int, cols: Int)(data: Array[V]):Vec[V]
+
+  def fill[@spec(Double, Int, Float) V:ClassManifest:DefaultArrayValue](rows: Int, cols: Int)(v: =>V):Vec[V] = apply(rows, cols)(Array.fill(rows * cols)(v))
+  def tabulate[@spec(Double, Int, Float) V:ClassManifest:DefaultArrayValue](rows: Int, cols: Int)(f: (Int,Int)=>V):Vec[V]= {
+    val z = zeros(rows, cols)
+    for(c <- 0 until cols; r <- 0 until rows) {
+      z(r, c) = f(r, c)
+    }
+    z
+  }
+
+  def rand(rows: Int, cols: Int, rand: Random = new Random()) = {
+    fill(rows, cols)(rand.nextDouble())
+  }
+
+  /** Static constructor for a literal matrix. */
+  def apply[R,@specialized(Int, Float, Double) V](rows : R*)(implicit rl : LiteralRow[R,V], man : ClassManifest[V], df: DefaultArrayValue[V]) = {
+    val nRows = rows.length
+    val ns = rl.length(rows(0))
+    val rv = zeros(nRows, ns)
+    for ((row,i) <- rows.zipWithIndex) {
+      rl.foreach(row, {(j, v) => rv(i,j) = v})
+    }
+    rv
+  }
 
 }
 

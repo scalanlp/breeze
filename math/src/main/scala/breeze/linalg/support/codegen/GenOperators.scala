@@ -844,6 +844,53 @@ object GenVectorRegistries extends App {
 
 }
 
+object GenCSCOps extends App {
+  import GenOperators._
+  def gen(out: PrintStream) {
+    import out._
+
+    println("package breeze.linalg")
+    println("import java.util._")
+    println("import breeze.linalg.operators._")
+    println("import breeze.linalg.support._")
+    println("import breeze.numerics._")
+
+    for( (scalar,ops) <- GenOperators.ops) {
+      println()
+      val matrix = "CSCMatrix[%s]" format scalar
+      val gvector = "Vector[%s]" format scalar
+      println("/** This is an auto-generated trait providing operators for CSCMatrix */")
+      println("trait CSCMatrixOps_"+scalar +" { this: CSCMatrix.type =>")
+
+      println(genBinaryOperator("canMulM_V_" + scalar, matrix, gvector, OpMulMatrix, gvector){"""
+      val res = DenseVector.zeros[Scalar](a.rows)
+      var c = 0
+      while(c < a.cols) {
+        var rr = a.colPtrs(c)
+        val rrlast = a.colPtrs(c+1)
+        while (rr < rrlast) {
+          val r = a.rowIndices(rr)
+          res(r) += a.data(rr) * b(c)
+          rr += 1
+        }
+        c += 1
+      }
+
+      res                                                               """.replaceAll("Scalar", scalar)
+      })
+
+
+      println("}")
+
+    }
+  }
+
+  val out = new PrintStream(new FileOutputStream(new File("math/src/main/scala/breeze/linalg/CSCMatrixOps.scala")))
+  gen(out)
+  out.close()
+
+}
+
 
 object GenAll extends App {
   GenDenseOps.main(Array.empty)
