@@ -40,11 +40,9 @@ object GenOperators {
 
   def genBinaryUpdateOperator(name: String, typeA: String, typeB: String, op: OpType)(loop: String) = {
     """
-  implicit val Name: BinaryUpdateOp[TypeA, TypeB, TypeOp] = {
-    new BinaryUpdateOp[TypeA, TypeB, TypeOp] {
-      def apply(a: TypeA, b: TypeB) {
-        LOOP
-      }
+  implicit object Name extends BinaryUpdateOp[TypeA, TypeB, TypeOp] {
+    def apply(a: TypeA, b: TypeB) {
+      LOOP
     }
   }
 """.replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getName.replaceAll("[$]","")).replaceAll("LOOP",loop)
@@ -53,11 +51,9 @@ object GenOperators {
 
   def genBinaryOperator(name: String, typeA: String, typeB: String, op: OpType, result: String)(loop: String) = {
     """
-  implicit val Name: BinaryOp[TypeA, TypeB, TypeOp, Result] = {
-    new BinaryOp[TypeA, TypeB, TypeOp, Result] {
-      def apply(a: TypeA, b: TypeB) = {
-        LOOP
-      }
+  implicit object Name extends BinaryOp[TypeA, TypeB, TypeOp, Result] {
+    def apply(a: TypeA, b: TypeB) = {
+      LOOP
     }
   }
 """.replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("Result",result).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getName.replaceAll("[$]","")).replaceAll("LOOP",loop)
@@ -66,11 +62,9 @@ object GenOperators {
 
   def genBinaryUpdateRegistry(name: String, typeA: String, typeB: String, op: OpType)(loop: String) = {
     """
-  implicit val Name: BinaryUpdateRegistry[TypeA, TypeB, TypeOp] = {
-    new BinaryUpdateRegistry[TypeA, TypeB, TypeOp] {
-      override def bindingMissing(a: TypeA, b: TypeB) {
-        LOOP
-      }
+  implicit object Name: BinaryUpdateRegistry[TypeA, TypeB, TypeOp] {
+    override def bindingMissing(a: TypeA, b: TypeB) {
+      LOOP
     }
   }
 """.replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getName.replaceAll("[$]","")).replaceAll("LOOP",loop)
@@ -377,12 +371,13 @@ object GenDVSVSpecialOps extends App {
         val bi = b.index
         val bsize = b.iterableSize
         var i = 0
-        while(i < b.size) {
+        while(i < bsize) {
           if(b.isActive(i)) result += a(bi(i)) * bd(i)
           i += 1
         }
         result""".replaceAll("       ","        ")
       })
+      println("  " + register("Vector", GenVectorRegistries.getDotName(scalar), dotName))
 
       println("}")
 

@@ -1,6 +1,7 @@
 package breeze.linalg
 
 import org.scalacheck.{Arbitrary,Gen}
+import scala.util.Random
 import org.scalatest._
 import org.scalatest.junit._
 import org.scalatest.prop._
@@ -141,6 +142,14 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
     val (_QQ, _RR, _P, _) = qrp(A)
     val ap = A * _P.values.map(_.toDouble)
     _QQ * _RR foreachPair { case ((i,j), v) => v should be (ap(i,j) plusOrMinus 1e-8) }
+  }
+
+  test("mean and variance") {
+    val r = new Random()
+    val data =  Array.fill(100000)(r.nextGaussian)
+    val (m,v) = meanAndVariance(data)
+    assert(breeze.numerics.closeTo(m,0.0,1E-2), m + " should be 0")
+    assert(breeze.numerics.closeTo(v,1.0,1E-2), v + " should be 1")
   }
 
 }

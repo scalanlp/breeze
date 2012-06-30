@@ -22,13 +22,16 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
     (breeze.numerics.logSum(mlog(1), mlog(2), mlog(3)) should be (mlog(6) plusOrMinus 1e-10))
     (breeze.numerics.logSum(mlog(1), mlog(2), Double.NegativeInfinity) should be (mlog(3) plusOrMinus (1e-10)))
 
-    val s = Array.tabulate[Double](5)(i => log1p(i))
+    val s = log1p(Array.tabulate(5)(_.toDouble))
     (breeze.numerics.logSum(s.iterator, s.max) should be (mlog(15) plusOrMinus 1e-10))
     (breeze.numerics.logSum(s) should be (mlog(15) plusOrMinus 1e-10))
-    (breeze.numerics.logSum(s,s.length) should be (mlog(15) plusOrMinus 1e-10))
-    (breeze.numerics.logSum(s,s.length-1) should be (mlog(10) plusOrMinus 1e-10))
     (breeze.numerics.logSum(Double.NegativeInfinity +: s) should be (mlog(15) plusOrMinus 1e-10))
     (breeze.numerics.logSum(s :+ Double.NegativeInfinity) should be (mlog(15) plusOrMinus 1e-10))
+
+    (breeze.numerics.logSum(s,s.length) should be (mlog(15) plusOrMinus 1e-10))
+    (breeze.numerics.logSum(s,s.length-1) should be (mlog(10) plusOrMinus 1e-10))
+
+    (breeze.linalg.softmax(s,1,2,(s.length-1)/2, { (_) => true}) should be (mlog(3) plusOrMinus 1e-10))
   }
 
   test("logDiff") {

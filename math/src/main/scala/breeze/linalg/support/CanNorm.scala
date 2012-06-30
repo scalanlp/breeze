@@ -9,7 +9,9 @@ import breeze.math.Ring
  *
  * @author dramage
  */
-trait CanNorm[-From] extends ((From,Double)=>Double)
+trait CanNorm[-From] {
+  def apply(v1: From, v2: Double): Double
+}
 
 object CanNorm {
   implicit def mkTensor1Norm[T, V](implicit tt : T=>Vector[V], ring: Ring[V]): CanNorm[T] = new CanNorm[T] {

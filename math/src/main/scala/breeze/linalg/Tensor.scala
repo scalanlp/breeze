@@ -125,7 +125,7 @@ trait TensorLike[@spec(Int) K, @specialized(Int, Float, Double) V, +This<:Tensor
 }
 
 
-trait Tensor[@spec(Int) K, @specialized V] extends TensorLike[K, V, Tensor[K, V]]
+trait Tensor[@spec(Int) K, @specialized(Int, Float, Double) V] extends TensorLike[K, V, Tensor[K, V]]
 
 object Tensor {
   implicit def canUReduce[T, I, V](implicit ev: T<:<Tensor[I, V]):UReduceable[T, V] = {

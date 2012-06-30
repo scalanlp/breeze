@@ -277,11 +277,36 @@ class DenseMatrixTest extends FunSuite with Checkers {
   test("sum") {
     assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._0) === DenseMatrix((3., 7.)))
     assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._1) === DenseVector(4., 6.))
+    assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0))) === 10.0)
   }
 
   test("normalize rows and columns") {
     assert(normalize(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._0, 1) === DenseMatrix((1.0/3.0, 3.0/7.0), (2.0/3.0,4.0/7.0)))
     assert(normalize(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._1, 1) === DenseMatrix((1.0/4.0, 3.0/4.0), (2.0/6.0,4.0/6.0)))
+
+  }
+
+  test("Generic Dense ops") {
+    // mostly for coverage
+    val a = DenseMatrix[String](1,1)(Array("SSS"))
+    intercept[IndexOutOfBoundsException] {
+      a(3,3) = ":("
+      assert(false, "Shouldn't be here!")
+    }
+    assert(a(0,0) === "SSS")
+    intercept[IndexOutOfBoundsException] {
+      a(3,3)
+      assert(false, "Shouldn't be here!")
+    }
+
+    a(0,0) = ":("
+    assert(a(0,0) === ":(")
+
+    a := ":)"
+    assert(a(0,0) === ":)")
+    val b = DenseMatrix.zeros[String](1,1)
+    b := a
+    assert(b === a)
 
   }
 }

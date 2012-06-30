@@ -7,7 +7,7 @@ import org.netlib.blas.{Dgemm, BLAS}
 import breeze.util.ArrayUtil
 import breeze.numerics.IntMath
 import support._
-import breeze.generic.{CanCollapseAxis, CanMapValues}
+import breeze.generic.{URFunc, CanCollapseAxis, CanMapValues}
 import breeze.math.Semiring
 import breeze.storage.DefaultArrayValue
 
@@ -89,6 +89,13 @@ extends StorageMatrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
 
   def isActive(i: Int) = true
   def allVisitableIndicesActive = true
+
+  override def ureduce[A](f: URFunc[V, A]): A = {
+    val idealMajorStride = if(isTranspose) cols else rows
+    if(majorStride == idealMajorStride && offset == 0) f(data, rows*cols)
+    else if(majorStride == idealMajorStride) f(data, offset, 1, rows*cols, {_ => {true}})
+    else f(valuesIterator)
+  }
 }
 
 object DenseMatrix extends LowPriorityDenseMatrix

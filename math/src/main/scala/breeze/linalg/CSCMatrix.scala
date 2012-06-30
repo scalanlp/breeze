@@ -26,14 +26,16 @@ class CSCMatrix[@specialized(Int, Float, Double) V:DefaultArrayValue] private[li
 
 
   def apply(row: Int, col: Int): V = {
-    require(row < rows && col < cols && row >= 0 && col >= 0)
+    if(row >= rows || col >= cols || row < 0 || col < 0)
+      throw new IndexOutOfBoundsException()
     val ind = locate(row, col)
     if(ind < 0) zero
     else data(ind)
   }
 
   def update(row: Int, col: Int, v: V) {
-    require(row < rows && col < cols && row >= 0 && col >= 0)
+    if(row >= rows || col >= cols || row < 0 || col < 0)
+      throw new IndexOutOfBoundsException()
     val ind = locate(row, col)
     if(ind >= 0) data(ind) = v
     else if (v != zero) {

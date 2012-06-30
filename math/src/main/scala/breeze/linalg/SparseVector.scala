@@ -125,13 +125,13 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
   }
 
 
-  class CanCopySparseVector[@specialized V:ClassManifest:DefaultArrayValue] extends CanCopy[SparseVector[V]] {
+  class CanCopySparseVector[@specialized(Int, Float, Double) V:ClassManifest:DefaultArrayValue] extends CanCopy[SparseVector[V]] {
     def apply(v1: SparseVector[V]) = {
       v1.copy
     }
   }
 
-  implicit def canCopySparse[V: ClassManifest: DefaultArrayValue] = new CanCopySparseVector[V]
+  implicit def canCopySparse[@specialized(Int, Float, Double) V: ClassManifest: DefaultArrayValue] = new CanCopySparseVector[V]
 
   implicit def canMapValues[V, V2: ClassManifest: DefaultArrayValue]:CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] = {
     new CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] {

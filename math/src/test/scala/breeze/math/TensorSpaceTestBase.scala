@@ -115,6 +115,16 @@ trait TensorSpaceTestBase[V, I, S] extends FunSuite with Checkers {
       close(ab, ba, 1e-6)
     })
 
+    check(Prop.forAll{ (trip: (V, V, V)) =>
+      val (a, b, c) = trip
+      val ab = copy(a)
+      ab += b
+      ab :*= c
+      val ba = copy(a) :* c
+      ba :+= (b :* c)
+      close(ab, ba, 1e-6)
+    })
+
 //    check(Prop.forAll{ (trip: (V, V, V), s: S) =>
 //      val (a, b, _) = trip
 //      s == 0 || {
@@ -159,6 +169,18 @@ trait TensorSpaceTestBase[V, I, S] extends FunSuite with Checkers {
       val ba = copy(a)
       ba *= field.*(s, t)
       close(ab, ba, 1e-6)
+    })
+
+    check(Prop.forAll{ (trip: (V, V, V), s: S, t: S) =>
+      val (a, _, _) = trip
+      s == field.zero || t == field.zero || {
+      val ab = copy(a)
+        ab /= s
+        ab /= t
+        val ba = copy(a)
+        ba /= field.*(s, t)
+        close(ab, ba, 1e-6)
+      }
     })
   }
 
@@ -244,6 +266,7 @@ trait TensorSpaceTestBase[V, I, S] extends FunSuite with Checkers {
       val (a, b, c) = trip
       close( (a + b) :* c, (b :* c) + (a :* c), 1E-6)
     })
+
 
 //    check(Prop.forAll{ (trip: (V, V, V), s: S) =>
 //      val (a, b, _) = trip
