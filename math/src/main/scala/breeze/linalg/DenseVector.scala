@@ -9,10 +9,6 @@ import java.util.Arrays
 import breeze.math.{TensorSpace, Semiring, Ring, Field}
 import breeze.util.ArrayUtil
 
-/**
- *
- * @author dlwh
- */
 @SerialVersionUID(1L)
 final class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
                                                      val offset: Int,

@@ -18,7 +18,9 @@ import breeze.math.Semiring
  * @author dlwh
  */
 @SerialVersionUID(1L)
-final class DenseMatrix[@specialized(Int, Float, Double) V](/** The underlying data. Mutate at your own risk.
+final class DenseMatrix[@specialized(Int, Float, Double) V](/** The underlying data.
+                                                              Column-major unless isTranpose is true.
+                                                              Mutate at your own risk.
                                                              Note that this matrix may be a view of the data.
                                                             Use linearIndex(r,c) to calculate indices.*/
                                                             val data: Array[V],
@@ -34,7 +36,9 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](/** The underlying d
                                                             val offset: Int = 0,
                                                             val isTranspose: Boolean = false)
 extends StorageMatrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
+  /** Creates a matrix with the specified data array, rows, and columns. Data must be column major */
   def this(data: Array[V], rows: Int, cols: Int) = this(data, rows, cols, rows)
+  /** Creates a matrix with the specified data array  and rows. columns inferred automatically */
   def this(data: Array[V], rows: Int) = this(data, rows, {assert(data.length % rows == 0); data.length/rows})
 
   def apply(row: Int, col: Int) = {
@@ -90,11 +94,17 @@ object DenseMatrix extends LowPriorityDenseMatrix
                            with DenseMatrixOps_Int
                            with DenseMatrixOps_Float
                            with DenseMatrixOps_Double with DenseMatrixMultiplyStuff {
+  /**
+   * The standard way to create an empty matrix, size is rows * cols
+   */
   def zeros[V:ClassManifest](rows: Int, cols: Int) = {
     val data = new Array[V](rows * cols)
     new DenseMatrix(data, rows, cols)
   }
 
+  /**
+   * Creates a square diagonal array of size dim x dim, with 1's along the diagonal.
+   */
   def eye[V: ClassManifest:Semiring](dim: Int) = {
     val r = zeros[V](dim, dim)
     breeze.linalg.diag(r) := implicitly[Semiring[V]].one
@@ -102,13 +112,14 @@ object DenseMatrix extends LowPriorityDenseMatrix
   }
 
 
-
-
   /** Creates a dense matrix of the given value repeated of the requested size. */
   def fill[V:ClassManifest](rows: Int, cols: Int)(value: =>V) = {
     new DenseMatrix[V](Array.fill(rows * cols)(value), rows, cols)
   }
 
+  /**
+   * Creates a matrix with entries (i,j) the result of the function.
+   */
   def tabulate[V:ClassManifest](rows : Int, cols : Int)(fn : (Int, Int) => V) = {
     new DenseMatrix(Array.tabulate(rows * cols)(i => fn(i % rows, i / rows)), rows, cols)
   }
@@ -383,9 +394,6 @@ object DenseMatrix extends LowPriorityDenseMatrix
   }
 
 
-
-
-
   implicit val setMM_D: BinaryUpdateOp[DenseMatrix[Double], DenseMatrix[Double], OpSet] = new SetDMDMOp[Double]
   implicit val setMM_F: BinaryUpdateOp[DenseMatrix[Float], DenseMatrix[Float], OpSet]  = new SetDMDMOp[Float]
   implicit val setMM_I: BinaryUpdateOp[DenseMatrix[Int], DenseMatrix[Int], OpSet]  = new SetDMDMOp[Int]
@@ -597,7 +605,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double { this: DenseMatrix
       }
     }
 
-    /** X := A \ X */
+    /** X := A \ X, for square A */
     def LUSolve(X : DenseMatrix[Double], A : DenseMatrix[Double]) = {
       require(X.offset == 0)
       require(A.offset == 0)
@@ -618,7 +626,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double { this: DenseMatrix
       X
     }
 
-    /** X := A \ V */
+    /** X := A \ V, for arbitrary A */
     def QRSolve(X : DenseMatrix[Double], A : DenseMatrix[Double], V : DenseMatrix[Double]) = {
       require(X.offset == 0)
       require(A.offset == 0)
