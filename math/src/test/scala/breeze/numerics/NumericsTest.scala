@@ -25,6 +25,8 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
     val s = Array.tabulate[Double](5)(i => log1p(i))
     (breeze.numerics.logSum(s.iterator, s.max) should be (mlog(15) plusOrMinus 1e-10))
     (breeze.numerics.logSum(s) should be (mlog(15) plusOrMinus 1e-10))
+    (breeze.numerics.logSum(s,s.length) should be (mlog(15) plusOrMinus 1e-10))
+    (breeze.numerics.logSum(s,s.length-1) should be (mlog(10) plusOrMinus 1e-10))
     (breeze.numerics.logSum(Double.NegativeInfinity +: s) should be (mlog(15) plusOrMinus 1e-10))
     (breeze.numerics.logSum(s :+ Double.NegativeInfinity) should be (mlog(15) plusOrMinus 1e-10))
   }
@@ -41,7 +43,7 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
   import Arbitrary._
 
   implicit def ae(x: Double) = new {
-    def =~=(y: Double) = (x - y).abs / x < 1E-6
+    def =~=(y: Double) = breeze.numerics.closeTo(x, y, 1E-6)
   }
 
   // TODO 2.9 filter out Double.MaxValue.
@@ -61,6 +63,17 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
       Seq(a,b,c).exists(x => x > 1E300 || x < -1E300) ||
       (a + breeze.numerics.logSum(b,c)) =~= (breeze.numerics.logSum(a + b,a+c))
     })
+  }
+
+  test("exp(digamma(x)) ≈ x - .5, x >= 10") {
+    check(Prop.forAll { (a: Double) =>
+      a.abs < 10 || a.abs > Double.MaxValue / 2 || exp(breeze.numerics.digamma(a.abs)) =~= (a.abs - .5)
+    })
+  }
+
+  test("lgamma") {
+    import breeze.numerics.{lgamma=>lg}
+    lg(10) should be (12.8018274801 plusOrMinus 1E-8)
   }
 
 }

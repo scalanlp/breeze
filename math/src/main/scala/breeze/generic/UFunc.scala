@@ -8,14 +8,14 @@ package breeze.generic
  * object.
  * @author dlwh
  */
-trait UFunc[@specialized -V, @specialized +V2] {
+trait UFunc[@specialized(Int, Float, Double) -V, @specialized(Int, Float, Double) +V2] {
   def apply(v: V):V2
   def apply[T,U](t: T)(implicit cmv: CanMapValues[T, V, V2, U]):U = cmv.map(t, apply _)
   def applyActive[T,U](t: T)(implicit cmv: CanMapValues[T, V, V2, U]):U = cmv.mapActive(t, apply _)
 }
 
 object UFunc {
-  def apply[@specialized V, @specialized V2](f: V=>V2):UFunc[V, V2] = new UFunc[V, V2] {
+  def apply[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) V2](f: V=>V2):UFunc[V, V2] = new UFunc[V, V2] {
     def apply(v: V) = f(v)
   }
 }

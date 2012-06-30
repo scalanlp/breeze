@@ -7,7 +7,7 @@ import breeze.math.Complex
  *
  * @author dlwh
  */
-trait CanZipMapValues[From, @specialized A, @specialized B, +To] {
+trait CanZipMapValues[From, @specialized(Int, Float, Double) A, @specialized(Int, Float, Double) B, +To] {
   /** Maps all corresponding values from the two collection. */
   def map(from : From, from2: From, fn : (A,A)=>B) : To
 }
@@ -19,7 +19,7 @@ object CanZipMapValues {
   // Arrays
   //
 
-  class OpArray[@specialized A, @specialized B: ClassManifest]
+  class OpArray[@specialized(Int, Float, Double) A, @specialized(Int, Float, Double) B: ClassManifest]
     extends Op[Array[A], A, B, Array[B]] {
 
     /**Maps all values from the given collection. */
