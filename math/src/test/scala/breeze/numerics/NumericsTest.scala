@@ -81,8 +81,23 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
 
   test("incomplete gamma") {
     import breeze.numerics.{lgamma=>lg}
+    import breeze.numerics.gammp
     lg(3,4) should be (0.4212028764812177 plusOrMinus 1E-8)
     lg(3,1) should be (-1.828821079471455 plusOrMinus 1E-8)
+    gammp(3, 1) should be (0.08030139707139419 plusOrMinus 1E-8)
+    gammp(3, 4) should be (0.7618966944464557 plusOrMinus 1E-8)
+    gammp(3, 10) should be (0.9972306042844884 plusOrMinus 1E-8)
+  }
+
+  test("erf") {
+    import breeze.numerics.{erf,erfi}
+    erf(3.) should be (.9999779095030014 plusOrMinus 1E-8)
+    erf(-3.) should be (-.9999779095030014 plusOrMinus 1E-8)
+    erf(1E-4) should be (0.00011283791633342489 plusOrMinus 1E-8)
+    erfi(3.) should be (1629.994622601567 plusOrMinus 1E-4)
+    erfi(-3.) should be (-1629.994622601567 plusOrMinus 1E-4)
+    erf(1E-4) should be (0.00011283791708567767 plusOrMinus 1E-8)
+
 
   }
 

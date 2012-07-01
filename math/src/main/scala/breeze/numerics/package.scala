@@ -79,23 +79,60 @@ package object numerics extends UniversalFuncs {
     (-tmp + log(2.5066282746310005*ser / x))
   }
 
-  // erf and erfi: cribbed from http://en.wikipedia.org/wiki/Error_function
-  private val erf_a = 0.147
   /**
    * An approximation to the error function
    */
   def erf(x: Double) = {
-    val x2 = x*x
-    val inner = exp(-1*x2*(4/Pi + erf_a*x2) /
-                    (1.0 + erf_a*x2))
-    signum(x)*sqrt(1.0 - inner)
+    if(x < 0.0) -gammp(0.5,x*x) else gammp(0.5,x*x)
   }
 
-  def erfi(x: Double) = {
-    val x2 = x*x
-    val i1 = 2.0/(Pi*erf_a) + log(1-x2)/2.0
-    val i2 = log(1-x2)/erf_a
-    signum(x) * sqrt( sqrt(i1*i1 - i2) - i1 )
+  private val erf_a = 0.147
+
+  /**
+   * The imaginary error function for real argument x.
+   *
+   * Adapted from http://www.mathworks.com/matlabcentral/newsreader/view_thread/24120
+   * verified against mathematica
+   * @param x
+   * @return
+   */
+  def erfi(x: Double):Double = {
+    if(x < 0) -erfi(-x)
+    else {
+      var y = x
+      val x2 = x * x
+      var xx = x
+      var f = 1.0
+      var n  = 0
+      while (n < 100) {
+        n += 1
+        f /= n
+        xx *= x2
+        val del =  f * xx/(2*n+1)
+        if(del < 1E-8) n = 101
+        y += del
+      }
+      y = y*2/m.sqrt(Pi)
+      y
+    }
+  }
+//    val x2 = x*x
+//    val i1 = 2.0/(Pi*erf_a) + m.log(1-x2)/2.0
+//    val i2 = log(1-x2)/erf_a
+//    m.signum(x) * m.sqrt( sqrt(i1*i1 - i2) - i1 )
+//  }
+
+  /**
+   * regularized incomplete gamma function  \int_0x \exp(-t)pow(t,a-1) dt / Gamma(a)
+   * @param a
+   * @param x
+   */
+  def gammp(a: Double, x: Double) = {
+    val arr = new Array[Double](1)
+    val incom = _lgamma(a, x, arr)
+    var lgam = arr(0)
+    if(lgam.isNaN) lgam = lgamma(a)
+    m.exp(incom - lgam)
   }
 
 
@@ -104,7 +141,14 @@ package object numerics extends UniversalFuncs {
    *
    * Based on NR
   */
-  def lgamma(a: Double, x:Double):Double = {
+  def lgamma(a: Double, x: Double) = _lgamma(a, x)
+
+  /**
+  * log Incomplete gamma function = \log \int_0x \exp(-t)pow(t,a-1) dt
+  * May store lgamma(a) in lgam(0) if it's non-null and needs to be computed.
+   * Based on NR
+  */
+  private def _lgamma(a: Double, x:Double, lgam: Array[Double] = null):Double = {
     if (x < 0.0 || a <= 0.0) throw new IllegalArgumentException()
     else if(x == 0) 0.0
     else if (x < a + 1.0) {
@@ -122,6 +166,7 @@ package object numerics extends UniversalFuncs {
         }
         n += 1
       }
+      if(lgam != null) lgam(0) = Double.NaN
       if(result.isNaN) throw new ArithmeticException("Convergence failed")
       else result
     } else {
@@ -144,6 +189,7 @@ package object numerics extends UniversalFuncs {
         h *= del
         if (scala.math.abs(del-1.0) < 1E-7) n = 101
       }
+      if(lgam != null) lgam(0) = gln
       if (n == 100) throw new ArithmeticException("Convergence failed")
       else logDiff(gln, -x+a*log(x) + m.log(h))
     }
