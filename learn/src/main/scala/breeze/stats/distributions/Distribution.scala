@@ -22,7 +22,7 @@ package breeze.stats.distributions
  * 
  * @author(dlwh)
  */
-trait Measure[T] extends (T=>Double) {
+trait Measure[T] {
   /** Returns the unnormalized value of the measure*/
   def apply(x:T): Double;
   /** Returns the log unnormalized value of the measure*/
