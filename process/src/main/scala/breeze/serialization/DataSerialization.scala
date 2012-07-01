@@ -36,12 +36,6 @@ with ByteSerialization {
   type Input = DataInput
   type Output = DataOutput
 
-  /** Caches the given value to the given path. */
-  def cache[V:Readable:Writable](path : File)(value : =>V) =
-    breeze.ra.Cell.cache(path)(value)(
-      FileSerialization.fromDataReadable[V],
-      FileSerialization.fromDataWritable[V])
-
   //
   // From ByteSerialization
   // 

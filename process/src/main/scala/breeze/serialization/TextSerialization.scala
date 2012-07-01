@@ -26,12 +26,6 @@ with StringSerialization {
   type Input = TextReader;
   type Output = TextWriter;
 
-  /** Caches the given value to the given path. */
-  def cache[V:Readable:Writable](path : File)(value : =>V) =
-    breeze.ra.Cell.cache(path)(value)(
-      FileSerialization.fromTextReadable[V],
-      FileSerialization.fromTextWritable[V]);
-
   //
   // from StringSerialization
   //

@@ -17,5 +17,11 @@ class PairIndex[T,U](tIndex: Index[T], uIndex: Index[U]) extends Index[(T,U)] {
     None
   }
 
-  def apply(t: (T, U)) = tIndex(t._1) * uIndex.size + uIndex(t._2);
+  def apply(t: (T, U)) = {
+    val i = tIndex(t._1) * uIndex.size + uIndex(t._2)
+    if(i < 0) -1
+    else i
+  };
+
+  override def size: Int = tIndex.size * uIndex.size
 }

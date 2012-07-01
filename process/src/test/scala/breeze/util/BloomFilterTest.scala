@@ -1,7 +1,7 @@
 /*
  Copyright 2009 David Hall, Daniel Ramage
 
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
 
@@ -14,24 +14,24 @@
  limitations under the License.
 */
 
-package breeze.util;
+package breeze.util
 
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.junit.runner.RunWith;
+import org.scalatest._
+import org.scalatest.junit._
+import org.scalatest.prop._
+import org.junit.runner.RunWith
 
-import TopKImplicits._;
+import TopKImplicits._
 
 @RunWith(classOf[JUnitRunner])
 class BloomFilterTest extends FunSuite with Checkers {
   test("add a bunch of strings and they're all there") {
-    check { (strings: List[String], numBuckets: Int, numHashes: Int) => numBuckets <= 0  || numHashes <= 0 ||
-           (numHashes >= numBuckets) || numBuckets > 10000 || {
-        val bf = new BloomFilter[String](numBuckets,numHashes.abs);
-        strings foreach { bf += _ };
+    check { (strings: List[String], _numBuckets: Int, _numHashes: Int) => {
+      val numHashes = _numHashes.abs % 1000 + 1
+      val numBuckets = _numBuckets.abs % 1000 + 1
+        val bf = new BloomFilter[String](numBuckets,numHashes.abs)
+        strings foreach { bf += _ }
         strings forall { bf contains _ }
-      }
-    };
+    }}
   }
 }

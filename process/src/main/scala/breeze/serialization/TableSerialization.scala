@@ -20,7 +20,6 @@ package serialization;
 import java.io.File;
 
 import breeze.io.{TextReader,TextWriter,TextReaderException};
-import breeze.ra.Cell;
 import breeze.pipes.Pipes;
 
 /**
@@ -194,13 +193,6 @@ trait TextTableSerialization { self =>
     implicitly[TableRowWritable[List[String]]].write(writer.next, columns);
     implicitly[TableWritable[V]].write(writer, value);
   }
-
-  /** Evaluates the given eval function if no cache exists; otherwise loads value. */
-  def cache[V:TableReadable:TableWritable](path : File)(eval : => V) : V =
-    new Cell(path, eval).get;
-
-  def cache[V:TableReadable:TableWritable](name : String, pipes : Pipes = Pipes.global)(eval : => V) : V =
-    new Cell(pipes.file(name), eval).get;
 
   implicit def fileReadWritable[V:TableReadable:TableWritable] : FileSerialization.ReadWritable[V] =
     new FileReadWritable[V];

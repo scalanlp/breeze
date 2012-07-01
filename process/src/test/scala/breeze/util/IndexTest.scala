@@ -1,7 +1,7 @@
 /*
  Copyright 2009 David Hall, Daniel Ramage
 
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
 
@@ -14,23 +14,48 @@
  limitations under the License.
 */
 
-package breeze.util;
+package breeze.util
 
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.junit.runner.RunWith;
+import org.scalatest._
+import org.scalatest.junit._
+import org.scalatest.prop._
+import org.junit.runner.RunWith
 
-import breeze.serialization.FileSerialization;
+import breeze.serialization.FileSerialization
 
 @RunWith(classOf[JUnitRunner])
 class IndexTest extends FunSuite with Checkers {
 
   test("Index serialization") {
-    val tmpFile = java.io.File.createTempFile("index-", ".txt");
-    val index = Index(List("a","b","c","d"));
-    FileSerialization.write(tmpFile, index);
-    assert(FileSerialization.read[Index[String]](tmpFile) == index);
-    tmpFile.delete();
+    val tmpFile = java.io.File.createTempFile("index-", ".txt")
+    val index = Index(List("a","b","c","d"))
+    FileSerialization.write(tmpFile, index)
+    assert(FileSerialization.read[Index[String]](tmpFile) == index)
+    tmpFile.delete()
+  }
+
+  test("CompositeIndex") {
+    val index = Index(List("a","b","c","d"))
+    val index2 = Index(List("e","f","g","h"))
+    val comp = new CompositeIndex(index, index2)
+    assert(comp(1 -> "e") === 4)
+    assert(comp(0 -> "e") === -1)
+  }
+
+  test("PairIndex") {
+    val index = Index(List("a","b","c","d"))
+    val index2 = Index(List("e","f","g","h"))
+    val comp = new PairIndex(index, index2)
+    assert(comp("a" -> "e") === 0)
+    assert(comp("e" -> "e") === -1)
+  }
+
+
+  test("EitherIndex") {
+    val index = Index(List("a","b","c","d"))
+    val index2 = Index(List("e","f","g","h"))
+    val comp = new EitherIndex(index, index2)
+    assert(comp(Right("e")) === 4)
+    assert(comp(Left("e")) === -1)
   }
 }
