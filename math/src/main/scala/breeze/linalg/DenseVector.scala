@@ -348,7 +348,8 @@ trait DenseVector_SpecialOps extends DenseVectorOps_Double { this: DenseVector.t
       }
 
     }
-    implicit val canScaleD = binaryOpFromBinaryUpdateOp(implicitly[CanCopy[DenseVector[Double]]], canScaleIntoD, implicitly[ClassManifest[Double]])
+    implicit val canScaleD: BinaryOp[DenseVector[Double], Double, OpMulScalar, DenseVector[Double]] {def apply(a: DenseVector[Double], b: Double): DenseVector[Double]} = binaryOpFromBinaryUpdateOp(implicitly[CanCopy[DenseVector[Double]]], canScaleIntoD, implicitly[ClassManifest[Double]])
+    Vector.canMulScalar_V_S_Double.register(canScaleD)
 
     implicit val canSetD:BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSet] = new BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSet] {
       def apply(a: DenseVector[Double], b: DenseVector[Double]) {

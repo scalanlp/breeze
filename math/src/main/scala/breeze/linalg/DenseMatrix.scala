@@ -381,9 +381,9 @@ object DenseMatrix extends LowPriorityDenseMatrix
   }
 
 
-  implicit val setMM_D: BinaryUpdateOp[DenseMatrix[Double], DenseMatrix[Double], OpSet] = new SetDMDMOp[Double]
-  implicit val setMM_F: BinaryUpdateOp[DenseMatrix[Float], DenseMatrix[Float], OpSet]  = new SetDMDMOp[Float]
-  implicit val setMM_I: BinaryUpdateOp[DenseMatrix[Int], DenseMatrix[Int], OpSet]  = new SetDMDMOp[Int]
+//  implicit val setMM_D: BinaryUpdateOp[DenseMatrix[Double], DenseMatrix[Double], OpSet] = new SetDMDMOp[Double]
+//  implicit val setMM_F: BinaryUpdateOp[DenseMatrix[Float], DenseMatrix[Float], OpSet]  = new SetDMDMOp[Float]
+//  implicit val setMM_I: BinaryUpdateOp[DenseMatrix[Int], DenseMatrix[Int], OpSet]  = new SetDMDMOp[Int]
 
   implicit val setMV_D: BinaryUpdateOp[DenseMatrix[Double], DenseVector[Double], OpSet] = new SetDMDVOp[Double]
   implicit val setMV_F: BinaryUpdateOp[DenseMatrix[Float], DenseVector[Float], OpSet]  = new SetDMDVOp[Float]

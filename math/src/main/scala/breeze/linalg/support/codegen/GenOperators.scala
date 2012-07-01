@@ -40,46 +40,44 @@ object GenOperators {
 
   def genBinaryUpdateOperator(name: String, typeA: String, typeB: String, op: OpType)(loop: String) = {
     """
-  implicit object Name extends BinaryUpdateOp[TypeA, TypeB, TypeOp] {
+  class Name private[linalg] () extends BinaryUpdateOp[TypeA, TypeB, TypeOp] {
     def apply(a: TypeA, b: TypeB) {
       LOOP
     }
-  }
+  }; implicit val Name = new Name ()
 """.replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getName.replaceAll("[$]","")).replaceAll("LOOP",loop)
   }
 
 
   def genBinaryOperator(name: String, typeA: String, typeB: String, op: OpType, result: String)(loop: String) = {
     """
-  implicit object Name extends BinaryOp[TypeA, TypeB, TypeOp, Result] {
+   class Name private[linalg] () extends BinaryOp[TypeA, TypeB, TypeOp, Result] {
     def apply(a: TypeA, b: TypeB) = {
       LOOP
     }
-  }
+  }; implicit val Name = new Name ()
 """.replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("Result",result).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getName.replaceAll("[$]","")).replaceAll("LOOP",loop)
   }
 
 
   def genBinaryUpdateRegistry(name: String, typeA: String, typeB: String, op: OpType)(loop: String) = {
     """
-  implicit object Name: BinaryUpdateRegistry[TypeA, TypeB, TypeOp] {
+  class Name private[linalg] () extends BinaryUpdateRegistry[TypeA, TypeB, TypeOp] {
     override def bindingMissing(a: TypeA, b: TypeB) {
       LOOP
     }
-  }
+  }; implicit val Name = new Name ()
 """.replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getName.replaceAll("[$]","")).replaceAll("LOOP",loop)
   }
 
 
   def genBinaryRegistry(name: String, typeA: String, typeB: String, op: OpType, result: String)(loop: String) = {
     """
-  implicit val Name: BinaryRegistry[TypeA, TypeB, TypeOp, Result] = {
-    new BinaryRegistry[TypeA, TypeB, TypeOp, Result] {
-      override def bindingMissing(a: TypeA, b: TypeB) = {
-        LOOP
-      }
+  class Name private[linalg] () extends BinaryRegistry[TypeA, TypeB, TypeOp, Result] {
+    override def bindingMissing(a: TypeA, b: TypeB) = {
+      LOOP
     }
-  }
+  }; implicit val Name = new Name()
 """.replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("Result",result).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getName.replaceAll("[$]","")).replaceAll("LOOP",loop)
   }
 
@@ -216,9 +214,14 @@ object GenOperators {
       )
 
   )
+
+
 }
 
 object GenDenseOps extends App {
+
+  val blacklist = Set("canMulScalarInto_DV_S_Double", "canSetInto_DV_DV_Double",
+    "canAddInto_DV_DV_Double", "canSubInto_DV_DV_Double")
 
   def genHomogeneous(tpe: String, generic: String, pckg: String, f: File)(loop: ((String,String)=>String)=>String,
                                                                          loopS: ((String,String)=>String)=>String,
@@ -254,23 +257,27 @@ object GenDenseOps extends App {
 
       for( (op,fn) <- ops) {
         val name = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_DV_DV_"+scalar
-        println(genBinaryUpdateOperator(name, vector, vector, op)(loop(fn)))
-        if(generic == "Vector")
-        println("  " + register(generic, GenVectorRegistries.getVVIntoName(op, scalar), name))
-        println()
-        println("  " +genBinaryAdaptor(name.replace("Into",""), vector, vector, op, vector, "pureFromUpdate_"+scalar+ "(" + name+ ")"))
-        if(generic == "Vector")
-        println("  " + register(generic, GenVectorRegistries.getVVName(op, scalar), name.replace("Into", "")))
-        println()
+        if(!blacklist(name)) {
+          println(genBinaryUpdateOperator(name, vector, vector, op)(loop(fn)))
+          if(generic == "Vector")
+            println("  " + register(generic, GenVectorRegistries.getVVIntoName(op, scalar), name))
+          println()
+          println("  " +genBinaryAdaptor(name.replace("Into",""), vector, vector, op, vector, "pureFromUpdate_"+scalar+ "(" + name+ ")"))
+          if(generic == "Vector")
+            println("  " + register(generic, GenVectorRegistries.getVVName(op, scalar), name.replace("Into", "")))
+          println()
+        }
         val names = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_DV_S_"+scalar
-        println(genBinaryUpdateOperator(names, vector, scalar, op)(loopS(fn)))
-        if(generic == "Vector")
-        println("  " + register(generic, GenVectorRegistries.getVSIntoName(op, scalar), names))
-        println()
-        println("  " +genBinaryAdaptor(names.replace("Into",""), vector, scalar, op, vector, "pureFromUpdate_"+scalar+ "(" + names+ ")"))
-        if(generic == "Vector")
-          println("  " + register(generic, GenVectorRegistries.getVSName(op, scalar), names.replaceAll("Into","")))
-        println()
+        if(!blacklist(names)) {
+          println(genBinaryUpdateOperator(names, vector, scalar, op)(loopS(fn)))
+          if(generic == "Vector")
+            println("  " + register(generic, GenVectorRegistries.getVSIntoName(op, scalar), names))
+          println()
+          println("  " +genBinaryAdaptor(names.replace("Into",""), vector, scalar, op, vector, "pureFromUpdate_"+scalar+ "(" + names+ ")"))
+          if(generic == "Vector")
+            println("  " + register(generic, GenVectorRegistries.getVSName(op, scalar), names.replaceAll("Into","")))
+          println()
+        }
 
         val namegen = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_DV_V_"+scalar
         println(genBinaryUpdateOperator(namegen, vector, gvector, op)(loopG(fn, op == OpAdd || op == OpSub)))
@@ -891,4 +898,6 @@ object GenAll extends App {
   GenDenseOps.main(Array.empty)
   GenDVSVSpecialOps.main(Array.empty)
   GenSVOps.main(Array.empty)
+  GenVectorRegistries.main(Array.empty)
+  GenCSCOps.main(Array.empty)
 }

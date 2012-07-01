@@ -7,10 +7,9 @@ import breeze.numerics._
 /** This is an auto-generated trait providing operators for CSCMatrix */
 trait CSCMatrixOps_Double { this: CSCMatrix.type =>
 
-  implicit val canMulM_V_Double: BinaryOp[CSCMatrix[Double], Vector[Double], breeze.linalg.operators.OpMulMatrix, Vector[Double]] = {
-    new BinaryOp[CSCMatrix[Double], Vector[Double], breeze.linalg.operators.OpMulMatrix, Vector[Double]] {
-      def apply(a: CSCMatrix[Double], b: Vector[Double]) = {
-        
+   class canMulM_V_Double private[linalg] () extends BinaryOp[CSCMatrix[Double], Vector[Double], breeze.linalg.operators.OpMulMatrix, Vector[Double]] {
+    def apply(a: CSCMatrix[Double], b: Vector[Double]) = {
+      
       val res = DenseVector.zeros[Double](a.rows)
       var c = 0
       while(c < a.cols) {
@@ -25,19 +24,17 @@ trait CSCMatrixOps_Double { this: CSCMatrix.type =>
       }
 
       res                                                               
-      }
     }
-  }
+  }; implicit val canMulM_V_Double = new canMulM_V_Double ()
 
 }
 
 /** This is an auto-generated trait providing operators for CSCMatrix */
 trait CSCMatrixOps_Float { this: CSCMatrix.type =>
 
-  implicit val canMulM_V_Float: BinaryOp[CSCMatrix[Float], Vector[Float], breeze.linalg.operators.OpMulMatrix, Vector[Float]] = {
-    new BinaryOp[CSCMatrix[Float], Vector[Float], breeze.linalg.operators.OpMulMatrix, Vector[Float]] {
-      def apply(a: CSCMatrix[Float], b: Vector[Float]) = {
-        
+   class canMulM_V_Float private[linalg] () extends BinaryOp[CSCMatrix[Float], Vector[Float], breeze.linalg.operators.OpMulMatrix, Vector[Float]] {
+    def apply(a: CSCMatrix[Float], b: Vector[Float]) = {
+      
       val res = DenseVector.zeros[Float](a.rows)
       var c = 0
       while(c < a.cols) {
@@ -52,19 +49,17 @@ trait CSCMatrixOps_Float { this: CSCMatrix.type =>
       }
 
       res                                                               
-      }
     }
-  }
+  }; implicit val canMulM_V_Float = new canMulM_V_Float ()
 
 }
 
 /** This is an auto-generated trait providing operators for CSCMatrix */
 trait CSCMatrixOps_Int { this: CSCMatrix.type =>
 
-  implicit val canMulM_V_Int: BinaryOp[CSCMatrix[Int], Vector[Int], breeze.linalg.operators.OpMulMatrix, Vector[Int]] = {
-    new BinaryOp[CSCMatrix[Int], Vector[Int], breeze.linalg.operators.OpMulMatrix, Vector[Int]] {
-      def apply(a: CSCMatrix[Int], b: Vector[Int]) = {
-        
+   class canMulM_V_Int private[linalg] () extends BinaryOp[CSCMatrix[Int], Vector[Int], breeze.linalg.operators.OpMulMatrix, Vector[Int]] {
+    def apply(a: CSCMatrix[Int], b: Vector[Int]) = {
+      
       val res = DenseVector.zeros[Int](a.rows)
       var c = 0
       while(c < a.cols) {
@@ -79,8 +74,7 @@ trait CSCMatrixOps_Int { this: CSCMatrix.type =>
       }
 
       res                                                               
-      }
     }
-  }
+  }; implicit val canMulM_V_Int = new canMulM_V_Int ()
 
 }
