@@ -75,8 +75,7 @@ case class Poisson(val mean: Double)(implicit rand: RandBasis=Rand) extends Disc
     -mean + k * log(mean) - lgamma(k+1)
   }
 
-  def logCdf(k: Int) = lgamma(k+1,mean) - lgamma(k+1)
-  def cdf(k:Int) = exp(logCdf(k))
+  def cdf(k:Int) = 1 - gammp(k+1, mean)
 
   def variance = mean
   def mode = math.ceil(mean) - 1
