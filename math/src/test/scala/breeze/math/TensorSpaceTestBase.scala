@@ -15,11 +15,13 @@ trait TensorSpaceTestBase[V, I, S] extends FunSuite with Checkers {
   implicit def genTriple: Arbitrary[(V, V, V)]
   implicit def genScalar: Arbitrary[S]
 
+  val TOL = 1E-6
+
   import space._
   test("Addition is Associative") {
     check(Prop.forAll{ (trip: (V, V, V)) =>
       val (a, b, c) = trip
-      close((a + b) + c, a + (b + c), 1E-6)
+      close((a + b) + c, a + (b + c), TOL)
     })
 
     check(Prop.forAll{ (trip: (V, V, V)) =>
@@ -28,14 +30,14 @@ trait TensorSpaceTestBase[V, I, S] extends FunSuite with Checkers {
       val bc = b + c
       ab += c
       bc += a
-      close(ab, bc, 1e-6)
+      close(ab, bc, TOL)
     })
   }
 
   test("Addition Commutes") {
     check(Prop.forAll{ (trip: (V, V, V)) =>
       val (a, b, _) = trip
-      close(a + b, b +a, 1E-6)
+      close(a + b, b +a, TOL)
     })
 
     check(Prop.forAll{ (trip: (V, V, V)) =>
@@ -44,7 +46,7 @@ trait TensorSpaceTestBase[V, I, S] extends FunSuite with Checkers {
       ab += b
       val ba = copy(b)
       ba += a
-      close(ab, ba, 1e-6)
+      close(ab, ba, TOL)
     })
   }
 
@@ -52,7 +54,7 @@ trait TensorSpaceTestBase[V, I, S] extends FunSuite with Checkers {
     check(Prop.forAll{ (trip: (V, V, V)) =>
       val (a, b, c) = trip
       val z = zeros(a)
-      close(a :+ z, a, 1E-6)
+      close(a :+ z, a, TOL)
     })
 
     check(Prop.forAll{ (trip: (V, V, V)) =>
@@ -60,7 +62,7 @@ trait TensorSpaceTestBase[V, I, S] extends FunSuite with Checkers {
       val ab = copy(a)
       val z = zeros(a)
       ab :+= z
-      close(a, ab, 1e-6)
+      close(a, ab, TOL)
     })
   }
 
@@ -68,21 +70,21 @@ trait TensorSpaceTestBase[V, I, S] extends FunSuite with Checkers {
     check(Prop.forAll{ (trip: (V, V, V)) =>
       val (a, b, c) = trip
       val z = zeros(a)
-      close(a + -a, z, 1E-6)
+      close(a + -a, z, TOL)
     })
 
     check(Prop.forAll{ (trip: (V, V, V)) =>
       val (a, b, _) = trip
       val z = zeros(a)
       a += -a
-      close(a, z, 1e-6)
+      close(a, z, TOL)
     })
 
     check(Prop.forAll{ (trip: (V, V, V)) =>
       val (a, b, _) = trip
       val z = zeros(a)
       a :-= a
-      close(a, z, 1e-6)
+      close(a, z, TOL)
     })
 
     check(Prop.forAll{ (trip: (V, V, V)) =>
@@ -90,19 +92,19 @@ trait TensorSpaceTestBase[V, I, S] extends FunSuite with Checkers {
       val z = zeros(a)
       val ab = a :- b
       a -= b
-      close(a, ab, 1e-6)
+      close(a, ab, TOL)
     })
   }
 
   test("Scalar mult distributes over vector addition") {
     check(Prop.forAll{ (trip: (V, V, V), s: S) =>
       val (a, b, _) = trip
-      close( (a + b) * s, (b * s +a * s), 1E-6)
+      close( (a + b) * s, (b * s +a * s), TOL)
     })
 
 //    check(Prop.forAll{ (trip: (V, V, V), s: S) =>
 //      val (a, b, _) = trip
-//      s == 0 || close( (a + b)/ s, (b / s +a / s), 1E-6)
+//      s == 0 || close( (a + b)/ s, (b / s +a / s), TOL)
 //    })
 
     check(Prop.forAll{ (trip: (V, V, V), s: S) =>
@@ -112,7 +114,7 @@ trait TensorSpaceTestBase[V, I, S] extends FunSuite with Checkers {
       ab *= s
       val ba = copy(a) * s
       ba += (b * s)
-      close(ab, ba, 1e-6)
+      close(ab, ba, TOL)
     })
 
     check(Prop.forAll{ (trip: (V, V, V)) =>
@@ -122,7 +124,7 @@ trait TensorSpaceTestBase[V, I, S] extends FunSuite with Checkers {
       ab :*= c
       val ba = copy(a) :* c
       ba :+= (b :* c)
-      close(ab, ba, 1e-6)
+      close(ab, ba, TOL)
     })
 
 //    check(Prop.forAll{ (trip: (V, V, V), s: S) =>
@@ -133,7 +135,7 @@ trait TensorSpaceTestBase[V, I, S] extends FunSuite with Checkers {
 //        ab /= s
 //        val ba = copy(a) / s
 //        ba += (b / s)
-//        close(ab, ba, 1e-6)
+//        close(ab, ba, TOL)
 //      }
 //    })
   }
@@ -158,7 +160,7 @@ trait TensorSpaceTestBase[V, I, S] extends FunSuite with Checkers {
   test("Compatibility of scalar multiplication with field multiplication") {
     check(Prop.forAll{ (trip: (V, V, V), s: S, t: S) =>
       val (a, _, _) = trip
-      close( (a) * field.*(s,t), a * s * t, 1E-6)
+      close( (a) * field.*(s,t), a * s * t, TOL)
     })
 
     check(Prop.forAll{ (trip: (V, V, V), s: S, t: S) =>
@@ -168,7 +170,7 @@ trait TensorSpaceTestBase[V, I, S] extends FunSuite with Checkers {
       ab *= t
       val ba = copy(a)
       ba *= field.*(s, t)
-      close(ab, ba, 1e-6)
+      close(ab, ba, TOL)
     })
 
     check(Prop.forAll{ (trip: (V, V, V), s: S, t: S) =>
@@ -179,7 +181,7 @@ trait TensorSpaceTestBase[V, I, S] extends FunSuite with Checkers {
         ab /= t
         val ba = copy(a)
         ba /= field.*(s, t)
-        close(ab, ba, 1e-6)
+        close(ab, ba, TOL)
       }
     })
   }
@@ -187,14 +189,14 @@ trait TensorSpaceTestBase[V, I, S] extends FunSuite with Checkers {
   test("1 is 1") {
     check(Prop.forAll{ (trip: (V, V, V)) =>
       val (a, b, c) = trip
-      close(a * field.one, a, 1E-6)
+      close(a * field.one, a, TOL)
     })
 
     check(Prop.forAll{ (trip: (V, V, V)) =>
       val (a, b, _) = trip
       val ab = copy(a)
       ab *= field.one
-      close(a, ab, 1e-6)
+      close(a, ab, TOL)
     })
   }
 
@@ -202,14 +204,14 @@ trait TensorSpaceTestBase[V, I, S] extends FunSuite with Checkers {
   test("norm positive homogeneity") {
     check(Prop.forAll{ (trip: (V, V, V), s: S) =>
       val (a, b, c) = trip
-      (norm(a * s) - field.norm(s) * norm(a)) <= 1E-6 * norm(a * s)
+      (norm(a * s) - field.norm(s) * norm(a)) <= TOL * norm(a * s)
     })
   }
 
   test("norm triangle inequality") {
     check(Prop.forAll{ (trip: (V, V, V)) =>
       val (a, b, c) = trip
-      ((1.0 - 1E-6) * norm(a + b) <= norm(b) + norm(a))
+      ((1.0 - TOL) * norm(a + b) <= norm(b) + norm(a))
     })
   }
 
@@ -264,13 +266,13 @@ trait TensorSpaceTestBase[V, I, S] extends FunSuite with Checkers {
   test("Vector element-wise mult distributes over vector addition") {
     check(Prop.forAll{ (trip: (V, V, V)) =>
       val (a, b, c) = trip
-      close( (a + b) :* c, (b :* c) + (a :* c), 1E-6)
+      close( (a + b) :* c, (b :* c) + (a :* c), TOL)
     })
 
 
 //    check(Prop.forAll{ (trip: (V, V, V), s: S) =>
 //      val (a, b, _) = trip
-//      s == 0 || close( (a + b)/ s, (b / s +a / s), 1E-6)
+//      s == 0 || close( (a + b)/ s, (b / s +a / s), TOL)
 //    })
 
     check(Prop.forAll{ (trip: (V, V, V)) =>

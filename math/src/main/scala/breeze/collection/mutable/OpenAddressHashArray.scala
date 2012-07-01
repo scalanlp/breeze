@@ -11,7 +11,7 @@ import java.util
  *
  * @author dlwh
  */
-final class OpenAddressHashArray[@specialized Elem] private (protected var _index: Array[Int],
+final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] private (protected var _index: Array[Int],
                                 protected var _data: Array[Elem],
                                  protected var load: Int,
                                  val size: Int,
@@ -132,7 +132,7 @@ final class OpenAddressHashArray[@specialized Elem] private (protected var _inde
 }
 
 object OpenAddressHashArray {
-  def apply[@specialized T:ClassManifest:DefaultArrayValue](values : T*) = {
+  def apply[@specialized(Int, Float, Long, Double) T:ClassManifest:DefaultArrayValue](values : T*) = {
     val rv = new OpenAddressHashArray[T](values.length)
     val default = implicitly[DefaultArrayValue[T]].value
     for( (v,i) <- values.zipWithIndex if v != default) {

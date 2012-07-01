@@ -148,8 +148,11 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
     val r = new Random()
     val data =  Array.fill(100000)(r.nextGaussian)
     val (m,v) = meanAndVariance(data)
+    val (m2,v2) = meanAndVariance(data.iterator)
     assert(breeze.numerics.closeTo(m,0.0,1E-2), m + " should be 0")
     assert(breeze.numerics.closeTo(v,1.0,1E-2), v + " should be 1")
+    assert(m2 === m)
+    assert(v2 === v)
   }
 
 }

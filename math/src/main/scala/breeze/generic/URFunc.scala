@@ -12,7 +12,7 @@ import breeze.linalg.support.CanSlice2
  *
  * @author dlwh
  */
-trait URFunc[@specialized A, +B] {
+trait URFunc[@specialized(Int, Float, Double) A, +B] {
   def apply(cc: TraversableOnce[A]):B
 
 
@@ -40,7 +40,7 @@ trait URFunc[@specialized A, +B] {
  *
  * @author dlwh
  */
-trait UReduceable[T, @specialized A] extends {
+trait UReduceable[T, @specialized(Int, Float, Double)  A] extends {
   def apply[Final](c: T, f: URFunc[A, Final]):Final
 }
 

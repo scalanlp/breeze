@@ -167,7 +167,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     }
   }
 
-  implicit def negFromScale[@specialized V, Double](implicit scale: BinaryOp[DenseVector[V], V, OpMulScalar, DenseVector[V]], field: Ring[V]) = {
+  implicit def negFromScale[@specialized(Int, Float, Double)  V, Double](implicit scale: BinaryOp[DenseVector[V], V, OpMulScalar, DenseVector[V]], field: Ring[V]) = {
     new UnaryOp[DenseVector[V], OpNeg, DenseVector[V]] {
       override def apply(a : DenseVector[V]) = {
         scale(a, field.negate(field.one))

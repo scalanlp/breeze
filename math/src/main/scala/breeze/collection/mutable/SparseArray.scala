@@ -12,7 +12,7 @@ import java.util
  * @author dlwh, dramage
  */
 @SerialVersionUID(1L)
-final class SparseArray[@specialized Elem](var index: Array[Int],
+final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[Int],
                         var data: Array[Elem],
                         private var used: Int,
                         val size: Int,
@@ -377,7 +377,7 @@ final class SparseArray[@specialized Elem](var index: Array[Int],
 }
 
 object SparseArray {
-  def apply[@specialized T:ClassManifest:DefaultArrayValue](values : T*) = {
+  def apply[@specialized(Int, Float, Double) T:ClassManifest:DefaultArrayValue](values : T*) = {
     val rv = new SparseArray[T](Array.range(0, values.length), values.toArray, values.length, values.length, implicitly[DefaultArrayValue[T]].value)
     rv.compact()
     rv
@@ -392,7 +392,7 @@ object SparseArray {
    *
    * @author dramage
    */
-  def fill[@specialized T:ClassManifest:DefaultArrayValue](length : Int)(value : =>T) : SparseArray[T] = {
+  def fill[@specialized(Int, Float, Double) T:ClassManifest:DefaultArrayValue](length : Int)(value : =>T) : SparseArray[T] = {
     if (value != implicitly[DefaultArrayValue[T]].value) {
       val rv = new SparseArray[T](size = length)
       var i = 0
@@ -406,7 +406,7 @@ object SparseArray {
     }
   }
 
-  def create[@specialized T:ClassManifest:DefaultArrayValue](length : Int)(values : (Int,T)*) = {
+  def create[@specialized(Int, Float, Double) T:ClassManifest:DefaultArrayValue](length : Int)(values : (Int,T)*) = {
     val rv = new SparseArray[T](length)
     for ((k,v) <- values) {
       rv(k) = v
@@ -414,7 +414,7 @@ object SparseArray {
     rv
   }
 
-  def tabulate[@specialized T:ClassManifest:DefaultArrayValue](length : Int)(fn : (Int => T)) = {
+  def tabulate[@specialized(Int, Float, Double) T:ClassManifest:DefaultArrayValue](length : Int)(fn : (Int => T)) = {
     val rv = new SparseArray[T](length)
     var i = 0
     while (i < length) {

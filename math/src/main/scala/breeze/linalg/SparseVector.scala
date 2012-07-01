@@ -125,13 +125,13 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
   }
 
 
-  class CanCopySparseVector[@specialized(Int, Float, Double) V:ClassManifest:DefaultArrayValue] extends CanCopy[SparseVector[V]] {
+  class CanCopySparseVector[@spec(Int, Float, Double) V:ClassManifest:DefaultArrayValue] extends CanCopy[SparseVector[V]] {
     def apply(v1: SparseVector[V]) = {
       v1.copy
     }
   }
 
-  implicit def canCopySparse[@specialized(Int, Float, Double) V: ClassManifest: DefaultArrayValue] = new CanCopySparseVector[V]
+  implicit def canCopySparse[@spec(Int, Float, Double) V: ClassManifest: DefaultArrayValue] = new CanCopySparseVector[V]
 
   implicit def canMapValues[V, V2: ClassManifest: DefaultArrayValue]:CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] = {
     new CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] {
@@ -173,8 +173,7 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
     }
   }
 
-  // There's a bizarre error from @specializing Float here.
-  class CanZipMapValuesSparseVector[@specialized(Int, Double, Float) V, @specialized(Int, Double) RV:ClassManifest:DefaultArrayValue] extends CanZipMapValues[SparseVector[V],V,RV,SparseVector[RV]] {
+  class CanZipMapValuesSparseVector[@spec(Int, Double, Float) V, @spec(Int, Double) RV:ClassManifest:DefaultArrayValue] extends CanZipMapValues[SparseVector[V],V,RV,SparseVector[RV]] {
     def create(length : Int) = zeros(length)
 
     /**Maps all corresponding values from the two collection. */
@@ -195,7 +194,7 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
   implicit val zipMap_i = new CanZipMapValuesSparseVector[Int, Int]
 
 
-  implicit def negFromScale[@specialized V, Double](implicit scale: BinaryOp[SparseVector[V], V, OpMulScalar, SparseVector[V]], field: Ring[V]) = {
+  implicit def negFromScale[@spec(Int, Float, Double)  V, Double](implicit scale: BinaryOp[SparseVector[V], V, OpMulScalar, SparseVector[V]], field: Ring[V]) = {
     new UnaryOp[SparseVector[V], OpNeg, SparseVector[V]] {
       override def apply(a : SparseVector[V]) = {
         scale(a, field.negate(field.one))

@@ -100,7 +100,7 @@ object Vector extends VectorOps_Int with VectorOps_Double with VectorOps_Float {
     }
   }
 
-  implicit def negFromScale[@specialized V, Double](implicit scale: BinaryOp[Vector[V], V, OpMulScalar, Vector[V]], field: Ring[V]) = {
+  implicit def negFromScale[@specialized(Int, Float, Double) V, Double](implicit scale: BinaryOp[Vector[V], V, OpMulScalar, Vector[V]], field: Ring[V]) = {
     new UnaryOp[Vector[V], OpNeg, Vector[V]] {
       override def apply(a : Vector[V]) = {
         scale(a, field.negate(field.one))
