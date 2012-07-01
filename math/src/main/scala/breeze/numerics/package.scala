@@ -86,8 +86,6 @@ package object numerics extends UniversalFuncs {
     if(x < 0.0) -gammp(0.5,x*x) else gammp(0.5,x*x)
   }
 
-  private val erf_a = 0.147
-
   /**
    * The imaginary error function for real argument x.
    *
@@ -98,7 +96,7 @@ package object numerics extends UniversalFuncs {
    */
   def erfi(x: Double):Double = {
     if(x < 0) -erfi(-x)
-    else {
+    else { // taylor expansion
       var y = x
       val x2 = x * x
       var xx = x
@@ -116,11 +114,6 @@ package object numerics extends UniversalFuncs {
       y
     }
   }
-//    val x2 = x*x
-//    val i1 = 2.0/(Pi*erf_a) + m.log(1-x2)/2.0
-//    val i2 = log(1-x2)/erf_a
-//    m.signum(x) * m.sqrt( sqrt(i1*i1 - i2) - i1 )
-//  }
 
   /**
    * regularized incomplete gamma function  \int_0x \exp(-t)pow(t,a-1) dt / Gamma(a)
