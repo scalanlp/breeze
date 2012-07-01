@@ -1,5 +1,5 @@
 Breeze is a library for numerical processing, machine learning, and natural language processing.
-It's primary focus is on being generic, clean, and powerful without sacrificing (much) efficiency.
+Its primary focus is on being generic, clean, and powerful without sacrificing (much) efficiency.
 
 The library currently consists of several parts: 
 
