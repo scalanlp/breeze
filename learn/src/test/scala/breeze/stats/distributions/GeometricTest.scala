@@ -41,11 +41,11 @@ class GeometricTest extends FunSuite with Checkers with MomentsTestBase[Int] wit
   }
 
   implicit def arbParameter = Arbitrary {
-    for(p <- arbitrary[Double].map{m =>.5 + (m % 1.0)/2.0}) yield p
+    for(p <- arbitrary[Double].map{m => (math.abs(m) % 1.0) + 1E-5}) yield p
   }
 
   implicit def arbDistr = Arbitrary {
-    for(p <- arbitrary[Double].map{m => .5 + (m % 1.0)/2.0}) yield new Geometric(p)
+    for(p <- arbitrary[Double].map{m => (math.abs(m) % 1.0) + 1E-5}) yield new Geometric(p)
   }
 
 

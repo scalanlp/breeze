@@ -29,7 +29,7 @@ class BinomialTest extends FunSuite with Checkers with MomentsTestBase[Int] {
   import Arbitrary.arbitrary;
 
   implicit def arbDistr = Arbitrary {
-    for(n <- arbitrary[Int].map{_.abs % 1000 + 1};
+    for(n <- arbitrary[Int].map{_.abs % 10000 + 1};
       p <- arbitrary[Double].map{_.abs % 1.0+1E-4}) yield new Binomial(n.abs+1,p)
   }
 
