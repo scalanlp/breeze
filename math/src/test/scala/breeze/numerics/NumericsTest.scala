@@ -79,4 +79,11 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
     lg(10) should be (12.8018274801 plusOrMinus 1E-8)
   }
 
+  test("incomplete gamma") {
+    import breeze.numerics.{lgamma=>lg}
+    lg(3,4) should be (0.4212028764812177 plusOrMinus 1E-8)
+    lg(3,1) should be (-1.828821079471455 plusOrMinus 1E-8)
+
+  }
+
 }

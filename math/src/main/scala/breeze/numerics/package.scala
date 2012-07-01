@@ -3,6 +3,7 @@ package breeze
 import generic.UFunc
 import linalg.{QuasiTensor, Tensor}
 import scala.math._
+import scala.{math=>m}
 
 /**
  * Provides some functions left out of java.lang.math.
@@ -73,7 +74,7 @@ package object numerics extends UniversalFuncs {
     while (j < 6) {
       y += 1
       ser += (cof(j)/y)
-      j +=1
+      j += 1
     }
     (-tmp + log(2.5066282746310005*ser / x))
   }
@@ -97,24 +98,56 @@ package object numerics extends UniversalFuncs {
     signum(x) * sqrt( sqrt(i1*i1 - i2) - i1 )
   }
 
+
   /**
-  * Incomplete lgamma function.
+  * log Incomplete gamma function = \log \int_0x \exp(-t)pow(t,a-1) dt
+   *
+   * Based on NR
   */
-  def lgamma(a: Double, z:Double) = {
-    var res = 0.
-    var m = 21
-    while( m > 1) {
-      res = ((1.0-m)*(m-1.0-a)) / (2*m -1+z -a + res)
-      m -= 1
+  def lgamma(a: Double, x:Double):Double = {
+    if (x < 0.0 || a <= 0.0) throw new IllegalArgumentException()
+    else if(x == 0) 0.0
+    else if (x < a + 1.0) {
+      var ap = a
+      var del, sum = 1.0/a
+      var n = 0
+      var result = Double.NaN
+      while(n < 100) {
+        ap += 1
+        del *= x/ap
+        sum += del
+        if (scala.math.abs(del) < scala.math.abs(sum)*1E-7) {
+          result = -x+a*m.log(x) + m.log(sum)
+          n = 100
+        }
+        n += 1
+      }
+      if(result.isNaN) throw new ArithmeticException("Convergence failed")
+      else result
+    } else {
+      val gln = lgamma(a)
+      var b = x+1.0-a
+      var c = 1.0/1.0e-30
+      var d = 1.0/b
+      var h = d
+      var n = 0
+      while(n < 100) {
+        n += 1
+        val an = -n*(n-a)
+        b += 2.0
+        d = an*d+b
+        if (scala.math.abs(d) < 1E-30) d = 1E-30
+        c = b+an/c
+        if (scala.math.abs(c) < 1E-30) c = 1E-30
+        d = 1.0/d
+        val del = d*c
+        h *= del
+        if (scala.math.abs(del-1.0) < 1E-7) n = 101
+      }
+      if (n == 100) throw new ArithmeticException("Convergence failed")
+      else logDiff(gln, -x+a*log(x) + m.log(h))
     }
-
-    a * log(z) - z - log(1+z-a+res)
   }
-
-  /**
-  * Incomplete gamma function, the exp of lgamma(a,z)
-  */
-  def gamma(a: Double, z:Double) = exp(lgamma(a,z))
 
   /**
   * Sums together things in log space.
@@ -247,7 +280,7 @@ package object numerics extends UniversalFuncs {
   /**
    * closeTo for Doubles.
    */
-  def closeTo(a: Double, b: Double, relDiff: Double=1E-4) = {
+  def closeTo(a: Double, b: Double, relDiff: Double = 1E-4) = {
     a == b || (scala.math.abs(a-b) < scala.math.max(scala.math.max(scala.math.abs(a),scala.math.abs(b)) ,1) * relDiff)
   }
 
