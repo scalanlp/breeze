@@ -20,6 +20,14 @@ The Scalala parts are largely rewritten.
 
 Portions (c) Daniel Ramage, 2009 - 2011
 
+Contributions from:
+  Jason Zaugg <retronym>
+  Alexander Lehmann <afwlehmann>
+  Jonathan Merritt <lancelet>
+  Keith Stevens <fozziethebeat>
+  And others (email me if you've contributed code and aren't listed)
+
+
 This project can be built with sbt 0.11.2
 
 Documentation forthcoming.
