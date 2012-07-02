@@ -24,7 +24,7 @@ class SentenceTokenizer extends Tokenizer {
         def next(): String = {
           val str = v1.substring(start, end)
           start = end
-          str
+          str.trim()
         }
       }
     }
