@@ -17,7 +17,6 @@ package breeze;
 package text;
 package tokenize;
 
-import breeze.serialization.SubtypedCompanion;
 import breeze.serialization.TextSerialization;
 
 
@@ -36,7 +35,7 @@ trait Tokenizer extends (String => Iterable[String]) with Serializable {
   def ~> (g : Transformer) =
     new Tokenizer.Chain(this, g);
 
-  override def toString = TextSerialization.toString(this);
+  override def toString = getClass.getName
 }
 
 /**
@@ -47,36 +46,7 @@ trait Tokenizer extends (String => Iterable[String]) with Serializable {
  *
  * @author dramage
  */
-object Tokenizer extends SubtypedCompanion[Tokenizer] {
-  prepare();
-  register[RegexSplitTokenizer];
-  register[RegexSearchTokenizer];
-  register[WhitespaceTokenizer];
-  register[PTBTokenizer];
-  register[Chain]("Tokenizer.Chain");
-  SimpleEnglishTokenizer;
-
-  implicit def apply(f : String => Iterable[String]) : Tokenizer = {
-    f match {
-      case ft : Tokenizer => ft;
-      case _ => new Impl(f, f.toString);
-    }
-  }
-
-  /** Load tokenizer chains. */
-  override def continueParsing(input : TextSerialization.Input, current : Tokenizer) : Tokenizer = {
-    var rv = current;
-    input.skipWhitespace;
-    while (input.peek == '~') {
-      input.expect("~>");
-      input.skipWhitespace;
-      val next = TextSerialization.read[Transformer](input);
-      input.skipWhitespace;
-      rv = rv ~> next;
-    }
-    rv;
-  }
-
+object Tokenizer  {
   /** Standard implementation wrapping an underlying function of String => Iterable[String]. */
   class Impl(val f : String => Iterable[String], val name : String) extends Tokenizer {
     override def apply(txt : String) = f(txt);
@@ -111,38 +81,5 @@ object Tokenizer extends SubtypedCompanion[Tokenizer] {
     override def hashCode = f.hashCode * 37 + g.hashCode;
   }
 
-  object Chain {
-    import TextSerialization._;
 
-    /**
-     * Constructs a ReadWritable for the primary type T.
-     */
-    implicit val readWritable : TextSerialization.ReadWritable[Chain] =
-    new TextSerialization.ReadWritable[Chain] {
-      override def read(in : Input) : Chain = {
-        val tok : Tokenizer = TextSerialization.read[Tokenizer](in);
-        in.skipWhitespace;
-        in.expect( "~>");
-        in.skipWhitespace;
-        val trn : Transformer = TextSerialization.read[Transformer](in);
-        in.skipWhitespace;
-
-        var rv = new Chain(tok, trn);
-
-        while (in.peek == '~') {
-          in.expect("~>");
-          in.skipWhitespace;
-          val next = TextSerialization.read[Transformer](in);
-          in.skipWhitespace;
-          rv = new Chain(rv, next);
-        }
-
-        rv;
-      }
-
-      override def write(out : Output, value : Chain) = {
-        out.append(value.toString);
-      }
-    }
-  }
 }

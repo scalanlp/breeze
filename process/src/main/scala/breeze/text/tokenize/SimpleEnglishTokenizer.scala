@@ -19,8 +19,6 @@ package tokenize;
 
 import breeze.io.TextReader;
 
-import breeze.serialization.{SubtypedCompanion,TypedCompanion0};
-
 /**
  * Simple English document tokenizer that splits up words on whitespace
  * or punctuation, but keeps word-internal punctuation within the word.
@@ -36,13 +34,7 @@ import breeze.serialization.{SubtypedCompanion,TypedCompanion0};
  */
 trait SimpleEnglishTokenizer extends Tokenizer;
 
-object SimpleEnglishTokenizer extends SubtypedCompanion[SimpleEnglishTokenizer] {
-  prepare();
-
-  for (cc <- List(this, Tokenizer)) {
-    cc.register[V0]("SimpleEnglishTokenizer.V0");
-    cc.register[V1]("SimpleEnglishTokenizer.V1");
-  }
+object SimpleEnglishTokenizer {
 
   def apply() = V1();
 
@@ -57,8 +49,7 @@ object SimpleEnglishTokenizer extends SubtypedCompanion[SimpleEnglishTokenizer] 
     }
   }
 
-  object V0 extends TypedCompanion0[V0] {
-    prepare();
+  object V0  {
 
     // delete word-final hyphens when followed by newlines
     val r1 = "(?<=\\w)-\\s*\n\\s*".r;
@@ -70,7 +61,7 @@ object SimpleEnglishTokenizer extends SubtypedCompanion[SimpleEnglishTokenizer] 
     private val _instance = new V0();
     def apply() = _instance;
 
-    override def name = "SimpleEnglishTokenizer.V0"
+    def name = "SimpleEnglishTokenizer.V0"
   }
 
   /**
@@ -125,12 +116,10 @@ object SimpleEnglishTokenizer extends SubtypedCompanion[SimpleEnglishTokenizer] 
     }
   }
 
-  object V1 extends TypedCompanion0[V1] {
-    prepare();
+  object V1 {
 
     private val _instance = new V1();
     def apply() = _instance;
 
-    override def name = "SimpleEnglishTokenizer.V1";
   }
 }

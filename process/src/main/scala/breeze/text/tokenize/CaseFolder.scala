@@ -17,7 +17,6 @@ package breeze;
 package text;
 package tokenize;
 
-import breeze.serialization.TypedCompanion0;
 
 /**
  * Lowercases all strings in a batch of strings.
@@ -29,8 +28,6 @@ case class CaseFolder() extends Transformer {
     in.map(CaseFolder);
 }
 
-object CaseFolder extends (String=>String) with TypedCompanion0[CaseFolder] {
-  prepare();
-
+object CaseFolder extends (String=>String)  {
   override def apply(in : String) : String = in.toLowerCase;
 }

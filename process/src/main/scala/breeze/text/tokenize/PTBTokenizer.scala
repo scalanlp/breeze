@@ -1,7 +1,7 @@
 /*
  Copyright 2010 David Hall, Daniel Ramage
 
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
 
@@ -13,16 +13,14 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package breeze;
-package text;
-package tokenize;
+package breeze
+package text
+package tokenize
 
 import scala.util.parsing.combinator._
-import scala.util.parsing.combinator.syntactical._
-import scala.util.parsing.combinator.lexical._;
-import scala.util.parsing.input._;
+import scala.util.parsing.combinator.lexical._
+import scala.util.parsing.input._
 
-import breeze.serialization.{SubtypedCompanion,TypedCompanion0};
 
 /**
  * PTBTokenizer tokenizes sentences into treebank style sentences.
@@ -30,37 +28,27 @@ import breeze.serialization.{SubtypedCompanion,TypedCompanion0};
  *
  * Because this class may improve over time in non-backwards-compatible ways,
  * the default behavior of PTBTokenizer.apply() is to return an
- * instance of PTBTokenizer.V0;
+ * instance of PTBTokenizer.V0
  *
  * @author dramage
  * @author dlwh
  */
-trait PTBTokenizer extends Tokenizer;
+trait PTBTokenizer extends Tokenizer
 
-object PTBTokenizer extends SubtypedCompanion[PTBTokenizer] {
+object PTBTokenizer  {
 
-  prepare();
+  def apply() : PTBTokenizer = V0()
 
-  for (cc <- List(this, Tokenizer)) {
-    cc.register[V0]("PTBTokenizer.V0");
-  }
-
-  def apply() : PTBTokenizer = V0();
-
-  val _instance = apply();
-  def apply(in : String) : Iterable[String] = _instance.apply(in);
+  val _instance = apply()
+  def apply(in : String) : Iterable[String] = _instance.apply(in)
 
   case class V0() extends PTBTokenizer {
     override def apply(in : String) = new Iterable[String] {
-      val result = RawPTBTokenizer.tokenize(in).left.get;
-      override def iterator = result.iterator;
+      val result = RawPTBTokenizer.tokenize(in).left.get
+      override def iterator = result.iterator
     }
   }
 
-  object V0 extends TypedCompanion0[V0] {
-    prepare();
-    override def name = "PTBTokenizer.V0"
-  }
 }
 
 /**
@@ -76,16 +64,16 @@ private[tokenize] object RawPTBTokenizer extends StdLexical with ImplicitConvers
   def tokenize(input: String): Either[List[String],ParseResult[List[Token]]] = {
       phrase(words)(new CharSequenceReader(input)) match {
         case Success(result, _) => Left(result.map(_.chars))
-        case x => Right(x);
+        case x => Right(x)
       }
   }
 
   /**
   * @see tokenize
   */
-  def apply(input: String) = tokenize(input);
+  def apply(input: String) = tokenize(input)
 
-  private def word:Parser[Token] = ( (letter) ~ rep((letter))^^{ case x ~ y=> StringLit( (x::y).mkString("")) } ) | number;
+  private def word:Parser[Token] = ( (letter) ~ rep((letter))^^{ case x ~ y=> StringLit( (x::y).mkString("")) } ) | number
 
   private def number: Parser[Token] = {
     ( rep(accept('$')|'.'|'/'|'-') ~ digit ~ rep(number)) ^^ { case pref ~ d ~ tail => 
@@ -125,28 +113,28 @@ private[tokenize] object RawPTBTokenizer extends StdLexical with ImplicitConvers
     | ws ^^ {x => Nil}
   )
 
-  private def posessiveLike = '\'' ~> elem("something","smdSMD" contains _);
+  private def posessiveLike = '\'' ~> elem("something","smdSMD" contains _)
 
   private def title: Parser[String] = {
     acceptSeq("Dr") | acceptSeq("Mr") | acceptSeq("Prof") | acceptSeq("Mrs") | acceptSeq("Ms") 
   } ^^ { _.mkString("") }
 
   private def seg(s: String, m1: String, m2: String) = {
-    val init :Parser[Char]= accept(s(0).toLower) | s(0).toUpper;
-    val rest = acceptSeq(s.drop(1));
+    val init :Parser[Char]= accept(s(0).toLower) | s(0).toUpper
+    val rest = acceptSeq(s.drop(1))
     init <~ rest ^^ { case i  =>  List(SL(i + m1), SL(m2)) }
   }
 
   private def seg(s: String, m1: String, m2: String, m3:String) = {
-    val init : Parser[Char] = accept(s(0).toLower) | accept( s(0).toUpper);
-    val rest = acceptSeq(s.drop(1));
+    val init : Parser[Char] = accept(s(0).toLower) | accept( s(0).toUpper)
+    val rest = acceptSeq(s.drop(1))
     init <~ rest ^^ { case i => List(SL(i + m1), SL(m2), SL(m3)) }
   }
 
 
   // convenience
-  private def ws = whitespace;
-  private def SL(x:String) = StringLit(x);
+  private def ws = whitespace
+  private def SL(x:String) = StringLit(x)
 
   private def symbol = elem("sym",x => !x.isLetter && !x.isDigit && x > ' ') 
 

@@ -17,8 +17,6 @@ package breeze;
 package text;
 package tokenize;
 
-import breeze.serialization.TypedCompanion1;
-
 import scala.io.Source;
 import java.util.Locale;
 
@@ -55,10 +53,6 @@ case class StopWordFilter(language : String) extends Transformer {
 
 }
 
-object StopWordFilter extends TypedCompanion1[String,StopWordFilter] {
-  prepare();
-
+object StopWordFilter {
   def apply() = new StopWordFilter();
-
-  override def unpack(swf : StopWordFilter) = swf.language;
 }

@@ -17,8 +17,6 @@ package breeze;
 package text;
 package tokenize;
 
-import breeze.serialization.TypedCompanion1;
-
 /**
  * Splits the input document according to the given pattern.  Does not
  * return the splits.
@@ -29,6 +27,3 @@ case class RegexSplitTokenizer(pattern : String) extends Tokenizer {
   override def apply(doc : String) = doc.split(pattern);
 }
 
-object RegexSplitTokenizer extends TypedCompanion1[String,RegexSplitTokenizer] {
-  prepare();
-}

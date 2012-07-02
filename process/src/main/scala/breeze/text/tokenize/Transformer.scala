@@ -17,8 +17,6 @@ package breeze;
 package text;
 package tokenize;
 
-import breeze.serialization.{TextSerialization,SubtypedCompanion};
-
 /**
  * A generic (loadable) transformation of a tokenized input text.
  *
@@ -26,30 +24,7 @@ import breeze.serialization.{TextSerialization,SubtypedCompanion};
  */
 @SerialVersionUID(1)
 trait Transformer extends (Iterable[String] => Iterable[String]) with Serializable {
-  override def toString = TextSerialization.toString(this);
+  override def toString = getClass.getName +"()"
 }
 
-object Transformer extends SubtypedCompanion[Transformer] {
-  prepare();
-  register[MinimumLengthFilter];
-  register[WordsAndNumbersOnlyFilter];
-  register[PorterStemmer];
-  register[CaseFolder];
-  register[StopWordFilter];
 
-  implicit def apply(f : Iterable[String] => Iterable[String]) : Transformer = {
-    f match {
-      case ft : Transformer => ft;
-      case _ => new Impl(f, f.toString);
-    }
-  }
-
-  class Impl(val f : Iterable[String] => Iterable[String], val name : String) extends Transformer {
-    override def apply(tokens : Iterable[String]) = f(tokens);
-    override def toString = name;
-    override def equals(other : Any) = other match {
-      case that : Impl => this.f == that.f;
-      case _ => false;
-    }
-  }
-}

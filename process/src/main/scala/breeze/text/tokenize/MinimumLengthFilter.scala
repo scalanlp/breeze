@@ -17,7 +17,6 @@ package breeze;
 package text;
 package tokenize;
 
-import breeze.serialization.TypedCompanion1;
 
 /**
  * Filters out tokens composed of fewer than minLength characters.
@@ -27,8 +26,4 @@ import breeze.serialization.TypedCompanion1;
 case class MinimumLengthFilter(minLength : Int) extends Transformer {
   override def apply(doc : Iterable[String]) : Iterable[String] =
     doc.filter(token => token.length >= minLength);
-}
-
-object MinimumLengthFilter extends TypedCompanion1[Int,MinimumLengthFilter] {
-  prepare();
 }

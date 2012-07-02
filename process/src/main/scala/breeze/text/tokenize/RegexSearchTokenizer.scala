@@ -17,8 +17,6 @@ package breeze;
 package text;
 package tokenize;
 
-import breeze.serialization.TypedCompanion1;
-
 /**
  * Finds all occurrences of the given pattern in the document.
  *
@@ -30,8 +28,4 @@ extends Tokenizer {
   override def apply(doc : String) = new Iterable[String] {
     override def iterator = (pattern.r.findAllIn(doc));
   }
-}
-
-object RegexSearchTokenizer extends TypedCompanion1[String,RegexSearchTokenizer] {
-  prepare();
 }

@@ -17,8 +17,6 @@ package breeze;
 package text;
 package tokenize;
 
-import breeze.serialization.TypedCompanion0;
-
 /**
  * Converts words to their stemmed form using the classic Porter stemming
  * algorithm.
@@ -37,8 +35,7 @@ class PorterStemmer() extends Transformer {
  *
  * @author dlwh
  */
-object PorterStemmer extends (String=>String) with TypedCompanion0[PorterStemmer] {
-  prepare();
+object PorterStemmer extends (String=>String) {
 
   private val _instance = new PorterStemmer();
   def apply() = _instance;

@@ -17,8 +17,6 @@ package breeze;
 package text;
 package tokenize;
 
-import breeze.serialization.TypedCompanion0;
-
 /**
  * An enumeration over token types (see inner objects to
  * TokenType companion object) based on regex patterns
@@ -60,8 +58,4 @@ object TokenType {
 case class WordsAndNumbersOnlyFilter() extends Transformer {
   override def apply(terms : Iterable[String]) =
     terms.filter(term => TokenType.Word.matches(term) || TokenType.Number.matches(term));
-}
-
-object WordsAndNumbersOnlyFilter extends TypedCompanion0[WordsAndNumbersOnlyFilter] {
-  prepare();
 }
