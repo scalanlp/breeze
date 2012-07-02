@@ -20,134 +20,269 @@ package tokenize
 import scala.util.parsing.combinator._
 import scala.util.parsing.combinator.lexical._
 import scala.util.parsing.input._
+import scala.collection.mutable.ArrayBuffer
+import annotation.switch
 
 
 /**
  * PTBTokenizer tokenizes sentences into treebank style sentences.
  * Input must be a single sentence.
  *
- * Because this class may improve over time in non-backwards-compatible ways,
- * the default behavior of PTBTokenizer.apply() is to return an
- * instance of PTBTokenizer.V0
+ * Should be replaced by a real lexer one day, meh.
  *
- * @author dramage
  * @author dlwh
  */
-trait PTBTokenizer extends Tokenizer
+class PTBTokenizer extends Tokenizer {
+  def apply(v1: String): Iterable[String] = {
+    val out = new ArrayBuffer[String]
+    var begTok = 0
+    var cur = 0
+    var cLast = ' '
+    var hasSingleQuote = false
+
+    // adds tok [begTok,cur), advances tok to cur+=1
+    def addToken() {
+      if(begTok < cur) {
+        val str = v1.substring(begTok, cur)
+        post(str, out, hasSingleQuote)
+      }
+      skipTok()
+      hasSingleQuote = false
+    }
+    def skipTok() { begTok = cur + 1}
+
+    while(cur < v1.length) {
+      val c = v1.charAt(cur)
+      val nextChar = if(cur + 1 == v1.length) ' ' else v1.charAt(cur + 1)
+      val nextNextChar = if(cur + 2 >= v1.length) ' ' else v1.charAt(cur + 2)
+      c match {
+        case x if x.isSpaceChar =>
+          addToken()
+        case '-' if nextChar == '-' =>
+          addToken()
+          out += "--"
+          cur += 1
+          skipTok()
+        case '"' =>
+          addToken()
+          if(cLast.isSpaceChar) out += "``"
+          else out += "''"
+          skipTok()
+        case '\'' if nextChar.isSpaceChar =>
+          addToken()
+          out += "'"
+          skipTok()
+        case '\'' if "sSmMdD".contains(nextChar) && nextNextChar.isSpaceChar =>
+          addToken()
+          begTok = cur
+        case '\'' =>
+          hasSingleQuote = true
+        case '!' |  '?' =>
+          addToken()
+          out += c.toString
+          skipTok()
+        case '.' if nextChar == '.' && nextNextChar == '.' =>
+          addToken()
+          out += "..."
+          cur += 2
+          skipTok()
+        case '.' if cur == v1.length - 1 || (!nextChar.isLetterOrDigit && cur == v1.length - 2) =>
+          addToken()
+          out += "."
+          skipTok()
+        case c if ",;:@#$%&][(){}<>".contains(c) =>
+          addToken()
+          post(c.toString, out, false)
+          skipTok()
+        case _ =>
+      }
+      cLast = c
+      cur += 1
+    }
+    addToken()
+
+    out
+
+  }
+
+  private def post(tok: String, out: ArrayBuffer[String], hasSingleQuote: Boolean) = {
+    var added = true
+    (tok.charAt(0): @switch) match {
+      case '(' =>
+        out += "-LRB-"
+      case ')' =>
+        out += "-RRB-"
+      case '[' =>
+        out += "-LSB-"
+      case ']' =>
+        out += "-RSB-"
+      case '{' =>
+        out += "-LCB-"
+      case '}' =>
+        out += "-RCB-"
+      case 'C' =>
+        if(tok == "Cannot")  {
+          out += "Can"
+          out += "not"
+        }  else {
+          added = false
+        }
+      case 'c' =>
+        if(tok == "cannot")  {
+          out += "can"
+          out += "not"
+        } else {
+          added = false
+        }
+      case 'D' =>
+        if(tok == "D'ye")  {
+          out += "D'"
+          out += "ye"
+        } else {
+          added = false
+        }
+      case 'd' =>
+        if(tok == "d'ye")  {
+          out += "d'"
+          out += "ye"
+        } else {
+          added = false
+        }
+      case 'G' =>
+        if(tok == "Gimme")  {
+          out += "Gim"
+          out += "me"
+        } else if (tok == "Gonna") {
+          out += "Gon"
+          out += "na"
+        } else if (tok == "Gotta") {
+          out += "Got"
+          out += "ta"
+        } else {
+          added = false
+        }
+      case 'g' =>
+        if(tok == "gimme")  {
+          out += "gim"
+          out += "me"
+        } else if (tok == "gonna") {
+          out += "gon"
+          out += "na"
+        } else if (tok == "gotta") {
+          out += "got"
+          out += "ta"
+        } else {
+          added = false
+        }
+      case 'L' =>
+        if(tok == "Lemme")  {
+          out += "Lem"
+          out += "me"
+        } else {
+          added = false
+        }
+      case 'l' =>
+        if(tok == "lemme")  {
+          out += "lem"
+          out += "me"
+        } else {
+          added = false
+        }
+      case 'M' =>
+        if(tok == "More'n")  {
+          out += "More"
+          out += "'n"
+        } else {
+          added = false
+        }
+      case 'm' =>
+        if(tok == "more'n")  {
+          out += "more"
+          out += "'n"
+        } else {
+          out += tok
+        }
+      case '\'' =>
+        if(tok == "'Tis")  {
+          out += "'T"
+          out += "is"
+        } else if (tok == "'Twas") {
+          out += "'T"
+          out += "was"
+        } else if (tok == "'Twere") {
+          out += "'T"
+          out += "were"
+        } else if(tok == "'tis")  {
+          out += "'t"
+          out += "is"
+        } else if (tok == "'twas") {
+          out += "'t"
+          out += "was"
+        } else if (tok == "'twere") {
+          out += "'t"
+          out += "were"
+        } else {
+          added = false
+        }
+      case 'W' =>
+        if(tok == "Wanna")  {
+          out += "Wan"
+          out += "na"
+        } else {
+          added = false
+        }
+      case 'w' =>
+        if(tok == "wanna")  {
+          out += "wan"
+          out += "na"
+        } else {
+          added = false
+        }
+      case _ =>
+        added = false
+    }
+    // handle contractions
+    if(!added && hasSingleQuote) {
+      tok.last match {
+        case 'l' if(tok.endsWith("'ll"))  =>
+          out += tok.substring(0,tok.length-3)
+          out += "'ll"
+        case 'e' if(tok.endsWith("'re"))  =>
+          out += tok.substring(0,tok.length-3)
+          out += "'re"
+        case 'e' if(tok.endsWith("'ve"))  =>
+          out += tok.substring(0,tok.length-3)
+          out += "'ve"
+        case 't' if(tok.endsWith("n't"))  =>
+          out += tok.substring(0,tok.length-3)
+          out += "n't"
+        case 'L' if(tok.endsWith("'LL"))  =>
+          out += tok.substring(0,tok.length-3)
+          out += "'LL"
+        case 'E' if(tok.endsWith("'RE"))  =>
+          out += tok.substring(0,tok.length-3)
+          out += "'RE"
+        case 'E' if(tok.endsWith("'VE"))  =>
+          out += tok.substring(0,tok.length-3)
+          out += "'VE"
+        case 'T' if(tok.endsWith("N'T"))  =>
+          out += tok.substring(0,tok.length-3)
+          out += "N'T"
+        case _ =>
+          out += tok
+      }
+    } else if (!added) {
+      out += tok
+    }
+  }
+}
 
 object PTBTokenizer  {
 
-  def apply() : PTBTokenizer = V0()
+  def apply() : PTBTokenizer = new PTBTokenizer
 
   val _instance = apply()
   def apply(in : String) : Iterable[String] = _instance.apply(in)
-
-  case class V0() extends PTBTokenizer {
-    override def apply(in : String) = new Iterable[String] {
-      val result = RawPTBTokenizer.tokenize(in).left.get
-      override def iterator = result.iterator
-    }
-  }
-
 }
 
-/**
- * Penn Treebank-style tokenization.
- *
- * @author dlwh
- */
-private[tokenize] object RawPTBTokenizer extends StdLexical with ImplicitConversions with Scanners {
-  /**
-  * Tokenize the input sentence using the PTBTokenizer.
-  * Returns Left(List(tokens)) on success, and Right(error) on failure
-  */
-  def tokenize(input: String): Either[List[String],ParseResult[List[Token]]] = {
-      phrase(words)(new CharSequenceReader(input)) match {
-        case Success(result, _) => Left(result.map(_.chars))
-        case x => Right(x)
-      }
-  }
 
-  /**
-  * @see tokenize
-  */
-  def apply(input: String) = tokenize(input)
-
-  private def word:Parser[Token] = ( (letter) ~ rep((letter))^^{ case x ~ y=> StringLit( (x::y).mkString("")) } ) | number
-
-  private def number: Parser[Token] = {
-    ( rep(accept('$')|'.'|'/'|'-') ~ digit ~ rep(number)) ^^ { case pref ~ d ~ tail => 
-                                                                 SL(pref.mkString("") + d + tail.view.map(_.chars).mkString(""))
-                                                             }
-  }
-
-  private def tokens:Parser[List[Token]] = (
-      seg("cannot","an","not") 
-    | seg("d'ye","'","ye") 
-    | seg("gimme","im","me")
-    | seg("gonna","on","na")
-    | seg("gotta","ot","ta")
-    | seg("Lemme","em","me")
-    | seg("more'n","ore","'n")
-    | seg("'tis","t","is")
-    | seg("'Tis","T","is")
-    | seg("Wanna","an","na")
-    | seg("Whaddya","ha","dd","ya")
-    | seg("Whatcha","ha","t","cha")
-    | '.' ~> '.' ~> '.'              ^^ { _ => List(SL("..."))}
-    | '"' ~> word                    ^^ { w => List(SL("\""),w) }
-    | word ~ contraction             ^^ {case word ~ cont => List(word, cont) }
-    | word ~ posessiveLike           ^^ {case w ~ xs => List(w, SL("'" + xs))}
-    | number                         ^^ {x => List(x) }
-    | rep1(symbol)                   ^^ {x => List(SL(x.mkString)) }
-    | title <~ '.'                   ^^ {word => List(SL(word + ".")) }
-    | word <~ '.'                    ^^ {word => List(word,SL(".")) }
-    | word ~ rep1(symbol)            ^^ {case w ~ s => List(w,SL(s.mkString))}
-    | word                           ^^ {word => List(word) }
-  )
-
-
-
-  private def words:Parser[List[Token]] = (
-    repsep(tokens,ws)                    ^^ { _.foldLeft[List[Token]](Nil)(_++_) }
-    | ws ^^ {x => Nil}
-  )
-
-  private def posessiveLike = '\'' ~> elem("something","smdSMD" contains _)
-
-  private def title: Parser[String] = {
-    acceptSeq("Dr") | acceptSeq("Mr") | acceptSeq("Prof") | acceptSeq("Mrs") | acceptSeq("Ms") 
-  } ^^ { _.mkString("") }
-
-  private def seg(s: String, m1: String, m2: String) = {
-    val init :Parser[Char]= accept(s(0).toLower) | s(0).toUpper
-    val rest = acceptSeq(s.drop(1))
-    init <~ rest ^^ { case i  =>  List(SL(i + m1), SL(m2)) }
-  }
-
-  private def seg(s: String, m1: String, m2: String, m3:String) = {
-    val init : Parser[Char] = accept(s(0).toLower) | accept( s(0).toUpper)
-    val rest = acceptSeq(s.drop(1))
-    init <~ rest ^^ { case i => List(SL(i + m1), SL(m2), SL(m3)) }
-  }
-
-
-  // convenience
-  private def ws = whitespace
-  private def SL(x:String) = StringLit(x)
-
-  private def symbol = elem("sym",x => !x.isLetter && !x.isDigit && x > ' ') 
-
-  private def contraction = { 
-   'n' ~ ('\'' ~ 't') |
-   '\'' ~ { 
-	    'l' ~'l' |
-	    'r' ~ 'e' |
-	    'v' ~ 'e' |
-	    'L' ~ 'L' |
-	    'R' ~ 'E' |
-	    'V' ~ 'E'
-   }
-  } ^^ { case x ~ (y ~ z) => StringLit("" + x + y + z)}
-
-}

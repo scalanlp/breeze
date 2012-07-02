@@ -1,7 +1,7 @@
 /*
  Copyright 2009 David Hall, Daniel Ramage
  
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at 
  
@@ -14,50 +14,62 @@
  limitations under the License. 
 */
 
-package breeze.text.tokenize;
+package breeze.text.tokenize
 
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.scalacheck._;
+import org.scalatest._
+import org.scalatest.junit._
+import org.scalatest.prop._
+import org.scalacheck._
 import org.junit.runner.RunWith
 
 @RunWith(classOf[JUnitRunner])
 class PTBTokenizerTest extends FunSuite with Checkers {
-  import Arbitrary.arbitrary;
-  
+
   private def isOneToken(w: String) =
-    w === PTBTokenizer(w).head;
+    w === PTBTokenizer(w).head
   
   test("simple words") {
-    val words = List("Hi","there","pilgrim","happy","Thanksgiving","there");
+    val words = List("Hi","there","pilgrim","happy","Thanksgiving","there")
     for(w <- words) {
-      assert(isOneToken(w));
+      assert(isOneToken(w))
     }
   }
 
   test("some symbols") {
-    val words = List(".","...","$","-","/");
+    val words = List(".","...","$","-","/")
     for(w <- words) {
       assert(isOneToken(w))
+    }
+    val special = Map(
+     "(" -> "-LRB-",
+     ")" -> "-RRB-",
+     "[" -> "-LSB-",
+     "]" -> "-RSB-",
+     "{" -> "-LCB-",
+     "}" -> "-RCB-"
+    )
+
+    for( (s,t) <- special) {
+      assert(PTBTokenizer(s).toList === List(t))
     }
   }
 
   test("simple sentences") {
     val sents = Map( "Every good boy does fine." -> List("Every","good","boy","does","fine","."),
       "Hi there, pilgrim; happy Thanksgiving there, pilgrim?" -> List("Hi","there",",","pilgrim",";","happy","Thanksgiving","there",",","pilgrim","?"),
-      "Hi there, pilgrim; happy Thanksgiving there, pilgrim!" -> List("Hi","there",",","pilgrim",";","happy","Thanksgiving","there",",","pilgrim","!")
-    );
+      "Hi there, pilgrim; happy Thanksgiving there, pilgrim!" -> List("Hi","there",",","pilgrim",";","happy","Thanksgiving","there",",","pilgrim","!"),
+    "Hi there, (pilgrim); happy Thanksgiving there, pilgrim!" -> List("Hi","there",",","-LRB-", "pilgrim", "-RRB-", ";","happy","Thanksgiving","there",",","pilgrim","!")
+    )
     for( (s,toks) <- sents) {
       assert(PTBTokenizer(s).toList === toks)
     }
   }
 
   test("quotes") {
-    val sents = Map("\"Hi there\"" -> List("\"","Hi","there","\""),
-      "\"Hi there.\"" -> List("\"","Hi","there",".","\""));
+    val sents = Map("\"Hi there\"" -> List("``","Hi","there","''"),
+      "\"Hi there.\"" -> List("``","Hi","there",".","''"))
     for( (s,toks) <- sents) {
-      assert(PTBTokenizer(s).toList === toks);
+      assert(PTBTokenizer(s).toList === toks)
     }
   }
 
@@ -69,20 +81,22 @@ class PTBTokenizerTest extends FunSuite with Checkers {
       "YA'LL" -> List("YA","'LL"),
       "WE'RE" -> List("WE","'RE"),
       "WE'VE" -> List("WE","'VE"),
+      "cannot" -> List("can","not"),
+      "can't" -> List("ca","n't"),
+      "CAN'T" -> List("CA","N'T"),
       "I'm" -> List("I","'m"),
-      "He's" -> List("He","'s")
-    );
+      "He's" -> List("He","'s"),
+      "parents'" -> List("parents","'")
+    )
     for( (s,toks) <- sents) {
-      assert(PTBTokenizer(s).toList === toks);
+      assert(PTBTokenizer(s).toList === toks)
     }
   }
 
   test("moneys") {
-    val words = List("99","$99","$99.33");
-    for(w <- words) {
-      assert(isOneToken(w))
-    }
-    
+    assert(PTBTokenizer("99").toList === List("99"))
+    assert(PTBTokenizer("$99").toList === List("$","99"))
+    assert(PTBTokenizer("$99.33").toList === List("$","99.33"))
   }
 
   test("special words") {
@@ -95,12 +109,12 @@ class PTBTokenizerTest extends FunSuite with Checkers {
         "more'n"->List("more","'n"),
         "'tis"->List("'t","is"),
         "'Tis"->List("'T","is"),
-        "wanna"->List("wan","na"),
-        "Whaddya"->List("Wha","dd","ya"),
-        "Whatcha"->List("Wha","t","cha")
-    );
+        "wanna"->List("wan","na")
+//        "Whaddya"->List("Wha","dd","ya"),
+//        "Whatcha"->List("Wha","t","cha")
+    )
     for( (s,toks) <- words) {
-      assert(PTBTokenizer(s).toList === toks);
+      assert(PTBTokenizer(s).toList === toks)
     }
 
   }
