@@ -18,7 +18,39 @@ object BuildSettings {
     resolvers ++= Seq(
       "Breeze Maven2" at "http://repo.scalanlp.org/repo"
       // "ondex" at "http://ondex.rothamsted.bbsrc.ac.uk/nexus/content/groups/public"
-    )
+    ),
+  publishMavenStyle := true,
+  publishTo <<= version { (v: String) =>
+  val nexus = "https://oss.sonatype.org/"
+  if (v.trim.endsWith("SNAPSHOT")) 
+    Some("snapshots" at nexus + "content/repositories/snapshots") 
+    else
+      Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+    },
+    publishArtifact in Test := false,
+    pomIncludeRepository := { _ => false },
+    pomExtra := (
+      <url>http://scalanlp.org/</url>
+      <licenses>
+        <license>
+          <name>Apache 2</name>
+          <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+          <distribution>repo</distribution>
+        </license>
+      </licenses>
+      <scm>
+        <url>git@github.com:dlwh/breeze.git</url>
+        <connection>scm:git:git@github.com:dlwh/breeze.git</connection>
+      </scm>
+      <developers>
+        <developer>
+          <id>dlwh</id>
+          <name>David Hall</name>
+          <url>http://cs.berkeley.edu/~dlwh/</url>
+        </developer>
+      </developers>)
+
+
   )
 }
 
@@ -46,6 +78,7 @@ object BreezeBuild extends Build {
         "junit" % "junit" % "4.5" % "test"
       )
   }
+
 
   //
   // subprojects
