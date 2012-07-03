@@ -20,7 +20,6 @@ package serialization;
 import java.io.File;
 
 import breeze.io.{TextReader,TextWriter,TextReaderException};
-import breeze.pipes.Pipes;
 
 /**
  * Reads a table as a series of TableRowReader.  Note that the returned

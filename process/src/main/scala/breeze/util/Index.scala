@@ -299,22 +299,6 @@ object Index {
     apply(source.getLines.map(_.stripLineEnd))
   }
 
-  implicit object FileFormat extends breeze.serialization.FileSerialization.ReadWritable[Index[String]] {
-    import breeze.pipes.Pipes.global._
-    
-    override def read(source : java.io.File) = {
-      Index(source.getLines)
-    }
-
-    override def write(target : java.io.File, index : Index[String]) = {
-      if (index.iterator.exists(_.contains("\n"))) {
-        throw new breeze.serialization.SerializationException("Cannot serialize index with strings that contain newline.")
-      }
-      index.iterator | target
-    }
-  }
-
-
 }
 
 /**
