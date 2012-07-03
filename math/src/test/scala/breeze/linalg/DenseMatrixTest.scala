@@ -217,9 +217,12 @@ class DenseMatrixTest extends FunSuite with Checkers {
     val a = DenseMatrix((1., 2., 3.),(4., 5., 6.))
     val b = DenseMatrix((7., -2., 8.),(-3., -3., 1.),(12., 0., 5.))
     val c = DenseVector(6.,2.,3.)
+    val cs = SparseVector(6.,2.,3.)
     assert(a * b === DenseMatrix((37., -8., 25.), (85., -23., 67.)))
     assert(a * c === DenseVector(19.,52.))
     assert(b * c === DenseVector(62., -21., 87.))
+    assert(a * cs === DenseVector(19.,52.))
+    assert(b * cs === DenseVector(62., -21., 87.))
     assert(b.t * c === DenseVector(72., -18., 65.))
     assert(a.t * DenseVector(4., 3.) === DenseVector(16., 23., 30.))
 
@@ -234,6 +237,55 @@ class DenseMatrixTest extends FunSuite with Checkers {
     val z : DenseMatrix[Double] = b * (b + 1.0)
     assert(z === DenseMatrix((164.,5.,107.),(-5.,10.,-27.),(161.,-7.,138.)))
   }
+
+
+  test("Multiply Int") {
+    val a = DenseMatrix((1, 2, 3),(4, 5, 6))
+    val b = DenseMatrix((7, -2, 8),(-3, -3, 1),(12, 0, 5))
+    val c = DenseVector(6,2,3)
+    assert(a * b === DenseMatrix((37, -8, 25), (85, -23, 67)))
+    assert(a * c === DenseVector(19,52))
+    assert(b * c === DenseVector(62, -21, 87))
+    assert(b.t * c === DenseVector(72, -18, 65))
+    assert(a.t * DenseVector(4, 3) === DenseVector(16, 23, 30))
+
+    // should be dense
+    val x = a * a.t
+    assert(x === DenseMatrix((14,32),(32,77)))
+
+    // should be dense
+    val y = a.t * a
+    assert(y === DenseMatrix((17,22,27),(22,29,36),(27,36,45)))
+
+    val z : DenseMatrix[Int] = b * (b + 1)
+    assert(z === DenseMatrix((164,5,107),(-5,10,-27),(161,-7,138)))
+  }
+
+  test("Multiply Float") {
+    val a = DenseMatrix((1.0f, 2.0f, 3.0f),(4.0f, 5.0f, 6.0f))
+    val b = DenseMatrix((7.0f, -2.0f, 8.0f),(-3.0f, -3.0f, 1.0f),(12.0f, 0.0f, 5.0f))
+    val c = DenseVector(6.0f,2.0f,3.0f)
+    val cs = SparseVector(6.0f,2.0f,3.0f)
+    assert(a * b === DenseMatrix((37.0f, -8.0f, 25.0f), (85.0f, -23.0f, 67.0f)))
+    assert(a * c === DenseVector(19.0f,52.0f))
+    assert(b * c === DenseVector(62.0f, -21.0f, 87.0f))
+    assert(a * cs === DenseVector(19.0f,52.0f))
+    assert(b * cs === DenseVector(62.0f, -21.0f, 87.0f))
+    assert(b.t * c === DenseVector(72.0f, -18.0f, 65.0f))
+    assert(a.t * DenseVector(4.0f, 3.0f) === DenseVector(16.0f, 23.0f, 30.0f))
+
+    // should be dense
+    val x = a * a.t
+    assert(x === DenseMatrix((14.0f,32.0f),(32.0f,77.0f)))
+
+    // should be dense
+    val y = a.t * a
+    assert(y === DenseMatrix((17.0f,22.0f,27.0f),(22.0f,29.0f,36.0f),(27.0f,36.0f,45.0f)))
+
+    val z : DenseMatrix[Float] = b * (b + 1.0f)
+    assert(z === DenseMatrix((164.0f,5.0f,107.0f),(-5.0f,10.0f,-27.0f),(161.0f,-7.0f,138.0f)))
+  }
+
 
   test("Trace") {
     assert(DenseMatrix((1,2),(4,5)).trace === 1 + 5)

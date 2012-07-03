@@ -893,6 +893,78 @@ object GenCSCOps extends App {
 
 }
 
+object GenDMMultOps extends App {
+  import GenOperators._
+  def gen(out: PrintStream) {
+    import out._
+
+    println("package breeze.linalg")
+    println("import java.util._")
+    println("import breeze.linalg.operators._")
+    println("import breeze.linalg.support._")
+    println("import breeze.numerics._")
+
+    for( (scalar,ops) <- GenOperators.ops) {
+      println()
+      val matrix = "DenseMatrix[%s]" format scalar
+      val vector = "DenseVector[%s]" format scalar
+      val gvector = "Vector[%s]" format scalar
+      val gmatrix = "Matrix[%s]" format scalar
+      println("/** This is an auto-generated trait providing multiplication for DenseMatrix */")
+      println("trait DenseMatrixMultOps_"+scalar +" extends DenseMatrixOps_" + scalar + " { this: DenseMatrix.type =>")
+
+      println(genBinaryRegistry("canMulM_V_" + scalar, matrix, gvector, OpMulMatrix, vector){"""
+      // TODO: this could probably be much faster?
+      require(a.cols == b.length)
+      val res = DenseVector.zeros[Scalar](a.rows)
+      var c = 0
+      while(c < a.cols) {
+        var r = 0
+        while (r < a.rows) {
+          val v = a(r, c)
+          res(r) += v * b(c)
+          r += 1
+        }
+        c += 1
+      }
+
+      res                                                               """.replaceAll("Scalar", scalar)
+      })
+
+      println(genBinaryRegistry("canMulM_M_" + scalar, matrix, gmatrix, OpMulMatrix, matrix){"""
+      // TODO: this could probably be much faster
+      val res = DenseMatrix.zeros[Scalar](a.rows, b.cols)
+      require(a.cols == b.rows)
+      var c = 0
+      while(c < a.cols) {
+        var r = 0
+        while (r < a.rows) {
+          val v = a(r, c)
+          var j = 0
+          while(j < b.cols) {
+            res(r, j) += v * b(c, j)
+            j += 1
+          }
+          r += 1
+        }
+        c += 1
+      }
+
+      res                                                               """.replaceAll("Scalar", scalar)
+      })
+
+
+      println("}")
+
+    }
+  }
+
+  val out = new PrintStream(new FileOutputStream(new File("math/src/main/scala/breeze/linalg/DenseMatrixMulOps.scala")))
+  gen(out)
+  out.close()
+
+}
+
 
 object GenAll extends App {
   GenDenseOps.main(Array.empty)

@@ -102,7 +102,11 @@ object DenseMatrix extends LowPriorityDenseMatrix
                            with DenseMatrixOps_Int
                            with DenseMatrixOps_Float
                            with DenseMatrixOps_Double
-                           with DenseMatrixMultiplyStuff with MatrixConstructors[DenseMatrix]  {
+                           with DenseMatrixMultOps_Int
+                           with DenseMatrixMultOps_Float
+                           with DenseMatrixMultOps_Double
+                           with DenseMatrixMultiplyStuff
+                           with MatrixConstructors[DenseMatrix]  {
   /**
    * The standard way to create an empty matrix, size is rows * cols
    */
@@ -317,7 +321,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
     }
   }
 
-  implicit def binaryOpFromBinaryUpdateOp[V, Other, Op<:OpType](implicit copy: CanCopy[DenseMatrix[V]], op: BinaryUpdateOp[DenseMatrix[V], Other, Op], man: ClassManifest[V]) = {
+  def binaryOpFromBinaryUpdateOp[V, Other, Op<:OpType](implicit copy: CanCopy[DenseMatrix[V]], op: BinaryUpdateOp[DenseMatrix[V], Other, Op], man: ClassManifest[V]) = {
     new BinaryOp[DenseMatrix[V], Other, Op, DenseMatrix[V]] {
       override def apply(a : DenseMatrix[V], b : Other) = {
         val c = copy(a)
@@ -544,7 +548,7 @@ trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
   implicit def setDMS[V]: BinaryUpdateOp[DenseMatrix[V], V, OpSet] = new SetMSOp[V]
 }
 
-trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double { this: DenseMatrix.type =>
+trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double with DenseMatrixMultOps_Double { this: DenseMatrix.type =>
   implicit object DenseMatrixDMulDenseMatrixD
   extends BinaryOp[DenseMatrix[Double],DenseMatrix[Double],OpMulMatrix,DenseMatrix[Double]] {
     def apply(a : DenseMatrix[Double], b : DenseMatrix[Double]) = {

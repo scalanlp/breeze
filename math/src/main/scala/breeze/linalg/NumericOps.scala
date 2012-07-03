@@ -76,7 +76,7 @@ trait NumericOps[+This] {
     op(repr, b)
   }
 
-  /** Alias for :*(b) when b is a scalar. */
+  /** Matrix multiplication */
   final def * [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulMatrix,That]) = {
     op(repr, b)
   }
