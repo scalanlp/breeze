@@ -302,7 +302,7 @@ package object numerics extends UniversalFuncs {
    *
    *
    */
-  def sigmoid(x: Double) = 1/(1+exp(-x))
+  def sigmoid = UFunc { (x:Double) => 1/(1+scala.math.exp(-x)) }
 
   /**
    * Takes the difference of two doubles in log space. Requires a &gt b.
