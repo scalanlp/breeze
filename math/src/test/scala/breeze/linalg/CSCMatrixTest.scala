@@ -68,7 +68,7 @@ class CSCMatrixTest extends FunSuite with Checkers {
 
   test("Generic CSC ops") {
     // mostly for coverage
-    val a = CSCMatrix[String](1,1)(Array("SSS"))
+    val a = CSCMatrix.create[String](1,1, Array("SSS"))
     intercept[IndexOutOfBoundsException] {
       a(3,3) = ":("
       assert(false, "Shouldn't be here!")

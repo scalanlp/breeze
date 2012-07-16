@@ -139,7 +139,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps_Int wit
 
   def zeros[@specialized(Int, Float, Double) V: ClassManifest : DefaultArrayValue](rows: Int, cols: Int): CSCMatrix[V] = zeros(rows, cols, 0)
 
-  def apply[@specialized(Int, Float, Double) V: DefaultArrayValue](rows: Int, cols: Int)(data: Array[V]): CSCMatrix[V] = {
+  def create[@specialized(Int, Float, Double) V: DefaultArrayValue](rows: Int, cols: Int, data: Array[V]): CSCMatrix[V] = {
     val z = implicitly[DefaultArrayValue[V]].value
     implicit val man = ClassManifest.fromClass(data.getClass.getComponentType.asInstanceOf[Class[V]])
     val res = zeros(rows, cols, data.length)

@@ -33,28 +33,29 @@ import breeze.storage.DefaultArrayValue
  * @author dlwh
  */
 @SerialVersionUID(1L)
-final class DenseMatrix[@specialized(Int, Float, Double) V](/** The underlying data.
-                                                              Column-major unless isTranpose is true.
-                                                              Mutate at your own risk.
-                                                             Note that this matrix may be a view of the data.
-                                                            Use linearIndex(r,c) to calculate indices.*/
-                                                            val data: Array[V],
+final class DenseMatrix[@specialized(Int, Float, Double) V](
                                                             /** number of rows */
                                                             val rows: Int,
                                                             /** number of columns */
                                                             val cols: Int,
+                                                            /** The underlying data.
+                                                            Column-major unless isTranpose is true.
+                                                            Mutate at your own risk.
+                                                            Note that this matrix may be a view of the data.
+                                                            Use linearIndex(r,c) to calculate indices.*/
+                                                            val data: Array[V],
+                                                            /** starting point into array */
+                                                            val offset: Int,
                                                             /**distance separating columns (or rows, for isTranspose)
                                                              * Should be >= rows (or cols, for isTranspose)
                                                              */
                                                             val majorStride: Int,
-                                                            /** starting point into array */
-                                                            val offset: Int = 0,
                                                             val isTranspose: Boolean = false)
 extends StorageMatrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
   /** Creates a matrix with the specified data array, rows, and columns. Data must be column major */
-  def this(data: Array[V], rows: Int, cols: Int) = this(data, rows, cols, rows)
+  def this(rows: Int, cols: Int, data: Array[V], offset: Int = 0) = this(rows, cols, data, offset, rows)
   /** Creates a matrix with the specified data array  and rows. columns inferred automatically */
-  def this(data: Array[V], rows: Int) = this(data, rows, {assert(data.length % rows == 0); data.length/rows})
+  def this(rows: Int, data: Array[V], offset: Int = 0) = this(rows, {assert(data.length % rows == 0); data.length/rows}, data, offset)
 
   def apply(row: Int, col: Int) = {
     if(row < 0 || row > rows) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
@@ -126,10 +127,12 @@ object DenseMatrix extends LowPriorityDenseMatrix
    */
   def zeros[@specialized(Int, Float, Double) V:ClassManifest:DefaultArrayValue](rows: Int, cols: Int) = {
     val data = new Array[V](rows * cols)
-    new DenseMatrix(data, rows, cols)
+    new DenseMatrix(rows, cols, data)
   }
 
-  def apply[@specialized(Int, Float, Double) V:DefaultArrayValue](rows: Int, cols: Int)(data: Array[V]): DenseMatrix[V] = new DenseMatrix(data, rows, cols)
+  def create[@specialized(Int, Float, Double) V:DefaultArrayValue](rows: Int, cols: Int, data: Array[V]): DenseMatrix[V] = {
+    new DenseMatrix(rows, cols, data)
+  }
 
   /**
    * Creates a square diagonal array of size dim x dim, with 1's along the diagonal.
@@ -180,9 +183,9 @@ object DenseMatrix extends LowPriorityDenseMatrix
     new CanSlice2[DenseMatrix[V], Int, ::.type, DenseMatrix[V]] {
       def apply(m: DenseMatrix[V], row: Int, ignored: ::.type) = {
         if(!m.isTranspose)
-          new DenseMatrix(m.data, 1, m.cols, m.majorStride, m.offset + row)
+          new DenseMatrix(1, m.cols, m.data, m.offset + row, m.majorStride)
         else
-          new DenseMatrix(m.data, 1, m.cols, 1, m.offset + row * m.cols)
+          new DenseMatrix(1, m.cols, m.data, m.offset + row * m.cols, 1)
       }
     }
   }
@@ -201,11 +204,11 @@ object DenseMatrix extends LowPriorityDenseMatrix
   implicit def canSliceRows[V]: CanSlice2[DenseMatrix[V], Range, ::.type, DenseMatrix[V]] = {
     new CanSlice2[DenseMatrix[V], Range, ::.type, DenseMatrix[V]] {
       def apply(m: DenseMatrix[V], rows: Range, ignored: ::.type) = {
-        if(rows.isEmpty) new DenseMatrix(m.data, 0, 0, 1, 0)
+        if(rows.isEmpty) new DenseMatrix(0, 0, m.data, 0, 0)
         else if(!m.isTranspose) {
           require(rows.step == 1, "Sorry, we can't support row ranges with step sizes other than 1")
           val first = rows.head
-          new DenseMatrix(m.data, rows.length, m.cols, m.majorStride, m.offset + first)
+          new DenseMatrix(rows.length, m.cols, m.data, m.offset + first, m.majorStride)
         } else {
           canSliceCols(m.t, ::, rows).t
         }
@@ -216,10 +219,10 @@ object DenseMatrix extends LowPriorityDenseMatrix
   implicit def canSliceCols[V]: CanSlice2[DenseMatrix[V], ::.type, Range, DenseMatrix[V]] = {
     new CanSlice2[DenseMatrix[V], ::.type, Range, DenseMatrix[V]] {
       def apply(m: DenseMatrix[V], ignored: ::.type, cols: Range) = {
-        if(cols.isEmpty) new DenseMatrix(m.data, 0, 0, 1, 0)
+        if(cols.isEmpty) new DenseMatrix(0, 0, m.data, 0, 1)
         else if(!m.isTranspose) {
           val first = cols.head
-          new DenseMatrix(m.data, m.rows, cols.length, m.majorStride * cols.step, m.offset + first * m.rows)
+          new DenseMatrix(m.rows, cols.length, m.data, m.offset + first * m.rows, m.majorStride * cols.step)
         } else {
           canSliceRows(m.t, cols, ::).t
         }
@@ -230,11 +233,11 @@ object DenseMatrix extends LowPriorityDenseMatrix
   implicit def canSliceColsAndRows[V]: CanSlice2[DenseMatrix[V], Range, Range, DenseMatrix[V]] = {
     new CanSlice2[DenseMatrix[V], Range, Range, DenseMatrix[V]] {
       def apply(m: DenseMatrix[V], rows: Range, cols: Range) = {
-        if(rows.isEmpty || cols.isEmpty) new DenseMatrix(m.data, 0, 0, 1, 0)
+        if(rows.isEmpty || cols.isEmpty) new DenseMatrix(0, 0, m.data, 0, 1)
         else if(!m.isTranspose) {
           require(rows.step == 1, "Sorry, we can't support row ranges with step sizes other than 1 for non transposed matrices")
           val first = cols.head
-          new DenseMatrix(m.data, rows.length, cols.length, m.majorStride * cols.step, m.offset + first * m.rows + rows.head)
+          new DenseMatrix(rows.length, cols.length, m.data, m.offset + first * m.rows + rows.head, m.majorStride * cols.step)
         } else {
           require(cols.step == 1, "Sorry, we can't support col ranges with step sizes other than 1 for transposed matrices")
           canSliceColsAndRows(m.t, cols, rows).t
@@ -247,10 +250,10 @@ object DenseMatrix extends LowPriorityDenseMatrix
     new CanSlice2[DenseMatrix[V], Int, Range, DenseMatrix[V]] {
       def apply(m: DenseMatrix[V], row: Int, cols: Range) = {
         if(row < 0  || row > m.rows) throw new IndexOutOfBoundsException("Slice with out of bounds row! " + row)
-        if(cols.isEmpty) new DenseMatrix(m.data, 0, 0, 1, 0)
+        if(cols.isEmpty) new DenseMatrix(0, 0, m.data, 0, 1)
         else if(!m.isTranspose) {
           val first = cols.head
-          new DenseMatrix(m.data, 1, cols.length, m.majorStride * cols.step, m.offset + first * m.rows + row)
+          new DenseMatrix(1, cols.length, m.data, m.offset + first * m.rows + row, m.majorStride * cols.step)
         } else {
           require(cols.step == 1, "Sorry, we can't support col ranges with step sizes other than 1 for transposed matrices")
           canSlicePartOfCol(m.t, cols, row).t
@@ -288,7 +291,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
           }
           j += 1
         }
-        new DenseMatrix[R](data, from.rows, from.cols)
+        new DenseMatrix[R](from.rows, from.cols, data)
       }
 
       override def mapActive(from : DenseMatrix[V], fn : (V=>R)) =
@@ -311,7 +314,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
           }
           j += 1
         }
-        new DenseMatrix(data, from.rows, from.cols)
+        new DenseMatrix(from.rows, from.cols, data)
       }
 
       override def mapActive(from : DenseMatrix[V], fn : (((Int,Int),V)=>R)) =
@@ -322,7 +325,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
   implicit def canTranspose[V]: CanTranspose[DenseMatrix[V], DenseMatrix[V]] = {
     new CanTranspose[DenseMatrix[V], DenseMatrix[V]] {
       def apply(from: DenseMatrix[V]) = {
-        new DenseMatrix(from.data, offset = from.offset, cols = from.rows, rows = from.cols, majorStride = from.majorStride, isTranspose = !from.isTranspose)
+        new DenseMatrix(data = from.data, offset = from.offset, cols = from.rows, rows = from.cols, majorStride = from.majorStride, isTranspose = !from.isTranspose)
       }
     }
   }
@@ -696,7 +699,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double with DenseMatrixMul
 
   implicit object DenseMatrixCanSolveDenseVector extends BinaryOp[DenseMatrix[Double],DenseVector[Double],OpSolveMatrixBy,DenseVector[Double]] {
     override def apply(a : DenseMatrix[Double], b : DenseVector[Double]) = {
-      val rv = a \ new DenseMatrix[Double](b.data, b.size, 1)
+      val rv = a \ new DenseMatrix[Double](b.size, 1, b.data, b.offset, b.stride)
       new DenseVector[Double](rv.data)
     }
   }

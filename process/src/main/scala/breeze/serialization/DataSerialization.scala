@@ -226,7 +226,7 @@ with ByteSerialization {
     override def read(in : DataInput) =  {
       val rows = DataSerialization.read[Int](in)
       val cols = DataSerialization.read[Int](in)
-      new DenseMatrix(DataSerialization.read[Array[Double]](in),rows,cols)
+      new DenseMatrix(rows,cols, DataSerialization.read[Array[Double]](in))
     }
 
     override def write(out : Output, v : DenseMatrix[Double]) {

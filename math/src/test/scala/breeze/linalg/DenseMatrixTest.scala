@@ -354,7 +354,7 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
   test("Generic Dense ops") {
     // mostly for coverage
-    val a = DenseMatrix[String](1,1)(Array("SSS"))
+    val a = DenseMatrix.create[String](1,1, Array("SSS"))
     intercept[IndexOutOfBoundsException] {
       a(3,3) = ":("
       assert(false, "Shouldn't be here!")

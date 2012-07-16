@@ -124,14 +124,14 @@ trait Matrix[@spec(Int, Float, Double) E] extends MatrixLike[E, Matrix[E]] {
 object Matrix extends MatrixConstructors[Matrix] {
   def zeros[@specialized(Int, Float, Double) V: ClassManifest:DefaultArrayValue](rows: Int, cols: Int): Matrix[V] = DenseMatrix.zeros(rows, cols)
 
-  def apply[@specialized(Int, Float, Double) V:DefaultArrayValue](rows: Int, cols: Int)(data: Array[V]): Matrix[V] = DenseMatrix.apply(rows, cols)(data)
+  def create[@specialized(Int, Float, Double) V:DefaultArrayValue](rows: Int, cols: Int, data: Array[V]): Matrix[V] = DenseMatrix.create(rows, cols, data)
 }
 
 trait MatrixConstructors[Vec[T]<:Matrix[T]] {
   def zeros[@specialized(Int, Float, Double) V:ClassManifest:DefaultArrayValue](rows: Int, cols: Int):Vec[V]
-  def apply[@specialized(Int, Float, Double) V:DefaultArrayValue](rows: Int, cols: Int)(data: Array[V]):Vec[V]
+  def create[@specialized(Int, Float, Double) V:DefaultArrayValue](rows: Int, cols: Int, data: Array[V]):Vec[V]
 
-  def fill[@spec(Double, Int, Float) V:ClassManifest:DefaultArrayValue](rows: Int, cols: Int)(v: =>V):Vec[V] = apply(rows, cols)(Array.fill(rows * cols)(v))
+  def fill[@spec(Double, Int, Float) V:ClassManifest:DefaultArrayValue](rows: Int, cols: Int)(v: =>V):Vec[V] = create(rows, cols, Array.fill(rows * cols)(v))
   def tabulate[@spec(Double, Int, Float) V:ClassManifest:DefaultArrayValue](rows: Int, cols: Int)(f: (Int,Int)=>V):Vec[V]= {
     val z = zeros(rows, cols)
     for(c <- 0 until cols; r <- 0 until rows) {

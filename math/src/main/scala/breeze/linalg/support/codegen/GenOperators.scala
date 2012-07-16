@@ -235,8 +235,8 @@ object GenOperators {
 
 object GenDenseOps extends App {
 
-  val blacklist = Set("canMulScalarInto_DV_S_Double", "canSetInto_DV_DV_Double",
-    "canAddInto_DV_DV_Double", "canSubInto_DV_DV_Double")
+  val blacklist = Map("DenseVector" -> Set("canMulScalarInto_DV_S_Double", "canSetInto_DV_DV_Double",
+    "canAddInto_DV_DV_Double", "canSubInto_DV_DV_Double")).withDefaultValue(Set.empty)
 
   def genHomogeneous(tpe: String, generic: String, pckg: String, f: File)(loop: ((String,String)=>String)=>String,
                                                                          loopS: ((String,String)=>String)=>String,
@@ -272,7 +272,7 @@ object GenDenseOps extends App {
 
       for( (op,fn) <- ops) {
         val name = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_DV_DV_"+scalar
-        if(!blacklist(name)) {
+        if(!blacklist(tpe)(name)) {
           println(genBinaryUpdateOperator(name, vector, vector, op)(loop(fn)))
           if(generic == "Vector")
             println("  " + register(generic, GenVectorRegistries.getVVIntoName(op, scalar), name))
@@ -283,7 +283,7 @@ object GenDenseOps extends App {
           println()
         }
         val names = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_DV_S_"+scalar
-        if(!blacklist(names)) {
+        if(!blacklist(tpe)(names)) {
           println(genBinaryUpdateOperator(names, vector, scalar, op)(loopS(fn)))
           if(generic == "Vector")
             println("  " + register(generic, GenVectorRegistries.getVSIntoName(op, scalar), names))
