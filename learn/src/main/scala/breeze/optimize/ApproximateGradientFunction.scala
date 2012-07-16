@@ -38,7 +38,7 @@ class ApproximateGradientFunction[K,T](f: T=>Double,
       xx(k) += epsilon
       grad(k) = (f(xx) - fx) / epsilon
       xx(k) -= epsilon
-      println("diff : " + epsilon + " val: " + (grad(k) - trueGrad(k)) + " comp: " + trueGrad(k) + " " + grad(k))
+      println("diff : " + epsilon + " val: " + (grad(k) - trueGrad(k)) + " dp: " + trueGrad(k) + " empirical: " + grad(k))
     }
     (fx,grad)
 
@@ -47,7 +47,7 @@ class ApproximateGradientFunction[K,T](f: T=>Double,
 
 class RandomizedGradientCheckingFunction[K,T](f: DiffFunction[T],
                                               randFraction:Double = 0.01,
-                                              epsilons: Seq[Double] = Array(1E-5),
+                                              epsilons: Seq[Double] = Array(1E-8),
                                               toString: K=>String = {(_:K).toString})
                                              (implicit zeros: CanCreateZerosLike[T,T],
                                               view2: T <:< NumericOps[T],
