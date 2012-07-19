@@ -286,7 +286,7 @@ package object numerics extends UniversalFuncs {
   }
 
   // fast versions of max. Useful for the fast logsum.
-  private def max(a: Array[Double], length: Int) = {
+  def max(a: Array[Double], length: Int) = {
     var i = 1
     var max =  a(0)
     while(i < length) {
