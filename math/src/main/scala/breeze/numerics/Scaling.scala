@@ -20,9 +20,8 @@ trait Scaling {
   val scaleConstant: Int
 
   /**
-   * Ensures that all doubles are between (2**scaleConstant,2**-scaleConstant),
-   * scaling the array as necessary. If that's not possible, we prefer
-   * to keep the largest values less than 2**scaleConstant
+   * Ensures that the max double is between (2**scaleConstant,2**-scaleConstant),
+   * scaling the array as necessary.
    * @param scores
    * @param currentScale
    * @return newScale
@@ -33,7 +32,7 @@ trait Scaling {
     if(scaleDelta != 0) {
       var i = 0
       while(i < scores.length) {
-        scores(i) = java.lang.Math.scalb(scores(i), scaleDelta)
+        scores(i) = java.lang.Math.scalb(scores(i), -scaleDelta)
         i += 1
       }
     }
@@ -43,30 +42,28 @@ trait Scaling {
 
   /**
    * Computes the log power of two we'd need to scale by
-   * so that all doubles are between (2 ** scaleConstant, 2 ** -scaleConstant).
-   *
-   * If it's not possible to represent all numbers in that range, we prefer
-   * to keep all doubles less than 2 ** scaleConstant, letting others
-   * underflow
+   * so that the max double is between (2 ** scaleConstant, 2 ** -scaleConstant).
    *
    * @param scores
    * @return
    */
-  def computeScaleDelta(scores: Array[Double]):Int = {
-    var maxScale = 0
-    var minScale = 0
+  private def computeScaleDelta(scores: Array[Double]):Int = {
+    var maxScale = -10000
     var i = 0
     while(i < scores.length) {
-      val exp = java.lang.Math.getExponent(scores(i))
-      maxScale = math.max(maxScale, exp)
-      minScale = math.min(minScale, exp)
+      val score = scores(i)
+      if(score != 0.0) {
+        val exp = java.lang.Math.getExponent(score)
+        maxScale = math.max(maxScale, exp)
+      }
       i += 1
     }
 
-    // if we scalb by this value, then all doubles will be in the range we want.
+    // if we scalb by -value, then all doubles will be in the range we want.
     // note that minScale < 0 in general
-    if(maxScale > scaleConstant) -scaleConstant * (maxScale / scaleConstant)
-    else if(minScale < -scaleConstant) -scaleConstant * (minScale / scaleConstant)
+    if(maxScale == -10000) 0
+    else if(maxScale > scaleConstant) scaleConstant * (maxScale / scaleConstant)
+    else if(maxScale < -scaleConstant) scaleConstant * (maxScale / scaleConstant)
     else 0
   }
 
@@ -76,7 +73,7 @@ trait Scaling {
     if(scaleDelta != 0) {
       var i = 0
       while(i < scores.length) {
-        scores(i) = java.lang.Math.scalb(scores(i), scaleDelta)
+        scores(i) = java.lang.Math.scalb(scores(i), -scaleDelta)
         i += 1
       }
     }
@@ -90,6 +87,16 @@ trait Scaling {
     java.lang.Math.scalb(score, -currentScale)
   }
 
+  /**
+   * Converts the scaled value into "normal" space
+   */
+  def scaleValue(score: Double, currentScale: Int, targetScale: Int) = {
+    java.lang.Math.scalb(score, targetScale-currentScale)
+  }
+
+  def toLogSpace(score: Double, currentScale: Int) = {
+    log(score) - currentScale * log(2)
+  }
 }
 
 object Scaling extends Scaling {
