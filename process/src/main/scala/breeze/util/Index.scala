@@ -177,6 +177,7 @@ trait SynchronizedMutableIndex[T] extends MutableIndex[T] with SynchronizedIndex
  *
  * @author dlwh, dramage
  */
+@SerialVersionUID(-7655100457525569617L)
 class HashIndex[T] extends MutableIndex[T] with Serializable {
   /** Forward map from int to object */
   private val objects = new ArrayBuffer[T]
@@ -207,12 +208,14 @@ class HashIndex[T] extends MutableIndex[T] with Serializable {
 
   /** Returns the position of T, adding it to the index if it's not there. */
   override def index(t: T) = {
-    def nextMax = {
-      val m = objects.size
+    if(!indices.contains(t)) {
+      val ind = objects.size
       objects += t
-      m
+      indices.put(t, ind)
+      ind
+    } else {
+      indices(t)
     }
-    indices.getOrElseUpdate(t,nextMax)
   }
 
   def pairs = indices.iterator
