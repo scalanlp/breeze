@@ -7,7 +7,7 @@ import java.text.BreakIterator
  * @author dlwh
  */
 
-class SentenceTokenizer extends Tokenizer {
+case class SentenceTokenizer() extends Tokenizer {
   def apply(v1: String): Iterable[String] = {
     new Iterable[String] {
       def iterator: Iterator[String] = new Iterator[String] {
@@ -31,4 +31,3 @@ class SentenceTokenizer extends Tokenizer {
 
   }
 }
-
