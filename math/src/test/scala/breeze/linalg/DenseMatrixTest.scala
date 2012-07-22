@@ -164,7 +164,7 @@ class DenseMatrixTest extends FunSuite with Checkers {
   }
 
   /*
-  test("Map") {
+  test("Map Triples") {
     val a : DenseMatrix[Int] = DenseMatrix((1,0,0),(2,3,-1))
 
     val b1 : DenseMatrix[Int] = a.mapTriples((i,j,v) => i + v)

@@ -21,6 +21,7 @@ import org.netlib.blas.Dgemm
 import breeze.util.Terminal
 import support.LiteralRow
 import util.Random
+import breeze.generic.CanMapValues
 
 /**
  *
@@ -28,6 +29,7 @@ import util.Random
  */
 
 trait MatrixLike[@spec(Int, Float, Double) E, +Self <: Matrix[E]] extends Tensor[(Int, Int), E] with TensorLike[(Int, Int), E, Self] {
+  def map[E2, That](fn: E=>E2)(implicit canMapValues: CanMapValues[Self, E, E2, That]):That = values map fn
 
 }
 
