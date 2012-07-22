@@ -31,30 +31,28 @@ import breeze.storage.DefaultArrayValue
  * can be used with blas, and support operations to that effect.
  *
  * @author dlwh
+ * @param rows number of rows
+ * @param cols number of cols
+ * @param data The underlying data.
+ *             Column-major unless isTranpose is true.
+ *             Mutate at your own risk.
+ *             Note that this matrix may be a view of the data.
+ *             Use linearIndex(r,c) to calculate indices.
+ * @param offset starting point into array
+ * @param majorStride distance separating columns (or rows, for isTranspose). should be >= rows (or cols, for isTranspose)
+ * @param isTranspose if true, then the matrix is considered to be "transposed" (that is, row major)
  */
 @SerialVersionUID(1L)
-final class DenseMatrix[@specialized(Int, Float, Double) V](
-                                                            /** number of rows */
-                                                            val rows: Int,
-                                                            /** number of columns */
+final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
                                                             val cols: Int,
-                                                            /** The underlying data.
-                                                            Column-major unless isTranpose is true.
-                                                            Mutate at your own risk.
-                                                            Note that this matrix may be a view of the data.
-                                                            Use linearIndex(r,c) to calculate indices.*/
                                                             val data: Array[V],
-                                                            /** starting point into array */
                                                             val offset: Int,
-                                                            /**distance separating columns (or rows, for isTranspose)
-                                                             * Should be >= rows (or cols, for isTranspose)
-                                                             */
                                                             val majorStride: Int,
                                                             val isTranspose: Boolean = false)
 extends StorageMatrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
   /** Creates a matrix with the specified data array, rows, and columns. Data must be column major */
   def this(rows: Int, cols: Int, data: Array[V], offset: Int = 0) = this(rows, cols, data, offset, rows)
-  /** Creates a matrix with the specified data array  and rows. columns inferred automatically */
+  /** Creates a matrix with the specified data array and rows. columns inferred automatically */
   def this(rows: Int, data: Array[V], offset: Int = 0) = this(rows, {assert(data.length % rows == 0); data.length/rows}, data, offset)
 
   def apply(row: Int, col: Int) = {
@@ -64,8 +62,8 @@ extends StorageMatrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
   }
 
 
-  @inline
-  final def linearIndex(row: Int, col: Int): Int = {
+  /** Calculates the index into the data array for row and column */
+  def linearIndex(row: Int, col: Int): Int = {
     if(isTranspose)
       offset + col + row * majorStride
     else
@@ -86,6 +84,7 @@ extends StorageMatrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
 
   def activeKeysIterator = keysIterator
 
+  /** Computes the sum along the diagonal. */
   def trace(implicit numeric: Numeric[V]) = diagM(this:DenseMatrix[V]).sum
 
   override def equals(p1: Any) = p1 match {
