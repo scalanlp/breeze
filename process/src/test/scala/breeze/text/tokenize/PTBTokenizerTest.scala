@@ -124,6 +124,10 @@ class PTBTokenizerTest extends FunSuite with Checkers {
     for(s <- candidates) {
       assert(PTBTokenizer(s).toList === List(s,"."))
     }
+  }
 
+  test("URLs") {
+    val text = "Go to http://google.com/ now!"
+    assert(PTBTokenizer(text).toList === List("Go", "to", "http://google.com/", "now", "!"))
   }
 }

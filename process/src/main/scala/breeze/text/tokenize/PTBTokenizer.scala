@@ -33,7 +33,7 @@ import annotation.switch
  * @author dlwh
  */
 class PTBTokenizer extends Tokenizer {
-  def apply(v1: String): Iterable[String] = {
+  def apply(text: String): Iterable[String] = {
     val out = new ArrayBuffer[String]
     var begTok = 0
     var cur = 0
@@ -43,7 +43,7 @@ class PTBTokenizer extends Tokenizer {
     // adds tok [begTok,cur), advances tok to cur+=1
     def addToken() {
       if(begTok < cur) {
-        val str = v1.substring(begTok, cur)
+        val str = text.substring(begTok, cur)
         post(str, out, hasSingleQuote)
       }
       skipTok()
@@ -51,12 +51,12 @@ class PTBTokenizer extends Tokenizer {
     }
     def skipTok() { begTok = cur + 1}
 
-    def currentToken = v1.substring(begTok,cur)
+    def currentToken = text.substring(begTok,cur)
 
-    while(cur < v1.length) {
-      val c = v1.charAt(cur)
-      val nextChar = if(cur + 1 == v1.length) ' ' else v1.charAt(cur + 1)
-      val nextNextChar = if(cur + 2 >= v1.length) ' ' else v1.charAt(cur + 2)
+    while(cur < text.length) {
+      val c = text.charAt(cur)
+      val nextChar = if(cur + 1 == text.length) ' ' else text.charAt(cur + 1)
+      val nextNextChar = if(cur + 2 >= text.length) ' ' else text.charAt(cur + 2)
       c match {
         case x if x.isSpaceChar =>
           // spaces end tokens
@@ -96,7 +96,7 @@ class PTBTokenizer extends Tokenizer {
           out += "..."
           cur += 2
           skipTok()
-        case '.' if cur == v1.length - 1 || (!nextChar.isLetterOrDigit && cur == v1.length - 2) =>
+        case '.' if cur == text.length - 1 || (!nextChar.isLetterOrDigit && cur == text.length - 2) =>
           // if the current token contains a '.' it's probably an acronym,
           // add new period as its own token
           if(currentToken.contains("."))
@@ -104,7 +104,22 @@ class PTBTokenizer extends Tokenizer {
           addToken()
           out += "."
           skipTok()
-        case c if ",;:@#$%&][(){}<>".contains(c) =>
+        case ':' if nextChar == '/' && nextNextChar == '/' =>
+          // assume url:
+
+          var endOfURL = text.indexWhere(ch => ch.isSpaceChar || ch == '"', cur)
+          val possibleQuote = text.indexOf('"', cur)
+          if (possibleQuote < endOfURL && possibleQuote >= 0)
+            endOfURL = possibleQuote
+          if(endOfURL == -1) {
+            cur = text.length
+          } else {
+            cur = endOfURL
+          }
+          // add that url
+          addToken()
+        case c if ",;#$%&][(){}<>".contains(c) =>
+          // most symbols are boundaries
           addToken()
           post(c.toString, out, false)
           skipTok()
