@@ -118,7 +118,12 @@ class PTBTokenizer extends Tokenizer {
           }
           // add that url
           addToken()
-        case c if ",;#$%&][(){}<>".contains(c) =>
+        case c if ":@#&".contains(c) && nextChar.isSpaceChar =>
+          // these are only boundaries if the next character is space
+          addToken()
+          post(c.toString, out, false)
+          skipTok()
+        case c if ",;$%][(){}<>".contains(c)  =>
           // most symbols are boundaries
           addToken()
           post(c.toString, out, false)
