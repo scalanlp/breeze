@@ -75,7 +75,7 @@ final class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
 
   def copy: DenseVector[E] = {
     implicit val man = ClassManifest.fromClass[E](data.getClass.getComponentType.asInstanceOf[Class[E]])
-    val r = new DenseVector(new Array[E](length), 0, 1, length)
+    val r = new DenseVector(new Array[E](length))
     r := this
     r
   }
@@ -108,6 +108,21 @@ final class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
    * @return
    */
   def allVisitableIndicesActive: Boolean = true
+
+  /**
+   * Faster foreach
+   * @param fn
+   * @tparam U
+   */
+  override def foreach[U](fn: (E) => U) {
+    var i = offset
+    var j = 0
+    while(j < length) {
+      fn(data(i))
+      i += stride
+      j += 1
+    }
+  }
 }
 
 
