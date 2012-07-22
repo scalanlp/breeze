@@ -51,42 +51,56 @@ class PTBTokenizer extends Tokenizer {
     }
     def skipTok() { begTok = cur + 1}
 
+    def currentToken = v1.substring(begTok,cur)
+
     while(cur < v1.length) {
       val c = v1.charAt(cur)
       val nextChar = if(cur + 1 == v1.length) ' ' else v1.charAt(cur + 1)
       val nextNextChar = if(cur + 2 >= v1.length) ' ' else v1.charAt(cur + 2)
       c match {
         case x if x.isSpaceChar =>
+          // spaces end tokens
           addToken()
         case '-' if nextChar == '-' =>
+          // -- is one character
           addToken()
           out += "--"
           cur += 1
           skipTok()
         case '"' =>
+          // " may be a `` or a ''
           addToken()
           if(cLast.isSpaceChar) out += "``"
           else out += "''"
           skipTok()
         case '\'' if nextChar.isSpaceChar =>
+          // ' followed by a ' ends a token and is its own token
           addToken()
           out += "'"
           skipTok()
         case '\'' if "sSmMdD".contains(nextChar) && nextNextChar.isSpaceChar =>
+          // common contractions
           addToken()
           begTok = cur
         case '\'' =>
+          // maybe we handle less common contractions later
           hasSingleQuote = true
         case '!' |  '?' =>
+          // always separate '!' and '?'
           addToken()
           out += c.toString
           skipTok()
         case '.' if nextChar == '.' && nextNextChar == '.' =>
+          // ellipsis
           addToken()
           out += "..."
           cur += 2
           skipTok()
         case '.' if cur == v1.length - 1 || (!nextChar.isLetterOrDigit && cur == v1.length - 2) =>
+          // if the current token contains a '.' it's probably an acronym,
+          // add new period as its own token
+          if(currentToken.contains("."))
+           cur += 1
           addToken()
           out += "."
           skipTok()

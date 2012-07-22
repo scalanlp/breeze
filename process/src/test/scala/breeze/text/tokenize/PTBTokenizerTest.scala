@@ -118,4 +118,12 @@ class PTBTokenizerTest extends FunSuite with Checkers {
     }
 
   }
+
+  test("acronyms") {
+    val candidates = Seq("U.S.","u.s.","p.s.")
+    for(s <- candidates) {
+      assert(PTBTokenizer(s).toList === List(s,"."))
+    }
+
+  }
 }
