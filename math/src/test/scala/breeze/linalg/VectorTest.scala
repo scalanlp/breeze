@@ -54,7 +54,7 @@ class VectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[Vector[Double
 class VectorOps_FloatTest extends TensorSpaceTestBase[Vector[Float], Int, Float] {
  val space: TensorSpace[Vector[Float], Int, Float] = implicitly
 
-  override val TOL: Double = 1E-4
+  override val TOL: Double = 1E-3
   val N = 30
   implicit def genTriple: Arbitrary[(Vector[Float], Vector[Float], Vector[Float])] = {
     Arbitrary {
