@@ -27,16 +27,12 @@ import breeze.generic.CanMapValues
  *
  * @author dlwh
  */
-
 trait MatrixLike[@spec(Int, Float, Double) E, +Self <: Matrix[E]] extends Tensor[(Int, Int), E] with TensorLike[(Int, Int), E, Self] {
   def map[E2, That](fn: E=>E2)(implicit canMapValues: CanMapValues[Self, E, E2, That]):That = values map fn
 
 }
 
 trait Matrix[@spec(Int, Float, Double) E] extends MatrixLike[E, Matrix[E]] {
-
-
-
   final def apply(i: (Int, Int)) = apply(i._1, i._2)
   final def update(i: (Int, Int), e: E) {
     update(i._1, i._2, e)
@@ -156,15 +152,5 @@ trait MatrixConstructors[Vec[T]<:Matrix[T]] {
     }
     rv
   }
-
-}
-
-
-trait StorageMatrix[@spec(Int, Float, Double) E] extends Matrix[E] with MatrixLike[E, StorageMatrix[E]] with Storage[E] {
-  def offset: Int
-  def majorStride: Int
-  def isTranspose: Boolean
-
-
 
 }

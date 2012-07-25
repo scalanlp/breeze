@@ -49,7 +49,7 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
                                                             val offset: Int,
                                                             val majorStride: Int,
                                                             val isTranspose: Boolean = false)
-extends StorageMatrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
+extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
   /** Creates a matrix with the specified data array, rows, and columns. Data must be column major */
   def this(rows: Int, cols: Int, data: Array[V], offset: Int = 0) = this(rows, cols, data, offset, rows)
   /** Creates a matrix with the specified data array and rows. columns inferred automatically */
