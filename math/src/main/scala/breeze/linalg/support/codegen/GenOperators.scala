@@ -330,27 +330,40 @@ object GenDVSVSpecialOps extends App {
   def fastLoop(op: (String,String)=>String):String = {
     """require(b.length == a.length, "Vectors must be the same length!")
 
+    val adata = a.data
+    val aoff = a.offset
+    val astride = a.stride
+
     val bd = b.data
     val bi = b.index
     val bsize = b.iterableSize
+
     var i = 0
     while(i < bsize) {
-      if(b.isActive(i)) a(bi(i)) = %s
+      if(b.isActive(i)) {
+        val j = aoff + bi(i) * astride
+        adata(j) = %s
+      }
       i += 1
     }
-    """.format(op("a(bi(i))","bd(i)")).replaceAll("    ","        ")
+    """.format(op("adata(j)","bd(i)")).replaceAll("    ","        ")
   }
 
 
   def slowLoop(op: (String,String)=>String):String = {
     """require(b.length == a.length, "Vectors must be the same length!")
 
+    val adata = a.data
+    var j = a.offset
+    val astride = a.stride
+
     var i = 0
     while(i < b.length) {
-      a(i) = %s
+      adata(j) = %s
       i += 1
+      j += astride
     }
-    """.format(op("a(i)","b(i)")).replaceAll("    ","        ")
+    """.format(op("adata(j)","b(i)")).replaceAll("    ","        ")
   }
 
   def gen(sparseType: String, out: PrintStream) {
@@ -387,17 +400,22 @@ object GenDVSVSpecialOps extends App {
       println(genBinaryOperator(dotName, vector, svector, OpMulInner, scalar){
         """require(b.length == a.length, "Vectors must be the same length!")
 
-       var result: """ + scalar + """ = 0
+      var result: """ + scalar + """ = 0
 
-        val bd = b.data
-        val bi = b.index
-        val bsize = b.iterableSize
-        var i = 0
-        while(i < bsize) {
-          if(b.isActive(i)) result += a(bi(i)) * bd(i)
-          i += 1
-        }
-        result""".replaceAll("       ","        ")
+      val bd = b.data
+      val bi = b.index
+      val bsize = b.iterableSize
+
+      val adata = a.data
+      val aoff = a.offset
+      val stride = a.stride
+
+      var i = 0
+      while(i < bsize) {
+        if(b.isActive(i)) result += adata(aoff + bi(i) * stride) * bd(i)
+        i += 1
+      }
+      result""".replaceAll("       ","        ")
       })
       println("  " + register("Vector", GenVectorRegistries.getDotName(scalar), dotName))
 
