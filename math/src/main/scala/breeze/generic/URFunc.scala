@@ -14,7 +14,6 @@ package breeze.generic
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import breeze.linalg.Axis
 
 /**
  * A "Universal Reducer" Function that can support reduction-type operations
