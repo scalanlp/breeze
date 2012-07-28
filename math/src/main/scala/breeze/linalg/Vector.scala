@@ -139,7 +139,15 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
   def zeros[V:ClassManifest](size: Int):Vec[V]
   def apply[@spec(Double, Int, Float) V](values: Array[V]):Vec[V]
 
-  def apply[V:ClassManifest](values: V*):Vec[V] = apply(values.toArray)
+  def apply[V:ClassManifest](values: V*):Vec[V] = {
+    // manual specialization so that we create the right DenseVector specialization... @specialized doesn't work here
+    val man = implicitly[ClassManifest[V]]
+    if(man == manifest[Double]) apply(values.toArray.asInstanceOf[Array[Double]]).asInstanceOf[Vec[V]]
+    else if (man == manifest[Float]) apply(values.toArray.asInstanceOf[Array[Float]]).asInstanceOf[Vec[V]]
+    else if (man == manifest[Int]) apply(values.toArray.asInstanceOf[Array[Int]]).asInstanceOf[Vec[V]]
+    else apply(values.toArray)
+//     apply(values.toArray)
+  }
   def fill[@spec(Double, Int, Float) V:ClassManifest](size: Int)(v: =>V):Vec[V] = apply(Array.fill(size)(v))
   def tabulate[@spec(Double, Int, Float) V:ClassManifest](size: Int)(f: Int=>V):Vec[V]= apply(Array.tabulate(size)(f))
 

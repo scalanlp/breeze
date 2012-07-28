@@ -34,12 +34,12 @@ package object linalg extends LinearAlgebra {
    * @param m the matrix
    * @tparam V
    */
-  def diag[V](m: DenseMatrix[V]): DenseVector[V] = {
+  def diag[@specialized(Double) V](m: DenseMatrix[V]): DenseVector[V] = {
     require(m.rows == m.cols, "m must be square")
     new DenseVector(m.data, m.offset, m.majorStride + 1, m.rows)
   }
 
-  private[linalg] def diagM[V](m: DenseMatrix[V]): DenseVector[V] = {
+  private[linalg] def diagM[@specialized(Double) V](m: DenseMatrix[V]): DenseVector[V] = {
     diag(m)
   }
 
