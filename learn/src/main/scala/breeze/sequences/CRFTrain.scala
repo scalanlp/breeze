@@ -12,6 +12,15 @@ import scala.collection.IndexedSeq
 import io.Source
 import breeze.data.Observation
 
+/**
+ * This class is just for holding onto all the information produced by CRFTrain.
+ *
+ * CRFTest can process it.
+ *
+ * @param crf the crf
+ * @param template the feature template created using this CRF
+ * @param statIndex the index for features (features without labels)
+ */
 case class CRFPackage(crf: CRF[String,Seq[Seq[Int]]],
                     template: FeatureTemplate,
                     statIndex: Index[SuffStat]) {

@@ -28,6 +28,12 @@ import util.{Index, Encoder, Lazy}
 import java.util.Arrays
 import scala.collection.immutable.{Range, BitSet}
 
+
+/**
+ * Trait to handle the scoring for each transiton in a CRF
+ * @tparam L label type
+ * @tparam W the sequence type. Note that we don't take Seq[W], but a single W.
+ */
 trait CRFModel[L,W] extends Encoder[L] with Serializable {
   val index: Index[L]
   def scoreTransition(pos: Int, w: W, l: L, ln: L):Double = {
@@ -40,14 +46,23 @@ trait CRFModel[L,W] extends Encoder[L] with Serializable {
 }
 
 /**
- * Represents a linear-chain CRF with a fixed window size (2), can score sequences and such.
+ * Represents a linear-chain Conditional Random Field with a fixed window size (2), can score sequences and such.
  *
  * W is kept as an opaque object, which allows for you to condition on more than just the "outputs"
+ * @tparam L label type
+ * @tparam W the sequence type. Note that we don't take Seq[W], but a single W.
+ * @param transitions The underlying CRFModel, which scores transitions
  *
  */
 class CRF[L,W](val transitions: CRFModel[L,W]) {
   def numStates = transitions.index.size
 
+  /**
+   * Computes the most likely series of states for the
+   * @param words input sequence
+   * @param length the length of the sequence
+   * @return most likely sequence
+   */
   def viterbi(words: W, length: Int) = {
     val forwardScores = Array.fill(length)(mkVector(numStates, Double.NegativeInfinity))
     val back = Array.fill(length,numStates)(-1)
@@ -57,7 +72,6 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
     // forward
     for(i <- 0 until length) {
       val cur = forwardScores(i)
-      // TODO: add in active iterators to scalala?
       for ( next <- transitions.validSymbols(i,words)) {
         for((previousLabel,prevScore) <- previous.iterator) {
           val score = transitions.score(i,words,previousLabel,next) + prevScore
@@ -155,8 +169,10 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
   }
 
   /**
-  * A calibration is a class that represents the CRF being conditioned on some input.
-  */
+   * A calibration is a class that represents the CRF being conditioned on some input.
+   *
+   * You can get marginals and expected counts from it.
+   */
   class Calibration protected[CRF] (val words:W, length: Int, forward: Array[Vector[Double]], backward: Array[Vector[Double]]) {
     /** 
     * returns the value of the partition function for this sequence of words. This is the normalizer for the distribution.
