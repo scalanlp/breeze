@@ -20,8 +20,13 @@ package breeze.numerics
  *
  * @author dlwh
  */
-
 object IntMath {
+  /**
+   * Computes base to the exp'th power for Ints by repeated squaring.
+   * @param base
+   * @param exp
+   * @return
+   */
   def ipow(base: Int, exp: Int):Int = {
     var b = base
     if(exp < 0 && base != 1) 0

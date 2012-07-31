@@ -23,7 +23,21 @@ import breeze.numerics.IntMath
 import java.util.Arrays
 import breeze.math.{TensorSpace, Semiring, Ring, Field}
 import breeze.util.ArrayUtil
+import breeze.storage.DefaultArrayValue
 
+/**
+ * A DenseVector is the "obvious" implementation of a Vector, with one twist.
+ * The underlying data may have more data than the Vector.
+ *
+ * The i'th element is at offset + i * stride
+ *
+ * @author dlwh
+ *
+ * @param data data array
+ * @param offset index of the 0'th element
+ * @param stride separation between elements
+ * @param length number of elements
+ */
 @SerialVersionUID(1L)
 class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
                                                      val offset: Int,
@@ -31,6 +45,10 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
                                                      val length: Int) extends StorageVector[E]
                                                     with VectorLike[E, DenseVector[E]] with Serializable{
   def this(data: Array[E]) = this(data, 0, 1, data.length)
+
+  // uncomment to get all the ridiculous places where specialization fails.
+ // if(data.isInstanceOf[Array[Double]] && getClass.getName() == "breeze.linalg.DenseVector") throw new Exception("...")
+
   def repr = this
 
   def activeSize = length
@@ -73,6 +91,10 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
     else f(data, offset, stride, length, {(_:Int) => true})
   }
 
+  /**
+   * Returns a copy of this DenseVector. stride will always be 1, offset will always be 0.
+   * @return
+   */
   def copy: DenseVector[E] = {
     implicit val man = ClassManifest.fromClass[E](data.getClass.getComponentType.asInstanceOf[Class[E]])
     val r = new DenseVector(new Array[E](length))
@@ -81,11 +103,11 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
   }
 
   /**
-   * same as data(i). Gives the value at the underlying offset.
+   * same as apply(i). Gives the value at the underlying offset.
    * @param i index into the data array
-   * @return data(i)
+   * @return apply(i)
    */
-  def valueAt(i: Int): E = data(i)
+  def valueAt(i: Int): E = apply(i)
 
   /**
    * Gives the logical index from the physical index.
@@ -102,6 +124,7 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
    * @return
    */
   def isActive(i: Int): Boolean = true
+
 
   /**
    * Only gives true if isActive would return true for all i. (May be false anyway)
@@ -146,9 +169,10 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
 
     // concatenation
   /**
-   * Horizontal concatenation of two or more row vectors into one matrix.
+   * Horizontal concatenation of two or more vectors into one matrix.
    * @throws IllegalArgumentException if vectors have different sizes
-  def horzcat[V: ClassManifest](vectors: DenseVector[V]*): DenseMatrix[V] = {
+   */
+  def horzcat[V: ClassManifest:DefaultArrayValue](vectors: DenseVector[V]*): DenseMatrix[V] = {
     val size = vectors.head.size
     if (!(vectors forall (_.size == size)))
       throw new IllegalArgumentException("All vectors must have the same size!")
@@ -157,7 +181,6 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
       result(::, col) := v
     result
   }
-   */
 
   /**
    * Vertical concatenation of two or more column vectors into one large vector.
@@ -173,17 +196,23 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     result
   }
 
+  // capabilities
+
   implicit def canCreateZerosLike[V:ClassManifest] = new CanCreateZerosLike[DenseVector[V], DenseVector[V]] {
     def apply(v1: DenseVector[V]) = {
       zeros[V](v1.length)
     }
   }
 
-
-
-  implicit def canCopyDenseVector[V:ClassManifest] = new CanCopy[DenseVector[V]] {
+  implicit def canCopyDenseVector[V:ClassManifest]:CanCopy[DenseVector[V]] = new CanCopy[DenseVector[V]] {
     def apply(v1: DenseVector[V]) = {
-      new DenseVector(Array.tabulate(v1.length)(i => v1(i)))
+      val data = new Array[V](v1.length)
+      var i = 0
+      while(i < data.length) {
+        data(i) = v1(i)
+        i += 1
+      }
+      new DenseVector(data)
     }
   }
 
@@ -197,7 +226,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     }
   }
 
-  implicit def negFromScale[@specialized(Int, Float, Double)  V, Double](implicit scale: BinaryOp[DenseVector[V], V, OpMulScalar, DenseVector[V]], field: Ring[V]) = {
+  implicit def negFromScale[V](implicit scale: BinaryOp[DenseVector[V], V, OpMulScalar, DenseVector[V]], field: Ring[V]) = {
     new UnaryOp[DenseVector[V], OpNeg, DenseVector[V]] {
       override def apply(a : DenseVector[V]) = {
         scale(a, field.negate(field.one))
@@ -279,8 +308,6 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   implicit val space_d = TensorSpace.make[DenseVector[Double], Int, Double]
   implicit val space_f = TensorSpace.make[DenseVector[Float], Int, Float]
   implicit val space_i = TensorSpace.make[DenseVector[Int], Int, Int]
-
-
 
 }
 

@@ -23,6 +23,13 @@ import org.netlib.util.intW
 import storage.DefaultArrayValue
 
 /**
+ * This package contains everything relating to Vectors, Matrices, Tensors, etc.
+ *
+ * If you're doing basic work, you probably want [[breeze.linalg.DenseVector]] and [[breeze.linalg.DenseMatrix]],
+ * which support most operations. We also have [[breeze.linalg.SparseVector]]s and (basic!) support
+ * for a sparse matrix ([[breeze.linalg.CSCMatrix]]).
+ *
+ * This package object contains Matlab-esque functions for interacting with tensors and matrices.
  *
  * @author dlwh
  */
@@ -34,12 +41,14 @@ package object linalg extends LinearAlgebra {
    * @param m the matrix
    * @tparam V
    */
-  def diag[V](m: DenseMatrix[V]): DenseVector[V] = {
+  def diag[@specialized(Double) V](m: DenseMatrix[V]): DenseVector[V] = {
     require(m.rows == m.cols, "m must be square")
     new DenseVector(m.data, m.offset, m.majorStride + 1, m.rows)
   }
 
-  private[linalg] def diagM[V](m: DenseMatrix[V]): DenseVector[V] = {
+  // there's a weird compile error I don't understand if I try to use diag in DenseMatrix.scala directly.
+  // this is a crappy little function to deal with it.
+  private[linalg] def diagM[@specialized(Double) V](m: DenseMatrix[V]): DenseVector[V] = {
     diag(m)
   }
 
@@ -68,8 +77,14 @@ package object linalg extends LinearAlgebra {
     DenseVector.tabulate(length)(i => a + increment * i)
   }
 
+  /**
+   * Copy a T. Most tensor objects have a CanCopy implicit, which is what this farms out to.
+   */
   def copy[T](t: T)(implicit canCopy: CanCopy[T]): T = canCopy(t)
 
+  /**
+   * Computes the norm of an object. Many tensor objects have a CanNorm implicit, which is what this calls.
+   */
   def norm[T](t: T, v: Double = 2)(implicit canNorm: CanNorm[T]) = canNorm(t, v)
 
 
@@ -100,7 +115,7 @@ package object linalg extends LinearAlgebra {
                                   red: UReduceable[V, Double],
                                   op : BinaryOp[V,Double,OpSub,V]): V = {
     val max = softmax(value)
-    if(max.isInfinite) value
+    if(max == Double.NegativeInfinity) value
     else value - max
   }
 
@@ -127,7 +142,9 @@ package object linalg extends LinearAlgebra {
     collapse(value, axis)(v => logAndNormalize(v))
   }
 
-
+  /**
+   * A [[breeze.generic.URFunc]] for computing the mean of objects
+   */
   val mean:URFunc[Double, Double] = new URFunc[Double, Double] {
     def apply(cc: TraversableOnce[Double]) =  {
       val (sum,n) = accumulateAndCount(cc)
@@ -177,6 +194,11 @@ package object linalg extends LinearAlgebra {
   }
 
 
+  /**
+   * A [[breeze.generic.URFunc]] for computing the mean and variance of objects.
+   * This uses an efficient, numerically stable, one pass algorithm for computing both
+   * the mean and the variance.
+   */
   val meanAndVariance:URFunc[Double, (Double,Double)] = new URFunc[Double, (Double,Double)] {
     def apply(it: TraversableOnce[Double]) = {
       val (mu,s,n) = it.foldLeft( (0.0,0.0,0)) { (acc,y) =>
@@ -212,6 +234,10 @@ package object linalg extends LinearAlgebra {
     }
   }
 
+  /**
+   * A [[breeze.generic.URFunc]] for computing the variance of objects.
+   * The method just calls meanAndVariance and returns the second result.
+   */
   val variance:URFunc[Double, Double] = new URFunc[Double, Double] {
     def apply(cc: TraversableOnce[Double]) =  {
       meanAndVariance(cc)._2
@@ -223,6 +249,9 @@ package object linalg extends LinearAlgebra {
     }
   }
 
+  /**
+   * Cmoputes the standard deviation by calling variance and then sqrt'ing
+   */
   val stddev:URFunc[Double, Double] = new URFunc[Double, Double] {
     def apply(cc: TraversableOnce[Double]) =  {
       scala.math.sqrt(variance(cc))
@@ -233,6 +262,9 @@ package object linalg extends LinearAlgebra {
     }
   }
 
+  /**
+   * Computes the max, aka the infinity norm.
+   */
   val max:URFunc[Double, Double] = new URFunc[Double, Double] {
     def apply(cc: TraversableOnce[Double]) =  {
       cc.max
@@ -255,6 +287,9 @@ package object linalg extends LinearAlgebra {
   }
 
 
+  /**
+   * Computes the minimum.
+   */
   val min:URFunc[Double, Double] = new URFunc[Double, Double] {
     def apply(cc: TraversableOnce[Double]) =  {
       cc.min
@@ -276,6 +311,12 @@ package object linalg extends LinearAlgebra {
     }
   }
 
+  /**
+   * Computes the softmax (a.k.a. logSum) of an object. Softmax is defined as \log \sum_i \exp(x(i)), but
+   * implemented in a more numerically stable way. Softmax is so-called because it is
+   * a differentiable function that tends to look quite a lot like max. Consider
+   * log(exp(30) + exp(10)). That's basically 30. We use softmax a lot in machine learning.
+   */
   val softmax:URFunc[Double, Double] = new URFunc[Double, Double] {
     def apply(cc: TraversableOnce[Double]) =  {
       val a = cc.toArray[Double]
@@ -322,11 +363,9 @@ package object linalg extends LinearAlgebra {
 
 }
 
-
 package linalg {
 
 import math.Ring
-
 
 /**
  * Basic linear algebraic operations.
@@ -373,10 +412,10 @@ trait LinearAlgebra {
     val n = m.rows
 
     // Allocate space for the decomposition
-    var Wr = DenseVector.zeros[Double](n)
-    var Wi = DenseVector.zeros[Double](n)
+    val Wr = DenseVector.zeros[Double](n)
+    val Wi = DenseVector.zeros[Double](n)
 
-    var Vr = DenseMatrix.zeros[Double](n,n)
+    val Vr = DenseMatrix.zeros[Double](n,n)
 
     // Find the needed workspace
     val worksize = Array.ofDim[Double](1)
@@ -645,12 +684,11 @@ trait LinearAlgebra {
   /**
    * QR Factorization
    *
-   * input: A m x n matrix
-   * optional: skipQ - if true, don't reconstruct orthogonal matrix Q (instead returns (null,R))
-   * output: (Q,R)
-   *   Q: m x m
-   *   R: m x n
+   * @param A m x n matrix
+   * @param skipQ (optional) if true, don't reconstruct orthogonal matrix Q (instead returns (null,R))
+   * @return: (Q,R) Q: m x m R: m x n
    */
+  // TODO: I don't like returning null sometimes here...
   def qr(A: DenseMatrix[Double], skipQ : Boolean = false): (DenseMatrix[Double], DenseMatrix[Double]) = {
     val m = A.rows
     val n = A.cols
@@ -705,8 +743,6 @@ trait LinearAlgebra {
     //skip Q and just return R
     else (null,R)
   }
-
-
 
 
   /**

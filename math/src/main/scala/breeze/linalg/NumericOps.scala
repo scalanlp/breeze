@@ -19,7 +19,9 @@ import breeze.linalg.operators._
 import breeze.math.{Field, VectorSpace}
 
 /**
- *
+ * In some sense, this is the real root of the linalg hierarchy. It provides
+ * methods for doing operations on a Tensor-like thing. All methods farm out to some implicit or another.
+ * We use this when we don't care about the index into the Tensor, or if we don't really have an index.
  * @author dlwh
  */
 trait NumericOps[+This] {
@@ -199,6 +201,10 @@ trait NumericOps[+This] {
 }
 
 object NumericOps {
+
+  /**
+   * If you import this object's members, you can treat Arrays as DenseVectors.
+   */
   object Arrays {
     implicit def arrayIsNumericOps[V](arr: Array[V]):NumericOps[Array[V]] = new NumericOps[Array[V]] {
       def repr = arr
