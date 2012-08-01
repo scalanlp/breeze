@@ -31,8 +31,9 @@ import scala.{specialized=>spec}
  *
  * @author fozziethebeat
  */
-class CacheDecorator[@spec(Double, Int, Float) E](val vector: Vector[E]) extends Vector[E] {
+class NormCacheDecorator[@spec(Double, Int, Float) E](val vector: Vector[E]) extends Vector[E] {
 
+  var sweep: Boolean = true
   var sumCache:Option[E] = None
   var normCache:Map[Double, Double] = Map[Double, Double]()
 
@@ -41,6 +42,7 @@ class CacheDecorator[@spec(Double, Int, Float) E](val vector: Vector[E]) extends
    */
   override def update(i: Int, v: E) {
     // Invalidate the caches.
+    sweep = true
     sumCache = None
     normCache = Map[Double, Double]()
     // Call update as normal.
@@ -56,8 +58,12 @@ class CacheDecorator[@spec(Double, Int, Float) E](val vector: Vector[E]) extends
     normCache.get(n) match {
       case Some(cachedNorm) => cachedNorm
       case None => {
+        sweep = false
         val computedNorm = vector.norm(n)
-        normCache += (n -> computedNorm)
+        // In a multi-threaded setting, update could be called while we are computing the norm.  If this happens, the sweep variable will be
+        // set to true nothing that the norm value we've computed *may* be incorrect, so it should not be cached.
+        if (!sweep)
+            normCache += (n -> computedNorm)
         computedNorm
       }
     }
@@ -67,8 +73,12 @@ class CacheDecorator[@spec(Double, Int, Float) E](val vector: Vector[E]) extends
     sumCache match {
       case Some(cachedSum) => cachedSum
       case None => {
+        sweep = false
         val computedSum = vector.sum
-        sumCache = Some(computedSum)
+        // In a multi-threaded setting, update could be called while we are computing the sum.  If this happens, the sweep variable will be
+        // set to true nothing that the norm value we've computed *may* be incorrect, so it should not be cached.
+        if (!sweep)
+            sumCache = Some(computedSum)
         computedSum
       }
     }

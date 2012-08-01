@@ -16,7 +16,7 @@ import scala.math.sqrt
  * @author fozziethebeat
  */
 @RunWith(classOf[JUnitRunner])
-class CacheDecoratorTest extends FunSuite with Checkers {
+class NormCacheDecoratorTest extends FunSuite with Checkers {
 
   val TOLERANCE = 1e-4
 
@@ -25,7 +25,7 @@ class CacheDecoratorTest extends FunSuite with Checkers {
 
   test("Can find dense binaryOps") {
     val v = DenseVector(2, 0, 3, 2, -1)
-    val vd = new CacheDecorator(v)
+    val vd = new NormCacheDecorator(v)
     assert( (v + 5) == (vd + 5))
     assert( (v * 5) == (vd * 5))
     assert( (v - 5) == (vd - 5))
@@ -35,7 +35,7 @@ class CacheDecoratorTest extends FunSuite with Checkers {
 
   test("Can find sparse binaryOps") {
     val v = SparseVector(2, 0, 3, 2, -1)
-    val vd = new CacheDecorator(v)
+    val vd = new NormCacheDecorator(v)
     assert( (v + 5) == (vd + 5))
     assert( (v * 5) == (vd * 5))
     assert( (v - 5) == (vd - 5))
@@ -43,44 +43,45 @@ class CacheDecoratorTest extends FunSuite with Checkers {
 
   test("Can find sparse active iterator") {
     val v = SparseVector(10)( (0, 2), (3, 0), (4, 3), (6, 2), (8, -1) )
-    val vd = new CacheDecorator(v)
+    val vd = new NormCacheDecorator(v)
     val size = vd.activeIterator.size
+    // TODO: Fix this.  This test fails.  size returns 10 when it should be 5.
     assertEquals(5, size)
   }
 
   test("Can find dense active iterator") {
     val v = DenseVector(2, 0, 3, 2, -1)
-    val vd = new CacheDecorator(v)
+    val vd = new NormCacheDecorator(v)
     val size = vd.activeIterator.size
     assertEquals(5, size)
   }
 
-  test("Update Cached DenseVector") {
+  test("Update NormCached DenseVector") {
     val v = DenseVector(2, 0, 3, 2, -1)
-    val vd = new CacheDecorator(v)
+    val vd = new NormCacheDecorator(v)
     vd(1) = 4
     assertClose(v(1), vd(1))
     assertClose(4, vd(1))
   }
 
-  test("Update Cached SparseVector") {
+  test("Update NormCached SparseVector") {
     val v = SparseVector(10)( (0, 2), (3, 0), (4, 3), (6, 2), (8, -1) )
-    val vd = new CacheDecorator(v)
+    val vd = new NormCacheDecorator(v)
     vd(1) = 4
     assertClose(v(1), vd(1))
     assertClose(4, vd(1))
   }
 
-  test("Cached sum") {
+  test("NormCached sum") {
     val v = SparseVector(10)( (0, 2), (3, 0), (4, 3), (6, 2), (8, -1) )
-    val vd = new CacheDecorator(v)
+    val vd = new NormCacheDecorator(v)
     assertEquals(6, vd.sum, TOLERANCE)
     assertEquals(6, vd.sum, TOLERANCE)
   }
 
-  test("Cached Norms") {
+  test("NormCached Norms") {
     val v = SparseVector(10)( (0, 2), (3, 0), (4, 3), (6, 2), (8, -1) )
-    val vd = new CacheDecorator(v)
+    val vd = new NormCacheDecorator(v)
     assertEquals(8, vd.norm(1), TOLERANCE)
     assertEquals(8, vd.norm(1), TOLERANCE)
     assertEquals(sqrt(18), vd.norm(2), TOLERANCE)
@@ -89,7 +90,7 @@ class CacheDecoratorTest extends FunSuite with Checkers {
 
   test("Update invalidates cache") {
     val v = DenseVector(2, 0, 3, 2, -1)
-    val vd = new CacheDecorator(v)
+    val vd = new NormCacheDecorator(v)
     assertClose(8, vd.norm(1))
     assertClose(6, vd.sum)
     vd(1) = 1
