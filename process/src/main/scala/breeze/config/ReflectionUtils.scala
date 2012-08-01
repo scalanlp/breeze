@@ -8,6 +8,20 @@ import java.lang.reflect.{TypeVariable, Type, ParameterizedType}
  * @author dlwh
  */
 private[config] object ReflectionUtils {
+  def manifestFromClass(c: Class[_]):Manifest[_] = {
+    import java.lang._
+    if(c == Float.TYPE) Manifest.Float
+    else if(c == Long.TYPE) Manifest.Long
+    else if(c == Double.TYPE) Manifest.Double
+    else if(c == Integer.TYPE) Manifest.Int
+    else if(c == Byte.TYPE) Manifest.Byte
+    else if(c == Short.TYPE) Manifest.Short
+    else if(c == Character.TYPE) Manifest.Char
+    else if(c == Boolean.TYPE) Manifest.Boolean
+    else if(c == Void.TYPE) Manifest.Unit
+    else Manifest.classType(c)
+  }
+
   /**
    * For a seq of parameters in a class's primary constructor, acquires the default parameters
    * for that class. The returned functions will throw exceptions if there

@@ -3,7 +3,7 @@ package breeze.config
 /*
  Copyright 2010 David Hall, Daniel Ramage
 
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
 
@@ -17,16 +17,19 @@ package breeze.config
 */
 
 
-import com.thoughtworks.paranamer.AdaptiveParanamer;
+import com.thoughtworks.paranamer.AdaptiveParanamer
 import com.thoughtworks.paranamer.ParameterNamesNotFoundException
 import java.io.File
 import java.io.FileInputStream
 import java.util.Properties
-import scala.reflect.Manifest;
-import scala.reflect.OptManifest;
-import scala.reflect.NoManifest;
+import scala.reflect.Manifest
+import scala.reflect.OptManifest
+import scala.reflect.NoManifest
 
 import ReflectionUtils._
+import collection.mutable.ArrayBuffer
+import collection.mutable
+import collection.generic.GenericCompanion
 
 /**
  * Configuration provides a way to read in parameters
@@ -37,7 +40,7 @@ import ReflectionUtils._
  * can read in the following:
  *
  * <code>
- * case class Foo(bool: Boolean, bar: String, path: File, logLevel: Int = 3);
+ * case class Foo(bool: Boolean, bar: String, path: File, logLevel: Int = 3)
  * </code>
  *
  * with the following command:
@@ -79,9 +82,8 @@ trait Configuration { outer =>
   final def readIn[T: Manifest](prefix: String, default: => T): T = {
     try (readIn[T](prefix)) catch {
       case (e: NoParameterException) => default
-    };
+    }
   }
-
 
   /**
    * Read in an object, boxing it if necessary.
@@ -89,7 +91,7 @@ trait Configuration { outer =>
   final def readOpt[T: Manifest](prefix: String="") = {
     try (Some(readIn[T](prefix))) catch {
       case (e: NoParameterException) => None
-    };
+    }
   }
 
   /**
@@ -98,58 +100,17 @@ trait Configuration { outer =>
   final def readIn[T: Manifest](prefix: String=""): T = {
     ArgumentParser.getArgumentParser[T] match {
       case Some(parser) =>
-        val property = recursiveGetProperty(prefix);
+        val property = recursiveGetProperty(prefix)
         if (property.isEmpty)
-          throw new NoParameterException("Could not find matching property for " + prefix, prefix);
-        parser.parse(property.get);
-      case None => reflectiveReadIn[T](prefix);
-    }
-  }
-
-  // We have a static type, and a dynamic type.
-  // The dynamic type will have to be inferred.
-  // Some attempts are made to deal with generics
-  private def reflectiveReadIn[T: Manifest](prefix: String): T = {
-    val staticManifest = implicitly[Manifest[T]];
-    val dynamicClass: Class[_] = recursiveGetProperty(prefix).map{
-      Class.forName(_)
-    } getOrElse (staticManifest.erasure);
-    if (dynamicClass.getConstructors.isEmpty)
-      throw new NoParameterException("Could not find a constructor for type " + dynamicClass.getName, prefix);
-
-    val staticTypeVars: Seq[String] = staticManifest.erasure.getTypeParameters.map(_.toString);
-    val staticTypeVals: Seq[OptManifest[_]] = staticManifest.typeArguments;
-    val staticTypeMap: Map[String, OptManifest[_]] = (staticTypeVars zip staticTypeVals).toMap withDefaultValue (NoManifest);
-
-    val dynamicTypeMap = solveTypes(staticTypeMap, staticManifest.erasure, dynamicClass);
-
-    try {
-      val ctor = dynamicClass.getConstructors.last
-      val reader = new AdaptiveParanamer();
-      val paramNames = reader.lookupParameterNames(ctor);
-      val typedParams = ctor.getGenericParameterTypes.map{
-        mkManifest(dynamicTypeMap, _)
-      }
-      val defaults = lookupDefaultValues(dynamicClass, paramNames);
-      val namedParams = for {((tpe, name), default) <- typedParams zip paramNames zip defaults} yield (tpe, name, default);
-      val paramValues = namedParams.map{
-        case (man, name, default) => readIn[Object](prefix + "." + name, default())(man)
-      }
-      ctor.newInstance(paramValues: _*).asInstanceOf[T];
-    } catch {
-      case e: ParameterNamesNotFoundException =>
-        throw new ConfigurationException("Could not find parameter names for " + dynamicClass.getName + " (" + prefix + ")");
-    }
-  }
-
-  private[config] def recursiveGetProperty(prefix: String): Option[String] = {
-    if (prefix.isEmpty) None
-    else getProperty(prefix) match {
-      case opt@Some(p) => opt
+          throw new NoParameterException("Could not find matching property for " + prefix, prefix)
+        parser.parse(property.get)
       case None =>
-        var next = prefix.dropWhile('.' !=);
-        if (!next.isEmpty) next = next.drop(1);
-        if (next.isEmpty) None else recursiveGetProperty(next);
+        val man = implicitly[Manifest[T]]
+        if(isCollectionType(man))  {
+          readSequence(prefix, man, containedType(man)).asInstanceOf[T]
+        } else {
+          reflectiveReadIn[T](prefix)
+        }
     }
   }
 
@@ -157,17 +118,128 @@ trait Configuration { outer =>
   def backoff(that: Configuration):Configuration = new Configuration {
     def getProperty(property: String) = outer.getProperty(property).orElse(that.getProperty(property))
   }
+
+  /**
+   * Determines whether or not this type is a collection type
+   * @param man the manifest to examine
+   * @return
+   */
+  private def isCollectionType(man: Manifest[_]) = {
+    man.erasure.isArray || classOf[Iterable[_]].isAssignableFrom(man.erasure)
+  }
+
+  /**
+   * Gets the contained type from a contained
+   * @param man the manifest to examine
+   * @return
+   */
+  private def containedType(man: Manifest[_]) = {
+    if(man.erasure.isArray) {
+      val comp = man.erasure.getComponentType
+      ReflectionUtils.manifestFromClass(comp)
+    }
+    else man.typeArguments.head
+  }
+
+  /**
+   * Reads in a sequence by looking for properties of the form prefix.0, prefix.1 etc
+   */
+  private def readSequence[T](prefix: String, container: Manifest[_], contained: Manifest[T]):AnyRef = {
+    val builder = {
+      if(container.erasure.isArray)
+        mutable.ArrayBuilder.make()(contained)
+      else {
+        try {
+          // try to construct a builder by going through the companion
+          container.erasure.newInstance().asInstanceOf[Iterable[T]].companion.newBuilder[T]
+        } catch {
+          case e => // hope the companion is named like we want...
+            try {
+              Class.forName(container.erasure.getName + "$").getField("MODULE$").get(null).asInstanceOf[GenericCompanion[Iterable]].newBuilder[T]
+            } catch {
+              case e =>
+              throw new NoParameterException("Can't figure out what to do with a sequence of type:" + container, prefix)
+            }
+        }
+
+      }
+    }
+    var ok = true
+    var i = 0
+    while(ok) {
+      try {
+        builder += readIn(prefix+"."+i)(contained)
+      } catch {
+        case e: NoParameterException => ok = false
+      }
+      i += 1
+    }
+
+     builder.result()
+  }
+
+  // We have a static type, and a dynamic type.
+  // The dynamic type will have to be inferred.
+  // Some attempts are made to deal with generics
+  private def reflectiveReadIn[T: Manifest](prefix: String): T = {
+    val staticManifest = implicitly[Manifest[T]]
+    val dynamicClass: Class[_] = recursiveGetProperty(prefix).map{
+      Class.forName(_)
+    } getOrElse (staticManifest.erasure)
+    if (dynamicClass.getConstructors.isEmpty)
+      throw new NoParameterException("Could not find a constructor for type " + dynamicClass.getName, prefix)
+
+    val staticTypeVars: Seq[String] = staticManifest.erasure.getTypeParameters.map(_.toString)
+    val staticTypeVals: Seq[OptManifest[_]] = staticManifest.typeArguments
+    val staticTypeMap: Map[String, OptManifest[_]] = (staticTypeVars zip staticTypeVals).toMap withDefaultValue (NoManifest)
+
+    val dynamicTypeMap = solveTypes(staticTypeMap, staticManifest.erasure, dynamicClass)
+
+    try {
+      // pick a constructor and figure out what the parameters names are
+      val ctor = dynamicClass.getConstructors.last
+      val reader = new AdaptiveParanamer()
+      val paramNames = reader.lookupParameterNames(ctor)
+      // Also get their types
+      val typedParams = ctor.getGenericParameterTypes.map{
+        mkManifest(dynamicTypeMap, _)
+      }
+      // and defaults, where possible
+      val defaults = lookupDefaultValues(dynamicClass, paramNames)
+      val namedParams = for {((tpe, name), default) <- typedParams zip paramNames zip defaults} yield (tpe, name, default)
+      val paramValues = namedParams.map {
+        case (man, name, default) => readIn[Object](prefix + "." + name, default())(man)
+      }
+      ctor.newInstance(paramValues: _*).asInstanceOf[T]
+    } catch {
+      case e: ParameterNamesNotFoundException =>
+        throw new ConfigurationException("Could not find parameter names for " + dynamicClass.getName + " (" + prefix + ")")
+    }
+  }
+
+  // tries to read prefix of the form "some.value.etc" and then tries "value.etc", continuing on
+  private[config] def recursiveGetProperty(prefix: String): Option[String] = {
+    if (prefix.isEmpty) None
+    else getProperty(prefix) match {
+      case opt@Some(p) => opt
+      case None =>
+        var next = prefix.dropWhile('.' !=)
+        if (!next.isEmpty) next = next.drop(1)
+        if (next.isEmpty) None else recursiveGetProperty(next)
+    }
+  }
+
 }
 
 /** The exception thrown in case something goes wrong in Configuration
  * @author dlwh
  */
-class ConfigurationException(msg: String) extends Exception(msg);
+class ConfigurationException(msg: String) extends Exception(msg)
 
 /**
  * The exception thrown for a missing property in Configuration
  */
-class NoParameterException(msg: String, param: String) extends ConfigurationException("while searching for " + param + ": " + msg);
+class NoParameterException(msg: String, param: String) extends ConfigurationException("while searching for " + param + ": " + msg)
 
 object Configuration {
 
@@ -178,9 +250,9 @@ object Configuration {
    */
   def fromProperties(prop: Properties) = new Configuration {
     def getProperty(p: String) = {
-      val v = prop.getProperty(p);
+      val v = prop.getProperty(p)
       if (v == null) None
-      else Some(v);
+      else Some(v)
     }
   }
 
@@ -188,7 +260,7 @@ object Configuration {
    * Creates a Configuration from a Map.
    */
   def fromMap(map: Map[String, String]):Configuration = new Configuration {
-    def getProperty(p: String) = map.get(p);
+    def getProperty(p: String) = map.get(p)
   }
 
 
@@ -199,11 +271,11 @@ object Configuration {
   def fromPropertiesFiles(args: Seq[File]) = {
     val props = args.foldLeft(System.getProperties) {
       (old, file) =>
-        val props = new Properties(old);
-        props.load(new FileInputStream(file));
+        val props = new Properties(old)
+        props.load(new FileInputStream(file))
         props
     }
-    Configuration.fromProperties(props);
+    Configuration.fromProperties(props)
   }
 
 }
