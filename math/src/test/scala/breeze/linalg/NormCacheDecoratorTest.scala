@@ -45,8 +45,7 @@ class NormCacheDecoratorTest extends FunSuite with Checkers {
     val v = SparseVector(10)( (0, 2), (3, 0), (4, 3), (6, 2), (8, -1) )
     val vd = new NormCacheDecorator(v)
     val size = vd.activeIterator.size
-    // TODO: Fix this.  This test fails.  size returns 10 when it should be 5.
-    assertEquals(5, size)
+    assertEquals(4, size)
   }
 
   test("Can find dense active iterator") {

@@ -83,13 +83,13 @@ class NormCacheDecorator[@spec(Double, Int, Float) E](val vector: Vector[E]) ext
       }
     }
 
-  def activeIterator = vector.iterator
+  def activeIterator = vector.activeIterator
 
-  def activeSize = vector.length
+  def activeSize = vector.activeSize
 
-  def activeKeysIterator = vector.keysIterator
+  def activeKeysIterator = vector.activeKeysIterator
 
-  def activeValuesIterator = vector.valuesIterator
+  def activeValuesIterator = vector.activeValuesIterator
 
   def apply(i: Int) = vector.apply(i)
 
