@@ -111,3 +111,168 @@ object LogisticClassifier {
   }
 
 }
+
+
+/**
+ * This is an example app for creating a logistic classifier from data that is 
+ * stored as string valued features and string valued labels, e.g.
+ * 
+ * verb=join,noun=board,prep=as,prep_obj=director,V
+ * verb=is,noun=chairman,prep=of,prep_obj=N.V.,N
+ * verb=named,noun=director,prep=of,prep_obj=conglomerate,N
+ *
+ * These are examples from Ratnarparkhi's classic prepositional phrase attachment
+ * dataset, discussed in the following homework:
+ *
+ *   http://ata-s12.utcompling.com/assignments/classification
+ *
+ * The homework includes pointers to the data and to Scala code for generating
+ * said features.
+ *
+ * This example handles creating a feature index and getting the examples into the
+ * right data structures for training with the logistic regression classifier,
+ * which should serve as a useful example for creating features and classifiers
+ * using the API.
+ * 
+ * @author jasonbaldridge
+ */ 
+object LogisticClassifierFromCsv {
+
+  import breeze.util.Index
+  import breeze.config._
+  import breeze.stats.ContingencyStats
+  import Counter._
+  import java.io.File
+
+  case class Params(
+    @Help(text="Input training file in CSV format.") train: File,
+    @Help(text="Input eval file in CSV format.") eval: File,
+    @Help(text="Show evaluation.") showEval: Boolean = false,
+    @Help(text="Output full distributions.") fullOutput: Boolean = false,
+    @Help(text="Regularization value (default 1.0).") reg: Double = 1.0,
+    @Help(text="Tolerance (stopping criteria) (default 1E-4).") tol: Double = 1E-4,
+    @Help(text="Maximum number of iterations (default 1000).") maxIterations: Int = 1000,
+    @Help(text="Prints this") help:Boolean = false
+  )
+
+  def main(args: Array[String]) {
+
+    val config = CommandLineParser.parseArguments(args)._1
+    val params = config.readIn[Params]("")
+
+    // Feature map
+    val fmap = Index[String]()
+
+    // Read in the training data and index it.
+    val trainingData = 
+      SparseCsvDataset(io.Source.fromFile(params.train))
+        .map(ex => ex.map(_.map(fmap.index(_))))
+        .toList // Need to consume the lines in order to populate the feature map
+
+    val numFeatures = fmap.size
+
+    val trainingExamples = 
+      trainingData
+        .zipWithIndex
+        .map { case(ex, rowId) => {
+          Example[String,SparseVector[Double]](
+            label=ex.label,
+            features=makeSparseFeatureVector(ex, numFeatures),
+            id=rowId.toString
+          )
+        }}
+
+    // Train the classifier
+    val opt = OptParams(
+      regularization=params.reg,
+      maxIterations = params.maxIterations,
+      tolerance = params.tol
+    )
+
+    val classifier = 
+      new LogisticClassifier.Trainer[String,SparseVector[Double]](opt)
+        .train(trainingExamples)
+
+    // Read in the evaluation data
+    val evalExamples = 
+      SparseCsvDataset(io.Source.fromFile(params.eval))
+        .zipWithIndex
+        .map { case(ex, rowId) => {
+          val mappedEx = ex.map(_.flatMap(fmap.indexOpt(_)))
+          Example[String, SparseVector[Double]](
+            label=ex.label,
+            features=makeSparseFeatureVector(mappedEx, numFeatures),
+            id=rowId.toString
+          )
+        }}
+        .toList
+
+    // Get the predictions
+    val predictions = evalExamples.map(ex => classifier.scores(ex.features))
+
+    // Output full predictions
+    if (params.fullOutput) {
+      predictions.foreach { prediction => {
+        val pcounter = prediction.asInstanceOf[Counter[String,Double]]
+        val distribution = logNormalize(pcounter).mapValues(math.exp(_))
+        val sortedDistributionString =
+          distribution
+            .argsort
+            .reverse
+            .map(label => label + " " + distribution(label)).mkString(" ")
+        println(sortedDistributionString)
+      }}
+    }
+
+    // Output evaluation statistics
+    if (params.showEval) {
+      println("\n-----------------------------------------------------")
+      println("Training set 'performance':")
+      println(ContingencyStats(classifier,trainingExamples))
+      
+      println("\n-----------------------------------------------------")
+      println("Eval set performance:")
+      println(ContingencyStats(classifier, evalExamples))
+    }
+
+  }
+
+  /**
+   * Creates a sparse feature vector from an indexed example. Assumes we have
+   * observations of each feature, and these could show up multiple times, so
+   * we count those occurences and use those as the values stored in the
+   * vector.
+   */
+  private def makeSparseFeatureVector (example: Example[String, Seq[Int]], numFeatures: Int) = {
+    val vec = SparseVector.zeros[Double](numFeatures)
+    example
+      .features
+      .groupBy(x=>x)
+      .mapValues(_.length.toDouble)
+      .foreach { case(index, value) => vec(index) = value }
+    vec
+  }
+
+
+  /**
+   * Read in a dataset and create Examples from it. Don't do any feature indexation,
+   * since for training data we want to build the index, but for eval data we just
+   * want to use it.
+   */
+  object SparseCsvDataset {
+  
+    def apply(dataSource: io.Source): Iterator[Example[String, Seq[String]]] =
+      dataSource
+        .getLines
+        .zipWithIndex
+        .map { case(line,rowId) => { 
+          val lineData = line.split(",")
+          val (features, label) = (lineData.dropRight(1), lineData.last);
+          Example[String, Seq[String]](label=label, features=features, id=rowId.toString)
+        }}
+
+  }
+
+}
+
+
