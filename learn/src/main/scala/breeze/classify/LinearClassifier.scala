@@ -19,7 +19,7 @@ package breeze.classify
 
 import breeze.serialization.DataSerialization.ReadWritable
 import breeze.serialization.{SerializationFormat, DataSerialization}
-import breeze.linalg.{Tensor, Counter, NumericOps}
+import breeze.linalg.{QuasiTensor, Tensor, Counter, NumericOps}
 import breeze.linalg.operators._
 import breeze.math.{MutableCoordinateSpace, TensorSpace, VectorSpace}
 import breeze.linalg.support.{CanCopy, CanZipMapValues, CanNorm, CanCreateZerosLike}
@@ -40,11 +40,15 @@ class LinearClassifier[L,T2, TL, TF]
     (val featureWeights: T2, val intercepts: TL)
     (implicit viewT2 : T2<:<NumericOps[T2], vspace: VectorSpace[TL, Double],
      mulTensors : BinaryOp[T2,TF,OpMulMatrix,TL],
-     view: TL <:< Tensor[L, Double]) extends Classifier[L,TF] with Serializable {
+     view: TL <:< QuasiTensor[L, Double]) extends Classifier[L,TF] with Serializable {
   import vspace._
   def scores(o: TF) = {
-    val r:TL = featureWeights * o
-    vspace.isNumericOps(r) + intercepts
+    val r = featureWeights * o + intercepts
+    val ctr = Counter[L, Double]()
+    for((l, v) <- r.iterator) {
+      ctr(l) = v
+    }
+    ctr
   }
 }
 

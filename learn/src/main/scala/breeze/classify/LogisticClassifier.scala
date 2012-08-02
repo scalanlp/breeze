@@ -118,7 +118,7 @@ object LogisticClassifier {
  * stored as string valued features and string valued labels, e.g.
  * 
  * verb=join,noun=board,prep=as,prep_obj=director,V
- * verb=is,noun=chairman,prep=of,prep_obj=N.V.,N
+ * verb=isIs,noun=chairman,prep=of,prep_obj=N.V.,N
  * verb=named,noun=director,prep=of,prep_obj=conglomerate,N
  *
  * These are examples from Ratnarparkhi's classic prepositional phrase attachment
@@ -213,8 +213,8 @@ object LogisticClassifierFromCsv {
     // Output full predictions
     if (params.fullOutput) {
       predictions.foreach { prediction => {
-        val pcounter = prediction.asInstanceOf[Counter[String,Double]]
-        val distribution = logNormalize(pcounter).mapValues(math.exp(_))
+        val pcounter = prediction
+        val distribution = exp(logNormalize(pcounter))
         val sortedDistributionString =
           distribution
             .argsort
