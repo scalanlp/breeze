@@ -39,7 +39,7 @@ import breeze.storage.DefaultArrayValue
  * @param length number of elements
  */
 @SerialVersionUID(1L)
-final class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
+class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
                                                      val offset: Int,
                                                      val stride: Int,
                                                      val length: Int) extends StorageVector[E]
