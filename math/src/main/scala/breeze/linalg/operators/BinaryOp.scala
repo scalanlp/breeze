@@ -15,12 +15,13 @@ package breeze.linalg.operators
  limitations under the License.
 */
 import breeze.generic.{MMRegistry2, Multimethod2}
+import breeze.math.Semiring
 
 /**
  *
  * @author dlwh
  */
-trait BinaryOp[A, -B, +Op<:OpType, +R]  {
+trait BinaryOp[A, B, +Op<:OpType, +R]  {
   def apply(a: A, b: B): R
 }
 

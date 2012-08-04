@@ -16,7 +16,7 @@ package breeze.linalg
 */
 
 import breeze.linalg.operators._
-import breeze.math.{Field, VectorSpace}
+import breeze.math.{Ring, Field, VectorSpace}
 
 /**
  * In some sense, this is the real root of the linalg hierarchy. It provides
@@ -97,6 +97,9 @@ trait NumericOps[+This] {
   final def * [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulMatrix,That]) = {
     op(repr, b)
   }
+
+
+
 
   /** Alias for :/(b) when b is a scalar. */
   final def / [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpDiv,That]) = {

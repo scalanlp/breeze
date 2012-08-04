@@ -146,6 +146,27 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
       j += 1
     }
   }
+
+  /**Returns the k-norm of this Vector. */
+  override def norm(n: Double)(implicit field: Ring[E]): Double = {
+    if (n == 1) {
+      var sum = 0.0
+      foreach (v => sum += field.norm(v))
+      sum
+    } else if (n == 2) {
+      var sum = 0.0
+      foreach (v => { val nn = field.norm(v); sum += nn * nn })
+      math.sqrt(sum)
+    } else if (n == Double.PositiveInfinity) {
+      var max = Double.NegativeInfinity
+      foreach (v => { val nn = field.norm(v); if (nn > max) max = nn })
+      max
+    } else {
+      var sum = 0.0
+      foreach (v => { val nn = field.norm(v); sum += math.pow(nn,n) })
+      math.pow(sum, 1.0 / n)
+    }
+  }
 }
 
 
@@ -353,111 +374,119 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
 trait DenseVector_SpecialOps extends DenseVectorOps_Double { this: DenseVector.type =>
   // hyperspecialized operators
 
-    implicit val canAddIntoD: BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpAdd] = {
-      new BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpAdd] {
-        def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
-          require(a.length == b.length, "Vectors must have same length")
-          org.netlib.blas.Daxpy.daxpy(
-            a.length, 1.0, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
-        }
-        Vector.canAddInto_V_V_Double.register(this)
+  implicit val canAddIntoD: BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpAdd] = {
+    new BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpAdd] {
+      def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
+        require(a.length == b.length, "Vectors must have same length")
+        org.netlib.blas.Daxpy.daxpy(
+          a.length, 1.0, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
-
+      Vector.canAddInto_V_V_Double.register(this)
     }
 
-    implicit val canSubIntoD: BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSub] = {
-      new BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSub] {
-        def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
-          require(a.length == b.length, "Vectors must have same length")
-          org.netlib.blas.Daxpy.daxpy(
-            a.length, -1.0, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
-        }
-        Vector.canSubInto_V_V_Double.register(this)
-      }
+  }
+  implicit val canAddD: BinaryOp[DenseVector[Double], DenseVector[Double], OpAdd, DenseVector[Double]] = {
+    pureFromUpdate_Double(canAddIntoD)
+  }
+  Vector.canAdd_V_V_Double.register(canAddD)
 
+  implicit val canSubIntoD: BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSub] = {
+    new BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSub] {
+      def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
+        require(a.length == b.length, "Vectors must have same length")
+        org.netlib.blas.Daxpy.daxpy(
+          a.length, -1.0, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
+      }
+      Vector.canSubInto_V_V_Double.register(this)
     }
 
-    implicit val canDotD: BinaryOp[DenseVector[Double], DenseVector[Double], OpMulInner, Double] = {
-      new BinaryOp[DenseVector[Double], DenseVector[Double], OpMulInner, Double] {
-        def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
-          require(a.length == b.length, "Vectors must have same length")
-          org.netlib.blas.Ddot.ddot(
-            a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
-        }
-        Vector.canDotProductV_Double.register(this)
-      }
+  }
+  implicit val canSubD: BinaryOp[DenseVector[Double], DenseVector[Double], OpSub, DenseVector[Double]] = {
+    pureFromUpdate_Double(canSubIntoD)
+  }
+  Vector.canSub_V_V_Double.register(canSubD)
 
-    }
-
-    implicit val canScaleIntoD: BinaryUpdateOp[DenseVector[Double], Double, OpMulScalar] = {
-      new BinaryUpdateOp[DenseVector[Double], Double, OpMulScalar] {
-        def apply(a: DenseVector[Double], b: Double) = {
-          org.netlib.blas.Dscal.dscal(
-            a.length, b, a.data, a.offset, a.stride)
-        }
-        Vector.canMulScalarInto_V_S_Double.register(this)
-      }
-
-    }
-    implicit val canScaleD: BinaryOp[DenseVector[Double], Double, OpMulScalar, DenseVector[Double]] {def apply(a: DenseVector[Double], b: Double): DenseVector[Double]} = binaryOpFromBinaryUpdateOp(implicitly[CanCopy[DenseVector[Double]]], canScaleIntoD, implicitly[ClassManifest[Double]])
-    Vector.canMulScalar_V_S_Double.register(canScaleD)
-
-    implicit val canSetD:BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSet] = new BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSet] {
-      def apply(a: DenseVector[Double], b: DenseVector[Double]) {
-        org.netlib.blas.Dcopy.dcopy(
+  implicit val canDotD: BinaryOp[DenseVector[Double], DenseVector[Double], OpMulInner, Double] = {
+    new BinaryOp[DenseVector[Double], DenseVector[Double], OpMulInner, Double] {
+      def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
+        require(a.length == b.length, "Vectors must have same length")
+        org.netlib.blas.Ddot.ddot(
           a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
-      Vector.canSetInto_V_V_Double.register(this)
+      Vector.canDotProductV_Double.register(this)
     }
 
+  }
 
-    implicit val canDot_DV_DV_Int: BinaryOp[DenseVector[Int], DenseVector[Int], breeze.linalg.operators.OpMulInner, Int] = {
-      new BinaryOp[DenseVector[Int], DenseVector[Int], breeze.linalg.operators.OpMulInner, Int] {
-        def apply(a: DenseVector[Int], b: DenseVector[Int]) = {
-          require(b.length == a.length, "Vectors must be the same length!")
-
-          val ad = a.data
-          val bd = b.data
-          var aoff = a.offset
-          var boff = b.offset
-          var result = 0
-
-          var i = 0
-          while(i < a.length) {
-            result += ad(aoff) * bd(boff)
-            aoff += a.stride
-            boff += b.stride
-            i += 1
-          }
-          result
-
-        }
-        Vector.canDotProductV_Int.register(this)
+  implicit val canScaleIntoD: BinaryUpdateOp[DenseVector[Double], Double, OpMulScalar] = {
+    new BinaryUpdateOp[DenseVector[Double], Double, OpMulScalar] {
+      def apply(a: DenseVector[Double], b: Double) = {
+        org.netlib.blas.Dscal.dscal(
+          a.length, b, a.data, a.offset, a.stride)
       }
+      Vector.canMulScalarInto_V_S_Double.register(this)
     }
 
-    implicit val canDot_DV_DV_Float: BinaryOp[DenseVector[Float], DenseVector[Float], breeze.linalg.operators.OpMulInner, Float] = {
-       new BinaryOp[DenseVector[Float], DenseVector[Float], breeze.linalg.operators.OpMulInner, Float] {
-         def apply(a: DenseVector[Float], b: DenseVector[Float]) = {
-           require(b.length == a.length, "Vectors must be the same length!")
+  }
+  implicit val canScaleD: BinaryOp[DenseVector[Double], Double, OpMulScalar, DenseVector[Double]] {def apply(a: DenseVector[Double], b: Double): DenseVector[Double]} = binaryOpFromBinaryUpdateOp(implicitly[CanCopy[DenseVector[Double]]], canScaleIntoD, implicitly[ClassManifest[Double]])
+  Vector.canMulScalar_V_S_Double.register(canScaleD)
 
-           val ad = a.data
-           val bd = b.data
-           var aoff = a.offset
-           var boff = b.offset
-           var result = 0f
+  implicit val canSetD:BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSet] = new BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSet] {
+    def apply(a: DenseVector[Double], b: DenseVector[Double]) {
+      org.netlib.blas.Dcopy.dcopy(
+        a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
+    }
+    Vector.canSetInto_V_V_Double.register(this)
+  }
 
-           var i = 0
-           while(i < a.length) {
-             result += ad(aoff) * bd(boff)
-             aoff += a.stride
-             boff += b.stride
-             i += 1
-           }
-           result
 
-         }
-         Vector.canDotProductV_Float.register(this)
-       }
-     }
+  implicit val canDot_DV_DV_Int: BinaryOp[DenseVector[Int], DenseVector[Int], breeze.linalg.operators.OpMulInner, Int] = {
+    new BinaryOp[DenseVector[Int], DenseVector[Int], breeze.linalg.operators.OpMulInner, Int] {
+      def apply(a: DenseVector[Int], b: DenseVector[Int]) = {
+        require(b.length == a.length, "Vectors must be the same length!")
+
+        val ad = a.data
+        val bd = b.data
+        var aoff = a.offset
+        var boff = b.offset
+        var result = 0
+
+        var i = 0
+        while(i < a.length) {
+          result += ad(aoff) * bd(boff)
+          aoff += a.stride
+          boff += b.stride
+          i += 1
+        }
+        result
+
+      }
+      Vector.canDotProductV_Int.register(this)
+    }
+  }
+
+  implicit val canDot_DV_DV_Float: BinaryOp[DenseVector[Float], DenseVector[Float], breeze.linalg.operators.OpMulInner, Float] = {
+    new BinaryOp[DenseVector[Float], DenseVector[Float], breeze.linalg.operators.OpMulInner, Float] {
+      def apply(a: DenseVector[Float], b: DenseVector[Float]) = {
+        require(b.length == a.length, "Vectors must be the same length!")
+
+        val ad = a.data
+        val bd = b.data
+        var aoff = a.offset
+        var boff = b.offset
+        var result = 0f
+
+        var i = 0
+        while(i < a.length) {
+          result += ad(aoff) * bd(boff)
+          aoff += a.stride
+          boff += b.stride
+          i += 1
+        }
+        result
+
+      }
+      Vector.canDotProductV_Float.register(this)
+    }
+  }
 }

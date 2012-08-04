@@ -189,7 +189,7 @@ object LFMatrix {
       def apply(v1: LFMatrix[L, TF], v2: Double) = {
         val r = v1.empty
         for( (l,tf) <- v1.map) {
-          r(l) = tf * v2
+          r(l) = tf :* v2
         }
         r
       }

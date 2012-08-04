@@ -35,22 +35,28 @@ object GenOperators {
       typeR,
       from
     )
-
-
   )
-
 
   def genBinaryRegistryAdaptor(name: String, typeA: String, typeB: String, op: OpType, typeR: String, from: String) = (
     """implicit val %s: BinaryRegistry[%s, %s, %s, %s] = %s""".format(
       name,
       typeA,
       typeB,
-      op.getClass.getName.replaceAll("[$]",""),
+      op.getClass.getSimpleName.replaceAll("[$]",""),
       typeR,
       from
     )
+  )
 
-
+  def genBinaryRegistryAdaptorDef(name: String, typeA: String, typeB: String, op: OpType, typeR: String, from: String) = (
+    """val Name: BinaryRegistry[TypeA, TypeB, TypeOp, TypeR] = From
+  implicit def Name_def[A <: TypeA, B <: TypeB]:BinaryOp[A, B, TypeOp, TypeR] = From.asInstanceOf[BinaryOp[A, B, TypeOp, TypeR]]
+    """.replaceAll("Name",name)
+      .replaceAll("TypeA", typeA)
+      .replaceAll("TypeB", typeB)
+      .replaceAll("TypeOp",  op.getClass.getSimpleName.replaceAll("[$]",""))
+      .replaceAll("TypeR", typeR)
+      .replaceAll("From",from)
   )
 
   def genBinaryUpdateOperator(name: String, typeA: String, typeB: String, op: OpType)(loop: String) = {
@@ -59,8 +65,23 @@ object GenOperators {
     def apply(a: TypeA, b: TypeB) {
       LOOP
     }
-  }; implicit val Name = new Name ()
-""".replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getName.replaceAll("[$]","")).replaceAll("LOOP",loop)
+  }
+  implicit val Name = new Name ()
+    """.replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getName.replaceAll("[$]","")).replaceAll("LOOP",loop)
+  }
+
+  def genBinaryUpdateOperatorDef(name: String, typeA: String, typeB: String, op: OpType)(loop: String) = {
+    """
+  class Name private[linalg] () extends BinaryUpdateOp[TypeA, TypeB, TypeOp] {
+    def apply(a: TypeA, b: TypeB) {
+      LOOP
+    }
+  }
+  val Name = new Name ()
+  implicit def Name_def[A <: TypeA, B <: TypeB]:BinaryUpdateOp[A, B, TypeOp] = (
+    Name.asInstanceOf[BinaryUpdateOp[A, B, TypeOp]]
+  )
+    """.replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getSimpleName.replaceAll("[$]","")).replaceAll("LOOP",loop)
   }
 
 
@@ -74,6 +95,19 @@ object GenOperators {
 """.replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("Result",result).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getName.replaceAll("[$]","")).replaceAll("LOOP",loop)
   }
 
+
+  def genBinaryUpdateRegistryDef(name: String, typeA: String, typeB: String, op: OpType)(loop: String) = {
+    """
+  class Name private[linalg] () extends BinaryUpdateRegistry[TypeA, TypeB, TypeOp] {
+    override def bindingMissing(a: TypeA, b: TypeB) {
+      LOOP
+    }
+  }
+  val Name = new Name ()
+  implicit def Name_def[A <: TypeA, B <: TypeB]:BinaryUpdateOp[A, B, TypeOp] = (
+    Name.asInstanceOf[BinaryUpdateOp[A, B, TypeOp]]
+  )""".replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getName.replaceAll("[$]","")).replaceAll("LOOP",loop)
+  }
 
   def genBinaryUpdateRegistry(name: String, typeA: String, typeB: String, op: OpType)(loop: String) = {
     """
@@ -94,6 +128,21 @@ object GenOperators {
     }
   }; implicit val Name = new Name()
 """.replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("Result",result).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getName.replaceAll("[$]","")).replaceAll("LOOP",loop)
+  }
+
+
+  def genBinaryRegistryDef(name: String, typeA: String, typeB: String, op: OpType, result: String)(loop: String) = {
+    """
+  class Name private[linalg] () extends BinaryRegistry[TypeA, TypeB, TypeOp, Result] {
+    override def bindingMissing(a: TypeA, b: TypeB) = {
+      LOOP
+    }
+  };
+  val Name = new Name()
+  implicit def Name_def[A <: TypeA, B <: TypeB]:BinaryOp[A, B, TypeOp, Result] = (
+    Name.asInstanceOf[BinaryOp[A, B, TypeOp, Result]]
+  )
+    """.replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("Result",result).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getName.replaceAll("[$]","")).replaceAll("LOOP",loop)
   }
 
 
@@ -204,6 +253,7 @@ object GenOperators {
     "Double" -> Map[OpType,(String,String)=>String](OpAdd -> {_ + " + " + _},
       OpSub -> {_ + " - " + _},
       OpMulScalar -> {_ + " * " + _},
+      OpMulMatrix -> {_ + " * " + _},
       OpDiv -> {_ + " / " + _},
       OpMod -> {_ + " % " + _},
       OpSet -> {(a,b) => b},
@@ -213,6 +263,7 @@ object GenOperators {
     "Float" -> Map[OpType,(String,String)=>String](OpAdd -> {_ + " + " + _},
       OpSub -> {_ + " - " + _},
       OpMulScalar -> {_ + " * " + _},
+      OpMulMatrix -> {_ + " * " + _},
       OpDiv -> {_ + " / " + _},
       OpMod -> {_ + " % " + _},
       OpSet -> {(a,b) => b},
@@ -222,6 +273,7 @@ object GenOperators {
     "Int" -> Map[OpType,(String,String)=>String](OpAdd -> {_ + " + " + _},
         OpSub -> {_ + " - " + _},
         OpMulScalar -> {_ + " * " + _},
+      OpMulMatrix -> {_ + " * " + _},
         OpDiv -> {_ + " / " + _},
         OpMod -> {_ + " % " + _},
         OpSet -> {(a,b) => b},
@@ -238,9 +290,14 @@ object GenDenseOps extends App {
   val blacklist = Map("DenseVector" -> Set("canMulScalarInto_DV_S_Double", "canSetInto_DV_DV_Double",
     "canAddInto_DV_DV_Double", "canSubInto_DV_DV_Double")).withDefaultValue(Set.empty)
 
-  def genHomogeneous(tpe: String, generic: String, pckg: String, f: File)(loop: ((String,String)=>String)=>String,
-                                                                         loopS: ((String,String)=>String)=>String,
-                                                                         loopG: (((String,String)=>String),Boolean)=>String) {
+  def genHomogeneous(tpe: String,
+                     generic: String,
+                     parentTrait: String,
+                     pckg: String,
+                     f: File)
+                    (loop: ((String, String)=>String)=>String,
+                     loopS: ((String,String)=>String)=>String,
+                     loopG: (((String,String)=>String),Boolean)=>String) {
     val out = new FileOutputStream(f)
     val print = new PrintStream(out)
     import print.println
@@ -250,57 +307,116 @@ object GenDenseOps extends App {
     println("import breeze.linalg.support._")
     println("import breeze.numerics._")
 
-    import GenOperators._
     for( (scalar,ops) <- GenOperators.ops) {
+      val genericClassName = tpe+"Ops_" +scalar +"_Generic"
       val vector = "%s[%s]".format(tpe,scalar)
       val gvector = "%s[%s]".format(generic,scalar)
-      println("/** This is an auto-generated trait providing operators for " + tpe + ". */")
-      println("trait "+tpe+"Ops_"+scalar +" { this: "+tpe+".type =>")
+      generateDVDVTrait(print, tpe, scalar, genericClassName, generic, vector, ops, loop, loopS, generic == "Vector")
+      generateGenericOpsTrait(print, tpe, scalar, genericClassName, parentTrait, generic, vector, gvector, ops, loopG, generic == "Vector")
+    }
+    print.close()
+  }
 
-      println(
-        """
-  def pureFromUpdate_%s[Other,Op<:OpType](op: BinaryUpdateOp[%s, Other, Op])(implicit copy: CanCopy[%s]):BinaryOp[%s, Other, Op, %s] = {
-    new BinaryOp[%s, Other, Op, %s] {
-      override def apply(a : %s, b : Other) = {
-        val c = copy(a)
-        op(c, b)
-        c
+
+  def generateDVDVTrait(out: PrintStream,
+                        tpe: String, scalar: String,
+                        genericClassName: String,
+                        generic: String,
+                        vector: String,
+                        ops: Map[OpType, (String, String) => String],
+                        loop: ((String, String) => String) => String,
+                        loopS: ((String, String) => String) => String,
+                        genRegistries: Boolean) {
+    import out.println
+    println("/** This is an auto-generated trait providing operators for " + tpe + ". */")
+    println("trait " + tpe + "Ops_" + scalar + " extends " + genericClassName + " { this: " + tpe + ".type =>")
+
+    println(
+           """
+       def pureFromUpdate_%s[Other,Op<:OpType](op: BinaryUpdateOp[%s, Other, Op])(implicit copy: CanCopy[%s]):BinaryOp[%s, Other, Op, %s] = {
+         new BinaryOp[%s, Other, Op, %s] {
+           override def apply(a : %s, b : Other) = {
+             val c = copy(a)
+             op(c, b)
+             c
+           }
+         }
+       }""".format(scalar, vector, vector, vector, vector, vector, vector, vector))
+
+
+    for ((op, fn) <- ops) {
+
+
+
+      import GenOperators._
+      val name = "can" + op.getClass.getSimpleName.drop(2).dropRight(1) + "Into_DV_DV_" + scalar
+      if (!blacklist(tpe)(name) && op != OpMulMatrix) { // don't generate OpMulMatrix for DV_DV
+        println(genBinaryUpdateOperator(name, vector, vector, op)(loop(fn)))
+        if (genRegistries)
+          println("  " + register(generic, GenVectorRegistries.getVVIntoName(op, scalar), name))
+        println()
+        println("  " + genBinaryAdaptor(name.replace("Into", ""), vector, vector, op, vector, "pureFromUpdate_" + scalar + "(" + name + ")"))
+        if (genRegistries)
+          println("  " + register(generic, GenVectorRegistries.getVVName(op, scalar), name.replace("Into", "")))
+        println()
+      }
+      val names = "can" + op.getClass.getSimpleName.drop(2).dropRight(1) + "Into_DV_S_" + scalar
+      if (!blacklist(tpe)(names)) {
+        println(genBinaryUpdateOperator(names, vector, scalar, op)(loopS(fn)))
+        if (genRegistries)
+          println("  " + register(generic, GenVectorRegistries.getVSIntoName(op, scalar), names))
+        println()
+        println("  " + genBinaryAdaptor(names.replace("Into", ""), vector, scalar, op, vector, "pureFromUpdate_" + scalar + "(" + names + ")"))
+        if (genRegistries)
+          println("  " + register(generic, GenVectorRegistries.getVSName(op, scalar), names.replaceAll("Into", "")))
+        println()
+      }
+
+
+
+
+    }
+    println("}")
+  }
+
+  def generateGenericOpsTrait(out: PrintStream,
+                       tpe: String, scalar: String,
+                       genericClassName: String,
+                       parent: String,
+                       generic: String,
+                       vector: String,
+                       gvector: String,
+                       ops: Map[OpType, (String, String) => String],
+                       loopG: ((String, String) => String, Boolean) => String,
+                       genRegistries: Boolean) {
+    import out.println
+    println("/** This is an auto-generated trait providing operators for " + tpe + ". */")
+    println("trait " + genericClassName + " extends " + parent + "{ this: " + tpe + ".type =>")
+    println(
+      """
+    def pureRegistryFromUpdate_%s[Other,Op<:OpType](op: BinaryUpdateRegistry[%s, Other, Op])(implicit copy: CanCopy[%s]):BinaryRegistry[%s, Other, Op, %s] = {
+      new BinaryRegistry[%s, Other, Op, %s] {
+        override def bindingMissing(a : %s, b : Other) = {
+          val c = copy(a)
+          op(c, b)
+          c
+        }
       }
     }
-  }
-        """.format(scalar,vector, vector, vector, vector, vector, vector, vector))
+        """.format(scalar, vector, vector, vector, vector, vector, vector, vector))
 
-      for( (op,fn) <- ops) {
-        val name = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_DV_DV_"+scalar
-        if(!blacklist(tpe)(name)) {
-          println(genBinaryUpdateOperator(name, vector, vector, op)(loop(fn)))
-          if(generic == "Vector")
-            println("  " + register(generic, GenVectorRegistries.getVVIntoName(op, scalar), name))
-          println()
-          println("  " +genBinaryAdaptor(name.replace("Into",""), vector, vector, op, vector, "pureFromUpdate_"+scalar+ "(" + name+ ")"))
-          if(generic == "Vector")
-            println("  " + register(generic, GenVectorRegistries.getVVName(op, scalar), name.replace("Into", "")))
-          println()
-        }
-        val names = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_DV_S_"+scalar
-        if(!blacklist(tpe)(names)) {
-          println(genBinaryUpdateOperator(names, vector, scalar, op)(loopS(fn)))
-          if(generic == "Vector")
-            println("  " + register(generic, GenVectorRegistries.getVSIntoName(op, scalar), names))
-          println()
-          println("  " +genBinaryAdaptor(names.replace("Into",""), vector, scalar, op, vector, "pureFromUpdate_"+scalar+ "(" + names+ ")"))
-          if(generic == "Vector")
-            println("  " + register(generic, GenVectorRegistries.getVSName(op, scalar), names.replaceAll("Into","")))
-          println()
-        }
 
-        val namegen = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_DV_V_"+scalar
-        println(genBinaryUpdateOperator(namegen, vector, gvector, op)(loopG(fn, op == OpAdd || op == OpSub)))
-        if(generic == "Vector")
+
+
+      for ((op, fn) <- ops if op != OpMulMatrix) {
+        import GenOperators._
+        val namegen = "can" + op.getClass.getSimpleName.drop(2).dropRight(1) + "Into_DV_V_" + scalar
+        println(genBinaryUpdateRegistryDef(namegen, vector, gvector, op)(loopG(fn, op == OpAdd || op == OpSub)))
+        if (generic == "Vector")
           println("  " + register(generic, GenVectorRegistries.getVVIntoName(op, scalar), namegen))
         println()
-        println("  " +genBinaryAdaptor(namegen.replace("Into",""), vector, gvector, op, vector, "pureFromUpdate_"+scalar+ "(" + namegen+ ")"))
-        if(generic == "Vector")
+        println("  " + genBinaryRegistryAdaptorDef(namegen.replace("Into", ""), vector, gvector, op, vector, "pureRegistryFromUpdate_" + scalar + "(" + namegen + ")"))
+        if (generic == "Vector")
           println("  " + register(generic, GenVectorRegistries.getVVName(op, scalar), namegen.replace("Into", "")))
         println()
 
@@ -308,17 +424,15 @@ object GenDenseOps extends App {
       }
       println("}")
     }
-    print.close()
-  }
 
   val out = new File("math/src/main/scala/breeze/linalg/DenseVectorOps.scala")
-  genHomogeneous("DenseVector", "Vector", "breeze.linalg", out)(
+  genHomogeneous("DenseVector", "Vector", "AnyRef", "breeze.linalg", out)(
     GenOperators.binaryUpdateDV_DV_loop _,
     GenOperators.binaryUpdateDV_scalar_loop _,
     GenOperators.binaryUpdateDV_V_loop _
   )
   val outM = new File("math/src/main/scala/breeze/linalg/DenseMatrixOps.scala")
-  genHomogeneous("DenseMatrix", "Matrix", "breeze.linalg", outM)(
+  genHomogeneous("DenseMatrix", "Matrix", "LowPriorityDenseMatrix", "breeze.linalg", outM)(
     GenOperators.binaryUpdateDM_DM_loop _,
     GenOperators.binaryUpdateDM_scalar_loop _,
     GenOperators.binaryUpdateDM_M_loop _)
@@ -380,7 +494,7 @@ object GenDVSVSpecialOps extends App {
       val svector = "%s[%s]".format(sparseType,scalar)
       println("/** This is an auto-generated trait providing operators for DenseVector and " + sparseType + "*/")
       println("trait DenseVectorOps_"+sparseType+"_"+scalar +" { this: DenseVector.type =>")
-      for( (op,fn) <- ops) {
+      for( (op,fn) <- ops if op != OpMulMatrix) {
         val name = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_DV_" + sparseType + "_" + scalar
         val loop = if(op == OpSub || op == OpAdd) fastLoop _ else slowLoop _
 
@@ -706,7 +820,7 @@ object GenSVOps extends App {
         """.format(scalar,vector, vector, vector, vector, vector, vector, vector))
 
 
-      for( (op,fn) <- ops if op != OpMulScalar) {
+      for( (op,fn) <- ops if op != OpMulScalar && op != OpMulMatrix) {
         val name = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_VV_" + scalar
         def postProcesscopy(c: String) = if(op == OpAdd) "" else if(op == OpSub) c + "*= (-1).to"+scalar else sys.error(":(")
         val loop = if(op == OpSub || op == OpAdd) plusIntoLoop(scalar, (_:(String,String)=>String), postProcesscopy _) else slowLoop _
@@ -746,6 +860,12 @@ object GenSVOps extends App {
         println(genBinaryUpdateOperator(names, vector, scalar, op)(scalarMultLoop(ops(OpMulScalar))))
         println()
         println("  " +genBinaryAdaptor(names.replace("Into",""), vector, scalar, op, vector, "pureFromUpdate_"+scalar+ "(" + names+ ")"))
+        println()
+
+        val namesm = "canMulMatrixInto_SV_S_"+scalar
+        println(genBinaryUpdateOperator(namesm, vector, scalar, OpMulMatrix)(scalarMultLoop(ops(OpMulMatrix))))
+        println()
+        println("  " +genBinaryAdaptor(namesm.replace("Into",""), vector, scalar, OpMulMatrix, vector, "pureFromUpdate_"+scalar+ "(" + namesm+ ")"))
         println()
       }
 
@@ -815,13 +935,15 @@ object GenVectorRegistries extends App {
         """.format(scalar,vector, vector, vector, vector, vector, vector, vector))
 
       for( (op,fn) <- ops) {
-        val name = getVVIntoName(op, scalar)
-        println(genBinaryUpdateRegistry(name, vector, vector, op)(loop(fn, op == OpAdd || op == OpSub)))
-        println()
-        println("  " +genBinaryRegistryAdaptor(getVVName(op, scalar), vector, vector, op, vector, "pureFromUpdate_"+scalar+ "(" + name+ ")"))
-        println()
+        if(op != OpMulMatrix) {
+          val name = getVVIntoName(op, scalar)
+          println(genBinaryUpdateRegistryDef(name, vector, vector, op)(loop(fn, op == OpAdd || op == OpSub)))
+          println()
+          println("  " +genBinaryRegistryAdaptor(getVVName(op, scalar), vector, vector, op, vector, "pureFromUpdate_"+scalar+ "(" + name+ ")"))
+          println()
+        }
         val names: String = getVSIntoName(op, scalar)
-        println(genBinaryUpdateRegistry(names, vector, scalar, op)(loopS(fn, op == OpAdd || op == OpSub)))
+        println(genBinaryUpdateRegistryDef(names, vector, scalar, op)(loopS(fn, op == OpAdd || op == OpSub)))
         println()
         println("  " +genBinaryRegistryAdaptor(getVSName(op, scalar), vector, scalar, op, vector, "pureFromUpdate_"+scalar+ "(" + names+ ")"))
         println()
@@ -831,7 +953,7 @@ object GenVectorRegistries extends App {
 
 
       val dotName: String = getDotName(scalar)
-      println(genBinaryRegistry(dotName, vector, vector, OpMulInner, scalar){
+      println(genBinaryRegistryDef(dotName, vector, vector, OpMulInner, scalar){
         """require(b.length == a.length, "Vectors must be the same length!")
 
        var result: """ + scalar + """ = 0
@@ -897,7 +1019,7 @@ object GenCSCOps extends App {
       println("/** This is an auto-generated trait providing operators for CSCMatrix */")
       println("trait CSCMatrixOps_"+scalar +" { this: CSCMatrix.type =>")
 
-      println(genBinaryOperator("canMulM_V_" + scalar, matrix, gvector, OpMulMatrix, gvector){"""
+      println(genBinaryRegistryDef("canMulM_V_" + scalar, matrix, gvector, OpMulMatrix, gvector){"""
       val res = DenseVector.zeros[Scalar](a.rows)
       var c = 0
       while(c < a.cols) {
@@ -911,7 +1033,7 @@ object GenCSCOps extends App {
         c += 1
       }
 
-      res                                                               """.replaceAll("Scalar", scalar)
+      res""".replaceAll("Scalar", scalar)
       })
 
 
@@ -946,7 +1068,7 @@ object GenDMMultOps extends App {
       println("/** This is an auto-generated trait providing multiplication for DenseMatrix */")
       println("trait DenseMatrixMultOps_"+scalar +" extends DenseMatrixOps_" + scalar + " { this: DenseMatrix.type =>")
 
-      println(genBinaryRegistry("canMulM_V_" + scalar, matrix, gvector, OpMulMatrix, vector){"""
+      println(genBinaryRegistryDef("canMulM_V_" + scalar, matrix, gvector, OpMulMatrix, vector){"""
       // TODO: this could probably be much faster?
       require(a.cols == b.length)
       val res = DenseVector.zeros[Scalar](a.rows)
@@ -964,7 +1086,7 @@ object GenDMMultOps extends App {
       res                                                               """.replaceAll("Scalar", scalar)
       })
 
-      println(genBinaryRegistry("canMulM_M_" + scalar, matrix, gmatrix, OpMulMatrix, matrix){"""
+      println(genBinaryRegistryDef("canMulM_M_" + scalar, matrix, gmatrix, OpMulMatrix, matrix){"""
       // TODO: this could probably be much faster
       val res = DenseMatrix.zeros[Scalar](a.rows, b.cols)
       require(a.cols == b.rows)
@@ -1018,7 +1140,7 @@ object GenMatrixMultOps extends App {
       println("/** This is an auto-generated trait providing multiplication for Matrix */")
       println("trait MatrixMultOps_"+scalar +" { this: Matrix.type =>")
 
-      println(genBinaryRegistry("canMulM_V_" + scalar, matrix, gvector, OpMulMatrix, vector){"""
+      println(genBinaryRegistryDef("canMulM_V_" + scalar, matrix, gvector, OpMulMatrix, vector){"""
       // TODO: this could probably be much faster?
       require(a.cols == b.length)
       val res = DenseVector.zeros[Scalar](a.rows)
@@ -1036,7 +1158,7 @@ object GenMatrixMultOps extends App {
       res                                                               """.replaceAll("Scalar", scalar)
       })
 
-      println(genBinaryRegistry("canMulM_M_" + scalar, matrix, gmatrix, OpMulMatrix, matrix){"""
+      println(genBinaryRegistryDef("canMulM_M_" + scalar, matrix, gmatrix, OpMulMatrix, matrix){"""
       // TODO: this could probably be much faster
       val res = DenseMatrix.zeros[Scalar](a.rows, b.cols)
       require(a.cols == b.rows)

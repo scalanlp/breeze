@@ -33,6 +33,7 @@ trait VectorSpace[V, S] {
 
   implicit def zeros: CanCreateZerosLike[V, V]
   implicit def mulVS: BinaryOp[V, S, OpMulScalar, V]
+  implicit def mulVS_M: BinaryOp[V, S, OpMulMatrix, V] = mulVS.asInstanceOf[BinaryOp[V, S, OpMulMatrix, V]]
   implicit def divVS: BinaryOp[V, S, OpDiv, V]
 
   implicit def addVV: BinaryOp[V, V, OpAdd, V]
@@ -57,6 +58,7 @@ trait InnerProductSpace[V, S] extends NormedVectorSpace[V, S] {
 trait MutableVectorSpace[V, S] extends VectorSpace[V, S] {
   implicit def copy: CanCopy[V]
   implicit def mulIntoVS: BinaryUpdateOp[V, S, OpMulScalar]
+  implicit def mulIntoVS_M: BinaryUpdateOp[V, S, OpMulMatrix] = mulIntoVS.asInstanceOf[BinaryUpdateOp[V, S, OpMulMatrix]]
   implicit def divIntoVS: BinaryUpdateOp[V, S, OpDiv]
 
   implicit def addIntoVV: BinaryUpdateOp[V, V, OpAdd]
