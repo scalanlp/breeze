@@ -20,6 +20,7 @@ package breeze.util
 import breeze.linalg._
 import breeze.storage.DefaultArrayValue
 import breeze.collection.mutable.{SparseArray, SparseArrayMap}
+import java.util
 
 
 /**
@@ -41,14 +42,15 @@ trait Encoder[T] {
    * Creates a DenseVector[Double] with the index's size
    */
   final def mkDenseVector(default: Double=0.0):DenseVector[Double] = {
-    val vec = DenseVector.fill[Double](index.size)(default)
-    vec
+    val array = new Array[Double](index.size)
+    util.Arrays.fill(array, default)
+    new DenseVector(array)
   }
 
   /**
    * Creates a Vector[Double] of some sort with the index's size.
    */
-  final def mkVector():Vector[Double] = mkSparseVector
+  final def mkVector():Vector[Double] = mkSparseVector()
 
   /**
    * makes a matrix of some sort with the index's size as rows and cols
