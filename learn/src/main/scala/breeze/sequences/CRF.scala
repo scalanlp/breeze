@@ -33,6 +33,7 @@ import scala.collection.immutable.{Range, BitSet}
  * Trait to handle the scoring for each transiton in a CRF
  * @tparam L label type
  * @tparam W the sequence type. Note that we don't take Seq[W], but a single W.
+ * @author dlwh
  */
 trait CRFModel[L,W] extends Encoder[L] with Serializable {
   val index: Index[L]
@@ -52,7 +53,7 @@ trait CRFModel[L,W] extends Encoder[L] with Serializable {
  * @tparam L label type
  * @tparam W the sequence type. Note that we don't take Seq[W], but a single W.
  * @param transitions The underlying CRFModel, which scores transitions
- *
+ * @author dlwh
  */
 class CRF[L,W](val transitions: CRFModel[L,W]) {
   def numStates = transitions.index.size
@@ -149,7 +150,6 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
       previous = cur
     }
 
-
     new Calibration(words, length, forwardScores, backwardScores)
   }
 
@@ -227,7 +227,7 @@ class CRF[L,W](val transitions: CRFModel[L,W]) {
 object CRF {
   trait Feature
   trait Featurizer[L,W] extends Encoder[Feature] with Serializable {
-    def featuresFor(pos: Int, w: W, l: Int, ln: Int):Iterator[Int]
+    def featuresFor(pos: Int, w: W, l: Int, ln: Int):SparseVector[Double]
   }
 
   class Trainer[L,W](featurizer: Featurizer[L,W],
@@ -242,20 +242,16 @@ object CRF {
       val cached = new CachedBatchDiffFunction(obj)
 //      val checking = new RandomizedGradientCheckingFunction(cached)
       val weights = params.iterations(cached,featurizer.mkDenseVector()).drop(params.maxIterations).next.x
-      val model = mkModel(labels,weights.data)
+      val model = mkModel(labels,weights)
       new CRF(model)
     }
 
-    def mkModel(labels: Index[L], weights: Array[Double]): CRFModel[L, W] = {
+    def mkModel(labels: Index[L], weights: Vector[Double]): CRFModel[L, W] = {
       new CRFModel[L, W] {
         val index = labels
 
         def score(pos: Int, w: W, l: Int, ln: Int) = {
-          var score = 0.0
-          for (f <- featurizer.featuresFor(pos, w, l, ln)) {
-            score += weights(f)
-          }
-          score
+          weights dot featurizer.featuresFor(pos, w, l, ln)
         }
 
         def validSymbols(pos: Int, w: W) = {
@@ -271,9 +267,7 @@ object CRF {
                   labels: Index[L]): BatchDiffFunction[DenseVector[Double]]  = {
       new BatchDiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double], batch: IndexedSeq[Int]) = {
-          val weights = x.data
-
-          val model = mkModel(labels, weights)
+          val model = mkModel(labels, x)
 
           val crf = new CRF(model)
 
@@ -282,7 +276,7 @@ object CRF {
 //          println(b.size)
           val r  = b.par.aggregate(null:(Double,DenseVector[Double])) ({ (pair,ex) =>
             val (score,counts) = if(pair eq null) (0.0,featurizer.mkDenseVector()) else pair
-            val (goldScore,goldFeatures) = computeGoldFeatures(ex, weights, counts.data, -1)
+            val (goldScore,goldFeatures) = computeGoldFeatures(ex, x, counts.data, -1)
             val (part,guessFeatures) = computeGuessFeatures(ex, crf, counts.data, 1)
             (score + part - goldScore,counts)
           }, {(a,b) =>
@@ -293,11 +287,11 @@ object CRF {
           r
         }
 
-        private def computeGoldFeatures(ex: Example[Seq[L], (W,Int)], weights: Array[Double], counts: Array[Double], scale: Double) = {
+        private def computeGoldFeatures(ex: Example[Seq[L], (W,Int)], weights: Vector[Double], counts: Array[Double], scale: Double) = {
           val gold = (startSymbol +: ex.label).map(labels)
           var score = 0.0
-          for(i <- 0 until ex.features._2; f <- featurizer.featuresFor(i,ex.features._1,gold(i),gold(i+1))) {
-            counts(f) += 1 * scale
+          for(i <- 0 until ex.features._2; (f,v) <- featurizer.featuresFor(i,ex.features._1,gold(i),gold(i+1)).activeIterator) {
+            counts(f) += 1 * scale * v
             score += weights(f)
           }
           (score -> counts)
@@ -310,12 +304,16 @@ object CRF {
           val edgeMarginals = Array.tabulate(ex.features._2)(i => cal.edgeMarginalAt(i))
           def validSymbols(i: Int) = if(i < 0) BitSet(crf.transitions.start) else crf.transitions.validSymbols(i,ex.features._1)
 
-          for(i <- 0 until ex.features._2;
-              prev <- validSymbols(i-1);
-              next <- validSymbols(i);
-              m = scala.math.exp(edgeMarginals(i)(prev,next));
-              f <- featurizer.featuresFor(i,ex.features._1, prev, next)) {
-            counts(f) += m * scale
+          for(i <- 0 until ex.features._2; prev <- validSymbols(i-1); next <- validSymbols(i)) {
+            val m = scala.math.exp(edgeMarginals(i)(prev,next))
+            var off = 0
+            val features = featurizer.featuresFor(i,ex.features._1, prev, next)
+            while(off < features.activeSize) {
+              val f = features.indexAt(off)
+              val v = features.valueAt(off)
+              counts(f) += m * scale * v
+              off += 1
+            }
           }
 
           (score -> counts)

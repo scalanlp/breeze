@@ -206,13 +206,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
 
   implicit def canCopyDenseVector[V:ClassManifest]:CanCopy[DenseVector[V]] = new CanCopy[DenseVector[V]] {
     def apply(v1: DenseVector[V]) = {
-      val data = new Array[V](v1.length)
-      var i = 0
-      while(i < data.length) {
-        data(i) = v1(i)
-        i += 1
-      }
-      new DenseVector(data)
+      v1.copy
     }
   }
 
