@@ -246,7 +246,7 @@ object CRF {
       new CRF(model)
     }
 
-    def mkModel(labels: Index[L], weights: Vector[Double]): CRFModel[L, W] = {
+    def mkModel(labels: Index[L], weights: DenseVector[Double]): CRFModel[L, W] = {
       new CRFModel[L, W] {
         val index = labels
 

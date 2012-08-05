@@ -85,7 +85,7 @@ class SparseVector[@spec(Double,Int, Float) E](val array: SparseArray[E])
   }
 
   def copy: SparseVector[E] = {
-    new SparseVector[E](ArrayUtil.copyOf(index, index.length), ArrayUtil.copyOf(data, index.length), activeSize, length)
+    new SparseVector[E](ArrayUtil.copyOf(index, index.length), ArrayUtil.copyOf(data, index.length), activeSize, size)
   }
 
   /**

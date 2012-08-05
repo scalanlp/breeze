@@ -15,7 +15,9 @@ case class TrainerParams(
   @Help(text="Prints this") help:Boolean = false)
 
 /**
- * Class that builds a classifier
+ * Main program that builds a classifier from a [[breeze.data.SparseFeatureDataset]].
+ * You can build a logistic classifier or an SVM, at the moment.
+ *
  * @author dlwh
  */
 object Trainer extends App {
@@ -25,7 +27,7 @@ object Trainer extends App {
     println(GenerateHelp[TrainerParams](config))
   } else {
     val input = SparseFeatureDataset.fromSource[Int](Source.fromFile(params.input),params.input.getName)
-    type TheClassifier = LinearClassifier[Int,LFMatrix[Int,SparseVector[Double]],Counter[Int,Double],SparseVector[Double]]
+    type TheClassifier = LinearClassifier[Int,UnindexedLFMatrix[Int,SparseVector[Double]],Counter[Int,Double],SparseVector[Double]]
 
     val trainer:Classifier.Trainer[Int,SparseVector[Double]] { type MyClassifier = TheClassifier } = params.`type`.toLowerCase match {
       case "logistic" => new LogisticClassifier.Trainer[Int,SparseVector[Double]]
