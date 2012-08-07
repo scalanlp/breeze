@@ -871,23 +871,38 @@ object GenSVOps extends App {
       }
 
 
-
       // dot product
       val dotName = "canDotProductSV_" + scalar
       println(genBinaryOperator(dotName, vector, vector, OpMulInner, scalar){
         """require(b.length == a.length, "Vectors must be the same length!")
 
-       var result: """ + scalar + """ = 0
+       if (a.activeSize < b.activeSize) {
+         apply(b, a)
+       } else {
 
-        val bd = b.data
-        val bi = b.index
-        val bsize = b.iterableSize
-        var i = 0
-        while(i < bsize) {
-          if(b.isActive(i)) result += a(bi(i)) * bd(i)
-          i += 1
-        }
-        result""".replaceAll("       ","        ")
+         var result: """ + scalar + """ = 0
+
+         val ad = a.data
+         val bd = b.data
+         val ai = a.index
+         val bi = b.index
+         val bsize = b.iterableSize
+         val asize = a.iterableSize
+         var i = 0
+         // TODO: this can be made faster by using the last index to bracket the search as well.
+         var lastOff = 0
+         while(i < bsize) {
+           val aoff = Arrays.binarySearch(ai, lastOff, asize, bi(i))
+           if(aoff >=  0) {
+            lastOff = aoff
+            result += ad(aoff) * bd(i)
+           } else {
+            lastOff = ~aoff
+           }
+           i += 1
+         }
+         result
+       }""".replaceAll("       ","        ")
       })
 
       println("}")

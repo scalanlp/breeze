@@ -18,46 +18,6 @@ trait SparseVectorOps_Double { this: SparseVector.type =>
   }
         
 
-  class canModInto_VV_Double private[linalg] () extends BinaryUpdateOp[SparseVector[Double], SparseVector[Double], breeze.linalg.operators.OpMod] {
-    def apply(a: SparseVector[Double], b: SparseVector[Double]) {
-      require(b.length == a.length, "Vectors must be the same length!")
-
-        var i = 0
-        while(i < b.length) {
-          a(i) = a(i) % b(i)
-          i += 1
-        }
-        
-    }
-  }
-  implicit val canModInto_VV_Double = new canModInto_VV_Double ()
-    
-  Vector.canModInto_V_V_Double.register(canModInto_VV_Double)
-
-  implicit val canMod_VV_Double: BinaryOp[SparseVector[Double], SparseVector[Double], breeze.linalg.operators.OpMod, SparseVector[Double]] = pureFromUpdate_Double(canModInto_VV_Double)
-  Vector.canMod_V_V_Double.register(canMod_VV_Double)
-
-
-  class canModInto_SV_S_Double private[linalg] () extends BinaryUpdateOp[SparseVector[Double], Double, breeze.linalg.operators.OpMod] {
-    def apply(a: SparseVector[Double], b: Double) {
-      
-
-        var i = 0
-        while(i < a.length) {
-          a(i) = a(i) % b
-          i += 1
-        }
-        
-    }
-  }
-  implicit val canModInto_SV_S_Double = new canModInto_SV_S_Double ()
-    
-  Vector.canModInto_V_S_Double.register(canModInto_SV_S_Double)
-
-  implicit val canMod_SV_S_Double: BinaryOp[SparseVector[Double], Double, breeze.linalg.operators.OpMod, SparseVector[Double]] = pureFromUpdate_Double(canModInto_SV_S_Double)
-  Vector.canMod_V_S_Double.register(canMod_SV_S_Double)
-
-
   class canSetInto_VV_Double private[linalg] () extends BinaryUpdateOp[SparseVector[Double], SparseVector[Double], breeze.linalg.operators.OpSet] {
     def apply(a: SparseVector[Double], b: SparseVector[Double]) {
       require(b.length == a.length, "Vectors must be the same length!")
@@ -98,143 +58,44 @@ trait SparseVectorOps_Double { this: SparseVector.type =>
   Vector.canSet_V_S_Double.register(canSet_SV_S_Double)
 
 
-  class canSubInto_VV_Double private[linalg] () extends BinaryUpdateOp[SparseVector[Double], SparseVector[Double], breeze.linalg.operators.OpSub] {
-    def apply(a: SparseVector[Double], b: SparseVector[Double]) {
-      require(b.length == a.length, "Vectors must be the same length!")
-
-        // TODO: decide the appropriate value of 3 and 30 here.
-        if(b.activeSize > a.activeSize * 3 && b.activeSize > 30) {
-          val c = copy(b)
-          apply(c, a)
-          c*= (-1).toDouble
-          a.use(c.index, c.data, c.activeSize)
-          return
-        }
-
-        var buf:Array[Double] = null
-        var bufi:Array[Int] = null
-        var nactiveSize = 0
-
-        val bd = b.data
-        val bi = b.index
-        val bsize = b.iterableSize
-        var i = 0
-        while(i < bsize) {
-          if (a.contains(bi(i))) {
-                // just add it in if it's there
-                a(bi(i)) = a(bi(i)) - bd(i)
-          } else { // not there
-                if(buf eq null) {
-                  buf = new Array[Double](b.activeSize - i)
-                  bufi = new Array[Int](b.activeSize - i)
-                } else if(buf.length == nactiveSize) {
-                  buf = Arrays.copyOf(buf, nactiveSize + b.activeSize - i)
-                  bufi = Arrays.copyOf(bufi, nactiveSize + b.activeSize - i)
-                }
-
-                // append to buffer to merged in later
-                buf(nactiveSize) = buf(nactiveSize) - bd(i)
-                bufi(nactiveSize) = bi(i)
-                nactiveSize += 1
-          }
-          i += 1
-        }
-
-        // merge two disjoint sorted lists
-        if(buf != null) {
-          val result = new Array[Double](a.activeSize + nactiveSize)
-          val resultI = new Array[Int](a.activeSize + nactiveSize)
-          var ni = 0
-          var ai = 0
-          var out = 0
-
-          while(ni < nactiveSize) {
-                while(ai < a.activeSize && a.index(ai) < bufi(ni) ) {
-                  result(out) = a.data(ai)
-                  resultI(out) = a.index(ai)
-                  ai += 1
-                  out += 1
-                }
-                result(out) = buf(ni)
-                resultI(out) = bufi(ni)
-                out += 1
-                ni += 1
-          }
-
-          System.arraycopy(a.data, ai, result, out, result.length - out)
-          System.arraycopy(a.index, ai, resultI, out, result.length - out)
-          out = result.length
-
-          a.use(resultI, result, out)
-        }
-        
-    }
-  }
-  implicit val canSubInto_VV_Double = new canSubInto_VV_Double ()
-    
-  Vector.canSubInto_V_V_Double.register(canSubInto_VV_Double)
-
-  implicit val canSub_VV_Double: BinaryOp[SparseVector[Double], SparseVector[Double], breeze.linalg.operators.OpSub, SparseVector[Double]] = pureFromUpdate_Double(canSubInto_VV_Double)
-  Vector.canSub_V_V_Double.register(canSub_VV_Double)
-
-
-  class canSubInto_SV_S_Double private[linalg] () extends BinaryUpdateOp[SparseVector[Double], Double, breeze.linalg.operators.OpSub] {
-    def apply(a: SparseVector[Double], b: Double) {
-      
-
-        var i = 0
-        while(i < a.length) {
-          a(i) = a(i) - b
-          i += 1
-        }
-        
-    }
-  }
-  implicit val canSubInto_SV_S_Double = new canSubInto_SV_S_Double ()
-    
-  Vector.canSubInto_V_S_Double.register(canSubInto_SV_S_Double)
-
-  implicit val canSub_SV_S_Double: BinaryOp[SparseVector[Double], Double, breeze.linalg.operators.OpSub, SparseVector[Double]] = pureFromUpdate_Double(canSubInto_SV_S_Double)
-  Vector.canSub_V_S_Double.register(canSub_SV_S_Double)
-
-
-  class canDivInto_VV_Double private[linalg] () extends BinaryUpdateOp[SparseVector[Double], SparseVector[Double], breeze.linalg.operators.OpDiv] {
+  class canPowInto_VV_Double private[linalg] () extends BinaryUpdateOp[SparseVector[Double], SparseVector[Double], breeze.linalg.operators.OpPow] {
     def apply(a: SparseVector[Double], b: SparseVector[Double]) {
       require(b.length == a.length, "Vectors must be the same length!")
 
         var i = 0
         while(i < b.length) {
-          a(i) = a(i) / b(i)
+          a(i) = scala.math.pow(a(i), b(i))
           i += 1
         }
         
     }
   }
-  implicit val canDivInto_VV_Double = new canDivInto_VV_Double ()
+  implicit val canPowInto_VV_Double = new canPowInto_VV_Double ()
     
-  Vector.canDivInto_V_V_Double.register(canDivInto_VV_Double)
+  Vector.canPowInto_V_V_Double.register(canPowInto_VV_Double)
 
-  implicit val canDiv_VV_Double: BinaryOp[SparseVector[Double], SparseVector[Double], breeze.linalg.operators.OpDiv, SparseVector[Double]] = pureFromUpdate_Double(canDivInto_VV_Double)
-  Vector.canDiv_V_V_Double.register(canDiv_VV_Double)
+  implicit val canPow_VV_Double: BinaryOp[SparseVector[Double], SparseVector[Double], breeze.linalg.operators.OpPow, SparseVector[Double]] = pureFromUpdate_Double(canPowInto_VV_Double)
+  Vector.canPow_V_V_Double.register(canPow_VV_Double)
 
 
-  class canDivInto_SV_S_Double private[linalg] () extends BinaryUpdateOp[SparseVector[Double], Double, breeze.linalg.operators.OpDiv] {
+  class canPowInto_SV_S_Double private[linalg] () extends BinaryUpdateOp[SparseVector[Double], Double, breeze.linalg.operators.OpPow] {
     def apply(a: SparseVector[Double], b: Double) {
       
-    var i = 0
-    while(i < a.activeSize) {
-      a.data(i) = a.data(i) / b
-      i += 1
-    }
-    
+
+        var i = 0
+        while(i < a.length) {
+          a(i) = scala.math.pow(a(i), b)
+          i += 1
+        }
+        
     }
   }
-  implicit val canDivInto_SV_S_Double = new canDivInto_SV_S_Double ()
+  implicit val canPowInto_SV_S_Double = new canPowInto_SV_S_Double ()
     
-  Vector.canDivInto_V_S_Double.register(canDivInto_SV_S_Double)
+  Vector.canPowInto_V_S_Double.register(canPowInto_SV_S_Double)
 
-  implicit val canDiv_SV_S_Double: BinaryOp[SparseVector[Double], Double, breeze.linalg.operators.OpDiv, SparseVector[Double]] = pureFromUpdate_Double(canDivInto_SV_S_Double)
-  Vector.canDiv_V_S_Double.register(canDiv_SV_S_Double)
+  implicit val canPow_SV_S_Double: BinaryOp[SparseVector[Double], Double, breeze.linalg.operators.OpPow, SparseVector[Double]] = pureFromUpdate_Double(canPowInto_SV_S_Double)
+  Vector.canPow_V_S_Double.register(canPow_SV_S_Double)
 
 
   class canAddInto_VV_Double private[linalg] () extends BinaryUpdateOp[SparseVector[Double], SparseVector[Double], breeze.linalg.operators.OpAdd] {
@@ -337,44 +198,183 @@ trait SparseVectorOps_Double { this: SparseVector.type =>
   Vector.canAdd_V_S_Double.register(canAdd_SV_S_Double)
 
 
-  class canPowInto_VV_Double private[linalg] () extends BinaryUpdateOp[SparseVector[Double], SparseVector[Double], breeze.linalg.operators.OpPow] {
+  class canDivInto_VV_Double private[linalg] () extends BinaryUpdateOp[SparseVector[Double], SparseVector[Double], breeze.linalg.operators.OpDiv] {
     def apply(a: SparseVector[Double], b: SparseVector[Double]) {
       require(b.length == a.length, "Vectors must be the same length!")
 
         var i = 0
         while(i < b.length) {
-          a(i) = scala.math.pow(a(i), b(i))
+          a(i) = a(i) / b(i)
           i += 1
         }
         
     }
   }
-  implicit val canPowInto_VV_Double = new canPowInto_VV_Double ()
+  implicit val canDivInto_VV_Double = new canDivInto_VV_Double ()
     
-  Vector.canPowInto_V_V_Double.register(canPowInto_VV_Double)
+  Vector.canDivInto_V_V_Double.register(canDivInto_VV_Double)
 
-  implicit val canPow_VV_Double: BinaryOp[SparseVector[Double], SparseVector[Double], breeze.linalg.operators.OpPow, SparseVector[Double]] = pureFromUpdate_Double(canPowInto_VV_Double)
-  Vector.canPow_V_V_Double.register(canPow_VV_Double)
+  implicit val canDiv_VV_Double: BinaryOp[SparseVector[Double], SparseVector[Double], breeze.linalg.operators.OpDiv, SparseVector[Double]] = pureFromUpdate_Double(canDivInto_VV_Double)
+  Vector.canDiv_V_V_Double.register(canDiv_VV_Double)
 
 
-  class canPowInto_SV_S_Double private[linalg] () extends BinaryUpdateOp[SparseVector[Double], Double, breeze.linalg.operators.OpPow] {
+  class canDivInto_SV_S_Double private[linalg] () extends BinaryUpdateOp[SparseVector[Double], Double, breeze.linalg.operators.OpDiv] {
+    def apply(a: SparseVector[Double], b: Double) {
+      
+    var i = 0
+    while(i < a.activeSize) {
+      a.data(i) = a.data(i) / b
+      i += 1
+    }
+    
+    }
+  }
+  implicit val canDivInto_SV_S_Double = new canDivInto_SV_S_Double ()
+    
+  Vector.canDivInto_V_S_Double.register(canDivInto_SV_S_Double)
+
+  implicit val canDiv_SV_S_Double: BinaryOp[SparseVector[Double], Double, breeze.linalg.operators.OpDiv, SparseVector[Double]] = pureFromUpdate_Double(canDivInto_SV_S_Double)
+  Vector.canDiv_V_S_Double.register(canDiv_SV_S_Double)
+
+
+  class canModInto_VV_Double private[linalg] () extends BinaryUpdateOp[SparseVector[Double], SparseVector[Double], breeze.linalg.operators.OpMod] {
+    def apply(a: SparseVector[Double], b: SparseVector[Double]) {
+      require(b.length == a.length, "Vectors must be the same length!")
+
+        var i = 0
+        while(i < b.length) {
+          a(i) = a(i) % b(i)
+          i += 1
+        }
+        
+    }
+  }
+  implicit val canModInto_VV_Double = new canModInto_VV_Double ()
+    
+  Vector.canModInto_V_V_Double.register(canModInto_VV_Double)
+
+  implicit val canMod_VV_Double: BinaryOp[SparseVector[Double], SparseVector[Double], breeze.linalg.operators.OpMod, SparseVector[Double]] = pureFromUpdate_Double(canModInto_VV_Double)
+  Vector.canMod_V_V_Double.register(canMod_VV_Double)
+
+
+  class canModInto_SV_S_Double private[linalg] () extends BinaryUpdateOp[SparseVector[Double], Double, breeze.linalg.operators.OpMod] {
     def apply(a: SparseVector[Double], b: Double) {
       
 
         var i = 0
         while(i < a.length) {
-          a(i) = scala.math.pow(a(i), b)
+          a(i) = a(i) % b
           i += 1
         }
         
     }
   }
-  implicit val canPowInto_SV_S_Double = new canPowInto_SV_S_Double ()
+  implicit val canModInto_SV_S_Double = new canModInto_SV_S_Double ()
     
-  Vector.canPowInto_V_S_Double.register(canPowInto_SV_S_Double)
+  Vector.canModInto_V_S_Double.register(canModInto_SV_S_Double)
 
-  implicit val canPow_SV_S_Double: BinaryOp[SparseVector[Double], Double, breeze.linalg.operators.OpPow, SparseVector[Double]] = pureFromUpdate_Double(canPowInto_SV_S_Double)
-  Vector.canPow_V_S_Double.register(canPow_SV_S_Double)
+  implicit val canMod_SV_S_Double: BinaryOp[SparseVector[Double], Double, breeze.linalg.operators.OpMod, SparseVector[Double]] = pureFromUpdate_Double(canModInto_SV_S_Double)
+  Vector.canMod_V_S_Double.register(canMod_SV_S_Double)
+
+
+  class canSubInto_VV_Double private[linalg] () extends BinaryUpdateOp[SparseVector[Double], SparseVector[Double], breeze.linalg.operators.OpSub] {
+    def apply(a: SparseVector[Double], b: SparseVector[Double]) {
+      require(b.length == a.length, "Vectors must be the same length!")
+
+        // TODO: decide the appropriate value of 3 and 30 here.
+        if(b.activeSize > a.activeSize * 3 && b.activeSize > 30) {
+          val c = copy(b)
+          apply(c, a)
+          c*= (-1).toDouble
+          a.use(c.index, c.data, c.activeSize)
+          return
+        }
+
+        var buf:Array[Double] = null
+        var bufi:Array[Int] = null
+        var nactiveSize = 0
+
+        val bd = b.data
+        val bi = b.index
+        val bsize = b.iterableSize
+        var i = 0
+        while(i < bsize) {
+          if (a.contains(bi(i))) {
+                // just add it in if it's there
+                a(bi(i)) = a(bi(i)) - bd(i)
+          } else { // not there
+                if(buf eq null) {
+                  buf = new Array[Double](b.activeSize - i)
+                  bufi = new Array[Int](b.activeSize - i)
+                } else if(buf.length == nactiveSize) {
+                  buf = Arrays.copyOf(buf, nactiveSize + b.activeSize - i)
+                  bufi = Arrays.copyOf(bufi, nactiveSize + b.activeSize - i)
+                }
+
+                // append to buffer to merged in later
+                buf(nactiveSize) = buf(nactiveSize) - bd(i)
+                bufi(nactiveSize) = bi(i)
+                nactiveSize += 1
+          }
+          i += 1
+        }
+
+        // merge two disjoint sorted lists
+        if(buf != null) {
+          val result = new Array[Double](a.activeSize + nactiveSize)
+          val resultI = new Array[Int](a.activeSize + nactiveSize)
+          var ni = 0
+          var ai = 0
+          var out = 0
+
+          while(ni < nactiveSize) {
+                while(ai < a.activeSize && a.index(ai) < bufi(ni) ) {
+                  result(out) = a.data(ai)
+                  resultI(out) = a.index(ai)
+                  ai += 1
+                  out += 1
+                }
+                result(out) = buf(ni)
+                resultI(out) = bufi(ni)
+                out += 1
+                ni += 1
+          }
+
+          System.arraycopy(a.data, ai, result, out, result.length - out)
+          System.arraycopy(a.index, ai, resultI, out, result.length - out)
+          out = result.length
+
+          a.use(resultI, result, out)
+        }
+        
+    }
+  }
+  implicit val canSubInto_VV_Double = new canSubInto_VV_Double ()
+    
+  Vector.canSubInto_V_V_Double.register(canSubInto_VV_Double)
+
+  implicit val canSub_VV_Double: BinaryOp[SparseVector[Double], SparseVector[Double], breeze.linalg.operators.OpSub, SparseVector[Double]] = pureFromUpdate_Double(canSubInto_VV_Double)
+  Vector.canSub_V_V_Double.register(canSub_VV_Double)
+
+
+  class canSubInto_SV_S_Double private[linalg] () extends BinaryUpdateOp[SparseVector[Double], Double, breeze.linalg.operators.OpSub] {
+    def apply(a: SparseVector[Double], b: Double) {
+      
+
+        var i = 0
+        while(i < a.length) {
+          a(i) = a(i) - b
+          i += 1
+        }
+        
+    }
+  }
+  implicit val canSubInto_SV_S_Double = new canSubInto_SV_S_Double ()
+    
+  Vector.canSubInto_V_S_Double.register(canSubInto_SV_S_Double)
+
+  implicit val canSub_SV_S_Double: BinaryOp[SparseVector[Double], Double, breeze.linalg.operators.OpSub, SparseVector[Double]] = pureFromUpdate_Double(canSubInto_SV_S_Double)
+  Vector.canSub_V_S_Double.register(canSub_SV_S_Double)
 
 
   class canMulScalarInto_VV_Double private[linalg] () extends BinaryUpdateOp[SparseVector[Double], SparseVector[Double], breeze.linalg.operators.OpMulScalar] {
@@ -479,22 +479,37 @@ trait SparseVectorOps_Double { this: SparseVector.type =>
 
   implicit val canMulMatrix_SV_S_Double: BinaryOp[SparseVector[Double], Double, breeze.linalg.operators.OpMulMatrix, SparseVector[Double]] = pureFromUpdate_Double(canMulMatrixInto_SV_S_Double)
 
-
    class canDotProductSV_Double private[linalg] () extends BinaryOp[SparseVector[Double], SparseVector[Double], breeze.linalg.operators.OpMulInner, Double] {
     def apply(a: SparseVector[Double], b: SparseVector[Double]) = {
       require(b.length == a.length, "Vectors must be the same length!")
 
-       var result: Double = 0
+       if (a.activeSize < b.activeSize) {
+         apply(b, a)
+       } else {
 
-         val bd = b.data
-         val bi = b.index
-         val bsize = b.iterableSize
-         var i = 0
-         while(i < bsize) {
-           if(b.isActive(i)) result += a(bi(i)) * bd(i)
-           i += 1
-         }
-         result
+         var result: Double = 0
+
+          val ad = a.data
+          val bd = b.data
+          val ai = a.index
+          val bi = b.index
+          val bsize = b.iterableSize
+          val asize = a.iterableSize
+          var i = 0
+          // TODO: this can be made faster by using the last index to bracket the search as well.
+          var lastOff = 0
+          while(i < bsize) {
+            val aoff = Arrays.binarySearch(ai, lastOff, asize, bi(i))
+            if(aoff >=  0) {
+             lastOff = aoff
+             result += ad(aoff) * bd(i)
+            } else {
+             lastOff = ~aoff
+            }
+            i += 1
+          }
+          result
+        }
     }
   }; implicit val canDotProductSV_Double = new canDotProductSV_Double ()
 
@@ -513,46 +528,6 @@ trait SparseVectorOps_Float { this: SparseVector.type =>
     }
   }
         
-
-  class canModInto_VV_Float private[linalg] () extends BinaryUpdateOp[SparseVector[Float], SparseVector[Float], breeze.linalg.operators.OpMod] {
-    def apply(a: SparseVector[Float], b: SparseVector[Float]) {
-      require(b.length == a.length, "Vectors must be the same length!")
-
-        var i = 0
-        while(i < b.length) {
-          a(i) = a(i) % b(i)
-          i += 1
-        }
-        
-    }
-  }
-  implicit val canModInto_VV_Float = new canModInto_VV_Float ()
-    
-  Vector.canModInto_V_V_Float.register(canModInto_VV_Float)
-
-  implicit val canMod_VV_Float: BinaryOp[SparseVector[Float], SparseVector[Float], breeze.linalg.operators.OpMod, SparseVector[Float]] = pureFromUpdate_Float(canModInto_VV_Float)
-  Vector.canMod_V_V_Float.register(canMod_VV_Float)
-
-
-  class canModInto_SV_S_Float private[linalg] () extends BinaryUpdateOp[SparseVector[Float], Float, breeze.linalg.operators.OpMod] {
-    def apply(a: SparseVector[Float], b: Float) {
-      
-
-        var i = 0
-        while(i < a.length) {
-          a(i) = a(i) % b
-          i += 1
-        }
-        
-    }
-  }
-  implicit val canModInto_SV_S_Float = new canModInto_SV_S_Float ()
-    
-  Vector.canModInto_V_S_Float.register(canModInto_SV_S_Float)
-
-  implicit val canMod_SV_S_Float: BinaryOp[SparseVector[Float], Float, breeze.linalg.operators.OpMod, SparseVector[Float]] = pureFromUpdate_Float(canModInto_SV_S_Float)
-  Vector.canMod_V_S_Float.register(canMod_SV_S_Float)
-
 
   class canSetInto_VV_Float private[linalg] () extends BinaryUpdateOp[SparseVector[Float], SparseVector[Float], breeze.linalg.operators.OpSet] {
     def apply(a: SparseVector[Float], b: SparseVector[Float]) {
@@ -594,143 +569,44 @@ trait SparseVectorOps_Float { this: SparseVector.type =>
   Vector.canSet_V_S_Float.register(canSet_SV_S_Float)
 
 
-  class canSubInto_VV_Float private[linalg] () extends BinaryUpdateOp[SparseVector[Float], SparseVector[Float], breeze.linalg.operators.OpSub] {
-    def apply(a: SparseVector[Float], b: SparseVector[Float]) {
-      require(b.length == a.length, "Vectors must be the same length!")
-
-        // TODO: decide the appropriate value of 3 and 30 here.
-        if(b.activeSize > a.activeSize * 3 && b.activeSize > 30) {
-          val c = copy(b)
-          apply(c, a)
-          c*= (-1).toFloat
-          a.use(c.index, c.data, c.activeSize)
-          return
-        }
-
-        var buf:Array[Float] = null
-        var bufi:Array[Int] = null
-        var nactiveSize = 0
-
-        val bd = b.data
-        val bi = b.index
-        val bsize = b.iterableSize
-        var i = 0
-        while(i < bsize) {
-          if (a.contains(bi(i))) {
-                // just add it in if it's there
-                a(bi(i)) = a(bi(i)) - bd(i)
-          } else { // not there
-                if(buf eq null) {
-                  buf = new Array[Float](b.activeSize - i)
-                  bufi = new Array[Int](b.activeSize - i)
-                } else if(buf.length == nactiveSize) {
-                  buf = Arrays.copyOf(buf, nactiveSize + b.activeSize - i)
-                  bufi = Arrays.copyOf(bufi, nactiveSize + b.activeSize - i)
-                }
-
-                // append to buffer to merged in later
-                buf(nactiveSize) = buf(nactiveSize) - bd(i)
-                bufi(nactiveSize) = bi(i)
-                nactiveSize += 1
-          }
-          i += 1
-        }
-
-        // merge two disjoint sorted lists
-        if(buf != null) {
-          val result = new Array[Float](a.activeSize + nactiveSize)
-          val resultI = new Array[Int](a.activeSize + nactiveSize)
-          var ni = 0
-          var ai = 0
-          var out = 0
-
-          while(ni < nactiveSize) {
-                while(ai < a.activeSize && a.index(ai) < bufi(ni) ) {
-                  result(out) = a.data(ai)
-                  resultI(out) = a.index(ai)
-                  ai += 1
-                  out += 1
-                }
-                result(out) = buf(ni)
-                resultI(out) = bufi(ni)
-                out += 1
-                ni += 1
-          }
-
-          System.arraycopy(a.data, ai, result, out, result.length - out)
-          System.arraycopy(a.index, ai, resultI, out, result.length - out)
-          out = result.length
-
-          a.use(resultI, result, out)
-        }
-        
-    }
-  }
-  implicit val canSubInto_VV_Float = new canSubInto_VV_Float ()
-    
-  Vector.canSubInto_V_V_Float.register(canSubInto_VV_Float)
-
-  implicit val canSub_VV_Float: BinaryOp[SparseVector[Float], SparseVector[Float], breeze.linalg.operators.OpSub, SparseVector[Float]] = pureFromUpdate_Float(canSubInto_VV_Float)
-  Vector.canSub_V_V_Float.register(canSub_VV_Float)
-
-
-  class canSubInto_SV_S_Float private[linalg] () extends BinaryUpdateOp[SparseVector[Float], Float, breeze.linalg.operators.OpSub] {
-    def apply(a: SparseVector[Float], b: Float) {
-      
-
-        var i = 0
-        while(i < a.length) {
-          a(i) = a(i) - b
-          i += 1
-        }
-        
-    }
-  }
-  implicit val canSubInto_SV_S_Float = new canSubInto_SV_S_Float ()
-    
-  Vector.canSubInto_V_S_Float.register(canSubInto_SV_S_Float)
-
-  implicit val canSub_SV_S_Float: BinaryOp[SparseVector[Float], Float, breeze.linalg.operators.OpSub, SparseVector[Float]] = pureFromUpdate_Float(canSubInto_SV_S_Float)
-  Vector.canSub_V_S_Float.register(canSub_SV_S_Float)
-
-
-  class canDivInto_VV_Float private[linalg] () extends BinaryUpdateOp[SparseVector[Float], SparseVector[Float], breeze.linalg.operators.OpDiv] {
+  class canPowInto_VV_Float private[linalg] () extends BinaryUpdateOp[SparseVector[Float], SparseVector[Float], breeze.linalg.operators.OpPow] {
     def apply(a: SparseVector[Float], b: SparseVector[Float]) {
       require(b.length == a.length, "Vectors must be the same length!")
 
         var i = 0
         while(i < b.length) {
-          a(i) = a(i) / b(i)
+          a(i) = scala.math.pow(a(i), b(i)).toFloat
           i += 1
         }
         
     }
   }
-  implicit val canDivInto_VV_Float = new canDivInto_VV_Float ()
+  implicit val canPowInto_VV_Float = new canPowInto_VV_Float ()
     
-  Vector.canDivInto_V_V_Float.register(canDivInto_VV_Float)
+  Vector.canPowInto_V_V_Float.register(canPowInto_VV_Float)
 
-  implicit val canDiv_VV_Float: BinaryOp[SparseVector[Float], SparseVector[Float], breeze.linalg.operators.OpDiv, SparseVector[Float]] = pureFromUpdate_Float(canDivInto_VV_Float)
-  Vector.canDiv_V_V_Float.register(canDiv_VV_Float)
+  implicit val canPow_VV_Float: BinaryOp[SparseVector[Float], SparseVector[Float], breeze.linalg.operators.OpPow, SparseVector[Float]] = pureFromUpdate_Float(canPowInto_VV_Float)
+  Vector.canPow_V_V_Float.register(canPow_VV_Float)
 
 
-  class canDivInto_SV_S_Float private[linalg] () extends BinaryUpdateOp[SparseVector[Float], Float, breeze.linalg.operators.OpDiv] {
+  class canPowInto_SV_S_Float private[linalg] () extends BinaryUpdateOp[SparseVector[Float], Float, breeze.linalg.operators.OpPow] {
     def apply(a: SparseVector[Float], b: Float) {
       
-    var i = 0
-    while(i < a.activeSize) {
-      a.data(i) = a.data(i) / b
-      i += 1
-    }
-    
+
+        var i = 0
+        while(i < a.length) {
+          a(i) = scala.math.pow(a(i), b).toFloat
+          i += 1
+        }
+        
     }
   }
-  implicit val canDivInto_SV_S_Float = new canDivInto_SV_S_Float ()
+  implicit val canPowInto_SV_S_Float = new canPowInto_SV_S_Float ()
     
-  Vector.canDivInto_V_S_Float.register(canDivInto_SV_S_Float)
+  Vector.canPowInto_V_S_Float.register(canPowInto_SV_S_Float)
 
-  implicit val canDiv_SV_S_Float: BinaryOp[SparseVector[Float], Float, breeze.linalg.operators.OpDiv, SparseVector[Float]] = pureFromUpdate_Float(canDivInto_SV_S_Float)
-  Vector.canDiv_V_S_Float.register(canDiv_SV_S_Float)
+  implicit val canPow_SV_S_Float: BinaryOp[SparseVector[Float], Float, breeze.linalg.operators.OpPow, SparseVector[Float]] = pureFromUpdate_Float(canPowInto_SV_S_Float)
+  Vector.canPow_V_S_Float.register(canPow_SV_S_Float)
 
 
   class canAddInto_VV_Float private[linalg] () extends BinaryUpdateOp[SparseVector[Float], SparseVector[Float], breeze.linalg.operators.OpAdd] {
@@ -833,44 +709,183 @@ trait SparseVectorOps_Float { this: SparseVector.type =>
   Vector.canAdd_V_S_Float.register(canAdd_SV_S_Float)
 
 
-  class canPowInto_VV_Float private[linalg] () extends BinaryUpdateOp[SparseVector[Float], SparseVector[Float], breeze.linalg.operators.OpPow] {
+  class canDivInto_VV_Float private[linalg] () extends BinaryUpdateOp[SparseVector[Float], SparseVector[Float], breeze.linalg.operators.OpDiv] {
     def apply(a: SparseVector[Float], b: SparseVector[Float]) {
       require(b.length == a.length, "Vectors must be the same length!")
 
         var i = 0
         while(i < b.length) {
-          a(i) = scala.math.pow(a(i), b(i)).toFloat
+          a(i) = a(i) / b(i)
           i += 1
         }
         
     }
   }
-  implicit val canPowInto_VV_Float = new canPowInto_VV_Float ()
+  implicit val canDivInto_VV_Float = new canDivInto_VV_Float ()
     
-  Vector.canPowInto_V_V_Float.register(canPowInto_VV_Float)
+  Vector.canDivInto_V_V_Float.register(canDivInto_VV_Float)
 
-  implicit val canPow_VV_Float: BinaryOp[SparseVector[Float], SparseVector[Float], breeze.linalg.operators.OpPow, SparseVector[Float]] = pureFromUpdate_Float(canPowInto_VV_Float)
-  Vector.canPow_V_V_Float.register(canPow_VV_Float)
+  implicit val canDiv_VV_Float: BinaryOp[SparseVector[Float], SparseVector[Float], breeze.linalg.operators.OpDiv, SparseVector[Float]] = pureFromUpdate_Float(canDivInto_VV_Float)
+  Vector.canDiv_V_V_Float.register(canDiv_VV_Float)
 
 
-  class canPowInto_SV_S_Float private[linalg] () extends BinaryUpdateOp[SparseVector[Float], Float, breeze.linalg.operators.OpPow] {
+  class canDivInto_SV_S_Float private[linalg] () extends BinaryUpdateOp[SparseVector[Float], Float, breeze.linalg.operators.OpDiv] {
+    def apply(a: SparseVector[Float], b: Float) {
+      
+    var i = 0
+    while(i < a.activeSize) {
+      a.data(i) = a.data(i) / b
+      i += 1
+    }
+    
+    }
+  }
+  implicit val canDivInto_SV_S_Float = new canDivInto_SV_S_Float ()
+    
+  Vector.canDivInto_V_S_Float.register(canDivInto_SV_S_Float)
+
+  implicit val canDiv_SV_S_Float: BinaryOp[SparseVector[Float], Float, breeze.linalg.operators.OpDiv, SparseVector[Float]] = pureFromUpdate_Float(canDivInto_SV_S_Float)
+  Vector.canDiv_V_S_Float.register(canDiv_SV_S_Float)
+
+
+  class canModInto_VV_Float private[linalg] () extends BinaryUpdateOp[SparseVector[Float], SparseVector[Float], breeze.linalg.operators.OpMod] {
+    def apply(a: SparseVector[Float], b: SparseVector[Float]) {
+      require(b.length == a.length, "Vectors must be the same length!")
+
+        var i = 0
+        while(i < b.length) {
+          a(i) = a(i) % b(i)
+          i += 1
+        }
+        
+    }
+  }
+  implicit val canModInto_VV_Float = new canModInto_VV_Float ()
+    
+  Vector.canModInto_V_V_Float.register(canModInto_VV_Float)
+
+  implicit val canMod_VV_Float: BinaryOp[SparseVector[Float], SparseVector[Float], breeze.linalg.operators.OpMod, SparseVector[Float]] = pureFromUpdate_Float(canModInto_VV_Float)
+  Vector.canMod_V_V_Float.register(canMod_VV_Float)
+
+
+  class canModInto_SV_S_Float private[linalg] () extends BinaryUpdateOp[SparseVector[Float], Float, breeze.linalg.operators.OpMod] {
     def apply(a: SparseVector[Float], b: Float) {
       
 
         var i = 0
         while(i < a.length) {
-          a(i) = scala.math.pow(a(i), b).toFloat
+          a(i) = a(i) % b
           i += 1
         }
         
     }
   }
-  implicit val canPowInto_SV_S_Float = new canPowInto_SV_S_Float ()
+  implicit val canModInto_SV_S_Float = new canModInto_SV_S_Float ()
     
-  Vector.canPowInto_V_S_Float.register(canPowInto_SV_S_Float)
+  Vector.canModInto_V_S_Float.register(canModInto_SV_S_Float)
 
-  implicit val canPow_SV_S_Float: BinaryOp[SparseVector[Float], Float, breeze.linalg.operators.OpPow, SparseVector[Float]] = pureFromUpdate_Float(canPowInto_SV_S_Float)
-  Vector.canPow_V_S_Float.register(canPow_SV_S_Float)
+  implicit val canMod_SV_S_Float: BinaryOp[SparseVector[Float], Float, breeze.linalg.operators.OpMod, SparseVector[Float]] = pureFromUpdate_Float(canModInto_SV_S_Float)
+  Vector.canMod_V_S_Float.register(canMod_SV_S_Float)
+
+
+  class canSubInto_VV_Float private[linalg] () extends BinaryUpdateOp[SparseVector[Float], SparseVector[Float], breeze.linalg.operators.OpSub] {
+    def apply(a: SparseVector[Float], b: SparseVector[Float]) {
+      require(b.length == a.length, "Vectors must be the same length!")
+
+        // TODO: decide the appropriate value of 3 and 30 here.
+        if(b.activeSize > a.activeSize * 3 && b.activeSize > 30) {
+          val c = copy(b)
+          apply(c, a)
+          c*= (-1).toFloat
+          a.use(c.index, c.data, c.activeSize)
+          return
+        }
+
+        var buf:Array[Float] = null
+        var bufi:Array[Int] = null
+        var nactiveSize = 0
+
+        val bd = b.data
+        val bi = b.index
+        val bsize = b.iterableSize
+        var i = 0
+        while(i < bsize) {
+          if (a.contains(bi(i))) {
+                // just add it in if it's there
+                a(bi(i)) = a(bi(i)) - bd(i)
+          } else { // not there
+                if(buf eq null) {
+                  buf = new Array[Float](b.activeSize - i)
+                  bufi = new Array[Int](b.activeSize - i)
+                } else if(buf.length == nactiveSize) {
+                  buf = Arrays.copyOf(buf, nactiveSize + b.activeSize - i)
+                  bufi = Arrays.copyOf(bufi, nactiveSize + b.activeSize - i)
+                }
+
+                // append to buffer to merged in later
+                buf(nactiveSize) = buf(nactiveSize) - bd(i)
+                bufi(nactiveSize) = bi(i)
+                nactiveSize += 1
+          }
+          i += 1
+        }
+
+        // merge two disjoint sorted lists
+        if(buf != null) {
+          val result = new Array[Float](a.activeSize + nactiveSize)
+          val resultI = new Array[Int](a.activeSize + nactiveSize)
+          var ni = 0
+          var ai = 0
+          var out = 0
+
+          while(ni < nactiveSize) {
+                while(ai < a.activeSize && a.index(ai) < bufi(ni) ) {
+                  result(out) = a.data(ai)
+                  resultI(out) = a.index(ai)
+                  ai += 1
+                  out += 1
+                }
+                result(out) = buf(ni)
+                resultI(out) = bufi(ni)
+                out += 1
+                ni += 1
+          }
+
+          System.arraycopy(a.data, ai, result, out, result.length - out)
+          System.arraycopy(a.index, ai, resultI, out, result.length - out)
+          out = result.length
+
+          a.use(resultI, result, out)
+        }
+        
+    }
+  }
+  implicit val canSubInto_VV_Float = new canSubInto_VV_Float ()
+    
+  Vector.canSubInto_V_V_Float.register(canSubInto_VV_Float)
+
+  implicit val canSub_VV_Float: BinaryOp[SparseVector[Float], SparseVector[Float], breeze.linalg.operators.OpSub, SparseVector[Float]] = pureFromUpdate_Float(canSubInto_VV_Float)
+  Vector.canSub_V_V_Float.register(canSub_VV_Float)
+
+
+  class canSubInto_SV_S_Float private[linalg] () extends BinaryUpdateOp[SparseVector[Float], Float, breeze.linalg.operators.OpSub] {
+    def apply(a: SparseVector[Float], b: Float) {
+      
+
+        var i = 0
+        while(i < a.length) {
+          a(i) = a(i) - b
+          i += 1
+        }
+        
+    }
+  }
+  implicit val canSubInto_SV_S_Float = new canSubInto_SV_S_Float ()
+    
+  Vector.canSubInto_V_S_Float.register(canSubInto_SV_S_Float)
+
+  implicit val canSub_SV_S_Float: BinaryOp[SparseVector[Float], Float, breeze.linalg.operators.OpSub, SparseVector[Float]] = pureFromUpdate_Float(canSubInto_SV_S_Float)
+  Vector.canSub_V_S_Float.register(canSub_SV_S_Float)
 
 
   class canMulScalarInto_VV_Float private[linalg] () extends BinaryUpdateOp[SparseVector[Float], SparseVector[Float], breeze.linalg.operators.OpMulScalar] {
@@ -980,17 +995,33 @@ trait SparseVectorOps_Float { this: SparseVector.type =>
     def apply(a: SparseVector[Float], b: SparseVector[Float]) = {
       require(b.length == a.length, "Vectors must be the same length!")
 
-       var result: Float = 0
+       if (a.activeSize < b.activeSize) {
+         apply(b, a)
+       } else {
 
-         val bd = b.data
-         val bi = b.index
-         val bsize = b.iterableSize
-         var i = 0
-         while(i < bsize) {
-           if(b.isActive(i)) result += a(bi(i)) * bd(i)
-           i += 1
-         }
-         result
+         var result: Float = 0
+
+          val ad = a.data
+          val bd = b.data
+          val ai = a.index
+          val bi = b.index
+          val bsize = b.iterableSize
+          val asize = a.iterableSize
+          var i = 0
+          // TODO: this can be made faster by using the last index to bracket the search as well.
+          var lastOff = 0
+          while(i < bsize) {
+            val aoff = Arrays.binarySearch(ai, lastOff, asize, bi(i))
+            if(aoff >=  0) {
+             lastOff = aoff
+             result += ad(aoff) * bd(i)
+            } else {
+             lastOff = ~aoff
+            }
+            i += 1
+          }
+          result
+        }
     }
   }; implicit val canDotProductSV_Float = new canDotProductSV_Float ()
 
@@ -1009,46 +1040,6 @@ trait SparseVectorOps_Int { this: SparseVector.type =>
     }
   }
         
-
-  class canModInto_VV_Int private[linalg] () extends BinaryUpdateOp[SparseVector[Int], SparseVector[Int], breeze.linalg.operators.OpMod] {
-    def apply(a: SparseVector[Int], b: SparseVector[Int]) {
-      require(b.length == a.length, "Vectors must be the same length!")
-
-        var i = 0
-        while(i < b.length) {
-          a(i) = a(i) % b(i)
-          i += 1
-        }
-        
-    }
-  }
-  implicit val canModInto_VV_Int = new canModInto_VV_Int ()
-    
-  Vector.canModInto_V_V_Int.register(canModInto_VV_Int)
-
-  implicit val canMod_VV_Int: BinaryOp[SparseVector[Int], SparseVector[Int], breeze.linalg.operators.OpMod, SparseVector[Int]] = pureFromUpdate_Int(canModInto_VV_Int)
-  Vector.canMod_V_V_Int.register(canMod_VV_Int)
-
-
-  class canModInto_SV_S_Int private[linalg] () extends BinaryUpdateOp[SparseVector[Int], Int, breeze.linalg.operators.OpMod] {
-    def apply(a: SparseVector[Int], b: Int) {
-      
-
-        var i = 0
-        while(i < a.length) {
-          a(i) = a(i) % b
-          i += 1
-        }
-        
-    }
-  }
-  implicit val canModInto_SV_S_Int = new canModInto_SV_S_Int ()
-    
-  Vector.canModInto_V_S_Int.register(canModInto_SV_S_Int)
-
-  implicit val canMod_SV_S_Int: BinaryOp[SparseVector[Int], Int, breeze.linalg.operators.OpMod, SparseVector[Int]] = pureFromUpdate_Int(canModInto_SV_S_Int)
-  Vector.canMod_V_S_Int.register(canMod_SV_S_Int)
-
 
   class canSetInto_VV_Int private[linalg] () extends BinaryUpdateOp[SparseVector[Int], SparseVector[Int], breeze.linalg.operators.OpSet] {
     def apply(a: SparseVector[Int], b: SparseVector[Int]) {
@@ -1090,143 +1081,44 @@ trait SparseVectorOps_Int { this: SparseVector.type =>
   Vector.canSet_V_S_Int.register(canSet_SV_S_Int)
 
 
-  class canSubInto_VV_Int private[linalg] () extends BinaryUpdateOp[SparseVector[Int], SparseVector[Int], breeze.linalg.operators.OpSub] {
-    def apply(a: SparseVector[Int], b: SparseVector[Int]) {
-      require(b.length == a.length, "Vectors must be the same length!")
-
-        // TODO: decide the appropriate value of 3 and 30 here.
-        if(b.activeSize > a.activeSize * 3 && b.activeSize > 30) {
-          val c = copy(b)
-          apply(c, a)
-          c*= (-1).toInt
-          a.use(c.index, c.data, c.activeSize)
-          return
-        }
-
-        var buf:Array[Int] = null
-        var bufi:Array[Int] = null
-        var nactiveSize = 0
-
-        val bd = b.data
-        val bi = b.index
-        val bsize = b.iterableSize
-        var i = 0
-        while(i < bsize) {
-          if (a.contains(bi(i))) {
-                // just add it in if it's there
-                a(bi(i)) = a(bi(i)) - bd(i)
-          } else { // not there
-                if(buf eq null) {
-                  buf = new Array[Int](b.activeSize - i)
-                  bufi = new Array[Int](b.activeSize - i)
-                } else if(buf.length == nactiveSize) {
-                  buf = Arrays.copyOf(buf, nactiveSize + b.activeSize - i)
-                  bufi = Arrays.copyOf(bufi, nactiveSize + b.activeSize - i)
-                }
-
-                // append to buffer to merged in later
-                buf(nactiveSize) = buf(nactiveSize) - bd(i)
-                bufi(nactiveSize) = bi(i)
-                nactiveSize += 1
-          }
-          i += 1
-        }
-
-        // merge two disjoint sorted lists
-        if(buf != null) {
-          val result = new Array[Int](a.activeSize + nactiveSize)
-          val resultI = new Array[Int](a.activeSize + nactiveSize)
-          var ni = 0
-          var ai = 0
-          var out = 0
-
-          while(ni < nactiveSize) {
-                while(ai < a.activeSize && a.index(ai) < bufi(ni) ) {
-                  result(out) = a.data(ai)
-                  resultI(out) = a.index(ai)
-                  ai += 1
-                  out += 1
-                }
-                result(out) = buf(ni)
-                resultI(out) = bufi(ni)
-                out += 1
-                ni += 1
-          }
-
-          System.arraycopy(a.data, ai, result, out, result.length - out)
-          System.arraycopy(a.index, ai, resultI, out, result.length - out)
-          out = result.length
-
-          a.use(resultI, result, out)
-        }
-        
-    }
-  }
-  implicit val canSubInto_VV_Int = new canSubInto_VV_Int ()
-    
-  Vector.canSubInto_V_V_Int.register(canSubInto_VV_Int)
-
-  implicit val canSub_VV_Int: BinaryOp[SparseVector[Int], SparseVector[Int], breeze.linalg.operators.OpSub, SparseVector[Int]] = pureFromUpdate_Int(canSubInto_VV_Int)
-  Vector.canSub_V_V_Int.register(canSub_VV_Int)
-
-
-  class canSubInto_SV_S_Int private[linalg] () extends BinaryUpdateOp[SparseVector[Int], Int, breeze.linalg.operators.OpSub] {
-    def apply(a: SparseVector[Int], b: Int) {
-      
-
-        var i = 0
-        while(i < a.length) {
-          a(i) = a(i) - b
-          i += 1
-        }
-        
-    }
-  }
-  implicit val canSubInto_SV_S_Int = new canSubInto_SV_S_Int ()
-    
-  Vector.canSubInto_V_S_Int.register(canSubInto_SV_S_Int)
-
-  implicit val canSub_SV_S_Int: BinaryOp[SparseVector[Int], Int, breeze.linalg.operators.OpSub, SparseVector[Int]] = pureFromUpdate_Int(canSubInto_SV_S_Int)
-  Vector.canSub_V_S_Int.register(canSub_SV_S_Int)
-
-
-  class canDivInto_VV_Int private[linalg] () extends BinaryUpdateOp[SparseVector[Int], SparseVector[Int], breeze.linalg.operators.OpDiv] {
+  class canPowInto_VV_Int private[linalg] () extends BinaryUpdateOp[SparseVector[Int], SparseVector[Int], breeze.linalg.operators.OpPow] {
     def apply(a: SparseVector[Int], b: SparseVector[Int]) {
       require(b.length == a.length, "Vectors must be the same length!")
 
         var i = 0
         while(i < b.length) {
-          a(i) = a(i) / b(i)
+          a(i) = IntMath.ipow(a(i), b(i))
           i += 1
         }
         
     }
   }
-  implicit val canDivInto_VV_Int = new canDivInto_VV_Int ()
+  implicit val canPowInto_VV_Int = new canPowInto_VV_Int ()
     
-  Vector.canDivInto_V_V_Int.register(canDivInto_VV_Int)
+  Vector.canPowInto_V_V_Int.register(canPowInto_VV_Int)
 
-  implicit val canDiv_VV_Int: BinaryOp[SparseVector[Int], SparseVector[Int], breeze.linalg.operators.OpDiv, SparseVector[Int]] = pureFromUpdate_Int(canDivInto_VV_Int)
-  Vector.canDiv_V_V_Int.register(canDiv_VV_Int)
+  implicit val canPow_VV_Int: BinaryOp[SparseVector[Int], SparseVector[Int], breeze.linalg.operators.OpPow, SparseVector[Int]] = pureFromUpdate_Int(canPowInto_VV_Int)
+  Vector.canPow_V_V_Int.register(canPow_VV_Int)
 
 
-  class canDivInto_SV_S_Int private[linalg] () extends BinaryUpdateOp[SparseVector[Int], Int, breeze.linalg.operators.OpDiv] {
+  class canPowInto_SV_S_Int private[linalg] () extends BinaryUpdateOp[SparseVector[Int], Int, breeze.linalg.operators.OpPow] {
     def apply(a: SparseVector[Int], b: Int) {
       
-    var i = 0
-    while(i < a.activeSize) {
-      a.data(i) = a.data(i) / b
-      i += 1
-    }
-    
+
+        var i = 0
+        while(i < a.length) {
+          a(i) = IntMath.ipow(a(i), b)
+          i += 1
+        }
+        
     }
   }
-  implicit val canDivInto_SV_S_Int = new canDivInto_SV_S_Int ()
+  implicit val canPowInto_SV_S_Int = new canPowInto_SV_S_Int ()
     
-  Vector.canDivInto_V_S_Int.register(canDivInto_SV_S_Int)
+  Vector.canPowInto_V_S_Int.register(canPowInto_SV_S_Int)
 
-  implicit val canDiv_SV_S_Int: BinaryOp[SparseVector[Int], Int, breeze.linalg.operators.OpDiv, SparseVector[Int]] = pureFromUpdate_Int(canDivInto_SV_S_Int)
-  Vector.canDiv_V_S_Int.register(canDiv_SV_S_Int)
+  implicit val canPow_SV_S_Int: BinaryOp[SparseVector[Int], Int, breeze.linalg.operators.OpPow, SparseVector[Int]] = pureFromUpdate_Int(canPowInto_SV_S_Int)
+  Vector.canPow_V_S_Int.register(canPow_SV_S_Int)
 
 
   class canAddInto_VV_Int private[linalg] () extends BinaryUpdateOp[SparseVector[Int], SparseVector[Int], breeze.linalg.operators.OpAdd] {
@@ -1329,44 +1221,183 @@ trait SparseVectorOps_Int { this: SparseVector.type =>
   Vector.canAdd_V_S_Int.register(canAdd_SV_S_Int)
 
 
-  class canPowInto_VV_Int private[linalg] () extends BinaryUpdateOp[SparseVector[Int], SparseVector[Int], breeze.linalg.operators.OpPow] {
+  class canDivInto_VV_Int private[linalg] () extends BinaryUpdateOp[SparseVector[Int], SparseVector[Int], breeze.linalg.operators.OpDiv] {
     def apply(a: SparseVector[Int], b: SparseVector[Int]) {
       require(b.length == a.length, "Vectors must be the same length!")
 
         var i = 0
         while(i < b.length) {
-          a(i) = IntMath.ipow(a(i), b(i))
+          a(i) = a(i) / b(i)
           i += 1
         }
         
     }
   }
-  implicit val canPowInto_VV_Int = new canPowInto_VV_Int ()
+  implicit val canDivInto_VV_Int = new canDivInto_VV_Int ()
     
-  Vector.canPowInto_V_V_Int.register(canPowInto_VV_Int)
+  Vector.canDivInto_V_V_Int.register(canDivInto_VV_Int)
 
-  implicit val canPow_VV_Int: BinaryOp[SparseVector[Int], SparseVector[Int], breeze.linalg.operators.OpPow, SparseVector[Int]] = pureFromUpdate_Int(canPowInto_VV_Int)
-  Vector.canPow_V_V_Int.register(canPow_VV_Int)
+  implicit val canDiv_VV_Int: BinaryOp[SparseVector[Int], SparseVector[Int], breeze.linalg.operators.OpDiv, SparseVector[Int]] = pureFromUpdate_Int(canDivInto_VV_Int)
+  Vector.canDiv_V_V_Int.register(canDiv_VV_Int)
 
 
-  class canPowInto_SV_S_Int private[linalg] () extends BinaryUpdateOp[SparseVector[Int], Int, breeze.linalg.operators.OpPow] {
+  class canDivInto_SV_S_Int private[linalg] () extends BinaryUpdateOp[SparseVector[Int], Int, breeze.linalg.operators.OpDiv] {
+    def apply(a: SparseVector[Int], b: Int) {
+      
+    var i = 0
+    while(i < a.activeSize) {
+      a.data(i) = a.data(i) / b
+      i += 1
+    }
+    
+    }
+  }
+  implicit val canDivInto_SV_S_Int = new canDivInto_SV_S_Int ()
+    
+  Vector.canDivInto_V_S_Int.register(canDivInto_SV_S_Int)
+
+  implicit val canDiv_SV_S_Int: BinaryOp[SparseVector[Int], Int, breeze.linalg.operators.OpDiv, SparseVector[Int]] = pureFromUpdate_Int(canDivInto_SV_S_Int)
+  Vector.canDiv_V_S_Int.register(canDiv_SV_S_Int)
+
+
+  class canModInto_VV_Int private[linalg] () extends BinaryUpdateOp[SparseVector[Int], SparseVector[Int], breeze.linalg.operators.OpMod] {
+    def apply(a: SparseVector[Int], b: SparseVector[Int]) {
+      require(b.length == a.length, "Vectors must be the same length!")
+
+        var i = 0
+        while(i < b.length) {
+          a(i) = a(i) % b(i)
+          i += 1
+        }
+        
+    }
+  }
+  implicit val canModInto_VV_Int = new canModInto_VV_Int ()
+    
+  Vector.canModInto_V_V_Int.register(canModInto_VV_Int)
+
+  implicit val canMod_VV_Int: BinaryOp[SparseVector[Int], SparseVector[Int], breeze.linalg.operators.OpMod, SparseVector[Int]] = pureFromUpdate_Int(canModInto_VV_Int)
+  Vector.canMod_V_V_Int.register(canMod_VV_Int)
+
+
+  class canModInto_SV_S_Int private[linalg] () extends BinaryUpdateOp[SparseVector[Int], Int, breeze.linalg.operators.OpMod] {
     def apply(a: SparseVector[Int], b: Int) {
       
 
         var i = 0
         while(i < a.length) {
-          a(i) = IntMath.ipow(a(i), b)
+          a(i) = a(i) % b
           i += 1
         }
         
     }
   }
-  implicit val canPowInto_SV_S_Int = new canPowInto_SV_S_Int ()
+  implicit val canModInto_SV_S_Int = new canModInto_SV_S_Int ()
     
-  Vector.canPowInto_V_S_Int.register(canPowInto_SV_S_Int)
+  Vector.canModInto_V_S_Int.register(canModInto_SV_S_Int)
 
-  implicit val canPow_SV_S_Int: BinaryOp[SparseVector[Int], Int, breeze.linalg.operators.OpPow, SparseVector[Int]] = pureFromUpdate_Int(canPowInto_SV_S_Int)
-  Vector.canPow_V_S_Int.register(canPow_SV_S_Int)
+  implicit val canMod_SV_S_Int: BinaryOp[SparseVector[Int], Int, breeze.linalg.operators.OpMod, SparseVector[Int]] = pureFromUpdate_Int(canModInto_SV_S_Int)
+  Vector.canMod_V_S_Int.register(canMod_SV_S_Int)
+
+
+  class canSubInto_VV_Int private[linalg] () extends BinaryUpdateOp[SparseVector[Int], SparseVector[Int], breeze.linalg.operators.OpSub] {
+    def apply(a: SparseVector[Int], b: SparseVector[Int]) {
+      require(b.length == a.length, "Vectors must be the same length!")
+
+        // TODO: decide the appropriate value of 3 and 30 here.
+        if(b.activeSize > a.activeSize * 3 && b.activeSize > 30) {
+          val c = copy(b)
+          apply(c, a)
+          c*= (-1).toInt
+          a.use(c.index, c.data, c.activeSize)
+          return
+        }
+
+        var buf:Array[Int] = null
+        var bufi:Array[Int] = null
+        var nactiveSize = 0
+
+        val bd = b.data
+        val bi = b.index
+        val bsize = b.iterableSize
+        var i = 0
+        while(i < bsize) {
+          if (a.contains(bi(i))) {
+                // just add it in if it's there
+                a(bi(i)) = a(bi(i)) - bd(i)
+          } else { // not there
+                if(buf eq null) {
+                  buf = new Array[Int](b.activeSize - i)
+                  bufi = new Array[Int](b.activeSize - i)
+                } else if(buf.length == nactiveSize) {
+                  buf = Arrays.copyOf(buf, nactiveSize + b.activeSize - i)
+                  bufi = Arrays.copyOf(bufi, nactiveSize + b.activeSize - i)
+                }
+
+                // append to buffer to merged in later
+                buf(nactiveSize) = buf(nactiveSize) - bd(i)
+                bufi(nactiveSize) = bi(i)
+                nactiveSize += 1
+          }
+          i += 1
+        }
+
+        // merge two disjoint sorted lists
+        if(buf != null) {
+          val result = new Array[Int](a.activeSize + nactiveSize)
+          val resultI = new Array[Int](a.activeSize + nactiveSize)
+          var ni = 0
+          var ai = 0
+          var out = 0
+
+          while(ni < nactiveSize) {
+                while(ai < a.activeSize && a.index(ai) < bufi(ni) ) {
+                  result(out) = a.data(ai)
+                  resultI(out) = a.index(ai)
+                  ai += 1
+                  out += 1
+                }
+                result(out) = buf(ni)
+                resultI(out) = bufi(ni)
+                out += 1
+                ni += 1
+          }
+
+          System.arraycopy(a.data, ai, result, out, result.length - out)
+          System.arraycopy(a.index, ai, resultI, out, result.length - out)
+          out = result.length
+
+          a.use(resultI, result, out)
+        }
+        
+    }
+  }
+  implicit val canSubInto_VV_Int = new canSubInto_VV_Int ()
+    
+  Vector.canSubInto_V_V_Int.register(canSubInto_VV_Int)
+
+  implicit val canSub_VV_Int: BinaryOp[SparseVector[Int], SparseVector[Int], breeze.linalg.operators.OpSub, SparseVector[Int]] = pureFromUpdate_Int(canSubInto_VV_Int)
+  Vector.canSub_V_V_Int.register(canSub_VV_Int)
+
+
+  class canSubInto_SV_S_Int private[linalg] () extends BinaryUpdateOp[SparseVector[Int], Int, breeze.linalg.operators.OpSub] {
+    def apply(a: SparseVector[Int], b: Int) {
+      
+
+        var i = 0
+        while(i < a.length) {
+          a(i) = a(i) - b
+          i += 1
+        }
+        
+    }
+  }
+  implicit val canSubInto_SV_S_Int = new canSubInto_SV_S_Int ()
+    
+  Vector.canSubInto_V_S_Int.register(canSubInto_SV_S_Int)
+
+  implicit val canSub_SV_S_Int: BinaryOp[SparseVector[Int], Int, breeze.linalg.operators.OpSub, SparseVector[Int]] = pureFromUpdate_Int(canSubInto_SV_S_Int)
+  Vector.canSub_V_S_Int.register(canSub_SV_S_Int)
 
 
   class canMulScalarInto_VV_Int private[linalg] () extends BinaryUpdateOp[SparseVector[Int], SparseVector[Int], breeze.linalg.operators.OpMulScalar] {
@@ -1476,17 +1507,33 @@ trait SparseVectorOps_Int { this: SparseVector.type =>
     def apply(a: SparseVector[Int], b: SparseVector[Int]) = {
       require(b.length == a.length, "Vectors must be the same length!")
 
-       var result: Int = 0
+       if (a.activeSize < b.activeSize) {
+         apply(b, a)
+       } else {
 
-         val bd = b.data
-         val bi = b.index
-         val bsize = b.iterableSize
-         var i = 0
-         while(i < bsize) {
-           if(b.isActive(i)) result += a(bi(i)) * bd(i)
-           i += 1
-         }
-         result
+         var result: Int = 0
+
+          val ad = a.data
+          val bd = b.data
+          val ai = a.index
+          val bi = b.index
+          val bsize = b.iterableSize
+          val asize = a.iterableSize
+          var i = 0
+          // TODO: this can be made faster by using the last index to bracket the search as well.
+          var lastOff = 0
+          while(i < bsize) {
+            val aoff = Arrays.binarySearch(ai, lastOff, asize, bi(i))
+            if(aoff >=  0) {
+             lastOff = aoff
+             result += ad(aoff) * bd(i)
+            } else {
+             lastOff = ~aoff
+            }
+            i += 1
+          }
+          result
+        }
     }
   }; implicit val canDotProductSV_Int = new canDotProductSV_Int ()
 
