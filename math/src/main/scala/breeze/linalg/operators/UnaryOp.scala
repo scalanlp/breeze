@@ -18,8 +18,12 @@ import collection.mutable.HashMap
 import breeze.generic.{MethodImpl, Multimethod}
 
 /**
- *
- * @author dlwh
+ * This is the capability trait for operations of the form -a.
+ * These traits are usually implemented in (a supertype of) the companion object of
+ * one of the operands.
+ * @tparam A
+ * @tparam B
+ * @tparam Op
  */
 trait UnaryOp[A, Op <: OpType, +R] extends MethodImpl[A, R] {
   def apply(a: A): R
@@ -30,10 +34,10 @@ object UnaryOp {
 }
 
 /**
- *
+ * This is a special kind of UnaryOp that supports registration
+ * of specialized implementations for a given operation.
  * @author dlwh
  */
-
 trait UnaryRegistry[A <: AnyRef, Op <: OpType, R] extends UnaryOp[A, Op, R] with Multimethod[UnaryOp.Bind[Op]#Sig, A, R] {
 }
 

@@ -26,7 +26,7 @@ import breeze.util.{Terminal, ArrayUtil}
  * @author dlwh
  */
 // TODO: maybe put columns in own array of sparse vectors, making slicing easier?
-// TODO: constructor should be private[linalg], but it doesn't work. stupid specialization.
+// TODO: constructor should be private, but it doesn't work. stupid specialization.
 class CSCMatrix[@specialized(Int, Float, Double) V:DefaultArrayValue] private[linalg] (private var _data: Array[V],
                                                                                val rows: Int,
                                                                                val cols: Int,

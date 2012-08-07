@@ -20,7 +20,8 @@ import java.io.{File, FileOutputStream, PrintStream}
 
 
 /**
- *
+ * This class (and all classes in this package) are ugly spaghetti code for
+ * generating the customized loops for all the operators. I'm sorry it's so messy.
  * @author dlwh
  */
 

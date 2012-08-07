@@ -31,6 +31,13 @@ trait UFunc[@specialized(Int, Float, Double) -V, @specialized(Int, Float, Double
 }
 
 object UFunc {
+  /**
+   * Creates a UFunc from the given Function1
+   * @param f
+   * @tparam V
+   * @tparam V2
+   * @return
+   */
   def apply[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) V2](f: V=>V2):UFunc[V, V2] = new UFunc[V, V2] {
     def apply(v: V) = f(v)
   }

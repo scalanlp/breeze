@@ -16,11 +16,12 @@ package breeze.linalg.operators
 */
 
 /**
- * Transpose of a shaped value.
+ * Capability trait for the transpose of a shaped value.
  *
  * @author dramage
  * @author dlwh
  */
+// Don't inherit Function1 or you will make kittens cry.
 trait CanTranspose[-From, +To] {
   def apply(from: From):To
 }

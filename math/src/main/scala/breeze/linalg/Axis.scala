@@ -14,11 +14,12 @@ package breeze.linalg
  See the License for the specific language governing permissions and
  limitations under the License.
 */
+
 /**
- *
+ * This trait is commonly used for [[breeze.linalg]].sum and its kin for summing along
+ * a particular axis of a Matrix.
  * @author dlwh
  */
-
 sealed trait Axis
 object Axis {
   type Value = Axis

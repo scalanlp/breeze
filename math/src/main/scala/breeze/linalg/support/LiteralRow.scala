@@ -14,6 +14,7 @@ package breeze.linalg.support
  See the License for the specific language governing permissions and
  limitations under the License.
 */
+
 /**
  * Marker trait for a row literal used in Matrix construction.
  *

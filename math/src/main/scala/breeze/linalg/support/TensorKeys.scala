@@ -17,10 +17,9 @@ package support
 */
 
 /**
- *
+ * Class that is kind of like a collection view of the keys in a tensor.
  * @author dlwh
  */
-
 class TensorKeys[K, V, +This](private val tensor: This, active: Boolean = false, f: K=>Boolean = { (k: K) => true})(implicit ev: This <:< Tensor[K, V]) {
   def size = tensor.size
   def iterator = {if(active) tensor.activeKeysIterator else tensor.keysIterator}.filter(f)

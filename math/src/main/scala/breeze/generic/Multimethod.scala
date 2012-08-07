@@ -22,10 +22,11 @@ import breeze.util.ReflectionUtil
 import collection.mutable
 
 /**
+ * A Multimethod is basically a glorified registry that uses dynamic reflection (and subtyping) to determine which
+ * version of the method to invoke.
  *
  * @author dlwh
  */
-
 trait Multimethod[Method[AA, RR] <: MethodImpl[AA, RR], A <: AnyRef, R] extends MMRegistry1[Method[_ <: A, _ <: R]] { this: Method[A, R] =>
   protected def bindingMissing(a: A): R = throw new UnsupportedOperationException("Types not found!")
   protected def multipleOptions(a: A, m: Map[Class[_],Method[_ <: A, _ <: R]]) = {
@@ -122,6 +123,10 @@ trait Multimethod2[Method[AA,BB,RR]<:Function2[AA,BB,RR],A, B, R] extends ((A, B
 }
 
 
+/**
+ * A Multiproc2 is a Multimethod that is guaranteed to return Unit
+ * @author dlwh
+ */
 trait Multiproc2[Method[AA,BB]<:(AA, BB) => Unit,A<:AnyRef,B] extends ((A, B) => Unit) with MMRegistry2[Method[_<:A, _<:B]] { this: Method[A, B] =>
   protected def bindingMissing(a: A, b: B):Unit = throw new UnsupportedOperationException("Types not found!")
   protected def multipleOptions(a: A, b: B, m: Map[(Class[_],Class[_]),Method[_ <: A, _ <: B]]) = {
