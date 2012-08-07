@@ -2,9 +2,9 @@
 
 EXIT_CODE=0
 
-if [ -z $JAVA_MEM_FLAG ] 
+if [ -z $BREEZE_DIR ] 
 then
-   BREEZE_DIR=`dirname $0`
+   BREEZE_DIR=`dirname $0`/../
 fi
 
 if [ -z $JAVA_MEM_FLAG ] 
