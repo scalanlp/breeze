@@ -106,6 +106,8 @@ object LogisticClassifier {
           }
         }
         assert(!breeze.linalg.norm(grad).isNaN, grad)
+        grad *= (data.size * 1.0 / range.size)
+        ll *= (data.size * 1.0 / range.size)
         (ll,grad)
       }
     }
@@ -153,6 +155,7 @@ object LogisticClassifierFromCsv {
     @Help(text="Regularization value (default 1.0).") reg: Double = 1.0,
     @Help(text="Tolerance (stopping criteria) (default 1E-4).") tol: Double = 1E-4,
     @Help(text="Maximum number of iterations (default 1000).") maxIterations: Int = 1000,
+    @Help(text="Optimization parameters") opt: OptParams,
     @Help(text="Prints this") help:Boolean = false
   )
 
@@ -184,11 +187,7 @@ object LogisticClassifierFromCsv {
         }}
 
     // Train the classifier
-    val opt = OptParams(
-      regularization=params.reg,
-      maxIterations = params.maxIterations,
-      tolerance = params.tol
-    )
+    val opt = params.opt
 
     val classifier = 
       new LogisticClassifier.Trainer[String,SparseVector[Double]](opt)
