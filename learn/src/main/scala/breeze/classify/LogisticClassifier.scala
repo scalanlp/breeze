@@ -26,8 +26,7 @@ import breeze.math.MutableCoordinateSpace
 import breeze.util.Index
 
 /**
- * A multi-class logistic/softmax/maxent classifier. It's currently unsmoothed (no regularization)
- * but I hope to fix that at some point.
+ * A multi-class logistic/softmax/maxent classifier.
  *
  * @author dlwh
  */
@@ -60,7 +59,7 @@ object LogisticClassifier {
     def train(data: Iterable[Example[L,TF]]) = {
       require(data.size > 0)
       val labelIndex = Index[L]()
-      data.foreach(l => labelIndex.index(l.label))
+      data foreach { ex => labelIndex.index(ex.label) }
 
       val guess = new LFMatrix[L,TF](zeros(data.head.features), labelIndex)
 
@@ -72,7 +71,6 @@ object LogisticClassifier {
 
       new LinearClassifier(weights.unindexed,Counter[L,Double]())
     }
-
 
     protected def objective(data: IndexedSeq[Example[L,TF]], labelIndex: Index[L]) = new ObjectiveFunction(data, labelIndex)
 
