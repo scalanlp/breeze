@@ -1,4 +1,4 @@
-package breeze.data;
+package breeze.data
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
@@ -17,7 +17,7 @@ package breeze.data;
 */
 
 
-import scala.collection.Map;
+import scala.collection.Map
 
 /**
 * Represents a single example from a collection of data. Intentionally overly general.
@@ -25,27 +25,27 @@ import scala.collection.Map;
 * @author dlwh
 */
 trait Example[+L,+T] extends Observation[T] with Labeled[L] with Serializable {outer=>
-  def id : String;
+  def id : String
   def label: L
 
   /** 
    * Converts the features in this example to a different one while still
    * preserving label and id. 
    */
-  override def map[U](f: T=>U) = new Example[L,U] {
-    def label = outer.label;
-    def id = outer.id;
-    val features = f(outer.features);
+  override def map[U](f: T=>U):Example[L, U] = new Example[L,U] {
+    def label = outer.label
+    def id = outer.id
+    val features = f(outer.features)
   }
 
   /** 
    * Converts the label in this example to a different one while still
    * preserving features and id. 
    */
-  def relabel[L2](f: L=>L2) = new Example[L2,T] {
-    def label = f(outer.label);
-    def id = outer.id;
-    val features = outer.features;
+  def relabel[L2](f: L=>L2):Example[L2, T] = new Example[L2,T] {
+    def label = f(outer.label)
+    def id = outer.id
+    val features = outer.features
   }
 
 
@@ -54,7 +54,7 @@ trait Example[+L,+T] extends Observation[T] with Labeled[L] with Serializable {o
    * 
    * preserving label and id. 
    */
-  override def flatMap[U](f: T=>U) = map(f);
+  override def flatMap[U](f: T=>U) = map(f)
 
   override def toString = {
     "Example { ids =" + id + ", label = " + label + ", features = " + features + "}"; 
@@ -66,15 +66,15 @@ object Example {
   * Lifts a function to operate over Examples,
   * Rather than the contained object.
   */
-  def lift[T,U,L](f: T=>U) = (o : Example[L,T]) => o.map(f);
+  def lift[T,U,L](f: T=>U) = (o : Example[L,T]) => o.map(f)
   def apply[L,T](label: L, features: T, id:String=""): Example[L,T] = {
-    val l = label;
-    val f = features;
-    val i = id;
+    val l = label
+    val f = features
+    val i = id
     new Example[L,T] {
-      def id = i;
-      def label = l;
-      def features = f;
+      def id = i
+      def label = l
+      def features = f
     }
   }
 }
