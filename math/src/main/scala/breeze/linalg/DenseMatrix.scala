@@ -63,7 +63,7 @@ extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
 
 
   /** Calculates the index into the data array for row and column */
-  def linearIndex(row: Int, col: Int): Int = {
+  final def linearIndex(row: Int, col: Int): Int = {
     if(isTranspose)
       offset + col + row * majorStride
     else
