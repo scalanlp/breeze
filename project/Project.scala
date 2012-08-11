@@ -16,7 +16,9 @@ object BuildSettings {
     scalaVersion := buildScalaVersion,
     scalacOptions ++= Seq("-optimize","-deprecation", "-Ydependent-method-types"),
     resolvers ++= Seq(
-      "Breeze Maven2" at "http://repo.scalanlp.org/repo"
+      "Breeze Maven2" at "http://repo.scalanlp.org/repo",
+	// thanks clojure people!
+      "Clojars" at "http://www.clojars.org/repo"
       // "ondex" at "http://ondex.rothamsted.bbsrc.ac.uk/nexus/content/groups/public"
     ),
   publishMavenStyle := true,
@@ -64,8 +66,9 @@ object BreezeBuild extends Build {
   val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
 
   val netlib = "com.googlecode.netlib-java" % "netlib-java" % "0.9.3"
+  val jblas = "uk.co.forward" % "jblas" % "1.2.0"
 
-  val commonDeps = Seq(paranamer, netlib)
+  val commonDeps = Seq(paranamer, netlib, jblas)
 
   def testDependencies = libraryDependencies <++= (scalaVersion) {
     sv =>

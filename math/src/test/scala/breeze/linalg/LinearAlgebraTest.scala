@@ -169,4 +169,19 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
     assert(v2 === v)
   }
 
+  test("simple eig test") {
+    val (w, _, v) = eig(diag(DenseVector(1.0, 2.0, 3.0)))
+    assert(w === DenseVector(1.0, 2.0, 3.0))
+    assert(v === diag(DenseVector(1.0, 1.0, 1.0)))
+  }
+
+  test("complex eig test") {
+    // complex, get it?
+    val (w, wi, v) = eig(DenseMatrix((1.0, -1.0), (1.0, 1.0)))
+    assert(w === DenseVector(1., 1.))
+    assert(wi === DenseVector(1., -1.))
+    assert(v === diag(DenseVector(0.7071067811865475, -0.7071067811865475)))
+    // TODO, we seem to throw out VI... these seems bad...
+  }
+
 }

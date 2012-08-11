@@ -21,6 +21,7 @@ import math.Semiring
 import org.netlib.lapack.LAPACK
 import org.netlib.util.intW
 import storage.DefaultArrayValue
+import org.jblas.NativeBlas
 
 /**
  * This package contains everything relating to Vectors, Matrices, Tensors, etc.
@@ -34,6 +35,43 @@ import storage.DefaultArrayValue
  * @author dlwh
  */
 package object linalg extends LinearAlgebra {
+
+  /**
+   * Returns true if we can use native libraries. You can disable it by writing
+   * breeze.linalg.useNativeLibraries to false
+   */
+  def useNativeLibraries = _useNativeLibraries
+
+  private var _useNativeLibraries = canLoadNativeBlas
+
+
+  /**
+   * Attempts to load the NativeBlas libraries. Returns false if we can't.
+   * @return
+   */
+  def canLoadNativeBlas: Boolean = {
+    try {
+      // he left this constructor public, which is useful for us.
+      // this attempts to load the library, we'll get an exception if false
+      new NativeBlas
+      true
+    } catch {
+      case x: UnsatisfiedLinkError => false
+    }
+  }
+
+  /**
+   * Disables or attempts to enable native libraries. Will throw a RuntimeException if you
+   * try to set the value to true and we can't load the libraries.
+   * @param v
+   */
+  def useNativeLibraries_=(v: Boolean) = {
+    if (v == true) {
+      if (!canLoadNativeBlas) throw new RuntimeException("Can't load NativeBlasLibraries")
+    }
+    _useNativeLibraries = v
+  }
+
 
   /**
    * returns a vector along the diagonal of v.
@@ -440,13 +478,23 @@ trait LinearAlgebra {
 
     val A = DenseMatrix.zeros[Double](n, n)
     A := m
-    LAPACK.getInstance.dgeev(
-      "N", "V", n,
-      A.data, scala.math.max(1,n),
-      Wr.data, Wi.data,
-      Array.empty[Double], scala.math.max(1,n),
-      Vr.data, scala.math.max(1,n),
-      work, work.length, info)
+    if (useNativeLibraries) {
+      val i = NativeBlas.dgeev(
+        'N', 'V', n,
+        A.data, 0, scala.math.max(1,n),
+        Wr.data, 0, Wi.data, 0,
+        Array.empty[Double], 0, scala.math.max(1,n),
+        Vr.data, 0, scala.math.max(1,n))
+        info.`val` = i
+    } else {
+      LAPACK.getInstance.dgeev(
+        "N", "V", n,
+        A.data, scala.math.max(1,n),
+        Wr.data, Wi.data,
+        Array.empty[Double], scala.math.max(1,n),
+        Vr.data, scala.math.max(1,n),
+        work, work.length, info)
+    }
 
     if (info.`val` > 0)
       throw new NotConvergedException(NotConvergedException.Iterations)

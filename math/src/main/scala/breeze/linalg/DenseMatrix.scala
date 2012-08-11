@@ -24,6 +24,7 @@ import support._
 import breeze.generic.{URFunc, CanCollapseAxis, CanMapValues}
 import breeze.math.Semiring
 import breeze.storage.DefaultArrayValue
+import org.jblas.NativeBlas
 
 /**
  * A DenseMatrix is a matrix with all elements found in an array. It is column major unless isTranspose is true,
@@ -570,7 +571,13 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double with DenseMatrixMul
     def apply(a : DenseMatrix[Double], b : DenseMatrix[Double]) = {
       val rv = DenseMatrix.zeros[Double](a.rows, b.cols)
       require(a.cols == b.rows, "Dimension mismatch!")
-      Dgemm.dgemm(transposeString(a), transposeString(b),
+      if(math.max(a.size,b.size) >= 1000 && useNativeLibraries)
+        NativeBlas.dgemm(transposeString(a).charAt(0), transposeString(b).charAt(0),
+              rv.rows, rv.cols, a.cols,
+              1.0, a.data, a.offset, a.majorStride,
+              b.data, b.offset, b.majorStride,
+              0.0, rv.data, 0, rv.rows)
+      else  Dgemm.dgemm(transposeString(a), transposeString(b),
         rv.rows, rv.cols, a.cols,
         1.0, a.data, a.offset, a.majorStride, b.data, b.offset, b.majorStride,
         0.0, rv.data, 0, rv.rows)
@@ -579,7 +586,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double with DenseMatrixMul
   }
 
 
-  def transposeString(a: DenseMatrix[Double]): String = {
+  private def transposeString(a: DenseMatrix[Double]): String = {
     if (a.isTranspose) "t" else "n"
   }
 
