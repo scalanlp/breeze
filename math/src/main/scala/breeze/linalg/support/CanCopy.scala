@@ -20,7 +20,7 @@ import breeze.util.ArrayUtil
 import breeze.generic.CanMapValues
 
 /**
- * Marker for being able to copy a collection
+ * Capability trait for being able to copy a collection
  *
  * @author dlwh
  */

@@ -26,8 +26,12 @@ trait MatrixMultOps_Double { this: Matrix.type =>
 
       res                                                               
     }
-  }; implicit val canMulM_V_Double = new canMulM_V_Double()
-
+  };
+  val canMulM_V_Double = new canMulM_V_Double()
+  implicit def canMulM_V_Double_def[A <: Matrix[Double], B <: Vector[Double]]:BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Vector[Double]] = (
+    canMulM_V_Double.asInstanceOf[BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Vector[Double]]]
+  )
+    
 
   class canMulM_M_Double private[linalg] () extends BinaryRegistry[Matrix[Double], Matrix[Double], breeze.linalg.operators.OpMulMatrix, Matrix[Double]] {
     override def bindingMissing(a: Matrix[Double], b: Matrix[Double]) = {
@@ -52,8 +56,12 @@ trait MatrixMultOps_Double { this: Matrix.type =>
 
       res                                                               
     }
-  }; implicit val canMulM_M_Double = new canMulM_M_Double()
-
+  };
+  val canMulM_M_Double = new canMulM_M_Double()
+  implicit def canMulM_M_Double_def[A <: Matrix[Double], B <: Matrix[Double]]:BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Matrix[Double]] = (
+    canMulM_M_Double.asInstanceOf[BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Matrix[Double]]]
+  )
+    
 }
 
 /** This is an auto-generated trait providing multiplication for Matrix */
@@ -78,8 +86,12 @@ trait MatrixMultOps_Float { this: Matrix.type =>
 
       res                                                               
     }
-  }; implicit val canMulM_V_Float = new canMulM_V_Float()
-
+  };
+  val canMulM_V_Float = new canMulM_V_Float()
+  implicit def canMulM_V_Float_def[A <: Matrix[Float], B <: Vector[Float]]:BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Vector[Float]] = (
+    canMulM_V_Float.asInstanceOf[BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Vector[Float]]]
+  )
+    
 
   class canMulM_M_Float private[linalg] () extends BinaryRegistry[Matrix[Float], Matrix[Float], breeze.linalg.operators.OpMulMatrix, Matrix[Float]] {
     override def bindingMissing(a: Matrix[Float], b: Matrix[Float]) = {
@@ -104,8 +116,12 @@ trait MatrixMultOps_Float { this: Matrix.type =>
 
       res                                                               
     }
-  }; implicit val canMulM_M_Float = new canMulM_M_Float()
-
+  };
+  val canMulM_M_Float = new canMulM_M_Float()
+  implicit def canMulM_M_Float_def[A <: Matrix[Float], B <: Matrix[Float]]:BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Matrix[Float]] = (
+    canMulM_M_Float.asInstanceOf[BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Matrix[Float]]]
+  )
+    
 }
 
 /** This is an auto-generated trait providing multiplication for Matrix */
@@ -130,8 +146,12 @@ trait MatrixMultOps_Int { this: Matrix.type =>
 
       res                                                               
     }
-  }; implicit val canMulM_V_Int = new canMulM_V_Int()
-
+  };
+  val canMulM_V_Int = new canMulM_V_Int()
+  implicit def canMulM_V_Int_def[A <: Matrix[Int], B <: Vector[Int]]:BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Vector[Int]] = (
+    canMulM_V_Int.asInstanceOf[BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Vector[Int]]]
+  )
+    
 
   class canMulM_M_Int private[linalg] () extends BinaryRegistry[Matrix[Int], Matrix[Int], breeze.linalg.operators.OpMulMatrix, Matrix[Int]] {
     override def bindingMissing(a: Matrix[Int], b: Matrix[Int]) = {
@@ -156,6 +176,10 @@ trait MatrixMultOps_Int { this: Matrix.type =>
 
       res                                                               
     }
-  }; implicit val canMulM_M_Int = new canMulM_M_Int()
-
+  };
+  val canMulM_M_Int = new canMulM_M_Int()
+  implicit def canMulM_M_Int_def[A <: Matrix[Int], B <: Matrix[Int]]:BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Matrix[Int]] = (
+    canMulM_M_Int.asInstanceOf[BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Matrix[Int]]]
+  )
+    
 }

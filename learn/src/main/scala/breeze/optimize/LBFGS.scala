@@ -145,16 +145,19 @@ class LBFGS[T](maxIter: Int = -1, m: Int=5)
     }
 
     def ff(alpha: Double) = f.valueAt(x + dir * alpha)
-    val search = new BacktrackingLineSearch(cScale = if(iter < 1) 0.01 else 0.5, initAlpha = 1.0)
+    val search = new BacktrackingLineSearch(cScale = if(iter < 1) 0.01 else 0.5, initAlpha = if (iter < .1) 1/norm(dir) else 1.0)
     val iterates = search.iterations(ff)
     val targetState = iterates.find { case search.State(alpha,v) =>
       // sufficient descent
       val r = v < state.value + alpha * 0.0001 * normGradInDir
-      if(!r) log.info(".")
+      // I tried using the Wolfe conditions, but it makes the line
+      // search more likely to fail and otherwise rarely changes the
+      // line searcher. Not worth it.
+      if(!r)  log.info(".")
       r
 
     }
-    val search.State(alpha,currentVal) = targetState.getOrElse(throw new LineSearchFailed)
+    val search.State(alpha,currentVal) = targetState.getOrElse(throw new LineSearchFailed(norm(grad), norm(dir)))
 
     if(alpha * norm(grad,Double.PositiveInfinity) < 1E-10)
       throw new StepSizeUnderflow

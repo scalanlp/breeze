@@ -231,6 +231,7 @@ class SparseVectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[SparseV
 class SparseVectorOps_FloatTest extends TensorSpaceTestBase[SparseVector[Float], Int, Float] {
  val space: TensorSpace[SparseVector[Float], Int, Float] = implicitly
 
+  override val TOL: Double = 1E-4
   val N = 30
   implicit def genTriple: Arbitrary[(SparseVector[Float], SparseVector[Float], SparseVector[Float])] = {
     Arbitrary {

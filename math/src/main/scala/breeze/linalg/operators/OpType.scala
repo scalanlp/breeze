@@ -46,7 +46,7 @@ object OpSub extends OpSub
  *
  * @author dramage
  */
-sealed trait OpMulScalar extends OpMulMatrix
+sealed trait OpMulScalar extends OpType
 object OpMulScalar extends OpMulScalar
 
 /**

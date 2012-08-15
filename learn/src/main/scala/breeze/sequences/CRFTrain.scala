@@ -8,11 +8,20 @@ import breeze.util.Index
 import breeze.sequences.CRF.Featurizer
 import collection.mutable.ArrayBuffer
 import breeze.text.tokenize.{EnglishWordClassGenerator, WordShapeGenerator}
-import scala.collection.IndexedSeq
 import io.Source
-import breeze.data.Observation
+import breeze.data.{Example, Observation}
+import breeze.linalg._
 
-case class CRFPackage(crf: CRF[String,Seq[Seq[Int]]],
+/**
+ * This class is just for holding onto all the information produced by CRFTrain.
+ *
+ * CRFTest can process it.
+ *
+ * @param crf the crf
+ * @param template the feature template created using this CRF
+ * @param statIndex the index for features (features without labels)
+ */
+case class CRFPackage(crf: CRF[String,Seq[SparseVector[Double]]],
                     template: FeatureTemplate,
                     statIndex: Index[SuffStat]) {
 
@@ -28,10 +37,20 @@ case class CRFPackage(crf: CRF[String,Seq[Seq[Int]]],
     crf.viterbi(processed._1,processed._2)
   }
 
-  def process(ex: Observation[IndexedSeq[IndexedSeq[String]]]) = {
-    val mapped = IndexedSeq.tabulate(ex.features.length)(i => template.extract(ex, i).map(statIndex(_)).filter(_ != -1).toIndexedSeq)
+  def process(ex: Observation[IndexedSeq[IndexedSeq[String]]]): (IndexedSeq[SparseVector[Double]], Int) = {
+    val mapped = IndexedSeq.tabulate(ex.features.length){i =>
+      val stats = SparseVector.zeros[Double](statIndex.size)
+      for(stat <- template.extract(ex, i)) {
+        val istat = statIndex(stat)
+        if(istat >= 0) {
+          stats(istat) = 1
+        }
+      }
+      stats
+    }
     mapped -> ex.features.length
   }
+
 }
 
 /**
@@ -92,9 +111,26 @@ object CRFTrain extends App {
   val transitionFeatures = Array.tabulate(labelIndex.size,labelIndex.size) { (prev,next) =>
     statIndex.index(LabelStat(prev)) * labelIndex.size + next
   }
-  val processed = for(ex <- train) yield ex.map { features =>
-    val mapped = IndexedSeq.tabulate(features.length)(i => template.extract(ex, i).map(statIndex.index _).toIndexedSeq)
-    mapped -> features.length
+
+  // index all stats for all sequences, then
+  // make vectors from the sequences
+  val vectors = {
+
+    val processed = for(ex <- train) yield ex.map { features =>
+      val mapped = IndexedSeq.tabulate(features.length)(i => template.extract(ex, i).map(statIndex.index _).toIndexedSeq)
+      mapped -> features.length
+    }
+
+    for(ex <- processed) yield ex.map[(IndexedSeq[SparseVector[Double]], Int)] { case (indexedStats, length) =>
+      val asVectors = indexedStats.map { stats =>
+        val vec = SparseVector.zeros[Double](statIndex.size)
+        for( i <- stats) {
+          vec(i) += 1.0
+        }
+        vec
+      }
+      asVectors -> length
+    }
   }
 
   val featureIndex = new Index[CRF.Feature]() {
@@ -103,7 +139,7 @@ object CRFTrain extends App {
       case _ => -1
     }
 
-    override def size = labelIndex.size * statIndex.size
+    override val size = labelIndex.size * statIndex.size
 
     def unapply(i: Int) = if(i < 0 || i >= size) None  else {
       val lbl = i % labelIndex.size
@@ -117,30 +153,46 @@ object CRFTrain extends App {
   }
 
 
-  val featurizer = new Featurizer[String,Seq[Seq[Int]]] {
+  val featurizer = new Featurizer[String,Seq[SparseVector[Double]]] {
     val index = featureIndex
-    def featuresFor(pos: Int, w: Seq[Seq[Int]], l: Int, ln: Int) = {
-      w(pos).iterator.map(i => i * labelIndex.size + ln) ++ Iterator(transitionFeatures(l)(ln))
+    // expands the vector of sufficient statistics to one over features, this is
+    // accomplished by converting the indices in the vector to the right value for the
+    // feature vector
+    def featuresFor(pos: Int, w: Seq[SparseVector[Double]], l: Int, ln: Int) = {
+      val stats = w(pos)
+      // TODO: have code for initial non-zeros in SparseVector's companion
+      val expandedIndex = new Array[Int](stats.activeSize+1)
+      val expandedData = new Array[Double](stats.activeSize+1)
+      expandedIndex(0) = (transitionFeatures(l)(ln))
+      expandedData(0) = 1.0
+      var off = 0
+      while(off < stats.activeSize) {
+        val i = stats.index(off)
+        val v = stats.data(off)
+        expandedIndex(off+1) = (i * labelIndex.size + ln)
+        expandedData(off+1) = v
+        off += 1
+      }
+      val expanded = new SparseVector[Double]( expandedIndex, expandedData, expandedIndex.size, featureIndex.size)
+      expanded
     }
   }
 
-  val trainer = new CRF.Trainer[String, Seq[Seq[Int]]](featurizer, startSymbol, params.opt)
-  val crf = trainer.train(processed)
+  val trainer = new CRF.Trainer[String, Seq[SparseVector[Double]]](featurizer, startSymbol, params.opt)
+  val crf = trainer.train(vectors)
+
+  val model = new CRFPackage(crf,template,statIndex)
 
   if(params.output != null) {
-    val model = new CRFPackage(crf,template,statIndex)
     breeze.util.writeObject(params.output, model)
   }
 
 
   if(params.test != null) {
-    val test=
+    val test =
       CONLLSequenceReader.readTrain(new FileInputStream(params.test), params.test.getName).toIndexedSeq
 
-    val testProcessed = for(ex <- test) yield ex.map { features =>
-      val mapped = IndexedSeq.tabulate(features.length)(i => template.extract(ex, i).map(statIndex(_)).filter(_ != -1).toIndexedSeq)
-      mapped -> features.length
-    }
+    val testProcessed = for(ex <- test) yield ex.map{_ => model.process(ex)}
 
     def extractNamedEntities(seq: IndexedSeq[String]) = {
       val result = new ArrayBuffer[(String,Range)]()

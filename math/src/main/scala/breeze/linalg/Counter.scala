@@ -257,9 +257,32 @@ trait CounterOps {
     }
   }
 
+  implicit def canMulIntoVS_M[K2, K1 <: K2, V:Semiring]:BinaryUpdateOp[Counter[K1, V], V, OpMulMatrix] = new BinaryUpdateOp[Counter[K1, V], V, OpMulMatrix] {
+    val field = implicitly[Semiring[V]]
+    def apply(a: Counter[K1, V], b: V) {
+      for( (k,v) <- a.activeIterator) {
+        a(k) = field.*(v, b)
+      }
+    }
+  }
+
   implicit def canMulVS[K2, K1<:K2, V](implicit semiring: Semiring[V],
                                        d: DefaultArrayValue[V]):BinaryOp[Counter[K1, V], V, OpMulScalar, Counter[K1, V]] = {
     new BinaryOp[Counter[K1, V], V, OpMulScalar, Counter[K1, V]] {
+      override def apply(a : Counter[K1, V], b : V) = {
+        val r = Counter[K1, V]()
+        for( (k, v) <- a.activeIterator) {
+          val vr = semiring.*(v, b)
+            r(k) = vr
+        }
+        r
+      }
+    }
+  }
+
+  implicit def canMulVS_M[K2, K1<:K2, V](implicit semiring: Semiring[V],
+                                       d: DefaultArrayValue[V]):BinaryOp[Counter[K1, V], V, OpMulMatrix, Counter[K1, V]] = {
+    new BinaryOp[Counter[K1, V], V, OpMulMatrix, Counter[K1, V]] {
       override def apply(a : Counter[K1, V], b : V) = {
         val r = Counter[K1, V]()
         for( (k, v) <- a.activeIterator) {

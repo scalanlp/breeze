@@ -17,9 +17,16 @@ package breeze.collection.mutable
 */
 
 /**
+ * An ArrayLike is something that can behave kind of like an Array, but isn't.
+ * They have a fixed size and reasonably fast access times. The main
+ * difference is that they're sparse in one way or another.
+ * This includes [[breeze.collection.mutable.OpenAddressHashArray]]s and
+ * [[breeze.collection.mutable.SparseArray]]. They support several reasonable
+ * operations
  *
  * @author dlwh
  */
+// TODO: perhaps these should be called sparse Arrays
 trait ArrayLike[T] {
   def apply(i: Int): T
   def update(i: Int, t: T): Unit
@@ -41,6 +48,14 @@ trait ArrayLike[T] {
 
   def length = size
 
+  /**
+   * Only iterates "active" elements. I'm not sure how I feel
+   * about this behavior, since it's inconsistent with the rest of Breeze.
+   * I will think on it.
+   * @param f
+   * @tparam U
+   */
+  // TODO: maybe make this iterate all elements?
   def foreach[U](f: (T) => U) = valuesIterator foreach f
 
 

@@ -29,7 +29,7 @@ import breeze.collection.mutable.SparseArray
  * @author dlwh
  */
 @SerialVersionUID(1)
-final class SparseVector[@spec(Double,Int, Float) E](val array: SparseArray[E])
+class SparseVector[@spec(Double,Int, Float) E](val array: SparseArray[E])
                                                     (implicit value: DefaultArrayValue[E])
                                                     extends StorageVector[E]
                                                     with VectorLike[E, SparseVector[E]] with Serializable {
@@ -85,7 +85,7 @@ final class SparseVector[@spec(Double,Int, Float) E](val array: SparseArray[E])
   }
 
   def copy: SparseVector[E] = {
-    new SparseVector[E](ArrayUtil.copyOf(index, index.length), ArrayUtil.copyOf(data, index.length), activeSize, length)
+    new SparseVector[E](ArrayUtil.copyOf(index, index.length), ArrayUtil.copyOf(data, index.length), activeSize, size)
   }
 
   /**

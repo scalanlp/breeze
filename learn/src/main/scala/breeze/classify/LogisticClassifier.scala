@@ -23,10 +23,10 @@ import breeze.data._
 import breeze.optimize._
 import breeze.optimize.FirstOrderMinimizer.OptParams
 import breeze.math.MutableCoordinateSpace
+import breeze.util.Index
 
 /**
- * A multi-class logistic/softmax/maxent classifier. It's currently unsmoothed (no regularization)
- * but I hope to fix that at some point.
+ * A multi-class logistic/softmax/maxent classifier.
  *
  * @author dlwh
  */
@@ -50,37 +50,35 @@ object LogisticClassifier {
    * @tparam TF feature vectors, which are the input vectors to the classifer
    * @return a LinearClassifier based on the fitted model
    */
-  class Trainer[L,TF](opt: OptParams = OptParams())(implicit arith: MutableCoordinateSpace[TF, Double]) extends Classifier.Trainer[L,TF] {
+  class Trainer[L,TF](opt: OptParams = OptParams())(implicit arith: MutableCoordinateSpace[TF, Double],
+                                                    man: ClassManifest[TF]) extends Classifier.Trainer[L,TF] {
     import arith._
 
-    type MyClassifier = LinearClassifier[L,LFMatrix[L,TF],Counter[L,Double],TF]
+    type MyClassifier = LinearClassifier[L,UnindexedLFMatrix[L,TF],Counter[L,Double],TF]
 
     def train(data: Iterable[Example[L,TF]]) = {
       require(data.size > 0)
-      val labelSet = Set.empty ++ data.iterator.map(_.label)
+      val labelIndex = Index[L]()
+      data foreach { ex => labelIndex.index(ex.label) }
 
-      val guess = new LFMatrix[L,TF](zeros(data.head.features))
-      for(l <- labelSet) guess(l) = zeros(data.head.features)
+      val guess = new LFMatrix[L,TF](zeros(data.head.features), labelIndex)
 
-      val obj = new CachedBatchDiffFunction(objective(data.toIndexedSeq))(LFMatrix.canCopy(copy))
+      val obj = new CachedBatchDiffFunction(objective(data.toIndexedSeq, labelIndex))(LFMatrix.canCopy(copy))
 
       val weights = opt.minimize(obj,guess)(LFMatrix.coordSpace)
 //
 //      val weights = new LBFGS[LFMatrix[L, TF]]().minimize(obj, guess)
 
-      new LinearClassifier(weights,Counter[L,Double]())
+      new LinearClassifier(weights.unindexed,Counter[L,Double]())
     }
 
-
-    protected def objective(data: IndexedSeq[Example[L,TF]]) = new ObjectiveFunction(data)
+    protected def objective(data: IndexedSeq[Example[L,TF]], labelIndex: Index[L]) = new ObjectiveFunction(data, labelIndex)
 
     // preliminaries: an objective function
-    protected class ObjectiveFunction(data: IndexedSeq[Example[L,TF]]) extends BatchDiffFunction[LFMatrix[L,TF]] {
-      val labelSet = Set.empty ++ data.iterator.map(_.label)
-      val allLabels = labelSet.toSeq
+    protected class ObjectiveFunction(data: IndexedSeq[Example[L,TF]], labelIndex: Index[L]) extends BatchDiffFunction[LFMatrix[L,TF]] {
 
       // Computes the dot product for each label
-      def logScores(weights: LFMatrix[L,TF], datum: TF): Counter[L,Double] = {
+      def logScores(weights: LFMatrix[L,TF], datum: TF): DenseVector[Double] = {
         weights * datum
       }
 
@@ -92,19 +90,22 @@ object LogisticClassifier {
         assert(!breeze.linalg.norm(weights).isNaN, weights)
 
         for( datum <- range.view map data) {
-          val logScores = this.logScores(weights,datum.features)
+          val logScores: DenseVector[Double] = this.logScores(weights,datum.features)
           val logNormalizer = softmax(logScores)
-          ll -= (logScores(datum.label) - logNormalizer)
+          val goldLabel = labelIndex(datum.label)
+          ll -= (logScores(goldLabel) - logNormalizer)
           assert(!ll.isNaN, logNormalizer + " " + logScores + " " + weights + " " + datum + " " + (weights * datum.features))
 
           // d ll/d weight_kj = \sum_i x_ij ( I(group_i = k) - p_k(x_i;Beta))
-          for ( label <- allLabels ) {
+          for ( label <- 0 until labelIndex.size ) {
             val prob_k = math.exp(logScores(label) - logNormalizer)
             assert(prob_k >= 0 && prob_k <= 1,prob_k)
-            grad(label) -= datum.features * (I(label == datum.label) - prob_k)
+            grad(label) -= datum.features * (I(label == goldLabel) - prob_k)
           }
         }
         assert(!breeze.linalg.norm(grad).isNaN, grad)
+        grad *= (data.size * 1.0 / range.size)
+        ll *= (data.size * 1.0 / range.size)
         (ll,grad)
       }
     }
@@ -118,7 +119,7 @@ object LogisticClassifier {
  * stored as string valued features and string valued labels, e.g.
  * 
  * verb=join,noun=board,prep=as,prep_obj=director,V
- * verb=is,noun=chairman,prep=of,prep_obj=N.V.,N
+ * verb=isIs,noun=chairman,prep=of,prep_obj=N.V.,N
  * verb=named,noun=director,prep=of,prep_obj=conglomerate,N
  *
  * These are examples from Ratnarparkhi's classic prepositional phrase attachment
@@ -152,6 +153,7 @@ object LogisticClassifierFromCsv {
     @Help(text="Regularization value (default 1.0).") reg: Double = 1.0,
     @Help(text="Tolerance (stopping criteria) (default 1E-4).") tol: Double = 1E-4,
     @Help(text="Maximum number of iterations (default 1000).") maxIterations: Int = 1000,
+    @Help(text="Optimization parameters") opt: OptParams,
     @Help(text="Prints this") help:Boolean = false
   )
 
@@ -183,11 +185,7 @@ object LogisticClassifierFromCsv {
         }}
 
     // Train the classifier
-    val opt = OptParams(
-      regularization=params.reg,
-      maxIterations = params.maxIterations,
-      tolerance = params.tol
-    )
+    val opt = params.opt
 
     val classifier = 
       new LogisticClassifier.Trainer[String,SparseVector[Double]](opt)
@@ -213,8 +211,8 @@ object LogisticClassifierFromCsv {
     // Output full predictions
     if (params.fullOutput) {
       predictions.foreach { prediction => {
-        val pcounter = prediction.asInstanceOf[Counter[String,Double]]
-        val distribution = logNormalize(pcounter).mapValues(math.exp(_))
+        val pcounter = prediction
+        val distribution = exp(logNormalize(pcounter))
         val sortedDistributionString =
           distribution
             .argsort

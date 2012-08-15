@@ -23,6 +23,7 @@ import breeze.linalg._
 import breeze.numerics._
 import breeze.stats.distributions.Rand
 import breeze.math.{MutableInnerProductSpace, MutableCoordinateSpace}
+import breeze.util.Index
 
 
 /**
@@ -35,7 +36,8 @@ object SVM {
    * Trains an SVM using the Pegasos Algorithm.
    */
   def apply[L,T](data:Seq[Example[L,T]],numIterations:Int=1000)
-              (implicit vspace: MutableCoordinateSpace[T, Double]):Classifier[L,T] = {
+              (implicit vspace: MutableCoordinateSpace[T, Double],
+                man: ClassManifest[T]):Classifier[L,T] = {
 
     new SMOTrainer(numIterations).train(data)
   }
@@ -142,14 +144,18 @@ object SVM {
     }
   }
 
-  class SMOTrainer[L,T](maxIterations: Int=30, C: Double = 10.0)(implicit vspace: MutableCoordinateSpace[T, Double]) extends Classifier.Trainer[L,T] with ConfiguredLogging {
-    type MyClassifier = LinearClassifier[L,LFMatrix[L,T],Counter[L,Double],T]
+  class SMOTrainer[L,T](maxIterations: Int=30,
+                        C: Double = 10.0)
+                       (implicit vspace: MutableCoordinateSpace[T, Double],
+                        man: ClassManifest[T]) extends Classifier.Trainer[L,T] with ConfiguredLogging {
+    type MyClassifier = LinearClassifier[L,UnindexedLFMatrix[L,T],Counter[L,Double],T]
 
     import vspace._
 
     def train(data: Iterable[Example[L, T]]) = {
       val alphas = data.map { d => Counter[L,Double](d.label -> C)}.toArray
-      val weights = new LFMatrix[L,T](zeros(data.head.features))
+      val labelIndex = Index[L](data.map(_.label))
+      val weights = new LFMatrix[L,T](zeros(data.head.features), labelIndex)
       val allLabels = data.iterator.map(_.label).toSet
       weights(data.head.label); // seed with one label
       var largestChange = 10000.0
@@ -181,7 +187,7 @@ object SVM {
         log.info("Largest Change: " + largestChange)
 
       }
-      new LinearClassifier(weights,Counter[L,Double]())
+      new LinearClassifier(weights.unindexed,Counter[L,Double]())
     }
   }
 

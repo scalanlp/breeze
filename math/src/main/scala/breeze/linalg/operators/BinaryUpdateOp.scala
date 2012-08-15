@@ -18,16 +18,29 @@ package breeze.linalg.operators
 import breeze.generic.{MMRegistry2, Multiproc2}
 
 
+/**
+ * This is the capability trait for operations of the form a += b, a -= b, etc.
+ * These traits are usually implemented in (a supertype of) the companion object of
+ * one of the operands.
+ * @tparam A
+ * @tparam B
+ * @tparam Op
+ */
 trait BinaryUpdateOp[A, B, Op<:OpType] {
   def apply(a: A, b: B)
 }
 
 
 object BinaryUpdateOp {
+  /** Just a magic type lambda to make registries happy. */
   type Bind[Op <:OpType] = { type Sig[A, B] = BinaryUpdateOp[A, B, Op]}
 }
 
-
+/**
+ * This is a special kind of BinaryUpdateOp that supports registration
+ * of specialized implementations for a given operation.
+ * @author dlwh
+ */
 // This trait could reuse code from Multimethod2, but not doing so allows us to reduce code size a lot
 // because we don't need BinaryOp's to inherit from Function2, which has a lot of @specialzied cruft.
 trait BinaryUpdateRegistry[A<:AnyRef, B, Op<:OpType] extends BinaryUpdateOp[A, B, Op] with MMRegistry2[BinaryUpdateOp[_ <: A, _ <: B, Op]] {

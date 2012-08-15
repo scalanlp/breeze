@@ -23,10 +23,7 @@ object CRFEvaluate extends App {
 
   val test= CONLLSequenceReader.readTrain(new FileInputStream(params.test), params.test.getName).toIndexedSeq
 
-  val testProcessed = for(ex <- test) yield ex.map { features =>
-    val mapped = IndexedSeq.tabulate(features.length)(i => template.extract(ex, i).map(statIndex(_)).filter(_ != -1).toIndexedSeq)
-    mapped -> features.length
-  }
+  val testProcessed = for(ex <- test) yield ex.map { _ => crfP.process(ex) }
 
   var numRight = 0
   var numGuess = 0
@@ -69,10 +66,7 @@ object CRFPredict extends App {
     CONLLSequenceReader.readTrain(stream, params.test).toIndexedSeq
   }
 
-  val testProcessed = for(ex <- test) yield ex.map { features =>
-    val mapped = IndexedSeq.tabulate(features.length)(i => template.extract(ex, i).map(statIndex(_)).filter(_ != -1).toIndexedSeq)
-    mapped -> features.length
-  }
+  val testProcessed = for(ex <- test) yield ex.map { _ => crfP.process(ex) }
 
   for( (t,ex) <- (testProcessed zip test)) {
     val guess = crf.viterbi(t.features._1,t.features._2)
@@ -102,10 +96,7 @@ object NERTest extends App {
 
   val test= CONLLSequenceReader.readTrain(new FileInputStream(params.test), params.test.getName).toIndexedSeq
 
-  val testProcessed = for(ex <- test) yield ex.map { features =>
-    val mapped = IndexedSeq.tabulate(features.length)(i => template.extract(ex, i).map(statIndex(_)).filter(_ != -1).toIndexedSeq)
-    mapped -> features.length
-  }
+  val testProcessed = for(ex <- test) yield ex.map { _ => crfP.process(ex) }
 
   def extractNamedEntities(seq: IndexedSeq[String]) = {
     val result = new ArrayBuffer[(String,Range)]()

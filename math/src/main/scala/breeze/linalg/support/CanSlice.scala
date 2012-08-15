@@ -16,7 +16,7 @@ package breeze.linalg.support
 */
 
 /**
- *
+ * Capability trait for slices like denseVector(0 until 5)
  * @author dlwh
  */
 trait CanSlice[-From, -Slice, +To] {
@@ -24,7 +24,7 @@ trait CanSlice[-From, -Slice, +To] {
 }
 
 /**
- *
+ * Capability trait for slices like denseMatrix(1 until 5, 3 until 20 by 2)
  * @author dlwh
  */
 trait CanSlice2[-From, -Slice1, -Slice2, +To] {

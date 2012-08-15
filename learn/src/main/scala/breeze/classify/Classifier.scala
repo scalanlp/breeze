@@ -35,7 +35,7 @@ trait Classifier[L,-T] extends (T=>L) { outer =>
   /** For the observation, return the score for each label that has a nonzero 
    *  score. 
    */
-  def scores(o: T): Tensor[L,Double]
+  def scores(o: T): Counter[L,Double]
 
   /**
    * Transforms output labels L=>M. if f(x) is not one-to-one then the max of score
