@@ -17,7 +17,9 @@ package breeze;
 package text;
 package tokenize;
 
-import breeze.serialization.TextSerialization;
+import breeze.serialization.TextSerialization
+import transform.Transformer
+;
 
 
 /**

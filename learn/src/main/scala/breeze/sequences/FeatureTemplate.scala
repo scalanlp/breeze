@@ -3,6 +3,7 @@ package breeze.sequences
 import breeze.data.Observation
 import scala.collection.IndexedSeq
 import util.parsing.combinator.JavaTokenParsers
+import breeze.text.analyze.{WordShapeGenerator, EnglishWordClassGenerator}
 import breeze.text.tokenize.{WordShapeGenerator, EnglishWordClassGenerator}
 
 /**

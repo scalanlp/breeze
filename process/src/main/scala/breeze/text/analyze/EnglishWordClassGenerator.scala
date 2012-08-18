@@ -1,4 +1,4 @@
-package breeze.text.tokenize
+package breeze.text.analyze
 
 /**
  * Converts a string into another string with properties of that string
@@ -6,13 +6,13 @@ package breeze.text.tokenize
  * @author dlwh
  */
 @SerialVersionUID(1L)
-object EnglishWordClassGenerator extends (String=>String) with Serializable {
+object EnglishWordClassGenerator extends Analyzer with Serializable {
   def apply(x: String) = signatureFor(x)
 
   def signatureFor(word: String) = {
     val sb = new StringBuilder;
     val wlen = word.length();
-    val numCaps = (word:Seq[Char]).count(_.isUpper);
+    val numCaps = (word: Seq[Char]).count(_.isUpper);
     val hasDigit = word.exists(_.isDigit);
     val hasDash = word.contains('-');
     val hasLower = numCaps < wlen;

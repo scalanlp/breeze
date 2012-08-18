@@ -45,4 +45,5 @@ object Unicode {
   def isPunctuation(cp : Int) = {
     inRanges(cp, punctuationRangeStarts, punctuationRangeEnds)
   }
+
 }
