@@ -13,21 +13,21 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package breeze;
-package text;
-package tokenize;
+package breeze
+package text
+package analyze
 
 
 /**
- * Lowercases all strings in a batch of strings.
+ * Just lowercases strings
  *
+ * @author dlwh
  * @author dramage
  */
-case class CaseFolder() extends Transformer {
-  override def apply(in : Iterable[String]) =
-    in.map(CaseFolder);
+class CaseFolder extends Analyzer {
+  override def apply(v1: String): String = v1.toLowerCase
 }
 
-object CaseFolder extends (String=>String)  {
-  override def apply(in : String) : String = in.toLowerCase;
+object CaseFolder extends CaseFolder {
+  override def apply(in: String): String = in.toLowerCase;
 }
