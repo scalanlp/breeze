@@ -13,17 +13,22 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package breeze;
-package text;
-package tokenize;
+package breeze
+package text
+package transform
 
+;
+;
+;
 
 /**
- * Filters out tokens composed of fewer than minLength characters.
+ * A generic (loadable) transformation of a tokenized input text.
  *
  * @author dramage
  */
-case class MinimumLengthFilter(minLength : Int) extends Transformer {
-  override def apply(doc : Iterable[String]) : Iterable[String] =
-    doc.filter(token => token.length >= minLength);
+@SerialVersionUID(1)
+trait Transformer extends (Iterable[String] => Iterable[String]) with Serializable {
+  override def toString = getClass.getName + "()"
 }
+
+

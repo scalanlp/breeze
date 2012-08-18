@@ -1,8 +1,9 @@
-package breeze.data.process
+package breeze.text.tokenize
+
 /*
  Copyright 2010 David Hall, Daniel Ramage
 
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
 
@@ -15,8 +16,10 @@ package breeze.data.process
  limitations under the License.
 */
 
-import java.text._;
-import java.util.Locale;
+import java.text._
+import java.util.Locale
+import breeze.text.segment.SegmentingIterator
+
 
 /**
  * A Word Segmenter backed by Java's BreakIterator.
@@ -26,15 +29,18 @@ import java.util.Locale;
  * @author dlwh
  */
 
-class SegmentWords(locale:Locale) extends (String=>Iterator[String] ) {
-    def this() = this(Locale.getDefault);
-  def apply(s: String):Iterator[String] = {
-    val breaker = BreakIterator.getWordInstance(locale);
-    breaker.setText(s);
-    new SegmentingIterator(breaker,s).map(_.trim).filter(!_.isEmpty);
+class JavaWordTokenizer(locale: Locale) extends Tokenizer {
+  def this() = this(Locale.getDefault)
+
+  def apply(s: String): Iterable[String] = {
+    val breaker = BreakIterator.getWordInstance(locale)
+    breaker.setText(s)
+    new Iterable[String] {
+     def iterator = new SegmentingIterator(breaker, s).map(_.trim).filter(!_.isEmpty)
+    }
   }
 }
 
- object SegmentWords extends SegmentWords;
+object JavaWordTokenizer extends JavaWordTokenizer
 
 
