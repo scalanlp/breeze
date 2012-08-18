@@ -8,7 +8,6 @@ import breeze.util.Index
 import breeze.sequences.CRF.Featurizer
 import collection.mutable.ArrayBuffer
 import breeze.text.analyze.{WordShapeGenerator, EnglishWordClassGenerator}
-import breeze.text.tokenize.{EnglishWordClassGenerator, WordShapeGenerator}
 import io.Source
 import breeze.data.{Example, Observation}
 import breeze.linalg._
