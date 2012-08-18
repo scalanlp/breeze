@@ -25,9 +25,10 @@ Contributions from:
   Alexander Lehmann <afwlehmann>
   Jonathan Merritt <lancelet>
   Keith Stevens <fozziethebeat>
+  Jason Baldridge <jasonbaldridge>
   And others (email me if you've contributed code and aren't listed)
 
 
 This project can be built with sbt 0.11.2
 
-Documentation forthcoming.
+Documentation: https://github.com/dlwh/breeze/wiki/Quickstart
