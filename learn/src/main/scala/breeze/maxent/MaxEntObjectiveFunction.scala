@@ -1,9 +1,6 @@
 package breeze.maxent
 
-/**
- * 
- * @author dlwh
- */
+
 import breeze.util.Index
 import breeze.util.Encoder
 import breeze.util.Profiling
@@ -11,6 +8,10 @@ import breeze.optimize.{FirstOrderMinimizer, DiffFunction}
 import breeze.linalg._
 import breeze.collection.mutable.SparseArray
 
+/**
+ *
+ * @author dlwh
+ */
 abstract class MaxEntObjectiveFunction extends DiffFunction[DenseVector[Double]]  {
   type Context
   type Decision
