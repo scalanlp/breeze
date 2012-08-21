@@ -25,7 +25,7 @@ import java.util
 
 
 /**
- * Trait that marks an O(1) bidirection map between Ints (increasing from 0)
+ * Trait that marks an O(1) bidirectional map between Ints (increasing from 0)
  * and T's.  This class is used, for example, to efficiently build unique
  * vector space mappings for strings.  The methods in this trait do not mutate
  * the underlying index.  Use either a MutableIndex or one of the companion
