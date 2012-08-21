@@ -227,18 +227,19 @@ class HashIndex[T] extends MutableIndex[T] with Serializable {
 *
 * @author dlwh, dramage
 */
-class DenseIntIndex(max: Int) extends Index[Int] {
+class DenseIntIndex(beg: Int, end: Int) extends Index[Int] {
+  def this(end: Int) = this(0, end)
 
-  override def size = max
+  require(beg >= 0)
+  require(end >= beg)
 
-  override def apply(t : Int) =
-    if (contains(t)) t else -1
+  override def size = end - beg
 
-  override def unapply(i : Int) =
-    if (contains(i)) Some(i) else None
+  override def apply(t : Int) = if(contains(t)) t - beg else -1
 
-  override def contains(t : Int) =
-    t < max && t >= 0
+  override def unapply(i : Int) = if (i < size) Some(i + beg) else None
+
+  override def contains(t : Int) = t < end - beg && t >= 0
 
   override def indexOpt(t : Int) =
     if (contains(t)) Some(t) else None
@@ -246,21 +247,11 @@ class DenseIntIndex(max: Int) extends Index[Int] {
   override def get(i : Int) =
     if (contains(i)) i else throw new IndexOutOfBoundsException()
 
-  override def iterator =
-    (0 to max).iterator
+  override def iterator = (beg until end).iterator
 
-  def pairs = iterator zip iterator
-}
+  def pairs = iterator zip iterator.map(_ + min)
 
-/**
- * Adds an index to a type
- */
-trait Indexed[T] {
-  val index: Index[T] = Index[T]()
-}
-
-trait SynchronouslyIndexed[T] extends Indexed[T] {
-  override val index: Index[T] = new HashIndex[T] with SynchronizedMutableIndex[T]
+  override def hashCode = beg + 37 * end
 }
 
 /**
