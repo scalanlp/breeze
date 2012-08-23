@@ -64,11 +64,10 @@ object BreezeBuild extends Build {
   p.setProperty("log.level","WARN")
 
   val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
-
   val netlib = "com.googlecode.netlib-java" % "netlib-java" % "0.9.3"
   val jblas = "uk.co.forward" % "jblas" % "1.2.0"
-
-  val commonDeps = Seq(paranamer, netlib, jblas)
+  val antiXML = "com.codecommit" % "anti-xml_2.9.1" % "0.3"
+  val commonDeps = Seq(paranamer, netlib, jblas, antiXML)
 
   def testDependencies = libraryDependencies <++= (scalaVersion) {
     sv =>
