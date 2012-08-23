@@ -10,7 +10,7 @@ import java.io.{File, FileInputStream, InputStream}
  * @author dlwh
  */
 object CONLLSequenceReader {
-  def readTrain(f: InputStream, name: String = "sequence"):Iterator[Example[IndexedSeq[String],IndexedSeq[IndexedSeq[String]]]] = {
+  def readTrain(f: InputStream, name: String = "sequence", splitToken:String =" "):Iterator[Example[IndexedSeq[String],IndexedSeq[IndexedSeq[String]]]] = {
     val source = Source.fromInputStream(f).getLines()
     new Iterator[Example[IndexedSeq[String],IndexedSeq[IndexedSeq[String]]]] {
       def hasNext = source.hasNext
@@ -24,7 +24,7 @@ object CONLLSequenceReader {
             val line = source.next()
             if(line.trim().isEmpty) break
 
-            val split = line.split(" ");
+            val split = line.split(splitToken)
             inputs += split.take(split.length -1).toIndexedSeq
             outputs += split.last
           }
@@ -36,7 +36,14 @@ object CONLLSequenceReader {
     }
   }
 
-  def readTest(f: InputStream, name: String = "test-sequence"):Iterator[Observation[IndexedSeq[IndexedSeq[String]]]] = {
+  /**
+   * This format reads a CONLL file with the last column (i.e. the label) missing. If you have the label,
+   * use readTrain, even if you plan on testing with it. Silly, I know.
+   * @param f
+   * @param name
+   * @return
+   */
+  def readTest(f: InputStream, name: String = "test-sequence", splitToken: String = " "):Iterator[Observation[IndexedSeq[IndexedSeq[String]]]] = {
     val source = Source.fromInputStream(f).getLines()
     new Iterator[Observation[IndexedSeq[IndexedSeq[String]]]] {
       def hasNext = source.hasNext
@@ -49,7 +56,7 @@ object CONLLSequenceReader {
             val line = source.next()
             if(line.trim().isEmpty) break
 
-            val split = line.split(" ");
+            val split = line.split(splitToken)
             inputs += split
           }
         }
