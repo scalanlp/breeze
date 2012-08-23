@@ -1,6 +1,7 @@
 package breeze.corpora
 
 import com.codecommit.antixml._
+import io.Codec
 
 /**
  * Convert native MASC xml into CONLL format for named entity recognition.
@@ -45,10 +46,15 @@ object MascNer {
     val output = new FileWriter(outputName)
     for ((file, prefix) <- targets) {
       try {
-        val allDataBySentence = processTarget(file,prefix)
+        val allDataBySentence: Seq[(Seq[String], Seq[String], Seq[String], Seq[MRegion])] = processTarget(file,prefix)
         for (sentenceInfo <- allDataBySentence) {
-          sentenceInfo.zipped.foreach { 
-            case (tok, pos, ner) => output.write(tok + " " + pos + " " + ner + "\n")
+          // sigh, no zipped on tuple4
+          (0 until sentenceInfo._1.length).foreach {  i =>
+            val (tok, pos, ner, region) = (sentenceInfo._1(i), sentenceInfo._2(i), sentenceInfo._3(i), sentenceInfo._4(i))
+            if(tok.exists(_.isSpaceChar)) {
+              println("Weird token! '" + tok +"' " + file + "/" + prefix +".txt:" + + region.start + "-" + region.end)
+            }
+            output.write(tok + " " + pos + " " + ner + "\n")
           }
           output.write("\n")
         }
@@ -63,23 +69,76 @@ object MascNer {
     System.err.println
   }
 
-  def processTarget(dir: File, prefix: String) = {
+  val badFiles = Set(
+    "Acephalous-Internet.txt",
+    "blog-varsity-athletics.txt",
+    "detroit.txt",
+    "Effing-Idiot.txt",
+    "Fermentation_Eminent-Domain.txt",
+    "Fermentation_HR5034.txt",
+    "How_soon-Fans.txt",
+    "Italy.txt",
+    "Tupelo-Honey-Cafe.txt",
+    "vampires.txt",
+    "111399.txt",
+    "111424.txt",
+    "FBI_urgent.txt",
+    "record_volume.txt",
+    "Re_JobOffer.txt",
+    "SEO.txt",
+    "SgtCassandra.txt",
+    "ucb20.txt",
+    "ucb26.txt",
+    "ucb41.txt",
+    "ucb46.txt",
+    "ucb48.txt",
+    "ucb50.txt",
+    "ucb49.txt",
+    "ucb52.txt",
+    "A_defense_of_Michael_Moore.txt",
+    "captured_moments.txt",
+    "Env_Prot_Agency-nov1.txt",
+    "chapter-10.txt",
+    "LSC-Protocol_Regarding_Access.txt",
+    "jokes13.txt",
+    "jokes16.txt",
+    "jokes3.txt",
+    "jokes2.txt",
+    "jokes4.txt",
+    "jokes5.txt",
+    "jokes8.txt",
+    "alumnifund1.txt",
+    "aspca1.txt",
+    "united1.txt",
+    "JurassicParkIV-Scene_3.txt",
+    "pirates.txt",
+    "ch5.txt",
+    "1468-6708-3-1.txt",
+    "journal.pbio.0020001.txt",
+    "pmed.0010029.txt"
+  )
+
+
+
+  def processTarget(dir: File, prefix: String): Seq[(Seq[String], Seq[String], Seq[String], Seq[MRegion])] = {
 
     def dirFile(prefix: String) = new File(dir, prefix)
 
+    implicit val codec = Codec.UTF8 //if(badFiles.contains(prefix +".txt")) Codec.ISO8859 else Codec.UTF8
+
     // Raw text
-    val rawtext = Source.fromFile(dirFile(prefix+".txt")).mkString
+    val rawtext = Source.fromFile(dirFile(prefix+".txt"))(codec).mkString
 
     // Sentence information
-    val sentenceXml = XML.fromSource(Source.fromFile(dirFile(prefix+"-s.xml")))
+    val sentenceXml = XML.fromSource(Source.fromFile(dirFile(prefix+"-s.xml"))(Codec.UTF8))
     val sentenceRegions = getRegions(sentenceXml).sorted
 
     // Basic segment information
-    val segmentXml = XML.fromSource(Source.fromFile(dirFile(prefix+"-seg.xml")))
+    val segmentXml = XML.fromSource(Source.fromFile(dirFile(prefix+"-seg.xml"))(Codec.UTF8))
     val segmentRegions = getRegions(segmentXml).map(r => (r.id -> r)).toMap
 
     // POS information
-    val pennXml = XML.fromSource(Source.fromFile(dirFile(prefix+"-penn.xml")))
+    val pennXml = XML.fromSource(Source.fromFile(dirFile(prefix+"-penn.xml"))(Codec.UTF8))
 
     val tokenRegions =  getNodes(pennXml).map { n =>
       val regions = n.targets.map(segmentRegions).sorted
@@ -90,7 +149,7 @@ object MascNer {
     val posAnnotations = getAnnotations(pennXml).map(anno => (anno.ref -> anno)).toMap
 
     // NER information
-    val neXml = XML.fromSource(Source.fromFile(dirFile(prefix+"-ne.xml")))
+    val neXml = XML.fromSource(Source.fromFile(dirFile(prefix+"-ne.xml"))(Codec.UTF8))
     val neAnnotations = 
       getAnnotations(neXml).map(anno => (anno.ref -> anno)).toMap.withDefault(x=>outsideNe)
 
@@ -119,7 +178,7 @@ object MascNer {
               prefix+nerLabelStandardizer(curr.label)
             }
         }
-        Some(orderedTokens, orderedPos, bioLabels)
+        Some(orderedTokens, orderedPos, bioLabels, orderedRegions)
       }
     }
 
