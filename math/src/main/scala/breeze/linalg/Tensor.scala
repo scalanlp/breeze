@@ -49,6 +49,7 @@ sealed trait QuasiTensor[@specialized(Int) K, @specialized(Int, Float, Double) V
   def activeKeysIterator: Iterator[K]
 }
 
+
 /**
  * A Tensor defines a map from an index set to a set of values
  *
@@ -146,6 +147,18 @@ object Tensor {
   implicit def canUReduce[T, I, V](implicit ev: T<:<Tensor[I, V]):UReduceable[T, V] = {
     new UReduceable[T, V] {
       def apply[Final](c: T, f: URFunc[V, Final]): Final = c.ureduce(f)
+    }
+  }
+
+  implicit def canSliceTensor[K, V:ClassManifest]:CanSlice[Tensor[K,V], Seq[K], SliceVector[K, V]] = new CanSlice[Tensor[K,V], Seq[K], SliceVector[K, V]] {
+    def apply(from: Tensor[K, V], slice: Seq[K]): SliceVector[K, V] = new SliceVector(from, slice.toIndexedSeq)
+  }
+
+  implicit def canSliceTensor2[K1, K2, V:ClassManifest]:CanSlice2[Tensor[(K1,K2),V], Seq[K1], Seq[K2], SliceMatrix[K1, K2, V]] = {
+    new CanSlice2[Tensor[(K1,K2),V], Seq[K1], Seq[K2], SliceMatrix[K1, K2, V]] {
+      def apply(from: Tensor[(K1, K2), V], slice: Seq[K1], slice2: Seq[K2]): SliceMatrix[K1, K2, V] = {
+        new SliceMatrix(from, slice.toIndexedSeq, slice2.toIndexedSeq)
+      }
     }
   }
 }
