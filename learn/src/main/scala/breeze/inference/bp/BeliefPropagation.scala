@@ -38,23 +38,53 @@ object BeliefPropagation {
      * @param f the factor
      * @return the edge marginal factor
      */
-    def factorMarginalFor(f: Factor): Factor = new Factor {
-      def variables = f.variables
-      val (myMessages, myFVbyI) = {
-        val fi = model.factorIndex(f)
-        if(fi == -1)  f.variables.map { v => DenseVector.zeros[Double](v.domain.size) } -> f.variables.map(model.variableIndex).toArray
-        else messages(fi) -> model.factorVariablesByIndices(fi)
-      }
+    def factorMarginalFor(f: Factor): Factor = {
+      if(f.variables.length == 1) {
+        new Factor {
+          val variables = f.variables
+          val index = model.variableIndex(variables.head)
 
-
-
-      def logApply(assignments: Array[Int]) = {
-        f.logApply(assignments)* {
-          for ( (v, i) <- myFVbyI.zipWithIndex) yield {
-            beliefs(v)(assignments(i)) / math.exp(myMessages(i)(assignments(i)))
+          def logApply(assignments: Array[Int]) = {
+            math.log(beliefs(index)(assignments(0)))
           }
-        }.product
+        }
 
+      } else {
+        new Factor {
+          override lazy val logPartition = 0.0
+
+          def variables = f.variables
+          val fi = model.factorIndex(f)
+          val (myMessages, myFVbyI) = {
+            if(fi == -1)  f.variables.map { v => DenseVector.zeros[Double](v.domain.size) } -> f.variables.map(model.variableIndex).toArray
+            else messages(fi) -> model.factorVariablesByIndices(fi)
+          }
+
+          def logApply(assignments: Array[Int]) = {
+            var ll = f.logApply(assignments)
+            var i = 0
+            while (i < myFVbyI.length) {
+              val v = myFVbyI(i)
+              ll += math.log(beliefs(v)(assignments(i))) - myMessages(i)(assignments(i))
+              i += 1
+            }
+            ll -= myLogPartition
+            ll
+          }
+
+          private var myLogPartition = 0.0;
+
+          {
+            val arr = new Array[Double](this.size)
+            var i = 0
+            foreachAssignment { ass =>
+              arr(i) = logApply(ass)
+              i += 1
+            }
+            myLogPartition = breeze.numerics.logSum(arr, i)
+          }
+
+        }
       }
     }
 
@@ -78,6 +108,10 @@ object BeliefPropagation {
     val messages = model.factors.map{ f =>
       f.variables.map { v => DenseVector.zeros[Double](v.domain.size) }
     }
+
+    // go ahead and apply arity-1 factors. We won't need to revisit them.
+    val oneVariableFactors = (0 until model.factors.length).filter(i => model.factors(i).variables.length == 1)
+
 
     val partitions =  new Array[Double](model.factors.size)
 
