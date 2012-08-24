@@ -109,12 +109,13 @@ object BeliefPropagation {
         // normalize new beliefs
         newBeliefs foreach { b => b /= sum(b)}
         // compute new messages, store new beliefs in old beliefs
-        for( ((v, mfv),  nb) <- model.factorVariablesByIndices(f) zip messages(f) zip newBeliefs) {
-          mfv := (log(nb) - log(beliefs(v)))
+        for ( (globalV, localV) <- model.factorVariablesByIndices(f).zipWithIndex) {
+          val mfv: DenseVector[Double] = messages(f)(localV)
+          mfv := (log(newBeliefs(localV)) - log(divided(localV)))
 
           // nans are usually from infinities or division by 0.0, usually we can s
           for(i <- 0 until mfv.length) { if(mfv(i).isNaN) mfv(i) = 0.0}
-          beliefs(v) := nb
+          beliefs(globalV) := newBeliefs(localV)
         }
 
         partitions(f) = partition

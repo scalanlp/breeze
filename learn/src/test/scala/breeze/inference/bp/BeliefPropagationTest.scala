@@ -9,27 +9,32 @@ class BeliefPropagationTest extends FunSuite {
 
     // based on factorie loop4 test
     val factors = IndexedSeq(
-      Factor.fromLogFn(v4)(i => 5 * I(i == 0)),
-      Factor.fromLogFn(v1, v2)( (i,j) => if(i == j) -1 else 0.0 ),
-      Factor.fromLogFn(v1, v3)( (i,j) => if(i == j) -1 else 0.0 ),
-      Factor.fromLogFn(v2, v4)( (i,j) => if(i == j) -1 else 0.0 ),
-      Factor.fromLogFn(v3, v4)( (i,j) => if(i == j) -1 else 0.0 )
+      Factor.fromLogFn(v1, v2)( (i,j) => -I(i == j)),
+      Factor.fromLogFn(v1, v3)( (i,j) => -I(i == j)),
+      Factor.fromLogFn(v2, v4)( (i,j) => -I(i == j)),
+      Factor.fromLogFn(v3, v4)( (i,j) => -I(i == j)),
+      Factor.fromLogFn(v4)(i => 5 * I(i == 0))
     )
+
+    val joint: Factor = factors.reduceLeft(_ * _)
+    val part = math.exp(joint.logPartition)
+    val marginals = Array(0.0, 0.0, 0.0, 0.0)
+    joint.foreachAssignment { ass =>
+      val score = joint(ass)
+      if(ass(0) == 0) marginals(0) += score / part
+      if(ass(1) == 0) marginals(1) += score / part
+      if(ass(2) == 0) marginals(2) += score / part
+      if(ass(3) == 0) marginals(3) += score / part
+    }
+
 
     val model = Model(IndexedSeq(v1, v2, v3, v4), factors)
     val inf = BeliefPropagation.infer(model)
-    assert(inf.beliefs(0)(0) >= 0.999, inf.beliefs(0))
-    assert(inf.beliefs(0)(1) < 1E-3)
-
-    assert(inf.beliefs(1)(0) < 1E-3)
-    assert(inf.beliefs(1)(1) >= 0.999)
-
-    assert(inf.beliefs(2)(0) < 1E-3)
-    assert(inf.beliefs(2)(1) >= 0.999)
-
-    assert(inf.beliefs(3)(0) >= 0.999)
-    assert(inf.beliefs(3)(1) < 1E-3)
-
+    import breeze.numerics.closeTo
+    assert(closeTo(inf.beliefs(0)(0),marginals(0), 1E-2), inf.beliefs(0).toString + " " + marginals.mkString("{",", ", "}"))
+    assert(closeTo(inf.beliefs(1)(0),marginals(1), 1E-2), inf.beliefs(1).toString + " " + marginals.mkString("{",", ", "}"))
+    assert(closeTo(inf.beliefs(2)(0),marginals(2), 1E-2), inf.beliefs(2).toString + " " + marginals.mkString("{",", ", "}"))
+    assert(closeTo(inf.beliefs(3)(0),marginals(3), 1E-2), inf.beliefs(3).toString + " " + marginals.mkString("{",", ", "}"))
   }
 
 }

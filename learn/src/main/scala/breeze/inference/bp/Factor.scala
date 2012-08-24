@@ -76,11 +76,11 @@ object Factor {
 
 case class ProductFactor(f1: Factor, f2: Factor, scale2: Double = 1) extends Factor {
   val (variables, f2Map: Array[Int], isSameDomain) = {
-    if(f1.variables.eq(f2.variables) || f1.variables.equals()) {
+    if(f1.variables.eq(f2.variables) || f1.variables.equals(f2.variables)) {
       (f1.variables, Array.range(0, f1.variables.size), true)
     } else {
       val varIndex = Index(f1.variables ++ f2.variables)
-      (varIndex.iterator.toIndexedSeq, f2.variables.map(varIndex), false)
+      (varIndex.iterator.toIndexedSeq, f2.variables.map(varIndex).toArray, false)
     }
   }
 
