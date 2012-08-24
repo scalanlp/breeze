@@ -19,7 +19,7 @@ object GenerateHelp {
    */
   def apply[C:Manifest](conf: Configuration = Configuration.empty):String = {
     val man = implicitly[Manifest[C]]
-    val reader = new AdaptiveParanamer();
+    val reader = new AdaptiveParanamer()
 
     def recGen(staticManifest: Manifest[_], prefix: String):Seq[Format] = {
       val clss = staticManifest.erasure
@@ -31,22 +31,22 @@ object GenerateHelp {
 
       val dynamicClass: Class[_] = conf.recursiveGetProperty(prefix).map{
         Class.forName(_)
-      } getOrElse (clss);
+      } getOrElse (clss)
       if (dynamicClass.getConstructors.isEmpty)
         return res
 
-      val staticTypeVars: Seq[String] = staticManifest.erasure.getTypeParameters.map(_.toString);
-      val staticTypeVals: Seq[OptManifest[_]] = staticManifest.typeArguments;
-      val staticTypeMap: Map[String, OptManifest[_]] = (staticTypeVars zip staticTypeVals).toMap withDefaultValue (NoManifest);
+      val staticTypeVars: Seq[String] = staticManifest.erasure.getTypeParameters.map(_.toString)
+      val staticTypeVals: Seq[OptManifest[_]] = staticManifest.typeArguments
+      val staticTypeMap: Map[String, OptManifest[_]] = (staticTypeVars zip staticTypeVals).toMap withDefaultValue (NoManifest)
 
-      val dynamicTypeMap = solveTypes(staticTypeMap, staticManifest.erasure, dynamicClass);
+      val dynamicTypeMap = solveTypes(staticTypeMap, staticManifest.erasure, dynamicClass)
 
       // Handle ctor parameters
       val toRecurse = ArrayBuffer[(String,Manifest[_])]()
 
-      val ctor = clss.getConstructors apply 0
-      val paramNames = reader.lookupParameterNames(ctor);
-      val defaults = lookupDefaultValues(dynamicClass, paramNames);
+      val ctor = dynamicClass.getConstructors apply 0
+      val paramNames = reader.lookupParameterNames(ctor)
+      val defaults = lookupDefaultValues(dynamicClass, paramNames)
       val anns = ctor.getParameterAnnotations
       val typedParams = ctor.getGenericParameterTypes.map { mkManifest(dynamicTypeMap, _)}
 
