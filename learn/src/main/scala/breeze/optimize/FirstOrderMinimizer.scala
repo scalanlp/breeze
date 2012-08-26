@@ -8,14 +8,16 @@ import breeze.math.{NormedVectorSpace, MutableCoordinateSpace}
  * @author dlwh
  */
 
-abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: Int = -1)(implicit vspace: NormedVectorSpace[T, Double]) extends Minimizer[T,DF] with Logged {
+abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: Int = -1, tolerance: Double=1E-5)(implicit vspace: NormedVectorSpace[T, Double]) extends Minimizer[T,DF] with Logged {
 
   type History
   case class State(x: T,
                    value: Double, grad: T,
                    adjustedValue: Double, adjustedGradient: T,
                    iter: Int,
-                   history: History)
+                   initialAdjVal: Double,
+                   history: History) {
+  }
 
   protected def initialHistory(f: DF, init: T): History
   protected def adjust(newX: T, newGrad: T, newVal: Double):(Double,T) = (newVal,newGrad)
@@ -29,7 +31,7 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
     val (value,grad) = f.calculate(x)
     val (adjValue,adjGrad) = adjust(x,grad,value)
     val history = initialHistory(f,init)
-    State(x,value,grad,adjValue,adjGrad,0,history)
+    State(x,value,grad,adjValue,adjGrad,0,adjValue,history)
   }
 
   def iterations(f: DF,init: T): Iterator[State] = {
@@ -45,7 +47,7 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
         log.info("Adj Val and Grad Norm:" + adjValue + " " + vspace.norm(adjGrad))
         val history = updateHistory(x,grad,value,state)
         failedOnce = false
-        State(x,value,grad,adjValue,adjGrad,state.iter + 1,history)
+        State(x,value,grad,adjValue,adjGrad,state.iter + 1, state.initialAdjVal, history)
     } catch {
       case x: FirstOrderException if !failedOnce =>
         failedOnce = true
@@ -57,9 +59,10 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
   }
 
   def minimize(f: DF, init: T):T = {
-    iterations(f,init).find(state =>
+    var initialFVal: Option[Double] = None;
+    iterations(f,init).find (state =>
       (state.iter >= maxIter && maxIter >= 0)
-        || vspace.norm(state.adjustedGradient) <= math.max(1E-6 * state.adjustedValue.abs,1E-9)
+        || (vspace.norm(state.adjustedGradient) <= math.max(tolerance * state.initialAdjVal,1E-8))
     ).get.x
   }
 }
@@ -80,7 +83,7 @@ object FirstOrderMinimizer {
     def minimize[T](f: BatchDiffFunction[T], init: T)(implicit arith: MutableCoordinateSpace[T, Double]) = {
       this.iterations(f, init).find{state =>
             ((state.iter >= maxIterations && maxIterations >= 0)
-              || arith.norm(state.adjustedGradient) <= math.max(tolerance * state.adjustedValue.abs,1E-9))
+              || arith.norm(state.adjustedGradient) <= math.max(tolerance * state.initialAdjVal.abs,1E-8))
           }.get.x
     }
 

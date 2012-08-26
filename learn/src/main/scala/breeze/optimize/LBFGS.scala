@@ -36,8 +36,8 @@ import breeze.linalg._
  * @param maxIter: maximum number of iterations, or &lt;= 0 for unlimited
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
-class LBFGS[T](maxIter: Int = -1, m: Int=5)
-              (implicit vspace: MutableCoordinateSpace[T, Double]) extends FirstOrderMinimizer[T,DiffFunction[T]](maxIter) with ConfiguredLogging {
+class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-5)
+              (implicit vspace: MutableCoordinateSpace[T, Double]) extends FirstOrderMinimizer[T,DiffFunction[T]](maxIter, tolerance) with ConfiguredLogging {
 
   import vspace._
   require(m > 0)
