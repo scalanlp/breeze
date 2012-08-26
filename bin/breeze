@@ -17,7 +17,14 @@ JARS="`find $HOME/.ivy2/ -name '*.jar' -print | tr '\n' ':'`"
 SCALA_LIB="$HOME/.sbt/boot/scala-2.9.2/lib/scala-library.jar"
 
 CP="$BREEZE_DIR/examples/target/scala-2.9.2/classes:$BREEZE_DIR/graph/target/scala-2.9.2/classes:$BREEZE_DIR/learn/target/scala-2.9.2/classes:$BREEZE_DIR/math/target/scala-2.9.2/classes$SCALA_LIB:$BREEZE_DIR/process/target/scala-2.9.2/classes:$SCALA_LIB:$JARS:$CLASSPATH"
-JAVA="$JAVA_HOME/bin/java"
+
+if [ -z "$JAVA_HOME" ]; then 
+  echo "JAVA_HOME not set, hoping just 'java' works."
+  JAVA="java"
+else
+  JAVA="$JAVA_HOME/bin/java"
+fi
+
 JAVA_COMMAND="$JAVA -classpath $CP"
 
 CMD=$1
