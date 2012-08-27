@@ -7,10 +7,12 @@ import breeze.linalg.DenseMatrix
 class BeliefPropagationTest extends FunSuite {
   test("Simple Test") {
     import SimpleProblem._
-    assert(closeTo(inf.beliefs(0)(0),marginals(0), 1E-2), inf.beliefs(0).toString + " " + marginals.mkString("{",", ", "}"))
-    assert(closeTo(inf.beliefs(1)(0),marginals(1), 1E-2), inf.beliefs(1).toString + " " + marginals.mkString("{",", ", "}"))
-    assert(closeTo(inf.beliefs(2)(0),marginals(2), 1E-2), inf.beliefs(2).toString + " " + marginals.mkString("{",", ", "}"))
-    assert(closeTo(inf.beliefs(3)(0),marginals(3), 1E-2), inf.beliefs(3).toString + " " + marginals.mkString("{",", ", "}"))
+    assert(closeTo(inf.beliefs(0)(0),marginals(0), 1E-3), inf.beliefs(0).toString + " " + marginals.mkString("{",", ", "}"))
+    assert(closeTo(inf.beliefs(1)(0),marginals(1), 1E-3), inf.beliefs(1).toString + " " + marginals.mkString("{",", ", "}"))
+    assert(closeTo(inf.beliefs(2)(0),marginals(2), 1E-3), inf.beliefs(2).toString + " " + marginals.mkString("{",", ", "}"))
+    assert(closeTo(inf.beliefs(3)(0),marginals(3), 2E-3), inf.beliefs(3).toString + " " + marginals.mkString("{",", ", "}"))
+
+    assert(closeTo(math.log(part), inf.logPartition, 1E-3), math.log(part) + " " + inf.logPartition + " " + inf.factorLogPartitions.mkString(", "))
   }
 
   test("Simple Test Factor Marginals") {
@@ -61,6 +63,7 @@ class BeliefPropagationTest extends FunSuite {
       factorMarginals(3)(ass(2),ass(3)) += marg
       factorMarginals(4)(ass(3),ass(3)) += marg
     }
+
     val model = Model(IndexedSeq(v1, v2, v3, v4), factors)
     val inf = BeliefPropagation.infer(model)
   }

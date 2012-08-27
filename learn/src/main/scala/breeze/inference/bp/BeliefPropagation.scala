@@ -51,44 +51,38 @@ object BeliefPropagation {
 
       } else {
         new Factor {
-          override lazy val logPartition = 0.0
 
           def variables = f.variables
           val fi = model.factorIndex(f)
-          val (myMessages, myFVbyI) = {
-            if(fi == -1)  f.variables.map { v => DenseVector.zeros[Double](v.domain.size) } -> f.variables.map(model.variableIndex).toArray
-            else messages(fi) -> model.factorVariablesByIndices(fi)
+          val divided = for( (v, m_fv) <- model.factorVariablesByIndices(fi) zip messages(fi)) yield {
+            log(beliefs(v) :/ m_fv)
           }
 
           def logApply(assignments: Array[Int]) = {
             var ll = f.logApply(assignments)
             var i = 0
-            while (i < myFVbyI.length) {
-              val v = myFVbyI(i)
-              ll += math.log(beliefs(v)(assignments(i))) - myMessages(i)(assignments(i))
+            while (i < divided.length) {
+              ll += divided(i)(assignments(i))
               i += 1
             }
-            ll -= myLogPartition
+            ll -= factorLogPartitions(fi)
             ll
-          }
-
-          private var myLogPartition = 0.0;
-
-          {
-            val arr = new Array[Double](this.size)
-            var i = 0
-            foreachAssignment { ass =>
-              arr(i) = logApply(ass)
-              i += 1
-            }
-            myLogPartition = breeze.numerics.logSum(arr, i)
           }
 
         }
       }
     }
+    // group the messages and then add them up
+    private val messageContribution = {
+      val acc = Encoder.fromIndex(model.variableIndex).tabulateArray(v => DenseVector.zeros[Double](v.size))
+      for(fi <- 0 until model.factors.size; (v,m) <- model.factorVariablesByIndices(fi) zip messages(fi)) {
+        acc(v) += log(m)
+      }
+      acc.map(softmax(_)).sum
 
-    val logPartition = factorLogPartitions.sum
+    }
+
+    val logPartition = factorLogPartitions.sum + messageContribution
   }
 
   /**
@@ -106,11 +100,11 @@ object BeliefPropagation {
     }
 
     val messages = model.factors.map{ f =>
-      f.variables.map { v => DenseVector.zeros[Double](v.domain.size) }
+      f.variables.map { v => DenseVector.ones[Double](v.domain.size) }
     }
 
-    // go ahead and apply arity-1 factors. We won't need to revisit them.
-    val oneVariableFactors = (0 until model.factors.length).filter(i => model.factors(i).variables.length == 1)
+// TODO:    go ahead and apply arity-1 factors. We won't need to revisit them.
+//    val oneVariableFactors = (0 until model.factors.length).filter(i => model.factors(i).variables.length == 1)
 
 
     val partitions =  new Array[Double](model.factors.size)
@@ -121,8 +115,9 @@ object BeliefPropagation {
     while(!converged && iter < maxIterations) {
       converged = true
       for(f <- 0 until model.factors.length) {
+        // localize the old beliefs and divide out the messages
         val divided = for( (v, m_fv) <- model.factorVariablesByIndices(f) zip messages(f)) yield {
-          exp(log(beliefs(v)) - m_fv)
+          beliefs(v) :/ m_fv
         }
 
         val newBeliefs = divided.map(b => DenseVector.zeros[Double](b.size))
@@ -131,8 +126,9 @@ object BeliefPropagation {
         // this is actually the EP update, but whatever.
         var partition = 0.0
         model.factors(f).foreachAssignment { ass =>
-          val score = model.factors(f).apply(ass) * {for ( (ass_i, b) <- ass zip divided) yield b(ass_i)}.product
-          partition += math.log(score)
+          val score = model.factors(f)(ass) * {for ( (ass_i, b) <- ass zip divided) yield b(ass_i)}.product
+          assert(score != 0.0)
+          partition += score
 
           for( (ass_i, bNew) <- ass zip newBeliefs) {
             bNew(ass_i) += score
@@ -144,17 +140,19 @@ object BeliefPropagation {
         newBeliefs foreach { b => b /= sum(b)}
         // compute new messages, store new beliefs in old beliefs
         for ( (globalV, localV) <- model.factorVariablesByIndices(f).zipWithIndex) {
-          val mfv: DenseVector[Double] = messages(f)(localV)
-          mfv := (log(newBeliefs(localV)) - log(divided(localV)))
+          converged &&= (norm(beliefs(globalV) - newBeliefs(localV), inf) < 1E-4)
+          if(!converged) {
+            beliefs(globalV) := newBeliefs(localV)
+            val mfv = messages(f)(localV)
+            mfv := (newBeliefs(localV) / divided(localV))
 
-          // nans are usually from infinities or division by 0.0, usually we can s
-          for(i <- 0 until mfv.length) { if(mfv(i).isNaN) mfv(i) = 0.0}
-          beliefs(globalV) := newBeliefs(localV)
+            // nans are usually from infinities or division by 0.0, usually we can s
+            for(i <- 0 until mfv.length) { if(mfv(i).isInfinite || mfv(i).isNaN) mfv(i) = 1.0}
+          }
         }
 
-        partitions(f) = partition
-
-        converged &&= (newBeliefs zip beliefs).forall { case (a,b) => norm(a - b, inf) <= 1E-4}
+        if(!converged)
+          partitions(f) = math.log(partition)
       }
 
       iter += 1
