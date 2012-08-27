@@ -106,11 +106,7 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-5)
     } else {
       val sy = prevStep dot prevGrad
       val yy = prevGrad dot prevGrad
-      val syyy = if(sy < 0 || sy.isNaN) {
-        throw new NaNHistory
-      } else {
-        sy/yy
-      }
+      if(sy < 0 || sy.isNaN) throw new NaNHistory
      ((zeros(grad) + 1.)* sy/yy)
     }
   }
@@ -149,11 +145,17 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-5)
     val iterates = search.iterations(ff)
     val targetState = iterates.find { case search.State(alpha,v) =>
       // sufficient descent
-      val r = v < state.value + alpha * 0.0001 * normGradInDir
+      var r = v < state.value + alpha * 0.0001 * normGradInDir
+
       // I tried using the Wolfe conditions, but it makes the line
       // search more likely to fail and otherwise rarely changes the
       // line searcher. Not worth it.
       if(!r)  log.info(".")
+      else {
+//        r = math.abs(dir dot f.gradientAt(x + dir * alpha)) <= .9 * math.abs(normGradInDir)
+        if(!r) log.info(",")
+      }
+
       r
 
     }
