@@ -59,10 +59,9 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
   }
 
   def minimize(f: DF, init: T):T = {
-    var initialFVal: Option[Double] = None;
     iterations(f,init).find (state =>
       (state.iter >= maxIter && maxIter >= 0)
-        || (vspace.norm(state.adjustedGradient) <= math.max(tolerance * state.initialAdjVal,1E-8))
+        || (vspace.norm(state.adjustedGradient) <= math.max(tolerance * state.initialAdjVal.abs,1E-8))
     ).get.x
   }
 }
