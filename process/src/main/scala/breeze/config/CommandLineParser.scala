@@ -16,17 +16,20 @@ import java.util.Properties
  * @author dlwh
  */
 object CommandLineParser {
+
+  private def isNumber(s: String) = try { s.toDouble; true } catch {case ex => false}
+
   def parseArguments(args: IndexedSeq[String]):(Configuration,IndexedSeq[String]) = {
     val properties = collection.mutable.Map[String,String]();
     val linear = ArrayBuffer[String]()
     var i = 0;
     while(i < args.length) {
-      if(args(i).startsWith("--") || args(i).startsWith("-")) {
+      if((args(i).startsWith("--") || args(i).startsWith("-")) && !isNumber(args(i))) {
         val rawName = args(i).dropWhile('-'==)
         i += 1
         val argument = {
           if(i == args.length) "true"
-          else if(args(i).startsWith("-") || args(i).startsWith("+")) {
+          else if ( (args(i).startsWith("-") || args(i).startsWith("+")) && !isNumber(args(i))) {
             "true"
           } else {
             val arg = args(i)
