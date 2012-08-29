@@ -350,7 +350,7 @@ final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[
   def allVisitableIndicesActive = true
 
   /** Compacts the array by removing all stored default values. */
-  def compact()(implicit man: ClassManifest[Elem]) {
+  def compact() {
     val nz = { // number of non-zeros
       var _nz = 0
       var i = 0
@@ -363,7 +363,7 @@ final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[
       _nz
     }
 
-    val newData  = new Array[Elem](nz)
+    val newData  = ClassManifest.fromClass(data.getClass.getComponentType).newArray(nz).asInstanceOf[Array[Elem]]
     val newIndex = new Array[Int](nz)
 
     var i = 0
@@ -387,6 +387,20 @@ final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[
     this.index = index
     this.data = data
     this.used = used
+  }
+
+  def reserve(nnz: Int) {
+    if(nnz >= used && nnz != index.length)  {
+      index = util.Arrays.copyOf(index, nnz)
+      data = ArrayUtil.copyOf(data, nnz)
+    }
+  }
+
+  /**
+   * Like compact, but doesn't look for defaultValues that can be removed.
+   */
+  def quickCompact() {
+    reserve(used)
   }
 }
 

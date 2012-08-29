@@ -88,6 +88,14 @@ class SparseVector[@spec(Double,Int, Float) E](val array: SparseArray[E])
     new SparseVector[E](ArrayUtil.copyOf(index, index.length), ArrayUtil.copyOf(data, index.length), activeSize, size)
   }
 
+  def reserve(nnz: Int) {
+    array.reserve(nnz)
+  }
+
+  def compact() {
+    array.compact()
+  }
+
   /**
    * Sets the underlying sparse array to use this data
    * @param index must be a sorted list of indices
