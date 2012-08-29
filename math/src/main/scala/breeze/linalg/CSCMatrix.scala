@@ -243,15 +243,6 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps_Int wit
         lastCol += 1
       }
 
-      println()
-      println(cs.mkString(","))
-      println(rs.mkString(","))
-      println(vs.mkString(","))
-      println(order.mkString(","))
-      println(outData.mkString(","))
-      println(outCols.mkString(","))
-      println(outRows.mkString(","))
-      println(outDataIndex)
       val out = new CSCMatrix[T](outData, rows, cols, outCols, outDataIndex, outRows)
       out.compact()
       out
