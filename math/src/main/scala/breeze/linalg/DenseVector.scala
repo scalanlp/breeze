@@ -253,7 +253,21 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     new CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] {
       /**Maps all key-value pairs from the given collection. */
       def map(from: DenseVector[V], fn: (V) => V2) = {
-        DenseVector.tabulate(from.length)(i => fn(from(i)))
+        // this is slow
+        // DenseVector.tabulate(from.length)(i => fn(from(i)))
+        val arr = new Array[V2](from.length)
+
+        val d = from.data
+        val stride = from.stride
+
+        var i = 0
+        var j = from.offset
+        while(i < arr.length) {
+          arr(i) = fn(d(j))
+          i += 1
+          j += stride
+        }
+        new DenseVector[V2](arr)
       }
 
       /**Maps all active key-value pairs from the given collection. */
@@ -267,7 +281,20 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     new CanMapKeyValuePairs[DenseVector[V], Int, V, V2, DenseVector[V2]] {
       /**Maps all key-value pairs from the given collection. */
       def map(from: DenseVector[V], fn: (Int, V) => V2) = {
-        DenseVector.tabulate(from.length)(i => fn(i, from(i)))
+        // slow: DenseVector.tabulate(from.length)(i => fn(i, from(i)))
+        val arr = new Array[V2](from.length)
+
+        val d = from.data
+        val stride = from.stride
+
+        var i = 0
+        var j = from.offset
+        while(i < arr.length) {
+          arr(i) = fn(i, d(j))
+          i += 1
+          j += stride
+        }
+        new DenseVector[V2](arr)
       }
 
       /**Maps all active key-value pairs from the given collection. */
