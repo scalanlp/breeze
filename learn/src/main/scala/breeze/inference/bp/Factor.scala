@@ -2,6 +2,7 @@ package breeze.inference.bp
 
 import breeze.numerics._
 import breeze.util.Index
+import breeze.linalg.DenseVector
 
 /**
  * A Factor knows about a set of variables and can
@@ -44,6 +45,47 @@ trait Factor extends breeze.inference.Factor[Factor] {
         return false
     }
     true
+  }
+
+  // for calling by belief propagation
+  protected[inference] final def _updateBeliefs(beliefs: IndexedSeq[DenseVector[Double]]) ={
+    updateBeliefs(beliefs)
+  }
+
+  /**
+   * Return partition function estimate and new normalized beliefs
+   * by sending messages to all variables. This is actually the EP update, but whatever.
+   *
+   * You might be able to override this, for example, visit fewer assignments if structure
+   * permits.
+   *
+   * @param beliefs current beliefs from all other factors.
+   * @return
+   */
+  protected def updateBeliefs(beliefs: IndexedSeq[DenseVector[Double]]):(IndexedSeq[DenseVector[Double]],Double) = {
+    assert(beliefs.length == variables.length)
+    val newBeliefs = beliefs.map(b => DenseVector.zeros[Double](b.length))
+    var partition = 0.0
+    foreachAssignment { ass =>
+      var vi = 0
+      var score = apply(ass)
+      while(vi < ass.length) {
+        score *= beliefs(vi)(ass(vi))
+        vi += 1
+      }
+      partition += score
+
+      vi = 0
+      while(vi < ass.length) {
+        newBeliefs(vi)(ass(vi)) += score
+        vi += 1
+      }
+
+    }
+    import breeze.linalg.sum
+    newBeliefs foreach { b => b /= sum(b)}
+
+    (newBeliefs, partition)
   }
 
   def foreachAssignment(f: Array[Int]=>Any) {

@@ -143,30 +143,9 @@ object BeliefPropagation {
           beliefs(v) :/ m_fv
         }
 
-        val newBeliefs = divided.map(b => DenseVector.zeros[Double](b.size))
-
-        // send messages to all variables
-        // this is actually the EP update, but whatever.
-        var partition = 0.0
-        model.factors(f).foreachAssignment { ass =>
-          var vi = 0
-          var score = model.factors(f)(ass)
-          while(vi < ass.length) {
-            score *= divided(vi)(ass(vi))
-            vi += 1
-          }
-          partition += score
-
-          vi = 0
-          while(vi < ass.length) {
-            newBeliefs(vi)(ass(vi)) += score
-            vi += 1
-          }
-
-        }
+        val (newBeliefs, partition) = model.factors(f)._updateBeliefs(divided)
 
         // normalize new beliefs
-        newBeliefs foreach { b => b /= sum(b)}
         // compute new messages, store new beliefs in old beliefs
         for ( (globalV, localV) <- model.factorVariablesByIndices(f).zipWithIndex) {
           converged &&= (norm(beliefs(globalV) - newBeliefs(localV), inf) < 1E-4)
