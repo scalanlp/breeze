@@ -75,8 +75,6 @@ package object util extends DoubleImplicits with IteratorImplicits {
    */
   def trace[T](a: T) = {println(a); a}
 
-
-
   // this should be a separate trait but Scala is freaking out
   class SeqExtras[T](s: Seq[T]) {
     def argmax(implicit ordering: Ordering[T]) = {

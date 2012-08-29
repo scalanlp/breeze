@@ -28,9 +28,12 @@ import breeze.math.MutableCoordinateSpace
 * @author dlwh
 */
 abstract class StochasticGradientDescent[T](val defaultStepSize: Double,
-                                            val maxIter: Int)
+                                            val maxIter: Int,
+                                            tolerance: Double=1E-5,
+                                            improvementTol: Double=1E-4,
+                                            minImprovementWindow: Int = 50)
                                             (implicit protected val vspace: MutableCoordinateSpace[T, Double])
-  extends FirstOrderMinimizer[T,StochasticDiffFunction[T]](maxIter) with ConfiguredLogging {
+  extends FirstOrderMinimizer[T,StochasticDiffFunction[T]](maxIter, tolerance, improvementTol, minImprovementWindow, 2) with ConfiguredLogging {
 
   import vspace._
 
@@ -43,6 +46,17 @@ abstract class StochasticGradientDescent[T](val defaultStepSize: Double,
    */
   protected def takeStep(state: State, dir: T, stepSize: Double) = state.x + dir * stepSize
   protected def chooseDescentDirection(state: State) = state.grad * -1.0
+
+
+  override protected def updateFValWindow(oldState: State, newAdjVal: Double) = {
+    if(oldState.fVals.isEmpty) IndexedSeq(newAdjVal)
+    else {
+      // weighted average. less sensitive to outliers
+      val interm = oldState.fVals :+ ((oldState.fVals.last * 3 + newAdjVal)/4.0)
+      if(interm.length > minImprovementWindow) interm.drop(1)
+      else interm
+    }
+  }
 
   /**
    * Choose a step size scale for this iteration.

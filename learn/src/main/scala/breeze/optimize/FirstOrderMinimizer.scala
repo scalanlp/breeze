@@ -2,13 +2,18 @@ package breeze.optimize
 
 import breeze.util.logging.{ConsoleLogging, Logged}
 import breeze.math.{NormedVectorSpace, MutableCoordinateSpace}
+import breeze.util.Implicits._
 
 /**
- * 
+ *
+ * @param minImprovementWindow How many iterations to improve function by at least improvementTol
  * @author dlwh
  */
-
-abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: Int = -1, tolerance: Double=1E-5)(implicit vspace: NormedVectorSpace[T, Double]) extends Minimizer[T,DF] with Logged {
+abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: Int = -1,
+                                                                     tolerance: Double=1E-5,
+                                                                     improvementTol: Double=1E-3,
+                                                                     val minImprovementWindow: Int = 20,
+                                                                     val numberOfImprovementFailures: Int = 1)(implicit vspace: NormedVectorSpace[T, Double]) extends Minimizer[T,DF] with Logged {
 
   type History
   case class State(x: T,
@@ -16,7 +21,10 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
                    adjustedValue: Double, adjustedGradient: T,
                    iter: Int,
                    initialAdjVal: Double,
-                   history: History) {
+                   history: History,
+                   fVals: IndexedSeq[Double] = IndexedSeq.empty,
+                   numImprovementFailures: Int = 0,
+                   searchFailed: Boolean = false) {
   }
 
   protected def initialHistory(f: DF, init: T): History
@@ -25,6 +33,12 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
   protected def determineStepSize(state: State, f: DF, direction: T):Double
   protected def takeStep(state: State, dir: T, stepSize:Double):T
   protected def updateHistory(newX: T, newGrad: T, newVal: Double, oldState: State):History
+
+  protected def updateFValWindow(oldState: State, newAdjVal: Double):IndexedSeq[Double] = {
+    val interm = oldState.fVals :+ newAdjVal
+    if(interm.length > minImprovementWindow) interm.drop(1)
+    else interm
+  }
 
   protected def initialState(f: DF, init: T) = {
     val x = init
@@ -46,15 +60,23 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
         val (adjValue,adjGrad) = adjust(x,grad,value)
         log.info("Adj Val and Grad Norm:" + adjValue + " " + vspace.norm(adjGrad))
         val history = updateHistory(x,grad,value,state)
+        val newAverage = updateFValWindow(state, adjValue)
         failedOnce = false
-        State(x,value,grad,adjValue,adjGrad,state.iter + 1, state.initialAdjVal, history)
+        var s = State(x,value,grad,adjValue,adjGrad,state.iter + 1, state.initialAdjVal, history, newAverage, 0)
+        val improvementFailure = (state.fVals.length >= minImprovementWindow && state.fVals.nonEmpty && state.fVals.last > state.fVals.head * (1-improvementTol))
+        if(improvementFailure)
+          s = s.copy(fVals = IndexedSeq.empty, numImprovementFailures = state.numImprovementFailures + 1)
+        s
     } catch {
       case x: FirstOrderException if !failedOnce =>
         failedOnce = true
         log.error("Failure! Resetting history: " + x)
         state.copy(history = initialHistory(f,state.x))
+      case x: FirstOrderException =>
+        log.error("Failure again! Giving up and returning. Maybe the objective is just poorly behaved?")
+        state.copy(searchFailed = true)
     }
-    }
+    }.takeUpToWhere(_.searchFailed)
     it:Iterator[State]
   }
 
@@ -62,6 +84,7 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
     iterations(f,init).find (state =>
       (state.iter >= maxIter && maxIter >= 0)
         || (vspace.norm(state.adjustedGradient) <= math.max(tolerance * state.initialAdjVal.abs,1E-8))
+        || (state.numImprovementFailures >= numberOfImprovementFailures)
     ).get.x
   }
 }

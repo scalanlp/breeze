@@ -32,6 +32,20 @@ trait IteratorImplicits {
         iter.hasNext;
       }
     }
+
+    def takeUpToWhere(f: T=>Boolean):Iterator[T] = new Iterator[T] {
+      var done = false
+      def next = {
+        if(done) throw new NoSuchElementException()
+        val n = iter.next;
+        done = f(n)
+        n
+      }
+
+      def hasNext = {
+        !done && iter.hasNext;
+      }
+    }
   }
 
   implicit def scEnrichIterator[T](iter: Iterator[T]) = new RichIterator[T](iter);
