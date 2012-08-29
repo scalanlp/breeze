@@ -1052,6 +1052,39 @@ object GenCSCOps extends App {
       res""".replaceAll("Scalar", scalar)
       })
 
+      println(genBinaryOperator("canMulM_M_" + scalar, matrix, matrix, OpMulMatrix, matrix){"""
+      if(a.cols != b.rows) throw new RuntimeException("Dimension Mismatch!")
+
+      var numnz = 0
+      var i = 0
+      while (i < b.cols) {
+        var j = b.colPtrs(i)
+        while (j < b.colPtrs(i+1)) {
+          numnz += a.colPtrs(b.rowIndices(j)+1) - a.colPtrs(b.rowIndices(j))
+          j += 1
+        }
+        i += 1
+      }
+      val res = new CSCMatrix.Builder[Scalar](a.rows, b.cols, numnz)
+      i = 0
+      while (i < b.cols) {
+        var j = b.colPtrs(i)
+        while (j < b.colPtrs(i+1)) {
+          val dval = b.data(j)
+          var k = a.colPtrs(b.rowIndices(j))
+          while (k < a.colPtrs(b.rowIndices(j)+1)) {
+            res.add(a.rowIndices(k), i, a.data(k) * dval)
+            k += 1
+          }
+          j += 1
+        }
+        i += 1
+      }
+
+
+      res.result()""".replaceAll("Scalar", scalar)
+      })
+
 
       println("}")
 
