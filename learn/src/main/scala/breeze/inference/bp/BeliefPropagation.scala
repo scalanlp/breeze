@@ -3,6 +3,7 @@ package breeze.inference.bp
 import breeze.linalg._
 import breeze.numerics._
 import breeze.util.Encoder
+import collection.immutable.BitSet
 
 /**
  * Implements basic belief propagation for computing variable
@@ -103,14 +104,36 @@ object BeliefPropagation {
       f.variables.map { v => DenseVector.ones[Double](v.domain.size) }
     }
 
-// TODO:    go ahead and apply arity-1 factors. We won't need to revisit them.
-//    val oneVariableFactors = (0 until model.factors.length).filter(i => model.factors(i).variables.length == 1)
-
-
     val partitions =  new Array[Double](model.factors.size)
+
+    // TODO:    go ahead and apply arity-1 factors. We'll only need to touch them once more to fix partitions
+    val oneVariableFactors = BitSet.empty ++ (0 until model.factors.length).filter(i => model.factors(i).variables.length == 1)
+
+    var touchedVariables = BitSet.empty
+
+    /*
+    for( f <- oneVariableFactors) {
+      val vi = model.variableIndex(model.factors(f).variables(0))
+      var partition = 0.0
+      model.factors(f).foreachAssignment { ass =>
+        var score = model.factors(f)(ass)
+        messages(f)(0)(ass(0)) = score
+
+        if(touchedVariables(vi))
+          score *= beliefs(vi)(ass(0))
+
+        partition += score
+        beliefs(vi)(ass(0)) = score
+      }
+      beliefs(vi) /= partition
+      touchedVariables += vi
+    }
+    */
 
     var converged = false
     var iter = 0
+
+    val otherFactors = BitSet.empty ++ (0 until model.factors.length) -- oneVariableFactors
 
     while(!converged && iter < maxIterations) {
       converged = true
@@ -126,12 +149,18 @@ object BeliefPropagation {
         // this is actually the EP update, but whatever.
         var partition = 0.0
         model.factors(f).foreachAssignment { ass =>
-          val score = model.factors(f)(ass) * {for ( (ass_i, b) <- ass zip divided) yield b(ass_i)}.product
-          assert(score != 0.0)
+          var vi = 0
+          var score = model.factors(f)(ass)
+          while(vi < ass.length) {
+            score *= divided(vi)(ass(vi))
+            vi += 1
+          }
           partition += score
 
-          for( (ass_i, bNew) <- ass zip newBeliefs) {
-            bNew(ass_i) += score
+          vi = 0
+          while(vi < ass.length) {
+            newBeliefs(vi)(ass(vi)) += score
+            vi += 1
           }
 
         }
@@ -157,6 +186,7 @@ object BeliefPropagation {
 
       iter += 1
     }
+
 
     new Beliefs(model, beliefs, messages, partitions)
   }
