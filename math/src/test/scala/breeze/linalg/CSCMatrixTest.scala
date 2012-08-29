@@ -80,8 +80,40 @@ class CSCMatrixTest extends FunSuite with Checkers {
     }
     a(0,0) = ":("
     assert(a(0,0) === ":(")
+  }
 
+  test("Builder, simple") {
+    val builder = new CSCMatrix.Builder[Double](3, 3)
+    builder.add(1, 1, 2.0)
+    val cs = builder.result()
+    assert(cs === CSCMatrix((0.0, 0.0, 0.0), (0.0, 2.0, 0.0), (0.0, 0.0, 0.0)))
+  }
 
+  test("Builder, full") {
+    val builder = new CSCMatrix.Builder[Double](2, 3)
+    builder.add(0, 1, 2.0)
+    builder.add(1, 1, 5.0)
+    builder.add(0, 2, 3.0)
+    builder.add(1, 0, 4.0)
+    builder.add(1, 2, 6.0)
+    builder.add(0, 0, 1.0)
+    val cs = builder.result()
+    val a = CSCMatrix((1., 2., 3.),(4., 5., 6.))
+    assert(cs === a)
+  }
+
+  test("Builder, repeated full") {
+    val builder = new CSCMatrix.Builder[Double](2, 3)
+    builder.add(0, 1, 2.0)
+    builder.add(1, 2, 3.0)
+    builder.add(1, 1, 5.0)
+    builder.add(0, 2, 3.0)
+    builder.add(1, 0, 4.0)
+    builder.add(1, 2, 3.0)
+    builder.add(0, 0, 1.0)
+    val cs = builder.result()
+    val a = CSCMatrix((1., 2., 3.),(4., 5., 6.))
+    assert(cs === a)
   }
 }
 
