@@ -1031,6 +1031,7 @@ object GenCSCOps extends App {
     for( (scalar,ops) <- GenOperators.ops) {
       println()
       val matrix = "CSCMatrix[%s]" format scalar
+      val dmatrix = "DenseMatrix[%s]" format scalar
       val gvector = "Vector[%s]" format scalar
       println("/** This is an auto-generated trait providing operators for CSCMatrix */")
       println("trait CSCMatrixOps_"+scalar +" { this: CSCMatrix.type =>")
@@ -1051,6 +1052,93 @@ object GenCSCOps extends App {
 
       res""".replaceAll("Scalar", scalar)
       })
+
+      println(genBinaryOperator("canMulM_DM_" + scalar, matrix, dmatrix, OpMulMatrix, dmatrix){"""
+      if(a.cols != b.rows) throw new RuntimeException("Dimension Mismatch!")
+
+
+      val res = new DenseMatrix[Scalar](a.rows, b.cols)
+      var i = 0
+      while (i < b.cols) {
+        var j = 0
+        while (j < a.cols) {
+          val v = b(j, i)
+          var k = a.colPtrs(j)
+          while (k < a.colPtrs(j+1)) {
+            res(a.rowIndices(k), i) += v * a.data(k)
+            k += 1
+          }
+          j += 1
+        }
+        i += 1
+      }
+
+
+      res""".replaceAll("Scalar", scalar)
+      })
+
+
+      println(genBinaryOperator("canMulDM_M_" + scalar, dmatrix, matrix, OpMulMatrix, dmatrix){"""
+      if(a.cols != b.rows) throw new RuntimeException("Dimension Mismatch!")
+
+
+      val res = new DenseMatrix[Scalar](a.rows, b.cols)
+      var i = 0
+      while (i < b.cols) {
+        var j = b.colPtrs(i)
+        while (j < b.colPtrs(i+1)) {
+          val dval = b.data(j)
+          val ival = b.rowIndices(j)
+          var k = 0
+          while (k < a.rows) {
+            res(k,i) += a(k,ival)*dval
+            k += 1
+          }
+          j += 1
+        }
+        i += 1
+      }
+
+
+
+
+
+      res""".replaceAll("Scalar", scalar)
+      })
+
+      println(genBinaryOperator("canMulM_M_" + scalar, matrix, matrix, OpMulMatrix, matrix){"""
+            if(a.cols != b.rows) throw new RuntimeException("Dimension Mismatch!")
+
+            var numnz = 0
+            var i = 0
+            while (i < b.cols) {
+              var j = b.colPtrs(i)
+              while (j < b.colPtrs(i+1)) {
+                numnz += a.colPtrs(b.rowIndices(j)+1) - a.colPtrs(b.rowIndices(j))
+                j += 1
+              }
+              i += 1
+            }
+            val res = new CSCMatrix.Builder[Scalar](a.rows, b.cols, numnz)
+            i = 0
+            while (i < b.cols) {
+              var j = b.colPtrs(i)
+              while (j < b.colPtrs(i+1)) {
+                val dval = b.data(j)
+                var k = a.colPtrs(b.rowIndices(j))
+                while (k < a.colPtrs(b.rowIndices(j)+1)) {
+                  res.add(a.rowIndices(k), i, a.data(k) * dval)
+                  k += 1
+                }
+                j += 1
+              }
+              i += 1
+            }
+
+
+            res.result()""".replaceAll("Scalar", scalar)
+      })
+
 
 
       println("}")

@@ -17,6 +17,8 @@ package breeze.linalg
 import breeze.storage.DefaultArrayValue
 import java.util
 import breeze.util.{Terminal, ArrayUtil}
+import collection.mutable
+import breeze.math.Semiring
 
 /**
  * A compressed sparse column matrix, as used in Matlab and CSparse, etc.
@@ -94,6 +96,17 @@ class CSCMatrix[@specialized(Int, Float, Double) V:DefaultArrayValue] private[li
     }
   }
 
+  def reserve(nnz: Int) {
+    if(nnz >= used && nnz != rowIndices.length)  {
+      _rowIndices = util.Arrays.copyOf(rowIndices, nnz)
+      _data = ArrayUtil.copyOf(data, nnz)
+    }
+  }
+
+  def compact() {
+    reserve(used)
+  }
+
   def activeKeysIterator: Iterator[(Int, Int)] = {
     for(c <- Iterator.range(0, cols); rr <- Iterator.range(colPtrs(c),colPtrs(c+1))) yield (rowIndices(rr), c)
   }
@@ -129,6 +142,12 @@ class CSCMatrix[@specialized(Int, Float, Double) V:DefaultArrayValue] private[li
     buf.toString()
   }
 
+
+  override def equals(p1: Any): Boolean = p1 match {
+    case m:Matrix[V] if m.rows == rows && m.cols == cols => valuesIterator.sameElements(m.valuesIterator)
+    case _ => false
+  }
+
   override def toString: String = toString(maxLines = Terminal.terminalHeight - 3)
 }
 
@@ -153,5 +172,87 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps_Int wit
     }
     // TODO: res.compact()
     res
+  }
+
+
+  /**
+   * This is basically an unsorted coordinate matrix.
+   * @param initNnz initial number of nonzero entries
+   */
+  class Builder[@specialized(Int, Float, Double) T:ClassManifest:Semiring:DefaultArrayValue](rows: Int, cols: Int, initNnz: Int = 16) {
+    private def ring = implicitly[Semiring[T]]
+    def add(r: Int, c: Int, v: T) {
+      rs += r
+      cs += c
+      vs += v
+    }
+
+    private val rs = new mutable.ArrayBuilder.ofInt()
+    rs.sizeHint(initNnz)
+    private val cs = new mutable.ArrayBuilder.ofInt()
+    cs.sizeHint(initNnz)
+    private val vs = implicitly[ClassManifest[T]].newArrayBuilder()
+    vs.sizeHint(initNnz)
+
+    def result():CSCMatrix[T] = {
+      val rs = this.rs.result()
+      val cs = this.cs.result()
+      val vs = this.vs.result()
+      // at most this many nnz
+      val nnz = rs.length
+
+      val order = sortedIndices(rs, cs)
+
+      val outRows = new Array[Int](nnz)
+      val outCols = new Array[Int](cols+1)
+      val outData = new Array[T](nnz)
+
+      if (cs.length > 0) {
+        outRows(0) = rs(order(0))
+        outData(0) = vs(order(0))
+      }
+      var outDataIndex = 0
+      var i = 1
+      var lastCol = cs(order(0))
+      while (i < nnz) {
+        val colsEqual = cs(order(i)) == lastCol
+
+        if (colsEqual && rs(order(i)) == rs(order(i-1))) {
+          // TODO: might need to codegen to make this fast.
+          outData(outDataIndex) = ring.+(outData(outDataIndex), vs(order(i)))
+        } else {
+          outDataIndex += 1
+          outRows(outDataIndex) = rs(order(i))
+          outData(outDataIndex) = vs(order(i))
+        }
+
+        // we need the outCols array to point to the
+        if(!colsEqual) {
+          while(lastCol < cs(order(i))) {
+            outCols(lastCol+1) = outDataIndex
+            lastCol += 1
+          }
+        }
+
+        i += 1
+      }
+      outDataIndex += 1
+
+      while(lastCol < cols) {
+        outCols(lastCol+1) = outDataIndex
+        lastCol += 1
+      }
+
+      val out = new CSCMatrix[T](outData, rows, cols, outCols, outDataIndex, outRows)
+      out.compact()
+      out
+    }
+
+    // returns indices of a lexicgraphic sort of cs then rs
+    private def sortedIndices(rs: Array[Int], cs: Array[Int]) = {
+      Array.range(0, rs.length).sortWith { (i, j) =>
+        (cs(i) < cs(j))  || (cs(i) == cs(j) && rs(i) < rs(j))
+      }
+    }
   }
 }
