@@ -67,7 +67,8 @@ object BreezeBuild extends Build {
   val netlib = "com.googlecode.netlib-java" % "netlib-java" % "0.9.3"
   val jblas = "uk.co.forward" % "jblas" % "1.2.0"
   val antiXML = "com.codecommit" % "anti-xml_2.9.1" % "0.3"
-  val commonDeps = Seq(paranamer, netlib, jblas, antiXML)
+  val liblinear = "de.bwaldvogel" % "liblinear" % "1.8"
+  val commonDeps = Seq(paranamer, netlib, jblas, antiXML, liblinear)
 
   def testDependencies = libraryDependencies <++= (scalaVersion) {
     sv =>
