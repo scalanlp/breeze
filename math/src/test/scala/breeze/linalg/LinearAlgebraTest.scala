@@ -184,4 +184,16 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
     // TODO, we seem to throw out VI... these seems bad...
   }
 
+  test("svd") {
+    val m = DenseMatrix((2.0,4.0),(1.0,3.0),(0.0,0.0),(0.0,0.0))
+    val (u, s, vt) = svd(m)
+    assert(u === DenseMatrix((-0.8174155604703632, -0.5760484367663208, 0.0,0.0),
+                             (-0.5760484367663208, 0.8174155604703633, 0.0, 0.0),
+                             (0.0,0.0,1.0,0.0),
+                             (0.0,0.0,0.0,1.0) ))
+    assert(s === DenseVector(5.464985704219043, 0.3659661906262578))
+    assert(vt === DenseMatrix((-0.4045535848337569,-0.9145142956773045),
+      (-0.9145142956773045,0.4045535848337569)))
+  }
+
 }

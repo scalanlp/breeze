@@ -526,12 +526,22 @@ trait LinearAlgebra {
     val work = new Array[Double](workSize)
     val info = new intW(0)
     val cm = copy(mat)
-    LAPACK.getInstance.dgesdd(
-      "A", m, n,
-      cm.data, scala.math.max(1,m),
-      S.data, U.data, scala.math.max(1,m),
-      Vt.data, scala.math.max(1,n),
-      work,work.length,iwork, info)
+
+    if (useNativeLibraries) {
+      val i = NativeBlas.dgesvd(
+        'A', 'A', m, n,
+        cm.data, 0, scala.math.max(1,m),
+        S.data, 0, U.data, 0, scala.math.max(1, m),
+        Vt.data, 0, scala.math.max(1,n))
+        info.`val` = i
+    } else {
+      LAPACK.getInstance.dgesdd(
+        "A", m, n,
+        cm.data, scala.math.max(1,m),
+        S.data, U.data, scala.math.max(1,m),
+        Vt.data, scala.math.max(1,n),
+        work,work.length,iwork, info)
+    }
 
     if (info.`val` > 0)
       throw new NotConvergedException(NotConvergedException.Iterations)
@@ -646,11 +656,17 @@ trait LinearAlgebra {
 
     val N = X.rows
     val info = new intW(0)
-    LAPACK.getInstance.dpotrf(
-      "L" /* lower triangular */,
-      N /* number of rows */, A.data, scala.math.max(1, N) /* LDA */,
-      info
-    )
+    if (useNativeLibraries) {
+      val i = NativeBlas.dpotrf(
+        'L', N, A.data, 0, scala.math.max(1,N))
+        info.`val` = i
+    } else {
+      LAPACK.getInstance.dpotrf(
+        "L" /* lower triangular */,
+        N /* number of rows */, A.data, scala.math.max(1, N) /* LDA */,
+        info
+      )
+    }
     // A value of info.`val` < 0 would tell us that the i-th argument
     // of the call to dpotrf was erroneous (where i == |info.`val`|).
     assert(info.`val` >= 0)
