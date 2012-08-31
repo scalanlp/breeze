@@ -16,10 +16,7 @@ object BuildSettings {
     scalaVersion := buildScalaVersion,
     scalacOptions ++= Seq("-optimize","-deprecation", "-Ydependent-method-types"),
     resolvers ++= Seq(
-      "Breeze Maven2" at "http://repo.scalanlp.org/repo",
-	// thanks clojure people!
-      "Clojars" at "http://www.clojars.org/repo"
-      // "ondex" at "http://ondex.rothamsted.bbsrc.ac.uk/nexus/content/groups/public"
+      "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
     ),
   publishMavenStyle := true,
   publishTo <<= version { (v: String) =>
@@ -65,7 +62,7 @@ object BreezeBuild extends Build {
 
   val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
   val netlib = "com.googlecode.netlib-java" % "netlib-java" % "0.9.3"
-  val jblas = "uk.co.forward" % "jblas" % "1.2.0"
+  val jblas = "org.scalanlp" % "jblas" % "1.2.1"
   val antiXML = "com.codecommit" % "anti-xml_2.9.1" % "0.3"
   val liblinear = "de.bwaldvogel" % "liblinear" % "1.8"
   val commonDeps = Seq(paranamer, netlib, jblas, antiXML, liblinear)
