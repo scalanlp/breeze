@@ -60,6 +60,26 @@ package object numerics extends UniversalFuncs {
     }
   }
 
+  /**
+   * Trigramma function. From Apache Commons Math.
+   *
+   * http://commons.apache.org/math/api-2.0/src-html/org/apache/commons/math/special/Gamma.html
+   */
+  val trigamma = new UFunc[Double, Double] {
+    val S_LIMIT = 1E-5
+    val C_LIMIT = 49
+    def apply(x: Double): Double = {
+      if (x > 0 && x <= S_LIMIT) {
+        1 / (x * x)
+      } else if (x >= C_LIMIT) {
+        val inv = 1 / (x * x)
+        1 / x + inv / 2 + inv / x * (1.0 / 6 - inv * (1.0 / 30 + inv / 42))
+      } else {
+        apply(x + 1) + 1 / (x * x)
+      }
+    }
+  }
+
   private val cof =  Array(76.18009172947146, -86.50532032941677,
     24.01409824083091,-1.231739572450155,
     0.1208650973866179e-2,-0.5395239384953e-5
