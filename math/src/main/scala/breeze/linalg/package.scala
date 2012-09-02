@@ -937,14 +937,12 @@ trait LinearAlgebra {
     val lwork     = scala.math.max(1, N)
     val work      = Array.ofDim[Double](lwork)
     val info      = new intW(0)
-    if(useNativeLibraries) {
-      LAPACK.getInstance.dgetri(
-        N, m.data, scala.math.max(1, N) /* LDA */,
-        ipiv,
-        work /* workspace */, lwork /* workspace size */,
-        info
-      )
-    }
+    LAPACK.getInstance.dgetri(
+      N, m.data, scala.math.max(1, N) /* LDA */,
+      ipiv,
+      work /* workspace */, lwork /* workspace size */,
+      info
+    )
     assert(info.`val` >= 0, "Malformed argument %d (LAPACK)".format(-info.`val`))
 
     if (info.`val` > 0)
