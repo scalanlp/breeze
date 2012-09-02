@@ -56,5 +56,13 @@ class GammaTest extends FunSuite with Checkers with MomentsTestBase[Double] with
         scale <- arbitrary[Double].map {x => math.abs(x) % 8.0 + 1.0}) yield new Gamma(shape,scale);
   }
 
+  test("Issue #11 on github") {
+    val mean = 2.834312
+    val meanOfLogs = -0.689661
+    val n=5.000000
+    val ss = Gamma.SufficientStatistic(n, meanOfLogs, mean)
+    val (k, theta) = Gamma.mle(ss)
+  }
+
 
 }  
