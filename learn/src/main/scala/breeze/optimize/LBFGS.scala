@@ -129,18 +129,17 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-5)
     }
 
     def ff(alpha: Double) = f.valueAt(x + dir * alpha)
-    val search = new BacktrackingLineSearch(cScale = if(iter < 1) 0.01 else 0.5, initAlpha = if (iter < .1) 1/norm(dir) else 1.0)
+    val search = new BacktrackingLineSearch(cScale = if(iter < 1) 0.01 else 0.5, initAlpha = if (iter < 1) 1/norm(dir) else 1.0)
     val iterates = search.iterations(ff)
     val targetState = iterates.find { case search.State(alpha,v) =>
       // sufficient descent
       var r = v < state.value + alpha * 0.0001 * normGradInDir
 
-      // I tried using the Wolfe conditions, but it makes the line
-      // search more likely to fail and otherwise rarely changes the
-      // line searcher. Not worth it.
       if(!r)  log.info(".")
-      else {
-//        r = math.abs(dir dot f.gradientAt(x + dir * alpha)) <= .9 * math.abs(normGradInDir)
+      // on the first few iterations, don't worry about sufficient slope reduction
+      // since we're trying to build the hessian approximation
+      else if(state.history.memStep.length >= m) {
+        r = math.abs(dir dot f.gradientAt(x + dir * alpha)) <= 0.95 * math.abs(normGradInDir)
         if(!r) log.info(",")
       }
 
