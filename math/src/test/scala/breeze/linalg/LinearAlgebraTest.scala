@@ -159,7 +159,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
   }
 
   test("mean and variance") {
-    val r = new Random()
+    val r = new Random(0)
     val data =  Array.fill(100000)(r.nextGaussian)
     val (m,v) = meanAndVariance(data)
     val (m2,v2) = meanAndVariance(data.iterator)
