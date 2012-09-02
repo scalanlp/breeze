@@ -5,6 +5,7 @@ import org.scalatest.prop.Checkers
 import breeze.linalg.DenseVector
 import breeze.optimize.{GradientCheckingDiffFunction, LBFGS}
 import breeze.util.logging.ConsoleLogging
+import scala.util.Random
 
 /**
  *
@@ -14,7 +15,7 @@ class NeuralNetworkTest extends FunSuite with Checkers {
 
   test("Can recover a simple quadratic function") {
     def f(x: Double) = x * x
-    val inputs = DenseVector.rand(100)
+    val inputs = DenseVector.rand(300, rand = new Random(0))
     val asVector = Array.tabulate(inputs.length)(i => DenseVector(inputs(i)))
     val outputs = inputs map f
     def loss(x: DenseVector[Double], y: Double) = ((x(0)-y)*(x(0)-y), DenseVector(2 * (x(0)-y)))
