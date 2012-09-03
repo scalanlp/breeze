@@ -396,6 +396,7 @@ trait UniversalFuncs {
   val round = UFunc(m.round _)
   val rint = UFunc(m.rint _)
   val signum = UFunc(m.signum(_:Double))
+  val abs = UFunc(m.abs(_:Double))
 
 
 }
