@@ -46,7 +46,7 @@ class OWLQN[T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit vspace: Mutable
       val v =  f.valueAt(newX)
       v + l1reg * norm(newX,1)
     }
-    val search = new BacktrackingLineSearch(initAlpha = if (iter < 1) 0.5/norm(state.grad) else 1.0)
+    val search = new BacktrackingLineSearch(initAlpha = if (iter < 1) 0.5/norm(state.grad) else 1.0, cScale= if(iter < 1) 0.1 else 0.5)
     val iterates = search.iterations(ff)
     val targetState = iterates.find { case search.State(alpha,v) =>
       // sufficient descent
