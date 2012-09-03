@@ -20,7 +20,7 @@ import breeze.storage.{DefaultArrayValue}
 import support.{CanZipMapValues, CanMapKeyValuePairs, CanCopy, CanSlice}
 import breeze.util.ArrayUtil
 import breeze.generic.{CanMapValues, URFunc, UReduceable}
-import breeze.math.{Ring, TensorSpace}
+import breeze.math.{Semiring, Ring, TensorSpace}
 import breeze.collection.mutable.SparseArray
 
 
@@ -147,6 +147,64 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
   }
 
 
+  /**
+   * Helper class for building a sparse vector.
+   * Sorts things when you want the result
+   * @param dim
+   */
+  class Builder[@spec(Int, Float, Double) V:ClassManifest:DefaultArrayValue:Semiring](var dim: Int) {
+    private val index = ClassManifest.Int.newArrayBuilder()
+    private val values = implicitly[ClassManifest[V]].newArrayBuilder()
+    private def ring = implicitly[Semiring[V]]
+
+
+    def add(i: Int, v: V) = {
+      index += i
+      values += v
+    }
+
+    def result() = {
+      val index = this.index.result()
+      val values = this.values.result()
+
+      val outIndex = new Array[Int](index.length)
+      val outValues = new Array[V](values.length)
+
+      val ord = sortedIndices(index)
+      if(ord.length > 0) {
+        outIndex(0) = index(ord(0))
+        outValues(0) = values(ord(0))
+      }
+      var i   = 1
+      var out = 0
+      while(i < ord.length) {
+        if(outIndex(out) == index(ord(i))) {
+          outValues(out) = ring.+(outValues(out), values(ord(i)))
+        } else {
+          out += 1
+          outIndex(out) = index(ord(i))
+          outValues(out) = values(ord(i))
+        }
+        i += 1
+      }
+
+      require(i == 0 || dim > outIndex.last, "Index out of bounds in constructing sparse vector.")
+      new SparseVector(outIndex, outValues, out, dim)
+    }
+
+    private def sortedIndices(indices: Array[Int]) = {
+      Array.range(0, indices.length).sortWith { (i, j) =>
+        (indices(i) < indices(j))
+      }
+    }
+
+
+
+  }
+
+
+
+  // implicits
   class CanCopySparseVector[@spec(Int, Float, Double) V:ClassManifest:DefaultArrayValue] extends CanCopy[SparseVector[V]] {
     def apply(v1: SparseVector[V]) = {
       v1.copy

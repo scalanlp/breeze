@@ -240,6 +240,16 @@ object LFMatrix {
     }
   }
 
+  implicit def canCreateZerosLike[L,TF](implicit zeros: CanCreateZerosLike[TF, TF]) = new CanCreateZerosLike[LFMatrix[L, TF], LFMatrix[L,TF]] {
+    def apply(from: LFMatrix[L, TF]) = {
+      val r = from.empty
+      for( (v, l) <- from.data.zipWithIndex) {
+        r(l) =zeros(v)
+      }
+      r
+    }
+  }
+
   implicit def lfReadWritable[L,TF](implicit formatL: DataSerialization.ReadWritable[L],
                                     formatTF: DataSerialization.ReadWritable[TF],
                                     zeros: CanCreateZerosLike[TF,TF], man: Manifest[TF]) = {

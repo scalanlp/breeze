@@ -16,10 +16,7 @@ object BuildSettings {
     scalaVersion := buildScalaVersion,
     scalacOptions ++= Seq("-optimize","-deprecation", "-Ydependent-method-types"),
     resolvers ++= Seq(
-      "Breeze Maven2" at "http://repo.scalanlp.org/repo",
-	// thanks clojure people!
-      "Clojars" at "http://www.clojars.org/repo"
-      // "ondex" at "http://ondex.rothamsted.bbsrc.ac.uk/nexus/content/groups/public"
+      "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
     ),
   publishMavenStyle := true,
   publishTo <<= version { (v: String) =>
@@ -65,10 +62,19 @@ object BreezeBuild extends Build {
 
   val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
   val netlib = "com.googlecode.netlib-java" % "netlib-java" % "0.9.3"
-  val jblas = "uk.co.forward" % "jblas" % "1.2.0"
+  val jblas = "org.scalanlp" % "jblas" % "1.2.1"
   val antiXML = "com.codecommit" % "anti-xml_2.9.1" % "0.3"
   val liblinear = "de.bwaldvogel" % "liblinear" % "1.8"
   val commonDeps = Seq(paranamer, netlib, jblas, antiXML, liblinear)
+
+  val vizDeps = Seq(
+    "jfree" % "jcommon" % "1.0.16",
+    "jfree" % "jfreechart" % "1.0.13",
+    "org.apache.xmlgraphics" % "xmlgraphics-commons" % "1.3.1", // for eps gen
+    // "org.apache.xmlgraphics" % "batik-dom" % "1.7",    // for svg gen
+    // "org.apache.xmlgraphics" % "batik-svggen" % "1.7", // for svg gen
+    "com.lowagie" % "itext" % "2.1.5" intransitive()  // for pdf gen
+  )
 
   def testDependencies = libraryDependencies <++= (scalaVersion) {
     sv =>
@@ -87,14 +93,14 @@ object BreezeBuild extends Build {
   // subprojects
   //
 
-  lazy val breeze = Project("breeze", file("."), settings = buildSettings ++ jacoco.settings) aggregate (math,process,learn,graphs) dependsOn (math,process,learn,graphs)
+  lazy val breeze = Project("breeze", file("."), settings = buildSettings ++ jacoco.settings) aggregate (math,process,learn,graphs) dependsOn (math,process,learn,graphs,viz)
   lazy val math = Project("breeze-math",file("math"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies ++ assemblySettings ++ jacoco.settings)
   lazy val process = Project("breeze-process",file("process"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies ++ assemblySettings ++ jacoco.settings) dependsOn(math)
   lazy val learn = Project("breeze-learn",file("learn") , settings = buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies++ assemblySettings ++ jacoco.settings) dependsOn(math,process)
   lazy val graphs = Project("breeze-graphs",file("graphs"), settings = buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies) dependsOn(math,process)
-  lazy val examples = Project("breeze-examples",file("examples"), settings = buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies) dependsOn(math,learn,graphs,process)
+  lazy val viz = Project("breeze-viz",file("viz"), settings = buildSettings ++ Seq (libraryDependencies ++= (commonDeps ++ vizDeps)) ++ testDependencies) dependsOn(math)
 
-    val _projects: Seq[ProjectReference] = Seq(math,process,learn)
+val _projects: Seq[ProjectReference] = Seq(math,process,learn,viz)
   lazy val doc = Project("doc", file("doc"))
       .settings((buildSettings ++ Seq(
         version := "1.0",
