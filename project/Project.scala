@@ -67,6 +67,15 @@ object BreezeBuild extends Build {
   val liblinear = "de.bwaldvogel" % "liblinear" % "1.8"
   val commonDeps = Seq(paranamer, netlib, jblas, antiXML, liblinear)
 
+  val vizDeps = Seq(
+    "jfree" % "jcommon" % "1.0.16",
+    "jfree" % "jfreechart" % "1.0.13",
+    "org.apache.xmlgraphics" % "xmlgraphics-commons" % "1.3.1", // for eps gen
+    // "org.apache.xmlgraphics" % "batik-dom" % "1.7",    // for svg gen
+    // "org.apache.xmlgraphics" % "batik-svggen" % "1.7", // for svg gen
+    "com.lowagie" % "itext" % "2.1.5" intransitive()  // for pdf gen
+  )
+
   def testDependencies = libraryDependencies <++= (scalaVersion) {
     sv =>
       Seq(
@@ -84,14 +93,14 @@ object BreezeBuild extends Build {
   // subprojects
   //
 
-  lazy val breeze = Project("breeze", file("."), settings = buildSettings ++ jacoco.settings) aggregate (math,process,learn,graphs) dependsOn (math,process,learn,graphs)
+  lazy val breeze = Project("breeze", file("."), settings = buildSettings ++ jacoco.settings) aggregate (math,process,learn,graphs) dependsOn (math,process,learn,graphs,viz)
   lazy val math = Project("breeze-math",file("math"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies ++ assemblySettings ++ jacoco.settings)
   lazy val process = Project("breeze-process",file("process"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies ++ assemblySettings ++ jacoco.settings) dependsOn(math)
   lazy val learn = Project("breeze-learn",file("learn") , settings = buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies++ assemblySettings ++ jacoco.settings) dependsOn(math,process)
   lazy val graphs = Project("breeze-graphs",file("graphs"), settings = buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies) dependsOn(math,process)
-  lazy val examples = Project("breeze-examples",file("examples"), settings = buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies) dependsOn(math,learn,graphs,process)
+  lazy val viz = Project("breeze-viz",file("viz"), settings = buildSettings ++ Seq (libraryDependencies ++= (commonDeps ++ vizDeps)) ++ testDependencies) dependsOn(math)
 
-    val _projects: Seq[ProjectReference] = Seq(math,process,learn)
+val _projects: Seq[ProjectReference] = Seq(math,process,learn,viz)
   lazy val doc = Project("doc", file("doc"))
       .settings((buildSettings ++ Seq(
         version := "1.0",
