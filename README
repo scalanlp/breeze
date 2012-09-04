@@ -6,10 +6,9 @@ The library currently consists of several parts:
 * breeze-math: Linear algebra and numerics routines
 * breeze-process: Libraries for managing datasets and job pipelines.
 * breeze-learn: Machine Learning and Optimization.
+* breeze-viz: Vizualization and plotting
 
 Possible future releases:
-* breeze-viz: Vizualization and plotting
-* breeze-parse: A statistical parsing library
 * breeze-fst: Finite state toolkit
 
 Breeze is the merger of the ScalaNLP and Scalala projects, because 
@@ -26,6 +25,7 @@ Contributions from:
   Jonathan Merritt <lancelet>
   Keith Stevens <fozziethebeat>
   Jason Baldridge <jasonbaldridge>
+  Timothy Hunter <tjhunter>
   And others (email me if you've contributed code and aren't listed)
 
 

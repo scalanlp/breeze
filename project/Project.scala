@@ -93,7 +93,7 @@ object BreezeBuild extends Build {
   // subprojects
   //
 
-  lazy val breeze = Project("breeze", file("."), settings = buildSettings ++ jacoco.settings) aggregate (math,process,learn,graphs) dependsOn (math,process,learn,graphs,viz)
+  lazy val breeze = Project("breeze", file("."), settings = buildSettings ++ jacoco.settings) aggregate (math,process,learn,graphs,viz) dependsOn (math,process,learn,graphs,viz)
   lazy val math = Project("breeze-math",file("math"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies ++ assemblySettings ++ jacoco.settings)
   lazy val process = Project("breeze-process",file("process"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies ++ assemblySettings ++ jacoco.settings) dependsOn(math)
   lazy val learn = Project("breeze-learn",file("learn") , settings = buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies++ assemblySettings ++ jacoco.settings) dependsOn(math,process)
@@ -105,6 +105,6 @@ val _projects: Seq[ProjectReference] = Seq(math,process,learn,viz)
       .settings((buildSettings ++ Seq(
         version := "1.0",
         unmanagedSourceDirectories in Compile <<= (_projects map (unmanagedSourceDirectories in _ in Compile)).join.apply {(s) => s.flatten} 
-  ) ++ Seq (libraryDependencies ++= commonDeps)):_*)
+  ) ++ Seq ( libraryDependencies ++= (commonDeps ++ vizDeps)):_*))
 }
 
