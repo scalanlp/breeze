@@ -117,6 +117,7 @@ case class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasi
       }
       x
     } else {
+      // from numpy distributions.c which is Copyright 2005 Robert Kern (robert.kern@gmail.com) under BSD
       val d = shape-1.0/3.0
       val c = 1.0 / math.sqrt(9.0* d)
       var r = 0.0
@@ -127,12 +128,12 @@ case class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasi
         do {
           x = rand.gaussian(0, 1).draw()
           v = 1.0 + c * x
-        } while(v < 0)
+        } while(v <= 0)
 
         v = v*v*v
         val x2 = x * x
         val u = rand.uniform.draw()
-        if (  (x2 * x2) < 108 * d  *u
+        if (  u < 1.0 - 0.0331 * (x2 * x2)
           || log(u) < 0.5*x2 + d* (1.0 - v+log(v))) {
           r = (scale*d*v)
           ok = true

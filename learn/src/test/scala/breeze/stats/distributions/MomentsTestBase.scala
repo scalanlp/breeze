@@ -36,13 +36,17 @@ trait MomentsTestBase[T] extends FunSuite with Checkers {
   val VARIANCE_TOLERANCE = 5E-2
   test("variance") {
     check(Prop.forAll { (distr: Measure[T] with Rand[T] with Moments[Double])=>
-       val sample = distr.sample(numSamples).map(asDouble _)
-       val variance = DescriptiveStats.variance(sample)
+    // try twice, and only fail if both fail.
+    // just a little more robustness...
+      Iterator.range(0,2).exists{ _ =>
+        val sample = distr.sample(numSamples).map(asDouble _)
+        val variance = DescriptiveStats.variance(sample)
 
-       if((variance - distr.variance).abs/(variance max 1) > VARIANCE_TOLERANCE) {
-         println("Expected " + distr.variance + " but got " + variance)
-         false
-       } else true
+        if((variance - distr.variance).abs/(variance max 1) > VARIANCE_TOLERANCE) {
+          println("Expected " + distr.variance + " but got " + variance)
+          false
+        } else true
+      }
     })
   }
 

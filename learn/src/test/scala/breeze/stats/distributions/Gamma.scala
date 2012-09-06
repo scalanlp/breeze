@@ -30,10 +30,8 @@ class GammaTest extends FunSuite with Checkers with MomentsTestBase[Double] with
 
   val expFam = Gamma
 
-  override val numSamples = 30000
+  override val numSamples = 40000
 
-
-  override val VARIANCE_TOLERANCE: Double = 2E-1
 
   implicit def arbParameter = Arbitrary {
     for(shape <- arbitrary[Double].map{_.abs % 200.0 + 0.2}; // Gamma pdf at 0 not defined when shape == 1

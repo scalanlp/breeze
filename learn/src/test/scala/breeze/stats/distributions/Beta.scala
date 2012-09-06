@@ -31,8 +31,8 @@ class BetaTest extends FunSuite with Checkers with MomentsTestBase[Double] /*wit
   import Arbitrary.arbitrary;
 
   def arbParameter = Arbitrary{
-    for( mean <- arbitrary[Double].map{x => math.abs(x) % 100.0 + 1.3};
-      std <- arbitrary[Double].map{x => math.abs(x) % 100 + 1.3}
+    for( mean <- arbitrary[Double].map{x => math.abs(x) % 100.0 + 1E-4};
+      std <- arbitrary[Double].map{x => math.abs(x) % 100 + 1E-4}
     ) yield (mean,std)
   }
 
