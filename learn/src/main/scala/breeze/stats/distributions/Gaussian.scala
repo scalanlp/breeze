@@ -74,8 +74,15 @@ object Gaussian extends ExponentialFamily[Gaussian,Double] {
 
   type Parameter = (Double,Double)
   import breeze.stats.distributions.{SufficientStatistic=>BaseSuffStat}
+
+  /**
+   * @param n running total of examples
+   * @param mean running mean
+   * @param M2 running variance * n
+   */
   final case class SufficientStatistic(n: Double, mean: Double, M2: Double) extends BaseSuffStat[SufficientStatistic] {
-    def *(weight: Double) = SufficientStatistic(n * weight, mean * weight, M2 * weight)
+    // multiply M2 (which is variance * n)
+    def *(weight: Double) = SufficientStatistic(n * weight, mean, M2 * weight)
 
     // Due to Chan
     def +(t: SufficientStatistic) = {

@@ -59,7 +59,7 @@ class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends Contin
 object Beta extends ExponentialFamily[Beta,Double] {
   type Parameter = (Double,Double)
   case class SufficientStatistic(n: Double, meanLog: Double, meanLog1M: Double) extends distributions.SufficientStatistic[SufficientStatistic]  {
-    def *(weight: Double) = SufficientStatistic(n*weight,meanLog * weight, meanLog1M * weight)
+    def *(weight: Double) = SufficientStatistic(n*weight,meanLog, meanLog1M)
     def +(t: SufficientStatistic) = {
       val delta = t.meanLog - meanLog
       val newMeanLog = meanLog + delta * (t.n /(t.n + n))

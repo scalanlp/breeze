@@ -153,7 +153,7 @@ object Gamma extends ExponentialFamily[Gamma,Double] {
   type Parameter = (Double,Double)
   import breeze.stats.distributions.{SufficientStatistic=>BaseSuffStat}
   case class SufficientStatistic(n: Double, meanOfLogs: Double, mean: Double) extends BaseSuffStat[SufficientStatistic] {
-    def *(weight: Double) = SufficientStatistic(n*weight, meanOfLogs*weight, mean * weight)
+    def *(weight: Double) = SufficientStatistic(n*weight, meanOfLogs, mean)
     def +(t: SufficientStatistic) = {
       val delta = t.mean - mean
       val newMean = mean + delta * (t.n /(t.n + n))
