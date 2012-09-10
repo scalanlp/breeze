@@ -361,3 +361,26 @@ class CompositeIndex[U](indices: Index[_ <:U]*) extends Index[(Int,U)] {
 
   override def size:Int = offsets.last
 }
+
+object EnumerationIndex {
+  def apply[T<:Enumeration](t: T): Index[t.Value] = new Index[t.Value] {
+    /**
+     * Returns the int id of the given element (0-based) or -1 if not
+     * found in the index.  This method never changes the index (even
+     * in MutableIndex).
+     */
+    def apply(x: t.Value): Int = x.id
+
+    /**
+     * Returns Some(t) if this int corresponds to some object,
+     * and None otherwise.
+     */
+    def unapply(i: Int): Option[t.Value] = Some[t.Value](t(i))
+
+    /** Returns the indexed items along with their indicies */
+    def pairs: Iterator[(t.Value, Int)] = for(v <- t.values.iterator) yield v -> v.id
+
+    def iterator: Iterator[t.Value] = t.values.iterator
+  }
+
+}

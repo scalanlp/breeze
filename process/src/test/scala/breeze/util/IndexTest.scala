@@ -58,4 +58,15 @@ class IndexTest extends FunSuite with Checkers {
     assert(comp(Right("e")) === 4)
     assert(comp(Left("e")) === -1)
   }
+
+  test("EnumerationIndex") {
+    object E extends Enumeration {
+      val A, B, C, D = Value
+    }
+    val index:Index[E.Value] = EnumerationIndex(E)
+
+    assert(index.get(0) === E.A)
+    assert(index.get(1) === E.B)
+    assert(index(E.A) === 0)
+  }
 }
