@@ -30,9 +30,9 @@ import breeze.collection.mutable.SparseArray
  */
 @SerialVersionUID(1)
 class SparseVector[@spec(Double,Int, Float) E](val array: SparseArray[E])
-                                                    (implicit value: DefaultArrayValue[E])
-                                                    extends StorageVector[E]
-                                                    with VectorLike[E, SparseVector[E]] with Serializable {
+                                              (implicit value: DefaultArrayValue[E])
+                                              extends StorageVector[E]
+                                              with VectorLike[E, SparseVector[E]] with Serializable {
 
   def this(index: Array[Int], data: Array[E], activeSize: Int, length: Int)(implicit value: DefaultArrayValue[E])  = this(new SparseArray(index, data, activeSize, length, value.value))
   def this(index: Array[Int], data: Array[E], length: Int)(implicit value: DefaultArrayValue[E])  = this(index, data, index.length, length)
@@ -150,13 +150,12 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
   /**
    * Helper class for building a sparse vector.
    * Sorts things when you want the result
-   * @param dim
+   * @param dim dimensionality of the sparsevector. can be changed if you need it to be.
    */
   class Builder[@spec(Int, Float, Double) V:ClassManifest:DefaultArrayValue:Semiring](var dim: Int) {
     private val index = ClassManifest.Int.newArrayBuilder()
     private val values = implicitly[ClassManifest[V]].newArrayBuilder()
     private def ring = implicitly[Semiring[V]]
-
 
     def add(i: Int, v: V) = {
       index += i
@@ -188,7 +187,7 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
         i += 1
       }
 
-      require(i == 0 || dim > outIndex.last, "Index out of bounds in constructing sparse vector.")
+      require(ord.length == 0 || dim > outIndex.last, "Index out of bounds in constructing sparse vector.")
       new SparseVector(outIndex, outValues, out, dim)
     }
 
