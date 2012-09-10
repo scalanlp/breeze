@@ -76,7 +76,7 @@ class LBFGSTest extends OptimizeTestBase {
       val targetValue = 3 / (1.0 / 2 + 1)
       val result = lbfgs.minimize(DiffFunction.withL2Regularization(f, 1.0),init)
       val ok = norm(result :- DenseVector.ones[Double](init.size) * targetValue,2)/result.size < 3E-3
-      ok || error(init.toString + " " + result)
+      ok || (throw new RuntimeException("Failed to find optimum for init " + init))
     }
 
     check(Prop.forAll(optimizeThis _))
