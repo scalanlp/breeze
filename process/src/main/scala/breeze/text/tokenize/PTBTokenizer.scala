@@ -32,7 +32,7 @@ import annotation.switch
  *
  * @author dlwh
  */
-class PTBTokenizer extends Tokenizer {
+object PTBTokenizer extends Tokenizer {
   def apply(text: String): Iterable[String] = {
     val out = new ArrayBuffer[String]
     var begTok = 0
@@ -310,13 +310,3 @@ class PTBTokenizer extends Tokenizer {
     }
   }
 }
-
-object PTBTokenizer  {
-
-  def apply() : PTBTokenizer = new PTBTokenizer
-
-  val _instance = apply()
-  def apply(in : String) : Iterable[String] = _instance.apply(in)
-}
-
-

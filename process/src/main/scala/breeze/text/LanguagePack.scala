@@ -25,7 +25,7 @@ object LanguagePack {
 
     def simpleTokenizer: Tokenizer = SimpleEnglishTokenizer()
 
-    def treebankTokenizer: Option[Tokenizer] = Some(new PTBTokenizer)
+    def treebankTokenizer: Option[Tokenizer] = Some(PTBTokenizer)
 
     def sentenceSegmenter: SentenceSegmenter = new JavaSentenceSegmenter(Locale.ENGLISH)
 
