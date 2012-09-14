@@ -4,7 +4,7 @@ import breeze.math.{MutableInnerProductSpace, TensorSpace}
 import breeze.linalg.operators.{OpMulMatrix, BinaryOp}
 
 /**
- * Solve argmin a dot x + x dot (B * x) for x,  subject to norm(x) <= value
+ * Solve argmin a dot x + .5 * x dot (B * x) for x,  subject to norm(x) <= value
  *
  * Based on the code from "Trust Region Newton Method for Large-Scale Logistic Regression"
  * * @author dlwh
@@ -72,6 +72,7 @@ class ConjugateGradient[T,M](maxNormValue: Double = Double.PositiveInfinity,
         rtr = newrtr
         converged = norm(r) <= tolerance || (iter > maxIterations && maxIterations > 0)
         iter += 1
+
       }
     }
 

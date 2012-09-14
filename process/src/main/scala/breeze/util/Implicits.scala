@@ -46,6 +46,14 @@ trait IteratorImplicits {
         !done && iter.hasNext;
       }
     }
+
+    def last = {
+      var x = iter.next()
+      while(iter.hasNext) {
+        x = iter.next()
+      }
+      x
+    }
   }
 
   implicit def scEnrichIterator[T](iter: Iterator[T]) = new RichIterator[T](iter);
