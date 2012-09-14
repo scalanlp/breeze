@@ -36,6 +36,7 @@ object NNetClassifier {
       val processedData = data.toArray.par.map { d =>
         fEncoder.encodeDense(d.features) -> labels(d.label)
       }
+      // log loss error function log(  input(gold)/(sum of all outputs))
       def errorFun(input: DenseVector[Double], label: Int) = {
         val sm = softmax(input)
         val obj = sm -  input(label)
@@ -47,7 +48,7 @@ object NNetClassifier {
       val obj = new NNObjective(processedData.toIndexedSeq, errorFun, layers)
       val guess = obj.initialWeightVector
       val weights = opt.minimize(obj,guess)
-      new NNetClassifier(obj.extract(weights), fEncoder.encodeDense _, labels)
+      new NNetClassifier(obj.extract(weights), {fEncoder.encodeDense(_, true)}, labels)
     }
   }
 }

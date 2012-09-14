@@ -74,13 +74,12 @@ trait Encoder[T] {
   /**
    * Encodes a DoubleCounter as a Vector[Double]. All elements in the counter must be in the index.
    */
-  def encodeDense(c: Tensor[T,Double]):DenseVector[Double] = {
+  def encodeDense(c: Tensor[T,Double], ignoreOutOfIndex:Boolean = false):DenseVector[Double] = {
     val vec = mkDenseVector()
     for( (k,v) <- c.active.pairs) {
       val ki = index(k)
-      if(ki < 0) throw new RuntimeException("Error, not in index: " + k)
-
-      vec(ki) = v
+      if(ki < 0) {if(!ignoreOutOfIndex) throw new RuntimeException("Error, not in index: " + k)}
+      else  vec(ki) = v
     }
     vec
   }
@@ -88,24 +87,26 @@ trait Encoder[T] {
   /**
    * Encodes a DoubleCounter as a SparseVector[Double]. All elements in the counter must be in the index.
    */
-  def encodeSparse(c: Tensor[T,Double]):SparseVector[Double] = {
-    val vec = mkSparseVector()
+  def encodeSparse(c: Tensor[T,Double], ignoreOutOfIndex: Boolean = false):SparseVector[Double] = {
+    val vec = new SparseVector.Builder[Double](index.size)
+    vec.sizeHint(c.activeSize)
     for( (k,v) <- c.active.pairs) {
-      vec(index(k)) = v
+      val ki = index(k)
+      if(ki < 0) {if(!ignoreOutOfIndex) throw new RuntimeException("Error, not in index: " + k)}
+      else  vec.add(ki, v)
     }
-    vec
+    vec.result()
   }
 
   /**
    * Encodes a DoubleCounter as a Vector[Double]. All elements in the counter must be in the index.
    */
-  def encode(c: Tensor[T,Double]):Vector[Double] = {
+  def encode(c: Tensor[T,Double], ignoreOutOfIndex: Boolean = false):Vector[Double] = {
     val vec = mkVector()
     for( (k,v) <- c.active.pairs) {
       val ki = index(k)
-      if(ki < 0) throw new RuntimeException("Error, not in index: " + k)
-
-      vec(ki) = v
+      if(ki < 0) {if(!ignoreOutOfIndex) throw new RuntimeException("Error, not in index: " + k)}
+      else  vec(ki) = v
     }
     vec
   }
