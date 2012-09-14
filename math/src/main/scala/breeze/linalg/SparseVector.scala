@@ -157,9 +157,15 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
     private val values = implicitly[ClassManifest[V]].newArrayBuilder()
     private def ring = implicitly[Semiring[V]]
 
+
     def add(i: Int, v: V) = {
       index += i
       values += v
+    }
+
+    def sizeHint(nnz: Int) {
+      index.sizeHint(nnz)
+      values.sizeHint(nnz)
     }
 
     def result() = {
