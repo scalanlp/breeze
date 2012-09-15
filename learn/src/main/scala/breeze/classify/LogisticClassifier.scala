@@ -24,6 +24,7 @@ import breeze.optimize._
 import breeze.optimize.FirstOrderMinimizer.OptParams
 import breeze.math.MutableCoordinateSpace
 import breeze.util.Index
+import breeze.util.logging.ConsoleLogging
 
 /**
  * A multi-class logistic/softmax/maxent classifier.
@@ -65,9 +66,12 @@ object LogisticClassifier {
 
       val obj = new CachedBatchDiffFunction(objective(data.toIndexedSeq, labelIndex))(LFMatrix.canCopy(copy))
 
+//      val adjusted = SecondOrderFunction.empirical(obj)
+//      val adjusted = new FisherDiffFunction(obj)
+//        val weights = new TruncatedNewtonMinimizer[LFMatrix[L, TF], EmpiricalHessian[LFMatrix[L, TF]]](l2Regularization = 1.0).minimize(adjusted, guess)
       val weights = opt.minimize(obj,guess)(LFMatrix.coordSpace)
 //
-//      val weights = new LBFGS[LFMatrix[L, TF]]().minimize(obj, guess)
+//      val weights = (new LBFGS[LFMatrix[L, TF]]() with ConsoleLogging).minimize(DiffFunction.withL2Regularization(obj, 1.0), guess)
 
       new LinearClassifier(weights.unindexed,Counter[L,Double]())
     }

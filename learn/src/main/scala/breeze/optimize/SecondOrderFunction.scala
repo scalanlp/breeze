@@ -1,6 +1,6 @@
 package breeze.optimize
 
-import breeze.math.{MutableInnerProductSpace, MutableVectorSpace, VectorSpace}
+import breeze.math.{InnerProductSpace, MutableInnerProductSpace, MutableVectorSpace, VectorSpace}
 import breeze.linalg.operators.{OpMulMatrix, BinaryOp}
 import breeze.stats.distributions.Rand
 import collection.immutable.BitSet
@@ -34,8 +34,23 @@ object SecondOrderFunction {
         (v,grad,h)
       }
     }
+  }
 
-
+  def minibatchEmpirical[T](f: BatchDiffFunction[T], eps: Double = 1E-5, batchSize: Int = 30000)(implicit vs: InnerProductSpace[T, Double]):SecondOrderFunction[T, EmpiricalHessian[T]] = {
+    new SecondOrderFunction[T, EmpiricalHessian[T]] {
+      /** Calculates the value, the gradient, and the Hessian at a point */
+      def calculate2(x: T): (Double, T, EmpiricalHessian[T]) = {
+        val subset = Rand.subsetsOfSize(f.fullRange, batchSize).draw()
+        val (v, grad) = f.calculate(x)
+        val newf = new DiffFunction[T] {
+          def calculate(x: T): (Double, T) = {
+            f.calculate(x, subset)
+          }
+        }
+        val h = new EmpiricalHessian(newf, x, newf.gradientAt(x), eps)
+        (v,grad,h)
+      }
+    }
   }
 }
 
@@ -74,19 +89,19 @@ object EmpiricalHessian {
 }
 
 class FisherDiffFunction[T](df: BatchDiffFunction[T],
-                            gradientsToKeep: Int = 100)
+                            gradientsToKeep: Int = 1000)
                            (implicit vs: MutableInnerProductSpace[T, Double]) extends SecondOrderFunction[T, FisherMatrix[T]] {
   import vs._
   /** Calculates the value, the gradient, and an approximation to the Fisher approximation to the Hessian */
   def calculate2(x: T): (Double, T, FisherMatrix[T]) = {
     val subset = Rand.subsetsOfSize(df.fullRange, gradientsToKeep).draw()
     val toKeep = subset.map(i => df.calculate(x, IndexedSeq(i))).seq
-    val (v, otherGradient) = df.calculate(x, df.fullRange.filterNot(BitSet.empty ++ subset))
+    val (v, otherGradient) = df.calculate(x)
 
-    val fullGrad = toKeep.view.map(_._2).foldLeft(otherGradient)(_ += _)
-    val fullV = toKeep.view.map(_._1).foldLeft(v)(_ + _)
+//    val fullGrad = toKeep.view.map(_._2).foldLeft(otherGradient * (df.fullRange.size - subset.size).toDouble )(_ += _ ) /df.fullRange.size.toDouble
+//    val fullV = toKeep.view.map(_._1).foldLeft(v * (df.fullRange.size - subset.size) )(_ + _) / df.fullRange.size
 
-    (fullV, fullGrad, new FisherMatrix(toKeep.map(_._2).toIndexedSeq))
+    (v, otherGradient, new FisherMatrix(toKeep.map(_._2).toIndexedSeq))
   }
 }
 
@@ -101,7 +116,7 @@ class FisherDiffFunction[T](df: BatchDiffFunction[T],
 class FisherMatrix[T](grads: IndexedSeq[T])(implicit vs: MutableInnerProductSpace[T, Double]) {
   import vs._
   def *(t: T):T = {
-    grads.map(g => g * (g dot t)).reduceLeft(_ += _)
+    grads.view.map(g => g * (g dot t)).reduceLeft(_ += _) /= grads.length.toDouble
   }
 }
 

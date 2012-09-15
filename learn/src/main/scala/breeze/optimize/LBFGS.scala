@@ -33,7 +33,7 @@ import breeze.linalg._
  *    pp. 503-528.
  *  * 
  * 
- * @param maxIter: maximum number of iterations, or &lt;= 0 for unlimited
+ * @param maxIter: maximum number of iterations, or <= 0 for unlimited
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
 class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-5)

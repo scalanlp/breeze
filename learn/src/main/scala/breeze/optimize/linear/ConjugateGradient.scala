@@ -4,13 +4,15 @@ import breeze.math.{MutableInnerProductSpace, TensorSpace}
 import breeze.linalg.operators.{OpMulMatrix, BinaryOp}
 
 /**
- * Solve argmin a dot x + .5 * x dot (B * x) for x,  subject to norm(x) <= value
+ * Solve argmin (a dot x + .5 * x dot (B * x) + .5 * normSquaredPenalty * (x dot x)) for x
+ * subject to norm(x) <= maxNormValue
  *
  * Based on the code from "Trust Region Newton Method for Large-Scale Logistic Regression"
  * * @author dlwh
  */
 class ConjugateGradient[T,M](maxNormValue: Double = Double.PositiveInfinity,
                              maxIterations: Int = -1,
+                             normSquaredPenalty: Double = 0,
                              tolerance: Double = 1E-5)
                             (implicit space: MutableInnerProductSpace[T, Double], mult: BinaryOp[M, T, OpMulMatrix, T]) {
   import space._
@@ -28,24 +30,24 @@ class ConjugateGradient[T,M](maxNormValue: Double = Double.PositiveInfinity,
    */
   def minimizeAndReturnResidual(a: T, B: M, initX: T): (T,T) = {
 
-    var r = a - mult(B, initX)
+    var r = a - mult(B, initX) - initX * normSquaredPenalty
     var d = copy(r)
-    var x = zeros(d)
+    var x = copy(initX)
 
     var rtr = r dot r
     var iter = 0
 
 
-    var converged = false
+    var converged = norm(r) <= tolerance
     while(!converged) {
       val Bd = mult(B, d)
-      val alpha = math.pow(norm(r), 2.0) / (d dot Bd)
+      val dtd = d dot d
+      val alpha = math.pow(norm(r), 2.0) / (d.dot(Bd) + normSquaredPenalty * (dtd))
       val nextX = x + d * alpha
 
       if( norm(nextX) >= maxNormValue) {
         val xtd = x dot d
         val xtx = x dot x
-        val dtd = d dot d
 
         val normSquare = maxNormValue * maxNormValue
 
@@ -56,15 +58,16 @@ class ConjugateGradient[T,M](maxNormValue: Double = Double.PositiveInfinity,
           (radius - xtd) / (dtd)
         }
 
+        assert(!alphaNext.isNaN, xtd +" " + normSquare + " " + xtx + "  " + xtd + " " + radius + " " +  dtd)
         x += d * alphaNext
-        r -= Bd * alphaNext
+        r -= (Bd + d * normSquaredPenalty) * alphaNext
 
 
         converged = true
 
       } else {
         x := nextX
-        r -= Bd * alpha
+        r -= (Bd + d * normSquaredPenalty) * alpha
         val newrtr = r dot r
         val beta = newrtr / rtr
         d *= beta
@@ -76,6 +79,7 @@ class ConjugateGradient[T,M](maxNormValue: Double = Double.PositiveInfinity,
       }
     }
 
+    println(iter)
     x -> r
 
 
