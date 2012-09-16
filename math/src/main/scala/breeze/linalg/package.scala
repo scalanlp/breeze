@@ -56,7 +56,7 @@ package object linalg extends LinearAlgebra {
       new NativeBlas
       true
     } catch {
-      case x: UnsatisfiedLinkError => false
+      case x: Throwable => false
     }
   }
 
@@ -404,6 +404,7 @@ package object linalg extends LinearAlgebra {
 package linalg {
 
 import math.Ring
+import support.NativeBlasDeferrer
 
 /**
  * Basic linear algebraic operations.
@@ -458,6 +459,7 @@ trait LinearAlgebra {
     // Find the needed workspace
     val worksize = Array.ofDim[Double](1)
     val info = new intW(0)
+
     LAPACK.getInstance.dgeev(
       "N", "V", n,
       Array.empty[Double], scala.math.max(1,n),
@@ -479,7 +481,7 @@ trait LinearAlgebra {
     val A = DenseMatrix.zeros[Double](n, n)
     A := m
     if (useNativeLibraries) {
-      val i = NativeBlas.dgeev(
+      val i = NativeBlasDeferrer.dgeev(
         'N', 'V', n,
         A.data, 0, scala.math.max(1,n),
         Wr.data, 0, Wi.data, 0,
@@ -528,7 +530,7 @@ trait LinearAlgebra {
     val cm = copy(mat)
 
     if (useNativeLibraries) {
-      val i = NativeBlas.dgesvd(
+      val i = NativeBlasDeferrer.dgesvd(
         'A', 'A', m, n,
         cm.data, 0, scala.math.max(1,m),
         S.data, 0, U.data, 0, scala.math.max(1, m),
@@ -657,7 +659,7 @@ trait LinearAlgebra {
     val N = X.rows
     val info = new intW(0)
     if (useNativeLibraries) {
-      val i = NativeBlas.dpotrf(
+      val i = NativeBlasDeferrer.dpotrf(
         'L', N, A.data, 0, scala.math.max(1,N))
         info.`val` = i
     } else {
@@ -834,7 +836,7 @@ trait LinearAlgebra {
     val work  = Array.ofDim[Double](lwork)
     val info  = new intW(0)
     if(useNativeLibraries) {
-      val i = NativeBlas.dsyev(if(rightEigenvectors) 'V' else 'N', 'L',
+      val i = NativeBlasDeferrer.dsyev(if(rightEigenvectors) 'V' else 'N', 'L',
         N, A.data, 0, scala.math.max(1, N),
         evs.data, 0)
 
@@ -883,7 +885,7 @@ trait LinearAlgebra {
     val ipiv = Array.ofDim[Int](scala.math.min(M,N))
     val info = new intW(0)
     if(useNativeLibraries) {
-      val i = NativeBlas.dgetrf(M, N, Y.data, 0, scala.math.max(1, M), ipiv, 0)
+      val i = NativeBlasDeferrer.dgetrf(M, N, Y.data, 0, scala.math.max(1, M), ipiv, 0)
       info.`val` = i
     } else {
       LAPACK.getInstance.dgetrf(
