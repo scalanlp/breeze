@@ -21,6 +21,7 @@ import math._
 import breeze.numerics.{lgamma,digamma}
 import breeze.linalg._
 import breeze.optimize.{DiffFunction, LBFGS}
+import breeze.numerics
 
 /**
  * The Beta distribution, which is the conjugate prior for the Bernoulli distribution
@@ -44,10 +45,51 @@ class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends Contin
   private val aGamma = new Gamma(a,1)(rand)
   private val bGamma = new Gamma(b,1)(rand)
   
-  override def draw() = {
-    val ad = aGamma.get
-    val bd = bGamma.get
-    (ad) / (ad + bd)
+  override def draw():Double = {
+    // from tjhunter, a corrected version of numpy's rk_beta sampling in mtrand/distributions.c
+    if(a <= .5 && b <= .5) {
+      while (true) {
+        val U = rand.uniform.draw()
+        val V = rand.uniform.draw()
+        if (U > 0 && V > 0) {
+          // Performing the computations in the log-domain
+          // The exponentiation may fail if a or b are really small
+          //        val X = math.pow(U, 1.0 / a)
+          val logX = math.log(U) / a
+          //        val Y = math.pow(V, 1.0 / b)
+          val logY=  math.log(V) / b
+          val logSum = numerics.logSum(logX, logY)
+          if (logSum <= 0.0) {
+            return math.exp(logX - logSum)
+          }
+        } else {
+          throw new RuntimeException("Underflow!")
+        }
+      }
+      throw new RuntimeException("Shouldn't be here.")
+    } else if(a <= 1 && b <= 1) {
+      while (true) {
+        val U = rand.uniform.draw()
+        val V = rand.uniform.draw()
+        if (U > 0 && V > 0) {
+          // Performing the computations in the log-domain
+          // The exponentiation may fail if a or b are really small
+          val X = math.pow(U, 1.0 / a)
+          val Y = math.pow(V, 1.0 / b)
+          val sum = X + Y
+          if (sum <= 1.0) {
+            return X / sum
+          }
+        } else {
+          throw new RuntimeException("Underflow!")
+        }
+      }
+      throw new RuntimeException("Shouldn't be here.")
+    } else {
+      val ad = aGamma.get
+      val bd = bGamma.get
+      (ad) / (ad + bd)
+    }
   }
   
   def mean = a / (a + b)

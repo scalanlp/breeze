@@ -55,5 +55,25 @@ class BetaTest extends FunSuite with Checkers with MomentsTestBase[Double] /*wit
         b <- arbitrary[Double].map {x => math.abs(x) % 8.0 + 1.1}) yield new Beta(a,b);
   }
 
+  test("#15 test 1: Small a and b") {
+    val a = 0.0014364182264741652
+    val b = 0.0024709345620239687
+    val n = 100000
+    val samples = new Beta(a,b).sample(n)
+    val mean = samples.sum / n
+    val true_mean = a / (a+b)
+    assert(math.abs(mean - true_mean) < 1e-2, (mean, true_mean))
+  }
+
+  test("#15 test 2: Smaller a and b") {
+    val a = 7.672385302336129E-4
+    val b = 0.5028709732819038
+    val n = 100000
+    val samples = new Beta(a,b).sample(n)
+    val mean = samples.sum / n
+    val true_mean = a / (a+b)
+    assert(math.abs(mean - true_mean) < 1e-2, (mean, true_mean))
+  }
+
 
 }  
