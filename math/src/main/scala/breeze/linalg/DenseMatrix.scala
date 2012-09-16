@@ -113,6 +113,13 @@ extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
     else if(majorStride == idealMajorStride) f(data, offset, 1, rows*cols, {_ => {true}})
     else f(valuesIterator)
   }
+
+  def copy: DenseMatrix[V] = {
+    implicit val man = ClassManifest.fromClass[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+    val result = new DenseMatrix[V](rows, cols, new Array[V](size))
+    result := this
+    result
+  }
 }
 
 object DenseMatrix extends LowPriorityDenseMatrix
@@ -334,9 +341,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
 
   implicit def canCopyDenseMatrix[V:ClassManifest] = new CanCopy[DenseMatrix[V]] {
     def apply(v1: DenseMatrix[V]) = {
-      val result = DenseMatrix.zeros(v1.rows, v1.cols)
-      result := v1
-      result
+      v1.copy
     }
   }
 
