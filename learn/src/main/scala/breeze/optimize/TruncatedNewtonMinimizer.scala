@@ -15,9 +15,9 @@ import breeze.util.logging.{ConsoleLogging, ConfiguredLogging}
  */
 class TruncatedNewtonMinimizer[T, H](maxIterations: Int = -1,
                                      tolerance: Double = 1E-6,
-                                     l2Regularization: Double = 1)
+                                     l2Regularization: Double = 0)
                                     (implicit vs: MutableCoordinateSpace[T, Double],
-                                     mult: BinaryOp[H, T, OpMulMatrix, T]) extends Minimizer[T, SecondOrderFunction[T, H]] with ConsoleLogging {
+                                     mult: BinaryOp[H, T, OpMulMatrix, T]) extends Minimizer[T, SecondOrderFunction[T, H]] with ConfiguredLogging {
 
   def minimize(f: SecondOrderFunction[T, H], initial: T): T = iterations(f, initial).takeUpToWhere(_.converged).last.x
 

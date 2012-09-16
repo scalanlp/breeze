@@ -79,7 +79,6 @@ class ConjugateGradient[T,M](maxNormValue: Double = Double.PositiveInfinity,
       }
     }
 
-    println(iter)
     x -> r
 
 
