@@ -15,11 +15,15 @@ import breeze.util.logging.{ConsoleLogging, ConfiguredLogging}
  */
 class TruncatedNewtonMinimizer[T, H](maxIterations: Int = -1,
                                      tolerance: Double = 1E-6,
-                                     l2Regularization: Double = 0)
+                                     l2Regularization: Double = 0,
+                                     m: Int = 0)
                                     (implicit vs: MutableCoordinateSpace[T, Double],
                                      mult: BinaryOp[H, T, OpMulMatrix, T]) extends Minimizer[T, SecondOrderFunction[T, H]] with ConfiguredLogging {
 
   def minimize(f: SecondOrderFunction[T, H], initial: T): T = iterations(f, initial).takeUpToWhere(_.converged).last.x
+
+
+
 
   import vs._
   case class State(iter: Int,
@@ -30,7 +34,7 @@ class TruncatedNewtonMinimizer[T, H](maxIterations: Int = -1,
                    grad: T,
                    h: H,
                    adjFval: Double,
-                   adjGrad: T) {
+                   adjGrad: T, history: History) {
     def converged = (iter >= maxIterations && maxIterations > 0) || norm(adjGrad) <= tolerance * initialGNorm
   }
 
@@ -41,7 +45,7 @@ class TruncatedNewtonMinimizer[T, H](maxIterations: Int = -1,
     State(0, initDelta, initDelta,
       initial, v, grad, h,
       v + 0.5 * l2Regularization * (initial dot initial),
-      adjgrad)
+      adjgrad, initialHistory(f, initial))
   }
 
   // from tron
@@ -64,8 +68,8 @@ class TruncatedNewtonMinimizer[T, H](maxIterations: Int = -1,
         maxIterations = 400,
         normSquaredPenalty = l2Regularization)
       // todo see if we can use something other than zeros as an initializer?
-      val initStep = if(iter > 3 && norm(adjGrad) <= delta) -adjGrad else zeros(adjGrad)
-      val (step, residual) = cg.minimizeAndReturnResidual(-grad - x * l2Regularization,  h, initStep)
+      val initStep = chooseDescentDirection(state)
+      val (step, residual) = cg.minimizeAndReturnResidual(-adjGrad,  h, initStep)
       val x_new = x + step
 
       val gs = adjGrad dot step
@@ -96,7 +100,8 @@ class TruncatedNewtonMinimizer[T, H](maxIterations: Int = -1,
 
       if (actualReduction > eta0 * predictedReduction) {
         log.info("Accept %d d=%.2E newv=%.4E newG=%.4E resNorm=%.2E pred=%.2E actual=%.2E".format(iter, delta, adjNewV, norm(adjNewG), norm(residual), predictedReduction, actualReduction))
-        State(iter + 1, initialGNorm, newDelta, x_new, newv, newg, newh, adjNewV, adjNewG)
+        val newHistory = updateHistory(x_new, adjNewG, adjNewV, state)
+        State(iter + 1, initialGNorm, newDelta, x_new, newv, newg, newh, adjNewV, adjNewG, newHistory)
       } else {
         log.info("Reject %d d=%.2f resNorm=%.2f pred=%.2f actual=%.2f".format(iter, delta, norm(residual), predictedReduction, actualReduction))
         state.copy(iter + 1, delta = newDelta)
@@ -104,6 +109,65 @@ class TruncatedNewtonMinimizer[T, H](maxIterations: Int = -1,
 
     }
 
+  }
+
+  // lbfgs stuff for preconditioning
+    // LBFGS history
+  case class History(memStep: IndexedSeq[T] = IndexedSeq.empty,
+                     memGradDelta: IndexedSeq[T] = IndexedSeq.empty)
+
+  protected def initialHistory(f: DiffFunction[T], x: T):History = new History()
+  protected def chooseDescentDirection(state: State):T = {
+    val grad = state.adjGrad
+    val memStep = state.history.memStep
+    val memGradDelta = state.history.memGradDelta
+    val diag = if(memStep.size > 0) {
+      computeDiagScale(memStep.head,memGradDelta.head)
+    } else {
+      1.0 / norm(grad)
+    }
+
+    val dir:T = copy(grad)
+    val as = new Array[Double](m)
+    val rho = new Array[Double](m)
+
+    for(i <- (memStep.length-1) to 0 by -1) {
+      rho(i) = (memStep(i) dot memGradDelta(i))
+      as(i) = (memStep(i) dot dir)/rho(i)
+      if(as(i).isNaN) {
+        throw new NaNHistory
+      }
+      dir -= memGradDelta(i) * as(i)
+    }
+
+    dir *= diag
+
+    for(i <- 0 until memStep.length) {
+      val beta = (memGradDelta(i) dot dir)/rho(i)
+      dir += memStep(i) * (as(i) - beta)
+    }
+
+    dir *= -1.0
+    dir
+  }
+
+
+  private def computeDiagScale(prevStep: T, prevGradStep: T):Double = {
+    val sy = prevStep dot prevGradStep
+    val yy = prevGradStep dot prevGradStep
+    if(sy < 0 || sy.isNaN) throw new NaNHistory
+    sy/yy
+  }
+
+  protected def updateHistory(newX: T, newGrad: T, newVal: Double, oldState: State): History = {
+    val gradDelta : T = (newGrad :- oldState.adjGrad)
+    val step:T = (newX - oldState.x)
+
+    val memStep = (step +: oldState.history.memStep) take m
+    val memGradDelta = (gradDelta +: oldState.history.memGradDelta) take m
+
+
+    new History(memStep,memGradDelta)
   }
 
 }

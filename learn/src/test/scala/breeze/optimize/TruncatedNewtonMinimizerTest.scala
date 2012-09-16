@@ -26,7 +26,7 @@ import breeze.linalg._
 class TruncatedNewtonMinimizerTest extends OptimizeTestBase {
 
   test("optimize a simple multivariate gaussian") {
-    val lbfgs = new TruncatedNewtonMinimizer[DenseVector[Double], EmpiricalHessian[DenseVector[Double]]](100)
+    val lbfgs = new TruncatedNewtonMinimizer[DenseVector[Double], EmpiricalHessian[DenseVector[Double]]](100, tolerance=1E-8)
 
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
@@ -37,7 +37,7 @@ class TruncatedNewtonMinimizerTest extends OptimizeTestBase {
 
       val empF = SecondOrderFunction.empirical(f)
       val result = lbfgs.minimize(empF, init)
-      if(norm(result - 3.0, 2) < 1E-10) {
+      if(norm(result - 3.0, 2) < 1E-7) {
         true
       } else {
         println("Bad result " + result + " for " + init)
