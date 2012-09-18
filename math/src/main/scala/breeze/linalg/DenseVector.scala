@@ -178,6 +178,9 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
                       with DenseVectorOps_SparseVector_Double
                       with DenseVectorOps_SparseVector_Float
                       with DenseVectorOps_SparseVector_Int
+                      with DenseVectorOps_HashVector_Double
+                      with DenseVectorOps_HashVector_Float
+                      with DenseVectorOps_HashVector_Int
                       with DenseVector_SpecialOps {
   def zeros[@spec(Double, Float, Int) V: ClassManifest](size: Int) = apply(new Array[V](size))
   def apply[@spec(Double, Float, Int) V](values: Array[V]) = new DenseVector(values)
@@ -379,6 +382,10 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
     new BinaryUpdateOp[DenseVector[V], DenseVector[V], breeze.linalg.operators.OpSet] {
       def apply(a: DenseVector[V], b: DenseVector[V]) {
         require(b.length == a.length, "Vectors must be the same length!")
+        if(a.stride == b.stride) {
+          System.arraycopy(b.data, b.offset, a.data, a.offset, a.length)
+          return
+        }
 
         val ad = a.data
         val bd = b.data

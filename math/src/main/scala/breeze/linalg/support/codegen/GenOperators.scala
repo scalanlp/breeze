@@ -193,10 +193,11 @@ object GenOperators {
 
   def binaryUpdateV_S_loop(op: (String,String)=>String, zeroIsIdempotent: Boolean):String = {
     """
-    for( (i,v) <- a.%s) {
-      a(i) = %s
-    }
-    """.format(if(zeroIsIdempotent) "activeIterator" else "iterator", op("v","b")).replaceAll("    ","        ")
+    if(!%s || b != 0)
+      for( (i,v) <- a.iterator) {
+        a(i) = %s
+      }
+    """.format(zeroIsIdempotent, op("v","b")).replaceAll("    ","        ")
   }
 
   def binaryUpdateDM_scalar_loop(op: (String, String)=>String):String = {
@@ -481,7 +482,7 @@ object GenDVSVSpecialOps extends App {
     """.format(op("adata(j)","b(i)")).replaceAll("    ","        ")
   }
 
-  def gen(sparseType: String, out: PrintStream) {
+  def gen(sparseType: String, shortName: String, out: PrintStream) {
     import out._
 
     println("package breeze.linalg")
@@ -511,7 +512,7 @@ object GenDVSVSpecialOps extends App {
 
 
       // dot product
-      val dotName = "canDotProductDV_SV_" + scalar
+      val dotName = "canDotProductDV_" + shortName + "_" + scalar
       println(genBinaryOperator(dotName, vector, svector, OpMulInner, scalar){
         """require(b.length == a.length, "Vectors must be the same length!")
 
@@ -541,8 +542,11 @@ object GenDVSVSpecialOps extends App {
   }
 
   val out = new PrintStream(new FileOutputStream(new File("math/src/main/scala/breeze/linalg/DenseVectorSVOps.scala")))
-  gen("SparseVector", out)
+  gen("SparseVector", "SV", out)
+  val out2 = new PrintStream(new FileOutputStream(new File("math/src/main/scala/breeze/linalg/DenseVectorHVOps.scala")))
+  gen("HashVector", "HV", out2)
   out.close()
+  out2.close()
 
 }
 
@@ -1011,6 +1015,12 @@ object GenVectorRegistries extends App {
 
   val out = new File("math/src/main/scala/breeze/linalg/VectorOps.scala")
   genHomogeneous("Vector", "breeze.linalg", out)(
+    GenOperators.binaryUpdateDV_V_loop _,
+    GenOperators.binaryUpdateV_S_loop _
+  )
+
+  val out2 = new File("math/src/main/scala/breeze/linalg/HashVectorOps.scala")
+  genHomogeneous("HashVector", "breeze.linalg", out2)(
     GenOperators.binaryUpdateDV_V_loop _,
     GenOperators.binaryUpdateV_S_loop _
   )

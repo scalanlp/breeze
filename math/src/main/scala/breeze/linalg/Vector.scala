@@ -51,6 +51,13 @@ trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]]{
   def keysIterator = Iterator.range(0, size)
 
 
+  override def equals(p1: Any) = p1 match {
+    case x: Vector[_] =>
+        this.length == x.length &&
+          (valuesIterator sameElements x.valuesIterator)
+    case _ => false
+  }
+
 
 
   /** Returns the k-norm of this Vector. */

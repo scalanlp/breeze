@@ -15,7 +15,6 @@ package breeze.collection.mutable
  limitations under the License.
 */
 
-import collection.mutable.BitSet
 import breeze.storage.{Storage, ConfigurableDefault, DefaultArrayValue}
 import java.util
 
@@ -26,7 +25,7 @@ import java.util
  *
  * @author dlwh
  */
-final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] private (protected var _index: Array[Int],
+final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] private[mutable] (protected var _index: Array[Int],
                                 protected var _data: Array[Elem],
                                  protected var load: Int,
                                  val size: Int,
@@ -74,7 +73,7 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
 
   def contains(i: Int) = index(locate(i)) >= 0
 
-  def isActive(i: Int) = contains(i)
+  def isActive(i: Int) = index(i) >= 0
 
   def allVisitableIndicesActive = false
 
@@ -144,6 +143,13 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
   override def iterableSize = index.length
 
   override def toString: String = activeIterator.mkString("OpenAddressHashArray(",", ", ")")
+
+  def copy:OpenAddressHashArray[Elem] = {
+    new OpenAddressHashArray[Elem](util.Arrays.copyOf(_index, _index.length),
+      breeze.util.ArrayUtil.copyOf(_data, _data.length),
+      load, size, default
+    )
+  }
 }
 
 object OpenAddressHashArray {

@@ -38,7 +38,7 @@ import java.util.Arrays
  *
  * @author dlwh
  */
-trait ConfigurableDefault[V] extends Serializable { outer =>
+trait ConfigurableDefault[@specialized V] extends Serializable { outer =>
   def value(implicit default: DefaultArrayValue[V]):V
 
   def fillArray(arr: Array[V], v: V) = arr.asInstanceOf[AnyRef] match {

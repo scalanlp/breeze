@@ -16,109 +16,40 @@ trait VectorOps_Double { this: Vector.type =>
   }
         
 
-  class canMulScalarInto_V_V_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Vector[Double], breeze.linalg.operators.OpMulScalar] {
+  class canAddInto_V_V_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Vector[Double], breeze.linalg.operators.OpAdd] {
     override def bindingMissing(a: Vector[Double], b: Vector[Double]) {
       require(b.length == a.length, "Vectors must be the same length!")
 
-        for( (i,v) <- b.iterator) {
-          a(i) = a(i) * v
+        for( (i,v) <- b.activeIterator) {
+          a(i) = a(i) + v
         }
         
     }
   }
-  val canMulScalarInto_V_V_Double = new canMulScalarInto_V_V_Double ()
-  implicit def canMulScalarInto_V_V_Double_def[A <: Vector[Double], B <: Vector[Double]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar] = (
-    canMulScalarInto_V_V_Double.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar]]
+  val canAddInto_V_V_Double = new canAddInto_V_V_Double ()
+  implicit def canAddInto_V_V_Double_def[A <: Vector[Double], B <: Vector[Double]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd] = (
+    canAddInto_V_V_Double.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd]]
   )
 
-  implicit val canMulScalar_V_V_Double: BinaryRegistry[Vector[Double], Vector[Double], OpMulScalar, Vector[Double]] = pureFromUpdate_Double(canMulScalarInto_V_V_Double)
+  implicit val canAdd_V_V_Double: BinaryRegistry[Vector[Double], Vector[Double], OpAdd, Vector[Double]] = pureFromUpdate_Double(canAddInto_V_V_Double)
 
 
-  class canMulScalarInto_V_S_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Double, breeze.linalg.operators.OpMulScalar] {
+  class canAddInto_V_S_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Double, breeze.linalg.operators.OpAdd] {
     override def bindingMissing(a: Vector[Double], b: Double) {
       
-        for( (i,v) <- a.iterator) {
-          a(i) = v * b
-        }
+        if(!true || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = v + b
+          }
         
     }
   }
-  val canMulScalarInto_V_S_Double = new canMulScalarInto_V_S_Double ()
-  implicit def canMulScalarInto_V_S_Double_def[A <: Vector[Double], B <: Double]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar] = (
-    canMulScalarInto_V_S_Double.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar]]
+  val canAddInto_V_S_Double = new canAddInto_V_S_Double ()
+  implicit def canAddInto_V_S_Double_def[A <: Vector[Double], B <: Double]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd] = (
+    canAddInto_V_S_Double.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd]]
   )
 
-  implicit val canMulScalar_V_S_Double: BinaryRegistry[Vector[Double], Double, OpMulScalar, Vector[Double]] = pureFromUpdate_Double(canMulScalarInto_V_S_Double)
-
-
-  class canModInto_V_V_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Vector[Double], breeze.linalg.operators.OpMod] {
-    override def bindingMissing(a: Vector[Double], b: Vector[Double]) {
-      require(b.length == a.length, "Vectors must be the same length!")
-
-        for( (i,v) <- b.iterator) {
-          a(i) = a(i) % v
-        }
-        
-    }
-  }
-  val canModInto_V_V_Double = new canModInto_V_V_Double ()
-  implicit def canModInto_V_V_Double_def[A <: Vector[Double], B <: Vector[Double]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod] = (
-    canModInto_V_V_Double.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod]]
-  )
-
-  implicit val canMod_V_V_Double: BinaryRegistry[Vector[Double], Vector[Double], OpMod, Vector[Double]] = pureFromUpdate_Double(canModInto_V_V_Double)
-
-
-  class canModInto_V_S_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Double, breeze.linalg.operators.OpMod] {
-    override def bindingMissing(a: Vector[Double], b: Double) {
-      
-        for( (i,v) <- a.iterator) {
-          a(i) = v % b
-        }
-        
-    }
-  }
-  val canModInto_V_S_Double = new canModInto_V_S_Double ()
-  implicit def canModInto_V_S_Double_def[A <: Vector[Double], B <: Double]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod] = (
-    canModInto_V_S_Double.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod]]
-  )
-
-  implicit val canMod_V_S_Double: BinaryRegistry[Vector[Double], Double, OpMod, Vector[Double]] = pureFromUpdate_Double(canModInto_V_S_Double)
-
-
-  class canSetInto_V_V_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Vector[Double], breeze.linalg.operators.OpSet] {
-    override def bindingMissing(a: Vector[Double], b: Vector[Double]) {
-      require(b.length == a.length, "Vectors must be the same length!")
-
-        for( (i,v) <- b.iterator) {
-          a(i) = v
-        }
-        
-    }
-  }
-  val canSetInto_V_V_Double = new canSetInto_V_V_Double ()
-  implicit def canSetInto_V_V_Double_def[A <: Vector[Double], B <: Vector[Double]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet] = (
-    canSetInto_V_V_Double.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet]]
-  )
-
-  implicit val canSet_V_V_Double: BinaryRegistry[Vector[Double], Vector[Double], OpSet, Vector[Double]] = pureFromUpdate_Double(canSetInto_V_V_Double)
-
-
-  class canSetInto_V_S_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Double, breeze.linalg.operators.OpSet] {
-    override def bindingMissing(a: Vector[Double], b: Double) {
-      
-        for( (i,v) <- a.iterator) {
-          a(i) = b
-        }
-        
-    }
-  }
-  val canSetInto_V_S_Double = new canSetInto_V_S_Double ()
-  implicit def canSetInto_V_S_Double_def[A <: Vector[Double], B <: Double]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet] = (
-    canSetInto_V_S_Double.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet]]
-  )
-
-  implicit val canSet_V_S_Double: BinaryRegistry[Vector[Double], Double, OpSet, Vector[Double]] = pureFromUpdate_Double(canSetInto_V_S_Double)
+  implicit val canAdd_V_S_Double: BinaryRegistry[Vector[Double], Double, OpAdd, Vector[Double]] = pureFromUpdate_Double(canAddInto_V_S_Double)
 
 
   class canSubInto_V_V_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Vector[Double], breeze.linalg.operators.OpSub] {
@@ -142,9 +73,10 @@ trait VectorOps_Double { this: Vector.type =>
   class canSubInto_V_S_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Double, breeze.linalg.operators.OpSub] {
     override def bindingMissing(a: Vector[Double], b: Double) {
       
-        for( (i,v) <- a.activeIterator) {
-          a(i) = v - b
-        }
+        if(!true || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = v - b
+          }
         
     }
   }
@@ -159,9 +91,10 @@ trait VectorOps_Double { this: Vector.type =>
   class canMulMatrixInto_V_S_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Double, breeze.linalg.operators.OpMulMatrix] {
     override def bindingMissing(a: Vector[Double], b: Double) {
       
-        for( (i,v) <- a.iterator) {
-          a(i) = v * b
-        }
+        if(!false || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = v * b
+          }
         
     }
   }
@@ -171,6 +104,42 @@ trait VectorOps_Double { this: Vector.type =>
   )
 
   implicit val canMulMatrix_V_S_Double: BinaryRegistry[Vector[Double], Double, OpMulMatrix, Vector[Double]] = pureFromUpdate_Double(canMulMatrixInto_V_S_Double)
+
+
+  class canSetInto_V_V_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Vector[Double], breeze.linalg.operators.OpSet] {
+    override def bindingMissing(a: Vector[Double], b: Vector[Double]) {
+      require(b.length == a.length, "Vectors must be the same length!")
+
+        for( (i,v) <- b.iterator) {
+          a(i) = v
+        }
+        
+    }
+  }
+  val canSetInto_V_V_Double = new canSetInto_V_V_Double ()
+  implicit def canSetInto_V_V_Double_def[A <: Vector[Double], B <: Vector[Double]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet] = (
+    canSetInto_V_V_Double.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet]]
+  )
+
+  implicit val canSet_V_V_Double: BinaryRegistry[Vector[Double], Vector[Double], OpSet, Vector[Double]] = pureFromUpdate_Double(canSetInto_V_V_Double)
+
+
+  class canSetInto_V_S_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Double, breeze.linalg.operators.OpSet] {
+    override def bindingMissing(a: Vector[Double], b: Double) {
+      
+        if(!false || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = b
+          }
+        
+    }
+  }
+  val canSetInto_V_S_Double = new canSetInto_V_S_Double ()
+  implicit def canSetInto_V_S_Double_def[A <: Vector[Double], B <: Double]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet] = (
+    canSetInto_V_S_Double.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet]]
+  )
+
+  implicit val canSet_V_S_Double: BinaryRegistry[Vector[Double], Double, OpSet, Vector[Double]] = pureFromUpdate_Double(canSetInto_V_S_Double)
 
 
   class canDivInto_V_V_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Vector[Double], breeze.linalg.operators.OpDiv] {
@@ -194,9 +163,10 @@ trait VectorOps_Double { this: Vector.type =>
   class canDivInto_V_S_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Double, breeze.linalg.operators.OpDiv] {
     override def bindingMissing(a: Vector[Double], b: Double) {
       
-        for( (i,v) <- a.iterator) {
-          a(i) = v / b
-        }
+        if(!false || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = v / b
+          }
         
     }
   }
@@ -208,39 +178,40 @@ trait VectorOps_Double { this: Vector.type =>
   implicit val canDiv_V_S_Double: BinaryRegistry[Vector[Double], Double, OpDiv, Vector[Double]] = pureFromUpdate_Double(canDivInto_V_S_Double)
 
 
-  class canAddInto_V_V_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Vector[Double], breeze.linalg.operators.OpAdd] {
+  class canMulScalarInto_V_V_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Vector[Double], breeze.linalg.operators.OpMulScalar] {
     override def bindingMissing(a: Vector[Double], b: Vector[Double]) {
       require(b.length == a.length, "Vectors must be the same length!")
 
-        for( (i,v) <- b.activeIterator) {
-          a(i) = a(i) + v
+        for( (i,v) <- b.iterator) {
+          a(i) = a(i) * v
         }
         
     }
   }
-  val canAddInto_V_V_Double = new canAddInto_V_V_Double ()
-  implicit def canAddInto_V_V_Double_def[A <: Vector[Double], B <: Vector[Double]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd] = (
-    canAddInto_V_V_Double.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd]]
+  val canMulScalarInto_V_V_Double = new canMulScalarInto_V_V_Double ()
+  implicit def canMulScalarInto_V_V_Double_def[A <: Vector[Double], B <: Vector[Double]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar] = (
+    canMulScalarInto_V_V_Double.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar]]
   )
 
-  implicit val canAdd_V_V_Double: BinaryRegistry[Vector[Double], Vector[Double], OpAdd, Vector[Double]] = pureFromUpdate_Double(canAddInto_V_V_Double)
+  implicit val canMulScalar_V_V_Double: BinaryRegistry[Vector[Double], Vector[Double], OpMulScalar, Vector[Double]] = pureFromUpdate_Double(canMulScalarInto_V_V_Double)
 
 
-  class canAddInto_V_S_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Double, breeze.linalg.operators.OpAdd] {
+  class canMulScalarInto_V_S_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Double, breeze.linalg.operators.OpMulScalar] {
     override def bindingMissing(a: Vector[Double], b: Double) {
       
-        for( (i,v) <- a.activeIterator) {
-          a(i) = v + b
-        }
+        if(!false || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = v * b
+          }
         
     }
   }
-  val canAddInto_V_S_Double = new canAddInto_V_S_Double ()
-  implicit def canAddInto_V_S_Double_def[A <: Vector[Double], B <: Double]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd] = (
-    canAddInto_V_S_Double.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd]]
+  val canMulScalarInto_V_S_Double = new canMulScalarInto_V_S_Double ()
+  implicit def canMulScalarInto_V_S_Double_def[A <: Vector[Double], B <: Double]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar] = (
+    canMulScalarInto_V_S_Double.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar]]
   )
 
-  implicit val canAdd_V_S_Double: BinaryRegistry[Vector[Double], Double, OpAdd, Vector[Double]] = pureFromUpdate_Double(canAddInto_V_S_Double)
+  implicit val canMulScalar_V_S_Double: BinaryRegistry[Vector[Double], Double, OpMulScalar, Vector[Double]] = pureFromUpdate_Double(canMulScalarInto_V_S_Double)
 
 
   class canPowInto_V_V_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Vector[Double], breeze.linalg.operators.OpPow] {
@@ -264,9 +235,10 @@ trait VectorOps_Double { this: Vector.type =>
   class canPowInto_V_S_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Double, breeze.linalg.operators.OpPow] {
     override def bindingMissing(a: Vector[Double], b: Double) {
       
-        for( (i,v) <- a.iterator) {
-          a(i) = scala.math.pow(v, b)
-        }
+        if(!false || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = scala.math.pow(v, b)
+          }
         
     }
   }
@@ -276,6 +248,42 @@ trait VectorOps_Double { this: Vector.type =>
   )
 
   implicit val canPow_V_S_Double: BinaryRegistry[Vector[Double], Double, OpPow, Vector[Double]] = pureFromUpdate_Double(canPowInto_V_S_Double)
+
+
+  class canModInto_V_V_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Vector[Double], breeze.linalg.operators.OpMod] {
+    override def bindingMissing(a: Vector[Double], b: Vector[Double]) {
+      require(b.length == a.length, "Vectors must be the same length!")
+
+        for( (i,v) <- b.iterator) {
+          a(i) = a(i) % v
+        }
+        
+    }
+  }
+  val canModInto_V_V_Double = new canModInto_V_V_Double ()
+  implicit def canModInto_V_V_Double_def[A <: Vector[Double], B <: Vector[Double]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod] = (
+    canModInto_V_V_Double.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod]]
+  )
+
+  implicit val canMod_V_V_Double: BinaryRegistry[Vector[Double], Vector[Double], OpMod, Vector[Double]] = pureFromUpdate_Double(canModInto_V_V_Double)
+
+
+  class canModInto_V_S_Double private[linalg] () extends BinaryUpdateRegistry[Vector[Double], Double, breeze.linalg.operators.OpMod] {
+    override def bindingMissing(a: Vector[Double], b: Double) {
+      
+        if(!false || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = v % b
+          }
+        
+    }
+  }
+  val canModInto_V_S_Double = new canModInto_V_S_Double ()
+  implicit def canModInto_V_S_Double_def[A <: Vector[Double], B <: Double]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod] = (
+    canModInto_V_S_Double.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod]]
+  )
+
+  implicit val canMod_V_S_Double: BinaryRegistry[Vector[Double], Double, OpMod, Vector[Double]] = pureFromUpdate_Double(canModInto_V_S_Double)
 
 
   class canDotProductV_Double private[linalg] () extends BinaryRegistry[Vector[Double], Vector[Double], breeze.linalg.operators.OpMulInner, Double] {
@@ -310,109 +318,40 @@ trait VectorOps_Float { this: Vector.type =>
   }
         
 
-  class canMulScalarInto_V_V_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Vector[Float], breeze.linalg.operators.OpMulScalar] {
+  class canAddInto_V_V_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Vector[Float], breeze.linalg.operators.OpAdd] {
     override def bindingMissing(a: Vector[Float], b: Vector[Float]) {
       require(b.length == a.length, "Vectors must be the same length!")
 
-        for( (i,v) <- b.iterator) {
-          a(i) = a(i) * v
+        for( (i,v) <- b.activeIterator) {
+          a(i) = a(i) + v
         }
         
     }
   }
-  val canMulScalarInto_V_V_Float = new canMulScalarInto_V_V_Float ()
-  implicit def canMulScalarInto_V_V_Float_def[A <: Vector[Float], B <: Vector[Float]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar] = (
-    canMulScalarInto_V_V_Float.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar]]
+  val canAddInto_V_V_Float = new canAddInto_V_V_Float ()
+  implicit def canAddInto_V_V_Float_def[A <: Vector[Float], B <: Vector[Float]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd] = (
+    canAddInto_V_V_Float.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd]]
   )
 
-  implicit val canMulScalar_V_V_Float: BinaryRegistry[Vector[Float], Vector[Float], OpMulScalar, Vector[Float]] = pureFromUpdate_Float(canMulScalarInto_V_V_Float)
+  implicit val canAdd_V_V_Float: BinaryRegistry[Vector[Float], Vector[Float], OpAdd, Vector[Float]] = pureFromUpdate_Float(canAddInto_V_V_Float)
 
 
-  class canMulScalarInto_V_S_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Float, breeze.linalg.operators.OpMulScalar] {
+  class canAddInto_V_S_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Float, breeze.linalg.operators.OpAdd] {
     override def bindingMissing(a: Vector[Float], b: Float) {
       
-        for( (i,v) <- a.iterator) {
-          a(i) = v * b
-        }
+        if(!true || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = v + b
+          }
         
     }
   }
-  val canMulScalarInto_V_S_Float = new canMulScalarInto_V_S_Float ()
-  implicit def canMulScalarInto_V_S_Float_def[A <: Vector[Float], B <: Float]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar] = (
-    canMulScalarInto_V_S_Float.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar]]
+  val canAddInto_V_S_Float = new canAddInto_V_S_Float ()
+  implicit def canAddInto_V_S_Float_def[A <: Vector[Float], B <: Float]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd] = (
+    canAddInto_V_S_Float.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd]]
   )
 
-  implicit val canMulScalar_V_S_Float: BinaryRegistry[Vector[Float], Float, OpMulScalar, Vector[Float]] = pureFromUpdate_Float(canMulScalarInto_V_S_Float)
-
-
-  class canModInto_V_V_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Vector[Float], breeze.linalg.operators.OpMod] {
-    override def bindingMissing(a: Vector[Float], b: Vector[Float]) {
-      require(b.length == a.length, "Vectors must be the same length!")
-
-        for( (i,v) <- b.iterator) {
-          a(i) = a(i) % v
-        }
-        
-    }
-  }
-  val canModInto_V_V_Float = new canModInto_V_V_Float ()
-  implicit def canModInto_V_V_Float_def[A <: Vector[Float], B <: Vector[Float]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod] = (
-    canModInto_V_V_Float.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod]]
-  )
-
-  implicit val canMod_V_V_Float: BinaryRegistry[Vector[Float], Vector[Float], OpMod, Vector[Float]] = pureFromUpdate_Float(canModInto_V_V_Float)
-
-
-  class canModInto_V_S_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Float, breeze.linalg.operators.OpMod] {
-    override def bindingMissing(a: Vector[Float], b: Float) {
-      
-        for( (i,v) <- a.iterator) {
-          a(i) = v % b
-        }
-        
-    }
-  }
-  val canModInto_V_S_Float = new canModInto_V_S_Float ()
-  implicit def canModInto_V_S_Float_def[A <: Vector[Float], B <: Float]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod] = (
-    canModInto_V_S_Float.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod]]
-  )
-
-  implicit val canMod_V_S_Float: BinaryRegistry[Vector[Float], Float, OpMod, Vector[Float]] = pureFromUpdate_Float(canModInto_V_S_Float)
-
-
-  class canSetInto_V_V_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Vector[Float], breeze.linalg.operators.OpSet] {
-    override def bindingMissing(a: Vector[Float], b: Vector[Float]) {
-      require(b.length == a.length, "Vectors must be the same length!")
-
-        for( (i,v) <- b.iterator) {
-          a(i) = v
-        }
-        
-    }
-  }
-  val canSetInto_V_V_Float = new canSetInto_V_V_Float ()
-  implicit def canSetInto_V_V_Float_def[A <: Vector[Float], B <: Vector[Float]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet] = (
-    canSetInto_V_V_Float.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet]]
-  )
-
-  implicit val canSet_V_V_Float: BinaryRegistry[Vector[Float], Vector[Float], OpSet, Vector[Float]] = pureFromUpdate_Float(canSetInto_V_V_Float)
-
-
-  class canSetInto_V_S_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Float, breeze.linalg.operators.OpSet] {
-    override def bindingMissing(a: Vector[Float], b: Float) {
-      
-        for( (i,v) <- a.iterator) {
-          a(i) = b
-        }
-        
-    }
-  }
-  val canSetInto_V_S_Float = new canSetInto_V_S_Float ()
-  implicit def canSetInto_V_S_Float_def[A <: Vector[Float], B <: Float]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet] = (
-    canSetInto_V_S_Float.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet]]
-  )
-
-  implicit val canSet_V_S_Float: BinaryRegistry[Vector[Float], Float, OpSet, Vector[Float]] = pureFromUpdate_Float(canSetInto_V_S_Float)
+  implicit val canAdd_V_S_Float: BinaryRegistry[Vector[Float], Float, OpAdd, Vector[Float]] = pureFromUpdate_Float(canAddInto_V_S_Float)
 
 
   class canSubInto_V_V_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Vector[Float], breeze.linalg.operators.OpSub] {
@@ -436,9 +375,10 @@ trait VectorOps_Float { this: Vector.type =>
   class canSubInto_V_S_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Float, breeze.linalg.operators.OpSub] {
     override def bindingMissing(a: Vector[Float], b: Float) {
       
-        for( (i,v) <- a.activeIterator) {
-          a(i) = v - b
-        }
+        if(!true || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = v - b
+          }
         
     }
   }
@@ -453,9 +393,10 @@ trait VectorOps_Float { this: Vector.type =>
   class canMulMatrixInto_V_S_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Float, breeze.linalg.operators.OpMulMatrix] {
     override def bindingMissing(a: Vector[Float], b: Float) {
       
-        for( (i,v) <- a.iterator) {
-          a(i) = v * b
-        }
+        if(!false || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = v * b
+          }
         
     }
   }
@@ -465,6 +406,42 @@ trait VectorOps_Float { this: Vector.type =>
   )
 
   implicit val canMulMatrix_V_S_Float: BinaryRegistry[Vector[Float], Float, OpMulMatrix, Vector[Float]] = pureFromUpdate_Float(canMulMatrixInto_V_S_Float)
+
+
+  class canSetInto_V_V_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Vector[Float], breeze.linalg.operators.OpSet] {
+    override def bindingMissing(a: Vector[Float], b: Vector[Float]) {
+      require(b.length == a.length, "Vectors must be the same length!")
+
+        for( (i,v) <- b.iterator) {
+          a(i) = v
+        }
+        
+    }
+  }
+  val canSetInto_V_V_Float = new canSetInto_V_V_Float ()
+  implicit def canSetInto_V_V_Float_def[A <: Vector[Float], B <: Vector[Float]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet] = (
+    canSetInto_V_V_Float.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet]]
+  )
+
+  implicit val canSet_V_V_Float: BinaryRegistry[Vector[Float], Vector[Float], OpSet, Vector[Float]] = pureFromUpdate_Float(canSetInto_V_V_Float)
+
+
+  class canSetInto_V_S_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Float, breeze.linalg.operators.OpSet] {
+    override def bindingMissing(a: Vector[Float], b: Float) {
+      
+        if(!false || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = b
+          }
+        
+    }
+  }
+  val canSetInto_V_S_Float = new canSetInto_V_S_Float ()
+  implicit def canSetInto_V_S_Float_def[A <: Vector[Float], B <: Float]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet] = (
+    canSetInto_V_S_Float.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet]]
+  )
+
+  implicit val canSet_V_S_Float: BinaryRegistry[Vector[Float], Float, OpSet, Vector[Float]] = pureFromUpdate_Float(canSetInto_V_S_Float)
 
 
   class canDivInto_V_V_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Vector[Float], breeze.linalg.operators.OpDiv] {
@@ -488,9 +465,10 @@ trait VectorOps_Float { this: Vector.type =>
   class canDivInto_V_S_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Float, breeze.linalg.operators.OpDiv] {
     override def bindingMissing(a: Vector[Float], b: Float) {
       
-        for( (i,v) <- a.iterator) {
-          a(i) = v / b
-        }
+        if(!false || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = v / b
+          }
         
     }
   }
@@ -502,39 +480,40 @@ trait VectorOps_Float { this: Vector.type =>
   implicit val canDiv_V_S_Float: BinaryRegistry[Vector[Float], Float, OpDiv, Vector[Float]] = pureFromUpdate_Float(canDivInto_V_S_Float)
 
 
-  class canAddInto_V_V_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Vector[Float], breeze.linalg.operators.OpAdd] {
+  class canMulScalarInto_V_V_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Vector[Float], breeze.linalg.operators.OpMulScalar] {
     override def bindingMissing(a: Vector[Float], b: Vector[Float]) {
       require(b.length == a.length, "Vectors must be the same length!")
 
-        for( (i,v) <- b.activeIterator) {
-          a(i) = a(i) + v
+        for( (i,v) <- b.iterator) {
+          a(i) = a(i) * v
         }
         
     }
   }
-  val canAddInto_V_V_Float = new canAddInto_V_V_Float ()
-  implicit def canAddInto_V_V_Float_def[A <: Vector[Float], B <: Vector[Float]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd] = (
-    canAddInto_V_V_Float.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd]]
+  val canMulScalarInto_V_V_Float = new canMulScalarInto_V_V_Float ()
+  implicit def canMulScalarInto_V_V_Float_def[A <: Vector[Float], B <: Vector[Float]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar] = (
+    canMulScalarInto_V_V_Float.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar]]
   )
 
-  implicit val canAdd_V_V_Float: BinaryRegistry[Vector[Float], Vector[Float], OpAdd, Vector[Float]] = pureFromUpdate_Float(canAddInto_V_V_Float)
+  implicit val canMulScalar_V_V_Float: BinaryRegistry[Vector[Float], Vector[Float], OpMulScalar, Vector[Float]] = pureFromUpdate_Float(canMulScalarInto_V_V_Float)
 
 
-  class canAddInto_V_S_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Float, breeze.linalg.operators.OpAdd] {
+  class canMulScalarInto_V_S_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Float, breeze.linalg.operators.OpMulScalar] {
     override def bindingMissing(a: Vector[Float], b: Float) {
       
-        for( (i,v) <- a.activeIterator) {
-          a(i) = v + b
-        }
+        if(!false || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = v * b
+          }
         
     }
   }
-  val canAddInto_V_S_Float = new canAddInto_V_S_Float ()
-  implicit def canAddInto_V_S_Float_def[A <: Vector[Float], B <: Float]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd] = (
-    canAddInto_V_S_Float.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd]]
+  val canMulScalarInto_V_S_Float = new canMulScalarInto_V_S_Float ()
+  implicit def canMulScalarInto_V_S_Float_def[A <: Vector[Float], B <: Float]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar] = (
+    canMulScalarInto_V_S_Float.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar]]
   )
 
-  implicit val canAdd_V_S_Float: BinaryRegistry[Vector[Float], Float, OpAdd, Vector[Float]] = pureFromUpdate_Float(canAddInto_V_S_Float)
+  implicit val canMulScalar_V_S_Float: BinaryRegistry[Vector[Float], Float, OpMulScalar, Vector[Float]] = pureFromUpdate_Float(canMulScalarInto_V_S_Float)
 
 
   class canPowInto_V_V_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Vector[Float], breeze.linalg.operators.OpPow] {
@@ -558,9 +537,10 @@ trait VectorOps_Float { this: Vector.type =>
   class canPowInto_V_S_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Float, breeze.linalg.operators.OpPow] {
     override def bindingMissing(a: Vector[Float], b: Float) {
       
-        for( (i,v) <- a.iterator) {
-          a(i) = scala.math.pow(v, b).toFloat
-        }
+        if(!false || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = scala.math.pow(v, b).toFloat
+          }
         
     }
   }
@@ -570,6 +550,42 @@ trait VectorOps_Float { this: Vector.type =>
   )
 
   implicit val canPow_V_S_Float: BinaryRegistry[Vector[Float], Float, OpPow, Vector[Float]] = pureFromUpdate_Float(canPowInto_V_S_Float)
+
+
+  class canModInto_V_V_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Vector[Float], breeze.linalg.operators.OpMod] {
+    override def bindingMissing(a: Vector[Float], b: Vector[Float]) {
+      require(b.length == a.length, "Vectors must be the same length!")
+
+        for( (i,v) <- b.iterator) {
+          a(i) = a(i) % v
+        }
+        
+    }
+  }
+  val canModInto_V_V_Float = new canModInto_V_V_Float ()
+  implicit def canModInto_V_V_Float_def[A <: Vector[Float], B <: Vector[Float]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod] = (
+    canModInto_V_V_Float.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod]]
+  )
+
+  implicit val canMod_V_V_Float: BinaryRegistry[Vector[Float], Vector[Float], OpMod, Vector[Float]] = pureFromUpdate_Float(canModInto_V_V_Float)
+
+
+  class canModInto_V_S_Float private[linalg] () extends BinaryUpdateRegistry[Vector[Float], Float, breeze.linalg.operators.OpMod] {
+    override def bindingMissing(a: Vector[Float], b: Float) {
+      
+        if(!false || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = v % b
+          }
+        
+    }
+  }
+  val canModInto_V_S_Float = new canModInto_V_S_Float ()
+  implicit def canModInto_V_S_Float_def[A <: Vector[Float], B <: Float]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod] = (
+    canModInto_V_S_Float.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod]]
+  )
+
+  implicit val canMod_V_S_Float: BinaryRegistry[Vector[Float], Float, OpMod, Vector[Float]] = pureFromUpdate_Float(canModInto_V_S_Float)
 
 
   class canDotProductV_Float private[linalg] () extends BinaryRegistry[Vector[Float], Vector[Float], breeze.linalg.operators.OpMulInner, Float] {
@@ -604,109 +620,40 @@ trait VectorOps_Int { this: Vector.type =>
   }
         
 
-  class canMulScalarInto_V_V_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Vector[Int], breeze.linalg.operators.OpMulScalar] {
+  class canAddInto_V_V_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Vector[Int], breeze.linalg.operators.OpAdd] {
     override def bindingMissing(a: Vector[Int], b: Vector[Int]) {
       require(b.length == a.length, "Vectors must be the same length!")
 
-        for( (i,v) <- b.iterator) {
-          a(i) = a(i) * v
+        for( (i,v) <- b.activeIterator) {
+          a(i) = a(i) + v
         }
         
     }
   }
-  val canMulScalarInto_V_V_Int = new canMulScalarInto_V_V_Int ()
-  implicit def canMulScalarInto_V_V_Int_def[A <: Vector[Int], B <: Vector[Int]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar] = (
-    canMulScalarInto_V_V_Int.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar]]
+  val canAddInto_V_V_Int = new canAddInto_V_V_Int ()
+  implicit def canAddInto_V_V_Int_def[A <: Vector[Int], B <: Vector[Int]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd] = (
+    canAddInto_V_V_Int.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd]]
   )
 
-  implicit val canMulScalar_V_V_Int: BinaryRegistry[Vector[Int], Vector[Int], OpMulScalar, Vector[Int]] = pureFromUpdate_Int(canMulScalarInto_V_V_Int)
+  implicit val canAdd_V_V_Int: BinaryRegistry[Vector[Int], Vector[Int], OpAdd, Vector[Int]] = pureFromUpdate_Int(canAddInto_V_V_Int)
 
 
-  class canMulScalarInto_V_S_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Int, breeze.linalg.operators.OpMulScalar] {
+  class canAddInto_V_S_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Int, breeze.linalg.operators.OpAdd] {
     override def bindingMissing(a: Vector[Int], b: Int) {
       
-        for( (i,v) <- a.iterator) {
-          a(i) = v * b
-        }
+        if(!true || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = v + b
+          }
         
     }
   }
-  val canMulScalarInto_V_S_Int = new canMulScalarInto_V_S_Int ()
-  implicit def canMulScalarInto_V_S_Int_def[A <: Vector[Int], B <: Int]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar] = (
-    canMulScalarInto_V_S_Int.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar]]
+  val canAddInto_V_S_Int = new canAddInto_V_S_Int ()
+  implicit def canAddInto_V_S_Int_def[A <: Vector[Int], B <: Int]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd] = (
+    canAddInto_V_S_Int.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd]]
   )
 
-  implicit val canMulScalar_V_S_Int: BinaryRegistry[Vector[Int], Int, OpMulScalar, Vector[Int]] = pureFromUpdate_Int(canMulScalarInto_V_S_Int)
-
-
-  class canModInto_V_V_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Vector[Int], breeze.linalg.operators.OpMod] {
-    override def bindingMissing(a: Vector[Int], b: Vector[Int]) {
-      require(b.length == a.length, "Vectors must be the same length!")
-
-        for( (i,v) <- b.iterator) {
-          a(i) = a(i) % v
-        }
-        
-    }
-  }
-  val canModInto_V_V_Int = new canModInto_V_V_Int ()
-  implicit def canModInto_V_V_Int_def[A <: Vector[Int], B <: Vector[Int]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod] = (
-    canModInto_V_V_Int.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod]]
-  )
-
-  implicit val canMod_V_V_Int: BinaryRegistry[Vector[Int], Vector[Int], OpMod, Vector[Int]] = pureFromUpdate_Int(canModInto_V_V_Int)
-
-
-  class canModInto_V_S_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Int, breeze.linalg.operators.OpMod] {
-    override def bindingMissing(a: Vector[Int], b: Int) {
-      
-        for( (i,v) <- a.iterator) {
-          a(i) = v % b
-        }
-        
-    }
-  }
-  val canModInto_V_S_Int = new canModInto_V_S_Int ()
-  implicit def canModInto_V_S_Int_def[A <: Vector[Int], B <: Int]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod] = (
-    canModInto_V_S_Int.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod]]
-  )
-
-  implicit val canMod_V_S_Int: BinaryRegistry[Vector[Int], Int, OpMod, Vector[Int]] = pureFromUpdate_Int(canModInto_V_S_Int)
-
-
-  class canSetInto_V_V_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Vector[Int], breeze.linalg.operators.OpSet] {
-    override def bindingMissing(a: Vector[Int], b: Vector[Int]) {
-      require(b.length == a.length, "Vectors must be the same length!")
-
-        for( (i,v) <- b.iterator) {
-          a(i) = v
-        }
-        
-    }
-  }
-  val canSetInto_V_V_Int = new canSetInto_V_V_Int ()
-  implicit def canSetInto_V_V_Int_def[A <: Vector[Int], B <: Vector[Int]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet] = (
-    canSetInto_V_V_Int.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet]]
-  )
-
-  implicit val canSet_V_V_Int: BinaryRegistry[Vector[Int], Vector[Int], OpSet, Vector[Int]] = pureFromUpdate_Int(canSetInto_V_V_Int)
-
-
-  class canSetInto_V_S_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Int, breeze.linalg.operators.OpSet] {
-    override def bindingMissing(a: Vector[Int], b: Int) {
-      
-        for( (i,v) <- a.iterator) {
-          a(i) = b
-        }
-        
-    }
-  }
-  val canSetInto_V_S_Int = new canSetInto_V_S_Int ()
-  implicit def canSetInto_V_S_Int_def[A <: Vector[Int], B <: Int]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet] = (
-    canSetInto_V_S_Int.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet]]
-  )
-
-  implicit val canSet_V_S_Int: BinaryRegistry[Vector[Int], Int, OpSet, Vector[Int]] = pureFromUpdate_Int(canSetInto_V_S_Int)
+  implicit val canAdd_V_S_Int: BinaryRegistry[Vector[Int], Int, OpAdd, Vector[Int]] = pureFromUpdate_Int(canAddInto_V_S_Int)
 
 
   class canSubInto_V_V_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Vector[Int], breeze.linalg.operators.OpSub] {
@@ -730,9 +677,10 @@ trait VectorOps_Int { this: Vector.type =>
   class canSubInto_V_S_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Int, breeze.linalg.operators.OpSub] {
     override def bindingMissing(a: Vector[Int], b: Int) {
       
-        for( (i,v) <- a.activeIterator) {
-          a(i) = v - b
-        }
+        if(!true || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = v - b
+          }
         
     }
   }
@@ -747,9 +695,10 @@ trait VectorOps_Int { this: Vector.type =>
   class canMulMatrixInto_V_S_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Int, breeze.linalg.operators.OpMulMatrix] {
     override def bindingMissing(a: Vector[Int], b: Int) {
       
-        for( (i,v) <- a.iterator) {
-          a(i) = v * b
-        }
+        if(!false || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = v * b
+          }
         
     }
   }
@@ -759,6 +708,42 @@ trait VectorOps_Int { this: Vector.type =>
   )
 
   implicit val canMulMatrix_V_S_Int: BinaryRegistry[Vector[Int], Int, OpMulMatrix, Vector[Int]] = pureFromUpdate_Int(canMulMatrixInto_V_S_Int)
+
+
+  class canSetInto_V_V_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Vector[Int], breeze.linalg.operators.OpSet] {
+    override def bindingMissing(a: Vector[Int], b: Vector[Int]) {
+      require(b.length == a.length, "Vectors must be the same length!")
+
+        for( (i,v) <- b.iterator) {
+          a(i) = v
+        }
+        
+    }
+  }
+  val canSetInto_V_V_Int = new canSetInto_V_V_Int ()
+  implicit def canSetInto_V_V_Int_def[A <: Vector[Int], B <: Vector[Int]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet] = (
+    canSetInto_V_V_Int.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet]]
+  )
+
+  implicit val canSet_V_V_Int: BinaryRegistry[Vector[Int], Vector[Int], OpSet, Vector[Int]] = pureFromUpdate_Int(canSetInto_V_V_Int)
+
+
+  class canSetInto_V_S_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Int, breeze.linalg.operators.OpSet] {
+    override def bindingMissing(a: Vector[Int], b: Int) {
+      
+        if(!false || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = b
+          }
+        
+    }
+  }
+  val canSetInto_V_S_Int = new canSetInto_V_S_Int ()
+  implicit def canSetInto_V_S_Int_def[A <: Vector[Int], B <: Int]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet] = (
+    canSetInto_V_S_Int.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpSet]]
+  )
+
+  implicit val canSet_V_S_Int: BinaryRegistry[Vector[Int], Int, OpSet, Vector[Int]] = pureFromUpdate_Int(canSetInto_V_S_Int)
 
 
   class canDivInto_V_V_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Vector[Int], breeze.linalg.operators.OpDiv] {
@@ -782,9 +767,10 @@ trait VectorOps_Int { this: Vector.type =>
   class canDivInto_V_S_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Int, breeze.linalg.operators.OpDiv] {
     override def bindingMissing(a: Vector[Int], b: Int) {
       
-        for( (i,v) <- a.iterator) {
-          a(i) = v / b
-        }
+        if(!false || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = v / b
+          }
         
     }
   }
@@ -796,39 +782,40 @@ trait VectorOps_Int { this: Vector.type =>
   implicit val canDiv_V_S_Int: BinaryRegistry[Vector[Int], Int, OpDiv, Vector[Int]] = pureFromUpdate_Int(canDivInto_V_S_Int)
 
 
-  class canAddInto_V_V_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Vector[Int], breeze.linalg.operators.OpAdd] {
+  class canMulScalarInto_V_V_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Vector[Int], breeze.linalg.operators.OpMulScalar] {
     override def bindingMissing(a: Vector[Int], b: Vector[Int]) {
       require(b.length == a.length, "Vectors must be the same length!")
 
-        for( (i,v) <- b.activeIterator) {
-          a(i) = a(i) + v
+        for( (i,v) <- b.iterator) {
+          a(i) = a(i) * v
         }
         
     }
   }
-  val canAddInto_V_V_Int = new canAddInto_V_V_Int ()
-  implicit def canAddInto_V_V_Int_def[A <: Vector[Int], B <: Vector[Int]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd] = (
-    canAddInto_V_V_Int.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd]]
+  val canMulScalarInto_V_V_Int = new canMulScalarInto_V_V_Int ()
+  implicit def canMulScalarInto_V_V_Int_def[A <: Vector[Int], B <: Vector[Int]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar] = (
+    canMulScalarInto_V_V_Int.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar]]
   )
 
-  implicit val canAdd_V_V_Int: BinaryRegistry[Vector[Int], Vector[Int], OpAdd, Vector[Int]] = pureFromUpdate_Int(canAddInto_V_V_Int)
+  implicit val canMulScalar_V_V_Int: BinaryRegistry[Vector[Int], Vector[Int], OpMulScalar, Vector[Int]] = pureFromUpdate_Int(canMulScalarInto_V_V_Int)
 
 
-  class canAddInto_V_S_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Int, breeze.linalg.operators.OpAdd] {
+  class canMulScalarInto_V_S_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Int, breeze.linalg.operators.OpMulScalar] {
     override def bindingMissing(a: Vector[Int], b: Int) {
       
-        for( (i,v) <- a.activeIterator) {
-          a(i) = v + b
-        }
+        if(!false || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = v * b
+          }
         
     }
   }
-  val canAddInto_V_S_Int = new canAddInto_V_S_Int ()
-  implicit def canAddInto_V_S_Int_def[A <: Vector[Int], B <: Int]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd] = (
-    canAddInto_V_S_Int.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpAdd]]
+  val canMulScalarInto_V_S_Int = new canMulScalarInto_V_S_Int ()
+  implicit def canMulScalarInto_V_S_Int_def[A <: Vector[Int], B <: Int]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar] = (
+    canMulScalarInto_V_S_Int.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMulScalar]]
   )
 
-  implicit val canAdd_V_S_Int: BinaryRegistry[Vector[Int], Int, OpAdd, Vector[Int]] = pureFromUpdate_Int(canAddInto_V_S_Int)
+  implicit val canMulScalar_V_S_Int: BinaryRegistry[Vector[Int], Int, OpMulScalar, Vector[Int]] = pureFromUpdate_Int(canMulScalarInto_V_S_Int)
 
 
   class canPowInto_V_V_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Vector[Int], breeze.linalg.operators.OpPow] {
@@ -852,9 +839,10 @@ trait VectorOps_Int { this: Vector.type =>
   class canPowInto_V_S_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Int, breeze.linalg.operators.OpPow] {
     override def bindingMissing(a: Vector[Int], b: Int) {
       
-        for( (i,v) <- a.iterator) {
-          a(i) = IntMath.ipow(v, b)
-        }
+        if(!false || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = IntMath.ipow(v, b)
+          }
         
     }
   }
@@ -864,6 +852,42 @@ trait VectorOps_Int { this: Vector.type =>
   )
 
   implicit val canPow_V_S_Int: BinaryRegistry[Vector[Int], Int, OpPow, Vector[Int]] = pureFromUpdate_Int(canPowInto_V_S_Int)
+
+
+  class canModInto_V_V_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Vector[Int], breeze.linalg.operators.OpMod] {
+    override def bindingMissing(a: Vector[Int], b: Vector[Int]) {
+      require(b.length == a.length, "Vectors must be the same length!")
+
+        for( (i,v) <- b.iterator) {
+          a(i) = a(i) % v
+        }
+        
+    }
+  }
+  val canModInto_V_V_Int = new canModInto_V_V_Int ()
+  implicit def canModInto_V_V_Int_def[A <: Vector[Int], B <: Vector[Int]]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod] = (
+    canModInto_V_V_Int.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod]]
+  )
+
+  implicit val canMod_V_V_Int: BinaryRegistry[Vector[Int], Vector[Int], OpMod, Vector[Int]] = pureFromUpdate_Int(canModInto_V_V_Int)
+
+
+  class canModInto_V_S_Int private[linalg] () extends BinaryUpdateRegistry[Vector[Int], Int, breeze.linalg.operators.OpMod] {
+    override def bindingMissing(a: Vector[Int], b: Int) {
+      
+        if(!false || b != 0)
+          for( (i,v) <- a.iterator) {
+                a(i) = v % b
+          }
+        
+    }
+  }
+  val canModInto_V_S_Int = new canModInto_V_S_Int ()
+  implicit def canModInto_V_S_Int_def[A <: Vector[Int], B <: Int]:BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod] = (
+    canModInto_V_S_Int.asInstanceOf[BinaryUpdateOp[A, B, breeze.linalg.operators.OpMod]]
+  )
+
+  implicit val canMod_V_S_Int: BinaryRegistry[Vector[Int], Int, OpMod, Vector[Int]] = pureFromUpdate_Int(canModInto_V_S_Int)
 
 
   class canDotProductV_Int private[linalg] () extends BinaryRegistry[Vector[Int], Vector[Int], breeze.linalg.operators.OpMulInner, Int] {
