@@ -33,7 +33,8 @@ import java.util
  * 
  * @author dlwh, dramage
  */
-trait Index[T] extends Iterable[T] with (T=>Int) {
+@SerialVersionUID(1L)
+trait Index[T] extends Iterable[T] with (T=>Int) with Serializable {
 
   /** Number of elements in this index. */
   def size : Int
@@ -327,13 +328,23 @@ class EitherIndex[L,R](left: Index[L], right: Index[R]) extends Index[Either[L,R
   override def size:Int = left.size + right.size
 }
 
+
 /**
  * An Index over N kinds of things. A little type unsafe.
  *
  * @author dlwh
  */
-class CompositeIndex[U](indices: Index[_ <:U]*) extends Index[(Int,U)] {
+final class CompositeIndex[U](indices: Index[_ <:U]*) extends Index[(Int,U)] {
   private val offsets:Array[Int] = indices.unfold(0){ (n,i) => n + i.size}.toArray
+
+  /** If you know which component, and which index in that component,
+    * you can quickly get its mapped value with this function.
+    */
+  @inline
+  def mapIndex(component: Int, uIndex: Int) = {
+    if(uIndex < 0) -1
+    else offsets(component) + uIndex
+  }
 
   def apply(t: (Int,U)) = {
     if(t._1 >= indices.length || t._1 < 0) -1
@@ -359,7 +370,7 @@ class CompositeIndex[U](indices: Index[_ <:U]*) extends Index[(Int,U)] {
 
   def iterator = indices.iterator.zipWithIndex.flatMap { case (index,i) => index.iterator.map{ t => (i -> t)}}
 
-  override def size:Int = offsets.last
+  override def size:Int = offsets(offsets.length-1)
 }
 
 object EnumerationIndex {
@@ -381,6 +392,10 @@ object EnumerationIndex {
     def pairs: Iterator[(t.Value, Int)] = for(v <- t.values.iterator) yield v -> v.id
 
     def iterator: Iterator[t.Value] = t.values.iterator
+
+    override def size: Int = t.maxId + 1
   }
 
 }
+
+
