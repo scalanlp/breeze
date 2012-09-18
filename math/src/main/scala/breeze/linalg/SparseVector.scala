@@ -18,10 +18,11 @@ import operators.{UnaryOp, OpNeg, BinaryOp, OpMulScalar}
 import scala.{specialized=>spec}
 import breeze.storage.{DefaultArrayValue}
 import support.{CanZipMapValues, CanMapKeyValuePairs, CanCopy, CanSlice}
-import breeze.util.ArrayUtil
+import breeze.util.{Sorting, ArrayUtil}
 import breeze.generic.{CanMapValues, URFunc, UReduceable}
 import breeze.math.{Semiring, Ring, TensorSpace}
 import breeze.collection.mutable.SparseArray
+import java.util
 
 
 /**
@@ -153,24 +154,35 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
    * @param dim dimensionality of the sparsevector. can be changed if you need it to be.
    */
   class Builder[@spec(Int, Float, Double) V:ClassManifest:DefaultArrayValue:Semiring](var dim: Int) {
-    private val index = ClassManifest.Int.newArrayBuilder()
-    private val values = implicitly[ClassManifest[V]].newArrayBuilder()
+    // stupid boxing, stupid crappy specialization
+//    private val index = ClassManifest.Int.newArrayBuilder()
+//    private val values = implicitly[ClassManifest[V]].newArrayBuilder()
+    private var used = 0
+    private var index = new Array[Int](16)
+    private var values = new Array[V](16)
     private def ring = implicitly[Semiring[V]]
 
 
     def add(i: Int, v: V) = {
-      index += i
-      values += v
+      if(used == index.length) {
+        index = util.Arrays.copyOf(index, used*2)
+        values = ArrayUtil.copyOf(values, used*2)
+      }
+      index(used) = i
+      values(used) = v
+      used += 1
     }
 
     def sizeHint(nnz: Int) {
-      index.sizeHint(nnz)
-      values.sizeHint(nnz)
+      if(index.size < nnz) {
+        index = util.Arrays.copyOf(index, nnz)
+        values = ArrayUtil.copyOf(values, nnz)
+      }
     }
 
     def result() = {
-      val index = this.index.result()
-      val values = this.values.result()
+      val index = this.index
+      val values = this.values
 
       val outIndex = new Array[Int](index.length)
       val outValues = new Array[V](values.length)
@@ -198,9 +210,20 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
     }
 
     private def sortedIndices(indices: Array[Int]) = {
-      Array.range(0, indices.length).sortWith { (i, j) =>
-        (indices(i) < indices(j))
+      val arr = range(used)
+      Sorting.indexSort(arr, 0, used, indices)
+      arr
+    }
+
+    // Sigh, Array.range is slow.
+    private def range(length: Int) = {
+      val result = new Array[Int](length)
+      var i = 0
+      while(i < length) {
+        result(i) = i
+        i += 1
       }
+      result
     }
 
 
@@ -250,7 +273,7 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
         val out = new Array[V2](from.used)
         var i = 0
         while(i < from.used) {
-          out(i) = fn(i, from.data(i))
+          out(i) = fn(from.index(i), from.data(i))
           i += 1
         }
         new SparseVector(from.index.take(from.used), out, from.used, from.length)
