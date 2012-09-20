@@ -46,7 +46,7 @@ class CachedBatchDiffFunction[T:CanCopy](obj: BatchDiffFunction[T]) extends Batc
   /** Calculates both the value and the gradient at a point */
   override def calculate(x:T, range: IndexedSeq[Int]):(Double,T) = {
     val last = lastData()
-    if(last == null || x != last._1) {
+    if(last == null || range != last._4 || x != last._1) {
       val newData = obj.calculate(x, range)
       lastData.set ( (copy(x), newData._1, newData._2, range))
     }
