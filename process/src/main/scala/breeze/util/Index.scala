@@ -393,7 +393,7 @@ object EnumerationIndex {
 
     def iterator: Iterator[t.Value] = t.values.iterator
 
-    override def size: Int = t.maxId + 1
+    override def size: Int = t.maxId
   }
 
 }
