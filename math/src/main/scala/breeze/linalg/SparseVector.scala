@@ -191,6 +191,10 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
       if(ord.length > 0) {
         outIndex(0) = index(ord(0))
         outValues(0) = values(ord(0))
+        if(index(ord.last) >= dim)
+          throw new RuntimeException("Index " + index(ord.last) + " exceeds dimension " + dim)
+        else if (outIndex(0) < 0)
+          throw new RuntimeException("Index " + outIndex(0) + " is less than 0!")
       }
       var i   = 1
       var out = 0
