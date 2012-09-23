@@ -86,11 +86,11 @@ object AdaptiveGradientDescent {
       val s:T = sqrt(state.history.sumOfSquaredGradients :+ (grad :* grad) :+ delta)
       val res:T = x + (dir * stepSize :/ s)
       val tlambda = lambda * stepSize
-      vspace.zipMapValues.map(res, s, { case (v,v2) =>
-        if(v.abs < tlambda / v2) {
-          0.
+      vspace.zipMapValues.map(res, s, { case (x_half ,s_i) =>
+        if(x_half.abs < tlambda / s_i) {
+          0.0
         } else {
-          (v - math.signum(v) * tlambda / v2)
+          (x_half - math.signum(x_half) * tlambda / s_i)
         }
       })
     }
