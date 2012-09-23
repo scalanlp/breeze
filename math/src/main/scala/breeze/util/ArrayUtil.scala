@@ -24,6 +24,7 @@ import java.util.Arrays
  */
 
 object ArrayUtil {
+
   def fill[V](a: Array[V], offset: Int, length: Int, v: V) {
     a match {
       case x: Array[Double] => Arrays.fill(x, offset, offset + length, v.asInstanceOf[Double])
@@ -49,6 +50,22 @@ object ArrayUtil {
       case x: Array[Char] => Arrays.copyOf(x, length).asInstanceOf[Array[V]]
       case x: Array[Byte] => Arrays.copyOf(x, length).asInstanceOf[Array[V]]
       case x: Array[_] => Arrays.copyOf(x.asInstanceOf[Array[AnyRef]], length).asInstanceOf[Array[V]]
+      case _ => throw new RuntimeException("shouldn't be here!")
+    }
+  }
+
+  def newArrayLike[V](a: Array[V], length: Int): Array[V] = {
+    a match {
+      case x: Array[Double] => new Array[Double](length).asInstanceOf[Array[V]]
+      case x: Array[Int] => new Array[Int](length).asInstanceOf[Array[V]]
+      case x: Array[Float] => new Array[Float](length).asInstanceOf[Array[V]]
+      case x: Array[Long] => new Array[Long](length).asInstanceOf[Array[V]]
+      case x: Array[Short] => new Array[Short](length).asInstanceOf[Array[V]]
+      case x: Array[Char] => new Array[Char](length).asInstanceOf[Array[V]]
+      case x: Array[Byte] => new Array[Byte](length).asInstanceOf[Array[V]]
+      case x: Array[_] =>
+        implicit val man = ClassManifest.fromClass(x.getClass.getComponentType.asInstanceOf[Class[V]])
+        new Array[V](length)
       case _ => throw new RuntimeException("shouldn't be here!")
     }
   }

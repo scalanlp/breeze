@@ -88,14 +88,14 @@ trait Encoder[T] {
    * Encodes a DoubleCounter as a SparseVector[Double]. All elements in the counter must be in the index.
    */
   def encodeSparse(c: Tensor[T,Double], ignoreOutOfIndex: Boolean = false):SparseVector[Double] = {
-    val vec = new SparseVector.Builder[Double](index.size)
-    vec.sizeHint(c.activeSize)
+    val vec = new VectorBuilder[Double](index.size)
+    vec.reserve(c.activeSize)
     for( (k,v) <- c.active.pairs) {
       val ki = index(k)
       if(ki < 0) {if(!ignoreOutOfIndex) throw new RuntimeException("Error, not in index: " + k)}
       else  vec.add(ki, v)
     }
-    vec.result()
+    vec.toSparseVector
   }
 
   /**

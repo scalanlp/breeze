@@ -22,6 +22,17 @@ trait DefaultArrayValue[@specialized T] extends Serializable {
 }
 
 object DefaultArrayValue {
+  def forClass(clazz: Class[_]):DefaultArrayValue[_] = {
+    if(clazz == Integer.TYPE) IntDefaultArrayValue
+    else if (clazz == java.lang.Float.TYPE) FloatDefaultArrayValue
+    else if (clazz == java.lang.Double.TYPE) DoubleDefaultArrayValue
+    else if (clazz == java.lang.Short.TYPE) ShortDefaultArrayValue
+    else if (clazz == java.lang.Byte.TYPE) ByteDefaultArrayValue
+    else if (clazz == java.lang.Boolean.TYPE) BooleanDefaultArrayValue
+    else if (clazz == java.lang.Character.TYPE) CharDefaultArrayValue
+    else refDefault
+  }
+
   def apply[T](v: T):DefaultArrayValue[T] = new DefaultArrayValue[T] {
     def value = v
   }

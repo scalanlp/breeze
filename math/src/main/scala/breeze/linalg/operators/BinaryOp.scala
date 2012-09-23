@@ -16,6 +16,7 @@ package breeze.linalg.operators
 */
 import breeze.generic.{MMRegistry2, Multimethod2}
 import breeze.math.Semiring
+import breeze.linalg.support.CanCopy
 
 /**
  * A BinaryOp is the standard implicit capability trait for binary operations: a + b, a - b, etc.
@@ -30,6 +31,19 @@ trait BinaryOp[A, B, +Op<:OpType, +R]  {
 object BinaryOp {
   /** Just a magic type lambda to make registries happy. */
   type Bind[Op <:OpType] = { type Sig[A, B, R] = BinaryOp[A, B, Op, R]}
+
+
+  def fromCopyAndUpdate[A,B,Op<:OpType](implicit op: BinaryUpdateOp[A, B, Op], copy: CanCopy[A]):BinaryOp[A, B, Op, A] = {
+    new BinaryOp[A, B, Op, A] {
+      def apply(a: A, b: B): A = {
+        val c = copy(a)
+        op(c,b)
+        c
+      }
+    }
+
+
+  }
 }
 
 /**

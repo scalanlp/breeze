@@ -34,6 +34,7 @@ trait BinaryUpdateOp[A, B, Op<:OpType] {
 object BinaryUpdateOp {
   /** Just a magic type lambda to make registries happy. */
   type Bind[Op <:OpType] = { type Sig[A, B] = BinaryUpdateOp[A, B, Op]}
+
 }
 
 /**
