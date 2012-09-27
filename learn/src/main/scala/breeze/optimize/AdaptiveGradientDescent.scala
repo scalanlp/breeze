@@ -42,8 +42,11 @@ object AdaptiveGradientDescent {
     override protected def takeStep(state: State, dir: T, stepSize: Double) = {
       import state._
       val s = sqrt(state.history.sumOfSquaredGradients :+ (state.grad :* state.grad))
-      val res = (( (s :* x) + dir * stepSize) :/ (s + (delta + lambda * stepSize)))
-      res
+      val newx = x :* s
+      newx += dir * stepSize
+      s += (delta + lambda * stepSize)
+      newx :/= s
+      newx
     }
 
     override def determineStepSize(state: State, f: StochasticDiffFunction[T], dir: T) = {
