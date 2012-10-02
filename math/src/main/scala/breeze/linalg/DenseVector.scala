@@ -200,8 +200,8 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     val size = vectors.head.size
     if (!(vectors forall (_.size == size)))
       throw new IllegalArgumentException("All vectors must have the same size!")
-    val result = DenseMatrix.zeros[V](vectors.size, size)
-    for ((v, col) <- vectors zip (0 until vectors.size))
+    val result = DenseMatrix.zeros[V](size, vectors.size)
+    for ((v, col) <- vectors.zipWithIndex)
       result(::, col) := v
     result
   }

@@ -237,6 +237,14 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(DenseVector.vertcat(a1, a2) === res)
   }
 
+
+  test("horzcat") {
+    val a1 = DenseVector[Double](1, 2, 3)
+    val a2 = DenseVector[Double](2, 3, 4)
+    val res = DenseMatrix( (1.0, 2.0), (2.0, 3.0), (3.0, 4.0))
+    assert(DenseVector.horzcat(a1, a2) === res)
+  }
+
   test("Negation") {
     val a1 = DenseVector(1.0, 2.0, 3.0)
     assert(-a1 == DenseVector(-1.0, -2.0, -3.0))
