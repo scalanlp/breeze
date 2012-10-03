@@ -22,7 +22,7 @@ import breeze.util.ArrayUtil
 import breeze.numerics.IntMath
 import support._
 import breeze.generic.{URFunc, CanCollapseAxis, CanMapValues}
-import breeze.math.Semiring
+import breeze.math.{Ring, Semiring}
 import breeze.storage.DefaultArrayValue
 import org.jblas.NativeBlas
 
@@ -251,6 +251,15 @@ object DenseMatrix extends LowPriorityDenseMatrix
           require(cols.step == 1, "Sorry, we can't support col ranges with step sizes other than 1 for transposed matrices")
           canSliceColsAndRows(m.t, cols, rows).t
         }
+      }
+    }
+  }
+
+
+  implicit def negFromScale[V](implicit scale: BinaryOp[DenseMatrix[V], V, OpMulScalar, DenseMatrix[V]], field: Ring[V]) = {
+    new UnaryOp[DenseMatrix[V], OpNeg, DenseMatrix[V]] {
+      override def apply(a : DenseMatrix[V]) = {
+        scale(a, field.negate(field.one))
       }
     }
   }
