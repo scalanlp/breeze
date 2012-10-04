@@ -95,7 +95,7 @@ class VectorBuilder[@spec(Double,Int, Float) E](private var _index: Array[Int],
   def add(i: Int, v: E) {
     if(i < 0 || i > size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
 
-    if(_data.length >= used) {
+    if(_data.length <= used) {
       _data = ArrayUtil.copyOf(_data, math.max(_data.length * 2, 1))
       _index = ArrayUtil.copyOf(_index, math.max(_index.length * 2, 1))
     }
