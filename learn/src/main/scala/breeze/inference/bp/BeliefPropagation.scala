@@ -20,7 +20,7 @@ object BeliefPropagation {
    * The result object for BeliefPropagation, useful for getting information
    * about marginals and edge marginals
    * @param model the Factor model used to perform inference
-   * @param beliefs
+   * @param beliefs beliefs for each variable, for each assignment to each variable. normalized, not in log space
    * @param messages
    */
   case class Beliefs(model: Model,
