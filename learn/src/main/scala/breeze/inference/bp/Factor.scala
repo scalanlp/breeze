@@ -114,6 +114,22 @@ object Factor {
 
     def logApply(assignments: Array[Int]) = f(assignments(0), assignments(1))
   }
+
+  def apply[T1](v1: Variable[T1])(f: Int=>Double):Factor = new Factor {
+    def variables = IndexedSeq(v1)
+
+    override def apply(assignments: Array[Int]) = f(assignments(0))
+    def logApply(assignments: Array[Int]): Double = math.exp(apply(assignments))
+  }
+
+  def apply[T1, T2](v1: Variable[T1], v2: Variable[T2])(f: (Int,Int)=>Double):Factor = new Factor {
+    def variables = IndexedSeq(v1, v2)
+
+
+    override def apply(assignments: Array[Int]) = f(assignments(0), assignments(1))
+
+    def logApply(assignments: Array[Int]): Double = math.exp(apply(assignments))
+  }
 }
 
 case class ProductFactor(f1: Factor, f2: Factor, scale2: Double = 1) extends Factor {
