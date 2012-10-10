@@ -53,6 +53,8 @@ final class TriangularArray[T:ClassManifest](dim: Int) extends Serializable { ou
   def iterator = Iterator.range(0,numElems) map slice
   def foreach(f: T=>Unit) { data foreach f }
 
+  def map[U:ClassManifest](f: T=>U) = tabulate(dim)((i,j) => f(apply(i,j)))
+
   override def toString = {
     val buffer = new StringBuilder()
     for ( r <- 0 until dim )  {
