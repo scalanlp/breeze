@@ -191,6 +191,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     r
   }
 
+
     // concatenation
   /**
    * Horizontal concatenation of two or more vectors into one matrix.
@@ -308,11 +309,13 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   }
 
   // slicing
-  implicit def canSlice[V]: CanSlice[DenseVector[V], Range, DenseVector[V]] = {
-    new CanSlice[DenseVector[V], Range, DenseVector[V]] {
-      def apply(v: DenseVector[V], r: Range) = {
+  @inline implicit def canSlice[V]: CanSlice[DenseVector[V], Range, DenseVector[V]] = __canSlice.asInstanceOf[CanSlice[DenseVector[V], Range, DenseVector[V]]]
+
+  private val __canSlice = {
+    new CanSlice[DenseVector[Any], Range, DenseVector[Any]] {
+      def apply(v: DenseVector[Any], r: Range) = {
         require(r.isEmpty || r.last < v.length)
-        require(r.isEmpty || r.head >= 0)
+        require(r.isEmpty || r.start >= 0)
         new DenseVector(v.data, offset = v.offset + r.start, stride = v.stride * r.step, length = r.length)
       }
     }

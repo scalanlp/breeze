@@ -76,6 +76,12 @@ object BreezeBuild extends Build {
     "com.lowagie" % "itext" % "2.1.5" intransitive()  // for pdf gen
   )
 
+  val benchmarkDeps = Seq(
+    "com.google.code.java-allocation-instrumenter" % "java-allocation-instrumenter" % "2.0",
+    "com.google.code.gson" % "gson" % "1.7.1",
+    "com.google.caliper" % "caliper" % "0.5-rc1"
+  )
+
   def testDependencies = libraryDependencies <++= (scalaVersion) {
     sv =>
       Seq(
@@ -89,6 +95,44 @@ object BreezeBuild extends Build {
   }
 
 
+  def patchclasspath = Command.command("patchclasspath") { (state: State) =>
+    val extracted = Project.extract(state)
+    import extracted._
+    println(currentProject.id)
+    val classPath = Project.runTask(fullClasspath in Runtime, state).get._2.toEither.right.get.files.mkString(":")
+    println(classPath)
+    // return a state with javaOptionsPatched = true and javaOptions set correctly
+    Project.extract(state).append(Seq(javaOptions ++= Seq("-cp", classPath)), state.put(caliperLoopKey, true))
+  }
+
+  val caliperFixForBenchmark = (
+
+    // we need to add the runtime classpath as a "-cp" argument to the `javaOptions in run`, otherwise caliper
+    // will not see the right classpath and die with a ConfigurationException
+    // unfortunately `javaOptions` is a SettingsKey and `fullClasspath in Runtime` is a TaskKey, so we need to
+    // jump through these hoops here in order to feed the result of the latter into the former
+    onLoad in Global ~= { previous => state =>
+      previous {
+        state.get(caliperLoopKey) match {
+          case None =>
+            println("!"+ Project.extract(state).currentProject.id)
+            // get the runtime classpath, turn into a colon-delimited string
+            val classPath = Project.runTask(fullClasspath in Runtime, state).get._2.toEither.right.get.files.mkString(":")
+            // return a state with javaOptionsPatched = true and javaOptions set correctly
+            Project.extract(state).append(Seq(javaOptions ++= Seq("-cp", classPath)), state.put(caliperLoopKey, true))
+            
+          case Some(_) => // the javaOptions are already patched
+            println("?"+Project.extract(state).currentProject.id)
+            state
+        }
+      }
+    }
+
+  )
+
+ val caliperLoopKey = AttributeKey[Boolean]("javaOptionsPatched") // attribute caliperLoopKey to prevent circular onLoad hook
+
+
   //
   // subprojects
   //
@@ -99,6 +143,7 @@ object BreezeBuild extends Build {
   lazy val learn = Project("breeze-learn",file("learn") , settings = buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies++ assemblySettings ++ jacoco.settings) dependsOn(math,process)
   lazy val graphs = Project("breeze-graphs",file("graphs"), settings = buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies) dependsOn(math,process)
   lazy val viz = Project("breeze-viz",file("viz"), settings = buildSettings ++ Seq (libraryDependencies ++= (commonDeps ++ vizDeps)) ++ testDependencies) dependsOn(math)
+  lazy val benchmark = Project("breeze-benchmark",file("benchmark"), settings = (buildSettings :+ (fork in run := true) :+ (commands += patchclasspath)) ++ Seq (libraryDependencies ++= (commonDeps ++ benchmarkDeps)) ++ testDependencies) dependsOn(math)
 
 val _projects: Seq[ProjectReference] = Seq(math,process,learn,viz)
   lazy val doc = Project("doc", file("doc"))

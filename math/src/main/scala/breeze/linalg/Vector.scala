@@ -142,6 +142,7 @@ object Vector extends VectorOps_Int with VectorOps_Double with VectorOps_Float {
 
 }
 
+
 trait VectorConstructors[Vec[T]<:Vector[T]] {
   def zeros[V:ClassManifest](size: Int):Vec[V]
   def apply[@spec(Double, Int, Float) V](values: Array[V]):Vec[V]
@@ -159,7 +160,16 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
   def tabulate[@spec(Double, Int, Float) V:ClassManifest](size: Int)(f: Int=>V):Vec[V]= apply(Array.tabulate(size)(f))
 
   def rand(size: Int, rand: Random = new Random()) = {
-    fill(size)(rand.nextDouble())
+    // Array#fill is slow.
+    val arr = new Array[Double](size)
+    var i = 0
+    while(i < arr.length) {
+      arr(i) = rand.nextDouble()
+      i += 1
+    }
+
+    apply(arr)
+
   }
 
 
