@@ -208,10 +208,48 @@ object NumericOps {
   /**
    * If you import this object's members, you can treat Arrays as DenseVectors.
    */
-  object Arrays {
+  object Arrays extends ArraysLowPriority {
     implicit def arrayIsNumericOps[V](arr: Array[V]):NumericOps[Array[V]] = new NumericOps[Array[V]] {
       def repr = arr
     }
+
+
+    implicit def binaryOpFromDVOp2[V,Other,Op<:OpType,U](implicit op: BinaryOp[DenseVector[V], DenseVector[V], Op, DenseVector[U]], man: ClassManifest[U]) = {
+      new BinaryOp[Array[V], Array[V], Op, Array[U]] {
+        def apply(a: Array[V], b: Array[V]): Array[U] = {
+          val r = op(new DenseVector(a),new DenseVector[V](b))
+          if(r.offset != 0 || r.stride != 1) {
+            val z = DenseVector.zeros[U](r.length)
+            z := r
+            z.data
+          } else {
+            r.data
+          }
+        }
+      }
+    }
+
+
+    implicit def binaryUpdateOpFromDVDVOp[V,Op<:OpType, U](implicit op: BinaryUpdateOp[DenseVector[V], DenseVector[V], Op], man: ClassManifest[U]) = {
+      new BinaryUpdateOp[Array[V], Array[V], Op] {
+        def apply(a: Array[V], b: Array[V]){
+          op(new DenseVector(a),new DenseVector(b))
+        }
+      }
+    }
+
+
+  }
+
+  sealed trait ArraysLowPriority {
+    implicit def binaryUpdateOpFromDVOp[V,Other,Op<:OpType, U](implicit op: BinaryUpdateOp[DenseVector[V], Other, Op], man: ClassManifest[U]) = {
+      new BinaryUpdateOp[Array[V], Other, Op] {
+        def apply(a: Array[V], b: Other){
+          op(new DenseVector(a),b)
+        }
+      }
+    }
+
 
     implicit def binaryOpFromDVOp[V,Other,Op<:OpType,U](implicit op: BinaryOp[DenseVector[V], Other, Op, DenseVector[U]], man: ClassManifest[U]) = {
       new BinaryOp[Array[V], Other, Op, Array[U]] {
@@ -224,14 +262,6 @@ object NumericOps {
           } else {
             r.data
           }
-        }
-      }
-    }
-
-    implicit def binaryUpdateOpFromDVOp[V,Other,Op<:OpType, U](implicit op: BinaryUpdateOp[DenseVector[V], Other, Op], man: ClassManifest[U]) = {
-      new BinaryUpdateOp[Array[V], Other, Op] {
-        def apply(a: Array[V], b: Other){
-          op(new DenseVector(a),b)
         }
       }
     }
