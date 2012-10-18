@@ -43,6 +43,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
   }
 
   test("cholesky") {
+    println(useNativeLibraries + " ??")
     val A = DenseMatrix((1.,0.,0.),(2.,3.,0.),(4.,5.,6.))
     val Sigma = A * A.t
     assert(cholesky(Sigma) === A)
@@ -180,7 +181,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
     val (w, wi, v) = eig(DenseMatrix((1.0, -1.0), (1.0, 1.0)))
     assert(w === DenseVector(1., 1.))
     assert(wi === DenseVector(1., -1.))
-    assert(v === diag(DenseVector(0.7071067811865475, -0.7071067811865475)))
+    assert((v - diag(DenseVector(0.7071067811865475, -0.7071067811865475))).valuesIterator.max.abs < 1E-7)
     // TODO, we seem to throw out VI... these seems bad...
   }
 

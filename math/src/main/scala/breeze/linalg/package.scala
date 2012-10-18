@@ -51,12 +51,12 @@ package object linalg extends LinearAlgebra {
    */
   def canLoadNativeBlas: Boolean = {
     try {
-      // he left this constructor public, which is useful for us.
       // this attempts to load the library, we'll get an exception if false
-      new NativeBlas
+      NativeBlas.dcopy(0, new Array(0), 0, 1, new Array(0), 0, 1)
       true
     } catch {
-      case x: Throwable => false
+      case x: UnsatisfiedLinkError => false
+      case x => throw new RuntimeException("Couldn't load blas!"); false
     }
   }
 
