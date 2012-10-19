@@ -56,7 +56,7 @@ package object linalg extends LinearAlgebra {
       true
     } catch {
       case x: UnsatisfiedLinkError => false
-      case x => throw new RuntimeException("Couldn't load blas!"); false
+      case x: Throwable => throw new RuntimeException("Couldn't load blas!", x); false
     }
   }
 
@@ -912,7 +912,7 @@ trait LinearAlgebra {
     // of the diagonal elements X(i,i) where 0 <= i < N.
     // Since det(AB) = det(A) * det(B), the LU factorization is well-suited for
     // the computation of the determinant of general N-by-N matrices.
-    val (m, ipiv) = LU(X)
+    val (m:DenseMatrix[Double], ipiv:Array[Int]) = LU(X)
 
     // Count the number of exchanged rows.  ipiv contains an array of swapped indices,
     //  but it also contains indices that weren't swapped.  To count the swapped
@@ -934,7 +934,8 @@ trait LinearAlgebra {
   def inv[T](X: Matrix[T])(implicit td: T => Double): DenseMatrix[Double] = {
     requireSquareMatrix(X)
 
-    val (m, ipiv) = LU(X)
+    // Should these type hints be necessary?
+    val (m:DenseMatrix[Double], ipiv:Array[Int]) = LU(X)
     val N         = m.rows
     val lwork     = scala.math.max(1, N)
     val work      = Array.ofDim[Double](lwork)

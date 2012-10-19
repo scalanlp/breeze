@@ -6,12 +6,12 @@ import AssemblyKeys._
 
 object BuildSettings {
   val buildOrganization = "org.scalanlp"
-  val buildScalaVersion = "2.9.2"
+  val buildScalaVersion = "2.10.0-RC1"
 
   val buildSettings = Defaults.defaultSettings ++ Seq (
     organization := buildOrganization,
     scalaVersion := buildScalaVersion,
-    scalacOptions ++= Seq("-optimize","-deprecation", "-Ydependent-method-types"),
+    scalacOptions ++= Seq("-optimize","-deprecation"),
     resolvers ++= Seq(
       "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
     ),
@@ -84,6 +84,7 @@ object BreezeBuild extends Build {
       Seq(
         sv match {
           case "2.9.2" => "org.scala-tools.testing" % "scalacheck_2.9.1" % "1.9" % "test"
+          case "2.10.0-RC1" => "org.scalacheck" % "scalacheck_2.10.0-RC1" % "1.10.0" % "test"
           case _       => "org.scala-tools.testing" % "scalacheck" % "1.9" % "test"
         },
         "org.scalatest" % "scalatest_2.9.0" % "1.8" % "test",

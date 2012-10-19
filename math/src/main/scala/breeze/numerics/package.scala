@@ -47,7 +47,7 @@ package object numerics extends UniversalFuncs {
         x += 1
       }
 
-      val f = 1./(x * x)
+      val f = 1.0/(x * x)
       val t = f*(-1/12.0 +
         f*(1/120.0 +
           f*(-1/252.0 +

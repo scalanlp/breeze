@@ -136,7 +136,6 @@ class VectorBuilder[@spec(Double,Int, Float) E](private var _index: Array[Int],
   }
 
   def toHashVector = {
-    implicit val defaultArrayValue = DefaultArrayValue.forClass(_data.getClass.getComponentType).asInstanceOf[DefaultArrayValue[E]]
     implicit val man = ClassManifest.fromClass(_data.getClass.getComponentType.asInstanceOf[Class[E]])
     val hv = HashVector.zeros[E](length)
     var i = 0

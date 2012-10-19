@@ -20,7 +20,7 @@ import breeze.math.{TensorSpace, Ring, Semiring, Field}
 import breeze.generic.{URFunc, UReduceable, CanMapValues}
 import collection.Set
 import operators._
-import support.{CanZipMapValues, CanNorm, CanCopy}
+import support.{CanCreateZerosLike, CanZipMapValues, CanNorm, CanCopy}
 
 /**
  * A map-like tensor that acts like a collection of key-value pairs where
@@ -116,7 +116,7 @@ object Counter extends CounterOps {
 
   def count[K](items: K*): Counter[K,Int] = count(items)
 
-  implicit def CanMapValuesCounter[K, V, RV:Semiring:DefaultArrayValue]: CanMapValues[Counter[K, V], V, RV, Counter[K, RV]]
+  implicit def canMapValues[K, V, RV:Semiring:DefaultArrayValue]: CanMapValues[Counter[K, V], V, RV, Counter[K, RV]]
   = new CanMapValues[Counter[K,V],V,RV,Counter[K,RV]] {
     override def map(from : Counter[K,V], fn : (V=>RV)) = {
       val rv = Counter[K,RV]()
@@ -144,8 +144,36 @@ object Counter extends CounterOps {
 
   implicit def tensorspace[K, V:Field:DefaultArrayValue] = {
     implicit def zipMap = Counter.zipMap[K, V, V]
-    implicit def canDivVV = Counter.canDivVV[K, K, V]
-    TensorSpace.make[Counter[K, V], K, V]
+    // sigh...
+    TensorSpace.make[Counter[K, V], K, V](canNorm,
+      canMapValues[K, V, V],
+      ured[K, V],
+      zipMap,
+      addVS,
+      subVS,
+      canMulVV,
+      canDivVV,
+      canCopy,
+      canMulIntoVS,
+      canDivIntoVS,
+      addIntoVV[K, V],
+      subIntoVV[K, V],
+      addIntoVS[K, V],
+      subIntoVS[K, V],
+      canMulIntoVV,
+      canDivIntoVV,
+      canSetIntoVV,
+      canSetIntoVS,
+      implicitly[Field[V]],
+      implicitly[CanCreateZerosLike[Counter[K, V], Counter[K, V]]],
+      canMulVS,
+      canDivVS,
+      addVV,
+      subVV,
+      canNegate,
+      implicitly[<:<[breeze.linalg.Counter[K,V],breeze.linalg.NumericOps[breeze.linalg.Counter[K,V]] with breeze.linalg.QuasiTensor[K,V]]],
+      canMulInner[K, K, V]
+    )
   }
 }
 
@@ -181,7 +209,7 @@ trait CounterOps {
     binaryOpFromBinaryUpdateOp(canCopy, addIntoVV)
   }
 
-  implicit def addIntoVS[K1, K2<:K1, V:Semiring]:BinaryUpdateOp[Counter[K1, V], V, OpAdd] = new BinaryUpdateOp[Counter[K1, V], V, OpAdd] {
+  implicit def addIntoVS[K1, V:Semiring]:BinaryUpdateOp[Counter[K1, V], V, OpAdd] = new BinaryUpdateOp[Counter[K1, V], V, OpAdd] {
     val field = implicitly[Semiring[V]]
     def apply(a: Counter[K1, V], b: V) {
       for( (k,v) <- a.activeIterator) {
@@ -209,7 +237,7 @@ trait CounterOps {
     binaryOpFromBinaryUpdateOp(canCopy, subIntoVV)
   }
 
-  implicit def subIntoVS[K1, K2<:K1, V:Ring]:BinaryUpdateOp[Counter[K1, V], V, OpSub] = new BinaryUpdateOp[Counter[K1, V], V, OpSub] {
+  implicit def subIntoVS[K1, V:Ring]:BinaryUpdateOp[Counter[K1, V], V, OpSub] = new BinaryUpdateOp[Counter[K1, V], V, OpSub] {
     val field = implicitly[Ring[V]]
     def apply(a: Counter[K1, V], b: V) {
       for( (k,v) <- a.activeIterator) {

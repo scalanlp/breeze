@@ -15,7 +15,6 @@ package breeze.linalg.support
  limitations under the License.
 */
 import breeze.math.Field
-import actors.threadpool.Arrays
 import breeze.util.ArrayUtil
 import breeze.generic.CanMapValues
 

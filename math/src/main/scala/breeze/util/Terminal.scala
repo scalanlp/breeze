@@ -22,46 +22,21 @@ package breeze.util
  */
 object Terminal {
   /** The width of the console, or 80 if it can't be discovered. */
-  lazy val terminalWidth : Int = {
-    // this ugly try-catch is here to use scala's built-in jline,
-    // which only exists in scala > 2.9
-    try {
-      type Terminal = { def getWidth() : Int; def getHeight() : Int; }
-      val terminal = Class.forName("scala.tools.jline.TerminalFactory").
-        getMethod("create").invoke(null).asInstanceOf[Terminal]
-      terminal.getWidth()
-    } catch {
-      case _ : Throwable => try {
-        type Terminal = { def getTerminalWidth() : Int; def getTerminalHeight() : Int; }
-        val terminal = Class.forName("jline.Terminal").
-          getMethod("getInstance").invoke(null).asInstanceOf[Terminal]
-        terminal.getTerminalWidth()
-      } catch {
-        case _ : Throwable => 80
-      }
-    }
-  }
+//  lazy val (terminalWidth: Int, terminalHeight : Int) = {
+//    try {
+//      val terminal = Class.forName("scala.tools.jline.TerminalFactory").
+//        getMethod("create").invoke(null)
+//      val width = terminal.getClass.getMethod("getWidth").invoke(terminal).asInstanceOf[java.lang.Integer].intValue()
+//      val height = terminal.getClass.getMethod("getHeight").invoke(terminal).asInstanceOf[java.lang.Integer].intValue()
+//      width -> height
+//    } catch {
+//      case _ : Throwable => 80
+//    }
+//  }
 
-  /** The height of the console, or 24 if it can't be discovered. */
-  lazy val terminalHeight : Int = {
-    // this ugly try-catch is here to use scala's built-in jline,
-    // which only exists in scala > 2.9
-    try {
-      type Terminal = { def getWidth() : Int; def getHeight() : Int; }
-      val terminal = Class.forName("scala.tools.jline.TerminalFactory").
-        getMethod("create").invoke(null).asInstanceOf[Terminal]
-      terminal.getHeight()
-    } catch {
-      case _ :Throwable => try {
-        type Terminal = { def getTerminalWidth() : Int; def getTerminalHeight() : Int; }
-        val terminal = Class.forName("jline.Terminal").
-          getMethod("getInstance").invoke(null).asInstanceOf[Terminal]
-        terminal.getTerminalHeight()
-      } catch {
-        case _ :Throwable => 24
-      }
-    }
-  }
+//    val (terminalWidth: Int, terminalHeight : Int) = (80, 80)
+  val terminalWidth: Int = 80
+  val terminalHeight: Int = 80
 
-  val newline = System.getProperty("line.separator")
+  val newline = "\n" //System.getProperty("line.separator")
 }

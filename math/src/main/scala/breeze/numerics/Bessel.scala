@@ -39,7 +39,7 @@ object Bessel {
     val ax = x.abs
     if (ax < 15.0) {
       val y = x * x
-      poly(i0p, y) / poly(i0q, 225.- y)
+      poly(i0p, y) / poly(i0q, 225.0 - y)
     } else {
       val z = 1.0 - 15.0 / ax
       exp(ax) * poly(i0pp, z) / (poly(i0qq, z) * sqrt(ax))
