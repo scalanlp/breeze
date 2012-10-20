@@ -107,11 +107,11 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
 
   test("erf") {
     import breeze.numerics.{erf,erfi}
-    erf(3.) should be (.9999779095030014 plusOrMinus 1E-8)
-    erf(-3.) should be (-.9999779095030014 plusOrMinus 1E-8)
+    erf(3.0) should be (.9999779095030014 plusOrMinus 1E-8)
+    erf(-3.0) should be (-.9999779095030014 plusOrMinus 1E-8)
     erf(1E-4) should be (0.00011283791633342489 plusOrMinus 1E-8)
-    erfi(3.) should be (1629.994622601567 plusOrMinus 1E-4)
-    erfi(-3.) should be (-1629.994622601567 plusOrMinus 1E-4)
+    erfi(3.0) should be (1629.994622601567 plusOrMinus 1E-4)
+    erfi(-3.0) should be (-1629.994622601567 plusOrMinus 1E-4)
     erf(1E-4) should be (0.00011283791708567767 plusOrMinus 1E-8)
 
 

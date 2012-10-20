@@ -43,7 +43,7 @@ case class StopWordFilter(language: String) extends Transformer {
     val strm = try {
       this.getClass.getClassLoader().getResourceAsStream("stopwords/" + language.toLowerCase + ".lst")
     } catch {
-      case _ => throw new IllegalArgumentException("Unavailable language: " + language)
+      case ex: Exception => throw new IllegalArgumentException("Unavailable language: " + language, ex)
     }
     val src = Source.fromInputStream(strm)
 

@@ -153,11 +153,11 @@ trait Configuration { outer =>
           // try to construct a builder by going through the companion
           container.erasure.newInstance().asInstanceOf[Iterable[T]].companion.newBuilder[T]
         } catch {
-          case e => // hope the companion is named like we want...
+          case e: Exception => // hope the companion is named like we want...
             try {
               Class.forName(container.erasure.getName + "$").getField("MODULE$").get(null).asInstanceOf[GenericCompanion[Iterable]].newBuilder[T]
             } catch {
-              case e =>
+              case e: Exception =>
               throw new NoParameterException("Can't figure out what to do with a sequence of type:" + container, prefix)
             }
         }

@@ -11,7 +11,7 @@ object BuildSettings {
   val buildSettings = Defaults.defaultSettings ++ Seq (
     organization := buildOrganization,
     scalaVersion := buildScalaVersion,
-    scalacOptions ++= Seq("-optimize","-deprecation"),
+    scalacOptions ++= Seq("-optimize","-deprecation", "-no-specialization"),
     resolvers ++= Seq(
       "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
     ),
@@ -87,7 +87,7 @@ object BreezeBuild extends Build {
           case "2.10.0-RC1" => "org.scalacheck" % "scalacheck_2.10.0-RC1" % "1.10.0" % "test"
           case _       => "org.scala-tools.testing" % "scalacheck" % "1.9" % "test"
         },
-        "org.scalatest" % "scalatest_2.9.0" % "1.8" % "test",
+        "org.scalatest" % "scalatest_2.10.0-RC1" % "2.0.M4-2.10.0-RC1-B1",
         "junit" % "junit" % "4.5" % "test"
       )
   }

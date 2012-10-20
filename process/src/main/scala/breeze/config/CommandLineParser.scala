@@ -17,7 +17,6 @@ import java.util.Properties
  */
 object CommandLineParser {
 
-  private def isNumber(s: String) = try { s.toDouble; true } catch {case ex => false}
 
   def parseArguments(args: IndexedSeq[String]):(Configuration,IndexedSeq[String]) = {
     val properties = collection.mutable.Map[String,String]();
@@ -80,4 +79,5 @@ object CommandLineParser {
     (Configuration.fromMap(Map.empty ++ properties), linear)
   }
 
+  private def isNumber(s: String) = try { s.toDouble; true } catch {case ex:NumberFormatException => false}
 }

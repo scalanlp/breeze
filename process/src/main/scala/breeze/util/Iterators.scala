@@ -51,7 +51,7 @@ object Iterators {
       running = false
     }
     
-    return new Iterator[E] {
+    new Iterator[E] {
       def waitIfNecessary() = {
         while (isRunning && !isPending) {
           Thread.`yield`

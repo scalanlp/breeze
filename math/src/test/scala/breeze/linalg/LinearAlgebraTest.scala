@@ -44,16 +44,16 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
 
   test("cholesky") {
     println(useNativeLibraries + " ??")
-    val A = DenseMatrix((1.,0.,0.),(2.,3.,0.),(4.,5.,6.))
+    val A = DenseMatrix((1.0,0.0,0.0),(2.0,3.0,0.0),(4.0,5.0,6.0))
     val Sigma = A * A.t
     assert(cholesky(Sigma) === A)
   }
 
   test("eigSym") {
-    val A = DenseMatrix((9.,0.,0.),(0.,82.,0.),(0.,0.,25.))
+    val A = DenseMatrix((9.0,0.0,0.0),(0.0,82.0,0.0),(0.0,0.0,25.0))
     val (lambda, Some(evs)) = eigSym(A, true)
-    assert(lambda === DenseVector(9.,25.,82.))
-    assert(evs === DenseMatrix((1.,0.,0.),(0.,0.,1.),(0.,1.,0.)))
+    assert(lambda === DenseVector(9.0,25.0,82.0))
+    assert(evs === DenseMatrix((1.0,0.0,0.0),(0.0,0.0,1.0),(0.0,1.0,0.0)))
   }
 
   test("LUfactorization") {
@@ -126,9 +126,9 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
   }
 
   test("rank") {
-    val r1 = DenseMatrix((1.,2.,3.), (1.,2.,3.), (1.,2.,3.))  // rank 1 matrix
-    val r2 = DenseMatrix((1.,2.,3.), (4.,5.,6.), (7.,8.,9.))  // rank 2 matrix
-    val r3 = DenseMatrix((1.,2.,3.), (4.,5.,6.), (6.,8.,9.))  // rank 3 matrix
+    val r1 = DenseMatrix((1.0,2.0,3.0), (1.0,2.0,3.0), (1.0,2.0,3.0))  // rank 1 matrix
+    val r2 = DenseMatrix((1.0,2.0,3.0), (4.0,5.0,6.0), (7.0,8.0,9.0))  // rank 2 matrix
+    val r3 = DenseMatrix((1.0,2.0,3.0), (4.0,5.0,6.0), (6.0,8.0,9.0))  // rank 3 matrix
     assert(rank(r1) === 1)
     assert(rank(r2) === 2)
     assert(rank(r3) === 3)
@@ -146,8 +146,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
     _Q foreachPair { case ((i,j), v) => v should be (expectedQ(i,j) plusOrMinus 1e-8) }
 
     val expectedR = DenseMatrix((-16.52271164,-4.418160988,-1.270977818),
-      (0.,-1.216492285,-1.138203178),
-      (0.,0.,-0.2985111571))
+      (0.0,-1.216492285,-1.138203178),
+      (0.0,0.0,-0.2985111571))
     _R.rows should  be (expectedR.rows)
     _R.cols should  be (expectedR.cols)
     _R foreachPair { case ((i,j), v) => v should be (expectedR(i,j) plusOrMinus 1e-8) }
@@ -179,8 +179,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
   test("complex eig test") {
     // complex, get it?
     val (w, wi, v) = eig(DenseMatrix((1.0, -1.0), (1.0, 1.0)))
-    assert(w === DenseVector(1., 1.))
-    assert(wi === DenseVector(1., -1.))
+    assert(w === DenseVector(1.0, 1.0))
+    assert(wi === DenseVector(1.0, -1.0))
     assert((v - diag(DenseVector(0.7071067811865475, -0.7071067811865475))).valuesIterator.max.abs < 1E-7)
     // TODO, we seem to throw out VI... these seems bad...
   }

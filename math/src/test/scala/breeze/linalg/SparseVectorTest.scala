@@ -37,7 +37,7 @@ class SparseVectorTest extends FunSuite {
     val a = SparseVector(0.56390,0.36231,0.14601,0.60294,0.14535)
     val b = SparseVector(0.15951,0.83671,0.56002,0.57797,0.54450)
     val bd = DenseVector(0.15951,0.83671,0.56002,0.57797,0.54450)
-    val bdSplit = DenseVector(0., 0.15951, 0., 0.83671,0., 0.56002, 0., 0.57797, 0., 0.54450)
+    val bdSplit = DenseVector(0.0, 0.15951, 0.0, 0.83671,0.0, 0.56002, 0.0, 0.57797, 0.0, 0.54450)
     val bdd = bdSplit(1 to 9 by 2)
     assertClose(a dot b, .90249)
 //    assertClose(a dot bd, .90249)
@@ -75,10 +75,10 @@ class SparseVectorTest extends FunSuite {
     val a = SparseVector(1.0, 2.0, 3.0)
     val b = SparseVector(3.0, 4.0, 5.0)
     (a:Vector[Double]) += (b: Vector[Double])
-    assert(a === SparseVector(4.,6.,8.))
+    assert(a === SparseVector(4.0,6.0,8.0))
     assert((a: Vector[Double]).dot (b: Vector[Double]) === (a dot b))
     (a:Vector[Double]) *= (b: Vector[Double])
-    assert(a === SparseVector(12.,24.,40.))
+    assert(a === SparseVector(12.0,24.0,40.0))
   }
 
 
@@ -90,7 +90,7 @@ class SparseVectorTest extends FunSuite {
   test("MapPairs Double") {
     val a: SparseVector[Double] = SparseVector(1, 2, 3, 4, 5)
     val m: SparseVector[Double] = a.mapPairs( (i, x) => x + 1)
-    assert(m === SparseVector(2., 3., 4., 5., 6.))
+    assert(m === SparseVector(2.0, 3.0, 4.0, 5.0, 6.0))
   }
 
   test("MapActivePairs only touches non-zero entries: Double") {
@@ -99,13 +99,13 @@ class SparseVectorTest extends FunSuite {
     a(2) = 3
     a(4) = 5
     val m: SparseVector[Double] = a.mapActivePairs( (i,x) => x+1)
-    assert(m === SparseVector(2., 0., 4., 0., 6.))
+    assert(m === SparseVector(2.0, 0.0, 4.0, 0.0, 6.0))
   }
  
   test("MapValues Double") {
     val a: SparseVector[Double] = SparseVector(1, 2, 3, 4, 5)
     val m: SparseVector[Double] = a.mapValues(_ + 1)
-    assert(m === SparseVector(2., 3., 4., 5., 6.))
+    assert(m === SparseVector(2.0, 3.0, 4.0, 5.0, 6.0))
   }
 
   test("MapActiveValues only touches non-zero entries: Double") {
@@ -114,7 +114,7 @@ class SparseVectorTest extends FunSuite {
     a(2) = 3
     a(4) = 5
     val m: SparseVector[Double] = a.mapActiveValues(_+1)
-    assert(m === SparseVector(2., 0., 4., 0., 6.))
+    assert(m === SparseVector(2.0, 0.0, 4.0, 0.0, 6.0))
   }
 
   test("MapPairs Int") {

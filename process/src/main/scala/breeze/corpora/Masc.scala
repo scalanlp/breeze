@@ -61,12 +61,12 @@ object MascNer {
         System.err.println("Success: " + file + "," + prefix)
       } 
       catch { 
-        case e => System.err.println("Failure: " + file + "," + prefix)
+        case e: Exception => System.err.println("Failure: " + file + "," + prefix)
       }
     }
-    output.flush
-    output.close
-    System.err.println
+    output.flush()
+    output.close()
+    System.err.println()
   }
 
   val badFiles = Set(

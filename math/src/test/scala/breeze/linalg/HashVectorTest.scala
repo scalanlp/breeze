@@ -37,7 +37,7 @@ class HashVectorTest extends FunSuite {
     val a = HashVector(0.56390,0.36231,0.14601,0.60294,0.14535)
     val b = HashVector(0.15951,0.83671,0.56002,0.57797,0.54450)
     val bd = DenseVector(0.15951,0.83671,0.56002,0.57797,0.54450)
-    val bdSplit = DenseVector(0., 0.15951, 0., 0.83671,0., 0.56002, 0., 0.57797, 0., 0.54450)
+    val bdSplit = DenseVector(0.0, 0.15951, 0.0, 0.83671,0.0, 0.56002, 0.0, 0.57797, 0.0, 0.54450)
     val bdd = bdSplit(1 to 9 by 2)
     assertClose(a dot b, .90249)
 //    assertClose(a dot bd, .90249)
@@ -75,10 +75,10 @@ class HashVectorTest extends FunSuite {
     val a = HashVector(1.0, 2.0, 3.0)
     val b = HashVector(3.0, 4.0, 5.0)
     (a:Vector[Double]) += (b: Vector[Double])
-    assert(a === HashVector(4.,6.,8.))
+    assert(a === HashVector(4.0,6.0,8.0))
     assert((a: Vector[Double]).dot (b: Vector[Double]) === (a dot b))
     (a:Vector[Double]) *= (b: Vector[Double])
-    assert(a === HashVector(12.,24.,40.))
+    assert(a === HashVector(12.0,24.0,40.0))
   }
 
 
@@ -90,7 +90,7 @@ class HashVectorTest extends FunSuite {
   test("MapPairs Double") {
     val a: HashVector[Double] = HashVector(1, 2, 3, 4, 5)
     val m: HashVector[Double] = a.mapPairs( (i, x) => x + 1)
-    assert(m === HashVector(2., 3., 4., 5., 6.))
+    assert(m === HashVector(2.0, 3.0, 4.0, 5.0, 6.0))
   }
 
   test("MapActivePairs only touches non-zero entries: Double") {
@@ -99,13 +99,13 @@ class HashVectorTest extends FunSuite {
     a(2) = 3
     a(4) = 5
     val m: HashVector[Double] = a.mapActivePairs( (i,x) => x+1)
-    assert(m === HashVector(2., 0., 4., 0., 6.))
+    assert(m === HashVector(2.0, 0.0, 4.0, 0.0, 6.0))
   }
  
   test("MapValues Double") {
     val a: HashVector[Double] = HashVector(1, 2, 3, 4, 5)
     val m: HashVector[Double] = a.mapValues(_ + 1)
-    assert(m === HashVector(2., 3., 4., 5., 6.))
+    assert(m === HashVector(2.0, 3.0, 4.0, 5.0, 6.0))
   }
 
   test("MapActiveValues only touches non-zero entries: Double") {
@@ -114,7 +114,7 @@ class HashVectorTest extends FunSuite {
     a(2) = 3
     a(4) = 5
     val m: HashVector[Double] = a.mapActiveValues(_+1)
-    assert(m === HashVector(2., 0., 4., 0., 6.))
+    assert(m === HashVector(2.0, 0.0, 4.0, 0.0, 6.0))
   }
 
   test("MapPairs Int") {

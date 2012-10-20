@@ -125,7 +125,8 @@ private[config] object ReflectionUtils {
     case jl.Float.TYPE => Manifest.Float.asInstanceOf[Manifest[Object]]
     case jl.Boolean.TYPE => Manifest.Boolean.asInstanceOf[Manifest[Object]]
     case tpe: Class[_] with ParameterizedType => new Manifest[Object] {
-      def erasure = tpe
+      override def erasure: Class[_] = tpe
+      def runtimeClass = tpe
 
       override def typeArguments = tpe.getActualTypeArguments.map(mkManifest(typeMap, _)).toList
 
@@ -134,14 +135,19 @@ private[config] object ReflectionUtils {
     case tpe: ParameterizedType =>
       val innerMan = mkManifest(Map.empty, tpe.getRawType)
       new Manifest[Object] {
-        def erasure = innerMan.erasure
+        override def erasure = innerMan.erasure
+
+        def runtimeClass = innerMan.erasure
 
         override def typeArguments = tpe.getActualTypeArguments.map(mkManifest(typeMap, _)).toList
 
         override def toString = erasure.getName + argString
       }
     case tpe: Class[_] => new Manifest[Object] {
-      def erasure = tpe
+      def runtimeClass = tpe
+
+
+      override def erasure: Class[_] = tpe
 
       override def toString = erasure.getName + argString
     }

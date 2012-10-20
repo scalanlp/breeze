@@ -1,9 +1,9 @@
-package breeze.corpora;
+package breeze.corpora
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
  
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at 
  
@@ -17,10 +17,10 @@ package breeze.corpora;
 */
 
 
-//import breeze.util.Implicits._;
-import java.net._;
-import java.io.File;
-import scala.xml.XML;
+//import breeze.util.Implicits._
+import java.net._
+import java.io.File
+import scala.xml.XML
 
 /**
 * Class to help load corpora. Each Corpus is represented by a class
@@ -48,23 +48,23 @@ import scala.xml.XML;
 * @author dlwh
 */
 class Corpora(val repositories: Seq[URL]) {
-  import Corpora._;
-  def this(remoteURL: String) = this( Array(CorpusUtils.defaultCorpusRepo, new URL(remoteURL)));
+  import Corpora._
+  def this(remoteURL: String) = this( Array(CorpusUtils.defaultCorpusRepo, new URL(remoteURL)))
 
   /**
   * Create a new instance of the corpus.
   */
   def load[T](clss: Class[U] forSome {type U<:Corpus[T]}) = {
-    clss.newInstance;
+    clss.newInstance
   }
 
   /**
   * Either loads the Corpus with the given class name, or searches the repositories for the corpus with the (lowercase) name.
   */
   def load[T](name: String):Corpus[T] = { 
-    val clss = cForName[T](name) orElse cForName[T]("breeze.corpora."+name);
+    val clss = cForName[T](name) orElse cForName[T]("breeze.corpora."+name)
     clss match {
-      case None => locateCorpus(name);
+      case None => locateCorpus(name)
       case Some(c) => load(c.asSubclass(classOf[Corpus[T]]))
     }
   }
@@ -74,56 +74,56 @@ class Corpora(val repositories: Seq[URL]) {
   * Searches for a corpus in the available repositories.
   */
   def locateCorpus[T](name: String) : Corpus[T] = {
-    val jarLocation = findJar(name);
-    val cl = new URLClassLoader(Array(jarLocation));
+    val jarLocation = findJar(name)
+    val cl = new URLClassLoader(Array(jarLocation))
     val className = {
-      val strm = cl.getResourceAsStream("breeze-corpus.xml");
-      val xml = XML.load(strm);
-      println(xml);
-      strm.close();
-      (xml \ "classname").text.trim();
+      val strm = cl.getResourceAsStream("breeze-corpus.xml")
+      val xml = XML.load(strm)
+      println(xml)
+      strm.close()
+      (xml \ "classname").text.trim()
     }
-    println(className + " " + jarLocation);
-    load(cl.loadClass(className).asSubclass(classOf[Corpus[T]]));
+    println(className + " " + jarLocation)
+    load(cl.loadClass(className).asSubclass(classOf[Corpus[T]]))
   }
 
   private def findJar(name: String) = {
-    val lowerName = name.toLowerCase;
-    val urls = repositories.iterator;
+    val lowerName = name.toLowerCase
+    val urls = repositories.iterator
 
-    var jar: URL = null;
+    var jar: URL = null
     while(urls.hasNext && (jar eq null)) {
-      val url = urls.next;
+      val url = urls.next
       try { // is it a directory?
-        val f = new File(url.toURI);
-        val location = new File(new File(f, "org/breeze/corpora/"), lowerName);
-        println(location);
+        val f = new File(url.toURI)
+        val location = new File(new File(f, "org/breeze/corpora/"), lowerName)
+        println(location)
         if(location.exists && location.isDirectory) {
           val latestVersion = location.listFiles.filter(_.isDirectory).reduceLeft( (x,y) =>
             new File(lexicographicOrder(x.getName,y.getName))
-          );
-          println(latestVersion);
+          )
+          println(latestVersion)
           jar = latestVersion.listFiles.filter(_.getName.endsWith(".jar"))(0).toURI.toURL
         }
       } catch { // not a file, so we'll hope it's a maven repo
-        case _ => 
-        val location = url.toString +"/org/breeze/corpora/"+lowerName;
-        val metadata = new URL(location + "/maven-metadata.xml");
+        case _:Exception =>
+        val location = url.toString +"/org/breeze/corpora/"+lowerName
+        val metadata = new URL(location + "/maven-metadata.xml")
         try {
-          val stream = metadata.openStream();
+          val stream = metadata.openStream()
           try {
             val xml = XML.load(stream); 
             val latestVersion = (xml \ "version").text
-            jar = new URL(location + "/" + latestVersion + "/"+lowerName + "-"+latestVersion + ".jar");
+            jar = new URL(location + "/" + latestVersion + "/"+lowerName + "-"+latestVersion + ".jar")
           } finally {
-            stream.close();
+            stream.close()
           }
         } catch {
-          case _ => ();
+          case _:Exception => ()
         } 
       }
     }
-    if(jar == null) throw new RuntimeException("Couldn't find the corpus " + name);
+    if(jar == null) throw new RuntimeException("Couldn't find the corpus " + name)
     jar
   }
 
@@ -133,15 +133,15 @@ class Corpora(val repositories: Seq[URL]) {
       try {
         s1.toInt > s2.toInt
       } catch {
-        case _ => s1 > s2;
+        case _ => s1 > s2
       }
-    }) f1 else f2;
+    }) f1 else f2
   }
 
   private def cForName[T](name: String) = try {
     Some(Class.forName(name).asInstanceOf[Class[Corpus[T]]])
   } catch {
-    case _ => None;
+    case _: Exception => None
   }
 
 }
@@ -152,11 +152,11 @@ object Corpora extends Corpora("http://repo.breeze.org/repo/") {
 object CorpusUtils {
   protected[corpora] def defaultCorpusRepo = {
     val repoFile = {
-      var a = System.getenv("SCALANLP_CORPORA");
-      if(a == null) a = System.getenv("MAVEN_HOME");
+      var a = System.getenv("SCALANLP_CORPORA")
+      if(a == null) a = System.getenv("MAVEN_HOME")
       if(a == null) a = System.getenv("HOME") + "/.m2/"
-    a } + "repository/";
-    new File(repoFile).toURI.toURL;
+    a } + "repository/"
+    new File(repoFile).toURI.toURL
   }
 
 }
