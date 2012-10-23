@@ -11,7 +11,7 @@ object BuildSettings {
   val buildSettings = Defaults.defaultSettings ++ Seq (
     organization := buildOrganization,
     scalaVersion := buildScalaVersion,
-    scalacOptions ++= Seq("-optimize","-deprecation", "-no-specialization"),
+    scalacOptions ++= Seq("-optimize","-deprecation"),
     resolvers ++= Seq(
       "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
     ),
