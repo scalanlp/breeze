@@ -167,6 +167,18 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
       math.pow(sum, 1.0 / n)
     }
   }
+
+  /**
+   * Slices the DenseVector, in the range (start,end
+   * @param start
+   * @param end
+   * @param stride
+   */
+  def slice(start: Int, end: Int, stride: Int=1):DenseVector[E] = {
+    if(start > end || start < 0) throw new IllegalArgumentException("Slice arguments " + start +", " +end +" invalid.")
+    if(end > length || end < 0) throw new IllegalArgumentException("End " + end + "is out of bounds for slice of DenseVector of length " + length)
+    new DenseVector(data, start + offset, stride * this.stride, (end-start)/stride)
+  }
 }
 
 

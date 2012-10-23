@@ -70,12 +70,12 @@ class DenseVectorTest extends FunSuite with Checkers {
   }
 
   test("MulOuter") {
-    val a = DenseVector(1., 2., 3.)
-    val b = DenseVector(6., -4., 8.)
+    val a = DenseVector(1.0, 2.0, 3.0)
+    val b = DenseVector(6.0, -4.0, 8.0)
 
     // assert result is a dense matrix
     val m: DenseMatrix[Double] = a * b.t
-    assert(m === DenseMatrix((6., -4., 8.), (12., -8., 16.), (18., -12., 24.)))
+    assert(m === DenseMatrix((6.0, -4.0, 8.0), (12.0, -8.0, 16.0), (18.0, -12.0, 24.0)))
   }
 
   test("Slice") {
@@ -102,15 +102,19 @@ class DenseVectorTest extends FunSuite with Checkers {
     val x = DenseVector[Double](1, 2, 3, 4, 5)
 
     val s: DenseVector[Double] = x(2 to 3)
+    val s2: DenseVector[Double] = x.slice(2,4)
 
-    assert(s === DenseVector(3., 4.))
+    assert(s === DenseVector(3.0, 4.0))
+    assert(s2 === DenseVector(3.0, 4.0))
 
     val t = s.t
 
-    assert(t === DenseVector(3., 4.).t)
+    assert(t === DenseVector(3.0, 4.0).t)
 
     val emptySlice = x(2 until 2)
+    val emptySlice2 = x.slice(2,2)
     assert(emptySlice === DenseVector[Double]())
+    assert(emptySlice2 === DenseVector[Double]())
   }
 
   test("Slice and Transpose Int") {
@@ -150,23 +154,23 @@ class DenseVectorTest extends FunSuite with Checkers {
     // test static type and write-through of transpose
     val y = x.t
     y(0, 0) = 0
-    assert(x === DenseVector(0., 2., 3.))
+    assert(x === DenseVector(0.0, 2.0, 3.0))
   }
 
   test("Map(Active)Pairs Double") {
     val a: DenseVector[Double] = DenseVector(1, 2, 3, 4, 5)
     val mv: DenseVector[Double] = a.mapPairs((i,x) => x + 1)
     val mav: DenseVector[Double] = a.mapActivePairs((i,x) => x + 1)
-    assert(mv === DenseVector(2., 3., 4., 5., 6.))
-    assert(mav === DenseVector(2., 3., 4., 5., 6.))
+    assert(mv === DenseVector(2.0, 3.0, 4.0, 5.0, 6.0))
+    assert(mav === DenseVector(2.0, 3.0, 4.0, 5.0, 6.0))
   }
 
   test("Map(Active)Values Double") {
     val a: DenseVector[Double] = DenseVector(1, 2, 3, 4, 5)
     val mv: DenseVector[Double] = a.mapValues(_ + 1)
     val mav: DenseVector[Double] = a.mapActiveValues(_ + 1)
-    assert(mv === DenseVector(2., 3., 4., 5., 6.))
-    assert(mav === DenseVector(2., 3., 4., 5., 6.))
+    assert(mv === DenseVector(2.0, 3.0, 4.0, 5.0, 6.0))
+    assert(mav === DenseVector(2.0, 3.0, 4.0, 5.0, 6.0))
   }
 
   test("Map(Active)Pairs Int") {
@@ -255,10 +259,10 @@ class DenseVectorTest extends FunSuite with Checkers {
     val a = DenseVector(1.0, 2.0, 3.0)
     val b = DenseVector(3.0, 4.0, 5.0)
     (a:Vector[Double]) += (b: Vector[Double])
-    assert(a === DenseVector(4.,6.,8.))
+    assert(a === DenseVector(4.0,6.0,8.0))
     assert((a: Vector[Double]).dot (b: Vector[Double]) === (a dot b))
     (a:Vector[Double]) *= (b: Vector[Double])
-    assert(a === DenseVector(12.,24.,40.))
+    assert(a === DenseVector(12.0,24.0,40.0))
   }
 
   test("Generic DV ops") {
