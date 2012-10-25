@@ -18,7 +18,6 @@ package breeze.collection.mutable
 import breeze.storage.{Storage, ConfigurableDefault, DefaultArrayValue}
 import java.util
 
-
 /**
  * This is a Sparse Array implementation backed by a linear-probing
  * open address hash table.
@@ -150,6 +149,31 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
       load, size, default
     )
   }
+
+  // This hash code must be symmetric in the contents but ought not
+  // collide trivially. based on hashmap.hashcode
+  override def hashCode() = scala.util.MurmurHash.symmetricHash(iterator, 43)
+
+  override def equals(that: Any): Boolean = that match {
+    case that: OpenAddressHashArray[Elem] =>
+      (this eq that) ||
+      (this.size == that.size) && {
+      try {
+        this.iterator forall {
+          case (k, v) => that(k) match {
+            case Some(v) =>
+              true
+            case _ => false
+          }
+        }
+      } catch {
+        case ex: ClassCastException =>
+          false
+      }}
+    case _ =>
+      false
+  }
+
 }
 
 object OpenAddressHashArray {
