@@ -37,7 +37,7 @@ object DescriptiveStats {
       val s = oldVar + frac.fromInt(i-1) / frac.fromInt(i) * d *d;
       (mu,s,i);
     }
-    (mu,s/frac.fromInt(n-1));
+    (mu,if(n==1) frac.zero else s/frac.fromInt(n-1));
   }
 
   /**
