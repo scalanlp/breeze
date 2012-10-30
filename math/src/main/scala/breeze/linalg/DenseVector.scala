@@ -22,7 +22,7 @@ import support.{CanCreateZerosLike, CanMapKeyValuePairs, CanZipMapValues, CanSli
 import breeze.numerics.IntMath
 import java.util.Arrays
 import breeze.math.{TensorSpace, Semiring, Ring, Field}
-import breeze.util.ArrayUtil
+import breeze.util.{ArrayUtil, Isomorphism}
 import breeze.storage.DefaultArrayValue
 
 /**
@@ -40,10 +40,10 @@ import breeze.storage.DefaultArrayValue
  */
 @SerialVersionUID(1L)
 class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
-                                                     val offset: Int,
-                                                     val stride: Int,
-                                                     val length: Int) extends StorageVector[E]
-                                                    with VectorLike[E, DenseVector[E]] with Serializable{
+                                               val offset: Int,
+                                               val stride: Int,
+                                               val length: Int) extends StorageVector[E]
+                                              with VectorLike[E, DenseVector[E]] with Serializable{
   def this(data: Array[E]) = this(data, 0, 1, data.length)
 
   // uncomment to get all the ridiculous places where specialization fails.
@@ -369,6 +369,17 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   implicit val space_f = TensorSpace.make[DenseVector[Float], Int, Float]
   implicit val space_i = TensorSpace.make[DenseVector[Int], Int, Int]
 
+  object TupleIsomorphisms {
+    implicit object doubleIsVector extends Isomorphism[Double,DenseVector[Double]] {
+      def forward(t: Double) = DenseVector(t)
+      def backward(t: DenseVector[Double]) = { assert(t.size == 1); t(0)}
+    }
+
+    implicit object pdoubleIsVector extends Isomorphism[(Double,Double),DenseVector[Double]] {
+      def forward(t: (Double,Double)) = DenseVector(t._1,t._2)
+      def backward(t: DenseVector[Double]) = { assert(t.size == 2); (t(0),t(1))}
+    }
+  }
 }
 
 trait DenseVector_GenericOps { this: DenseVector.type =>

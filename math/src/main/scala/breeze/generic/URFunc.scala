@@ -15,6 +15,8 @@ package breeze.generic
  limitations under the License.
 */
 
+import breeze.collection.mutable.SparseArray
+
 /**
  * A "Universal Reducer" Function that can support reduction-type operations
  * on a collection or some such.
@@ -69,6 +71,14 @@ object UReduceable {
     new UReduceable[Array[A], A] {
       def apply[Final](c: Array[A], f: URFunc[A, Final]) = {
         f(c)
+      }
+    }
+  }
+
+  implicit def sparseArrayIsUReduceable[A]:UReduceable[SparseArray[A], A] = {
+    new UReduceable[SparseArray[A], A] {
+      def apply[Final](c: SparseArray[A], f: URFunc[A, Final]) = {
+        f(c.data, c.activeSize)
       }
     }
   }

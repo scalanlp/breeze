@@ -16,8 +16,6 @@
 package breeze;
 package io;
 
-import serialization.TextSerialization;
-
 /**
  * Reader for consuming unicode code points from a stream.  See implicit
  * constructors in companion object.  This class is not threadsafe.
@@ -99,7 +97,7 @@ trait TextReader { self =>
     } else if (c == '\n') {
       "\n"
     } else {
-      die("Expected newline but got: '"+TextSerialization.escapeChar(c.toChar)+"'");
+      die("Expected newline but got: '"+TextReader.escapeChar(c.toChar)+"'");
     }
   }
 
@@ -147,7 +145,7 @@ trait TextReader { self =>
   def expect(literal : Char) : Unit = {
     val got = read();
     if (got != literal) {
-      die("Got: "+TextSerialization.escapeChar(got.toChar)+" != "+TextSerialization.escapeChar(literal));
+      die("Got: "+TextReader.escapeChar(got.toChar)+" != "+TextReader.escapeChar(literal));
     }
   }
 
@@ -155,7 +153,7 @@ trait TextReader { self =>
   def expectLower(literal : Char) : Unit = {
     val got = Character.toLowerCase(read());
     if (got != literal) {
-      die("Got: "+TextSerialization.escapeChar(got.toChar)+" != "+TextSerialization.escapeChar(literal));
+      die("Got: "+TextReader.escapeChar(got.toChar)+" != "+TextReader.escapeChar(literal));
     }
   }
 
@@ -163,7 +161,7 @@ trait TextReader { self =>
   def expect(literal : String) : Unit = {
     val got = read(literal.length);
     if (got != literal) {
-      die("Got: "+TextSerialization.escape(got)+" != "+TextSerialization.escape(literal));
+      die("Got: "+TextReader.escape(got)+" != "+TextReader.escape(literal));
     }
   }
 
@@ -171,7 +169,7 @@ trait TextReader { self =>
   def expectLower(literal : String) : Unit = {
     val got = read(literal.length).toLowerCase;
     if (got != literal) {
-      die("Got: "+TextSerialization.escape(got)+" != "+TextSerialization.escape(literal));
+      die("Got: "+TextReader.escape(got)+" != "+TextReader.escape(literal));
     }
   }
 
@@ -316,6 +314,50 @@ object TextReader {
 
     override def close() =
       reader.close();
+  }
+
+  // utility methods
+  /** Escapes the given string.  Unicode friendly, but only for code points that fit inside a Char. */
+  def escapeChar(c : Char) : String = c match {
+    case '"'  => "\\\"";
+    case '\\' => "\\\\";
+    case '\b' => "\\b";
+    case '\f' => "\\f";
+    case '\n' => "\\n";
+    case '\r' => "\\r";
+    case '\t' => "\\t";
+    case c if ((c >= '\u0000' && c <= '\u001F') || (c >= '\u007F' && c <= '\u009F') || (c >= '\u2000' && c <= '\u20FF')) =>
+      { val hex = c.toInt.toHexString.toUpperCase; "\\u"+("0"*(4-hex.length))+hex; }
+    case c => c.toString;
+  }
+
+
+
+  /** Escapes the given string.  Unicode friendly. */
+  def escape(str : String) : String = {
+    val sb = new java.lang.StringBuilder;
+
+    var i = 0;
+    while (i < str.length) {
+      val cp = str.codePointAt(i);
+
+      if (cp == '"') sb.append("\\\"");
+      else if (cp == '\\') sb.append("\\\\");
+      else if (cp == '\b') sb.append("\\b");
+      else if (cp == '\f') sb.append("\\f");
+      else if (cp == '\n') sb.append("\\n");
+      else if (cp == '\r') sb.append("\\r");
+      else if (cp == '\t') sb.append("\\t");
+      else if ((cp >= '\u0000' && cp <= '\u001F') || (cp >= '\u007F' && cp <= '\u009F') || (cp >= '\u2000' && cp <= '\u20FF')) {
+        val hex = cp.toInt.toHexString.toUpperCase;
+        sb.append("\\u"+("0"*(4-hex.length))+hex);
+      }
+      else sb.appendCodePoint(cp);
+
+      i += Character.charCount(cp);
+    }
+
+    sb.toString;
   }
 }
 

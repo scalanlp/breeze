@@ -1,4 +1,5 @@
 package breeze.collection.mutable
+
 /*
  Copyright 2012 David Hall
 

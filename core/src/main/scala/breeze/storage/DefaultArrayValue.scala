@@ -16,10 +16,17 @@ package breeze.storage
  limitations under the License.
 */
 
+
+
+/**
+ *
+ * @author dlwh
+ */
 @SerialVersionUID(1l)
 trait DefaultArrayValue[@specialized T] extends Serializable {
   def value : T
 }
+
 
 object DefaultArrayValue {
   def forClass(clazz: Class[_]):DefaultArrayValue[_] = {
@@ -76,4 +83,3 @@ object DefaultArrayValue {
   implicit def ObjectDefaultArrayValue[T<:AnyRef] =
     refDefault.asInstanceOf[DefaultArrayValue[T]]
 }
-

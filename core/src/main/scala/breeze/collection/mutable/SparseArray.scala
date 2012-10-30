@@ -1,4 +1,5 @@
 package breeze.collection.mutable
+
 /*
  Copyright 2012 David Hall
 
@@ -17,7 +18,6 @@ package breeze.collection.mutable
 import breeze.storage.{Storage, DefaultArrayValue, ConfigurableDefault}
 import collection.mutable.BitSet
 import breeze.util.ArrayUtil
-import breeze.generic.{URFunc, UReduceable}
 import java.util
 
 
@@ -456,12 +456,6 @@ object SparseArray {
     rv
   }
 
-  implicit def sparseArrayIsUReduceable[A]:UReduceable[SparseArray[A], A] = {
-    new UReduceable[SparseArray[A], A] {
-      def apply[Final](c: SparseArray[A], f: URFunc[A, Final]) = {
-        f(c.data, c.used)
-      }
-    }
-  }
+
 
 }

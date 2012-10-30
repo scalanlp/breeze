@@ -1,4 +1,4 @@
-package breeze.collection.immutable;
+package breeze.collection.immutable
 
 /*
  Copyright 2009 David Hall, Daniel Ramage

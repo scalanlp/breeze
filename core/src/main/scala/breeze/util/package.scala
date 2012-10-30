@@ -1,16 +1,16 @@
 package breeze
 
+import java.util.zip._
 import java.io._
-import util.{IteratorImplicits, DoubleImplicits}
-import java.util.zip.{GZIPOutputStream, GZIPInputStream}
-import scala.collection.generic.CanBuildFrom
+import scala.collection.generic._
 
 /**
- * Adds a bunch of implicits and things that are generically useful.
+ *
  * @author dlwh
  */
-package object util extends DoubleImplicits with IteratorImplicits {
-  /**
+package object util {
+
+/**
    * Deserializes an object using java serialization
    */
   def readObject[T](loc: File) = {
@@ -99,5 +99,4 @@ package object util extends DoubleImplicits with IteratorImplicits {
 
   implicit def seqExtras[T](s: Seq[T]) = new SeqExtras(s);
 
-  implicit def arraySeqExtras[T](s: Array[T]) = new SeqExtras(s);
-}
+  implicit def arraySeqExtras[T](s: Array[T]) = new SeqExtras(s);}

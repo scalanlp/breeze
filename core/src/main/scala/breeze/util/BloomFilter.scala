@@ -1,4 +1,5 @@
 package breeze.util
+
 /*
  Copyright 2010 David Hall, Daniel Ramage
 

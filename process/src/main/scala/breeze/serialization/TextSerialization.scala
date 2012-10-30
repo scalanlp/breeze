@@ -187,7 +187,7 @@ with StringSerialization {
 
     override def write(out : Output, c : Char) = {
       out.append('\'');
-      out.append(if (c == '\'') "\\'" else escapeChar(c));
+      out.append(if (c == '\'') "\\'" else TextReader.escapeChar(c));
       out.append('\'');
     }
   }
@@ -209,7 +209,7 @@ with StringSerialization {
               case '\\' => '\\';
               case '/'  => '/';
               case 'u'  => java.lang.Integer.parseInt(in.read(4), 16).toChar;
-              case c    => throw new TextSerializationException("Unknown escape character "+escapeChar(c.toChar));
+              case c    => throw new TextSerializationException("Unknown escape character "+ TextReader.escapeChar(c.toChar));
             }
             case c : Int => c
           }
@@ -221,7 +221,7 @@ with StringSerialization {
 
     override def write(out : Output, v : String) = {
       out.append(quote);
-      out.append(escape(v));
+      out.append(TextReader.escape(v));
       out.append(quote);
     }
   }
@@ -309,46 +309,6 @@ with StringSerialization {
   // Utility methods
   //
 
-  /** Escapes the given string.  Unicode friendly, but only for code points that fit inside a Char. */
-  def escapeChar(c : Char) : String = c match {
-    case '"'  => "\\\"";
-    case '\\' => "\\\\";
-    case '\b' => "\\b";
-    case '\f' => "\\f";
-    case '\n' => "\\n";
-    case '\r' => "\\r";
-    case '\t' => "\\t";
-    case c if ((c >= '\u0000' && c <= '\u001F') || (c >= '\u007F' && c <= '\u009F') || (c >= '\u2000' && c <= '\u20FF')) =>
-      { val hex = c.toInt.toHexString.toUpperCase; "\\u"+("0"*(4-hex.length))+hex; }
-    case c => c.toString;
-  }
-
-  /** Escapes the given string.  Unicode friendly. */
-  def escape(str : String) : String = {
-    val sb = new java.lang.StringBuilder;
-
-    var i = 0;
-    while (i < str.length) {
-      val cp = str.codePointAt(i);
-
-      if (cp == '"') sb.append("\\\"");
-      else if (cp == '\\') sb.append("\\\\");
-      else if (cp == '\b') sb.append("\\b");
-      else if (cp == '\f') sb.append("\\f");
-      else if (cp == '\n') sb.append("\\n");
-      else if (cp == '\r') sb.append("\\r");
-      else if (cp == '\t') sb.append("\\t");
-      else if ((cp >= '\u0000' && cp <= '\u001F') || (cp >= '\u007F' && cp <= '\u009F') || (cp >= '\u2000' && cp <= '\u20FF')) {
-        val hex = cp.toInt.toHexString.toUpperCase;
-        sb.append("\\u"+("0"*(4-hex.length))+hex);
-      }
-      else sb.appendCodePoint(cp);
-
-      i += Character.charCount(cp);
-    }
-
-    sb.toString;
-  }
 }
 
 /**

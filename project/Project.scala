@@ -62,8 +62,10 @@ object BreezeBuild extends Build {
   val jblas = "org.scalanlp" % "jblas" % "1.2.1"
   val antiXML = "com.codecommit" % "anti-xml_2.9.1" % "0.3"
   val liblinear = "de.bwaldvogel" % "liblinear" % "1.8"
-  val commonDeps = Seq(paranamer, netlib, jblas, antiXML, liblinear)
 
+  val coreDeps = Seq(paranamer)
+  val commonDeps = Seq(paranamer, netlib, jblas, antiXML)
+  val learnDeps = commonDeps ++ Seq(liblinear)
   val vizDeps = Seq(
     "jfree" % "jcommon" % "1.0.16",
     "jfree" % "jfreechart" % "1.0.13",
@@ -135,9 +137,10 @@ object BreezeBuild extends Build {
   //
 
   lazy val breeze = Project("breeze", file("."), settings = buildSettings) aggregate (math,process,learn,graphs,viz) dependsOn (math,process,learn,graphs,viz)
-  lazy val math = Project("breeze-math",file("math"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies ++ assemblySettings)
-  lazy val process = Project("breeze-process",file("process"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies ++ assemblySettings) dependsOn(math)
-  lazy val learn = Project("breeze-learn",file("learn") , settings = buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies++ assemblySettings) dependsOn(math,process)
+  lazy val core = Project("breeze-core",file("core"), settings =  buildSettings ++ Seq (libraryDependencies ++= coreDeps) ++ testDependencies ++ assemblySettings)
+  lazy val math = Project("breeze-math",file("math"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies ++ assemblySettings) dependsOn(core)
+  lazy val process = Project("breeze-process",file("process"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies ++ assemblySettings) dependsOn(math, core)
+  lazy val learn = Project("breeze-learn",file("learn") , settings = buildSettings ++ Seq (libraryDependencies ++= learnDeps) ++ testDependencies++ assemblySettings) dependsOn(math,process)
   lazy val graphs = Project("breeze-graphs",file("graphs"), settings = buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies) dependsOn(math,process)
   lazy val viz = Project("breeze-viz",file("viz"), settings = buildSettings ++ Seq (libraryDependencies ++= (commonDeps ++ vizDeps)) ++ testDependencies) dependsOn(math)
   lazy val benchmark = Project("breeze-benchmark",file("benchmark"), settings = (buildSettings :+ (fork in run := true) :+ (commands += patchclasspath)) ++ Seq (libraryDependencies ++= (commonDeps ++ benchmarkDeps)) ++ testDependencies) dependsOn(math)

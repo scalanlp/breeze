@@ -85,6 +85,7 @@ object VonMises extends ExponentialFamily[VonMises,Double] {
 
 
   def mle(stats: SufficientStatistic): (Double, Double) = {
+    import breeze.linalg.DenseVector.TupleIsomorphisms._
     val lensed = likelihoodFunction(stats).throughLens[DenseVector[Double]]
     val lbfgs = new LBFGS[DenseVector[Double]](100,3)
     // Starting points due to Sra, 2009... not as good as these old ones that I forgot about
