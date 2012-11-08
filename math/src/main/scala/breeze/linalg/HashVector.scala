@@ -6,6 +6,7 @@ import breeze.storage.{ConfigurableDefault, DefaultArrayValue}
 import breeze.generic.{CanMapValues, URFunc}
 import support.{CanZipMapValues, CanMapKeyValuePairs, CanCopy}
 import breeze.math.{TensorSpace, Ring}
+import util.MurmurHash
 
 /**
  * A HashVector is a sparse vector backed by an OpenAddressHashArray
@@ -44,6 +45,28 @@ class HashVector[@specialized(Int, Double, Float) E](val array: OpenAddressHashA
 
   override def toString = {
     activeIterator.mkString("HashVector(",", ", ")")
+  }
+
+  override def hashCode() = {
+    val hash = new MurmurHash[E](47)
+    // we make the hash code based on index * value, so that non-zeros don't affect the hashcode.
+    val dv = array.default.value(array.defaultArrayValue)
+    var i = 0
+    while(i < activeSize) {
+      if(isActive(i)) {
+        val ind = index(i)
+        val v = data(i)
+        if(v != dv) {
+          hash.apply(v)
+          hash.append(ind)
+        }
+      }
+
+      i += 1
+    }
+
+    hash.hash
+
   }
 }
 

@@ -31,7 +31,7 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
                                  val size: Int,
                                  val default: ConfigurableDefault[Elem] = ConfigurableDefault.default[Elem])
                                 (implicit protected val manElem: ClassManifest[Elem],
-                                 protected val defaultArrayValue: DefaultArrayValue[Elem]) extends Storage[Elem] with ArrayLike[Elem] {
+                                 val defaultArrayValue: DefaultArrayValue[Elem]) extends Storage[Elem] with ArrayLike[Elem] {
   require(size > 0, "Size must be positive, but got " + size)
 
   def this(size: Int, default: ConfigurableDefault[Elem],
