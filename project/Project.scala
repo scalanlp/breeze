@@ -136,7 +136,7 @@ object BreezeBuild extends Build {
   // subprojects
   //
 
-  lazy val breeze = Project("breeze", file("."), settings = buildSettings) aggregate (math,process,learn,graphs,viz) dependsOn (math,process,learn,graphs,viz)
+  lazy val breeze = Project("breeze", file("."), settings = buildSettings) aggregate (core, math,process,learn,graphs,viz) dependsOn (core, math,process,learn,graphs,viz)
   lazy val core = Project("breeze-core",file("core"), settings =  buildSettings ++ Seq (libraryDependencies ++= coreDeps) ++ testDependencies ++ assemblySettings)
   lazy val math = Project("breeze-math",file("math"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies ++ assemblySettings) dependsOn(core)
   lazy val process = Project("breeze-process",file("process"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies ++ assemblySettings) dependsOn(math, core)
