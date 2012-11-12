@@ -4,7 +4,7 @@ import breeze.math.{MutableInnerProductSpace, MutableNormedSpace}
 import breeze.numerics._
 import breeze.linalg._
 import breeze.util._
-import breeze.util.Implicits._
+//import breeze.util.Implicits._
 import collection.mutable.ArrayBuffer
 import breeze.stats.distributions.Multinomial
 

@@ -103,7 +103,7 @@ class GradientCheckingDiffFunction[K,T](f: DiffFunction[T],
   override def valueAt(x: T) = f(x)
 
   def calculate(x:T) = {
-    val (v,predicted:T) = f.calculate(x)
+    val (v,predicted) = f.calculate(x)
     for { (fap,eps) <- approxes zip epsilons } {
       val empirical = fap.calculateAndPrint(x,predicted)._2
       println("diff : " + eps + " norm: " + canNorm(view2(empirical) - predicted,2))
