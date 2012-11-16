@@ -153,7 +153,7 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
 
   // This hash code must be symmetric in the contents but ought not
   // collide trivially. based on hashmap.hashcode
-  override def hashCode() = scala.util.MurmurHash.symmetricHash(iterator, 43)
+  override def hashCode() = scala.util.MurmurHash.symmetricHash(iterator.filter(_._2 != default.value), 43)
 
   override def equals(that: Any): Boolean = that match {
     case that: OpenAddressHashArray[Elem] =>
@@ -162,7 +162,7 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
       try {
         this.iterator forall {
           case (k, v) => that(k) match {
-            case Some(v) =>
+            case `v` =>
               true
             case _ => false
           }

@@ -21,18 +21,8 @@ import org.scalatest.junit._
 import org.scalatest.prop._
 import org.junit.runner.RunWith
 
-import breeze.serialization.FileSerialization
-
 @RunWith(classOf[JUnitRunner])
 class IndexTest extends FunSuite with Checkers {
-
-  test("Index serialization") {
-    val tmpFile = java.io.File.createTempFile("index-", ".txt")
-    val index = Index(List("a","b","c","d"))
-    FileSerialization.write(tmpFile, index)
-    assert(FileSerialization.read[Index[String]](tmpFile) == index)
-    tmpFile.delete()
-  }
 
   test("CompositeIndex") {
     val index = Index(List("a","b","c","d"))
