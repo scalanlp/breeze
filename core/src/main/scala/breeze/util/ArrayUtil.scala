@@ -54,6 +54,21 @@ object ArrayUtil {
     }
   }
 
+
+  def copyOfRange[V](a: Array[V], from: Int, to: Int): Array[V] = {
+    a match {
+      case x: Array[Double] => Arrays.copyOfRange(x, from, to).asInstanceOf[Array[V]]
+      case x: Array[Int] => Arrays.copyOfRange(x, from, to).asInstanceOf[Array[V]]
+      case x: Array[Float] => Arrays.copyOfRange(x, from, to).asInstanceOf[Array[V]]
+      case x: Array[Long] => Arrays.copyOfRange(x, from, to).asInstanceOf[Array[V]]
+      case x: Array[Short] => Arrays.copyOfRange(x, from, to).asInstanceOf[Array[V]]
+      case x: Array[Char] => Arrays.copyOfRange(x, from, to).asInstanceOf[Array[V]]
+      case x: Array[Byte] => Arrays.copyOfRange(x, from, to).asInstanceOf[Array[V]]
+      case x: Array[_] => Arrays.copyOfRange(x.asInstanceOf[Array[AnyRef]], from, to).asInstanceOf[Array[V]]
+      case _ => throw new RuntimeException("shouldn't be here!")
+    }
+  }
+
   def newArrayLike[V](a: Array[V], length: Int): Array[V] = {
     a match {
       case x: Array[Double] => new Array[Double](length).asInstanceOf[Array[V]]

@@ -179,6 +179,20 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
     if(end > length || end < 0) throw new IllegalArgumentException("End " + end + "is out of bounds for slice of DenseVector of length " + length)
     new DenseVector(data, start + offset, stride * this.stride, (end-start)/stride)
   }
+
+  def toArray[V>:E:ClassManifest] = if(stride == 1){
+    ArrayUtil.copyOfRange(data, offset, offset + length)
+  } else {
+    val arr = new Array[V](length)
+    var i = 0
+    var off = offset
+    while(i < length) {
+      arr(i) = data(off)
+      off += stride
+      i += 1
+    }
+    arr
+  }
 }
 
 
