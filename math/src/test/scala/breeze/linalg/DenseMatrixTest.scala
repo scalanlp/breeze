@@ -349,7 +349,10 @@ class DenseMatrixTest extends FunSuite with Checkers {
   test("normalize rows and columns") {
     assert(normalize(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._0, 1) === DenseMatrix((1.0/3.0, 3.0/7.0), (2.0/3.0,4.0/7.0)))
     assert(normalize(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._1, 1) === DenseMatrix((1.0/4.0, 3.0/4.0), (2.0/6.0,4.0/6.0)))
-
+    // handle odd sized matrices (test for a bug.)
+    val dm = DenseMatrix.tabulate(2,5)( (i,j) => i * j * 1.0 + 1)
+    dm := normalize(dm, Axis._1, 2)
+    assert((dm(0,::).map(x => x * x).sum - 1).abs < 1E-4, dm.toString + " not normalized!")
   }
 
   test("Generic Dense ops") {
