@@ -455,7 +455,7 @@ trait LowPriorityDenseMatrix1 {
     def apply(from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => R): DenseVector[R] = {
       val result = DenseVector.zeros[R](from.rows)
       val t = from.t
-      for(r <- 0 until from.cols) {
+      for(r <- 0 until t.cols) {
         result(r) = f(t(::, r))
       }
       result
