@@ -191,6 +191,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
   implicit def canSliceRow[V]: CanSlice2[DenseMatrix[V], Int, ::.type, DenseMatrix[V]] = {
     new CanSlice2[DenseMatrix[V], Int, ::.type, DenseMatrix[V]] {
       def apply(m: DenseMatrix[V], row: Int, ignored: ::.type) = {
+        if(row < 0 || row >= m.rows) throw new ArrayIndexOutOfBoundsException("Row must be in bounds for slice!")
         if(!m.isTranspose)
           new DenseMatrix(1, m.cols, m.data, m.offset + row, m.majorStride)
         else
@@ -202,6 +203,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
   implicit def canSliceCol[V]: CanSlice2[DenseMatrix[V], ::.type, Int, DenseVector[V]] = {
     new CanSlice2[DenseMatrix[V], ::.type, Int, DenseVector[V]] {
       def apply(m: DenseMatrix[V], ignored: ::.type, col: Int) = {
+        if(col < 0 || col >= m.cols) throw new ArrayIndexOutOfBoundsException("Column must be in bounds for slice!")
         if(!m.isTranspose)
           new DenseVector(m.data, length = m.rows, offset = col * m.rows + m.offset, stride=1)
         else
@@ -406,7 +408,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
     def apply(from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => DenseVector[V]): DenseMatrix[V] = {
       var result:DenseMatrix[V] = null
       val t = from.t
-      for(r <- 0 until from.cols) {
+      for(r <- 0 until from.rows) {
         val row = f(t(::, r))
         if(result eq null) {
           result = DenseMatrix.zeros[V](from.rows, row.length)
@@ -455,7 +457,7 @@ trait LowPriorityDenseMatrix1 {
     def apply(from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => R): DenseVector[R] = {
       val result = DenseVector.zeros[R](from.rows)
       val t = from.t
-      for(r <- 0 until t.cols) {
+      for(r <- 0 until from.rows) {
         result(r) = f(t(::, r))
       }
       result
