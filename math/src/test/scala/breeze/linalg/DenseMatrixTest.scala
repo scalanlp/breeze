@@ -34,7 +34,7 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
     // slice row
     val s2 : DenseMatrix[Int] = m(0, ::)
-    assert(s2.valuesIterator sameElements DenseVector(0,2,3).valuesIterator)
+    assert(s2.0valuesIterator sameElements DenseVector(0,2,3).valuesIterator)
     s2 *= 2
     assert(m === DenseMatrix((0,4,6),(3,5,6)))
 
@@ -100,11 +100,11 @@ class DenseMatrixTest extends FunSuite with Checkers {
     // column of original looks same as row of tranpose
     val sm1 = m(::, 1)
     val smt1 = m.t apply (1, ::)
-    assert(sm1.valuesIterator sameElements smt1.valuesIterator)
+    assert(sm1.0valuesIterator sameElements smt1.0valuesIterator)
 
     val sm2 = m(::, 2)
     val smt2 = m.t apply (2, ::)
-    assert(sm2.valuesIterator sameElements smt2.valuesIterator)
+    assert(sm2.0valuesIterator sameElements smt2.0valuesIterator)
 
     val sm1c = m(1, ::)
     val smt1c = m.t apply (::, 1)
@@ -118,7 +118,7 @@ class DenseMatrixTest extends FunSuite with Checkers {
     val s1 = m(0 to 1, 1 to 2)
     assert(s1 === DenseMatrix((1, 2), (4, 5)))
 
-    val t1 = s1.t
+    val t1 = s1.0t
     assert(t1 === DenseMatrix((1, 4), (2, 5)))
 
     val t1b = m.t apply (1 to 2, 0 to 1)
@@ -126,22 +126,22 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
     val s2 = m(0 to 1, 1)
     val t2 = m.t apply (1, 0 to 1)
-    assert(s2.valuesIterator sameElements t2.valuesIterator)
+    assert(s2.0valuesIterator sameElements t2.0valuesIterator)
 
     val s3 = m(0, 0 to 1)
     val t3 = m.t apply (0 to 1, 0)
-    assert(s3.valuesIterator sameElements t3.valuesIterator)
+    assert(s3.0valuesIterator sameElements t3.0valuesIterator)
 
     {
       val s2 = m(0 to 1, ::)
       val t2 = m.t apply (::, 0 to 1)
-      assert(s2.t === t2)
-      assert(s2 === t2.t)
+      assert(s2.0t === t2)
+      assert(s2 === t2.0t)
 
       val s3 = m(::, 0 to 1)
       val t3 = m.t apply (0 to 1, ::)
-      assert(s3.t === t3)
-      assert(s3 === t3.t)
+      assert(s3.0t === t3)
+      assert(s3 === t3.0t)
     }
   }
 
@@ -228,28 +228,28 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
 
   test("Multiply") {
-    val a = DenseMatrix((1., 2., 3.),(4., 5., 6.))
-    val b = DenseMatrix((7., -2., 8.),(-3., -3., 1.),(12., 0., 5.))
-    val c = DenseVector(6.,2.,3.)
-    val cs = SparseVector(6.,2.,3.)
-    assert(a * b === DenseMatrix((37., -8., 25.), (85., -23., 67.)))
-    assert(a * c === DenseVector(19.,52.))
-    assert(b * c === DenseVector(62., -21., 87.))
-    assert(a * cs === DenseVector(19.,52.))
-    assert(b * cs === DenseVector(62., -21., 87.))
-    assert(b.t * c === DenseVector(72., -18., 65.))
-    assert(a.t * DenseVector(4., 3.) === DenseVector(16., 23., 30.))
+    val a = DenseMatrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
+    val b = DenseMatrix((7.0, -2.0, 8.0),(-3.0, -3.0, 1.0),(12.0, 0.0, 5.0))
+    val c = DenseVector(6.0,2.0,3.0)
+    val cs = SparseVector(6.0,2.0,3.0)
+    assert(a * b === DenseMatrix((37.0, -8.0, 25.0), (85.0, -23.0, 67.0)))
+    assert(a * c === DenseVector(19.0,52.0))
+    assert(b * c === DenseVector(62.0, -21.0, 87.0))
+    assert(a * cs === DenseVector(19.0,52.0))
+    assert(b * cs === DenseVector(62.0, -21.0, 87.0))
+    assert(b.t * c === DenseVector(72.0, -18.0, 65.0))
+    assert(a.t * DenseVector(4.0, 3.0) === DenseVector(16.0, 23.0, 30.0))
 
     // should be dense
     val x = a * a.t
-    assert(x === DenseMatrix((14.,32.),(32.,77.)))
+    assert(x === DenseMatrix((14.0,32.0),(32.0,77.0)))
 
     // should be dense
     val y = a.t * a
-    assert(y === DenseMatrix((17.,22.,27.),(22.,29.,36.),(27.,36.,45.)))
+    assert(y === DenseMatrix((17.0,22.0,27.0),(22.0,29.0,36.0),(27.0,36.0,45.0)))
 
     val z : DenseMatrix[Double] = b * (b + 1.0)
-    assert(z === DenseMatrix((164.,5.,107.),(-5.,10.,-27.),(161.,-7.,138.)))
+    assert(z === DenseMatrix((164.0,5.0,107.0),(-5.0,10.0,-27.0),(161.0,-7.0,138.0)))
   }
 
 
@@ -341,15 +341,18 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
 
   test("sum") {
-    assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._0) === DenseMatrix((3., 7.)))
-    assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._1) === DenseVector(4., 6.))
+    assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._0) === DenseMatrix((3.0, 7.0)))
+    assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._1) === DenseVector(4.0, 6.0))
     assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0))) === 10.0)
   }
 
   test("normalize rows and columns") {
     assert(normalize(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._0, 1) === DenseMatrix((1.0/3.0, 3.0/7.0), (2.0/3.0,4.0/7.0)))
     assert(normalize(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._1, 1) === DenseMatrix((1.0/4.0, 3.0/4.0), (2.0/6.0,4.0/6.0)))
-
+    // handle odd sized matrices (test for a bug.)
+    val dm = DenseMatrix.tabulate(2,5)( (i,j) => i * j * 1.0 + 1)
+    dm := normalize(dm, Axis._1, 2)
+    assert((dm(0,::).map(x => x * x).sum - 1).abs < 1E-4, dm.toString + " not normalized!")
   }
 
   test("Generic Dense ops") {

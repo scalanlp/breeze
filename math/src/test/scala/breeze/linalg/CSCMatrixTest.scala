@@ -22,29 +22,29 @@ import org.junit.runner.RunWith
 @RunWith(classOf[JUnitRunner])
 class CSCMatrixTest extends FunSuite with Checkers {
   test("Multiply") {
-    val a = CSCMatrix((1., 2., 3.),(4., 5., 6.))
-    val ad = DenseMatrix((1., 2., 3.),(4., 5., 6.))
-    val b = CSCMatrix((7., -2., 8.),(-3., -3., 1.),(12., 0., 5.))
-    val bd = DenseMatrix((7., -2., 8.),(-3., -3., 1.),(12., 0., 5.))
-    val c = DenseVector(6.,2.,3.)
-    assert( (a * b: CSCMatrix[Double]) === CSCMatrix((37., -8., 25.), (85., -23., 67.)))
-    assert((a * bd :DenseMatrix[Double])=== DenseMatrix((37., -8., 25.), (85., -23., 67.)))
-    assert((ad * b :DenseMatrix[Double])=== DenseMatrix((37., -8., 25.), (85., -23., 67.)))
-    assert(a * c === DenseVector(19.,52.))
-    assert(b * c === DenseVector(62., -21., 87.))
-//    assert(b.t * c === DenseVector(72., -18., 65.))
-//    assert(a.t * DenseVector(4., 3.) === DenseVector(16., 23., 30.))
+    val a = CSCMatrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
+    val ad = DenseMatrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
+    val b = CSCMatrix((7.0, -2.0, 8.0),(-3.0, -3.0, 1.0),(12.0, 0.0, 5.0))
+    val bd = DenseMatrix((7.0, -2.0, 8.0),(-3.0, -3.0, 1.0),(12.0, 0.0, 5.0))
+    val c = DenseVector(6.0,2.0,3.0)
+    assert( (a * b: CSCMatrix[Double]) === CSCMatrix((37.0, -8.0, 25.0), (85.0, -23.0, 67.0)))
+    assert((a * bd :DenseMatrix[Double])=== DenseMatrix((37.0, -8.0, 25.0), (85.0, -23.0, 67.0)))
+    assert((ad * b :DenseMatrix[Double])=== DenseMatrix((37.0, -8.0, 25.0), (85.0, -23.0, 67.0)))
+    assert(a * c === DenseVector(19.0,52.0))
+    assert(b * c === DenseVector(62.0, -21.0, 87.0))
+//    assert(b.t * c === DenseVector(72.0, -18.0, 65.0))
+//    assert(a.t * DenseVector(4.0, 3.0) === DenseVector(16.0, 23.0, 30.0))
 
     // should be dense
 //    val x = a * a.t
-//    assert(x === DenseMatrix((14.,32.),(32.,77.)))
+//    assert(x === DenseMatrix((14.0,32.0),(32.0,77.0)))
 
     // should be dense
 //    val y = a.t * a
-//    assert(y === DenseMatrix((17.,22.,27.),(22.,29.,36.),(27.,36.,45.)))
+//    assert(y === DenseMatrix((17.0,22.0,27.0),(22.0,29.0,36.0),(27.0,36.0,45.0)))
 
 //    val z : DenseMatrix[Double] = b * (b + 1.0)
-//    assert(z === DenseMatrix((164.,5.,107.),(-5.,10.,-27.),(161.,-7.,138.)))
+//    assert(z === DenseMatrix((164.0,5.0,107.0),(-5.0,10.0,-27.0),(161.0,-7.0,138.0)))
   }
 
   test("Multiply Int") {
@@ -104,7 +104,7 @@ class CSCMatrixTest extends FunSuite with Checkers {
     builder.add(1, 2, 6.0)
     builder.add(0, 0, 1.0)
     val cs = builder.result()
-    val a = CSCMatrix((1., 2., 3.),(4., 5., 6.))
+    val a = CSCMatrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
     assert(cs === a)
   }
 
@@ -118,7 +118,7 @@ class CSCMatrixTest extends FunSuite with Checkers {
     builder.add(1, 2, 3.0)
     builder.add(0, 0, 1.0)
     val cs = builder.result()
-    val a = CSCMatrix((1., 2., 3.),(4., 5., 6.))
+    val a = CSCMatrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
     assert(cs === a)
   }
 }

@@ -157,6 +157,19 @@ package object linalg extends LinearAlgebra {
     else value - max
   }
 
+
+  /**
+   * logs and then logNormalizes the argument along axis such that each softmax is 0.0.
+   * Returns value if value's softmax is -infinity
+   */
+  def logNormalize[T, Axis, V, Result](value: T, axis: Axis)(implicit  collapse: CanCollapseAxis[T, Axis, V, V, Result],
+                                  view: V => NumericOps[V],
+                                  red: UReduceable[V, Double],
+                                  map: CanMapValues[V, Double, Double, V],
+                                  op : BinaryOp[V,Double,OpSub,V]):Result = {
+    collapse(value, axis)(v => logNormalize(v))
+  }
+
   /**
    * logs and then logNormalizes the argument such that the softmax is 0.0.
    * Returns value if value's softmax is -infinity

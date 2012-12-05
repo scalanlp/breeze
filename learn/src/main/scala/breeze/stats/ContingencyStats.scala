@@ -112,7 +112,7 @@ object ContingencyStats {
 
   class Accuracy(val numRight: Int, val numTotal: Int) {
     def this() = this(0,0)
-    def accuracy = if(numTotal == 0) 0. else numRight.asInstanceOf[Double]/ numTotal;
+    def accuracy = if(numTotal == 0) 0.0 else numRight.asInstanceOf[Double]/ numTotal;
     def + (b:Boolean) = new Accuracy(if(b) numRight + 1 else numRight, numTotal + 1);
     def ++(b:Iterator[Boolean]) = b.foldLeft(this)(_+_);
     def ++(b:Iterable[Boolean]) = b.foldLeft(this)(_+_);
@@ -148,7 +148,7 @@ object ContingencyStats {
 
     /** F-Score
     */
-    def f:Double = f(1.);
+    def f:Double = f(1.0);
 
     /** F-\beta = (1+beta^2) * (precision * recall) / (\beta^2 * pr + re) 
     */

@@ -116,6 +116,7 @@ object Beta extends ExponentialFamily[Beta,Double] {
   def sufficientStatisticFor(t: Double) = SufficientStatistic(1,math.log(t),math.log1p(-t))
 
   def mle(stats: SufficientStatistic): (Double, Double) = {
+    import breeze.linalg.DenseVector.TupleIsomorphisms._
     val lensed = likelihoodFunction(stats).throughLens[DenseVector[Double]]
     val lbfgs = new LBFGS[DenseVector[Double]](200,3)
     val startingA = stats.meanLog.abs // MoM would include variance, meh.

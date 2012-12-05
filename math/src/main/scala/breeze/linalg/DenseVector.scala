@@ -22,7 +22,7 @@ import support.{CanCreateZerosLike, CanMapKeyValuePairs, CanZipMapValues, CanSli
 import breeze.numerics.IntMath
 import java.util.Arrays
 import breeze.math.{TensorSpace, Semiring, Ring, Field}
-import breeze.util.ArrayUtil
+import breeze.util.{ArrayUtil, Isomorphism}
 import breeze.storage.DefaultArrayValue
 
 /**
@@ -40,10 +40,10 @@ import breeze.storage.DefaultArrayValue
  */
 @SerialVersionUID(1L)
 class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
-                                                     val offset: Int,
-                                                     val stride: Int,
-                                                     val length: Int) extends StorageVector[E]
-                                                    with VectorLike[E, DenseVector[E]] with Serializable{
+                                               val offset: Int,
+                                               val stride: Int,
+                                               val length: Int) extends StorageVector[E]
+                                              with VectorLike[E, DenseVector[E]] with Serializable{
   def this(data: Array[E]) = this(data, 0, 1, data.length)
 
   // uncomment to get all the ridiculous places where specialization fails.
@@ -166,6 +166,32 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
       foreach (v => { val nn = field.norm(v); sum += math.pow(nn,n) })
       math.pow(sum, 1.0 / n)
     }
+  }
+
+  /**
+   * Slices the DenseVector, in the range (start,end
+   * @param start
+   * @param end
+   * @param stride
+   */
+  def slice(start: Int, end: Int, stride: Int=1):DenseVector[E] = {
+    if(start > end || start < 0) throw new IllegalArgumentException("Slice arguments " + start +", " +end +" invalid.")
+    if(end > length || end < 0) throw new IllegalArgumentException("End " + end + "is out of bounds for slice of DenseVector of length " + length)
+    new DenseVector(data, start + offset, stride * this.stride, (end-start)/stride)
+  }
+
+  def toArray[V>:E:ClassManifest] = if(stride == 1){
+    ArrayUtil.copyOfRange(data, offset, offset + length)
+  } else {
+    val arr = new Array[V](length)
+    var i = 0
+    var off = offset
+    while(i < length) {
+      arr(i) = data(off)
+      off += stride
+      i += 1
+    }
+    arr
   }
 }
 
@@ -357,6 +383,17 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   implicit val space_f = TensorSpace.make[DenseVector[Float], Int, Float]
   implicit val space_i = TensorSpace.make[DenseVector[Int], Int, Int]
 
+  object TupleIsomorphisms {
+    implicit object doubleIsVector extends Isomorphism[Double,DenseVector[Double]] {
+      def forward(t: Double) = DenseVector(t)
+      def backward(t: DenseVector[Double]) = { assert(t.size == 1); t(0)}
+    }
+
+    implicit object pdoubleIsVector extends Isomorphism[(Double,Double),DenseVector[Double]] {
+      def forward(t: (Double,Double)) = DenseVector(t._1,t._2)
+      def backward(t: DenseVector[Double]) = { assert(t.size == 2); (t(0),t(1))}
+    }
+  }
 }
 
 trait DenseVector_GenericOps { this: DenseVector.type =>

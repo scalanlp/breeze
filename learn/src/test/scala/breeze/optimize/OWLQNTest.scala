@@ -42,7 +42,7 @@ class OWLQNTest extends OptimizeTestBase {
       result
     }
 
-    val result = optimizeThis(DenseVector(-1.1053,0.,0.0))
+    val result = optimizeThis(DenseVector(-1.1053,0.0,0.0))
     assert((result(0) - 2.5) < 1E-4, result)
   }
 

@@ -18,8 +18,8 @@ class SparseFeatureDatasetTest extends FunSuite {
 -1 1:1 3:1
 -1 1:1"""))
     assert(result.examples(0).label === -1)
-    assert(result.examples(0).features === SparseVector(0.,1.,0.,1.), result.examples(0).features.length + " " + result.examples(0).features.valuesIterator.mkString(",") + " "+ SparseVector(0., 1., 0., 1.).valuesIterator.mkString(", "))
-    assert(result.examples(3).features === SparseVector(0.,1.,0.,0.))
+    assert(result.examples(0).features === SparseVector(0.0,1.0,0.0,1.0), result.examples(0).features.length + " " + result.examples(0).features.valuesIterator.mkString(",") + " "+ SparseVector(0.0, 1.0, 0.0, 1.0).valuesIterator.mkString(", "))
+    assert(result.examples(3).features === SparseVector(0.0,1.0,0.0,0.0))
   }
 
 }

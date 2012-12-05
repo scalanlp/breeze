@@ -33,7 +33,7 @@ class InteriorPointTest extends FunSuite {
   // from: http://en.wikipedia.org/wiki/Karmarkar's_algorithm
   test("Small example") {
     val x0 = DenseVector(.2,.2)
-    val c = DenseVector(-1.,-1.)
+    val c = DenseVector(-1.0,-1.0)
     val A = DenseMatrix.zeros[Double](11,2)
     val b = DenseVector.zeros[Double](11)
 
@@ -51,7 +51,7 @@ class InteriorPointTest extends FunSuite {
   }
 
   test("dsl") {
-//    http://www.tu-chemnitz.de/mathematik/discrete/manuals/cplex/doc/getstart/html/cpxGSilocplex13.html
+//    http://www.tu-chemnitz.de/mathematik/discrete/manuals/cplex/doc/getstart/html/cpxGSilocplex13.0html
     val lp = new LinearProgram()
     import lp._
     val x0 = Real()
@@ -66,7 +66,7 @@ class InteriorPointTest extends FunSuite {
 
     val result = maximize( lpp)
 
-    assert( (result.result - DenseVector(40.,17.5,42.5)).norm(2) < 1E-4)
+    assert( (result.result - DenseVector(40.0,17.5,42.5)).norm(2) < 1E-4)
 
 
   }

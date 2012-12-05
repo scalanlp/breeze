@@ -90,7 +90,7 @@ object InteriorPoint {
     val r = minimize(newA,newB,newC,newX)
     if(r(x0.size) > 1E-8)
       println("Problem appears to be infeasible: " + r(x0.size))
-    r(0 until x0.size)
+    r.slice(0, x0.size)
   }
 
   private def lineSearch(x: DenseVector[Double],dx: Vector[Double]):Double = {
@@ -127,9 +127,9 @@ object InteriorPoint {
     diag(mat) += 1E-20
 
     val r = DenseVector.zeros[Double](m + n + m)
-    r((m+n) until (m+n+m)) -= (dsaff :* dzaff - sigma/m * (s dot z) )
+    r.slice((m+n), (m+n+m)) -= (dsaff :* dzaff - sigma/m * (s dot z) )
     val sol = mat \ r
-    (r(0 until m),r(m until (n+m)),r( (n+m) until (n+m+m)))
+    (r.slice(0, m),r.slice(m, (n+m)),r.slice((n+m), (n+m+m)))
   }
 
 

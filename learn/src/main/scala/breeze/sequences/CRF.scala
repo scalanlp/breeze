@@ -24,7 +24,7 @@ import numerics._
 import data.Example
 import optimize.FirstOrderMinimizer.OptParams
 import optimize.{CachedBatchDiffFunction, RandomizedGradientCheckingFunction, BatchDiffFunction, DiffFunction}
-import util.{Index, Encoder, Lazy}
+import util.{Index, Encoder}
 import java.util.Arrays
 import scala.collection.immutable.{Range, BitSet}
 

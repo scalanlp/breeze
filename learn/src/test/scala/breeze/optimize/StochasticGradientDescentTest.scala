@@ -28,7 +28,7 @@ class StochasticGradientDescentTest extends OptimizeTestBase {
 
 
   test("optimize a simple multivariate gaussian") {
-    val sgd = StochasticGradientDescent[DenseVector[Double]](2.,100)
+    val sgd = StochasticGradientDescent[DenseVector[Double]](2.0,100)
 
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new BatchDiffFunction[DenseVector[Double]] {
@@ -48,7 +48,7 @@ class StochasticGradientDescentTest extends OptimizeTestBase {
   }
 
   test("optimize a simple multivariate gaussian with counters") {
-    val sgd =  StochasticGradientDescent[Counter[String,Double]](1.,100)
+    val sgd =  StochasticGradientDescent[Counter[String,Double]](1.0,100)
 
     def optimizeThis(init: Counter[String,Double]) = {
       val f = new BatchDiffFunction[Counter[String,Double]] {

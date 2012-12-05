@@ -155,12 +155,11 @@ object LFMatrix {
   : BinaryUpdateOp[LFMatrix[L,TF],Double,Op]  = {
     new BinaryUpdateOp[LFMatrix[L,TF],Double,Op] {
 
-      def apply(v1: LFMatrix[L, TF], v2: Double) = {
+      def apply(v1: LFMatrix[L, TF], v2: Double) {
         val r = v1.empty
         for( tf <- v1.data) {
           op(tf,v2)
         }
-        r
       }
     }
   }

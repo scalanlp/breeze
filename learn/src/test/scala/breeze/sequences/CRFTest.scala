@@ -46,7 +46,7 @@ class CRFTest extends FunSuite {
     val hmm = new HMM[Symbol,Symbol](states,'Start,transitions,emissions)
     val crf = new CRF(hmm.asCRFModel)
     val cal = crf.calibrate(Seq('U,'U,'N,'U,'U),5)
-    val marginals = (0 until 5).map(cal.marginalAt(_)).map(hmm.asCRFModel.decode _)
+    val marginals = (0 until 5).map(cal.marginalAt(_)).map(hmm.asCRFModel.decode(_))
     assert( (marginals(0)('Rainy) - math.log(0.8673)).abs < 1E-4)
     assert( (marginals(1)('Rainy) - math.log(0.8204)).abs < 1E-4)
     assert( (marginals(2)('Rainy) - math.log(0.3075)).abs < 1E-4)

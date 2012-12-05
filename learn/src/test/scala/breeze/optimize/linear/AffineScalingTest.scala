@@ -33,7 +33,7 @@ class AffineScalingTest extends FunSuite {
   // from: http://en.wikipedia.org/wiki/Karmarkar's_algorithm
   test("Small example") {
     val x0 = DenseVector(0.0,0.0)
-    val c = DenseVector(1.,1.)
+    val c = DenseVector(1.0,1.0)
     val A = DenseMatrix.zeros[Double](11,2)
     val b = DenseVector.zeros[Double](11)
 

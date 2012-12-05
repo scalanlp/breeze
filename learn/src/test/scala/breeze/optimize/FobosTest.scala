@@ -31,7 +31,7 @@ class FobosTest extends OptimizeTestBase {
   test("optimize a simple multivariate gaussian, l2") {
 
     def optimizeThis(init: DenseVector[Double], reg: Double) = {
-      val sgd = new StochasticGradientDescent.SimpleSGD[DenseVector[Double]](2.,100) with Fobos.L2Regularization[DenseVector[Double]] {
+      val sgd = new StochasticGradientDescent.SimpleSGD[DenseVector[Double]](2.0,100) with Fobos.L2Regularization[DenseVector[Double]] {
         override val lambda = reg.abs
       }
       val f = new BatchDiffFunction[DenseVector[Double]] {
@@ -57,7 +57,7 @@ class FobosTest extends OptimizeTestBase {
   test("optimize a simple multivariate gaussian, l1") {
 
     def optimizeThis(init: DenseVector[Double], reg: Double) = {
-      val sgd = new StochasticGradientDescent.SimpleSGD[DenseVector[Double]](2.,100) with Fobos.L1Regularization[Int,DenseVector[Double]] {
+      val sgd = new StochasticGradientDescent.SimpleSGD[DenseVector[Double]](2.0,100) with Fobos.L1Regularization[Int,DenseVector[Double]] {
         override val lambda = reg.abs
       }
       val f = new BatchDiffFunction[DenseVector[Double]] {

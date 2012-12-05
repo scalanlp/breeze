@@ -6,6 +6,7 @@ import org.scalatest.junit._
 import org.scalatest.prop._
 import org.junit.runner.RunWith
 import breeze.math.{DoubleValuedTensorSpaceTestBase, TensorSpace, TensorSpaceTestBase}
+import java.util
 
 /**
  *
@@ -102,15 +103,19 @@ class DenseVectorTest extends FunSuite with Checkers {
     val x = DenseVector[Double](1, 2, 3, 4, 5)
 
     val s: DenseVector[Double] = x(2 to 3)
+    val s2: DenseVector[Double] = x.slice(2,4)
 
     assert(s === DenseVector(3.0, 4.0))
+    assert(s2 === DenseVector(3.0, 4.0))
 
     val t = s.t
 
     assert(t === DenseVector(3.0, 4.0).t)
 
     val emptySlice = x(2 until 2)
+    val emptySlice2 = x.slice(2,2)
     assert(emptySlice === DenseVector[Double]())
+    assert(emptySlice2 === DenseVector[Double]())
   }
 
   test("Slice and Transpose Int") {
@@ -276,6 +281,13 @@ class DenseVectorTest extends FunSuite with Checkers {
     }
 
 
+  }
+
+  test("toArray") {
+    val a = DenseVector(1, 2, 3)
+    assert(util.Arrays.equals(a.toArray[Int], a.data))
+    assert(util.Arrays.equals(a(0 until 3 by 2).toArray[Int], Array(1,3)))
+    assert(util.Arrays.equals(a(1 until 3 by 1).toArray[Int], Array(2,3)))
   }
 }
 
