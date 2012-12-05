@@ -113,10 +113,10 @@ object OWLQN {
       val result = lbfgs.minimize(f,init)
     }
 
-    //    optimizeThis(Counter(1->1.,2->2.,3->3.))
-    //    optimizeThis(Counter(3-> -2.,2->3.,1-> -10.))
-    //        optimizeThis(DenseVector(1.,2.,3.))
-    optimizeThis(DenseVector( -0.,0.0, -0.))
+    //    optimizeThis(Counter(1->1.0,2->2.0,3->3.0))
+    //    optimizeThis(Counter(3-> -2.0,2->3.0,1-> -10.0))
+    //        optimizeThis(DenseVector(1.0,2.0,3.0))
+    optimizeThis(DenseVector( -0.0,0.0, -0.0))
   }
 }
 
