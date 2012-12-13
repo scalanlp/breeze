@@ -17,7 +17,7 @@ package breeze.linalg
 
 import operators._
 import scala.{specialized=>spec}
-import breeze.generic.{URFunc, UReduceable, CanMapValues}
+import breeze.generic._
 import support.{CanCreateZerosLike, CanMapKeyValuePairs, CanZipMapValues, CanSlice, CanCopy}
 import breeze.numerics.IntMath
 import java.util.Arrays
@@ -307,6 +307,28 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     }
   }
 
+
+  implicit def canTransformValues[V]:CanTransformValues[DenseVector[V], V, V] = {
+    new CanTransformValues[DenseVector[V], V, V] {
+      def transform(from: DenseVector[V], fn: (V) => V) {
+        val d = from.data
+        val stride = from.stride
+
+        var i = 0
+        var j = from.offset
+        while(i < from.length) {
+          from.data(j) = fn(d(j))
+          i += 1
+          j += stride
+        }
+      }
+
+      def transformActive(from: DenseVector[V], fn: (V) => V) {
+        transform(from, fn)
+      }
+    }
+  }
+
   implicit def canMapPairs[V, V2](implicit man: ClassManifest[V2]):CanMapKeyValuePairs[DenseVector[V], Int, V, V2, DenseVector[V2]] = {
     new CanMapKeyValuePairs[DenseVector[V], Int, V, V2, DenseVector[V2]] {
       /**Maps all key-value pairs from the given collection. */
@@ -335,7 +357,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   }
 
   // slicing
-  @inline implicit def canSlice[V]: CanSlice[DenseVector[V], Range, DenseVector[V]] = __canSlice.asInstanceOf[CanSlice[DenseVector[V], Range, DenseVector[V]]]
+  implicit def canSlice[V]: CanSlice[DenseVector[V], Range, DenseVector[V]] = __canSlice.asInstanceOf[CanSlice[DenseVector[V], Range, DenseVector[V]]]
 
   private val __canSlice = {
     new CanSlice[DenseVector[Any], Range, DenseVector[Any]] {
