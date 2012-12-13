@@ -651,7 +651,7 @@ trait LinearAlgebra {
 
   /**
    * Computes the cholesky decomposition A of the given real symmetric
-   * positive definite matrix X such that X = A A^T.
+   * positive definite matrix X such that X = A A.t.
    *
    * XXX: For higher dimensionalities, the return value really should be a
    *      sparse matrix due to its inherent lower triangular nature.
@@ -765,7 +765,7 @@ trait LinearAlgebra {
    *
    * @param A m x n matrix
    * @param skipQ (optional) if true, don't reconstruct orthogonal matrix Q (instead returns (null,R))
-   * @return: (Q,R) Q: m x m R: m x n
+   * @return (Q,R) Q: m x m R: m x n
    */
   // TODO: I don't like returning null sometimes here...
   def qr(A: DenseMatrix[Double], skipQ : Boolean = false): (DenseMatrix[Double], DenseMatrix[Double]) = {
