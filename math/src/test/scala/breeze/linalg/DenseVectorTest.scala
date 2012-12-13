@@ -46,6 +46,12 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(v.max === 3)
   }
 
+  test("Topk") {
+    val v = DenseVector(2, 0, 3, 4, -1)
+
+    assert(v.argtopk(3) === IndexedSeq(3,2,0))
+  }
+
 
   test("Mean") {
     assert(mean(DenseVector(0.0,1.0,2.0)) === 1.0)
