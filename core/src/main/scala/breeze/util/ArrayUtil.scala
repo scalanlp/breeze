@@ -55,7 +55,7 @@ object ArrayUtil {
   }
 
 
-  def copyOfRange[V](a: Array[V], from: Int, to: Int): Array[V] = {
+  def copyOfRange[V, VU>:V](a: Array[V], from: Int, to: Int): Array[V] = {
     a match {
       case x: Array[Double] => Arrays.copyOfRange(x, from, to).asInstanceOf[Array[V]]
       case x: Array[Int] => Arrays.copyOfRange(x, from, to).asInstanceOf[Array[V]]

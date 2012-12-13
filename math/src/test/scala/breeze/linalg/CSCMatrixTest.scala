@@ -121,5 +121,15 @@ class CSCMatrixTest extends FunSuite with Checkers {
     val a = CSCMatrix((1., 2., 3.),(4., 5., 6.))
     assert(cs === a)
   }
+
+  test("MapValues") {
+    val a : CSCMatrix[Int] = CSCMatrix((1,0,0),(2,3,-1))
+
+    val b1 : CSCMatrix[Int] = a.mapValues(_ + 1)
+    assert(b1 === CSCMatrix((2,1,1),(3,4,0)))
+
+    val b2 : CSCMatrix[Double] = a.mapValues(_ + 1.0)
+    assert(b2 === CSCMatrix((2.0,1.0,1.0),(3.0,4.0,0.0)))
+  }
 }
 

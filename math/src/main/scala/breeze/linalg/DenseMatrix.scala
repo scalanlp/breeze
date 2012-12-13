@@ -257,6 +257,14 @@ object DenseMatrix extends LowPriorityDenseMatrix
     }
   }
 
+  implicit def canSliceWeirdRows[V]:CanSlice2[DenseMatrix[V], Seq[Int], ::.type, SliceMatrix[Int, Int, V]] = {
+    new CanSlice2[DenseMatrix[V], Seq[Int], ::.type, SliceMatrix[Int, Int, V]] {
+      def apply(from: DenseMatrix[V], slice: Seq[Int], slice2: ::.type): SliceMatrix[Int, Int, V] = {
+        new SliceMatrix(from, slice.toIndexedSeq, (0 until from.cols))
+      }
+    }
+  }
+
 
   implicit def negFromScale[V](implicit scale: BinaryOp[DenseMatrix[V], V, OpMulScalar, DenseMatrix[V]], field: Ring[V]) = {
     new UnaryOp[DenseMatrix[V], OpNeg, DenseMatrix[V]] {

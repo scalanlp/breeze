@@ -108,13 +108,13 @@ object Counter extends CounterOps {
   }
 
   /** Counts each of the given items. */
-  def count[K](items : TraversableOnce[K]) : Counter[K,Int] = {
+  def countTraversable[K](items : TraversableOnce[K]) : Counter[K,Int] = {
     val rv = apply[K,Int]()
     items.foreach(rv(_) += 1)
     rv
   }
 
-  def count[K](items: K*): Counter[K,Int] = count(items)
+  def count[K](items: K*): Counter[K,Int] = countTraversable(items)
 
   implicit def CanMapValuesCounter[K, V, RV:Semiring:DefaultArrayValue]: CanMapValues[Counter[K, V], V, RV, Counter[K, RV]]
   = new CanMapValues[Counter[K,V],V,RV,Counter[K,RV]] {

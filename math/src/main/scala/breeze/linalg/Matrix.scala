@@ -118,6 +118,10 @@ trait Matrix[@spec(Int, Float, Double) E] extends MatrixLike[E, Matrix[E]] {
 
   override def toString : String = toString(Terminal.terminalHeight, Terminal.terminalWidth)
 
+  def toDenseMatrix(implicit cm: ClassManifest[E], dfv: DefaultArrayValue[E]) = {
+    DenseMatrix.tabulate(rows, cols){ (i,j) => apply(i, j)}
+  }
+
 }
 
 object Matrix extends MatrixConstructors[Matrix]
@@ -127,6 +131,8 @@ object Matrix extends MatrixConstructors[Matrix]
   def zeros[@specialized(Int, Float, Double) V: ClassManifest:DefaultArrayValue](rows: Int, cols: Int): Matrix[V] = DenseMatrix.zeros(rows, cols)
 
   def create[@specialized(Int, Float, Double) V:DefaultArrayValue](rows: Int, cols: Int, data: Array[V]): Matrix[V] = DenseMatrix.create(rows, cols, data)
+
+  // slicing
 }
 
 trait MatrixConstructors[Vec[T]<:Matrix[T]] {

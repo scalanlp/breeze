@@ -180,10 +180,10 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
     new DenseVector(data, start + offset, stride * this.stride, (end-start)/stride)
   }
 
-  def toArray[V>:E:ClassManifest] = if(stride == 1){
+  override def toArray(implicit cm: ClassManifest[E]) = if(stride == 1){
     ArrayUtil.copyOfRange(data, offset, offset + length)
   } else {
-    val arr = new Array[V](length)
+    val arr = new Array[E](length)
     var i = 0
     var off = offset
     while(i < length) {
@@ -241,7 +241,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     val result = zeros[V](size)
     var offset = 0
     for (v <- vectors) {
-      result(offset until (offset + v.size)) := v
+      result.slice(offset, offset + v.size) := v
       offset += v.size
     }
     result

@@ -68,6 +68,8 @@ sealed trait QuasiTensor[@specialized(Int) K, @specialized(Int, Float, Double) V
   def keysIterator: Iterator[K]
   def activeKeysIterator: Iterator[K]
 
+  /** Returns all indices k whose value satisfies a predicate. */
+  def findAll(f: V=>Boolean) = activeIterator.filter(p => f(p._2)).map(_._1).toIndexedSeq
 }
 
 
