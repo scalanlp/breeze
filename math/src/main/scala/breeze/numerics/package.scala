@@ -16,8 +16,9 @@ package breeze
  limitations under the License.
 */
 
-import generic.UFunc
-import linalg.{QuasiTensor, Tensor}
+import generic.{URFunc, UReduceable, UFunc}
+import linalg.operators.{OpSub, BinaryOp}
+import linalg.{NumericOps, QuasiTensor, Tensor}
 import scala.math._
 import scala.{math=>m}
 
@@ -80,17 +81,39 @@ package object numerics extends UniversalFuncs {
     }
   }
 
-  private val cof =  Array(76.18009172947146, -86.50532032941677,
-    24.01409824083091,-1.231739572450155,
-    0.1208650973866179e-2,-0.5395239384953e-5
-  )
 
   /**
    * Evaluates the log of the generalized beta function.
    *  \sum_a lgamma(c(a))- lgamma(c.sum)
    */
-  def lbeta[T](c: QuasiTensor[T,Double]) = {
-    c.valuesIterator.foldLeft(-lgamma(c.sum))( (acc,x)=> acc +lgamma(x))
+  def lbeta:URFunc[Double, Double] = new URFunc[Double, Double] {
+    def apply(cc: TraversableOnce[Double]): Double = {
+      var sum = 0.0
+      var lgSum = 0.0
+      for(v <- cc) {
+        sum += v
+        lgSum += lgamma(v)
+      }
+      lgSum - lgamma(sum)
+    }
+
+    override def apply(arr: Array[Double], offset: Int, stride: Int, length: Int, isUsed: (Int) => Boolean): Double = {
+      var off = offset
+      var sum = 0.0
+      var lgSum = 0.0
+      var i = 0
+      while(i < length) {
+
+        if(isUsed(off))   {
+          sum += arr(off)
+          lgSum += lgamma(arr(off))
+        }
+
+        i += 1
+        off += stride
+      }
+      lgSum - lgamma(sum)
+    }
   }
 
   /**
@@ -101,19 +124,27 @@ package object numerics extends UniversalFuncs {
   * www.cs.berkeley.edu/~milch/blog/versions/blog-0.1.3/blog/distrib
   * @return an approximation of the log of the Gamma function * of x.  Laczos Approximation
   */
-  def lgamma(x : Double) = {
-    var y = x
-    var tmp = x + 5.5
-    tmp -= ((x + 0.5) * log(tmp))
-    var ser = 1.000000000190015
-    var j = 0
-    while (j < 6) {
-      y += 1
-      ser += (cof(j)/y)
-      j += 1
+  def lgamma:UFunc[Double, Double] = new UFunc[Double, Double] {
+    def apply(x: Double) = {
+      var y = x
+      var tmp = x + 5.5
+      tmp -= ((x + 0.5) * log(tmp))
+      var ser = 1.000000000190015
+      var j = 0
+      while (j < 6) {
+        y += 1
+        ser += (lgamma_cof(j)/y)
+        j += 1
+      }
+      (-tmp + log(2.5066282746310005*ser / x))
     }
-    (-tmp + log(2.5066282746310005*ser / x))
   }
+
+
+  private val lgamma_cof =  Array(76.18009172947146, -86.50532032941677,
+    24.01409824083091,-1.231739572450155,
+    0.1208650973866179e-2,-0.5395239384953e-5
+  )
 
   /**
    * An approximation to the error function
