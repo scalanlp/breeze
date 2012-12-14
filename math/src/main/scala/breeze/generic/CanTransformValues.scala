@@ -42,33 +42,33 @@ object CanTransformValues {
   // Arrays
   //
 
-  class OpArray[@specialized(Int, Float, Double) A, @specialized(Int, Float, Double) B<:A]
-    extends Op[Array[A], A, B] {
+  class OpArray[@specialized(Int, Float, Double) A]
+    extends Op[Array[A], A, A] {
 
     /**Transforms all values from the given collection. */
-    def transform(from: Array[A], fn: (A) => B) {
+    def transform(from: Array[A], fn: (A) => A) {
       for(i <- 0 until from.length) {
         from(i) = fn(from(i))
       }
     }
 
     /**Transforms all active key-value pairs from the given collection. */
-    def transformActive(from: Array[A], fn: (A) => B) { transform(from, fn)}
+    def transformActive(from: Array[A], fn: (A) => A) { transform(from, fn)}
   }
 
 
-  implicit def opArray[@specialized A, @specialized B <: A] =
-    new OpArray[A, B]
+  implicit def opArray[@specialized A] =
+    new OpArray[A]
 
-  implicit object OpArrayII extends OpArray[Int, Int]
+  implicit object OpArrayII extends OpArray[Int]
 
-  implicit object OpArraySS extends OpArray[Short, Short]
+  implicit object OpArraySS extends OpArray[Short]
 
-  implicit object OpArrayLL extends OpArray[Long, Long]
+  implicit object OpArrayLL extends OpArray[Long]
 
-  implicit object OpArrayFF extends OpArray[Float, Float]
+  implicit object OpArrayFF extends OpArray[Float]
 
-  implicit object OpArrayDD extends OpArray[Double, Double]
+  implicit object OpArrayDD extends OpArray[Double]
 
-  implicit object OpArrayCC extends OpArray[Complex, Complex]
+  implicit object OpArrayCC extends OpArray[Complex]
 }
