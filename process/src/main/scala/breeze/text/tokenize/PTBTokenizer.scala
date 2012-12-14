@@ -97,9 +97,9 @@ object PTBTokenizer extends Tokenizer {
           cur += 2
           skipTok()
         case '.' if cur == text.length - 1 || (!nextChar.isLetterOrDigit && cur == text.length - 2) =>
-          // if the current token contains a '.' it's probably an acronym,
+          // if the current token contains a '.' one back it's probably an acronym,
           // add new period as its own token
-          if(currentToken.contains("."))
+          if (cur > 1 && text(cur-2) == '.')
            cur += 1
           addToken()
           out += "."
