@@ -47,21 +47,21 @@ object InteriorPoint {
       val sigma = math.pow( (s + sAff * scaleX).dot(z + zAff * scaleZ)/(s dot z) ,3)
       val (zCC,xCC,sCC) = computeCenteringCorrectorDir(A,b,c,x,s,z,sAff,zAff,sigma)
 
-      val dz = zAff + zCC
-      val dx = xAff + xCC
-      val ds = sAff + sCC
+      val dz = zAff += zCC
+      val dx = xAff += xCC
+      val ds = sAff += sCC
 
       val scaleXF = lineSearch(s,ds)
       val scaleZF = lineSearch(z,dz)
 
-      x += dx * (.99 * scaleXF)
-      s += ds * (.99 * scaleXF)
-      z += dz * (.99 * scaleZF)
+      axpy((.99 * scaleXF), dx, x)
+      axpy((.99 * scaleXF), ds, s)
+      axpy((.99 * scaleZF), dz, z)
 
       val gap = (c dot x) + (b dot z)
       converged = gap.abs < tol
       if(gap > lastGap) {
-        x -= dx * (.99 * scaleXF)
+        axpy(-(.99 * scaleXF), dx, x)
       }
       lastGap = gap
       } catch {
@@ -129,7 +129,7 @@ object InteriorPoint {
     val r = DenseVector.zeros[Double](m + n + m)
     r.slice((m+n), (m+n+m)) -= (dsaff :* dzaff - sigma/m * (s dot z) )
     val sol = mat \ r
-    (r.slice(0, m),r.slice(m, (n+m)),r.slice((n+m), (n+m+m)))
+    (sol.slice(0, m),sol.slice(m, (n+m)),sol.slice((n+m), (n+m+m)))
   }
 
 

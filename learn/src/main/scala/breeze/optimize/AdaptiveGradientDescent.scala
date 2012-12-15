@@ -43,7 +43,7 @@ object AdaptiveGradientDescent {
       import state._
       val s = sqrt(state.history.sumOfSquaredGradients :+ (state.grad :* state.grad))
       val newx = x :* s
-      newx += dir * stepSize
+      axpy(stepSize, dir, newx)
       s += (delta + lambda * stepSize)
       newx :/= s
       newx
