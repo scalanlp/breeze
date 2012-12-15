@@ -21,6 +21,7 @@ import support._
 import breeze.generic.{UReduceable, URFunc, CanMapValues}
 import collection.mutable
 import breeze.collection.mutable.Beam
+import breeze.math.Semiring
 
 
 /**
@@ -70,6 +71,11 @@ sealed trait QuasiTensor[@specialized(Int) K, @specialized(Int, Float, Double) V
 
   /** Returns all indices k whose value satisfies a predicate. */
   def findAll(f: V=>Boolean) = activeIterator.filter(p => f(p._2)).map(_._1).toIndexedSeq
+
+  /** Returns true if all elements are non-zero */
+  def all(implicit semi: Semiring[V]) = valuesIterator.forall(_ != semi.zero)
+  /** Returns true if no elements are non-zero */
+  def any(implicit semi: Semiring[V]) = valuesIterator.exists(_ != semi.zero)
 }
 
 
