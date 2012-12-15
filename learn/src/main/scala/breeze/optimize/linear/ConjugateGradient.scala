@@ -2,6 +2,7 @@ package breeze.optimize.linear
 
 import breeze.math.{MutableInnerProductSpace, TensorSpace}
 import breeze.linalg.operators.{OpMulMatrix, BinaryOp}
+import breeze.linalg._
 
 /**
  * Solve argmin (a dot x + .5 * x dot (B * x) + .5 * normSquaredPenalty * (x dot x)) for x
@@ -59,8 +60,10 @@ class ConjugateGradient[T,M](maxNormValue: Double = Double.PositiveInfinity,
         }
 
         assert(!alphaNext.isNaN, xtd +" " + normSquare + " " + xtx + "  " + xtd + " " + radius + " " +  dtd)
-        x += d * alphaNext
-        r -= (Bd + d * normSquaredPenalty) * alphaNext
+        axpy(alphaNext, d, x)
+        axpy(-alphaNext, Bd + d * normSquaredPenalty, r)
+//        x += d * alphaNext
+//        r -= (Bd + d * normSquaredPenalty) * alphaNext
 
 
         converged = true
