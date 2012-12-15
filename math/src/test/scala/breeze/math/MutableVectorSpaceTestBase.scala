@@ -121,6 +121,17 @@ trait MutableVectorSpaceTestBase[V, S] extends FunSuite with Checkers {
 
    }
 
+  test("daxpy is consistent") {
+    check(Prop.forAll{ (trip: (V, V, V), s: S) =>
+      val (a, b, _) = trip
+      val ac = copy(a)
+      val prod = a + b * s
+      breeze.linalg.axpy(s, b, ac)
+      close( prod, ac, TOL)
+    })
+
+  }
+
 
    test("Scalar mult distributes over field addition") {
      check(Prop.forAll{ (trip: (V, V, V), s: S, t: S) =>

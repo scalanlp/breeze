@@ -72,6 +72,11 @@ package object linalg extends LinearAlgebra {
     _useNativeLibraries = v
   }
 
+  /**
+   * Computes y += x * a, possibly doing less work than actually doing that operation
+   */
+  def axpy[A, X, Y](a: A, x: X, y: Y)(implicit axpy: CanAxpy[A, X, Y]) { axpy(a,x,y) }
+
 
   /**
    * returns a vector along the diagonal of v.

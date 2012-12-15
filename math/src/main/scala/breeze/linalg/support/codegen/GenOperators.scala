@@ -71,6 +71,18 @@ object GenOperators {
     """.replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("TypeB", typeB).replaceAll("TypeOp", op.getClass.getName.replaceAll("[$]","")).replaceAll("LOOP",loop)
   }
 
+  def genAxpy(name: String, typeS: String, typeA: String, typeB: String)(loop: String) = {
+    """
+  class Name private[linalg] () extends CanAxpy[TypeS, TypeA, TypeB] {
+    def apply(s: TypeS, b: TypeA, a: TypeB) {
+      if(s == 0) return;
+      LOOP
+    }
+  }
+  implicit val Name = new Name ()
+    """.replaceAll("TypeA",typeA).replaceAll("Name",name).replaceAll("TypeB", typeB).replaceAll("TypeS", typeS).replaceAll("LOOP",loop)
+  }
+
   def genBinaryUpdateOperatorDef(name: String, typeA: String, typeB: String, op: OpType)(loop: String) = {
     """
   class Name private[linalg] () extends BinaryUpdateOp[TypeA, TypeB, TypeOp] {
@@ -345,12 +357,11 @@ object GenDenseOps extends App {
          }
        }""".format(scalar, vector, vector, vector, vector, vector, vector, vector))
 
-
+    import GenOperators.{ops=>_, _}
     for ((op, fn) <- ops) {
 
 
 
-      import GenOperators._
       val name = "can" + op.getClass.getSimpleName.drop(2).dropRight(1) + "Into_DV_DV_" + scalar
       if (!blacklist(tpe)(name) && op != OpMulMatrix) { // don't generate OpMulMatrix for DV_DV
         println(genBinaryUpdateOperator(name, vector, vector, op)(loop(fn)))
@@ -378,6 +389,10 @@ object GenDenseOps extends App {
 
 
     }
+
+    val name = "canAxpy_DV_DV_" + scalar
+    if(scalar != "Double" && !vector.contains("Matrix"))
+      println(genAxpy(name, scalar, vector, vector)(loop((y,x) => "%s + s * %s".format(y, x))))
     println("}")
   }
 
@@ -410,8 +425,8 @@ object GenDenseOps extends App {
 
 
 
+    import GenOperators.{ops=>_, _}
       for ((op, fn) <- ops if op != OpMulMatrix) {
-        import GenOperators._
         val namegen = "can" + op.getClass.getSimpleName.drop(2).dropRight(1) + "Into_DV_V_" + scalar
         println(genBinaryUpdateRegistryDef(namegen, vector, gvector, op)(loopG(fn, op == OpAdd || op == OpSub)))
         if (generic == "Vector")
@@ -424,6 +439,8 @@ object GenDenseOps extends App {
 
 
       }
+      val names = "canAxpy_DV_V_" + scalar
+      println(genAxpy(names, scalar, gvector, vector)(loopG((y,x) => "%s + s * %s".format(y, x), true)))
       println("}")
     }
 
@@ -534,6 +551,9 @@ object GenDVSVSpecialOps extends App {
       result""".replaceAll("       ","        ")
       })
       println("  " + register("Vector", GenVectorRegistries.getDotName(scalar), dotName))
+
+      val name = "canAxpy_DV_" + shortName +"_" + scalar
+      println(genAxpy(name, scalar, svector, vector)(fastLoop((y,x) => "%s + s * %s".format(y, x))))
 
       println("}")
 
@@ -719,6 +739,68 @@ object GenSVOps extends App {
     """.replaceAll("Type",tpe).format(postProcessCopy("c"),op("a(bi(i))","bd(i)"), op("buf(nactiveSize)","bd(i)")).replaceAll("    ","        ")
   }
 
+  def axpyLoop(tpe: String, op: (String,String)=>String):String = {
+    """require(b.length == a.length, "Vectors must be the same length!")
+
+    var buf:Array[Type] = null
+    var bufi:Array[Int] = null
+    var nactiveSize = 0
+
+    val bd = b.data
+    val bi = b.index
+    val bsize = b.iterableSize
+    var i = 0
+    while(i < bsize) {
+      if (a.contains(bi(i))) {
+        // just add it in if it's there
+        a(bi(i)) = %s
+      } else { // not there
+        if(buf eq null) {
+          buf = new Array[Type](b.activeSize - i)
+          bufi = new Array[Int](b.activeSize - i)
+        } else if(buf.length == nactiveSize) {
+          buf = Arrays.copyOf(buf, nactiveSize + b.activeSize - i)
+          bufi = Arrays.copyOf(bufi, nactiveSize + b.activeSize - i)
+        }
+
+        // append to buffer to merged in later
+        buf(nactiveSize) = %s
+        bufi(nactiveSize) = bi(i)
+        nactiveSize += 1
+      }
+      i += 1
+    }
+
+    // merge two disjoint sorted lists
+    if(buf != null) {
+      val result = new Array[Type](a.activeSize + nactiveSize)
+      val resultI = new Array[Int](a.activeSize + nactiveSize)
+      var ni = 0
+      var ai = 0
+      var out = 0
+
+      while(ni < nactiveSize) {
+        while(ai < a.activeSize && a.index(ai) < bufi(ni) ) {
+          result(out) = a.data(ai)
+          resultI(out) = a.index(ai)
+          ai += 1
+          out += 1
+        }
+        result(out) = buf(ni)
+        resultI(out) = bufi(ni)
+        out += 1
+        ni += 1
+      }
+
+      System.arraycopy(a.data, ai, result, out, result.length - out)
+      System.arraycopy(a.index, ai, resultI, out, result.length - out)
+      out = result.length
+
+      a.use(resultI, result, out)
+    }
+    """.replaceAll("Type",tpe).format(op("a(bi(i))","bd(i)"), op("buf(nactiveSize)","bd(i)")).replaceAll("    ","        ")
+  }
+
   def timesLoopTemplate(tpe: String, zero: String, finish: (String, String, String)=>String) = {
     """require(b.length == a.length, "Vectors must be the same length!")
 
@@ -875,6 +957,10 @@ object GenSVOps extends App {
       }
 
 
+      val name = "canAxpy_SV_SV_" + scalar
+      println(genAxpy(name, scalar, vector, vector)(axpyLoop(scalar, {(y:String,x: String) => "%s + s * %s".format(y, x)})))
+
+
       // dot product
       val dotName = "canDotProductSV_" + scalar
       println(genBinaryOperator(dotName, vector, vector, OpMulInner, scalar){
@@ -971,6 +1057,15 @@ object GenVectorRegistries extends App {
 
       }
 
+      val name = "canAxpy_SV_SV_" + scalar
+      println(genAxpy(name, scalar, vector, vector) {
+        """require(b.length == a.length, "Vectors must be the same length!")
+
+        for( (i, v) <- b.activeIterator) {
+          a(i) += v * s
+        }
+        """
+      })
 
       val dotName: String = getDotName(scalar)
       println(genBinaryRegistryDef(dotName, vector, vector, OpMulInner, scalar){

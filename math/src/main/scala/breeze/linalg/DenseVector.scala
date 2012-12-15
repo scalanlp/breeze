@@ -444,7 +444,7 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
     new BinaryUpdateOp[DenseVector[V], DenseVector[V], breeze.linalg.operators.OpSet] {
       def apply(a: DenseVector[V], b: DenseVector[V]) {
         require(b.length == a.length, "Vectors must be the same length!")
-        if(a.stride == b.stride) {
+        if(a.stride == b.stride && a.stride == 1) {
           System.arraycopy(b.data, b.offset, a.data, a.offset, a.length)
           return
         }
@@ -465,6 +465,27 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
       }
     }
   }
+
+  implicit def canGaxpy[V:Semiring]: CanAxpy[V, DenseVector[V], DenseVector[V]] = {
+    new CanAxpy[V, DenseVector[V], DenseVector[V]] {
+      val ring = implicitly[Semiring[V]]
+      def apply(s: V, b: DenseVector[V], a: DenseVector[V]) {
+      require(b.length == a.length, "Vectors must be the same length!")
+      val ad = a.data
+      val bd = b.data
+      var aoff = a.offset
+      var boff = b.offset
+
+      var i = 0
+      while(i < a.length) {
+        ad(aoff) = ring.+(ad(aoff),ring.*(s, bd(boff)))
+        aoff += a.stride
+        boff += b.stride
+        i += 1
+      }
+      }
+    }
+  }
 }
 
 trait DenseVector_SpecialOps extends DenseVectorOps_Double { this: DenseVector.type =>
@@ -479,8 +500,18 @@ trait DenseVector_SpecialOps extends DenseVectorOps_Double { this: DenseVector.t
       }
       Vector.canAddInto_V_V_Double.register(this)
     }
-
   }
+
+  implicit val canDaxpy: CanAxpy[Double, DenseVector[Double], DenseVector[Double]] = {
+    new CanAxpy[Double, DenseVector[Double], DenseVector[Double]] {
+      def apply(a: Double, x: DenseVector[Double], y: DenseVector[Double]) {
+        require(x.length == y.length, "Vectors must have same length")
+        org.netlib.blas.Daxpy.daxpy(
+          x.length, a, x.data, x.offset, x.stride, y.data, y.offset, y.stride)
+      }
+    }
+  }
+
   implicit val canAddD: BinaryOp[DenseVector[Double], DenseVector[Double], OpAdd, DenseVector[Double]] = {
     pureFromUpdate_Double(canAddIntoD)
   }
