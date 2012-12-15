@@ -67,6 +67,14 @@ class CounterTest extends FunSuite with Checkers {
     a := b
     assert(a === b)
   }
+
+  test("Counting") {
+    val a = Counter.count("this", "is", "my", "sentence")
+    val b = Counter.count(List("this", "is", "my", "sentence"):_*)
+    val c = Counter.countTraversable(Iterator("this", "is", "my", "sentence"))
+    assert(a === b)
+    assert(a === c)
+  }
 }
 
 
@@ -82,7 +90,7 @@ class CounterOps_IntTest extends TensorSpaceTestBase[Counter[Int, Int], Int, Int
   implicit def genS: Arbitrary[Counter[Int, Int]] = {
     Arbitrary {
       for{l <- Arbitrary.arbitrary[List[Int]] } yield {
-        Counter.count(l)
+        Counter.count(l:_*)
       }
     }
   }

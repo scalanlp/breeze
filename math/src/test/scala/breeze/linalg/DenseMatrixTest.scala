@@ -99,19 +99,19 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
     // column of original looks same as row of tranpose
     val sm1 = m(::, 1)
-    val smt1 = m.t apply (1, ::)
+    val smt1 = m.t(1, ::)
     assert(sm1.valuesIterator sameElements smt1.valuesIterator)
 
     val sm2 = m(::, 2)
-    val smt2 = m.t apply (2, ::)
+    val smt2 = m.t(2, ::)
     assert(sm2.valuesIterator sameElements smt2.valuesIterator)
 
     val sm1c = m(1, ::)
-    val smt1c = m.t apply (::, 1)
+    val smt1c = m.t(::, 1)
     assert(sm1c.valuesIterator sameElements smt1c.valuesIterator, sm1c.toString + " is not " + smt1c.toString)
 
     val sm2c = m(0, ::)
-    val smt2c = m.t apply (::, 0)
+    val smt2c = m.t(::, 0)
     assert(sm2c.valuesIterator sameElements smt2c.valuesIterator)
 
     // slice sub-matrix
@@ -121,25 +121,25 @@ class DenseMatrixTest extends FunSuite with Checkers {
     val t1 = s1.t
     assert(t1 === DenseMatrix((1, 4), (2, 5)))
 
-    val t1b = m.t apply (1 to 2, 0 to 1)
+    val t1b = m.t(1 to 2, 0 to 1)
     assert(t1 === t1b)
 
     val s2 = m(0 to 1, 1)
-    val t2 = m.t apply (1, 0 to 1)
+    val t2 = m.t(1, 0 to 1)
     assert(s2.valuesIterator sameElements t2.valuesIterator)
 
     val s3 = m(0, 0 to 1)
-    val t3 = m.t apply (0 to 1, 0)
+    val t3 = m.t(0 to 1, 0)
     assert(s3.valuesIterator sameElements t3.valuesIterator)
 
     {
       val s2 = m(0 to 1, ::)
-      val t2 = m.t apply (::, 0 to 1)
+      val t2 = m.t(::, 0 to 1)
       assert(s2.t === t2)
       assert(s2 === t2.t)
 
       val s3 = m(::, 0 to 1)
-      val t3 = m.t apply (0 to 1, ::)
+      val t3 = m.t(0 to 1, ::)
       assert(s3.t === t3)
       assert(s3 === t3.t)
     }

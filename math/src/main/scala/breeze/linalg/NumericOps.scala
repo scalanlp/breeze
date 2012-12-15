@@ -17,6 +17,7 @@ package breeze.linalg
 
 import breeze.linalg.operators._
 import breeze.math.{Ring, Field, VectorSpace}
+import support.CanSlice2
 
 /**
  * In some sense, this is the real root of the linalg hierarchy. It provides
@@ -194,13 +195,21 @@ trait NumericOps[+This] {
 
   // matrix-y ops
 
-  /** A transposed view of this column. */
+  /** A transposed view of this object. */
   final def t [TT>:This,That](implicit op : CanTranspose[TT,That]) =
     op.apply(repr)
 
   /** Shaped solve of this by b. */
   def \ [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpSolveMatrixBy,That]) =
     op.apply(repr,b)
+
+
+  /** A transposed view of this object, followed by a slice. Sadly frequently necessary. */
+  final def t[TT>:This,That,Slice1,Slice2,Result](a: Slice1,
+                                                  b: Slice2)
+                                                 (implicit op : CanTranspose[TT,That],
+                                                  canSlice: CanSlice2[That, Slice1, Slice2, Result]):Result =
+    canSlice(op.apply(repr), a, b)
 }
 
 object NumericOps {

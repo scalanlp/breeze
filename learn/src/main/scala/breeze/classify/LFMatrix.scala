@@ -179,6 +179,20 @@ object LFMatrix {
     }
   }
 
+  implicit def lfAxpyOp[L,TF]
+  (implicit op: CanAxpy[Double, TF,TF], numeric: TF=>NumericOps[TF])
+  : CanAxpy[Double, LFMatrix[L,TF],LFMatrix[L,TF]]  = {
+    new CanAxpy[Double, LFMatrix[L,TF],LFMatrix[L,TF]]  {
+      def apply(a: Double, v2: LFMatrix[L,TF], v1: LFMatrix[L, TF]) {
+        require(v2.labelIndex == v1.labelIndex)
+        for( (tf, l) <- v1.data.zipWithIndex) {
+          op(a, v2(l),tf)
+        }
+
+      }
+    }
+  }
+
   implicit def lfUnaryOp[L,TF,Op<:OpType]
   (implicit op: UnaryOp[TF,Op,TF], numeric: TF=>NumericOps[TF])
   : UnaryOp[LFMatrix[L,TF], Op, LFMatrix[L, TF]]  = {

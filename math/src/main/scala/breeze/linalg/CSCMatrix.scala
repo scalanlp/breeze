@@ -19,6 +19,7 @@ import java.util
 import breeze.util.{Terminal, ArrayUtil}
 import collection.mutable
 import breeze.math.Semiring
+import breeze.generic.CanMapValues
 
 /**
  * A compressed sparse column matrix, as used in Matlab and CSparse, etc.
@@ -172,6 +173,53 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps_Int wit
     }
     // TODO: res.compact()
     res
+  }
+
+    implicit def canMapValues[V, R:ClassManifest:DefaultArrayValue:Semiring] = {
+      val z = implicitly[DefaultArrayValue[R]].value
+    new CanMapValues[CSCMatrix[V],V,R,CSCMatrix[R]] {
+      override def map(from : CSCMatrix[V], fn : (V=>R)) = {
+        val fz = fn(from.zero)
+        val fzIsNotZero = fz != z
+        val builder = new Builder[R](from.rows, from.cols, from.activeSize)
+        var j = 0
+        while(j < from.cols) {
+          var ip = from.colPtrs(j)
+          var lastI = 0
+          while(ip < from.colPtrs(j+1)) {
+            val i = from.rowIndices(ip)
+            while(fzIsNotZero && lastI < i) {
+              builder.add(lastI, j, fz)
+              lastI += 1
+            }
+            lastI += 1
+            val v = from.data(ip)
+            val r = fn(v)
+            if (r != z) {
+              builder.add(i, j, r)
+            }
+            ip += 1
+          }
+
+          while(fzIsNotZero && lastI < from.rows) {
+            builder.add(lastI, j, fz)
+              lastI += 1
+          }
+          j += 1
+        }
+
+        builder.result()
+      }
+
+      override def mapActive(from : CSCMatrix[V], fn : (V=>R)) = {
+        var zeroSeen = false
+        def ff(v: V) = { val r = fn(v); if (r == z) zeroSeen = true; r}
+        val newData = from.data.map(ff)
+        val r = new CSCMatrix[R](newData, from.rows, from.cols, from.colPtrs.clone(), from.activeSize, from.rowIndices.clone)
+        if(zeroSeen) r.compact()
+        r
+      }
+    }
   }
 
 

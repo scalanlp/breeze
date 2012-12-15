@@ -44,17 +44,19 @@ trait Encoder[T] {
   /**
    * Decodes a vector back to a Counter[T,Double]
    */
-  def decode(v: Vector[Double]):Counter[T,Double] = {
+  def decode(v: Vector[Double], keepZeros: Boolean = false):Counter[T,Double] = {
     val ctr = Counter[T,Double]()
     for( (i,v) <- v.active.pairs) {
-      ctr(index.get(i)) = v
+      if(keepZeros || v != 0.0)
+        ctr(index.get(i)) = v
     }
     ctr
   }
 
 
   /**
-   * Encodes a DoubleCounter as a Vector[Double]. All elements in the counter must be in the index.
+   * Encodes a DoubleCounter as a Vector[Double].
+   * All elements in the counter must be in the index unless ignoreOutOfIndex is true
    */
   def encodeDense(c: Tensor[T,Double], ignoreOutOfIndex:Boolean = false):DenseVector[Double] = {
     val vec = mkDenseVector()
@@ -67,7 +69,8 @@ trait Encoder[T] {
   }
 
   /**
-   * Encodes a DoubleCounter as a SparseVector[Double]. All elements in the counter must be in the index.
+   * Encodes a DoubleCounter as a SparseVector[Double].
+   * All elements in the counter must be in the index unless ignoreOutOfIndex is true
    */
   def encodeSparse(c: Tensor[T,Double], ignoreOutOfIndex: Boolean = false):SparseVector[Double] = {
     val vec = new VectorBuilder[Double](index.size)
@@ -81,7 +84,8 @@ trait Encoder[T] {
   }
 
   /**
-   * Encodes a DoubleCounter as a Vector[Double]. All elements in the counter must be in the index.
+   * Encodes a DoubleCounter as a Vector[Double].
+   * All elements in the counter must be in the index unless ignoreOutOfIndex is true
    */
   def encode(c: Tensor[T,Double], ignoreOutOfIndex: Boolean = false):Vector[Double] = {
     val vec = mkVector()
@@ -94,7 +98,8 @@ trait Encoder[T] {
   }
 
     /**
-   * Encodes a Tensor[(T,T),Double] as a DenseMatrix[Double]. All elements in the counter must be in the index.
+   * Encodes a Tensor[(T,T),Double] as a DenseMatrix[Double].
+   * All elements in the counter must be in the index unless ignoreOutOfIndex is true
    */
   def encode(c: Tensor[(T,T),Double]):DenseMatrix[Double] = {
     val vec = mkMatrix()

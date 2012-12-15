@@ -22,6 +22,7 @@ import breeze.util.Terminal
 import support.LiteralRow
 import util.Random
 import breeze.generic.CanMapValues
+import breeze.math.Semiring
 
 /**
  *
@@ -118,6 +119,10 @@ trait Matrix[@spec(Int, Float, Double) E] extends MatrixLike[E, Matrix[E]] {
 
   override def toString : String = toString(Terminal.terminalHeight, Terminal.terminalWidth)
 
+  def toDenseMatrix(implicit cm: ClassManifest[E], dfv: DefaultArrayValue[E]) = {
+    DenseMatrix.tabulate(rows, cols){ (i,j) => apply(i, j)}
+  }
+
 }
 
 object Matrix extends MatrixConstructors[Matrix]
@@ -127,11 +132,24 @@ object Matrix extends MatrixConstructors[Matrix]
   def zeros[@specialized(Int, Float, Double) V: ClassManifest:DefaultArrayValue](rows: Int, cols: Int): Matrix[V] = DenseMatrix.zeros(rows, cols)
 
   def create[@specialized(Int, Float, Double) V:DefaultArrayValue](rows: Int, cols: Int, data: Array[V]): Matrix[V] = DenseMatrix.create(rows, cols, data)
+
+  // slicing
 }
 
 trait MatrixConstructors[Vec[T]<:Matrix[T]] {
   def zeros[@specialized(Int, Float, Double) V:ClassManifest:DefaultArrayValue](rows: Int, cols: Int):Vec[V]
   def create[@specialized(Int, Float, Double) V:DefaultArrayValue](rows: Int, cols: Int, data: Array[V]):Vec[V]
+
+  /**
+   * Creates a matrix of all ones.
+   * @param rows
+   * @param cols
+   * @tparam V
+   * @return
+   */
+  def ones[@specialized(Int, Float, Double) V:ClassManifest:DefaultArrayValue:Semiring](rows: Int, cols: Int):Vec[V] = {
+    fill(rows,cols)(implicitly[Semiring[V]].one)
+  }
 
   def fill[@spec(Double, Int, Float) V:ClassManifest:DefaultArrayValue](rows: Int, cols: Int)(v: =>V):Vec[V] = create(rows, cols, Array.fill(rows * cols)(v))
   def tabulate[@spec(Double, Int, Float) V:ClassManifest:DefaultArrayValue](rows: Int, cols: Int)(f: (Int,Int)=>V):Vec[V]= {

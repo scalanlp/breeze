@@ -130,4 +130,9 @@ class PTBTokenizerTest extends FunSuite with Checkers {
     val text = "Go to http://google.com/ now!"
     assert(PTBTokenizer(text).toList === List("Go", "to", "http://google.com/", "now", "!"))
   }
+
+
+  test("emails") {
+    assert(PTBTokenizer("Email asdf@asdf.com.").toList === List("Email", "asdf@asdf.com", "."))
+  }
 }

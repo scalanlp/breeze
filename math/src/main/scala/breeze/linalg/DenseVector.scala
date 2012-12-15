@@ -17,7 +17,7 @@ package breeze.linalg
 
 import operators._
 import scala.{specialized=>spec}
-import breeze.generic.{URFunc, UReduceable, CanMapValues}
+import breeze.generic._
 import support.{CanCreateZerosLike, CanMapKeyValuePairs, CanZipMapValues, CanSlice, CanCopy}
 import breeze.numerics.IntMath
 import java.util.Arrays
@@ -180,10 +180,10 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
     new DenseVector(data, start + offset, stride * this.stride, (end-start)/stride)
   }
 
-  def toArray[V>:E:ClassManifest] = if(stride == 1){
+  override def toArray(implicit cm: ClassManifest[E]) = if(stride == 1){
     ArrayUtil.copyOfRange(data, offset, offset + length)
   } else {
-    val arr = new Array[V](length)
+    val arr = new Array[E](length)
     var i = 0
     var off = offset
     while(i < length) {
@@ -241,7 +241,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     val result = zeros[V](size)
     var offset = 0
     for (v <- vectors) {
-      result(offset until (offset + v.size)) := v
+      result.slice(offset, offset + v.size) := v
       offset += v.size
     }
     result
@@ -307,6 +307,28 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     }
   }
 
+
+  implicit def canTransformValues[V]:CanTransformValues[DenseVector[V], V, V] = {
+    new CanTransformValues[DenseVector[V], V, V] {
+      def transform(from: DenseVector[V], fn: (V) => V) {
+        val d = from.data
+        val stride = from.stride
+
+        var i = 0
+        var j = from.offset
+        while(i < from.length) {
+          from.data(j) = fn(d(j))
+          i += 1
+          j += stride
+        }
+      }
+
+      def transformActive(from: DenseVector[V], fn: (V) => V) {
+        transform(from, fn)
+      }
+    }
+  }
+
   implicit def canMapPairs[V, V2](implicit man: ClassManifest[V2]):CanMapKeyValuePairs[DenseVector[V], Int, V, V2, DenseVector[V2]] = {
     new CanMapKeyValuePairs[DenseVector[V], Int, V, V2, DenseVector[V2]] {
       /**Maps all key-value pairs from the given collection. */
@@ -335,7 +357,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   }
 
   // slicing
-  @inline implicit def canSlice[V]: CanSlice[DenseVector[V], Range, DenseVector[V]] = __canSlice.asInstanceOf[CanSlice[DenseVector[V], Range, DenseVector[V]]]
+  implicit def canSlice[V]: CanSlice[DenseVector[V], Range, DenseVector[V]] = __canSlice.asInstanceOf[CanSlice[DenseVector[V], Range, DenseVector[V]]]
 
   private val __canSlice = {
     new CanSlice[DenseVector[Any], Range, DenseVector[Any]] {
@@ -422,7 +444,7 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
     new BinaryUpdateOp[DenseVector[V], DenseVector[V], breeze.linalg.operators.OpSet] {
       def apply(a: DenseVector[V], b: DenseVector[V]) {
         require(b.length == a.length, "Vectors must be the same length!")
-        if(a.stride == b.stride) {
+        if(a.stride == b.stride && a.stride == 1) {
           System.arraycopy(b.data, b.offset, a.data, a.offset, a.length)
           return
         }
@@ -443,6 +465,27 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
       }
     }
   }
+
+  implicit def canGaxpy[V:Semiring]: CanAxpy[V, DenseVector[V], DenseVector[V]] = {
+    new CanAxpy[V, DenseVector[V], DenseVector[V]] {
+      val ring = implicitly[Semiring[V]]
+      def apply(s: V, b: DenseVector[V], a: DenseVector[V]) {
+      require(b.length == a.length, "Vectors must be the same length!")
+      val ad = a.data
+      val bd = b.data
+      var aoff = a.offset
+      var boff = b.offset
+
+      var i = 0
+      while(i < a.length) {
+        ad(aoff) = ring.+(ad(aoff),ring.*(s, bd(boff)))
+        aoff += a.stride
+        boff += b.stride
+        i += 1
+      }
+      }
+    }
+  }
 }
 
 trait DenseVector_SpecialOps extends DenseVectorOps_Double { this: DenseVector.type =>
@@ -457,8 +500,18 @@ trait DenseVector_SpecialOps extends DenseVectorOps_Double { this: DenseVector.t
       }
       Vector.canAddInto_V_V_Double.register(this)
     }
-
   }
+
+  implicit val canDaxpy: CanAxpy[Double, DenseVector[Double], DenseVector[Double]] = {
+    new CanAxpy[Double, DenseVector[Double], DenseVector[Double]] {
+      def apply(a: Double, x: DenseVector[Double], y: DenseVector[Double]) {
+        require(x.length == y.length, "Vectors must have same length")
+        org.netlib.blas.Daxpy.daxpy(
+          x.length, a, x.data, x.offset, x.stride, y.data, y.offset, y.stride)
+      }
+    }
+  }
+
   implicit val canAddD: BinaryOp[DenseVector[Double], DenseVector[Double], OpAdd, DenseVector[Double]] = {
     pureFromUpdate_Double(canAddIntoD)
   }

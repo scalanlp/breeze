@@ -19,10 +19,11 @@ import scala.{specialized=>spec}
 import breeze.storage.{DefaultArrayValue}
 import support.{CanZipMapValues, CanMapKeyValuePairs, CanCopy, CanSlice}
 import breeze.util.{Sorting, ArrayUtil}
-import breeze.generic.{CanMapValues, URFunc, UReduceable}
+import breeze.generic.{CanTransformValues, CanMapValues, URFunc, UReduceable}
 import breeze.math.{Semiring, Ring, TensorSpace}
 import breeze.collection.mutable.SparseArray
 import java.util
+import collection.mutable
 
 
 /**
@@ -176,6 +177,39 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
       }
     }
   }
+
+  implicit def canTransformValues[V:DefaultArrayValue:ClassManifest]:CanTransformValues[SparseVector[V], V, V] = {
+    new CanTransformValues[SparseVector[V], V, V] {
+      val z = implicitly[DefaultArrayValue[V]]
+      /**Transforms all key-value pairs from the given collection. */
+      def transform(from: SparseVector[V], fn: (V) => V) {
+        val newData =  mutable.ArrayBuilder.make[V]()
+        val newIndex = mutable.ArrayBuilder.make[Int]()
+        var used = 0
+        var i = 0
+        while(i < from.length) {
+          val vv = fn(from(i))
+          if(vv != z) {
+            newData += vv
+            newIndex += i
+            used += 1
+          }
+          i += 1
+        }
+        from.array.use(newIndex.result(), newData.result(), used)
+      }
+
+      /**Transforms all active key-value pairs from the given collection. */
+      def transformActive(from: SparseVector[V], fn: (V) => V) {
+        var i = 0
+        while(i < from.activeSize) {
+          from.data(i) = fn(from.data(i))
+          i += 1
+        }
+      }
+    }
+  }
+
 
   implicit def canMapPairs[V, V2: ClassManifest: DefaultArrayValue]:CanMapKeyValuePairs[SparseVector[V], Int, V, V2, SparseVector[V2]] = {
     new CanMapKeyValuePairs[SparseVector[V], Int, V, V2, SparseVector[V2]] {

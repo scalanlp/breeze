@@ -43,7 +43,6 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
   }
 
   test("cholesky") {
-    println(useNativeLibraries + " ??")
     val A = DenseMatrix((1.,0.,0.),(2.,3.,0.),(4.,5.,6.))
     val Sigma = A * A.t
     assert(cholesky(Sigma) === A)
