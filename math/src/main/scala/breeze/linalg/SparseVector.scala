@@ -154,10 +154,28 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
     new SparseVector(resultArray)
   }
 
-  def horzcat[V:DefaultArrayValue:ClassManifest](vectors: SparseVector[V]*):DenseMatrix[V] ={ 
+  def horzcat[V:DefaultArrayValue:ClassManifest](vectors: SparseVector[V]*):CSCMatrix[V] ={
     if(!vectors.forall(_.size==vectors(0).size))
-      throw new IllegalArgumentException("vector lengths must be equal")
-    DenseMatrix.tabulate[V](vectors(0).size,vectors.size)((i,j)=>vectors(j)(i))
+      throw new IllegalArgumentException("vector lengths must be equal, but got: " + vectors.map(_.length).mkString(", "))
+    val rows = vectors(0).length
+    val cols = vectors.length
+    val data = new Array[V](vectors.map(_.data.length).sum)
+    val rowIndices = new Array[Int](data.length)
+    val colPtrs = new Array[Int](vectors.length + 1)
+    val used = data.length
+
+    var vec = 0
+    var off = 0
+    while(vec < vectors.length) {
+      colPtrs(vec) = off
+      System.arraycopy(vectors(vec).data, 0, data, off, vectors(vec).activeSize)
+      System.arraycopy(vectors(vec).index, 0, rowIndices, off, vectors(vec).activeSize)
+      off += vectors(vec).activeSize
+      vec += 1
+    }
+    colPtrs(vec) = off
+
+    new CSCMatrix(data, rows, cols, colPtrs, used, rowIndices)
   }
 
   // implicits
