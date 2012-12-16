@@ -402,6 +402,15 @@ final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[
   def quickCompact() {
     reserve(used)
   }
+
+  def concatenate(that:SparseArray[Elem])(implicit man :ClassManifest[Elem]):SparseArray[Elem]={ 
+    if(this.default!=that.default) throw new IllegalArgumentException("default values should be equal")
+    new SparseArray((this.index.slice(0,this.used) union that.index.slice(0,that.used).map(_ + this.size)).toArray,
+		    (this.data.slice(0,this.used) union that.data.slice(0,that.used)).toArray,
+		    this.used+that.used,
+		    this.size+that.size,
+		    this.default)
+  }
 }
 
 object SparseArray {
