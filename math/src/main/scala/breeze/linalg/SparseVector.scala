@@ -14,7 +14,7 @@ package breeze.linalg
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import operators.{UnaryOp, OpNeg, BinaryOp, OpMulScalar}
+import operators._
 import scala.{specialized=>spec}
 import breeze.storage.{DefaultArrayValue}
 import support.{CanZipMapValues, CanMapKeyValuePairs, CanCopy, CanSlice}
@@ -148,6 +148,17 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
     r
   }
 
+
+  def vertcat[V:DefaultArrayValue:ClassManifest](vectors: SparseVector[V]*): SparseVector[V] = {
+    val resultArray = vectors.map(_.array).foldLeft(new SparseArray[V](0))(_ concatenate _)
+    new SparseVector(resultArray)
+  }
+
+  def horzcat[V:DefaultArrayValue:ClassManifest](vectors: SparseVector[V]*):DenseMatrix[V] ={ 
+    if(!vectors.forall(_.size==vectors(0).size))
+      throw new IllegalArgumentException("vector lengths must be equal")
+    DenseMatrix.tabulate[V](vectors(0).size,vectors.size)((i,j)=>vectors(j)(i))
+  }
 
   // implicits
   class CanCopySparseVector[@spec(Int, Float, Double) V:ClassManifest:DefaultArrayValue] extends CanCopy[SparseVector[V]] {
