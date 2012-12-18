@@ -1,7 +1,7 @@
 package breeze.config
 
 import collection.mutable.ArrayBuffer
-import java.io.FileInputStream
+import java.io.{File, FileInputStream}
 import java.util.Properties
 
 /**
@@ -17,8 +17,48 @@ import java.util.Properties
  */
 object CommandLineParser {
 
-  private def isNumber(s: String) = try { s.toDouble; true } catch {case ex => false}
+  /**
+   *
+   * @param args command line args
+   * @param checkHelp if true and "--help" is set, print help and exit.
+   * @param extraArgsAsConfigFiles if true, unprocessed arguments are treated as paths to configuration files.
+   * @tparam T
+   * @return
+   */
+  def readIn[T:Manifest](args: IndexedSeq[String],
+                              checkHelp: Boolean = true,
+                              extraArgsAsConfigFiles: Boolean = true):T = {
+    val (baseConfig, files) = parseArguments(args)
+    val config:Configuration = if(extraArgsAsConfigFiles) {
+      baseConfig backoff Configuration.fromPropertiesFiles(files.map(new File(_)))
+    } else {
+      require(files.isEmpty, "Unknown options: " + files)
+      baseConfig
+    }
 
+    if(config.readIn[Boolean]("help", false)) {
+      println(breeze.config.GenerateHelp[T](config))
+      sys.exit(1)
+    }
+
+    val params = try {
+      config.readIn[T]("")
+    } catch {
+      case e:Exception =>
+      e.printStackTrace()
+      println(breeze.config.GenerateHelp[T](config))
+      sys.exit(1)
+    }
+
+    params
+  }
+
+
+  /**
+   * Reads in arguments as specified above. Returns arguments not bound to an option as second return value.
+   * @param args
+   * @return
+   */
   def parseArguments(args: IndexedSeq[String]):(Configuration,IndexedSeq[String]) = {
     val properties = collection.mutable.Map[String,String]();
     val linear = ArrayBuffer[String]()
@@ -80,4 +120,5 @@ object CommandLineParser {
     (Configuration.fromMap(Map.empty ++ properties), linear)
   }
 
+  private def isNumber(s: String) = try { s.toDouble; true } catch {case ex => false}
 }
