@@ -58,8 +58,8 @@ class ScalingTest extends FunSuite {
   }
 
   test("Unscale value") {
-    assert(Scaling.unscaleValue(math.pow(2,10), -290) === math.pow(2, 300))
-    assert(Scaling.toLogSpace(math.pow(2,10), -290) === math.log(2) * 300)
+    assert(Scaling.unscaleValue(math.pow(2,10), 290) === math.pow(2, 300))
+    assert(Scaling.toLogSpace(math.pow(2,10), 290) === math.log(2) * 300)
   }
 
 
