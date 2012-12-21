@@ -328,6 +328,30 @@ class EitherIndex[L,R](left: Index[L], right: Index[R]) extends Index[Either[L,R
   override def size:Int = left.size + right.size
 }
 
+/**
+ *  Lifts an index of T into an index of Option[T] . The last element is None. Everything else is as you expect.
+ *
+ * @author dlwh
+ */
+class OptionIndex[T](inner: Index[T]) extends Index[Option[T]] {
+  def apply(t: Option[T]) = t match {
+    case Some(l) => inner(l)
+    case None => inner.size
+  }
+
+  def unapply(i: Int) = {
+    if(i < 0 || i >= size) None
+    else if(i < inner.size) Some(Some(inner.get(i))) // sic!
+    else None
+  }
+
+  def pairs = inner.pairs.map { case (l,i) => Some(l) -> i} ++ Iterator(None -> inner.size)
+
+  def iterator = inner.iterator.map{Some(_)} ++ Iterator(None)
+
+  override def size:Int = inner.size + 1
+}
+
 
 /**
  * An Index over N kinds of things. A little type unsafe.
