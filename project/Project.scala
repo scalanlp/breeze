@@ -6,7 +6,7 @@ import AssemblyKeys._
 
 object BuildSettings {
   val buildOrganization = "org.scalanlp"
-  val buildScalaVersion = "2.10.0-RC1"
+  val buildScalaVersion = "2.10.0"
 
   val buildSettings = Defaults.defaultSettings ++ Seq (
     organization := buildOrganization,
@@ -83,7 +83,7 @@ object BreezeBuild extends Build {
   
 
   libraryDependencies ++= Seq(
-    "org.scala-lang" % "scala-actors" % "2.10.0-RC1"
+    "org.scala-lang" % "scala-actors" % "2.10.0"
   )
   
 
@@ -93,11 +93,11 @@ object BreezeBuild extends Build {
         sv match {
           case "2.9.2" => "org.scala-tools.testing" % "scalacheck_2.9.1" % "1.9" % "test"
           case "2.10.0-RC1" => "org.scalacheck" % "scalacheck_2.10.0-RC1" % "1.10.0" % "test"
-          case _       => "org.scala-tools.testing" % "scalacheck" % "1.9" % "test"
+          case _       => "org.scalacheck" %% "scalacheck" % "1.10.0" % "test"
         },
-        "org.scalatest" % "scalatest_2.10.0-RC1" % "2.0.M4-2.10.0-RC1-B1",
+        "org.scalatest" % "scalatest_2.10.0" % "2.0.M5",
         "junit" % "junit" % "4.5" % "test",
-        "org.scala-lang" % "scala-actors" % "2.10.0-RC1"
+        "org.scala-lang" % "scala-actors" % "2.10.0"
       )
   }
 
