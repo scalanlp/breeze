@@ -8,45 +8,54 @@ object BuildSettings {
   val buildOrganization = "org.scalanlp"
   val buildScalaVersion = "2.10.0"
 
+  val scalaVersionRegex = "(\\d+)\\.(\\d+).*".r
+
+
   val buildSettings = Defaults.defaultSettings ++ Seq (
     organization := buildOrganization,
     scalaVersion := buildScalaVersion,
-    scalacOptions ++= Seq("-no-specialization","-optimize","-target:jvm-1.6","-deprecation"),
     resolvers ++= Seq(
       "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
     ),
+    crossScalaVersions := Seq("2.9.2", "2.10.0"),
   publishMavenStyle := true,
   publishTo <<= version { (v: String) =>
-  val nexus = "https://oss.sonatype.org/"
-  if (v.trim.endsWith("SNAPSHOT")) 
-    Some("snapshots" at nexus + "content/repositories/snapshots") 
+    val nexus = "https://oss.sonatype.org/"
+    if (v.trim.endsWith("SNAPSHOT")) 
+      Some("snapshots" at nexus + "content/repositories/snapshots") 
     else
       Some("releases"  at nexus + "service/local/staging/deploy/maven2")
-    },
-    publishArtifact in Test := false,
-    pomIncludeRepository := { _ => false },
-    pomExtra := (
-      <url>http://scalanlp.org/</url>
-      <licenses>
-        <license>
-          <name>Apache 2</name>
-          <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
-          <distribution>repo</distribution>
-        </license>
-      </licenses>
-      <scm>
-        <url>git@github.com:dlwh/breeze.git</url>
-        <connection>scm:git:git@github.com:dlwh/breeze.git</connection>
-      </scm>
-      <developers>
-        <developer>
-          <id>dlwh</id>
-          <name>David Hall</name>
-          <url>http://cs.berkeley.edu/~dlwh/</url>
-        </developer>
-      </developers>)
-
-
+  },
+  publishArtifact in Test := false,
+  pomIncludeRepository := { _ => false },
+  pomExtra := (
+    <url>http://scalanlp.org/</url>
+    <licenses>
+      <license>
+        <name>Apache 2</name>
+        <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+        <distribution>repo</distribution>
+      </license>
+    </licenses>
+    <scm>
+      <url>git@github.com:dlwh/breeze.git</url>
+      <connection>scm:git:git@github.com:dlwh/breeze.git</connection>
+    </scm>
+    <developers>
+      <developer>
+        <id>dlwh</id>
+        <name>David Hall</name>
+        <url>http://cs.berkeley.edu/~dlwh/</url>
+      </developer>
+    </developers>),
+  scalacOptions <++= (scalaVersion).map { (sv) =>
+     sv.toString match {
+       case "2.9.2" | "2.9.1" => 
+     println(sv)
+       Seq("-no-specialization","-optimize","-deprecation", "-Ydependent-method-types")
+      case _ => Seq("-no-specialization","-optimize","-deprecation")
+     }
+    }
   )
 }
 
@@ -82,11 +91,6 @@ object BreezeBuild extends Build {
   )
   
 
-  libraryDependencies ++= Seq(
-    "org.scala-lang" % "scala-actors" % "2.10.0"
-  )
-  
-
   def testDependencies = libraryDependencies <++= (scalaVersion) {
     sv =>
       Seq(
@@ -95,9 +99,11 @@ object BreezeBuild extends Build {
           case "2.10.0-RC1" => "org.scalacheck" % "scalacheck_2.10.0-RC1" % "1.10.0" % "test"
           case _       => "org.scalacheck" %% "scalacheck" % "1.10.0" % "test"
         },
-        "org.scalatest" % "scalatest_2.10.0" % "2.0.M5",
-        "junit" % "junit" % "4.5" % "test",
-        "org.scala-lang" % "scala-actors" % "2.10.0"
+        sv match {
+          case "2.9.2" => "org.scalatest" %% "scalatest" % "2.0.M5" % "test"
+          case _       => "org.scalatest" %% "scalatest" % "2.0.M5b" % "test"
+        },
+        "junit" % "junit" % "4.5" % "test"
       )
   }
 

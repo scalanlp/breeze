@@ -1,7 +1,7 @@
 package breeze.inference.bp
 
 import breeze.util.{DenseIntIndex, Index}
-import actors.threadpool.AtomicInteger
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * A Variable has a domain and an optional name. Domains are indices.
