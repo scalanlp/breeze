@@ -14,15 +14,16 @@ package breeze.linalg
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import operators.{UnaryOp, OpNeg, BinaryOp, OpMulScalar}
+import operators._
 import scala.{specialized=>spec}
 import breeze.storage.{DefaultArrayValue}
 import support.{CanZipMapValues, CanMapKeyValuePairs, CanCopy, CanSlice}
 import breeze.util.{Sorting, ArrayUtil}
-import breeze.generic.{CanMapValues, URFunc, UReduceable}
+import breeze.generic.{CanTransformValues, CanMapValues, URFunc, UReduceable}
 import breeze.math.{Semiring, Ring, TensorSpace}
 import breeze.collection.mutable.SparseArray
 import java.util
+import collection.mutable
 
 
 /**
@@ -148,6 +149,35 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
   }
 
 
+  def vertcat[V:DefaultArrayValue:ClassManifest](vectors: SparseVector[V]*): SparseVector[V] = {
+    val resultArray = vectors.map(_.array).foldLeft(new SparseArray[V](0))(_ concatenate _)
+    new SparseVector(resultArray)
+  }
+
+  def horzcat[V:DefaultArrayValue:ClassManifest](vectors: SparseVector[V]*):CSCMatrix[V] ={
+    if(!vectors.forall(_.size==vectors(0).size))
+      throw new IllegalArgumentException("vector lengths must be equal, but got: " + vectors.map(_.length).mkString(", "))
+    val rows = vectors(0).length
+    val cols = vectors.length
+    val data = new Array[V](vectors.map(_.data.length).sum)
+    val rowIndices = new Array[Int](data.length)
+    val colPtrs = new Array[Int](vectors.length + 1)
+    val used = data.length
+
+    var vec = 0
+    var off = 0
+    while(vec < vectors.length) {
+      colPtrs(vec) = off
+      System.arraycopy(vectors(vec).data, 0, data, off, vectors(vec).activeSize)
+      System.arraycopy(vectors(vec).index, 0, rowIndices, off, vectors(vec).activeSize)
+      off += vectors(vec).activeSize
+      vec += 1
+    }
+    colPtrs(vec) = off
+
+    new CSCMatrix(data, rows, cols, colPtrs, used, rowIndices)
+  }
+
   // implicits
   class CanCopySparseVector[@spec(Int, Float, Double) V:ClassManifest:DefaultArrayValue] extends CanCopy[SparseVector[V]] {
     def apply(v1: SparseVector[V]) = {
@@ -176,6 +206,39 @@ object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with 
       }
     }
   }
+
+  implicit def canTransformValues[V:DefaultArrayValue:ClassManifest]:CanTransformValues[SparseVector[V], V, V] = {
+    new CanTransformValues[SparseVector[V], V, V] {
+      val z = implicitly[DefaultArrayValue[V]]
+      /**Transforms all key-value pairs from the given collection. */
+      def transform(from: SparseVector[V], fn: (V) => V) {
+        val newData =  mutable.ArrayBuilder.make[V]()
+        val newIndex = mutable.ArrayBuilder.make[Int]()
+        var used = 0
+        var i = 0
+        while(i < from.length) {
+          val vv = fn(from(i))
+          if(vv != z) {
+            newData += vv
+            newIndex += i
+            used += 1
+          }
+          i += 1
+        }
+        from.array.use(newIndex.result(), newData.result(), used)
+      }
+
+      /**Transforms all active key-value pairs from the given collection. */
+      def transformActive(from: SparseVector[V], fn: (V) => V) {
+        var i = 0
+        while(i < from.activeSize) {
+          from.data(i) = fn(from.data(i))
+          i += 1
+        }
+      }
+    }
+  }
+
 
   implicit def canMapPairs[V, V2: ClassManifest: DefaultArrayValue]:CanMapKeyValuePairs[SparseVector[V], Int, V, V2, SparseVector[V2]] = {
     new CanMapKeyValuePairs[SparseVector[V], Int, V, V2, SparseVector[V2]] {

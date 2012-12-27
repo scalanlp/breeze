@@ -81,6 +81,20 @@ trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]]{
     }
   }
 
+  def toDenseVector(implicit cm: ClassManifest[E]) = {
+    new DenseVector(toArray)
+  }
+
+  def toArray(implicit cm: ClassManifest[E]) = {
+    val result = new Array[E](length)
+    var i = 0
+    while(i < length) {
+      result(i) = apply(i)
+      i += 1
+    }
+    result
+  }
+
 }
 
 object Vector extends VectorOps_Int with VectorOps_Double with VectorOps_Float {

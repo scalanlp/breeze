@@ -28,6 +28,8 @@ trait UFunc[@specialized(Int, Float, Double) -V, @specialized(Int, Float, Double
   def apply(v: V):V2
   def apply[T,U](t: T)(implicit cmv: CanMapValues[T, V, V2, U]):U = cmv.map(t, apply _)
   def applyActive[T,U](t: T)(implicit cmv: CanMapValues[T, V, V2, U]):U = cmv.mapActive(t, apply _)
+
+  def inPlace[T](t: T)(implicit ctv: CanTransformValues[T, V, V2]) { ctv.transform(t, apply _)}
 }
 
 object UFunc {

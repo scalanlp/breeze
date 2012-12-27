@@ -65,6 +65,8 @@ trait MutableVectorSpace[V, S] extends VectorSpace[V, S] {
   implicit def subIntoVV: BinaryUpdateOp[V, V, OpSub]
 
   implicit def setIntoVV: BinaryUpdateOp[V, V, OpSet]
+
+  implicit def axpyVV: CanAxpy[S, V, V]
 }
 
 trait MutableNormedSpace[V, S] extends NormedVectorSpace[V, S] with MutableVectorSpace[V, S]
@@ -148,6 +150,7 @@ object MutableCoordinateSpace {
                    _subVV:  BinaryOp[V, V, OpSub, V],
                    _neg:  UnaryOp[V, OpNeg, V],
                    _isNumericOps: V <:< NumericOps[V],
+                   _axpy:  CanAxpy[S, V, V],
                    _dotVV:  BinaryOp[V, V, OpMulInner, S]):MutableCoordinateSpace[V, S] = new MutableCoordinateSpace[V, S] {
     implicit def norm: CanNorm[V] = _norm
 
@@ -222,6 +225,8 @@ object MutableCoordinateSpace {
     implicit def isNumericOps(v: V): NumericOps[V] = _isNumericOps(v)
 
     implicit def dotVV: BinaryOp[V, V, OpMulInner, S] = _dotVV
+
+    implicit def axpyVV: CanAxpy[S, V, V] = _axpy
  }
 }
 
@@ -252,7 +257,12 @@ object TensorSpace {
                    _divIntoVV:  BinaryUpdateOp[V, V, OpDiv],
                    _setIntoVV:  BinaryUpdateOp[V, V, OpSet],
                    _setIntoVS:  BinaryUpdateOp[V, S, OpSet],
-                  _field:  Field[S],
+//                   _powIntoVV:  BinaryUpdateOp[V, V, OpPow],
+//                   _powIntoVS:  BinaryUpdateOp[V, S, OpPow],
+//                   _modIntoVV:  BinaryUpdateOp[V, V, OpMod],
+//                   _modIntoVS:  BinaryUpdateOp[V, S, OpMod],
+                   _axpy:  CanAxpy[S, V, V],
+                   _field:  Field[S],
                    _zeros:  CanCreateZerosLike[V, V],
                    _mulVS:  BinaryOp[V, S, OpMulScalar, V],
                    _divVS:  BinaryOp[V, S, OpDiv, V],
@@ -335,5 +345,7 @@ object TensorSpace {
     implicit def setIntoVV: BinaryUpdateOp[V, V, OpSet] = _setIntoVV
 
     implicit def setIntoVS: BinaryUpdateOp[V, S, OpSet] = _setIntoVS
+
+    implicit def axpyVV: CanAxpy[S, V, V] = _axpy
   }
 }

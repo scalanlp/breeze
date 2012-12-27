@@ -99,4 +99,7 @@ package object util {
 
   implicit def seqExtras[T](s: Seq[T]) = new SeqExtras(s);
 
-  implicit def arraySeqExtras[T](s: Array[T]) = new SeqExtras(s);}
+  implicit def arraySeqExtras[T](s: Array[T]) = new SeqExtras(s);
+
+}
+

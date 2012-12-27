@@ -68,14 +68,15 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-5)
       if(as(i).isNaN) {
         throw new NaNHistory
       }
-      dir -= memGradDelta(i) * as(i)
+//      dir -= memGradDelta(i) * as(i)
+      axpy(-as(i), memGradDelta(i), dir)
     }
 
     dir *= diag
 
     for(i <- 0 until memStep.length) {
       val beta = (memGradDelta(i) dot dir)/rho(i)
-      dir += memStep(i) * (as(i) - beta)
+      axpy(as(i) - beta, memStep(i), dir)
     }
 
     dir *= -1.0

@@ -113,8 +113,23 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
     erfi(3.0) should be (1629.994622601567 plusOrMinus 1E-4)
     erfi(-3.0) should be (-1629.994622601567 plusOrMinus 1E-4)
     erf(1E-4) should be (0.00011283791708567767 plusOrMinus 1E-8)
+  }
 
+  test("in place works for exp") {
+    val v = DenseVector.rand(20)
+    val expv = exp(v)
+    exp.inPlace(v)
+    assert(v === expv)
 
+    val m = DenseMatrix.rand(2,2)
+    val mexp = exp(m)
+    exp.inPlace(m)
+    assert(m === mexp)
+
+    val sv = SparseVector.tabulate(3)(_.toDouble)
+    val svexp = exp(sv)
+    exp.inPlace(sv)
+    assert(sv === svexp)
   }
 
 }

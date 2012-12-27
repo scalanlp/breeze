@@ -104,7 +104,7 @@ object LogisticClassifier {
           for ( label <- 0 until labelIndex.size ) {
             val prob_k = math.exp(logScores(label) - logNormalizer)
             assert(prob_k >= 0 && prob_k <= 1,prob_k)
-            grad(label) -= datum.features * (I(label == goldLabel) - prob_k)
+            axpy(-(I(label == goldLabel) - prob_k), datum.features, grad(label))
           }
         }
         assert(!breeze.linalg.norm(grad).isNaN, grad)

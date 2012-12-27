@@ -15,9 +15,13 @@ package breeze.linalg
  limitations under the License.
 */
 
+import operators.CanTranspose
 import scala.{specialized=>spec}
 import support._
 import breeze.generic.{UReduceable, URFunc, CanMapValues}
+import collection.mutable
+import breeze.collection.mutable.Beam
+import breeze.math.Semiring
 
 
 /**
@@ -37,6 +41,23 @@ sealed trait QuasiTensor[@specialized(Int) K, @specialized(Int, Float, Double) V
   def argmin(implicit ord: Ordering[V]) = keysIterator.minBy( apply _)
   def sum(implicit num: Numeric[V]) = valuesIterator.sum
 
+
+  def argsort(implicit ord : Ordering[V]) : IndexedSeq[K] =
+    keysIterator.toIndexedSeq.sorted(ord.on[K](apply _))
+
+  /**
+   * Returns the k indices with maximum value. (NOT absolute value.)
+   * @param k how many to return
+   * @param ordering
+   * @return
+   */
+  def argtopk(k: Int)(implicit ordering: Ordering[V]) = {
+    implicit val ordK = ordering.on(apply _)
+    val queue = new Beam[K](k)
+    queue ++= keysIterator
+    queue.toIndexedSeq.reverse
+  }
+
   def ureduce[A](f: URFunc[V, A]) = f(this.valuesIterator)
 
   def iterator: Iterator[(K, V)]
@@ -47,6 +68,14 @@ sealed trait QuasiTensor[@specialized(Int) K, @specialized(Int, Float, Double) V
 
   def keysIterator: Iterator[K]
   def activeKeysIterator: Iterator[K]
+
+  /** Returns all indices k whose value satisfies a predicate. */
+  def findAll(f: V=>Boolean) = activeIterator.filter(p => f(p._2)).map(_._1).toIndexedSeq
+
+  /** Returns true if all elements are non-zero */
+  def all(implicit semi: Semiring[V]) = valuesIterator.forall(_ != semi.zero)
+  /** Returns true if no elements are non-zero */
+  def any(implicit semi: Semiring[V]) = valuesIterator.exists(_ != semi.zero)
 }
 
 
@@ -103,8 +132,6 @@ trait TensorLike[@spec(Int) K, @specialized(Int, Float, Double) V, +This<:Tensor
     bf.mapActive(repr.asInstanceOf[TT], f)
   }
 
-  def argsort(implicit ord : Ordering[V]) : IndexedSeq[K] =
-    keysIterator.toIndexedSeq.sorted(ord.on[K](apply _))
 
 
   /** Applies the given function to each key in the tensor. */
@@ -137,6 +164,7 @@ trait TensorLike[@spec(Int) K, @specialized(Int, Float, Double) V, +This<:Tensor
     foreachValue(v => if (!fn(v)) return false)
     true
   }
+
 
 }
 

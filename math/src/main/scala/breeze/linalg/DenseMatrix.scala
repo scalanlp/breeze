@@ -21,7 +21,7 @@ import org.netlib.blas.{Dgemm, BLAS}
 import breeze.util.ArrayUtil
 import breeze.numerics.IntMath
 import support._
-import breeze.generic.{URFunc, CanCollapseAxis, CanMapValues}
+import breeze.generic.{CanTransformValues, URFunc, CanCollapseAxis, CanMapValues}
 import breeze.math.{Ring, Semiring}
 import breeze.storage.DefaultArrayValue
 import org.jblas.NativeBlas
@@ -258,6 +258,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
   }
 
 
+
   implicit def negFromScale[V](implicit scale: BinaryOp[DenseMatrix[V], V, OpMulScalar, DenseMatrix[V]], field: Ring[V]) = {
     new UnaryOp[DenseMatrix[V], OpNeg, DenseMatrix[V]] {
       override def apply(a : DenseMatrix[V]) = {
@@ -316,6 +317,27 @@ object DenseMatrix extends LowPriorityDenseMatrix
 
       override def mapActive(from : DenseMatrix[V], fn : (V=>R)) =
         map(from, fn)
+    }
+  }
+
+
+  implicit def canTransformValues[V]:CanTransformValues[DenseMatrix[V], V, V] = {
+    new CanTransformValues[DenseMatrix[V], V, V] {
+      def transform(from: DenseMatrix[V], fn: (V) => V) {
+        var j = 0
+        while (j < from.cols) {
+          var i = 0
+          while(i < from.rows) {
+            from(i, j) = fn(from(i, j))
+            i += 1
+          }
+          j += 1
+        }
+      }
+
+      def transformActive(from: DenseMatrix[V], fn: (V) => V) {
+        transform(from, fn)
+      }
     }
   }
 
@@ -509,6 +531,14 @@ trait LowPriorityDenseMatrix1 {
 }
 
 trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
+
+  implicit def canSliceWeirdRows[V]:CanSlice2[DenseMatrix[V], Seq[Int], ::.type, SliceMatrix[Int, Int, V]] = {
+    new CanSlice2[DenseMatrix[V], Seq[Int], ::.type, SliceMatrix[Int, Int, V]] {
+      def apply(from: DenseMatrix[V], slice: Seq[Int], slice2: ::.type): SliceMatrix[Int, Int, V] = {
+        new SliceMatrix(from, slice.toIndexedSeq, (0 until from.cols))
+      }
+    }
+  }
 
   class SetDMDMOp[@specialized(Int, Double, Float) V] extends BinaryUpdateOp[DenseMatrix[V], DenseMatrix[V], OpSet] {
     def apply(a: DenseMatrix[V], b: DenseMatrix[V]) {

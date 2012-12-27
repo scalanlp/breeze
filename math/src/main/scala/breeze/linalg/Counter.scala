@@ -108,13 +108,13 @@ object Counter extends CounterOps {
   }
 
   /** Counts each of the given items. */
-  def count[K](items : TraversableOnce[K]) : Counter[K,Int] = {
+  def countTraversable[K](items : TraversableOnce[K]) : Counter[K,Int] = {
     val rv = apply[K,Int]()
     items.foreach(rv(_) += 1)
     rv
   }
 
-  def count[K](items: K*): Counter[K,Int] = count(items)
+  def count[K](items: K*): Counter[K,Int] = countTraversable(items)
 
   implicit def canMapValues[K, V, RV:Semiring:DefaultArrayValue]: CanMapValues[Counter[K, V], V, RV, Counter[K, RV]]
   = new CanMapValues[Counter[K,V],V,RV,Counter[K,RV]] {
@@ -164,6 +164,7 @@ object Counter extends CounterOps {
       canDivIntoVV,
       canSetIntoVV,
       canSetIntoVS,
+      canAxpy,
       implicitly[Field[V]],
       implicitly[CanCreateZerosLike[Counter[K, V], Counter[K, V]]],
       canMulVS,
@@ -201,6 +202,15 @@ trait CounterOps {
     def apply(a: Counter[K1, V], b: Counter[K1, V]) {
       for( (k,v) <- b.activeIterator) {
         a(k) = field.+(a(k), v)
+      }
+    }
+  }
+
+  implicit def canAxpy[K1, V:Semiring]:CanAxpy[V, Counter[K1, V], Counter[K1, V]] = new CanAxpy[V, Counter[K1, V], Counter[K1, V]] {
+    val field = implicitly[Semiring[V]]
+    def apply(s: V, b: Counter[K1, V], a: Counter[K1, V]) {
+      for( (k,v) <- b.activeIterator) {
+        a(k) = field.+(a(k), field.*(s, v))
       }
     }
   }

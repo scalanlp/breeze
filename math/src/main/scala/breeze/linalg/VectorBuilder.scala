@@ -414,6 +414,21 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
     }
   }
 
+  implicit val canAxpy_VB_VB_Double: CanAxpy[Double, VectorBuilder[Double], VectorBuilder[Double]] = {
+    new  CanAxpy[Double, VectorBuilder[Double], VectorBuilder[Double]]  {
+      def apply(s: Double, b: VectorBuilder[Double], a: VectorBuilder[Double]) {
+        require(a.length == b.length, "Dimension mismatch!")
+        a.reserve(b.activeSize + a.activeSize)
+        var i = 0
+        val bd = b.data
+        while(i < b.activeSize) {
+          a.add(b.index(i), s * bd(i))
+          i += 1
+        }
+      }
+    }
+  }
+
   implicit val mvector_space_Double: MutableVectorSpace[VectorBuilder[Double], Double] = {
     new MutableVectorSpace[VectorBuilder[Double], Double] {
       def field: Field[Double] = Field.fieldD
@@ -458,6 +473,8 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
       def close(a: VectorBuilder[Double], b: VectorBuilder[Double], tolerance: Double): Boolean = {
         (a.toHashVector - b.toHashVector).norm(2) < tolerance
       }
+
+      implicit def axpyVV: CanAxpy[Double, VectorBuilder[Double], VectorBuilder[Double]] = canAxpy_VB_VB_Double
     }
   }
 
@@ -556,6 +573,20 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
           i += 1
         }
         result
+      }
+    }
+  }
+
+  implicit def canAxpy_V_VB_Double[V<:Vector[Double]]: CanAxpy[Double, VectorBuilder[Double], V] = {
+    new  CanAxpy[Double, VectorBuilder[Double], V]  {
+      def apply(s: Double, b: VectorBuilder[Double], a: V) {
+        require(a.length == b.length, "Dimension mismatch!")
+        var i = 0
+        val bd = b.data
+        while(i < b.activeSize) {
+          a(b.index(i)) += s * bd(i)
+          i += 1
+        }
       }
     }
   }
