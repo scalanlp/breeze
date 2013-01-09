@@ -13,6 +13,17 @@ trait Lens[T,U] {
 }
 
 object Lens {
+  def apply[T, U](get: T=>U, set: (T,U)=>T):Lens[T, U] = {
+    val g = get
+    val s = set
+    new Lens[T, U] {
+      def get(t: T): U = g(t)
+
+      def set(t: T, u: U): T = s(t, u)
+    }
+  }
+
+
   implicit def identity[T]:Lens[T,T] = new Lens[T,T] {
     def get(t: T) = t
     def set(t: T, u: T) = u
@@ -23,4 +34,5 @@ object Lens {
 
     def set(t: T, u: U) = iso.backward(u)
   }
+
 }
