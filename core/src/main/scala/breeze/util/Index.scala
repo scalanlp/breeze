@@ -342,6 +342,13 @@ class OptionIndex[T](inner: Index[T]) extends Index[Option[T]] {
   def unapply(i: Int) = {
     if(i < 0 || i >= size) None
     else if(i < inner.size) Some(Some(inner.get(i))) // sic!
+    else Some(None) // sic!
+  }
+
+
+  override def get(i: Int): Option[T] = {
+    if(i < 0 || i >= size) throw new IndexOutOfBoundsException()
+    else if(i < inner.size) Some(inner.get(i))
     else None
   }
 
