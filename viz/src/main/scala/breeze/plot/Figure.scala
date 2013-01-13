@@ -16,6 +16,9 @@ class Figure(name: String, private var rows_ : Int  = 1, private var cols_ :Int 
 
   protected val plots = ArrayBuffer[Option[Plot]]()
 
+  private var width_ = 600
+  private var height_ = 400
+
   /**Selects the given subplot.  */
   def subplot(i: Int) = selectPlot(i)
 
@@ -34,6 +37,19 @@ class Figure(name: String, private var rows_ : Int  = 1, private var cols_ :Int 
     selectPlot(select)
   }
 
+  /** Width of figure on screen (or in image) */
+  def width = width_
+  def width_=(newwidth : Int) : Unit  = {
+    width_ = newwidth
+    refresh()
+  }
+
+  /** Height of figure on screen (or in image) */
+  def height = width_
+  def height_=(newheight : Int) : Unit  = {
+    height_ = newheight
+    refresh()
+  }
 
   /** How many rows of plots are in the figure */
   def rows = rows_
@@ -62,7 +78,7 @@ class Figure(name: String, private var rows_ : Int  = 1, private var cols_ :Int 
   /** JPanel holding for drawing subplots in this figure. */
   private val contents = {
     val _c = new JPanel()
-    _c.setSize(600,400)
+    _c.setSize(width_, height_)
     _c
   }
 
@@ -70,7 +86,7 @@ class Figure(name: String, private var rows_ : Int  = 1, private var cols_ :Int 
   /** The Swing frame for this plot */
   private lazy val frame : JFrame = {
     val f = new JFrame(name)
-    f.setSize(600,400)
+    f.setSize(width_, height_)
     f.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE)
     f.setLayout(new java.awt.BorderLayout())
     f.add(contents, java.awt.BorderLayout.CENTER)
@@ -103,10 +119,12 @@ class Figure(name: String, private var rows_ : Int  = 1, private var cols_ :Int 
     SwingUtilities.invokeLater(new Runnable {
       def run() {
         contents.removeAll()
+        contents.setSize(width_, height_)
         contents.setLayout(new java.awt.GridLayout(rows,cols))
         for (plot <- plots) {
           contents.add(plot match { case Some(plot) => plot.panel; case None => new JPanel() })
         }
+        frame.setSize(width_, height_)
         frame.setVisible(visible)
       }
     })
