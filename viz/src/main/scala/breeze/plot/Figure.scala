@@ -45,7 +45,7 @@ class Figure(name: String, private var rows_ : Int  = 1, private var cols_ :Int 
   }
 
   /** Height of figure on screen (or in image) */
-  def height = width_
+  def height = height_
   def height_=(newheight : Int) : Unit  = {
     height_ = newheight
     refresh()
