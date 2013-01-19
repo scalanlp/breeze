@@ -3,7 +3,7 @@ package breeze.linalg.support
 import org.jblas.NativeBlas
 
 /**
- * Layer of indirection to help with link errors when libraries aren't around?
+ * Layer of indirection to help with link errors when libraries aren't around.
  * @author dlwh
  */
 object NativeBlasDeferrer {
@@ -35,5 +35,11 @@ object NativeBlasDeferrer {
     assert(breeze.linalg.canLoadNativeBlas)
     NativeBlas.dpotrf(c, i, doubles, i1, i2)
   }
+
+  def dgemm(transa: Char, transb: Char, m: Int, n: Int, k: Int, alpha: Double, a: Array[Double], aIdx: Int, lda: Int, b: Array[Double], bIdx: Int, ldb: Int, beta: Double, c: Array[Double], cIdx: Int, ldc: Int) = {
+    assert(breeze.linalg.canLoadNativeBlas)
+    NativeBlas.dgemm(transa, transb, m, n, k, alpha, a, aIdx, lda, b, bIdx, ldb, beta, c, cIdx, ldc)
+  }
+
 
 }

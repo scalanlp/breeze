@@ -24,7 +24,6 @@ import support._
 import breeze.generic.{CanTransformValues, URFunc, CanCollapseAxis, CanMapValues}
 import breeze.math.{Ring, Semiring}
 import breeze.storage.DefaultArrayValue
-import org.jblas.NativeBlas
 
 /**
  * A DenseMatrix is a matrix with all elements found in an array. It is column major unless isTranspose is true,
@@ -620,7 +619,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double with DenseMatrixMul
       val rv = DenseMatrix.zeros[Double](a.rows, b.cols)
       require(a.cols == b.rows, "Dimension mismatch!")
       if(math.max(a.size,b.size) >= 1000 && useNativeLibraries)
-        NativeBlas.dgemm(transposeString(a).charAt(0), transposeString(b).charAt(0),
+        NativeBlasDeferrer.dgemm(transposeString(a).charAt(0), transposeString(b).charAt(0),
               rv.rows, rv.cols, a.cols,
               1.0, a.data, a.offset, a.majorStride,
               b.data, b.offset, b.majorStride,
