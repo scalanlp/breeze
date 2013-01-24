@@ -17,9 +17,8 @@ package breeze.linalg
 import operators._
 import org.netlib.util.intW
 import org.netlib.lapack.LAPACK
-import org.netlib.blas.{Dgemm, BLAS}
+import org.netlib.blas.{Dgemm}
 import breeze.util.ArrayUtil
-import breeze.numerics.IntMath
 import support._
 import breeze.generic.{CanTransformValues, URFunc, CanCollapseAxis, CanMapValues}
 import breeze.math.{Ring, Semiring}
