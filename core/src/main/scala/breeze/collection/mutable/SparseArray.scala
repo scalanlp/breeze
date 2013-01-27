@@ -22,6 +22,11 @@ import java.util
 
 
 /**
+ * A SparseArray is a sparse representation of an array using a two-array binary-search approach.
+ * There are two arrays: index and data, which together are pairs (i, v) of indices into the array
+ * and the value at that position.
+ *
+ * The default value is assumed to be null for AnyRef, and 0 for AnyVal types.
  *
  * @author dlwh, dramage
  */

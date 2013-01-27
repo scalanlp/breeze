@@ -24,7 +24,7 @@ import util.Random
 import breeze.storage.Storage
 
 /**
- *
+ * Trait for operators and such used in vectors.
  * @author dlwh
  */
 trait VectorLike[@spec E, +Self <: Vector[E]] extends Tensor[Int, E] with TensorLike[Int, E, Self] {
@@ -33,12 +33,18 @@ trait VectorLike[@spec E, +Self <: Vector[E]] extends Tensor[Int, E] with Tensor
   def foreach[U](fn: E=>U) { values foreach fn }
 
   def copy: Self
-
 }
 
 
+/**
+ * A Vector represents the mathematical concept of a vector in math.
+ * @tparam E
+ */
 trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]]{
 
+  /**
+   * @return the set of keys in this vector (0 until length)
+   */
   def keySet: Set[Int] = BitSet( (0 until length) :_*)
 
   def length: Int
@@ -157,10 +163,33 @@ object Vector extends VectorOps_Int with VectorOps_Double with VectorOps_Float {
 }
 
 
+/**
+ * Trait that can mixed to companion objects to enable utility methods for creating vectors.
+ * @tparam Vec
+ */
 trait VectorConstructors[Vec[T]<:Vector[T]] {
+  /**
+   * Creates a Vector of size size.
+   * @param size
+   * @tparam V
+   * @return
+   */
   def zeros[V:ClassManifest](size: Int):Vec[V]
+
+  /**
+   * Creates a vector with the specified elements
+   * @param values
+   * @tparam V
+   * @return
+   */
   def apply[@spec(Double, Int, Float) V](values: Array[V]):Vec[V]
 
+  /**
+   * Creates a vector with the specified elements
+   * @param values
+   * @tparam V
+   * @return
+   */
   def apply[V:ClassManifest](values: V*):Vec[V] = {
     // manual specialization so that we create the right DenseVector specialization... @specialized doesn't work here
     val man = implicitly[ClassManifest[V]]
@@ -170,9 +199,31 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
     else apply(values.toArray)
 //     apply(values.toArray)
   }
+
+  /**
+   * Analogous to Array.fill
+   * @param size
+   * @param v
+   * @tparam V
+   * @return
+   */
   def fill[@spec(Double, Int, Float) V:ClassManifest](size: Int)(v: =>V):Vec[V] = apply(Array.fill(size)(v))
+
+  /**
+   * Analogous to Array.tabulate
+   * @param size
+   * @param f
+   * @tparam V
+   * @return
+   */
   def tabulate[@spec(Double, Int, Float) V:ClassManifest](size: Int)(f: Int=>V):Vec[V]= apply(Array.tabulate(size)(f))
 
+  /**
+   * Creates a Vector of uniform random numbers in (0,1)
+   * @param size
+   * @param rand
+   * @return
+   */
   def rand(size: Int, rand: Random = new Random()) = {
     // Array#fill is slow.
     val arr = new Array[Double](size)

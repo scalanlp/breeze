@@ -18,11 +18,12 @@ import java.util.Properties
 object CommandLineParser {
 
   /**
+   * Reads in arguments using parseArguments below, checks for --help and prints help and exits if it's present.
    *
    * @param args command line args
    * @param checkHelp if true and "--help" is set, print help and exit.
    * @param extraArgsAsConfigFiles if true, unprocessed arguments are treated as paths to configuration files.
-   * @tparam T
+   * @tparam T the type to be read in.
    * @return
    */
   def readIn[T:Manifest](args: IndexedSeq[String],

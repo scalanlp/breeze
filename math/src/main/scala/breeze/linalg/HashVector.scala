@@ -49,7 +49,7 @@ class HashVector[@specialized(Int, Double, Float) E](val array: OpenAddressHashA
 
   override def hashCode() = {
     val hash = new MurmurHash[E](47)
-    // we make the hash code based on index * value, so that non-zeros don't affect the hashcode.
+    // we make the hash code based on index * value, so that zeros don't affect the hashcode.
     val dv = array.default.value(array.defaultArrayValue)
     var i = 0
     while(i < activeSize) {

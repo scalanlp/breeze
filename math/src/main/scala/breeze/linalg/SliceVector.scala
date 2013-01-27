@@ -1,7 +1,13 @@
 package breeze.linalg
 
 /**
+ * A SliceVector is a vector that is a view of another underlying tensor. For instance:
+ * {{{
+ * val m = DenseMatrix(...)
+ * m( (1,2), (3,4), (4,5))
+ * }}}
  *
+ * will give a SliceVector such that apply/update at index 0 will map to m(1,2), index 1 to m(3,4), etc.
  * @author dlwh
  */
 class SliceVector[@specialized(Int) K, @specialized(Int, Double, Float) V:ClassManifest](val tensor: QuasiTensor[K,V],

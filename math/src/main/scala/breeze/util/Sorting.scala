@@ -14,8 +14,11 @@ object Sorting {
   //**                          |/                                          **
   //\*                                                                      */
 
-  // Sorts the array x where each element has order order.
-  // Used to build sparse vectors.
+  /**
+   *
+   * Sorts the array x where each element has order order.
+   * Used to build sparse vectors.
+   */
   def indexSort(x: Array[Int], off: Int, len: Int, order: Array[Int]) {
     def swap(a: Int, b: Int) {
       val t = x(a)

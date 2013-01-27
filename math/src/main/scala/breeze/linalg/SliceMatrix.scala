@@ -1,9 +1,5 @@
 package breeze.linalg
 
-/**
- *
- * @author dlwh
- */
 class SliceMatrix[@specialized(Int) K1,
                   @specialized(Int) K2,
                   @specialized(Int, Double, Float) V](val tensor: QuasiTensor[(K1, K2),V],
