@@ -33,6 +33,11 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
   protected def determineStepSize(state: State, f: DF, direction: T):Double
   protected def takeStep(state: State, dir: T, stepSize:Double):T
   protected def updateHistory(newX: T, newGrad: T, newVal: Double, oldState: State):History
+  /**
+   * Take this many steps and then reset x to the original x. Mostly for Adagrad, which can behave oddly
+   * until it has a good sense of rate of change.
+   */
+  protected def numDepthChargeSteps:Int = 0
 
   protected def updateFValWindow(oldState: State, newAdjVal: Double):IndexedSeq[Double] = {
     val interm = oldState.fVals :+ newAdjVal
@@ -50,7 +55,7 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
 
   def iterations(f: DF,init: T): Iterator[State] = {
     var failedOnce = false
-    val it = Iterator.iterate(initialState(f,init)) { state => try {
+    val it = Iterator.iterate(doDepthCharge(f,init)) { state => try {
         val dir = chooseDescentDirection(state)
         val stepSize = determineStepSize(state, f, dir)
         log.info("Step Size:" + stepSize)
@@ -87,6 +92,22 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
         || (state.numImprovementFailures >= numberOfImprovementFailures)
     ).get.x
   }
+
+  private def doDepthCharge(f: DF, init: T): State = {
+    var state = initialState(f, init)
+    for(i <- 0 until numDepthChargeSteps) {
+      val dir = chooseDescentDirection(state)
+      val stepSize = determineStepSize(state, f, dir)
+      val x = takeStep(state, dir, stepSize)
+      val (value,grad) = f.calculate(x)
+      val (adjValue,adjGrad) = adjust(x,grad,value)
+      val history = updateHistory(x,grad,value,state)
+      log.info("False Step %d: v=%f g=%f".format(i,adjValue, vspace.norm(adjGrad)))
+      state = State(x, value, grad, adjValue, adjGrad, 0, state.initialAdjVal, history, IndexedSeq(), 0)
+    }
+
+    initialState(f, init).copy(history=state.history)
+  }
 }
 
 sealed class FirstOrderException(msg: String="") extends RuntimeException(msg)
@@ -95,6 +116,26 @@ class StepSizeUnderflow extends FirstOrderException
 class LineSearchFailed(gradNorm: Double, dirNorm: Double) extends FirstOrderException("Grad norm: %.4f Dir Norm: %.4f".format(gradNorm, dirNorm))
 
 object FirstOrderMinimizer {
+
+  /**
+   * OptParams is a Configuration-compatible case class that can be used to select optimization
+   * routines at runtime.
+   *
+   * Configurations:
+   * 1) useStochastic=false,useL1=false: LBFGS with L2 regularization
+   * 2) useStochastic=false,useL1=true: OWLQN with L1 regularization
+   * 3) useStochastic=true,useL1=false: AdaptiveGradientDescent with L2 regularization
+   * 3) useStochastic=true,useL1=true: AdaptiveGradientDescent with L1 regularization
+   *
+   *
+   * @param batchSize size of batches to use if useStochastic and you give a BatchDiffFunction
+   * @param regularization regularization constant to use.
+   * @param alpha rate of change to use, only applies to SGD.
+   * @param maxIterations, how many iterations to do.
+   * @param useL1 if true, use L1 regularization. Otherwise, use L2.
+   * @param tolerance convergence tolerance, looking at both average improvement and the norm of the gradient.
+   * @param useStochastic if false, use LBFGS or OWLQN. If true, use some variant of Stochastic Gradient Descent.
+   */
   case class OptParams(batchSize:Int = 512,
                        regularization: Double = 1.0,
                        alpha: Double = 0.5,
@@ -120,10 +161,7 @@ object FirstOrderMinimizer {
     }
 
     def iterations[T](f: StochasticDiffFunction[T], init:T)(implicit arith: MutableCoordinateSpace[T, Double]):Iterator[FirstOrderMinimizer[T, StochasticDiffFunction[T]]#State] = {
-      val r = if(regularization == 0.0) {
-        new StochasticGradientDescent.SimpleSGD[T](alpha, maxIterations)(arith) {
-        }
-      } else if(useL1) {
+      val r = if(useL1) {
         new AdaptiveGradientDescent.L1Regularization[T](regularization, eta=alpha, maxIter = maxIterations)(arith) {
         }
       } else { // L2
