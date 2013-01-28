@@ -65,7 +65,7 @@ case class Dirichlet[T,@specialized(Int) I](params: T)(implicit space: TensorSpa
  * Provides several defaults for Dirichlets, one for Arrays and one for
  * Counters.
  *
- * @author(dlwh)
+ * @author dlwh
  */
 object Dirichlet {
   /**
