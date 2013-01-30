@@ -26,13 +26,13 @@ import scala.collection.mutable.Seq
  * These are useful for parse charts.
  *
  * @author dlwh
- * @param dim: The size of the array
+ * @param dimension: The size of the array
  */
 @SerialVersionUID(1L)
-final class TriangularArray[T:ClassManifest](dim: Int) extends Serializable { outer =>
+final class TriangularArray[T:ClassManifest](val dimension: Int) extends Serializable { outer =>
   import TriangularArray._
 
-  private def numElems = dim * (dim+1) / 2
+  private def numElems = dimension * (dimension+1) / 2
   val data = new Array[T](numElems)
 
   def update(r: Int, c: Int, t: T) { data(index(r,c))  = t }
@@ -46,19 +46,19 @@ final class TriangularArray[T:ClassManifest](dim: Int) extends Serializable { ou
   private def slice(r: Int):Seq[T] = new Seq[T] {
     def apply(c: Int) = outer.apply(r,c)
     def update(c: Int, t: T) = outer.update(r,c,t)
-    def length = (dim - r)
-    def iterator = Iterator.range(r,dim).map(apply _ )
+    def length = (dimension - r)
+    def iterator = Iterator.range(r,dimension).map(apply _ )
   }
 
   def iterator = Iterator.range(0,numElems) map slice
   def foreach(f: T=>Unit) { data foreach f }
 
-  def map[U:ClassManifest](f: T=>U) = tabulate(dim)((i,j) => f(apply(i,j)))
+  def map[U:ClassManifest](f: T=>U) = tabulate(dimension)((i,j) => f(apply(i,j)))
 
   override def toString = {
     val buffer = new StringBuilder()
-    for ( r <- 0 until dim )  {
-      val columns = for(c <- 0 until dim) yield {
+    for ( r <- 0 until dimension )  {
+      val columns = for(c <- 0 until dimension) yield {
         if(c <= r) "----" else apply(r,c).toString
       }
       buffer ++= columns.mkString("[",", ","]\n")
