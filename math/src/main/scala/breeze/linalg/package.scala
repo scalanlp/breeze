@@ -55,7 +55,11 @@ package object linalg extends LinearAlgebra {
       NativeBlas.dcopy(0, new Array(0), 0, 1, new Array(0), 0, 1)
       true
     } catch {
-      case x: UnsatisfiedLinkError => false
+      case x: UnsatisfiedLinkError =>
+        System.err.println(
+          """You probably got an error about an unsatisfied link error. Probably you are
+          |running an old version of GLIBC. Your program will run, just more slowly.""".stripMargin('|'))
+        false
       case x: Throwable => throw new RuntimeException("Couldn't load blas!", x); false
     }
   }
