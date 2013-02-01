@@ -23,7 +23,12 @@ import breeze.numerics._
 import breeze.numerics
 
 /**
- * Represents a multinomial Distribution over elements.
+ * Represents a Multinomial distribution over elements.
+ * You can make a distribution over any [[breeze.linalg.QuasiTensor]], which includes
+ * DenseVectors and Counters.
+ *
+ * TODO: I should probably rename this to Discrete or something, since it only handles
+ * one draw.
  *
  * @author dlwh
  */
@@ -32,7 +37,7 @@ case class Multinomial[T,I](params: T)(implicit ev: T=>QuasiTensor[I, Double], r
   require(sum != 0.0, "There's no mass!")
 
   // check rep
-  for ((k,v) <- params.iterator) {
+  for ((k,v) <- params.activeIterator) {
     if (v < 0) {
       throw new IllegalArgumentException("Multinomial has negative mass at index "+k)
     }
@@ -59,7 +64,7 @@ case class Multinomial[T,I](params: T)(implicit ev: T=>QuasiTensor[I, Double], r
 
 /**
  * Provides routines to create Multinomials
- * @author(dlwh)
+ * @author dlwh
  */
 object Multinomial {
 

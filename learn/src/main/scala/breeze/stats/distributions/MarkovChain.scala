@@ -24,7 +24,7 @@ import math._;
 /**
 * Provides methods for doing MCMC.
 *
-* @author(dlwh)
+* @author dlwh
 */
 object MarkovChain {
   /**

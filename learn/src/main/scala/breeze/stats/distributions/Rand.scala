@@ -23,7 +23,7 @@ import collection.generic.CanBuildFrom
 
 /**
  * A trait for monadic distributions. Provides support for use in for-comprehensions
- * @author(dlwh)
+ * @author dlwh
  */
 trait Rand[+T] { outer =>
   /**

@@ -132,16 +132,25 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-5)
     def ff(alpha: Double) = f.valueAt(x + dir * alpha)
     val search = new BacktrackingLineSearch(cScale = if(iter < 1) 0.01 else 0.5, initAlpha = if (iter < 1) 1/norm(dir) else 1.0)
     val iterates = search.iterations(ff)
+    var backoffs = 0
     val targetState = iterates.find { case search.State(alpha,v) =>
       // sufficient descent
       var r = v < state.value + alpha * 0.0001 * normGradInDir
 
-      if(!r)  log.info(".")
+      backoffs += 1
+      if(!r)  {
+        log.info("Sufficient descent not met. Backing off.")
+        if(backoffs > 4 && state.history.memStep.length >= m) {
+          log.info("A lot of backing off. Check your gradient calculation?")
+          if (norm(grad) <= 1E-3 * norm(state.x))
+            log.info("Or maybe we're almost converged?")
+        }
+      }
       // on the first few iterations, don't worry about sufficient slope reduction
       // since we're trying to build the hessian approximation
       else if(state.history.memStep.length >= m) {
         r = math.abs(dir dot f.gradientAt(x + dir * alpha)) <= 0.95 * math.abs(normGradInDir)
-        if(!r) log.info(",")
+        if(!r) log.info("Sufficient slope reduction condition not met. Backing off.")
       }
 
       r

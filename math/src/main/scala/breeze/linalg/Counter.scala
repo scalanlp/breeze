@@ -84,13 +84,6 @@ trait Counter[K, V] extends Tensor[K,V] with CounterLike[K, V, collection.mutabl
 }
 
 object Counter extends CounterOps {
-  class Impl[K, V]
-  (override val data : scala.collection.mutable.Map[K,V])
-  (implicit defaultArrayValue : DefaultArrayValue[V])
-  extends Counter[K,V] {
-    def default = defaultArrayValue.value
-  }
-
   /** Returns an empty counter. */
   def apply[K,V:DefaultArrayValue:Semiring]() : Counter[K,V] =
     new Impl(scala.collection.mutable.HashMap[K,V]())
@@ -115,6 +108,13 @@ object Counter extends CounterOps {
   }
 
   def count[K](items: K*): Counter[K,Int] = countTraversable(items)
+
+  class Impl[K, V]
+  (override val data : scala.collection.mutable.Map[K,V])
+  (implicit defaultArrayValue : DefaultArrayValue[V])
+  extends Counter[K,V] {
+    def default = defaultArrayValue.value
+  }
 
   implicit def canMapValues[K, V, RV:Semiring:DefaultArrayValue]: CanMapValues[Counter[K, V], V, RV, Counter[K, RV]]
   = new CanMapValues[Counter[K,V],V,RV,Counter[K,RV]] {

@@ -20,7 +20,7 @@ package breeze.stats.distributions
 /**
  * Represents an unnormalized probability distribution.
  * 
- * @author(dlwh)
+ * @author dlwh
  */
 trait Measure[T] {
   /** Returns the unnormalized value of the measure*/
