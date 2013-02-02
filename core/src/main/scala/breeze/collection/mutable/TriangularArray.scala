@@ -59,7 +59,7 @@ final class TriangularArray[T:ClassManifest](val dimension: Int) extends Seriali
     val buffer = new StringBuilder()
     for ( r <- 0 until dimension )  {
       val columns = for(c <- 0 until dimension) yield {
-        if(c <= r) "----" else apply(r,c).toString
+        if(c <= r) "----" else Option(apply(r,c)).map(_.toString).getOrElse("null")
       }
       buffer ++= columns.mkString("[",", ","]\n")
     }
