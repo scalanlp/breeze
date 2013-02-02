@@ -56,9 +56,12 @@ package object linalg extends LinearAlgebra {
       true
     } catch {
       case x: UnsatisfiedLinkError =>
-        System.err.println(
-          """You probably got an error about an unsatisfied link error. Probably you are
-          |running an old version of GLIBC. Your program will run, just more slowly.""".stripMargin('|'))
+        lastBlasError = x
+        if(System.getProperty("os.name").toLowerCase.contains("linux"))
+          System.err.println(
+            """NOTE: You probably got an error about an unsatisfied link error. Probably you are
+              |      running an old version of GLIBC. Your program will run, just more slowly.
+              |      Also, I can't suppress the prior message, so one more message won't hurt you.""".stripMargin('|'))
         false
       case x: Throwable => throw new RuntimeException("Couldn't load blas!", x); false
     }
@@ -71,10 +74,12 @@ package object linalg extends LinearAlgebra {
    */
   def useNativeLibraries_=(v: Boolean) = {
     if (v == true) {
-      if (!canLoadNativeBlas) throw new RuntimeException("Can't load NativeBlasLibraries")
+      if (!canLoadNativeBlas) throw new RuntimeException("Can't load NativeBlasLibraries", lastBlasError)
     }
     _useNativeLibraries = v
   }
+
+  private var lastBlasError: Throwable = null
 
   /**
    * Computes y += x * a, possibly doing less work than actually doing that operation
