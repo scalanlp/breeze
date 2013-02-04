@@ -544,13 +544,27 @@ object GenDVSVSpecialOps extends App {
       val stride = a.stride
 
       var i = 0
-      while(i < bsize) {
-        if(b.isActive(i)) result += adata(aoff + bi(i) * stride) * bd(i)
-        i += 1
+      if(b.allVisitableIndicesActive && stride == 1 && aoff == 0) {
+        while(i < bsize) {
+          result += adata(bi(i)) * bd(i)
+          i += 1
+        }
+      } else {
+        while(i < bsize) {
+          if(b.isActive(i)) result += adata(aoff + bi(i) * stride) * bd(i)
+          i += 1
+        }
       }
       result""".replaceAll("       ","        ")
       })
-      println("  " + register("Vector", GenVectorRegistries.getDotName(scalar), dotName))
+
+      val dotReverse = "canDotProduct" + shortName + "_DV_" + scalar
+      println(genBinaryOperator(dotReverse, vector, svector, OpMulInner, scalar){
+      """require(b.length == a.length, "Vectors must be the same length!")
+      %s(b,a)
+      """.replaceAll("       ","        ").format(dotName)
+      })
+//      println("  " + register("Vector", GenVectorRegistries.getDotName(scalar), dotReverse))
 
       val name = "canAxpy_DV_" + shortName +"_" + scalar
       println(genAxpy(name, scalar, svector, vector)(fastLoop((y,x) => "%s + s * %s".format(y, x))))

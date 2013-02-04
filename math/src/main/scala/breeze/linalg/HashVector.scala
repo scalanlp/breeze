@@ -47,6 +47,8 @@ class HashVector[@specialized(Int, Double, Float) E](val array: OpenAddressHashA
     activeIterator.mkString("HashVector(",", ", ")")
   }
 
+  def allVisitableIndicesActive:Boolean = false
+
   override def hashCode() = {
     val hash = new MurmurHash[E](47)
     // we make the hash code based on index * value, so that zeros don't affect the hashcode.
