@@ -379,5 +379,9 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(b === a)
 
   }
+
+  test("toString with no rows doesn't throw") {
+    DenseMatrix.zeros[Double](0, 2).toString
+  }
 }
 

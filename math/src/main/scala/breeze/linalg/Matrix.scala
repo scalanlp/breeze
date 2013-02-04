@@ -66,7 +66,7 @@ trait Matrix[@spec(Int, Float, Double) E] extends MatrixLike[E, Matrix[E]] {
                maxWidth : Int = Terminal.terminalWidth) : String = {
     val showRows = if (rows > maxLines) maxLines - 1 else rows
     def colWidth(col : Int) =
-      (0 until showRows).map(row => this(row,col).toString.length+2).max
+      if (showRows > 0) (0 until showRows).map(row => this(row,col).toString.length+2).max else 0
 
     val colWidths = new scala.collection.mutable.ArrayBuffer[Int]
     var col = 0
