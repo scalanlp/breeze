@@ -81,16 +81,17 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
         log.error("Failure again! Giving up and returning. Maybe the objective is just poorly behaved?")
         state.copy(searchFailed = true)
     }
-    }.takeUpToWhere(_.searchFailed)
+    }.takeUpToWhere ( state =>
+      (state.iter >= maxIter && maxIter >= 0)
+        || (vspace.norm(state.adjustedGradient) <= math.max(tolerance * state.initialAdjVal.abs,1E-8))
+        || (state.numImprovementFailures >= numberOfImprovementFailures)
+        || state.searchFailed
+    )
     it:Iterator[State]
   }
 
   def minimize(f: DF, init: T):T = {
-    iterations(f,init).find (state =>
-      (state.iter >= maxIter && maxIter >= 0)
-        || (vspace.norm(state.adjustedGradient) <= math.max(tolerance * state.initialAdjVal.abs,1E-8))
-        || (state.numImprovementFailures >= numberOfImprovementFailures)
-    ).get.x
+    iterations(f,init).last.x
   }
 
   private def doDepthCharge(f: DF, init: T): State = {
@@ -143,11 +144,8 @@ object FirstOrderMinimizer {
                        useL1: Boolean = false,
                        tolerance:Double = 1E-4,
                        useStochastic: Boolean= false) {
-    def minimize[T](f: BatchDiffFunction[T], init: T)(implicit arith: MutableCoordinateSpace[T, Double]) = {
-      this.iterations(f, init).find{state =>
-            ((state.iter >= maxIterations && maxIterations >= 0)
-              || arith.norm(state.adjustedGradient) <= math.max(tolerance * state.initialAdjVal.abs,1E-8))
-          }.get.x
+    def minimize[T](f: BatchDiffFunction[T], init: T)(implicit arith: MutableCoordinateSpace[T, Double]): T = {
+      this.iterations(f, init).last.x
     }
 
     def iterations[T](f: BatchDiffFunction[T], init: T)(implicit arith: MutableCoordinateSpace[T, Double]): Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State] = {
