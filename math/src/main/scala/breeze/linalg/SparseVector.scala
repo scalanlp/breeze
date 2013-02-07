@@ -27,8 +27,21 @@ import collection.mutable
 
 
 /**
- * A Binary-search backed vector
- * @author dlwh
+ * A Binary-search backed vector.
+ * There is a parallel array of ints (in 0 until length) and values, sorted by index value.
+ * To quickly access all stored values use the following loop:
+ *
+ * {{{
+ *  var offset = 0
+ *  while( offset < v.activeSize) {
+ *    val index: Int = v.indexAt(offset)
+ *    val value: E = v.valueAt(offset)
+ *
+ *    offset += 1
+ *  }
+ * }}}
+ *
+ *@author dlwh
  */
 @SerialVersionUID(1)
 class SparseVector[@spec(Double,Int, Float) E](val array: SparseArray[E])
