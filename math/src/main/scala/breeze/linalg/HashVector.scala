@@ -34,7 +34,7 @@ class HashVector[@specialized(Int, Double, Float) E](val array: OpenAddressHashA
   def repr = this
 
   override def ureduce[A](f: URFunc[E, A]): A = {
-    f.apply(array.data, 0, 1, length, array.isActive _)
+    f.apply(array.data, 0, 1, array.data.length, array.isActive _)
   }
 
   final def iterableSize: Int = array.iterableSize
@@ -124,7 +124,7 @@ object HashVector extends HashVectorOps_Int with HashVectorOps_Float with HashVe
         var i = 0
         while(i < from.iterableSize) {
           if(from.isActive(i))
-            out(i) = fn(from.data(i))
+            out(from.index(i)) = fn(from.data(i))
           i += 1
         }
         new HashVector(out)

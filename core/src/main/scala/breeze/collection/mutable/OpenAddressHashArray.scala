@@ -84,7 +84,7 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
   }
 
   final def update(i: Int, v: Elem) {
-    if(i < 0 || i >= size) throw new IndexOutOfBoundsException()
+    if(i < 0 || i >= size) throw new IndexOutOfBoundsException(i + " is out of bounds for size " + size)
     val pos = locate(i)
     _data(pos) = v
     if(_index(pos) != i) {
@@ -108,7 +108,7 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
     val index = this.index
     val len = index.length
     val lenm1 = len - 1
-    var hash = i.## & lenm1
+    var hash = hashCodeFor(i) & lenm1
     var numProbes = 0
     while(index(hash) != i && index(hash) >= 0) {
       numProbes += 1
@@ -116,6 +116,18 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
       hash &= (lenm1)
     }
     hash
+  }
+
+
+  private def hashCodeFor(i: Int): Int = {
+    // based on what's in HashTable.scala and scala.util.hashing (inlined because of 2.9.2 support)
+    // doing this so that i and i +1 aren't near each other.
+    var code = i.##
+    code *= 0x9e3775cd
+    code = java.lang.Integer.reverseBytes(code)
+    code *= 0x9e3775cd
+    val rotated = (code >>> 11) | (code << 21)
+    rotated
   }
 
   final protected def rehash() {
