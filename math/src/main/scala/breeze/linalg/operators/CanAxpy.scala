@@ -27,6 +27,30 @@ trait CanAxpy[A, X, Y] {
   def apply(a: A, x: X, y: Y)
 }
 
+object CanAxpy {
+  implicit val canAxpyDoubleArray:CanAxpy[Double, Array[Double], Array[Double]] = {
+    new CanAxpy[Double, Array[Double], Array[Double]] {
+      def apply(a: Double, x: Array[Double], y: Array[Double]) {
+        require(x.length == y.length, "Arrays must have the same length!")
+        if (a == 1.0) {
+          var i = 0
+          while(i < x.length) {
+            y(i) += x(i)
+            i += 1
+          }
+        } else if (a != 0.0) {
+          var i = 0
+          while(i < x.length) {
+            y(i) += x(i) * a
+            i += 1
+          }
+        }
+      }
+    }
+  }
+
+}
+
 
 
 

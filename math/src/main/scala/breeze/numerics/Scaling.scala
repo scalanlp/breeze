@@ -1,5 +1,7 @@
 package breeze.numerics
 
+import breeze.linalg.axpy
+
 /**
  * Scaling utilities.
  *
@@ -78,6 +80,32 @@ trait Scaling {
       }
     }
 
+  }
+
+  def sumArrays(src: Array[Double], srcScale: Int, dest: Array[Double], destScale: Int): Int = {
+    if (destScale == srcScale) {
+      axpy(1.0, src, dest)
+      destScale
+    } else if (destScale - srcScale > 40)  {
+      destScale
+    } else if (srcScale - destScale > 40) {
+      System.arraycopy(src,0,dest,0,src.length)
+      srcScale
+    } else if (srcScale > destScale) {
+      scaleArrayToScale(dest, destScale, srcScale)
+      axpy(1.0, src, dest)
+      srcScale
+    } else {
+      // hybrid axpy/scale
+      val scaleDelta = destScale - srcScale
+      var i = 0
+      while(i < src.length) {
+        dest(i) += java.lang.Math.scalb(src(i), -scaleDelta)
+        i += 1
+      }
+
+      destScale
+    }
   }
 
   /**

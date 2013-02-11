@@ -73,5 +73,32 @@ class ScalingTest extends FunSuite {
     assert(array(2) === target(2))
   }
 
+  test("Addition of arrays of vastly different scales is a noop or a clobber") {
+    val arr1 = Array(3.0,4.0,5.0)
+    val arr2 = Array(1.0,2.0,3.0)
+    val newScale1 = Scaling.sumArrays(arr1, 0, arr2, 45)
+    assert(newScale1 == 45)
+    assert(arr2.toIndexedSeq === IndexedSeq(1.0, 2.0, 3.0))
+    val newScale2 = Scaling.sumArrays(arr1, 45, arr2, 0)
+    assert(newScale2 == 45)
+    assert(arr2.toIndexedSeq === IndexedSeq(3.0, 4.0, 5.0))
+  }
+
+
+  test("Addition of arrays of slightly different scales works as expected") {
+    val arr1 = Array(3.0,4.0,5.0)
+    val arr2,arr3 = Array(1.0,2.0,3.0)
+    val newScale1 = Scaling.sumArrays(arr1, 0, arr2, 2)
+    assert(newScale1 == 2)
+    Scaling.scaleArrayToScale(arr1, 0, 2)
+    val newScale2 = Scaling.sumArrays(arr1, 2, arr3, 2)
+    assert(newScale2 == 2)
+    assert(arr2.toIndexedSeq === arr3.toIndexedSeq)
+
+    Scaling.sumArrays(arr1, 2, arr2, 0)
+    Scaling.scaleArrayToScale(arr3, 0, 2)
+    Scaling.sumArrays(arr1, 2, arr3, 2)
+    assert(arr2.toIndexedSeq === arr3.toIndexedSeq)
+  }
 
 }
