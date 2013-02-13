@@ -53,7 +53,7 @@ class OWLQNTest extends OptimizeTestBase {
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
-          (((x - 3.0) :^ 2.0).sum,(x * 2.0) - 6.0)
+          ((math.pow(norm(x - 3.0,2),2)),(x * 2.0) - 6.0)
         }
       }
 
@@ -85,7 +85,7 @@ class OWLQNTest extends OptimizeTestBase {
       if(ok) {
         true
       } else {
-        throw new Exception(result.toString + " is not close enough to 2.5" + norm(result - 2.5, 2))
+        throw new Exception(result.toString + " is not close enough to 2.5: " + norm(result - 2.5, 2))
       }
     }
 

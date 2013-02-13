@@ -15,7 +15,7 @@ import breeze.math.MutableCoordinateSpace
  *
  * @author dlwh
  */
-class OWLQN[T](maxIter: Int, m: Int, l1reg: Double=1.0)(implicit vspace: MutableCoordinateSpace[T, Double]) extends LBFGS[T](maxIter, m) with  ConfiguredLogging {
+class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-8)(implicit vspace: MutableCoordinateSpace[T, Double]) extends LBFGS[T](maxIter, m, tolerance=tolerance) with  ConfiguredLogging {
   import vspace._
   require(m > 0)
   require(l1reg >= 0)
