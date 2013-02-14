@@ -12,7 +12,7 @@ import breeze.util.Implicits._
 abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: Int = -1,
                                                                      tolerance: Double=1E-5,
                                                                      improvementTol: Double=1E-3,
-                                                                     val minImprovementWindow: Int = 20,
+                                                                     val minImprovementWindow: Int = 10,
                                                                      val numberOfImprovementFailures: Int = 1)(implicit vspace: NormedVectorSpace[T, Double]) extends Minimizer[T,DF] with Logged {
 
   type History
@@ -142,7 +142,7 @@ object FirstOrderMinimizer {
                        alpha: Double = 0.5,
                        maxIterations:Int = 1000,
                        useL1: Boolean = false,
-                       tolerance:Double = 1E-4,
+                       tolerance:Double = 1E-3,
                        useStochastic: Boolean= false) {
     def minimize[T](f: BatchDiffFunction[T], init: T)(implicit arith: MutableCoordinateSpace[T, Double]): T = {
       this.iterations(f, init).last.x
@@ -171,8 +171,8 @@ object FirstOrderMinimizer {
     }
 
     def iterations[T](f: DiffFunction[T], init:T)(implicit vspace: MutableCoordinateSpace[T, Double]): Iterator[LBFGS[T]#State] = {
-       if(useL1) new OWLQN[T](maxIterations, 5, regularization)(vspace).iterations(f,init)
-      else (new LBFGS[T](maxIterations, 5)(vspace)).iterations(DiffFunction.withL2Regularization(f,regularization),init)
+       if(useL1) new OWLQN[T](maxIterations, 5, regularization, tolerance)(vspace).iterations(f,init)
+      else (new LBFGS[T](maxIterations, 5, tolerance=tolerance)(vspace)).iterations(DiffFunction.withL2Regularization(f,regularization),init)
     }
   }
 }
