@@ -7,6 +7,10 @@ import org.jblas.NativeBlas
  * @author dlwh
  */
 object NativeBlasDeferrer {
+  def dgesv(n: Int, nrhs: Int, a: Array[Double], aIdx: Int, lda: Int, ipiv: Array[Int], ipivIdx: Int, b: Array[Double], bIdx: Int, ldb: Int): Int = {
+    NativeBlas.dgesv(n, nrhs, a, aIdx, lda, ipiv, ipivIdx, b, bIdx, ldb)
+  }
+
   def dgetrf(i: Int, i1: Int, doubles: Array[Double], i2: Int, i3: Int, ints: Array[Int], i4: Int) = {
     NativeBlas.dgetrf(i, i1, doubles, i2, i3, ints, i4)
   }

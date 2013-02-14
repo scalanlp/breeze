@@ -340,6 +340,14 @@ class DenseMatrixTest extends FunSuite with Checkers {
                              (-0.08333333333333352, -0.08333333333333436)))
   }
 
+  test("GH#29 transpose solve is broken") {
+    val A = DenseMatrix((1.0,0.0),(1.0,-1.0))
+    val t = DenseVector(1.0,0.0)
+
+    assert(A \ t === DenseVector(1.0, 1.0))
+    assert(A.t \ t === DenseVector(1.0, 0.0))
+  }
+
 
   test("sum") {
     assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._0) === DenseMatrix((3.0, 7.0)))

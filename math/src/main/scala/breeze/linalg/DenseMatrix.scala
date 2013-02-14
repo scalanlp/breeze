@@ -674,17 +674,24 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double with DenseMatrixMul
       require(X.offset == 0)
       require(A.offset == 0)
       val piv = new Array[Int](A.rows)
+      val newA = A.copy
+      assert(!newA.isTranspose)
 
-      val info = new intW(0)
-      LAPACK.getInstance().dgesv(
-        A.rows, X.cols,
-        A.data.clone(), A.majorStride,
-        piv,
-        X.data, X.majorStride, info)
+      val info = if(useNativeLibraries) {
+        NativeBlasDeferrer.dgesv(
+          A.rows, X.cols,
+          newA.data, newA.offset, newA.majorStride,
+          piv, 0,
+          X.data, X.offset, X.majorStride)
+      } else {
+        val info = new intW(0)
+        LAPACK.getInstance().dgesv(A.rows, X.cols, newA.data, newA.majorStride, piv, X.data, X.majorStride, info)
+        info.`val`
+      }
 
-      if (info.`val` > 0)
+      if (info > 0)
         throw new MatrixSingularException()
-      else if (info.`val` < 0)
+      else if (info < 0)
         throw new IllegalArgumentException()
 
       X
