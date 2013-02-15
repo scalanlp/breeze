@@ -352,8 +352,8 @@ class DenseMatrixTest extends FunSuite with Checkers {
   test("sum") {
     // Test square and retangular matrices
   	assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._0) === DenseMatrix((3.0, 7.0)))
-    assert(sum(DenseMatrix((1.0,3.0,5.0),(2.0,4.0,6.0)), Axis._0) === DenseVector(3.0, 7.0,11.0))
-    assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0),(5.0, 6.0)), Axis._0) === DenseVector(8.0, 13.0))
+    assert(sum(DenseMatrix((1.0,3.0,5.0),(2.0,4.0,6.0)), Axis._0) === DenseMatrix((3.0, 7.0,11.0)))
+    assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0),(5.0, 6.0)), Axis._0) === DenseMatrix((8.0, 13.0)))
 
     assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._1) === DenseVector(4.0, 6.0))
     assert(sum(DenseMatrix((1.0,3.0,5.0),(2.0,4.0,6.0)), Axis._1) === DenseVector(9.0, 12.0))
