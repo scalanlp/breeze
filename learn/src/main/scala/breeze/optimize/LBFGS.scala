@@ -17,7 +17,7 @@ package breeze.optimize
 */
 
 import breeze.util.logging._
-import breeze.math.MutableCoordinateSpace
+import breeze.math.{MutableInnerProductSpace, MutableCoordinateSpace}
 import breeze.linalg._
 
 
@@ -37,7 +37,7 @@ import breeze.linalg._
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
 class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-5)
-              (implicit vspace: MutableCoordinateSpace[T, Double]) extends FirstOrderMinimizer[T,DiffFunction[T]](maxIter, tolerance) with ConfiguredLogging {
+              (implicit vspace: MutableInnerProductSpace[T, Double]) extends FirstOrderMinimizer[T,DiffFunction[T]](maxIter, tolerance) with ConfiguredLogging {
 
   import vspace._
   require(m > 0)
@@ -158,7 +158,7 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-5)
     }
     val search.State(alpha,currentVal) = targetState.getOrElse(throw new LineSearchFailed(norm(grad), norm(dir)))
 
-    if(alpha * norm(grad,Double.PositiveInfinity) < 1E-10)
+    if(alpha * norm(grad) < 1E-10)
       throw new StepSizeUnderflow
     alpha
   }
