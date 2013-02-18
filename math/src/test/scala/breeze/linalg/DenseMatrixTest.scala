@@ -397,5 +397,16 @@ class DenseMatrixTest extends FunSuite with Checkers {
   test("toString with no rows doesn't throw") {
     DenseMatrix.zeros[Double](0, 2).toString
   }
+
+  test("GH #30: Shaped solve of transposed and slice matrix does not work") {
+    val A=DenseMatrix((1.0,0.0),(1.0,-1.0))
+    val i = DenseMatrix.eye[Double](2)
+    val res = i \ A.t(::,1)
+    assert(res === DenseVector(1.0,-1.0))
+    val res2 = i \ A(1,::).t
+    assert(res2 === DenseMatrix(1.0,-1.0))
+  }
+
+
 }
 

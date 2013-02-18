@@ -57,8 +57,8 @@ extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
   def this(rows: Int, data: Array[V], offset: Int = 0) = this(rows, {assert(data.length % rows == 0); data.length/rows}, data, offset)
 
   def apply(row: Int, col: Int) = {
-    if(row < 0 || row > rows) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
-    if(col < 0 || col > cols) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
+    if(row < 0 || row >= rows) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
+    if(col < 0 || col >= cols) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
       data(linearIndex(row, col))
   }
 
@@ -758,7 +758,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double with DenseMatrixMul
 
   implicit object DenseMatrixCanSolveDenseVector extends BinaryOp[DenseMatrix[Double],DenseVector[Double],OpSolveMatrixBy,DenseVector[Double]] {
     override def apply(a : DenseMatrix[Double], b : DenseVector[Double]) = {
-      val rv = a \ new DenseMatrix[Double](b.size, 1, b.data, b.offset, b.stride)
+      val rv = a \ new DenseMatrix[Double](b.size, 1, b.data, b.offset, b.stride, true)
       new DenseVector[Double](rv.data)
     }
   }

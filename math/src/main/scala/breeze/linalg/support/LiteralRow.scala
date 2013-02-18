@@ -36,6 +36,14 @@ object LiteralRow {
     def length(arr : Array[V]) = arr.length
   }
 
+  implicit def vLiteral[V<:AnyVal] : LiteralRow[V,V] = new LiteralRow[V,V] {
+    def foreach[X](tup : V, fn : ((Int,V) => X)) = {
+      fn(0, tup)
+    }
+
+    def length(tup : V) = 1
+  }
+
   implicit def tuple2[V] : LiteralRow[Tuple2[V,V],V] = new LiteralRow[Tuple2[V,V],V] {
     def foreach[X](tup : Tuple2[V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1)
