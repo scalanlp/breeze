@@ -301,7 +301,15 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(z === DenseMatrix((164.0f,5.0f,107.0f),(-5.0f,10.0f,-27.0f),(161.0f,-7.0f,138.0f)))
   }
 
-
+  test("toDenseVector")  {
+  	val a = DenseMatrix((1,2,3), (4,5,6))
+  	val b = a(0 to 1, 1 to 2)
+  	val c = b.t
+    assert(a.toDenseVector === DenseVector(1,4,2,5,3,6))
+    assert(b.toDenseVector === DenseVector(2,5,3,6))
+    assert(c.toDenseVector === DenseVector(2,3,5,6))
+  }
+  
   test("Trace") {
     assert(DenseMatrix((1,2),(4,5)).trace === 1 + 5)
     assert(DenseMatrix((1,2,3),(3,4,5),(5,6,7)).trace == 1 + 4 + 7)

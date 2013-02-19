@@ -77,6 +77,22 @@ extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
     data(linearIndex(row, col)) = v
   }
 
+  /** Converts this matrix to a DenseVector (column-major) */
+  def toDenseVector: DenseVector[V] = {
+    implicit val man = ClassManifest.fromClass[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+    val ret = DenseVector(new Array[V](rows * cols))
+    var i = 0
+    while (i < cols) {
+      var j = 0
+      while (j < rows) {
+        ret(i * rows + j) = data(linearIndex(j, i))
+        j += 1
+      }
+      i += 1
+    }
+    ret
+  }
+
   def repr = this
 
   def activeIterator = iterator
