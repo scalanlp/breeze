@@ -72,6 +72,45 @@ trait MutableVectorSpace[V, S] extends VectorSpace[V, S] {
 trait MutableNormedSpace[V, S] extends NormedVectorSpace[V, S] with MutableVectorSpace[V, S]
 trait MutableInnerProductSpace[V, S] extends InnerProductSpace[V, S] with MutableVectorSpace[V, S]
 
+object MutableInnerProductSpace {
+  /** Construct a MutableInnerProductSpace for the given type from the available implicits */
+  def make[V, I, S](implicit _field: Field[S],
+    _isNumericOps: V <:< NumericOps[V],
+    _zeros: CanCreateZerosLike[V, V],
+    _mulVS: BinaryOp[V, S, OpMulScalar, V],
+    _divVS: BinaryOp[V, S, OpDiv, V],
+    _addVV: BinaryOp[V, V, OpAdd, V],
+    _subVV: BinaryOp[V, V, OpSub, V],
+    _neg: UnaryOp[V, OpNeg, V],
+    _norm: CanNorm[V],
+    _dotVV: BinaryOp[V, V, OpMulInner, S],
+    _copy: CanCopy[V],
+    _mulIntoVS: BinaryUpdateOp[V, S, OpMulScalar],
+    _divIntoVS: BinaryUpdateOp[V, S, OpDiv],
+    _addIntoVV: BinaryUpdateOp[V, V, OpAdd],
+    _subIntoVV: BinaryUpdateOp[V, V, OpSub],
+    _setIntoVV: BinaryUpdateOp[V, V, OpSet],
+    _axpy: CanAxpy[S, V, V]): MutableInnerProductSpace[V, S] = new MutableInnerProductSpace[V, S] {
+    def field: Field[S] = _field
+    def norm(a: V): Double = norm.apply(a, 2)
+    implicit def isNumericOps(v: V): NumericOps[V] = _isNumericOps(v)
+    implicit def zeros: CanCreateZerosLike[V, V] = _zeros
+    implicit def mulVS: BinaryOp[V, S, OpMulScalar, V] = _mulVS
+    implicit def divVS: BinaryOp[V, S, OpDiv, V] = _divVS
+    implicit def addVV: BinaryOp[V, V, OpAdd, V] = _addVV
+    implicit def subVV: BinaryOp[V, V, OpSub, V] = _subVV
+    implicit def neg: UnaryOp[V, OpNeg, V] = _neg
+    implicit def norm: CanNorm[V] = _norm
+    implicit def dotVV: BinaryOp[V, V, OpMulInner, S] = _dotVV
+    implicit def copy: CanCopy[V] = _copy
+    implicit def mulIntoVS: BinaryUpdateOp[V, S, OpMulScalar] = _mulIntoVS
+    implicit def divIntoVS: BinaryUpdateOp[V, S, OpDiv] = _divIntoVS
+    implicit def addIntoVV: BinaryUpdateOp[V, V, OpAdd] = _addIntoVV
+    implicit def subIntoVV: BinaryUpdateOp[V, V, OpSub] = _subIntoVV
+    implicit def setIntoVV: BinaryUpdateOp[V, V, OpSet] = _setIntoVV
+    implicit def axpyVV: CanAxpy[S, V, V] = _axpy
+  }
+}
 
 /**
  * A coordinate space is like a [[breeze.math.InnerProductSpace]], but

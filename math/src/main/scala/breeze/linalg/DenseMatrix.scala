@@ -463,6 +463,53 @@ object DenseMatrix extends LowPriorityDenseMatrix
   implicit val setMV_D: BinaryUpdateOp[DenseMatrix[Double], DenseVector[Double], OpSet] = new SetDMDVOp[Double]
   implicit val setMV_F: BinaryUpdateOp[DenseMatrix[Float], DenseVector[Float], OpSet]  = new SetDMDVOp[Float]
   implicit val setMV_I: BinaryUpdateOp[DenseMatrix[Int], DenseVector[Int], OpSet]  = new SetDMDVOp[Int]
+
+  // There's a bizarre error specializing float's here.
+  class CanZipMapValuesDenseMatrix[@specialized(Int, Double, Float) V, @specialized(Int, Double) RV: ClassManifest] extends CanZipMapValues[DenseMatrix[V], V, RV, DenseMatrix[RV]] {
+    def create(rows: Int, cols: Int) = new DenseMatrix(rows, cols, new Array[RV](rows * cols))
+
+    /**Maps all corresponding values from the two collection. */
+    def map(from: DenseMatrix[V], from2: DenseMatrix[V], fn: (V, V) => RV) = {
+      require(from.rows == from2.rows, "Vector row dimensions must match!")
+      require(from.cols == from2.cols, "Vector col dimensions must match!")
+      val result = create(from.rows, from.cols)
+      var i = 0
+      while (i < from.rows) {
+        var j = 0
+        while (j < from.cols) {
+          result(i, j) = fn(from(i, j), from2(i, j))
+          j += 1
+        }
+        i += 1
+      }
+      result
+    }
+  }
+
+  implicit def zipMap[V, R: ClassManifest] = new CanZipMapValuesDenseMatrix[V, R]
+  implicit val zipMap_d = new CanZipMapValuesDenseMatrix[Double, Double]
+  implicit val zipMap_f = new CanZipMapValuesDenseMatrix[Float, Float]
+  implicit val zipMap_i = new CanZipMapValuesDenseMatrix[Int, Int]
+
+  implicit def canGaxpy[V: Semiring]: CanAxpy[V, DenseMatrix[V], DenseMatrix[V]] = {
+    new CanAxpy[V, DenseMatrix[V], DenseMatrix[V]] {
+      val ring = implicitly[Semiring[V]]
+      def apply(s: V, b: DenseMatrix[V], a: DenseMatrix[V]) {
+        require(a.rows == b.rows, "Vector row dimensions must match!")
+        require(a.cols == b.cols, "Vector col dimensions must match!")
+
+        var i = 0
+        while (i < a.rows) {
+          var j = 0
+          while (j < a.cols) {
+            a(i, j) = ring.+(a(i, j), ring.*(s, b(i, j)))
+            j += 1
+          }
+          i += 1
+        }
+      }
+    }
+  }
 }
 
 trait LowPriorityDenseMatrix1 {
