@@ -8,8 +8,7 @@ import DenseMatrix._
 
 /** Import this to provide access to a DenseMatrix[Double] as a MutableInnerProductSpace, so it can be used in optimization. */
 object MutableInnerProductSpaceDenseMatrixDouble {
-	// Gets us normalization
-	implicit def matrixAsVector: DenseMatrix[Double]=>Vector[Double] = (a: DenseMatrix[Double]) => a.toDenseVector
+
 
 	class CanDotDDenseMatrix extends BinaryOp[DenseMatrix[Double], DenseMatrix[Double], OpMulInner, Double] {
 		override def apply(a: DenseMatrix[Double], b: DenseMatrix[Double]):Double = {

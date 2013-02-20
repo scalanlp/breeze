@@ -53,6 +53,8 @@ trait NormedVectorSpace[V, S] extends VectorSpace[V, S] {
 
 trait InnerProductSpace[V, S] extends NormedVectorSpace[V, S] {
   implicit def dotVV: BinaryOp[V, V, OpMulInner, S]
+
+  def norm(a: V) = math.sqrt(field.norm(dotVV(a,a)))
 }
 
 trait MutableVectorSpace[V, S] extends VectorSpace[V, S] {
@@ -82,7 +84,6 @@ object MutableInnerProductSpace {
     _addVV: BinaryOp[V, V, OpAdd, V],
     _subVV: BinaryOp[V, V, OpSub, V],
     _neg: UnaryOp[V, OpNeg, V],
-    _norm: CanNorm[V],
     _dotVV: BinaryOp[V, V, OpMulInner, S],
     _copy: CanCopy[V],
     _mulIntoVS: BinaryUpdateOp[V, S, OpMulScalar],
@@ -92,7 +93,6 @@ object MutableInnerProductSpace {
     _setIntoVV: BinaryUpdateOp[V, V, OpSet],
     _axpy: CanAxpy[S, V, V]): MutableInnerProductSpace[V, S] = new MutableInnerProductSpace[V, S] {
     def field: Field[S] = _field
-    def norm(a: V): Double = norm.apply(a, 2)
     implicit def isNumericOps(v: V): NumericOps[V] = _isNumericOps(v)
     implicit def zeros: CanCreateZerosLike[V, V] = _zeros
     implicit def mulVS: BinaryOp[V, S, OpMulScalar, V] = _mulVS
@@ -100,7 +100,6 @@ object MutableInnerProductSpace {
     implicit def addVV: BinaryOp[V, V, OpAdd, V] = _addVV
     implicit def subVV: BinaryOp[V, V, OpSub, V] = _subVV
     implicit def neg: UnaryOp[V, OpNeg, V] = _neg
-    implicit def norm: CanNorm[V] = _norm
     implicit def dotVV: BinaryOp[V, V, OpMulInner, S] = _dotVV
     implicit def copy: CanCopy[V] = _copy
     implicit def mulIntoVS: BinaryUpdateOp[V, S, OpMulScalar] = _mulIntoVS
@@ -259,7 +258,7 @@ object MutableCoordinateSpace {
 
     implicit def neg: UnaryOp[V, OpNeg, V] = _neg
 
-    def norm(a: V): Double = norm.apply(a, 2)
+    override def norm(a: V): Double = norm.apply(a, 2)
 
     implicit def isNumericOps(v: V): NumericOps[V] = _isNumericOps(v)
 
@@ -374,7 +373,7 @@ object TensorSpace {
 
     implicit def neg: UnaryOp[V, OpNeg, V] = _neg
 
-    def norm(a: V): Double = norm.apply(a, 2)
+    override def norm(a: V): Double = norm.apply(a, 2)
 
     implicit def isNumericOps(v: V): NumericOps[V] with QuasiTensor[I, S] = _isNumericOps(v)
 
