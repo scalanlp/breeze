@@ -21,14 +21,6 @@ import org.junit.runner.RunWith
 
 @RunWith(classOf[JUnitRunner])
 class Counter2Test extends FunSuite with Checkers {
-  def typeOf[X](value : X)(implicit m : scala.reflect.Manifest[X]) =
-    m.toString
-  def show[X](value : X)(implicit m : scala.reflect.Manifest[X]) = {
-    println(typeOf(value) + ":")
-    println(value)
-    println()
-  }
-
   test("Getting and setting") {
     val x = Counter2[String,Int,Double]()
     x("a",1) = 3.0
@@ -129,8 +121,8 @@ class Counter2Test extends FunSuite with Checkers {
 
 
   test("sum") {
-    assert(sum(Counter2((1,'a,1.0),(1, 'b, 3.0), (2, 'a, 2.0), (2, 'b, 4.0)), Axis._0) === Counter('a -> 3., 'b -> 7.))
-    assert(sum(Counter2((1,'a,1.0),(1, 'b, 3.0), (2, 'a, 2.0), (2, 'b, 4.0)), Axis._1) === Counter(1 -> 4., 2 -> 6.))
+    assert(sum(Counter2((1,'a,1.0),(1, 'b, 3.0), (2, 'a, 2.0), (2, 'b, 4.0)), Axis._0) === Counter('a -> 3.0, 'b -> 7.0))
+    assert(sum(Counter2((1,'a,1.0),(1, 'b, 3.0), (2, 'a, 2.0), (2, 'b, 4.0)), Axis._1) === Counter(1 -> 4.0, 2 -> 6.0))
   }
 
   test("normalize Rows and columns") {
