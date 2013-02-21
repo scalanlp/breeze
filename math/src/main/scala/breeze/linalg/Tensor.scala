@@ -15,11 +15,9 @@ package breeze.linalg
  limitations under the License.
 */
 
-import operators.CanTranspose
 import scala.{specialized=>spec}
 import support._
 import breeze.generic.{UReduceable, URFunc, CanMapValues}
-import collection.mutable
 import breeze.collection.mutable.Beam
 import breeze.math.Semiring
 
@@ -79,11 +77,7 @@ sealed trait QuasiTensor[@specialized(Int) K, @specialized(Int, Float, Double) V
 }
 
 
-/**
- * A Tensor defines a map from an index set to a set of values
- *
- * @author dlwh
- */
+
 trait TensorLike[@spec(Int) K, @specialized(Int, Float, Double) V, +This<:Tensor[K, V]] extends QuasiTensor[K,V] with NumericOps[This] {
   def apply(i: K):V
   def update(i: K, v: V)
@@ -99,13 +93,30 @@ trait TensorLike[@spec(Int) K, @specialized(Int, Float, Double) V, +This<:Tensor
 
 
   // slicing
+  /**
+   * method for slicing a tensor. For instance, DenseVectors support efficient slicing by a Range object.
+   * @return
+   */
   def apply[Slice, Result](slice: Slice)(implicit canSlice: CanSlice[This, Slice, Result]) = {
     canSlice(repr, slice)
   }
+
+  /**
+   * Slice a sequence of elements. Must be at least 2.
+   * @param a
+   * @param slice
+   * @param canSlice
+   * @tparam Result
+   * @return
+   */
   def apply[Result](a: K, slice: K*)(implicit canSlice: CanSlice[This, Seq[K], Result]) = {
     canSlice(repr, a +: slice)
   }
 
+  /**
+   * Method for slicing that is tuned for Matrices.
+   * @return
+   */
   def apply[Slice1, Slice2, Result](slice1: Slice1, slice2: Slice2)(implicit canSlice: CanSlice2[This, Slice1, Slice2, Result]) = {
     canSlice(repr, slice1, slice2)
   }
@@ -168,7 +179,11 @@ trait TensorLike[@spec(Int) K, @specialized(Int, Float, Double) V, +This<:Tensor
 
 }
 
-
+/**
+ * A Tensor defines a map from an index set to a set of values.
+ *
+ * @author dlwh
+ */
 trait Tensor[@spec(Int) K, @specialized(Int, Float, Double) V] extends TensorLike[K, V, Tensor[K, V]]
 
 object Tensor {
