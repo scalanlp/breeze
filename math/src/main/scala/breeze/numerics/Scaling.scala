@@ -49,7 +49,7 @@ trait Scaling {
    * @param scores
    * @return
    */
-  private def computeScaleDelta(scores: Array[Double]):Int = {
+  def computeScaleDelta(scores: Array[Double]):Int = {
     var maxScale = -10000
     var i = 0
     while(i < scores.length) {
@@ -69,6 +69,18 @@ trait Scaling {
     else 0
   }
 
+  def determineScale(score: Double, oldScale: Int):Int = {
+    if(score != 0.0) {
+      val maxScale = java.lang.Math.getExponent(score)
+      if(maxScale == -10000) oldScale
+      else if(maxScale > scaleConstant) oldScale + scaleConstant * (maxScale / scaleConstant)
+      else if(maxScale < -scaleConstant) oldScale + scaleConstant * (maxScale / scaleConstant)
+      else oldScale
+    } else {
+      Int.MinValue
+    }
+  }
+
   def scaleArrayToScale(scores: Array[Double], currentScale: Int, targetScale: Int) {
     val scaleDelta = targetScale - currentScale
 
@@ -82,6 +94,15 @@ trait Scaling {
 
   }
 
+  /**
+   * Sums `src` into `dest` assuming they're at different scales. `src` may be longer than
+   * `dest`, which is useful for allocating a large work buffer.
+   * @param src
+   * @param srcScale
+   * @param dest
+   * @param destScale
+   * @return the new scale
+   */
   def sumArrays(src: Array[Double], srcScale: Int, dest: Array[Double], destScale: Int): Int = {
     if (destScale == srcScale) {
       axpy(1.0, src, dest)
@@ -92,17 +113,21 @@ trait Scaling {
     } else if (destScale - srcScale > 53 + 2 * scaleConstant) {
       destScale
     } else if (srcScale - destScale > 53 + 2 * scaleConstant) {
-      System.arraycopy(src,0,dest,0,src.length)
+      System.arraycopy(src,0,dest,0,dest.length)
       srcScale
     } else if (srcScale > destScale) {
       scaleArrayToScale(dest, destScale, srcScale)
-      axpy(1.0, src, dest)
+      var i = 0
+      while(i < dest.length) {
+        dest(i) += src(i)
+        i += 1
+      }
       srcScale
     } else {
       // hybrid axpy/scale
       val scaleDelta = destScale - srcScale
       var i = 0
-      while(i < src.length) {
+      while(i < dest.length) {
         dest(i) += java.lang.Math.scalb(src(i), -scaleDelta)
         i += 1
       }
@@ -122,7 +147,7 @@ trait Scaling {
    * Converts the scaled value into "normal" space
    */
   def scaleValue(score: Double, currentScale: Int, targetScale: Int) = {
-    java.lang.Math.scalb(score, targetScale-currentScale)
+    java.lang.Math.scalb(score, currentScale - targetScale)
   }
 
   def toLogSpace(score: Double, currentScale: Int) = {
