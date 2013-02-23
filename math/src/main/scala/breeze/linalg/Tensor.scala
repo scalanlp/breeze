@@ -37,7 +37,7 @@ sealed trait QuasiTensor[@specialized(Int) K, @specialized(Int, Float, Double) V
   def min(implicit ord: Ordering[V]) = valuesIterator.min
   def argmax(implicit ord: Ordering[V]) = keysIterator.maxBy( apply _)
   def argmin(implicit ord: Ordering[V]) = keysIterator.minBy( apply _)
-  def sum(implicit num: Numeric[V]) = valuesIterator.sum
+  def sum(implicit num: Numeric[V]) = activeValuesIterator.sum
 
 
   def argsort(implicit ord : Ordering[V]) : IndexedSeq[K] =
