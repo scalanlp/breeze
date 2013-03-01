@@ -219,7 +219,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
       def apply(m: DenseMatrix[V], ignored: ::.type, col: Int) = {
         if(col < 0 || col >= m.cols) throw new ArrayIndexOutOfBoundsException("Column must be in bounds for slice!")
         if(!m.isTranspose)
-          new DenseVector(m.data, length = m.rows, offset = col * m.rows + m.offset, stride=1)
+          new DenseVector(m.data, length = m.rows, offset = col * m.majorStride + m.offset, stride=1)
         else
           new DenseVector(m.data, length=m.rows, offset = m.offset + col, stride = m.majorStride)
       }
@@ -247,7 +247,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
         if(cols.isEmpty) new DenseMatrix(0, 0, m.data, 0, 1)
         else if(!m.isTranspose) {
           val first = cols.head
-          new DenseMatrix(m.rows, cols.length, m.data, m.offset + first * m.rows, m.majorStride * cols.step)
+          new DenseMatrix(m.rows, cols.length, m.data, m.offset + first * m.majorStride, m.majorStride * cols.step)
         } else {
           canSliceRows(m.t, cols, ::).t
         }

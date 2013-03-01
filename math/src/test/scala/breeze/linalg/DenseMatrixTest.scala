@@ -80,6 +80,13 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(m === DenseMatrix((3,4,7),(6,4,6)))
   }
 
+  test("Multiple Slicing") {
+    val m = new DenseMatrix(6, (1 to 36).toArray)
+    val slice1 = m(1 to 3, 1 to 3)
+    assert(slice1(::, 1) === DenseVector(14, 15, 16))
+    assert(slice1(::, 1 to 2) === DenseMatrix((14, 20), (15, 21), (16, 22)))
+  }
+  
   test("Transpose") {
     val m = DenseMatrix((1,2,3),(4,5,6))
 
@@ -358,7 +365,7 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
 
   test("sum") {
-    // Test square and retangular matrices
+    // Test square and rectangular matrices
   	assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._0) === DenseMatrix((3.0, 7.0)))
     assert(sum(DenseMatrix((1.0,3.0,5.0),(2.0,4.0,6.0)), Axis._0) === DenseMatrix((3.0, 7.0,11.0)))
     assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0),(5.0, 6.0)), Axis._0) === DenseMatrix((8.0, 13.0)))
