@@ -196,4 +196,9 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
       (-0.9145142956773045,0.4045535848337569))).max < 1E-5)
   }
 
-}
+
+  test("small pow test") {
+    val X = DenseMatrix(( .7, .2), (.3, .8))
+    assert(pow(X, 1) === X)
+    assert( breeze.numerics.abs(pow(X, .5) - DenseMatrix((.82426, 0.11716), (.17574, 0.88284))).max < 1E-5, pow(X, .5))
+  }}

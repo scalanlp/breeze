@@ -1035,6 +1035,21 @@ trait LinearAlgebra {
     s.data.count(_ > useTol)  // TODO: Use DenseVector[_].count() if/when that is implemented
   }
 
+  /**
+   * Raises m to the exp'th power via eigenvalue decomposition. Currently requires
+   * that m's eigenvalues are real.
+   * @param m
+   * @param exp
+   */
+  def pow(m: DenseMatrix[Double], exp: Double) = {
+    requireSquareMatrix(m)
+    val (real, imag, evectors) = eig(m)
+    require(norm(imag) == 0.0, "We cannot handle complex eigenvalues yet.")
+    val exped = real.values.map(scala.math.pow(_, exp))
+
+    (evectors.t \ (evectors * diag(exped)).t).t
+  }
+
 }
 
 object LinearAlgebra extends LinearAlgebra
