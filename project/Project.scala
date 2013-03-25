@@ -159,11 +159,11 @@ object BreezeBuild extends Build {
   lazy val benchmark = Project("breeze-benchmark",file("benchmark"), settings = (buildSettings :+ (fork in run := true) :+ (commands += patchclasspath)) ++ Seq (libraryDependencies ++= (commonDeps ++ benchmarkDeps)) ++ testDependencies) dependsOn(math)
   lazy val viz =  Project("breeze-viz", file("viz"),  settings =  buildSettings ++ Seq (libraryDependencies ++= (commonDeps ++ vizDeps)) ++ testDependencies ++ assemblySettings) dependsOn(core, math)
 
-val _projects: Seq[ProjectReference] = Seq(math,process,learn,viz)
+val _projects: Seq[ProjectReference] = Seq(math,process,learn,viz,core)
   lazy val doc = Project("doc", file("doc"))
       .settings((buildSettings ++ Seq(
         version := "1.0",
         unmanagedSourceDirectories in Compile <<= (_projects map (unmanagedSourceDirectories in _ in Compile)).join.apply {(s) => s.flatten} 
-  ) ++ Seq ( libraryDependencies ++= (commonDeps ++ vizDeps)):_*))
+  ) ++ Seq ( libraryDependencies ++= (commonDeps ++ vizDeps ++ learnDeps)):_*))
 }
 
