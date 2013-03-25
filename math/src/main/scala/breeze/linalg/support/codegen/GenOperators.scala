@@ -285,14 +285,23 @@ object GenOperators {
     ),
 
     "Int" -> Map[OpType,(String,String)=>String](OpAdd -> {_ + " + " + _},
-        OpSub -> {_ + " - " + _},
-        OpMulScalar -> {_ + " * " + _},
+      OpSub -> {_ + " - " + _},
+      OpMulScalar -> {_ + " * " + _},
       OpMulMatrix -> {_ + " * " + _},
-        OpDiv -> {_ + " / " + _},
-        OpMod -> {_ + " % " + _},
-        OpSet -> {(a,b) => b},
-        OpPow -> {"IntMath.ipow("+ _ + ", " + _ + ")"}
-      )
+      OpDiv -> {_ + " / " + _},
+      OpMod -> {_ + " % " + _},
+      OpSet -> {(a,b) => b},
+      OpPow -> {"IntMath.ipow("+ _ + ", " + _ + ")"}
+    ),
+    
+    "Complex" -> Map[OpType,(String,String)=>String](OpAdd -> {_ + " + " + _},
+      OpSub -> {_ + " - " + _},
+      OpMulScalar -> {_ + " * " + _},
+      OpMulMatrix -> {_ + " * " + _},
+      OpDiv -> {_ + " / " + _},
+      OpSet -> {(a,b) => b},
+      OpPow -> {_ + ".pow(" + _ + ")"}
+    )
 
   )
 
@@ -302,7 +311,8 @@ object GenOperators {
 object GenDenseOps extends App {
 
   val blacklist = Map("DenseVector" -> Set("canMulScalarInto_DV_S_Double", "canSetInto_DV_DV_Double",
-    "canAddInto_DV_DV_Double", "canSubInto_DV_DV_Double")).withDefaultValue(Set.empty)
+    "canAddInto_DV_DV_Double", "canSubInto_DV_DV_Double", "canMulScalarInto_DV_S_Complex", 
+    "canSetInto_DV_DV_Complex","canAddInto_DV_DV_Complex", "canSubInto_DV_DV_Complex")).withDefaultValue(Set.empty)
 
   def genHomogeneous(tpe: String,
                      generic: String,
@@ -319,6 +329,7 @@ object GenDenseOps extends App {
     println("package " + pckg)
     println("import breeze.linalg.operators._")
     println("import breeze.linalg.support._")
+    println("import breeze.math.Complex")
     println("import breeze.numerics._")
 
     for( (scalar,ops) <- GenOperators.ops) {
@@ -391,7 +402,7 @@ object GenDenseOps extends App {
     }
 
     val name = "canAxpy_DV_DV_" + scalar
-    if(scalar != "Double" && !vector.contains("Matrix"))
+    if(scalar != "Double" && scalar != "Complex" && !vector.contains("Matrix"))
       println(genAxpy(name, scalar, vector, vector)(loop((y,x) => "%s + s * %s".format(y, x))))
     println("}")
   }
@@ -505,6 +516,7 @@ object GenDVSVSpecialOps extends App {
     println("package breeze.linalg")
     println("import breeze.linalg.operators._")
     println("import breeze.linalg.support._")
+    println("import breeze.math.Complex")
     println("import breeze.numerics._")
 
     for( (scalar,ops) <- GenOperators.ops) {
@@ -529,11 +541,12 @@ object GenDVSVSpecialOps extends App {
 
 
       // dot product
+      val zero = if (scalar == "Complex") "Complex(0, 0)" else "0"
       val dotName = "canDotProductDV_" + shortName + "_" + scalar
       println(genBinaryOperator(dotName, vector, svector, OpMulInner, scalar){
         """require(b.length == a.length, "Vectors must be the same length!")
 
-      var result: """ + scalar + """ = 0
+      var result: """ + scalar + """ = """ + zero + """
 
       val bd = b.data
       val bi = b.index
@@ -559,7 +572,7 @@ object GenDVSVSpecialOps extends App {
       })
 
       val dotReverse = "canDotProduct" + shortName + "_DV_" + scalar
-      println(genBinaryOperator(dotReverse, vector, svector, OpMulInner, scalar){
+      println(genBinaryOperator(dotReverse, svector, vector, OpMulInner, scalar){
       """require(b.length == a.length, "Vectors must be the same length!")
       %s(b,a)
       """.replaceAll("       ","        ").format(dotName)
@@ -898,6 +911,7 @@ object GenSVOps extends App {
     println("import java.util._")
     println("import breeze.linalg.operators._")
     println("import breeze.linalg.support._")
+    println("import breeze.math.Complex")
     println("import breeze.numerics._")
 
     for( (scalar,ops) <- GenOperators.ops) {
@@ -923,7 +937,8 @@ object GenSVOps extends App {
 
       for( (op,fn) <- ops if op != OpMulScalar && op != OpMulMatrix) {
         val name = "can"+op.getClass.getSimpleName.drop(2).dropRight(1)+"Into_VV_" + scalar
-        def postProcesscopy(c: String) = if(op == OpAdd) "" else if(op == OpSub) c + "*= (-1).to"+scalar else sys.error(":(")
+        val negOne = if (scalar == "Complex") "Complex(-1,0)" else "(-1).to" + scalar
+        def postProcesscopy(c: String) = if(op == OpAdd) "" else if(op == OpSub) c + "*= "+negOne else sys.error(":(")
         val loop = if(op == OpSub || op == OpAdd) plusIntoLoop(scalar, (_:(String,String)=>String), postProcesscopy _) else slowLoop _
 
         println(genBinaryUpdateOperator(name, vector, vector, op)(loop(fn)))
@@ -976,6 +991,7 @@ object GenSVOps extends App {
 
 
       // dot product
+      val zero = if (scalar == "Complex") "Complex(0, 0)" else "0"
       val dotName = "canDotProductSV_" + scalar
       println(genBinaryOperator(dotName, vector, vector, OpMulInner, scalar){
         """require(b.length == a.length, "Vectors must be the same length!")
@@ -984,7 +1000,7 @@ object GenSVOps extends App {
          apply(b, a)
        } else {
 
-         var result: """ + scalar + """ = 0
+         var result: """ + scalar + """ = """ + zero + """
 
          val ad = a.data
          val bd = b.data
@@ -1033,6 +1049,7 @@ object GenVectorRegistries extends App {
     println("package " + pckg)
     println("import breeze.linalg.operators._")
     println("import breeze.linalg.support._")
+    println("import breeze.math.Complex")
     println("import breeze.numerics._")
 
     import GenOperators._
@@ -1081,11 +1098,12 @@ object GenVectorRegistries extends App {
         """
       })
 
+      val zero = if (scalar == "Complex") "Complex(0, 0)" else "0"
       val dotName: String = getDotName(scalar)
       println(genBinaryRegistryDef(dotName, vector, vector, OpMulInner, scalar){
         """require(b.length == a.length, "Vectors must be the same length!")
 
-       var result: """ + scalar + """ = 0
+       var result: """ + scalar + """ = """ + zero + """
 
         for( (i, v) <- b.activeIterator) {
           result += a(i) * v
@@ -1145,6 +1163,7 @@ object GenCSCOps extends App {
     println("import java.util._")
     println("import breeze.linalg.operators._")
     println("import breeze.linalg.support._")
+    println("import breeze.math.Complex")
     println("import breeze.numerics._")
 
     for( (scalar,ops) <- GenOperators.ops) {
@@ -1280,6 +1299,7 @@ object GenDMMultOps extends App {
     println("import java.util._")
     println("import breeze.linalg.operators._")
     println("import breeze.linalg.support._")
+    println("import breeze.math.Complex")
     println("import breeze.numerics._")
 
     for( (scalar,ops) <- GenOperators.ops) {
@@ -1352,6 +1372,7 @@ object GenMatrixMultOps extends App {
     println("import java.util._")
     println("import breeze.linalg.operators._")
     println("import breeze.linalg.support._")
+    println("import breeze.math.Complex")
     println("import breeze.numerics._")
 
     for( (scalar,ops) <- GenOperators.ops) {

@@ -2,6 +2,7 @@ package breeze.linalg
 import java.util._
 import breeze.linalg.operators._
 import breeze.linalg.support._
+import breeze.math.Complex
 import breeze.numerics._
 
 /** This is an auto-generated trait providing operators for CSCMatrix */
@@ -379,5 +380,131 @@ trait CSCMatrixOps_Int { this: CSCMatrix.type =>
             res.result()
     }
   }; implicit val canMulM_M_Int = new canMulM_M_Int ()
+
+}
+
+/** This is an auto-generated trait providing operators for CSCMatrix */
+trait CSCMatrixOps_Complex { this: CSCMatrix.type =>
+
+  class canMulM_V_Complex private[linalg] () extends BinaryRegistry[CSCMatrix[Complex], Vector[Complex], breeze.linalg.operators.OpMulMatrix, Vector[Complex]] {
+    override def bindingMissing(a: CSCMatrix[Complex], b: Vector[Complex]) = {
+      
+      val res = DenseVector.zeros[Complex](a.rows)
+      var c = 0
+      while(c < a.cols) {
+        var rr = a.colPtrs(c)
+        val rrlast = a.colPtrs(c+1)
+        while (rr < rrlast) {
+          val r = a.rowIndices(rr)
+          res(r) += a.data(rr) * b(c)
+          rr += 1
+        }
+        c += 1
+      }
+
+      res
+    }
+  };
+  val canMulM_V_Complex = new canMulM_V_Complex()
+  implicit def canMulM_V_Complex_def[A <: CSCMatrix[Complex], B <: Vector[Complex]]:BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Vector[Complex]] = (
+    canMulM_V_Complex.asInstanceOf[BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Vector[Complex]]]
+  )
+    
+
+   class canMulM_DM_Complex private[linalg] () extends BinaryOp[CSCMatrix[Complex], DenseMatrix[Complex], breeze.linalg.operators.OpMulMatrix, DenseMatrix[Complex]] {
+    def apply(a: CSCMatrix[Complex], b: DenseMatrix[Complex]) = {
+      
+      if(a.cols != b.rows) throw new RuntimeException("Dimension Mismatch!")
+
+
+      val res = new DenseMatrix[Complex](a.rows, b.cols)
+      var i = 0
+      while (i < b.cols) {
+        var j = 0
+        while (j < a.cols) {
+          val v = b(j, i)
+          var k = a.colPtrs(j)
+          while (k < a.colPtrs(j+1)) {
+            res(a.rowIndices(k), i) += v * a.data(k)
+            k += 1
+          }
+          j += 1
+        }
+        i += 1
+      }
+
+
+      res
+    }
+  }; implicit val canMulM_DM_Complex = new canMulM_DM_Complex ()
+
+
+   class canMulDM_M_Complex private[linalg] () extends BinaryOp[DenseMatrix[Complex], CSCMatrix[Complex], breeze.linalg.operators.OpMulMatrix, DenseMatrix[Complex]] {
+    def apply(a: DenseMatrix[Complex], b: CSCMatrix[Complex]) = {
+      
+      if(a.cols != b.rows) throw new RuntimeException("Dimension Mismatch!")
+
+
+      val res = new DenseMatrix[Complex](a.rows, b.cols)
+      var i = 0
+      while (i < b.cols) {
+        var j = b.colPtrs(i)
+        while (j < b.colPtrs(i+1)) {
+          val dval = b.data(j)
+          val ival = b.rowIndices(j)
+          var k = 0
+          while (k < a.rows) {
+            res(k,i) += a(k,ival)*dval
+            k += 1
+          }
+          j += 1
+        }
+        i += 1
+      }
+
+
+
+
+
+      res
+    }
+  }; implicit val canMulDM_M_Complex = new canMulDM_M_Complex ()
+
+
+   class canMulM_M_Complex private[linalg] () extends BinaryOp[CSCMatrix[Complex], CSCMatrix[Complex], breeze.linalg.operators.OpMulMatrix, CSCMatrix[Complex]] {
+    def apply(a: CSCMatrix[Complex], b: CSCMatrix[Complex]) = {
+      
+            if(a.cols != b.rows) throw new RuntimeException("Dimension Mismatch!")
+
+            var numnz = 0
+            var i = 0
+            while (i < b.cols) {
+              var j = b.colPtrs(i)
+              while (j < b.colPtrs(i+1)) {
+                numnz += a.colPtrs(b.rowIndices(j)+1) - a.colPtrs(b.rowIndices(j))
+                j += 1
+              }
+              i += 1
+            }
+            val res = new CSCMatrix.Builder[Complex](a.rows, b.cols, numnz)
+            i = 0
+            while (i < b.cols) {
+              var j = b.colPtrs(i)
+              while (j < b.colPtrs(i+1)) {
+                val dval = b.data(j)
+                var k = a.colPtrs(b.rowIndices(j))
+                while (k < a.colPtrs(b.rowIndices(j)+1)) {
+                  res.add(a.rowIndices(k), i, a.data(k) * dval)
+                  k += 1
+                }
+                j += 1
+              }
+              i += 1
+            }
+
+
+            res.result()
+    }
+  }; implicit val canMulM_M_Complex = new canMulM_M_Complex ()
 
 }

@@ -201,12 +201,15 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
                       with DenseVectorOps_Int
                       with DenseVectorOps_Float
                       with DenseVectorOps_Double
+                      with DenseVectorOps_Complex
                       with DenseVectorOps_SparseVector_Double
                       with DenseVectorOps_SparseVector_Float
                       with DenseVectorOps_SparseVector_Int
+                      with DenseVectorOps_SparseVector_Complex
                       with DenseVectorOps_HashVector_Double
                       with DenseVectorOps_HashVector_Float
                       with DenseVectorOps_HashVector_Int
+                      with DenseVectorOps_HashVector_Complex
                       with DenseVector_SpecialOps {
   def zeros[@spec(Double, Float, Int) V: ClassManifest](size: Int) = apply(new Array[V](size))
   def apply[@spec(Double, Float, Int) V](values: Array[V]) = new DenseVector(values)

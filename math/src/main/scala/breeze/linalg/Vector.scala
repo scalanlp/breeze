@@ -103,7 +103,7 @@ trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]]{
 
 }
 
-object Vector extends VectorOps_Int with VectorOps_Double with VectorOps_Float {
+object Vector extends VectorOps_Int with VectorOps_Double with VectorOps_Float with VectorOps_Complex {
 
   implicit def canCopy[E]:CanCopy[Vector[E]] = new CanCopy[Vector[E]] {
     // Should not inherit from T=>T because those get  used by the compiler.
