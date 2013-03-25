@@ -45,6 +45,7 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
                                                val length: Int) extends StorageVector[E]
                                               with VectorLike[E, DenseVector[E]] with Serializable{
   def this(data: Array[E]) = this(data, 0, 1, data.length)
+  def this(data: Array[E], offset: Int) = this(data, offset, 1, data.length)
 
   // uncomment to get all the ridiculous places where specialization fails.
  // if(data.isInstanceOf[Array[Double]] && getClass.getName() == "breeze.linalg.DenseVector") throw new Exception("...")

@@ -316,6 +316,14 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(b.toDenseVector === DenseVector(2,5,3,6))
     assert(c.toDenseVector === DenseVector(2,3,5,6))
   }
+
+
+  test("flattenView")  {
+  	val a = DenseMatrix((1,2,3), (4,5,6))
+    a.flatten(true)(2) = 4
+    assert(a === DenseMatrix((1,4,3), (4,5,6)))
+  }
+
   
   test("Trace") {
     assert(DenseMatrix((1,2),(4,5)).trace === 1 + 5)
@@ -323,16 +331,23 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(DenseMatrix((1,2,3),(4,5,6),(7,8,9)).trace === 1 + 5 + 9)
   }
 
-  /*
   test("Reshape") {
     val m : DenseMatrix[Int] = DenseMatrix((1,2,3),(4,5,6))
-    val r : DenseMatrix[Int] = m.reshape(3,2)
+    val r : DenseMatrix[Int] = m.reshape(3, 2, true)
     assert(m.data eq r.data)
     assert(r.rows === 3)
     assert(r.cols === 2)
     assert(r === DenseMatrix((1,5),(4,3),(2,6)))
   }
-  */
+
+  test("Reshape transpose") {
+    val m : DenseMatrix[Int] = DenseMatrix((1,2,3),(4,5,6)).t
+    val r : DenseMatrix[Int] = m.reshape(2, 3, true)
+    assert(m.data eq r.data)
+    assert(r.rows === 2)
+    assert(r.cols === 3)
+    assert(r === DenseMatrix((1,5),(4,3),(2,6)).t)
+  }
 
   test("Solve") {
     // square solve

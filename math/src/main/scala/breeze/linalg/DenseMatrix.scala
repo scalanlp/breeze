@@ -93,6 +93,58 @@ extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
     ret
   }
 
+  /** Converts this matrix to a DenseVector (column-major)
+    * If view = true (or View.Require), throws an exception if we cannot return a view. otherwise returns a view.
+    * If view == false (or View.Copy) returns a copy
+    * If view == View.Prefer (the default), returns a view if possible, otherwise returns a copy.
+    *
+    * Views are only possible (if(isTranspose) majorStride == cols else majorStride == rows) == true
+    */
+  def flatten(view: View=View.Prefer):DenseVector[V] = view match {
+    case View.Require =>
+      if(!canFlattenView)
+        throw new UnsupportedOperationException("Cannot make a view of this matrix.")
+      else
+        new DenseVector(data, offset, 1, rows * cols)
+    case View.Copy =>
+      toDenseVector
+    case View.Prefer =>
+      flatten(canFlattenView)
+  }
+
+
+  private def canFlattenView = if(isTranspose) majorStride == cols else majorStride == rows
+  private def canReshapeView = if(isTranspose) majorStride == cols else majorStride == rows
+
+  /** Reshapes this matrix to have the given number of rows and columns
+    * If view = true (or View.Require), throws an exception if we cannot return a view. otherwise returns a view.
+    * If view == false (or View.Copy) returns a copy
+    * If view == View.Prefer (the default), returns a view if possible, otherwise returns a copy.
+    *
+    * Views are only possible (if(isTranspose) majorStride == cols else majorStride == rows) == true
+    *
+    * rows * cols must equal size, or cols < 0 && (size / rows * rows == size)
+    * @param rows the number of rows
+    * @param cols the number of columns, or -1 to auto determine based on size and rows
+    */
+  def reshape(rows: Int, cols: Int = -1, view: View=View.Prefer):DenseMatrix[V] = {
+    require(rows > 0)
+    val _cols = if(cols < 0) size / rows else cols
+    require(rows * _cols == size, "Cannot reshape a (%d,%d) matrix to a (%d,%d) matrix!".format(this.rows, this.cols, rows, _cols))
+
+    view match {
+      case View.Require =>
+        if(!canFlattenView)
+          throw new UnsupportedOperationException("Cannot make a view of this matrix.")
+        else
+          new DenseMatrix(rows, _cols, data, offset, if(isTranspose) cols else rows, isTranspose)
+      case View.Copy =>
+        copy.reshape(rows, _cols, false)
+      case View.Prefer =>
+        reshape(rows, cols, canFlattenView)
+    }
+  }
+
   def repr = this
 
   def activeIterator = iterator
