@@ -22,7 +22,6 @@ import org.scalatest.prop._;
 import org.scalacheck._;
 import org.junit.runner.RunWith
 
-import breeze.stats.DescriptiveStats._;
 
 @RunWith(classOf[JUnitRunner])
 class GammaTest extends FunSuite with Checkers with MomentsTestBase[Double] with ExpFamTest[Gamma,Double] {
@@ -60,6 +59,12 @@ class GammaTest extends FunSuite with Checkers with MomentsTestBase[Double] with
     val n=5.000000
     val ss = Gamma.SufficientStatistic(n, meanOfLogs, mean)
     val (k, theta) = Gamma.mle(ss)
+  }
+
+  test("logDraw for small values") {
+    val g = new Gamma(0.0001, 1)
+    val (m, v) =  breeze.linalg.meanAndVariance(Array.fill(100000)(g.logDraw()).map(math.exp _))
+    assert((paramsClose(m -> v, g.mean -> g.variance)), (m -> v) -> (g.mean -> g.variance))
   }
 
 

@@ -21,6 +21,7 @@ import breeze.numerics._
 import breeze.optimize.{LBFGS, DiffFunction}
 import breeze.linalg.DenseVector
 import math.pow
+import annotation.tailrec
 
 
 /**
@@ -91,31 +92,71 @@ case class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasi
   }
   */
 
+  def logDraw() = if (shape < 1) {
+    // adapted from numpy distributions.c which is Copyright 2005 Robert Kern (robert.kern@gmail.com) under BSD
+    @tailrec
+    def rec: Double = {
+      val u = rand.uniform.draw()
+      val v = -math.log(rand.uniform.draw())
+      val logU = log(u)
+      if ( logU <= math.log1p(-shape)) {
+        val logV = log(v)
+        val logX = logU / shape
+        if (logX <= logV)  logX
+        else rec
+      } else {
+        val y = -log((1-u)/shape)
+        val logX = math.log(1.0 - shape + shape*y)/shape
+        if (logX <= math.log(v + y)) logX
+        else rec
+      }
+    }
+    rec + math.log(scale)
+  } else math.log(draw)
+
   def draw() = {
     if(shape == 1.0) {
       scale * -math.log(rand.uniform.draw())
     } else if (shape < 1.0) {
-      val c = 1.0 + shape/scala.math.E
-      var d = c * rand.uniform.draw()
-      var ok = false
-      var x = 0.0
-      while(!ok) {
-        if (d >= 1.0) {
-          x = -log((c - d) / shape)
-          if (-math.log(rand.uniform.draw()) >= (1.0 - shape) * log(x)) {
-            x = (scale * x)
-            ok = true
-          }
+      // from numpy distributions.c which is Copyright 2005 Robert Kern (robert.kern@gmail.com) under BSD
+      @tailrec
+      def rec: Double = {
+        val u = rand.uniform.draw()
+        val v = -math.log(rand.uniform.draw())
+        if (u <= 1.0 - shape) {
+          val x = pow(u, 1.0 / shape)
+          if (x <= v)  x
+          else rec
         } else {
-          x = math.pow(d, 1.0/shape)
-          if (-math.log(rand.uniform.draw()) >= (1.0 - shape) * log(x)) {
-            x = scale * x
-            ok = true
-          }
+          val y = -log((1-u)/shape)
+          val x = pow(1.0 - shape + shape*y, 1.0 / shape)
+          if (x <= (v + y)) x
+          else rec
         }
-        d = c * rand.uniform.draw()
       }
-      x
+
+      scale * rec
+//      val c = 1.0 + shape/scala.math.E
+//      var d = c * rand.uniform.draw()
+//      var ok = false
+//      var x = 0.0
+//      while(!ok) {
+//        if (d >= 1.0) {
+//          x = -log((c - d) / shape)
+//          if (-math.log(rand.uniform.draw()) >= (1.0 - shape) * log(x)) {
+//            x = (scale * x)
+//            ok = true
+//          }
+//        } else {
+//          x = math.pow(d, 1.0/shape)
+//          if (-math.log(rand.uniform.draw()) >= (1.0 - shape) * log(x)) {
+//            x = scale * x
+//            ok = true
+//          }
+//        }
+//        d = c * rand.uniform.draw()
+//      }
+//      x
     } else {
       // from numpy distributions.c which is Copyright 2005 Robert Kern (robert.kern@gmail.com) under BSD
       val d = shape-1.0/3.0

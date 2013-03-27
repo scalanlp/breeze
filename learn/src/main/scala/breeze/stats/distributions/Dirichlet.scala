@@ -45,6 +45,15 @@ case class Dirichlet[T,@specialized(Int) I](params: T)(implicit space: TensorSpa
   }
 
   /**
+   * Returns logNormalized probabilities. Use this if you're worried about underflow
+   */
+  def logDraw() = {
+    val x = mapValues.mapActive(params, { (v:Double) => new Gamma(v,1).logDraw()})
+    x -= softmax(x)
+    x
+  }
+
+  /**
    * Returns the log pdf function of the Dirichlet up to a constant evaluated at m
    */
   override def unnormalizedLogPdf(m : T) = {
