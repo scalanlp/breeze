@@ -148,6 +148,10 @@ object FirstOrderMinimizer {
       this.iterations(f, init).last.x
     }
 
+    def minimize[T](f: DiffFunction[T], init: T)(implicit arith: MutableCoordinateSpace[T, Double]): T = {
+      this.iterations(f, init).last.x
+    }
+
     def iterations[T](f: BatchDiffFunction[T], init: T)(implicit arith: MutableCoordinateSpace[T, Double]): Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State] = {
       val it = if(useStochastic) {
          this.iterations(f.withRandomBatches(batchSize), init)(arith)
