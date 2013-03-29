@@ -1,4 +1,4 @@
-Breeze version 0.2
+Breeze version 0.3-SNAPSHOT
 
 Breeze is a library for numerical processing, machine learning, and natural language processing.
 Its primary focus is on being generic, clean, and powerful without sacrificing (much) efficiency.
@@ -34,6 +34,7 @@ Contributions from:
   Marc Millstone <splittingfield>
   Mérő László <laci37>
   Alexey Noskov <alno>
+  Devon Bryant <devonbryant>
 
   And others (email me if you've contributed code and aren't listed)
 
