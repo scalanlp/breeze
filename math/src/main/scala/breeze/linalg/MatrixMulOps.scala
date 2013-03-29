@@ -3,6 +3,7 @@ import java.util._
 import breeze.linalg.operators._
 import breeze.linalg.support._
 import breeze.math.Complex
+import breeze.math.Complex._
 import breeze.numerics._
 
 /** This is an auto-generated trait providing multiplication for Matrix */
