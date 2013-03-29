@@ -18,6 +18,7 @@ import org.scalatest._
 import org.scalatest.junit._
 import org.scalatest.prop._
 import org.junit.runner.RunWith
+import breeze.math.Complex
 
 @RunWith(classOf[JUnitRunner])
 class DenseMatrixTest extends FunSuite with Checkers {
@@ -299,6 +300,21 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
     val z : DenseMatrix[Float] = b * (b + 1.0f)
     assert(z === DenseMatrix((164.0f,5.0f,107.0f),(-5.0f,10.0f,-27.0f),(161.0f,-7.0f,138.0f)))
+  }
+  
+  test("Multiply Complex") {
+    val a = DenseMatrix((Complex(1,1), Complex(2,2), Complex(3,3)),
+                        (Complex(4,4), Complex(5,5), Complex(6,6)))
+    val b = DenseMatrix((Complex(7,7), Complex(-2,-2), Complex(8,8)),
+                        (Complex(-3,-3), Complex(-3,-3), Complex(1,1)),
+                        (Complex(12,12), Complex(0,0), Complex(5,5)))
+    val c = DenseVector(Complex(6,0), Complex(2,0), Complex(3,0))
+    val cs = SparseVector(Complex(6,0), Complex(2,0), Complex(3,0))
+    assert(a * b === DenseMatrix((Complex(0,74), Complex(0,-16), Complex(0,50)),
+                                 (Complex(0,170), Complex(0,-46), Complex(0,134))))
+    assert(b * c === DenseVector(Complex(62,62), Complex(-21,-21), Complex(87,87)))
+    assert(b * cs === DenseVector(Complex(62,62), Complex(-21,-21), Complex(87,87)))
+    assert(b.t * c === DenseVector(Complex(72,72), Complex(-18,-18), Complex(65,65)))
   }
 
   test("toDenseVector")  {

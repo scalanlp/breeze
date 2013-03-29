@@ -193,6 +193,10 @@ object Complex { outer =>
     val defaultArrayValue = DefaultArrayValue(Complex(0, 0))
 
   }
+  
+  implicit object ComplexDefaultArrayValue extends DefaultArrayValue[Complex] {
+    val value = Complex(0, 0)
+  }
 
   //
   // neg

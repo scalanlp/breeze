@@ -3,7 +3,9 @@ import java.util._
 import breeze.linalg.operators._
 import breeze.linalg.support._
 import breeze.math.Complex
+import breeze.math.Complex._
 import breeze.numerics._
+import breeze.storage.DefaultArrayValue._
 
 /** This is an auto-generated trait providing multiplication for DenseMatrix */
 trait DenseMatrixMultOps_Double extends DenseMatrixOps_Double { this: DenseMatrix.type =>

@@ -330,6 +330,7 @@ object GenDenseOps extends App {
     println("import breeze.linalg.operators._")
     println("import breeze.linalg.support._")
     println("import breeze.math.Complex")
+    println("import breeze.math.Complex._")
     println("import breeze.numerics._")
 
     for( (scalar,ops) <- GenOperators.ops) {
@@ -517,6 +518,7 @@ object GenDVSVSpecialOps extends App {
     println("import breeze.linalg.operators._")
     println("import breeze.linalg.support._")
     println("import breeze.math.Complex")
+    println("import breeze.math.Complex._")
     println("import breeze.numerics._")
 
     for( (scalar,ops) <- GenOperators.ops) {
@@ -912,6 +914,7 @@ object GenSVOps extends App {
     println("import breeze.linalg.operators._")
     println("import breeze.linalg.support._")
     println("import breeze.math.Complex")
+    println("import breeze.math.Complex._")
     println("import breeze.numerics._")
 
     for( (scalar,ops) <- GenOperators.ops) {
@@ -1050,6 +1053,7 @@ object GenVectorRegistries extends App {
     println("import breeze.linalg.operators._")
     println("import breeze.linalg.support._")
     println("import breeze.math.Complex")
+    println("import breeze.math.Complex._")
     println("import breeze.numerics._")
 
     import GenOperators._
@@ -1164,6 +1168,7 @@ object GenCSCOps extends App {
     println("import breeze.linalg.operators._")
     println("import breeze.linalg.support._")
     println("import breeze.math.Complex")
+    println("import breeze.math.Complex._")
     println("import breeze.numerics._")
 
     for( (scalar,ops) <- GenOperators.ops) {
@@ -1300,7 +1305,9 @@ object GenDMMultOps extends App {
     println("import breeze.linalg.operators._")
     println("import breeze.linalg.support._")
     println("import breeze.math.Complex")
+    println("import breeze.math.Complex._")
     println("import breeze.numerics._")
+    println("import breeze.storage.DefaultArrayValue._")
 
     for( (scalar,ops) <- GenOperators.ops) {
       println()
@@ -1373,6 +1380,7 @@ object GenMatrixMultOps extends App {
     println("import breeze.linalg.operators._")
     println("import breeze.linalg.support._")
     println("import breeze.math.Complex")
+    println("import breeze.math.Complex._")
     println("import breeze.numerics._")
 
     for( (scalar,ops) <- GenOperators.ops) {

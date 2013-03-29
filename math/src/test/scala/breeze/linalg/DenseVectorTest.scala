@@ -5,7 +5,7 @@ import org.scalatest._
 import org.scalatest.junit._
 import org.scalatest.prop._
 import org.junit.runner.RunWith
-import breeze.math.{DoubleValuedTensorSpaceTestBase, TensorSpace, TensorSpaceTestBase}
+import breeze.math.{Complex, DoubleValuedTensorSpaceTestBase, TensorSpace, TensorSpaceTestBase}
 import java.util
 
 /**
@@ -19,6 +19,9 @@ class DenseVectorTest extends FunSuite with Checkers {
 
   def assertClose(a: Double, b: Double) =
     assert(math.abs(a - b) < TOLERANCE)
+    
+  def assertClose(a: Complex, b: Complex) =
+    assert(math.abs(a.real - b.real) < TOLERANCE && math.abs(a.imag - b.imag) < TOLERANCE)
 
   test("Can raise IntegerVector by Integer") {
     val v = DenseVector(2, 0, 3, 2, -1)
@@ -36,6 +39,15 @@ class DenseVectorTest extends FunSuite with Checkers {
     val v = DenseVector(2f, 0f, 3f, 2f, -1f)
     val w = v :^ 2f
     assert(w == DenseVector(4f, 0f, 9f, 4f, 1f))
+  }
+  
+  test("Can raise ComplexVector by Complex") {
+    val v = DenseVector(Complex(0,0), Complex(1,1), Complex(2,2), Complex(-1,-1))
+    val w = v :^ Complex(2,0)
+    assertClose(w(0), Complex(0,0))
+    assertClose(w(1), Complex(0,2))
+    assertClose(w(2), Complex(0,8))
+    assertClose(w(3), Complex(0,2))
   }
 
   test("Min/Max") {
@@ -210,6 +222,14 @@ class DenseVectorTest extends FunSuite with Checkers {
     val mav: DenseVector[Float] = a.mapActiveValues(_ + 1f)
     assert(mv === DenseVector(2f, 3f, 4f, 5f, 6f))
     assert(mav === DenseVector(2f, 3f, 4f, 5f, 6f))
+  }
+  
+  test("Map(Active)Values Complex") {
+    val a: DenseVector[Complex] = DenseVector(Complex(1,1), Complex(2,2))
+    val mv: DenseVector[Complex] = a.mapValues(_ + Complex(1,1))
+    val mav: DenseVector[Complex] = a.mapActiveValues(_ + Complex(1,1))
+    assert(mv === DenseVector(Complex(2,2), Complex(3,3)))
+    assert(mav === DenseVector(Complex(2,2), Complex(3,3)))
   }
 
   test("ForComprehensions") {

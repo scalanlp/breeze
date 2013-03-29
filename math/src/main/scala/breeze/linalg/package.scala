@@ -144,7 +144,7 @@ package object linalg extends LinearAlgebra {
    * Normalizes the argument such that its norm is 1.0 (with respect to the argument n).
    * Returns value if value's norm is 0.
    */
-  def normalize[T, U>:T](t: T, n: Double = 2)(implicit div: BinaryOp[T, Double, OpDiv, U], canNorm: CanNorm[T]): U = {
+  def normalize[T, U>:T](t: T, n: Double = 2)(implicit div: BinaryOp[T, Double, OpDiv, U], canNorm: CanNorm[T], dav: DefaultArrayValue[T]): U = {
     val norm = canNorm(t, n)
     if(norm == 0) t
     else div(t,norm)
@@ -155,7 +155,8 @@ package object linalg extends LinearAlgebra {
    * Each column is unchanged if it's norm is 0
    */
   def normalize[T, Axis, V, Result](value: T, axis: Axis, n: Double)(implicit  collapse: CanCollapseAxis[T, Axis, V, V, Result],
-                                                                     div: BinaryOp[V, Double, OpDiv, V], canNorm: CanNorm[V]):Result = {
+                                                                     div: BinaryOp[V, Double, OpDiv, V], canNorm: CanNorm[V],
+                                                                     dav: DefaultArrayValue[V]):Result = {
     collapse(value, axis)(v => normalize[V, V](v, n))
   }
 

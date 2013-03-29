@@ -151,7 +151,11 @@ class CSCMatrix[@specialized(Int, Float, Double) V:DefaultArrayValue] private[li
   override def toString: String = toString(maxLines = Terminal.terminalHeight - 3)
 }
 
-object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps_Int with CSCMatrixOps_Float with CSCMatrixOps_Double  {
+object CSCMatrix extends MatrixConstructors[CSCMatrix] 
+                         with CSCMatrixOps_Int 
+                         with CSCMatrixOps_Float 
+                         with CSCMatrixOps_Double
+                         with CSCMatrixOps_Complex {
   def zeros[@specialized(Int, Float, Double) V:ClassManifest:DefaultArrayValue](rows: Int, cols: Int, initialNonzero: Int = 0) = {
     new CSCMatrix[V](new Array(initialNonzero), rows, cols, new Array(cols + 1), 0, new Array(initialNonzero))
   }

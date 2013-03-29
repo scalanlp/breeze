@@ -211,7 +211,9 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
                       with DenseVectorOps_HashVector_Int
                       with DenseVectorOps_HashVector_Complex
                       with DenseVector_SpecialOps {
-  def zeros[@spec(Double, Float, Int) V: ClassManifest](size: Int) = apply(new Array[V](size))
+  def zeros[@spec(Double, Float, Int) V: ClassManifest : DefaultArrayValue](size: Int) = {
+    apply(Array.fill(size) { implicitly[DefaultArrayValue[V]].value })
+  }
   def apply[@spec(Double, Float, Int) V](values: Array[V]) = new DenseVector(values)
   def ones[@spec(Double, Float, Int) V: ClassManifest:Semiring](size: Int) = {
     val r = apply(new Array[V](size))
@@ -239,7 +241,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   /**
    * Vertical concatenation of two or more column vectors into one large vector.
    */
-  def vertcat[V](vectors: DenseVector[V]*)(implicit canSet: BinaryUpdateOp[DenseVector[V], DenseVector[V], OpSet], vman: ClassManifest[V]): DenseVector[V] = {
+  def vertcat[V](vectors: DenseVector[V]*)(implicit canSet: BinaryUpdateOp[DenseVector[V], DenseVector[V], OpSet], vman: ClassManifest[V], dav: DefaultArrayValue[V]): DenseVector[V] = {
     val size = vectors.foldLeft(0)(_ + _.size)
     val result = zeros[V](size)
     var offset = 0
@@ -252,7 +254,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
 
   // capabilities
 
-  implicit def canCreateZerosLike[V:ClassManifest] = new CanCreateZerosLike[DenseVector[V], DenseVector[V]] {
+  implicit def canCreateZerosLike[V:ClassManifest:DefaultArrayValue] = new CanCreateZerosLike[DenseVector[V], DenseVector[V]] {
     def apply(v1: DenseVector[V]) = {
       zeros[V](v1.length)
     }

@@ -21,7 +21,7 @@ import breeze.math.{TensorSpace, Ring, Field}
 import collection.immutable.BitSet
 import support.{CanZipMapValues, CanCopy}
 import util.Random
-import breeze.storage.Storage
+import breeze.storage.{DefaultArrayValue, Storage}
 
 /**
  * Trait for operators and such used in vectors.
@@ -103,7 +103,10 @@ trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]]{
 
 }
 
-object Vector extends VectorOps_Int with VectorOps_Double with VectorOps_Float with VectorOps_Complex {
+object Vector extends VectorOps_Int 
+                      with VectorOps_Double 
+                      with VectorOps_Float 
+                      with VectorOps_Complex {
 
   implicit def canCopy[E]:CanCopy[Vector[E]] = new CanCopy[Vector[E]] {
     // Should not inherit from T=>T because those get  used by the compiler.
@@ -174,7 +177,7 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @tparam V
    * @return
    */
-  def zeros[V:ClassManifest](size: Int):Vec[V]
+  def zeros[V:ClassManifest:DefaultArrayValue](size: Int):Vec[V]
 
   /**
    * Creates a vector with the specified elements
