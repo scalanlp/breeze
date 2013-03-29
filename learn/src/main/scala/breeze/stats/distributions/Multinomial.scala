@@ -21,6 +21,7 @@ import breeze.linalg._
 import breeze.math.{TensorSpace, MutableCoordinateSpace}
 import breeze.numerics._
 import breeze.numerics
+import breeze.storage.DefaultArrayValue
 
 /**
  * Represents a Multinomial distribution over elements.
@@ -68,7 +69,7 @@ case class Multinomial[T,I](params: T)(implicit ev: T=>QuasiTensor[I, Double], r
  */
 object Multinomial {
 
-  class ExpFam[T,I](exemplar: T)(implicit space: TensorSpace[T, I, Double]) extends ExponentialFamily[Multinomial[T,I],I] with HasConjugatePrior[Multinomial[T,I],I] {
+  class ExpFam[T,I](exemplar: T)(implicit space: TensorSpace[T, I, Double], dav: DefaultArrayValue[T]) extends ExponentialFamily[Multinomial[T,I],I] with HasConjugatePrior[Multinomial[T,I],I] {
 
     import space._
     type ConjugatePrior = Dirichlet[T,I]
