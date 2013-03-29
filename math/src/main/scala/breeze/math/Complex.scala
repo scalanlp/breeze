@@ -18,7 +18,7 @@ import breeze.linalg.operators._
 import breeze.storage.DefaultArrayValue
 
 /**
- * Immutable complex numbex number representation backed by doubles
+ * Immutable complex number representation backed by doubles
  * for the real and imaginary parts.
  *
  * Integration with `scala.math.Numeric` and `scala.math.Fractional` is
@@ -101,6 +101,24 @@ case class Complex(real : Double, imag : Double) {
 
   def conjugate =
     Complex(real, -imag)
+    
+  def log = 
+    Complex(math.log(abs), math.atan2(imag, real))
+  
+  def pow(b: Double): Complex = pow(Complex(b, 0))
+  
+  def pow(b: Complex): Complex = {
+    if (b == Complex.zero) Complex.one
+    else if (this == Complex.zero) {
+      if (b.imag != 0.0 || b.real < 0.0) Complex.nan
+      else Complex.zero
+    }
+    else {
+      val c = log * b
+      val expReal = math.exp(c.real)
+      Complex(expReal * math.cos(c.imag), expReal * math.sin(c.imag))
+    }
+  }
 
   override def equals(that : Any) = that match {
     case that : Complex => this.real == that.real && this.imag == that.imag
@@ -174,6 +192,10 @@ object Complex { outer =>
 
     val defaultArrayValue = DefaultArrayValue(Complex(0, 0))
 
+  }
+  
+  implicit object ComplexDefaultArrayValue extends DefaultArrayValue[Complex] {
+    val value = Complex(0, 0)
   }
 
   //

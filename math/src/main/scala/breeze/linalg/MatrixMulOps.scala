@@ -2,6 +2,8 @@ package breeze.linalg
 import java.util._
 import breeze.linalg.operators._
 import breeze.linalg.support._
+import breeze.math.Complex
+import breeze.math.Complex._
 import breeze.numerics._
 
 /** This is an auto-generated trait providing multiplication for Matrix */
@@ -180,6 +182,66 @@ trait MatrixMultOps_Int { this: Matrix.type =>
   val canMulM_M_Int = new canMulM_M_Int()
   implicit def canMulM_M_Int_def[A <: Matrix[Int], B <: Matrix[Int]]:BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Matrix[Int]] = (
     canMulM_M_Int.asInstanceOf[BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Matrix[Int]]]
+  )
+    
+}
+
+/** This is an auto-generated trait providing multiplication for Matrix */
+trait MatrixMultOps_Complex { this: Matrix.type =>
+
+  class canMulM_V_Complex private[linalg] () extends BinaryRegistry[Matrix[Complex], Vector[Complex], breeze.linalg.operators.OpMulMatrix, Vector[Complex]] {
+    override def bindingMissing(a: Matrix[Complex], b: Vector[Complex]) = {
+      
+      // TODO: this could probably be much faster?
+      require(a.cols == b.length)
+      val res = DenseVector.zeros[Complex](a.rows)
+      var c = 0
+      while(c < a.cols) {
+        var r = 0
+        while (r < a.rows) {
+          val v = a(r, c)
+          res(r) += v * b(c)
+          r += 1
+        }
+        c += 1
+      }
+
+      res                                                               
+    }
+  };
+  val canMulM_V_Complex = new canMulM_V_Complex()
+  implicit def canMulM_V_Complex_def[A <: Matrix[Complex], B <: Vector[Complex]]:BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Vector[Complex]] = (
+    canMulM_V_Complex.asInstanceOf[BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Vector[Complex]]]
+  )
+    
+
+  class canMulM_M_Complex private[linalg] () extends BinaryRegistry[Matrix[Complex], Matrix[Complex], breeze.linalg.operators.OpMulMatrix, Matrix[Complex]] {
+    override def bindingMissing(a: Matrix[Complex], b: Matrix[Complex]) = {
+      
+      // TODO: this could probably be much faster
+      val res = DenseMatrix.zeros[Complex](a.rows, b.cols)
+      require(a.cols == b.rows)
+      var c = 0
+      while(c < a.cols) {
+        var r = 0
+        while (r < a.rows) {
+          val v = a(r, c)
+          var j = 0
+          while(j < b.cols) {
+            res(r, j) += v * b(c, j)
+            j += 1
+          }
+          r += 1
+        }
+        c += 1
+      }
+
+      res                                                               
+    }
+  };
+  val canMulM_M_Complex = new canMulM_M_Complex()
+  implicit def canMulM_M_Complex_def[A <: Matrix[Complex], B <: Matrix[Complex]]:BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Matrix[Complex]] = (
+    canMulM_M_Complex.asInstanceOf[BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Matrix[Complex]]]
   )
     
 }

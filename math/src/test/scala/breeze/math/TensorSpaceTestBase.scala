@@ -124,9 +124,10 @@ trait TensorSpaceTestBase[V, I, S] extends MutableVectorSpaceTestBase[V, S] with
 
 }
 
-trait DoubleValuedTensorSpaceTestBase[V, I] extends TensorSpaceTestBase[V, I, Double] {
+trait DoubleValuedTensorSpaceTestBase[V <: breeze.linalg.Vector[Double], I] extends TensorSpaceTestBase[V, I, Double] {
     // normalization
   import space._
+  
   test("normalization sets appropriate norm to 1") {
     check(Prop.forAll{ (trip: (V, V, V), n: Double) =>
       val (a, b, c) = trip

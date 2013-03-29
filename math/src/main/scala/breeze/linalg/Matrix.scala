@@ -128,7 +128,8 @@ trait Matrix[@spec(Int, Float, Double) E] extends MatrixLike[E, Matrix[E]] {
 object Matrix extends MatrixConstructors[Matrix]
                       with MatrixMultOps_Double
                       with MatrixMultOps_Float
-                      with MatrixMultOps_Int {
+                      with MatrixMultOps_Int
+                      with MatrixMultOps_Complex {
   def zeros[@specialized(Int, Float, Double) V: ClassManifest:DefaultArrayValue](rows: Int, cols: Int): Matrix[V] = DenseMatrix.zeros(rows, cols)
 
   def create[@specialized(Int, Float, Double) V:DefaultArrayValue](rows: Int, cols: Int, data: Array[V]): Matrix[V] = DenseMatrix.create(rows, cols, data)

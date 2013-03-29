@@ -33,7 +33,7 @@ object DefaultArrayValue {
     if(clazz == Integer.TYPE) IntDefaultArrayValue
     else if (clazz == java.lang.Float.TYPE) FloatDefaultArrayValue
     else if (clazz == java.lang.Double.TYPE) DoubleDefaultArrayValue
-    else if (clazz == java.lang.Short.TYPE) ShortDefaultArrayValue
+//    else if (clazz == java.lang.Short.TYPE) ShortDefaultArrayValue
     else if (clazz == java.lang.Byte.TYPE) ByteDefaultArrayValue
     else if (clazz == java.lang.Boolean.TYPE) BooleanDefaultArrayValue
     else if (clazz == java.lang.Character.TYPE) CharDefaultArrayValue
