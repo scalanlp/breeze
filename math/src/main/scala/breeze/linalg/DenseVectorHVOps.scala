@@ -8,6 +8,31 @@ import breeze.numerics._
 /** This is an auto-generated trait providing operators for DenseVector and HashVector*/
 trait DenseVectorOps_HashVector_Double { this: DenseVector.type =>
 
+  class canDivInto_DV_HashVector_Double private[linalg] () extends BinaryUpdateOp[DenseVector[Double], HashVector[Double], breeze.linalg.operators.OpDiv] {
+    def apply(a: DenseVector[Double], b: HashVector[Double]) {
+      require(b.length == a.length, "Vectors must be the same length!")
+
+        val adata = a.data
+        var j = a.offset
+        val astride = a.stride
+
+        var i = 0
+        while(i < b.length) {
+          adata(j) = adata(j) / b(i)
+          i += 1
+          j += astride
+        }
+        
+    }
+  }
+  implicit val canDivInto_DV_HashVector_Double = new canDivInto_DV_HashVector_Double ()
+    
+  Vector.canDivInto_V_V_Double.register(canDivInto_DV_HashVector_Double)
+
+  implicit val canDiv_DV_HashVector_Double: BinaryOp[DenseVector[Double], HashVector[Double], breeze.linalg.operators.OpDiv, DenseVector[Double]] = pureFromUpdate_Double(canDivInto_DV_HashVector_Double)
+  Vector.canDiv_V_V_Double.register(canDiv_DV_HashVector_Double)
+
+
   class canSubInto_DV_HashVector_Double private[linalg] () extends BinaryUpdateOp[DenseVector[Double], HashVector[Double], breeze.linalg.operators.OpSub] {
     def apply(a: DenseVector[Double], b: HashVector[Double]) {
       require(b.length == a.length, "Vectors must be the same length!")
@@ -39,7 +64,7 @@ trait DenseVectorOps_HashVector_Double { this: DenseVector.type =>
   Vector.canSub_V_V_Double.register(canSub_DV_HashVector_Double)
 
 
-  class canModInto_DV_HashVector_Double private[linalg] () extends BinaryUpdateOp[DenseVector[Double], HashVector[Double], breeze.linalg.operators.OpMod] {
+  class canSetInto_DV_HashVector_Double private[linalg] () extends BinaryUpdateOp[DenseVector[Double], HashVector[Double], breeze.linalg.operators.OpSet] {
     def apply(a: DenseVector[Double], b: HashVector[Double]) {
       require(b.length == a.length, "Vectors must be the same length!")
 
@@ -49,19 +74,19 @@ trait DenseVectorOps_HashVector_Double { this: DenseVector.type =>
 
         var i = 0
         while(i < b.length) {
-          adata(j) = adata(j) % b(i)
+          adata(j) = b(i)
           i += 1
           j += astride
         }
         
     }
   }
-  implicit val canModInto_DV_HashVector_Double = new canModInto_DV_HashVector_Double ()
+  implicit val canSetInto_DV_HashVector_Double = new canSetInto_DV_HashVector_Double ()
     
-  Vector.canModInto_V_V_Double.register(canModInto_DV_HashVector_Double)
+  Vector.canSetInto_V_V_Double.register(canSetInto_DV_HashVector_Double)
 
-  implicit val canMod_DV_HashVector_Double: BinaryOp[DenseVector[Double], HashVector[Double], breeze.linalg.operators.OpMod, DenseVector[Double]] = pureFromUpdate_Double(canModInto_DV_HashVector_Double)
-  Vector.canMod_V_V_Double.register(canMod_DV_HashVector_Double)
+  implicit val canSet_DV_HashVector_Double: BinaryOp[DenseVector[Double], HashVector[Double], breeze.linalg.operators.OpSet, DenseVector[Double]] = pureFromUpdate_Double(canSetInto_DV_HashVector_Double)
+  Vector.canSet_V_V_Double.register(canSet_DV_HashVector_Double)
 
 
   class canAddInto_DV_HashVector_Double private[linalg] () extends BinaryUpdateOp[DenseVector[Double], HashVector[Double], breeze.linalg.operators.OpAdd] {
@@ -145,7 +170,7 @@ trait DenseVectorOps_HashVector_Double { this: DenseVector.type =>
   Vector.canMulScalar_V_V_Double.register(canMulScalar_DV_HashVector_Double)
 
 
-  class canDivInto_DV_HashVector_Double private[linalg] () extends BinaryUpdateOp[DenseVector[Double], HashVector[Double], breeze.linalg.operators.OpDiv] {
+  class canModInto_DV_HashVector_Double private[linalg] () extends BinaryUpdateOp[DenseVector[Double], HashVector[Double], breeze.linalg.operators.OpMod] {
     def apply(a: DenseVector[Double], b: HashVector[Double]) {
       require(b.length == a.length, "Vectors must be the same length!")
 
@@ -155,44 +180,19 @@ trait DenseVectorOps_HashVector_Double { this: DenseVector.type =>
 
         var i = 0
         while(i < b.length) {
-          adata(j) = adata(j) / b(i)
+          adata(j) = adata(j) % b(i)
           i += 1
           j += astride
         }
         
     }
   }
-  implicit val canDivInto_DV_HashVector_Double = new canDivInto_DV_HashVector_Double ()
+  implicit val canModInto_DV_HashVector_Double = new canModInto_DV_HashVector_Double ()
     
-  Vector.canDivInto_V_V_Double.register(canDivInto_DV_HashVector_Double)
+  Vector.canModInto_V_V_Double.register(canModInto_DV_HashVector_Double)
 
-  implicit val canDiv_DV_HashVector_Double: BinaryOp[DenseVector[Double], HashVector[Double], breeze.linalg.operators.OpDiv, DenseVector[Double]] = pureFromUpdate_Double(canDivInto_DV_HashVector_Double)
-  Vector.canDiv_V_V_Double.register(canDiv_DV_HashVector_Double)
-
-
-  class canSetInto_DV_HashVector_Double private[linalg] () extends BinaryUpdateOp[DenseVector[Double], HashVector[Double], breeze.linalg.operators.OpSet] {
-    def apply(a: DenseVector[Double], b: HashVector[Double]) {
-      require(b.length == a.length, "Vectors must be the same length!")
-
-        val adata = a.data
-        var j = a.offset
-        val astride = a.stride
-
-        var i = 0
-        while(i < b.length) {
-          adata(j) = b(i)
-          i += 1
-          j += astride
-        }
-        
-    }
-  }
-  implicit val canSetInto_DV_HashVector_Double = new canSetInto_DV_HashVector_Double ()
-    
-  Vector.canSetInto_V_V_Double.register(canSetInto_DV_HashVector_Double)
-
-  implicit val canSet_DV_HashVector_Double: BinaryOp[DenseVector[Double], HashVector[Double], breeze.linalg.operators.OpSet, DenseVector[Double]] = pureFromUpdate_Double(canSetInto_DV_HashVector_Double)
-  Vector.canSet_V_V_Double.register(canSet_DV_HashVector_Double)
+  implicit val canMod_DV_HashVector_Double: BinaryOp[DenseVector[Double], HashVector[Double], breeze.linalg.operators.OpMod, DenseVector[Double]] = pureFromUpdate_Double(canModInto_DV_HashVector_Double)
+  Vector.canMod_V_V_Double.register(canMod_DV_HashVector_Double)
 
 
    class canDotProductDV_HV_Double private[linalg] () extends BinaryOp[DenseVector[Double], HashVector[Double], breeze.linalg.operators.OpMulInner, Double] {
@@ -266,6 +266,31 @@ trait DenseVectorOps_HashVector_Double { this: DenseVector.type =>
 /** This is an auto-generated trait providing operators for DenseVector and HashVector*/
 trait DenseVectorOps_HashVector_Float { this: DenseVector.type =>
 
+  class canDivInto_DV_HashVector_Float private[linalg] () extends BinaryUpdateOp[DenseVector[Float], HashVector[Float], breeze.linalg.operators.OpDiv] {
+    def apply(a: DenseVector[Float], b: HashVector[Float]) {
+      require(b.length == a.length, "Vectors must be the same length!")
+
+        val adata = a.data
+        var j = a.offset
+        val astride = a.stride
+
+        var i = 0
+        while(i < b.length) {
+          adata(j) = adata(j) / b(i)
+          i += 1
+          j += astride
+        }
+        
+    }
+  }
+  implicit val canDivInto_DV_HashVector_Float = new canDivInto_DV_HashVector_Float ()
+    
+  Vector.canDivInto_V_V_Float.register(canDivInto_DV_HashVector_Float)
+
+  implicit val canDiv_DV_HashVector_Float: BinaryOp[DenseVector[Float], HashVector[Float], breeze.linalg.operators.OpDiv, DenseVector[Float]] = pureFromUpdate_Float(canDivInto_DV_HashVector_Float)
+  Vector.canDiv_V_V_Float.register(canDiv_DV_HashVector_Float)
+
+
   class canSubInto_DV_HashVector_Float private[linalg] () extends BinaryUpdateOp[DenseVector[Float], HashVector[Float], breeze.linalg.operators.OpSub] {
     def apply(a: DenseVector[Float], b: HashVector[Float]) {
       require(b.length == a.length, "Vectors must be the same length!")
@@ -297,7 +322,7 @@ trait DenseVectorOps_HashVector_Float { this: DenseVector.type =>
   Vector.canSub_V_V_Float.register(canSub_DV_HashVector_Float)
 
 
-  class canModInto_DV_HashVector_Float private[linalg] () extends BinaryUpdateOp[DenseVector[Float], HashVector[Float], breeze.linalg.operators.OpMod] {
+  class canSetInto_DV_HashVector_Float private[linalg] () extends BinaryUpdateOp[DenseVector[Float], HashVector[Float], breeze.linalg.operators.OpSet] {
     def apply(a: DenseVector[Float], b: HashVector[Float]) {
       require(b.length == a.length, "Vectors must be the same length!")
 
@@ -307,19 +332,19 @@ trait DenseVectorOps_HashVector_Float { this: DenseVector.type =>
 
         var i = 0
         while(i < b.length) {
-          adata(j) = adata(j) % b(i)
+          adata(j) = b(i)
           i += 1
           j += astride
         }
         
     }
   }
-  implicit val canModInto_DV_HashVector_Float = new canModInto_DV_HashVector_Float ()
+  implicit val canSetInto_DV_HashVector_Float = new canSetInto_DV_HashVector_Float ()
     
-  Vector.canModInto_V_V_Float.register(canModInto_DV_HashVector_Float)
+  Vector.canSetInto_V_V_Float.register(canSetInto_DV_HashVector_Float)
 
-  implicit val canMod_DV_HashVector_Float: BinaryOp[DenseVector[Float], HashVector[Float], breeze.linalg.operators.OpMod, DenseVector[Float]] = pureFromUpdate_Float(canModInto_DV_HashVector_Float)
-  Vector.canMod_V_V_Float.register(canMod_DV_HashVector_Float)
+  implicit val canSet_DV_HashVector_Float: BinaryOp[DenseVector[Float], HashVector[Float], breeze.linalg.operators.OpSet, DenseVector[Float]] = pureFromUpdate_Float(canSetInto_DV_HashVector_Float)
+  Vector.canSet_V_V_Float.register(canSet_DV_HashVector_Float)
 
 
   class canAddInto_DV_HashVector_Float private[linalg] () extends BinaryUpdateOp[DenseVector[Float], HashVector[Float], breeze.linalg.operators.OpAdd] {
@@ -403,7 +428,7 @@ trait DenseVectorOps_HashVector_Float { this: DenseVector.type =>
   Vector.canMulScalar_V_V_Float.register(canMulScalar_DV_HashVector_Float)
 
 
-  class canDivInto_DV_HashVector_Float private[linalg] () extends BinaryUpdateOp[DenseVector[Float], HashVector[Float], breeze.linalg.operators.OpDiv] {
+  class canModInto_DV_HashVector_Float private[linalg] () extends BinaryUpdateOp[DenseVector[Float], HashVector[Float], breeze.linalg.operators.OpMod] {
     def apply(a: DenseVector[Float], b: HashVector[Float]) {
       require(b.length == a.length, "Vectors must be the same length!")
 
@@ -413,44 +438,19 @@ trait DenseVectorOps_HashVector_Float { this: DenseVector.type =>
 
         var i = 0
         while(i < b.length) {
-          adata(j) = adata(j) / b(i)
+          adata(j) = adata(j) % b(i)
           i += 1
           j += astride
         }
         
     }
   }
-  implicit val canDivInto_DV_HashVector_Float = new canDivInto_DV_HashVector_Float ()
+  implicit val canModInto_DV_HashVector_Float = new canModInto_DV_HashVector_Float ()
     
-  Vector.canDivInto_V_V_Float.register(canDivInto_DV_HashVector_Float)
+  Vector.canModInto_V_V_Float.register(canModInto_DV_HashVector_Float)
 
-  implicit val canDiv_DV_HashVector_Float: BinaryOp[DenseVector[Float], HashVector[Float], breeze.linalg.operators.OpDiv, DenseVector[Float]] = pureFromUpdate_Float(canDivInto_DV_HashVector_Float)
-  Vector.canDiv_V_V_Float.register(canDiv_DV_HashVector_Float)
-
-
-  class canSetInto_DV_HashVector_Float private[linalg] () extends BinaryUpdateOp[DenseVector[Float], HashVector[Float], breeze.linalg.operators.OpSet] {
-    def apply(a: DenseVector[Float], b: HashVector[Float]) {
-      require(b.length == a.length, "Vectors must be the same length!")
-
-        val adata = a.data
-        var j = a.offset
-        val astride = a.stride
-
-        var i = 0
-        while(i < b.length) {
-          adata(j) = b(i)
-          i += 1
-          j += astride
-        }
-        
-    }
-  }
-  implicit val canSetInto_DV_HashVector_Float = new canSetInto_DV_HashVector_Float ()
-    
-  Vector.canSetInto_V_V_Float.register(canSetInto_DV_HashVector_Float)
-
-  implicit val canSet_DV_HashVector_Float: BinaryOp[DenseVector[Float], HashVector[Float], breeze.linalg.operators.OpSet, DenseVector[Float]] = pureFromUpdate_Float(canSetInto_DV_HashVector_Float)
-  Vector.canSet_V_V_Float.register(canSet_DV_HashVector_Float)
+  implicit val canMod_DV_HashVector_Float: BinaryOp[DenseVector[Float], HashVector[Float], breeze.linalg.operators.OpMod, DenseVector[Float]] = pureFromUpdate_Float(canModInto_DV_HashVector_Float)
+  Vector.canMod_V_V_Float.register(canMod_DV_HashVector_Float)
 
 
    class canDotProductDV_HV_Float private[linalg] () extends BinaryOp[DenseVector[Float], HashVector[Float], breeze.linalg.operators.OpMulInner, Float] {
@@ -524,6 +524,31 @@ trait DenseVectorOps_HashVector_Float { this: DenseVector.type =>
 /** This is an auto-generated trait providing operators for DenseVector and HashVector*/
 trait DenseVectorOps_HashVector_Int { this: DenseVector.type =>
 
+  class canDivInto_DV_HashVector_Int private[linalg] () extends BinaryUpdateOp[DenseVector[Int], HashVector[Int], breeze.linalg.operators.OpDiv] {
+    def apply(a: DenseVector[Int], b: HashVector[Int]) {
+      require(b.length == a.length, "Vectors must be the same length!")
+
+        val adata = a.data
+        var j = a.offset
+        val astride = a.stride
+
+        var i = 0
+        while(i < b.length) {
+          adata(j) = adata(j) / b(i)
+          i += 1
+          j += astride
+        }
+        
+    }
+  }
+  implicit val canDivInto_DV_HashVector_Int = new canDivInto_DV_HashVector_Int ()
+    
+  Vector.canDivInto_V_V_Int.register(canDivInto_DV_HashVector_Int)
+
+  implicit val canDiv_DV_HashVector_Int: BinaryOp[DenseVector[Int], HashVector[Int], breeze.linalg.operators.OpDiv, DenseVector[Int]] = pureFromUpdate_Int(canDivInto_DV_HashVector_Int)
+  Vector.canDiv_V_V_Int.register(canDiv_DV_HashVector_Int)
+
+
   class canSubInto_DV_HashVector_Int private[linalg] () extends BinaryUpdateOp[DenseVector[Int], HashVector[Int], breeze.linalg.operators.OpSub] {
     def apply(a: DenseVector[Int], b: HashVector[Int]) {
       require(b.length == a.length, "Vectors must be the same length!")
@@ -555,7 +580,7 @@ trait DenseVectorOps_HashVector_Int { this: DenseVector.type =>
   Vector.canSub_V_V_Int.register(canSub_DV_HashVector_Int)
 
 
-  class canModInto_DV_HashVector_Int private[linalg] () extends BinaryUpdateOp[DenseVector[Int], HashVector[Int], breeze.linalg.operators.OpMod] {
+  class canSetInto_DV_HashVector_Int private[linalg] () extends BinaryUpdateOp[DenseVector[Int], HashVector[Int], breeze.linalg.operators.OpSet] {
     def apply(a: DenseVector[Int], b: HashVector[Int]) {
       require(b.length == a.length, "Vectors must be the same length!")
 
@@ -565,19 +590,19 @@ trait DenseVectorOps_HashVector_Int { this: DenseVector.type =>
 
         var i = 0
         while(i < b.length) {
-          adata(j) = adata(j) % b(i)
+          adata(j) = b(i)
           i += 1
           j += astride
         }
         
     }
   }
-  implicit val canModInto_DV_HashVector_Int = new canModInto_DV_HashVector_Int ()
+  implicit val canSetInto_DV_HashVector_Int = new canSetInto_DV_HashVector_Int ()
     
-  Vector.canModInto_V_V_Int.register(canModInto_DV_HashVector_Int)
+  Vector.canSetInto_V_V_Int.register(canSetInto_DV_HashVector_Int)
 
-  implicit val canMod_DV_HashVector_Int: BinaryOp[DenseVector[Int], HashVector[Int], breeze.linalg.operators.OpMod, DenseVector[Int]] = pureFromUpdate_Int(canModInto_DV_HashVector_Int)
-  Vector.canMod_V_V_Int.register(canMod_DV_HashVector_Int)
+  implicit val canSet_DV_HashVector_Int: BinaryOp[DenseVector[Int], HashVector[Int], breeze.linalg.operators.OpSet, DenseVector[Int]] = pureFromUpdate_Int(canSetInto_DV_HashVector_Int)
+  Vector.canSet_V_V_Int.register(canSet_DV_HashVector_Int)
 
 
   class canAddInto_DV_HashVector_Int private[linalg] () extends BinaryUpdateOp[DenseVector[Int], HashVector[Int], breeze.linalg.operators.OpAdd] {
@@ -661,7 +686,7 @@ trait DenseVectorOps_HashVector_Int { this: DenseVector.type =>
   Vector.canMulScalar_V_V_Int.register(canMulScalar_DV_HashVector_Int)
 
 
-  class canDivInto_DV_HashVector_Int private[linalg] () extends BinaryUpdateOp[DenseVector[Int], HashVector[Int], breeze.linalg.operators.OpDiv] {
+  class canModInto_DV_HashVector_Int private[linalg] () extends BinaryUpdateOp[DenseVector[Int], HashVector[Int], breeze.linalg.operators.OpMod] {
     def apply(a: DenseVector[Int], b: HashVector[Int]) {
       require(b.length == a.length, "Vectors must be the same length!")
 
@@ -671,44 +696,19 @@ trait DenseVectorOps_HashVector_Int { this: DenseVector.type =>
 
         var i = 0
         while(i < b.length) {
-          adata(j) = adata(j) / b(i)
+          adata(j) = adata(j) % b(i)
           i += 1
           j += astride
         }
         
     }
   }
-  implicit val canDivInto_DV_HashVector_Int = new canDivInto_DV_HashVector_Int ()
+  implicit val canModInto_DV_HashVector_Int = new canModInto_DV_HashVector_Int ()
     
-  Vector.canDivInto_V_V_Int.register(canDivInto_DV_HashVector_Int)
+  Vector.canModInto_V_V_Int.register(canModInto_DV_HashVector_Int)
 
-  implicit val canDiv_DV_HashVector_Int: BinaryOp[DenseVector[Int], HashVector[Int], breeze.linalg.operators.OpDiv, DenseVector[Int]] = pureFromUpdate_Int(canDivInto_DV_HashVector_Int)
-  Vector.canDiv_V_V_Int.register(canDiv_DV_HashVector_Int)
-
-
-  class canSetInto_DV_HashVector_Int private[linalg] () extends BinaryUpdateOp[DenseVector[Int], HashVector[Int], breeze.linalg.operators.OpSet] {
-    def apply(a: DenseVector[Int], b: HashVector[Int]) {
-      require(b.length == a.length, "Vectors must be the same length!")
-
-        val adata = a.data
-        var j = a.offset
-        val astride = a.stride
-
-        var i = 0
-        while(i < b.length) {
-          adata(j) = b(i)
-          i += 1
-          j += astride
-        }
-        
-    }
-  }
-  implicit val canSetInto_DV_HashVector_Int = new canSetInto_DV_HashVector_Int ()
-    
-  Vector.canSetInto_V_V_Int.register(canSetInto_DV_HashVector_Int)
-
-  implicit val canSet_DV_HashVector_Int: BinaryOp[DenseVector[Int], HashVector[Int], breeze.linalg.operators.OpSet, DenseVector[Int]] = pureFromUpdate_Int(canSetInto_DV_HashVector_Int)
-  Vector.canSet_V_V_Int.register(canSet_DV_HashVector_Int)
+  implicit val canMod_DV_HashVector_Int: BinaryOp[DenseVector[Int], HashVector[Int], breeze.linalg.operators.OpMod, DenseVector[Int]] = pureFromUpdate_Int(canModInto_DV_HashVector_Int)
+  Vector.canMod_V_V_Int.register(canMod_DV_HashVector_Int)
 
 
    class canDotProductDV_HV_Int private[linalg] () extends BinaryOp[DenseVector[Int], HashVector[Int], breeze.linalg.operators.OpMulInner, Int] {
@@ -781,6 +781,31 @@ trait DenseVectorOps_HashVector_Int { this: DenseVector.type =>
 
 /** This is an auto-generated trait providing operators for DenseVector and HashVector*/
 trait DenseVectorOps_HashVector_Complex { this: DenseVector.type =>
+
+  class canDivInto_DV_HashVector_Complex private[linalg] () extends BinaryUpdateOp[DenseVector[Complex], HashVector[Complex], breeze.linalg.operators.OpDiv] {
+    def apply(a: DenseVector[Complex], b: HashVector[Complex]) {
+      require(b.length == a.length, "Vectors must be the same length!")
+
+        val adata = a.data
+        var j = a.offset
+        val astride = a.stride
+
+        var i = 0
+        while(i < b.length) {
+          adata(j) = adata(j) / b(i)
+          i += 1
+          j += astride
+        }
+        
+    }
+  }
+  implicit val canDivInto_DV_HashVector_Complex = new canDivInto_DV_HashVector_Complex ()
+    
+  Vector.canDivInto_V_V_Complex.register(canDivInto_DV_HashVector_Complex)
+
+  implicit val canDiv_DV_HashVector_Complex: BinaryOp[DenseVector[Complex], HashVector[Complex], breeze.linalg.operators.OpDiv, DenseVector[Complex]] = pureFromUpdate_Complex(canDivInto_DV_HashVector_Complex)
+  Vector.canDiv_V_V_Complex.register(canDiv_DV_HashVector_Complex)
+
 
   class canSubInto_DV_HashVector_Complex private[linalg] () extends BinaryUpdateOp[DenseVector[Complex], HashVector[Complex], breeze.linalg.operators.OpSub] {
     def apply(a: DenseVector[Complex], b: HashVector[Complex]) {
@@ -892,56 +917,6 @@ trait DenseVectorOps_HashVector_Complex { this: DenseVector.type =>
 
   implicit val canMulScalar_DV_HashVector_Complex: BinaryOp[DenseVector[Complex], HashVector[Complex], breeze.linalg.operators.OpMulScalar, DenseVector[Complex]] = pureFromUpdate_Complex(canMulScalarInto_DV_HashVector_Complex)
   Vector.canMulScalar_V_V_Complex.register(canMulScalar_DV_HashVector_Complex)
-
-
-  class canDivInto_DV_HashVector_Complex private[linalg] () extends BinaryUpdateOp[DenseVector[Complex], HashVector[Complex], breeze.linalg.operators.OpDiv] {
-    def apply(a: DenseVector[Complex], b: HashVector[Complex]) {
-      require(b.length == a.length, "Vectors must be the same length!")
-
-        val adata = a.data
-        var j = a.offset
-        val astride = a.stride
-
-        var i = 0
-        while(i < b.length) {
-          adata(j) = adata(j) / b(i)
-          i += 1
-          j += astride
-        }
-        
-    }
-  }
-  implicit val canDivInto_DV_HashVector_Complex = new canDivInto_DV_HashVector_Complex ()
-    
-  Vector.canDivInto_V_V_Complex.register(canDivInto_DV_HashVector_Complex)
-
-  implicit val canDiv_DV_HashVector_Complex: BinaryOp[DenseVector[Complex], HashVector[Complex], breeze.linalg.operators.OpDiv, DenseVector[Complex]] = pureFromUpdate_Complex(canDivInto_DV_HashVector_Complex)
-  Vector.canDiv_V_V_Complex.register(canDiv_DV_HashVector_Complex)
-
-
-  class canSetInto_DV_HashVector_Complex private[linalg] () extends BinaryUpdateOp[DenseVector[Complex], HashVector[Complex], breeze.linalg.operators.OpSet] {
-    def apply(a: DenseVector[Complex], b: HashVector[Complex]) {
-      require(b.length == a.length, "Vectors must be the same length!")
-
-        val adata = a.data
-        var j = a.offset
-        val astride = a.stride
-
-        var i = 0
-        while(i < b.length) {
-          adata(j) = b(i)
-          i += 1
-          j += astride
-        }
-        
-    }
-  }
-  implicit val canSetInto_DV_HashVector_Complex = new canSetInto_DV_HashVector_Complex ()
-    
-  Vector.canSetInto_V_V_Complex.register(canSetInto_DV_HashVector_Complex)
-
-  implicit val canSet_DV_HashVector_Complex: BinaryOp[DenseVector[Complex], HashVector[Complex], breeze.linalg.operators.OpSet, DenseVector[Complex]] = pureFromUpdate_Complex(canSetInto_DV_HashVector_Complex)
-  Vector.canSet_V_V_Complex.register(canSet_DV_HashVector_Complex)
 
 
    class canDotProductDV_HV_Complex private[linalg] () extends BinaryOp[DenseVector[Complex], HashVector[Complex], breeze.linalg.operators.OpMulInner, Complex] {

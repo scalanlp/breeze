@@ -299,7 +299,6 @@ object GenOperators {
       OpMulScalar -> {_ + " * " + _},
       OpMulMatrix -> {_ + " * " + _},
       OpDiv -> {_ + " / " + _},
-      OpSet -> {(a,b) => b},
       OpPow -> {_ + ".pow(" + _ + ")"}
     )
 
