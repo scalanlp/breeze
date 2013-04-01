@@ -55,7 +55,9 @@ object BuildSettings {
        Seq("-no-specialization","-optimize","-deprecation", "-Ydependent-method-types")
       case _ => Seq("-no-specialization","-optimize","-deprecation")
      }
-    }
+    },
+    javacOptions ++= Seq("-target", "1.6", "-source","1.6")
+
   )
 }
 
