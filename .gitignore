@@ -12,4 +12,13 @@ project/build
 .idea_modules/
 *.iml
 *~
+.DS_Store
 
+# Scala-IDE specific
+.settings/
+.scala_dependencies
+.classpath
+.project
+.cache
+.worksheet/
+*.sc

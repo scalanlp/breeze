@@ -73,7 +73,10 @@ class HashVector[@specialized(Int, Double, Float) E](val array: OpenAddressHashA
 }
 
 
-object HashVector extends HashVectorOps_Int with HashVectorOps_Float with HashVectorOps_Double {
+object HashVector extends HashVectorOps_Int 
+                          with HashVectorOps_Float 
+                          with HashVectorOps_Double
+                          with HashVectorOps_Complex {
   def zeros[@specialized(Double, Float, Int) V: ClassManifest:DefaultArrayValue](size: Int) = {
     new HashVector(new OpenAddressHashArray[V](size))
   }

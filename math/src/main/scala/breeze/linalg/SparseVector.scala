@@ -145,7 +145,10 @@ class SparseVector[@spec(Double,Int, Float) E](val array: SparseArray[E])
   def allVisitableIndicesActive: Boolean = true
 }
 
-object SparseVector extends SparseVectorOps_Int with SparseVectorOps_Float with SparseVectorOps_Double {
+object SparseVector extends SparseVectorOps_Int 
+                            with SparseVectorOps_Float 
+                            with SparseVectorOps_Double
+                            with SparseVectorOps_Complex {
   def zeros[@spec(Double, Float, Int) V: ClassManifest:DefaultArrayValue](size: Int) = new SparseVector(Array.empty, Array.empty[V], 0, size)
   def apply[@spec(Double, Float, Int) V:DefaultArrayValue](values: Array[V]) = new SparseVector(Array.range(0,values.length), values, values.length, values.length)
 

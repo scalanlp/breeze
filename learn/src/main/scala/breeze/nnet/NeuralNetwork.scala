@@ -9,20 +9,22 @@ import collection.mutable.ArrayBuffer
  *
  * @author dlwh
  */
-class NeuralNetwork(parameters: Array[DenseMatrix[Double]]) extends (DenseVector[Double]=>DenseVector[Double]) {
+class NeuralNetwork(_parameters: Array[DenseMatrix[Double]]) extends (DenseVector[Double]=>DenseVector[Double]) {
 
   def apply(x: DenseVector[Double]) = {
     computeActivations(x).last
   }
 
+  def parameters = _parameters
+
   def computeActivations(x: DenseVector[Double]):IndexedSeq[DenseVector[Double]] = {
     val activations = new ArrayBuffer[DenseVector[Double]]
     var activation = x
     activations += x
-    for(i <- 0 until parameters.length) {
-      val w = parameters(i)
+    for(i <- 0 until _parameters.length) {
+      val w = _parameters(i)
       activation = w * activation
-      if(i < parameters.length - 1)
+      if(i < _parameters.length - 1)
       activation = sigmoid(activation)
       activations += activation
     }
