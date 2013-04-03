@@ -3,7 +3,7 @@ package breeze.plot
 
 import org.jfree.chart.JFreeChart
 import org.jfree.chart.plot.{CrosshairState, PlotRenderingInfo, DefaultDrawingSupplier}
-import org.jfree.chart.axis.{ValueAxis, NumberAxis, TickUnits, NumberTickUnit}
+import org.jfree.chart.axis._
 import java.awt._
 import collection.mutable.ArrayBuffer
 import collection.mutable
@@ -89,8 +89,40 @@ class Plot() {
     plot.getRangeAxis.setUpperBound(upper)
   }
 
-  val xaxis : NumberAxis = new NumberAxis(null)
-  val yaxis : NumberAxis = new NumberAxis(null)
+  def xaxis = _xaxis
+  def yaxis = _yaxis
+
+  private var _xaxis : NumberAxis = new NumberAxis(null)
+  private var _yaxis : NumberAxis = new NumberAxis(null)
+
+  def logScaleX = xaxis.isInstanceOf[LogarithmicAxis]
+  def logScaleY = yaxis.isInstanceOf[LogarithmicAxis]
+
+  def logScaleX_=(value: Boolean) {
+    if(value != logScaleX) {
+      // TODO this is such a pain. There has to be a better way.
+      val oldAxis = _xaxis
+      _xaxis = if(value) new LogarithmicAxis(xlabel) else new NumberAxis(xlabel)
+      plot.setDomainAxis(_xaxis)
+      xlim = oldAxis.getLowerBound -> oldAxis.getUpperBound
+      _xaxis.setStandardTickUnits(oldAxis.getStandardTickUnits)
+      _xaxis.setAutoRangeIncludesZero(oldAxis.getAutoRangeIncludesZero)
+    }
+  }
+
+  def logScaleY_=(value: Boolean) {
+    if(value != logScaleY) {
+      // TODO this is such a pain. There has to be a better way.
+      val oldAxis = _yaxis
+      _yaxis = if(value) new LogarithmicAxis(ylabel) else new NumberAxis(ylabel)
+      plot.setRangeAxis(_yaxis)
+      ylim = oldAxis.getLowerBound -> oldAxis.getUpperBound
+      _yaxis.setStandardTickUnits(oldAxis.getStandardTickUnits)
+      _yaxis.setAutoRangeIncludesZero(oldAxis.getAutoRangeIncludesZero)
+    }
+  }
+
+
 
   /** The plot title */
   def title_=(str : String) {

@@ -22,6 +22,4 @@ trait Series {
 }
 
 
-object Plotting {
 
-}
