@@ -1,9 +1,9 @@
 package breeze.optimize
 
 import breeze.util._
-import logging.ConfiguredLogging
 import breeze.stats.distributions._
 import breeze.math.MutableCoordinateSpace
+import com.typesafe.scalalogging.log4j.Logging
 
 
 /*
@@ -33,7 +33,7 @@ abstract class StochasticGradientDescent[T](val defaultStepSize: Double,
                                             improvementTol: Double=1E-4,
                                             minImprovementWindow: Int = 50)
                                             (implicit protected val vspace: MutableCoordinateSpace[T, Double])
-  extends FirstOrderMinimizer[T,StochasticDiffFunction[T]](maxIter, tolerance, improvementTol, minImprovementWindow, 2) with ConfiguredLogging {
+  extends FirstOrderMinimizer[T,StochasticDiffFunction[T]](maxIter, tolerance, improvementTol, minImprovementWindow, 2) with Logging {
 
   import vspace._
 

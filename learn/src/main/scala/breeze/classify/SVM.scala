@@ -17,13 +17,13 @@ package breeze.classify
 
 
 
-import breeze.util.logging._
 import breeze.data.Example
 import breeze.linalg._
 import breeze.numerics._
 import breeze.stats.distributions.Rand
 import breeze.math.{MutableInnerProductSpace, MutableCoordinateSpace}
 import breeze.util.Index
+import com.typesafe.scalalogging.log4j.Logging
 
 
 /**
@@ -93,8 +93,8 @@ object SVM {
          val loss = problemSubset.iterator.map(_._3).sum
 
          val rate = 1 / (regularization * (iter.toDouble + 1))
-         log.info("rate: " + rate)
-         log.info("subset size: " + problemSubset.size)
+         logger.info("rate: " + rate)
+         logger.info("subset size: " + problemSubset.size)
          val w_half = problemSubset.foldLeft(w * (1-rate * regularization)) { (w,exr) =>
            val (ex,r, oldLoss) = exr
            val et = ex.features * (rate/subset.size)
@@ -107,7 +107,7 @@ object SVM {
          val w_norm = (1 / (sqrt(regularization) * breeze.linalg.norm(w_half,2))) min 1
          w = w_half * w_norm
          println(w, w_half)
-         log.info("iter: " + iter + " " + loss)
+         logger.info("iter: " + iter + " " + loss)
 
 
          val problemSubset2 = (for {
@@ -118,7 +118,7 @@ object SVM {
 
 
          val loss2 = problemSubset2.iterator.map(_._3).sum
-         log.info("Post loss: " + loss2)
+         logger.info("Post loss: " + loss2)
        }
        new LinearClassifier(w,Counter[L,Double]())
      }
@@ -136,7 +136,7 @@ object SVM {
 
     println(vectors.length)
 
-    val trainer = new SVM.SMOTrainer[Int,DenseVector[Double]](100) with ConsoleLogging
+    val trainer = new SVM.SMOTrainer[Int,DenseVector[Double]](100) with Logging
     val classifier = trainer.train(vectors)
     for( ex <- vectors.take(30)) {
       val guessed = classifier.classify(ex.features)
@@ -147,7 +147,7 @@ object SVM {
   class SMOTrainer[L,T](maxIterations: Int=30,
                         C: Double = 10.0)
                        (implicit vspace: MutableCoordinateSpace[T, Double],
-                        man: ClassManifest[T]) extends Classifier.Trainer[L,T] with ConfiguredLogging {
+                        man: ClassManifest[T]) extends Classifier.Trainer[L,T] with Logging {
     type MyClassifier = LinearClassifier[L,UnindexedLFMatrix[L,T],Counter[L,Double],T]
 
     import vspace._
@@ -184,7 +184,7 @@ object SVM {
             largestChange = largestChange max (oldA2 - newA2).abs
           }
         }
-        log.info("Largest Change: " + largestChange)
+        logger.info("Largest Change: " + largestChange)
 
       }
       new LinearClassifier(weights.unindexed,Counter[L,Double]())

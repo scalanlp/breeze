@@ -73,7 +73,6 @@ object CRFTrain extends App {
 
   val config = CommandLineParser.parseArguments(args)._1
   val params = config.readIn[Params]("")
-  breeze.util.logging.ConfiguredLogging.configuration = config
   import params.startSymbol
   val train = CONLLSequenceReader.readTrain(new FileInputStream(params.train), params.train.getName).toIndexedSeq
   val labelIndex = Index(Iterator(startSymbol) ++ {for(ex <- train.iterator; l <- ex.label) yield l})

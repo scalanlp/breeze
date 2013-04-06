@@ -1,10 +1,10 @@
 package breeze.optimize
 
 import breeze.util._
-import logging.{ConsoleLogging, ConfiguredLogging}
 import breeze.linalg._
 import breeze.numerics._
 import breeze.math.MutableCoordinateSpace
+import com.typesafe.scalalogging.log4j.Logging
 
 
 /**
@@ -15,7 +15,7 @@ import breeze.math.MutableCoordinateSpace
  *
  * @author dlwh
  */
-class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-8)(implicit vspace: MutableCoordinateSpace[T, Double]) extends LBFGS[T](maxIter, m, tolerance=tolerance) with  ConfiguredLogging {
+class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-8)(implicit vspace: MutableCoordinateSpace[T, Double]) extends LBFGS[T](maxIter, m, tolerance=tolerance) with  Logging {
   import vspace._
   require(m > 0)
   require(l1reg >= 0)
@@ -31,8 +31,8 @@ class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-
     val normGradInDir = {
       val possibleNorm = dir dot state.grad
 //      if (possibleNorm > 0) { // hill climbing is not what we want. Bad LBFGS.
-//        log.warn("Direction of positive gradient chosen!")
-//        log.warn("Direction is:" + possibleNorm)
+//        logger.warn("Direction of positive gradient chosen!")
+//        logger.warn("Direction is:" + possibleNorm)
 //        Reverse the direction, clearly it's a bad idea to go up
 //        dir *= -1.0
 //        dir dot state.grad
@@ -51,7 +51,7 @@ class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-
     val targetState = iterates.find { case search.State(alpha,v) =>
       // sufficient descent
       val r = v < state.adjustedValue + alpha * 0.0001 * normGradInDir
-      if(!r) log.info(".")
+      if(!r) logger.info(".")
       r
     }
 

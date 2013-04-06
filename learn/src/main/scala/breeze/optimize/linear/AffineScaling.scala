@@ -1,7 +1,7 @@
 package breeze.optimize.linear
 
-import breeze.util.logging.{ConfiguredLogging, Logged}
 import breeze.linalg._
+import com.typesafe.scalalogging.log4j.Logging
 
 
 /**
@@ -9,7 +9,7 @@ import breeze.linalg._
  * Note that this is not Karmarkar's algorithm.
  * @author dlwh
  */
-class AffineScaling extends ConfiguredLogging {
+class AffineScaling extends Logging {
   /**
    * Maximize c dot x s.t. Ax <= b
    */
@@ -33,7 +33,7 @@ class AffineScaling extends ConfiguredLogging {
       val alpha = if(constraints.size > 1) constraints.min * gamma else 0.0
       val xn = x + hx * alpha
       val cvn = xn dot c
-      log.info("Current obj: " + cvn)
+      logger.info("Current obj: " + cvn)
       if( (cvn - cv).abs/(1.0 max cvn) < eps) converged = true
       cv = cvn
       x = xn
@@ -44,4 +44,4 @@ class AffineScaling extends ConfiguredLogging {
   object UnboundedProblem extends Exception
 }
 
-object AffineScaling extends AffineScaling with ConfiguredLogging
+object AffineScaling extends AffineScaling

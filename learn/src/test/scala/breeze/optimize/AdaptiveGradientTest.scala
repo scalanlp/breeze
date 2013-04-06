@@ -23,7 +23,6 @@ import org.scalacheck._
 import org.junit.runner.RunWith
 
 import breeze.linalg._
-import breeze.util.logging.ConsoleLogging
 
 
 @RunWith(classOf[JUnitRunner])

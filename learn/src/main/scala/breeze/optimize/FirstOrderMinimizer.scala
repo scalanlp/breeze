@@ -1,8 +1,8 @@
 package breeze.optimize
 
-import breeze.util.logging.{ConsoleLogging, Logged}
 import breeze.math.{NormedVectorSpace, MutableCoordinateSpace}
 import breeze.util.Implicits._
+import com.typesafe.scalalogging.log4j.Logging
 
 /**
  *
@@ -13,7 +13,7 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
                                                                      tolerance: Double=1E-5,
                                                                      improvementTol: Double=1E-3,
                                                                      val minImprovementWindow: Int = 10,
-                                                                     val numberOfImprovementFailures: Int = 1)(implicit vspace: NormedVectorSpace[T, Double]) extends Minimizer[T,DF] with Logged {
+                                                                     val numberOfImprovementFailures: Int = 1)(implicit vspace: NormedVectorSpace[T, Double]) extends Minimizer[T,DF] with Logging {
 
   type History
   case class State(x: T,
@@ -58,12 +58,12 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
     val it = Iterator.iterate(doDepthCharge(f,init)) { state => try {
         val dir = chooseDescentDirection(state)
         val stepSize = determineStepSize(state, f, dir)
-        log.info("Step Size:" + stepSize)
+        logger.info("Step Size:" + stepSize)
         val x = takeStep(state,dir,stepSize)
         val (value,grad) = f.calculate(x)
-        log.info("Val and Grad Norm:" + value + " " + vspace.norm(grad))
+        logger.info("Val and Grad Norm:" + value + " " + vspace.norm(grad))
         val (adjValue,adjGrad) = adjust(x,grad,value)
-        log.info("Adj Val and Grad Norm:" + adjValue + " " + vspace.norm(adjGrad))
+        logger.info("Adj Val and Grad Norm:" + adjValue + " " + vspace.norm(adjGrad))
         val history = updateHistory(x,grad,value,state)
         val newAverage = updateFValWindow(state, adjValue)
         failedOnce = false
@@ -75,10 +75,10 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
     } catch {
       case x: FirstOrderException if !failedOnce =>
         failedOnce = true
-        log.error("Failure! Resetting history: " + x)
+        logger.error("Failure! Resetting history: " + x)
         state.copy(history = initialHistory(f,state.x))
       case x: FirstOrderException =>
-        log.error("Failure again! Giving up and returning. Maybe the objective is just poorly behaved?")
+        logger.error("Failure again! Giving up and returning. Maybe the objective is just poorly behaved?")
         state.copy(searchFailed = true)
     }
     }.takeUpToWhere ( state =>
@@ -103,7 +103,7 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
       val (value,grad) = f.calculate(x)
       val (adjValue,adjGrad) = adjust(x,grad,value)
       val history = updateHistory(x,grad,value,state)
-      log.info("False Step %d: v=%f g=%f".format(i,adjValue, vspace.norm(adjGrad)))
+      logger.info("False Step %d: v=%f g=%f".format(i,adjValue, vspace.norm(adjGrad)))
       state = State(x, value, grad, adjValue, adjGrad, 0, state.initialAdjVal, history, IndexedSeq(), 0)
     }
 

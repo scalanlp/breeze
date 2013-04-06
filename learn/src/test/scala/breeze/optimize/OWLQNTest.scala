@@ -22,7 +22,6 @@ import org.scalatest.prop._
 import org.scalacheck._
 import org.junit.runner.RunWith
 
-import breeze.util.logging.ConsoleLogging
 import breeze.linalg._
 
 

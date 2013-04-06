@@ -24,7 +24,6 @@ import breeze.optimize._
 import breeze.optimize.FirstOrderMinimizer.OptParams
 import breeze.math.MutableCoordinateSpace
 import breeze.util.Index
-import breeze.util.logging.ConsoleLogging
 
 /**
  * A multi-class logistic/softmax/maxent classifier.

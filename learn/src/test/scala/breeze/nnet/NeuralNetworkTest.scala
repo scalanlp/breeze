@@ -4,7 +4,6 @@ import org.scalatest.FunSuite
 import org.scalatest.prop.Checkers
 import breeze.linalg.DenseVector
 import breeze.optimize.{GradientCheckingDiffFunction, LBFGS}
-import breeze.util.logging.ConsoleLogging
 import scala.util.Random
 
 /**

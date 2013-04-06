@@ -16,9 +16,9 @@ package breeze.optimize
  limitations under the License. 
 */
 
-import breeze.util.logging._
 import breeze.math.{MutableInnerProductSpace, MutableCoordinateSpace}
 import breeze.linalg._
+import com.typesafe.scalalogging.log4j.Logging
 
 
 /**
@@ -37,7 +37,7 @@ import breeze.linalg._
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
 class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-5)
-              (implicit vspace: MutableInnerProductSpace[T, Double]) extends FirstOrderMinimizer[T,DiffFunction[T]](maxIter, tolerance) with ConfiguredLogging {
+              (implicit vspace: MutableInnerProductSpace[T, Double]) extends FirstOrderMinimizer[T,DiffFunction[T]](maxIter, tolerance) with Logging {
 
   import vspace._
   require(m > 0)
@@ -119,8 +119,8 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-5)
     val normGradInDir = {
       val possibleNorm = dir dot grad
       if (possibleNorm > 0) { // hill climbing is not what we want. Bad LBFGS.
-        log.warn("Direction of positive gradient chosen!")
-        log.warn("Direction is:" + possibleNorm)
+        logger.warn("Direction of positive gradient chosen!")
+        logger.warn("Direction is:" + possibleNorm)
         // Reverse the direction, clearly it's a bad idea to go up
         dir *= -1.0
         dir dot grad
@@ -139,18 +139,18 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-5)
 
       backoffs += 1
       if(!r)  {
-        log.info("Sufficient descent not met. Backing off.")
+        logger.info("Sufficient descent not met. Backing off.")
         if(backoffs > 4 && state.history.memStep.length >= m) {
-          log.info("A lot of backing off. Check your gradient calculation?")
+          logger.info("A lot of backing off. Check your gradient calculation?")
           if (norm(grad) <= 1E-3 * norm(state.x))
-            log.info("Or maybe we're almost converged?")
+            logger.info("Or maybe we're almost converged?")
         }
       }
       // on the first few iterations, don't worry about sufficient slope reduction
       // since we're trying to build the hessian approximation
       else if(state.history.memStep.length >= m) {
         r = math.abs(dir dot f.gradientAt(x + dir * alpha)) <= 0.95 * math.abs(normGradInDir)
-        if(!r) log.info("Sufficient slope reduction condition not met. Backing off.")
+        if(!r) logger.info("Sufficient slope reduction condition not met. Backing off.")
       }
 
       r
@@ -167,7 +167,7 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-5)
 
 object LBFGS {
   def main(args: Array[String]) {
-    val lbfgs = new LBFGS[Counter[Int,Double]](5,4) with ConsoleLogging
+    val lbfgs = new LBFGS[Counter[Int,Double]](5,4)
 
     def optimizeThis(init: Counter[Int,Double]) = {
       val f = new DiffFunction[Counter[Int,Double]] {

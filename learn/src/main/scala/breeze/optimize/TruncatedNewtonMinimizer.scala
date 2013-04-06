@@ -4,7 +4,7 @@ import breeze.math.{MutableCoordinateSpace, MutableInnerProductSpace}
 import breeze.linalg.operators.{OpMulMatrix, BinaryOp}
 import breeze.util.Implicits._
 import linear.ConjugateGradient
-import breeze.util.logging.{ConsoleLogging, ConfiguredLogging}
+import com.typesafe.scalalogging.log4j.Logging
 
 
 /**
@@ -18,7 +18,7 @@ class TruncatedNewtonMinimizer[T, H](maxIterations: Int = -1,
                                      l2Regularization: Double = 0,
                                      m: Int = 0)
                                     (implicit vs: MutableCoordinateSpace[T, Double],
-                                     mult: BinaryOp[H, T, OpMulMatrix, T]) extends Minimizer[T, SecondOrderFunction[T, H]] with ConfiguredLogging {
+                                     mult: BinaryOp[H, T, OpMulMatrix, T]) extends Minimizer[T, SecondOrderFunction[T, H]] with Logging {
 
   def minimize(f: SecondOrderFunction[T, H], initial: T): T = iterations(f, initial).takeUpToWhere(_.converged).last.x
 
@@ -99,11 +99,11 @@ class TruncatedNewtonMinimizer[T, H](maxIterations: Int = -1,
       }
 
       if (actualReduction > eta0 * predictedReduction) {
-        log.info("Accept %d d=%.2E newv=%.4E newG=%.4E resNorm=%.2E pred=%.2E actual=%.2E".format(iter, delta, adjNewV, norm(adjNewG), norm(residual), predictedReduction, actualReduction))
+        logger.info("Accept %d d=%.2E newv=%.4E newG=%.4E resNorm=%.2E pred=%.2E actual=%.2E".format(iter, delta, adjNewV, norm(adjNewG), norm(residual), predictedReduction, actualReduction))
         val newHistory = updateHistory(x_new, adjNewG, adjNewV, state)
         State(iter + 1, initialGNorm, newDelta, x_new, newv, newg, newh, adjNewV, adjNewG, newHistory)
       } else {
-        log.info("Reject %d d=%.2f resNorm=%.2f pred=%.2f actual=%.2f".format(iter, delta, norm(residual), predictedReduction, actualReduction))
+        logger.info("Reject %d d=%.2f resNorm=%.2f pred=%.2f actual=%.2f".format(iter, delta, norm(residual), predictedReduction, actualReduction))
         state.copy(iter + 1, delta = newDelta)
       }
 

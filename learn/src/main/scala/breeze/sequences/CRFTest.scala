@@ -3,9 +3,9 @@ package breeze.sequences
 import breeze.optimize.FirstOrderMinimizer
 import breeze.corpora.CONLLSequenceReader
 import collection.mutable.ArrayBuffer
-import breeze.util._
 import breeze.config.CommandLineParser
 import java.io.{InputStream, FileInputStream, File}
+import breeze.util._
 
 /**
  * Runs the CRF and evaluates per-word accuracy. This won't give the right results for NER. Use NERTest for that.
@@ -16,7 +16,6 @@ object CRFEvaluate extends App {
 
   val config = CommandLineParser.parseArguments(args)._1
   val params = config.readIn[Params]("")
-  breeze.util.logging.ConfiguredLogging.configuration = config
 
   val crfP = readObject[CRFPackage](params.input)
   import crfP._
@@ -56,7 +55,6 @@ object CRFPredict extends App {
 
   val config = CommandLineParser.parseArguments(args)._1
   val params = config.readIn[Params]("")
-  breeze.util.logging.ConfiguredLogging.configuration = config
 
   val crfP = readObject[CRFPackage](params.input)
   import crfP._
@@ -89,7 +87,6 @@ object NERTest extends App {
 
   val config = CommandLineParser.parseArguments(args)._1
   val params = config.readIn[Params]("")
-  breeze.util.logging.ConfiguredLogging.configuration = config
 
   val crfP = readObject[CRFPackage](params.input)
   import crfP._
