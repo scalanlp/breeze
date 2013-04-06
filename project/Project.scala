@@ -72,8 +72,9 @@ object BreezeBuild extends Build {
   val netlib = "com.googlecode.netlib-java" % "netlib-java" % "0.9.3"
   val jblas = "org.scalanlp" % "jblas" % "1.2.1"
   val liblinear = "de.bwaldvogel" % "liblinear" % "1.8"
+  val opencsv = "net.sf.opencsv" % "opencsv" % "2.3"
 
-  val coreDeps = Seq(paranamer)
+  val coreDeps = Seq(paranamer, opencsv)
   val commonDeps = Seq(paranamer, netlib, jblas)
   val learnDeps = commonDeps ++ Seq(liblinear)
   val vizDeps = Seq(

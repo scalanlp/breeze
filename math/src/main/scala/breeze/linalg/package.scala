@@ -15,6 +15,7 @@ package breeze
  limitations under the License.
 */
 import generic.{CanCollapseAxis, CanMapValues, UReduceable, URFunc}
+import io.{CSVWriter, CSVReader}
 import linalg.operators._
 import linalg.support.{CanNorm, CanCopy}
 import math.Semiring
@@ -22,6 +23,7 @@ import org.netlib.lapack.LAPACK
 import org.netlib.util.intW
 import storage.DefaultArrayValue
 import org.jblas.NativeBlas
+import java.io.{FileWriter, File, FileReader, Reader}
 
 /**
  * This package contains everything relating to Vectors, Matrices, Tensors, etc.
@@ -425,6 +427,34 @@ package object linalg extends LinearAlgebra {
           }
       }
     }
+  }
+
+  // io stuff
+  /**
+   * Reads in a DenseMatrix from a CSV File
+   */
+  def csvread(file: File,
+             separator: Char=',',
+             quote: Char='"',
+             escape: Char='\\',
+             skipLines: Int = 0): DenseMatrix[Double] = {
+    val input = new FileReader(file)
+    var mat = CSVReader.read(input, separator, quote, escape, skipLines)
+    mat = mat.takeWhile(line => line.length != 0 && line.head.nonEmpty) // empty lines at the end
+    input.close()
+    if(mat.length == 0) {
+      DenseMatrix.zeros[Double](0,0)
+    } else {
+      DenseMatrix.tabulate(mat.length,mat.head.length)((i,j)=>mat(i)(j).toDouble)
+    }
+  }
+
+  def csvwrite(file: File, mat: Matrix[Double],
+               separator: Char=',',
+               quote: Char='\0',
+               escape: Char='\\',
+               skipLines: Int = 0) {
+    CSVWriter.writeFile(file, IndexedSeq.tabulate(mat.rows,mat.cols)(mat(_,_).toString), separator, quote, escape)
   }
 
 }
