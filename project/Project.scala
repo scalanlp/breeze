@@ -71,11 +71,10 @@ object BreezeBuild extends Build {
   val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
   val netlib = "com.googlecode.netlib-java" % "netlib-java" % "0.9.3"
   val jblas = "org.scalanlp" % "jblas" % "1.2.1"
-  val antiXML = "com.codecommit" % "anti-xml_2.9.1" % "0.3"
   val liblinear = "de.bwaldvogel" % "liblinear" % "1.8"
 
   val coreDeps = Seq(paranamer)
-  val commonDeps = Seq(paranamer, netlib, jblas, antiXML)
+  val commonDeps = Seq(paranamer, netlib, jblas)
   val learnDeps = commonDeps ++ Seq(liblinear)
   val vizDeps = Seq(
     "jfree" % "jcommon" % "1.0.16",
