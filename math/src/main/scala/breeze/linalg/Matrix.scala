@@ -23,6 +23,7 @@ import support.LiteralRow
 import util.Random
 import breeze.generic.CanMapValues
 import breeze.math.Semiring
+import breeze.linalg.operators.{OpSet, BinaryUpdateOp}
 
 /**
  *
@@ -126,6 +127,7 @@ trait Matrix[@spec(Int, Float, Double) E] extends MatrixLike[E, Matrix[E]] {
 }
 
 object Matrix extends MatrixConstructors[Matrix]
+                      with MatrixGenericOps
                       with MatrixMultOps_Double
                       with MatrixMultOps_Float
                       with MatrixMultOps_Int
@@ -135,6 +137,22 @@ object Matrix extends MatrixConstructors[Matrix]
   def create[@specialized(Int, Float, Double) V:DefaultArrayValue](rows: Int, cols: Int, data: Array[V]): Matrix[V] = DenseMatrix.create(rows, cols, data)
 
   // slicing
+}
+
+trait MatrixGenericOps { this: Matrix.type =>
+  class SetMMOp[@specialized(Int, Double, Float) V, MM](implicit subtype: MM<:<Matrix[V]) extends BinaryUpdateOp[Matrix[V], MM, OpSet] {
+    def apply(a: Matrix[V], b: MM) {
+      require(a.rows == b.rows, "Row dimension mismatch!")
+      require(a.cols == b.cols, "Col dimension mismatch!")
+      val bb = subtype(b)
+      // TODO: might make sense to have a "am I sparse?" check and use activeIterator instead?
+      for(i <- 0 until a.rows; j <- 0 until a.cols) {
+        a(i,j) = bb(i, j)
+      }
+
+    }
+  }
+  implicit def setDMDV[V, MM](implicit st: MM<:<Matrix[V]) = new SetMMOp[V, MM]
 }
 
 trait MatrixConstructors[Vec[T]<:Matrix[T]] {
