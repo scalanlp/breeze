@@ -457,7 +457,7 @@ object GenDenseOps extends App {
     }
 
   val out = new File("math/src/main/scala/breeze/linalg/DenseVectorOps.scala")
-  genHomogeneous("DenseVector", "Vector", "AnyRef", "breeze.linalg", out)(
+  genHomogeneous("DenseVector", "Vector", "DenseVector_GenericOps", "breeze.linalg", out)(
     GenOperators.binaryUpdateDV_DV_loop _,
     GenOperators.binaryUpdateDV_scalar_loop _,
     GenOperators.binaryUpdateDV_V_loop _

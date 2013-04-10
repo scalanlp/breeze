@@ -308,6 +308,13 @@ class DenseVectorTest extends FunSuite with Checkers {
 
 
   }
+  
+  test("Complex OpSet") {
+    val a = DenseVector(Complex(1,1))
+    val b = DenseVector(Complex(2,2))
+    a := b
+    assert(a === b)
+  }
 
   test("toArray") {
     val a = DenseVector(1, 2, 3)
