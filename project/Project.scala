@@ -70,7 +70,7 @@ object BreezeBuild extends Build {
 
   val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
   val netlib = "com.googlecode.netlib-java" % "netlib-java" % "0.9.3"
-  val jblas = "org.scalanlp" % "jblas" % "1.2.1"
+  val jblas = "org.jblas" % "jblas" % "1.2.3"
   val liblinear = "de.bwaldvogel" % "liblinear" % "1.8"
   val opencsv = "net.sf.opencsv" % "opencsv" % "2.3"
   val logging = "com.typesafe" %% "scalalogging-log4j" % "1.0.1"
