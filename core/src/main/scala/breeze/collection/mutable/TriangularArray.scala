@@ -18,6 +18,7 @@ package breeze.collection.mutable
 
 
 import scala.collection.mutable.Seq
+import scala.reflect.ClassTag
 
 /**
  * A TriangularArray is a jagged 2-d array where for every row r,
@@ -29,7 +30,7 @@ import scala.collection.mutable.Seq
  * @param dimension: The size of the array
  */
 @SerialVersionUID(1L)
-final class TriangularArray[T:ClassManifest](val dimension: Int) extends Serializable { outer =>
+final class TriangularArray[T:ClassTag](val dimension: Int) extends Serializable { outer =>
   import TriangularArray._
 
   private def numElems = dimension * (dimension+1) / 2
@@ -53,7 +54,7 @@ final class TriangularArray[T:ClassManifest](val dimension: Int) extends Seriali
   def iterator = Iterator.range(0,numElems) map slice
   def foreach(f: T=>Unit) { data foreach f }
 
-  def map[U:ClassManifest](f: T=>U) = tabulate(dimension)((i,j) => f(apply(i,j)))
+  def map[U:ClassTag](f: T=>U) = tabulate(dimension)((i,j) => f(apply(i,j)))
 
   override def toString = {
     val buffer = new StringBuilder()
@@ -69,7 +70,7 @@ final class TriangularArray[T:ClassManifest](val dimension: Int) extends Seriali
 
 object TriangularArray {
 
-  def tabulate[T:ClassManifest](dim: Int)(fill: (Int,Int)=>T) = {
+  def tabulate[T:ClassTag](dim: Int)(fill: (Int,Int)=>T) = {
     val array = new TriangularArray[T](dim)
     for( c <- 0 until dim; r <- 0 to c) {
       array.data(index(r,c)) = fill(r,c)
@@ -77,7 +78,7 @@ object TriangularArray {
     array
   }
 
-  def fill[T:ClassManifest](dim: Int)(fill: =>T) = {
+  def fill[T:ClassTag](dim: Int)(fill: =>T) = {
     val array = new TriangularArray[T](dim)
     for( c <- 0 until dim; r <- 0 to c) {
       array.data(index(r,c)) = fill
@@ -91,7 +92,7 @@ object TriangularArray {
     (c * (c+1) /2 + r)
   }
 
-  def raw[T:ClassManifest](dim: Int, fill: =>T) = {
+  def raw[T:ClassTag](dim: Int, fill: =>T) = {
     val numElems = arraySize(dim)
     val data = Array.fill[T](numElems)(fill)
     data

@@ -1,5 +1,7 @@
 package breeze.collection.mutable
 
+import scala.reflect.ClassTag
+
 /*
  Copyright 2012 David Hall
 
@@ -29,7 +31,7 @@ package breeze.collection.mutable
 // TODO: perhaps these should be called sparse Arrays
 trait ArrayLike[T] {
   def apply(i: Int): T
-  def update(i: Int, t: T): Unit
+  def update(i: Int, t: T)
 
   /**
    * Only iterates "active" elements
@@ -64,7 +66,7 @@ trait ArrayLike[T] {
    */
   def iterator = keysIterator zip valuesIterator
 
-  def toArray[U>:T:ClassManifest] = Array.tabulate[U](length)(apply)
+  def toArray[U>:T:ClassTag] = Array.tabulate[U](length)(apply)
 
   def toList = List.tabulate(length)(apply)
 

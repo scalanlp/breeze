@@ -24,6 +24,7 @@ import breeze.util.Index
 import breeze.storage.DefaultArrayValue
 import breeze.linalg.{Counter2, Counter}
 import breeze.math.Field
+import scala.reflect.ClassTag
 
 /**
  * Reads type V from input Input.
@@ -256,7 +257,7 @@ object SerializationFormat {
     }
 
     implicit def arrayReadWritable[T]
-    (implicit tH: ReadWritable[T], man: ClassManifest[T])
+    (implicit tH: ReadWritable[T], man: ClassTag[T])
     = new ReadWritable[Array[T]] {
       def read(source: Input) =
         readBuildable[T,Array[T]](source, ArrayBuilder.make[T]);
@@ -389,7 +390,7 @@ object SerializationFormat {
      *
      * @author dramage
      */
-    abstract class Constructible[V:ClassManifest,RW:ReadWritable] extends ReadWritable[V] {
+    abstract class Constructible[V:ClassTag,RW:ReadWritable] extends ReadWritable[V] {
       /** Name written and read. */
       def name : String;
 

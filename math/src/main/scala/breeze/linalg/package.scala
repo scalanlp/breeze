@@ -24,6 +24,7 @@ import org.netlib.util.intW
 import storage.DefaultArrayValue
 import org.jblas.NativeBlas
 import java.io.{FileWriter, File, FileReader, Reader}
+import scala.reflect.ClassTag
 
 /**
  * This package contains everything relating to Vectors, Matrices, Tensors, etc.
@@ -116,7 +117,7 @@ package object linalg extends LinearAlgebra {
    * @return
    */
   // TODO: make a real diagonal matrix class
-  def diag[V:ClassManifest:DefaultArrayValue](t: DenseVector[V]): DenseMatrix[V] = {
+  def diag[V:ClassTag:DefaultArrayValue](t: DenseVector[V]): DenseMatrix[V] = {
     val r = DenseMatrix.zeros[V](t.length, t.length)
     diag(r) := t
     r
@@ -617,7 +618,7 @@ trait LinearAlgebra {
    */
   def kron[V1,V2, M,RV](a : DenseMatrix[V1], b : M)(implicit mul : BinaryOp[V1, M, OpMulScalar,DenseMatrix[RV]],
                                                     asMat: M<:<Matrix[V2],
-                                                    man: ClassManifest[RV],
+                                                    man: ClassTag[RV],
                                                     dfv: DefaultArrayValue[RV]) : DenseMatrix[RV] = {
     val result: DenseMatrix[RV] = DenseMatrix.zeros[RV](a.rows * b.rows, a.cols * b.cols)
     for( ((r,c),av) <- a.activeIterator) {
@@ -629,7 +630,7 @@ trait LinearAlgebra {
   /**
    * Vector cross product of 3D vectors a and b.
    */
-  def cross[V1](a: DenseVector[V1], b: DenseVector[V1])(implicit ring: Ring[V1], man: ClassManifest[V1]): DenseVector[V1] = {
+  def cross[V1](a: DenseVector[V1], b: DenseVector[V1])(implicit ring: Ring[V1], man: ClassTag[V1]): DenseVector[V1] = {
     require(a.length == 3)
     require(b.length == 3)
     import ring._
@@ -674,7 +675,7 @@ trait LinearAlgebra {
    * The lower triangular portion of the given real quadratic matrix X. Note
    * that no check will be performed regarding the symmetry of X.
    */
-  def lowerTriangular[T: Semiring: ClassManifest:DefaultArrayValue](X: Matrix[T]): DenseMatrix[T] = {
+  def lowerTriangular[T: Semiring: ClassTag:DefaultArrayValue](X: Matrix[T]): DenseMatrix[T] = {
     val N = X.rows
     DenseMatrix.tabulate(N, N)( (i, j) =>
       if(j <= i) X(i,j)
@@ -686,7 +687,7 @@ trait LinearAlgebra {
    * The upper triangular portion of the given real quadratic matrix X. Note
    * that no check will be performed regarding the symmetry of X.
    */
-  def upperTriangular[T: Semiring: ClassManifest: DefaultArrayValue](X: Matrix[T]): DenseMatrix[T] = {
+  def upperTriangular[T: Semiring: ClassTag: DefaultArrayValue](X: Matrix[T]): DenseMatrix[T] = {
     val N = X.rows
     DenseMatrix.tabulate(N, N)( (i, j) =>
       if(j >= i) X(i,j)

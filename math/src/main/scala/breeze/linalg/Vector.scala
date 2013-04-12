@@ -22,6 +22,7 @@ import collection.immutable.BitSet
 import support.{CanZipMapValues, CanCopy}
 import util.Random
 import breeze.storage.{DefaultArrayValue, Storage}
+import scala.reflect.ClassTag
 
 /**
  * Trait for operators and such used in vectors.
@@ -87,11 +88,11 @@ trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]]{
     }
   }
 
-  def toDenseVector(implicit cm: ClassManifest[E]) = {
+  def toDenseVector(implicit cm: ClassTag[E]) = {
     new DenseVector(toArray)
   }
 
-  def toArray(implicit cm: ClassManifest[E]) = {
+  def toArray(implicit cm: ClassTag[E]) = {
     val result = new Array[E](length)
     var i = 0
     while(i < length) {
@@ -114,7 +115,7 @@ object Vector extends VectorOps_Int
   }
 
   // There's a bizarre error specializing float's here.
-  class CanZipMapValuesVector[@specialized(Int, Double) V, @specialized(Int, Double) RV:ClassManifest] extends CanZipMapValues[Vector[V],V,RV,Vector[RV]] {
+  class CanZipMapValuesVector[@specialized(Int, Double) V, @specialized(Int, Double) RV:ClassTag] extends CanZipMapValues[Vector[V],V,RV,Vector[RV]] {
     def create(length : Int) = new DenseVector(new Array[RV](length))
 
     /**Maps all corresponding values from the two collection. */
@@ -130,7 +131,7 @@ object Vector extends VectorOps_Int
     }
   }
 
-  implicit def canMapValues[V, V2](implicit man: ClassManifest[V2]):CanMapValues[Vector[V], V, V2, Vector[V2]] = {
+  implicit def canMapValues[V, V2](implicit man: ClassTag[V2]):CanMapValues[Vector[V], V, V2, Vector[V2]] = {
     new CanMapValues[Vector[V], V, V2, Vector[V2]] {
       /**Maps all key-value pairs from the given collection. */
       def map(from: Vector[V], fn: (V) => V2) = {
@@ -153,7 +154,7 @@ object Vector extends VectorOps_Int
   }
 
 
-  implicit def zipMap[V, R:ClassManifest] = new CanZipMapValuesVector[V, R]
+  implicit def zipMap[V, R:ClassTag] = new CanZipMapValuesVector[V, R]
   implicit val zipMap_d = new CanZipMapValuesVector[Double, Double]
   implicit val zipMap_f = new CanZipMapValuesVector[Float, Float]
   implicit val zipMap_i = new CanZipMapValuesVector[Int, Int]
@@ -177,7 +178,7 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @tparam V
    * @return
    */
-  def zeros[V:ClassManifest:DefaultArrayValue](size: Int):Vec[V]
+  def zeros[V:ClassTag:DefaultArrayValue](size: Int):Vec[V]
 
   /**
    * Creates a vector with the specified elements
@@ -193,9 +194,9 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @tparam V
    * @return
    */
-  def apply[V:ClassManifest](values: V*):Vec[V] = {
+  def apply[V:ClassTag](values: V*):Vec[V] = {
     // manual specialization so that we create the right DenseVector specialization... @specialized doesn't work here
-    val man = implicitly[ClassManifest[V]]
+    val man = implicitly[ClassTag[V]]
     if(man == manifest[Double]) apply(values.toArray.asInstanceOf[Array[Double]]).asInstanceOf[Vec[V]]
     else if (man == manifest[Float]) apply(values.toArray.asInstanceOf[Array[Float]]).asInstanceOf[Vec[V]]
     else if (man == manifest[Int]) apply(values.toArray.asInstanceOf[Array[Int]]).asInstanceOf[Vec[V]]
@@ -210,7 +211,7 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @tparam V
    * @return
    */
-  def fill[@spec(Double, Int, Float) V:ClassManifest](size: Int)(v: =>V):Vec[V] = apply(Array.fill(size)(v))
+  def fill[@spec(Double, Int, Float) V:ClassTag](size: Int)(v: =>V):Vec[V] = apply(Array.fill(size)(v))
 
   /**
    * Analogous to Array.tabulate
@@ -219,7 +220,7 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @tparam V
    * @return
    */
-  def tabulate[@spec(Double, Int, Float) V:ClassManifest](size: Int)(f: Int=>V):Vec[V]= apply(Array.tabulate(size)(f))
+  def tabulate[@spec(Double, Int, Float) V:ClassTag](size: Int)(f: Int=>V):Vec[V]= apply(Array.tabulate(size)(f))
 
   /**
    * Creates a Vector of uniform random numbers in (0,1)

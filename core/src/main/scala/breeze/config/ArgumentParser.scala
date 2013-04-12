@@ -17,6 +17,7 @@ package breeze.config
 
 
 import java.io.File
+import scala.reflect.ClassTag
 
 /**
  * ArgumentParsers are used by Configuration objects to process special arguments.
@@ -71,8 +72,8 @@ object ArgumentParser {
 
   private val argumentParsers = collection.mutable.HashMap[String,ArgumentParser[_]]()
 
-  def addArgumentParser[T:ClassManifest](ap: ArgumentParser[T]) = {
-    argumentParsers += (implicitly[ClassManifest[T]].toString -> ap);
+  def addArgumentParser[T:ClassTag](ap: ArgumentParser[T]) = {
+    argumentParsers += (implicitly[ClassTag[T]].toString -> ap);
   }
 
   addArgumentParser(intParser);
@@ -81,8 +82,8 @@ object ArgumentParser {
   addArgumentParser(stringParser);
   addArgumentParser(fileParser);
 
-  protected[config] def getArgumentParser[T:ClassManifest]:Option[ArgumentParser[T]] = {
-    if(implicitly[ClassManifest[T]].erasure == classOf[Class[_]]) Some(classParser.asInstanceOf[ArgumentParser[T]])
-    else argumentParsers.get(implicitly[ClassManifest[T]].toString).asInstanceOf[Option[ArgumentParser[T]]];
+  protected[config] def getArgumentParser[T:ClassTag]:Option[ArgumentParser[T]] = {
+    if(implicitly[ClassTag[T]].erasure == classOf[Class[_]]) Some(classParser.asInstanceOf[ArgumentParser[T]])
+    else argumentParsers.get(implicitly[ClassTag[T]].toString).asInstanceOf[Option[ArgumentParser[T]]];
   }
 }

@@ -15,6 +15,7 @@ package breeze.linalg.support
  limitations under the License.
 */
 import breeze.math.Complex
+import scala.reflect.ClassTag
 
 /**
  * Marker for being able to zip two From's and map the values to a new collection
@@ -33,7 +34,7 @@ object CanZipMapValues {
   // Arrays
   //
 
-  class OpArray[@specialized(Int, Float, Double) A, @specialized(Int, Float, Double) B: ClassManifest]
+  class OpArray[@specialized(Int, Float, Double) A, @specialized(Int, Float, Double) B: ClassTag]
     extends Op[Array[A], A, B, Array[B]] {
 
     /**Maps all values from the given collection. */
@@ -49,7 +50,7 @@ object CanZipMapValues {
   }
 
 
-  implicit def opArray[@specialized A, @specialized B: ClassManifest] =
+  implicit def opArray[@specialized A, @specialized B: ClassTag] =
     new OpArray[A, B]
 
   implicit object OpArrayII extends OpArray[Int, Int]

@@ -15,6 +15,7 @@ package breeze.generic
  limitations under the License.
 */
 import breeze.math.Complex
+import scala.reflect.ClassTag
 
 /**
  * Marker for being able to map the keys and values in a value collection
@@ -45,7 +46,7 @@ object CanMapValues {
   // Arrays
   //
 
-  class OpArray[@specialized(Int, Float, Double) A, @specialized(Int, Float, Double) B: ClassManifest]
+  class OpArray[@specialized(Int, Float, Double) A, @specialized(Int, Float, Double) B: ClassTag]
     extends Op[Array[A], A, B, Array[B]] {
 
     /**Maps all values from the given collection. */
@@ -62,7 +63,7 @@ object CanMapValues {
   }
 
 
-  implicit def opArray[@specialized A, @specialized B: ClassManifest] =
+  implicit def opArray[@specialized A, @specialized B: ClassTag] =
     new OpArray[A, B]
 
   implicit object OpArrayII extends OpArray[Int, Int]

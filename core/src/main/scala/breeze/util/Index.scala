@@ -260,7 +260,7 @@ class DenseIntIndex(beg: Int, end: Int) extends Index[Int] {
  */
 object Index {
   /** Constructs an empty index. */
-  import scala.reflect.ClassManifest.{Char=>MChar}
+  import scala.reflect.ClassTag.{Char=>MChar}
   import scala.reflect.OptManifest
   def apply[T:OptManifest]() : MutableIndex[T] = implicitly[OptManifest[T]] match {
     case _ => new HashIndex[T]; 

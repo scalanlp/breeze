@@ -24,6 +24,7 @@ import util.Random
 import breeze.generic.CanMapValues
 import breeze.math.Semiring
 import breeze.linalg.operators.{OpSet, BinaryUpdateOp}
+import scala.reflect.ClassTag
 
 /**
  *
@@ -120,7 +121,7 @@ trait Matrix[@spec(Int, Float, Double) E] extends MatrixLike[E, Matrix[E]] {
 
   override def toString : String = toString(Terminal.terminalHeight, Terminal.terminalWidth)
 
-  def toDenseMatrix(implicit cm: ClassManifest[E], dfv: DefaultArrayValue[E]) = {
+  def toDenseMatrix(implicit cm: ClassTag[E], dfv: DefaultArrayValue[E]) = {
     DenseMatrix.tabulate(rows, cols){ (i,j) => apply(i, j)}
   }
 
@@ -132,7 +133,7 @@ object Matrix extends MatrixConstructors[Matrix]
                       with MatrixMultOps_Float
                       with MatrixMultOps_Int
                       with MatrixMultOps_Complex {
-  def zeros[@specialized(Int, Float, Double) V: ClassManifest:DefaultArrayValue](rows: Int, cols: Int): Matrix[V] = DenseMatrix.zeros(rows, cols)
+  def zeros[@specialized(Int, Float, Double) V: ClassTag:DefaultArrayValue](rows: Int, cols: Int): Matrix[V] = DenseMatrix.zeros(rows, cols)
 
   def create[@specialized(Int, Float, Double) V:DefaultArrayValue](rows: Int, cols: Int, data: Array[V]): Matrix[V] = DenseMatrix.create(rows, cols, data)
 
@@ -156,7 +157,7 @@ trait MatrixGenericOps { this: Matrix.type =>
 }
 
 trait MatrixConstructors[Vec[T]<:Matrix[T]] {
-  def zeros[@specialized(Int, Float, Double) V:ClassManifest:DefaultArrayValue](rows: Int, cols: Int):Vec[V]
+  def zeros[@specialized(Int, Float, Double) V:ClassTag:DefaultArrayValue](rows: Int, cols: Int):Vec[V]
   def create[@specialized(Int, Float, Double) V:DefaultArrayValue](rows: Int, cols: Int, data: Array[V]):Vec[V]
 
   /**
@@ -166,12 +167,12 @@ trait MatrixConstructors[Vec[T]<:Matrix[T]] {
    * @tparam V
    * @return
    */
-  def ones[@specialized(Int, Float, Double) V:ClassManifest:DefaultArrayValue:Semiring](rows: Int, cols: Int):Vec[V] = {
+  def ones[@specialized(Int, Float, Double) V:ClassTag:DefaultArrayValue:Semiring](rows: Int, cols: Int):Vec[V] = {
     fill(rows,cols)(implicitly[Semiring[V]].one)
   }
 
-  def fill[@spec(Double, Int, Float) V:ClassManifest:DefaultArrayValue](rows: Int, cols: Int)(v: =>V):Vec[V] = create(rows, cols, Array.fill(rows * cols)(v))
-  def tabulate[@spec(Double, Int, Float) V:ClassManifest:DefaultArrayValue](rows: Int, cols: Int)(f: (Int,Int)=>V):Vec[V]= {
+  def fill[@spec(Double, Int, Float) V:ClassTag:DefaultArrayValue](rows: Int, cols: Int)(v: =>V):Vec[V] = create(rows, cols, Array.fill(rows * cols)(v))
+  def tabulate[@spec(Double, Int, Float) V:ClassTag:DefaultArrayValue](rows: Int, cols: Int)(f: (Int,Int)=>V):Vec[V]= {
     val z = zeros(rows, cols)
     for(c <- 0 until cols; r <- 0 until rows) {
       z(r, c) = f(r, c)
@@ -184,7 +185,7 @@ trait MatrixConstructors[Vec[T]<:Matrix[T]] {
   }
 
   /** Static constructor for a literal matrix. */
-  def apply[R,@specialized(Int, Float, Double) V](rows : R*)(implicit rl : LiteralRow[R,V], man : ClassManifest[V], df: DefaultArrayValue[V]) = {
+  def apply[R,@specialized(Int, Float, Double) V](rows : R*)(implicit rl : LiteralRow[R,V], man : ClassTag[V], df: DefaultArrayValue[V]) = {
     val nRows = rows.length
     val ns = rl.length(rows(0))
     val rv = zeros(nRows, ns)

@@ -21,10 +21,11 @@ import breeze.util.{Sorting, ArrayUtil}
 import breeze.generic.{CanMapValues, URFunc}
 import breeze.math.{Field, MutableVectorSpace, Semiring, Ring}
 import breeze.storage.DefaultArrayValue
+import scala.reflect.ClassTag
 
 
 /**
- * A VectorBuilder is basically unsorted Sparse Vector. Two parallel
+ * A VectorBuilder is basically an unsorted Sparse Vector. Two parallel
  * arrays are maintained, one of indices, and another of values.
  * The indices are not sorted. Moreover, <B> indices are not unique in
  * the index array</b>. Furthermore, apply(i) and update(i, v) are linear in the number
@@ -35,7 +36,8 @@ import breeze.storage.DefaultArrayValue
  * but require creating a HashVector copy. (TODO: maybe a SparseVector?)
  *
  * In general, these should never be used, except for building, or for doing feature
- * vector type things.
+ * vector type things where you just need a sparse vector with a fast dot product
+ * with a "real" vector.
  *
  * @author dlwh
  */
@@ -48,7 +50,7 @@ class VectorBuilder[@spec(Double,Int, Float) E](private var _index: Array[Int],
                                                 dfv: DefaultArrayValue[E]) extends NumericOps[VectorBuilder[E]] with Serializable {
 
   def this(length: Int, initialNonZero: Int = 0)(implicit ring: Semiring[E],
-                                                 man: ClassManifest[E],
+                                                 man: ClassTag[E],
                                                  dfv: DefaultArrayValue[E]) = this(new Array[Int](0), new Array[E](0), 0, length)
 
 
@@ -136,7 +138,7 @@ class VectorBuilder[@spec(Double,Int, Float) E](private var _index: Array[Int],
   }
 
   def toHashVector = {
-    implicit val man = ClassManifest.fromClass(_data.getClass.getComponentType.asInstanceOf[Class[E]])
+    implicit val man = ClassTag[E](_data.getClass.getComponentType.asInstanceOf[Class[E]])
     val hv = HashVector.zeros[E](length)
     var i = 0
     while(i < used) {
@@ -252,14 +254,14 @@ class VectorBuilder[@spec(Double,Int, Float) E](private var _index: Array[Int],
 
 object VectorBuilder extends VectorBuilderOps_Double {
 
-  def zeros[@spec(Double, Float, Int) V: ClassManifest:Semiring:DefaultArrayValue](size: Int, initialNonzero: Int = 16) = new VectorBuilder(size, initialNonzero)
+  def zeros[@spec(Double, Float, Int) V: ClassTag:Semiring:DefaultArrayValue](size: Int, initialNonzero: Int = 16) = new VectorBuilder(size, initialNonzero)
   def apply[@spec(Double, Float, Int) V:Semiring:DefaultArrayValue](values: Array[V]) = new VectorBuilder(Array.range(0,values.length), values, values.length, values.length)
 
-  def apply[V:ClassManifest:Semiring:DefaultArrayValue](values: V*):VectorBuilder[V] = apply(values.toArray)
-  def fill[@spec(Double, Int, Float) V:ClassManifest:Semiring:DefaultArrayValue](size: Int)(v: =>V):VectorBuilder[V] = apply(Array.fill(size)(v))
-  def tabulate[@spec(Double, Int, Float) V:ClassManifest:Semiring:DefaultArrayValue](size: Int)(f: Int=>V):VectorBuilder[V]= apply(Array.tabulate(size)(f))
+  def apply[V:ClassTag:Semiring:DefaultArrayValue](values: V*):VectorBuilder[V] = apply(values.toArray)
+  def fill[@spec(Double, Int, Float) V:ClassTag:Semiring:DefaultArrayValue](size: Int)(v: =>V):VectorBuilder[V] = apply(Array.fill(size)(v))
+  def tabulate[@spec(Double, Int, Float) V:ClassTag:Semiring:DefaultArrayValue](size: Int)(f: Int=>V):VectorBuilder[V]= apply(Array.tabulate(size)(f))
 
-  def apply[V:ClassManifest:Semiring:DefaultArrayValue](length: Int)(values: (Int, V)*) = {
+  def apply[V:ClassTag:Semiring:DefaultArrayValue](length: Int)(values: (Int, V)*) = {
     val r = zeros[V](length)
     for( (i, v) <- values) {
       r(i) = v
@@ -269,20 +271,20 @@ object VectorBuilder extends VectorBuilderOps_Double {
 
 
   // implicits
-  class CanCopyBuilder[@spec(Int, Float, Double) V:ClassManifest:Semiring:DefaultArrayValue] extends CanCopy[VectorBuilder[V]] {
+  class CanCopyBuilder[@spec(Int, Float, Double) V:ClassTag:Semiring:DefaultArrayValue] extends CanCopy[VectorBuilder[V]] {
     def apply(v1: VectorBuilder[V]) = {
       v1.copy
     }
   }
 
-  class CanZerosBuilder[@spec(Int, Float, Double) V:ClassManifest:Semiring:DefaultArrayValue] extends CanCreateZerosLike[VectorBuilder[V], VectorBuilder[V]] {
+  class CanZerosBuilder[@spec(Int, Float, Double) V:ClassTag:Semiring:DefaultArrayValue] extends CanCreateZerosLike[VectorBuilder[V], VectorBuilder[V]] {
     def apply(v1: VectorBuilder[V]) = {
       v1.zerosLike
     }
   }
 
-  implicit def canCopyBuilder[@spec(Int, Float, Double) V: ClassManifest: Semiring:DefaultArrayValue] = new CanCopyBuilder[V]
-  implicit def canZerosBuilder[@spec(Int, Float, Double) V: ClassManifest: Semiring:DefaultArrayValue] = new CanZerosBuilder[V]
+  implicit def canCopyBuilder[@spec(Int, Float, Double) V: ClassTag: Semiring:DefaultArrayValue] = new CanCopyBuilder[V]
+  implicit def canZerosBuilder[@spec(Int, Float, Double) V: ClassTag: Semiring:DefaultArrayValue] = new CanZerosBuilder[V]
 
   implicit def negFromScale[@spec(Int, Float, Double)  V, Double](implicit scale: BinaryOp[VectorBuilder[V], V, OpMulScalar, VectorBuilder[V]], field: Ring[V]) = {
     new UnaryOp[VectorBuilder[V], OpNeg, VectorBuilder[V]] {

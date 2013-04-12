@@ -16,6 +16,7 @@ package breeze.math
 */
 import breeze.linalg.operators._
 import breeze.storage.DefaultArrayValue
+import scala.reflect.ClassTag
 
 /**
  * Immutable complex number representation backed by doubles
@@ -188,7 +189,7 @@ object Complex { outer =>
     def isNaN(a : Complex) =
       a.real.isNaN || a.imag.isNaN
 
-    val manifest = implicitly[ClassManifest[Complex]]
+    val manifest = implicitly[ClassTag[Complex]]
 
     val defaultArrayValue = DefaultArrayValue(Complex(0, 0))
 

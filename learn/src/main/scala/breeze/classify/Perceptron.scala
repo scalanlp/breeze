@@ -4,11 +4,12 @@ import breeze.data.Example
 import breeze.math.MutableInnerProductSpace
 import breeze.linalg.Counter
 import breeze.util.Index
+import scala.reflect.ClassTag
 
 object Perceptron {
   class Trainer[L,T](maxPasses: Int = 20)(
     implicit vspace: MutableInnerProductSpace[T, Double],
-    man: ClassManifest[T]) extends Classifier.Trainer[L,T] {
+    man: ClassTag[T]) extends Classifier.Trainer[L,T] {
     import vspace._
     type MyClassifier = LinearClassifier[L,UnindexedLFMatrix[L,T],Counter[L,Double],T]
     def train(data: Iterable[Example[L,T]]) = {

@@ -18,6 +18,8 @@ package breeze.collection.mutable
 
 import breeze.storage.{Storage, ConfigurableDefault, DefaultArrayValue}
 import java.util
+import scala.reflect.ClassTag
+import scala.util.hashing.MurmurHash3
 
 /**
  * This is a Sparse Array implementation backed by a linear-probing
@@ -30,13 +32,13 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
                                  protected var load: Int,
                                  val size: Int,
                                  val default: ConfigurableDefault[Elem] = ConfigurableDefault.default[Elem])
-                                (implicit protected val manElem: ClassManifest[Elem],
+                                (implicit protected val manElem: ClassTag[Elem],
                                  val defaultArrayValue: DefaultArrayValue[Elem]) extends Storage[Elem] with ArrayLike[Elem] {
   require(size > 0, "Size must be positive, but got " + size)
 
   def this(size: Int, default: ConfigurableDefault[Elem],
            initialSize: Int)
-          (implicit manElem: ClassManifest[Elem],
+          (implicit manElem: ClassTag[Elem],
            defaultArrayValue: DefaultArrayValue[Elem]) = {
     this(OpenAddressHashArray.emptyIndexArray(OpenAddressHashArray.calculateSize(initialSize)),
       default.makeArray(OpenAddressHashArray.calculateSize(initialSize)),
@@ -47,12 +49,12 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
 
   def this(size: Int,
            default: ConfigurableDefault[Elem])
-          (implicit manElem: ClassManifest[Elem],
+          (implicit manElem: ClassTag[Elem],
            defaultArrayValue: DefaultArrayValue[Elem]) = {
     this(size, default, 16)
   }
 
-  def this(size: Int)(implicit manElem: ClassManifest[Elem], defaultArrayValue: DefaultArrayValue[Elem]) = {
+  def this(size: Int)(implicit manElem: ClassTag[Elem], defaultArrayValue: DefaultArrayValue[Elem]) = {
     this(size, ConfigurableDefault.default[Elem])
   }
 
@@ -165,7 +167,7 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
 
   // This hash code must be symmetric in the contents but ought not
   // collide trivially. based on hashmap.hashcode
-  override def hashCode() = scala.util.MurmurHash.symmetricHash(iterator.filter(_._2 != default.value), 43)
+  override def hashCode() = MurmurHash3.symmetricHash(iterator.filter(_._2 != default.value), 43)
 
   override def equals(that: Any): Boolean = that match {
     case that: OpenAddressHashArray[Elem] =>
@@ -190,7 +192,7 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
 }
 
 object OpenAddressHashArray {
-  def apply[@specialized(Int, Float, Long, Double) T:ClassManifest:DefaultArrayValue](values : T*) = {
+  def apply[@specialized(Int, Float, Long, Double) T:ClassTag:DefaultArrayValue](values : T*) = {
     val rv = new OpenAddressHashArray[T](values.length)
     val default = implicitly[DefaultArrayValue[T]].value
     for( (v,i) <- values.zipWithIndex if v != default) {

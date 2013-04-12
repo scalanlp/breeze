@@ -24,6 +24,7 @@ import breeze.generic.{CanTransformValues, URFunc, CanCollapseAxis, CanMapValues
 import breeze.math.{Ring, Semiring}
 import breeze.storage.DefaultArrayValue
 import breeze.storage.DefaultArrayValue._
+import scala.reflect.ClassTag
 
 /**
  * A DenseMatrix is a matrix with all elements found in an array. It is column major unless isTranspose is true,
@@ -51,7 +52,7 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
                                                             val isTranspose: Boolean = false)
 extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
   /** Creates a matrix with the specified data array, rows, and columns. */
-  def this(rows: Int, cols: Int)(implicit man: ClassManifest[V]) = this(rows, cols, new Array[V](rows * cols), 0, rows)
+  def this(rows: Int, cols: Int)(implicit man: ClassTag[V]) = this(rows, cols, new Array[V](rows * cols), 0, rows)
   /** Creates a matrix with the specified data array, rows, and columns. Data must be column major */
   def this(rows: Int, cols: Int, data: Array[V], offset: Int = 0) = this(rows, cols, data, offset, rows)
   /** Creates a matrix with the specified data array and rows. columns inferred automatically */
@@ -80,7 +81,7 @@ extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
 
   /** Converts this matrix to a DenseVector (column-major) */
   def toDenseVector: DenseVector[V] = {
-    implicit val man = ClassManifest.fromClass[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+    implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
     val ret = DenseVector(new Array[V](rows * cols))
     var i = 0
     while (i < cols) {
@@ -182,7 +183,7 @@ extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
   }
 
   def copy: DenseMatrix[V] = {
-    implicit val man = ClassManifest.fromClass[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+    implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
     val result = new DenseMatrix[V](rows, cols, new Array[V](size))
     result := this
     result
@@ -203,7 +204,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
   /**
    * The standard way to create an empty matrix, size is rows * cols
    */
-  def zeros[@specialized(Int, Float, Double) V:ClassManifest:DefaultArrayValue](rows: Int, cols: Int) = {
+  def zeros[@specialized(Int, Float, Double) V:ClassTag:DefaultArrayValue](rows: Int, cols: Int) = {
     fill(rows,cols)(implicitly[DefaultArrayValue[V]].value)
   }
 
@@ -214,14 +215,14 @@ object DenseMatrix extends LowPriorityDenseMatrix
   /**
    * Creates a square diagonal array of size dim x dim, with 1's along the diagonal.
    */
-  def eye[@specialized(Int, Float, Double) V: ClassManifest:DefaultArrayValue:Semiring](dim: Int) = {
+  def eye[@specialized(Int, Float, Double) V: ClassTag:DefaultArrayValue:Semiring](dim: Int) = {
     val r = zeros[V](dim, dim)
     breeze.linalg.diag(r) := implicitly[Semiring[V]].one
     r
   }
 
   /** Horizontally tiles some matrices. They must have the same number of rows */
-  def horzcat[M,V](matrices: M*)(implicit ev: M <:< Matrix[V], opset: BinaryUpdateOp[DenseMatrix[V], M, OpSet], vman: ClassManifest[V], dav: DefaultArrayValue[V]) = {
+  def horzcat[M,V](matrices: M*)(implicit ev: M <:< Matrix[V], opset: BinaryUpdateOp[DenseMatrix[V], M, OpSet], vman: ClassTag[V], dav: DefaultArrayValue[V]) = {
     if(matrices.isEmpty) zeros[V](0,0)
     else {
       require(matrices.forall(m => m.rows == matrices(0).rows),"Not all matrices have the same number of rows")
@@ -238,7 +239,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
   }
 
   /** Vertically tiles some matrices. They must have the same number of columns */
-  def vertcat[V](matrices: DenseMatrix[V]*)(implicit opset: BinaryUpdateOp[DenseMatrix[V], DenseMatrix[V], OpSet], vman: ClassManifest[V], dav: DefaultArrayValue[V]) = {
+  def vertcat[V](matrices: DenseMatrix[V]*)(implicit opset: BinaryUpdateOp[DenseMatrix[V], DenseMatrix[V], OpSet], vman: ClassTag[V], dav: DefaultArrayValue[V]) = {
     if(matrices.isEmpty) zeros[V](0,0)
     else {
       require(matrices.forall(m => m.cols == matrices(0).cols),"Not all matrices have the same number of columns")
@@ -365,7 +366,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
     }
   }
 
-  implicit def canMapValues[V, R:ClassManifest] = {
+  implicit def canMapValues[V, R:ClassTag] = {
     new CanMapValues[DenseMatrix[V],V,R,DenseMatrix[R]] {
       override def map(from : DenseMatrix[V], fn : (V=>R)) = {
         val data = new Array[R](from.size)
@@ -409,7 +410,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
     }
   }
 
-  implicit def canMapKeyValuePairs[V, R:ClassManifest] = {
+  implicit def canMapKeyValuePairs[V, R:ClassTag] = {
     new CanMapKeyValuePairs[DenseMatrix[V],(Int,Int),V,R,DenseMatrix[R]] {
       override def map(from : DenseMatrix[V], fn : (((Int,Int),V)=>R)) = {
         val data = new Array[R](from.data.length)
@@ -440,13 +441,13 @@ object DenseMatrix extends LowPriorityDenseMatrix
     }
   }
 
-  implicit def canCopyDenseMatrix[V:ClassManifest] = new CanCopy[DenseMatrix[V]] {
+  implicit def canCopyDenseMatrix[V:ClassTag] = new CanCopy[DenseMatrix[V]] {
     def apply(v1: DenseMatrix[V]) = {
       v1.copy
     }
   }
 
-  def binaryOpFromBinaryUpdateOp[V, Other, Op<:OpType](implicit copy: CanCopy[DenseMatrix[V]], op: BinaryUpdateOp[DenseMatrix[V], Other, Op], man: ClassManifest[V]) = {
+  def binaryOpFromBinaryUpdateOp[V, Other, Op<:OpType](implicit copy: CanCopy[DenseMatrix[V]], op: BinaryUpdateOp[DenseMatrix[V], Other, Op], man: ClassTag[V]) = {
     new BinaryOp[DenseMatrix[V], Other, Op, DenseMatrix[V]] {
       override def apply(a : DenseMatrix[V], b : Other) = {
         val c = copy(a)
@@ -470,7 +471,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
    * @tparam R
    * @return
    */
-  implicit def canMapRows[V:ClassManifest:DefaultArrayValue]: CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], DenseVector[V], DenseMatrix[V]]  = new CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], DenseVector[V], DenseMatrix[V]] {
+  implicit def canMapRows[V:ClassTag:DefaultArrayValue]: CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], DenseVector[V], DenseMatrix[V]]  = new CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], DenseVector[V], DenseMatrix[V]] {
     def apply(from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => DenseVector[V]): DenseMatrix[V] = {
       var result:DenseMatrix[V] = null
       for(c <- 0 until from.cols) {
@@ -494,7 +495,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
    * @tparam R
    * @return
    */
-  implicit def canMapCols[V:ClassManifest:DefaultArrayValue] = new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], DenseVector[V], DenseMatrix[V]] {
+  implicit def canMapCols[V:ClassTag:DefaultArrayValue] = new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], DenseVector[V], DenseMatrix[V]] {
     def apply(from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => DenseVector[V]): DenseMatrix[V] = {
       var result:DenseMatrix[V] = null
       val t = from.t
@@ -519,7 +520,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
   implicit val setMV_I: BinaryUpdateOp[DenseMatrix[Int], DenseVector[Int], OpSet]  = new SetDMDVOp[Int]
 
   // There's a bizarre error specializing float's here.
-  class CanZipMapValuesDenseMatrix[@specialized(Int, Double, Float) V, @specialized(Int, Double) RV: ClassManifest] extends CanZipMapValues[DenseMatrix[V], V, RV, DenseMatrix[RV]] {
+  class CanZipMapValuesDenseMatrix[@specialized(Int, Double, Float) V, @specialized(Int, Double) RV: ClassTag] extends CanZipMapValues[DenseMatrix[V], V, RV, DenseMatrix[RV]] {
     def create(rows: Int, cols: Int) = new DenseMatrix(rows, cols, new Array[RV](rows * cols))
 
     /**Maps all corresponding values from the two collection. */
@@ -540,7 +541,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
     }
   }
 
-  implicit def zipMap[V, R: ClassManifest] = new CanZipMapValuesDenseMatrix[V, R]
+  implicit def zipMap[V, R: ClassTag] = new CanZipMapValuesDenseMatrix[V, R]
   implicit val zipMap_d = new CanZipMapValuesDenseMatrix[Double, Double]
   implicit val zipMap_f = new CanZipMapValuesDenseMatrix[Float, Float]
   implicit val zipMap_i = new CanZipMapValuesDenseMatrix[Int, Int]
@@ -574,7 +575,7 @@ trait LowPriorityDenseMatrix1 {
    * @tparam R
    * @return
    */
-  implicit def canCollapseRows[V, R:ClassManifest:DefaultArrayValue]: CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], R, DenseMatrix[R]]  = new CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], R, DenseMatrix[R]] {
+  implicit def canCollapseRows[V, R:ClassTag:DefaultArrayValue]: CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], R, DenseMatrix[R]]  = new CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], R, DenseMatrix[R]] {
     def apply(from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => R): DenseMatrix[R] = {
       val result = DenseMatrix.zeros[R](1, from.cols)
       for(c <- 0 until from.cols) {
@@ -590,7 +591,7 @@ trait LowPriorityDenseMatrix1 {
    * @tparam R
    * @return
    */
-  implicit def canCollapseCols[V, R:ClassManifest:DefaultArrayValue] = new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], R, DenseVector[R]] {
+  implicit def canCollapseCols[V, R:ClassTag:DefaultArrayValue] = new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], R, DenseVector[R]] {
     def apply(from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => R): DenseVector[R] = {
       val result = DenseVector.zeros[R](from.rows)
       val t = from.t

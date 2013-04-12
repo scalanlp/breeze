@@ -51,7 +51,6 @@ object BuildSettings {
   scalacOptions <++= (scalaVersion).map { (sv) =>
      sv.toString match {
        case "2.9.2" | "2.9.1" => 
-     println(sv)
        Seq("-no-specialization","-optimize","-deprecation", "-Ydependent-method-types")
       case _ => Seq("-no-specialization","-optimize","-deprecation")
      }
@@ -74,8 +73,9 @@ object BreezeBuild extends Build {
   val liblinear = "de.bwaldvogel" % "liblinear" % "1.8"
   val opencsv = "net.sf.opencsv" % "opencsv" % "2.3"
   val logging = "com.typesafe" %% "scalalogging-log4j" % "1.0.1"
+  val log4j =  "org.apache.logging.log4j" % "log4j-core" % "2.0-beta4"
 
-  val coreDeps = Seq(paranamer, opencsv, logging)
+  val coreDeps = Seq(paranamer, opencsv, logging, log4j)
   val commonDeps = Seq(paranamer, netlib, jblas)
   val learnDeps = commonDeps ++ Seq(liblinear)
   val vizDeps = Seq(

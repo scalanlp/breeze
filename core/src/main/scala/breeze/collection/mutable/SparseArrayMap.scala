@@ -3,12 +3,13 @@ package breeze.collection.mutable
 import collection.generic.CanBuildFrom
 import collection.mutable.{ArrayBuffer, Builder, MapLike}
 import breeze.storage.DefaultArrayValue
+import scala.reflect.ClassTag
 
 /**
  * 
  * @author dlwh
  */
-class SparseArrayMap[@specialized T:ClassManifest:DefaultArrayValue](val length: Int, default: =>T)
+class SparseArrayMap[@specialized T:ClassTag:DefaultArrayValue](val length: Int, default: =>T)
   extends scala.collection.mutable.Map[Int,T] with MapLike[Int,T,SparseArrayMap[T]] with Serializable {
   val array = new SparseArray[T](length)
 
@@ -44,7 +45,7 @@ class SparseArrayMap[@specialized T:ClassManifest:DefaultArrayValue](val length:
 }
 
 object SparseArrayMap {
-  implicit def canMapValues[T,U:ClassManifest:DefaultArrayValue]: CanBuildFrom[SparseArrayMap[T], (Int, U), SparseArrayMap[U]] = new CanBuildFrom[SparseArrayMap[T],(Int,U),SparseArrayMap[U]] {
+  implicit def canMapValues[T,U:ClassTag:DefaultArrayValue]: CanBuildFrom[SparseArrayMap[T], (Int, U), SparseArrayMap[U]] = new CanBuildFrom[SparseArrayMap[T],(Int,U),SparseArrayMap[U]] {
     def apply(): Builder[(Int, U), SparseArrayMap[U]] = new Builder[(Int,U),SparseArrayMap[U]] {
       var bld = new SparseArrayMap[U](Int.MaxValue,implicitly[DefaultArrayValue[U]].value)
       def result() = bld

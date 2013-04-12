@@ -20,6 +20,7 @@ import breeze.util.{Terminal, ArrayUtil}
 import collection.mutable
 import breeze.math.Semiring
 import breeze.generic.CanMapValues
+import scala.reflect.ClassTag
 
 /**
  * A compressed sparse column matrix, as used in Matlab and CSparse, etc.
@@ -156,15 +157,15 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
                          with CSCMatrixOps_Float 
                          with CSCMatrixOps_Double
                          with CSCMatrixOps_Complex {
-  def zeros[@specialized(Int, Float, Double) V:ClassManifest:DefaultArrayValue](rows: Int, cols: Int, initialNonzero: Int = 0) = {
+  def zeros[@specialized(Int, Float, Double) V:ClassTag:DefaultArrayValue](rows: Int, cols: Int, initialNonzero: Int = 0) = {
     new CSCMatrix[V](new Array(initialNonzero), rows, cols, new Array(cols + 1), 0, new Array(initialNonzero))
   }
 
-  def zeros[@specialized(Int, Float, Double) V: ClassManifest : DefaultArrayValue](rows: Int, cols: Int): CSCMatrix[V] = zeros(rows, cols, 0)
+  def zeros[@specialized(Int, Float, Double) V: ClassTag : DefaultArrayValue](rows: Int, cols: Int): CSCMatrix[V] = zeros(rows, cols, 0)
 
   def create[@specialized(Int, Float, Double) V: DefaultArrayValue](rows: Int, cols: Int, data: Array[V]): CSCMatrix[V] = {
     val z = implicitly[DefaultArrayValue[V]].value
-    implicit val man = ClassManifest.fromClass(data.getClass.getComponentType.asInstanceOf[Class[V]])
+    implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
     val res = zeros(rows, cols, data.length)
     var i = 0
     for(c <- 0 until cols; r <- 0 until rows) {
@@ -178,7 +179,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
     res
   }
 
-    implicit def canMapValues[V, R:ClassManifest:DefaultArrayValue:Semiring] = {
+    implicit def canMapValues[V, R:ClassTag:DefaultArrayValue:Semiring] = {
       val z = implicitly[DefaultArrayValue[R]].value
     new CanMapValues[CSCMatrix[V],V,R,CSCMatrix[R]] {
       override def map(from : CSCMatrix[V], fn : (V=>R)) = {
@@ -230,7 +231,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
    * This is basically an unsorted coordinate matrix.
    * @param initNnz initial number of nonzero entries
    */
-  class Builder[@specialized(Int, Float, Double) T:ClassManifest:Semiring:DefaultArrayValue](rows: Int, cols: Int, initNnz: Int = 16) {
+  class Builder[@specialized(Int, Float, Double) T:ClassTag:Semiring:DefaultArrayValue](rows: Int, cols: Int, initNnz: Int = 16) {
     private def ring = implicitly[Semiring[T]]
     def add(r: Int, c: Int, v: T) {
       rs += r
@@ -242,7 +243,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
     rs.sizeHint(initNnz)
     private val cs = new mutable.ArrayBuilder.ofInt()
     cs.sizeHint(initNnz)
-    private val vs = implicitly[ClassManifest[T]].newArrayBuilder()
+    private val vs = implicitly[ClassTag[T]].newArrayBuilder()
     vs.sizeHint(initNnz)
 
     def result():CSCMatrix[T] = {

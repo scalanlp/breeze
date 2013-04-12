@@ -21,6 +21,7 @@ import breeze.math.{Semiring, Field}
 import support.CanSlice2
 import collection.{Set, mutable}
 import breeze.generic.{CanCollapseAxis, CanMapValues}
+import scala.reflect.ClassTag
 
 /**
  *
@@ -213,10 +214,9 @@ object Counter2 extends LowPriorityCounter2 {
   /**
    * Returns a Counter[K2, V]
    * @tparam V
-   * @tparam R
    * @return
    */
-  implicit def canMapRows[K1, K2, V:ClassManifest:DefaultArrayValue:Semiring]: CanCollapseAxis[Counter2[K1, K2,V], Axis._0.type, Counter[K1, V], Counter[K1, V], Counter2[K1, K2, V]]  = new CanCollapseAxis[Counter2[K1, K2,V], Axis._0.type, Counter[K1, V], Counter[K1, V], Counter2[K1,K2,V]] {
+  implicit def canMapRows[K1, K2, V:ClassTag:DefaultArrayValue:Semiring]: CanCollapseAxis[Counter2[K1, K2,V], Axis._0.type, Counter[K1, V], Counter[K1, V], Counter2[K1, K2, V]]  = new CanCollapseAxis[Counter2[K1, K2,V], Axis._0.type, Counter[K1, V], Counter[K1, V], Counter2[K1,K2,V]] {
     def apply(from: Counter2[K1, K2,V], axis: Axis._0.type)(f: (Counter[K1, V]) => Counter[K1, V]): Counter2[K1, K2, V] = {
       val result = Counter2[K1, K2, V]()
       for( dom <- from.keySet.map(_._2)) {
@@ -231,7 +231,7 @@ object Counter2 extends LowPriorityCounter2 {
    * @tparam R
    * @return
    */
-  implicit def canMapCols[K1, K2, V:ClassManifest:DefaultArrayValue:Semiring]: CanCollapseAxis[Counter2[K1, K2,V], Axis._1.type, Counter[K2, V], Counter[K2, V], Counter2[K1, K2, V]]  = new CanCollapseAxis[Counter2[K1, K2,V], Axis._1.type, Counter[K2, V], Counter[K2, V], Counter2[K1,K2,V]] {
+  implicit def canMapCols[K1, K2, V:ClassTag:DefaultArrayValue:Semiring]: CanCollapseAxis[Counter2[K1, K2,V], Axis._1.type, Counter[K2, V], Counter[K2, V], Counter2[K1, K2, V]]  = new CanCollapseAxis[Counter2[K1, K2,V], Axis._1.type, Counter[K2, V], Counter[K2, V], Counter2[K1,K2,V]] {
     def apply(from: Counter2[K1, K2,V], axis: Axis._1.type)(f: (Counter[K2, V]) => Counter[K2, V]): Counter2[K1, K2, V] = {
       val result = Counter2[K1, K2, V]()
       for( (dom,c) <- from.data) {
@@ -264,7 +264,7 @@ trait LowPriorityCounter2 {
    * @tparam R
    * @return
    */
-  implicit def canCollapseRows[K1, K2, V, R:ClassManifest:DefaultArrayValue:Semiring]: CanCollapseAxis[Counter2[K1, K2,V], Axis._0.type, Counter[K1, V], R, Counter[K2, R]]  = new CanCollapseAxis[Counter2[K1, K2,V], Axis._0.type, Counter[K1, V], R, Counter[K2,R]] {
+  implicit def canCollapseRows[K1, K2, V, R:ClassTag:DefaultArrayValue:Semiring]: CanCollapseAxis[Counter2[K1, K2,V], Axis._0.type, Counter[K1, V], R, Counter[K2, R]]  = new CanCollapseAxis[Counter2[K1, K2,V], Axis._0.type, Counter[K1, V], R, Counter[K2,R]] {
     def apply(from: Counter2[K1, K2,V], axis: Axis._0.type)(f: (Counter[K1, V]) => R): Counter[K2, R] = {
       val result = Counter[K2, R]()
       for( dom <- from.keySet.map(_._2)) {
@@ -279,7 +279,7 @@ trait LowPriorityCounter2 {
    * @tparam R
    * @return
    */
-  implicit def canCollapseCols[K1, K2, V, R:ClassManifest:DefaultArrayValue:Semiring]: CanCollapseAxis[Counter2[K1, K2,V], Axis._1.type, Counter[K2, V], R, Counter[K1, R]]  = new CanCollapseAxis[Counter2[K1, K2,V], Axis._1.type, Counter[K2, V], R, Counter[K1,R]] {
+  implicit def canCollapseCols[K1, K2, V, R:ClassTag:DefaultArrayValue:Semiring]: CanCollapseAxis[Counter2[K1, K2,V], Axis._1.type, Counter[K2, V], R, Counter[K1, R]]  = new CanCollapseAxis[Counter2[K1, K2,V], Axis._1.type, Counter[K2, V], R, Counter[K1,R]] {
     def apply(from: Counter2[K1, K2,V], axis: Axis._1.type)(f: (Counter[K2, V]) => R): Counter[K1, R] = {
       val result = Counter[K1, R]()
       for( (dom,c) <- from.data) {

@@ -20,6 +20,7 @@ import support._
 import breeze.generic.{UReduceable, URFunc, CanMapValues}
 import breeze.collection.mutable.Beam
 import breeze.math.Semiring
+import scala.reflect.ClassTag
 
 
 /**
@@ -193,11 +194,11 @@ object Tensor {
     }
   }
 
-  implicit def canSliceTensor[K, V:ClassManifest]:CanSlice[Tensor[K,V], Seq[K], SliceVector[K, V]] = new CanSlice[Tensor[K,V], Seq[K], SliceVector[K, V]] {
+  implicit def canSliceTensor[K, V:ClassTag]:CanSlice[Tensor[K,V], Seq[K], SliceVector[K, V]] = new CanSlice[Tensor[K,V], Seq[K], SliceVector[K, V]] {
     def apply(from: Tensor[K, V], slice: Seq[K]): SliceVector[K, V] = new SliceVector(from, slice.toIndexedSeq)
   }
 
-  implicit def canSliceTensor2[K1, K2, V:ClassManifest]:CanSlice2[Tensor[(K1,K2),V], Seq[K1], Seq[K2], SliceMatrix[K1, K2, V]] = {
+  implicit def canSliceTensor2[K1, K2, V:ClassTag]:CanSlice2[Tensor[(K1,K2),V], Seq[K1], Seq[K2], SliceMatrix[K1, K2, V]] = {
     new CanSlice2[Tensor[(K1,K2),V], Seq[K1], Seq[K2], SliceMatrix[K1, K2, V]] {
       def apply(from: Tensor[(K1, K2), V], slice: Seq[K1], slice2: Seq[K2]): SliceMatrix[K1, K2, V] = {
         new SliceMatrix(from, slice.toIndexedSeq, slice2.toIndexedSeq)

@@ -24,6 +24,7 @@ import breeze.math.{Semiring, Ring, TensorSpace}
 import breeze.collection.mutable.SparseArray
 import java.util
 import collection.mutable
+import scala.reflect.ClassTag
 
 
 /**
@@ -149,14 +150,14 @@ object SparseVector extends SparseVectorOps_Int
                             with SparseVectorOps_Float 
                             with SparseVectorOps_Double
                             with SparseVectorOps_Complex {
-  def zeros[@spec(Double, Float, Int) V: ClassManifest:DefaultArrayValue](size: Int) = new SparseVector(Array.empty, Array.empty[V], 0, size)
+  def zeros[@spec(Double, Float, Int) V: ClassTag:DefaultArrayValue](size: Int) = new SparseVector(Array.empty, Array.empty[V], 0, size)
   def apply[@spec(Double, Float, Int) V:DefaultArrayValue](values: Array[V]) = new SparseVector(Array.range(0,values.length), values, values.length, values.length)
 
-  def apply[V:ClassManifest:DefaultArrayValue](values: V*):SparseVector[V] = apply(values.toArray)
-  def fill[@spec(Double, Int, Float) V:ClassManifest:DefaultArrayValue](size: Int)(v: =>V):SparseVector[V] = apply(Array.fill(size)(v))
-  def tabulate[@spec(Double, Int, Float) V:ClassManifest:DefaultArrayValue](size: Int)(f: Int=>V):SparseVector[V]= apply(Array.tabulate(size)(f))
+  def apply[V:ClassTag:DefaultArrayValue](values: V*):SparseVector[V] = apply(values.toArray)
+  def fill[@spec(Double, Int, Float) V:ClassTag:DefaultArrayValue](size: Int)(v: =>V):SparseVector[V] = apply(Array.fill(size)(v))
+  def tabulate[@spec(Double, Int, Float) V:ClassTag:DefaultArrayValue](size: Int)(f: Int=>V):SparseVector[V]= apply(Array.tabulate(size)(f))
 
-  def apply[V:ClassManifest:DefaultArrayValue](length: Int)(values: (Int, V)*) = {
+  def apply[V:ClassTag:DefaultArrayValue](length: Int)(values: (Int, V)*) = {
     val r = zeros[V](length)
     for( (i, v) <- values) {
       r(i) = v
@@ -165,12 +166,12 @@ object SparseVector extends SparseVectorOps_Int
   }
 
 
-  def vertcat[V:DefaultArrayValue:ClassManifest](vectors: SparseVector[V]*): SparseVector[V] = {
+  def vertcat[V:DefaultArrayValue:ClassTag](vectors: SparseVector[V]*): SparseVector[V] = {
     val resultArray = vectors.map(_.array).foldLeft(new SparseArray[V](0))(_ concatenate _)
     new SparseVector(resultArray)
   }
 
-  def horzcat[V:DefaultArrayValue:ClassManifest](vectors: SparseVector[V]*):CSCMatrix[V] ={
+  def horzcat[V:DefaultArrayValue:ClassTag](vectors: SparseVector[V]*):CSCMatrix[V] ={
     if(!vectors.forall(_.size==vectors(0).size))
       throw new IllegalArgumentException("vector lengths must be equal, but got: " + vectors.map(_.length).mkString(", "))
     val rows = vectors(0).length
@@ -195,15 +196,15 @@ object SparseVector extends SparseVectorOps_Int
   }
 
   // implicits
-  class CanCopySparseVector[@spec(Int, Float, Double) V:ClassManifest:DefaultArrayValue] extends CanCopy[SparseVector[V]] {
+  class CanCopySparseVector[@spec(Int, Float, Double) V:ClassTag:DefaultArrayValue] extends CanCopy[SparseVector[V]] {
     def apply(v1: SparseVector[V]) = {
       v1.copy
     }
   }
 
-  implicit def canCopySparse[@spec(Int, Float, Double) V: ClassManifest: DefaultArrayValue] = new CanCopySparseVector[V]
+  implicit def canCopySparse[@spec(Int, Float, Double) V: ClassTag: DefaultArrayValue] = new CanCopySparseVector[V]
 
-  implicit def canMapValues[V, V2: ClassManifest: DefaultArrayValue]:CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] = {
+  implicit def canMapValues[V, V2: ClassTag: DefaultArrayValue]:CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] = {
     new CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] {
       /**Maps all key-value pairs from the given collection. */
       def map(from: SparseVector[V], fn: (V) => V2) = {
@@ -223,7 +224,7 @@ object SparseVector extends SparseVectorOps_Int
     }
   }
 
-  implicit def canTransformValues[V:DefaultArrayValue:ClassManifest]:CanTransformValues[SparseVector[V], V, V] = {
+  implicit def canTransformValues[V:DefaultArrayValue:ClassTag]:CanTransformValues[SparseVector[V], V, V] = {
     new CanTransformValues[SparseVector[V], V, V] {
       val z = implicitly[DefaultArrayValue[V]]
       /**Transforms all key-value pairs from the given collection. */
@@ -256,7 +257,7 @@ object SparseVector extends SparseVectorOps_Int
   }
 
 
-  implicit def canMapPairs[V, V2: ClassManifest: DefaultArrayValue]:CanMapKeyValuePairs[SparseVector[V], Int, V, V2, SparseVector[V2]] = {
+  implicit def canMapPairs[V, V2: ClassTag: DefaultArrayValue]:CanMapKeyValuePairs[SparseVector[V], Int, V, V2, SparseVector[V2]] = {
     new CanMapKeyValuePairs[SparseVector[V], Int, V, V2, SparseVector[V2]] {
       /**Maps all key-value pairs from the given collection. */
       def map(from: SparseVector[V], fn: (Int, V) => V2) = {
@@ -276,7 +277,7 @@ object SparseVector extends SparseVectorOps_Int
     }
   }
 
-  class CanZipMapValuesSparseVector[@spec(Int, Double, Float) V, @spec(Int, Double) RV:ClassManifest:DefaultArrayValue] extends CanZipMapValues[SparseVector[V],V,RV,SparseVector[RV]] {
+  class CanZipMapValuesSparseVector[@spec(Int, Double, Float) V, @spec(Int, Double) RV:ClassTag:DefaultArrayValue] extends CanZipMapValues[SparseVector[V],V,RV,SparseVector[RV]] {
     def create(length : Int) = zeros(length)
 
     /**Maps all corresponding values from the two collection. */
@@ -291,7 +292,7 @@ object SparseVector extends SparseVectorOps_Int
       result
     }
   }
-  implicit def zipMap[V, R:ClassManifest:DefaultArrayValue] = new CanZipMapValuesSparseVector[V, R]
+  implicit def zipMap[V, R:ClassTag:DefaultArrayValue] = new CanZipMapValuesSparseVector[V, R]
   implicit val zipMap_d = new CanZipMapValuesSparseVector[Double, Double]
   implicit val zipMap_f = new CanZipMapValuesSparseVector[Float, Float]
   implicit val zipMap_i = new CanZipMapValuesSparseVector[Int, Int]

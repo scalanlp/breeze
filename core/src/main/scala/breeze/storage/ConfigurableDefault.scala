@@ -15,6 +15,7 @@ package breeze.storage
  limitations under the License.
 */
 import java.util.Arrays
+import scala.reflect.ClassTag
 
 /**
  *
@@ -35,7 +36,7 @@ trait ConfigurableDefault[@specialized V] extends Serializable { outer =>
     case _ => throw new RuntimeException("shouldn't be here!")
   }
 
-  def makeArray(size:Int)(implicit default: DefaultArrayValue[V], man: ClassManifest[V]) = {
+  def makeArray(size:Int)(implicit default: DefaultArrayValue[V], man: ClassTag[V]) = {
     val arr = new Array[V](size)
     fillArray(arr,value(default))
     arr

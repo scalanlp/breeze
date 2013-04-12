@@ -19,6 +19,7 @@ import breeze.storage.{Storage, DefaultArrayValue, ConfigurableDefault}
 import collection.mutable.BitSet
 import breeze.util.ArrayUtil
 import java.util
+import scala.reflect.ClassTag
 
 
 /**
@@ -39,11 +40,11 @@ final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[
 
 
 
-  def this(size: Int, default: Elem)(implicit manElem: ClassManifest[Elem]) = {
+  def this(size: Int, default: Elem)(implicit manElem: ClassTag[Elem]) = {
     this(Array.empty,Array.empty,0, size, default)
   }
 
-  def this(size: Int)(implicit manElem: ClassManifest[Elem], defaultArrayValue: DefaultArrayValue[Elem]) = {
+  def this(size: Int)(implicit manElem: ClassTag[Elem], defaultArrayValue: DefaultArrayValue[Elem]) = {
     this(size, ConfigurableDefault.default[Elem].value(defaultArrayValue))
   }
 
@@ -90,7 +91,7 @@ final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[
    * value, the result may be an efficiently dense (or almost dense) paired
    * array.
    */
-  def map[B:ClassManifest:DefaultArrayValue](f : Elem=>B) : SparseArray[B] = {
+  def map[B:ClassTag:DefaultArrayValue](f : Elem=>B) : SparseArray[B] = {
     val newDefault = implicitly[DefaultArrayValue[B]].value
     if (used <= length && f(default) == newDefault) {
       // some default values but f(default) is still default
@@ -368,7 +369,7 @@ final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[
       _nz
     }
 
-    val newData  = ClassManifest.fromClass(data.getClass.getComponentType).newArray(nz).asInstanceOf[Array[Elem]]
+    val newData  = ClassTag[Elem](data.getClass.getComponentType).newArray(nz)
     val newIndex = new Array[Int](nz)
 
     var i = 0
@@ -408,7 +409,7 @@ final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[
     reserve(used)
   }
 
-  def concatenate(that:SparseArray[Elem])(implicit man :ClassManifest[Elem]):SparseArray[Elem]={ 
+  def concatenate(that:SparseArray[Elem])(implicit man :ClassTag[Elem]):SparseArray[Elem]={ 
     if(this.default!=that.default) throw new IllegalArgumentException("default values should be equal")
     new SparseArray((this.index.slice(0,this.used) union that.index.slice(0,that.used).map(_ + this.size)).toArray,
 		    (this.data.slice(0,this.used) union that.data.slice(0,that.used)).toArray,
@@ -419,7 +420,7 @@ final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[
 }
 
 object SparseArray {
-  def apply[@specialized(Int, Float, Double) T:ClassManifest:DefaultArrayValue](values : T*) = {
+  def apply[@specialized(Int, Float, Double) T:ClassTag:DefaultArrayValue](values : T*) = {
     val rv = new SparseArray[T](Array.range(0, values.length), values.toArray, values.length, values.length, implicitly[DefaultArrayValue[T]].value)
     rv.compact()
     rv
@@ -434,7 +435,7 @@ object SparseArray {
    *
    * @author dramage
    */
-  def fill[@specialized(Int, Float, Double) T:ClassManifest:DefaultArrayValue](length : Int)(value : =>T) : SparseArray[T] = {
+  def fill[@specialized(Int, Float, Double) T:ClassTag:DefaultArrayValue](length : Int)(value : =>T) : SparseArray[T] = {
     if (value != implicitly[DefaultArrayValue[T]].value) {
       val rv = new SparseArray[T](size = length)
       var i = 0
@@ -448,7 +449,7 @@ object SparseArray {
     }
   }
 
-  def create[@specialized(Int, Float, Double) T:ClassManifest:DefaultArrayValue](length : Int)(values : (Int,T)*) = {
+  def create[@specialized(Int, Float, Double) T:ClassTag:DefaultArrayValue](length : Int)(values : (Int,T)*) = {
     val rv = new SparseArray[T](length)
     for ((k,v) <- values) {
       rv(k) = v
@@ -456,7 +457,7 @@ object SparseArray {
     rv
   }
 
-  def tabulate[@specialized(Int, Float, Double) T:ClassManifest:DefaultArrayValue](length : Int)(fn : (Int => T)) = {
+  def tabulate[@specialized(Int, Float, Double) T:ClassTag:DefaultArrayValue](length : Int)(fn : (Int => T)) = {
     val rv = new SparseArray[T](length)
     var i = 0
     while (i < length) {

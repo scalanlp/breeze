@@ -15,6 +15,7 @@ package breeze.math
  limitations under the License.
 */
 import breeze.storage.DefaultArrayValue
+import scala.reflect.ClassTag
 
 
 /**
@@ -43,7 +44,7 @@ object Field {
     def norm(a : Int) = if (a < 0) -a else a
     def toDouble(a : Int) = a
     def isNaN(a : Int) = false
-    val manifest = implicitly[ClassManifest[Int]]
+    val manifest = implicitly[ClassTag[Int]]
     val defaultArrayValue = implicitly[DefaultArrayValue[Int]]
 
 
@@ -62,7 +63,7 @@ object Field {
     def norm(a : Short) = if (a < 0) -a else a
     def toDouble(a : Short) = a
     def isNaN(a : Short) = false
-    val manifest = implicitly[ClassManifest[Short]]
+    val manifest = implicitly[ClassTag[Short]]
     val defaultArrayValue = implicitly[DefaultArrayValue[Short]]
   }
 
@@ -79,7 +80,7 @@ object Field {
     def norm(a : Long) = if (a < 0) -a else a
     def toDouble(a : Long) = a
     def isNaN(a : Long) = false
-    val manifest = implicitly[ClassManifest[Long]]
+    val manifest = implicitly[ClassTag[Long]]
     val defaultArrayValue = implicitly[DefaultArrayValue[Long]]
   }
 
@@ -96,7 +97,7 @@ object Field {
     def norm(a : Float) = if (a < 0) -a else a
     def toDouble(a : Float) = a
     def isNaN(a : Float) = java.lang.Float.isNaN(a)
-    val manifest = implicitly[ClassManifest[Float]]
+    val manifest = implicitly[ClassTag[Float]]
     val defaultArrayValue = implicitly[DefaultArrayValue[Float]]
 
     override def close(a: Float, b: Float, tolerance: Double) = (a-b).abs <= math.max(a.abs, b.abs) * tolerance
@@ -115,7 +116,7 @@ object Field {
     def norm(a : Double) = if (a < 0) -a else a
     def toDouble(a : Double) = a
     def isNaN(a : Double) = java.lang.Double.isNaN(a)
-    val manifest = implicitly[ClassManifest[Double]]
+    val manifest = implicitly[ClassTag[Double]]
     val defaultArrayValue = implicitly[DefaultArrayValue[Double]]
 
     override def close(a: Double, b: Double, tolerance: Double) = (a-b).abs <= math.max(a.abs, b.abs) * tolerance

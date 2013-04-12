@@ -17,6 +17,7 @@ package breeze.util
 */
 
 import java.util.Arrays
+import scala.reflect.ClassTag
 
 /**
  * Array operations on generic arrays, a little faster in general, I hope.
@@ -79,7 +80,7 @@ object ArrayUtil {
       case x: Array[Char] => new Array[Char](length).asInstanceOf[Array[V]]
       case x: Array[Byte] => new Array[Byte](length).asInstanceOf[Array[V]]
       case x: Array[_] =>
-        implicit val man = ClassManifest.fromClass(x.getClass.getComponentType.asInstanceOf[Class[V]])
+        implicit val man = ClassTag[V](x.getClass.getComponentType.asInstanceOf[Class[V]])
         new Array[V](length)
       case _ => throw new RuntimeException("shouldn't be here!")
     }

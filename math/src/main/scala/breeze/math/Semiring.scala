@@ -16,6 +16,7 @@ package breeze.math
  limitations under the License.
 */
 import breeze.storage.DefaultArrayValue
+import scala.reflect.ClassTag
 
 /**
  *
@@ -34,7 +35,7 @@ trait Semiring[@specialized(Int,Short,Long,Float,Double) V] extends Serializable
   def close(a: V, b: V, tolerance: Double=1E-4):Boolean = a == b
 
   /** Returns the class manifest of the scalar type. */
-  def manifest : ClassManifest[V]
+  def manifest : ClassTag[V]
 
   /** Returns the DefaultArrayValue for this type.  Always this.zero. */
   def defaultArrayValue : DefaultArrayValue[V]
@@ -60,7 +61,7 @@ object Semiring {
     def norm(a : Boolean) = breeze.numerics.I(a)
     def toDouble(a : Boolean) = breeze.numerics.I(a)
     def isNaN(a : Boolean) = false
-    def manifest = implicitly[ClassManifest[Boolean]]
+    def manifest = implicitly[ClassTag[Boolean]]
     val defaultArrayValue = implicitly[DefaultArrayValue[Boolean]]
  }
 }

@@ -24,6 +24,7 @@ import breeze.stats.distributions.Rand
 import breeze.math.{MutableInnerProductSpace, MutableCoordinateSpace}
 import breeze.util.Index
 import com.typesafe.scalalogging.log4j.Logging
+import scala.reflect.ClassTag
 
 
 /**
@@ -37,7 +38,7 @@ object SVM {
    */
   def apply[L,T](data:Seq[Example[L,T]],numIterations:Int=1000)
               (implicit vspace: MutableCoordinateSpace[T, Double],
-                man: ClassManifest[T]):Classifier[L,T] = {
+                man: ClassTag[T]):Classifier[L,T] = {
 
     new SMOTrainer(numIterations).train(data)
   }
@@ -147,7 +148,7 @@ object SVM {
   class SMOTrainer[L,T](maxIterations: Int=30,
                         C: Double = 10.0)
                        (implicit vspace: MutableCoordinateSpace[T, Double],
-                        man: ClassManifest[T]) extends Classifier.Trainer[L,T] with Logging {
+                        man: ClassTag[T]) extends Classifier.Trainer[L,T] with Logging {
     type MyClassifier = LinearClassifier[L,UnindexedLFMatrix[L,T],Counter[L,Double],T]
 
     import vspace._

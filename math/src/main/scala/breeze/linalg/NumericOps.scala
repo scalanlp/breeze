@@ -19,6 +19,7 @@ import breeze.linalg.operators._
 import breeze.math.{Ring, Field, VectorSpace}
 import support.CanSlice2
 import breeze.storage.DefaultArrayValue
+import scala.reflect.ClassTag
 
 /**
  * In some sense, this is the real root of the linalg hierarchy. It provides
@@ -225,7 +226,7 @@ object NumericOps {
 
 
     implicit def binaryOpFromDVOp2[V,Other,Op<:OpType,U](implicit op: BinaryOp[DenseVector[V], DenseVector[V], Op, DenseVector[U]], 
-                                                         man: ClassManifest[U],
+                                                         man: ClassTag[U],
                                                          dav: DefaultArrayValue[U]) = {
       new BinaryOp[Array[V], Array[V], Op, Array[U]] {
         def apply(a: Array[V], b: Array[V]): Array[U] = {
@@ -242,7 +243,7 @@ object NumericOps {
     }
 
 
-    implicit def binaryUpdateOpFromDVDVOp[V,Op<:OpType, U](implicit op: BinaryUpdateOp[DenseVector[V], DenseVector[V], Op], man: ClassManifest[U]) = {
+    implicit def binaryUpdateOpFromDVDVOp[V,Op<:OpType, U](implicit op: BinaryUpdateOp[DenseVector[V], DenseVector[V], Op], man: ClassTag[U]) = {
       new BinaryUpdateOp[Array[V], Array[V], Op] {
         def apply(a: Array[V], b: Array[V]){
           op(new DenseVector(a),new DenseVector(b))
@@ -254,7 +255,7 @@ object NumericOps {
   }
 
   sealed trait ArraysLowPriority {
-    implicit def binaryUpdateOpFromDVOp[V,Other,Op<:OpType, U](implicit op: BinaryUpdateOp[DenseVector[V], Other, Op], man: ClassManifest[U]) = {
+    implicit def binaryUpdateOpFromDVOp[V,Other,Op<:OpType, U](implicit op: BinaryUpdateOp[DenseVector[V], Other, Op], man: ClassTag[U]) = {
       new BinaryUpdateOp[Array[V], Other, Op] {
         def apply(a: Array[V], b: Other){
           op(new DenseVector(a),b)
@@ -264,7 +265,7 @@ object NumericOps {
 
 
     implicit def binaryOpFromDVOp[V,Other,Op<:OpType,U](implicit op: BinaryOp[DenseVector[V], Other, Op, DenseVector[U]], 
-                                                        man: ClassManifest[U],
+                                                        man: ClassTag[U],
                                                         dav: DefaultArrayValue[U]) = {
       new BinaryOp[Array[V], Other, Op, Array[U]] {
         def apply(a: Array[V], b: Other): Array[U] = {

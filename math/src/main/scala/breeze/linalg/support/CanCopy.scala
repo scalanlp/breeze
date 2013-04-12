@@ -17,6 +17,7 @@ package breeze.linalg.support
 import breeze.math.Field
 import breeze.util.ArrayUtil
 import breeze.generic.CanMapValues
+import scala.reflect.ClassTag
 
 /**
  * Capability trait for being able to copy a collection
@@ -30,7 +31,7 @@ trait CanCopy[T] {
 
 object CanCopy {
 
-  class OpArray[@specialized V:ClassManifest:Field]
+  class OpArray[@specialized V]
   extends CanCopy[Array[V]] {
     override def apply(from : Array[V]) = {
       ArrayUtil.copyOf(from, from.length)
@@ -44,7 +45,7 @@ object CanCopy {
   implicit def opMapValues[From,A](implicit map : CanMapValues[From,A,A,From], op : CanCopy[A])
   : CanCopy[From] = new OpMapValues[From,A]()(op, map)
 
-  implicit def OpArrayAny[V:ClassManifest:Field] : OpArray[V] =
+  implicit def OpArrayAny[V:ClassTag:Field] : OpArray[V] =
     new OpArray[V]
 
   implicit object OpArrayI extends OpArray[Int]

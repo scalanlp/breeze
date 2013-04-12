@@ -19,7 +19,9 @@ package serialization;
 
 import java.io.File;
 
-import breeze.io.{TextReader,TextWriter,TextReaderException};
+import breeze.io.{TextReader,TextWriter,TextReaderException}
+import scala.reflect.ClassTag
+;
 
 /**
  * Reads a table as a series of TableRowReader.  Note that the returned
@@ -51,7 +53,7 @@ object TableReadable {
       tr.map(implicitly[TableRowReadable[V]].read);
   }
 
-  implicit def toArray[V:ClassManifest:TableRowReadable]
+  implicit def toArray[V:ClassTag:TableRowReadable]
   : TableReadable[Array[V]] = new TableReadable[Array[V]] {
     override def header =
       implicitly[TableRowReadable[V]].header;

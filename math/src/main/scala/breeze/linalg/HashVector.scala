@@ -7,6 +7,8 @@ import breeze.generic.{CanMapValues, URFunc}
 import support.{CanZipMapValues, CanMapKeyValuePairs, CanCopy}
 import breeze.math.{TensorSpace, Ring}
 import util.MurmurHash
+import scala.reflect.ClassTag
+import scala.util.hashing.MurmurHash3
 
 /**
  * A HashVector is a sparse vector backed by an OpenAddressHashArray
@@ -50,7 +52,7 @@ class HashVector[@specialized(Int, Double, Float) E](val array: OpenAddressHashA
   def allVisitableIndicesActive:Boolean = false
 
   override def hashCode() = {
-    val hash = new MurmurHash[E](47)
+    var hash = 47
     // we make the hash code based on index * value, so that zeros don't affect the hashcode.
     val dv = array.default.value(array.defaultArrayValue)
     var i = 0
@@ -59,16 +61,15 @@ class HashVector[@specialized(Int, Double, Float) E](val array: OpenAddressHashA
         val ind = index(i)
         val v = data(i)
         if(v != dv) {
-          hash.apply(v)
-          hash.append(ind)
+          hash = MurmurHash3.mix(hash, v.##)
+          hash = MurmurHash3.mix(hash, ind)
         }
       }
 
       i += 1
     }
 
-    hash.hash
-
+    MurmurHash.finalizeHash(hash)
   }
 }
 
@@ -77,23 +78,23 @@ object HashVector extends HashVectorOps_Int
                           with HashVectorOps_Float 
                           with HashVectorOps_Double
                           with HashVectorOps_Complex {
-  def zeros[@specialized(Double, Float, Int) V: ClassManifest:DefaultArrayValue](size: Int) = {
+  def zeros[@specialized(Double, Float, Int) V: ClassTag:DefaultArrayValue](size: Int) = {
     new HashVector(new OpenAddressHashArray[V](size))
   }
   def apply[@specialized(Double, Float, Int) V:DefaultArrayValue](values: Array[V]) = {
-    implicit val man = ClassManifest.fromClass[V](values.getClass.getComponentType.asInstanceOf[Class[V]])
+    implicit val man = ClassTag[V](values.getClass.getComponentType.asInstanceOf[Class[V]])
     val oah = new OpenAddressHashArray[V](values.length)
     for( (v,i) <- values.zipWithIndex) oah(i) = v
     new HashVector(oah)
   }
 
-  def apply[V:ClassManifest:DefaultArrayValue](values: V*):HashVector[V] = {
+  def apply[V:ClassTag:DefaultArrayValue](values: V*):HashVector[V] = {
     apply(values.toArray)
   }
-  def fill[@specialized(Double, Int, Float) V:ClassManifest:DefaultArrayValue](size: Int)(v: =>V):HashVector[V] = apply(Array.fill(size)(v))
-  def tabulate[@specialized(Double, Int, Float) V:ClassManifest:DefaultArrayValue](size: Int)(f: Int=>V):HashVector[V]= apply(Array.tabulate(size)(f))
+  def fill[@specialized(Double, Int, Float) V:ClassTag:DefaultArrayValue](size: Int)(v: =>V):HashVector[V] = apply(Array.fill(size)(v))
+  def tabulate[@specialized(Double, Int, Float) V:ClassTag:DefaultArrayValue](size: Int)(f: Int=>V):HashVector[V]= apply(Array.tabulate(size)(f))
 
-  def apply[V:ClassManifest:DefaultArrayValue](length: Int)(values: (Int, V)*) = {
+  def apply[V:ClassTag:DefaultArrayValue](length: Int)(values: (Int, V)*) = {
     val r = zeros[V](length)
     for( (i, v) <- values) {
       r(i) = v
@@ -106,15 +107,15 @@ object HashVector extends HashVectorOps_Int
 
 
   // implicits
-  class CanCopyHashVector[@specialized(Int, Float, Double) V:ClassManifest:DefaultArrayValue] extends CanCopy[HashVector[V]] {
+  class CanCopyHashVector[@specialized(Int, Float, Double) V:ClassTag:DefaultArrayValue] extends CanCopy[HashVector[V]] {
     def apply(v1: HashVector[V]) = {
       v1.copy
     }
   }
 
-  implicit def canCopyHash[@specialized(Int, Float, Double) V: ClassManifest: DefaultArrayValue] = new CanCopyHashVector[V]
+  implicit def canCopyHash[@specialized(Int, Float, Double) V: ClassTag: DefaultArrayValue] = new CanCopyHashVector[V]
 
-  implicit def canMapValues[V, V2: ClassManifest: DefaultArrayValue]:CanMapValues[HashVector[V], V, V2, HashVector[V2]] = {
+  implicit def canMapValues[V, V2: ClassTag: DefaultArrayValue]:CanMapValues[HashVector[V], V, V2, HashVector[V2]] = {
     new CanMapValues[HashVector[V], V, V2, HashVector[V2]] {
       /**Maps all key-value pairs from the given collection. */
       def map(from: HashVector[V], fn: (V) => V2) = {
@@ -135,7 +136,7 @@ object HashVector extends HashVectorOps_Int
     }
   }
 
-  implicit def canMapPairs[V, V2: ClassManifest: DefaultArrayValue]:CanMapKeyValuePairs[HashVector[V], Int, V, V2, HashVector[V2]] = {
+  implicit def canMapPairs[V, V2: ClassTag: DefaultArrayValue]:CanMapKeyValuePairs[HashVector[V], Int, V, V2, HashVector[V2]] = {
     new CanMapKeyValuePairs[HashVector[V], Int, V, V2, HashVector[V2]] {
       /**Maps all key-value pairs from the given collection. */
       def map(from: HashVector[V], fn: (Int, V) => V2) = {
@@ -156,7 +157,7 @@ object HashVector extends HashVectorOps_Int
     }
   }
 
-  class CanZipMapValuesHashVector[@specialized(Int, Double, Float) V, @specialized(Int, Double) RV:ClassManifest:DefaultArrayValue] extends CanZipMapValues[HashVector[V],V,RV,HashVector[RV]] {
+  class CanZipMapValuesHashVector[@specialized(Int, Double, Float) V, @specialized(Int, Double) RV:ClassTag:DefaultArrayValue] extends CanZipMapValues[HashVector[V],V,RV,HashVector[RV]] {
     def create(length : Int) = zeros(length)
 
     /**Maps all corresponding values from the two collection. */
@@ -171,7 +172,7 @@ object HashVector extends HashVectorOps_Int
       result
     }
   }
-  implicit def zipMap[V, R:ClassManifest:DefaultArrayValue] = new CanZipMapValuesHashVector[V, R]
+  implicit def zipMap[V, R:ClassTag:DefaultArrayValue] = new CanZipMapValuesHashVector[V, R]
   implicit val zipMap_d = new CanZipMapValuesHashVector[Double, Double]
   implicit val zipMap_f = new CanZipMapValuesHashVector[Float, Float]
   implicit val zipMap_i = new CanZipMapValuesHashVector[Int, Int]

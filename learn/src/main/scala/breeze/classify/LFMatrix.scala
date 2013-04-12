@@ -8,6 +8,7 @@ import breeze.generic.{URFunc, UReduceable, CanMapValues}
 import breeze.serialization.DataSerialization
 import breeze.serialization.DataSerialization.ReadWritable
 import breeze.math.{MutableCoordinateSpace, TensorSpace}
+import scala.reflect.ClassTag
 
 /**
  * This stupidly named class is a Label-Feature Matrix, which is to say that
@@ -22,7 +23,7 @@ import breeze.math.{MutableCoordinateSpace, TensorSpace}
  * @tparam TF feature tensor type
  */
 @SerialVersionUID(1L)
-class LFMatrix[L,TF:ClassManifest](val data: Array[TF],
+class LFMatrix[L,TF:ClassTag](val data: Array[TF],
                               emptyTF: =>TF,
                               val labelIndex:Index[L]) extends NumericOps[LFMatrix[L,TF]] with Serializable {
   def this(emptyTF: => TF, labelIndex: Index[L]) = this(Array.fill(labelIndex.size)(emptyTF), emptyTF, labelIndex)

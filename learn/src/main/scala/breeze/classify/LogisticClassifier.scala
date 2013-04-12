@@ -24,6 +24,7 @@ import breeze.optimize._
 import breeze.optimize.FirstOrderMinimizer.OptParams
 import breeze.math.MutableCoordinateSpace
 import breeze.util.Index
+import scala.reflect.ClassTag
 
 /**
  * A multi-class logistic/softmax/maxent classifier.
@@ -51,7 +52,7 @@ object LogisticClassifier {
    * @return a LinearClassifier based on the fitted model
    */
   class Trainer[L,TF](opt: OptParams = OptParams())(implicit arith: MutableCoordinateSpace[TF, Double],
-                                                    man: ClassManifest[TF]) extends Classifier.Trainer[L,TF] {
+                                                    man: ClassTag[TF]) extends Classifier.Trainer[L,TF] {
     import arith._
 
     type MyClassifier = LinearClassifier[L,UnindexedLFMatrix[L,TF],Counter[L,Double],TF]

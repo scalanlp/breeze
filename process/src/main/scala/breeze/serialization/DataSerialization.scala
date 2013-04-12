@@ -22,6 +22,7 @@ import java.io.{ObjectInputStream,ObjectOutputStream}
 
 import scala.collection.mutable.Builder
 import breeze.collection.mutable.SparseArray
+import scala.reflect.ClassTag
 
 /**
  * File-backed Serialization with standard combinators using optimized
@@ -183,7 +184,7 @@ with ByteSerialization {
     }
   }
 
-  implicit def ArrayReadWritable[T:ReadWritable:ClassManifest] = new ReadWritable[Array[T]] {
+  implicit def ArrayReadWritable[T:ReadWritable:ClassTag] = new ReadWritable[Array[T]] {
     override def read(in : DataInput) = {
       var rv = new Array[T](in.readInt)
       var i = 0
