@@ -129,9 +129,9 @@ extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
     * @param rows the number of rows
     * @param cols the number of columns, or -1 to auto determine based on size and rows
     */
-  def reshape(rows: Int, cols: Int = -1, view: View=View.Prefer):DenseMatrix[V] = {
+  def reshape(rows: Int, cols: Int, view: View=View.Prefer):DenseMatrix[V] = {
     require(rows > 0)
-    val _cols = if(cols < 0) size / rows else cols
+    val _cols = cols//if(cols < 0) size / rows else cols
     require(rows * _cols == size, "Cannot reshape a (%d,%d) matrix to a (%d,%d) matrix!".format(this.rows, this.cols, rows, _cols))
 
     view match {
@@ -141,9 +141,12 @@ extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
         else
           new DenseMatrix(rows, _cols, data, offset, if(isTranspose) cols else rows, isTranspose)
       case View.Copy =>
-        copy.reshape(rows, _cols, false)
+        // calling copy directly gives a verify error. TODO: submit bug
+        val result = new DenseMatrix[V](this.rows, this.cols, ArrayUtil.newArrayLike(data, size))
+        result := this
+        result.reshape(rows, _cols, View.Require)
       case View.Prefer =>
-        reshape(rows, cols, canFlattenView)
+        reshape(rows, cols, canReshapeView)
     }
   }
 
@@ -541,10 +544,10 @@ object DenseMatrix extends LowPriorityDenseMatrix
     }
   }
 
-  implicit def zipMap[V, R: ClassTag] = new CanZipMapValuesDenseMatrix[V, R]
-  implicit val zipMap_d = new CanZipMapValuesDenseMatrix[Double, Double]
-  implicit val zipMap_f = new CanZipMapValuesDenseMatrix[Float, Float]
-  implicit val zipMap_i = new CanZipMapValuesDenseMatrix[Int, Int]
+  implicit def zipMap[V, R: ClassTag]: CanZipMapValuesDenseMatrix[V, R] = new CanZipMapValuesDenseMatrix[V, R]
+  implicit val zipMap_d: CanZipMapValuesDenseMatrix[Double, Double] = new CanZipMapValuesDenseMatrix[Double, Double]
+  implicit val zipMap_f: CanZipMapValuesDenseMatrix[Float, Float] = new CanZipMapValuesDenseMatrix[Float, Float]
+  implicit val zipMap_i: CanZipMapValuesDenseMatrix[Int, Int] = new CanZipMapValuesDenseMatrix[Int, Int]
 
   implicit def canGaxpy[V: Semiring]: CanAxpy[V, DenseMatrix[V], DenseMatrix[V]] = {
     new CanAxpy[V, DenseMatrix[V], DenseMatrix[V]] {

@@ -48,15 +48,8 @@ object BuildSettings {
         <url>http://cs.berkeley.edu/~dlwh/</url>
       </developer>
     </developers>),
-  scalacOptions <++= (scalaVersion).map { (sv) =>
-     sv.toString match {
-       case "2.9.2" | "2.9.1" => 
-       Seq("-no-specialization","-optimize","-deprecation", "-Ydependent-method-types")
-      case _ => Seq("-no-specialization","-optimize","-deprecation")
-     }
-    },
+  scalacOptions ++= Seq("-optimize","-deprecation","-language:_"),
     javacOptions ++= Seq("-target", "1.6", "-source","1.6")
-
   )
 }
 

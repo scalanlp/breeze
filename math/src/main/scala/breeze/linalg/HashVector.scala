@@ -6,7 +6,6 @@ import breeze.storage.{ConfigurableDefault, DefaultArrayValue}
 import breeze.generic.{CanMapValues, URFunc}
 import support.{CanZipMapValues, CanMapKeyValuePairs, CanCopy}
 import breeze.math.{TensorSpace, Ring}
-import util.MurmurHash
 import scala.reflect.ClassTag
 import scala.util.hashing.MurmurHash3
 
@@ -69,7 +68,7 @@ class HashVector[@specialized(Int, Double, Float) E](val array: OpenAddressHashA
       i += 1
     }
 
-    MurmurHash.finalizeHash(hash)
+    MurmurHash3.finalizeHash(hash, activeSize)
   }
 }
 

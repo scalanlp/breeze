@@ -189,10 +189,16 @@ trait MatrixConstructors[Vec[T]<:Matrix[T]] {
     val nRows = rows.length
     val ns = rl.length(rows(0))
     val rv = zeros(nRows, ns)
+    finishLiteral(rv, rl, rows)
+    rv
+  }
+
+  // This method only exists because of trouble in Scala-specialization land.
+  // basically, we turn off specialization for this loop, since it's not going to be fast anyway.
+  private def finishLiteral[V, R](rv: Matrix[V], rl : LiteralRow[R,V], rows: Seq[R]) {
     for ((row,i) <- rows.zipWithIndex) {
       rl.foreach(row, {(j, v) => rv(i,j) = v})
     }
-    rv
   }
 
 }

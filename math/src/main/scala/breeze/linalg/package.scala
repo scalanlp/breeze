@@ -1077,7 +1077,7 @@ trait LinearAlgebra {
     requireSquareMatrix(m)
     val (real, imag, evectors) = eig(m)
     require(norm(imag) == 0.0, "We cannot handle complex eigenvalues yet.")
-    val exped = real.values.map(scala.math.pow(_, exp))
+    val exped = new DenseVector(real.data.map(scala.math.pow(_, exp)))
 
     (evectors.t \ (evectors * diag(exped)).t).t
   }
