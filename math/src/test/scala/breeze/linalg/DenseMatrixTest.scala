@@ -321,7 +321,7 @@ class DenseMatrixTest extends FunSuite with Checkers {
                                  (Complex(0,170), Complex(0,-46), Complex(0,134))))
     assert(b * c === DenseVector(Complex(62,62), Complex(-21,-21), Complex(87,87)))
     assert(b * cs === DenseVector(Complex(62,62), Complex(-21,-21), Complex(87,87)))
-    assert(b.t * c === DenseVector(Complex(72,72), Complex(-18,-18), Complex(65,65)))
+    assert(b.t * c === DenseVector(Complex(72,-72), Complex(-18,18), Complex(65,-65)))
   }
 
   test("toDenseVector")  {

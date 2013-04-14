@@ -21,7 +21,7 @@ import breeze.generic._
 import support.{CanCreateZerosLike, CanMapKeyValuePairs, CanZipMapValues, CanSlice, CanCopy}
 import breeze.numerics.IntMath
 import java.util.Arrays
-import breeze.math.{TensorSpace, Semiring, Ring, Field}
+import breeze.math.{Complex, TensorSpace, Semiring, Ring, Field}
 import breeze.util.{ArrayUtil, Isomorphism}
 import breeze.storage.DefaultArrayValue
 import scala.reflect.ClassTag
@@ -381,6 +381,18 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     new CanTranspose[DenseVector[V], DenseMatrix[V]] {
       def apply(from: DenseVector[V]) = {
         new DenseMatrix(data = from.data, offset = from.offset, cols = from.length, rows = 1, majorStride = from.stride)
+      }
+    }
+  }
+  
+  implicit def canTransposeComplex: CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] = {
+    new CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] {
+      def apply(from: DenseVector[Complex]) = {
+        new DenseMatrix(data = from.data map { _.conjugate }, 
+                        offset = from.offset, 
+                        cols = from.length, 
+                        rows = 1, 
+                        majorStride = from.stride)
       }
     }
   }

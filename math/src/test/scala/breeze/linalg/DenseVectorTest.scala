@@ -175,6 +175,13 @@ class DenseVectorTest extends FunSuite with Checkers {
     y(0, 0) = 0
     assert(x === DenseVector(0.0, 2.0, 3.0))
   }
+  
+  test("Transpose Complex") {
+    val x = DenseVector(Complex(1, 1), Complex(1, -1))
+    val y = x.t
+    val expected = new DenseMatrix(1, 2, Array(Complex(1, -1), Complex(1, 1)))
+    assert(y === expected)
+  }
 
   test("Map(Active)Pairs Double") {
     val a: DenseVector[Double] = DenseVector(1, 2, 3, 4, 5)
