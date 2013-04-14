@@ -14,11 +14,12 @@ package breeze.linalg
  See the License for the specific language governing permissions and
  limitations under the License.
 */
+import operators.CanTranspose
 import breeze.storage.DefaultArrayValue
 import java.util
-import breeze.util.{Terminal, ArrayUtil}
+import breeze.util.{ Terminal, ArrayUtil }
 import collection.mutable
-import breeze.math.Semiring
+import breeze.math.{ Complex, Semiring }
 import breeze.generic.CanMapValues
 import scala.reflect.ClassTag
 
@@ -157,7 +158,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
                          with CSCMatrixOps_Float 
                          with CSCMatrixOps_Double
                          with CSCMatrixOps_Complex {
-  def zeros[@specialized(Int, Float, Double) V:ClassTag:DefaultArrayValue](rows: Int, cols: Int, initialNonzero: Int = 0) = {
+  def zeros[@specialized(Int, Float, Double) V:ClassTag:DefaultArrayValue](rows: Int, cols: Int, initialNonzero: Int) = {
     new CSCMatrix[V](new Array(initialNonzero), rows, cols, new Array(cols + 1), 0, new Array(initialNonzero))
   }
 
@@ -179,8 +180,8 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
     res
   }
 
-    implicit def canMapValues[V, R:ClassTag:DefaultArrayValue:Semiring] = {
-      val z = implicitly[DefaultArrayValue[R]].value
+  implicit def canMapValues[V, R:ClassTag:DefaultArrayValue:Semiring] = {
+    val z = implicitly[DefaultArrayValue[R]].value
     new CanMapValues[CSCMatrix[V],V,R,CSCMatrix[R]] {
       override def map(from : CSCMatrix[V], fn : (V=>R)) = {
         val fz = fn(from.zero)
@@ -225,7 +226,47 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
       }
     }
   }
-
+  
+  implicit def canTranspose[V:ClassTag:DefaultArrayValue]: CanTranspose[CSCMatrix[V], CSCMatrix[V]] = {
+    new CanTranspose[CSCMatrix[V], CSCMatrix[V]] {
+      def apply(from: CSCMatrix[V]) = {
+        val transposedMtx = CSCMatrix.zeros[V](from.cols, from.rows)
+        
+        var j = 0
+        while(j < from.cols) {
+          var ip = from.colPtrs(j)
+          while(ip < from.colPtrs(j+1)) {
+            val i = from.rowIndices(ip)
+            transposedMtx(j, i) = from.data(ip)
+            ip += 1
+          }
+          j += 1
+        }
+        transposedMtx
+      }
+    }
+  }
+    
+  implicit def canTransposeComplex: CanTranspose[CSCMatrix[Complex], CSCMatrix[Complex]] = {
+    new CanTranspose[CSCMatrix[Complex], CSCMatrix[Complex]] {
+      def apply(from: CSCMatrix[Complex]) = {
+        val transposedMtx = CSCMatrix.zeros[Complex](from.cols, from.rows)
+        
+        var j = 0
+        while(j < from.cols) {
+          var ip = from.colPtrs(j)
+          while(ip < from.colPtrs(j+1)) {
+            val i = from.rowIndices(ip)
+            transposedMtx(j, i) = from.data(ip).conjugate
+            ip += 1
+          }
+          j += 1
+        }
+        transposedMtx
+      }
+    }
+  }
+    
 
   /**
    * This is basically an unsorted coordinate matrix.

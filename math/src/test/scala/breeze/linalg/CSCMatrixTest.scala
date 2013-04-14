@@ -14,6 +14,7 @@ package breeze.linalg
  See the License for the specific language governing permissions and
  limitations under the License.
 */
+import breeze.math.Complex
 import org.scalatest._
 import org.scalatest.junit._
 import org.scalatest.prop._
@@ -70,7 +71,30 @@ class CSCMatrixTest extends FunSuite with Checkers {
 //    val z : DenseMatrix[Double] = b * (b + 1.0)
 //    assert(z === DenseMatrix((164,5,107),(-5,10,-27),(161,-7,138)))
   }
-
+  
+  test("Transpose") {
+    val a = CSCMatrix.zeros[Int](2,3)
+    a(0,0) = 1
+    a(1,2) = 2
+    
+    val expected = CSCMatrix.zeros[Int](3,2)
+    expected(0,0) = 1
+    expected(2,1) = 2
+    
+    assert(a.t === expected)
+  }
+  
+  test("Transpose Complex") {
+    val a = CSCMatrix.zeros[Complex](2,3)
+    a(0,0) = Complex(1,1)
+    a(1,2) = Complex(-2,-2)
+    
+    val expected = CSCMatrix.zeros[Complex](3,2)
+    expected(0,0) = Complex(1,-1)
+    expected(2,1) = Complex(-2,2)
+    
+    assert(a.t === expected)
+  }
 
   test("Generic CSC ops") {
     // mostly for coverage
