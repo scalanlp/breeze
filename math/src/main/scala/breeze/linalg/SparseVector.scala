@@ -20,7 +20,7 @@ import breeze.storage.{DefaultArrayValue}
 import support.{CanZipMapValues, CanMapKeyValuePairs, CanCopy, CanSlice}
 import breeze.util.{Sorting, ArrayUtil}
 import breeze.generic.{CanTransformValues, CanMapValues, URFunc, UReduceable}
-import breeze.math.{Semiring, Ring, TensorSpace}
+import breeze.math.{Complex, Semiring, Ring, TensorSpace}
 import breeze.collection.mutable.SparseArray
 import java.util
 import collection.mutable
@@ -310,5 +310,35 @@ object SparseVector extends SparseVectorOps_Int
   implicit val space_d = TensorSpace.make[SparseVector[Double], Int, Double]
   implicit val space_f = TensorSpace.make[SparseVector[Float], Int, Float]
   implicit val space_i = TensorSpace.make[SparseVector[Int], Int, Int]
+  
+  implicit def canTranspose[V:ClassTag:DefaultArrayValue]: CanTranspose[SparseVector[V], CSCMatrix[V]] = {
+    new CanTranspose[SparseVector[V], CSCMatrix[V]] {
+      def apply(from: SparseVector[V]) = {
+        val transposedMtx = CSCMatrix.zeros[V](1, from.length)
+        var i = 0
+        while (i < from.activeSize) {
+          val c = from.index(i)
+          transposedMtx(0, c) = from.data(i)
+          i += 1
+        }
+        transposedMtx
+      }
+    }
+  }
+  
+  implicit def canTransposeComplex: CanTranspose[SparseVector[Complex], CSCMatrix[Complex]] = {
+    new CanTranspose[SparseVector[Complex], CSCMatrix[Complex]] {
+      def apply(from: SparseVector[Complex]) = {
+        val transposedMtx = CSCMatrix.zeros[Complex](1, from.length)
+        var i = 0
+        while (i < from.activeSize) {
+          val c = from.index(i)
+          transposedMtx(0, c) = from.data(i).conjugate
+          i += 1
+        }
+        transposedMtx
+      }
+    }
+  }
 
 }

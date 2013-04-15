@@ -21,7 +21,7 @@ import org.netlib.blas.{Dgemm}
 import breeze.util.ArrayUtil
 import support._
 import breeze.generic.{CanTransformValues, URFunc, CanCollapseAxis, CanMapValues}
-import breeze.math.{Ring, Semiring}
+import breeze.math.{Complex, Ring, Semiring}
 import breeze.storage.DefaultArrayValue
 import breeze.storage.DefaultArrayValue._
 import scala.reflect.ClassTag
@@ -440,6 +440,19 @@ object DenseMatrix extends LowPriorityDenseMatrix
     new CanTranspose[DenseMatrix[V], DenseMatrix[V]] {
       def apply(from: DenseMatrix[V]) = {
         new DenseMatrix(data = from.data, offset = from.offset, cols = from.rows, rows = from.cols, majorStride = from.majorStride, isTranspose = !from.isTranspose)
+      }
+    }
+  }
+  
+  implicit def canTransposeComplex: CanTranspose[DenseMatrix[Complex], DenseMatrix[Complex]] = {
+    new CanTranspose[DenseMatrix[Complex], DenseMatrix[Complex]] {
+      def apply(from: DenseMatrix[Complex]) = {
+        new DenseMatrix(data = from.data map { _.conjugate }, 
+                        offset = from.offset, 
+                        cols = from.rows, 
+                        rows = from.cols, 
+                        majorStride = from.majorStride, 
+                        isTranspose = !from.isTranspose)
       }
     }
   }
