@@ -8,7 +8,8 @@ package breeze.optimize
  *
  * @author dlwh
  */
-class BacktrackingLineSearch(shrinkStep: Double = 0.5,
+class BacktrackingLineSearch(maxIterations: Int = 20,
+                             shrinkStep: Double = 0.5,
                              growStep: Double = 2.1,
                              cArmijo: Double = 1E-4,
                              cWolfe: Double = 0.9,
@@ -24,7 +25,7 @@ class BacktrackingLineSearch(shrinkStep: Double = 0.5,
   def iterations(f: DiffFunction[Double], init: Double = 1.0): Iterator[State] = {
     val (f0, df0) = f.calculate(0.0)
     val (initfval, initfderiv) = f.calculate(init)
-    Iterator.iterate(State(init, initfval, initfderiv) -> false) { case (state@State(alpha, fval, fderiv), _) =>
+    Iterator.iterate( (State(init, initfval, initfderiv), false, 0)) { case (state@State(alpha, fval, fderiv), _, iter) =>
       val multiplier =  if(fval > f0 + alpha * df0 * cArmijo) {
         shrinkStep
       } else if (enforceWolfeConditions && (fderiv < cWolfe * df0)) {
@@ -35,17 +36,19 @@ class BacktrackingLineSearch(shrinkStep: Double = 0.5,
         1.0
       }
       if(multiplier == 1.0) {
-        state -> true
+        (state, true, iter)
       } else {
         val newAlpha = alpha * multiplier
-        if(newAlpha < minAlpha) {
+        if (iter >= maxIterations) {
+          throw new LineSearchFailed(0.0, 0.0)
+        } else if(newAlpha < minAlpha) {
           throw new StepSizeUnderflow()
         } else if (newAlpha > maxAlpha) {
           throw new StepSizeOverflow()
         }
         val (fvalnew, fderivnew) = f.calculate(newAlpha)
-        State(newAlpha, fvalnew, fderivnew) -> false
+        (State(newAlpha, fvalnew, fderivnew), false, iter+1)
       }
-    }.takeWhile(!_._2).map(_._1)
+    }.takeWhile(triple => !triple._2 && (triple._3 < maxIterations)).map(_._1)
   }
 }
