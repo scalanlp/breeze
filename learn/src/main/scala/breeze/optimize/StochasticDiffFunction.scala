@@ -9,14 +9,14 @@ import breeze.util.Isomorphism
  */
 trait StochasticDiffFunction[T] extends (T=>Double) { outer =>
    /** calculates the gradient at a point */
-  def gradientAt(x: T): T = calculate(x)._2;
+  def gradientAt(x: T): T = calculate(x)._2
   /** calculates the value at a point */
-  def valueAt(x:T): Double = calculate(x)._1;
+  def valueAt(x:T): Double = calculate(x)._1
 
-  def apply(x:T) = valueAt(x);
+  final def apply(x:T) = valueAt(x)
 
   /** Calculates both the value and the gradient at a point */
-  def calculate(x:T):(Double,T);
+  def calculate(x:T):(Double,T)
 
   /**
    * Lenses provide a way of mapping between two types, which we typically
@@ -24,9 +24,9 @@ trait StochasticDiffFunction[T] extends (T=>Double) { outer =>
    */
   def throughLens[U](implicit l: Isomorphism[T,U]) = new DiffFunction[U] {
     def calculate(u: U) = {
-      val t = l.backward(u);
-      val (obj,gu) = outer.calculate(t);
-      (obj,l.forward(gu));
+      val t = l.backward(u)
+      val (obj,gu) = outer.calculate(t)
+      (obj,l.forward(gu))
     }
   }
 }

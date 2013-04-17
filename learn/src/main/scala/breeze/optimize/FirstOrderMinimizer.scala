@@ -114,6 +114,7 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
 sealed class FirstOrderException(msg: String="") extends RuntimeException(msg)
 class NaNHistory extends FirstOrderException
 class StepSizeUnderflow extends FirstOrderException
+class StepSizeOverflow extends FirstOrderException
 class LineSearchFailed(gradNorm: Double, dirNorm: Double) extends FirstOrderException("Grad norm: %.4f Dir Norm: %.4f".format(gradNorm, dirNorm))
 
 object FirstOrderMinimizer {

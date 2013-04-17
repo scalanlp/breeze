@@ -36,7 +36,7 @@ import com.typesafe.scalalogging.log4j.Logging
  * @param maxIter: maximum number of iterations, or <= 0 for unlimited
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
-class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-5)
+class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
               (implicit vspace: MutableInnerProductSpace[T, Double]) extends FirstOrderMinimizer[T,DiffFunction[T]](maxIter, tolerance) with Logging {
 
   import vspace._
@@ -62,19 +62,18 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-5)
     val as = new Array[Double](m)
     val rho = new Array[Double](m)
 
-    for(i <- (memStep.length-1) to 0 by -1) {
+    for(i <- 0 until memStep.length) {
       rho(i) = (memStep(i) dot memGradDelta(i))
       as(i) = (memStep(i) dot dir)/rho(i)
       if(as(i).isNaN) {
         throw new NaNHistory
       }
-//      dir -= memGradDelta(i) * as(i)
       axpy(-as(i), memGradDelta(i), dir)
     }
 
     dir *= diag
 
-    for(i <- 0 until memStep.length) {
+    for(i <- (memStep.length - 1) to 0 by (-1)) {
       val beta = (memGradDelta(i) dot dir)/rho(i)
       axpy(as(i) - beta, memStep(i), dir)
     }
@@ -129,34 +128,9 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-5)
       }
     }
 
-    def ff(alpha: Double) = f.valueAt(x + dir * alpha)
-    val search = new BacktrackingLineSearch(cScale = if(iter < 1) 0.01 else 0.5, initAlpha = if (iter < 1) 1/norm(dir) else 1.0)
-    val iterates = search.iterations(ff)
-    var backoffs = 0
-    val targetState = iterates.find { case search.State(alpha,v) =>
-      // sufficient descent
-      var r = v < state.value + alpha * 0.0001 * normGradInDir
-
-      backoffs += 1
-      if(!r)  {
-        logger.info("Sufficient descent not met. Backing off.")
-        if(backoffs > 4 && state.history.memStep.length >= m) {
-          logger.info("A lot of backing off. Check your gradient calculation?")
-          if (norm(grad) <= 1E-3 * norm(state.x))
-            logger.info("Or maybe we're almost converged?")
-        }
-      }
-      // on the first few iterations, don't worry about sufficient slope reduction
-      // since we're trying to build the hessian approximation
-      else if(state.history.memStep.length >= m) {
-        r = math.abs(dir dot f.gradientAt(x + dir * alpha)) <= 0.95 * math.abs(normGradInDir)
-        if(!r) logger.info("Sufficient slope reduction condition not met. Backing off.")
-      }
-
-      r
-
-    }
-    val search.State(alpha,currentVal) = targetState.getOrElse(throw new LineSearchFailed(norm(grad), norm(dir)))
+    val ff = LineSearch.functionFromSearchDirection(f, x, dir)
+    val search = new BacktrackingLineSearch(shrinkStep = if(iter < 1) 0.01 else 0.5)
+    val alpha = search.minimize(ff, if(state.iter == 0.0) 1.0/norm(dir) else 1.0)
 
     if(alpha * norm(grad) < 1E-10)
       throw new StepSizeUnderflow

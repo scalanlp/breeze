@@ -64,7 +64,7 @@ class LBFGSTest extends OptimizeTestBase {
 
 
   test("optimize a simple multivariate gaussian with l2 regularization") {
-    val lbfgs = new LBFGS[DenseVector[Double]](100,4)
+    val lbfgs = new LBFGS[DenseVector[Double]](10000,4)
 
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
@@ -84,4 +84,47 @@ class LBFGSTest extends OptimizeTestBase {
    }
 
 
+
+   test("lbfgs-c rosenbroch example") {
+    val lbfgs = new LBFGS[DenseVector[Double]](40,6)
+
+    def optimizeThis(init: DenseVector[Double]) = {
+      val f = new DiffFunction[DenseVector[Double]] {
+
+        def calculate(x: DenseVector[Double]) = {
+          var fx = 0.0
+          val g = DenseVector.zeros[Double](x.length)
+
+          for(i <- 0 until x.length by 2) {
+            val t1 = 1.0 - x(i)
+            val t2 = 10.0 * (x(i+1) - x(i) * x(i))
+            g(i+1) = 20 * t2
+            g(i) = -2 * (x(i) * g(i+1) + t1)
+            fx += t1 * t1 + t2 * t2
+
+          }
+          fx -> g
+
+        }
+      }
+
+      val targetValue = 1.0
+
+      val result = lbfgs.minimize(f,init)
+
+      val ok = norm(result :- DenseVector.ones[Double](init.size) * targetValue,2)/result.size < 1E-5
+      ok || (throw new RuntimeException("Failed to find optimum for init " + init))
+    }
+    val init = DenseVector.zeros[Double](100)
+    init(0 until init.length by 2) := -1.2
+    init(1 until init.length by 2) := 1.0
+    assert(optimizeThis(init))
+
+
+   }
+
+
+
+
 }
+

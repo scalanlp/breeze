@@ -41,25 +41,17 @@ class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-
 //      }
     }
 
-    def ff(alpha: Double) = {
-      val newX = takeStep(state, dir, alpha)
-      val v =  f.valueAt(newX)
-      v + l1reg * norm(newX,1)
+    val ff = new DiffFunction[Double] {
+       def calculate(alpha: Double) = {
+         val newX = takeStep(state, dir, alpha)
+         val (v, newG) =  f.calculate(newX)
+         val (adjv, adjgrad) = adjust(newX, newG, v)
+         // TODO not sure if this is quite right...
+         adjv -> (adjgrad dot dir)
+       }
     }
-    val search = new BacktrackingLineSearch(initAlpha = if (iter < 1) 0.5/norm(state.grad) else 1.0, cScale= if(iter < 1) 0.1 else 0.5)
-    val iterates = search.iterations(ff)
-    val targetState = iterates.find { case search.State(alpha,v) =>
-      // sufficient descent
-      val r = v < state.adjustedValue + alpha * 0.0001 * normGradInDir
-      if(!r) logger.info(".")
-      r
-    }
-
-    val alpha = (for(search.State(alpha,currentVal) <- targetState) yield {
-      if(alpha > 0 && alpha * norm(state.grad,Double.PositiveInfinity) < 1E-10)
-        throw new StepSizeUnderflow
-      alpha
-    }) getOrElse(0.0)
+    val search = new BacktrackingLineSearch(shrinkStep= if(iter < 1) 0.1 else 0.5)
+    val alpha = search.minimize(ff, if(iter < 1) .5/norm(state.grad) else 1.0)
 
     alpha
   }
