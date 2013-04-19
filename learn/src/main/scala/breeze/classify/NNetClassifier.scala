@@ -24,10 +24,10 @@ class NNetClassifier[L, T](nnet: NeuralNetwork,
 }
 
 object NNetClassifier {
-  class CounterTrainer[L, T](opt: OptParams = OptParams()) extends Classifier.Trainer[L, Counter[T, Double]] {
+  class CounterTrainer[L, T](opt: OptParams = OptParams(),layersIn:Array[Int] = Array(100)) extends Classifier.Trainer[L, Counter[T, Double]] {
     type MyClassifier = NNetClassifier[L, Counter[T, Double]]
 
-    def train(data: Iterable[Example[L, Counter[T, Double]]],layersIn:Array[Int] = Array(100)) = {
+    def train(data: Iterable[Example[L, Counter[T, Double]]]) = {
       val labels = Index[L]()
       data foreach { labels index _.label}
       val featureIndex = Index[T]()
@@ -48,7 +48,7 @@ object NNetClassifier {
       val obj = new NNObjective(processedData.toIndexedSeq, errorFun, layers)
       val guess = obj.initialWeightVector
       val weights = opt.minimize(obj,guess)
-      new NNetClassifier(obj.extract(weights), {fEncoder.encodeDense(_, true)}, labels)
+      new NNetClassifier(obj.extract(weights), {fEncoder.encodeDense(_:Counter[T, Double], true)}, labels)
     }
   }
 }
