@@ -21,6 +21,7 @@ import linalg.operators.{OpSub, BinaryOp}
 import linalg.{NumericOps, QuasiTensor, Tensor}
 import scala.math._
 import scala.{math=>m}
+import org.apache.commons.math3.special.{Gamma => G, Erf}
 
 /**
  * Provides some functions left out of java.lang.math.
@@ -31,56 +32,6 @@ package object numerics extends UniversalFuncs {
 
   val inf, Inf = Double.PositiveInfinity
   val nan, NaN = Double.NaN
-
-
-  /**
-   * The standard digamma function. Cribbed from Radford Neal
-   *
-   * http://google.com/codesearch/p?hl=en#EbB356_xxkI/fbm.2003-06-29/util/digamma.c
-   */
-  val digamma = new UFunc[Double, Double] {
-    def apply(xx: Double) = {
-      var x = xx
-      var r = 0.0
-
-      while (x<=5) {
-        r -= 1/x
-        x += 1
-      }
-
-      val f = 1.0/(x * x)
-      val t = f*(-1/12.0 +
-        f*(1/120.0 +
-          f*(-1/252.0 +
-            f*(1/240.0 +
-              f*(-1/132.0 +
-                f*(691/32760.0 +
-                  f*(-1/12.0 +
-                    f*3617.0/8160.0)))))))
-      r + log(x) - 0.5/x + t
-    }
-  }
-
-  /**
-   * Trigramma function. From Apache Commons Math.
-   *
-   * http://commons.apache.org/math/api-2.0/src-html/org/apache/commons/math/special/Gamma.html
-   */
-  val trigamma = new UFunc[Double, Double] {
-    val S_LIMIT = 1E-5
-    val C_LIMIT = 49
-    def apply(x: Double): Double = {
-      if (x > 0 && x <= S_LIMIT) {
-        1 / (x * x)
-      } else if (x >= C_LIMIT) {
-        val inv = 1 / (x * x)
-        1 / x + inv / 2 + inv / x * (1.0 / 6 - inv * (1.0 / 30 + inv / 42))
-      } else {
-        apply(x + 1) + 1 / (x * x)
-      }
-    }
-  }
-
 
   /**
    * Evaluates the log of the generalized beta function.
@@ -119,51 +70,36 @@ package object numerics extends UniversalFuncs {
   /**
   * Computes the log of the gamma function.
   *
-  * Reference: Numerical Recipes in C
-  * http://www.library.cornell.edu/nr/cbookcpdf.html
-  * www.cs.berkeley.edu/~milch/blog/versions/blog-0.1.3/blog/distrib
-  * @return an approximation of the log of the Gamma function * of x.  Laczos Approximation
+  * @return an approximation of the log of the Gamma function of x.
   */
-  val lgamma:UFunc[Double, Double] = new UFunc[Double, Double] {
-    def apply(x: Double) = {
-      var y = x
-      var tmp = x + 5.5
-      tmp -= ((x + 0.5) * log(tmp))
-      var ser = 1.000000000190015
-      var j = 0
-      while (j < 6) {
-        y += 1
-        ser += (lgamma_cof(j)/y)
-        j += 1
-      }
-      (-tmp + log(2.5066282746310005*ser / x))
-    }
+  val lgamma:UFunc[Double, Double] = UFunc(G.logGamma _)
 
-    private val lgamma_cof =  Array(76.18009172947146, -86.50532032941677,
-      24.01409824083091,-1.231739572450155,
-      0.1208650973866179e-2,-0.5395239384953e-5
-    )
-  }
+  /**
+   * The derivative of the log gamma function
+   */
+  val digamma = UFunc(G.digamma _)
+
+  /**
+   * The second derivative of the log gamma function
+   */
+  val trigamma = UFunc(G.trigamma _)
 
   /**
    * An approximation to the error function
    */
-  val erf = UFunc{ (x:Double) =>
-    if(x < 0.0) -gammp(0.5,x*x) else gammp(0.5,x*x)
-  }
+  val erf = UFunc{ Erf.erf _ }
 
   /**
    * An approximation to the complementary error function: erfc(x) = 1 - erfc(x)
    */
-  val erfc = UFunc{ (x:Double) =>
-    if(x < 0.0) 1.0-gammp(0.5,x*x) else 1.0-gammp(0.5,x*x)
-  }
+  val erfc = UFunc{ Erf.erfc _ }
 
   /**
    * The imaginary error function for real argument x.
    *
    * Adapted from http://www.mathworks.com/matlabcentral/newsreader/view_thread/24120
    * verified against mathematica
+   *
    * @return
    */
   val erfi:UFunc[Double, Double] = new UFunc[Double, Double]{
@@ -190,17 +126,25 @@ package object numerics extends UniversalFuncs {
   }
 
   /**
+   * Inverse erf
+   */
+  val erfinv = UFunc{ Erf.erfInv _ }
+
+  /**
+   * Inverse erfc
+   */
+  val erfcinv = UFunc{ Erf.erfcInv _ }
+
+  /**
    * regularized incomplete gamma function  \int_0x \exp(-t)pow(t,a-1) dt / Gamma(a)
    * @param a
    * @param x
+   * @see http://commons.apache.org/proper/commons-math/apidocs/org/apache/commons/math3/special/Gamma.html#regularizedGammaP(double, double)
    */
-  def gammp(a: Double, x: Double) = {
-    val arr = new Array[Double](1)
-    val incom = _lgamma(a, x, arr)
-    var lgam = arr(0)
-    if(lgam.isNaN) lgam = lgamma(a)
-    m.exp(incom - lgam)
-  }
+  def gammp(a: Double, x: Double) = G.regularizedGammaP(a, x)
+
+
+
 
 
   /**
@@ -343,7 +287,7 @@ package object numerics extends UniversalFuncs {
     }
   }
 
-  // fast versions of max. Useful for the fast logsum.
+  /** fast versions of max. Useful for the fast logsum. */
   def max(a: Array[Double], length: Int) = {
     var i = 1
     var max =  a(0)
