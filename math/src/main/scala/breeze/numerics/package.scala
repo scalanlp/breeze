@@ -323,7 +323,7 @@ package object numerics extends UniversalFuncs {
    * Computes the polynomial P(x) with coefficients given in the passed in array.
    * coefs(i) is the coef for the x_i term.
    */
-  def poly(coefs: Array[Double], x: Double) = {
+  def polyval(coefs: Array[Double], x: Double) = {
     var i = coefs.length-1
     var p = coefs(i)
     while (i>0) {
