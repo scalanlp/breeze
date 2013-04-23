@@ -75,12 +75,12 @@ class StrongWolfeLineSearch(maxZoomIter: Int, maxLineSearchIter: Int) extends Cu
     }
 
     var t = 1.0 // Search's current multiple of pk
-    var low = phi(0.0)
+    var low = phi(init)
     val fval = low.fval
     val dd = low.dd
 
     if (dd > 0) {
-      throw new Exception("Line search invoked with non-descent direction: " + dd)
+      throw new FirstOrderException("Line search invoked with non-descent direction: " + dd)
     }
 
     /**
@@ -137,7 +137,7 @@ class StrongWolfeLineSearch(maxZoomIter: Int, maxLineSearchIter: Int) extends Cu
         }
       }
 
-      throw new Exception("Line search zoom failed")
+      throw new FirstOrderException(s"Line search zoom failed for\nlow: $low\nhi: $hi\nlinit: $linit\nrinit: $rinit")
     }
 
     ///////////////////////////////////////////////////////////////////
@@ -180,7 +180,7 @@ class StrongWolfeLineSearch(maxZoomIter: Int, maxLineSearchIter: Int) extends Cu
       }
     }
 
-    throw new Exception("Line search failed")
+    throw new FirstOrderException("Line search failed")
   }
 
 }
