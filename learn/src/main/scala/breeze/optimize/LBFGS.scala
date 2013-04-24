@@ -129,7 +129,7 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
     }
 
     val ff = LineSearch.functionFromSearchDirection(f, x, dir)
-    val search = new BacktrackingLineSearch(shrinkStep = if(iter < 1) 0.01 else 0.5)
+    val search = new StrongWolfeLineSearch(maxZoomIter = 10, maxLineSearchIter = 10) // TODO: Need good default values here.
     val alpha = search.minimize(ff, if(state.iter == 0.0) 1.0/norm(dir) else 1.0)
 
     if(alpha * norm(grad) < 1E-10)
