@@ -74,8 +74,8 @@ class StrongWolfeLineSearch(maxZoomIter: Int, maxLineSearchIter: Int) extends Cu
       Bracket(t = t, dd = pdd, fval = pval)
     }
 
-    var t = 1.0 // Search's current multiple of pk
-    var low = phi(init)
+    var t = init // Search's current multiple of pk
+    var low = phi(0.0)
     val fval = low.fval
     val dd = low.dd
 
@@ -137,7 +137,7 @@ class StrongWolfeLineSearch(maxZoomIter: Int, maxLineSearchIter: Int) extends Cu
         }
       }
 
-      throw new FirstOrderException(s"Line search zoom failed for\nlow: $low\nhi: $hi\nlinit: $linit\nrinit: $rinit")
+      throw new FirstOrderException(s"Line search zoom failed")
     }
 
     ///////////////////////////////////////////////////////////////////
