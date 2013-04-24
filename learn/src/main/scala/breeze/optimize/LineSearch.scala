@@ -2,6 +2,10 @@ package breeze.optimize
 
 import breeze.math.InnerProductSpace
 
+trait MinimizingLineSearch {
+  def minimize(f: DiffFunction[Double], init: Double = 1.0):Double
+}
+
 /**
  * A line search optimizes a function of one variable without
  * analytic gradient information. Differs only in whether or not it tries to find an exact minimizer
@@ -15,7 +19,7 @@ trait LineSearch extends ApproximateLineSearch
  * backtracking line search), where there is no intrinsic termination criterion, only extrinsic
  * @author dlwh
  */
-trait ApproximateLineSearch {
+trait ApproximateLineSearch extends MinimizingLineSearch {
   final case class State(alpha: Double, value: Double, deriv: Double)
   def iterations(f: DiffFunction[Double], init: Double = 1.0):Iterator[State]
   def minimize(f: DiffFunction[Double], init: Double = 1.0):Double = iterations(f, init).reduceLeft( (a,b) => b).alpha
