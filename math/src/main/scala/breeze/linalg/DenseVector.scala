@@ -72,6 +72,8 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
   def activeKeysIterator = keysIterator
 
   override def equals(p1: Any) = p1 match {
+    case y: DenseVector[_] =>
+      y.length == length && ArrayUtil.nonstupidEquals(data, offset, stride, length, y.data, y.offset, y.stride, y.length)
     case x: Vector[_] =>
 //      length == x.length && (( stride == x.stride
 //        && offset == x.offset

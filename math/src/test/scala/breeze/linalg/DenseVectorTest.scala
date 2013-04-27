@@ -323,6 +323,17 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(a === b)
   }
 
+  test("Equals")  {
+    val a, b = DenseVector(3,4,5,6)
+    assert(a === b)
+    a(0) = -1
+    assert(a.slice(1, a.length) === b.slice(1, b.length))
+    a.slice(0,3) := b.slice(1,b.length)
+    assert(a.slice(0, 3) === b.slice(1, b.length))
+    a.slice(0,4,2) := b(0 until 2)
+    assert(a.slice(0, 4, 2) === b(0 until 2))
+  }
+
   test("toArray") {
     val a = DenseVector(1, 2, 3)
     assert(util.Arrays.equals(a.toArray, a.data))
