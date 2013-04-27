@@ -2,6 +2,9 @@ package breeze.optimize.linear
 
 import collection.mutable.ArrayBuffer
 import breeze.linalg._
+import org.apache.commons.math3.optim.linear._
+import org.apache.commons.math3.optim.nonlinear.scalar._
+import scala.collection.JavaConverters._
 
 /**
  * DSL for LinearPrograms. Not thread-safe per instance. Make multiple instances
@@ -167,19 +170,18 @@ class LinearProgram {
 
 
   def maximize(objective: Problem) = {
-    val c = DenseVector.zeros[Double](variables.size) + objective.objective.coefficients
+    val obj = new LinearObjectiveFunction(objective.objective.coefficients.toDenseVector.data, objective.objective.scalarComponent)
 
-    val A = DenseMatrix.zeros[Double](objective.constraints.length,variables.length)
-    val b = DenseVector.zeros[Double](objective.constraints.length)
 
-    for( (c,i) <- objective.constraints.zipWithIndex) {
+    val constraints = for( c <- objective.constraints) yield {
       val cs = c.standardize
-      A(i,::) := cs.lhs.coefficients
-      b(i) = cs.rhs.scalarComponent
+      new LinearConstraint(cs.lhs.coefficients.toDenseVector.data, Relationship.LEQ, cs.rhs.scalarComponent)
+
+
     }
 
-    val result = InteriorPoint.minimize(A,b,-c, DenseVector.zeros[Double](variables.size) + 1.0)
-    Result(result,objective)
+    val sol = new SimplexSolver().optimize(obj, new LinearConstraintSet(constraints.asJava), GoalType.MAXIMIZE)
+    Result(new DenseVector(sol.getPoint),objective)
   }
 
 }
