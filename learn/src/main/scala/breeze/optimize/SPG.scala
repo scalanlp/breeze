@@ -35,7 +35,7 @@ object ProjectableProblem {
 }
 
 abstract class ProjectableProblem extends DiffFunction[DenseVector[Double]] {
-  def project(x: DenseVector[Double]): DenseVector[Double]
+  def project(x: DenseVector[Double]): DenseVector[Double] = x
 }
 
 class SPG(

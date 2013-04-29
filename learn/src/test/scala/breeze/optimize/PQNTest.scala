@@ -34,9 +34,6 @@ class PQNTest extends OptimizeTestBase {
         def calculate(x: DenseVector[Double]) = {
           (((x - 3.0) :^ 2.0).sum, (x * 2.0) - 6.0)
         }
-        def project(x: DenseVector[Double]) = {
-          x
-        }
       }
 
       val result = optimizer.minimize(f, init)
@@ -53,7 +50,7 @@ class PQNTest extends OptimizeTestBase {
         def calculate(x: DenseVector[Double]) = {
           (((x - 3.0) :^ 2.0).sum, (x * 2.0) - 6.0)
         }
-        def project(x: DenseVector[Double]) = {
+        override def project(x: DenseVector[Double]) = {
           x.map(scala.math.min(_, 2.0))
         }
       }
@@ -71,9 +68,6 @@ class PQNTest extends OptimizeTestBase {
       val f = new ProjectableProblem {
         def calculate(x: DenseVector[Double]) = {
           (norm((x - 3.0) :^ 2.0, 1), (x * 2.0) - 6.0)
-        }
-        def project(x: DenseVector[Double]) = {
-          x
         }
       }
 

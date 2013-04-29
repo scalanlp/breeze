@@ -118,7 +118,7 @@ class PQNSubproblem(fun: ProjectableProblem,
   var Bd = xk.copy
   var time = 0L
 
-  def project(p: DenseVector[Double]): DenseVector[Double] = fun.project(p)
+  override def project(p: DenseVector[Double]): DenseVector[Double] = fun.project(p)
   /**
    * Return value and gradient of the quadratic model at the current iterate:
    *  q_k(p)        = f_k + (p-x_k)^T g_k + 1/2 (p-x_k)^T B_k(p-x_k)
