@@ -48,53 +48,39 @@ class SPG(
   val testOpt: Boolean = true, // perform optimality check based on projected gradient at each iteration
   val initFeas: Boolean = false, // is the initial guess feasible, or should it be projected?
   val maxSrchIt: Int = 30 // maximum number of line search attempts
-  ) extends Minimizer[DenseVector[Double], ProjectableProblem] with  Logging {
+  ) extends Minimizer[DenseVector[Double], ProjectableProblem] with Logging {
 
   override def minimize(prob: ProjectableProblem, guess: DenseVector[Double]): DenseVector[Double] = {
-    def computeGradient(x: DenseVector[Double], g: DenseVector[Double]): DenseVector[Double] = prob.project(x - g) - x
-
-    def computeGradientNorm(x: DenseVector[Double], g: DenseVector[Double]): (Double, DenseVector[Double]) = {
-      val w = computeGradient(x, g)
-      return (w.norm(Double.PositiveInfinity), w)
-    }
+    def correctedGradient(x: DenseVector[Double], g: DenseVector[Double]): DenseVector[Double] = prob.project(x - g) - x
+    var gnorm: Double = 0.0
     var x = if (initFeas) guess.copy else prob.project(guess.copy)
-    var g = prob.gradientAt(x)
-    var f = prob.valueAt(x)
 
-    var candx: DenseVector[Double] = computeGradient(x, g)
-    var gnorm = candx.norm(Double.PositiveInfinity)
     var alpha = 1.0 //0.001 / gnorm
     var prevfs = new RingBuffer[Double](M)
     var t = 1
     var fevals = 1
-    var gTd = 0.0
-    var d = DenseVector.zeros[Double](0)
 
-    while (((testOpt == false) || (gnorm > optTol))
-      && (t < maxNumIt) //  && (!prob.hasConverged)
-      ) {
-      d = computeGradient(x, g * alpha)
-      gTd = d.dot(g)
-      if (testOpt) {
-        candx = computeGradient(x, g)
-        gnorm = candx.norm(Double.PositiveInfinity)
-      }
+    do {
+      var g = prob.gradientAt(x)
 
-      prevfs += f
+      val searchDirection = correctedGradient(x, g * alpha)
+      val gTd = searchDirection.dot(g)
+
+      prevfs += prob.valueAt(x)
       var lambda = 1.0
       var accepted = false
       var srchit = 0
 
+      gnorm = correctedGradient(x, g).norm(Double.PositiveInfinity)
       // Backtracking line-search
       do {
-        candx = x + d * lambda
+        val candx = x + searchDirection * lambda
         val candg = prob.gradientAt(candx)
         val candf = prob.valueAt(candx)
         val suffdec = gamma * lambda * gTd
 
         if (prevfs.exists(candf <= _ + suffdec)) {
           alpha = alphaMax.min(alphaMin.max(computeStep(candx, x, candg, g)))
-          f = candf
           accepted = true
           g = candg
           x = candx
@@ -112,7 +98,9 @@ class SPG(
       }
 
       t = t + 1
-    }
+    } while (((testOpt == false) || (gnorm > optTol))
+      && (t < maxNumIt) //  && (!prob.hasConverged)
+      )
 
     return x
   }

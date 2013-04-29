@@ -27,7 +27,7 @@ import breeze.linalg._
 class PQNTest extends OptimizeTestBase {
 
   test("optimize a simple multivariate gaussian") {
-    val optimizer = new PQN(optTol = 1.0E-5)
+    val optimizer = new PQN(optTol = 1.0E-9)
 
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new ProjectableProblem {
