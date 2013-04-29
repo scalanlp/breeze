@@ -110,15 +110,14 @@ class CompactHessian(m: Int) {
 
 // Forms a quadratic model around fun, the argmin of which is then a feasible
 // quasi-Newton descent direction
-class PQNSubproblem(fun: ProjectableProblem,
+class PQNSubproblem(fun: DiffFunction[DenseVector[Double]],
   fk: Double,
   xk: DenseVector[Double],
   gk: DenseVector[Double],
-  B: CompactHessian) extends ProjectableProblem {
+  B: CompactHessian) extends DiffFunction[DenseVector[Double]] {
   var Bd = xk.copy
   var time = 0L
 
-  override def project(p: DenseVector[Double]): DenseVector[Double] = fun.project(p)
   /**
    * Return value and gradient of the quadratic model at the current iterate:
    *  q_k(p)        = f_k + (p-x_k)^T g_k + 1/2 (p-x_k)^T B_k(p-x_k)
@@ -141,13 +140,14 @@ class PQN(
   val testOpt: Boolean = true,
   val maxNumIt: Int = 2000,
   val maxSrchIt: Int = 30,
-  val gamma: Double = 1e-10) extends Minimizer[DenseVector[Double], ProjectableProblem] with Logging {
+  val gamma: Double = 1e-10,
+  val projection: DenseVector[Double] => DenseVector[Double] = identity) extends Minimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]] with Logging {
   // strictness of linesearch
-  def minimize(prob: ProjectableProblem, guess: DenseVector[Double]): DenseVector[Double] = {
+  def minimize(prob: DiffFunction[DenseVector[Double]], guess: DenseVector[Double]): DenseVector[Double] = {
 
     def computeGradientNorm(x: DenseVector[Double], g: DenseVector[Double]): Double = computeGradient(x, g).norm(Double.PositiveInfinity)
-    def computeGradient(x: DenseVector[Double], g: DenseVector[Double]): DenseVector[Double] = prob.project(x - g) - x
-    val x = if (initFeas) guess.copy else prob.project(guess.copy)
+    def computeGradient(x: DenseVector[Double], g: DenseVector[Double]): DenseVector[Double] = projection(x - g) - x
+    val x = if (initFeas) guess.copy else projection(guess.copy)
     val g = prob.gradientAt(x)
     var f = prob.valueAt(x)
     var d = DenseVector.zeros[Double](x.size)
@@ -180,7 +180,8 @@ class PQN(
           optTol = 1e-3,
           maxNumIt = 30,
           initFeas = true,
-          M = 5
+          M = 5,
+          projection = projection
         ).minimize(subprob, x)
         d = p - x
         //	time += subprob.time

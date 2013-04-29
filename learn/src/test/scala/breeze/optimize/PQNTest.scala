@@ -30,7 +30,7 @@ class PQNTest extends OptimizeTestBase {
     val optimizer = new PQN(optTol = 1.0E-9)
 
     def optimizeThis(init: DenseVector[Double]) = {
-      val f = new ProjectableProblem {
+      val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
           (((x - 3.0) :^ 2.0).sum, (x * 2.0) - 6.0)
         }
@@ -43,15 +43,12 @@ class PQNTest extends OptimizeTestBase {
     check(Prop.forAll(optimizeThis _))
   }
   test("optimize a simple multivariate gaussian with projection") {
-    val optimizer = new PQN(optTol = 1.0E-5)
+    val optimizer = new PQN(optTol = 1.0E-5, projection = _.map(scala.math.min(_, 2.0)))
 
     def optimizeThis(init: DenseVector[Double]) = {
-      val f = new ProjectableProblem {
+      val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
           (((x - 3.0) :^ 2.0).sum, (x * 2.0) - 6.0)
-        }
-        override def project(x: DenseVector[Double]) = {
-          x.map(scala.math.min(_, 2.0))
         }
       }
 
@@ -65,14 +62,14 @@ class PQNTest extends OptimizeTestBase {
     val optimizer = new PQN(optTol = 1.0E-5)
 
     def optimizeThis(init: DenseVector[Double]) = {
-      val f = new ProjectableProblem {
+      val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
           (norm((x - 3.0) :^ 2.0, 1), (x * 2.0) - 6.0)
         }
       }
 
       val targetValue = 3 / (1.0 / 2 + 1)
-      val result = optimizer.minimize(ProjectableProblem.withL2Regularization(f, 1.0), init)
+      val result = optimizer.minimize(DiffFunction.withL2Regularization(f, 1.0), init)
       val ok = norm(result :- DenseVector.ones[Double](init.size) * targetValue, 2) / result.size < 3E-3
       ok || (throw new RuntimeException("Failed to find optimum for init " + init))
     }
