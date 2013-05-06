@@ -67,9 +67,10 @@ object BreezeBuild extends Build {
   val opencsv = "net.sf.opencsv" % "opencsv" % "2.3"
   val logging = "com.typesafe" %% "scalalogging-log4j" % "1.0.1"
   val log4j =  "org.apache.logging.log4j" % "log4j-core" % "2.0-beta4"
+  val jtransforms = "com.github.rwl" % "jtransforms" % "2.4.0"
 
   val coreDeps = Seq(paranamer, opencsv, logging, log4j)
-  val commonDeps = Seq(paranamer, netlib, jblas)
+  val commonDeps = Seq(paranamer, netlib, jblas, jtransforms)
   val learnDeps = commonDeps ++ Seq(liblinear)
   val vizDeps = Seq(
     "jfree" % "jcommon" % "1.0.16",
