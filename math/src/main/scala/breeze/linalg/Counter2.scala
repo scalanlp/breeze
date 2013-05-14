@@ -17,11 +17,12 @@ package breeze.linalg
 import breeze.linalg.Counter2.Curried
 import breeze.storage.DefaultArrayValue
 import collection.mutable.HashMap
-import breeze.math.{Semiring, Field}
-import support.CanSlice2
+import breeze.math.{Ring, Semiring, Field}
+import breeze.linalg.support.{CanCopy, CanZipMapValues, CanNorm, CanSlice2}
 import collection.{Set, mutable}
-import breeze.generic.{CanCollapseAxis, CanMapValues}
+import breeze.generic._
 import scala.reflect.ClassTag
+import breeze.linalg.operators._
 
 /**
  *
@@ -102,7 +103,7 @@ trait Counter2
 [K1, K2, V]
 extends Tensor[(K1,K2),V] with Counter2Like[K1,K2,V,Curried[scala.collection.mutable.Map,K1]#Result,Counter[K2,V],Counter2[K1,K2,V]]
 
-object Counter2 extends LowPriorityCounter2 {
+object Counter2 extends LowPriorityCounter2 with Counter2Ops {
 
   @SerialVersionUID(1L)
   class Impl[K1, K2, V]
@@ -131,13 +132,13 @@ object Counter2 extends LowPriorityCounter2 {
 
 
   /** Aggregates the counts in the given items. */
-  def apply[K1,K2,V:Field:DefaultArrayValue](values : (K1,K2,V)*) : Counter2[K1,K2,V] =
+  def apply[K1,K2,V:Semiring:DefaultArrayValue](values : (K1,K2,V)*) : Counter2[K1,K2,V] =
     apply(values)
 
   /** Aggregates the counts in the given items. */
-  def apply[K1,K2,V:Field:DefaultArrayValue](values : TraversableOnce[(K1,K2,V)]) : Counter2[K1,K2,V] = {
+  def apply[K1,K2,V:Semiring:DefaultArrayValue](values : TraversableOnce[(K1,K2,V)]) : Counter2[K1,K2,V] = {
     val rv = apply[K1,K2,V]()
-    values.foreach({ case (k1,k2,v) => rv(k1,k2) = implicitly[Field[V]].+(rv(k1,k2), v) })
+    values.foreach({ case (k1,k2,v) => rv(k1,k2) = implicitly[Semiring[V]].+(rv(k1,k2), v) })
     rv
   }
 
@@ -289,4 +290,284 @@ trait LowPriorityCounter2 {
     }
   }
 
+}
+
+
+trait Counter2Ops {
+  implicit def canCopy[K1, K2, V:DefaultArrayValue:Semiring]:CanCopy[Counter2[K1, K2, V]] = new CanCopy[Counter2[K1, K2, V]] {
+    def apply(t: Counter2[K1, K2, V]): Counter2[K1, K2, V] = {
+      Counter2(t.iterator.map{case ((k1,k2), v) => (k1, k2, v)})
+    }
+  }
+
+
+  private def binaryOpFromBinaryUpdateOp[K1, K2, V, Other, Op<:OpType](implicit copy: CanCopy[Counter2[K1, K2, V]], op: BinaryUpdateOp[Counter2[K1, K2, V], Other, Op]) = {
+    new BinaryOp[Counter2[K1, K2, V], Other, Op, Counter2[K1, K2, V]] {
+      override def apply(a : Counter2[K1, K2, V], b : Other) = {
+        val c = copy(a)
+        op(c, b)
+        c
+      }
+    }
+  }
+
+
+  implicit def addIntoVV[K1, K2, V:Semiring]:BinaryUpdateOp[Counter2[K1, K2, V], Counter2[K1, K2, V], OpAdd] = new BinaryUpdateOp[Counter2[K1, K2, V], Counter2[K1, K2, V], OpAdd] {
+    val field = implicitly[Semiring[V]]
+    def apply(a: Counter2[K1, K2, V], b: Counter2[K1, K2, V]) {
+      for( (k,v) <- b.activeIterator) {
+        a(k) = field.+(a(k), v)
+      }
+    }
+  }
+
+  implicit def canAxpy[K1, K2, V:Semiring]:CanAxpy[V, Counter2[K1, K2, V], Counter2[K1, K2, V]] = new CanAxpy[V, Counter2[K1, K2, V], Counter2[K1, K2, V]] {
+    val field = implicitly[Semiring[V]]
+    def apply(s: V, b: Counter2[K1, K2, V], a: Counter2[K1, K2, V]) {
+      for( (k,v) <- b.activeIterator) {
+        a(k) = field.+(a(k), field.*(s, v))
+      }
+    }
+  }
+
+  implicit def addVV[K1, K2, V:Semiring:DefaultArrayValue]:BinaryOp[Counter2[K1, K2, V], Counter2[K1, K2, V], OpAdd, Counter2[K1, K2, V]] = {
+    binaryOpFromBinaryUpdateOp(canCopy, addIntoVV)
+  }
+
+  implicit def addIntoVS[K1, K2, V:Semiring]:BinaryUpdateOp[Counter2[K1, K2, V], V, OpAdd] = new BinaryUpdateOp[Counter2[K1, K2, V], V, OpAdd] {
+    val field = implicitly[Semiring[V]]
+    def apply(a: Counter2[K1, K2, V], b: V) {
+      for( (k,v) <- a.activeIterator) {
+        a(k) = field.+(v, b)
+      }
+    }
+  }
+
+
+  implicit def addVS[K1, K2, V:Semiring:DefaultArrayValue]:BinaryOp[Counter2[K1, K2, V], V, OpAdd, Counter2[K1, K2, V]] = {
+    binaryOpFromBinaryUpdateOp(canCopy, addIntoVS)
+  }
+
+  implicit def subIntoVV[K1, K2, V:Ring]:BinaryUpdateOp[Counter2[K1, K2, V], Counter2[K1, K2, V], OpSub] = new BinaryUpdateOp[Counter2[K1, K2, V], Counter2[K1, K2, V], OpSub] {
+    val field = implicitly[Ring[V]]
+    def apply(a: Counter2[K1, K2, V], b: Counter2[K1, K2, V]) {
+      for( (k,v) <- b.activeIterator) {
+        a(k) = field.-(a(k), v)
+      }
+    }
+  }
+
+
+  implicit def subVV[K1, K2, V:Ring:DefaultArrayValue]:BinaryOp[Counter2[K1, K2, V], Counter2[K1, K2, V], OpSub, Counter2[K1, K2, V]] = {
+    binaryOpFromBinaryUpdateOp(canCopy, subIntoVV)
+  }
+
+  implicit def subIntoVS[K1, K2, V:Ring]:BinaryUpdateOp[Counter2[K1, K2, V], V, OpSub] = new BinaryUpdateOp[Counter2[K1, K2, V], V, OpSub] {
+    val field = implicitly[Ring[V]]
+    def apply(a: Counter2[K1, K2, V], b: V) {
+      for( (k,v) <- a.activeIterator) {
+        a(k) = field.-(v, b)
+      }
+    }
+  }
+
+
+  implicit def subVS[K1, K2, V:Ring:DefaultArrayValue]:BinaryOp[Counter2[K1, K2, V], V, OpSub, Counter2[K1, K2, V]] = {
+    binaryOpFromBinaryUpdateOp(canCopy, subIntoVS)
+  }
+
+  implicit def canMulIntoVV[K1, K2, V:Semiring]:BinaryUpdateOp[Counter2[K1, K2, V], Counter2[K1, K2, V], OpMulScalar] = new BinaryUpdateOp[Counter2[K1, K2, V], Counter2[K1, K2, V], OpMulScalar] {
+    val field = implicitly[Semiring[V]]
+    def apply(a: Counter2[K1, K2, V], b: Counter2[K1, K2, V]) {
+      for( (k,v) <- a.activeIterator) {
+        a(k) = field.*(v, b(k))
+      }
+    }
+  }
+
+  implicit def canMulVV[K1, K2, V](implicit semiring: Semiring[V],
+                                       d: DefaultArrayValue[V]):BinaryOp[Counter2[K1, K2, V], Counter2[K1, K2, V], OpMulScalar, Counter2[K1, K2, V]] = {
+    new BinaryOp[Counter2[K1, K2, V], Counter2[K1, K2, V], OpMulScalar, Counter2[K1, K2, V]] {
+      override def apply(a : Counter2[K1, K2, V], b : Counter2[K1, K2, V]) = {
+        val r = Counter2[K1, K2, V]()
+        for( (k, v) <- a.activeIterator) {
+          val vr = semiring.*(v, b(k))
+          if(vr != semiring.zero)
+            r(k) = vr
+        }
+        r
+      }
+    }
+  }
+
+
+  implicit def canMulIntoVS[K1, K2, V:Semiring]:BinaryUpdateOp[Counter2[K1, K2, V], V, OpMulScalar] = new BinaryUpdateOp[Counter2[K1, K2, V], V, OpMulScalar] {
+    val field = implicitly[Semiring[V]]
+    def apply(a: Counter2[K1, K2, V], b: V) {
+      for( (k,v) <- a.activeIterator) {
+        a(k) = field.*(v, b)
+      }
+    }
+  }
+
+  implicit def canMulIntoVS_M[K1, K2, V:Semiring]:BinaryUpdateOp[Counter2[K1, K2, V], V, OpMulMatrix] = new BinaryUpdateOp[Counter2[K1, K2, V], V, OpMulMatrix] {
+    val field = implicitly[Semiring[V]]
+    def apply(a: Counter2[K1, K2, V], b: V) {
+      for( (k,v) <- a.activeIterator) {
+        a(k) = field.*(v, b)
+      }
+    }
+  }
+
+  implicit def canMulVS[K1, K2, V](implicit semiring: Semiring[V],
+                                       d: DefaultArrayValue[V]):BinaryOp[Counter2[K1, K2, V], V, OpMulScalar, Counter2[K1, K2, V]] = {
+    new BinaryOp[Counter2[K1, K2, V], V, OpMulScalar, Counter2[K1, K2, V]] {
+      override def apply(a : Counter2[K1, K2, V], b : V) = {
+        val r = Counter2[K1, K2, V]()
+        for( (k, v) <- a.activeIterator) {
+          val vr = semiring.*(v, b)
+            r(k) = vr
+        }
+        r
+      }
+    }
+  }
+
+  implicit def canMulVS_M[K1, K2, V](implicit semiring: Semiring[V],
+                                       d: DefaultArrayValue[V]):BinaryOp[Counter2[K1, K2, V], V, OpMulMatrix, Counter2[K1, K2, V]] = {
+    new BinaryOp[Counter2[K1, K2, V], V, OpMulMatrix, Counter2[K1, K2, V]] {
+      override def apply(a : Counter2[K1, K2, V], b : V) = {
+        val r = Counter2[K1, K2, V]()
+        for( (k, v) <- a.activeIterator) {
+          val vr = semiring.*(v, b)
+            r(k) = vr
+        }
+        r
+      }
+    }
+  }
+
+
+  implicit def canDivIntoVV[K1, K2, V:Field]:BinaryUpdateOp[Counter2[K1, K2, V], Counter2[K1, K2, V], OpDiv] = new BinaryUpdateOp[Counter2[K1, K2, V], Counter2[K1, K2, V], OpDiv] {
+    val field = implicitly[Field[V]]
+    def apply(a: Counter2[K1, K2, V], b: Counter2[K1, K2, V]) {
+      for( (k,v) <- a.activeIterator) {
+        a(k) = field./(v, b(k))
+      }
+    }
+  }
+
+  implicit def canDivVV[K1, K2, V](implicit copy: CanCopy[Counter2[K1, K2, V]],
+                                       semiring: Field[V],
+                                       d: DefaultArrayValue[V]):BinaryOp[Counter2[K1, K2, V], Counter2[K1, K2, V], OpDiv, Counter2[K1, K2, V]] = {
+    new BinaryOp[Counter2[K1, K2, V], Counter2[K1, K2, V], OpDiv, Counter2[K1, K2, V]] {
+      override def apply(a : Counter2[K1, K2, V], b : Counter2[K1, K2, V]) = {
+        val r = Counter2[K1, K2, V]()
+        for( (k, v) <- a.activeIterator) {
+          val vr = semiring./(v, b(k))
+            r(k) = vr
+        }
+        r
+      }
+    }
+  }
+
+
+  implicit def canDivVS[K1, K2, V](implicit copy: CanCopy[Counter2[K1, K2, V]],
+                               semiring: Field[V],
+                               d: DefaultArrayValue[V]):BinaryOp[Counter2[K1, K2, V], V, OpDiv, Counter2[K1, K2, V]] = {
+    new BinaryOp[Counter2[K1, K2, V], V, OpDiv, Counter2[K1, K2, V]] {
+      override def apply(a : Counter2[K1, K2, V], b : V) = {
+        val r = Counter2[K1, K2, V]()
+        for( (k, v) <- a.activeIterator) {
+          val vr = semiring./(v, b)
+            r(k) = vr
+        }
+        r
+      }
+    }
+  }
+
+  implicit def canDivIntoVS[K1, K2, V:Field]:BinaryUpdateOp[Counter2[K1, K2, V], V, OpDiv] = new BinaryUpdateOp[Counter2[K1, K2, V], V, OpDiv] {
+    val field = implicitly[Field[V]]
+    def apply(a: Counter2[K1, K2, V], b: V) {
+      for( (k,v) <- a.activeIterator) {
+        a(k) = field./(v, b)
+      }
+    }
+  }
+
+
+  implicit def canSetIntoVV[K1, K2, V]:BinaryUpdateOp[Counter2[K1, K2, V], Counter2[K1, K2, V], OpSet] = new BinaryUpdateOp[Counter2[K1, K2, V], Counter2[K1, K2, V], OpSet] {
+    def apply(a: Counter2[K1, K2, V], b: Counter2[K1, K2, V]) {
+      a.data.clear()
+      for( (k,v) <- b.activeIterator) {
+        a(k) = v
+      }
+    }
+  }
+
+
+  implicit def canSetIntoVS[K1, K2, V]:BinaryUpdateOp[Counter2[K1, K2, V], V, OpSet] = new BinaryUpdateOp[Counter2[K1, K2, V], V, OpSet] {
+    def apply(a: Counter2[K1, K2, V], b: V) {
+      for( k <- a.keysIterator) {
+        a(k) = b
+      }
+    }
+  }
+
+  implicit def canNegate[K1, K2, V](implicit  ring: Ring[V], d: DefaultArrayValue[V]):UnaryOp[Counter2[K1, K2, V], OpNeg, Counter2[K1, K2, V]] = {
+    new UnaryOp[Counter2[K1, K2, V], OpNeg, Counter2[K1, K2, V]] {
+      override def apply(a : Counter2[K1, K2, V]) = {
+        val result = Counter2[K1, K2, V]()
+        for( (k, v) <- a.activeIterator) {
+          val vr = ring.negate(v)
+          result(k) = vr
+        }
+        result
+      }
+    }
+  }
+
+
+  /** Returns the k-norm of this Vector. */
+  implicit def canNorm[K1, K2, V:Ring]:CanNorm[Counter2[K1, K2, V]] = new CanNorm[Counter2[K1, K2, V]] {
+    val field = implicitly[Ring[V]]
+    def apply(c: Counter2[K1, K2, V], n: Double): Double = {
+      import c._
+
+      if (n == 1) {
+        var sum = 0.0
+        activeValuesIterator foreach (v => sum += field.norm(v))
+        sum
+      } else if (n == 2) {
+        var sum = 0.0
+        activeValuesIterator foreach (v => { val nn = field.norm(v); sum += nn * nn })
+        math.sqrt(sum)
+      } else if (n == Double.PositiveInfinity) {
+        var max = Double.NegativeInfinity
+        activeValuesIterator foreach (v => { val nn = field.norm(v); if (nn > max) max = nn })
+        max
+      } else {
+        var sum = 0.0
+        activeValuesIterator foreach (v => { val nn = field.norm(v); sum += math.pow(nn,n) })
+        math.pow(sum, 1.0 / n)
+      }
+    }
+  }
+
+  class CanZipMapValuesCounter2[K1, K2, V, RV:DefaultArrayValue:Semiring] extends CanZipMapValues[Counter2[K1, K2, V],V,RV,Counter2[K1, K2, RV]] {
+
+    /**Maps all corresponding values from the two collection. */
+    def map(from: Counter2[K1, K2, V], from2: Counter2[K1, K2, V], fn: (V, V) => RV) = {
+      val result = Counter2[K1, K2, RV]
+      for ( k <- (from.keySet ++ from2.keySet)) {
+        result(k) = fn(from(k), from2(k))
+      }
+      result
+    }
+  }
+
+
+  implicit def zipMap[K1, K2, V, R:DefaultArrayValue:Semiring] = new CanZipMapValuesCounter2[K1, K2, V, R]
 }

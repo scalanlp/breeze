@@ -82,7 +82,6 @@ class Counter2Test extends FunSuite with Checkers {
     assert(s2("a") === 3.0)
   }
 
-  /*
   test("Addition") {
     // require expected static type
     val v1 : Counter2[String,String,Int] =
@@ -113,6 +112,7 @@ class Counter2Test extends FunSuite with Checkers {
     assert(Counter2(("a","a",3)) :* Counter2(("a","a",1),("b","b",2)) === Counter2(("a","a",3)))
   }
 
+  /*
   test("Shaped Multiplication") {
     assert(Counter2((0,'a',1),(1,'a',2),(1,'b',3)) * Counter2(('a',0,1),('b',0,2)) ===
       Counter2((0,0,1),(1,0,8)))

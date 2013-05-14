@@ -111,10 +111,11 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
     val len = index.length
     val lenm1 = len - 1
     var hash = hashCodeFor(i) & lenm1
-    var numProbes = 0
+//    var numProbes = 0
     while(index(hash) != i && index(hash) >= 0) {
-      numProbes += 1
-      hash += numProbes
+//      numProbes += 1
+//      hash += numProbes
+      hash += 1
       hash &= (lenm1)
     }
     hash
