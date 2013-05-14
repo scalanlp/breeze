@@ -25,7 +25,7 @@ import edu.emory.mathcs.jtransforms.fft.DoubleFFT_1D
  */
 package object signal {
 
-  //maintain instance of transform to eliminate repeated initialization
+  //maintain instances of transform to eliminate repeated initialization
   private var fft_instD1D: (Int, DoubleFFT_1D) = (0, null)
   private def getD1DInstance(length: Int): DoubleFFT_1D = {
     if(length == fft_instD1D._1) fft_instD1D._2
@@ -35,29 +35,87 @@ package object signal {
     }
   }
 
-
+  private def tempToDenseVector(tempArr: Array[Double]): DenseVector[Complex] = {
+    val tempRet = DenseVector.zeros[Complex](tempArr.length/2)
+    for (n <- 0 until tempRet.length) tempRet(n) = new Complex( tempArr(2*n), tempArr(2*n+1))
+    tempRet
+  }
+  private def denseVectorCToTemp(tempDV: DenseVector[Complex]): Array[Double] = {
+    val tempRet = Array[Double](tempDV.length*2)
+    for(n <- 0 until tempDV.length) {
+      tempDV(n) match {
+        case Complex(re, im) => {
+          tempRet(2*n) = re
+          tempRet(2*n+1) = im
+        }
+      }
+    }
+    tempRet
+  }
 
   /**
-   * Computes 1D forward DFT of real data
+   * Computes 1D forward DFT
    *
    * @param v data to transform
    */
   def fft(v: DenseVector[Double]): DenseVector[Complex] = {
-
     val fft_instance = getD1DInstance(v.length)
 
-    //reformat for input
+    //reformat for input: note difference in format for input to complex fft
     val tempArr = DenseVector.zeros[Double](v.length*2)
-    tempArr(0 until tempArr.length-1) := v
-
+    tempArr(0 until v.length) := v
     //actual action
     fft_instance.realForwardFull( tempArr.data ) //does operation in place
-
     //reformat for output
-    val tempRet: DenseVector[Complex] = DenseVector.zeros[Complex](v.length)
-    for (n <- 0 to tempArr.size/2 - 1) tempRet(n) = new Complex( tempArr(2*n), tempArr(2*n+1))
+    tempToDenseVector(tempArr)
+  }
 
-    tempRet
+  /**
+   * Computes 1D forward DFT
+   *
+   * @param v data to transform
+   */
+  def fft(v: DenseVector[Complex]): DenseVector[Complex] = {
+    val fft_instance = getD1DInstance(v.length)
+
+    //reformat for input: note difference in format for input to real fft
+    val tempArr = denseVectorCToTemp(v)
+    //actual action
+    fft_instance.complexForward( tempArr ) //does operation in place
+    //reformat for output
+    tempToDenseVector(tempArr)
+  }
+
+  /**
+   * Computes 1D inverse DFT
+   *
+   * @param v data to transform
+   */
+  def ifft(v: DenseVector[Complex]): DenseVector[Complex] = {
+    val fft_instance = getD1DInstance(v.length)
+
+    //reformat for input: note difference in format for input to real fft
+    val tempArr = denseVectorCToTemp(v)
+    //actual action
+    fft_instance.complexInverse( tempArr, true ) //does operation in place
+    //reformat for output
+    tempToDenseVector(tempArr)
+  }
+
+  /**
+   * Computes 1D inverse DFT
+   *
+   * @param v data to transform
+   */
+  def ifft(v: DenseVector[Complex]): DenseVector[Complex] = {
+    val fft_instance = getD1DInstance(v.length)
+
+    //reformat for input: note difference in format for input to real fft
+    val tempArr = denseVectorCToTemp(v)
+    //actual action
+    fft_instance.complexInverse( tempArr, true ) //does operation in place
+    //reformat for output
+    tempToDenseVector(tempArr)
   }
 
 }
