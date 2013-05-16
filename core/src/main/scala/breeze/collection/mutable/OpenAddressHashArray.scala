@@ -27,13 +27,14 @@ import scala.util.hashing.MurmurHash3
  *
  * @author dlwh
  */
+@SerialVersionUID(1L)
 final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] private[mutable] (protected var _index: Array[Int],
                                 protected var _data: Array[Elem],
                                  protected var load: Int,
                                  val size: Int,
                                  val default: ConfigurableDefault[Elem] = ConfigurableDefault.default[Elem])
                                 (implicit protected val manElem: ClassTag[Elem],
-                                 val defaultArrayValue: DefaultArrayValue[Elem]) extends Storage[Elem] with ArrayLike[Elem] {
+                                 val defaultArrayValue: DefaultArrayValue[Elem]) extends Storage[Elem] with ArrayLike[Elem] with Serializable {
   require(size > 0, "Size must be positive, but got " + size)
 
   def this(size: Int, default: ConfigurableDefault[Elem],
@@ -168,7 +169,7 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
 
   // This hash code must be symmetric in the contents but ought not
   // collide trivially. based on hashmap.hashcode
-  override def hashCode() = MurmurHash3.symmetricHash(iterator.filter(_._2 != default.value), 43)
+  override def hashCode() = MurmurHash3.unorderedHash(iterator.filter(_._2 != default.value), 43)
 
   override def equals(that: Any): Boolean = that match {
     case that: OpenAddressHashArray[Elem] =>
