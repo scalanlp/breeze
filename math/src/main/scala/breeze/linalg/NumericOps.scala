@@ -216,25 +216,39 @@ trait NumericOps[+This] {
 
 object NumericOps {
 
+  implicit class ScalarsAreNumericOps[@specialized(Int, Double, Long, Float) S](x: S) extends NumericOps[S] {
+    def repr: S = x
+  }
+
+
   /**
    * If you import this object's members, you can treat Arrays as DenseVectors.
    */
   object Arrays extends ArraysLowPriority {
-    implicit def arrayIsNumericOps[V](arr: Array[V]):NumericOps[Array[V]] = new NumericOps[Array[V]] {
+    implicit class ArrayIsNumericOps[V](arr: Array[V])extends NumericOps[Array[V]] {
       def repr = arr
     }
 
-
-    implicit def binaryOpFromDVOp2[V,Other,Op<:OpType,U](implicit op: BinaryOp[DenseVector[V], DenseVector[V], Op, DenseVector[U]], 
-                                                         man: ClassTag[U],
-                                                         dav: DefaultArrayValue[U]) = {
-      new BinaryOp[Array[V], Array[V], Op, Array[U]] {
-        def apply(a: Array[V], b: Array[V]): Array[U] = {
+    // TODO these two really shouldn't be necessary, but there's interference(?) from any2StringAdd, or something.
+    implicit def binaryOpFromDVOp2Add[V](implicit op: BinaryOp[DenseVector[V], DenseVector[V], OpAdd, DenseVector[V]]): BinaryOp[Array[V], Array[V], OpAdd, Array[V]] = {
+      new BinaryOp[Array[V], Array[V], OpAdd, Array[V]] {
+        def apply(a: Array[V], b: Array[V]): Array[V] = {
           val r = op(new DenseVector(a),new DenseVector[V](b))
           if(r.offset != 0 || r.stride != 1) {
-            val z = DenseVector.zeros[U](r.length)
-            z := r
-            z.data
+            r.copy.data
+          } else {
+            r.data
+          }
+        }
+      }
+    }
+
+    implicit def binaryOpAddFromDVUOpAdd2[V](implicit op: BinaryOp[DenseVector[V], V, OpAdd, DenseVector[V]]) = {
+      new BinaryOp[Array[V], V, OpAdd, Array[V]] {
+        def apply(a: Array[V], b: V): Array[V] = {
+          val r = op(new DenseVector(a), b)
+          if(r.offset != 0 || r.stride != 1) {
+            r.copy.data
           } else {
             r.data
           }
@@ -243,13 +257,42 @@ object NumericOps {
     }
 
 
-    implicit def binaryUpdateOpFromDVDVOp[V,Op<:OpType, U](implicit op: BinaryUpdateOp[DenseVector[V], DenseVector[V], Op], man: ClassTag[U]) = {
+    implicit def binaryOpFromDVOp2[V,Op<:OpType](implicit op: BinaryOp[DenseVector[V], DenseVector[V], Op, DenseVector[V]]): BinaryOp[Array[V], Array[V], Op, Array[V]] = {
+      new BinaryOp[Array[V], Array[V], Op, Array[V]] {
+        def apply(a: Array[V], b: Array[V]): Array[V] = {
+          val r = op(new DenseVector(a),new DenseVector[V](b))
+          if(r.offset != 0 || r.stride != 1) {
+            r.copy.data
+          } else {
+            r.data
+          }
+        }
+      }
+    }
+
+
+    implicit def binaryUpdateOpFromDVDVOp[V,Op<:OpType](implicit op: BinaryUpdateOp[DenseVector[V], DenseVector[V], Op]) = {
       new BinaryUpdateOp[Array[V], Array[V], Op] {
         def apply(a: Array[V], b: Array[V]){
           op(new DenseVector(a),new DenseVector(b))
         }
       }
     }
+
+    implicit def binaryOpFromDVUOp2[V,Op<:OpType](implicit op: BinaryOp[DenseVector[V], V, Op, DenseVector[V]]) = {
+      new BinaryOp[Array[V], V, Op, Array[V]] {
+        def apply(a: Array[V], b: V): Array[V] = {
+          val r = op(new DenseVector(a), b)
+          if(r.offset != 0 || r.stride != 1) {
+            r.copy.data
+          } else {
+            r.data
+          }
+        }
+      }
+    }
+
+
 
 
   }
@@ -281,4 +324,13 @@ object NumericOps {
       }
     }
   }
+
+  implicit def binaryUpdateOpFromDVVOp[V,Op<:OpType, U](implicit op: BinaryUpdateOp[DenseVector[V], U, Op], man: ClassTag[U]) = {
+      new BinaryUpdateOp[Array[V], U, Op] {
+        def apply(a: Array[V], b:U){
+          op(new DenseVector(a),b)
+        }
+      }
+    }
+
 }
