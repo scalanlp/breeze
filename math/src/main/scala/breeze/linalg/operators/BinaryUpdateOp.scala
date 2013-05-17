@@ -85,6 +85,6 @@ trait BinaryUpdateRegistry[A<:AnyRef, B, Op<:OpType] extends BinaryUpdateOp[A, B
   }
 
   def register[AA<:A, BB<:B](op: BinaryUpdateOp[AA, BB, Op])(implicit manA: Manifest[AA], manB: Manifest[BB]) {
-    super.register(manA.erasure, manB.erasure, op)
+    super.register(manA.runtimeClass, manB.runtimeClass, op)
   }
 }

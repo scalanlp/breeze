@@ -18,7 +18,7 @@ import operators.CanTranspose
 import breeze.storage.DefaultArrayValue
 import java.util
 import breeze.util.{ Terminal, ArrayUtil }
-import collection.mutable
+import scala.collection.mutable
 import breeze.math.{ Complex, Semiring }
 import breeze.generic.CanMapValues
 import scala.reflect.ClassTag
@@ -284,7 +284,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
     rs.sizeHint(initNnz)
     private val cs = new mutable.ArrayBuilder.ofInt()
     cs.sizeHint(initNnz)
-    private val vs = implicitly[ClassTag[T]].newArrayBuilder()
+    private val vs = mutable.ArrayBuilder.make[T]()
     vs.sizeHint(initNnz)
 
     def result():CSCMatrix[T] = {

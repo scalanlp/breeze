@@ -62,7 +62,7 @@ trait Multimethod[Method[AA, RR] <: MethodImpl[AA, RR], A <: AnyRef, R] extends 
 
 
   def register[AA <: A](op: Method[AA, _ <: R])(implicit manA: Manifest[AA]) {
-    super.register(manA.erasure.asInstanceOf[Class[AA]], op)
+    super.register(manA.runtimeClass.asInstanceOf[Class[AA]], op)
   }
 }
 
@@ -117,7 +117,7 @@ trait Multimethod2[Method[AA,BB,RR]<:Function2[AA,BB,RR],A, B, R] extends ((A, B
   }
 
   def register[AA<:A, BB<:B](op: Method[AA, BB, _ <: R])(implicit manA: Manifest[AA], manB: Manifest[BB]) {
-    super.register(manA.erasure.asInstanceOf[Class[_]], manB.erasure.asInstanceOf[Class[_]], op)
+    super.register(manA.runtimeClass.asInstanceOf[Class[_]], manB.runtimeClass.asInstanceOf[Class[_]], op)
   }
 
 }
@@ -168,7 +168,7 @@ trait Multiproc2[Method[AA,BB]<:(AA, BB) => Unit,A<:AnyRef,B] extends ((A, B) =>
   }
 
   def register[AA<:A, BB<:B](op: Method[AA, BB])(implicit manA: Manifest[AA], manB: Manifest[BB]) {
-    super.register(manA.erasure.asInstanceOf[Class[AA]], manB.erasure.asInstanceOf[Class[BB]], op)
+    super.register(manA.runtimeClass.asInstanceOf[Class[AA]], manB.runtimeClass.asInstanceOf[Class[BB]], op)
   }
 
 }
