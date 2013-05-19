@@ -17,7 +17,7 @@ package breeze.linalg
 
 import breeze.storage.DefaultArrayValue
 import breeze.math.{TensorSpace, Ring, Semiring, Field}
-import breeze.generic.{URFunc, UReduceable, CanMapValues}
+import breeze.generic.{CanTransformValues, URFunc, UReduceable, CanMapValues}
 import collection.Set
 import operators._
 import support.{CanCreateZerosLike, CanZipMapValues, CanNorm, CanCopy}
@@ -470,4 +470,19 @@ trait CounterOps {
 
 
   implicit def zipMap[K, V, R:DefaultArrayValue:Semiring] = new CanZipMapValuesCounter[K, V, R]
+
+
+  implicit def canTransformValues[L, V]:CanTransformValues[Counter[L, V], V, V] = {
+    new CanTransformValues[Counter[L, V], V, V] {
+      def transform(from: Counter[L, V], fn: (V) => V) {
+        for( (k,v) <- from.activeIterator) {
+          from(k) = fn(v)
+        }
+      }
+
+      def transformActive(from: Counter[L, V], fn: (V) => V) {
+        transform(from, fn)
+      }
+    }
+  }
 }
