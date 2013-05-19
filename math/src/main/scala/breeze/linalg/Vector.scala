@@ -241,6 +241,8 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
 
   }
 
+  def range(start:Int, end: Int): Vec[Int] = range(start,end,1)
+  def range(start:Int, end: Int, step: Int): Vec[Int] = apply[Int](Array.range(start,end,step))
 
 
 }
