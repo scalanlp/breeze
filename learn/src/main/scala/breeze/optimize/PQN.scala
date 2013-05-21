@@ -3,6 +3,7 @@ package breeze.optimize
 import scala.actors._
 import breeze.linalg._
 import com.typesafe.scalalogging.log4j.Logging
+import breeze.collection.mutable.RingBuffer
 
 // Compact representation of an n x n Hessian, maintained via L-BFGS updates
 class CompactHessian(m: Int) {
@@ -63,7 +64,7 @@ class CompactHessian(m: Int) {
 
   }
 
-  def times(v: DenseVector[Double], Bd: DenseVector[Double]): DenseVector[Double] = {
+  def times(v: DenseVector[Double]): DenseVector[Double] = {
     if (Y.size == 0) {
       v
     } else {
@@ -115,8 +116,6 @@ class PQNSubproblem(fun: DiffFunction[DenseVector[Double]],
   xk: DenseVector[Double],
   gk: DenseVector[Double],
   B: CompactHessian) extends DiffFunction[DenseVector[Double]] {
-  var Bd = xk.copy
-  var time = 0L
 
   /**
    * Return value and gradient of the quadratic model at the current iterate:
@@ -125,7 +124,7 @@ class PQNSubproblem(fun: DiffFunction[DenseVector[Double]],
    */
   override def calculate(x: DenseVector[Double]): (Double, DenseVector[Double]) = {
     val d = x - xk
-    Bd = B.times(d, Bd)
+    val Bd = B.times(d)
     val f = fk + d.dot(gk) + (0.5 * d.dot(Bd))
     val g = gk + Bd
     (f, g)
@@ -136,7 +135,6 @@ class PQN(
   val optTol: Double = 1e-3,
   val m: Int = 10,
   val initFeas: Boolean = false,
-  val sleep: Int = 0,
   val testOpt: Boolean = true,
   val maxNumIt: Int = 2000,
   val maxSrchIt: Int = 30,
@@ -157,9 +155,6 @@ class PQN(
     var s = null.asInstanceOf[DenseVector[Double]]
     var t = 1
     var fevals = 1
-    var time = 0L
-    var uptime = 0L
-    var subtime = 0L
 
     logger.debug(f"PQN: Initially  : f $f%-10.4f ||g|| $gnorm%-10.4f")
 

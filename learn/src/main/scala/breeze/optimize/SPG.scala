@@ -2,6 +2,7 @@ package breeze.optimize
 
 import breeze.math.MutableCoordinateSpace
 import com.typesafe.scalalogging.log4j.Logging
+import breeze.collection.mutable.RingBuffer
 
 
 /**

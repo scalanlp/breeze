@@ -1,4 +1,4 @@
-package breeze.optimize
+package breeze.collection.mutable
 
 import scala.collection.mutable._
 import scala.collection.generic._
