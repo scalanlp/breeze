@@ -1,7 +1,5 @@
 package breeze.optimize
 
-import breeze.linalg._
-import breeze.numerics._
 import com.typesafe.scalalogging.log4j.Logging
 
 abstract class CubicLineSearch extends Logging with MinimizingLineSearch {
