@@ -5,9 +5,9 @@ package breeze
  * @author dlwh
  */
 package object optimize {
-  def minimize[Function, Vector, Option, T](fn: Function,
-                                         init: Vector,
-                                         options: T*)(implicit optimization: OptimizationPackage[Function,Vector,Option], conv: T=>Option) {
-    optimization.minimize(fn, init, options.map(conv): _*)
+  def minimize[Objective, Vector](fn: Objective,
+                                 init: Vector,
+                                 options: OptimizationOption*)(implicit optimization: OptimizationPackage[Objective,Vector]) {
+    optimization.minimize(fn, init, options:_*)
   }
 }
