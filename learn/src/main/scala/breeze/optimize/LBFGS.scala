@@ -19,6 +19,7 @@ package breeze.optimize
 import breeze.math.{MutableInnerProductSpace, MutableCoordinateSpace}
 import breeze.linalg._
 import com.typesafe.scalalogging.log4j.Logging
+import breeze.linalg.operators.{OpMulMatrix, BinaryOp}
 
 
 /**
@@ -42,64 +43,18 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
   import vspace._
   require(m > 0)
 
-  case class History(private[LBFGS] val memStep: IndexedSeq[T] = IndexedSeq.empty,
-                     private[LBFGS] val memGradDelta: IndexedSeq[T] = IndexedSeq.empty)
-
+  type History = LBFGS.ApproximateInverseHessian[T]
 
   protected def takeStep(state: State, dir: T, stepSize: Double) = state.x + dir * stepSize
-  protected def initialHistory(f: DiffFunction[T], x: T):History = new History()
+  protected def initialHistory(f: DiffFunction[T], x: T):History = new LBFGS.ApproximateInverseHessian(m)
   protected def chooseDescentDirection(state: State):T = {
-    val grad = state.grad
-    val memStep = state.history.memStep
-    val memGradDelta = state.history.memGradDelta
-    val diag = if(memStep.size > 0) {
-      computeDiagScale(memStep.head,memGradDelta.head)
-    } else {
-      1.0
-    }
-
-    val dir:T = copy(grad)
-    val as = new Array[Double](m)
-    val rho = new Array[Double](m)
-
-    for(i <- 0 until memStep.length) {
-      rho(i) = (memStep(i) dot memGradDelta(i))
-      as(i) = (memStep(i) dot dir)/rho(i)
-      if(as(i).isNaN) {
-        throw new NaNHistory
-      }
-      axpy(-as(i), memGradDelta(i), dir)
-    }
-
-    dir *= diag
-
-    for(i <- (memStep.length - 1) to 0 by (-1)) {
-      val beta = (memGradDelta(i) dot dir)/rho(i)
-      axpy(as(i) - beta, memStep(i), dir)
-    }
-
-    dir *= -1.0
-    dir
+    state.history * state.grad
   }
 
   protected def updateHistory(newX: T, newGrad: T, newVal: Double, oldState: State): History = {
-    val gradDelta : T = (newGrad :- oldState.grad)
-    val step:T = (newX - oldState.x)
-
-    val memStep = (step +: oldState.history.memStep) take m
-    val memGradDelta = (gradDelta +: oldState.history.memGradDelta) take m
-
-
-    new History(memStep,memGradDelta)
+    oldState.history.updated(newX - oldState.x, newGrad :- oldState.grad)
   }
 
-  private def computeDiagScale(prevStep: T, prevGradStep: T):Double = {
-    val sy = prevStep dot prevGradStep
-    val yy = prevGradStep dot prevGradStep
-    if(sy < 0 || sy.isNaN) throw new NaNHistory
-    sy/yy
-  }
-   
   /**
    * Given a direction, perform a line search to find 
    * a direction to descend. At the moment, this just executes
@@ -111,22 +66,8 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
    * @return stepSize
    */
   protected def determineStepSize(state: State, f: DiffFunction[T], dir: T) = {
-    val iter = state.iter
     val x = state.x
     val grad = state.grad
-
-    val normGradInDir = {
-      val possibleNorm = dir dot grad
-      if (possibleNorm > 0) { // hill climbing is not what we want. Bad LBFGS.
-        logger.warn("Direction of positive gradient chosen!")
-        logger.warn("Direction is:" + possibleNorm)
-        // Reverse the direction, clearly it's a bad idea to go up
-        dir *= -1.0
-        dir dot grad
-      } else {
-        possibleNorm
-      }
-    }
 
     val ff = LineSearch.functionFromSearchDirection(f, x, dir)
     val search = new StrongWolfeLineSearch(maxZoomIter = 10, maxLineSearchIter = 10) // TODO: Need good default values here.
@@ -140,21 +81,67 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
 }
 
 object LBFGS {
-  def main(args: Array[String]) {
-    val lbfgs = new LBFGS[Counter[Int,Double]](5,4)
+  case class ApproximateInverseHessian[T](m: Int,
+                                          private[LBFGS] val memStep: IndexedSeq[T] = IndexedSeq.empty,
+                                          private[LBFGS] val memGradDelta: IndexedSeq[T] = IndexedSeq.empty)
+                                         (implicit vspace: MutableInnerProductSpace[T, Double]) extends NumericOps[ApproximateInverseHessian[T]] {
 
-    def optimizeThis(init: Counter[Int,Double]) = {
-      val f = new DiffFunction[Counter[Int,Double]] {
-        def calculate(x: Counter[Int,Double]) = {
-          (math.pow(norm((x - 3.0),2),2),(x * 2.0) - 6.0)
-        }
-      }
+    import vspace._
 
-      val result = lbfgs.minimize(f,init)
-      println(result)
+    def repr: ApproximateInverseHessian[T] = this
+
+    def updated(step: T, gradDelta: T) = {
+      val memStep = (step +: this.memStep) take m
+      val memGradDelta = (gradDelta +: this.memGradDelta) take m
+
+      new ApproximateInverseHessian(m, memStep,memGradDelta)
     }
 
-    optimizeThis(Counter(1->0.0,2->0.0,3->0.0,4->0.0,5->0.0))
+
+    def historyLength = memStep.length
+
+    def *(grad: T) = {
+     val diag = if(historyLength > 0) {
+       val prevStep = memStep.head
+       val prevGradStep = memGradDelta.head
+       val sy = prevStep dot prevGradStep
+       val yy = prevGradStep dot prevGradStep
+       if(sy < 0 || sy.isNaN) throw new NaNHistory
+       sy/yy
+     } else {
+       1.0
+     }
+
+     val dir:T = vspace.copy(grad)
+     val as = new Array[Double](m)
+     val rho = new Array[Double](m)
+
+     for(i <- 0 until historyLength) {
+       rho(i) = (memStep(i) dot memGradDelta(i))
+       as(i) = (memStep(i) dot dir)/rho(i)
+       if(as(i).isNaN) {
+         throw new NaNHistory
+       }
+       axpy(-as(i), memGradDelta(i), dir)
+     }
+
+     dir *= diag
+
+     for(i <- (historyLength - 1) to 0 by (-1)) {
+       val beta = (memGradDelta(i) dot dir)/rho(i)
+       axpy(as(i) - beta, memStep(i), dir)
+     }
+
+     dir *= -1.0
+     dir
+    }
+  }
+
+
+  implicit def multiplyInverseHessian[T](implicit vspace: MutableInnerProductSpace[T, Double]):BinaryOp[ApproximateInverseHessian[T], T, OpMulMatrix, T] = {
+    new BinaryOp[ApproximateInverseHessian[T], T, OpMulMatrix, T] {
+      def apply(a: ApproximateInverseHessian[T], b: T): T = a * b
+    }
+
   }
 }
-
