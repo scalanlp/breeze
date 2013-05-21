@@ -1,27 +1,40 @@
 package breeze.optimize
 
-import scala.actors._
-import breeze.linalg.DenseVector
-import breeze.math.InnerProductSpace
+import breeze.math.MutableCoordinateSpace
 import com.typesafe.scalalogging.log4j.Logging
 
 
-class SPG(
-  val optTol: Double = 1e-4, // termination criterion: tolerance for norm of projected gradient
-  val gamma: Double = 1e-4, // sufficient decrease parameter
-  val M: Int = 10, // number of history entries for linesearch
-  val alphaMax: Double = 1e10, // longest step
-  val alphaMin: Double = 1e-10, // shortest step
-  val maxNumIt: Int = 1000, // maximum number of iterations
-  val testOpt: Boolean = true, // perform optimality check based on projected gradient at each iteration
-  val initFeas: Boolean = false, // is the initial guess feasible, or should it be projected?
-  val maxSrchIt: Int = 30, // maximum number of line search attempts
-  val projection: DenseVector[Double] => DenseVector[Double] = identity) extends Minimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]] with Logging {
+/**
+ *
+ * @tparam T vector type
+ * @param optTol termination criterion: tolerance for norm of projected gradient
+ * @param gamma  sufficient decrease parameter
+ * @param M number of history entries for linesearch
+ * @param alphaMax longest step
+ * @param alphaMin shortest step
+ * @param maxNumIt maximum number of iterations
+ * @param testOpt perform optimality check based on projected gradient at each iteration
+ * @param initFeas is the initial guess feasible, or should it be projected?
+ * @param maxSrchIt maximum number of line search attempts
+ * @param projection projection operations
+ */
+class SPG[T](
+ val projection: T => T = {(t:T) =>t},
+ val optTol: Double = 1e-4,
+  val gamma: Double = 1e-4,
+  val M: Int = 10,
+  val alphaMax: Double = 1e10,
+  val alphaMin: Double = 1e-10,
+  val maxNumIt: Int = 1000,
+  val testOpt: Boolean = true,
+  val initFeas: Boolean = false,
+  val maxSrchIt: Int = 30)(implicit coord: MutableCoordinateSpace[T, Double]) extends Minimizer[T, DiffFunction[T]] with Logging {
+  import coord._
 
-  override def minimize(prob: DiffFunction[DenseVector[Double]], guess: DenseVector[Double]): DenseVector[Double] = {
-    def correctedGradient(x: DenseVector[Double], g: DenseVector[Double]): DenseVector[Double] = projection(x - g) - x
+  override def minimize(prob: DiffFunction[T], guess: T): T = {
+    def correctedGradient(x: T, g: T): T = projection(x - g) - x
     var gnorm: Double = 0.0
-    var x = if (initFeas) guess.copy else projection(guess.copy)
+    var x = if (initFeas) copy(guess) else projection(copy(guess))
 
     var alpha = 1.0 //0.001 / gnorm
     var prevfs = new RingBuffer[Double](M)
@@ -39,7 +52,7 @@ class SPG(
       var accepted = false
       var srchit = 0
 
-      gnorm = correctedGradient(x, g).norm(Double.PositiveInfinity)
+      gnorm = norm(correctedGradient(x, g))
       // Backtracking line-search
       do {
         val candx = x + searchDirection * lambda
@@ -70,14 +83,13 @@ class SPG(
       && (t < maxNumIt) //  && (!prob.hasConverged)
       )
 
-    return x
+    x
   }
 
-  def computeStep(newx: DenseVector[Double], oldx: DenseVector[Double],
-    newg: DenseVector[Double], oldg: DenseVector[Double]): Double = {
+  def computeStep(newx: T, oldx: T, newg: T, oldg: T): Double = {
     val s = newx - oldx
     val y = newg - oldg
-    return s.dot(s) / s.dot(y)
+    s.dot(s) / s.dot(y)
   }
 
 }
