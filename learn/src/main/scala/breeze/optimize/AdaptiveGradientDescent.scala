@@ -24,9 +24,13 @@ object AdaptiveGradientDescent {
    *
    * where g_ti is the gradient and s_ti = \sqrt(\sum_t'^{t} g_ti^2)
    */
-  trait L2Regularization[T] extends StochasticGradientDescent[T] {
+  class L2Regularization[T](val regularizationConstant: Double = 1.0,
+                            stepSize: Double, maxIter: Int,
+                            tolerance: Double = 1E-5,
+                            improvementTolerance: Double= 1E-4,
+                            minImprovementWindow: Int = 50)(implicit vspace: MutableCoordinateSpace[T, Double])
+    extends StochasticGradientDescent[T](stepSize, maxIter, tolerance, improvementTolerance, minImprovementWindow) {
 
-    val lambda: Double = 1.0
     val delta = 1E-4
     import vspace._
 
@@ -50,7 +54,7 @@ object AdaptiveGradientDescent {
       val s = sqrt(state.history.sumOfSquaredGradients :+ (state.grad :* state.grad))
       val newx = x :* s
       axpy(stepSize, dir, newx)
-      s += (delta + lambda * stepSize)
+      s += (delta + regularizationConstant * stepSize)
       newx :/= s
       newx
     }
@@ -60,8 +64,8 @@ object AdaptiveGradientDescent {
     }
 
     override protected def adjust(newX: T, newGrad: T, newVal: Double) = {
-      val av = newVal + (newX dot newX) * lambda / 2.0
-      val ag = newGrad + newX * lambda
+      val av = newVal + (newX dot newX) * regularizationConstant / 2.0
+      val ag = newGrad + newX * regularizationConstant
       (av -> ag)
     }
 

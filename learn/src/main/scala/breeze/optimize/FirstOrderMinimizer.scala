@@ -165,12 +165,9 @@ object FirstOrderMinimizer {
 
     def iterations[T](f: StochasticDiffFunction[T], init:T)(implicit arith: MutableCoordinateSpace[T, Double]):Iterator[FirstOrderMinimizer[T, StochasticDiffFunction[T]]#State] = {
       val r = if(useL1) {
-        new AdaptiveGradientDescent.L1Regularization[T](regularization, eta=alpha, maxIter = maxIterations)(arith) {
-        }
+        new AdaptiveGradientDescent.L1Regularization[T](regularization, eta=alpha, maxIter = maxIterations)(arith)
       } else { // L2
-        new StochasticGradientDescent[T](alpha,  maxIterations)(arith) with AdaptiveGradientDescent.L2Regularization[T] {
-          override val lambda = regularization
-        }
+        new AdaptiveGradientDescent.L2Regularization[T](regularization, alpha,  maxIterations)(arith)
       }
       r.iterations(f,init)
     }

@@ -32,9 +32,7 @@ class AdaptiveGradientTest extends OptimizeTestBase {
 
     def optimizeThis(init2: DenseVector[Double], reg: Double) = {
       val init = init2 % 100.0
-      val sgd = new StochasticGradientDescent[DenseVector[Double]](1,500) with AdaptiveGradientDescent.L2Regularization[DenseVector[Double]] {
-        override val lambda = reg.abs % 1E4
-      }
+      val sgd = new AdaptiveGradientDescent.L2Regularization[DenseVector[Double]](reg % 1E3 abs, 1,500)
       val f = new BatchDiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double], r: IndexedSeq[Int]) = {
           (((x - 3.0) :^ 2.0).sum,(x * 2.0) - 6.0)
@@ -43,10 +41,10 @@ class AdaptiveGradientTest extends OptimizeTestBase {
       }
 
       val result = sgd.minimize(f,init)
-      val targetValue = 3 / (sgd.lambda / 2 + 1)
+      val targetValue = 3 / (sgd.regularizationConstant / 2 + 1)
       val ok = norm(result :- DenseVector.ones[Double](init.size) * targetValue,2)/result.size < 2E-3
       if(!ok) {
-        sys.error("min " + init + " with reg: " + sgd.lambda + "gives " + result + " should be " + targetValue)
+        sys.error("min " + init + " with reg: " + sgd.regularizationConstant + "gives " + result + " should be " + targetValue)
       }
       ok
     }
