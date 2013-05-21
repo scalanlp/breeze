@@ -139,11 +139,11 @@ object FirstOrderMinimizer {
    * @param useStochastic if false, use LBFGS or OWLQN. If true, use some variant of Stochastic Gradient Descent.
    */
   case class OptParams(batchSize:Int = 512,
-                       regularization: Double = 1.0,
+                       regularization: Double = 0.0,
                        alpha: Double = 0.5,
                        maxIterations:Int = 1000,
                        useL1: Boolean = false,
-                       tolerance:Double = 1E-3,
+                       tolerance:Double = 1E-5,
                        useStochastic: Boolean= false) {
     def minimize[T](f: BatchDiffFunction[T], init: T)(implicit arith: MutableCoordinateSpace[T, Double]): T = {
       this.iterations(f, init).last.x

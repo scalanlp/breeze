@@ -16,7 +16,7 @@ package breeze.stats.distributions
  limitations under the License. 
 */
 
-import breeze.optimize.{LBFGS, DiffFunction}
+import breeze.optimize._
 import breeze.linalg._
 import breeze.numerics._
 import breeze.linalg.operators.{OpDiv, BinaryOp}
@@ -109,8 +109,7 @@ object Dirichlet {
 
     def mle(stats: SufficientStatistic) = {
       val likelihood = likelihoodFunction(stats)
-      val lbfgs = new LBFGS[T](100,3)
-      val result = lbfgs.minimize(likelihood, zeros(stats.t) + 1.0)
+      val result = minimize(likelihood, zeros(stats.t) + 1.0)
       result
     }
 

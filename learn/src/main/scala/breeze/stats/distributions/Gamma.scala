@@ -18,8 +18,7 @@ package distributions
 */
 
 import breeze.numerics._
-import breeze.optimize.{LBFGS, DiffFunction}
-import breeze.linalg.DenseVector
+import breeze.optimize.DiffFunction
 import math.pow
 import annotation.tailrec
 

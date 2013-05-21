@@ -20,7 +20,7 @@ import math._
 
 import breeze.numerics.{lgamma,digamma}
 import breeze.linalg._
-import breeze.optimize.{DiffFunction, LBFGS}
+import breeze.optimize._
 import breeze.numerics
 
 /**
@@ -118,10 +118,9 @@ object Beta extends ExponentialFamily[Beta,Double] {
   def mle(stats: SufficientStatistic): (Double, Double) = {
     import breeze.linalg.DenseVector.TupleIsomorphisms._
     val lensed = likelihoodFunction(stats).throughLens[DenseVector[Double]]
-    val lbfgs = new LBFGS[DenseVector[Double]](200,3)
     val startingA = stats.meanLog.abs // MoM would include variance, meh.
     val startingB = stats.meanLog1M.abs // MoM would include variance, meh
-    val result = lbfgs.minimize(lensed,DenseVector(startingA,startingB))
+    val result = minimize(lensed,DenseVector(startingA,startingB))
     val res@(a,b) = (result(0),result(1))
     res
   }

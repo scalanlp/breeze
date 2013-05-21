@@ -18,7 +18,7 @@ package breeze.stats.distributions
 
 import breeze.numerics.Bessel
 import math._
-import breeze.optimize.{LBFGS, DiffFunction}
+import breeze.optimize._
 import breeze.linalg.DenseVector
 
 
@@ -87,7 +87,6 @@ object VonMises extends ExponentialFamily[VonMises,Double] {
   def mle(stats: SufficientStatistic): (Double, Double) = {
     import breeze.linalg.DenseVector.TupleIsomorphisms._
     val lensed = likelihoodFunction(stats).throughLens[DenseVector[Double]]
-    val lbfgs = new LBFGS[DenseVector[Double]](100,3)
     // Starting points due to Sra, 2009... not as good as these old ones that I forgot about
     // http://en.wikipedia.org/wiki/Von_Mises-Fisher_distribution
 //    val startingMu = {
@@ -115,7 +114,7 @@ object VonMises extends ExponentialFamily[VonMises,Double] {
       else if(t < 0.85) -0.4 + 1.39 * t + (0.43)/(1-t)
       else 1/( t* (3 + t * (-4 + t)))
     }
-    val result = lbfgs.minimize(lensed,DenseVector(mu,kx))
+    val result = minimize(lensed,DenseVector(mu,kx))
     val res@(a,b) = (result(0),result(1))
     res
   }

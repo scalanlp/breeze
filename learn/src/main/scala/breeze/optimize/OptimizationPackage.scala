@@ -16,13 +16,13 @@ trait OptimizationPackage[Function, Vector] {
 }
 
 object OptimizationPackage {
-  class FirstOrderOptimizationPackage[Vector]()(implicit coord: MutableCoordinateSpace[Vector, Double]) extends OptimizationPackage[DiffFunction[Vector], Vector] {
-    def minimize(fn: DiffFunction[Vector], init: Vector, options: OptimizationOption*):Vector = {
+  class FirstOrderOptimizationPackage[DF, Vector]()(implicit coord: MutableCoordinateSpace[Vector, Double], df: DF <:< DiffFunction[Vector]) extends OptimizationPackage[DF, Vector] {
+    def minimize(fn: DF, init: Vector, options: OptimizationOption*):Vector = {
       options.foldLeft(OptParams())( (a,b) => b apply a).minimize(new CachedDiffFunction(fn)(coord.copy), init)
     }
   }
 
-  implicit def firstOrderPackage[Vector](implicit coord: MutableCoordinateSpace[Vector, Double]) = new FirstOrderOptimizationPackage[Vector]()
+  implicit def firstOrderPackage[DF, Vector](implicit coord: MutableCoordinateSpace[Vector, Double], df: DF <:< DiffFunction[Vector]) = new FirstOrderOptimizationPackage[DF, Vector]()
 
   class SecondOrderOptimizationPackage[Vector, Hessian]()(implicit coord: MutableCoordinateSpace[Vector, Double],
                                                           mult: BinaryOp[Hessian, Vector, OpMulMatrix, Vector]) extends OptimizationPackage[SecondOrderFunction[Vector, Hessian], Vector] {
