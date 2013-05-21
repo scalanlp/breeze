@@ -6,7 +6,8 @@ import breeze.collection.mutable.RingBuffer
 
 
 /**
- *
+ * SPG is a Spectral Projected Gradient minimizer; it minimizes a differentiable
+ * function subject to the optimum being in some set, given by the projection operator  projection
  * @tparam T vector type
  * @param optTol termination criterion: tolerance for norm of projected gradient
  * @param gamma  sufficient decrease parameter
