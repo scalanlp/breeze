@@ -1,5 +1,6 @@
 package breeze.optimize
 
+import breeze.util.Implicits._
 import breeze.math.InnerProductSpace
 
 trait MinimizingLineSearch {
@@ -22,7 +23,7 @@ trait LineSearch extends ApproximateLineSearch
 trait ApproximateLineSearch extends MinimizingLineSearch {
   final case class State(alpha: Double, value: Double, deriv: Double)
   def iterations(f: DiffFunction[Double], init: Double = 1.0):Iterator[State]
-  def minimize(f: DiffFunction[Double], init: Double = 1.0):Double = iterations(f, init).reduceLeft( (a,b) => b).alpha
+  def minimize(f: DiffFunction[Double], init: Double = 1.0):Double = iterations(f, init).last.alpha
 }
 
 object LineSearch {
