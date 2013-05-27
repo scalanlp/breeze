@@ -33,11 +33,6 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
   protected def determineStepSize(state: State, f: DF, direction: T):Double
   protected def takeStep(state: State, dir: T, stepSize:Double):T
   protected def updateHistory(newX: T, newGrad: T, newVal: Double, oldState: State):History
-  /**
-   * Take this many steps and then reset x to the original x. Mostly for Adagrad, which can behave oddly
-   * until it has a good sense of rate of change.
-   */
-  protected def numDepthChargeSteps:Int = 0
 
   protected def updateFValWindow(oldState: State, newAdjVal: Double):IndexedSeq[Double] = {
     val interm = oldState.fVals :+ newAdjVal
@@ -55,15 +50,15 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
 
   def iterations(f: DF,init: T): Iterator[State] = {
     var failedOnce = false
-    val it = Iterator.iterate(doDepthCharge(f,init)) { state => try {
+    val it = Iterator.iterate(initialState(f,init)) { state => try {
         val dir = chooseDescentDirection(state)
         val stepSize = determineStepSize(state, f, dir)
-        logger.info("Step Size:" + stepSize)
+        logger.info(f"Step Size: $stepSize%.4g")
         val x = takeStep(state,dir,stepSize)
         val (value,grad) = f.calculate(x)
-        logger.info("Val and Grad Norm:" + value + " " + vspace.norm(grad))
         val (adjValue,adjGrad) = adjust(x,grad,value)
-        logger.info("Adj Val and Grad Norm:" + adjValue + " " + vspace.norm(adjGrad))
+        val oneOffImprovement = (state.adjustedValue - adjValue)/(state.adjustedValue.abs max adjValue.abs max 1E-6 * state.initialAdjVal.abs)
+        logger.info(f"Val and Grad Norm: $adjValue%.4g ($oneOffImprovement%.3g) ${vspace.norm(adjGrad)}%.4g")
         val history = updateHistory(x,grad,value,state)
         val newAverage = updateFValWindow(state, adjValue)
         failedOnce = false
@@ -94,21 +89,7 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
     iterations(f,init).last.x
   }
 
-  private def doDepthCharge(f: DF, init: T): State = {
-    var state = initialState(f, init)
-    for(i <- 0 until numDepthChargeSteps) {
-      val dir = chooseDescentDirection(state)
-      val stepSize = determineStepSize(state, f, dir)
-      val x = takeStep(state, dir, stepSize)
-      val (value,grad) = f.calculate(x)
-      val (adjValue,adjGrad) = adjust(x,grad,value)
-      val history = updateHistory(x,grad,value,state)
-      logger.info("False Step %d: v=%f g=%f".format(i,adjValue, vspace.norm(adjGrad)))
-      state = State(x, value, grad, adjValue, adjGrad, 0, state.initialAdjVal, history, IndexedSeq(), 0)
-    }
 
-    initialState(f, init).copy(history=state.history)
-  }
 }
 
 sealed class FirstOrderException(msg: String="") extends RuntimeException(msg)

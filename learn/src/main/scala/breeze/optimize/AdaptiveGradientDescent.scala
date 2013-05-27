@@ -35,11 +35,6 @@ object AdaptiveGradientDescent {
     import vspace._
 
 
-    /**
-     * Take this many steps and then reset x to the original x. Mostly for Adagrad, which can behave oddly
-     * until it has a good sense of rate of change.
-     */
-    override protected def numDepthChargeSteps: Int = 3
 
     case class History(sumOfSquaredGradients: T)
     override def initialHistory(f: StochasticDiffFunction[T],init: T) = History(zeros(init))
@@ -87,12 +82,6 @@ object AdaptiveGradientDescent {
                             maxIter: Int=100)(implicit vspace: MutableCoordinateSpace[T, Double]) extends StochasticGradientDescent[T](eta,maxIter) {
 
 
-
-    /**
-     * Take this many steps and then reset x to the original x. Mostly for Adagrad, which can behave oddly
-     * until it has a good sense of rate of change.
-     */
-    override protected def numDepthChargeSteps: Int = 3
 
     import vspace._
     case class History(sumOfSquaredGradients: T)
