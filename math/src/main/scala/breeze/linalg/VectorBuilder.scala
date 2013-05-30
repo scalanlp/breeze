@@ -264,7 +264,7 @@ object VectorBuilder extends VectorBuilderOps_Double {
   def apply[V:ClassTag:Semiring:DefaultArrayValue](length: Int)(values: (Int, V)*) = {
     val r = zeros[V](length)
     for( (i, v) <- values) {
-      r(i) = v
+      r.add(i, v)
     }
     r
   }
