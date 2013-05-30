@@ -58,7 +58,7 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
         val (value,grad) = f.calculate(x)
         val (adjValue,adjGrad) = adjust(x,grad,value)
         val oneOffImprovement = (state.adjustedValue - adjValue)/(state.adjustedValue.abs max adjValue.abs max 1E-6 * state.initialAdjVal.abs)
-        logger.info(f"Val and Grad Norm: $adjValue%.4g ($oneOffImprovement%.3g) ${vspace.norm(adjGrad)}%.4g")
+        logger.info(f"Val and Grad Norm: $adjValue%.6g (rel: $oneOffImprovement%.3g) ${vspace.norm(adjGrad)}%.6g")
         val history = updateHistory(x,grad,value,state)
         val newAverage = updateFValWindow(state, adjValue)
         failedOnce = false

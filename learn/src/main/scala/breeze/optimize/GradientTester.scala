@@ -4,6 +4,7 @@ import breeze.linalg.support.{CanNorm, CanCopy, CanCreateZerosLike}
 import breeze.linalg.{Tensor, NumericOps}
 import breeze.linalg.operators.{OpSub, BinaryOp}
 import breeze.stats.distributions.Rand
+import com.typesafe.scalalogging.log4j.Logging
 
 /**
  * Class that compares the computed gradient with an empirical gradient based on
@@ -11,9 +12,10 @@ import breeze.stats.distributions.Rand
  *
  * @author dlwh
  */
-object GradientTester {
+object GradientTester extends Logging {
   /**
-   * Tests a gradient
+   * Tests a gradient by comparing the gradient to the empirically calculated gradient from finite differences,
+   * returning those that are bad, logging bad ones on WARN, ok ones on DEBUG, and overall statistics on INFO.
    * @param f the function to test
    * @param x point to test from
    * @param randFraction what percentage of x's domain to try.
@@ -24,7 +26,7 @@ object GradientTester {
    * @param toString toString function for converting elements of x's domain to a string.
    * @tparam K
    * @tparam T
-   * @return
+   * @return set of bad components.
    */
   def test[K,T](f: DiffFunction[T], x: T,
                 randFraction:Double = 0.01,
@@ -40,37 +42,31 @@ object GradientTester {
 
     val (fx,trueGrad) = f.calculate(x)
     val xx = copy(x)
+    var badComponents = Set[K]()
     val subsetOfDimensions = Rand.subsetsOfSize(x.keysIterator.toIndexedSeq, (x.size * randFraction + 1).toInt).get()
-    var lastWasOk = false
-    var lastWasZero = true
+    var ok, tried = 0
     for (k <- subsetOfDimensions) {
       if(skipZeros && trueGrad(k) == 0.0) {
-         if (!lastWasZero) {
-          println()
-          print("Zero Grad: ")
-        }
-        lastWasZero = true
-        lastWasOk = false
+        logger.debug(s"Zero Grad: ${toString(k)}")
         print(toString(k) + " ")
       } else {
         xx(k) += epsilon
         val grad = (f(xx) - fx) / epsilon
         xx(k) -= epsilon
-        val relDif =  (grad - trueGrad(k))/math.max(trueGrad(k).abs, grad.abs).max(1E-4)
+        val relDif =  (grad - trueGrad(k)).abs/math.max(trueGrad(k).abs, grad.abs).max(1E-4)
         if (relDif < tolerance) {
-          if(!lastWasOk) print("Ok: ")
-          print(toString(k) + " ")
-          lastWasOk = true
-          lastWasZero = false
+          ok += 1
+          logger.debug(s"OK: ${toString(k)} $relDif")
         } else {
-          if(lastWasOk || lastWasZero) {
-            println()
-            lastWasOk = false
-            lastWasZero = false
-          }
-          println(toString(k) + " relDif: %.3e [eps : %e, calculated: %4.3e empirical: %4.3e]".format(relDif, epsilon, trueGrad(k), grad))
+          badComponents += k
+          logger.warn(toString(k) + " relDif: %.3e [eps : %e, calculated: %4.3e empirical: %4.3e]".format(relDif, epsilon, trueGrad(k), grad))
         }
+        tried += 1
+      }
+      if(tried % 100 == 0 || tried == subsetOfDimensions.length) {
+        logger.info(f"Checked $tried of ${subsetOfDimensions.length} (out of dimension ${x.size}). ${ok * 1.0/tried}%.4g%% ok.")
       }
     }
+    badComponents
   }
 }
