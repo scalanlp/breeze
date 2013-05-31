@@ -1,6 +1,5 @@
 package breeze.optimize
 
-import scala.actors._
 import breeze.linalg._
 import com.typesafe.scalalogging.log4j.Logging
 import breeze.collection.mutable.RingBuffer
@@ -26,13 +25,11 @@ class CompactHessian(m: Int) {
     val k = Y.size
 
     // D_k is the k x k diagonal matrix D_k = diag [s_0^Ty_0, ...,s_{k-1}^Ty_{k-1}].
-    val fD = Futures.future {
-      diag(DenseVector(S.zip(Y).map {case (s,y) => s dot y}:_*))
-    }
+    val D =  diag(DenseVector(S.zip(Y).map {case (s,y) => s dot y}:_*))
 
     // L_k is the k x k matrix with (L_k)_{i,j} = if( i > j ) s_i^T y_j else 0   
     // (this is a lower triangular matrix with the diagonal set to all zeroes)
-    val fL = Futures.future {
+    val L = {
       val ret = DenseMatrix.zeros[Double](k, k)
       for (j <- 0 until k)
         for (i <- (j + 1) until k)
@@ -41,7 +38,7 @@ class CompactHessian(m: Int) {
     }
 
     // S_k^T S_k is the symmetric k x k matrix with element (i,j) given by <s_i, s_j>
-    val fSTS = Futures.future {
+    val STS = {
       val ret = DenseMatrix.zeros[Double](k, k)
       for (j <- 0 until k) {
         for (i <- j until k) {
@@ -52,10 +49,6 @@ class CompactHessian(m: Int) {
       }
       ret
     }
-
-    val L = fL()
-    val D = fD()
-    val STS = fSTS()
 
     // M is the 2k x 2k matrix given by: M = [ \sigma * S_k^T S_k    L_k ]
     //                                       [         L_k^T        -D_k ]
@@ -77,22 +70,17 @@ class CompactHessian(m: Int) {
   def NTv(v: DenseVector[Double]): DenseMatrix[Double] = {
     val ntv = DenseMatrix.zeros[Double](2 * Y.size, 1)
 
-    val f1 = Futures.future {
-      var i = 0
-      for (s <- S) {
-        ntv.update(i, 0, s.dot(v) * sigma)
-        i += 1
-      }
+    var i = 0
+    for (s <- S) {
+      ntv.update(i, 0, s.dot(v) * sigma)
+      i += 1
     }
-    val f2 = Futures.future {
-      var i = S.size
-      for (y <- Y) {
-        ntv.update(i, 0, y.dot(v))
-        i += 1
-      }
+    i = S.size
+    for (y <- Y) {
+      ntv.update(i, 0, y.dot(v))
+      i += 1
     }
-    f1(); f2();
-    return ntv
+    ntv
   }
 
   def subtractNv(subFrom: DenseVector[Double], v: Matrix[Double]): DenseVector[Double] = {
