@@ -18,8 +18,6 @@ package breeze.stats;
 
 
 import scala.collection.mutable.{Seq=>_,_};
-import breeze.data._;
-import breeze.classify._;
 import distributions._;
 
 /** Implements statistical significance testing for the output of two systems by randomization. 
@@ -59,24 +57,4 @@ class RandomizationTest[L](val numSamples:Int, val errorMeasure: Seq[L]=>Double)
     }
     (numBetter + 1.0) / (numSamples+1.0);
   }
-}
-
-object RandomizationTest {
-
-  /** Classify the dataset according to the two classifiers, and then use some
-  * measure from ContingencyStats to see if they're different.
-  */
-  def apply[L,T](dataset: Seq[Example[L,T]], c1: Classifier[L,T], c2: Classifier[L,T], error: ContingencyStats[L]=>Double):Double = {
-    new RandomizationTest[L]( l1=> 
-      error(ContingencyStats(l1,dataset.map(_.label)))
-    ) apply (dataset.view.map(Example.lift(c1)).map(_.label).force,dataset.view.map(Example.lift(c2)).map(_.features).force);
-  }
-
-  /** Classify the dataset according to the two classifiers, and then use f1
-  * measure from ContingencyStats to see if they're different.
-  */
-  def apply[L,T](dataset: Seq[Example[L,T]], c1: Classifier[L,T], c2: Classifier[L,T]):Double = {
-    apply(dataset,c1,c2,(x:ContingencyStats[L]) => x.macroaveraged.f);
-  }
-
 }
