@@ -7,6 +7,9 @@ import operators.{BinaryUpdateOp, OpMulInner, BinaryOp, CanAxpy}
 /**
  * Represents a feature vector of indicator (i.e. binary) features.
  * Not a full vector. Only supports dot and addition with a real vector.
+ *
+ * TODO: possibly rename to IndicatorVector?
+ *
  * @author dlwh
  */
 class FeatureVector(val data: Array[Int]) extends NumericOps[FeatureVector] {
@@ -25,6 +28,7 @@ class FeatureVector(val data: Array[Int]) extends NumericOps[FeatureVector] {
    * @return
    */
   def apply(i: Int) = data(i)
+
 
 
   override def toString: String = data.mkString("FeatureVector(",", ", ")")
