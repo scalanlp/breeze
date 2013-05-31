@@ -1,4 +1,4 @@
-package breeze.stats;
+package breeze.stats
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
