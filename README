@@ -1,4 +1,4 @@
-Breeze version 0.4-SNAPSHOT
+# Breeze version 0.4-SNAPSHOT
 
 Breeze is a library for numerical processing, machine learning, and natural language processing.
 Its primary focus is on being generic, clean, and powerful without sacrificing (much) efficiency.
@@ -13,9 +13,7 @@ The library currently consists of several parts:
 Possible future releases:
 * breeze-fst: Finite state toolkit
 
-Breeze is the merger of the ScalaNLP and Scalala projects, because 
-one of the original maintainers is unable to continue development.
-The Scalala parts are largely rewritten.
+Breeze is the merger of the ScalaNLP and Scalala projects, because  one of the original maintainers is unable to continue development. The Scalala parts are largely rewritten.
 
 (c) David Hall, 2009 -
 
@@ -36,12 +34,14 @@ Contributions from:
   Alexey Noskov <alno>
   Devon Bryant <devonbryant>
 
-  And others (email me if you've contributed code and aren't listed)
+  And others (email David Hall if you've contributed code and aren't listed)
 
+## Build
 
 This project can be built with sbt 0.11.2
 
-Documentation:
+## Documentation
+
 * https://github.com/scalanlp/breeze/wiki/Quickstart
 * https://github.com/scalanlp/breeze/wiki/Breeze-Linear-Algebra
 * https://github.com/scalanlp/breeze/wiki/UserGuide
