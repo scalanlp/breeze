@@ -29,10 +29,10 @@ class MersenneTwister(seed: Int) extends RandomGenerator {
   /**
   * Seeds the generator with System.currentTimeMillis.toInt
   */
-  def this() = this(System.currentTimeMillis.toInt);
+  def this() = this(System.currentTimeMillis.toInt)
 
   // Create a length 624 array to store the state of the generator
-  private val MT = new Array[Int](624);
+  private val MT = new Array[Int](624)
   private var index = 0
   MT(0) = seed
   for (i <- 1 to 623) { 
@@ -46,11 +46,11 @@ class MersenneTwister(seed: Int) extends RandomGenerator {
       generateNumbers()
     }
 
-    var y = MT(index);
-    y = y ^ (y >>> 11);
-    y = y ^ (( (y.toLong<<7) & (2636928640L))&0xffffffff) toInt;
-    y = y ^ (( (y.toLong<<15) & (4022730752L))&0xffffffff) toInt;
-    y = y ^ (y >>> 18);
+    var y = MT(index)
+    y = y ^ (y >>> 11)
+    y = y ^ (( (y.toLong<<7) & (2636928640L))&0xffffffff).toInt
+    y = y ^ (( (y.toLong<<15) & (4022730752L))&0xffffffff).toInt
+    y = y ^ (y >>> 18)
 
     index = (index + 1) % 624
     y
@@ -60,10 +60,10 @@ class MersenneTwister(seed: Int) extends RandomGenerator {
   private def generateNumbers() {
     for (i <- 0 to 623) {
       // 32'th bit of the one and the last 31 bits of the other
-      val y = (MT(i) & 0x80000000) | (MT((i+1) % 624)&0x7fffffff);
-      MT(i) = MT((i + 397) % 624) ^ (y >>> 1);
+      val y = (MT(i) & 0x80000000) | (MT((i+1) % 624)&0x7fffffff)
+      MT(i) = MT((i + 397) % 624) ^ (y >>> 1)
       if (y % 2 == 1) {
-        MT(i) = MT(i) ^ (2567483615L) toInt;
+        MT(i) = (MT(i) ^ (2567483615L)).toInt
       }
     }
   }
