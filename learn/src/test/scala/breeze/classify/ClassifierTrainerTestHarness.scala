@@ -1,7 +1,7 @@
 package breeze.classify
 
 import org.scalatest.FunSuite
-import breeze.data.{DataMatrix, Example}
+import chalk.data.{DataMatrix, Example}
 import breeze.stats.ContingencyStats
 import breeze.linalg._
 

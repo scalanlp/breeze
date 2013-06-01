@@ -3,7 +3,7 @@ package breeze.classify
 import breeze.nnet.{NNObjective, NeuralNetwork}
 import breeze.util.{Encoder, Index}
 import breeze.linalg._
-import breeze.data.Example
+import chalk.data.Example
 import breeze.numerics._
 import breeze.optimize.FirstOrderMinimizer.OptParams
 

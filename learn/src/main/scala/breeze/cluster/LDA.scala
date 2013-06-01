@@ -5,8 +5,8 @@ import breeze.numerics._
 import breeze.config.CommandLineParser
 import breeze.util.Index
 import java.io.File
-import breeze.text.tokenize.JavaWordTokenizer
-import breeze.text.transform.StopWordFilter
+import chalk.text.tokenize.JavaWordTokenizer
+import chalk.text.transform.StopWordFilter
 import scala.io._
 import breeze.util.Implicits._
 

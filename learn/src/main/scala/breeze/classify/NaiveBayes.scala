@@ -17,7 +17,7 @@ package breeze.classify
 */
 
 import math._
-import breeze.data._
+import chalk.data._
 import breeze.linalg._
 
 
