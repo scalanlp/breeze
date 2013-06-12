@@ -75,6 +75,13 @@ class CounterTest extends FunSuite with Checkers {
     assert(a === b)
     assert(a === c)
   }
+
+  test("Counter inplace operations") {
+    import breeze.numerics.log
+    val x = Counter(1 -> 1.0, 2 -> 2.0)
+    log.inPlace(x)
+    assert(x === Counter(1 -> log(1.0), 2 -> log(2.0)))
+  }
 }
 
 

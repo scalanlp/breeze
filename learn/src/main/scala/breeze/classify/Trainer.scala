@@ -1,13 +1,11 @@
 package breeze.classify
 
 import breeze.config._
-import breeze.data.SparseFeatureDataset
+import chalk.data.SparseFeatureDataset
 import io.Source
 import breeze.stats.ContingencyStats
-import breeze.serialization.DataSerialization
 import java.io._
 import breeze.linalg._
-import breeze.math.VectorSpace
 
 case class TrainerParams(
   @Help(text="The kind of classifier to train. {Logistic,SVM,Pegasos}") `type`: String= "Logistic",

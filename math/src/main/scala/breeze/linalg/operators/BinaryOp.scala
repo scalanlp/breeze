@@ -15,8 +15,9 @@ package breeze.linalg.operators
  limitations under the License.
 */
 import breeze.generic.{MMRegistry2, Multimethod2}
-import breeze.math.Semiring
+import breeze.math.{Field, Ring, Semiring}
 import breeze.linalg.support.CanCopy
+import breeze.numerics.IntMath
 
 /**
  * A BinaryOp is the standard implicit capability trait for binary operations: a + b, a - b, etc.
@@ -43,6 +44,47 @@ object BinaryOp {
     }
 
 
+  }
+
+  // scalar implicits
+  implicit def scalarOpAdd[S:Semiring]:BinaryOp[S, S, OpAdd, S] = new BinaryOp[S, S, OpAdd, S] {
+    def apply(a: S, b: S): S = implicitly[Semiring[S]].+(a,b)
+  }
+
+  implicit def scalarOpSub[S:Ring]:BinaryOp[S, S, OpSub, S] = new BinaryOp[S, S, OpSub, S] {
+    def apply(a: S, b: S): S = implicitly[Ring[S]].-(a,b)
+  }
+
+  implicit def scalarOpMul[S:Semiring]:BinaryOp[S, S, OpMulScalar, S] = new BinaryOp[S, S, OpMulScalar, S] {
+    def apply(a: S, b: S): S = implicitly[Semiring[S]].*(a,b)
+  }
+
+  implicit def scalarOpDiv[S:Field]:BinaryOp[S, S, OpDiv, S] = new BinaryOp[S, S, OpDiv, S] {
+    def apply(a: S, b: S): S = implicitly[Field[S]]./(a,b)
+  }
+
+  implicit def intOpPow:BinaryOp[Int, Int, OpPow, Int] = new BinaryOp[Int, Int, OpPow, Int] {
+    def apply(a: Int, b: Int): Int = IntMath.ipow(a,b)
+  }
+
+  implicit def doubleOpPow:BinaryOp[Double, Double, OpPow, Double] = new BinaryOp[Double, Double, OpPow, Double] {
+    def apply(a: Double, b: Double): Double = math.pow(a,b)
+  }
+
+  implicit def floatOpPow:BinaryOp[Float, Float, OpPow, Float] = new BinaryOp[Float, Float, OpPow, Float] {
+    def apply(a: Float, b: Float): Float = math.pow(a,b).toFloat
+  }
+
+  implicit def intOpMod:BinaryOp[Int, Int, OpMod, Int] = new BinaryOp[Int, Int, OpMod, Int] {
+    def apply(a: Int, b: Int): Int = IntMath.ipow(a,b)
+  }
+
+  implicit def doubleOpMod:BinaryOp[Double, Double, OpMod, Double] = new BinaryOp[Double, Double, OpMod, Double] {
+    def apply(a: Double, b: Double): Double = math.pow(a,b)
+  }
+
+  implicit def floatOpMod:BinaryOp[Float, Float, OpMod, Float] = new BinaryOp[Float, Float, OpMod, Float] {
+    def apply(a: Float, b: Float): Float = a % b
   }
 }
 
@@ -95,7 +137,7 @@ trait BinaryRegistry[A, B, Op<:OpType, R] extends BinaryOp[A, B, Op, R] with MMR
   }
 
   def register[AA<:A, BB<:B, RR <: R](op: BinaryOp[AA, BB, Op, RR])(implicit manA: Manifest[AA], manB: Manifest[BB]) {
-    super.register(manA.erasure, manB.erasure, op)
+    super.register(manA.runtimeClass, manB.runtimeClass, op)
   }
 
 }

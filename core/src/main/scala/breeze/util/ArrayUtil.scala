@@ -86,6 +86,47 @@ object ArrayUtil {
     }
   }
 
+  /**
+   * For reasons that I cannot explain java.util.Arrays.equals(Array(0.0), Array(-0.0)) == false
+   * This method fixes that for floats and doubles
+   */
+  def nonstupidEquals(a: Array[_], aoffset: Int, astride: Int, alength: Int,
+             b: Array[_], boffset: Int, bstride: Int, blength: Int):Boolean = {
+    val ac = a.getClass
+        val bc = b.getClass
+    if(ac != bc || alength != blength) {
+      false
+    } else {
+      a match {
+        case x: Array[Double] =>
+          val y = b.asInstanceOf[Array[Double]]
+          var ai = aoffset
+          var bi = boffset
+          var i = 0
+          while(i < alength) {
+            if(x(ai) != y(bi)) return false
+            ai += astride
+            bi += bstride
+            i += 1
+          }
+          true
+        case x: Array[Float] =>
+          val y = b.asInstanceOf[Array[Float]]
+          var ai = aoffset
+          var bi = boffset
+          var i = 0
+          while(i < alength) {
+            if(x(ai) != y(bi)) return false
+            ai += astride
+            bi += bstride
+            i += 1
+          }
+          true
+        case _ => equals(a, aoffset, astride, alength, b, boffset, bstride, blength)
+      }
+    }
+  }
+
   def equals(a: Array[_], b: Array[_]):Boolean = {
     val ac = a.getClass
     val bc = b.getClass
@@ -100,6 +141,118 @@ object ArrayUtil {
         case x: Array[Char] => Arrays.equals(a.asInstanceOf[Array[Char]], b.asInstanceOf[Array[Char]])
         case x: Array[Byte] => Arrays.equals(a.asInstanceOf[Array[Byte]], b.asInstanceOf[Array[Byte]])
         case x: Array[_] => Arrays.equals(a.asInstanceOf[Array[AnyRef]], b.asInstanceOf[Array[AnyRef]])
+        case _ => throw new RuntimeException("shouldn't be here!")
+      }
+    }
+
+
+  }
+
+  def equals(a: Array[_], aoffset: Int, astride: Int, alength: Int,
+             b: Array[_], boffset: Int, bstride: Int, blength: Int):Boolean = {
+    val ac = a.getClass
+    val bc = b.getClass
+    if(ac != bc || alength != blength) false
+    else if(aoffset == 0 && astride == 1 && alength == a.length && boffset == 0 && bstride == 1 && blength == b.length) {
+      equals(a,b)
+    }else {
+      a match {
+        case x: Array[Double] =>
+          val y = b.asInstanceOf[Array[Double]]
+          var ai = aoffset
+          var bi = boffset
+          var i = 0
+          while(i < alength) {
+            if(x(ai) != y(bi)) return false
+            ai += astride
+            bi += bstride
+            i += 1
+          }
+          true
+        case x: Array[Int] =>
+          val y = b.asInstanceOf[Array[Int]]
+          var ai = aoffset
+          var bi = boffset
+          var i = 0
+          while(i < alength) {
+            if(x(ai) != y(bi)) return false
+            ai += astride
+            bi += bstride
+            i += 1
+          }
+          true
+        case x: Array[Float] =>
+          val y = b.asInstanceOf[Array[Float]]
+          var ai = aoffset
+          var bi = boffset
+          var i = 0
+          while(i < alength) {
+            if(x(ai) != y(bi)) return false
+            ai += astride
+            bi += bstride
+            i += 1
+          }
+          true
+        case x: Array[Long] =>
+          val y = b.asInstanceOf[Array[Long]]
+          var ai = aoffset
+          var bi = boffset
+          var i = 0
+          while(i < alength) {
+            if(x(ai) != y(bi)) return false
+            ai += astride
+            bi += bstride
+            i += 1
+          }
+          true
+        case x: Array[Short] =>
+          val y = b.asInstanceOf[Array[Short]]
+          var ai = aoffset
+          var bi = boffset
+          var i = 0
+          while(i < alength) {
+            if(x(ai) != y(bi)) return false
+            ai += astride
+            bi += bstride
+            i += 1
+          }
+          true
+        case x: Array[Char] =>
+          val y = b.asInstanceOf[Array[Char]]
+          var ai = aoffset
+          var bi = boffset
+          var i = 0
+          while(i < alength) {
+            if(x(ai) != y(bi)) return false
+            ai += astride
+            bi += bstride
+            i += 1
+          }
+          true
+        case x: Array[Byte] =>
+          val y = b.asInstanceOf[Array[Byte]]
+          var ai = aoffset
+          var bi = boffset
+          var i = 0
+          while(i < alength) {
+            if(x(ai) != y(bi)) return false
+            ai += astride
+            bi += bstride
+            i += 1
+          }
+          true
+        case x: Array[_] =>
+          val y = b.asInstanceOf[Array[AnyRef]]
+          var ai = aoffset
+          var bi = boffset
+          var i = 0
+          while(i < alength) {
+            if(x(ai) != y(bi)) return false
+            ai += astride
+            bi += bstride
+            i += 1
+          }
+          true
         case _ => throw new RuntimeException("shouldn't be here!")
       }
     }

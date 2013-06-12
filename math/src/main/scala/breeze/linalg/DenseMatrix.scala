@@ -208,7 +208,10 @@ object DenseMatrix extends LowPriorityDenseMatrix
    * The standard way to create an empty matrix, size is rows * cols
    */
   def zeros[@specialized(Int, Float, Double) V:ClassTag:DefaultArrayValue](rows: Int, cols: Int) = {
-    fill(rows,cols)(implicitly[DefaultArrayValue[V]].value)
+    val data = new Array[V](rows * cols)
+    if(rows * cols != 0 && data(0) != implicitly[DefaultArrayValue[V]].value)
+      ArrayUtil.fill(data, 0, data.length, implicitly[DefaultArrayValue[V]].value)
+    new DenseMatrix(rows, cols, data)
   }
 
   def create[@specialized(Int, Float, Double) V:DefaultArrayValue](rows: Int, cols: Int, data: Array[V]): DenseMatrix[V] = {

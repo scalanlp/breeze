@@ -17,11 +17,11 @@ package breeze.classify
 
 
 
-import breeze.data.Example
+import chalk.data.Example
 import breeze.linalg._
 import breeze.numerics._
 import breeze.stats.distributions.Rand
-import breeze.math.{MutableInnerProductSpace, MutableCoordinateSpace}
+import breeze.math.MutableCoordinateSpace
 import breeze.util.Index
 import com.typesafe.scalalogging.log4j.Logging
 import scala.reflect.ClassTag
@@ -128,7 +128,7 @@ object SVM {
    */
 
   def main(args: Array[String]) {
-    import breeze.data._
+    import chalk.data._
 
     val data = DataMatrix.fromURL(new java.net.URL("http://www-stat.stanford.edu/~tibs/ElemStatLearn/datasets/spam.data"),-1,dropRow = true)
     var vectors = data.rows.map(e => e map ((a:Seq[Double]) => DenseVector(a:_*)) relabel (_.toInt))

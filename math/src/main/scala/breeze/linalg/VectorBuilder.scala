@@ -119,7 +119,7 @@ class VectorBuilder[@spec(Double,Int, Float) E](private var _index: Array[Int],
   def isActive(rawIndex: Int) = rawIndex < used && rawIndex > 0
 
   override def toString = {
-    (index.iterator zip data.iterator).take(used).mkString("USVector(",", ", ")")
+   (index.iterator zip data.iterator).take(used).mkString(s"VectorBuilder($length)(",", ", ")")
   }
 
   def copy: VectorBuilder[E] = {
@@ -264,7 +264,7 @@ object VectorBuilder extends VectorBuilderOps_Double {
   def apply[V:ClassTag:Semiring:DefaultArrayValue](length: Int)(values: (Int, V)*) = {
     val r = zeros[V](length)
     for( (i, v) <- values) {
-      r(i) = v
+      r.add(i, v)
     }
     r
   }
@@ -344,7 +344,9 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
         require(a.length == b.length, "Dimension mismatch!")
         a.reserve(a.activeSize + b.activeSize)
         var i = 0
-        while(i < b.activeSize) {
+        // read once here in case we're doing a += a
+        val bActiveSize = b.activeSize
+        while(i < bActiveSize) {
           a.add(b.index(i), b.data(i))
           i += 1
         }
@@ -359,7 +361,9 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
         require(a.length == b.length, "Dimension mismatch!")
         a.reserve(a.activeSize + b.activeSize)
         var i = 0
-        while(i < b.activeSize) {
+        // read once here in case we're doing a += a
+        val bActiveSize = b.activeSize
+        while(i < bActiveSize) {
           a.add(b.index(i), -b.data(i))
           i += 1
         }
@@ -372,6 +376,7 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
   implicit val canSet_Double: BinaryUpdateOp[VectorBuilder[Double], VectorBuilder[Double], OpSet] =  {
     new  BinaryUpdateOp[VectorBuilder[Double], VectorBuilder[Double], OpSet]  {
       def apply(a: VectorBuilder[Double], b: VectorBuilder[Double]) {
+        if(a eq b) return
         a.clear()
         a.reserve(b.activeSize)
         var i = 0
@@ -420,12 +425,17 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
     new  CanAxpy[Double, VectorBuilder[Double], VectorBuilder[Double]]  {
       def apply(s: Double, b: VectorBuilder[Double], a: VectorBuilder[Double]) {
         require(a.length == b.length, "Dimension mismatch!")
-        a.reserve(b.activeSize + a.activeSize)
-        var i = 0
-        val bd = b.data
-        while(i < b.activeSize) {
-          a.add(b.index(i), s * bd(i))
-          i += 1
+        if(a eq b) {
+          a :*= (1+s)
+        } else {
+          val bActiveSize: Int = b.activeSize
+          a.reserve(bActiveSize + a.activeSize)
+          var i = 0
+          val bd = b.data
+          while(i < bActiveSize) {
+            a.add(b.index(i), s * bd(i))
+            i += 1
+          }
         }
       }
     }
@@ -473,7 +483,10 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
       }
 
       def close(a: VectorBuilder[Double], b: VectorBuilder[Double], tolerance: Double): Boolean = {
-        (a.toHashVector - b.toHashVector).norm(2) < tolerance
+        val diff: Double = (a.toHashVector - b.toHashVector).norm(2)
+        if(diff > tolerance)
+          println((a,b,a.toHashVector, b.toHashVector,diff))
+        diff < tolerance
       }
 
       implicit def axpyVV: CanAxpy[Double, VectorBuilder[Double], VectorBuilder[Double]] = canAxpy_VB_VB_Double
@@ -488,7 +501,7 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
         var i = 0
         val bd = b.data
         while(i < b.activeSize) {
-          a(b.index(i)) -= bd(i)
+          a(b.index(i)) += bd(i)
           i += 1
         }
       }

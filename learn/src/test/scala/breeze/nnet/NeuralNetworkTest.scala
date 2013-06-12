@@ -3,7 +3,7 @@ package breeze.nnet
 import org.scalatest.FunSuite
 import org.scalatest.prop.Checkers
 import breeze.linalg.DenseVector
-import breeze.optimize.{GradientCheckingDiffFunction, LBFGS}
+import breeze.optimize._
 import scala.util.Random
 
 /**
@@ -21,8 +21,7 @@ class NeuralNetworkTest extends FunSuite with Checkers {
 
     val nnObj = new NNObjective[Double](asVector zip outputs.data, loss, Array(1, 20, 5, 1))
 
-    val lbfgs = new LBFGS[DenseVector[Double]](maxIter = 250)
-    val weights = lbfgs.minimize(nnObj, nnObj.initialWeightVector)
+    val weights = minimize(nnObj, nnObj.initialWeightVector)
     val nn = nnObj.extract(weights)
     // ensure squared-loss is small.
     val mse = (asVector.map(nn) zip outputs.data map (loss _).tupled).map(_._1).sum / inputs.size

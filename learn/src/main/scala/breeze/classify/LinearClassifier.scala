@@ -17,8 +17,8 @@ package breeze.classify
 
 
 
-import breeze.serialization.DataSerialization.ReadWritable
-import breeze.serialization.{SerializationFormat, DataSerialization}
+import chalk.serialization.DataSerialization.ReadWritable
+import chalk.serialization.{SerializationFormat, DataSerialization}
 import breeze.linalg._
 import breeze.linalg.operators._
 import breeze.math.{MutableCoordinateSpace, TensorSpace, VectorSpace}

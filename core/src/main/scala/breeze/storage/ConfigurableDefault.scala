@@ -21,6 +21,7 @@ import scala.reflect.ClassTag
  *
  * @author dlwh
  */
+@SerialVersionUID(1L)
 trait ConfigurableDefault[@specialized V] extends Serializable { outer =>
   def value(implicit default: DefaultArrayValue[V]):V
 

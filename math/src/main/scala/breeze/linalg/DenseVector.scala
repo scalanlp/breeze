@@ -72,6 +72,8 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
   def activeKeysIterator = keysIterator
 
   override def equals(p1: Any) = p1 match {
+    case y: DenseVector[_] =>
+      y.length == length && ArrayUtil.nonstupidEquals(data, offset, stride, length, y.data, y.offset, y.stride, y.length)
     case x: Vector[_] =>
 //      length == x.length && (( stride == x.stride
 //        && offset == x.offset
@@ -214,8 +216,13 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
                       with DenseVectorOps_HashVector_Complex
                       with DenseVector_SpecialOps {
   def zeros[@spec(Double, Float, Int) V: ClassTag : DefaultArrayValue](size: Int) = {
-    apply(Array.fill(size) { implicitly[DefaultArrayValue[V]].value })
+    val data = new Array[V](size)
+    if(size != 0 && data(0) != implicitly[DefaultArrayValue[V]].value)
+      ArrayUtil.fill(data, 0, data.length, implicitly[DefaultArrayValue[V]].value)
+    new DenseVector(data)
   }
+
+
   def apply[@spec(Double, Float, Int) V](values: Array[V]) = new DenseVector(values)
   def ones[@spec(Double, Float, Int) V: ClassTag:Semiring](size: Int) = {
     val r = apply(new Array[V](size))

@@ -183,7 +183,7 @@ object LiblinearUtil {
  */ 
 object LiblinearClassifierFromCsv {
 
-  import breeze.data._
+  import chalk.data._
   import breeze.config._
   import java.io._
 

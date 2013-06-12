@@ -5,8 +5,8 @@ import breeze.linalg.{Counter, DenseVector, NumericOps}
 import breeze.linalg.operators._
 import breeze.linalg.support.{CanCreateZerosLike, CanCopy, CanZipMapValues, CanNorm}
 import breeze.generic.{URFunc, UReduceable, CanMapValues}
-import breeze.serialization.DataSerialization
-import breeze.serialization.DataSerialization.ReadWritable
+import chalk.serialization.DataSerialization
+import chalk.serialization.DataSerialization.ReadWritable
 import breeze.math.{MutableCoordinateSpace, TensorSpace}
 import scala.reflect.ClassTag
 

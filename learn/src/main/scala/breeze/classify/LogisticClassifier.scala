@@ -19,7 +19,7 @@ package breeze.classify
 
 import breeze.linalg._
 import breeze.numerics._
-import breeze.data._
+import chalk.data._
 import breeze.optimize._
 import breeze.optimize.FirstOrderMinimizer.OptParams
 import breeze.math.MutableCoordinateSpace

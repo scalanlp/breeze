@@ -1,6 +1,6 @@
 package breeze.classify
 
-import breeze.data.Example
+import chalk.data.Example
 import breeze.math.MutableInnerProductSpace
 import breeze.linalg.Counter
 import breeze.util.Index
