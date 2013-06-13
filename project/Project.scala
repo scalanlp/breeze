@@ -69,13 +69,14 @@ object BreezeBuild extends Build {
   val log4j =  "org.apache.logging.log4j" % "log4j-core" % "2.0-beta4"
   val oldScalaActors = "org.scala-lang" % "scala-actors" % "2.10.0"
   val chalkCurrent = "org.scalanlp" % "chalk" % "1.2.0"
+  val jtransforms = "com.github.rwl" % "jtransforms" % "2.4.0"
 
   val commonsMath =  "org.apache.commons" % "commons-math3" % "3.2"
             
 
 
   val coreDeps = Seq(paranamer, opencsv, logging, log4j)
-  val commonDeps = Seq(paranamer, netlib, jblas, commonsMath)
+  val commonDeps = Seq(paranamer, netlib, jblas, commonsMath, jtransforms)
   val learnDeps = commonDeps ++ Seq(liblinear, oldScalaActors, chalkCurrent)
   val vizDeps = Seq(
     "jfree" % "jcommon" % "1.0.16",
