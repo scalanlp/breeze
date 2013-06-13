@@ -58,40 +58,55 @@ package object signal {
     tempRet
   }
 
-//  /**
-//   * Reformat for input: note difference in format with denseVectorCToTemp
-//   * @param tempDV
-//   * @return
-//   */
-//  private def denseVectorDToTemp(tempDV: DenseVector[Double]): Array[Double] = {
-//    val tempArr = Array[Double](tempDV.length*2)
-//    for(n <- 0 until tempDV.length) tempArr(n) = tempDV(n)
-//    tempArr
-//  }
-//
-//
-////  /**
-//   * Computes 1D forward DFT
-//   *
-//   * @param v data to transform
-//   */
-//  def fft(v: DenseVector[Double]): DenseVector[Complex] = {
-//    val fft_instance = getD1DInstance(v.length)
-//
-//    //reformat for input: note difference in format for input to complex fft
-//    val tempArr = denseVectorDToTemp(v)
-//    //actual action
-//    fft_instance.realForwardFull( tempArr ) //does operation in place
-//    //reformat for output
-//    tempToDenseVector(tempArr)
-//  }
+  /**
+   * Reformat for input: note difference in format with denseVectorCToTemp
+   * @param tempDV
+   * @return
+   */
+  private def denseVectorDToTemp(tempDV: DenseVector[Double]): Array[Double] = {
+    val tempArr = new Array[Double](tempDV.length*2)
+    for(n <- 0 until tempDV.length) tempArr(n) = tempDV(n)
+    tempArr
+  }
+
 
   /**
    * Computes 1D forward DFT
    *
    * @param v data to transform
    */
-  def fft(v: DenseVector[Complex]): DenseVector[Complex] = {
+  def fftDouble(v: DenseVector[Double]): DenseVector[Complex] = {
+    val fft_instance = getD1DInstance(v.length)
+
+    //reformat for input: note difference in format for input to complex fft
+    val tempArr = denseVectorDToTemp(v)
+    //actual action
+    fft_instance.realForwardFull( tempArr ) //does operation in place
+    //reformat for output
+    tempToDenseVector(tempArr)
+  }
+
+  /**
+   * Computes 1D forward DFT
+   *
+   * @param v data to transform
+   */
+  def fft(v: DenseVector[_]): DenseVector[Complex] = {
+    val dataClass = v.data(0).getClass.getName
+    dataClass match {
+      case "double" => fftDouble(v.asInstanceOf[DenseVector[Double]])
+      case "java.lang.Double"  => fftDouble(v.asInstanceOf[DenseVector[Double]])
+      case "breeze.math.Complex" => fftComplex(v.asInstanceOf[DenseVector[Complex]])
+      case _ => throw new Error("DenseVector generic " + dataClass + " is not supported yet.")
+    }
+  }
+
+  /**
+   * Computes 1D forward DFT
+   *
+   * @param v data to transform
+   */
+  def fftComplex(v: DenseVector[Complex]): DenseVector[Complex] = {
     val fft_instance = getD1DInstance(v.length)
 
     //reformat for input: note difference in format for input to real fft

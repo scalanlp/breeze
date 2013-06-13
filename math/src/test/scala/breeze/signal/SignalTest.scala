@@ -41,13 +41,22 @@ class SignalTest extends FunSuite {
     Complex(-0.973134608372272, 0.424078607189411),  Complex(0.248156703823313, 0.961542739609668),
     Complex(-0.0977261644584599, -0.994224442620027) )
 
+//  println(testReal16C.data(0).getClass())
+//  println(testReal16C.data(0).getClass().getName())
+//  println(testReal16.data(0).getClass())
+//  println(testReal16.data(0).getClass().getName())
+
   test("fft 1D of Complex (A)") {
     assert( norm( fft(testReal16C) - testReal16fft ) < testNormThreshold )
+  }
+  test("fft 1D of Double (A)") {
+    assert( norm( fft(testReal16) - testReal16fft ) < testNormThreshold )
   }
 
   test("ifft 1D of Complex (A)") {
     assert( norm( ifft(testReal16fft) - testReal16C ) < testNormThreshold )
   }
+
 
 
 }
