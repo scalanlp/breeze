@@ -68,13 +68,6 @@ object BreezeBuild extends Build {
   val logging = "com.typesafe" %% "scalalogging-log4j" % "1.0.1"
   val log4j =  "org.apache.logging.log4j" % "log4j-core" % "2.0-beta4"
   val oldScalaActors = "org.scala-lang" % "scala-actors" % "2.10.0"
-<<<<<<< HEAD
-  val jtransforms = "com.github.rwl" % "jtransforms" % "2.4.0"
-
-  val coreDeps = Seq(paranamer, opencsv, logging, log4j)
-  val commonDeps = Seq(paranamer, netlib, jblas, jtransforms)
-  val learnDeps = commonDeps ++ Seq(liblinear, oldScalaActors)
-=======
   val chalkCurrent = "org.scalanlp" % "chalk" % "1.2.0"
 
   val commonsMath =  "org.apache.commons" % "commons-math3" % "3.2"
@@ -84,7 +77,6 @@ object BreezeBuild extends Build {
   val coreDeps = Seq(paranamer, opencsv, logging, log4j)
   val commonDeps = Seq(paranamer, netlib, jblas, commonsMath)
   val learnDeps = commonDeps ++ Seq(liblinear, oldScalaActors, chalkCurrent)
->>>>>>> remotes/scalanlp/master
   val vizDeps = Seq(
     "jfree" % "jcommon" % "1.0.16",
     "jfree" % "jfreechart" % "1.0.13",
@@ -93,7 +85,6 @@ object BreezeBuild extends Build {
     // "org.apache.xmlgraphics" % "batik-svggen" % "1.7", // for svg gen
     "com.lowagie" % "itext" % "2.1.5" intransitive()  // for pdf gen
   )
-  val signalDeps = Seq("com.github.rwl" % "jtransforms" % "2.4.0")
 
   val benchmarkDeps = Seq(
     "com.google.code.java-allocation-instrumenter" % "java-allocation-instrumenter" % "2.0",
@@ -161,28 +152,19 @@ object BreezeBuild extends Build {
   // subprojects
   //
 
-<<<<<<< HEAD
-  lazy val breeze = Project("breeze", file("."), settings = buildSettings) aggregate (core, math,process,learn,viz,signal) dependsOn (core, math,process,learn,viz,signal)
-=======
   lazy val breeze = Project("breeze", file("."), settings = buildSettings) aggregate (core, math,learn,viz) dependsOn (core, math,learn,viz)
->>>>>>> remotes/scalanlp/master
   lazy val core = Project("breeze-core",file("core"), settings =  buildSettings ++ Seq (libraryDependencies ++= coreDeps) ++ testDependencies ++ assemblySettings)
   lazy val math = Project("breeze-math",file("math"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies ++ assemblySettings) dependsOn(core)
   // learn depends on the 0.3 release of breeze for now (through its chalk dependency.) Soon it will be gone.
   lazy val learn = Project("breeze-learn",file("learn") , settings = buildSettings ++ Seq (libraryDependencies ++= learnDeps) ++ testDependencies++ assemblySettings) dependsOn(math)
   lazy val benchmark = Project("breeze-benchmark",file("benchmark"), settings = (buildSettings :+ (fork in run := true) :+ (commands += patchclasspath)) ++ Seq (libraryDependencies ++= (commonDeps ++ benchmarkDeps)) ++ testDependencies) dependsOn(math)
   lazy val viz =  Project("breeze-viz", file("viz"),  settings =  buildSettings ++ Seq (libraryDependencies ++= (commonDeps ++ vizDeps)) ++ testDependencies ++ assemblySettings) dependsOn(core, math)
-  lazy val signal = Project("breeze-signal", file("signal"), settings = buildSettings ++ Seq (libraryDependencies ++= signalDeps) ++ testDependencies ++ assemblySettings)  dependsOn(math, core)
 
-<<<<<<< HEAD
-val _projects: Seq[ProjectReference] = Seq(math,process,learn,viz,core,signal)
-=======
 val _projects: Seq[ProjectReference] = Seq(math,learn,viz,core)
->>>>>>> remotes/scalanlp/master
   lazy val doc = Project("doc", file("doc"))
       .settings((buildSettings ++ Seq(
         version := "1.0",
         unmanagedSourceDirectories in Compile <<= (_projects map (unmanagedSourceDirectories in _ in Compile)).join.apply {(s) => s.flatten} 
-  ) ++ Seq ( libraryDependencies ++= (coreDeps ++ commonDeps ++ vizDeps ++ learnDeps ++ signalDeps)):_*))
+  ) ++ Seq ( libraryDependencies ++= (coreDeps ++ commonDeps ++ vizDeps ++ learnDeps)):_*))
 }
 
