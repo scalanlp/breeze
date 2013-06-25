@@ -3,10 +3,10 @@ package breeze.signal
 import org.junit.runner.RunWith
 import org.scalatest._
 import org.scalatest.junit._
-import breeze.linalg._
-import breeze.math._
-import scala.reflect.ClassTag
-
+import breeze.linalg.{DenseVector, norm}
+import breeze.math.Complex
+import breeze.signal.support.{CanFFT, CanIFFT}
+import breeze.signal.support.CanIFFT._
 
 /**
  * Created with IntelliJ IDEA.
@@ -41,22 +41,47 @@ class SignalTest extends FunSuite {
     Complex(-0.973134608372272, 0.424078607189411),  Complex(0.248156703823313, 0.961542739609668),
     Complex(-0.0977261644584599, -0.994224442620027) )
 
-//  println(testReal16C.data(0).getClass())
-//  println(testReal16C.data(0).getClass().getName())
-//  println(testReal16.data(0).getClass())
-//  println(testReal16.data(0).getClass().getName())
+  val testReal16ifft = DenseVector[Complex](
+    Complex(0.609466770234482, 0),  Complex(-0.00610788527865374, -0.0621390276637517),
+    Complex(0.0155097939889571, 0.0600964212256043),  Complex(-0.060820913023267, 0.0265049129493382),
+    Complex(0.124898633160558, -0.00744624810841799),  Complex(-0.000439446526582871, 0.034730426100725),
+    Complex(0.00732824693093313, 0.159368769948704),  Complex(0.0316724575682239, 0.0272884109920191),
+    Complex(-0.0188248574816404, 0),  Complex(0.0316724575682239, -0.0272884109920191),
+    Complex(0.00732824693093313, -0.159368769948704),  Complex(-0.000439446526582871, -0.034730426100725),
+    Complex(0.124898633160558, 0.00744624810841799),  Complex(-0.060820913023267, -0.0265049129493382),
+    Complex(0.0155097939889571, -0.0600964212256043),  Complex(-0.00610788527865374, 0.0621390276637517) )
 
-  test("fft 1D of Complex (A)") {
-    assert( norm( fft(testReal16C) - testReal16fft ) < testNormThreshold )
+
+  test("fft 1D of DenseVector[Complex]") {
+    assert( norm( fft[DenseVector[Complex], DenseVector[Complex]](testReal16C)( CanFFT.dvComplexFFT(testReal16C) )
+      - testReal16fft ) < testNormThreshold )
   }
-  test("fft 1D of Double (A)") {
-    assert( norm( fft(testReal16) - testReal16fft ) < testNormThreshold )
+//  test("fft 1D of DenseVector[Complex]") {
+//    assert( norm( fft[DenseVector[Complex], DenseVector[Complex]](testReal16C) - testReal16fft ) < testNormThreshold )
+//  }
+
+  test("fft 1D of DenseVector[Double]") {
+    assert( norm( fft[DenseVector[Double], DenseVector[Complex]](testReal16)( CanFFT.dvDoubleFFT(testReal16) )
+      - testReal16fft ) < testNormThreshold )
   }
+//  test("fft 1D of DenseVector[Double]") {
+//    assert( norm( fft[DenseVector[Double], DenseVector[Complex]](testReal16) - testReal16fft ) < testNormThreshold )
+//  }
 
-  test("ifft 1D of Complex (A)") {
-    assert( norm( ifft(testReal16fft) - testReal16C ) < testNormThreshold )
+  test("ifft 1D of DenseVector[Complex]") {
+    assert( norm( ifft[DenseVector[Complex], DenseVector[Complex]](testReal16fft)( CanIFFT.dvComplexIFFT(testReal16fft) )
+      - testReal16C ) < testNormThreshold )
   }
+//  test("ifft 1D of DenseVector[Complex]") {
+//    assert( norm( ifft[DenseVector[Complex], DenseVector[Complex]](testReal16fft) - testReal16C ) < testNormThreshold )
+//  }
 
-
+  test("ifft 1D of DenseVector[Double]") {
+    assert( norm( ifft[DenseVector[Double], DenseVector[Complex]](testReal16)( CanIFFT.dvDoubleIFFT(testReal16) )
+      - testReal16ifft ) < testNormThreshold )
+  }
+//  test("ifft 1D of DenseVector[Double]") {
+//    assert( norm( ifft[DenseVector[Double], DenseVector[Complex]](testReal16) - testReal16ifft ) < testNormThreshold )
+//  }
 
 }
