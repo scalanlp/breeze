@@ -40,6 +40,7 @@ package object signal {
     for (n <- 0 until tempRet.length) tempRet(n) = new Complex( tempArr(2*n), tempArr(2*n+1))
     tempRet
   }
+
   /**
    * Reformat for input: note difference in format with denseVectorDToTemp
    * @param tempDV
@@ -57,6 +58,7 @@ package object signal {
     }
     tempRet
   }
+
 
   /**
    * Reformat for input: note difference in format with denseVectorCToTemp
