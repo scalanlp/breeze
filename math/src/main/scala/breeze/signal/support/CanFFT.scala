@@ -32,7 +32,7 @@ trait CanFFT[InputType, OutputType] {
 
 object CanFFT {
 
-  implicit def dvDoubleFFT(v1: DenseVector[Double]) : CanFFT[DenseVector[Double], DenseVector[Complex]] = {
+  implicit val dvDoubleFFT : CanFFT[DenseVector[Double], DenseVector[Complex]] = {
     new CanFFT[DenseVector[Double], DenseVector[Complex]] {
       def apply(v: DenseVector[Double]) = {
         //reformat for input: note difference in format for input to complex fft
@@ -48,7 +48,7 @@ object CanFFT {
     }
   }
 
-  implicit def dvComplexFFT(v1: DenseVector[Complex]) : CanFFT[DenseVector[Complex], DenseVector[Complex]] = {
+  implicit val dvComplexFFT : CanFFT[DenseVector[Complex], DenseVector[Complex]] = {
     new CanFFT[DenseVector[Complex], DenseVector[Complex]] {
       def apply(v: DenseVector[Complex]) = {
         //reformat for input: note difference in format for input to real fft

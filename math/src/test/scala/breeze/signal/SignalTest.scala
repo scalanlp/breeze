@@ -6,7 +6,6 @@ import org.scalatest.junit._
 import breeze.linalg.{DenseVector, norm}
 import breeze.math.Complex
 import breeze.signal.support.{CanFFT, CanIFFT}
-import breeze.signal.support.CanIFFT._
 
 /**
  * Created with IntelliJ IDEA.
@@ -53,35 +52,19 @@ class SignalTest extends FunSuite {
 
 
   test("fft 1D of DenseVector[Complex]") {
-    assert( norm( fft[DenseVector[Complex], DenseVector[Complex]](testReal16C)( CanFFT.dvComplexFFT(testReal16C) )
-      - testReal16fft ) < testNormThreshold )
+    assert( norm( fft(testReal16C) - testReal16fft ) < testNormThreshold )
   }
-//  test("fft 1D of DenseVector[Complex]") {
-//    assert( norm( fft[DenseVector[Complex], DenseVector[Complex]](testReal16C) - testReal16fft ) < testNormThreshold )
-//  }
 
   test("fft 1D of DenseVector[Double]") {
-    assert( norm( fft[DenseVector[Double], DenseVector[Complex]](testReal16)( CanFFT.dvDoubleFFT(testReal16) )
-      - testReal16fft ) < testNormThreshold )
+    assert( norm( fft(testReal16) - testReal16fft ) < testNormThreshold )
   }
-//  test("fft 1D of DenseVector[Double]") {
-//    assert( norm( fft[DenseVector[Double], DenseVector[Complex]](testReal16) - testReal16fft ) < testNormThreshold )
-//  }
 
   test("ifft 1D of DenseVector[Complex]") {
-    assert( norm( ifft[DenseVector[Complex], DenseVector[Complex]](testReal16fft)( CanIFFT.dvComplexIFFT(testReal16fft) )
-      - testReal16C ) < testNormThreshold )
+    assert( norm( ifft(testReal16fft) - testReal16C ) < testNormThreshold )
   }
-//  test("ifft 1D of DenseVector[Complex]") {
-//    assert( norm( ifft[DenseVector[Complex], DenseVector[Complex]](testReal16fft) - testReal16C ) < testNormThreshold )
-//  }
 
   test("ifft 1D of DenseVector[Double]") {
-    assert( norm( ifft[DenseVector[Double], DenseVector[Complex]](testReal16)( CanIFFT.dvDoubleIFFT(testReal16) )
-      - testReal16ifft ) < testNormThreshold )
+    assert( norm( ifft(testReal16) - testReal16ifft ) < testNormThreshold )
   }
-//  test("ifft 1D of DenseVector[Double]") {
-//    assert( norm( ifft[DenseVector[Double], DenseVector[Complex]](testReal16) - testReal16ifft ) < testNormThreshold )
-//  }
 
 }
