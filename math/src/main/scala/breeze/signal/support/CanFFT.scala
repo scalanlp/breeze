@@ -16,7 +16,7 @@ package breeze.signal.support
  limitations under the License.
 */
 
-import breeze.linalg.DenseVector
+import breeze.linalg.{DenseVector, DenseMatrix}
 import breeze.math.Complex
 import breeze.signal.support.JTransformsSupport._
 
@@ -32,7 +32,7 @@ trait CanFFT[InputType, OutputType] {
 
 object CanFFT {
 
-  implicit val dvDoubleFFT : CanFFT[DenseVector[Double], DenseVector[Complex]] = {
+  implicit val dvDouble1DFFT : CanFFT[DenseVector[Double], DenseVector[Complex]] = {
     new CanFFT[DenseVector[Double], DenseVector[Complex]] {
       def apply(v: DenseVector[Double]) = {
         //reformat for input: note difference in format for input to complex fft
@@ -48,7 +48,7 @@ object CanFFT {
     }
   }
 
-  implicit val dvComplexFFT : CanFFT[DenseVector[Complex], DenseVector[Complex]] = {
+  implicit val dvComplex1DFFT : CanFFT[DenseVector[Complex], DenseVector[Complex]] = {
     new CanFFT[DenseVector[Complex], DenseVector[Complex]] {
       def apply(v: DenseVector[Complex]) = {
         //reformat for input: note difference in format for input to real fft
@@ -63,4 +63,38 @@ object CanFFT {
       }
     }
   }
+
+  implicit val dmComplex2DFFT : CanFFT[DenseMatrix[Complex], DenseMatrix[Complex]] = {
+    new CanFFT[DenseMatrix[Complex], DenseMatrix[Complex]] {
+      def apply(v: DenseMatrix[Complex]) = {
+        //reformat for input: note difference in format for input to real fft
+        val tempMat = denseMatrixCToTemp(v)
+
+        //actual action
+        val fft_instance = getD2DInstance(v.rows, v.cols)
+        fft_instance.complexForward( tempMat ) //does operation in place
+
+        //reformat for output
+        tempToDenseMatrix(tempMat, v.rows, v.cols)
+      }
+    }
+  }
+
+  implicit val dmDouble2DFFT : CanFFT[DenseMatrix[Double], DenseMatrix[Complex]] = {
+    new CanFFT[DenseMatrix[Double], DenseMatrix[Complex]] {
+      def apply(v: DenseMatrix[Double]) = {
+        //reformat for input
+        val tempMat = denseMatrixDToTemp(v)
+
+        //actual action
+        val fft_instance = getD2DInstance(v.rows, v.cols)
+        fft_instance.complexForward( tempMat ) //does operation in place
+        //ToDo this could be optimized to use realFullForward for speed, but only if the indexes are powers of two
+
+        //reformat for output
+        tempToDenseMatrix(tempMat, v.rows, v.cols)
+      }
+    }
+  }
+
 }

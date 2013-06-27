@@ -1,7 +1,7 @@
 package breeze.signal.support
 
-import edu.emory.mathcs.jtransforms.fft.DoubleFFT_1D
-import breeze.linalg.DenseVector
+import edu.emory.mathcs.jtransforms.fft.{DoubleFFT_1D, DoubleFFT_2D}
+import breeze.linalg.{DenseVector, DenseMatrix}
 import breeze.math.Complex
 
 /** This class encapsulates convenience methods to use the JTransforms package.
@@ -21,6 +21,14 @@ object JTransformsSupport {
     else {
       fft_instD1D = (length, new DoubleFFT_1D(length))
       fft_instD1D._2
+    }
+  }
+  private var fft_instD2D: (Int, Int, DoubleFFT_2D) = (0, 0, null)
+  def getD2DInstance(rows: Int, columns: Int): DoubleFFT_2D = {
+    if(rows == fft_instD2D._1 && columns == fft_instD2D._2) fft_instD2D._3
+    else {
+      fft_instD2D = (rows, columns, new DoubleFFT_2D(rows, columns))
+      fft_instD2D._3
     }
   }
 
@@ -57,6 +65,48 @@ object JTransformsSupport {
     val tempArr = new Array[Double](tempDV.length*2)
     for(n <- 0 until tempDV.length) tempArr(n) = tempDV(n)
     tempArr
+  }
+
+  /**
+   * Reformat for input
+   * @param tempDM
+   * @return
+   */
+  def denseMatrixCToTemp(tempDM: DenseMatrix[Complex]): Array[Double] = {
+    val tempCols = tempDM.cols
+    val tempRet = new Array[Double](tempDM.rows * tempCols * 2)
+    for(r <- 0 until tempDM.rows; c <- 0 until tempDM.cols) {
+      tempDM(r, c) match {
+        case Complex(re, im) => {
+          val ind = r*2*tempCols + 2*c
+          tempRet(ind) = re
+          tempRet(ind + 1) = im
+        }
+      }
+    }
+    tempRet
+  }
+  /**
+   * Reformat for input
+   * @param tempDM
+   * @return
+   */
+  def denseMatrixDToTemp(tempDM: DenseMatrix[Double]): Array[Double] = {
+    val tempCols = tempDM.cols
+    val tempRet = new Array[Double](tempDM.rows * tempCols * 2)
+    for(r <- 0 until tempDM.rows; c <- 0 until tempDM.cols) {
+      tempRet(r*2*tempCols + 2*c) = tempDM(r, c)
+    }
+    tempRet
+  }
+
+  def tempToDenseMatrix(tempArr: Array[Double], rows: Int, cols: Int): DenseMatrix[Complex] = {
+    val tempRet = DenseMatrix.zeros[Complex](rows, cols)
+    for (r <- 0 until rows; c <- 0 until cols) {
+      val ind = r*2*cols + 2*c
+      tempRet(r, c) = new Complex( tempArr(ind), tempArr(ind + 1))
+    }
+    tempRet
   }
 
 }
