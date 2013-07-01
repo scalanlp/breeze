@@ -153,7 +153,7 @@ object BreezeBuild extends Build {
   // subprojects
   //
 
-  lazy val breeze = Project("breeze", file("."), settings = buildSettings) aggregate (core, math,learn,viz) dependsOn (core, math,learn,viz)
+  lazy val breeze = Project("breeze", file("."), settings = buildSettings) aggregate (core, math,viz) dependsOn (core, math, viz)
   lazy val core = Project("breeze-core",file("core"), settings =  buildSettings ++ Seq (libraryDependencies ++= coreDeps) ++ testDependencies ++ assemblySettings)
   lazy val math = Project("breeze-math",file("math"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies ++ assemblySettings) dependsOn(core)
   // learn depends on the 0.3 release of breeze for now (through its chalk dependency.) Soon it will be gone.
@@ -161,11 +161,11 @@ object BreezeBuild extends Build {
   lazy val benchmark = Project("breeze-benchmark",file("benchmark"), settings = (buildSettings :+ (fork in run := true) :+ (commands += patchclasspath)) ++ Seq (libraryDependencies ++= (commonDeps ++ benchmarkDeps)) ++ testDependencies) dependsOn(math)
   lazy val viz =  Project("breeze-viz", file("viz"),  settings =  buildSettings ++ Seq (libraryDependencies ++= (commonDeps ++ vizDeps)) ++ testDependencies ++ assemblySettings) dependsOn(core, math)
 
-val _projects: Seq[ProjectReference] = Seq(math,learn,viz,core)
+val _projects: Seq[ProjectReference] = Seq(math,viz,core)
   lazy val doc = Project("doc", file("doc"))
       .settings((buildSettings ++ Seq(
         version := "1.0",
         unmanagedSourceDirectories in Compile <<= (_projects map (unmanagedSourceDirectories in _ in Compile)).join.apply {(s) => s.flatten} 
-  ) ++ Seq ( libraryDependencies ++= (coreDeps ++ commonDeps ++ vizDeps ++ learnDeps)):_*))
+  ) ++ Seq ( libraryDependencies ++= (coreDeps ++ commonDeps ++ vizDeps)):_*))
 }
 

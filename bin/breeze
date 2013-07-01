@@ -33,7 +33,7 @@ shift
 help()
 {
 cat <<EOF
-Breeze 0.1 commands: 
+Breeze 0.4 commands: 
 
   run           run the main method of a given class
 
