@@ -23,6 +23,9 @@ import breeze.signal.support.JTransformsSupport._
 
 /**
  * Construction delegate for getting the FFT of a value of type InputType.
+ * Implementation details (especially
+ * option arguments) may be added in the future, so it is recommended not
+ * to call this implicit delegate directly.
  *
  * @author ktakagaki
  */
@@ -30,8 +33,19 @@ trait CanFFT[InputType, OutputType] {
   def apply(v1: InputType): OutputType
 }
 
+/**
+ * Construction delegate for getting the FFT of a value of type InputType.</p>
+ * Implementation details (especially
+ * option arguments) may be added in the future, so it is recommended not
+ * to call these implicit delegates directly. Instead, use fft(x: DenseVector/DenseMatrix).
+ *
+ * @author ktakagaki
+ */
 object CanFFT {
 
+  /** Use via implicit delegate syntax fft(x: DenseVector)
+    *
+    */
   implicit val dvDouble1DFFT : CanFFT[DenseVector[Double], DenseVector[Complex]] = {
     new CanFFT[DenseVector[Double], DenseVector[Complex]] {
       def apply(v: DenseVector[Double]) = {
@@ -48,6 +62,9 @@ object CanFFT {
     }
   }
 
+  /** Use via implicit delegate syntax fft(x: DenseVector)
+    *
+    */
   implicit val dvComplex1DFFT : CanFFT[DenseVector[Complex], DenseVector[Complex]] = {
     new CanFFT[DenseVector[Complex], DenseVector[Complex]] {
       def apply(v: DenseVector[Complex]) = {
@@ -64,6 +81,9 @@ object CanFFT {
     }
   }
 
+  /** Use via implicit delegate syntax fft(x: DenseMatrix)
+    *
+    */
   implicit val dmComplex2DFFT : CanFFT[DenseMatrix[Complex], DenseMatrix[Complex]] = {
     new CanFFT[DenseMatrix[Complex], DenseMatrix[Complex]] {
       def apply(v: DenseMatrix[Complex]) = {
@@ -80,6 +100,9 @@ object CanFFT {
     }
   }
 
+  /** Use via implicit delegate syntax fft(x: DenseMatrix)
+    *
+    */
   implicit val dmDouble2DFFT : CanFFT[DenseMatrix[Double], DenseMatrix[Complex]] = {
     new CanFFT[DenseMatrix[Double], DenseMatrix[Complex]] {
       def apply(v: DenseMatrix[Double]) = {

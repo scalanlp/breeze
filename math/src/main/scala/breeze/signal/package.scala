@@ -23,7 +23,34 @@ import breeze.signal.support.{CanFFT, CanIFFT}
  */
 package object signal {
 
+  /**Returns the fast fourier transform of a DenseVector or DenseMatrix. Currently,
+   * DenseVector/DenseMatrix types of Double and Complex are supported. Scaling
+   * follows the common signal processing convention, i.e. <b>no scaling on forward DFT</b>,
+   * and 1/n scaling for the inverse DFT. Of note, fft(x: DenseMatrix[Double]) will
+   * perform the 2D fft in both row and column dimensions, as opposed to the MatLab
+   * toolbox syntax, which performs column-wise 1D fft.</p>
+   * Implementation is via the implicit trait CanFFT[ InputType,  OutputType ],
+   * which is found in breeze.signal.support.CanFFT.scala.
+   *
+   * @param v DenseVector or DenseMatrix to be fft'ed
+   * @param canFFT implicit delegate which is used for implementation. End-users should not use this argument.
+   * @return
+   */
   def fft[Input, Output](v: Input)(implicit canFFT: CanFFT[Input, Output]): Output = canFFT(v)
+
+  /**Returns the inverse fast fourier transform of a DenseVector or DenseMatrix. Currently,
+    * DenseVector/DenseMatrix types of Double and Complex are supported. Scaling
+    * follows the common signal processing convention, i.e. no scaling on forward DFT,
+    * and <b>1/n scaling for the inverse DFT</b>. Of note, ifft(x: DenseMatrix[Double]) will
+    * perform the 2D ifft in both row and column dimensions, as opposed to the MatLab
+    * toolbox syntax, which performs column-wise 1D ifft.</p>
+    * Implementation is via the implicit trait CanIFFT[ InputType,  OutputType ],
+    * which is found in breeze.signal.support.CanIFFT.scala.
+    *
+    * @param v DenseVector or DenseMatrix to be fft'ed
+    * @param canIFFT implicit delegate which is used for implementation. End-users should not use this argument.
+    * @return
+    */
   def ifft[Input, Output](v: Input)(implicit canIFFT: CanIFFT[Input, Output]): Output = canIFFT(v)
 
 }

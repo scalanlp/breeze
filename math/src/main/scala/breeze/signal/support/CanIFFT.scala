@@ -22,7 +22,10 @@ import breeze.signal.support.JTransformsSupport._
 
 
 /**
- * Construction delegate for getting the inverse FFT of a value of type InputType.
+ * Construction delegate for getting the IFFT of a value of type InputType.
+ * Implementation details (especially
+ * option arguments) may be added in the future, so it is recommended not
+ * to call this implicit delegate directly.
  *
  * @author ktakagaki
  */
@@ -30,8 +33,19 @@ trait CanIFFT[InputType, OutputType] {
   def apply(v1: InputType): OutputType
 }
 
+/**
+ * Construction delegate for getting the IFFT of a value of type InputType.</p>
+ * Implementation details (especially
+ * option arguments) may be added in the future, so it is recommended not
+ * to call these implicit delegates directly. Instead, use ifft(x: DenseVector/DenseMatrix).
+ *
+ * @author ktakagaki
+ */
 object CanIFFT {
 
+  /** Use via implicit delegate syntax ifft(x: DenseVector)
+    *
+    */
   implicit val dvDoubleIFFT : CanIFFT[DenseVector[Double], DenseVector[Complex]] = {
     new CanIFFT[DenseVector[Double], DenseVector[Complex]] {
       def apply(v: DenseVector[Double]) = {
@@ -48,6 +62,9 @@ object CanIFFT {
     }
   }
 
+  /** Use via implicit delegate syntax ifft(x: DenseVector)
+    *
+    */
   implicit val dvComplexIFFT : CanIFFT[DenseVector[Complex], DenseVector[Complex]] = {
     new CanIFFT[DenseVector[Complex], DenseVector[Complex]] {
       def apply(v: DenseVector[Complex]) = {
@@ -64,6 +81,9 @@ object CanIFFT {
     }
   }
 
+  /** Use via implicit delegate syntax ifft(x: DenseMatrix)
+    *
+    */
   implicit val dmComplex2DIFFT : CanIFFT[DenseMatrix[Complex], DenseMatrix[Complex]] = {
     new CanIFFT[DenseMatrix[Complex], DenseMatrix[Complex]] {
       def apply(v: DenseMatrix[Complex]) = {
@@ -80,6 +100,9 @@ object CanIFFT {
     }
   }
 
+  /** Use via implicit delegate syntax ifft(x: DenseMatrix)
+    *
+    */
   implicit val dmDouble2DIFFT : CanIFFT[DenseMatrix[Double], DenseMatrix[Complex]] = {
     new CanIFFT[DenseMatrix[Double], DenseMatrix[Complex]] {
       def apply(v: DenseMatrix[Double]) = {
