@@ -18,6 +18,7 @@ This project can be built with sbt 0.11.2
 * https://github.com/scalanlp/breeze/wiki/Quickstart
 * https://github.com/scalanlp/breeze/wiki/Breeze-Linear-Algebra
 * https://github.com/scalanlp/breeze/wiki/UserGuide
+* [Scaladoc](http://www.scalanlp.org/api/#breeze.package)
 
 
 ## History
