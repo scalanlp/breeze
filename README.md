@@ -11,7 +11,7 @@ Note: after the recent reorganization, breeze-learn (machine learning) is now in
 
 ## Build
 
-This project can be built with sbt 0.11.2
+This project can be built with sbt 0.12.3
 
 ## Documentation
 
