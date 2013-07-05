@@ -20,7 +20,7 @@ import org.netlib.lapack.LAPACK
 import org.netlib.blas.{Dgemm}
 import breeze.util.ArrayUtil
 import support._
-import breeze.generic.{CanTransformValues, URFunc, CanCollapseAxis, CanMapValues}
+import breeze.generic._
 import breeze.math.{Complex, Ring, Semiring}
 import breeze.storage.DefaultArrayValue
 import breeze.storage.DefaultArrayValue._
@@ -485,7 +485,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
   }
 
   /**
-   * Maps the columns into a new dense matrix
+   * transforms each row into a new row, giving a new matrix.
    * @tparam V
    * @tparam R
    * @return
@@ -500,6 +500,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
         }
         result(::, c) := col
       }
+
       if(result eq null){
         DenseMatrix.zeros[V](0, from.cols)
       } else {
@@ -509,9 +510,8 @@ object DenseMatrix extends LowPriorityDenseMatrix
   }
 
   /**
-   * Returns a numRows DenseVector
-   * @tparam V
-   * @tparam R
+   * transforms each column into a new column, giving a new matrix.
+   * @tparam V value type
    * @return
    */
   implicit def canMapCols[V:ClassTag:DefaultArrayValue] = new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], DenseVector[V], DenseMatrix[V]] {
@@ -525,7 +525,38 @@ object DenseMatrix extends LowPriorityDenseMatrix
         }
         result.t apply (::, r) := row
       }
-      result
+
+      if(result ne null) result
+      else DenseMatrix.zeros[V](from.rows, 0)
+    }
+  }
+
+
+
+  /**
+   * Iterates over each columns
+   * @return
+   */
+  implicit def canIterateCols[V:ClassTag:DefaultArrayValue]: CanIterateAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]]  = new CanIterateAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]] {
+    def apply[A](from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => A) {
+      for(c <- 0 until from.cols) {
+        f(from(::, c))
+      }
+    }
+  }
+
+  /**
+   * iterates over each column
+   * @tparam V
+   * @tparam R
+   * @return
+   */
+  implicit def canIterateRows[V:ClassTag:DefaultArrayValue] = new CanIterateAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]] {
+    def apply[A](from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => A) {
+      val t = from.t
+      for(r <- 0 until from.rows) {
+        f(t(::, r))
+      }
     }
   }
 

@@ -76,7 +76,7 @@ package object linalg extends LinearAlgebra {
    * @param v
    */
   def useNativeLibraries_=(v: Boolean) = {
-    if (v == true) {
+    if (v) {
       if (!canLoadNativeBlas) throw new RuntimeException("Can't load NativeBlasLibraries", lastBlasError)
     }
     _useNativeLibraries = v
@@ -88,6 +88,7 @@ package object linalg extends LinearAlgebra {
    * Computes y += x * a, possibly doing less work than actually doing that operation
    */
   def axpy[A, X, Y](a: A, x: X, y: Y)(implicit axpy: CanAxpy[A, X, Y]) { axpy(a,x,y) }
+
 
 
   /**
@@ -319,7 +320,7 @@ package object linalg extends LinearAlgebra {
   }
 
   /**
-   * Cmoputes the standard deviation by calling variance and then sqrt'ing
+   * Computes the standard deviation by calling variance and then sqrt'ing
    */
   val stddev:URFunc[Double, Double] = new URFunc[Double, Double] {
     def apply(cc: TraversableOnce[Double]) =  {
@@ -633,11 +634,10 @@ trait LinearAlgebra {
   def cross[V1](a: DenseVector[V1], b: DenseVector[V1])(implicit ring: Ring[V1], man: ClassTag[V1]): DenseVector[V1] = {
     require(a.length == 3)
     require(b.length == 3)
-    import ring._
     DenseVector(
-      ring.-(*(a(1), b(2)), *(a(2), b(1))),
-      ring.-(*(a(2), b(0)), *(a(0), b(2))),
-      ring.-(*(a(0), b(1)), *(a(1), b(0)))
+      ring.-(ring.*(a(1), b(2)), ring.*(a(2), b(1))),
+      ring.-(ring.*(a(2), b(0)), ring.*(a(0), b(2))),
+      ring.-(ring.*(a(0), b(1)), ring.*(a(1), b(0)))
     )
   }
 
