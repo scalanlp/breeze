@@ -31,19 +31,20 @@ Portions (c) Daniel Ramage, 2009 - 2011
 
 Contributions from:
 
-* Jason Zaugg <retronym>
-* Alexander Lehmann <afwlehmann>
-* Jonathan Merritt <lancelet>
-* Keith Stevens <fozziethebeat>
-* Jason Baldridge <jasonbaldridge>
-* Timothy Hunter <tjhunter>
-* Dave DeCaprio <DaveDeCaprio>
-* Daniel Duckworth <duckworthd>
-* Eric Christiansen <emchristiansen>
-* Marc Millstone <splittingfield>
-* Mérő László <laci37>
-* Alexey Noskov <alno>
-* Devon Bryant <devonbryant>
+* Jason Zaugg (@retronym)
+* Alexander Lehmann (@afwlehmann)
+* Jonathan Merritt (@lancelet)
+* Keith Stevens (@fozziethebeat)
+* Jason Baldridge (@jasonbaldridge)
+* Timothy Hunter (@tjhunter)
+* Dave DeCaprio (@DaveDeCaprio)
+* Daniel Duckworth (@duckworthd)
+* Eric Christiansen (@emchristiansen)
+* Marc Millstone (@splittingfield)
+* Mérő László (@laci37)
+* Alexey Noskov (@alno)
+* Devon Bryant (@devonbryant)
+* Kentaroh Takagaki (@ktakagaki)
 
 And others (email David Hall if you've contributed code and aren't listed).
 
