@@ -125,7 +125,7 @@ trait Configuration { outer =>
    * @return
    */
   private def isCollectionType(man: Manifest[_]) = {
-    man.erasure.isArray || classOf[Iterable[_]].isAssignableFrom(man.erasure)
+    man.runtimeClass.isArray || classOf[Iterable[_]].isAssignableFrom(man.runtimeClass)
   }
 
   /**
@@ -134,8 +134,8 @@ trait Configuration { outer =>
    * @return
    */
   private def containedType(man: Manifest[_]) = {
-    if(man.erasure.isArray) {
-      val comp = man.erasure.getComponentType
+    if(man.runtimeClass.isArray) {
+      val comp = man.runtimeClass.getComponentType
       ReflectionUtils.manifestFromClass(comp)
     }
     else man.typeArguments.head
@@ -146,16 +146,16 @@ trait Configuration { outer =>
    */
   private def readSequence[T](prefix: String, container: Manifest[_], contained: Manifest[T]):AnyRef = {
     val builder = {
-      if(container.erasure.isArray)
+      if(container.runtimeClass.isArray)
         mutable.ArrayBuilder.make()(contained)
       else {
         try {
           // try to construct a builder by going through the companion
-          container.erasure.newInstance().asInstanceOf[Iterable[T]].companion.newBuilder[T]
+          container.runtimeClass.newInstance().asInstanceOf[Iterable[T]].companion.newBuilder[T]
         } catch {
           case e: Exception => // hope the companion is named like we want...
             try {
-              Class.forName(container.erasure.getName + "$").getField("MODULE$").get(null).asInstanceOf[GenericCompanion[Iterable]].newBuilder[T]
+              Class.forName(container.runtimeClass.getName + "$").getField("MODULE$").get(null).asInstanceOf[GenericCompanion[Iterable]].newBuilder[T]
             } catch {
               case e: Exception =>
               throw new NoParameterException("Can't figure out what to do with a sequence of type:" + container, prefix)
@@ -185,15 +185,15 @@ trait Configuration { outer =>
     val staticManifest = implicitly[Manifest[T]]
     val dynamicClass: Class[_] = recursiveGetProperty(prefix).map{
       Class.forName(_)
-    } getOrElse (staticManifest.erasure)
+    } getOrElse (staticManifest.runtimeClass)
     if (dynamicClass.getConstructors.isEmpty)
       throw new NoParameterException("Could not find a constructor for type " + dynamicClass.getName, prefix)
 
-    val staticTypeVars: Seq[String] = staticManifest.erasure.getTypeParameters.map(_.toString)
+    val staticTypeVars: Seq[String] = staticManifest.runtimeClass.getTypeParameters.map(_.toString)
     val staticTypeVals: Seq[OptManifest[_]] = staticManifest.typeArguments
     val staticTypeMap: Map[String, OptManifest[_]] = (staticTypeVars zip staticTypeVals).toMap withDefaultValue (NoManifest)
 
-    val dynamicTypeMap = solveTypes(staticTypeMap, staticManifest.erasure, dynamicClass)
+    val dynamicTypeMap = solveTypes(staticTypeMap, staticManifest.runtimeClass, dynamicClass)
 
     try {
       // pick a constructor and figure out what the parameters names are
