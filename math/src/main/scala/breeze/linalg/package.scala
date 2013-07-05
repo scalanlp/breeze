@@ -17,7 +17,7 @@ package breeze
 import generic.{CanCollapseAxis, CanMapValues, UReduceable, URFunc}
 import io.{CSVWriter, CSVReader}
 import linalg.operators._
-import linalg.support.{CanNorm, CanCopy}
+import breeze.linalg.support.{RangeSuffix, CanNorm, CanCopy}
 import math.Semiring
 import org.netlib.lapack.LAPACK
 import org.netlib.util.intW
@@ -458,6 +458,12 @@ package object linalg extends LinearAlgebra {
                skipLines: Int = 0) {
     CSVWriter.writeFile(file, IndexedSeq.tabulate(mat.rows,mat.cols)(mat(_,_).toString), separator, quote, escape)
   }
+
+  /** for adding slicing */
+  implicit class RichIntMethods(val x: Int) extends AnyVal {
+    def until(z: ::.type) = new RangeSuffix(x)
+  }
+
 
 }
 

@@ -18,7 +18,7 @@ package breeze.linalg
 import operators._
 import scala.{specialized=>spec}
 import breeze.generic._
-import support.{CanCreateZerosLike, CanMapKeyValuePairs, CanZipMapValues, CanSlice, CanCopy}
+import breeze.linalg.support._
 import breeze.numerics.IntMath
 import java.util.Arrays
 import breeze.math.{Complex, TensorSpace, Semiring, Ring, Field}
@@ -379,6 +379,16 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
         require(r.isEmpty || r.last < v.length)
         require(r.isEmpty || r.start >= 0)
         new DenseVector(v.data, offset = v.offset + r.start, stride = v.stride * r.step, length = r.length)
+      }
+    }
+  }
+
+  implicit def canSliceSuffix[V]: CanSlice[DenseVector[V], RangeSuffix, DenseVector[V]] = __canSliceSuffix.asInstanceOf[CanSlice[DenseVector[V], RangeSuffix, DenseVector[V]]]
+
+  private val __canSliceSuffix = {
+    new CanSlice[DenseVector[Any], RangeSuffix, DenseVector[Any]] {
+      def apply(v: DenseVector[Any], r: RangeSuffix) = {
+        canSlice(v, r.start until v.length)
       }
     }
   }
