@@ -31,7 +31,7 @@ object Broadcaster {
   }
 
 
-  implicit def canBroadcastSliceColumns[From, Slice1]: CanSlice2[From, ::.type, *.type, BroadcastedColumns[From]] = {
+  implicit def canBroadcastColumns[From, Slice1]: CanSlice2[From, ::.type, *.type, BroadcastedColumns[From]] = {
     new CanSlice2[From, ::.type, *.type, BroadcastedColumns[From]] {
       def apply(from: From, slice: ::.type, slice2: *.type): BroadcastedColumns[From] = {
         BroadcastedColumns(from)

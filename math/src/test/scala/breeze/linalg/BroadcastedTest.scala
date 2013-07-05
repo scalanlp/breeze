@@ -21,4 +21,13 @@ class BroadcastedTest extends FunSuite {
     assert(res === DenseMatrix((3.0, 3.0, 3.0), (4.0, 4.0, 4.0)))
   }
 
+  test("broadcast slice DenseMatrix along columns") {
+    val dm = DenseMatrix((-1.0,-2.0,-3.0),
+      (1.0,2.0,3.0),
+      (4.0,5.0,6.0))
+
+    dm(1 to 2, *) := DenseVector(3.0, 4.0)
+    assert(dm === DenseMatrix((-1.0,-2.0,-3.0), (3.0, 3.0, 3.0), (4.0, 4.0, 4.0)))
+  }
+
 }
