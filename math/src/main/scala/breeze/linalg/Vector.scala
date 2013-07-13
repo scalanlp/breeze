@@ -23,6 +23,7 @@ import support.{CanZipMapValues, CanCopy}
 import util.Random
 import breeze.storage.{DefaultArrayValue, Storage}
 import scala.reflect.ClassTag
+import breeze.stats.distributions.Rand
 
 /**
  * Trait for operators and such used in vectors.
@@ -228,17 +229,16 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @param rand
    * @return
    */
-  def rand(size: Int, rand: Random = new Random()) = {
+  def rand[T:ClassTag](size: Int, rand: Rand[T] = Rand.uniform) = {
     // Array#fill is slow.
-    val arr = new Array[Double](size)
+    val arr = new Array[T](size)
     var i = 0
     while(i < arr.length) {
-      arr(i) = rand.nextDouble()
+      arr(i) = rand.draw()
       i += 1
     }
 
     apply(arr)
-
   }
 
   def range(start:Int, end: Int): Vec[Int] = range(start,end,1)
