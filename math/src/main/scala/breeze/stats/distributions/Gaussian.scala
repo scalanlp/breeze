@@ -91,7 +91,7 @@ object Gaussian extends ExponentialFamily[Gaussian,Double] {
       SufficientStatistic(t.n + n, newMean, newM2)
     }
 
-    def variance = M2/ (n)
+    def variance = M2/ n
   }
 
   val emptySufficientStatistic = SufficientStatistic(0,0,0)
