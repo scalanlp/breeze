@@ -3,7 +3,7 @@ package breeze.stats.random
 /*
 Copyright 2009 David Hall, Daniel Ramage
 
-Licensed under the Apache License, Version 2.0 (the "License");
+Licensed under the Apache License, Version 2.0 (the "License")
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at 
 
@@ -30,54 +30,54 @@ trait RandomGenerator {
   def nextInt:Int
 
   def nextInt(n: Int):Int = {
-    if (n<=0) throw new IllegalArgumentException("n must be positive");
+    if (n<=0) throw new IllegalArgumentException("n must be positive")
 
-    var result = 0;
-    var bits = 0;
+    var result = 0
+    var bits = 0
     do {
       bits = math.abs(nextInt)
-      result = (bits) % n;
-    } while(bits - result + (n-1) < 0);
+      result = (bits) % n
+    } while(bits - result + (n-1) < 0)
     result
   }
 
   
   def nextDouble:Double = {
     // Taken from Cern
-    val ret = (nextLong.toDouble - -9.223372036854776E18)  *  5.421010862427522E-20;
+    val ret = (nextLong.toDouble - -9.223372036854776E18)  *  5.421010862427522E-20
     if(ret > 0.0 && ret <1.0) ret
     else nextDouble
   }
 
   def nextLong = {
     // also from CERN:
-    ((nextInt & 0xFFFFFFFFL) << 32) | ((nextInt & 0xFFFFFFFFL));
+    ((nextInt & 0xFFFFFFFFL) << 32) | ((nextInt & 0xFFFFFFFFL))
   }
 
-  def nextFloat: Float = nextDouble.toFloat;
-  def nextBoolean:Boolean = if((nextInt & 1) == 0) false else true;
+  def nextFloat: Float = nextDouble.toFloat
+  def nextBoolean:Boolean = if((nextInt & 1) == 0) false else true
 
-  private var haveNextNextGaussian: Boolean = false;
-  private var nextNextGaussian: Double = 0.0;
+  private var haveNextNextGaussian: Boolean = false
+  private var nextNextGaussian: Double = 0.0
 
   def nextGaussian: Double  = synchronized {
     // Cribbed from Sun's javadocs
     if (haveNextNextGaussian) {
-      haveNextNextGaussian = false;
-      nextNextGaussian;
+      haveNextNextGaussian = false
+      nextNextGaussian
     } else {
-      var v1 = 0.0;
-      var v2 = 0.0;
-      var s = 0.0;
+      var v1 = 0.0
+      var v2 = 0.0
+      var s = 0.0
       do { 
         v1 = 2 * nextDouble - 1;   // between -1.0 and 1.0
         v2 = 2 * nextDouble - 1;   // between -1.0 and 1.0
-        s = v1 * v1 + v2 * v2;
-      } while (s >= 1 || s == 0);
-      val multiplier = math.sqrt(-2 * math.log(s)/s);
-      nextNextGaussian = v2 * multiplier;
-      haveNextNextGaussian = true;
-      v1 * multiplier;
+        s = v1 * v1 + v2 * v2
+      } while (s >= 1 || s == 0)
+      val multiplier = math.sqrt(-2 * math.log(s)/s)
+      nextNextGaussian = v2 * multiplier
+      haveNextNextGaussian = true
+      v1 * multiplier
     }
   }
 

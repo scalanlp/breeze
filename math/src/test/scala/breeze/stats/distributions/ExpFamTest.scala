@@ -3,6 +3,7 @@ package breeze.stats.distributions
 import org.scalatest.FunSuite
 import org.scalatest.prop.Checkers
 import org.scalacheck.{Prop, Arbitrary}
+import scala.reflect.ClassTag
 
 /**
  * 
@@ -15,6 +16,7 @@ trait ExpFamTest[D<:Measure[T] with Rand[T],T] extends FunSuite with Checkers {
   implicit def arbParameter: Arbitrary[expFam.Parameter]
 
   def paramsClose(p: Parameter, b: Parameter):Boolean
+
 
   test("MLE is consistent") {
     check(Prop.forAll { (p: expFam.Parameter) =>
