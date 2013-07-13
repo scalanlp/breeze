@@ -121,6 +121,8 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
   def indexAt(i: Int): Int = i
 
   /**
+   * Always returns true.
+   *
    * Some storages (namely HashStorage) won't have active
    * indices packed. This lets you know if the bin is
    * actively in use.
@@ -131,7 +133,7 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
 
 
   /**
-   * Only gives true if isActive would return true for all i. (May be false anyway)
+   * Always returns true.
    * @return
    */
   def allVisitableIndicesActive: Boolean = true
@@ -149,6 +151,16 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
       i += stride
       j += 1
     }
+  }
+
+  /** Creates a copy of this DenseVector that is represented as a 1 by length DenseMatrix */
+  def toDenseMatrix: DenseMatrix[E] = {
+     copy.asDenseMatrix
+  }
+
+  /** Creates a view of this DenseVector that is represented as a 1 by length DenseMatrix */
+  def asDenseMatrix: DenseMatrix[E] = {
+    new DenseMatrix[E](1, length, data, offset, stride)
   }
 
   /**Returns the k-norm of this Vector. */
@@ -173,7 +185,7 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
   }
 
   /**
-   * Slices the DenseVector, in the range (start,end
+   * Slices the DenseVector, in the range (start,end] with a stride stride.
    * @param start
    * @param end
    * @param stride
