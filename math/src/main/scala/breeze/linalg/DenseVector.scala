@@ -19,16 +19,16 @@ import operators._
 import scala.{specialized=>spec}
 import breeze.generic._
 import breeze.linalg.support._
-import breeze.numerics.IntMath
-import java.util.Arrays
-import breeze.math.{Complex, TensorSpace, Semiring, Ring, Field}
+import breeze.math.{Complex, TensorSpace, Semiring, Ring}
 import breeze.util.{ArrayUtil, Isomorphism}
 import breeze.storage.DefaultArrayValue
 import scala.reflect.ClassTag
 
 /**
  * A DenseVector is the "obvious" implementation of a Vector, with one twist.
- * The underlying data may have more data than the Vector.
+ * The underlying data may have more data than the Vector, represented using an offset
+ * into the array (for the 0th element), and a stride that is how far elements are apart
+ * from one another.
  *
  * The i'th element is at offset + i * stride
  *
@@ -616,10 +616,6 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
 
 trait DenseVector_SpecialOps extends DenseVectorOps_Double { this: DenseVector.type =>
   // hyperspecialized operators
-
-
-
-
   implicit val canDot_DV_DV_Int: BinaryOp[DenseVector[Int], DenseVector[Int], breeze.linalg.operators.OpMulInner, Int] = {
     new BinaryOp[DenseVector[Int], DenseVector[Int], breeze.linalg.operators.OpMulInner, Int] {
       def apply(a: DenseVector[Int], b: DenseVector[Int]) = {
@@ -649,22 +645,8 @@ trait DenseVector_SpecialOps extends DenseVectorOps_Double { this: DenseVector.t
     new BinaryOp[DenseVector[Float], DenseVector[Float], breeze.linalg.operators.OpMulInner, Float] {
       def apply(a: DenseVector[Float], b: DenseVector[Float]) = {
         require(b.length == a.length, "Vectors must be the same length!")
-
-        val ad = a.data
-        val bd = b.data
-        var aoff = a.offset
-        var boff = b.offset
-        var result = 0f
-
-        var i = 0
-        while(i < a.length) {
-          result += ad(aoff) * bd(boff)
-          aoff += a.stride
-          boff += b.stride
-          i += 1
-        }
-        result
-
+        org.netlib.blas.Sdot.sdot(
+          a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
       Vector.canDotProductV_Float.register(this)
     }
