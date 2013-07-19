@@ -54,12 +54,14 @@ class VectorBuilder[@spec(Double,Int, Float) E](private var _index: Array[Int],
                                                  dfv: DefaultArrayValue[E]) = this(new Array[Int](0), new Array[E](0), 0, length)
 
 
+
   def size = length
 
 
   def data  = _data
   def index = _index
   def activeSize = used
+
 
   def repr = this
 
@@ -101,6 +103,7 @@ class VectorBuilder[@spec(Double,Int, Float) E](private var _index: Array[Int],
       _data = ArrayUtil.copyOf(_data, math.max(_data.length * 2, 1))
       _index = ArrayUtil.copyOf(_index, math.max(_index.length * 2, 1))
     }
+
     _data(used) = v
     _index(used) = i
     used += 1
@@ -148,14 +151,19 @@ class VectorBuilder[@spec(Double,Int, Float) E](private var _index: Array[Int],
     hv
   }
 
-  def toSparseVector = {
+  def toSparseVector:SparseVector[E] = toSparseVector(alreadySorted=false)
+
+  def toSparseVector(alreadySorted: Boolean = false, keysAlreadyUnique: Boolean = false): SparseVector[E] = {
     val index = this.index
     val values = this.data
+    if(alreadySorted && keysAlreadyUnique) {
+      return new SparseVector(index, values, used, length)
+    }
 
     val outIndex = new Array[Int](index.length)
     val outValues = ArrayUtil.newArrayLike(values, values.length)
 
-    val ord = sortedIndices(index)
+    val ord = if(!alreadySorted) sortedIndices(index) else VectorBuilder.range(used)
     if(ord.length > 0) {
       outIndex(0) = index(ord(0))
       outValues(0) = values(ord(0))
@@ -166,15 +174,24 @@ class VectorBuilder[@spec(Double,Int, Float) E](private var _index: Array[Int],
     }
     var i   = 1
     var out = 0
-    while(i < ord.length) {
-      if(outIndex(out) == index(ord(i))) {
-        outValues(out) = ring.+(outValues(out), values(ord(i)))
-      } else {
+    if(keysAlreadyUnique) {
+      while(i < ord.length) {
         out += 1
         outIndex(out) = index(ord(i))
         outValues(out) = values(ord(i))
+        i += 1
       }
-      i += 1
+    } else {
+      while(i < ord.length) {
+        if(outIndex(out) == index(ord(i))) {
+          outValues(out) = ring.+(outValues(out), values(ord(i)))
+        } else {
+          out += 1
+          outIndex(out) = index(ord(i))
+          outValues(out) = values(ord(i))
+        }
+        i += 1
+      }
     }
 
     if(ord.length > 0)
