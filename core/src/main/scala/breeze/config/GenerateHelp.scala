@@ -29,9 +29,7 @@ object GenerateHelp {
         res += Break += Group(prefix,clss.getName,ann.text) += Break
       }
 
-      val dynamicClass: Class[_] = conf.recursiveGetProperty(prefix).map{
-        Class.forName(_)
-      } getOrElse (clss)
+      val dynamicClass: Class[_] = conf.recursiveGetProperty(prefix).map( x => Class.forName(x._1) ) getOrElse clss
       if (dynamicClass.getConstructors.isEmpty)
         return res
 

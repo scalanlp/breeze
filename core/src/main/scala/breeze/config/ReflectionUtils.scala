@@ -57,7 +57,7 @@ private[config] object ReflectionUtils {
     } catch {
       case e: Exception =>
         paramNames.map{
-          paramName => (() => throw new NoParameterException("Could not find a matching property!", paramName))
+          paramName => () => throw new NoParameterException("Could not find a matching property!", paramName)
         }
     }
   }
@@ -156,9 +156,9 @@ private[config] object ReflectionUtils {
     }
     case tpe: TypeVariable[_] => typeMap(tpe.toString) match {
       case x: Manifest[_] => x.asInstanceOf[Manifest[Object]]
-      case _ => throw new ConfigurationException("Don't know how to deal with " + tpe + " yet! Add an ArgumentParser.")
+      case _ => throw new CannotParseException("", "Don't know how to deal with " + tpe + " yet! Add an ArgumentParser.")
     }
     case tpe: GenericArrayType => mkManifest(typeMap, tpe.getGenericComponentType).arrayManifest.asInstanceOf[Manifest[Object]]
-    case _ => throw new ConfigurationException("Don't know how to deal with " + tpe + " yet! Add an ArgumentParser." + tpe.getClass.getName)
+    case _ => throw new CannotParseException("", "Don't know how to deal with " + tpe + " yet! Add an ArgumentParser." + tpe.getClass.getName)
   }
 }

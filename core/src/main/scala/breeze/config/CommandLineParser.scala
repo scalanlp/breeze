@@ -27,8 +27,11 @@ object CommandLineParser {
    * @return
    */
   def readIn[T:Manifest](args: IndexedSeq[String],
-                              checkHelp: Boolean = true,
-                              extraArgsAsConfigFiles: Boolean = true):T = {
+                         checkHelp: Boolean = true,
+                         enforceNoUnusedArguments: Boolean = true,
+                         extraArgsAsConfigFiles: Boolean = true,
+                         exitOnErrorInsteadOfThrow: Boolean = true,
+                         printHelpOnError: Boolean = true):T = {
     val (baseConfig, files) = parseArguments(args)
     val config:Configuration = if(extraArgsAsConfigFiles) {
       baseConfig backoff Configuration.fromPropertiesFiles(files.map(new File(_)))
@@ -37,21 +40,30 @@ object CommandLineParser {
       baseConfig
     }
 
-    if(config.readIn[Boolean]("help", false)) {
+    if(config.readIn[Boolean]("help", default = false)) {
       println(breeze.config.GenerateHelp[T](config))
-      sys.exit(1)
+      if(exitOnErrorInsteadOfThrow) sys.exit(1) else throw RequestedHelpException
     }
 
     val params = try {
-      config.readIn[T]("")
+      config.readIn[T]("", enforceFullCoverage = enforceNoUnusedArguments)
     } catch {
       case e:Exception =>
-      e.printStackTrace()
-      println(breeze.config.GenerateHelp[T](config))
-      sys.exit(1)
+      if(printHelpOnError) println(breeze.config.GenerateHelp[T](config))
+      if(exitOnErrorInsteadOfThrow) {
+        e.printStackTrace()
+        sys.exit(1)
+      } else {
+        throw e
+      }
     }
 
+
     params
+  }
+
+  object RequestedHelpException extends ConfigurationException("User requested help.") {
+    def param: String = "help"
   }
 
 
