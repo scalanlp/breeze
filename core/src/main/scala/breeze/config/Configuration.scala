@@ -31,6 +31,8 @@ import scala.collection.JavaConverters._
 import ReflectionUtils._
 import scala.collection.mutable
 import collection.generic.GenericCompanion
+import scala.util.Try
+import Configuration._
 
 /**
  * Configuration provides a way to read in parameters
@@ -197,7 +199,7 @@ trait Configuration { outer =>
     var touched = Set.empty[String]
     while(ok) {
       try {
-        val (t, myTouched) = readInTouched(prefix+"."+i)(contained)
+        val (t, myTouched) = readInTouched(wrap(prefix,i.toString))(contained)
         builder += t
         touched ++= myTouched
       } catch {
@@ -217,7 +219,9 @@ trait Configuration { outer =>
 
     val (dynamicClass: Class[_], touchedProperties) = {
       recursiveGetProperty(prefix) match {
-        case Some((prop, propName)) => Class.forName(prop) -> Set(propName)
+        case Some((prop, propName)) =>
+          // replace each . in time with a $, for inner classes.
+          Class.forName(prop) -> Set(propName)
         case None => staticManifest.runtimeClass -> Set.empty[String]
       }
     }
@@ -241,7 +245,7 @@ trait Configuration { outer =>
       val defaults = lookupDefaultValues(dynamicClass, paramNames)
       val namedParams = for {((tpe, name), default) <- typedParams zip paramNames zip defaults} yield (tpe, name, default)
       val (paramValues, touched) = namedParams.map {
-        case (man, name, default) => readInTouched[Object](prefix + "." + name, default())(man)
+        case (man, name, default) => readInTouched[Object](wrap(prefix,name), default())(man)
       }.unzip
       ctor.newInstance(paramValues: _*).asInstanceOf[T] -> touched.foldLeft(touchedProperties)(_ ++ _)
     } catch {
@@ -262,6 +266,18 @@ trait Configuration { outer =>
         if (!next.isEmpty) next = next.drop(1)
         if (next.isEmpty) None else recursiveGetProperty(next)
     }
+  }
+
+  override def toString = {
+    allPropertyNames.iterator.map(k => "  " + k + " -> " + getProperty(k).get).mkString("Configuration (\n",",\n", "\n)")
+  }
+
+  def toPropertiesString = {
+    allPropertyNames.iterator.map(k => k + " = " + getProperty(k)).mkString("\n")
+  }
+
+  def toCommandLineString = {
+    allPropertyNames.iterator.map(k => "--" + k + " " + getProperty(k)).mkString(" ")
   }
 
 }
@@ -286,7 +302,9 @@ class UnusedOptionsException[T:Manifest](val param: String, val unused: Set[Stri
 
 object Configuration {
 
-  def empty = fromMap(Map.empty)
+  def empty: Configuration = fromMap(Map.empty)
+
+  def apply(kv: (String,String)*): Configuration = fromMap(kv.toMap)
 
   /**
    * Creates a Configuration from a java.util.Properties.
@@ -324,5 +342,72 @@ object Configuration {
     }
     Configuration.fromProperties(props)
   }
+
+  /**
+   * extracts a Configuration object from a preexisting object. Mostly useful for saving information about how
+   * an execution was configured.
+   * @tparam T
+   */
+  def fromObject[T:Manifest](t: T, name: String =""):Configuration = {
+
+    def rec[T:Manifest](t: T, name: String = ""):Map[String, String] = t match {
+      case _: Boolean => Map(name -> t.toString)
+      case _: Int => Map(name -> t.toString)
+      case _: Short => Map(name -> t.toString)
+      case _: Long => Map(name -> t.toString)
+      case _: Float => Map(name -> t.toString)
+      case _: Double => Map(name -> t.toString)
+      case _: Char => Map(name -> t.toString)
+      case _: Byte => Map(name -> t.toString)
+      case _: File => Map(name -> t.toString)
+      case _: String => Map(name -> t.toString)
+      case t: Class[_] => Map(name -> t.getName)
+      case t: Array[_] => rec(t:IndexedSeq[_], name)
+      case t: Iterable[_] =>  t.zipWithIndex.foldLeft(Map.empty[String,String]){ case (acc, (ti, i)) =>
+        rec(ti.asInstanceOf[AnyRef], name+"." + i)(ReflectionUtils.manifestFromClass(ti.getClass).asInstanceOf[Manifest[AnyRef]])
+      }
+      case x:Product =>
+        val staticManifest = implicitly[Manifest[T]]
+        val dynamicClass = x.getClass
+        var baseMap = if(dynamicClass != staticManifest.runtimeClass) {
+          rec(dynamicClass, name)
+        } else {
+          Map.empty[String, String]
+        }
+
+        val staticTypeVars: Seq[String] = staticManifest.runtimeClass.getTypeParameters.map(_.toString)
+        val staticTypeVals: Seq[OptManifest[_]] = staticManifest.typeArguments
+        val staticTypeMap: Map[String, OptManifest[_]] = (staticTypeVars zip staticTypeVals).toMap withDefaultValue (NoManifest)
+        val dynamicTypeMap = solveTypes(staticTypeMap, staticManifest.runtimeClass, dynamicClass)
+
+        val ctor = dynamicClass.getConstructors.last
+        val paramNames = reader.lookupParameterNames(ctor)
+        val defaults = lookupDefaultValues(dynamicClass, paramNames)
+        val anns = ctor.getParameterAnnotations
+        val typedParams = ctor.getGenericParameterTypes.map { mkManifest(dynamicTypeMap, _)}
+        val prefix = name
+        for( i <- 0 until paramNames.length) {
+          val tpe = typedParams(i)
+          val name = paramNames(i)
+          val meth = Try(x.getClass.getMethod(name)).getOrElse(x.getClass.getMethod(s"get${name.capitalize}"))
+          if(!meth.isAccessible)
+            meth.setAccessible(true)
+          baseMap ++= rec(meth.invoke(x), wrap(prefix, name))(tpe.asInstanceOf[Manifest[AnyRef]])
+        }
+
+        baseMap
+
+
+    }
+    fromMap(rec(t, name))
+  }
+
+  private val reader = new AdaptiveParanamer()
+  private def wrap(prefix: String, name: String):String = {
+    if(prefix.isEmpty) name
+    else prefix + "." + name
+  }
+
+
 
 }

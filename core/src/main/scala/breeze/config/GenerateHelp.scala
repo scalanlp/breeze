@@ -19,7 +19,6 @@ object GenerateHelp {
    */
   def apply[C:Manifest](conf: Configuration = Configuration.empty):String = {
     val man = implicitly[Manifest[C]]
-    val reader = new AdaptiveParanamer()
 
     def recGen(staticManifest: Manifest[_], prefix: String):Seq[Format] = {
       val clss = staticManifest.runtimeClass
@@ -42,7 +41,7 @@ object GenerateHelp {
       // Handle ctor parameters
       val toRecurse = ArrayBuffer[(String,Manifest[_])]()
 
-      val ctor = dynamicClass.getConstructors apply 0
+      val ctor = dynamicClass.getConstructors.last
       val paramNames = reader.lookupParameterNames(ctor)
       val defaults = lookupDefaultValues(dynamicClass, paramNames)
       val anns = ctor.getParameterAnnotations
@@ -149,4 +148,7 @@ object GenerateHelp {
   def main(args: Array[String]) {
     println(GenerateHelp[Params]())
   }
+
+
+  private val reader = new AdaptiveParanamer()
 }
