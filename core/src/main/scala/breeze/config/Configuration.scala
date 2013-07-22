@@ -273,11 +273,11 @@ trait Configuration { outer =>
   }
 
   def toPropertiesString = {
-    allPropertyNames.iterator.map(k => k + " = " + getProperty(k)).mkString("\n")
+    allPropertyNames.iterator.map(k => k + " = " + getProperty(k).get).mkString("\n")
   }
 
   def toCommandLineString = {
-    allPropertyNames.iterator.map(k => "--" + k + " " + getProperty(k)).mkString(" ")
+    allPropertyNames.iterator.map(k => "--" + k + " " + getProperty(k).get).mkString(" ")
   }
 
 }
@@ -351,6 +351,7 @@ object Configuration {
   def fromObject[T:Manifest](t: T, name: String =""):Configuration = {
 
     def rec[T:Manifest](t: T, name: String = ""):Map[String, String] = t match {
+      case null => Map.empty[String, String]
       case _: Boolean => Map(name -> t.toString)
       case _: Int => Map(name -> t.toString)
       case _: Short => Map(name -> t.toString)
@@ -382,8 +383,6 @@ object Configuration {
 
         val ctor = dynamicClass.getConstructors.last
         val paramNames = reader.lookupParameterNames(ctor)
-        val defaults = lookupDefaultValues(dynamicClass, paramNames)
-        val anns = ctor.getParameterAnnotations
         val typedParams = ctor.getGenericParameterTypes.map { mkManifest(dynamicTypeMap, _)}
         val prefix = name
         for( i <- 0 until paramNames.length) {

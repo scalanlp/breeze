@@ -167,9 +167,6 @@ class ConfigurationTest extends FunSuite {
     println(ctor.symbol.typeSignatureIn(tpe))
     */
 
-
-
-
     val foo = Foo.Params(3, false, new java.io.File("zzz"), Rec(4))
     val config = Configuration.fromObject(foo)
     val foo2 = config.readIn[Foo.Params]()
