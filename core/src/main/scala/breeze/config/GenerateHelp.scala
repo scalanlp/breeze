@@ -19,32 +19,29 @@ object GenerateHelp {
    */
   def apply[C:Manifest](conf: Configuration = Configuration.empty):String = {
     val man = implicitly[Manifest[C]]
-    val reader = new AdaptiveParanamer()
 
     def recGen(staticManifest: Manifest[_], prefix: String):Seq[Format] = {
-      val clss = staticManifest.erasure
+      val clss = staticManifest.runtimeClass
       val ann = clss.getAnnotation(classOf[Help])
       val res = new ArrayBuffer[Format]
       if(ann != null) {
         res += Break += Group(prefix,clss.getName,ann.text) += Break
       }
 
-      val dynamicClass: Class[_] = conf.recursiveGetProperty(prefix).map{
-        Class.forName(_)
-      } getOrElse (clss)
+      val dynamicClass: Class[_] = conf.recursiveGetProperty(prefix).map( x => Class.forName(x._1) ) getOrElse clss
       if (dynamicClass.getConstructors.isEmpty)
         return res
 
-      val staticTypeVars: Seq[String] = staticManifest.erasure.getTypeParameters.map(_.toString)
+      val staticTypeVars: Seq[String] = staticManifest.runtimeClass.getTypeParameters.map(_.toString)
       val staticTypeVals: Seq[OptManifest[_]] = staticManifest.typeArguments
       val staticTypeMap: Map[String, OptManifest[_]] = (staticTypeVars zip staticTypeVals).toMap withDefaultValue (NoManifest)
 
-      val dynamicTypeMap = solveTypes(staticTypeMap, staticManifest.erasure, dynamicClass)
+      val dynamicTypeMap = solveTypes(staticTypeMap, staticManifest.runtimeClass, dynamicClass)
 
       // Handle ctor parameters
       val toRecurse = ArrayBuffer[(String,Manifest[_])]()
 
-      val ctor = dynamicClass.getConstructors apply 0
+      val ctor = dynamicClass.getConstructors.last
       val paramNames = reader.lookupParameterNames(ctor)
       val defaults = lookupDefaultValues(dynamicClass, paramNames)
       val anns = ctor.getParameterAnnotations
@@ -57,13 +54,13 @@ object GenerateHelp {
         val default = try { defaults(i)().toString } catch { case e: Exception => ""}
         val ann = myAnns.collectFirst{case h: Help => h}
         ann match {
-          case None if isPrimitive(tpe.erasure) =>
+          case None if isPrimitive(tpe.runtimeClass) =>
             res += Param(wrap(prefix,name), prettyString(tpe),default, "")
           case Some(help) =>
             res += Param(wrap(prefix,name), prettyString(tpe),default, help.text)
           case _ =>
         }
-        if(!isPrimitive(tpe.erasure)) {
+        if(!isPrimitive(tpe.runtimeClass)) {
           toRecurse += (name -> tpe)
         }
       }
@@ -120,7 +117,7 @@ object GenerateHelp {
     case Manifest.Double => "Double"
     case Manifest.Char => "Char"
     case Manifest.Byte => "Byte"
-    case c => if(c.erasure == classOf[String]) "String" else if (c.erasure == classOf[File]) "File" else tpe.toString
+    case c => if(c.runtimeClass == classOf[String]) "String" else if (c.runtimeClass == classOf[File]) "File" else tpe.toString
   }
 
   private def wrap(prefix: String, name: String):String = {
@@ -151,4 +148,7 @@ object GenerateHelp {
   def main(args: Array[String]) {
     println(GenerateHelp[Params]())
   }
+
+
+  private val reader = new AdaptiveParanamer()
 }

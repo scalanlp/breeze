@@ -54,12 +54,14 @@ class VectorBuilder[@spec(Double,Int, Float) E](private var _index: Array[Int],
                                                  dfv: DefaultArrayValue[E]) = this(new Array[Int](0), new Array[E](0), 0, length)
 
 
+
   def size = length
 
 
   def data  = _data
   def index = _index
   def activeSize = used
+
 
   def repr = this
 
@@ -101,6 +103,7 @@ class VectorBuilder[@spec(Double,Int, Float) E](private var _index: Array[Int],
       _data = ArrayUtil.copyOf(_data, math.max(_data.length * 2, 1))
       _index = ArrayUtil.copyOf(_index, math.max(_index.length * 2, 1))
     }
+
     _data(used) = v
     _index(used) = i
     used += 1
@@ -119,7 +122,7 @@ class VectorBuilder[@spec(Double,Int, Float) E](private var _index: Array[Int],
   def isActive(rawIndex: Int) = rawIndex < used && rawIndex > 0
 
   override def toString = {
-    (index.iterator zip data.iterator).take(used).mkString("USVector(",", ", ")")
+   (index.iterator zip data.iterator).take(used).mkString(s"VectorBuilder($length)(",", ", ")")
   }
 
   def copy: VectorBuilder[E] = {
@@ -148,14 +151,19 @@ class VectorBuilder[@spec(Double,Int, Float) E](private var _index: Array[Int],
     hv
   }
 
-  def toSparseVector = {
+  def toSparseVector:SparseVector[E] = toSparseVector(alreadySorted=false)
+
+  def toSparseVector(alreadySorted: Boolean = false, keysAlreadyUnique: Boolean = false): SparseVector[E] = {
     val index = this.index
     val values = this.data
+    if(alreadySorted && keysAlreadyUnique) {
+      return new SparseVector(index, values, used, length)
+    }
 
     val outIndex = new Array[Int](index.length)
     val outValues = ArrayUtil.newArrayLike(values, values.length)
 
-    val ord = sortedIndices(index)
+    val ord = if(!alreadySorted) sortedIndices(index) else VectorBuilder.range(used)
     if(ord.length > 0) {
       outIndex(0) = index(ord(0))
       outValues(0) = values(ord(0))
@@ -166,15 +174,24 @@ class VectorBuilder[@spec(Double,Int, Float) E](private var _index: Array[Int],
     }
     var i   = 1
     var out = 0
-    while(i < ord.length) {
-      if(outIndex(out) == index(ord(i))) {
-        outValues(out) = ring.+(outValues(out), values(ord(i)))
-      } else {
+    if(keysAlreadyUnique) {
+      while(i < ord.length) {
         out += 1
         outIndex(out) = index(ord(i))
         outValues(out) = values(ord(i))
+        i += 1
       }
-      i += 1
+    } else {
+      while(i < ord.length) {
+        if(outIndex(out) == index(ord(i))) {
+          outValues(out) = ring.+(outValues(out), values(ord(i)))
+        } else {
+          out += 1
+          outIndex(out) = index(ord(i))
+          outValues(out) = values(ord(i))
+        }
+        i += 1
+      }
     }
 
     if(ord.length > 0)
@@ -264,7 +281,7 @@ object VectorBuilder extends VectorBuilderOps_Double {
   def apply[V:ClassTag:Semiring:DefaultArrayValue](length: Int)(values: (Int, V)*) = {
     val r = zeros[V](length)
     for( (i, v) <- values) {
-      r(i) = v
+      r.add(i, v)
     }
     r
   }
@@ -344,7 +361,9 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
         require(a.length == b.length, "Dimension mismatch!")
         a.reserve(a.activeSize + b.activeSize)
         var i = 0
-        while(i < b.activeSize) {
+        // read once here in case we're doing a += a
+        val bActiveSize = b.activeSize
+        while(i < bActiveSize) {
           a.add(b.index(i), b.data(i))
           i += 1
         }
@@ -359,7 +378,9 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
         require(a.length == b.length, "Dimension mismatch!")
         a.reserve(a.activeSize + b.activeSize)
         var i = 0
-        while(i < b.activeSize) {
+        // read once here in case we're doing a += a
+        val bActiveSize = b.activeSize
+        while(i < bActiveSize) {
           a.add(b.index(i), -b.data(i))
           i += 1
         }
@@ -372,6 +393,7 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
   implicit val canSet_Double: BinaryUpdateOp[VectorBuilder[Double], VectorBuilder[Double], OpSet] =  {
     new  BinaryUpdateOp[VectorBuilder[Double], VectorBuilder[Double], OpSet]  {
       def apply(a: VectorBuilder[Double], b: VectorBuilder[Double]) {
+        if(a eq b) return
         a.clear()
         a.reserve(b.activeSize)
         var i = 0
@@ -420,12 +442,17 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
     new  CanAxpy[Double, VectorBuilder[Double], VectorBuilder[Double]]  {
       def apply(s: Double, b: VectorBuilder[Double], a: VectorBuilder[Double]) {
         require(a.length == b.length, "Dimension mismatch!")
-        a.reserve(b.activeSize + a.activeSize)
-        var i = 0
-        val bd = b.data
-        while(i < b.activeSize) {
-          a.add(b.index(i), s * bd(i))
-          i += 1
+        if(a eq b) {
+          a :*= (1+s)
+        } else {
+          val bActiveSize: Int = b.activeSize
+          a.reserve(bActiveSize + a.activeSize)
+          var i = 0
+          val bd = b.data
+          while(i < bActiveSize) {
+            a.add(b.index(i), s * bd(i))
+            i += 1
+          }
         }
       }
     }
@@ -473,7 +500,10 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
       }
 
       def close(a: VectorBuilder[Double], b: VectorBuilder[Double], tolerance: Double): Boolean = {
-        (a.toHashVector - b.toHashVector).norm(2) < tolerance
+        val diff: Double = (a.toHashVector - b.toHashVector).norm(2)
+        if(diff > tolerance)
+          println((a,b,a.toHashVector, b.toHashVector,diff))
+        diff < tolerance
       }
 
       implicit def axpyVV: CanAxpy[Double, VectorBuilder[Double], VectorBuilder[Double]] = canAxpy_VB_VB_Double
@@ -488,7 +518,7 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
         var i = 0
         val bd = b.data
         while(i < b.activeSize) {
-          a(b.index(i)) -= bd(i)
+          a(b.index(i)) += bd(i)
           i += 1
         }
       }

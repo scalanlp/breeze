@@ -83,7 +83,7 @@ object ArgumentParser {
   addArgumentParser(fileParser);
 
   protected[config] def getArgumentParser[T:ClassTag]:Option[ArgumentParser[T]] = {
-    if(implicitly[ClassTag[T]].erasure == classOf[Class[_]]) Some(classParser.asInstanceOf[ArgumentParser[T]])
+    if(implicitly[ClassTag[T]].runtimeClass == classOf[Class[_]]) Some(classParser.asInstanceOf[ArgumentParser[T]])
     else argumentParsers.get(implicitly[ClassTag[T]].toString).asInstanceOf[Option[ArgumentParser[T]]];
   }
 }

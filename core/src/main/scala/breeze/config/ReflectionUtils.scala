@@ -57,7 +57,7 @@ private[config] object ReflectionUtils {
     } catch {
       case e: Exception =>
         paramNames.map{
-          paramName => (() => throw new NoParameterException("Could not find a matching property!", paramName))
+          paramName => () => throw new NoParameterException("Could not find a matching property!", paramName)
         }
     }
   }
@@ -135,37 +135,30 @@ private[config] object ReflectionUtils {
     case jl.Float.TYPE => Manifest.Float.asInstanceOf[Manifest[Object]]
     case jl.Boolean.TYPE => Manifest.Boolean.asInstanceOf[Manifest[Object]]
     case tpe: Class[_] with ParameterizedType => new Manifest[Object] {
-      override def erasure: Class[_] = tpe
-      def runtimeClass = tpe
-
+      override def runtimeClass: Class[_] = tpe
       override def typeArguments = tpe.getActualTypeArguments.map(mkManifest(typeMap, _)).toList
 
-      override def toString = erasure.getName + argString
+      override def toString = runtimeClass.getName + argString
     }
     case tpe: ParameterizedType =>
       val innerMan = mkManifest(Map.empty, tpe.getRawType)
       new Manifest[Object] {
-        override def erasure = innerMan.erasure
-
-        def runtimeClass = innerMan.erasure
+        def runtimeClass = innerMan.runtimeClass
 
         override def typeArguments = tpe.getActualTypeArguments.map(mkManifest(typeMap, _)).toList
 
-        override def toString = erasure.getName + argString
+        override def toString = runtimeClass.getName + argString
       }
     case tpe: Class[_] => new Manifest[Object] {
       def runtimeClass = tpe
 
-
-      override def erasure: Class[_] = tpe
-
-      override def toString = erasure.getName + argString
+      override def toString = runtimeClass.getName + argString
     }
     case tpe: TypeVariable[_] => typeMap(tpe.toString) match {
       case x: Manifest[_] => x.asInstanceOf[Manifest[Object]]
-      case _ => throw new ConfigurationException("Don't know how to deal with " + tpe + " yet! Add an ArgumentParser.")
+      case _ => throw new CannotParseException("", "Don't know how to deal with " + tpe + " yet! Add an ArgumentParser.")
     }
     case tpe: GenericArrayType => mkManifest(typeMap, tpe.getGenericComponentType).arrayManifest.asInstanceOf[Manifest[Object]]
-    case _ => throw new ConfigurationException("Don't know how to deal with " + tpe + " yet! Add an ArgumentParser." + tpe.getClass.getName)
+    case _ => throw new CannotParseException("", "Don't know how to deal with " + tpe + " yet! Add an ArgumentParser." + tpe.getClass.getName)
   }
 }

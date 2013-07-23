@@ -92,7 +92,7 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
     _data(pos) = v
     if(_index(pos) != i) {
       load += 1
-      if(load * 3 > _index.length * 2) {
+      if(load * 4 > _index.length * 3) {
         rehash()
         update(i, v)
       } else {
@@ -110,14 +110,12 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
     if(i < 0) throw new IndexOutOfBoundsException(i + " less than 0")
     val index = this.index
     val len = index.length
-    val lenm1 = len - 1
-    var hash = hashCodeFor(i) & lenm1
-//    var numProbes = 0
+    var hash = hashCodeFor(i) & (len - 1)
     while(index(hash) != i && index(hash) >= 0) {
-//      numProbes += 1
-//      hash += numProbes
       hash += 1
-      hash &= (lenm1)
+      if (hash >= len) {
+        hash = 0
+      }
     }
     hash
   }

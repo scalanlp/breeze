@@ -1,12 +1,14 @@
 package breeze.config
 
-import org.scalacheck._
 import org.scalatest._
 import org.scalatest.junit._
-import org.scalatest.prop._
 import org.junit.runner.RunWith
 
 import java.util.Properties
+import java.io.File
+import breeze.config.Foo.Rec
+import scala.reflect.runtime.universe._
+import java.lang.reflect.ParameterizedType
 
 trait ConfigurationDemoIFace {
   def int:Int
@@ -148,4 +150,35 @@ class ConfigurationTest extends FunSuite {
 
 
 
+
+  test("fromObject") {
+    /*
+    println(typeOf[Foo.Params].members)
+    val rm: Mirror = runtimeMirror(classOf[Foo.Params].getClassLoader)
+    val tpe = manifestToTypeTag(rm, manifest[Foo.Params]).tpe.asInstanceOf[Type]
+    val cm = rm.reflectClass(tpe.typeSymbol.asClass)
+    val ctor = cm.reflectConstructor(tpe.declaration(nme.CONSTRUCTOR).asMethod)
+    ctor.symbol.typeSignatureIn(tpe) match {
+      case MethodType(params, result) => println(params, result)
+        params.foreach{ p =>
+          println(p.typeSignature)
+        }
+    }
+    println(ctor.symbol.typeSignatureIn(tpe))
+    */
+
+    val foo = Foo.Params(3, false, new java.io.File("zzz"), Rec(4))
+    val config = Configuration.fromObject(foo)
+    val foo2 = config.readIn[Foo.Params]()
+    assert(foo === foo2)
+  }
+
+}
+
+
+object Foo {
+  trait ZZZ
+
+  case class Rec(i: Int) extends ZZZ
+  case class Params(str: Int, bo: Boolean, f: File , rec: ZZZ)
 }
