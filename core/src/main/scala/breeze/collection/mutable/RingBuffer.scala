@@ -8,7 +8,7 @@ class RingBuffer[A](m: Int) extends Buffer[A] with GenericTraversableTemplate[A,
 
   private def resize: Unit = while (buf.size > m) buf.remove(0)
 
-  override def length = buf.length
+  def length = buf.length
   override def apply(n: Int): A = buf.apply(n)
   def update(n: Int, x: A) = buf.update(n, x)
   def +=(x: A): this.type = { buf.+=(x); resize; this }

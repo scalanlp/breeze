@@ -45,7 +45,7 @@ abstract class StochasticGradientDescent[T](val defaultStepSize: Double,
    * Default just takes a step
    */
   protected def takeStep(state: State, dir: T, stepSize: Double) = state.x + dir * stepSize
-  protected def chooseDescentDirection(state: State) = state.grad * -1.0
+  protected def chooseDescentDirection(state: State, fn: StochasticDiffFunction[T]) = state.grad * -1.0
 
 
   override protected def updateFValWindow(oldState: State, newAdjVal: Double) = {

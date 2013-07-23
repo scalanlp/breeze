@@ -47,7 +47,7 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
 
   protected def takeStep(state: State, dir: T, stepSize: Double) = state.x + dir * stepSize
   protected def initialHistory(f: DiffFunction[T], x: T):History = new LBFGS.ApproximateInverseHessian(m)
-  protected def chooseDescentDirection(state: State):T = {
+  protected def chooseDescentDirection(state: State, fn: DiffFunction[T]):T = {
     state.history * state.grad
   }
 

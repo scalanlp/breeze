@@ -5,24 +5,21 @@ import com.typesafe.scalalogging.log4j.Logging
 import breeze.collection.mutable.RingBuffer
 
 // Compact representation of an n x n Hessian, maintained via L-BFGS updates
-class CompactHessian(m: Int) extends NumericOps[CompactHessian] {
+class CompactHessian(M: DenseMatrix[Double], Y: RingBuffer[DenseVector[Double]], S: RingBuffer[DenseVector[Double]], sigma: Double, m: Int) extends NumericOps[CompactHessian] {
+  def this(m: Int) = this(null, new RingBuffer(m), new RingBuffer(m), 1.0, m)
   def repr: CompactHessian = this
 
-  var sigma = 1.0
-  var M = null.asInstanceOf[DenseMatrix[Double]]
-  var Y = new RingBuffer[DenseVector[Double]](m)
-  var S = new RingBuffer[DenseVector[Double]](m)
   def update(y: DenseVector[Double],
-             s: DenseVector[Double]): Unit = {
+             s: DenseVector[Double]):CompactHessian = {
     // Compute scaling factor for initial Hessian, which we choose as
     val yTs = y.dot(s)
 
     if (yTs < 1e-10) // ensure B remains strictly positive definite
-      return
+      return this
 
-    S += s
-    Y += y
-    sigma = 1.0 / (yTs / y.dot(y))
+    val S = this.S :+ s
+    val Y = this.Y :+ y
+    val sigma = 1.0 / (yTs / y.dot(y))
 
     val k = Y.size
 
@@ -39,7 +36,6 @@ class CompactHessian(m: Int) extends NumericOps[CompactHessian] {
       }
     }
 
-
     // S_k^T S_k is the symmetric k x k matrix with element (i,j) given by <s_i, s_j>
     val STS = DenseMatrix.tabulate[Double](k, k){ (i, j) =>
       sigma * (S(i) dot S(j))
@@ -48,9 +44,11 @@ class CompactHessian(m: Int) extends NumericOps[CompactHessian] {
 
     // M is the 2k x 2k matrix given by: M = [ \sigma * S_k^T S_k    L_k ]
     //                                       [         L_k^T        -D_k ]
-    M = DenseMatrix.vertcat(DenseMatrix.horzcat(STS, L), DenseMatrix.horzcat(L.t, -D))
+    val M = DenseMatrix.vertcat(DenseMatrix.horzcat(STS, L), DenseMatrix.horzcat(L.t, -D))
 
 
+    val newB = new CompactHessian(M, S, Y, sigma, m)
+    newB
   }
 
   def times(v: DenseVector[Double]): DenseVector[Double] = {
@@ -106,97 +104,90 @@ class ProjectedQuasiNewton(val optTol: Double = 1e-3,
                            val maxNumIt: Int = 2000,
                            val maxSrchIt: Int = 30,
                            val gamma: Double = 1e-10,
-                           val projection: DenseVector[Double] => DenseVector[Double] = identity) extends Minimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]] with Logging {
-  // strictness of linesearch
-  def minimize(prob: DiffFunction[DenseVector[Double]], guess: DenseVector[Double]): DenseVector[Double] = {
+                           val projection: DenseVector[Double] => DenseVector[Double] = identity) extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]] with Logging {
 
-    def computeGradientNorm(x: DenseVector[Double], g: DenseVector[Double]): Double = computeGradient(x, g).norm(Double.PositiveInfinity)
-    def computeGradient(x: DenseVector[Double], g: DenseVector[Double]): DenseVector[Double] = projection(x - g) - x
-    val x = if (initFeas) guess.copy else projection(guess.copy)
-    val g = prob.gradientAt(x)
-    var f = prob.valueAt(x)
-    var d = DenseVector.zeros[Double](x.size)
-    var gnorm = computeGradientNorm(x, g)
-    val B = new CompactHessian(m)
-    var y = null.asInstanceOf[DenseVector[Double]]
-    var s = null.asInstanceOf[DenseVector[Double]]
-    var t = 1
-    var fevals = 1
+  case class History(B: CompactHessian)
 
-    logger.debug(f"PQN: Initially  : f $f%-10.4f ||g|| $gnorm%-10.4f")
 
-    while (((testOpt == false) || (gnorm > optTol))
-      && (t < maxNumIt) //&& (!prob.hasConverged)
-    ) {
+  protected def initialHistory(f: DiffFunction[DenseVector[Double]], init: DenseVector[Double]): History = {
+    History(new CompactHessian(m))
+  }
 
-      // Find descent direction
-      if (t == 1) {
-        d = computeGradient(x, g * (0.1 / gnorm))
-      } else {
-        // Update the limited-memory BFGS approximation to the Hessian
-        B.update(y, s)
-        // Solve subproblem; we use the current iterate x as a guess
-        val subprob = new ProjectedQuasiNewton.QuadraticSubproblem(prob, f, x, g, B)
-        val p = new SpectralProjectedGradient(
-          testOpt = false,
-          optTol = 1e-3,
-          maxNumIt = 30,
-          initFeas = true,
-          M = 5,
-          projection = projection
-        ).minimize(subprob, x)
-        d = p - x
-        //	time += subprob.time
-      }
+  private def computeGradient(x: DenseVector[Double], g: DenseVector[Double]): DenseVector[Double] = projection(x - g) - x
+  private def computeGradientNorm(x: DenseVector[Double], g: DenseVector[Double]): Double = computeGradient(x, g).norm(Double.PositiveInfinity)
 
-      // Backtracking line-search
-      var accepted = false
-      var lambda = 1.0
-      val gTd = g.dot(d)
-      var srchit = 0
-
-      do {
-        val candx = x + d * lambda
-        val candg = prob.gradientAt(candx)
-        val candf = prob.valueAt(candx)
-        val suffdec = gamma * lambda * gTd
-
-        if (testOpt && srchit > 0) {
-          logger.debug(f"PQN:    SrchIt $srchit%4d: f $candf%-10.4f t $lambda%-10.4f\n")
-        }
-
-        if (candf < f + suffdec) {
-          s = candx - x
-          y = candg - g
-          x := candx
-          g := candg
-          f = candf
-          accepted = true
-        } else if (srchit >= maxSrchIt) {
-          accepted = true
-        } else {
-          lambda *= 0.5
-          srchit = srchit + 1
-        }
-        fevals = fevals + 1
-      } while (!accepted)
-
-      if (srchit >= maxSrchIt) {
-        logger.info("PQN: Line search cannot make further progress")
-        return x
-      }
-
-      if (testOpt) {
-        gnorm = computeGradientNorm(x, g)
-        logger.debug(f"PQN: MainIt $t%4d: f $f%-10.4f ||g|| $gnorm%-10.4f")
-      }
-
-      t = t + 1
+  protected def chooseDescentDirection(state: State, fn: DiffFunction[DenseVector[Double]]): DenseVector[Double] = {
+    import state._
+    import history.B
+    if (iter == 1) {
+      val gnorm = computeGradientNorm(x, grad)
+      computeGradient(x, grad * (0.1 / gnorm))
+    } else {
+      // Update the limited-memory BFGS approximation to the Hessian
+      //B.update(y, s)
+      // Solve subproblem; we use the current iterate x as a guess
+      val subprob = new ProjectedQuasiNewton.QuadraticSubproblem(fn, state.adjustedValue, x, grad, B)
+      val p = new SpectralProjectedGradient(
+        testOpt = false,
+        optTol = 1e-3,
+        maxNumIt = 30,
+        initFeas = true,
+        M = 5,
+        projection = projection
+      ).minimize(subprob, x)
+      p - x
+      //	time += subprob.time
     }
+  }
 
-    logger.info(f"PQN: FinIt  $t%4d: f $f%-10.4f ||g|| $gnorm%-10.4f fevals: $fevals%d")
 
-    return x
+  protected def determineStepSize(state: State, fn: DiffFunction[DenseVector[Double]], dir: DenseVector[Double]): Double = {
+    val dirnorm = dir.norm(Double.PositiveInfinity)
+    if(dirnorm < 1E-10) return 0.0
+    import state._
+    // Backtracking line-search
+    var accepted = false
+    var lambda = 1.0
+    val gTd = grad dot dir
+    var srchit = 0
+
+    do {
+      val candx = x + dir * lambda
+      val candf = fn.valueAt(candx)
+      val suffdec = gamma * lambda * gTd
+
+      if (testOpt && srchit > 0) {
+        logger.debug(f"PQN:    SrchIt $srchit%4d: f $candf%-10.4f t $lambda%-10.4f\n")
+      }
+
+      if (candf < state.adjustedValue + suffdec) {
+        accepted = true
+      } else if (srchit >= maxSrchIt) {
+        accepted = true
+      } else {
+        lambda *= 0.5
+        srchit = srchit + 1
+      }
+    } while (!accepted)
+
+    if (srchit >= maxSrchIt) {
+      logger.info("PQN: Line search cannot make further progress")
+      throw new LineSearchFailed(state.grad.norm(Double.PositiveInfinity), dir.norm(Double.PositiveInfinity))
+    }
+    lambda
+  }
+
+
+  protected def takeStep(state: State, dir: DenseVector[Double], stepSize: Double): DenseVector[Double] = {
+    projection(state.x + dir * stepSize)
+  }
+
+
+  protected def updateHistory(newX: DenseVector[Double], newGrad: DenseVector[Double], newVal: Double, oldState: State): History = {
+    import oldState._
+    val s = newX - oldState.x
+    val y = newGrad - oldState.grad
+    History(oldState.history.B.update(y, s))
   }
 
 }

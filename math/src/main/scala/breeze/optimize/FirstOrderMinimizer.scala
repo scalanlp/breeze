@@ -29,7 +29,7 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
 
   protected def initialHistory(f: DF, init: T): History
   protected def adjust(newX: T, newGrad: T, newVal: Double):(Double,T) = (newVal,newGrad)
-  protected def chooseDescentDirection(state: State):T
+  protected def chooseDescentDirection(state: State, f: DF):T
   protected def determineStepSize(state: State, f: DF, direction: T):Double
   protected def takeStep(state: State, dir: T, stepSize:Double):T
   protected def updateHistory(newX: T, newGrad: T, newVal: Double, oldState: State):History
@@ -51,7 +51,7 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
   def iterations(f: DF,init: T): Iterator[State] = {
     var failedOnce = false
     val it = Iterator.iterate(initialState(f,init)) { state => try {
-        val dir = chooseDescentDirection(state)
+        val dir = chooseDescentDirection(state, f)
         val stepSize = determineStepSize(state, f, dir)
         logger.info(f"Step Size: $stepSize%.4g")
         val x = takeStep(state,dir,stepSize)

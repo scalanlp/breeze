@@ -21,8 +21,8 @@ class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-
   require(l1reg >= 0)
 
 
-  override protected def chooseDescentDirection(state: State) = {
-    super.chooseDescentDirection(state.copy(grad = state.adjustedGradient))
+  override protected def chooseDescentDirection(state: State, fn: DiffFunction[T]) = {
+    super.chooseDescentDirection(state.copy(grad = state.adjustedGradient), fn)
   }
 
   override protected def determineStepSize(state: State, f: DiffFunction[T], dir: T) = {
