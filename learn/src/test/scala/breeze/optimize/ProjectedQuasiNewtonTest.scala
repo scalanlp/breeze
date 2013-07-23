@@ -24,10 +24,10 @@ import org.junit.runner.RunWith
 import breeze.linalg._
 
 @RunWith(classOf[JUnitRunner])
-class PQNTest extends OptimizeTestBase {
+class ProjectedQuasiNewtonTest extends OptimizeTestBase {
 
   test("optimize a simple multivariate gaussian") {
-    val optimizer = new PQN(optTol = 1.0E-9)
+    val optimizer = new ProjectedQuasiNewton(optTol = 1.0E-9)
 
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
@@ -43,7 +43,7 @@ class PQNTest extends OptimizeTestBase {
     check(Prop.forAll(optimizeThis _))
   }
   test("optimize a simple multivariate gaussian with projection") {
-    val optimizer = new PQN(optTol = 1.0E-5, projection = _.map(scala.math.min(_, 2.0)))
+    val optimizer = new ProjectedQuasiNewton(optTol = 1.0E-5, projection = _.map(scala.math.min(_, 2.0)))
 
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
@@ -59,7 +59,7 @@ class PQNTest extends OptimizeTestBase {
     check(Prop.forAll(optimizeThis _))
   }
   test("optimize a simple multivariate gaussian with l2 regularization") {
-    val optimizer = new PQN(optTol = 1.0E-5)
+    val optimizer = new ProjectedQuasiNewton(optTol = 1.0E-5)
 
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {

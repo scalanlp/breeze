@@ -15,7 +15,7 @@ trait BatchDiffFunction[T] extends DiffFunction[T] with ((T,IndexedSeq[Int])=>Do
   */
   def valueAt(x:T, batch: IndexedSeq[Int]) : Double = calculate(x,batch)._1
   /**
-  * Calculates the value and gradient of the function on a subset of the data;
+  * Calculates the value and gradient of the function on a subset of the data
   */
   def calculate(x:T, batch: IndexedSeq[Int]): (Double,T)
 
@@ -28,7 +28,7 @@ trait BatchDiffFunction[T] extends DiffFunction[T] with ((T,IndexedSeq[Int])=>Do
   /**
   * The full size of the data
   */
-  def fullRange: IndexedSeq[Int];
+  def fullRange: IndexedSeq[Int]
 
   def withRandomBatches(size: Int):StochasticDiffFunction[T] = new StochasticDiffFunction[T] {
     val rand = Rand.subsetsOfSize(fullRange,size)

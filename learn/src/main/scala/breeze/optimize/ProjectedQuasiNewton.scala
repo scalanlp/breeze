@@ -6,13 +6,15 @@ import com.typesafe.scalalogging.log4j.Logging
 import breeze.collection.mutable.RingBuffer
 
 // Compact representation of an n x n Hessian, maintained via L-BFGS updates
-class CompactHessian(m: Int) {
+class CompactHessian(m: Int) extends NumericOps[CompactHessian] {
+  def repr: CompactHessian = this
+
   var sigma = 1.0
   var M = null.asInstanceOf[DenseMatrix[Double]]
   var Y = new RingBuffer[DenseVector[Double]](m)
   var S = new RingBuffer[DenseVector[Double]](m)
   def update(y: DenseVector[Double],
-    s: DenseVector[Double]): Unit = {
+             s: DenseVector[Double]): Unit = {
     // Compute scaling factor for initial Hessian, which we choose as
     val yTs = y.dot(s)
 
@@ -25,37 +27,25 @@ class CompactHessian(m: Int) {
 
     val k = Y.size
 
+
     // D_k is the k x k diagonal matrix D_k = diag [s_0^Ty_0, ...,s_{k-1}^Ty_{k-1}].
-    val fD = Futures.future {
-      diag(DenseVector(S.zip(Y).map {case (s,y) => s dot y}:_*))
+    // L_k is the k x k matrix with (L_k)_{i,j} = if( i > j ) s_i^T y_j else 0
+    // (this is a lower triangular matrix with the diagonal set to all zeroes)
+    val D = diag(DenseVector.tabulate[Double](k){ i => S(i) dot Y(i)})
+    val L = DenseMatrix.tabulate[Double](k, k) { (i, j) =>
+      if(i > j) {
+        S(i) dot Y(j)
+      } else {
+        0.0
+      }
     }
 
-    // L_k is the k x k matrix with (L_k)_{i,j} = if( i > j ) s_i^T y_j else 0   
-    // (this is a lower triangular matrix with the diagonal set to all zeroes)
-    val fL = Futures.future {
-      val ret = DenseMatrix.zeros[Double](k, k)
-      for (j <- 0 until k)
-        for (i <- (j + 1) until k)
-          ret.update(i, j, S(i) dot Y(j))
-      ret
-    }
 
     // S_k^T S_k is the symmetric k x k matrix with element (i,j) given by <s_i, s_j>
-    val fSTS = Futures.future {
-      val ret = DenseMatrix.zeros[Double](k, k)
-      for (j <- 0 until k) {
-        for (i <- j until k) {
-          val sTs = sigma * (S(i) dot S(j))
-          ret.update(i, j, sTs)
-          ret.update(j, i, sTs)
-        }
-      }
-      ret
+    val STS = DenseMatrix.tabulate[Double](k, k){ (i, j) =>
+      sigma * (S(i) dot S(j))
     }
 
-    val L = fL()
-    val D = fD()
-    val STS = fSTS()
 
     // M is the 2k x 2k matrix given by: M = [ \sigma * S_k^T S_k    L_k ]
     //                                       [         L_k^T        -D_k ]
@@ -109,37 +99,16 @@ class CompactHessian(m: Int) {
   }
 }
 
-// Forms a quadratic model around fun, the argmin of which is then a feasible
-// quasi-Newton descent direction
-class PQNSubproblem(fun: DiffFunction[DenseVector[Double]],
-  fk: Double,
-  xk: DenseVector[Double],
-  gk: DenseVector[Double],
-  B: CompactHessian) extends DiffFunction[DenseVector[Double]] {
 
-  /**
-   * Return value and gradient of the quadratic model at the current iterate:
-   *  q_k(p)        = f_k + (p-x_k)^T g_k + 1/2 (p-x_k)^T B_k(p-x_k)
-   *  \nabla q_k(p) = g_k + B_k(p-x_k)
-   */
-  override def calculate(x: DenseVector[Double]): (Double, DenseVector[Double]) = {
-    val d = x - xk
-    val Bd = B.times(d)
-    val f = fk + d.dot(gk) + (0.5 * d.dot(Bd))
-    val g = gk + Bd
-    (f, g)
-  }
-}
 
-class PQN(
-  val optTol: Double = 1e-3,
-  val m: Int = 10,
-  val initFeas: Boolean = false,
-  val testOpt: Boolean = true,
-  val maxNumIt: Int = 2000,
-  val maxSrchIt: Int = 30,
-  val gamma: Double = 1e-10,
-  val projection: DenseVector[Double] => DenseVector[Double] = identity) extends Minimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]] with Logging {
+class ProjectedQuasiNewton(val optTol: Double = 1e-3,
+                           val m: Int = 10,
+                           val initFeas: Boolean = false,
+                           val testOpt: Boolean = true,
+                           val maxNumIt: Int = 2000,
+                           val maxSrchIt: Int = 30,
+                           val gamma: Double = 1e-10,
+                           val projection: DenseVector[Double] => DenseVector[Double] = identity) extends Minimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]] with Logging {
   // strictness of linesearch
   def minimize(prob: DiffFunction[DenseVector[Double]], guess: DenseVector[Double]): DenseVector[Double] = {
 
@@ -160,7 +129,7 @@ class PQN(
 
     while (((testOpt == false) || (gnorm > optTol))
       && (t < maxNumIt) //&& (!prob.hasConverged)
-      ) {
+    ) {
 
       // Find descent direction
       if (t == 1) {
@@ -169,8 +138,8 @@ class PQN(
         // Update the limited-memory BFGS approximation to the Hessian
         B.update(y, s)
         // Solve subproblem; we use the current iterate x as a guess
-        val subprob = new PQNSubproblem(prob, f, x, g, B)
-        val p = new SPG(
+        val subprob = new ProjectedQuasiNewton.QuadraticSubproblem(prob, f, x, g, B)
+        val p = new SpectralProjectedGradient(
           testOpt = false,
           optTol = 1e-3,
           maxNumIt = 30,
@@ -232,4 +201,28 @@ class PQN(
     return x
   }
 
+}
+
+object ProjectedQuasiNewton {
+  // Forms a quadratic model around fun, the argmin of which is then a feasible
+  // quasi-Newton descent direction
+  class QuadraticSubproblem(fun: DiffFunction[DenseVector[Double]],
+                            fk: Double,
+                            xk: DenseVector[Double],
+                            gk: DenseVector[Double],
+                            B: CompactHessian) extends DiffFunction[DenseVector[Double]] {
+
+    /**
+     * Return value and gradient of the quadratic model at the current iterate:
+     *  q_k(p)        = f_k + (p-x_k)^T g_k + 1/2 (p-x_k)^T B_k(p-x_k)
+     *  \nabla q_k(p) = g_k + B_k(p-x_k)
+     */
+    override def calculate(x: DenseVector[Double]): (Double, DenseVector[Double]) = {
+      val d = x - xk
+      val Bd = B.times(d)
+      val f = fk + d.dot(gk) + (0.5 * d.dot(Bd))
+      val g = gk + Bd
+      (f, g)
+    }
+  }
 }

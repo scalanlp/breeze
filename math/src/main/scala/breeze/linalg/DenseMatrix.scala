@@ -191,6 +191,7 @@ extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
     result := this
     result
   }
+
 }
 
 object DenseMatrix extends LowPriorityDenseMatrix

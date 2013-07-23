@@ -20,7 +20,7 @@ import breeze.collection.mutable.RingBuffer
  * @param maxSrchIt maximum number of line search attempts
  * @param projection projection operations
  */
-class SPG[T](
+class SpectralProjectedGradient[T](
  val projection: T => T = {(t:T) =>t},
  val optTol: Double = 1e-4,
   val gamma: Double = 1e-4,
