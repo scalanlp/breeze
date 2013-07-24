@@ -6,7 +6,7 @@ import AssemblyKeys._
 
 object BuildSettings {
   val buildOrganization = "org.scalanlp"
-  val buildScalaVersion = "2.10.1"
+  val buildScalaVersion = "2.10.2"
 
   val scalaVersionRegex = "(\\d+)\\.(\\d+).*".r
 
@@ -17,7 +17,7 @@ object BuildSettings {
     resolvers ++= Seq(
       "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
     ),
-    crossScalaVersions := Seq("2.9.2", "2.10.1"),
+    crossScalaVersions := Seq("2.9.2", "2.10.2"),
   publishMavenStyle := true,
   publishTo <<= version { (v: String) =>
     val nexus = "https://oss.sonatype.org/"
@@ -67,8 +67,6 @@ object BreezeBuild extends Build {
   val opencsv = "net.sf.opencsv" % "opencsv" % "2.3"
   val logging = "com.typesafe" %% "scalalogging-log4j" % "1.0.1"
   val log4j =  "org.apache.logging.log4j" % "log4j-core" % "2.0-beta4"
-  val oldScalaActors = "org.scala-lang" % "scala-actors" % "2.10.0"
-  val chalkCurrent = "org.scalanlp" % "chalk" % "1.2.0"
   val jtransforms = "com.github.rwl" % "jtransforms" % "2.4.0"
 
   val commonsMath =  "org.apache.commons" % "commons-math3" % "3.2"
