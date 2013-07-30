@@ -1,17 +1,8 @@
 # Breeze 
 
-Breeze is a library for numerical processing. Its primary focus is on being generic, clean, and powerful without sacrificing (much) efficiency.
+Breeze is a library for numerical processing. It aims to be generic, clean, and powerful without sacrificing (much) efficiency.
 
-The current version is 0.4-SNAPSHOT. The library currently consists of several parts: 
-
-* breeze-math: Linear algebra and numerics routines
-* breeze-viz: Vizualization and plotting (this is going away soon)
-
-Note: after the recent reorganization, breeze-learn (machine learning) is now in [Nak](https://github.com/scalanlp/nak) and breeze-process (natural language processing) has become [Chalk](https://github.com/scalanlp/chalk).
-
-## Build
-
-This project can be built with sbt 0.12.3
+The current version is 0.4. 
 
 ## Using Breeze in your projects
 
@@ -20,6 +11,12 @@ Breeze consists of three parts:
 * breeze-math contains high-performance linear algebra and numerics.
 * breeze-viz contains plotting and visualization routines.
 * breeze-core contains some basic data structures and configuration.
+
+Note: after the recent reorganization, breeze-learn (machine learning) is now in [Nak](https://github.com/scalanlp/nak) and breeze-process (natural language processing) has become [Chalk](https://github.com/scalanlp/chalk).
+
+## Build
+
+This project can be built with sbt 0.12.3
 
 ### SBT
 
@@ -43,7 +40,7 @@ resolvers ++= Seq(
 )
 
 // Scala 2.9.2 is still supported for 0.2.1, but is dropped afterwards.
-scalaVersion := "2.10.1"
+scalaVersion := "2.10.2"
 ```
 
 ### Maven
@@ -60,9 +57,7 @@ Maven looks like this:
 
 ### Other build tools
 
-http://mvnrepository.com/artifact/org.scalanlp/breeze-math_2.10/0.3 (as an example) is a great resource for finding other configuration examples for other build tools.
-
-
+http://mvnrepository.com/artifact/org.scalanlp/breeze-math_2.10/0.4 (as an example) is a great resource for finding other configuration examples for other build tools.
 
 See documentation (linked below!) for more information on using Breeze.
 
@@ -76,7 +71,7 @@ See documentation (linked below!) for more information on using Breeze.
 
 ## History
 
-Breeze is the merger of the ScalaNLP and Scalala projects, because  one of the original maintainers is unable to continue development. The Scalala parts are largely rewritten.
+Breeze is the merger of the ScalaNLP and Scalala projects, because one of the original maintainers is unable to continue development. The Scalala parts are largely rewritten.
 
 (c) David Hall, 2009 -
 
@@ -99,5 +94,5 @@ Contributions from:
 * Devon Bryant (@devonbryant)
 * Kentaroh Takagaki (@ktakagaki)
 
-And others (email David Hall if you've contributed code and aren't listed).
+And others (contact David Hall if you've contributed code and aren't listed).
 
