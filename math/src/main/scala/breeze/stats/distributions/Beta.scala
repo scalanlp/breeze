@@ -27,8 +27,8 @@ import breeze.numerics
  * The Beta distribution, which is the conjugate prior for the Bernoulli distribution
  *
  * @author dlwh
- * @param a the number of pseudo-observations for false
- * @param b the number of pseudo-observations for true
+ * @param a the number of pseudo-observations for true
+ * @param b the number of pseudo-observations for false
  */
 class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double]  with Moments[Double] {
   require(a > 0.0)
@@ -86,9 +86,9 @@ class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends Contin
       }
       throw new RuntimeException("Shouldn't be here.")
     } else {
-      val ad = aGamma.get
-      val bd = bGamma.get
-      (ad) / (ad + bd)
+      val ad = aGamma.draw()
+      val bd = bGamma.draw()
+      ad / (ad + bd)
     }
   }
   
