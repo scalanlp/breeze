@@ -50,7 +50,9 @@ class SparseVector[@spec(Double,Int, Float) E](val array: SparseArray[E])
                                               extends StorageVector[E]
                                               with VectorLike[E, SparseVector[E]] with Serializable {
 
+  /** This auxiliary constructor assumes that the index array is already sorted. */
   def this(index: Array[Int], data: Array[E], activeSize: Int, length: Int)(implicit value: DefaultArrayValue[E])  = this(new SparseArray(index, data, activeSize, length, value.value))
+  /** This auxiliary constructor assumes that the index array is already sorted. */
   def this(index: Array[Int], data: Array[E], length: Int)(implicit value: DefaultArrayValue[E])  = this(index, data, index.length, length)
 
   def data  = array.data
