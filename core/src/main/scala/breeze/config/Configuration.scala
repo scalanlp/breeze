@@ -236,7 +236,7 @@ trait Configuration { outer =>
 
     try {
       // pick a constructor and figure out what the parameters names are
-      val ctor = dynamicClass.getConstructors.last
+      val ctor = dynamicClass.getConstructors.head
       val reader = new AdaptiveParanamer()
       val paramNames = reader.lookupParameterNames(ctor)
       // Also get their types
@@ -381,7 +381,8 @@ object Configuration {
         val staticTypeMap: Map[String, OptManifest[_]] = (staticTypeVars zip staticTypeVals).toMap withDefaultValue (NoManifest)
         val dynamicTypeMap = solveTypes(staticTypeMap, staticManifest.runtimeClass, dynamicClass)
 
-        val ctor = dynamicClass.getConstructors.last
+        val ctor = dynamicClass.getConstructors.head
+
         val paramNames = reader.lookupParameterNames(ctor)
         val typedParams = ctor.getGenericParameterTypes.map { mkManifest(dynamicTypeMap, _)}
         val prefix = name

@@ -1,0 +1,8 @@
+target/
+project
+*target*
+*/target/
+*class
+*jar*
+.*.swp
+.idea*

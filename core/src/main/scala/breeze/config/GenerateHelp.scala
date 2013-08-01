@@ -41,7 +41,7 @@ object GenerateHelp {
       // Handle ctor parameters
       val toRecurse = ArrayBuffer[(String,Manifest[_])]()
 
-      val ctor = dynamicClass.getConstructors.last
+      val ctor = dynamicClass.getConstructors.head
       val paramNames = reader.lookupParameterNames(ctor)
       val defaults = lookupDefaultValues(dynamicClass, paramNames)
       val anns = ctor.getParameterAnnotations

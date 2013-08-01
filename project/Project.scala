@@ -17,7 +17,7 @@ object BuildSettings {
     resolvers ++= Seq(
       "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
     ),
-    crossScalaVersions := Seq("2.9.2", "2.10.2"),
+    crossScalaVersions := Seq("2.10.2"),
   publishMavenStyle := true,
   publishTo <<= version { (v: String) =>
     val nexus = "https://oss.sonatype.org/"
