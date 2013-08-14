@@ -23,7 +23,7 @@ import scala.reflect.ClassTag
  * @author dlwh
  */
 trait CanZipMapValues[From, @specialized(Int, Float, Double) A, @specialized(Int, Float, Double) B, +To] {
-  /** Maps all corresponding values from the two collection. */
+  /** Maps all corresponding values from the two collections. */
   def map(from : From, from2: From, fn : (A,A)=>B) : To
 }
 

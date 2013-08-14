@@ -16,7 +16,7 @@ package breeze.optimize
  limitations under the License. 
 */
 
-import breeze.math.{MutableInnerProductSpace, MutableCoordinateSpace}
+import breeze.math.{InnerProductSpace, MutableInnerProductSpace, MutableCoordinateSpace}
 import breeze.linalg._
 import com.typesafe.scalalogging.log4j.Logging
 import breeze.linalg.operators.{OpMulMatrix, BinaryOp}
@@ -38,9 +38,9 @@ import breeze.linalg.operators.{OpMulMatrix, BinaryOp}
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
 class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
-              (implicit vspace: MutableInnerProductSpace[T, Double]) extends FirstOrderMinimizer[T,DiffFunction[T]](maxIter, tolerance) with Logging {
+              (implicit space: MutableInnerProductSpace[T, Double]) extends FirstOrderMinimizer[T,DiffFunction[T]](maxIter, tolerance) with Logging {
 
-  import vspace._
+  import space._
   require(m > 0)
 
   type History = LBFGS.ApproximateInverseHessian[T]
@@ -112,7 +112,7 @@ object LBFGS {
        1.0
      }
 
-     val dir:T = vspace.copy(grad)
+     val dir = vspace.copy(grad)
      val as = new Array[Double](m)
      val rho = new Array[Double](m)
 

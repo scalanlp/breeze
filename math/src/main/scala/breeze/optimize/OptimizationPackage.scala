@@ -1,6 +1,6 @@
 package breeze.optimize
 
-import breeze.math.MutableCoordinateSpace
+import breeze.math.{MutablizingAdaptor, CoordinateSpace, MutableCoordinateSpace}
 import breeze.util.Implicits._
 import breeze.optimize.FirstOrderMinimizer.OptParams
 import breeze.linalg.DenseVector
@@ -16,7 +16,8 @@ trait OptimizationPackage[Function, Vector] {
 }
 
 object OptimizationPackage {
-  class FirstOrderOptimizationPackage[DF, Vector]()(implicit coord: MutableCoordinateSpace[Vector, Double], df: DF <:< DiffFunction[Vector]) extends OptimizationPackage[DF, Vector] {
+  class FirstOrderOptimizationPackage[DF, Vector]()(implicit coord: MutableCoordinateSpace[Vector, Double],
+                                                    df: DF <:< DiffFunction[Vector]) extends OptimizationPackage[DF, Vector] {
     def minimize(fn: DF, init: Vector, options: OptimizationOption*):Vector = {
       options.foldLeft(OptParams())( (a,b) => b apply a).minimize(new CachedDiffFunction(fn)(coord.copy), init)
     }
@@ -52,4 +53,22 @@ object OptimizationPackage {
   }
 
   implicit def firstOrderBatchPackage[Vector](implicit coord: MutableCoordinateSpace[Vector, Double]) = new FirstOrderBatchOptimizationPackage[Vector]()
+}
+
+
+trait OptimizationPackageLowPriority {
+  class ImmutableFirstOrderOptimizationPackage[DF, Vector]()(implicit coord: CoordinateSpace[Vector, Double],
+                                                    df: DF <:< DiffFunction[Vector]) extends OptimizationPackage[DF, Vector] {
+    def minimize(fn: DF, init: Vector, options: OptimizationOption*):Vector = {
+      val mut = MutablizingAdaptor.ensureMutable(coord)
+      import mut._
+
+      val wrapped = fn.throughLens[Wrapper]
+
+      val res = options.foldLeft(OptParams())( (a,b) => b apply a).minimize(new CachedDiffFunction(wrapped)(mutaVspace.copy), wrap(init))
+      unwrap(res)
+    }
+  }
+
+  implicit def imFirstOrderPackage[DF, Vector](implicit coord: CoordinateSpace[Vector, Double], df: DF <:< DiffFunction[Vector])  = new ImmutableFirstOrderOptimizationPackage[DF, Vector]()
 }
