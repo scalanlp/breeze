@@ -16,6 +16,7 @@ package breeze.linalg.operators
 */
 import collection.mutable.HashMap
 import breeze.generic.{MethodImpl, Multimethod}
+import breeze.math.Ring
 
 /**
  * This is the capability trait for operations of the form -a.
@@ -30,6 +31,10 @@ trait UnaryOp[A, Op <: OpType, +R] extends MethodImpl[A, R] {
 }
 
 object UnaryOp {
+  implicit def scalaOpNeg[S:Ring]: UnaryOp[S, OpNeg, S] = new UnaryOp[S, OpNeg, S] {
+    def apply(a: S): S = implicitly[Ring[S]].negate(a)
+  }
+
   type Bind[Op <:OpType] = { type Sig[A, R] = UnaryOp[A, Op, R]}
 }
 

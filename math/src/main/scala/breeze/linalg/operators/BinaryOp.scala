@@ -59,6 +59,10 @@ object BinaryOp {
     def apply(a: S, b: S): S = implicitly[Semiring[S]].*(a,b)
   }
 
+ implicit def scalarOpMulInner[S:Semiring]:BinaryOp[S, S, OpMulInner, S] = new BinaryOp[S, S, OpMulInner, S] {
+    def apply(a: S, b: S): S = implicitly[Semiring[S]].*(a,b)
+  }
+
   implicit def scalarOpDiv[S:Field]:BinaryOp[S, S, OpDiv, S] = new BinaryOp[S, S, OpDiv, S] {
     def apply(a: S, b: S): S = implicitly[Field[S]]./(a,b)
   }

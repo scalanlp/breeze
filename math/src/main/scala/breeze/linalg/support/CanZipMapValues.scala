@@ -28,6 +28,11 @@ trait CanZipMapValues[From, @specialized(Int, Float, Double) A, @specialized(Int
 }
 
 object CanZipMapValues {
+  def canZipMapSelf[S]: CanZipMapValues[S, S, S, S] = new CanZipMapValues[S, S, S, S] {
+    /** Maps all corresponding values from the two collections. */
+    def map(from: S, from2: S, fn: (S, S) => S): S = fn(from, from2)
+  }
+
   type Op[From, A, B, To] = CanZipMapValues[From, A, B, To]
 
   //
