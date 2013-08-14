@@ -18,7 +18,7 @@ package breeze.stats.distributions
 
 import breeze.optimize.DiffFunction
 import breeze.linalg._
-import breeze.math.{VectorSpace, TensorSpace, MutableCoordinateSpace}
+import breeze.math.{MutablizingAdaptor, VectorSpace, TensorSpace, MutableCoordinateSpace}
 import breeze.numerics._
 import breeze.numerics
 import breeze.storage.DefaultArrayValue
@@ -60,17 +60,19 @@ case class Multinomial[T,I](params: T)(implicit ev: T=>QuasiTensor[I, Double], r
   override def toString = ev(params).activeIterator.mkString("Multinomial{",",","}")
 
   def expectedValue[U](f: I=>U)(implicit vs: VectorSpace[U, Double]) = {
-    import vs._
-    var acc: U  = null.asInstanceOf[U]
+    val wrapped = MutablizingAdaptor.ensureMutable(vs)
+    import wrapped.mutaVspace._
+    import wrapped._
+    var acc: Wrapper = null.asInstanceOf[Wrapper]
     for ( (k, v) <- params.activeIterator) {
       if(acc == null) {
-        acc = f(k) * (v/sum)
+        acc = wrap(f(k)) * (v/sum)
       } else {
-        acc = acc + f(k) * (v/sum)
+        axpy(v/sum, wrap(f(k)), acc)
       }
     }
     assert(acc != null)
-    acc
+    unwrap(acc)
   }
 
 
