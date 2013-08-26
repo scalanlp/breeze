@@ -32,7 +32,7 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
   protected def chooseDescentDirection(state: State, f: DF):T
   protected def determineStepSize(state: State, f: DF, direction: T):Double
   protected def takeStep(state: State, dir: T, stepSize:Double):T
-  protected def updateHistory(newX: T, newGrad: T, newVal: Double, oldState: State):History
+  protected def updateHistory(newX: T, newGrad: T, newVal: Double, f: DF, oldState: State):History
 
   protected def updateFValWindow(oldState: State, newAdjVal: Double):IndexedSeq[Double] = {
     val interm = oldState.fVals :+ newAdjVal
@@ -42,10 +42,15 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
 
   protected def initialState(f: DF, init: T) = {
     val x = init
-    val (value,grad) = f.calculate(x)
-    val (adjValue,adjGrad) = adjust(x,grad,value)
     val history = initialHistory(f,init)
+    val (value, grad) = calculateObjective(f, x, history)
+    val (adjValue,adjGrad) = adjust(x,grad,value)
     State(x,value,grad,adjValue,adjGrad,0,adjValue,history)
+  }
+
+
+  protected def calculateObjective(f: DF, x: T, history: History): (Double, T) = {
+     f.calculate(x)
   }
 
   def iterations(f: DF,init: T): Iterator[State] = {
@@ -55,11 +60,11 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
         val stepSize = determineStepSize(state, f, dir)
         logger.info(f"Step Size: $stepSize%.4g")
         val x = takeStep(state,dir,stepSize)
-        val (value,grad) = f.calculate(x)
+        val (value,grad) = calculateObjective(f, x, state.history)
         val (adjValue,adjGrad) = adjust(x,grad,value)
         val oneOffImprovement = (state.adjustedValue - adjValue)/(state.adjustedValue.abs max adjValue.abs max 1E-6 * state.initialAdjVal.abs)
         logger.info(f"Val and Grad Norm: $adjValue%.6g (rel: $oneOffImprovement%.3g) ${vspace.norm(adjGrad)}%.6g")
-        val history = updateHistory(x,grad,value,state)
+        val history = updateHistory(x,grad,value, f, state)
         val newAverage = updateFValWindow(state, adjValue)
         failedOnce = false
         var s = State(x,value,grad,adjValue,adjGrad,state.iter + 1, state.initialAdjVal, history, newAverage, 0)

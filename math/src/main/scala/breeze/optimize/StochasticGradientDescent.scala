@@ -80,7 +80,7 @@ object StochasticGradientDescent {
                     (implicit vs: MutableCoordinateSpace[T, Double]) extends StochasticGradientDescent[T](eta,maxIter) {
     type History = Unit
     def initialHistory(f: StochasticDiffFunction[T],init: T)= ()
-    def updateHistory(newX: T, newGrad: T, newValue: Double, oldState: State) = ()
+    def updateHistory(newX: T, newGrad: T, newValue: Double, f: StochasticDiffFunction[T], oldState: State) = ()
   }
 
 }

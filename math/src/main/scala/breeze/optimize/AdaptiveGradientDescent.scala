@@ -39,10 +39,10 @@ object AdaptiveGradientDescent {
     case class History(sumOfSquaredGradients: T)
     override def initialHistory(f: StochasticDiffFunction[T],init: T) = History(zeros(init))
 
-    override def updateHistory(newX: T, newGrad: T, newValue: Double, oldState: State) = {
+    override def updateHistory(newX: T, newGrad: T, newValue: Double, f: StochasticDiffFunction[T], oldState: State) = {
       val oldHistory = oldState.history
       val newG = (oldState.grad :* oldState.grad)
-      val maxAge = 200.0
+      val maxAge = 300.0
       if(oldState.iter > maxAge) {
         newG *= 1/maxAge
         axpy((maxAge - 1)/maxAge, oldHistory.sumOfSquaredGradients, newG)
@@ -102,7 +102,7 @@ object AdaptiveGradientDescent {
     }
     */
 
-    override def updateHistory(newX: T, newGrad: T, newValue: Double, oldState: State) = {
+    override def updateHistory(newX: T, newGrad: T, newValue: Double,  f: StochasticDiffFunction[T], oldState: State) = {
       val oldHistory = oldState.history
       val newG = (oldState.grad :* oldState.grad)
       val maxAge = 200.0

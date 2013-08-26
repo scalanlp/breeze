@@ -183,7 +183,7 @@ class ProjectedQuasiNewton(val optTol: Double = 1e-3,
   }
 
 
-  protected def updateHistory(newX: DenseVector[Double], newGrad: DenseVector[Double], newVal: Double, oldState: State): History = {
+  protected def updateHistory(newX: DenseVector[Double], newGrad: DenseVector[Double], newVal: Double,  f: DiffFunction[DenseVector[Double]], oldState: State): History = {
     import oldState._
     val s = newX - oldState.x
     val y = newGrad - oldState.grad

@@ -1,7 +1,6 @@
 package breeze.optimize
 
 import breeze.stats.distributions.Rand
-
 /**
 * A diff function that supports subsets of the data. By default it evaluates on all the data
 */
@@ -45,5 +44,17 @@ trait BatchDiffFunction[T] extends DiffFunction[T] with ((T,IndexedSeq[Int])=>Do
     }
 
     def calculate(x: T) = outer.calculate(x, nextBatch)
+  }
+}
+
+object BatchDiffFunction {
+  def wrap[T](f: DiffFunction[T]):BatchDiffFunction[T] = new BatchDiffFunction[T] {
+    def calculate(x: T, batch: IndexedSeq[Int]): (Double, T) = f.calculate(x)
+
+    override def gradientAt(x: T, batch: IndexedSeq[Int]): T = f.gradientAt(x)
+
+    override def valueAt(x: T, batch: IndexedSeq[Int]): Double = f.valueAt(x)
+
+    def fullRange: IndexedSeq[Int] = IndexedSeq(0)
   }
 }

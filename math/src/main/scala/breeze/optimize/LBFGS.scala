@@ -51,7 +51,7 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
     state.history * state.grad
   }
 
-  protected def updateHistory(newX: T, newGrad: T, newVal: Double, oldState: State): History = {
+  protected def updateHistory(newX: T, newGrad: T, newVal: Double,  f: DiffFunction[T], oldState: State): History = {
     oldState.history.updated(newX - oldState.x, newGrad :- oldState.grad)
   }
 
