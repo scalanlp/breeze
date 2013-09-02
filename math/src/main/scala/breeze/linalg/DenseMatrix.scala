@@ -15,9 +15,7 @@ package breeze.linalg
  limitations under the License.
 */
 import operators._
-import org.netlib.util.intW
-import org.netlib.lapack.LAPACK
-import org.netlib.blas.{Dgemm}
+import com.github.fommil.netlib.{BLAS, LAPACK}
 import breeze.util.ArrayUtil
 import support._
 import breeze.generic._
@@ -25,6 +23,7 @@ import breeze.math.{Complex, Ring, Semiring}
 import breeze.storage.DefaultArrayValue
 import breeze.storage.DefaultArrayValue._
 import scala.reflect.ClassTag
+import org.netlib.util.intW
 
 /**
  * A DenseMatrix is a matrix with all elements found in an array. It is column major unless isTranspose is true,
@@ -802,16 +801,11 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double with DenseMatrixMul
     def apply(a : DenseMatrix[Double], b : DenseMatrix[Double]) = {
       val rv = DenseMatrix.zeros[Double](a.rows, b.cols)
       require(a.cols == b.rows, "Dimension mismatch!")
-      if(math.max(a.size,b.size) >= 1000 && useNativeLibraries)
-        NativeBlasDeferrer.dgemm(transposeString(a).charAt(0), transposeString(b).charAt(0),
-              rv.rows, rv.cols, a.cols,
-              1.0, a.data, a.offset, a.majorStride,
-              b.data, b.offset, b.majorStride,
-              0.0, rv.data, 0, rv.rows)
-      else  Dgemm.dgemm(transposeString(a), transposeString(b),
-        rv.rows, rv.cols, a.cols,
-        1.0, a.data, a.offset, a.majorStride, b.data, b.offset, b.majorStride,
-        0.0, rv.data, 0, rv.rows)
+      BLAS.getInstance.dgemm(transposeString(a), transposeString(b),
+          rv.rows, rv.cols, a.cols,
+          1.0, a.data, a.offset, a.majorStride,
+          b.data, b.offset, b.majorStride,
+          0.0, rv.data, 0, rv.rows)
       rv
     }
   }
@@ -826,7 +820,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double with DenseMatrixMul
     def apply(a : DenseMatrix[Double], b : DenseVector[Double]) = {
       require(a.cols == b.length, "Dimension mismatch!")
       val rv = DenseVector.zeros[Double](a.rows)
-      org.netlib.blas.Dgemv.dgemv(transposeString(a),
+      BLAS.getInstance().dgemv(transposeString(a),
         if(a.isTranspose) a.cols else a.rows, if(a.isTranspose) a.rows else a.cols,
         1.0, a.data, a.offset, a.majorStride,
              b.data, b.offset, b.stride,
@@ -862,13 +856,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double with DenseMatrixMul
       val newA = A.copy
       assert(!newA.isTranspose)
 
-      val info = if(useNativeLibraries) {
-        NativeBlasDeferrer.dgesv(
-          A.rows, X.cols,
-          newA.data, newA.offset, newA.majorStride,
-          piv, 0,
-          X.data, X.offset, X.majorStride)
-      } else {
+      val info = {
         val info = new intW(0)
         LAPACK.getInstance().dgesv(A.rows, X.cols, newA.data, newA.majorStride, piv, X.data, X.majorStride, info)
         info.`val`
@@ -962,7 +950,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double with DenseMatrixMul
 //          a.data
 //        }
         val rv = DenseMatrix.zeros[Double](a.length, b.cols)
-        Dgemm.dgemm("t", transposeString(b),
+        BLAS.getInstance().dgemm("t", transposeString(b),
           rv.rows, rv.cols, 1,
           1.0, a.data, a.offset, a.stride, b.data, b.offset, b.majorStride,
           0.0, rv.data, 0, rv.rows)
