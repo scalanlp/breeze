@@ -812,7 +812,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double with DenseMatrixMul
 
 
   private def transposeString(a: DenseMatrix[Double]): String = {
-    if (a.isTranspose) "t" else "n"
+    if (a.isTranspose) "T" else "N"
   }
 
   implicit object DenseMatrixDMulDenseVectorD
@@ -950,7 +950,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double with DenseMatrixMul
 //          a.data
 //        }
         val rv = DenseMatrix.zeros[Double](a.length, b.cols)
-        BLAS.getInstance().dgemm("t", transposeString(b),
+        BLAS.getInstance().dgemm("T", transposeString(b),
           rv.rows, rv.cols, 1,
           1.0, a.data, a.offset, a.stride, b.data, b.offset, b.majorStride,
           0.0, rv.data, 0, rv.rows)
