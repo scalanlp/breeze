@@ -61,8 +61,8 @@ object BreezeBuild extends Build {
   p.setProperty("log.level","WARN")
 
   val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
-  val netlib = "com.github.fommil.netlib" % "all" % "1.0"
-  val oldnetlib = "com.googlecode.netlib-java" % "netlib-java" % "0.9.3"
+  val netlib = "com.github.fommil.netlib" % "all" % "1.0" pomOnly()
+  val arpack = "net.sourceforge.f2j" % "arpack_combined_all" % "0.1"
   val liblinear = "de.bwaldvogel" % "liblinear" % "1.8"
   val opencsv = "net.sf.opencsv" % "opencsv" % "2.3"
   val logging = "com.typesafe" %% "scalalogging-log4j" % "1.0.1"
@@ -74,7 +74,7 @@ object BreezeBuild extends Build {
 
 
   val coreDeps = Seq(paranamer, opencsv, logging, log4j)
-  val commonDeps = Seq(paranamer, netlib, commonsMath, jtransforms, oldnetlib)
+  val commonDeps = Seq(paranamer, netlib, commonsMath, jtransforms, arpack)
   val vizDeps = Seq(
     "jfree" % "jcommon" % "1.0.16",
     "jfree" % "jfreechart" % "1.0.13",
