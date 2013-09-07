@@ -37,27 +37,6 @@ import scala.reflect.ClassTag
  */
 package object linalg extends LinearAlgebra {
 
-
-  def setupNativeBlas() = {
-    if(! _setupNativeBlas) {
-      _setupNativeBlas = true
-      // basically, if the keys aren't set already, set them
-      // to use the default native blas.
-      System.setProperty("com.github.fommil.netlib.BLAS",
-        System.getProperty("com.github.fommil.netlib.BLAS", "com.github.fommil.netlib.NativeRefBLAS"))
-
-      System.setProperty("com.github.fommil.netlib.LAPACK",
-        System.getProperty("com.github.fommil.netlib.LAPACK", "com.github.fommil.netlib.NativeRefLAPACK"))
-
-      System.setProperty("com.github.fommil.netlib.ARPACK",
-        System.getProperty("com.github.fommil.netlib.ARPACK", "com.github.fommil.netlib.NativeRefARPACK"))
-    }
-  }
-
-  private var _setupNativeBlas = false
-
-
-
   /**
    * Computes y += x * a, possibly doing less work than actually doing that operation
    */
@@ -442,7 +421,7 @@ package object linalg extends LinearAlgebra {
 package linalg {
 
 import math.Ring
-import com.github.fommil.netlib.LAPACK
+import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 
 /**
  * Basic linear algebraic operations.
@@ -498,7 +477,7 @@ trait LinearAlgebra {
     val worksize = Array.ofDim[Double](1)
     val info = new intW(0)
 
-    LAPACK.getInstance.dgeev(
+    lapack.dgeev(
       "N", "V", n,
       Array.empty[Double], scala.math.max(1,n),
       Array.empty[Double], Array.empty[Double],
@@ -518,7 +497,7 @@ trait LinearAlgebra {
 
     val A = DenseMatrix.zeros[Double](n, n)
     A := m
-      LAPACK.getInstance.dgeev(
+      lapack.dgeev(
         "N", "V", n,
         A.data, scala.math.max(1,n),
         Wr.data, Wi.data,
@@ -557,7 +536,7 @@ trait LinearAlgebra {
     val info = new intW(0)
     val cm = copy(mat)
 
-    LAPACK.getInstance.dgesdd(
+    lapack.dgesdd(
       "A", m, n,
       cm.data, scala.math.max(1,m),
       S.data, U.data, scala.math.max(1,m),
@@ -676,7 +655,7 @@ trait LinearAlgebra {
 
     val N = X.rows
     val info = new intW(0)
-      LAPACK.getInstance.dpotrf(
+      lapack.dpotrf(
         "L" /* lower triangular */,
         N /* number of rows */, A.data, scala.math.max(1, N) /* LDA */,
         info
@@ -704,7 +683,7 @@ trait LinearAlgebra {
   def qrp(A: DenseMatrix[Double]): (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Int], Array[Int]) = {
     val m = A.rows
     val n = A.cols
-    val lapack = LAPACK.getInstance()
+    val lapack = lapack()
 
     //Get optimal workspace size
     // we do this by sending -1 as lwork to the lapack function
@@ -770,7 +749,7 @@ trait LinearAlgebra {
   def qr(A: DenseMatrix[Double], skipQ : Boolean = false): (DenseMatrix[Double], DenseMatrix[Double]) = {
     val m = A.rows
     val n = A.cols
-    val lapack = LAPACK.getInstance()
+    val lapack = lapack()
 
     //Get optimal workspace size
     // we do this by sending -1 as lwork to the lapack function
@@ -847,7 +826,7 @@ trait LinearAlgebra {
     val lwork = scala.math.max(1, 3*N-1)
     val work  = Array.ofDim[Double](lwork)
     val info  = new intW(0)
-    LAPACK.getInstance.dsyev(
+    lapack.dsyev(
       if (rightEigenvectors) "V" else "N" /* eigenvalues N, eigenvalues & eigenvectors "V" */,
       "L" /* lower triangular */,
       N /* number of rows */, A.data, scala.math.max(1, N) /* LDA */,
@@ -888,7 +867,7 @@ trait LinearAlgebra {
     val Y    = DenseMatrix.tabulate[Double](M,N)(X(_,_))
     val ipiv = Array.ofDim[Int](scala.math.min(M,N))
     val info = new intW(0)
-    LAPACK.getInstance.dgetrf(
+    lapack.dgetrf(
       M /* rows */, N /* cols */,
       Y.data, scala.math.max(1,M) /* LDA */,
       ipiv /* pivot indices */,
@@ -939,7 +918,7 @@ trait LinearAlgebra {
     val lwork     = scala.math.max(1, N)
     val work      = Array.ofDim[Double](lwork)
     val info      = new intW(0)
-    LAPACK.getInstance.dgetri(
+    lapack.dgetri(
       N, m.data, scala.math.max(1, N) /* LDA */,
       ipiv,
       work /* workspace */, lwork /* workspace size */,
@@ -1001,7 +980,7 @@ trait LinearAlgebra {
     val (u, s, vt) = svd(m)
     val useTol = tol.getOrElse {
       // we called LAPACK for the SVD method, so this is the LAPACK definition of eps.
-      val eps: Double = 2.0 * LAPACK.getInstance.dlamch("e")
+      val eps: Double = 2.0 * lapack.dlamch("e")
       scala.math.max(m.cols, m.rows) * eps * s.max
     }
     s.data.count(_ > useTol)  // TODO: Use DenseVector[_].count() if/when that is implemented
