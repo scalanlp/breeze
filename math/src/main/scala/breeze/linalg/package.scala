@@ -23,6 +23,9 @@ import org.netlib.util.intW
 import storage.DefaultArrayValue
 import java.io.{FileWriter, File, FileReader, Reader}
 import scala.reflect.ClassTag
+import com.github.fommil.netlib.BLAS.{getInstance => blas}
+import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
+
 
 /**
  * This package contains everything relating to Vectors, Matrices, Tensors, etc.
@@ -683,7 +686,6 @@ trait LinearAlgebra {
   def qrp(A: DenseMatrix[Double]): (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Int], Array[Int]) = {
     val m = A.rows
     val n = A.cols
-    val lapack = lapack()
 
     //Get optimal workspace size
     // we do this by sending -1 as lwork to the lapack function
@@ -749,7 +751,6 @@ trait LinearAlgebra {
   def qr(A: DenseMatrix[Double], skipQ : Boolean = false): (DenseMatrix[Double], DenseMatrix[Double]) = {
     val m = A.rows
     val n = A.cols
-    val lapack = lapack()
 
     //Get optimal workspace size
     // we do this by sending -1 as lwork to the lapack function
