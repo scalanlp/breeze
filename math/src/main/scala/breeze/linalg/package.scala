@@ -19,10 +19,8 @@ import io.{CSVWriter, CSVReader}
 import linalg.operators._
 import breeze.linalg.support.{RangeSuffix, CanNorm, CanCopy}
 import math.Semiring
-import org.netlib.lapack.LAPACK
 import org.netlib.util.intW
 import storage.DefaultArrayValue
-import org.jblas.NativeBlas
 import java.io.{FileWriter, File, FileReader, Reader}
 import scala.reflect.ClassTag
 
@@ -39,57 +37,31 @@ import scala.reflect.ClassTag
  */
 package object linalg extends LinearAlgebra {
 
-  /**
-   * Returns true if we can use native libraries. You can disable it by writing
-   * breeze.linalg.useNativeLibraries to false
-   */
-  def useNativeLibraries = _useNativeLibraries
 
-  private var _useNativeLibraries = canLoadNativeBlas
+  def setupNativeBlas() = {
+    if(! _setupNativeBlas) {
+      _setupNativeBlas = true
+      // basically, if the keys aren't set already, set them
+      // to use the default native blas.
+      System.setProperty("com.github.fommil.netlib.BLAS",
+        System.getProperty("com.github.fommil.netlib.BLAS", "com.github.fommil.netlib.NativeRefBLAS"))
 
+      System.setProperty("com.github.fommil.netlib.LAPACK",
+        System.getProperty("com.github.fommil.netlib.LAPACK", "com.github.fommil.netlib.NativeRefLAPACK"))
 
-  /**
-   * Attempts to load the NativeBlas libraries. Returns false if we can't.
-   * @return
-   */
-  def canLoadNativeBlas: Boolean = {
-    try {
-      // this attempts to load the library, we'll get an exception if false
-      NativeBlas.dcopy(0, new Array(0), 0, 1, new Array(0), 0, 1)
-      true
-    } catch {
-      case x: UnsatisfiedLinkError =>
-        lastBlasError = x
-        if(System.getProperty("os.name").toLowerCase.contains("linux"))
-          System.err.println(
-            """NOTE: You probably got an error about an unsatisfied link error. Probably you are
-              |      running an old version of GLIBC. Your program will run, just more slowly.
-              |      Also, I can't suppress the prior message, so one more message won't hurt you.""".stripMargin('|'))
-        false
-      case x: Throwable => throw new RuntimeException("Couldn't load blas!", x); false
+      System.setProperty("com.github.fommil.netlib.ARPACK",
+        System.getProperty("com.github.fommil.netlib.ARPACK", "com.github.fommil.netlib.NativeRefARPACK"))
     }
   }
 
-  /**
-   * Disables or attempts to enable native libraries. Will throw a RuntimeException if you
-   * try to set the value to true and we can't load the libraries.
-   * @param v
-   */
-  def useNativeLibraries_=(v: Boolean) = {
-    if (v) {
-      if (!canLoadNativeBlas) throw new RuntimeException("Can't load NativeBlasLibraries", lastBlasError)
-    }
-    _useNativeLibraries = v
-  }
+  private var _setupNativeBlas = false
 
-  private var lastBlasError: Throwable = null
+
 
   /**
    * Computes y += x * a, possibly doing less work than actually doing that operation
    */
   def axpy[A, X, Y](a: A, x: X, y: Y)(implicit axpy: CanAxpy[A, X, Y]) { axpy(a,x,y) }
-
-
 
   /**
    * returns a vector along the diagonal of v.
@@ -470,7 +442,7 @@ package object linalg extends LinearAlgebra {
 package linalg {
 
 import math.Ring
-import support.NativeBlasDeferrer
+import com.github.fommil.netlib.LAPACK
 
 /**
  * Basic linear algebraic operations.
@@ -546,15 +518,6 @@ trait LinearAlgebra {
 
     val A = DenseMatrix.zeros[Double](n, n)
     A := m
-    if (useNativeLibraries) {
-      val i = NativeBlasDeferrer.dgeev(
-        'N', 'V', n,
-        A.data, 0, scala.math.max(1,n),
-        Wr.data, 0, Wi.data, 0,
-        Array.empty[Double], 0, scala.math.max(1,n),
-        Vr.data, 0, scala.math.max(1,n))
-        info.`val` = i
-    } else {
       LAPACK.getInstance.dgeev(
         "N", "V", n,
         A.data, scala.math.max(1,n),
@@ -562,7 +525,6 @@ trait LinearAlgebra {
         Array.empty[Double], scala.math.max(1,n),
         Vr.data, scala.math.max(1,n),
         work, work.length, info)
-    }
 
     if (info.`val` > 0)
       throw new NotConvergedException(NotConvergedException.Iterations)
@@ -595,21 +557,12 @@ trait LinearAlgebra {
     val info = new intW(0)
     val cm = copy(mat)
 
-    if (useNativeLibraries) {
-      val i = NativeBlasDeferrer.dgesvd(
-        'A', 'A', m, n,
-        cm.data, 0, scala.math.max(1,m),
-        S.data, 0, U.data, 0, scala.math.max(1, m),
-        Vt.data, 0, scala.math.max(1,n))
-        info.`val` = i
-    } else {
-      LAPACK.getInstance.dgesdd(
-        "A", m, n,
-        cm.data, scala.math.max(1,m),
-        S.data, U.data, scala.math.max(1,m),
-        Vt.data, scala.math.max(1,n),
-        work,work.length,iwork, info)
-    }
+    LAPACK.getInstance.dgesdd(
+      "A", m, n,
+      cm.data, scala.math.max(1,m),
+      S.data, U.data, scala.math.max(1,m),
+      Vt.data, scala.math.max(1,n),
+      work,work.length,iwork, info)
 
     if (info.`val` > 0)
       throw new NotConvergedException(NotConvergedException.Iterations)
@@ -723,17 +676,11 @@ trait LinearAlgebra {
 
     val N = X.rows
     val info = new intW(0)
-    if (useNativeLibraries) {
-      val i = NativeBlasDeferrer.dpotrf(
-        'L', N, A.data, 0, scala.math.max(1,N))
-        info.`val` = i
-    } else {
       LAPACK.getInstance.dpotrf(
         "L" /* lower triangular */,
         N /* number of rows */, A.data, scala.math.max(1, N) /* LDA */,
         info
       )
-    }
     // A value of info.`val` < 0 would tell us that the i-th argument
     // of the call to dpotrf was erroneous (where i == |info.`val`|).
     assert(info.`val` >= 0)
@@ -900,22 +847,14 @@ trait LinearAlgebra {
     val lwork = scala.math.max(1, 3*N-1)
     val work  = Array.ofDim[Double](lwork)
     val info  = new intW(0)
-    if(useNativeLibraries) {
-      val i = NativeBlasDeferrer.dsyev(if(rightEigenvectors) 'V' else 'N', 'L',
-        N, A.data, 0, scala.math.max(1, N),
-        evs.data, 0)
-
-      info.`val` = i
-    } else {
-      LAPACK.getInstance.dsyev(
-        if (rightEigenvectors) "V" else "N" /* eigenvalues N, eigenvalues & eigenvectors "V" */,
-        "L" /* lower triangular */,
-        N /* number of rows */, A.data, scala.math.max(1, N) /* LDA */,
-        evs.data,
-        work /* workspace */, lwork /* workspace size */,
-        info
-      )
-    }
+    LAPACK.getInstance.dsyev(
+      if (rightEigenvectors) "V" else "N" /* eigenvalues N, eigenvalues & eigenvectors "V" */,
+      "L" /* lower triangular */,
+      N /* number of rows */, A.data, scala.math.max(1, N) /* LDA */,
+      evs.data,
+      work /* workspace */, lwork /* workspace size */,
+      info
+    )
     // A value of info.`val` < 0 would tell us that the i-th argument
     // of the call to dsyev was erroneous (where i == |info.`val`|).
     assert(info.`val` >= 0)
@@ -949,17 +888,12 @@ trait LinearAlgebra {
     val Y    = DenseMatrix.tabulate[Double](M,N)(X(_,_))
     val ipiv = Array.ofDim[Int](scala.math.min(M,N))
     val info = new intW(0)
-    if(useNativeLibraries) {
-      val i = NativeBlasDeferrer.dgetrf(M, N, Y.data, 0, scala.math.max(1, M), ipiv, 0)
-      info.`val` = i
-    } else {
-      LAPACK.getInstance.dgetrf(
-        M /* rows */, N /* cols */,
-        Y.data, scala.math.max(1,M) /* LDA */,
-        ipiv /* pivot indices */,
-        info
-      )
-    }
+    LAPACK.getInstance.dgetrf(
+      M /* rows */, N /* cols */,
+      Y.data, scala.math.max(1,M) /* LDA */,
+      ipiv /* pivot indices */,
+      info
+    )
     // A value of info.`val` < 0 would tell us that the i-th argument
     // of the call to dsyev was erroneous (where i == |info.`val`|).
     assert(info.`val` >= 0)

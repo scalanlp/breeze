@@ -17,7 +17,6 @@ package breeze.linalg
 
 import scala.{specialized=>spec}
 import breeze.storage.{DefaultArrayValue, Storage}
-import org.netlib.blas.Dgemm
 import breeze.util.Terminal
 import support.LiteralRow
 import util.Random

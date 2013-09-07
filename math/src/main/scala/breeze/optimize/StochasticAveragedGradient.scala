@@ -20,7 +20,6 @@ class StochasticAveragedGradient[T](maxIter: Int = -1, initialStepSize: Double =
                      nextPos: Int)
 
   protected def initialHistory(f: BatchDiffFunction[T], init: T): History = {
-    println("...")
     val zero = zeros(init)
     History(initialStepSize, f.fullRange, zeros(init), IndexedSeq.fill(f.fullRange.length)(zero), 0)
   }
@@ -29,7 +28,7 @@ class StochasticAveragedGradient[T](maxIter: Int = -1, initialStepSize: Double =
     state.history.currentSum* (-1.0/f.fullRange.size)
   }
 
-  protected def determineStepSize(state: State, f: BatchDiffFunction[T], direction: T): Double = state.history.stepSize / state.history.range.length
+  protected def determineStepSize(state: State, f: BatchDiffFunction[T], direction: T): Double = state.history.stepSize
 
 
   override protected def calculateObjective(f: BatchDiffFunction[T], x: T, history: History): (Double, T) = {
@@ -62,7 +61,6 @@ class StochasticAveragedGradient[T](maxIter: Int = -1, initialStepSize: Double =
     } else {
       stepSize
     }
-    println(newStepSize)
     d += newGrad
     History(newStepSize, range, d, previousGradients.updated(nextPos, newGrad), if(oldState.iter < previousGradients.length - 1) oldState.iter + 1 else Rand.choose(range).draw())
   }

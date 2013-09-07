@@ -1,6 +1,8 @@
 package breeze.optimize
 
 import breeze.stats.distributions.Rand
+import scala.collection.immutable
+
 /**
 * A diff function that supports subsets of the data. By default it evaluates on all the data
 */
@@ -45,6 +47,25 @@ trait BatchDiffFunction[T] extends DiffFunction[T] with ((T,IndexedSeq[Int])=>Do
 
     def calculate(x: T) = outer.calculate(x, nextBatch)
   }
+
+  def groupItems(groupSize: Int):BatchDiffFunction[T] = new BatchDiffFunction[T] {
+    val numGroups = (outer.fullRange.size + groupSize - 1)/ groupSize
+    val groups: Array[immutable.IndexedSeq[Int]] =  Array.tabulate(numGroups)(i => (i until outer.fullRange.length by numGroups).map(outer.fullRange))
+    /**
+     * Calculates the value and gradient of the function on a subset of the data
+     */
+    def calculate(x: T, batch: IndexedSeq[Int]): (Double, T) = outer.calculate(x, batch.flatMap(groups))
+
+    override def gradientAt(x: T, batch: IndexedSeq[Int]): T = outer.gradientAt(x, batch.flatMap(groups))
+
+    override def valueAt(x: T, batch: IndexedSeq[Int]): Double = outer.valueAt(x, batch.flatMap(groups))
+
+    /**
+     * The full size of the data
+     */
+    def fullRange: IndexedSeq[Int] = (0 until groups.length)
+  }
+
 }
 
 object BatchDiffFunction {

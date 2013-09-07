@@ -42,7 +42,7 @@ object AdaptiveGradientDescent {
     override def updateHistory(newX: T, newGrad: T, newValue: Double, f: StochasticDiffFunction[T], oldState: State) = {
       val oldHistory = oldState.history
       val newG = (oldState.grad :* oldState.grad)
-      val maxAge = 300.0
+      val maxAge = 1000.0
       if(oldState.iter > maxAge) {
         newG *= 1/maxAge
         axpy((maxAge - 1)/maxAge, oldHistory.sumOfSquaredGradients, newG)
