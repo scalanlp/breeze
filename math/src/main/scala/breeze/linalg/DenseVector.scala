@@ -23,6 +23,9 @@ import breeze.math.{Complex, TensorSpace, Semiring, Ring}
 import breeze.util.{ArrayUtil, Isomorphism}
 import breeze.storage.DefaultArrayValue
 import scala.reflect.ClassTag
+import com.github.fommil.netlib.BLAS.{getInstance => blas}
+import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
+
 
 /**
  * A DenseVector is the "obvious" implementation of a Vector, with one twist.
@@ -453,7 +456,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     new BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpAdd] {
       def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
         require(a.length == b.length, "Vectors must have same length")
-        org.netlib.blas.Daxpy.daxpy(
+        blas.daxpy(
           a.length, 1.0, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
       Vector.canAddInto_V_V_Double.register(this)
@@ -464,7 +467,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     new CanAxpy[Double, DenseVector[Double], DenseVector[Double]] {
       def apply(a: Double, x: DenseVector[Double], y: DenseVector[Double]) {
         require(x.length == y.length, "Vectors must have same length")
-        org.netlib.blas.Daxpy.daxpy(
+        blas.daxpy(
           x.length, a, x.data, x.offset, x.stride, y.data, y.offset, y.stride)
       }
     }
@@ -479,7 +482,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     new BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSub] {
       def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
         require(a.length == b.length, "Vectors must have same length")
-        org.netlib.blas.Daxpy.daxpy(
+        blas.daxpy(
           a.length, -1.0, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
       Vector.canSubInto_V_V_Double.register(this)
@@ -495,7 +498,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     new BinaryOp[DenseVector[Double], DenseVector[Double], OpMulInner, Double] {
       def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
         require(a.length == b.length, "Vectors must have same length")
-        org.netlib.blas.Ddot.ddot(
+        blas.ddot(
           a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
       Vector.canDotProductV_Double.register(this)
@@ -506,7 +509,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   implicit val canScaleIntoD: BinaryUpdateOp[DenseVector[Double], Double, OpMulScalar] = {
     new BinaryUpdateOp[DenseVector[Double], Double, OpMulScalar] {
       def apply(a: DenseVector[Double], b: Double) = {
-        org.netlib.blas.Dscal.dscal(
+        blas.dscal(
           a.length, b, a.data, a.offset, a.stride)
       }
       Vector.canMulScalarInto_V_S_Double.register(this)
@@ -518,7 +521,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
 
   implicit val canSetD:BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSet] = new BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSet] {
     def apply(a: DenseVector[Double], b: DenseVector[Double]) {
-      org.netlib.blas.Dcopy.dcopy(
+      blas.dcopy(
         a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
     }
     Vector.canSetInto_V_V_Double.register(this)
@@ -645,7 +648,7 @@ trait DenseVector_SpecialOps extends DenseVectorOps_Double { this: DenseVector.t
     new BinaryOp[DenseVector[Float], DenseVector[Float], breeze.linalg.operators.OpMulInner, Float] {
       def apply(a: DenseVector[Float], b: DenseVector[Float]) = {
         require(b.length == a.length, "Vectors must be the same length!")
-        org.netlib.blas.Sdot.sdot(
+        blas.sdot(
           a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
       Vector.canDotProductV_Float.register(this)

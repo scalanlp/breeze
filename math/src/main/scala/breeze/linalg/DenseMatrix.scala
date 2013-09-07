@@ -15,7 +15,8 @@ package breeze.linalg
  limitations under the License.
 */
 import operators._
-import com.github.fommil.netlib.{BLAS, LAPACK}
+import com.github.fommil.netlib.BLAS.{getInstance => blas}
+import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
 import breeze.util.ArrayUtil
 import support._
 import breeze.generic._
@@ -801,7 +802,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double with DenseMatrixMul
     def apply(a : DenseMatrix[Double], b : DenseMatrix[Double]) = {
       val rv = DenseMatrix.zeros[Double](a.rows, b.cols)
       require(a.cols == b.rows, "Dimension mismatch!")
-      BLAS.getInstance.dgemm(transposeString(a), transposeString(b),
+      blas.dgemm(transposeString(a), transposeString(b),
           rv.rows, rv.cols, a.cols,
           1.0, a.data, a.offset, a.majorStride,
           b.data, b.offset, b.majorStride,
@@ -820,7 +821,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double with DenseMatrixMul
     def apply(a : DenseMatrix[Double], b : DenseVector[Double]) = {
       require(a.cols == b.length, "Dimension mismatch!")
       val rv = DenseVector.zeros[Double](a.rows)
-      BLAS.getInstance().dgemv(transposeString(a),
+      blas.dgemv(transposeString(a),
         if(a.isTranspose) a.cols else a.rows, if(a.isTranspose) a.rows else a.cols,
         1.0, a.data, a.offset, a.majorStride,
              b.data, b.offset, b.stride,
@@ -858,7 +859,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double with DenseMatrixMul
 
       val info = {
         val info = new intW(0)
-        LAPACK.getInstance().dgesv(A.rows, X.cols, newA.data, newA.majorStride, piv, X.data, X.majorStride, info)
+        lapack.dgesv(A.rows, X.cols, newA.data, newA.majorStride, piv, X.data, X.majorStride, info)
         info.`val`
       }
 
@@ -891,7 +892,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double with DenseMatrixMul
       // query optimal workspace
       val queryWork = new Array[Double](1)
       val queryInfo = new intW(0)
-      LAPACK.getInstance().dgels(
+      lapack.dgels(
         if (!transpose) "N" else "T",
         A.rows, A.cols, nrhs,
         newData, A.majorStride,
@@ -911,7 +912,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double with DenseMatrixMul
 
       // compute factorization
       val info = new intW(0)
-      LAPACK.getInstance().dgels(
+      lapack.dgels(
         if (!transpose) "N" else "T",
         A.rows, A.cols, nrhs,
         newData, A.majorStride,
@@ -950,7 +951,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps_Double with DenseMatrixMul
 //          a.data
 //        }
         val rv = DenseMatrix.zeros[Double](a.length, b.cols)
-        BLAS.getInstance().dgemm("T", transposeString(b),
+        blas.dgemm("T", transposeString(b),
           rv.rows, rv.cols, 1,
           1.0, a.data, a.offset, a.stride, b.data, b.offset, b.majorStride,
           0.0, rv.data, 0, rv.rows)
