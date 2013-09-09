@@ -21,26 +21,41 @@ object expand {
     import c.mirror.universe._
     annottees.head.tree match {
       case tree@DefDef(mods, name, targs, vargs, tpt, rhs) =>
-        val typesToUnrollAs = targs.map{ td =>
+
+        val (typesToExpand, typesLeftAbstract) = targs.partition(shouldExpand(c)(_))
+        println(typesToExpand, typesLeftAbstract)
+
+        val typesToUnrollAs = typesToExpand.map{ td =>
           (td.name:Name) -> typeMappings(c)(td)
         }.toMap
+
       val configurations = makeConfigurations(c)(typesToUnrollAs)
       println(typesToUnrollAs)
-        val fixed = configurations.map{ typeMap =>
-          val inted = new Transformer() {
-            override def transform(tree: Tree): Tree = tree match {
-              case Ident(x) if  typeMap.contains(x) =>
-                TypeTree(typeMap(x))
-              case _ =>
-                super.transform(tree)
-            }
-          } transform rhs
-          inted
+        val newDefs = configurations.map{ typeMap =>
+          val grounded = substitute(c)(typeMap, rhs)
+          val newtpt = substitute(c)(typeMap, tpt)
+          val newName = newTermName(name.toString + "_"+typeMap.map{ case (k,v) => k.toString +"_"+ v.toString}.mkString("_"))
+          DefDef(mods, newName, typesLeftAbstract, vargs, newtpt, grounded)
         }
-        println(fixed)
-        c.Expr(Block(q"def $name(...$vargs) = ${fixed.head}"))
+        println(newDefs)
+        val ret = c.Expr(Block(newDefs.toList, Literal(Constant(()))))
+      println(ret)
+        ret
       case _ => ???
     }
+  }
+
+
+  def substitute(c: Context)(typeMap: Map[c.Name, c.Type], rhs: c.mirror.universe.Tree): c.mirror.universe.Tree = {
+    import c.mirror.universe._
+    new Transformer() {
+      override def transform(tree: Tree): Tree = tree match {
+        case Ident(x) if typeMap.contains(x) =>
+          TypeTree(typeMap(x))
+        case _ =>
+          super.transform(tree)
+      }
+    } transform rhs
   }
 
   /**
@@ -63,6 +78,14 @@ object expand {
     types.foldLeft(Seq(Map.empty[c.Name, c.Type])){ (acc, pair) =>
       val (nme, types) = pair
       for(t <- types; map <- acc) yield map + (nme -> t)
+    }
+  }
+
+  private def shouldExpand(c: Context)(td: c.mirror.universe.TypeDef):Boolean = {
+    import c.mirror.universe._
+    td.mods.annotations.exists{
+      case q"new ${Ident(nme)}(...$args)" if (nme:Name).decoded == "expandArgs" => true
+      case _ => false
     }
   }
 }
