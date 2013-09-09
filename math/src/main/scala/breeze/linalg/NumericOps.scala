@@ -216,9 +216,11 @@ trait NumericOps[+This] {
 
 object NumericOps {
 
+  /*
   implicit class ScalarsAreNumericOps[@specialized(Int, Double, Long, Float) S](x: S) extends NumericOps[S] {
     def repr: S = x
   }
+  */
 
 
   /**

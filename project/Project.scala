@@ -20,6 +20,7 @@ object BuildSettings {
       Resolver.sonatypeRepo("releases"),
       Resolver.typesafeRepo("releases")
     ),
+    addCompilerPlugin("org.scala-lang.plugins" % "macro-paradise" % "2.0.0-SNAPSHOT" cross CrossVersion.full),
     crossScalaVersions := Seq("2.10.2"),
   publishMavenStyle := true,
   publishTo <<= version { (v: String) =>
