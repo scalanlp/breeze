@@ -219,7 +219,7 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
 
 object DenseVector extends VectorConstructors[DenseVector] with DenseVector_GenericOps
                       with DenseVectorOps
-                      with DenseVectorOps_Complex
+//                      with DenseVectorOps_Complex
                       with DenseVectorOps_SparseVector_Double
                       with DenseVectorOps_SparseVector_Float
                       with DenseVectorOps_SparseVector_Int
@@ -628,6 +628,16 @@ trait DenseVectorOps {
     }
   }
 
+  def pureFromUpdate_Complex[Other,Op<:OpType](op: BinaryUpdateOp[DenseVector[Complex], Other, Op])(implicit copy: CanCopy[DenseVector[Complex]]):BinaryOp[DenseVector[Complex], Other, Op, DenseVector[Complex]] = {
+    new BinaryOp[DenseVector[Complex], Other, Op, DenseVector[Complex]] {
+      override def apply(a : DenseVector[Complex], b : Other) = {
+        val c = copy(a)
+        op(c, b)
+        c
+      }
+    }
+  }
+
   def pureFromUpdate_Float[Other,Op<:OpType](op: BinaryUpdateOp[DenseVector[Float], Other, Op])(implicit copy: CanCopy[DenseVector[Float]]):BinaryOp[DenseVector[Float], Other, Op, DenseVector[Float]] = {
     new BinaryOp[DenseVector[Float], Other, Op, DenseVector[Float]] {
       override def apply(a : DenseVector[Float], b : Other) = {
@@ -649,7 +659,8 @@ trait DenseVectorOps {
   }
 
   @expand
-  implicit def dv_dv_Op[@expandArgs(Int, Double, Float, Long) T,
+  @expand.exclude(Complex, OpMod)
+  implicit def dv_dv_Op[@expandArgs(Int, Double, Float, Long, Complex) T,
   @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod) Op <: OpType]
   (implicit @sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _})
   op: BinaryOp[T, T, Op, T]):BinaryOp[DenseVector[T], DenseVector[T], Op, DenseVector[T]] = new BinaryOp[DenseVector[T], DenseVector[T], Op, DenseVector[T]] {
@@ -673,7 +684,8 @@ trait DenseVectorOps {
   }
 
   @expand
-  implicit def dv_v_Op[@expandArgs(Int, Double, Float, Long) T,
+  @expand.exclude(Complex, OpMod)
+  implicit def dv_v_Op[@expandArgs(Int, Double, Float, Long, Complex) T,
   @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod) Op <: OpType]
   (implicit @sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _})
   op: BinaryOp[T, T, Op, T]):BinaryOp[DenseVector[T], Vector[T], Op, DenseVector[T]] = new BinaryOp[DenseVector[T], Vector[T], Op, DenseVector[T]] {
@@ -694,7 +706,8 @@ trait DenseVectorOps {
   }
 
   @expand
-  implicit def dv_s_Op[@expandArgs(Int, Double, Float, Long) T,
+  @expand.exclude(Complex, OpMod)
+  implicit def dv_s_Op[@expandArgs(Int, Double, Float, Long, Complex) T,
   @expandArgs(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod) Op <: OpType]
   (implicit @sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _})
   op: BinaryOp[T, T, Op, T]):BinaryOp[DenseVector[T], T, Op, DenseVector[T]] = new BinaryOp[DenseVector[T], T, Op, DenseVector[T]] {
@@ -717,7 +730,8 @@ trait DenseVectorOps {
 
 
   @expand
-  implicit def dv_dv_UpdateOp[@expandArgs(Int, Double, Float, Long) T,
+  @expand.exclude(Complex, OpMod)
+  implicit def dv_dv_UpdateOp[@expandArgs(Int, Double, Float, Long, Complex) T,
   @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod) Op <: OpType]
   (implicit @sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _})
   op: BinaryOp[T, T, Op, T]):BinaryUpdateOp[DenseVector[T], DenseVector[T], Op] = new BinaryUpdateOp[DenseVector[T], DenseVector[T], Op] {
@@ -738,7 +752,8 @@ trait DenseVectorOps {
   }
 
   @expand
-  implicit def dv_s_UpdateOp[@expandArgs(Int, Double, Float, Long) T,
+  @expand.exclude(Complex, OpMod)
+  implicit def dv_s_UpdateOp[@expandArgs(Int, Double, Float, Long, Complex) T,
   @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod) Op <: OpType]
   (implicit @sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _})
   op: BinaryOp[T, T, Op, T]):BinaryUpdateOp[DenseVector[T], T, Op] = new BinaryUpdateOp[DenseVector[T], T, Op] {
@@ -757,8 +772,8 @@ trait DenseVectorOps {
 
   // OpPow is weird
   @expand
-  implicit def dv_dv_UpdateOp_Pow[@expandArgs(Int, Double, Float) T]
-  (implicit @sequence[T]({IntMath.ipow(_, _)},  {math.pow(_, _)}, {math.pow(_, _).toFloat}) op: BinaryOp[T, T, OpPow, T]):BinaryUpdateOp[DenseVector[T], DenseVector[T], OpPow] = {
+  implicit def dv_dv_UpdateOp_Pow[@expandArgs(Int, Double, Float, Complex) T]
+  (implicit @sequence[T]({IntMath.ipow(_, _)},  {math.pow(_, _)}, {math.pow(_, _).toFloat}, {_ pow _}) op: BinaryOp[T, T, OpPow, T]):BinaryUpdateOp[DenseVector[T], DenseVector[T], OpPow] = {
     new BinaryUpdateOp[DenseVector[T], DenseVector[T], OpPow] {
       def apply(a: DenseVector[T], b: DenseVector[T]):Unit = {
         val ad = a.data
@@ -779,8 +794,8 @@ trait DenseVectorOps {
 
 
   @expand
-  implicit def dv_s_UpdateOp_Pow[@expandArgs(Int, Double, Float) T]
-  (implicit @sequence[T]({IntMath.ipow(_, _)},  {math.pow(_, _)}, {math.pow(_, _).toFloat}) op: BinaryOp[T, T, OpPow, T]):BinaryUpdateOp[DenseVector[T], T, OpPow] = {
+  implicit def dv_s_UpdateOp_Pow[@expandArgs(Int, Double, Float, Complex) T]
+  (implicit @sequence[T]({IntMath.ipow(_, _)},  {math.pow(_, _)}, {math.pow(_, _).toFloat}, {_ pow _}) op: BinaryOp[T, T, OpPow, T]):BinaryUpdateOp[DenseVector[T], T, OpPow] = {
     new BinaryUpdateOp[DenseVector[T], T, OpPow] {
       def apply(a: DenseVector[T], b: T):Unit = {
         val ad = a.data
@@ -798,8 +813,8 @@ trait DenseVectorOps {
 
 
   @expand
-  implicit def dv_dv_Op_Pow[@expandArgs(Int, Double, Float) T]
-  (implicit @sequence[T]({IntMath.ipow(_, _)},  {math.pow(_, _)}, {math.pow(_, _).toFloat}) op: BinaryOp[T, T, OpPow, T]):BinaryOp[DenseVector[T], DenseVector[T], OpPow, DenseVector[T]] = {
+  implicit def dv_dv_Op_Pow[@expandArgs(Int, Double, Float, Complex) T]
+  (implicit @sequence[T]({IntMath.ipow(_, _)},  {math.pow(_, _)}, {math.pow(_, _).toFloat}, {_ pow _}) op: BinaryOp[T, T, OpPow, T]):BinaryOp[DenseVector[T], DenseVector[T], OpPow, DenseVector[T]] = {
     new BinaryOp[DenseVector[T], DenseVector[T], OpPow, DenseVector[T]] {
       def apply(a: DenseVector[T], b: DenseVector[T]): DenseVector[T] = {
         val ad = a.data
@@ -824,8 +839,8 @@ trait DenseVectorOps {
 
 
   @expand
-  implicit def dv_s_Op_Pow[@expandArgs(Int, Double, Float) T]
-  (implicit @sequence[T]({IntMath.ipow(_, _)},  {math.pow(_, _)}, {math.pow(_, _).toFloat}) op: BinaryOp[T, T, OpPow, T]):BinaryOp[DenseVector[T], T, OpPow, DenseVector[T]] = {
+  implicit def dv_s_Op_Pow[@expandArgs(Int, Double, Float, Complex) T]
+  (implicit @sequence[T]({IntMath.ipow(_, _)},  {math.pow(_, _)}, {math.pow(_, _).toFloat}, {_ pow _}) op: BinaryOp[T, T, OpPow, T]):BinaryOp[DenseVector[T], T, OpPow, DenseVector[T]] = {
     new BinaryOp[DenseVector[T], T, OpPow, DenseVector[T]] {
       def apply(a: DenseVector[T], b: T): DenseVector[T] = {
         val ad = a.data

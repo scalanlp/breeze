@@ -19,6 +19,7 @@ class sequence[T](args: Any*) extends Annotation with StaticAnnotation
 
 object expand {
 
+  class exclude(args: Any*) extends Annotation with StaticAnnotation
 
 
   def expandImpl(c: Context)(annottees: c.Expr[Any]*):c.Expr[Any] = {
@@ -28,6 +29,8 @@ object expand {
 
         val (typesToExpand, typesLeftAbstract) = targs.partition(shouldExpand(c)(_))
 
+        val exclusions = getExclusions(c)(mods, targs.map(_.name))
+
         val typesToUnrollAs = typesToExpand.map{ td =>
           (td.name:Name) -> typeMappings(c)(td)
         }.toMap
@@ -36,14 +39,15 @@ object expand {
 
         val valsToExpand2 = valsToExpand.flatten
 
-        val configurations = makeTypeMaps(c)(typesToUnrollAs)
+
+        val configurations = makeTypeMaps(c)(typesToUnrollAs).filterNot(exclusions.toSet)
         val valExpansions = valsToExpand2.map{v => v.name -> solveSequence(c)(v, typesToUnrollAs)}.asInstanceOf[List[(c.Name, (c.Name, Map[c.Type, c.Tree]))]].toMap
 
         val newDefs = configurations.map{ typeMap =>
           val grounded = substitute(c)(typeMap, valExpansions, rhs)
           val newvargs = valsToLeave.filterNot(_.isEmpty).map(_.map(substitute(c)(typeMap, valExpansions, _).asInstanceOf[ValDef]))
           val newtpt = substitute(c)(typeMap, valExpansions, tpt)
-          val newName = newTermName(name.toString + "_"+typeMap.map{ case (k,v) => k.toString +"_"+ v.toString.reverse.takeWhile(_ != '.').reverse}.mkString("_"))
+          val newName = newTermName(mkName(c)(name, typeMap))
           DefDef(mods, newName, typesLeftAbstract, newvargs, newtpt, grounded)
         }
         val ret = c.Expr(Block(newDefs.toList, Literal(Constant(()))))
@@ -52,6 +56,12 @@ object expand {
     }
   }
 
+
+  private def mkName(c: Context)(name: c.Name, typeMap: Map[c.Name, c.Type]): String = {
+    name.toString + "_" + typeMap.map {
+      case (k, v) => k.toString + "_" + v.toString.reverse.takeWhile(_ != '.').reverse
+    }.mkString("_")
+  }
 
   def substitute(c: Context)(typeMap: Map[c.Name, c.Type], valExpansions: Map[c.Name, (c.Name, Map[c.Type, c.Tree])], rhs: c.mirror.universe.Tree): c.mirror.universe.Tree = {
     import c.mirror.universe._
@@ -120,6 +130,15 @@ object expand {
       val (nme, types) = pair
       for(t <- types; map <- acc) yield map + (nme -> t)
     }
+  }
+
+  private def getExclusions(c: Context)(mods: c.Modifiers, targs: Seq[c.Name]):Seq[Map[c.Name, c.Type]] = {
+    import c.mirror.universe._
+    mods.annotations.collect {
+        case q"new expand.exclude(...$args)" =>
+          args.map(aa => (targs zip aa.map(c.typeCheck(_)).map(_.symbol.asModule.companionSymbol.asType.toType)).toMap)
+        case x => println("..." + showRaw(x)); Seq.empty
+    }.flatten.toSeq
   }
 
   private def shouldExpand(c: Context)(td: c.mirror.universe.TypeDef):Boolean = {
