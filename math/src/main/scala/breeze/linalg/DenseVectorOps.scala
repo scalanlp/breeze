@@ -7,15 +7,7 @@ import breeze.numerics._
 /** This is an auto-generated trait providing operators for DenseVector. */
 trait DenseVectorOps_Double extends DenseVectorOps_Double_Generic { this: DenseVector.type =>
 
-       def pureFromUpdate_Double[Other,Op<:OpType](op: BinaryUpdateOp[DenseVector[Double], Other, Op])(implicit copy: CanCopy[DenseVector[Double]]):BinaryOp[DenseVector[Double], Other, Op, DenseVector[Double]] = {
-         new BinaryOp[DenseVector[Double], Other, Op, DenseVector[Double]] {
-           override def apply(a : DenseVector[Double], b : Other) = {
-             val c = copy(a)
-             op(c, b)
-             c
-           }
-         }
-       }
+
 
   class canAddInto_DV_S_Double private[linalg] () extends BinaryUpdateOp[DenseVector[Double], Double, breeze.linalg.operators.OpAdd] {
     def apply(a: DenseVector[Double], b: Double) {

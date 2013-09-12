@@ -27,22 +27,18 @@ object expand {
       case tree@DefDef(mods, name, targs, vargs, tpt, rhs) =>
 
         val (typesToExpand, typesLeftAbstract) = targs.partition(shouldExpand(c)(_))
-        println(typesToExpand, typesLeftAbstract)
 
         val typesToUnrollAs = typesToExpand.map{ td =>
           (td.name:Name) -> typeMappings(c)(td)
         }.toMap
 
         val (valsToExpand, valsToLeave) = vargs.map(_.partition(shouldExpandVarg(c)(_))).unzip
-        println(valsToExpand, valsToLeave)
 
         val valsToExpand2 = valsToExpand.flatten
 
         val configurations = makeTypeMaps(c)(typesToUnrollAs)
         val valExpansions = valsToExpand2.map{v => v.name -> solveSequence(c)(v, typesToUnrollAs)}.asInstanceOf[List[(c.Name, (c.Name, Map[c.Type, c.Tree]))]].toMap
 
-        println(typesToUnrollAs)
-        println(valExpansions)
         val newDefs = configurations.map{ typeMap =>
           val grounded = substitute(c)(typeMap, valExpansions, rhs)
           val newvargs = valsToLeave.filterNot(_.isEmpty).map(_.map(substitute(c)(typeMap, valExpansions, _).asInstanceOf[ValDef]))
@@ -50,9 +46,7 @@ object expand {
           val newName = newTermName(name.toString + "_"+typeMap.map{ case (k,v) => k.toString +"_"+ v.toString.reverse.takeWhile(_ != '.').reverse}.mkString("_"))
           DefDef(mods, newName, typesLeftAbstract, newvargs, newtpt, grounded)
         }
-//        println(newDefs)
         val ret = c.Expr(Block(newDefs.toList, Literal(Constant(()))))
-        println(ret)
         ret
       case _ => ???
     }
