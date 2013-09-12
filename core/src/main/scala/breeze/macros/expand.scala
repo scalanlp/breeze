@@ -97,7 +97,7 @@ object expand {
 
   private def mkName(c: Context)(name: c.Name, typeMap: Map[c.Name, c.Type]): String = {
     name.toString + "_" + typeMap.map {
-      case (k, v) => k.toString + "_" + v.toString.reverse.takeWhile(_ != '.').reverse
+      case (k, v) => v.toString.reverse.takeWhile(_ != '.').reverse
     }.mkString("_")
   }
 

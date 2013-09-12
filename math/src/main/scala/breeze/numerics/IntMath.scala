@@ -43,4 +43,27 @@ object IntMath {
       result
     }
   }
+
+  /**
+   * Computes base to the exp'th power for Longs by repeated squaring.
+   * @param base
+   * @param exp
+   * @return
+   */
+  def ipow(base: Long, exp: Long):Long = {
+    var b = base
+    if(exp < 0 && base != 1) 0
+    else {
+      var e = exp
+      var result: Long = 1
+      while (e != 0) {
+        if ( (e & 1) != 0)
+          result *= b
+        e >>= 1
+        b *= b
+      }
+
+      result
+    }
+  }
 }
