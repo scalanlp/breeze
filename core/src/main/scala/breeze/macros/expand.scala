@@ -5,9 +5,47 @@ import scala.language.experimental.macros
 import scala.annotation.{Annotation, StaticAnnotation}
 
 /**
- * TODO
+ * expand is a macro annotation that is kind of like @specialized, but it's more of a templating mechanism.
+ * It is pretty... alpha in that the functionality is basically there, but it is now in the least bit battle tested.
+ * Don't ask much of it, and it will do fine, ask a lot, and well...
  *
- * @author dlwh
+ * Basically, expand takes a def with type arguments whose types are annotated with [[breeze.macros.expandArgs]]
+ * and generates the cross product of all combinations. For example:
+ *
+ * {{{
+ *   @expand
+ *   def foo[@expandArgs(Int, Double) T, @expandArgs(Int, Double) U](x: T, y: U) = x + y
+ * }}}
+ *
+ * will generate
+ * {{{
+ *   def foo_T_Int_U_Int(x: Int, y: Int) = x + y
+ *   def foo_T_Int_U_Double(x: Int, y: Double) = x + y
+ *   def foo_T_Double_U_Int(x: Double, y: Int) = x + y
+ *   def foo_T_Double_U_Double(x: Double, y: Double) = x + y
+ * }}}
+ *
+ * The real power comes from [[breeze.macros.sequence]], which annotates an argument to the method
+ * to correlate with a type (the first argument to sequence) and then a sequence of trees which are inlined
+ * in place of references to the argument. For example:
+ *
+ * {{{
+ *   @expand
+ *   def foo[@expandArgs(Int, Double) T](x: T, y: T)(implicit @sequence(T)({_ + _}, {_ * _}) op: XXX) = op(x,y)
+ *   /* The type of op is unimportant, though giving it a "real" type is useful. */
+ * }}}
+ *
+ * will generate
+ * {{{
+ *   def foo_T_Int(x: Int, y: Int) = x + y
+ *   def foo_T_Double(x: Double, y: Double) = x * y
+ * }}}
+ *
+ *
+ * See [[breeze.linalg.DenseVectorOps]] for a more complete example.
+ *
+ *
+ *@author dlwh
  **/
 class expand extends Annotation with StaticAnnotation {
   def macroTransform(annottees: Any*) = macro expand.expandImpl
