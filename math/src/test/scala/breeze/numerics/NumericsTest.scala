@@ -47,7 +47,8 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
     (breeze.numerics.logSum(s,s.length) should be (mlog(15) plusOrMinus 1e-10))
     (breeze.numerics.logSum(s,s.length-1) should be (mlog(10) plusOrMinus 1e-10))
 
-    (breeze.linalg.softmax(s,1,2,(s.length-1)/2, { (_) => true}) should be (mlog(3) plusOrMinus 1e-10))
+    // s(1), s(3)
+    (breeze.linalg.softmax(s,1,2,(s.length-1)/2, { (_) => true}) should be (softmax(Array(s(1),s(3))) plusOrMinus(1e-10)))
   }
 
   test("logDiff") {
