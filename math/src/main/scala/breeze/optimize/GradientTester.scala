@@ -26,7 +26,7 @@ object GradientTester extends Logging {
    * @param toString toString function for converting elements of x's domain to a string.
    * @tparam K
    * @tparam T
-   * @return set of bad components.
+   * @return differences in each component
    */
   def test[K,T](f: DiffFunction[T], x: T,
                 randFraction:Double = 0.01,
@@ -42,7 +42,7 @@ object GradientTester extends Logging {
 
     val (fx,trueGrad) = f.calculate(x)
     val xx = copy(x)
-    var badComponents = Set[K]()
+    val differences = opSub(x,x)
     val subsetOfDimensions = Rand.subsetsOfSize(x.keysIterator.toIndexedSeq, (x.size * randFraction + 1).toInt).get()
     var ok, tried = 0
     for (k <- subsetOfDimensions) {
@@ -58,15 +58,15 @@ object GradientTester extends Logging {
           ok += 1
           logger.debug(s"OK: ${toString(k)} $relDif")
         } else {
-          badComponents += k
           logger.warn(toString(k) + " relDif: %.3e [eps : %e, calculated: %4.3e empirical: %4.3e]".format(relDif, epsilon, trueGrad(k), grad))
         }
+        differences(k) = relDif
         tried += 1
       }
       if(tried % 100 == 0 || tried == subsetOfDimensions.length) {
         logger.info(f"Checked $tried of ${subsetOfDimensions.length} (out of dimension ${x.size}). ${ok * 1.0/tried}%.4g%% ok.")
       }
     }
-    badComponents
+    differences
   }
 }
