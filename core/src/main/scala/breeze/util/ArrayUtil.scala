@@ -18,6 +18,7 @@ package breeze.util
 
 import java.util.Arrays
 import scala.reflect.ClassTag
+import scala.collection.mutable
 
 /**
  * Array operations on generic arrays, a little faster in general, I hope.
@@ -127,7 +128,7 @@ object ArrayUtil {
     }
   }
 
-  def equals(a: Array[_], b: Array[_]):Boolean = {
+  def equals(a: Array[_], b: Array[_]) :Boolean = {
     val ac = a.getClass
     val bc = b.getClass
     if(ac != bc) false
@@ -136,6 +137,7 @@ object ArrayUtil {
         case x: Array[Double] => Arrays.equals(a.asInstanceOf[Array[Double]], b.asInstanceOf[Array[Double]])
         case x: Array[Int] => Arrays.equals(a.asInstanceOf[Array[Int]], b.asInstanceOf[Array[Int]])
         case x: Array[Float] => Arrays.equals(a.asInstanceOf[Array[Float]], b.asInstanceOf[Array[Float]])
+        case x: Array[Boolean] => Arrays.equals(a.asInstanceOf[Array[Boolean]], b.asInstanceOf[Array[Boolean]])
         case x: Array[Long] => Arrays.equals(a.asInstanceOf[Array[Long]], b.asInstanceOf[Array[Long]])
         case x: Array[Short] => Arrays.equals(a.asInstanceOf[Array[Short]], b.asInstanceOf[Array[Short]])
         case x: Array[Char] => Arrays.equals(a.asInstanceOf[Array[Char]], b.asInstanceOf[Array[Char]])
@@ -154,7 +156,7 @@ object ArrayUtil {
     val bc = b.getClass
     if(ac != bc || alength != blength) false
     else if(aoffset == 0 && astride == 1 && alength == a.length && boffset == 0 && bstride == 1 && blength == b.length) {
-      equals(a,b)
+      ArrayUtil.equals(a,b)
     }else {
       a match {
         case x: Array[Double] =>

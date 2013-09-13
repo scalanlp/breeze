@@ -220,7 +220,7 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
 
 object DenseVector extends VectorConstructors[DenseVector] with DenseVector_GenericOps
                       with DenseVectorOps
-//                      with DenseVectorOps_Complex
+                      with DenseVector_OrderingOps
                       with DenseVectorOps_SparseVector_Double
                       with DenseVectorOps_SparseVector_Float
                       with DenseVectorOps_SparseVector_Int
@@ -791,6 +791,79 @@ trait DenseVectorOps {
 //      Vector.canDotProductV_T.register(this)
     }
   }
+
+
+}
+
+trait DenseVector_OrderingOps extends DenseVectorOps { this: DenseVector.type =>
+
+  @expand
+  implicit def dv_dv_Op[@expandArgs(Int, Double, Float, Long, BigInt) T,
+  @expandArgs(OpGT, OpGTE, OpLTE, OpLT, OpEq, OpNe) Op <: OpType]
+  (implicit @sequence[Op]({_ > _},  {_ >= _}, {_ <= _}, {_ < _}, { _ == _}, {_ != _})
+  op: BinaryOp[T, T, Op, T]):BinaryOp[DenseVector[T], DenseVector[T], Op, DenseVector[Boolean]] = new BinaryOp[DenseVector[T], DenseVector[T], Op, DenseVector[Boolean]] {
+    def apply(a: DenseVector[T], b: DenseVector[T]): DenseVector[Boolean] = {
+      val ad = a.data
+      val bd = b.data
+      var aoff = a.offset
+      var boff = b.offset
+      val result = DenseVector.zeros[Boolean](a.length)
+      val rd = result.data
+
+      var i = 0
+      while(i < a.length) {
+        rd(i) = op(ad(aoff), bd(boff))
+        aoff += a.stride
+        boff += b.stride
+        i += 1
+      }
+      result
+    }
+  }
+
+  @expand
+  implicit def dv_v_Op[@expandArgs(Int, Double, Float, Long, BigInt) T,
+  @expandArgs(OpGT, OpGTE, OpLTE, OpLT, OpEq, OpNe) Op <: OpType]
+  (implicit @sequence[Op]({_ > _},  {_ >= _}, {_ <= _}, {_ < _}, { _ == _}, {_ != _})
+  op: BinaryOp[T, T, Op, Boolean]):BinaryOp[DenseVector[T], Vector[T], Op, DenseVector[Boolean]] = new BinaryOp[DenseVector[T], Vector[T], Op, DenseVector[Boolean]] {
+    def apply(a: DenseVector[T], b: Vector[T]): DenseVector[Boolean] = {
+      val ad = a.data
+      var aoff = a.offset
+      val result = DenseVector.zeros[Boolean](a.length)
+      val rd = result.data
+
+      var i = 0
+      while(i < a.length) {
+        rd(i) = op(ad(aoff), b(i))
+        aoff += a.stride
+        i += 1
+      }
+      result
+    }
+  }
+
+
+  @expand
+  implicit def dv_s_Op[@expandArgs(Int, Double, Float, Long, BigInt) T,
+  @expandArgs(OpGT, OpGTE, OpLTE, OpLT, OpEq, OpNe) Op <: OpType]
+  (implicit @sequence[Op]({_ > _},  {_ >= _}, {_ <= _}, {_ < _}, { _ == _}, {_ != _})
+  op: BinaryOp[T, T, Op, T]):BinaryOp[DenseVector[T], T, Op, DenseVector[Boolean]] = new BinaryOp[DenseVector[T], T, Op, DenseVector[Boolean]] {
+    def apply(a: DenseVector[T], b: T): DenseVector[Boolean] = {
+      val ad = a.data
+      var aoff = a.offset
+      val result = DenseVector.zeros[Boolean](a.length)
+      val rd = result.data
+
+      var i = 0
+      while(i < a.length) {
+        rd(i) = op(ad(aoff), b)
+        aoff += a.stride
+        i += 1
+      }
+      result
+    }
+  }
+
 
 
 }

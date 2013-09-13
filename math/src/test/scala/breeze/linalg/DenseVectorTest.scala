@@ -340,6 +340,18 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(util.Arrays.equals(a(0 until 3 by 2).toArray, Array(1,3)))
     assert(util.Arrays.equals(a(1 until 3 by 1).toArray, Array(2,3)))
   }
+
+  test("OpEq and friends") {
+    val a = DenseVector(1, 2, 3)
+    val b = DenseVector(1, 4, 1)
+    assert( (a :== b) === DenseVector(true, false, false))
+    assert( (a :!= b) === DenseVector(false, true, true))
+    assert( (a :<= b) === DenseVector(true, true, false))
+    assert( (a :>= b) === DenseVector(true, false, true))
+    assert( (a :< b) === DenseVector(false, true, false))
+    assert( (a :> b) === DenseVector(false, false, true))
+
+  }
 }
 
 /**
