@@ -221,13 +221,6 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
 object DenseVector extends VectorConstructors[DenseVector] with DenseVector_GenericOps
                       with DenseVectorOps
                       with DenseVector_OrderingOps
-                      /*
-                      with DenseVectorOps_SparseVector_Double
-                      with DenseVectorOps_SparseVector_Float
-                      with DenseVectorOps_SparseVector_Int
-                      with DenseVectorOps_SparseVector_Complex
-                      */
-                      with DenseVector_SparseVector_Ops
                       with DenseVectorOps_HashVector_Double
                       with DenseVectorOps_HashVector_Float
                       with DenseVectorOps_HashVector_Int
@@ -549,7 +542,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
 }
 
 trait DenseVector_GenericOps { this: DenseVector.type =>
-  
+  import breeze.math.PowImplicits._
   @expand
   implicit def pureFromUpdate[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T, Other,Op<:OpType](op: BinaryUpdateOp[DenseVector[T], Other, Op])(implicit copy: CanCopy[DenseVector[T]]):BinaryOp[DenseVector[T], Other, Op, DenseVector[T]] = {
     new BinaryOp[DenseVector[T], Other, Op, DenseVector[T]] {
@@ -643,24 +636,7 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
 }
 
 trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
-
-  // just to make some unrolling less terrible
-  // TODO: move this somewhere sensible
-  protected implicit class DoublePow(x: Double) {
-    def pow(y: Double) = math.pow(x,y)
-  }
-
-  protected implicit class FloatPow(x: Float) {
-    def pow(y: Float) = math.pow(x,y).toFloat
-  }
-
-  protected implicit class IntPow(x: Int) {
-    def pow(y: Int) = IntMath.ipow(x, y)
-  }
-
-  protected implicit class LongPow(x: Long) {
-    def pow(y: Long) = IntMath.ipow(x, y)
-  }
+  import breeze.math.PowImplicits._
 
 
 
@@ -901,108 +877,4 @@ trait DenseVector_SpecialOps extends DenseVectorOps { this: DenseVector.type =>
 }
 
 
-trait DenseVector_SparseVector_Ops extends DenseVectorOps { this: DenseVector.type =>
-  @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
-  implicit def dv_sv_UpdateOp[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @sequence[Op]({_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
-  op: BinaryOp[T, T, Op, T]):BinaryUpdateOp[DenseVector[T], SparseVector[T], Op] = new BinaryUpdateOp[DenseVector[T], SparseVector[T], Op] {
-    def apply(a: DenseVector[T], b: SparseVector[T]):Unit = {
-      require(a.length == b.length, "Vectors must have the same length")
-      val ad = a.data
-      val bdefault = b.array.default
-      var aoff = a.offset
-      val bsize = b.activeSize
-      val astride = a.stride
-      val bd = b.data
-      val bi = b.index
 
-      var i = 0
-      while(i < bsize) {
-        // do defaults until we get to the next aoffset
-        val nextAoff = a.offset + bi(i) * astride
-        while(aoff < nextAoff) {
-          ad(aoff) = op(ad(aoff), bdefault)
-          aoff += astride
-        }
-        
-        ad(aoff) = op(ad(aoff), bd(i))
-        aoff += a.stride
-        i += 1
-      }
-
-      while(aoff < ad.length) {
-        ad(aoff) = op(ad(aoff), bdefault)
-        aoff += astride
-      }
-    }
-  }
-
-  // this shouldn't be necessary but it is:
-  @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
-  implicit def dv_sv_op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType] = pureFromUpdate(implicitly[BinaryUpdateOp[DenseVector[T], SparseVector[T], Op]])
-
-
-  @expand
-  implicit def dv_sv_Update_Zero_Idempotent[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpAdd, OpSub) Op <: OpType]
-  (implicit @sequence[Op]({_ + _},  {_ - _})
-  op: BinaryOp[T, T, Op, T]):BinaryUpdateOp[DenseVector[T], SparseVector[T], Op] = new BinaryUpdateOp[DenseVector[T], SparseVector[T], Op] {
-    def apply(a: DenseVector[T], b: SparseVector[T]):Unit = {
-      require(a.length == b.length, "Vectors must have the same length")
-      val ad = a.data
-      val bd = b.data
-      val bi = b.index
-      val bsize = b.size
-
-      var i = 0
-      while(i < bsize) {
-        val aoff = a.offset + bi(i) * a.stride
-        ad(aoff) = op(ad(aoff), bd(i))
-        i += 1
-      }
-    }
-  }
-
- 
-  @expand
-  implicit def canDot_DV_SV[@expandArgs(Int, Long, BigInt, Complex) T](implicit @sequence[T](0, 0l, BigInt(0), Complex.zero) zero: T): BinaryOp[DenseVector[T], SparseVector[T], breeze.linalg.operators.OpMulInner, T] = {
-    new BinaryOp[DenseVector[T], SparseVector[T], breeze.linalg.operators.OpMulInner, T] {
-      def apply(a: DenseVector[T], b: SparseVector[T]) = {
-        require(b.length == a.length, "Vectors must be the same length!")
-
-        var result: T = zero
-
-        val bd = b.data
-        val bi = b.index
-        val bsize = b.iterableSize
-
-        val adata = a.data
-        val aoff = a.offset
-        val stride = a.stride
-
-        var i = 0
-        if(stride == 1 && aoff == 0) {
-          while(i < bsize) {
-            result += adata(bi(i)) * bd(i)
-            i += 1
-          }
-        } else {
-          while(i < bsize) {
-            result += adata(aoff + bi(i) * stride) * bd(i)
-            i += 1
-          }
-        }
-        result
-      }
-      //      Vector.canDotProductV_T.register(this)
-    }
-  }
-
-
-}

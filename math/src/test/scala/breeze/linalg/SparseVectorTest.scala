@@ -215,6 +215,25 @@ class SparseVectorTest extends FunSuite {
       assert(false, "Shouldn't be here!")
     }
   }
+
+
+  test("DV/SV ops") {
+    val a = DenseVector(1, 2, 3)
+    val b = SparseVector(3)((1,1))
+    assert(a.dot(b) === 2)
+    assert(a + b === DenseVector(1,3,3))
+    assert(a :* b === DenseVector(0, 2, 0))
+  }
+
+  test("SV/DV ops") {
+    val a = DenseVector(1, 2, 3)
+    val b = SparseVector(3)((1,1))
+    assert(b.dot(a) === 2)
+    assert(b + a === DenseVector(1,3,3))
+    assert(b :* a === DenseVector(0, 2, 0))
+    b += a
+    assert(b === SparseVector(1,3,3))
+  }
 }
 
 /**

@@ -84,6 +84,23 @@ object Field {
     val defaultArrayValue = implicitly[DefaultArrayValue[Long]]
   }
 
+  implicit object fieldBigInt extends Field[BigInt] {
+    def zero = 0l
+    def one = 1l
+    def nan = throw new ArithmeticException("Operation resulted in long-valued NaN")
+    def ==(a : BigInt, b : BigInt) = a == b
+    def !=(a : BigInt, b : BigInt) = a != b
+    def +(a : BigInt, b : BigInt) = a + b
+    def -(a : BigInt, b : BigInt) = a - b
+    def *(a : BigInt, b : BigInt) = a * b
+    def /(a : BigInt, b : BigInt) = a / b
+    def norm(a : BigInt) = if (a < 0) (-a).toDouble else a.toDouble
+    def toDouble(a : BigInt) = a
+    def isNaN(a : BigInt) = false
+    val manifest = implicitly[ClassTag[BigInt]]
+    val defaultArrayValue = implicitly[DefaultArrayValue[BigInt]]
+  }
+
   implicit object fieldFloat extends Field[Float] {
     def zero = 0.0f
     def one = 1.0f

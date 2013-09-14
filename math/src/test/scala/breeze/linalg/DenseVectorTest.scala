@@ -352,14 +352,6 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert( (a :> b) === DenseVector(false, false, true))
   }
 
-  test("DV/SV ops") {
-    val a = DenseVector(1, 2, 3)
-    val b = SparseVector(3)((1,1))
-    assert(a.dot(b) === 2)
-    assert(a + b === DenseVector(1,3,3))
-    assert(a :* b === DenseVector(0, 2, 0))
-
-  }
 }
 
 /**

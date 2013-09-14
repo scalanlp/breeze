@@ -47,6 +47,7 @@ object Semiring {
   implicit val semiringFloat: Semiring[Float] = ringFloat
   implicit val semiringInt: Semiring[Int] = ringInt
   implicit val semiringLong: Semiring[Long] = ringLong
+  implicit val semiringBigInt: Semiring[BigInt] = ringBigInt
   implicit val semiringShort: Semiring[Short] = ringShort
   implicit val semiringCmplx: Semiring[Complex] = ringComplex
 
