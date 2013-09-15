@@ -521,7 +521,7 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
       val ad = a.data
       val bd = b.data
       val bi = b.index
-      val bsize = b.size
+      val bsize = b.iterableSize
 
       var i = 0
       while(i < bsize) {

@@ -221,10 +221,6 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
 object DenseVector extends VectorConstructors[DenseVector] with DenseVector_GenericOps
                       with DenseVectorOps
                       with DenseVector_OrderingOps
-                      with DenseVectorOps_HashVector_Double
-                      with DenseVectorOps_HashVector_Float
-                      with DenseVectorOps_HashVector_Int
-                      with DenseVectorOps_HashVector_Complex
                       with DenseVector_SpecialOps {
   def zeros[@spec(Double, Float, Int) V: ClassTag : DefaultArrayValue](size: Int) = {
     val data = new Array[V](size)
