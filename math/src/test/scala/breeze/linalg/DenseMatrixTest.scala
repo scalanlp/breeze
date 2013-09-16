@@ -453,6 +453,12 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(res2 === DenseMatrix(1.0,-1.0))
   }
 
+  test("softmax on dm slices") {
+    val a = DenseMatrix((1.0, 2.0, 3.0))
+    assert(softmax(a(::, 1)) === 2.0)
+
+  }
+
 
 }
 

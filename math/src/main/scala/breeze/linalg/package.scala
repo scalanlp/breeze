@@ -374,13 +374,13 @@ package object linalg extends LinearAlgebra {
     override def apply(a: Array[Double], offset: Int, stride: Int, length: Int, isUsed: (Int) => Boolean) = {
       length match {
         case 0 => Double.NegativeInfinity
-        case 1 => if(isUsed(0)) a(0) else Double.NegativeInfinity
+        case 1 => if(isUsed(offset)) a(offset) else Double.NegativeInfinity
         case 2 =>
-          if (isUsed(0))
-            if (isUsed(1))
-              numerics.logSum(a(0),a(1))
-            else a(0)
-          else if(isUsed(1)) a(1)
+          if (isUsed(offset))
+            if (isUsed(offset + stride))
+              numerics.logSum(a(offset),a(offset + stride))
+            else a(offset)
+          else if(isUsed(offset + stride)) a(offset + stride)
           else Double.NegativeInfinity
         case _ =>
           val m = max(a, offset, stride, length, isUsed)
