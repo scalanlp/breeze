@@ -211,6 +211,16 @@ class HashVectorTest extends FunSuite {
     b += a
     assert(b === HashVector(1,3,3))
   }
+
+  test("HV/SV ops") {
+    val a = SparseVector(3)( (1,2), (2,3))
+    val b = HashVector(3)((1,1))
+    assert(b.dot(a) === 2)
+    assert(b + a === HashVector(0,3,3))
+    assert(b :* a === HashVector(0, 2, 0))
+    b += a
+    assert(b === HashVector(0,3,3))
+  }
 }
 
 /**
