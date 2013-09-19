@@ -150,12 +150,7 @@ class SparseVector[@spec(Double,Int, Float) E](val array: SparseArray[E])
   def allVisitableIndicesActive: Boolean = true
 }
 
-object SparseVector extends SparseVectorOps_Int 
-                            with SparseVectorOps_Float 
-                            with SparseVectorOps_Double
-                            with SparseVectorOps_Complex
-                            with DenseVector_SparseVector_Ops
-                            with SparseVector_DenseVector_Ops  {
+object SparseVector extends SparseVectorOps with DenseVector_SparseVector_Ops with SparseVector_DenseVector_Ops  {
   def zeros[@spec(Double, Float, Int) V: ClassTag:DefaultArrayValue](size: Int) = new SparseVector(Array.empty, Array.empty[V], 0, size)
   def apply[@spec(Double, Float, Int) V:DefaultArrayValue](values: Array[V]) = new SparseVector(Array.range(0,values.length), values, values.length, values.length)
 
@@ -461,6 +456,7 @@ trait SparseVector_DenseVector_Ops extends DenseVector_SparseVector_Ops { this: 
 
 }
 
+
 trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
   import breeze.math.PowImplicits._
 
@@ -563,6 +559,366 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
       }
     }
   }
+
+
+
+
+}
+
+trait SparseVectorOps { this: SparseVector.type =>
+  import breeze.math.PowImplicits._
+
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def sv_sv_Idempotent_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub) Op <: OpType]
+  (implicit @sequence[Op]({_ + _}, {_ - _}) op: BinaryOp[T, T, Op, T],
+  @sequence[T](0, 0.0, 0f, 0l, BigInt(0), Complex.zero) zero: T):BinaryOp[SparseVector[T], SparseVector[T], Op, SparseVector[T]] = new BinaryOp[SparseVector[T], SparseVector[T], Op, SparseVector[T]] {
+    def apply(a: SparseVector[T], b: SparseVector[T]): SparseVector[T] = {
+      require(b.length == a.length, "Vectors must be the same length!")
+      val asize = a.activeSize
+      val bsize = b.activeSize
+
+      val q = zero
+
+      val resultI = new Array[Int](asize + bsize)
+      val resultV = new Array[T](asize + bsize)
+      var resultOff = 0
+
+      var aoff = 0
+      var boff = 0
+
+
+      // double loop:
+      // b moves to catch up with a, then a takes a step (possibly bringing b along)
+      while(aoff < asize) {
+
+        while(boff < bsize && b.indexAt(boff) < a.indexAt(aoff)) {
+          resultI(resultOff) = b.indexAt(boff)
+          resultV(resultOff) = op(q, b.valueAt(boff))
+          resultOff += 1
+          boff += 1
+        }
+
+        val bvalue = if(boff < bsize && b.indexAt(boff) == a.indexAt(aoff)) {
+          val bv = b.valueAt(boff)
+          boff += 1
+          bv
+        }  else {
+          q
+        }
+        resultI(resultOff) = a.indexAt(aoff)
+        resultV(resultOff) = op(a.valueAt(aoff), bvalue)
+        resultOff += 1
+        aoff += 1
+      }
+
+      while(boff < bsize) {
+        resultI(resultOff) = b.indexAt(boff)
+        resultV(resultOff) = op(q, b.valueAt(boff))
+        resultOff += 1
+        boff += 1
+      }
+
+      if(resultOff != resultI.length) {
+        new SparseVector[T](util.Arrays.copyOf(resultI, resultOff), util.Arrays.copyOf(resultV, resultOff), resultOff, a.length)
+      } else {
+        new SparseVector[T](resultI, resultV, resultOff, a.length)
+      }
+    }
+  }
+
+
+ @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def sv_sv_OpMul[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T](implicit
+  @sequence[T](0, 0.0, 0f,  0l, BigInt(0), Complex.zero) zero: T):BinaryOp[SparseVector[T], SparseVector[T], OpMulScalar, SparseVector[T]] = new BinaryOp[SparseVector[T], SparseVector[T], OpMulScalar, SparseVector[T]] {
+    def apply(a: SparseVector[T], b: SparseVector[T]): SparseVector[T] = {
+      if(b.activeSize < a.activeSize)
+        return apply(b, a)
+
+      require(b.length == a.length, "Vectors must be the same length!")
+      val asize = a.activeSize
+      val bsize = b.activeSize
+
+      val resultI = new Array[Int](math.min(asize, bsize))
+      val resultV = new Array[T](math.min(asize, bsize))
+      var resultOff = 0
+
+      var aoff = 0
+      var boff = 0
+      // in principle we could do divide and conquer here
+      // by picking the middle of a, figuring out where that is in b, and then recursing,
+      // using it as a bracketing.
+
+      // double loop:
+      // b moves to catch up with a, then a takes a step (possibly bringing b along)
+      while(aoff < asize) {
+        val aind = a.indexAt(aoff)
+        boff = util.Arrays.binarySearch(b.index, boff, math.min(bsize, aind + 1), aind)
+        if(boff < 0) {
+          boff = ~boff
+          if(boff == bsize) {
+            // we're through the b array, so we're done.
+            aoff = asize
+          } else {
+            // fast forward a until we get to the b we just got to
+            val bind = b.indexAt(boff)
+            var newAoff = util.Arrays.binarySearch(a.index, aoff, math.min(asize, bind + 1), bind)
+            if(newAoff < 0) {
+              newAoff = ~newAoff
+              boff += 1
+            }
+            assert(newAoff > aoff, bind + " " + aoff + " " + newAoff + " " + a.index(aoff) + " " + a.index(newAoff) + " " + a + " " + b)
+            aoff = newAoff
+          }
+        } else {
+          // b is there, a is there, do the multiplication!
+          resultI(resultOff) = aind
+          resultV(resultOff) = a.valueAt(aoff) * b.valueAt(boff)
+          aoff += 1
+          boff += 1
+          resultOff += 1
+        }
+      }
+
+      if(resultOff != resultI.length) {
+        new SparseVector[T](util.Arrays.copyOf(resultI, resultOff), util.Arrays.copyOf(resultV, resultOff), resultOff, a.length)
+      } else {
+        new SparseVector[T](resultI, resultV, resultOff, a.length)
+      }
+    }
+  }
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def sv_sv_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: BinaryOp[T, T, Op, T]):BinaryOp[SparseVector[T], SparseVector[T], Op, SparseVector[T]] = new BinaryOp[SparseVector[T], SparseVector[T], Op, SparseVector[T]] {
+    def apply(a: SparseVector[T], b: SparseVector[T]): SparseVector[T] = {
+      require(b.length == a.length, "Vectors must be the same length!")
+      val result = new VectorBuilder[T](a.length)
+      var i = 0
+      while(i < a.length) {
+        result.add(i, op(a(i), b(i)))
+        i += 1
+      }
+      result.toSparseVector(true, true)
+    }
+  }
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def sv_v_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: BinaryOp[T, T, Op, T]):BinaryOp[SparseVector[T], Vector[T], Op, SparseVector[T]] = new BinaryOp[SparseVector[T], Vector[T], Op, SparseVector[T]] {
+    def apply(a: SparseVector[T], b: Vector[T]): SparseVector[T] = {
+      require(b.length == a.length, "Vectors must be the same length!")
+      val result = new VectorBuilder[T](a.length)
+      var i = 0
+      while(i < a.length) {
+        result.add(i, op(a(i), b(i)))
+        i += 1
+      }
+      result.toSparseVector(true, true)
+    }
+  }
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def sv_s_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @sequence[Op]({_ + _},  {_ - _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: BinaryOp[T, T, Op, T],
+   @sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero)
+   zero: T):BinaryOp[SparseVector[T], T, Op, SparseVector[T]] = new BinaryOp[SparseVector[T], T, Op, SparseVector[T]] {
+    def apply(a: SparseVector[T], b: T): SparseVector[T] = {
+      val result = new VectorBuilder[T](a.length)
+
+      var i = 0
+      while(i < a.length) {
+        val r =  op(a(i), b)
+        if(r  != zero)
+          result.add(i,r)
+        i += 1
+      }
+      result.toSparseVector(true, true)
+    }
+  }
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def sv_s_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpMulScalar, OpMulMatrix) Op<:OpType]
+  (implicit @sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero)
+   zero: T):BinaryOp[SparseVector[T], T, Op, SparseVector[T]] = new BinaryOp[SparseVector[T], T, Op, SparseVector[T]] {
+    def apply(a: SparseVector[T], b: T): SparseVector[T] = {
+      val result = new VectorBuilder[T](a.length)
+
+      var i = 0
+      while(i < a.activeSize) {
+        result.add(a.indexAt(i), a.valueAt(i) * b)
+        i += 1
+      }
+      result.toSparseVector(true, true)
+    }
+  }
+
+  protected def updateFromPure[T, Op<:OpType, Other](implicit op: BinaryOp[SparseVector[T], Other, Op, SparseVector[T]]) = new BinaryUpdateOp[SparseVector[T], Other, Op] {
+    def apply(a: SparseVector[T], b: Other) {
+      val result = op(a, b)
+      a.use(result.index, result.data, result.activeSize)
+    }
+  }
+
+
+  implicit def opSet[T]: BinaryUpdateOp[SparseVector[T], SparseVector[T], OpSet] = new BinaryUpdateOp[SparseVector[T], SparseVector[T], OpSet] {
+    def apply(a: SparseVector[T], b: SparseVector[T]) {
+      val result = b.copy
+      a.use(result.index, result.data, result.activeSize)
+    }
+  }
+
+  // this shouldn't be necessary but it is:
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def sv_sv_Update[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpMod, OpPow) Op <: OpType](implicit op: BinaryOp[SparseVector[T], SparseVector[T], Op, SparseVector[T]]) = {
+    updateFromPure(op)
+  }
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def sv_s_Update[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpMod, OpPow) Op <: OpType](implicit op: BinaryOp[SparseVector[T], T, Op, SparseVector[T]]) = {
+    updateFromPure(op)
+  }
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def sv_sv_Dot
+  [@expandArgs(Int, Double, Float, Long, BigInt, Complex) T]
+  (implicit @sequence[T](0, 0.0, 0f,  0l, BigInt(0), Complex.zero) zero: T):BinaryOp[SparseVector[T], SparseVector[T], OpMulInner, T] = new BinaryOp[SparseVector[T], SparseVector[T], OpMulInner, T] {
+    def apply(a: SparseVector[T], b: SparseVector[T]): T = {
+      if(b.activeSize < a.activeSize)
+        return apply(b, a)
+
+      require(b.length == a.length, "Vectors must be the same length!")
+      val asize = a.activeSize
+      val bsize = b.activeSize
+
+      var result:T = zero
+
+      var aoff = 0
+      var boff = 0
+      // in principle we could do divide and conquer here
+      // by picking the middle of a, figuring out where that is in b, and then recursing,
+      // using it as a bracketing.
+
+      // double loop:
+      // b moves to catch up with a, then a takes a step (possibly bringing b along)
+      while(aoff < asize) {
+        val aind = a.indexAt(aoff)
+        boff = util.Arrays.binarySearch(b.index, boff, math.min(bsize, aind + 1), aind)
+        if(boff < 0) {
+          boff = ~boff
+          if(boff == bsize) {
+            // we're through the b array, so we're done.
+            aoff = asize
+          } else {
+            // fast forward a until we get to the b we just got to
+            val bind = b.indexAt(boff)
+            var newAoff = util.Arrays.binarySearch(a.index, aoff, math.min(asize, bind + 1), bind)
+            if(newAoff < 0) {
+              newAoff = ~newAoff
+              boff += 1
+            }
+            assert(newAoff > aoff, aoff + " " + newAoff)
+            aoff = newAoff
+          }
+        } else {
+          // b is there, a is there, do the multiplication!
+          result += a.valueAt(aoff) * b.valueAt(boff)
+          aoff += 1
+          boff += 1
+        }
+      }
+
+      result
+    }
+  }
+
+
+
+  @expand
+  implicit def sv_sv_axpy[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T] (implicit  @sequence[T](0, 0.0, 0f, 0l, BigInt(0), Complex.zero) zero: T):CanAxpy[T, SparseVector[T], SparseVector[T]] = new CanAxpy[T, SparseVector[T], SparseVector[T]] {
+    def apply(a: T, x: SparseVector[T], y: SparseVector[T]) {
+      require(x.length == y.length, "Vectors must be the same length!")
+      val asize = y.activeSize
+      val bsize = x.activeSize
+
+      if(a == zero) return
+
+      val resultI = new Array[Int](asize + bsize)
+      val resultV = new Array[T](asize + bsize)
+      var resultOff = 0
+
+      var aoff = 0
+      var boff = 0
+
+
+
+      // double loop:
+      // b moves to catch up with a, then a takes a step (possibly bringing b along)
+      while(aoff < asize) {
+
+        while(boff < bsize && x.indexAt(boff) < y.indexAt(aoff)) {
+          resultI(resultOff) = x.indexAt(boff)
+          resultV(resultOff) = a * x.valueAt(boff)
+          resultOff += 1
+          boff += 1
+        }
+
+        val bvalue = if(boff < bsize && x.indexAt(boff) == y.indexAt(aoff)) {
+          val bv = a * x.valueAt(boff)
+          boff += 1
+          bv
+        }  else {
+          zero
+        }
+        resultI(resultOff) = y.indexAt(aoff)
+        resultV(resultOff) = y.valueAt(aoff) + bvalue
+        resultOff += 1
+        aoff += 1
+      }
+
+      while(boff < bsize) {
+        resultI(resultOff) = x.indexAt(boff)
+        resultV(resultOff) = a * x.valueAt(boff)
+        resultOff += 1
+        boff += 1
+      }
+
+      if(resultOff != resultI.length) {
+        y.use(util.Arrays.copyOf(resultI, resultOff), util.Arrays.copyOf(resultV, resultOff), resultOff)
+      } else {
+        y.use(resultI, resultV, resultOff)
+      }
+    }
+  }
+
 
 
 }
