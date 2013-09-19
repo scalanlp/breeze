@@ -2,7 +2,7 @@ package breeze.features
 
 import breeze.linalg._
 import java.util
-import operators.{BinaryUpdateOp, OpMulInner, BinaryOp, CanAxpy}
+import breeze.linalg.operators._
 
 /**
  * Represents a feature vector of indicator (i.e. binary) features.
@@ -82,6 +82,13 @@ object FeatureVector {
         a(b(i)) += 1
         i += 1
       }
+    }
+  }
+
+  implicit object MulDMFV extends BinaryOp[DenseMatrix[Double], FeatureVector, OpMulMatrix, DenseVector[Double]] {
+    def apply(a: DenseMatrix[Double], b: FeatureVector): DenseVector[Double] = {
+      val result = a(*, ::) dot b
+      result
     }
   }
 
