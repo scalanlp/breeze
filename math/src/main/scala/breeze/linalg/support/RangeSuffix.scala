@@ -1,7 +1,7 @@
 package breeze.linalg.support
 
 /**
- * TODO
+ * A range suffix is just a marker for the beginning of a range.
  *
  * @author dlwh
  **/
