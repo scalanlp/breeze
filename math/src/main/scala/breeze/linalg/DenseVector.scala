@@ -833,7 +833,7 @@ trait DenseVector_OrderingOps extends DenseVectorOps { this: DenseVector.type =>
 
 
   @expand
-  implicit def dv_s_Op[@expandArgs(Int, Double, Float, Long, BigInt) T,
+  implicit def dv_s_CompOp[@expandArgs(Int, Double, Float, Long, BigInt) T,
   @expandArgs(OpGT, OpGTE, OpLTE, OpLT, OpEq, OpNe) Op <: OpType]
   (implicit @sequence[Op]({_ > _},  {_ >= _}, {_ <= _}, {_ < _}, { _ == _}, {_ != _})
   op: BinaryOp[T, T, Op, T]):BinaryOp[DenseVector[T], T, Op, DenseVector[Boolean]] = new BinaryOp[DenseVector[T], T, Op, DenseVector[Boolean]] {
@@ -850,6 +850,27 @@ trait DenseVector_OrderingOps extends DenseVectorOps { this: DenseVector.type =>
         i += 1
       }
       result
+    }
+  }
+
+  @expand
+  implicit def axpy[@expandArgs(Int, Double, Float, Long, BigInt, Complex) V]: CanAxpy[V, DenseVector[V], DenseVector[V]] = {
+    new CanAxpy[V, DenseVector[V], DenseVector[V]] {
+      def apply(s: V, b: DenseVector[V], a: DenseVector[V]) {
+        require(b.length == a.length, "Vectors must be the same length!")
+        val ad = a.data
+        val bd = b.data
+        var aoff = a.offset
+        var boff = b.offset
+
+        var i = 0
+        while(i < a.length) {
+          ad(aoff) += s * bd(boff)
+          aoff += a.stride
+          boff += b.stride
+          i += 1
+        }
+      }
     }
   }
 

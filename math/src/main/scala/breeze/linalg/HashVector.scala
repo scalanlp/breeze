@@ -655,13 +655,10 @@ trait HashVector_GenericOps { this: HashVector.type =>
     new CanAxpy[V, HashVector[V], HashVector[V]] {
       val ring = implicitly[Semiring[V]]
       def apply(s: V, b: HashVector[V], a: HashVector[V]) {
-      require(b.length == a.length, "Vectors must be the same length!")
+        require(b.length == a.length, "Vectors must be the same length!")
 
-      var i = 0
-      while(i < a.length) {
-        a(i) = ring.+(a(i),ring.*(s, b(i)))
-        i += 1
-      }
+        for( (k,v) <- b.activeIterator)
+          a(k) = ring.+(a(k),ring.*(s, v))
       }
     }
   }
