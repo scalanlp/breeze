@@ -78,7 +78,8 @@ class HashVector[@specialized(Int, Double, Float) E](val array: OpenAddressHashA
 object HashVector extends HashVectorOps
                           with DenseVector_HashVector_Ops
                           with HashVector_DenseVector_Ops
-                          with HashVector_SparseVector_Ops {
+                          with HashVector_SparseVector_Ops
+                          with SparseVector_HashVector_Ops {
   def zeros[@specialized(Double, Float, Int) V: ClassTag:DefaultArrayValue](size: Int) = {
     new HashVector(new OpenAddressHashArray[V](size))
   }
@@ -534,7 +535,7 @@ trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type 
       require(b.length == a.length, "Vectors must be the same length!")
       val builder = new VectorBuilder[T](a.length)
       for((k,v) <- b.iterator) {
-        val r = a(k) * v
+        val r = op(a(k), v)
         if(r != zero)
           builder.add(k, r)
       }
@@ -601,6 +602,84 @@ trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type 
   }
 }
 
+
+trait SparseVector_HashVector_Ops extends HashVectorOps { this: HashVector.type =>
+  import breeze.math.PowImplicits._
+
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def sv_hv_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: BinaryOp[T, T, Op, T],
+   @sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T):BinaryOp[SparseVector[T], HashVector[T], Op, SparseVector[T]] = new BinaryOp[SparseVector[T], HashVector[T], Op, SparseVector[T]] {
+    def apply(a: SparseVector[T], b: HashVector[T]): SparseVector[T] = {
+      require(b.length == a.length, "Vectors must be the same length!")
+      val builder = new VectorBuilder[T](a.length)
+      for((k,v) <- b.iterator) {
+        val r = op(a(k), v)
+        if(r != zero)
+          builder.add(k, r)
+      }
+      builder.toSparseVector
+    }
+  }
+
+  @expand
+  implicit def sv_hv_nilpotent_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T]
+  (implicit @sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T):BinaryOp[SparseVector[T], HashVector[T], OpMulScalar, SparseVector[T]] = new BinaryOp[SparseVector[T], HashVector[T], OpMulScalar, SparseVector[T]] {
+    def apply(a: SparseVector[T], b: HashVector[T]): SparseVector[T] = {
+      require(b.length == a.length, "Vectors must be the same length!")
+      val builder = new VectorBuilder[T](a.length)
+      for((k,v) <- a.activeIterator) {
+        val r = v * b(k)
+        if(r != zero)
+          builder.add(k, r)
+      }
+      builder.toSparseVector(true, true)
+    }
+  }
+
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def sv_hv_Idempotent_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub) Op <: OpType]
+  (implicit @sequence[Op]({_ + _}, {_ - _})
+  op: BinaryOp[T, T, Op, T]):BinaryOp[SparseVector[T], HashVector[T], Op, SparseVector[T]] = new BinaryOp[SparseVector[T], HashVector[T], Op, SparseVector[T]] {
+    def apply(a: SparseVector[T], b: HashVector[T]): SparseVector[T] = {
+      require(b.length == a.length, "Vectors must be the same length!")
+      val builder = new VectorBuilder[T](a.length)
+      var aoff = 0
+      while(aoff < a.activeSize) {
+        val k = a.indexAt(aoff)
+        val v = a.valueAt(aoff)
+        builder.add(k,v)
+        aoff += 1
+      }
+
+      for((k,v) <- b.activeIterator) {
+        builder.add(k, v)
+      }
+
+      builder.toSparseVector
+    }
+  }
+
+
+  @expand
+  implicit def canDot_SV_HV[@expandArgs(Int, Long, BigInt, Complex) T](implicit @sequence[T](0, 0l, BigInt(0), Complex.zero) zero: T): BinaryOp[SparseVector[T], HashVector[T], breeze.linalg.operators.OpMulInner, T] = {
+    new BinaryOp[SparseVector[T], HashVector[T], breeze.linalg.operators.OpMulInner, T] {
+      def apply(a: SparseVector[T], b: HashVector[T]) = {
+        b dot a
+      }
+//      Vector.canDotProductV_T.register(this)
+    }
+  }
+}
 
 trait HashVector_GenericOps { this: HashVector.type =>
   import breeze.math.PowImplicits._
