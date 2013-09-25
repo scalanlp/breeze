@@ -58,6 +58,7 @@ class sequence[T](args: Any*) extends Annotation with StaticAnnotation
 object expand {
 
   class exclude(args: Any*) extends Annotation with StaticAnnotation
+  class valify extends Annotation with StaticAnnotation
 
 
   def expandImpl(c: Context)(annottees: c.Expr[Any]*):c.Expr[Any] = {
@@ -68,6 +69,7 @@ object expand {
         val (typesToExpand, typesLeftAbstract) = targs.partition(shouldExpand(c)(_))
 
         val exclusions = getExclusions(c)(mods, targs.map(_.name))
+        val shouldValify = checkValify(c)(mods)
 
         val typesToUnrollAs = typesToExpand.map{ td =>
           (td.name:Name) -> typeMappings(c)(td)
@@ -86,7 +88,15 @@ object expand {
           val newvargs = valsToLeave.filterNot(_.isEmpty).map(_.map(substitute(c)(typeMap, valExpansions, _).asInstanceOf[ValDef]))
           val newtpt = substitute(c)(typeMap, valExpansions, tpt)
           val newName = newTermName(mkName(c)(name, typeMap))
-          DefDef(mods, newName, typesLeftAbstract, newvargs, newtpt, grounded)
+          if(shouldValify) {
+            if(typesLeftAbstract.nonEmpty)
+              c.error(tree.pos, "Can't valify: Not all types were grounded: " + typesLeftAbstract.mkString(", "))
+            if(newvargs.exists(_.nonEmpty))
+              c.error(tree.pos, "Can't valify: Not all arguments were grounded: " + newvargs.map(_.mkString(", ")).mkString("(",")(",")"))
+            ValDef(mods, newName, newtpt, grounded)
+          } else {
+            DefDef(mods, newName, typesLeftAbstract, newvargs, newtpt, grounded)
+          }
         }
         val ret = c.Expr(Block(newDefs.toList, Literal(Constant(()))))
         ret
@@ -175,8 +185,14 @@ object expand {
     mods.annotations.collect {
         case q"new expand.exclude(...$args)" =>
           args.map(aa => (targs zip aa.map(c.typeCheck(_)).map(_.symbol.asModule.companionSymbol.asType.toType)).toMap)
-        case x => println("..." + showRaw(x)); Seq.empty
     }.flatten.toSeq
+  }
+
+    private def checkValify(c: Context)(mods: c.Modifiers) = {
+    import c.mirror.universe._
+    mods.annotations.collectFirst {
+        case q"new expand.valify" => true
+    }.getOrElse(false)
   }
 
   private def shouldExpand(c: Context)(td: c.mirror.universe.TypeDef):Boolean = {
