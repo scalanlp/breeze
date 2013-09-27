@@ -325,8 +325,8 @@ trait VectorOps { this: Vector.type =>
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
   implicit def v_s_UpdateOp[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod) Op <: OpType]
-  (implicit @sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _})
+  @expandArgs(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: BinaryOp[T, T, Op, T]):BinaryUpdateRegistry[Vector[T], T, Op] = new BinaryUpdateRegistry[Vector[T], T, Op] {
     override def bindingMissing(a: Vector[T], b: T):Unit = {
       var i = 0
@@ -359,6 +359,7 @@ trait VectorOps { this: Vector.type =>
 
 
   @expand
+  @expand.valify
   implicit def axpy[@expandArgs(Int, Double, Float, Long, BigInt, Complex) V]: CanAxpy[V, Vector[V], Vector[V]] = {
     new CanAxpy[V, Vector[V], Vector[V]] {
       def apply(s: V, b: Vector[V], a: Vector[V]) {

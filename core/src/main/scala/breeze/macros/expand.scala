@@ -195,7 +195,10 @@ object expand {
   private def getExclusions(c: Context)(mods: c.Modifiers, targs: Seq[c.Name]):Seq[Map[c.Name, c.Type]] = {
     import c.mirror.universe._
     mods.annotations.collect {
-        case q"new expand.exclude(...$args)" =>
+        case t@q"new expand.exclude(...$args)" =>
+          for(aa <- args)
+            if(aa.length != targs.length)
+              c.error(t.pos, "arguments to @exclude does not have the same arity as the type symbols!")
           args.map(aa => (targs zip aa.map(c.typeCheck(_)).map(_.symbol.asModule.companionSymbol.asType.toType)).toMap)
     }.flatten.toSeq
   }

@@ -644,7 +644,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: BinaryOp[T, T, Op, T]):BinaryOp[DenseVector[T], DenseVector[T], Op, DenseVector[T]] = {
-    val opop = new BinaryOp[DenseVector[T], DenseVector[T], Op, DenseVector[T]] {
+    new BinaryOp[DenseVector[T], DenseVector[T], Op, DenseVector[T]] {
       def apply(a: DenseVector[T], b: DenseVector[T]): DenseVector[T] = {
         val ad = a.data
         val bd = b.data
@@ -662,14 +662,12 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
         }
         result
       }
+      implicitly[BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]]].register(this)
     }
-
-//    implicitly[BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]]].register(opop)
-//    implicitly[BinaryRegistry[DenseVector[T], Vector[T], Op, Vector[T]]].register(opop)
-    opop
   }
 
   @expand
+  @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
   implicit def dv_v_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
@@ -690,9 +688,11 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
       }
       result
     }
+    implicitly[BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]]].register(this)
   }
 
   @expand
+  @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
   implicit def dv_s_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
@@ -713,11 +713,13 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
       }
       result
     }
+    implicitly[BinaryRegistry[Vector[T], T, Op, Vector[T]]].register(this)
   }
 
 
 
   @expand
+  @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
   implicit def dv_dv_UpdateOp[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
@@ -738,14 +740,16 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
         i += 1
       }
     }
+    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op]].register(this)
   }
 
   @expand
+  @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
   implicit def dv_s_UpdateOp[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod) Op <: OpType]
-  (implicit @sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _})
+  @expandArgs(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod) Op <: OpType]
+  (implicit @sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _})
   op: BinaryOp[T, T, Op, T]):BinaryUpdateOp[DenseVector[T], T, Op] = new BinaryUpdateOp[DenseVector[T], T, Op] {
     def apply(a: DenseVector[T], b: T):Unit = {
       val ad = a.data
@@ -757,12 +761,14 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
         aoff += a.stride
         i += 1
       }
+      implicitly[BinaryUpdateRegistry[Vector[T], T, Op]].register(this)
     }
   }
 
 
 
   @expand
+  @expand.valify
   implicit def canDot_DV_DV[@expandArgs(Int, Long, BigInt, Complex) T](implicit @sequence[T](0, 0l, BigInt(0), Complex.zero) zero: T): BinaryOp[DenseVector[T], DenseVector[T], breeze.linalg.operators.OpMulInner, T] = {
     new BinaryOp[DenseVector[T], DenseVector[T], breeze.linalg.operators.OpMulInner, T] {
       def apply(a: DenseVector[T], b: DenseVector[T]) = {
@@ -784,7 +790,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
         result
 
       }
-//      Vector.canDotProductV_T.register(this)
+      implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulInner, T]].register(this)
     }
   }
 
@@ -808,8 +814,9 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
         result
 
       }
-      //      Vector.canDotProductV_T.register(this)
+      implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulInner, T]].register(this)
     }
+
   }
 
 
