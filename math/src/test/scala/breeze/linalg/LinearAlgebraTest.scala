@@ -197,7 +197,6 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     }
 
 
-    println(u.rows,u.cols,s.length,vt.rows, vt.cols)
     val ss = DenseMatrix.zeros[Double](m.rows, m.cols)
     diag(ss(0 until s.length, 0 until s.length)) := s
     val reM: DenseMatrix[Double] =  u * ss * vt
