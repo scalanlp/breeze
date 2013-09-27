@@ -106,11 +106,7 @@ trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]]{
 
 }
 
-object Vector extends VectorConstructors[Vector]
-                      with VectorOps_Int
-                      with VectorOps_Double 
-                      with VectorOps_Float 
-                      with VectorOps_Complex {
+object Vector extends VectorConstructors[Vector] with VectorOps {
 
 
   /**
@@ -193,15 +189,15 @@ trait VectorOps { this: Vector.type =>
   import breeze.math.PowImplicits._
 
 
-  @expand
   @expand.valify
+  @expand
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
   implicit def v_v_Idempotent_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
   @expandArgs(OpAdd, OpSub) Op <: OpType]
   (implicit @sequence[Op]({_ + _}, {_ - _})
   op: BinaryOp[T, T, Op, T]):BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]] = new BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]] {
-    def methodMissing(a: Vector[T], b: Vector[T]): Vector[T] = {
+    override def bindingMissing(a: Vector[T], b: Vector[T]): Vector[T] = {
       require(b.length == a.length, "Vectors must be the same length!")
       val result = a.copy
       for((k,v) <- b.activeIterator) {
@@ -212,11 +208,12 @@ trait VectorOps { this: Vector.type =>
   }
 
 
+
   @expand
   @expand.valify
   implicit def v_v_nilpotent_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T]
   (implicit @sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T):BinaryRegistry[Vector[T], Vector[T], OpMulScalar, Vector[T]] = new BinaryRegistry[Vector[T], Vector[T], OpMulScalar, Vector[T]] {
-    def methodMissing(a: Vector[T], b: Vector[T]): Vector[T] = {
+    override def bindingMissing(a: Vector[T], b: Vector[T]): Vector[T] = {
       require(b.length == a.length, "Vectors must be the same length!")
       val builder = new VectorBuilder[T](a.length)
       for((k,v) <- b.activeIterator) {
@@ -230,6 +227,8 @@ trait VectorOps { this: Vector.type =>
 
 
 
+
+
   @expand
   @expand.valify
   @expand.exclude(Complex, OpMod)
@@ -238,7 +237,7 @@ trait VectorOps { this: Vector.type =>
   @expandArgs(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: BinaryOp[T, T, Op, T]):BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]] = new BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]] {
-    def methodMissing(a: Vector[T], b: Vector[T]): Vector[T] = {
+    override def bindingMissing(a: Vector[T], b: Vector[T]): Vector[T] = {
       require(b.length == a.length, "Vectors must be the same length!")
       val result = Vector.zeros[T](a.length)
       var i = 0
@@ -250,6 +249,19 @@ trait VectorOps { this: Vector.type =>
     }
   }
 
+
+
+  /*
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def cast_v_v_Op[V1, V2,
+  @expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub, OpMulScalar,OpDiv, OpSet, OpMod, OpPow) Op <: OpType](implicit v1: V1<:<Vector[T], v2: V2<:<Vector[T]) = {
+    implicitly[BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]]].asInstanceOf[BinaryOp[V1, V2, Op, Vector[T]]]
+  }
+  */
+
   @expand
   @expand.valify
   @expand.exclude(Complex, OpMod)
@@ -260,7 +272,7 @@ trait VectorOps { this: Vector.type =>
   op: BinaryOp[T, T, Op, T],
   @sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero)
   zero: T):BinaryRegistry[Vector[T], T, Op, Vector[T]] = new BinaryRegistry[Vector[T], T, Op, Vector[T]] {
-    def methodMissing(a: Vector[T], b: T): Vector[T] = {
+    override def bindingMissing(a: Vector[T], b: T): Vector[T] = {
       val result = Vector.zeros[T](a.length)
 
       var i = 0
@@ -282,7 +294,7 @@ trait VectorOps { this: Vector.type =>
   @expandArgs(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @sequence[Op]({_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: BinaryOp[T, T, Op, T]):BinaryUpdateRegistry[Vector[T], Vector[T], Op] = new BinaryUpdateRegistry[Vector[T], Vector[T], Op] {
-    def methodMissing(a: Vector[T], b: Vector[T]):Unit = {
+    override def bindingMissing(a: Vector[T], b: Vector[T]):Unit = {
       require(b.length == a.length, "Vectors must be the same length!")
       var i = 0
       while(i < a.length) {
@@ -300,7 +312,7 @@ trait VectorOps { this: Vector.type =>
   @expandArgs(OpAdd, OpSub) Op <: OpType]
   (implicit @sequence[Op]({_ + _}, {_ - _})
   op: BinaryOp[T, T, Op, T]):BinaryUpdateRegistry[Vector[T], Vector[T], Op] = new BinaryUpdateRegistry[Vector[T], Vector[T], Op] {
-    def methodMissing(a: Vector[T], b: Vector[T]):Unit = {
+    override def bindingMissing(a: Vector[T], b: Vector[T]):Unit = {
       require(b.length == a.length, "Vectors must be the same length!")
       for( (k,v) <- b.activeIterator) {
         a(k) = op(a(k), v)
@@ -316,7 +328,7 @@ trait VectorOps { this: Vector.type =>
   @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod) Op <: OpType]
   (implicit @sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _})
   op: BinaryOp[T, T, Op, T]):BinaryUpdateRegistry[Vector[T], T, Op] = new BinaryUpdateRegistry[Vector[T], T, Op] {
-    def methodMissing(a: Vector[T], b: T):Unit = {
+    override def bindingMissing(a: Vector[T], b: T):Unit = {
       var i = 0
       while(i < a.length) {
         a(i) = op(a(i), b)
@@ -326,15 +338,14 @@ trait VectorOps { this: Vector.type =>
   }
 
 
-
   @expand
   @expand.valify
-  implicit def canDot_V_V[@expandArgs(Int, Long, BigInt, Complex) T](implicit @sequence[T](0, 0l, BigInt(0), Complex.zero) zero: T): BinaryRegistry[Vector[T], Vector[T], breeze.linalg.operators.OpMulInner, T] = {
+  implicit def canDot_V_V[@expandArgs(Int, Long, BigInt, Complex, Float, Double) T](implicit @sequence[T](0, 0l, BigInt(0), Complex.zero, 0.0f, 0.0) zero: T): BinaryRegistry[Vector[T], Vector[T], breeze.linalg.operators.OpMulInner, T] = {
     new BinaryRegistry[Vector[T], Vector[T], breeze.linalg.operators.OpMulInner, T] {
-      def methodMissing(a: Vector[T], b: Vector[T]):T = {
+      override def bindingMissing(a: Vector[T], b: Vector[T]):T = {
         require(b.length == a.length, "Vectors must be the same length!")
         if (a.activeSize > b.activeSize) {
-          methodMissing(b, a)
+          bindingMissing(b, a)
         } else {
           var result : T = zero
           for( (k,v) <- a.activeIterator) {
@@ -343,9 +354,26 @@ trait VectorOps { this: Vector.type =>
           result
         }
       }
-//      Vector.canDotProductV_T.register(this)
     }
   }
+
+
+  @expand
+  implicit def axpy[@expandArgs(Int, Double, Float, Long, BigInt, Complex) V]: CanAxpy[V, Vector[V], Vector[V]] = {
+    new CanAxpy[V, Vector[V], Vector[V]] {
+      def apply(s: V, b: Vector[V], a: Vector[V]) {
+        require(b.length == a.length, "Vectors must be the same length!")
+        if(s == 0) return
+
+        var i = 0
+        for( (k, v) <- b.activeIterator) {
+          a(k) += s * v
+          i += 1
+        }
+      }
+    }
+  }
+
 }
 
 /**

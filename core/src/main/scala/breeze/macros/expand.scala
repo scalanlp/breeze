@@ -95,7 +95,8 @@ object expand {
               c.error(tree.pos, "Can't valify: Not all arguments were grounded: " + newvargs.map(_.mkString(", ")).mkString("(",")(",")"))
             ValDef(mods, newName, newtpt, grounded)
           } else {
-            DefDef(mods, newName, typesLeftAbstract, newvargs, newtpt, grounded)
+            val newTargs = typesLeftAbstract.map(substitute(c)(typeMap, valExpansions, _)).asInstanceOf[List[TypeDef]]
+            DefDef(mods, newName, newTargs, newvargs, newtpt, grounded)
           }
         }
         val ret = c.Expr(Block(newDefs.toList, Literal(Constant(()))))
@@ -152,7 +153,12 @@ object expand {
     import context.mirror.universe._
     val x = v.mods.annotations.collectFirst{
       case x@q"new ${Ident(nme)}[${Ident(nme2)}](...$args)"  if (nme:Name).decoded == "sequence" =>
-        nme2 -> (typeMappings(nme2) zip args.flatten).toMap
+        if( args.flatten.length != typeMappings(nme2).length) {
+          context.error(x.pos, s"@sequence arguments list does not match the expandArgs for $nme2")
+        }
+        val predef = context.mirror.staticModule("scala.Predef").asModule
+        val missing = Select(Ident(predef), predef.newTermSymbol(newTermName("???")))
+        nme2 -> (typeMappings(nme2) zip args.flatten).toMap.withDefaultValue(missing)
     }
     x.get
   }
@@ -166,9 +172,15 @@ object expand {
   private def typeMappings(c: Context)(td: c.mirror.universe.TypeDef):List[c.mirror.universe.Type] = {
     import c.mirror.universe._
 
-    val mods = td.mods.annotations.collect{ case q"new ${Ident(nme)}(...$args)" if (nme:Name).decoded == "expandArgs" =>
+    val mods = td.mods.annotations.collect{ case tree@q"new ${Ident(nme)}(...$args)" if (nme:Name).decoded == "expandArgs" =>
       val flatArgs:Seq[Tree] = args.flatten
-      flatArgs.map(c.typeCheck(_)).map(_.symbol.asModule.companionSymbol.asType.toType)
+      flatArgs.map(c.typeCheck(_)).map{ tree =>
+        try {
+          tree.symbol.asModule.companionSymbol.asType.toType
+        }  catch {
+          case ex: Exception => c.abort(tree.pos, s"${tree.symbol} does not have a companion. Is it maybe an alias?")
+        }
+      }
     }.flatten
     mods
   }

@@ -443,7 +443,7 @@ trait SparseVector_DenseVector_Ops extends DenseVector_SparseVector_Ops { this: 
   }
 
   @expand
-  implicit def canDot_SV_DV[@expandArgs(Int, Long, BigInt, Complex) T](implicit @sequence[T](0, 0l, BigInt(0), Complex.zero) zero: T): BinaryOp[SparseVector[T], DenseVector[T], breeze.linalg.operators.OpMulInner, T] = {
+  implicit def canDot_SV_DV[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T]: BinaryOp[SparseVector[T], DenseVector[T], breeze.linalg.operators.OpMulInner, T] = {
     new BinaryOp[SparseVector[T], DenseVector[T], breeze.linalg.operators.OpMulInner, T] {
       def apply(a: SparseVector[T], b: DenseVector[T]) = {
         require(b.length == a.length, "Vectors must be the same length!")
@@ -530,7 +530,7 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
 
 
   @expand
-  implicit def canDot_DV_SV[@expandArgs(Int, Long, BigInt, Complex) T](implicit @sequence[T](0, 0l, BigInt(0), Complex.zero) zero: T): BinaryOp[DenseVector[T], SparseVector[T], breeze.linalg.operators.OpMulInner, T] = {
+  implicit def canDot_DV_SV[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T](implicit @sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T): BinaryOp[DenseVector[T], SparseVector[T], breeze.linalg.operators.OpMulInner, T] = {
     new BinaryOp[DenseVector[T], SparseVector[T], breeze.linalg.operators.OpMulInner, T] {
       def apply(a: DenseVector[T], b: SparseVector[T]) = {
         var result: T = zero
@@ -773,35 +773,50 @@ trait SparseVectorOps { this: SparseVector.type =>
     }
   }
 
-  protected def updateFromPure[T, Op<:OpType, Other](implicit op: BinaryOp[SparseVector[T], Other, Op, SparseVector[T]]) = new BinaryUpdateOp[SparseVector[T], Other, Op] {
-    def apply(a: SparseVector[T], b: Other) {
-      val result = op(a, b)
-      a.use(result.index, result.data, result.activeSize)
+  protected def updateFromPure[T, Op<:OpType, Other](implicit op: BinaryOp[SparseVector[T], Other, Op, SparseVector[T]]): BinaryUpdateOp[SparseVector[T], Other, Op] = {
+    new BinaryUpdateOp[SparseVector[T], Other, Op] {
+      def apply(a: SparseVector[T], b: Other) {
+        val result = op(a, b)
+        a.use(result.index, result.data, result.activeSize)
+      }
     }
   }
 
 
-  implicit def opSet[T]: BinaryUpdateOp[SparseVector[T], SparseVector[T], OpSet] = new BinaryUpdateOp[SparseVector[T], SparseVector[T], OpSet] {
-    def apply(a: SparseVector[T], b: SparseVector[T]) {
-      val result = b.copy
-      a.use(result.index, result.data, result.activeSize)
+  implicit def opSet[T]: BinaryUpdateOp[SparseVector[T], SparseVector[T], OpSet] = {
+    new BinaryUpdateOp[SparseVector[T], SparseVector[T], OpSet] {
+      def apply(a: SparseVector[T], b: SparseVector[T]) {
+        val result = b.copy
+        a.use(result.index, result.data, result.activeSize)
+      }
+    }
+  }
+
+  implicit def opSetS[T:Semiring:ClassTag]: BinaryUpdateOp[SparseVector[T], T, OpSet] = {
+    val zero = implicitly[Semiring[T]].zero
+    new BinaryUpdateOp[SparseVector[T], T, OpSet] {
+      def apply(a: SparseVector[T], b: T) {
+        if(b == zero) {
+          a.use(new Array[Int](2), new Array[T](2), 0)
+          return
+        }
+        val data = Array.fill(a.length)(b)
+        val index = Array.range(0, a.length)
+        a.use(index, data, a.length)
+      }
     }
   }
 
   // this shouldn't be necessary but it is:
   @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
   implicit def sv_sv_Update[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpMod, OpPow) Op <: OpType](implicit op: BinaryOp[SparseVector[T], SparseVector[T], Op, SparseVector[T]]) = {
+  @expandArgs(OpAdd, OpSub, OpDiv, OpPow, OpMod, OpMulScalar) Op <: OpType](implicit op: BinaryOp[SparseVector[T], SparseVector[T], Op, SparseVector[T]]): BinaryUpdateOp[SparseVector[T], SparseVector[T], Op] = {
     updateFromPure(op)
   }
 
   @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
   implicit def sv_s_Update[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpMod, OpPow) Op <: OpType](implicit op: BinaryOp[SparseVector[T], T, Op, SparseVector[T]]) = {
+   @expandArgs(OpAdd, OpSub, OpDiv, OpPow, OpMod, OpMulScalar, OpMulMatrix) Op <: OpType](implicit op: BinaryOp[SparseVector[T], T, Op, SparseVector[T]]): BinaryUpdateOp[SparseVector[T], T, Op]  = {
     updateFromPure(op)
   }
 

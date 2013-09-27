@@ -163,7 +163,7 @@ class LinearProgram {
   */
 
   case class Result private[LinearProgram] (result: DenseVector[Double], problem: Problem) {
-    def valueOf(x: Expression) = {(x.coefficients dot result) + x.scalarComponent}
+    def valueOf(x: Expression):Double =  {(result dot x.coefficients) + x.scalarComponent}
     def value = valueOf(problem.objective)
   }
 

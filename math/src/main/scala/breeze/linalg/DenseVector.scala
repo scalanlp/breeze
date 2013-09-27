@@ -451,7 +451,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
         blas.daxpy(
           a.length, 1.0, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
-      Vector.canAddInto_V_V_Double.register(this)
+      implicitly[BinaryUpdateRegistry[Vector[Double], Vector[Double], OpAdd]].register(this)
     }
   }
 
@@ -468,7 +468,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   implicit val canAddD: BinaryOp[DenseVector[Double], DenseVector[Double], OpAdd, DenseVector[Double]] = {
     pureFromUpdate_Double(canAddIntoD)
   }
-  Vector.canAdd_V_V_Double.register(canAddD)
+  implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpAdd, Vector[Double]]].register(canAddD)
 
   implicit val canSubIntoD: BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSub] = {
     new BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSub] {
@@ -477,14 +477,14 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
         blas.daxpy(
           a.length, -1.0, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
-      Vector.canSubInto_V_V_Double.register(this)
+      implicitly[BinaryUpdateRegistry[Vector[Double], Vector[Double], OpSub]].register(this)
     }
 
   }
   implicit val canSubD: BinaryOp[DenseVector[Double], DenseVector[Double], OpSub, DenseVector[Double]] = {
     pureFromUpdate_Double(canSubIntoD)
   }
-  Vector.canSub_V_V_Double.register(canSubD)
+  implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpSub, Vector[Double]]].register(canSubD)
 
   implicit val canDotD: BinaryOp[DenseVector[Double], DenseVector[Double], OpMulInner, Double] = {
     new BinaryOp[DenseVector[Double], DenseVector[Double], OpMulInner, Double] {
@@ -493,7 +493,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
         blas.ddot(
           a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
-      Vector.canDotProductV_Double.register(this)
+      implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpMulInner, Double]].register(this)
     }
 
   }
@@ -504,19 +504,19 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
         blas.dscal(
           a.length, b, a.data, a.offset, a.stride)
       }
-      Vector.canMulScalarInto_V_S_Double.register(this)
+      implicitly[BinaryUpdateRegistry[Vector[Double], Double, OpMulScalar]].register(this)
     }
 
   }
   implicit val canScaleD: BinaryOp[DenseVector[Double], Double, OpMulScalar, DenseVector[Double]] {def apply(a: DenseVector[Double], b: Double): DenseVector[Double]} = binaryOpFromBinaryUpdateOp(implicitly[CanCopy[DenseVector[Double]]], canScaleIntoD, implicitly[ClassTag[Double]])
-  Vector.canMulScalar_V_S_Double.register(canScaleD)
+  implicitly[BinaryRegistry[Vector[Double], Double, OpMulScalar, Vector[Double]]].register(canScaleD)
 
   implicit val canSetD:BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSet] = new BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSet] {
     def apply(a: DenseVector[Double], b: DenseVector[Double]) {
       blas.dcopy(
         a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
     }
-    Vector.canSetInto_V_V_Double.register(this)
+    implicitly[BinaryUpdateRegistry[Vector[Double], Vector[Double], OpSet]].register(this)
   }
 
 
@@ -639,27 +639,34 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   @expand
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
+  @expand.valify
   implicit def dv_dv_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
   @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
-  op: BinaryOp[T, T, Op, T]):BinaryOp[DenseVector[T], DenseVector[T], Op, DenseVector[T]] = new BinaryOp[DenseVector[T], DenseVector[T], Op, DenseVector[T]] {
-    def apply(a: DenseVector[T], b: DenseVector[T]): DenseVector[T] = {
-      val ad = a.data
-      val bd = b.data
-      var aoff = a.offset
-      var boff = b.offset
-      val result = DenseVector.zeros[T](a.length)
-      val rd = result.data
+  op: BinaryOp[T, T, Op, T]):BinaryOp[DenseVector[T], DenseVector[T], Op, DenseVector[T]] = {
+    val opop = new BinaryOp[DenseVector[T], DenseVector[T], Op, DenseVector[T]] {
+      def apply(a: DenseVector[T], b: DenseVector[T]): DenseVector[T] = {
+        val ad = a.data
+        val bd = b.data
+        var aoff = a.offset
+        var boff = b.offset
+        val result = DenseVector.zeros[T](a.length)
+        val rd = result.data
 
-      var i = 0
-      while(i < a.length) {
-        rd(i) = op(ad(aoff), bd(boff))
-        aoff += a.stride
-        boff += b.stride
-        i += 1
+        var i = 0
+        while(i < a.length) {
+          rd(i) = op(ad(aoff), bd(boff))
+          aoff += a.stride
+          boff += b.stride
+          i += 1
+        }
+        result
       }
-      result
     }
+
+//    implicitly[BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]]].register(opop)
+//    implicitly[BinaryRegistry[DenseVector[T], Vector[T], Op, Vector[T]]].register(opop)
+    opop
   }
 
   @expand
@@ -781,6 +788,30 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
     }
   }
 
+  @expand
+  @expand.valify
+  implicit def canDot_DV_V[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T](implicit @sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T): BinaryOp[DenseVector[T], Vector[T], breeze.linalg.operators.OpMulInner, T] = {
+    new BinaryOp[DenseVector[T], Vector[T], breeze.linalg.operators.OpMulInner, T] {
+      def apply(a: DenseVector[T], b: Vector[T]) = {
+        require(b.length == a.length, "Vectors must be the same length!")
+
+        val ad = a.data
+        var aoff = a.offset
+        var result : T = zero
+
+        var i = 0
+        while(i < a.length) {
+          result += ad(aoff) * b(i)
+          aoff += a.stride
+          i += 1
+        }
+        result
+
+      }
+      //      Vector.canDotProductV_T.register(this)
+    }
+  }
+
 
 }
 
@@ -888,7 +919,7 @@ trait DenseVector_SpecialOps extends DenseVectorOps { this: DenseVector.type =>
         blas.sdot(
           a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
-      Vector.canDotProductV_Float.register(this)
+      implicitly[BinaryRegistry[Vector[Float], Vector[Float], OpMulInner, Float]].register(this)
     }
   }
 }
