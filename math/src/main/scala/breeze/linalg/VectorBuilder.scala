@@ -336,7 +336,7 @@ object VectorBuilder extends VectorBuilderOps_Double {
 
 
   // Sigh, Array.range is slow.
-  private def range(length: Int) = {
+  private[linalg] def range(length: Int) = {
     val result = new Array[Int](length)
     var i = 0
     while(i < length) {

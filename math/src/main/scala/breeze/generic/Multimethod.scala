@@ -174,6 +174,7 @@ trait Multiproc2[Method[AA,BB]<:(AA, BB) => Unit,A<:AnyRef,B] extends ((A, B) =>
 }
 
 
+// TODO: switch to identity hashing!
 trait MMRegistry2[R] {
   protected val ops = HashMap[(Class[_],Class[_]), R]()
   protected val cache = new ConcurrentHashMap[(Class[_], Class[_]), Option[R]]()

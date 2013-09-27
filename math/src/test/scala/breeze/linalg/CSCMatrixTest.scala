@@ -53,10 +53,13 @@ class CSCMatrixTest extends FunSuite with Checkers {
     val b = CSCMatrix((7, -2, 8),(-3, -3, 1),(12, 0, 5))
     val bd = DenseMatrix((7, -2, 8),(-3, -3, 1),(12, 0, 5))
     val c = DenseVector(6,2,3)
+    val cs = SparseVector(3)( (1,2))
     assert(a * b === CSCMatrix((37, -8, 25), (85, -23, 67)))
     assert(a * bd === DenseMatrix((37, -8, 25), (85, -23, 67)))
     assert(a * c === DenseVector(19,52))
     assert(b * c === DenseVector(62, -21, 87))
+    assert(a * cs === SparseVector(4, 10))
+
 //    assert(b.t * c === DenseVector(72, -18, 65))
 //    assert(a.t * DenseVector(4, 3) === DenseVector(16, 23, 30))
 
