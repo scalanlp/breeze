@@ -21,6 +21,7 @@ import org.scalatest.junit._
 import org.scalatest.prop._
 import org.scalatest.matchers.ShouldMatchers
 import org.junit.runner.RunWith
+import breeze.util.DoubleImplicits
 
 /**
  *
@@ -28,7 +29,7 @@ import org.junit.runner.RunWith
  */
 
 @RunWith(classOf[JUnitRunner])
-class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
+class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with DoubleImplicits {
   test("kron") {
     val a = DenseMatrix((1,2),(3,4))
     val b = DenseMatrix((0,5),(6,7))
@@ -137,19 +138,16 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
     val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
     val (_Q, _R) = qr(A)
 
-    val expectedQ = DenseMatrix((-0.06052275326,-0.6022239035,-0.7960297521),
-                           (-0.2420910130,-0.7648243574,0.5970223140),
-                           (-0.9683640522,0.2288450833,-0.09950371901))
-    assert(_Q.rows === (expectedQ.rows))
-    assert(_Q.cols === (expectedQ.cols))
-    _Q foreachPair { case ((i,j), v) => v should be (expectedQ(i,j) plusOrMinus 1e-8) }
+    assert( (_Q.t * _Q).trace.closeTo(_Q.rows) )
+    for(i <- 0 until _R.rows; j <- 0 until i) {
+      assert(_R(i,j) === 0.0)
+    }
 
-    val expectedR = DenseMatrix((-16.52271164,-4.418160988,-1.270977818),
-      (0.0,-1.216492285,-1.138203178),
-      (0.0,0.0,-0.2985111571))
-    _R.rows should  be (expectedR.rows)
-    _R.cols should  be (expectedR.cols)
-    _R foreachPair { case ((i,j), v) => v should be (expectedR(i,j) plusOrMinus 1e-8) }
+    val reA: DenseMatrix[Double] = _Q * _R
+    for(i <- 0 until A.rows; j <- 0 until A.cols) {
+      reA(i,j) should be (A(i, j) plusOrMinus 1E-6)
+    }
+
   }
   test("qrp") {
     val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
@@ -187,13 +185,25 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
   test("svd") {
     val m = DenseMatrix((2.0,4.0),(1.0,3.0),(0.0,0.0),(0.0,0.0))
     val (u, s, vt) = svd(m)
-    assert( (u - DenseMatrix((-0.8174155604703632, -0.5760484367663208, 0.0,0.0),
-                             (-0.5760484367663208, 0.8174155604703633, 0.0, 0.0),
-                             (0.0,0.0,1.0,0.0),
-                             (0.0,0.0,0.0,1.0) )).valuesIterator.map(_.abs).max < 1E-5)
-    assert( breeze.numerics.abs(s - DenseVector(5.464985704219043, 0.3659661906262578)).max < 1E-5)
-    assert( breeze.numerics.abs(vt - DenseMatrix((-0.4045535848337569,-0.9145142956773045),
-      (-0.9145142956773045,0.4045535848337569))).max < 1E-5)
+
+    // u and vt are unitary
+    (u.t * u).trace should be (u.rows.toDouble plusOrMinus 1E-5)
+    (vt * vt.t).trace should be (vt.rows.toDouble plusOrMinus 1E-5)
+
+    // s is sorted by size of singular value, and be nonnegative
+    for(i <- 1 until s.length) {
+      assert(s(i) <= s(i-1), s"s($i) > s(${i-1}): ${s(i)} > ${s(i-1)}")
+      assert(s(i) >= 0, s"s($i) < 0: ${s(i)}")
+    }
+
+
+    println(u.rows,u.cols,s.length,vt.rows, vt.cols)
+    val ss = DenseMatrix.zeros[Double](m.rows, m.cols)
+    diag(ss(0 until s.length, 0 until s.length)) := s
+    val reM: DenseMatrix[Double] =  u * ss * vt
+    for(i <- 0 until m.rows; j <- 0 until m.cols) {
+      reM(i,j) should be (m(i, j) plusOrMinus 1E-6)
+    }
   }
 
 
@@ -201,4 +211,5 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
     val X = DenseMatrix(( .7, .2), (.3, .8))
     assert(pow(X, 1) === X)
     assert( breeze.numerics.abs(pow(X, .5) - DenseMatrix((.82426, 0.11716), (.17574, 0.88284))).max < 1E-5, pow(X, .5))
-  }}
+  }
+}
