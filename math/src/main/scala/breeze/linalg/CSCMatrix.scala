@@ -153,6 +153,10 @@ class CSCMatrix[@specialized(Int, Float, Double) V:DefaultArrayValue] private[li
   }
 
   override def toString: String = toString(maxLines = Terminal.terminalHeight - 3)
+
+  def copy: Matrix[V] = {
+    new CSCMatrix[V](ArrayUtil.copyOf(_data, activeSize), rows, cols, colPtrs.clone(), activeSize, _rowIndices.clone)
+  }
 }
 
 object CSCMatrix extends MatrixConstructors[CSCMatrix]  with CSCMatrixOps {

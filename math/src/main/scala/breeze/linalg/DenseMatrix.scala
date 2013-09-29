@@ -187,13 +187,18 @@ extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
     else f(valuesIterator)
   }
 
+  override def toDenseMatrix(implicit cm: ClassTag[V], dfv: DefaultArrayValue[V]): DenseMatrix[V] = {
+    val result = new DenseMatrix[V](rows, cols, new Array[V](size))
+    result := this
+    result
+  }
+
   def copy: DenseMatrix[V] = {
     implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
     val result = new DenseMatrix[V](rows, cols, new Array[V](size))
     result := this
     result
   }
-
 }
 
 object DenseMatrix extends LowPriorityDenseMatrix
@@ -1067,6 +1072,10 @@ trait DenseMatrixOpsLowPrio { this: DenseMatrixOps =>
 }
 
 trait DenseMatrixMultOps extends DenseMatrixOps { this: DenseMatrix.type =>
+  // I don't know why this import is necessary to make the DefaultArrayValue do the right thing.
+  // If I remove the import breeze.storage.DefaultArrayValue._, everything breaks, for some reason.
+  import breeze.math.Complex.ComplexDefaultArrayValue
+
   @expand
   @expand.valify
   implicit def op_DM_V[@expandArgs(Int, Long, Float, Double, BigInt, Complex) T]:BinaryRegistry[DenseMatrix[T], Vector[T], OpMulMatrix, DenseVector[T]] = new BinaryRegistry[DenseMatrix[T], Vector[T], OpMulMatrix, DenseVector[T]] {
@@ -1088,7 +1097,7 @@ trait DenseMatrixMultOps extends DenseMatrixOps { this: DenseMatrix.type =>
 
       res
     }
-  };
+  }
 
 
   @expand
@@ -1119,9 +1128,6 @@ trait DenseMatrixMultOps extends DenseMatrixOps { this: DenseMatrix.type =>
   }
 
 
-  // I don't know why this import is necessary to make the DefaultArrayValue do the right thing.
-  // If I remove the import breeze.storage.DefaultArrayValue._, everything breaks, for some reason.
-  import breeze.math.Complex.ComplexDefaultArrayValue
 
   @expand
   @expand.valify

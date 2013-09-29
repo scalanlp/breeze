@@ -18,12 +18,14 @@ package breeze.linalg
 import scala.{specialized=>spec}
 import breeze.storage.{DefaultArrayValue, Storage}
 import breeze.util.Terminal
-import support.LiteralRow
+import breeze.linalg.support.{CanCopy, LiteralRow}
 import util.Random
 import breeze.generic.CanMapValues
-import breeze.math.Semiring
-import breeze.linalg.operators.{OpSet, BinaryUpdateOp}
+import breeze.math.{Complex, Semiring}
+import breeze.linalg.operators._
 import scala.reflect.ClassTag
+import breeze.macros.{sequence, expandArgs, expand}
+import scala.math.BigInt
 
 /**
  *
@@ -124,6 +126,8 @@ trait Matrix[@spec(Int, Float, Double) E] extends MatrixLike[E, Matrix[E]] {
     DenseMatrix.tabulate(rows, cols){ (i,j) => apply(i, j)}
   }
 
+  def copy:Matrix[E]
+
 }
 
 object Matrix extends MatrixConstructors[Matrix]
@@ -132,11 +136,38 @@ object Matrix extends MatrixConstructors[Matrix]
                       with MatrixMultOps_Float
                       with MatrixMultOps_Int
                       with MatrixMultOps_Complex {
+
   def zeros[@specialized(Int, Float, Double) V: ClassTag:DefaultArrayValue](rows: Int, cols: Int): Matrix[V] = DenseMatrix.zeros(rows, cols)
 
   def create[@specialized(Int, Float, Double) V:DefaultArrayValue](rows: Int, cols: Int, data: Array[V]): Matrix[V] = DenseMatrix.create(rows, cols, data)
 
-  // slicing
+  private[linalg] def zeroRows[V](cols: Int):Matrix[V] = emptyMatrix(0, cols)
+  private[linalg] def zeroCols[V](rows: Int):Matrix[V] = emptyMatrix(rows, 0)
+
+
+  private[linalg] def emptyMatrix[V](_rows: Int, _cols: Int):Matrix[V] = new Matrix[V] {
+    def activeIterator: Iterator[((Int, Int), V)] = Iterator.empty
+
+    def activeValuesIterator: Iterator[V] = Iterator.empty
+
+    def activeKeysIterator: Iterator[(Int, Int)] = Iterator.empty
+
+    def apply(i: Int, j: Int): V = throw new IndexOutOfBoundsException("Empty matrix!")
+
+    def update(i: Int, j: Int, e: V) {
+      throw new IndexOutOfBoundsException("Empty matrix!")
+    }
+
+    def rows: Int = _rows
+
+    def cols: Int = _cols
+
+    def copy: Matrix[V] = this
+
+    def activeSize: Int = 0
+
+    def repr: Matrix[V] = this
+  }
 }
 
 trait MatrixGenericOps { this: Matrix.type =>
@@ -153,6 +184,12 @@ trait MatrixGenericOps { this: Matrix.type =>
     }
   }
   implicit def setDMDV[V, MM](implicit st: MM<:<Matrix[V]) = new SetMMOp[V, MM]
+
+  implicit def canCopyMatrix[V:ClassTag] = new CanCopy[Matrix[V]] {
+    def apply(v1: Matrix[V]) = {
+      v1.copy
+    }
+  }
 }
 
 trait MatrixConstructors[Vec[T]<:Matrix[T]] {
@@ -197,6 +234,162 @@ trait MatrixConstructors[Vec[T]<:Matrix[T]] {
   private def finishLiteral[V, R](rv: Matrix[V], rl : LiteralRow[R,V], rows: Seq[R]) {
     for ((row,i) <- rows.zipWithIndex) {
       rl.foreach(row, {(j, v) => rv(i,j) = v})
+    }
+  }
+
+}
+
+
+trait MatrixOps { this: Matrix.type =>
+
+  import breeze.math.PowImplicits._
+
+  @expand
+  @expand.valify
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def dm_dm_UpdateOp[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: BinaryOp[T, T, Op, T]):BinaryUpdateOp[Matrix[T], Matrix[T], Op] = new BinaryUpdateOp[Matrix[T], Matrix[T], Op] {
+    def apply(a: Matrix[T], b: Matrix[T]):Unit = {
+      var c = 0
+
+      while(c < a.cols) {
+        var r = 0
+        while(r < a.rows) {
+          a(r, c) = op(a(r,c), b(r,c))
+          r += 1
+        }
+        c += 1
+      }
+
+      //      implicitly[BinaryUpdateRegistry[Matrix[T], Matrix[T], Op]].register(this)
+    }
+  }
+
+  @expand
+  @expand.valify
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def dm_s_UpdateOp[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: BinaryOp[T, T, Op, T]):BinaryUpdateOp[Matrix[T], T, Op] = new BinaryUpdateOp[Matrix[T], T, Op] {
+    def apply(a: Matrix[T], b: T):Unit = {
+      var c = 0
+
+      while(c < a.cols) {
+        var r = 0
+        while(r < a.rows) {
+          a(r, c) = op(a(r,c), b)
+          r += 1
+        }
+        c += 1
+      }
+
+      //      implicitly[BinaryUpdateRegistry[Matrix[T], T, Op]].register(this)
+    }
+  }
+
+
+  @expand
+  @expand.valify
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def op_DM_S[@expandArgs(Int, Long, Float, Double, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpMod, OpDiv, OpPow) Op]: BinaryOp[Matrix[T], T, Op, Matrix[T]] = {
+    val uop = implicitly[BinaryUpdateOp[Matrix[T], T, Op]]
+    new BinaryOp[Matrix[T],  T, Op, Matrix[T]] {
+      override def apply(a : Matrix[T], b: T) = {
+        val c = copy(a)
+        uop(c, b)
+        c
+      }
+      //      implicitly[BinaryRegistry[Matrix[T], T, Op, Matrix[T]]].register(this)
+    }
+  }
+
+  @expand
+  @expand.valify
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def op_DM_DM[@expandArgs(Int, Long, Float, Double, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub, OpMulScalar, OpMod, OpDiv, OpPow) Op]: BinaryOp[Matrix[T], Matrix[T], Op, Matrix[T]] = {
+    val uop = implicitly[BinaryUpdateOp[Matrix[T], Matrix[T], Op]]
+    new BinaryOp[Matrix[T],  Matrix[T], Op, Matrix[T]] {
+      override def apply(a : Matrix[T], b: Matrix[T]) = {
+        val c = copy(a)
+        uop(c, b)
+        c
+      }
+      //      implicitly[BinaryRegistry[Matrix[T], Matrix[T], Op, Matrix[T]]].register(this)
+    }
+  }
+
+}
+
+trait MatrixOpsLowPrio { this: MatrixOps =>
+  @expand
+  implicit def canMulM_V_def[@expandArgs(Int, Float, Double, Long, Complex, BigInt) T, A, B](implicit bb :  B <:< Vector[T]):BinaryOp[A, B, OpMulMatrix, Vector[T]] = (
+    implicitly[BinaryOp[Matrix[T], Vector[T], OpMulMatrix, Vector[T]]].asInstanceOf[BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Vector[T]]]
+    )
+
+  @expand
+  implicit def canMulM_M_def[@expandArgs(Int, Float, Double, Long, Complex, BigInt) T, B](implicit bb :  B <:< Matrix[T]):BinaryOp[Matrix[T], B, OpMulMatrix, Matrix[T]] = (
+    implicitly[BinaryOp[Matrix[T], Matrix[T], OpMulMatrix, Matrix[T]]].asInstanceOf[BinaryOp[Matrix[T], B, OpMulMatrix, Matrix[T]]]
+    )
+}
+
+trait MatrixMultOps extends MatrixOps { this: Matrix.type =>
+  @expand
+  @expand.valify
+  implicit def op_DM_V[@expandArgs(Int, Long, Float, Double, BigInt, Complex) T]:BinaryRegistry[Matrix[T], Vector[T], OpMulMatrix, Vector[T]] = new BinaryRegistry[Matrix[T], Vector[T], OpMulMatrix, Vector[T]] {
+    override def bindingMissing(a: Matrix[T], b: Vector[T]) = {
+
+      // TODO: this could probably be much faster?
+      require(a.cols == b.length)
+      val res = Vector.zeros[T](a.rows)
+      var c = 0
+      while(c < a.cols) {
+        var r = 0
+        while (r < a.rows) {
+          val v = a(r, c)
+          res(r) += v * b(c)
+          r += 1
+        }
+        c += 1
+      }
+
+      res
+    }
+  };
+
+
+  @expand
+  @expand.valify
+  implicit def op_DM_M[@expandArgs(Int, Long, Float, Double, BigInt, Complex) T]:BinaryRegistry[Matrix[T], Matrix[T], OpMulMatrix, Matrix[T]] = new BinaryRegistry[Matrix[T], Matrix[T], OpMulMatrix, Matrix[T]] {
+    override def bindingMissing(a: Matrix[T], b: Matrix[T]) = {
+
+      // TODO: this could probably be much faster
+      val res = Matrix.zeros[T](a.rows, b.cols)
+      require(a.cols == b.rows)
+      var c = 0
+      while(c < a.cols) {
+        var r = 0
+        while (r < a.rows) {
+          val v = a(r, c)
+          var j = 0
+          while(j < b.cols) {
+            res(r, j) += v * b(c, j)
+            j += 1
+          }
+          r += 1
+        }
+        c += 1
+      }
+
+      res
     }
   }
 
