@@ -132,10 +132,9 @@ trait Matrix[@spec(Int, Float, Double) E] extends MatrixLike[E, Matrix[E]] {
 
 object Matrix extends MatrixConstructors[Matrix]
                       with MatrixGenericOps
-                      with MatrixMultOps_Double
-                      with MatrixMultOps_Float
-                      with MatrixMultOps_Int
-                      with MatrixMultOps_Complex {
+                      with MatrixOpsLowPrio
+                      with MatrixOps
+                      with MatrixMultOps {
 
   def zeros[@specialized(Int, Float, Double) V: ClassTag:DefaultArrayValue](rows: Int, cols: Int): Matrix[V] = DenseMatrix.zeros(rows, cols)
 
@@ -240,7 +239,7 @@ trait MatrixConstructors[Vec[T]<:Matrix[T]] {
 }
 
 
-trait MatrixOps { this: Matrix.type =>
+trait MatrixOps extends MatrixGenericOps { this: Matrix.type =>
 
   import breeze.math.PowImplicits._
 
@@ -329,10 +328,10 @@ trait MatrixOps { this: Matrix.type =>
 
 }
 
-trait MatrixOpsLowPrio { this: MatrixOps =>
+trait MatrixOpsLowPrio extends MatrixGenericOps { this: MatrixOps with Matrix.type =>
   @expand
-  implicit def canMulM_V_def[@expandArgs(Int, Float, Double, Long, Complex, BigInt) T, A, B](implicit bb :  B <:< Vector[T]):BinaryOp[A, B, OpMulMatrix, Vector[T]] = (
-    implicitly[BinaryOp[Matrix[T], Vector[T], OpMulMatrix, Vector[T]]].asInstanceOf[BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, Vector[T]]]
+  implicit def canMulM_V_def[@expandArgs(Int, Float, Double, Long, Complex, BigInt) T, B](implicit bb :  B <:< Vector[T]):BinaryOp[Matrix[T], B, OpMulMatrix, Vector[T]] = (
+    implicitly[BinaryOp[Matrix[T], Vector[T], OpMulMatrix, Vector[T]]].asInstanceOf[BinaryOp[Matrix[T], B, breeze.linalg.operators.OpMulMatrix, Vector[T]]]
     )
 
   @expand
@@ -341,7 +340,7 @@ trait MatrixOpsLowPrio { this: MatrixOps =>
     )
 }
 
-trait MatrixMultOps extends MatrixOps { this: Matrix.type =>
+trait MatrixMultOps extends MatrixOps with MatrixOpsLowPrio { this: Matrix.type =>
   @expand
   @expand.valify
   implicit def op_DM_V[@expandArgs(Int, Long, Float, Double, BigInt, Complex) T]:BinaryRegistry[Matrix[T], Vector[T], OpMulMatrix, Vector[T]] = new BinaryRegistry[Matrix[T], Vector[T], OpMulMatrix, Vector[T]] {

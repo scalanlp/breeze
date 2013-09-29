@@ -1060,18 +1060,21 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
 }
 
 trait DenseMatrixOpsLowPrio { this: DenseMatrixOps =>
+  // LOL, if we explicitly annotate the type, then the implicit resolution thing will load this recursively.
+  // If we don't, then everything works ok.
   @expand
-  implicit def canMulM_V_def[@expandArgs(Int, Float, Double, Long, Complex, BigInt) T, A, B](implicit bb :  B <:< Vector[T]):BinaryOp[A, B, OpMulMatrix, DenseVector[T]] = (
+  implicit def canMulM_V_def[@expandArgs(Int, Float, Double, Long, Complex, BigInt) T, A, B](implicit bb :  B <:< Vector[T]) = (
     implicitly[BinaryOp[DenseMatrix[T], Vector[T], OpMulMatrix, DenseVector[T]]].asInstanceOf[BinaryOp[A, B, breeze.linalg.operators.OpMulMatrix, DenseVector[T]]]
     )
 
+  // ibid.
   @expand
-  implicit def canMulM_M_def[@expandArgs(Int, Float, Double, Long, Complex, BigInt) T, B](implicit bb :  B <:< Matrix[T]):BinaryOp[DenseMatrix[T], B, OpMulMatrix, DenseMatrix[T]] = (
+  implicit def canMulM_M_def[@expandArgs(Int, Float, Double, Long, Complex, BigInt) T, B](implicit bb :  B <:< Matrix[T]) = (
     implicitly[BinaryOp[DenseMatrix[T], Matrix[T], OpMulMatrix, DenseMatrix[T]]].asInstanceOf[BinaryOp[DenseMatrix[T], B, OpMulMatrix, DenseMatrix[T]]]
     )
 }
 
-trait DenseMatrixMultOps extends DenseMatrixOps { this: DenseMatrix.type =>
+trait DenseMatrixMultOps extends DenseMatrixOps with DenseMatrixOpsLowPrio { this: DenseMatrix.type =>
   // I don't know why this import is necessary to make the DefaultArrayValue do the right thing.
   // If I remove the import breeze.storage.DefaultArrayValue._, everything breaks, for some reason.
   import breeze.math.Complex.ComplexDefaultArrayValue
