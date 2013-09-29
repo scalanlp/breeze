@@ -152,7 +152,7 @@ object expand {
   private def solveSequence(context: Context)(v: context.mirror.universe.ValDef, typeMappings: Map[context.Name, List[context.Type]]):(context.Name, Map[context.Type, context.Tree]) = {
     import context.mirror.universe._
     val x = v.mods.annotations.collectFirst{
-      case x@q"new ${Ident(nme)}[${Ident(nme2)}](...$args)"  if (nme:Name).decoded == "sequence" =>
+      case x@q"new ${Ident(nme)}[${Ident(nme2)}](...$args)"    if (nme:Name).decoded == "sequence" =>
         if( args.flatten.length != typeMappings(nme2).length) {
           context.error(x.pos, s"@sequence arguments list does not match the expandArgs for $nme2")
         }

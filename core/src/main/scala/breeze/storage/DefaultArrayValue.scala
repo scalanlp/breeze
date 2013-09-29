@@ -28,7 +28,7 @@ trait DefaultArrayValue[@specialized T] extends Serializable {
 }
 
 
-object DefaultArrayValue {
+object DefaultArrayValue extends DefaultArrayValueLowPriority {
   def forClass(clazz: Class[_]):DefaultArrayValue[_] = {
     if(clazz == Integer.TYPE) IntDefaultArrayValue
     else if (clazz == java.lang.Float.TYPE) FloatDefaultArrayValue
@@ -76,10 +76,16 @@ object DefaultArrayValue {
     override def value = false
   }
 
+
+}
+
+trait DefaultArrayValueLowPriority { this: DefaultArrayValue.type =>
+  implicit def ObjectDefaultArrayValue[T<:AnyRef] = {
+    refDefault.asInstanceOf[DefaultArrayValue[T]]
+  }
+
+
   val refDefault = new DefaultArrayValue[AnyRef] {
     override def value : AnyRef = null
   }
-
-  implicit def ObjectDefaultArrayValue[T<:AnyRef] =
-    refDefault.asInstanceOf[DefaultArrayValue[T]]
 }

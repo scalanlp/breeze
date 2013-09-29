@@ -127,6 +127,8 @@ trait DenseMatrixMultOps_Float extends DenseMatrixOps_Float { this: DenseMatrix.
     
 }
 
+
+
 /** This is an auto-generated trait providing multiplication for DenseMatrix */
 trait DenseMatrixMultOps_Int extends DenseMatrixOps_Int { this: DenseMatrix.type =>
 

@@ -425,7 +425,6 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
         val rrlast = a.colPtrs(c+1)
         if(rr < rrlast) {
           val newBOffset = util.Arrays.binarySearch(b.index, lastOffset, math.max(b.activeSize, c+1), c)
-          println(c, b.index.toIndexedSeq, lastOffset, b.activeSize, newBOffset, ~newBOffset)
           if(newBOffset < 0) {
             lastOffset = ~newBOffset
           } else {
