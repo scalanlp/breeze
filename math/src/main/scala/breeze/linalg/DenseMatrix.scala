@@ -993,8 +993,8 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
         c += 1
       }
 
-//      implicitly[BinaryUpdateRegistry[Matrix[T], Matrix[T], Op]].register(this)
     }
+    implicitly[BinaryUpdateRegistry[Matrix[T], Matrix[T], Op]].register(this)
   }
 
   @expand
@@ -1018,8 +1018,8 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
         c += 1
       }
 
-//      implicitly[BinaryUpdateRegistry[Matrix[T], T, Op]].register(this)
     }
+    implicitly[BinaryUpdateRegistry[Matrix[T], T, Op]].register(this)
   }
 
 
@@ -1036,7 +1036,7 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
         uop(c, b)
         c
       }
-//      implicitly[BinaryRegistry[Matrix[T], T, Op, Matrix[T]]].register(this)
+      implicitly[BinaryRegistry[Matrix[T], T, Op, Matrix[T]]].register(this)
     }
   }
 
@@ -1053,7 +1053,7 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
         uop(c, b)
         c
       }
-//      implicitly[BinaryRegistry[Matrix[T], Matrix[T], Op, Matrix[T]]].register(this)
+      implicitly[BinaryRegistry[Matrix[T], Matrix[T], Op, Matrix[T]]].register(this)
     }
   }
 
@@ -1100,6 +1100,7 @@ trait DenseMatrixMultOps extends DenseMatrixOps with DenseMatrixOpsLowPrio { thi
 
       res
     }
+    implicitly[BinaryRegistry[Matrix[T], Vector[T], OpMulMatrix, Vector[T]]].register(this)
   }
 
 
@@ -1128,6 +1129,7 @@ trait DenseMatrixMultOps extends DenseMatrixOps with DenseMatrixOpsLowPrio { thi
 
       res
     }
+    implicitly[BinaryRegistry[Matrix[T], Matrix[T], OpMulMatrix, Matrix[T]]].register(this)
   }
 
 
@@ -1158,6 +1160,8 @@ trait DenseMatrixMultOps extends DenseMatrixOps with DenseMatrixOpsLowPrio { thi
 
       res
     }
+    implicitly[BinaryRegistry[Matrix[T], Matrix[T], OpMulMatrix, Matrix[T]]].register(this)
+    implicitly[BinaryRegistry[DenseMatrix[T], Matrix[T], OpMulMatrix, DenseMatrix[T]]].register(this)
   }
 
 }
