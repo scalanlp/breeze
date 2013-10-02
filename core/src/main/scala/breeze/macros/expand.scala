@@ -52,13 +52,21 @@ class expand extends Annotation with StaticAnnotation {
 
 }
 
-class expandArgs(args: Any*) extends Annotation with StaticAnnotation
-class sequence[T](args: Any*) extends Annotation with StaticAnnotation
 
 object expand {
 
+  /** Args are put on type arguments, and the cross product of all types that are so annotated
+    * are instantiated.
+    * @param args
+    */
+  class args(args: Any*) extends Annotation with StaticAnnotation
+  /** Excludes specific instantiations of the cross product inferred by @args.
+    * Order is the same as the order of the type arguments */
   class exclude(args: Any*) extends Annotation with StaticAnnotation
+  /** Replaces a def with a val. Requires that all type arguments be expanded and all term arguments be sequenced */
   class valify extends Annotation with StaticAnnotation
+  /** \@sequence[T](args) associates the term parameter's values with the type argument indicated. */
+  class sequence[T](args: Any*) extends Annotation with StaticAnnotation
 
 
   def expandImpl(c: Context)(annottees: c.Expr[Any]*):c.Expr[Any] = {
@@ -105,7 +113,6 @@ object expand {
     }
   }
 
-
   private def mkName(c: Context)(name: c.Name, typeMap: Map[c.Name, c.Type]): String = {
     name.toString + "_" + typeMap.map {
       case (k, v) => v.toString.reverse.takeWhile(_ != '.').reverse
@@ -148,13 +155,13 @@ object expand {
 
 
 
-  /** for a valdef with a [[breeze.macros.sequence]] annotation, converts the sequence of associations to a Map */
+  /** for a valdef with a [[breeze.macros.expand.sequence]] annotation, converts the sequence of associations to a Map */
   private def solveSequence(context: Context)(v: context.mirror.universe.ValDef, typeMappings: Map[context.Name, List[context.Type]]):(context.Name, Map[context.Type, context.Tree]) = {
     import context.mirror.universe._
     val x = v.mods.annotations.collectFirst{
-      case x@q"new ${Ident(nme)}[${Ident(nme2)}](...$args)"    if (nme:Name).decoded == "sequence" =>
+      case x@q"new expand.sequence[${Ident(nme2)}](...$args)"  =>
         if( args.flatten.length != typeMappings(nme2).length) {
-          context.error(x.pos, s"@sequence arguments list does not match the expandArgs for $nme2")
+          context.error(x.pos, s"@sequence arguments list does not match the expand.args for $nme2")
         }
         val predef = context.mirror.staticModule("scala.Predef").asModule
         val missing = Select(Ident(predef), predef.newTermSymbol(newTermName("???")))
@@ -172,7 +179,7 @@ object expand {
   private def typeMappings(c: Context)(td: c.mirror.universe.TypeDef):List[c.mirror.universe.Type] = {
     import c.mirror.universe._
 
-    val mods = td.mods.annotations.collect{ case tree@q"new ${Ident(nme)}(...$args)" if (nme:Name).decoded == "expandArgs" =>
+    val mods = td.mods.annotations.collect{ case tree@q"new expand.args(...$args)" =>
       val flatArgs:Seq[Tree] = args.flatten
       flatArgs.map(c.typeCheck(_)).map{ tree =>
         try {
@@ -213,7 +220,7 @@ object expand {
   private def shouldExpand(c: Context)(td: c.mirror.universe.TypeDef):Boolean = {
     import c.mirror.universe._
     td.mods.annotations.exists{
-      case q"new ${Ident(nme)}(...$args)" if (nme:Name).decoded == "expandArgs" => true
+      case q"new expand.args(...$args)" => true
       case _ => false
     }
   }
@@ -221,8 +228,7 @@ object expand {
   private def shouldExpandVarg(c: Context)(td: c.mirror.universe.ValDef):Boolean = {
     import c.mirror.universe._
     td.mods.annotations.exists{
-      case x@q"new ${Ident(nme)}[..$targs](...$args)" =>
-        (nme:Name).decoded == "sequence"
+      case x@q"new expand.sequence[..$targs](...$args)" => true
       case _ => false
     }
   }

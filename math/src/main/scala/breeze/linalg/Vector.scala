@@ -24,7 +24,7 @@ import support.{CanZipMapValues, CanCopy}
 import breeze.storage.{DefaultArrayValue, Storage}
 import scala.reflect.ClassTag
 import breeze.stats.distributions.Rand
-import breeze.macros.{sequence, expandArgs, expand}
+import breeze.macros.expand
 
 /**
  * Trait for operators and such used in vectors.
@@ -193,9 +193,9 @@ trait VectorOps { this: Vector.type =>
   @expand
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
-  implicit def v_v_Idempotent_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpAdd, OpSub) Op <: OpType]
-  (implicit @sequence[Op]({_ + _}, {_ - _})
+  implicit def v_v_Idempotent_Op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  @expand.args(OpAdd, OpSub) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _}, {_ - _})
   op: BinaryOp[T, T, Op, T]):BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]] = new BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]] {
     override def bindingMissing(a: Vector[T], b: Vector[T]): Vector[T] = {
       require(b.length == a.length, "Vectors must be the same length!")
@@ -211,8 +211,8 @@ trait VectorOps { this: Vector.type =>
 
   @expand
   @expand.valify
-  implicit def v_v_nilpotent_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T]
-  (implicit @sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T):BinaryRegistry[Vector[T], Vector[T], OpMulScalar, Vector[T]] = new BinaryRegistry[Vector[T], Vector[T], OpMulScalar, Vector[T]] {
+  implicit def v_v_nilpotent_Op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T]
+  (implicit @expand.sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T):BinaryRegistry[Vector[T], Vector[T], OpMulScalar, Vector[T]] = new BinaryRegistry[Vector[T], Vector[T], OpMulScalar, Vector[T]] {
     override def bindingMissing(a: Vector[T], b: Vector[T]): Vector[T] = {
       require(b.length == a.length, "Vectors must be the same length!")
       val builder = new VectorBuilder[T](a.length)
@@ -233,9 +233,9 @@ trait VectorOps { this: Vector.type =>
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
-  implicit def v_v_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  implicit def v_v_Op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  @expand.args(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: BinaryOp[T, T, Op, T]):BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]] = new BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]] {
     override def bindingMissing(a: Vector[T], b: Vector[T]): Vector[T] = {
       require(b.length == a.length, "Vectors must be the same length!")
@@ -256,8 +256,8 @@ trait VectorOps { this: Vector.type =>
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
   implicit def cast_v_v_Op[V1, V2,
-  @expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpAdd, OpSub, OpMulScalar,OpDiv, OpSet, OpMod, OpPow) Op <: OpType](implicit v1: V1<:<Vector[T], v2: V2<:<Vector[T]) = {
+  @expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  @expand.args(OpAdd, OpSub, OpMulScalar,OpDiv, OpSet, OpMod, OpPow) Op <: OpType](implicit v1: V1<:<Vector[T], v2: V2<:<Vector[T]) = {
     implicitly[BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]]].asInstanceOf[BinaryOp[V1, V2, Op, Vector[T]]]
   }
   */
@@ -266,11 +266,11 @@ trait VectorOps { this: Vector.type =>
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
-  implicit def v_s_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  implicit def v_s_Op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: BinaryOp[T, T, Op, T],
-  @sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero)
+  @expand.sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero)
   zero: T):BinaryRegistry[Vector[T], T, Op, Vector[T]] = new BinaryRegistry[Vector[T], T, Op, Vector[T]] {
     override def bindingMissing(a: Vector[T], b: T): Vector[T] = {
       val result = Vector.zeros[T](a.length)
@@ -290,9 +290,9 @@ trait VectorOps { this: Vector.type =>
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
-  implicit def v_v_UpdateOp[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @sequence[Op]({_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  implicit def v_v_UpdateOp[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: BinaryOp[T, T, Op, T]):BinaryUpdateRegistry[Vector[T], Vector[T], Op] = new BinaryUpdateRegistry[Vector[T], Vector[T], Op] {
     override def bindingMissing(a: Vector[T], b: Vector[T]):Unit = {
       require(b.length == a.length, "Vectors must be the same length!")
@@ -308,9 +308,9 @@ trait VectorOps { this: Vector.type =>
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
-  implicit def v_v_Idempotent_UpdateOp[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpAdd, OpSub) Op <: OpType]
-  (implicit @sequence[Op]({_ + _}, {_ - _})
+  implicit def v_v_Idempotent_UpdateOp[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  @expand.args(OpAdd, OpSub) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _}, {_ - _})
   op: BinaryOp[T, T, Op, T]):BinaryUpdateRegistry[Vector[T], Vector[T], Op] = new BinaryUpdateRegistry[Vector[T], Vector[T], Op] {
     override def bindingMissing(a: Vector[T], b: Vector[T]):Unit = {
       require(b.length == a.length, "Vectors must be the same length!")
@@ -324,9 +324,9 @@ trait VectorOps { this: Vector.type =>
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
-  implicit def v_s_UpdateOp[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  implicit def v_s_UpdateOp[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: BinaryOp[T, T, Op, T]):BinaryUpdateRegistry[Vector[T], T, Op] = new BinaryUpdateRegistry[Vector[T], T, Op] {
     override def bindingMissing(a: Vector[T], b: T):Unit = {
       var i = 0
@@ -340,7 +340,7 @@ trait VectorOps { this: Vector.type =>
 
   @expand
   @expand.valify
-  implicit def canDot_V_V[@expandArgs(Int, Long, BigInt, Complex, Float, Double) T](implicit @sequence[T](0, 0l, BigInt(0), Complex.zero, 0.0f, 0.0) zero: T): BinaryRegistry[Vector[T], Vector[T], breeze.linalg.operators.OpMulInner, T] = {
+  implicit def canDot_V_V[@expand.args(Int, Long, BigInt, Complex, Float, Double) T](implicit @expand.sequence[T](0, 0l, BigInt(0), Complex.zero, 0.0f, 0.0) zero: T): BinaryRegistry[Vector[T], Vector[T], breeze.linalg.operators.OpMulInner, T] = {
     new BinaryRegistry[Vector[T], Vector[T], breeze.linalg.operators.OpMulInner, T] {
       override def bindingMissing(a: Vector[T], b: Vector[T]):T = {
         require(b.length == a.length, "Vectors must be the same length!")
@@ -360,7 +360,7 @@ trait VectorOps { this: Vector.type =>
 
   @expand
   @expand.valify
-  implicit def axpy[@expandArgs(Int, Double, Float, Long, BigInt, Complex) V]: CanAxpy[V, Vector[V], Vector[V]] = {
+  implicit def axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) V]: CanAxpy[V, Vector[V], Vector[V]] = {
     new CanAxpy[V, Vector[V], Vector[V]] {
       def apply(s: V, b: Vector[V], a: Vector[V]) {
         require(b.length == a.length, "Vectors must be the same length!")

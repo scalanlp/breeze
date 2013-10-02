@@ -26,7 +26,7 @@ import breeze.collection.mutable.SparseArray
 import java.util
 import collection.mutable
 import scala.reflect.ClassTag
-import breeze.macros.{sequence, expandArgs, expand}
+import breeze.macros.expand
 
 
 /**
@@ -352,9 +352,9 @@ trait SparseVector_DenseVector_Ops extends DenseVector_SparseVector_Ops { this: 
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
   @expand.valify
-  implicit def sv_dv_UpdateOp[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @sequence[Op]({_ + _}, {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  implicit def sv_dv_UpdateOp[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _}, {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: BinaryOp[T, T, Op, T]):BinaryUpdateOp[SparseVector[T], DenseVector[T], Op] = new BinaryUpdateOp[SparseVector[T], DenseVector[T], Op] {
     def apply(a: SparseVector[T], b: DenseVector[T]):Unit = {
       require(a.length == b.length, "Vectors must have the same length")
@@ -400,9 +400,9 @@ trait SparseVector_DenseVector_Ops extends DenseVector_SparseVector_Ops { this: 
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
-  implicit def sv_dv_op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-                        @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @sequence[Op]({_ + _}, {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  implicit def sv_dv_op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+                        @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _}, {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: BinaryOp[T, T, Op, T]):BinaryOp[SparseVector[T], DenseVector[T], Op, DenseVector[T]] = {
     new BinaryOp[SparseVector[T], DenseVector[T], Op, DenseVector[T]] {
       def apply(a: SparseVector[T], b: DenseVector[T]) = {
@@ -447,7 +447,7 @@ trait SparseVector_DenseVector_Ops extends DenseVector_SparseVector_Ops { this: 
 
   @expand
   @expand.valify
-  implicit def canDot_SV_DV[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T]: BinaryOp[SparseVector[T], DenseVector[T], breeze.linalg.operators.OpMulInner, T] = {
+  implicit def canDot_SV_DV[@expand.args(Int, Double, Float, Long, BigInt, Complex) T]: BinaryOp[SparseVector[T], DenseVector[T], breeze.linalg.operators.OpMulInner, T] = {
     new BinaryOp[SparseVector[T], DenseVector[T], breeze.linalg.operators.OpMulInner, T] {
       def apply(a: SparseVector[T], b: DenseVector[T]) = {
         require(b.length == a.length, "Vectors must be the same length!")
@@ -469,9 +469,9 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
-  implicit def dv_sv_UpdateOp[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @sequence[Op]({_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  implicit def dv_sv_UpdateOp[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: BinaryOp[T, T, Op, T]):BinaryUpdateOp[DenseVector[T], SparseVector[T], Op] = new BinaryUpdateOp[DenseVector[T], SparseVector[T], Op] {
     def apply(a: DenseVector[T], b: SparseVector[T]):Unit = {
       require(a.length == b.length, "Vectors must have the same length")
@@ -510,8 +510,8 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
   @expand.valify
-  implicit def dv_sv_op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType] = {
+  implicit def dv_sv_op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType] = {
     val op = DenseVector.pureFromUpdate(implicitly[BinaryUpdateOp[DenseVector[T], SparseVector[T], Op]])
     implicitly[BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]]].register(op)
     op
@@ -519,9 +519,9 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
 
 
   @expand
-  implicit def dv_sv_Update_Zero_Idempotent[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpAdd, OpSub) Op <: OpType]
-  (implicit @sequence[Op]({_ + _},  {_ - _}) op: BinaryOp[T, T, Op, T]):BinaryUpdateOp[DenseVector[T], SparseVector[T], Op] = new BinaryUpdateOp[DenseVector[T], SparseVector[T], Op] {
+  implicit def dv_sv_Update_Zero_Idempotent[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  @expand.args(OpAdd, OpSub) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _},  {_ - _}) op: BinaryOp[T, T, Op, T]):BinaryUpdateOp[DenseVector[T], SparseVector[T], Op] = new BinaryUpdateOp[DenseVector[T], SparseVector[T], Op] {
     def apply(a: DenseVector[T], b: SparseVector[T]):Unit = {
       require(a.length == b.length, "Vectors must have the same length")
       val ad = a.data
@@ -542,7 +542,7 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
 
   @expand
   @expand.valify
-  implicit def canDot_DV_SV[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T](implicit @sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T): BinaryOp[DenseVector[T], SparseVector[T], breeze.linalg.operators.OpMulInner, T] = {
+  implicit def canDot_DV_SV[@expand.args(Int, Double, Float, Long, BigInt, Complex) T](implicit @expand.sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T): BinaryOp[DenseVector[T], SparseVector[T], breeze.linalg.operators.OpMulInner, T] = {
     new BinaryOp[DenseVector[T], SparseVector[T], breeze.linalg.operators.OpMulInner, T] {
       def apply(a: DenseVector[T], b: SparseVector[T]) = {
         var result: T = zero
@@ -586,10 +586,10 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
-  implicit def sv_sv_Idempotent_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpAdd, OpSub) Op <: OpType]
-  (implicit @sequence[Op]({_ + _}, {_ - _}) op: BinaryOp[T, T, Op, T],
-  @sequence[T](0, 0.0, 0f, 0l, BigInt(0), Complex.zero) zero: T):BinaryOp[SparseVector[T], SparseVector[T], Op, SparseVector[T]] = new BinaryOp[SparseVector[T], SparseVector[T], Op, SparseVector[T]] {
+  implicit def sv_sv_Idempotent_Op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  @expand.args(OpAdd, OpSub) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _}, {_ - _}) op: BinaryOp[T, T, Op, T],
+  @expand.sequence[T](0, 0.0, 0f, 0l, BigInt(0), Complex.zero) zero: T):BinaryOp[SparseVector[T], SparseVector[T], Op, SparseVector[T]] = new BinaryOp[SparseVector[T], SparseVector[T], Op, SparseVector[T]] {
     def apply(a: SparseVector[T], b: SparseVector[T]): SparseVector[T] = {
       require(b.length == a.length, "Vectors must be the same length!")
       val asize = a.activeSize
@@ -648,8 +648,8 @@ trait SparseVectorOps { this: SparseVector.type =>
 
   @expand
   @expand.valify
-  implicit def sv_sv_OpMul[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T](implicit
-  @sequence[T](0, 0.0, 0f,  0l, BigInt(0), Complex.zero) zero: T):BinaryOp[SparseVector[T], SparseVector[T], OpMulScalar, SparseVector[T]] = new BinaryOp[SparseVector[T], SparseVector[T], OpMulScalar, SparseVector[T]] {
+  implicit def sv_sv_OpMul[@expand.args(Int, Double, Float, Long, BigInt, Complex) T](implicit
+  @expand.sequence[T](0, 0.0, 0f,  0l, BigInt(0), Complex.zero) zero: T):BinaryOp[SparseVector[T], SparseVector[T], OpMulScalar, SparseVector[T]] = new BinaryOp[SparseVector[T], SparseVector[T], OpMulScalar, SparseVector[T]] {
     def apply(a: SparseVector[T], b: SparseVector[T]): SparseVector[T] = {
       if(b.activeSize < a.activeSize)
         return apply(b, a)
@@ -713,9 +713,9 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
-  implicit def sv_sv_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  implicit def sv_sv_Op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  @expand.args(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: BinaryOp[T, T, Op, T]):BinaryOp[SparseVector[T], SparseVector[T], Op, SparseVector[T]] = new BinaryOp[SparseVector[T], SparseVector[T], Op, SparseVector[T]] {
     def apply(a: SparseVector[T], b: SparseVector[T]): SparseVector[T] = {
       require(b.length == a.length, "Vectors must be the same length!")
@@ -734,9 +734,9 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
-  implicit def sv_v_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  implicit def sv_v_Op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  @expand.args(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: BinaryOp[T, T, Op, T]):BinaryOp[SparseVector[T], Vector[T], Op, SparseVector[T]] = new BinaryOp[SparseVector[T], Vector[T], Op, SparseVector[T]] {
     def apply(a: SparseVector[T], b: Vector[T]): SparseVector[T] = {
       require(b.length == a.length, "Vectors must be the same length!")
@@ -755,11 +755,11 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
-  implicit def sv_s_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpAdd, OpSub, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @sequence[Op]({_ + _},  {_ - _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  implicit def sv_s_Op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  @expand.args(OpAdd, OpSub, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: BinaryOp[T, T, Op, T],
-   @sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero)
+   @expand.sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero)
    zero: T):BinaryOp[SparseVector[T], T, Op, SparseVector[T]] = new BinaryOp[SparseVector[T], T, Op, SparseVector[T]] {
     def apply(a: SparseVector[T], b: T): SparseVector[T] = {
       val result = new VectorBuilder[T](a.length)
@@ -780,9 +780,9 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
-  implicit def sv_s_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpMulScalar, OpMulMatrix) Op<:OpType]
-  (implicit @sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero)
+  implicit def sv_s_Op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  @expand.args(OpMulScalar, OpMulMatrix) Op<:OpType]
+  (implicit @expand.sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero)
    zero: T):BinaryOp[SparseVector[T], T, Op, SparseVector[T]] = new BinaryOp[SparseVector[T], T, Op, SparseVector[T]] {
     def apply(a: SparseVector[T], b: T): SparseVector[T] = {
       val result = new VectorBuilder[T](a.length)
@@ -836,8 +836,8 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
-  implicit def sv_sv_Update[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-  @expandArgs(OpAdd, OpSub, OpDiv, OpPow, OpMod, OpMulScalar) Op <: OpType]: BinaryUpdateOp[SparseVector[T], SparseVector[T], Op] = {
+  implicit def sv_sv_Update[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  @expand.args(OpAdd, OpSub, OpDiv, OpPow, OpMod, OpMulScalar) Op <: OpType]: BinaryUpdateOp[SparseVector[T], SparseVector[T], Op] = {
     val uop = updateFromPure(implicitly[BinaryOp[SparseVector[T], SparseVector[T], Op, SparseVector[T]]])
     implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op]].register(uop)
     uop
@@ -847,8 +847,8 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
-  implicit def sv_s_Update[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
-   @expandArgs(OpAdd, OpSub, OpDiv, OpPow, OpMod, OpMulScalar, OpMulMatrix) Op <: OpType]: BinaryUpdateOp[SparseVector[T], T, Op]  = {
+  implicit def sv_s_Update[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+   @expand.args(OpAdd, OpSub, OpDiv, OpPow, OpMod, OpMulScalar, OpMulMatrix) Op <: OpType]: BinaryUpdateOp[SparseVector[T], T, Op]  = {
     val uop = updateFromPure(implicitly[BinaryOp[SparseVector[T], T, Op, SparseVector[T]]])
     implicitly[BinaryUpdateRegistry[Vector[T], T, Op]].register(uop)
     uop
@@ -857,8 +857,8 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand
   @expand.valify
   implicit def sv_sv_Dot
-  [@expandArgs(Int, Double, Float, Long, BigInt, Complex) T]
-  (implicit @sequence[T](0, 0.0, 0f,  0l, BigInt(0), Complex.zero) zero: T):BinaryOp[SparseVector[T], SparseVector[T], OpMulInner, T] = new BinaryOp[SparseVector[T], SparseVector[T], OpMulInner, T] {
+  [@expand.args(Int, Double, Float, Long, BigInt, Complex) T]
+  (implicit @expand.sequence[T](0, 0.0, 0f,  0l, BigInt(0), Complex.zero) zero: T):BinaryOp[SparseVector[T], SparseVector[T], OpMulInner, T] = new BinaryOp[SparseVector[T], SparseVector[T], OpMulInner, T] {
     def apply(a: SparseVector[T], b: SparseVector[T]): T = {
       if(b.activeSize < a.activeSize)
         return apply(b, a)
@@ -912,7 +912,7 @@ trait SparseVectorOps { this: SparseVector.type =>
 
 
   @expand
-  implicit def sv_sv_axpy[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T] (implicit  @sequence[T](0, 0.0, 0f, 0l, BigInt(0), Complex.zero) zero: T):CanAxpy[T, SparseVector[T], SparseVector[T]] = new CanAxpy[T, SparseVector[T], SparseVector[T]] {
+  implicit def sv_sv_axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) T] (implicit  @expand.sequence[T](0, 0.0, 0f, 0l, BigInt(0), Complex.zero) zero: T):CanAxpy[T, SparseVector[T], SparseVector[T]] = new CanAxpy[T, SparseVector[T], SparseVector[T]] {
     def apply(a: T, x: SparseVector[T], y: SparseVector[T]) {
       require(x.length == y.length, "Vectors must be the same length!")
       val asize = y.activeSize
