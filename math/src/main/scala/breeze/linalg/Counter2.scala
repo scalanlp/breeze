@@ -19,7 +19,7 @@ import breeze.storage.DefaultArrayValue
 import collection.mutable.HashMap
 import breeze.math.{Ring, Semiring, Field}
 import breeze.linalg.support.{CanCopy, CanZipMapValues, CanNorm, CanSlice2}
-import collection.{Set, mutable}
+import scala.collection.{mutable, Set}
 import breeze.generic._
 import scala.reflect.ClassTag
 import breeze.linalg.operators._
@@ -552,6 +552,30 @@ trait Counter2Ops {
         var sum = 0.0
         activeValuesIterator foreach (v => { val nn = field.norm(v); sum += math.pow(nn,n) })
         math.pow(sum, 1.0 / n)
+      }
+    }
+  }
+
+  implicit def canMultiplyC2C1[K1, K2, V](implicit  semiring: Semiring[V], d: DefaultArrayValue[V]):BinaryOp[Counter2[K1, K2, V], Counter[K2, V], OpMulMatrix, Counter[K1, V]] = {
+    new BinaryOp[Counter2[K1, K2, V], Counter[K2, V], OpMulMatrix, Counter[K1, V]] {
+      override def apply(a : Counter2[K1, K2, V], b : Counter[K2, V]) = {
+        val r = Counter[K1, V]()
+        for( (row, ctr) <- a.data.iterator) {
+          r(row) = ctr dot b
+        }
+        r
+      }
+    }
+  }
+
+  implicit def canMultiplyC2C2[K1, K2, K3, V](implicit  semiring: Semiring[V], d: DefaultArrayValue[V]):BinaryOp[Counter2[K1, K2, V], Counter2[K2, K3, V], OpMulMatrix, Counter2[K1, K3, V]] = {
+    new BinaryOp[Counter2[K1, K2, V], Counter2[K2, K3, V], OpMulMatrix, Counter2[K1, K3, V]] {
+      override def apply(a : Counter2[K1, K2, V], b : Counter2[K2, K3, V]) = {
+        val r = Counter2[K1, K3, V]()
+        for( (row, ctr) <- a.data.iterator; (k2, v) <- ctr.activeIterator; (k3, v2) <- b(k2, ::).data) {
+          r(row, k3) = semiring.+(r(row,k3), semiring.*(v, v2))
+        }
+        r
       }
     }
   }
