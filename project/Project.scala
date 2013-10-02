@@ -6,7 +6,7 @@ import AssemblyKeys._
 
 object BuildSettings {
   val buildOrganization = "org.scalanlp"
-  val buildScalaVersion = "2.10.2"
+  val buildScalaVersion = "2.10.3"
 
   val scalaVersionRegex = "(\\d+)\\.(\\d+).*".r
 
@@ -20,8 +20,8 @@ object BuildSettings {
       Resolver.sonatypeRepo("releases"),
       Resolver.typesafeRepo("releases")
     ),
-    addCompilerPlugin("org.scala-lang.plugins" % "macro-paradise" % "2.0.0-SNAPSHOT" cross CrossVersion.full),
-    crossScalaVersions := Seq("2.10.2"),
+addCompilerPlugin("org.scala-lang.plugins" % "macro-paradise" % "2.0.0-SNAPSHOT" cross CrossVersion.full),
+    crossScalaVersions := Seq("2.10.3"),
   publishMavenStyle := true,
   publishTo <<= version { (v: String) =>
     val nexus = "https://oss.sonatype.org/"
@@ -64,6 +64,7 @@ object BreezeBuild extends Build {
   val p = System.getProperties();
   p.setProperty("log.level","WARN")
 
+  val breezeMacros = "org.scalanlp" %% "breeze-macros" % "0.1"
   val paranamer = "com.thoughtworks.paranamer" % "paranamer" % "2.2"
   val netlib = "com.github.fommil.netlib" % "all" % "1.1-SNAPSHOT" pomOnly()
   val liblinear = "de.bwaldvogel" % "liblinear" % "1.8"
@@ -77,7 +78,7 @@ object BreezeBuild extends Build {
 
 
   val coreDeps = Seq(paranamer, opencsv, logging, log4j)
-  val commonDeps = Seq(paranamer, netlib, commonsMath, jtransforms)
+  val commonDeps = Seq(paranamer, netlib, commonsMath, jtransforms, breezeMacros)
   val vizDeps = Seq(
     "jfree" % "jcommon" % "1.0.16",
     "jfree" % "jfreechart" % "1.0.13",
