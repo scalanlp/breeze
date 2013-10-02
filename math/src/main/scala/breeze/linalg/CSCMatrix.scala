@@ -31,13 +31,14 @@ import scala.reflect.ClassTag
  * @author dlwh
  */
 // TODO: maybe put columns in own array of sparse vectors, making slicing easier?
+@SerialVersionUID(1L)
 class CSCMatrix[@specialized(Int, Float, Double) V:DefaultArrayValue] private[linalg] (private var _data: Array[V],
                                                                                val rows: Int,
                                                                                val cols: Int,
                                                                                val colPtrs: Array[Int], // len cols + 1
                                                                                private var used : Int,
                                                                                private var _rowIndices: Array[Int]) // len >= used
-  extends Matrix[V] with MatrixLike[V, CSCMatrix[V]] {
+  extends Matrix[V] with MatrixLike[V, CSCMatrix[V]] with Serializable {
 
   def rowIndices = _rowIndices
   def data = _data
