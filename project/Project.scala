@@ -74,26 +74,15 @@ object BreezeBuild extends Build {
   val jtransforms = "com.github.rwl" % "jtransforms" % "2.4.0"
 
   val commonsMath =  "org.apache.commons" % "commons-math3" % "3.2"
-            
-
 
   val coreDeps = Seq(paranamer, opencsv, logging, log4j)
   val commonDeps = Seq(paranamer, netlib, commonsMath, jtransforms, breezeMacros)
-  val vizDeps = Seq(
-    "jfree" % "jcommon" % "1.0.16",
-    "jfree" % "jfreechart" % "1.0.13",
-    "org.apache.xmlgraphics" % "xmlgraphics-commons" % "1.3.1", // for eps gen
-    // "org.apache.xmlgraphics" % "batik-dom" % "1.7",    // for svg gen
-    // "org.apache.xmlgraphics" % "batik-svggen" % "1.7", // for svg gen
-    "com.lowagie" % "itext" % "2.1.5" intransitive()  // for pdf gen
-  )
 
   val benchmarkDeps = Seq(
     "com.google.code.java-allocation-instrumenter" % "java-allocation-instrumenter" % "2.0",
     "com.google.code.gson" % "gson" % "1.7.1",
     "com.google.caliper" % "caliper" % "0.5-rc1"
   )
-  
 
   def testDependencies = libraryDependencies <++= (scalaVersion) {
     sv =>
@@ -154,17 +143,16 @@ object BreezeBuild extends Build {
   // subprojects
   //
 
-  lazy val breeze = Project("breeze", file("."), settings = buildSettings) aggregate (core, math,viz) dependsOn (core, math, viz)
+  lazy val breeze = Project("breeze", file("."), settings = buildSettings) aggregate (core, math) dependsOn (core, math)
   lazy val core = Project("breeze-core",file("core"), settings =  buildSettings ++ Seq (libraryDependencies ++= coreDeps) ++ testDependencies ++ assemblySettings)
   lazy val math = Project("breeze-math",file("math"), settings =  buildSettings ++ Seq (libraryDependencies ++= commonDeps) ++ testDependencies ++ assemblySettings) dependsOn(core)
   lazy val benchmark = Project("breeze-benchmark",file("benchmark"), settings = (buildSettings :+ (fork in run := true) :+ (commands += patchclasspath)) ++ Seq (libraryDependencies ++= (commonDeps ++ benchmarkDeps)) ++ testDependencies) dependsOn(math)
-  lazy val viz =  Project("breeze-viz", file("viz"),  settings =  buildSettings ++ Seq (libraryDependencies ++= (commonDeps ++ vizDeps)) ++ testDependencies ++ assemblySettings) dependsOn(core, math)
 
-val _projects: Seq[ProjectReference] = Seq(math,viz,core)
+val _projects: Seq[ProjectReference] = Seq(math,core)
   lazy val doc = Project("doc", file("doc"))
       .settings((buildSettings ++ Seq(
         version := "1.0",
         unmanagedSourceDirectories in Compile <<= (_projects map (unmanagedSourceDirectories in _ in Compile)).join.apply {(s) => s.flatten} 
-  ) ++ Seq ( libraryDependencies ++= (coreDeps ++ commonDeps ++ vizDeps)):_*))
+  ) ++ Seq ( libraryDependencies ++= (coreDeps ++ commonDeps)):_*))
 }
 
