@@ -140,9 +140,20 @@ class VectorBuilder[@spec(Double,Int, Float) E](private var _index: Array[Int],
     }
   }
 
-  def toHashVector = {
+  def toHashVector: HashVector[E] = {
     implicit val man = ClassTag[E](_data.getClass.getComponentType.asInstanceOf[Class[E]])
     val hv = HashVector.zeros[E](length)
+    var i = 0
+    while(i < used) {
+      hv(index(i)) = ring.+(hv(index(i)),data(i))
+      i += 1
+    }
+    hv
+  }
+
+  def toDenseVector: DenseVector[E] = {
+    implicit val man = ClassTag[E](_data.getClass.getComponentType.asInstanceOf[Class[E]])
+    val hv = DenseVector.zeros[E](length)
     var i = 0
     while(i < used) {
       hv(index(i)) = ring.+(hv(index(i)),data(i))
@@ -267,6 +278,15 @@ class VectorBuilder[@spec(Double,Int, Float) E](private var _index: Array[Int],
    * @return
    */
   def allVisitableIndicesActive: Boolean = true
+
+  def toVector = {
+    if(size < 40 || activeSize > size / 2) {
+      toDenseVector
+    } else {
+      toSparseVector
+    }
+
+  }
 }
 
 object VectorBuilder extends VectorBuilderOps_Double {
@@ -316,7 +336,7 @@ object VectorBuilder extends VectorBuilderOps_Double {
 
 
   // Sigh, Array.range is slow.
-  private def range(length: Int) = {
+  private[linalg] def range(length: Int) = {
     val result = new Array[Int](length)
     var i = 0
     while(i < length) {

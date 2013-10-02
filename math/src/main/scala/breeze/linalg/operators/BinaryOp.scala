@@ -18,6 +18,7 @@ import breeze.generic.{MMRegistry2, Multimethod2}
 import breeze.math.{Field, Ring, Semiring}
 import breeze.linalg.support.CanCopy
 import breeze.numerics.IntMath
+import scala.annotation.unchecked.uncheckedVariance
 
 /**
  * A BinaryOp is the standard implicit capability trait for binary operations: a + b, a - b, etc.
@@ -99,9 +100,9 @@ object BinaryOp {
  */
 // This trait could reuse code from Multimethod2, but not doing so allows us to reduce code size a lot
 // because we don't need BinaryOp's to inherit from Function2, which has a lot of @specialzied cruft.
-trait BinaryRegistry[A, B, Op<:OpType, R] extends BinaryOp[A, B, Op, R] with MMRegistry2[BinaryOp[_ <: A, _ <: B, Op, _ <: R]] {
+trait BinaryRegistry[A, B, Op<:OpType, +R] extends BinaryOp[A, B, Op, R] with MMRegistry2[BinaryOp[_ <: A, _ <: B, Op, _ <: (R @uncheckedVariance)]] {
   protected def bindingMissing(a: A, b: B):R = throw new UnsupportedOperationException("Types not found!" + a + b + " " + ops)
-  protected def multipleOptions(a: A, b: B, m: Map[(Class[_],Class[_]),BinaryOp[_ <: A, _ <: B, Op, _ <: R]]) = {
+  protected def multipleOptions(a: A, b: B, m: Map[(Class[_],Class[_]),BinaryOp[_ <: A, _ <: B, Op, _ <: R @uncheckedVariance]]) = {
     throw new RuntimeException("Multiple bindings for method: " + m)
   }
 
@@ -140,7 +141,7 @@ trait BinaryRegistry[A, B, Op<:OpType, R] extends BinaryOp[A, B, Op, R] with MMR
     }
   }
 
-  def register[AA<:A, BB<:B, RR <: R](op: BinaryOp[AA, BB, Op, RR])(implicit manA: Manifest[AA], manB: Manifest[BB]) {
+  def register[AA<:A, BB<:B](op: BinaryOp[AA, BB, Op, R @uncheckedVariance])(implicit manA: Manifest[AA], manB: Manifest[BB]) {
     super.register(manA.runtimeClass, manB.runtimeClass, op)
   }
 

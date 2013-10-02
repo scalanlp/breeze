@@ -42,6 +42,7 @@ object Ring {
   implicit val ringFloat: Ring[Float] = fieldFloat
   implicit val ringInt: Ring[Int] = fieldInt
   implicit val ringLong: Ring[Long] = fieldLong
+  implicit val ringBigInt: Ring[BigInt] = fieldBigInt
   implicit val ringShort: Ring[Short] = fieldShort
   implicit val ringComplex: Ring[Complex] = Complex.scalar
 }

@@ -193,6 +193,44 @@ class HashVectorTest extends FunSuite {
 
 
   }
+
+  test("DV/HV ops") {
+    val a = DenseVector(1, 2, 3)
+    val b = HashVector(3)((1,1))
+    assert(a.dot(b) === 2)
+    assert(a + b === DenseVector(1,3,3))
+    assert(a :* b === DenseVector(0, 2, 0))
+  }
+
+  test("HV/DV ops") {
+    val a = DenseVector(1, 2, 3)
+    val b = HashVector(3)((1,1))
+    assert(b.dot(a) === 2)
+    assert(b + a === DenseVector(1,3,3))
+    assert(b :* a === DenseVector(0, 2, 0))
+    b += a
+    assert(b === HashVector(1,3,3))
+  }
+
+  test("HV/SV ops") {
+    val a = SparseVector(3)( (1,2), (2,3))
+    val b = HashVector(3)((1,1))
+    assert(b.dot(a) === 2)
+    assert(b + a === HashVector(0,3,3))
+    assert(b :* a === HashVector(0, 2, 0))
+    b += a
+    assert(b === HashVector(0,3,3))
+  }
+
+  test("SV/HV ops") {
+    val a = SparseVector(3)( (1,2), (2,3))
+    val b = HashVector(3)((1,1))
+    assert(a.dot(b) === 2)
+    assert(a + b === SparseVector(0,3,3))
+    assert(a :* b === SparseVector(0, 2, 0))
+    a += b
+    assert(a === SparseVector(0,3,3))
+  }
 }
 
 /**

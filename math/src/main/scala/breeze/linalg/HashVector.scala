@@ -1,13 +1,15 @@
 package breeze.linalg
 
 import breeze.collection.mutable.OpenAddressHashArray
-import operators.{OpNeg, UnaryOp, OpMulScalar, BinaryOp}
+import breeze.linalg.operators._
 import breeze.storage.{ConfigurableDefault, DefaultArrayValue}
 import breeze.generic.{CanMapValues, URFunc}
 import support.{CanZipMapValues, CanMapKeyValuePairs, CanCopy}
-import breeze.math.{TensorSpace, Ring}
+import breeze.math.{Semiring, TensorSpace, Ring, Complex}
 import scala.reflect.ClassTag
 import scala.util.hashing.MurmurHash3
+import breeze.macros.{sequence, expandArgs, expand}
+import scala.math.BigInt
 
 /**
  * A HashVector is a sparse vector backed by an OpenAddressHashArray
@@ -73,10 +75,11 @@ class HashVector[@specialized(Int, Double, Float) E](val array: OpenAddressHashA
 }
 
 
-object HashVector extends HashVectorOps_Int 
-                          with HashVectorOps_Float 
-                          with HashVectorOps_Double
-                          with HashVectorOps_Complex {
+object HashVector extends HashVectorOps
+                          with DenseVector_HashVector_Ops
+                          with HashVector_DenseVector_Ops
+                          with HashVector_SparseVector_Ops
+                          with SparseVector_HashVector_Ops {
   def zeros[@specialized(Double, Float, Int) V: ClassTag:DefaultArrayValue](size: Int) = {
     new HashVector(new OpenAddressHashArray[V](size))
   }
@@ -189,4 +192,595 @@ object HashVector extends HashVectorOps_Int
   implicit val space_d = TensorSpace.make[HashVector[Double], Int, Double]
   implicit val space_f = TensorSpace.make[HashVector[Float], Int, Float]
   implicit val space_i = TensorSpace.make[HashVector[Int], Int, Int]
+}
+
+
+
+trait DenseVector_HashVector_Ops { this: HashVector.type =>
+  import breeze.math.PowImplicits._
+
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def dv_hv_UpdateOp[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @sequence[Op]({_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: BinaryOp[T, T, Op, T]):BinaryUpdateOp[DenseVector[T], HashVector[T], Op] = new BinaryUpdateOp[DenseVector[T], HashVector[T], Op] {
+    def apply(a: DenseVector[T], b: HashVector[T]):Unit = {
+      require(a.length == b.length, "Vectors must have the same length")
+      val ad = a.data
+      var aoff = a.offset
+      val astride = a.stride
+
+      var i = 0
+      while(i < a.length) {
+        ad(aoff) = op(ad(aoff), b(i))
+        aoff += astride
+        i += 1
+      }
+
+    }
+  }
+
+  // this shouldn't be necessary but it is:
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def dv_hv_op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType] = DenseVector.pureFromUpdate(implicitly[BinaryUpdateOp[DenseVector[T], HashVector[T], Op]])
+
+
+  @expand
+  implicit def dv_hv_Update_Zero_Idempotent[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub) Op <: OpType]
+  (implicit @sequence[Op]({_ + _},  {_ - _})
+  op: BinaryOp[T, T, Op, T]):BinaryUpdateOp[DenseVector[T], HashVector[T], Op] = new BinaryUpdateOp[DenseVector[T], HashVector[T], Op] {
+    def apply(a: DenseVector[T], b: HashVector[T]):Unit = {
+      require(a.length == b.length, "Vectors must have the same length")
+      val ad = a.data
+      val bd = b.data
+      val bi = b.index
+      val bsize = b.iterableSize
+
+      var i = 0
+      while(i < bsize) {
+        val aoff = a.offset + bi(i) * a.stride
+        if(b.isActive(i))
+          ad(aoff) = op(ad(aoff), bd(i))
+        i += 1
+      }
+    }
+  }
+
+
+  @expand
+  implicit def canDot_DV_HV[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T](implicit @sequence[T](0, 0.0, 0f, 0l, BigInt(0), Complex.zero) zero: T): BinaryOp[DenseVector[T], HashVector[T], breeze.linalg.operators.OpMulInner, T] = {
+    new BinaryOp[DenseVector[T], HashVector[T], breeze.linalg.operators.OpMulInner, T] {
+      def apply(a: DenseVector[T], b: HashVector[T]) = {
+        var result: T = zero
+
+        val bd = b.data
+        val bi = b.index
+        val bsize = b.iterableSize
+
+        val adata = a.data
+        val aoff = a.offset
+        val stride = a.stride
+
+        var i = 0
+        while(i < bsize) {
+          if(b.isActive(i))
+            result += adata(aoff + bi(i) * stride) * bd(i)
+          i += 1
+        }
+        result
+      }
+    }
+  }
+
+
+}
+
+trait HashVector_DenseVector_Ops extends DenseVector_HashVector_Ops { this: HashVector.type =>
+  import breeze.math.PowImplicits._
+
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def hv_dv_UpdateOp[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @sequence[Op]({_ + _}, {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: BinaryOp[T, T, Op, T]):BinaryUpdateOp[HashVector[T], DenseVector[T], Op] = new BinaryUpdateOp[HashVector[T], DenseVector[T], Op] {
+    def apply(a: HashVector[T], b: DenseVector[T]):Unit = {
+      require(a.length == b.length, "Vectors must have the same length")
+
+      var i = 0
+      while(i < b.length) {
+        a(i) = op(a(i), b(i))
+        i += 1
+      }
+    }
+  }
+
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def hv_dv_op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+                        @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @sequence[Op]({_ + _}, {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: BinaryOp[T, T, Op, T]):BinaryOp[HashVector[T], DenseVector[T], Op, DenseVector[T]] = {
+    new BinaryOp[HashVector[T], DenseVector[T], Op, DenseVector[T]] {
+      def apply(a: HashVector[T], b: DenseVector[T]) = {
+        require(a.length == b.length, "Vectors must have the same length")
+        val result = DenseVector.zeros[T](a.length)
+
+        var i = 0
+        while(i < b.length) {
+          result(i) = op(a(i), b(i))
+          i += 1
+        }
+
+        result
+      }
+    }
+  }
+
+  @expand
+  implicit def canDot_HV_DV[@expandArgs(Int, Float, Double, Long, BigInt, Complex) T]: BinaryOp[HashVector[T], DenseVector[T], breeze.linalg.operators.OpMulInner, T] = {
+    new BinaryOp[HashVector[T], DenseVector[T], breeze.linalg.operators.OpMulInner, T] {
+      def apply(a: HashVector[T], b: DenseVector[T]) = {
+        require(b.length == a.length, "Vectors must be the same length!")
+        b dot a
+      }
+    }
+      //      Vector.canDotProductV_T.register(this)
+  }
+
+
+}
+
+trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
+  import breeze.math.PowImplicits._
+
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def hv_hv_Idempotent_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub) Op <: OpType]
+  (implicit @sequence[Op]({_ + _}, {_ - _})
+  op: BinaryOp[T, T, Op, T]):BinaryOp[HashVector[T], HashVector[T], Op, HashVector[T]] = new BinaryOp[HashVector[T], HashVector[T], Op, HashVector[T]] {
+    def apply(a: HashVector[T], b: HashVector[T]): HashVector[T] = {
+      require(b.length == a.length, "Vectors must be the same length!")
+      val result = a.copy
+      for((k,v) <- b.activeIterator) {
+        result(k) = op(a(k), v)
+      }
+      result
+    }
+  }
+
+
+  @expand
+  implicit def hv_hv_nilpotent_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T]
+  (implicit @sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T):BinaryOp[HashVector[T], HashVector[T], OpMulScalar, HashVector[T]] = new BinaryOp[HashVector[T], HashVector[T], OpMulScalar, HashVector[T]] {
+    def apply(a: HashVector[T], b: HashVector[T]): HashVector[T] = {
+      require(b.length == a.length, "Vectors must be the same length!")
+      val builder = new VectorBuilder[T](a.length)
+      for((k,v) <- b.activeIterator) {
+        val r = a(k) * v
+        if(r != zero)
+          builder.add(k, r)
+      }
+      builder.toHashVector
+    }
+  }
+
+
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def hv_hv_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: BinaryOp[T, T, Op, T]):BinaryOp[HashVector[T], HashVector[T], Op, HashVector[T]] = new BinaryOp[HashVector[T], HashVector[T], Op, HashVector[T]] {
+    def apply(a: HashVector[T], b: HashVector[T]): HashVector[T] = {
+      require(b.length == a.length, "Vectors must be the same length!")
+      val result = HashVector.zeros[T](a.length)
+      var i = 0
+      while(i < a.length) {
+        result(i) = op(a(i), b(i))
+        i += 1
+      }
+      result
+    }
+  }
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def hv_v_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: BinaryOp[T, T, Op, T]):BinaryOp[HashVector[T], Vector[T], Op, HashVector[T]] = new BinaryOp[HashVector[T], Vector[T], Op, HashVector[T]] {
+    def apply(a: HashVector[T], b: Vector[T]): HashVector[T] = {
+
+      require(b.length == a.length, "Vectors must be the same length!")
+      val result = HashVector.zeros[T](a.length)
+
+      var i = 0
+      while(i < a.length) {
+        result(i) = op(a(i), b(i))
+        i += 1
+      }
+      result
+    }
+  }
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def hv_s_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: BinaryOp[T, T, Op, T],
+  @sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero)
+  zero: T):BinaryOp[HashVector[T], T, Op, HashVector[T]] = new BinaryOp[HashVector[T], T, Op, HashVector[T]] {
+    def apply(a: HashVector[T], b: T): HashVector[T] = {
+      val result = HashVector.zeros[T](a.length)
+
+      var i = 0
+      while(i < a.length) {
+        result(i) = op(a(i), b)
+        i += 1
+      }
+      result
+    }
+  }
+
+
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def hv_hv_UpdateOp[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @sequence[Op]({_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: BinaryOp[T, T, Op, T]):BinaryUpdateOp[HashVector[T], HashVector[T], Op] = new BinaryUpdateOp[HashVector[T], HashVector[T], Op] {
+    def apply(a: HashVector[T], b: HashVector[T]):Unit = {
+      require(b.length == a.length, "Vectors must be the same length!")
+      var i = 0
+      while(i < a.length) {
+        a(i) = op(a(i), b(i))
+        i += 1
+      }
+    }
+  }
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def hv_hv_Idempotent_UpdateOp[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub) Op <: OpType]
+  (implicit @sequence[Op]({_ + _}, {_ - _})
+  op: BinaryOp[T, T, Op, T]):BinaryUpdateOp[HashVector[T], HashVector[T], Op] = new BinaryUpdateOp[HashVector[T], HashVector[T], Op] {
+    def apply(a: HashVector[T], b: HashVector[T]):Unit = {
+      require(b.length == a.length, "Vectors must be the same length!")
+      for( (k,v) <- b.activeIterator) {
+        a(k) = op(a(k), v)
+      }
+    }
+  }
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def hv_s_UpdateOp[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod) Op <: OpType]
+  (implicit @sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _})
+  op: BinaryOp[T, T, Op, T]):BinaryUpdateOp[HashVector[T], T, Op] = new BinaryUpdateOp[HashVector[T], T, Op] {
+    def apply(a: HashVector[T], b: T):Unit = {
+      var i = 0
+      while(i < a.length) {
+        a(i) = op(a(i), b)
+        i += 1
+      }
+    }
+  }
+
+
+
+  @expand
+  implicit def canDot_HV_HV[@expandArgs(Int, Long, BigInt, Complex, Double, Float) T](implicit @sequence[T](0, 0l, BigInt(0), Complex.zero, 0.0, 0f) zero: T): BinaryOp[HashVector[T], HashVector[T], breeze.linalg.operators.OpMulInner, T] = {
+    new BinaryOp[HashVector[T], HashVector[T], breeze.linalg.operators.OpMulInner, T] {
+      def apply(a: HashVector[T], b: HashVector[T]):T = {
+        require(b.length == a.length, "Vectors must be the same length!")
+
+        if (a.iterableSize > b.iterableSize) {
+          apply(b, a)
+        } else {
+          var result : T = zero
+          for( (k,v) <- a.activeIterator) {
+            result += v * b(k)
+          }
+          result
+        }
+      }
+//      Vector.canDotProductV_T.register(this)
+    }
+  }
+
+
+}
+
+
+
+trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type =>
+  import breeze.math.PowImplicits._
+
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def hv_sv_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: BinaryOp[T, T, Op, T],
+   @sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T):BinaryOp[HashVector[T], SparseVector[T], Op, HashVector[T]] = new BinaryOp[HashVector[T], SparseVector[T], Op, HashVector[T]] {
+    def apply(a: HashVector[T], b: SparseVector[T]): HashVector[T] = {
+      require(b.length == a.length, "Vectors must be the same length!")
+      val builder = new VectorBuilder[T](a.length)
+      for((k,v) <- b.iterator) {
+        val r = op(a(k), v)
+        if(r != zero)
+          builder.add(k, r)
+      }
+      builder.toHashVector
+    }
+  }
+
+
+  @expand
+  implicit def hv_sv_nilpotent_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T]
+  (implicit @sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T):BinaryOp[HashVector[T], SparseVector[T], OpMulScalar, HashVector[T]] = new BinaryOp[HashVector[T], SparseVector[T], OpMulScalar, HashVector[T]] {
+    def apply(a: HashVector[T], b: SparseVector[T]): HashVector[T] = {
+      require(b.length == a.length, "Vectors must be the same length!")
+      val builder = new VectorBuilder[T](a.length)
+      for((k,v) <- b.activeIterator) {
+        val r = a(k) * v
+        if(r != zero)
+          builder.add(k, r)
+      }
+      builder.toHashVector
+    }
+  }
+
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def hv_sv_Idempotent_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub) Op <: OpType]
+  (implicit @sequence[Op]({_ + _}, {_ - _})
+  op: BinaryOp[T, T, Op, T]):BinaryOp[HashVector[T], SparseVector[T], Op, HashVector[T]] = new BinaryOp[HashVector[T], SparseVector[T], Op, HashVector[T]] {
+    def apply(a: HashVector[T], b: SparseVector[T]): HashVector[T] = {
+      require(b.length == a.length, "Vectors must be the same length!")
+      val result = a.copy
+      var boff = 0
+
+      while(boff < b.activeSize) {
+        val k = b.indexAt(boff)
+        val v = b.valueAt(boff)
+        result(k) = op(a(k), v)
+        boff += 1
+      }
+      result
+    }
+  }
+
+
+  @expand
+  implicit def canDot_HV_SV[@expandArgs(Int, Long, BigInt, Complex, Float, Double) T](implicit @sequence[T](0, 0l, BigInt(0), Complex.zero, 0f, 0.0) zero: T): BinaryOp[HashVector[T], SparseVector[T], breeze.linalg.operators.OpMulInner, T] = {
+    new BinaryOp[HashVector[T], SparseVector[T], breeze.linalg.operators.OpMulInner, T] {
+      def apply(a: HashVector[T], b: SparseVector[T]) = {
+        require(b.length == a.length, "Vectors must be the same length!")
+        var result: T = zero
+        var boff = 0
+
+        while(boff < b.activeSize) {
+          result += a(b.indexAt(boff)) * b.valueAt(boff)
+          boff += 1
+        }
+
+        result
+      }
+//      Vector.canDotProductV_T.register(this)
+    }
+  }
+
+
+
+  protected def updateFromPure[T, Op<:OpType, Other](implicit op: BinaryOp[HashVector[T], Other, Op, HashVector[T]],
+                                                              set: BinaryUpdateOp[HashVector[T], HashVector[T], OpSet]): BinaryUpdateOp[HashVector[T], Other, Op] = {
+    new BinaryUpdateOp[HashVector[T], Other, Op] {
+      def apply(a: HashVector[T], b: Other) {
+        val result = op(a, b)
+        a := result
+      }
+    }
+  }
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def hv_sv_UpdateOp[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  :BinaryUpdateOp[HashVector[T], SparseVector[T], Op] = updateFromPure
+
+
+
+}
+
+
+trait SparseVector_HashVector_Ops extends HashVectorOps with HashVector_SparseVector_Ops { this: HashVector.type =>
+  import breeze.math.PowImplicits._
+
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def sv_hv_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: BinaryOp[T, T, Op, T],
+   @sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T):BinaryOp[SparseVector[T], HashVector[T], Op, SparseVector[T]] = new BinaryOp[SparseVector[T], HashVector[T], Op, SparseVector[T]] {
+    def apply(a: SparseVector[T], b: HashVector[T]): SparseVector[T] = {
+      require(b.length == a.length, "Vectors must be the same length!")
+      val builder = new VectorBuilder[T](a.length)
+      for((k,v) <- b.iterator) {
+        val r = op(a(k), v)
+        if(r != zero)
+          builder.add(k, r)
+      }
+      builder.toSparseVector
+    }
+  }
+
+  @expand
+  implicit def sv_hv_nilpotent_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T]
+  (implicit @sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T):BinaryOp[SparseVector[T], HashVector[T], OpMulScalar, SparseVector[T]] = new BinaryOp[SparseVector[T], HashVector[T], OpMulScalar, SparseVector[T]] {
+    def apply(a: SparseVector[T], b: HashVector[T]): SparseVector[T] = {
+      require(b.length == a.length, "Vectors must be the same length!")
+      val builder = new VectorBuilder[T](a.length)
+      for((k,v) <- a.activeIterator) {
+        val r = v * b(k)
+        if(r != zero)
+          builder.add(k, r)
+      }
+      builder.toSparseVector(true, true)
+    }
+  }
+
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def sv_hv_Idempotent_Op[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub) Op <: OpType]
+  (implicit @sequence[Op]({_ + _}, {_ - _})
+  op: BinaryOp[T, T, Op, T]):BinaryOp[SparseVector[T], HashVector[T], Op, SparseVector[T]] = new BinaryOp[SparseVector[T], HashVector[T], Op, SparseVector[T]] {
+    def apply(a: SparseVector[T], b: HashVector[T]): SparseVector[T] = {
+      require(b.length == a.length, "Vectors must be the same length!")
+      val builder = new VectorBuilder[T](a.length)
+      var aoff = 0
+      while(aoff < a.activeSize) {
+        val k = a.indexAt(aoff)
+        val v = a.valueAt(aoff)
+        builder.add(k,v)
+        aoff += 1
+      }
+
+      for((k,v) <- b.activeIterator) {
+        builder.add(k, v)
+      }
+
+      builder.toSparseVector
+    }
+  }
+
+
+
+
+  implicit def canDot_SV_HV[T](implicit op: BinaryOp[HashVector[T], SparseVector[T], OpMulInner, T]): BinaryOp[SparseVector[T], HashVector[T], breeze.linalg.operators.OpMulInner, T] = {
+    new BinaryOp[SparseVector[T], HashVector[T], breeze.linalg.operators.OpMulInner, T] {
+      def apply(a: SparseVector[T], b: HashVector[T]) = {
+        b dot a
+      }
+    }
+  }
+
+  protected def updateFromPureS[T, Op<:OpType, Other](implicit op: BinaryOp[SparseVector[T], Other, Op, SparseVector[T]],
+                                                     set: BinaryUpdateOp[SparseVector[T], SparseVector[T], OpSet]): BinaryUpdateOp[SparseVector[T], Other, Op] = {
+    new BinaryUpdateOp[SparseVector[T], Other, Op] {
+      def apply(a: SparseVector[T], b: Other) {
+        val result = op(a, b)
+        a := result
+      }
+    }
+  }
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def sv_hv_update[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T,
+  @expandArgs(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  :BinaryUpdateOp[SparseVector[T], HashVector[T], Op] = updateFromPureS
+}
+
+trait HashVector_GenericOps { this: HashVector.type =>
+  import breeze.math.PowImplicits._
+  @expand
+  implicit def pureFromUpdate[@expandArgs(Int, Double, Float, Long, BigInt, Complex) T, Other,Op<:OpType](op: BinaryUpdateOp[HashVector[T], Other, Op])(implicit copy: CanCopy[HashVector[T]]):BinaryOp[HashVector[T], Other, Op, HashVector[T]] = {
+    new BinaryOp[HashVector[T], Other, Op, HashVector[T]] {
+      override def apply(a : HashVector[T], b : Other) = {
+        val c = copy(a)
+        op(c, b)
+        c
+      }
+    }
+  }
+
+  implicit def pureFromUpdate[T, Other, Op<:OpType](op: BinaryUpdateOp[HashVector[T], Other, Op])(implicit copy: CanCopy[HashVector[T]]):BinaryOp[HashVector[T], Other, Op, HashVector[T]] = {
+    new BinaryOp[HashVector[T], Other, Op, HashVector[T]] {
+      override def apply(a : HashVector[T], b : Other) = {
+        val c = copy(a)
+        op(c, b)
+        c
+      }
+    }
+  }
+
+  implicit def canSet_HV_Generic[V]: BinaryUpdateOp[HashVector[V], V, breeze.linalg.operators.OpSet] = {
+    new BinaryUpdateOp[HashVector[V], V, breeze.linalg.operators.OpSet] {
+      def apply(a: HashVector[V], b: V) {
+        var i = 0
+        while(i < a.length) {
+          a(i) = b
+          i += 1
+        }
+
+      }
+    }
+  }
+
+  implicit def canSet_HV_HV_Generic[V]: BinaryUpdateOp[HashVector[V], Vector[V], breeze.linalg.operators.OpSet] = {
+    new BinaryUpdateOp[HashVector[V], Vector[V], breeze.linalg.operators.OpSet] {
+      def apply(a: HashVector[V], b: Vector[V]) {
+        require(b.length == a.length, "Vectors must be the same length!")
+        var i = 0
+         while(i < a.length) {
+          a(i) = b(i)
+          i += 1
+        }
+      }
+    }
+  }
+
+  implicit def canGaxpy[V:Semiring]: CanAxpy[V, HashVector[V], HashVector[V]] = {
+    new CanAxpy[V, HashVector[V], HashVector[V]] {
+      val ring = implicitly[Semiring[V]]
+      def apply(s: V, b: HashVector[V], a: HashVector[V]) {
+        require(b.length == a.length, "Vectors must be the same length!")
+
+        for( (k,v) <- b.activeIterator)
+          a(k) = ring.+(a(k),ring.*(s, v))
+      }
+    }
+  }
+
+
 }
