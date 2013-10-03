@@ -27,6 +27,7 @@ import scala.reflect.ClassTag
 import org.netlib.util.intW
 import breeze.macros.expand
 import scala.math.BigInt
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * A DenseMatrix is a matrix with all elements found in an array. It is column major unless isTranspose is true,
@@ -199,6 +200,71 @@ extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
     result := this
     result
   }
+
+  private implicit def dontNeedDefaultArrayValue[V]: DefaultArrayValue[V] = null.asInstanceOf[DefaultArrayValue[V]]
+
+
+  def delete(row: Int, axis: Axis._0.type): DenseMatrix[V] = {
+    implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+    require(row >= 0 && row < rows, s"row $row is not in bounds: [0, $rows)")
+    if (row == 0) this(1 until rows, ::).copy
+    else if (row == rows - 1) this(0 until rows-1, ::).copy
+    else DenseMatrix.vertcat(this(0 until row, ::), this((row+1) until rows, ::))
+  }
+
+  def delete(col: Int, axis: Axis._1.type): DenseMatrix[V] = {
+    implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+    require(col >= 0 && col < cols, s"col $col is not in bounds: [0, $cols)")
+    if (col == 0) this(::, 1 until cols).copy
+    else if (col == cols - 1) this(::, 0 until cols-1).copy
+    else DenseMatrix.horzcat(this(::, 0 until col), this(::, (col+1) until cols))
+  }
+
+  def delete(rows: Seq[Int], axis: Axis._0.type):DenseMatrix[V] = {
+    implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+    if(rows.isEmpty) copy
+    else if(rows.size == 1) delete(rows(0), axis)
+    else {
+      val sorted = rows.sorted
+      require(sorted.head >= 0 && sorted.last < this.rows, s"row $rows are not in bounds: [0, ${this.rows})")
+      var last = 0
+      val matrices = ArrayBuffer[DenseMatrix[V]]()
+      for(index <- sorted) {
+        assert(index >= last)
+        if(index != last) {
+          matrices += this(last until index, ::)
+        }
+        last = index + 1
+      }
+      if(last != this.rows) {
+        matrices += this(last until this.rows, ::)
+      }
+      DenseMatrix.vertcat(matrices:_*)
+    }
+  }
+
+  def delete(cols: Seq[Int], axis: Axis._1.type):DenseMatrix[V] = {
+    implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+    if(cols.isEmpty) copy
+    else if(cols.size == 1) delete(cols(0), axis)
+    else {
+      val sorted = cols.sorted
+      require(sorted.head >= 0 && sorted.last < this.cols, s"col $cols are not in bounds: [0, ${this.cols})")
+      var last = 0
+      val matrices = ArrayBuffer[DenseMatrix[V]]()
+      for(index <- sorted) {
+        assert(index >= last)
+        if(index != last) {
+          matrices += this(::, last until index)
+        }
+        last = index + 1
+      }
+      if(last != this.cols) {
+        matrices += this(::, last until this.cols)
+      }
+      DenseMatrix.horzcat(matrices:_*)
+    }
+  }
 }
 
 object DenseMatrix extends LowPriorityDenseMatrix
@@ -211,7 +277,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
    */
   def zeros[@specialized(Int, Float, Double) V:ClassTag:DefaultArrayValue](rows: Int, cols: Int) = {
     val data = new Array[V](rows * cols)
-    if(rows * cols != 0 && data(0) != implicitly[DefaultArrayValue[V]].value)
+    if(implicitly[DefaultArrayValue[V]] != null && rows * cols != 0 && data(0) != implicitly[DefaultArrayValue[V]].value)
       ArrayUtil.fill(data, 0, data.length, implicitly[DefaultArrayValue[V]].value)
     new DenseMatrix(rows, cols, data)
   }

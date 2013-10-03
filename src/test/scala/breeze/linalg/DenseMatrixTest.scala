@@ -460,6 +460,23 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
   }
 
+  test("Delete") {
+    val a = DenseMatrix((1, 2, 3),(4, 5, 6), (7,8,9))
+    assert(a.delete(0, Axis._0) === DenseMatrix((4, 5, 6), (7,8,9)))
+    assert(a.delete(1, Axis._0) === DenseMatrix((1, 2, 3), (7,8,9)))
+    assert(a.delete(2, Axis._0) === DenseMatrix((1, 2, 3), (4,5,6)))
+
+    assert(a.delete(0, Axis._1) === DenseMatrix((2, 3), (5,6), (8,9)))
+    assert(a.delete(1, Axis._1) === DenseMatrix((1, 3), (4,6), (7,9)))
+    assert(a.delete(2, Axis._1) === DenseMatrix((1, 2), (4,5), (7,8)))
+
+    assert(a.delete(Seq(0,2), Axis._1) === DenseMatrix(2, 5, 8))
+    assert(a.delete(Seq(1, 2), Axis._1) === DenseMatrix(1, 4, 7))
+
+    assert(a.delete(Seq(0,2), Axis._0) === DenseMatrix((4, 5, 6)))
+    assert(a.delete(Seq(1,2), Axis._0) === DenseMatrix((1, 2, 3)))
+  }
+
 
 }
 
