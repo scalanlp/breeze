@@ -4,15 +4,15 @@ Breeze is a library for numerical processing. It aims to be generic, clean, and 
 
 The current version is 0.5-SNAPSHOT. The latest release is 0.4. 
 
-## Using Breeze in your projects
+Note:  
 
-Breeze consists of three parts:
+Breeze used to have more components, but they are getting sharded out to different libraries. Their new homes are described below:
 
-* breeze-math contains high-performance linear algebra and numerics.
-* breeze-viz contains plotting and visualization routines.
-* breeze-core contains some basic data structures and configuration.
+* breeze-viz: a (barely maintained) visualization library in its own repository. It is available at [https://github.com/scalanlp/breeze-viz](https://github.com/scalanlp/breeze-viz).
+* breeze-learn (machine learning) is now in [Nak](https://github.com/scalanlp/nak).
+* breeze-process (natural language processing) has become [Chalk](https://github.com/scalanlp/chalk).
 
-Note: after the recent reorganization, breeze-learn (machine learning) is now in [Nak](https://github.com/scalanlp/nak) and breeze-process (natural language processing) has become [Chalk](https://github.com/scalanlp/chalk).
+
 
 ## Build
 
