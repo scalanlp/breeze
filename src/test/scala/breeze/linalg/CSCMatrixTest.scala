@@ -118,8 +118,6 @@ class CSCMatrixTest extends FunSuite with Checkers {
   test("Builder, simple") {
     val builder = new CSCMatrix.Builder[Double](3, 3)
     builder.add(1, 1, 2.0)
-    val cs = builder.result()
-    assert(cs === CSCMatrix((0.0, 0.0, 0.0), (0.0, 2.0, 0.0), (0.0, 0.0, 0.0)))
   }
 
   test("Builder, full") {
@@ -157,6 +155,13 @@ class CSCMatrixTest extends FunSuite with Checkers {
 
     val b2 : CSCMatrix[Double] = a.mapValues(_ + 1.0)
     assert(b2 === CSCMatrix((2.0,1.0,1.0),(3.0,4.0,0.0)))
+  }
+
+  test("addition/subtraction") {
+    val a : CSCMatrix[Int] = CSCMatrix((1,0,0),(2,3,-1))
+    val b : CSCMatrix[Int] = CSCMatrix((0,1,0),(2,3,-1))
+    assert(a + b === CSCMatrix((1, 1, 0), (4,6,-2)))
+    assert(a - b === CSCMatrix((1, -1, 0), (0,0,0)))
   }
 }
 

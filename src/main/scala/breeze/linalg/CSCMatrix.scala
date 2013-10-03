@@ -19,7 +19,7 @@ import breeze.storage.DefaultArrayValue
 import java.util
 import breeze.util.{ Terminal, ArrayUtil }
 import scala.collection.mutable
-import breeze.math.{ Complex, Semiring }
+import breeze.math.{Ring, Complex, Semiring}
 import breeze.generic.CanMapValues
 import scala.reflect.ClassTag
 import breeze.macros.expand
@@ -157,6 +157,7 @@ class CSCMatrix[@specialized(Int, Float, Double) V:DefaultArrayValue] private[li
   def copy: Matrix[V] = {
     new CSCMatrix[V](ArrayUtil.copyOf(_data, activeSize), rows, cols, colPtrs.clone(), activeSize, _rowIndices.clone)
   }
+
 }
 
 object CSCMatrix extends MatrixConstructors[CSCMatrix]  with CSCMatrixOps {
@@ -283,11 +284,15 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]  with CSCMatrixOps {
     }
 
     private val rs = new mutable.ArrayBuilder.ofInt()
-    rs.sizeHint(initNnz)
     private val cs = new mutable.ArrayBuilder.ofInt()
-    cs.sizeHint(initNnz)
     private val vs = mutable.ArrayBuilder.make[T]()
-    vs.sizeHint(initNnz)
+
+    def sizeHint(nnz: Int) = {
+      rs.sizeHint(nnz)
+      cs.sizeHint(nnz)
+      vs.sizeHint(nnz)
+    }
+    sizeHint(initNnz)
 
     def result:CSCMatrix[T] = result(false, false)
 
@@ -354,6 +359,25 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]  with CSCMatrixOps {
       Array.range(0, rs.length).sortWith { (i, j) =>
         (cs(i) < cs(j))  || (cs(i) == cs(j) && rs(i) < rs(j))
       }
+    }
+  }
+
+  object Builder {
+    def fromMatrix[@specialized(Int, Float, Double) T:ClassTag:Semiring:DefaultArrayValue](matrix: CSCMatrix[T]):Builder[T] = {
+      val bldr = new Builder[T](matrix.rows, matrix.cols, matrix.activeSize)
+      var c = 0
+      while(c < matrix.cols) {
+        var rr = matrix.colPtrs(c)
+        val rrlast = matrix.colPtrs(c+1)
+        while (rr < rrlast) {
+          val r = matrix.rowIndices(rr)
+          bldr.add(r, c, matrix.data(rr))
+          rr += 1
+        }
+        c += 1
+      }
+
+      bldr
     }
   }
 }
@@ -595,6 +619,45 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
     }
 
     implicitly[BinaryRegistry[Matrix[A], Matrix[A], OpMulScalar, Matrix[A]]].register(this)
+  }
+
+  implicit def CSCMatrixCanAdd_M_M[A:Semiring:DefaultArrayValue:ClassTag]: BinaryOp[CSCMatrix[A], CSCMatrix[A], OpAdd, CSCMatrix[A]] = new BinaryOp[CSCMatrix[A], CSCMatrix[A], OpAdd, CSCMatrix[A]] {
+    def apply(a: CSCMatrix[A], b: CSCMatrix[A]): CSCMatrix[A] = {
+      val bldr = CSCMatrix.Builder.fromMatrix(a)
+      bldr.sizeHint(a.activeSize + b.activeSize)
+      var c = 0
+      while(c < b.cols) {
+        var rr = b.colPtrs(c)
+        val rrlast = b.colPtrs(c+1)
+        while (rr < rrlast) {
+          val r = b.rowIndices(rr)
+          bldr.add(r, c, b.data(rr))
+          rr += 1
+        }
+        c += 1
+      }
+      bldr.result()
+    }
+  }
+
+  implicit def CSCMatrixCanSubM_M[A:Ring:DefaultArrayValue:ClassTag]: BinaryOp[CSCMatrix[A], CSCMatrix[A], OpSub, CSCMatrix[A]] = new BinaryOp[CSCMatrix[A], CSCMatrix[A], OpSub, CSCMatrix[A]] {
+    val ring = implicitly[Ring[A]]
+    def apply(a: CSCMatrix[A], b: CSCMatrix[A]): CSCMatrix[A] = {
+      val bldr = CSCMatrix.Builder.fromMatrix(a)
+      bldr.sizeHint(a.activeSize + b.activeSize)
+      var c = 0
+      while(c < b.cols) {
+        var rr = b.colPtrs(c)
+        val rrlast = b.colPtrs(c+1)
+        while (rr < rrlast) {
+          val r = b.rowIndices(rr)
+          bldr.add(r, c, ring.negate(b.data(rr)))
+          rr += 1
+        }
+        c += 1
+      }
+      bldr.result()
+    }
   }
 
 }
