@@ -47,9 +47,9 @@ scalacOptions ++= Seq("-optimize","-deprecation","-language:_")
 
 
 libraryDependencies ++= Seq(
-  "org.scalanlp" %% "breeze-macros" % "0.1",
+  "org.scalanlp" %% "breeze-macros" % "0.1" % "compile",
   "com.thoughtworks.paranamer" % "paranamer" % "2.2",
-  "com.github.fommil.netlib" % "all" % "1.1-SNAPSHOT" pomOnly(),
+  "com.github.fommil.netlib" % "all" % "1.1-SNAPSHOT",
   "de.bwaldvogel" % "liblinear" % "1.8",
   "net.sf.opencsv" % "opencsv" % "2.3",
   "com.typesafe" %% "scalalogging-log4j" % "1.0.1",
