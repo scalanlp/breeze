@@ -44,4 +44,25 @@ class BitVectorTest extends FunSuite {
     assert(!a === BitVector(10)(0,1,3,4, 5,6, 8,9))
   }
 
+  test("MulInner") {
+    val a = BitVector   (false, false, true  , true,   false, true, true)
+    val b = SparseVector(1,     0,      2,        0,       3, 4, 0)
+    val bd = DenseVector(1,     0,      2,        0,       3, 4, 0)
+    b.compact()
+    assert( (a dot b) === (b dot a))
+    assert( (a dot b) === 6)
+    assert( (a dot bd) === 6)
+  }
+
+  test("axpy") {
+    val a = BitVector   (false, false, true  , true,   false, true, true)
+    val b = SparseVector(1,     0,      2,        0,       3, 4, 0)
+    b.compact()
+    val bd = DenseVector(1,     0,      2,        0,       3, 4, 0)
+    axpy(3, a, b)
+    axpy(3, a, bd)
+    assert(b === SparseVector(1, 0, 5, 3, 3, 7, 3))
+    assert(bd === DenseVector(1, 0, 5, 3, 3, 7, 3))
+  }
+
 }

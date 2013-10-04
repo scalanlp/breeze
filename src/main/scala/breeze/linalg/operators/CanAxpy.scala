@@ -23,7 +23,7 @@ package breeze.linalg.operators
  * @tparam X Source
  * @tparam Y Sink
  */
-trait CanAxpy[A, X, Y] {
+trait CanAxpy[A, X, -Y] {
   def apply(a: A, x: X, y: Y)
 }
 

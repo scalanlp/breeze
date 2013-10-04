@@ -4,6 +4,7 @@ import java.util
 import breeze.macros.expand
 import scala.math.BigInt
 import breeze.linalg.operators._
+import breeze.math.Complex
 
 /**
  * TODO
@@ -154,6 +155,87 @@ trait BitVectorOps {
     def apply(a: BitVector, b: BitVector): BitVector = {
       if(!a.lengthsMatch(b)) throw new IllegalArgumentException(s"Lengths don't match: ${a.length} ${b.length}")
       !(a :!= b)
+    }
+  }
+
+  @expand
+  implicit def axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) V]: CanAxpy[V, BitVector, Vector[V]] = {
+    new CanAxpy[V, BitVector, Vector[V]] {
+      def apply(s: V, b: BitVector, a: Vector[V]) {
+        require(b.lengthsMatch(a), "Vectors must be the same length!")
+        val bd = b.data
+        var i= bd.nextSetBit(0)
+        while(i >= 0) {
+          a(i) += s
+          i = bd.nextSetBit(i+1)
+        }
+      }
+    }
+  }
+
+  implicit val canDot_BV_BV: BinaryOp[BitVector, BitVector, OpMulInner, Boolean] = {
+    new BinaryOp[BitVector, BitVector, breeze.linalg.operators.OpMulInner, Boolean] {
+      def apply(a: BitVector, b: BitVector): Boolean = {
+        require(a.lengthsMatch(b), "Vectors must be the same length!")
+        a.data intersects b.data
+      }
+    }
+  }
+
+
+  @expand
+  @expand.valify
+  implicit def canDot_BV_DenseVector[@expand.args(Int, Long, BigInt, Complex) T](implicit @expand.sequence[T](0, 0l, BigInt(0), Complex.zero) zero: T): BinaryOp[BitVector, DenseVector[T], breeze.linalg.operators.OpMulInner, T] = {
+    new BinaryOp[BitVector, DenseVector[T], breeze.linalg.operators.OpMulInner, T] {
+      def apply(a: BitVector, b: DenseVector[T]) = {
+        val ad = a.data
+        val boff = b.offset
+        val bd = b.data
+        val bstride = b.stride
+        var result : T = zero
+
+        var i= ad.nextSetBit(0)
+        while(i >= 0) {
+          result += bd(boff + bstride * i)
+          i = ad.nextSetBit(i+1)
+        }
+        result
+
+      }
+//      implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulInner, T]].register(this)
+    }
+  }
+
+  @expand
+  @expand.valify
+  implicit def canDot_BV_SV[@expand.args(Int, Long, BigInt, Complex) T](implicit @expand.sequence[T](0, 0l, BigInt(0), Complex.zero) zero: T): BinaryOp[BitVector, SparseVector[T], breeze.linalg.operators.OpMulInner, T] = {
+    new BinaryOp[BitVector, SparseVector[T], breeze.linalg.operators.OpMulInner, T] {
+      def apply(a: BitVector, b: SparseVector[T]):T = {
+        require(a.lengthsMatch(b), "Vectors must be the same length!")
+        if(b.activeSize == 0) return zero
+
+        val ad = a.data
+        var boff = 0
+        val bindex = b.index
+        val bd = b.data
+        var result : T = zero
+        while(boff < b.activeSize) {
+          if(ad.get(b.indexAt(boff)))
+            result += b.valueAt(boff)
+          boff += 1
+        }
+        result
+
+      }
+      //      implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulInner, T]].register(this)
+    }
+  }
+
+  implicit def canDot_Other_BV[T, Other](implicit op: BinaryOp[BitVector, Other, OpMulInner, T]):BinaryOp[Other, BitVector, OpMulInner, T] = {
+    new BinaryOp[Other, BitVector, OpMulInner, T] {
+      def apply(a: Other, b: BitVector) = {
+        op(b,a)
+      }
     }
   }
 }
