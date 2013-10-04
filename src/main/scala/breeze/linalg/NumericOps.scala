@@ -71,10 +71,10 @@ trait NumericOps[+This] {
   final def :!= [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpNe,That]) = op(repr,b)
 
   /** Element-wise logical "and" operator -- returns true if corresponding elements are non-zero. */
-  final def :&& [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpAnd,That]) = op(repr,b)
+  final def :& [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpAnd,That]) = op(repr,b)
 
   /** Element-wise logical "or" operator -- returns true if either element is non-zero. */
-  final def :|| [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpOr,That]) = op(repr,b)
+  final def :| [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpOr,That]) = op(repr,b)
 
   /** Element-wise logical "xor" operator -- returns true if only one of the corresponding elements is non-zero. */
   final def :^^ [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpXor,That]) = op(repr,b)
@@ -102,8 +102,6 @@ trait NumericOps[+This] {
   }
 
 
-
-
   /** Alias for :/(b) when b is a scalar. */
   final def / [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpDiv,That]) = {
     op(repr, b)
@@ -115,12 +113,12 @@ trait NumericOps[+This] {
   }
 
   /** Alias for :&&(b) for all b. */
-  final def && [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpAnd,That]) = {
+  final def & [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpAnd,That]) = {
     op(repr, b)
   }
 
   /** Alias for :||(b) for all b. */
-  final def || [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpOr,That]) = {
+  final def | [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpOr,That]) = {
     op(repr, b)
   }
 
@@ -176,9 +174,6 @@ trait NumericOps[+This] {
   final def += [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpAdd]) =
     this.:+=[TT,B](b)
 
-  /** Returns the operator delegate used in += */
-  final def +=?[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpAdd]) = op
-
   /** Alias for :-=(b) for all b. */
   final def -= [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpSub]) =
     this.:-=[TT,B](b)
@@ -194,6 +189,43 @@ trait NumericOps[+This] {
   /** Alias for :%=(b) when b is a scalar. */
   final def %= [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpMod]) =
     this.:%=[TT,B](b)
+
+
+  /** Mutates this by element-wise and of this and b. */
+  final def :&= [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpAnd]) : This = {
+    op(repr,b)
+    repr
+  }
+
+  /** Mutates this by element-wise or of this and b. */
+  final def :|= [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpOr]) : This = {
+    op(repr,b)
+    repr
+  }
+
+  /** Mutates this by element-wise xor of this and b. */
+  final def :^^= [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpXor]) : This = {
+    op(repr,b)
+    repr
+  }
+
+  /** Mutates this by element-wise and of this and b. */
+  final def &= [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpAnd]) : This = {
+    op(repr,b)
+    repr
+  }
+
+  /** Mutates this by element-wise or of this and b. */
+  final def |= [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpOr]) : This = {
+    op(repr,b)
+    repr
+  }
+
+  /** Mutates this by element-wise xor of this and b. */
+  final def ^^= [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpXor]) : This = {
+    op(repr,b)
+    repr
+  }
 
   // matrix-y ops
 
