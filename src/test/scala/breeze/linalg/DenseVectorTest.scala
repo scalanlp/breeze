@@ -344,12 +344,12 @@ class DenseVectorTest extends FunSuite with Checkers {
   test("OpEq and friends") {
     val a = DenseVector(1, 2, 3)
     val b = DenseVector(1, 4, 1)
-    assert( (a :== b) === DenseVector(true, false, false))
-    assert( (a :!= b) === DenseVector(false, true, true))
-    assert( (a :<= b) === DenseVector(true, true, false))
-    assert( (a :>= b) === DenseVector(true, false, true))
-    assert( (a :< b) === DenseVector(false, true, false))
-    assert( (a :> b) === DenseVector(false, false, true))
+    assert( (a :== b) === BitVector(true, false, false))
+    assert( (a :!= b) === BitVector(false, true, true))
+    assert( (a :<= b) === BitVector(true, true, false))
+    assert( (a :>= b) === BitVector(true, false, true))
+    assert( (a :< b) === BitVector(false, true, false))
+    assert( (a :> b) === BitVector(false, false, true))
   }
 
 }

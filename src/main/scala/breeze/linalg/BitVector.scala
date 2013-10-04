@@ -19,6 +19,7 @@ class BitVector(val data: java.util.BitSet, val length: Int, val enforceLength: 
 
   def update(i: Int, v: Boolean) {
     if(i < 0 || (i >= length))
+      throw new IndexOutOfBoundsException(s"$i is not in the range [0, $length)")
     data.set(i, v)
   }
 
@@ -76,6 +77,16 @@ class BitVector(val data: java.util.BitSet, val length: Int, val enforceLength: 
 }
 
 object BitVector extends BitVectorOps {
+
+  def apply(bools: Boolean*) = {
+    val bs = new util.BitSet
+    for(i <- 0 until bools.length if bools(i)) {
+      bs.set(i)
+    }
+
+    new BitVector(bs, bools.length)
+  }
+
   def apply(length: Int, enforceLength: Boolean = true)(trues: Int*) = {
     val bs = new util.BitSet
     for(i <- trues) {
