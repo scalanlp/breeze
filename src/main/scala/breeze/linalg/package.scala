@@ -673,6 +673,7 @@ trait LinearAlgebra {
     A
   }
 
+
   /**
    * QR Factorization with pivoting
    *
@@ -689,11 +690,11 @@ trait LinearAlgebra {
 
     //Get optimal workspace size
     // we do this by sending -1 as lwork to the lapack function
-    val work = new Array[Double](1)
+    val scratch, work = new Array[Double](1)
     var info = new intW(0)
-    lapack.dgeqrf(m, n, null, m, null, work, -1, info)
+    lapack.dgeqrf(m, n, scratch, m, scratch, work, -1, info)
     val lwork1 = if(info.`val` != 0) n else work(0).toInt
-    lapack.dorgqr(m, m, scala.math.min(m,n), null, m, null, work, -1, info)
+    lapack.dorgqr(m, m, scala.math.min(m,n), scratch, m, scratch, work, -1, info)
     val lwork2 = if(info.`val` != 0) n else work(0).toInt
     //allocate workspace mem. as max of lwork1 and lwork3
     val workspace = new Array[Double](scala.math.max(lwork1, lwork2))
@@ -754,11 +755,12 @@ trait LinearAlgebra {
 
     //Get optimal workspace size
     // we do this by sending -1 as lwork to the lapack function
-    val work = new Array[Double](1)
+    // can't pass in null arrays on linux to new lapack, so passing in a length 1 called scratch
+    val scratch, work = new Array[Double](1)
     val info = new intW(0)
-    lapack.dgeqrf(m, n, null, m, null, work, -1, info)
+    lapack.dgeqrf(m, n, scratch, m, scratch, work, -1, info)
     val lwork1 = if(info.`val` != 0) n else work(0).toInt
-    lapack.dorgqr(m, m, scala.math.min(m,n), null, m, null, work, -1, info)
+    lapack.dorgqr(m, m, scala.math.min(m,n), scratch, m, scratch, work, -1, info)
     val lwork2 = if(info.`val` != 0) n else work(0).toInt
     //allocate workspace mem. as max of lwork1 and lwork3
     val workspace = new Array[Double](scala.math.max(lwork1, lwork2))
