@@ -42,6 +42,16 @@ object BroadcastedRows {
 
   }
 
+
+  implicit def broadcastBinaryOpMulInner[T, ColumnType, RHS, OpResult, Result](implicit op: BinaryOp[ColumnType, RHS, OpMulInner, OpResult], cc: CanCollapseAxis[T, Axis._1.type, ColumnType, OpResult, Result]): BinaryOp[BroadcastedRows[T], RHS, OpMulInner, Result] = {
+    new BinaryOp[BroadcastedRows[T], RHS, OpMulInner, Result] {
+      def apply(a: BroadcastedRows[T], b: RHS): Result = {
+        cc(a.underlying, Axis._1){op(_,b)}
+      }
+    }
+
+  }
+
   implicit def broadcastBinaryOpMulScalar[T, ColumnType, RHS, OpResult, Result](implicit op: BinaryOp[ColumnType, RHS, OpMulScalar, OpResult], cc: CanCollapseAxis[T, Axis._1.type, ColumnType, OpResult, Result]): BinaryOp[BroadcastedRows[T], RHS, OpMulScalar, Result] = {
     new BinaryOp[BroadcastedRows[T], RHS, OpMulScalar, Result] {
       def apply(a: BroadcastedRows[T], b: RHS): Result = {
@@ -185,6 +195,9 @@ object BroadcastedRows {
     }
 
   }
+
+
+
 
   implicit def broadcastBinaryUpdateOpMulScalar[T, ColumnType, RHS](implicit op: BinaryUpdateOp[ColumnType, RHS, OpMulScalar], cc: CanIterateAxis[T, Axis._1.type, ColumnType]): BinaryUpdateOp[BroadcastedRows[T], RHS, OpMulScalar] = {
     new BinaryUpdateOp[BroadcastedRows[T], RHS, OpMulScalar] {

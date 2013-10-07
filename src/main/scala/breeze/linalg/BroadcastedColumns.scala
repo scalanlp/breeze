@@ -300,5 +300,16 @@ object BroadcastedColumns {
     }
 
   }
+
+
+  implicit def broadcastBinaryOpMulInner[T, ColumnType, RHS, OpResult, Result](implicit op: BinaryOp[ColumnType, RHS, OpMulInner, OpResult], cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]): BinaryOp[BroadcastedColumns[T], RHS, OpMulInner, Result] = {
+    new BinaryOp[BroadcastedColumns[T], RHS, OpMulInner, Result] {
+      def apply(a: BroadcastedColumns[T], b: RHS): Result = {
+        cc(a.underlying, Axis._0){op(_,b)}
+      }
+    }
+
+  }
+
 }
 
