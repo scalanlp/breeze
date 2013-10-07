@@ -512,7 +512,7 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
   @expand.valify
   implicit def dv_sv_op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType] = {
-    val op = DenseVector.pureFromUpdate(implicitly[BinaryUpdateOp[DenseVector[T], SparseVector[T], Op]])
+    val op: BinaryOp[DenseVector[T], SparseVector[T], Op, DenseVector[T]] = DenseVector.pureFromUpdate(implicitly[BinaryUpdateOp[DenseVector[T], SparseVector[T], Op]])
     implicitly[BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]]].register(op)
     op
   }
@@ -574,7 +574,22 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
   }
 
 
+  @expand
+  implicit def sv_dv_axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) T] (implicit  @expand.sequence[T](0, 0.0, 0f, 0l, BigInt(0), Complex.zero) zero: T):CanAxpy[T, SparseVector[T], DenseVector[T]] = new CanAxpy[T, SparseVector[T], DenseVector[T]] {
+    def apply(a: T, x: SparseVector[T], y: DenseVector[T]) {
+      require(x.length == y.length, "Vectors must be the same length!")
+      val xsize = x.activeSize
 
+      if(a == zero) return
+
+      var xoff = 0
+      while(xoff < xsize) {
+        y(x.indexAt(xoff)) += a * x.valueAt(xoff)
+        xoff += 1
+      }
+
+    }
+  }
 
 }
 
@@ -967,6 +982,7 @@ trait SparseVectorOps { this: SparseVector.type =>
       }
     }
   }
+
 
 
 
