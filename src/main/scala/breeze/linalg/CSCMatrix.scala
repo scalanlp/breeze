@@ -39,7 +39,7 @@ class CSCMatrix[@specialized(Int, Float, Double) V:DefaultArrayValue] private[li
                                                                                val colPtrs: Array[Int], // len cols + 1
                                                                                private var used : Int,
                                                                                private var _rowIndices: Array[Int]) // len >= used
-  extends Matrix[V] with MatrixLike[V, CSCMatrix[V]] {
+  extends Matrix[V] with MatrixLike[V, CSCMatrix[V]] with Serializable {
 
   def rowIndices = _rowIndices
   def data = _data

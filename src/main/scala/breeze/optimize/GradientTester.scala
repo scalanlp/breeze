@@ -39,21 +39,33 @@ object GradientTester extends Logging {
                 copy: CanCopy[T],
                 canNorm: CanNorm[T],
                 opSub: BinaryOp[T,T,OpSub,T]) = {
+    val indices = Rand.subsetsOfSize(x.keysIterator.toIndexedSeq, (x.size * randFraction + 1).toInt).get()
+    testIndices(f, x, indices, skipZeros, toString, epsilon, tolerance)
+  }
 
-    val (fx,trueGrad) = f.calculate(x)
+  def testIndices[T, K](f: DiffFunction[T], x: T,
+                        indices: Traversable[K],
+                        skipZeros: Boolean = false,
+                        toString: (K) => String = {(_:K).toString},
+                        epsilon: Double = 1e-8, tolerance: Double = 1E-3)(implicit  view2: T <:< NumericOps[T],
+                view: T<:< Tensor[K,Double],
+                copy: CanCopy[T],
+                canNorm: CanNorm[T],
+                opSub: BinaryOp[T,T,OpSub,T]): T = {
+    val (fx, trueGrad) = f.calculate(x)
     val xx = copy(x)
-    val differences = opSub(x,x)
-    val subsetOfDimensions = Rand.subsetsOfSize(x.keysIterator.toIndexedSeq, (x.size * randFraction + 1).toInt).get()
+    val differences = opSub(x, x)
     var ok, tried = 0
-    for (k <- subsetOfDimensions) {
-      if(skipZeros && trueGrad(k) == 0.0) {
+    val sz = indices.size
+    for (k <- indices) {
+      if (skipZeros && trueGrad(k) == 0.0) {
         logger.debug(s"Zero Grad: ${toString(k)}")
         print(toString(k) + " ")
       } else {
         xx(k) += epsilon
         val grad = (f(xx) - fx) / epsilon
         xx(k) -= epsilon
-        val relDif =  (grad - trueGrad(k)).abs/math.max(trueGrad(k).abs, grad.abs).max(1E-4)
+        val relDif = (grad - trueGrad(k)).abs / math.max(trueGrad(k).abs, grad.abs).max(1E-4)
         if (relDif < tolerance) {
           ok += 1
           logger.debug(s"OK: ${toString(k)} $relDif")
@@ -63,8 +75,8 @@ object GradientTester extends Logging {
         differences(k) = relDif
         tried += 1
       }
-      if(tried % 100 == 0 || tried == subsetOfDimensions.length) {
-        logger.info(f"Checked $tried of ${subsetOfDimensions.length} (out of dimension ${x.size}). ${ok * 1.0/tried}%.4g%% ok.")
+      if (tried % 100 == 0 || tried == sz) {
+        logger.info(f"Checked $tried of ${sz} (out of dimension ${x.size}). ${ok * 1.0 / tried}%.4g%% ok.")
       }
     }
     differences

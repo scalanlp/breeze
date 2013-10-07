@@ -53,7 +53,7 @@ libraryDependencies ++= Seq(
   "de.bwaldvogel" % "liblinear" % "1.8",
   "net.sf.opencsv" % "opencsv" % "2.3",
   "com.typesafe" %% "scalalogging-log4j" % "1.0.1",
-   "org.apache.logging.log4j" % "log4j-core" % "2.0-beta4",
+   "org.apache.logging.log4j" % "log4j-core" % "2.0-beta8",
   "com.github.rwl" % "jtransforms" % "2.4.0",
    "org.apache.commons" % "commons-math3" % "3.2",
    "org.scalacheck" %% "scalacheck" % "1.10.0" % "test",
