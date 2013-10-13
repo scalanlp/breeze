@@ -2,7 +2,13 @@
 
 Breeze is a library for numerical processing. It aims to be generic, clean, and powerful without sacrificing (much) efficiency.
 
-The current version is 0.5-SNAPSHOT. The latest release is 0.4. 
+The current version is 0.5. The latest release is 0.5. 
+## Documentation
+
+* https://github.com/scalanlp/breeze/wiki/Quickstart
+* https://github.com/scalanlp/breeze/wiki/Breeze-Linear-Algebra
+* https://github.com/scalanlp/breeze/wiki/UserGuide
+* [Scaladoc](http://www.scalanlp.org/api/#breeze.package)
 
 Note:  
 
@@ -12,9 +18,9 @@ Breeze used to have more components, but they are getting sharded out to differe
 * breeze-learn (machine learning) is now in [Nak](https://github.com/scalanlp/nak).
 * breeze-process (natural language processing) has become [Chalk](https://github.com/scalanlp/chalk).
 
+## Using Breeze
 
-
-## Build
+### Building it yourself.
 
 This project can be built with sbt 0.12.3
 
@@ -28,13 +34,9 @@ For **SBT**, Add these lines to your SBT project definition:
 libraryDependencies  ++= Seq(
             // other dependencies here
             // pick and choose:
-            "org.scalanlp" % "breeze_2.10" % "0.5-SNAPSHOT",
+            "org.scalanlp" % "breeze_2.10" % "0.5",
             // in a different repository now (github.com/scalanlp/breeze-viz)
-            "org.scalanlp" % "breeze-viz_2.10" % "0.5-SNAPSHOT",
-            // current releases: You can't use both.
-            "org.scalanlp" % "breeze-math_2.10" % "0.4",
-            "org.scalanlp" % "breeze-viz_2.10" % "0.4"
-           
+            "org.scalanlp" % "breeze-viz_2.10" % "0.5"
 )
 
 resolvers ++= Seq(
@@ -45,6 +47,7 @@ resolvers ++= Seq(
 )
 
 // Scala 2.9.2 is still supported for 0.2.1, but is dropped afterwards.
+// Don't use an earlier version of 2.10, you will probably get weird compiler crashes.
 scalaVersion := "2.10.3"
 ```
 
@@ -55,24 +58,16 @@ Maven looks like this:
 ```xml
 <dependency>
   <groupId>org.scalanlp</groupId>
-	<artifactId>breeze-math_2.10</artifactId>
-	<version>0.4-SNAPSHOT</version>
+	<artifactId>breeze_2.10</artifactId>
+	<version>0.5-SNAPSHOT</version>
 </dependency>
 ```
 
 ### Other build tools
 
-http://mvnrepository.com/artifact/org.scalanlp/breeze-math_2.10/0.4 (as an example) is a great resource for finding other configuration examples for other build tools.
+http://mvnrepository.com/artifact/org.scalanlp/breeze-math_2.10/0.5 (as an example) is a great resource for finding other configuration examples for other build tools.
 
 See documentation (linked below!) for more information on using Breeze.
-
-## Documentation
-
-* https://github.com/scalanlp/breeze/wiki/Quickstart
-* https://github.com/scalanlp/breeze/wiki/Breeze-Linear-Algebra
-* https://github.com/scalanlp/breeze/wiki/UserGuide
-* [Scaladoc](http://www.scalanlp.org/api/#breeze.package)
-
 
 ## History
 
