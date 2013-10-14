@@ -8,6 +8,12 @@ import org.scalatest.FunSuite
  * @author dlwh
  **/
 class BitVectorTest extends FunSuite {
+  test("Ones") {
+    val as = BitVector.ones(5)
+    val expected = BitVector(5)(0, 1, 2, 3, 4)
+    assert( as === expected)
+  }
+
   test("Or") {
     val as = BitVector(10)(1, 3, 5, 7)
     val bs = BitVector(10)(1, 2, 3, 5)
