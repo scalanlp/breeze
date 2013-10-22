@@ -8,8 +8,10 @@ import breeze.math.Complex
 
 /**
  * TODO
+ * @ dwhl: What does enforceLength exactly do?
  *
  * @author dlwh
+ * @author Martin Senne
  **/
 class BitVector(val data: java.util.BitSet, val length: Int, val enforceLength: Boolean = true) extends Vector[Boolean] with VectorLike[Boolean, BitVector] {
   def apply(i: Int): Boolean = {
@@ -101,11 +103,18 @@ object BitVector extends BitVectorOps {
   def zeros(length: Int, enforceLength: Boolean = true):BitVector = new BitVector(new util.BitSet(), length, enforceLength)
 
   def ones(length: Int, enforceLength: Boolean = true) = {
-    val data = new Array[Long]( (length + 63)/64)
-    util.Arrays.fill(data, -1L)
-    val bs = util.BitSet.valueOf(data)
-    bs.clear(length,data.length * 64)
+    val bs = new java.util.BitSet(length)
+    bs.set(0, length)
     new BitVector(bs, length, enforceLength)
+
+    //    commented out by Martin Senne due to issue #92
+    //    (BitSet.valueOf not available in JDK 6)
+    //
+    //    val data = new Array[Long]( (length + 63)/64)
+    //    util.Arrays.fill(data, -1L)
+    //    val bs = util.BitSet.valueOf(data)
+    //    bs.clear(length,data.length * 64)
+    //    new BitVector(bs, length, enforceLength)
   }
 }
 
