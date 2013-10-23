@@ -22,6 +22,9 @@ import org.scalatest.prop._;
 import org.scalacheck._;
 import org.junit.runner.RunWith
 import breeze.linalg.DenseVector
+import breeze.linalg.SparseVector
+import breeze.numerics.{ logSum }
+import math.{ abs, exp }
 
 
 @RunWith(classOf[JUnitRunner])
@@ -32,5 +35,13 @@ class DirichletTest extends FunSuite with Checkers {
     assert(Array.fill(1000)(g.logDraw()).forall(_(0) > Double.NegativeInfinity))
   }
 
+  test("logDraw of SparseVector") {
+    val g = new Dirichlet(SparseVector(7)(1 -> 1E-5, 3 -> 5.0, 5 -> 50.0))
+    Array.fill(1000)(g.logDraw()).foreach { (d: SparseVector[Double]) =>
+      assert(d(1) > Double.NegativeInfinity)
+      assert(d.activeSize == 3)
+      assert(abs(exp(logSum(d.activeValuesIterator.toArray, d.activeSize)) - 1.0) < 0.0000001)
+    }
+  }
 
 }  
