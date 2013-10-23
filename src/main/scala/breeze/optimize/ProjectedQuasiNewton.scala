@@ -47,7 +47,7 @@ class CompactHessian(M: DenseMatrix[Double], Y: RingBuffer[DenseVector[Double]],
     val M = DenseMatrix.vertcat(DenseMatrix.horzcat(STS, L), DenseMatrix.horzcat(L.t, -D))
 
 
-    val newB = new CompactHessian(M, S, Y, sigma, m)
+    val newB = new CompactHessian(M, Y, S, sigma, m)
     newB
   }
 
