@@ -51,7 +51,8 @@ case class Dirichlet[T,@specialized(Int) I](params: T)(implicit space: TensorSpa
    */
   def logDraw() = {
     val x = mapValues.mapActive(params, { (v:Double) => new Gamma(v,1).logDraw()})
-    x -= softmax(x)
+    val m = softmax(x)
+    x.activeKeysIterator.foreach(i => x(i) -= m)
     x
   }
 
