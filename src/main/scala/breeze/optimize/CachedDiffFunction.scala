@@ -19,14 +19,14 @@ class CachedDiffFunction[T:CanCopy](obj: DiffFunction[T]) extends DiffFunction[T
 
   /** Calculates both the value and the gradient at a point */
   def calculate(x:T):(Double,T) = {
-    this.synchronized {
-      if (lastData == null || x != lastData._1) {
-        val newData = obj.calculate(x)
-        lastData = (copy(x), newData._1, newData._2)
-      }
+    var ld = lastData
+    if (ld == null || x != ld._1) {
+      val newData = obj.calculate(x)
+      ld = (copy(x), newData._1, newData._2)
+      lastData = ld
     }
 
-    val (_, v, g) = lastData
+    val (_, v, g) = ld
     v -> g
   }
 }
@@ -46,14 +46,14 @@ class CachedBatchDiffFunction[T:CanCopy](obj: BatchDiffFunction[T]) extends Batc
 
   /** Calculates both the value and the gradient at a point */
   override def calculate(x:T, range: IndexedSeq[Int]):(Double,T) = {
-    this.synchronized {
-      if (lastData == null || range != lastData._4 || x != lastData._1) {
-        val newData = obj.calculate(x, range)
-        lastData = (copy(x), newData._1, newData._2, range)
-      }
+    var ld = lastData
+    if (ld == null || range != ld._4 || x != ld._1) {
+      val newData = obj.calculate(x, range)
+      ld = (copy(x), newData._1, newData._2, range)
+      lastData = ld
     }
 
-    val (_, v, g, _) = lastData
+    val (_, v, g, _) = ld
     v -> g
   }
 }
