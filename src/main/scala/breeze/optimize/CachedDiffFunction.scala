@@ -15,17 +15,16 @@ class CachedDiffFunction[T:CanCopy](obj: DiffFunction[T]) extends DiffFunction[T
   /** calculates the value at a point */
   override def valueAt(x:T): Double = calculate(x)._1
 
-  private val lastData = new ThreadLocal[(T, Double, T)](null)
+  private var lastData:(T, Double, T) = null
 
   /** Calculates both the value and the gradient at a point */
   def calculate(x:T):(Double,T) = {
-    val last = lastData()
-    if(last == null || x != last._1) {
+    if(lastData == null || x != lastData._1) {
       val newData = obj.calculate(x)
-      lastData.set ( (copy(x), newData._1, newData._2))
+      lastData = (copy(x), newData._1, newData._2)
     }
 
-    val (_, v, g) = lastData.get()
+    val (_, v, g) = lastData
     v -> g
   }
 }
@@ -39,19 +38,18 @@ class CachedBatchDiffFunction[T:CanCopy](obj: BatchDiffFunction[T]) extends Batc
   /** calculates the value at a point */
   override def valueAt(x:T, range: IndexedSeq[Int]): Double = calculate(x,range)._1
 
-  private val lastData = new ThreadLocal[(T, Double, T, IndexedSeq[Int])](null)
+  private var lastData: (T, Double, T, IndexedSeq[Int])  = null
 
   def fullRange = obj.fullRange
 
   /** Calculates both the value and the gradient at a point */
   override def calculate(x:T, range: IndexedSeq[Int]):(Double,T) = {
-    val last = lastData()
-    if(last == null || range != last._4 || x != last._1) {
+    if(lastData == null || range != lastData._4 || x != lastData._1) {
       val newData = obj.calculate(x, range)
-      lastData.set ( (copy(x), newData._1, newData._2, range))
+      lastData = (copy(x), newData._1, newData._2, range)
     }
 
-    val (_, v, g, _) = lastData.get()
+    val (_, v, g, _) = lastData
     v -> g
   }
 }
