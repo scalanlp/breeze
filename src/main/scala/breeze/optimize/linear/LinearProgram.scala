@@ -5,6 +5,7 @@ import breeze.linalg._
 import org.apache.commons.math3.optim.linear._
 import org.apache.commons.math3.optim.nonlinear.scalar._
 import scala.collection.JavaConverters._
+import lpsolve.LpSolve
 
 /**
  * DSL for LinearPrograms. Not thread-safe per instance. Make multiple instances
@@ -57,27 +58,27 @@ class LinearProgram {
    * Anything that can be built up from adding/subtracting/dividing and multiplying by constants
    */
   sealed trait Expression extends Problem{ outer =>
-    private[LinearProgram] def coefficients: Vector[Double]
-    private[LinearProgram] def scalarComponent: Double = 0
+    def coefficients: Vector[Double]
+    def scalarComponent: Double = 0
     def objective = this
 
     def constraints: IndexedSeq[Constraint] = IndexedSeq.empty
 
     def +(other: Expression):Expression = new Expression {
-      private[LinearProgram] def coefficients: Vector[Double] = outer.coefficients + other.coefficients
-      private[LinearProgram] override def scalarComponent: Double = outer.scalarComponent + other.scalarComponent
+       def coefficients: Vector[Double] = outer.coefficients + other.coefficients
+       override def scalarComponent: Double = outer.scalarComponent + other.scalarComponent
       override def toString = outer.toString + " + " + other
     }
 
     def +(other: Double):Expression = new Expression {
-      private[LinearProgram] def coefficients: Vector[Double] = outer.coefficients
-      private[LinearProgram] override def scalarComponent: Double = outer.scalarComponent + other
+       def coefficients: Vector[Double] = outer.coefficients
+       override def scalarComponent: Double = outer.scalarComponent + other
       override def toString = outer.toString + " + " + other
     }
 
     def -(other: Expression):Expression = new Expression {
-      private[LinearProgram] def coefficients: Vector[Double] = outer.coefficients - other.coefficients
-      private[LinearProgram] override def scalarComponent: Double = outer.scalarComponent - other.scalarComponent
+       def coefficients: Vector[Double] = outer.coefficients - other.coefficients
+       override def scalarComponent: Double = outer.scalarComponent - other.scalarComponent
       override def toString = outer.toString + " - " + other
     }
 
@@ -89,22 +90,22 @@ class LinearProgram {
     def <=(c: Double):Constraint = new Constraint {
       def lhs = outer
       def rhs = new Expression {
-        private[LinearProgram] def coefficients = SparseVector.zeros[Double](variables.length)
-        private[LinearProgram] override def scalarComponent = c
+         def coefficients = SparseVector.zeros[Double](variables.length)
+         override def scalarComponent = c
 
         override def toString = c.toString
       }
     }
 
     def *(c: Double) = new Expression {
-      private[LinearProgram] def coefficients = outer.coefficients * c
-      private[LinearProgram] override def scalarComponent = outer.scalarComponent * c
+       def coefficients = outer.coefficients * c
+       override def scalarComponent = outer.scalarComponent * c
       override def toString = outer.toString + " * " + c
     }
 
     def *:(c: Double) = new Expression {
-      private[LinearProgram] def coefficients = outer.coefficients * c
-      private[LinearProgram] override def scalarComponent = outer.scalarComponent * c
+       def coefficients = outer.coefficients * c
+       override def scalarComponent = outer.scalarComponent * c
       override def toString = outer.toString + " * " + c
     }
   }
@@ -117,12 +118,12 @@ class LinearProgram {
 
     def standardize: Constraint = new Constraint {
       def lhs = new Expression {
-        private[LinearProgram] def coefficients = outer.lhs.coefficients - outer.rhs.coefficients
-        private[LinearProgram] override def scalarComponent = 0.0
+         def coefficients = outer.lhs.coefficients - outer.rhs.coefficients
+         override def scalarComponent = 0.0
       }
       def rhs = new Expression {
-        private[LinearProgram] def coefficients = SparseVector.zeros[Double](variables.length)
-        private[LinearProgram] override def scalarComponent = outer.rhs.scalarComponent - outer.lhs.scalarComponent
+         def coefficients = SparseVector.zeros[Double](variables.length)
+         override def scalarComponent = outer.rhs.scalarComponent - outer.lhs.scalarComponent
       }
     }
   }
@@ -140,12 +141,36 @@ class LinearProgram {
     val id = variables.length
     variables += this
 
-    private[LinearProgram] def coefficients = {
+    def coefficients = {
       val v = SparseVector.zeros[Double](variables.length)
       for(i <- 0 until size) v(id + i) = 1.0
       v
     }
   }
+
+  case class Integer(name: String = "x_" + nextId) extends Variable { variable =>
+    val id = variables.length
+    variables += this
+
+    def coefficients = {
+      val v = SparseVector.zeros[Double](variables.length)
+      for(i <- 0 until size) v(id + i) = 1.0
+      v
+    }
+  }
+
+  case class Binary(name: String = "x_" + nextId) extends Variable { variable =>
+    val id = variables.length
+    variables += this
+
+    def coefficients = {
+      val v = SparseVector.zeros[Double](variables.length)
+      for(i <- 0 until size) v(id + i) = 1.0
+      v
+    }
+  }
+
+
 
   /* I thought that interior point defaulted to requiring all variables to be positive. I appear to be wrong.
   case class Real(name: String="x_" + nextId) extends Variable {
@@ -153,7 +178,7 @@ class LinearProgram {
     variables += this
     variables += this
 
-    private[LinearProgram] def coefficients = {
+     def coefficients = {
       val v = SparseVector.zeros[Double](variables.length)
       v(id) = 1
       v(id+1) = -1
@@ -162,28 +187,115 @@ class LinearProgram {
   }
   */
 
-  case class Result private[LinearProgram] (result: DenseVector[Double], problem: Problem) {
+  case class Result(result: DenseVector[Double], problem: Problem) {
     def valueOf(x: Expression):Double =  {(result dot x.coefficients) + x.scalarComponent}
     def value = valueOf(problem.objective)
   }
 
+  def maximize(objective: Problem)(implicit solver: LinearProgram.Solver) = solver.maximize(this)(objective)
 
 
-  def maximize(objective: Problem) = {
-    val obj = new LinearObjectiveFunction(objective.objective.coefficients.toDenseVector.data, objective.objective.scalarComponent)
 
-
-    val constraints = for( c <- objective.constraints) yield {
-      val cs = c.standardize
-      new LinearConstraint(cs.lhs.coefficients.toDenseVector.data, Relationship.LEQ, cs.rhs.scalarComponent)
-
-
-    }
-
-    val sol = new SimplexSolver().optimize(obj, new LinearConstraintSet(constraints.asJava), GoalType.MAXIMIZE)
-    Result(new DenseVector(sol.getPoint),objective)
-  }
 
 }
 
 
+
+object LinearProgram {
+  trait Solver {
+    def maximize(lp: LinearProgram)(obj: lp.Problem):lp.Result
+  }
+
+  implicit val mySolver = try {
+    NativeLPSolver
+  } catch {
+    case _ =>
+      ApacheSimplexSolver
+  }
+
+  object ApacheSimplexSolver extends Solver {
+    def maximize(lp: LinearProgram)(objective: lp.Problem):lp.Result = {
+      import lp._
+      val obj = new LinearObjectiveFunction(objective.objective.coefficients.toDenseVector.data, objective.objective.scalarComponent)
+
+      for(v <- variables) if(!v.isInstanceOf[lp.Variable]) throw new UnsupportedOperationException("Apache Solver can only handle real-valued lps!")
+
+
+      val constraints = for( c <- objective.constraints) yield {
+        val cs = c.standardize
+        new LinearConstraint(cs.lhs.coefficients.toDenseVector.data, Relationship.LEQ, cs.rhs.scalarComponent)
+
+
+      }
+
+      val sol = new SimplexSolver().optimize(obj, new LinearConstraintSet(constraints.asJava), GoalType.MAXIMIZE)
+      Result(new DenseVector(sol.getPoint),objective)
+    }
+  }
+
+  object NativeLPSolver extends Solver {
+    def maximize(lp: LinearProgram)(objective: lp.Problem): lp.Result = {
+      val lpsol = LpSolve.makeLp(0, lp.variables.length)
+      try {
+        import lp._
+
+        lpsol.setVerbose(LpSolve.IMPORTANT)
+
+        for( (v, i) <- variables.zipWithIndex) {
+          v match  {
+            case x: Real =>
+            case x: Integer => lpsol.setInt(i+1, true)
+            case x: Binary => lpsol.setBinary(i+1, true)
+          }
+
+        }
+
+        for( c <- objective.constraints) yield {
+          val cs = c.standardize
+          lpsol.addConstraint(0.0 +: cs.lhs.coefficients.toDenseVector.data, LpSolve.LE, cs.rhs.scalarComponent)
+        }
+        lpsol.setObjFn(objective.objective.scalarComponent +: objective.objective.coefficients.toDenseVector.data)
+        lpsol.setMaxim()
+
+
+        val status = lpsol.solve()
+        val result = status match {
+          case 0 =>
+            val result = lp.Result(new DenseVector(lpsol.getPtrVariables), objective)
+            result
+          case LpSolve.UNBOUNDED =>
+            throw new UnboundedSolutionException
+          case LpSolve.INFEASIBLE =>
+            throw new InfeasibleProblem(objective)
+          case _ =>
+            throw new RuntimeException("Optimization failed with status: "  + lpStatusToString(status) +"(" + status +")")
+        }
+        result
+      } finally {
+        lpsol.deleteLp()
+      }
+
+    }
+
+    def lpStatusToString(status: Int) = status match {
+      case -5 => "UnknownError"
+      case -4 => "DataIgnored"
+      case -3 => "NoBfp"
+      case -2 => "NoMemory"
+      case -1 => "NotRun"
+      case 0 => "Optimal"
+      case 1 => "Suboptimal"
+      case 2 => "Infeasible"
+      case 3 => "Unbounded"
+      case 4 => "Degenerate"
+      case 5 => "NumFailure"
+      case 6 => "UserAbort"
+      case 7 => "TimeOut"
+      case 8 => "Running"
+      case 9 => "FutureStatus"
+      case _ => "Unknown"
+    }
+  }
+}
+
+case class InfeasibleProblem(prob: LinearProgram#Problem) extends RuntimeException

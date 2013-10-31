@@ -50,24 +50,5 @@ class InteriorPointTest extends FunSuite {
     assert( (x(1) - 0.75).abs < 1E-3, x(1))
   }
 
-  test("dsl") {
-//    http://www.tu-chemnitz.de/mathematik/discrete/manuals/cplex/doc/getstart/html/cpxGSilocplex13.0html
-    val lp = new LinearProgram()
-    import lp._
-    val x0 = Real()
-    val x1 = Real()
-    val x2 = Real()
 
-    val lpp =  ( (x0 +  x1 * 2 + x2 * 3 )
-        subjectTo ( x0 * -1 + x1 + x2 <= 20)
-        subjectTo ( x0 - x1 * 3 + x2 <= 30)
-        subjectTo ( x0 <= 40 )
-    )
-
-    val result = maximize( lpp)
-
-    assert( (result.result - DenseVector(40.0,17.5,42.5)).norm(2) < 1E-4)
-
-
-  }
 }
