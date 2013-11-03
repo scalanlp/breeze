@@ -19,6 +19,8 @@ trait MomentsTestBase[T] extends FunSuite with Checkers {
   def asDouble(x: T):Double
   def fromDouble(x: Double):T
 
+  def numFailures: Int = 2
+
   test("mean") {
     check(Prop.forAll { (distr: Measure[T] with Rand[T] with Moments[Double])=>
        val sample = distr.sample(numSamples).map(asDouble _)
@@ -38,7 +40,7 @@ trait MomentsTestBase[T] extends FunSuite with Checkers {
     check(Prop.forAll { (distr: Measure[T] with Rand[T] with Moments[Double])=>
     // try twice, and only fail if both fail.
     // just a little more robustness...
-      Iterator.range(0,2).exists{ _ =>
+      Iterator.range(0,numFailures).exists{ _ =>
         val sample = distr.sample(numSamples).map(asDouble _)
         val variance = DescriptiveStats.variance(sample)
 

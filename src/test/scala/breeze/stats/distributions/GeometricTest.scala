@@ -23,6 +23,7 @@ import org.scalacheck._;
 import org.junit.runner.RunWith
 
 import breeze.stats.DescriptiveStats._
+import breeze.stats.random.MersenneTwister
 
 @RunWith(classOf[JUnitRunner])
 class GeometricTest extends FunSuite with Checkers with MomentsTestBase[Int] with ExpFamTest[Geometric,Int] {
@@ -43,7 +44,7 @@ class GeometricTest extends FunSuite with Checkers with MomentsTestBase[Int] wit
   }
 
   implicit def arbDistr = Arbitrary {
-    for(p <- arbitrary[Double].map{m => (math.abs(m) % 1.0) + 1E-3}) yield new Geometric(p)
+    for(p <- arbitrary[Double].map{m => (math.abs(m) % 1.0) + 1E-3}) yield new Geometric(p)(new RandBasis(new MersenneTwister(0)))
   }
 
   def asDouble(x: Int) = x.toDouble
