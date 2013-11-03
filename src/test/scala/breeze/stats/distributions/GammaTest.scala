@@ -22,15 +22,13 @@ import org.scalatest.prop._;
 import org.scalacheck._;
 import org.junit.runner.RunWith
 
-
 @RunWith(classOf[JUnitRunner])
 class GammaTest extends FunSuite with Checkers with MomentsTestBase[Double] with ExpFamTest[Gamma,Double] {
-  import Arbitrary.arbitrary;
+  import Arbitrary.arbitrary
 
   val expFam = Gamma
 
   override val numSamples = 40000
-
 
   implicit def arbParameter = Arbitrary {
     for(shape <- arbitrary[Double].map{_.abs % 200.0 + 0.2}; // Gamma pdf at 0 not defined when shape == 1
@@ -44,7 +42,6 @@ class GammaTest extends FunSuite with Checkers with MomentsTestBase[Double] with
   }
 
   def asDouble(x: Double) = x
-
 
   def fromDouble(x: Double) = x
 
@@ -66,6 +63,5 @@ class GammaTest extends FunSuite with Checkers with MomentsTestBase[Double] with
     val (m, v) =  breeze.linalg.meanAndVariance(Array.fill(100000)(g.logDraw()).map(math.exp _))
     assert((paramsClose(m -> v, g.mean -> g.variance)), (m -> v) -> (g.mean -> g.variance))
   }
-
 
 }  
