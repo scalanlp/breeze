@@ -46,7 +46,7 @@ class LPMaxFlow[N](val g: FlowGraph[N]) {
             val f_e = Real(e.head + "->" + e.tail)
             edgeMap += (e -> f_e)
             constraints += (f_e <= e.capacity)
-            constraints += (f_e * -1.0 <= 0.0 )
+            constraints += (f_e  >= 0.0 )
             incoming(e.tail) += f_e * e.gain
             outgoing(e.head) += f_e
             if(!visited(e.tail))
@@ -106,7 +106,7 @@ class LPMaxFlow[N](val g: FlowGraph[N]) {
             val f_e = Real(e.head + "->" + e.tail)
             edgeMap += (e -> f_e)
             constraints += (f_e <= e.capacity)
-            constraints += (f_e * -1.0 <= 0.0 )
+            constraints += (f_e >= 0.0 )
             costs += (f_e * e.cost)
 
             incoming(e.tail) += f_e * e.gain
@@ -123,7 +123,7 @@ class LPMaxFlow[N](val g: FlowGraph[N]) {
     }
 
     val flowTotal = incoming(sink).reduceLeft(_ + _)
-    constraints += (flowTotal * -1.0 <= mf * -1.0)
+    constraints += (flowTotal >= mf)
 
     val total = costs.reduceLeft( _ + _)
     val solution = maximize { total * -1.0 subjectTo(constraints:_*) }
