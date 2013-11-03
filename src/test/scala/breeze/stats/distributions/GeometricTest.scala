@@ -26,13 +26,11 @@ import breeze.stats.DescriptiveStats._
 
 @RunWith(classOf[JUnitRunner])
 class GeometricTest extends FunSuite with Checkers with MomentsTestBase[Int] with ExpFamTest[Geometric,Int] {
-  import Arbitrary.arbitrary;
-
+  import Arbitrary.arbitrary
 
   val expFam = Geometric
 
-  override val numSamples = 300000
-
+  override val numSamples = 10000
 
   override val VARIANCE_TOLERANCE: Double = 1E-1
 
@@ -41,14 +39,12 @@ class GeometricTest extends FunSuite with Checkers with MomentsTestBase[Int] wit
   }
 
   implicit def arbParameter = Arbitrary {
-    for(p <- arbitrary[Double].map{m => (math.abs(m) % 1.0) + 1E-5}) yield p
+    for(p <- arbitrary[Double].map{m => (math.abs(m) % 1.0) + 1E-3}) yield p
   }
 
   implicit def arbDistr = Arbitrary {
-    for(p <- arbitrary[Double].map{m => (math.abs(m) % 1.0) + 1E-5}) yield new Geometric(p)
+    for(p <- arbitrary[Double].map{m => (math.abs(m) % 1.0) + 1E-3}) yield new Geometric(p)
   }
-
-
 
   def asDouble(x: Int) = x.toDouble
   def fromDouble(x: Double) = x.toInt
