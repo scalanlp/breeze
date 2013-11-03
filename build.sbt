@@ -51,7 +51,6 @@ libraryDependencies ++= Seq(
   "com.thoughtworks.paranamer" % "paranamer" % "2.2",
   "com.github.fommil.netlib" % "all" % "1.1.1" pomOnly(),
   "org.scalanlp" % "lpsolve" % "5.5.2-SNAPSHOT",
-  "de.bwaldvogel" % "liblinear" % "1.8",
   "net.sf.opencsv" % "opencsv" % "2.3",
   "com.typesafe" %% "scalalogging-log4j" % "1.0.1",
    "org.apache.logging.log4j" % "log4j-core" % "2.0-beta8",
