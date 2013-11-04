@@ -1,4 +1,4 @@
-# Breeze 
+# Breeze [![Build Status](https://travis-ci.org/scalanlp/breeze.png?branch=master)](https://travis-ci.org/scalanlp/breeze)
 
 Breeze is a library for numerical processing. It aims to be generic, clean, and powerful without sacrificing (much) efficiency.
 
