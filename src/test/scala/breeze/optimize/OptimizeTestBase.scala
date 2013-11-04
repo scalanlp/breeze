@@ -24,7 +24,7 @@ import org.junit.runner.RunWith
 
 import breeze.linalg._
 
-class OptimizeTestBase extends FunSuite with Checkers {
+trait OptimizeTestBaseTrait {
   import Arbitrary._
   implicit val arbVector : Arbitrary[DenseVector[Double]] = Arbitrary(for {
     n <- arbitrary[Int] suchThat { _ > 0 }
@@ -42,3 +42,5 @@ class OptimizeTestBase extends FunSuite with Checkers {
   })
 
 }
+
+class OptimizeTestBase extends FunSuite with Checkers with OptimizeTestBaseTrait

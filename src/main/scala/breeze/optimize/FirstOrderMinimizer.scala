@@ -22,7 +22,7 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
                    iter: Int,
                    initialAdjVal: Double,
                    history: History,
-                   fVals: IndexedSeq[Double] = IndexedSeq.empty,
+                   fVals: IndexedSeq[Double] = Vector(Double.PositiveInfinity),
                    numImprovementFailures: Int = 0,
                    searchFailed: Boolean = false) {
   }
@@ -72,28 +72,28 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
         if(improvementFailure)
           s = s.copy(fVals = IndexedSeq.empty, numImprovementFailures = state.numImprovementFailures + 1)
         s
-    } catch {
-      case x: FirstOrderException if !failedOnce =>
-        failedOnce = true
-        logger.error("Failure! Resetting history: " + x)
-        state.copy(history = initialHistory(f,state.x))
-      case x: FirstOrderException =>
-        logger.error("Failure again! Giving up and returning. Maybe the objective is just poorly behaved?")
-        state.copy(searchFailed = true)
-    }
-    }.takeUpToWhere ( state =>
-      (state.iter >= maxIter && maxIter >= 0)
-        || (vspace.norm(state.adjustedGradient) <= math.max(tolerance * state.initialAdjVal.abs,1E-8))
-        || (state.numImprovementFailures >= numberOfImprovementFailures)
-        || state.searchFailed
-    )
-    it:Iterator[State]
+      } catch {
+        case x: FirstOrderException if !failedOnce =>
+          failedOnce = true
+          logger.error("Failure! Resetting history: " + x)
+          state.copy(history = initialHistory(f, state.x))
+        case x: FirstOrderException =>
+          logger.error("Failure again! Giving up and returning. Maybe the objective is just poorly behaved?")
+          state.copy(searchFailed = true)
+      }
+    }.takeUpToWhere(iteratingShouldStop)
+    it: Iterator[State]
+  }
+  def iteratingShouldStop(state: State) = {
+    ((state.iter >= maxIter && maxIter >= 0)
+      || (!state.fVals.isEmpty && (state.adjustedValue - state.fVals.max).abs <= tolerance)
+      || (state.numImprovementFailures >= numberOfImprovementFailures)
+      || state.searchFailed)
   }
 
-  def minimize(f: DF, init: T):T = {
-    iterations(f,init).last.x
+  def minimize(f: DF, init: T): T = {
+    iterations(f, init).last.x
   }
-
 
 }
 

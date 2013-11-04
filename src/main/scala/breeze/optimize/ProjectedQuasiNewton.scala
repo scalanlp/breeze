@@ -8,8 +8,9 @@ import breeze.collection.mutable.RingBuffer
 class CompactHessian(M: DenseMatrix[Double], Y: RingBuffer[DenseVector[Double]], S: RingBuffer[DenseVector[Double]], sigma: Double, m: Int) extends NumericOps[CompactHessian] {
   def this(m: Int) = this(null, new RingBuffer(m), new RingBuffer(m), 1.0, m)
   def repr: CompactHessian = this
-
-  def update(y: DenseVector[Double],
+  implicit def collectionOfVectorsToMatrix(coll: Seq[DenseVector[Double]]) =
+    DenseMatrix.tabulate(coll.size, coll.headOption.map(_.size).getOrElse(0)) { case (i, j) => coll(i)(j) }
+  def updated(y: DenseVector[Double],
              s: DenseVector[Double]):CompactHessian = {
     // Compute scaling factor for initial Hessian, which we choose as
     val yTs = y.dot(s)
@@ -19,7 +20,7 @@ class CompactHessian(M: DenseMatrix[Double], Y: RingBuffer[DenseVector[Double]],
 
     val S = this.S :+ s
     val Y = this.Y :+ y
-    val sigma = 1.0 / (yTs / y.dot(y))
+    val sigma = y.dot(y) / yTs
 
     val k = Y.size
 
@@ -35,12 +36,9 @@ class CompactHessian(M: DenseMatrix[Double], Y: RingBuffer[DenseVector[Double]],
         0.0
       }
     }
-
+    val SM = collectionOfVectorsToMatrix(S)
     // S_k^T S_k is the symmetric k x k matrix with element (i,j) given by <s_i, s_j>
-    val STS = DenseMatrix.tabulate[Double](k, k){ (i, j) =>
-      sigma * (S(i) dot S(j))
-    }
-
+    val STS = (SM * SM.t) * sigma
 
     // M is the 2k x 2k matrix given by: M = [ \sigma * S_k^T S_k    L_k ]
     //                                       [         L_k^T        -D_k ]
@@ -51,90 +49,57 @@ class CompactHessian(M: DenseMatrix[Double], Y: RingBuffer[DenseVector[Double]],
     newB
   }
 
-  def times(v: DenseVector[Double]): DenseVector[Double] = {
+  def *(v: DenseVector[Double]): DenseVector[Double] = {
     if (Y.size == 0) {
       v
     } else {
-      val temp = v * sigma
-      subtractNv(temp, M \ (NTv(v)))
+      val nTv = N.t * v.toDenseMatrix.t
+      val u = (N * (M \ nTv)).toDenseVector
+      v * sigma - u
     }
   }
-
-  // Returns a 2k x 1 matrix
-  def NTv(v: DenseVector[Double]): DenseMatrix[Double] = {
-    val ntv = DenseMatrix.zeros[Double](2 * Y.size, 1)
-
-    val f1 = {
-      var i = 0
-      for (s <- S) {
-        ntv.update(i, 0, s.dot(v) * sigma)
-        i += 1
-      }
-    }
-    val f2 =  {
-      var i = S.size
-      for (y <- Y) {
-        ntv.update(i, 0, y.dot(v))
-        i += 1
-      }
-    }
-    return ntv
-  }
-
-  def subtractNv(subFrom: DenseVector[Double], v: Matrix[Double]): DenseVector[Double] = {
-    var i = 0
-    for (s <- S) {
-      subFrom := subFrom + s * (-sigma * v(i, 0))
-      i += 1
-    }
-    for (y <- Y) {
-      subFrom := subFrom + y * (-v(i, 0))
-      i += 1
-    }
-    return subFrom
-  }
+  lazy val N = DenseMatrix.horzcat(S.t * sigma, Y.t)
 }
 
-
-
-class ProjectedQuasiNewton(val optTol: Double = 1e-3,
+class ProjectedQuasiNewton(tolerance: Double = 1e-6,
                            val m: Int = 10,
                            val initFeas: Boolean = false,
                            val testOpt: Boolean = true,
-                           val maxNumIt: Int = 2000,
-                           val maxSrchIt: Int = 30,
-                           val gamma: Double = 1e-10,
-                           val projection: DenseVector[Double] => DenseVector[Double] = identity) extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]] with Logging {
+                           val maxNumIt: Int = 500,
+                           val maxSrchIt: Int = 50,
+                           val gamma: Double = 1e-4,
+                           val projection: DenseVector[Double] => DenseVector[Double] = identity) extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]](maxIter = maxNumIt, tolerance = tolerance) with Projecting[DenseVector[Double]] with Logging {
+  val innerOptimizer = new SpectralProjectedGradient(
+    testOpt = true,
+    tolerance = tolerance,
+    maxIter = 500,
+    initFeas = true,
+    minImprovementWindow = 10,
+    projection = projection
+  )
 
-  case class History(B: CompactHessian)
+  type History = CompactHessian
 
 
   protected def initialHistory(f: DiffFunction[DenseVector[Double]], init: DenseVector[Double]): History = {
-    History(new CompactHessian(m))
+    new CompactHessian(m)
   }
 
-  private def computeGradient(x: DenseVector[Double], g: DenseVector[Double]): DenseVector[Double] = projection(x - g) - x
+  override protected def adjust(newX: DenseVector[Double], newGrad: DenseVector[Double], newVal: Double):(Double,DenseVector[Double]) = (newVal,-projectedVector(newX, -newGrad))
+
+  private def computeGradient(x: DenseVector[Double], g: DenseVector[Double]): DenseVector[Double] = projectedVector(x, -g)
   private def computeGradientNorm(x: DenseVector[Double], g: DenseVector[Double]): Double = computeGradient(x, g).norm(Double.PositiveInfinity)
 
   protected def chooseDescentDirection(state: State, fn: DiffFunction[DenseVector[Double]]): DenseVector[Double] = {
     import state._
-    import history.B
-    if (iter == 1) {
-      val gnorm = computeGradientNorm(x, grad)
-      computeGradient(x, grad * (0.1 / gnorm))
+    if (iter == 0) {
+      computeGradient(x, grad)
     } else {
       // Update the limited-memory BFGS approximation to the Hessian
       //B.update(y, s)
       // Solve subproblem; we use the current iterate x as a guess
-      val subprob = new ProjectedQuasiNewton.QuadraticSubproblem(fn, state.adjustedValue, x, grad, B)
-      val p = new SpectralProjectedGradient(
-        testOpt = false,
-        optTol = 1e-3,
-        maxNumIt = 30,
-        initFeas = true,
-        M = 5,
-        projection = projection
-      ).minimize(subprob, x)
+      val subprob = new ProjectedQuasiNewton.QuadraticSubproblem(fn, state.adjustedValue, x, grad, history)
+      val p = innerOptimizer.minimize(new CachedDiffFunction(subprob), x)
       p - x
       //	time += subprob.time
     }
@@ -142,6 +107,8 @@ class ProjectedQuasiNewton(val optTol: Double = 1e-3,
 
 
   protected def determineStepSize(state: State, fn: DiffFunction[DenseVector[Double]], dir: DenseVector[Double]): Double = {
+    if (state.iter == 0)
+      return scala.math.min(1.0, 1.0 / state.grad.norm(1.0))
     val dirnorm = dir.norm(Double.PositiveInfinity)
     if(dirnorm < 1E-10) return 0.0
     import state._
@@ -187,7 +154,7 @@ class ProjectedQuasiNewton(val optTol: Double = 1e-3,
     import oldState._
     val s = newX - oldState.x
     val y = newGrad - oldState.grad
-    History(oldState.history.B.update(y, s))
+    oldState.history.updated(y, s)
   }
 
 }
@@ -208,7 +175,7 @@ object ProjectedQuasiNewton {
      */
     override def calculate(x: DenseVector[Double]): (Double, DenseVector[Double]) = {
       val d = x - xk
-      val Bd = B.times(d)
+      val Bd = B * d
       val f = fk + d.dot(gk) + (0.5 * d.dot(Bd))
       val g = gk + Bd
       (f, g)
