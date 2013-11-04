@@ -20,16 +20,17 @@ import org.scalatest.junit._
 import org.scalatest.prop._
 import org.scalacheck._
 import org.junit.runner.RunWith
+import org.scalatest.matchers.ShouldMatchers
+import scala.math._
 
 import breeze.linalg._
 
 @RunWith(classOf[JUnitRunner])
-class ProjectedQuasiNewtonTest extends OptimizeTestBase {
+class ProjectedQuasiNewtonTest extends PropSpec with PropertyChecks with ShouldMatchers with OptimizeTestBaseTrait with VectorMatchers {
 
-  test("optimize a simple multivariate gaussian") {
+  property("optimize a simple multivariate gaussian") {
     val optimizer = new ProjectedQuasiNewton(optTol = 1.0E-9)
-
-    def optimizeThis(init: DenseVector[Double]) = {
+    forAll { init: DenseVector[Double] =>
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
           (((x - 3.0) :^ 2.0).sum, (x * 2.0) - 6.0)
@@ -37,31 +38,29 @@ class ProjectedQuasiNewtonTest extends OptimizeTestBase {
       }
 
       val result = optimizer.minimize(f, init)
-      norm(result - 3.0, 2) < 1E-10
+      result should beSimilarTo(DenseVector.fill(result.size)(3.0), allowedDeviation = 1E-5)
     }
-
-    check(Prop.forAll(optimizeThis _))
   }
-  test("optimize a simple multivariate gaussian with projection") {
+
+  property("optimize a simple multivariate gaussian with projection") {
     val optimizer = new ProjectedQuasiNewton(optTol = 1.0E-5, projection = _.map(scala.math.min(_, 2.0)))
 
-    def optimizeThis(init: DenseVector[Double]) = {
+    forAll { init: DenseVector[Double] =>
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
-          (((x - 3.0) :^ 2.0).sum, (x * 2.0) - 6.0)
+          (((x - 3.0) :^ 4.0).sum, (x - 3.0) :^ 3.0 :* 4.0)
         }
       }
 
       val result = optimizer.minimize(f, init)
-      norm(result - 2.0, 2) < 1E-10
+      result should beSimilarTo(DenseVector.fill(result.size)(2.0), allowedDeviation = 1E-10)
     }
-
-    check(Prop.forAll(optimizeThis _))
   }
-  test("optimize a simple multivariate gaussian with l2 regularization") {
+
+  property("optimize a simple multivariate gaussian with l2 regularization") {
     val optimizer = new ProjectedQuasiNewton(optTol = 1.0E-5)
 
-    def optimizeThis(init: DenseVector[Double]) = {
+    forAll { init: DenseVector[Double] =>
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
           (norm((x - 3.0) :^ 2.0, 1), (x * 2.0) - 6.0)
@@ -70,12 +69,26 @@ class ProjectedQuasiNewtonTest extends OptimizeTestBase {
 
       val targetValue = 3 / (1.0 / 2 + 1)
       val result = optimizer.minimize(DiffFunction.withL2Regularization(f, 1.0), init)
-      val ok = norm(result :- DenseVector.ones[Double](init.size) * targetValue, 2) / result.size < 3E-3
-      ok || (throw new RuntimeException("Failed to find optimum for init " + init))
+      result should beSimilarTo(DenseVector.ones[Double](init.size) * targetValue, allowedDeviation = 3E-3 * result.size)
     }
+  }
 
-    check(Prop.forAll(optimizeThis _))
+  property("optimize a complicated function without projection") {
+    val optimizer = new ProjectedQuasiNewton(optTol = 1.0E-5)
 
+    forAll { a: DenseVector[Double] =>
+      whenever(a.min >= -3.0 && a.max <= 3.0) {
+        val init = DenseVector.rand(a.size)
+        val f = new DiffFunction[DenseVector[Double]] {
+          def calculate(x: DenseVector[Double]) = {
+            (breeze.numerics.exp((x :^ 2.0) :- (a :* x)).sum, (x * 2.0 :- a) :* breeze.numerics.exp(x :^ 2.0 :- a :* x))
+          }
+        }
+
+        val result = optimizer.minimize(f, init)
+        val minimum = f(a / 2.0)
+        f(result) should be(minimum plusOrMinus abs(minimum) * 1E-2)
+      }
+    }
   }
 }
-
