@@ -29,7 +29,7 @@ import breeze.linalg._
 class ProjectedQuasiNewtonTest extends PropSpec with PropertyChecks with ShouldMatchers with OptimizeTestBaseTrait with VectorMatchers {
 
   property("optimize a simple multivariate gaussian") {
-    val optimizer = new ProjectedQuasiNewton(optTol = 1.0E-9)
+    val optimizer = new ProjectedQuasiNewton(tolerance = 1.0E-9)
     forAll { init: DenseVector[Double] =>
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
@@ -43,7 +43,7 @@ class ProjectedQuasiNewtonTest extends PropSpec with PropertyChecks with ShouldM
   }
 
   property("optimize a simple multivariate gaussian with projection") {
-    val optimizer = new ProjectedQuasiNewton(optTol = 1.0E-5, projection = _.map(scala.math.min(_, 2.0)))
+    val optimizer = new ProjectedQuasiNewton(tolerance = 1.0E-5, projection = _.map(scala.math.min(_, 2.0)))
 
     forAll { init: DenseVector[Double] =>
       val f = new DiffFunction[DenseVector[Double]] {
@@ -58,7 +58,7 @@ class ProjectedQuasiNewtonTest extends PropSpec with PropertyChecks with ShouldM
   }
 
   property("optimize a simple multivariate gaussian with l2 regularization") {
-    val optimizer = new ProjectedQuasiNewton(optTol = 1.0E-5)
+    val optimizer = new ProjectedQuasiNewton(tolerance = 1.0E-5)
 
     forAll { init: DenseVector[Double] =>
       val f = new DiffFunction[DenseVector[Double]] {
@@ -74,7 +74,7 @@ class ProjectedQuasiNewtonTest extends PropSpec with PropertyChecks with ShouldM
   }
 
   property("optimize a complicated function without projection") {
-    val optimizer = new ProjectedQuasiNewton(optTol = 1.0E-5)
+    val optimizer = new ProjectedQuasiNewton(tolerance = 1.0E-5)
 
     forAll { a: DenseVector[Double] =>
       whenever(a.min >= -3.0 && a.max <= 3.0) {
