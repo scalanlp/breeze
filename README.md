@@ -22,7 +22,7 @@ Breeze used to have more components, but they are getting sharded out to differe
 
 ### Building it yourself.
 
-This project can be built with sbt 0.12.3
+This project can be built with sbt 0.13
 
 ### SBT
 
