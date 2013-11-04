@@ -47,7 +47,6 @@ class BetaTest extends FunSuite with Checkers with MomentsTestBase[Double] /*wit
 
   def asDouble(x: Double) = x
 
-
   def fromDouble(x: Double) = x
 
   implicit def arbDistr = Arbitrary {
@@ -58,7 +57,7 @@ class BetaTest extends FunSuite with Checkers with MomentsTestBase[Double] /*wit
   test("#15 test 1: Small a and b") {
     val a = 0.0014364182264741652
     val b = 0.0024709345620239687
-    val n = 100000
+    val n = 1000000
     val samples = new Beta(a,b).sample(n)
     val mean = samples.sum / n
     val true_mean = a / (a+b)

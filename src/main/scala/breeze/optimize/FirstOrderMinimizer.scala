@@ -10,7 +10,7 @@ import com.typesafe.scalalogging.log4j.Logging
  * @author dlwh
  */
 abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: Int = -1,
-                                                                     tolerance: Double=1E-5,
+                                                                     tolerance: Double=1E-6,
                                                                      improvementTol: Double=1E-3,
                                                                      val minImprovementWindow: Int = 10,
                                                                      val numberOfImprovementFailures: Int = 1)(implicit vspace: NormedVectorSpace[T, Double]) extends Minimizer[T,DF] with Logging {
@@ -88,6 +88,7 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
     ((state.iter >= maxIter && maxIter >= 0)
       || (!state.fVals.isEmpty && (state.adjustedValue - state.fVals.max).abs <= tolerance)
       || (state.numImprovementFailures >= numberOfImprovementFailures)
+      || (vspace.norm(state.adjustedGradient) <= math.max(tolerance * state.adjustedValue.abs,1E-8))
       || state.searchFailed)
   }
 
