@@ -20,78 +20,65 @@ import breeze.collection.mutable.RingBuffer
  * @param maxSrchIt maximum number of line search attempts
  * @param projection projection operations
  */
-class SpectralProjectedGradient[T](
- val projection: T => T = {(t:T) =>t},
- val optTol: Double = 1e-4,
-  val gamma: Double = 1e-4,
-  val M: Int = 10,
+class SpectralProjectedGradient[T, -DF <: DiffFunction[T]](
+  val projection: T => T = { (t: T) => t },
+  tolerance: Double = 1e-6,
+  val suffDec: Double = 1e-4,
+  minImprovementWindow: Int = 10,
   val alphaMax: Double = 1e10,
   val alphaMin: Double = 1e-10,
-  val maxNumIt: Int = 1000,
+  maxIter: Int = 500,
   val testOpt: Boolean = true,
   val initFeas: Boolean = false,
-  val maxSrchIt: Int = 30)(implicit coord: MutableCoordinateSpace[T, Double]) extends Minimizer[T, DiffFunction[T]] with Logging {
+  val maxSrchIt: Int = 30)(implicit coord: MutableCoordinateSpace[T, Double]) extends FirstOrderMinimizer[T, DF](minImprovementWindow = minImprovementWindow, maxIter = maxIter, tolerance = tolerance) with Projecting[T] with Logging {
   import coord._
-
-  override def minimize(prob: DiffFunction[T], guess: T): T = {
-    def correctedGradient(x: T, g: T): T = projection(x - g) - x
-    var gnorm: Double = 0.0
-    var x = if (initFeas) copy(guess) else projection(copy(guess))
-
-    var alpha = 1.0 //0.001 / gnorm
-    var prevfs = new RingBuffer[Double](M)
-    var t = 1
-    var fevals = 1
-
-    do {
-      var g = prob.gradientAt(x)
-
-      val searchDirection = correctedGradient(x, g * alpha)
-      val gTd = searchDirection.dot(g)
-
-      prevfs += prob.valueAt(x)
-      var lambda = 1.0
-      var accepted = false
-      var srchit = 0
-
-      gnorm = norm(correctedGradient(x, g))
-      // Backtracking line-search
-      do {
-        val candx = x + searchDirection * lambda
-        val candg = prob.gradientAt(candx)
-        val candf = prob.valueAt(candx)
-        val suffdec = gamma * lambda * gTd
-
-        if (prevfs.exists(candf <= _ + suffdec)) {
-          alpha = alphaMax.min(alphaMin.max(computeStep(candx, x, candg, g)))
-          accepted = true
-          g = candg
-          x = candx
-        } else if (srchit >= maxSrchIt) {
-          accepted = true
-        } else {
-          lambda *= 0.3
-          srchit = srchit + 1
-        }
-        fevals = fevals + 1
-      } while (!accepted)
-
-      if (srchit >= maxSrchIt) {
-        return x
-      }
-
-      t = t + 1
-    } while (((testOpt == false) || (gnorm > optTol))
-      && (t < maxNumIt) //  && (!prob.hasConverged)
-      )
-
-    x
+  type History = Double
+  protected def initialHistory(f: DF, init: T): History = 1.0
+  protected def chooseDescentDirection(state: State, f: DF): T = projectedVector(state.x, state.grad * -state.history)
+  override protected def adjust(newX: T, newGrad: T, newVal: Double):(Double,T) = (newVal,-projectedVector(newX, - newGrad))
+  protected def takeStep(state: State, dir: T, stepSize: Double): T = projection(state.x + dir * stepSize)
+  protected def updateHistory(newX: T, newGrad: T, newVal: Double, f: DF, oldState: State): History = {
+    val y = newGrad - oldState.grad
+    val s = newX - oldState.x
+    val alpha = s.dot(s) / s.dot(y)
+    if (alpha.isNaN())
+      0.0
+    else if (alpha < alphaMin || alpha > alphaMax)
+      1
+    else
+      alpha
   }
 
-  def computeStep(newx: T, oldx: T, newg: T, oldg: T): Double = {
-    val s = newx - oldx
-    val y = newg - oldg
-    s.dot(s) / s.dot(y)
-  }
+  protected def determineStepSize(state: State, f: DF, direction: T): Double = {
+    import state._
+    val funRef = if (fVals.isEmpty) Double.PositiveInfinity else fVals.max
+    val t = if (iter == 0) {
+      scala.math.min(1.0, (1.0 / norm(grad, 1)))
+    } else {
+      1.0
+    }
+    val searchStep = direction * t
+    val sufficientDecrease = grad.dot(searchStep) * suffDec
+    val requiredValue = funRef + sufficientDecrease
 
+    val lineSearchFunction = LineSearch.functionFromSearchDirection(f, x, direction)
+    val ls = new SimpleLineSearch(requiredValue, maxSrchIt)
+    ls.minimize(lineSearchFunction, t)
+  }
+  class SimpleLineSearch(requiredValue: Double, maxIterations: Int) extends ApproximateLineSearch {
+    def iterations(f: DiffFunction[Double], init: Double = 1.0): Iterator[State] = {
+      val (initfval, initfderiv) = f.calculate(init)
+      Iterator.iterate((State(init, initfval, initfderiv), 0)) {
+        case (State(alpha, fval, fderiv), iter) =>
+          val newAlpha = alpha / 2.0
+          val (fvalnew, fderivnew) = f.calculate(newAlpha)
+          (State(newAlpha, fvalnew, fderivnew), iter + 1)
+      }.takeWhile {
+        case (state, iterations) =>
+          (iterations == 0) ||
+            (iterations < maxIterations &&
+              state.value > requiredValue)
+      }.map(_._1)
+    }
+  }
 }
