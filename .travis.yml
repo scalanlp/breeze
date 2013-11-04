@@ -4,3 +4,6 @@ scala:
 jdk:
    - oraclejdk7
    - openjdk7
+before_install:
+ - sudo apt-get update -qq
+ - sudo apt-get install -qq libatlas3-base libopenblas-base
