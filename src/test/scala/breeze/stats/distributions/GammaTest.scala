@@ -21,7 +21,7 @@ import org.scalatest.junit._;
 import org.scalatest.prop._;
 import org.scalacheck._;
 import org.junit.runner.RunWith
-import breeze.stats.random.MersenneTwister
+import org.apache.commons.math3.random.MersenneTwister
 
 @RunWith(classOf[JUnitRunner])
 class GammaTest extends FunSuite with Checkers with MomentsTestBase[Double] with ExpFamTest[Gamma,Double] {

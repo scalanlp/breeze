@@ -23,7 +23,7 @@ import org.scalacheck._;
 import org.junit.runner.RunWith
 
 import breeze.stats.DescriptiveStats._
-import breeze.stats.random.MersenneTwister
+import org.apache.commons.math3.random.MersenneTwister
 
 @RunWith(classOf[JUnitRunner])
 class GeometricTest extends FunSuite with Checkers with MomentsTestBase[Int] with ExpFamTest[Geometric,Int] {

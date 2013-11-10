@@ -17,10 +17,10 @@ package breeze.stats.distributions
 */
 
 import scala.collection.mutable.ArrayBuffer
-import breeze.stats.random.{MersenneTwister, RandomGenerator}
 import collection.TraversableLike
 import collection.generic.CanBuildFrom
 import breeze.linalg.DenseVector
+import org.apache.commons.math3.random.{MersenneTwister, RandomGenerator}
 
 /**
  * A trait for monadic distributions. Provides support for use in for-comprehensions
