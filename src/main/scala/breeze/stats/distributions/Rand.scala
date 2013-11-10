@@ -255,4 +255,4 @@ class RandBasis(val generator: RandomGenerator) {
 /**
  * Provides a number of random generators.
  */
-object Rand extends RandBasis(new MersenneTwister())
+object Rand extends RandBasis(new ThreadLocalRandomGenerator(new MersenneTwister()))
