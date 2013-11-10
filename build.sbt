@@ -66,3 +66,5 @@ resolvers ++= Seq(
     Resolver.sonatypeRepo("releases"),
     Resolver.typesafeRepo("releases")
     )
+
+testOptions in Test += Tests.Argument("-oDF")
