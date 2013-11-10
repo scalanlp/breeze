@@ -34,62 +34,12 @@ case class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasi
   if(shape <= 0.0 || scale <= 0.0)
     throw new IllegalArgumentException("Shape and scale must be positive")
 
-  val logNormalizer = lgamma(shape) + shape * log(scale)
+
+  lazy val logNormalizer = lgamma(shape) + shape * log(scale)
 
   override def unnormalizedLogPdf(x : Double) = (shape - 1) * log(x) - x/scale
 
   override def toString = "Gamma(" + shape + "," + scale + ")"
-
-  // Copied from Teh
-  /*
-  def draw() : Double = { 
-    var aa = 0.0
-    var bb = 0.0
-    var cc = 0.0
-    var dd = 0.0
-    var uu = 0.0
-    var vv = 0.0
-    var ww = 0.0
-    var xx = 0.0
-    var yy = 0.0
-    var zz = 0.0
-    if (shape == 1.0) {
-      /* Exponential */
-      scale * -math.log(rand.uniform.get)
-    } else if (shape < 1.0) {
-      /* Use Johnks generator */
-      cc = 1.0 / shape
-      dd = 1.0 / (1.0 - shape)
-      while (true) {
-        xx = pow(rand.uniform.get(), cc)
-        yy = xx + pow(rand.uniform.get(), dd)
-        if (yy <= 1.0) {
-          return scale * -log(rand.uniform.get()) * xx / yy
-        }
-      }
-      sys.error("shouldn't get here")
-    } else { /* shape > 1.0 */
-      /* Use bests algorithm */
-      bb = shape - 1.0
-      cc = 3.0 * shape - 0.75
-      while (true) {
-        uu = rand.uniform.get()
-        vv = rand.uniform.get()
-        ww = uu * (1.0 - uu)
-        yy = math.sqrt(cc / ww) * (uu - 0.5)
-        xx = bb + yy
-        if (xx >= 0) {
-          zz = 64.0 * ww * ww * ww * vv * vv
-          if ((zz <= (1.0 - 2.0 * yy * yy / xx))
-              || (math.log(zz) <= 2.0 * (bb * math.log(xx / bb) - yy))) {
-            return xx * scale
-          }
-        }
-      }
-      sys.error("shouldn't get here")
-    }
-  }
-  */
 
   def logDraw() = if (shape < 1) {
     // adapted from numpy distributions.c which is Copyright 2005 Robert Kern (robert.kern@gmail.com) under BSD
@@ -166,7 +116,7 @@ case class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasi
         var v = 0.0
         var x = 0.0
         do {
-          x = rand.gaussian(0, 1).draw()
+          x = rand.generator.nextGaussian
           v = 1.0 + c * x
         } while(v <= 0)
 

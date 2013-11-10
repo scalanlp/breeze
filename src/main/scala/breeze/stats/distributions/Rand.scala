@@ -26,7 +26,7 @@ import breeze.linalg.DenseVector
  * A trait for monadic distributions. Provides support for use in for-comprehensions
  * @author dlwh
  */
-trait Rand[+T] { outer =>
+trait Rand[@specialized(Int, Double) +T] { outer =>
   /**
    * Gets one sample from the distribution. Equivalent to sample()
    */
@@ -34,8 +34,8 @@ trait Rand[+T] { outer =>
   
   def get() = draw()
 
-  /** Overridden by filter/map/flatmap for monadic invocations */
-  protected def drawOpt():Option[T] = Some(draw())
+  /** Overridden by filter/map/flatmap for monadic invocations. Basically, rejeciton samplers will return None here */
+  def drawOpt():Option[T] = Some(draw())
 
   /**
    * Gets one sample from the distribution. Equivalent to get()
@@ -120,7 +120,7 @@ trait Rand[+T] { outer =>
 * Provides standard combinators and such to use
 * to compose new Rands.
 */ 
-class RandBasis(r: RandomGenerator) {
+class RandBasis(val generator: RandomGenerator) {
   /**
    * Chooses an element from a collection. 
    */
@@ -175,36 +175,37 @@ class RandBasis(r: RandomGenerator) {
    * Uniformly samples in [0,1]
    */
   val uniform:Rand[Double] = new Rand[Double] {
-    def draw = r.nextDouble
+    def draw = generator.nextDouble
   }
 
   /**
    * Uniformly samples an integer in [0,MAX_INT]
    */
   val randInt:Rand[Int] = new Rand[Int] {
-    def draw = r.nextInt
+    def draw = generator.nextInt
   }
 
   /**
    * Uniformly samples an integer in [0,n)
    */
   def randInt(n : Int):Rand[Int] = new Rand[Int] {
-    def draw = r.nextInt(n)
+    def draw = generator.nextInt(n)
   }
 
   /**
    * Uniformly samples an integer in [n,m)
    */
   def randInt(n : Int, m: Int):Rand[Int] = new Rand[Int] {
-    def draw = r.nextInt(m-n)+n
+    def draw = generator.nextInt(m-n)+n
   }
 
   /**
    * Samples a gaussian with 0 mean and 1 std
    */
   val gaussian :Rand[Double] = new Rand[Double] {
-    def draw = r.nextGaussian
+    def draw = generator.nextGaussian
   }
+  
 
   /**
    * Samples a gaussian with m mean and s std
@@ -222,7 +223,7 @@ class RandBasis(r: RandomGenerator) {
       arr ++= (0 until n)
       var i = n
       while(i > 1) {
-        val k = r.nextInt(i)
+        val k = generator.nextInt(i)
         i -= 1
         val tmp = arr(i)
         arr(i) = arr(k)
@@ -240,7 +241,7 @@ class RandBasis(r: RandomGenerator) {
       val arr = Array.range(0,set.size)
       var i = 0
       while( i < n.min(set.size)) {
-        val k = r.nextInt(set.size-i) + i
+        val k = generator.nextInt(set.size-i) + i
         val temp = arr(i)
         arr(i) = arr(k)
         arr(k) = temp

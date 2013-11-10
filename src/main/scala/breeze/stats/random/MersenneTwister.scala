@@ -58,13 +58,15 @@ class MersenneTwister(seed: Int) extends RandomGenerator {
 
   // Generate an array of 624 untempered numbers
   private def generateNumbers() {
-    for (i <- 0 to 623) {
+    var i = 0
+    while(i <= 623) {
       // 32'th bit of the one and the last 31 bits of the other
       val y = (MT(i) & 0x80000000) | (MT((i+1) % 624)&0x7fffffff)
       MT(i) = MT((i + 397) % 624) ^ (y >>> 1)
       if (y % 2 == 1) {
-        MT(i) = (MT(i) ^ (2567483615L)).toInt
+        MT(i) = (MT(i) ^ 2567483615L).toInt
       }
+      i += 1
     }
   }
 }
