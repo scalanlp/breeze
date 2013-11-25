@@ -16,6 +16,8 @@ package breeze.generic
 */
 
 import breeze.collection.mutable.SparseArray
+import breeze.linalg.support.CanZipMapValues
+import breeze.linalg.Axis
 
 /**
  * A "Universal Reducer" Function that can support reduction-type operations
@@ -34,7 +36,7 @@ trait URFunc[@specialized(Int, Float, Double) A, +B] {
     urable(c, this)
   }
 
-  def apply[T2, Axis, TA, R](c: T2, axis: Axis)(implicit collapse: CanCollapseAxis[T2, Axis, TA, B, R], ured: UReduceable[TA, A]): R = {
+  def apply[T2, AxisT<:Axis, TA, R](c: T2, axis: AxisT)(implicit collapse: CanCollapseAxis[T2, AxisT, TA, B, R], ured: UReduceable[TA, A]): R = {
     collapse(c,axis)(ta => this.apply[TA](ta))
   }
 
@@ -45,6 +47,11 @@ trait URFunc[@specialized(Int, Float, Double) A, +B] {
   }
 
   def apply(as: A*):B = apply(as)
+  def apply(a: A, a2: A):B = apply(Seq(a,a2):_*)
+
+  def apply[FromT, ToT, X>:B](first: FromT, second: FromT)(implicit zipmap: CanZipMapValues[FromT, A, X, ToT]): ToT = {
+    zipmap.map(first, second, apply(_:A, _:A))
+  }
 
 }
 
