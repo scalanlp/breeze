@@ -134,7 +134,8 @@ trait Configuration { outer =>
   }
 
   /**
-   * Read in a T using a prefix, backing off to default, if necessary.
+   * Read in a T using a prefix, backing off to default, if necessary. Returns T and the
+   * set of properties that were used.
    */
   final def readInTouched[T: Manifest](prefix: String, default: => T): (T, Set[String]) = {
     try readInTouched[T](prefix) catch {
