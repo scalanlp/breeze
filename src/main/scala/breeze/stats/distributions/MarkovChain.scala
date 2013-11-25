@@ -202,7 +202,7 @@ object MarkovChain {
     * @param proposal the proposal distribution generator
     *
     */
-    def metropolisHastings[T](proposal: T =>(Measure[T] with Rand[T]))
+    def metropolisHastings[T](proposal: T =>(Density[T] with Rand[T]))
                              (logMeasure: T=>Double)(implicit rand:RandBasis=Rand)= { t:T =>
       val prop = proposal(t);
       for(next <- prop;
@@ -291,7 +291,7 @@ object MarkovChain {
   * @param proposal the proposal distribution generator
   *
   */
-  def metropolisHastings[T](init : T, proposal : T =>(Measure[T] with Rand[T]))(logMeasure: T=>Double) = {
+  def metropolisHastings[T](init : T, proposal : T =>(Density[T] with Rand[T]))(logMeasure: T=>Double) = {
     MarkovChain(init) { Kernels.metropolisHastings(proposal){logMeasure}};
   }
 

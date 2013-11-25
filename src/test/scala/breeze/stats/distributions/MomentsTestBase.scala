@@ -14,7 +14,7 @@ import java.util.zip.DeflaterInputStream
  * @author dlwh
  */
 trait MomentsTestBase[T] extends FunSuite with Checkers {
-  implicit def arbDistr: Arbitrary[Measure[T] with Rand[T] with Moments[Double]];
+  implicit def arbDistr: Arbitrary[Density[T] with Rand[T] with Moments[Double, Double]];
   val numSamples = 10000;
   def asDouble(x: T):Double
   def fromDouble(x: Double):T
@@ -22,7 +22,7 @@ trait MomentsTestBase[T] extends FunSuite with Checkers {
   def numFailures: Int = 2
 
   test("mean") {
-    check(Prop.forAll { (distr: Measure[T] with Rand[T] with Moments[Double])=>
+    check(Prop.forAll { (distr: Density[T] with Rand[T] with Moments[Double, Double])=>
        val sample = distr.sample(numSamples).map(asDouble _)
        val mean = DescriptiveStats.mean(sample)
        if ( (mean - distr.mean).abs/(mean.abs max 1) > 1E-1) {
@@ -37,7 +37,7 @@ trait MomentsTestBase[T] extends FunSuite with Checkers {
 
   val VARIANCE_TOLERANCE = 5E-2
   test("variance") {
-    check(Prop.forAll { (distr: Measure[T] with Rand[T] with Moments[Double])=>
+    check(Prop.forAll { (distr: Density[T] with Rand[T] with Moments[Double, Double])=>
     // try twice, and only fail if both fail.
     // just a little more robustness...
       Iterator.range(0,numFailures).exists{ _ =>
@@ -54,7 +54,7 @@ trait MomentsTestBase[T] extends FunSuite with Checkers {
 
 
   test("mode") {
-    check(Prop.forAll { (distr: Rand[T] with Measure[T] with Moments[Double])=>
+    check(Prop.forAll { (distr: Rand[T] with Density[T] with Moments[Double, Double])=>
       val sample = distr.sample(40)
       val probMode = distr(fromDouble(distr.mode))
 //      if(distr.isInstanceOf[Poisson])

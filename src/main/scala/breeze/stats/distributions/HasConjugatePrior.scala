@@ -22,15 +22,15 @@ package breeze.stats.distributions
  *
  * @author dlwh
  */
-trait HasConjugatePrior[Likelihood <: Measure[T], T] extends ExponentialFamily[Likelihood,T] {
+trait HasConjugatePrior[Likelihood <: Density[T], T] extends ExponentialFamily[Likelihood,T] {
 
-  type ConjugatePrior <: Measure[Parameter]
+  type ConjugatePrior <: Density[Parameter]
   val conjugateFamily: ExponentialFamily[ConjugatePrior,Parameter]
 
   /**
    * Returns a distribtution over T's after integrating out the intermediate distributions.
    */
-  def predictive(parameter: conjugateFamily.Parameter) : Measure[T]
+  def predictive(parameter: conjugateFamily.Parameter) : Density[T]
 
   /**
    * Gives a new parameter for this conjugate prior after observing the evidence. See Dirichlet for an example.

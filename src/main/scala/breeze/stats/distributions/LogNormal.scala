@@ -16,7 +16,7 @@ import scala.math.sqrt
  *
  * @author dlwh
  **/
-case class LogNormal(mu: Double, sigma: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double] with Moments[Double] {
+case class LogNormal(mu: Double, sigma: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double] with Moments[Double, Double] {
   private val myGaussian = Gaussian(mu, sigma)
   require(sigma > 0, "Sigma must be positive, but got " + sigma)
   /**

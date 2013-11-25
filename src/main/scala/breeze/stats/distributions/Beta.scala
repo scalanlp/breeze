@@ -30,7 +30,7 @@ import breeze.numerics
  * @param a the number of pseudo-observations for true
  * @param b the number of pseudo-observations for false
  */
-class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double]  with Moments[Double] {
+class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double]  with Moments[Double, Double] {
   require(a > 0.0)
   require(b > 0.0)
 

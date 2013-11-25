@@ -9,7 +9,7 @@ import scala.reflect.ClassTag
  * 
  * @author dlwh
  */
-trait ExpFamTest[D<:Measure[T] with Rand[T],T] extends FunSuite with Checkers {
+trait ExpFamTest[D<:Density[T] with Rand[T],T] extends FunSuite with Checkers {
   val expFam: ExponentialFamily[D,T]
   import expFam._
 

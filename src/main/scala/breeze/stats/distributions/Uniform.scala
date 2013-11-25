@@ -5,7 +5,7 @@ package breeze.stats.distributions
  * @author dlwh
  */
 
-case class Uniform(low: Double, high: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double] with Moments[Double] {
+case class Uniform(low: Double, high: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double] with Moments[Double, Double] {
   require(low <= high, "low <= high")
   def draw() = rand.uniform.get * (high - low) + low
 

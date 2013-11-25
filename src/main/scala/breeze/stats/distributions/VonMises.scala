@@ -31,7 +31,7 @@ import breeze.linalg.DenseVector
  *
  * @author dlwh
  */
-case class VonMises(mu: Double, k: Double)(implicit rand: RandBasis=Rand) extends ContinuousDistr[Double] with Moments[Double] {
+case class VonMises(mu: Double, k: Double)(implicit rand: RandBasis=Rand) extends ContinuousDistr[Double] with Moments[Double, Double] {
   require( k >= 0, "K must be positive")
   require(mu <= math.Pi * 2 && mu >= 0, "Mu must be in the range [0,2pi]")
 

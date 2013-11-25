@@ -9,7 +9,7 @@ import breeze.util._
  * happens with probability p.
  * @author dlwh
  */
-case class Geometric(p: Double)(implicit rand: RandBasis=Rand) extends DiscreteDistr[Int] with Moments[Double] {
+case class Geometric(p: Double)(implicit rand: RandBasis=Rand) extends DiscreteDistr[Int] with Moments[Double, Double] {
   require(p >= 0)
   require(p <= 1)
 

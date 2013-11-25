@@ -28,7 +28,7 @@ import math.{Pi,log1p}
  * @author dlwh
  */
 case class Gaussian(mu :Double, sigma : Double)(implicit rand: RandBasis = Rand)
-    extends ContinuousDistr[Double] with Moments[Double] {
+    extends ContinuousDistr[Double] with Moments[Double, Double] {
   private val inner = rand.gaussian(mu,sigma)
   def draw() = inner.get()
 

@@ -24,7 +24,7 @@ import breeze.optimize.DiffFunction
  * Represents a Poisson random variable.
  * @author dlwh
  */
-case class Poisson(mean: Double)(implicit rand: RandBasis=Rand) extends DiscreteDistr[Int] with Moments[Double] {
+case class Poisson(mean: Double)(implicit rand: RandBasis=Rand) extends DiscreteDistr[Int] with Moments[Double, Double] {
   require(mean >= 0, "Poisson mean must be non-negative, but got " + mean)
   require(!mean.isInfinite, "Poisson mean must be finite, but got " + mean)
 
