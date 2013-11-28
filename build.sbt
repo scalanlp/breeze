@@ -52,13 +52,23 @@ libraryDependencies ++= Seq(
   "com.github.fommil.netlib" % "all" % "1.1.1" pomOnly(),
   "org.scalanlp" % "lpsolve" % "5.5.2-SNAPSHOT",
   "net.sf.opencsv" % "opencsv" % "2.3",
-  "com.typesafe" %% "scalalogging-log4j" % "1.0.1",
-   "org.apache.logging.log4j" % "log4j-core" % "2.0-beta8",
   "com.github.rwl" % "jtransforms" % "2.4.0",
    "org.apache.commons" % "commons-math3" % "3.2",
    "org.scalacheck" %% "scalacheck" % "1.10.0" % "test",
-   "org.scalatest" %% "scalatest" % "2.0.M5b" % "test"
+   "org.scalatest" %% "scalatest" % "2.0.M5b" % "test",
+    "com.typesafe" %% "scalalogging-slf4j" % "1.0.1",
+    "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.0-beta9" % "test",
+    "org.apache.logging.log4j" % "log4j-core" % "2.0-beta9" % "test",
+    "org.apache.logging.log4j" % "log4j-api" % "2.0-beta9" % "test"
   )
+
+// see https://github.com/typesafehub/scalalogging/issues/23
+testOptions in Test += Tests.Setup(classLoader =>
+  classLoader
+    .loadClass("org.slf4j.LoggerFactory")
+    .getMethod("getLogger", classLoader.loadClass("java.lang.String"))
+    .invoke(null, "ROOT")
+)
 
 resolvers ++= Seq(
     Resolver.mavenLocal,

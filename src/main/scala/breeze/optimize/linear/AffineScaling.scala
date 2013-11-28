@@ -1,7 +1,7 @@
 package breeze.optimize.linear
 
 import breeze.linalg._
-import com.typesafe.scalalogging.log4j.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 
 /**

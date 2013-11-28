@@ -4,7 +4,7 @@ import breeze.linalg.support.{CanNorm, CanCopy, CanCreateZerosLike}
 import breeze.linalg.{Tensor, NumericOps}
 import breeze.linalg.operators.{OpSub, BinaryOp}
 import breeze.stats.distributions.Rand
-import com.typesafe.scalalogging.log4j.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 /**
  * Class that compares the computed gradient with an empirical gradient based on

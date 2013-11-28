@@ -3,7 +3,7 @@ package breeze.optimize
 import breeze.util._
 import breeze.stats.distributions._
 import breeze.math.MutableCoordinateSpace
-import com.typesafe.scalalogging.log4j.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 
 /*

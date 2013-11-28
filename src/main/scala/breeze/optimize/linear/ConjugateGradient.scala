@@ -4,7 +4,7 @@ import breeze.math.{MutableInnerProductSpace, TensorSpace}
 import breeze.util.Implicits._
 import breeze.linalg.operators.{OpMulMatrix, BinaryOp}
 import breeze.linalg._
-import com.typesafe.scalalogging.log4j.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 /**
  * Solve argmin (a dot x + .5 * x dot (B * x) + .5 * normSquaredPenalty * (x dot x)) for x

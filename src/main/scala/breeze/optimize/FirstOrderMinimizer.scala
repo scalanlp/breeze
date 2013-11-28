@@ -2,7 +2,7 @@ package breeze.optimize
 
 import breeze.math.{NormedVectorSpace, MutableCoordinateSpace}
 import breeze.util.Implicits._
-import com.typesafe.scalalogging.log4j.Logging
+import com.typesafe.scalalogging.slf4j.Logging
 
 /**
  *
