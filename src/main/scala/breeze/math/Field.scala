@@ -31,6 +31,7 @@ trait Field[@specialized(Int,Short,Long,Float,Double) V] extends Ring[V] {
 }
 
 object Field {
+  /** Not a field, but whatever. */
   implicit object fieldInt extends Field[Int] {
     def zero = 0
     def one = 1
@@ -50,6 +51,7 @@ object Field {
 
   }
 
+  /** Not a field, but whatever. */
   implicit object fieldShort extends Field[Short] {
     def zero = 0.asInstanceOf[Short]
     def one = 1.asInstanceOf[Short]
@@ -67,6 +69,7 @@ object Field {
     val defaultArrayValue = implicitly[DefaultArrayValue[Short]]
   }
 
+  /** Not a field, but whatever. */
   implicit object fieldLong extends Field[Long] {
     def zero = 0l
     def one = 1l
@@ -84,6 +87,7 @@ object Field {
     val defaultArrayValue = implicitly[DefaultArrayValue[Long]]
   }
 
+  /** Not a field, but whatever. */
   implicit object fieldBigInt extends Field[BigInt] {
     def zero = 0l
     def one = 1l
