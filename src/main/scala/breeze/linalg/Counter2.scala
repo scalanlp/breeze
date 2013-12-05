@@ -199,7 +199,7 @@ object Counter2 extends LowPriorityCounter2 with Counter2Ops {
         }
 
         override def iterator =
-          for ((k1,map) <- from.data.iterator) yield (k1,map(col))
+          for ((k1,map) <- from.data.iterator; v <- map.get(col)) yield (k1,v)
 
         override def get(k1 : K1) =
           from.data.get(k1).map(_(col))

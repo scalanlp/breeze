@@ -73,7 +73,7 @@ class Counter2Test extends FunSuite with Checkers {
 
     // require expected static type
     val s2 : Counter[String,Double] = x(::,2)
-    assert(s2.toMap === Map("a" -> 0.0, "b" -> 7.75, "c" -> 8.0))
+    assert(s2.toMap === Map("b" -> 7.75, "c" -> 8.0))
 
     // write-through
     s2("a") = 1
