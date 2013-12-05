@@ -76,6 +76,9 @@ object DefaultArrayValue extends DefaultArrayValueLowPriority {
     override def value = false
   }
 
+  implicit object BigIntDefaultArrayValue extends DefaultArrayValue[BigInt] {
+    override def value = BigInt(0)
+  }
 
 }
 

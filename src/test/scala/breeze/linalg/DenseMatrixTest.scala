@@ -477,6 +477,17 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(a.delete(Seq(1,2), Axis._0) === DenseMatrix((1, 2, 3)))
   }
 
+  test("Big Int zeros are the right thing") {
+    val dm = DenseMatrix.zeros[BigInt](1,1)
+    assert(dm(0, 0) === BigInt(0))
+  }
+
+  test("BigInt multiply") {
+    val m = DenseMatrix((BigInt(1), BigInt(1)), (BigInt(1), BigInt(0)))
+    val m2 = DenseMatrix(((1), (1)), ((1), (0)))
+    assert(m * m === (m2 * m2).values.map(_.toInt))
+  }
+
 
 }
 
