@@ -34,11 +34,6 @@ trait Semiring[@specialized(Int,Short,Long,Float,Double) V] extends Serializable
   def !=(a : V, b : V) : Boolean
   def close(a: V, b: V, tolerance: Double=1E-4):Boolean = a == b
 
-  /** Returns the class manifest of the scalar type. */
-  def manifest : ClassTag[V]
-
-  /** Returns the DefaultArrayValue for this type.  Always this.zero. */
-  def defaultArrayValue : DefaultArrayValue[V]
 }
 
 object Semiring {
@@ -54,15 +49,9 @@ object Semiring {
   implicit object fieldB extends Semiring[Boolean] {
     def zero = false
     def one = true
-    def nan = throw new ArithmeticException("Operation resulted in boolean-valued NaN")
     def ==(a : Boolean, b : Boolean) = a == b
     def !=(a : Boolean, b : Boolean) = a != b
     def +(a : Boolean, b : Boolean) = a || b
     def *(a : Boolean, b : Boolean) = a && b
-    def norm(a : Boolean) = breeze.numerics.I(a)
-    def toDouble(a : Boolean) = breeze.numerics.I(a)
-    def isNaN(a : Boolean) = false
-    def manifest = implicitly[ClassTag[Boolean]]
-    val defaultArrayValue = implicitly[DefaultArrayValue[Boolean]]
  }
 }

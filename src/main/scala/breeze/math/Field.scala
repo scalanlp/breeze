@@ -41,67 +41,53 @@ object Field {
     def -(a : Int, b : Int) = a - b
     def *(a : Int, b : Int) = a * b
     def /(a : Int, b : Int) = a / b
-    val manifest = implicitly[ClassTag[Int]]
-    val defaultArrayValue = implicitly[DefaultArrayValue[Int]]
   }
 
   /** Not a field, but whatever. */
   implicit object fieldShort extends Field[Short] {
     def zero = 0.asInstanceOf[Short]
     def one = 1.asInstanceOf[Short]
-    def nan = throw new ArithmeticException("Operation resulted in short-valued NaN")
     def ==(a : Short, b : Short) = a == b
     def !=(a : Short, b : Short) = a != b
     def +(a : Short, b : Short) = (a + b).asInstanceOf[Short]
     def -(a : Short, b : Short) = (a - b).asInstanceOf[Short]
     def *(a : Short, b : Short) = (a * b).asInstanceOf[Short]
     def /(a : Short, b : Short) = (a / b).asInstanceOf[Short]
-    val manifest = implicitly[ClassTag[Short]]
-    val defaultArrayValue = implicitly[DefaultArrayValue[Short]]
   }
 
   /** Not a field, but whatever. */
   implicit object fieldLong extends Field[Long] {
     def zero = 0l
     def one = 1l
-    def nan = throw new ArithmeticException("Operation resulted in long-valued NaN")
     def ==(a : Long, b : Long) = a == b
     def !=(a : Long, b : Long) = a != b
     def +(a : Long, b : Long) = a + b
     def -(a : Long, b : Long) = a - b
     def *(a : Long, b : Long) = a * b
     def /(a : Long, b : Long) = a / b
-    val manifest = implicitly[ClassTag[Long]]
-    val defaultArrayValue = implicitly[DefaultArrayValue[Long]]
   }
 
   /** Not a field, but whatever. */
   implicit object fieldBigInt extends Field[BigInt] {
     def zero = 0l
     def one = 1l
-    def nan = throw new ArithmeticException("Operation resulted in long-valued NaN")
     def ==(a : BigInt, b : BigInt) = a == b
     def !=(a : BigInt, b : BigInt) = a != b
     def +(a : BigInt, b : BigInt) = a + b
     def -(a : BigInt, b : BigInt) = a - b
     def *(a : BigInt, b : BigInt) = a * b
     def /(a : BigInt, b : BigInt) = a / b
-    val manifest = implicitly[ClassTag[BigInt]]
-    val defaultArrayValue = implicitly[DefaultArrayValue[BigInt]]
   }
 
   implicit object fieldFloat extends Field[Float] {
     def zero = 0.0f
     def one = 1.0f
-    def nan = Float.NaN
     def ==(a : Float, b : Float) = a == b
     def !=(a : Float, b : Float) = a != b
     def +(a : Float, b : Float) = a + b
     def -(a : Float, b : Float) = a - b
     def *(a : Float, b : Float) = a * b
     def /(a : Float, b : Float) = a / b
-    val manifest = implicitly[ClassTag[Float]]
-    val defaultArrayValue = implicitly[DefaultArrayValue[Float]]
 
     override def close(a: Float, b: Float, tolerance: Double) = (a-b).abs <= math.max(a.abs, b.abs) * tolerance
   }
@@ -109,15 +95,12 @@ object Field {
   implicit object fieldD extends Field[Double] {
     def zero = 0.0
     def one = 1.0
-    def nan = Double.NaN
     def ==(a : Double, b : Double) = a == b
     def !=(a : Double, b : Double) = a != b
     def +(a : Double, b : Double) = a + b
     def -(a : Double, b : Double) = a - b
     def *(a : Double, b : Double) = a * b
     def /(a : Double, b : Double) = a / b
-    val manifest = implicitly[ClassTag[Double]]
-    val defaultArrayValue = implicitly[DefaultArrayValue[Double]]
 
     override def close(a: Double, b: Double, tolerance: Double) = (a-b).abs <= math.max(a.abs, b.abs) * tolerance
   }
