@@ -59,6 +59,7 @@ class CSCMatrixTest extends FunSuite with Checkers {
     assert(a * c === DenseVector(19,52))
     assert(b * c === DenseVector(62, -21, 87))
     assert(a * cs === SparseVector(4, 10))
+    assert(b * cs === SparseVector(3)((0, -4), (1, -6)))
 
 //    assert(b.t * c === DenseVector(72, -18, 65))
 //    assert(a.t * DenseVector(4, 3) === DenseVector(16, 23, 30))

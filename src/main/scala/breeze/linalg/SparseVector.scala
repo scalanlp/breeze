@@ -148,6 +148,7 @@ class SparseVector[@spec(Double,Int, Float) E](val array: SparseArray[E])
    * @return
    */
   def allVisitableIndicesActive: Boolean = true
+
 }
 
 object SparseVector extends SparseVectorOps with DenseVector_SparseVector_Ops with SparseVector_DenseVector_Ops  {
