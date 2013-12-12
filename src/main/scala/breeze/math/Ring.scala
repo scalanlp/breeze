@@ -25,12 +25,6 @@ trait Ring[@specialized(Int,Short,Long,Float,Double) V] extends Semiring[V]  {
   def -(a : V, b : V) : V
   def negate(s: V): V = this.-(zero, s)
 
-  /** Returns true if this is a primitive type. */
-  def isPrimitive : Boolean = manifest.runtimeClass.isPrimitive
-
-  /** Returns true if this is not a number. */
-  def isNaN(a : V) : Boolean
-
 }
 
 object Ring {

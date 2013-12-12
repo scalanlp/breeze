@@ -35,20 +35,14 @@ object Field {
   implicit object fieldInt extends Field[Int] {
     def zero = 0
     def one = 1
-    def nan = throw new ArithmeticException("Operation resulted in integer-valued NaN")
     def ==(a : Int, b : Int) = a == b
     def !=(a : Int, b : Int) = a != b
     def +(a : Int, b : Int) = a + b
     def -(a : Int, b : Int) = a - b
     def *(a : Int, b : Int) = a * b
     def /(a : Int, b : Int) = a / b
-    def norm(a : Int) = if (a < 0) -a else a
-    def toDouble(a : Int) = a
-    def isNaN(a : Int) = false
     val manifest = implicitly[ClassTag[Int]]
     val defaultArrayValue = implicitly[DefaultArrayValue[Int]]
-
-
   }
 
   /** Not a field, but whatever. */
@@ -62,9 +56,6 @@ object Field {
     def -(a : Short, b : Short) = (a - b).asInstanceOf[Short]
     def *(a : Short, b : Short) = (a * b).asInstanceOf[Short]
     def /(a : Short, b : Short) = (a / b).asInstanceOf[Short]
-    def norm(a : Short) = if (a < 0) -a else a
-    def toDouble(a : Short) = a
-    def isNaN(a : Short) = false
     val manifest = implicitly[ClassTag[Short]]
     val defaultArrayValue = implicitly[DefaultArrayValue[Short]]
   }
@@ -80,9 +71,6 @@ object Field {
     def -(a : Long, b : Long) = a - b
     def *(a : Long, b : Long) = a * b
     def /(a : Long, b : Long) = a / b
-    def norm(a : Long) = if (a < 0) -a else a
-    def toDouble(a : Long) = a
-    def isNaN(a : Long) = false
     val manifest = implicitly[ClassTag[Long]]
     val defaultArrayValue = implicitly[DefaultArrayValue[Long]]
   }
@@ -98,9 +86,6 @@ object Field {
     def -(a : BigInt, b : BigInt) = a - b
     def *(a : BigInt, b : BigInt) = a * b
     def /(a : BigInt, b : BigInt) = a / b
-    def norm(a : BigInt) = if (a < 0) (-a).toDouble else a.toDouble
-    def toDouble(a : BigInt) = a
-    def isNaN(a : BigInt) = false
     val manifest = implicitly[ClassTag[BigInt]]
     val defaultArrayValue = implicitly[DefaultArrayValue[BigInt]]
   }
@@ -115,9 +100,6 @@ object Field {
     def -(a : Float, b : Float) = a - b
     def *(a : Float, b : Float) = a * b
     def /(a : Float, b : Float) = a / b
-    def norm(a : Float) = if (a < 0) -a else a
-    def toDouble(a : Float) = a
-    def isNaN(a : Float) = java.lang.Float.isNaN(a)
     val manifest = implicitly[ClassTag[Float]]
     val defaultArrayValue = implicitly[DefaultArrayValue[Float]]
 
@@ -134,9 +116,6 @@ object Field {
     def -(a : Double, b : Double) = a - b
     def *(a : Double, b : Double) = a * b
     def /(a : Double, b : Double) = a / b
-    def norm(a : Double) = if (a < 0) -a else a
-    def toDouble(a : Double) = a
-    def isNaN(a : Double) = java.lang.Double.isNaN(a)
     val manifest = implicitly[ClassTag[Double]]
     val defaultArrayValue = implicitly[DefaultArrayValue[Double]]
 
