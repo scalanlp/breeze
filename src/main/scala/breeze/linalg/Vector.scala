@@ -20,7 +20,7 @@ import breeze.generic.CanMapValues
 import breeze.math.{Complex, TensorSpace, Ring}
 import scala.math.BigInt
 import collection.immutable.BitSet
-import support.{CanZipMapValues, CanCopy}
+import breeze.linalg.support.{CanNorm, CanZipMapValues, CanCopy}
 import breeze.storage.{DefaultArrayValue, Storage}
 import scala.reflect.ClassTag
 import breeze.stats.distributions.Rand
@@ -65,29 +65,6 @@ trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]]{
         this.length == x.length &&
           (valuesIterator sameElements x.valuesIterator)
     case _ => false
-  }
-
-
-
-  /** Returns the k-norm of this Vector. */
-  def norm(n : Double)(implicit ring: Ring[E]) : Double = {
-    if (n == 1) {
-      var sum = 0.0
-      activeValuesIterator foreach (v => sum += ring.norm(v))
-      sum
-    } else if (n == 2) {
-      var sum = 0.0
-      activeValuesIterator foreach (v => { val nn = ring.norm(v); sum += nn * nn })
-      math.sqrt(sum)
-    } else if (n == Double.PositiveInfinity) {
-      var max = Double.NegativeInfinity
-      activeValuesIterator foreach (v => { val nn = ring.norm(v); if (nn > max) max = nn })
-      max
-    } else {
-      var sum = 0.0
-      activeValuesIterator foreach (v => { val nn = ring.norm(v); sum += math.pow(nn,n) })
-      math.pow(sum, 1.0 / n)
-    }
   }
 
   def toDenseVector(implicit cm: ClassTag[E]) = {
@@ -370,6 +347,35 @@ trait VectorOps { this: Vector.type =>
         for( (k, v) <- b.activeIterator) {
           a(k) += s * v
           i += 1
+        }
+      }
+    }
+  }
+
+
+  /**Returns the k-norm of this Vector. */
+  @expand
+  implicit def canNorm[@expand.args(Int, Double, Float, Long, BigInt, Complex) T](implicit @expand.sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T): CanNorm[Vector[T], Double] = {
+
+    new CanNorm[Vector[T], Double] {
+      def apply(v: Vector[T], n: Double): Double = {
+        import v._
+        if (n == 1) {
+          var sum = 0.0
+          activeValuesIterator foreach (v => sum += v.abs.toDouble )
+          sum
+        } else if (n == 2) {
+          var sum = 0.0
+          activeValuesIterator foreach (v => { val nn = v.abs.toDouble; sum += nn * nn })
+          math.sqrt(sum)
+        } else if (n == Double.PositiveInfinity) {
+          var max = 0.0
+          activeValuesIterator foreach (v => { val nn = v.abs.toDouble; if (nn > max) max = nn })
+          max
+        } else {
+          var sum = 0.0
+          activeValuesIterator foreach (v => { val nn = v.abs.toDouble; sum += math.pow(nn,n) })
+          math.pow(sum, 1.0 / n)
         }
       }
     }

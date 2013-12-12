@@ -513,9 +513,10 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
   @expand.valify
   implicit def dv_sv_op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType] = {
-    val op: BinaryOp[DenseVector[T], SparseVector[T], Op, DenseVector[T]] = DenseVector.pureFromUpdate(implicitly[BinaryUpdateOp[DenseVector[T], SparseVector[T], Op]])
-    implicitly[BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]]].register(op)
-    op
+    //val _op: BinaryOp[DenseVector[T], SparseVector[T], Op, DenseVector[T]] =
+    implicitly[BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]]].register {
+      DenseVector.pureFromUpdate(implicitly[BinaryUpdateOp[DenseVector[T], SparseVector[T], Op]])
+    }
   }
 
 

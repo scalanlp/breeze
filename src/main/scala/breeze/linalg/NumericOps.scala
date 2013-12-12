@@ -17,7 +17,7 @@ package breeze.linalg
 
 import breeze.linalg.operators._
 import breeze.math.{Ring, Field, VectorSpace}
-import support.CanSlice2
+import breeze.linalg.support.{CanNorm, CanSlice2}
 import breeze.storage.DefaultArrayValue
 import scala.reflect.ClassTag
 
@@ -225,6 +225,17 @@ trait NumericOps[+This] {
   final def ^^= [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpXor]) : This = {
     op(repr,b)
     repr
+  }
+
+  /** Represents the "natural" norm of this vector, for types that don't support arbitrary norms */
+  final def norm[TT>:This, R]()(implicit op: CanNorm[TT, Unit]): Double = {
+    op(repr, ())
+  }
+
+
+  /** Represents the norm of this vector */
+  final def norm[TT>:This, B, R](b: B)(implicit op: CanNorm[TT, B]): Double = {
+    op(repr, b)
   }
 
   // matrix-y ops

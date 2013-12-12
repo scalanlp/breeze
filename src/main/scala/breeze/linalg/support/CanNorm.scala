@@ -17,20 +17,30 @@ package support
 */
 
 import breeze.math.Ring
+import breeze.macros.expand
 
 
 /**
  * Construction delegate for getting the norm of a value of type From.
  *
- * @author dramage
+ * @author dramage, dlwh
  */
-trait CanNorm[-From] {
-  def apply(v1: From, v2: Double): Double
+trait CanNorm[-From, NormType] {
+  def apply(v1: From, v2: NormType): Double
 }
 
 object CanNorm {
-  implicit def mkTensor1Norm[T, V](implicit tt : T=>Vector[V], ring: Ring[V]): CanNorm[T] = new CanNorm[T] {
-    def apply(t : T, n : Double) : Double =
-      tt(t).norm(n)
+  @expand
+  @expand.valify
+  implicit def scalarNorm[@expand.args(Int, Long, Float, Double) T]: CanNorm[T, Unit] = new CanNorm[T, Unit] {
+    def apply(v1: T, v2: Unit): Double = v1.abs.toDouble
+  }
+
+  implicit def standardNormFromDoubleNorm[T](implicit norm: CanNorm[T, Double]):CanNorm[T, Unit] = new CanNorm[T, Unit] {
+    def apply(v1: T, v2: Unit): Double = norm(v1, 2.0)
+  }
+
+  implicit def intNormFromDoubleNorm[T](implicit norm: CanNorm[T, Double]):CanNorm[T, Int] = new CanNorm[T, Int] {
+    def apply(v1: T, v2: Int): Double = norm(v1, v2.toDouble)
   }
 }

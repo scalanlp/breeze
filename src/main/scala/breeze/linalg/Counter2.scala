@@ -530,7 +530,7 @@ trait Counter2Ops {
   }
 
 
-  /** Returns the k-norm of this Vector. */
+  /** Returns the k-norm of this Vector.
   implicit def canNorm[K1, K2, V:Ring]:CanNorm[Counter2[K1, K2, V]] = new CanNorm[Counter2[K1, K2, V]] {
     val field = implicitly[Ring[V]]
     def apply(c: Counter2[K1, K2, V], n: Double): Double = {
@@ -554,7 +554,8 @@ trait Counter2Ops {
         math.pow(sum, 1.0 / n)
       }
     }
-  }
+  }*/
+
 
   implicit def canMultiplyC2C1[K1, K2, V](implicit  semiring: Semiring[V], d: DefaultArrayValue[V]):BinaryOp[Counter2[K1, K2, V], Counter[K2, V], OpMulMatrix, Counter[K1, V]] = {
     new BinaryOp[Counter2[K1, K2, V], Counter[K2, V], OpMulMatrix, Counter[K1, V]] {

@@ -95,14 +95,20 @@ package object linalg extends LinearAlgebra {
   /**
    * Computes the norm of an object. Many tensor objects have a CanNorm implicit, which is what this calls.
    */
-  def norm[T](t: T, v: Double = 2)(implicit canNorm: CanNorm[T]) = canNorm(t, v)
+  def norm[T](t: T)(implicit canNorm: CanNorm[T, Unit]) = canNorm(t, ())
+
+  /**
+   * Computes the norm of an object. Many tensor objects have a CanNorm implicit, which is what this calls.
+   */
+  def norm[T, NormType](t: T, v: NormType)(implicit canNorm: CanNorm[T, NormType]) = canNorm(t, v)
+
 
 
   /**
    * Normalizes the argument such that its norm is 1.0 (with respect to the argument n).
    * Returns value if value's norm is 0.
    */
-  def normalize[T, U>:T](t: T, n: Double = 2)(implicit div: BinaryOp[T, Double, OpDiv, U], canNorm: CanNorm[T], dav: DefaultArrayValue[T]): U = {
+  def normalize[T, U>:T](t: T, n: Double = 2)(implicit div: BinaryOp[T, Double, OpDiv, U], canNorm: CanNorm[T, Double], dav: DefaultArrayValue[T]): U = {
     val norm = canNorm(t, n)
     if(norm == 0) t
     else div(t,norm)
@@ -113,7 +119,7 @@ package object linalg extends LinearAlgebra {
    * Each column is unchanged if it's norm is 0
    */
   def normalize[T, Axis, V, Result](value: T, axis: Axis, n: Double)(implicit  collapse: CanCollapseAxis[T, Axis, V, V, Result],
-                                                                     div: BinaryOp[V, Double, OpDiv, V], canNorm: CanNorm[V],
+                                                                     div: BinaryOp[V, Double, OpDiv, V], canNorm: CanNorm[V, Double],
                                                                      dav: DefaultArrayValue[V]):Result = {
     collapse(value, axis)(v => normalize[V, V](v, n))
   }

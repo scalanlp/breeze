@@ -19,6 +19,7 @@ package breeze.linalg
 import breeze.math.Ring
 
 import scala.{specialized=>spec}
+import breeze.linalg.support.CanNorm
 
 /**
  * This decorator automatically caches the norm and sums of a vector and invalidates the cache whenever the vector is updated.  It can be
@@ -49,24 +50,7 @@ class NormCacheDecorator[@spec(Double, Int, Float) E](val vector: Vector[E]) ext
     vector.update(i, v)
   }
 
-  /**
-   * Returns a cached value (O(1) time) if the L2 norm is requested and a previous computation is still valid.  Otherwise, the norm is
-   * computed (O(N) time) and the cached value is stored.
-   */
-  override def norm(n : Double)(implicit field: Ring[E]) : Double =
-    // Check to see if the norm has been cached.  If so, return that value.  Otherwise, recompute the norm and cache it.
-    normCache.get(n) match {
-      case Some(cachedNorm) => cachedNorm
-      case None => {
-        sweep = false
-        val computedNorm = vector.norm(n)
-        // In a multi-threaded setting, update could be called while we are computing the norm.  If this happens, the sweep variable will be
-        // set to true nothing that the norm value we've computed *may* be incorrect, so it should not be cached.
-        if (!sweep)
-            normCache += (n -> computedNorm)
-        computedNorm
-      }
-    }
+
 
   override def sum(implicit num: Numeric[E]) =
     // Check to see if the norm has been cached.  If so, return that value.  Otherwise, recompute the norm and cache it.
@@ -98,4 +82,32 @@ class NormCacheDecorator[@spec(Double, Int, Float) E](val vector: Vector[E]) ext
   def length = vector.length
 
   def repr = vector.repr
+}
+
+object NormCacheDecorator {
+    /**
+   * Returns a cached value (O(1) time) if the L2 norm is requested and a previous computation is still valid.  Otherwise, the norm is
+   * computed (O(N) time) and the cached value is stored.
+   */
+  implicit def canNorm[E](implicit norm: CanNorm[Vector[E], Double]): CanNorm[NormCacheDecorator[E], Double] = {
+    new CanNorm[NormCacheDecorator[E], Double] {
+      def apply(v1: NormCacheDecorator[E], n: Double): Double = {
+        import v1.{norm => _, _}
+        normCache.get(n) match {
+          case Some(cachedNorm) => cachedNorm
+          case None => {
+            sweep = false
+            val computedNorm = vector.norm(n)(norm)
+            // In a multi-threaded setting, update could be called while we are computing the norm.  If this happens, the sweep variable will be
+            // set to true nothing that the norm value we've computed *may* be incorrect, so it should not be cached.
+            if (!sweep)
+              normCache += (n -> computedNorm)
+            computedNorm
+          }
+
+        }
+      }
+
+    }
+  }
 }

@@ -17,7 +17,7 @@ import breeze.linalg.NumericOps
  * @tparam S
  */
 trait CoordinateSpace[V, S] extends InnerProductSpace[V, S] {
-  implicit def norm: CanNorm[V]
+  implicit def norm: CanNorm[V, Double]
   implicit def mapValues: CanMapValues[V,S,S,V]
   implicit def zipMapValues: CanZipMapValues[V,S,S,V]
 
@@ -32,8 +32,13 @@ trait CoordinateSpace[V, S] extends InnerProductSpace[V, S] {
 }
 
 object CoordinateSpace {
-  implicit def fromField[S](implicit f: Field[S]):CoordinateSpace[S, S] = new CoordinateSpace[S, S] {
+  implicit def fromField[S](implicit f: Field[S], canNorm: CanNorm[S, Double]):CoordinateSpace[S, S] = new CoordinateSpace[S, S] {
     def field: Field[S] = f
+
+
+    implicit def scalarNorm: CanNorm[S, Unit] = new CanNorm[S, Unit] {
+      def apply(v1: S, v2: Unit): Double = canNorm(v1, 1)
+    }
 
     implicit def isNumericOps(v: S): NumericOps[S] = new NumericOps[S] {
       def repr: S = v
@@ -56,9 +61,7 @@ object CoordinateSpace {
 
     implicit val neg: UnaryOp[S, OpNeg, S] = UnaryOp.scalaOpNeg
 
-    implicit val norm: CanNorm[S] = new CanNorm[S] {
-      def apply(v1: S, v2: Double): Double = ???
-    }
+    implicit val norm: CanNorm[S, Double] = canNorm
 
     implicit val mapValues: CanMapValues[S, S, S, S] = CanMapValues.canMapSelf
 
@@ -92,7 +95,8 @@ trait MutableCoordinateSpace[V, S] extends MutableInnerProductSpace[V, S]  with 
 
 object MutableCoordinateSpace {
   def make[V, S](implicit
-                    _norm:  CanNorm[V],
+                    _norm:  CanNorm[V, Double],
+                    _scalarNorm:  CanNorm[S, Unit],
                    _mapValues:  CanMapValues[V, S, S, V],
 //                   _reduce:  UReduceable[V, S],
                    _zipMapValues:  CanZipMapValues[V, S, S, V],
@@ -129,7 +133,11 @@ object MutableCoordinateSpace {
                    _isNumericOps: V <:< NumericOps[V],
                    _axpy:  CanAxpy[S, V, V],
                    _dotVV:  BinaryOp[V, V, OpMulInner, S]):MutableCoordinateSpace[V, S] = new MutableCoordinateSpace[V, S] {
-    implicit def norm: CanNorm[V] = _norm
+    implicit def norm: CanNorm[V, Double] = _norm
+
+    implicit def scalarNorm: CanNorm[S, Unit] = _scalarNorm
+
+
 
     implicit def mapValues: CanMapValues[V, S, S, V] = _mapValues
 

@@ -37,7 +37,7 @@ object GradientTester extends Logging {
                (implicit  view2: T <:< NumericOps[T],
                 view: T<:< Tensor[K,Double],
                 copy: CanCopy[T],
-                canNorm: CanNorm[T],
+                canNorm: CanNorm[T, Unit],
                 opSub: BinaryOp[T,T,OpSub,T]) = {
     val indices = Rand.subsetsOfSize(x.keysIterator.toIndexedSeq, (x.size * randFraction + 1).toInt).get()
     testIndices(f, x, indices, skipZeros, toString, epsilon, tolerance)
@@ -50,7 +50,7 @@ object GradientTester extends Logging {
                         epsilon: Double = 1e-8, tolerance: Double = 1E-3)(implicit  view2: T <:< NumericOps[T],
                 view: T<:< Tensor[K,Double],
                 copy: CanCopy[T],
-                canNorm: CanNorm[T],
+                canNorm: CanNorm[T, Unit],
                 opSub: BinaryOp[T,T,OpSub,T]): T = {
     val (fx, trueGrad) = f.calculate(x)
     val xx = copy(x)

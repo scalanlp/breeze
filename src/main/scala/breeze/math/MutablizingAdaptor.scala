@@ -181,6 +181,9 @@ object MutablizingAdaptor {
         }
       }
 
+
+      implicit def scalarNorm: CanNorm[S, Unit] = u.scalarNorm
+
       implicit def mulIntoVS: BinaryUpdateOp[Wrapper, S, OpMulScalar] = liftUpdate[OpMulScalar](u.mulVS)
 
       implicit def divIntoVS: BinaryUpdateOp[Wrapper, S, OpDiv] = liftUpdate[OpDiv](u.divVS)
@@ -311,9 +314,12 @@ object MutablizingAdaptor {
         }
       }
 
-      implicit def norm: CanNorm[Wrapper] = new CanNorm[Wrapper] {
+      implicit def norm: CanNorm[Wrapper, Double] = new CanNorm[Wrapper, Double] {
         def apply(v1: Wrapper, v2: Double): Double = u.norm(v1.value, v2)
       }
+
+
+      implicit def scalarNorm: CanNorm[S, Unit] = u.scalarNorm
 
       implicit def mapValues: CanMapValues[Wrapper, S, S, Wrapper] = new CanMapValues[Wrapper, S, S, Wrapper] {
         /** Maps all key-value pairs from the given collection. */

@@ -167,26 +167,6 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
     new DenseMatrix[E](1, length, data, offset, stride)
   }
 
-  /**Returns the k-norm of this Vector. */
-  override def norm(n: Double)(implicit field: Ring[E]): Double = {
-    if (n == 1) {
-      var sum = 0.0
-      foreach (v => sum += field.norm(v))
-      sum
-    } else if (n == 2) {
-      var sum = 0.0
-      foreach (v => { val nn = field.norm(v); sum += nn * nn })
-      math.sqrt(sum)
-    } else if (n == Double.PositiveInfinity) {
-      var max = Double.NegativeInfinity
-      foreach (v => { val nn = field.norm(v); if (nn > max) max = nn })
-      max
-    } else {
-      var sum = 0.0
-      foreach (v => { val nn = field.norm(v); sum += math.pow(nn,n) })
-      math.pow(sum, 1.0 / n)
-    }
-  }
 
   /**
    * Slices the DenseVector, in the range (start,end] with a stride stride.
@@ -626,6 +606,7 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
       }
     }
   }
+
 
 
 }

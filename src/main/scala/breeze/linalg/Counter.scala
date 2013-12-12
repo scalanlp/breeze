@@ -142,10 +142,11 @@ object Counter extends CounterOps {
 
   }
 
-  implicit def tensorspace[K, V:Field:DefaultArrayValue] = {
+  implicit def tensorspace[K, V](implicit field: Field[V], dfv: DefaultArrayValue[V], norm: CanNorm[V, Unit]) = {
     implicit def zipMap = Counter.zipMap[K, V, V]
     // sigh...
     TensorSpace.make[Counter[K, V], K, V](canNorm,
+      norm,
       canMapValues[K, V, V],
       ured[K, V],
       zipMap,
@@ -431,26 +432,25 @@ trait CounterOps {
     }
   }
   /** Returns the k-norm of this Vector. */
-  implicit def canNorm[K, V:Ring]:CanNorm[Counter[K, V]] = new CanNorm[Counter[K, V]] {
-    val field = implicitly[Ring[V]]
+  implicit def canNorm[K, V](implicit norm: CanNorm[V, Unit]):CanNorm[Counter[K, V], Double] = new CanNorm[Counter[K, V], Double] {
     def apply(c: Counter[K, V], n: Double): Double = {
-      import c._
+      import c.{norm => _, _}
 
       if (n == 1) {
         var sum = 0.0
-        activeValuesIterator foreach (v => sum += field.norm(v))
+        activeValuesIterator foreach (v => sum += norm(v, ()))
         sum
       } else if (n == 2) {
         var sum = 0.0
-        activeValuesIterator foreach (v => { val nn = field.norm(v); sum += nn * nn })
+        activeValuesIterator foreach (v => { val nn = norm(v, ()); sum += nn * nn })
         math.sqrt(sum)
       } else if (n == Double.PositiveInfinity) {
-        var max = Double.NegativeInfinity
-        activeValuesIterator foreach (v => { val nn = field.norm(v); if (nn > max) max = nn })
+        var max = 0.0
+        activeValuesIterator foreach (v => { val nn = norm(v, ()); if (nn > max) max = nn })
         max
       } else {
         var sum = 0.0
-        activeValuesIterator foreach (v => { val nn = field.norm(v); sum += math.pow(nn,n) })
+        activeValuesIterator foreach (v => { val nn = norm(v, ()); sum += math.pow(nn,n) })
         math.pow(sum, 1.0 / n)
       }
     }

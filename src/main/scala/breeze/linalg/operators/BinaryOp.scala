@@ -141,8 +141,9 @@ trait BinaryRegistry[A, B, Op<:OpType, +R] extends BinaryOp[A, B, Op, R] with MM
     }
   }
 
-  def register[AA<:A, BB<:B](op: BinaryOp[AA, BB, Op, R @uncheckedVariance])(implicit manA: Manifest[AA], manB: Manifest[BB]) {
+  def register[AA<:A, BB<:B](op: BinaryOp[AA, BB, Op, R @uncheckedVariance])(implicit manA: Manifest[AA], manB: Manifest[BB]) = {
     super.register(manA.runtimeClass, manB.runtimeClass, op)
+    op
   }
 
 }

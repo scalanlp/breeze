@@ -54,7 +54,8 @@ trait NormedVectorSpace[V, S] extends VectorSpace[V, S] {
 trait InnerProductSpace[V, S] extends NormedVectorSpace[V, S] {
   implicit def dotVV: BinaryOp[V, V, OpMulInner, S]
 
-  def norm(a: V) = math.sqrt(field.norm(dotVV(a,a)))
+  def norm(a: V) = math.sqrt(scalarNorm(dotVV(a,a), ()))
+  implicit def scalarNorm: CanNorm[S, Unit]
 }
 
 trait MutableVectorSpace[V, S] extends VectorSpace[V, S] {
@@ -77,6 +78,7 @@ trait MutableInnerProductSpace[V, S] extends InnerProductSpace[V, S] with Mutabl
 object MutableInnerProductSpace {
   /** Construct a MutableInnerProductSpace for the given type from the available implicits */
   def make[V, I, S](implicit _field: Field[S],
+                    _scalarNorm: CanNorm[S, Unit],
     _isNumericOps: V <:< NumericOps[V],
     _zeros: CanCreateZerosLike[V, V],
     _mulVS: BinaryOp[V, S, OpMulScalar, V],
@@ -93,6 +95,9 @@ object MutableInnerProductSpace {
     _setIntoVV: BinaryUpdateOp[V, V, OpSet],
     _axpy: CanAxpy[S, V, V]): MutableInnerProductSpace[V, S] = new MutableInnerProductSpace[V, S] {
     def field: Field[S] = _field
+
+    implicit def scalarNorm: CanNorm[S, Unit] = _scalarNorm
+
     implicit def isNumericOps(v: V): NumericOps[V] = _isNumericOps(v)
     implicit def zeros: CanCreateZerosLike[V, V] = _zeros
     implicit def mulVS: BinaryOp[V, S, OpMulScalar, V] = _mulVS
@@ -120,7 +125,8 @@ trait TensorSpace[V, I, S] extends MutableCoordinateSpace[V, S] {
 
 object TensorSpace {
   def make[V, I, S](implicit
-                    _norm:  CanNorm[V],
+                    _norm:  CanNorm[V, Double],
+                    _scalarNorm: CanNorm[S, Unit] ,
                    _mapValues:  CanMapValues[V, S, S, V],
                    _reduce:  UReduceable[V, S],
                    _zipMapValues:  CanZipMapValues[V, S, S, V],
@@ -153,8 +159,9 @@ object TensorSpace {
                    _neg:  UnaryOp[V, OpNeg, V],
                    _isNumericOps: V <:< NumericOps[V] with QuasiTensor[I, S],
                    _dotVV:  BinaryOp[V, V, OpMulInner, S]):TensorSpace[V, I, S] = new TensorSpace[V, I, S] {
-    implicit def norm: CanNorm[V] = _norm
+    implicit def norm: CanNorm[V, Double] = _norm
 
+    implicit def scalarNorm: CanNorm[S, Unit] = _scalarNorm
     implicit def mapValues: CanMapValues[V, S, S, V] = _mapValues
 
     implicit def reduce: UReduceable[V, S] = _reduce
