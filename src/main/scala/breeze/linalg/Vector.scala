@@ -154,6 +154,34 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
   implicit val zipMap_i = new CanZipMapValuesVector[Int, Int]
 
 
+  /**Returns the k-norm of this Vector. */
+  implicit def canNorm[T](implicit canNormS: CanNorm[T, Unit]): CanNorm[Vector[T], Double] = {
+
+    new CanNorm[Vector[T], Double] {
+      def apply(v: Vector[T], n: Double): Double = {
+        import v._
+        if (n == 1) {
+          var sum = 0.0
+          activeValuesIterator foreach (v => sum += canNormS(v, ()) )
+          sum
+        } else if (n == 2) {
+          var sum = 0.0
+          activeValuesIterator foreach (v => { val nn = canNormS(v, ()); sum += nn * nn })
+          math.sqrt(sum)
+        } else if (n == Double.PositiveInfinity) {
+          var max = 0.0
+          activeValuesIterator foreach (v => { val nn = canNormS(v, ()); if (nn > max) max = nn })
+          max
+        } else {
+          var sum = 0.0
+          activeValuesIterator foreach (v => { val nn = canNormS(v, ()); sum += math.pow(nn,n) })
+          math.pow(sum, 1.0 / n)
+        }
+      }
+    }
+  }
+
+
   implicit val space_d = TensorSpace.make[Vector[Double], Int, Double]
   implicit val space_f = TensorSpace.make[Vector[Float], Int, Float]
   implicit val space_i = TensorSpace.make[Vector[Int], Int, Int]
@@ -353,33 +381,8 @@ trait VectorOps { this: Vector.type =>
   }
 
 
-  /**Returns the k-norm of this Vector. */
-  @expand
-  implicit def canNorm[@expand.args(Int, Double, Float, Long, BigInt, Complex) T](implicit @expand.sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T): CanNorm[Vector[T], Double] = {
 
-    new CanNorm[Vector[T], Double] {
-      def apply(v: Vector[T], n: Double): Double = {
-        import v._
-        if (n == 1) {
-          var sum = 0.0
-          activeValuesIterator foreach (v => sum += v.abs.toDouble )
-          sum
-        } else if (n == 2) {
-          var sum = 0.0
-          activeValuesIterator foreach (v => { val nn = v.abs.toDouble; sum += nn * nn })
-          math.sqrt(sum)
-        } else if (n == Double.PositiveInfinity) {
-          var max = 0.0
-          activeValuesIterator foreach (v => { val nn = v.abs.toDouble; if (nn > max) max = nn })
-          max
-        } else {
-          var sum = 0.0
-          activeValuesIterator foreach (v => { val nn = v.abs.toDouble; sum += math.pow(nn,n) })
-          math.pow(sum, 1.0 / n)
-        }
-      }
-    }
-  }
+
 
 }
 

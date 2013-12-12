@@ -499,6 +499,39 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   }
 
 
+  /*
+  TODO: scaladoc crashes on this. I don't know why. It makes me want to die a little.
+  Returns the k-norm of this Vector.
+  */
+  @expand
+  @expand.valify
+  implicit def canNorm[@expand.args(Int, Double, Float, Long, BigInt, Complex) T]: CanNorm[DenseVector[T], Double] = {
+
+    new CanNorm[DenseVector[T], Double] {
+      def apply(v: DenseVector[T], n: Double): Double = {
+        import v._
+        if (n == 1) {
+          var sum = 0.0
+          foreach (v => sum += v.abs.toDouble )
+          sum
+        } else if (n == 2) {
+          var sum = 0.0
+          foreach (v => { val nn = v.abs.toDouble; sum += nn * nn })
+          math.sqrt(sum)
+        } else if (n == Double.PositiveInfinity) {
+          var max = 0.0
+          foreach (v => { val nn = v.abs.toDouble; if (nn > max) max = nn })
+          max
+        } else {
+          var sum = 0.0
+          foreach (v => { val nn = v.abs.toDouble; sum += math.pow(nn,n) })
+          math.pow(sum, 1.0 / n)
+        }
+      }
+    }
+  }
+
+
   implicit val space_d = TensorSpace.make[DenseVector[Double], Int, Double]
   implicit val space_f = TensorSpace.make[DenseVector[Float], Int, Float]
   implicit val space_i = TensorSpace.make[DenseVector[Int], Int, Int]

@@ -222,32 +222,9 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   }
 
 
-  /**Returns the k-norm of this Vector. */
-  @expand
-  implicit def canNorm[@expand.args(Int, Double, Float, Long, BigInt, Complex) T](implicit @expand.sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T): CanNorm[DenseVector[T], Double] = {
 
-    new CanNorm[DenseVector[T], Double] {
-      def apply(v: DenseVector[T], n: Double): Double = {
-        import v._
-        if (n == 1) {
-          var sum = 0.0
-          foreach (v => sum += v.abs.toDouble )
-          sum
-        } else if (n == 2) {
-          var sum = 0.0
-          foreach (v => { val nn = v.abs.toDouble; sum += nn * nn })
-          math.sqrt(sum)
-        } else if (n == Double.PositiveInfinity) {
-          var max = 0.0
-          foreach (v => { val nn = v.abs.toDouble; if (nn > max) max = nn })
-          max
-        } else {
-          var sum = 0.0
-          foreach (v => { val nn = v.abs.toDouble; sum += math.pow(nn,n) })
-          math.pow(sum, 1.0 / n)
-        }
-      }
-    }
-  }
+
+
+
 
 }
