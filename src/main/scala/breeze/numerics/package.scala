@@ -16,22 +16,207 @@ package breeze
  limitations under the License.
 */
 
-import generic.{URFunc, UReduceable, UFunc}
-import linalg.operators.{OpSub, BinaryOp}
-import linalg.{NumericOps, QuasiTensor, Tensor}
+import breeze.generic.{URFunc, UFunc}
 import scala.math._
 import scala.{math=>m}
 import org.apache.commons.math3.special.{Gamma => G, Erf}
 
 /**
- * Provides some functions left out of java.lang.math.
+ * Contains several standard numerical functions as UFuncs,
  *
  * @author dlwh, afwlehmann
  */
-package object numerics extends UniversalFuncs {
+package object numerics {
+
+  import scala.{math=>m}
+
+  // TODO: I should probably codegen this.
+
+  object exp extends UFunc with expFloatLowPrio {
+    implicit object expDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = java.lang.Math.exp(v)}
+  }
+
+  trait expFloatLowPrio extends UFunc { this: exp.type =>
+    implicit val expFloatImpl = new Impl[Float, Float] { def apply(v: Float) = java.lang.Math.exp(v).toFloat}
+  }
+
+  object log extends UFunc {
+    implicit object logDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.log(v)}
+  }
+
+  trait logLowPrioFloat { this: log.type =>
+    implicit object logFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.log(v).toFloat}
+  }
+
+  object log1p extends UFunc {
+    implicit object log1pDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.log1p(v)}
+  }
+
+  trait log1pLowPrioFloat { this: log1p.type =>
+    implicit object log1pFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.log1p(v).toFloat}
+  }
+
+  object sqrt extends UFunc {
+    implicit object sqrtDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.sqrt(v)}
+  }
+
+  trait sqrtLowPrio { this: sqrt.type =>
+    implicit object sqrtFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.sqrt(v).toFloat}
+  }
+
+  object sin extends UFunc {
+    implicit object sinDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.sin(v)}
+  }
+
+  trait sinLowPrio { this: sin.type =>
+    implicit object sinFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.sin(v).toFloat}
+  }
+
+  object cos extends UFunc {
+    implicit object cosDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.cos(v)}
+  }
+
+  trait cosLowPrio { this: cos.type =>
+    implicit object cosFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.cos(v).toFloat}
+  }
+
+  object tan extends UFunc {
+    implicit object tanDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.tan(v)}
+  }
+
+  trait tanLowPrio { this: tan.type =>
+    implicit object tanFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.tan(v).toFloat}
+  }
+
+  object asin extends UFunc {
+    implicit object asinDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.asin(v)}
+  }
+
+
+  trait asinLowPrio { this: asin.type =>
+    implicit object asinFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.asin(v).toFloat}
+  }
+
+  object acos extends UFunc {
+    implicit object acosDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.acos(v)}
+  }
+
+  trait acosLowPrio { this: acos.type =>
+    implicit object acosFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.acos(v).toFloat}
+  }
+
+  object atan extends UFunc {
+    implicit object atanDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.atan(v)}
+  }
+
+  trait atanLowPrio { this: atan.type =>
+    implicit object atanFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.atan(v).toFloat}
+  }
+
+  object toDegrees extends UFunc {
+    implicit object toDegreesDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.toDegrees(v)}
+  }
+
+  trait toDegreesLowPrio { this: toDegrees.type =>
+    implicit object toDegreesFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.toDegrees(v).toFloat}
+  }
+
+  object toRadians extends UFunc {
+    implicit object toRadiansDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.toRadians(v)}
+  }
+
+  trait toRadiansLowPrio { this: toRadians.type =>
+    implicit object toRadiansFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.toRadians(v).toFloat}
+  }
+
+  object floor extends UFunc {
+    implicit object floorDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.floor(v)}
+  }
+
+  trait floorLowPrio { this: floor.type =>
+    implicit object floorFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.floor(v).toFloat}
+  }
+
+  object ceil extends UFunc {
+    implicit object ceilDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.ceil(v)}
+  }
+
+  trait ceilLowPrio { this: ceil.type =>
+    implicit object ceilFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.ceil(v).toFloat}
+  }
+
+  object round extends UFunc {
+    implicit object roundDoubleImpl extends Impl[Double, Long] { def apply(v: Double) = m.round(v)}
+  }
+
+  trait roundLowPrio { this: round.type =>
+    implicit object roundFloatImpl extends Impl[Float, Int] { def apply(v: Float) = m.round(v)}
+  }
+
+  object rint extends UFunc {
+    implicit object rintDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.rint(v)}
+  }
+
+  trait rintLowPrio { this: rint.type =>
+    implicit object rintFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.rint(v).toFloat}
+  }
+
+  object signum extends UFunc {
+    implicit object signumDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.signum(v)}
+  }
+
+  trait signumLowPrio { this: signum.type =>
+    implicit object signumFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.signum(v)}
+  }
+
+  object abs extends UFunc {
+    implicit object absDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.abs(v)}
+  }
+
+  trait absLowPrio { this: abs.type =>
+    implicit object absFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.abs(v)}
+  }
+
+
+
+
+  // implementations
+
 
   val inf, Inf = Double.PositiveInfinity
   val nan, NaN = Double.NaN
+
+  /**
+  * Computes the log of the gamma function.
+  *
+  * @return an approximation of the log of the Gamma function of x.
+  */
+  object lgamma extends UFunc {
+    implicit object lgammaImplDouble extends Impl[Double, Double] {
+      def apply(v: Double): Double = G.logGamma(v)
+    }
+  }
+
+
+  /**
+   * The derivative of the log gamma function
+   */
+  object digamma extends UFunc {
+    implicit object digammaImplDouble extends Impl[Double, Double] {
+      def apply(v: Double): Double = G.digamma(v)
+    }
+  }
+
+
+  /**
+   * The second derivative of the log gamma function
+   */
+  object trigamma extends UFunc {
+    implicit object trigammaImplDouble extends Impl[Double, Double] {
+      def apply(v: Double): Double = G.trigamma(v)
+    }
+  }
+
 
   /**
    * Evaluates the log of the generalized beta function.
@@ -43,7 +228,7 @@ package object numerics extends UniversalFuncs {
       var lgSum = 0.0
       for(v <- cc) {
         sum += v
-        lgSum += lgamma(v)
+        lgSum += lgamma(v:Double)
       }
       lgSum - lgamma(sum)
     }
@@ -67,32 +252,28 @@ package object numerics extends UniversalFuncs {
     }
   }
 
-  /**
-  * Computes the log of the gamma function.
-  *
-  * @return an approximation of the log of the Gamma function of x.
-  */
-  val lgamma:UFunc[Double, Double] = UFunc(G.logGamma _)
-
-  /**
-   * The derivative of the log gamma function
-   */
-  val digamma = UFunc(G.digamma _)
-
-  /**
-   * The second derivative of the log gamma function
-   */
-  val trigamma = UFunc(G.trigamma _)
 
   /**
    * An approximation to the error function
    */
-  val erf = UFunc{ Erf.erf _ }
+  object erf extends UFunc {
+    implicit object erfImplDouble extends Impl[Double, Double] {
+      def apply(v: Double): Double = Erf.erf(v)
+    }
+  }
+
+
 
   /**
    * An approximation to the complementary error function: erfc(x) = 1 - erfc(x)
    */
-  val erfc = UFunc{ Erf.erfc _ }
+  object erfc extends UFunc {
+    implicit object erfcImplDouble extends Impl[Double, Double] {
+      def apply(v: Double): Double = Erf.erfc(v)
+    }
+
+  }
+
 
   /**
    * The imaginary error function for real argument x.
@@ -102,38 +283,51 @@ package object numerics extends UniversalFuncs {
    *
    * @return
    */
-  val erfi:UFunc[Double, Double] = new UFunc[Double, Double]{
-    def apply(x:Double):Double = {
-      if(x < 0) -apply(-x)
-      else { // taylor expansion
-      var y = x
-        val x2 = x * x
-        var xx = x
-        var f = 1.0
-        var n  = 0
-        while (n < 100) {
-          n += 1
-          f /= n
-          xx *= x2
-          val del =  f * xx/(2*n+1)
-          if(del < 1E-8) n = 101
-          y += del
+  object erfi extends UFunc {
+    implicit object erfiImplDouble extends Impl[Double, Double] {
+      def apply(x:Double):Double = {
+        if(x < 0) -apply(-x)
+        else { // taylor expansion
+        var y = x
+          val x2 = x * x
+          var xx = x
+          var f = 1.0
+          var n  = 0
+          while (n < 100) {
+            n += 1
+            f /= n
+            xx *= x2
+            val del =  f * xx/(2*n+1)
+            if(del < 1E-8) n = 101
+            y += del
+          }
+          y = y*2/m.sqrt(Pi)
+          y
         }
-        y = y*2/m.sqrt(Pi)
-        y
       }
     }
+
   }
+
 
   /**
    * Inverse erf
    */
-  val erfinv = UFunc{ Erf.erfInv _ }
+  object erfinv extends UFunc {
+    implicit object erfinvImplDouble extends Impl[Double, Double] {
+      def apply(v: Double): Double = Erf.erfInv(v)
+    }
+
+  }
 
   /**
    * Inverse erfc
    */
-  val erfcinv = UFunc{ Erf.erfcInv _ }
+  object erfcinv extends UFunc {
+    implicit object erfcinvImplDouble extends Impl[Double, Double] {
+      def apply(v: Double): Double = Erf.erfcInv(v)
+    }
+  }
 
   /**
    * regularized incomplete gamma function  \int_0x \exp(-t)pow(t,a-1) dt / Gamma(a)
@@ -142,9 +336,6 @@ package object numerics extends UniversalFuncs {
    * @see http://commons.apache.org/proper/commons-math/apidocs/org/apache/commons/math3/special/Gamma.html#regularizedGammaP(double, double)
    */
   def gammp(a: Double, x: Double) = G.regularizedGammaP(a, x)
-
-
-
 
 
   /**
@@ -200,11 +391,13 @@ package object numerics extends UniversalFuncs {
         h *= del
         if (scala.math.abs(del-1.0) < 1E-7) n = 101
       }
+
       if(lgam != null) lgam(0) = gln
       if (n == 100) throw new ArithmeticException("Convergence failed")
-      else logDiff(gln, -x+a*log(x) + m.log(h))
+      else logDiff(gln, -x+a*m.log(x) + m.log(h))
     }
   }
+
 
   /**
   * Sums together things in log space.
@@ -213,8 +406,8 @@ package object numerics extends UniversalFuncs {
   def logSum(a: Double, b: Double) = {
     if (a.isNegInfinity) b
     else if (b.isNegInfinity) a
-    else if (a < b) b + scala.math.log1p(exp(a - b))
-    else a + scala.math.log1p(exp(b - a))
+    else if (a < b) b + scala.math.log1p(m.exp(a - b))
+    else a + scala.math.log1p(m.exp(b - a))
   }
 
   /**
@@ -238,7 +431,7 @@ package object numerics extends UniversalFuncs {
       max
     } else {
       val aux = (0.0 /: iter) {
-        (acc, x) => if (x.isNegInfinity) acc else acc + exp(x-max)
+        (acc, x) => if (x.isNegInfinity) acc else acc + m.exp(x-max)
       }
       if (aux != 0)
         max + scala.math.log(aux)
@@ -304,7 +497,11 @@ package object numerics extends UniversalFuncs {
    *
    *
    */
-  def sigmoid = UFunc { (x:Double) => 1/(1+scala.math.exp(-x)) }
+  object sigmoid extends UFunc {
+    implicit object sigmoidImplDouble extends Impl[Double, Double] {
+      def apply(x:Double) = 1/(1+scala.math.exp(-x))
+    }
+  }
 
   /**
    * Takes the difference of two doubles in log space. Requires a &gt b.
@@ -315,7 +512,7 @@ package object numerics extends UniversalFuncs {
    */
   def logDiff(a: Double, b: Double): Double = {
     require(a >= b)
-    if (a > b) a + log(1.0 - exp(b-a))
+    if (a > b) a + m.log(1.0 - m.exp(b-a))
     else Double.NegativeInfinity
   }
 
@@ -345,44 +542,21 @@ package object numerics extends UniversalFuncs {
   /**
    * The indicator function. 1.0 iff b, else 0.0
    */
-  val I: UFunc[Boolean, Double] = new UFunc[Boolean, Double] {
-    def apply(b: Boolean) = if (b) 1.0 else 0.0
+  object I extends UFunc {
+    implicit object iBoolImpl extends Impl[Boolean, Double] {
+      def apply(b: Boolean) = if (b) 1.0 else 0.0
+    }
   }
+
 
   /**
    * The indicator function in log space: 0.0 iff b else Double.NegativeInfinity
    */
-  val logI: UFunc[Boolean, Double] = new UFunc[Boolean, Double] {
-    def apply(b: Boolean) = if(b) 0.0 else Double.NegativeInfinity
+  object logI extends UFunc {
+    implicit object logIBoolImpl extends Impl[Boolean, Double] {
+      def apply(b: Boolean) = if (b) 0.0 else Double.NegativeInfinity
+    }
   }
-}
-
-
-trait UniversalFuncs {
-  import scala.{math=>m}
-  // TODO: these probably need to be manually specced out because boxing hurts so much
-  val exp = UFunc(m.exp _)
-  val log = UFunc(m.log _)
-  val log1p = UFunc(m.log1p _)
-
-  val sqrt = UFunc(m.sqrt _)
-
-  val sin = UFunc(m.sin _)
-  val cos = UFunc(m.cos _)
-  val tan = UFunc(m.tan _)
-
-  val asin = UFunc(m.asin _)
-  val acos = UFunc(m.acos _)
-  val atan = UFunc(m.atan _)
-  val toDegrees = UFunc(m.toDegrees _)
-  val toRadians = UFunc(m.toRadians _)
-
-  val floor = UFunc(m.floor _)
-  val ceil = UFunc(m.ceil _)
-  val round = UFunc(m.round _)
-  val rint = UFunc(m.rint _)
-  val signum = UFunc(m.signum(_:Double))
-  val abs = UFunc(m.abs(_:Double))
-
 
 }
+

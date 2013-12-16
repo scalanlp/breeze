@@ -456,6 +456,13 @@ object DenseMatrix extends LowPriorityDenseMatrix
     }
   }
 
+  // the canmapvalues implicit in UFunc should take care of this, but limits of scala type inference, blah blah blah
+  implicit def mapUFuncImpl[Tag, V,  U](implicit impl: UFunc.UImpl[Tag, V, U], canMapValues: CanMapValues[DenseMatrix[V], V, U, DenseMatrix[U]]): UFunc.UImpl[Tag, DenseMatrix[V], DenseMatrix[U]] = {
+    new UFunc.UImpl[Tag, DenseMatrix[V], DenseMatrix[U]] {
+      def apply(v: DenseMatrix[V]): DenseMatrix[U] = canMapValues.map(v, impl.apply)
+    }
+  }
+
   implicit def canMapValues[V, R:ClassTag] = {
     new CanMapValues[DenseMatrix[V],V,R,DenseMatrix[R]] {
       override def map(from : DenseMatrix[V], fn : (V=>R)) = {

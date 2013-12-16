@@ -17,7 +17,7 @@ package breeze.linalg
 
 import breeze.storage.DefaultArrayValue
 import breeze.math.{TensorSpace, Ring, Semiring, Field}
-import breeze.generic.{CanTransformValues, URFunc, UReduceable, CanMapValues}
+import breeze.generic._
 import collection.Set
 import operators._
 import support.{CanCreateZerosLike, CanZipMapValues, CanNorm, CanCopy}
@@ -115,6 +115,13 @@ object Counter extends CounterOps {
   (implicit defaultArrayValue : DefaultArrayValue[V])
   extends Counter[K,V] {
     def default = defaultArrayValue.value
+  }
+
+  // the canmapvalues implicit in UFunc should take care of this, but limits of scala type inference, blah blah blah
+  implicit def mapUFuncImpl[Tag, K, V,  U](implicit impl: UFunc.UImpl[Tag, V, U], canMapValues: CanMapValues[Counter[K, V], V, U, Counter[K, U]]): UFunc.UImpl[Tag, Counter[K, V], Counter[K, U]] = {
+    new UFunc.UImpl[Tag, Counter[K, V], Counter[K, U]] {
+      def apply(v: Counter[K, V]): Counter[K, U] = canMapValues.map(v, impl.apply)
+    }
   }
 
   implicit def canMapValues[K, V, RV:Semiring:DefaultArrayValue]: CanMapValues[Counter[K, V], V, RV, Counter[K, RV]]

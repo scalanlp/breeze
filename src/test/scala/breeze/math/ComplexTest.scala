@@ -25,6 +25,7 @@ import org.scalatest._
 import org.scalatest.junit._
 import org.scalatest.prop._
 import org.junit.runner.RunWith
+import breeze.linalg.DenseVector
 
 @RunWith(classOf[JUnitRunner])
 class ComplexTest extends FunSuite with Checkers {
@@ -69,6 +70,11 @@ class ComplexTest extends FunSuite with Checkers {
   test("List[Complex].sorted (test ComplexOrdering)") {
     val x = List((5 + 7 * i), (1 + 3 * i), (13 + 17 * i))
     assert(x.sorted === List((1 + 3 * i), (5 + 7 * i), (13 + 17 * i)))
+  }
+
+  test("universal function compatibility") {
+    import breeze.numerics.abs
+    assert(abs(DenseVector(Complex.i)) === DenseVector(1.0))
   }
 
   test("Only permit conversion to built-in numeric types when purely real.") {

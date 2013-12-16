@@ -32,13 +32,27 @@ trait CanMapValues[-From, +A, -B, +To] {
   def mapActive(from: From, fn: (A => B)): To
 }
 
-object CanMapValues {
+trait CanMapValuesLowPrio {
+
+  /*implicit*/ def canMapSelf[V, V2]: CanMapValues[V, V, V2, V2] = {
+    new CanMapValues[V, V, V2, V2] {
+      def map(from: V, fn: (V) => V2) = fn(from)
+      def mapActive(from: V, fn: (V) => V2) = fn(from)
+    }
+  }
+
+}
+
+object CanMapValues extends CanMapValuesLowPrio {
+
+  /*
   implicit def canMapSelf[V, V2]: CanMapValues[V, V, V2, V2] = {
     new CanMapValues[V, V, V2, V2] {
       def map(from: V, fn: (V) => V2) = fn(from)
       def mapActive(from: V, fn: (V) => V2) = fn(from)
     }
   }
+  */
 
   type Op[From, A, B, To] = CanMapValues[From, A, B, To]
 

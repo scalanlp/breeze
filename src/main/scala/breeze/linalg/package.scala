@@ -14,7 +14,7 @@ package breeze
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import generic.{CanCollapseAxis, CanMapValues, UReduceable, URFunc}
+import breeze.generic._
 import io.{CSVWriter, CSVReader}
 import linalg.operators._
 import breeze.linalg.support.{RangeSuffix, CanNorm, CanCopy}
@@ -25,6 +25,7 @@ import java.io.{FileWriter, File, FileReader, Reader}
 import scala.reflect.ClassTag
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
+import scala.Some
 
 
 /**

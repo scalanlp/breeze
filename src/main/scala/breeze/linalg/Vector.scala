@@ -16,7 +16,7 @@ package breeze.linalg
 */
 import operators._
 import scala.{specialized=>spec}
-import breeze.generic.CanMapValues
+import breeze.generic.{UFunc, CanMapValues}
 import breeze.math.{Complex, TensorSpace, Ring}
 import scala.math.BigInt
 import collection.immutable.BitSet
@@ -122,6 +122,13 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
         i += 1
       }
       result
+    }
+  }
+
+  // the canmapvalues implicit in UFunc should take care of this, but limits of scala type inference, blah blah blah
+  implicit def mapUFuncImpl[Tag, V,  U](implicit impl: UFunc.UImpl[Tag, V, U], canMapValues: CanMapValues[Vector[V], V, U, Vector[U]]): UFunc.UImpl[Tag, Vector[V], Vector[U]] = {
+    new UFunc.UImpl[Tag, Vector[V], Vector[U]] {
+      def apply(v: Vector[V]): Vector[U] = canMapValues.map(v, impl.apply)
     }
   }
 

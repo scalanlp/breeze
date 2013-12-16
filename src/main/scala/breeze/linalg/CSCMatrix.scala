@@ -20,7 +20,7 @@ import java.util
 import breeze.util.{ Terminal, ArrayUtil }
 import scala.collection.mutable
 import breeze.math.{Ring, Complex, Semiring}
-import breeze.generic.CanMapValues
+import breeze.generic.{UFunc, CanMapValues}
 import scala.reflect.ClassTag
 import breeze.macros.expand
 import scala.math.BigInt
@@ -182,6 +182,14 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]  with CSCMatrixOps {
     // TODO: res.compact()
     res
   }
+
+  // the canmapvalues implicit in UFunc should take care of this, but limits of scala type inference, blah blah blah
+  implicit def mapUFuncImpl[Tag, V,  U](implicit impl: UFunc.UImpl[Tag, V, U], canMapValues: CanMapValues[CSCMatrix[V], V, U, CSCMatrix[U]]): UFunc.UImpl[Tag, CSCMatrix[V], CSCMatrix[U]] = {
+    new UFunc.UImpl[Tag, CSCMatrix[V], CSCMatrix[U]] {
+      def apply(v: CSCMatrix[V]): CSCMatrix[U] = canMapValues.map(v, impl.apply)
+    }
+  }
+
 
   implicit def canMapValues[V, R:ClassTag:DefaultArrayValue:Semiring] = {
     val z = implicitly[DefaultArrayValue[R]].value

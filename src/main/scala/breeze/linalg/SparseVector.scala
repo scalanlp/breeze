@@ -20,7 +20,7 @@ import scala.{specialized=>spec}
 import breeze.storage.{DefaultArrayValue}
 import support.{CanZipMapValues, CanMapKeyValuePairs, CanCopy, CanSlice}
 import breeze.util.{Sorting, ArrayUtil}
-import breeze.generic.{CanTransformValues, CanMapValues, URFunc, UReduceable}
+import breeze.generic._
 import breeze.math.{Complex, Semiring, Ring, TensorSpace}
 import breeze.collection.mutable.SparseArray
 import java.util
@@ -204,6 +204,13 @@ object SparseVector extends SparseVectorOps with DenseVector_SparseVector_Ops wi
   }
 
   implicit def canCopySparse[@spec(Int, Float, Double) V: ClassTag: DefaultArrayValue] = new CanCopySparseVector[V]
+
+  // the canmapvalues implicit in UFunc should take care of this, but limits of scala type inference, blah blah blah
+  implicit def mapUFuncImpl[Tag, V,  U](implicit impl: UFunc.UImpl[Tag, V, U], canMapValues: CanMapValues[SparseVector[V], V, U, SparseVector[U]]): UFunc.UImpl[Tag, SparseVector[V], SparseVector[U]] = {
+    new UFunc.UImpl[Tag, SparseVector[V], SparseVector[U]] {
+      def apply(v: SparseVector[V]): SparseVector[U] = canMapValues.map(v, impl.apply)
+    }
+  }
 
   implicit def canMapValues[V, V2: ClassTag: DefaultArrayValue]:CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] = {
     new CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] {

@@ -23,6 +23,7 @@ import org.scalatest.prop._
 import org.scalatest.matchers.ShouldMatchers
 import org.junit.runner.RunWith
 import org.scalacheck.{Prop, Arbitrary}
+import breeze.math.Complex
 
 @RunWith(classOf[JUnitRunner])
 class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
@@ -116,7 +117,18 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
     erf(1E-4) should be (0.00011283791708567767 plusOrMinus 1E-8)
   }
 
+  test("basic ufunc tests") {
+    import breeze.numerics._
+    exp(DenseVector(0.0))
+    exp(DenseVector(0.0f))
+    log(DenseVector(Complex.zero))
+    log(SparseVector(Complex.zero))
+    log(SparseVector(0.0))
+    exp(SparseVector(0.0f))
+  }
+
   test("in place works for exp") {
+    import breeze.numerics._
     val v = DenseVector.rand(20)
     val expv = exp(v)
     exp.inPlace(v)

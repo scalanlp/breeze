@@ -21,9 +21,9 @@ import org.scalatest.prop._
 import org.scalacheck._
 import org.junit.runner.RunWith
 import org.scalatest.matchers.ShouldMatchers
-import scala.math._
 
 import breeze.linalg._
+import breeze.numerics._
 
 @RunWith(classOf[JUnitRunner])
 class ProjectedQuasiNewtonTest extends PropSpec with PropertyChecks with ShouldMatchers with OptimizeTestBaseTrait with VectorMatchers {
@@ -81,7 +81,7 @@ class ProjectedQuasiNewtonTest extends PropSpec with PropertyChecks with ShouldM
         val init = DenseVector.rand(a.size)
         val f = new DiffFunction[DenseVector[Double]] {
           def calculate(x: DenseVector[Double]) = {
-            (breeze.numerics.exp((x :^ 2.0) :- (a :* x)).sum, (x * 2.0 :- a) :* breeze.numerics.exp(x :^ 2.0 :- a :* x))
+            (exp((x :^ 2.0) :- (a :* x)).sum, (x * 2.0 :- a) :* exp(x :^ 2.0 :- a :* x))
           }
         }
 

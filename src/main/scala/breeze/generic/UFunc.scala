@@ -1,4 +1,7 @@
 package breeze.generic
+
+import breeze.macros.expand
+
 /*
  Copyright 2012 David Hall
 
@@ -17,30 +20,70 @@ package breeze.generic
 
 
 /**
- * "Universal" Functions that mimic numpy's. A universal function is defined
- * on anything that supports elementwise maps
+ * "Universal" Functions that mimic numpy's. A universal function is typically defined
+ * on anything that supports elementwise maps.
  *
  * For example, exp is a UFunc: it just calls exp on all components of the passed in
  * object.
- * @author dlwh
+ *
+ * Additional implementations can be added as implicits by extending a UFunc's
+ * Impl or InPlaceImpl traits. For example, [[breeze.math.Complex]] extends [[breeze.numerics.log]]
+ * with the following implicit:
+ *
+ * {{{
+    implicit object logComplexImpl extends breeze.numerics.log.Impl[Complex, Complex] { def apply(v: Complex) = v.log }
+ * }}}
+ *
+ *
+ *
+ *@author dlwh
  */
-trait UFunc[@specialized(Int, Float, Double) -V, @specialized(Int, Float, Double) +V2] {
-  def apply(v: V):V2
-  def apply[T,U](t: T)(implicit cmv: CanMapValues[T, V, V2, U]):U = cmv.map(t, apply _)
-  def applyActive[T,U](t: T)(implicit cmv: CanMapValues[T, V, V2, U]):U = cmv.mapActive(t, apply _)
+trait UFunc {
+  type Impl[V, VR] = UFunc.UImpl[this.type, V, VR]
 
-  def inPlace[T](t: T)(implicit ctv: CanTransformValues[T, V, V2]) { ctv.transform(t, apply _)}
+  trait InPlaceImpl[V] {
+    def apply(v: V)
+  }
+
+  final def apply[V, VR](v: V)(implicit impl: Impl[V, VR]):VR = impl(v)
+
+  final def inPlace[V](v: V)(implicit impl: InPlaceImpl[V]) = impl(v)
+
+  implicit def implicitDoubleUTag[V, VR](implicit conv: V=>Double, impl: Impl[Double, VR]):Impl[V, VR] = {
+    new Impl[V, VR] {
+      def apply(v: V): VR = impl(v)
+    }
+  }
+
+
+  implicit def canTransformValuesUFunc[Tag, T, V](implicit canTransform: CanTransformValues[T, V, V],
+                                                      impl: Impl[V, V]):InPlaceImpl[T] = {
+    new InPlaceImpl[T] {
+      def apply(v: T) = { canTransform.transform(v, impl.apply) }
+    }
+  }
 }
 
-object UFunc {
-  /**
-   * Creates a UFunc from the given Function1
-   * @param f
-   * @tparam V
-   * @tparam V2
-   * @return
-   */
-  def apply[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) V2](f: V=>V2):UFunc[V, V2] = new UFunc[V, V2] {
-    def apply(v: V) = f(v)
+trait UFuncLowPrio { this: UFunc.type =>
+  implicit def canMapValues[Tag, T, V,  U](implicit impl: UImpl[Tag, V, V], canMapValues: CanMapValues[T, V, V, U]): UImpl[Tag, T, U] = {
+    new UImpl[Tag, T, U] {
+      def apply(v: T): U = canMapValues.map(v, impl.apply)
+    }
   }
+}
+
+object UFunc extends UFuncLowPrio {
+  trait UImpl[Tag, V, VR] {
+    def apply(v: V):VR
+  }
+
+  /*
+  implicit def canMapValues[Tag, T, V, VR, U](implicit impl: UImpl[Tag, V, VR], canMapValues: CanMapValues[T, V, VR, U]): UImpl[Tag, T, U] = {
+    new UImpl[Tag, T, U] {
+      def apply(v: T): U = canMapValues.map(v, impl.apply)
+    }
+  }
+  */
+
+
 }
