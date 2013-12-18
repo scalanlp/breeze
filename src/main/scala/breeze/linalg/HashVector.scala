@@ -3,7 +3,7 @@ package breeze.linalg
 import breeze.collection.mutable.OpenAddressHashArray
 import breeze.linalg.operators._
 import breeze.storage.{ConfigurableDefault, DefaultArrayValue}
-import breeze.generic.{UFunc, CanMapValues, URFunc}
+import breeze.generic.{UFunc2ZippingImplicits, UFunc, CanMapValues, URFunc}
 import support.{CanZipMapValues, CanMapKeyValuePairs, CanCopy}
 import breeze.math.{Semiring, TensorSpace, Ring, Complex}
 import scala.reflect.ClassTag
@@ -79,7 +79,8 @@ object HashVector extends HashVectorOps
                           with DenseVector_HashVector_Ops
                           with HashVector_DenseVector_Ops
                           with HashVector_SparseVector_Ops
-                          with SparseVector_HashVector_Ops {
+                          with SparseVector_HashVector_Ops
+                          with UFunc2ZippingImplicits[HashVector] {
   def zeros[@specialized(Double, Float, Int) V: ClassTag:DefaultArrayValue](size: Int) = {
     new HashVector(new OpenAddressHashArray[V](size))
   }

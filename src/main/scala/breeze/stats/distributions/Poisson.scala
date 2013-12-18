@@ -75,10 +75,10 @@ case class Poisson(mean: Double)(implicit rand: RandBasis=Rand) extends Discrete
 
   def probabilityOf(k:Int) = math.exp(logProbabilityOf(k))
   override def logProbabilityOf(k:Int) = {
-    -mean + k * log(mean) - lgamma(k.toDouble+1)
+    -mean + k * log(mean) - lgamma(k + 1.0)
   }
 
-  def cdf(k:Int) = 1 - gammp(k+1, mean)
+  def cdf(k:Int) = 1 - gammp(k + 1.0, mean)
 
   def variance = mean
   def mode = math.ceil(mean) - 1

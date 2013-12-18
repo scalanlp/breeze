@@ -63,7 +63,6 @@ package object linalg extends LinearAlgebra {
     diag(m)
   }
 
-
   /**
    * Creates a Diagonal dense matrix from this vector.
    *

@@ -243,6 +243,7 @@ extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
     }
   }
 
+
   def delete(cols: Seq[Int], axis: Axis._1.type):DenseMatrix[V] = {
     implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
     if(cols.isEmpty) copy
@@ -265,13 +266,15 @@ extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
       DenseMatrix.horzcat(matrices:_*)
     }
   }
+
 }
 
 object DenseMatrix extends LowPriorityDenseMatrix
                            with DenseMatrixOps
                            with DenseMatrixMultOps
                            with DenseMatrixMultiplyStuff
-                           with MatrixConstructors[DenseMatrix]  {
+                           with MatrixConstructors[DenseMatrix]
+                           with UFunc2ZippingImplicits[DenseMatrix] {
   /**
    * The standard way to create an empty matrix, size is rows * cols
    */

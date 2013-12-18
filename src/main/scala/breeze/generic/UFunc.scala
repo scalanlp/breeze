@@ -1,6 +1,7 @@
 package breeze.generic
 
 import breeze.macros.expand
+import breeze.linalg.support.CanZipMapValues
 
 /*
  Copyright 2012 David Hall
@@ -39,13 +40,17 @@ import breeze.macros.expand
  *@author dlwh
  */
 trait UFunc {
+  final def apply[V, VR](v: V)(implicit impl: Impl[V, VR]):VR = impl(v)
+  final def apply[V1, V2, VR](v1: V1, v2: V2)(implicit impl: Impl2[V1, V2, VR]):VR = impl(v1, v2)
+
   type Impl[V, VR] = UFunc.UImpl[this.type, V, VR]
+  type Impl2[V1, V2, VR] = UFunc.UImpl2[this.type, V1, V2, VR]
+
 
   trait InPlaceImpl[V] {
     def apply(v: V)
   }
 
-  final def apply[V, VR](v: V)(implicit impl: Impl[V, VR]):VR = impl(v)
 
   final def inPlace[V](v: V)(implicit impl: InPlaceImpl[V]) = impl(v)
 
@@ -72,9 +77,13 @@ trait UFuncLowPrio { this: UFunc.type =>
   }
 }
 
-object UFunc extends UFuncLowPrio {
+object UFunc extends UFuncLowPrio with UFunc2LowPrio {
   trait UImpl[Tag, V, VR] {
     def apply(v: V):VR
+  }
+
+  trait UImpl2[Tag, V1, V2, VR] {
+    def apply(v: V1, v2: V2):VR
   }
 
   /*
@@ -87,3 +96,51 @@ object UFunc extends UFuncLowPrio {
 
 
 }
+
+import breeze.generic.UFunc.UImpl2
+
+trait UFunc2LowPrio { this: UFunc.type =>
+  implicit def canZipMapValues[Tag, T, V1, VR, U](implicit impl: UImpl2[Tag, V1, V1, VR], canZipMapValues: CanZipMapValues[T, V1, VR, U]): UImpl2[Tag, T, T, U] = {
+    new UImpl2[Tag, T, T, U] {
+      def apply(v1: T, v2: T): U = canZipMapValues.map(v1, v2, impl.apply)
+    }
+  }
+
+  /*
+  implicit def canMapV1Values[Tag, T, V1, V2, VR, U](implicit impl: UImpl2[Tag, V1, V2, VR], canMapValues: CanMapValues[T, V1, VR, U]): UImpl2[Tag, T, V2, U] = {
+    new UImpl2[Tag, T, V2, U] {
+      def apply(v1: T, v2: V2): U = canMapValues.map(v1, impl.apply(_, v2))
+    }
+  }
+
+  implicit def canMapV2Values[Tag, T, V1, V2, VR, U](implicit impl: UImpl2[Tag, V1, V2, VR], canMapValues: CanMapValues[T, V2, VR, U]): UImpl2[Tag, V1, T, U] = {
+    new UImpl2[Tag, V1, T, U] {
+      def apply(v1: V1, v2: T): U = canMapValues.map(v2, impl.apply(v1, _))
+    }
+  }
+  */
+}
+
+/* Sadly we have to specialize these for types we want to use. Rawr */
+trait UFunc2ZippingImplicits[T[_]] {
+
+  implicit def canZipMapValuesUImpl[Tag, V1, VR, U](implicit impl: UImpl2[Tag, V1, V1, VR], canZipMapValues: CanZipMapValues[T[V1], V1, VR, U]): UImpl2[Tag, T[V1], T[V1], U] = {
+    new UImpl2[Tag, T[V1], T[V1], U] {
+      def apply(v1: T[V1], v2: T[V1]): U = canZipMapValues.map(v1, v2, impl.apply)
+    }
+  }
+
+  implicit def canMapV1DV[Tag, V1, V2, VR, U](implicit impl: UImpl2[Tag, V1, V2, VR], canMapValues: CanMapValues[T[V1], V1, VR, U]): UImpl2[Tag, T[V1], V2, U] = {
+    new UImpl2[Tag, T[V1], V2, U] {
+      def apply(v1: T[V1], v2: V2): U = canMapValues.map(v1, impl.apply(_, v2))
+    }
+  }
+
+  implicit def canMapV2Values[Tag, V1, V2, VR, U](implicit impl: UImpl2[Tag, V1, V2, VR], canMapValues: CanMapValues[T[V2], V2, VR, U]): UImpl2[Tag, V1, T[V2], U] = {
+    new UImpl2[Tag, V1, T[V2], U] {
+      def apply(v1: V1, v2: T[V2]): U = canMapValues.map(v2, impl.apply(v1, _))
+    }
+  }
+
+}
+

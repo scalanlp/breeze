@@ -18,7 +18,6 @@ package breeze
 
 import breeze.generic.{URFunc, UFunc}
 import scala.math._
-import scala.{math=>m}
 import org.apache.commons.math3.special.{Gamma => G, Erf}
 
 /**
@@ -178,22 +177,23 @@ package object numerics {
   }
 
 
-
-
-  // implementations
-
-
   val inf, Inf = Double.PositiveInfinity
   val nan, NaN = Double.NaN
 
   /**
-  * Computes the log of the gamma function.
-  *
-  * @return an approximation of the log of the Gamma function of x.
-  */
+   * Computes the log of the gamma function. The UFunc2 version (i.e. two parameter version)
+   * is the log Incomplete gamma function = \log \int_0x \exp(-t)pow(t,a-1) dt
+   *
+   * @return an approximation of the log of the Gamma function of x.
+   */
   object lgamma extends UFunc {
     implicit object lgammaImplDouble extends Impl[Double, Double] {
       def apply(v: Double): Double = G.logGamma(v)
+    }
+
+
+    implicit object lgammaImplDoubleDouble extends Impl2[Double, Double, Double] {
+      def apply(v1: Double, v2: Double): Double = _lgamma(v1, v2)
     }
   }
 
@@ -331,19 +331,26 @@ package object numerics {
 
   /**
    * regularized incomplete gamma function  \int_0x \exp(-t)pow(t,a-1) dt / Gamma(a)
-   * @param a
-   * @param x
    * @see http://commons.apache.org/proper/commons-math/apidocs/org/apache/commons/math3/special/Gamma.html#regularizedGammaP(double, double)
    */
-  def gammp(a: Double, x: Double) = G.regularizedGammaP(a, x)
-
+  object gammp extends UFunc {
+    implicit object gammpImplDoubleDouble extends Impl2[Double, Double, Double] {
+      def apply(v1: Double, v2: Double): Double = G.regularizedGammaP(v1, v2)
+    }
+  }
 
   /**
-  * log Incomplete gamma function = \log \int_0x \exp(-t)pow(t,a-1) dt
-   *
-   * Based on NR
-  */
-  def lgamma(a: Double, x: Double) = _lgamma(a, x)
+   * regularized incomplete gamma function  \int_0x \exp(-t)pow(t,a-1) dt / Gamma(a)
+   * @see http://commons.apache.org/proper/commons-math/apidocs/org/apache/commons/math3/special/Gamma.html#regularizedGammaP(double, double)
+   */
+  object gammq extends UFunc {
+    implicit object gammqImplDoubleDouble extends Impl2[Double, Double, Double] {
+      def apply(v1: Double, v2: Double): Double = G.regularizedGammaP(v1, v2)
+    }
+  }
+
+
+
 
   /**
   * log Incomplete gamma function = \log \int_0x \exp(-t)pow(t,a-1) dt

@@ -200,7 +200,8 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
 object DenseVector extends VectorConstructors[DenseVector] with DenseVector_GenericOps
                       with DenseVectorOps
                       with DenseVector_OrderingOps
-                      with DenseVector_SpecialOps {
+                      with DenseVector_SpecialOps
+                      with UFunc2ZippingImplicits[DenseVector] {
   def zeros[@spec(Double, Float, Int) V: ClassTag : DefaultArrayValue](size: Int) = {
     val data = new Array[V](size)
     if(size != 0 && data(0) != implicitly[DefaultArrayValue[V]].value)
@@ -285,6 +286,28 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
       def apply(v: DenseVector[V]): DenseVector[U] = canMapValues.map(v, impl.apply)
     }
   }
+  /*
+
+  implicit def canZipMapValuesUImpl[Tag, V1, VR, U](implicit impl: UImpl2[Tag, V1, V1, VR], canZipMapValues: CanZipMapValues[DenseVector[V1], V1, VR, U]): UImpl2[Tag, DenseVector[V1], DenseVector[V1], U] = {
+    new UImpl2[Tag, DenseVector[V1], DenseVector[V1], U] {
+      def apply(v1: DenseVector[V1], v2: DenseVector[V1]): U = canZipMapValues.map(v1, v2, impl.apply)
+    }
+  }
+
+  implicit def canMapV1DV[Tag, V1, V2, VR, U](implicit impl: UImpl2[Tag, V1, V2, VR], canMapValues: CanMapValues[DenseVector[V1], V1, VR, U]): UImpl2[Tag, DenseVector[V1], V2, U] = {
+    new UImpl2[Tag, DenseVector[V1], V2, U] {
+      def apply(v1: DenseVector[V1], v2: V2): U = canMapValues.map(v1, impl.apply(_, v2))
+    }
+  }
+
+  implicit def canMapV2Values[Tag, V1, V2, VR, U](implicit impl: UImpl2[Tag, V1, V2, VR], canMapValues: CanMapValues[DenseVector[V2], V2, VR, U]): UImpl2[Tag, V1, DenseVector[V2], U] = {
+    new UImpl2[Tag, V1, DenseVector[V2], U] {
+      def apply(v1: V1, v2: DenseVector[V2]): U = canMapValues.map(v2, impl.apply(v1, _))
+    }
+  }
+
+  */
+
 
   implicit def canMapValues[V, V2](implicit man: ClassTag[V2]):CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] = {
     new CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] {

@@ -151,7 +151,10 @@ class SparseVector[@spec(Double,Int, Float) E](val array: SparseArray[E])
 
 }
 
-object SparseVector extends SparseVectorOps with DenseVector_SparseVector_Ops with SparseVector_DenseVector_Ops  {
+object SparseVector extends SparseVectorOps
+            with DenseVector_SparseVector_Ops
+            with SparseVector_DenseVector_Ops
+            with UFunc2ZippingImplicits[SparseVector] {
   def zeros[@spec(Double, Float, Int) V: ClassTag:DefaultArrayValue](size: Int) = new SparseVector(Array.empty, Array.empty[V], 0, size)
   def apply[@spec(Double, Float, Int) V:DefaultArrayValue](values: Array[V]) = new SparseVector(Array.range(0,values.length), values, values.length, values.length)
 

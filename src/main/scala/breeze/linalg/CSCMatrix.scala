@@ -20,7 +20,7 @@ import java.util
 import breeze.util.{ Terminal, ArrayUtil }
 import scala.collection.mutable
 import breeze.math.{Ring, Complex, Semiring}
-import breeze.generic.{UFunc, CanMapValues}
+import breeze.generic.{UFunc2ZippingImplicits, UFunc, CanMapValues}
 import scala.reflect.ClassTag
 import breeze.macros.expand
 import scala.math.BigInt
@@ -160,7 +160,7 @@ class CSCMatrix[@specialized(Int, Float, Double) V:DefaultArrayValue] private[li
 
 }
 
-object CSCMatrix extends MatrixConstructors[CSCMatrix]  with CSCMatrixOps {
+object CSCMatrix extends MatrixConstructors[CSCMatrix]  with CSCMatrixOps with UFunc2ZippingImplicits[CSCMatrix] {
   def zeros[@specialized(Int, Float, Double) V:ClassTag:DefaultArrayValue](rows: Int, cols: Int, initialNonzero: Int) = {
     new CSCMatrix[V](new Array(initialNonzero), rows, cols, new Array(cols + 1), 0, new Array(initialNonzero))
   }
