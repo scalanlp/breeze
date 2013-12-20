@@ -19,7 +19,6 @@ package breeze
 import breeze.generic.{URFunc, UFunc}
 import scala.math._
 import org.apache.commons.math3.special.{Gamma => G, Erf}
-import breeze.linalg.DenseVector
 
 /**
  * Contains several standard numerical functions as UFuncs,
