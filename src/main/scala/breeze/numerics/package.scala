@@ -37,6 +37,24 @@ package object numerics {
     implicit object expFloatImpl extends Impl[Float, Float] { def apply(v: Float) = java.lang.Math.exp(v).toFloat}
   }
 
+  object pow extends UFunc {
+    implicit object powDoubleDoubleImpl extends Impl2[Double, Double, Double] {
+      def apply(v: Double, v2: Double) = java.lang.Math.pow(v, v2)
+    }
+
+    implicit object powFloatFloatImpl extends Impl2[Float, Float, Float] {
+      def apply(v: Float, v2: Float) = java.lang.Math.pow(v, v2).toFloat
+    }
+
+    implicit object powDoubleIntImpl extends Impl2[Double, Int, Double] {
+      def apply(v: Double, v2: Int) = java.lang.Math.pow(v, v2)
+    }
+
+    implicit object powFloatIntImpl extends Impl2[Float, Int, Float] {
+      def apply(v: Float, v2: Int) = java.lang.Math.pow(v, v2).toFloat
+    }
+  }
+
   object log extends UFunc {
     implicit object logDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.log(v)}
   }
