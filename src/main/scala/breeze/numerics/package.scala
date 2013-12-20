@@ -19,6 +19,7 @@ package breeze
 import breeze.generic.{URFunc, UFunc}
 import scala.math._
 import org.apache.commons.math3.special.{Gamma => G, Erf}
+import breeze.linalg.DenseVector
 
 /**
  * Contains several standard numerical functions as UFuncs,
@@ -57,141 +58,89 @@ package object numerics {
 
   object log extends UFunc {
     implicit object logDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.log(v)}
-  }
-
-  trait logLowPrioFloat { this: log.type =>
     implicit object logFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.log(v).toFloat}
   }
 
+
   object log1p extends UFunc {
     implicit object log1pDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.log1p(v)}
-  }
-
-  trait log1pLowPrioFloat { this: log1p.type =>
     implicit object log1pFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.log1p(v).toFloat}
   }
 
   object sqrt extends UFunc {
     implicit object sqrtDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.sqrt(v)}
-  }
-
-  trait sqrtLowPrio { this: sqrt.type =>
     implicit object sqrtFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.sqrt(v).toFloat}
   }
 
   object sin extends UFunc {
     implicit object sinDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.sin(v)}
-  }
-
-  trait sinLowPrio { this: sin.type =>
     implicit object sinFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.sin(v).toFloat}
   }
 
   object cos extends UFunc {
     implicit object cosDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.cos(v)}
-  }
-
-  trait cosLowPrio { this: cos.type =>
     implicit object cosFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.cos(v).toFloat}
   }
 
   object tan extends UFunc {
     implicit object tanDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.tan(v)}
-  }
-
-  trait tanLowPrio { this: tan.type =>
     implicit object tanFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.tan(v).toFloat}
   }
 
   object asin extends UFunc {
     implicit object asinDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.asin(v)}
-  }
-
-
-  trait asinLowPrio { this: asin.type =>
     implicit object asinFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.asin(v).toFloat}
   }
 
   object acos extends UFunc {
     implicit object acosDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.acos(v)}
-  }
-
-  trait acosLowPrio { this: acos.type =>
     implicit object acosFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.acos(v).toFloat}
   }
 
   object atan extends UFunc {
     implicit object atanDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.atan(v)}
-  }
-
-  trait atanLowPrio { this: atan.type =>
     implicit object atanFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.atan(v).toFloat}
   }
 
   object toDegrees extends UFunc {
     implicit object toDegreesDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.toDegrees(v)}
-  }
-
-  trait toDegreesLowPrio { this: toDegrees.type =>
     implicit object toDegreesFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.toDegrees(v).toFloat}
   }
 
   object toRadians extends UFunc {
     implicit object toRadiansDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.toRadians(v)}
-  }
-
-  trait toRadiansLowPrio { this: toRadians.type =>
     implicit object toRadiansFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.toRadians(v).toFloat}
   }
 
   object floor extends UFunc {
     implicit object floorDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.floor(v)}
-  }
-
-  trait floorLowPrio { this: floor.type =>
     implicit object floorFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.floor(v).toFloat}
   }
 
   object ceil extends UFunc {
     implicit object ceilDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.ceil(v)}
-  }
-
-  trait ceilLowPrio { this: ceil.type =>
     implicit object ceilFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.ceil(v).toFloat}
   }
 
   object round extends UFunc {
     implicit object roundDoubleImpl extends Impl[Double, Long] { def apply(v: Double) = m.round(v)}
-  }
-
-  trait roundLowPrio { this: round.type =>
     implicit object roundFloatImpl extends Impl[Float, Int] { def apply(v: Float) = m.round(v)}
   }
 
   object rint extends UFunc {
     implicit object rintDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.rint(v)}
-  }
-
-  trait rintLowPrio { this: rint.type =>
     implicit object rintFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.rint(v).toFloat}
   }
 
   object signum extends UFunc {
     implicit object signumDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.signum(v)}
-  }
-
-  trait signumLowPrio { this: signum.type =>
     implicit object signumFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.signum(v)}
   }
 
   object abs extends UFunc {
     implicit object absDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.abs(v)}
-  }
-
-  trait absLowPrio { this: abs.type =>
     implicit object absFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.abs(v)}
   }
-
 
   val inf, Inf = Double.PositiveInfinity
   val nan, NaN = Double.NaN
