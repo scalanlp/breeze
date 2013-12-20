@@ -208,13 +208,6 @@ object SparseVector extends SparseVectorOps
 
   implicit def canCopySparse[@spec(Int, Float, Double) V: ClassTag: DefaultArrayValue] = new CanCopySparseVector[V]
 
-  // the canmapvalues implicit in UFunc should take care of this, but limits of scala type inference, blah blah blah
-  implicit def mapUFuncImpl[Tag, V,  U](implicit impl: UFunc.UImpl[Tag, V, U], canMapValues: CanMapValues[SparseVector[V], V, U, SparseVector[U]]): UFunc.UImpl[Tag, SparseVector[V], SparseVector[U]] = {
-    new UFunc.UImpl[Tag, SparseVector[V], SparseVector[U]] {
-      def apply(v: SparseVector[V]): SparseVector[U] = canMapValues.map(v, impl.apply)
-    }
-  }
-
   implicit def canMapValues[V, V2: ClassTag: DefaultArrayValue]:CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] = {
     new CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] {
       /**Maps all key-value pairs from the given collection. */

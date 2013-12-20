@@ -27,16 +27,14 @@ import org.apache.commons.math3.special.{Gamma => G, Erf}
  */
 package object numerics {
 
+
   import scala.{math=>m}
 
   // TODO: I should probably codegen this.
 
-  object exp extends UFunc with expFloatLowPrio {
+  object exp extends UFunc {
     implicit object expDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = java.lang.Math.exp(v)}
-  }
-
-  trait expFloatLowPrio extends UFunc { this: exp.type =>
-    implicit val expFloatImpl = new Impl[Float, Float] { def apply(v: Float) = java.lang.Math.exp(v).toFloat}
+    implicit object expFloatImpl extends Impl[Float, Float] { def apply(v: Float) = java.lang.Math.exp(v).toFloat}
   }
 
   object log extends UFunc {

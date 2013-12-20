@@ -39,7 +39,7 @@ import breeze.linalg.support.CanZipMapValues
  *
  *@author dlwh
  */
-trait UFunc {
+trait UFunc extends UFuncX {
   final def apply[V, VR](v: V)(implicit impl: Impl[V, VR]):VR = impl(v)
   final def apply[V1, V2, VR](v1: V1, v2: V2)(implicit impl: Impl2[V1, V2, VR]):VR = impl(v1, v2)
 
@@ -67,17 +67,24 @@ trait UFunc {
       def apply(v: T) = { canTransform.transform(v, impl.apply) }
     }
   }
-}
 
-trait UFuncLowPrio { this: UFunc.type =>
-  implicit def canMapValues[Tag, T, V,  U](implicit impl: UImpl[Tag, V, V], canMapValues: CanMapValues[T, V, V, U]): UImpl[Tag, T, U] = {
-    new UImpl[Tag, T, U] {
-      def apply(v: T): U = canMapValues.map(v, impl.apply)
+  implicit def fromCanMapValues[T[_], V, V2, U[_]](implicit impl: Impl[V, V2], canMapValues: CanMapValues[T[V], V, V2, U[V2]]): Impl[T[V], U[V2]] = {
+    new Impl[T[V], U[V2]] {
+      def apply(v: T[V]): U[V2] = canMapValues.map(v, impl.apply)
     }
   }
 }
 
-object UFunc extends UFuncLowPrio with UFunc2LowPrio {
+trait UFuncX { this: UFunc =>
+  implicit def fromLowOrderCanMapValues[T, V, V2, U](implicit canMapValues: CanMapValues[T, V, V2, U], impl: Impl[V, V2]): Impl[T, U] = {
+    new Impl[T, U] {
+      def apply(v: T): U = canMapValues.map(v, impl.apply)
+    }
+  }
+
+}
+
+object UFunc extends UFunc2LowPrio {
   trait UImpl[Tag, V, VR] {
     def apply(v: V):VR
   }
@@ -85,6 +92,8 @@ object UFunc extends UFuncLowPrio with UFunc2LowPrio {
   trait UImpl2[Tag, V1, V2, VR] {
     def apply(v: V1, v2: V2):VR
   }
+
+
 
   /*
   implicit def canMapValues[Tag, T, V, VR, U](implicit impl: UImpl[Tag, V, VR], canMapValues: CanMapValues[T, V, VR, U]): UImpl[Tag, T, U] = {

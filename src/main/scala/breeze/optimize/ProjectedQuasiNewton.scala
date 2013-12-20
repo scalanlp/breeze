@@ -58,7 +58,7 @@ class CompactHessian(M: DenseMatrix[Double], Y: RingBuffer[DenseVector[Double]],
       v * sigma - u
     }
   }
-  lazy val N = DenseMatrix.horzcat(S.t * sigma, Y.t)
+  lazy val N = DenseMatrix.horzcat(collectionOfVectorsToMatrix(S).t * sigma, collectionOfVectorsToMatrix(Y).t)
 }
 
 class ProjectedQuasiNewton(tolerance: Double = 1e-6,

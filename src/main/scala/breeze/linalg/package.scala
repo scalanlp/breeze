@@ -21,11 +21,10 @@ import breeze.linalg.support.{RangeSuffix, CanNorm, CanCopy}
 import math.Semiring
 import org.netlib.util.intW
 import storage.DefaultArrayValue
-import java.io.{FileWriter, File, FileReader, Reader}
+import java.io.{File, FileReader}
 import scala.reflect.ClassTag
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
-import scala.Some
 
 
 /**
@@ -39,44 +38,12 @@ import scala.Some
  *
  * @author dlwh
  */
-package object linalg extends LinearAlgebra {
+package object linalg {
 
   /**
    * Computes y += x * a, possibly doing less work than actually doing that operation
    */
   def axpy[A, X, Y](a: A, x: X, y: Y)(implicit axpy: CanAxpy[A, X, Y]) { axpy(a,x,y) }
-
-  /**
-   * returns a vector along the diagonal of v.
-   * Requires a square matrix?
-   * @param m the matrix
-   * @tparam V
-   */
-  def diag[@specialized(Double) V](m: DenseMatrix[V]): DenseVector[V] = {
-    require(m.rows == m.cols, "m must be square")
-    new DenseVector(m.data, m.offset, m.majorStride + 1, m.rows)
-  }
-
-  // there's a weird compile error I don't understand if I try to use diag in DenseMatrix.scala directly.
-  // this is a crappy little function to deal with it.
-  private[linalg] def diagM[@specialized(Double) V](m: DenseMatrix[V]): DenseVector[V] = {
-    diag(m)
-  }
-
-  /**
-   * Creates a Diagonal dense matrix from this vector.
-   *
-   * TODO make a real diagonal matrix class
-   * @param t
-   * @tparam V
-   * @return
-   */
-  // TODO: make a real diagonal matrix class
-  def diag[V:ClassTag:DefaultArrayValue](t: DenseVector[V]): DenseMatrix[V] = {
-    val r = DenseMatrix.zeros[V](t.length, t.length)
-    diag(r) := t
-    r
-  }
 
   /**
    * Generates a vector of linearly spaced values between a and b (inclusive).
@@ -425,9 +392,6 @@ package object linalg extends LinearAlgebra {
   }
 
 
-}
-
-package linalg {
 
 import math.Ring
 import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
@@ -437,7 +401,6 @@ import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
  *
  * @author dlwh,dramage,retronym,afwlehmann,lancelet
  */
-trait LinearAlgebra {
   //  import breeze.linalg._
 
   @inline private def requireNonEmptyMatrix[V](mat: Matrix[V]) =
@@ -1017,26 +980,4 @@ trait LinearAlgebra {
 
 }
 
-object LinearAlgebra extends LinearAlgebra
-
-
-/**
- * Exception thrown if a routine has not converged.
- */
-class NotConvergedException(val reason: NotConvergedException.Reason, msg: String = "")
-  extends RuntimeException(msg)
-
-object NotConvergedException {
-  trait Reason
-  object Iterations extends Reason
-  object Divergence extends Reason
-  object Breakdown extends Reason
-}
-
-class MatrixNotSymmetricException extends IllegalArgumentException("Matrix is not symmetric")
-
-class MatrixNotSquareException extends IllegalArgumentException("Matrix is not square")
-
-class MatrixEmptyException extends IllegalArgumentException("Matrix is empty")
-}
 

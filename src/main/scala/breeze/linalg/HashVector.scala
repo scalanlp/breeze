@@ -118,15 +118,6 @@ object HashVector extends HashVectorOps
 
   implicit def canCopyHash[@specialized(Int, Float, Double) V: ClassTag: DefaultArrayValue] = new CanCopyHashVector[V]
 
-  // the canmapvalues implicit in UFunc should take care of this, but limits of scala type inference, blah blah blah
-  implicit def mapUFuncImpl[Tag, V,  U](implicit impl: UFunc.UImpl[Tag, V, U], canMapValues: CanMapValues[HashVector[V], V, U, HashVector[U]]): UFunc.UImpl[Tag, HashVector[V], HashVector[U]] = {
-    new UFunc.UImpl[Tag, HashVector[V], HashVector[U]] {
-      def apply(v: HashVector[V]): HashVector[U] = canMapValues.map(v, impl.apply)
-    }
-  }
-
-
-
   implicit def canMapValues[V, V2: ClassTag: DefaultArrayValue]:CanMapValues[HashVector[V], V, V2, HashVector[V2]] = {
     new CanMapValues[HashVector[V], V, V2, HashVector[V2]] {
       /**Maps all key-value pairs from the given collection. */

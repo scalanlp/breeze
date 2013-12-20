@@ -127,6 +127,7 @@ object Multinomial {
 
         val sum = stats.t.sum
 
+
         val exped = numerics.exp(nn)
         val grad = exped * sum - stats.t
 

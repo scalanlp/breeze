@@ -19,7 +19,6 @@ import breeze.storage.DefaultArrayValue
 import scala.reflect.ClassTag
 import breeze.macros.expand
 import breeze.linalg.support.CanNorm
-import breeze.linalg.DenseVector
 import breeze.generic.CanMapValues
 import breeze.numerics.log
 import breeze.generic.UFunc.UImpl
@@ -394,11 +393,11 @@ object Complex { outer =>
   implicit object logComplexImpl extends breeze.numerics.log.Impl[Complex, Complex] { def apply(v: Complex) = v.log}
   implicit object absComplexImpl extends breeze.numerics.abs.Impl[Complex, Double] { def apply(v: Complex) = v.abs}
 
-  implicit def canMapValues[Tag, T, U](implicit impl: UImpl[Tag, Complex, Complex], canMapValues: CanMapValues[T, Complex, Complex, U]): UImpl[Tag, T, U] = {
-    new UImpl[Tag, T, U] {
-      def apply(v: T): U = canMapValues.map(v, impl.apply)
-    }
-  }
+//  implicit def canMapValues[Tag, T, U](implicit impl: UImpl[Tag, Complex, Complex], canMapValues: CanMapValues[T, Complex, Complex, U]): UImpl[Tag, T, U] = {
+//    new UImpl[Tag, T, U] {
+//      def apply(v: T): U = canMapValues.map(v, impl.apply)
+//    }
+//  }
 
 }
 

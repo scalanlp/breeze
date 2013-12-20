@@ -162,7 +162,7 @@ extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
   def activeKeysIterator = keysIterator
 
   /** Computes the sum along the diagonal. */
-  def trace(implicit numeric: Numeric[V]) = diagM(this:DenseMatrix[V]).sum
+  def trace(implicit numeric: Numeric[V]) = diag(this:DenseMatrix[V]).sum
 
   override def equals(p1: Any) = p1 match {
     case x: DenseMatrix[_] =>
@@ -294,7 +294,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
    */
   def eye[@specialized(Int, Float, Double) V: ClassTag:DefaultArrayValue:Semiring](dim: Int) = {
     val r = zeros[V](dim, dim)
-    breeze.linalg.diag(r) := implicitly[Semiring[V]].one
+    breeze.linalg.diag.diagDMDVImpl.apply(r) := implicitly[Semiring[V]].one
     r
   }
 
@@ -456,13 +456,6 @@ object DenseMatrix extends LowPriorityDenseMatrix
           m2(::, 0)
         }
       }
-    }
-  }
-
-  // the canmapvalues implicit in UFunc should take care of this, but limits of scala type inference, blah blah blah
-  implicit def mapUFuncImpl[Tag, V,  U](implicit impl: UFunc.UImpl[Tag, V, U], canMapValues: CanMapValues[DenseMatrix[V], V, U, DenseMatrix[U]]): UFunc.UImpl[Tag, DenseMatrix[V], DenseMatrix[U]] = {
-    new UFunc.UImpl[Tag, DenseMatrix[V], DenseMatrix[U]] {
-      def apply(v: DenseMatrix[V]): DenseMatrix[U] = canMapValues.map(v, impl.apply)
     }
   }
 
@@ -709,6 +702,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
       }
     }
   }
+
 }
 
 trait LowPriorityDenseMatrix1 {

@@ -26,13 +26,14 @@ import breeze.linalg.operators._
 import scala.reflect.ClassTag
 import breeze.macros.expand
 import scala.math.BigInt
+import scala.annotation.unchecked.uncheckedVariance
 
 /**
  *
  * @author dlwh
  */
-trait MatrixLike[@spec(Int, Float, Double) E, +Self <: Matrix[E]] extends Tensor[(Int, Int), E] with TensorLike[(Int, Int), E, Self] {
-  def map[E2, That](fn: E=>E2)(implicit canMapValues: CanMapValues[Self, E, E2, That]):That = values map fn
+trait MatrixLike[@spec(Int, Float, Double) E, +Self  <: Matrix[E]] extends Tensor[(Int, Int), E] with TensorLike[(Int, Int), E, Self] {
+  def map[E2, That](fn: E=>E2)(implicit canMapValues: CanMapValues[Self @uncheckedVariance , E, E2, That]):That = values map fn
 
 }
 

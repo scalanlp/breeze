@@ -281,12 +281,12 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   }
 
   // the canmapvalues implicit in UFunc should take care of this, but limits of scala type inference, blah blah blah
+  /*
   implicit def mapUFuncImpl[Tag, V,  U](implicit impl: UFunc.UImpl[Tag, V, U], canMapValues: CanMapValues[DenseVector[V], V, U, DenseVector[U]]): UFunc.UImpl[Tag, DenseVector[V], DenseVector[U]] = {
     new UFunc.UImpl[Tag, DenseVector[V], DenseVector[U]] {
       def apply(v: DenseVector[V]): DenseVector[U] = canMapValues.map(v, impl.apply)
     }
   }
-  /*
 
   implicit def canZipMapValuesUImpl[Tag, V1, VR, U](implicit impl: UImpl2[Tag, V1, V1, VR], canZipMapValues: CanZipMapValues[DenseVector[V1], V1, VR, U]): UImpl2[Tag, DenseVector[V1], DenseVector[V1], U] = {
     new UImpl2[Tag, DenseVector[V1], DenseVector[V1], U] {
@@ -577,6 +577,8 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
       def backward(t: DenseVector[Double]) = { assert(t.size == 2); (t(0),t(1))}
     }
   }
+
+
 }
 
 trait DenseVector_GenericOps { this: DenseVector.type =>

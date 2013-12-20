@@ -25,13 +25,14 @@ import breeze.storage.{DefaultArrayValue, Storage}
 import scala.reflect.ClassTag
 import breeze.stats.distributions.Rand
 import breeze.macros.expand
+import scala.annotation.unchecked.uncheckedVariance
 
 /**
  * Trait for operators and such used in vectors.
  * @author dlwh
  */
 trait VectorLike[@spec E, +Self <: Vector[E]] extends Tensor[Int, E] with TensorLike[Int, E, Self] {
-  def map[E2, That](fn: E=>E2)(implicit canMapValues: CanMapValues[Self, E, E2, That]):That = values map fn
+  def map[E2, That](fn: E=>E2)(implicit canMapValues: CanMapValues[Self  @uncheckedVariance, E, E2, That]):That = values map fn
 
   def foreach[U](fn: E=>U) { values foreach fn }
 
