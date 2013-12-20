@@ -20,7 +20,7 @@ import scala.reflect.ClassTag
 import breeze.macros.expand
 import breeze.linalg.support.CanNorm
 import breeze.generic.CanMapValues
-import breeze.numerics.log
+import breeze.numerics.{cos, log}
 import breeze.generic.UFunc.UImpl
 
 /**
@@ -110,7 +110,12 @@ case class Complex(real : Double, imag : Double) {
     
   def log = 
     Complex(math.log(abs), math.atan2(imag, real))
-  
+
+  def exp = {
+    val expreal = math.exp(real)
+    Complex(expreal * math.cos(imag), expreal * math.sin(imag))
+  }
+
   def pow(b: Double): Complex = pow(Complex(b, 0))
   
   def pow(b: Complex): Complex = {
@@ -391,7 +396,10 @@ object Complex { outer =>
                                       with ComplexOrdering
 
   implicit object logComplexImpl extends breeze.numerics.log.Impl[Complex, Complex] { def apply(v: Complex) = v.log}
+  implicit object expComplexImpl extends breeze.numerics.exp.Impl[Complex, Complex] { def apply(v: Complex) = v.exp}
   implicit object absComplexImpl extends breeze.numerics.abs.Impl[Complex, Double] { def apply(v: Complex) = v.abs}
+  implicit object powComplexDoubleImpl extends breeze.numerics.pow.Impl2[Complex, Double, Complex] { def apply(v: Complex, d: Double) = v.pow(d) }
+  implicit object powComplexComplexImpl extends breeze.numerics.pow.Impl2[Complex, Complex, Complex] { def apply(v: Complex, d: Complex) = v.pow(d) }
 
 //  implicit def canMapValues[Tag, T, U](implicit impl: UImpl[Tag, Complex, Complex], canMapValues: CanMapValues[T, Complex, Complex, U]): UImpl[Tag, T, U] = {
 //    new UImpl[Tag, T, U] {
