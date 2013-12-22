@@ -170,23 +170,31 @@ package object linalg {
   }
 
 
-  val sum:URFunc[Double, Double] = new URFunc[Double, Double] {
-    def apply(cc: TraversableOnce[Double]) =  {
-      cc.sum
+  object sum extends UFunc  {
+    implicit def fromUReduce[T, V](implicit ured: UReduceable[T, V]):Impl[T,V] = new Impl[T, V] {
+      def apply(v: T) = ured(v, sumUr.asInstanceOf[URFunc[V, V]])
     }
 
-    override def apply(arr: Array[Double], offset: Int, stride: Int, length: Int, isUsed: (Int) => Boolean) = {
-      var i = 0
-      var sum = 0.0
-      var off = offset
-      while(i < length) {
-        if(isUsed(i)) {
-          sum += arr(off)
-        }
-        i += 1
-        off += stride
+
+    object sumUr extends URFunc[Double, Double] {
+
+      def apply(cc: TraversableOnce[Double]) =  {
+        cc.sum
       }
-      sum
+
+      override def apply(arr: Array[Double], offset: Int, stride: Int, length: Int, isUsed: (Int) => Boolean) = {
+        var i = 0
+        var sum = 0.0
+        var off = offset
+        while(i < length) {
+          if(isUsed(i)) {
+            sum += arr(off)
+          }
+          i += 1
+          off += stride
+        }
+        sum
+      }
     }
   }
 

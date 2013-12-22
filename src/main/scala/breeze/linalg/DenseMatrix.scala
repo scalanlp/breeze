@@ -596,6 +596,9 @@ object DenseMatrix extends LowPriorityDenseMatrix
     }
   }
 
+  implicit def handholdCanMapRows[V]: CanCollapseAxis.HandHold[DenseMatrix[V], Axis._0.type, DenseVector[V]] = new CanCollapseAxis.HandHold[DenseMatrix[V], Axis._0.type, DenseVector[V]]()
+
+
   /**
    * transforms each column into a new column, giving a new matrix.
    * @tparam V value type
@@ -617,6 +620,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
       else DenseMatrix.zeros[V](from.rows, 0)
     }
   }
+  implicit def handholdCanMapCols[V]: CanCollapseAxis.HandHold[DenseMatrix[V], Axis._1.type, DenseVector[V]] = new CanCollapseAxis.HandHold[DenseMatrix[V], Axis._1.type, DenseVector[V]]()
 
 
 

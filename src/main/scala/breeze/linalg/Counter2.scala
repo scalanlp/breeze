@@ -273,7 +273,7 @@ trait LowPriorityCounter2 {
    * @tparam R
    * @return
    */
-  implicit def canCollapseRows[K1, K2, V, R:ClassTag:DefaultArrayValue:Semiring]: CanCollapseAxis[Counter2[K1, K2,V], Axis._0.type, Counter[K1, V], R, Counter[K2, R]]  = new CanCollapseAxis[Counter2[K1, K2,V], Axis._0.type, Counter[K1, V], R, Counter[K2,R]] {
+  implicit def canCollapseRows[K1, K2, V, R:ClassTag:DefaultArrayValue:Semiring]: CanCollapseAxis[Counter2[K1, K2, V], Axis._0.type, Counter[K1, V], R, Counter[K2, R]]  = new CanCollapseAxis[Counter2[K1, K2,V], Axis._0.type, Counter[K1, V], R, Counter[K2,R]] {
     def apply(from: Counter2[K1, K2,V], axis: Axis._0.type)(f: (Counter[K1, V]) => R): Counter[K2, R] = {
       val result = Counter[K2, R]()
       for( dom <- from.keySet.map(_._2)) {
@@ -282,13 +282,16 @@ trait LowPriorityCounter2 {
       result
     }
   }
+
+  implicit def handholdCanMapRows[K1, K2, V]: CanCollapseAxis.HandHold[Counter2[K1, K2, V], Axis._0.type, Counter[K1, V]] = new CanCollapseAxis.HandHold[Counter2[K1, K2, V], Axis._0.type, Counter[K1, V]]()
+
   /**
    * Returns a Counter[K1, V]
    * @tparam V
    * @tparam R
    * @return
    */
-  implicit def canCollapseCols[K1, K2, V, R:ClassTag:DefaultArrayValue:Semiring]: CanCollapseAxis[Counter2[K1, K2,V], Axis._1.type, Counter[K2, V], R, Counter[K1, R]]  = new CanCollapseAxis[Counter2[K1, K2,V], Axis._1.type, Counter[K2, V], R, Counter[K1,R]] {
+  implicit def canCollapseCols[K1, K2, V, R:ClassTag:DefaultArrayValue:Semiring]: CanCollapseAxis[Counter2[K1, K2, V], Axis._1.type, Counter[K2, V], R, Counter[K1, R]]  = new CanCollapseAxis[Counter2[K1, K2,V], Axis._1.type, Counter[K2, V], R, Counter[K1,R]] {
     def apply(from: Counter2[K1, K2,V], axis: Axis._1.type)(f: (Counter[K2, V]) => R): Counter[K1, R] = {
       val result = Counter[K1, R]()
       for( (dom,c) <- from.data) {
@@ -297,6 +300,7 @@ trait LowPriorityCounter2 {
       result
     }
   }
+  implicit def handholdCanMapCols[K1, K2, V]: CanCollapseAxis.HandHold[Counter2[K1, K2, V], Axis._1.type, Counter[K2, V]] = new CanCollapseAxis.HandHold[Counter2[K1, K2, V], Axis._1.type, Counter[K2, V]]()
 
 }
 

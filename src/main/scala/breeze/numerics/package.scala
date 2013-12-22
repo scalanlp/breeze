@@ -16,12 +16,12 @@ package breeze
  limitations under the License.
 */
 
-import breeze.generic.{URFunc, UFunc}
+import breeze.generic.{MappingUFunc, URFunc, UFunc}
 import scala.math._
 import org.apache.commons.math3.special.{Gamma => G, Erf}
 
 /**
- * Contains several standard numerical functions as UFuncs,
+ * Contains several standard numerical functions as UFunc with MappingUFuncs,
  *
  * @author dlwh, afwlehmann
  */
@@ -32,12 +32,12 @@ package object numerics {
 
   // TODO: I should probably codegen this.
 
-  object exp extends UFunc {
+  object exp extends UFunc with MappingUFunc {
     implicit object expDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = java.lang.Math.exp(v)}
     implicit object expFloatImpl extends Impl[Float, Float] { def apply(v: Float) = java.lang.Math.exp(v).toFloat}
   }
 
-  object pow extends UFunc {
+  object pow extends UFunc with MappingUFunc {
     implicit object powDoubleDoubleImpl extends Impl2[Double, Double, Double] {
       def apply(v: Double, v2: Double) = java.lang.Math.pow(v, v2)
     }
@@ -55,88 +55,88 @@ package object numerics {
     }
   }
 
-  object log extends UFunc {
+  object log extends UFunc with MappingUFunc {
     implicit object logDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.log(v)}
     implicit object logFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.log(v).toFloat}
   }
 
 
-  object log1p extends UFunc {
+  object log1p extends UFunc with MappingUFunc {
     implicit object log1pDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.log1p(v)}
     implicit object log1pFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.log1p(v).toFloat}
   }
 
-  object sqrt extends UFunc {
+  object sqrt extends UFunc with MappingUFunc {
     implicit object sqrtDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.sqrt(v)}
     implicit object sqrtFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.sqrt(v).toFloat}
   }
 
-  object sin extends UFunc {
+  object sin extends UFunc with MappingUFunc {
     implicit object sinDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.sin(v)}
     implicit object sinFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.sin(v).toFloat}
   }
 
-  object cos extends UFunc {
+  object cos extends UFunc with MappingUFunc {
     implicit object cosDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.cos(v)}
     implicit object cosFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.cos(v).toFloat}
   }
 
-  object tan extends UFunc {
+  object tan extends UFunc with MappingUFunc {
     implicit object tanDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.tan(v)}
     implicit object tanFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.tan(v).toFloat}
   }
 
-  object asin extends UFunc {
+  object asin extends UFunc with MappingUFunc {
     implicit object asinDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.asin(v)}
     implicit object asinFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.asin(v).toFloat}
   }
 
-  object acos extends UFunc {
+  object acos extends UFunc with MappingUFunc {
     implicit object acosDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.acos(v)}
     implicit object acosFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.acos(v).toFloat}
   }
 
-  object atan extends UFunc {
+  object atan extends UFunc with MappingUFunc {
     implicit object atanDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.atan(v)}
     implicit object atanFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.atan(v).toFloat}
   }
 
-  object toDegrees extends UFunc {
+  object toDegrees extends UFunc with MappingUFunc {
     implicit object toDegreesDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.toDegrees(v)}
     implicit object toDegreesFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.toDegrees(v).toFloat}
   }
 
-  object toRadians extends UFunc {
+  object toRadians extends UFunc with MappingUFunc {
     implicit object toRadiansDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.toRadians(v)}
     implicit object toRadiansFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.toRadians(v).toFloat}
   }
 
-  object floor extends UFunc {
+  object floor extends UFunc with MappingUFunc {
     implicit object floorDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.floor(v)}
     implicit object floorFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.floor(v).toFloat}
   }
 
-  object ceil extends UFunc {
+  object ceil extends UFunc with MappingUFunc {
     implicit object ceilDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.ceil(v)}
     implicit object ceilFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.ceil(v).toFloat}
   }
 
-  object round extends UFunc {
+  object round extends UFunc with MappingUFunc {
     implicit object roundDoubleImpl extends Impl[Double, Long] { def apply(v: Double) = m.round(v)}
     implicit object roundFloatImpl extends Impl[Float, Int] { def apply(v: Float) = m.round(v)}
   }
 
-  object rint extends UFunc {
+  object rint extends UFunc with MappingUFunc {
     implicit object rintDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.rint(v)}
     implicit object rintFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.rint(v).toFloat}
   }
 
-  object signum extends UFunc {
+  object signum extends UFunc with MappingUFunc {
     implicit object signumDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.signum(v)}
     implicit object signumFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.signum(v)}
   }
 
-  object abs extends UFunc {
+  object abs extends UFunc with MappingUFunc {
     implicit object absDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.abs(v)}
     implicit object absFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.abs(v)}
   }
@@ -145,12 +145,12 @@ package object numerics {
   val nan, NaN = Double.NaN
 
   /**
-   * Computes the log of the gamma function. The UFunc2 version (i.e. two parameter version)
+   * Computes the log of the gamma function. The UFunc with MappingUFunc2 version (i.e. two parameter version)
    * is the log Incomplete gamma function = \log \int_0x \exp(-t)pow(t,a-1) dt
    *
    * @return an approximation of the log of the Gamma function of x.
    */
-  object lgamma extends UFunc {
+  object lgamma extends UFunc with MappingUFunc {
     implicit object lgammaImplDouble extends Impl[Double, Double] {
       def apply(v: Double): Double = G.logGamma(v)
     }
@@ -165,7 +165,7 @@ package object numerics {
   /**
    * The derivative of the log gamma function
    */
-  object digamma extends UFunc {
+  object digamma extends UFunc with MappingUFunc {
     implicit object digammaImplDouble extends Impl[Double, Double] {
       def apply(v: Double): Double = G.digamma(v)
     }
@@ -175,7 +175,7 @@ package object numerics {
   /**
    * The second derivative of the log gamma function
    */
-  object trigamma extends UFunc {
+  object trigamma extends UFunc with MappingUFunc {
     implicit object trigammaImplDouble extends Impl[Double, Double] {
       def apply(v: Double): Double = G.trigamma(v)
     }
@@ -220,7 +220,7 @@ package object numerics {
   /**
    * An approximation to the error function
    */
-  object erf extends UFunc {
+  object erf extends UFunc with MappingUFunc {
     implicit object erfImplDouble extends Impl[Double, Double] {
       def apply(v: Double): Double = Erf.erf(v)
     }
@@ -231,7 +231,7 @@ package object numerics {
   /**
    * An approximation to the complementary error function: erfc(x) = 1 - erfc(x)
    */
-  object erfc extends UFunc {
+  object erfc extends UFunc with MappingUFunc {
     implicit object erfcImplDouble extends Impl[Double, Double] {
       def apply(v: Double): Double = Erf.erfc(v)
     }
@@ -247,7 +247,7 @@ package object numerics {
    *
    * @return
    */
-  object erfi extends UFunc {
+  object erfi extends UFunc with MappingUFunc {
     implicit object erfiImplDouble extends Impl[Double, Double] {
       def apply(x:Double):Double = {
         if(x < 0) -apply(-x)
@@ -277,7 +277,7 @@ package object numerics {
   /**
    * Inverse erf
    */
-  object erfinv extends UFunc {
+  object erfinv extends UFunc with MappingUFunc {
     implicit object erfinvImplDouble extends Impl[Double, Double] {
       def apply(v: Double): Double = Erf.erfInv(v)
     }
@@ -287,7 +287,7 @@ package object numerics {
   /**
    * Inverse erfc
    */
-  object erfcinv extends UFunc {
+  object erfcinv extends UFunc with MappingUFunc {
     implicit object erfcinvImplDouble extends Impl[Double, Double] {
       def apply(v: Double): Double = Erf.erfcInv(v)
     }
@@ -297,7 +297,7 @@ package object numerics {
    * regularized incomplete gamma function  \int_0x \exp(-t)pow(t,a-1) dt / Gamma(a)
    * @see http://commons.apache.org/proper/commons-math/apidocs/org/apache/commons/math3/special/Gamma.html#regularizedGammaP(double, double)
    */
-  object gammp extends UFunc {
+  object gammp extends UFunc with MappingUFunc {
     implicit object gammpImplDoubleDouble extends Impl2[Double, Double, Double] {
       def apply(v1: Double, v2: Double): Double = G.regularizedGammaP(v1, v2)
     }
@@ -307,7 +307,7 @@ package object numerics {
    * regularized incomplete gamma function  \int_0x \exp(-t)pow(t,a-1) dt / Gamma(a)
    * @see http://commons.apache.org/proper/commons-math/apidocs/org/apache/commons/math3/special/Gamma.html#regularizedGammaP(double, double)
    */
-  object gammq extends UFunc {
+  object gammq extends UFunc with MappingUFunc {
     implicit object gammqImplDoubleDouble extends Impl2[Double, Double, Double] {
       def apply(v1: Double, v2: Double): Double = G.regularizedGammaP(v1, v2)
     }
@@ -468,7 +468,7 @@ package object numerics {
    *
    *
    */
-  object sigmoid extends UFunc {
+  object sigmoid extends UFunc with MappingUFunc {
     implicit object sigmoidImplDouble extends Impl[Double, Double] {
       def apply(x:Double) = 1/(1+scala.math.exp(-x))
     }
@@ -513,7 +513,7 @@ package object numerics {
   /**
    * The indicator function. 1.0 iff b, else 0.0
    */
-  object I extends UFunc {
+  object I extends UFunc with MappingUFunc {
     implicit object iBoolImpl extends Impl[Boolean, Double] {
       def apply(b: Boolean) = if (b) 1.0 else 0.0
     }
@@ -523,7 +523,7 @@ package object numerics {
   /**
    * The indicator function in log space: 0.0 iff b else Double.NegativeInfinity
    */
-  object logI extends UFunc {
+  object logI extends UFunc with breeze.generic.MappingUFunc {
     implicit object logIBoolImpl extends Impl[Boolean, Double] {
       def apply(b: Boolean) = if (b) 0.0 else Double.NegativeInfinity
     }

@@ -28,7 +28,7 @@ import breeze.linalg.Axis
  *
  * @author dlwh
  */
-trait URFunc[@specialized(Int, Float, Double) A, +B] {
+trait URFunc[@specialized(Int, Float, Double) A, B] {
   def apply(cc: TraversableOnce[A]):B
 
 

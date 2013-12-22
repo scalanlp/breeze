@@ -2,6 +2,7 @@ package breeze.generic
 
 import breeze.macros.expand
 import breeze.linalg.support.CanZipMapValues
+import breeze.linalg.Axis
 
 /*
  Copyright 2012 David Hall
@@ -39,9 +40,11 @@ import breeze.linalg.support.CanZipMapValues
  *
  *@author dlwh
  */
-trait UFunc extends UFuncX {
+trait UFunc {
   final def apply[V, VR](v: V)(implicit impl: Impl[V, VR]):VR = impl(v)
   final def apply[V1, V2, VR](v1: V1, v2: V2)(implicit impl: Impl2[V1, V2, VR]):VR = impl(v1, v2)
+  final def inPlace[V](v: V)(implicit impl: InPlaceImpl[V]) = impl(v)
+
 
   type Impl[V, VR] = UFunc.UImpl[this.type, V, VR]
   type Impl2[V1, V2, VR] = UFunc.UImpl2[this.type, V1, V2, VR]
@@ -52,7 +55,6 @@ trait UFunc extends UFuncX {
   }
 
 
-  final def inPlace[V](v: V)(implicit impl: InPlaceImpl[V]) = impl(v)
 
   implicit def implicitDoubleUTag[V, VR](implicit conv: V=>Double, impl: Impl[Double, VR]):Impl[V, VR] = {
     new Impl[V, VR] {
@@ -68,11 +70,21 @@ trait UFunc extends UFuncX {
     }
   }
 
+
+  implicit def collapseUred[V1, AxisT<:Axis, TA, VR, Result](implicit handhold: CanCollapseAxis.HandHold[V1, AxisT, TA], impl: Impl[TA, VR], collapse: CanCollapseAxis[V1, AxisT, TA, VR, Result]) = new Impl2[V1, AxisT, Result] {
+    def apply(v: V1, v2: AxisT): Result = collapse.apply(v, v2)(impl(_))
+  }
+}
+
+trait MappingUFunc extends UFuncX { this: UFunc =>
+
   implicit def fromCanMapValues[T[_], V, V2, U[_]](implicit impl: Impl[V, V2], canMapValues: CanMapValues[T[V], V, V2, U[V2]]): Impl[T[V], U[V2]] = {
     new Impl[T[V], U[V2]] {
       def apply(v: T[V]): U[V2] = canMapValues.map(v, impl.apply)
     }
   }
+
+
 }
 
 trait UFuncX { this: UFunc =>
@@ -109,13 +121,13 @@ object UFunc extends UFunc2LowPrio {
 import breeze.generic.UFunc.UImpl2
 
 trait UFunc2LowPrio { this: UFunc.type =>
+  /*
   implicit def canZipMapValues[Tag, T, V1, VR, U](implicit impl: UImpl2[Tag, V1, V1, VR], canZipMapValues: CanZipMapValues[T, V1, VR, U]): UImpl2[Tag, T, T, U] = {
     new UImpl2[Tag, T, T, U] {
       def apply(v1: T, v2: T): U = canZipMapValues.map(v1, v2, impl.apply)
     }
   }
 
-  /*
   implicit def canMapV1Values[Tag, T, V1, V2, VR, U](implicit impl: UImpl2[Tag, V1, V2, VR], canMapValues: CanMapValues[T, V1, VR, U]): UImpl2[Tag, T, V2, U] = {
     new UImpl2[Tag, T, V2, U] {
       def apply(v1: T, v2: V2): U = canMapValues.map(v1, impl.apply(_, v2))

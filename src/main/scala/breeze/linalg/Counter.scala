@@ -117,13 +117,6 @@ object Counter extends CounterOps {
     def default = defaultArrayValue.value
   }
 
-  // the canmapvalues implicit in UFunc should take care of this, but limits of scala type inference, blah blah blah
-  implicit def mapUFuncImpl[Tag, K, V,  U](implicit impl: UFunc.UImpl[Tag, V, U], canMapValues: CanMapValues[Counter[K, V], V, U, Counter[K, U]]): UFunc.UImpl[Tag, Counter[K, V], Counter[K, U]] = {
-    new UFunc.UImpl[Tag, Counter[K, V], Counter[K, U]] {
-      def apply(v: Counter[K, V]): Counter[K, U] = canMapValues.map(v, impl.apply)
-    }
-  }
-
   implicit def canMapValues[K, V, RV:Semiring:DefaultArrayValue]: CanMapValues[Counter[K, V], V, RV, Counter[K, RV]]
   = new CanMapValues[Counter[K,V],V,RV,Counter[K,RV]] {
     override def map(from : Counter[K,V], fn : (V=>RV)) = {
