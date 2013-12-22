@@ -14,8 +14,6 @@ package breeze.math
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import breeze.storage.DefaultArrayValue
-import scala.reflect.ClassTag
 
 
 /**

@@ -1,6 +1,5 @@
 package breeze.generic
 
-import breeze.macros.expand
 import breeze.linalg.support.CanZipMapValues
 import breeze.linalg.Axis
 

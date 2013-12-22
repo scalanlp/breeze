@@ -17,11 +17,7 @@ package breeze.math
 import breeze.linalg.operators._
 import breeze.storage.DefaultArrayValue
 import scala.reflect.ClassTag
-import breeze.macros.expand
 import breeze.linalg.support.CanNorm
-import breeze.generic.CanMapValues
-import breeze.numerics.{cos, log}
-import breeze.generic.UFunc.UImpl
 
 /**
  * Immutable complex number representation backed by doubles
