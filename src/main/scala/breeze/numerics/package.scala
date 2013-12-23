@@ -257,7 +257,7 @@ package object numerics {
           }
 
           if (n == 100) throw new ArithmeticException("Convergence failed")
-          else logDiff(gln, -x+a*m.log(x) + m.log(h))
+          else breeze.linalg.logDiff(gln, -x+a*m.log(x) + m.log(h))
         }
       }
     }
@@ -417,102 +417,6 @@ package object numerics {
 
 
   /**
-  * Sums together things in log space.
-  * @return log(exp(a) + exp(b))
-  */
-  def logSum(a: Double, b: Double) = {
-    if (a.isNegInfinity) b
-    else if (b.isNegInfinity) a
-    else if (a < b) b + scala.math.log1p(m.exp(a - b))
-    else a + scala.math.log1p(m.exp(b - a))
-  }
-
-  /**
-  * Sums together things in log space.
-  * @return log(\sum exp(a_i))
-  */
-  def logSum(a: Double, b: Double, c: Double*): Double = {
-    if (c.length == 0)
-      logSum(a, b)
-    else
-      logSum(logSum(a, b) +: c)
-  }
-
-  /**
-  * Sums together things in log space.
-  * @return log(\sum exp(a_i))
-  */
-  def logSum(iter: Iterator[Double], max: Double): Double = {
-    require(iter.hasNext)
-    if (max.isInfinite) {
-      max
-    } else {
-      val aux = (0.0 /: iter) {
-        (acc, x) => if (x.isNegInfinity) acc else acc + m.exp(x-max)
-      }
-      if (aux != 0)
-        max + scala.math.log(aux)
-      else
-        max
-    }
-  }
-
-  /**
-  * Sums together things in log space.
-  * @return log(\sum exp(a_i))
-  */
-  def logSum(a: Seq[Double]): Double = {
-    a.length match {
-      case 0 => Double.NegativeInfinity
-      case 1 => a(0)
-      case 2 => logSum(a(0), a(1))
-      case _ => logSum(a.iterator, a reduceLeft (_ max _))
-    }
-  }
-
-  /**
-   * Sums together the first length elements in log space.
-   * The length parameter is used to make things faster.
-   *
-   * This method needs to be fast. Don't scala-ify it.
-   * @return log(\sum^length exp(a_i))
-   */
-  def logSum(a: Array[Double], length: Int):Double = {
-    length match {
-      case 0 => Double.NegativeInfinity
-      case 1 => a(0)
-      case 2 => logSum(a(0),a(1))
-      case _ =>
-        val m = max(a, length)
-        if(m.isInfinite) m
-        else {
-          var i = 0
-          var accum = 0.0
-          while(i < length) {
-            accum += scala.math.exp(a(i) - m)
-            i += 1
-          }
-          m + scala.math.log(accum)
-        }
-    }
-  }
-
-  /** fast versions of max. Useful for the fast logsum. */
-  def max(a: Array[Double], length: Int) = {
-    if(length == 0 || length > a.length) {
-      throw new IllegalArgumentException(s"Passed in a length of $length to max, for an array of type ${a.length}")
-    }
-    var i = 1
-    var max =  a(0)
-    while(i < length) {
-      if(a(i) > max) max = a(i)
-      i += 1
-    }
-    max
-
-  }
-
-  /**
    * The sigmoid function: 1/(1 + exp(-x))
    *
    *
@@ -521,19 +425,6 @@ package object numerics {
     implicit object sigmoidImplDouble extends Impl[Double, Double] {
       def apply(x:Double) = 1/(1+scala.math.exp(-x))
     }
-  }
-
-  /**
-   * Takes the difference of two doubles in log space. Requires a &gt b.
-   * Note that this only works if a and b are close in value. For a &gt;&gt; b,
-   * this will almost certainly do nothing. (exp(30) - exp(1) \approx exp(30))
-   *
-   * @return log(exp(a) - exp(b))
-   */
-  def logDiff(a: Double, b: Double): Double = {
-    require(a >= b)
-    if (a > b) a + m.log(1.0 - m.exp(b-a))
-    else Double.NegativeInfinity
   }
 
   /**

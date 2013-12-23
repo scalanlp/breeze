@@ -58,7 +58,7 @@ class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends Contin
           val logX = math.log(U) / a
           //        val Y = math.pow(V, 1.0 / b)
           val logY=  math.log(V) / b
-          val logSum = numerics.logSum(logX, logY)
+          val logSum = softmax(logX, logY)
           if (logSum <= 0.0) {
             return math.exp(logX - logSum)
           }

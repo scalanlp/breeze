@@ -28,28 +28,29 @@ import breeze.math.Complex
 @RunWith(classOf[JUnitRunner])
 class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
 
-  test("logSum") {
+  test("softmax") {
     import math.{log=>mlog}
-    (breeze.numerics.logSum(mlog(5.0), mlog(2)) should be (mlog(7) plusOrMinus 1e-10))
-    (breeze.numerics.logSum(mlog(2), mlog(5)) should be (mlog(7) plusOrMinus 1e-10))
-    (breeze.numerics.logSum(Double.NegativeInfinity, mlog(5)) should be (mlog(5) plusOrMinus 1e-10))
-    (breeze.numerics.logSum(mlog(5), Double.NegativeInfinity) should be (mlog(5) plusOrMinus 1e-10))
-    (breeze.numerics.logSum(Double.NegativeInfinity, Double.NegativeInfinity) should be (Double.NegativeInfinity))
+    import breeze.linalg.softmax
+    (softmax(mlog(5.0), mlog(2)) should be (mlog(7) plusOrMinus 1e-10))
+    (softmax(mlog(2), mlog(5)) should be (mlog(7) plusOrMinus 1e-10))
+    (softmax(Double.NegativeInfinity, mlog(5)) should be (mlog(5) plusOrMinus 1e-10))
+    (softmax(mlog(5), Double.NegativeInfinity) should be (mlog(5) plusOrMinus 1e-10))
+    (softmax(Double.NegativeInfinity, Double.NegativeInfinity) should be (Double.NegativeInfinity))
 
-    (breeze.numerics.logSum(mlog(1), mlog(2), mlog(3)) should be (mlog(6) plusOrMinus 1e-10))
-    (breeze.numerics.logSum(mlog(1), mlog(2), Double.NegativeInfinity) should be (mlog(3) plusOrMinus (1e-10)))
+    (softmax(Array(mlog(1), mlog(2), mlog(3))) should be (mlog(6) plusOrMinus 1e-10))
+    (softmax(Array(mlog(1), mlog(2), Double.NegativeInfinity)) should be (mlog(3) plusOrMinus (1e-10)))
 
     val s = log1p(Array.tabulate(5)(_.toDouble))
-    (breeze.numerics.logSum(s.iterator, s.max) should be (mlog(15) plusOrMinus 1e-10))
-    (breeze.numerics.logSum(s) should be (mlog(15) plusOrMinus 1e-10))
-    (breeze.numerics.logSum(Double.NegativeInfinity +: s) should be (mlog(15) plusOrMinus 1e-10))
-    (breeze.numerics.logSum(s :+ Double.NegativeInfinity) should be (mlog(15) plusOrMinus 1e-10))
+    (softmax(s) should be (mlog(15) plusOrMinus 1e-10))
+    (softmax(Double.NegativeInfinity +: s) should be (mlog(15) plusOrMinus 1e-10))
+    (softmax(s :+ Double.NegativeInfinity) should be (mlog(15) plusOrMinus 1e-10))
 
-    (breeze.numerics.logSum(s,s.length) should be (mlog(15) plusOrMinus 1e-10))
-    (breeze.numerics.logSum(s,s.length-1) should be (mlog(10) plusOrMinus 1e-10))
+    (softmax(DenseVector(s)) should be (mlog(15) plusOrMinus 1e-10))
+    (softmax(DenseVector(s)(0 until s.length-1)) should be (mlog(10) plusOrMinus 1e-10))
   }
 
   test("logDiff") {
+    import breeze.linalg.logDiff
     (logDiff(log(5), log(2)) should be (log(3) plusOrMinus 1e-10))
     (logDiff(log(5), log(5)) should be (Double.NegativeInfinity))
 
@@ -65,21 +66,21 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
   }
 
   // TODO 2.9 filter out Double.MaxValue.
-  test("logsumming is approximately associative") {
+  test("softmax is approximately associative") {
     check(Prop.forAll { (a: Double, b:Double, c: Double) =>
       Seq(a,b,c).exists(x => x > 1E300 || x < -1E300) ||
-      breeze.numerics.logSum(a,breeze.numerics.logSum(b,c)) =~= breeze.numerics.logSum(breeze.numerics.logSum(a,b),c)
+      softmax(a,softmax(b,c)) =~= softmax(softmax(a,b),c)
     })
     check(Prop.forAll { (a: Double, b:Double, c: Double) =>
       Seq(a,b,c).exists(x => x > 1E300 || x < -1E300) ||
-      breeze.numerics.logSum(a,breeze.numerics.logSum(b,c)) =~= breeze.numerics.logSum(a,b,c)
+      softmax(a,softmax(b,c)) =~= softmax(Array(a,b,c))
     })
   }
 
-  test("sum distributes over logsum") {
+  test("sum distributes over softmax") {
     check(Prop.forAll { (a: Double, b:Double, c: Double) =>
       Seq(a,b,c).exists(x => x > 1E300 || x < -1E300) ||
-      (a + breeze.numerics.logSum(b,c)) =~= (breeze.numerics.logSum(a + b,a+c))
+      (a + softmax(b,c)) =~= (softmax(a + b,a+c))
     })
   }
 

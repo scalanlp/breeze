@@ -21,9 +21,7 @@ import org.scalatest.junit._;
 import org.scalatest.prop._;
 import org.scalacheck._;
 import org.junit.runner.RunWith
-import breeze.linalg.DenseVector
-import breeze.linalg.SparseVector
-import breeze.numerics.{ logSum }
+import breeze.linalg.{softmax, DenseVector, SparseVector}
 import math.{ abs, exp }
 
 
@@ -40,7 +38,7 @@ class DirichletTest extends FunSuite with Checkers {
     Array.fill(1000)(g.logDraw()).foreach { (d: SparseVector[Double]) =>
       assert(d(1) > Double.NegativeInfinity)
       assert(d.activeSize == 3)
-      assert(abs(exp(logSum(d.activeValuesIterator.toArray, d.activeSize)) - 1.0) < 0.0000001, d)
+      assert(abs(exp(softmax(d.activeValuesIterator)) - 1.0) < 0.0000001, d)
     }
   }
 
