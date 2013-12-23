@@ -20,7 +20,7 @@ import breeze.generic.{CanTraverseValues, UFunc, CanMapValues}
 import breeze.math.{Complex, TensorSpace, Ring}
 import scala.math.BigInt
 import collection.immutable.BitSet
-import breeze.linalg.support.{CanNorm, CanZipMapValues, CanCopy}
+import breeze.linalg.support.{CanZipMapValues, CanCopy}
 import breeze.storage.{DefaultArrayValue, Storage}
 import scala.reflect.ClassTag
 import breeze.stats.distributions.Rand
@@ -164,26 +164,26 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
 
 
   /**Returns the k-norm of this Vector. */
-  implicit def canNorm[T](implicit canNormS: CanNorm[T, Unit]): CanNorm[Vector[T], Double] = {
+  implicit def canNorm[T](implicit canNormS: norm.Impl[T, Double]): norm.Impl2[Vector[T], Double, Double] = {
 
-    new CanNorm[Vector[T], Double] {
+    new norm.Impl2[Vector[T], Double, Double] {
       def apply(v: Vector[T], n: Double): Double = {
         import v._
         if (n == 1) {
           var sum = 0.0
-          activeValuesIterator foreach (v => sum += canNormS(v, ()) )
+          activeValuesIterator foreach (v => sum += canNormS(v) )
           sum
         } else if (n == 2) {
           var sum = 0.0
-          activeValuesIterator foreach (v => { val nn = canNormS(v, ()); sum += nn * nn })
+          activeValuesIterator foreach (v => { val nn = canNormS(v); sum += nn * nn })
           math.sqrt(sum)
         } else if (n == Double.PositiveInfinity) {
           var max = 0.0
-          activeValuesIterator foreach (v => { val nn = canNormS(v, ()); if (nn > max) max = nn })
+          activeValuesIterator foreach (v => { val nn = canNormS(v); if (nn > max) max = nn })
           max
         } else {
           var sum = 0.0
-          activeValuesIterator foreach (v => { val nn = canNormS(v, ()); sum += math.pow(nn,n) })
+          activeValuesIterator foreach (v => { val nn = canNormS(v); sum += math.pow(nn,n) })
           math.pow(sum, 1.0 / n)
         }
       }

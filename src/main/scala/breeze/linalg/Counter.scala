@@ -20,7 +20,7 @@ import breeze.math.{TensorSpace, Ring, Semiring, Field}
 import breeze.generic._
 import collection.Set
 import operators._
-import support.{CanCreateZerosLike, CanZipMapValues, CanNorm, CanCopy}
+import support.{CanCreateZerosLike, CanZipMapValues, CanCopy}
 import breeze.generic.CanTraverseValues.ValuesVisitor
 
 /**
@@ -147,11 +147,11 @@ object Counter extends CounterOps {
 
   }
 
-  implicit def tensorspace[K, V](implicit field: Field[V], dfv: DefaultArrayValue[V], norm: CanNorm[V, Unit]) = {
+  implicit def tensorspace[K, V](implicit field: Field[V], dfv: DefaultArrayValue[V], normImpl: norm.Impl[V, Double]) = {
     implicit def zipMap = Counter.zipMap[K, V, V]
     // sigh...
     TensorSpace.make[Counter[K, V], K, V](canNorm,
-      norm,
+      normImpl,
       canMapValues[K, V, V],
       canIterateValues[K, V],
       zipMap,
@@ -437,25 +437,25 @@ trait CounterOps {
     }
   }
   /** Returns the k-norm of this Vector. */
-  implicit def canNorm[K, V](implicit norm: CanNorm[V, Unit]):CanNorm[Counter[K, V], Double] = new CanNorm[Counter[K, V], Double] {
+  implicit def canNorm[K, V](implicit normImpl: norm.Impl[V, Double]):norm.Impl2[Counter[K, V], Double, Double] = new norm.Impl2[Counter[K, V], Double, Double] {
     def apply(c: Counter[K, V], n: Double): Double = {
       import c.{norm => _, _}
 
       if (n == 1) {
         var sum = 0.0
-        activeValuesIterator foreach (v => sum += norm(v, ()))
+        activeValuesIterator foreach (v => sum += norm(v))
         sum
       } else if (n == 2) {
         var sum = 0.0
-        activeValuesIterator foreach (v => { val nn = norm(v, ()); sum += nn * nn })
+        activeValuesIterator foreach (v => { val nn = norm(v); sum += nn * nn })
         math.sqrt(sum)
       } else if (n == Double.PositiveInfinity) {
         var max = 0.0
-        activeValuesIterator foreach (v => { val nn = norm(v, ()); if (nn > max) max = nn })
+        activeValuesIterator foreach (v => { val nn = norm(v); if (nn > max) max = nn })
         max
       } else {
         var sum = 0.0
-        activeValuesIterator foreach (v => { val nn = norm(v, ()); sum += math.pow(nn,n) })
+        activeValuesIterator foreach (v => { val nn = norm(v); sum += math.pow(nn,n) })
         math.pow(sum, 1.0 / n)
       }
     }

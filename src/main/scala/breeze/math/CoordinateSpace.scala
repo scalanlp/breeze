@@ -1,9 +1,9 @@
 package breeze.math
 
-import breeze.linalg.support.{CanCreateZerosLike, CanCopy, CanZipMapValues, CanNorm}
+import breeze.linalg.support.{CanCreateZerosLike, CanCopy, CanZipMapValues}
 import breeze.generic.CanMapValues
 import breeze.linalg.operators._
-import breeze.linalg.NumericOps
+import breeze.linalg.{norm, NumericOps}
 
 /**
  * A coordinate space is like a [[breeze.math.InnerProductSpace]], but
@@ -17,7 +17,7 @@ import breeze.linalg.NumericOps
  * @tparam S
  */
 trait CoordinateSpace[V, S] extends InnerProductSpace[V, S] {
-  implicit def norm: CanNorm[V, Double]
+  implicit def normImplDouble: norm.Impl2[V, Double, Double]
   implicit def mapValues: CanMapValues[V,S,S,V]
   implicit def zipMapValues: CanZipMapValues[V,S,S,V]
 
@@ -32,13 +32,11 @@ trait CoordinateSpace[V, S] extends InnerProductSpace[V, S] {
 }
 
 object CoordinateSpace {
-  implicit def fromField[S](implicit f: Field[S], canNorm: CanNorm[S, Double]):CoordinateSpace[S, S] = new CoordinateSpace[S, S] {
+  implicit def fromField[S](implicit f: Field[S], _normImpl: norm.Impl[S, Double]):CoordinateSpace[S, S] = new CoordinateSpace[S, S] {
     def field: Field[S] = f
 
 
-    implicit def scalarNorm: CanNorm[S, Unit] = new CanNorm[S, Unit] {
-      def apply(v1: S, v2: Unit): Double = canNorm(v1, 1)
-    }
+    implicit def scalarNorm = _normImpl
 
     implicit def isNumericOps(v: S): NumericOps[S] = new NumericOps[S] {
       def repr: S = v
@@ -61,7 +59,9 @@ object CoordinateSpace {
 
     implicit val neg: UnaryOp[S, OpNeg, S] = UnaryOp.scalaOpNeg
 
-    implicit val norm: CanNorm[S, Double] = canNorm
+    implicit val normImplDouble:norm.Impl2[S, Double, Double] = new norm.Impl2[S, Double, Double] {
+      def apply(v: S, v2: Double): Double = scalarNorm(v)
+    }
 
     implicit val mapValues: CanMapValues[S, S, S, S] = CanMapValues.canMapSelf
 
@@ -95,8 +95,8 @@ trait MutableCoordinateSpace[V, S] extends MutableInnerProductSpace[V, S]  with 
 
 object MutableCoordinateSpace {
   def make[V, S](implicit
-                    _norm:  CanNorm[V, Double],
-                    _scalarNorm:  CanNorm[S, Unit],
+                    _norm:  norm.Impl2[V, Double, Double],
+                    _scalarNorm:  norm.Impl[S, Double],
                    _mapValues:  CanMapValues[V, S, S, V],
 //                   _reduce:  UReduceable[V, S],
                    _zipMapValues:  CanZipMapValues[V, S, S, V],
@@ -133,11 +133,9 @@ object MutableCoordinateSpace {
                    _isNumericOps: V <:< NumericOps[V],
                    _axpy:  CanAxpy[S, V, V],
                    _dotVV:  BinaryOp[V, V, OpMulInner, S]):MutableCoordinateSpace[V, S] = new MutableCoordinateSpace[V, S] {
-    implicit def norm: CanNorm[V, Double] = _norm
+    implicit def normImplDouble = _norm
 
-    implicit def scalarNorm: CanNorm[S, Unit] = _scalarNorm
-
-
+    implicit def scalarNorm: norm.Impl[S, Double] = _scalarNorm
 
     implicit def mapValues: CanMapValues[V, S, S, V] = _mapValues
 
@@ -204,8 +202,6 @@ object MutableCoordinateSpace {
     implicit def subVV: BinaryOp[V, V, OpSub, V] = _subVV
 
     implicit def neg: UnaryOp[V, OpNeg, V] = _neg
-
-    override def norm(a: V): Double = norm.apply(a, 2)
 
     implicit def isNumericOps(v: V): NumericOps[V] = _isNumericOps(v)
 

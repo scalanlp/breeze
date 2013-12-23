@@ -1,7 +1,7 @@
 package breeze.math
 
-import breeze.linalg.NumericOps
-import breeze.linalg.support.{CanNorm, CanZipMapValues, CanCopy, CanCreateZerosLike}
+import breeze.linalg.{norm, NumericOps}
+import breeze.linalg.support.{CanZipMapValues, CanCopy, CanCreateZerosLike}
 import breeze.linalg.operators._
 import breeze.util.Isomorphism
 import breeze.generic.CanMapValues
@@ -182,7 +182,7 @@ object MutablizingAdaptor {
       }
 
 
-      implicit def scalarNorm: CanNorm[S, Unit] = u.scalarNorm
+      implicit def scalarNorm = u.scalarNorm
 
       implicit def mulIntoVS: BinaryUpdateOp[Wrapper, S, OpMulScalar] = liftUpdate[OpMulScalar](u.mulVS)
 
@@ -314,12 +314,12 @@ object MutablizingAdaptor {
         }
       }
 
-      implicit def norm: CanNorm[Wrapper, Double] = new CanNorm[Wrapper, Double] {
-        def apply(v1: Wrapper, v2: Double): Double = u.norm(v1.value, v2)
+      implicit def normImplDouble: norm.Impl2[Wrapper, Double, Double]  = new norm.Impl2[Wrapper, Double, Double] {
+        def apply(v1: Wrapper, v2: Double): Double = u.normImplDouble(v1.value, v2)
       }
 
 
-      implicit def scalarNorm: CanNorm[S, Unit] = u.scalarNorm
+      implicit def scalarNorm = u.scalarNorm
 
       implicit def mapValues: CanMapValues[Wrapper, S, S, Wrapper] = new CanMapValues[Wrapper, S, S, Wrapper] {
         /** Maps all key-value pairs from the given collection. */

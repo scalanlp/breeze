@@ -5,6 +5,7 @@ import breeze.linalg.operators.{OpMulMatrix, BinaryOp}
 import breeze.util.Implicits._
 import linear.ConjugateGradient
 import com.typesafe.scalalogging.slf4j.Logging
+import breeze.linalg.norm
 
 
 /**

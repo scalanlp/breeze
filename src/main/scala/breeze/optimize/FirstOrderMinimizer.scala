@@ -3,6 +3,7 @@ package breeze.optimize
 import breeze.math.{NormedVectorSpace, MutableCoordinateSpace}
 import breeze.util.Implicits._
 import com.typesafe.scalalogging.slf4j.Logging
+import breeze.linalg.norm
 
 /**
  *
@@ -26,6 +27,8 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
                    numImprovementFailures: Int = 0,
                    searchFailed: Boolean = false) {
   }
+
+  import vspace.normImpl
 
   protected def initialHistory(f: DF, init: T): History
   protected def adjust(newX: T, newGrad: T, newVal: Double):(Double,T) = (newVal,newGrad)
@@ -63,7 +66,7 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
         val (value,grad) = calculateObjective(f, x, state.history)
         val (adjValue,adjGrad) = adjust(x,grad,value)
         val oneOffImprovement = (state.adjustedValue - adjValue)/(state.adjustedValue.abs max adjValue.abs max 1E-6 * state.initialAdjVal.abs)
-        logger.info(f"Val and Grad Norm: $adjValue%.6g (rel: $oneOffImprovement%.3g) ${vspace.norm(adjGrad)}%.6g")
+        logger.info(f"Val and Grad Norm: $adjValue%.6g (rel: $oneOffImprovement%.3g) ${norm(adjGrad)}%.6g")
         val history = updateHistory(x,grad,value, f, state)
         val newAverage = updateFValWindow(state, adjValue)
         failedOnce = false
@@ -88,7 +91,7 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
     ((state.iter >= maxIter && maxIter >= 0)
       || (!state.fVals.isEmpty && (state.adjustedValue - state.fVals.max).abs <= tolerance)
       || (state.numImprovementFailures >= numberOfImprovementFailures)
-      || (vspace.norm(state.adjustedGradient) <= math.max(tolerance * state.adjustedValue.abs,1E-8))
+      || (norm(state.adjustedGradient) <= math.max(tolerance * state.adjustedValue.abs,1E-8))
       || state.searchFailed)
   }
 

@@ -36,7 +36,7 @@ case class Dirichlet[T,@specialized(Int) I](params: T)(implicit space: TensorSpa
    * Returns a Multinomial distribution over the iterator
    */
   def draw():T = {
-    normalize(unnormalizedDraw(),1)
+    normalize(unnormalizedDraw(),1.0)
   }
 
   /**
@@ -106,7 +106,7 @@ object Dirichlet {
     def emptySufficientStatistic = SufficientStatistic(0,zeros(exemplar))
 
     def sufficientStatisticFor(t: T) = {
-      SufficientStatistic(1,numerics.log(normalize(t,1)))
+      SufficientStatistic(1,numerics.log(normalize(t,1.0)))
     }
 
     def mle(stats: SufficientStatistic) = {

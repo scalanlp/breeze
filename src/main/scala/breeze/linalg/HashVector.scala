@@ -4,7 +4,7 @@ import breeze.collection.mutable.OpenAddressHashArray
 import breeze.linalg.operators._
 import breeze.storage.{ConfigurableDefault, DefaultArrayValue}
 import breeze.generic._
-import support.{CanZipMapValues, CanMapKeyValuePairs, CanCopy}
+import breeze.linalg.support.{CanZipMapValues, CanMapKeyValuePairs, CanCopy}
 import breeze.math.{Semiring, TensorSpace, Ring, Complex}
 import scala.reflect.ClassTag
 import scala.util.hashing.MurmurHash3
@@ -529,6 +529,33 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
     }
   }
 
+  @expand
+  @expand.valify
+  implicit def canNorm[@expand.args(Int, Double, Float, Long, BigInt, Complex) T]: norm.Impl2[HashVector[T], Double, Double] = {
+
+    new norm.Impl2[HashVector[T], Double, Double] {
+      def apply(v: HashVector[T], n: Double): Double = {
+        import v._
+        if (n == 1) {
+          var sum = 0.0
+          activeValuesIterator foreach (v => sum += v.abs.toDouble )
+          sum
+        } else if (n == 2) {
+          var sum = 0.0
+          activeValuesIterator  foreach (v => { val nn = v.abs.toDouble; sum += nn * nn })
+          math.sqrt(sum)
+        } else if (n == Double.PositiveInfinity) {
+          var max = 0.0
+          activeValuesIterator foreach (v => { val nn = v.abs.toDouble; if (nn > max) max = nn })
+          max
+        } else {
+          var sum = 0.0
+          activeValuesIterator foreach (v => { val nn = v.abs.toDouble; sum += math.pow(nn,n) })
+          math.pow(sum, 1.0 / n)
+        }
+      }
+    }
+  }
 
 }
 

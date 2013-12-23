@@ -17,7 +17,7 @@ package breeze.math
 import breeze.linalg.operators._
 import breeze.storage.DefaultArrayValue
 import scala.reflect.ClassTag
-import breeze.linalg.support.CanNorm
+import breeze.linalg.norm
 
 /**
  * Immutable complex number representation backed by doubles
@@ -201,8 +201,8 @@ object Complex { outer =>
 
   }
 
-  implicit val complexNorm: CanNorm[Complex, Unit] = new CanNorm[Complex, Unit] {
-    def apply(v1: Complex, v2: Unit): Double = v1.abs
+  implicit val complexNorm: norm.Impl[Complex, Double] = new norm.Impl[Complex, Double] {
+    def apply(v1: Complex): Double = v1.abs
   }
   
   implicit object ComplexDefaultArrayValue extends DefaultArrayValue[Complex] {

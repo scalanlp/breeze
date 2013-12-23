@@ -17,13 +17,14 @@ package breeze
 import breeze.generic._
 import io.{CSVWriter, CSVReader}
 import linalg.operators._
-import breeze.linalg.support.{RangeSuffix, CanNorm, CanCopy}
+import breeze.linalg.support.{RangeSuffix, CanCopy}
 import math.Semiring
 import org.netlib.util.intW
 import storage.DefaultArrayValue
 import java.io.{File, FileReader}
 import scala.reflect.ClassTag
 import breeze.generic.CanTraverseValues.ValuesVisitor
+import breeze.macros.expand
 
 
 /**
@@ -59,15 +60,29 @@ package object linalg {
   def copy[T](t: T)(implicit canCopy: CanCopy[T]): T = canCopy(t)
 
   /**
-   * Computes the norm of an object. Many tensor objects have a CanNorm implicit, which is what this calls.
+   * Computes the norm of an object. Many tensor objects have a norm implementation implicit, which is what this calls.
    */
-  def norm[T](t: T)(implicit canNorm: CanNorm[T, Unit]) = canNorm(t, ())
+  object norm extends UFunc {
+    @expand
+    @expand.valify
+    implicit def scalarNorm[@expand.args(Int, Long, Float, Double) T]: Impl[T, Double] = new Impl[T, Double] {
+      def apply(v1: T): Double = v1.abs.toDouble
+    }
 
-  /**
-   * Computes the norm of an object. Many tensor objects have a CanNorm implicit, which is what this calls.
-   */
-  def norm[T, NormType](t: T, v: NormType)(implicit canNorm: CanNorm[T, NormType]) = canNorm(t, v)
 
+
+    implicit def normDoubleToNormalNorm[T](implicit normImpl: Impl2[T, Double, Double]):Impl[T, Double] = {
+      new Impl[T, Double] {
+        def apply(v: T): Double = normImpl(v, 2.0)
+      }
+    }
+
+    implicit def fromCanNormInt[T](implicit impl: Impl2[T, Double, Double]):Impl2[T, Int, Double] = {
+      new Impl2[T, Int, Double] {
+        def apply(v: T, v2: Int): Double = impl(v, v2)
+      }
+    }
+  }
 
 
   /**
@@ -75,7 +90,7 @@ package object linalg {
    * Returns value if value's norm is 0.
    */
   object normalize extends UFunc {
-    implicit def normalizeDoubleImpl[T, U>:T](implicit div: BinaryOp[T, Double, OpDiv, U], canNorm: CanNorm[T, Double]):Impl2[T, Double, U] = {
+    implicit def normalizeDoubleImpl[T, U>:T](implicit div: BinaryOp[T, Double, OpDiv, U], canNorm: norm.Impl2[T, Double, Double]):Impl2[T, Double, U] = {
       new Impl2[T, Double, U] {
         def apply(t: T, n: Double): U = {
           val norm = canNorm(t, n)

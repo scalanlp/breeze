@@ -514,9 +514,9 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   */
   @expand
   @expand.valify
-  implicit def canNorm[@expand.args(Int, Double, Float, Long, BigInt, Complex) T]: CanNorm[DenseVector[T], Double] = {
+  implicit def canNorm[@expand.args(Int, Double, Float, Long, BigInt, Complex) T]: norm.Impl2[DenseVector[T], Double, Double] = {
 
-    new CanNorm[DenseVector[T], Double] {
+    new norm.Impl2[DenseVector[T], Double, Double] {
       def apply(v: DenseVector[T], n: Double): Double = {
         import v._
         if (n == 1) {

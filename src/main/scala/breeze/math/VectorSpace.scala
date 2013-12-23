@@ -16,8 +16,8 @@ package breeze.math
  limitations under the License.
 */
 import breeze.linalg.operators._
-import breeze.linalg.support.{CanZipMapValues, CanNorm, CanCopy, CanCreateZerosLike}
-import breeze.linalg.{QuasiTensor, NumericOps}
+import breeze.linalg.support.{CanZipMapValues, CanCopy, CanCreateZerosLike}
+import breeze.linalg.{norm, QuasiTensor, NumericOps}
 import breeze.generic.{CanTraverseValues, CanMapValues}
 
 /**
@@ -47,15 +47,18 @@ trait VectorSpace[V, S] {
 }
 
 trait NormedVectorSpace[V, S] extends VectorSpace[V, S] {
-  def norm(a: V):Double
+  implicit def normImpl: norm.Impl[V, Double]
   def close(a: V, b: V, tolerance: Double):Boolean = norm(a - b) <= tolerance * math.max(norm(a), norm(b))
 }
 
 trait InnerProductSpace[V, S] extends NormedVectorSpace[V, S] {
   implicit def dotVV: BinaryOp[V, V, OpMulInner, S]
 
-  def norm(a: V) = math.sqrt(scalarNorm(dotVV(a,a), ()))
-  implicit def scalarNorm: CanNorm[S, Unit]
+  implicit def scalarNorm: norm.Impl[S, Double]
+
+  implicit def normImpl: norm.Impl[V, Double] = new norm.Impl[V, Double] {
+    def apply(v: V): Double = math.sqrt(scalarNorm(dotVV(v, v)))
+  }
 }
 
 trait MutableVectorSpace[V, S] extends VectorSpace[V, S] {
@@ -78,7 +81,7 @@ trait MutableInnerProductSpace[V, S] extends InnerProductSpace[V, S] with Mutabl
 object MutableInnerProductSpace {
   /** Construct a MutableInnerProductSpace for the given type from the available implicits */
   def make[V, I, S](implicit _field: Field[S],
-                    _scalarNorm: CanNorm[S, Unit],
+                    _scalarNorm: norm.Impl[S, Double],
     _isNumericOps: V <:< NumericOps[V],
     _zeros: CanCreateZerosLike[V, V],
     _mulVS: BinaryOp[V, S, OpMulScalar, V],
@@ -96,7 +99,7 @@ object MutableInnerProductSpace {
     _axpy: CanAxpy[S, V, V]): MutableInnerProductSpace[V, S] = new MutableInnerProductSpace[V, S] {
     def field: Field[S] = _field
 
-    implicit def scalarNorm: CanNorm[S, Unit] = _scalarNorm
+    implicit def scalarNorm = _scalarNorm
 
     implicit def isNumericOps(v: V): NumericOps[V] = _isNumericOps(v)
     implicit def zeros: CanCreateZerosLike[V, V] = _zeros
@@ -125,8 +128,8 @@ trait TensorSpace[V, I, S] extends MutableCoordinateSpace[V, S] {
 
 object TensorSpace {
   def make[V, I, S](implicit
-                    _norm:  CanNorm[V, Double],
-                    _scalarNorm: CanNorm[S, Unit] ,
+                    _norm:  norm.Impl2[V, Double, Double],
+                    _scalarNorm: norm.Impl[S, Double] ,
                    _mapValues:  CanMapValues[V, S, S, V],
                    _reduce:  CanTraverseValues[V, S],
                    _zipMapValues:  CanZipMapValues[V, S, S, V],
@@ -159,9 +162,9 @@ object TensorSpace {
                    _neg:  UnaryOp[V, OpNeg, V],
                    _isNumericOps: V <:< NumericOps[V] with QuasiTensor[I, S],
                    _dotVV:  BinaryOp[V, V, OpMulInner, S]):TensorSpace[V, I, S] = new TensorSpace[V, I, S] {
-    implicit def norm: CanNorm[V, Double] = _norm
+    implicit def normImplDouble: norm.Impl2[V, Double, Double] = _norm
 
-    implicit def scalarNorm: CanNorm[S, Unit] = _scalarNorm
+    implicit def scalarNorm: norm.Impl[S, Double] = _scalarNorm
     implicit def mapValues: CanMapValues[V, S, S, V] = _mapValues
 
     implicit def iterateValues: CanTraverseValues[V, S] = _reduce
@@ -223,8 +226,6 @@ object TensorSpace {
     implicit def subVV: BinaryOp[V, V, OpSub, V] = _subVV
 
     implicit def neg: UnaryOp[V, OpNeg, V] = _neg
-
-    override def norm(a: V): Double = norm.apply(a, 2)
 
     implicit def isNumericOps(v: V): NumericOps[V] with QuasiTensor[I, S] = _isNumericOps(v)
 

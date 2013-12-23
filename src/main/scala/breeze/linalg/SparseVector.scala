@@ -18,7 +18,7 @@ import operators._
 import scala.math.BigInt
 import scala.{specialized=>spec}
 import breeze.storage.{DefaultArrayValue}
-import support.{CanZipMapValues, CanMapKeyValuePairs, CanCopy, CanSlice}
+import breeze.linalg.support._
 import breeze.util.{Sorting, ArrayUtil}
 import breeze.generic._
 import breeze.math.{Complex, Semiring, Ring, TensorSpace}
@@ -356,6 +356,7 @@ object SparseVector extends SparseVectorOps
       }
     }
   }
+
 
 }
 
@@ -1001,6 +1002,33 @@ trait SparseVectorOps { this: SparseVector.type =>
   }
 
 
+  @expand
+  @expand.valify
+  implicit def canNorm[@expand.args(Int, Double, Float, Long, BigInt, Complex) T]: norm.Impl2[SparseVector[T], Double, Double] = {
+
+    new norm.Impl2[SparseVector[T], Double, Double] {
+      def apply(v: SparseVector[T], n: Double): Double = {
+        import v._
+        if (n == 1) {
+          var sum = 0.0
+          activeValuesIterator foreach (v => sum += v.abs.toDouble )
+          sum
+        } else if (n == 2) {
+          var sum = 0.0
+          activeValuesIterator  foreach (v => { val nn = v.abs.toDouble; sum += nn * nn })
+          math.sqrt(sum)
+        } else if (n == Double.PositiveInfinity) {
+          var max = 0.0
+          activeValuesIterator foreach (v => { val nn = v.abs.toDouble; if (nn > max) max = nn })
+          max
+        } else {
+          var sum = 0.0
+          activeValuesIterator foreach (v => { val nn = v.abs.toDouble; sum += math.pow(nn,n) })
+          math.pow(sum, 1.0 / n)
+        }
+      }
+    }
+  }
 
 
 }
