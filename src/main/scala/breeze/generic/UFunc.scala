@@ -43,15 +43,24 @@ trait UFunc {
   final def apply[@specialized(Int, Double, Float) V,
                   @specialized(Int, Double, Float) VR]
                   (v: V)(implicit impl: Impl[V, VR]):VR = impl(v)
+
   final def apply[@specialized(Int, Double, Float) V1,
                   @specialized(Int, Double, Float) V2,
                   @specialized(Int, Double, Float) VR]
                    (v1: V1, v2: V2)(implicit impl: Impl2[V1, V2, VR]):VR = impl(v1, v2)
+
+  final def apply[@specialized(Int, Double, Float) V1,
+  @specialized(Int, Double, Float) V2,
+  @specialized(Int, Double, Float) V3,
+  @specialized(Int, Double, Float) VR]
+  (v1: V1, v2: V2, v3: V3)(implicit impl: Impl3[V1, V2, V3, VR]):VR = impl(v1, v2, v3)
+
   final def inPlace[V](v: V)(implicit impl: InPlaceImpl[V]) = impl(v)
 
 
   type Impl[V, VR] = UFunc.UImpl[this.type, V, VR]
   type Impl2[V1, V2, VR] = UFunc.UImpl2[this.type, V1, V2, VR]
+  type Impl3[V1, V2, V3, VR] = UFunc.UImpl3[this.type, V1, V2, V3, VR]
 
 
   trait InPlaceImpl[V] {
@@ -77,6 +86,10 @@ trait UFunc {
 
   implicit def collapseUred[V1, AxisT<:Axis, TA, VR, Result](implicit handhold: CanCollapseAxis.HandHold[V1, AxisT, TA], impl: Impl[TA, VR], collapse: CanCollapseAxis[V1, AxisT, TA, VR, Result]) = new Impl2[V1, AxisT, Result] {
     def apply(v: V1, v2: AxisT): Result = collapse.apply(v, v2)(impl(_))
+  }
+
+  implicit def collapseUred3[V1, AxisT<:Axis, V3, TA, VR, Result](implicit handhold: CanCollapseAxis.HandHold[V1, AxisT, TA], impl: Impl2[TA, V3, VR], collapse: CanCollapseAxis[V1, AxisT, TA, VR, Result]) = new Impl3[V1, AxisT, V3, Result] {
+    def apply(v: V1, v2: AxisT, v3: V3): Result = collapse.apply(v, v2)(impl(_, v3))
   }
 }
 
@@ -109,6 +122,12 @@ object UFunc {
     def apply(v: V1, v2: V2):VR
   }
 
+  trait UImpl3[Tag, @specialized(Int, Double, Float) V1,
+                    @specialized(Int, Double, Float) V2,
+                    @specialized(Int, Double, Float) V3,
+                    @specialized(Int, Double, Float) VR] {
+    def apply(v: V1, v2: V2, v3: V3):VR
+  }
 
 }
 
