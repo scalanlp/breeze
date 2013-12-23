@@ -23,6 +23,7 @@ import scala.collection.Set
 import breeze.generic._
 import scala.reflect.ClassTag
 import breeze.linalg.operators._
+import breeze.generic.CanTraverseValues.ValuesVisitor
 
 /**
  *
@@ -174,6 +175,19 @@ object Counter2 extends LowPriorityCounter2 with Counter2Ops {
       }
       rv
     }
+  }
+
+
+  implicit def canIterateValues[K1, K2, V]: CanTraverseValues[Counter2[K1, K2,V], V] = new CanTraverseValues[Counter2[K1, K2, V], V] {
+
+
+    /** Iterates all key-value pairs from the given collection. */
+    def traverse(from: Counter2[K1, K2, V], fn: ValuesVisitor[V]): Unit = {
+      for( v <- from.valuesIterator) {
+        fn.visit(v)
+      }
+    }
+
   }
 
   // slicing

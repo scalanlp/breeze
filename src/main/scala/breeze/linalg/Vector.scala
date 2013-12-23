@@ -16,7 +16,7 @@ package breeze.linalg
 */
 import operators._
 import scala.{specialized=>spec}
-import breeze.generic.{UFunc, CanMapValues}
+import breeze.generic.{CanTraverseValues, UFunc, CanMapValues}
 import breeze.math.{Complex, TensorSpace, Ring}
 import scala.math.BigInt
 import collection.immutable.BitSet
@@ -26,6 +26,7 @@ import scala.reflect.ClassTag
 import breeze.stats.distributions.Rand
 import breeze.macros.expand
 import scala.annotation.unchecked.uncheckedVariance
+import breeze.generic.CanTraverseValues.ValuesVisitor
 
 /**
  * Trait for operators and such used in vectors.
@@ -187,6 +188,16 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
         }
       }
     }
+  }
+
+  implicit def canIterateValues[V]: CanTraverseValues[Vector[V], V] = new CanTraverseValues[Vector[V], V] {
+    /** Iterates all values from the given collection. */
+    def traverse(from: Vector[V], fn: ValuesVisitor[V]): Unit = {
+      for( v <- from.valuesIterator) {
+        fn.visit(v)
+      }
+    }
+
   }
 
 

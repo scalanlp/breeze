@@ -21,6 +21,7 @@ import breeze.generic._
 import collection.Set
 import operators._
 import support.{CanCreateZerosLike, CanZipMapValues, CanNorm, CanCopy}
+import breeze.generic.CanTraverseValues.ValuesVisitor
 
 /**
  * A map-like tensor that acts like a collection of key-value pairs where
@@ -136,9 +137,12 @@ object Counter extends CounterOps {
     }
   }
 
-  implicit def ured[K, V]: UReduceable[Counter[K, V], V] = {
-    new UReduceable[Counter[K, V], V] {
-      def apply[Final](c: Counter[K, V], f: URFunc[V, Final]): Final = f(c.data.values)
+  implicit def canIterateValues[K, V]: CanTraverseValues[Counter[K, V], V] = new CanTraverseValues[Counter[K,V], V] {
+    /** Iterates all values from the given collection. */
+    def traverse(from: Counter[K, V], fn: ValuesVisitor[V]): Unit = {
+      for( v <- from.valuesIterator) {
+        fn.visit(v)
+      }
     }
 
   }
@@ -149,7 +153,7 @@ object Counter extends CounterOps {
     TensorSpace.make[Counter[K, V], K, V](canNorm,
       norm,
       canMapValues[K, V, V],
-      ured[K, V],
+      canIterateValues[K, V],
       zipMap,
       addVS,
       subVS,

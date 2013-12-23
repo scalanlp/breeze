@@ -47,9 +47,6 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
 
     (breeze.numerics.logSum(s,s.length) should be (mlog(15) plusOrMinus 1e-10))
     (breeze.numerics.logSum(s,s.length-1) should be (mlog(10) plusOrMinus 1e-10))
-
-    // s(1), s(3)
-    (breeze.linalg.softmax(s,1,2,(s.length-1)/2, { (_) => true}) should be (softmax(Array(s(1),s(3))) plusOrMinus(1e-10)))
   }
 
   test("logDiff") {
@@ -95,6 +92,10 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
   test("lgamma") {
     import breeze.numerics.{lgamma=>lg}
     lg(10) should be (12.8018274801 plusOrMinus 1E-8)
+  }
+
+  test("lbeta") {
+    assert(exp(breeze.numerics.lbeta(breeze.linalg.DenseVector(1.0, 2.0))) === 0.5)
   }
 
   test("incomplete gamma") {

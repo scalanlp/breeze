@@ -17,7 +17,7 @@ package breeze.linalg
 
 import scala.{specialized=>spec}
 import support._
-import breeze.generic.{UReduceable, URFunc, CanMapValues}
+import breeze.generic.{CanMapValues}
 import breeze.collection.mutable.Beam
 import breeze.math.Semiring
 import scala.reflect.ClassTag
@@ -56,8 +56,6 @@ sealed trait QuasiTensor[@specialized(Int) K, @specialized(Int, Float, Double) V
     queue ++= keysIterator
     queue.toIndexedSeq.reverse
   }
-
-  def ureduce[A](f: URFunc[V, A]) = f(this.valuesIterator)
 
   def iterator: Iterator[(K, V)]
   def activeIterator: Iterator[(K, V)]
@@ -188,11 +186,7 @@ trait TensorLike[@spec(Int) K, @specialized(Int, Float, Double) V, +This<:Tensor
 trait Tensor[@spec(Int) K, @specialized(Int, Float, Double) V] extends TensorLike[K, V, Tensor[K, V]]
 
 object Tensor {
-  implicit def canUReduce[T, I, V](implicit ev: T<:<Tensor[I, V]):UReduceable[T, V] = {
-    new UReduceable[T, V] {
-      def apply[Final](c: T, f: URFunc[V, Final]): Final = c.ureduce(f)
-    }
-  }
+
 
   implicit def canSliceTensor[K, V:ClassTag]:CanSlice[Tensor[K,V], Seq[K], SliceVector[K, V]] = new CanSlice[Tensor[K,V], Seq[K], SliceVector[K, V]] {
     def apply(from: Tensor[K, V], slice: Seq[K]): SliceVector[K, V] = new SliceVector(from, slice.toIndexedSeq)

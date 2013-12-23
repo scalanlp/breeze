@@ -3,13 +3,14 @@ package breeze.linalg
 import breeze.collection.mutable.OpenAddressHashArray
 import breeze.linalg.operators._
 import breeze.storage.{ConfigurableDefault, DefaultArrayValue}
-import breeze.generic.{UFunc2ZippingImplicits, UFunc, CanMapValues, URFunc}
+import breeze.generic._
 import support.{CanZipMapValues, CanMapKeyValuePairs, CanCopy}
 import breeze.math.{Semiring, TensorSpace, Ring, Complex}
 import scala.reflect.ClassTag
 import scala.util.hashing.MurmurHash3
 import breeze.macros.expand
 import scala.math.BigInt
+import breeze.generic.CanTraverseValues.ValuesVisitor
 
 /**
  * A HashVector is a sparse vector backed by an OpenAddressHashArray
@@ -28,6 +29,8 @@ class HashVector[@specialized(Int, Double, Float) E](val array: OpenAddressHashA
     array(i) = v
   }
 
+  def default = array.defaultValue
+
   def activeSize: Int = array.activeSize
 
   def length: Int = array.length
@@ -35,10 +38,6 @@ class HashVector[@specialized(Int, Double, Float) E](val array: OpenAddressHashA
   def copy: HashVector[E] = new HashVector(array.copy)
 
   def repr = this
-
-  override def ureduce[A](f: URFunc[E, A]): A = {
-    f.apply(array.data, 0, 1, array.data.length, array.isActive _)
-  }
 
   final def iterableSize: Int = array.iterableSize
   def data = array.data
@@ -135,6 +134,21 @@ object HashVector extends HashVectorOps
           i += 1
         }
         new HashVector(out)
+      }
+    }
+  }
+
+  implicit def canIterateValues[V]:CanTraverseValues[HashVector[V], V] = {
+    new CanTraverseValues[HashVector[V],V] {
+
+      def traverse(from: HashVector[V], fn: ValuesVisitor[V]): Unit = {
+        fn.zeros(from.size - from.activeSize, from.default)
+        var i = 0
+        while(i < from.iterableSize) {
+          if(from.isActive(i))
+            fn.visit(from.data(i))
+          i += 1
+        }
       }
     }
   }

@@ -62,6 +62,8 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
   def data = _data
   def index = _index
 
+  def defaultValue = default.value(defaultArrayValue)
+
   /**
    * Only iterates "active" elements
    */

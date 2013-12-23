@@ -16,9 +16,10 @@ package breeze
  limitations under the License.
 */
 
-import breeze.generic.{MappingUFunc, URFunc, UFunc}
+import breeze.generic.{CanTraverseValues, MappingUFunc, UFunc}
 import scala.math._
 import org.apache.commons.math3.special.{Gamma => G, Erf}
+import breeze.generic.CanTraverseValues.ValuesVisitor
 
 /**
  * Contains several standard numerical functions as UFunc with MappingUFuncs,
@@ -145,19 +146,68 @@ package object numerics {
   val nan, NaN = Double.NaN
 
   /**
-   * Computes the log of the gamma function. The UFunc with MappingUFunc2 version (i.e. two parameter version)
+   * Computes the log of the gamma function. The two parameter version
    * is the log Incomplete gamma function = \log \int_0x \exp(-t)pow(t,a-1) dt
    *
    * @return an approximation of the log of the Gamma function of x.
    */
   object lgamma extends UFunc with MappingUFunc {
     implicit object lgammaImplDouble extends Impl[Double, Double] {
-      def apply(v: Double): Double = G.logGamma(v)
+      def apply(v: Double): Double = if(v == 0.0) Double.PositiveInfinity else G.logGamma(v)
     }
 
 
+    /**
+     * log Incomplete gamma function = \log \int_0x \exp(-t)pow(t,a-1) dt
+     * May store lgamma(a) in lgam(0) if it's non-null and needs to be computed.
+     * Based on NR
+     */
     implicit object lgammaImplDoubleDouble extends Impl2[Double, Double, Double] {
-      def apply(v1: Double, v2: Double): Double = _lgamma(v1, v2)
+      def apply(a: Double, x: Double): Double = {
+        if (x < 0.0 || a <= 0.0) throw new IllegalArgumentException()
+        else if(x == 0) 0.0
+        else if (x < a + 1.0) {
+          var ap = a
+          var del, sum = 1.0/a
+          var n = 0
+          var result = Double.NaN
+          while(n < 100) {
+            ap += 1
+            del *= x/ap
+            sum += del
+            if (scala.math.abs(del) < scala.math.abs(sum)*1E-7) {
+              result = -x+a*m.log(x) + m.log(sum)
+              n = 100
+            }
+            n += 1
+          }
+          if(result.isNaN) throw new ArithmeticException("Convergence failed")
+          else result
+        } else {
+          val gln = lgamma(a)
+          var b = x+1.0-a
+          var c = 1.0/1.0e-30
+          var d = 1.0/b
+          var h = d
+          var n = 0
+          while(n < 100) {
+            n += 1
+            val an = -n*(n-a)
+            b += 2.0
+            d = an*d+b
+            if (scala.math.abs(d) < 1E-30) d = 1E-30
+            c = b+an/c
+            if (scala.math.abs(c) < 1E-30) c = 1E-30
+            d = 1.0/d
+            val del = d*c
+            h *= del
+            if (scala.math.abs(del-1.0) < 1E-7) n = 101
+          }
+
+          if (n == 100) throw new ArithmeticException("Convergence failed")
+          else logDiff(gln, -x+a*m.log(x) + m.log(h))
+        }
+      }
     }
   }
 
@@ -186,33 +236,28 @@ package object numerics {
    * Evaluates the log of the generalized beta function.
    *  \sum_a lgamma(c(a))- lgamma(c.sum)
    */
-  val lbeta:URFunc[Double, Double] = new URFunc[Double, Double] {
-    def apply(cc: TraversableOnce[Double]): Double = {
-      var sum = 0.0
-      var lgSum = 0.0
-      for(v <- cc) {
-        sum += v
-        lgSum += lgamma(v:Double)
-      }
-      lgSum - lgamma(sum)
-    }
+  object lbeta extends UFunc {
+    implicit def reduceDouble[T](implicit iter: CanTraverseValues[T, Double]): Impl[T, Double] = new Impl[T, Double] {
+      def apply(v: T): Double = {
+        val visit = new ValuesVisitor[Double] {
+          var sum = 0.0
+          var lgSum = 0.0
+          def visit(a: Double): Unit = {
+            sum += a
+            lgSum += lgamma(a)
+          }
 
-    override def apply(arr: Array[Double], offset: Int, stride: Int, length: Int, isUsed: (Int) => Boolean): Double = {
-      var off = offset
-      var sum = 0.0
-      var lgSum = 0.0
-      var i = 0
-      while(i < length) {
-
-        if(isUsed(off))   {
-          sum += arr(off)
-          lgSum += lgamma(arr(off))
+          def zeros(numZero: Int, zeroValue: Double): Unit = {
+            sum += numZero * zeroValue
+            lgSum += lgamma(zeroValue)
+          }
         }
 
-        i += 1
-        off += stride
+        iter.traverse(v, visit)
+
+        visit.lgSum - lgamma(visit.sum)
       }
-      lgSum - lgamma(sum)
+
     }
   }
 
@@ -316,58 +361,7 @@ package object numerics {
 
 
 
-  /**
-  * log Incomplete gamma function = \log \int_0x \exp(-t)pow(t,a-1) dt
-  * May store lgamma(a) in lgam(0) if it's non-null and needs to be computed.
-   * Based on NR
-  */
-  private def _lgamma(a: Double, x:Double, lgam: Array[Double] = null):Double = {
-    if (x < 0.0 || a <= 0.0) throw new IllegalArgumentException()
-    else if(x == 0) 0.0
-    else if (x < a + 1.0) {
-      var ap = a
-      var del, sum = 1.0/a
-      var n = 0
-      var result = Double.NaN
-      while(n < 100) {
-        ap += 1
-        del *= x/ap
-        sum += del
-        if (scala.math.abs(del) < scala.math.abs(sum)*1E-7) {
-          result = -x+a*m.log(x) + m.log(sum)
-          n = 100
-        }
-        n += 1
-      }
-      if(lgam != null) lgam(0) = Double.NaN
-      if(result.isNaN) throw new ArithmeticException("Convergence failed")
-      else result
-    } else {
-      val gln = lgamma(a)
-      var b = x+1.0-a
-      var c = 1.0/1.0e-30
-      var d = 1.0/b
-      var h = d
-      var n = 0
-      while(n < 100) {
-        n += 1
-        val an = -n*(n-a)
-        b += 2.0
-        d = an*d+b
-        if (scala.math.abs(d) < 1E-30) d = 1E-30
-        c = b+an/c
-        if (scala.math.abs(c) < 1E-30) c = 1E-30
-        d = 1.0/d
-        val del = d*c
-        h *= del
-        if (scala.math.abs(del-1.0) < 1E-7) n = 101
-      }
 
-      if(lgam != null) lgam(0) = gln
-      if (n == 100) throw new ArithmeticException("Convergence failed")
-      else logDiff(gln, -x+a*m.log(x) + m.log(h))
-    }
-  }
 
 
   /**
@@ -453,6 +447,9 @@ package object numerics {
 
   /** fast versions of max. Useful for the fast logsum. */
   def max(a: Array[Double], length: Int) = {
+    if(length == 0 || length > a.length) {
+      throw new IllegalArgumentException(s"Passed in a length of $length to max, for an array of type ${a.length}")
+    }
     var i = 1
     var max =  a(0)
     while(i < length) {

@@ -40,7 +40,7 @@ class DirichletTest extends FunSuite with Checkers {
     Array.fill(1000)(g.logDraw()).foreach { (d: SparseVector[Double]) =>
       assert(d(1) > Double.NegativeInfinity)
       assert(d.activeSize == 3)
-      assert(abs(exp(logSum(d.activeValuesIterator.toArray, d.activeSize)) - 1.0) < 0.0000001)
+      assert(abs(exp(logSum(d.activeValuesIterator.toArray, d.activeSize)) - 1.0) < 0.0000001, d)
     }
   }
 

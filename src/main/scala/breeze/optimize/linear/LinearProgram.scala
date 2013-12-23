@@ -310,6 +310,7 @@ object LinearProgram {
   }
 
   object NativeLPSolver extends Solver {
+    LpSolve.lpSolveVersion()
     def maximize(lp: LinearProgram)(objective: lp.Problem): lp.Result = {
       val lpsol = LpSolve.makeLp(0, lp.variables.length)
       try {

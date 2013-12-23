@@ -27,6 +27,7 @@ import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import breeze.macros.expand
 import breeze.numerics.IntMath
 import scala.math.BigInt
+import breeze.generic.CanTraverseValues.ValuesVisitor
 
 /**
  * A DenseVector is the "obvious" implementation of a Vector, with one twist.
@@ -92,11 +93,6 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
 
   override def toString = {
     valuesIterator.mkString("DenseVector(",", ", ")")
-  }
-
-  override def ureduce[Final](f: URFunc[E, Final]) = {
-    if(offset == 0 && stride == 1) f(data, length)
-    else f(data, offset, stride, length, {(_:Int) => true})
   }
 
   /**
@@ -280,34 +276,6 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     }
   }
 
-  // the canmapvalues implicit in UFunc should take care of this, but limits of scala type inference, blah blah blah
-  /*
-  implicit def mapUFuncImpl[Tag, V,  U](implicit impl: UFunc.UImpl[Tag, V, U], canMapValues: CanMapValues[DenseVector[V], V, U, DenseVector[U]]): UFunc.UImpl[Tag, DenseVector[V], DenseVector[U]] = {
-    new UFunc.UImpl[Tag, DenseVector[V], DenseVector[U]] {
-      def apply(v: DenseVector[V]): DenseVector[U] = canMapValues.map(v, impl.apply)
-    }
-  }
-
-  implicit def canZipMapValuesUImpl[Tag, V1, VR, U](implicit impl: UImpl2[Tag, V1, V1, VR], canZipMapValues: CanZipMapValues[DenseVector[V1], V1, VR, U]): UImpl2[Tag, DenseVector[V1], DenseVector[V1], U] = {
-    new UImpl2[Tag, DenseVector[V1], DenseVector[V1], U] {
-      def apply(v1: DenseVector[V1], v2: DenseVector[V1]): U = canZipMapValues.map(v1, v2, impl.apply)
-    }
-  }
-
-  implicit def canMapV1DV[Tag, V1, V2, VR, U](implicit impl: UImpl2[Tag, V1, V2, VR], canMapValues: CanMapValues[DenseVector[V1], V1, VR, U]): UImpl2[Tag, DenseVector[V1], V2, U] = {
-    new UImpl2[Tag, DenseVector[V1], V2, U] {
-      def apply(v1: DenseVector[V1], v2: V2): U = canMapValues.map(v1, impl.apply(_, v2))
-    }
-  }
-
-  implicit def canMapV2Values[Tag, V1, V2, VR, U](implicit impl: UImpl2[Tag, V1, V2, VR], canMapValues: CanMapValues[DenseVector[V2], V2, VR, U]): UImpl2[Tag, V1, DenseVector[V2], U] = {
-    new UImpl2[Tag, V1, DenseVector[V2], U] {
-      def apply(v1: V1, v2: DenseVector[V2]): U = canMapValues.map(v2, impl.apply(v1, _))
-    }
-  }
-
-  */
-
 
   implicit def canMapValues[V, V2](implicit man: ClassTag[V2]):CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] = {
     new CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] {
@@ -334,6 +302,17 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
       def mapActive(from: DenseVector[V], fn: (V) => V2) = {
         map(from, fn)
       }
+    }
+  }
+
+  implicit def canIterateValues[V]:CanTraverseValues[DenseVector[V], V] = {
+    new CanTraverseValues[DenseVector[V], V] {
+
+      /** Iterates all key-value pairs from the given collection. */
+      def traverse(from: DenseVector[V], fn: ValuesVisitor[V]): Unit = {
+        fn.visitArray(from.data, from.offset, from.length, from.stride)
+      }
+
     }
   }
 

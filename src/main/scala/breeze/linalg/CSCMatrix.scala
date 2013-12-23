@@ -20,10 +20,11 @@ import java.util
 import breeze.util.{ Terminal, ArrayUtil }
 import scala.collection.mutable
 import breeze.math.{Ring, Complex, Semiring}
-import breeze.generic.{UFunc2ZippingImplicits, UFunc, CanMapValues}
+import breeze.generic.{CanTraverseValues, UFunc2ZippingImplicits, UFunc, CanMapValues}
 import scala.reflect.ClassTag
 import breeze.macros.expand
 import scala.math.BigInt
+import breeze.generic.CanTraverseValues.ValuesVisitor
 
 /**
  * A compressed sparse column matrix, as used in Matlab and CSparse, etc.
@@ -183,15 +184,9 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]  with CSCMatrixOps with U
     res
   }
 
-  // the canmapvalues implicit in UFunc should take care of this, but limits of scala type inference, blah blah blah
-  implicit def mapUFuncImpl[Tag, V,  U](implicit impl: UFunc.UImpl[Tag, V, U], canMapValues: CanMapValues[CSCMatrix[V], V, U, CSCMatrix[U]]): UFunc.UImpl[Tag, CSCMatrix[V], CSCMatrix[U]] = {
-    new UFunc.UImpl[Tag, CSCMatrix[V], CSCMatrix[U]] {
-      def apply(v: CSCMatrix[V]): CSCMatrix[U] = canMapValues.map(v, impl.apply)
-    }
-  }
 
 
-  implicit def canMapValues[V, R:ClassTag:DefaultArrayValue:Semiring] = {
+  implicit def canMapValues[V, R:ClassTag:DefaultArrayValue:Semiring]:CanMapValues[CSCMatrix[V], V, R, CSCMatrix[R]] = {
     val z = implicitly[DefaultArrayValue[R]].value
     new CanMapValues[CSCMatrix[V],V,R,CSCMatrix[R]] {
       override def map(from : CSCMatrix[V], fn : (V=>R)) = {
@@ -237,6 +232,27 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]  with CSCMatrixOps with U
       }
     }
   }
+
+  implicit def canIterateValues[V]:CanTraverseValues[CSCMatrix[V], V] = {
+    new CanTraverseValues[CSCMatrix[V],V] {
+
+      /** Iterates all key-value pairs from the given collection. */
+      def traverse(from: CSCMatrix[V], fn: ValuesVisitor[V]): Unit = {
+        fn.zeros(from.size - from.activeSize, from.zero)
+        var j = 0
+        while(j < from.cols) {
+          var ip = from.colPtrs(j)
+          while(ip < from.colPtrs(j+1)) {
+            val i = from.rowIndices(ip)
+            fn.visit(from.data(ip))
+            ip += 1
+          }
+          j += 1
+        }
+      }
+    }
+  }
+
   
   implicit def canTranspose[V:ClassTag:DefaultArrayValue]: CanTranspose[CSCMatrix[V], CSCMatrix[V]] = {
     new CanTranspose[CSCMatrix[V], CSCMatrix[V]] {

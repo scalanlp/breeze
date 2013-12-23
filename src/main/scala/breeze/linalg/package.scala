@@ -23,8 +23,7 @@ import org.netlib.util.intW
 import storage.DefaultArrayValue
 import java.io.{File, FileReader}
 import scala.reflect.ClassTag
-import com.github.fommil.netlib.BLAS.{getInstance => blas}
-import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
+import breeze.generic.CanTraverseValues.ValuesVisitor
 
 
 /**
@@ -91,228 +90,192 @@ package object linalg {
     collapse(value, axis)(v => normalize[V, V](v, n))
   }
 
-  /**
-   * logNormalizes the argument such that the softmax is 0.0.
-   * Returns value if value's softmax is -infinity
-   */
-  def logNormalize[V,K](value: V)(implicit view: V => NumericOps[V],
-                                  red: UReduceable[V, Double],
-                                  op : BinaryOp[V,Double,OpSub,V]): V = {
-    val max = softmax(value)
-    if(max == Double.NegativeInfinity) value
-    else value - max
-  }
+  object logNormalize extends UFunc {
+    implicit def logNormalizeImpl[V](implicit softmaxImpl: softmax.Impl[V, Double],
+                                     op : BinaryOp[V,Double,OpSub,V]):Impl[V, V] = new Impl[V, V] {
 
-
-  /**
-   * logs and then logNormalizes the argument along axis such that each softmax is 0.0.
-   * Returns value if value's softmax is -infinity
-   */
-  def logNormalize[T, Axis, V, Result](value: T, axis: Axis)(implicit  collapse: CanCollapseAxis[T, Axis, V, V, Result],
-                                  view: V => NumericOps[V],
-                                  red: UReduceable[V, Double],
-                                  map: CanMapValues[V, Double, Double, V],
-                                  op : BinaryOp[V,Double,OpSub,V]):Result = {
-    collapse(value, axis)(v => logNormalize(v))
-  }
-
-  /**
-   * logs and then logNormalizes the argument such that the softmax is 0.0.
-   * Returns value if value's softmax is -infinity
-   */
-  def logAndNormalize[V](value: V)(implicit view: V => NumericOps[V],
-                                   red: UReduceable[V, Double],
-                                   map: CanMapValues[V, Double, Double, V],
-                                   op : BinaryOp[V,Double,OpSub,V]):V = {
-    logNormalize(numerics.log(value))
-  }
-
-  /**
-   * logs and then logNormalizes the argument along axis such that each softmax is 0.0.
-   * Returns value if value's softmax is -infinity
-   */
-  def logAndNormalize[T, Axis, V, Result](value: T, axis: Axis)(implicit  collapse: CanCollapseAxis[T, Axis, V, V, Result],
-                                  view: V => NumericOps[V],
-                                  red: UReduceable[V, Double],
-                                  map: CanMapValues[V, Double, Double, V],
-                                  op : BinaryOp[V,Double,OpSub,V]):Result = {
-    collapse(value, axis)(v => logAndNormalize(v))
-  }
-
-  /**
-   * A [[breeze.generic.URFunc]] for computing the mean of objects
-   */
-  val mean:URFunc[Double, Double] = new URFunc[Double, Double] {
-    def apply(cc: TraversableOnce[Double]) =  {
-      val (sum,n) = accumulateAndCount(cc)
-      sum / n
-    }
-
-    def accumulateAndCount(it : TraversableOnce[Double]):(Double, Int) = it.foldLeft( (0.0,0) ) { (tup,d) =>
-      (tup._1 + d, tup._2 + 1)
-    }
-
-    override def apply(arr: Array[Double], offset: Int, stride: Int, length: Int, isUsed: (Int) => Boolean) = {
-      var i = 0
-      var used = 0
-      var sum = 0.0
-      var off = offset
-      while(i < length) {
-        if(isUsed(i)) {
-          sum += arr(off)
-          used += 1
-        }
-        i += 1
-        off += stride
+      def apply(value: V): V = {
+        val max = softmax(value)
+        if(max == Double.NegativeInfinity) value
+        else op(value, max)
       }
-      sum / used
     }
+
+  }
+
+  object logAndNormalize extends UFunc {
+    implicit def logNormalizeImpl[V](implicit logImpl: breeze.numerics.log.Impl[V, V],
+                                     logNormalizeImpl: logNormalize.Impl[V, V]):Impl[V, V] = new Impl[V, V] {
+
+      def apply(value: V): V = {
+        logNormalize(numerics.log(value))
+      }
+    }
+
   }
 
 
-  object sum extends UFunc  {
-    implicit def fromUReduce[T, V](implicit ured: UReduceable[T, V]):Impl[T,V] = new Impl[T, V] {
-      def apply(v: T) = ured(v, sumUr.asInstanceOf[URFunc[V, V]])
-    }
-
-
-    object sumUr extends URFunc[Double, Double] {
-
-      def apply(cc: TraversableOnce[Double]) =  {
-        cc.sum
-      }
-
-      override def apply(arr: Array[Double], offset: Int, stride: Int, length: Int, isUsed: (Int) => Boolean) = {
-        var i = 0
-        var sum = 0.0
-        var off = offset
-        while(i < length) {
-          if(isUsed(i)) {
-            sum += arr(off)
+  /**
+   * A [[breeze.generic.UFunc]] for computing the mean of objects
+   */
+  object mean extends UFunc {
+    implicit def reduceDouble[T](implicit iter: CanTraverseValues[T, Double]): Impl[T, Double] = new Impl[T, Double] {
+      def apply(v: T): Double = {
+        val visit = new ValuesVisitor[Double] {
+          var sum = 0.0
+          var n = 0
+          def visit(a: Double): Unit = {
+            sum += a
+            n += 1
           }
-          i += 1
-          off += stride
+
+          def zeros(numZero: Int, zeroValue: Double): Unit = {
+            sum += numZero * zeroValue
+            n += numZero
+          }
         }
-        sum
+
+        iter.traverse(v, visit)
+
+        visit.sum / visit.n
       }
+    }
+
+  }
+
+
+  object sum extends UFunc {
+    implicit def reduceDouble[T](implicit iter: CanTraverseValues[T, Double]): Impl[T, Double] = new Impl[T, Double] {
+      def apply(v: T): Double = {
+        val visit = new ValuesVisitor[Double] {
+          var sum = 0.0
+          def visit(a: Double): Unit = {
+            sum += a
+          }
+
+          def zeros(numZero: Int, zeroValue: Double): Unit = {
+            sum += numZero * zeroValue
+          }
+        }
+
+        iter.traverse(v, visit)
+
+        visit.sum
+      }
+
     }
   }
 
 
   /**
-   * A [[breeze.generic.URFunc]] for computing the mean and variance of objects.
+   * A [[breeze.generic.UFunc]] for computing the mean and variance of objects.
    * This uses an efficient, numerically stable, one pass algorithm for computing both
    * the mean and the variance.
    */
-  val meanAndVariance:URFunc[Double, (Double,Double)] = new URFunc[Double, (Double,Double)] {
-    def apply(it: TraversableOnce[Double]) = {
-      val (mu,s,n) = it.foldLeft( (0.0,0.0,0)) { (acc,y) =>
-        val (oldMu,oldVar,n) = acc
-        val i = n+1
-        val d = y - oldMu
-        val mu = oldMu + 1.0/i * d
-        val s = oldVar + (i-1) * d / i * d
-        (mu,s,i)
-      }
-      (mu,s/(n-1))
-    }
+  object meanAndVariance extends UFunc {
+    implicit def reduceDouble[T](implicit iter: CanTraverseValues[T, Double]): Impl[T, (Double, Double)] = new Impl[T, (Double, Double)] {
+      def apply(v: T): (Double, Double) = {
+        val visit = new ValuesVisitor[Double] {
+          var mu = 0.0
+          var s = 0.0
+          var n = 0
+          def visit(y: Double): Unit = {
+            n += 1
+            val d = y - mu
+            mu = mu + 1.0/n * d
+            s = s + (n-1) * d / n * d
+          }
 
-    override def apply(arr: Array[Double], offset: Int, stride: Int, length: Int, isUsed: (Int) => Boolean) = {
-      var mu = 0.0
-      var s = 0.0
-      var n = 0
-      var i = 0
-      var off = offset
-      while(i < length) {
-        if(isUsed(i)) {
-          val y = arr(off)
-          n += 1
-          val d = y - mu
-          mu = mu + 1.0/n * d
-          s = s + (n-1) * d / n * d
+          def zeros(numZero: Int, zeroValue: Double): Unit = {
+            for(i <- 0 until numZero) visit(zeroValue)
+          }
         }
-        off += stride
-        i += 1
+        iter.traverse(v, visit)
+        import visit._
+        (mu, s/(n-1))
       }
-      (mu, s/(n-1))
-
     }
   }
 
+
   /**
-   * A [[breeze.generic.URFunc]] for computing the variance of objects.
+   * A [[breeze.generic.UFunc]] for computing the variance of objects.
    * The method just calls meanAndVariance and returns the second result.
    */
-  val variance:URFunc[Double, Double] = new URFunc[Double, Double] {
-    def apply(cc: TraversableOnce[Double]) =  {
-      meanAndVariance(cc)._2
-    }
-
-
-    override def apply(arr: Array[Double], offset: Int, stride: Int, length: Int, isUsed: (Int) => Boolean) = {
-      meanAndVariance(arr, offset, stride, length, isUsed)._2
+  object variance extends UFunc {
+    implicit def reduceDouble[T](mv: meanAndVariance.Impl[T, (Double, Double)]): Impl[T, Double] = new Impl[T, Double] {
+      def apply(v: T): Double = mv(v)._2
     }
   }
 
   /**
    * Computes the standard deviation by calling variance and then sqrt'ing
    */
-  val stddev:URFunc[Double, Double] = new URFunc[Double, Double] {
-    def apply(cc: TraversableOnce[Double]) =  {
-      scala.math.sqrt(variance(cc))
-    }
-
-    override def apply(arr: Array[Double], offset: Int, stride: Int, length: Int, isUsed: (Int) => Boolean) = {
-      scala.math.sqrt(variance(arr, offset, stride, length, isUsed))
+  object stddev extends UFunc {
+    implicit def reduceDouble[T](mv: variance.Impl[T, Double]): Impl[T, Double] = new Impl[T, Double] {
+      def apply(v: T): Double = scala.math.sqrt(mv(v))
     }
   }
 
-  /**
-   * Computes the max, aka the infinity norm.
-   */
-  val max:URFunc[Double, Double] = new URFunc[Double, Double] {
-    def apply(cc: TraversableOnce[Double]) =  {
-      cc.max
-    }
+  object max extends UFunc {
+    implicit def reduceDouble[T](implicit iter: CanTraverseValues[T, Double]): Impl[T, Double] = new Impl[T, Double] {
+      def apply(v: T): Double = {
+        val visit = new ValuesVisitor[Double] {
+          var max = Double.NegativeInfinity
+          var visitedOne = false
+          def visit(a: Double): Unit = {
+            visitedOne = true
+            max = scala.math.max(max, a)
+          }
 
-    override def apply(arr: Array[Double], offset: Int, stride: Int,length: Int, isUsed: (Int) => Boolean) = {
-      var max = Double.NegativeInfinity
-      var i = 0
-      var off = offset
-      while(i < length) {
-        if(isUsed(i)) {
-          val m = arr(off)
-          if(max < m) max = m
+          def zeros(numZero: Int, zeroValue: Double): Unit = {
+            if(numZero != 0) {
+              visitedOne = true
+              max = scala.math.max(zeroValue, max)
+            }
+          }
         }
-        off += stride
-        i += 1
+
+        iter.traverse(v, visit)
+        if(!visit.visitedOne) throw new IllegalArgumentException(s"No values in $v!")
+
+        visit.max
       }
-      max
+
     }
   }
+
+
 
 
   /**
    * Computes the minimum.
    */
-  val min:URFunc[Double, Double] = new URFunc[Double, Double] {
-    def apply(cc: TraversableOnce[Double]) =  {
-      cc.min
-    }
+  object min extends UFunc {
+    implicit def reduceDouble[T](implicit iter: CanTraverseValues[T, Double]): Impl[T, Double] = new Impl[T, Double] {
+      def apply(v: T): Double = {
+        val visit = new ValuesVisitor[Double] {
+          var min = Double.PositiveInfinity
+          var visitedOne = false
+          def visit(a: Double): Unit = {
+            visitedOne = true
+            min = scala.math.min(min, a)
+          }
 
-    override def apply(arr: Array[Double], offset: Int, stride: Int, length: Int, isUsed: (Int) => Boolean) = {
-      var min = Double.NegativeInfinity
-      var i = 0
-      var off = offset
-      while(i < length) {
-        if(isUsed(i)) {
-          val m = arr(off)
-          if(min > m) min = m
+          def zeros(numZero: Int, zeroValue: Double): Unit = {
+            if(numZero != 0) {
+              visitedOne = true
+              min = scala.math.min(zeroValue, min)
+            }
+          }
         }
-        off += stride
-        i += 1
+
+        iter.traverse(v, visit)
+        if(!visit.visitedOne) throw new IllegalArgumentException(s"No values in $v!")
+
+        visit.min
       }
-      min
+
     }
   }
 
@@ -322,47 +285,41 @@ package object linalg {
    * a differentiable function that tends to look quite a lot like max. Consider
    * log(exp(30) + exp(10)). That's basically 30. We use softmax a lot in machine learning.
    */
-  val softmax:URFunc[Double, Double] = new URFunc[Double, Double] {
-    def apply(cc: TraversableOnce[Double]) =  {
-      val a = cc.toArray[Double]
-      breeze.numerics.logSum(a, a.length)
-      // apply(cc.toArray) breaks the compiler...
-    }
+  object softmax extends UFunc {
+    implicit def reduceDouble[T](implicit iter: CanTraverseValues[T, Double], maxImpl: max.Impl[T, Double]): Impl[T, Double] = new Impl[T, Double] {
+      def apply(v: T): Double = {
 
+        val max = if(iter.onePass(v)) 0.0 else maxImpl(v)
 
-    override def apply(a: Array[Double], length: Int) = {
-      numerics.logSum(a, length)
-    }
+        val visit = new ValuesVisitor[Double] {
+          var accum = 0.0
+          def visit(a: Double): Unit = {
+            accum += scala.math.exp(a - max)
+          }
 
-    override def apply(a: Array[Double], offset: Int, stride: Int, length: Int, isUsed: (Int) => Boolean) = {
-      length match {
-        case 0 => Double.NegativeInfinity
-        case 1 => if(isUsed(offset)) a(offset) else Double.NegativeInfinity
-        case 2 =>
-          if (isUsed(offset))
-            if (isUsed(offset + stride))
-              numerics.logSum(a(offset),a(offset + stride))
-            else a(offset)
-          else if(isUsed(offset + stride)) a(offset + stride)
-          else Double.NegativeInfinity
-        case _ =>
-          val m = max(a, offset, stride, length, isUsed)
-          if (m.isInfinite) m
-          else {
+          def zeros(numZero: Int, zeroValue: Double): Unit = {
+            if(numZero != 0) {
+              accum += (numZero * scala.math.exp(zeroValue - max))
+            }
+          }
+
+          override def visitArray(arr: Array[Double], offset: Int, length: Int, stride: Int): Unit = {
             var i = 0
             var off = offset
-            var accum = 0.0
             while(i < length) {
-              if(isUsed(i))
-                accum += scala.math.exp(a(off) - m)
+                accum += scala.math.exp(arr(off) - max)
               i += 1
               off += stride
             }
-            if (i > 0)
-              m + scala.math.log(accum)
-            else Double.NegativeInfinity
+
           }
+        }
+
+        iter.traverse(v, visit)
+
+        max + scala.math.log(visit.accum)
       }
+
     }
   }
 
@@ -401,8 +358,8 @@ package object linalg {
 
 
 
-import math.Ring
-import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
+  import math.Ring
+  import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 
 /**
  * Basic linear algebraic operations.

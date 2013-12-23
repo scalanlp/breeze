@@ -17,8 +17,8 @@ package breeze.math
 */
 import breeze.linalg.operators._
 import breeze.linalg.support.{CanZipMapValues, CanNorm, CanCopy, CanCreateZerosLike}
-import breeze.linalg.{QuasiTensor, TensorLike, Tensor, NumericOps}
-import breeze.generic.{UReduceable, CanMapValues}
+import breeze.linalg.{QuasiTensor, NumericOps}
+import breeze.generic.{CanTraverseValues, CanMapValues}
 
 /**
  *
@@ -119,7 +119,7 @@ object MutableInnerProductSpace {
 
 trait TensorSpace[V, I, S] extends MutableCoordinateSpace[V, S] {
   implicit def isNumericOps(v: V):NumericOps[V] with QuasiTensor[I, S]
-  implicit def reduce: UReduceable[V,S]
+  implicit def iterateValues: CanTraverseValues[V,S]
 
 }
 
@@ -128,7 +128,7 @@ object TensorSpace {
                     _norm:  CanNorm[V, Double],
                     _scalarNorm: CanNorm[S, Unit] ,
                    _mapValues:  CanMapValues[V, S, S, V],
-                   _reduce:  UReduceable[V, S],
+                   _reduce:  CanTraverseValues[V, S],
                    _zipMapValues:  CanZipMapValues[V, S, S, V],
                    _addVS:  BinaryOp[V, S, OpAdd, V],
                    _subVS:  BinaryOp[V, S, OpSub, V],
@@ -164,7 +164,7 @@ object TensorSpace {
     implicit def scalarNorm: CanNorm[S, Unit] = _scalarNorm
     implicit def mapValues: CanMapValues[V, S, S, V] = _mapValues
 
-    implicit def reduce: UReduceable[V, S] = _reduce
+    implicit def iterateValues: CanTraverseValues[V, S] = _reduce
 
     implicit def zipMapValues: CanZipMapValues[V, S, S, V] = _zipMapValues
 

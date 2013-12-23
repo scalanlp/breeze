@@ -28,6 +28,7 @@ import org.netlib.util.intW
 import breeze.macros.expand
 import scala.math.BigInt
 import scala.collection.mutable.ArrayBuffer
+import breeze.generic.CanTraverseValues.ValuesVisitor
 
 /**
  * A DenseMatrix is a matrix with all elements found in an array. It is column major unless isTranspose is true,
@@ -181,12 +182,6 @@ extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
   def isActive(i: Int) = true
   def allVisitableIndicesActive = true
 
-  override def ureduce[A](f: URFunc[V, A]): A = {
-    val idealMajorStride = if(isTranspose) cols else rows
-    if(majorStride == idealMajorStride && offset == 0) f(data, rows*cols)
-    else if(majorStride == idealMajorStride) f(data, offset, 1, rows*cols, {_ => {true}})
-    else f(valuesIterator)
-  }
 
   override def toDenseMatrix(implicit cm: ClassTag[V], dfv: DefaultArrayValue[V]): DenseMatrix[V] = {
     val result = new DenseMatrix[V](rows, cols, new Array[V](size))
@@ -479,6 +474,34 @@ object DenseMatrix extends LowPriorityDenseMatrix
 
       override def mapActive(from : DenseMatrix[V], fn : (V=>R)) =
         map(from, fn)
+    }
+  }
+
+  implicit def canIterateValues[V]:CanTraverseValues[DenseMatrix[V], V] = {
+    new CanTraverseValues[DenseMatrix[V], V] {
+
+      /** Iterates all key-value pairs from the given collection. */
+      def traverse(from: DenseMatrix[V], fn: ValuesVisitor[V]): Unit = {
+        import from._
+        val idealMajorStride = if(isTranspose) cols else rows
+
+        if(majorStride == idealMajorStride) {
+          fn.visitArray(data, offset, rows*cols, 1)
+        } else {
+          var j = 0
+          var off = 0
+          while (j < from.cols) {
+            var i = 0
+            while(i < from.rows) {
+              fn.visit(from(i, j))
+              off += 1
+              i += 1
+            }
+            j += 1
+          }
+        }
+      }
+
     }
   }
 

@@ -27,6 +27,7 @@ import java.util
 import collection.mutable
 import scala.reflect.ClassTag
 import breeze.macros.expand
+import breeze.generic.CanTraverseValues.ValuesVisitor
 
 
 /**
@@ -98,10 +99,6 @@ class SparseVector[@spec(Double,Int, Float) E](val array: SparseArray[E])
 
   override def toString = {
     activeIterator.mkString("SparseVector(",", ", ")")
-  }
-
-  override def ureduce[Final](f: URFunc[E, Final]) = {
-    f(data, activeSize)
   }
 
   def copy: SparseVector[E] = {
@@ -224,6 +221,21 @@ object SparseVector extends SparseVectorOps
           i += 1
         }
         new SparseVector(from.index.take(from.activeSize), out, from.activeSize, from.length)
+      }
+    }
+  }
+
+  implicit def canIterateValues[V]:CanTraverseValues[SparseVector[V], V] = {
+    new CanTraverseValues[SparseVector[V],V] {
+
+      /** Iterates all key-value pairs from the given collection. */
+      def traverse(from: SparseVector[V], fn: ValuesVisitor[V]): Unit = {
+        fn.zeros(from.size - from.activeSize, from.default)
+        var i = 0
+        while(i < from.activeSize) {
+          fn.visit(from.data(i))
+          i += 1
+        }
       }
     }
   }
