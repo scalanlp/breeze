@@ -487,7 +487,7 @@ with MatrixConstructors[DenseMatrix] {
 
         if(majorStride == idealMajorStride) {
           fn.visitArray(data, offset, rows*cols, 1)
-        } else {
+        } else if(!from.isTranspose) {
           var j = 0
           var off = 0
           while (j < from.cols) {
@@ -495,6 +495,16 @@ with MatrixConstructors[DenseMatrix] {
             while(i < from.rows) {
               fn.visit(from(i, j))
               off += 1
+              i += 1
+            }
+            j += 1
+          }
+        } else {
+          var j = 0
+          while (j < from.cols) {
+            var i = 0
+            while(i < from.rows) {
+              fn.visit(from(i, j))
               i += 1
             }
             j += 1

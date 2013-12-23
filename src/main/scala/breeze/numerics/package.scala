@@ -410,12 +410,6 @@ package object numerics {
     }
   }
 
-
-
-
-
-
-
   /**
    * The sigmoid function: 1/(1 + exp(-x))
    *
