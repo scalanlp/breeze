@@ -109,6 +109,7 @@ object Counter extends CounterOps {
 
   def count[K](items: K*): Counter[K,Int] = countTraversable(items)
 
+  @SerialVersionUID(2872445575657408160L)
   class Impl[K, V]
   (override val data : scala.collection.mutable.Map[K,V])
   (implicit defaultArrayValue : DefaultArrayValue[V])
