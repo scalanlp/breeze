@@ -23,10 +23,9 @@ import breeze.math.Ring
  * These traits are usually implemented in (a supertype of) the companion object of
  * one of the operands.
  * @tparam A
- * @tparam B
  * @tparam Op
  */
-trait UnaryOp[A, Op <: OpType, +R] extends MethodImpl[A, R] {
+trait UnaryOp[A, Op <: OpType, +R] {
   def apply(a: A): R
 }
 
@@ -35,14 +34,6 @@ object UnaryOp {
     def apply(a: S): S = implicitly[Ring[S]].negate(a)
   }
 
-  type Bind[Op <:OpType] = { type Sig[A, R] = UnaryOp[A, Op, R]}
 }
 
-/**
- * This is a special kind of UnaryOp that supports registration
- * of specialized implementations for a given operation.
- * @author dlwh
- */
-trait UnaryRegistry[A <: AnyRef, Op <: OpType, R] extends UnaryOp[A, Op, R] with Multimethod[UnaryOp.Bind[Op]#Sig, A, R] {
-}
 
