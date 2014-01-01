@@ -213,7 +213,7 @@ object Complex { outer =>
   // neg
   //
 
-  implicit object Neg extends UnaryOp[Complex,OpNeg,Complex]
+  implicit object Neg extends OpNeg.Impl[Complex, Complex]
     { def apply(v : Complex) = -v}
 
   //

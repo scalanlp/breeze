@@ -315,7 +315,7 @@ object SparseVector extends SparseVectorOps
 
 
   implicit def negFromScale[@spec(Int, Float, Double)  V, Double](implicit scale: BinaryOp[SparseVector[V], V, OpMulScalar, SparseVector[V]], field: Ring[V]) = {
-    new UnaryOp[SparseVector[V], OpNeg, SparseVector[V]] {
+    new OpNeg.Impl[SparseVector[V], SparseVector[V]] {
       override def apply(a : SparseVector[V]) = {
         scale(a, field.negate(field.one))
       }

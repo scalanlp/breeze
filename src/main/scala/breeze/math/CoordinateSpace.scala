@@ -57,7 +57,7 @@ object CoordinateSpace {
 
     implicit val subVV: BinaryOp[S, S, OpSub, S] = scalarOpSub
 
-    implicit val neg: UnaryOp[S, OpNeg, S] = UnaryOp.scalaOpNeg
+    implicit val neg: OpNeg.Impl[S, S] = OpNeg.ringNegation
 
     implicit val normImplDouble:norm.Impl2[S, Double, Double] = new norm.Impl2[S, Double, Double] {
       def apply(v: S, v2: Double): Double = scalarNorm(v)
@@ -129,7 +129,7 @@ object MutableCoordinateSpace {
                    _divVS:  BinaryOp[V, S, OpDiv, V],
                    _addVV:  BinaryOp[V, V, OpAdd, V],
                    _subVV:  BinaryOp[V, V, OpSub, V],
-                   _neg:  UnaryOp[V, OpNeg, V],
+                   _neg:  OpNeg.Impl[V, V],
                    _isNumericOps: V <:< NumericOps[V],
                    _axpy:  CanAxpy[S, V, V],
                    _dotVV:  BinaryOp[V, V, OpMulInner, S]):MutableCoordinateSpace[V, S] = new MutableCoordinateSpace[V, S] {
@@ -201,7 +201,7 @@ object MutableCoordinateSpace {
 
     implicit def subVV: BinaryOp[V, V, OpSub, V] = _subVV
 
-    implicit def neg: UnaryOp[V, OpNeg, V] = _neg
+    implicit def neg: OpNeg.Impl[V, V] = _neg
 
     implicit def isNumericOps(v: V): NumericOps[V] = _isNumericOps(v)
 

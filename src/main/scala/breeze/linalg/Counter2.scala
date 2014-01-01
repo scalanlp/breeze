@@ -542,8 +542,8 @@ trait Counter2Ops {
     }
   }
 
-  implicit def canNegate[K1, K2, V](implicit  ring: Ring[V], d: DefaultArrayValue[V]):UnaryOp[Counter2[K1, K2, V], OpNeg, Counter2[K1, K2, V]] = {
-    new UnaryOp[Counter2[K1, K2, V], OpNeg, Counter2[K1, K2, V]] {
+  implicit def canNegate[K1, K2, V](implicit  ring: Ring[V], d: DefaultArrayValue[V]):OpNeg.Impl[Counter2[K1, K2, V], Counter2[K1, K2, V]] = {
+    new OpNeg.Impl[Counter2[K1, K2, V], Counter2[K1, K2, V]] {
       override def apply(a : Counter2[K1, K2, V]) = {
         val result = Counter2[K1, K2, V]()
         for( (k, v) <- a.activeIterator) {

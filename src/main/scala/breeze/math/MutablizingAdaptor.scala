@@ -129,7 +129,7 @@ object MutablizingAdaptor {
       def close(a: Wrapper, b: Wrapper, tolerance: Double): Boolean = u.close(a.value, b.value, tolerance)
 
       // default implementations
-      implicit def neg: UnaryOp[Wrapper, OpNeg, Wrapper] = new UnaryOp[Wrapper, OpNeg, Wrapper] {
+      implicit def neg: OpNeg.Impl[Wrapper, Wrapper] = new OpNeg.Impl[Wrapper, Wrapper] {
         def apply(a: Wrapper): Wrapper = a.map(u.neg apply)
       }
     }
@@ -215,7 +215,7 @@ object MutablizingAdaptor {
       override def close(a: Wrapper, b: Wrapper, tolerance: Double): Boolean = u.close(a.value, b.value, tolerance)
 
       // default implementations
-      implicit def neg: UnaryOp[Wrapper, OpNeg, Wrapper] = new UnaryOp[Wrapper, OpNeg, Wrapper] {
+      implicit def neg: OpNeg.Impl[Wrapper, Wrapper] = new OpNeg.Impl[Wrapper, Wrapper] {
         def apply(a: Wrapper): Wrapper = a.map(u.neg apply)
       }
 
@@ -304,7 +304,7 @@ object MutablizingAdaptor {
       override def close(a: Wrapper, b: Wrapper, tolerance: Double): Boolean = u.close(a.value, b.value, tolerance)
 
       // default implementations
-      implicit def neg: UnaryOp[Wrapper, OpNeg, Wrapper] = new UnaryOp[Wrapper, OpNeg, Wrapper] {
+      implicit def neg: OpNeg.Impl[Wrapper, Wrapper] = new OpNeg.Impl[Wrapper, Wrapper] {
         def apply(a: Wrapper): Wrapper = a.map(u.neg apply)
       }
 

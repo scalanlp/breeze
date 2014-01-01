@@ -417,7 +417,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
 
 
   implicit def negFromScale[V](implicit scale: BinaryOp[DenseMatrix[V], V, OpMulScalar, DenseMatrix[V]], field: Ring[V]) = {
-    new UnaryOp[DenseMatrix[V], OpNeg, DenseMatrix[V]] {
+    new OpNeg.Impl[DenseMatrix[V], DenseMatrix[V]] {
       override def apply(a : DenseMatrix[V]) = {
         scale(a, field.negate(field.one))
       }

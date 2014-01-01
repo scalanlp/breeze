@@ -149,7 +149,7 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
   }
 
   implicit def negFromScale[@specialized(Int, Float, Double) V, Double](implicit scale: BinaryOp[Vector[V], V, OpMulScalar, Vector[V]], ring: Ring[V]) = {
-    new UnaryOp[Vector[V], OpNeg, Vector[V]] {
+    new OpNeg.Impl[Vector[V], Vector[V]] {
       override def apply(a : Vector[V]) = {
         scale(a, ring.negate(ring.one))
       }

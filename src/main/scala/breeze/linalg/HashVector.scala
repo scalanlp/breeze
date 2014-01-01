@@ -196,7 +196,7 @@ object HashVector extends HashVectorOps
 
 
   implicit def negFromScale[@specialized(Int, Float, Double)  V, Double](implicit scale: BinaryOp[HashVector[V], V, OpMulScalar, HashVector[V]], field: Ring[V]) = {
-    new UnaryOp[HashVector[V], OpNeg, HashVector[V]] {
+    new OpNeg.Impl[HashVector[V], HashVector[V]] {
       override def apply(a : HashVector[V]) = {
         scale(a, field.negate(field.one))
       }

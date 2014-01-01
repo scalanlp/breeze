@@ -30,9 +30,9 @@ import scala.reflect.ClassTag
 trait NumericOps[+This] {
   def repr : This
 
-  final def unary_-[TT>:This,That](implicit op : UnaryOp[TT,OpNeg,That]) = op(repr)
+  final def unary_-[TT>:This,That](implicit op : OpNeg.Impl[TT, That]) = op(repr)
 
-  final def unary_![TT>:This,That](implicit op : UnaryOp[TT,OpNot,That]) = op(repr)
+  final def unary_![TT>:This,That](implicit op : OpNot.Impl[TT, That]) = op(repr)
 
   /** Element-wise sum of this and b. */
   final def :+ [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpAdd,That]) = op(repr,b)

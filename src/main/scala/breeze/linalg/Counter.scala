@@ -407,8 +407,8 @@ trait CounterOps {
     }
   }
 
-  implicit def canNegate[K1, V](implicit  ring: Ring[V], d: DefaultArrayValue[V]):UnaryOp[Counter[K1, V], OpNeg, Counter[K1, V]] = {
-    new UnaryOp[Counter[K1, V], OpNeg, Counter[K1, V]] {
+  implicit def canNegate[K1, V](implicit ring: Ring[V], d: DefaultArrayValue[V]):OpNeg.Impl[Counter[K1, V], Counter[K1, V]] = {
+    new OpNeg.Impl[Counter[K1, V], Counter[K1, V]] {
       override def apply(a : Counter[K1, V]) = {
         val result = Counter[K1, V]()
         for( (k, v) <- a.activeIterator) {

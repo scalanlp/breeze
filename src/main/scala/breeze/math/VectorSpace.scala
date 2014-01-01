@@ -42,7 +42,7 @@ trait VectorSpace[V, S] {
   def close(a: V, b: V, tolerance: Double):Boolean
 
   // default implementations
-  implicit def neg: UnaryOp[V, OpNeg, V]
+  implicit def neg: OpNeg.Impl[V, V]
 
 }
 
@@ -88,7 +88,7 @@ object MutableInnerProductSpace {
     _divVS: BinaryOp[V, S, OpDiv, V],
     _addVV: BinaryOp[V, V, OpAdd, V],
     _subVV: BinaryOp[V, V, OpSub, V],
-    _neg: UnaryOp[V, OpNeg, V],
+    _neg: OpNeg.Impl[V, V],
     _dotVV: BinaryOp[V, V, OpMulInner, S],
     _copy: CanCopy[V],
     _mulIntoVS: BinaryUpdateOp[V, S, OpMulScalar],
@@ -107,7 +107,7 @@ object MutableInnerProductSpace {
     implicit def divVS: BinaryOp[V, S, OpDiv, V] = _divVS
     implicit def addVV: BinaryOp[V, V, OpAdd, V] = _addVV
     implicit def subVV: BinaryOp[V, V, OpSub, V] = _subVV
-    implicit def neg: UnaryOp[V, OpNeg, V] = _neg
+    implicit def neg: OpNeg.Impl[V, V] = _neg
     implicit def dotVV: BinaryOp[V, V, OpMulInner, S] = _dotVV
     implicit def copy: CanCopy[V] = _copy
     implicit def mulIntoVS: BinaryUpdateOp[V, S, OpMulScalar] = _mulIntoVS
@@ -159,7 +159,7 @@ object TensorSpace {
                    _divVS:  BinaryOp[V, S, OpDiv, V],
                    _addVV:  BinaryOp[V, V, OpAdd, V],
                    _subVV:  BinaryOp[V, V, OpSub, V],
-                   _neg:  UnaryOp[V, OpNeg, V],
+                   _neg:  OpNeg.Impl[V, V],
                    _isNumericOps: V <:< NumericOps[V] with QuasiTensor[I, S],
                    _dotVV:  BinaryOp[V, V, OpMulInner, S]):TensorSpace[V, I, S] = new TensorSpace[V, I, S] {
     implicit def normImplDouble: norm.Impl2[V, Double, Double] = _norm
@@ -225,7 +225,7 @@ object TensorSpace {
 
     implicit def subVV: BinaryOp[V, V, OpSub, V] = _subVV
 
-    implicit def neg: UnaryOp[V, OpNeg, V] = _neg
+    implicit def neg: OpNeg.Impl[V, V] = _neg
 
     implicit def isNumericOps(v: V): NumericOps[V] with QuasiTensor[I, S] = _isNumericOps(v)
 

@@ -145,7 +145,7 @@ trait BitVectorOps {
   }
 
 
-  implicit val bv_OpNot:UnaryOp[BitVector, OpNot, BitVector] = new UnaryOp[BitVector, OpNot, BitVector] {
+  implicit val bv_OpNot:OpNot.Impl[BitVector, BitVector] = new OpNot.Impl[BitVector, BitVector] {
     def apply(a: BitVector): BitVector = {
       val ones = BitVector.ones(a.length, a.enforceLength)
       ones.data.andNot(a.data)

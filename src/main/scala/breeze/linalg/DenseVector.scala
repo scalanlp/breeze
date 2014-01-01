@@ -269,7 +269,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   }
 
   implicit def negFromScale[V](implicit scale: BinaryOp[DenseVector[V], V, OpMulScalar, DenseVector[V]], field: Ring[V]) = {
-    new UnaryOp[DenseVector[V], OpNeg, DenseVector[V]] {
+    new OpNeg.Impl[DenseVector[V], DenseVector[V]] {
       override def apply(a : DenseVector[V]) = {
         scale(a, field.negate(field.one))
       }
@@ -665,6 +665,7 @@ trait DenseVector_OrderingOps extends DenseVectorOps { this: DenseVector.type =>
   (implicit @expand.sequence[Op]({_ > _},  {_ >= _}, {_ <= _}, {_ < _}, { _ == _}, {_ != _})
   op: BinaryOp[T, T, Op, T]):BinaryOp[DenseVector[T], DenseVector[T], Op, BitVector] = new BinaryOp[DenseVector[T], DenseVector[T], Op, BitVector] {
     def apply(a: DenseVector[T], b: DenseVector[T]): BitVector = {
+      Op
       val ad = a.data
       val bd = b.data
       var aoff = a.offset

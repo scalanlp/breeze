@@ -324,7 +324,7 @@ object VectorBuilder extends VectorBuilderOps_Double {
   implicit def canZerosBuilder[@spec(Int, Float, Double) V: ClassTag: Semiring:DefaultArrayValue] = new CanZerosBuilder[V]
 
   implicit def negFromScale[@spec(Int, Float, Double)  V, Double](implicit scale: BinaryOp[VectorBuilder[V], V, OpMulScalar, VectorBuilder[V]], field: Ring[V]) = {
-    new UnaryOp[VectorBuilder[V], OpNeg, VectorBuilder[V]] {
+    new OpNeg.Impl[VectorBuilder[V], VectorBuilder[V]] {
       override def apply(a : VectorBuilder[V]) = {
         scale(a, field.negate(field.one))
       }
@@ -443,8 +443,8 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
     BinaryOp.fromCopyAndUpdate[VectorBuilder[Double], VectorBuilder[Double], OpSub]
   }
 
-  implicit val neg_Double: UnaryOp[VectorBuilder[Double], OpNeg, VectorBuilder[Double]] = {
-    new UnaryOp[VectorBuilder[Double], OpNeg, VectorBuilder[Double]] {
+  implicit val neg_Double: OpNeg.Impl[VectorBuilder[Double], VectorBuilder[Double]] = {
+    new OpNeg.Impl[VectorBuilder[Double], VectorBuilder[Double]] {
       def apply(a: VectorBuilder[Double]): VectorBuilder[Double] = {
         val c = a.zerosLike
         c.reserve(a.size)
@@ -513,7 +513,7 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
       }
 
 
-      implicit def neg: UnaryOp[VectorBuilder[Double], OpNeg, VectorBuilder[Double]] = neg_Double
+      implicit def neg: OpNeg.Impl[VectorBuilder[Double], VectorBuilder[Double]] = neg_Double
 
       implicit def setIntoVV: BinaryUpdateOp[VectorBuilder[Double], VectorBuilder[Double], OpSet] = {
         canSet_Double
