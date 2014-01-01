@@ -47,7 +47,7 @@ scalacOptions ++= Seq("-optimize","-deprecation","-language:_")
 
 
 libraryDependencies ++= Seq(
-  "org.scalanlp" %% "breeze-macros" % "0.1" % "compile",
+  "org.scalanlp" %% "breeze-macros" % "0.2-SNAPSHOT" % "compile",
   "com.thoughtworks.paranamer" % "paranamer" % "2.2",
   "com.github.fommil.netlib" % "all" % "1.1.2" pomOnly(),
   "org.scalanlp" % "lpsolve" % "5.5.2-SNAPSHOT",
