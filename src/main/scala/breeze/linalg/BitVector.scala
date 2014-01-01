@@ -124,7 +124,7 @@ trait BitVectorOps {
   @expand.valify
   implicit def bv_bv_UpdateOp[@expand.args(OpAnd, OpOr, OpXor, OpSet) Op <: OpType]
   (implicit @expand.sequence[Op]({_ and _},  {_ or _}, {_ xor _}, { (a,b) => a.clear(); a.or(b)})
-  op: BinaryUpdateOp[java.util.BitSet, java.util.BitSet, Op]):BinaryUpdateOp[BitVector, BitVector, Op] = new BinaryUpdateOp[BitVector, BitVector, Op] {
+  op: Op.InPlaceImpl2[java.util.BitSet, java.util.BitSet]):Op.InPlaceImpl2[BitVector, BitVector] = new Op.InPlaceImpl2[BitVector, BitVector] {
     def apply(a: BitVector, b: BitVector) {
       if(!a.lengthsMatch(b)) throw new IllegalArgumentException(s"Lengths don't match: ${a.length} ${b.length}")
       op(a.data, b.data)
@@ -135,7 +135,7 @@ trait BitVectorOps {
   @expand.valify
   implicit def bv_bv_Op[@expand.args(OpAnd, OpOr, OpXor) Op <: OpType]
   (implicit @expand.sequence[Op]({_ and _},  {_ or _}, {_ xor _})
-  op: BinaryUpdateOp[java.util.BitSet, java.util.BitSet, Op]):BinaryOp[BitVector, BitVector, Op, BitVector] = new BinaryOp[BitVector, BitVector, Op, BitVector] {
+  op: Op.InPlaceImpl2[java.util.BitSet, java.util.BitSet]):Op.Impl2[BitVector, BitVector, BitVector] = new Op.Impl2[BitVector, BitVector, BitVector] {
     def apply(a: BitVector, b: BitVector) = {
       if(!a.lengthsMatch(b)) throw new IllegalArgumentException(s"Lengths don't match: ${a.length} ${b.length}")
       val result = a.data.clone().asInstanceOf[util.BitSet]
@@ -154,13 +154,13 @@ trait BitVectorOps {
   }
 
 
-  implicit val bv_bv_OpNe:BinaryOp[BitVector, BitVector, OpNe, BitVector] = new BinaryOp[BitVector, BitVector, OpNe, BitVector] {
+  implicit val bv_bv_OpNe:OpNe.Impl2[BitVector, BitVector, BitVector] = new OpNe.Impl2[BitVector, BitVector, BitVector] {
     def apply(a: BitVector, b: BitVector): BitVector = {
       a ^^ b
     }
   }
 
-  implicit val bv_bv_OpEq:BinaryOp[BitVector, BitVector, OpEq, BitVector] = new BinaryOp[BitVector, BitVector, OpEq, BitVector] {
+  implicit val bv_bv_OpEq:OpEq.Impl2[BitVector, BitVector, BitVector] = new OpEq.Impl2[BitVector, BitVector, BitVector] {
     def apply(a: BitVector, b: BitVector): BitVector = {
       if(!a.lengthsMatch(b)) throw new IllegalArgumentException(s"Lengths don't match: ${a.length} ${b.length}")
       !(a :!= b)
@@ -182,8 +182,8 @@ trait BitVectorOps {
     }
   }
 
-  implicit val canDot_BV_BV: BinaryOp[BitVector, BitVector, OpMulInner, Boolean] = {
-    new BinaryOp[BitVector, BitVector, breeze.linalg.operators.OpMulInner, Boolean] {
+  implicit val canDot_BV_BV: OpMulInner.Impl2[BitVector, BitVector, Boolean] = {
+    new breeze.linalg.operators.OpMulInner.Impl2[BitVector, BitVector, Boolean] {
       def apply(a: BitVector, b: BitVector): Boolean = {
         require(a.lengthsMatch(b), "Vectors must be the same length!")
         a.data intersects b.data
@@ -194,8 +194,8 @@ trait BitVectorOps {
 
   @expand
   @expand.valify
-  implicit def canDot_BV_DenseVector[@expand.args(Int, Long, BigInt, Complex) T](implicit @expand.sequence[T](0, 0l, BigInt(0), Complex.zero) zero: T): BinaryOp[BitVector, DenseVector[T], breeze.linalg.operators.OpMulInner, T] = {
-    new BinaryOp[BitVector, DenseVector[T], breeze.linalg.operators.OpMulInner, T] {
+  implicit def canDot_BV_DenseVector[@expand.args(Int, Long, BigInt, Complex) T](implicit @expand.sequence[T](0, 0l, BigInt(0), Complex.zero) zero: T): breeze.linalg.operators.OpMulInner.Impl2[BitVector, DenseVector[T], T] = {
+    new breeze.linalg.operators.OpMulInner.Impl2[BitVector, DenseVector[T], T] {
       def apply(a: BitVector, b: DenseVector[T]) = {
         val ad = a.data
         val boff = b.offset
@@ -217,8 +217,8 @@ trait BitVectorOps {
 
   @expand
   @expand.valify
-  implicit def canDot_BV_SV[@expand.args(Int, Long, BigInt, Complex) T](implicit @expand.sequence[T](0, 0l, BigInt(0), Complex.zero) zero: T): BinaryOp[BitVector, SparseVector[T], breeze.linalg.operators.OpMulInner, T] = {
-    new BinaryOp[BitVector, SparseVector[T], breeze.linalg.operators.OpMulInner, T] {
+  implicit def canDot_BV_SV[@expand.args(Int, Long, BigInt, Complex) T](implicit @expand.sequence[T](0, 0l, BigInt(0), Complex.zero) zero: T): breeze.linalg.operators.OpMulInner.Impl2[BitVector, SparseVector[T], T] = {
+    new breeze.linalg.operators.OpMulInner.Impl2[BitVector, SparseVector[T], T] {
       def apply(a: BitVector, b: SparseVector[T]):T = {
         require(a.lengthsMatch(b), "Vectors must be the same length!")
         if(b.activeSize == 0) return zero
@@ -240,8 +240,8 @@ trait BitVectorOps {
     }
   }
 
-  implicit def canDot_Other_BV[T, Other](implicit op: BinaryOp[BitVector, Other, OpMulInner, T]):BinaryOp[Other, BitVector, OpMulInner, T] = {
-    new BinaryOp[Other, BitVector, OpMulInner, T] {
+  implicit def canDot_Other_BV[T, Other](implicit op: OpMulInner.Impl2[BitVector, Other, T]):OpMulInner.Impl2[Other, BitVector, T] = {
+    new OpMulInner.Impl2[Other, BitVector, T] {
       def apply(a: Other, b: BitVector) = {
         op(b,a)
       }

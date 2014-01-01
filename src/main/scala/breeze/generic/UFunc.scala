@@ -114,18 +114,18 @@ trait UFuncX { this: UFunc =>
 }
 
 object UFunc {
-  trait UImpl[Tag, @specialized(Int, Double, Float) V, @specialized(Int, Double, Float) VR] {
+  trait UImpl[Tag, @specialized(Int, Double, Float) V, @specialized(Int, Double, Float) +VR] {
     def apply(v: V):VR
   }
 
-  trait UImpl2[Tag, @specialized(Int, Double, Float) V1, @specialized(Int, Double, Float) V2, @specialized(Int, Double, Float) VR] {
+  trait UImpl2[Tag, @specialized(Int, Double, Float) V1, @specialized(Int, Double, Float) V2, @specialized(Int, Double, Float) +VR] {
     def apply(v: V1, v2: V2):VR
   }
 
   trait UImpl3[Tag, @specialized(Int, Double, Float) V1,
                     @specialized(Int, Double, Float) V2,
                     @specialized(Int, Double, Float) V3,
-                    @specialized(Int, Double, Float) VR] {
+                    @specialized(Int, Double, Float) +VR] {
     def apply(v: V1, v2: V2, v3: V3):VR
   }
 

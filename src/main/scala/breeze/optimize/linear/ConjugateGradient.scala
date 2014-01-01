@@ -17,7 +17,7 @@ class ConjugateGradient[T,M](maxNormValue: Double = Double.PositiveInfinity,
                              maxIterations: Int = -1,
                              normSquaredPenalty: Double = 0,
                              tolerance: Double = 1E-5)
-                            (implicit space: MutableInnerProductSpace[T, Double], mult: BinaryOp[M, T, OpMulMatrix, T]) extends Logging {
+                            (implicit space: MutableInnerProductSpace[T, Double], mult: OpMulMatrix.Impl2[M, T, T]) extends Logging {
   import space._
 
   def minimize(a: T, B: M): T = minimize(a, B, zeros(a))

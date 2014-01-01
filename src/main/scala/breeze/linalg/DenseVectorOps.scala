@@ -23,8 +23,8 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   implicit def dv_dv_Op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
-  op: BinaryOp[T, T, Op, T]):BinaryOp[DenseVector[T], DenseVector[T], Op, DenseVector[T]] = {
-    new BinaryOp[DenseVector[T], DenseVector[T], Op, DenseVector[T]] {
+  op: Op.Impl2[T, T, T]):Op.Impl2[DenseVector[T], DenseVector[T], DenseVector[T]] = {
+    new Op.Impl2[DenseVector[T], DenseVector[T], DenseVector[T]] {
       def apply(a: DenseVector[T], b: DenseVector[T]): DenseVector[T] = {
         val ad = a.data
         val bd = b.data
@@ -42,7 +42,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
         }
         result
       }
-      implicitly[BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]]].register(this)
+      implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
     }
   }
 
@@ -53,7 +53,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   implicit def dv_v_Op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
-  op: BinaryOp[T, T, Op, T]):BinaryOp[DenseVector[T], Vector[T], Op, DenseVector[T]] = new BinaryOp[DenseVector[T], Vector[T], Op, DenseVector[T]] {
+  op: Op.Impl2[T, T, T]):Op.Impl2[DenseVector[T], Vector[T], DenseVector[T]] = new Op.Impl2[DenseVector[T], Vector[T], DenseVector[T]] {
     def apply(a: DenseVector[T], b: Vector[T]): DenseVector[T] = {
       val ad = a.data
       var aoff = a.offset
@@ -68,7 +68,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
       }
       result
     }
-    implicitly[BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]]].register(this)
+    implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
   }
 
   @expand
@@ -78,7 +78,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   implicit def dv_s_Op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
-  op: BinaryOp[T, T, Op, T]):BinaryOp[DenseVector[T], T, Op, DenseVector[T]] = new BinaryOp[DenseVector[T], T, Op, DenseVector[T]] {
+  op: Op.Impl2[T, T, T]):Op.Impl2[DenseVector[T], T, DenseVector[T]] = new Op.Impl2[DenseVector[T], T, DenseVector[T]] {
     def apply(a: DenseVector[T], b: T): DenseVector[T] = {
       val ad = a.data
       var aoff = a.offset
@@ -93,7 +93,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
       }
       result
     }
-    implicitly[BinaryRegistry[Vector[T], T, Op, Vector[T]]].register(this)
+    implicitly[BinaryRegistry[Vector[T], T, Op.type, Vector[T]]].register(this)
   }
 
 
@@ -105,7 +105,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   implicit def dv_dv_UpdateOp[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
-  op: BinaryOp[T, T, Op, T]):BinaryUpdateOp[DenseVector[T], DenseVector[T], Op] = new BinaryUpdateOp[DenseVector[T], DenseVector[T], Op] {
+  op: Op.Impl2[T, T, T]):Op.InPlaceImpl2[DenseVector[T], DenseVector[T]] = new Op.InPlaceImpl2[DenseVector[T], DenseVector[T]] {
     def apply(a: DenseVector[T], b: DenseVector[T]):Unit = {
       val ad = a.data
       val bd = b.data
@@ -120,7 +120,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
         i += 1
       }
     }
-    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op]].register(this)
+    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
   }
 
   @expand
@@ -130,7 +130,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   implicit def dv_s_UpdateOp[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _})
-  op: BinaryOp[T, T, Op, T]):BinaryUpdateOp[DenseVector[T], T, Op] = new BinaryUpdateOp[DenseVector[T], T, Op] {
+  op: Op.Impl2[T, T, T]):Op.InPlaceImpl2[DenseVector[T], T] = new Op.InPlaceImpl2[DenseVector[T], T] {
     def apply(a: DenseVector[T], b: T):Unit = {
       val ad = a.data
       var aoff = a.offset
@@ -141,7 +141,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
         aoff += a.stride
         i += 1
       }
-      implicitly[BinaryUpdateRegistry[Vector[T], T, Op]].register(this)
+      implicitly[BinaryUpdateRegistry[Vector[T], T, Op.type]].register(this)
     }
   }
 
@@ -149,8 +149,8 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 
   @expand
   @expand.valify
-  implicit def canDot_DV_DV[@expand.args(Int, Long, BigInt, Complex) T](implicit @expand.sequence[T](0, 0l, BigInt(0), Complex.zero) zero: T): BinaryOp[DenseVector[T], DenseVector[T], breeze.linalg.operators.OpMulInner, T] = {
-    new BinaryOp[DenseVector[T], DenseVector[T], breeze.linalg.operators.OpMulInner, T] {
+  implicit def canDot_DV_DV[@expand.args(Int, Long, BigInt, Complex) T](implicit @expand.sequence[T](0, 0l, BigInt(0), Complex.zero) zero: T): breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], DenseVector[T], T] = {
+    new breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], DenseVector[T], T] {
       def apply(a: DenseVector[T], b: DenseVector[T]) = {
         require(b.length == a.length, "Vectors must be the same length!")
 
@@ -170,14 +170,14 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
         result
 
       }
-      implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulInner, T]].register(this)
+      implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulInner.type, T]].register(this)
     }
   }
 
   @expand
   @expand.valify
-  implicit def canDot_DV_V[@expand.args(Int, Double, Float, Long, BigInt, Complex) T](implicit @expand.sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T): BinaryOp[DenseVector[T], Vector[T], breeze.linalg.operators.OpMulInner, T] = {
-    new BinaryOp[DenseVector[T], Vector[T], breeze.linalg.operators.OpMulInner, T] {
+  implicit def canDot_DV_V[@expand.args(Int, Double, Float, Long, BigInt, Complex) T](implicit @expand.sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T): breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], Vector[T], T] = {
+    new breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], Vector[T], T] {
       def apply(a: DenseVector[T], b: Vector[T]) = {
         require(b.length == a.length, "Vectors must be the same length!")
 
@@ -194,7 +194,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
         result
 
       }
-      implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulInner, T]].register(this)
+      implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulInner.type, T]].register(this)
     }
 
   }

@@ -14,7 +14,7 @@ object MutableInnerProductSpaceDenseMatrixDouble {
 //	//implicit val canDotD_i = new CanDotDDenseMatrix[Int]
 
 	implicit val space_d = {
-    class CanDotDDenseMatrix extends BinaryOp[DenseMatrix[Double], DenseMatrix[Double], OpMulInner, Double] {
+    class CanDotDDenseMatrix extends OpMulInner.Impl2[DenseMatrix[Double], DenseMatrix[Double], Double] {
    		override def apply(a: DenseMatrix[Double], b: DenseMatrix[Double]):Double = {
    			require(a.rows == b.rows, "Vector row dimensions must match!")
    			require(a.cols == b.cols, "Vector col dimensions must match!")

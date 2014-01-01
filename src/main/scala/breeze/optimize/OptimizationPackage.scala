@@ -26,7 +26,7 @@ object OptimizationPackage {
   implicit def firstOrderPackage[DF, Vector](implicit coord: MutableCoordinateSpace[Vector, Double], df: DF <:< DiffFunction[Vector]) = new FirstOrderOptimizationPackage[DF, Vector]()
 
   class SecondOrderOptimizationPackage[Vector, Hessian]()(implicit coord: MutableCoordinateSpace[Vector, Double],
-                                                          mult: BinaryOp[Hessian, Vector, OpMulMatrix, Vector]) extends OptimizationPackage[SecondOrderFunction[Vector, Hessian], Vector] {
+                                                          mult: OpMulMatrix.Impl2[Hessian, Vector, Vector]) extends OptimizationPackage[SecondOrderFunction[Vector, Hessian], Vector] {
     def minimize(fn: SecondOrderFunction[Vector, Hessian], init: Vector, options: OptimizationOption*):Vector = {
       val params = options.foldLeft(OptParams())( (a,b) => b apply a)
       if(params.useL1) throw new UnsupportedOperationException("Can't use L1 with second order optimizer right now")
@@ -36,7 +36,7 @@ object OptimizationPackage {
   }
 
   implicit def secondOrderPackage[Vector, Hessian](implicit coord: MutableCoordinateSpace[Vector, Double],
-                                                   mult: BinaryOp[Hessian, Vector, OpMulMatrix, Vector]) = new SecondOrderOptimizationPackage[Vector, Hessian]()
+                                                   mult: OpMulMatrix.Impl2[Hessian, Vector, Vector]) = new SecondOrderOptimizationPackage[Vector, Hessian]()
 
   class FirstOrderStochasticOptimizationPackage[Vector]()(implicit coord: MutableCoordinateSpace[Vector, Double]) extends OptimizationPackage[StochasticDiffFunction[Vector], Vector] {
     def minimize(fn: StochasticDiffFunction[Vector], init: Vector, options: OptimizationOption*):Vector = {

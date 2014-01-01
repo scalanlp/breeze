@@ -19,7 +19,7 @@ class TruncatedNewtonMinimizer[T, H](maxIterations: Int = -1,
                                      l2Regularization: Double = 0,
                                      m: Int = 0)
                                     (implicit vs: MutableCoordinateSpace[T, Double],
-                                     mult: BinaryOp[H, T, OpMulMatrix, T]) extends Minimizer[T, SecondOrderFunction[T, H]] with Logging {
+                                     mult: OpMulMatrix.Impl2[H, T, T]) extends Minimizer[T, SecondOrderFunction[T, H]] with Logging {
 
   def minimize(f: SecondOrderFunction[T, H], initial: T): T = iterations(f, initial).takeUpToWhere(_.converged).last.x
 

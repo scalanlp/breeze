@@ -148,7 +148,7 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
     }
   }
 
-  implicit def negFromScale[@specialized(Int, Float, Double) V, Double](implicit scale: BinaryOp[Vector[V], V, OpMulScalar, Vector[V]], ring: Ring[V]) = {
+  implicit def negFromScale[@specialized(Int, Float, Double) V, Double](implicit scale: OpMulScalar.Impl2[Vector[V], V, Vector[V]], ring: Ring[V]) = {
     new OpNeg.Impl[Vector[V], Vector[V]] {
       override def apply(a : Vector[V]) = {
         scale(a, ring.negate(ring.one))
@@ -220,7 +220,7 @@ trait VectorOps { this: Vector.type =>
   implicit def v_v_Idempotent_Op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
   @expand.args(OpAdd, OpSub) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _}, {_ - _})
-  op: BinaryOp[T, T, Op, T]):BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]] = new BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]] {
+  op: Op.Impl2[T, T, T]):BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]] = new BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]] {
     override def bindingMissing(a: Vector[T], b: Vector[T]): Vector[T] = {
       require(b.length == a.length, "Vectors must be the same length!")
       val result = a.copy
@@ -236,7 +236,7 @@ trait VectorOps { this: Vector.type =>
   @expand
   @expand.valify
   implicit def v_v_nilpotent_Op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T]
-  (implicit @expand.sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T):BinaryRegistry[Vector[T], Vector[T], OpMulScalar, Vector[T]] = new BinaryRegistry[Vector[T], Vector[T], OpMulScalar, Vector[T]] {
+  (implicit @expand.sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T):BinaryRegistry[Vector[T], Vector[T], OpMulScalar.type, Vector[T]] = new BinaryRegistry[Vector[T], Vector[T], OpMulScalar.type, Vector[T]] {
     override def bindingMissing(a: Vector[T], b: Vector[T]): Vector[T] = {
       require(b.length == a.length, "Vectors must be the same length!")
       val builder = new VectorBuilder[T](a.length)
@@ -260,7 +260,7 @@ trait VectorOps { this: Vector.type =>
   implicit def v_v_Op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
   @expand.args(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
-  op: BinaryOp[T, T, Op, T]):BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]] = new BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]] {
+  op: Op.Impl2[T, T, T]):BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]] = new BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]] {
     override def bindingMissing(a: Vector[T], b: Vector[T]): Vector[T] = {
       require(b.length == a.length, "Vectors must be the same length!")
       val result = Vector.zeros[T](a.length)
@@ -282,7 +282,7 @@ trait VectorOps { this: Vector.type =>
   implicit def cast_v_v_Op[V1, V2,
   @expand.args(Int, Double, Float, Long, BigInt, Complex) T,
   @expand.args(OpAdd, OpSub, OpMulScalar,OpDiv, OpSet, OpMod, OpPow) Op <: OpType](implicit v1: V1<:<Vector[T], v2: V2<:<Vector[T]) = {
-    implicitly[BinaryRegistry[Vector[T], Vector[T], Op, Vector[T]]].asInstanceOf[BinaryOp[V1, V2, Op, Vector[T]]]
+    implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].asInstanceOf[Op.Impl2[V1, V2, Vector[T]]]
   }
   */
 
@@ -293,9 +293,9 @@ trait VectorOps { this: Vector.type =>
   implicit def v_s_Op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
-  op: BinaryOp[T, T, Op, T],
+  op: Op.Impl2[T, T, T],
   @expand.sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero)
-  zero: T):BinaryRegistry[Vector[T], T, Op, Vector[T]] = new BinaryRegistry[Vector[T], T, Op, Vector[T]] {
+  zero: T):BinaryRegistry[Vector[T], T, Op.type, Vector[T]] = new BinaryRegistry[Vector[T], T, Op.type, Vector[T]] {
     override def bindingMissing(a: Vector[T], b: T): Vector[T] = {
       val result = Vector.zeros[T](a.length)
 
@@ -317,7 +317,7 @@ trait VectorOps { this: Vector.type =>
   implicit def v_v_UpdateOp[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
   @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
-  op: BinaryOp[T, T, Op, T]):BinaryUpdateRegistry[Vector[T], Vector[T], Op] = new BinaryUpdateRegistry[Vector[T], Vector[T], Op] {
+  op: Op.Impl2[T, T, T]):BinaryUpdateRegistry[Vector[T], Vector[T], Op.type] = new BinaryUpdateRegistry[Vector[T], Vector[T], Op.type] {
     override def bindingMissing(a: Vector[T], b: Vector[T]):Unit = {
       require(b.length == a.length, "Vectors must be the same length!")
       var i = 0
@@ -335,7 +335,7 @@ trait VectorOps { this: Vector.type =>
   implicit def v_v_Idempotent_UpdateOp[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
   @expand.args(OpAdd, OpSub) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _}, {_ - _})
-  op: BinaryOp[T, T, Op, T]):BinaryUpdateRegistry[Vector[T], Vector[T], Op] = new BinaryUpdateRegistry[Vector[T], Vector[T], Op] {
+  op: Op.Impl2[T, T, T]):BinaryUpdateRegistry[Vector[T], Vector[T], Op.type] = new BinaryUpdateRegistry[Vector[T], Vector[T], Op.type] {
     override def bindingMissing(a: Vector[T], b: Vector[T]):Unit = {
       require(b.length == a.length, "Vectors must be the same length!")
       for( (k,v) <- b.activeIterator) {
@@ -351,7 +351,7 @@ trait VectorOps { this: Vector.type =>
   implicit def v_s_UpdateOp[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
-  op: BinaryOp[T, T, Op, T]):BinaryUpdateRegistry[Vector[T], T, Op] = new BinaryUpdateRegistry[Vector[T], T, Op] {
+  op: Op.Impl2[T, T, T]):BinaryUpdateRegistry[Vector[T], T, Op.type] = new BinaryUpdateRegistry[Vector[T], T, Op.type] {
     override def bindingMissing(a: Vector[T], b: T):Unit = {
       var i = 0
       while(i < a.length) {
@@ -364,8 +364,8 @@ trait VectorOps { this: Vector.type =>
 
   @expand
   @expand.valify
-  implicit def canDot_V_V[@expand.args(Int, Long, BigInt, Complex, Float, Double) T](implicit @expand.sequence[T](0, 0l, BigInt(0), Complex.zero, 0.0f, 0.0) zero: T): BinaryRegistry[Vector[T], Vector[T], breeze.linalg.operators.OpMulInner, T] = {
-    new BinaryRegistry[Vector[T], Vector[T], breeze.linalg.operators.OpMulInner, T] {
+  implicit def canDot_V_V[@expand.args(Int, Long, BigInt, Complex, Float, Double) T](implicit @expand.sequence[T](0, 0l, BigInt(0), Complex.zero, 0.0f, 0.0) zero: T): BinaryRegistry[Vector[T], Vector[T], breeze.linalg.operators.OpMulInner.type, T] = {
+    new BinaryRegistry[Vector[T], Vector[T], breeze.linalg.operators.OpMulInner.type, T] {
       override def bindingMissing(a: Vector[T], b: Vector[T]):T = {
         require(b.length == a.length, "Vectors must be the same length!")
         if (a.activeSize > b.activeSize) {

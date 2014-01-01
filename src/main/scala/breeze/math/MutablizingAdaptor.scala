@@ -4,7 +4,8 @@ import breeze.linalg.{norm, NumericOps}
 import breeze.linalg.support.{CanZipMapValues, CanCopy, CanCreateZerosLike}
 import breeze.linalg.operators._
 import breeze.util.Isomorphism
-import breeze.generic.CanMapValues
+import breeze.generic.{UFunc, CanMapValues}
+import breeze.generic.UFunc.UImpl2
 
 /**
  *
@@ -74,39 +75,39 @@ object MutablizingAdaptor {
         def apply(from: Wrapper): Wrapper = from
       }
 
-      def liftUpdate[Op <: OpType](implicit op: BinaryOp[V, S, Op, V]):BinaryUpdateOp[Wrapper, S, Op] = new BinaryUpdateOp[Wrapper, S, Op] {
+      def liftUpdate[Op<:OpType](implicit op: UFunc.UImpl2[Op, V, S, V]):UFunc.InPlaceImpl2[Op, Wrapper, S] = new UFunc.InPlaceImpl2[Op, Wrapper, S] {
         def apply(a: Wrapper, b: S) {
           a.value = op(a.value, b)
         }
       }
 
-      def liftUpdateV[Op <: OpType](implicit op: BinaryOp[V, V, Op, V]):BinaryUpdateOp[Wrapper, Wrapper, Op] = new BinaryUpdateOp[Wrapper, Wrapper, Op] {
+      def liftUpdateV[Op <: OpType](implicit op: UFunc.UImpl2[Op, V, V, V]):UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] = new UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] {
         def apply(a: Wrapper, b: Wrapper) {
           a.value = op(a.value, b.value)
         }
       }
 
-      def liftOp[Op <: OpType](implicit op: BinaryOp[V, S, Op, V]):BinaryOp[Wrapper, S, Op, Wrapper] = new BinaryOp[Wrapper, S, Op, Wrapper] {
+      def liftOp[Op <: OpType](implicit op: UFunc.UImpl2[Op, V, S, V]):UFunc.UImpl2[Op, Wrapper, S, Wrapper] = new UImpl2[Op, Wrapper, S, Wrapper] {
         def apply(a: Wrapper, b: S) = {
           a.map(op(_, b))
         }
       }
 
-      def liftOpV[Op <: OpType](implicit op: BinaryOp[V, V, Op, V]):BinaryOp[Wrapper, Wrapper, Op, Wrapper] = new BinaryOp[Wrapper, Wrapper, Op, Wrapper] {
+      def liftOpV[Op <: OpType](implicit op:UFunc.UImpl2[Op, V, V, V]):UFunc.UImpl2[Op, Wrapper, Wrapper, Wrapper] = new UFunc.UImpl2[Op, Wrapper, Wrapper, Wrapper] {
         def apply(a: Wrapper, b: Wrapper) = {
           a.map(op(_, b.value))
         }
       }
 
-      implicit def mulIntoVS: BinaryUpdateOp[Wrapper, S, OpMulScalar] = liftUpdate[OpMulScalar](u.mulVS)
+      implicit def mulIntoVS: OpMulScalar.InPlaceImpl2[Wrapper, S] = liftUpdate(u.mulVS)
 
-      implicit def divIntoVS: BinaryUpdateOp[Wrapper, S, OpDiv] = liftUpdate[OpDiv](u.divVS)
+      implicit def divIntoVS: OpDiv.InPlaceImpl2[Wrapper, S] = liftUpdate(u.divVS)
 
-      implicit def addIntoVV: BinaryUpdateOp[Wrapper, Wrapper, OpAdd] = liftUpdateV[OpAdd](u.addVV)
+      implicit def addIntoVV: OpAdd.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.addVV)
 
-      implicit def subIntoVV: BinaryUpdateOp[Wrapper, Wrapper, OpSub] = liftUpdateV[OpSub](u.subVV)
+      implicit def subIntoVV: OpSub.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.subVV)
 
-      implicit def setIntoVV: BinaryUpdateOp[Wrapper, Wrapper, OpSet] = new BinaryUpdateOp[Wrapper, Wrapper, OpSet] {
+      implicit def setIntoVV: OpSet.InPlaceImpl2[Wrapper, Wrapper] = new OpSet.InPlaceImpl2[Wrapper, Wrapper] {
         def apply(a: Wrapper, b: Wrapper) {
           a.value = b.value
         }
@@ -118,13 +119,13 @@ object MutablizingAdaptor {
         }
       }
 
-      implicit def mulVS: BinaryOp[Wrapper, S, OpMulScalar, Wrapper] = liftOp(u.mulVS)
+      implicit def mulVS: OpMulScalar.Impl2[Wrapper, S, Wrapper] = liftOp(u.mulVS)
 
-      implicit def divVS: BinaryOp[Wrapper, S, OpDiv, Wrapper] = liftOp(u.divVS)
+      implicit def divVS: OpDiv.Impl2[Wrapper, S, Wrapper] = liftOp(u.divVS)
 
-      implicit def addVV: BinaryOp[Wrapper, Wrapper, OpAdd, Wrapper] = liftOpV(u.addVV)
+      implicit def addVV: OpAdd.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.addVV)
 
-      implicit def subVV: BinaryOp[Wrapper, Wrapper, OpSub, Wrapper] = liftOpV(u.subVV)
+      implicit def subVV: OpSub.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.subVV)
 
       def close(a: Wrapper, b: Wrapper, tolerance: Double): Boolean = u.close(a.value, b.value, tolerance)
 
@@ -157,25 +158,25 @@ object MutablizingAdaptor {
         def apply(from: Wrapper): Wrapper = from
       }
 
-      def liftUpdate[Op <: OpType](implicit op: BinaryOp[V, S, Op, V]):BinaryUpdateOp[Wrapper, S, Op] = new BinaryUpdateOp[Wrapper, S, Op] {
+      def liftUpdate[Op <: OpType](implicit op: UImpl2[Op, V, S, V]):UFunc.InPlaceImpl2[Op, Wrapper, S] = new UFunc.InPlaceImpl2[Op, Wrapper, S] {
         def apply(a: Wrapper, b: S) {
           a.value = op(a.value, b)
         }
       }
 
-      def liftUpdateV[Op <: OpType](implicit op: BinaryOp[V, V, Op, V]):BinaryUpdateOp[Wrapper, Wrapper, Op] = new BinaryUpdateOp[Wrapper, Wrapper, Op] {
+      def liftUpdateV[Op <: OpType](implicit op: UImpl2[Op, V, V, V]):UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] = new UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] {
         def apply(a: Wrapper, b: Wrapper) {
           a.value = op(a.value, b.value)
         }
       }
 
-      def liftOp[Op <: OpType](implicit op: BinaryOp[V, S, Op, V]):BinaryOp[Wrapper, S, Op, Wrapper] = new BinaryOp[Wrapper, S, Op, Wrapper] {
+      def liftOp[Op <: OpType](implicit op: UImpl2[Op, V, S, V]):UImpl2[Op, Wrapper, S, Wrapper] = new UImpl2[Op, Wrapper, S, Wrapper] {
         def apply(a: Wrapper, b: S) = {
           a.map(op(_, b))
         }
       }
 
-      def liftOpV[Op <: OpType](implicit op: BinaryOp[V, V, Op, V]):BinaryOp[Wrapper, Wrapper, Op, Wrapper] = new BinaryOp[Wrapper, Wrapper, Op, Wrapper] {
+      def liftOpV[Op <: OpType](implicit op: UImpl2[Op, V, V, V]):UImpl2[Op, Wrapper, Wrapper, Wrapper] = new UImpl2[Op, Wrapper, Wrapper, Wrapper] {
         def apply(a: Wrapper, b: Wrapper) = {
           a.map(op(_, b.value))
         }
@@ -184,15 +185,15 @@ object MutablizingAdaptor {
 
       implicit def scalarNorm = u.scalarNorm
 
-      implicit def mulIntoVS: BinaryUpdateOp[Wrapper, S, OpMulScalar] = liftUpdate[OpMulScalar](u.mulVS)
+      implicit def mulIntoVS: OpMulScalar.InPlaceImpl2[Wrapper, S] = liftUpdate(u.mulVS)
 
-      implicit def divIntoVS: BinaryUpdateOp[Wrapper, S, OpDiv] = liftUpdate[OpDiv](u.divVS)
+      implicit def divIntoVS: OpDiv.InPlaceImpl2[Wrapper, S] = liftUpdate(u.divVS)
 
-      implicit def addIntoVV: BinaryUpdateOp[Wrapper, Wrapper, OpAdd] = liftUpdateV[OpAdd](u.addVV)
+      implicit def addIntoVV: OpAdd.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.addVV)
 
-      implicit def subIntoVV: BinaryUpdateOp[Wrapper, Wrapper, OpSub] = liftUpdateV[OpSub](u.subVV)
+      implicit def subIntoVV: OpSub.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.subVV)
 
-      implicit def setIntoVV: BinaryUpdateOp[Wrapper, Wrapper, OpSet] = new BinaryUpdateOp[Wrapper, Wrapper, OpSet] {
+      implicit def setIntoVV: OpSet.InPlaceImpl2[Wrapper, Wrapper] = new OpSet.InPlaceImpl2[Wrapper, Wrapper] {
         def apply(a: Wrapper, b: Wrapper) {
           a.value = b.value
         }
@@ -204,13 +205,13 @@ object MutablizingAdaptor {
         }
       }
 
-      implicit def mulVS: BinaryOp[Wrapper, S, OpMulScalar, Wrapper] = liftOp(u.mulVS)
+      implicit def mulVS: OpMulScalar.Impl2[Wrapper, S, Wrapper] = liftOp(u.mulVS)
 
-      implicit def divVS: BinaryOp[Wrapper, S, OpDiv, Wrapper] = liftOp(u.divVS)
+      implicit def divVS: OpDiv.Impl2[Wrapper, S, Wrapper] = liftOp(u.divVS)
 
-      implicit def addVV: BinaryOp[Wrapper, Wrapper, OpAdd, Wrapper] = liftOpV(u.addVV)
+      implicit def addVV: OpAdd.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.addVV)
 
-      implicit def subVV: BinaryOp[Wrapper, Wrapper, OpSub, Wrapper] = liftOpV(u.subVV)
+      implicit def subVV: OpSub.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.subVV)
 
       override def close(a: Wrapper, b: Wrapper, tolerance: Double): Boolean = u.close(a.value, b.value, tolerance)
 
@@ -219,7 +220,7 @@ object MutablizingAdaptor {
         def apply(a: Wrapper): Wrapper = a.map(u.neg apply)
       }
 
-      implicit def dotVV: BinaryOp[Wrapper, Wrapper, OpMulInner, S] = new BinaryOp[Wrapper, Wrapper, OpMulInner, S] {
+      implicit def dotVV: OpMulInner.Impl2[Wrapper, Wrapper, S] = new OpMulInner.Impl2[Wrapper, Wrapper, S] {
         def apply(a: Wrapper, b: Wrapper): S = {
           u.dotVV(a.value, b.value)
         }
@@ -249,39 +250,39 @@ object MutablizingAdaptor {
         def apply(from: Wrapper): Wrapper = from
       }
 
-      def liftUpdate[Op <: OpType](implicit op: BinaryOp[V, S, Op, V]):BinaryUpdateOp[Wrapper, S, Op] = new BinaryUpdateOp[Wrapper, S, Op] {
+      def liftUpdate[Op <: OpType](implicit op: UFunc.UImpl2[Op, V, S, V]):UFunc.InPlaceImpl2[Op, Wrapper, S] = new UFunc.InPlaceImpl2[Op, Wrapper, S] {
         def apply(a: Wrapper, b: S) {
           a.value = op(a.value, b)
         }
       }
 
-      def liftUpdateV[Op <: OpType](implicit op: BinaryOp[V, V, Op, V]):BinaryUpdateOp[Wrapper, Wrapper, Op] = new BinaryUpdateOp[Wrapper, Wrapper, Op] {
+      def liftUpdateV[Op <: OpType](implicit op:UFunc.UImpl2[Op, V, V, V]):UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] = new UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] {
         def apply(a: Wrapper, b: Wrapper) {
           a.value = op(a.value, b.value)
         }
       }
 
-      def liftOp[Op <: OpType](implicit op: BinaryOp[V, S, Op, V]):BinaryOp[Wrapper, S, Op, Wrapper] = new BinaryOp[Wrapper, S, Op, Wrapper] {
+      def liftOp[Op <: OpType](implicit op:UFunc.UImpl2[Op, V, S, V]):UFunc.UImpl2[Op, Wrapper, S, Wrapper] = new UFunc.UImpl2[Op, Wrapper, S, Wrapper] {
         def apply(a: Wrapper, b: S) = {
           a.map(op(_, b))
         }
       }
 
-      def liftOpV[Op <: OpType](implicit op: BinaryOp[V, V, Op, V]):BinaryOp[Wrapper, Wrapper, Op, Wrapper] = new BinaryOp[Wrapper, Wrapper, Op, Wrapper] {
+      def liftOpV[Op <: OpType](implicit op: UFunc.UImpl2[Op, V, V, V]): UFunc.UImpl2[Op, Wrapper, Wrapper, Wrapper] = new UFunc.UImpl2[Op, Wrapper, Wrapper, Wrapper] {
         def apply(a: Wrapper, b: Wrapper) = {
           a.map(op(_, b.value))
         }
       }
 
-      implicit def mulIntoVS: BinaryUpdateOp[Wrapper, S, OpMulScalar] = liftUpdate[OpMulScalar](u.mulVS)
+      implicit def mulIntoVS: OpMulScalar.InPlaceImpl2[Wrapper, S] = liftUpdate(u.mulVS)
 
-      implicit def divIntoVS: BinaryUpdateOp[Wrapper, S, OpDiv] = liftUpdate[OpDiv](u.divVS)
+      implicit def divIntoVS: OpDiv.InPlaceImpl2[Wrapper, S] = liftUpdate(u.divVS)
 
-      implicit def addIntoVV: BinaryUpdateOp[Wrapper, Wrapper, OpAdd] = liftUpdateV[OpAdd](u.addVV)
+      implicit def addIntoVV: OpAdd.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.addVV)
 
-      implicit def subIntoVV: BinaryUpdateOp[Wrapper, Wrapper, OpSub] = liftUpdateV[OpSub](u.subVV)
+      implicit def subIntoVV: OpSub.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.subVV)
 
-      implicit def setIntoVV: BinaryUpdateOp[Wrapper, Wrapper, OpSet] = new BinaryUpdateOp[Wrapper, Wrapper, OpSet] {
+      implicit def setIntoVV: OpSet.InPlaceImpl2[Wrapper, Wrapper] = new OpSet.InPlaceImpl2[Wrapper, Wrapper] {
         def apply(a: Wrapper, b: Wrapper) {
           a.value = b.value
         }
@@ -293,13 +294,13 @@ object MutablizingAdaptor {
         }
       }
 
-      implicit def mulVS: BinaryOp[Wrapper, S, OpMulScalar, Wrapper] = liftOp(u.mulVS)
+      implicit def mulVS: OpMulScalar.Impl2[Wrapper, S, Wrapper] = liftOp(u.mulVS)
 
-      implicit def divVS: BinaryOp[Wrapper, S, OpDiv, Wrapper] = liftOp(u.divVS)
+      implicit def divVS: OpDiv.Impl2[Wrapper, S, Wrapper] = liftOp(u.divVS)
 
-      implicit def addVV: BinaryOp[Wrapper, Wrapper, OpAdd, Wrapper] = liftOpV(u.addVV)
+      implicit def addVV: OpAdd.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.addVV)
 
-      implicit def subVV: BinaryOp[Wrapper, Wrapper, OpSub, Wrapper] = liftOpV(u.subVV)
+      implicit def subVV: OpSub.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.subVV)
 
       override def close(a: Wrapper, b: Wrapper, tolerance: Double): Boolean = u.close(a.value, b.value, tolerance)
 
@@ -308,7 +309,7 @@ object MutablizingAdaptor {
         def apply(a: Wrapper): Wrapper = a.map(u.neg apply)
       }
 
-      implicit def dotVV: BinaryOp[Wrapper, Wrapper, OpMulInner, S] = new BinaryOp[Wrapper, Wrapper, OpMulInner, S] {
+      implicit def dotVV: OpMulInner.Impl2[Wrapper, Wrapper, S] = new OpMulInner.Impl2[Wrapper, Wrapper, S] {
         def apply(a: Wrapper, b: Wrapper): S = {
           u.dotVV(a.value, b.value)
         }
@@ -340,23 +341,23 @@ object MutablizingAdaptor {
         }
       }
 
-      implicit def addVS: BinaryOp[Wrapper, S, OpAdd, Wrapper] = liftOp(u.addVS)
+      implicit def addVS: OpAdd.Impl2[Wrapper, S, Wrapper] = liftOp(u.addVS)
 
-      implicit def subVS: BinaryOp[Wrapper, S, OpSub, Wrapper] = liftOp(u.subVS)
+      implicit def subVS: OpSub.Impl2[Wrapper, S, Wrapper] = liftOp(u.subVS)
 
-      implicit def mulVV: BinaryOp[Wrapper, Wrapper, OpMulScalar, Wrapper] = liftOpV(u.mulVV)
+      implicit def mulVV: OpMulScalar.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.mulVV)
 
-      implicit def divVV: BinaryOp[Wrapper, Wrapper, OpDiv, Wrapper] = liftOpV(u.divVV)
+      implicit def divVV: OpDiv.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.divVV)
 
-      implicit def addIntoVS: BinaryUpdateOp[Wrapper, S, OpAdd] = liftUpdate(u.addVS)
+      implicit def addIntoVS: OpAdd.InPlaceImpl2[Wrapper, S] = liftUpdate(u.addVS)
 
-      implicit def subIntoVS: BinaryUpdateOp[Wrapper, S, OpSub] = liftUpdate(u.subVS)
+      implicit def subIntoVS: OpSub.InPlaceImpl2[Wrapper, S] = liftUpdate(u.subVS)
 
-      implicit def mulIntoVV: BinaryUpdateOp[Wrapper, Wrapper, OpMulScalar] = liftUpdateV(u.mulVV)
+      implicit def mulIntoVV: OpMulScalar.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.mulVV)
 
-      implicit def divIntoVV: BinaryUpdateOp[Wrapper, Wrapper, OpDiv] = liftUpdateV(u.divVV)
+      implicit def divIntoVV: OpDiv.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.divVV)
 
-      implicit def setIntoVS: BinaryUpdateOp[Wrapper, S, OpSet] = new BinaryUpdateOp[Wrapper, S, OpSet] {
+      implicit def setIntoVS: OpSet.InPlaceImpl2[Wrapper, S] = new OpSet.InPlaceImpl2[Wrapper, S] {
         def apply(a: Wrapper, b: S) {
           a.value = (zeros(a) + b).value
         }

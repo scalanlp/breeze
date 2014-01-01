@@ -323,7 +323,7 @@ object VectorBuilder extends VectorBuilderOps_Double {
   implicit def canCopyBuilder[@spec(Int, Float, Double) V: ClassTag: Semiring:DefaultArrayValue] = new CanCopyBuilder[V]
   implicit def canZerosBuilder[@spec(Int, Float, Double) V: ClassTag: Semiring:DefaultArrayValue] = new CanZerosBuilder[V]
 
-  implicit def negFromScale[@spec(Int, Float, Double)  V, Double](implicit scale: BinaryOp[VectorBuilder[V], V, OpMulScalar, VectorBuilder[V]], field: Ring[V]) = {
+  implicit def negFromScale[@spec(Int, Float, Double)  V, Double](implicit scale: OpMulScalar.Impl2[VectorBuilder[V], V, VectorBuilder[V]], field: Ring[V]) = {
     new OpNeg.Impl[VectorBuilder[V], VectorBuilder[V]] {
       override def apply(a : VectorBuilder[V]) = {
         scale(a, field.negate(field.one))
@@ -349,8 +349,8 @@ object VectorBuilder extends VectorBuilderOps_Double {
 }
 
 trait VectorBuilderOps_Double { this: VectorBuilder.type =>
-  implicit val canScaleInto_Double: BinaryUpdateOp[VectorBuilder[Double], Double, OpMulScalar] =  {
-    new  BinaryUpdateOp[VectorBuilder[Double], Double, OpMulScalar]  {
+  implicit val canScaleInto_Double: OpMulScalar.InPlaceImpl2[VectorBuilder[Double], Double] =  {
+    new  OpMulScalar.InPlaceImpl2[VectorBuilder[Double], Double]  {
       def apply(a: VectorBuilder[Double], b: Double) {
         var i = 0
         while(i < a.activeSize) {
@@ -362,8 +362,8 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
 
   }
 
-  implicit val canDivInto_Double: BinaryUpdateOp[VectorBuilder[Double], Double, OpDiv] =  {
-    new  BinaryUpdateOp[VectorBuilder[Double], Double, OpDiv]  {
+  implicit val canDivInto_Double: OpDiv.InPlaceImpl2[VectorBuilder[Double], Double] =  {
+    new  OpDiv.InPlaceImpl2[VectorBuilder[Double], Double]  {
       def apply(a: VectorBuilder[Double], b: Double) {
         var i = 0
         while(i < a.activeSize) {
@@ -375,8 +375,8 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
 
   }
 
-  implicit val canAddInto_VV_Double: BinaryUpdateOp[VectorBuilder[Double], VectorBuilder[Double], OpAdd] =  {
-    new  BinaryUpdateOp[VectorBuilder[Double], VectorBuilder[Double], OpAdd]  {
+  implicit val canAddInto_VV_Double: OpAdd.InPlaceImpl2[VectorBuilder[Double], VectorBuilder[Double]] =  {
+    new  OpAdd.InPlaceImpl2[VectorBuilder[Double], VectorBuilder[Double]]  {
       def apply(a: VectorBuilder[Double], b: VectorBuilder[Double]) {
         require(a.length == b.length, "Dimension mismatch!")
         a.reserve(a.activeSize + b.activeSize)
@@ -392,8 +392,8 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
 
   }
 
-  implicit val canSubInto_VV_Double: BinaryUpdateOp[VectorBuilder[Double], VectorBuilder[Double], OpSub] =  {
-    new  BinaryUpdateOp[VectorBuilder[Double], VectorBuilder[Double], OpSub]  {
+  implicit val canSubInto_VV_Double: OpSub.InPlaceImpl2[VectorBuilder[Double], VectorBuilder[Double]] =  {
+    new  OpSub.InPlaceImpl2[VectorBuilder[Double], VectorBuilder[Double]]  {
       def apply(a: VectorBuilder[Double], b: VectorBuilder[Double]) {
         require(a.length == b.length, "Dimension mismatch!")
         a.reserve(a.activeSize + b.activeSize)
@@ -410,8 +410,8 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
   }
 
 
-  implicit val canSet_Double: BinaryUpdateOp[VectorBuilder[Double], VectorBuilder[Double], OpSet] =  {
-    new  BinaryUpdateOp[VectorBuilder[Double], VectorBuilder[Double], OpSet]  {
+  implicit val canSet_Double: OpSet.InPlaceImpl2[VectorBuilder[Double], VectorBuilder[Double]] =  {
+    new  OpSet.InPlaceImpl2[VectorBuilder[Double], VectorBuilder[Double]]  {
       def apply(a: VectorBuilder[Double], b: VectorBuilder[Double]) {
         if(a eq b) return
         a.clear()
@@ -427,20 +427,20 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
   }
 
 
-  implicit val mulVS_Double: BinaryOp[VectorBuilder[Double], Double, OpMulScalar, VectorBuilder[Double]] = {
-    BinaryOp.fromCopyAndUpdate[VectorBuilder[Double], Double, OpMulScalar]
+  implicit val mulVS_Double: OpMulScalar.Impl2[VectorBuilder[Double], Double, VectorBuilder[Double]] = {
+    BinaryOp.fromCopyAndUpdate[VectorBuilder[Double], Double, OpMulScalar.type]
   }
 
-  implicit val divVS_Double: BinaryOp[VectorBuilder[Double], Double, OpDiv, VectorBuilder[Double]] = {
-    BinaryOp.fromCopyAndUpdate[VectorBuilder[Double], Double, OpDiv]
+  implicit val divVS_Double: OpDiv.Impl2[VectorBuilder[Double], Double, VectorBuilder[Double]] = {
+    BinaryOp.fromCopyAndUpdate[VectorBuilder[Double], Double, OpDiv.type]
   }
 
-  implicit val addVV_Double: BinaryOp[VectorBuilder[Double], VectorBuilder[Double], OpAdd, VectorBuilder[Double]] = {
-    BinaryOp.fromCopyAndUpdate[VectorBuilder[Double], VectorBuilder[Double], OpAdd]
+  implicit val addVV_Double: OpAdd.Impl2[VectorBuilder[Double], VectorBuilder[Double], VectorBuilder[Double]] = {
+    BinaryOp.fromCopyAndUpdate[VectorBuilder[Double], VectorBuilder[Double], OpAdd.type]
   }
 
-  implicit val subVV_Double: BinaryOp[VectorBuilder[Double], VectorBuilder[Double], OpSub, VectorBuilder[Double]] = {
-    BinaryOp.fromCopyAndUpdate[VectorBuilder[Double], VectorBuilder[Double], OpSub]
+  implicit val subVV_Double: OpSub.Impl2[VectorBuilder[Double], VectorBuilder[Double], VectorBuilder[Double]] = {
+    BinaryOp.fromCopyAndUpdate[VectorBuilder[Double], VectorBuilder[Double], OpSub.type]
   }
 
   implicit val neg_Double: OpNeg.Impl[VectorBuilder[Double], VectorBuilder[Double]] = {
@@ -488,34 +488,34 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
 
        def copy: CanCopy[VectorBuilder[Double]] = VectorBuilder.canCopyBuilder[Double]
 
-       def mulIntoVS: BinaryUpdateOp[VectorBuilder[Double], Double, OpMulScalar] = canScaleInto_Double
+       def mulIntoVS: OpMulScalar.InPlaceImpl2[VectorBuilder[Double], Double] = canScaleInto_Double
 
-       def divIntoVS: BinaryUpdateOp[VectorBuilder[Double], Double, OpDiv] = canDivInto_Double
+       def divIntoVS: OpDiv.InPlaceImpl2[VectorBuilder[Double], Double] = canDivInto_Double
 
-       def addIntoVV: BinaryUpdateOp[VectorBuilder[Double], VectorBuilder[Double], OpAdd] = canAddInto_VV_Double
-       def subIntoVV: BinaryUpdateOp[VectorBuilder[Double], VectorBuilder[Double], OpSub] = canSubInto_VV_Double
+       def addIntoVV: OpAdd.InPlaceImpl2[VectorBuilder[Double], VectorBuilder[Double]] = canAddInto_VV_Double
+       def subIntoVV: OpSub.InPlaceImpl2[VectorBuilder[Double], VectorBuilder[Double]] = canSubInto_VV_Double
 
 
-      def mulVS: BinaryOp[VectorBuilder[Double], Double, OpMulScalar, VectorBuilder[Double]] = {
-        BinaryOp.fromCopyAndUpdate[VectorBuilder[Double], Double, OpMulScalar]
+      def mulVS: OpMulScalar.Impl2[VectorBuilder[Double], Double, VectorBuilder[Double]] = {
+        BinaryOp.fromCopyAndUpdate[VectorBuilder[Double], Double, OpMulScalar.type]
       }
 
-      def divVS: BinaryOp[VectorBuilder[Double], Double, OpDiv, VectorBuilder[Double]] = {
-        BinaryOp.fromCopyAndUpdate[VectorBuilder[Double], Double, OpDiv]
+      def divVS: OpDiv.Impl2[VectorBuilder[Double], Double, VectorBuilder[Double]] = {
+        BinaryOp.fromCopyAndUpdate[VectorBuilder[Double], Double, OpDiv.type]
       }
 
-      def addVV: BinaryOp[VectorBuilder[Double], VectorBuilder[Double], OpAdd, VectorBuilder[Double]] = {
-        BinaryOp.fromCopyAndUpdate[VectorBuilder[Double], VectorBuilder[Double], OpAdd]
+      def addVV: OpAdd.Impl2[VectorBuilder[Double], VectorBuilder[Double], VectorBuilder[Double]] = {
+        BinaryOp.fromCopyAndUpdate[VectorBuilder[Double], VectorBuilder[Double], OpAdd.type]
       }
 
-      def subVV: BinaryOp[VectorBuilder[Double], VectorBuilder[Double], OpSub, VectorBuilder[Double]] = {
-        BinaryOp.fromCopyAndUpdate[VectorBuilder[Double], VectorBuilder[Double], OpSub]
+      def subVV: OpSub.Impl2[VectorBuilder[Double], VectorBuilder[Double], VectorBuilder[Double]] = {
+        BinaryOp.fromCopyAndUpdate[VectorBuilder[Double], VectorBuilder[Double], OpSub.type]
       }
 
 
       implicit def neg: OpNeg.Impl[VectorBuilder[Double], VectorBuilder[Double]] = neg_Double
 
-      implicit def setIntoVV: BinaryUpdateOp[VectorBuilder[Double], VectorBuilder[Double], OpSet] = {
+      implicit def setIntoVV: OpSet.InPlaceImpl2[VectorBuilder[Double], VectorBuilder[Double]] = {
         canSet_Double
       }
 
@@ -531,8 +531,8 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
   }
 
   // operations involving vectors:
-  implicit def canAddInto_V_VB_Double[V<:Vector[Double]]: BinaryUpdateOp[V, VectorBuilder[Double], OpAdd] =  {
-    new  BinaryUpdateOp[V, VectorBuilder[Double], OpAdd]  {
+  implicit def canAddInto_V_VB_Double[V<:Vector[Double]]: OpAdd.InPlaceImpl2[V, VectorBuilder[Double]] =  {
+    new  OpAdd.InPlaceImpl2[V, VectorBuilder[Double]]  {
       def apply(a: V, b: VectorBuilder[Double]) {
         require(a.length == b.length, "Dimension mismatch!")
         var i = 0
@@ -546,8 +546,8 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
 
   }
 
-  implicit def canSubInto_V_VB_Double[V<:Vector[Double]]: BinaryUpdateOp[V, VectorBuilder[Double], OpSub] =  {
-    new  BinaryUpdateOp[V, VectorBuilder[Double], OpSub]  {
+  implicit def canSubInto_V_VB_Double[V<:Vector[Double]]: OpSub.InPlaceImpl2[V, VectorBuilder[Double]] =  {
+    new  OpSub.InPlaceImpl2[V, VectorBuilder[Double]]  {
       def apply(a: V, b: VectorBuilder[Double]) {
         require(a.length == b.length, "Dimension mismatch!")
         var i = 0
@@ -561,8 +561,8 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
 
   }
 
-  implicit def canAddInto_VB_V_Double[V <: Vector[Double]]: BinaryUpdateOp[VectorBuilder[Double], V, OpAdd] =  {
-    new  BinaryUpdateOp[VectorBuilder[Double], V, OpAdd]  {
+  implicit def canAddInto_VB_V_Double[V <: Vector[Double]]: OpAdd.InPlaceImpl2[VectorBuilder[Double], V] =  {
+    new  OpAdd.InPlaceImpl2[VectorBuilder[Double], V]  {
       def apply(a: VectorBuilder[Double], b: V) {
         b match {
           case b: StorageVector[Double] =>
@@ -587,8 +587,8 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
 
   }
 
-  implicit def canSubInto_VB_V_Double[V <: Vector[Double]]: BinaryUpdateOp[VectorBuilder[Double], V, OpSub] =  {
-    new  BinaryUpdateOp[VectorBuilder[Double], V, OpSub]  {
+  implicit def canSubInto_VB_V_Double[V <: Vector[Double]]: OpSub.InPlaceImpl2[VectorBuilder[Double], V] =  {
+    new  OpSub.InPlaceImpl2[VectorBuilder[Double], V]  {
       def apply(a: VectorBuilder[Double], b: V) {
         b match {
           case b: StorageVector[Double] =>
@@ -613,8 +613,8 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
 
   }
 
-  implicit def canDot_V_VB_Double[V<:Vector[Double]]: BinaryOp[V, VectorBuilder[Double], OpMulInner, Double] =  {
-    new  BinaryOp[V, VectorBuilder[Double], OpMulInner, Double]  {
+  implicit def canDot_V_VB_Double[V<:Vector[Double]]: OpMulInner.Impl2[V, VectorBuilder[Double], Double] =  {
+    new  OpMulInner.Impl2[V, VectorBuilder[Double], Double]  {
       def apply(a: V, b: VectorBuilder[Double]) =  {
         require(a.length == b.length, "Dimension mismatch!")
         var result : Double = 0
@@ -643,8 +643,8 @@ trait VectorBuilderOps_Double { this: VectorBuilder.type =>
     }
   }
 
-  implicit def canDot_VB_V_Double[V<:Vector[Double]]: BinaryOp[VectorBuilder[Double], V, OpMulInner, Double] =  {
-    new  BinaryOp[VectorBuilder[Double], V, OpMulInner, Double]  {
+  implicit def canDot_VB_V_Double[V<:Vector[Double]]: OpMulInner.Impl2[VectorBuilder[Double], V, Double] =  {
+    new  OpMulInner.Impl2[VectorBuilder[Double], V, Double]  {
       def apply(a: VectorBuilder[Double], b: V) =  {
         canDot_V_VB_Double(b,a)
       }

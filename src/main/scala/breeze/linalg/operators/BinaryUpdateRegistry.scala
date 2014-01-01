@@ -15,27 +15,9 @@ package breeze.linalg.operators
  limitations under the License.
 */
 
-import breeze.generic.{MMRegistry2, Multiproc2}
+import breeze.generic.{UFunc, MMRegistry2}
+import breeze.generic.UFunc.InPlaceImpl2
 
-
-/**
- * This is the capability trait for operations of the form a += b, a -= b, etc.
- * These traits are usually implemented in (a supertype of) the companion object of
- * one of the operands.
- * @tparam A
- * @tparam B
- * @tparam Op
- */
-trait BinaryUpdateOp[A, B, Op<:OpType] {
-  def apply(a: A, b: B)
-}
-
-
-object BinaryUpdateOp {
-  /** Just a magic type lambda to make registries happy. */
-  type Bind[Op <:OpType] = { type Sig[A, B] = BinaryUpdateOp[A, B, Op]}
-
-}
 
 /**
  * This is a special kind of BinaryUpdateOp that supports registration
@@ -44,9 +26,9 @@ object BinaryUpdateOp {
  */
 // This trait could reuse code from Multimethod2, but not doing so allows us to reduce code size a lot
 // because we don't need BinaryOp's to inherit from Function2, which has a lot of @specialzied cruft.
-trait BinaryUpdateRegistry[A<:AnyRef, B, Op<:OpType] extends BinaryUpdateOp[A, B, Op] with MMRegistry2[BinaryUpdateOp[_ <: A, _ <: B, Op]] {
+trait BinaryUpdateRegistry[A<:AnyRef, B, Op<:OpType] extends UFunc.InPlaceImpl2[Op, A, B] with MMRegistry2[UFunc.InPlaceImpl2[Op, _ <: A, _ <: B]] {
   protected def bindingMissing(a: A, b: B):Unit = throw new UnsupportedOperationException("Types not found!" + a + b + " " + ops)
-  protected def multipleOptions(a: A, b: B, m: Map[(Class[_],Class[_]),BinaryUpdateOp[_ <: A, _ <: B, Op]]):Unit = {
+  protected def multipleOptions(a: A, b: B, m: Map[(Class[_],Class[_]),UFunc.InPlaceImpl2[Op, _ <: A, _ <: B]]):Unit = {
     throw new RuntimeException("Multiple bindings for method: " + m)
   }
 
@@ -59,7 +41,7 @@ trait BinaryUpdateRegistry[A<:AnyRef, B, Op<:OpType] extends BinaryUpdateOp[A, B
       cached match {
         case None => bindingMissing(a, b)
         case Some(m) =>
-          m.asInstanceOf[BinaryUpdateOp[A, B, Op]].apply(a, b)
+          m.asInstanceOf[InPlaceImpl2[Op, A, B]].apply(a, b)
       }
     } else {
       val options = resolve(ac, bc.asInstanceOf[Class[_<:B]])
@@ -70,7 +52,7 @@ trait BinaryUpdateRegistry[A<:AnyRef, B, Op<:OpType] extends BinaryUpdateOp[A, B
         case 1 =>
           val method = options.values.head
           cache.put(ac -> bc, Some(method))
-          method.asInstanceOf[BinaryUpdateOp[A, B, Op]].apply(a, b)
+          method.asInstanceOf[InPlaceImpl2[Op, A, B]].apply(a, b)
         case _ =>
           val selected = selectBestOption(options)
           if(selected.size != 1)
@@ -78,13 +60,13 @@ trait BinaryUpdateRegistry[A<:AnyRef, B, Op<:OpType] extends BinaryUpdateOp[A, B
           else {
             val method = selected.values.head
             cache.put(ac -> bc, Some(method))
-            method.asInstanceOf[BinaryUpdateOp[A, B, Op]].apply(a, b)
+            method.asInstanceOf[InPlaceImpl2[Op, A, B]].apply(a, b)
           }
       }
     }
   }
 
-  def register[AA<:A, BB<:B](op: BinaryUpdateOp[AA, BB, Op])(implicit manA: Manifest[AA], manB: Manifest[BB]) {
+  def register[AA<:A, BB<:B](op: InPlaceImpl2[Op, AA, BB])(implicit manA: Manifest[AA], manB: Manifest[BB]) {
     super.register(manA.runtimeClass, manB.runtimeClass, op)
   }
 }

@@ -90,7 +90,7 @@ package object linalg {
    * Returns value if value's norm is 0.
    */
   object normalize extends UFunc {
-    implicit def normalizeDoubleImpl[T, U>:T](implicit div: BinaryOp[T, Double, OpDiv, U], canNorm: norm.Impl2[T, Double, Double]):Impl2[T, Double, U] = {
+    implicit def normalizeDoubleImpl[T, U>:T](implicit div: OpDiv.Impl2[T, Double, U], canNorm: norm.Impl2[T, Double, Double]):Impl2[T, Double, U] = {
       new Impl2[T, Double, U] {
         def apply(t: T, n: Double): U = {
           val norm = canNorm(t, n)
@@ -118,7 +118,7 @@ package object linalg {
 
   object logNormalize extends UFunc {
     implicit def logNormalizeImpl[V](implicit softmaxImpl: softmax.Impl[V, Double],
-                                     op : BinaryOp[V,Double,OpSub,V]):Impl[V, V] = new Impl[V, V] {
+                                     op : OpSub.Impl2[V, Double, V]):Impl[V, V] = new Impl[V, V] {
 
       def apply(value: V): V = {
         val max = softmax(value)
@@ -539,7 +539,7 @@ package object linalg {
    * Returns the Kronecker product of the two matrices a and b,
    * usually denoted a ⊗ b.
    */
-  def kron[V1,V2, M,RV](a : DenseMatrix[V1], b : M)(implicit mul : BinaryOp[V1, M, OpMulScalar,DenseMatrix[RV]],
+  def kron[V1,V2, M,RV](a : DenseMatrix[V1], b : M)(implicit mul : OpMulScalar.Impl2[V1, M, DenseMatrix[RV]],
                                                     asMat: M<:<Matrix[V2],
                                                     man: ClassTag[RV],
                                                     dfv: DefaultArrayValue[RV]) : DenseMatrix[RV] = {
