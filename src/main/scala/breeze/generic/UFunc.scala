@@ -55,17 +55,17 @@ trait UFunc {
   @specialized(Int, Double, Float) VR]
   (v1: V1, v2: V2, v3: V3)(implicit impl: Impl3[V1, V2, V3, VR]):VR = impl(v1, v2, v3)
 
-  final def inPlace[V](v: V)(implicit impl: InPlaceImpl[V]) = impl(v)
+  final def inPlace[V](v: V)(implicit impl: UFunc.InPlaceImpl[this.type, V]) = impl(v)
+  final def inPlace[V, V2](v: V, v2: V2)(implicit impl: UFunc.InPlaceImpl2[this.type, V, V2]) = impl(v, v2)
 
 
   type Impl[V, VR] = UFunc.UImpl[this.type, V, VR]
   type Impl2[V1, V2, VR] = UFunc.UImpl2[this.type, V1, V2, VR]
   type Impl3[V1, V2, V3, VR] = UFunc.UImpl3[this.type, V1, V2, V3, VR]
+  type InPlaceImpl[V] = UFunc.InPlaceImpl[this.type, V]
+  type InPlaceImpl2[V1, V2] = UFunc.InPlaceImpl2[this.type, V1, V2]
 
 
-  trait InPlaceImpl[V] {
-    def apply(v: V)
-  }
 
 
 
@@ -129,12 +129,21 @@ object UFunc {
     def apply(v: V1, v2: V2, v3: V3):VR
   }
 
+  trait InPlaceImpl[Tag, V] {
+    def apply(v: V)
+  }
+
+  trait InPlaceImpl2[Tag, V,  @specialized(Int, Double, Float) V2] {
+    def apply(v: V, v2: V2)
+  }
+
 }
 
 import breeze.generic.UFunc.UImpl2
 
 /* Sadly we have to specialize these for types we want to use. Rawr */
 trait UFunc2ZippingImplicits[T[_]] {
+
 
   implicit def canZipMapValuesUImpl[Tag, V1, VR, U](implicit impl: UImpl2[Tag, V1, V1, VR], canZipMapValues: CanZipMapValues[T[V1], V1, VR, U]): UImpl2[Tag, T[V1], T[V1], U] = {
     new UImpl2[Tag, T[V1], T[V1], U] {
