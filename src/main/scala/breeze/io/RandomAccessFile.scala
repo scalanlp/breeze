@@ -10,12 +10,9 @@ import java.io.{File, DataInput, DataOutput, Closeable, IOException}
   * (2) the readXXX(n: Int) functions, which will try to read n samples from the file. (Try to use these functions instead
   * of reading multiple times in a loop with readXXX(), as each individual read is costly
   * in terms of performance.
-  *
-  * Child [[breeze.io.RandomAccessFileBE]] explicitly supports big endian reading/writing (as does [[java.io.RandomAccessFile]]).
-  * Use [[breeze.io.RandomAccessFileLE]] to read/write little endian.
-  *
-  * Each function throws a [[java.io.IOException]], which can be caught in Scala
-  * if necessary to detect ends of files when reading, for example. Catching is obligatory in Java.
+  *  *
+  * Each function throws a [[java.io.IOException]] (including subclass [[java.io.EOFException]]). These can be caught in Scala
+  * if necessary, to detect ends of files when reading, for example. Catching is obligatory in Java.
   *
   * <table border="2">
   * <tr><th>Type</th>                    <th>Java Type  </th>    <th>Scala Type  </th>   <th>Value Range  </th> </tr>
@@ -34,17 +31,18 @@ import java.io.{File, DataInput, DataOutput, Closeable, IOException}
   * ways... as a truncated Int64 (which will only allow half of the range of UInt64 to be actually used, but which
   * is compatible with + - * / operations), or as a shifted Int64, where UInt64 are subtracted and shifted down to cover
   * both positive and negative values of Int64 (this is compatible with + and -, for use as timestamps, for example,
-  * but is of course not compatible with * and / operations).
+  * but is of course not compatible with * and / operations)
+  *
+  * *implementation note: this class was not overriden from java.io.RandomAccessFile or implicitly "pimped," but instead
+  * passes through to java.io.RandomAccessFile. This is mainly because the java.io.RandomAccessFile.readXXX functions are
+  * declared final, and cannot be overridden.
   */
-abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInput /*with DataOutput*/ with Closeable /*extends java.io.RandomAccessFile(file, arg0)*/ {
+class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteConverter = ByteConverterBigEndian)
+  extends DataInput with DataOutput with Closeable /*extends java.io.RandomAccessFile(file, arg0)*/ {
 
-  /** byte converter to encode (switched for RandomAccessFileLE)
-    */
-  val converter: ByteConverter
+  def this(filename: String, arg0: String)(implicit converter: ByteConverter = ByteConverterBigEndian) = this(new File(filename), arg0)(converter)
 
-  def this(filename: String, arg0: String) = this(new File(filename), arg0)
-
-  protected val rafObj = new java.io.RandomAccessFile(file, arg0)
+  val rafObj = new java.io.RandomAccessFile(file, arg0)
   //protected var fileEnded = false
 
 
@@ -64,7 +62,7 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
   @throws(classOf[IOException])
   final def readInt8(n: Int): Array[Byte] = {
     val tempret = new Array[Byte](n)
-    rafObj.read(tempret)
+    rafObj.readFully(tempret)
     tempret
   }
   //(for(i <- 0 until calculateN(n) ) yield readByte() ).toArray
@@ -90,22 +88,22 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
 
   //<editor-fold desc="Aliases">
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileLE]].io.RandomAccessFileBE.readInt8]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile]].io.RandomAccessFileBE.readInt8]]
     */
   @throws(classOf[IOException])
   final override def readByte(): Byte = readInt8()
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileLE]].io.RandomAccessFileBE.readInt8]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile]].io.RandomAccessFileBE.readInt8]]
     */
   @throws(classOf[IOException])
   final def readByte(n: Int): Array[Byte] = readInt8(n)
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileLE]].io.RandomAccessFileBE.writeInt8]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile]].io.RandomAccessFileBE.writeInt8]]
     */
   @throws(classOf[IOException])
   final def write(v: Byte) = writeInt8(v)
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileLE]].io.RandomAccessFileBE.writeInt8]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile]].io.RandomAccessFileBE.writeInt8]]
     */
   @throws(classOf[IOException])
   final def write(v: Array[Byte]) = writeInt8(v)
@@ -157,19 +155,19 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
 
   //<editor-fold desc="Aliases">
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileLE]].io.RandomAccessFileBE.readUInt8]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile]].io.RandomAccessFileBE.readUInt8]]
     */
   @throws(classOf[IOException])
   final override def readUnsignedByte() = readUInt8()
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileLE]].io.RandomAccessFileBE.readUInt8]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile]].io.RandomAccessFileBE.readUInt8]]
     */
   @throws(classOf[IOException])
   final def readUnsignedByte(n: Int): Array[Short] = readUInt8(n)
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileLE]].io.RandomAccessFileBE.writeUInt8]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile]].io.RandomAccessFileBE.writeUInt8]]
     */
   @throws(classOf[IOException])
   final def writeUnsignedByte(value: Short) = writeUInt8(value)
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.writeUInt8]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.writeUInt8]]
     */
   @throws(classOf[IOException])
   final def writeUnsignedByte(values: Array[Short]) = writeUInt8(values)
@@ -184,15 +182,17 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
     * Will throw an exception if it encounters an end of file.
     */
   @throws(classOf[IOException])
-  def readInt16(): Short
-
+  def readInt16() ={
+    val ba = readByte(2)
+    converter.bytesToInt16(ba(0), ba(1))
+  }
   /** Tries to read n Int16s from the current getFilePointer().
     * Will throw an exception if it encounters an end of file.
     */
   @throws(classOf[IOException])
   final def readInt16(n: Int): Array[Short] = {
     val ba = new Array[Byte](n * 2)
-    rafObj.read(ba) //reading is much faster if many bytes are read simultaneously
+    rafObj.readFully(ba) //reading is much faster if many bytes are read simultaneously
     val tr = new Array[Short](n)
     //the following is a hack to avoid the heavier Scala for loop
     var c = 0
@@ -224,27 +224,31 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
 
   //<editor-fold desc="Aliases">
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.readInt16]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.readInt16]]
     */
   @throws(classOf[IOException])
   final override def readShort() = readInt16()
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.readInt16]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.readInt16]]
     */
   @throws(classOf[IOException])
   final def readShort(n: Int): Array[Short] = readInt16(n)
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.readInt16]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.readInt16]]
     */
   @throws(classOf[IOException])
   final def writeShort(v: Short) = writeInt16(v)
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.readInt16]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.readInt16]]
+    */
+  @throws(classOf[IOException])
+  override final def writeShort(v: Int) = writeInt16(v.toShort)
+
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.readInt16]]
     */
   @throws(classOf[IOException])
   final def writeShort(v: Array[Short]) = writeInt16(v)
   //</editor-fold>
-
 
   ///// UInt16 (Char) /////
 
@@ -254,7 +258,10 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
     * Will throw an exception if it encounters an end of file.
     */
   @throws(classOf[IOException])
-  def readUInt16(): Char
+  def readUInt16(): Char = {
+    val ba = readByte(2)
+    converter.bytesToUInt16(ba(0), ba(1))
+  }
 
   /** Tries to read n UInt16s (Chars) from the current getFilePointer() as Int32.
     * Will throw an exception if it encounters an end of file.
@@ -262,7 +269,7 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
   @throws(classOf[IOException])
   final def readUInt16(n: Int): Array[Char] = {
     val ba = new Array[Byte](n * 2)
-    rafObj.read(ba) //reading is much faster if many bytes are read simultaneously
+    rafObj.readFully(ba) //reading is much faster if many bytes are read simultaneously
     val tr = new Array[Char](n)
     //the following is a hack to avoid the heavier Scala for loop
     var c = 0
@@ -294,28 +301,28 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
 
   //<editor-fold desc="Aliases">
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.readUInt16]], but reads as Int.
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.readUInt16]], but reads as Int.
     */
   @throws(classOf[IOException])
   final override def readUnsignedShort(): Int = readUInt16().toInt
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.readUInt16]], but reads as Int.
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.readUInt16]], but reads as Int.
     */
   @throws(classOf[IOException])
   final def readUnsignedShort(n: Int): Array[Int] = readUInt16(n).map(_.toInt)
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.readUInt16]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.readUInt16]]
     */
   @throws(classOf[IOException])
   override final def readChar(): Char = readUInt16()
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.readUInt16]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.readUInt16]]
     */
   @throws(classOf[IOException])
   final def readChar(n: Int): Array[Char] = readUInt16(n)
 //  {
 //    val ba = new Array[Byte](n * 2)
-//    rafObj.read(ba) //reading is much faster if many bytes are read simultaneously
+//    rafObj.readFully(ba) //reading is much faster if many bytes are read simultaneously
 //    val tr = new Array[Char](n)
 //    //the following is a hack to avoid the heavier Scala for loop
 //    var c = 0
@@ -327,25 +334,31 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
 //    tr
 //  }
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.writeUInt16]], but reads as Int.
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.writeUInt16]], but reads as Int.
     */
   @throws(classOf[IOException])
   final def writeUnsignedShort(value: Int): Unit = writeUInt16(value.toChar)
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.writeUInt16]], but reads as Int.
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.writeUInt16]], but reads as Int.
     */
   @throws(classOf[IOException])
   final def writeUnsignedShort(value: Array[Int]): Unit = writeUInt16(value.map(_.toChar))
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.writeUInt16]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.writeUInt16]]
     */
   @throws(classOf[IOException])
   final def writeChar(value: Char): Unit = writeUInt16( value )
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.writeUInt16]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.writeUInt16]]
+    */
+  @throws(classOf[IOException])
+  final override def writeChar(v: Int): Unit = writeUInt16( v.toChar )
+
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.writeUInt16]]
     */
   @throws(classOf[IOException])
   final def WriteChar(value: Array [Char]): Unit = writeUInt16(value)
+
   //
   //</editor-fold>
 
@@ -358,7 +371,10 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
     * Will throw an exception if it encounters an end of file.
     */
   @throws(classOf[IOException])
-  def readInt32(): Int
+  final def readInt32():Int = {
+    val ba = readByte(4)
+    converter.bytesToInt32(ba(0), ba(1), ba(2), ba(3))
+  }
 
   /** Tries to read n Int32s from the current getFilePointer().
     * Will throw an exception if it encounters an end of file.
@@ -366,7 +382,7 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
   @throws(classOf[IOException])
   final def readInt32(n: Int): Array[Int] = {
     val ba = new Array[Byte](n * 4)
-    rafObj.read(ba) //reading is much faster if many bytes are read simultaneously
+    rafObj.readFully(ba) //reading is much faster if many bytes are read simultaneously
     val tr = new Array[Int](n)
     //the following is a hack to avoid the heavier Scala for loop
     var c = 0
@@ -399,22 +415,22 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
 
   //<editor-fold desc="Aliases">
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.readUInt32]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.readUInt32]]
     */
   @throws(classOf[IOException])
   final override def readInt() = readInt32()
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.readUInt32]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.readUInt32]]
     */
   @throws(classOf[IOException])
   final def readInt(n: Int): Array[Int] = readInt32(n)
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.writeInt32]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.writeInt32]]
     */
   @throws(classOf[IOException])
   final def writeInt(value: Int): Unit = writeInt32( value )
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.writeInt32]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.writeInt32]]
     */
   @throws(classOf[IOException])
   final def writeInt(value: Array [Int]): Unit = writeInt32(value)
@@ -440,7 +456,7 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
   @throws(classOf[IOException])
   final def readUInt32(n: Int): Array[Long] = {
     val ba = new Array[Byte](n * 4)
-    rafObj.read(ba) //reading is much faster if many bytes are read simultaneously
+    rafObj.readFully(ba) //reading is much faster if many bytes are read simultaneously
     val tr = new Array[Long](n)
     //the following is a hack to avoid the heavier Scala for loop
     var c = 0
@@ -478,7 +494,10 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
     * Will throw an exception if it encounters an end of file.
     */
   @throws(classOf[IOException])
-  def readInt64(): Long
+  def readInt64(): Long = {
+    val ba = readByte(8)
+    converter.bytesToInt64(ba(0), ba(1), ba(2), ba(3), ba(4), ba(5), ba(6), ba(7))
+  }
 
   /** Tries to read n Int64s from the current getFilePointer().
     * Will throw an exception if it encounters an end of file.
@@ -486,7 +505,7 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
   @throws(classOf[IOException])
   final def readInt64(n: Int): Array[Long] = {
     val ba = new Array[Byte](n * 8)
-    rafObj.read(ba) //reading is much faster if many bytes are read simultaneously
+    rafObj.readFully(ba) //reading is much faster if many bytes are read simultaneously
     val tr = new Array[Long](n)
     //the following is a hack to avoid the heavier Scala for loop
     var c = 0
@@ -520,22 +539,22 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
 
   //<editor-fold desc="Aliases">
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.readInt64]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.readInt64]]
     */
   @throws(classOf[IOException])
   final override def readLong() = readInt64()
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.readInt64]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.readInt64]]
     */
   @throws(classOf[IOException])
   final def readLong(n: Int): Array[Long] = readInt64(n)
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.writeInt64]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.writeInt64]]
     */
   @throws(classOf[IOException])
   final def writeLong(value: Long): Unit = writeInt64( value )
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFileBE.writeInt64]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.writeInt64]]
     */
   @throws(classOf[IOException])
   final def writeLong(value: Array [Long]): Unit = writeInt64(value)
@@ -564,7 +583,7 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
   @throws(classOf[IOException])
   final def readUInt64(n: Int): Array[Long] = {
     val ba = new Array[Byte](n * 8)
-    rafObj.read(ba) //reading is much faster if many bytes are read simultaneously
+    rafObj.readFully(ba) //reading is much faster if many bytes are read simultaneously
     val tr = new Array[Long](n)
     //the following is a hack to avoid the heavier Scala for loop
     var c = 0
@@ -620,7 +639,7 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
   @throws(classOf[IOException])
   final def readUInt64Shifted(n: Int): Array[Long] = {
     val ba = new Array[Byte](n * 8)
-    rafObj.read(ba) //reading is much faster if many bytes are read simultaneously
+    rafObj.readFully(ba) //reading is much faster if many bytes are read simultaneously
     val tr = new Array[Long](n)
     //the following is a hack to avoid the heavier Scala for loop
     var c = 0
@@ -659,11 +678,18 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
   /** Tries to read a Double at the current getFilePointer().
     * Will throw an exception if it encounters an end of file.
     */
-  override def readDouble(): Double
+  @throws(classOf[IOException])
+  override def readDouble(): Double = {
+    java.lang.Double.longBitsToDouble(readLong())
+  }
+
   /** Tries to read a Float at the current getFilePointer().
     * Will throw an exception if it encounters an end of file.
     */
-  override def readFloat(): Float
+  @throws(classOf[IOException])
+  override def readFloat():Float = {
+    java.lang.Float.intBitsToFloat(readInt())
+  }
 
   /** Tries to read n Doubles from the current getFilePointer().
     * Will throw an exception if it encounters an end of file.
@@ -671,7 +697,7 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
   @throws(classOf[IOException])
   final def readDouble(n: Int): Array[Double] = {
     val ba = new Array[Byte](n * 8)
-    rafObj.read(ba) //reading is much faster if many bytes are read simultaneously
+    rafObj.readFully(ba) //reading is much faster if many bytes are read simultaneously
     val tr = new Array[Double](n)
     //the following is a hack to avoid the heavier Scala for loop
     var c = 0
@@ -692,7 +718,7 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
   @throws(classOf[IOException])
   final def readFloat(n: Int): Array[Float] = {
     val ba = new Array[Byte](n * 4)
-    rafObj.read(ba) //reading is much faster if many bytes are read simultaneously
+    rafObj.readFully(ba) //reading is much faster if many bytes are read simultaneously
     val tr = new Array[Float](n)
     //the following is a hack to avoid the heavier Scala for loop
     var c = 0
@@ -711,10 +737,14 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
   //<editor-fold desc="Writing">
 
   @throws(classOf[IOException])
-  def writeDouble(v: Double): Unit
+  def writeFloat(v: Float) =  {
+    writeInt32(java.lang.Float.floatToRawIntBits(v))
+  }
 
   @throws(classOf[IOException])
-  def writeFloat(v: Float): Unit
+  def writeDouble(v: Double) = {
+    writeInt64(java.lang.Double.doubleToRawLongBits(v))
+  }
 
   @throws(classOf[IOException])
   def writeDouble(v: Array[Double]): Unit = {
@@ -722,7 +752,7 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
     //the following is a hack to avoid the heavier Scala for loop
     var c = 0
     while (c < v.length) {
-      la(c) = java.lang.Double.doubleToLongBits(v(c))
+      la(c) = java.lang.Double.doubleToRawLongBits(v(c))
       c += 1
     }
     writeLong(la)
@@ -734,7 +764,7 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
     //the following is a hack to avoid the heavier Scala for loop
     var c = 0
     while (c < v.length) {
-      ia(c) = java.lang.Float.floatToIntBits(v(c))
+      ia(c) = java.lang.Float.floatToRawIntBits(v(c))
       c += 1
     }
     writeInt(ia)
@@ -763,6 +793,14 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
   /** Pass on to [[java.io.RandomAccessFile]]
     */
   override def readUTF() = rafObj.readUTF()
+
+  /** Pass on to [[java.io.RandomAccessFile]]
+    */
+  override final def writeChars(value: String): Unit = rafObj.writeChars(value)
+
+  /** Pass on to [[java.io.RandomAccessFile]]
+    */
+  override def writeUTF(value: String) = rafObj.writeUTF(value)
 
   /** Pass on to [[java.io.RandomAccessFile]]
     */
@@ -796,6 +834,25 @@ abstract class RandomAccessFile(file: File, arg0: String = "r") extends DataInpu
     */
   def getFD = rafObj.getFD
 
+  /** Pass on to [[java.io.RandomAccessFile]]
+    */
+  def write(b: Int): Unit = rafObj.write(b)
+
+  /** Pass on to [[java.io.RandomAccessFile]]
+    */
+  def write(b: Array[Byte], off: Int, len: Int): Unit = rafObj.write(b, off, len)
+
+  /** Pass on to [[java.io.RandomAccessFile]]
+    */
+  def writeBoolean(v: Boolean): Unit = rafObj.writeBoolean(v)
+
+  /** Pass on to [[java.io.RandomAccessFile]]
+    */
+  def writeByte(v: Int): Unit =  rafObj.writeByte(v)
+
+  /** Pass on to [[java.io.RandomAccessFile]]
+    */
+  def writeBytes(s: String): Unit = rafObj.writeBytes(s)
 }
 
 
@@ -859,5 +916,150 @@ abstract class ByteConverter {
 
   /**Takes an Int64 (Long), and returns an array of 8 bytes, shifted up to a UInt64. See [[breeze.io.ByteConverter.bytesToUInt64Shifted()]]*/
   def uInt64ShiftedToBytes(value: Long): Array[Byte]
+
+}
+
+/** See [[breeze.io.ByteConverter]], reads big endian.
+  */
+object ByteConverterBigEndian extends ByteConverter {
+
+  ///// bytesToXXX /////
+  def bytesToInt16(b0: Byte, b1: Byte): Short = {
+    (b0 << 8 | b1 & 0xFF).toShort
+  }
+
+  def bytesToUInt16(b0: Byte, b1: Byte): Char = {
+    ((b0.toInt & 0xFF) << 8 | (b1.toInt & 0xFF)).toChar
+  }
+
+  def bytesToInt32(b0: Byte, b1: Byte, b2: Byte, b3: Byte): Int = {
+    b0.toInt << 24 | (b1 & 0xFF) << 16 | (b2 & 0xFF) << 8 | (b3 & 0xFF)
+  }
+
+  def bytesToUInt32(b0: Byte, b1: Byte, b2: Byte, b3: Byte): Long = {
+    (b0.toLong & 0xFFL) << 24 | (b1.toLong & 0xFFL) << 16 | (b2.toLong & 0xFFL) << 8 | (b3.toLong & 0xFFL)
+  }
+
+  def bytesToUInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Long = {
+    if ((b0/*.toInt*/ & 0x80) != 0x00) {
+      throw new IOException("UInt64 too big to read given limitations of Long format.")
+    } else {
+      (b0.toLong & 0xFFL) << 56 | (b1.toLong & 0xFFL) << 48 | (b2.toLong & 0xFFL) << 40 | (b3.toLong & 0xFFL) << 32 |
+        (b4.toLong & 0xFFL) << 24 | (b5.toLong & 0xFFL) << 16 | (b6.toLong & 0xFFL) << 8 | (b7.toLong & 0xFFL)
+    }
+  }
+
+  def bytesToInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Long = {
+    b0.toLong << 56 | (b1.toLong & 0xFFL) << 48 | (b2.toLong & 0xFFL) << 40 | (b3.toLong & 0xFFL) << 32 |
+      (b4.toLong & 0xFFL) << 24 | (b5.toLong & 0xFFL) << 16 | (b6.toLong & 0xFFL) << 8 | (b7.toLong & 0xFFL)
+  }
+
+  def bytesToUInt64Shifted(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Long = {
+    (b0 ^ 0x80).toLong << 56 | (b1.toLong & 0xFFL) << 48 | (b2.toLong & 0xFFL) << 40 | (b3.toLong & 0xFFL) << 32 |
+      (b4.toLong & 0xFFL) << 24 | (b5.toLong & 0xFFL) << 16 | (b6.toLong & 0xFFL) << 8 | (b7.toLong & 0xFFL)
+  }
+  ///// XXXToByte /////
+  def int16ToBytes(value: Short): Array[Byte] = {
+    val tempret = new Array[Byte](2)
+    tempret(0) = (value >> 8).toByte
+    tempret(1) = (value & 0xFF).toByte
+    tempret
+  }
+
+  def uInt16ToBytes(value: Char): Array[Byte] = {
+    require(value <= 65535 && value >= 0, "Value " + value + " is out of range of 2-byte unsigned array.")
+
+    val tempret = new Array[Byte](2)
+    tempret(0) = ((value >> 8) & 0xFF).toByte
+    tempret(1) =  (value       & 0xFF).toByte
+    tempret
+  }
+
+  def int32ToBytes(value: Int): Array[Byte] = {
+    val tempret = new Array[Byte](4)
+    tempret(0) =  (value >> 24).toByte
+    tempret(1) = ((value >> 16) & 0xFF).toByte
+    tempret(2) = ((value >> 8)  & 0xFF).toByte
+    tempret(3) =  (value        & 0xFF).toByte
+    tempret
+  }
+
+  def uInt32ToBytes(value: Long): Array[Byte] = {
+    require(value <= 4294967295L && value >= 0L, "Value " + value + " is out of range of 4-byte unsigned array.")
+
+    val tempret = new Array[Byte](4)
+    tempret(0) = ((value >> 24) & 0xFF).toByte
+    tempret(1) = ((value >> 16) & 0xFF).toByte
+    tempret(2) = ((value >> 8)  & 0xFF).toByte
+    tempret(3) =  (value        & 0xFF).toByte
+    tempret
+  }
+
+  def int64ToBytes(value: Long): Array[Byte] = {
+    val tempret = new Array[Byte](8)
+    tempret(0) =  (value >> 56).toByte
+    tempret(1) = ((value >> 48) & 0xFF).toByte
+    tempret(2) = ((value >> 40) & 0xFF).toByte
+    tempret(3) = ((value >> 32) & 0xFF).toByte
+    tempret(4) = ((value >> 24) & 0xFF).toByte
+    tempret(5) = ((value >> 16) & 0xFF).toByte
+    tempret(6) = ((value >> 8)  & 0xFF).toByte
+    tempret(7) =  (value        & 0xFF).toByte
+    tempret
+  }
+
+  def uInt64ToBytes(value: Long): Array[Byte] = {
+    require(value >= 0, "Value " + value + " is out of range of 4-byte unsigned array.")
+
+    val tempret = new Array[Byte](8)
+    tempret(0) = ((value >> 56) & 0xFF).toByte
+    tempret(1) = ((value >> 48) & 0xFF).toByte
+    tempret(2) = ((value >> 40) & 0xFF).toByte
+    tempret(3) = ((value >> 32) & 0xFF).toByte
+    tempret(4) = ((value >> 24) & 0xFF).toByte
+    tempret(5) = ((value >> 16) & 0xFF).toByte
+    tempret(6) = ((value >> 8)  & 0xFF).toByte
+    tempret(7) =  (value        & 0xFF).toByte
+    tempret
+  }
+
+  def uInt64ShiftedToBytes(value: Long): Array[Byte] = {
+
+    val tempret = new Array[Byte](8)
+    tempret(0) = (((value >> 56) & 0xFF) ^ 0x80).toByte
+    tempret(1) = ((value >> 48) & 0xFF).toByte
+    tempret(2) = ((value >> 40) & 0xFF).toByte
+    tempret(3) = ((value >> 32) & 0xFF).toByte
+    tempret(4) = ((value >> 24) & 0xFF).toByte
+    tempret(5) = ((value >> 16) & 0xFF).toByte
+    tempret(6) = ((value >> 8)  & 0xFF).toByte
+    tempret(7) =  (value        & 0xFF).toByte
+    tempret
+  }
+
+}
+
+/** See [[breeze.io.ByteConverter]], reads little endian.
+  */
+object ByteConverterLittleEndian extends ByteConverter  {
+
+  override def bytesToInt16(b0: Byte, b1: Byte)  = ByteConverterBigEndian.bytesToInt16(b1, b0)
+  override def bytesToUInt16(b0: Byte, b1: Byte) = ByteConverterBigEndian.bytesToUInt16(b1, b0)
+  override def bytesToInt32(b0: Byte, b1: Byte, b2: Byte, b3: Byte) = ByteConverterBigEndian.bytesToInt32(b3, b2, b1, b0)
+  override def bytesToUInt32(b0: Byte, b1: Byte, b2: Byte, b3: Byte) = ByteConverterBigEndian.bytesToUInt32(b3, b2, b1, b0)
+  override def bytesToInt64(b0: Byte, b1 : Byte, b2 : Byte, b3 : Byte, b4 : Byte, b5 : Byte, b6 : Byte, b7 : Byte)
+  = ByteConverterBigEndian.bytesToInt64(b7, b6, b5, b4, b3, b2, b1, b0)
+  override def bytesToUInt64(b0: Byte, b1 : Byte, b2 : Byte, b3 : Byte, b4 : Byte, b5 : Byte, b6 : Byte, b7 : Byte)
+  = ByteConverterBigEndian.bytesToUInt64(b7, b6, b5, b4, b3, b2, b1, b0)
+  override def bytesToUInt64Shifted(b0: Byte, b1 : Byte, b2 : Byte, b3 : Byte, b4 : Byte, b5 : Byte, b6 : Byte, b7 : Byte)
+  = ByteConverterBigEndian.bytesToUInt64Shifted(b7, b6, b5, b4, b3, b2, b1, b0)
+
+  override def int16ToBytes(value: Short): Array[Byte]  = ByteConverterBigEndian.int16ToBytes(value).reverse
+  override def uInt16ToBytes(value: Char): Array[Byte]   = ByteConverterBigEndian.uInt16ToBytes(value).reverse
+  override def int32ToBytes(value: Int): Array[Byte]    = ByteConverterBigEndian.int32ToBytes(value).reverse
+  override def uInt32ToBytes(value: Long): Array[Byte]  = ByteConverterBigEndian.uInt32ToBytes(value).reverse
+  override def int64ToBytes(value: Long): Array[Byte]   = ByteConverterBigEndian.int64ToBytes(value).reverse
+  override def uInt64ToBytes(value: Long): Array[Byte]  = ByteConverterBigEndian.uInt64ToBytes(value).reverse
+  override def uInt64ShiftedToBytes(value: Long): Array[Byte] = ByteConverterBigEndian.uInt64ShiftedToBytes(value).reverse
 
 }

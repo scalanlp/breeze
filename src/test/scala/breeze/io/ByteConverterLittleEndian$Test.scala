@@ -1,37 +1,12 @@
 package breeze.io
 
+import breeze.io.ByteConverterLittleEndian._
 import org.scalatest.FunSuite
-import breeze.io.ByteConverterBE._
 
 /**
  * Created by Kenta on 12/10/13.
  */
-class ByteConverterBE$Test extends FunSuite {
-
-
-  test("UInt8"){
-    var valueS: Short = 1
-    var ba = uInt8ToByte( valueS )
-    assert(ba == 0x1)
-    assert(valueS == byteToUInt8(ba))
-
-    valueS = 127
-    ba = uInt8ToByte( valueS )
-    assert(ba == 0x7F)
-    assert(valueS == byteToUInt8(ba))
-
-    valueS = 128
-    ba = uInt8ToByte( valueS )
-    assert(ba == -128)
-    assert(valueS.toShort == byteToUInt8(ba))
-
-    valueS = 255
-    ba = uInt8ToByte( valueS )
-    assert(ba == -1)
-    assert(valueS == byteToUInt8(ba))
-
-  }
-
+class ByteConverterLittleEndian$Test extends FunSuite {
 
   test("Int16"){
     var valueS: Short = - 32768
