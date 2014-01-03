@@ -1,7 +1,7 @@
 package breeze.io
 
 import org.scalatest.FunSuite
-import java.io.IOException
+import java.io.{File, IOException}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -14,15 +14,18 @@ import org.scalatest.junit.JUnitRunner
  */
 class RandomAccessFileTestBigEndian extends FunSuite {
 
-  val fileHead = "V:/docs/gh/breeze/src/test/scala/breeze/io/binary"
   implicit val bc: ByteConverter = breeze.io.ByteConverterBigEndian
   val fileNameAppend = "BE.bin"
+  lazy val fileHead = (new File(getClass.getResource("/Double"+fileNameAppend).getPath())).getParent
+
   type RAF = RandomAccessFile
+
+  def getResource(fileNameHead: String) = getClass.getResource(fileNameHead).getFile
 
   //The following tests are common with RandomAccessFileLETest, edit that as well
 
   test("readDouble"){
-    val stream = new RAF(fileHead + "/Double" + fileNameAppend, "r")
+    val stream = new RAF( getResource("/Double"+fileNameAppend), "r")
     val result = stream.readDouble(5)
     assert(result(0) == 0.0)
     assert(result(1) == 3.141592653589793)
@@ -33,7 +36,7 @@ class RandomAccessFileTestBigEndian extends FunSuite {
   }
 
   test("readFloat"){
-    val stream = new RAF(fileHead + "/Float" + fileNameAppend, "r")
+    val stream = new RAF( getResource("/Float"+fileNameAppend), "r")
     val result = stream.readFloat(5)
     assert(result(0) == 0.0)
     assert(result(1) == 3.1415927F)
@@ -44,7 +47,7 @@ class RandomAccessFileTestBigEndian extends FunSuite {
   }
 
   test("readInt8/readByte"){
-    val stream = new RAF(fileHead + "/Int8.bin", "r")
+    val stream = new RAF( getResource("/Int8.bin"), "r")
     val res = stream.readInt8(5)
     stream.seek(0)
     val resB = stream.readByte(5)
@@ -57,7 +60,7 @@ class RandomAccessFileTestBigEndian extends FunSuite {
   }
 
   test("readUInt8/readUnsignedByte"){
-    val stream = new RAF(fileHead + "/UInt8.bin", "r")
+    val stream = new RAF( getResource("/UInt8.bin"), "r")
     val res = stream.readUInt8(5)
     stream.seek(0)
     val resB = stream.readUnsignedByte(5)
@@ -70,7 +73,7 @@ class RandomAccessFileTestBigEndian extends FunSuite {
   }
 
   test("readInt16/readShort"){
-    val stream = new RAF(fileHead + "/Int16" + fileNameAppend, "r")
+    val stream = new RAF( getResource("/Int16"+fileNameAppend), "r")
     val res = stream.readInt16(5)
     stream.seek(0)
     val resB = stream.readShort(5)
@@ -83,7 +86,7 @@ class RandomAccessFileTestBigEndian extends FunSuite {
   }
 
   test("readUInt16/readUnsignedShort"){
-    val stream = new RAF(fileHead + "/UInt16" + fileNameAppend, "r")
+    val stream = new RAF( getResource("/UInt16"+fileNameAppend), "r")
     val res = stream.readUInt16(5)
     stream.seek(0)
     val resB = stream.readUnsignedShort(5)
@@ -96,7 +99,7 @@ class RandomAccessFileTestBigEndian extends FunSuite {
   }
 
   test("readInt32/readInt"){
-    val stream = new RAF(fileHead + "/Int32" + fileNameAppend, "r")
+    val stream = new RAF( getResource("/Int32"+fileNameAppend), "r")
     val res = stream.readInt32(5)
     stream.seek(0)
     val resB = stream.readInt(5)
@@ -109,7 +112,7 @@ class RandomAccessFileTestBigEndian extends FunSuite {
   }
 
   test("readUInt32"){
-    val stream = new RAF(fileHead + "/UInt32" + fileNameAppend, "r")
+    val stream = new RAF( getResource("/UInt32"+fileNameAppend), "r")
     val res = stream.readUInt32(5)
     assert(res(0) ==  0L)
     assert(res(1) ==  1L)
@@ -120,7 +123,7 @@ class RandomAccessFileTestBigEndian extends FunSuite {
   }
 
   test("readInt64/readLong"){
-    val stream = new RAF(fileHead + "/Int64" + fileNameAppend, "r")
+    val stream = new RAF( getResource("/Int64"+fileNameAppend), "r")
     val res = stream.readInt64(5)
     stream.seek(0)
     val resB = stream.readLong(5)
@@ -133,7 +136,7 @@ class RandomAccessFileTestBigEndian extends FunSuite {
   }
 
   test("readUInt64"){
-    val stream = new RAF(fileHead + "/UInt64" + fileNameAppend, "r")
+    val stream = new RAF( getResource("/UInt64"+fileNameAppend), "r")
     val res = stream.readUInt64(4)
     assert(res(0) ==  0L)
     assert(res(1) ==  1L)
@@ -149,7 +152,7 @@ class RandomAccessFileTestBigEndian extends FunSuite {
   }
 
   test("readUInt64Shifted"){
-    val stream = new RAF(fileHead + "/UInt64" + fileNameAppend, "r")
+    val stream = new RAF( getResource("/UInt64"+fileNameAppend), "r")
     val res = stream.readUInt64Shifted(5)
     assert(res(0) ==  -9223372036854775808L)
     assert(res(1) ==  -9223372036854775807L)

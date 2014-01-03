@@ -88,22 +88,22 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
 
   //<editor-fold desc="Aliases">
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFile]].io.RandomAccessFileBE.readInt8]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.readInt8]]
     */
   @throws(classOf[IOException])
   final override def readByte(): Byte = readInt8()
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFile]].io.RandomAccessFileBE.readInt8]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.readInt8]]
     */
   @throws(classOf[IOException])
   final def readByte(n: Int): Array[Byte] = readInt8(n)
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFile]].io.RandomAccessFileBE.writeInt8]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.writeInt8]]
     */
   @throws(classOf[IOException])
   final def write(v: Byte) = writeInt8(v)
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFile]].io.RandomAccessFileBE.writeInt8]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.writeInt8]]
     */
   @throws(classOf[IOException])
   final def write(v: Array[Byte]) = writeInt8(v)
@@ -155,15 +155,15 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
 
   //<editor-fold desc="Aliases">
 
-  /** Alias, in java style, for [[breeze.io.RandomAccessFile]].io.RandomAccessFileBE.readUInt8]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.readUInt8]]
     */
   @throws(classOf[IOException])
   final override def readUnsignedByte() = readUInt8()
-  /** Alias, in java style, for [[breeze.io.RandomAccessFile]].io.RandomAccessFileBE.readUInt8]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.readUInt8]]
     */
   @throws(classOf[IOException])
   final def readUnsignedByte(n: Int): Array[Short] = readUInt8(n)
-  /** Alias, in java style, for [[breeze.io.RandomAccessFile]].io.RandomAccessFileBE.writeUInt8]]
+  /** Alias, in java style, for [[breeze.io.RandomAccessFile.writeUInt8]]
     */
   @throws(classOf[IOException])
   final def writeUnsignedByte(value: Short) = writeUInt8(value)
