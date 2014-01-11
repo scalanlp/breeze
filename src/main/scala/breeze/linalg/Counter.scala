@@ -138,6 +138,9 @@ object Counter extends CounterOps {
   }
 
   implicit def canIterateValues[K, V]: CanTraverseValues[Counter[K, V], V] = new CanTraverseValues[Counter[K,V], V] {
+
+    def isTraversableAgain(from: Counter[K, V]): Boolean = true
+
     /** Iterates all values from the given collection. */
     def traverse(from: Counter[K, V], fn: ValuesVisitor[V]): Unit = {
       for( v <- from.valuesIterator) {

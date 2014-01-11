@@ -358,7 +358,7 @@ package object linalg {
     implicit def reduceDouble[T](implicit iter: CanTraverseValues[T, Double], maxImpl: max.Impl[T, Double]): Impl[T, Double] = new Impl[T, Double] {
       def apply(v: T): Double = {
 
-        val max = if(iter.onePass(v)) 0.0 else maxImpl(v)
+        val max = if(!iter.isTraversableAgain(v)) 0.0 else maxImpl(v)
 
         val visit = new ValuesVisitor[Double] {
           var accum = 0.0

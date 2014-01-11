@@ -28,7 +28,7 @@ import breeze.generic.CanTraverseValues.ValuesVisitor
 trait CanTraverseValues[From, A] {
   /**Traverses all values from the given collection. */
   def traverse(from: From, fn: ValuesVisitor[A]): Unit
-  def onePass(from: From):Boolean = true
+  def isTraversableAgain(from: From):Boolean
 }
 
 
@@ -56,6 +56,9 @@ object CanTraverseValues {
       def traverse(from: V, fn: ValuesVisitor[V]): Unit = {
         fn.visit(from)
       }
+
+
+      def isTraversableAgain(from: V): Boolean = true
     }
   }
 
@@ -68,7 +71,7 @@ object CanTraverseValues {
         }
       }
 
-      override def onePass(from: X): Boolean = !from.isTraversableAgain
+      def isTraversableAgain(from: X): Boolean = from.isTraversableAgain
     }
   }
 
@@ -84,6 +87,8 @@ object CanTraverseValues {
     def traverse(from: Array[A], fn: ValuesVisitor[A]): Unit = {
       fn.visitArray(from)
     }
+
+    def isTraversableAgain(from: Array[A]): Boolean = true
   }
 
 

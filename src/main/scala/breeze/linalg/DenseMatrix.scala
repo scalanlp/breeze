@@ -479,6 +479,8 @@ with MatrixConstructors[DenseMatrix] {
 
   implicit def canIterateValues[V]:CanTraverseValues[DenseMatrix[V], V] = {
     new CanTraverseValues[DenseMatrix[V], V] {
+      def isTraversableAgain(from: DenseMatrix[V]): Boolean = true
+
 
       /** Iterates all key-value pairs from the given collection. */
       def traverse(from: DenseMatrix[V], fn: ValuesVisitor[V]): Unit = {
@@ -489,14 +491,8 @@ with MatrixConstructors[DenseMatrix] {
           fn.visitArray(data, offset, rows*cols, 1)
         } else if(!from.isTranspose) {
           var j = 0
-          var off = 0
           while (j < from.cols) {
-            var i = 0
-            while(i < from.rows) {
-              fn.visit(from(i, j))
-              off += 1
-              i += 1
-            }
+            fn.visitArray(data, offset + j * majorStride, rows, 1)
             j += 1
           }
         } else {

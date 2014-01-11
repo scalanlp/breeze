@@ -307,6 +307,9 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   implicit def canIterateValues[V]:CanTraverseValues[DenseVector[V], V] = {
     new CanTraverseValues[DenseVector[V], V] {
 
+
+      def isTraversableAgain(from: DenseVector[V]): Boolean = true
+
       /** Iterates all key-value pairs from the given collection. */
       def traverse(from: DenseVector[V], fn: ValuesVisitor[V]): Unit = {
         fn.visitArray(from.data, from.offset, from.length, from.stride)

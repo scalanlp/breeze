@@ -142,6 +142,9 @@ object HashVector extends HashVectorOps
   implicit def canIterateValues[V]:CanTraverseValues[HashVector[V], V] = {
     new CanTraverseValues[HashVector[V],V] {
 
+
+      def isTraversableAgain(from: HashVector[V]): Boolean = true
+
       def traverse(from: HashVector[V], fn: ValuesVisitor[V]): Unit = {
         fn.zeros(from.size - from.activeSize, from.default)
         var i = 0

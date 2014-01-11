@@ -191,6 +191,9 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
   }
 
   implicit def canIterateValues[V]: CanTraverseValues[Vector[V], V] = new CanTraverseValues[Vector[V], V] {
+
+    def isTraversableAgain(from: Vector[V]): Boolean = true
+
     /** Iterates all values from the given collection. */
     def traverse(from: Vector[V], fn: ValuesVisitor[V]): Unit = {
       for( v <- from.valuesIterator) {

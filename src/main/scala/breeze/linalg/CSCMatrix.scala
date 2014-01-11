@@ -236,19 +236,12 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
   implicit def canIterateValues[V]:CanTraverseValues[CSCMatrix[V], V] = {
     new CanTraverseValues[CSCMatrix[V],V] {
 
+      def isTraversableAgain(from: CSCMatrix[V]): Boolean = true
+
       /** Iterates all key-value pairs from the given collection. */
       def traverse(from: CSCMatrix[V], fn: ValuesVisitor[V]): Unit = {
         fn.zeros(from.size - from.activeSize, from.zero)
-        var j = 0
-        while(j < from.cols) {
-          var ip = from.colPtrs(j)
-          while(ip < from.colPtrs(j+1)) {
-            val i = from.rowIndices(ip)
-            fn.visit(from.data(ip))
-            ip += 1
-          }
-          j += 1
-        }
+        fn.visitArray(from.data, 0, from.activeSize, 1)
       }
     }
   }
