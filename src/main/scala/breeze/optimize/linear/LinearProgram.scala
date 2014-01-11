@@ -275,7 +275,9 @@ object LinearProgram {
   implicit val mySolver = try {
     NativeLPSolver
   } catch {
-    case _ =>
+    case ex: SecurityException =>
+      ApacheSimplexSolver
+    case ex: UnsatisfiedLinkError =>
       ApacheSimplexSolver
   }
 
