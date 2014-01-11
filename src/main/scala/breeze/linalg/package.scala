@@ -171,21 +171,22 @@ package object linalg {
 
 
   object sum extends UFunc {
-    implicit def reduceDouble[T](implicit iter: CanTraverseValues[T, Double]): Impl[T, Double] = new Impl[T, Double] {
-      def apply(v: T): Double = {
-        val visit = new ValuesVisitor[Double] {
-          var sum = 0.0
-          def visit(a: Double): Unit = {
+
+    @expand
+    implicit def reduce[T, @expand.args(Int, Double, Float, Long) S](implicit iter: CanTraverseValues[T, S]): Impl[T, S] = new Impl[T, S] {
+      def apply(v: T): S = {
+        class SumVisitor extends ValuesVisitor[S] {
+          var sum : S = 0
+          def visit(a: S): Unit = {
             sum += a
           }
 
-          def zeros(numZero: Int, zeroValue: Double): Unit = {
+          def zeros(numZero: Int, zeroValue: S): Unit = {
             sum += numZero * zeroValue
           }
         }
-
+        val visit = new SumVisitor
         iter.traverse(v, visit)
-
         visit.sum
       }
 
