@@ -16,7 +16,7 @@ limitations under the License.
 */
 
 import breeze.signal.support.{CanFFT, CanIFFT}
-import breeze.signal.support.{CanFHT, CanIFHT}
+import breeze.signal.support.{CanHaarTransform, CanIFHT}
 
 /**This package provides digital signal processing functions.
  *
@@ -66,11 +66,12 @@ package object signal {
    * @param canFHT implicit delegate which is used for implementation. End-users should not use this argument.
    * @return DenseVector or DenseMatrix
    */
-  def fht[Input, Output](v : Input)(implicit canFHT: CanFHT[Input, Output]): Output = canFHT(v)
+  def haarTransform[Input, Output](v : Input)(implicit canHaarTransform: CanHaarTransform[Input, Output]): Output =
+    canHaarTransform(v)
 
   /**Returns the inverse fast haar transform for a DenseVector or DenseMatrix.
    *
    */
-  def ifht[Input, Output](v : Input)(implicit canIFHT: CanIFHT[Input, Output]): Output = canIFHT(v)
+  def inverseHaarTransform[Input, Output](v : Input)(implicit canIFHT: CanIFHT[Input, Output]): Output = canIFHT(v)
 
 }
