@@ -209,7 +209,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
 
   test("small pow test") {
     val X = DenseMatrix(( .7, .2), (.3, .8))
-    assert(pow(X, 1) === X)
-    assert( abs(pow(X, .5) - DenseMatrix((.82426, 0.11716), (.17574, 0.88284))).max < 1E-5, pow(X, .5))
+    assert(mpow(X, 1) === X)
+    assert( abs(mpow(X, .5) - DenseMatrix((.82426, 0.11716), (.17574, 0.88284))).max < 1E-5, mpow(X, .5))
   }
 }
