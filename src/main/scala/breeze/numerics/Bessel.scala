@@ -1,5 +1,7 @@
 package breeze.numerics
 
+import breeze.generic.UFunc
+
 /*
 Copyright 2012 David Hall
 
@@ -23,6 +25,67 @@ limitations under the License.
  * @author dlwh
  */
 object Bessel {
+
+
+  object i0 extends UFunc {
+    implicit object ImplDouble extends Impl[Double, Double] {
+
+      def apply(x: Double): Double = {
+        val ax = x.abs
+        if (ax < 15.0) {
+          val y = x * x
+          polyval(i0p, y) / polyval(i0q, 225.0 - y)
+        } else {
+          val z = 1.0 - 15.0 / ax
+          exp(ax) * polyval(i0pp, z) / (polyval(i0qq, z) * sqrt(ax))
+        }
+      }
+    }
+  }
+
+  object i1 extends UFunc {
+    def apply(x: Double): Double = {
+      var y: Double = Double.NaN
+      var z = x.abs
+
+      if (z <= 8.0) {
+        y = (z / 2.0) - 2.0
+        z = chbevl(y, A_i1, 29) * z * math.exp(z)
+      }
+      else {
+        z = math.exp(z) * chbevl(32.0 / z - 2.0, B_i1, 25) / math.sqrt(z)
+      }
+      if (x < 0.0)
+        z = -z
+      z
+    }
+
+  }
+
+  private def chbevl(x: Double, coef: Array[Double], N: Int) = {
+    var b0 = 0.0
+    var b1 = 0.0
+    var b2 = 0.0
+
+    var p = 0
+    var i = N - 1
+
+    b0 = coef(p)
+    p += 1
+    b1 = 0.0
+    i = N - 1
+
+    do {
+      b2 = b1
+      b1 = b0
+      b0 = x * b1 - b2 + coef(p)
+      p += 1
+      i -= 1
+    } while (i > 0)
+
+    (0.5 * (b0 - b2))
+  }
+
   private val i0p = Array(9.999999999999997e-1, 2.466405579426905e-1, 1.478980363444585e-2,
     3.826993559940360e-4, 5.395676869878828e-6, 4.700912200921704e-8,
     2.733894920915608e-10, 1.115830108455192e-12, 3.301093025084127e-15,
@@ -34,17 +97,6 @@ object Bessel {
     8.474903580801549e-3, 2.023821945835647e-4)
   private val i0qq = Array(2.962898424533095e-1, 4.866115913196384e-1, 1.938352806477617e-1,
     2.261671093400046e-2, 6.450448095075585e-4, 1.529835782400450e-6)
-
-  def i0(x: Double) = {
-    val ax = x.abs
-    if (ax < 15.0) {
-      val y = x * x
-      polyval(i0p, y) / polyval(i0q, 225.0 - y)
-    } else {
-      val z = 1.0 - 15.0 / ax
-      exp(ax) * polyval(i0pp, z) / (polyval(i0qq, z) * sqrt(ax))
-    }
-  }
 
 
   private val A_i1 = Array(
@@ -107,44 +159,5 @@ object Bessel {
     7.78576235018280120474E-1
   )
 
-  // Taken from colt
-  def i1(x: Double) = {
-    var y: Double = Double.NaN
-    var z = x.abs
 
-    if (z <= 8.0) {
-      y = (z / 2.0) - 2.0
-      z = chbevl(y, A_i1, 29) * z * math.exp(z)
-    }
-    else {
-      z = math.exp(z) * chbevl(32.0 / z - 2.0, B_i1, 25) / math.sqrt(z)
-    }
-    if (x < 0.0)
-      z = -z
-    (z)
-  }
-
-  private def chbevl(x: Double, coef: Array[Double], N: Int) = {
-    var b0 = 0.0
-    var b1 = 0.0
-    var b2 = 0.0
-
-    var p = 0
-    var i = N - 1
-
-    b0 = coef(p)
-    p += 1
-    b1 = 0.0
-    i = N - 1
-
-    do {
-      b2 = b1
-      b1 = b0
-      b0 = x * b1 - b2 + coef(p)
-      p += 1
-      i -= 1
-    } while (i > 0)
-
-    (0.5 * (b0 - b2))
-  }
 }
