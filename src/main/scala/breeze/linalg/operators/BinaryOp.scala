@@ -21,7 +21,7 @@ import breeze.numerics.IntMath
 import scala.annotation.unchecked.uncheckedVariance
 
 object BinaryOp {
-  def fromCopyAndUpdate[A,B,Op<:OpType](implicit op: UFunc.InPlaceImpl2[Op, A, B], copy: CanCopy[A]):UFunc.UImpl2[Op, A, B, A] = {
+  def fromCopyAndUpdate[A,B,Op](implicit op: UFunc.InPlaceImpl2[Op, A, B], copy: CanCopy[A]):UFunc.UImpl2[Op, A, B, A] = {
     new UFunc.UImpl2[Op, A, B, A] {
       def apply(a: A, b: B): A = {
         val c = copy(a)
