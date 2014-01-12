@@ -24,6 +24,6 @@ object MutableInnerProductSpaceDenseMatrixDouble {
    		}
    	}
     implicit val canDotD_d = new CanDotDDenseMatrix()
-    MutableInnerProductSpace.make[DenseMatrix[Double], Int, Double]
+    MutableInnerProductSpace.make[DenseMatrix[Double], Double]
   }
 }

@@ -75,28 +75,67 @@ trait MutableVectorSpace[V, S] extends VectorSpace[V, S] {
   implicit def axpyVV: CanAxpy[S, V, V]
 }
 
+object MutableVectorSpace {
+  /** Construct a MutableInnerProductSpace for the given type from the available implicits */
+  def make[V, S](closeTo: (V,V,Double)=>Boolean)(implicit _field: Field[S],
+                    _isNumericOps: V <:< NumericOps[V],
+                    _zeros: CanCreateZerosLike[V, V],
+                    _mulVS: OpMulScalar.Impl2[V, S, V],
+                    _divVS: OpDiv.Impl2[V, S, V],
+                    _addVV: OpAdd.Impl2[V, V, V],
+                    _subVV: OpSub.Impl2[V, V, V],
+                    _neg: OpNeg.Impl[V, V],
+                    _copy: CanCopy[V],
+                    _mulIntoVS: OpMulScalar.InPlaceImpl2[V, S],
+                    _divIntoVS: OpDiv.InPlaceImpl2[V, S],
+                    _addIntoVV: OpAdd.InPlaceImpl2[V, V],
+                    _subIntoVV: OpSub.InPlaceImpl2[V, V],
+                    _setIntoVV: OpSet.InPlaceImpl2[V, V],
+                    _axpy: CanAxpy[S, V, V]): MutableVectorSpace[V, S] = new MutableVectorSpace[V, S] {
+    def field: Field[S] = _field
+
+
+    def close(a: V, b: V, tolerance: Double): Boolean = closeTo(a,b,tolerance)
+
+    implicit def isNumericOps(v: V): NumericOps[V] = _isNumericOps(v)
+    implicit def zeros: CanCreateZerosLike[V, V] = _zeros
+    implicit def mulVS: OpMulScalar.Impl2[V, S, V] = _mulVS
+    implicit def divVS: OpDiv.Impl2[V, S, V] = _divVS
+    implicit def addVV: OpAdd.Impl2[V, V, V] = _addVV
+    implicit def subVV: OpSub.Impl2[V, V, V] = _subVV
+    implicit def neg: OpNeg.Impl[V, V] = _neg
+    implicit def copy: CanCopy[V] = _copy
+    implicit def mulIntoVS: OpMulScalar.InPlaceImpl2[V, S] = _mulIntoVS
+    implicit def divIntoVS: OpDiv.InPlaceImpl2[V, S] = _divIntoVS
+    implicit def addIntoVV: OpAdd.InPlaceImpl2[V, V] = _addIntoVV
+    implicit def subIntoVV: OpSub.InPlaceImpl2[V, V] = _subIntoVV
+    implicit def setIntoVV: OpSet.InPlaceImpl2[V, V] = _setIntoVV
+    implicit def axpyVV: CanAxpy[S, V, V] = _axpy
+  }
+}
+
 trait MutableNormedSpace[V, S] extends NormedVectorSpace[V, S] with MutableVectorSpace[V, S]
 trait MutableInnerProductSpace[V, S] extends InnerProductSpace[V, S] with MutableVectorSpace[V, S]
 
 object MutableInnerProductSpace {
   /** Construct a MutableInnerProductSpace for the given type from the available implicits */
-  def make[V, I, S](implicit _field: Field[S],
-                    _scalarNorm: norm.Impl[S, Double],
-    _isNumericOps: V <:< NumericOps[V],
-    _zeros: CanCreateZerosLike[V, V],
-    _mulVS: OpMulScalar.Impl2[V, S, V],
-    _divVS: OpDiv.Impl2[V, S, V],
-    _addVV: OpAdd.Impl2[V, V, V],
-    _subVV: OpSub.Impl2[V, V, V],
-    _neg: OpNeg.Impl[V, V],
-    _dotVV: OpMulInner.Impl2[V, V, S],
-    _copy: CanCopy[V],
-    _mulIntoVS: OpMulScalar.InPlaceImpl2[V, S],
-    _divIntoVS: OpDiv.InPlaceImpl2[V, S],
-    _addIntoVV: OpAdd.InPlaceImpl2[V, V],
-    _subIntoVV: OpSub.InPlaceImpl2[V, V],
-    _setIntoVV: OpSet.InPlaceImpl2[V, V],
-    _axpy: CanAxpy[S, V, V]): MutableInnerProductSpace[V, S] = new MutableInnerProductSpace[V, S] {
+  def make[V, S](implicit _field: Field[S],
+                 _scalarNorm: norm.Impl[S, Double],
+                 _isNumericOps: V <:< NumericOps[V],
+                 _zeros: CanCreateZerosLike[V, V],
+                 _mulVS: OpMulScalar.Impl2[V, S, V],
+                 _divVS: OpDiv.Impl2[V, S, V],
+                 _addVV: OpAdd.Impl2[V, V, V],
+                 _subVV: OpSub.Impl2[V, V, V],
+                 _neg: OpNeg.Impl[V, V],
+                 _dotVV: OpMulInner.Impl2[V, V, S],
+                 _copy: CanCopy[V],
+                 _mulIntoVS: OpMulScalar.InPlaceImpl2[V, S],
+                 _divIntoVS: OpDiv.InPlaceImpl2[V, S],
+                 _addIntoVV: OpAdd.InPlaceImpl2[V, V],
+                 _subIntoVV: OpSub.InPlaceImpl2[V, V],
+                 _setIntoVV: OpSet.InPlaceImpl2[V, V],
+                 _axpy: CanAxpy[S, V, V]): MutableInnerProductSpace[V, S] = new MutableInnerProductSpace[V, S] {
     def field: Field[S] = _field
 
     implicit def scalarNorm = _scalarNorm
