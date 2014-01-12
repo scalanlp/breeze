@@ -1,53 +1,26 @@
-package breeze.signal.support
+package breeze.signal
 
-/*
- Copyright 2013 David Hall
-
- Licensed under the Apache License, Version 2.0 (the "License")
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-*/
-
+import breeze.generic.UFunc
 import breeze.linalg.{DenseMatrix, DenseVector}
 import breeze.math.Complex
 import breeze.signal.support.JTransformsSupport._
 
-
-/**
- * Construction delegate for getting the IFFT of a value of type InputType.
- * Implementation details (especially
- * option arguments) may be added in the future, so it is recommended not
- * to call this implicit delegate directly.
- *
- * @author ktakagaki
- */
-trait CanIFFT[InputType, OutputType] {
-  def apply(v1: InputType): OutputType
-}
-
-/**
- * Construction delegate for getting the IFFT of a value of type InputType.</p>
- * Implementation details (especially
- * option arguments) may be added in the future, so it is recommended not
- * to call these implicit delegates directly. Instead, use ifft(x: DenseVector/DenseMatrix).
- *
- * @author ktakagaki
- */
-object CanIFFT {
-
+/**Returns the inverse fast fourier transform of a DenseVector or DenseMatrix. Currently,
+  * DenseVector/DenseMatrix types of Double and Complex are supported. Scaling
+  * follows the common signal processing convention, i.e. no scaling on forward DFT,
+  * and <b>1/n scaling for the inverse DFT</b>. Of note, ifft(x: DenseMatrix[Double]) will
+  * perform the 2D ifft in both row and column dimensions, as opposed to the MatLab
+  * toolbox syntax, which performs column-wise 1D ifft.</p>
+  * Implementation is via the implicit trait CanIFFT[ InputType,  OutputType ],
+  * which is found in breeze.signal.support.CanIFFT.scala.
+  *
+  */
+object ifft extends UFunc {
   /** Use via implicit delegate syntax ifft(x: DenseVector)
     *
     */
-  implicit val dvDoubleIFFT : CanIFFT[DenseVector[Double], DenseVector[Complex]] = {
-    new CanIFFT[DenseVector[Double], DenseVector[Complex]] {
+  implicit val dvDoubleIFFT : ifft.Impl[DenseVector[Double], DenseVector[Complex]] = {
+    new ifft.Impl[DenseVector[Double], DenseVector[Complex]] {
       def apply(v: DenseVector[Double]) = {
         //reformat for input: note difference in format for input to complex fft
         val tempArr = denseVectorDToTemp(v)
@@ -65,8 +38,8 @@ object CanIFFT {
   /** Use via implicit delegate syntax ifft(x: DenseVector)
     *
     */
-  implicit val dvComplexIFFT : CanIFFT[DenseVector[Complex], DenseVector[Complex]] = {
-    new CanIFFT[DenseVector[Complex], DenseVector[Complex]] {
+  implicit val dvComplexIFFT : ifft.Impl[DenseVector[Complex], DenseVector[Complex]] = {
+    new ifft.Impl[DenseVector[Complex], DenseVector[Complex]] {
       def apply(v: DenseVector[Complex]) = {
         //reformat for input: note difference in format for input to real fft
         val tempArr = denseVectorCToTemp(v)
@@ -84,8 +57,8 @@ object CanIFFT {
   /** Use via implicit delegate syntax ifft(x: DenseMatrix)
     *
     */
-  implicit val dmComplex2DIFFT : CanIFFT[DenseMatrix[Complex], DenseMatrix[Complex]] = {
-    new CanIFFT[DenseMatrix[Complex], DenseMatrix[Complex]] {
+  implicit val dmComplex2DIFFT : ifft.Impl[DenseMatrix[Complex], DenseMatrix[Complex]] = {
+    new ifft.Impl[DenseMatrix[Complex], DenseMatrix[Complex]] {
       def apply(v: DenseMatrix[Complex]) = {
         //reformat for input: note difference in format for input to real fft
         val tempMat = denseMatrixCToTemp(v)
@@ -103,8 +76,8 @@ object CanIFFT {
   /** Use via implicit delegate syntax ifft(x: DenseMatrix)
     *
     */
-  implicit val dmDouble2DIFFT : CanIFFT[DenseMatrix[Double], DenseMatrix[Complex]] = {
-    new CanIFFT[DenseMatrix[Double], DenseMatrix[Complex]] {
+  implicit val dmDouble2DIFFT : ifft.Impl[DenseMatrix[Double], DenseMatrix[Complex]] = {
+    new ifft.Impl[DenseMatrix[Double], DenseMatrix[Complex]] {
       def apply(v: DenseMatrix[Double]) = {
         //reformat for input
         val tempMat = denseMatrixDToTemp(v)
@@ -119,5 +92,7 @@ object CanIFFT {
       }
     }
   }
-
 }
+
+
+
