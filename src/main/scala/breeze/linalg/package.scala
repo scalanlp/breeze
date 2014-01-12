@@ -917,6 +917,9 @@ trait LinearAlgebra {
 
   /**
    * Computes the inverse of a given real matrix.
+   * In general, you should avoid using this metho in combination with *.
+   * Instead, wherever you might want to write inv(A) * B, you should write
+   * A \ B.
    */
   def inv[T](X: Matrix[T])(implicit td: T => Double): DenseMatrix[Double] = {
     requireSquareMatrix(X)
@@ -943,18 +946,20 @@ trait LinearAlgebra {
 
   /**
    * Computes the Moore-Penrose pseudo inverse of the given real matrix X.
+   *
+   *     The pseudo inverse is nothing but the least-squares solution to AX=B,
+   * hence:
+   *        d/dX 1/2 (AX-B)^2 = A^T (AX-B)
+   *  Solving A^T (AX-B) = 0 for X yields
+   *        A^T AX = A^T B
+   *     =>      X = (A^T A)^(-1) A^T B
    */
   def pinv(X: DenseMatrix[Double]) : DenseMatrix[Double] = {
     requireNonEmptyMatrix(X)
 
-    // The pseudo inverse is nothing but the least-squares solution to AX=B,
-    // hence:
-    //       d/dX 1/2 (AX-B)^2 = A^T (AX-B)
-    // Solving A^T (AX-B) = 0 for X yields
-    //       A^T AX = A^T B
-    //    =>      X = (A^T A)^(-1) A^T B
 
-    inv(X.t * X) * X.t
+
+    (X.t * X) \ X.t
   }
 
   /**
