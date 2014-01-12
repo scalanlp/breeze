@@ -152,38 +152,7 @@ object Counter extends CounterOps {
 
   implicit def tensorspace[K, V](implicit field: Field[V], dfv: DefaultArrayValue[V], normImpl: norm.Impl[V, Double]) = {
     implicit def zipMap = Counter.zipMap[K, V, V]
-    // sigh...
-    TensorSpace.make[Counter[K, V], K, V](canNorm,
-      normImpl,
-      canMapValues[K, V, V],
-      canIterateValues[K, V],
-      zipMap,
-      addVS,
-      subVS,
-      canMulVV,
-      canDivVV,
-      canCopy,
-      canMulIntoVS,
-      canDivIntoVS,
-      addIntoVV[K, V],
-      subIntoVV[K, V],
-      addIntoVS[K, V],
-      subIntoVS[K, V],
-      canMulIntoVV,
-      canDivIntoVV,
-      canSetIntoVV,
-      canSetIntoVS,
-      canAxpy,
-      implicitly[Field[V]],
-      implicitly[CanCreateZerosLike[Counter[K, V], Counter[K, V]]],
-      canMulVS,
-      canDivVS,
-      addVV,
-      subVV,
-      canNegate,
-      implicitly[<:<[breeze.linalg.Counter[K,V],breeze.linalg.NumericOps[breeze.linalg.Counter[K,V]] with breeze.linalg.QuasiTensor[K,V]]],
-      canMulInner[K, V]
-    )
+    TensorSpace.make[Counter[K, V], K, V]
   }
 }
 
