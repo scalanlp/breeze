@@ -3,6 +3,7 @@ package breeze.features
 import breeze.linalg._
 import java.util
 import breeze.linalg.operators._
+import breeze.linalg.support.CanAxpy
 
 /**
  * Represents a feature vector of indicator (i.e. binary) features.

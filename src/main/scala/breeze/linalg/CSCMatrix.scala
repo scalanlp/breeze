@@ -20,11 +20,12 @@ import java.util
 import breeze.util.{ Terminal, ArrayUtil }
 import scala.collection.mutable
 import breeze.math.{Ring, Complex, Semiring}
-import breeze.generic.{CanTraverseValues, UFunc2ZippingImplicits, UFunc, CanMapValues}
+import breeze.generic.{UFunc2ZippingImplicits, UFunc}
 import scala.reflect.ClassTag
 import breeze.macros.expand
 import scala.math.BigInt
-import breeze.generic.CanTraverseValues.ValuesVisitor
+import breeze.linalg.support.{CanTranspose, CanTraverseValues, CanMapValues}
+import CanTraverseValues.ValuesVisitor
 
 /**
  * A compressed sparse column matrix, as used in Matlab and CSparse, etc.

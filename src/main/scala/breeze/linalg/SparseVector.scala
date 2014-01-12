@@ -27,7 +27,7 @@ import java.util
 import collection.mutable
 import scala.reflect.ClassTag
 import breeze.macros.expand
-import breeze.generic.CanTraverseValues.ValuesVisitor
+import CanTraverseValues.ValuesVisitor
 import breeze.generic.UFunc.InPlaceImpl2
 
 

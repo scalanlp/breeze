@@ -18,9 +18,8 @@ package breeze.linalg
 import scala.{specialized=>spec}
 import breeze.storage.{DefaultArrayValue, Storage}
 import breeze.util.Terminal
-import breeze.linalg.support.{CanCopy, LiteralRow}
+import breeze.linalg.support.{CanMapValues, CanCopy, LiteralRow}
 import util.Random
-import breeze.generic.CanMapValues
 import breeze.math.{Complex, Semiring}
 import breeze.linalg.operators._
 import scala.reflect.ClassTag

@@ -17,7 +17,6 @@ package breeze.linalg
 
 import scala.{specialized=>spec}
 import support._
-import breeze.generic.{CanMapValues}
 import breeze.collection.mutable.Beam
 import breeze.math.Semiring
 import scala.reflect.ClassTag

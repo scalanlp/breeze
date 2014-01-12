@@ -18,12 +18,12 @@ import breeze.linalg.Counter2.Curried
 import breeze.storage.DefaultArrayValue
 import collection.mutable.HashMap
 import breeze.math.{Ring, Semiring, Field}
-import breeze.linalg.support.{CanCopy, CanZipMapValues, CanSlice2}
+import breeze.linalg.support._
 import scala.collection.Set
 import breeze.generic._
 import scala.reflect.ClassTag
 import breeze.linalg.operators._
-import breeze.generic.CanTraverseValues.ValuesVisitor
+import CanTraverseValues.ValuesVisitor
 import breeze.generic.UFunc.{InPlaceImpl, UImpl2, InPlaceImpl2}
 
 /**

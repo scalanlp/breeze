@@ -1,4 +1,4 @@
-package breeze.generic
+package breeze.linalg.support
 
 /*
  Copyright 2012 David Hall
@@ -15,18 +15,14 @@ package breeze.generic
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-/**
- *
- * This trait is for multi-dimensional tensors that can logically have one of their
- * dimensions "collapsed", e.g. summing out all columns of a matrix to give a column
- * vector.
- *
- * @author dlwh
- * @tparam From the tensor being collapsed
- * @tparam Axis which axis is being collapsed. Usually a subtype of [[breeze.linalg.Axis.Value]]
- * @tparam ColType the type of the "column" (or row or...) being collapsed.
- */
-trait CanIterateAxis[From, Axis, ColType] {
-  def apply[A](from: From, axis: Axis)(f: ColType=>A)
 
+/**
+ * Capability trait for the transpose of a shaped value.
+ *
+ * @author dramage
+ * @author dlwh
+ */
+// Don't inherit Function1 or you will make kittens cry.
+trait CanTranspose[From, +To] {
+  def apply(from: From):To
 }

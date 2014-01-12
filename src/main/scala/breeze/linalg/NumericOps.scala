@@ -16,8 +16,7 @@ package breeze.linalg
 */
 
 import breeze.linalg.operators._
-import breeze.math.{Ring, Field, VectorSpace}
-import breeze.linalg.support.{CanSlice2}
+import breeze.linalg.support.{CanTranspose, CanSlice2}
 import breeze.storage.DefaultArrayValue
 import scala.reflect.ClassTag
 import breeze.generic.UFunc

@@ -1,7 +1,7 @@
 package breeze.linalg
 
 import breeze.linalg.operators._
-import breeze.generic.{CanIterateAxis, CanCollapseAxis}
+import breeze.linalg.support.{CanCollapseAxis, CanIterateAxis}
 
 /**
  * Class for classes that are broadcasting their rows.

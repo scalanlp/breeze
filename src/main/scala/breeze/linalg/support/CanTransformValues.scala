@@ -1,4 +1,4 @@
-package breeze.generic
+package breeze.linalg.support
 
 import breeze.math.Complex
 

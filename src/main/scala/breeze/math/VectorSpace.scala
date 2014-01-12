@@ -16,9 +16,8 @@ package breeze.math
  limitations under the License.
 */
 import breeze.linalg.operators._
-import breeze.linalg.support.{CanZipMapValues, CanCopy, CanCreateZerosLike}
+import breeze.linalg.support._
 import breeze.linalg.{norm, QuasiTensor, NumericOps}
-import breeze.generic.{CanTraverseValues, CanMapValues}
 
 /**
  *

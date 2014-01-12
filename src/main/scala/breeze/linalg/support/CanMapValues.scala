@@ -1,4 +1,5 @@
-package breeze.generic
+package breeze.linalg.support
+
 /*
  Copyright 2012 David Hall
 

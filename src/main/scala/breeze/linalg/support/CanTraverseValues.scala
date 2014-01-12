@@ -1,4 +1,4 @@
-package breeze.generic
+package breeze.linalg.support
 
 /*
  Copyright 2012 David Hall
@@ -17,7 +17,7 @@ package breeze.generic
 */
 import breeze.math.Complex
 import scala.reflect.ClassTag
-import breeze.generic.CanTraverseValues.ValuesVisitor
+import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 
 /**
  * Marker for being able to traverse over the values in a collection/tensor

@@ -17,13 +17,13 @@ package breeze
 import breeze.generic._
 import io.{CSVWriter, CSVReader}
 import linalg.operators._
-import breeze.linalg.support.{RangeSuffix, CanCopy}
+import breeze.linalg.support.{CanAxpy, CanTraverseValues, RangeSuffix, CanCopy}
 import math.Semiring
 import org.netlib.util.intW
 import storage.DefaultArrayValue
 import java.io.{File, FileReader}
 import scala.reflect.ClassTag
-import breeze.generic.CanTraverseValues.ValuesVisitor
+import CanTraverseValues.ValuesVisitor
 import breeze.macros.expand
 import breeze.macros.expand.sequence
 

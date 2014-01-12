@@ -5,6 +5,7 @@ import breeze.macros.expand
 import scala.math.BigInt
 import breeze.linalg.operators._
 import breeze.math.Complex
+import breeze.linalg.support.CanAxpy
 
 /**
  * TODO
@@ -167,10 +168,11 @@ trait BitVectorOps {
     }
   }
 
+
   @expand
-  implicit def axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) V]: CanAxpy[V, BitVector, Vector[V]] = {
-    new CanAxpy[V, BitVector, Vector[V]] {
-      def apply(s: V, b: BitVector, a: Vector[V]) {
+  implicit def axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) V, Vec](implicit ev: Vec <:< Vector[V]): CanAxpy[V, BitVector, Vec] = {
+    new CanAxpy[V, BitVector, Vec] {
+      def apply(s: V, b: BitVector, a: Vec) {
         require(b.lengthsMatch(a), "Vectors must be the same length!")
         val bd = b.data
         var i= bd.nextSetBit(0)

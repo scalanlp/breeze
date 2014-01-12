@@ -4,13 +4,13 @@ import breeze.collection.mutable.OpenAddressHashArray
 import breeze.linalg.operators._
 import breeze.storage.{ConfigurableDefault, DefaultArrayValue}
 import breeze.generic._
-import breeze.linalg.support.{CanZipMapValues, CanMapKeyValuePairs, CanCopy}
+import breeze.linalg.support._
 import breeze.math.{Semiring, TensorSpace, Ring, Complex}
 import scala.reflect.ClassTag
 import scala.util.hashing.MurmurHash3
 import breeze.macros.expand
 import scala.math.BigInt
-import breeze.generic.CanTraverseValues.ValuesVisitor
+import CanTraverseValues.ValuesVisitor
 import breeze.generic.UFunc.UImpl2
 
 /**

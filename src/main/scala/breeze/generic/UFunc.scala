@@ -1,6 +1,6 @@
 package breeze.generic
 
-import breeze.linalg.support.CanZipMapValues
+import breeze.linalg.support.{CanTransformValues, CanMapValues, CanCollapseAxis, CanZipMapValues}
 import breeze.linalg.Axis
 
 /*

@@ -27,7 +27,7 @@ import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import breeze.macros.expand
 import breeze.numerics.IntMath
 import scala.math.BigInt
-import breeze.generic.CanTraverseValues.ValuesVisitor
+import CanTraverseValues.ValuesVisitor
 
 /**
  * A DenseVector is the "obvious" implementation of a Vector, with one twist.

@@ -1,10 +1,10 @@
 package breeze.math
 
 import breeze.linalg.{norm, NumericOps}
-import breeze.linalg.support.{CanZipMapValues, CanCopy, CanCreateZerosLike}
+import breeze.linalg.support._
 import breeze.linalg.operators._
 import breeze.util.Isomorphism
-import breeze.generic.{UFunc, CanMapValues}
+import breeze.generic.{UFunc}
 import breeze.generic.UFunc.UImpl2
 
 /**

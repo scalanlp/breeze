@@ -20,8 +20,8 @@ import breeze.math.{TensorSpace, Ring, Semiring, Field}
 import breeze.generic._
 import collection.Set
 import operators._
-import support.{CanCreateZerosLike, CanZipMapValues, CanCopy}
-import breeze.generic.CanTraverseValues.ValuesVisitor
+import breeze.linalg.support._
+import CanTraverseValues.ValuesVisitor
 
 /**
  * A map-like tensor that acts like a collection of key-value pairs where

@@ -1,4 +1,4 @@
-package breeze.linalg.operators
+package breeze.linalg.support
 
 /*
  Copyright 2012 David Hall

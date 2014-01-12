@@ -16,10 +16,11 @@ package breeze
  limitations under the License.
 */
 
-import breeze.generic.{CanTraverseValues, MappingUFunc, UFunc}
+import breeze.generic.{MappingUFunc, UFunc}
 import scala.math._
 import org.apache.commons.math3.special.{Gamma => G, Erf}
-import breeze.generic.CanTraverseValues.ValuesVisitor
+import breeze.linalg.support.CanTraverseValues
+import CanTraverseValues.ValuesVisitor
 import org.apache.commons.math3.util.FastMath
 
 /**

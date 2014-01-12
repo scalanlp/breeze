@@ -16,17 +16,17 @@ package breeze.linalg
 */
 import operators._
 import scala.{specialized=>spec}
-import breeze.generic.{CanTraverseValues, UFunc, CanMapValues}
+import breeze.generic.{UFunc}
 import breeze.math.{Complex, TensorSpace, Ring}
 import scala.math.BigInt
 import collection.immutable.BitSet
-import breeze.linalg.support.{CanZipMapValues, CanCopy}
+import breeze.linalg.support._
 import breeze.storage.{DefaultArrayValue, Storage}
 import scala.reflect.ClassTag
 import breeze.stats.distributions.Rand
 import breeze.macros.expand
 import scala.annotation.unchecked.uncheckedVariance
-import breeze.generic.CanTraverseValues.ValuesVisitor
+import CanTraverseValues.ValuesVisitor
 
 /**
  * Trait for operators and such used in vectors.

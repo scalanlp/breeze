@@ -14,7 +14,6 @@ package breeze.linalg.support
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import breeze.generic.CanMapValues
 import breeze.math.{Semiring, Field}
 import scala.reflect.ClassTag
 

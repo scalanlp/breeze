@@ -1,4 +1,6 @@
-package breeze.generic
+package breeze.linalg.support
+
+
 /*
  Copyright 2012 David Hall
 
@@ -34,8 +36,8 @@ trait CanCollapseAxis[From, Axis, ColType, R, TR] {
 
 object CanCollapseAxis {
   /** Sometimes Scala can't deal with the R/TR part if it's being chained. This
-    * delays some of the inference of [[breeze.generic.CanCollapseAxis]]'s parameters
-    * until they can be further resolved. (See [[breeze.generic.UFunc.collapseUred]] example.) */
+    * delays some of the inference of [[breeze.linalg.support.CanCollapseAxis]]'s parameters
+    * until they can be further resolved. (See [[breeze.generic.UFunc.collapseUred]] for an example.) */
   class HandHold[From, Axis, ColType]
 
 }
