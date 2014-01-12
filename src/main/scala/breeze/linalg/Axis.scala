@@ -16,7 +16,7 @@ package breeze.linalg
 */
 
 /**
- * This trait is commonly used for [[breeze.linalg]].sum and its kin for summing along
+ * This trait is commonly used for [[breeze.linalg.sum]] and its kin for summing along
  * a particular axis of a Matrix.
  * @author dlwh
  */
