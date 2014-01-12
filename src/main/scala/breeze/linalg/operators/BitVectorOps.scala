@@ -4,7 +4,7 @@ package operators
 import breeze.macros.expand
 import java.util
 import scala.math.BigInt
-import breeze.math.Complex
+import breeze.math.{Semiring, Complex}
 import breeze.linalg.support.CanAxpy
 
 
@@ -60,7 +60,7 @@ trait BitVectorOps {
 
 
   @expand
-  implicit def axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) V, Vec](implicit ev: Vec <:< Vector[V]): CanAxpy[V, BitVector, Vec] = {
+  implicit def axpy[@expand.args(Int, Double, Float, Long) V, Vec](implicit ev: Vec <:< Vector[V]): CanAxpy[V, BitVector, Vec] = {
     new CanAxpy[V, BitVector, Vec] {
       def apply(s: V, b: BitVector, a: Vec) {
         require(b.lengthsMatch(a), "Vectors must be the same length!")
@@ -68,6 +68,21 @@ trait BitVectorOps {
         var i= bd.nextSetBit(0)
         while(i >= 0) {
           a(i) += s
+          i = bd.nextSetBit(i+1)
+        }
+      }
+    }
+  }
+
+
+  implicit def axpyGen[V, Vec](implicit ev: Vec <:< Vector[V], semi: Semiring[V]): CanAxpy[V, BitVector, Vec] = {
+    new CanAxpy[V, BitVector, Vec] {
+      def apply(s: V, b: BitVector, a: Vec) {
+        require(b.lengthsMatch(a), "Vectors must be the same length!")
+        val bd = b.data
+        var i= bd.nextSetBit(0)
+        while(i >= 0) {
+          a(i) = semi.+(a(i), s)
           i = bd.nextSetBit(i+1)
         }
       }
@@ -86,7 +101,7 @@ trait BitVectorOps {
 
   @expand
   @expand.valify
-  implicit def canDot_BV_DenseVector[@expand.args(Int, Long, BigInt, Complex) T](implicit @expand.sequence[T](0, 0l, BigInt(0), Complex.zero) zero: T): breeze.linalg.operators.OpMulInner.Impl2[BitVector, DenseVector[T], T] = {
+  implicit def canDot_BV_DenseVector[@expand.args(Double, Float, Int, Long) T](implicit @expand.sequence[T](0.0, 0.0f, 0, 0l) zero: T): breeze.linalg.operators.OpMulInner.Impl2[BitVector, DenseVector[T], T] = {
     new breeze.linalg.operators.OpMulInner.Impl2[BitVector, DenseVector[T], T] {
       def apply(a: BitVector, b: DenseVector[T]) = {
         val ad = a.data
@@ -117,8 +132,6 @@ trait BitVectorOps {
 
         val ad = a.data
         var boff = 0
-        val bindex = b.index
-        val bd = b.data
         var result : T = zero
         while(boff < b.activeSize) {
           if(ad.get(b.indexAt(boff)))
