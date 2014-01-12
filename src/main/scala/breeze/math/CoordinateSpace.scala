@@ -49,13 +49,13 @@ object CoordinateSpace {
 
     import BinaryOp._
 
-    implicit val mulVS: OpMulScalar.Impl2[S, S, S] = scalarOpMul[S]
+    implicit val mulVS: OpMulScalar.Impl2[S, S, S] = OpMulScalar.opMulScalarFromSemiring[S]
 
-    implicit val divVS: OpDiv.Impl2[S, S, S] = scalarOpDiv
+    implicit val divVS: OpDiv.Impl2[S, S, S] = OpDiv.opDivFromField[S]
 
-    implicit val addVV: OpAdd.Impl2[S, S, S] = scalarOpAdd
+    implicit val addVV: OpAdd.Impl2[S, S, S] = OpAdd.opAddFromSemiring
 
-    implicit val subVV: OpSub.Impl2[S, S, S] = scalarOpSub
+    implicit val subVV: OpSub.Impl2[S, S, S] = OpSub.opSubFromRing
 
     implicit val neg: OpNeg.Impl[S, S] = OpNeg.ringNegation
 
@@ -67,15 +67,15 @@ object CoordinateSpace {
 
     implicit val zipMapValues: CanZipMapValues[S, S, S, S] = CanZipMapValues.canZipMapSelf
 
-    implicit val addVS: OpAdd.Impl2[S, S, S] = scalarOpAdd
+    implicit val addVS: OpAdd.Impl2[S, S, S] = OpAdd.opAddFromSemiring
 
-    implicit val subVS: OpSub.Impl2[S, S, S] = scalarOpSub
+    implicit val subVS: OpSub.Impl2[S, S, S] = OpSub.opSubFromRing
 
-    implicit val mulVV: OpMulScalar.Impl2[S, S, S] = scalarOpMul
+    implicit val mulVV: OpMulScalar.Impl2[S, S, S] = OpMulScalar.opMulScalarFromSemiring
 
-    implicit val divVV: OpDiv.Impl2[S, S, S] = scalarOpDiv
+    implicit val divVV: OpDiv.Impl2[S, S, S] = OpDiv.opDivFromField
 
-    implicit val dotVV: OpMulInner.Impl2[S, S, S] = scalarOpMulInner
+    implicit val dotVV: OpMulInner.Impl2[S, S, S] = OpMulInner.opMulInnerFromSemiring
   }
 }
 

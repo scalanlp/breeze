@@ -33,50 +33,6 @@ object BinaryOp {
 
   }
 
-  // scalar implicits
-  implicit def scalarOpAdd[S:Semiring]:OpAdd.Impl2[S, S, S] = new OpAdd.Impl2[S, S, S] {
-    def apply(a: S, b: S): S = implicitly[Semiring[S]].+(a,b)
-  }
-
-  implicit def scalarOpSub[S:Ring]:OpSub.Impl2[S, S, S] = new OpSub.Impl2[S, S, S] {
-    def apply(a: S, b: S): S = implicitly[Ring[S]].-(a,b)
-  }
-
-  implicit def scalarOpMul[S:Semiring]:OpMulScalar.Impl2[S, S, S] = new OpMulScalar.Impl2[S, S, S] {
-    def apply(a: S, b: S): S = implicitly[Semiring[S]].*(a,b)
-  }
-
- implicit def scalarOpMulInner[S:Semiring]:OpMulInner.Impl2[S, S, S] = new OpMulInner.Impl2[S, S, S] {
-    def apply(a: S, b: S): S = implicitly[Semiring[S]].*(a,b)
-  }
-
-  implicit def scalarOpDiv[S:Field]:OpDiv.Impl2[S, S, S] = new OpDiv.Impl2[S, S, S] {
-    def apply(a: S, b: S): S = implicitly[Field[S]]./(a,b)
-  }
-
-  implicit def intOpPow:OpPow.Impl2[Int, Int, Int] = new OpPow.Impl2[Int, Int, Int] {
-    def apply(a: Int, b: Int): Int = IntMath.ipow(a,b)
-  }
-
-  implicit def doubleOpPow:OpPow.Impl2[Double, Double, Double] = new OpPow.Impl2[Double, Double, Double] {
-    def apply(a: Double, b: Double): Double = math.pow(a,b)
-  }
-
-  implicit def floatOpPow:OpPow.Impl2[Float, Float, Float] = new OpPow.Impl2[Float, Float, Float] {
-    def apply(a: Float, b: Float): Float = math.pow(a,b).toFloat
-  }
-
-  implicit def intOpMod:OpMod.Impl2[Int, Int, Int] = new OpMod.Impl2[Int, Int, Int] {
-    def apply(a: Int, b: Int): Int = IntMath.ipow(a,b)
-  }
-
-  implicit def doubleOpMod:OpMod.Impl2[Double, Double, Double] = new OpMod.Impl2[Double, Double, Double] {
-    def apply(a: Double, b: Double): Double = math.pow(a,b)
-  }
-
-  implicit def floatOpMod:OpMod.Impl2[Float, Float, Float] = new OpMod.Impl2[Float, Float, Float] {
-    def apply(a: Float, b: Float): Float = a % b
-  }
 }
 
 /**

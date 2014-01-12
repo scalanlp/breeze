@@ -1,7 +1,7 @@
 package breeze.linalg.operators
 
 import breeze.generic.UFunc
-import breeze.math.Ring
+import breeze.math.{Field, Semiring, Ring}
 
 /*
  Copyright 2012 Daniel Ramage
@@ -35,7 +35,11 @@ sealed trait OpType
  * @author dramage
  */
 sealed trait OpAdd extends OpType
-object OpAdd extends OpAdd with UFunc
+object OpAdd extends OpAdd with UFunc {
+  implicit def opAddFromSemiring[S:Semiring]: Impl2[S, S, S] = new Impl2[S, S, S] {
+    def apply(v: S, v2: S): S = implicitly[Semiring[S]].+(v, v2)
+  }
+}
 
 /**
  * Type marker for BinaryOp A :- B and BinaryUpdateOp A :-= B.
@@ -43,7 +47,11 @@ object OpAdd extends OpAdd with UFunc
  * @author dramage
  */
 sealed trait OpSub extends OpType
-object OpSub extends OpSub with UFunc
+object OpSub extends OpSub with UFunc {
+  implicit def opSubFromRing[S:Ring]: Impl2[S, S, S] = new Impl2[S, S, S] {
+    def apply(v: S, v2: S): S = implicitly[Ring[S]].-(v, v2)
+  }
+}
 
 /**
  * Type marker for BinaryOp A :* B and BinaryUpdateOp A :*= B.
@@ -51,7 +59,11 @@ object OpSub extends OpSub with UFunc
  * @author dramage
  */
 sealed trait OpMulScalar extends OpType
-object OpMulScalar extends OpMulScalar with UFunc
+object OpMulScalar extends OpMulScalar with UFunc {
+  implicit def opMulScalarFromSemiring[S:Semiring]: Impl2[S, S, S] = new Impl2[S, S, S] {
+    def apply(v: S, v2: S): S = implicitly[Semiring[S]].*(v, v2)
+  }
+}
 
 /**
  * Type marker for BinaryOp A :/ B and BinaryUpdateOp A:/= B.
@@ -59,7 +71,11 @@ object OpMulScalar extends OpMulScalar with UFunc
  * @author dramage
  */
 sealed trait OpDiv extends OpType
-object OpDiv extends OpDiv with UFunc
+object OpDiv extends OpDiv with UFunc {
+  implicit def opDivFromField[S:Field]: Impl2[S, S, S] = new Impl2[S, S, S] {
+    def apply(v: S, v2: S): S = implicitly[Field[S]]./(v, v2)
+  }
+}
 
 /**
  * Type marker for BinaryOp A :% B and BinaryUpdateOp A:%= B.
@@ -184,7 +200,11 @@ object OpNot extends OpNot with UFunc
  * @author dramage
  */
 sealed trait OpMulInner extends OpType
-object OpMulInner extends OpMulInner with UFunc
+object OpMulInner extends OpMulInner with UFunc {
+  def opMulInnerFromSemiring[S:Semiring]: OpMulInner.Impl2[S, S, S] = new Impl2[S, S, S] {
+    def apply(v: S, v2: S): S = implicitly[Semiring[S]].*(v, v2)
+  }
+}
 
 
 /**
