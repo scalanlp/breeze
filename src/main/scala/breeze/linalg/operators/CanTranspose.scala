@@ -22,6 +22,6 @@ package breeze.linalg.operators
  * @author dlwh
  */
 // Don't inherit Function1 or you will make kittens cry.
-trait CanTranspose[-From, +To] {
+trait CanTranspose[From, +To] {
   def apply(from: From):To
 }
