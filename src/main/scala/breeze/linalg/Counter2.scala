@@ -17,14 +17,13 @@ package breeze.linalg
 import breeze.linalg.Counter2.Curried
 import breeze.storage.DefaultArrayValue
 import collection.mutable.HashMap
-import breeze.math.{Ring, Semiring, Field}
+import breeze.math.Semiring
 import breeze.linalg.support._
 import scala.collection.Set
 import breeze.generic._
 import scala.reflect.ClassTag
 import breeze.linalg.operators._
 import CanTraverseValues.ValuesVisitor
-import breeze.generic.UFunc.{InPlaceImpl, UImpl2, InPlaceImpl2}
 
 /**
  *
