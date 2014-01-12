@@ -70,29 +70,6 @@ trait UFunc {
 
 
 
-  implicit def implicitDoubleUTag[V, VR](implicit conv: V=>Double, impl: Impl[Double, VR]):Impl[V, VR] = {
-    new Impl[V, VR] {
-      def apply(v: V): VR = impl(v)
-    }
-  }
-
-
-  implicit def canTransformValuesUFunc[Tag, T, V](implicit canTransform: CanTransformValues[T, V, V],
-                                                      impl: Impl[V, V]):InPlaceImpl[T] = {
-    new InPlaceImpl[T] {
-      def apply(v: T) = { canTransform.transform(v, impl.apply) }
-    }
-  }
-
-
-  implicit def collapseUred[V1, AxisT<:Axis, TA, VR, Result](implicit handhold: CanCollapseAxis.HandHold[V1, AxisT, TA], impl: Impl[TA, VR], collapse: CanCollapseAxis[V1, AxisT, TA, VR, Result]) = new Impl2[V1, AxisT, Result] {
-    def apply(v: V1, v2: AxisT): Result = collapse.apply(v, v2)(impl(_))
-  }
-
-  implicit def collapseUred3[V1, AxisT<:Axis, V3, TA, VR, Result](implicit handhold: CanCollapseAxis.HandHold[V1, AxisT, TA], impl: Impl2[TA, V3, VR], collapse: CanCollapseAxis[V1, AxisT, TA, VR, Result]) = new Impl3[V1, AxisT, V3, Result] {
-    def apply(v: V1, v2: AxisT, v3: V3): Result = collapse.apply(v, v2)(impl(_, v3))
-  }
-
 
 }
 
@@ -157,6 +134,32 @@ object UFunc {
 
   trait InPlaceImpl2[Tag, V,  @specialized(Int, Double, Float) V2] {
     def apply(v: V, v2: V2)
+  }
+
+  // implicits for add impl's
+
+
+  implicit def implicitDoubleUTag[Tag, V, VR](implicit conv: V=>Double, impl: UImpl[Tag, Double, VR]):UImpl[Tag, V, VR] = {
+    new UImpl[Tag, V, VR] {
+      def apply(v: V): VR = impl(v)
+    }
+  }
+
+
+  implicit def canTransformValuesUFunc[Tag, T, V](implicit canTransform: CanTransformValues[T, V, V],
+                                                  impl: UImpl[Tag, V, V]):InPlaceImpl[Tag, T] = {
+    new InPlaceImpl[Tag, T] {
+      def apply(v: T) = { canTransform.transform(v, impl.apply) }
+    }
+  }
+
+
+  implicit def collapseUred[Tag, V1, AxisT<:Axis, TA, VR, Result](implicit handhold: CanCollapseAxis.HandHold[V1, AxisT, TA], impl: UImpl[Tag, TA, VR], collapse: CanCollapseAxis[V1, AxisT, TA, VR, Result]) = new UImpl2[Tag, V1, AxisT, Result] {
+    def apply(v: V1, v2: AxisT): Result = collapse.apply(v, v2)(impl(_))
+  }
+
+  implicit def collapseUred3[Tag, V1, AxisT<:Axis, V3, TA, VR, Result](implicit handhold: CanCollapseAxis.HandHold[V1, AxisT, TA], impl: UImpl2[Tag, TA, V3, VR], collapse: CanCollapseAxis[V1, AxisT, TA, VR, Result]) = new UImpl3[Tag, V1, AxisT, V3, Result] {
+    def apply(v: V1, v2: AxisT, v3: V3): Result = collapse.apply(v, v2)(impl(_, v3))
   }
 
 }
