@@ -10,21 +10,21 @@ import breeze.linalg.{DenseVector, DenseMatrix}
  *
  * @author ktakagaki
  */
-trait CanIFHT[InputType, OutputType] {
+trait CanInverseHaarTransform[InputType, OutputType] {
   def apply(v1: InputType): OutputType
 }
 
 /**
  * Construction delegate for getting the inverse FHT of a value of type InputType.
  */
-object CanIFHT {
+object CanInverseHaarTransform {
 
   private val nFactor = 1d / Math.sqrt(2d)
 
   /** Compute the fht on a given double vector.
    */
-  implicit val dvDouble1IFHT : CanIFHT[DenseVector[Double], DenseVector[Double]] = {
-    new CanIFHT[DenseVector[Double], DenseVector[Double]] {
+  implicit val dvDouble1IFHT : CanInverseHaarTransform[DenseVector[Double], DenseVector[Double]] = {
+    new CanInverseHaarTransform[DenseVector[Double], DenseVector[Double]] {
       def apply(v: DenseVector[Double]) = {
         def _ifht(v : DenseVector[Double]) : DenseVector[Double] = {
             if (v.length > 1) {
@@ -44,8 +44,8 @@ object CanIFHT {
 
   /** Compute the fht on a given double matrix.
     */
-  implicit val dmDouble2IFHT : CanIFHT[DenseMatrix[Double], DenseMatrix[Double]] = {
-    new CanIFHT[DenseMatrix[Double], DenseMatrix[Double]] {
+  implicit val dmDouble2IFHT : CanInverseHaarTransform[DenseMatrix[Double], DenseMatrix[Double]] = {
+    new CanInverseHaarTransform[DenseMatrix[Double], DenseMatrix[Double]] {
       def apply(m: DenseMatrix[Double]) = {
         def _ifht(m: DenseMatrix[Double], limit : Int) : Unit = if (limit > 1) {
           // inverse the upper left first
