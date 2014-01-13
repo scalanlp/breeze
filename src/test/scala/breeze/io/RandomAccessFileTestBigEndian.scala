@@ -174,6 +174,7 @@ class RandomAccessFileTestBigEndian extends FunSuite {
 
     val stream2 =  new RAF(fileHead + "/temp.bin", "r")
     val result2 = stream2.readDouble(3)
+    println(result2(0))
     assert(result2(0) == 0.0)
     assert(result2(1) == 3.141592653589793)
     assert(result2(2) == 2.718281828459045)
@@ -344,6 +345,7 @@ class RandomAccessFileTestBigEndian extends FunSuite {
 
     val stream2 =  new RAF(fileHead + "/temp.bin", "r")
     val result2 = stream2.readUInt64Shifted(3)
+    println(result2(0))
     assert(result2(0) == 0L )
     assert(result2(1) == 1L )
     assert(result2(2) == -32767L )
