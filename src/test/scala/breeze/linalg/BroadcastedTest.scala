@@ -28,6 +28,26 @@ class BroadcastedTest extends FunSuite {
     assert(dm === DenseMatrix((-1.0,-2.0,-3.0), (3.0, 3.0, 3.0), (4.0, 4.0, 4.0)))
   }
 
+  test("broadcast map to normalize") {
+    val dm = DenseMatrix((-1.0,-2.0,-3.0),
+      (1.0,2.0,3.0),
+      (4.0,8.0,7.0))
+
+    val res = dm(1 to 2, *).map( v => v/ sum(v))
+
+    assert(res === DenseMatrix((0.2, 0.2, 0.3), (0.8, 0.8, 0.7)))
+  }
+
+  test("broadcast map to normalize rows") {
+    val dm = DenseMatrix((-2.0,-2.0,-3.0),
+      (1.0,4.0,3.0),
+      (4.0,6.0,7.0))
+
+    val res = dm(*, 0 to 1).map( v => v/ sum(v))
+
+    assert(res === DenseMatrix((0.5, 0.5), (0.2, 0.8), (0.4, 0.6)))
+  }
+
   test("broadcast DenseMatrix along rows") {
     val dm = DenseMatrix((1.0,2.0,3.0),
       (4.0,5.0,6.0)).t
