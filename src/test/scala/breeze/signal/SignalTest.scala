@@ -134,8 +134,9 @@ class SignalTest extends FunSuite {
   test("convolve of DenseVector[Double]") {
     val kernel = DenseVector(1.0, 2.0)
     val data = DenseVector(2.0, 3.0, 4.0, 5.0)
-    println( convolve(kernel, data) )
     assert( convolve(kernel, data) == DenseVector(7.0, 10.0, 13.0) )
   }
+  //ListConvolve[{1, 2}, {2, 3, 4, 5}]
+
   // </editor-fold>
 }

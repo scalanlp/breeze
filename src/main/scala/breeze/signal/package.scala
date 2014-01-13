@@ -39,7 +39,7 @@ package object signal {
    */
   def fourierTransform[Input, Output](v: Input)(implicit canFFT: CanFFT[Input, Output]): Output = canFFT(v)
   /**Deprecated, see [[breeze.signal.fourierTransform]]*/
-  @deprecated("use fourierTransform")
+  @deprecated("use fourierTransform", "v.0.6")
   def fft[Input, Output](v: Input)(implicit canFFT: CanFFT[Input, Output]): Output = canFFT(v)
 
   /**Returns the inverse fast fourier transform of a DenseVector or DenseMatrix. Currently,
@@ -57,11 +57,12 @@ package object signal {
     */
   def inverseFourierTransform[Input, Output](v: Input)(implicit canIFFT: CanIFFT[Input, Output]): Output = canIFFT(v)
   /**Deprecated, see [[breeze.signal.inverseFourierTransform]]*/
-  @deprecated("use inverseFourierTransform")
+  @deprecated("use inverseFourierTransform", "v.0.6")
   def ifft[Input, Output](v: Input)(implicit canIFFT: CanIFFT[Input, Output]): Output = canIFFT(v)
   // </editor-fold>
 
   // <editor-fold desc="Convolution">
+
   /**Convolves to DenseVectors or DenseMatrixes.</p>
     * Implementation is via the implicit trait CanConvolve[ InputType,  OutputType ],
     * which is found in breeze.signal.support.CanConvolve.scala.
@@ -74,6 +75,7 @@ package object signal {
   def convolve[Input, Output](kernel: Input, data: Input, overhangOpt: OverhangOpt = OverhangOpt.Default())
                              (implicit canConvolve: CanConvolve[Input, Output]): Output =
     canConvolve(kernel, data, overhangOpt)
+
   // </editor-fold>
 
 }
