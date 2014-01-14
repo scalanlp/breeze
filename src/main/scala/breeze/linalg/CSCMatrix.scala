@@ -17,13 +17,10 @@ package breeze.linalg
 import breeze.linalg.operators._
 import breeze.storage.DefaultArrayValue
 import java.util
-import breeze.util.{ Terminal, ArrayUtil }
+import breeze.util.{Sorting, Terminal, ArrayUtil}
 import scala.collection.mutable
 import breeze.math.{Ring, Complex, Semiring}
-import breeze.generic.{UFunc2ZippingImplicits, UFunc}
 import scala.reflect.ClassTag
-import breeze.macros.expand
-import scala.math.BigInt
 import breeze.linalg.support.{CanTranspose, CanTraverseValues, CanMapValues}
 import CanTraverseValues.ValuesVisitor
 
@@ -263,23 +260,26 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
     }
   }
 
-  
-  implicit def canTranspose[V:ClassTag:DefaultArrayValue]: CanTranspose[CSCMatrix[V], CSCMatrix[V]] = {
+
+
+
+  implicit def canTranspose[V:ClassTag:DefaultArrayValue:Semiring]: CanTranspose[CSCMatrix[V], CSCMatrix[V]] = {
     new CanTranspose[CSCMatrix[V], CSCMatrix[V]] {
       def apply(from: CSCMatrix[V]) = {
-        val transposedMtx = CSCMatrix.zeros[V](from.cols, from.rows)
+        val transposedMtx = new CSCMatrix.Builder[V](from.cols, from.rows, from.activeSize)
         
         var j = 0
         while(j < from.cols) {
           var ip = from.colPtrs(j)
           while(ip < from.colPtrs(j+1)) {
             val i = from.rowIndices(ip)
-            transposedMtx(j, i) = from.data(ip)
+            transposedMtx.add(j, i, from.data(ip))
             ip += 1
           }
           j += 1
         }
-        transposedMtx
+        assert(transposedMtx.activeSize == from.activeSize)
+        transposedMtx.result(false, false)
       }
     }
   }
@@ -312,6 +312,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
   class Builder[@specialized(Int, Float, Double) T:ClassTag:Semiring:DefaultArrayValue](rows: Int, cols: Int, initNnz: Int = 16) {
     private def ring = implicitly[Semiring[T]]
     def add(r: Int, c: Int, v: T) {
+      numAdded += 1
       rs += r
       cs += c
       vs += v
@@ -320,6 +321,8 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
     private val rs = new mutable.ArrayBuilder.ofInt()
     private val cs = new mutable.ArrayBuilder.ofInt()
     private val vs = mutable.ArrayBuilder.make[T]()
+    private var numAdded = 0
+    def activeSize = numAdded
 
     def sizeHint(nnz: Int) = {
       rs.sizeHint(nnz)
@@ -336,6 +339,11 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
       val vs = this.vs.result()
       // at most this many nnz
       val nnz = rs.length
+      val outCols = new Array[Int](cols+1)
+
+      if(nnz == 0) {
+        return new CSCMatrix(vs, rows, cols, outCols, 0, rs)
+      }
 
       val order: Array[Int] = if(keysAlreadySorted) {
         VectorBuilder.range(cs.length)
@@ -344,7 +352,6 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
       }
 
       val outRows = new Array[Int](nnz)
-      val outCols = new Array[Int](cols+1)
       val outData = new Array[T](nnz)
 
       if (cs.length > 0) {
