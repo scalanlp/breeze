@@ -25,8 +25,11 @@ import breeze.generic.UFunc.{InPlaceImpl2, UImpl2}
  * "Universal" Functions that mimic numpy's. A universal function is typically defined
  * on anything that supports elementwise maps.
  *
- * For example, exp is a UFunc: it just calls exp on all components of the passed in
+ * For example, exp is a UFunc: It just calls exp on all components of the passed in
  * object.
+ *
+ * Moreover, "operators" like [[breeze.linalg.operators.OpAdd]] are UFuncs as well,
+ * with syntactic sugar provided by way of [[breeze.linalg.NumericOps]].
  *
  * Additional implementations can be added as implicits by extending a UFunc's
  * Impl or InPlaceImpl traits. For example, [[breeze.math.Complex]] extends [[breeze.numerics.log]]
@@ -65,12 +68,6 @@ trait UFunc {
   type Impl3[V1, V2, V3, VR] = UFunc.UImpl3[this.type, V1, V2, V3, VR]
   type InPlaceImpl[V] = UFunc.InPlaceImpl[this.type, V]
   type InPlaceImpl2[V1, V2] = UFunc.InPlaceImpl2[this.type, V1, V2]
-
-
-
-
-
-
 }
 
 trait MappingUFunc extends UFuncX { this: UFunc =>
