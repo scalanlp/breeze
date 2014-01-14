@@ -1,9 +1,6 @@
 package breeze.linalg
 
 import org.scalatest.FunSuite
-import breeze.linalg.support.CanTraverseValues
-import breeze.math.Semiring
-import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 
 /**
  * TODO
@@ -77,6 +74,12 @@ class BitVectorTest extends FunSuite {
   test("sum") {
     assert(sum(BitVector(false, false, true)) === true)
     assert(sum(BitVector(false, false, false)) === false)
+  }
+
+  test("product") {
+    assert(product(BitVector(true, true, true)) === true)
+    assert(product(BitVector(false, false, true)) === false)
+    assert(product(BitVector(false, false, false)) === false)
   }
 
 }
