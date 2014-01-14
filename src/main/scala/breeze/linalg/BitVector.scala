@@ -2,6 +2,8 @@ package breeze.linalg
 
 import java.util
 import operators.BitVectorOps
+import breeze.linalg.support.CanTraverseValues
+import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 
 /**
  * TODO
@@ -103,15 +105,15 @@ object BitVector extends BitVectorOps {
     val bs = new java.util.BitSet(length)
     bs.set(0, length)
     new BitVector(bs, length, enforceLength)
+  }
 
-    //    commented out by Martin Senne due to issue #92
-    //    (BitSet.valueOf not available in JDK 6)
-    //
-    //    val data = new Array[Long]( (length + 63)/64)
-    //    util.Arrays.fill(data, -1L)
-    //    val bs = util.BitSet.valueOf(data)
-    //    bs.clear(length,data.length * 64)
-    //    new BitVector(bs, length, enforceLength)
+  implicit object traverseBitVector extends CanTraverseValues[BitVector, Boolean] {
+    /** Traverses all values from the given collection. */
+    def traverse(from: BitVector, fn: ValuesVisitor[Boolean]): Unit = {
+      for(i <- from.valuesIterator) fn.visit(i)
+    }
+
+    def isTraversableAgain(from: BitVector): Boolean = true
   }
 }
 

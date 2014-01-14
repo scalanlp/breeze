@@ -50,30 +50,7 @@ object CanTraverseValues {
   }
 
 
-  implicit def canTraverseSelf[V, V2]: CanTraverseValues[V, V] = {
-    new CanTraverseValues[V, V] {
-      /** Traverses all values from the given collection. */
-      def traverse(from: V, fn: ValuesVisitor[V]): Unit = {
-        fn.visit(from)
-      }
 
-
-      def isTraversableAgain(from: V): Boolean = true
-    }
-  }
-
-  implicit def canTraverseTraversable[X, V](implicit cast:  X<:<TraversableOnce[V]): CanTraverseValues[X, V] = {
-    new CanTraverseValues[X, V] {
-      /** Traverses all values from the given collection. */
-      def traverse(from: X, fn: ValuesVisitor[V]): Unit = {
-        for(v <- from) {
-          fn.visit(v)
-        }
-      }
-
-      def isTraversableAgain(from: X): Boolean = from.isTraversableAgain
-    }
-  }
 
 
 
@@ -106,5 +83,32 @@ object CanTraverseValues {
   implicit object OpArrayDD extends OpArray[Double]
 
   implicit object OpArrayCC extends OpArray[Complex]
+  implicit def canTraverseTraversable[X, V](implicit cast:  X<:<TraversableOnce[V]): CanTraverseValues[X, V] = {
+    new CanTraverseValues[X, V] {
+      /** Traverses all values from the given collection. */
+      override def traverse(from: X, fn: CanTraverseValues.ValuesVisitor[V]): Unit = {
+        for(v <- from) {
+          fn.visit(v)
+        }
+      }
+
+      def isTraversableAgain(from: X): Boolean = from.isTraversableAgain
+    }
+  }
+}
+
+trait LowPrioCanTraverseValues { this: CanTraverseValues.type =>
+  implicit def canTraverseSelf[V, V2]: CanTraverseValues[V, V] = {
+    new CanTraverseValues[V, V] {
+      /** Traverses all values from the given collection. */
+      override def traverse(from: V, fn: CanTraverseValues.ValuesVisitor[V]): Unit = {
+        fn.visit(from)
+      }
+
+
+      def isTraversableAgain(from: V): Boolean = true
+    }
+  }
+
 
 }

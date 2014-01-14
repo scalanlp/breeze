@@ -190,7 +190,24 @@ package object linalg {
         iter.traverse(v, visit)
         visit.sum
       }
+    }
 
+    implicit def reduceSemiring[T, S](implicit iter: CanTraverseValues[T, S], semiring: Semiring[S]): Impl[T, S] = new Impl[T, S] {
+      def apply(v: T): S = {
+        class SumVisitor extends ValuesVisitor[S] {
+          var sum : S = semiring.zero
+          def visit(a: S): Unit = {
+            sum = semiring.+(sum, a)
+          }
+
+          def zeros(numZero: Int, zeroValue: S): Unit = {
+          }
+
+        }
+        val visit = new SumVisitor
+        iter.traverse(v, visit)
+        visit.sum
+      }
     }
   }
 
