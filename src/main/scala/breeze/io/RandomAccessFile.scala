@@ -659,7 +659,7 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
     */
   @throws(classOf[IOException])
   final def writeUInt64Shifted(v: Long): Unit = {
-    rafObj.write(converter.uInt64ShiftedToBytes(v))
+    rafObj.write( converter.uInt64ShiftedToBytes(v) )
   }
 
   /** Tries to write an array of UInt64Shifted (shifted down to Long range) to the current getFilePointer().

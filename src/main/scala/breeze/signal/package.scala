@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import breeze.signal.support.{CanFFT, CanIFFT}
+import breeze.signal.support.{OverhangOpt, CanConvolve, CanFFT, CanIFFT}
 
 /**This package provides digital signal processing functions.
  *
@@ -23,6 +23,7 @@ import breeze.signal.support.{CanFFT, CanIFFT}
  */
 package object signal {
 
+  // <editor-fold desc="Fourier Transforms">
   /**Returns the fast fourier transform of a DenseVector or DenseMatrix. Currently,
    * DenseVector/DenseMatrix types of Double and Complex are supported. Scaling
    * follows the common signal processing convention, i.e. <b>no scaling on forward DFT</b>,
@@ -36,6 +37,9 @@ package object signal {
    * @param canFFT implicit delegate which is used for implementation. End-users should not use this argument.
    * @return
    */
+  def fourierTransform[Input, Output](v: Input)(implicit canFFT: CanFFT[Input, Output]): Output = canFFT(v)
+  /**Deprecated, see [[breeze.signal.fourierTransform]]*/
+  @deprecated("use fourierTransform", "v.0.6")
   def fft[Input, Output](v: Input)(implicit canFFT: CanFFT[Input, Output]): Output = canFFT(v)
 
   /**Returns the inverse fast fourier transform of a DenseVector or DenseMatrix. Currently,
@@ -51,6 +55,27 @@ package object signal {
     * @param canIFFT implicit delegate which is used for implementation. End-users should not use this argument.
     * @return
     */
+  def inverseFourierTransform[Input, Output](v: Input)(implicit canIFFT: CanIFFT[Input, Output]): Output = canIFFT(v)
+  /**Deprecated, see [[breeze.signal.inverseFourierTransform]]*/
+  @deprecated("use inverseFourierTransform", "v.0.6")
   def ifft[Input, Output](v: Input)(implicit canIFFT: CanIFFT[Input, Output]): Output = canIFFT(v)
+  // </editor-fold>
+
+  // <editor-fold desc="Convolution">
+
+  /**Convolves to DenseVectors or DenseMatrixes.</p>
+    * Implementation is via the implicit trait CanConvolve[ InputType,  OutputType ],
+    * which is found in breeze.signal.support.CanConvolve.scala.
+    *
+    * @param kernel DenseVector or DenseMatrix kernel
+    * @param data DenseVector or DenseMatrix to be convolved
+    * @param canConvolve implicit delegate which is used for implementation. End-users should not use this argument.
+    * @return
+    */
+  def convolve[Input, Output](kernel: Input, data: Input, overhangOpt: OverhangOpt = OverhangOpt.Default())
+                             (implicit canConvolve: CanConvolve[Input, Output]): Output =
+    canConvolve(kernel, data, overhangOpt)
+
+  // </editor-fold>
 
 }
