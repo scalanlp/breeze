@@ -179,9 +179,53 @@ object HashVector extends HashVectorOps
   }
 
 
-  implicit val space_d = TensorSpace.make[HashVector[Double], Int, Double]
-  implicit val space_f = TensorSpace.make[HashVector[Float], Int, Float]
-  implicit val space_i = TensorSpace.make[HashVector[Int], Int, Int]
+  implicit val space_d = {
+    implicit val neg: OpNeg.Impl[HashVector[Double], HashVector[Double]] = this.negFromScale[Double]
+    TensorSpace.make[HashVector[Double], Int, Double]
+  }
+  implicit val space_f = {
+    implicit val neg: OpNeg.Impl[HashVector[Float], HashVector[Float]] = this.negFromScale[Float]
+    TensorSpace.make[HashVector[Float], Int, Float]
+  }
+  implicit val space_i = {
+    implicit val neg: OpNeg.Impl[HashVector[Int], HashVector[Int]] = this.negFromScale[Int]
+    TensorSpace.make[HashVector[Int], Int, Int]
+  }
+
+  import breeze.math.PowImplicits._
+
+
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def dv_hv_UpdateOp[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: Op.Impl2[T, T, T]):Op.InPlaceImpl2[DenseVector[T], HashVector[T]] = new Op.InPlaceImpl2[DenseVector[T], HashVector[T]] {
+    def apply(a: DenseVector[T], b: HashVector[T]):Unit = {
+      require(a.length == b.length, "Vectors must have the same length")
+      val ad = a.data
+      var aoff = a.offset
+      val astride = a.stride
+
+      var i = 0
+      while(i < a.length) {
+        ad(aoff) = op(ad(aoff), b(i))
+        aoff += astride
+        i += 1
+      }
+
+    }
+  }
+
+  // this shouldn't be necessary but it is:
+  @expand
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
+  implicit def dv_hv_op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType] = {
+    DenseVector.pureFromUpdate(implicitly[Op.InPlaceImpl2[DenseVector[T], HashVector[T]]])
+  }
 }
 
 

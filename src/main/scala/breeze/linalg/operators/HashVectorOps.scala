@@ -6,45 +6,13 @@ import scala.math.BigInt
 import breeze.linalg._
 import breeze.generic.{UFunc2ZippingImplicits, UFunc}
 import breeze.linalg.support.{CanZipMapValues, CanAxpy, CanCopy}
-import breeze.generic.UFunc.UImpl2
+import breeze.generic.UFunc.{UImpl, UImpl2}
 import scala.reflect.ClassTag
 import breeze.storage.DefaultArrayValue
 
 trait DenseVector_HashVector_Ops { this: HashVector.type =>
   import breeze.math.PowImplicits._
 
-
-  @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
-  implicit def dv_hv_UpdateOp[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
-  @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
-  op: Op.Impl2[T, T, T]):Op.InPlaceImpl2[DenseVector[T], HashVector[T]] = new Op.InPlaceImpl2[DenseVector[T], HashVector[T]] {
-    def apply(a: DenseVector[T], b: HashVector[T]):Unit = {
-      require(a.length == b.length, "Vectors must have the same length")
-      val ad = a.data
-      var aoff = a.offset
-      val astride = a.stride
-
-      var i = 0
-      while(i < a.length) {
-        ad(aoff) = op(ad(aoff), b(i))
-        aoff += astride
-        i += 1
-      }
-
-    }
-  }
-
-  // this shouldn't be necessary but it is:
-  @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
-  implicit def dv_hv_op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
-  @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType] = {
-    DenseVector.pureFromUpdate(implicitly[Op.InPlaceImpl2[DenseVector[T], HashVector[T]]])
-  }
 
 
   @expand
@@ -646,7 +614,7 @@ trait HashVector_GenericOps extends UFunc2ZippingImplicits[HashVector]{ this: Ha
   implicit val zipMap_i: CanZipMapValuesHashVector[Int, Int] = new CanZipMapValuesHashVector[Int, Int]
 
 
-  implicit def negFromScale[@specialized(Int, Float, Double)  V, Double](implicit scale: OpMulScalar.Impl2[HashVector[V], V, HashVector[V]], field: Ring[V]) = {
+  implicit def negFromScale[V](implicit scale: OpMulScalar.Impl2[HashVector[V], V, HashVector[V]], field: Ring[V]): OpNeg.Impl[HashVector[V], HashVector[V]] = {
     new OpNeg.Impl[HashVector[V], HashVector[V]] {
       override def apply(a : HashVector[V]) = {
         scale(a, field.negate(field.one))
