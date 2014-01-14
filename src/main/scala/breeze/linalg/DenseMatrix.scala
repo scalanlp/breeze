@@ -273,7 +273,7 @@ with MatrixConstructors[DenseMatrix] {
   /**
    * The standard way to create an empty matrix, size is rows * cols
    */
-  def zeros[@specialized(Int, Float, Double) V:ClassTag:DefaultArrayValue](rows: Int, cols: Int) = {
+  def zeros[@specialized(Int, Float, Double) V:ClassTag:DefaultArrayValue](rows: Int, cols: Int): DenseMatrix[V] = {
     val data = new Array[V](rows * cols)
     if(implicitly[DefaultArrayValue[V]] != null && rows * cols != 0 && data(0) != implicitly[DefaultArrayValue[V]].value)
       ArrayUtil.fill(data, 0, data.length, implicitly[DefaultArrayValue[V]].value)
@@ -640,17 +640,27 @@ with MatrixConstructors[DenseMatrix] {
   implicit def canMapCols[V:ClassTag:DefaultArrayValue] = new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], DenseVector[V], DenseMatrix[V]] {
     def apply(from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => DenseVector[V]): DenseMatrix[V] = {
       var result:DenseMatrix[V] = null
+      import from.{rows, cols}
       val t = from.t
       for(r <- 0 until from.rows) {
         val row = f(t(::, r))
         if(result eq null) {
-          result = DenseMatrix.zeros[V](from.rows, row.length)
+          // scala has decided this method is overloaded, and needs a result type.
+          // It has a result type, and is not overloaded.
+//          result = DenseMatrix.zeros[V](from.rows, row.length)
+          val data = new Array[V](rows * row.length)
+          result = new DenseMatrix(rows, row.length, data)
         }
         result.t apply (::, r) := row
       }
 
-      if(result ne null) result
-      else DenseMatrix.zeros[V](from.rows, 0)
+      if(result ne null) {
+        result
+      } else {
+        val data = new Array[V](0)
+        result = new DenseMatrix(rows, 0, data)
+        result
+      }
     }
   }
   implicit def handholdCanMapCols[V]: CanCollapseAxis.HandHold[DenseMatrix[V], Axis._1.type, DenseVector[V]] = new CanCollapseAxis.HandHold[DenseMatrix[V], Axis._1.type, DenseVector[V]]()
