@@ -81,7 +81,7 @@ object CanTraverseValues {
   // Arrays
   //
 
-  class OpArray[@specialized(Int, Float, Double) A, @specialized(Int, Float, Double) B: ClassTag]
+  class OpArray[@specialized(Int, Float, Double) A]
     extends CanTraverseValues[Array[A], A] {
     /** Traverses all values from the given collection. */
     def traverse(from: Array[A], fn: ValuesVisitor[A]): Unit = {
@@ -92,26 +92,19 @@ object CanTraverseValues {
   }
 
 
-  implicit def opArray[@specialized A, @specialized B: ClassTag] =
-    new OpArray[A, B]
+  implicit def opArray[@specialized A] =
+    new OpArray[A]
 
-  implicit object OpArrayII extends OpArray[Int, Int]
+  implicit object OpArrayII extends OpArray[Int]
 
-  implicit object OpArraySS extends OpArray[Short, Short]
+  implicit object OpArraySS extends OpArray[Short]
 
-  implicit object OpArrayLL extends OpArray[Long, Long]
+  implicit object OpArrayLL extends OpArray[Long]
 
-  implicit object OpArrayFF extends OpArray[Float, Float]
+  implicit object OpArrayFF extends OpArray[Float]
 
-  implicit object OpArrayDD extends OpArray[Double, Double]
+  implicit object OpArrayDD extends OpArray[Double]
 
-  implicit object OpArrayCC extends OpArray[Complex, Complex]
+  implicit object OpArrayCC extends OpArray[Complex]
 
-  implicit object OpArrayID extends OpArray[Int, Double]
-
-  implicit object OpArraySD extends OpArray[Short, Double]
-
-  implicit object OpArrayLD extends OpArray[Long, Double]
-
-  implicit object OpArrayFD extends OpArray[Float, Double]
 }
