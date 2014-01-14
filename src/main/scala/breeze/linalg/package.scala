@@ -303,6 +303,23 @@ package object linalg {
       }
 
     }
+
+    /**
+     * Method for computing the max of the first length elements of an array. Arrays
+     * of size 0 give Double.NegativeInfinity
+     * @param arr
+     * @param length
+     * @return
+     */
+    def array(arr: Array[Double], length: Int) = {
+      var accum = Double.NegativeInfinity
+      var i = 0
+      while(i < length) {
+        accum = scala.math.max(arr(i), accum)
+        i += 1
+      }
+      accum
+    }
   }
 
 
@@ -370,6 +387,24 @@ package object linalg {
         else if (a < b) b + scala.math.log1p(scala.math.exp(a - b))
         else a + scala.math.log1p(scala.math.exp(b - a))
       }
+    }
+
+    /**
+     * Method for computing the max of the first length elements of an array. Arrays
+     * of size 0 give Double.NegativeInfinity
+     * @param arr
+     * @param length
+     * @return
+     */
+    def array(arr: Array[Double], length: Int) = {
+      val m = max.array(arr, length)
+      var accum = 0.0
+      var i = 0
+      while(i < length) {
+        accum += scala.math.exp(arr(i) - m)
+        i += 1
+      }
+      m + scala.math.log(accum)
     }
 
     implicit def reduceDouble[T](implicit iter: CanTraverseValues[T, Double], maxImpl: max.Impl[T, Double]): Impl[T, Double] = new Impl[T, Double] {
