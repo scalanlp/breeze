@@ -1176,23 +1176,34 @@ trait DenseMatrixMultOps extends DenseMatrixOps with DenseMatrixOpsLowPrio { thi
     override def bindingMissing(a: DenseMatrix[T], b: Matrix[T]) = {
 
       // TODO: this could probably be much faster
+      // Martin Senne:
+      // Accessing consequent areas in memory in the innermost loop ( a(i,l), a(i+1,l) ) is faster
+      // than accessing ( b(c, j), b(c, j+1) as data layout in memory is column-like (Fortran), that is a(0,0), a(1,0), a(2,0), ...
+      // Thus (adapted from dgemm in BLAS):
+      //   - exchanged loop order
+      //   - so to access consequent entries in the innermost loop and to hopefully avoid cache-misses
       val res = DenseMatrix.zeros[T](a.rows, b.cols)
       require(a.cols == b.rows)
-      var c = 0
-      while(c < a.cols) {
-        var r = 0
-        while (r < a.rows) {
-          val v = a(r, c)
-          var j = 0
-          while(j < b.cols) {
-            res(r, j) += v * b(c, j)
-            j += 1
-          }
-          r += 1
-        }
-        c += 1
-      }
 
+      val colsB = b.cols
+      val colsA = a.cols
+      val rowsA = a.rows
+
+      var j = 0
+      while (j < colsB) {
+        var l = 0;
+        while (l < colsA) {
+
+          val v = b(l, j)
+          var i = 0
+          while (i < rowsA) {
+            res(i, j) += v * a(i,l)
+            i += 1
+          }
+          l += 1
+        }
+        j += 1
+      }
       res
     }
     implicitly[BinaryRegistry[Matrix[T], Matrix[T], OpMulMatrix, Matrix[T]]].register(this)
@@ -1207,23 +1218,40 @@ trait DenseMatrixMultOps extends DenseMatrixOps with DenseMatrixOpsLowPrio { thi
     override def apply(a: DenseMatrix[T], b: DenseMatrix[T]) = {
 
       // TODO: this could probably be much faster
+      // Martin Senne:
+      // Accessing consequent areas in memory in the innermost loop ( a(i,l), a(i+1,l) ) is faster
+      // than accessing ( b(c, j), b(c, j+1) as data layout in memory is column-like (Fortran), that is a(0,0), a(1,0), a(2,0), ...
+      // Thus (adapted from dgemm in BLAS):
+      //   - exchanged loop order
+      //   - so to access consequent entries in the innermost loop and to hopefully avoid cache-misses
+      // Improved performance: DenseMatrix[Int] ( 1000 x 1000 now runs in 12sec than in 16sec )
+      //    as comparison      DenseMatrix[Double] (1000 x 1000) takes ~1sec via BLAS.dgemm (native (0.8sec) and f2j (1sec) )
+      // so there seems room for improvement ;)
+
+      // TODO: @dlwh: Why does implicitly(DM, M, Op, DM) occur twice (top and bottom) and at different positions
+
       val res = DenseMatrix.zeros[T](a.rows, b.cols)
       require(a.cols == b.rows)
-      var c = 0
-      while(c < a.cols) {
-        var r = 0
-        while (r < a.rows) {
-          val v = a(r, c)
-          var j = 0
-          while(j < b.cols) {
-            res(r, j) += v * b(c, j)
-            j += 1
-          }
-          r += 1
-        }
-        c += 1
-      }
 
+      val colsB = b.cols
+      val colsA = a.cols
+      val rowsA = a.rows
+
+      var j = 0
+      while (j < colsB) {
+        var l = 0;
+        while (l < colsA) {
+
+          val v = b(l, j)
+          var i = 0
+          while (i < rowsA) {
+            res(i, j) += v * a(i,l)
+            i += 1
+          }
+          l += 1
+        }
+        j += 1
+      }
       res
     }
     implicitly[BinaryRegistry[Matrix[T], Matrix[T], OpMulMatrix, Matrix[T]]].register(this)
