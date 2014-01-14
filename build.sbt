@@ -41,7 +41,7 @@ pomExtra := (
     </developer>
   </developers>)
 
-scalacOptions ++= Seq("-optimize","-deprecation","-language:_")
+scalacOptions ++= Seq("-deprecation","-language:_")
 
   javacOptions ++= Seq("-target", "1.6", "-source","1.6")
 
