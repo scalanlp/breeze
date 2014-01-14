@@ -160,6 +160,22 @@ class CSCMatrix[@specialized(Int, Float, Double) V:DefaultArrayValue] private[li
     new CSCMatrix[V](ArrayUtil.copyOf(_data, activeSize), rows, cols, colPtrs.clone(), activeSize, _rowIndices.clone)
   }
 
+
+  def toDense:DenseMatrix[V] = {
+    implicit val ctg = ClassTag(data.getClass.getComponentType).asInstanceOf[ClassTag[V]]
+    val res = DenseMatrix.zeros[V](rows, cols)
+    var i = 0
+    while (i < cols) {
+      var j = colPtrs(i)
+      while (j < colPtrs(i+1)) {
+        res(rowIndices(j), i) = data(j)
+        j += 1
+      }
+      i += 1
+    }
+    res
+  }
+
 }
 
 object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
