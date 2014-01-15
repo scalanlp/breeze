@@ -79,6 +79,12 @@ trait MappingUFunc extends UFuncX { this: UFunc =>
   }
 
 
+  implicit def canZipMapValuesImpl[T, V1, VR, U](implicit handhold: CanMapValues.HandHold[T, V1], impl: Impl2[V1, V1, VR], canZipMapValues: CanZipMapValues[T, V1, VR, U]): Impl2[T, T, U] = {
+    new Impl2[T, T, U] {
+      def apply(v1: T, v2: T): U = canZipMapValues.map(v1, v2, impl.apply)
+    }
+  }
+
 }
 
 trait UFuncX { this: UFunc =>
@@ -89,11 +95,6 @@ trait UFuncX { this: UFunc =>
   }
 
 
-  implicit def canZipMapValuesImpl[T, V1, VR, U](implicit canZipMapValues: CanZipMapValues[T, V1, VR, U], impl: Impl2[V1, V1, VR]): Impl2[T, T, U] = {
-    new Impl2[T, T, U] {
-      def apply(v1: T, v2: T): U = canZipMapValues.map(v1, v2, impl.apply)
-    }
-  }
 
   implicit def canMapV1DV[T, V1, V2, VR, U](implicit handhold: CanMapValues.HandHold[T, V1],
                                             impl: Impl2[V1, V2, VR],
