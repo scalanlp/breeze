@@ -14,42 +14,41 @@ import breeze.signal.support.{CanFFT, CanIFFT}
  * Time: 02:31
  * To change this template use File | Settings | File Templates.
  */
-@RunWith(classOf[JUnitRunner])
 class SignalTest extends FunSuite {
 
 
-
+  // <editor-fold desc="Fourier">
   test("fft 1D of DenseVector[Complex]") {
-    assert( norm( fft(test16C) - test16fftC ) < testNormThreshold )
+    assert( norm( fourierTransform(test16C) - test16fftC ) < testNormThreshold )
   }
 
   test("fft 1D of DenseVector[Double]") {
-    assert( norm( fft(test16) - test16fftC ) < testNormThreshold )
+    assert( norm( fourierTransform(test16) - test16fftC ) < testNormThreshold )
   }
 
   test("ifft 1D of DenseVector[Complex]") {
-    assert( norm( ifft(test16fftC) - test16C ) < testNormThreshold )
+    assert( norm( inverseFourierTransform(test16fftC) - test16C ) < testNormThreshold )
   }
 
   test("ifft 1D of DenseVector[Double]") {
-    assert( norm( ifft(test16) - test16ifftC ) < testNormThreshold )
+    assert( norm( inverseFourierTransform(test16) - test16ifftC ) < testNormThreshold )
   }
 
 
   test("fft 2D of DenseMatrix[Complex]") {
-    assert( norm( (fft(test5x5C) - test5x5fftC).toDenseVector ) < testNormThreshold )
+    assert( norm( (fourierTransform(test5x5C) - test5x5fftC).toDenseVector ) < testNormThreshold )
   }
 
   test("fft 2D of DenseMatrix[Double]") {
-    assert( norm( (fft(test5x5) - test5x5fftC).toDenseVector  ) < testNormThreshold )
+    assert( norm( (fourierTransform(test5x5) - test5x5fftC).toDenseVector  ) < testNormThreshold )
   }
 
   test("ifft 2D of DenseMatrix[Complex]") {
-    assert( norm( (ifft(test5x5fftC) - test5x5C).toDenseVector  ) < testNormThreshold )
+    assert( norm( (inverseFourierTransform(test5x5fftC) - test5x5C).toDenseVector  ) < testNormThreshold )
   }
 
   test("ifft 2D of DenseMatrix[Double]") {
-    assert( norm( (ifft(test5x5) - test5x5ifftC).toDenseVector  ) < testNormThreshold )
+    assert( norm( (inverseFourierTransform(test5x5) - test5x5ifftC).toDenseVector  ) < testNormThreshold )
   }
 
 
@@ -129,5 +128,15 @@ class SignalTest extends FunSuite {
     Complex(-0.0340790588920675, -0.0164817032844492),  Complex(-0.0111237676782706, 0.0421311103441244),  Complex(-0.0352947896536454, -0.0601003670562562),
     Complex(-0.0428501336637738, -0.0338040468960716)
   ).t.reshape(5,5).t
+  // </editor-fold>
 
+  // <editor-fold desc="convolve">
+  test("convolve of DenseVector[Double]") {
+    val kernel = DenseVector(1.0, 2.0)
+    val data = DenseVector(2.0, 3.0, 4.0, 5.0)
+    assert( convolve(kernel, data) == DenseVector(7.0, 10.0, 13.0) )
+  }
+  //ListConvolve[{1, 2}, {2, 3, 4, 5}]
+
+  // </editor-fold>
 }
