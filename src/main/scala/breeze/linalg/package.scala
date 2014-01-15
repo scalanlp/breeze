@@ -119,23 +119,6 @@ package object linalg {
         throw new MatrixNotSymmetricException
   }
 
-
-
-  /**
-   * Returns the Kronecker product of the two matrices a and b,
-   * usually denoted a ⊗ b.
-   */
-  def kron[V1,V2, M,RV](a : DenseMatrix[V1], b : M)(implicit mul : OpMulScalar.Impl2[V1, M, DenseMatrix[RV]],
-                                                    asMat: M<:<Matrix[V2],
-                                                    man: ClassTag[RV],
-                                                    dfv: DefaultArrayValue[RV]) : DenseMatrix[RV] = {
-    val result: DenseMatrix[RV] = DenseMatrix.zeros[RV](a.rows * b.rows, a.cols * b.cols)
-    for( ((r,c),av) <- a.activeIterator) {
-      result((r*b.rows) until ((r+1)*b.rows), (c * b.cols) until ((c+1) * b.cols)) := mul(av, b)
-    }
-    result
-  }
-
   /**
    * Vector cross product of 3D vectors a and b.
    */
@@ -203,69 +186,9 @@ package object linalg {
     )
   }
 
-  /**
-   * Computes the cholesky decomposition A of the given real symmetric
-   * positive definite matrix X such that X = A A.t.
-   *
-   * XXX: For higher dimensionalities, the return value really should be a
-   *      sparse matrix due to its inherent lower triangular nature.
-   */
-  def cholesky(X: Matrix[Double]): DenseMatrix[Double] = {
-    requireNonEmptyMatrix(X)
-
-    // As LAPACK doesn't check if the given matrix is in fact symmetric,
-    // we have to do it here (or get rid of this time-waster as long as
-    // the caller of this function is clearly aware that only the lower
-    // triangular portion of the given matrix is used and there is no
-    // check for symmetry).
-    requireSymmetricMatrix(X)
-
-    // Copy the lower triangular part of X. LAPACK will store the result in A
-    val A: DenseMatrix[Double] = lowerTriangular(X)
-
-    val N = X.rows
-    val info = new intW(0)
-      lapack.dpotrf(
-        "L" /* lower triangular */,
-        N /* number of rows */, A.data, scala.math.max(1, N) /* LDA */,
-        info
-      )
-    // A value of info.`val` < 0 would tell us that the i-th argument
-    // of the call to dpotrf was erroneous (where i == |info.`val`|).
-    assert(info.`val` >= 0)
-
-    if (info.`val` > 0)
-      throw new NotConvergedException(NotConvergedException.Iterations)
-
-    A
-  }
 
 
 
-
-
-
-  /**
-   * Computes the rank of a DenseMatrix[Double].
-   *
-   * The rank of the matrix is computed using the SVD method.  The singular values of the SVD
-   * which are greater than a specified tolerance are counted.
-   *
-   * @param m matrix for which to compute the rank
-   * @param tol optional tolerance for singular values.  If not supplied, the default
-   *   tolerance is: max(m.cols, m.rows) * eps * sigma_max, where
-   *   eps is the machine epsilon and sigma_max is the largest singular value of m.
-   * @return the rank of the matrix (number of singular values)
-   */
-  def rank(m: DenseMatrix[Double], tol: Option[Double] = None): Int = {
-    val (u, s, vt) = svd(m)
-    val useTol = tol.getOrElse {
-      // we called LAPACK for the SVD method, so this is the LAPACK definition of eps.
-      val eps: Double = 2.0 * lapack.dlamch("e")
-      scala.math.max(m.cols, m.rows) * eps * s.max
-    }
-    s.data.count(_ > useTol)  // TODO: Use DenseVector[_].count() if/when that is implemented
-  }
 
 
 }
