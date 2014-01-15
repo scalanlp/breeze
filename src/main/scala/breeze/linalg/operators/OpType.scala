@@ -1,6 +1,6 @@
 package breeze.linalg.operators
 
-import breeze.generic.UFunc
+import breeze.generic.{MappingUFunc, UFunc}
 import breeze.math.{Field, Semiring, Ring}
 
 /*
@@ -99,7 +99,14 @@ object OpPow extends OpPow with UFunc
  * @author dramage
  */
 sealed trait OpLT  extends OpType
-object OpLT  extends OpLT with UFunc
+object OpLT  extends OpLT with UFunc with MappingUFunc {
+  implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
+    val ord = implicitly[Ordering[T]]
+    new Impl2[T, T, Boolean] {
+      def apply(v: T, v2: T): Boolean = ord.lt(v, v2)
+    }
+  }
+}
 
 /**
  * Type marker for BinaryOp A :&lt= B.
@@ -107,7 +114,14 @@ object OpLT  extends OpLT with UFunc
  * @author dramage
  */
 sealed trait OpLTE extends OpType
-object OpLTE extends OpLTE with UFunc
+object OpLTE extends OpLTE with UFunc with MappingUFunc {
+  implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
+    val ord = implicitly[Ordering[T]]
+    new Impl2[T, T, Boolean] {
+      def apply(v: T, v2: T): Boolean = ord.lteq(v, v2)
+    }
+  }
+}
 
 /**
  * Type marker for BinaryOp A :&gt B.
@@ -115,7 +129,14 @@ object OpLTE extends OpLTE with UFunc
  * @author dramage
  */
 sealed trait OpGT  extends OpType
-object OpGT  extends OpGT with UFunc
+object OpGT  extends OpGT with UFunc with MappingUFunc {
+  implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
+    val ord = implicitly[Ordering[T]]
+    new Impl2[T, T, Boolean] {
+      def apply(v: T, v2: T): Boolean = ord.gt(v, v2)
+    }
+  }
+}
 
 /**
  * Type marker for BinaryOp A :&gt= B.
@@ -123,7 +144,14 @@ object OpGT  extends OpGT with UFunc
  * @author dramage
  */
 sealed trait OpGTE extends OpType
-object OpGTE extends OpGTE with UFunc
+object OpGTE extends OpGTE with UFunc with MappingUFunc {
+  implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
+    val ord = implicitly[Ordering[T]]
+    new Impl2[T, T, Boolean] {
+      def apply(v: T, v2: T): Boolean = ord.gteq(v, v2)
+    }
+  }
+}
 
 /**
  * Type marker for BinaryOp A :== B.
@@ -131,7 +159,14 @@ object OpGTE extends OpGTE with UFunc
  * @author dramage
  */
 sealed trait OpEq  extends OpType
-object OpEq  extends OpEq with UFunc
+object OpEq  extends OpEq with UFunc with MappingUFunc {
+  implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
+    val ord = implicitly[Ordering[T]]
+    new Impl2[T, T, Boolean] {
+      def apply(v: T, v2: T): Boolean = ord.equiv(v, v2)
+    }
+  }
+}
 
 /**
  * Type marker for BinaryOp A :!= B.
@@ -139,7 +174,14 @@ object OpEq  extends OpEq with UFunc
  * @author dramage
  */
 sealed trait OpNe  extends OpType
-object OpNe  extends OpNe with UFunc
+object OpNe  extends OpNe with UFunc with MappingUFunc {
+  implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
+    val ord = implicitly[Ordering[T]]
+    new Impl2[T, T, Boolean] {
+      def apply(v: T, v2: T): Boolean = !ord.equiv(v, v2)
+    }
+  }
+}
 
 /**
  * Type marker for BinaryUpdateOp A := B.
@@ -179,7 +221,7 @@ object OpXor extends OpXor with UFunc
  * @author dramage
  */
 sealed trait OpNeg extends OpType
-object OpNeg extends OpNeg with UFunc {
+object OpNeg extends OpNeg with UFunc with MappingUFunc {
   implicit def ringNegation[S:Ring] = new Impl[S, S] {
     def apply(v: S): S = implicitly[Ring[S]].negate(v)
   }
