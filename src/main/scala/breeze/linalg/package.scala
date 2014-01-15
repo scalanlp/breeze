@@ -387,130 +387,13 @@ package object linalg {
     (evs, if (rightEigenvectors) Some(A) else None)
   }
 
-  /**
-   * Computes the LU factorization of the given real M-by-N matrix X such that
-   * X = P * L * U where P is a permutation matrix (row exchanges).
-   *
-   * Upon completion, a tuple consisting of a matrix A and an integer array P.
-   *
-   * The upper triangular portion of A resembles U whereas the lower triangular portion of
-   * A resembles L up to but not including the diagonal elements of L which are
-   * all equal to 1.
-   *
-   * For 0 <= i < M, each element P(i) denotes whether row i of the matrix X
-   * was exchanged with row P(i-1) during computation (the offset is caused by
-   * the internal call to LAPACK).
-   */
-  def LU[T](X: Matrix[T])(implicit td: T => Double): (DenseMatrix[Double], Array[Int]) = {
-    requireNonEmptyMatrix(X)
-
-    val M    = X.rows
-    val N    = X.cols
-    // TODO: use := when that's available
-    val Y    = DenseMatrix.tabulate[Double](M,N)(X(_,_))
-    val ipiv = Array.ofDim[Int](scala.math.min(M,N))
-    val info = new intW(0)
-    lapack.dgetrf(
-      M /* rows */, N /* cols */,
-      Y.data, scala.math.max(1,M) /* LDA */,
-      ipiv /* pivot indices */,
-      info
-    )
-    // A value of info.`val` < 0 would tell us that the i-th argument
-    // of the call to dsyev was erroneous (where i == |info.`val`|).
-    assert(info.`val` >= 0)
-
-    (Y, ipiv)
-  }
-
-  /**
-   * Computes the determinant of the given real matrix.
-   */
-  def det[T](X: Matrix[T])(implicit td: T => Double): Double = {
-    requireSquareMatrix(X)
-
-    // For triangular N-by-N matrices X, the determinant of X equals the product
-    // of the diagonal elements X(i,i) where 0 <= i < N.
-    // Since det(AB) = det(A) * det(B), the LU factorization is well-suited for
-    // the computation of the determinant of general N-by-N matrices.
-    val (m:DenseMatrix[Double], ipiv:Array[Int]) = LU(X)
-
-    // Count the number of exchanged rows.  ipiv contains an array of swapped indices,
-    //  but it also contains indices that weren't swapped.  To count the swapped
-    //  indices, we have to compare them against their position within the array.  A
-    //  final complication is that the array indices are 1-based, due to the LU call
-    //  into LAPACK.
-    val numExchangedRows = ipiv.map(_ - 1).zipWithIndex.count { piv => piv._1 != piv._2 }
-
-    var acc = if (numExchangedRows % 2 == 1) -1.0 else 1.0
-    for (i <- 0 until m.rows)
-      acc *= m(i,i)
-
-    acc
-  }
-
-  /**
-   * Computes the inverse of a given real matrix.
-   * In general, you should avoid using this metho in combination with *.
-   * Instead, wherever you might want to write inv(A) * B, you should write
-   * A \ B.
-   */
-  def inv[T](X: Matrix[T])(implicit td: T => Double): DenseMatrix[Double] = {
-    requireSquareMatrix(X)
-
-    // Should these type hints be necessary?
-    val (m:DenseMatrix[Double], ipiv:Array[Int]) = LU(X)
-    val N         = m.rows
-    val lwork     = scala.math.max(1, N)
-    val work      = Array.ofDim[Double](lwork)
-    val info      = new intW(0)
-    lapack.dgetri(
-      N, m.data, scala.math.max(1, N) /* LDA */,
-      ipiv,
-      work /* workspace */, lwork /* workspace size */,
-      info
-    )
-    assert(info.`val` >= 0, "Malformed argument %d (LAPACK)".format(-info.`val`))
-
-    if (info.`val` > 0)
-      throw new MatrixSingularException
-
-    m
-  }
-
-  /**
-   * Computes the Moore-Penrose pseudo inverse of the given real matrix X.
-   *
-   *     The pseudo inverse is nothing but the least-squares solution to AX=B,
-   * hence:
-   *        d/dX 1/2 (AX-B)^2 = A^T (AX-B)
-   *  Solving A^T (AX-B) = 0 for X yields
-   *        A^T AX = A^T B
-   *     =>      X = (A^T A)^(-1) A^T B
-   */
-  def pinv(X: DenseMatrix[Double]) : DenseMatrix[Double] = {
-    requireNonEmptyMatrix(X)
 
 
 
-    (X.t * X) \ X.t
-  }
 
-  /**
-   * Computes the Moore-Penrose pseudo inverse of the given real matrix X.
-   */
-  def pinv[V](X: DenseMatrix[V])(implicit cast : V=>Double) : DenseMatrix[Double] = {
-    requireNonEmptyMatrix(X)
 
-    // The pseudo inverse is nothing but the least-squares solution to AX=B,
-    // hence:
-    //       d/dX 1/2 (AX-B)^2 = A^T (AX-B)
-    // Solving A^T (AX-B) = 0 for X yields
-    //       A^T AX = A^T B
-    //    =>      X = (A^T A)^(-1) A^T B
 
-    pinv(X.mapValues(cast))
-  }
+
 
   /**
    * Computes the rank of a DenseMatrix[Double].
