@@ -261,6 +261,7 @@ trait DenseVector_OrderingOps extends DenseVectorOps { this: DenseVector.type =>
   (implicit @expand.sequence[Op]({_ > _},  {_ >= _}, {_ <= _}, {_ < _}, { _ == _}, {_ != _})
   op: Op.Impl2[T, T, T]):Op.Impl2[DenseVector[T], DenseVector[T], BitVector] = new Op.Impl2[DenseVector[T], DenseVector[T], BitVector] {
     def apply(a: DenseVector[T], b: DenseVector[T]): BitVector = {
+      if(a.length != b.length) throw new ArrayIndexOutOfBoundsException(s"Lengths don't match for operator $Op ${a.length} ${b.length}")
       val ad = a.data
       val bd = b.data
       var aoff = a.offset
@@ -424,6 +425,21 @@ trait DenseVector_GenericOps extends UFunc2ZippingImplicits[DenseVector] { this:
         }
       }
     }
+  }
+
+  implicit def dv_v_OpSet[T, Vec](implicit ev: Vec <:< Vector[T]):OpSet.InPlaceImpl2[DenseVector[T], Vec] = new OpSet.InPlaceImpl2[DenseVector[T], Vec] {
+    def apply(a: DenseVector[T], b: Vec):Unit = {
+      val ad = a.data
+      var aoff = a.offset
+
+      var i = 0
+      while(i < a.length) {
+        ad(aoff) = b(i)
+        aoff += a.stride
+        i += 1
+      }
+    }
+//    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], OpSet.type]].register(this)
   }
 
 

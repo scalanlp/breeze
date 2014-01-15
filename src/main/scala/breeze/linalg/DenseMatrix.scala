@@ -632,6 +632,25 @@ with MatrixConstructors[DenseMatrix] {
 
   implicit def handholdCanMapRows[V]: CanCollapseAxis.HandHold[DenseMatrix[V], Axis._0.type, DenseVector[V]] = new CanCollapseAxis.HandHold[DenseMatrix[V], Axis._0.type, DenseVector[V]]()
 
+  implicit def canMapRowsBitVector[V:ClassTag:DefaultArrayValue]: CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], BitVector, DenseMatrix[Boolean]]  = new CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], BitVector, DenseMatrix[Boolean]] {
+    def apply(from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => BitVector): DenseMatrix[Boolean] = {
+      var result:DenseMatrix[Boolean] = null
+      for(c <- 0 until from.cols) {
+        val col = f(from(::, c))
+        if(result eq null) {
+          result = DenseMatrix.zeros[Boolean](col.length, from.cols)
+        }
+        result(::, c) := col
+      }
+
+      if(result eq null){
+        DenseMatrix.zeros[Boolean](0, from.cols)
+      } else {
+        result
+      }
+    }
+  }
+
 
   /**
    * transforms each column into a new column, giving a new matrix.
@@ -666,6 +685,32 @@ with MatrixConstructors[DenseMatrix] {
   }
   implicit def handholdCanMapCols[V]: CanCollapseAxis.HandHold[DenseMatrix[V], Axis._1.type, DenseVector[V]] = new CanCollapseAxis.HandHold[DenseMatrix[V], Axis._1.type, DenseVector[V]]()
 
+  implicit def canMapColsBitVector[V:ClassTag:DefaultArrayValue] = new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], BitVector, DenseMatrix[Boolean]] {
+    def apply(from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => BitVector): DenseMatrix[Boolean] = {
+      var result:DenseMatrix[Boolean] = null
+      import from.{rows, cols}
+      val t = from.t
+      for(r <- 0 until from.rows) {
+        val row = f(t(::, r))
+        if(result eq null) {
+          // scala has decided this method is overloaded, and needs a result type.
+          // It has a result type, and is not overloaded.
+          //          result = DenseMatrix.zeros[V](from.rows, row.length)
+          val data = new Array[Boolean](rows * row.length)
+          result = new DenseMatrix(rows, row.length, data)
+        }
+        result.t apply (::, r) := row
+      }
+
+      if(result ne null) {
+        result
+      } else {
+        val data = new Array[Boolean](0)
+        result = new DenseMatrix(rows, 0, data)
+        result
+      }
+    }
+  }
 
 
   /**

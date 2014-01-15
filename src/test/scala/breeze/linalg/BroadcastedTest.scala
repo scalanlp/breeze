@@ -15,6 +15,10 @@ class BroadcastedTest extends FunSuite {
     val res = dm(::, *) + DenseVector(3.0, 4.0)
     assert(res === DenseMatrix((4.0, 5.0, 6.0), (8.0, 9.0, 10.0)))
 
+
+    val comp = dm(::, *) :< DenseVector(3.0, 4.0)
+    assert(comp === DenseMatrix((true, true, false), (false, false, false)) )
+
     res(::, *) := DenseVector(3.0, 4.0)
     assert(res === DenseMatrix((3.0, 3.0, 3.0), (4.0, 4.0, 4.0)))
   }
@@ -54,6 +58,10 @@ class BroadcastedTest extends FunSuite {
 
     val res = dm(*, ::) + DenseVector(3.0, 4.0)
     assert(res === DenseMatrix((4.0, 5.0, 6.0), (8.0, 9.0, 10.0)).t)
+
+    val comp = dm(*, ::) :< DenseVector(3.0, 4.0)
+    assert(comp === DenseMatrix((true, true, false), (false, false, false)).t )
+
 
     res(*, ::) := DenseVector(3.0, 4.0)
     assert(res === DenseMatrix((3.0, 3.0, 3.0), (4.0, 4.0, 4.0)).t)

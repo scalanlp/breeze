@@ -43,7 +43,7 @@ import breeze.generic.UFunc.{InPlaceImpl2, UImpl2}
  *
  *@author dlwh
  */
-trait UFunc {
+trait UFunc extends MappingUFunc {
   final def apply[@specialized(Int, Double, Float) V,
                   @specialized(Int, Double, Float) VR]
                   (v: V)(implicit impl: Impl[V, VR]):VR = impl(v)
@@ -72,12 +72,6 @@ trait UFunc {
 
 trait MappingUFunc extends UFuncX { this: UFunc =>
 
-  implicit def fromCanMapValues[T[_], V, V2, U[_]](implicit impl: Impl[V, V2], canMapValues: CanMapValues[T[V], V, V2, U[V2]]): Impl[T[V], U[V2]] = {
-    new Impl[T[V], U[V2]] {
-      def apply(v: T[V]): U[V2] = canMapValues.map(v, impl.apply)
-    }
-  }
-
 
   implicit def canZipMapValuesImpl[T, V1, VR, U](implicit handhold: CanMapValues.HandHold[T, V1], impl: Impl2[V1, V1, VR], canZipMapValues: CanZipMapValues[T, V1, VR, U]): Impl2[T, T, U] = {
     new Impl2[T, T, U] {
@@ -87,7 +81,7 @@ trait MappingUFunc extends UFuncX { this: UFunc =>
 
 }
 
-trait UFuncX { this: UFunc =>
+trait UFuncX extends UFuncZ { this: UFunc =>
   implicit def fromLowOrderCanMapValues[T, V, V2, U](implicit handhold: CanMapValues.HandHold[T, V], impl: Impl[V, V2], canMapValues: CanMapValues[T, V, V2, U]): Impl[T, U] = {
     new Impl[T, U] {
       def apply(v: T): U = canMapValues.map(v, impl.apply)
@@ -104,6 +98,11 @@ trait UFuncX { this: UFunc =>
     }
   }
 
+
+
+}
+
+trait UFuncZ { this: UFunc =>
   implicit def canMapV2Values[T, V1, V2, VR, U](implicit handhold: CanMapValues.HandHold[T, V2], impl: Impl2[V1, V2, VR], canMapValues: CanMapValues[T, V2, VR, U]): Impl2[V1, T, U] = {
     new Impl2[V1, T, U] {
       def apply(v1: V1, v2: T): U = canMapValues.map(v2, impl.apply(v1, _))
