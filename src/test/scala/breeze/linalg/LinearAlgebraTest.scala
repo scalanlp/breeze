@@ -52,7 +52,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
 
   test("eigSym") {
     val A = DenseMatrix((9.0,0.0,0.0),(0.0,82.0,0.0),(0.0,0.0,25.0))
-    val (lambda, Some(evs)) = eigSym(A, true)
+    val (lambda, evs) = eigSym(A)
     assert(lambda === DenseVector(9.0,25.0,82.0))
     assert(evs === DenseMatrix((1.0,0.0,0.0),(0.0,0.0,1.0),(0.0,1.0,0.0)))
   }
