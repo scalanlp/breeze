@@ -150,6 +150,16 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     }
 
   }
+
+
+  test("qr just[QR]") {
+    val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
+    val (_Q, _R) = qr(A)
+    val _Q2 = qr.justQ(A)
+    assert (_Q2 === _Q)
+    assert (_R === qr.justR(A))
+  }
+
   test("qrp") {
     val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
     val (_QQ, _RR, _P, _) = qrp(A)
