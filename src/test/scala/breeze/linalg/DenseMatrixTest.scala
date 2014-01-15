@@ -488,6 +488,12 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(m * m === (m2 * m2).values.map(_.toInt))
   }
 
+  test("comparisons") {
+    val one = DenseMatrix.ones[Double](5, 6)
+    val zero = DenseMatrix.zeros[Double](5, 6)
+    assert( (one :> zero) === DenseMatrix.ones[Boolean](5, 6))
+  }
+
 
 }
 
