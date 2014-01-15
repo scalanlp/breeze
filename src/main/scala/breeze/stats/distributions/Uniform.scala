@@ -1,5 +1,7 @@
 package breeze.stats.distributions
 
+import breeze.numerics._
+
 /**
  * 
  * @author dlwh
@@ -9,7 +11,9 @@ case class Uniform(low: Double, high: Double)(implicit rand: RandBasis = Rand) e
   require(low <= high, "low <= high")
   def draw() = rand.uniform.get * (high - low) + low
 
-  def unnormalizedLogPdf(x: Double) = breeze.numerics.logI(x >= low && x <= high)
+  def unnormalizedLogPdf(x: Double) = {
+    logI(x >= low && x <= high)
+  }
 
   def logNormalizer = entropy
 

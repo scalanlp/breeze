@@ -78,8 +78,8 @@ class EmpiricalHessian[T](df: DiffFunction[T], x: T,
 }
 
 object EmpiricalHessian {
-  implicit def product[T]:BinaryOp[EmpiricalHessian[T], T, OpMulMatrix, T] = {
-    new BinaryOp[EmpiricalHessian[T], T, OpMulMatrix, T] {
+  implicit def product[T]:OpMulMatrix.Impl2[EmpiricalHessian[T], T, T] = {
+    new OpMulMatrix.Impl2[EmpiricalHessian[T], T, T] {
       def apply(a: EmpiricalHessian[T], b: T):T = {
         a * b
       }
@@ -121,8 +121,8 @@ class FisherMatrix[T](grads: IndexedSeq[T])(implicit vs: MutableInnerProductSpac
 }
 
 object FisherMatrix {
-  implicit def product[T]:BinaryOp[FisherMatrix[T], T, OpMulMatrix, T] = {
-    new BinaryOp[FisherMatrix[T], T, OpMulMatrix, T] {
+  implicit def product[T]:OpMulMatrix.Impl2[FisherMatrix[T], T, T] = {
+    new OpMulMatrix.Impl2[FisherMatrix[T], T, T] {
       def apply(a: FisherMatrix[T], b: T):T = {
         a * b
       }

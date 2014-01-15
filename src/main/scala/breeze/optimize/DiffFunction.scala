@@ -65,7 +65,7 @@ object DiffFunction {
     }
 
     private def myValueAt(x:T) = {
-      weight * math.pow(norm(x,2),2) / 2
+      weight * math.pow(normImplDouble(x,2),2) / 2
     }
 
     private def myGrad(g: T, x: T) = {

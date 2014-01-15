@@ -18,6 +18,7 @@ package breeze.math
 import org.scalatest.FunSuite
 import org.scalatest.prop.Checkers
 import org.scalacheck.{Prop, Arbitrary}
+import breeze.linalg.norm
 
 /**
  *
@@ -34,7 +35,7 @@ trait TensorSpaceTestBase[V, I, S] extends MutableVectorSpaceTestBase[V, S] with
   test("norm positive homogeneity") {
     check(Prop.forAll{ (trip: (V, V, V), s: S) =>
       val (a, b, c) = trip
-      (norm(a * s) - scalarNorm(s, ()) * norm(a)) <= TOL * norm(a * s)
+      (norm(a * s) - norm(s) * norm(a)) <= TOL * norm(a * s)
     })
   }
 

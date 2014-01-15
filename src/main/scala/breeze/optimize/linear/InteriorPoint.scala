@@ -99,7 +99,7 @@ object InteriorPoint {
     alpha
   }
 
-  private def computeAffineScalingDir(A: DenseMatrix[Double], b: DenseVector[Double], c: DenseVector[Double], x: DenseVector[Double], s: DenseVector[Double], z: DenseVector[Double]) = {
+  private def computeAffineScalingDir(A: DenseMatrix[Double], b: DenseVector[Double], c: DenseVector[Double], x: DenseVector[Double], s: DenseVector[Double], z: DenseVector[Double]): (DenseVector[Double], DenseVector[Double], DenseVector[Double]) = {
     val XiZ = diag(z :/ s)
 
     val AtXiZ = (A.t * XiZ).asInstanceOf[DenseMatrix[Double]]

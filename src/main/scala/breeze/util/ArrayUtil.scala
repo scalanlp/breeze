@@ -36,6 +36,7 @@ object ArrayUtil {
       case x: Array[Short] => Arrays.fill(x, offset, offset + length, v.asInstanceOf[Short])
       case x: Array[Char] => Arrays.fill(x, offset, offset + length, v.asInstanceOf[Char])
       case x: Array[Byte] => Arrays.fill(x, offset, offset + length, v.asInstanceOf[Byte])
+      case x: Array[Boolean] => Arrays.fill(x, offset, offset + length, v.asInstanceOf[Boolean])
       case x: Array[_] => Arrays.fill(x.asInstanceOf[Array[AnyRef]], offset, offset + length, v.asInstanceOf[AnyRef])
       case _ => throw new RuntimeException("shouldn't be here!")
     }
@@ -51,6 +52,7 @@ object ArrayUtil {
       case x: Array[Short] => Arrays.copyOf(x, length).asInstanceOf[Array[V]]
       case x: Array[Char] => Arrays.copyOf(x, length).asInstanceOf[Array[V]]
       case x: Array[Byte] => Arrays.copyOf(x, length).asInstanceOf[Array[V]]
+      case x: Array[Boolean] => Arrays.copyOf(x, length).asInstanceOf[Array[V]]
       case x: Array[_] => Arrays.copyOf(x.asInstanceOf[Array[AnyRef]], length).asInstanceOf[Array[V]]
       case _ => throw new RuntimeException("shouldn't be here!")
     }
@@ -66,6 +68,7 @@ object ArrayUtil {
       case x: Array[Short] => Arrays.copyOfRange(x, from, to).asInstanceOf[Array[V]]
       case x: Array[Char] => Arrays.copyOfRange(x, from, to).asInstanceOf[Array[V]]
       case x: Array[Byte] => Arrays.copyOfRange(x, from, to).asInstanceOf[Array[V]]
+      case x: Array[Boolean] => Arrays.copyOfRange(x, from, to).asInstanceOf[Array[V]]
       case x: Array[_] => Arrays.copyOfRange(x.asInstanceOf[Array[AnyRef]], from, to).asInstanceOf[Array[V]]
       case _ => throw new RuntimeException("shouldn't be here!")
     }
@@ -80,6 +83,7 @@ object ArrayUtil {
       case x: Array[Short] => new Array[Short](length).asInstanceOf[Array[V]]
       case x: Array[Char] => new Array[Char](length).asInstanceOf[Array[V]]
       case x: Array[Byte] => new Array[Byte](length).asInstanceOf[Array[V]]
+      case x: Array[Boolean] => new Array[Boolean](length).asInstanceOf[Array[V]]
       case x: Array[_] =>
         implicit val man = ClassTag[V](x.getClass.getComponentType.asInstanceOf[Class[V]])
         new Array[V](length)
@@ -233,6 +237,18 @@ object ArrayUtil {
           true
         case x: Array[Byte] =>
           val y = b.asInstanceOf[Array[Byte]]
+          var ai = aoffset
+          var bi = boffset
+          var i = 0
+          while(i < alength) {
+            if(x(ai) != y(bi)) return false
+            ai += astride
+            bi += bstride
+            i += 1
+          }
+          true
+        case x: Array[Boolean] =>
+          val y = b.asInstanceOf[Array[Boolean]]
           var ai = aoffset
           var bi = boffset
           var i = 0

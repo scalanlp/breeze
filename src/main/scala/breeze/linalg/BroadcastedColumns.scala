@@ -1,7 +1,7 @@
 package breeze.linalg
 
-import breeze.linalg.operators._
-import breeze.generic.{CanIterateAxis, CanCollapseAxis}
+import breeze.linalg.support._
+import breeze.generic.UFunc.{InPlaceImpl, UImpl, InPlaceImpl2, UImpl2}
 
 /**
  * Class for classes that are broadcasting their columns.
@@ -9,307 +9,77 @@ import breeze.generic.{CanIterateAxis, CanCollapseAxis}
  * @param underlying the tensor (or equivalent) being broadcasted
  * @tparam T the type of the tensor
  */
-case class BroadcastedColumns[T](underlying: T) extends BroadcastedLike[T, BroadcastedColumns[T]] {
+case class BroadcastedColumns[T, B](underlying: T) extends BroadcastedLike[T, B, BroadcastedColumns[T, B]] {
   def repr = this
+
 }
 
 object BroadcastedColumns {
-  // I shouldn't need to do one for each operator, but I get diverging implicit errors if i don't.
-  implicit def broadcastBinaryOpAdd[T, ColumnType, RHS, OpResult, Result](implicit op: BinaryOp[ColumnType, RHS, OpAdd, OpResult], cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]): BinaryOp[BroadcastedColumns[T], RHS, OpAdd, Result] = {
-    new BinaryOp[BroadcastedColumns[T], RHS, OpAdd, Result] {
-      def apply(a: BroadcastedColumns[T], b: RHS): Result = {
-        cc(a.underlying, Axis._0){op(_,b)}
+
+  implicit def canMapValues[T, ColumnType, ResultColumn, Result]
+                            (implicit cc: CanCollapseAxis[T, Axis._0.type, ColumnType, ResultColumn, Result])
+                            :CanMapValues[BroadcastedColumns[T, ColumnType], ColumnType, ResultColumn, Result] = {
+    new CanMapValues[BroadcastedColumns[T, ColumnType], ColumnType, ResultColumn, Result] {
+      def map(from: BroadcastedColumns[T, ColumnType], fn: (ColumnType) => ResultColumn): Result = {
+        cc(from.underlying, Axis._0){fn}
+      }
+
+      /** Maps all active key-value pairs from the given collection. */
+      def mapActive(from: BroadcastedColumns[T, ColumnType], fn: (ColumnType) => ResultColumn): Result = {
+        cc(from.underlying, Axis._0){fn}
       }
     }
 
   }
 
-  implicit def broadcastBinaryOpSub[T, ColumnType, RHS, OpResult, Result](implicit op: BinaryOp[ColumnType, RHS, OpSub, OpResult], cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]): BinaryOp[BroadcastedColumns[T], RHS, OpSub, Result] = {
-    new BinaryOp[BroadcastedColumns[T], RHS, OpSub, Result] {
-      def apply(a: BroadcastedColumns[T], b: RHS): Result = {
-        cc(a.underlying, Axis._0){op(_,b)}
+  implicit def handholdCMV[T, ColumnType] = new CanMapValues.HandHold[BroadcastedColumns[T, ColumnType], ColumnType]
+
+
+  /*
+  implicit def broadcastOp[Op, T, ColumnType, OpResult, Result](implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, ColumnType],
+                                                                     op: UImpl[Op, ColumnType, OpResult],
+                                                                     cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]):UImpl[Op, BroadcastedColumns[T, ColumnType], Result] = {
+    new UImpl[Op, BroadcastedColumns[T, ColumnType], Result] {
+      def apply(v: BroadcastedColumns[T, ColumnType]): Result = {
+        cc(v.underlying, Axis._0){op(_)}
       }
     }
+  }
+  */
 
+  implicit def broadcastInplaceOp[Op, T, ColumnType, RHS, OpResult](implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, ColumnType],
+                                                                     op: InPlaceImpl[Op, ColumnType],
+                                                                     cc: CanIterateAxis[T, Axis._0.type, ColumnType]):InPlaceImpl[Op, BroadcastedColumns[T, ColumnType]] = {
+    new InPlaceImpl[Op, BroadcastedColumns[T, ColumnType]] {
+      def apply(v: BroadcastedColumns[T, ColumnType]) {
+        cc(v.underlying, Axis._0){op(_)}
+      }
+    }
   }
 
-  implicit def broadcastBinaryOpMulMatrix[T, ColumnType, RHS, OpResult, Result](implicit op: BinaryOp[ColumnType, RHS, OpMulMatrix, OpResult], cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]): BinaryOp[BroadcastedColumns[T], RHS, OpMulMatrix, Result] = {
-    new BinaryOp[BroadcastedColumns[T], RHS, OpMulMatrix, Result] {
-      def apply(a: BroadcastedColumns[T], b: RHS): Result = {
-        cc(a.underlying, Axis._0){op(_,b)}
+  /*
+  implicit def broadcastOp2[Op, T, ColumnType, RHS, OpResult, Result](implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, ColumnType],
+                                                                     op: UImpl2[Op, ColumnType, RHS, OpResult],
+                                                                     cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]):UImpl2[Op, BroadcastedColumns[T, ColumnType], RHS, Result] = {
+    new UImpl2[Op, BroadcastedColumns[T, ColumnType], RHS, Result] {
+      def apply(v: BroadcastedColumns[T, ColumnType], v2: RHS): Result = {
+        cc(v.underlying, Axis._0){op(_, v2)}
       }
     }
-
   }
+  */
 
-  implicit def broadcastBinaryOpMulScalar[T, ColumnType, RHS, OpResult, Result](implicit op: BinaryOp[ColumnType, RHS, OpMulScalar, OpResult], cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]): BinaryOp[BroadcastedColumns[T], RHS, OpMulScalar, Result] = {
-    new BinaryOp[BroadcastedColumns[T], RHS, OpMulScalar, Result] {
-      def apply(a: BroadcastedColumns[T], b: RHS): Result = {
-        cc(a.underlying, Axis._0){op(_,b)}
+  implicit def broadcastInplaceOp2[Op, T, ColumnType, RHS, OpResult](implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, ColumnType],
+                                                                    op: InPlaceImpl2[Op, ColumnType, RHS],
+                                                                    cc: CanIterateAxis[T, Axis._0.type, ColumnType]):InPlaceImpl2[Op, BroadcastedColumns[T, ColumnType], RHS] = {
+    new InPlaceImpl2[Op, BroadcastedColumns[T, ColumnType], RHS] {
+      def apply(v: BroadcastedColumns[T, ColumnType], v2: RHS) {
+        cc(v.underlying, Axis._0){op(_, v2)}
       }
     }
-
-  }
-  implicit def broadcastBinaryOpDiv[T, ColumnType, RHS, OpResult, Result](implicit op: BinaryOp[ColumnType, RHS, OpDiv, OpResult], cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]): BinaryOp[BroadcastedColumns[T], RHS, OpDiv, Result] = {
-    new BinaryOp[BroadcastedColumns[T], RHS, OpDiv, Result] {
-      def apply(a: BroadcastedColumns[T], b: RHS): Result = {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-  implicit def broadcastBinaryOpSet[T, ColumnType, RHS, OpResult, Result](implicit op: BinaryOp[ColumnType, RHS, OpSet, OpResult], cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]): BinaryOp[BroadcastedColumns[T], RHS, OpSet, Result] = {
-    new BinaryOp[BroadcastedColumns[T], RHS, OpSet, Result] {
-      def apply(a: BroadcastedColumns[T], b: RHS): Result = {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-  implicit def broadcastBinaryOpMod[T, ColumnType, RHS, OpResult, Result](implicit op: BinaryOp[ColumnType, RHS, OpMod, OpResult], cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]): BinaryOp[BroadcastedColumns[T], RHS, OpMod, Result] = {
-    new BinaryOp[BroadcastedColumns[T], RHS, OpMod, Result] {
-      def apply(a: BroadcastedColumns[T], b: RHS): Result = {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
   }
 
 
-  implicit def broadcastBinaryOpPow[T, ColumnType, RHS, OpResult, Result](implicit op: BinaryOp[ColumnType, RHS, OpMod, OpResult], cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]): BinaryOp[BroadcastedColumns[T], RHS, OpMod, Result] = {
-    new BinaryOp[BroadcastedColumns[T], RHS, OpMod, Result] {
-      def apply(a: BroadcastedColumns[T], b: RHS): Result = {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-  implicit def broadcastBinaryOpLT[T, ColumnType, RHS, OpResult, Result](implicit op: BinaryOp[ColumnType, RHS, OpLT, OpResult], cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]): BinaryOp[BroadcastedColumns[T], RHS, OpLT, Result] = {
-    new BinaryOp[BroadcastedColumns[T], RHS, OpLT, Result] {
-      def apply(a: BroadcastedColumns[T], b: RHS): Result = {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-  implicit def broadcastBinaryOpGT[T, ColumnType, RHS, OpResult, Result](implicit op: BinaryOp[ColumnType, RHS, OpGT, OpResult], cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]): BinaryOp[BroadcastedColumns[T], RHS, OpGT, Result] = {
-    new BinaryOp[BroadcastedColumns[T], RHS, OpGT, Result] {
-      def apply(a: BroadcastedColumns[T], b: RHS): Result = {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-  implicit def broadcastBinaryOpLTE[T, ColumnType, RHS, OpResult, Result](implicit op: BinaryOp[ColumnType, RHS, OpLTE, OpResult], cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]): BinaryOp[BroadcastedColumns[T], RHS, OpLTE, Result] = {
-    new BinaryOp[BroadcastedColumns[T], RHS, OpLTE, Result] {
-      def apply(a: BroadcastedColumns[T], b: RHS): Result = {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-  implicit def broadcastBinaryOpGTE[T, ColumnType, RHS, OpResult, Result](implicit op: BinaryOp[ColumnType, RHS, OpGTE, OpResult], cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]): BinaryOp[BroadcastedColumns[T], RHS, OpGTE, Result] = {
-    new BinaryOp[BroadcastedColumns[T], RHS, OpGTE, Result] {
-      def apply(a: BroadcastedColumns[T], b: RHS): Result = {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-  implicit def broadcastBinaryOpEq[T, ColumnType, RHS, OpResult, Result](implicit op: BinaryOp[ColumnType, RHS, OpEq, OpResult], cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]): BinaryOp[BroadcastedColumns[T], RHS, OpEq, Result] = {
-    new BinaryOp[BroadcastedColumns[T], RHS, OpEq, Result] {
-      def apply(a: BroadcastedColumns[T], b: RHS): Result = {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-  implicit def broadcastBinaryOpNe[T, ColumnType, RHS, OpResult, Result](implicit op: BinaryOp[ColumnType, RHS, OpNe, OpResult], cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]): BinaryOp[BroadcastedColumns[T], RHS, OpNe, Result] = {
-    new BinaryOp[BroadcastedColumns[T], RHS, OpNe, Result] {
-      def apply(a: BroadcastedColumns[T], b: RHS): Result = {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-  implicit def broadcastBinaryOpAnd[T, ColumnType, RHS, OpResult, Result](implicit op: BinaryOp[ColumnType, RHS, OpAnd, OpResult], cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]): BinaryOp[BroadcastedColumns[T], RHS, OpAnd, Result] = {
-    new BinaryOp[BroadcastedColumns[T], RHS, OpAnd, Result] {
-      def apply(a: BroadcastedColumns[T], b: RHS): Result = {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-  implicit def broadcastBinaryOpXor[T, ColumnType, RHS, OpResult, Result](implicit op: BinaryOp[ColumnType, RHS, OpXor, OpResult], cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]): BinaryOp[BroadcastedColumns[T], RHS, OpXor, Result] = {
-    new BinaryOp[BroadcastedColumns[T], RHS, OpXor, Result] {
-      def apply(a: BroadcastedColumns[T], b: RHS): Result = {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-
-  // Update Ops.
-  implicit def broadcastBinaryUpdateOpAdd[T, ColumnType, RHS](implicit op: BinaryUpdateOp[ColumnType, RHS, OpAdd], cc: CanIterateAxis[T, Axis._0.type, ColumnType]): BinaryUpdateOp[BroadcastedColumns[T], RHS, OpAdd] = {
-    new BinaryUpdateOp[BroadcastedColumns[T], RHS, OpAdd] {
-      def apply(a: BroadcastedColumns[T], b: RHS) {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-  implicit def broadcastBinaryUpdateOpSub[T, ColumnType, RHS](implicit op: BinaryUpdateOp[ColumnType, RHS, OpSub], cc: CanIterateAxis[T, Axis._0.type, ColumnType]): BinaryUpdateOp[BroadcastedColumns[T], RHS, OpSub] = {
-    new BinaryUpdateOp[BroadcastedColumns[T], RHS, OpSub] {
-      def apply(a: BroadcastedColumns[T], b: RHS) {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-  implicit def broadcastBinaryUpdateOpMulMatrix[T, ColumnType, RHS](implicit op: BinaryUpdateOp[ColumnType, RHS, OpMulMatrix], cc: CanIterateAxis[T, Axis._0.type, ColumnType]): BinaryUpdateOp[BroadcastedColumns[T], RHS, OpMulMatrix] = {
-    new BinaryUpdateOp[BroadcastedColumns[T], RHS, OpMulMatrix] {
-      def apply(a: BroadcastedColumns[T], b: RHS) {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-  implicit def broadcastBinaryUpdateOpMulScalar[T, ColumnType, RHS](implicit op: BinaryUpdateOp[ColumnType, RHS, OpMulScalar], cc: CanIterateAxis[T, Axis._0.type, ColumnType]): BinaryUpdateOp[BroadcastedColumns[T], RHS, OpMulScalar] = {
-    new BinaryUpdateOp[BroadcastedColumns[T], RHS, OpMulScalar] {
-      def apply(a: BroadcastedColumns[T], b: RHS) {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-  implicit def broadcastBinaryUpdateOpDiv[T, ColumnType, RHS](implicit op: BinaryUpdateOp[ColumnType, RHS, OpDiv], cc: CanIterateAxis[T, Axis._0.type, ColumnType]): BinaryUpdateOp[BroadcastedColumns[T], RHS, OpDiv] = {
-    new BinaryUpdateOp[BroadcastedColumns[T], RHS, OpDiv] {
-      def apply(a: BroadcastedColumns[T], b: RHS) {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-  implicit def broadcastBinaryUpdateOpSet[T, ColumnType, RHS](implicit op: BinaryUpdateOp[ColumnType, RHS, OpSet], cc: CanIterateAxis[T, Axis._0.type, ColumnType]): BinaryUpdateOp[BroadcastedColumns[T], RHS, OpSet] = {
-    new BinaryUpdateOp[BroadcastedColumns[T], RHS, OpSet] {
-      def apply(a: BroadcastedColumns[T], b: RHS) {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-  implicit def broadcastBinaryUpdateOpMod[T, ColumnType, RHS](implicit op: BinaryUpdateOp[ColumnType, RHS, OpMod], cc: CanIterateAxis[T, Axis._0.type, ColumnType]): BinaryUpdateOp[BroadcastedColumns[T], RHS, OpMod] = {
-    new BinaryUpdateOp[BroadcastedColumns[T], RHS, OpMod] {
-      def apply(a: BroadcastedColumns[T], b: RHS) {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-
-  implicit def broadcastBinaryUpdateOpPow[T, ColumnType, RHS](implicit op: BinaryUpdateOp[ColumnType, RHS, OpMod], cc: CanIterateAxis[T, Axis._0.type, ColumnType]): BinaryUpdateOp[BroadcastedColumns[T], RHS, OpMod] = {
-    new BinaryUpdateOp[BroadcastedColumns[T], RHS, OpMod] {
-      def apply(a: BroadcastedColumns[T], b: RHS) {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-  implicit def broadcastBinaryUpdateOpLT[T, ColumnType, RHS](implicit op: BinaryUpdateOp[ColumnType, RHS, OpLT], cc: CanIterateAxis[T, Axis._0.type, ColumnType]): BinaryUpdateOp[BroadcastedColumns[T], RHS, OpLT] = {
-    new BinaryUpdateOp[BroadcastedColumns[T], RHS, OpLT] {
-      def apply(a: BroadcastedColumns[T], b: RHS) {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-  implicit def broadcastBinaryUpdateOpGT[T, ColumnType, RHS](implicit op: BinaryUpdateOp[ColumnType, RHS, OpGT], cc: CanIterateAxis[T, Axis._0.type, ColumnType]): BinaryUpdateOp[BroadcastedColumns[T], RHS, OpGT] = {
-    new BinaryUpdateOp[BroadcastedColumns[T], RHS, OpGT] {
-      def apply(a: BroadcastedColumns[T], b: RHS) {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-  implicit def broadcastBinaryUpdateOpLTE[T, ColumnType, RHS](implicit op: BinaryUpdateOp[ColumnType, RHS, OpLTE], cc: CanIterateAxis[T, Axis._0.type, ColumnType]): BinaryUpdateOp[BroadcastedColumns[T], RHS, OpLTE] = {
-    new BinaryUpdateOp[BroadcastedColumns[T], RHS, OpLTE] {
-      def apply(a: BroadcastedColumns[T], b: RHS) {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-  implicit def broadcastBinaryUpdateOpGTE[T, ColumnType, RHS](implicit op: BinaryUpdateOp[ColumnType, RHS, OpGTE], cc: CanIterateAxis[T, Axis._0.type, ColumnType]): BinaryUpdateOp[BroadcastedColumns[T], RHS, OpGTE] = {
-    new BinaryUpdateOp[BroadcastedColumns[T], RHS, OpGTE] {
-      def apply(a: BroadcastedColumns[T], b: RHS) {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-  implicit def broadcastBinaryUpdateOpEq[T, ColumnType, RHS](implicit op: BinaryUpdateOp[ColumnType, RHS, OpEq], cc: CanIterateAxis[T, Axis._0.type, ColumnType]): BinaryUpdateOp[BroadcastedColumns[T], RHS, OpEq] = {
-    new BinaryUpdateOp[BroadcastedColumns[T], RHS, OpEq] {
-      def apply(a: BroadcastedColumns[T], b: RHS) {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-  implicit def broadcastBinaryUpdateOpNe[T, ColumnType, RHS](implicit op: BinaryUpdateOp[ColumnType, RHS, OpNe], cc: CanIterateAxis[T, Axis._0.type, ColumnType]): BinaryUpdateOp[BroadcastedColumns[T], RHS, OpNe] = {
-    new BinaryUpdateOp[BroadcastedColumns[T], RHS, OpNe] {
-      def apply(a: BroadcastedColumns[T], b: RHS) {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-  implicit def broadcastBinaryUpdateOpAnd[T, ColumnType, RHS](implicit op: BinaryUpdateOp[ColumnType, RHS, OpAnd], cc: CanIterateAxis[T, Axis._0.type, ColumnType]): BinaryUpdateOp[BroadcastedColumns[T], RHS, OpAnd] = {
-    new BinaryUpdateOp[BroadcastedColumns[T], RHS, OpAnd] {
-      def apply(a: BroadcastedColumns[T], b: RHS) {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-  implicit def broadcastBinaryUpdateOpXor[T, ColumnType, RHS](implicit op: BinaryUpdateOp[ColumnType, RHS, OpXor], cc: CanIterateAxis[T, Axis._0.type, ColumnType]): BinaryUpdateOp[BroadcastedColumns[T], RHS, OpXor] = {
-    new BinaryUpdateOp[BroadcastedColumns[T], RHS, OpXor] {
-      def apply(a: BroadcastedColumns[T], b: RHS) {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
-
-
-  implicit def broadcastBinaryOpMulInner[T, ColumnType, RHS, OpResult, Result](implicit op: BinaryOp[ColumnType, RHS, OpMulInner, OpResult], cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]): BinaryOp[BroadcastedColumns[T], RHS, OpMulInner, Result] = {
-    new BinaryOp[BroadcastedColumns[T], RHS, OpMulInner, Result] {
-      def apply(a: BroadcastedColumns[T], b: RHS): Result = {
-        cc(a.underlying, Axis._0){op(_,b)}
-      }
-    }
-
-  }
 
 }
 

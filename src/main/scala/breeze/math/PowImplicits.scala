@@ -3,7 +3,7 @@ package breeze.math
 import breeze.numerics.IntMath
 
 /**
- * importing this gives numeric types a "pow" method.
+ * importing this gives numeric enables a "pow" method on basic numeric types
  *
  * @author dlwh
  **/

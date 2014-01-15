@@ -27,18 +27,23 @@ import collection.mutable
  *
  * @author dlwh
  */
-trait Multimethod[Method[AA, RR] <: MethodImpl[AA, RR], A <: AnyRef, R] extends MMRegistry1[Method[_ <: A, _ <: R]] { this: Method[A, R] =>
+trait Multimethod[Method, A <: AnyRef, R] extends MMRegistry1[Method] { this: Method =>
+
+
   protected def bindingMissing(a: A): R = throw new UnsupportedOperationException("Types not found!")
-  protected def multipleOptions(a: A, m: Map[Class[_],Method[_ <: A, _ <: R]]) = {
+  protected def multipleOptions(a: A, m: Map[Class[_],Method]) = {
     throw new RuntimeException("Multiple bindings for method: " + m)
   }
+
+  protected def doMethod(m: Method, a: A): R
+
 
   def apply(a: A): R = {
     val ac = a.asInstanceOf[AnyRef].getClass
 
     val cached = cache.get(ac)
     if(cached != null) {
-      cached.asInstanceOf[Method[A, R]].apply(a)
+      doMethod(cached.asInstanceOf, a)
     } else {
       val options = resolve(ac)
       options.size match {
@@ -46,22 +51,22 @@ trait Multimethod[Method[AA, RR] <: MethodImpl[AA, RR], A <: AnyRef, R] extends 
         case 1 =>
           val method = options.values.head
           cache.put(ac, method)
-          method.asInstanceOf[Method[A, R]].apply(a)
+          doMethod(method, a)
         case _ =>
           val selected = selectBestOption(options)
-          if(selected.size != 1)
+          if(selected.size != 1) {
             multipleOptions(a, options)
-          else {
+          } else {
             val method = selected.values.head
             cache.put(ac, method)
-            method.asInstanceOf[Method[A, R]].apply(a)
+            doMethod(method, a)
           }
       }
     }
   }
 
 
-  def register[AA <: A](op: Method[AA, _ <: R])(implicit manA: Manifest[AA]) {
+  def register[AA <: A](op: Method)(implicit manA: Manifest[AA]) {
     super.register(manA.runtimeClass.asInstanceOf[Class[AA]], op)
   }
 }
@@ -218,8 +223,6 @@ trait MMRegistry2[R] {
     ops.get(a -> b) match {
       case Some(m) => Map((a->b) -> m)
       case None =>
-        val newCA = a.getInterfaces
-        val newCB = b.getInterfaces
         val sa = closeSupertypes(a)
         val sb = closeSupertypes(b)
         val candidates = ArrayBuffer[((Class[_], Class[_]), R)]()

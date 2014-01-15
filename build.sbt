@@ -41,13 +41,13 @@ pomExtra := (
     </developer>
   </developers>)
 
-scalacOptions ++= Seq("-optimize","-deprecation","-language:_")
+scalacOptions ++= Seq("-deprecation","-language:_")
 
   javacOptions ++= Seq("-target", "1.6", "-source","1.6")
 
 
 libraryDependencies ++= Seq(
-  "org.scalanlp" %% "breeze-macros" % "0.1" % "compile",
+  "org.scalanlp" %% "breeze-macros" % "0.2-SNAPSHOT" % "compile",
   "com.thoughtworks.paranamer" % "paranamer" % "2.2",
   "com.github.fommil.netlib" % "all" % "1.1.2" pomOnly(),
   "org.scalanlp" % "lpsolve" % "5.5.2-SNAPSHOT",

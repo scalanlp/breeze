@@ -22,6 +22,7 @@ import org.scalatest.prop._
 import org.scalatest.matchers.ShouldMatchers
 import org.junit.runner.RunWith
 import breeze.util.DoubleImplicits
+import breeze.numerics._
 
 /**
  *
@@ -51,7 +52,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
 
   test("eigSym") {
     val A = DenseMatrix((9.0,0.0,0.0),(0.0,82.0,0.0),(0.0,0.0,25.0))
-    val (lambda, Some(evs)) = eigSym(A, true)
+    val (lambda, evs) = eigSym(A)
     assert(lambda === DenseVector(9.0,25.0,82.0))
     assert(evs === DenseMatrix((1.0,0.0,0.0),(0.0,0.0,1.0),(0.0,1.0,0.0)))
   }
@@ -149,6 +150,16 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     }
 
   }
+
+
+  test("qr just[QR]") {
+    val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
+    val (_Q, _R) = qr(A)
+    val _Q2 = qr.justQ(A)
+    assert (_Q2 === _Q)
+    assert (_R === qr.justR(A))
+  }
+
   test("qrp") {
     val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
     val (_QQ, _RR, _P, _) = qrp(A)
@@ -208,7 +219,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
 
   test("small pow test") {
     val X = DenseMatrix(( .7, .2), (.3, .8))
-    assert(pow(X, 1) === X)
-    assert( breeze.numerics.abs(pow(X, .5) - DenseMatrix((.82426, 0.11716), (.17574, 0.88284))).max < 1E-5, pow(X, .5))
+    assert(mpow(X, 1) === X)
+    assert( abs(mpow(X, .5) - DenseMatrix((.82426, 0.11716), (.17574, 0.88284))).max < 1E-5, mpow(X, .5))
   }
 }

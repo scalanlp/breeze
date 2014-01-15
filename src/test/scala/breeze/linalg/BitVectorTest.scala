@@ -71,4 +71,15 @@ class BitVectorTest extends FunSuite {
     assert(bd === DenseVector(1, 0, 5, 3, 3, 7, 3))
   }
 
+  test("sum") {
+    assert(sum(BitVector(false, false, true)) === true)
+    assert(sum(BitVector(false, false, false)) === false)
+  }
+
+  test("product") {
+    assert(product(BitVector(true, true, true)) === true)
+    assert(product(BitVector(false, false, true)) === false)
+    assert(product(BitVector(false, false, false)) === false)
+  }
+
 }

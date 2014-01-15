@@ -240,14 +240,14 @@ class DenseVectorTest extends FunSuite with Checkers {
   }
 
   test("ForComprehensions") {
-    val a: DenseVector[Double] = DenseVector(1, 2, 3, 4, 5)
+    val a: DenseVector[Int] = DenseVector(1, 2, 3, 4, 5)
 
     var s = 0.0
 
     // foreach
     s = 0.0
     for (v <- a) s += v
-    assert(s === a.sum)
+    assert(s === sum(a))
 
 //    filter
 //    s = 0.0
@@ -255,11 +255,11 @@ class DenseVectorTest extends FunSuite with Checkers {
 //    assert(s === 1 + 2)
 
     // map
-    val b1: DenseVector[Double] = for (v <- a) yield v * 2.0
-    assert(b1 === DenseVector(2.0, 4.0, 6.0, 8.0, 10.0))
+    val b1: DenseVector[Int] = for (v <- a) yield v * 2
+    assert(b1 === DenseVector(2, 4, 6, 8, 10))
 
 //    map with filter
-//    val b2: DenseVector[Double] = for (v <- a if v < 3) yield v * 2
+//    val b2: DenseVector[Int] = for (v <- a if v < 3) yield v * 2
 //    assert(b2 === DenseVector(2.0, 4.0))
   }
 

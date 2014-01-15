@@ -3,6 +3,7 @@ package breeze.features
 import breeze.linalg._
 import java.util
 import breeze.linalg.operators._
+import breeze.linalg.support.CanAxpy
 
 /**
  * Represents a feature vector of indicator (i.e. binary) features.
@@ -58,7 +59,7 @@ object FeatureVector {
     }
   }
 
-  implicit object DotProductFVDV extends BinaryOp[FeatureVector, DenseVector[Double], OpMulInner, Double] {
+  implicit object DotProductFVDV extends OpMulInner.Impl2[FeatureVector, DenseVector[Double], Double] {
     def apply(a: FeatureVector, b: DenseVector[Double]): Double = {
       var score = 0.0
       var i = 0
@@ -71,11 +72,11 @@ object FeatureVector {
     }
   }
 
-  implicit object DotProductDVFV extends BinaryOp[DenseVector[Double], FeatureVector, OpMulInner, Double] {
+  implicit object DotProductDVFV extends OpMulInner.Impl2[DenseVector[Double], FeatureVector, Double] {
     def apply(b: DenseVector[Double], a: FeatureVector): Double = DotProductFVDV(a, b)
   }
 
-  implicit object FVAddIntoDV extends BinaryUpdateOp[DenseVector[Double], FeatureVector, OpMulInner] {
+  implicit object FVAddIntoDV extends OpMulInner.InPlaceImpl2[DenseVector[Double], FeatureVector] {
     def apply(a: DenseVector[Double], b: FeatureVector) {
       var i = 0
       while(i < b.activeLength) {
@@ -85,7 +86,7 @@ object FeatureVector {
     }
   }
 
-  implicit object CanMulDMFV extends BinaryOp[DenseMatrix[Double], FeatureVector, OpMulMatrix, DenseVector[Double]] {
+  implicit object CanMulDMFV extends OpMulMatrix.Impl2[DenseMatrix[Double], FeatureVector, DenseVector[Double]] {
     def apply(a: DenseMatrix[Double], b: FeatureVector): DenseVector[Double] = {
       a(*, ::) dot b
     }

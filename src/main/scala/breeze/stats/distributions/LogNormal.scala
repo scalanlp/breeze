@@ -1,6 +1,5 @@
 package breeze.stats.distributions
 
-import math._
 import scala.runtime.ScalaRunTime
 import breeze.optimize.DiffFunction
 import breeze.numerics._
@@ -29,7 +28,7 @@ case class LogNormal(mu: Double, sigma: Double)(implicit rand: RandBasis = Rand)
 
   def unnormalizedLogPdf(x: Double): Double = myGaussian.unnormalizedLogPdf(log(x))
 
-  def logNormalizer: Double = -sqrt(2 * Pi) * sigma
+  def logNormalizer: Double = -sqrt(2 * math.Pi) * sigma
 
   /**
    * Computes the inverse cdf of the p-value for this gaussian.
@@ -50,7 +49,7 @@ case class LogNormal(mu: Double, sigma: Double)(implicit rand: RandBasis = Rand)
 
   def variance: Double = expm1(sigma * sigma) * exp(2 * mu + sigma * sigma)
 
-  def entropy: Double = 0.5 + 0.5 * math.log(2 * Pi * sigma * sigma) + mu
+  def entropy: Double = 0.5 + 0.5 * math.log(2 * math.Pi * sigma * sigma) + mu
 
   def mode: Double = exp(mu - sigma * sigma)
 }

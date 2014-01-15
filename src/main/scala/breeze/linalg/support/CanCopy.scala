@@ -16,7 +16,6 @@ package breeze.linalg.support
 */
 import breeze.math.Field
 import breeze.util.ArrayUtil
-import breeze.generic.CanMapValues
 import scala.reflect.ClassTag
 
 /**

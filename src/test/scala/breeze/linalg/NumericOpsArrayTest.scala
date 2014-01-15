@@ -1,7 +1,6 @@
 package breeze.linalg
 
 import org.scalatest.FunSuite
-import breeze.linalg.operators.{OpAdd, BinaryOp}
 
 /**
  * 

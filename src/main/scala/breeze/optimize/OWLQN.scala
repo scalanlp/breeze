@@ -76,7 +76,7 @@ class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-
       val g = if(delta_- > 0) delta_- else if(delta_+ < 0) delta_+ else 0.0
       g
     })
-    val adjValue = newVal + l1reg * norm(newX,1)
+    val adjValue = newVal + l1reg * norm(newX, 1)
     adjValue -> res
   }
 

@@ -49,7 +49,7 @@ case class Poisson(mean: Double)(implicit rand: RandBasis=Rand) extends Discrete
     } else {
       val k_start = mean.toInt
       val u = rand.uniform.get
-      var t1 = exp(k_start * log(mean) - mean - lgamma(k_start+1))
+      var t1 = exp(k_start * log(mean) - mean - lgamma(k_start.toDouble+1))
       if (t1 > u) k_start
       else {
         var k1 = k_start
@@ -75,10 +75,10 @@ case class Poisson(mean: Double)(implicit rand: RandBasis=Rand) extends Discrete
 
   def probabilityOf(k:Int) = math.exp(logProbabilityOf(k))
   override def logProbabilityOf(k:Int) = {
-    -mean + k * log(mean) - lgamma(k+1)
+    -mean + k * log(mean) - lgamma(k + 1.0)
   }
 
-  def cdf(k:Int) = 1 - gammp(k+1, mean)
+  def cdf(k:Int) = 1 - gammp(k + 1.0, mean)
 
   def variance = mean
   def mode = math.ceil(mean) - 1
@@ -92,7 +92,7 @@ case class Poisson(mean: Double)(implicit rand: RandBasis=Rand) extends Discrete
     var meanmean = 1.0/mean
     do {
       meanmean *= mean
-      val ln_k_! = lgamma(k+1)
+      val ln_k_! = lgamma(k.toDouble+1)
       correction = meanmean * ln_k_! / exp(ln_k_!)
       extra += correction
       k += 1
@@ -104,6 +104,9 @@ case class Poisson(mean: Double)(implicit rand: RandBasis=Rand) extends Discrete
 
 
 object Poisson extends ExponentialFamily[Poisson,Int] {
+
+
+
   type Parameter = Double
   case class SufficientStatistic(sum: Double, n: Double) extends distributions.SufficientStatistic[SufficientStatistic] {
     def +(t: SufficientStatistic) = SufficientStatistic(t.sum + sum, t.n + n)
