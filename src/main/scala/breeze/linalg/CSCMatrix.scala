@@ -247,6 +247,8 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
     }
   }
 
+  implicit def handholdCMV[T] = new CanMapValues.HandHold[CSCMatrix[T], T]
+
   implicit def canIterateValues[V]:CanTraverseValues[CSCMatrix[V], V] = {
     new CanTraverseValues[CSCMatrix[V],V] {
 

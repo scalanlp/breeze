@@ -138,6 +138,7 @@ object HashVector extends HashVectorOps
       }
     }
   }
+  implicit def handholdCMV[T]= new CanMapValues.HandHold[HashVector[T], T]
 
   implicit def canIterateValues[V]:CanTraverseValues[HashVector[V], V] = {
     new CanTraverseValues[HashVector[V],V] {

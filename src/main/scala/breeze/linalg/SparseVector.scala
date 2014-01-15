@@ -221,6 +221,7 @@ object SparseVector extends SparseVectorOps
       }
     }
   }
+  implicit def handholdCMV[T]= new CanMapValues.HandHold[SparseVector[T], T]
 
   implicit def canIterateValues[V]:CanTraverseValues[SparseVector[V], V] = {
     new CanTraverseValues[SparseVector[V],V] {

@@ -303,6 +303,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
       }
     }
   }
+  implicit def handholdCMV[T]= new CanMapValues.HandHold[DenseVector[T], T]
 
   implicit def canIterateValues[V]:CanTraverseValues[DenseVector[V], V] = {
     new CanTraverseValues[DenseVector[V], V] {

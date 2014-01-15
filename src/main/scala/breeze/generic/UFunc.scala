@@ -82,26 +82,28 @@ trait MappingUFunc extends UFuncX { this: UFunc =>
 }
 
 trait UFuncX { this: UFunc =>
-  implicit def fromLowOrderCanMapValues[T, V, V2, U](implicit canMapValues: CanMapValues[T, V, V2, U], impl: Impl[V, V2]): Impl[T, U] = {
+  implicit def fromLowOrderCanMapValues[T, V, V2, U](implicit handhold: CanMapValues.HandHold[T, V], impl: Impl[V, V2], canMapValues: CanMapValues[T, V, V2, U]): Impl[T, U] = {
     new Impl[T, U] {
       def apply(v: T): U = canMapValues.map(v, impl.apply)
     }
   }
 
 
-  implicit def canZipMapValuesImpl[T, V1, VR, U](implicit impl: Impl2[V1, V1, VR], canZipMapValues: CanZipMapValues[T, V1, VR, U]): Impl2[T, T, U] = {
+  implicit def canZipMapValuesImpl[T, V1, VR, U](implicit canZipMapValues: CanZipMapValues[T, V1, VR, U], impl: Impl2[V1, V1, VR]): Impl2[T, T, U] = {
     new Impl2[T, T, U] {
       def apply(v1: T, v2: T): U = canZipMapValues.map(v1, v2, impl.apply)
     }
   }
 
-  implicit def canMapV1DV[T, V1, V2, VR, U](implicit impl: Impl2[V1, V2, VR], canMapValues: CanMapValues[T, V1, VR, U]): Impl2[T, V2, U] = {
+  implicit def canMapV1DV[T, V1, V2, VR, U](implicit handhold: CanMapValues.HandHold[T, V1],
+                                            impl: Impl2[V1, V2, VR],
+                                            canMapValues: CanMapValues[T, V1, VR, U]): Impl2[T, V2, U] = {
     new Impl2[T, V2, U] {
       def apply(v1: T, v2: V2): U = canMapValues.map(v1, impl.apply(_, v2))
     }
   }
 
-  implicit def canMapV2Values[T, V1, V2, VR, U](implicit impl: Impl2[V1, V2, VR], canMapValues: CanMapValues[T, V2, VR, U]): Impl2[V1, T, U] = {
+  implicit def canMapV2Values[T, V1, V2, VR, U](implicit handhold: CanMapValues.HandHold[T, V2], impl: Impl2[V1, V2, VR], canMapValues: CanMapValues[T, V2, VR, U]): Impl2[V1, T, U] = {
     new Impl2[V1, T, U] {
       def apply(v1: V1, v2: T): U = canMapValues.map(v2, impl.apply(v1, _))
     }

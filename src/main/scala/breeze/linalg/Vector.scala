@@ -148,6 +148,8 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
     }
   }
 
+  implicit def handholdCMV[T]= new CanMapValues.HandHold[Vector[T], T]
+
   implicit def negFromScale[@specialized(Int, Float, Double) V, Double](implicit scale: OpMulScalar.Impl2[Vector[V], V, Vector[V]], ring: Ring[V]) = {
     new OpNeg.Impl[Vector[V], Vector[V]] {
       override def apply(a : Vector[V]) = {

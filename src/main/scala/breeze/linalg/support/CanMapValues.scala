@@ -17,6 +17,7 @@ package breeze.linalg.support
 */
 import breeze.math.Complex
 import scala.reflect.ClassTag
+import breeze.linalg.support.CanMapValues.HandHold
 
 /**
  * Marker for being able to map the keys and values in a value collection
@@ -34,6 +35,7 @@ trait CanMapValues[From, +A, B, +To] {
 }
 
 trait CanMapValuesLowPrio {
+  implicit def handHoldFromCMV[From, ValueType](implicit cmv: CanMapValues[From, ValueType, ValueType, From]) = new HandHold[From, ValueType]
 
   /*implicit*/ def canMapSelf[V, V2]: CanMapValues[V, V, V2, V2] = {
     new CanMapValues[V, V, V2, V2] {
@@ -45,6 +47,7 @@ trait CanMapValuesLowPrio {
 }
 
 object CanMapValues extends CanMapValuesLowPrio {
+  class HandHold[From, ValueType]
 
   /*
   implicit def canMapSelf[V, V2]: CanMapValues[V, V, V2, V2] = {
@@ -100,4 +103,6 @@ object CanMapValues extends CanMapValuesLowPrio {
   implicit object OpArrayLD extends OpArray[Long, Double]
 
   implicit object OpArrayFD extends OpArray[Float, Double]
+
+  implicit def handholdArray[T]:HandHold[Array[T], T] = new HandHold[Array[T], T]
 }

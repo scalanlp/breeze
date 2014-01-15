@@ -1,7 +1,6 @@
 package breeze.linalg
 
-import breeze.linalg.operators._
-import breeze.linalg.support.{CanForeachValues, CanMapValues, CanCollapseAxis, CanIterateAxis}
+import breeze.linalg.support.{CanMapValues, CanCollapseAxis, CanIterateAxis}
 import breeze.generic.UFunc.{InPlaceImpl, UImpl, InPlaceImpl2, UImpl2}
 
 /**
@@ -33,6 +32,7 @@ object BroadcastedRows {
 
   }
 
+  implicit def handholdCMV[T, RowType] = new CanMapValues.HandHold[BroadcastedRows[T, RowType], RowType]
 
 
   implicit def broadcastOp[Op, T, RowType, OpResult, Result](implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, RowType],

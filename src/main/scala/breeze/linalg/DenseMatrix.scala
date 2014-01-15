@@ -476,6 +476,7 @@ with MatrixConstructors[DenseMatrix] {
         map(from, fn)
     }
   }
+  implicit def handholdCMV[T]= new CanMapValues.HandHold[DenseMatrix[T], T]
 
   implicit def canIterateValues[V]:CanTraverseValues[DenseMatrix[V], V] = {
     new CanTraverseValues[DenseMatrix[V], V] {
