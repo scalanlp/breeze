@@ -35,6 +35,7 @@ object BroadcastedRows {
   implicit def handholdCMV[T, RowType] = new CanMapValues.HandHold[BroadcastedRows[T, RowType], RowType]
 
 
+  /*
   implicit def broadcastOp[Op, T, RowType, OpResult, Result](implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, RowType],
                                                                 op: UImpl[Op, RowType, OpResult],
                                                                 cc: CanCollapseAxis[T, Axis._1.type, RowType, OpResult, Result]):UImpl[Op, BroadcastedRows[T, RowType], Result] = {
@@ -44,6 +45,7 @@ object BroadcastedRows {
       }
     }
   }
+  */
 
   implicit def broadcastInplaceOp[Op, T, RowType, RHS, OpResult](implicit handhold: CanCollapseAxis.HandHold[T, Axis._1.type, RowType],
                                                                     op: InPlaceImpl[Op, RowType],
