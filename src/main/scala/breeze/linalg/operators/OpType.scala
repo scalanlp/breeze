@@ -99,7 +99,7 @@ object OpPow extends OpPow with UFunc
  * @author dramage
  */
 sealed trait OpLT  extends OpType
-object OpLT  extends OpLT with UFunc with MappingUFunc {
+object OpLT  extends OpLT with UFunc {
   implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
     val ord = implicitly[Ordering[T]]
     new Impl2[T, T, Boolean] {
@@ -114,7 +114,7 @@ object OpLT  extends OpLT with UFunc with MappingUFunc {
  * @author dramage
  */
 sealed trait OpLTE extends OpType
-object OpLTE extends OpLTE with UFunc with MappingUFunc {
+object OpLTE extends OpLTE with UFunc {
   implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
     val ord = implicitly[Ordering[T]]
     new Impl2[T, T, Boolean] {
@@ -129,7 +129,7 @@ object OpLTE extends OpLTE with UFunc with MappingUFunc {
  * @author dramage
  */
 sealed trait OpGT  extends OpType
-object OpGT  extends OpGT with UFunc with MappingUFunc {
+object OpGT  extends OpGT with UFunc {
   implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
     val ord = implicitly[Ordering[T]]
     new Impl2[T, T, Boolean] {
@@ -144,7 +144,7 @@ object OpGT  extends OpGT with UFunc with MappingUFunc {
  * @author dramage
  */
 sealed trait OpGTE extends OpType
-object OpGTE extends OpGTE with UFunc with MappingUFunc {
+object OpGTE extends OpGTE with UFunc {
   implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
     val ord = implicitly[Ordering[T]]
     new Impl2[T, T, Boolean] {
@@ -159,7 +159,7 @@ object OpGTE extends OpGTE with UFunc with MappingUFunc {
  * @author dramage
  */
 sealed trait OpEq  extends OpType
-object OpEq  extends OpEq with UFunc with MappingUFunc {
+object OpEq  extends OpEq with UFunc {
   implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
     val ord = implicitly[Ordering[T]]
     new Impl2[T, T, Boolean] {
@@ -174,7 +174,7 @@ object OpEq  extends OpEq with UFunc with MappingUFunc {
  * @author dramage
  */
 sealed trait OpNe  extends OpType
-object OpNe  extends OpNe with UFunc with MappingUFunc {
+object OpNe  extends OpNe with UFunc {
   implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
     val ord = implicitly[Ordering[T]]
     new Impl2[T, T, Boolean] {
@@ -221,7 +221,7 @@ object OpXor extends OpXor with UFunc
  * @author dramage
  */
 sealed trait OpNeg extends OpType
-object OpNeg extends OpNeg with UFunc with MappingUFunc {
+object OpNeg extends OpNeg with UFunc {
   implicit def ringNegation[S:Ring] = new Impl[S, S] {
     def apply(v: S): S = implicitly[Ring[S]].negate(v)
   }

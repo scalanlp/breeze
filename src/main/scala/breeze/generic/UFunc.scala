@@ -43,7 +43,7 @@ import breeze.generic.UFunc.{InPlaceImpl2, UImpl2}
  *
  *@author dlwh
  */
-trait UFunc extends MappingUFunc {
+trait UFunc {
   final def apply[@specialized(Int, Double, Float) V,
                   @specialized(Int, Double, Float) VR]
                   (v: V)(implicit impl: Impl[V, VR]):VR = impl(v)
@@ -68,9 +68,7 @@ trait UFunc extends MappingUFunc {
   type Impl3[V1, V2, V3, VR] = UFunc.UImpl3[this.type, V1, V2, V3, VR]
   type InPlaceImpl[V] = UFunc.InPlaceImpl[this.type, V]
   type InPlaceImpl2[V1, V2] = UFunc.InPlaceImpl2[this.type, V1, V2]
-}
 
-trait MappingUFunc extends UFuncX { this: UFunc =>
 
 
   implicit def canZipMapValuesImpl[T, V1, VR, U](implicit handhold: CanMapValues.HandHold[T, V1], impl: Impl2[V1, V1, VR], canZipMapValues: CanZipMapValues[T, V1, VR, U]): Impl2[T, T, U] = {
@@ -78,6 +76,11 @@ trait MappingUFunc extends UFuncX { this: UFunc =>
       def apply(v1: T, v2: T): U = canZipMapValues.map(v1, v2, impl.apply)
     }
   }
+}
+
+trait MappingUFunc extends UFuncX { this: UFunc =>
+
+
 
 }
 

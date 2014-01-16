@@ -494,6 +494,19 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert( (one :> zero) === DenseMatrix.ones[Boolean](5, 6))
   }
 
+  test("Some ill-typedness") {
+    import shapeless.test.illTyped
+    illTyped {
+      """
+        val one = DenseMatrix.ones[Double](5, 6)
+        val z = DenseVector.zeros[Double](5)
+        (z + one)
+      """
+
+    }
+
+  }
+
 
 }
 
