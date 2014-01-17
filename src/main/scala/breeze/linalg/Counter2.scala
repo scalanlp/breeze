@@ -250,6 +250,9 @@ object Counter2 extends LowPriorityCounter2 with Counter2Ops {
       result
     }
   }
+
+  implicit def handholdCanMapRows[K1, K2, V]: CanCollapseAxis.HandHold[Counter2[K1, K2, V], Axis._0.type, Counter[K1, V]] = new CanCollapseAxis.HandHold[Counter2[K1, K2, V], Axis._0.type, Counter[K1, V]]()
+
   /**
    * Returns a Counter[K1, V]
    * @tparam V
@@ -265,6 +268,8 @@ object Counter2 extends LowPriorityCounter2 with Counter2Ops {
       result
     }
   }
+  implicit def handholdCanMapCols[K1, K2, V]: CanCollapseAxis.HandHold[Counter2[K1, K2, V], Axis._1.type, Counter[K2, V]] = new CanCollapseAxis.HandHold[Counter2[K1, K2, V], Axis._1.type, Counter[K2, V]]()
+
 
 
 
@@ -299,7 +304,6 @@ trait LowPriorityCounter2 {
     }
   }
 
-  implicit def handholdCanMapRows[K1, K2, V]: CanCollapseAxis.HandHold[Counter2[K1, K2, V], Axis._0.type, Counter[K1, V]] = new CanCollapseAxis.HandHold[Counter2[K1, K2, V], Axis._0.type, Counter[K1, V]]()
 
   /**
    * Returns a Counter[K1, V]
@@ -316,7 +320,6 @@ trait LowPriorityCounter2 {
       result
     }
   }
-  implicit def handholdCanMapCols[K1, K2, V]: CanCollapseAxis.HandHold[Counter2[K1, K2, V], Axis._1.type, Counter[K2, V]] = new CanCollapseAxis.HandHold[Counter2[K1, K2, V], Axis._1.type, Counter[K2, V]]()
 
 }
 
