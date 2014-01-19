@@ -7,7 +7,7 @@ import java.util
 import breeze.macros.expand
 import breeze.math._
 import scala.math.BigInt
-import breeze.generic.{UFunc, UFunc2ZippingImplicits}
+import breeze.generic.{UFunc}
 import scala.specialized
 import breeze.storage.DefaultArrayValue
 import breeze.generic.UFunc.UImpl
@@ -262,7 +262,7 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
 
 }
 
-trait SparseVectorOps extends UFunc2ZippingImplicits[SparseVector]{ this: SparseVector.type =>
+trait SparseVectorOps { this: SparseVector.type =>
   import breeze.math.PowImplicits._
 
 

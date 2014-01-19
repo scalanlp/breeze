@@ -166,12 +166,4 @@ object UFunc {
 
 }
 
-import breeze.generic.UFunc.UImpl2
-
-/* Sadly we have to specialize these for types we want to use. Rawr */
-trait UFunc2ZippingImplicits[T[_]] {
-
-
-
-}
 

@@ -7,7 +7,6 @@ import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 import breeze.macros.expand
 import breeze.math.Complex
 import scala.math.BigInt
-import breeze.generic.UFunc2ZippingImplicits
 import breeze.linalg.support.{CanCollapseAxis, CanSlice2}
 import breeze.util.ArrayUtil
 import breeze.storage.DefaultArrayValue
@@ -312,7 +311,7 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
 
 }
 
-trait DenseMatrixOpsLowPrio extends UFunc2ZippingImplicits[DenseMatrix] { this: DenseMatrixOps =>
+trait DenseMatrixOpsLowPrio { this: DenseMatrixOps =>
   // LOL, if we explicitly annotate the type, then the implicit resolution thing will load this recursively.
   // If we don't, then everything works ok.
   @expand

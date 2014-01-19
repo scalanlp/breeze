@@ -6,7 +6,6 @@ import breeze.linalg.{DenseMatrix, SparseVector}
 import breeze.math._
 import breeze.storage.DefaultArrayValue
 import scala.reflect.ClassTag
-import breeze.generic.UFunc2ZippingImplicits
 import java.util
 
 /**
@@ -293,7 +292,7 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
  *
  * @author dlwh
  **/
-trait CSCMatrixOpsLowPrio extends UFunc2ZippingImplicits[CSCMatrix] { this: CSCMatrixOps =>
+trait CSCMatrixOpsLowPrio { this: CSCMatrixOps =>
   @expand
   implicit def canMulM_V_def[@expand.args(Int, Float, Double, Long, Complex) T, A, B](implicit bb :  B <:< Vector[T]) = (
     implicitly[OpMulMatrix.Impl2[CSCMatrix[T], Vector[T], Vector[T]]].asInstanceOf[breeze.linalg.operators.OpMulMatrix.Impl2[A, B, Vector[T]]]
