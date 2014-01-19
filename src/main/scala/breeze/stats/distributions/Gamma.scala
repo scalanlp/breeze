@@ -35,7 +35,7 @@ case class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasi
     throw new IllegalArgumentException("Shape and scale must be positive")
 
 
-  lazy val logNormalizer = lgamma(shape) + shape * log(scale)
+  lazy val logNormalizer: Double = lgamma(shape) + shape * log(scale)
 
   override def unnormalizedLogPdf(x : Double) = (shape - 1) * log(x) - x/scale
 
