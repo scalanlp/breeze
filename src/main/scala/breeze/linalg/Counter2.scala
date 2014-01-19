@@ -150,13 +150,6 @@ object Counter2 extends LowPriorityCounter2 with Counter2Ops {
     rv
   }
 
-  // the canmapvalues implicit in UFunc should take care of this, but limits of scala type inference, blah blah blah
-  implicit def mapUFuncImpl[Tag, K1, K2, V,  U](implicit impl: UFunc.UImpl[Tag, V, U], canMapValues: CanMapValues[Counter2[K1, K2, V], V, U, Counter2[K1, K2, U]]): UFunc.UImpl[Tag, Counter2[K1, K2, V], Counter2[K1, K2, U]] = {
-    new UFunc.UImpl[Tag, Counter2[K1, K2, V], Counter2[K1, K2, U]] {
-      def apply(v: Counter2[K1, K2, V]): Counter2[K1, K2, U] = canMapValues.map(v, impl.apply)
-    }
-  }
-
 
   implicit def CanMapValuesCounter[K1, K2, V, RV:Semiring:DefaultArrayValue]: CanMapValues[Counter2[K1, K2, V], V, RV, Counter2[K1, K2, RV]]
   = new CanMapValues[Counter2[K1, K2, V],V,RV,Counter2[K1, K2, RV]] {
@@ -320,6 +313,8 @@ trait LowPriorityCounter2 {
       result
     }
   }
+
+
 
 }
 
