@@ -16,9 +16,16 @@ import scala.reflect.ClassTag
 trait DenseMatrixMultiplyStuff extends DenseMatrixOps with DenseMatrixMultOps { this: DenseMatrix.type =>
   implicit object DenseMatrixDMulDenseMatrixD
     extends OpMulMatrix.Impl2[DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double]] {
-    def apply(a : DenseMatrix[Double], b : DenseMatrix[Double]) = {
-      val rv = DenseMatrix.zeros[Double](a.rows, b.cols)
-      require(a.cols == b.rows, "Dimension mismatch!")
+    def apply(_a : DenseMatrix[Double], _b : DenseMatrix[Double]): DenseMatrix[Double] = {
+      require(_a.cols == _b.rows, "Dimension mismatch!")
+      val rv = DenseMatrix.zeros[Double](_a.rows, _b.cols)
+
+      if(_a.rows == 0 || _b.rows == 0 || _a.cols == 0 || _b.cols == 0) return rv
+
+      // if we have a weird stride...
+      val a:DenseMatrix[Double] = if(_a.majorStride < math.max(if(_a.isTranspose) _a.cols else _a.rows, 1)) _a.copy else _a
+      val b:DenseMatrix[Double] = if(_b.majorStride < math.max(if(_b.isTranspose) _b.cols else _b.rows, 1)) _b.copy else _b
+
       blas.dgemm(transposeString(a), transposeString(b),
         rv.rows, rv.cols, a.cols,
         1.0, a.data, a.offset, a.majorStride,

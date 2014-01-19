@@ -356,7 +356,7 @@ with MatrixConstructors[DenseMatrix] {
   implicit def canSliceRows[V]: CanSlice2[DenseMatrix[V], Range, ::.type, DenseMatrix[V]] = {
     new CanSlice2[DenseMatrix[V], Range, ::.type, DenseMatrix[V]] {
       def apply(m: DenseMatrix[V], rows: Range, ignored: ::.type) = {
-        if(rows.isEmpty) new DenseMatrix(0, 0, m.data, 0, 0)
+        if(rows.isEmpty) new DenseMatrix(0, m.cols, m.data, 0, 0)
         else if(!m.isTranspose) {
           require(rows.step == 1, "Sorry, we can't support row ranges with step sizes other than 1")
           val first = rows.head
@@ -379,7 +379,7 @@ with MatrixConstructors[DenseMatrix] {
   implicit def canSliceCols[V]: CanSlice2[DenseMatrix[V], ::.type, Range, DenseMatrix[V]] = {
     new CanSlice2[DenseMatrix[V], ::.type, Range, DenseMatrix[V]] {
       def apply(m: DenseMatrix[V], ignored: ::.type, cols: Range) = {
-        if(cols.isEmpty) new DenseMatrix(0, 0, m.data, 0, 1)
+        if(cols.isEmpty) new DenseMatrix(m.rows, 0, m.data, 0, 1)
         else if(!m.isTranspose) {
           val first = cols.head
           new DenseMatrix(m.rows, cols.length, m.data, m.offset + first * m.majorStride, m.majorStride * cols.step)
