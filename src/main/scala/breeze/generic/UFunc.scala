@@ -61,6 +61,7 @@ trait UFunc {
 
   final def inPlace[V](v: V)(implicit impl: UFunc.InPlaceImpl[this.type, V]) = impl(v)
   final def inPlace[V, V2](v: V, v2: V2)(implicit impl: UFunc.InPlaceImpl2[this.type, V, V2]) = impl(v, v2)
+  final def inPlace[V, V2, V3](v: V, v2: V2, v3: V3)(implicit impl: UFunc.InPlaceImpl3[this.type, V, V2, V3]) = impl(v, v2, v3)
 
 
   type Impl[V, VR] = UFunc.UImpl[this.type, V, VR]
@@ -68,6 +69,7 @@ trait UFunc {
   type Impl3[V1, V2, V3, VR] = UFunc.UImpl3[this.type, V1, V2, V3, VR]
   type InPlaceImpl[V] = UFunc.InPlaceImpl[this.type, V]
   type InPlaceImpl2[V1, V2] = UFunc.InPlaceImpl2[this.type, V1, V2]
+  type InPlaceImpl3[V1, V2, V3] = UFunc.InPlaceImpl3[this.type, V1, V2, V3]
 
 
 
@@ -136,6 +138,10 @@ object UFunc {
 
   trait InPlaceImpl2[Tag, V,  @specialized(Int, Double, Float) V2] {
     def apply(v: V, v2: V2)
+  }
+
+  trait InPlaceImpl3[Tag, V,  V2, V3] {
+    def apply(v: V, v2: V2, v3: V3)
   }
 
   // implicits for add impl's

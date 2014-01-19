@@ -352,6 +352,13 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert( (a :> b) === BitVector(false, false, true))
   }
 
+  test("clip") {
+    val dv = DenseVector.range(0, 10)
+    assert(clip(dv, 1, 8) === DenseVector(1,1,2,3,4,5,6,7,8,8))
+    clip.inPlace(dv, 1, 8)
+    assert(dv === DenseVector(1,1,2,3,4,5,6,7,8,8))
+  }
+
 }
 
 /**
