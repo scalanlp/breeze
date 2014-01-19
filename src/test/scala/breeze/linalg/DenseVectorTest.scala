@@ -352,6 +352,16 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert( (a :> b) === BitVector(false, false, true))
   }
 
+  test("any and all") {
+    val a = DenseVector(1, 2, 3)
+    val b = DenseVector(1, 4, 1)
+    assert( any(a :== b))
+    assert( !all(a :== b))
+    assert( any(a :== a))
+    assert( all(a :== a))
+    assert( !any(a :== (b - 1)))
+  }
+
 }
 
 /**
