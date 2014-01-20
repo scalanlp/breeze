@@ -4,8 +4,8 @@ package breeze.signal.support
  * Created by Kenta on 1/9/14.
  */
 import breeze.linalg.{DenseVector, DenseMatrix}
-import breeze.math.Complex
-import breeze.signal.support.JTransformsSupport._
+//import breeze.math.Complex
+//import breeze.signal.support.JTransformsSupport._
 
 
 //ToDo 1: provide convolve of Integer and other DenseVectors
@@ -21,7 +21,7 @@ import breeze.signal.support.JTransformsSupport._
  * @author ktakagaki
  */
 trait CanConvolve[InputType, OutputType] {
-  def apply(kernel: InputType, data: InputType, overhangOpt: OverhangOpt): OutputType
+  def apply(kernel: InputType, data: InputType, overhangOpt: OptOverhang): OutputType
 }
 
 /**
@@ -39,9 +39,9 @@ object CanConvolve {
     */
   implicit val dvDouble1DConvolve : CanConvolve[DenseVector[Double], DenseVector[Double]] = {
     new CanConvolve[DenseVector[Double], DenseVector[Double]] {
-      def apply(kernel: DenseVector[Double], data: DenseVector[Double], overhangOpt: OverhangOpt) = {
-        overhangOpt match  {
-          case x: OverhangOpt.Default => {
+      def apply(kernel: DenseVector[Double], data: DenseVector[Double], optOverhang: OptOverhang) = {
+        optOverhang match  {
+          case x: OptOverhang.Default => {
             require(kernel.length <= data.length, "kernel length must be shorter or equal to data")
             //for(cRes <- 0 until (data.length - kernel.length +1) ) yield sum(kernel :* data(cRes until cRes + kernel.length))
             val tempRet = new Array[Double](data.length - kernel.length +1)
@@ -70,15 +70,15 @@ object CanConvolve {
 
 }
 
-abstract class OverhangOpt
-object OverhangOpt{
-  case class Default() extends OverhangOpt
-  case class Sequence(k: (Integer, Integer)) extends OverhangOpt
-  case class Integer(k: Integer) extends OverhangOpt
+abstract class OptOverhang
+object OptOverhang{
+  case class Default() extends OptOverhang
+  case class Sequence(k0: Int, k1: Int) extends OptOverhang
+  case class Integer(k: Int) extends OptOverhang
 }
 
-abstract class PaddingOpt
-object PaddingOpt{
-  case class None() extends PaddingOpt
-  case class Value[T](value: T) extends PaddingOpt
+abstract class OptPadding
+object OptPadding{
+  case class None() extends OptPadding
+  case class Value[T](value: T) extends OptPadding
 }

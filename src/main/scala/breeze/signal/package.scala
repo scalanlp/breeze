@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import breeze.signal.support.{OverhangOpt, CanConvolve, CanFFT, CanIFFT}
+import breeze.signal.support.{OptOverhang, CanConvolve, CanFFT, CanIFFT}
 
 /**This package provides digital signal processing functions.
  *
@@ -72,9 +72,9 @@ package object signal {
     * @param canConvolve implicit delegate which is used for implementation. End-users should not use this argument.
     * @return
     */
-  def convolve[Input, Output](kernel: Input, data: Input, overhangOpt: OverhangOpt = OverhangOpt.Default())
+  def convolve[Input, Output](kernel: Input, data: Input, optOverhang: OptOverhang = OptOverhang.Default())
                              (implicit canConvolve: CanConvolve[Input, Output]): Output =
-    canConvolve(kernel, data, overhangOpt)
+    canConvolve(kernel, data, optOverhang)
 
   // </editor-fold>
 
