@@ -52,13 +52,20 @@ object CSVReader {
  */
 object CSVWriter {
   def write(output: Writer,
-            mat: IndexedSeq[IndexedSeq[String]],
+            mat: TraversableOnce[IndexedSeq[String]],
             separator: Char=',',
             quote: Char='"',
             escape: Char='\\') {
     val writer = new OpenCSVWriter(output, separator, quote, escape)
     import scala.collection.JavaConverters._
-    writer.writeAll(mat.map(_.toArray).asJava)
+    mat match {
+      case Seq(x @ _*) => writer.writeAll(x.map(_.toArray).asJava)
+      case _ =>
+        for(l <- mat) {
+          writer.writeNext(l.toArray)
+        }
+    }
+    writer.flush()
   }
 
   def writeFile(file: File,

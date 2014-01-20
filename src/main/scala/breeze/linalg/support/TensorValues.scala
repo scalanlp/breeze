@@ -16,7 +16,6 @@ package support
  limitations under the License.
 */
 
-import breeze.generic.CanMapValues
 
 /**
  * Class that is kind of like a collection view of the values in a tensor.

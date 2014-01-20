@@ -1,4 +1,8 @@
 package breeze.linalg.operators
+
+import breeze.generic.{MappingUFunc, UFunc}
+import breeze.math.{Field, Semiring, Ring}
+
 /*
  Copyright 2012 Daniel Ramage
 
@@ -31,7 +35,11 @@ sealed trait OpType
  * @author dramage
  */
 sealed trait OpAdd extends OpType
-object OpAdd extends OpAdd
+object OpAdd extends OpAdd with UFunc {
+  implicit def opAddFromSemiring[S:Semiring]: Impl2[S, S, S] = new Impl2[S, S, S] {
+    def apply(v: S, v2: S): S = implicitly[Semiring[S]].+(v, v2)
+  }
+}
 
 /**
  * Type marker for BinaryOp A :- B and BinaryUpdateOp A :-= B.
@@ -39,7 +47,11 @@ object OpAdd extends OpAdd
  * @author dramage
  */
 sealed trait OpSub extends OpType
-object OpSub extends OpSub
+object OpSub extends OpSub with UFunc {
+  implicit def opSubFromRing[S:Ring]: Impl2[S, S, S] = new Impl2[S, S, S] {
+    def apply(v: S, v2: S): S = implicitly[Ring[S]].-(v, v2)
+  }
+}
 
 /**
  * Type marker for BinaryOp A :* B and BinaryUpdateOp A :*= B.
@@ -47,7 +59,11 @@ object OpSub extends OpSub
  * @author dramage
  */
 sealed trait OpMulScalar extends OpType
-object OpMulScalar extends OpMulScalar
+object OpMulScalar extends OpMulScalar with UFunc {
+  implicit def opMulScalarFromSemiring[S:Semiring]: Impl2[S, S, S] = new Impl2[S, S, S] {
+    def apply(v: S, v2: S): S = implicitly[Semiring[S]].*(v, v2)
+  }
+}
 
 /**
  * Type marker for BinaryOp A :/ B and BinaryUpdateOp A:/= B.
@@ -55,7 +71,11 @@ object OpMulScalar extends OpMulScalar
  * @author dramage
  */
 sealed trait OpDiv extends OpType
-object OpDiv extends OpDiv
+object OpDiv extends OpDiv with UFunc {
+  implicit def opDivFromField[S:Field]: Impl2[S, S, S] = new Impl2[S, S, S] {
+    def apply(v: S, v2: S): S = implicitly[Field[S]]./(v, v2)
+  }
+}
 
 /**
  * Type marker for BinaryOp A :% B and BinaryUpdateOp A:%= B.
@@ -63,7 +83,7 @@ object OpDiv extends OpDiv
  * @author dramage
  */
 sealed trait OpMod extends OpType
-object OpMod extends OpMod
+object OpMod extends OpMod with UFunc
 
 /**
  * Type marker for BinaryOp A :^ B and BinaryUpdateOp A:^= B.
@@ -71,7 +91,7 @@ object OpMod extends OpMod
  * @author dramage
  */
 sealed trait OpPow extends OpType
-object OpPow extends OpPow
+object OpPow extends OpPow with UFunc
 
 /**
  * Type marker for BinaryOp A :&lt B.
@@ -79,7 +99,14 @@ object OpPow extends OpPow
  * @author dramage
  */
 sealed trait OpLT  extends OpType
-object OpLT  extends OpLT
+object OpLT  extends OpLT with UFunc {
+  implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
+    val ord = implicitly[Ordering[T]]
+    new Impl2[T, T, Boolean] {
+      def apply(v: T, v2: T): Boolean = ord.lt(v, v2)
+    }
+  }
+}
 
 /**
  * Type marker for BinaryOp A :&lt= B.
@@ -87,7 +114,14 @@ object OpLT  extends OpLT
  * @author dramage
  */
 sealed trait OpLTE extends OpType
-object OpLTE extends OpLTE
+object OpLTE extends OpLTE with UFunc {
+  implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
+    val ord = implicitly[Ordering[T]]
+    new Impl2[T, T, Boolean] {
+      def apply(v: T, v2: T): Boolean = ord.lteq(v, v2)
+    }
+  }
+}
 
 /**
  * Type marker for BinaryOp A :&gt B.
@@ -95,7 +129,14 @@ object OpLTE extends OpLTE
  * @author dramage
  */
 sealed trait OpGT  extends OpType
-object OpGT  extends OpGT
+object OpGT  extends OpGT with UFunc {
+  implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
+    val ord = implicitly[Ordering[T]]
+    new Impl2[T, T, Boolean] {
+      def apply(v: T, v2: T): Boolean = ord.gt(v, v2)
+    }
+  }
+}
 
 /**
  * Type marker for BinaryOp A :&gt= B.
@@ -103,7 +144,14 @@ object OpGT  extends OpGT
  * @author dramage
  */
 sealed trait OpGTE extends OpType
-object OpGTE extends OpGTE
+object OpGTE extends OpGTE with UFunc {
+  implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
+    val ord = implicitly[Ordering[T]]
+    new Impl2[T, T, Boolean] {
+      def apply(v: T, v2: T): Boolean = ord.gteq(v, v2)
+    }
+  }
+}
 
 /**
  * Type marker for BinaryOp A :== B.
@@ -111,7 +159,14 @@ object OpGTE extends OpGTE
  * @author dramage
  */
 sealed trait OpEq  extends OpType
-object OpEq  extends OpEq
+object OpEq  extends OpEq with UFunc {
+  implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
+    val ord = implicitly[Ordering[T]]
+    new Impl2[T, T, Boolean] {
+      def apply(v: T, v2: T): Boolean = ord.equiv(v, v2)
+    }
+  }
+}
 
 /**
  * Type marker for BinaryOp A :!= B.
@@ -119,7 +174,14 @@ object OpEq  extends OpEq
  * @author dramage
  */
 sealed trait OpNe  extends OpType
-object OpNe  extends OpNe
+object OpNe  extends OpNe with UFunc {
+  implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
+    val ord = implicitly[Ordering[T]]
+    new Impl2[T, T, Boolean] {
+      def apply(v: T, v2: T): Boolean = !ord.equiv(v, v2)
+    }
+  }
+}
 
 /**
  * Type marker for BinaryUpdateOp A := B.
@@ -127,7 +189,7 @@ object OpNe  extends OpNe
  * @author dramage
  */
 sealed trait OpSet extends OpType
-object OpSet extends OpSet
+object OpSet extends OpSet with UFunc
 
 /**
  * Type marker for BinaryOp A :&& B
@@ -135,7 +197,7 @@ object OpSet extends OpSet
  * @author dramage
  */
 sealed trait OpAnd extends OpType
-object OpAnd extends OpAnd
+object OpAnd extends OpAnd with UFunc
 
 /**
  * Type marker for BinaryOp A :|| B
@@ -143,7 +205,7 @@ object OpAnd extends OpAnd
  * @author dramage
  */
 sealed trait OpOr extends OpType
-object OpOr extends OpOr
+object OpOr extends OpOr with UFunc
 
 /**
  * Type marker for BinaryOp A :^^ B
@@ -151,7 +213,7 @@ object OpOr extends OpOr
  * @author dramage
  */
 sealed trait OpXor extends OpType
-object OpXor extends OpXor
+object OpXor extends OpXor with UFunc
 
 /**
  * Type marker for UnaryOp -A.
@@ -159,7 +221,11 @@ object OpXor extends OpXor
  * @author dramage
  */
 sealed trait OpNeg extends OpType
-object OpNeg extends OpNeg
+object OpNeg extends OpNeg with UFunc {
+  implicit def ringNegation[S:Ring] = new Impl[S, S] {
+    def apply(v: S): S = implicitly[Ring[S]].negate(v)
+  }
+}
 
 /**
  * Type marker for UnaryOp !A.
@@ -167,7 +233,7 @@ object OpNeg extends OpNeg
  * @author dramage
  */
 sealed trait OpNot extends OpType
-object OpNot extends OpNot
+object OpNot extends OpNot with UFunc
 
 
 /**
@@ -176,7 +242,11 @@ object OpNot extends OpNot
  * @author dramage
  */
 sealed trait OpMulInner extends OpType
-object OpMulInner extends OpMulInner
+object OpMulInner extends OpMulInner with UFunc {
+  def opMulInnerFromSemiring[S:Semiring]: OpMulInner.Impl2[S, S, S] = new Impl2[S, S, S] {
+    def apply(v: S, v2: S): S = implicitly[Semiring[S]].*(v, v2)
+  }
+}
 
 
 /**
@@ -185,7 +255,7 @@ object OpMulInner extends OpMulInner
  * @author dramage
  */
 sealed trait OpSolveMatrixBy extends OpType
-object OpSolveMatrixBy extends OpSolveMatrixBy
+object OpSolveMatrixBy extends OpSolveMatrixBy with UFunc
 
 
 /**
@@ -194,4 +264,5 @@ object OpSolveMatrixBy extends OpSolveMatrixBy
  * @author dramage
  */
 sealed trait OpMulMatrix extends OpType
-object OpMulMatrix extends OpMulMatrix
+object OpMulMatrix extends OpMulMatrix with UFunc
+

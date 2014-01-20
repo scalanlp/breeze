@@ -15,10 +15,10 @@ package breeze.linalg
  limitations under the License.
 */
 
-import operators._
 import scala.{specialized=>spec}
 import breeze.generic._
 import breeze.linalg.support._
+import breeze.linalg.operators._
 import breeze.math.{Complex, TensorSpace, Semiring, Ring}
 import breeze.util.{ArrayUtil, Isomorphism}
 import breeze.storage.DefaultArrayValue
@@ -27,6 +27,7 @@ import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import breeze.macros.expand
 import breeze.numerics.IntMath
 import scala.math.BigInt
+import CanTraverseValues.ValuesVisitor
 
 /**
  * A DenseVector is the "obvious" implementation of a Vector, with one twist.
@@ -92,11 +93,6 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
 
   override def toString = {
     valuesIterator.mkString("DenseVector(",", ", ")")
-  }
-
-  override def ureduce[Final](f: URFunc[E, Final]) = {
-    if(offset == 0 && stride == 1) f(data, length)
-    else f(data, offset, stride, length, {(_:Int) => true})
   }
 
   /**
@@ -236,7 +232,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   /**
    * Vertical concatenation of two or more column vectors into one large vector.
    */
-  def vertcat[V](vectors: DenseVector[V]*)(implicit canSet: BinaryUpdateOp[DenseVector[V], DenseVector[V], OpSet], vman: ClassTag[V], dav: DefaultArrayValue[V]): DenseVector[V] = {
+  def vertcat[V](vectors: DenseVector[V]*)(implicit canSet: OpSet.InPlaceImpl2[DenseVector[V], DenseVector[V]], vman: ClassTag[V], dav: DefaultArrayValue[V]): DenseVector[V] = {
     val size = vectors.foldLeft(0)(_ + _.size)
     val result = zeros[V](size)
     var offset = 0
@@ -261,8 +257,8 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     }
   }
 
-  def binaryOpFromBinaryUpdateOp[V, Other, Op<:OpType](implicit copy: CanCopy[DenseVector[V]], op: BinaryUpdateOp[DenseVector[V], Other, Op], man: ClassTag[V]) = {
-    new BinaryOp[DenseVector[V], Other, Op, DenseVector[V]] {
+  def binaryOpFromUpdateOp[Op<:OpType, V, Other](implicit copy: CanCopy[DenseVector[V]], op: UFunc.InPlaceImpl2[Op, DenseVector[V], Other], man: ClassTag[V]):UFunc.UImpl2[Op, DenseVector[V], Other, DenseVector[V]] = {
+    new UFunc.UImpl2[Op, DenseVector[V], Other, DenseVector[V]] {
       override def apply(a : DenseVector[V], b : Other) = {
         val c = copy(a)
         op(c, b)
@@ -271,13 +267,14 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     }
   }
 
-  implicit def negFromScale[V](implicit scale: BinaryOp[DenseVector[V], V, OpMulScalar, DenseVector[V]], field: Ring[V]) = {
-    new UnaryOp[DenseVector[V], OpNeg, DenseVector[V]] {
+  implicit def negFromScale[V](implicit scale: OpMulScalar.Impl2[DenseVector[V], V, DenseVector[V]], field: Ring[V]) = {
+    new OpNeg.Impl[DenseVector[V], DenseVector[V]] {
       override def apply(a : DenseVector[V]) = {
         scale(a, field.negate(field.one))
       }
     }
   }
+
 
   implicit def canMapValues[V, V2](implicit man: ClassTag[V2]):CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] = {
     new CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] {
@@ -304,6 +301,21 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
       def mapActive(from: DenseVector[V], fn: (V) => V2) = {
         map(from, fn)
       }
+    }
+  }
+  implicit def handholdCMV[T]= new CanMapValues.HandHold[DenseVector[T], T]
+
+  implicit def canIterateValues[V]:CanTraverseValues[DenseVector[V], V] = {
+    new CanTraverseValues[DenseVector[V], V] {
+
+
+      def isTraversableAgain(from: DenseVector[V]): Boolean = true
+
+      /** Iterates all key-value pairs from the given collection. */
+      def traverse(from: DenseVector[V], fn: ValuesVisitor[V]): Unit = {
+        fn.visitArray(from.data, from.offset, from.length, from.stride)
+      }
+
     }
   }
 
@@ -423,14 +435,14 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   implicit val zipMap_f = new CanZipMapValuesDenseVector[Float, Float]
   implicit val zipMap_i = new CanZipMapValuesDenseVector[Int, Int]
 
-  implicit val canAddIntoD: BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpAdd] = {
-    new BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpAdd] {
+  implicit val canAddIntoD: OpAdd.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = {
+    new OpAdd.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
       def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
         require(a.length == b.length, "Vectors must have same length")
         blas.daxpy(
           a.length, 1.0, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
-      implicitly[BinaryUpdateRegistry[Vector[Double], Vector[Double], OpAdd]].register(this)
+      implicitly[BinaryUpdateRegistry[Vector[Double], Vector[Double], OpAdd.type]].register(this)
     }
   }
 
@@ -444,58 +456,60 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     }
   }
 
-  implicit val canAddD: BinaryOp[DenseVector[Double], DenseVector[Double], OpAdd, DenseVector[Double]] = {
+  implicit val canAddD: OpAdd.Impl2[DenseVector[Double], DenseVector[Double], DenseVector[Double]] = {
     pureFromUpdate_Double(canAddIntoD)
   }
-  implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpAdd, Vector[Double]]].register(canAddD)
+  implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpAdd.type, Vector[Double]]].register(canAddD)
 
-  implicit val canSubIntoD: BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSub] = {
-    new BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSub] {
+  implicit val canSubIntoD: OpSub.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = {
+    new OpSub.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
       def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
         require(a.length == b.length, "Vectors must have same length")
         blas.daxpy(
           a.length, -1.0, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
-      implicitly[BinaryUpdateRegistry[Vector[Double], Vector[Double], OpSub]].register(this)
+      implicitly[BinaryUpdateRegistry[Vector[Double], Vector[Double], OpSub.type]].register(this)
     }
 
   }
-  implicit val canSubD: BinaryOp[DenseVector[Double], DenseVector[Double], OpSub, DenseVector[Double]] = {
+  implicit val canSubD: OpSub.Impl2[DenseVector[Double], DenseVector[Double], DenseVector[Double]] = {
     pureFromUpdate_Double(canSubIntoD)
   }
-  implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpSub, Vector[Double]]].register(canSubD)
+  implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpSub.type, Vector[Double]]].register(canSubD)
 
-  implicit val canDotD: BinaryOp[DenseVector[Double], DenseVector[Double], OpMulInner, Double] = {
-    new BinaryOp[DenseVector[Double], DenseVector[Double], OpMulInner, Double] {
+  implicit val canDotD: OpMulInner.Impl2[DenseVector[Double], DenseVector[Double], Double] = {
+    new OpMulInner.Impl2[DenseVector[Double], DenseVector[Double], Double] {
       def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
         require(a.length == b.length, "Vectors must have same length")
         blas.ddot(
           a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
-      implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpMulInner, Double]].register(this)
+      implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpMulInner.type, Double]].register(this)
     }
 
   }
 
-  implicit val canScaleIntoD: BinaryUpdateOp[DenseVector[Double], Double, OpMulScalar] = {
-    new BinaryUpdateOp[DenseVector[Double], Double, OpMulScalar] {
+  implicit val canScaleIntoD: OpMulScalar.InPlaceImpl2[DenseVector[Double], Double] = {
+    new OpMulScalar.InPlaceImpl2[DenseVector[Double], Double] {
       def apply(a: DenseVector[Double], b: Double) = {
         blas.dscal(
           a.length, b, a.data, a.offset, a.stride)
       }
-      implicitly[BinaryUpdateRegistry[Vector[Double], Double, OpMulScalar]].register(this)
+      implicitly[BinaryUpdateRegistry[Vector[Double], Double, OpMulScalar.type]].register(this)
     }
 
   }
-  implicit val canScaleD: BinaryOp[DenseVector[Double], Double, OpMulScalar, DenseVector[Double]] {def apply(a: DenseVector[Double], b: Double): DenseVector[Double]} = binaryOpFromBinaryUpdateOp(implicitly[CanCopy[DenseVector[Double]]], canScaleIntoD, implicitly[ClassTag[Double]])
-  implicitly[BinaryRegistry[Vector[Double], Double, OpMulScalar, Vector[Double]]].register(canScaleD)
+  implicit val canScaleD: OpMulScalar.Impl2[DenseVector[Double], Double, DenseVector[Double]] = {
+    binaryOpFromUpdateOp(implicitly[CanCopy[DenseVector[Double]]], canScaleIntoD, implicitly[ClassTag[Double]])
+  }
+  implicitly[BinaryRegistry[Vector[Double], Double, OpMulScalar.type, Vector[Double]]].register(canScaleD)
 
-  implicit val canSetD:BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSet] = new BinaryUpdateOp[DenseVector[Double], DenseVector[Double], OpSet] {
+  implicit val canSetD: OpSet.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = new OpSet.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
     def apply(a: DenseVector[Double], b: DenseVector[Double]) {
       blas.dcopy(
         a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
     }
-    implicitly[BinaryUpdateRegistry[Vector[Double], Vector[Double], OpSet]].register(this)
+    implicitly[BinaryUpdateRegistry[Vector[Double], Vector[Double], OpSet.type]].register(this)
   }
 
 
@@ -505,9 +519,9 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   */
   @expand
   @expand.valify
-  implicit def canNorm[@expand.args(Int, Double, Float, Long, BigInt, Complex) T]: CanNorm[DenseVector[T], Double] = {
+  implicit def canNorm[@expand.args(Int, Double, Float, Long, BigInt, Complex) T]: norm.Impl2[DenseVector[T], Double, Double] = {
 
-    new CanNorm[DenseVector[T], Double] {
+    new norm.Impl2[DenseVector[T], Double, Double] {
       def apply(v: DenseVector[T], n: Double): Double = {
         import v._
         if (n == 1) {
@@ -547,191 +561,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
       def backward(t: DenseVector[Double]) = { assert(t.size == 2); (t(0),t(1))}
     }
   }
-}
-
-trait DenseVector_GenericOps { this: DenseVector.type =>
-  import breeze.math.PowImplicits._
-  @expand
-  implicit def pureFromUpdate[@expand.args(Int, Double, Float, Long, BigInt, Complex) T, Other,Op<:OpType](op: BinaryUpdateOp[DenseVector[T], Other, Op])(implicit copy: CanCopy[DenseVector[T]]):BinaryOp[DenseVector[T], Other, Op, DenseVector[T]] = {
-    new BinaryOp[DenseVector[T], Other, Op, DenseVector[T]] {
-      override def apply(a : DenseVector[T], b : Other) = {
-        val c = copy(a)
-        op(c, b)
-        c
-      }
-    }
-  }
-
-  implicit def pureFromUpdate[T, Other, Op<:OpType](op: BinaryUpdateOp[DenseVector[T], Other, Op])(implicit copy: CanCopy[DenseVector[T]]):BinaryOp[DenseVector[T], Other, Op, DenseVector[T]] = {
-    new BinaryOp[DenseVector[T], Other, Op, DenseVector[T]] {
-      override def apply(a : DenseVector[T], b : Other) = {
-        val c = copy(a)
-        op(c, b)
-        c
-      }
-    }
-  }
-
-  implicit def canSet_DV_Generic[V]: BinaryUpdateOp[DenseVector[V], V, breeze.linalg.operators.OpSet] = {
-    new BinaryUpdateOp[DenseVector[V], V, breeze.linalg.operators.OpSet] {
-      def apply(a: DenseVector[V], b: V) {
-        val ad = a.data
-        if(a.stride == 1) {
-          ArrayUtil.fill(ad, a.offset, a.length, b)
-          return
-        }
-
-        var i = 0
-        var aoff = a.offset
-        while(i < a.length) {
-          ad(aoff) = b
-          aoff += a.stride
-          i += 1
-        }
-
-      }
-    }
-  }
-
-  implicit def canSet_DV_DV_Generic[V]: BinaryUpdateOp[DenseVector[V], DenseVector[V], breeze.linalg.operators.OpSet] = {
-    new BinaryUpdateOp[DenseVector[V], DenseVector[V], breeze.linalg.operators.OpSet] {
-      def apply(a: DenseVector[V], b: DenseVector[V]) {
-        require(b.length == a.length, "Vectors must be the same length!")
-        if(a.stride == b.stride && a.stride == 1) {
-          System.arraycopy(b.data, b.offset, a.data, a.offset, a.length)
-          return
-        }
-
-        val ad = a.data
-        val bd = b.data
-        var aoff = a.offset
-        var boff = b.offset
-
-        var i = 0
-        while(i < a.length) {
-          ad(aoff) = bd(boff)
-          aoff += a.stride
-          boff += b.stride
-          i += 1
-        }
-
-      }
-    }
-  }
-
-  implicit def canGaxpy[V:Semiring]: CanAxpy[V, DenseVector[V], DenseVector[V]] = {
-    new CanAxpy[V, DenseVector[V], DenseVector[V]] {
-      val ring = implicitly[Semiring[V]]
-      def apply(s: V, b: DenseVector[V], a: DenseVector[V]) {
-      require(b.length == a.length, "Vectors must be the same length!")
-      val ad = a.data
-      val bd = b.data
-      var aoff = a.offset
-      var boff = b.offset
-
-      var i = 0
-      while(i < a.length) {
-        ad(aoff) = ring.+(ad(aoff),ring.*(s, bd(boff)))
-        aoff += a.stride
-        boff += b.stride
-        i += 1
-      }
-      }
-    }
-  }
-
 
 
 }
-
-
-
-trait DenseVector_OrderingOps extends DenseVectorOps { this: DenseVector.type =>
-
-  @expand
-  implicit def dv_dv_Op[@expand.args(Int, Double, Float, Long, BigInt) T,
-  @expand.args(OpGT, OpGTE, OpLTE, OpLT, OpEq, OpNe) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ > _},  {_ >= _}, {_ <= _}, {_ < _}, { _ == _}, {_ != _})
-  op: BinaryOp[T, T, Op, T]):BinaryOp[DenseVector[T], DenseVector[T], Op, BitVector] = new BinaryOp[DenseVector[T], DenseVector[T], Op, BitVector] {
-    def apply(a: DenseVector[T], b: DenseVector[T]): BitVector = {
-      val ad = a.data
-      val bd = b.data
-      var aoff = a.offset
-      var boff = b.offset
-      val result = BitVector.zeros(a.length)
-
-      var i = 0
-      while(i < a.length) {
-        result(i) = op(ad(aoff), bd(boff))
-        aoff += a.stride
-        boff += b.stride
-        i += 1
-      }
-      result
-    }
-  }
-
-  @expand
-  implicit def dv_v_Op[@expand.args(Int, Double, Float, Long, BigInt) T,
-  @expand.args(OpGT, OpGTE, OpLTE, OpLT, OpEq, OpNe) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ > _},  {_ >= _}, {_ <= _}, {_ < _}, { _ == _}, {_ != _})
-  op: BinaryOp[T, T, Op, Boolean]):BinaryOp[DenseVector[T], Vector[T], Op, BitVector] = new BinaryOp[DenseVector[T], Vector[T], Op, BitVector] {
-    def apply(a: DenseVector[T], b: Vector[T]): BitVector = {
-      val ad = a.data
-      var aoff = a.offset
-      val result = BitVector.zeros(a.length)
-
-      var i = 0
-      while(i < a.length) {
-        result(i) = op(ad(aoff), b(i))
-        aoff += a.stride
-        i += 1
-      }
-      result
-    }
-  }
-
-
-  @expand
-  implicit def dv_s_CompOp[@expand.args(Int, Double, Float, Long, BigInt) T,
-  @expand.args(OpGT, OpGTE, OpLTE, OpLT, OpEq, OpNe) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ > _},  {_ >= _}, {_ <= _}, {_ < _}, { _ == _}, {_ != _})
-  op: BinaryOp[T, T, Op, Boolean]):BinaryOp[DenseVector[T], T, Op, BitVector] = new BinaryOp[DenseVector[T], T, Op, BitVector] {
-    def apply(a: DenseVector[T], b: T): BitVector = {
-      val ad = a.data
-      var aoff = a.offset
-      val result = BitVector.zeros(a.length)
-
-      var i = 0
-      while(i < a.length) {
-        result(i) = op(ad(aoff), b)
-        aoff += a.stride
-        i += 1
-      }
-      result
-    }
-  }
-
-
-
-
-
-}
-
-trait DenseVector_SpecialOps extends DenseVectorOps { this: DenseVector.type =>
-
-
-  implicit val canDot_DV_DV_Float: BinaryOp[DenseVector[Float], DenseVector[Float], breeze.linalg.operators.OpMulInner, Float] = {
-    new BinaryOp[DenseVector[Float], DenseVector[Float], breeze.linalg.operators.OpMulInner, Float] {
-      def apply(a: DenseVector[Float], b: DenseVector[Float]) = {
-        require(b.length == a.length, "Vectors must be the same length!")
-        blas.sdot(
-          a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
-      }
-      implicitly[BinaryRegistry[Vector[Float], Vector[Float], OpMulInner, Float]].register(this)
-    }
-  }
-}
-
-
 

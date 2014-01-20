@@ -275,7 +275,9 @@ object LinearProgram {
   implicit val mySolver = try {
     NativeLPSolver
   } catch {
-    case _ =>
+    case ex: SecurityException =>
+      ApacheSimplexSolver
+    case ex: UnsatisfiedLinkError =>
       ApacheSimplexSolver
   }
 
@@ -308,6 +310,7 @@ object LinearProgram {
   }
 
   object NativeLPSolver extends Solver {
+    LpSolve.lpSolveVersion()
     def maximize(lp: LinearProgram)(objective: lp.Problem): lp.Result = {
       val lpsol = LpSolve.makeLp(0, lp.variables.length)
       try {

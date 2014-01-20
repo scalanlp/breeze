@@ -19,7 +19,7 @@ package math
 
 
 import scala.math._
-import numerics.{logSum,logDiff}
+import breeze.linalg.{softmax, logDiff}
 
 /**
  * Represents a double in log space, to prevent under/overflow
@@ -34,18 +34,16 @@ class LogDouble(val logValue: Double) {
 
   def /(other: LogDouble) = new LogDouble(logValue - other.logValue)
 
-  def +(other: LogDouble) = new LogDouble(logSum(logValue, other.logValue))
+  def +(other: LogDouble) = new LogDouble(softmax(logValue, other.logValue))
 
   def -(other: LogDouble) = new LogDouble(logDiff(logValue, other.logValue))
 
-
-  import LogDouble.doubleExtra
 
   def *(d: Double) = new LogDouble(logValue + log(d))
 
   def /(d: Double) = new LogDouble(logValue - log(d))
 
-  def +(d: Double) = new LogDouble(logSum(logValue, log(d)))
+  def +(d: Double) = new LogDouble(softmax(logValue, log(d)))
 
   def -(d: Double) = new LogDouble(logDiff(logValue, log(d)))
 
@@ -78,7 +76,7 @@ object LogDouble {
 
     def /(o: LogDouble) = new LogDouble(scala.math.log(d) - o.logValue)
 
-    def +(o: LogDouble) = new LogDouble(logSum(o.logValue, scala.math.log(d)))
+    def +(o: LogDouble) = new LogDouble(softmax(o.logValue, scala.math.log(d)))
 
     def -(o: LogDouble) = new LogDouble(logDiff(scala.math.log(d), o.logValue))
   }
@@ -92,4 +90,18 @@ object LogDouble {
   def pow(d: LogDouble, p: Double) = new LogDouble(d.logValue * p)
 
   def pow(d: LogDouble, p: LogDouble) = new LogDouble(d.logValue * p.value)
+
+  implicit object SemiringLogDouble extends Semiring[LogDouble] {
+    def zero: LogDouble = new LogDouble(Double.NegativeInfinity)
+
+    def one: LogDouble = new LogDouble(0)
+
+    def +(a: LogDouble, b: LogDouble): LogDouble = a + b
+
+    def *(a: LogDouble, b: LogDouble): LogDouble = a * b
+
+    def ==(a: LogDouble, b: LogDouble): Boolean = a == b
+
+    def !=(a: LogDouble, b: LogDouble): Boolean = a != b
+  }
 }

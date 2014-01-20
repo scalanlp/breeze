@@ -74,7 +74,7 @@ class VectorBuilderTest extends FunSuite with Checkers {
  * @author dlwh
  */
 @RunWith(classOf[JUnitRunner])
-class VectorBuilderOps_DoubleTest extends MutableVectorSpaceTestBase[VectorBuilder[Double], Double] {
+class VectorBuilderOpsTest extends MutableVectorSpaceTestBase[VectorBuilder[Double], Double] {
  val space: MutableVectorSpace[VectorBuilder[Double], Double] = VectorBuilder.mvector_space_Double
 
 

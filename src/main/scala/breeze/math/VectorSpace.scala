@@ -16,9 +16,8 @@ package breeze.math
  limitations under the License.
 */
 import breeze.linalg.operators._
-import breeze.linalg.support.{CanZipMapValues, CanNorm, CanCopy, CanCreateZerosLike}
-import breeze.linalg.{QuasiTensor, TensorLike, Tensor, NumericOps}
-import breeze.generic.{UReduceable, CanMapValues}
+import breeze.linalg.support._
+import breeze.linalg.{norm, QuasiTensor, NumericOps}
 
 /**
  *
@@ -32,44 +31,86 @@ trait VectorSpace[V, S] {
   implicit def isNumericOps(v: V):NumericOps[V]
 
   implicit def zeros: CanCreateZerosLike[V, V]
-  implicit def mulVS: BinaryOp[V, S, OpMulScalar, V]
-  implicit def mulVS_M: BinaryOp[V, S, OpMulMatrix, V] = mulVS.asInstanceOf[BinaryOp[V, S, OpMulMatrix, V]]
-  implicit def divVS: BinaryOp[V, S, OpDiv, V]
+  implicit def mulVS: OpMulScalar.Impl2[V, S, V]
+  implicit def mulVS_M: OpMulMatrix.Impl2[V, S, V] = mulVS.asInstanceOf[OpMulMatrix.Impl2[V, S, V]]
+  implicit def divVS: OpDiv.Impl2[V, S, V]
 
-  implicit def addVV: BinaryOp[V, V, OpAdd, V]
-  implicit def subVV: BinaryOp[V, V, OpSub, V]
+  implicit def addVV: OpAdd.Impl2[V, V, V]
+  implicit def subVV: OpSub.Impl2[V, V, V]
 
   def close(a: V, b: V, tolerance: Double):Boolean
 
   // default implementations
-  implicit def neg: UnaryOp[V, OpNeg, V]
+  implicit def neg: OpNeg.Impl[V, V]
 
 }
 
 trait NormedVectorSpace[V, S] extends VectorSpace[V, S] {
-  def norm(a: V):Double
+  implicit def normImpl: norm.Impl[V, Double]
   def close(a: V, b: V, tolerance: Double):Boolean = norm(a - b) <= tolerance * math.max(norm(a), norm(b))
 }
 
 trait InnerProductSpace[V, S] extends NormedVectorSpace[V, S] {
-  implicit def dotVV: BinaryOp[V, V, OpMulInner, S]
+  implicit def dotVV: OpMulInner.Impl2[V, V, S]
 
-  def norm(a: V) = math.sqrt(scalarNorm(dotVV(a,a), ()))
-  implicit def scalarNorm: CanNorm[S, Unit]
+  implicit def scalarNorm: norm.Impl[S, Double]
+
+  implicit def normImpl: norm.Impl[V, Double] = new norm.Impl[V, Double] {
+    def apply(v: V): Double = math.sqrt(scalarNorm(dotVV(v, v)))
+  }
 }
 
 trait MutableVectorSpace[V, S] extends VectorSpace[V, S] {
   implicit def copy: CanCopy[V]
-  implicit def mulIntoVS: BinaryUpdateOp[V, S, OpMulScalar]
-  implicit def mulIntoVS_M: BinaryUpdateOp[V, S, OpMulMatrix] = mulIntoVS.asInstanceOf[BinaryUpdateOp[V, S, OpMulMatrix]]
-  implicit def divIntoVS: BinaryUpdateOp[V, S, OpDiv]
+  implicit def mulIntoVS: OpMulScalar.InPlaceImpl2[V, S]
+  implicit def mulIntoVS_M: OpMulMatrix.InPlaceImpl2[V, S] = mulIntoVS.asInstanceOf[OpMulMatrix.InPlaceImpl2[V, S]]
+  implicit def divIntoVS: OpDiv.InPlaceImpl2[V, S]
 
-  implicit def addIntoVV: BinaryUpdateOp[V, V, OpAdd]
-  implicit def subIntoVV: BinaryUpdateOp[V, V, OpSub]
+  implicit def addIntoVV: OpAdd.InPlaceImpl2[V, V]
+  implicit def subIntoVV: OpSub.InPlaceImpl2[V, V]
 
-  implicit def setIntoVV: BinaryUpdateOp[V, V, OpSet]
+  implicit def setIntoVV: OpSet.InPlaceImpl2[V, V]
 
   implicit def axpyVV: CanAxpy[S, V, V]
+}
+
+object MutableVectorSpace {
+  /** Construct a MutableInnerProductSpace for the given type from the available implicits */
+  def make[V, S](closeTo: (V,V,Double)=>Boolean)(implicit _field: Field[S],
+                    _isNumericOps: V <:< NumericOps[V],
+                    _zeros: CanCreateZerosLike[V, V],
+                    _mulVS: OpMulScalar.Impl2[V, S, V],
+                    _divVS: OpDiv.Impl2[V, S, V],
+                    _addVV: OpAdd.Impl2[V, V, V],
+                    _subVV: OpSub.Impl2[V, V, V],
+                    _neg: OpNeg.Impl[V, V],
+                    _copy: CanCopy[V],
+                    _mulIntoVS: OpMulScalar.InPlaceImpl2[V, S],
+                    _divIntoVS: OpDiv.InPlaceImpl2[V, S],
+                    _addIntoVV: OpAdd.InPlaceImpl2[V, V],
+                    _subIntoVV: OpSub.InPlaceImpl2[V, V],
+                    _setIntoVV: OpSet.InPlaceImpl2[V, V],
+                    _axpy: CanAxpy[S, V, V]): MutableVectorSpace[V, S] = new MutableVectorSpace[V, S] {
+    def field: Field[S] = _field
+
+
+    def close(a: V, b: V, tolerance: Double): Boolean = closeTo(a,b,tolerance)
+
+    implicit def isNumericOps(v: V): NumericOps[V] = _isNumericOps(v)
+    implicit def zeros: CanCreateZerosLike[V, V] = _zeros
+    implicit def mulVS: OpMulScalar.Impl2[V, S, V] = _mulVS
+    implicit def divVS: OpDiv.Impl2[V, S, V] = _divVS
+    implicit def addVV: OpAdd.Impl2[V, V, V] = _addVV
+    implicit def subVV: OpSub.Impl2[V, V, V] = _subVV
+    implicit def neg: OpNeg.Impl[V, V] = _neg
+    implicit def copy: CanCopy[V] = _copy
+    implicit def mulIntoVS: OpMulScalar.InPlaceImpl2[V, S] = _mulIntoVS
+    implicit def divIntoVS: OpDiv.InPlaceImpl2[V, S] = _divIntoVS
+    implicit def addIntoVV: OpAdd.InPlaceImpl2[V, V] = _addIntoVV
+    implicit def subIntoVV: OpSub.InPlaceImpl2[V, V] = _subIntoVV
+    implicit def setIntoVV: OpSet.InPlaceImpl2[V, V] = _setIntoVV
+    implicit def axpyVV: CanAxpy[S, V, V] = _axpy
+  }
 }
 
 trait MutableNormedSpace[V, S] extends NormedVectorSpace[V, S] with MutableVectorSpace[V, S]
@@ -77,41 +118,41 @@ trait MutableInnerProductSpace[V, S] extends InnerProductSpace[V, S] with Mutabl
 
 object MutableInnerProductSpace {
   /** Construct a MutableInnerProductSpace for the given type from the available implicits */
-  def make[V, I, S](implicit _field: Field[S],
-                    _scalarNorm: CanNorm[S, Unit],
-    _isNumericOps: V <:< NumericOps[V],
-    _zeros: CanCreateZerosLike[V, V],
-    _mulVS: BinaryOp[V, S, OpMulScalar, V],
-    _divVS: BinaryOp[V, S, OpDiv, V],
-    _addVV: BinaryOp[V, V, OpAdd, V],
-    _subVV: BinaryOp[V, V, OpSub, V],
-    _neg: UnaryOp[V, OpNeg, V],
-    _dotVV: BinaryOp[V, V, OpMulInner, S],
-    _copy: CanCopy[V],
-    _mulIntoVS: BinaryUpdateOp[V, S, OpMulScalar],
-    _divIntoVS: BinaryUpdateOp[V, S, OpDiv],
-    _addIntoVV: BinaryUpdateOp[V, V, OpAdd],
-    _subIntoVV: BinaryUpdateOp[V, V, OpSub],
-    _setIntoVV: BinaryUpdateOp[V, V, OpSet],
-    _axpy: CanAxpy[S, V, V]): MutableInnerProductSpace[V, S] = new MutableInnerProductSpace[V, S] {
+  def make[V, S](implicit _field: Field[S],
+                 _scalarNorm: norm.Impl[S, Double],
+                 _isNumericOps: V <:< NumericOps[V],
+                 _zeros: CanCreateZerosLike[V, V],
+                 _mulVS: OpMulScalar.Impl2[V, S, V],
+                 _divVS: OpDiv.Impl2[V, S, V],
+                 _addVV: OpAdd.Impl2[V, V, V],
+                 _subVV: OpSub.Impl2[V, V, V],
+                 _neg: OpNeg.Impl[V, V],
+                 _dotVV: OpMulInner.Impl2[V, V, S],
+                 _copy: CanCopy[V],
+                 _mulIntoVS: OpMulScalar.InPlaceImpl2[V, S],
+                 _divIntoVS: OpDiv.InPlaceImpl2[V, S],
+                 _addIntoVV: OpAdd.InPlaceImpl2[V, V],
+                 _subIntoVV: OpSub.InPlaceImpl2[V, V],
+                 _setIntoVV: OpSet.InPlaceImpl2[V, V],
+                 _axpy: CanAxpy[S, V, V]): MutableInnerProductSpace[V, S] = new MutableInnerProductSpace[V, S] {
     def field: Field[S] = _field
 
-    implicit def scalarNorm: CanNorm[S, Unit] = _scalarNorm
+    implicit def scalarNorm = _scalarNorm
 
     implicit def isNumericOps(v: V): NumericOps[V] = _isNumericOps(v)
     implicit def zeros: CanCreateZerosLike[V, V] = _zeros
-    implicit def mulVS: BinaryOp[V, S, OpMulScalar, V] = _mulVS
-    implicit def divVS: BinaryOp[V, S, OpDiv, V] = _divVS
-    implicit def addVV: BinaryOp[V, V, OpAdd, V] = _addVV
-    implicit def subVV: BinaryOp[V, V, OpSub, V] = _subVV
-    implicit def neg: UnaryOp[V, OpNeg, V] = _neg
-    implicit def dotVV: BinaryOp[V, V, OpMulInner, S] = _dotVV
+    implicit def mulVS: OpMulScalar.Impl2[V, S, V] = _mulVS
+    implicit def divVS: OpDiv.Impl2[V, S, V] = _divVS
+    implicit def addVV: OpAdd.Impl2[V, V, V] = _addVV
+    implicit def subVV: OpSub.Impl2[V, V, V] = _subVV
+    implicit def neg: OpNeg.Impl[V, V] = _neg
+    implicit def dotVV: OpMulInner.Impl2[V, V, S] = _dotVV
     implicit def copy: CanCopy[V] = _copy
-    implicit def mulIntoVS: BinaryUpdateOp[V, S, OpMulScalar] = _mulIntoVS
-    implicit def divIntoVS: BinaryUpdateOp[V, S, OpDiv] = _divIntoVS
-    implicit def addIntoVV: BinaryUpdateOp[V, V, OpAdd] = _addIntoVV
-    implicit def subIntoVV: BinaryUpdateOp[V, V, OpSub] = _subIntoVV
-    implicit def setIntoVV: BinaryUpdateOp[V, V, OpSet] = _setIntoVV
+    implicit def mulIntoVS: OpMulScalar.InPlaceImpl2[V, S] = _mulIntoVS
+    implicit def divIntoVS: OpDiv.InPlaceImpl2[V, S] = _divIntoVS
+    implicit def addIntoVV: OpAdd.InPlaceImpl2[V, V] = _addIntoVV
+    implicit def subIntoVV: OpSub.InPlaceImpl2[V, V] = _subIntoVV
+    implicit def setIntoVV: OpSet.InPlaceImpl2[V, V] = _setIntoVV
     implicit def axpyVV: CanAxpy[S, V, V] = _axpy
   }
 }
@@ -119,121 +160,119 @@ object MutableInnerProductSpace {
 
 trait TensorSpace[V, I, S] extends MutableCoordinateSpace[V, S] {
   implicit def isNumericOps(v: V):NumericOps[V] with QuasiTensor[I, S]
-  implicit def reduce: UReduceable[V,S]
+  implicit def iterateValues: CanTraverseValues[V,S]
 
 }
 
 object TensorSpace {
   def make[V, I, S](implicit
-                    _norm:  CanNorm[V, Double],
-                    _scalarNorm: CanNorm[S, Unit] ,
+                    _norm:  norm.Impl2[V, Double, Double],
+                    _scalarNorm: norm.Impl[S, Double] ,
                    _mapValues:  CanMapValues[V, S, S, V],
-                   _reduce:  UReduceable[V, S],
+                   _reduce:  CanTraverseValues[V, S],
                    _zipMapValues:  CanZipMapValues[V, S, S, V],
-                   _addVS:  BinaryOp[V, S, OpAdd, V],
-                   _subVS:  BinaryOp[V, S, OpSub, V],
-                   _mulVV:  BinaryOp[V, V, OpMulScalar, V],
-                   _divVV:  BinaryOp[V, V, OpDiv, V],
+                   _addVS:  OpAdd.Impl2[V, S, V],
+                   _subVS:  OpSub.Impl2[V, S, V],
+                   _mulVV:  OpMulScalar.Impl2[V, V, V],
+                   _divVV:  OpDiv.Impl2[V, V, V],
                    _copy:  CanCopy[V],
-                   _mulIntoVS:  BinaryUpdateOp[V, S, OpMulScalar],
-                   _divIntoVS:  BinaryUpdateOp[V, S, OpDiv],
-                   _addIntoVV:  BinaryUpdateOp[V, V, OpAdd],
-                   _subIntoVV:  BinaryUpdateOp[V, V, OpSub],
-                   _addIntoVS:  BinaryUpdateOp[V, S, OpAdd],
-                   _subIntoVS:  BinaryUpdateOp[V, S, OpSub],
-                   _mulIntoVV:  BinaryUpdateOp[V, V, OpMulScalar],
-                   _divIntoVV:  BinaryUpdateOp[V, V, OpDiv],
-                   _setIntoVV:  BinaryUpdateOp[V, V, OpSet],
-                   _setIntoVS:  BinaryUpdateOp[V, S, OpSet],
-//                   _powIntoVV:  BinaryUpdateOp[V, V, OpPow],
-//                   _powIntoVS:  BinaryUpdateOp[V, S, OpPow],
-//                   _modIntoVV:  BinaryUpdateOp[V, V, OpMod],
-//                   _modIntoVS:  BinaryUpdateOp[V, S, OpMod],
+                   _mulIntoVS:  OpMulScalar.InPlaceImpl2[V, S],
+                   _divIntoVS:  OpDiv.InPlaceImpl2[V, S],
+                   _addIntoVV:  OpAdd.InPlaceImpl2[V, V],
+                   _subIntoVV:  OpSub.InPlaceImpl2[V, V],
+                   _addIntoVS:  OpAdd.InPlaceImpl2[V, S],
+                   _subIntoVS:  OpSub.InPlaceImpl2[V, S],
+                   _mulIntoVV:  OpMulScalar.InPlaceImpl2[V, V],
+                   _divIntoVV:  OpDiv.InPlaceImpl2[V, V],
+                   _setIntoVV:  OpSet.InPlaceImpl2[V, V],
+                   _setIntoVS:  OpSet.InPlaceImpl2[V, S],
+//                   _powIntoVV:  OpPow.InPlaceImpl2[V, V],
+//                   _powIntoVS:  OpPow.InPlaceImpl2[V, S],
+//                   _modIntoVV:  OpMod.InPlaceImpl2[V, V],
+//                   _modIntoVS:  OpMod.InPlaceImpl2[V, S],
                    _axpy:  CanAxpy[S, V, V],
                    _field:  Field[S],
                    _zeros:  CanCreateZerosLike[V, V],
-                   _mulVS:  BinaryOp[V, S, OpMulScalar, V],
-                   _divVS:  BinaryOp[V, S, OpDiv, V],
-                   _addVV:  BinaryOp[V, V, OpAdd, V],
-                   _subVV:  BinaryOp[V, V, OpSub, V],
-                   _neg:  UnaryOp[V, OpNeg, V],
+                   _mulVS:  OpMulScalar.Impl2[V, S, V],
+                   _divVS:  OpDiv.Impl2[V, S, V],
+                   _addVV:  OpAdd.Impl2[V, V, V],
+                   _subVV:  OpSub.Impl2[V, V, V],
+                   _neg:  OpNeg.Impl[V, V],
                    _isNumericOps: V <:< NumericOps[V] with QuasiTensor[I, S],
-                   _dotVV:  BinaryOp[V, V, OpMulInner, S]):TensorSpace[V, I, S] = new TensorSpace[V, I, S] {
-    implicit def norm: CanNorm[V, Double] = _norm
+                   _dotVV:  OpMulInner.Impl2[V, V, S]):TensorSpace[V, I, S] = new TensorSpace[V, I, S] {
+    implicit def normImplDouble: norm.Impl2[V, Double, Double] = _norm
 
-    implicit def scalarNorm: CanNorm[S, Unit] = _scalarNorm
+    implicit def scalarNorm: norm.Impl[S, Double] = _scalarNorm
     implicit def mapValues: CanMapValues[V, S, S, V] = _mapValues
 
-    implicit def reduce: UReduceable[V, S] = _reduce
+    implicit def iterateValues: CanTraverseValues[V, S] = _reduce
 
     implicit def zipMapValues: CanZipMapValues[V, S, S, V] = _zipMapValues
 
-    implicit def addVS: BinaryOp[V, S, OpAdd, V] = _addVS
+    implicit def addVS: OpAdd.Impl2[V, S, V] = _addVS
 
-    implicit def subVS: BinaryOp[V, S, OpSub, V] = _subVS
+    implicit def subVS: OpSub.Impl2[V, S, V] = _subVS
 
-    implicit def mulVV: BinaryOp[V, V, OpMulScalar, V] = _mulVV
+    implicit def mulVV: OpMulScalar.Impl2[V, V, V] = _mulVV
 
-    implicit def divVV: BinaryOp[V, V, OpDiv, V] = _divVV
+    implicit def divVV: OpDiv.Impl2[V, V, V] = _divVV
 
-//    implicit def powVV: BinaryOp[V, V, OpPow, V] = _powVV
+//    implicit def powVV: OpPow.Impl2[V, V, V] = _powVV
 //
-//    implicit def powVS: BinaryOp[V, S, OpPow, V] = _powVS
+//    implicit def powVS: OpPow.Impl2[V, S, V] = _powVS
 //
-//    implicit def modVV: BinaryOp[V, V, OpMod, V] = _modVV
+//    implicit def modVV: OpMod.Impl2[V, V, V] = _modVV
 //
-//    implicit def modVS: BinaryOp[V, S, OpMod, V] = _modVS
+//    implicit def modVS: OpMod.Impl2[V, S, V] = _modVS
 
     implicit def copy: CanCopy[V] = _copy
 
-    implicit def mulIntoVS: BinaryUpdateOp[V, S, OpMulScalar] = _mulIntoVS
+    implicit def mulIntoVS: OpMulScalar.InPlaceImpl2[V, S] = _mulIntoVS
 
-    implicit def divIntoVS: BinaryUpdateOp[V, S, OpDiv] = _divIntoVS
+    implicit def divIntoVS: OpDiv.InPlaceImpl2[V, S] = _divIntoVS
 
-    implicit def addIntoVV: BinaryUpdateOp[V, V, OpAdd] = _addIntoVV
+    implicit def addIntoVV: OpAdd.InPlaceImpl2[V, V] = _addIntoVV
 
-    implicit def subIntoVV: BinaryUpdateOp[V, V, OpSub] = _subIntoVV
+    implicit def subIntoVV: OpSub.InPlaceImpl2[V, V] = _subIntoVV
 
-    implicit def addIntoVS: BinaryUpdateOp[V, S, OpAdd] = _addIntoVS
+    implicit def addIntoVS: OpAdd.InPlaceImpl2[V, S] = _addIntoVS
 
-    implicit def subIntoVS: BinaryUpdateOp[V, S, OpSub] = _subIntoVS
+    implicit def subIntoVS: OpSub.InPlaceImpl2[V, S] = _subIntoVS
 
-    implicit def mulIntoVV: BinaryUpdateOp[V, V, OpMulScalar] = _mulIntoVV
+    implicit def mulIntoVV: OpMulScalar.InPlaceImpl2[V, V] = _mulIntoVV
 
-    implicit def divIntoVV: BinaryUpdateOp[V, V, OpDiv] = _divIntoVV
+    implicit def divIntoVV: OpDiv.InPlaceImpl2[V, V] = _divIntoVV
 
-//    implicit def powIntoVV: BinaryUpdateOp[V, V, OpPow] = _powIntoVV
+//    implicit def powIntoVV: OpPow.InPlaceImpl2[V, V] = _powIntoVV
 //
-//    implicit def powIntoVS: BinaryUpdateOp[V, S, OpPow] = _powIntoVS
+//    implicit def powIntoVS: OpPow.InPlaceImpl2[V, S] = _powIntoVS
 //
-//    implicit def modIntoVV: BinaryUpdateOp[V, V, OpMod] = _modIntoVV
+//    implicit def modIntoVV: OpMod.InPlaceImpl2[V, V] = _modIntoVV
 //
-//    implicit def modIntoVS: BinaryUpdateOp[V, S, OpMod] = _modIntoVS
+//    implicit def modIntoVS: OpMod.InPlaceImpl2[V, S] = _modIntoVS
 
     def field: Field[S] = _field
 
     implicit def zeros: CanCreateZerosLike[V, V] = _zeros
 
-    implicit def mulVS: BinaryOp[V, S, OpMulScalar, V] = _mulVS
+    implicit def mulVS: OpMulScalar.Impl2[V, S, V] = _mulVS
 
-    implicit def divVS: BinaryOp[V, S, OpDiv, V] = _divVS
+    implicit def divVS: OpDiv.Impl2[V, S, V] = _divVS
 
-    implicit def addVV: BinaryOp[V, V, OpAdd, V] = _addVV
+    implicit def addVV: OpAdd.Impl2[V, V, V] = _addVV
 
-    implicit def subVV: BinaryOp[V, V, OpSub, V] = _subVV
+    implicit def subVV: OpSub.Impl2[V, V, V] = _subVV
 
-    implicit def neg: UnaryOp[V, OpNeg, V] = _neg
-
-    override def norm(a: V): Double = norm.apply(a, 2)
+    implicit def neg: OpNeg.Impl[V, V] = _neg
 
     implicit def isNumericOps(v: V): NumericOps[V] with QuasiTensor[I, S] = _isNumericOps(v)
 
-    implicit def dotVV: BinaryOp[V, V, OpMulInner, S] = _dotVV
+    implicit def dotVV: OpMulInner.Impl2[V, V, S] = _dotVV
 
 
-    implicit def setIntoVV: BinaryUpdateOp[V, V, OpSet] = _setIntoVV
+    implicit def setIntoVV: OpSet.InPlaceImpl2[V, V] = _setIntoVV
 
-    implicit def setIntoVS: BinaryUpdateOp[V, S, OpSet] = _setIntoVS
+    implicit def setIntoVS: OpSet.InPlaceImpl2[V, S] = _setIntoVS
 
     implicit def axpyVV: CanAxpy[S, V, V] = _axpy
   }

@@ -134,7 +134,7 @@ object AdaptiveGradientDescent {
     }
 
     override protected def adjust(newX: T, newGrad: T, newVal: Double) = {
-      val av = newVal + norm(newX,1) * lambda
+      val av = newVal + norm(newX, 1.0) * lambda
       val ag = newGrad + signum(newX) * lambda
       (av -> ag)
     }

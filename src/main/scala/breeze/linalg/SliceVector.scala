@@ -12,7 +12,7 @@ import scala.reflect.ClassTag
  * will give a SliceVector such that apply/update at index 0 will map to m(1,2), index 1 to m(3,4), etc.
  * @author dlwh
  */
-class SliceVector[@specialized(Int) K, @specialized(Int, Double, Float) V:ClassTag](val tensor: QuasiTensor[K,V],
+class SliceVector[@specialized(Int) K, @specialized(Int, Double, Float) V:ClassTag](val tensor: Tensor[K,V],
                                                                            val slices: IndexedSeq[K]) extends Vector[V] {
   def apply(i: Int): V = tensor(slices(i))
 

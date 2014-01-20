@@ -14,8 +14,6 @@ package breeze.math
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import breeze.storage.DefaultArrayValue
-import scala.reflect.ClassTag
 
 
 /**
@@ -32,6 +30,7 @@ trait Field[@specialized(Int,Short,Long,Float,Double) V] extends Ring[V] {
 
 object Field {
   /** Not a field, but whatever. */
+  @SerialVersionUID(1L)
   implicit object fieldInt extends Field[Int] {
     def zero = 0
     def one = 1
@@ -44,6 +43,7 @@ object Field {
   }
 
   /** Not a field, but whatever. */
+  @SerialVersionUID(1L)
   implicit object fieldShort extends Field[Short] {
     def zero = 0.asInstanceOf[Short]
     def one = 1.asInstanceOf[Short]
@@ -56,6 +56,7 @@ object Field {
   }
 
   /** Not a field, but whatever. */
+  @SerialVersionUID(1L)
   implicit object fieldLong extends Field[Long] {
     def zero = 0l
     def one = 1l
@@ -68,6 +69,7 @@ object Field {
   }
 
   /** Not a field, but whatever. */
+  @SerialVersionUID(1L)
   implicit object fieldBigInt extends Field[BigInt] {
     def zero = 0l
     def one = 1l
@@ -79,6 +81,7 @@ object Field {
     def /(a : BigInt, b : BigInt) = a / b
   }
 
+  @SerialVersionUID(1L)
   implicit object fieldFloat extends Field[Float] {
     def zero = 0.0f
     def one = 1.0f
@@ -92,6 +95,7 @@ object Field {
     override def close(a: Float, b: Float, tolerance: Double) = (a-b).abs <= math.max(a.abs, b.abs) * tolerance
   }
 
+  @SerialVersionUID(-5955467582882664220L)
   implicit object fieldD extends Field[Double] {
     def zero = 0.0
     def one = 1.0

@@ -5,7 +5,6 @@ import org.scalatest._
 import org.scalatest.junit._
 import breeze.linalg.{DenseVector, DenseMatrix, norm}
 import breeze.math.Complex
-import breeze.signal.support.{CanFFT, CanIFFT}
 
 /**
  * Created with IntelliJ IDEA.

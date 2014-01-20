@@ -41,13 +41,16 @@ pomExtra := (
     </developer>
   </developers>)
 
-scalacOptions ++= Seq("-optimize","-deprecation","-language:_")
+scalacOptions ++= Seq("-deprecation","-language:_")
+
+// scalacOptions in (Compile, console) += "-Xlog-implicits"
+
 
   javacOptions ++= Seq("-target", "1.6", "-source","1.6")
 
 
 libraryDependencies ++= Seq(
-  "org.scalanlp" %% "breeze-macros" % "0.1" % "compile",
+  "org.scalanlp" %% "breeze-macros" % "0.2-SNAPSHOT" % "compile",
   "com.thoughtworks.paranamer" % "paranamer" % "2.2",
   "com.github.fommil.netlib" % "all" % "1.1.2" pomOnly(),
   "org.scalanlp" % "lpsolve" % "5.5.2-SNAPSHOT",
@@ -59,7 +62,8 @@ libraryDependencies ++= Seq(
     "com.typesafe" %% "scalalogging-slf4j" % "1.0.1",
     "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.0-beta9" % "test",
     "org.apache.logging.log4j" % "log4j-core" % "2.0-beta9" % "test",
-    "org.apache.logging.log4j" % "log4j-api" % "2.0-beta9" % "test"
+    "org.apache.logging.log4j" % "log4j-api" % "2.0-beta9" % "test",
+    "com.chuusai" % "shapeless_2.10.3" % "2.0.0-M1" % "test"
   )
 
 // see https://github.com/typesafehub/scalalogging/issues/23

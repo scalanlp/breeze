@@ -488,6 +488,33 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(m * m === (m2 * m2).values.map(_.toInt))
   }
 
+  test("comparisons") {
+    val one = DenseMatrix.ones[Double](5, 6)
+    val zero = DenseMatrix.zeros[Double](5, 6)
+    assert( (one :> zero) === DenseMatrix.ones[Boolean](5, 6))
+  }
+
+  test("Some ill-typedness") {
+    import shapeless.test.illTyped
+    illTyped {
+      """
+        val one = DenseMatrix.ones[Double](5, 6)
+        val z = DenseVector.zeros[Double](5)
+        (z + one)
+      """
+
+    }
+
+  }
+
+  test("ensure we don't crash on weird strides") {
+    val dm = DenseMatrix.zeros[Double](3,3)
+
+    assert( (dm(::, 0 until 0) * dm(0 until 0, ::)) === dm)
+    assert( (dm(0 until 0, ::) * dm(::, 0 until 0)) === DenseMatrix.zeros[Double](0, 0))
+//    assert( (dm(::, 2 until 0 by -1) * dm(2 until 0 by -1, ::)) === dm)
+  }
+
 
 }
 
