@@ -9,7 +9,8 @@ import scala.math.{cos, Pi}
 object WindowFunction {
 
   def hammingWindow(n: Int, alpha: Double = 0.54, beta: Double = 0.46): DenseVector[Double] = {
-    DenseVector(  (for(count <- 0 until n) yield alpha - beta * cos( 2d * Pi * count / (n - 1))).toArray )
+    if(n == 1 ) DenseVector(1d)
+    else DenseVector(  (for(count <- 0 until n) yield alpha - beta * cos( 2d * Pi * count / (n - 1))).toArray )
   }
 
 }
