@@ -15,11 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-<<<<<<< HEAD
-import breeze.signal.support.{OptOverhang, CanConvolve, CanFFT, CanIFFT}
-=======
-import breeze.signal.support.{OverhangOpt, CanConvolve}
->>>>>>> 54f3ecb2535a73b2b503cea533b198c8ec39df7f
+import breeze.signal.support.{OptOverhang, CanConvolve}
 
 /**This package provides digital signal processing functions.
  *
