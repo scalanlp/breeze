@@ -94,6 +94,24 @@ package object numerics {
     implicit object sinFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.sin(v).toFloat}
   }
 
+  object sinc extends UFunc with MappingUFunc {
+    implicit object sincDoubleImpl extends Impl[Double, Double] {
+      def apply(v: Double) = if(v == 0) 1d else m.sin(v)/v
+    }
+    implicit object sincFloatImpl extends Impl[Float, Float] {
+      def apply(v: Float) =  if(v == 0) 1f else m.sin(v).toFloat/v
+    }
+  }
+
+  object sincpi extends UFunc with MappingUFunc {
+    implicit object sincpiDoubleImpl extends Impl[Double, Double] {
+      def apply(v: Double) = if(v == 0) 1d else {val temp = v * m.Pi;  m.sin(temp)/temp}
+    }
+    implicit object sincpiFloatImpl extends Impl[Float, Float] {
+      def apply(v: Float) =  if(v == 0) 1f else  {val temp = v * m.Pi;  (m.sin(temp)/temp).toFloat}
+    }
+  }
+
   object cos extends UFunc with MappingUFunc {
     implicit object cosDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.cos(v)}
     implicit object cosFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.cos(v).toFloat}

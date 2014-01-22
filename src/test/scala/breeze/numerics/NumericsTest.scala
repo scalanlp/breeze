@@ -150,4 +150,24 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
     assert(sv === svexp)
   }
 
+  test("sinc"){
+    val testThreshold = 1.0E-15
+    assert( abs(sinc(1d) - 0.8414709848078965) < testThreshold)
+    assert( abs(sinc(1f) - 0.8414709848078965) < testThreshold*1.0E8)
+    assert( sinc(0d) == 1d )
+
+    val testDV = DenseVector( -10d, -7d, -4d, -1d )
+    assert( norm( sinc(testDV) - DenseVector(-0.05440211108893698, 0.09385522838839844, -0.18920062382698205,0.8414709848078965) ) < testThreshold)
+  }
+
+  test("sincpi"){
+    val testThreshold = 1.0E-15
+    assert( abs(sincpi(1d) - 3.898171832519376E-17) < testThreshold)
+    assert( abs(sincpi(1f) - 3.898171832519376E-17) < testThreshold*1.0E8)
+    assert( sincpi(0d) == 1d )
+
+    val testDV = DenseVector( -3d, -2.5, -2d, -1.5 )
+    assert( norm( sincpi(testDV) - DenseVector(3.898171832519376E-17, 0.127323954473516, -3.898171832519376E-17, -0.212206590789194 ) ) < testThreshold)
+  }
+
 }
