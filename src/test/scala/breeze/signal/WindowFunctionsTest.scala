@@ -3,7 +3,7 @@ package breeze.signal
 import org.scalatest._
 import breeze._
 import breeze.linalg._ //{norm, DenseVector}
-import breeze.signal.filter.WindowFunction.hammingWindow
+import breeze.signal.filter.WindowFunctions.hammingWindow
 
 /**
  * Created with IntelliJ IDEA.

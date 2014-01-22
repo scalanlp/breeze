@@ -4,13 +4,13 @@ import breeze.linalg.DenseVector
 import scala.math.{cos, Pi}
 
 /**
- * Created by Kenta on 1/20/14.
+ * @author ktakagaki
  */
-object WindowFunction {
+object WindowFunctions {
 
   def hammingWindow(n: Int, alpha: Double = 0.54, beta: Double = 0.46): DenseVector[Double] = {
     if(n == 1 ) DenseVector(1d)
-    else DenseVector(  (for(count <- 0 until n) yield alpha - beta * cos( 2d * Pi * count / (n - 1))).toArray )
+    else DenseVector.tabulate(n)( count => alpha - beta * cos( 2d * Pi * count / (n - 1)) )
   }
 
 }

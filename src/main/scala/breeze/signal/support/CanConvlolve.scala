@@ -1,11 +1,9 @@
 package breeze.signal.support
 
 /**
- * Created by Kenta on 1/9/14.
+ * @author ktakagaki
  */
 import breeze.linalg.{DenseVector, DenseMatrix}
-//import breeze.math.Complex
-//import breeze.signal.support.JTransformsSupport._
 
 
 //ToDo 1: provide convolve of Integer and other DenseVectors
