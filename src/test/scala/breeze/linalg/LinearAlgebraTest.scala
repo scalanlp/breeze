@@ -230,8 +230,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     assert( norm( diff(xDouble, 2) - DenseVector(0.6, 0.4) ) < testThreshold)
     val x1 = DenseVector( .7)
     assert(diff(x1) == DenseVector[Double]())
-//    val xInt = DenseVector( 7, 2, 3, 8)
-//    assert(diff(xInt, 3) == DenseVector(-2))
+    val xInt = DenseVector( 7, 2, 3, 8)
+    assert(diff(xInt, 3) == DenseVector(-2))
   }
 
 }
