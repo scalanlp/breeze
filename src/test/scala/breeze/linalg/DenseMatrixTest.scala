@@ -507,6 +507,14 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
   }
 
+  test("ensure we don't crash on weird strides") {
+    val dm = DenseMatrix.zeros[Double](3,3)
+
+    assert( (dm(::, 0 until 0) * dm(0 until 0, ::)) === dm)
+    assert( (dm(0 until 0, ::) * dm(::, 0 until 0)) === DenseMatrix.zeros[Double](0, 0))
+//    assert( (dm(::, 2 until 0 by -1) * dm(2 until 0 by -1, ::)) === dm)
+  }
+
 
 }
 

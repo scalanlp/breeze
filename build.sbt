@@ -43,6 +43,9 @@ pomExtra := (
 
 scalacOptions ++= Seq("-deprecation","-language:_")
 
+// scalacOptions in (Compile, console) += "-Xlog-implicits"
+
+
   javacOptions ++= Seq("-target", "1.6", "-source","1.6")
 
 
