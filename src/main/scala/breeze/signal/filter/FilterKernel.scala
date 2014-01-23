@@ -1,7 +1,7 @@
 package breeze.signal.filter
 
 import breeze.linalg.{sum, DenseVector, diff}
-import breeze.numerics.{cos, sincpi}
+import breeze.numerics.{cos, sincpi, isOdd, isEven}
 import breeze.signal._
 import breeze.generic.UFunc
 import scala.math.{sin, Pi}
@@ -63,7 +63,7 @@ object KernelDesign{
       require(diff(cutoff).min > 0, "The cutoff frequency must be monotonically increasing.")
     }
 
-    val nyquistPass = zeroPass != (cutoff.length % 2 != 0)
+    val nyquistPass = zeroPass != isOdd(cutoff.length)
     var tempCutoff = (cutoff / nyquist).toArray
     if(zeroPass) tempCutoff = tempCutoff.+:(0d)
     if(nyquistPass) tempCutoff = tempCutoff.:+(1d)
@@ -72,7 +72,7 @@ object KernelDesign{
 
     //ToDo: Is the following statement translated from numpy code correct???
     //https://github.com/scipy/scipy/blob/v0.13.0/scipy/signal/fir_filter_design.py#L138
-    require( !(nyquistPass && cutoff.length % 2 == 0),
+    require( !(nyquistPass && isEven(cutoff.length) ),
       "A filter with an even number of coefficients must have zero response at the Nyquist rate.")
 
     //val bands = scaledCutoff.reshape(-1, 2)
