@@ -150,10 +150,10 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
     assert(sv === svexp)
   }
 
-  test("isOdd") {
+  test("isOdd/isEven") {
     assert(isOdd(1), "1 should be odd!")
     assert(isEven(0.0), "0.0 should be even!")
-    assert(isEven(DenseVector(2.0f, 1.5f, -3.0f) == DenseVector(true, false, false) ), "an array of floats")
+    assert(isEven(DenseVector(2.0f, 1.5f, -3.0f)) == DenseVector(true, false, false) , "an array of floats")
 
   }
 
