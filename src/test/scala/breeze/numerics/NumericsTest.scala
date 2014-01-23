@@ -175,4 +175,6 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
 
     val testDV = DenseVector( -3d, -2.5, -2d, -1.5 )
     assert( norm( sincpi(testDV) - DenseVector(3.898171832519376E-17, 0.127323954473516, -3.898171832519376E-17, -0.212206590789194 ) ) < testThreshold)
-  }}
+  }
+
+}
