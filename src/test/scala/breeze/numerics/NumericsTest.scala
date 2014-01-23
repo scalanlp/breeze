@@ -150,6 +150,13 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
     assert(sv === svexp)
   }
 
+  test("isOdd/isEven") {
+    assert(isOdd(1), "1 should be odd!")
+    assert(isEven(0.0), "0.0 should be even!")
+    assert(isEven(DenseVector(2.0f, 1.5f, -3.0f)) == DenseVector(true, false, false) , "an array of floats")
+
+  }
+
   test("sinc"){
     val testThreshold = 1.0E-15
     assert( abs(sinc(1d) - 0.8414709848078965) < testThreshold)
