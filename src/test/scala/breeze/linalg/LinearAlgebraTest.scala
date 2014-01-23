@@ -222,4 +222,16 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     assert(mpow(X, 1) === X)
     assert( abs(mpow(X, .5) - DenseMatrix((.82426, 0.11716), (.17574, 0.88284))).max < 1E-5, mpow(X, .5))
   }
+
+  test("diff test") {
+    val testThreshold = 1.0E-15
+    val xDouble = DenseVector( .7, .2, .3, .8)
+    assert( norm( diff(xDouble) - DenseVector(-0.5, 0.1, 0.5) ) < testThreshold)
+    assert( norm( diff(xDouble, 2) - DenseVector(0.6, 0.4) ) < testThreshold)
+    val x1 = DenseVector( .7)
+    assert(diff(x1) == DenseVector[Double]())
+    val xInt = DenseVector( 7, 2, 3, 8)
+    assert(diff(xInt, 3) == DenseVector(-2))
+  }
+
 }

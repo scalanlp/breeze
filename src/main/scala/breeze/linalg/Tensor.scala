@@ -69,8 +69,10 @@ sealed trait QuasiTensor[@specialized(Int) K, @specialized(Int, Float, Double) V
   def findAll(f: V=>Boolean) = activeIterator.filter(p => f(p._2)).map(_._1).toIndexedSeq
 
   /** Returns true if all elements are non-zero */
+  @deprecated("Use breeze.linalg.all instead", "0.6")
   def all(implicit semi: Semiring[V]) = valuesIterator.forall(_ != semi.zero)
-  /** Returns true if no elements are non-zero */
+  /** Returns true if some element is non-zero */
+  @deprecated("Use breeze.linalg.any instead", "0.6")
   def any(implicit semi: Semiring[V]) = valuesIterator.exists(_ != semi.zero)
 }
 

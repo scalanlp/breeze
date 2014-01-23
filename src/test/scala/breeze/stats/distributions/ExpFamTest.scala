@@ -20,14 +20,18 @@ trait ExpFamTest[D<:Density[T] with Rand[T],T] extends FunSuite with Checkers {
 
   test("MLE is consistent") {
     check(Prop.forAll { (p: expFam.Parameter) =>
-      val dist = expFam.distribution(p)
-      val suffstat = dist.sample(10000).map(sufficientStatisticFor).reduce(_ + _)
-      val mle = expFam.mle(suffstat)
-      if(!paramsClose(mle, p)) {
-        println("Got " + mle + " expected " + p)
-        false
-      } else {
-        true
+      try {
+        val dist = expFam.distribution(p)
+        val suffstat = dist.sample(10000).map(sufficientStatisticFor).reduce(_ + _)
+        val mle = expFam.mle(suffstat)
+        if(!paramsClose(mle, p)) {
+          println("Got " + mle + " expected " + p)
+          false
+        } else {
+          true
+        }
+      } catch {
+        case ex: Exception =>  ex.printStackTrace(); throw ex
       }
     } )
   }

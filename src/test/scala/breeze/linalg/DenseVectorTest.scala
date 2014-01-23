@@ -359,6 +359,16 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(dv === DenseVector(1,1,2,3,4,5,6,7,8,8))
   }
 
+  test("any and all") {
+    val a = DenseVector(1, 2, 3)
+    val b = DenseVector(1, 4, 1)
+    assert( any(a :== b))
+    assert( !all(a :== b))
+    assert( any(a :== a))
+    assert( all(a :== a))
+    assert( !any(a :== (b - 1)))
+  }
+
 }
 
 /**
