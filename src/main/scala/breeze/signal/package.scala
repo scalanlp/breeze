@@ -15,7 +15,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import breeze.signal.support.{OptOverhang, CanConvolve}
+import breeze.signal.support._
+import breeze.signal.filter.{FIRKernel1D, FilterKernel}
 
 /**This package provides digital signal processing functions.
  *
@@ -23,12 +24,12 @@ import breeze.signal.support.{OptOverhang, CanConvolve}
  */
 package object signal {
 
-  // <editor-fold desc="Fourier Transforms">
   @deprecated("use fourierTransform", "v.0.6")
   val fft:fourierTransform.type = fourierTransform
   @deprecated("use inverseFourierTransform", "v.0.6")
   val ifft:inverseFourierTransform.type = inverseFourierTransform
 
+  // <editor-fold desc="convolve, correlate">
   /**Convolves to DenseVectors or DenseMatrixes.</p>
     * Implementation is via the implicit trait CanConvolve[ InputType,  OutputType ],
     * which is found in breeze.signal.support.CanConvolve.scala.
@@ -38,10 +39,25 @@ package object signal {
     * @param canConvolve implicit delegate which is used for implementation. End-users should not use this argument.
     * @return
     */
-  def convolve[Input, Output](kernel: Input, data: Input, optOverhang: OptOverhang = OptOverhang.Default())
+  def convolve[Input, Output](kernel: Input, data: Input,
+                              cyclical: Boolean = true,
+                              optOverhang: OptOverhang = OptOverhang.OptDefault(),
+                              optMethod: OptMethod = OptMethod.OptAutomatic()
+                              )
                              (implicit canConvolve: CanConvolve[Input, Output]): Output =
-    canConvolve(kernel, data, optOverhang)
+    canConvolve(kernel, data, cyclical, optOverhang, optMethod)
 
   // </editor-fold>
+
+  def filter[Input, Kernel, Output](data: Input, kernel: Kernel,
+                             optPadding: OptPadding = OptPadding.OptBoundary)
+        (implicit canFilter: CanFilter[Input, Kernel, Output]): Output =
+    canFilter(data, kernel, optPadding)
+
+  def filterBandpass[Input, Output](data: Input, omega: (Double, Double),
+                             sampleRate: Double = 1d,
+                             optPadding: OptPadding = OptPadding.OptBoundary)
+        (implicit canFilter: CanFilter[Input, FIRKernel1D, Output]): Output =
+    canFilter(data, firwin(), optPadding)
 
 }
