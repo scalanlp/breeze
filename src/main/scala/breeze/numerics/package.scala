@@ -22,6 +22,7 @@ import org.apache.commons.math3.special.{Gamma => G, Erf}
 import breeze.linalg.support.CanTraverseValues
 import CanTraverseValues.ValuesVisitor
 import org.apache.commons.math3.util.FastMath
+import breeze.macros.expand
 
 /**
  * Contains several standard numerical functions as UFunc with MappingUFuncs,
@@ -219,6 +220,32 @@ package object numerics {
   object abs extends UFunc with MappingUFunc {
     implicit object absDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.abs(v)}
     implicit object absFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.abs(v)}
+  }
+
+  /** Whether a number is odd. For Double and Float, isOdd also implies that the number is an integer,
+    * and therefore does not necessarily equal !isEven for fractional input.
+    */
+  object isOdd extends UFunc with MappingUFunc {
+    @expand
+    @expand.valify
+    implicit def isOddImpl[@expand.args(Int, Double, Float, Long) T]: Impl[T, Boolean] = {
+      new Impl[T, Boolean] {
+        def apply(v: T) = {v % 2 == 1}
+      }
+    }
+  }
+
+  /** Whether a number is even. For Double and Float, isEven also implies that the number is an integer,
+    * and therefore does not necessarily equal !isOdd for fractional input.
+    */
+  object isEven extends UFunc with MappingUFunc {
+    @expand
+    @expand.valify
+    implicit def isEvenImpl[@expand.args(Int, Double, Float, Long) T]: Impl[T, Boolean] = {
+      new Impl[T, Boolean] {
+        def apply(v: T) = {v % 2 == 0}
+      }
+    }
   }
 
   val inf, Inf = Double.PositiveInfinity
