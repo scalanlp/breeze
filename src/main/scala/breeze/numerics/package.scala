@@ -94,6 +94,11 @@ package object numerics {
     implicit object sinFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.sin(v).toFloat}
   }
 
+  /**The sine cardinal (sinc) function, as defined by sinc(0)=1, sinc(n != 0)=sin(x)/x.
+   * Note that this differs from some signal analysis conventions, where sinc(n != 0)
+   * is defined by sin(Pi*x)/(Pi*x). This variant is provided for convenience as
+   * [[breeze.numerics.sincpi]]. <b><i>Use it instead when translating from numpy.sinc.</i></b>.
+   */
   object sinc extends UFunc with MappingUFunc {
     implicit object sincDoubleImpl extends Impl[Double, Double] {
       def apply(v: Double) = if(v == 0) 1d else m.sin(v)/v
@@ -103,6 +108,9 @@ package object numerics {
     }
   }
 
+  /**The pi-normalized sine cardinal (sinc) function, as defined by sinc(0)=1, sinc(n != 0)=sin(Pi*x)/(Pi*x).
+    * See also [[breeze.numerics.sinc]].
+    */
   object sincpi extends UFunc with MappingUFunc {
     implicit object sincpiDoubleImpl extends Impl[Double, Double] {
       def apply(v: Double) = if(v == 0) 1d else {val temp = v * m.Pi;  m.sin(temp)/temp}
