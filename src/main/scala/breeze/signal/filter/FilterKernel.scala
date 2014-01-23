@@ -44,9 +44,9 @@ object KernelDesign{
                   The frequencies must lie between (0, nyquist).
                   0 and nyquist should not be included in this array.
 
-    @param window Currently supports a hamming window [[breeze.signal.filter.KernelDesign.OptWindowFunction.Hamming]],
-                  a specified window [[breeze.signal.filter.KernelDesign.OptWindowFunction.DenseVector]], or
-                  no window [[breeze.signal.filter.KernelDesign.OptWindowFunction.None]].
+    @param window Currently supports a hamming window [[breeze.signal.filter.KernelDesign.OptWindowFunction.OptHamming]],
+                  a specified window [[breeze.signal.filter.KernelDesign.OptWindowFunction.OptDenseVector]], or
+                  no window [[breeze.signal.filter.KernelDesign.OptWindowFunction.OptNone]].
     @param zeroPass If true (default), the gain at frequency 0 (ie the "DC gain") is 1, if false, 0.
     @param scale Whether to scale the coefficiency so that frequency response is unity at either (A) 0 if zeroPass is true
                  or (B) at nyquist if the first passband ends at nyquist, or (C) the center of the first passband. Default is true.
