@@ -3,9 +3,7 @@ package breeze.signal.filter
 import breeze.linalg.{sum, DenseVector, diff}
 import breeze.numerics.{cos, sincpi, isOdd, isEven}
 import breeze.signal._
-import breeze.generic.UFunc
 import scala.math.{sin, Pi}
-import breeze.signal.filter.KernelDesign.OptWindowFunction._
 
 /**
  * Portions of the code are translated from scipy (scipy.org) based on provisions of the BSD license.
@@ -44,15 +42,15 @@ object KernelDesign{
                   The frequencies must lie between (0, nyquist).
                   0 and nyquist should not be included in this array.
 
-    @param window Currently supports a hamming window [[breeze.signal.filter.KernelDesign.OptWindowFunction.OptHamming]],
-                  a specified window [[breeze.signal.filter.KernelDesign.OptWindowFunction.OptDenseVector]], or
-                  no window [[breeze.signal.filter.KernelDesign.OptWindowFunction.OptNone]].
+    @param optWindow Currently supports a hamming window [[breeze.signal.OptWindowFunction.OptHamming]],
+                  a specified window [[breeze.signal.OptWindowFunction.OptDenseVector]], or
+                  no window [[breeze.signal.OptWindowFunction.OptNone]].
     @param zeroPass If true (default), the gain at frequency 0 (ie the "DC gain") is 1, if false, 0.
     @param scale Whether to scale the coefficiency so that frequency response is unity at either (A) 0 if zeroPass is true
                  or (B) at nyquist if the first passband ends at nyquist, or (C) the center of the first passband. Default is true.
     @param nyquist The nyquist frequency, default is 1.
     */
-  def firwin(numtaps: Int, cutoff: DenseVector[Double], window: OptWindowFunction,
+  def firwin(numtaps: Int, cutoff: DenseVector[Double], optWindow: OptWindowFunction = OptWindowFunction.OptHamming(),
               zeroPass: Boolean = true, nyquist: Double = 1d, scale: Boolean = true): FIRKernel1D = {
 
     //various variable conditions which must be met
@@ -86,10 +84,10 @@ object KernelDesign{
       else h += sincpi(m :* band._1) :* band._1
     }
 
-    val win = window match {
-      case OptHamming(alpha, beta) => WindowFunctions.hammingWindow( numtaps, alpha, beta )
-      case OptNone() => DenseVector.ones[Double]( numtaps )
-      case OptDenseVector(dv) => {
+    val win = optWindow match {
+      case OptWindowFunction.OptHamming(alpha, beta) => WindowFunctions.hammingWindow( numtaps, alpha, beta )
+      case OptWindowFunction.OptNone() => DenseVector.ones[Double]( numtaps )
+      case OptWindowFunction.OptDenseVector(dv) => {
         require(dv.length == numtaps, "Length of specified window function is not the same as numtaps!")
         dv
       }
@@ -108,25 +106,9 @@ object KernelDesign{
     }
 
     new FIRKernel1D( h,
-      "FIRKernel1D(firwin): " + numtaps + " taps, " + cutoff + ", " + window + ", zeroPass=" + zeroPass + ", nyquist=" + nyquist + ", scale=" + scale
+      "FIRKernel1D(firwin): " + numtaps + " taps, " + cutoff + ", " + optWindow + ", zeroPass=" + zeroPass + ", nyquist=" + nyquist + ", scale=" + scale
     )
 
   }
-
-
- abstract class OptWindowFunction
- object OptWindowFunction{
-   case class OptHamming(alpha: Double = 0.54, beta: Double = 0.46) extends OptWindowFunction {
-     override def toString = "Hamming window ("+ alpha + ", " + beta + ")"
-   }
-   case class OptDenseVector(dv: DenseVector[Double]) extends OptWindowFunction {
-     override def toString = "user-specified window"
-   }
-   case class OptNone() extends OptWindowFunction{
-     override def toString = "no window"
-   }
- }
-
-  //def difference[Input, Output](data: Input)(implicit canDifference: CanDiff[Input, Output]): Output = canDiff(data)
 
 }

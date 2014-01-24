@@ -15,8 +15,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+import breeze.signal._
 import breeze.signal.support._
 import breeze.signal.filter.{FIRKernel1D, FilterKernel}
+
 
 /**This package provides digital signal processing functions.
  *
@@ -41,23 +43,32 @@ package object signal {
     */
   def convolve[Input, Output](kernel: Input, data: Input,
                               cyclical: Boolean = true,
-                              optOverhang: OptOverhang = OptOverhang.OptDefault(),
-                              optMethod: OptMethod = OptMethod.OptAutomatic()
+                              optOverhang: OptConvolveOverhang = OptConvolveOverhang.OptSequence(-1, 1),
+                              optConvolveMethod: OptConvolveMethod = OptAutomatic()
                               )
                              (implicit canConvolve: CanConvolve[Input, Output]): Output =
-    canConvolve(kernel, data, cyclical, optOverhang, optMethod)
+    canConvolve(kernel, data, cyclical, optOverhang, optConvolveMethod)
 
   // </editor-fold>
 
-  def filter[Input, Kernel, Output](data: Input, kernel: Kernel,
-                             optPadding: OptPadding = OptPadding.OptBoundary)
-        (implicit canFilter: CanFilter[Input, Kernel, Output]): Output =
-    canFilter(data, kernel, optPadding)
+//  def filter[Input, Kernel, Output](data: Input, kernel: Kernel,
+//                             optPadding: OptPadding = OptPadding.OptBoundary)
+//        (implicit canFilter: CanFilter[Input, Kernel, Output]): Output =
+//    canFilter(data, kernel, optPadding)
+//
+//  def filterBandpass[Input, Output](data: Input, omega: (Double, Double),
+//                             sampleRate: Double = 1d,
+//                             optKernelType: OptKernelType = OptKernelType.optFirwin,
+//                             optPadding: OptPadding = OptPadding.OptBoundary)
+//        (implicit canFilterBPBS: CanFilterBPBS[Input, FIRKernel1D, Output]): Output =
+//    canFilterBPBS(data, omega, sampleRate, optKernelType, optPadding, bandStop = false)
 
-  def filterBandpass[Input, Output](data: Input, omega: (Double, Double),
-                             sampleRate: Double = 1d,
-                             optPadding: OptPadding = OptPadding.OptBoundary)
-        (implicit canFilter: CanFilter[Input, FIRKernel1D, Output]): Output =
-    canFilter(data, firwin(), optPadding)
+
+//  //these implicit conversions will allow the same OptDefault() object to be given for different functions.
+//  implicit def optDefaultSpecialize_ConvolveOverhang(x: breeze.signal.OptDefault) = breeze.signal.OptConvolveOverhang.OptDefault
+//  implicit def optDefaultSpecialize_Padding(x: breeze.signal.OptDefault) = breeze.signal.OptPadding.OptDefault
+//  implicit def optDefaultSpecialize_ConvolveMethod(x: breeze.signal.OptDefault) = breeze.signal.OptConvolveMethod.OptDefault
+//  implicit def optDefaultSpecialize_KernelType(x: breeze.signal.OptDefault) = breeze.signal.OptKernelType.OptDefault
+//  implicit def optDefaultSpecialize_WindowFunction(x: OptDefault): OptWindowFunction.OptDefault = OptWindowFunction.OptDefault()
 
 }
