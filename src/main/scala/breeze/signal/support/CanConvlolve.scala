@@ -72,9 +72,25 @@ object CanConvolve {
 
 
   @expand
-  def convolveLoopCyclical[@expand.args(Int, Double, Float, Long) T](data: DenseVector[T], kernel: DenseVector[T], k0: Int, k1: Int): DenseVector[T] = {
+  def convolveLoopNoOverhang[@expand.args(Int, Double, Float, Long) T](data: DenseVector[T], kernel: DenseVector[T]): DenseVector[T] =
+    correlateLoopNoOverhang(data, reverse(kernel))
+  @expand
+  def correlateLoopNoOverhang[@expand.args(Int, Double, Float, Long) T](data: DenseVector[T], kernel: DenseVector[T]): DenseVector[T] = {
+    require( data.length * kernel.length != 0, "data and kernel must be non-empty DenseVectors")
+    require( data.length >= kernel.length, "kernel cannot be longer than data to be convolved/coorelated!")
 
-    DenseVector[T]()
+    DenseVector.tabulate(data.length - kernel.length + 1)(
+      di => {
+        var ki: T = 0
+        var sum: T = 0
+        while(c < kernel.length){
+          s += data(di + ki)*kernel(ki)
+          c += 1
+        }
+        s
+      }
+    )
+
   }
 
 
