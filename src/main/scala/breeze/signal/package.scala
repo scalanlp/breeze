@@ -63,12 +63,4 @@ package object signal {
 //        (implicit canFilterBPBS: CanFilterBPBS[Input, FIRKernel1D, Output]): Output =
 //    canFilterBPBS(data, omega, sampleRate, optKernelType, optPadding, bandStop = false)
 
-
-//  //these implicit conversions will allow the same OptDefault() object to be given for different functions.
-//  implicit def optDefaultSpecialize_ConvolveOverhang(x: breeze.signal.OptDefault) = breeze.signal.OptConvolveOverhang.OptDefault
-//  implicit def optDefaultSpecialize_Padding(x: breeze.signal.OptDefault) = breeze.signal.OptPadding.OptDefault
-//  implicit def optDefaultSpecialize_ConvolveMethod(x: breeze.signal.OptDefault) = breeze.signal.OptConvolveMethod.OptDefault
-//  implicit def optDefaultSpecialize_KernelType(x: breeze.signal.OptDefault) = breeze.signal.OptKernelType.OptDefault
-//  implicit def optDefaultSpecialize_WindowFunction(x: OptDefault): OptWindowFunction.OptDefault = OptWindowFunction.OptDefault()
-
 }
