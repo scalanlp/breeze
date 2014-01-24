@@ -234,4 +234,11 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     assert(diff(xInt, 3) == DenseVector(-2))
   }
 
+  test("reverse test") {
+    val xDouble = DenseVector( .7, .2, .3, .8)
+    assert( reverse(xDouble) == DenseVector(.8, .3, .2, .7)  )
+    val xEmpty = DenseVector[Long]()
+    assert( reverse(xEmpty) == DenseVector[Long]() )
+  }
+
 }
