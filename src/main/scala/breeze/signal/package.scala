@@ -32,35 +32,47 @@ package object signal {
   val ifft:inverseFourierTransform.type = inverseFourierTransform
 
   // <editor-fold desc="convolve, correlate">
-  /**Convolves to DenseVectors or DenseMatrixes.</p>
+  /**Convolves DenseVectors.</p>
     * Implementation is via the implicit trait CanConvolve[ InputType,  OutputType ],
     * which is found in breeze.signal.support.CanConvolve.scala.
     *
     * @param kernel DenseVector or DenseMatrix kernel
     * @param data DenseVector or DenseMatrix to be convolved
     * @param canConvolve implicit delegate which is used for implementation. End-users should not use this argument.
-    * @return
     */
-  def convolve[Input, Output](kernel: Input, data: Input,
-                              cyclical: Boolean = true,
-                              optOverhang: OptConvolveOverhang = OptConvolveOverhang.OptSequence(-1, 1),
-                              optConvolveMethod: OptConvolveMethod = OptAutomatic()
+  def convolve[Input, Output](data: Input, kernel: Input,
+                              overhang: OptOverhang = OptOverhang.None(),
+                              padding: OptPadding = OptPadding.Value(0d),
+                              method: OptMethod = Automatic()
                               )
                              (implicit canConvolve: CanConvolve[Input, Output]): Output =
-    canConvolve(kernel, data, cyclical, optOverhang, optConvolveMethod)
+    canConvolve(data, kernel, correlate=false, overhang, padding, method)
+
+  /**Correlates DenseVectors.</p>
+    * Implementation is via the implicit trait CanConvolve[ InputType,  OutputType ],
+    * which is found in breeze.signal.support.CanConvolve.scala.
+    * See [[breeze.signal.convolve]] for options and other information.
+    */
+  def correlate[Input, Output](data: Input, kernel: Input,
+                              overhang: OptOverhang = OptOverhang.None(),
+                              padding: OptPadding = OptPadding.Value(0d),
+                              method: OptMethod = Automatic()
+                               )
+                             (implicit canConvolve: CanConvolve[Input, Output]): Output =
+    canConvolve(data, kernel, correlate=true, overhang, padding, method)
 
   // </editor-fold>
 
 //  def filter[Input, Kernel, Output](data: Input, kernel: Kernel,
-//                             optPadding: OptPadding = OptPadding.OptBoundary)
+//                             padding: OptPadding = OptPadding.Boundary)
 //        (implicit canFilter: CanFilter[Input, Kernel, Output]): Output =
-//    canFilter(data, kernel, optPadding)
+//    canFilter(data, kernel, padding)
 //
 //  def filterBandpass[Input, Output](data: Input, omega: (Double, Double),
 //                             sampleRate: Double = 1d,
 //                             optKernelType: OptKernelType = OptKernelType.optFirwin,
-//                             optPadding: OptPadding = OptPadding.OptBoundary)
+//                             padding: OptPadding = OptPadding.Boundary)
 //        (implicit canFilterBPBS: CanFilterBPBS[Input, FIRKernel1D, Output]): Output =
-//    canFilterBPBS(data, omega, sampleRate, optKernelType, optPadding, bandStop = false)
+//    canFilterBPBS(data, omega, sampleRate, optKernelType, padding, bandStop = false)
 
 }

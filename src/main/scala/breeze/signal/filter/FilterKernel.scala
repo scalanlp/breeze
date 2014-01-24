@@ -42,15 +42,15 @@ object KernelDesign{
                   The frequencies must lie between (0, nyquist).
                   0 and nyquist should not be included in this array.
 
-    @param optWindow Currently supports a hamming window [[breeze.signal.OptWindowFunction.OptHamming]],
-                  a specified window [[breeze.signal.OptWindowFunction.OptDenseVector]], or
-                  no window [[breeze.signal.OptWindowFunction.OptNone]].
+    @param optWindow Currently supports a hamming window [[breeze.signal.OptWindowFunction.Hamming]],
+                  a specified window [[breeze.signal.OptWindowFunction.User]], or
+                  no window [[breeze.signal.OptWindowFunction.None]].
     @param zeroPass If true (default), the gain at frequency 0 (ie the "DC gain") is 1, if false, 0.
     @param scale Whether to scale the coefficiency so that frequency response is unity at either (A) 0 if zeroPass is true
                  or (B) at nyquist if the first passband ends at nyquist, or (C) the center of the first passband. Default is true.
     @param nyquist The nyquist frequency, default is 1.
     */
-  def firwin(numtaps: Int, cutoff: DenseVector[Double], optWindow: OptWindowFunction = OptWindowFunction.OptHamming(),
+  def firwin(numtaps: Int, cutoff: DenseVector[Double], optWindow: OptWindowFunction = OptWindowFunction.Hamming(),
               zeroPass: Boolean = true, nyquist: Double = 1d, scale: Boolean = true): FIRKernel1D = {
 
     //various variable conditions which must be met
@@ -85,9 +85,9 @@ object KernelDesign{
     }
 
     val win = optWindow match {
-      case OptWindowFunction.OptHamming(alpha, beta) => WindowFunctions.hammingWindow( numtaps, alpha, beta )
-      case OptWindowFunction.OptNone() => DenseVector.ones[Double]( numtaps )
-      case OptWindowFunction.OptDenseVector(dv) => {
+      case OptWindowFunction.Hamming(alpha, beta) => WindowFunctions.hammingWindow( numtaps, alpha, beta )
+      case OptWindowFunction.None() => DenseVector.ones[Double]( numtaps )
+      case OptWindowFunction.User(dv) => {
         require(dv.length == numtaps, "Length of specified window function is not the same as numtaps!")
         dv
       }

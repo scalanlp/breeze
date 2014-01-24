@@ -20,8 +20,8 @@
 //  def apply(data: DenseVector[Double], omega: (Double, Double),
 //            sampleRate: Double, numtaps: Int, bandStop: Boolean,
 //            optKernelType: OptKernelType,
-//            optConvolveOverhang: OptConvolveOverhang,
-//            optPadding: OptPadding = OptPadding.OptBoundary): OutputType
+//            overhang: OptOverhang,
+//            padding: OptPadding = OptPadding.Boundary): OutputType
 //}
 //
 ///**
@@ -41,18 +41,18 @@
 //    new CanFilterBPBS[DenseVector[Double], DenseVector[Double]] {
 //      def apply(data: DenseVector[Double], omega: (Double, Double),
 //                sampleRate: Double = 1d, numtaps: Int = 512, bandStop: Boolean = false,
-//                optKernelType: OptKernelType = OptKernelType.OptFirwin,
-//                optConvolveOverhang: OptConvolveOverhang,
-//                optPadding: OptPadding = OptPadding.OptBoundary): DenseVector[Double] = {
+//                optKernelType: OptKernelType = OptKernelType.Firwin,
+//                overhang: OptOverhang,
+//                padding: OptPadding = OptPadding.Boundary): DenseVector[Double] = {
 //
 //        val kernel = optKernelType match  {
 //          case x: OptKernelType.OptDefault => KernelDesign.firwin( numtaps, DenseVector[Double](omega._1, omega._2), zeroPass = bandStop, nyquist = sampleRate/2d)
-//          case x: OptKernelType.OptFirwin =>  KernelDesign.firwin( numtaps, DenseVector[Double](omega._1, omega._2), zeroPass = bandStop, nyquist = sampleRate/2d)
+//          case x: OptKernelType.Firwin =>  KernelDesign.firwin( numtaps, DenseVector[Double](omega._1, omega._2), zeroPass = bandStop, nyquist = sampleRate/2d)
 //          case x => require(false, "Cannot handle option value "+ x)
 //        }
 //
-////        val optConvolveOverhang1 = optConvolveOverhang
-////        filter(data, kernel, optConvolveOverhang = optConvolveOverhang1, optPadding = OptPadding.OptBoundary)
+////        val optConvolveOverhang1 = overhang
+////        filter(data, kernel, overhang = optConvolveOverhang1, padding = OptPadding.Boundary)
 //        DenseVector[Double]()
 //      }
 //    }

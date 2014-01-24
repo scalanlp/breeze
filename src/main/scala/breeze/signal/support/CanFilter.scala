@@ -18,8 +18,8 @@
 // */
 //trait CanFilter[InputType, Kernel, OutputType] {
 //  def apply(data: InputType, kernel: Kernel,
-//            optConvolveOverhang: OptConvolveOverhang,
-//            optPadding: OptPadding = OptPadding.OptBoundary ): OutputType
+//            overhang: OptOverhang,
+//            padding: OptPadding = OptPadding.Boundary ): OutputType
 //}
 //
 ///**
@@ -37,13 +37,13 @@
 //    */
 //  implicit val dvDouble1DFilter : CanFilter[DenseVector[Double], FIRKernel1D, DenseVector[Double]] = {
 //    new CanFilter[DenseVector[Double], FIRKernel1D, DenseVector[Double]] {
-//      def apply(data: DenseVector[Double], kernel: FIRKernel1D, optConvolveOverhang1: OptConvolveOverhang, optPadding: OptPadding) = {
+//      def apply(data: DenseVector[Double], kernel: FIRKernel1D, optConvolveOverhang1: OptOverhang, padding: OptPadding) = {
 //
-////        optPadding match  {
-////          case x: OptPadding.OptNone => {}
+////        padding match  {
+////          case x: OptPadding.None => {}
 ////        }
 ////
-////        convolve(data, kernel, cyclical = false, optOverhang = optConvolveOverhang1, optConvolveMethod: OptConvolveMethod)
+////        convolve(data, kernel, cyclical = false, overhang = optConvolveOverhang1, method: OptMethod)
 //        DenseVector[Double]()
 //
 //      }
@@ -56,7 +56,7 @@
 ////abstract class OptSampleRate
 ////object OptSampleRate{
 ////  case class OptConvolveDefault() extends OptSampleRate
-////  case class OptValue(sampleRate: Double) extends OptSampleRate
+////  case class Value(sampleRate: Double) extends OptSampleRate
 ////}
 //
 //
