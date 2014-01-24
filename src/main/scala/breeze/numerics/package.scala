@@ -22,6 +22,7 @@ import org.apache.commons.math3.special.{Gamma => G, Erf}
 import breeze.linalg.support.CanTraverseValues
 import CanTraverseValues.ValuesVisitor
 import org.apache.commons.math3.util.FastMath
+import breeze.macros.expand
 
 /**
  * Contains several standard numerical functions as UFunc with MappingUFuncs,
@@ -92,6 +93,32 @@ package object numerics {
   object sin extends UFunc with MappingUFunc {
     implicit object sinDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.sin(v)}
     implicit object sinFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.sin(v).toFloat}
+  }
+
+  /**The sine cardinal (sinc) function, as defined by sinc(0)=1, sinc(n != 0)=sin(x)/x.
+   * Note that this differs from some signal analysis conventions, where sinc(n != 0)
+   * is defined by sin(Pi*x)/(Pi*x). This variant is provided for convenience as
+   * [[breeze.numerics.sincpi]]. <b><i>Use it instead when translating from numpy.sinc.</i></b>.
+   */
+  object sinc extends UFunc with MappingUFunc {
+    implicit object sincDoubleImpl extends Impl[Double, Double] {
+      def apply(v: Double) = if(v == 0) 1d else m.sin(v)/v
+    }
+    implicit object sincFloatImpl extends Impl[Float, Float] {
+      def apply(v: Float) =  if(v == 0) 1f else m.sin(v).toFloat/v
+    }
+  }
+
+  /**The pi-normalized sine cardinal (sinc) function, as defined by sinc(0)=1, sinc(n != 0)=sin(Pi*x)/(Pi*x).
+    * See also [[breeze.numerics.sinc]].
+    */
+  object sincpi extends UFunc with MappingUFunc {
+    implicit object sincpiDoubleImpl extends Impl[Double, Double] {
+      def apply(v: Double) = if(v == 0) 1d else {val temp = v * m.Pi;  m.sin(temp)/temp}
+    }
+    implicit object sincpiFloatImpl extends Impl[Float, Float] {
+      def apply(v: Float) =  if(v == 0) 1f else  {val temp = v * m.Pi;  (m.sin(temp)/temp).toFloat}
+    }
   }
 
   object cos extends UFunc with MappingUFunc {
@@ -193,6 +220,32 @@ package object numerics {
   object abs extends UFunc with MappingUFunc {
     implicit object absDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.abs(v)}
     implicit object absFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.abs(v)}
+  }
+
+  /** Whether a number is odd. For Double and Float, isOdd also implies that the number is an integer,
+    * and therefore does not necessarily equal !isEven for fractional input.
+    */
+  object isOdd extends UFunc with MappingUFunc {
+    @expand
+    @expand.valify
+    implicit def isOddImpl[@expand.args(Int, Double, Float, Long) T]: Impl[T, Boolean] = {
+      new Impl[T, Boolean] {
+        def apply(v: T) = {v % 2 == 1}
+      }
+    }
+  }
+
+  /** Whether a number is even. For Double and Float, isEven also implies that the number is an integer,
+    * and therefore does not necessarily equal !isOdd for fractional input.
+    */
+  object isEven extends UFunc with MappingUFunc {
+    @expand
+    @expand.valify
+    implicit def isEvenImpl[@expand.args(Int, Double, Float, Long) T]: Impl[T, Boolean] = {
+      new Impl[T, Boolean] {
+        def apply(v: T) = {v % 2 == 0}
+      }
+    }
   }
 
   val inf, Inf = Double.PositiveInfinity
