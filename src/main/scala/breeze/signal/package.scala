@@ -18,7 +18,7 @@ limitations under the License.
 import breeze.signal._
 import breeze.signal.support._
 import breeze.signal.filter.{FIRKernel1D, FilterKernel}
-
+import breeze.signal.support.{CanHaarTransform, CanInverseHaarTransform}
 
 /**This package provides digital signal processing functions.
  *
@@ -74,5 +74,27 @@ package object signal {
 //                             padding: OptPadding = OptPadding.Boundary)
 //        (implicit canFilterBPBS: CanFilterBPBS[Input, FIRKernel1D, Output]): Output =
 //    canFilterBPBS(data, omega, sampleRate, optKernelType, padding, bandStop = false)
+
+  /**Return the padded fast haar transformation of a DenseVector or DenseMatrix. Note that
+   * the output will always be padded to a power of 2.</p>
+   * A matrix will cause a 2D fht. The 2D haar transformation is defined for squared power of 2
+   * matrices. A new matrix will thus be created and the old matrix will be placed in the upper-left
+   * part of the new matrix. Avoid calling this method with a matrix that has few cols / many rows or
+   * many cols / few rows (e.g. 1000000 x 3) as this will cause a very high memory consumption.
+   *
+   * @see https://en.wikipedia.org/wiki/Haar_wavelet
+   * @param v DenseVector or DenseMatrix to be transformed.
+   * @param canHaarTransform implicit delegate which is used for implementation. End-users should not use this argument.
+   * @return DenseVector or DenseMatrix
+   */
+  def haarTransform[Input, Output](v : Input)(implicit canHaarTransform: CanHaarTransform[Input, Output]): Output =
+    canHaarTransform(v)
+
+  /**Returns the inverse fast haar transform for a DenseVector or DenseMatrix.
+   *
+   */
+  def inverseHaarTransform[Input, Output](v : Input)
+      (implicit canInverseHaarTransform: CanInverseHaarTransform[Input, Output]): Output =
+          canInverseHaarTransform(v)
 
 }
