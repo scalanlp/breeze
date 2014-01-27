@@ -17,7 +17,6 @@ limitations under the License.
 
 import breeze.signal._
 import breeze.signal.support._
-import breeze.signal.filter.{FIRKernel1D, FilterKernel}
 
 
 /**This package provides digital signal processing functions.
@@ -63,11 +62,11 @@ package object signal {
 
   // </editor-fold>
 
-//  def filter[Input, Kernel, Output](data: Input, kernel: Kernel,
-//                            overhang: OptOverhang = OptOverhang.None,
-//                            padding: OptPadding = OptPadding.Boundary)
-//        (implicit canFilter: CanFilter[Input, Kernel, Output]): Output =
-//    canFilter(data, kernel, overhang, padding)
+  def filter[Input, Kernel, Output](data: Input, kernel: Kernel,
+                            overhang: OptOverhang = OptOverhang.None,
+                            padding: OptPadding = OptPadding.Boundary)
+        (implicit canFilter: CanFilter[Input, Kernel, Output]): Output =
+    canFilter(data, kernel, overhang, padding)
 
 //  def filterBandpass[Input, Output](data: Input, omega: (Double, Double),
 //                             sampleRate: Double = 1d,

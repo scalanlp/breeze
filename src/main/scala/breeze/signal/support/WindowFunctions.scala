@@ -1,4 +1,4 @@
-package breeze.signal.filter
+package breeze.signal.support
 
 import breeze.linalg.DenseVector
 import scala.math.{cos, Pi}
