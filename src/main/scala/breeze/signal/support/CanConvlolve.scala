@@ -47,12 +47,17 @@ object CanConvolve {
                 correlate: Boolean,
                 overhang: OptOverhang,
                 padding: OptPadding,
-                method: OptMethod): DenseVector[Double] = {
+                method: OptMethod = OptMethod.Loop): DenseVector[Double] = {
 
         val optConvolveOverhangParsed = overhang match {
-          case OptOverhang.None() => OptOverhang.Sequence(-1, 1)
-          case OptOverhang.Full() => OptOverhang.Sequence(1, -1)
+          case OptOverhang.None => OptOverhang.Sequence(-1, 1)
+          case OptOverhang.Full => OptOverhang.Sequence(1, -1)
           case o => o
+        }
+
+        method match {
+          case OptMethod.Loop => require(true)
+          case _ => require(false, "currently, only loop convolutions are supported.")
         }
 
         val kl = kernel.length
@@ -62,15 +67,15 @@ object CanConvolve {
           case OptOverhang.Sequence(1, -1) =>
             DenseVector.vertcat(
               padding match {
-                case OptPadding.Cyclical() => data( dl - (kl-1) to dl - 1 )
-                case OptPadding.Boundary() => DenseVector.ones[Double](kernel.length-1) * data( 0 )
+                case OptPadding.Cyclical => data( dl - (kl-1) to dl - 1 )
+                case OptPadding.Boundary => DenseVector.ones[Double](kernel.length-1) * data( 0 )
                 case OptPadding.Value(v: Double) => DenseVector.ones[Double](kernel.length-1) * v
                 case op => require(false, "cannot handle OptPadding value " + op); DenseVector[Double]()
               },
               data,
               padding match {
-                case OptPadding.Cyclical() => data( 0 to kl-1 )
-                case OptPadding.Boundary() => DenseVector.ones[Double](kernel.length-1) * data( dl - 1  )
+                case OptPadding.Cyclical => data( 0 to kl-1 )
+                case OptPadding.Boundary => DenseVector.ones[Double](kernel.length-1) * data( dl - 1  )
                 case OptPadding.Value(v: Double) => DenseVector.ones[Double](kernel.length-1) * v
                 case op => require(false, "cannot handle OptPadding value " + op); DenseVector[Double]()
               }

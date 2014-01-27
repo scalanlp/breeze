@@ -41,9 +41,9 @@ package object signal {
     * @param canConvolve implicit delegate which is used for implementation. End-users should not use this argument.
     */
   def convolve[Input, Output](data: Input, kernel: Input,
-                              overhang: OptOverhang = OptOverhang.None(),
+                              overhang: OptOverhang = OptOverhang.None,
                               padding: OptPadding = OptPadding.Value(0d),
-                              method: OptMethod = Automatic()
+                              method: OptMethod = OptMethod.Automatic
                               )
                              (implicit canConvolve: CanConvolve[Input, Output]): Output =
     canConvolve(data, kernel, correlate=false, overhang, padding, method)
@@ -54,9 +54,9 @@ package object signal {
     * See [[breeze.signal.convolve]] for options and other information.
     */
   def correlate[Input, Output](data: Input, kernel: Input,
-                              overhang: OptOverhang = OptOverhang.None(),
+                              overhang: OptOverhang = OptOverhang.None,
                               padding: OptPadding = OptPadding.Value(0d),
-                              method: OptMethod = Automatic()
+                              method: OptMethod = OptMethod.Automatic
                                )
                              (implicit canConvolve: CanConvolve[Input, Output]): Output =
     canConvolve(data, kernel, correlate=true, overhang, padding, method)
@@ -64,10 +64,11 @@ package object signal {
   // </editor-fold>
 
 //  def filter[Input, Kernel, Output](data: Input, kernel: Kernel,
-//                             padding: OptPadding = OptPadding.Boundary)
+//                            overhang: OptOverhang = OptOverhang.None,
+//                            padding: OptPadding = OptPadding.Boundary)
 //        (implicit canFilter: CanFilter[Input, Kernel, Output]): Output =
-//    canFilter(data, kernel, padding)
-//
+//    canFilter(data, kernel, overhang, padding)
+
 //  def filterBandpass[Input, Output](data: Input, omega: (Double, Double),
 //                             sampleRate: Double = 1d,
 //                             optKernelType: OptKernelType = OptKernelType.optFirwin,
