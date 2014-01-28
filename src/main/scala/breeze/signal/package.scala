@@ -82,6 +82,7 @@ package object signal {
   // </editor-fold>
 
   // <editor-fold desc="filterBP, filterBS">
+
   /** Bandpass filter the input data.
     *
     * @param data data to be filtered
@@ -89,7 +90,7 @@ package object signal {
     *              or in Hz if the sampleRate is set to a specific value other than 2d.
     * @param sampleRate default of 2.0 means that the nyquist frequency is 1.0
     * @param numtaps  number of taps to use (default = 512)
-    * @param kernelType  currently only supports OptKernelType.Firwin. See [[breeze.signal.OptKernelType]]
+    * @param kernelDesign  currently only supports OptKernelType.Firwin. See [[breeze.signal.OptKernelDesign]]
     * @param overhang  whether to have overhanging values. See [[breeze.signal.OptOverhang]]
     * @param padding  how to pad the values. See [[breeze.signal.OptPadding]]
     * @param canFilterBPBS (implicit delegate to perform filtering on specific Input data types)
@@ -98,13 +99,13 @@ package object signal {
   def filterBP[Input, Output](data: Input, omega: (Double, Double),
                              numtaps: Int = 512,
                              sampleRate: Double = 2d,
-                             kernelType: OptKernelType = OptKernelType.Firwin,
+                             kernelDesign: OptKernelDesign = OptKernelDesign.Firwin,
                              overhang: OptOverhang = OptOverhang.None,
                              padding: OptPadding = OptPadding.Boundary)
         (implicit canFilterBPBS: CanFilterBPBS[Input, Output]): Output =
     canFilterBPBS(data, omega,
               numtaps, sampleRate, bandStop = false,
-              kernelType, overhang, padding)
+              kernelDesign, overhang, padding)
 
   /** Bandstop filter the input data.
     *
@@ -113,7 +114,7 @@ package object signal {
     *              or in Hz if the sampleRate is set to a specific value other than 2d.
     * @param sampleRate default of 2.0 means that the nyquist frequency is 1.0
     * @param numtaps  number of taps to use (default = 512)
-    * @param kernelType  currently only supports OptKernelType.Firwin. See [[breeze.signal.OptKernelType]]
+    * @param kernelDesign  currently only supports OptKernelType.Firwin. See [[breeze.signal.OptKernelDesign]]
     * @param overhang  whether to have overhanging values. See [[breeze.signal.OptOverhang]]
     * @param padding  how to pad the values. See [[breeze.signal.OptPadding]]
     * @param canFilterBPBS (implicit delegate to perform filtering on specific Input data types)
@@ -122,16 +123,18 @@ package object signal {
   def filterBS[Input, Output](data: Input, omega: (Double, Double),
                                     numtaps: Int = 512,
                                     sampleRate: Double = 2d,
-                                    kernelType: OptKernelType = OptKernelType.Firwin,
+                                    kernelDesign: OptKernelDesign = OptKernelDesign.Firwin,
                                     overhang: OptOverhang = OptOverhang.None,
                                     padding: OptPadding = OptPadding.Boundary)
                                    (implicit canFilterBPBS: CanFilterBPBS[Input, Output]): Output =
     canFilterBPBS(data, omega,
       numtaps, sampleRate, bandStop = true,
-      kernelType, overhang, padding)
+      kernelDesign, overhang, padding)
+
   // </editor-fold>
 
   // <editor-fold desc="filter design: firwin">
+
   /** FIR filter design using the window method.
     *
     * This function computes the coefficients of a finite impulse response
@@ -166,6 +169,7 @@ package object signal {
      canFirwin(numtaps, cutoff,
                 zeroPass, nyquist, scale,
                 optWindow)
+
 
   // </editor-fold>
 
