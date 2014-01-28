@@ -40,9 +40,9 @@ object CanFilterBPBS {
     new CanFilterBPBS[DenseVector[Double], DenseVector[Double]] {
       def apply(data: DenseVector[Double], omega: (Double, Double),
                 numtaps: Int, sampleRate: Double, bandStop: Boolean,
-                kernelType: OptKernelDesign = OptKernelDesign.Firwin,
+                kernelType: OptKernelDesign,
                 overhang: OptOverhang,
-                padding: OptPadding = OptPadding.Boundary): DenseVector[Double] = {
+                padding: OptPadding): DenseVector[Double] = {
 
         val kernel: FIRKernel1D[Double] = kernelType match  {
           //case x: OptKernelType.OptDefault => KernelDesign.firwin( numtaps, DenseVector[Double](omega._1, omega._2), zeroPass = bandStop, nyquist = sampleRate/2d)
