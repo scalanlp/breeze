@@ -44,5 +44,18 @@ object CanFilter {
     }
   }
 
+  /** Use via implicit delegate syntax filter(x: DenseVector)
+    *
+    */
+  implicit val dvDouble1DFilterVectorKernel : CanFilter[DenseVector[Double], DenseVector[Double], DenseVector[Double]] = {
+    new CanFilter[DenseVector[Double], DenseVector[Double], DenseVector[Double]] {
+      def apply(data: DenseVector[Double], kernel: DenseVector[Double],
+                overhang: OptOverhang,
+                padding: OptPadding): DenseVector[Double] = {
+        convolve(data, new FIRKernel1D(kernel, "User-specified kernel"), overhang, padding)
+      }
+    }
+  }
+
 
 }

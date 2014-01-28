@@ -62,17 +62,67 @@ package object signal {
 
   // </editor-fold>
 
+  /** Filter input data with the specified kernel and options.
+    *
+    * @param data data to be filtered
+    * @param kernel filter kernel (argument of DenseVector[Double] will specify a FIR kernel with specified values).
+    * @param overhang  whether to have overhanging values. See [[breeze.signal.OptOverhang]]
+    * @param padding  how to pad the values. See [[breeze.signal.OptPadding]]
+    * @param canFilter  (implicit delegate to perform filtering on specific Input data types)
+    * @return
+    */
   def filter[Input, Kernel, Output](data: Input, kernel: Kernel,
                             overhang: OptOverhang = OptOverhang.None,
                             padding: OptPadding = OptPadding.Boundary)
         (implicit canFilter: CanFilter[Input, Kernel, Output]): Output =
     canFilter(data, kernel, overhang, padding)
 
-//  def filterBandpass[Input, Output](data: Input, omega: (Double, Double),
-//                             sampleRate: Double = 1d,
-//                             optKernelType: OptKernelType = OptKernelType.optFirwin,
-//                             padding: OptPadding = OptPadding.Boundary)
-//        (implicit canFilterBPBS: CanFilterBPBS[Input, FIRKernel1D, Output]): Output =
-//    canFilterBPBS(data, omega, sampleRate, optKernelType, padding, bandStop = false)
+  /** Bandpass filter the input data.
+    *
+    * @param data data to be filtered
+    * @param omega sequence of two filter band parameters, in units of the nyquist frequency,
+    *              or in Hz if the sampleRate is set to a specific value other than 2d.
+    * @param sampleRate default of 2.0 means that the nyquist frequency is 1.0
+    * @param numtaps  number of taps to use (default = 512)
+    * @param kernelType  currently only supports OptKernelType.Firwin. See [[breeze.signal.OptKernelType]]
+    * @param overhang  whether to have overhanging values. See [[breeze.signal.OptOverhang]]
+    * @param padding  how to pad the values. See [[breeze.signal.OptPadding]]
+    * @param canFilterBPBS (implicit delegate to perform filtering on specific Input data types)
+    * @return
+    */
+  def filterBandpass[Input, Output](data: Input, omega: (Double, Double),
+                             numtaps: Int = 512,
+                             sampleRate: Double = 2d,
+                             kernelType: OptKernelType = OptKernelType.Firwin,
+                             overhang: OptOverhang = OptOverhang.None,
+                             padding: OptPadding = OptPadding.Boundary)
+        (implicit canFilterBPBS: CanFilterBPBS[Input, Output]): Output =
+    canFilterBPBS(data, omega,
+              numtaps, sampleRate, bandStop = false,
+              kernelType, overhang, padding)
+
+  /** Bandstop filter the input data.
+    *
+    * @param data data to be filtered
+    * @param omega sequence of two filter band parameters, in units of the nyquist frequency,
+    *              or in Hz if the sampleRate is set to a specific value other than 2d.
+    * @param sampleRate default of 2.0 means that the nyquist frequency is 1.0
+    * @param numtaps  number of taps to use (default = 512)
+    * @param kernelType  currently only supports OptKernelType.Firwin. See [[breeze.signal.OptKernelType]]
+    * @param overhang  whether to have overhanging values. See [[breeze.signal.OptOverhang]]
+    * @param padding  how to pad the values. See [[breeze.signal.OptPadding]]
+    * @param canFilterBPBS (implicit delegate to perform filtering on specific Input data types)
+    * @return
+    */
+  def filterBandstop[Input, Output](data: Input, omega: (Double, Double),
+                                    numtaps: Int = 512,
+                                    sampleRate: Double = 2d,
+                                    kernelType: OptKernelType = OptKernelType.Firwin,
+                                    overhang: OptOverhang = OptOverhang.None,
+                                    padding: OptPadding = OptPadding.Boundary)
+                                   (implicit canFilterBPBS: CanFilterBPBS[Input, Output]): Output =
+    canFilterBPBS(data, omega,
+      numtaps, sampleRate, bandStop = true,
+      kernelType, overhang, padding)
 
 }

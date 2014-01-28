@@ -1,9 +1,8 @@
-package breeze.signal.filter
+package breeze.signal.support
 
 import org.scalatest._
 import breeze.linalg.{norm, DenseVector}
 import breeze.signal._
-import breeze.signal.support.KernelDesign
 
 /**
  * @author ktakagaki
