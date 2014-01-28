@@ -112,10 +112,10 @@ object CanConvolve {
 }
 
 
-object correlateLoopNoOverhang extends UFunc{
+object correlateLoopNoOverhang extends UFunc {
   @expand
   @expand.valify
-  implicit def correlateLoopNoOverhang[@expand.args(Int, Double, Float, Long) T]: Impl2[DenseVector[T], DenseVector[T], DenseVector[T]] =
+  implicit def correlateLoopNoOverhang[@expand.args(Double, Float, Long) T]: Impl2[DenseVector[T], DenseVector[T], DenseVector[T]] =
     new Impl2[DenseVector[T], DenseVector[T], DenseVector[T]] {
       def apply(data: DenseVector[T], kernel: DenseVector[T]) = {
         require( data.length * kernel.length != 0, "data and kernel must be non-empty DenseVectors")
@@ -133,6 +133,28 @@ object correlateLoopNoOverhang extends UFunc{
           }
         )
 
+      }
+    }
+
+  implicit def correlateLoopNoOverhangInt: Impl2[DenseVector[Int], DenseVector[Int], DenseVector[Int]] =
+    new Impl2[DenseVector[Int], DenseVector[Int], DenseVector[Int]] {
+      def apply(data: DenseVector[Int], kernel: DenseVector[Int]) = {
+        require( data.length * kernel.length != 0, "data and kernel must be non-empty DenseVectors")
+        require( data.length >= kernel.length, "kernel cannot be longer than data to be convolved/coorelated!")
+
+        val dataL = data.map(_.toLong)
+        val kernelL = kernel.map(_.toLong)
+        DenseVector.tabulate(data.length - kernel.length + 1)(
+          di => {
+            var ki: Int = 0
+            var sum: Long = 0L
+            while(ki < kernel.length){
+              sum += dataL( (di + ki) ) * kernelL(ki)
+              ki += 1
+            }
+            sum.toInt
+          }
+        )
       }
     }
 
