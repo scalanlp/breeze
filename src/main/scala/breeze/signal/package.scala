@@ -63,6 +63,7 @@ package object signal {
 
   // </editor-fold>
 
+  // <editor-fold desc="filter">
   /** Filter input data with the specified kernel and options.
     *
     * @param data data to be filtered
@@ -78,6 +79,9 @@ package object signal {
         (implicit canFilter: CanFilter[Input, Kernel, Output]): Output =
     canFilter(data, kernel, overhang, padding)
 
+  // </editor-fold>
+
+  // <editor-fold desc="filterBP, filterBS">
   /** Bandpass filter the input data.
     *
     * @param data data to be filtered
@@ -91,7 +95,7 @@ package object signal {
     * @param canFilterBPBS (implicit delegate to perform filtering on specific Input data types)
     * @return
     */
-  def filterBandpass[Input, Output](data: Input, omega: (Double, Double),
+  def filterBP[Input, Output](data: Input, omega: (Double, Double),
                              numtaps: Int = 512,
                              sampleRate: Double = 2d,
                              kernelType: OptKernelType = OptKernelType.Firwin,
@@ -115,7 +119,7 @@ package object signal {
     * @param canFilterBPBS (implicit delegate to perform filtering on specific Input data types)
     * @return
     */
-  def filterBandstop[Input, Output](data: Input, omega: (Double, Double),
+  def filterBS[Input, Output](data: Input, omega: (Double, Double),
                                     numtaps: Int = 512,
                                     sampleRate: Double = 2d,
                                     kernelType: OptKernelType = OptKernelType.Firwin,
@@ -125,8 +129,9 @@ package object signal {
     canFilterBPBS(data, omega,
       numtaps, sampleRate, bandStop = true,
       kernelType, overhang, padding)
+  // </editor-fold>
 
-
+  // <editor-fold desc="filter design: firwin">
   /** FIR filter design using the window method.
     *
     * This function computes the coefficients of a finite impulse response
@@ -162,5 +167,6 @@ package object signal {
                 zeroPass, nyquist, scale,
                 optWindow)
 
+  // </editor-fold>
 
-    }
+}
