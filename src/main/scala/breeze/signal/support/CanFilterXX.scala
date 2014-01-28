@@ -44,12 +44,12 @@ object CanFilterBPBS {
                 overhang: OptOverhang,
                 padding: OptPadding = OptPadding.Boundary): DenseVector[Double] = {
 
-        val kernel: FIRKernel1D = kernelType match  {
+        val kernel: FIRKernel1D[Double] = kernelType match  {
           //case x: OptKernelType.OptDefault => KernelDesign.firwin( numtaps, DenseVector[Double](omega._1, omega._2), zeroPass = bandStop, nyquist = sampleRate/2d)
-          case OptKernelType.Firwin =>  KernelDesign.firwin( numtaps, DenseVector[Double](omega._1, omega._2), zeroPass = bandStop, nyquist = sampleRate/2d)
+          case OptKernelType.Firwin =>  firwin[Double]( numtaps, DenseVector[Double](omega._1, omega._2), zeroPass = bandStop, nyquist = sampleRate/2d)
           case x => {
             require(false, "Cannot handle option value "+ x)
-            FIRKernel1D(DenseVector[Double](), "null kernel!")
+            new FIRKernel1D[Double](DenseVector[Double](), "null kernel!")
           }
         }
 

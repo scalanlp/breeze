@@ -15,10 +15,10 @@ import breeze.signal._
 *
 * @author ktakagaki
 */
-trait CanFilter[InputType, Kernel, OutputType] {
-  def apply(data: InputType, kernel: Kernel,
+trait CanFilter[Input, KernelType, Output] {
+  def apply(data: Input, kernel: KernelType,
             overhang: OptOverhang,
-            padding: OptPadding ): OutputType
+            padding: OptPadding ): Output
 }
 
 /**
@@ -34,12 +34,12 @@ object CanFilter {
   /** Use via implicit delegate syntax filter(x: DenseVector)
     *
     */
-  implicit val dvDouble1DFilter : CanFilter[DenseVector[Double], FIRKernel1D, DenseVector[Double]] = {
-    new CanFilter[DenseVector[Double], FIRKernel1D, DenseVector[Double]] {
-      def apply(data: DenseVector[Double], kernel: FIRKernel1D,
+  implicit val dvDouble1DFilter : CanFilter[DenseVector[Double], FIRKernel1D[Double], DenseVector[Double]] = {
+    new CanFilter[DenseVector[Double], FIRKernel1D[Double], DenseVector[Double]] {
+      def apply(data: DenseVector[Double], kernel: FIRKernel1D[Double],
                 overhang: OptOverhang,
                 padding: OptPadding): DenseVector[Double] = {
-        convolve(data, kernel.kernel, overhang, padding)
+        convolve(data, kernel, overhang, padding)
       }
     }
   }
