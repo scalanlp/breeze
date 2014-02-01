@@ -387,6 +387,27 @@ class DenseMatrixTest extends FunSuite with Checkers {
                              (-0.08333333333333352, -0.08333333333333436))).mapValues(_.abs).max < 1E-5)
   }
 
+  test("Solve Float") {
+    // square solve
+    val r1 : DenseMatrix[Float] = DenseMatrix((1.0f,3.0f),(2.0f,0.0f)) \ DenseMatrix((1.0f,2.0f),(3.0f,4.0f))
+    assert(r1 === DenseMatrix((1.5f, 2.0f), (-1.0f/6, 0.0f)))
+
+    // matrix-vector solve
+    val r2 : DenseVector[Float] = DenseMatrix((1.0f,3.0f,4.0f),(2.0f,0.0f,6.0f)) \ DenseVector(1.0f,3.0f)
+    assert( (r2 - DenseVector(0.1813186813186811f, -0.3131868131868131f, 0.43956043956043944f)).norm(inf) < 1E-5)
+
+    // wide matrix solve
+    val r3 : DenseMatrix[Float] = DenseMatrix((1.0f,3.0f,4.0f),(2.0f,0.0f,6.0f)) \ DenseMatrix((1.0f,2.0f),(3.0f,4.0f))
+    assert( (r3 - DenseMatrix((0.1813186813186811f,   0.2197802197802196f),
+      (-0.3131868131868131f, -0.1978021978021977f),
+      (0.43956043956043944f,  0.5934065934065933f))).mapValues(_.abs).max < 1E-5)
+
+    // tall matrix solve
+    val r4 : DenseMatrix[Float] = DenseMatrix((1.0f,3.0f),(2.0f,0.0f),(4.0f,6.0f)) \ DenseMatrix((1.0f,4.0f),(2.0f,5.0f),(3.0f,6.0f))
+    assert( (r4 - DenseMatrix((0.9166666666666667f,    1.9166666666666672f),
+      (-0.08333333333333352f, -0.08333333333333436f))).mapValues(_.abs).max < 1E-5)
+  }
+
   test("GH#29 transpose solve is broken") {
     val A = DenseMatrix((1.0,0.0),(1.0,-1.0))
     val t = DenseVector(1.0,0.0)
