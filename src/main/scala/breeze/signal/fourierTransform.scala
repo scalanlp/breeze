@@ -4,7 +4,7 @@ import breeze.generic.UFunc
 import breeze.linalg.{DenseMatrix, DenseVector}
 import breeze.math.Complex
 import breeze.signal.support.JTransformsSupport._
-
+import breeze.macros.expand
 
 
 /**
@@ -42,6 +42,17 @@ object fourierTransform extends UFunc {
   }
 
   /** Use via implicit delegate syntax fft(x: DenseVector)
+    *
+    */
+  @expand
+  @expand.valify
+  implicit def dvDT1DFFT[@expand.args(Float, Long, Int) T]: Impl[DenseVector[T], DenseVector[Complex]] = {
+    new Impl[DenseVector[T], DenseVector[Complex]] {
+      def apply(v: DenseVector[T]) = fourierTransform( v.map( _.toDouble) )
+    }
+  }
+
+   /** Use via implicit delegate syntax fft(x: DenseVector)
     *
     */
   implicit val dvComplex1DFFT : fourierTransform.Impl[DenseVector[Complex], DenseVector[Complex]] = {

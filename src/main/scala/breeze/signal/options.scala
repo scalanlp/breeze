@@ -14,22 +14,22 @@ import breeze.linalg.DenseVector
 /**Base class for all options*/
 abstract class Opt
 
-
-/**Generic option for none.*/
-case class None() extends Opt
-object None {
-  //these implicit conversions will allow breeze.signal.None() object to be given for different functions.
-  implicit def optNoneSpecialize_WindowFunction(x: None) = OptWindowFunction.None()
-  implicit def optNoneSpecialize_ConvolveOverhang(x: None) = OptOverhang.None()
-  //implicit def optNoneSpecialize_Padding(x: breeze.signal.None) = breeze.signal.OptPadding.None()
-}
-
-/**Generic option for automatic.*/
-case class Automatic() extends Opt
-object Automatic {
-  //these implicit conversions will allow breeze.signal.None() object to be given for different functions.
-  implicit def optNoneSpecialize_ConvolveMethod(x: Automatic) = OptMethod.Automatic()
-}
+//Generic options with implicit specialization cannot be employed for case objects
+// (they can for parameterless case classes)
+//
+///**Generic option for none.*/
+//case object None extends Opt {
+//  //these implicit conversions will allow breeze.signal.None() object to be given for different functions.
+//  implicit def optNoneSpecialize_WindowFunction(x: breeze.signal.None) = OptWindowFunction.None
+//  implicit def optNoneSpecialize_ConvolveOverhang(x: breeze.signal.None) = OptOverhang.None
+//  //implicit def optNoneSpecialize_Padding(x: breeze.signal.None) = breeze.signal.OptPadding.None()
+//}
+//
+///**Generic option for automatic.*/
+//case object Automatic extends Opt {
+//  //these implicit conversions will allow breeze.signal.None() object to be given for different functions.
+//  implicit def optNoneSpecialize_ConvolveMethod(x: breeze.signal.Automatic) = OptMethod.Automatic
+//}
 
 
 ///Individual Options
@@ -43,7 +43,7 @@ object OptWindowFunction {
   case class User(dv: DenseVector[Double]) extends OptWindowFunction {
     override def toString = "user-specified window"
   }
-  case class None() extends OptWindowFunction{
+  case object None extends OptWindowFunction{
     override def toString = "no window"
   }
 }
@@ -63,9 +63,9 @@ object OptOverhang{
     */
   case class Sequence(k0: Int, k1: Int) extends OptOverhang
   /**Option value: Default, no overhangs, equivalent to Sequence(-1, 1).*/
-  case class None() extends OptOverhang
+  case object None extends OptOverhang
   /**Option value: maximal overhangs, equivalent to MatLab conv default ('full'), equivalent to Sequence(1, -1).*/
-  case class Full() extends OptOverhang
+  case object Full extends OptOverhang
 //  /**Option value: Forms the cyclic convolution where the kth kernel element is aligned with each data element.*/
 //  case class OptInteger(k: Int) extends OptOverhang
 }
@@ -74,9 +74,9 @@ object OptOverhang{
 abstract class OptPadding extends Opt
 object OptPadding{
   /**Option value: Performs cyclical convolutions (ie no padding)*/
-  case class Cyclical() extends OptPadding
+  case object Cyclical extends OptPadding
   /**Option value: Pads with the first and last components of the data*/
-  case class Boundary() extends OptPadding
+  case object Boundary extends OptPadding
   /**Option value: Pads with a specific value, eg 0.*/
   case class Value[T](value: T) extends OptPadding
 }
@@ -85,15 +85,27 @@ object OptPadding{
 abstract class OptMethod extends Opt
 object OptMethod{
   /**Option value: Decides on the fastest convolve method based on data size and type.*/
-  case class Automatic() extends OptMethod
+  case object Automatic extends OptMethod
   /**Option value: Convolve using FFT.*/
-  case class FFT() extends OptMethod
+  case object FFT extends OptMethod
   /**Option value: Convolve using for loop.*/
-  case class Loop() extends OptMethod
 }
 
-abstract class OptKernelType extends Opt
-object OptKernelType{
+abstract class OptKernelDesign extends Opt
+object OptKernelDesign {
   /**Option value: use firwin() to design FIR kernel using window method.*/
-  case class Firwin() extends OptKernelType
+  case object Firwin extends OptKernelDesign
 }
+
+//abstract class OptFilterOrder extends Opt
+//object OptFilterOrder {
+//  /**Option value: use firwin() to design FIR kernel using window method.*/
+//  case object Automatic extends OptFilterOrder
+//  case class Int(n: Int) extends OptFilterOrder
+//}
+//
+//abstract class OptFilterType extends Opt
+//object OptFilterType {
+//  /**Option value: use firwin() to design FIR kernel using window method.*/
+//  case object FIR extends OptFilterType
+//}
