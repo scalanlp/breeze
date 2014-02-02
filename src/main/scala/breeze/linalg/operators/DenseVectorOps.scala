@@ -331,7 +331,7 @@ trait DenseVector_OrderingOps extends DenseVectorOps { this: DenseVector.type =>
  *
  * @author dlwh
  **/
-trait DenseVector_GenericOps extends UFunc2ZippingImplicits[DenseVector] { this: DenseVector.type =>
+trait DenseVector_GenericOps { this: DenseVector.type =>
   @expand
   implicit def pureFromUpdate[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
   Other,

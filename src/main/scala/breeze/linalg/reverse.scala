@@ -2,26 +2,17 @@ package breeze.linalg
 
 import breeze.generic.UFunc
 import breeze.macros.expand
+import scala.reflect.ClassTag
 
 /**
  * Returns a reversed copy of the DenseVector.
  * @author ktakagaki
  */
 object reverse extends UFunc {
-  @expand
-  @expand.valify
-  implicit def dvReverse[@expand.args(Int, Long, Float, Double) T]: Impl[DenseVector[T], DenseVector[T]] =
+  implicit def dvReverse[T:ClassTag]: Impl[DenseVector[T], DenseVector[T]] =
     new Impl[DenseVector[T], DenseVector[T]] {
-      def apply(dv: DenseVector[T]): DenseVector[T] = DenseVector( dv.toArray.reverse )
+      def apply(dv: DenseVector[T]): DenseVector[T] = dv(dv.length - 1 to 0 by -1).copy
     }
 
 }
 
-// ???For implicit DenseVector[T].reverse
-//
-// class DenseVectorReverse[T](override val data: Array[T],
-//                            override val offset: Int,
-//                            override val stride: Int,
-//                            override val length: Int) extends DenseVector[T](data, offset, stride, length) {
-//  def reverse(): DenseVector[T] = breeze.linalg.reverse(this)
-//}

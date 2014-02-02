@@ -42,13 +42,31 @@ object fourierTransform extends UFunc {
   }
 
   /** Use via implicit delegate syntax fft(x: DenseVector)
-    *
-    */
+    *     For some reason this breaks scaladoc... No good reason why.
   @expand
   @expand.valify
   implicit def dvDT1DFFT[@expand.args(Float, Long, Int) T]: Impl[DenseVector[T], DenseVector[Complex]] = {
     new Impl[DenseVector[T], DenseVector[Complex]] {
       def apply(v: DenseVector[T]) = fourierTransform( v.map( _.toDouble) )
+    }
+  }
+    */
+
+  implicit def dvDT1DFFT_Float: Impl[DenseVector[Float], DenseVector[Complex]] = {
+    new Impl[DenseVector[Float], DenseVector[Complex]] {
+      def apply(v: DenseVector[Float]) = fourierTransform( v.map( _.toDouble) )
+    }
+  }
+
+  implicit def dvDT1DFFT_Int: Impl[DenseVector[Int], DenseVector[Complex]] = {
+    new Impl[DenseVector[Int], DenseVector[Complex]] {
+      def apply(v: DenseVector[Int]) = fourierTransform( v.map( _.toDouble) )
+    }
+  }
+
+  implicit def dvDT1DFFT_Long: Impl[DenseVector[Long], DenseVector[Complex]] = {
+    new Impl[DenseVector[Long], DenseVector[Complex]] {
+      def apply(v: DenseVector[Long]) = fourierTransform( v.map( _.toDouble) )
     }
   }
 

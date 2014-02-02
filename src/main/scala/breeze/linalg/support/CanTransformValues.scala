@@ -25,7 +25,7 @@ import breeze.math.Complex
  * @author dramage
  * @author dlwh
  */
-trait CanTransformValues[-From, +A, -B] {
+trait CanTransformValues[From, +A, B] {
   /**Transforms all key-value pairs from the given collection. */
   def transform(from: From, fn: (A => B))
 

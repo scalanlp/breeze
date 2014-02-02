@@ -446,13 +446,11 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     }
   }
 
-  implicit val canDaxpy: CanAxpy[Double, DenseVector[Double], DenseVector[Double]] = {
-    new CanAxpy[Double, DenseVector[Double], DenseVector[Double]] {
-      def apply(a: Double, x: DenseVector[Double], y: DenseVector[Double]) {
-        require(x.length == y.length, "Vectors must have same length")
-        blas.daxpy(
-          x.length, a, x.data, x.offset, x.stride, y.data, y.offset, y.stride)
-      }
+  implicit object canDaxpy extends CanAxpy[Double, DenseVector[Double], DenseVector[Double]] with Serializable {
+    def apply(a: Double, x: DenseVector[Double], y: DenseVector[Double]) {
+      require(x.length == y.length, "Vectors must have same length")
+      blas.daxpy(
+        x.length, a, x.data, x.offset, x.stride, y.data, y.offset, y.stride)
     }
   }
 

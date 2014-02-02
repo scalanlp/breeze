@@ -2,7 +2,7 @@ package breeze.linalg
 
 import breeze.generic.UFunc
 import breeze.macros.expand
-import breeze.linalg.support.CanTraverseValues
+import breeze.linalg.support.{CanTransformValues, CanMapValues, CanTraverseValues}
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 
 
@@ -115,3 +115,25 @@ object min extends UFunc {
   }
 }
 
+/**
+ * clip(a, lower, upper) returns an array such that all elements are "clipped" at the range (lower, upper)
+ */
+object clip extends UFunc {
+  implicit def clipOrdering[T,V](implicit ordering: Ordering[V], cmv: CanMapValues[T, V, V, T]):Impl3[T, V, V, T] = {
+    new Impl3[T, V, V, T] {
+      import ordering.mkOrderingOps
+      def apply(v: T, v2: V, v3: V): T = {
+        cmv.map(v, x => if(x < v2) v2 else if (x > v3) v3 else x)
+      }
+    }
+  }
+
+  implicit def clipInPlaceOrdering[T,V](implicit ordering: Ordering[V], cmv: CanTransformValues[T, V, V]):InPlaceImpl3[T, V, V] = {
+    import ordering.mkOrderingOps
+    new InPlaceImpl3[T, V, V] {
+      def apply(v: T, v2: V, v3: V):Unit = {
+        cmv.transform(v, x => if(x < v2) v2 else if (x > v3) v3 else x)
+      }
+    }
+  }
+}
