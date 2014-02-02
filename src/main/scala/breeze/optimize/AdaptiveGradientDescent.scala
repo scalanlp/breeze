@@ -3,6 +3,7 @@ package breeze.optimize
 import breeze.linalg._
 import breeze.numerics._
 import breeze.math.MutableCoordinateSpace
+import breeze.stats.distributions.{Rand, RandBasis}
 
 /**
  * Implements the L2^2 and L1 updates from
@@ -28,7 +29,7 @@ object AdaptiveGradientDescent {
                             stepSize: Double, maxIter: Int,
                             tolerance: Double = 1E-5,
                             improvementTolerance: Double= 1E-4,
-                            minImprovementWindow: Int = 50)(implicit vspace: MutableCoordinateSpace[T, Double])
+                            minImprovementWindow: Int = 50)(implicit vspace: MutableCoordinateSpace[T, Double], rand: RandBasis = Rand)
     extends StochasticGradientDescent[T](stepSize, maxIter, tolerance, improvementTolerance, minImprovementWindow) {
 
     val delta = 1E-4
@@ -87,7 +88,7 @@ object AdaptiveGradientDescent {
   class L1Regularization[T](val lambda: Double=1.0,
                             delta: Double = 1E-5,
                             eta: Double=4,
-                            maxIter: Int=100)(implicit vspace: MutableCoordinateSpace[T, Double]) extends StochasticGradientDescent[T](eta,maxIter) {
+                            maxIter: Int=100)(implicit vspace: MutableCoordinateSpace[T, Double], rand: RandBasis = Rand) extends StochasticGradientDescent[T](eta,maxIter) {
 
 
 

@@ -4,6 +4,8 @@ import breeze.math.{NormedVectorSpace, MutableCoordinateSpace}
 import breeze.util.Implicits._
 import com.typesafe.scalalogging.slf4j.Logging
 import breeze.linalg.norm
+import breeze.stats.distributions.{RandBasis, ThreadLocalRandomGenerator}
+import org.apache.commons.math3.random.MersenneTwister
 
 /**
  *
@@ -134,7 +136,10 @@ object FirstOrderMinimizer {
                        maxIterations:Int = 1000,
                        useL1: Boolean = false,
                        tolerance:Double = 1E-5,
-                       useStochastic: Boolean= false) {
+                       useStochastic: Boolean= false,
+                       randomSeed: Int = 0) {
+    private implicit val random = new RandBasis(new ThreadLocalRandomGenerator(new MersenneTwister(randomSeed)))
+
     def minimize[T](f: BatchDiffFunction[T], init: T)(implicit arith: MutableCoordinateSpace[T, Double]): T = {
       this.iterations(f, init).last.x
     }
@@ -155,9 +160,9 @@ object FirstOrderMinimizer {
 
     def iterations[T](f: StochasticDiffFunction[T], init:T)(implicit arith: MutableCoordinateSpace[T, Double]):Iterator[FirstOrderMinimizer[T, StochasticDiffFunction[T]]#State] = {
       val r = if(useL1) {
-        new AdaptiveGradientDescent.L1Regularization[T](regularization, eta=alpha, maxIter = maxIterations)(arith)
+        new AdaptiveGradientDescent.L1Regularization[T](regularization, eta=alpha, maxIter = maxIterations)(arith, random)
       } else { // L2
-        new AdaptiveGradientDescent.L2Regularization[T](regularization, alpha,  maxIterations)(arith)
+        new AdaptiveGradientDescent.L2Regularization[T](regularization, alpha,  maxIterations)(arith, random)
       }
       r.iterations(f,init)
     }
