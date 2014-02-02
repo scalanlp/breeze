@@ -38,9 +38,6 @@ trait CanConvolve[Input, KernelType, Output] {
  */
 object CanConvolve {
 
-  /** Use via implicit delegate syntax convolve(data: DenseVector, kernel)
-    *
-    */
   @expand
   @expand.valify
   implicit def dvT1DConvolve[@expand.args(Int, Long, Float, Double) T]: CanConvolve[DenseVector[T],DenseVector[T], DenseVector[T]] = {
@@ -91,9 +88,6 @@ object CanConvolve {
     }
   }
 
-  /** Use via implicit delegate syntax convolve(data: DenseVector, kernel)
-    *
-    */
   @expand
   @expand.valify
   implicit def dvTKernel1DConvolve[@expand.args(Int, Long, Float, Double) T]: CanConvolve[DenseVector[T], FIRKernel1D[T], DenseVector[T]] = {

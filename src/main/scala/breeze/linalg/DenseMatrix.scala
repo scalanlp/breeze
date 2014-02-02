@@ -134,7 +134,6 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
     * @param cols the number of columns, or -1 to auto determine based on size and rows
     */
   def reshape(rows: Int, cols: Int, view: View=View.Prefer):DenseMatrix[V] = {
-    require(rows > 0)
     val _cols = cols//if(cols < 0) size / rows else cols
     require(rows * _cols == size, "Cannot reshape a (%d,%d) matrix to a (%d,%d) matrix!".format(this.rows, this.cols, rows, _cols))
 
@@ -268,6 +267,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
 with DenseMatrixOps
 with DenseMatrixMultOps
 with DenseMatrixMultiplyStuff
+with DenseMatrixFloatMultiplyStuff
 with MatrixConstructors[DenseMatrix] {
 
   /**

@@ -7,7 +7,6 @@ import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 import breeze.macros.expand
 import breeze.math.Complex
 import scala.math.BigInt
-import breeze.generic.UFunc2ZippingImplicits
 import breeze.linalg.support.{CanCollapseAxis, CanSlice2}
 import breeze.util.ArrayUtil
 import breeze.storage.DefaultArrayValue
@@ -190,6 +189,184 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps with DenseMatrixMultOps { 
 }
 
 
+
+// TODO: fix expand to allow us to remove this code duplication
+trait DenseMatrixFloatMultiplyStuff extends DenseMatrixOps with DenseMatrixMultOps { this: DenseMatrix.type =>
+  implicit object DenseMatrixFMulDenseMatrixF
+    extends OpMulMatrix.Impl2[DenseMatrix[Float], DenseMatrix[Float], DenseMatrix[Float]] {
+    def apply(_a : DenseMatrix[Float], _b : DenseMatrix[Float]): DenseMatrix[Float] = {
+      require(_a.cols == _b.rows, "Dimension mismatch!")
+      val rv = DenseMatrix.zeros[Float](_a.rows, _b.cols)
+
+      if(_a.rows == 0 || _b.rows == 0 || _a.cols == 0 || _b.cols == 0) return rv
+
+      // if we have a weird stride...
+      val a:DenseMatrix[Float] = if(_a.majorStride < math.max(if(_a.isTranspose) _a.cols else _a.rows, 1)) _a.copy else _a
+      val b:DenseMatrix[Float] = if(_b.majorStride < math.max(if(_b.isTranspose) _b.cols else _b.rows, 1)) _b.copy else _b
+
+      blas.sgemm(transposeString(a), transposeString(b),
+        rv.rows, rv.cols, a.cols,
+        1.0f, a.data, a.offset, a.majorStride,
+        b.data, b.offset, b.majorStride,
+        0.0f, rv.data, 0, rv.rows)
+      rv
+    }
+  }
+
+
+  private def transposeString(a: DenseMatrix[Float]): String = {
+    if (a.isTranspose) "T" else "N"
+  }
+
+  implicit object DenseMatrixFMulDenseVectorF
+    extends OpMulMatrix.Impl2[DenseMatrix[Float], DenseVector[Float], DenseVector[Float]] {
+    def apply(a : DenseMatrix[Float], b : DenseVector[Float]) = {
+      require(a.cols == b.length, "Dimension mismatch!")
+      val rv = DenseVector.zeros[Float](a.rows)
+      blas.sgemv(transposeString(a),
+        if(a.isTranspose) a.cols else a.rows, if(a.isTranspose) a.rows else a.cols,
+        1.0f, a.data, a.offset, a.majorStride,
+        b.data, b.offset, b.stride,
+        0.0f, rv.data, rv.offset, rv.stride)
+      rv
+    }
+  }
+
+  implicit object DenseMatrixFloatCanSolveDenseMatrixFloat
+    extends OpSolveMatrixBy.Impl2[DenseMatrix[Float], DenseMatrix[Float], DenseMatrix[Float]] {
+    override def apply(A : DenseMatrix[Float], V : DenseMatrix[Float]) = {
+      require(A.rows == V.rows, "Non-conformant matrix sizes")
+
+      if (A.rows == A.cols) {
+        // square: LUSolve
+        val X = DenseMatrix.zeros[Float](V.rows, V.cols)
+        X := V
+        LUSolve(X,A)
+        X
+      } else {
+        // non-square: QRSolve
+        val X = DenseMatrix.zeros[Float](A.cols, V.cols)
+        QRSolve(X,A,V)
+        X
+      }
+    }
+
+    /** X := A \ X, for square A */
+    def LUSolve(X : DenseMatrix[Float], A : DenseMatrix[Float]) = {
+      require(X.offset == 0)
+      require(A.offset == 0)
+      val piv = new Array[Int](A.rows)
+      val newA = A.copy
+      assert(!newA.isTranspose)
+
+      val info = {
+        val info = new intW(0)
+        lapack.sgesv(A.rows, X.cols, newA.data, newA.majorStride, piv, X.data, X.majorStride, info)
+        info.`val`
+      }
+
+      if (info > 0)
+        throw new MatrixSingularException()
+      else if (info < 0)
+        throw new IllegalArgumentException()
+
+      X
+    }
+
+    /** X := A \ V, for arbitrary A */
+    def QRSolve(X : DenseMatrix[Float], A : DenseMatrix[Float], V : DenseMatrix[Float]) = {
+      require(X.offset == 0)
+      require(A.offset == 0)
+      require(V.offset == 0)
+      require(X.rows == A.cols, "Wrong number of rows in return value")
+      require(X.cols == V.cols, "Wrong number of rows in return value")
+      val transpose = X.isTranspose
+
+      val nrhs = V.cols
+
+      // allocate temporary solution matrix
+      val Xtmp = DenseMatrix.zeros[Float](math.max(A.rows, A.cols), nrhs)
+      val M = if (!transpose) A.rows else A.cols
+      Xtmp(0 until M,0 until nrhs) := V(0 until M, 0 until nrhs)
+
+      val newData = A.data.clone()
+
+      // query optimal workspace
+      val queryWork = new Array[Float](1)
+      val queryInfo = new intW(0)
+      lapack.sgels(
+        if (!transpose) "N" else "T",
+        A.rows, A.cols, nrhs,
+        newData, A.majorStride,
+        Xtmp.data, math.max(1,math.max(A.rows,A.cols)),
+        queryWork, -1, queryInfo)
+
+      // allocate workspace
+      val work = {
+        val lwork = {
+          if (queryInfo.`val` != 0)
+            math.max(1, math.min(A.rows, A.cols) + math.max(math.min(A.rows, A.cols), nrhs))
+          else
+            math.max(queryWork(0).toInt, 1)
+        }
+        new Array[Float](lwork)
+      }
+
+      // compute factorization
+      val info = new intW(0)
+      lapack.sgels(
+        if (!transpose) "N" else "T",
+        A.rows, A.cols, nrhs,
+        newData, A.majorStride,
+        Xtmp.data, math.max(1,math.max(A.rows,A.cols)),
+        work, work.length, info)
+
+      if (info.`val` < 0)
+        throw new IllegalArgumentException
+
+      // extract solution
+      val N = if (!transpose) A.cols else A.rows
+      X(0 until N, 0 until nrhs) := Xtmp(0 until N, 0 until nrhs)
+
+      X
+    }
+  }
+
+  implicit object DenseMatrixFloatCanSolveDenseVectorFloat extends OpSolveMatrixBy.Impl2[DenseMatrix[Float], DenseVector[Float], DenseVector[Float]] {
+    override def apply(a : DenseMatrix[Float], b : DenseVector[Float]) = {
+      val rv = a \ new DenseMatrix[Float](b.size, 1, b.data, b.offset, b.stride, true)
+      new DenseVector[Float](rv.data)
+    }
+  }
+
+
+
+  implicit val mulDVDMFloat: OpMulMatrix.Impl2[DenseVector[Float], DenseMatrix[Float], DenseMatrix[Float]] = {
+    new OpMulMatrix.Impl2[DenseVector[Float], DenseMatrix[Float], DenseMatrix[Float]] {
+      def apply(a: DenseVector[Float], b: DenseMatrix[Float]) = {
+        require(b.rows == 1)
+        //        val adata =  if(a.stride != 1) {
+        //          val v = DenseVector.zeros[Float](a.length)
+        //          v := a
+        //          v.data
+        //        } else {
+        //          a.data
+        //        }
+        val rv = DenseMatrix.zeros[Float](a.length, b.cols)
+        blas.sgemm("T", transposeString(b),
+          rv.rows, rv.cols, 1,
+          1.0f, a.data, a.offset, a.stride, b.data, b.offset, b.majorStride,
+          0.0f, rv.data, 0, rv.rows)
+        rv
+
+      }
+    }
+  }
+
+
+
+}
+
 trait DenseMatrixOps { this: DenseMatrix.type =>
 
   import breeze.math.PowImplicits._
@@ -312,7 +489,7 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
 
 }
 
-trait DenseMatrixOpsLowPrio extends UFunc2ZippingImplicits[DenseMatrix] { this: DenseMatrixOps =>
+trait DenseMatrixOpsLowPrio { this: DenseMatrixOps =>
   // LOL, if we explicitly annotate the type, then the implicit resolution thing will load this recursively.
   // If we don't, then everything works ok.
   @expand

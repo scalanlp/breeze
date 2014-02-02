@@ -4,7 +4,7 @@ import breeze.macros.expand
 import breeze.math.{Ring, Semiring, Complex}
 import scala.math.BigInt
 import breeze.linalg._
-import breeze.generic.{UFunc2ZippingImplicits, UFunc}
+import breeze.generic.{UFunc}
 import breeze.linalg.support.{CanZipMapValues, CanAxpy, CanCopy}
 import breeze.generic.UFunc.{UImpl, UImpl2}
 import scala.reflect.ClassTag
@@ -532,7 +532,7 @@ trait SparseVector_HashVector_Ops extends HashVectorOps with HashVector_SparseVe
   :Op.InPlaceImpl2[SparseVector[T], HashVector[T]] = updateFromPureS
 }
 
-trait HashVector_GenericOps extends UFunc2ZippingImplicits[HashVector]{ this: HashVector.type =>
+trait HashVector_GenericOps { this: HashVector.type =>
   import breeze.math.PowImplicits._
   @expand
   implicit def pureFromUpdate[@expand.args(Int, Double, Float, Long, BigInt, Complex) T, Other,Op<:OpType](op: UFunc.InPlaceImpl2[Op, HashVector[T], Other])(implicit copy: CanCopy[HashVector[T]]):UFunc.UImpl2[Op, HashVector[T], Other, HashVector[T]] = {
