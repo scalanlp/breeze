@@ -1,10 +1,11 @@
 package breeze.signal
 
 import breeze.generic.UFunc
-import breeze.linalg.{DenseMatrix, DenseVector}
+import breeze.linalg.{sum, DenseMatrix, DenseVector}
 import breeze.math.Complex
 import breeze.signal.support.JTransformsSupport._
 import breeze.macros.expand
+import breeze.numerics.{sin, cos}
 
 
 /**
@@ -129,12 +130,23 @@ object fourierTr extends UFunc {
   }
 
 
-  implicit val dvDouble1DFourierRange: fourierTr.Impl[DenseVector[Double], Range, DenseVector[Complex]] = {
-    new fourierTr.Impl[DenseVector[Double], Range, DenseVector[Complex]] {
-      def apply(v: DenseVector[Double], range: Range) = {
+  implicit val dvDouble1DFourierRange: fourierTr.Impl2[DenseVector[Double], Range, DenseVector[Complex]] = {
+    new fourierTr.Impl2[DenseVector[Double], Range, DenseVector[Complex]] {
+      def apply(v: DenseVector[Double], rangeNegative: Range) = {
+
+        val range = rangeNegative.getRangeWithoutNegativeIndexes(v.length)
 
 
+        val tempret =
+          for( k <- range ) yield {
+            val pk2_N = scala.math.Pi * k * 2d / v.length
+            sum(  DenseVector.tabulate[Complex](v.length)( (n: Int) => {
+                                        val nd = n.toDouble
+                                        Complex(cos(pk2_N * nd), sin(pk2_N * nd))
+                                                                                      } )
+            ) }
 
+        DenseVector( tempret )
 
       }
     }
