@@ -355,7 +355,10 @@ with MatrixConstructors[DenseMatrix] {
 
   implicit def canSliceRows[V]: CanSlice2[DenseMatrix[V], Range, ::.type, DenseMatrix[V]] = {
     new CanSlice2[DenseMatrix[V], Range, ::.type, DenseMatrix[V]] {
-      def apply(m: DenseMatrix[V], rows: Range, ignored: ::.type) = {
+      def apply(m: DenseMatrix[V], rowsWNegative: Range, ignored: ::.type) = {
+
+        val rows = rowsWNegative.getRangeWithoutNegativeIndexes(m.rows)
+
         if(rows.isEmpty) new DenseMatrix(0, m.cols, m.data, 0, 0)
         else if(!m.isTranspose) {
           require(rows.step == 1, "Sorry, we can't support row ranges with step sizes other than 1")
@@ -378,7 +381,10 @@ with MatrixConstructors[DenseMatrix] {
 
   implicit def canSliceCols[V]: CanSlice2[DenseMatrix[V], ::.type, Range, DenseMatrix[V]] = {
     new CanSlice2[DenseMatrix[V], ::.type, Range, DenseMatrix[V]] {
-      def apply(m: DenseMatrix[V], ignored: ::.type, cols: Range) = {
+      def apply(m: DenseMatrix[V], ignored: ::.type, colsWNegative: Range) = {
+
+        val cols = colsWNegative.getRangeWithoutNegativeIndexes(m.cols)
+
         if(cols.isEmpty) new DenseMatrix(m.rows, 0, m.data, 0, 1)
         else if(!m.isTranspose) {
           val first = cols.head
@@ -400,7 +406,11 @@ with MatrixConstructors[DenseMatrix] {
 
   implicit def canSliceColsAndRows[V]: CanSlice2[DenseMatrix[V], Range, Range, DenseMatrix[V]] = {
     new CanSlice2[DenseMatrix[V], Range, Range, DenseMatrix[V]] {
-      def apply(m: DenseMatrix[V], rows: Range, cols: Range) = {
+      def apply(m: DenseMatrix[V], rowsWNegative: Range, colsWNegative: Range) = {
+
+        val rows = rowsWNegative.getRangeWithoutNegativeIndexes(m.rows)
+        val cols = colsWNegative.getRangeWithoutNegativeIndexes(m.cols)
+
         if(rows.isEmpty || cols.isEmpty) new DenseMatrix(0, 0, m.data, 0, 1)
         else if(!m.isTranspose) {
           require(rows.step == 1, "Sorry, we can't support row ranges with step sizes other than 1 for non transposed matrices")
@@ -426,7 +436,10 @@ with MatrixConstructors[DenseMatrix] {
 
   implicit def canSlicePartOfRow[V]: CanSlice2[DenseMatrix[V], Int, Range, DenseMatrix[V]] = {
     new CanSlice2[DenseMatrix[V], Int, Range, DenseMatrix[V]] {
-      def apply(m: DenseMatrix[V], row: Int, cols: Range) = {
+      def apply(m: DenseMatrix[V], row: Int, colsWNegative: Range) = {
+
+        val cols = colsWNegative.getRangeWithoutNegativeIndexes(m.cols)
+
         if(row < 0  || row > m.rows) throw new IndexOutOfBoundsException("Slice with out of bounds row! " + row)
         if(cols.isEmpty) new DenseMatrix(0, 0, m.data, 0, 1)
         else if(!m.isTranspose) {
@@ -442,7 +455,10 @@ with MatrixConstructors[DenseMatrix] {
 
   implicit def canSlicePartOfCol[V]: CanSlice2[DenseMatrix[V], Range, Int, DenseVector[V]] = {
     new CanSlice2[DenseMatrix[V], Range, Int, DenseVector[V]] {
-      def apply(m: DenseMatrix[V], rows: Range, col: Int) = {
+      def apply(m: DenseMatrix[V], rowsWNegative: Range, col: Int) = {
+
+        val rows = rowsWNegative.getRangeWithoutNegativeIndexes(m.rows)
+
         if(rows.isEmpty) new DenseVector(m.data, 0, 0, 0)
         else if(!m.isTranspose) {
           new DenseVector(m.data, col * m.rows + m.offset + rows.head, rows.step, rows.length)
