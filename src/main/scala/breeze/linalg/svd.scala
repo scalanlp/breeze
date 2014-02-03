@@ -91,8 +91,11 @@ object svd extends UFunc {
       val bmat = "I"
       val which = "LM"
       
-      var iparam = Array(1,0,300,0,0,0,1)
-
+      var iparam = new Array[Int](11)
+      iparam(0) = 1
+      iparam(2) = 300
+      iparam(6) = 1
+   
       var ido = new intW(0)
       var info = new intW(0)
 
