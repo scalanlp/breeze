@@ -152,4 +152,87 @@ object correlateLoopNoOverhang extends UFunc {
       }
     }
 
+//  /**FFT-based FIR filtering using overlap-add method.
+//    *
+//    * @param filter
+//    * @param data data to be filtered
+//    */
+//  public static double[] filterFFT(double[] filter, double[] data){
+//    int dataL  = data.length;
+//    int filterL  = filter.length;
+//    //    ## Use FFT with the smallest power of 2 which is >= length (x) +
+//    //    ## length (b) - 1 as number of points ...
+//    int N = K.nextpow2( dataL + filterL - 1 );
+//
+//    return filterFFTImpl(KKJTransforms.fft(filter, N), data, N, filterL, dataL);
+//  }
+//  //    private static double[] filterFFTImpl(Complex[] filterFFT, double[] data, int N, int filterL, int dataL){
+//  //        double[] y =
+//  //                K.real(
+//  //                    K.ifft(
+//  //                        K.multiply(K.fft(data, N), filterFFT)
+//  //                    )
+//  //                );
+//  ////        return K.copy(y,K.r(0,dataL + filterL - 1));
+//  ////        return y;
+//  //        return K.copy(y,K.r(filterL/2,filterL/2+dataL-1));
+//  //    }
+//  private static double[] filterFFTImpl(ComplexArray filterFFT, double[] data, int N, int filterL, int dataL){
+//    ComplexArray tempret=KKJTransforms.fft(data, N);
+//    tempret.multiply(filterFFT);
+//    double[] tempretD = KKJTransforms.ifft(tempret).getRealArray();
+//    //        return K.copy(y,K.r(0,dataL + filterL - 1));
+//    //        return y;
+//    return K.copy(tempretD,K.r(filterL/2,filterL/2+dataL-1));
+//  }
+//
+//
+//  public static double[] filterFFT(double[] filter, double[] data, int N){
+//    int dataL  = data.length;
+//    int filterL  = filter.length;
+//    //    ## Use overlap-add method ...
+//    int n = K.nextpow2( K.max(N, filterL) );
+//    //K.pow(2, K.ceil( K.log( K.max(N, l_b)) / K.log(2)));
+//    int L = n - filterL + 1;
+//    ComplexArray B = KKJTransforms.fft(filter, n);
+//    //Complex[] B = K.fft(filter, n);
+//    int R = (int)K.ceil(dataL / L);
+//    double[] y = K.tableC(0d, dataL);//zeros1D(dataL);
+//
+//    for(int r=1; r<=R; r++){
+//      int lo  = (r - 1) * L;// + 1;
+//      int hi  = K.min(r * L, dataL) -1;
+//      ComplexArray tempfft = KKJTransforms.fft(K.copy(data, K.r(lo, hi)), n);
+//      tempfft.multiply(B);
+//      double[] tmp = KKJTransforms.ifft( tempfft ).getRealArray();
+//      //            double[] tmp = K.real(
+//      //                    K.ifft( K.multiply( K.fft( K.copy(data, K.r(lo, hi)), n), B)  )
+//      //                    );
+//      hi  = K.min(lo+N-1, dataL - 1);
+//      //ToDo: what was this!!! putTo/putTo            K.putTo(y, K.r(lo, hi),
+//      K.putTo(y, K.r(lo, hi),
+//        K.add(
+//          K.copy(y, K.r(lo, hi)),
+//          K.copy(tmp, K.r(0, hi-lo))
+//        )
+//      );
+//      //y(lo:hi) = y (lo:hi) + tmp (1:(hi-lo+1));
+//    }
+//    return y;
+//
+//    //y = reshape (y (1:l_x), r_x, c_x);
+//
+//    //  ## Final cleanups:  if both x and b are real respectively integer, y
+//    //  ## should also be
+//
+//    //          if (! (any (imag (x)) || any (imag (b))))
+//    //            y = real (y);
+//    //            endif
+//    //        if (! (any (x - round (x)) || any (b - round (b))))
+//    //            y = round (y);
+//    //        endif
+//
+//  }
+//  //</editor-fold>
+
 }
