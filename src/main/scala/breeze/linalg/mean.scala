@@ -67,7 +67,7 @@ object meanAndVariance extends UFunc {
  * The method just calls meanAndVariance and returns the second result.
  */
 object variance extends UFunc {
-  implicit def reduceDouble[T](mv: meanAndVariance.Impl[T, (Double, Double)]): Impl[T, Double] = new Impl[T, Double] {
+  implicit def reduceDouble[T](implicit mv: meanAndVariance.Impl[T, (Double, Double)]): Impl[T, Double] = new Impl[T, Double] {
     def apply(v: T): Double = mv(v)._2
   }
 }
@@ -76,7 +76,7 @@ object variance extends UFunc {
  * Computes the standard deviation by calling variance and then sqrt'ing
  */
 object stddev extends UFunc {
-  implicit def reduceDouble[T](mv: variance.Impl[T, Double]): Impl[T, Double] = new Impl[T, Double] {
+  implicit def reduceDouble[T](implicit mv: variance.Impl[T, Double]): Impl[T, Double] = new Impl[T, Double] {
     def apply(v: T): Double = scala.math.sqrt(mv(v))
   }
 }

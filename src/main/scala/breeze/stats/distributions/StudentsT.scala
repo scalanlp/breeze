@@ -1,0 +1,46 @@
+package breeze.stats.distributions
+
+import scala.runtime.ScalaRunTime
+import org.apache.commons.math3.distribution.TDistribution
+import breeze.numerics._
+
+/**
+ * Implements Student's T distribution
+ * [[http://en.wikipedia.org/wiki/Student's_t-distribution]]
+ *
+ * @author dlwh
+ **/
+case class StudentsT(degreesOfFreedom: Double)(implicit randBasis: RandBasis = Rand) extends ContinuousDistr[Double] with Moments[Double, Double] {
+  require(degreesOfFreedom > 0, "degreesOfFreedom must be positive, but got " + degreesOfFreedom)
+  override def toString: String = ScalaRunTime._toString(this)
+
+  private val innerInstance = new TDistribution(randBasis.generator, degreesOfFreedom, TDistribution.DEFAULT_INVERSE_ABSOLUTE_ACCURACY)
+
+  def draw(): Double = if(degreesOfFreedom >= 3) {
+    // this tends to be under distributed for small dof
+    innerInstance.sample()
+  } else {
+    // TODO: for small DoF this seems a little wrong too...
+    // numpy version
+    val N = randBasis.gaussian.draw()
+    val G = new Gamma(degreesOfFreedom/2, 1.0).draw()
+    val X = sqrt(degreesOfFreedom/2)*N/sqrt(G)
+    X
+  }
+
+  def unnormalizedLogPdf(x: Double): Double = -(degreesOfFreedom  + 1)/2 * math.log(1 + (x * x)/degreesOfFreedom)
+
+  def logNormalizer: Double = math.sqrt(math.Pi * degreesOfFreedom) + lgamma((degreesOfFreedom / 2) - lgamma(degreesOfFreedom + 1)/2)
+
+  def mean: Double = innerInstance.getNumericalMean
+
+  def variance: Double = innerInstance.getNumericalVariance
+
+  def entropy: Double = (
+    (degreesOfFreedom + 1)/2 * (digamma((degreesOfFreedom + 1)/2) -  digamma(degreesOfFreedom))
+      - .5 * log(degreesOfFreedom)
+      + lbeta(degreesOfFreedom/2, 0.5)
+  )
+
+  def mode: Double = mean
+}
