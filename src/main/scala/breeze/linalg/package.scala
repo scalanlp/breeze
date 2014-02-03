@@ -16,7 +16,7 @@ package breeze
 */
 import io.{CSVWriter, CSVReader}
 import linalg.operators._
-import breeze.linalg.support.{CanAxpy, CanTraverseValues, RangeSuffix, RangeExtender, CanCopy}
+import breeze.linalg.support.{CanAxpy, CanTraverseValues, RangeSuffix, CanCopy}
 import math.Semiring
 import org.netlib.util.intW
 import storage.DefaultArrayValue
@@ -89,10 +89,29 @@ package object linalg {
   /** for adding slicing */
   implicit class RichIntMethods(val x: Int) extends AnyVal {
     def until(z: ::.type) = new RangeSuffix(x)
+ }
 
-    def ##(y: Int): RangeExtender = new RangeExtender(x, y)
-    //Cannot do following, due to final def Any.##(): Int (ie Any.hashcode)
-    //def ##(): RangeExtender = new RangeExtender(x)
+  implicit class RangeExtender(val re: Range) extends Range(re.start, re.end, re.step) {
+
+    def getRangeWithoutNegativeIndexes(totalLength: Int): Range = {
+      val (actualStart: Int, actualEnd: Int) =
+        if(re.isInclusive){
+          (
+            if ( re.start < 0 ) totalLength + re.start else re.start   ,
+            if ( re.end < 0 ) {
+              if (re.step > 0 ) totalLength + re.end + 1 else totalLength + re.end - 1 //actualEnd will be given as argument to regular Range(), hence +1
+            } else if (re.step > 0 ) re.end + 1 else re.end - 1
+            )
+        } else {
+          if( re.end < 0 ) {
+            throw new IllegalArgumentException("cannot use negative end indexing with 'until', due to ambiguities from Range.end being exclusive")
+          } else {
+            if (re.start < 0 )  ( totalLength + re.start, re.end ) else ( re.start, re.end )
+          }
+        }
+      Range(actualStart, actualEnd, re.step)
+    }
+
   }
 
   import math.Ring

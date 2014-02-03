@@ -220,6 +220,8 @@ package object numerics {
   object abs extends UFunc with MappingUFunc {
     implicit object absDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.abs(v)}
     implicit object absFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.abs(v)}
+    implicit object absIntImpl extends Impl[Int, Int] { def apply(v: Int) = m.abs(v)}
+    implicit object absLongImpl extends Impl[Long, Long] { def apply(v: Long) = m.abs(v)}
   }
 
   /** Whether a number is odd. For Double and Float, isOdd also implies that the number is an integer,
