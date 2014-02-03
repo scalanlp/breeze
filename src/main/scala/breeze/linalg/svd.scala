@@ -108,21 +108,24 @@ object svd extends UFunc {
 
       var i:Int = 0
       
-      import scala.util.control.Breaks._
-      breakable{
-        while(true)
-        {
+      //import scala.util.control.Breaks._
+      //breakable{
+           arpack.dsaupd(ido,bmat,n,which,nev.`val`,tol,resid,ncv,v,n,iparam,ipntr,workd,workl,workl.length,info)
 
-          i = i+1
-          arpack.dsaupd(ido,bmat,n,which,nev.`val`,tol,resid,ncv,v,n,iparam,ipntr,workd,workl,workl.length,info)
+      while(ido.`val` !=99)
+      {
 
-          if(ido.`val` == 99) break
+        if (ido.`val` != -1 && ido.`val` != 1) throw new IllegalStateException("ido = " + ido.`val`)
 
-          if (ido.`val` != -1 && ido.`val` != 1) throw new IllegalStateException("ido = " + ido.`val`)
+        av(mat,workd, (ipntr(0) - 1), (ipntr(1) - 1))
 
-          av(mat,workd, (ipntr(0) - 1), (ipntr(1) - 1))
-        }
+//        i = i+1
+        arpack.dsaupd(ido,bmat,n,which,nev.`val`,tol,resid,ncv,v,n,iparam,ipntr,workd,workl,workl.length,info)
+
+        //if(ido.`val` == 99) break
+
       }
+      //}
 
       if (info.`val` != 0) throw new IllegalStateException("info = " + info.`val`)
       

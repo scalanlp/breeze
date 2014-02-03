@@ -223,7 +223,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     val (u1, s1, vt1) = svd(m1)
 
     val (u2,s2,vt2) = svd(m2,2)
-
+    //println(s1)
+   // println(s2)
     val w = s1-s2
     w.foreach{ e =>
     assert(scala.math.abs(e) <= 0.00001)
