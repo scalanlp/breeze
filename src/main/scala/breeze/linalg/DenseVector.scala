@@ -391,6 +391,15 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     }
   }
 
+  implicit def canSliceExtender[V]: CanSlice[DenseVector[V], RangeExtender, DenseVector[V]] = __canSliceExtender.asInstanceOf[CanSlice[DenseVector[V], RangeExtender, DenseVector[V]]]
+
+  private val __canSliceExtender = {
+    new CanSlice[DenseVector[Any], RangeExtender, DenseVector[Any]] {
+      def apply(v: DenseVector[Any], r: RangeExtender) = {
+        canSlice(v, r.getRange(v.length) )
+      }
+    }
+  }
 
   implicit def canTranspose[V]: CanTranspose[DenseVector[V], DenseMatrix[V]] = {
     new CanTranspose[DenseVector[V], DenseMatrix[V]] {

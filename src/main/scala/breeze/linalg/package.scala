@@ -16,7 +16,7 @@ package breeze
 */
 import io.{CSVWriter, CSVReader}
 import linalg.operators._
-import breeze.linalg.support.{CanAxpy, CanTraverseValues, RangeSuffix, CanCopy}
+import breeze.linalg.support.{CanAxpy, CanTraverseValues, RangeSuffix, RangeExtender, CanCopy}
 import math.Semiring
 import org.netlib.util.intW
 import storage.DefaultArrayValue
@@ -89,9 +89,11 @@ package object linalg {
   /** for adding slicing */
   implicit class RichIntMethods(val x: Int) extends AnyVal {
     def until(z: ::.type) = new RangeSuffix(x)
+
+    def ##(y: Int): RangeExtender = new RangeExtender(x, y)
+    //Cannot do following, due to final def Any.##(): Int (ie Any.hashcode)
+    //def ##(): RangeExtender = new RangeExtender(x)
   }
-
-
 
   import math.Ring
   import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
