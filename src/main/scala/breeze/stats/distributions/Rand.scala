@@ -21,6 +21,7 @@ import collection.TraversableLike
 import collection.generic.CanBuildFrom
 import breeze.linalg.DenseVector
 import org.apache.commons.math3.random.{MersenneTwister, RandomGenerator}
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * A trait for monadic distributions. Provides support for use in for-comprehensions
@@ -121,6 +122,7 @@ trait Rand[@specialized(Int, Double) +T] { outer =>
 * to compose new Rands.
 */ 
 class RandBasis(val generator: RandomGenerator) {
+
   /**
    * Chooses an element from a collection. 
    */
@@ -256,3 +258,16 @@ class RandBasis(val generator: RandomGenerator) {
  * Provides a number of random generators.
  */
 object Rand extends RandBasis(new ThreadLocalRandomGenerator(new MersenneTwister()))
+
+object RandBasis {
+  /** Returns a new MersenneTwister backed rand basis with seed set to 0. Note that
+    * if multiple threads use this, each thread gets a new generator with an increasing random
+    * seed.
+    * @return
+    */
+  def mt0 = {
+    val int = new AtomicInteger()
+    new RandBasis(new ThreadLocalRandomGenerator(new MersenneTwister(int.getAndIncrement())))
+  }
+
+}
