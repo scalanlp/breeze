@@ -23,11 +23,11 @@ class SliceVectorTest extends FunSuite {
   test("RangeExtender tests"){
 
     val tempDV = DenseVector(0, 1, 2, 3, 4, 5, 6)
-    assert( tempDV( 0 ## 3 ) == DenseVector(0, 1, 2, 3), "Failed> tempDV( 0 ## 3 ) = " + tempDV( 0 ## 3 )  )
-    assert( tempDV( 4 ## -1 ) == DenseVector(4, 5, 6), "Failed> tempDV( 4 ## -1 ) =  " + tempDV( 4 ## -1 ) )
-    assert( tempDV( -3 ## -1 ) == DenseVector(4, 5, 6), "Failed> tempDV( -1 ## -3 ) =  " + tempDV( -3 ## -1 ) )
-    assert( tempDV( 0 ## 4 ## 2 ) == DenseVector(0, 2, 4), "Failed> tempDV( 0 ## 4 ## 2 ) = " + tempDV( 0 ## 4 ## 2 ) )
-    assert( tempDV( 4 ## 0 ## -2 ) == DenseVector(4, 2, 0), "Failed> tempDV( 4 ## 0 ## -2 ) = " + tempDV( 4 ## 0 ## -2 ) )
+    assert( tempDV( 0 to 3 ) == DenseVector(0, 1, 2, 3), "Failed> tempDV( 0 ## 3 ) = " + tempDV( 0 to 3 )  )
+    assert( tempDV( 4 to -1 ) == DenseVector(4, 5, 6), "Failed> tempDV( 4 ## -1 ) =  " + tempDV( 4 to -1 ) )
+    assert( tempDV( -3 to -1 ) == DenseVector(4, 5, 6), "Failed> tempDV( -1 ## -3 ) =  " + tempDV( -3 to -1 ) )
+    assert( tempDV( 0 to 4 by 2 ) == DenseVector(0, 2, 4), "Failed> tempDV( 0 ## 4 ## 2 ) = " + tempDV( 0 to 4 by 2 ) )
+    assert( tempDV( 4 to 0 by -2 ) == DenseVector(4, 2, 0), "Failed> tempDV( 4 ## 0 ## -2 ) = " + tempDV( 4 to 0 by -2 ) )
 
   }
 
