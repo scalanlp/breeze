@@ -57,14 +57,12 @@ case class Tolerance(fvalTolerance: Double = 1E-5, gvalTolerance: Double = 1e-6)
 
 case object PreferOnline extends OptimizationOption {
   def apply(params: OptParams):OptParams = {
-    // TODO: gvaltolerance
     params.copy(useStochastic = true)
   }
 }
 
 case object PreferBatch extends OptimizationOption {
   def apply(params: OptParams):OptParams = {
-    // TODO: gvaltolerance
     params.copy(useStochastic = false)
   }
 }
