@@ -216,6 +216,19 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     }
   }
 
+  test("csc svd"){
+    val m1 = DenseMatrix((2.0,4.0),(1.0,3.0),(0.0,0.0),(0.0,0.0))
+    val m2 = CSCMatrix((2.0,4.0),(1.0,3.0),(0.0,0.0),(0.0,0.0))
+    
+    val (u1, s1, vt1) = svd(m1)
+
+    val (u2,s2,vt2) = svd(m2,2)
+
+    val w = s1-s2
+    w.foreach{ e =>
+    assert(scala.math.abs(e) <= 0.00001)
+    }
+  }
 
   test("small pow test") {
     val X = DenseMatrix(( .7, .2), (.3, .8))
