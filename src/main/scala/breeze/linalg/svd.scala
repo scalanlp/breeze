@@ -170,12 +170,7 @@ object svd extends UFunc {
         
         val vt = (mt.t *u.t)*diag(si)
         val dg = diag(si)
-        println(n,m)
-        println(dg.rows,dg.cols)
-        println(vt.rows,vt.cols)
-        println("asdjkasjdjlkdsaljksdalkj")
-
-        println(vt)
+      
         
         (u,s,vt)
       }
