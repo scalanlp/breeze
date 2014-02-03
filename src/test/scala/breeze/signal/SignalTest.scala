@@ -18,36 +18,36 @@ class SignalTest extends FunSuite {
 
   // <editor-fold desc="Fourier">
   test("fft 1D of DenseVector[Complex]") {
-    assert( norm( fourierTransform(test16C) - test16fftC ) < testNormThreshold )
+    assert( norm( fourierTr(test16C) - test16fftC ) < testNormThreshold )
   }
 
   test("fft 1D of DenseVector[Double]") {
-    assert( norm( fourierTransform(test16) - test16fftC ) < testNormThreshold )
+    assert( norm( fourierTr(test16) - test16fftC ) < testNormThreshold )
   }
 
   test("ifft 1D of DenseVector[Complex]") {
-    assert( norm( inverseFourierTransform(test16fftC) - test16C ) < testNormThreshold )
+    assert( norm( iFourierTr(test16fftC) - test16C ) < testNormThreshold )
   }
 
   test("ifft 1D of DenseVector[Double]") {
-    assert( norm( inverseFourierTransform(test16) - test16ifftC ) < testNormThreshold )
+    assert( norm( iFourierTr(test16) - test16ifftC ) < testNormThreshold )
   }
 
 
   test("fft 2D of DenseMatrix[Complex]") {
-    assert( norm( (fourierTransform(test5x5C) - test5x5fftC).toDenseVector ) < testNormThreshold )
+    assert( norm( (fourierTr(test5x5C) - test5x5fftC).toDenseVector ) < testNormThreshold )
   }
 
   test("fft 2D of DenseMatrix[Double]") {
-    assert( norm( (fourierTransform(test5x5) - test5x5fftC).toDenseVector  ) < testNormThreshold )
+    assert( norm( (fourierTr(test5x5) - test5x5fftC).toDenseVector  ) < testNormThreshold )
   }
 
   test("ifft 2D of DenseMatrix[Complex]") {
-    assert( norm( (inverseFourierTransform(test5x5fftC) - test5x5C).toDenseVector  ) < testNormThreshold )
+    assert( norm( (iFourierTr(test5x5fftC) - test5x5C).toDenseVector  ) < testNormThreshold )
   }
 
   test("ifft 2D of DenseMatrix[Double]") {
-    assert( norm( (inverseFourierTransform(test5x5) - test5x5ifftC).toDenseVector  ) < testNormThreshold )
+    assert( norm( (iFourierTr(test5x5) - test5x5ifftC).toDenseVector  ) < testNormThreshold )
   }
 
 

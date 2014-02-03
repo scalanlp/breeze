@@ -4,7 +4,7 @@ import org.junit.runner.RunWith
 import org.scalatest._
 import org.scalatest.junit._
 import breeze.linalg.{DenseVector, DenseMatrix, norm}
-import breeze.signal.support.{CanHaarTransform, CanInverseHaarTransform}
+import breeze.signal.support.{CanHaarTr, CanIHaarTr}
 
 /**
  * Test for correctness of the haar transform
@@ -12,11 +12,11 @@ import breeze.signal.support.{CanHaarTransform, CanInverseHaarTransform}
 @RunWith(classOf[JUnitRunner])
 class HaarTransformTest extends FunSuite {
 
-  test("haarTransform 1d of DenseVector[Double]") {
-    assert( norm( haarTransform(test16) - test16haarTransformed ) < testNormThreshold )
+  test("haarTr 1d of DenseVector[Double]") {
+    assert( norm( haarTr(test16) - test16haarTransformed ) < testNormThreshold )
   }
-  test("inverseHaarTransform 1d of DenseVector[Double]") {
-    assert( norm( inverseHaarTransform(test16haarTransformed) - test16 ) < testNormThreshold )
+  test("iHaarTr 1d of DenseVector[Double]") {
+    assert( norm( iHaarTr(test16haarTransformed) - test16 ) < testNormThreshold )
   }
 
  // Test Values

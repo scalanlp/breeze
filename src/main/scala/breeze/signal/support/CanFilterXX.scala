@@ -16,8 +16,8 @@ import breeze.signal._
 * @author ktakagaki
 */
 trait CanFilterBPBS[Input, Output] {
-  def apply(data: Input, omega: (Double, Double),
-            numtaps: Int, sampleRate: Double, bandStop: Boolean,
+  def apply(data: Input, order: Int, omega: (Double, Double),
+            sampleRate: Double, bandStop: Boolean,
             kernelType: OptKernelDesign,
             overhang: OptOverhang,
             padding: OptPadding): Output
@@ -38,15 +38,16 @@ object CanFilterBPBS {
     */
   implicit val dvDouble1DFilterBPBS : CanFilterBPBS[DenseVector[Double], DenseVector[Double]] = {
     new CanFilterBPBS[DenseVector[Double], DenseVector[Double]] {
-      def apply(data: DenseVector[Double], omega: (Double, Double),
-                numtaps: Int, sampleRate: Double, bandStop: Boolean,
+      def apply(data: DenseVector[Double], order: Int, omega: (Double, Double),
+                sampleRate: Double, bandStop: Boolean,
                 kernelType: OptKernelDesign,
                 overhang: OptOverhang,
                 padding: OptPadding): DenseVector[Double] = {
 
         val kernel: FIRKernel1D[Double] = kernelType match  {
           //case x: OptKernelType.OptDefault => KernelDesign.firwin( numtaps, DenseVector[Double](omega._1, omega._2), zeroPass = bandStop, nyquist = sampleRate/2d)
-          case OptKernelDesign.Firwin =>  firwin[Double]( numtaps, DenseVector[Double](omega._1, omega._2), zeroPass = bandStop, nyquist = sampleRate/2d)
+          case OptKernelDesign.Firwin =>
+            designFilterFirwin[Double]( order, DenseVector[Double](omega._1, omega._2), zeroPass = bandStop, nyquist = sampleRate/2d)
           case x => {
             require(false, "Cannot handle option value "+ x)
             new FIRKernel1D[Double](DenseVector[Double](), "null kernel!")

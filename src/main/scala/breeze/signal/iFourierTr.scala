@@ -15,12 +15,12 @@ import breeze.signal.support.JTransformsSupport._
   * which is found in breeze.signal.support.CanIFFT.scala.
   *
   */
-object inverseFourierTransform extends UFunc {
+object iFourierTr extends UFunc {
   /** Use via implicit delegate syntax ifft(x: DenseVector)
     *
     */
-  implicit val dvDoubleIFFT : inverseFourierTransform.Impl[DenseVector[Double], DenseVector[Complex]] = {
-    new inverseFourierTransform.Impl[DenseVector[Double], DenseVector[Complex]] {
+  implicit val dvDoubleIFFT : iFourierTr.Impl[DenseVector[Double], DenseVector[Complex]] = {
+    new iFourierTr.Impl[DenseVector[Double], DenseVector[Complex]] {
       def apply(v: DenseVector[Double]) = {
         //reformat for input: note difference in format for input to complex fft
         val tempArr = denseVectorDToTemp(v)
@@ -38,8 +38,8 @@ object inverseFourierTransform extends UFunc {
   /** Use via implicit delegate syntax ifft(x: DenseVector)
     *
     */
-  implicit val dvComplexIFFT : inverseFourierTransform.Impl[DenseVector[Complex], DenseVector[Complex]] = {
-    new inverseFourierTransform.Impl[DenseVector[Complex], DenseVector[Complex]] {
+  implicit val dvComplexIFFT : iFourierTr.Impl[DenseVector[Complex], DenseVector[Complex]] = {
+    new iFourierTr.Impl[DenseVector[Complex], DenseVector[Complex]] {
       def apply(v: DenseVector[Complex]) = {
         //reformat for input: note difference in format for input to real fft
         val tempArr = denseVectorCToTemp(v)
@@ -57,8 +57,8 @@ object inverseFourierTransform extends UFunc {
   /** Use via implicit delegate syntax ifft(x: DenseMatrix)
     *
     */
-  implicit val dmComplex2DIFFT : inverseFourierTransform.Impl[DenseMatrix[Complex], DenseMatrix[Complex]] = {
-    new inverseFourierTransform.Impl[DenseMatrix[Complex], DenseMatrix[Complex]] {
+  implicit val dmComplex2DIFFT : iFourierTr.Impl[DenseMatrix[Complex], DenseMatrix[Complex]] = {
+    new iFourierTr.Impl[DenseMatrix[Complex], DenseMatrix[Complex]] {
       def apply(v: DenseMatrix[Complex]) = {
         //reformat for input: note difference in format for input to real fft
         val tempMat = denseMatrixCToTemp(v)
@@ -76,8 +76,8 @@ object inverseFourierTransform extends UFunc {
   /** Use via implicit delegate syntax ifft(x: DenseMatrix)
     *
     */
-  implicit val dmDouble2DIFFT : inverseFourierTransform.Impl[DenseMatrix[Double], DenseMatrix[Complex]] = {
-    new inverseFourierTransform.Impl[DenseMatrix[Double], DenseMatrix[Complex]] {
+  implicit val dmDouble2DIFFT : iFourierTr.Impl[DenseMatrix[Double], DenseMatrix[Complex]] = {
+    new iFourierTr.Impl[DenseMatrix[Double], DenseMatrix[Complex]] {
       def apply(v: DenseMatrix[Double]) = {
         //reformat for input
         val tempMat = denseMatrixDToTemp(v)

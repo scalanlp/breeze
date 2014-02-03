@@ -20,13 +20,13 @@ import breeze.macros.expand
  * @return
  * @author ktakagaki, dlwh
  */
-object fourierTransform extends UFunc {
+object fourierTr extends UFunc {
 
   /** Use via implicit delegate syntax fft(x: DenseVector)
     *
     */
-  implicit val dvDouble1DFFT : fourierTransform.Impl[DenseVector[Double], DenseVector[Complex]] = {
-    new fourierTransform.Impl[DenseVector[Double], DenseVector[Complex]] {
+  implicit val dvDouble1DFFT : fourierTr.Impl[DenseVector[Double], DenseVector[Complex]] = {
+    new fourierTr.Impl[DenseVector[Double], DenseVector[Complex]] {
       def apply(v: DenseVector[Double]) = {
         //reformat for input: note difference in format for input to complex fft
         val tempArr = denseVectorDToTemp(v)
@@ -47,34 +47,34 @@ object fourierTransform extends UFunc {
   @expand.valify
   implicit def dvDT1DFFT[@expand.args(Float, Long, Int) T]: Impl[DenseVector[T], DenseVector[Complex]] = {
     new Impl[DenseVector[T], DenseVector[Complex]] {
-      def apply(v: DenseVector[T]) = fourierTransform( v.map( _.toDouble) )
+      def apply(v: DenseVector[T]) = fourierTr( v.map( _.toDouble) )
     }
   }
     */
 
   implicit def dvDT1DFFT_Float: Impl[DenseVector[Float], DenseVector[Complex]] = {
     new Impl[DenseVector[Float], DenseVector[Complex]] {
-      def apply(v: DenseVector[Float]) = fourierTransform( v.map( _.toDouble) )
+      def apply(v: DenseVector[Float]) = fourierTr( v.map( _.toDouble) )
     }
   }
 
   implicit def dvDT1DFFT_Int: Impl[DenseVector[Int], DenseVector[Complex]] = {
     new Impl[DenseVector[Int], DenseVector[Complex]] {
-      def apply(v: DenseVector[Int]) = fourierTransform( v.map( _.toDouble) )
+      def apply(v: DenseVector[Int]) = fourierTr( v.map( _.toDouble) )
     }
   }
 
   implicit def dvDT1DFFT_Long: Impl[DenseVector[Long], DenseVector[Complex]] = {
     new Impl[DenseVector[Long], DenseVector[Complex]] {
-      def apply(v: DenseVector[Long]) = fourierTransform( v.map( _.toDouble) )
+      def apply(v: DenseVector[Long]) = fourierTr( v.map( _.toDouble) )
     }
   }
 
    /** Use via implicit delegate syntax fft(x: DenseVector)
     *
     */
-  implicit val dvComplex1DFFT : fourierTransform.Impl[DenseVector[Complex], DenseVector[Complex]] = {
-    new fourierTransform.Impl[DenseVector[Complex], DenseVector[Complex]] {
+  implicit val dvComplex1DFFT : fourierTr.Impl[DenseVector[Complex], DenseVector[Complex]] = {
+    new fourierTr.Impl[DenseVector[Complex], DenseVector[Complex]] {
       def apply(v: DenseVector[Complex]) = {
         //reformat for input: note difference in format for input to real fft
         val tempArr = denseVectorCToTemp(v)
@@ -92,8 +92,8 @@ object fourierTransform extends UFunc {
   /** Use via implicit delegate syntax fft(x: DenseMatrix)
     *
     */
-  implicit val dmComplex2DFFT : fourierTransform.Impl[DenseMatrix[Complex], DenseMatrix[Complex]] = {
-    new fourierTransform.Impl[DenseMatrix[Complex], DenseMatrix[Complex]] {
+  implicit val dmComplex2DFFT : fourierTr.Impl[DenseMatrix[Complex], DenseMatrix[Complex]] = {
+    new fourierTr.Impl[DenseMatrix[Complex], DenseMatrix[Complex]] {
       def apply(v: DenseMatrix[Complex]) = {
         //reformat for input: note difference in format for input to real fft
         val tempMat = denseMatrixCToTemp(v)
@@ -111,8 +111,8 @@ object fourierTransform extends UFunc {
   /** Use via implicit delegate syntax fft(x: DenseMatrix)
     *
     */
-  implicit val dmDouble2DFFT : fourierTransform.Impl[DenseMatrix[Double], DenseMatrix[Complex]] = {
-    new fourierTransform.Impl[DenseMatrix[Double], DenseMatrix[Complex]] {
+  implicit val dmDouble2DFFT : fourierTr.Impl[DenseMatrix[Double], DenseMatrix[Complex]] = {
+    new fourierTr.Impl[DenseMatrix[Double], DenseMatrix[Complex]] {
       def apply(v: DenseMatrix[Double]) = {
         //reformat for input
         val tempMat = denseMatrixDToTemp(v)

@@ -21,7 +21,7 @@ abstract class FilterKernel1D extends FilterKernel
 /**This immutable class encapsulates 1D FIR filter kernels. It also internally stores the kernel Fourier transform for
   * multiple applications of fft convolution.*/
 class FIRKernel1D[T](val kernel: DenseVector[T], override val designText: String) extends FilterKernel1D {
-  //lazy val kernelFourier: DenseVector[Complex] = fourierTransform( kernel )
+  //lazy val kernelFourier: DenseVector[Complex] = fourierTr( kernel )
   lazy val length = kernel.length
 }
 
