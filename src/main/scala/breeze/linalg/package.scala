@@ -91,15 +91,6 @@ package object linalg {
     def until(z: ::.type) = new RangeSuffix(x)
  }
 
-//  this implicit doesn't work for global objects, such as within for loops
-//
-//  implicit def rangeExtenderToRange(re: RangeExtender): Range = {
-//    if(re.negativeIndexing){
-//      throw new IllegalArgumentException("Negative indexing was attempted for a function where it is not supported!")
-//    } else {
-//      new Range(re.start, re.end, re.step)
-//    }
-//  }
 
   import math.Ring
   import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}

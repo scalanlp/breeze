@@ -25,7 +25,6 @@ import breeze.storage.DefaultArrayValue
 import scala.reflect.ClassTag
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import breeze.macros.expand
-import breeze.numerics.IntMath
 import scala.math.BigInt
 import CanTraverseValues.ValuesVisitor
 
@@ -373,7 +372,26 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
 
   private val __canSlice = {
     new CanSlice[DenseVector[Any], Range, DenseVector[Any]] {
-      def apply(v: DenseVector[Any], r: Range) = {
+      def apply(v: DenseVector[Any], re: Range) = {
+
+        val (actualStart: Int, actualEnd: Int) =
+            if(re.isInclusive){
+              (
+                if ( re.start < 0 ) v.length + re.start else re.start   ,
+                if ( re.end < 0 ) {
+                  if (re.step > 0 ) v.length + re.end + 1 else v.length + re.end - 1 //actualEnd will be given as argument to regular Range(), hence +1
+                } else if (re.step > 0 ) re.end + 1 else re.end - 1
+              )
+            } else {
+              if( re.end < 0 ) {
+                throw new IllegalArgumentException("cannot use negative end indexing with 'until', due to ambiguities from Range.end being exclusive")
+              } else {
+                if (re.start < 0 )  ( v.length + re.start, re.end ) else ( re.start, re.end )
+              }
+            }
+
+        val r = Range(actualStart, actualEnd, re.step)
+
         require(r.isEmpty || r.last < v.length)
         require(r.isEmpty || r.start >= 0)
         new DenseVector(v.data, offset = v.offset + r.start, stride = v.stride * r.step, length = r.length)
@@ -391,15 +409,15 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     }
   }
 
-  implicit def canSliceExtender[V]: CanSlice[DenseVector[V], RangeExtender, DenseVector[V]] = __canSliceExtender.asInstanceOf[CanSlice[DenseVector[V], RangeExtender, DenseVector[V]]]
-
-  private val __canSliceExtender = {
-    new CanSlice[DenseVector[Any], RangeExtender, DenseVector[Any]] {
-      def apply(v: DenseVector[Any], r: RangeExtender) = {
-        canSlice(v, r.getRange(v.length) )
-      }
-    }
-  }
+//  implicit def canSliceExtender[V]: CanSlice[DenseVector[V], RangeExtender, DenseVector[V]] = __canSliceExtender.asInstanceOf[CanSlice[DenseVector[V], RangeExtender, DenseVector[V]]]
+//
+//  private val __canSliceExtender = {
+//    new CanSlice[DenseVector[Any], RangeExtender, DenseVector[Any]] {
+//      def apply(v: DenseVector[Any], re: RangeExtender) = {
+//        canSlice(v, re.getRange(v.length) )
+//      }
+//    }
+//  }
 
   implicit def canTranspose[V]: CanTranspose[DenseVector[V], DenseMatrix[V]] = {
     new CanTranspose[DenseVector[V], DenseMatrix[V]] {
