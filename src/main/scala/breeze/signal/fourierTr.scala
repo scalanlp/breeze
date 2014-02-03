@@ -22,7 +22,7 @@ import breeze.macros.expand
  */
 object fourierTr extends UFunc {
 
-  /** Use via implicit delegate syntax fft(x: DenseVector)
+  /** Use via implicit delegate syntax fourierTr(x: DenseVector)
     *
     */
   implicit val dvDouble1DFFT : fourierTr.Impl[DenseVector[Double], DenseVector[Complex]] = {
@@ -41,7 +41,7 @@ object fourierTr extends UFunc {
     }
   }
 
-  /** Use via implicit delegate syntax fft(x: DenseVector)
+  /** Use via implicit delegate syntax fourierTr(x: DenseVector)
     *     For some reason this breaks scaladoc... No good reason why.
   @expand
   @expand.valify
@@ -70,7 +70,7 @@ object fourierTr extends UFunc {
     }
   }
 
-   /** Use via implicit delegate syntax fft(x: DenseVector)
+   /** Use via implicit delegate syntax fourierTr(x: DenseVector)
     *
     */
   implicit val dvComplex1DFFT : fourierTr.Impl[DenseVector[Complex], DenseVector[Complex]] = {
@@ -89,7 +89,7 @@ object fourierTr extends UFunc {
     }
   }
 
-  /** Use via implicit delegate syntax fft(x: DenseMatrix)
+  /** Use via implicit delegate syntax fourierTr(x: DenseMatrix)
     *
     */
   implicit val dmComplex2DFFT : fourierTr.Impl[DenseMatrix[Complex], DenseMatrix[Complex]] = {
@@ -129,5 +129,15 @@ object fourierTr extends UFunc {
   }
 
 
+  implicit val dvDouble1DFourierRange: fourierTr.Impl[DenseVector[Double], Range, DenseVector[Complex]] = {
+    new fourierTr.Impl[DenseVector[Double], Range, DenseVector[Complex]] {
+      def apply(v: DenseVector[Double], range: Range) = {
+
+
+
+
+      }
+    }
+  }
 
 }
