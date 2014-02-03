@@ -267,6 +267,7 @@ object DenseMatrix extends LowPriorityDenseMatrix
 with DenseMatrixOps
 with DenseMatrixMultOps
 with DenseMatrixMultiplyStuff
+with DenseMatrixFloatMultiplyStuff
 with MatrixConstructors[DenseMatrix] {
 
   /**
