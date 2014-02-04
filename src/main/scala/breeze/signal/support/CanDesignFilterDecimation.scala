@@ -1,7 +1,8 @@
 package breeze.signal.support
 
+import breeze.signal._
 import breeze.linalg.DenseVector
-import breeze.signal.{OptFilterOrder, OptDesignMethod, OptWindowFunction}
+import breeze.signal.OptFilterOrder.IntOpt
 
 
 /**
@@ -34,10 +35,11 @@ object CanDesignFilterDecimation {
                 optWindow: OptWindowFunction, optFilterOrder: OptFilterOrder): FIRKernel1D[Double]  =  {
 
         optDesignMethod match {
-          case meth: OptDesignMethod.Firwin => {
+          case OptDesignMethod.Firwin => {
+            import OptFilterOrder._
             val realOrder = optFilterOrder match {
-              case OptFilterOrder.Automatic => 31
-              case OptFilterOrder.Int(ord) => ord
+              case Automatic => 31
+              case IntOpt(ord) => ord
             }
             //cannot use parameter-by-name for optWindow, given duplicate variable name
             designFilterFirwin(realOrder, DenseVector( 1d / factor.toDouble ), nyquist = 1d, zeroPass = true, scale = true, optWindow)

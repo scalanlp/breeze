@@ -7,6 +7,8 @@ import breeze.generic.UFunc
 import breeze.macros.expand
 import breeze.linalg.{reverse, DenseVector, DenseMatrix}
 import breeze.signal._
+import breeze.signal.OptRange.RangeOpt
+import breeze.numerics.isOdd
 
 //ToDo 1: provide convolve of Integer and other DenseVectors
 //ToDo 1: provide convolve of DenseMatrix
@@ -21,7 +23,7 @@ import breeze.signal._
  * @author ktakagaki
  */
 trait CanConvolve[Input, KernelType, Output] {
-  def apply(data: Input, kernel: KernelType,
+  def apply(data: Input, kernel: KernelType, range: OptRange,
             correlate: Boolean,
             overhang: OptOverhang,
             padding: OptPadding,
@@ -42,16 +44,21 @@ object CanConvolve {
   @expand.valify
   implicit def dvT1DConvolve[@expand.args(Int, Long, Float, Double) T]: CanConvolve[DenseVector[T],DenseVector[T], DenseVector[T]] = {
     new CanConvolve[DenseVector[T],DenseVector[T], DenseVector[T]] {
-      def apply(data: DenseVector[T], kernel: DenseVector[T],
+      def apply(data: DenseVector[T], kernel: DenseVector[T], range: OptRange,
                 correlate: Boolean,
                 overhang: OptOverhang,
                 padding: OptPadding,
                 method: OptMethod): DenseVector[T] = {
 
-        val optConvolveOverhangParsed = overhang match {
-          case OptOverhang.None => OptOverhang.Sequence(-1, 1)
-          case OptOverhang.Full => OptOverhang.Sequence(1, -1)
-          case o => o
+//        val optConvolveOverhangParsed = overhang match {
+//          case OptOverhang.None => OptOverhang.Sequence(-1, 1)
+//          case OptOverhang.Full => OptOverhang.Sequence(1, -1)
+//          case o => o
+//        }
+
+        val parsedOptRange = range match {
+          case OptRange.All => 0 until data.length
+          case RangeOpt( range ) => range
         }
 
         method match {
@@ -59,31 +66,53 @@ object CanConvolve {
           case _ => require(false, "currently, only loop convolutions are supported.")
         }
 
+        //ToDo 3: optimize -- padding is not necessary if kernel does not overhang data
         val kl = kernel.length
         val dl = data.length
-        val paddedData = optConvolveOverhangParsed match {
-          case OptOverhang.Sequence(-1, 1) => data
-          case OptOverhang.Sequence(1, -1) =>
+        val paddedData = overhang /*optConvolveOverhangParsed*/ match {
+          case OptOverhang.None => data
+          case OptOverhang.Full =>
             DenseVector.vertcat(
               padding match {
                 case OptPadding.Cyclical => data( dl - (kl-1) to dl - 1 )
                 case OptPadding.Boundary => DenseVector.ones[T](kernel.length-1) * data( 0 )
-                case OptPadding.Value(v: T) => DenseVector.ones[T](kernel.length-1) * v
+                case OptPadding.ValueOpt(v: T) => DenseVector.ones[T](kernel.length-1) * v
                 case op => require(false, "cannot handle OptPadding value " + op); DenseVector[T]()
               },
               data,
               padding match {
                 case OptPadding.Cyclical => data( 0 to kl-1 )
                 case OptPadding.Boundary => DenseVector.ones[T](kernel.length-1) * data( dl - 1  )
-                case OptPadding.Value(v: T) => DenseVector.ones[T](kernel.length-1) * v
+                case OptPadding.ValueOpt(v: T) => DenseVector.ones[T](kernel.length-1) * v
                 case op => require(false, "cannot handle OptPadding value " + op); DenseVector[T]()
               }
             )
+          case OptOverhang.PreserveLength => {
+            val leftPadding: Int =
+              if( isOdd(kernel.length) )  (kernel.length -1)/2
+              else (kernel.length/2 -1)
+            val rightPadding = kernel.length - leftPadding
+            DenseVector.vertcat(
+              padding match {
+                case OptPadding.Cyclical => data( dl - leftPadding to dl - 1 )
+                case OptPadding.Boundary => DenseVector.ones[T](leftPadding /*kernel.length-1*/) * data( 0 )
+                case OptPadding.ValueOpt(v: T) => DenseVector.ones[T](leftPadding) * v
+                case op => require(false, "cannot handle OptPadding value " + op); DenseVector[T]()
+              },
+              data,
+              padding match {
+                case OptPadding.Cyclical => data( 0 to rightPadding - 1 )
+                case OptPadding.Boundary => DenseVector.ones[T](rightPadding) * data( dl - 1  )
+                case OptPadding.ValueOpt(v: T) => DenseVector.ones[T](rightPadding) * v
+                case op => require(false, "cannot handle OptPadding value " + op); DenseVector[T]()
+              }
+            )
+          }
           case oc => require(false, "cannot handle OptOverhang value " + oc); data
         }
 
-        if(correlate) correlateLoopNoOverhang( paddedData, kernel )
-        else correlateLoopNoOverhang( paddedData, reverse(kernel) )
+        if(correlate) correlateLoopNoOverhang( paddedData, kernel, parsedOptRange )
+        else correlateLoopNoOverhang( paddedData, reverse(kernel), parsedOptRange )
       }
     }
   }
@@ -92,15 +121,19 @@ object CanConvolve {
   @expand.valify
   implicit def dvTKernel1DConvolve[@expand.args(Int, Long, Float, Double) T]: CanConvolve[DenseVector[T], FIRKernel1D[T], DenseVector[T]] = {
     new CanConvolve[DenseVector[T], FIRKernel1D[T], DenseVector[T]] {
-      def apply(data: DenseVector[T], kernel: FIRKernel1D[T],
+      def apply(data: DenseVector[T], kernel: FIRKernel1D[T], range: OptRange,
                 correlate: Boolean,
                 overhang: OptOverhang,
                 padding: OptPadding,
                 method: OptMethod): DenseVector[T] =
         //this is to be expanded to use the fft results within the FIRKernel1D, when using fft convolution
-        convolve(data, kernel.kernel, overhang, padding, method)
+        convolve(data, kernel.kernel, range,
+                  overhang,
+                  padding,
+                  method)
     }
   }
+
 
 
 }
@@ -109,13 +142,20 @@ object CanConvolve {
 object correlateLoopNoOverhang extends UFunc {
   @expand
   @expand.valify
-  implicit def correlateLoopNoOverhang[@expand.args(Double, Float, Long) T]: Impl2[DenseVector[T], DenseVector[T], DenseVector[T]] =
+  implicit def correlateLoopNoOverhang[@expand.args(Double, Float, Int, Long) T]: Impl2[DenseVector[T], DenseVector[T], DenseVector[T]] =
     new Impl2[DenseVector[T], DenseVector[T], DenseVector[T]] {
-      def apply(data: DenseVector[T], kernel: DenseVector[T]) = {
+      def apply(data: DenseVector[T], kernel: DenseVector[T]) = correlateLoopNoOverhang(data, kernel, 0 until data.length )
+    }
+
+  @expand
+  @expand.valify
+  implicit def correlateLoopNoOverhangRange[@expand.args(Double, Float, Long) T]: Impl3[DenseVector[T], DenseVector[T], Range, DenseVector[T]] =
+    new Impl3[DenseVector[T], DenseVector[T], Range, DenseVector[T]] {
+      def apply(data: DenseVector[T], kernel: DenseVector[T], range: Range) = {
         require( data.length * kernel.length != 0, "data and kernel must be non-empty DenseVectors")
         require( data.length >= kernel.length, "kernel cannot be longer than data to be convolved/coorelated!")
 
-        DenseVector.tabulate(data.length - kernel.length + 1)(
+        DenseVector.tabulate(range)(
           di => {
             var ki: Int = 0
             var sum: T = 0
@@ -130,15 +170,15 @@ object correlateLoopNoOverhang extends UFunc {
       }
     }
 
-  implicit def correlateLoopNoOverhangInt: Impl2[DenseVector[Int], DenseVector[Int], DenseVector[Int]] =
-    new Impl2[DenseVector[Int], DenseVector[Int], DenseVector[Int]] {
-      def apply(data: DenseVector[Int], kernel: DenseVector[Int]) = {
+  implicit def correlateLoopNoOverhangRangeInt: Impl3[DenseVector[Int], DenseVector[Int], Range, DenseVector[Int]] =
+    new Impl3[DenseVector[Int], DenseVector[Int], Range, DenseVector[Int]] {
+      def apply(data: DenseVector[Int], kernel: DenseVector[Int], range: Range) = {
         require( data.length * kernel.length != 0, "data and kernel must be non-empty DenseVectors")
         require( data.length >= kernel.length, "kernel cannot be longer than data to be convolved/coorelated!")
 
         val dataL = data.map(_.toLong)
         val kernelL = kernel.map(_.toLong)
-        DenseVector.tabulate(data.length - kernel.length + 1)(
+        DenseVector.tabulate(range)(
           di => {
             var ki: Int = 0
             var sum: Long = 0L

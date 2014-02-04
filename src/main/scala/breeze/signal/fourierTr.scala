@@ -131,9 +131,9 @@ object fourierTr extends UFunc {
   }
 
 
-  implicit val dvDouble1DFourierRange : fourierTr.Impl2[DenseVector[Double], Range, DenseVector[Complex]] = {
-    new fourierTr.Impl2[DenseVector[Double], Range, DenseVector[Complex]] {
-      def apply(v: DenseVector[Double], rangeNegative: Range): DenseVector[Complex] = {
+  implicit val dvDouble1DFourierRange: Impl2[DenseVector[Double], Range, DenseVector[Complex]] = {
+    new Impl2[DenseVector[Double], Range, DenseVector[Complex]] {
+      def apply(v: DenseVector[Double], rangeNegative: Range = Range(0, -1) ): DenseVector[Complex] = {
 
         val range = rangeNegative.getRangeWithoutNegativeIndexes( v.length )
 

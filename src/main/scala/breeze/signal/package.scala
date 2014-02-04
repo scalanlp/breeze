@@ -39,26 +39,28 @@ package object signal {
     * @param data DenseVector or DenseMatrix to be convolved
     * @param canConvolve implicit delegate which is used for implementation. End-users should not use this argument.
     */
-  def convolve[Input, KernelType, Output](data: Input, kernel: KernelType,
+  def convolve[Input, KernelType, Output](
+                              data: Input, kernel: KernelType, range: OptRange = OptRange.All,
                               overhang: OptOverhang = OptOverhang.None,
-                              padding: OptPadding = OptPadding.Value(0d),
+                              padding: OptPadding = OptPadding.ValueOpt(0d),
                               method: OptMethod = OptMethod.Automatic
                               )
                              (implicit canConvolve: CanConvolve[Input, KernelType, Output]): Output =
-    canConvolve(data, kernel, correlate=false, overhang, padding, method)
+    canConvolve(data, kernel, range, correlate=false, overhang, padding, method)
 
   /**Correlates DenseVectors.</p>
     * Implementation is via the implicit trait CanConvolve[ InputType,  OutputType ],
     * which is found in breeze.signal.support.CanConvolve.scala.
     * See [[breeze.signal.convolve]] for options and other information.
     */
-  def correlate[Input, KernelType, Output](data: Input, kernel: KernelType,
+  def correlate[Input, KernelType, Output](
+                              data: Input, kernel: KernelType, range: OptRange = OptRange.All,
                               overhang: OptOverhang = OptOverhang.None,
-                              padding: OptPadding = OptPadding.Value(0d),
+                              padding: OptPadding = OptPadding.ValueOpt(0d),
                               method: OptMethod = OptMethod.Automatic
                                )
                              (implicit canConvolve: CanConvolve[Input, KernelType, Output]): Output =
-    canConvolve(data, kernel, correlate=true, overhang, padding, method)
+    canConvolve(data, kernel, range, correlate=true, overhang, padding, method)
 
   // </editor-fold>
 
