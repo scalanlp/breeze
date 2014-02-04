@@ -112,5 +112,6 @@ abstract class OptRange extends Opt
 object OptRange {
   case object All extends OptRange
   case class RangeOpt(r: Range) extends OptRange
+  implicit def rangeToRangeOpt(r: Range) = RangeOpt( r )
 }
 
