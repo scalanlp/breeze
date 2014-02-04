@@ -89,7 +89,7 @@ package object signal {
     *              or in Hz if the sampleRate is set to a specific value other than 2d.
     * @param sampleRate default of 2.0 means that the nyquist frequency is 1.0
     * @param numtaps  number of taps to use (default = 512)
-    * @param kernelDesign  currently only supports OptKernelType.Firwin. See [[breeze.signal.OptKernelDesign]]
+    * @param kernelDesign  currently only supports OptKernelType.Firwin. See [[breeze.signal.OptDesignMethod]]
     * @param overhang  whether to have overhanging values. See [[breeze.signal.OptOverhang]]
     * @param padding  how to pad the values. See [[breeze.signal.OptPadding]]
     * @param canFilterBPBS (implicit delegate to perform filtering on specific Input data types)
@@ -98,7 +98,7 @@ package object signal {
   def filterBP[Input, Output](data: Input,
                               order: Int = 512, omegas: (Double, Double),
                               sampleRate: Double = 2d,
-                              kernelDesign: OptKernelDesign = OptKernelDesign.Firwin,
+                              kernelDesign: OptDesignMethod = OptDesignMethod.Firwin,
                               overhang: OptOverhang = OptOverhang.None,
                               padding: OptPadding = OptPadding.Boundary)
         (implicit canFilterBPBS: CanFilterBPBS[Input, Output]): Output =
@@ -113,7 +113,7 @@ package object signal {
     *              or in Hz if the sampleRate is set to a specific value other than 2d.
     * @param sampleRate default of 2.0 means that the nyquist frequency is 1.0
     * @param numtaps  number of taps to use (default = 512)
-    * @param kernelDesign  currently only supports OptKernelType.Firwin. See [[breeze.signal.OptKernelDesign]]
+    * @param kernelDesign  currently only supports OptKernelType.Firwin. See [[breeze.signal.OptDesignMethod]]
     * @param overhang  whether to have overhanging values. See [[breeze.signal.OptOverhang]]
     * @param padding  how to pad the values. See [[breeze.signal.OptPadding]]
     * @param canFilterBPBS (implicit delegate to perform filtering on specific Input data types)
@@ -122,7 +122,7 @@ package object signal {
   def filterBS[Input, Output](data: Input,
                               order: Int = 512, omegas: (Double, Double),
                               sampleRate: Double = 2d,
-                              kernelDesign: OptKernelDesign = OptKernelDesign.Firwin,
+                              kernelDesign: OptDesignMethod = OptDesignMethod.Firwin,
                               overhang: OptOverhang = OptOverhang.None,
                               padding: OptPadding = OptPadding.Boundary)
          (implicit canFilterBPBS: CanFilterBPBS[Input, Output]): Output =
@@ -167,6 +167,12 @@ package object signal {
      canFirwin(order, omegas, nyquist, zeroPass, scale,
                 optWindow)
 
+  def designFilterDecimation[Output](factor: Int,
+                                     optDesignMethod: OptDesignMethod = OptDesignMethod.Firwin,
+                                     optWindow: OptWindowFunction = OptWindowFunction.Hamming(),
+                                     optFilterOrder: OptFilterOrder = OptFilterOrder.Automatic)
+                                (implicit canDesignFilterDecimation: CanDesignFilterDecimation[Output]): FilterKernel1D[Output] =
+    canDesignFilterDecimation(factor, optDesignMethod, optWindow, optFilterOrder)
 
   // </editor-fold>
 

@@ -18,7 +18,7 @@ import breeze.signal._
 trait CanFilterBPBS[Input, Output] {
   def apply(data: Input, order: Int, omega: (Double, Double),
             sampleRate: Double, bandStop: Boolean,
-            kernelType: OptKernelDesign,
+            kernelType: OptDesignMethod,
             overhang: OptOverhang,
             padding: OptPadding): Output
 }
@@ -40,13 +40,13 @@ object CanFilterBPBS {
     new CanFilterBPBS[DenseVector[Double], DenseVector[Double]] {
       def apply(data: DenseVector[Double], order: Int, omega: (Double, Double),
                 sampleRate: Double, bandStop: Boolean,
-                kernelType: OptKernelDesign,
+                kernelType: OptDesignMethod,
                 overhang: OptOverhang,
                 padding: OptPadding): DenseVector[Double] = {
 
         val kernel: FIRKernel1D[Double] = kernelType match  {
           //case x: OptKernelType.OptDefault => KernelDesign.firwin( numtaps, DenseVector[Double](omega._1, omega._2), zeroPass = bandStop, nyquist = sampleRate/2d)
-          case OptKernelDesign.Firwin =>
+          case OptDesignMethod.Firwin =>
             designFilterFirwin[Double]( order, DenseVector[Double](omega._1, omega._2), zeroPass = bandStop, nyquist = sampleRate/2d)
           case x => {
             require(false, "Cannot handle option value "+ x)

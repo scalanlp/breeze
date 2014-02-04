@@ -91,21 +91,17 @@ object OptMethod{
   /**Option value: Convolve using for loop.*/
 }
 
-abstract class OptKernelDesign extends Opt
-object OptKernelDesign {
+abstract class OptDesignMethod extends Opt
+object OptDesignMethod {
   /**Option value: use firwin() to design FIR kernel using window method.*/
-  case object Firwin extends OptKernelDesign
+  case object Firwin extends OptDesignMethod
+  case object Cheby1 extends OptDesignMethod
 }
 
-//abstract class OptFilterOrder extends Opt
-//object OptFilterOrder {
-//  /**Option value: use firwin() to design FIR kernel using window method.*/
-//  case object Automatic extends OptFilterOrder
-//  case class Int(n: Int) extends OptFilterOrder
-//}
-//
-//abstract class OptFilterType extends Opt
-//object OptFilterType {
-//  /**Option value: use firwin() to design FIR kernel using window method.*/
-//  case object FIR extends OptFilterType
-//}
+abstract class OptFilterOrder extends Opt
+object OptFilterOrder {
+  /**Option value: use firwin() to design FIR kernel using window method.*/
+  case object Automatic extends OptFilterOrder
+  case class Int(n: Int) extends OptFilterOrder
+}
+
