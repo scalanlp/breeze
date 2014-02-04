@@ -383,15 +383,6 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     }
   }
 
-  implicit def canSliceSuffix[V]: CanSlice[DenseVector[V], RangeSuffix, DenseVector[V]] = __canSliceSuffix.asInstanceOf[CanSlice[DenseVector[V], RangeSuffix, DenseVector[V]]]
-
-  private val __canSliceSuffix = {
-    new CanSlice[DenseVector[Any], RangeSuffix, DenseVector[Any]] {
-      def apply(v: DenseVector[Any], r: RangeSuffix) = {
-        canSlice(v, r.start until v.length)
-      }
-    }
-  }
 
 //  implicit def canSliceExtender[V]: CanSlice[DenseVector[V], RangeExtender, DenseVector[V]] = __canSliceExtender.asInstanceOf[CanSlice[DenseVector[V], RangeExtender, DenseVector[V]]]
 //

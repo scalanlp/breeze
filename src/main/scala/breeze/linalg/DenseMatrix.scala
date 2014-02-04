@@ -371,14 +371,6 @@ with MatrixConstructors[DenseMatrix] {
     }
   }
 
-  implicit def canSliceRowsSuffix[V]: CanSlice2[DenseMatrix[V], RangeSuffix, ::.type, DenseMatrix[V]] = {
-    new CanSlice2[DenseMatrix[V], RangeSuffix, ::.type, DenseMatrix[V]] {
-      def apply(m: DenseMatrix[V], rows: RangeSuffix, ignored: ::.type) = {
-        canSliceRows(m, rows.start until m.rows, ::)
-      }
-    }
-  }
-
   implicit def canSliceCols[V]: CanSlice2[DenseMatrix[V], ::.type, Range, DenseMatrix[V]] = {
     new CanSlice2[DenseMatrix[V], ::.type, Range, DenseMatrix[V]] {
       def apply(m: DenseMatrix[V], ignored: ::.type, colsWNegative: Range) = {
@@ -392,14 +384,6 @@ with MatrixConstructors[DenseMatrix] {
         } else {
           canSliceRows(m.t, cols, ::).t
         }
-      }
-    }
-  }
-
-  implicit def canSliceColsSuffix[V]: CanSlice2[DenseMatrix[V], ::.type, RangeSuffix, DenseMatrix[V]] = {
-    new CanSlice2[DenseMatrix[V], ::.type, RangeSuffix, DenseMatrix[V]] {
-      def apply(m: DenseMatrix[V], ignored: ::.type, cols: RangeSuffix) = {
-        canSliceCols(m, ::, cols.start until m.cols)
       }
     }
   }

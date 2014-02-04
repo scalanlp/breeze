@@ -16,9 +16,8 @@ package breeze
 */
 import io.{CSVWriter, CSVReader}
 import linalg.operators._
-import breeze.linalg.support.{CanAxpy, CanTraverseValues, RangeSuffix, CanCopy}
+import breeze.linalg.support.{CanAxpy, CanCopy}
 import math.Semiring
-import org.netlib.util.intW
 import storage.DefaultArrayValue
 import java.io.{File, FileReader}
 import scala.reflect.ClassTag
@@ -86,10 +85,6 @@ package object linalg {
     CSVWriter.writeFile(file, IndexedSeq.tabulate(mat.rows,mat.cols)(mat(_,_).toString), separator, quote, escape)
   }
 
-  /** for adding slicing */
-  implicit class RichIntMethods(val x: Int) extends AnyVal {
-    def until(z: ::.type) = new RangeSuffix(x)
- }
 
   implicit class RangeExtender(val re: Range) extends Range(re.start, re.end, re.step) {
 
