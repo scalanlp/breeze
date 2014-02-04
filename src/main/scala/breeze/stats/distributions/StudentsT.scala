@@ -16,11 +16,8 @@ case class StudentsT(degreesOfFreedom: Double)(implicit randBasis: RandBasis = R
 
   private val innerInstance = new TDistribution(randBasis.generator, degreesOfFreedom, TDistribution.DEFAULT_INVERSE_ABSOLUTE_ACCURACY)
 
-  def draw(): Double = if(degreesOfFreedom >= 3) {
-    // this tends to be under distributed for small dof
-    innerInstance.sample()
-  } else {
-    // TODO: for small DoF this seems a little wrong too...
+  def draw(): Double = {
+    // TODO: for small DoF this seems a little wrong..., StudentsT is even worse though.
     // numpy version
     val N = randBasis.gaussian.draw()
     val G = new Gamma(degreesOfFreedom/2, 1.0).draw()
