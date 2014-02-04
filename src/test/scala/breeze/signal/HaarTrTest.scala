@@ -10,7 +10,7 @@ import breeze.signal.support.{CanHaarTr, CanIHaarTr}
  * Test for correctness of the haar transform
  */
 @RunWith(classOf[JUnitRunner])
-class HaarTransformTest extends FunSuite {
+class HaarTrTest extends FunSuite {
 
   test("haarTr 1d of DenseVector[Double]") {
     assert( norm( haarTr(test16) - test16haarTransformed ) < testNormThreshold )

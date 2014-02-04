@@ -7,7 +7,7 @@ import breeze.signal._
 /**
  * @author ktakagaki
  */
-class FilterDesignTest extends FunSuite {
+class DesignFilterTest extends FunSuite {
 
 
   test("firwin tested against output from scipy.signal.firwin (0.13.2-1)") {
