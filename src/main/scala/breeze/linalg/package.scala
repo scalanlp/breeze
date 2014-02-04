@@ -89,22 +89,25 @@ package object linalg {
   implicit class RangeExtender(val re: Range) extends Range(re.start, re.end, re.step) {
 
     def getRangeWithoutNegativeIndexes(totalLength: Int): Range = {
-      val (actualStart: Int, actualEnd: Int) =
         if(re.isInclusive){
-          (
-            if ( re.start < 0 ) totalLength + re.start else re.start   ,
-            if ( re.end < 0 ) {
-              if (re.step > 0 ) totalLength + re.end + 1 else totalLength + re.end - 1 //actualEnd will be given as argument to regular Range(), hence +1
-            } else if (re.step > 0 ) re.end + 1 else re.end - 1
-            )
+          val (actualStart: Int, actualEnd: Int) =
+            (
+              if ( re.start < 0 ) totalLength + re.start else re.start   ,
+              if ( re.end < 0 ) {
+                if (re.step > 0 ) totalLength + re.end + 1 else totalLength + re.end - 1 //actualEnd will be given as argument to regular Range(), hence +1
+              } else if (re.step > 0 ) re.end + 1 else re.end - 1
+              )
+          Range(actualStart, actualEnd, re.step)
         } else {
           if( re.end < 0 ) {
             throw new IllegalArgumentException("cannot use negative end indexing with 'until', due to ambiguities from Range.end being exclusive")
           } else {
-            if (re.start < 0 )  ( totalLength + re.start, re.end ) else ( re.start, re.end )
+            val (actualStart: Int, actualEnd: Int) = {
+              if (re.start < 0 )  ( totalLength + re.start, re.end ) else ( re.start, re.end )
+            }
+            Range(actualStart, actualEnd, re.step)
           }
         }
-      Range(actualStart, actualEnd, re.step)
     }
 
   }

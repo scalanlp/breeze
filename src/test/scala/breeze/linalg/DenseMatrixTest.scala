@@ -466,6 +466,7 @@ class DenseMatrixTest extends FunSuite with Checkers {
     DenseMatrix.zeros[Double](0, 2).toString
   }
 
+
   test("GH #30: Shaped solve of transposed and slice matrix does not work") {
     val A=DenseMatrix((1.0,0.0),(1.0,-1.0))
     val i = DenseMatrix.eye[Double](2)
@@ -473,6 +474,13 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(res === DenseVector(1.0,-1.0))
     val res2 = i \ A(1,::).t
     assert(res2 === DenseMatrix(1.0,-1.0))
+  }
+
+  test("GH #148: out of bounds slice throws") {
+    val temp2 = DenseMatrix.tabulate(5,5)( (x: Int, y: Int) => x + y*10 )
+    intercept[IndexOutOfBoundsException] {
+      temp2( Range( 4, 6 ), 3 )
+    }
   }
 
   test("softmax on dm slices") {

@@ -363,6 +363,10 @@ with MatrixConstructors[DenseMatrix] {
         else if(!m.isTranspose) {
           require(rows.step == 1, "Sorry, we can't support row ranges with step sizes other than 1")
           val first = rows.head
+          require(rows.last < m.rows)
+          if(rows.last >= m.rows) {
+            throw new IndexOutOfBoundsException(s"Row slice of $rows was bigger than matrix rows of ${m.rows}")
+          }
           new DenseMatrix(rows.length, m.cols, m.data, m.offset + first, m.majorStride)
         } else {
           canSliceCols(m.t, ::, rows).t
@@ -380,6 +384,9 @@ with MatrixConstructors[DenseMatrix] {
         if(cols.isEmpty) new DenseMatrix(m.rows, 0, m.data, 0, 1)
         else if(!m.isTranspose) {
           val first = cols.head
+          if(cols.last >= m.cols) {
+            throw new IndexOutOfBoundsException(s"Col slice of $cols was bigger than matrix cols of ${m.cols}")
+          }
           new DenseMatrix(m.rows, cols.length, m.data, m.offset + first * m.majorStride, m.majorStride * cols.step)
         } else {
           canSliceRows(m.t, cols, ::).t
@@ -395,10 +402,16 @@ with MatrixConstructors[DenseMatrix] {
         val rows = rowsWNegative.getRangeWithoutNegativeIndexes(m.rows)
         val cols = colsWNegative.getRangeWithoutNegativeIndexes(m.cols)
 
-        if(rows.isEmpty || cols.isEmpty) new DenseMatrix(0, 0, m.data, 0, 1)
+        if(rows.isEmpty || cols.isEmpty) new DenseMatrix(rows.size, cols.size, m.data, 0, 1)
         else if(!m.isTranspose) {
           require(rows.step == 1, "Sorry, we can't support row ranges with step sizes other than 1 for non transposed matrices")
           val first = cols.head
+          if(rows.last >= m.rows) {
+            throw new IndexOutOfBoundsException(s"Row slice of $rows was bigger than matrix rows of ${m.rows}")
+          }
+          if(cols.last >= m.cols) {
+            throw new IndexOutOfBoundsException(s"Col slice of $cols was bigger than matrix cols of ${m.cols}")
+          }
           new DenseMatrix(rows.length, cols.length, m.data, m.offset + first * m.rows + rows.head, m.majorStride * cols.step)
         } else {
           require(cols.step == 1, "Sorry, we can't support col ranges with step sizes other than 1 for transposed matrices")
@@ -428,6 +441,9 @@ with MatrixConstructors[DenseMatrix] {
         if(cols.isEmpty) new DenseMatrix(0, 0, m.data, 0, 1)
         else if(!m.isTranspose) {
           val first = cols.head
+          if(cols.last >= m.cols) {
+            throw new IndexOutOfBoundsException(s"Col slice of $cols was bigger than matrix cols of ${m.cols}")
+          }
           new DenseMatrix(1, cols.length, m.data, m.offset + first * m.rows + row, m.majorStride * cols.step)
         } else {
           require(cols.step == 1, "Sorry, we can't support col ranges with step sizes other than 1 for transposed matrices")
@@ -445,6 +461,9 @@ with MatrixConstructors[DenseMatrix] {
 
         if(rows.isEmpty) new DenseVector(m.data, 0, 0, 0)
         else if(!m.isTranspose) {
+          if(rows.last >= m.rows) {
+            throw new IndexOutOfBoundsException(s"Row slice of $rows was bigger than matrix rows of ${m.rows}")
+          }
           new DenseVector(m.data, col * m.rows + m.offset + rows.head, rows.step, rows.length)
         } else {
           val m2 = canSlicePartOfRow(m.t, col, rows).t
