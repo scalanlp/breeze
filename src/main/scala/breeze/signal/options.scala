@@ -52,7 +52,8 @@ object OptWindowFunction {
 /**Option values: how to deal with convolution overhangs.*/
 abstract class OptOverhang extends Opt
 object OptOverhang{
-  /**Option value: Forms the cyclic convolution whose first element contains data(0)*kernel(k0),
+  /** THIS OPTION REMOVED FOR NOW, DUE TO AMBIGUITY WITH KERNEL DIRECTION (IE CONVOLVE VS CORRELATE)
+   * Option value: Forms the cyclic convolution whose first element contains data(0)*kernel(k0),
     * and the last element contains data(-1)*kernel(k1).
     *
     * Common settings are:
@@ -66,6 +67,8 @@ object OptOverhang{
   case object None extends OptOverhang
   /**Option value: maximal overhangs, equivalent to MatLab conv default ('full'), equivalent to Sequence(1, -1).*/
   case object Full extends OptOverhang
+  /**Option value: maximal overhangs, equivalent to MatLab conv default ('full'), equivalent to Sequence(1, -1).*/
+  case object PreserveLength extends OptOverhang
 //  /**Option value: Forms the cyclic convolution where the kth kernel element is aligned with each data element.*/
 //  case class OptInteger(k: Int) extends OptOverhang
 }
@@ -78,7 +81,7 @@ object OptPadding{
   /**Option value: Pads with the first and last components of the data*/
   case object Boundary extends OptPadding
   /**Option value: Pads with a specific value, eg 0.*/
-  case class Value[T](value: T) extends OptPadding
+  case class ValueOpt[T](value: T) extends OptPadding
 }
 
 /**Option values: how to deal with convolution and filter padding.*/
@@ -91,21 +94,24 @@ object OptMethod{
   /**Option value: Convolve using for loop.*/
 }
 
-abstract class OptKernelDesign extends Opt
-object OptKernelDesign {
+abstract class OptDesignMethod extends Opt
+object OptDesignMethod {
   /**Option value: use firwin() to design FIR kernel using window method.*/
-  case object Firwin extends OptKernelDesign
+  case object Firwin extends OptDesignMethod
+  case object Cheby1 extends OptDesignMethod
 }
 
-//abstract class OptFilterOrder extends Opt
-//object OptFilterOrder {
-//  /**Option value: use firwin() to design FIR kernel using window method.*/
-//  case object Automatic extends OptFilterOrder
-//  case class Int(n: Int) extends OptFilterOrder
-//}
-//
-//abstract class OptFilterType extends Opt
-//object OptFilterType {
-//  /**Option value: use firwin() to design FIR kernel using window method.*/
-//  case object FIR extends OptFilterType
-//}
+abstract class OptFilterOrder extends Opt
+object OptFilterOrder {
+  /**Option value: use firwin() to design FIR kernel using window method.*/
+  case object Automatic extends OptFilterOrder
+  case class IntOpt(n: Int) extends OptFilterOrder
+}
+
+abstract class OptRange extends Opt
+object OptRange {
+  case object All extends OptRange
+  case class RangeOpt(r: Range) extends OptRange
+  implicit def rangeToRangeOpt(r: Range) = RangeOpt( r )
+}
+
