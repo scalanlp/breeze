@@ -318,11 +318,23 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
 
     val pca = princomp(smithData)
 
-    assert(smithData(*,::) - pca.center === smithTruth.centeredData)
-    assert(pca.covmat === smithTruth.covmat)
-    assert(pca.eigenvalues === smithTruth.eigenvalues)
-    assert(pca.loadings === smithTruth.eigenvectors)
-    assert(pca.scores === smithTruth.scores)
+    def vectorsNearlyEqual(A: DenseVector[Double], B: DenseVector[Double]) {
+      for(i <- 0 until A.length)
+        A(i) should be (B(i) plusOrMinus 1E-6)
+    }
+
+    def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double]) {
+      for(i <- 0 until A.rows; j <- 0 until A.cols)
+        A(i,j) should be (B(i, j) plusOrMinus 1E-6)
+    }
+
+    matricesNearlyEqual(smithData(*,::) - pca.center, smithTruth.centeredData)
+    matricesNearlyEqual(pca.covmat, smithTruth.covmat)
+    matricesNearlyEqual(pca.covmat, smithTruth.covmat)
+    vectorsNearlyEqual(pca.eigenvalues, smithTruth.eigenvalues)
+    matricesNearlyEqual(pca.loadings, smithTruth.eigenvectors)
+    matricesNearlyEqual(pca.scores, smithTruth.scores)
+
   }
 
 }
