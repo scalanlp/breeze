@@ -213,7 +213,7 @@ package object linalg {
    * data is used.
    */
   def princomp(
-    x: DenseMatrix[Double], 
+    x: DenseMatrix[Double],
     covmatOpt: Option[DenseMatrix[Double]] = None
   ) = {
     covmatOpt match {
@@ -232,21 +232,21 @@ package object linalg {
    * done.
    */
   def scale(
-    x: DenseMatrix[Double], 
-    center: Boolean = true,
-    scale: Boolean = false
-  ) = {
+             x: DenseMatrix[Double],
+             center: Boolean = true,
+             scale: Boolean = false
+             ) = {
     if (center) {
       val xc = x(*,::) - mean(x, Axis._0).toDenseVector
-      if (scale) 
-	xc(*,::) :/ columnVariances(xc).map(scala.math.sqrt)
-      else 
-	xc 
+      if (scale)
+        xc(*,::) :/ stddev(x(::, *)).toDenseVector
+      else
+        xc
     } else {
-      if (scale) 
-	x(*,::) :/ columnRMS(x)
-      else 
-	x 
+      if (scale)
+        x(*,::) :/ columnRMS(x)
+      else
+        x
     }
   }
 
@@ -259,15 +259,7 @@ package object linalg {
     (xc.t * xc) /= xc.rows - 1.0
   }
 
-  /**
-   * Helper function to compute the variances of the columns of a matrix.
-   * Feel free to make this more general.
-   */
-  private def columnVariances(x: DenseMatrix[Double]) = {
-    val diff = x(*,::) - mean(x,Axis._0).toDenseVector
-    val squaredDiff = diff :* diff
-    (sum(squaredDiff,Axis._0) / (x.rows - 1.0)).toDenseVector
-  }
+
 
 
   /**
