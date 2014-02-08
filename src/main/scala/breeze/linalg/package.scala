@@ -205,10 +205,77 @@ package object linalg {
     )
   }
 
+  /**
+   * Performs a principal components analysis on the given numeric data
+   * matrix and returns the results as an object of class PCA.
+   *
+   * If the no covariance matrix is supplied, one obtained from the given
+   * data is used.
+   */
+  def princomp(
+    x: DenseMatrix[Double], 
+    covmatOpt: Option[DenseMatrix[Double]] = None
+  ) = {
+    covmatOpt match {
+      case Some(covmat) => new PCA(x, covmat)
+      case None => new PCA(x, cov(x))
+    }
+  }
+
+  /**
+   * A generic function (based on the R function of the same name) whose
+   * default method centers and/or scales the columns of a numeric matrix.
+   * 
+   * If ‘scale’ is ‘TRUE’ then scaling is done by dividing the (centered)
+   * columns of ‘x’ by their standard deviations if ‘center’ is ‘TRUE’, and
+   * the root mean square otherwise.  If ‘scale’ is ‘FALSE’, no scaling is
+   * done.
+   */
+  def scale(
+    x: DenseMatrix[Double], 
+    center: Boolean = true,
+    scale: Boolean = false
+  ) = {
+    if (center) {
+      val xc = x(*,::) - mean(x, Axis._0).toDenseVector
+      if (scale) 
+	xc(*,::) :/ columnVariances(xc).map(scala.math.sqrt)
+      else 
+	xc 
+    } else {
+      if (scale) 
+	x(*,::) :/ columnRMS(x)
+      else 
+	x 
+    }
+  }
+
+  /**
+   * Compute the covariance matrix from the given data, centering
+   * if necessary. Very simple, just does the basic thing.
+   */
+  def cov(x: DenseMatrix[Double], center: Boolean = true) = {
+    val xc = scale(x,center,false)
+    (xc.t * xc) /= xc.rows - 1.0
+  }
+
+  /**
+   * Helper function to compute the variances of the columns of a matrix.
+   * Feel free to make this more general.
+   */
+  private def columnVariances(x: DenseMatrix[Double]) = {
+    val diff = x(*,::) - mean(x,Axis._0).toDenseVector
+    val squaredDiff = diff :* diff
+    (sum(squaredDiff,Axis._0) / (x.rows - 1.0)).toDenseVector
+  }
 
 
-
-
+  /**
+   * Helper function to compute the root-mean-square of the columns of a
+   * matrix. Feel free to make this more general.
+   */
+  private def columnRMS(x: DenseMatrix[Double]) = 
+    (sum(x:*x,Axis._0) / (x.rows-1.0)).map(scala.math.sqrt).toDenseVector
 
 }
 
