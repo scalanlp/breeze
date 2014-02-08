@@ -8,7 +8,7 @@ The current version is 0.6-SNAPSHOT. The latest release is 0.5.2.
 * https://github.com/scalanlp/breeze/wiki/Quickstart
 * https://github.com/scalanlp/breeze/wiki/Breeze-Linear-Algebra
 * https://github.com/scalanlp/breeze/wiki/UserGuide
-* [Scaladoc](http://www.scalanlp.org/api/#breeze.package)
+* [Scaladoc](http://www.scalanlp.org/api/breeze/)
 
 Note:  
 
@@ -66,7 +66,7 @@ Maven looks like this:
 
 http://mvnrepository.com/artifact/org.scalanlp/breeze-math_2.10/0.5 (as an example) is a great resource for finding other configuration examples for other build tools.
 
-See documentation (linked below!) for more information on using Breeze.
+See documentation (linked above!) for more information on using Breeze.
 
 ## History
 

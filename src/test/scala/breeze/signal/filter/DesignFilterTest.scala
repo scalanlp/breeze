@@ -7,21 +7,21 @@ import breeze.signal._
 /**
  * @author ktakagaki
  */
-class FilterDesignTest extends FunSuite {
+class DesignFilterTest extends FunSuite {
 
 
   test("firwin tested against output from scipy.signal.firwin (0.13.2-1)") {
     val testNormThreshold = 1.0E-10
-    val firwin1 = firwin[Double](6, DenseVector(0.5),
-                    zeroPass = true, nyquist = 1d, scale = true,
+    val firwin1 = designFilterFirwin[Double](6, DenseVector(0.5), nyquist = 1d,
+                    zeroPass = true,  scale = true,
                     OptWindowFunction.Hamming())
     assert( norm( testFirwin1 - firwin1.kernel) < testNormThreshold )
-    val firwin2 = firwin[Double](3, DenseVector(10.0),
-                    zeroPass = true, nyquist = 15.0, scale = false,
+    val firwin2 = designFilterFirwin[Double](3, DenseVector(10.0), nyquist = 15.0,
+                    zeroPass = true, scale = false,
                     OptWindowFunction.Hamming())
     assert( norm( testFirwin2 - firwin2.kernel) < testNormThreshold )
-    val firwin3 = firwin[Double](5, DenseVector(6.0, 10.0),
-                    zeroPass = false, nyquist = 15.0, scale = false,
+    val firwin3 = designFilterFirwin[Double](5, DenseVector(6.0, 10.0), nyquist = 15.0,
+                    zeroPass = false, scale = false,
                     OptWindowFunction.Hamming())
     assert( norm( testFirwin3 - firwin3.kernel) < testNormThreshold )
   }

@@ -264,4 +264,77 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     assert( accumulate(xEmpty) == DenseVector[Long]() )
   }
 
+
+  /**
+   * Test based on the values in Lindsay Smith's tutorial:
+   *
+   * http://www.cs.otago.ac.nz/cosc453/student_tutorials/principal_components.pdf
+   */
+  test("pca") {
+
+    // The data
+    val smithData = DenseMatrix(
+      (2.5,2.4), (0.5,0.7), (2.2,2.9), (1.9,2.2), (3.1,3.0), 
+      (2.3,2.7), (2.0,1.6), (1.0,1.1), (1.5,1.6), (1.1,0.9))
+
+    // The correct answers bundled up.
+    object smithTruth {
+
+      val centeredData = DenseMatrix(
+	(0.69                ,  0.4900000000000002   ),
+	(-1.31               ,  -1.2099999999999997  ),
+	(0.3900000000000001  ,  0.9900000000000002   ),
+	(0.08999999999999986 ,  0.2900000000000005   ),
+	(1.29                ,  1.0900000000000003   ),
+	(0.48999999999999977 ,  0.7900000000000005   ),
+	(0.18999999999999995 ,  -0.3099999999999996  ),
+	(-0.81               ,  -0.8099999999999996  ),
+	(-0.31000000000000005,  -0.3099999999999996  ),
+	(-0.71               ,  -1.0099999999999998  ))
+
+      val covmat = DenseMatrix(
+	(0.6165555555555556,  0.6154444444444445),
+	(0.6154444444444445,  0.7165555555555555))
+
+      val eigenvalues = 
+	DenseVector(1.2840277121727839, 0.04908339893832735)
+
+      val eigenvectors = DenseMatrix(
+	(-0.6778733985280118,  -0.735178655544408),
+	(-0.735178655544408,   0.6778733985280118)) 
+
+      val scores = DenseMatrix(
+	( -0.8279701862010882,   -0.17511530704691552 ),
+	(1.7775803252804288  ,  0.14285722654428046   ),
+	(-0.9921974944148888 ,  0.3843749888804126    ),
+	(-0.27421041597539964,  0.13041720657412714   ),
+	(-1.6758014186445402 ,  -0.2094984612567533   ),
+	(-0.9129491031588082 ,  0.17528244362036988   ),
+	(0.099109437498444   ,  -0.34982469809712086  ),
+	(1.1445721637986597  ,  0.04641725818328124   ),
+	(0.43804613676244986 ,  0.017764629675083132  ),
+	(1.2238205550547403  ,  -0.16267528707676204  ))
+    }
+
+    val pca = princomp(smithData)
+
+    def vectorsNearlyEqual(A: DenseVector[Double], B: DenseVector[Double]) {
+      for(i <- 0 until A.length)
+        A(i) should be (B(i) plusOrMinus 1E-6)
+    }
+
+    def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double]) {
+      for(i <- 0 until A.rows; j <- 0 until A.cols)
+        A(i,j) should be (B(i, j) plusOrMinus 1E-6)
+    }
+
+    matricesNearlyEqual(smithData(*,::) - pca.center, smithTruth.centeredData)
+    matricesNearlyEqual(pca.covmat, smithTruth.covmat)
+    matricesNearlyEqual(pca.covmat, smithTruth.covmat)
+    vectorsNearlyEqual(pca.eigenvalues, smithTruth.eigenvalues)
+    matricesNearlyEqual(pca.loadings, smithTruth.eigenvectors)
+    matricesNearlyEqual(pca.scores, smithTruth.scores)
+
+  }
+
 }

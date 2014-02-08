@@ -13,46 +13,53 @@ import breeze.math.Complex
  * Time: 02:31
  * To change this template use File | Settings | File Templates.
  */
-class SignalTest extends FunSuite {
+class FourierTrTest extends FunSuite {
 
 
-  // <editor-fold desc="Fourier">
+  // <editor-fold desc="FourierTr">
   test("fft 1D of DenseVector[Complex]") {
-    assert( norm( fourierTransform(test16C) - test16fftC ) < testNormThreshold )
+    assert( norm( fourierTr(test16C) - test16fftC ) < testNormThreshold )
   }
 
   test("fft 1D of DenseVector[Double]") {
-    assert( norm( fourierTransform(test16) - test16fftC ) < testNormThreshold )
+    assert( norm( fourierTr(test16) - test16fftC ) < testNormThreshold )
   }
 
   test("ifft 1D of DenseVector[Complex]") {
-    assert( norm( inverseFourierTransform(test16fftC) - test16C ) < testNormThreshold )
+    assert( norm( iFourierTr(test16fftC) - test16C ) < testNormThreshold )
   }
 
   test("ifft 1D of DenseVector[Double]") {
-    assert( norm( inverseFourierTransform(test16) - test16ifftC ) < testNormThreshold )
+    assert( norm( iFourierTr(test16) - test16ifftC ) < testNormThreshold )
   }
 
 
   test("fft 2D of DenseMatrix[Complex]") {
-    assert( norm( (fourierTransform(test5x5C) - test5x5fftC).toDenseVector ) < testNormThreshold )
+    assert( norm( (fourierTr(test5x5C) - test5x5fftC).toDenseVector ) < testNormThreshold )
   }
 
   test("fft 2D of DenseMatrix[Double]") {
-    assert( norm( (fourierTransform(test5x5) - test5x5fftC).toDenseVector  ) < testNormThreshold )
+    assert( norm( (fourierTr(test5x5) - test5x5fftC).toDenseVector  ) < testNormThreshold )
   }
 
   test("ifft 2D of DenseMatrix[Complex]") {
-    assert( norm( (inverseFourierTransform(test5x5fftC) - test5x5C).toDenseVector  ) < testNormThreshold )
+    assert( norm( (iFourierTr(test5x5fftC) - test5x5C).toDenseVector  ) < testNormThreshold )
   }
 
   test("ifft 2D of DenseMatrix[Double]") {
-    assert( norm( (inverseFourierTransform(test5x5) - test5x5ifftC).toDenseVector  ) < testNormThreshold )
+    assert( norm( (iFourierTr(test5x5) - test5x5ifftC).toDenseVector  ) < testNormThreshold )
+  }
+  // </editor-fold>
+
+  test("fft 1D of DenseVector[Double], spanned") {
+
+    //assert( norm( fourierTr(test16, 0 to 4) - test16fftC(0 to 4)  ) < testNormThreshold )
+
   }
 
 
+  // <editor-fold desc="Test Values">
 
- // Test Values
   val testNormThreshold = 1E-12
 
   val test16 = DenseVector[Double]( 0.814723686393179, 0.905791937075619, 0.126986816293506, 0.913375856139019,
@@ -129,17 +136,5 @@ class SignalTest extends FunSuite {
   ).t.reshape(5,5).t
   // </editor-fold>
 
-  // <editor-fold desc="convolve/correlate">
-  test("convolve/correlate") {
-    val kernel = DenseVector(1.0, 2.0)
-    val data = DenseVector(2.0, 3.0, 4.0, 5.0)
-    assert( convolve(data, kernel) == DenseVector(7.0, 10.0, 13.0) )
-    assert( correlate(data, kernel) == DenseVector(8.0, 11.0, 14.0) )
-    assert( convolve(data, kernel, overhang = OptOverhang.Full ) == DenseVector(2.0, 7.0, 10.0, 13.0, 10) )
-    assert( correlate(data, kernel, overhang = OptOverhang.Full ) == DenseVector(4.0, 8.0, 11.0, 14.0, 5.0) )
-  }
-  //MatLab: conv(2 : 5, 1 : 2)
-  //Mathematica: ListConvolve[{1, 2}, {2, 3, 4, 5}]
 
-  // </editor-fold>
 }
