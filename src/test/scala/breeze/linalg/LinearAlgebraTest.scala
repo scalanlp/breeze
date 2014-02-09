@@ -105,6 +105,15 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     assert(signD === -1.0)
   }
 
+  test("cond") {
+    val A = DenseMatrix( (1.0, 0.0, -1.0), (0.0, 1.0, 0.0), (1.0, 0.0, 1.0))
+    assert((cond(A) - math.sqrt(2)).abs < 1E-6, cond(A))
+
+    A(0, 0) = -1.0 // row 0 and row 2 are linearly dependent now
+    assert(cond(A) === Double.PositiveInfinity)
+
+  }
+
   test("inv") {
     val X = DenseMatrix(( 29.0, 42.0, -4.0, 50.0),
                    ( 20.0,-31.0, 32.0, 21.0),
