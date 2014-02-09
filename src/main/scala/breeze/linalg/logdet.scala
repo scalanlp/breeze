@@ -4,7 +4,9 @@ import breeze.generic.UFunc
 
 
 /**
- * Computes the determinant of the given real matrix.
+ * Computes the log of the determinant of the given real matrix. The  value returned
+ * is (sign of determinant, log of determinant). This method can be more accurate than just using [[breeze.linalg.det]],
+ * if det is very small.
  */
 object logdet extends UFunc {
   implicit def canDetUsingLU[T](implicit luImpl: LU.Impl[T, (DenseMatrix[Double], Array[Int])]):Impl[T, (Double, Double)] = {
