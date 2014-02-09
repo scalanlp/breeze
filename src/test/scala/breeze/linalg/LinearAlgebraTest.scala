@@ -71,16 +71,38 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
 
   test("det") {
     val A = DenseMatrix((9,26,21),(48,3,11),(7,48,26))
-    det(A) should be (13446.99999999 plusOrMinus 1e-8)
+    det(A) should be (13446.99999999 plusOrMinus 1e-6)
 
     val B = DenseMatrix((1,2,3),(4,5,-6),(7,8,9))
-    det(B) should be (-72.0 plusOrMinus 1e-15)
+    det(B) should be (-72.0 plusOrMinus 1e-16)
 
     val C = DenseMatrix((1,2,3),(2,4,6),(0,-1,0)) // 1st and 2nd row linearly dep.
-    det(C) should be (0.0 plusOrMinus 1e-15)
+    det(C) should be (0.0 plusOrMinus 1e-6)
 
     val D = DenseMatrix((-1,1,-1),(1,2,3),(3,-10,1))
-    det(D) should be (-8.0 plusOrMinus 1e-8)
+    det(D) should be (-8.0 plusOrMinus 1E-6)
+  }
+
+  test("logdet") {
+    val A = DenseMatrix((9,26,21),(48,3,11),(7,48,26))
+    val (signA, detA) = logdet(A)
+    detA should be (math.log(13446.99999999) plusOrMinus 1e-8)
+    signA should be (1.0 plusOrMinus 1e-8)
+
+    val B = DenseMatrix((1,2,3),(4,5,-6),(7,8,9))
+    val (signB, detB) = logdet(B)
+    detB should be (math.log(72.0) plusOrMinus 1e-15)
+    assert(signB === -1.0)
+
+    val C = DenseMatrix((1,2,3),(2,4,6),(0,-1,0)) // 1st and 2nd row linearly dep.
+    val (signC, detC) = logdet(C)
+    detC should be (Double.NegativeInfinity plusOrMinus 1e-15)
+    assert(signC === 0.0)
+
+    val D = DenseMatrix((-1,1,-1),(1,2,3),(3,-10,1))
+    val (signD, detD) = logdet(D)
+    detD should be (math.log(8) plusOrMinus 1e-8)
+    assert(signD === -1.0)
   }
 
   test("inv") {
