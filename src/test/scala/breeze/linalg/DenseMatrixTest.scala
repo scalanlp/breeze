@@ -36,7 +36,7 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
     // slice row
     val s2 : DenseMatrix[Int] = m(0, ::)
-    assert(s2.valuesIterator sameElements DenseVector(0,2,3).valuesIterator)
+    assert(s2 === DenseVector(0,2,3).t)
     s2 *= 2
     assert(m === DenseMatrix((0,4,6),(3,5,6)))
 
@@ -77,8 +77,8 @@ class DenseMatrixTest extends FunSuite with Checkers {
     // slice part of a column
     val s7a = m(0 to 1, 0)
     s7a += 2
-    val s7b = m(0 to 1,0);
-    s7b += 1;
+    val s7b = m(0 to 1,0)
+    s7b += 1
     assert(m === DenseMatrix((3,4,7),(6,4,6)))
   }
 
@@ -109,19 +109,19 @@ class DenseMatrixTest extends FunSuite with Checkers {
     // column of original looks same as row of tranpose
     val sm1 = m(::, 1)
     val smt1 = m.t(1, ::)
-    assert(sm1.valuesIterator sameElements smt1.valuesIterator)
+    assert(sm1.t === smt1)
 
     val sm2 = m(::, 2)
     val smt2 = m.t(2, ::)
-    assert(sm2.valuesIterator sameElements smt2.valuesIterator)
+    assert(sm2.t === smt2)
 
     val sm1c = m(1, ::)
     val smt1c = m.t(::, 1)
-    assert(sm1c.valuesIterator sameElements smt1c.valuesIterator, sm1c.toString + " is not " + smt1c.toString)
+    assert(sm1c === smt1c.t)
 
     val sm2c = m(0, ::)
     val smt2c = m.t(::, 0)
-    assert(sm2c.valuesIterator sameElements smt2c.valuesIterator)
+    assert(sm2c === smt2c.t)
 
     // slice sub-matrix
     val s1 = m(0 to 1, 1 to 2)
@@ -140,7 +140,7 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
     val s3 = m(0, 0 to 1)
     val t3 = m.t(0 to 1, 0)
-    assert(s3.valuesIterator sameElements t3.valuesIterator)
+    assert(s3.toDenseVector === t3)
 
     {
       val s2 = m(0 to 1, ::)
@@ -514,7 +514,7 @@ class DenseMatrixTest extends FunSuite with Checkers {
   test("BigInt multiply") {
     val m = DenseMatrix((BigInt(1), BigInt(1)), (BigInt(1), BigInt(0)))
     val m2 = DenseMatrix(((1), (1)), ((1), (0)))
-    assert(m * m === (m2 * m2).values.map(_.toInt))
+    assert(m * m === convert(m2 * m2, Int))
   }
 
   test("comparisons") {
