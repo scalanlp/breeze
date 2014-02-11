@@ -32,6 +32,8 @@ class SliceVectorTest extends FunSuite {
     intercept[IllegalArgumentException]{ tempDV( -3 until 7 ) }
     assert( tempDV( 0 to 4 by 2 ) == DenseVector(0, 2, 4), "Failed> tempDV( 0 to 4 by 2 ) = " + tempDV( 0 to 4 by 2 ) )
     assert( tempDV( 4 to 0 by -2 ) == DenseVector(4, 2, 0), "Failed> tempDV( 4 to 0 by -2 ) = " + tempDV( 4 to 0 by -2 ) )
+    assert( tempDV( -1 ) == 6, "Failed> tempDV( -1 ) = " + tempDV( -1 )  )
+    assert( tempDV( -7 ) == 0, "Failed> tempDV( -7 ) = " + tempDV( -7 )  )
 
   }
 
