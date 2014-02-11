@@ -11,7 +11,7 @@ import breeze.linalg.DenseVector
 trait CanDesignFilterDecimation[Output] {
   def apply(factor: Int, multiplier: Double,
             optDesignMethod: OptDesignMethod,
-            optWindow: OptWindowFunction, optFilterOrder: OptFilterOrder): FilterKernel1D[Output]
+            optWindow: OptWindowFunction, optFilterOrder: OptFilterTaps): FilterKernel1D[Output]
 }
 
 /**
@@ -31,11 +31,11 @@ object CanDesignFilterDecimation {
     new CanDesignFilterDecimation[Double] {
       def apply(factor: Int, multiplier: Double,
                 optDesignMethod: OptDesignMethod,
-                optWindow: OptWindowFunction, optFilterOrder: OptFilterOrder): FIRKernel1D[Double]  =  {
+                optWindow: OptWindowFunction, optFilterOrder: OptFilterTaps): FIRKernel1D[Double]  =  {
 
         optDesignMethod match {
           case OptDesignMethod.Firwin => {
-            import OptFilterOrder._
+            import OptFilterTaps._
             val realOrder = optFilterOrder match {
               case Automatic => 31
               case IntOpt(ord) => ord
