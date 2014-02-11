@@ -53,6 +53,8 @@ object CanFilterBPBS {
             new FIRKernel1D[Double](DenseVector[Double](), "null kernel!")
           }
         }
+//        println(kernel)
+//        println(kernel.kernel)
 
         filter(data, kernel, overhang, padding)
       }

@@ -65,10 +65,10 @@ object CanFirwin {
     val scaledCutoff = DenseVector(tempCutoff)
 
 
-    //ToDo: Is the following statement translated from numpy code correct???
+    //ToDo: Is the following statement translated from numpy code correctly???
     //https://github.com/scipy/scipy/blob/v0.13.0/scipy/signal/fir_filter_design.py#L138
-    require( !(nyquistPass && isEven(omegas.length) ),
-      "A filter with an even number of coefficients must have zero response at the Nyquist rate.")
+    require( !(nyquistPass && isEven(taps) ),
+      "A filter with an even number of taps must have zero response at the Nyquist rate.")
 
     //val bands = scaledCutoff.reshape(-1, 2)
     val alpha = 0.5 * (taps -1)

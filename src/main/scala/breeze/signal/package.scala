@@ -47,7 +47,7 @@ package object signal {
   def convolve[Input, KernelType, Output](
                               data: Input, kernel: KernelType, range: OptRange = OptRange.All,
                               overhang: OptOverhang = OptOverhang.None,
-                              padding: OptPadding = OptPadding.ValueOpt(0d),
+                              padding: OptPadding = OptPadding.Zero,
                               method: OptMethod = OptMethod.Automatic
                               )
                              (implicit canConvolve: CanConvolve[Input, KernelType, Output]): Output =
@@ -61,7 +61,7 @@ package object signal {
   def correlate[Input, KernelType, Output](
                               data: Input, kernel: KernelType, range: OptRange = OptRange.All,
                               overhang: OptOverhang = OptOverhang.None,
-                              padding: OptPadding = OptPadding.ValueOpt(0d),
+                              padding: OptPadding = OptPadding.Zero,
                               method: OptMethod = OptMethod.Automatic
                                )
                              (implicit canConvolve: CanConvolve[Input, KernelType, Output]): Output =
@@ -80,8 +80,8 @@ package object signal {
     * @return
     */
   def filter[Input, Kernel, Output](data: Input, kernel: Kernel,
-                            overhang: OptOverhang = OptOverhang.None,
-                            padding: OptPadding = OptPadding.Boundary)
+                            overhang: OptOverhang = OptOverhang.PreserveLength,
+                            padding: OptPadding = OptPadding.Zero)
         (implicit canFilter: CanFilter[Input, Kernel, Output]): Output =
     canFilter(data, kernel, overhang, padding)
 
@@ -103,13 +103,13 @@ package object signal {
     * @return
     */
   def filterBP[Input, Output](data: Input,
-                              order: Int = 512, omegas: (Double, Double),
+                              taps: Int = 512, omegas: (Double, Double),
                               sampleRate: Double = 2d,
                               kernelDesign: OptDesignMethod = OptDesignMethod.Firwin,
                               overhang: OptOverhang = OptOverhang.None,
                               padding: OptPadding = OptPadding.Boundary)
         (implicit canFilterBPBS: CanFilterBPBS[Input, Output]): Output =
-    canFilterBPBS(data, order, omegas,
+    canFilterBPBS(data, taps, omegas,
               sampleRate, bandStop = false,
               kernelDesign, overhang, padding)
 
@@ -127,13 +127,13 @@ package object signal {
     * @return
     */
   def filterBS[Input, Output](data: Input,
-                              order: Int = 512, omegas: (Double, Double),
+                              taps: Int = 512, omegas: (Double, Double),
                               sampleRate: Double = 2d,
                               kernelDesign: OptDesignMethod = OptDesignMethod.Firwin,
                               overhang: OptOverhang = OptOverhang.None,
                               padding: OptPadding = OptPadding.Boundary)
          (implicit canFilterBPBS: CanFilterBPBS[Input, Output]): Output =
-    canFilterBPBS(data, order, omegas,
+    canFilterBPBS(data, taps, omegas,
       sampleRate, bandStop = true,
       kernelDesign, overhang, padding)
 
@@ -166,12 +166,12 @@ package object signal {
     *              or (B) at nyquist if the first passband ends at nyquist, or (C) the center of the first passband. Default is true.
     * @param nyquist The nyquist frequency, default is 1.
     */
-  def designFilterFirwin[Output](order: Int, omegas: DenseVector[Double], nyquist: Double = 1d,
+  def designFilterFirwin[Output](taps: Int, omegas: DenseVector[Double], nyquist: Double = 1d,
                 zeroPass: Boolean = true,
                 scale: Boolean = true, multiplier: Double = 1d,
                 optWindow: OptWindowFunction = OptWindowFunction.Hamming()  )
                (implicit canFirwin: CanFirwin[Output]): FIRKernel1D[Output] =
-     canFirwin(order, omegas, nyquist, zeroPass, scale, multiplier,
+     canFirwin(taps, omegas, nyquist, zeroPass, scale, multiplier,
                 optWindow)
 
   def designFilterDecimation[Output](factor: Int, multiplier: Double = 1d,
