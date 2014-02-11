@@ -374,7 +374,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     new CanSlice[DenseVector[Any], Range, DenseVector[Any]] {
       def apply(v: DenseVector[Any], re: Range) = {
 
-        val r = re.getRangeWithoutNegativeIndexes(v.length)
+        val r = re.getRangeWithoutNegativeIndexes( v.length )
 
         require(r.isEmpty || r.last < v.length)
         require(r.isEmpty || r.start >= 0)
