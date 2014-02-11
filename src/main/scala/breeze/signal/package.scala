@@ -26,9 +26,14 @@ import breeze.linalg.DenseVector
 package object signal {
 
   @deprecated("use fourierTr", "v.0.6")
-  val fft:fourierTr.type = fourierTr
+  val fft: fourierTr.type = fourierTr
   @deprecated("use iFourierTr", "v.0.6")
-  val ifft:iFourierTr.type = iFourierTr
+  val ifft: iFourierTr.type = iFourierTr
+  @deprecated("use fourierTr", "v.0.6")
+  val fourierTransform: fourierTr.type = fourierTr
+  @deprecated("use iFourierTr", "v.0.6")
+  val inverseFourierTransform: iFourierTr.type = iFourierTr
+
 
   // <editor-fold desc="convolve, correlate">
   /**Convolves DenseVectors.</p>
@@ -163,18 +168,18 @@ package object signal {
     */
   def designFilterFirwin[Output](order: Int, omegas: DenseVector[Double], nyquist: Double = 1d,
                 zeroPass: Boolean = true,
-                scale: Boolean = true,
+                scale: Boolean = true, multiplier: Double = 1d,
                 optWindow: OptWindowFunction = OptWindowFunction.Hamming()  )
                (implicit canFirwin: CanFirwin[Output]): FIRKernel1D[Output] =
-     canFirwin(order, omegas, nyquist, zeroPass, scale,
+     canFirwin(order, omegas, nyquist, zeroPass, scale, multiplier,
                 optWindow)
 
-  def designFilterDecimation[Output](factor: Int,
+  def designFilterDecimation[Output](factor: Int, multiplier: Double = 1d,
                                      optDesignMethod: OptDesignMethod = OptDesignMethod.Firwin,
                                      optWindow: OptWindowFunction = OptWindowFunction.Hamming(),
                                      optFilterOrder: OptFilterOrder = OptFilterOrder.Automatic)
                                 (implicit canDesignFilterDecimation: CanDesignFilterDecimation[Output]): FilterKernel1D[Output] =
-    canDesignFilterDecimation(factor, optDesignMethod, optWindow, optFilterOrder)
+    canDesignFilterDecimation(factor, multiplier, optDesignMethod, optWindow, optFilterOrder)
 
   // </editor-fold>
 
@@ -193,11 +198,20 @@ package object signal {
   def haarTr[Input, Output](v : Input)(implicit canHaarTransform: CanHaarTr[Input, Output]): Output =
     canHaarTransform(v)
 
+  @deprecated("use haarTr", "v.0.6")
+  def haarTransform[Input, Output](v : Input)(implicit canHaarTransform: CanHaarTr[Input, Output]): Output =
+    canHaarTransform(v)
+
   /**Returns the inverse fast haar transform for a DenseVector or DenseMatrix.
    *
    */
   def iHaarTr[Input, Output](v : Input)
       (implicit canInverseHaarTransform: CanIHaarTr[Input, Output]): Output =
           canInverseHaarTransform(v)
+
+  @deprecated("use iHaarTr", "v.0.6")
+  def inverseHaarTransform[Input, Output](v : Input)
+                            (implicit canInverseHaarTransform: CanIHaarTr[Input, Output]): Output =
+    canInverseHaarTransform(v)
 
 }

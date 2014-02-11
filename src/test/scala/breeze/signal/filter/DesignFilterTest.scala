@@ -14,15 +14,18 @@ class DesignFilterTest extends FunSuite {
     val testNormThreshold = 1.0E-10
     val firwin1 = designFilterFirwin[Double](6, DenseVector(0.5), nyquist = 1d,
                     zeroPass = true,  scale = true,
-                    OptWindowFunction.Hamming())
+                    multiplier = 1d,
+                    optWindow = OptWindowFunction.Hamming())
     assert( norm( testFirwin1 - firwin1.kernel) < testNormThreshold )
     val firwin2 = designFilterFirwin[Double](3, DenseVector(10.0), nyquist = 15.0,
                     zeroPass = true, scale = false,
-                    OptWindowFunction.Hamming())
+                    multiplier = 1d,
+                    optWindow = OptWindowFunction.Hamming())
     assert( norm( testFirwin2 - firwin2.kernel) < testNormThreshold )
     val firwin3 = designFilterFirwin[Double](5, DenseVector(6.0, 10.0), nyquist = 15.0,
                     zeroPass = false, scale = false,
-                    OptWindowFunction.Hamming())
+                    multiplier = 1d,
+                    optWindow = OptWindowFunction.Hamming())
     assert( norm( testFirwin3 - firwin3.kernel) < testNormThreshold )
   }
 
