@@ -18,6 +18,12 @@ abstract class FilterKernel {
 
 abstract class FilterKernel1D[T] extends FilterKernel
 
+object FIRKernel1D {
+
+  def apply[T](kernel: DenseVector[T], designText: String) = new FIRKernel1D[T](kernel, designText)
+
+}
+
 /**This immutable class encapsulates 1D FIR filter kernels. It also internally stores the kernel Fourier transform for
   * multiple applications of fft convolution.*/
 class FIRKernel1D[T](val kernel: DenseVector[T], override val designText: String) extends FilterKernel1D[T] {
