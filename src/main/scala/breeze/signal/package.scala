@@ -36,47 +36,37 @@ package object signal {
   @deprecated("use iFourierTr", "v.0.6")
   val inverseFourierTransform: iFourierTr.type = iFourierTr
 
-  // <editor-fold desc="fourierFreq, fourierShift">
+  // <editor-fold desc="fourierFreq">
 
   /**Returns the frequencies for each tap in a discrete Fourier transform, useful for graphing.
+    * You must specify either an fs or a dt argument. If you specify both, which is redundant,
+    * fs == 1.0/dt must be true.
     *
-    * f = [0, 1, ..., n/2-1, -n/2, ..., -1] / (d*n)         if n is even
-    * f = [0, 1, ..., (n-1)/2, -(n-1)/2, ..., -1] / (d*n)   if n is odd
+    * f = [0, 1, ..., n/2-1, -n/2, ..., -1] / (dt*n)         if n is even
+    * f = [0, 1, ..., (n-1)/2, -(n-1)/2, ..., -1] / (dt*n)   if n is odd
    *
    * @param windowLength window length of discrete Fourier transform
-   * @param fs  sampling frequency (CAUTION: 1.0/d, where d is sample spacing, specified in scipy)
+   * @param fs  sampling frequency (1.0/dt; specify default of -1 if using dt)
+   * @param dt  time step (CAUTION: 1.0/fs; specify default of -1 if using fs)
    * @param shifted whether to return fourierShift'ed frequencies, default=false
    */
-  def fourierFreq(windowLength: Int, fs: Double, shifted: Boolean = false ): DenseVector[Double] = {
-    val shiftedFreq = if( isEven(windowLength) ) DenseVector.tabulate(- windowLength/2 to windowLength/2 -1)( (i: Int) => i.toDouble*fs/windowLength.toDouble )
-                      else DenseVector.tabulate(- (windowLength-1)/2 to (windowLength-1)/2 )( (i: Int) => i.toDouble*fs/windowLength.toDouble )
-    if(shifted) shiftedFreq else fourierShift(shiftedFreq)
-  }
+  def fourierFreq(windowLength: Int, fs: Double = -1, dt: Double = -1, shifted: Boolean = false ): DenseVector[Double] = {
+    require(fs>0 || dt>0, "Must specify either a valid fs or a valid dt argument.")
+    if(fs>0 && dt>0) require(fs == 1d/dt, "If fs and dt are both specified, fs == 1.0/dt must be true. Otherwise, they are incompatible")
+    val realFs = if(fs<0 && dt>0) 1d/dt else fs
 
-  //ToDo: 2D fourierShift/iFourierShift, make horz/vert join function first
-
-  /**Shift the zero-frequency component to the center of the spectrum.
-   * This function swaps half-spaces for all axes listed (defaults to all). Note that y[0] is the Nyquist component only if len(x) is even.
-   *
-   * @param dft input array
-   * @return
-   */
-  @expand
-  def fourierShift[@expand.args(Int, Long, Float, Double) T](dft: DenseVector[T]): DenseVector[T] = {
-    if( isEven(dft.length) ) DenseVector.vertcat( dft( dft.length/2 to -1 ), dft( 0 to dft.length/2 -1 ) )
-    else DenseVector.vertcat( dft( (dft.length + 1)/2 to -1 ), dft( 0 to (dft.length - 1)/2 ) )
-  }
-
-  /**Inverse shift the zero-frequency component to the center of the spectrum. For odd sequences, this is not
-    * equivalent to [[breeze.signal.fourierShift]]
-    *
-    * @param dft input array
-    * @return
-    */
-  @expand
-  def iFourierShift[@expand.args(Int, Long, Float, Double) T](dft: DenseVector[T]): DenseVector[T] = {
-    if( isEven(dft.length) ) DenseVector.vertcat( dft( dft.length/2 to -1 ), dft( 0 to dft.length/2 -1 ) )
-    else DenseVector.vertcat( dft( (dft.length - 1)/2 to -1 ), dft( 0 to (dft.length + 1)/2 ) )
+    val shiftedFreq = if( isEven(windowLength) ){
+      DenseVector.vertcat(
+        DenseVector.tabulate(0 to windowLength/2 - 1)( (i: Int) => i.toDouble*realFs/windowLength.toDouble ),
+        DenseVector.tabulate(- windowLength/2 to - 1)( (i: Int) => i.toDouble*realFs/windowLength.toDouble )
+      )
+    } else {
+      DenseVector.vertcat(
+        DenseVector.tabulate(0 to (windowLength-1)/2 )( (i: Int) => i.toDouble*realFs/windowLength.toDouble ),
+        DenseVector.tabulate(- (windowLength-1)/2 to -1 )( (i: Int) => i.toDouble*realFs/windowLength.toDouble )
+      )
+    }
+    if(shifted) fourierShift(shiftedFreq) else shiftedFreq
   }
 
 
