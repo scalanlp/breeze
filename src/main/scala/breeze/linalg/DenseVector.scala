@@ -166,7 +166,7 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
 
 
   /**
-   * Slices the DenseVector, in the range (start,end] with a stride stride.
+   * Slices the DenseVector, in the range [start,end] with a stride stride.
    * @param start
    * @param end
    * @param stride
@@ -190,6 +190,8 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
     }
     arr
   }
+
+
 }
 
 
