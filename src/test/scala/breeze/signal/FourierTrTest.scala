@@ -57,6 +57,15 @@ class FourierTrTest extends FunSuite {
 
   }
 
+  test("fourierShift/iFourierShift") {
+    val dvOdd = DenseVector.tabulate(4)( (i: Int) => i )
+    val dvEven = DenseVector.tabulate(5)( (i: Int) => i )
+    assert( fourierShift( dvOdd ) == DenseVector(3, 4, 0, 1, 2) )
+    assert( iFourierShift( dvOdd ) == DenseVector(2, 3, 4, 0, 1) )
+    assert( fourierShift( dvEven ) == DenseVector(3, 4, 5, 0, 1, 2) )
+    assert( iFourierShift( dvOdd ) == DenseVector(3, 4, 5, 0, 1, 2) )
+  }
+
 
   // <editor-fold desc="Test Values">
 

@@ -18,6 +18,8 @@ limitations under the License.
 import breeze.signal._
 import breeze.signal.support._
 import breeze.linalg.DenseVector
+import breeze.numerics.isEven
+import breeze.macros.expand
 
 /**This package provides digital signal processing functions.
  *
@@ -34,6 +36,51 @@ package object signal {
   @deprecated("use iFourierTr", "v.0.6")
   val inverseFourierTransform: iFourierTr.type = iFourierTr
 
+  // <editor-fold desc="fourierFreq, fourierShift">
+
+  /**Returns the frequencies for each tap in a discrete Fourier transform, useful for graphing.
+    *
+    * f = [0, 1, ..., n/2-1, -n/2, ..., -1] / (d*n)         if n is even
+    * f = [0, 1, ..., (n-1)/2, -(n-1)/2, ..., -1] / (d*n)   if n is odd
+   *
+   * @param windowLength window length of discrete Fourier transform
+   * @param fs  sampling frequency (CAUTION: 1.0/d, where d is sample spacing, specified in scipy)
+   * @param shifted whether to return fourierShift'ed frequencies, default=false
+   */
+  def fourierFreq(windowLength: Int, fs: Double, shifted: Boolean = false ): DenseVector[Double] = {
+    val shiftedFreq = if( isEven(windowLength) ) DenseVector.tabulate(- windowLength/2 to windowLength/2 -1)( (i: Int) => i.toDouble*fs/windowLength.toDouble )
+                      else DenseVector.tabulate(- (windowLength-1)/2 to (windowLength-1)/2 )( (i: Int) => i.toDouble*fs/windowLength.toDouble )
+    if(shifted) shiftedFreq else fourierShift(shiftedFreq)
+  }
+
+  //ToDo: 2D fourierShift/iFourierShift, make horz/vert join function first
+
+  /**Shift the zero-frequency component to the center of the spectrum.
+   * This function swaps half-spaces for all axes listed (defaults to all). Note that y[0] is the Nyquist component only if len(x) is even.
+   *
+   * @param dft input array
+   * @return
+   */
+  @expand
+  def fourierShift[@expand.args(Int, Long, Float, Double) T](dft: DenseVector[T]): DenseVector[T] = {
+    if( isEven(dft.length) ) DenseVector.vertcat( dft( dft.length/2 to -1 ), dft( 0 to dft.length/2 -1 ) )
+    else DenseVector.vertcat( dft( (dft.length + 1)/2 to -1 ), dft( 0 to (dft.length - 1)/2 ) )
+  }
+
+  /**Inverse shift the zero-frequency component to the center of the spectrum. For odd sequences, this is not
+    * equivalent to [[breeze.signal.fourierShift]]
+    *
+    * @param dft input array
+    * @return
+    */
+  @expand
+  def iFourierShift[@expand.args(Int, Long, Float, Double) T](dft: DenseVector[T]): DenseVector[T] = {
+    if( isEven(dft.length) ) DenseVector.vertcat( dft( dft.length/2 to -1 ), dft( 0 to dft.length/2 -1 ) )
+    else DenseVector.vertcat( dft( (dft.length - 1)/2 to -1 ), dft( 0 to (dft.length + 1)/2 ) )
+  }
+
+
+  // </editor-fold>
 
   // <editor-fold desc="convolve, correlate">
   /**Convolves DenseVectors.</p>
