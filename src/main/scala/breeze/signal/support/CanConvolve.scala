@@ -5,10 +5,11 @@ package breeze.signal.support
  */
 import breeze.generic.UFunc
 import breeze.macros.expand
-import breeze.linalg.{reverse, DenseVector, DenseMatrix, RangeExtender}
+import breeze.linalg._
 import breeze.signal._
 import breeze.signal.OptRange.RangeOpt
 import breeze.numerics.isOdd
+import breeze.signal.OptRange.RangeOpt
 
 //ToDo 1: provide convolve of Integer and other DenseVectors
 //ToDo 1: provide convolve of DenseMatrix
@@ -49,12 +50,6 @@ object CanConvolve {
                 overhang: OptOverhang,
                 padding: OptPadding,
                 method: OptMethod): DenseVector[T] = {
-
-//        val optConvolveOverhangParsed = overhang match {
-//          case OptOverhang.None => OptOverhang.Sequence(-1, 1)
-//          case OptOverhang.Full => OptOverhang.Sequence(1, -1)
-//          case o => o
-//        }
 
 
         //val parsedOptMethod =
@@ -131,14 +126,29 @@ object CanConvolve {
           case RangeOpt( negativeR ) => negativeR.getRangeWithoutNegativeIndexes(fullOptRangeLength)
         }
 
-        //println(paddedData)
-        //println(paddedData.length)
         //Actual implementation
         if(correlate) correlateLoopNoOverhang( paddedData, kernel, parsedOptRange )
         else correlateLoopNoOverhang( paddedData, reverse(kernel), parsedOptRange )
       }
     }
   }
+
+//  Bad idea, causes ambiguous implicit references when result types are not specified
+//  @expand
+//  @expand.valify
+//  implicit def dvT1DSingleConvolve[@expand.args(Int, Long, Float, Double) T]: CanConvolve[DenseVector[T],DenseVector[T], T] = {
+//    new CanConvolve[DenseVector[T],DenseVector[T], T] {
+//      def apply(data: DenseVector[T], kernel: DenseVector[T], range: OptRange,
+//                correlate: Boolean,
+//                overhang: OptOverhang,
+//                padding: OptPadding,
+//                method: OptMethod): T = {
+//        require(overhang == OptOverhang.None, "Overhang must equal OptOverhang.none to return scalar from convolution.")
+//        require(data.length == kernel.length, "Data and kernel must have same length to return scalar from convolution. ")
+//        if(correlate) sum(data :* kernel) else sum(data :* reverse(kernel))
+//      }
+//    }
+//  }
 
   @expand
   @expand.valify
