@@ -16,15 +16,21 @@ abstract class FilterKernel {
   override def toString = this.getClass.getSimpleName + "(): " + designText
 }
 
-abstract class FilterKernel1D extends FilterKernel
+abstract class FilterKernel1D[T] extends FilterKernel
+
+object FIRKernel1D {
+
+  def apply[T](kernel: DenseVector[T], designText: String) = new FIRKernel1D[T](kernel, designText)
+
+}
 
 /**This immutable class encapsulates 1D FIR filter kernels. It also internally stores the kernel Fourier transform for
   * multiple applications of fft convolution.*/
-class FIRKernel1D[T](val kernel: DenseVector[T], override val designText: String) extends FilterKernel1D {
-  //lazy val kernelFourier: DenseVector[Complex] = fourierTransform( kernel )
+class FIRKernel1D[T](val kernel: DenseVector[T], override val designText: String) extends FilterKernel1D[T] {
+  //lazy val kernelFourier: DenseVector[Complex] = fourierTr( kernel )
   lazy val length = kernel.length
 }
 
 /**This immutable class will encapsulate 1D IIR kernels. Not implemented yet.*/
-class IIRKernel1D[T](val kernelA: DenseVector[T], val kernelB: DenseVector[T], override val designText: String) extends FilterKernel1D {
+class IIRKernel1D[T](val kernelA: DenseVector[T], val kernelB: DenseVector[T], override val designText: String) extends FilterKernel1D[T] {
 }

@@ -86,27 +86,25 @@ package object linalg {
   }
 
 
+  object RangeExtender {
+    val All = new Range(0, -1, 1)
+  }
   implicit class RangeExtender(val re: Range) extends Range(re.start, re.end, re.step) {
 
     def getRangeWithoutNegativeIndexes(totalLength: Int): Range = {
         if(re.isInclusive){
           val (actualStart: Int, actualEnd: Int) =
             (
-              if ( re.start < 0 ) totalLength + re.start else re.start   ,
-              if ( re.end < 0 ) {
-                if (re.step > 0 ) totalLength + re.end + 1 else totalLength + re.end - 1 //actualEnd will be given as argument to regular Range(), hence +1
-              } else if (re.step > 0 ) re.end + 1 else re.end - 1
-              )
-          Range(actualStart, actualEnd, re.step)
-        } else {
-          if( re.end < 0 ) {
+              if ( re.start < 0 ) totalLength + re.start else re.start  ,  //actualStart will be given as argument to inclusive range "to"
+
+              if ( re.end < 0 ) totalLength + re.end else re.end  //actualEnd will be given as argument to inclusive range "to"
+            )
+          (actualStart to actualEnd by re.step)
+
+        } else if( re.end < 0 || re.start < 0) {
             throw new IllegalArgumentException("cannot use negative end indexing with 'until', due to ambiguities from Range.end being exclusive")
-          } else {
-            val (actualStart: Int, actualEnd: Int) = {
-              if (re.start < 0 )  ( totalLength + re.start, re.end ) else ( re.start, re.end )
-            }
-            Range(actualStart, actualEnd, re.step)
-          }
+        } else {
+            re
         }
     }
 
@@ -205,10 +203,69 @@ package object linalg {
     )
   }
 
+  /**
+   * Performs a principal components analysis on the given numeric data
+   * matrix and returns the results as an object of class PCA.
+   *
+   * If the no covariance matrix is supplied, one obtained from the given
+   * data is used.
+   */
+  def princomp(
+    x: DenseMatrix[Double],
+    covmatOpt: Option[DenseMatrix[Double]] = None
+  ) = {
+    covmatOpt match {
+      case Some(covmat) => new PCA(x, covmat)
+      case None => new PCA(x, cov(x))
+    }
+  }
+
+  /**
+   * A generic function (based on the R function of the same name) whose
+   * default method centers and/or scales the columns of a numeric matrix.
+   * 
+   * If ‘scale’ is ‘TRUE’ then scaling is done by dividing the (centered)
+   * columns of ‘x’ by their standard deviations if ‘center’ is ‘TRUE’, and
+   * the root mean square otherwise.  If ‘scale’ is ‘FALSE’, no scaling is
+   * done.
+   */
+  def scale(
+             x: DenseMatrix[Double],
+             center: Boolean = true,
+             scale: Boolean = false
+             ) = {
+    if (center) {
+      val xc = x(*,::) - mean(x, Axis._0).toDenseVector
+      if (scale)
+        xc(*,::) :/ stddev(x(::, *)).toDenseVector
+      else
+        xc
+    } else {
+      if (scale)
+        x(*,::) :/ columnRMS(x)
+      else
+        x
+    }
+  }
+
+  /**
+   * Compute the covariance matrix from the given data, centering
+   * if necessary. Very simple, just does the basic thing.
+   */
+  def cov(x: DenseMatrix[Double], center: Boolean = true) = {
+    val xc = scale(x,center,false)
+    (xc.t * xc) /= xc.rows - 1.0
+  }
 
 
 
 
+  /**
+   * Helper function to compute the root-mean-square of the columns of a
+   * matrix. Feel free to make this more general.
+   */
+  private def columnRMS(x: DenseMatrix[Double]) = 
+    (sum(x:*x,Axis._0) / (x.rows-1.0)).map(scala.math.sqrt).toDenseVector
 
 }
 

@@ -10,14 +10,14 @@ import breeze.linalg.{DenseVector, DenseMatrix}
  *
  * @author ktakagaki
  */
-trait CanHaarTransform[InputType, OutputType] {
+trait CanHaarTr[InputType, OutputType] {
   def apply(v1: InputType): OutputType
 }
 
 /**
  * Construction delegate for getting the FHT of a value of type InputType.
  */
-object CanHaarTransform {
+object CanHaarTr {
 
   // TODO: is the fht any good if you use complex numbers?
   // the main computation (x + y) / 2, (x - y) / 2 would work with complex numbers
@@ -81,8 +81,8 @@ object CanHaarTransform {
 
   /** Compute the fht on a given double vector.
    */
-  implicit val dvDouble1FHT : CanHaarTransform[DenseVector[Double], DenseVector[Double]] = {
-    new CanHaarTransform[DenseVector[Double], DenseVector[Double]] {
+  implicit val dvDouble1FHT : CanHaarTr[DenseVector[Double], DenseVector[Double]] = {
+    new CanHaarTr[DenseVector[Double], DenseVector[Double]] {
       def apply(v: DenseVector[Double]) = {
         def _fht(v : DenseVector[Double]) : DenseVector[Double] = {
             if (v.length > 1) {
@@ -99,8 +99,8 @@ object CanHaarTransform {
 
   /** Compute the fht on a given double matrix.
     */
-  implicit val dmDouble1FHT : CanHaarTransform[DenseMatrix[Double], DenseMatrix[Double]] = {
-    new CanHaarTransform[DenseMatrix[Double], DenseMatrix[Double]] {
+  implicit val dmDouble1FHT : CanHaarTr[DenseMatrix[Double], DenseMatrix[Double]] = {
+    new CanHaarTr[DenseMatrix[Double], DenseMatrix[Double]] {
       def apply(m: DenseMatrix[Double]) = {
         def _fht(m : DenseMatrix[Double], limit : Int) : Unit = if (limit > 1) {
             for (c <- 0 until limit) {

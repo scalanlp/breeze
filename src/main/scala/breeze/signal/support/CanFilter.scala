@@ -39,7 +39,7 @@ object CanFilter {
       def apply(data: DenseVector[Double], kernel: FIRKernel1D[Double],
                 overhang: OptOverhang,
                 padding: OptPadding): DenseVector[Double] = {
-        convolve(data, kernel, overhang, padding)
+        convolve(data, kernel.kernel, OptRange.All, overhang, padding)
       }
     }
   }
@@ -52,7 +52,7 @@ object CanFilter {
       def apply(data: DenseVector[Int], kernel: FIRKernel1D[Int],
                 overhang: OptOverhang,
                 padding: OptPadding): DenseVector[Int] = {
-        convolve(data, kernel, overhang, padding)
+        convolve(data, kernel.kernel, OptRange.All, overhang, padding)
       }
     }
   }
@@ -65,7 +65,7 @@ object CanFilter {
       def apply(data: DenseVector[Double], kernel: DenseVector[Double],
                 overhang: OptOverhang,
                 padding: OptPadding): DenseVector[Double] = {
-        convolve(data, new FIRKernel1D(kernel, "User-specified kernel"), overhang, padding)
+        convolve(data, kernel, /*new FIRKernel1D(kernel, "User-specified kernel"),*/ OptRange.All, overhang, padding)
       }
     }
   }

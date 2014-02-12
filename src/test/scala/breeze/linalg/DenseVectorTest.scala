@@ -297,6 +297,8 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert((a: Vector[Double]).dot (b: Vector[Double]) === (a dot b))
     (a:Vector[Double]) *= (b: Vector[Double])
     assert(a === DenseVector(12.0,24.0,40.0))
+    a += (b: Vector[Double])
+    assert(a === DenseVector(15.0,28.0,45.0))
   }
 
   test("Generic DV ops") {

@@ -72,6 +72,28 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
+  implicit def dv_v_InPlaceOp[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: Op.Impl2[T, T, T]):Op.InPlaceImpl2[DenseVector[T], Vector[T]] = new Op.InPlaceImpl2[DenseVector[T], Vector[T]] {
+    def apply(a: DenseVector[T], b: Vector[T]):Unit = {
+      val ad = a.data
+      var aoff = a.offset
+
+      var i = 0
+      while(i < a.length) {
+        ad(aoff) = op(ad(aoff), b(i))
+        aoff += a.stride
+        i += 1
+      }
+    }
+    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
+  }
+
+  @expand
+  @expand.valify
+  @expand.exclude(Complex, OpMod)
+  @expand.exclude(BigInt, OpPow)
   implicit def dv_s_Op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
@@ -298,6 +320,9 @@ trait DenseVector_OrderingOps extends DenseVectorOps { this: DenseVector.type =>
       result
     }
   }
+
+
+
 
 
   @expand

@@ -18,6 +18,8 @@ limitations under the License.
 import breeze.signal._
 import breeze.signal.support._
 import breeze.linalg.DenseVector
+import breeze.numerics.isEven
+import breeze.macros.expand
 
 /**This package provides digital signal processing functions.
  *
@@ -25,10 +27,50 @@ import breeze.linalg.DenseVector
  */
 package object signal {
 
-  @deprecated("use fourierTransform", "v.0.6")
-  val fft:fourierTransform.type = fourierTransform
-  @deprecated("use inverseFourierTransform", "v.0.6")
-  val ifft:inverseFourierTransform.type = inverseFourierTransform
+  @deprecated("use fourierTr", "v.0.6")
+  val fft: fourierTr.type = fourierTr
+  @deprecated("use iFourierTr", "v.0.6")
+  val ifft: iFourierTr.type = iFourierTr
+  @deprecated("use fourierTr", "v.0.6")
+  val fourierTransform: fourierTr.type = fourierTr
+  @deprecated("use iFourierTr", "v.0.6")
+  val inverseFourierTransform: iFourierTr.type = iFourierTr
+
+  // <editor-fold desc="fourierFreq">
+
+  /**Returns the frequencies for each tap in a discrete Fourier transform, useful for graphing.
+    * You must specify either an fs or a dt argument. If you specify both, which is redundant,
+    * fs == 1.0/dt must be true.
+    *
+    * f = [0, 1, ..., n/2-1, -n/2, ..., -1] / (dt*n)         if n is even
+    * f = [0, 1, ..., (n-1)/2, -(n-1)/2, ..., -1] / (dt*n)   if n is odd
+   *
+   * @param windowLength window length of discrete Fourier transform
+   * @param fs  sampling frequency (1.0/dt; specify default of -1 if using dt)
+   * @param dt  time step (CAUTION: 1.0/fs; specify default of -1 if using fs)
+   * @param shifted whether to return fourierShift'ed frequencies, default=false
+   */
+  def fourierFreq(windowLength: Int, fs: Double = -1, dt: Double = -1, shifted: Boolean = false ): DenseVector[Double] = {
+    require(fs>0 || dt>0, "Must specify either a valid fs or a valid dt argument.")
+    if(fs>0 && dt>0) require(fs == 1d/dt, "If fs and dt are both specified, fs == 1.0/dt must be true. Otherwise, they are incompatible")
+    val realFs = if(fs<0 && dt>0) 1d/dt else fs
+
+    val shiftedFreq = if( isEven(windowLength) ){
+      DenseVector.vertcat(
+        DenseVector.tabulate(0 to windowLength/2 - 1)( (i: Int) => i.toDouble*realFs/windowLength.toDouble ),
+        DenseVector.tabulate(- windowLength/2 to - 1)( (i: Int) => i.toDouble*realFs/windowLength.toDouble )
+      )
+    } else {
+      DenseVector.vertcat(
+        DenseVector.tabulate(0 to (windowLength-1)/2 )( (i: Int) => i.toDouble*realFs/windowLength.toDouble ),
+        DenseVector.tabulate(- (windowLength-1)/2 to -1 )( (i: Int) => i.toDouble*realFs/windowLength.toDouble )
+      )
+    }
+    if(shifted) fourierShift(shiftedFreq) else shiftedFreq
+  }
+
+
+  // </editor-fold>
 
   // <editor-fold desc="convolve, correlate">
   /**Convolves DenseVectors.</p>
@@ -39,26 +81,28 @@ package object signal {
     * @param data DenseVector or DenseMatrix to be convolved
     * @param canConvolve implicit delegate which is used for implementation. End-users should not use this argument.
     */
-  def convolve[Input, KernelType, Output](data: Input, kernel: KernelType,
+  def convolve[Input, KernelType, Output](
+                              data: Input, kernel: KernelType, range: OptRange = OptRange.All,
                               overhang: OptOverhang = OptOverhang.None,
-                              padding: OptPadding = OptPadding.Value(0d),
+                              padding: OptPadding = OptPadding.Zero,
                               method: OptMethod = OptMethod.Automatic
                               )
                              (implicit canConvolve: CanConvolve[Input, KernelType, Output]): Output =
-    canConvolve(data, kernel, correlate=false, overhang, padding, method)
+    canConvolve(data, kernel, range, correlate=false, overhang, padding, method)
 
   /**Correlates DenseVectors.</p>
     * Implementation is via the implicit trait CanConvolve[ InputType,  OutputType ],
     * which is found in breeze.signal.support.CanConvolve.scala.
     * See [[breeze.signal.convolve]] for options and other information.
     */
-  def correlate[Input, KernelType, Output](data: Input, kernel: KernelType,
+  def correlate[Input, KernelType, Output](
+                              data: Input, kernel: KernelType, range: OptRange = OptRange.All,
                               overhang: OptOverhang = OptOverhang.None,
-                              padding: OptPadding = OptPadding.Value(0d),
+                              padding: OptPadding = OptPadding.Zero,
                               method: OptMethod = OptMethod.Automatic
                                )
                              (implicit canConvolve: CanConvolve[Input, KernelType, Output]): Output =
-    canConvolve(data, kernel, correlate=true, overhang, padding, method)
+    canConvolve(data, kernel, range, correlate=true, overhang, padding, method)
 
   // </editor-fold>
 
@@ -73,8 +117,8 @@ package object signal {
     * @return
     */
   def filter[Input, Kernel, Output](data: Input, kernel: Kernel,
-                            overhang: OptOverhang = OptOverhang.None,
-                            padding: OptPadding = OptPadding.Boundary)
+                            overhang: OptOverhang = OptOverhang.PreserveLength,
+                            padding: OptPadding = OptPadding.Zero)
         (implicit canFilter: CanFilter[Input, Kernel, Output]): Output =
     canFilter(data, kernel, overhang, padding)
 
@@ -85,54 +129,102 @@ package object signal {
   /** Bandpass filter the input data.
     *
     * @param data data to be filtered
-    * @param omega sequence of two filter band parameters, in units of the nyquist frequency,
+    * @param taps  number of taps to use (default = 512)
+    * @param omegas sequence of two filter band parameters, in units of the nyquist frequency,
     *              or in Hz if the sampleRate is set to a specific value other than 2d.
     * @param sampleRate default of 2.0 means that the nyquist frequency is 1.0
-    * @param numtaps  number of taps to use (default = 512)
-    * @param kernelDesign  currently only supports OptKernelType.Firwin. See [[breeze.signal.OptKernelDesign]]
-    * @param overhang  whether to have overhanging values. See [[breeze.signal.OptOverhang]]
-    * @param padding  how to pad the values. See [[breeze.signal.OptPadding]]
+    * @param kernelDesign  currently only supports OptKernelType.Firwin. See [[breeze.signal.OptDesignMethod]]
+    * @param overhang  whether to have overhanging values when filtering. See [[breeze.signal.OptOverhang]]
+    * @param padding  how to pad the values when filtering. See [[breeze.signal.OptPadding]]
     * @param canFilterBPBS (implicit delegate to perform filtering on specific Input data types)
     * @return
     */
-  def filterBP[Input, Output](data: Input, omega: (Double, Double),
-                             numtaps: Int = 512,
-                             sampleRate: Double = 2d,
-                             kernelDesign: OptKernelDesign = OptKernelDesign.Firwin,
-                             overhang: OptOverhang = OptOverhang.None,
-                             padding: OptPadding = OptPadding.Boundary)
+  def filterBP[Input, Output](data: Input,
+                              omegas: (Double, Double), taps: Int = 512,
+                              sampleRate: Double = 2d,
+                              kernelDesign: OptDesignMethod = OptDesignMethod.Firwin,
+                              overhang: OptOverhang = OptOverhang.None,
+                              padding: OptPadding = OptPadding.Boundary)
         (implicit canFilterBPBS: CanFilterBPBS[Input, Output]): Output =
-    canFilterBPBS(data, omega,
-              numtaps, sampleRate, bandStop = false,
+    canFilterBPBS(data, omegas, taps,
+      sampleRate, bandStop = false,
               kernelDesign, overhang, padding)
 
   /** Bandstop filter the input data.
     *
     * @param data data to be filtered
-    * @param omega sequence of two filter band parameters, in units of the nyquist frequency,
+    * @param taps  number of taps to use (default = 512)
+    * @param omegas sequence of two filter band parameters, in units of the nyquist frequency,
     *              or in Hz if the sampleRate is set to a specific value other than 2d.
     * @param sampleRate default of 2.0 means that the nyquist frequency is 1.0
-    * @param numtaps  number of taps to use (default = 512)
-    * @param kernelDesign  currently only supports OptKernelType.Firwin. See [[breeze.signal.OptKernelDesign]]
-    * @param overhang  whether to have overhanging values. See [[breeze.signal.OptOverhang]]
-    * @param padding  how to pad the values. See [[breeze.signal.OptPadding]]
+    * @param kernelDesign  currently only supports OptKernelType.Firwin. See [[breeze.signal.OptDesignMethod]]
+    * @param overhang  whether to have overhanging values when filtering. See [[breeze.signal.OptOverhang]]
+    * @param padding  how to pad the values when filtering. See [[breeze.signal.OptPadding]]
     * @param canFilterBPBS (implicit delegate to perform filtering on specific Input data types)
     * @return
     */
-  def filterBS[Input, Output](data: Input, omega: (Double, Double),
-                                    numtaps: Int = 512,
-                                    sampleRate: Double = 2d,
-                                    kernelDesign: OptKernelDesign = OptKernelDesign.Firwin,
-                                    overhang: OptOverhang = OptOverhang.None,
-                                    padding: OptPadding = OptPadding.Boundary)
-                                   (implicit canFilterBPBS: CanFilterBPBS[Input, Output]): Output =
-    canFilterBPBS(data, omega,
-      numtaps, sampleRate, bandStop = true,
+  def filterBS[Input, Output](data: Input,
+                              omegas: (Double, Double), taps: Int = 512,
+                              sampleRate: Double = 2d,
+                              kernelDesign: OptDesignMethod = OptDesignMethod.Firwin,
+                              overhang: OptOverhang = OptOverhang.None,
+                              padding: OptPadding = OptPadding.Boundary)
+         (implicit canFilterBPBS: CanFilterBPBS[Input, Output]): Output =
+    canFilterBPBS(data, omegas, taps,
+      sampleRate, bandStop = true,
       kernelDesign, overhang, padding)
 
   // </editor-fold>
 
-  // <editor-fold desc="filter design: firwin">
+  // <editor-fold desc="filterLP, filterHP">
+
+  /** Lowpass filter the input data.
+    *
+    * @param data data to be filtered
+    * @param taps  number of taps to use (default = 512)
+    * @param omega cutoff frequency, in units of the nyquist frequency,
+    *              or in Hz if the sampleRate is set to a specific value other than 2d.
+    * @param sampleRate default of 2.0 means that the nyquist frequency is 1.0
+    * @param kernelDesign  currently only supports OptKernelType.Firwin. See [[breeze.signal.OptDesignMethod]]
+    * @param overhang  whether to have overhanging valueswhen filtering. See [[breeze.signal.OptOverhang]]
+    * @param padding  how to pad the values when filtering. See [[breeze.signal.OptPadding]]
+    * @param canFilterLPHP (implicit delegate to perform filtering on specific Input data types)
+    * @return
+    */
+  def filterLP[Input, Output](data: Input,
+                              omega: Double, taps: Int = 512,
+                              sampleRate: Double = 2d,
+                              kernelDesign: OptDesignMethod = OptDesignMethod.Firwin,
+                              overhang: OptOverhang = OptOverhang.None,
+                              padding: OptPadding = OptPadding.Boundary)
+                             (implicit canFilterLPHP: CanFilterLPHP[Input, Output]): Output =
+    canFilterLPHP(data, omega, taps, sampleRate, lowPass = true, kernelDesign, overhang, padding)
+
+  /** Highpass filter the input data.
+    *
+    * @param data data to be filtered
+    * @param taps  number of taps to use (default = 512)
+    * @param omega cutoff frequency, in units of the nyquist frequency,
+    *              or in Hz if the sampleRate is set to a specific value other than 2d.
+    * @param sampleRate default of 2.0 means that the nyquist frequency is 1.0
+    * @param kernelDesign  currently only supports OptKernelType.Firwin. See [[breeze.signal.OptDesignMethod]]
+    * @param overhang  whether to have overhanging values when filtering. See [[breeze.signal.OptOverhang]]
+    * @param padding  how to pad the values when filtering. See [[breeze.signal.OptPadding]]
+    * @param canFilterLPHP (implicit delegate to perform filtering on specific Input data types)
+    * @return
+    */
+  def filterHP[Input, Output](data: Input,
+                              omega: Double, taps: Int = 512,
+                              sampleRate: Double = 2d,
+                              kernelDesign: OptDesignMethod = OptDesignMethod.Firwin,
+                              overhang: OptOverhang = OptOverhang.None,
+                              padding: OptPadding = OptPadding.Boundary)
+                             (implicit canFilterLPHP: CanFilterLPHP[Input, Output]): Output =
+    canFilterLPHP(data, omega, taps, sampleRate, lowPass = false, kernelDesign, overhang, padding)
+
+  // </editor-fold>
+
+  // <editor-fold desc="filter design">
 
   /** FIR filter design using the window method.
     *
@@ -146,7 +238,7 @@ package object signal {
     *
     *  Portions of the code are translated from scipy (scipy.org) based on provisions of the BSD license.
     *
-    * @param cutoff Cutoff frequencies of the filter, specified in units of "nyquist."
+    * @param omegas Cutoff frequencies of the filter, specified in units of "nyquist."
     *               The frequencies should all be positive and monotonically increasing.
     *               The frequencies must lie between (0, nyquist).
     *               0 and nyquist should not be included in this array.
@@ -159,16 +251,20 @@ package object signal {
     *              or (B) at nyquist if the first passband ends at nyquist, or (C) the center of the first passband. Default is true.
     * @param nyquist The nyquist frequency, default is 1.
     */
-  def firwin[Output](numtaps: Int, cutoff: DenseVector[Double],
+  def designFilterFirwin[Output](taps: Int, omegas: DenseVector[Double], nyquist: Double = 1d,
                 zeroPass: Boolean = true,
-                nyquist: Double = 1d,
-                scale: Boolean = true,
+                scale: Boolean = true, multiplier: Double = 1d,
                 optWindow: OptWindowFunction = OptWindowFunction.Hamming()  )
                (implicit canFirwin: CanFirwin[Output]): FIRKernel1D[Output] =
-     canFirwin(numtaps, cutoff,
-                zeroPass, nyquist, scale,
+     canFirwin(taps, omegas, nyquist, zeroPass, scale, multiplier,
                 optWindow)
 
+  def designFilterDecimation[Output](factor: Int, multiplier: Double = 1d,
+                                     optDesignMethod: OptDesignMethod = OptDesignMethod.Firwin,
+                                     optWindow: OptWindowFunction = OptWindowFunction.Hamming(),
+                                     optFilterOrder: OptFilterTaps = OptFilterTaps.Automatic)
+                                (implicit canDesignFilterDecimation: CanDesignFilterDecimation[Output]): FilterKernel1D[Output] =
+    canDesignFilterDecimation(factor, multiplier, optDesignMethod, optWindow, optFilterOrder)
 
   // </editor-fold>
 
@@ -184,14 +280,23 @@ package object signal {
    * @param canHaarTransform implicit delegate which is used for implementation. End-users should not use this argument.
    * @return DenseVector or DenseMatrix
    */
-  def haarTransform[Input, Output](v : Input)(implicit canHaarTransform: CanHaarTransform[Input, Output]): Output =
+  def haarTr[Input, Output](v : Input)(implicit canHaarTransform: CanHaarTr[Input, Output]): Output =
+    canHaarTransform(v)
+
+  @deprecated("use haarTr", "v.0.6")
+  def haarTransform[Input, Output](v : Input)(implicit canHaarTransform: CanHaarTr[Input, Output]): Output =
     canHaarTransform(v)
 
   /**Returns the inverse fast haar transform for a DenseVector or DenseMatrix.
    *
    */
-  def inverseHaarTransform[Input, Output](v : Input)
-      (implicit canInverseHaarTransform: CanInverseHaarTransform[Input, Output]): Output =
+  def iHaarTr[Input, Output](v : Input)
+      (implicit canInverseHaarTransform: CanIHaarTr[Input, Output]): Output =
           canInverseHaarTransform(v)
+
+  @deprecated("use iHaarTr", "v.0.6")
+  def inverseHaarTransform[Input, Output](v : Input)
+                            (implicit canInverseHaarTransform: CanIHaarTr[Input, Output]): Output =
+    canInverseHaarTransform(v)
 
 }

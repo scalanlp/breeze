@@ -27,6 +27,7 @@ import breeze.stats.distributions.Rand
 import breeze.macros.expand
 import scala.annotation.unchecked.uncheckedVariance
 import CanTraverseValues.ValuesVisitor
+import scala.collection.mutable.ArrayBuilder
 
 /**
  * Trait for operators and such used in vectors.
@@ -464,6 +465,26 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @return
    */
   def tabulate[@spec(Double, Int, Float) V:ClassTag](size: Int)(f: Int=>V):Vec[V]= apply(Array.tabulate(size)(f))
+
+  /**
+   * Analogous to Array.tabulate, but taking a scala.Range to iterate over, instead of an index.
+   * @param f
+   * @tparam V
+   * @return
+   */
+  def tabulate[@spec(Double, Int, Float) V:ClassTag](range: Range)(f: Int=>V):Vec[V]= {
+    val b = ArrayBuilder.make[V]()
+    b.sizeHint(range.length)
+    var i = 0
+    while (i < range.length) {
+      b += f( range(i) )
+      i += 1
+    }
+    apply(b.result )
+  }
+
+
+
 
   /**
    * Creates a Vector of uniform random numbers in (0,1)
