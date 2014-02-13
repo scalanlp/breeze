@@ -56,8 +56,13 @@ object CanDesignFilterDecimation {
     new CanDesignFilterDecimation[Long] {
       def apply(factor: Int, multiplier: Double,
                 optDesignMethod: OptDesignMethod,
-                optWindow: OptWindowFunction, optFilterOrder: OptFilterTaps): FIRKernel1D[Double]  =  {
-        designFilterDecimation[Double](factor, multiplier, optDesignMethod, optWindow, optFilterOrder).toLong
+                optWindow: OptWindowFunction, optFilterOrder: OptFilterTaps): FIRKernel1D[Long]  =  {
+        val temp = designFilterDecimation[Double](factor, multiplier, optDesignMethod, optWindow, optFilterOrder)
+        temp match {
+          case x: FIRKernel1D[Double] => new FIRKernel1D[Long]( x.kernel.map(_.toLong), x.designText )
+          case _ => throw new IllegalArgumentException( "Something is wrong here! ")
+        }
+
       }
     }
   }
