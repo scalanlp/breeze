@@ -49,5 +49,17 @@ object CanDesignFilterDecimation {
     }
   }
 
+  /** Use via implicit delegate syntax firwin(xxxx)
+    *
+    */
+  implicit def decimationFilterLong: CanDesignFilterDecimation[Long] = {
+    new CanDesignFilterDecimation[Long] {
+      def apply(factor: Int, multiplier: Double,
+                optDesignMethod: OptDesignMethod,
+                optWindow: OptWindowFunction, optFilterOrder: OptFilterTaps): FIRKernel1D[Double]  =  {
+        designFilterDecimation[Double](factor, multiplier, optDesignMethod, optWindow, optFilterOrder).toLong
+      }
+    }
+  }
 
 }
