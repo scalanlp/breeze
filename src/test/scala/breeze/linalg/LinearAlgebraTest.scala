@@ -286,6 +286,15 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     assert( reverse(xEmpty) == DenseVector[Long]() )
   }
 
+  test("accumulate test") {
+    val xDouble = DenseVector( .7, .2, .3, .8)
+    assert( norm(accumulate(xDouble) - DenseVector(.7, .9, 1.2, 2.0)) < 1.0E-15  )
+    val xInt = DenseVector( 7, 2, 3, 8)
+    assert( norm(accumulate(xInt) - DenseVector(7, 9, 12, 20)) < 1.0E-15  )
+    val xEmpty = DenseVector[Long]()
+    assert( accumulate(xEmpty) == DenseVector[Long]() )
+  }
+
 
   /**
    * Test based on the values in Lindsay Smith's tutorial:
