@@ -206,8 +206,8 @@ object CanConvolve {
         require( data.length * kernel.length != 0, "data and kernel must be non-empty DenseVectors")
         require( data.length >= kernel.length, "kernel cannot be longer than data to be convolved/coorelated!")
 
-        val dataL = data.map( _.toLong )
-        val kernelL = kernel.map(_.toLong)
+        val dataL = data.toLong
+        val kernelL = kernel.toLong
         DenseVector.tabulate(range)(
           di => {
             var ki: Int = 0
