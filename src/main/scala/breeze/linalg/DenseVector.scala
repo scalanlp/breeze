@@ -110,7 +110,7 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
   }
 
   /**
-   * Returns a copy of this DenseVector. stride will always be 1, offset will always be 0.
+   * Returns a copy of this DenseVector casted to DenseVector[Long].
    * @return
    */
   def toLong()(implicit tag: TypeTag[E]): DenseVector[Long] = {
