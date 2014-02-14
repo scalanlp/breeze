@@ -50,14 +50,6 @@ class FourierTrTest extends FunSuite {
     assert( norm( (iFourierTr(test5x5) - test5x5ifftC).toDenseVector  ) < testNormThreshold )
   }
   // </editor-fold>
-
-  test("fft 1D of DenseVector[Double], spanned") {
-
-    //assert( norm( fourierTr(test16, 0 to 4) - test16fftC(0 to 4)  ) < testNormThreshold )
-
-  }
-
-
   // <editor-fold desc="Test Values">
 
   val testNormThreshold = 1E-12
@@ -94,18 +86,18 @@ class FourierTrTest extends FunSuite {
     Complex(0.0155097939889571, -0.0600964212256043),  Complex(-0.00610788527865374, 0.0621390276637517) )
 
   val test5x5 = DenseVector[Double](
-     0.498364051982143, 0.959743958516081, 0.340385726666133, 0.585267750979777, 0.223811939491137, 0.751267059305653,
-      0.255095115459269, 0.505957051665142, 0.699076722656686, 0.890903252535799, 0.959291425205444, 0.547215529963803,
-      0.138624442828679, 0.149294005559057, 0.257508254123736, 0.840717255983663, 0.254282178971531, 0.814284826068816,
-      0.243524968724989, 0.929263623187228, 0.349983765984809, 0.196595250431208, 0.251083857976031, 0.616044676146639,
-      0.473288848902729
+    0.498364051982143, 0.959743958516081, 0.340385726666133, 0.585267750979777, 0.223811939491137, 0.751267059305653,
+    0.255095115459269, 0.505957051665142, 0.699076722656686, 0.890903252535799, 0.959291425205444, 0.547215529963803,
+    0.138624442828679, 0.149294005559057, 0.257508254123736, 0.840717255983663, 0.254282178971531, 0.814284826068816,
+    0.243524968724989, 0.929263623187228, 0.349983765984809, 0.196595250431208, 0.251083857976031, 0.616044676146639,
+    0.473288848902729
   ).t.reshape(5,5).t
 
- val test5x5C = DenseVector[Complex](
- Complex(0.498364051982143, 0),  Complex(0.959743958516081, 0),  Complex(0.340385726666133, 0),  Complex(0.585267750979777, 0),
-  Complex(0.223811939491137, 0),  Complex(0.751267059305653, 0),  Complex(0.255095115459269, 0),  Complex(0.505957051665142, 0),
-   Complex(0.699076722656686, 0),  Complex(0.890903252535799, 0),  Complex(0.959291425205444, 0),  Complex(0.547215529963803, 0),
-   Complex(0.138624442828679, 0),  Complex(0.149294005559057, 0),  Complex(0.257508254123736, 0),  Complex(0.840717255983663, 0),
+  val test5x5C = DenseVector[Complex](
+    Complex(0.498364051982143, 0),  Complex(0.959743958516081, 0),  Complex(0.340385726666133, 0),  Complex(0.585267750979777, 0),
+    Complex(0.223811939491137, 0),  Complex(0.751267059305653, 0),  Complex(0.255095115459269, 0),  Complex(0.505957051665142, 0),
+    Complex(0.699076722656686, 0),  Complex(0.890903252535799, 0),  Complex(0.959291425205444, 0),  Complex(0.547215529963803, 0),
+    Complex(0.138624442828679, 0),  Complex(0.149294005559057, 0),  Complex(0.257508254123736, 0),  Complex(0.840717255983663, 0),
     Complex(0.254282178971531, 0),  Complex(0.814284826068816, 0),  Complex(0.243524968724989, 0),  Complex(0.929263623187228, 0),
     Complex(0.349983765984809, 0),  Complex(0.196595250431208, 0),  Complex(0.251083857976031, 0),  Complex(0.616044676146639, 0),
     Complex(0.473288848902729, 0)
@@ -135,6 +127,28 @@ class FourierTrTest extends FunSuite {
     Complex(-0.0428501336637738, -0.0338040468960716)
   ).t.reshape(5,5).t
   // </editor-fold>
+
+  test("fft 1D of DenseVector[Double], spanned") {
+
+    //assert( norm( fourierTr(test16, 0 to 4) - test16fftC(0 to 4)  ) < testNormThreshold )
+
+  }
+
+  test("fourierShift/iFourierShift") {
+    val dvOdd = DenseVector.tabulate(5)( (i: Int) => i )
+    val dvEven = DenseVector.tabulate(6)( (i: Int) => i )
+    assert( fourierShift( dvOdd ) == DenseVector(3, 4, 0, 1, 2) )
+    assert( iFourierShift( dvOdd ) == DenseVector(2, 3, 4, 0, 1) )
+    assert( fourierShift( dvEven ) == DenseVector(3, 4, 5, 0, 1, 2) )
+    assert( iFourierShift( dvEven ) == DenseVector(3, 4, 5, 0, 1, 2) )
+  }
+
+  test("fourierFreq") {
+    assert( fourierFreq( 5, dt = 0.1 ) == DenseVector(0.0,  2.0,  4.0, -4.0, -2.0) )
+    assert( fourierFreq( 4, dt = 0.1 ) == DenseVector(0.0 ,  2.5, -5.0 , -2.5) )
+  }
+
+
 
 
 }

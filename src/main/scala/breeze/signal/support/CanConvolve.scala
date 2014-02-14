@@ -5,10 +5,11 @@ package breeze.signal.support
  */
 import breeze.generic.UFunc
 import breeze.macros.expand
-import breeze.linalg.{reverse, DenseVector, DenseMatrix, RangeExtender}
+import breeze.linalg._
 import breeze.signal._
 import breeze.signal.OptRange.RangeOpt
 import breeze.numerics.isOdd
+import breeze.signal.OptRange.RangeOpt
 
 //ToDo 1: provide convolve of Integer and other DenseVectors
 //ToDo 1: provide convolve of DenseMatrix
@@ -50,12 +51,6 @@ object CanConvolve {
                 padding: OptPadding,
                 method: OptMethod): DenseVector[T] = {
 
-//        val optConvolveOverhangParsed = overhang match {
-//          case OptOverhang.None => OptOverhang.Sequence(-1, 1)
-//          case OptOverhang.Full => OptOverhang.Sequence(1, -1)
-//          case o => o
-//        }
-
 
         //val parsedOptMethod =
         method match {
@@ -80,6 +75,7 @@ object CanConvolve {
               padding match {
                 case OptPadding.Cyclical => data( dl - (kl-1) to dl - 1 )
                 case OptPadding.Boundary => DenseVector.ones[T](kernel.length-1) * data( 0 )
+                case OptPadding.Zero => DenseVector.zeros[T](kernel.length-1)
                 case OptPadding.ValueOpt(v: T) => DenseVector.ones[T](kernel.length-1) * v
                 case op => require(false, "cannot handle OptPadding value " + op); DenseVector[T]()
               },
@@ -87,6 +83,7 @@ object CanConvolve {
               padding match {
                 case OptPadding.Cyclical => data( 0 to kl-1 )
                 case OptPadding.Boundary => DenseVector.ones[T](kernel.length-1) * data( dl - 1  )
+                case OptPadding.Zero => DenseVector.zeros[T](kernel.length-1)
                 case OptPadding.ValueOpt(v: T) => DenseVector.ones[T](kernel.length-1) * v
                 case op => require(false, "cannot handle OptPadding value " + op); DenseVector[T]()
               }
@@ -106,6 +103,7 @@ object CanConvolve {
               padding match {
                 case OptPadding.Cyclical => data( dl - leftPadding to dl - 1 )
                 case OptPadding.Boundary => DenseVector.ones[T](leftPadding /*kernel.length-1*/) * data( 0 )
+                case OptPadding.Zero => DenseVector.zeros[T](leftPadding)
                 case OptPadding.ValueOpt(v: T) => DenseVector.ones[T](leftPadding) * v
                 case op => require(false, "cannot handle OptPadding value " + op); DenseVector[T]()
               },
@@ -113,6 +111,7 @@ object CanConvolve {
               padding match {
                 case OptPadding.Cyclical => data( 0 to rightPadding - 1 )
                 case OptPadding.Boundary => DenseVector.ones[T](rightPadding) * data( dl - 1  )
+                case OptPadding.Zero => DenseVector.zeros[T](rightPadding)
                 case OptPadding.ValueOpt(v: T) => DenseVector.ones[T](rightPadding) * v
                 case op => require(false, "cannot handle OptPadding value " + op); DenseVector[T]()
               }
@@ -134,20 +133,35 @@ object CanConvolve {
     }
   }
 
+//  Bad idea, causes ambiguous implicit references when result types are not specified
+//  @expand
+//  @expand.valify
+//  implicit def dvT1DSingleConvolve[@expand.args(Int, Long, Float, Double) T]: CanConvolve[DenseVector[T],DenseVector[T], T] = {
+//    new CanConvolve[DenseVector[T],DenseVector[T], T] {
+//      def apply(data: DenseVector[T], kernel: DenseVector[T], range: OptRange,
+//                correlate: Boolean,
+//                overhang: OptOverhang,
+//                padding: OptPadding,
+//                method: OptMethod): T = {
+//        require(overhang == OptOverhang.None, "Overhang must equal OptOverhang.none to return scalar from convolution.")
+//        require(data.length == kernel.length, "Data and kernel must have same length to return scalar from convolution. ")
+//        if(correlate) sum(data :* kernel) else sum(data :* reverse(kernel))
+//      }
+//    }
+//  }
+
   @expand
   @expand.valify
   implicit def dvTKernel1DConvolve[@expand.args(Int, Long, Float, Double) T]: CanConvolve[DenseVector[T], FIRKernel1D[T], DenseVector[T]] = {
     new CanConvolve[DenseVector[T], FIRKernel1D[T], DenseVector[T]] {
       def apply(data: DenseVector[T], kernel: FIRKernel1D[T], range: OptRange,
-                correlate: Boolean,
+                correlateVal: Boolean,
                 overhang: OptOverhang,
                 padding: OptPadding,
                 method: OptMethod): DenseVector[T] =
         //this is to be expanded to use the fft results within the FIRKernel1D, when using fft convolution
-        convolve(data, kernel.kernel, range,
-                  overhang,
-                  padding,
-                  method)
+        if(correlateVal) correlate(data, kernel.kernel, range, overhang, padding, method)
+        else convolve(data, kernel.kernel, range, overhang, padding, method)
     }
   }
 

@@ -82,6 +82,8 @@ object OptPadding{
   case object Boundary extends OptPadding
   /**Option value: Pads with a specific value, eg 0.*/
   case class ValueOpt[T](value: T) extends OptPadding
+  /**Option value: Pads with 0.*/
+  case object Zero extends OptPadding
 }
 
 /**Option values: how to deal with convolution and filter padding.*/
@@ -101,13 +103,13 @@ object OptDesignMethod {
   case object Cheby1 extends OptDesignMethod
 }
 
-abstract class OptFilterOrder extends Opt
-object OptFilterOrder {
-  /**Option value: use firwin() to design FIR kernel using window method.*/
-  case object Automatic extends OptFilterOrder
-  case class IntOpt(n: Int) extends OptFilterOrder
+abstract class OptFilterTaps extends Opt
+object OptFilterTaps {
+  case object Automatic extends OptFilterTaps
+  case class IntOpt(n: Int) extends OptFilterTaps
 }
 
+/**slices specific result ranges out of results for convolve, etc*/
 abstract class OptRange extends Opt
 object OptRange {
   case object All extends OptRange

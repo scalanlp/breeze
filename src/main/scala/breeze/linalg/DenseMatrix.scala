@@ -63,9 +63,11 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
   def this(rows: Int, data: Array[V], offset: Int = 0) = this(rows, {assert(data.length % rows == 0); data.length/rows}, data, offset)
 
   def apply(row: Int, col: Int) = {
-    if(row < 0 || row >= rows) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
-    if(col < 0 || col >= cols) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
-    data(linearIndex(row, col))
+    if(row < - rows || row >= rows) throw new IndexOutOfBoundsException((row,col) + " not in [-"+rows+","+rows+") x [-"+cols+"," + cols+")")
+    if(col < - cols || col >= cols) throw new IndexOutOfBoundsException((row,col) + " not in [-"+rows+","+rows+") x [-"+cols+"," + cols+")")
+    val trueRow = if(row<0) row + rows else row
+    val trueCol = if(col<0) col + cols else col
+    data(linearIndex(trueRow, trueCol))
   }
 
   // don't delete
@@ -80,9 +82,11 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
   }
 
   def update(row: Int, col: Int, v: V) {
-    if(row < 0 || row > rows) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
-    if(col < 0 || col > cols) throw new IndexOutOfBoundsException((row,col) + " not in [0,"+rows+") x [0," + cols+")")
-    data(linearIndex(row, col)) = v
+    if(row < - rows || row >= rows) throw new IndexOutOfBoundsException((row,col) + " not in [-"+rows+","+rows+") x [-"+cols+"," + cols+")")
+    if(col < - cols || col >= cols) throw new IndexOutOfBoundsException((row,col) + " not in [-"+rows+","+rows+") x [-"+cols+"," + cols+")")
+    val trueRow = if(row<0) row + rows else row
+    val trueCol = if(col<0) col + cols else col
+    data(linearIndex(trueRow, trueCol)) = v
   }
 
   /** Converts this matrix to a DenseVector (column-major) */
@@ -333,8 +337,11 @@ with MatrixConstructors[DenseMatrix] {
   // slices
   implicit def canSliceRow[V]: CanSlice2[DenseMatrix[V], Int, ::.type, DenseMatrix[V]] = {
     new CanSlice2[DenseMatrix[V], Int, ::.type, DenseMatrix[V]] {
-      def apply(m: DenseMatrix[V], row: Int, ignored: ::.type) = {
-        if(row < 0 || row >= m.rows) throw new ArrayIndexOutOfBoundsException("Row must be in bounds for slice!")
+      def apply(m: DenseMatrix[V], rowWNegative: Int, ignored: ::.type) = {
+
+        if(rowWNegative < -m.rows || rowWNegative >= m.rows) throw new ArrayIndexOutOfBoundsException("Row must be in bounds for slice!")
+        val row = if(rowWNegative<0) rowWNegative+m.rows else rowWNegative
+
         if(!m.isTranspose)
           new DenseMatrix(1, m.cols, m.data, m.offset + row, m.majorStride)
         else
@@ -345,8 +352,11 @@ with MatrixConstructors[DenseMatrix] {
 
   implicit def canSliceCol[V]: CanSlice2[DenseMatrix[V], ::.type, Int, DenseVector[V]] = {
     new CanSlice2[DenseMatrix[V], ::.type, Int, DenseVector[V]] {
-      def apply(m: DenseMatrix[V], ignored: ::.type, col: Int) = {
-        if(col < 0 || col >= m.cols) throw new ArrayIndexOutOfBoundsException("Column must be in bounds for slice!")
+      def apply(m: DenseMatrix[V], ignored: ::.type, colWNegative: Int) = {
+
+        if(colWNegative < -m.cols || colWNegative >= m.cols) throw new ArrayIndexOutOfBoundsException("Column must be in bounds for slice!")
+        val col = if(colWNegative<0) colWNegative+m.cols else colWNegative
+
         if(!m.isTranspose)
           new DenseVector(m.data, length = m.rows, offset = col * m.majorStride + m.offset, stride=1)
         else
@@ -435,8 +445,10 @@ with MatrixConstructors[DenseMatrix] {
 
   implicit def canSlicePartOfRow[V]: CanSlice2[DenseMatrix[V], Int, Range, DenseMatrix[V]] = {
     new CanSlice2[DenseMatrix[V], Int, Range, DenseMatrix[V]] {
-      def apply(m: DenseMatrix[V], row: Int, colsWNegative: Range) = {
+      def apply(m: DenseMatrix[V], rowWNegative: Int, colsWNegative: Range) = {
 
+        if(rowWNegative < -m.rows || rowWNegative >= m.rows) throw new ArrayIndexOutOfBoundsException("Row must be in bounds for slice!")
+        val row = if(rowWNegative<0) rowWNegative + m.rows else rowWNegative
         val cols = colsWNegative.getRangeWithoutNegativeIndexes(m.cols)
 
         if(row < 0  || row > m.rows) throw new IndexOutOfBoundsException("Slice with out of bounds row! " + row)
@@ -457,9 +469,11 @@ with MatrixConstructors[DenseMatrix] {
 
   implicit def canSlicePartOfCol[V]: CanSlice2[DenseMatrix[V], Range, Int, DenseVector[V]] = {
     new CanSlice2[DenseMatrix[V], Range, Int, DenseVector[V]] {
-      def apply(m: DenseMatrix[V], rowsWNegative: Range, col: Int) = {
+      def apply(m: DenseMatrix[V], rowsWNegative: Range, colWNegative: Int) = {
 
         val rows = rowsWNegative.getRangeWithoutNegativeIndexes(m.rows)
+        if(colWNegative < -m.cols || colWNegative >= m.cols) throw new ArrayIndexOutOfBoundsException("Row must be in bounds for slice!")
+        val col = if(colWNegative<0) colWNegative + m.cols else colWNegative
 
         if(rows.isEmpty) new DenseVector(m.data, 0, 0, 0)
         else if(!m.isTranspose) {

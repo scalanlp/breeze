@@ -74,6 +74,7 @@ trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]]{
     new DenseVector(toArray)
   }
 
+  /**Returns copy of this [[breeze.linalg.Vector]] as a [[scala.Array]]*/
   def toArray(implicit cm: ClassTag[E]) = {
     val result = new Array[E](length)
     var i = 0
@@ -83,6 +84,9 @@ trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]]{
     }
     result
   }
+
+  /**Returns copy of this [[breeze.linalg.Vector]] as a [[scala.Vector]]*/
+  def toVector(implicit cm: ClassTag[E]) = Vector[E]( toArray )
 
 }
 

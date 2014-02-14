@@ -63,13 +63,15 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
   def activeSize = length
 
   def apply(i: Int) = {
-    if(i < 0 || i > size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
-    data(offset + i * stride)
+    if(i < - size || i >= size) throw new IndexOutOfBoundsException(i + " not in [-"+size+","+size+")")
+    val trueI = if(i<0) i+size else i
+    data(offset + trueI * stride)
   }
 
   def update(i: Int, v: E) {
-    if(i < 0 || i > size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
-    data(offset + i * stride) = v
+    if(i < - size || i >= size) throw new IndexOutOfBoundsException(i + " not in [-"+size+","+size+")")
+    val trueI = if(i<0) i+size else i
+    data(offset + trueI * stride) = v
   }
 
   def activeIterator = iterator
@@ -167,7 +169,7 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
 
 
   /**
-   * Slices the DenseVector, in the range (start,end] with a stride stride.
+   * Slices the DenseVector, in the range [start,end] with a stride stride.
    * @param start
    * @param end
    * @param stride
@@ -191,6 +193,8 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
     }
     arr
   }
+
+
 }
 
 
@@ -378,7 +382,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     new CanSlice[DenseVector[Any], Range, DenseVector[Any]] {
       def apply(v: DenseVector[Any], re: Range) = {
 
-        val r = re.getRangeWithoutNegativeIndexes(v.length)
+        val r = re.getRangeWithoutNegativeIndexes( v.length )
 
         require(r.isEmpty || r.last < v.length)
         require(r.isEmpty || r.start >= 0)
