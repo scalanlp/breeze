@@ -11,12 +11,16 @@ import breeze.math.Complex
  *
  * @author ktakagaki
  */
-abstract class FilterKernel {
+abstract class FilterKernel[T] {
   val designText: String
   override def toString = this.getClass.getSimpleName + "(): " + designText
+  def toLong(): this.type[Long]
+  def toInt(): this.type[Int]
+  def toDouble(): this.type[Double]
+  def toFloat(): this.type[Float]
 }
 
-abstract class FilterKernel1D[T] extends FilterKernel
+abstract class FilterKernel1D[T] extends FilterKernel[T]
 
 object FIRKernel1D {
 
@@ -33,6 +37,11 @@ class FIRKernel1D[T](val kernel: DenseVector[T], override val designText: String
   lazy val overhangPre = (length - 1)/2
   /**Amount of overhang to append for convolution, to conserve output length.*/
   lazy val overhangPost = length - 1 - overhangPre
+
+  override def toLong() = FIRKernel1D[Long]( kernel.toLong, designText )
+  override def toInt() = FIRKernel1D[Int]( kernel.toInt, designText )
+  override def toFloat() = FIRKernel1D[Float]( kernel.toFloat, designText )
+  override def toDouble() = FIRKernel1D[Double]( kernel.toDouble, designText )
 }
 
 /**This immutable class will encapsulate 1D IIR kernels. Not implemented yet.*/
