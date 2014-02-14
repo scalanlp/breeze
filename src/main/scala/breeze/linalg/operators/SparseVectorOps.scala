@@ -702,7 +702,7 @@ trait SparseVectorOps { this: SparseVector.type =>
   implicit val zipMap_i: CanZipMapValuesSparseVector[Int, Int] = new CanZipMapValuesSparseVector[Int, Int]
 
 
-  implicit def negFromScale[@spec(Int, Float, Double)  V](implicit scale: OpMulScalar.Impl2[SparseVector[V], V, SparseVector[V]], field: Ring[V]): UImpl[OpNeg.type, SparseVector[V], SparseVector[V]] = {
+  implicit def negFromScale[@spec(Int, Float, Double)  V](implicit scale: OpMulScalar.Impl2[SparseVector[V], V, SparseVector[V]], field: Ring[V]): OpNeg.Impl[SparseVector[V], SparseVector[V]] = {
     new OpNeg.Impl[SparseVector[V], SparseVector[V]] {
       override def apply(a : SparseVector[V]) = {
         scale(a, field.negate(field.one))
