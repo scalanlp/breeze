@@ -371,6 +371,18 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert( !any(a :== (b - 1)))
   }
 
+  test("cast: toLong"){
+    val testLong = DenseVector(0L, 1L, 2L, 3L)
+    val testDouble = DenseVector(0d, 1d, 2d, 3d)
+    val testInt = DenseVector(0, 1, 2, 3)
+    val testFloat = DenseVector(0f, 1f, 2f, 3f)
+
+    assert( testLong.toLong == testLong, "DenseVector[Long].toLong failed!")
+    assert( testDouble.toLong == testLong, "DenseVector[Double].toLong failed!")
+    assert( testInt.toLong == testLong, "DenseVector[Int].toLong failed!")
+    assert( testFloat.toLong == testLong, "DenseVector[Float].toLong failed!")
+  }
+
 }
 
 /**

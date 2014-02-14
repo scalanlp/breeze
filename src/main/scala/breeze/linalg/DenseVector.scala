@@ -27,6 +27,7 @@ import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import breeze.macros.expand
 import scala.math.BigInt
 import CanTraverseValues.ValuesVisitor
+import scala.reflect.runtime.universe._
 
 /**
  * A DenseVector is the "obvious" implementation of a Vector, with one twist.
@@ -51,6 +52,7 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
                                               with VectorLike[E, DenseVector[E]] with Serializable{
   def this(data: Array[E]) = this(data, 0, 1, data.length)
   def this(data: Array[E], offset: Int) = this(data, offset, 1, data.length)
+
 
   // uncomment to get all the ridiculous places where specialization fails.
  // if(data.isInstanceOf[Array[Double]] && getClass.getName() == "breeze.linalg.DenseVector") throw new Exception("...")
@@ -108,6 +110,39 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
     val r = new DenseVector(new Array[E](length))
     r := this
     r
+  }
+
+  /**
+   * Returns a copy of this DenseVector casted to DenseVector[Long].
+   * @return
+   */
+  def toLong()(implicit tag: TypeTag[E]): DenseVector[Long] = {
+
+    var tempArr = new Array[Long](length)
+    tag match {
+      case TypeTag.Long => { tempArr = this.asInstanceOf[ DenseVector[Long] ].toArray }
+      case TypeTag.Int => {
+        val tempThis = this.asInstanceOf[ DenseVector[Int] ]
+        for( c <- 0 until tempArr.length ){
+          tempArr(c) = tempThis(c).toLong
+        }
+      }
+      case TypeTag.Double => {
+        val tempThis = this.asInstanceOf[ DenseVector[Double] ]
+        for( c <- 0 until tempArr.length ){
+          tempArr(c) = tempThis(c).toLong
+        }
+      }
+      case TypeTag.Float => {
+        val tempThis = this.asInstanceOf[ DenseVector[Float] ]
+        for( c <- 0 until tempArr.length ){
+          tempArr(c) = tempThis(c).toLong
+        }
+      }
+      case _ => throw new IllegalArgumentException( "cannot cast this tye of DenseVector[E] to Long!" )
+    }
+
+    DenseVector(tempArr)
   }
 
   /**
