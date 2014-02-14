@@ -56,6 +56,9 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
   // uncomment to get all the ridiculous places where specialization fails.
  // if(data.isInstanceOf[Array[Double]] && getClass.getName() == "breeze.linalg.DenseVector") throw new Exception("...")
 
+  // ensure that operators are all loaded.
+  DenseVector.init()
+
   def repr = this
 
   def activeSize = length
@@ -201,6 +204,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
                       with DenseVectorOps
                       with DenseVector_OrderingOps
                       with DenseVector_SpecialOps {
+
   def zeros[@spec(Double, Float, Int) V: ClassTag : DefaultArrayValue](size: Int) = {
     val data = new Array[V](size)
     if(size != 0 && data(0) != implicitly[DefaultArrayValue[V]].value)
@@ -568,5 +572,9 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   }
 
 
+
+  // used to make sure the operators are loaded
+  @noinline
+  private def init() = {}
 }
 
