@@ -18,6 +18,10 @@ import breeze.generic.UFunc.UImpl2
  * @author dlwh
  */
 class HashVector[@specialized(Int, Double, Float) E](val array: OpenAddressHashArray[E]) extends Vector[E] with VectorLike[E, HashVector[E]] {
+
+  // don't delete
+  HashVector.init()
+
   def activeIterator: Iterator[(Int, E)] = array.activeIterator
 
   def activeValuesIterator: Iterator[E] = array.activeValuesIterator
@@ -227,6 +231,10 @@ object HashVector extends HashVectorOps
   @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType] = {
     DenseVector.pureFromUpdate(implicitly[Op.InPlaceImpl2[DenseVector[T], HashVector[T]]])
   }
+
+
+  @noinline
+  private def init() = {}
 }
 
 

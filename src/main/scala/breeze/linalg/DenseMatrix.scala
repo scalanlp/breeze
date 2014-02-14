@@ -68,6 +68,8 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
     data(linearIndex(row, col))
   }
 
+  // don't delete
+  DenseMatrix.init()
 
   /** Calculates the index into the data array for row and column */
   final def linearIndex(row: Int, col: Int): Int = {
@@ -815,6 +817,8 @@ with MatrixConstructors[DenseMatrix] {
     }
   }
 
+  @noinline
+  private def init() = {}
 }
 
 

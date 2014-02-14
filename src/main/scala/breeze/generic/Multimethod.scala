@@ -219,7 +219,7 @@ trait MMRegistry2[R] {
   }
 
 
-  protected def resolve(a: Class[_], b: Class[_]):Map[(Class[_], Class[_]), R] = {
+  def resolve(a: Class[_], b: Class[_]):Map[(Class[_], Class[_]), R] = {
     ops.get(a -> b) match {
       case Some(m) => Map((a->b) -> m)
       case None =>

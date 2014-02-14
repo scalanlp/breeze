@@ -170,6 +170,7 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
         aoff += astride
       }
     }
+    implicitly[BinaryUpdateRegistry[DenseVector[T], Vector[T], Op.type]].register(this)
     implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
   }
 
@@ -180,10 +181,9 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
   @expand.valify
   implicit def dv_sv_op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType] = {
-    //val _op: Op.Impl2[DenseVector[T], SparseVector[T], DenseVector[T]] =
-    implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register {
-      DenseVector.pureFromUpdate(implicitly[Op.InPlaceImpl2[DenseVector[T], SparseVector[T]]])
-    }
+    val op = DenseVector.pureFromUpdate(implicitly[Op.InPlaceImpl2[DenseVector[T], SparseVector[T]]])
+    implicitly[BinaryRegistry[DenseVector[T], Vector[T], Op.type, Vector[T]]].register(op)
+    implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(op)
   }
 
 
