@@ -263,7 +263,7 @@ package object signal {
                                      optDesignMethod: OptDesignMethod = OptDesignMethod.Firwin,
                                      optWindow: OptWindowFunction = OptWindowFunction.Hamming(),
                                      optFilterOrder: OptFilterTaps = OptFilterTaps.Automatic)
-                                (implicit canDesignFilterDecimation: CanDesignFilterDecimation[Output]): FilterKernel1D[Output] =
+                                (implicit canDesignFilterDecimation: CanDesignFilterDecimation[Output]): Output =
     canDesignFilterDecimation(factor, multiplier, optDesignMethod, optWindow, optFilterOrder)
 
   // </editor-fold>
