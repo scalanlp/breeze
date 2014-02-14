@@ -1,7 +1,7 @@
 package breeze.signal.support
 
 import breeze.signal._
-import breeze.linalg.DenseVector
+import breeze.linalg.{convert, DenseVector}
 
 
 /**
@@ -59,7 +59,7 @@ object CanDesignFilterDecimation {
                 optWindow: OptWindowFunction, optFilterOrder: OptFilterTaps): FIRKernel1D[Long]  =  {
         val temp = designFilterDecimation[FIRKernel1D[Double]](factor, multiplier, optDesignMethod, optWindow, optFilterOrder)
         temp match {
-          case x: FIRKernel1D[Double] => new FIRKernel1D[Long]( x.kernel.map(_.toLong), x.designText )
+          case x: FIRKernel1D[Double] => new FIRKernel1D[Long]( convert( x.kernel, Long ), x.multiplier.toLong, x.designText )
           case _ => throw new IllegalArgumentException( "Something is wrong here! ")
         }
 

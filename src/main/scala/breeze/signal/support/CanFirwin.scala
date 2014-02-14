@@ -1,7 +1,7 @@
 package breeze.signal.support
 
 import breeze.signal.{OptWindowFunction}
-import breeze.linalg.{diff, DenseVector, min, sum}
+import breeze.linalg._
 import breeze.numerics.{cos, isOdd, isEven, sincpi}
 import scala.math.Pi
 import breeze.macros.expand
@@ -16,7 +16,7 @@ import breeze.macros.expand
  */
 trait CanFirwin[Output] {
   def apply(order: Int, omegas: DenseVector[Double], nyquist: Double,
-            zeroPass: Boolean, scale: Boolean, multiplier: Double,
+            zeroPass: Boolean, scale: Boolean, multiplier: Output,
             optWindow: OptWindowFunction  ): FIRKernel1D[Output]
 }
 
@@ -40,6 +40,7 @@ object CanFirwin {
                 optWindow: OptWindowFunction  ): FIRKernel1D[Double]
       =  new FIRKernel1D[Double](
         firwinDoubleImpl(taps, omegas, nyquist, zeroPass,  scale, optWindow) * multiplier,
+        multiplier,
         "FIRKernel1D(firwin): " + taps + " taps, " + omegas + ", " + optWindow + ", zeroPass=" + zeroPass + ", nyquist=" + nyquist + ", scale=" + scale
       )
 
@@ -109,10 +110,11 @@ object CanFirwin {
   implicit def firwinT[@expand.args(Int, Long, Float) T]: CanFirwin[T] = {
     new CanFirwin[T] {
       def apply(taps: Int, omegas: DenseVector[Double], nyquist: Double,
-                zeroPass: Boolean,  scale: Boolean, multiplier: Double,
+                zeroPass: Boolean,  scale: Boolean, multiplier: T,
                 optWindow: OptWindowFunction  ): FIRKernel1D[T]
       =  new FIRKernel1D[T](
-                (firwinDoubleImpl(taps, omegas, nyquist, zeroPass, scale, optWindow) * multiplier).map(_.asInstanceOf[T]),
+                convert( (firwinDoubleImpl(taps, omegas, nyquist, zeroPass, scale, optWindow) * multiplier.toDouble ), T),
+                multiplier,
                 "FIRKernel1D(firwin): " + taps + " taps, " + omegas + ", " + optWindow + ", zeroPass=" + zeroPass + ", nyquist=" + nyquist + ", scale=" + scale
             )
     }
