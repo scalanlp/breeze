@@ -33,7 +33,7 @@ class ProjectedQuasiNewtonTest extends PropSpec with PropertyChecks with ShouldM
     forAll { init: DenseVector[Double] =>
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
-          (((x - 3.0) :^ 2.0).sum, (x * 2.0) - 6.0)
+          (sum((x - 3.0) :^ 2.0), (x * 2.0) - 6.0)
         }
       }
 
@@ -48,7 +48,7 @@ class ProjectedQuasiNewtonTest extends PropSpec with PropertyChecks with ShouldM
     forAll { init: DenseVector[Double] =>
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
-          (((x - 3.0) :^ 4.0).sum, (x - 3.0) :^ 3.0 :* 4.0)
+          (sum((x - 3.0) :^ 4.0), (x - 3.0) :^ 3.0 :* 4.0)
         }
       }
 
@@ -77,11 +77,11 @@ class ProjectedQuasiNewtonTest extends PropSpec with PropertyChecks with ShouldM
     val optimizer = new ProjectedQuasiNewton(tolerance = 1.0E-5)
 
     forAll { a: DenseVector[Double] =>
-      whenever(a.min >= -3.0 && a.max <= 3.0) {
+      whenever(min(a) >= -3.0 && max(a) <= 3.0) {
         val init = DenseVector.rand(a.size)
         val f = new DiffFunction[DenseVector[Double]] {
           def calculate(x: DenseVector[Double]) = {
-            (exp((x :^ 2.0) :- (a :* x)).sum, (x * 2.0 :- a) :* exp(x :^ 2.0 :- a :* x))
+            (sum(exp((x :^ 2.0) :- (a :* x))), (x * 2.0 :- a) :* exp(x :^ 2.0 :- a :* x))
           }
         }
 

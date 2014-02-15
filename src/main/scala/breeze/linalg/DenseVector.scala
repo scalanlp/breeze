@@ -326,6 +326,19 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     }
   }
 
+  implicit def canTraverseKeyValuePairs[V]:CanTraverseKeyValuePairs[DenseVector[V], Int, V] = {
+    new CanTraverseKeyValuePairs[DenseVector[V], Int, V] {
+      def isTraversableAgain(from: DenseVector[V]): Boolean = true
+
+      /** Iterates all key-value pairs from the given collection. */
+      def traverse(from: DenseVector[V], fn: CanTraverseKeyValuePairs.KeyValuePairsVisitor[Int, V]): Unit = {
+        import from._
+
+        fn.visitArray((ind: Int)=> (ind - offset)/stride, data, offset, length, 1)
+      }
+
+    }
+  }
 
   implicit def canTransformValues[V]:CanTransformValues[DenseVector[V], V, V] = {
     new CanTransformValues[DenseVector[V], V, V] {

@@ -170,7 +170,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
     val (_Q, _R) = qr(A)
 
-    assert( (_Q.t * _Q).trace.closeTo(_Q.rows) )
+    assert( trace(_Q.t * _Q).closeTo(_Q.rows) )
     for(i <- 0 until _R.rows; j <- 0 until i) {
       assert(_R(i,j) === 0.0)
     }
@@ -227,8 +227,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     val (u, s, vt) = svd(m)
 
     // u and vt are unitary
-    (u.t * u).trace should be (u.rows.toDouble plusOrMinus 1E-5)
-    (vt * vt.t).trace should be (vt.rows.toDouble plusOrMinus 1E-5)
+    trace(u.t * u) should be (u.rows.toDouble plusOrMinus 1E-5)
+    trace(vt * vt.t) should be (vt.rows.toDouble plusOrMinus 1E-5)
 
     // s is sorted by size of singular value, and be nonnegative
     for(i <- 1 until s.length) {

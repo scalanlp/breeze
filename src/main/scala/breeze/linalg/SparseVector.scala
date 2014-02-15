@@ -242,6 +242,23 @@ object SparseVector extends SparseVectorOps
     }
   }
 
+  implicit def canTraverseKeyValuePairs[V]:CanTraverseKeyValuePairs[SparseVector[V], Int, V] = {
+    new CanTraverseKeyValuePairs[SparseVector[V], Int, V] {
+      def isTraversableAgain(from: SparseVector[V]): Boolean = true
+
+      /** Iterates all key-value pairs from the given collection. */
+      def traverse(from: SparseVector[V], fn: CanTraverseKeyValuePairs.KeyValuePairsVisitor[Int, V]): Unit = {
+        import from._
+
+        fn.visitArray(index, data, 0, activeSize, 1)
+        if(activeSize != size) {
+          fn.zeros(size - activeSize, Iterator.range(0, size).filterNot(index contains _), from.default)
+        }
+      }
+
+    }
+  }
+
   implicit def canTransformValues[V:DefaultArrayValue:ClassTag]:CanTransformValues[SparseVector[V], V, V] = {
     new CanTransformValues[SparseVector[V], V, V] {
       val z = implicitly[DefaultArrayValue[V]]

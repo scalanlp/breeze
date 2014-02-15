@@ -12,6 +12,7 @@ import breeze.macros.expand
 import scala.math.BigInt
 import CanTraverseValues.ValuesVisitor
 import breeze.generic.UFunc.UImpl2
+import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 
 /**
  * A HashVector is a sparse vector backed by an OpenAddressHashArray
@@ -158,6 +159,28 @@ object HashVector extends HashVectorOps
             fn.visit(from.data(i))
           i += 1
         }
+      }
+    }
+  }
+
+  implicit def canTraverseKeyValuePairs[V]:CanTraverseKeyValuePairs[HashVector[V], Int, V] = {
+    new CanTraverseKeyValuePairs[HashVector[V], Int, V] {
+
+
+      def traverse(from: HashVector[V], fn: KeyValuePairsVisitor[Int, V]): Unit = {
+        fn.zeros(from.size - from.activeSize, Iterator.range(0, from.size).filterNot(from.index contains _), from.default)
+        var i = 0
+        while(i < from.iterableSize) {
+          if(from.isActive(i))
+            fn.visit(from.index(i), from.data(i))
+          i += 1
+        }
+      }
+
+      def isTraversableAgain(from: HashVector[V]): Boolean = true
+
+      def traverse(from: HashVector[V], fn: ValuesVisitor[V]): Unit = {
+
       }
     }
   }

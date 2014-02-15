@@ -33,13 +33,19 @@ sealed trait QuasiTensor[@specialized(Int) K, @specialized(Int, Float, Double) V
   def keySet: scala.collection.Set[K]
 
     // Aggregators
+  @deprecated("Use max(t) instead of t.max", "0.6")
   def max(implicit ord: Ordering[V]) = valuesIterator.max
+  @deprecated("Use min(t) instead of t.min", "0.6")
   def min(implicit ord: Ordering[V]) = valuesIterator.min
+  @deprecated("Use argmax(t) instead of t.argmax", "0.6")
   def argmax(implicit ord: Ordering[V]) = keysIterator.maxBy( apply _)
+  @deprecated("Use argmin(t) instead of t.argmin", "0.6")
   def argmin(implicit ord: Ordering[V]) = keysIterator.minBy( apply _)
+  @deprecated("Use sum(t) instead of t.sum", "0.6")
   def sum(implicit num: Numeric[V]) = activeValuesIterator.sum
 
 
+  @deprecated("Use argsort(t) instead of t.argsort", "0.6")
   def argsort(implicit ord : Ordering[V]) : IndexedSeq[K] =
     keysIterator.toIndexedSeq.sorted(ord.on[K](apply _))
 
@@ -49,6 +55,7 @@ sealed trait QuasiTensor[@specialized(Int) K, @specialized(Int, Float, Double) V
    * @param ordering
    * @return
    */
+  @deprecated("Use argtopk(t, k) instead of t.argtopk(k)", "0.6")
   def argtopk(k: Int)(implicit ordering: Ordering[V]) = {
     implicit val ordK = ordering.on(apply _)
     val queue = new Beam[K](k)

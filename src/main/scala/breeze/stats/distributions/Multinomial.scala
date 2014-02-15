@@ -33,8 +33,8 @@ import breeze.storage.DefaultArrayValue
  *
  * @author dlwh
  */
-case class Multinomial[T,I](params: T)(implicit ev: T=>QuasiTensor[I, Double], rand: RandBasis=Rand) extends DiscreteDistr[I] {
-  val sum = params.sum
+case class Multinomial[T,I](params: T)(implicit ev: T=>QuasiTensor[I, Double], sumImpl: breeze.linalg.sum.Impl[T, Double], rand: RandBasis=Rand) extends DiscreteDistr[I] {
+  val sum = breeze.linalg.sum(params)
   require(sum != 0.0, "There's no mass!")
 
   // check rep
@@ -91,8 +91,6 @@ object Multinomial {
     type ConjugatePrior = Dirichlet[T,I]
     val conjugateFamily = new Dirichlet.ExpFam[T,I](exemplar)
 
-
-
     def predictive(parameter: conjugateFamily.Parameter) = new Polya(parameter)
 
     def posterior(prior: conjugateFamily.Parameter, evidence: TraversableOnce[I]) = {
@@ -105,9 +103,9 @@ object Multinomial {
     }
 
     type Parameter = T
-    case class SufficientStatistic(t: T) extends breeze.stats.distributions.SufficientStatistic[SufficientStatistic] {
-      def +(tt: SufficientStatistic) = SufficientStatistic(t + tt.t)
-      def *(w: Double) = SufficientStatistic(t * w)
+    case class SufficientStatistic(counts: T) extends breeze.stats.distributions.SufficientStatistic[SufficientStatistic] {
+      def +(tt: SufficientStatistic) = SufficientStatistic(counts + tt.counts)
+      def *(w: Double) = SufficientStatistic(counts * w)
     }
 
     def emptySufficientStatistic = SufficientStatistic(zeros(exemplar))
@@ -118,18 +116,18 @@ object Multinomial {
       SufficientStatistic(r)
     }
 
-    def mle(stats: SufficientStatistic) = log(stats.t)
+    def mle(stats: SufficientStatistic) = log(stats.counts)
 
     def likelihoodFunction(stats: SufficientStatistic) = new DiffFunction[T] {
       def calculate(x: T) = {
         val nn: T = logNormalize(x)
-        val lp = nn dot stats.t
+        val lp = nn dot stats.counts
 
-        val sum = stats.t.sum
+        val mysum = sum(stats.counts)
 
 
         val exped = numerics.exp(nn)
-        val grad = exped * sum - stats.t
+        val grad = exped * mysum - stats.counts
 
         (-lp,grad)
       }

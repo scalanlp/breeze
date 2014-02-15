@@ -81,6 +81,16 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
       offset + row + col * majorStride
   }
 
+  def rowColumnFromLinearIndex(index: Int) = {
+    val r = (index - offset)%majorStride
+    val c = (index - offset)/majorStride
+    if(isTranspose) {
+      (c, r)
+    } else {
+      (r,c)
+    }
+  }
+
   def update(row: Int, col: Int, v: V) {
     if(row < - rows || row >= rows) throw new IndexOutOfBoundsException((row,col) + " not in [-"+rows+","+rows+") x [-"+cols+"," + cols+")")
     if(col < - cols || col >= cols) throw new IndexOutOfBoundsException((row,col) + " not in [-"+rows+","+rows+") x [-"+cols+"," + cols+")")
@@ -168,6 +178,7 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
   def activeKeysIterator = keysIterator
 
   /** Computes the sum along the diagonal. */
+  @deprecated("use trace(dm) instead", "0.6")
   def trace(implicit numeric: Numeric[V]) = diag(this:DenseMatrix[V]).sum
 
   override def equals(p1: Any) = p1 match {
@@ -537,6 +548,39 @@ with MatrixConstructors[DenseMatrix] {
             var i = 0
             while(i < from.rows) {
               fn.visit(from(i, j))
+              i += 1
+            }
+            j += 1
+          }
+        }
+      }
+
+    }
+  }
+
+  implicit def canTraverseKeyValuePairs[V]:CanTraverseKeyValuePairs[DenseMatrix[V], (Int, Int), V] = {
+    new CanTraverseKeyValuePairs[DenseMatrix[V], (Int, Int), V] {
+      def isTraversableAgain(from: DenseMatrix[V]): Boolean = true
+
+      /** Iterates all key-value pairs from the given collection. */
+      def traverse(from: DenseMatrix[V], fn: CanTraverseKeyValuePairs.KeyValuePairsVisitor[(Int, Int), V]): Unit = {
+        import from._
+        val idealMajorStride = if(isTranspose) cols else rows
+
+        if(majorStride == idealMajorStride) {
+          fn.visitArray(from.rowColumnFromLinearIndex, data, offset, rows*cols, 1)
+        } else if(!from.isTranspose) {
+          var j = 0
+          while (j < from.cols) {
+            fn.visitArray(from.rowColumnFromLinearIndex, data, offset + j * majorStride, rows, 1)
+            j += 1
+          }
+        } else {
+          var j = 0
+          while (j < from.cols) {
+            var i = 0
+            while(i < from.rows) {
+              fn.visit((i,j), from(i, j))
               i += 1
             }
             j += 1

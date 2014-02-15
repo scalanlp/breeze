@@ -155,7 +155,7 @@ package object linalg {
    */
   def ranks[V:Ordering](x : Vector[V]): Array[Double] = {
     val a = x
-    val as = a.argsort
+    val as = argsort(a)
     val rv = new Array[Double](as.length)
     var i = 0
     while (i < as.length) {

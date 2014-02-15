@@ -75,7 +75,7 @@ object InteriorPoint {
 
   // find a feasible point
   private def phase1(A: DenseMatrix[Double], b: DenseVector[Double], c: DenseVector[Double], x0: DenseVector[Double]) = {
-    val s = (A * x0 - b).max + 1E-7
+    val s = max(A * x0 - b) + 1E-7
     val newA = DenseMatrix.zeros[Double](A.rows+1,A.cols+1)
     newA(0 until  A.rows,0 until A.cols) := A
     newA(0 until A.rows+1,A.cols) := -1.0
@@ -84,7 +84,7 @@ object InteriorPoint {
     val newC = DenseVector.zeros[Double](c.size + 1)
     newC(c.size) = 1
     val newX = DenseVector.tabulate(x0.size + 1)(i => if(i < x0.size) x0(i) else s)
-    if( (newA * newX - newB).values.exists(_ > 0)) {
+    if ( any((newA * newX - newB) :> 0.0) ) {
       throw new RuntimeException("Problem seems to be infeasible!")
     }
     val r = minimize(newA,newB,newC,newX)

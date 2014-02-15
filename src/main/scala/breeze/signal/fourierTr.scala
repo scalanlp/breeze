@@ -141,10 +141,10 @@ object fourierTr extends UFunc {
         val tempret =
           for( k <- range ) yield {
             val pk2_N = scala.math.Pi * k * 2d / v.length
-              DenseVector.tabulate[Complex](v.length)( (n: Int) => {
+              sum(DenseVector.tabulate[Complex](v.length)( (n: Int) => {
                                         val nd = n.toDouble
                                         Complex(cos(pk2_N * nd), sin(pk2_N * nd))
-                                                                                      } ).sum
+                                                                                      } ))
              }
 
         new DenseVector[Complex]( tempret.toArray[Complex] )
