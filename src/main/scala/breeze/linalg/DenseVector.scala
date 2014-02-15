@@ -55,18 +55,23 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
   // uncomment to get all the ridiculous places where specialization fails.
  // if(data.isInstanceOf[Array[Double]] && getClass.getName() == "breeze.linalg.DenseVector") throw new Exception("...")
 
+  // ensure that operators are all loaded.
+  DenseVector.init()
+
   def repr = this
 
   def activeSize = length
 
   def apply(i: Int) = {
-    if(i < 0 || i > size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
-    data(offset + i * stride)
+    if(i < - size || i >= size) throw new IndexOutOfBoundsException(i + " not in [-"+size+","+size+")")
+    val trueI = if(i<0) i+size else i
+    data(offset + trueI * stride)
   }
 
   def update(i: Int, v: E) {
-    if(i < 0 || i > size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
-    data(offset + i * stride) = v
+    if(i < - size || i >= size) throw new IndexOutOfBoundsException(i + " not in [-"+size+","+size+")")
+    val trueI = if(i<0) i+size else i
+    data(offset + trueI * stride) = v
   }
 
   def activeIterator = iterator
@@ -164,7 +169,7 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
 
 
   /**
-   * Slices the DenseVector, in the range (start,end] with a stride stride.
+   * Slices the DenseVector, in the range [start,end] with a stride stride.
    * @param start
    * @param end
    * @param stride
@@ -188,6 +193,8 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
     }
     arr
   }
+
+
 }
 
 
@@ -196,6 +203,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
                       with DenseVectorOps
                       with DenseVector_OrderingOps
                       with DenseVector_SpecialOps {
+
   def zeros[@spec(Double, Float, Int) V: ClassTag : DefaultArrayValue](size: Int) = {
     val data = new Array[V](size)
     if(size != 0 && data(0) != implicitly[DefaultArrayValue[V]].value)
@@ -374,7 +382,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     new CanSlice[DenseVector[Any], Range, DenseVector[Any]] {
       def apply(v: DenseVector[Any], re: Range) = {
 
-        val r = re.getRangeWithoutNegativeIndexes(v.length)
+        val r = re.getRangeWithoutNegativeIndexes( v.length )
 
         require(r.isEmpty || r.last < v.length)
         require(r.isEmpty || r.start >= 0)
@@ -563,5 +571,9 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   }
 
 
+
+  // used to make sure the operators are loaded
+  @noinline
+  private def init() = {}
 }
 

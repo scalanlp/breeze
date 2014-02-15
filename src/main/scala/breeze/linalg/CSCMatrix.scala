@@ -43,6 +43,8 @@ class CSCMatrix[@specialized(Int, Float, Double) V:DefaultArrayValue] private[li
   def rowIndices = _rowIndices
   def data = _data
 
+  // don't delete
+  CSCMatrix.init()
 
   def apply(row: Int, col: Int): V = {
     if(row >= rows || col >= cols || row < 0 || col < 0)
@@ -423,6 +425,9 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
       bldr
     }
   }
+
+  @noinline
+  private def init() = {}
 }
 
 

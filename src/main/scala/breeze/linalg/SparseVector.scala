@@ -55,6 +55,10 @@ class SparseVector[@spec(Double,Int, Float) E](val array: SparseArray[E])
   /** This auxiliary constructor assumes that the index array is already sorted. */
   def this(index: Array[Int], data: Array[E], length: Int)(implicit value: DefaultArrayValue[E])  = this(index, data, index.length, length)
 
+
+  // Don't delete
+  SparseVector.init()
+
   def data  = array.data
   def index = array.index
   def activeSize = array.activeSize
@@ -149,6 +153,7 @@ object SparseVector extends SparseVectorOps
             with DenseVector_SparseVector_Ops
             with SparseVector_DenseVector_Ops
              {
+
   def zeros[@spec(Double, Float, Int) V: ClassTag:DefaultArrayValue](size: Int) = new SparseVector(Array.empty, Array.empty[V], 0, size)
   def apply[@spec(Double, Float, Int) V:DefaultArrayValue](values: Array[V]) = new SparseVector(Array.range(0,values.length), values, values.length, values.length)
 
@@ -290,9 +295,12 @@ object SparseVector extends SparseVectorOps
     }
   }
 
-  implicit val space_d = TensorSpace.make[SparseVector[Double], Int, Double]
-  implicit val space_f = TensorSpace.make[SparseVector[Float], Int, Float]
-  implicit val space_i = TensorSpace.make[SparseVector[Int], Int, Int]
+  implicit val space_d: TensorSpace[SparseVector[Double], Int, Double] = TensorSpace.make[SparseVector[Double], Int, Double]
+  implicit val space_f: TensorSpace[SparseVector[Float], Int, Float] = {
+    val nop = this.negFromScale[Float]
+    TensorSpace.make[SparseVector[Float], Int, Float]
+  }
+  implicit val space_i: TensorSpace[SparseVector[Int], Int, Int] = TensorSpace.make[SparseVector[Int], Int, Int]
   
   implicit def canTranspose[V:ClassTag:DefaultArrayValue]: CanTranspose[SparseVector[V], CSCMatrix[V]] = {
     new CanTranspose[SparseVector[V], CSCMatrix[V]] {
@@ -325,6 +333,8 @@ object SparseVector extends SparseVectorOps
   }
 
 
+  @noinline
+  private def init() = {}
 }
 
 

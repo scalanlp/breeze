@@ -362,4 +362,33 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
       A(i,j) should be (B(i, j) plusOrMinus threshold)
   }
 
+  test("RangeExtender test") {
+    val xInt = DenseVector(0, 1, 2, 3, 4, 5)
+
+    val rangeIncl = 3 to 5
+    val rangeInclN1 = 3 to -1
+    val rangeInclN2 = -3 to 5
+    val rangeInclN3 = -1 to 3 by -1
+    val rangeInclN4 = 5 to -3 by -1
+    val rangeInclN5 = -1 to -3 by -1
+
+    val rangeExcl = 0 until 5
+    val rangeExclN1 = 3 until -1
+    val rangeExclN2 = -1 until 3 by -1
+
+    assert( xInt( rangeIncl ) == DenseVector(3, 4, 5), "range inclusive" )
+//    println( rangeInclN1.start + " " + rangeInclN1.end + " " + rangeInclN1.step)
+//    val rangeInclN1r = rangeInclN1.getRangeWithoutNegativeIndexes( xInt.length )
+//    println( rangeInclN1r.start + " " + rangeInclN1r.end + " " + rangeInclN1r.step)
+    assert( xInt( rangeInclN1 ) == DenseVector(3, 4, 5), "range inclusive, negative end"  )
+    assert( xInt( rangeInclN2 ) == DenseVector(3, 4, 5), "range inclusive, negative start"  )
+    assert( xInt( rangeInclN3 ) == DenseVector(5, 4, 3), "range inclusive, negative start/step"  )
+    assert( xInt( rangeInclN4 ) == DenseVector(5, 4, 3), "range inclusive, negative end/step"  )
+    assert( xInt( rangeInclN5 ) == DenseVector(5, 4, 3), "range inclusive, negative start/end/step"  )
+
+    assert( xInt( rangeExcl ) == DenseVector(0, 1, 2, 3, 4), "range exclusive" )
+    intercept[IllegalArgumentException]{ xInt(rangeExclN1) }
+    intercept[IllegalArgumentException]{ xInt(rangeExclN2) }
+  }
+
 }
