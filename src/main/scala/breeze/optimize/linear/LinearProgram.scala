@@ -5,7 +5,6 @@ import breeze.linalg._
 import org.apache.commons.math3.optim.linear._
 import org.apache.commons.math3.optim.nonlinear.scalar._
 import scala.collection.JavaConverters._
-import lpsolve.LpSolve
 
 /**
  * DSL for LinearPrograms. Not thread-safe per instance. Make multiple instances
@@ -273,12 +272,12 @@ object LinearProgram {
   }
 
   implicit val mySolver = try {
-    NativeLPSolver
-  } catch {
-    case ex: SecurityException =>
+//    NativeLPSolver
+//  } catch {
+//    case ex: SecurityException =>
       ApacheSimplexSolver
-    case ex: UnsatisfiedLinkError =>
-      ApacheSimplexSolver
+//    case ex: UnsatisfiedLinkError =>
+//      ApacheSimplexSolver
   }
 
   object ApacheSimplexSolver extends Solver {
@@ -309,6 +308,7 @@ object LinearProgram {
 
   }
 
+  /*
   object NativeLPSolver extends Solver {
     LpSolve.lpSolveVersion()
     def maximize(lp: LinearProgram)(objective: lp.Problem): lp.Result = {
@@ -379,6 +379,7 @@ object LinearProgram {
       case _ => "Unknown"
     }
   }
+  */
 }
 
 case class InfeasibleProblem(prob: LinearProgram#Problem) extends RuntimeException
