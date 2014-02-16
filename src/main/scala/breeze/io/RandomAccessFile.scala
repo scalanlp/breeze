@@ -806,6 +806,14 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
     */
   override def skipBytes(n: Int): Int = rafObj.skipBytes(n)
 
+  /** like [[skipBytes]] but just jumps, does not return. For speed
+    */
+  def jumpBytes(n: Int): Unit = {
+    //Speed optimization
+    //rafObj.skipBytes(n)
+    rafObj.seek( rafObj.getFilePointer + n )
+  }
+
   /** Pass on to [[java.io.RandomAccessFile]]
     */
   def getFilePointer: Long = rafObj.getFilePointer
