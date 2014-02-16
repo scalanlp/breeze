@@ -3,6 +3,7 @@ package breeze.linalg
 import breeze.generic.UFunc
 import breeze.linalg.support.CanTraverseValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
+import breeze.math.Complex
 
 /**
  * A [[breeze.generic.UFunc]] for computing the mean of objects
@@ -19,6 +20,30 @@ object mean extends UFunc {
         }
 
         def zeros(numZero: Int, zeroValue: Double): Unit = {
+          sum += numZero * zeroValue
+          n += numZero
+        }
+      }
+
+      iter.traverse(v, visit)
+
+      visit.sum / visit.n
+    }
+  }
+
+  implicit def reduceComplex[DenseVector[Complex]](implicit iter: CanTraverseValues[DenseVector[Complex], Complex]): Impl[DenseVector[Complex], Complex] =
+    new Impl[DenseVector[Complex], Complex] {
+
+      def apply(v: DenseVector[Complex]): Complex = {
+      val visit = new ValuesVisitor[Complex] {
+        var sum = new Complex(0.0, 0.0)
+        var n = 0
+        def visit(a: Complex): Unit = {
+          sum += a
+          n += 1
+        }
+
+        def zeros(numZero: Int, zeroValue: Complex): Unit = {
           sum += numZero * zeroValue
           n += numZero
         }
