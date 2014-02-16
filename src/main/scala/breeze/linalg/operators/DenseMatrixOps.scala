@@ -5,7 +5,7 @@ import breeze.linalg._
 import org.netlib.util.intW
 import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 import breeze.macros.expand
-import breeze.math.Complex
+import breeze.math.{Semiring, Complex}
 import scala.math.BigInt
 import breeze.linalg.support.{CanCollapseAxis, CanSlice2}
 import breeze.util.ArrayUtil
@@ -572,6 +572,36 @@ trait DenseMatrixMultOps extends DenseMatrixOps with DenseMatrixOpsLowPrio { thi
   }
 
 
+  implicit def op_DM_DM_Semiring[T:Semiring:ClassTag:DefaultArrayValue]:OpMulMatrix.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]] = new OpMulMatrix.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]] {
+    implicit val ring = implicitly[Semiring[T]]
+    override def apply(a: DenseMatrix[T], b: DenseMatrix[T]) = {
+
+      val res = DenseMatrix.zeros[T](a.rows, b.cols)
+      require(a.cols == b.rows)
+
+      val colsB = b.cols
+      val colsA = a.cols
+      val rowsA = a.rows
+
+      var j = 0
+      while (j < colsB) {
+        var l = 0;
+        while (l < colsA) {
+
+          val v = b(l, j)
+          var i = 0
+          while (i < rowsA) {
+            res(i, j) = ring.+(res(i,j), ring.*(a(i,l), v))
+            i += 1
+          }
+          l += 1
+        }
+        j += 1
+      }
+      res
+    }
+
+  }
 
   @expand
   @expand.valify

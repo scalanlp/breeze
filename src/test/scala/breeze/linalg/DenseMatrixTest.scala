@@ -287,6 +287,13 @@ class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with Do
     assert(z === DenseMatrix((164,5,107),(-5,10,-27),(161,-7,138)))
   }
 
+
+  test("Multiply Boolean") {
+    val a = DenseMatrix((true, true, true),(true, true, true))
+    val b = DenseMatrix((true, false, true),(true, false, true),(true, false, true))
+    assert(a * b === DenseMatrix((true, false, true),(true, false, true)))
+  }
+
   test("Multiply Float") {
     val a = DenseMatrix((1.0f, 2.0f, 3.0f),(4.0f, 5.0f, 6.0f))
     val b = DenseMatrix((7.0f, -2.0f, 8.0f),(-3.0f, -3.0f, 1.0f),(12.0f, 0.0f, 5.0f))
