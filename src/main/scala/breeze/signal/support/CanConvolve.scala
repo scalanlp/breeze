@@ -11,6 +11,7 @@ import breeze.signal.OptRange.RangeOpt
 import breeze.numerics.isOdd
 import breeze.signal.OptRange.RangeOpt
 import scala.reflect.ClassTag
+import com.typesafe.scalalogging.slf4j.Logging
 
 //ToDo 1: provide convolve of Integer and other DenseVectors
 //ToDo 1: provide convolve of DenseMatrix
@@ -40,7 +41,7 @@ trait CanConvolve[Input, KernelType, Output] {
  *
  * @author ktakagaki
  */
-object CanConvolve {
+object CanConvolve extends Logging {
 
   @expand
   @expand.valify
@@ -184,15 +185,25 @@ object CanConvolve {
       def apply(data: DenseVector[T], kernel: DenseVector[T], range: Range): DenseVector[T] = {
         require( data.length * kernel.length != 0, "data and kernel must be non-empty DenseVectors")
         require( data.length >= kernel.length, "kernel (" + kernel.length + ") cannot be longer than data(" + data.length + ") to be convolved/correlated!")
+        require( range.start >= 0 && range.last <= (data.length - kernel.length + 1),
+          logger.error("range (start {}, end {}, step {}, inclusive {}) is OOB for data (length {}) and kernel (length {})!",
+            range.start.toString, range.end.toString, range.step.toString, range.isInclusive.toString, data.length.toString, kernel.length.toString )
+        )
 
         val tempRangeVect = range.toVector
         val tempArr = new Array[T](tempRangeVect.length)
 
+//        println("data.length: " + data.length)
+//        println("kernel.length: " + kernel.length)
+//        println("tempRangeVect.length: " + tempRangeVect.length)
+//        println("tempArr.length: " + tempArr.length)
+
         for( count <- 0 until tempRangeVect.length){
           var ki: Int = 0
           var sum: T = 0.asInstanceOf[T]
+          val startTap = tempRangeVect(count)
           while(ki < kernel.length){
-            sum += data( (tempRangeVect(count) + ki) ) * kernel(ki)
+            sum += data( startTap + ki ) * kernel(ki)
             ki += 1
           }
           tempArr(count) = sum.asInstanceOf[T] //(sum: java.lang.Long).intValue() //sum.toInt
@@ -218,6 +229,10 @@ object CanConvolve {
       def apply(data: DenseVector[Int], kernel: DenseVector[Int], range: Range): DenseVector[Int] = {
         require( data.length * kernel.length != 0, "data and kernel must be non-empty DenseVectors")
         require( data.length >= kernel.length, "kernel cannot be longer than data to be convolved/corelated!")
+        require( range.start >= 0 && range.last <= (data.length - kernel.length + 1),
+          logger.error("range (start {}, end {}, step {}, inclusive {}) is OOB for data (length {}) and kernel (length {})!",
+            range.start.toString, range.end.toString, range.step.toString, range.isInclusive.toString, data.length.toString, kernel.length.toString )
+        )
 
         val dataL = convert(data, Long)
         val kernelL = convert(kernel, Long)
@@ -228,8 +243,9 @@ object CanConvolve {
         for( count <- 0 until tempRangeVect.length){
           var ki: Int = 0
           var sum: Long = 0L
+          val startTap = tempRangeVect(count)
           while(ki < kernel.length){
-            sum += dataL( (tempRangeVect(count) + ki) ) * kernelL(ki)
+            sum +=  dataL( startTap + ki ) * kernelL(ki)
             ki += 1
           }
           tempArr(count) = sum.asInstanceOf[Int] //(sum: java.lang.Long).intValue() //sum.toInt
