@@ -2,7 +2,7 @@
 
 Breeze is a library for numerical processing. It aims to be generic, clean, and powerful without sacrificing (much) efficiency.
 
-The current version is 0.6-SNAPSHOT. The latest release is 0.5.2. 
+The current version is 0.7-SNAPSHOT. The latest release is 0.6.
 ## Documentation
 
 * https://github.com/scalanlp/breeze/wiki/Quickstart
@@ -33,14 +33,12 @@ For **SBT**, Add these lines to your SBT project definition:
 ```scala
 libraryDependencies  ++= Seq(
             // other dependencies here
-            "org.scalanlp" % "breeze_2.10" % "0.5.2",
-            // in a different repository now (github.com/scalanlp/breeze-viz)
-            "org.scalanlp" % "breeze-viz_2.10" % "0.5.2"
+            "org.scalanlp" % "breeze_2.10" % "0.7-SNAPSHOT"
 )
 
 resolvers ++= Seq(
             // other resolvers here
-            // if you want to use snapshot builds (currently 0.6-SNAPSHOT), use this.
+            // if you want to use snapshot builds (currently 0.7-SNAPSHOT), use this.
             "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
             "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 )
@@ -58,13 +56,13 @@ Maven looks like this:
 <dependency>
   <groupId>org.scalanlp</groupId>
 	<artifactId>breeze_2.10</artifactId>
-	<version>0.5.2</version>
+	<version>0.6</version>
 </dependency>
 ```
 
 ### Other build tools
 
-http://mvnrepository.com/artifact/org.scalanlp/breeze-math_2.10/0.5 (as an example) is a great resource for finding other configuration examples for other build tools.
+http://mvnrepository.com/artifact/org.scalanlp/breeze-math_2.10/0.6 (as an example) is a great resource for finding other configuration examples for other build tools.
 
 See documentation (linked above!) for more information on using Breeze.
 

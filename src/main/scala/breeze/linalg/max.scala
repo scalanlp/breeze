@@ -76,7 +76,7 @@ object min extends UFunc {
   @expand
   implicit def reduce[T, @expand.args(Int, Double, Float, Long) S](implicit iter: CanTraverseValues[T, S], @expand.sequence[S](Int.MaxValue, Double.PositiveInfinity, Float.PositiveInfinity, Long.MaxValue) init: S): Impl[T, S] = new Impl[T, S] {
     def apply(v: T): S = {
-      class SumVisitor extends ValuesVisitor[S] {
+      class MinVisitor extends ValuesVisitor[S] {
         var min = init
         var visitedOne = false
         def visit(a: S): Unit = {
@@ -104,7 +104,7 @@ object min extends UFunc {
         }
       }
 
-      val visit = new SumVisitor
+      val visit = new MinVisitor
 
       iter.traverse(v, visit)
       if(!visit.visitedOne) throw new IllegalArgumentException(s"No values in $v!")
@@ -136,4 +136,55 @@ object clip extends UFunc {
       }
     }
   }
+}
+
+
+
+
+object ptp extends UFunc {
+  @expand
+  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S](implicit iter: CanTraverseValues[T, S], @expand.sequence[S](Int.MinValue, Double.NegativeInfinity, Float.NegativeInfinity, Long.MinValue) init: S): Impl[T, S] = new Impl[T, S] {
+    def apply(v: T): S = {
+      class SumVisitor extends ValuesVisitor[S] {
+        var max = init
+        var min = -init
+        var visitedOne = false
+        def visit(a: S): Unit = {
+          visitedOne = true
+          max = scala.math.max(max, a)
+          min = scala.math.min(min, a)
+        }
+
+        def zeros(numZero: Int, zeroValue: S): Unit = {
+          if(numZero != 0) {
+            visitedOne = true
+            max = scala.math.max(zeroValue, max)
+            min = scala.math.min(zeroValue, min)
+          }
+        }
+
+        override def visitArray(arr: Array[S], offset: Int, length: Int, stride: Int): Unit = {
+          var i = 0
+          var off = offset
+          while(i < length) {
+            visitedOne = true
+            max = scala.math.max(max, arr(off))
+            min = scala.math.min(min, arr(off))
+            i += 1
+            off += stride
+          }
+        }
+      }
+
+      val visit = new SumVisitor
+
+      iter.traverse(v, visit)
+      if(!visit.visitedOne) throw new IllegalArgumentException(s"No values in $v!")
+
+      visit.max - visit.min
+    }
+
+  }
+
+
 }

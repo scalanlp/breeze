@@ -19,11 +19,11 @@ class SparseVectorTest extends FunSuite {
 
 
   test("Min/Max") {
-    val v = SparseVector(2, 0, 3, 2, -1)
-    assert(v.argmin === 4)
-    assert(v.argmax === 2)
-    assert(v.min === -1)
-    assert(v.max === 3)
+    val v = SparseVector(5)(0 -> 2, 2-> 3, 3-> 2)
+    assert(Set(1,4) contains argmin(v), argmin(v))
+    assert(argmax(v) === 2)
+    assert(min(v) === 0)
+    assert(max(v) === 3)
   }
 
 

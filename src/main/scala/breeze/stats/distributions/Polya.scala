@@ -1,6 +1,6 @@
 package breeze.stats.distributions
 
-import breeze.linalg.{Counter, NumericOps}
+import breeze.linalg.{sum, Counter, NumericOps}
 import breeze.math.{TensorSpace, MutableCoordinateSpace}
 import breeze.numerics._
 import breeze.storage.DefaultArrayValue
@@ -40,9 +40,8 @@ class Polya[T,@specialized(Int) I](params: T)(implicit space: TensorSpace[T, I, 
 
   lazy val logNormalizer = -lbeta(params)
 
-  def probabilityOf(x: I) = math.exp(lbeta2(params.sum,1) - lbeta2(params(x),1))
+  def probabilityOf(x: I) = math.exp(lbeta(sum(params), 1.0) - lbeta(params(x), 1.0))
 
-  private def lbeta2(a: Double, b: Double) = lgamma(a) + lgamma(b) - lgamma(a+b)
 
 //  def probabilityOf(x: T) = math.exp(logProbabilityOf(x))
 //  def logProbabilityOf(x: T) = {

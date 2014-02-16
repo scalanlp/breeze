@@ -50,10 +50,9 @@ scalacOptions ++= Seq("-deprecation","-language:_")
 
 
 libraryDependencies ++= Seq(
-  "org.scalanlp" %% "breeze-macros" % "0.2-SNAPSHOT" % "compile",
+  "org.scalanlp" %% "breeze-macros" % "0.2" % "compile",
   "com.thoughtworks.paranamer" % "paranamer" % "2.2",
   "com.github.fommil.netlib" % "all" % "1.1.2" pomOnly(),
-  "org.scalanlp" % "lpsolve" % "5.5.2-SNAPSHOT",
   "net.sf.opencsv" % "opencsv" % "2.3",
   "com.github.rwl" % "jtransforms" % "2.4.0",
    "org.apache.commons" % "commons-math3" % "3.2",

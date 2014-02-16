@@ -66,7 +66,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
                      ( -0.4255, -39.5106, 42.2127,  11.6382, 3.2765),
                      ( -0.6170,  -0.7506, 42.4964,  45.1620, 5.3107),
                      ( -0.0638,  -0.3979, -0.6275,  54.5694, 8.8282))
-    assert(m.iterator forall { case (idx,v) => math.abs(v-aux(idx)) < 1e-4})
+    matricesNearlyEqual(m, aux, 1E-4)
   }
 
   test("det") {
@@ -120,13 +120,13 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
                    (-47.0,-20.0, 24.0,-22.0),
                    (  3.0, 17.0,-45.0, 23.0))
     val I = DenseMatrix.eye[Double](4)
-    assert((inv(X) * X).iterator forall { case (idx,v) => math.abs(v-I(idx)) < 1e-15})
+    matricesNearlyEqual(inv(X) * X, I)
   }
 
   test("pinv") {
     val X = DenseMatrix((54.0, 95.0), (23.0, 25.0), (70.0, 41.0), (31.0, 19.0))
     val I = DenseMatrix.eye[Double](2)
-    assert((pinv(X) * X).iterator forall { case (idx,v) => math.abs(v-I(idx)) < 1e-15})
+    matricesNearlyEqual(pinv(X) * X, I)
   }
 
   test("cross") {
@@ -170,15 +170,13 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
     val (_Q, _R) = qr(A)
 
-    assert( (_Q.t * _Q).trace.closeTo(_Q.rows) )
+    assert( trace(_Q.t * _Q).closeTo(_Q.rows) )
     for(i <- 0 until _R.rows; j <- 0 until i) {
       assert(_R(i,j) === 0.0)
     }
 
     val reA: DenseMatrix[Double] = _Q * _R
-    for(i <- 0 until A.rows; j <- 0 until A.cols) {
-      reA(i,j) should be (A(i, j) plusOrMinus 1E-6)
-    }
+    matricesNearlyEqual(reA, A)
 
   }
 
@@ -194,8 +192,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
   test("qrp") {
     val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
     val (_QQ, _RR, _P, _) = qrp(A)
-    val ap = A * _P.values.map(_.toDouble)
-    _QQ * _RR foreachPair { case ((i,j), v) => v should be (ap(i,j) plusOrMinus 1e-8) }
+    val ap = A * convert(_P, Double)
+    assert(max(abs(_QQ * _RR - ap)) < 1E-8)
   }
 
   test("mean and variance") {
@@ -220,7 +218,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     val (w, wi, v) = eig(DenseMatrix((1.0, -1.0), (1.0, 1.0)))
     assert(w === DenseVector(1.0, 1.0))
     assert(wi === DenseVector(1.0, -1.0))
-    assert((v - diag(DenseVector(0.7071067811865475, -0.7071067811865475))).valuesIterator.max.abs < 1E-7)
+    assert(max(abs(v - diag(DenseVector(0.7071067811865475, -0.7071067811865475)))) < 1E-7)
     // TODO, we seem to throw out VI... these seems bad...
   }
 
@@ -229,8 +227,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     val (u, s, vt) = svd(m)
 
     // u and vt are unitary
-    (u.t * u).trace should be (u.rows.toDouble plusOrMinus 1E-5)
-    (vt * vt.t).trace should be (vt.rows.toDouble plusOrMinus 1E-5)
+    trace(u.t * u) should be (u.rows.toDouble plusOrMinus 1E-5)
+    trace(vt * vt.t) should be (vt.rows.toDouble plusOrMinus 1E-5)
 
     // s is sorted by size of singular value, and be nonnegative
     for(i <- 1 until s.length) {
@@ -242,9 +240,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     val ss = DenseMatrix.zeros[Double](m.rows, m.cols)
     diag(ss(0 until s.length, 0 until s.length)) := s
     val reM: DenseMatrix[Double] =  u * ss * vt
-    for(i <- 0 until m.rows; j <- 0 until m.cols) {
-      reM(i,j) should be (m(i, j) plusOrMinus 1E-6)
-    }
+    matricesNearlyEqual(reM, m)
   }
 
   test("csc svd"){
@@ -257,15 +253,13 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     //println(s1)
    // println(s2)
     val w = s1-s2
-    w.foreach{ e =>
-    assert(scala.math.abs(e) <= 0.00001)
-    }
+    assert(max(abs((s1-s2))) < 1E-5)
   }
 
   test("small pow test") {
     val X = DenseMatrix(( .7, .2), (.3, .8))
     assert(mpow(X, 1) === X)
-    assert( abs(mpow(X, .5) - DenseMatrix((.82426, 0.11716), (.17574, 0.88284))).max < 1E-5, mpow(X, .5))
+    assert( max(abs(mpow(X, .5) - DenseMatrix((.82426, 0.11716), (.17574, 0.88284)))) < 1E-5, mpow(X, .5))
   }
 
   test("diff test") {
@@ -305,59 +299,49 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
 
     // The data
     val smithData = DenseMatrix(
-      (2.5,2.4), (0.5,0.7), (2.2,2.9), (1.9,2.2), (3.1,3.0), 
+      (2.5,2.4), (0.5,0.7), (2.2,2.9), (1.9,2.2), (3.1,3.0),
       (2.3,2.7), (2.0,1.6), (1.0,1.1), (1.5,1.6), (1.1,0.9))
 
     // The correct answers bundled up.
     object smithTruth {
 
       val centeredData = DenseMatrix(
-	(0.69                ,  0.4900000000000002   ),
-	(-1.31               ,  -1.2099999999999997  ),
-	(0.3900000000000001  ,  0.9900000000000002   ),
-	(0.08999999999999986 ,  0.2900000000000005   ),
-	(1.29                ,  1.0900000000000003   ),
-	(0.48999999999999977 ,  0.7900000000000005   ),
-	(0.18999999999999995 ,  -0.3099999999999996  ),
-	(-0.81               ,  -0.8099999999999996  ),
-	(-0.31000000000000005,  -0.3099999999999996  ),
-	(-0.71               ,  -1.0099999999999998  ))
+        (0.69                ,  0.4900000000000002   ),
+        (-1.31               ,  -1.2099999999999997  ),
+        (0.3900000000000001  ,  0.9900000000000002   ),
+        (0.08999999999999986 ,  0.2900000000000005   ),
+        (1.29                ,  1.0900000000000003   ),
+        (0.48999999999999977 ,  0.7900000000000005   ),
+        (0.18999999999999995 ,  -0.3099999999999996  ),
+        (-0.81               ,  -0.8099999999999996  ),
+        (-0.31000000000000005,  -0.3099999999999996  ),
+        (-0.71               ,  -1.0099999999999998  ))
 
       val covmat = DenseMatrix(
-	(0.6165555555555556,  0.6154444444444445),
-	(0.6154444444444445,  0.7165555555555555))
+        (0.6165555555555556,  0.6154444444444445),
+        (0.6154444444444445,  0.7165555555555555))
 
-      val eigenvalues = 
-	DenseVector(1.2840277121727839, 0.04908339893832735)
+      val eigenvalues =
+        DenseVector(1.2840277121727839, 0.04908339893832735)
 
       val eigenvectors = DenseMatrix(
-	(-0.6778733985280118,  -0.735178655544408),
-	(-0.735178655544408,   0.6778733985280118)) 
+        (-0.6778733985280118,  -0.735178655544408),
+        (-0.735178655544408,   0.6778733985280118))
 
       val scores = DenseMatrix(
-	( -0.8279701862010882,   -0.17511530704691552 ),
-	(1.7775803252804288  ,  0.14285722654428046   ),
-	(-0.9921974944148888 ,  0.3843749888804126    ),
-	(-0.27421041597539964,  0.13041720657412714   ),
-	(-1.6758014186445402 ,  -0.2094984612567533   ),
-	(-0.9129491031588082 ,  0.17528244362036988   ),
-	(0.099109437498444   ,  -0.34982469809712086  ),
-	(1.1445721637986597  ,  0.04641725818328124   ),
-	(0.43804613676244986 ,  0.017764629675083132  ),
-	(1.2238205550547403  ,  -0.16267528707676204  ))
+        ( -0.8279701862010882,   -0.17511530704691552 ),
+        (1.7775803252804288  ,  0.14285722654428046   ),
+        (-0.9921974944148888 ,  0.3843749888804126    ),
+        (-0.27421041597539964,  0.13041720657412714   ),
+        (-1.6758014186445402 ,  -0.2094984612567533   ),
+        (-0.9129491031588082 ,  0.17528244362036988   ),
+        (0.099109437498444   ,  -0.34982469809712086  ),
+        (1.1445721637986597  ,  0.04641725818328124   ),
+        (0.43804613676244986 ,  0.017764629675083132  ),
+        (1.2238205550547403  ,  -0.16267528707676204  ))
     }
 
     val pca = princomp(smithData)
-
-    def vectorsNearlyEqual(A: DenseVector[Double], B: DenseVector[Double]) {
-      for(i <- 0 until A.length)
-        A(i) should be (B(i) plusOrMinus 1E-6)
-    }
-
-    def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double]) {
-      for(i <- 0 until A.rows; j <- 0 until A.cols)
-        A(i,j) should be (B(i, j) plusOrMinus 1E-6)
-    }
 
     matricesNearlyEqual(smithData(*,::) - pca.center, smithTruth.centeredData)
     matricesNearlyEqual(pca.covmat, smithTruth.covmat)
@@ -366,6 +350,16 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     matricesNearlyEqual(pca.loadings, smithTruth.eigenvectors)
     matricesNearlyEqual(pca.scores, smithTruth.scores)
 
+  }
+
+  def vectorsNearlyEqual(A: DenseVector[Double], B: DenseVector[Double], threshold: Double = 1E-6) {
+    for(i <- 0 until A.length)
+      A(i) should be (B(i) plusOrMinus threshold)
+  }
+
+  def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6) {
+    for(i <- 0 until A.rows; j <- 0 until A.cols)
+      A(i,j) should be (B(i, j) plusOrMinus threshold)
   }
 
   test("RangeExtender test") {

@@ -20,9 +20,11 @@ import org.scalatest.prop._
 import org.junit.runner.RunWith
 import breeze.math.Complex
 import breeze.numerics._
+import org.scalatest.matchers.ShouldMatchers
+import breeze.util.DoubleImplicits
 
 @RunWith(classOf[JUnitRunner])
-class DenseMatrixTest extends FunSuite with Checkers {
+class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with DoubleImplicits {
 
   test("Slicing") {
     val m = DenseMatrix((0,1,2),
@@ -36,7 +38,7 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
     // slice row
     val s2 : DenseMatrix[Int] = m(0, ::)
-    assert(s2.valuesIterator sameElements DenseVector(0,2,3).valuesIterator)
+    assert(s2 === DenseVector(0,2,3).t)
     s2 *= 2
     assert(m === DenseMatrix((0,4,6),(3,5,6)))
 
@@ -77,8 +79,8 @@ class DenseMatrixTest extends FunSuite with Checkers {
     // slice part of a column
     val s7a = m(0 to 1, 0)
     s7a += 2
-    val s7b = m(0 to 1,0);
-    s7b += 1;
+    val s7b = m(0 to 1,0)
+    s7b += 1
     assert(m === DenseMatrix((3,4,7),(6,4,6)))
   }
 
@@ -109,19 +111,19 @@ class DenseMatrixTest extends FunSuite with Checkers {
     // column of original looks same as row of tranpose
     val sm1 = m(::, 1)
     val smt1 = m.t(1, ::)
-    assert(sm1.valuesIterator sameElements smt1.valuesIterator)
+    assert(sm1.t === smt1)
 
     val sm2 = m(::, 2)
     val smt2 = m.t(2, ::)
-    assert(sm2.valuesIterator sameElements smt2.valuesIterator)
+    assert(sm2.t === smt2)
 
     val sm1c = m(1, ::)
     val smt1c = m.t(::, 1)
-    assert(sm1c.valuesIterator sameElements smt1c.valuesIterator, sm1c.toString + " is not " + smt1c.toString)
+    assert(sm1c === smt1c.t)
 
     val sm2c = m(0, ::)
     val smt2c = m.t(::, 0)
-    assert(sm2c.valuesIterator sameElements smt2c.valuesIterator)
+    assert(sm2c === smt2c.t)
 
     // slice sub-matrix
     val s1 = m(0 to 1, 1 to 2)
@@ -140,7 +142,7 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
     val s3 = m(0, 0 to 1)
     val t3 = m.t(0 to 1, 0)
-    assert(s3.valuesIterator sameElements t3.valuesIterator)
+    assert(s3.toDenseVector === t3)
 
     {
       val s2 = m(0 to 1, ::)
@@ -157,10 +159,10 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
   test("Min/Max") {
     val m = DenseMatrix((1,0,0),(2,3,-1))
-    assert(m.argmin === (1,2))
-    assert(m.argmax === (1,1))
-    assert(m.min === -1)
-    assert(m.max === 3)
+    assert(argmin(m) === (1,2))
+    assert(argmax(m) === (1,1))
+    assert(min(m) === -1)
+    assert(max(m) === 3)
   }
 
   test("MapValues") {
@@ -192,7 +194,7 @@ class DenseMatrixTest extends FunSuite with Checkers {
     // foreach
     s = 0
     for ((i,j,v) <- a.triples) s += v
-    assert(s === a.sum)
+    assert(s === sum(a))
 
     // filter
     s = 0
@@ -285,6 +287,13 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(z === DenseMatrix((164,5,107),(-5,10,-27),(161,-7,138)))
   }
 
+
+  test("Multiply Boolean") {
+    val a = DenseMatrix((true, true, true),(true, true, true))
+    val b = DenseMatrix((true, false, true),(true, false, true),(true, false, true))
+    assert(a * b === DenseMatrix((true, false, true),(true, false, true)))
+  }
+
   test("Multiply Float") {
     val a = DenseMatrix((1.0f, 2.0f, 3.0f),(4.0f, 5.0f, 6.0f))
     val b = DenseMatrix((7.0f, -2.0f, 8.0f),(-3.0f, -3.0f, 1.0f),(12.0f, 0.0f, 5.0f))
@@ -343,9 +352,9 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
   
   test("Trace") {
-    assert(DenseMatrix((1,2),(4,5)).trace === 1 + 5)
-    assert(DenseMatrix((1,2,3),(3,4,5),(5,6,7)).trace == 1 + 4 + 7)
-    assert(DenseMatrix((1,2,3),(4,5,6),(7,8,9)).trace === 1 + 5 + 9)
+    assert(trace(DenseMatrix((1,2),(4,5))) === 1 + 5)
+    assert(trace(DenseMatrix((1,2,3),(3,4,5),(5,6,7))) == 1 + 4 + 7)
+    assert(trace(DenseMatrix((1,2,3),(4,5,6),(7,8,9))) === 1 + 5 + 9)
   }
 
   test("Reshape") {
@@ -377,14 +386,15 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
     // wide matrix solve
     val r3 : DenseMatrix[Double] = DenseMatrix((1.0,3.0,4.0),(2.0,0.0,6.0)) \ DenseMatrix((1.0,2.0),(3.0,4.0))
-    assert( (r3 - DenseMatrix((0.1813186813186811,   0.2197802197802196),
-                              (-0.3131868131868131, -0.1978021978021977),
-                              (0.43956043956043944,  0.5934065934065933))).mapValues(_.abs).max < 1E-5)
+    matricesNearlyEqual(r3,
+      DenseMatrix((0.1813186813186811,   0.2197802197802196),
+      (-0.3131868131868131, -0.1978021978021977),
+      (0.43956043956043944,  0.5934065934065933)))
 
     // tall matrix solve
     val r4 : DenseMatrix[Double] = DenseMatrix((1.0,3.0),(2.0,0.0),(4.0,6.0)) \ DenseMatrix((1.0,4.0),(2.0,5.0),(3.0,6.0))
-    assert( (r4 - DenseMatrix((0.9166666666666667,    1.9166666666666672),
-                             (-0.08333333333333352, -0.08333333333333436))).mapValues(_.abs).max < 1E-5)
+    assert( max(abs(r4 - DenseMatrix((0.9166666666666667,    1.9166666666666672),
+                             (-0.08333333333333352, -0.08333333333333436)))) < 1E-5)
   }
 
   test("Solve Float") {
@@ -398,14 +408,14 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
     // wide matrix solve
     val r3 : DenseMatrix[Float] = DenseMatrix((1.0f,3.0f,4.0f),(2.0f,0.0f,6.0f)) \ DenseMatrix((1.0f,2.0f),(3.0f,4.0f))
-    assert( (r3 - DenseMatrix((0.1813186813186811f,   0.2197802197802196f),
+    assert( max(abs(r3 - DenseMatrix((0.1813186813186811f,   0.2197802197802196f),
       (-0.3131868131868131f, -0.1978021978021977f),
-      (0.43956043956043944f,  0.5934065934065933f))).mapValues(_.abs).max < 1E-5)
+      (0.43956043956043944f,  0.5934065934065933f)))) < 1E-5)
 
     // tall matrix solve
     val r4 : DenseMatrix[Float] = DenseMatrix((1.0f,3.0f),(2.0f,0.0f),(4.0f,6.0f)) \ DenseMatrix((1.0f,4.0f),(2.0f,5.0f),(3.0f,6.0f))
-    assert( (r4 - DenseMatrix((0.9166666666666667f,    1.9166666666666672f),
-      (-0.08333333333333352f, -0.08333333333333436f))).mapValues(_.abs).max < 1E-5)
+    assert( max(abs(r4 - DenseMatrix((0.9166666666666667f,    1.9166666666666672f),
+      (-0.08333333333333352f, -0.08333333333333436f)))) < 1E-5)
   }
 
   test("GH#29 transpose solve is broken") {
@@ -435,7 +445,7 @@ class DenseMatrixTest extends FunSuite with Checkers {
     // handle odd sized matrices (test for a bug.)
     val dm = DenseMatrix.tabulate(2,5)( (i,j) => i * j * 1.0 + 1)
     dm := normalize(dm, Axis._1, 2)
-    assert((dm(0,::).map(x => x * x).sum - 1).abs < 1E-4, dm.toString + " not normalized!")
+    assert(abs(sum(dm(0,::).map(x => x * x)) - 1.0) < 1E-4, dm.toString + " not normalized!")
   }
 
   test("Generic Dense ops") {
@@ -513,8 +523,8 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
   test("BigInt multiply") {
     val m = DenseMatrix((BigInt(1), BigInt(1)), (BigInt(1), BigInt(0)))
-    val m2 = DenseMatrix(((1), (1)), ((1), (0)))
-    assert(m * m === (m2 * m2).values.map(_.toInt))
+    val m2 = DenseMatrix((1, 1), (1, 0))
+    assert(m * m === convert(m2 * m2, Int))
   }
 
   test("comparisons") {
@@ -545,5 +555,10 @@ class DenseMatrixTest extends FunSuite with Checkers {
   }
 
 
+
+  def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6) {
+    for(i <- 0 until A.rows; j <- 0 until A.cols)
+      A(i,j) should be (B(i, j) plusOrMinus threshold)
+  }
 }
 

@@ -53,10 +53,10 @@ object CanFirwin {
 
     //various variable conditions which must be met
     require(omegas.length > 0, "At least one cutoff frequency must be given!")
-    require(omegas.min >= 0, "The cutoff frequencies must be bigger than zero!")
-    require(omegas.max <= nyquist, "The cutoff frequencies must be smaller than the nyquist frequency!")
+    require(min(omegas) >= 0, "The cutoff frequencies must be bigger than zero!")
+    require(max(omegas) <= nyquist, "The cutoff frequencies must be smaller than the nyquist frequency!")
     if(omegas.length > 1){
-      require(diff(omegas).min > 0, "The cutoff frequency must be monotonically increasing.")
+      require(min(diff(omegas)) > 0, "The cutoff frequency must be monotonically increasing.")
     }
 
     val nyquistPass = zeroPass != isOdd(omegas.length)

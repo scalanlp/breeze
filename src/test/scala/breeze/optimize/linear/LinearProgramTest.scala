@@ -10,6 +10,7 @@ import breeze.linalg.DenseVector
  **/
 class LinearProgramTest extends FunSuite {
 
+  /*
   test("ILP Test") {
     // http://www.cs.ucf.edu/~shzhang/Combio/lec16.pdf
 
@@ -23,7 +24,8 @@ class LinearProgramTest extends FunSuite {
 
     assert(result.valueOf(x1) === 122)
     assert(result.valueOf(x2) === 78)
-  }
+  }*/
+
 
   test("dsl") {
     //    http://www.tu-chemnitz.de/mathematik/discrete/manuals/cplex/doc/getstart/html/cpxGSilocplex13.0html
@@ -46,6 +48,7 @@ class LinearProgramTest extends FunSuite {
 
   }
 
+  /*
   test("Binary ILP Test") {
     // http://www.cs.ucf.edu/~shzhang/Combio/lec16.pdf
 
@@ -60,5 +63,6 @@ class LinearProgramTest extends FunSuite {
     assert(result.valueOf(x1) === 1)
     assert(result.valueOf(x2) === 1)
   }
+  */
 
 }

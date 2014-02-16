@@ -32,7 +32,7 @@ class LBFGSTest extends OptimizeTestBase {
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
-          (((x - 3.0) :^ 2.0).sum,(x * 2.0) - 6.0)
+          (norm((x - 3.0) :^ 2.0, 1), (x * 2.0) - 6.0)
         }
       }
 
@@ -50,7 +50,7 @@ class LBFGSTest extends OptimizeTestBase {
     def optimizeThis(init: Counter[String,Double]) = {
       val f = new DiffFunction[Counter[String,Double]] {
         def calculate(x: Counter[String,Double]) = {
-          (((x - 3.0) dot (x - 3.0)),(x * 2.0) - 6.0)
+          ((x - 3.0) dot (x - 3.0),(x * 2.0) - 6.0)
         }
       }
 
