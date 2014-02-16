@@ -31,6 +31,9 @@ import breeze.linalg.norm
 case class Complex(real : Double, imag : Double) {
   override def toString = real + " + " + imag + "i"
 
+  def re() = real
+  def im() = imag
+
   def +(that : Complex) =
     Complex(this.real + that.real, this.imag + that.imag)
 
