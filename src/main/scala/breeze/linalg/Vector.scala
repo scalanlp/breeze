@@ -28,6 +28,7 @@ import breeze.macros.expand
 import scala.annotation.unchecked.uncheckedVariance
 import CanTraverseValues.ValuesVisitor
 import scala.collection.mutable.ArrayBuilder
+import breeze.generic.UFunc.{UImpl2, UImpl, InPlaceImpl2}
 
 /**
  * Trait for operators and such used in vectors.
@@ -352,6 +353,18 @@ trait VectorOps { this: Vector.type =>
         a(k) = op(a(k), v)
       }
     }
+  }
+
+  implicit def castUpdateOps[V1, V2, T, Op <: OpType](implicit v1ev: V1<:<Vector[T],
+                                                V2ev: V2<:<Vector[T],
+                                                op: UFunc.InPlaceImpl2[Op, Vector[T], Vector[T]]): InPlaceImpl2[Op, V1, V2] = {
+    op.asInstanceOf[UFunc.InPlaceImpl2[Op, V1, V2]]
+  }
+
+  implicit def castOps[V1, V2, T, Op <: OpType, VR](implicit v1ev: V1<:<Vector[T],
+                                                    V2ev: V2<:<Vector[T],
+                                                    op: UImpl2[Op, Vector[T], Vector[T], VR]): UImpl2[Op, V1, V2, VR] = {
+    op.asInstanceOf[UFunc.UImpl2[Op, V1, V2, VR]]
   }
 
   @expand
