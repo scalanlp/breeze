@@ -4,12 +4,15 @@ import breeze.generic.UFunc
 import breeze.linalg.support.CanTraverseValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.math.Complex
+import breeze.macros.expand
 
 /**
  * A [[breeze.generic.UFunc]] for computing the mean of objects
  */
 object mean extends UFunc {
-  implicit def reduceDouble[T](implicit iter: CanTraverseValues[T, Double]): Impl[T, Double] = new Impl[T, Double] {
+
+  @expand
+  implicit def reduceDouble[@expand.args(Int, Long, Double, Float) T](implicit iter: CanTraverseValues[T, Double]): Impl[T, Double] = new Impl[T, Double] {
     def apply(v: T): Double = {
       val visit = new ValuesVisitor[Double] {
         var sum = 0.0

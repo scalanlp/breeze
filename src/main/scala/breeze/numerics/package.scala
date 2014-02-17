@@ -83,6 +83,8 @@ package object numerics {
   object sqrt extends UFunc with MappingUFunc {
     implicit object sqrtDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.sqrt(v)}
     implicit object sqrtFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.sqrt(v).toFloat}
+    implicit object sqrtIntImpl extends Impl[Int, Int] { def apply(v: Int) = m.sqrt(v.toDouble).toInt }
+    implicit object sqrtLongImpl extends Impl[Long, Long] { def apply(v: Long) = m.sqrt(v.toDouble).toLong }
   }
 
   object cbrt extends UFunc with MappingUFunc {
