@@ -196,6 +196,13 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     assert(max(abs(_QQ * _RR - ap)) < 1E-8)
   }
 
+  test("complex mean") {
+    import breeze.{math=>bmath}
+    import breeze.math.Complex
+    val data =  DenseVector[Complex]( (0.0 + 1.0 * bmath.i), (1.0 + 0.0 * bmath.i), (2.0 + 2.0 * bmath.i) )
+    assert( mean(data) === (1.0 + 1.0 * bmath.i))
+  }
+
   test("mean and variance") {
     val r = new Random(0)
     val data =  Array.fill(100000)(r.nextGaussian)
