@@ -205,6 +205,7 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
         i += 1
       }
     }
+    implicitly[BinaryUpdateRegistry[DenseVector[T], Vector[T], Op.type]].register(this)
     implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
   }
 
@@ -239,6 +240,7 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
         result
       }
       implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulInner.type, T]].register(this)
+//      implicitly[BinaryRegistry[DenseVector[T], Vector[T], OpMulInner.type, T]].register(this)
     }
   }
 
