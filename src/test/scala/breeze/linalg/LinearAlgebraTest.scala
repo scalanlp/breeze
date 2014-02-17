@@ -209,10 +209,10 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     assert(v2 === v)
   }
 
-  test("complex mean") {
-    val data =  DenseVector[Complex]( (0.0 + 1.0 * bmath.i), (1.0 + 0.0 * bmath.i), (2.0 + 2.0 * bmath.i) )
-    assert( mean(data) == (1.0 + 1.0 * bmath.i), "complex mean incorrect")
-  }
+//  test("complex mean") {
+//    val data =  DenseVector[Complex]( (0.0 + 1.0 * bmath.i), (1.0 + 0.0 * bmath.i), (2.0 + 2.0 * bmath.i) )
+//    assert( mean(data) == (1.0 + 1.0 * bmath.i), "complex mean incorrect")
+//  }
 
   test("simple eig test") {
     val (w, _, v) = eig(diag(DenseVector(1.0, 2.0, 3.0)))

@@ -11,19 +11,19 @@ import breeze.macros.expand
  */
 object rootMeanSquare extends UFunc {
 
-  /** Use via implicit delegate syntax rootMeanSquare(x: DenseVector)
-    *
-    */
-  @expand.valify
-  @expand
-  implicit def rms1D[@expand.args(Int, Long, Float, Double) T] : rootMeanSquare.Impl[DenseVector[T], Double] = {
-    new rootMeanSquare.Impl[DenseVector[T], Double] {
-      def apply(v: DenseVector[T]): Double = {
-        val temp: Double = mean( v.map( (elem: T) => elem * elem )  )
-        sqrt( temp )
-      }
-    }
-  }
+//  /** Use via implicit delegate syntax rootMeanSquare(x: DenseVector)
+//    *
+//    */
+//  @expand
+//  @expand.valify
+//  implicit def rms1D[@expand.args(Int, Long, Float, Double) T] : rootMeanSquare.Impl[DenseVector[T], Double] = {
+//    new rootMeanSquare.Impl[DenseVector[T], Double] {
+//      def apply(v: DenseVector[T]): Double = {
+//        val temp: Double = mean( v.map( (elem: T) => elem * elem )  )
+//        sqrt( temp )
+//      }
+//    }
+//  }
 
 
 }

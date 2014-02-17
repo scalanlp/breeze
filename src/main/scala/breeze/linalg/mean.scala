@@ -3,16 +3,12 @@ package breeze.linalg
 import breeze.generic.UFunc
 import breeze.linalg.support.CanTraverseValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
-import breeze.math.Complex
-import breeze.macros.expand
 
 /**
  * A [[breeze.generic.UFunc]] for computing the mean of objects
  */
 object mean extends UFunc {
-
-  @expand
-  implicit def reduceDouble[@expand.args(Int, Long, Double, Float) T](implicit iter: CanTraverseValues[T, Double]): Impl[T, Double] = new Impl[T, Double] {
+  implicit def reduceDouble[T](implicit iter: CanTraverseValues[T, Double]): Impl[T, Double] = new Impl[T, Double] {
     def apply(v: T): Double = {
       val visit = new ValuesVisitor[Double] {
         var sum = 0.0
@@ -23,30 +19,6 @@ object mean extends UFunc {
         }
 
         def zeros(numZero: Int, zeroValue: Double): Unit = {
-          sum += numZero * zeroValue
-          n += numZero
-        }
-      }
-
-      iter.traverse(v, visit)
-
-      visit.sum / visit.n
-    }
-  }
-
-  implicit def reduceComplex[DenseVector[Complex]](implicit iter: CanTraverseValues[DenseVector[Complex], Complex]): Impl[DenseVector[Complex], Complex] =
-    new Impl[DenseVector[Complex], Complex] {
-
-      def apply(v: DenseVector[Complex]): Complex = {
-      val visit = new ValuesVisitor[Complex] {
-        var sum = new Complex(0.0, 0.0)
-        var n = 0
-        def visit(a: Complex): Unit = {
-          sum += a
-          n += 1
-        }
-
-        def zeros(numZero: Int, zeroValue: Complex): Unit = {
           sum += numZero * zeroValue
           n += numZero
         }
