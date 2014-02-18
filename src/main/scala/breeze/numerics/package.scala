@@ -76,8 +76,8 @@ package object numerics {
     //ToDo???: extend to negative logs (but return type Double/Complex dependent on input???)
     implicit object logDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.log(v)}
     implicit object logFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.log(v).toFloat}
-    implicit object logBDoubleImpl extends Impl2[Double, Double, Double] { def apply(b: Double, v: Double) = m.log(v)/m.log(b)}
-    implicit object logBFloatImpl extends Impl2[Float, Float, Float] { def apply(b: Float, v: Float) = (m.log(v)/m.log(b)).toFloat}
+    implicit object logBDoubleImpl extends Impl2[Double, Double, Double] { def apply(base: Double, v: Double) = m.log(v)/m.log(base)}
+    implicit object logBFloatImpl extends Impl2[Float, Float, Float] { def apply(base: Float, v: Float) = (m.log(v)/m.log(base)).toFloat}
   }
 
   object log2 extends UFunc with MappingUFunc {
@@ -96,6 +96,13 @@ package object numerics {
   }
 
 
+  object nextExponent extends UFunc with MappingUFunc {
+    implicit object nextExponentDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.ceil(m.log(v)) }
+    implicit object nextExponentFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.ceil(m.log(v)).toFloat }
+    implicit object nextExponentDoubleImpl2 extends Impl2[Double, Double, Double] { def apply(base: Double, v: Double) = m.ceil(m.log(v)/ m.log(base)) }
+    implicit object nextExponentFloatImpl2 extends Impl2[Float, Float, Float] { def apply(base: Float, v: Float) = m.ceil(m.log(v)/ m.log(base)).toFloat }
+  }
+
   object nextExponent2 extends UFunc with MappingUFunc {
     implicit object nextExponent2DoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.ceil(m.log(v)/ log2D) }
     implicit object nextExponent2FloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.ceil(m.log(v)/ log2D).toFloat }
@@ -106,14 +113,21 @@ package object numerics {
     implicit object nextExponent10FloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.ceil(m.log(v)/log10D).toFloat }
   }
 
+  object nextPower extends UFunc with MappingUFunc {
+    implicit object nextPowerDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.exp( nextExponent(v) ) }
+    implicit object nextPowerFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.exp( nextExponent(v) ).toFloat }
+    implicit object nextPowerDoubleImpl2 extends Impl2[Double, Double, Double] { def apply(base: Double, v: Double) = m.pow( base, nextExponent(v) ) }
+    implicit object nextPowerFloatImpl2 extends Impl2[Float, Float, Float] { def apply(base: Float, v: Float) = m.pow( base, nextExponent(v) ).toFloat }
+  }
+
   object nextPower2 extends UFunc with MappingUFunc {
-    implicit object nextPower2DoubleImpl extends Impl[Double, Double] { def apply(v: Double) = pow(2d, nextExponent2(v)) }
-    implicit object nextPower2FloatImpl extends Impl[Float, Float] { def apply(v: Float) = pow(2d, nextExponent2(v.toDouble)).toFloat }
+    implicit object nextPower2DoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.pow(2d, nextExponent2(v)) }
+    implicit object nextPower2FloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.pow(2d, nextExponent2(v.toDouble)).toFloat }
   }
 
   object nextPower10 extends UFunc with MappingUFunc {
-    implicit object nextPower10DoubleImpl extends Impl[Double, Double] { def apply(v: Double) = pow(10d, nextExponent10(v)) }
-    implicit object nextPower10FloatImpl extends Impl[Float, Float] { def apply(v: Float) = pow(10d, nextExponent10(v.toDouble)).toFloat }
+    implicit object nextPower10DoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.pow(10d, nextExponent10(v)) }
+    implicit object nextPower10FloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.pow(10d, nextExponent10(v.toDouble)).toFloat }
   }
 
 
