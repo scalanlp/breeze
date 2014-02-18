@@ -4,6 +4,7 @@ import breeze.generic.UFunc
 import breeze.linalg.{mean, DenseMatrix, DenseVector}
 import breeze.numerics._
 import breeze.macros.expand
+import breeze.math.Complex
 
 /**Root mean square of a vector.
  * @author ktakagaki
@@ -11,19 +12,21 @@ import breeze.macros.expand
  */
 object rootMeanSquare extends UFunc {
 
-//  /** Use via implicit delegate syntax rootMeanSquare(x: DenseVector)
-//    *
-//    */
-//  @expand
-//  @expand.valify
-//  implicit def rms1D[@expand.args(Int, Long, Float, Double) T] : rootMeanSquare.Impl[DenseVector[T], Double] = {
-//    new rootMeanSquare.Impl[DenseVector[T], Double] {
-//      def apply(v: DenseVector[T]): Double = {
-//        val temp: Double = mean( v.map( (elem: T) => elem * elem )  )
-//        sqrt( temp )
-//      }
-//    }
-//  }
+  //ToDo: Expand to Int and Long once mean() is generified
+
+  /** Use via implicit delegate syntax rootMeanSquare(x: DenseVector)
+    *
+    */
+  @expand
+  @expand.valify
+  implicit def rms1D[@expand.args(Float, Double) T] : rootMeanSquare.Impl[DenseVector[T], T] = {
+    new rootMeanSquare.Impl[DenseVector[T], T] {
+      def apply(v: DenseVector[T]): T = {
+        val temp: T = mean( v.map( (elem: T) => elem * elem )  )
+        sqrt( temp )
+      }
+    }
+  }
 
 
 }
