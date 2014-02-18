@@ -2,7 +2,7 @@
 
 Breeze is a library for numerical processing. It aims to be generic, clean, and powerful without sacrificing (much) efficiency.
 
-The current version is 0.7-SNAPSHOT. The latest release is 0.6.
+The current version is 0.7-SNAPSHOT. The latest release is 0.6.1.
 ## Documentation
 
 * https://github.com/scalanlp/breeze/wiki/Quickstart
@@ -56,13 +56,13 @@ Maven looks like this:
 <dependency>
   <groupId>org.scalanlp</groupId>
 	<artifactId>breeze_2.10</artifactId>
-	<version>0.6</version>
+	<version>0.6.1</version>
 </dependency>
 ```
 
 ### Other build tools
 
-http://mvnrepository.com/artifact/org.scalanlp/breeze-math_2.10/0.6 (as an example) is a great resource for finding other configuration examples for other build tools.
+http://mvnrepository.com/artifact/org.scalanlp/breeze-math_2.10/0.6.1 (as an example) is a great resource for finding other configuration examples for other build tools.
 
 See documentation (linked above!) for more information on using Breeze.
 
