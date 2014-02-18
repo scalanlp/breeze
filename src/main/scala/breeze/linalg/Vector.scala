@@ -413,16 +413,28 @@ trait VectorOps { this: Vector.type =>
         require(b.length == a.length, "Vectors must be the same length!")
         if(s == 0) return
 
-        var i = 0
-        for( (k, v) <- b.activeIterator) {
-          a(k) += s * v
-          i += 1
+        b match {
+          case b: StorageVector[V] =>
+            var i = 0
+            while(i < b.iterableSize) {
+              if(b.isActive(i)) {
+                a(b.indexAt(i)) += s * b.valueAt(i)
+              }
+              i += 1
+            }
+
+          case _ =>
+            for( (k, v) <- b.activeIterator) {
+              a(k) += s * v
+            }
         }
       }
     }
   }
 
-
+  implicit def castAxpy[Vec1, Vec2, T](implicit ev1: Vec1 <:< Vector[T], ev2: Vec2 <:< Vector[T], canAxpy: CanAxpy[T, Vector[T], Vector[T]]):CanAxpy[T, Vec1, Vec2] = {
+    canAxpy.asInstanceOf[CanAxpy[T, Vec1, Vec2]]
+  }
 
 
 
