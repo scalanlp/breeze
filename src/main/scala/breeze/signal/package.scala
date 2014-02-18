@@ -253,7 +253,7 @@ package object signal {
     */
   def designFilterFirwin[Output](taps: Int, omegas: DenseVector[Double], nyquist: Double = 1d,
                 zeroPass: Boolean = true,
-                scale: Boolean = true, multiplier: Output = 1.asInstanceOf[Output],
+                scale: Boolean = true, multiplier: Double = 1d,
                 optWindow: OptWindowFunction = OptWindowFunction.Hamming()  )
                (implicit canFirwin: CanFirwin[Output]): FIRKernel1D[Output] =
      canFirwin(taps, omegas, nyquist, zeroPass, scale, multiplier, optWindow)

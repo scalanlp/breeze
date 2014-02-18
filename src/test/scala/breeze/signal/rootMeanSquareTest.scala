@@ -21,4 +21,15 @@ class rootMeanSquareTest extends FunSuite {
     assert( rootMeanSquare(temp) == 3.0f )
   }
 
+  test("rootMeanSquare Int"){
+    val temp = DenseVector[Int](3, 5, 1, 1)
+    println(rootMeanSquare(temp))
+    assert( rootMeanSquare(temp) == 3d )
+  }
+
+  test("rootMeanSquare Long"){
+    val temp = DenseVector[Long](3L, 5L, 1L, 1L)
+    assert( rootMeanSquare(temp) == 3d )
+  }
+
 }
