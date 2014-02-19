@@ -218,7 +218,15 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
     */
   @throws(classOf[IOException])
   final def writeInt16(v: Array[Short]): Unit = {
-    rafObj.write( v.flatMap(converter.int16ToBytes(_)) )
+    val writeArr = new Array[Byte](v.length*2)
+    var currIndex = 0
+    for( cnt <- 0 until v.length ){
+      val x = converter.int16ToBytes( v(cnt) )
+      writeArr(currIndex) = x(0); currIndex += 1
+      writeArr(currIndex) = x(1); currIndex += 1
+    }
+    rafObj.write( writeArr )
+//    rafObj.write( v.flatMap(converter.int16ToBytes(_)) )
   }
   //</editor-fold>
 
