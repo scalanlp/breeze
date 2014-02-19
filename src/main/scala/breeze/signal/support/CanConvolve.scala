@@ -190,36 +190,23 @@ object CanConvolve extends Logging {
             range.start.toString, range.end.toString, range.step.toString, range.isInclusive.toString, data.length.toString, kernel.length.toString )
         )
 
-        val tempRangeVect = range.toVector
-        val tempArr = new Array[T](tempRangeVect.length)
+        val dataVect = data.toVector() //make immutable
+        val kernelVect = kernel.toVector()
+        val tempRange = range.par
+        val zero = 0.asInstanceOf[T]
 
-//        println("data.length: " + data.length)
-//        println("kernel.length: " + kernel.length)
-//        println("tempRangeVect.length: " + tempRangeVect.length)
-//        println("tempArr.length: " + tempArr.length)
-
-        for( count <- 0 until tempRangeVect.length){
-          var ki: Int = 0
-          var sum: T = 0.asInstanceOf[T]
-          val startTap = tempRangeVect(count)
-          while(ki < kernel.length){
-            sum += data( startTap + ki ) * kernel(ki)
-            ki += 1
+        val tempArr = tempRange.map(
+          (count: Int) => {
+            var ki: Int = 0
+            var sum = zero
+            while(ki < kernel.length){
+              sum = sum + dataVect( count + ki ) * kernelVect(ki)
+              ki = ki + 1
+            }
+            sum
           }
-          tempArr(count) = sum.asInstanceOf[T] //(sum: java.lang.Long).intValue() //sum.toInt
+        ).toArray
 
-        }
-//        DenseVector.tabulate(range)(
-//          di => {
-//            var ki: Int = 0
-//            var sum: T = 0
-//            while(ki < kernel.length){
-//              sum += data( (di + ki) ) * kernel(ki)
-//              ki += 1
-//            }
-//            sum
-//          }
-//        )
         DenseVector(tempArr)
       }
     }
@@ -234,35 +221,39 @@ object CanConvolve extends Logging {
             range.start.toString, range.end.toString, range.step.toString, range.isInclusive.toString, data.length.toString, kernel.length.toString )
         )
 
-        val dataL = convert(data, Long)
-        val kernelL = convert(kernel, Long)
+        val dataL = convert(data, Long).toVector() //make immutable
+        val kernelL = convert(kernel, Long).toVector()
 
-        val tempRangeVect = range.toVector
-        val tempArr = Array[Int](tempRangeVect.length)
-
-        for( count <- 0 until tempRangeVect.length){
-          var ki: Int = 0
-          var sum: Long = 0L
-          val startTap = tempRangeVect(count)
-          while(ki < kernel.length){
-            sum +=  dataL( startTap + ki ) * kernelL(ki)
-            ki += 1
+        val tempRange = range.par
+        val tempArr = tempRange.map(
+          (count: Int) => {
+            var ki: Int = 0
+            var sum = 0L
+            while(ki < kernel.length){
+              sum = sum + dataL( count + ki ) * kernelL(ki)
+              ki = ki + 1
+            }
+            sum.toInt
           }
-          tempArr(count) = sum.asInstanceOf[Int] //(sum: java.lang.Long).intValue() //sum.toInt
-       }
-//        DenseVector.tabulate(range)(
-//          di => {
-//            var ki: Int = 0
-//            var sum: Long = 0L
-//            while(ki < kernel.length){
-//              sum += dataL( (di + ki) ) * kernelL(ki)
-//              ki += 1
-//            }
-//            sum.toInt
+        ).toArray
+        DenseVector[Int]( tempArr )
+//        val tempRangeVect = range.toVector
+//        val tempArr = Array[Int](tempRangeVect.length)
+//
+//        var count = 0
+//        while( count < tempRangeVect.length ){
+//          var ki: Int = 0
+//          var sum: Long = 0L
+//          val startTap = tempRangeVect(count)
+//          while(ki < kernel.length){
+//            sum +=  dataL( startTap + ki ) * kernelL(ki)
+//            ki += 1
 //          }
-//        )
-
-        DenseVector(tempArr)
+//          tempArr(count) = sum.toInt
+//          count += 1
+//        }
+//
+//        DenseVector(tempArr)
       }
     }
 
