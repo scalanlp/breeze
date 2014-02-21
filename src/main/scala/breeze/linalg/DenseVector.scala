@@ -147,7 +147,7 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
    * @param fn
    * @tparam U
    */
-  override def foreach[U](fn: (E) => U) {
+  override def foreach[@specialized(Unit) U](fn: (E) => U) {
     var i = offset
     var j = 0
     while(j < length) {
