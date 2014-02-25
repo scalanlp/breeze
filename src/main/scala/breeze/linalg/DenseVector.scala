@@ -147,7 +147,7 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
    * @param fn
    * @tparam U
    */
-  override def foreach[U](fn: (E) => U) {
+  override def foreach[@specialized(Unit) U](fn: (E) => U) {
     var i = offset
     var j = 0
     while(j < length) {
@@ -540,7 +540,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   */
   @expand
   @expand.valify
-  implicit def canNorm[@expand.args(Int, Double, Float, Long, BigInt, Complex) T]: norm.Impl2[DenseVector[T], Double, Double] = {
+  implicit def canNorm[@expand.args(Int, Float, Long, BigInt, Complex) T]: norm.Impl2[DenseVector[T], Double, Double] = {
 
     new norm.Impl2[DenseVector[T], Double, Double] {
       def apply(v: DenseVector[T], n: Double): Double = {
@@ -566,6 +566,36 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     }
   }
 
+  /**
+   *  Returns the p-norm of this Vector (specialized for Double).
+   */
+  implicit def canNorm_Double: norm.Impl2[DenseVector[Double], Double, Double] = {
+    new norm.Impl2[DenseVector[Double], Double, Double] {
+      def apply(v: DenseVector[Double], p: Double): Double = {
+        if (p == 2) {
+          var sq = 0.0
+          v.foreach (x => sq += x * x)
+          math.sqrt(sq)
+        } else if (p == 1) {
+          var sum = 0.0
+          v.foreach (x => sum += x.abs)
+          sum
+        } else if (p == Double.PositiveInfinity) {
+          var max = 0.0
+          v.foreach (x => max = math.max(max, x.abs))
+          max
+        } else if (p == 0) {
+          var nnz = 0
+          v.foreach (x => if (x != 0) nnz += 1)
+          nnz
+        } else {
+          var sum = 0.0
+          v.foreach (x => sum += math.pow(x.abs, p))
+          math.pow(sum, 1.0 / p)
+        }
+      }
+    }
+  }
 
   implicit val space_d = TensorSpace.make[DenseVector[Double], Int, Double]
   implicit val space_f = TensorSpace.make[DenseVector[Float], Int, Float]
