@@ -248,6 +248,11 @@ object OpMulInner extends OpMulInner with UFunc {
   }
 }
 
+/**
+ * Type marker for zipping two vectors and then applying foreach.
+ */
+sealed trait OpZipForeachValues extends OpType
+object OpZipForeachValues extends OpZipForeachValues with UFunc
 
 /**
  * Type marker for BinaryOp A \ B when A is a matrix.

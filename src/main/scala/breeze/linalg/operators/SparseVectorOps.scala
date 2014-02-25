@@ -244,6 +244,47 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
     }
   }
 
+  @expand
+  @expand.valify
+  implicit def canZipForeachValues_DV_SV[@expand.args(Int, Double, Float, Long, BigInt, Complex) T](
+      implicit @expand.sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T)
+    : breeze.linalg.operators.OpZipForeachValues.InPlaceImpl3[DenseVector[T], SparseVector[T], (T, T) => Unit] = {
+    new breeze.linalg.operators.OpZipForeachValues.InPlaceImpl3[DenseVector[T], SparseVector[T], (T, T) => Unit] {
+      def apply(du: DenseVector[T], sv: SparseVector[T], fn: (T, T) => Unit) = {
+
+        val n = du.length
+        require(sv.length == n, "vector length mismatch")
+
+        val duData = du.data
+        val duStride = du.stride
+        var duOffset = du.offset
+
+        val svIndices = sv.index
+        val svValues = sv.data
+        val svActiveSize = sv.activeSize
+
+        var i = 0
+        var j = 0
+        while (j < svActiveSize) {
+          val svIndex = svIndices(j)
+          while (i < svIndex) {
+            fn(duData(duOffset), zero)
+            i += 1
+            duOffset += duStride
+          }
+          fn(duData(duOffset), svValues(j))
+          i += 1
+          duOffset += duStride
+          j += 1
+        }
+        while (i < n) {
+          fn(duData(duOffset), zero)
+          i += 1
+          duOffset += duStride
+        }
+      }
+    }
+  }
 
   @expand
   implicit def sv_dv_axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) T] (implicit  @expand.sequence[T](0, 0.0, 0f, 0l, BigInt(0), Complex.zero) zero: T):CanAxpy[T, SparseVector[T], DenseVector[T]] = new CanAxpy[T, SparseVector[T], DenseVector[T]] {

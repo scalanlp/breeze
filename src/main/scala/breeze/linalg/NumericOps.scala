@@ -82,6 +82,10 @@ trait NumericOps[+This] {
   /** Inner product of this and b. */
   final def dot [TT>:This,B,BB>:B, That](b : B)(implicit op : OpMulInner.Impl2[TT, BB, That]) = op(repr,b)
 
+  /** Zip foreach values of this and b. */
+  final def zipForeachValues [E, TT>:This, B, BB>:B](b : B, fn: (E, E) => Unit)
+      (implicit op: OpZipForeachValues.InPlaceImpl3[TT, BB, (E, E) => Unit]) = op(repr, b, fn)
+
   //
   // Operator aliases
   //
