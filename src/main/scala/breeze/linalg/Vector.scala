@@ -425,6 +425,34 @@ trait VectorOps { this: Vector.type =>
 
 
 
+  @expand
+  @expand.valify
+  implicit def zipValuesImpl_V_V[@expand.args(Int, Double, Float, Long, BigInt, Complex) T]: BinaryRegistry[Vector[T], Vector[T], zipValues.type, ZippedValues[T, T]] = {
+    new BinaryRegistry[Vector[T], Vector[T], zipValues.type, ZippedValues[T, T]]  {
+      protected override def bindingMissing(a: Vector[T], b: Vector[T]):ZippedValues[T, T] = {
+        require(a.length == b.length, "vector dimension mismatch")
+        ZippedVectorValues(a,b)
+      }
+    }
+  }
+
+  implicit def zipValuesSubclass[Vec1, Vec2, T, U](implicit view1: Vec1<:<Vector[T],
+                                                   view2: Vec2 <:< Vector[U],
+                                                   op: zipValues.Impl2[Vector[T], Vector[U], ZippedValues[T, U]]) = {
+    op.asInstanceOf[zipValues.Impl2[Vec1, Vec2, ZippedValues[T, U]]]
+  }
+
+  case class ZippedVectorValues[@specialized(Int, Double, Long, Float) T,
+                                @specialized(Int, Double, Long, Float) U](a: Vector[T], b: Vector[U]) extends ZippedValues[T, U] {
+    def foreach[A](f: (T, U) => A): Unit = {
+      var i = 0
+      while(i < a.length) {
+        f(a(i), b(i))
+        i += 1
+      }
+    }
+  }
+
 
 }
 

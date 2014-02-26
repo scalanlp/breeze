@@ -244,6 +244,57 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
     }
   }
 
+  @expand
+  @expand.valify
+  implicit def canZipForeachValues_DV_SV[@expand.args(Int, Double, Float, Long, BigInt, Complex) T](
+         implicit @expand.sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T)
+  : zipValues.Impl2[DenseVector[T], SparseVector[T], ZippedValues[T, T]] = {
+    val res = new zipValues.Impl2[DenseVector[T], SparseVector[T], ZippedValues[T, T]] {
+      def apply(du: DenseVector[T], sv: SparseVector[T]) = {
+        require(sv.length == du.length, "vector length mismatch")
+        new ZippedValues[T, T] {
+          def foreach[A](fn: (T, T) => A): Unit = {
+
+
+            val n = du.length
+
+            val duData = du.data
+            val duStride = du.stride
+            var duOffset = du.offset
+
+            val svIndices = sv.index
+            val svValues = sv.data
+            val svActiveSize = sv.activeSize
+
+            var i = 0
+            var j = 0
+            while (j < svActiveSize) {
+              val svIndex = svIndices(j)
+              while (i < svIndex) {
+                fn(duData(duOffset), zero)
+                i += 1
+                duOffset += duStride
+              }
+              fn(duData(duOffset), svValues(j))
+              i += 1
+              duOffset += duStride
+              j += 1
+            }
+            while (i < n) {
+              fn(duData(duOffset), zero)
+              i += 1
+              duOffset += duStride
+            }
+          }
+        }
+
+      }
+    }
+
+    implicitly[BinaryRegistry[Vector[T], Vector[T], zipValues.type, ZippedValues[T, T]]]
+
+    res
+  }
 
   @expand
   implicit def sv_dv_axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) T] (implicit  @expand.sequence[T](0, 0.0, 0f, 0l, BigInt(0), Complex.zero) zero: T):CanAxpy[T, SparseVector[T], DenseVector[T]] = new CanAxpy[T, SparseVector[T], DenseVector[T]] {
