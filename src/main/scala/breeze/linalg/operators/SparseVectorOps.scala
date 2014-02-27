@@ -246,7 +246,7 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
 
   @expand
   @expand.valify
-  implicit def canZipForeachValues_DV_SV[@expand.args(Int, Double, Float, Long, BigInt, Complex) T](
+  implicit def canZipValues_DV_SV[@expand.args(Int, Double, Float, Long, BigInt, Complex) T](
          implicit @expand.sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T)
   : zipValues.Impl2[DenseVector[T], SparseVector[T], ZippedValues[T, T]] = {
     val res = new zipValues.Impl2[DenseVector[T], SparseVector[T], ZippedValues[T, T]] {
@@ -254,7 +254,6 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
         require(sv.length == du.length, "vector length mismatch")
         new ZippedValues[T, T] {
           def foreach(fn: (T, T) => Unit): Unit = {
-
 
             val n = du.length
 
