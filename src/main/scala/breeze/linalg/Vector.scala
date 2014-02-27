@@ -444,7 +444,7 @@ trait VectorOps { this: Vector.type =>
 
   case class ZippedVectorValues[@specialized(Int, Double, Long, Float) T,
                                 @specialized(Int, Double, Long, Float) U](a: Vector[T], b: Vector[U]) extends ZippedValues[T, U] {
-    def foreach[A](f: (T, U) => A): Unit = {
+    def foreach(f: (T, U) => Unit): Unit = {
       var i = 0
       while(i < a.length) {
         f(a(i), b(i))

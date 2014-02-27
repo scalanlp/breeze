@@ -253,7 +253,7 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
       def apply(du: DenseVector[T], sv: SparseVector[T]) = {
         require(sv.length == du.length, "vector length mismatch")
         new ZippedValues[T, T] {
-          def foreach[A](fn: (T, T) => A): Unit = {
+          def foreach(fn: (T, T) => Unit): Unit = {
 
 
             val n = du.length
