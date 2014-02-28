@@ -10,6 +10,8 @@ import breeze.signal._
 import breeze.signal.OptRange.RangeOpt
 import breeze.numerics.isOdd
 import breeze.signal.OptRange.RangeOpt
+import scala.reflect.ClassTag
+import com.typesafe.scalalogging.slf4j.Logging
 
 //ToDo 1: provide convolve of Integer and other DenseVectors
 //ToDo 1: provide convolve of DenseMatrix
@@ -39,7 +41,7 @@ trait CanConvolve[Input, KernelType, Output] {
  *
  * @author ktakagaki
  */
-object CanConvolve {
+object CanConvolve extends Logging {
 
   @expand
   @expand.valify
@@ -182,43 +184,76 @@ object CanConvolve {
     new CanCorrelateNoOverhang[DenseVector[T], DenseVector[T], DenseVector[T]] {
       def apply(data: DenseVector[T], kernel: DenseVector[T], range: Range): DenseVector[T] = {
         require( data.length * kernel.length != 0, "data and kernel must be non-empty DenseVectors")
-        require( data.length >= kernel.length, "kernel cannot be longer than data to be convolved/correlated!")
+        require( data.length >= kernel.length, "kernel (" + kernel.length + ") cannot be longer than data(" + data.length + ") to be convolved/correlated!")
+        require( range.start >= 0 && range.last <= (data.length - kernel.length + 1),
+          logger.error("range (start {}, end {}, step {}, inclusive {}) is OOB for data (length {}) and kernel (length {})!",
+            range.start.toString, range.end.toString, range.step.toString, range.isInclusive.toString, data.length.toString, kernel.length.toString )
+        )
 
-        //println(range)
-        DenseVector.tabulate(range)(
-          di => {
+        val dataVect = data.toScalaVector() //make immutable
+        val kernelVect = kernel.toScalaVector()
+        val tempRange = range.par
+        val zero = 0.asInstanceOf[T]
+
+        val tempArr = tempRange.map(
+          (count: Int) => {
             var ki: Int = 0
-            var sum: T = 0
+            var sum = zero
             while(ki < kernel.length){
-              sum += data( (di + ki) ) * kernel(ki)
-              ki += 1
+              sum = sum + dataVect( count + ki ) * kernelVect(ki)
+              ki = ki + 1
             }
             sum
           }
-        )
+        ).toArray
 
+        DenseVector(tempArr)
       }
     }
 
-  implicit val correlateLoopNoOverhangRangeInt: CanCorrelateNoOverhang[DenseVector[Int], DenseVector[Int], DenseVector[Int]] =
+  implicit val correlateLoopNoOverhangRangeInt : CanCorrelateNoOverhang[DenseVector[Int], DenseVector[Int], DenseVector[Int]] =
     new CanCorrelateNoOverhang[DenseVector[Int], DenseVector[Int], DenseVector[Int]] {
       def apply(data: DenseVector[Int], kernel: DenseVector[Int], range: Range): DenseVector[Int] = {
         require( data.length * kernel.length != 0, "data and kernel must be non-empty DenseVectors")
-        require( data.length >= kernel.length, "kernel cannot be longer than data to be convolved/coorelated!")
+        require( data.length >= kernel.length, "kernel cannot be longer than data to be convolved/corelated!")
+        require( range.start >= 0 && range.last <= (data.length - kernel.length + 1),
+          logger.error("range (start {}, end {}, step {}, inclusive {}) is OOB for data (length {}) and kernel (length {})!",
+            range.start.toString, range.end.toString, range.step.toString, range.isInclusive.toString, data.length.toString, kernel.length.toString )
+        )
 
-        val dataL = data.map( _.toLong )
-        val kernelL = kernel.map(_.toLong)
-        DenseVector.tabulate(range)(
-          di => {
+        val dataL = convert(data, Long).toScalaVector() //make immutable
+        val kernelL = convert(kernel, Long).toScalaVector()
+
+        val tempRange = range.par
+        val tempArr = tempRange.map(
+          (count: Int) => {
             var ki: Int = 0
-            var sum: Long = 0L
+            var sum = 0L
             while(ki < kernel.length){
-              sum += dataL( (di + ki) ) * kernelL(ki)
-              ki += 1
+              sum = sum + dataL( count + ki ) * kernelL(ki)
+              ki = ki + 1
             }
             sum.toInt
           }
-        )
+        ).toArray
+        DenseVector[Int]( tempArr )
+//        val tempRangeVect = range.toVector
+//        val tempArr = Array[Int](tempRangeVect.length)
+//
+//        var count = 0
+//        while( count < tempRangeVect.length ){
+//          var ki: Int = 0
+//          var sum: Long = 0L
+//          val startTap = tempRangeVect(count)
+//          while(ki < kernel.length){
+//            sum +=  dataL( startTap + ki ) * kernelL(ki)
+//            ki += 1
+//          }
+//          tempArr(count) = sum.toInt
+//          count += 1
+//        }
+//
+//        DenseVector(tempArr)
       }
     }
 

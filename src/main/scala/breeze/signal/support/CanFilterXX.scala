@@ -59,7 +59,7 @@ object CanFilterBPBS {
             designFilterFirwin[Double]( taps, DenseVector[Double](omega._1, omega._2), zeroPass = bandStop, nyquist = sampleRate/2d)
           case x => {
             require(false, "Cannot handle option value "+ x)
-            new FIRKernel1D[Double](DenseVector[Double](), "null kernel!")
+            new FIRKernel1D[Double](DenseVector[Double](), 1d, "null kernel!")
           }
         }
 //        println(kernel)
@@ -95,7 +95,7 @@ object CanFilterLPHP {
             designFilterFirwin[Double]( taps, DenseVector[Double]( omega ), zeroPass = lowPass, nyquist = sampleRate/2d)
           case x => {
             require(false, "Cannot handle option value "+ x)
-            new FIRKernel1D[Double](DenseVector[Double](), "null kernel!")
+            new FIRKernel1D[Double](DenseVector[Double](), 1d, "null kernel!")
           }
         }
 

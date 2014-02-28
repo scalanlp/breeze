@@ -218,7 +218,15 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
     */
   @throws(classOf[IOException])
   final def writeInt16(v: Array[Short]): Unit = {
-    rafObj.write( v.flatMap(converter.int16ToBytes(_)) )
+    val writeArr = new Array[Byte](v.length*2)
+    var currIndex = 0
+    for( cnt <- 0 until v.length ){
+      val x = converter.int16ToBytes( v(cnt) )
+      writeArr(currIndex) = x(0); currIndex += 1
+      writeArr(currIndex) = x(1); currIndex += 1
+    }
+    rafObj.write( writeArr )
+//    rafObj.write( v.flatMap(converter.int16ToBytes(_)) )
   }
   //</editor-fold>
 
@@ -806,6 +814,14 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
     */
   override def skipBytes(n: Int): Int = rafObj.skipBytes(n)
 
+  /** like [[skipBytes]] but just jumps, does not return. For speed
+    */
+  def jumpBytes(n: Int): Unit = {
+    //Speed optimization
+    //rafObj.skipBytes(n)
+    rafObj.seek( rafObj.getFilePointer + n )
+  }
+
   /** Pass on to [[java.io.RandomAccessFile]]
     */
   def getFilePointer: Long = rafObj.getFilePointer
@@ -1054,12 +1070,92 @@ object ByteConverterLittleEndian extends ByteConverter  {
   override def bytesToUInt64Shifted(b0: Byte, b1 : Byte, b2 : Byte, b3 : Byte, b4 : Byte, b5 : Byte, b6 : Byte, b7 : Byte)
   = ByteConverterBigEndian.bytesToUInt64Shifted(b7, b6, b5, b4, b3, b2, b1, b0)
 
-  override def int16ToBytes(value: Short): Array[Byte]  = ByteConverterBigEndian.int16ToBytes(value).reverse
-  override def uInt16ToBytes(value: Char): Array[Byte]   = ByteConverterBigEndian.uInt16ToBytes(value).reverse
-  override def int32ToBytes(value: Int): Array[Byte]    = ByteConverterBigEndian.int32ToBytes(value).reverse
-  override def uInt32ToBytes(value: Long): Array[Byte]  = ByteConverterBigEndian.uInt32ToBytes(value).reverse
-  override def int64ToBytes(value: Long): Array[Byte]   = ByteConverterBigEndian.int64ToBytes(value).reverse
-  override def uInt64ToBytes(value: Long): Array[Byte]  = ByteConverterBigEndian.uInt64ToBytes(value).reverse
-  override def uInt64ShiftedToBytes(value: Long): Array[Byte] = ByteConverterBigEndian.uInt64ShiftedToBytes(value).reverse
+//reverse is pretty slow, time hog.
+//  override def int16ToBytes(value: Short): Array[Byte]  = ByteConverterBigEndian.int16ToBytes(value).reverse
+//  override def uInt16ToBytes(value: Char): Array[Byte]   = ByteConverterBigEndian.uInt16ToBytes(value).reverse
+//  override def int32ToBytes(value: Int): Array[Byte]    = ByteConverterBigEndian.int32ToBytes(value).reverse
+//  override def uInt32ToBytes(value: Long): Array[Byte]  = ByteConverterBigEndian.uInt32ToBytes(value).reverse
+//  override def int64ToBytes(value: Long): Array[Byte]   = ByteConverterBigEndian.int64ToBytes(value).reverse
+//  override def uInt64ToBytes(value: Long): Array[Byte]  = ByteConverterBigEndian.uInt64ToBytes(value).reverse
+//  override def uInt64ShiftedToBytes(value: Long): Array[Byte] = ByteConverterBigEndian.uInt64ShiftedToBytes(value).reverse
+  ///// XXXToByte /////
+  def int16ToBytes(value: Short): Array[Byte] = {
+    val tempret = new Array[Byte](2)
+    tempret(1) = (value >> 8).toByte
+    tempret(0) = (value & 0xFF).toByte
+    tempret
+  }
+
+  def uInt16ToBytes(value: Char): Array[Byte] = {
+    require(value <= 65535 && value >= 0, "Value " + value + " is out of range of 2-byte unsigned array.")
+
+    val tempret = new Array[Byte](2)
+    tempret(1) = ((value >> 8) & 0xFF).toByte
+    tempret(0) =  (value       & 0xFF).toByte
+    tempret
+  }
+
+  def int32ToBytes(value: Int): Array[Byte] = {
+    val tempret = new Array[Byte](4)
+    tempret(3) =  (value >> 24).toByte
+    tempret(2) = ((value >> 16) & 0xFF).toByte
+    tempret(1) = ((value >> 8)  & 0xFF).toByte
+    tempret(0) =  (value        & 0xFF).toByte
+    tempret
+  }
+
+  def uInt32ToBytes(value: Long): Array[Byte] = {
+    require(value <= 4294967295L && value >= 0L, "Value " + value + " is out of range of 4-byte unsigned array.")
+
+    val tempret = new Array[Byte](4)
+    tempret(3) = ((value >> 24) & 0xFF).toByte
+    tempret(2) = ((value >> 16) & 0xFF).toByte
+    tempret(1) = ((value >> 8)  & 0xFF).toByte
+    tempret(0) =  (value        & 0xFF).toByte
+    tempret
+  }
+
+  def int64ToBytes(value: Long): Array[Byte] = {
+    val tempret = new Array[Byte](8)
+    tempret(7) =  (value >> 56).toByte
+    tempret(6) = ((value >> 48) & 0xFF).toByte
+    tempret(5) = ((value >> 40) & 0xFF).toByte
+    tempret(4) = ((value >> 32) & 0xFF).toByte
+    tempret(3) = ((value >> 24) & 0xFF).toByte
+    tempret(2) = ((value >> 16) & 0xFF).toByte
+    tempret(1) = ((value >> 8)  & 0xFF).toByte
+    tempret(0) =  (value        & 0xFF).toByte
+    tempret
+  }
+
+  def uInt64ToBytes(value: Long): Array[Byte] = {
+    require(value >= 0, "Value " + value + " is out of range of 4-byte unsigned array.")
+
+    val tempret = new Array[Byte](8)
+    tempret(7) = ((value >> 56) & 0xFF).toByte
+    tempret(6) = ((value >> 48) & 0xFF).toByte
+    tempret(5) = ((value >> 40) & 0xFF).toByte
+    tempret(4) = ((value >> 32) & 0xFF).toByte
+    tempret(3) = ((value >> 24) & 0xFF).toByte
+    tempret(2) = ((value >> 16) & 0xFF).toByte
+    tempret(1) = ((value >> 8)  & 0xFF).toByte
+    tempret(0) =  (value        & 0xFF).toByte
+    tempret
+  }
+
+  def uInt64ShiftedToBytes(value: Long): Array[Byte] = {
+
+    val tempret = new Array[Byte](8)
+    tempret(7) = (((value >> 56) & 0xFF) ^ 0x80).toByte
+    tempret(6) = ((value >> 48) & 0xFF).toByte
+    tempret(5) = ((value >> 40) & 0xFF).toByte
+    tempret(4) = ((value >> 32) & 0xFF).toByte
+    tempret(3) = ((value >> 24) & 0xFF).toByte
+    tempret(2) = ((value >> 16) & 0xFF).toByte
+    tempret(1) = ((value >> 8)  & 0xFF).toByte
+    tempret(0) =  (value        & 0xFF).toByte
+    tempret
+  }
+
 
 }

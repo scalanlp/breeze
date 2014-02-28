@@ -256,14 +256,13 @@ package object signal {
                 scale: Boolean = true, multiplier: Double = 1d,
                 optWindow: OptWindowFunction = OptWindowFunction.Hamming()  )
                (implicit canFirwin: CanFirwin[Output]): FIRKernel1D[Output] =
-     canFirwin(taps, omegas, nyquist, zeroPass, scale, multiplier,
-                optWindow)
+     canFirwin(taps, omegas, nyquist, zeroPass, scale, multiplier, optWindow)
 
   def designFilterDecimation[Output](factor: Int, multiplier: Double = 1d,
                                      optDesignMethod: OptDesignMethod = OptDesignMethod.Firwin,
                                      optWindow: OptWindowFunction = OptWindowFunction.Hamming(),
                                      optFilterOrder: OptFilterTaps = OptFilterTaps.Automatic)
-                                (implicit canDesignFilterDecimation: CanDesignFilterDecimation[Output]): FilterKernel1D[Output] =
+                                (implicit canDesignFilterDecimation: CanDesignFilterDecimation[Output]): Output =
     canDesignFilterDecimation(factor, multiplier, optDesignMethod, optWindow, optFilterOrder)
 
   // </editor-fold>

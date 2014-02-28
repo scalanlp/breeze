@@ -112,8 +112,15 @@ object OptFilterTaps {
 /**slices specific result ranges out of results for convolve, etc*/
 abstract class OptRange extends Opt
 object OptRange {
-  case object All extends OptRange
-  case class RangeOpt(r: Range) extends OptRange
-  implicit def rangeToRangeOpt(r: Range) = RangeOpt( r )
+  case object All extends OptRange {
+    override def toString() = "OptRange.All"
+  }
+  case class RangeOpt(r: Range) extends OptRange {
+    override def toString() = "OptRange.RangeOpt( "+ r.start + ", "+ r.end+", "+r.step +"), isInclusive=" + r.isInclusive
+  }
+//  case class Single(i: Int) extends OptRange {
+//    override def toString() = "OptRange.Single("+ i +")"
+//  }
+  implicit def rangeToRangeOpt(r: Range) = OptRange.RangeOpt( r )
 }
 

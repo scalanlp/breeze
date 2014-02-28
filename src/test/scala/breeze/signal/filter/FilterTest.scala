@@ -27,13 +27,9 @@ class FilterTest  extends FunSuite {
 
 
     val firwin1 = designFilterFirwin[Double](11, DenseVector(0.25, 0.5), zeroPass = false )
-    //println(firwin1)
     assert( norm( spFirwin1 - firwin1.kernel) < testNormThreshold, "generated kernel is incorrect!" )
 
     val filtered1 = filterBP( testSignal, (0.25, 0.5), 11, overhang = OptOverhang.PreserveLength, padding = OptPadding.Zero )
-    //println( filtered1 )
-//    println( filter(testSignal, spFirwin1,  overhang = OptOverhang.PreserveLength, padding = OptPadding.Zero) )
-//    println( convolve(testSignal, spFirwin1, overhang = OptOverhang.PreserveLength, padding = OptPadding.Zero))
     assert( norm( filtered1(0 to -6) - spTestSignalFiltered1(5 to -1)) < testNormThreshold, "filtered result is incorrect!" )
 
 

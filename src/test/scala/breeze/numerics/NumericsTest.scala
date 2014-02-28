@@ -177,4 +177,24 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
     assert( norm( sincpi(testDV) - DenseVector(3.898171832519376E-17, 0.127323954473516, -3.898171832519376E-17, -0.212206590789194 ) ) < testThreshold)
   }
 
+  test("nextPower"){
+    assert( nextExponent10(0.05d) == -1d )
+    //assert( nextExponent10(0d) == Double.NegativeInfinity )
+    assert( nextExponent10(15d) == 2d )
+    assert( nextPower10(0.05d) == 0.1d )
+    //assert( nextPower10(0d) == 1d )
+    assert( nextPower10(15d) == 100d )
+
+    assert( nextExponent2(0.2) == -2d )
+    //assert( nextExponent2(0d) == Double.NegativeInfinity )
+    assert( nextExponent2(15d) == 4d )
+    assert( nextPower2(0.2d) == 0.25d )
+    //assert( nextPower2(0d) == 1d )
+    assert( nextPower2(15d) == 16d )
+  }
+
+  test("log"){
+    assert( log(2d, 4d) == 2d )
+    assert( log(3d, 81d) == 4d )
+  }
 }
