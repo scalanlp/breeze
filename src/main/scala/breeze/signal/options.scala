@@ -52,17 +52,17 @@ object OptWindowFunction {
 /**Option values: how to deal with convolution overhangs.*/
 abstract class OptOverhang extends Opt
 object OptOverhang{
-  /** THIS OPTION REMOVED FOR NOW, DUE TO AMBIGUITY WITH KERNEL DIRECTION (IE CONVOLVE VS CORRELATE)
-   * Option value: Forms the cyclic convolution whose first element contains data(0)*kernel(k0),
-    * and the last element contains data(-1)*kernel(k1).
-    *
-    * Common settings are:
-    * {-1, 1}: no overhangs (Default)
-    * {-1, -1}: maximal overhang at right hand end
-    * {1, 1}: maximal overhang at left hand end
-    * {1, -1}: maximal overhangs at both ends.
-    */
-  case class Sequence(k0: Int, k1: Int) extends OptOverhang
+//  /** THIS OPTION REMOVED FOR NOW, DUE TO AMBIGUITY WITH KERNEL DIRECTION (IE CONVOLVE VS CORRELATE)
+//   * Option value: Forms the cyclic convolution whose first element contains data(0)*kernel(k0),
+//    * and the last element contains data(-1)*kernel(k1).
+//    *
+//    * Common settings are:
+//    * {-1, 1}: no overhangs (Default)
+//    * {-1, -1}: maximal overhang at right hand end
+//    * {1, 1}: maximal overhang at left hand end
+//    * {1, -1}: maximal overhangs at both ends.
+//    */
+//  case class Sequence(k0: Int, k1: Int) extends OptOverhang
   /**Option value: Default, no overhangs, equivalent to Sequence(-1, 1).*/
   case object None extends OptOverhang
   /**Option value: maximal overhangs, equivalent to MatLab conv default ('full'), equivalent to Sequence(1, -1).*/
