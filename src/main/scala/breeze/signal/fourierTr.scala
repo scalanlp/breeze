@@ -133,10 +133,10 @@ object fourierTr extends UFunc {
 
   implicit val dvDouble1DFourierRange: Impl2[DenseVector[Double], Range, DenseVector[Complex]] = {
     new Impl2[DenseVector[Double], Range, DenseVector[Complex]] {
-      def apply(v: DenseVector[Double], rangeNegative: Range = Range(0, -1) ): DenseVector[Complex] = {
+      def apply(v: DenseVector[Double], rangeNegative: Range ): DenseVector[Complex] = {
 
         val range = rangeNegative.getRangeWithoutNegativeIndexes( v.length )
-
+        //ToDo check lengths and throw errors
 
         val tempret =
           for( k <- range ) yield {
