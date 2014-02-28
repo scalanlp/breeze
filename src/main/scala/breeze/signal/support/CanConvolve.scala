@@ -190,8 +190,8 @@ object CanConvolve extends Logging {
             range.start.toString, range.end.toString, range.step.toString, range.isInclusive.toString, data.length.toString, kernel.length.toString )
         )
 
-        val dataVect = data.toVector() //make immutable
-        val kernelVect = kernel.toVector()
+        val dataVect = data.toScalaVector() //make immutable
+        val kernelVect = kernel.toScalaVector()
         val tempRange = range.par
         val zero = 0.asInstanceOf[T]
 
@@ -221,8 +221,8 @@ object CanConvolve extends Logging {
             range.start.toString, range.end.toString, range.step.toString, range.isInclusive.toString, data.length.toString, kernel.length.toString )
         )
 
-        val dataL = convert(data, Long).toVector() //make immutable
-        val kernelL = convert(kernel, Long).toVector()
+        val dataL = convert(data, Long).toScalaVector() //make immutable
+        val kernelL = convert(kernel, Long).toScalaVector()
 
         val tempRange = range.par
         val tempArr = tempRange.map(
