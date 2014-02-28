@@ -90,15 +90,15 @@ object stddev extends UFunc {
  */
 object median extends UFunc {
   @expand
-  implicit def reduce[@expand.args(Int, Long, Double) T, Double]: Impl[DenseVector[T], Double] =
+  implicit def reduce[@expand.args(Int, Long, Double) T]: Impl[DenseVector[T], Double] =
   new Impl[DenseVector[T], Double] {
     def apply(v: DenseVector[T]): Double = {
-      val temp: DenseVector[Double] = convert(v)
+      val temp: DenseVector[Double] = convert(v, Double)
       val temp2 = temp.toScalaVector.sorted
-      if( isOdd(v.length) ) temp( (v.length - 1)/2 )
+      if( isOdd(v.length) ) temp2( (v.length - 1)/2 )
       else {
         val index2 = v.length/2
-        ( temp.apply(index2 -1) + temp.apply(index2) ).toDouble/2d
+        ( temp(index2 -1) + temp(index2) )/2d
       }
     }
   }
@@ -110,7 +110,7 @@ object median extends UFunc {
         if( isOdd(v.length) ) temp( (v.length - 1)/2 )
         else {
           val index2 = v.length/2
-          (temp(index2 -1) + temp(index2 + 1))/2f
+          (temp(index2 -1) + temp(index2))/2f
         }
       }
     }
