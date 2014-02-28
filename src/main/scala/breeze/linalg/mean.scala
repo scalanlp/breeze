@@ -5,6 +5,7 @@ import breeze.linalg.support.CanTraverseValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.macros.expand
 import breeze.math.Complex
+import breeze.numerics.isOdd
 
 /**
  * A [[breeze.generic.UFunc]] for computing the mean of objects
@@ -79,7 +80,39 @@ object variance extends UFunc {
  * Computes the standard deviation by calling variance and then sqrt'ing
  */
 object stddev extends UFunc {
-  implicit def reduceDouble[T](implicit mv: variance.Impl[T, Double]): Impl[T, Double] = new Impl[T, Double] {
-    def apply(v: T): Double = scala.math.sqrt(mv(v))
+  implicit def reduceDouble[T](implicit vari: variance.Impl[T, Double]): Impl[T, Double] = new Impl[T, Double] {
+    def apply(v: T): Double = scala.math.sqrt(vari(v))
   }
+}
+
+/**
+ * A [[breeze.generic.UFunc]] for computing the median of objects
+ */
+object median extends UFunc {
+  @expand
+  implicit def reduce[@expand.args(Int, Long, Double) T]: Impl[DenseVector[T], Double] =
+  new Impl[DenseVector[T], Double] {
+    def apply(v: DenseVector[T]): Double = {
+      val temp: DenseVector[Double] = convert(v, Double)
+      val temp2 = temp.toScalaVector.sorted
+      if( isOdd(v.length) ) temp2( (v.length - 1)/2 )
+      else {
+        val index2 = v.length/2
+        ( temp(index2 -1) + temp(index2) )/2d
+      }
+    }
+  }
+
+  implicit def reduceFloat: Impl[DenseVector[Float], Float] =
+    new Impl[DenseVector[Float], Float] {
+      def apply(v: DenseVector[Float]): Float = {
+        val temp = v.toScalaVector.sorted
+        if( isOdd(v.length) ) temp( (v.length - 1)/2 )
+        else {
+          val index2 = v.length/2
+          (temp(index2 -1) + temp(index2))/2f
+        }
+      }
+    }
+
 }

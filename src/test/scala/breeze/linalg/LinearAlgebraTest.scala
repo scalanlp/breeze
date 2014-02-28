@@ -221,6 +221,14 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
 //    assert( mean(data) == (1.0 + 1.0 * bmath.i), "complex mean incorrect")
 //  }
 
+  test("median") {
+    val dataOdd =  DenseVector(0,1,2,3,400000)
+    val dataEven =  DenseVector(0f,1f,2f,100f)
+
+    assert( median(dataOdd)==2, "median (odd length) should be 2 instead of "+ median(dataOdd))
+    assert( median(dataEven)==1.5f, "median (even length) should be 1.5f instead of "+ median(dataOdd))
+  }
+
   test("simple eig test") {
     val (w, _, v) = eig(diag(DenseVector(1.0, 2.0, 3.0)))
     assert(w === DenseVector(1.0, 2.0, 3.0))
