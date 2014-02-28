@@ -196,7 +196,7 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
   }
 
   /**Returns copy of this [[breeze.linalg.DenseVector]] as a [[scala.Vector]]*/
-  def toVector()(implicit cm: ClassTag[E]): scala.Vector[E] = this.toArray.toVector
+  def toScalaVector()(implicit cm: ClassTag[E]): scala.Vector[E] = this.toArray.toVector
 
 }
 
