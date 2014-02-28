@@ -1,15 +1,7 @@
 organization := "org.scalanlp"
 
-name := "breeze"
-
-lazy val (root,natives) = {
-  var r = project.in(file("."))
-  var n = project.in(file("natives")) 
-  r = r.aggregate(n).settings(aggregate in test := false, aggregate in compile := false)
-  n = n.dependsOn(r)
-  (r -> n)
-}
-
+// lazy val breeze = project in file("core")
+name := "breeze-natives"
 
 scalaVersion := "2.10.3"
 
@@ -59,20 +51,7 @@ scalacOptions ++= Seq("-deprecation","-language:_")
 
 
 libraryDependencies ++= Seq(
-  "org.scalanlp" %% "breeze-macros" % "0.2" % "compile",
-  "com.thoughtworks.paranamer" % "paranamer" % "2.2",
-  "com.github.fommil.netlib" % "core" % "1.1.2",
-  "net.sourceforge.f2j" % "arpack_combined_all" % "0.1",
-  "net.sf.opencsv" % "opencsv" % "2.3",
-  "com.github.rwl" % "jtransforms" % "2.4.0",
-   "org.apache.commons" % "commons-math3" % "3.2",
-   "org.scalacheck" %% "scalacheck" % "1.10.0" % "test",
-   "org.scalatest" %% "scalatest" % "2.0.M5b" % "test",
-    "com.typesafe" %% "scalalogging-slf4j" % "1.0.1",
-    "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.0-beta9" % "test",
-    "org.apache.logging.log4j" % "log4j-core" % "2.0-beta9" % "test",
-    "org.apache.logging.log4j" % "log4j-api" % "2.0-beta9" % "test",
-    "com.chuusai" % "shapeless_2.10.3" % "2.0.0-M1" % "test"
+  "com.github.fommil.netlib" % "all" % "1.1.2" pomOnly()
   )
 
 // see https://github.com/typesafehub/scalalogging/issues/23

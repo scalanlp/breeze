@@ -277,15 +277,21 @@ final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[
             found = true
         }
 
-        lastReturnedPos = mid
 
-        if (found || mid < 0)
+
+        // note: hold onto a local variable
+        // because multithreading
+        val result = if (found || mid < 0)
           mid
         // no match found,  insertion point
         else if (i <= index(mid))
           ~mid // Insert here (before mid)
         else
           ~(mid + 1) // Insert after mid
+
+        lastReturnedPos = result
+
+        result
       }
     }
   }
