@@ -16,11 +16,12 @@ package breeze
 */
 import io.{CSVWriter, CSVReader}
 import linalg.operators._
-import breeze.linalg.support.{CanAxpy, CanCopy}
-import math.Semiring
+import breeze.linalg.support.{PimpedTuple, CanAxpy, CanCopy}
+import breeze.math.{Complex, Semiring}
 import storage.DefaultArrayValue
 import java.io.{File, FileReader}
 import scala.reflect.ClassTag
+import breeze.linalg.DenseVector
 
 
 /**
@@ -266,6 +267,11 @@ package object linalg {
    */
   private def columnRMS(x: DenseMatrix[Double]) = 
     (sum(x:*x,Axis._0) / (x.rows-1.0)).map(scala.math.sqrt).toDenseVector
+
+
+  // tuple to DenseVector/DenseMatrix
+  implicit def tuplePimper( tuple: Product ) = new PimpedTuple(tuple)
+
 
 }
 
