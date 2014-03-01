@@ -17,11 +17,10 @@ package breeze
 import io.{CSVWriter, CSVReader}
 import linalg.operators._
 import breeze.linalg.support.{PimpedTuple, CanAxpy, CanCopy}
-import breeze.math.{Complex, Semiring}
+import breeze.math.Semiring
 import storage.DefaultArrayValue
 import java.io.{File, FileReader}
 import scala.reflect.ClassTag
-import breeze.linalg.DenseVector
 
 
 /**
