@@ -17,7 +17,7 @@ package breeze
 import io.{CSVWriter, CSVReader}
 import linalg.operators._
 import breeze.linalg.support.{PimpedTuple, CanAxpy, CanCopy}
-import breeze.math.Semiring
+import math.Semiring
 import storage.DefaultArrayValue
 import java.io.{File, FileReader}
 import scala.reflect.ClassTag
