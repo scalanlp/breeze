@@ -16,7 +16,7 @@ package breeze
 */
 import io.{CSVWriter, CSVReader}
 import linalg.operators._
-import breeze.linalg.support.{PimpedTuple, CanAxpy, CanCopy}
+import breeze.linalg.support.{LiteralRow, CanAxpy, CanCopy}
 import math.Semiring
 import storage.DefaultArrayValue
 import java.io.{File, FileReader}
@@ -268,8 +268,19 @@ package object linalg {
     (sum(x:*x,Axis._0) / (x.rows-1.0)).map(scala.math.sqrt).toDenseVector
 
 
-  // tuple to DenseVector/DenseMatrix
-  implicit def tuplePimper( tuple: Product ) = new PimpedTuple(tuple)
+  /**
+   * @author ktakagaki
+   * @author dlwh
+   * @date 3/1/14.
+   */
+  implicit class EnrichedTuple[Row, V]( tuple: Row)(implicit lr: LiteralRow[Row, V], ct: ClassTag[V], dav: DefaultArrayValue[V]) {
+    def v = {
+      val len = lr.length(tuple)
+      val dv = DenseVector.zeros[V](len)
+      lr.foreach(tuple, dv(_) = _)
+      dv
+    }
+  }
 
 
 }
