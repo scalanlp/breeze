@@ -31,6 +31,13 @@ import breeze.linalg.norm
 case class Complex(real : Double, imag : Double) {
   override def toString = real + " + " + imag + "i"
 
+  /** Redundant accessor method, placed for transparent interlink with MATLAB/Mathematica.
+    */
+  def re() = real
+  /** Redundant accessor method, placed for transparent interlink with MATLAB/Mathematica.
+    */
+  def im() = imag
+
   def +(that : Complex) =
     Complex(this.real + that.real, this.imag + that.imag)
 

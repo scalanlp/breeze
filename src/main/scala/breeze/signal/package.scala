@@ -256,15 +256,30 @@ package object signal {
                 scale: Boolean = true, multiplier: Double = 1d,
                 optWindow: OptWindowFunction = OptWindowFunction.Hamming()  )
                (implicit canFirwin: CanFirwin[Output]): FIRKernel1D[Output] =
-     canFirwin(taps, omegas, nyquist, zeroPass, scale, multiplier,
-                optWindow)
+     canFirwin(taps, omegas, nyquist, zeroPass, scale, multiplier, optWindow)
 
   def designFilterDecimation[Output](factor: Int, multiplier: Double = 1d,
                                      optDesignMethod: OptDesignMethod = OptDesignMethod.Firwin,
                                      optWindow: OptWindowFunction = OptWindowFunction.Hamming(),
                                      optFilterOrder: OptFilterTaps = OptFilterTaps.Automatic)
-                                (implicit canDesignFilterDecimation: CanDesignFilterDecimation[Output]): FilterKernel1D[Output] =
+                                (implicit canDesignFilterDecimation: CanDesignFilterDecimation[Output]): Output =
     canDesignFilterDecimation(factor, multiplier, optDesignMethod, optWindow, optFilterOrder)
+
+  // </editor-fold>
+
+  // <editor-fold defaultstate="collapsed" desc=" filterMedian ">
+
+  /** Median filter the input data.
+    * @param windowLength only supports odd windowLength values, since even values would cause half-frame time shifts in one or the other direction,
+    *                     and would also lead to floating point values even for integer input
+    * @param overhang specify OptOverhang.PreserveLength (default) or OptOverhang.None (result will be (windowLength -1) shorter)
+    *                 for OptOverhang.PreserveLength, the edges will feature symmetrical odd windows of increasing size,
+    *                 ie ( median( {0} ), median( {0, 1, 2} ), median( {0, 1, 2, 3, 4} )... )
+    */
+  def filterMedian[Input](data: DenseVector[Input], windowLength: Int, overhang: OptOverhang = OptOverhang.PreserveLength)
+                             (implicit canFilterMedian: CanFilterMedian[Input]): DenseVector[Input] =
+    canFilterMedian(data, windowLength, overhang)
+
 
   // </editor-fold>
 

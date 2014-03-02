@@ -27,16 +27,28 @@ class FilterTest  extends FunSuite {
 
 
     val firwin1 = designFilterFirwin[Double](11, DenseVector(0.25, 0.5), zeroPass = false )
-    //println(firwin1)
     assert( norm( spFirwin1 - firwin1.kernel) < testNormThreshold, "generated kernel is incorrect!" )
 
     val filtered1 = filterBP( testSignal, (0.25, 0.5), 11, overhang = OptOverhang.PreserveLength, padding = OptPadding.Zero )
-    //println( filtered1 )
-//    println( filter(testSignal, spFirwin1,  overhang = OptOverhang.PreserveLength, padding = OptPadding.Zero) )
-//    println( convolve(testSignal, spFirwin1, overhang = OptOverhang.PreserveLength, padding = OptPadding.Zero))
     assert( norm( filtered1(0 to -6) - spTestSignalFiltered1(5 to -1)) < testNormThreshold, "filtered result is incorrect!" )
 
 
   }
 
-}
+  test("filterMedian") {
+    val dataSmall = DenseVector.tabulate[Int](15)( p => p )
+    val result1 = filterMedian(dataSmall, 5, OptOverhang.None).toScalaVector
+    val result2 = filterMedian(dataSmall, 5, OptOverhang.PreserveLength).toScalaVector
+
+    assert( result1 == Array.tabulate[Int](11)( _ + 2 ).toVector, "median filter failed for small data and OptOverhang.None" )
+    assert( result2 == (Array(0, 1) ++ result1 ++ Array(13,14)).toVector, "median filter failed for small data and OptOverhang.PreserveLength" )
+
+    val dataLarge = DenseVector.tabulate[Float](100000)( p => p.toFloat )
+    val result3 = filterMedian(dataLarge, 5, OptOverhang.None).toScalaVector
+    val result4 = filterMedian(dataLarge, 5, OptOverhang.PreserveLength).toScalaVector
+    assert( result3 == Array.tabulate[Float](100000-4)( _ + 2 ).toVector, "median filter failed for large data and OptOverhang.None" )
+    assert( result4 == (Array(0f, 1f) ++ result3 ++ Array(99998f,99999f)).toVector, "median filter failed for large data and OptOverhang.PreserveLength" )
+
+  }
+
+  }
