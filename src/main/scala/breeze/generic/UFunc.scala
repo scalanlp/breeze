@@ -87,6 +87,19 @@ trait UFunc {
   }
 }
 
+object ImplProvider {
+  @implicitNotFound("Could not find an implicit implementation for ${Tag} with arguments ${V}")
+  trait UImplCls[U, @specialized(Int, Double, Float) V, @specialized(Int, Double, Float) +VR] {
+    def apply(k: U, v: V):VR
+  }
+}
+
+trait UFuncCls[U <: UFuncCls[U]] { self:U =>
+  final def apply[@specialized(Int, Double, Float) V,
+                  @specialized(Int, Double, Float) VR]
+                  (v: V)(implicit impl: ImplProvider.UImplCls[U,V,VR]):VR = impl(self,v)
+}
+
 trait MappingUFunc extends UFuncX { this: UFunc =>
 
 
@@ -184,5 +197,3 @@ object UFunc {
   }
 
 }
-
-
