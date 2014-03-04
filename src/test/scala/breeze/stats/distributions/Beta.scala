@@ -95,4 +95,5 @@ class BetaTest extends FunSuite with Checkers with MomentsTestBase[Double] /*wit
     assert(norm(d.pdf(x) - expectedResult) < 1e-8)
   }
 
+
 }
