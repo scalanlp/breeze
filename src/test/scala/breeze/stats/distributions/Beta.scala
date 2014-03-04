@@ -23,6 +23,7 @@ import org.scalacheck._;
 import org.junit.runner.RunWith
 
 import breeze.stats.DescriptiveStats._;
+import breeze.linalg.{DenseVector, DenseMatrix, norm}
 
 @RunWith(classOf[JUnitRunner])
 class BetaTest extends FunSuite with Checkers with MomentsTestBase[Double] /*with ExpFamTest[Beta,Double]*/ {
