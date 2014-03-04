@@ -81,5 +81,18 @@ class BetaTest extends FunSuite with Checkers with MomentsTestBase[Double] /*wit
     assert(dist.pdf(1) == 0)
   }
 
+  test("Beta.pdf works as a ufunc") {
+    val M = 100
+    val x = DenseVector.zeros[Double](M)
+    val expectedResult = DenseVector.zeros[Double](M)
+    var i=0
+    while (i < M) {
+      x(i) = (1.0/M)*i
+      expectedResult(i) = 2.0 - 2.0*x(i)
+      i += 1
+    }
+    val d = new Beta(1,2)
+    assert(norm(d.pdf(x) - expectedResult) < 1e-8)
+  }
 
 }
