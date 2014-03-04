@@ -14,6 +14,13 @@ trait DensePolynomial {
       def apply(k: PolyDenseUFuncWrapper, v: Double) = k.p(v)
     }
     implicit object denseVectorImpl extends Impl2[PolyDenseUFuncWrapper,DenseVector[Double],DenseVector[Double]] {
+      /* This implementation uses Horner's Algorithm:
+       *  http://en.wikipedia.org/wiki/Horner's_method
+       *
+       *  Iterating over the polynomial coefficients first and the
+       *  vector coefficients second is about 3x faster than
+       *  the other way around.
+       */
       def apply(k: PolyDenseUFuncWrapper, v: DenseVector[Double]) = {
         val coeffs: Array[Double] = k.p.coeffs
         var i = coeffs.length - 1
@@ -23,7 +30,6 @@ trait DensePolynomial {
           val c = coeffs(i)
           cfor(0)(j => j < result.size, j => j+1)( j => {
             result.unsafeUpdate(j, result.unsafeValueAt(j)*v.unsafeValueAt(j)+c)
-//            result.update(j, result.valueAt(j)*v.valueAt(j)+c)
           })
         }
         result
