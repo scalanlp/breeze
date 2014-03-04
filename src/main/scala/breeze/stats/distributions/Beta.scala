@@ -39,12 +39,23 @@ class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends Contin
     require(x <= 1)
     (a-1) * log(x) + (b-1) * log(1-x)
   }
-  
+
+  override def pdf(x: Double): Double = {
+    require(x >= 0)
+    require(x <= 1)
+    x match {
+      case 0.0 => if (a > 1) { 0 } else if (a == 1) { normalizer } else { Double.PositiveInfinity }
+      case 1.0 => if (b > 1) { 0 } else if (b == 1) { normalizer } else { Double.PositiveInfinity }
+      case x => math.exp(logPdf(x))
+    }
+  }
+
   val logNormalizer =  lgamma(a) + lgamma(b) - lgamma(a+b)
-  
+  private val normalizer = exp(-logNormalizer)
+
   private val aGamma = new Gamma(a,1)(rand)
   private val bGamma = new Gamma(b,1)(rand)
-  
+
   override def draw():Double = {
     // from tjhunter, a corrected version of numpy's rk_beta sampling in mtrand/distributions.c
     if(a <= .5 && b <= .5) {
@@ -91,14 +102,14 @@ class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends Contin
       ad / (ad + bd)
     }
   }
-  
+
   def mean = a / (a + b)
   def variance = (a * b) / ( (a + b) * (a+b) * (a+b+1))
   def mode = (a - 1) / (a+b - 2)
   def entropy = logNormalizer - (a - 1) * digamma(a) - (b-1) * digamma(b) + (a + b - 2) * digamma(a + b)
 }
 
-object Beta extends ExponentialFamily[Beta,Double] {
+object Beta extends ExponentialFamily[Beta,Double] with ContinuousDistributionUFuncProvider[Double,Beta] {
   type Parameter = (Double,Double)
   case class SufficientStatistic(n: Double, meanLog: Double, meanLog1M: Double) extends distributions.SufficientStatistic[SufficientStatistic]  {
     def *(weight: Double) = SufficientStatistic(n*weight,meanLog, meanLog1M)
