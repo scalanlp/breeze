@@ -1,4 +1,4 @@
 package breeze
 
-package object polynomial  {
+package object polynomial extends DensePolynomial {
 }
