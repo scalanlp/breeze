@@ -19,7 +19,7 @@ package breeze.polynomial
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
-import breeze.linalg.{DenseVector, norm}
+import breeze.linalg.{DenseVector, DenseMatrix, norm}
 import spire.math._
 import spire.math.poly._
 import spire.algebra._
@@ -33,6 +33,7 @@ import spire.implicits._
 class DensePolynomialTest extends FunSuite {
 
   test("PolyDenseUfuncWrapper applied to doubles") {
+    // Since polynomial has it's own .apply method, this is not very interesting.
     val p = Polynomial.dense(Array[Double](1,2,4))
     assert(p(0.0) == 1.0)
     assert(p(0.5) == 3.0)
@@ -50,5 +51,36 @@ class DensePolynomialTest extends FunSuite {
       result.update(j, 1+2*t+4*t*t+1*t*t*t+2*t*t*t*t)
     })
     assert(norm(p(x) - result) < 1e-10)
+  }
+
+  test("PolyDenseUfuncWrapper applied to diagonal dense matrix") {
+    val x = DenseMatrix.eye[Double](3) * 0.5
+    val p = Polynomial.dense(Array[Double](1,2,4))
+    val diff = p(x) - (DenseMatrix.eye[Double](3)*3.0)
+    assert(norm(diff.toDenseVector) < 1e-10)
+  }
+  test("PolyDenseUfuncWrapper applied to subdiagonal dense matrix") {
+    val p = Polynomial.dense(Array[Double](1,2,4))
+    var M = 100
+
+    val x = DenseMatrix.zeros[Double](M,M)
+    cfor(0)(i => i < M,i=>i+1)(i => { //   x is matrix with 1's just below the diagonal
+      cfor(0)(j => j < M,j=>j+1)(j => { // so x*x is matrix with row of 1's 2 below the diagonal, etc
+        if (j == i - 1) {
+          x.update(i,j,1.0)
+        }
+      })
+    })
+
+    val expectedResult = DenseMatrix.zeros[Double](M,M) // expected result easy to compute
+    cfor(0)(i => i < M,i=>i+1)(i => {
+      cfor(0)(j => j < M,j=>j+1)(j => {
+        if (j == i ) { expectedResult.update(i,j,1.0) }
+        if (j == i - 1) { expectedResult.update(i,j,2.0) }
+        if (j == i - 2) { expectedResult.update(i,j,4.0) }
+      })
+    })
+    val diff = p(x) - expectedResult
+    assert(norm(diff.toDenseVector) < 1e-10)
   }
 }
