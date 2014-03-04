@@ -51,7 +51,6 @@ trait DensePolynomial {
         val coeffs: Array[Double] = k.p.coeffs
         var i = coeffs.length - 1
         var result = DenseMatrix.eye[Double](n) * coeffs(i)
-        val iMat = DenseMatrix.eye[Double](n)
         while (i > 0) {
           i -= 1
           result = result*v //WILDLY INEFFICIENT, FIGURE OUT IN PLACE MULTIPLY
