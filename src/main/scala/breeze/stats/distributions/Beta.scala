@@ -109,7 +109,7 @@ class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends Contin
   def entropy = logNormalizer - (a - 1) * digamma(a) - (b-1) * digamma(b) + (a + b - 2) * digamma(a + b)
 }
 
-object Beta extends ExponentialFamily[Beta,Double] {
+object Beta extends ExponentialFamily[Beta,Double] with ContinuousDistributionUFuncProvider[Double,Beta] {
   type Parameter = (Double,Double)
   case class SufficientStatistic(n: Double, meanLog: Double, meanLog1M: Double) extends distributions.SufficientStatistic[SufficientStatistic]  {
     def *(weight: Double) = SufficientStatistic(n*weight,meanLog, meanLog1M)
