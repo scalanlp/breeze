@@ -51,7 +51,6 @@ class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends Contin
   }
 
   val logNormalizer =  lgamma(a) + lgamma(b) - lgamma(a+b)
-  private val normalizer = exp(-logNormalizer)
 
   private val aGamma = new Gamma(a,1)(rand)
   private val bGamma = new Gamma(b,1)(rand)

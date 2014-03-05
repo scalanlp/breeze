@@ -43,7 +43,8 @@ trait ContinuousDistr[T] extends Density[T] with Rand[T] {
   def unnormalizedPdf(x:T): Double = math.exp(unnormalizedLogPdf(x))
 
   def unnormalizedLogPdf(x:T): Double
-  def logNormalizer : Double
+  val logNormalizer : Double
+  lazy val normalizer: Double = math.exp(-logNormalizer) //Needs to be lazy to ensure that it is computed after logNormalizer. Suboptimal I guess.
 
   def apply(x:T) = unnormalizedPdf(x)
   override def logApply(x:T) = unnormalizedLogPdf(x)
