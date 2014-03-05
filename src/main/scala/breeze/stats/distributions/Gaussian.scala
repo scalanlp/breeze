@@ -60,7 +60,7 @@ case class Gaussian(mu :Double, sigma : Double)(implicit rand: RandBasis = Rand)
   }
 
   override lazy val normalizer = 1.0/sqrt(2 * Pi) / sigma
-  val logNormalizer = log(sqrt(2 * Pi)) + log(sigma)
+  lazy val logNormalizer = log(sqrt(2 * Pi)) + log(sigma)
 
   def mean = mu
   def variance = sigma * sigma

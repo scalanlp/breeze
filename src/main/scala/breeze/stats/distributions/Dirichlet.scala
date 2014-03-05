@@ -65,7 +65,7 @@ case class Dirichlet[T,@specialized(Int) I](params: T)(implicit space: TensorSpa
     parts.sum
   }
 
-  val logNormalizer = lbeta(params)
+  lazy val logNormalizer = lbeta(params)
 
   /**
    * Returns a Polya Distribution

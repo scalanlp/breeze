@@ -14,7 +14,7 @@ case class Exponential(rate: Double)(implicit basis: RandBasis=Rand) extends Con
 
   def unnormalizedLogPdf(x: Double) = - rate * x
 
-  val logNormalizer = - math.log(rate)
+  lazy val logNormalizer = - math.log(rate)
 
   def draw() = { for {
     x <- basis.uniform

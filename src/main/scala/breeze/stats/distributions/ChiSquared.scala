@@ -17,7 +17,7 @@ case class ChiSquared(k: Double)(implicit rand: RandBasis = Rand) extends Contin
 
   def unnormalizedLogPdf(x: Double): Double = innerGamma.unnormalizedLogPdf(x)
 
-  val logNormalizer: Double = innerGamma.logNormalizer
+  lazy val logNormalizer: Double = innerGamma.logNormalizer
 
   def mean: Double = innerGamma.mean
   def variance: Double = innerGamma.variance

@@ -28,7 +28,7 @@ case class LogNormal(mu: Double, sigma: Double)(implicit rand: RandBasis = Rand)
 
   def unnormalizedLogPdf(x: Double): Double = myGaussian.unnormalizedLogPdf(log(x))
 
-  val logNormalizer: Double = -sqrt(2 * math.Pi) * sigma
+  lazy val logNormalizer: Double = -sqrt(2 * math.Pi) * sigma
 
   /**
    * Computes the inverse cdf of the p-value for this gaussian.

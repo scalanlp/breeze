@@ -15,7 +15,7 @@ case class Uniform(low: Double, high: Double)(implicit rand: RandBasis = Rand) e
     logI(x >= low && x <= high)
   }
 
-  val logNormalizer = entropy
+  lazy val logNormalizer = entropy
 
   def mode = mean
 
