@@ -25,7 +25,7 @@ import util.Sorting
 */
 object DescriptiveStats {
   /**
-  * Returns the mean and variance of an iterator in a pair.
+  * Returns the mean, variance and count of an iterator in a pair.
   */
   def meanAndVariance[/*@specialized(Double, Float)*/ T ](it: TraversableOnce[T])(implicit frac: Fractional[T]) = {
     import frac.mkNumericOps
@@ -37,7 +37,7 @@ object DescriptiveStats {
       val s = oldVar + frac.fromInt(i-1) / frac.fromInt(i) * d *d
       (mu,s,i)
     }
-    (mu,if(n==1) frac.zero else s/frac.fromInt(n-1))
+    (mu,if(n==1) frac.zero else s/frac.fromInt(n-1),n)
   }
 
   /**
@@ -74,5 +74,42 @@ object DescriptiveStats {
       arr(i-1) + (f - i) * (arr(i) - arr(i-1))
     }
   }
+  
+  /**
+   * Returns both means and covariance between two vectors. Single pass algorithm.
+   * <p>
+   * Note:
+   * Will happily compute covariance between vectors of different lengths
+   * by truncating the longer vector.
+   * </p>
+   */
+  
+  def meanAndCov[T](it1 : TraversableOnce[T], it2 : TraversableOnce[T])(implicit frac: Fractional[T]) = {
+    implicit def t(it:TraversableOnce[T]) = it.toIterable //convert to an iterable for zip operation
+    import frac.mkNumericOps
+    //mu1(n-1), mu2(n-1), Cov(n-1), n-1
+    val (mu1,mu2,c,n) = (it1,it2).zipped.foldLeft( (frac.zero,frac.zero,frac.zero,frac.zero) ) {
+      (acc,y) => val(oldMu1,oldMu2,oldC,oldN) = acc
+      val newN = oldN + frac.fromInt(1)
+      val newMu1 = oldMu1 + ((y._1 - oldMu1) / newN)
+      val newMu2 = oldMu2 + ((y._2 - oldMu2) / newN)
+      val newC = oldC + ((y._1 - oldMu1)*(y._2 - newMu2))//compute covariance in single pass
+      (newMu1,newMu2,newC,newN)
+    }
+    if(n==1) (mu1,mu2,0) else (mu1,mu2,c/(n-frac.fromInt(1)))
+  }
 
+  /**
+   * Returns covariance between two vectors.
+   * <p>
+   * Note:
+   * Will happily compute covariance between vectors of different lengths
+   * by truncating the longer vector.
+   * </p>
+   */
+  
+  def cov[T](it1 : Iterable[T], it2 : Iterable[T])(implicit n: Fractional[T]) = {
+    meanAndCov(it1,it2)._3
+  }
+  
 }
