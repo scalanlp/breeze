@@ -30,13 +30,6 @@ class DescriptiveStatsTest extends WordSpec with ShouldMatchers {
       DescriptiveStats.cov(a,b) should be (2+(2.0/3))
       
     }
-//    "covariance should throw an IllegalArgumentException when lists are unequal lengths" in {
-//      val a = List(1.0,2.0,3.0)
-//      val b = List(1.0,2.0)
-//      intercept[IllegalArgumentException] {
-//        DescriptiveStats.cov(a,b)
-//      }
-//    }
   }
 
 
