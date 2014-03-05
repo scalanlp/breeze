@@ -14,6 +14,8 @@ class EnrichedTupleTest extends FunSuite {
     val testTuple2 = (0.0, 1.0, 2.0, 3.0, 4d).v
     assert( testTuple2 === DenseVector(0d, 1d, 2d, 3d, 4d) )
     //println(testTuple2)
+    val testTuple3 = (0, 1.5, 2, 3, 4).v
+    assert( testTuple3 === DenseVector(0d, 1d, 2d, 3d, 4d) )
 
   }
 
