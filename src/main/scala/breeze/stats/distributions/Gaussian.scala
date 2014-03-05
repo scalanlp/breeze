@@ -3,18 +3,18 @@ package distributions
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
- 
+
  Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
- You may obtain a copy of the License at 
- 
+ You may obtain a copy of the License at
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
- limitations under the License. 
+ limitations under the License.
 */
 
 
@@ -24,7 +24,7 @@ import math.{Pi,log1p}
 
 /**
  * Represents a Gaussian distribution over a single real variable.
- * 
+ *
  * @author dlwh
  */
 case class Gaussian(mu :Double, sigma : Double)(implicit rand: RandBasis = Rand)
@@ -38,7 +38,7 @@ case class Gaussian(mu :Double, sigma : Double)(implicit rand: RandBasis = Rand)
 
   /**
   * Computes the inverse cdf of the p-value for this gaussian.
-  * 
+  *
   * @param p: a probability in [0,1]
   * @return x s.t. cdf(x) = numYes
   */
@@ -54,11 +54,11 @@ case class Gaussian(mu :Double, sigma : Double)(implicit rand: RandBasis = Rand)
   */
   def cdf(x: Double) = .5 * (1 + erf( (x - mu)/Gaussian.sqrt2 / sigma))
 
-  override def unnormalizedLogPdf(t: Double) = { 
+  override def unnormalizedLogPdf(t: Double) = {
     val d = (t - mu)/sigma
     -d *d / 2.0
-  } 
-  
+  }
+
   val normalizer = 1.0/sqrt(2 * Pi) / sigma
   val logNormalizer = log(sqrt(2 * Pi)) + log(sigma)
 
@@ -68,7 +68,7 @@ case class Gaussian(mu :Double, sigma : Double)(implicit rand: RandBasis = Rand)
   def entropy = log(sigma) + .5 * log1p(log(math.Pi * 2))
 }
 
-object Gaussian extends ExponentialFamily[Gaussian,Double] {
+object Gaussian extends ExponentialFamily[Gaussian,Double] with ContinuousDistributionUFuncProvider[Double,Gaussian] {
   private val sqrt2 = math.sqrt(2.0)
 
   type Parameter = (Double,Double)

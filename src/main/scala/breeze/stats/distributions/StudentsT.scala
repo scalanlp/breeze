@@ -41,3 +41,5 @@ case class StudentsT(degreesOfFreedom: Double)(implicit randBasis: RandBasis = R
 
   def mode: Double = mean
 }
+
+object StudentsT extends ContinuousDistributionUFuncProvider[Double,StudentsT]

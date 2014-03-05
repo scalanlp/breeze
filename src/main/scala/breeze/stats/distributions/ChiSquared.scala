@@ -27,7 +27,7 @@ case class ChiSquared(k: Double)(implicit rand: RandBasis = Rand) extends Contin
   override def toString: String = ScalaRunTime._toString(this)
 }
 
-object ChiSquared extends ExponentialFamily[ChiSquared, Double] {
+object ChiSquared extends ExponentialFamily[ChiSquared, Double] with ContinuousDistributionUFuncProvider[Double,ChiSquared] {
   type Parameter = Double
   type SufficientStatistic = Gamma.SufficientStatistic
   def emptySufficientStatistic: ChiSquared.SufficientStatistic = Gamma.emptySufficientStatistic

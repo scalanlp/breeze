@@ -4,7 +4,7 @@ import runtime.ScalaRunTime
 import breeze.optimize.DiffFunction
 
 /**
- * 
+ *
  * @author dlwh
  */
 
@@ -21,7 +21,7 @@ case class Exponential(rate: Double)(implicit basis: RandBasis=Rand) extends Con
   } yield - math.log(x) / rate} get
 }
 
-object Exponential extends ExponentialFamily[Exponential,Double] {
+object Exponential extends ExponentialFamily[Exponential,Double] with ContinuousDistributionUFuncProvider[Double,Exponential] {
   type Parameter = Double
   case class SufficientStatistic(n: Double, v: Double) extends breeze.stats.distributions.SufficientStatistic[SufficientStatistic] {
     def +(t: SufficientStatistic) = copy(n + t.n, v + t.v)

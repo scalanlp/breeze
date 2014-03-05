@@ -55,7 +55,7 @@ case class LogNormal(mu: Double, sigma: Double)(implicit rand: RandBasis = Rand)
 }
 
 
-object LogNormal extends ExponentialFamily[LogNormal,Double] {
+object LogNormal extends ExponentialFamily[LogNormal,Double] with ContinuousDistributionUFuncProvider[Double,LogNormal] {
   type Parameter = (Double,Double)
 
   import Gaussian.SufficientStatistic
