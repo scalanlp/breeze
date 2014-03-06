@@ -23,6 +23,8 @@ import org.scalatest.matchers.ShouldMatchers
 import org.junit.runner.RunWith
 import breeze.util.DoubleImplicits
 import breeze.numerics._
+import breeze.math.{Complex}
+import breeze.{math => bmath}
 
 /**
  *
@@ -212,6 +214,19 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     assert(breeze.numerics.closeTo(v,1.0,1E-2), v + " should be 1")
     assert(m2 === m)
     assert(v2 === v)
+  }
+
+//  test("complex mean") {
+//    val data =  DenseVector[Complex]( (0.0 + 1.0 * bmath.i), (1.0 + 0.0 * bmath.i), (2.0 + 2.0 * bmath.i) )
+//    assert( mean(data) == (1.0 + 1.0 * bmath.i), "complex mean incorrect")
+//  }
+
+  test("median") {
+    val dataOdd =  DenseVector(0,1,2,3,400000)
+    val dataEven =  DenseVector(0f,1f,2f,100f)
+
+    assert( median(dataOdd)==2, "median (odd length) should be 2 instead of "+ median(dataOdd))
+    assert( median(dataEven)==1.5f, "median (even length) should be 1.5f instead of "+ median(dataOdd))
   }
 
   test("simple eig test") {

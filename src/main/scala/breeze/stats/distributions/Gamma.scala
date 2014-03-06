@@ -3,18 +3,18 @@ package distributions
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
- 
+
  Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
- You may obtain a copy of the License at 
- 
+ You may obtain a copy of the License at
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
- limitations under the License. 
+ limitations under the License.
 */
 
 import breeze.numerics._
@@ -34,6 +34,17 @@ case class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasi
   if(shape <= 0.0 || scale <= 0.0)
     throw new IllegalArgumentException("Shape and scale must be positive")
 
+  override def pdf(x:Double) = if (x > 0) {
+    math.exp(logPdf(x))
+  } else {
+    if (shape > 1.0) {
+      0.0
+    } else if (shape == 1.0) {
+      normalizer
+    } else {
+      Double.PositiveInfinity
+    }
+  }
 
   lazy val logNormalizer: Double = lgamma(shape) + shape * log(scale)
 
@@ -139,7 +150,7 @@ case class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasi
   def entropy = logNormalizer - (shape - 1) * digamma(shape) + shape
 }
 
-object Gamma extends ExponentialFamily[Gamma,Double] {
+object Gamma extends ExponentialFamily[Gamma,Double] with ContinuousDistributionUFuncProvider[Double,Gamma] {
   type Parameter = (Double,Double)
   import breeze.stats.distributions.{SufficientStatistic=>BaseSuffStat}
   case class SufficientStatistic(n: Double, meanOfLogs: Double, mean: Double) extends BaseSuffStat[SufficientStatistic] {

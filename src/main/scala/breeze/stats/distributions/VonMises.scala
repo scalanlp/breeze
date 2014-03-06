@@ -2,18 +2,18 @@ package breeze.stats.distributions
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
- 
+
  Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
- You may obtain a copy of the License at 
- 
+ You may obtain a copy of the License at
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
- limitations under the License. 
+ limitations under the License.
 */
 
 import breeze.numerics.Bessel
@@ -36,9 +36,9 @@ case class VonMises(mu: Double, k: Double)(implicit rand: RandBasis=Rand) extend
   require(mu <= math.Pi * 2 && mu >= 0, "Mu must be in the range [0,2pi]")
 
   override def unnormalizedLogPdf(theta:Double) = cos(theta - mu) * k
-  val logNormalizer = math.log(Bessel.i0(k) * 2* Pi)
+  lazy val logNormalizer = math.log(Bessel.i0(k) * 2* Pi)
 
-  private val r = { 
+  private val r = {
     val tau = 1.0 + sqrt(1.0 + 4.0 * k *k)
     val rho = (tau - sqrt(2.0 * tau)) / (2.0*k)
     (1.0 + rho * rho) / (2 * rho)
@@ -60,7 +60,7 @@ case class VonMises(mu: Double, k: Double)(implicit rand: RandBasis=Rand) extend
   def draw = {
     myRandom.draw
   }
-  
+
   override lazy val toString = "VonMises(mu=" + mu + ", k=" + k + ")"
 
   def mean = mu
@@ -153,7 +153,7 @@ object VonMises extends ExponentialFamily[VonMises,Double] {
     val sufStats = for {
       (o,count) <- obs.pairs
     } yield {
-      (count * cos(o),count * sin(o)) 
+      (count * cos(o),count * sin(o))
     }
     val cosineSum = sufStats.iterator.map(_._1) reduceLeft(_ + _)
     val sineSum = sufStats.iterator.map(_._2) reduceLeft( _ + _ )
@@ -161,12 +161,12 @@ object VonMises extends ExponentialFamily[VonMises,Double] {
     val mu = (muPart + {
       if(cosineSum < 0) Pi
       else if (cosineSum > 0 && sineSum < 0) 2 * Pi
-      else 0.0 
+      else 0.0
     } ) % (2 * Pi)
-    
+
     val t = sqrt(pow(cosineSum/obs.sum,2) + pow(sineSum / obs.sum,2))
     val k = (1.28 - 0.53*pow(t,2)) * tan(Pi/2*t)
-    
+
     /*
     val kx = {
       if(t < 0.53) t * (2 + t *t * (1 + 5 * t * t / 6))
@@ -177,4 +177,3 @@ object VonMises extends ExponentialFamily[VonMises,Double] {
   }
   */
 }
-

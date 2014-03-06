@@ -248,6 +248,38 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 
   }
 
+  @expand
+  @expand.valify
+  implicit def canZipValues_DV_DV[@expand.args(Int, Double, Float, Long, BigInt, Complex) T]()
+  : zipValues.Impl2[DenseVector[T], DenseVector[T], ZippedValues[T, T]] = {
+    val res = new zipValues.Impl2[DenseVector[T], DenseVector[T], ZippedValues[T, T]] {
+      def apply(v1: DenseVector[T], v2: DenseVector[T]) = {
+        val n = v1.length
+        require(v2.length == n, "vector length mismatch")
+        new ZippedValues[T, T] {
+          def foreach(fn: (T, T) => Unit) {
+            val data1 = v1.data
+            val stride1 = v1.stride
+            var offset1 = v1.offset
+            val data2 = v2.data
+            val stride2 = v2.stride
+            var offset2 = v2.offset
+            var i = 0
+            while (i < n) {
+              fn(data1(offset1), data2(offset2))
+              i += 1
+              offset1 += stride1
+              offset2 += stride2
+            }
+          }
+        }
+      }
+    }
+
+    implicitly[BinaryRegistry[Vector[T], Vector[T], zipValues.type, ZippedValues[T, T]]]
+
+    res
+  }
 
   @expand
   implicit def axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) V]: CanAxpy[V, DenseVector[V], DenseVector[V]] = {

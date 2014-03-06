@@ -5,6 +5,7 @@ import breeze.macros.expand
 import breeze.linalg.support.{CanTransformValues, CanMapValues, CanTraverseValues}
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 
+//ToDo: minMax function to find both in one go
 
 object max extends UFunc {
   @expand

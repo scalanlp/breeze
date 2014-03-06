@@ -4,7 +4,7 @@ name := "breeze"
 
 lazy val (root,natives) = {
   var r = project.in(file("."))
-  var n = project.in(file("natives")) 
+  var n = project.in(file("natives"))
   r = r.aggregate(n).settings(aggregate in test := false, aggregate in compile := false)
   n = n.dependsOn(r)
   (r -> n)
@@ -19,8 +19,8 @@ publishMavenStyle := true
 
 publishTo <<= version { (v: String) =>
   val nexus = "https://oss.sonatype.org/"
-  if (v.trim.endsWith("SNAPSHOT")) 
-    Some("snapshots" at nexus + "content/repositories/snapshots") 
+  if (v.trim.endsWith("SNAPSHOT"))
+    Some("snapshots" at nexus + "content/repositories/snapshots")
   else
     Some("releases"  at nexus + "service/local/staging/deploy/maven2")
 }
@@ -65,15 +65,16 @@ libraryDependencies ++= Seq(
   "net.sourceforge.f2j" % "arpack_combined_all" % "0.1",
   "net.sf.opencsv" % "opencsv" % "2.3",
   "com.github.rwl" % "jtransforms" % "2.4.0",
-   "org.apache.commons" % "commons-math3" % "3.2",
-   "org.scalacheck" %% "scalacheck" % "1.10.0" % "test",
-   "org.scalatest" %% "scalatest" % "2.0.M5b" % "test",
-    "com.typesafe" %% "scalalogging-slf4j" % "1.0.1",
-    "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.0-beta9" % "test",
-    "org.apache.logging.log4j" % "log4j-core" % "2.0-beta9" % "test",
-    "org.apache.logging.log4j" % "log4j-api" % "2.0-beta9" % "test",
-    "com.chuusai" % "shapeless_2.10.3" % "2.0.0-M1" % "test"
-  )
+  "org.apache.commons" % "commons-math3" % "3.2",
+  "org.spire-math" %% "spire" % "0.7.1",
+  "org.scalacheck" %% "scalacheck" % "1.10.0" % "test",
+  "org.scalatest" %% "scalatest" % "2.0.M5b" % "test",
+  "com.typesafe" %% "scalalogging-slf4j" % "1.0.1",
+  "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.0-beta9" % "test",
+  "org.apache.logging.log4j" % "log4j-core" % "2.0-beta9" % "test",
+  "org.apache.logging.log4j" % "log4j-api" % "2.0-beta9" % "test",
+  "com.chuusai" % "shapeless_2.10.3" % "2.0.0-M1" % "test"
+)
 
 // see https://github.com/typesafehub/scalalogging/issues/23
 testOptions in Test += Tests.Setup(classLoader =>

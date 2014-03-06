@@ -248,7 +248,6 @@ object OpMulInner extends OpMulInner with UFunc {
   }
 }
 
-
 /**
  * Type marker for BinaryOp A \ B when A is a matrix.
  *
