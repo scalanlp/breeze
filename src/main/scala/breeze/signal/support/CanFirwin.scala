@@ -47,9 +47,6 @@ object CanFirwin {
     }
   }
 
-  /** Use via implicit delegate syntax firwin(xxxx)
-    *
-    */
   @expand
   implicit def firwinT[@expand.args(Int, Long, Float) T]: CanFirwin[T] = {
     new CanFirwin[T] {
