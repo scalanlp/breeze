@@ -24,7 +24,7 @@ trait DensePolynomial {
       def apply(k: PolyDenseUFuncWrapper, v: DenseVector[Double]) = {
         val coeffs: Array[Double] = k.p.coeffs
         var i = coeffs.length - 1
-        var result = DenseVector.fill[Double](v.size, coeffs(i))
+        val result = DenseVector.fill[Double](v.size, coeffs(i))
         while (i > 0) {
           i -= 1
           val c = coeffs(i)
