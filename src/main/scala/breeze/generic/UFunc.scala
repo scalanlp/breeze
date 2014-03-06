@@ -87,10 +87,18 @@ trait UFunc {
   }
 }
 
+trait VariableUFunc[U <: UFunc, T <: VariableUFunc[U,T]] { self:T =>
+  final def apply[@specialized(Int, Double, Float) V,
+                  @specialized(Int, Double, Float) VR]
+                  (v: V)(implicit impl: UFunc.UImpl2[U,T,V,VR]):VR = impl(self, v)
+
+  final def apply[@specialized(Int, Double, Float) V1,
+                  @specialized(Int, Double, Float) V2,
+                  @specialized(Int, Double, Float) VR]
+                   (v1: V1, v2: V2)(implicit impl: UFunc.UImpl3[U,T,V1, V2, VR]):VR = impl(self, v1, v2)
+}
+
 trait MappingUFunc extends UFuncX { this: UFunc =>
-
-
-
 }
 
 trait UFuncX extends UFuncZ { this: UFunc =>
@@ -184,5 +192,3 @@ object UFunc {
   }
 
 }
-
-
