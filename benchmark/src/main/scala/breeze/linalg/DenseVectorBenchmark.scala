@@ -1,4 +1,4 @@
-package breeze.benchmark.linalg
+package breeze.linalg
 
 import breeze.benchmark._
 

@@ -42,6 +42,19 @@ trait BreezeBenchmark extends SimpleBenchmark {
     }
     result.get
   }
+
+  def runWith2[A,B,C](reps: Int, constructor: =>B, constructor2: =>C)(f: (B,C)=>A): A = {
+    if (reps < 1) sys.error("!")
+    var i=0
+    var result: Option[A] = None
+    val obj1: B = constructor
+    val obj2: C = constructor2
+    while (i < reps) {
+      result = Some(f(obj1, obj2))
+      i += 1
+    }
+    result.get
+  }
 }
 
 /**
