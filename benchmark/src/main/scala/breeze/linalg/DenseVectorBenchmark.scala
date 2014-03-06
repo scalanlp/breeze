@@ -16,10 +16,22 @@ trait BuildsRandomVectors {
     val result = DenseVector.zeros[Double](size)
     var i=0;
     while (i < size) {
-      result.update(i, uniform.draw())
+      result.unsafeUpdate(i, uniform.draw())
       i += 1
     }
     result
+  }
+
+  def randomMatrix(m: Int, n: Int): DenseMatrix[Double] = {
+    require(m > 0)
+    require(n > 0)
+    val d = new Array[Double](m*n)
+    var i = 0
+    while (i < m*n) {
+      d(i) = uniform.draw()
+      i += 1
+    }
+    return new DenseMatrix(m, n, d, 0, 1)
   }
 }
 

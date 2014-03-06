@@ -26,4 +26,9 @@ class DensePolynomialBenchmark extends BreezeBenchmark with BuildsRandomVectors 
   def timePolyOnDenseVector(reps: Int) = runWith2(reps, { randomPoly(10) }, {randomArray(1024*4) })( (poly, arr) => {
     poly(arr)
   })
+
+  def timePolyOnDenseMatrix(reps: Int) = runWith2(reps, { randomPoly(10) }, {randomMatrix(256,256) })( (poly, arr) => {
+    poly(arr)
+  })
+
 }
