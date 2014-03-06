@@ -269,7 +269,7 @@ class HashVectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[HashVecto
 class HashVectorOps_FloatTest extends TensorSpaceTestBase[HashVector[Float], Int, Float] {
  val space: TensorSpace[HashVector[Float], Int, Float] = implicitly
 
-  override val TOL: Double = 1E-4
+  override val TOL: Double = 1E-2
   val N = 30
   implicit def genTriple: Arbitrary[(HashVector[Float], HashVector[Float], HashVector[Float])] = {
     Arbitrary {
