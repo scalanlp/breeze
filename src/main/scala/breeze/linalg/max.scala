@@ -9,7 +9,10 @@ import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 
 object max extends UFunc {
   @expand
-  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S](implicit iter: CanTraverseValues[T, S], @expand.sequence[S](Int.MinValue, Double.NegativeInfinity, Float.NegativeInfinity, Long.MinValue) init: S): Impl[T, S] = new Impl[T, S] {
+  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S]
+            (implicit iter: CanTraverseValues[T, S],
+             @expand.sequence[S](Int.MinValue, Double.NegativeInfinity, Float.NegativeInfinity, Long.MinValue) init: S): Impl[T, S] = new Impl[T, S] {
+
     def apply(v: T): S = {
       class SumVisitor extends ValuesVisitor[S] {
         var max = init
@@ -75,11 +78,15 @@ object max extends UFunc {
  */
 object min extends UFunc {
   @expand
-  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S](implicit iter: CanTraverseValues[T, S], @expand.sequence[S](Int.MaxValue, Double.PositiveInfinity, Float.PositiveInfinity, Long.MaxValue) init: S): Impl[T, S] = new Impl[T, S] {
+  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S]
+            (implicit iter: CanTraverseValues[T, S],
+             @expand.sequence[S](Int.MaxValue, Double.PositiveInfinity, Float.PositiveInfinity, Long.MaxValue) init: S): Impl[T, S] = new Impl[T, S] {
+
     def apply(v: T): S = {
       class MinVisitor extends ValuesVisitor[S] {
         var min = init
         var visitedOne = false
+
         def visit(a: S): Unit = {
           visitedOne = true
           min = scala.math.min(min, a)
@@ -116,6 +123,63 @@ object min extends UFunc {
   }
 }
 
+  /**
+ * Computes the minimum.
+ */
+  object minMax extends UFunc {
+
+    @expand
+    implicit def reduce[@expand.args(Int, Double, Float, Long) T]
+    (implicit iter: CanTraverseValues[T, DenseVector[T]],
+      @expand.sequence[T]( DenseVector(Int.MinValue, Int.MaxValue), DenseVector(Double.NegativeInfinity, Double.PositiveInfinity),
+        DenseVector(Float.NegativeInfinity,Float.PositiveInfinity), DenseVector(Long.MinValue, Long.MaxValue) ) initMinMax: DenseVector[T]): Impl[T, DenseVector[T]] = new Impl[T, DenseVector[T]] {
+
+    def apply(v: T): DenseVector[T] = {
+
+      class MinMaxVisitor extends ValuesVisitor[T] {
+        var minMax = initMinMax
+        var visitedOne = false
+
+        def visit(a: DenseVector[T]): Unit = {
+          visitedOne = true
+          minMax(0) = scala.math.min(minMax(0), a(0))
+          minMax(1) = scala.math.max(minMax(1), a(1))
+        }
+
+        def zeros(numZero: Int, zeroValue: DenseVector[T]): Unit = {
+          if(numZero != 0) {
+            visitedOne = true
+            minMax(0) = scala.math.min(zeroValue(0), minMax(0))
+            minMax(1) = scala.math.max(zeroValue(1), minMax(1))
+          }
+        }
+
+        override def visitArray(arr: Array[T], offset: Int, length: Int, stride: Int): Unit = {
+          var i = 0
+          var off = offset
+          while(i < length) {
+            visitedOne = true
+            minMax(0) = scala.math.min(minMax(0), arr(off))
+            minMax(1) = scala.math.max(minMax(1), arr(off))
+            i += 1
+            off += stride
+          }
+        }
+
+      }
+
+      val visit = new MinMaxVisitor
+
+      iter.traverse(v, visit)
+      if(!visit.visitedOne) throw new IllegalArgumentException(s"No values in $v!")
+
+      visit.minMax
+
+    }}
+
+  }
+
+
 /**
  * clip(a, lower, upper) returns an array such that all elements are "clipped" at the range (lower, upper)
  */
@@ -140,11 +204,14 @@ object clip extends UFunc {
 }
 
 
-
-
+/** Peak-to-peak, ie the Range of values (maximum - minimum) along an axis.
+  */
 object ptp extends UFunc {
   @expand
-  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S](implicit iter: CanTraverseValues[T, S], @expand.sequence[S](Int.MinValue, Double.NegativeInfinity, Float.NegativeInfinity, Long.MinValue) init: S): Impl[T, S] = new Impl[T, S] {
+  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S]
+  (implicit iter: CanTraverseValues[T, S],
+   @expand.sequence[S](Int.MinValue, Double.NegativeInfinity, Float.NegativeInfinity, Long.MinValue) init: S): Impl[T, S] = new Impl[T, S] {
+
     def apply(v: T): S = {
       class SumVisitor extends ValuesVisitor[S] {
         var max = init
