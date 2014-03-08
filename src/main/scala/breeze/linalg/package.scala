@@ -285,7 +285,8 @@ package object linalg {
 //  }
 
   @arityize(22)
-  implicit def tupleToDenseVecor[@arityize.replicate V](  tuple: Tuple[V @arityize.repeat]  ) = new TupleToDenseVector[V @arityize.repeat](tuple)
+  @arityize.replicate
+  implicit def tupleToDenseVector(  tuple: Tuple @arityize.relative(tupletoDenseVector)  ) = new TupleToDenseVector @arityize.relative(tupletoDenseVector) (tuple)
 
 
 }
