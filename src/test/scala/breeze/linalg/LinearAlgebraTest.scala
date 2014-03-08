@@ -24,6 +24,7 @@ import org.junit.runner.RunWith
 import breeze.util.DoubleImplicits
 import breeze.numerics._
 import breeze.math.{Complex}
+import breeze.stats.{mean, median, meanAndVariance}
 import breeze.{math => bmath}
 
 /**
@@ -208,8 +209,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
   test("mean and variance") {
     val r = new Random(0)
     val data =  Array.fill(100000)(r.nextGaussian)
-    val (m,v) = meanAndVariance(data)
-    val (m2,v2) = meanAndVariance(data.iterator)
+    val (m,v,_) = meanAndVariance(data)
+    val (m2,v2,_) = meanAndVariance(data.iterator)
     assert(breeze.numerics.closeTo(m,0.0,1E-2), m + " should be 0")
     assert(breeze.numerics.closeTo(v,1.0,1E-2), v + " should be 1")
     assert(m2 === m)
@@ -268,7 +269,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
   test("csc svd"){
     val m1 = DenseMatrix((2.0,4.0),(1.0,3.0),(0.0,0.0),(0.0,0.0))
     val m2 = CSCMatrix((2.0,4.0),(1.0,3.0),(0.0,0.0),(0.0,0.0))
-    
+
     val (u1, s1, vt1) = svd(m1)
 
     val (u2,s2,vt2) = svd(m2,2)

@@ -1,7 +1,8 @@
 package breeze.signal.support
 
 import breeze.signal.{filterMedian, OptOverhang}
-import breeze.linalg.{convert, median, DenseVector}
+import breeze.stats._
+import breeze.linalg.{convert, DenseVector}
 import breeze.macros.expand
 import scala.collection.mutable
 import breeze.numerics.isOdd
@@ -194,6 +195,3 @@ object CanFilterMedian {
 
 
 }
-
-
-
