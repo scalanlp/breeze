@@ -273,12 +273,16 @@ package object linalg {
    * @author dlwh
    * @date 3/1/14.
    */
-  implicit class EnrichedTuple[Row, V]( tuple: Row)(implicit lr: LiteralRow[Row, V], ct: ClassTag[V], dav: DefaultArrayValue[V]) {
+  implicit class EnrichedTuple[Row, V]( tuple: Row )(implicit lr: LiteralRow[Row, V], ct: ClassTag[V], dav: DefaultArrayValue[V]) {
     def v = {
       val len = lr.length(tuple)
-      val dv = DenseVector.zeros[V](len)
-      lr.foreach(tuple, dv(_) = _)
+      val maxType = lr.maxElementType(tuple)
+
+      val dv = DenseVector.zeros[ maxType ](len)
+
+      lr.foreach[ maxType ](tuple, dv(_) = _)
       dv
+
     }
   }
 
