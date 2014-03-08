@@ -16,9 +16,6 @@ trait CanFilterMedian[Input] {
 
 object CanFilterMedian {
 
-  /** Use via implicit delegate syntax filterBP(x: DenseVector) and filterBS(x: DenseVector)
-    *
-    */
   //Int, Long and Float will calculate in Double (see algorithm, needs infinitesimal small numbers for ordering)
   @expand
   implicit def dvFilterMedianT[@expand.args(Int, Long, Float) T]: CanFilterMedian[T] = {

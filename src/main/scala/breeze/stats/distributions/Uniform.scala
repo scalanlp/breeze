@@ -3,7 +3,7 @@ package breeze.stats.distributions
 import breeze.numerics._
 
 /**
- * 
+ *
  * @author dlwh
  */
 
@@ -15,7 +15,7 @@ case class Uniform(low: Double, high: Double)(implicit rand: RandBasis = Rand) e
     logI(x >= low && x <= high)
   }
 
-  def logNormalizer = entropy
+  lazy val logNormalizer = entropy
 
   def mode = mean
 
@@ -23,3 +23,5 @@ case class Uniform(low: Double, high: Double)(implicit rand: RandBasis = Rand) e
   def variance = math.pow(high - low,2)/12
   def entropy = math.log(high - low)
 }
+
+object Uniform extends ContinuousDistributionUFuncProvider[Double,Uniform]

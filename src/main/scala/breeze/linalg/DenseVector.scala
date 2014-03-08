@@ -69,11 +69,13 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
     data(offset + trueI * stride)
   }
 
-  def update(i: Int, v: E) {
+  def update(i: Int, v: E) = {
     if(i < - size || i >= size) throw new IndexOutOfBoundsException(i + " not in [-"+size+","+size+")")
     val trueI = if(i<0) i+size else i
     data(offset + trueI * stride) = v
   }
+
+  def unsafeUpdate(i: Int, v: E) = { data(offset + i * stride) = v }
 
   def activeIterator = iterator
 
@@ -117,6 +119,11 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
    * @return apply(i)
    */
   def valueAt(i: Int): E = apply(i)
+
+  /**
+    * Unsafe version of above, a way to skip the checks.
+    */
+  def unsafeValueAt(i: Int): E = data(offset + i * stride)
 
   /**
    * Gives the logical index from the physical index.
@@ -216,13 +223,14 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
 
 
   def apply[@spec(Double, Float, Int) V](values: Array[V]) = new DenseVector(values)
-  def ones[@spec(Double, Float, Int) V: ClassTag:Semiring](size: Int) = {
+  def ones[@spec(Double, Float, Int) V: ClassTag:Semiring](size: Int) = fill[V](size, implicitly[Semiring[V]].one)
+
+  def fill[@spec(Double, Float, Int) V: ClassTag:Semiring](size: Int, v: V) = {
     val r = apply(new Array[V](size))
     assert(r.stride == 1)
-    ArrayUtil.fill(r.data, r.offset, r.length, implicitly[Semiring[V]].one)
+    ArrayUtil.fill(r.data, r.offset, r.length, v)
     r
   }
-
 
     // concatenation
   /**
@@ -425,14 +433,14 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
       }
     }
   }
-  
+
   implicit def canTransposeComplex: CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] = {
     new CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] {
       def apply(from: DenseVector[Complex]) = {
-        new DenseMatrix(data = from.data map { _.conjugate }, 
-                        offset = from.offset, 
-                        cols = from.length, 
-                        rows = 1, 
+        new DenseMatrix(data = from.data map { _.conjugate },
+                        offset = from.offset,
+                        cols = from.length,
+                        rows = 1,
                         majorStride = from.stride)
       }
     }
@@ -530,6 +538,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
 
   implicit val canSetD: OpSet.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = new OpSet.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
     def apply(a: DenseVector[Double], b: DenseVector[Double]) {
+      require(a.length == b.length, "Vector lengths must match!")
       blas.dcopy(
         a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
     }
@@ -622,4 +631,3 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   @noinline
   private def init() = {}
 }
-
