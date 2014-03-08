@@ -10,9 +10,9 @@ import breeze.math._
 import spire.implicits._
 
 package object financial {
-  sealed trait PaymentTime
-  case object Start extends PaymentTime
-  case object End extends PaymentTime
+  sealed class PaymentTime(val t: Int)
+  case object Start extends PaymentTime(1)
+  case object End extends PaymentTime(0)
 
   def futureValue(rate: Double, numPeriods: Int, payment:Double, presentValue: Double, when: PaymentTime = End):Double = {
     require(numPeriods >= 0)
@@ -20,10 +20,7 @@ package object financial {
       -1*(presentValue+payment*numPeriods)
     } else {
       val fromPv = presentValue * math.pow(1.0+rate, numPeriods)
-      val fromPayments = when match {
-        case Start => payment*((1.0+rate)/rate)*(math.pow(1.0+rate, numPeriods)-1.0)
-        case End => payment*(1.0/rate)*(math.pow(1.0+rate, numPeriods)-1.0)
-      }
+      val fromPayments = payment*((1.0+rate*when.t)/rate)*(math.pow(1.0+rate, numPeriods)-1.0)
       -1*(fromPv + fromPayments)
     }
   }
@@ -34,10 +31,7 @@ package object financial {
       -1*(futureValue+payment*numPeriods)
     } else {
       val denominator = math.pow(1.0+rate, numPeriods)
-      val fromPayments = when match {
-        case Start => payment*((1.0+rate)/rate)*(math.pow(1.0+rate, numPeriods)-1.0)
-        case End => payment*(1.0/rate)*(math.pow(1.0+rate, numPeriods)-1.0)
-      }
+      val fromPayments = payment*((1.0+rate*when.t)/rate)*(math.pow(1.0+rate, numPeriods)-1.0)
       -1*(futureValue + fromPayments) / denominator
     }
   }
@@ -71,13 +65,36 @@ package object financial {
     if (rate == 0) {
       -1*(futureValue+presentValue) / numPeriods
     } else {
-      val denominator = when match {
-        case Start => ((1.0+rate)/rate)*(math.pow(1.0+rate, numPeriods)-1.0)
-        case End => (1.0/rate)*(math.pow(1.0+rate, numPeriods)-1.0)
-      }
+      val denominator = ((1.0+rate*when.t)/rate)*(math.pow(1.0+rate, numPeriods)-1.0)
       -1*(futureValue + presentValue * math.pow(1.0+rate, numPeriods)) / denominator
     }
   }
 
+  def principalInterest(rate: Double, numPeriods: Int, presentValue: Double, futureValue: Double = 0.0, when: PaymentTime = End): (DenseVector[Double],DenseVector[Double], DenseVector[Double]) = {
+    if (when == Start) {
+      throw new IllegalArgumentException("This method is broken for payment at the start of the period!")
+    }
+    val pmt = payment(rate, numPeriods, presentValue, futureValue, when)
+    val interestPayment = DenseVector.zeros[Double](numPeriods)
+    val principalPayment = DenseVector.zeros[Double](numPeriods)
+    val principalRemaining = DenseVector.zeros[Double](numPeriods)
+    var principal = presentValue
+    var interest = presentValue*rate
+    cfor(0)(i => i < numPeriods, i => i+1)(i => {
+      val ip = -1*math.max(interest, 0)
+      interest += ip
+      principal += (pmt - ip)
+      principalRemaining.unsafeUpdate(i, principal)
+      interestPayment.unsafeUpdate(i, ip)
+      principalPayment.unsafeUpdate(i, pmt-ip)
+      interest += (principal+interest)*rate
+    })
+    (principalPayment, interestPayment, principalRemaining)
+  }
 
+  def interestPayments(rate: Double, numPeriods: Int, presentValue: Double, futureValue: Double = 0.0, when: PaymentTime = End): DenseVector[Double] = principalInterest(rate, numPeriods, presentValue, futureValue, when)._1
+
+  def principalPayments(rate: Double, numPeriods: Int, presentValue: Double, futureValue: Double = 0.0, when: PaymentTime = End): DenseVector[Double] = principalInterest(rate, numPeriods, presentValue, futureValue, when)._2
+
+  def principalRemaining(rate: Double, numPeriods: Int, presentValue: Double, futureValue: Double = 0.0, when: PaymentTime = End): DenseVector[Double] = principalInterest(rate, numPeriods, presentValue, futureValue, when)._3
 }
