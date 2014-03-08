@@ -17,10 +17,12 @@ package breeze
 import io.{CSVWriter, CSVReader}
 import linalg.operators._
 import breeze.linalg.support.{LiteralRow, CanAxpy, CanCopy}
+import breeze.linalg.support.tupleToDenseVector._
 import math.Semiring
 import storage.DefaultArrayValue
 import java.io.{File, FileReader}
 import scala.reflect.ClassTag
+import breeze.macros.arityize
 
 
 /**
@@ -268,23 +270,22 @@ package object linalg {
     (sum(x:*x,Axis._0) / (x.rows-1.0)).map(scala.math.sqrt).toDenseVector
 
 
-  /**
-   * @author ktakagaki
-   * @author dlwh
-   * @date 3/1/14.
-   */
-  implicit class EnrichedTuple[Row, V]( tuple: Row )(implicit lr: LiteralRow[Row, V], ct: ClassTag[V], dav: DefaultArrayValue[V]) {
-    def v = {
-      val len = lr.length(tuple)
-      val maxType = lr.maxElementType(tuple)
+//  /**
+//   * @author ktakagaki
+//   * @author dlwh
+//   * @date 3/1/14.
+//   */
+//  implicit class EnrichedTuple[Row, V]( tuple: Row)(implicit lr: LiteralRow[Row, V], ct: ClassTag[V], dav: DefaultArrayValue[V]) {
+//    def v = {
+//      val len = lr.length(tuple)
+//      val dv = DenseVector.zeros[V](len)
+//      lr.foreach(tuple, dv(_) = _)
+//      dv
+//    }
+//  }
 
-      val dv = DenseVector.zeros[ maxType ](len)
-
-      lr.foreach[ maxType ](tuple, dv(_) = _)
-      dv
-
-    }
-  }
+  @arityize(22)
+  implicit def tupleToDenseVecor[@arityize.replicate V](  tuple: Tuple[V @arityize.repeat]  ) = new TupleToDenseVector[V @arityize.repeat](tuple)
 
 
 }
