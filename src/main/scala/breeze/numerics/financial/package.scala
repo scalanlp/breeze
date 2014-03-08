@@ -1,9 +1,13 @@
 package breeze.numerics
 
+import breeze.optimize._
 import breeze.generic.UFunc
+import breeze.linalg._
 import breeze.linalg.support.CanTraverseValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.macros.expand
+import breeze.math._
+import spire.implicits._
 
 package object financial {
   sealed trait PaymentTime
