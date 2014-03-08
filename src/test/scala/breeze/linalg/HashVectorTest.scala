@@ -4,6 +4,7 @@ import org.scalatest._
 import org.scalatest.junit._
 import org.junit.runner.RunWith
 import breeze.math.{TensorSpaceTestBase, TensorSpace, DoubleValuedTensorSpaceTestBase}
+import breeze.stats.mean
 import org.scalacheck.Arbitrary
 
 /**
@@ -101,7 +102,7 @@ class HashVectorTest extends FunSuite {
     val m: HashVector[Double] = a.mapActivePairs( (i,x) => x+1)
     assert(m === HashVector(2.0, 0.0, 4.0, 0.0, 6.0))
   }
- 
+
   test("MapValues Double") {
     val a: HashVector[Double] = HashVector(1, 2, 3, 4, 5)
     val m: HashVector[Double] = a.mapValues(_ + 1)

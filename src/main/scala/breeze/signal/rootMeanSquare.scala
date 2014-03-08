@@ -5,6 +5,7 @@ import breeze.linalg._
 import breeze.numerics._
 import breeze.macros.expand
 import breeze.math.Complex
+import breeze.stats.mean
 
 /**Root mean square of a vector.
  * @author ktakagaki

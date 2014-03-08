@@ -17,50 +17,172 @@ import util.Sorting
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
+import breeze.generic.UFunc
+import breeze.linalg.{DenseVector, convert}
+import breeze.linalg.support.CanTraverseValues
+import breeze.linalg.support.CanTraverseValues.ValuesVisitor
+import breeze.macros.expand
+import breeze.math.Complex
+import breeze.numerics.isOdd
 
-/**
-* Provides utilities for descriptive statistics, like the mean and variance.
-*/
-object DescriptiveStats {
+trait DescriptiveStatsTrait {
   /**
-  * Returns the mean, variance and count of an iterator in a pair.
-  */
-  def meanAndVariance[/*@specialized(Double, Float)*/ T ](it: TraversableOnce[T])(implicit frac: Fractional[T]) = {
-    import frac.mkNumericOps
-    val (mu,s,n) = it.foldLeft( (frac.zero,frac.zero,0)) { (acc,y) =>
-      val (oldMu,oldVar,n) = acc
-      val i = n+1
-      val d = y - oldMu
-      val mu = oldMu + frac.one/frac.fromInt(i) * d
-      val s = oldVar + frac.fromInt(i-1) / frac.fromInt(i) * d *d
-      (mu,s,i)
+    * A [[breeze.generic.UFunc]] for computing the mean of objects
+    */
+  object mean extends UFunc {
+    @expand
+    implicit def reduce[T, @expand.args(Double, Complex, Float) Scalar](implicit iter: CanTraverseValues[T, Scalar], @expand.sequence[Scalar](0.0, Complex.zero, 0.0f) zero: Scalar): Impl[T, Scalar] = new Impl[T, Scalar] {
+      def apply(v: T): Scalar = {
+        val visit = new ValuesVisitor[Scalar] {
+          var sum  = zero
+          var n = 0
+          def visit(a: Scalar): Unit = {
+            sum += a
+            n += 1
+          }
+
+          def zeros(numZero: Int, zeroValue: Scalar): Unit = {
+            sum += (numZero * zeroValue)
+            n += numZero
+          }
+        }
+
+        iter.traverse(v, visit)
+
+        visit.sum / visit.n
+      }
     }
-    (mu,if(n==1) frac.zero else s/frac.fromInt(n-1),n)
+
+  }
+  /**
+    * A [[breeze.generic.UFunc]] for computing the mean and variance of objects.
+    * This uses an efficient, numerically stable, one pass algorithm for computing both
+    * the mean and the variance.
+    */
+  object meanAndVariance extends UFunc {
+    implicit def reduceDouble[T](implicit iter: CanTraverseValues[T, Double]): Impl[T, (Double, Double, Long)] = new Impl[T, (Double, Double, Long)] {
+      def apply(v: T): (Double, Double,Long) = {
+        val visit = new ValuesVisitor[Double] {
+          var mu = 0.0
+          var s = 0.0
+          var n: Long = 0
+          def visit(y: Double): Unit = {
+            n += 1
+            val d = y - mu
+            mu = mu + 1.0/n * d
+            s = s + (n-1) * d / n * d
+          }
+
+          def zeros(numZero: Int, zeroValue: Double): Unit = {
+            for(i <- 0 until numZero) visit(zeroValue)
+          }
+        }
+        iter.traverse(v, visit)
+        import visit._
+        if (n > 1) {
+          (mu, s/(n-1), n)
+        } else {
+          (mu, 0, n)
+        }
+      }
+    }
   }
 
   /**
-  * Returns the mean of the sequence of numbers
-  */
-  def mean[/*@specialized(Double, Float)*/ T](it : TraversableOnce[T])(implicit frac: Fractional[T]) = {
-    val (sum,n) = accumulateAndCount(it)
-    frac.div(sum , frac.fromInt(n))
+    * A [[breeze.generic.UFunc]] for computing the variance of objects.
+    * The method just calls meanAndVariance and returns the second result.
+    */
+  object variance extends UFunc {
+    implicit def reduceDouble[T](implicit mv: meanAndVariance.Impl[T, (Double, Double,Long)]): Impl[T, Double] = new Impl[T, Double] {
+      def apply(v: T): Double = mv(v)._2
+    }
   }
 
-  def variance[/*@specialized(Double, Float)*/ T](it : TraversableOnce[T])(implicit n: Fractional[T]) = meanAndVariance(it)._2
+  /**
+    * Computes the standard deviation by calling variance and then sqrt'ing
+    */
+  object stddev extends UFunc {
+    implicit def reduceDouble[T](implicit vari: variance.Impl[T, Double]): Impl[T, Double] = new Impl[T, Double] {
+      def apply(v: T): Double = scala.math.sqrt(vari(v))
+    }
+  }
 
   /**
-   * Return the total sum and the number of T's
-   */
+    * A [[breeze.generic.UFunc]] for computing the median of objects
+    */
+  object median extends UFunc {
+    @expand
+    implicit def reduce[@expand.args(Int, Long, Double) T]: Impl[DenseVector[T], Double] =
+      new Impl[DenseVector[T], Double] {
+        def apply(v: DenseVector[T]): Double = {
+          val temp: DenseVector[Double] = convert(v, Double)
+          val temp2 = temp.toScalaVector.sorted
+          if( isOdd(v.length) ) temp2( (v.length - 1)/2 )
+          else {
+            val index2 = v.length/2
+            ( temp(index2 -1) + temp(index2) )/2d
+          }
+        }
+      }
+
+    implicit def reduceFloat: Impl[DenseVector[Float], Float] =
+      new Impl[DenseVector[Float], Float] {
+        def apply(v: DenseVector[Float]): Float = {
+          val temp = v.toScalaVector.sorted
+          if( isOdd(v.length) ) temp( (v.length - 1)/2 )
+          else {
+            val index2 = v.length/2
+            (temp(index2 -1) + temp(index2))/2f
+          }
+        }
+      }
+
+  }
+
+  private class SumCountVisitor[@specialized(Double,Float,Int) T](initialSum: T)(implicit numeric:Numeric[T]) extends ValuesVisitor[T] {
+    import numeric.mkNumericOps
+    var sum:T  = initialSum
+    var n = 0
+    def visit(a: T): Unit = {
+      sum += a
+      n += 1
+    }
+    def zeros(numZero: Int, zeroValue: T): Unit = {
+      sum += zeroValue * numeric.fromInt(numZero)
+      n += numZero
+    }
+  }
+
+  /**
+    * Return the total sum and the number of T's
+    */
+/*  object accumulateAndCount extends UFunc {
+    @expand
+    implicit def reduce[T, @expand.args(Double, Complex, Float) Scalar](implicit iter: CanTraverseValues[T, Scalar], @expand.sequence[Scalar](0.0, Complex.zero, 0.0f) zero: Scalar): Impl[T, (Scalar,Scalar)] = new Impl[T, (Scalar,Scalar)] {
+      def apply(v: T): Scalar = {
+        val visit = new SumCountVisitor[Scalar](zero)
+        iter.traverse(v, visit)
+        (visit.sum, visit.n)
+      }
+    }
+
+  }*/
+
   def accumulateAndCount[@specialized T](it : TraversableOnce[T])(implicit n: Numeric[T]) = it.foldLeft( (n.zero,0) ) { (tup,d) =>
     import n.mkNumericOps
     (tup._1 + d, tup._2 + 1)
   }
+}
 
+/**
+  * Provides utilities for descriptive statistics, like the mean and variance.
+  */
+object DescriptiveStats {
   /**
-   * returns the estimate of the data at p * it.size, where p in [0,1]
-   */
+    * returns the estimate of the data at p * it.size, where p in [0,1]
+    */
   def percentile(it: TraversableOnce[Double], p: Double) = {
     if(p > 1 || p < 0) throw new IllegalArgumentException("p must be in [0,1]")
     val arr = it.toArray
@@ -74,16 +196,16 @@ object DescriptiveStats {
       arr(i-1) + (f - i) * (arr(i) - arr(i-1))
     }
   }
-  
+
   /**
-   * Returns both means and covariance between two vectors. Single pass algorithm.
-   * <p>
-   * Note:
-   * Will happily compute covariance between vectors of different lengths
-   * by truncating the longer vector.
-   * </p>
-   */
-  
+    * Returns both means and covariance between two vectors. Single pass algorithm.
+    * <p>
+    * Note:
+    * Will happily compute covariance between vectors of different lengths
+    * by truncating the longer vector.
+    * </p>
+    */
+
   def meanAndCov[T](it1 : TraversableOnce[T], it2 : TraversableOnce[T])(implicit frac: Fractional[T]) = {
     implicit def t(it:TraversableOnce[T]) = it.toIterable //convert to an iterable for zip operation
     import frac.mkNumericOps
@@ -100,16 +222,16 @@ object DescriptiveStats {
   }
 
   /**
-   * Returns covariance between two vectors.
-   * <p>
-   * Note:
-   * Will happily compute covariance between vectors of different lengths
-   * by truncating the longer vector.
-   * </p>
-   */
-  
+    * Returns covariance between two vectors.
+    * <p>
+    * Note:
+    * Will happily compute covariance between vectors of different lengths
+    * by truncating the longer vector.
+    * </p>
+    */
+
   def cov[T](it1 : Iterable[T], it2 : Iterable[T])(implicit n: Fractional[T]) = {
     meanAndCov(it1,it2)._3
   }
-  
+
 }
