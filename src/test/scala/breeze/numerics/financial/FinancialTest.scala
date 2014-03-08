@@ -41,5 +41,9 @@ class FinancialTest extends FunSuite {
     assert(math.abs(presentValue(0.05/12, 10*12, -100, 15692.93) - -100.0006713) < 1e-5)
     assert(presentValue(0, 3, 1, 1) == -4.0)
   }
+  test("payment") {
+    assert(math.abs(payment(0.075/12, 12*15, 200000, 0) - -1854.0247200054619) < 1e-5)
+    assert(math.abs(payment(0.0, 10, 1100, -100) - -100.0) < 1e-5)
+  }
 
 }

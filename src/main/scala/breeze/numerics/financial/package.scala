@@ -15,6 +15,7 @@ package object financial {
   case object End extends PaymentTime
 
   def futureValue(rate: Double, numPeriods: Int, payment:Double, presentValue: Double, when: PaymentTime = End):Double = {
+    require(numPeriods >= 0)
     if (rate == 0) {
       -1*(presentValue+payment*numPeriods)
     } else {
@@ -28,6 +29,7 @@ package object financial {
   }
 
   def presentValue(rate: Double, numPeriods: Int, payment:Double, futureValue: Double, when: PaymentTime = End):Double = {
+    require(numPeriods >= 0)
     if (rate == 0) {
       -1*(futureValue+payment*numPeriods)
     } else {
@@ -64,5 +66,18 @@ package object financial {
       }
     }
   }
+
+  def payment(rate: Double, numPeriods: Int, presentValue: Double, futureValue: Double = 0.0, when: PaymentTime = End):Double = {
+    if (rate == 0) {
+      -1*(futureValue+presentValue) / numPeriods
+    } else {
+      val denominator = when match {
+        case Start => ((1.0+rate)/rate)*(math.pow(1.0+rate, numPeriods)-1.0)
+        case End => (1.0/rate)*(math.pow(1.0+rate, numPeriods)-1.0)
+      }
+      -1*(futureValue + presentValue * math.pow(1.0+rate, numPeriods)) / denominator
+    }
+  }
+
 
 }
