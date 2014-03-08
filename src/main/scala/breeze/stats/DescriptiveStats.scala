@@ -28,13 +28,10 @@ import breeze.math.Complex
 import breeze.numerics.isOdd
 
 trait DescriptiveStatsTrait {
-  /**
-    * A [[breeze.generic.UFunc]] for computing the mean of objects
-    */
-  object mean extends UFunc {
+  object accumulateAndCount extends UFunc {
     @expand
-    implicit def reduce[T, @expand.args(Double, Complex, Float) Scalar](implicit iter: CanTraverseValues[T, Scalar], @expand.sequence[Scalar](0.0, Complex.zero, 0.0f) zero: Scalar): Impl[T, Scalar] = new Impl[T, Scalar] {
-      def apply(v: T): Scalar = {
+    implicit def reduce[T, @expand.args(Double, Complex, Float) Scalar](implicit iter: CanTraverseValues[T, Scalar], @expand.sequence[Scalar](0.0, Complex.zero, 0.0f) zero: Scalar): Impl[T, (Scalar,Int)] = new Impl[T, (Scalar,Int)] {
+      def apply(v: T): (Scalar,Int) = {
         val visit = new ValuesVisitor[Scalar] {
           var sum  = zero
           var n = 0
@@ -48,10 +45,22 @@ trait DescriptiveStatsTrait {
             n += numZero
           }
         }
-
         iter.traverse(v, visit)
 
-        visit.sum / visit.n
+        (visit.sum, visit.n)
+      }
+    }
+  }
+
+  /**
+    * A [[breeze.generic.UFunc]] for computing the mean of objects
+    */
+  object mean extends UFunc {
+    @expand
+    implicit def reduce[T, @expand.args(Double, Complex, Float) Scalar](implicit iter: CanTraverseValues[T, Scalar], @expand.sequence[Scalar](0.0, Complex.zero, 0.0f) zero: Scalar): Impl[T, Scalar] = new Impl[T, Scalar] {
+      def apply(v: T): Scalar = {
+        val (sum, count) = accumulateAndCount(v)
+        sum / count
       }
     }
 
@@ -138,41 +147,6 @@ trait DescriptiveStatsTrait {
           }
         }
       }
-
-  }
-
-  private class SumCountVisitor[@specialized(Double,Float,Int) T](initialSum: T)(implicit numeric:Numeric[T]) extends ValuesVisitor[T] {
-    import numeric.mkNumericOps
-    var sum:T  = initialSum
-    var n = 0
-    def visit(a: T): Unit = {
-      sum += a
-      n += 1
-    }
-    def zeros(numZero: Int, zeroValue: T): Unit = {
-      sum += zeroValue * numeric.fromInt(numZero)
-      n += numZero
-    }
-  }
-
-  /**
-    * Return the total sum and the number of T's
-    */
-/*  object accumulateAndCount extends UFunc {
-    @expand
-    implicit def reduce[T, @expand.args(Double, Complex, Float) Scalar](implicit iter: CanTraverseValues[T, Scalar], @expand.sequence[Scalar](0.0, Complex.zero, 0.0f) zero: Scalar): Impl[T, (Scalar,Scalar)] = new Impl[T, (Scalar,Scalar)] {
-      def apply(v: T): Scalar = {
-        val visit = new SumCountVisitor[Scalar](zero)
-        iter.traverse(v, visit)
-        (visit.sum, visit.n)
-      }
-    }
-
-  }*/
-
-  def accumulateAndCount[@specialized T](it : TraversableOnce[T])(implicit n: Numeric[T]) = it.foldLeft( (n.zero,0) ) { (tup,d) =>
-    import n.mkNumericOps
-    (tup._1 + d, tup._2 + 1)
   }
 }
 
