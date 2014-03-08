@@ -14,7 +14,6 @@ package object financial {
   case object Start extends PaymentTime
   case object End extends PaymentTime
 
-  //Future Value
   def futureValue(rate: Double, numPeriods: Int, payment:Double, presentValue: Double, when: PaymentTime = End):Double = {
     if (rate == 0) {
       -1*(presentValue+payment*numPeriods)
@@ -41,7 +40,6 @@ package object financial {
     }
   }
 
-  //Net Present Value
   object netPresentValue extends UFunc {
     @expand
     implicit def reduce[@expand.args(Double, Float, Int) Scalar, T](implicit iter: CanTraverseValues[T, Scalar], @expand.sequence[Scalar](0.0, 0.0f, 0) zero: Scalar): Impl2[Double, T, Double] = new Impl2[Double, T, Double] {
