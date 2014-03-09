@@ -17,7 +17,7 @@ package breeze
 import io.{CSVWriter, CSVReader}
 import linalg.operators._
 import breeze.linalg.support.{LiteralRow, CanAxpy, CanCopy}
-import breeze.linalg.support.tupleToDenseVector._
+import breeze.linalg.support.tupleToDenseVectorBuilder._
 import math.Semiring
 import storage.DefaultArrayValue
 import java.io.{File, FileReader}
@@ -285,8 +285,8 @@ package object linalg {
 //  }
 
   @arityize(22)
-  @arityize.replicate
-  implicit def tupleToDenseVector(  tuple: Tuple @arityize.relative(tupletoDenseVector)  ) = new TupleToDenseVector @arityize.relative(tupletoDenseVector) (tuple)
+  implicit def tupleToDenseVectorBuilder(  tuple: ( (Tuple @arityize.relative( tupleToDenseVectorBuilder ))[Any @arityize.repeat] )  ) =
+    new (breeze.linalg.support.tupleToDenseVectorBuilder.TupleToDenseVectorBuilder @arityize.relative( tupleToDenseVectorBuilder ) )(tuple)
 
 
 }

@@ -1,4 +1,4 @@
-package breeze.linalg.support.tupleToDenseVector
+package breeze.linalg.support.tupleToDenseVectorBuilder
 
 import breeze.math.Complex
 import breeze.linalg.{DenseVector, max}
@@ -9,7 +9,7 @@ import breeze.macros.arityize
  * @date 3/8/14.
  */
 
-  class TupleToDenseVectorBase {
+  class TupleToDenseVectorBuilderBase {
     protected def valueCode( any: Any ): Int = {
       //println(any.getClass.getName)
       any match {
@@ -59,8 +59,8 @@ import breeze.macros.arityize
   }
 
   @arityize(22)
-  @arityize.replicate
-  class TupleToDenseVector(tuple: Tuple @arityize.relative(TupleToDenseVector) ) extends TupleToDenseVectorBase {
+  case class TupleToDenseVectorBuilder(tuple: (Tuple[Any @arityize.repeat] @arityize.relative(TupleToDenseVectorBuilder)) ) extends TupleToDenseVectorBuilderBase {
+
     def v() = {
 
       val temp = tuple.productIterator.map( valueCode(_) )
