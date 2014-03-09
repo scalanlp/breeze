@@ -75,7 +75,10 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
     data(offset + trueI * stride) = v
   }
 
-  def unsafeUpdate(i: Int, v: E) = { data(offset + i * stride) = v }
+  //I have no fucking clue why this speeds things up, but it does seem to.
+  private final val innerUpdate: ((Int,E) => Unit) = if ((offset == 0) && (stride == 1)) { (i:Int,v:E) => {data(i) = v} } else {(i:Int,v:E) => {data(offset+i*stride)=v}  }
+
+  def unsafeUpdate(i: Int, v: E) = innerUpdate(i,v) //data(offset + i * stride) = v
 
   def activeIterator = iterator
 
