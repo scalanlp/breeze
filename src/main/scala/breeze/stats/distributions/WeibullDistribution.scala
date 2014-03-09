@@ -22,17 +22,15 @@ import breeze.numerics.{lgamma,digamma}
 import breeze.linalg._
 import breeze.optimize._
 import breeze.numerics
-import org.apache.commons.math3.distribution.{FDistribution => ApacheFDistribution, RealDistribution => ApacheRealDistribution}
+import org.apache.commons.math3.distribution.{WeibullDistribution => ApacheWeibullDistribution}
 /**
- * The F-distribution - ratio of two scaled chi^2 variables
+ * The Weibull-distribution - ratio of two scaled chi^2 variables
  *
  * @author stucchio
 */
 
-class FDistribution(numeratorDegreesOfFreedom: Double, denominatorDegreesOfFreedom: Double) extends ApacheContinuousDistribution /* with Moments[Double,Double] */ {
-  //Moments not implemented cause I can't find the entropy of it
-  protected final val inner = new ApacheFDistribution(numeratorDegreesOfFreedom, denominatorDegreesOfFreedom)
-  def mode = ((numeratorDegreesOfFreedom-2)/numeratorDegreesOfFreedom)*(denominatorDegreesOfFreedom/(denominatorDegreesOfFreedom+2))
+class WeibullDistribution(alpha: Double, beta: Double) extends ApacheContinuousDistribution {
+  protected final val inner = new ApacheWeibullDistribution(alpha, beta)
 }
 
-object FDistribution extends ContinuousDistributionUFuncProvider[Double,FDistribution]
+object WeibullDistribution extends ContinuousDistributionUFuncProvider[Double,WeibullDistribution]
