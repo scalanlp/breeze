@@ -24,6 +24,32 @@ class DenseVectorTest extends FunSuite with Checkers {
   def assertClose(a: Complex, b: Complex) =
     assert(math.abs(a.real - b.real) < TOLERANCE && math.abs(a.imag - b.imag) < TOLERANCE)
 
+  test("update/valueAt properly works") {
+    val v = DenseVector(2f, 0f, 3f, 2f, -1f)
+    v.update(3, 12f)
+    assert(v.valueAt(3) == 12f)
+  }
+
+  test("update/valueAt properly works with stride, offset") {
+    val data = new Array[Double](5+3*5)
+    val v = new DenseVector(data, 5, 3, 5)
+    v.update(3, 12)
+    assert(v.valueAt(3) == 12)
+  }
+
+  test("unsafeUpdate/unsafeValueAt properly works") {
+    val v = DenseVector(2f, 0f, 3f, 2f, -1f)
+    v.unsafeUpdate(3, 12f)
+    assert(v.unsafeValueAt(3) == 12f)
+  }
+
+  test("unsafeUpdate/unsafeValueAt properly works with stride, offset") {
+    val data = new Array[Double](5+3*5)
+    val v = new DenseVector(data, 5, 3, 5)
+    v.unsafeUpdate(3, 12)
+    assert(v.unsafeValueAt(3) == 12)
+  }
+
   test("Can raise IntegerVector by Integer") {
     val v = DenseVector(2, 0, 3, 2, -1)
     val w = v :^ 2
