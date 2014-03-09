@@ -2,7 +2,6 @@ package breeze.signal
 
 import org.scalatest.FunSuite
 import breeze.linalg.DenseVector
-import breeze.signal.rootMeanSquare
 import breeze.signal
 
 /**

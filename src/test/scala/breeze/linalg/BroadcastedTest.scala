@@ -1,6 +1,7 @@
 package breeze.linalg
 
 import org.scalatest.FunSuite
+import breeze.stats.mean
 
 /**
  * TODO

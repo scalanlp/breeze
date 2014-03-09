@@ -2,18 +2,18 @@ package breeze.stats.distributions
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
- 
+
  Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
- You may obtain a copy of the License at 
- 
+ You may obtain a copy of the License at
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
- limitations under the License. 
+ limitations under the License.
 */
 
 import scala.collection.mutable.ArrayBuffer
@@ -22,6 +22,7 @@ import collection.generic.CanBuildFrom
 import breeze.linalg.DenseVector
 import org.apache.commons.math3.random.{MersenneTwister, RandomGenerator}
 import java.util.concurrent.atomic.AtomicInteger
+import scala.reflect.ClassTag
 
 /**
  * A trait for monadic distributions. Provides support for use in for-comprehensions
@@ -32,7 +33,7 @@ trait Rand[@specialized(Int, Double) +T] { outer =>
    * Gets one sample from the distribution. Equivalent to sample()
    */
   def draw() : T
-  
+
   def get() = draw()
 
   /** Overridden by filter/map/flatmap for monadic invocations. Basically, rejeciton samplers will return None here */
@@ -44,7 +45,7 @@ trait Rand[@specialized(Int, Double) +T] { outer =>
   def sample() = get()
 
   /**
-   * Gets n samples from the distribution. 
+   * Gets n samples from the distribution.
    */
   def sample(n : Int) = IndexedSeq.fill(n)(draw())
 
@@ -62,7 +63,7 @@ trait Rand[@specialized(Int, Double) +T] { outer =>
    * Examples:
    * randInt(10).flatMap(x => randInt(3 * x.asInstanceOf[Int]) gives a Rand[Int] in the range [0,30]
    * Equivalently, for(x &lt;- randInt(10); y &lt;- randInt(30 *x)) yield y
-   * 
+   *
    * @param f the transform to apply to the sampled value.
    *
    */
@@ -76,7 +77,7 @@ trait Rand[@specialized(Int, Double) +T] { outer =>
    * Examples:
    * uniform.map(_*2) gives a Rand[Double] in the range [0,2]
    * Equivalently, for(x &lt;- uniform) yield 2*x
-   * 
+   *
    * @param f the transform to apply to the sampled value.
    *
    */
@@ -91,7 +92,7 @@ trait Rand[@specialized(Int, Double) +T] { outer =>
    * Samples one element and qpplies the provided function to it.
    * Despite the name, the function is applied once. Sample usage:
    * <pre> for(x &lt;- Rand.uniform) { println(x) } </pre>
-   * 
+   *
    * @param f the function to be applied
    */
   def foreach(f : T=>Unit) = f(get())
@@ -120,11 +121,11 @@ trait Rand[@specialized(Int, Double) +T] { outer =>
 /**
 * Provides standard combinators and such to use
 * to compose new Rands.
-*/ 
+*/
 class RandBasis(val generator: RandomGenerator) {
 
   /**
-   * Chooses an element from a collection. 
+   * Chooses an element from a collection.
    */
   def choose[T](c: Iterable[T]):Rand[T] = new Rand[T] {
     def draw() = {
@@ -149,10 +150,10 @@ class RandBasis(val generator: RandomGenerator) {
     def draw = t
   }
 
-  
+
   /**
   * Simply reevaluate the body every time get is called
-  */ 
+  */
   def fromBody[T](f : =>T):Rand[T] = new Rand[T] {
     def draw = f
   }
@@ -170,7 +171,7 @@ class RandBasis(val generator: RandomGenerator) {
 
   def promote[T1,T2](t : (Rand[T1],Rand[T2])) = fromBody( (t._1.get,t._2.get))
   def promote[T1,T2,T3](t : (Rand[T1],Rand[T2],Rand[T3])) = fromBody( (t._1.get,t._2.get,t._3.get))
-  def promote[T1,T2,T3,T4](t : (Rand[T1],Rand[T2],Rand[T3],Rand[T4])) = 
+  def promote[T1,T2,T3,T4](t : (Rand[T1],Rand[T2],Rand[T3],Rand[T4])) =
     fromBody( (t._1.get,t._2.get,t._3.get,t._4.get))
 
   /**
@@ -207,7 +208,7 @@ class RandBasis(val generator: RandomGenerator) {
   val gaussian :Rand[Double] = new Rand[Double] {
     def draw = generator.nextGaussian
   }
-  
+
 
   /**
    * Samples a gaussian with m mean and s std

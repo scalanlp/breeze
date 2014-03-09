@@ -223,7 +223,7 @@ package object linalg {
   /**
    * A generic function (based on the R function of the same name) whose
    * default method centers and/or scales the columns of a numeric matrix.
-   * 
+   *
    * If ‘scale’ is ‘TRUE’ then scaling is done by dividing the (centered)
    * columns of ‘x’ by their standard deviations if ‘center’ is ‘TRUE’, and
    * the root mean square otherwise.  If ‘scale’ is ‘FALSE’, no scaling is
@@ -234,6 +234,7 @@ package object linalg {
              center: Boolean = true,
              scale: Boolean = false
              ) = {
+    import breeze.stats.{mean, stddev}
     if (center) {
       val xc = x(*,::) - mean(x, Axis._0).toDenseVector
       if (scale)
@@ -264,9 +265,7 @@ package object linalg {
    * Helper function to compute the root-mean-square of the columns of a
    * matrix. Feel free to make this more general.
    */
-  private def columnRMS(x: DenseMatrix[Double]) = 
+  private def columnRMS(x: DenseMatrix[Double]) =
     (sum(x:*x,Axis._0) / (x.rows-1.0)).map(scala.math.sqrt).toDenseVector
 
 }
-
-
