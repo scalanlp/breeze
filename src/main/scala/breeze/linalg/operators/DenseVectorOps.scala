@@ -529,6 +529,18 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
 //    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], OpSet.type]].register(this)
   }
 
+  implicit def liftDMOpToDVTransposeOp[Tag, V, LHS, R]
+      (implicit op: UFunc.UImpl2[Tag, LHS, DenseMatrix[V], R]):UFunc.UImpl2[Tag, LHS, Transpose[DenseVector[V]], R] = {
+    new UFunc.UImpl2[Tag, LHS, Transpose[DenseVector[V]], R] {
+      def apply(v: LHS, v2: Transpose[DenseVector[V]]): R = {
+        val dv = v2.inner
+        val dm = new DenseMatrix(data = dv.data, offset = dv.offset, cols = dv.length, rows = 1, majorStride = dv.stride)
+        op(v, dm)
+      }
+    }
+
+  }
+
 
 
 }
