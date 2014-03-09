@@ -50,6 +50,14 @@ trait ContinuousDistr[T] extends Density[T] with Rand[T] {
   override def logApply(x:T) = unnormalizedLogPdf(x)
 }
 
+trait HasCdf {
+  def probability(x: Double, y: Double): Double // Probability that x < a <= Y
+}
+
+trait HasInverseCdf {
+  def inverseCdf(p: Double): Double //Compute the quantile of p
+}
+
 trait PdfIsUFunc[U <: UFunc,T,P <: PdfIsUFunc[U,T,P]] { self:P =>
   final def pdf[@specialized(Int, Double, Float) V,
                 @specialized(Int, Double, Float) VR]
