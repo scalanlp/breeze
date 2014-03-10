@@ -16,12 +16,6 @@ package distributions
  limitations under the License.
 */
 
-import math._
-
-import breeze.numerics.{lgamma,digamma}
-import breeze.linalg._
-import breeze.optimize._
-import breeze.numerics
 import org.apache.commons.math3.distribution.{WeibullDistribution => ApacheWeibullDistribution}
 /**
  * The Weibull-distribution - ratio of two scaled chi^2 variables
