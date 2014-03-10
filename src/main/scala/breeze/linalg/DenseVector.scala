@@ -27,6 +27,7 @@ import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import breeze.macros.expand
 import scala.math.BigInt
 import CanTraverseValues.ValuesVisitor
+import spire.implicits._
 
 /**
  * A DenseVector is the "obvious" implementation of a Vector, with one twist.
@@ -224,9 +225,40 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     new DenseVector(data)
   }
 
-
   def apply[@spec(Double, Float, Int) V](values: Array[V]) = new DenseVector(values)
   def ones[@spec(Double, Float, Int) V: ClassTag:Semiring](size: Int) = fill[V](size, implicitly[Semiring[V]].one)
+
+  def rangeI(start: Int, end: Int): DenseVector[Int] = {
+    require(end > start)
+    val size = end - start
+    val data = new Array[Int](size)
+    cfor(0)(i => i < size, i => i+1)(i => {
+      data(i) = (start+i)
+    })
+    new DenseVector(data)
+  }
+
+  def rangeF(start: Float, end: Float, step: Float = 1.0f): DenseVector[Float] = {
+    require(end > start)
+    require(end-start > step)
+    val size: Int = math.floor((end - start)/step).toInt
+    val data = new Array[Float](size)
+    cfor(0)(i => i < size, i => i+1)(i => {
+      data(i) = (start+i*step)
+    })
+    new DenseVector(data)
+  }
+
+  def rangeD(start: Double, end: Double, step: Double = 1.0): DenseVector[Double] = {
+    require(end > start)
+    require(end-start > step)
+    val size: Int = math.floor((end - start)/step).toInt
+    val data = new Array[Double](size)
+    cfor(0)(i => i < size, i => i+1)(i => {
+      data(i) = (start+i*step)
+    })
+    new DenseVector(data)
+  }
 
   def fill[@spec(Double, Float, Int) V: ClassTag:Semiring](size: Int, v: V) = {
     val r = apply(new Array[V](size))
