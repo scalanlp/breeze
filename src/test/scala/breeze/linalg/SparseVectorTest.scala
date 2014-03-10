@@ -5,6 +5,7 @@ import org.scalatest.junit._
 import org.junit.runner.RunWith
 import breeze.math.{Complex, TensorSpaceTestBase, TensorSpace, DoubleValuedTensorSpaceTestBase}
 import org.scalacheck.Arbitrary
+import breeze.stats.mean
 
 /**
  *
@@ -101,7 +102,7 @@ class SparseVectorTest extends FunSuite {
     val m: SparseVector[Double] = a.mapActivePairs( (i,x) => x+1)
     assert(m === SparseVector(2.0, 0.0, 4.0, 0.0, 6.0))
   }
- 
+
   test("MapValues Double") {
     val a: SparseVector[Double] = SparseVector(1, 2, 3, 4, 5)
     val m: SparseVector[Double] = a.mapValues(_ + 1)
@@ -176,28 +177,28 @@ class SparseVectorTest extends FunSuite {
     val m: SparseVector[Float] = a.mapActiveValues(_+1)
     assert(m === SparseVector(2f, 0f, 4f, 0f, 6f))
   }
-  
+
   test("Transpose") {
     val a = SparseVector.zeros[Int](4)
     a(1) = 1
     a(2) = 2
-    
+
     val expected = CSCMatrix.zeros[Int](1, 4)
     expected(0, 1) = 1
     expected(0, 2) = 2
-    
+
     assert(a.t === expected)
   }
-  
+
   test("Transpose Complex") {
     val a = SparseVector.zeros[Complex](4)
     a(1) = Complex(1,1)
     a(2) = Complex(-2,-2)
-    
+
     val expected = CSCMatrix.zeros[Complex](1, 4)
     expected(0, 1) = Complex(1,-1)
     expected(0, 2) = Complex(-2,2)
-    
+
     assert(a.t === expected)
   }
 

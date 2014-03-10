@@ -2,12 +2,13 @@ organization := "org.scalanlp"
 
 name := "breeze"
 
-lazy val (root,natives) = {
-  var r = project.in(file("."))
-  var n = project.in(file("natives"))
-  r = r.aggregate(n).settings(aggregate in test := false, aggregate in compile := false)
-  n = n.dependsOn(r)
-  (r -> n)
+lazy val (root, natives, benchmark) = {
+  var root = project.in(file("."))
+  var natives = project.in(file("natives"))
+  var benchmark = project.in(file("benchmark")).dependsOn(root, natives)
+  root = root.aggregate(natives, benchmark).settings(aggregate in test := false, aggregate in compile := false)
+  natives = natives.dependsOn(root)
+  (root, natives, benchmark)
 }
 
 
@@ -92,3 +93,5 @@ resolvers ++= Seq(
     )
 
 testOptions in Test += Tests.Argument("-oDF")
+
+

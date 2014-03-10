@@ -20,6 +20,7 @@ import org.junit.runner.RunWith
 import org.scalatest.prop.Checkers
 import breeze.math.{TensorSpace, TensorSpaceTestBase}
 import org.scalacheck.Arbitrary
+import breeze.stats.mean
 
 /**
  * @author dlwh

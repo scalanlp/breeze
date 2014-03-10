@@ -13,11 +13,11 @@ class DescriptiveStatsTest extends WordSpec with ShouldMatchers {
     }
     "variance should not explode when size of list is 1" in {
       val a = List(1.0)
-      DescriptiveStats.meanAndVariance(a) should be ((1.0,0,1))
+      meanAndVariance(a) should be ((1.0,0,1))
     }
     "mean should give correct value" in {
       val a = List(1.0,2.0,3.0,4.0)
-      DescriptiveStats.mean(a) should be (2.5)
+      mean(a) should be (2.5)
     }
     "covariance should not explode when size of list is 1" in {
       val a = List(1.0)
@@ -28,7 +28,7 @@ class DescriptiveStatsTest extends WordSpec with ShouldMatchers {
       val a = List(1.0,2.0,3.0,4)
       val b = List(2.0,-3,4.0,5)
       DescriptiveStats.cov(a,b) should be (2+(2.0/3))
-      
+
     }
   }
 

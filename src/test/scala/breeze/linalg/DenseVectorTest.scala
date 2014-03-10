@@ -6,6 +6,7 @@ import org.scalatest.junit._
 import org.scalatest.prop._
 import org.junit.runner.RunWith
 import breeze.math.{Complex, DoubleValuedTensorSpaceTestBase, TensorSpace, TensorSpaceTestBase}
+import breeze.stats.mean
 import java.util
 
 /**
@@ -19,9 +20,35 @@ class DenseVectorTest extends FunSuite with Checkers {
 
   def assertClose(a: Double, b: Double) =
     assert(math.abs(a - b) < TOLERANCE)
-    
+
   def assertClose(a: Complex, b: Complex) =
     assert(math.abs(a.real - b.real) < TOLERANCE && math.abs(a.imag - b.imag) < TOLERANCE)
+
+  test("update/valueAt properly works") {
+    val v = DenseVector(2f, 0f, 3f, 2f, -1f)
+    v.update(3, 12f)
+    assert(v.valueAt(3) == 12f)
+  }
+
+  test("update/valueAt properly works with stride, offset") {
+    val data = new Array[Double](5+3*5)
+    val v = new DenseVector(data, 5, 3, 5)
+    v.update(3, 12)
+    assert(v.valueAt(3) == 12)
+  }
+
+  test("unsafeUpdate/unsafeValueAt properly works") {
+    val v = DenseVector(2f, 0f, 3f, 2f, -1f)
+    v.unsafeUpdate(3, 12f)
+    assert(v.unsafeValueAt(3) == 12f)
+  }
+
+  test("unsafeUpdate/unsafeValueAt properly works with stride, offset") {
+    val data = new Array[Double](5+3*5)
+    val v = new DenseVector(data, 5, 3, 5)
+    v.unsafeUpdate(3, 12)
+    assert(v.unsafeValueAt(3) == 12)
+  }
 
   test("Can raise IntegerVector by Integer") {
     val v = DenseVector(2, 0, 3, 2, -1)
@@ -40,7 +67,7 @@ class DenseVectorTest extends FunSuite with Checkers {
     val w = v :^ 2f
     assert(w == DenseVector(4f, 0f, 9f, 4f, 1f))
   }
-  
+
   test("Can raise ComplexVector by Complex") {
     val v = DenseVector(Complex(0,0), Complex(1,1), Complex(2,2), Complex(-1,-1))
     val w = v :^ Complex(2,0)
@@ -175,7 +202,7 @@ class DenseVectorTest extends FunSuite with Checkers {
     y(0, 0) = 0
     assert(x === DenseVector(0.0, 2.0, 3.0))
   }
-  
+
   test("Transpose Complex") {
     val x = DenseVector(Complex(1, 1), Complex(1, -1))
     val y = x.t
@@ -230,7 +257,7 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(mv === DenseVector(2f, 3f, 4f, 5f, 6f))
     assert(mav === DenseVector(2f, 3f, 4f, 5f, 6f))
   }
-  
+
   test("Map(Active)Values Complex") {
     val a: DenseVector[Complex] = DenseVector(Complex(1,1), Complex(2,2))
     val mv: DenseVector[Complex] = a.mapValues(_ + Complex(1,1))
@@ -317,7 +344,7 @@ class DenseVectorTest extends FunSuite with Checkers {
 
 
   }
-  
+
   test("Complex OpSet") {
     val a = DenseVector(Complex(1,1))
     val b = DenseVector(Complex(2,2))
