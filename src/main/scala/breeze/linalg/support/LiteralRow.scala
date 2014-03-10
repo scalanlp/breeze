@@ -47,14 +47,14 @@ object LiteralRow {
     def length(tup : V) = 1
   }
 
-//  @arityize(22)
-//  implicit def tuple[V] : LiteralRow[Tuple[V @arityize.repeat] @arityize.relative(tuple),V] = new LiteralRow[Tuple[V @arityize.repeat] @arityize.relative(tuple),V] {
-//    def foreach[X](tup : Tuple[V @arityize.repeat] @arityize.relative(tuple), fn : ((Int,V) => X)) = {
-//      for( (v, i) <- tup.productIterator.zipWithIndex) {
-//        fn(i, v.asInstanceOf[V])
-//      }
-//    }
-//
-//    def length(tup : Tuple[V @arityize.repeat] @arityize.relative(tuple)) = __order__
-//  }
+  @arityize(22)
+  implicit def tuple[V] : LiteralRow[Tuple[V @arityize.repeat] @arityize.relative(tuple),V] = new LiteralRow[Tuple[V @arityize.repeat] @arityize.relative(tuple),V] {
+    def foreach[X](tup : Tuple[V @arityize.repeat] @arityize.relative(tuple), fn : ((Int,V) => X)) = {
+      for( (v, i) <- tup.productIterator.zipWithIndex) {
+        fn(i, v.asInstanceOf[V])
+      }
+    }
+
+    def length(tup : Tuple[V @arityize.repeat] @arityize.relative(tuple)) = __order__
+  }
 }

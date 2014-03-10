@@ -11,7 +11,6 @@ import breeze.macros.arityize
 
   class EnrichedTupleBase {
     protected def valueCode( any: Any ): Int = {
-      //println(any.getClass.getName)
       any match {
         case a: Int => 1
         case a: Long => 2
@@ -62,7 +61,7 @@ import breeze.macros.arityize
 //  case class EnrichedTuple(tuple: (Tuple[Any @arityize.repeat] @arityize.relative(EnrichedTuple)) ) extends EnrichedTupleBase {
 case class EnrichedTuple1( tuple: Tuple1[Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -78,7 +77,7 @@ case class EnrichedTuple1( tuple: Tuple1[Any] ) extends EnrichedTupleBase {
 }
 case class EnrichedTuple2( tuple: Tuple2[Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -94,7 +93,7 @@ case class EnrichedTuple2( tuple: Tuple2[Any, Any] ) extends EnrichedTupleBase {
 }
 case class EnrichedTuple3( tuple: Tuple3[Any, Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -110,7 +109,7 @@ case class EnrichedTuple3( tuple: Tuple3[Any, Any, Any] ) extends EnrichedTupleB
 }
 case class EnrichedTuple4( tuple: Tuple4[Any, Any, Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -126,7 +125,7 @@ case class EnrichedTuple4( tuple: Tuple4[Any, Any, Any, Any] ) extends EnrichedT
 }
 case class EnrichedTuple5( tuple: Tuple5[Any, Any, Any, Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -142,7 +141,7 @@ case class EnrichedTuple5( tuple: Tuple5[Any, Any, Any, Any, Any] ) extends Enri
 }
 case class EnrichedTuple6( tuple: Tuple6[Any, Any, Any, Any, Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -158,7 +157,7 @@ case class EnrichedTuple6( tuple: Tuple6[Any, Any, Any, Any, Any, Any] ) extends
 }
 case class EnrichedTuple7( tuple: Tuple7[Any, Any, Any, Any, Any, Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -174,7 +173,7 @@ case class EnrichedTuple7( tuple: Tuple7[Any, Any, Any, Any, Any, Any, Any] ) ex
 }
 case class EnrichedTuple8( tuple: Tuple8[Any, Any, Any, Any, Any, Any, Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -190,7 +189,7 @@ case class EnrichedTuple8( tuple: Tuple8[Any, Any, Any, Any, Any, Any, Any, Any]
 }
 case class EnrichedTuple9( tuple: Tuple9[Any, Any, Any, Any, Any, Any, Any, Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -206,7 +205,7 @@ case class EnrichedTuple9( tuple: Tuple9[Any, Any, Any, Any, Any, Any, Any, Any,
 }
 case class EnrichedTuple10( tuple: Tuple10[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -222,7 +221,7 @@ case class EnrichedTuple10( tuple: Tuple10[Any, Any, Any, Any, Any, Any, Any, An
 }
 case class EnrichedTuple11( tuple: Tuple11[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -238,7 +237,7 @@ case class EnrichedTuple11( tuple: Tuple11[Any, Any, Any, Any, Any, Any, Any, An
 }
 case class EnrichedTuple12( tuple: Tuple12[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -254,7 +253,7 @@ case class EnrichedTuple12( tuple: Tuple12[Any, Any, Any, Any, Any, Any, Any, An
 }
 case class EnrichedTuple13( tuple: Tuple13[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -270,7 +269,7 @@ case class EnrichedTuple13( tuple: Tuple13[Any, Any, Any, Any, Any, Any, Any, An
 }
 case class EnrichedTuple14( tuple: Tuple14[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -286,7 +285,7 @@ case class EnrichedTuple14( tuple: Tuple14[Any, Any, Any, Any, Any, Any, Any, An
 }
 case class EnrichedTuple15( tuple: Tuple15[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -302,7 +301,7 @@ case class EnrichedTuple15( tuple: Tuple15[Any, Any, Any, Any, Any, Any, Any, An
 }
 case class EnrichedTuple16( tuple: Tuple16[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -318,7 +317,7 @@ case class EnrichedTuple16( tuple: Tuple16[Any, Any, Any, Any, Any, Any, Any, An
 }
 case class EnrichedTuple17( tuple: Tuple17[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -334,7 +333,7 @@ case class EnrichedTuple17( tuple: Tuple17[Any, Any, Any, Any, Any, Any, Any, An
 }
 case class EnrichedTuple18( tuple: Tuple18[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -350,7 +349,7 @@ case class EnrichedTuple18( tuple: Tuple18[Any, Any, Any, Any, Any, Any, Any, An
 }
 case class EnrichedTuple19( tuple: Tuple19[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -366,7 +365,7 @@ case class EnrichedTuple19( tuple: Tuple19[Any, Any, Any, Any, Any, Any, Any, An
 }
 case class EnrichedTuple20( tuple: Tuple20[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -382,7 +381,7 @@ case class EnrichedTuple20( tuple: Tuple20[Any, Any, Any, Any, Any, Any, Any, An
 }
 case class EnrichedTuple21( tuple: Tuple21[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
@@ -398,7 +397,7 @@ case class EnrichedTuple21( tuple: Tuple21[Any, Any, Any, Any, Any, Any, Any, An
 }
 case class EnrichedTuple22( tuple: Tuple22[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) extends EnrichedTupleBase {
   def v() = {
-    val temp = tuple.productIterator.map( valueCode(_) )
+    val temp = tuple.productIterator.map( valueCode(_) ).toArray
     if(temp.forall( _ > 0 )){
       max( temp ) match {
         case 1 => DenseVector( tuple.productIterator.map( anyToInt(_) ).toArray )
