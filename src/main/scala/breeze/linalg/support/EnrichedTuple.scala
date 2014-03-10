@@ -1,7 +1,7 @@
 package breeze.linalg.support.enrichedTuple
 
 import breeze.math.Complex
-import breeze.linalg.{DenseVector, max}
+import breeze.linalg.{DenseMatrix, DenseVector, max}
 import breeze.macros.arityize
 
 /**
@@ -17,6 +17,29 @@ import breeze.macros.arityize
         case a: Float => 3
         case a: Double => 4
         case a: Complex => 5
+// To be used for TupleNN.m()
+//        case a: Tuple1[Any] => -1
+//        case a: Tuple2[Any, Any] => -2
+//        case a: Tuple3[Any, Any, Any] => -3
+//        case a: Tuple4[Any, Any, Any, Any] => -4
+//        case a: Tuple5[Any, Any, Any, Any, Any] => -5
+//        case a: Tuple6[Any, Any, Any, Any, Any, Any] => -6
+//        case a: Tuple7[Any, Any, Any, Any, Any, Any, Any] => -7
+//        case a: Tuple8[Any, Any, Any, Any, Any, Any, Any, Any] => -8
+//        case a: Tuple9[Any, Any, Any, Any, Any, Any, Any, Any, Any] => -9
+//        case a: Tuple10[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] => -10
+//        case a: Tuple11[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] => -11
+//        case a: Tuple12[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] => -12
+//        case a: Tuple13[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] => -13
+//        case a: Tuple14[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] => -14
+//        case a: Tuple15[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] => -15
+//        case a: Tuple16[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] => -16
+//        case a: Tuple17[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] => -17
+//        case a: Tuple18[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] => -18
+//        case a: Tuple19[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] => -19
+//        case a: Tuple20[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] => -20
+//        case a: Tuple21[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] => -21
+//        case a: Tuple22[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] => -22
         case a: Any => 0
       }
     }
