@@ -21,4 +21,10 @@ class splitTest extends FunSuite {
       split(DenseVector[Double](1,2,3,4,5,6,7,8,9,10,11), 3)
     }
   }
+
+  test("split works on arrays with sequence argument multiple") {
+    val start = DenseVector[Double](1,2,3,4,5,6,7,8,9,10,11,12)
+    val expectedResult = Seq(DenseVector[Double](1,2,3), DenseVector[Double](4,5,6,7,8), DenseVector[Double](9,10,11,12))
+    assert(split(start, Seq(3,8)) == expectedResult)
+  }
 }
