@@ -16,17 +16,17 @@ package distributions
  limitations under the License.
 */
 
-import org.apache.commons.math3.distribution.{LevyDistribution => ApacheLevyDistribution}
-import org.apache.commons.math3.random.{RandomGenerator, JDKRandomGenerator}
-
+import org.apache.commons.math3.random.{EmpiricalDistribution => ApacheEmpiricalDistribution}
 /**
- * The Levy-distribution - ratio of two scaled chi^2 variables
+ * The Weibull-distribution - ratio of two scaled chi^2 variables
  *
  * @author stucchio
 */
 
-class LevyDistribution(mu: Double, c: Double, generator: RandomGenerator = new JDKRandomGenerator()) extends ApacheContinuousDistribution {
-  protected final val inner = new ApacheLevyDistribution(generator, mu, c)
+class VariableKernelEmpiricalDistribution(data: Array[Double], binCount: Int = ApacheEmpiricalDistribution.DEFAULT_BIN_COUNT) extends ApacheContinuousDistribution {
+    def this(data: breeze.linalg.DenseVector[Double]) = this(data.data)
+  protected final val inner = new ApacheEmpiricalDistribution(binCount)
+  inner.load(data)
 }
 
-object LevyDistribution extends ContinuousDistributionUFuncProvider[Double,LevyDistribution]
+object VariableKernelEmpiricalDistribution extends ContinuousDistributionUFuncProvider[Double,VariableKernelEmpiricalDistribution]

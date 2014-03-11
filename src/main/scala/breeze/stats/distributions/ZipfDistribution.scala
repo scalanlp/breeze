@@ -1,7 +1,7 @@
 package breeze.stats
 package distributions
 /*
- Copyright 2009 David Hall, Daniel Ramage
+ Copyright 2009 Chris Stucchio
 
  Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
@@ -16,15 +16,8 @@ package distributions
  limitations under the License.
 */
 
-import org.apache.commons.math3.distribution.{WeibullDistribution => ApacheWeibullDistribution}
-/**
- * The Weibull-distribution - ratio of two scaled chi^2 variables
- *
- * @author stucchio
-*/
+import org.apache.commons.math3.distribution.{ZipfDistribution => ApacheZipfDistribution}
 
-class WeibullDistribution(alpha: Double, beta: Double) extends ApacheContinuousDistribution {
-  protected final val inner = new ApacheWeibullDistribution(alpha, beta)
+class ZipfDistribution(numberOfElements: Int, exponent: Double) extends ApacheDiscreteDistribution {
+  protected final val inner = new ApacheZipfDistribution(numberOfElements, exponent)
 }
-
-object WeibullDistribution extends ContinuousDistributionUFuncProvider[Double,WeibullDistribution]

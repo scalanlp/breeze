@@ -224,7 +224,6 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     new DenseVector(data)
   }
 
-
   def apply[@spec(Double, Float, Int) V](values: Array[V]) = new DenseVector(values)
   def ones[@spec(Double, Float, Int) V: ClassTag:Semiring](size: Int) = fill[V](size, implicitly[Semiring[V]].one)
 
