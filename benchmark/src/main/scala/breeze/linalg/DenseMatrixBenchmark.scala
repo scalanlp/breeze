@@ -14,16 +14,6 @@ trait BuildsRandomMatrices {
 }
 
 class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
-  def valueAtBench(reps: Int, size: Int) = runWith(reps, {randomMatrix(size,size)})((mat:DenseMatrix[Double]) => {
-    var t: Double = 0
-    cfor(0)(i=>i<size, i=>i+1)(i => {
-      cfor(0)(j=>j<size, j=>j+1)(j => {
-        t += mat(i,j)
-      })
-    })
-    t
-  })
-
   def timeValueAt(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
     val size = 2048
     var t: Double = 0
@@ -43,5 +33,23 @@ class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
       })
     })
     t
+  })
+  def timeUpdate(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
+    val size = 2048
+    cfor(0)(i=>i<size, i=>i+1)(i => {
+      cfor(0)(j=>j<size, j=>j+1)(j => {
+        mat.update(i,j,i+j)
+      })
+    })
+    mat
+  })
+  def timeUnsafeUpdate(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
+    val size = 2048
+    cfor(0)(i=>i<size, i=>i+1)(i => {
+      cfor(0)(j=>j<size, j=>j+1)(j => {
+        mat.unsafeUpdate(i,j,i+j)
+      })
+    })
+    mat
   })
 }
