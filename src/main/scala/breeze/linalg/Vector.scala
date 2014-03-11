@@ -551,6 +551,30 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
 
   def range(start:Int, end: Int): Vec[Int] = range(start,end,1)
   def range(start:Int, end: Int, step: Int): Vec[Int] = apply[Int](Array.range(start,end,step))
+
+  def rangeF(start: Float, end: Float, step: Float = 1.0f): Vec[Float] = {
+    import spire.implicits.cfor
+    require(end > start)
+    require(end-start > step)
+    val size: Int = math.floor((end - start)/step).toInt
+    val data = new Array[Float](size)
+    cfor(0)(i => i < size, i => i+1)(i => {
+      data(i) = (start+i*step)
+    })
+    apply(data)
+  }
+
+  def rangeD(start: Double, end: Double, step: Double = 1.0): Vec[Double] = {
+    import spire.implicits.cfor
+    require(end > start)
+    require(end-start > step)
+    val size: Int = math.floor((end - start)/step).toInt
+    val data = new Array[Double](size)
+    cfor(0)(i => i < size, i => i+1)(i => {
+      data(i) = (start+i*step)
+    })
+    apply(data)
+  }
 }
 
 trait StorageVector[E] extends Vector[E] with Storage[E]
