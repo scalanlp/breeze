@@ -125,7 +125,7 @@ class DenseVectorTest extends FunSuite with Checkers {
   }
 
   test("Range") {
-    assert(DenseVector.rangeI(0,10) == DenseVector(0,1,2,3,4,5,6,7,8,9))
+    assert(DenseVector.range(0,10) == DenseVector(0,1,2,3,4,5,6,7,8,9))
     assert(norm(DenseVector.rangeD(0,1,0.1) - DenseVector(0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9)) < 1e-10)
     assert(norm(DenseVector.rangeF(0f,1f,0.1f) - DenseVector(0.0f,0.1f,0.2f,0.3f,0.4f,0.5f,0.6f,0.7f,0.8f,0.9f)) < 1e-6)
   }
