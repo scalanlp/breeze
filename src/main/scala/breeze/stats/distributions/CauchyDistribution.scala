@@ -16,17 +16,15 @@ package distributions
  limitations under the License.
 */
 
-import org.apache.commons.math3.distribution.{LevyDistribution => ApacheLevyDistribution}
-import org.apache.commons.math3.random.{RandomGenerator, JDKRandomGenerator}
-
+import org.apache.commons.math3.distribution.{CauchyDistribution => ApacheCauchyDistribution}
 /**
- * The Levy-distribution - ratio of two scaled chi^2 variables
+ * The Cauchy-distribution
  *
  * @author stucchio
 */
 
-class LevyDistribution(mu: Double, c: Double, generator: RandomGenerator = new JDKRandomGenerator()) extends ApacheContinuousDistribution {
-  protected final val inner = new ApacheLevyDistribution(generator, mu, c)
+class CauchyDistribution(median: Double, scale: Double) extends ApacheContinuousDistribution {
+  protected final val inner = new ApacheCauchyDistribution(median, scale)
 }
 
-object LevyDistribution extends ContinuousDistributionUFuncProvider[Double,LevyDistribution]
+object CauchyDistribution extends ContinuousDistributionUFuncProvider[Double,CauchyDistribution]

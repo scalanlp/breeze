@@ -16,17 +16,16 @@ package distributions
  limitations under the License.
 */
 
-import org.apache.commons.math3.distribution.{LevyDistribution => ApacheLevyDistribution}
-import org.apache.commons.math3.random.{RandomGenerator, JDKRandomGenerator}
+import org.apache.commons.math3.distribution.{HypergeometricDistribution => ApacheHypergeometricDistribution}
 
 /**
- * The Levy-distribution - ratio of two scaled chi^2 variables
+ * The Hypergeometric-distribution - ratio of two scaled chi^2 variables
  *
  * @author stucchio
 */
 
-class LevyDistribution(mu: Double, c: Double, generator: RandomGenerator = new JDKRandomGenerator()) extends ApacheContinuousDistribution {
-  protected final val inner = new ApacheLevyDistribution(generator, mu, c)
+class HypergeometricDistribution(populationSize: Int, numberOfSuccesses: Int, sampleSize: Int) extends ApacheDiscreteDistribution {
+  protected final val inner = new ApacheHypergeometricDistribution(populationSize, numberOfSuccesses, sampleSize)
 }
 
-object LevyDistribution extends ContinuousDistributionUFuncProvider[Double,LevyDistribution]
+object HypergeometricDistribution
