@@ -1,7 +1,6 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
-import breeze.storage.DefaultArrayValue
 import scala.reflect.ClassTag
 import spire.implicits._
 
@@ -12,7 +11,7 @@ import spire.implicits._
  */
 object split extends UFunc {
 
-  implicit def implIntVec[T: ClassTag](implicit default: DefaultArrayValue[T]): Impl2[DenseVector[T], Int, Seq[DenseVector[T]]] = new Impl2[DenseVector[T], Int, Seq[DenseVector[T]]] {
+  implicit def implIntVec[T: ClassTag]: Impl2[DenseVector[T], Int, Seq[DenseVector[T]]] = new Impl2[DenseVector[T], Int, Seq[DenseVector[T]]] {
     def apply(v: DenseVector[T], n: Int): Seq[DenseVector[T]] = {
       require(n >= 0)
       require(n < v.size)
@@ -33,7 +32,7 @@ object split extends UFunc {
     }
   }
 
-  implicit def implSeqVec[T: ClassTag](implicit default: DefaultArrayValue[T]): Impl2[DenseVector[T], Seq[Int], Seq[DenseVector[T]]] = new Impl2[DenseVector[T], Seq[Int], Seq[DenseVector[T]]] {
+  implicit def implSeqVec[T: ClassTag]: Impl2[DenseVector[T], Seq[Int], Seq[DenseVector[T]]] = new Impl2[DenseVector[T], Seq[Int], Seq[DenseVector[T]]] {
     def apply(v: DenseVector[T], nSeq: Seq[Int]): Seq[DenseVector[T]] = {
       require(nSeq.size < v.size)
 
@@ -60,11 +59,12 @@ object split extends UFunc {
 }
 
 object hsplit extends UFunc {
-  implicit def implIntVec[T: ClassTag](implicit default: DefaultArrayValue[T]): Impl2[DenseVector[T], Int, Seq[DenseVector[T]]] = new Impl2[DenseVector[T], Int, Seq[DenseVector[T]]] { //For vectors just an alias
+  implicit def implIntVec[T: ClassTag]: Impl2[DenseVector[T], Int, Seq[DenseVector[T]]] = new Impl2[DenseVector[T], Int, Seq[DenseVector[T]]] { //For vectors just an alias
     def apply(v: DenseVector[T], n: Int): Seq[DenseVector[T]] = hsplit(v,n)
   }
 
-  implicit def implSeqVec[T: ClassTag](implicit default: DefaultArrayValue[T]): Impl2[DenseVector[T], Seq[Int], Seq[DenseVector[T]]] = new Impl2[DenseVector[T], Seq[Int], Seq[DenseVector[T]]] { //For vectors just an alias
+  implicit def implSeqVec[T: ClassTag]: Impl2[DenseVector[T], Seq[Int], Seq[DenseVector[T]]] = new Impl2[DenseVector[T], Seq[Int], Seq[DenseVector[T]]] { //For vectors just an alias
     def apply(v: DenseVector[T], n: Seq[Int]): Seq[DenseVector[T]] = hsplit(v,n)
   }
+
 }
