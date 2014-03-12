@@ -57,6 +57,14 @@ object split extends UFunc {
       result.toSeq
     }
   }
+
+  implicit def implIntMatrix[T: ClassTag](implicit dfv: DefaultArrayValue[T]): Impl3[DenseMatrix[T], Int, Int, Seq[DenseMatrix[T]]] = new Impl3[DenseMatrix[T], Int, Int, Seq[DenseMatrix[T]]] {
+    def apply(v: DenseMatrix[T], n: Int, axis: Int): Seq[DenseMatrix[T]] = axis match {
+      case 0 => vsplit(v,n)
+      case 1 => hsplit(v,n)
+      case _ => throw new IllegalArgumentException("Matrices have only two axes.")
+    }
+  }
 }
 
 object hsplit extends UFunc {
