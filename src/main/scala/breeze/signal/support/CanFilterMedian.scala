@@ -76,7 +76,7 @@ object CanFilterMedian {
 
           //pad both sides of the vector with medians with smaller windows
           (for(winLen <- 0 to halfWindow-1) yield median( data(0 to winLen * 2) )).toArray ++ tempret ++
-          (for(winLen <- (- halfWindow) to -1 ) yield median( data( 2*winLen + 1 to -1) ) ).toArray
+          (for(winLen <- (- halfWindow) to -1 ) yield median( data( 2*winLen + 1 to -1) ))
         }
         case OptOverhang.None => tempret
         case opt: OptOverhang => {
