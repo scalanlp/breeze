@@ -74,7 +74,7 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
   DenseMatrix.init()
 
   /** Calculates the index into the data array for row and column */
-  final def linearIndex(row: Int, col: Int): Int = {
+  def linearIndex(row: Int, col: Int): Int = {
     if(isTranspose)
       offset + col + row * majorStride
     else
@@ -91,13 +91,15 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
     }
   }
 
-  def update(row: Int, col: Int, v: V) {
+  def update(row: Int, col: Int, v: V) = {
     if(row < - rows || row >= rows) throw new IndexOutOfBoundsException((row,col) + " not in [-"+rows+","+rows+") x [-"+cols+"," + cols+")")
     if(col < - cols || col >= cols) throw new IndexOutOfBoundsException((row,col) + " not in [-"+rows+","+rows+") x [-"+cols+"," + cols+")")
     val trueRow = if(row<0) row + rows else row
     val trueCol = if(col<0) col + cols else col
     data(linearIndex(trueRow, trueCol)) = v
   }
+
+  def unsafeUpdate(row: Int, col: Int, v: V) = { data(linearIndex(row, col)) = v }
 
   /** Converts this matrix to a DenseVector (column-major) */
   def toDenseVector: DenseVector[V] = {
@@ -192,6 +194,8 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
   def activeSize = data.length
 
   def valueAt(i: Int) = data(i)
+  def valueAt(row: Int, col: Int) = apply(row,col)
+  def unsafeValueAt(row: Int, col: Int) = data(linearIndex(row, col))
 
   def indexAt(i: Int) = i
 
@@ -878,7 +882,3 @@ with MatrixConstructors[DenseMatrix] {
   @noinline
   private def init() = {}
 }
-
-
-
-
