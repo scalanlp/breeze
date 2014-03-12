@@ -92,3 +92,28 @@ object hsplit extends UFunc {
     }
   }
 }
+
+object vsplit extends UFunc {
+  implicit def implIntMat[T: ClassTag](implicit dfv: DefaultArrayValue[T]): Impl2[DenseMatrix[T], Int, Seq[DenseMatrix[T]]] = new Impl2[DenseMatrix[T],Int, Seq[DenseMatrix[T]]] { //for matrices
+    def apply(v: DenseMatrix[T], n: Int): Seq[DenseMatrix[T]] = {
+      require(n >= 0)
+      require(n < v.cols)
+      require(v.cols % n == 0)
+
+      val result = new collection.mutable.ListBuffer[DenseMatrix[T]]()
+      val newRows = v.rows / n
+
+      cfor(0)(k => k < n, k => k+1)(k => {
+        val offsetInOriginalMatrix = k*newRows
+        val chunk = DenseMatrix.create(newRows, v.cols, new Array[T](v.cols * newRows))
+        cfor(0)(i => i < newRows, i => i+1)(i => {
+          cfor(0)(j => j < v.cols, j => j+1)(j => {
+            chunk.unsafeUpdate(i,j, v.unsafeValueAt(i+offsetInOriginalMatrix,j))
+          })
+        })
+        result += chunk
+      })
+      result.toSeq
+    }
+  }
+}
