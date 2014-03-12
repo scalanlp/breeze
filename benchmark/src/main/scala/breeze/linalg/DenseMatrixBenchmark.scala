@@ -14,7 +14,7 @@ trait BuildsRandomMatrices {
 }
 
 class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
-  def timeValueAt(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
+  def timeValueAtRowCol(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
     val size = 2048
     var t: Double = 0
     cfor(0)(i=>i<size, i=>i+1)(i => {
@@ -24,7 +24,27 @@ class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
     })
     t
   })
-  def timeUnsafeValueAt(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
+  def timeUnsafeValueAtRowCol(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
+    val size = 2048
+    var t: Double = 0
+    cfor(0)(j=>j<size, j=>j+1)(j => {
+      cfor(0)(i=>i<size, i=>i+1)(i => {
+        t += mat.unsafeValueAt(i,j)
+      })
+    })
+    t
+  })
+  def timeValueAtColRow(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
+    val size = 2048
+    var t: Double = 0
+    cfor(0)(j=>j<size, j=>j+1)(j => {
+      cfor(0)(i=>i<size, i=>i+1)(i => {
+        t += mat(i,j)
+      })
+    })
+    t
+  })
+  def timeUnsafeValueAtColRow(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
     val size = 2048
     var t: Double = 0
     cfor(0)(i=>i<size, i=>i+1)(i => {
@@ -34,7 +54,8 @@ class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
     })
     t
   })
-  def timeUpdate(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
+
+  def timeUpdateRowCol(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
     val size = 2048
     cfor(0)(i=>i<size, i=>i+1)(i => {
       cfor(0)(j=>j<size, j=>j+1)(j => {
@@ -43,10 +64,28 @@ class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
     })
     mat
   })
-  def timeUnsafeUpdate(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
+  def timeUnsafeUpdateRowCol(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
     val size = 2048
     cfor(0)(i=>i<size, i=>i+1)(i => {
       cfor(0)(j=>j<size, j=>j+1)(j => {
+        mat.unsafeUpdate(i,j,i+j)
+      })
+    })
+    mat
+  })
+  def timeUpdateColRow(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
+    val size = 2048
+    cfor(0)(j=>j<size, j=>j+1)(j => {
+      cfor(0)(i=>i<size, i=>i+1)(i => {
+        mat.update(i,j,i+j)
+      })
+    })
+    mat
+  })
+  def timeUnsafeUpdateColRow(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
+    val size = 2048
+    cfor(0)(j=>j<size, j=>j+1)(j => {
+      cfor(0)(i=>i<size, i=>i+1)(i => {
         mat.unsafeUpdate(i,j,i+j)
       })
     })
