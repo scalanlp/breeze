@@ -45,38 +45,38 @@ object CanFilterMedian {
         var tempret =
           if( splitDataLength > windowLength*10*threadNo ){    //arbitrary cutoff for whether to parallelize or not
 
-          //middle 6 data vectors
-          var splitData: Vector[Vector[Double]] = (
-            for(cnt <- 1 to threadNo - 2)
-              yield data.slice(cnt*splitDataLength - windowLengthPre, (cnt+1)*splitDataLength + windowLengthPre).toScalaVector
-          ).toVector
+            //middle 6 data vectors
+            var splitData: Array[Array[Double]] = (
+              for(cnt <- 1 to threadNo - 2)
+                yield data.slice(cnt*splitDataLength - windowLengthPre, (cnt+1)*splitDataLength + windowLengthPre).toArray
+            ).toArray
 
-          splitData = splitData.+:( //first data vector
-            data.slice(0, splitDataLength + windowLengthPre).toScalaVector
-          )
-          splitData = splitData.:+(
-            data.slice((threadNo-1)*splitDataLength - windowLengthPre, data.length).toScalaVector
-          )
+            splitData = splitData.+:( //first data vector
+              data.slice(0, splitDataLength + windowLengthPre).toArray
+            )
+            splitData = splitData.:+(
+              data.slice((threadNo-1)*splitDataLength - windowLengthPre, data.length).toArray
+            )
+
+            //if( isOdd(windowLength) )
+              splitData.par.flatMap( medianFilterImplOddNoOverhang(_, windowLength) ).toArray
+            //else splitData.par.flatMap( medianFilterImplEvenDoubleNoOverhang(_, windowLength) )
+
+          } else {
 
           //if( isOdd(windowLength) )
-            splitData.par.flatMap( medianFilterImplOddNoOverhang(_, windowLength) ).toVector
-          //else splitData.par.flatMap( medianFilterImplEvenDoubleNoOverhang(_, windowLength) )
-
-        } else {
-
-          //if( isOdd(windowLength) )
-            medianFilterImplOddNoOverhang(data.toScalaVector, windowLength).toVector
+            medianFilterImplOddNoOverhang(data.toArray, windowLength)
           //else medianFilterImplEvenDoubleNoOverhang(data.toScalaVector, windowLength)
 
-        }
+          }
 
       tempret = overhang match {
         case OptOverhang.PreserveLength => {
           val halfWindow = (windowLength - 1)/2//(windowLength+1)/2 - 1
 
           //pad both sides of the vector with medians with smaller windows
-          (for(winLen <- 0 to halfWindow-1) yield median( data(0 to winLen * 2) )).toVector ++ tempret ++
-          (for(winLen <- (- halfWindow) to -1 ) yield median( data( 2*winLen + 1 to -1) )).toVector
+          (for(winLen <- 0 to halfWindow-1) yield median( data(0 to winLen * 2) )).toArray ++ tempret ++
+          (for(winLen <- (- halfWindow) to -1 ) yield median( data( 2*winLen + 1 to -1) ) ).toArray
         }
         case OptOverhang.None => tempret
         case opt: OptOverhang => {
@@ -84,7 +84,7 @@ object CanFilterMedian {
         }
       }
 
-        DenseVector( tempret.toArray )
+        DenseVector( tempret )
 
       }
 
@@ -94,7 +94,7 @@ object CanFilterMedian {
 
 
   /**Implementation, odd window*/
-  def medianFilterImplOddNoOverhang(data: Vector[Double], windowLength: Int): Vector[Double] = {
+  def medianFilterImplOddNoOverhang(data: Array[Double], windowLength: Int): Array[Double] = {
     require(windowLength <= data.length)
     require(windowLength % 2 == 1)
 
@@ -140,7 +140,7 @@ object CanFilterMedian {
     //process last element separately
     tempret(firstElement) = sortedData.toStream.apply(middleIndex)
 
-    tempret.toVector
+    tempret
 
   }
 
