@@ -10,7 +10,7 @@ object DenseMatrixBenchmark extends MyRunner(classOf[DenseMatrixBenchmark])
 
 trait BuildsRandomMatrices {
   private val uniform = Uniform(0,1)
-  def randomMatrix(m: Int, n: Int): DenseMatrix[Double] = { DenseMatrix.rand[Double](m,n) }
+  def randomMatrix(m: Int, n: Int, transpose: Boolean = false): DenseMatrix[Double] = if (!transpose) { DenseMatrix.rand[Double](m,n) } else { DenseMatrix.rand[Double](m,n).t }
 }
 
 class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
@@ -90,5 +90,12 @@ class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
       })
     })
     mat
+  })
+
+  def timeMapPairs(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
+    mat.mapPairs( (x:(Int,Int), v: Double) => (x._1*x._2*v) )
+  })
+  def timeMapPairsTranspose(reps: Int) = runWith(reps, {randomMatrix(2048,2048, true)})((mat:DenseMatrix[Double]) => {
+    mat.mapPairs( (x:(Int,Int), v: Double) => (x._1*x._2*v) )
   })
 }
