@@ -1,6 +1,7 @@
 package breeze.numerics.constants
 
 import breeze.numerics._
+import scala.collection.immutable.HashMap
 
 /**This package specifies standard numerical/scientific constants.
  * SI/MKS units where applicable, specified in name if otherwise.
