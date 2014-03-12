@@ -26,6 +26,7 @@ import scala.reflect.ClassTag
 import breeze.macros.expand
 import scala.math.BigInt
 import scala.annotation.unchecked.uncheckedVariance
+import breeze.stats.distributions.Rand
 
 /**
  *
@@ -170,9 +171,9 @@ object Matrix extends MatrixConstructors[Matrix]
 }
 
 
-trait MatrixConstructors[Vec[T]<:Matrix[T]] {
-  def zeros[@specialized(Int, Float, Double) V:ClassTag:DefaultArrayValue](rows: Int, cols: Int):Vec[V]
-  def create[@specialized(Int, Float, Double) V:DefaultArrayValue](rows: Int, cols: Int, data: Array[V]):Vec[V]
+trait MatrixConstructors[Mat[T]<:Matrix[T]] {
+  def zeros[@specialized(Int, Float, Double) V:ClassTag:DefaultArrayValue](rows: Int, cols: Int):Mat[V]
+  def create[@specialized(Int, Float, Double) V:DefaultArrayValue](rows: Int, cols: Int, data: Array[V]):Mat[V]
 
   /**
    * Creates a matrix of all ones.
@@ -181,12 +182,12 @@ trait MatrixConstructors[Vec[T]<:Matrix[T]] {
    * @tparam V
    * @return
    */
-  def ones[@specialized(Int, Float, Double) V:ClassTag:DefaultArrayValue:Semiring](rows: Int, cols: Int):Vec[V] = {
+  def ones[@specialized(Int, Float, Double) V:ClassTag:DefaultArrayValue:Semiring](rows: Int, cols: Int):Mat[V] = {
     fill(rows,cols)(implicitly[Semiring[V]].one)
   }
 
-  def fill[@spec(Double, Int, Float) V:ClassTag:DefaultArrayValue](rows: Int, cols: Int)(v: =>V):Vec[V] = create(rows, cols, Array.fill(rows * cols)(v))
-  def tabulate[@spec(Double, Int, Float) V:ClassTag:DefaultArrayValue](rows: Int, cols: Int)(f: (Int,Int)=>V):Vec[V]= {
+  def fill[@spec(Double, Int, Float) V:ClassTag:DefaultArrayValue](rows: Int, cols: Int)(v: =>V):Mat[V] = create(rows, cols, Array.fill(rows * cols)(v))
+  def tabulate[@spec(Double, Int, Float) V:ClassTag:DefaultArrayValue](rows: Int, cols: Int)(f: (Int,Int)=>V):Mat[V]= {
     val z = zeros(rows, cols)
     for(c <- 0 until cols; r <- 0 until rows) {
       z(r, c) = f(r, c)
@@ -194,8 +195,8 @@ trait MatrixConstructors[Vec[T]<:Matrix[T]] {
     z
   }
 
-  def rand(rows: Int, cols: Int, rand: Random = new Random()) = {
-    fill(rows, cols)(rand.nextDouble())
+  def rand[T:ClassTag:DefaultArrayValue](rows: Int, cols: Int, rand: Rand[T] = Rand.uniform): Mat[T] = {
+    fill(rows, cols)(rand.draw())
   }
 
   /** Static constructor for a literal matrix. */

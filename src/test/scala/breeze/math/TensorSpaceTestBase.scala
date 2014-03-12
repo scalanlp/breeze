@@ -119,7 +119,7 @@ trait TensorSpaceTestBase[V, I, S] extends MutableVectorSpaceTestBase[V, S] with
       ab :*= c
       val ba = copy(a) :* c
       ba += (b :* c)
-      close(ab, ba, 1e-6)
+      close(ab, ba, TOL)
     })
   }
 
@@ -135,7 +135,7 @@ trait DoubleValuedTensorSpaceTestBase[V <: breeze.linalg.Vector[Double], I] exte
       val nn = n.abs % 100 + 1.0
       val normalized = breeze.linalg.normalize(a, nn)
       val v = breeze.linalg.norm(normalized, nn)
-      (v - 1.0).abs <= 1E-5 || norm(normalized) == 0.0
+      (v - 1.0).abs <= TOL || norm(normalized) == 0.0
     })
 
 

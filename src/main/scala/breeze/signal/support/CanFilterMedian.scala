@@ -1,7 +1,8 @@
 package breeze.signal.support
 
 import breeze.signal.{filterMedian, OptOverhang}
-import breeze.linalg.{convert, median, DenseVector}
+import breeze.stats._
+import breeze.linalg.{convert, DenseVector}
 import breeze.macros.expand
 import scala.collection.mutable
 import breeze.numerics.isOdd
@@ -16,9 +17,6 @@ trait CanFilterMedian[Input] {
 
 object CanFilterMedian {
 
-  /** Use via implicit delegate syntax filterBP(x: DenseVector) and filterBS(x: DenseVector)
-    *
-    */
   //Int, Long and Float will calculate in Double (see algorithm, needs infinitesimal small numbers for ordering)
   @expand
   implicit def dvFilterMedianT[@expand.args(Int, Long, Float) T]: CanFilterMedian[T] = {
@@ -197,6 +195,3 @@ object CanFilterMedian {
 
 
 }
-
-
-
