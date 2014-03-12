@@ -1,4 +1,6 @@
-package breeze.numerics
+package breeze.numerics.constants
+
+import breeze.numerics._
 
 /**This package specifies standard numerical/scientific constants.
  * SI/MKS units where applicable, specified in name if otherwise.
@@ -85,7 +87,7 @@ object Constants {
     * @see <a href="http://en.wikipedia.org/wiki/Molar_gas_constant">http://en.wikipedia.org/wiki/Molar_gas_constant</a>
     */
   val MolarGasConstant: Double = 8.3144621
-  /** ALIAS FOR [[breeze.numerics.Constants.MolarGasConstant]]
+  /** ALIAS FOR [[Constants.MolarGasConstant]]
     */
   val R: Double = MolarGasConstant
 
@@ -164,5 +166,68 @@ object Constants {
 
   // </editor-fold>
 
+
+  // <editor-fold defaultstate="collapsed" desc=" SI Prefixes ">
+
+  /**SI prefix for 1.0E24*/
+  val yotta = 1.0E24
+  /**SI prefix for 1.0E21*/
+  val zetta = 1.0E21
+  /**SI prefix for 1.0E18*/
+  val exa   = 1.0E18
+  /**SI prefix for 1.0E15*/
+  val peta  = 1.0E15
+  /**SI prefix for 1.0E12*/
+  val tera  = 1.0E12
+  /**SI prefix for 1.0E9*/
+  val giga  = 1.0E9
+  /**SI prefix for 1.0E6*/
+  val mega  = 1.0E6
+  /**SI prefix for 1.0E3*/
+  val kilo  = 1.0E3
+  /**SI prefix for 1.0E2*/
+  val hecto = 1.0E2
+  /**SI prefix for 1.0E1*/
+  val deka  = 1.0E1
+  /**SI prefix for 1.0E-1*/
+  val deci  = 1.0E-1
+  /**SI prefix for 1.0E-2*/
+  val centi = 1.0E-2
+  /**SI prefix for 1.0E-3*/
+  val milli = 1.0E-3
+  /**SI prefix for 1.0E-6*/
+  val micro = 1.0E-6
+  /**SI prefix for 1.0E-9*/
+  val nano  = 1.0E-9
+  /**SI prefix for 1.0E-12*/
+  val pico  = 1.0E-12
+  /**SI prefix for 1.0E-15*/
+  val femto = 1.0E-15
+  /**SI prefix for 1.0E-18*/
+  val atto  = 1.0E-18
+  /**SI prefix for 1.0E-21*/
+  val zepto = 1.0E-21
+
+  // </editor-fold>
+  // <editor-fold defaultstate="collapsed" desc=" Binary Prefixes ">
+
+  /**Binary prefix for pow(2, 10)*/
+  val kibi = pow(2.0, 10d)
+  /**Binary prefix for pow(2, 20)*/
+  val mebi = pow(2.0, 20d)
+  /**Binary prefix for pow(2, 30)*/
+  val gibi = pow(2.0, 30d)
+  /**Binary prefix for pow(2, 40)*/
+  val tebi = pow(2.0, 40d)
+  /**Binary prefix for pow(2, 50)*/
+  val pebi = pow(2.0, 50d)
+  /**Binary prefix for pow(2, 60)*/
+  val exbi = pow(2.0, 60d)
+  /**Binary prefix for pow(2, 70)*/
+  val zebi = pow(2.0, 70d)
+  /**Binary prefix for pow(2, 80)*/
+  val yobi = pow(2.0, 80d)
+
+  // </editor-fold>
 
 }
