@@ -27,4 +27,26 @@ class splitTest extends FunSuite {
     val expectedResult = Seq(DenseVector[Double](1,2,3), DenseVector[Double](4,5,6,7,8), DenseVector[Double](9,10,11,12))
     assert(split(start, Seq(3,8)) == expectedResult)
   }
+
+  test("split works on dense matrix") {
+    val mbig = DenseMatrix(
+      (0,1,2,3,4,5),
+      (3,4,5,6,7,8),
+      (3,4,5,6,7,8),
+      (5,4,5,9,7,8)
+    )
+    val expectedResult = List(DenseMatrix(
+      (0,1,2),
+      (3,4,5),
+      (3,4,5),
+      (5,4,5)
+    ), DenseMatrix(
+      (3,4,5),
+      (6,7,8),
+      (6,7,8),
+      (9,7,8)
+    ))
+    assert(hsplit(mbig, 2) == expectedResult)
+  }
+
 }
