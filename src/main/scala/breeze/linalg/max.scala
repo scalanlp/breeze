@@ -169,11 +169,11 @@ object ptp extends UFunc {
         }
 
         def zeros(numZero: Int, zeroValue: S): Unit = {
-//          if(numZero != 0) {
-//            visitedOne = true
-//            max = scala.math.max(zeroValue, max)
-//            min = scala.math.min(zeroValue, min)
-//          }
+          if(numZero != 0) {
+            visitedOne = true
+            max = scala.math.max(zeroValue, max)
+            min = scala.math.min(zeroValue, min)
+          }
         }
 
         override def visitArray(arr: Array[S], offset: Int, length: Int, stride: Int): Unit = {
@@ -221,11 +221,11 @@ object minMax extends UFunc {
         }
 
         def zeros(numZero: Int, zeroValue: S): Unit = {
-//          if(numZero != 0) {
-//            visitedOne = true
-//            max = scala.math.max(zeroValue, max)
-//            min = scala.math.min(zeroValue, min)
-//          }
+          if(numZero != 0) {
+            visitedOne = true
+            max = scala.math.max(zeroValue, max)
+            min = scala.math.min(zeroValue, min)
+          }
         }
 
         override def visitArray(arr: Array[S], offset: Int, length: Int, stride: Int): Unit = {
