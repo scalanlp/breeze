@@ -10,6 +10,7 @@ import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import breeze.macros.expand
 import scala.math.BigInt
 import breeze.math.PowImplicits._
+import spire.implicits._
 
 trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 

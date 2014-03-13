@@ -16,12 +16,14 @@ package breeze.linalg
 */
 
 import breeze.storage.DefaultArrayValue
-import breeze.math.{TensorSpace, Ring, Semiring, Field}
+import breeze.math.{TensorSpace, Ring, Semiring, TemporaryFieldTranslation}
 import breeze.generic._
 import collection.Set
 import operators._
 import breeze.linalg.support._
 import CanTraverseValues.ValuesVisitor
+import spire.algebra.Field
+import spire.implicits._
 
 /**
  * A map-like tensor that acts like a collection of key-value pairs where
@@ -155,5 +157,3 @@ object Counter extends CounterOps {
     TensorSpace.make[Counter[K, V], K, V]
   }
 }
-
-

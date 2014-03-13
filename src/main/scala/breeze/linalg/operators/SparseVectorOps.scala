@@ -12,6 +12,7 @@ import scala.specialized
 import breeze.storage.DefaultArrayValue
 import breeze.generic.UFunc.UImpl
 import scala.{specialized=>spec}
+import spire.implicits._
 
 trait SparseVector_DenseVector_Ops extends DenseVector_SparseVector_Ops { this: SparseVector.type =>
   import breeze.math.PowImplicits._

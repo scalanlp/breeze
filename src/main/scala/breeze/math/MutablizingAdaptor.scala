@@ -6,6 +6,8 @@ import breeze.linalg.operators._
 import breeze.util.Isomorphism
 import breeze.generic.{UFunc}
 import breeze.generic.UFunc.UImpl2
+import spire.algebra._
+import spire.implicits._
 
 /**
  *

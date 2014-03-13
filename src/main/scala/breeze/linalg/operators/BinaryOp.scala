@@ -15,7 +15,7 @@ package breeze.linalg.operators
  limitations under the License.
 */
 import breeze.generic.{UFunc, MMRegistry2, Multimethod2}
-import breeze.math.{Field, Ring, Semiring}
+import breeze.math.{Ring, Semiring}
 import breeze.linalg.support.CanCopy
 import breeze.numerics.IntMath
 import scala.annotation.unchecked.uncheckedVariance

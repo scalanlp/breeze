@@ -2,12 +2,13 @@ package breeze.linalg.operators
 
 import breeze.macros.expand
 import breeze.generic.UFunc.{UImpl2, InPlaceImpl2}
-import breeze.math.{Ring, MutableVectorSpace, Semiring}
+import breeze.math.{Ring, MutableVectorSpace, Semiring, BreezeFields}
 import breeze.storage.DefaultArrayValue
 import scala.reflect.ClassTag
 import breeze.linalg.support.CanAxpy
 import breeze.linalg._
-
+import spire.implicits._
+import BreezeFields._
 
 trait VectorBuilderOps { this: VectorBuilder.type =>
   @expand

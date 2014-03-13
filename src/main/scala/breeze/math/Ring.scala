@@ -20,6 +20,9 @@ package breeze.math
  * @author dlwh
  */
 
+import spire.algebra._
+import spire.implicits._
+
 trait Ring[@specialized(Int,Short,Long,Float,Double) V] extends Semiring[V]  {
 
   def -(a : V, b : V) : V
@@ -28,9 +31,9 @@ trait Ring[@specialized(Int,Short,Long,Float,Double) V] extends Semiring[V]  {
 }
 
 object Ring {
-  import Field._
-  implicit val ringD: Ring[Double] = fieldD
-  implicit val ringFloat: Ring[Float] = fieldFloat
+  import BreezeFields._
+  implicit val ringD: Ring[Double] = new TemporaryFieldTranslation(implicitly[Field[Double]])
+  implicit val ringFloat: Ring[Float] = new TemporaryFieldTranslation(implicitly[Field[Float]])
   implicit val ringInt: Ring[Int] = fieldInt
   implicit val ringLong: Ring[Long] = fieldLong
   implicit val ringBigInt: Ring[BigInt] = fieldBigInt

@@ -5,6 +5,7 @@ import support._
 import breeze.math.MutableInnerProductSpace
 import breeze.math.Semiring
 import DenseMatrix._
+import spire.implicits._
 
 /** Import this to provide access to a DenseMatrix[Double] as a MutableInnerProductSpace, so it can be used in optimization. */
 object MutableInnerProductSpaceDenseMatrixDouble {

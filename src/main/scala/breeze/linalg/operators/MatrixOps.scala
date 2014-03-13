@@ -9,6 +9,7 @@ import scala.util.Random
 import breeze.macros.expand
 import scala.math.BigInt
 import breeze.linalg._
+import spire.implicits._
 
 
 trait MatrixGenericOps { this: Matrix.type =>

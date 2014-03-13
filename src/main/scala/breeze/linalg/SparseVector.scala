@@ -19,12 +19,15 @@ import scala.{specialized=>spec}
 import breeze.storage.DefaultArrayValue
 import breeze.linalg.support._
 import breeze.util.ArrayUtil
-import breeze.math.{Complex, Ring, TensorSpace}
+import breeze.math.{Complex, Ring, TensorSpace, BreezeFields}
 import breeze.collection.mutable.SparseArray
 import collection.mutable
 import scala.reflect.ClassTag
 import CanTraverseValues.ValuesVisitor
 import breeze.generic.UFunc.UImpl
+import spire.algebra.Field
+import spire.implicits._
+import BreezeFields._
 
 
 /**
@@ -318,7 +321,7 @@ object SparseVector extends SparseVectorOps
     TensorSpace.make[SparseVector[Float], Int, Float]
   }
   implicit val space_i: TensorSpace[SparseVector[Int], Int, Int] = TensorSpace.make[SparseVector[Int], Int, Int]
-  
+
   implicit def canTranspose[V:ClassTag:DefaultArrayValue]: CanTranspose[SparseVector[V], CSCMatrix[V]] = {
     new CanTranspose[SparseVector[V], CSCMatrix[V]] {
       def apply(from: SparseVector[V]) = {
@@ -333,7 +336,7 @@ object SparseVector extends SparseVectorOps
       }
     }
   }
-  
+
   implicit def canTransposeComplex: CanTranspose[SparseVector[Complex], CSCMatrix[Complex]] = {
     new CanTranspose[SparseVector[Complex], CSCMatrix[Complex]] {
       def apply(from: SparseVector[Complex]) = {
@@ -353,5 +356,3 @@ object SparseVector extends SparseVectorOps
   @noinline
   private def init() = {}
 }
-
-

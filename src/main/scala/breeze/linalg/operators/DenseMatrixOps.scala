@@ -11,6 +11,7 @@ import breeze.linalg.support.{CanCollapseAxis, CanSlice2}
 import breeze.util.ArrayUtil
 import breeze.storage.DefaultArrayValue
 import scala.reflect.ClassTag
+import spire.implicits._
 
 trait DenseMatrixMultiplyStuff extends DenseMatrixOps with DenseMatrixMultOps { this: DenseMatrix.type =>
   implicit object DenseMatrixDMulDenseMatrixD

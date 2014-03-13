@@ -9,6 +9,7 @@ import breeze.linalg.support.{CanZipMapValues, CanAxpy, CanCopy}
 import breeze.generic.UFunc.{UImpl, UImpl2}
 import scala.reflect.ClassTag
 import breeze.storage.DefaultArrayValue
+import spire.implicits._
 
 trait DenseVector_HashVector_Ops { this: HashVector.type =>
   import breeze.math.PowImplicits._

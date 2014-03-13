@@ -22,16 +22,29 @@ package breeze.math
  *
 *  @author dlwh
  */
-trait Field[@specialized(Int,Short,Long,Float,Double) V] extends Ring[V] {
-  def /(a : V, b : V) : V
-  def inverse(a: V) = /(one, a)
+import spire.algebra.Field
 
+trait MeasuresCloseness[T] {
+   def close(a: T, b: T, tolerance: Double): Boolean
 }
 
-object Field {
+trait FakeField[T] extends Field[T]
+
+trait TemporaryTranslation {
+  implicit class TemporaryFieldTranslation[T](field: Field[T]) extends Ring[T] {
+    //Here to translate Spire fields into Breeze rings, first step in eliminating breeze.math
+    def zero = field.zero
+    def one = field.one
+    def +(a: T, b: T) = field.plus(a,b)
+    def *(a: T, b: T) = field.times(a,b)
+  }
+}
+
+object BreezeFields {
+
   /** Not a field, but whatever. */
   @SerialVersionUID(1L)
-  implicit object fieldInt extends Field[Int] {
+  implicit object fieldInt extends FakeField[Int] {
     def zero = 0
     def one = 1
     def ==(a : Int, b : Int) = a == b
@@ -44,7 +57,7 @@ object Field {
 
   /** Not a field, but whatever. */
   @SerialVersionUID(1L)
-  implicit object fieldShort extends Field[Short] {
+  implicit object fieldShort extends FakeField[Short] {
     def zero = 0.asInstanceOf[Short]
     def one = 1.asInstanceOf[Short]
     def ==(a : Short, b : Short) = a == b
@@ -57,7 +70,7 @@ object Field {
 
   /** Not a field, but whatever. */
   @SerialVersionUID(1L)
-  implicit object fieldLong extends Field[Long] {
+  implicit object fieldLong extends FakeField[Long] {
     def zero = 0l
     def one = 1l
     def ==(a : Long, b : Long) = a == b
@@ -70,7 +83,7 @@ object Field {
 
   /** Not a field, but whatever. */
   @SerialVersionUID(1L)
-  implicit object fieldBigInt extends Field[BigInt] {
+  implicit object fieldBigInt extends FakeField[BigInt] {
     def zero = 0l
     def one = 1l
     def ==(a : BigInt, b : BigInt) = a == b
@@ -80,33 +93,4 @@ object Field {
     def *(a : BigInt, b : BigInt) = a * b
     def /(a : BigInt, b : BigInt) = a / b
   }
-
-  @SerialVersionUID(1L)
-  implicit object fieldFloat extends Field[Float] {
-    def zero = 0.0f
-    def one = 1.0f
-    def ==(a : Float, b : Float) = a == b
-    def !=(a : Float, b : Float) = a != b
-    def +(a : Float, b : Float) = a + b
-    def -(a : Float, b : Float) = a - b
-    def *(a : Float, b : Float) = a * b
-    def /(a : Float, b : Float) = a / b
-
-    override def close(a: Float, b: Float, tolerance: Double) = (a-b).abs <= math.max(a.abs, b.abs) * tolerance
-  }
-
-  @SerialVersionUID(-5955467582882664220L)
-  implicit object fieldD extends Field[Double] {
-    def zero = 0.0
-    def one = 1.0
-    def ==(a : Double, b : Double) = a == b
-    def !=(a : Double, b : Double) = a != b
-    def +(a : Double, b : Double) = a + b
-    def -(a : Double, b : Double) = a - b
-    def *(a : Double, b : Double) = a * b
-    def /(a : Double, b : Double) = a / b
-
-    override def close(a: Double, b: Double, tolerance: Double) = (a-b).abs <= math.max(a.abs, b.abs) * tolerance
-  }
 }
-

@@ -5,7 +5,7 @@ import breeze.linalg.operators._
 import breeze.storage.{ConfigurableDefault, DefaultArrayValue}
 import breeze.generic._
 import breeze.linalg.support._
-import breeze.math.{Semiring, TensorSpace, Ring, Complex}
+import breeze.math.{Semiring, TensorSpace, Ring, Complex, BreezeFields}
 import scala.reflect.ClassTag
 import scala.util.hashing.MurmurHash3
 import breeze.macros.expand
@@ -13,6 +13,8 @@ import scala.math.BigInt
 import CanTraverseValues.ValuesVisitor
 import breeze.generic.UFunc.UImpl2
 import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
+import spire.implicits._
+import BreezeFields._
 
 /**
  * A HashVector is a sparse vector backed by an OpenAddressHashArray
@@ -259,6 +261,3 @@ object HashVector extends HashVectorOps
   @noinline
   private def init() = {}
 }
-
-
-

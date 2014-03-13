@@ -19,7 +19,7 @@ import scala.{specialized=>spec}
 import breeze.generic._
 import breeze.linalg.support._
 import breeze.linalg.operators._
-import breeze.math.{Complex, TensorSpace, Semiring, Ring}
+import breeze.math.{Complex, TensorSpace, Semiring, Ring, BreezeFields}
 import breeze.util.{ArrayUtil, Isomorphism}
 import breeze.storage.DefaultArrayValue
 import scala.reflect.ClassTag
@@ -27,6 +27,8 @@ import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import breeze.macros.expand
 import scala.math.BigInt
 import CanTraverseValues.ValuesVisitor
+import spire.implicits._
+import BreezeFields._
 
 /**
  * A DenseVector is the "obvious" implementation of a Vector, with one twist.

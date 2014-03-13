@@ -14,9 +14,9 @@ package breeze.linalg.support
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import breeze.math.Field
 import breeze.util.ArrayUtil
 import scala.reflect.ClassTag
+import spire.algebra.Field
 
 /**
  * Capability trait for being able to copy a collection

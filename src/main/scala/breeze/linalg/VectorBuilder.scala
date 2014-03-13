@@ -18,11 +18,12 @@ import operators._
 import scala.{specialized=>spec}
 import support._
 import breeze.util.{Sorting, ArrayUtil}
-import breeze.math.{Field, MutableVectorSpace, Semiring, Ring}
+import breeze.math.{MutableVectorSpace, Semiring, Ring}
 import breeze.storage.DefaultArrayValue
 import scala.reflect.ClassTag
 import breeze.macros.expand
 import breeze.generic.UFunc.{UImpl2, InPlaceImpl2}
+import spire.algebra.Field
 
 
 /**
@@ -348,5 +349,3 @@ object VectorBuilder extends VectorBuilderOps {
   }
 
 }
-
-

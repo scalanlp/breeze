@@ -3,6 +3,7 @@ package breeze.math
 import breeze.linalg.support._
 import breeze.linalg.operators._
 import breeze.linalg.{norm, NumericOps}
+import spire.algebra._
 
 /**
  * A coordinate space is like a [[breeze.math.InnerProductSpace]], but

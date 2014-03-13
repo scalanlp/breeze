@@ -1,10 +1,12 @@
 package breeze.linalg.operators
 
 import breeze.storage.DefaultArrayValue
-import breeze.math.{Field, Ring, Semiring}
+import breeze.math.{Ring, Semiring, TemporaryFieldTranslation}
 import breeze.linalg.support.{CanTransformValues, CanZipMapValues, CanAxpy, CanCopy}
 import breeze.generic.UFunc
 import breeze.linalg._
+import spire.algebra.Field
+import spire.implicits._
 
 trait CounterOps {
   implicit def canCopy[K1, V:DefaultArrayValue:Semiring]:CanCopy[Counter[K1, V]] = new CanCopy[Counter[K1, V]] {
@@ -169,20 +171,20 @@ trait CounterOps {
       val field = implicitly[Field[V]]
       def apply(a: Counter[K1, V], b: Counter[K1, V]) {
         for( (k,v) <- a.activeIterator) {
-          a(k) = field./(v, b(k))
+          a(k) = field.quot(v, b(k))
         }
       }
     }
   }
 
   implicit def canDivVV[K1, V](implicit copy: CanCopy[Counter[K1, V]],
-                               semiring: Field[V],
+                               field: Field[V],
                                d: DefaultArrayValue[V]):OpDiv.Impl2[Counter[K1, V], Counter[K1, V], Counter[K1, V]] = {
     new OpDiv.Impl2[Counter[K1, V], Counter[K1, V], Counter[K1, V]] {
       override def apply(a : Counter[K1, V], b : Counter[K1, V]) = {
         val r = Counter[K1, V]()
         for( (k, v) <- a.activeIterator) {
-          val vr = semiring./(v, b(k))
+          val vr = field.quot(v, b(k))
           r(k) = vr
         }
         r
@@ -192,13 +194,13 @@ trait CounterOps {
 
 
   implicit def canDivVS[K1, V](implicit copy: CanCopy[Counter[K1, V]],
-                               semiring: Field[V],
+                               field: Field[V],
                                d: DefaultArrayValue[V]):OpDiv.Impl2[Counter[K1, V], V, Counter[K1, V]] = {
     new OpDiv.Impl2[Counter[K1, V], V, Counter[K1, V]] {
       override def apply(a : Counter[K1, V], b : V) = {
         val r = Counter[K1, V]()
         for( (k, v) <- a.activeIterator) {
-          val vr = semiring./(v, b)
+          val vr = field.quot(v, b)
           r(k) = vr
         }
         r
@@ -210,7 +212,7 @@ trait CounterOps {
     val field = implicitly[Field[V]]
     def apply(a: Counter[K1, V], b: V) {
       for( (k,v) <- a.activeIterator) {
-        a(k) = field./(v, b)
+        a(k) = field.quot(v, b)
       }
     }
   }

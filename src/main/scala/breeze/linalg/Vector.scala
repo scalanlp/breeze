@@ -17,7 +17,7 @@ package breeze.linalg
 import operators._
 import scala.{specialized=>spec}
 import breeze.generic.{UFunc}
-import breeze.math.{Complex, TensorSpace, Ring}
+import breeze.math.{Complex, TensorSpace, Ring, BreezeFields}
 import scala.math.BigInt
 import collection.immutable.BitSet
 import breeze.linalg.support._
@@ -29,6 +29,8 @@ import scala.annotation.unchecked.uncheckedVariance
 import CanTraverseValues.ValuesVisitor
 import scala.collection.mutable.ArrayBuilder
 import breeze.generic.UFunc.{UImpl2, UImpl, InPlaceImpl2}
+import spire.implicits._
+import BreezeFields._
 
 /**
  * Trait for operators and such used in vectors.

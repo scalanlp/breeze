@@ -2,9 +2,10 @@ package breeze.linalg
 package operators
 
 import breeze.storage.DefaultArrayValue
-import breeze.math.{Field, Ring, Semiring}
+import breeze.math.{Ring, Semiring}
 import breeze.linalg.support.{CanZipMapValues, CanAxpy, CanCopy}
 import breeze.generic.UFunc.{UImpl2, InPlaceImpl2}
+import spire.algebra.Field
 
 
 
@@ -171,20 +172,20 @@ trait Counter2Ops {
       val field = implicitly[Field[V]]
       def apply(a: Counter2[K1, K2, V], b: Counter2[K1, K2, V]) {
         for( (k,v) <- a.activeIterator) {
-          a(k) = field./(v, b(k))
+          a(k) = field.quot(v, b(k))
         }
       }
     }
   }
 
   implicit def canDivVV[K1, K2, V](implicit copy: CanCopy[Counter2[K1, K2, V]],
-                                   semiring: Field[V],
+                                   field: Field[V],
                                    d: DefaultArrayValue[V]):OpDiv.Impl2[Counter2[K1, K2, V], Counter2[K1, K2, V], Counter2[K1, K2, V]] = {
     new OpDiv.Impl2[Counter2[K1, K2, V], Counter2[K1, K2, V], Counter2[K1, K2, V]] {
       override def apply(a : Counter2[K1, K2, V], b : Counter2[K1, K2, V]) = {
         val r = Counter2[K1, K2, V]()
         for( (k, v) <- a.activeIterator) {
-          val vr = semiring./(v, b(k))
+          val vr = field.quot(v, b(k))
           r(k) = vr
         }
         r
@@ -194,13 +195,13 @@ trait Counter2Ops {
 
 
   implicit def canDivVS[K1, K2, V](implicit copy: CanCopy[Counter2[K1, K2, V]],
-                                   semiring: Field[V],
+                                   field: Field[V],
                                    d: DefaultArrayValue[V]):OpDiv.Impl2[Counter2[K1, K2, V], V, Counter2[K1, K2, V]] = {
     new OpDiv.Impl2[Counter2[K1, K2, V], V, Counter2[K1, K2, V]] {
       override def apply(a : Counter2[K1, K2, V], b : V) = {
         val r = Counter2[K1, K2, V]()
         for( (k, v) <- a.activeIterator) {
-          val vr = semiring./(v, b)
+          val vr = field.quot(v, b)
           r(k) = vr
         }
         r
@@ -212,7 +213,7 @@ trait Counter2Ops {
     val field = implicitly[Field[V]]
     def apply(a: Counter2[K1, K2, V], b: V) {
       for( (k,v) <- a.activeIterator) {
-        a(k) = field./(v, b)
+        a(k) = field.quot(v, b)
       }
     }
   }
@@ -316,5 +317,3 @@ trait Counter2Ops {
 
   implicit def zipMap[K1, K2, V, R:DefaultArrayValue:Semiring] = new CanZipMapValuesCounter2[K1, K2, V, R]
 }
-
-

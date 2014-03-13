@@ -14,8 +14,9 @@ package breeze.linalg.support
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import breeze.math.{Semiring, Field}
+import breeze.math.{Semiring}
 import scala.reflect.ClassTag
+import spire.algebra.Field
 
 
 /**
@@ -54,4 +55,3 @@ object CanCreateZerosLike {
   implicit object OpArrayF extends OpArray[Float]
   implicit object OpArrayD extends OpArray[Double]
 }
-

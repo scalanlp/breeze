@@ -1,7 +1,8 @@
 package breeze.linalg.operators
 
 import breeze.generic.{MappingUFunc, UFunc}
-import breeze.math.{Field, Semiring, Ring}
+import breeze.math.{Semiring, Ring}
+import spire.algebra.Field
 
 /*
  Copyright 2012 Daniel Ramage
@@ -73,7 +74,7 @@ object OpMulScalar extends OpMulScalar with UFunc {
 sealed trait OpDiv extends OpType
 object OpDiv extends OpDiv with UFunc {
   implicit def opDivFromField[S:Field]: Impl2[S, S, S] = new Impl2[S, S, S] {
-    def apply(v: S, v2: S): S = implicitly[Field[S]]./(v, v2)
+    def apply(v: S, v2: S): S = implicitly[Field[S]].quot(v, v2)
   }
 }
 
@@ -264,4 +265,3 @@ object OpSolveMatrixBy extends OpSolveMatrixBy with UFunc
  */
 sealed trait OpMulMatrix extends OpType
 object OpMulMatrix extends OpMulMatrix with UFunc
-
