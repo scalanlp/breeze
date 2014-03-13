@@ -314,6 +314,34 @@ with MatrixConstructors[DenseMatrix] {
     r
   }
 
+  /** Constructs DenseMatrix from Array[Array[V]] input. Input is in row-major like
+    * format, similar to DenseMatrix( (1,2 3), (4,5,6),... ) syntax, which is defined in [[breeze.linalg.Matrix]].
+    * @param values
+    * @tparam V
+    * @return
+    */
+  def apply[@specialized(Double, Float, Int) V: ClassTag](values: Array[Array[V]]) = {
+    val rows = values.length
+    val cols = values(0).length
+    val tempret = new Array[V](rows*cols)
+
+    var rowIndex = 0
+    var tempretIndex = 0
+    while(rowIndex<cols) {
+      require( values(rowIndex).length==cols, "Input Array[Array[V]] is not square!")
+      var colIndex = 0
+      while(colIndex<rows){
+        tempret(tempretIndex)=values(colIndex)(rowIndex)
+        colIndex += 1
+        tempretIndex += 1
+      }
+      rowIndex += 1
+    }
+
+    new DenseMatrix(rows, cols, tempret)
+  }
+
+
   /** Horizontally tiles some matrices. They must have the same number of rows */
   def horzcat[M,V](matrices: M*)(implicit ev: M <:< Matrix[V], opset: OpSet.InPlaceImpl2[DenseMatrix[V], M], vman: ClassTag[V], dav: DefaultArrayValue[V]) = {
     if(matrices.isEmpty) zeros[V](0,0)

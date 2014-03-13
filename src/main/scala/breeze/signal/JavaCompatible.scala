@@ -1,6 +1,6 @@
 package breeze.signal
 
-import breeze.linalg.DenseVector
+import breeze.linalg.{DenseMatrix, DenseVector}
 import breeze.math.Complex
 
 /**This class is a converter for using breeze.signal functions on Arrays of Double and Complex, from Java/Matlab/Mathematica.
@@ -10,18 +10,25 @@ import breeze.math.Complex
  */
 object JavaCompatible {
 
+  private def dvCToArray(data: DenseVector[Complex]): Array[Complex] = data.toArray
+
   def convolve(data: Array[Double], kernel: Array[Double]) = breeze.signal.convolve(DenseVector(data), DenseVector(kernel)).toArray
 
   /**Returns the discrete fourier transform.
    * Use fourierTrC instead for complex array imput.
    * Use fourierTr2/2C instead for 2D Fourier tranform.
    *
+   *
    * @return
    * @author ktakagaki, dlwh
    */
-  def fourierTr(data: Array[Double]): Array[Complex] = breeze.signal.fourierTr( DenseVector(data) ).toArray
+  def fourierTr(data: Array[Double]): Array[Complex] = dvCToArray(breeze.signal.fourierTr( DenseVector(data) ))
   /**See [[fourierTr]]*/
-  def fourierTrC(data: Array[Complex]): Array[Complex] = breeze.signal.fourierTr( DenseVector(data) ).toArray
+  def fourierTrC(data: Array[Complex]): Array[Complex] = dvCToArray(breeze.signal.fourierTr( DenseVector(data) ))
+  /**See [[fourierTr]]*/
+  def iFourierTrC(data: Array[Complex]): Array[Complex] = dvCToArray(breeze.signal.iFourierTr( DenseVector(data) ))
+  /**See [[fourierTr]]*/
+  def fourierTr2C(data: Array[Array[Complex]]): Array[Array[Complex]] = dmCToArrayArray( breeze.signal.fourierTr( DenseMatrix(data) ) )
 
   /**Shift the zero-frequency component to the center of the spectrum.
     * Use fourierShiftC instead for complex array input.
@@ -32,7 +39,7 @@ object JavaCompatible {
     */
   def fourierShift(data: Array[Double]): Array[Double] = breeze.signal.fourierShift( DenseVector(data) ).toArray
   /**See [[fourierShift]]*/
-  def fourierShiftC(data: Array[Complex]): Array[Complex] = breeze.signal.fourierShift( DenseVector(data) ).toArray
+  def fourierShiftC(data: Array[Complex]): Array[Complex] = dvCToArray( breeze.signal.fourierShift( DenseVector(data) ) )
 
   /**Returns the frequencies for each tap in a discrete Fourier transform, useful for plotting.
     * You must specify either an fs or a dt argument. If you specify both, which is redundant,
