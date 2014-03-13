@@ -38,7 +38,7 @@ package object signal {
 
   // <editor-fold desc="fourierFreq">
 
-  /**Returns the frequencies for each tap in a discrete Fourier transform, useful for graphing.
+  /**Returns the frequencies for each tap in a discrete Fourier transform, useful for plotting.
     * You must specify either an fs or a dt argument. If you specify both, which is redundant,
     * fs == 1.0/dt must be true.
     *
