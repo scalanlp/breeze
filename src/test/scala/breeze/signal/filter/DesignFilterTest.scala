@@ -3,10 +3,13 @@ package breeze.signal.support
 import org.scalatest._
 import breeze.linalg.{norm, DenseVector}
 import breeze.signal._
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 /**
  * @author ktakagaki
  */
+@RunWith(classOf[JUnitRunner])
 class DesignFilterTest extends FunSuite {
 
 
