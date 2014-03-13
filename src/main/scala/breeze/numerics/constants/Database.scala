@@ -24,9 +24,9 @@ object Database {
     * @param regex enter a regex object (i.e. """regex expression""".r)
     * @return returns a vector of (String, Double) objects, which contain the full entry name (String) and the value (Double)
     */
-  def value(regex: Regex) = databaseHM.filter(
-    (key: (String, (Double, Double, String))) => regex.findFirstIn(key._1).isInstanceOf[Some[String]]
-  ).map( (key: (String, (Double, Double, String))) => (key._1, key._2._1) ).toVector
+  def value(regex: Regex) = databaseHM.collect{
+    case (key: String, (value: Double, _, _)) if regex.findFirstIn(key).nonEmpty => (key, value)
+  }
 
 
   /** Look up the uncertainty of a specific entry.
@@ -39,10 +39,9 @@ object Database {
     * @param regex enter a regex object (i.e. """regex expression""".r)
     * @return returns a vector of (String, Double) objects, which contain the full entry name (String) and the uncertainty (Double)
     */
-  def uncertainty(regex: Regex) = databaseHM.filter(
-    (key: (String, (Double, Double, String))) => regex.findFirstIn(key._1).isInstanceOf[Some[String]]
-  ).map( (key: (String, (Double, Double, String))) => (key._1, key._2._2) ).toVector
-
+  def uncertainty(regex: Regex) = databaseHM.collect{
+    case (key: String, (_, uncert: Double, _)) if regex.findFirstIn(key).nonEmpty => (key, uncert)
+  }
 
   /** Look up the unit of a specific entry.
     * Name must be an exact match with the entry.
@@ -54,9 +53,9 @@ object Database {
     * @param regex enter a regex object (i.e. """regex expression""".r)
     * @return returns a vector of (String, Double) objects, which contain the full entry name (String) and the uncertainty (Double)
     */
-  def unit(regex: Regex) = databaseHM.filter(
-    (key: (String, (Double, Double, String))) => regex.findFirstIn(key._1).isInstanceOf[Some[String]]
-  ).map( (key: (String, (Double, Double, String))) => (key._1, key._2._3) ).toVector
+  def unit(regex: Regex) = databaseHM.collect{
+    case (key: String, (_, _, unit: String)) if regex.findFirstIn(key).nonEmpty => (key, unit)
+  }
 
 
   // <editor-fold defaultstate="collapsed" desc=" CODATA2010 Database HashMap ">
