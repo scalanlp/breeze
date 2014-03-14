@@ -30,7 +30,7 @@ trait MeasuresCloseness[T] {
 }
 
 trait FakeField[T] extends Field[T]
-class FakeFieldFromRing[T](ring: spire.algebra.EuclideanRing[T]) extends Field[T] {
+class FakeFieldFromRing[T](ring: spire.algebra.EuclideanRing[T]) extends FakeField[T] {
   // This is so wrong
   def zero = ring.zero
   def one = ring.one
@@ -51,8 +51,8 @@ trait TemporaryTranslation {
     def +(a: T, b: T) = ring.plus(a,b)
     def *(a: T, b: T) = ring.times(a,b)
     def -(a: T, b: T) = ring.minus(a,b)
-    def ==(a: T, b: T) = ring.==((a,b))
-    def !=(a: T, b: T) = ring.!=((a,b))
+    def ==(a: T, b: T): Boolean = (a == b)
+    def !=(a: T, b: T): Boolean = (a != b)
   }
 }
 
