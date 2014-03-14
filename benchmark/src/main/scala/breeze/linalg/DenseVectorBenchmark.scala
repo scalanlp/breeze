@@ -12,7 +12,7 @@ trait BuildsRandomVectors {
   def randomArray(size: Int, offset: Int = 0, stride: Int = 1): DenseVector[Double] = {
     require(offset >= 0)
     require(stride >= 1)
-    val result = DenseVector(new Array[Double](offset+stride*size)).slice(offset + (stride - 1) * size, offset + stride*size)
+    val result = new DenseVector(new Array[Double](offset+stride*size), offset, stride, size)
     var i=0
     while (i < size) {
       result.unsafeUpdate(i, uniform.draw())
