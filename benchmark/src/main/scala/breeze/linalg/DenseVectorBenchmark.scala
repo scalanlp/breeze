@@ -20,6 +20,18 @@ trait BuildsRandomVectors {
     }
     result
   }
+
+  def randomMatrix(m: Int, n: Int): DenseMatrix[Double] = {
+    require(m > 0)
+    require(n > 0)
+    val d = new Array[Double](m*n)
+    var i = 0
+    while (i < m*n) {
+      d(i) = uniform.draw()
+      i += 1
+    }
+    new DenseMatrix(m, n, d, 0, 1)
+  }
 }
 
 class DenseVectorBenchmark extends BreezeBenchmark with BuildsRandomVectors {
