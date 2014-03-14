@@ -44,7 +44,7 @@ onLoad in Global ~= { previous => state =>
         // return a state with javaOptionsPatched = true and javaOptions set correctly
         val extracted = Project.extract(state)
         val set = for(proj <- extracted.structure.allProjectRefs) yield {
-          val classPath = Project.runTask(fullClasspath in Runtime in proj, state).get._2.toEither.right.get.files.mkString(":")
+          val classPath = Project.runTask(fullClasspath in Runtime in proj, state).get._2.toEither.right.map(_.files.mkString(":")).right.getOrElse("")
           javaOptions in (proj, Runtime) ++= Seq("-cp", classPath)
         }
         extracted.append(set, state.put(k, true))
