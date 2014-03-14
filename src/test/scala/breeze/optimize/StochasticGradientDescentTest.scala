@@ -1,18 +1,18 @@
 package breeze.optimize
 /*
  Copyright 2009 David Hall, Daniel Ramage
- 
+
  Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
- You may obtain a copy of the License at 
- 
+ You may obtain a copy of the License at
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
- limitations under the License. 
+ limitations under the License.
 */
 
 import org.scalatest._
@@ -21,7 +21,7 @@ import org.scalatest.prop._
 import org.scalacheck._
 import org.junit.runner.RunWith
 import breeze.linalg._
-
+import spire.std.double._
 
 @RunWith(classOf[JUnitRunner])
 class StochasticGradientDescentTest extends OptimizeTestBase {
@@ -39,7 +39,7 @@ class StochasticGradientDescentTest extends OptimizeTestBase {
         val fullRange = 0 to 1
       }
 
-      val result = sgd.minimize(f,init) 
+      val result = sgd.minimize(f,init)
       norm(result :- DenseVector.ones[Double](init.size) * 3.0,2) < 1E-10
     }
 

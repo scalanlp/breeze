@@ -21,7 +21,7 @@ import org.scalatest.junit._
 import org.scalatest.prop._
 import org.scalacheck._
 import org.junit.runner.RunWith
-
+import spire.std.double._
 import breeze.linalg._
 
 

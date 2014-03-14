@@ -20,4 +20,5 @@ package breeze
  * @author dlwh
  */
 package object math extends TemporaryTranslation {
+  val i = Complex(0,1)
 }
