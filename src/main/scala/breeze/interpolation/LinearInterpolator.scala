@@ -5,7 +5,6 @@ package breeze.interpolation
  * @author chrismedrela
  */
 
-import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
 import breeze.linalg._
@@ -13,11 +12,17 @@ import breeze.linalg.support.CanMapValues
 import breeze.math.Field
 
 
+trait UnivariateInterpolator[T] {
+  def apply(x: T): T
+  def apply(x: Vector[T])(implicit canMapValues: CanMapValues[Vector[T], T, T, Vector[T]]): Vector[T] = x map apply
+}
+
 abstract class HandyUnivariateInterpolator[T <% Ordered[T]]
     (x_coords: Vector[T],
      y_coords: Vector[T])
-    (implicit val field: Field[T],
-     implicit val classtag: ClassTag[T]) {//extends UnivariateInterpolator{
+    (implicit field: Field[T],
+     classtag: ClassTag[T])
+     extends UnivariateInterpolator[T] {//extends UnivariateInterpolator{
 
   if (x_coords.size != x_coords.toArray.toSet.size)
     throw new Exception("x coordinates must be unique")
@@ -38,8 +43,6 @@ abstract class HandyUnivariateInterpolator[T <% Ordered[T]]
   }
 
   protected def valueAt(x: T): T
-
-  def apply(x: Vector[T])(implicit canMapValues: CanMapValues[Vector[T], T, T, Vector[T]]): Vector[T] = x map apply
 }
 
 
