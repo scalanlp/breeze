@@ -3,6 +3,7 @@ package breeze.stats.distributions
 import breeze.numerics.constants.{γ, Pi}
 import breeze.numerics.{exp, log}
 
+
 /**
  * TODO
  *
