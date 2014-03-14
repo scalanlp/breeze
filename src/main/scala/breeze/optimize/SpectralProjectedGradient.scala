@@ -1,9 +1,8 @@
 package breeze.optimize
 
 import breeze.math.MutableCoordinateSpace
-import com.typesafe.scalalogging.slf4j.Logging
-import breeze.collection.mutable.RingBuffer
 import breeze.linalg.norm
+import breeze.util.SerializableLogging
 
 
 /**
@@ -31,7 +30,7 @@ class SpectralProjectedGradient[T, -DF <: DiffFunction[T]](
   maxIter: Int = 500,
   val testOpt: Boolean = true,
   val initFeas: Boolean = false,
-  val maxSrchIt: Int = 30)(implicit coord: MutableCoordinateSpace[T, Double]) extends FirstOrderMinimizer[T, DF](minImprovementWindow = minImprovementWindow, maxIter = maxIter, tolerance = tolerance) with Projecting[T] with Logging {
+  val maxSrchIt: Int = 30)(implicit coord: MutableCoordinateSpace[T, Double]) extends FirstOrderMinimizer[T, DF](minImprovementWindow = minImprovementWindow, maxIter = maxIter, tolerance = tolerance) with Projecting[T] with SerializableLogging {
   import coord._
   type History = Double
   protected def initialHistory(f: DF, init: T): History = 1.0

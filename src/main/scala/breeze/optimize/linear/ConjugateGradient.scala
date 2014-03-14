@@ -4,7 +4,7 @@ import breeze.math.{MutableInnerProductSpace, TensorSpace}
 import breeze.util.Implicits._
 import breeze.linalg.operators.{OpMulMatrix, BinaryOp}
 import breeze.linalg._
-import com.typesafe.scalalogging.slf4j.Logging
+import breeze.util.SerializableLogging
 
 /**
  * Solve argmin (a dot x + .5 * x dot (B * x) + .5 * normSquaredPenalty * (x dot x)) for x
@@ -17,7 +17,7 @@ class ConjugateGradient[T,M](maxNormValue: Double = Double.PositiveInfinity,
                              maxIterations: Int = -1,
                              normSquaredPenalty: Double = 0,
                              tolerance: Double = 1E-5)
-                            (implicit space: MutableInnerProductSpace[T, Double], mult: OpMulMatrix.Impl2[M, T, T]) extends Logging {
+                            (implicit space: MutableInnerProductSpace[T, Double], mult: OpMulMatrix.Impl2[M, T, T]) extends SerializableLogging {
   import space._
 
   def minimize(a: T, B: M): T = minimize(a, B, zeros(a))

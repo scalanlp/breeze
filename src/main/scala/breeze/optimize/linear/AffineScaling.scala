@@ -1,7 +1,7 @@
 package breeze.optimize.linear
 
 import breeze.linalg._
-import com.typesafe.scalalogging.slf4j.Logging
+import breeze.util.SerializableLogging
 
 
 /**
@@ -9,7 +9,7 @@ import com.typesafe.scalalogging.slf4j.Logging
  * Note that this is not Karmarkar's algorithm.
  * @author dlwh
  */
-class AffineScaling extends Logging {
+class AffineScaling extends SerializableLogging {
   /**
    * Maximize c dot x s.t. Ax <= b
    */

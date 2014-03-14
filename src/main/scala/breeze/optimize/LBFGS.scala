@@ -16,10 +16,10 @@ package breeze.optimize
  limitations under the License. 
 */
 
-import breeze.math.{InnerProductSpace, MutableInnerProductSpace, MutableCoordinateSpace}
+import breeze.math.MutableInnerProductSpace
 import breeze.linalg._
-import com.typesafe.scalalogging.slf4j.Logging
-import breeze.linalg.operators.{OpMulMatrix, BinaryOp}
+import breeze.linalg.operators.OpMulMatrix
+import breeze.util.SerializableLogging
 
 
 /**
@@ -38,7 +38,7 @@ import breeze.linalg.operators.{OpMulMatrix, BinaryOp}
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
 class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
-              (implicit space: MutableInnerProductSpace[T, Double]) extends FirstOrderMinimizer[T,DiffFunction[T]](maxIter, tolerance) with Logging {
+              (implicit space: MutableInnerProductSpace[T, Double]) extends FirstOrderMinimizer[T,DiffFunction[T]](maxIter, tolerance) with SerializableLogging {
 
   import space._
   require(m > 0)

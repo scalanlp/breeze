@@ -2,10 +2,10 @@ package breeze.optimize
 
 import breeze.math.{NormedVectorSpace, MutableCoordinateSpace}
 import breeze.util.Implicits._
-import com.typesafe.scalalogging.slf4j.Logging
 import breeze.linalg.norm
 import breeze.stats.distributions.{RandBasis, ThreadLocalRandomGenerator}
 import org.apache.commons.math3.random.MersenneTwister
+import breeze.util.SerializableLogging
 
 /**
  *
@@ -16,7 +16,7 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
                                                                      tolerance: Double=1E-6,
                                                                      improvementTol: Double=1E-3,
                                                                      val minImprovementWindow: Int = 10,
-                                                                     val numberOfImprovementFailures: Int = 1)(implicit vspace: NormedVectorSpace[T, Double]) extends Minimizer[T,DF] with Logging {
+                                                                     val numberOfImprovementFailures: Int = 1)(implicit vspace: NormedVectorSpace[T, Double]) extends Minimizer[T,DF] with SerializableLogging {
 
   type History
   case class State(x: T,
