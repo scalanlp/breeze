@@ -20,7 +20,7 @@ import breeze.util.SerializableLogging
  * @param maxSrchIt maximum number of line search attempts
  * @param projection projection operations
  */
-class SpectralProjectedGradient[T, -DF <: DiffFunction[T]](
+class SpectralProjectedGradient[T, DF <: DiffFunction[T]](
   val projection: T => T = { (t: T) => t },
   tolerance: Double = 1e-6,
   val suffDec: Double = 1e-4,
