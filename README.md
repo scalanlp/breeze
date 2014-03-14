@@ -94,6 +94,8 @@ Contributions from:
 * Devon Bryant (@devonbryant)
 * Kentaroh Takagaki (@ktakagaki)
 * Sam Halliday (@fommil)
+* Chris Stucchio (@stucchio)
+* Xiangrui Meng (@mengxr)
 
 And others (contact David Hall if you've contributed code and aren't listed).
 
