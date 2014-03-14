@@ -181,6 +181,8 @@ trait CounterOps {
                                field: Field[V],
                                d: DefaultArrayValue[V]):OpDiv.Impl2[Counter[K1, V], Counter[K1, V], Counter[K1, V]] = {
     new OpDiv.Impl2[Counter[K1, V], Counter[K1, V], Counter[K1, V]] {
+      private implicit val ring = new TemporaryFieldTranslation(field)
+
       override def apply(a : Counter[K1, V], b : Counter[K1, V]) = {
         val r = Counter[K1, V]()
         for( (k, v) <- a.activeIterator) {
@@ -197,6 +199,7 @@ trait CounterOps {
                                field: Field[V],
                                d: DefaultArrayValue[V]):OpDiv.Impl2[Counter[K1, V], V, Counter[K1, V]] = {
     new OpDiv.Impl2[Counter[K1, V], V, Counter[K1, V]] {
+      private implicit val ring = new TemporaryFieldTranslation(field)
       override def apply(a : Counter[K1, V], b : V) = {
         val r = Counter[K1, V]()
         for( (k, v) <- a.activeIterator) {

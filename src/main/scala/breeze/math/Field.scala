@@ -31,12 +31,12 @@ trait MeasuresCloseness[T] {
 trait FakeField[T] extends Field[T]
 
 trait TemporaryTranslation {
-  implicit class TemporaryFieldTranslation[T](field: Field[T]) extends Ring[T] {
+  implicit class TemporaryFieldTranslation[T](ring: spire.algebra.Ring[T]) extends Ring[T] {
     //Here to translate Spire fields into Breeze rings, first step in eliminating breeze.math
-    def zero = field.zero
-    def one = field.one
-    def +(a: T, b: T) = field.plus(a,b)
-    def *(a: T, b: T) = field.times(a,b)
+    def zero = ring.zero
+    def one = ring.one
+    def +(a: T, b: T) = ring.plus(a,b)
+    def *(a: T, b: T) = ring.times(a,b)
   }
 }
 

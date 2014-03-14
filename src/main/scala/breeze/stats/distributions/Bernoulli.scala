@@ -4,6 +4,8 @@ package distributions
 import breeze.linalg.Counter
 import breeze.numerics._
 import breeze.optimize.DiffFunction
+import spire.algebra._
+import spire.implicits._
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
@@ -31,7 +33,7 @@ class Bernoulli(p: Double, rand: RandBasis = Rand) extends DiscreteDistr[Boolean
   require(p >= 0.0)
   require(p <= 1.0)
   def probabilityOf(b: Boolean) = if(b) p else (1-p)
-  
+
   override def draw() = {
     rand.uniform.get < p
   }

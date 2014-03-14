@@ -153,6 +153,7 @@ object Counter extends CounterOps {
   }
 
   implicit def tensorspace[K, V](implicit field: Field[V], dfv: DefaultArrayValue[V], normImpl: norm.Impl[V, Double]) = {
+    implicit val ring = new TemporaryFieldTranslation(field)
     implicit def zipMap = Counter.zipMap[K, V, V]
     TensorSpace.make[Counter[K, V], K, V]
   }

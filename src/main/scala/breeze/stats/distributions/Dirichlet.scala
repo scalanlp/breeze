@@ -23,6 +23,8 @@ import breeze.linalg.operators.{OpDiv, BinaryOp}
 import breeze.math.{TensorSpace, MutableCoordinateSpace}
 import breeze.numerics
 import breeze.storage.DefaultArrayValue
+import spire.algebra._
+import spire.implicits._
 
 /**
  * Represents a Dirichlet distribution, the conjugate prior to the multinomial.

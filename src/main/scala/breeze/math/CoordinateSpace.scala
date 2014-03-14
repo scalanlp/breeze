@@ -4,6 +4,7 @@ import breeze.linalg.support._
 import breeze.linalg.operators._
 import breeze.linalg.{norm, NumericOps}
 import spire.algebra._
+import spire.implicits._
 
 /**
  * A coordinate space is like a [[breeze.math.InnerProductSpace]], but
@@ -34,7 +35,7 @@ trait CoordinateSpace[V, S] extends InnerProductSpace[V, S] {
 object CoordinateSpace {
   implicit def fromField[S](implicit f: Field[S], _normImpl: norm.Impl[S, Double]):CoordinateSpace[S, S] = new CoordinateSpace[S, S] {
     def field: Field[S] = f
-
+    private implicit def ring = new TemporaryFieldTranslation(field)
 
     implicit def scalarNorm = _normImpl
 

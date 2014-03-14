@@ -2,7 +2,7 @@ package breeze.linalg
 package operators
 
 import breeze.storage.DefaultArrayValue
-import breeze.math.{Ring, Semiring}
+import breeze.math.{Ring, Semiring, TemporaryFieldTranslation}
 import breeze.linalg.support.{CanZipMapValues, CanAxpy, CanCopy}
 import breeze.generic.UFunc.{UImpl2, InPlaceImpl2}
 import spire.algebra.Field
@@ -182,6 +182,7 @@ trait Counter2Ops {
                                    field: Field[V],
                                    d: DefaultArrayValue[V]):OpDiv.Impl2[Counter2[K1, K2, V], Counter2[K1, K2, V], Counter2[K1, K2, V]] = {
     new OpDiv.Impl2[Counter2[K1, K2, V], Counter2[K1, K2, V], Counter2[K1, K2, V]] {
+      private implicit val ring = new TemporaryFieldTranslation(field)
       override def apply(a : Counter2[K1, K2, V], b : Counter2[K1, K2, V]) = {
         val r = Counter2[K1, K2, V]()
         for( (k, v) <- a.activeIterator) {
@@ -198,6 +199,7 @@ trait Counter2Ops {
                                    field: Field[V],
                                    d: DefaultArrayValue[V]):OpDiv.Impl2[Counter2[K1, K2, V], V, Counter2[K1, K2, V]] = {
     new OpDiv.Impl2[Counter2[K1, K2, V], V, Counter2[K1, K2, V]] {
+      private implicit val ring = new TemporaryFieldTranslation(field)
       override def apply(a : Counter2[K1, K2, V], b : V) = {
         val r = Counter2[K1, K2, V]()
         for( (k, v) <- a.activeIterator) {

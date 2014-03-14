@@ -41,7 +41,7 @@ trait DescriptiveStatsTrait {
           }
 
           def zeros(numZero: Int, zeroValue: Scalar): Unit = {
-            sum += (numZero * zeroValue)
+            sum += (zeroValue * numZero)
             n += numZero
           }
         }

@@ -4,6 +4,8 @@ import breeze.linalg.{sum, Counter, NumericOps}
 import breeze.math.{TensorSpace, MutableCoordinateSpace}
 import breeze.numerics._
 import breeze.storage.DefaultArrayValue
+import spire.algebra._
+import spire.implicits._
 
 
 /*
@@ -24,7 +26,7 @@ import breeze.storage.DefaultArrayValue
 
 /**
  * Represents a Polya distribution, a.k.a Dirichlet compound Multinomial distribution
- * see 
+ * see
  * http://en.wikipedia.org/wiki/Multivariate_Polya_distribution
  *
  * @author dlwh
