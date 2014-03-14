@@ -23,20 +23,36 @@ package breeze.math
 *  @author dlwh
  */
 import spire.algebra.Field
+import spire.implicits._
 
 trait MeasuresCloseness[T] {
    def close(a: T, b: T, tolerance: Double): Boolean
 }
 
 trait FakeField[T] extends Field[T]
+class FakeFieldFromRing[T](ring: spire.algebra.EuclideanRing[T]) extends Field[T] {
+  // This is so wrong
+  def zero = ring.zero
+  def one = ring.one
+  def plus(a: T, b: T) = ring.plus(a,b)
+  def times(a: T, b: T) = ring.times(a,b)
+  def negate(a: T) = ring.negate(a)
+  def div(a: T, b: T) = ring.quot(a,b)
+  def mod(a: T, b: T) = ring.mod(a,b)
+  def gcd(a: T, b: T) = ring.gcd(a,b)
+  def quot(a: T, b: T) = ring.quot(a,b)
+}
 
 trait TemporaryTranslation {
-  implicit class TemporaryFieldTranslation[T](ring: spire.algebra.Ring[T]) extends Ring[T] {
+  implicit class TemporaryFieldTranslation[T](ring: spire.algebra.EuclideanRing[T]) extends Ring[T] {
     //Here to translate Spire fields into Breeze rings, first step in eliminating breeze.math
     def zero = ring.zero
     def one = ring.one
     def +(a: T, b: T) = ring.plus(a,b)
     def *(a: T, b: T) = ring.times(a,b)
+    def -(a: T, b: T) = ring.minus(a,b)
+    def ==(a: T, b: T) = ring.==((a,b))
+    def !=(a: T, b: T) = ring.!=((a,b))
   }
 }
 
@@ -44,53 +60,17 @@ object BreezeFields {
 
   /** Not a field, but whatever. */
   @SerialVersionUID(1L)
-  implicit object fieldInt extends FakeField[Int] {
-    def zero = 0
-    def one = 1
-    def ==(a : Int, b : Int) = a == b
-    def !=(a : Int, b : Int) = a != b
-    def +(a : Int, b : Int) = a + b
-    def -(a : Int, b : Int) = a - b
-    def *(a : Int, b : Int) = a * b
-    def /(a : Int, b : Int) = a / b
-  }
+  implicit object fieldInt extends FakeFieldFromRing(spire.std.int.IntAlgebra)
 
   /** Not a field, but whatever. */
   @SerialVersionUID(1L)
-  implicit object fieldShort extends FakeField[Short] {
-    def zero = 0.asInstanceOf[Short]
-    def one = 1.asInstanceOf[Short]
-    def ==(a : Short, b : Short) = a == b
-    def !=(a : Short, b : Short) = a != b
-    def +(a : Short, b : Short) = (a + b).asInstanceOf[Short]
-    def -(a : Short, b : Short) = (a - b).asInstanceOf[Short]
-    def *(a : Short, b : Short) = (a * b).asInstanceOf[Short]
-    def /(a : Short, b : Short) = (a / b).asInstanceOf[Short]
-  }
+  implicit object fieldShort extends FakeFieldFromRing(spire.std.short.ShortAlgebra)
 
   /** Not a field, but whatever. */
   @SerialVersionUID(1L)
-  implicit object fieldLong extends FakeField[Long] {
-    def zero = 0l
-    def one = 1l
-    def ==(a : Long, b : Long) = a == b
-    def !=(a : Long, b : Long) = a != b
-    def +(a : Long, b : Long) = a + b
-    def -(a : Long, b : Long) = a - b
-    def *(a : Long, b : Long) = a * b
-    def /(a : Long, b : Long) = a / b
-  }
+  implicit object fieldLong extends FakeFieldFromRing(spire.std.long.LongAlgebra)
 
   /** Not a field, but whatever. */
   @SerialVersionUID(1L)
-  implicit object fieldBigInt extends FakeField[BigInt] {
-    def zero = 0l
-    def one = 1l
-    def ==(a : BigInt, b : BigInt) = a == b
-    def !=(a : BigInt, b : BigInt) = a != b
-    def +(a : BigInt, b : BigInt) = a + b
-    def -(a : BigInt, b : BigInt) = a - b
-    def *(a : BigInt, b : BigInt) = a * b
-    def /(a : BigInt, b : BigInt) = a / b
-  }
+  implicit object fieldBigInt extends FakeFieldFromRing(spire.std.bigInt.BigIntAlgebra)
 }

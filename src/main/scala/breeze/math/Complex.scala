@@ -190,13 +190,14 @@ object Complex { outer =>
     def <=(a : Complex, b : Complex) =
       (a.real <= b.real || (a.real == b.real && a.imag <= b.imag))
 
-    def +(a : Complex, b : Complex) = a + b
+    def plus(a : Complex, b : Complex) = a + b
 
-    def -(a : Complex, b : Complex) = a - b
+    def subtract(a : Complex, b : Complex) = a - b
 
-    def *(a : Complex, b : Complex) = a * b
+    def times(a : Complex, b : Complex) = a * b
 
-    def /(a : Complex, b : Complex) = a / b
+    def div(a : Complex, b : Complex) = a / b
+    def quot(a : Complex, b : Complex) = a / b
 
     def norm(a : Complex) = a.abs
 
@@ -210,6 +211,10 @@ object Complex { outer =>
 
     val defaultArrayValue = DefaultArrayValue(Complex(0, 0))
 
+    def negate(x: breeze.math.Complex): breeze.math.Complex = Complex(x.real, x.imag)
+    //These two are necessary to implement for spire. They will go away when we replace Complex with Spire's complex.
+    def gcd(a: breeze.math.Complex,b: breeze.math.Complex): breeze.math.Complex = ??? //Spire WTF is GCD of complex?
+    def mod(a: breeze.math.Complex,b: breeze.math.Complex): breeze.math.Complex = ??? //Spire WTF is GCD of complex?
   }
 
   implicit val complexNorm: norm.Impl[Complex, Double] = new norm.Impl[Complex, Double] {
