@@ -48,7 +48,7 @@ class GammaTest extends FunSuite with Checkers with MomentsTestBase[Double] with
 
   implicit def arbDistr = Arbitrary {
     for(shape <- arbitrary[Double].map{x => math.abs(x) % 1000.0 + 1.1}; // Gamma pdf at 0 not defined when shape == 1
-        scale <- arbitrary[Double].map {x => math.abs(x) % 8.0 + 1.0}) yield new Gamma(shape,scale)(new RandBasis(new MersenneTwister(0)))
+        scale <- arbitrary[Double].map {x => math.abs(x) % 8.0 + 1.0}) yield new Gamma(shape,scale)(RandBasis.mt0)
   }
 
   test("Issue #11 on github") {
