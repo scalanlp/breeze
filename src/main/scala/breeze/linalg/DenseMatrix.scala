@@ -62,6 +62,30 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
   /** Creates a matrix with the specified data array and rows. columns inferred automatically */
   def this(rows: Int, data: Array[V], offset: Int = 0) = this(rows, {assert(data.length % rows == 0); data.length/rows}, data, offset)
 
+  /** Constructs DenseMatrix from Array[Array[V]] input. Input is in row-major like
+    * format, similar to DenseMatrix( (1,2 3), (4,5,6),... ) syntax, which is defined in [[breeze.linalg.Matrix]].
+    * This constructor was written for JavaCompatible.
+    * @param values
+    * @return
+    */
+  def this(values: Array[Array[V]]) = this( values.length, values(0).length, {
+          val tempret = new Array[V](rows*cols)
+          var rowIndex = 0
+          var tempretIndex = 0
+          while(rowIndex<cols) {
+            require( values(rowIndex).length==cols, "Input Array[Array[V]] is not square!")
+            var colIndex = 0
+            while(colIndex<rows){
+              tempret(tempretIndex)=values(colIndex)(rowIndex)
+              colIndex += 1
+              tempretIndex += 1
+            }
+            rowIndex += 1
+          }
+          tempret
+          }
+  )
+
   def apply(row: Int, col: Int) = {
     if(row < - rows || row >= rows) throw new IndexOutOfBoundsException((row,col) + " not in [-"+rows+","+rows+") x [-"+cols+"," + cols+")")
     if(col < - cols || col >= cols) throw new IndexOutOfBoundsException((row,col) + " not in [-"+rows+","+rows+") x [-"+cols+"," + cols+")")
@@ -115,16 +139,6 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
       i += 1
     }
     ret
-  }
-
-  def toArrayArray: Array[Array[V]] = {
-    val tempRet = new Array[Array[V]](rows)
-    var row = 0
-    while (row < rows){
-      tempRet(row) = this(row, :: ).toArray
-      row += 1
-    }
-    tempRet
   }
 
   /** Converts this matrix to a DenseVector (column-major)
