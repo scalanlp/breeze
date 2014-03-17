@@ -1,6 +1,7 @@
 package breeze.optimize
 
 import breeze.math.{InnerProductSpace, CoordinateSpace}
+import breeze.linalg.support.CanCopy
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
@@ -23,7 +24,15 @@ import breeze.math.{InnerProductSpace, CoordinateSpace}
 *
 * @author dlwh
 */
-trait DiffFunction[T] extends StochasticDiffFunction[T]
+trait DiffFunction[T] extends StochasticDiffFunction[T] {
+  def cached(implicit copy: CanCopy[T]) = {
+    if (this.isInstanceOf[CachedDiffFunction[_]]) {
+      this
+    } else {
+      new CachedDiffFunction(this)
+    }
+  }
+}
 
 object DiffFunction {
   def withL2Regularization[T](d: DiffFunction[T],weight: Double)(implicit vspace: InnerProductSpace[T, Double]) = new DiffFunction[T] {

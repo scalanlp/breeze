@@ -25,7 +25,7 @@ import breeze.linalg.norm
  * @author dlwh
  */
 
-trait TensorSpaceTestBase[V, I, S] extends MutableVectorSpaceTestBase[V, S] with FunSuite with Checkers {
+trait TensorSpaceTestBase[V, I, S] extends MutableVectorSpaceTestBase[V, S] {
   implicit val space: TensorSpace[V, I, S]
 
   import space._

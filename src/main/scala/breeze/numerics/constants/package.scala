@@ -13,6 +13,8 @@ package object constants {
     */
   lazy val Pi = scala.math.Pi
 
+  lazy val π = Pi
+
   /** ALIAS FOR [[scala.math.E]].
     * @see <a href="http://en.wikipedia.org/wiki/%E2%84%AF">http://en.wikipedia.org/wiki/%E2%84%AF</a>
     */
@@ -22,6 +24,15 @@ package object constants {
     * @see <a href="http://en.wikipedia.org/wiki/Golden_ratio">http://en.wikipedia.org/wiki/Golden_ratio</a>
     */
   lazy val GoldenRatio: Double = (Math.sqrt(5d) + 1d)/2d
+
+  /**
+   * http://en.wikipedia.org/wiki/Euler%E2%80%93Mascheroni_constant
+   * (value from wikipedia)
+   */
+  lazy val eulerMascheroni = 0.5772156649015328606065120900824024310421
+
+  lazy val γ = eulerMascheroni
+
 
   // </editor-fold>
 

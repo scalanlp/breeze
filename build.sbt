@@ -68,8 +68,8 @@ libraryDependencies ++= Seq(
   "com.github.rwl" % "jtransforms" % "2.4.0",
   "org.apache.commons" % "commons-math3" % "3.2",
   "org.spire-math" %% "spire" % "0.7.1",
-  "org.scalacheck" %% "scalacheck" % "1.10.0" % "test",
-  "org.scalatest" %% "scalatest" % "2.0.M5b" % "test",
+  "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
+  "org.scalatest" %% "scalatest" % "2.1.0" % "test",
   "com.typesafe" %% "scalalogging-slf4j" % "1.0.1",
   "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.0-beta9" % "test",
   "org.apache.logging.log4j" % "log4j-core" % "2.0-beta9" % "test",
@@ -79,10 +79,14 @@ libraryDependencies ++= Seq(
 
 // see https://github.com/typesafehub/scalalogging/issues/23
 testOptions in Test += Tests.Setup(classLoader =>
+try {
   classLoader
     .loadClass("org.slf4j.LoggerFactory")
     .getMethod("getLogger", classLoader.loadClass("java.lang.String"))
     .invoke(null, "ROOT")
+    } catch {
+      case e: Exception => 
+    }
 )
 
 resolvers ++= Seq(

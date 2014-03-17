@@ -6,6 +6,7 @@ import breeze.util.Implicits._
 import linear.ConjugateGradient
 import com.typesafe.scalalogging.slf4j.Logging
 import breeze.linalg.norm
+import breeze.util.SerializableLogging
 
 
 /**
@@ -19,7 +20,7 @@ class TruncatedNewtonMinimizer[T, H](maxIterations: Int = -1,
                                      l2Regularization: Double = 0,
                                      m: Int = 0)
                                     (implicit vs: MutableCoordinateSpace[T, Double],
-                                     mult: OpMulMatrix.Impl2[H, T, T]) extends Minimizer[T, SecondOrderFunction[T, H]] with Logging {
+                                     mult: OpMulMatrix.Impl2[H, T, T]) extends Minimizer[T, SecondOrderFunction[T, H]] with SerializableLogging {
 
   def minimize(f: SecondOrderFunction[T, H], initial: T): T = iterations(f, initial).takeUpToWhere(_.converged).last.x
 

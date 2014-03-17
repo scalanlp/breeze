@@ -429,6 +429,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
 //    }
 //  }
 
+  /*
   implicit def canTranspose[V]: CanTranspose[DenseVector[V], DenseMatrix[V]] = {
     new CanTranspose[DenseVector[V], DenseMatrix[V]] {
       def apply(from: DenseVector[V]) = {
@@ -436,6 +437,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
       }
     }
   }
+  */
 
   implicit def canTransposeComplex: CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] = {
     new CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] {

@@ -59,7 +59,10 @@ trait MomentsTestBase[T] extends FunSuite with Checkers {
       val probMode = distr(fromDouble(distr.mode))
 //      if(distr.isInstanceOf[Poisson])
 //        println(distr,probMode,sample.map{ distr },sample)
-      sample.forall(x => probMode >= distr(x) - 1E-4);
+      sample.find(x => probMode < distr(x) - 1E-4) match {
+        case Some(x) => println(s"$x has higher prob than mode ${distr.mode}"); false
+        case None => true
+      }
     })
   }
 
