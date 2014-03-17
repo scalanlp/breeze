@@ -4,7 +4,6 @@ import breeze.util._
 import breeze.linalg._
 import breeze.numerics._
 import breeze.math.MutableCoordinateSpace
-import com.typesafe.scalalogging.slf4j.Logging
 
 
 /**
@@ -15,7 +14,7 @@ import com.typesafe.scalalogging.slf4j.Logging
  *
  * @author dlwh
  */
-class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-8)(implicit vspace: MutableCoordinateSpace[T, Double]) extends LBFGS[T](maxIter, m, tolerance=tolerance) with  Logging {
+class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-8)(implicit vspace: MutableCoordinateSpace[T, Double]) extends LBFGS[T](maxIter, m, tolerance=tolerance) with SerializableLogging {
   import vspace._
   require(m > 0)
   require(l1reg >= 0)

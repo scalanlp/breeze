@@ -30,32 +30,6 @@ class Counter2Test extends FunSuite with Checkers {
     assert(x.valuesIterator.toSet === Set(3.0,8.0,7.75))
   }
 
-  /*
-  test("Transpose") {
-    val x = Counter2[String,Int,Double]()
-    x(("a",1),("b",2),("c",2)) := List(3.0,7.75,8.0)
-
-    assert(x.t.valuesIterator.toSet === Set(3.0,0.0, 0.0, 0.0, 8.0,7.75))
-    assert(x.t.t === x)
-    assert(x.t.t eq x)
-
-    x.t(2,"a") = 1
-    assert(x("a",2) === 1)
-  }
-
-  test("Slice table") {
-    val x= Counter2[String,Int,Double]()
-    x(("a",1),("b",2),("c",2)) := List(3.0,7.75,8.0)
-
-    val table = x(List("a","b","c"),List(1,2))
-
-    assert(table.domain === TableDomain(3,2))
-
-    table(1,0) = 5
-    assert(x("b",1) === 5)
-  }
-  */
-
   test("Slice rows and columns") {
 //    val x = Counter2[String,Int,Double]()
 //    x(("a",1),("b",2),("c",2)) := List(3.0,7.75,8.0)
@@ -115,11 +89,25 @@ class Counter2Test extends FunSuite with Checkers {
   test("Shaped Multiplication: C2/C2") {
     assert(Counter2((0,'a',1),(1,'a',2),(1,'b',3)) * Counter2(('a',0,1),('b',0,2)) ===
       Counter2((0,0,1),(1,0,8)))
+
+
   }
 
   test("Shaped Multiplication: C2/C1") {
     assert(Counter2((0,'a',1),(1,'a',2),(1,'b',3)) * Counter(('a',1),('b',2)) ===
       Counter((0,1),(1,8)))
+  }
+
+  test("Shaped Transpose Multiplication C2/C2") {
+    val a = Counter2((0,'a',1),(1,'a',2),(1,'b',3))
+    val b = Counter2(('a',0,1),('b',0,2))
+    assert( (b.t * a.t).t === a * b)
+  }
+
+  test("Shaped Transpose Multiplication: C1/C2") {
+    val a = Counter2((0, 'a', 1), (1, 'a', 2), (1, 'b', 3))
+    val b = Counter(('a', 1), ('b', 2))
+    assert( (b.t * a.t).t === (a * b))
   }
 
 

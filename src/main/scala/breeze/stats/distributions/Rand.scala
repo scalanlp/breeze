@@ -24,6 +24,7 @@ import org.apache.commons.math3.random.{MersenneTwister, RandomGenerator}
 import java.util.concurrent.atomic.AtomicInteger
 import scala.reflect.ClassTag
 
+
 /**
  * A trait for monadic distributions. Provides support for use in for-comprehensions
  * @author dlwh
@@ -68,7 +69,12 @@ trait Rand[@specialized(Int, Double) +T] { outer =>
    *
    */
   def flatMap[E](f : T => Rand[E] ):Rand[E] = new Rand[E] {
-    def draw() = Iterator.continually(f(outer.draw()).drawOpt()).find(_.nonEmpty).get.get
+    def draw():E = {
+      f(outer.draw()).drawOpt() match {
+        case Some(x) => x
+        case None => draw
+      }
+    }
     override def drawOpt() = outer.drawOpt().flatMap(t => f(t).drawOpt())
   }
 
