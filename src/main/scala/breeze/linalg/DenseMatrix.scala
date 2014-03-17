@@ -117,6 +117,16 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
     ret
   }
 
+  def toArrayArray: Array[Array[V]] = {
+    val tempRet = new Array[Array[V]](rows)
+    var row = 0
+    while (row < rows){
+      tempRet(row) = this(row, :: ).toArray
+      row += 1
+    }
+    tempRet
+  }
+
   /** Converts this matrix to a DenseVector (column-major)
     * If view = true (or View.Require), throws an exception if we cannot return a view. otherwise returns a view.
     * If view == false (or View.Copy) returns a copy

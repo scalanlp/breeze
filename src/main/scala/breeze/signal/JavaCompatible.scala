@@ -28,7 +28,7 @@ object JavaCompatible {
   /**See [[fourierTr]]*/
   def iFourierTrC(data: Array[Complex]): Array[Complex] = dvCToArray(breeze.signal.iFourierTr( DenseVector(data) ))
   /**See [[fourierTr]]*/
-  def fourierTr2C(data: Array[Array[Complex]]): Array[Array[Complex]] = dmCToArrayArray( breeze.signal.fourierTr( DenseMatrix(data) ) )
+  def fourierTr2C(data: Array[Array[Complex]]): Array[Array[Complex]] = breeze.signal.fourierTr( DenseMatrix(data) ).toArray
 
   /**Shift the zero-frequency component to the center of the spectrum.
     * Use fourierShiftC instead for complex array input.
@@ -40,6 +40,16 @@ object JavaCompatible {
   def fourierShift(data: Array[Double]): Array[Double] = breeze.signal.fourierShift( DenseVector(data) ).toArray
   /**See [[fourierShift]]*/
   def fourierShiftC(data: Array[Complex]): Array[Complex] = dvCToArray( breeze.signal.fourierShift( DenseVector(data) ) )
+  /**Shift the zero-frequency component to the center of the spectrum.
+    * Use fourierShiftC instead for complex array input.
+    * This function swaps half-spaces for all axes listed (defaults to all). Note that y[0] is the Nyquist component only if len(x) is even.
+    *
+    * @param data input array
+    * @return
+    */
+  def iFourierShift(data: Array[Double]): Array[Double] = breeze.signal.iFourierShift( DenseVector(data) ).toArray
+  /**See [[fourierShift]]*/
+  def iFourierShiftC(data: Array[Complex]): Array[Complex] = breeze.signal.iFourierShift( DenseVector(data) ).toArray
 
   /**Returns the frequencies for each tap in a discrete Fourier transform, useful for plotting.
     * You must specify either an fs or a dt argument. If you specify both, which is redundant,
