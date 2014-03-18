@@ -3,7 +3,7 @@ package operators
 
 import breeze.storage.DefaultArrayValue
 import breeze.math.{Field, Ring, Semiring}
-import breeze.linalg.support.{CanZipMapValues, CanAxpy, CanCopy}
+import breeze.linalg.support.{CanZipMapValues, CanCopy}
 import breeze.generic.UFunc.{UImpl2, InPlaceImpl2}
 
 
@@ -39,11 +39,13 @@ trait Counter2Ops {
     }
   }
 
-  implicit def canAxpy[K1, K2, V:Semiring]:CanAxpy[V, Counter2[K1, K2, V], Counter2[K1, K2, V]] = new CanAxpy[V, Counter2[K1, K2, V], Counter2[K1, K2, V]] {
-    val field = implicitly[Semiring[V]]
-    def apply(s: V, b: Counter2[K1, K2, V], a: Counter2[K1, K2, V]) {
-      for( (k,v) <- b.activeIterator) {
-        a(k) = field.+(a(k), field.*(s, v))
+  implicit def canAxpy[K1, K2, V:Semiring]: scaleAdd.InPlaceImpl3[Counter2[K1, K2, V], V, Counter2[K1, K2, V]] = {
+    new scaleAdd.InPlaceImpl3[Counter2[K1, K2, V], V, Counter2[K1, K2, V]] {
+      val field = implicitly[Semiring[V]]
+      def apply(a: Counter2[K1, K2, V], s: V, b: Counter2[K1, K2, V]) {
+        for( (k,v) <- b.activeIterator) {
+          a(k) = field.+(a(k), field.*(s, v))
+        }
       }
     }
   }

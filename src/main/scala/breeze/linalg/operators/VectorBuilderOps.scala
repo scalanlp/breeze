@@ -5,7 +5,6 @@ import breeze.generic.UFunc.{UImpl2, InPlaceImpl2}
 import breeze.math.{Ring, MutableVectorSpace, Semiring}
 import breeze.storage.DefaultArrayValue
 import scala.reflect.ClassTag
-import breeze.linalg.support.CanAxpy
 import breeze.linalg._
 
 
@@ -76,9 +75,9 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
 
   @expand
   @expand.valify
-  implicit def canAxpy[@expand.args(Double, Long, Float, Int) T]: CanAxpy[T, VectorBuilder[T], VectorBuilder[T]] = {
-    new  CanAxpy[T, VectorBuilder[T], VectorBuilder[T]]  {
-      def apply(s: T, b: VectorBuilder[T], a: VectorBuilder[T]) {
+  implicit def canAxpy[@expand.args(Double, Long, Float, Int) T]: scaleAdd.InPlaceImpl3[VectorBuilder[T], T, VectorBuilder[T]] = {
+    new  scaleAdd.InPlaceImpl3[VectorBuilder[T], T, VectorBuilder[T]]  {
+      def apply(a: VectorBuilder[T], s: T, b: VectorBuilder[T]) {
         require(a.length == b.length, "Dimension mismatch!")
         if(a eq b) {
           a :*= (1+s)
@@ -208,9 +207,9 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
     }
   }
 
-  implicit def canAxpy_V_VB_Double[V, Vec](implicit ev: Vec <:< Vector[V], semi: Semiring[V]): CanAxpy[V, VectorBuilder[V], Vec] = {
-    new  CanAxpy[V, VectorBuilder[V], Vec]  {
-      def apply(s: V, b: VectorBuilder[V], a: Vec) {
+  implicit def canAxpy_V_VB_Double[V, Vec](implicit ev: Vec <:< Vector[V], semi: Semiring[V]): scaleAdd.InPlaceImpl3[Vec, V, VectorBuilder[V]] = {
+    new scaleAdd.InPlaceImpl3[Vec, V, VectorBuilder[V]]  {
+      def apply(a: Vec, s: V, b: VectorBuilder[V]) {
         require(a.length == b.length, "Dimension mismatch!")
         var i = 0
         val bd = b.data

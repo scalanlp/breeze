@@ -5,7 +5,6 @@ import breeze.macros.expand
 import java.util
 import scala.math.BigInt
 import breeze.math.{Semiring, Complex}
-import breeze.linalg.support.CanAxpy
 
 
 
@@ -60,9 +59,9 @@ trait BitVectorOps {
 
 
   @expand
-  implicit def axpy[@expand.args(Int, Double, Float, Long) V, Vec](implicit ev: Vec <:< Vector[V]): CanAxpy[V, BitVector, Vec] = {
-    new CanAxpy[V, BitVector, Vec] {
-      def apply(s: V, b: BitVector, a: Vec) {
+  implicit def axpy[@expand.args(Int, Double, Float, Long) V, Vec](implicit ev: Vec <:< Vector[V]): scaleAdd.InPlaceImpl3[Vec, V, BitVector] = {
+    new scaleAdd.InPlaceImpl3[Vec, V, BitVector] {
+      def apply(a: Vec, s: V, b: BitVector) {
         require(b.lengthsMatch(a), "Vectors must be the same length!")
         val bd = b.data
         var i= bd.nextSetBit(0)
@@ -75,9 +74,9 @@ trait BitVectorOps {
   }
 
 
-  implicit def axpyGen[V, Vec](implicit ev: Vec <:< Vector[V], semi: Semiring[V]): CanAxpy[V, BitVector, Vec] = {
-    new CanAxpy[V, BitVector, Vec] {
-      def apply(s: V, b: BitVector, a: Vec) {
+  implicit def axpyGen[V, Vec](implicit ev: Vec <:< Vector[V], semi: Semiring[V]): scaleAdd.InPlaceImpl3[Vec, V, BitVector] = {
+    new scaleAdd.InPlaceImpl3[Vec, V, BitVector] {
+      def apply(a: Vec, s: V, b: BitVector) {
         require(b.lengthsMatch(a), "Vectors must be the same length!")
         val bd = b.data
         var i= bd.nextSetBit(0)

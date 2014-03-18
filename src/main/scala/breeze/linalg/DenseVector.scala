@@ -484,8 +484,8 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     }
   }
 
-  implicit object canDaxpy extends CanAxpy[Double, DenseVector[Double], DenseVector[Double]] with Serializable {
-    def apply(a: Double, x: DenseVector[Double], y: DenseVector[Double]) {
+  implicit object canDaxpy extends scaleAdd.InPlaceImpl3[DenseVector[Double], Double, DenseVector[Double]] with Serializable {
+    def apply(y: DenseVector[Double], a: Double, x: DenseVector[Double]) {
       require(x.length == y.length, "Vectors must have same length")
       blas.daxpy(
         x.length, a, x.data, x.offset, x.stride, y.data, y.offset, y.stride)

@@ -5,7 +5,7 @@ import breeze.math.{Ring, Semiring, Complex}
 import scala.math.BigInt
 import breeze.linalg._
 import breeze.generic.{UFunc}
-import breeze.linalg.support.{CanZipMapValues, CanAxpy, CanCopy}
+import breeze.linalg.support.{CanZipMapValues, CanCopy}
 import breeze.generic.UFunc.{UImpl, UImpl2}
 import scala.reflect.ClassTag
 import breeze.storage.DefaultArrayValue
@@ -581,10 +581,10 @@ trait HashVector_GenericOps { this: HashVector.type =>
     }
   }
 
-  implicit def canGaxpy[V:Semiring]: CanAxpy[V, HashVector[V], HashVector[V]] = {
-    new CanAxpy[V, HashVector[V], HashVector[V]] {
+  implicit def canGaxpy[V:Semiring]: scaleAdd.InPlaceImpl3[HashVector[V], V, HashVector[V]] = {
+    new scaleAdd.InPlaceImpl3[HashVector[V], V, HashVector[V]] {
       val ring = implicitly[Semiring[V]]
-      def apply(s: V, b: HashVector[V], a: HashVector[V]) {
+      def apply(a: HashVector[V], s: V, b: HashVector[V]) {
         require(b.length == a.length, "Vectors must be the same length!")
 
         for( (k,v) <- b.activeIterator)

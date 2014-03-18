@@ -296,8 +296,8 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
   }
 
   @expand
-  implicit def sv_dv_axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) T] (implicit  @expand.sequence[T](0, 0.0, 0f, 0l, BigInt(0), Complex.zero) zero: T):CanAxpy[T, SparseVector[T], DenseVector[T]] = new CanAxpy[T, SparseVector[T], DenseVector[T]] {
-    def apply(a: T, x: SparseVector[T], y: DenseVector[T]) {
+  implicit def sv_dv_axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) T] (implicit  @expand.sequence[T](0, 0.0, 0f, 0l, BigInt(0), Complex.zero) zero: T):scaleAdd.InPlaceImpl3[DenseVector[T], T, SparseVector[T]] = new scaleAdd.InPlaceImpl3[DenseVector[T], T, SparseVector[T]] {
+    def apply(y: DenseVector[T], a: T, x: SparseVector[T]) {
       require(x.length == y.length, "Vectors must be the same length!")
       val xsize = x.activeSize
 
@@ -648,8 +648,8 @@ trait SparseVectorOps { this: SparseVector.type =>
 
 
   @expand
-  implicit def sv_sv_axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) T] (implicit  @expand.sequence[T](0, 0.0, 0f, 0l, BigInt(0), Complex.zero) zero: T):CanAxpy[T, SparseVector[T], SparseVector[T]] = new CanAxpy[T, SparseVector[T], SparseVector[T]] {
-    def apply(a: T, x: SparseVector[T], y: SparseVector[T]) {
+  implicit def sv_sv_axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) T] (implicit  @expand.sequence[T](0, 0.0, 0f, 0l, BigInt(0), Complex.zero) zero: T):scaleAdd.InPlaceImpl3[SparseVector[T], T, SparseVector[T]] = new scaleAdd.InPlaceImpl3[SparseVector[T], T, SparseVector[T]] {
+    def apply(y: SparseVector[T], a: T, x: SparseVector[T]) {
       require(x.length == y.length, "Vectors must be the same length!")
       val asize = y.activeSize
       val bsize = x.activeSize
