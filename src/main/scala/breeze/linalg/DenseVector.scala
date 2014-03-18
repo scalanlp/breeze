@@ -188,7 +188,7 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
   def slice(start: Int, end: Int, stride: Int=1):DenseVector[E] = {
     if(start > end || start < 0) throw new IllegalArgumentException("Slice arguments " + start +", " +end +" invalid.")
     if(end > length || end < 0) throw new IllegalArgumentException("End " + end + "is out of bounds for slice of DenseVector of length " + length)
-    new DenseVector(data, start + offset, stride * this.stride, (end-start)/stride)
+    new DenseVector(data, start * this.stride + offset, stride * this.stride, (end-start)/stride)
   }
 
   override def toArray(implicit cm: ClassTag[E]) = if(stride == 1){
@@ -412,7 +412,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
 
         require(r.isEmpty || r.last < v.length)
         require(r.isEmpty || r.start >= 0)
-        new DenseVector(v.data, offset = v.offset + r.start, stride = v.stride * r.step, length = r.length)
+        new DenseVector(v.data, offset = v.offset + v.stride * r.start, stride = v.stride * r.step, length = r.length)
       }
     }
   }
