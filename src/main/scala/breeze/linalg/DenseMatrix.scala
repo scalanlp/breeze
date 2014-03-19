@@ -282,6 +282,22 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
     }
   }
 
+  private def majorSize = if(isTranspose) rows else cols
+  private def footprint = majorSize * majorStride
+
+
+  /** Returns true if this dense matrix overlaps any content with the other matrix */
+  private[linalg] def overlaps(other: DenseMatrix[V]):Boolean = (this.data eq other.data) && {
+    val astart = offset
+    val aend = offset+ footprint
+    val bstart = other.offset
+    val bend = other.offset + other.footprint
+    Range(astart, aend).contains(bstart) ||
+      Range(astart, aend).contains(bend) ||
+      Range(bstart, bend).contains(astart) ||
+      Range(bstart, bend).contains(aend)
+  }
+
 }
 
 object DenseMatrix extends LowPriorityDenseMatrix
@@ -864,4 +880,5 @@ with MatrixConstructors[DenseMatrix] {
 
   @noinline
   private def init() = {}
+
 }

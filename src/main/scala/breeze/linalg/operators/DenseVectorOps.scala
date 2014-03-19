@@ -282,6 +282,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   }
 
   @expand
+  @expand.valify
   implicit def axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) V]: scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] = {
     new scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] {
       def apply(a: DenseVector[V], s: V, b: DenseVector[V]) {
@@ -299,6 +300,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
           i += 1
         }
       }
+      implicitly[TernaryUpdateRegistry[Vector[V], V, Vector[V], scaleAdd.type]].register(this)
     }
   }
 

@@ -491,6 +491,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
         x.length, a, x.data, x.offset, x.stride, y.data, y.offset, y.stride)
     }
   }
+  implicitly[TernaryUpdateRegistry[Vector[Double], Double, Vector[Double], scaleAdd.type]].register(canDaxpy)
 
   implicit val canAddD: OpAdd.Impl2[DenseVector[Double], DenseVector[Double], DenseVector[Double]] = {
     pureFromUpdate_Double(canAddIntoD)

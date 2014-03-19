@@ -20,38 +20,37 @@ import breeze.linalg._
 import org.scalatest._
 import org.scalatest.junit._
 import org.scalatest.prop._
-import org.scalatest.matchers.ShouldMatchers
 import org.junit.runner.RunWith
 import org.scalacheck.{Prop, Arbitrary}
 import breeze.math.Complex
 
 @RunWith(classOf[JUnitRunner])
-class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
+class NumericsTest extends FunSuite with Checkers with Matchers {
 
   test("softmax") {
     import math.{log=>mlog}
     import breeze.linalg.softmax
-    (softmax(mlog(5.0), mlog(2)) should be (mlog(7) plusOrMinus 1e-10))
-    (softmax(mlog(2), mlog(5)) should be (mlog(7) plusOrMinus 1e-10))
-    (softmax(Double.NegativeInfinity, mlog(5)) should be (mlog(5) plusOrMinus 1e-10))
-    (softmax(mlog(5), Double.NegativeInfinity) should be (mlog(5) plusOrMinus 1e-10))
+    (softmax(mlog(5.0), mlog(2)) should be (mlog(7) +- 1e-10))
+    (softmax(mlog(2), mlog(5)) should be (mlog(7) +- 1e-10))
+    (softmax(Double.NegativeInfinity, mlog(5)) should be (mlog(5) +- 1e-10))
+    (softmax(mlog(5), Double.NegativeInfinity) should be (mlog(5) +- 1e-10))
     (softmax(Double.NegativeInfinity, Double.NegativeInfinity) should be (Double.NegativeInfinity))
 
-    (softmax(Array(mlog(1), mlog(2), mlog(3))) should be (mlog(6) plusOrMinus 1e-10))
-    (softmax(Array(mlog(1), mlog(2), Double.NegativeInfinity)) should be (mlog(3) plusOrMinus (1e-10)))
+    (softmax(Array(mlog(1), mlog(2), mlog(3))) should be (mlog(6) +- 1e-10))
+    (softmax(Array(mlog(1), mlog(2), Double.NegativeInfinity)) should be (mlog(3) +- (1e-10)))
 
     val s = log1p(Array.tabulate(5)(_.toDouble))
-    (softmax(s) should be (mlog(15) plusOrMinus 1e-10))
-    (softmax(Double.NegativeInfinity +: s) should be (mlog(15) plusOrMinus 1e-10))
-    (softmax(s :+ Double.NegativeInfinity) should be (mlog(15) plusOrMinus 1e-10))
+    (softmax(s) should be (mlog(15) +- 1e-10))
+    (softmax(Double.NegativeInfinity +: s) should be (mlog(15) +- 1e-10))
+    (softmax(s :+ Double.NegativeInfinity) should be (mlog(15) +- 1e-10))
 
-    (softmax(DenseVector(s)) should be (mlog(15) plusOrMinus 1e-10))
-    (softmax(DenseVector(s)(0 until s.length-1)) should be (mlog(10) plusOrMinus 1e-10))
+    (softmax(DenseVector(s)) should be (mlog(15) +- 1e-10))
+    (softmax(DenseVector(s)(0 until s.length-1)) should be (mlog(10) +- 1e-10))
   }
 
   test("logDiff") {
     import breeze.linalg.logDiff
-    (logDiff(log(5), log(2)) should be (log(3) plusOrMinus 1e-10))
+    (logDiff(log(5), log(2)) should be (log(3) +- 1e-10))
     (logDiff(log(5), log(5)) should be (Double.NegativeInfinity))
 
     evaluating {
@@ -92,7 +91,7 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
 
   test("lgamma") {
     import breeze.numerics.{lgamma=>lg}
-    lg(10) should be (12.8018274801 plusOrMinus 1E-8)
+    lg(10) should be (12.8018274801 +- 1E-8)
   }
 
   test("lbeta") {
@@ -102,24 +101,24 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
   test("incomplete gamma") {
     import breeze.numerics.{lgamma=>lg}
     import breeze.numerics.gammp
-    lg(3.0,4.0) should be (0.4212028764812177 plusOrMinus 1E-8)
-    lg(3.0,1.0) should be (-1.828821079471455 plusOrMinus 1E-8)
+    lg(3.0,4.0) should be (0.4212028764812177 +- 1E-8)
+    lg(3.0,1.0) should be (-1.828821079471455 +- 1E-8)
     assert(lg(3.0,DenseVector(4.0, 1.0))  === DenseVector(lg(3.0, 4.0), lg(3.0, 1.0)))
     assert(lg(DenseVector(3.0, 3.0),4.0)  === DenseVector(lg(3.0, 4.0), lg(3.0, 4.0)))
     assert(lg(DenseVector(3.0, 3.0),DenseVector(4.0, 1.0))  === DenseVector(lg(3.0, 4.0), lg(3.0, 1.0)))
-    gammp(3.0, 1.0) should be (0.08030139707139419 plusOrMinus 1E-8)
-    gammp(3.0, 4.0) should be (0.7618966944464557 plusOrMinus 1E-8)
-    gammp(3.0, 10.0) should be (0.9972306042844884 plusOrMinus 1E-8)
+    gammp(3.0, 1.0) should be (0.08030139707139419 +- 1E-8)
+    gammp(3.0, 4.0) should be (0.7618966944464557 +- 1E-8)
+    gammp(3.0, 10.0) should be (0.9972306042844884 +- 1E-8)
   }
 
   test("erf") {
     import breeze.numerics.{erf,erfi}
-    erf(3.0) should be (.9999779095030014 plusOrMinus 1E-8)
-    erf(-3.0) should be (-.9999779095030014 plusOrMinus 1E-8)
-    erf(1E-4) should be (0.00011283791633342489 plusOrMinus 1E-8)
-    erfi(3.0) should be (1629.994622601567 plusOrMinus 1E-4)
-    erfi(-3.0) should be (-1629.994622601567 plusOrMinus 1E-4)
-    erf(1E-4) should be (0.00011283791708567767 plusOrMinus 1E-8)
+    erf(3.0) should be (.9999779095030014 +- 1E-8)
+    erf(-3.0) should be (-.9999779095030014 +- 1E-8)
+    erf(1E-4) should be (0.00011283791633342489 +- 1E-8)
+    erfi(3.0) should be (1629.994622601567 +- 1E-4)
+    erfi(-3.0) should be (-1629.994622601567 +- 1E-4)
+    erf(1E-4) should be (0.00011283791708567767 +- 1E-8)
   }
 
   test("basic ufunc tests") {

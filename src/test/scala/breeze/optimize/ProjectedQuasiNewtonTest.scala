@@ -26,7 +26,7 @@ import breeze.linalg._
 import breeze.numerics._
 
 @RunWith(classOf[JUnitRunner])
-class ProjectedQuasiNewtonTest extends PropSpec with PropertyChecks with ShouldMatchers with OptimizeTestBaseTrait with VectorMatchers {
+class ProjectedQuasiNewtonTest extends PropSpec with PropertyChecks with OptimizeTestBaseTrait with VectorMatchers with Matchers {
 
   property("optimize a simple multivariate gaussian") {
     val optimizer = new ProjectedQuasiNewton(tolerance = 1.0E-9)
@@ -87,7 +87,7 @@ class ProjectedQuasiNewtonTest extends PropSpec with PropertyChecks with ShouldM
 
         val result = optimizer.minimize(f, init)
         val minimum = f(a / 2.0)
-        f(result) should be(minimum plusOrMinus abs(minimum) * 1E-2)
+        f(result) should be(minimum +- abs(minimum) * 1E-2)
       }
     }
   }

@@ -19,7 +19,6 @@ import scala.util.Random
 import org.scalatest._
 import org.scalatest.junit._
 import org.scalatest.prop._
-import org.scalatest.matchers.ShouldMatchers
 import org.junit.runner.RunWith
 import breeze.util.DoubleImplicits
 import breeze.numerics._
@@ -33,7 +32,7 @@ import breeze.{math => bmath}
  */
 
 @RunWith(classOf[JUnitRunner])
-class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with DoubleImplicits {
+class LinearAlgebraTest extends FunSuite with Checkers with Matchers with DoubleImplicits {
   test("kron") {
     val a = DenseMatrix((1,2),(3,4))
     val b = DenseMatrix((0,5),(6,7))
@@ -74,37 +73,37 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
 
   test("det") {
     val A = DenseMatrix((9,26,21),(48,3,11),(7,48,26))
-    det(A) should be (13446.99999999 plusOrMinus 1e-6)
+    det(A) should be (13446.99999999 +- 1e-6)
 
     val B = DenseMatrix((1,2,3),(4,5,-6),(7,8,9))
-    det(B) should be (-72.0 plusOrMinus 1e-16)
+    det(B) should be (-72.0 +- 1e-16)
 
     val C = DenseMatrix((1,2,3),(2,4,6),(0,-1,0)) // 1st and 2nd row linearly dep.
-    det(C) should be (0.0 plusOrMinus 1e-6)
+    det(C) should be (0.0 +- 1e-6)
 
     val D = DenseMatrix((-1,1,-1),(1,2,3),(3,-10,1))
-    det(D) should be (-8.0 plusOrMinus 1E-6)
+    det(D) should be (-8.0 +- 1E-6)
   }
 
   test("logdet") {
     val A = DenseMatrix((9,26,21),(48,3,11),(7,48,26))
     val (signA, detA) = logdet(A)
-    detA should be (math.log(13446.99999999) plusOrMinus 1e-8)
-    signA should be (1.0 plusOrMinus 1e-8)
+    detA should be (math.log(13446.99999999) +- 1e-8)
+    signA should be (1.0 +- 1e-8)
 
     val B = DenseMatrix((1,2,3),(4,5,-6),(7,8,9))
     val (signB, detB) = logdet(B)
-    detB should be (math.log(72.0) plusOrMinus 1e-15)
+    detB should be (math.log(72.0) +- 1e-15)
     assert(signB === -1.0)
 
     val C = DenseMatrix((1,2,3),(2,4,6),(0,-1,0)) // 1st and 2nd row linearly dep.
     val (signC, detC) = logdet(C)
-    detC should be (Double.NegativeInfinity plusOrMinus 1e-15)
+    detC should be (Double.NegativeInfinity +- 1e-15)
     assert(signC === 0.0)
 
     val D = DenseMatrix((-1,1,-1),(1,2,3),(3,-10,1))
     val (signD, detD) = logdet(D)
-    detD should be (math.log(8) plusOrMinus 1e-8)
+    detD should be (math.log(8) +- 1e-8)
     assert(signD === -1.0)
   }
 
@@ -250,8 +249,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
     val (u, s, vt) = svd(m)
 
     // u and vt are unitary
-    trace(u.t * u) should be (u.rows.toDouble plusOrMinus 1E-5)
-    trace(vt * vt.t) should be (vt.rows.toDouble plusOrMinus 1E-5)
+    trace(u.t * u) should be (u.rows.toDouble +- 1E-5)
+    trace(vt * vt.t) should be (vt.rows.toDouble +- 1E-5)
 
     // s is sorted by size of singular value, and be nonnegative
     for(i <- 1 until s.length) {
@@ -377,12 +376,12 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers with 
 
   def vectorsNearlyEqual(A: DenseVector[Double], B: DenseVector[Double], threshold: Double = 1E-6) {
     for(i <- 0 until A.length)
-      A(i) should be (B(i) plusOrMinus threshold)
+      A(i) should be (B(i) +- threshold)
   }
 
   def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6) {
     for(i <- 0 until A.rows; j <- 0 until A.cols)
-      A(i,j) should be (B(i, j) plusOrMinus threshold)
+      A(i,j) should be (B(i, j) +- threshold)
   }
 
   test("RangeExtender test") {

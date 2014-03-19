@@ -702,6 +702,7 @@ trait SparseVectorOps { this: SparseVector.type =>
         y.use(resultI, resultV, resultOff)
       }
     }
+    implicitly[TernaryUpdateRegistry[Vector[T], T, Vector[T], scaleAdd.type]].register(this)
   }
 
 
