@@ -16,11 +16,13 @@ package breeze
 */
 import io.{CSVWriter, CSVReader}
 import linalg.operators._
-import breeze.linalg.support.CanCopy
+import breeze.linalg.support.{LiteralRow, CanAxpy, CanCopy}
+import breeze.linalg.support.enrichedTuple._
 import math.Semiring
 import storage.DefaultArrayValue
 import java.io.{File, FileReader}
 import scala.reflect.ClassTag
+import breeze.macros.arityize
 
 
 /**
@@ -267,5 +269,45 @@ package object linalg {
    */
   private def columnRMS(x: DenseMatrix[Double]) =
     (sum(x:*x,Axis._0) / (x.rows-1.0)).map(scala.math.sqrt).toDenseVector
+
+
+//  /**
+//   * @author ktakagaki
+//   * @author dlwh
+//   * @date 3/1/14.
+//   */
+//  implicit class EnrichedTuple[Row, V]( tuple: Row )(implicit lr: LiteralRow[Row, V], ct: ClassTag[V], dav: DefaultArrayValue[V]) {
+//    def v = {
+//      val len = lr.length(tuple)
+//      val dv = DenseVector.zeros[V](len)
+//      lr.foreach(tuple, dv(_) = _)
+//      dv
+//    }
+//  }
+
+//  @arityize(22)
+  implicit def enrichedTuple1( tuple: Tuple1[Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple1(tuple)
+  implicit def enrichedTuple2( tuple: Tuple2[Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple2(tuple)
+  implicit def enrichedTuple3( tuple: Tuple3[Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple3(tuple)
+  implicit def enrichedTuple4( tuple: Tuple4[Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple4(tuple)
+  implicit def enrichedTuple5( tuple: Tuple5[Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple5(tuple)
+  implicit def enrichedTuple6( tuple: Tuple6[Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple6(tuple)
+  implicit def enrichedTuple7( tuple: Tuple7[Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple7(tuple)
+  implicit def enrichedTuple8( tuple: Tuple8[Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple8(tuple)
+  implicit def enrichedTuple9( tuple: Tuple9[Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple9(tuple)
+  implicit def enrichedTuple10( tuple: Tuple10[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple10(tuple)
+  implicit def enrichedTuple11( tuple: Tuple11[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple11(tuple)
+  implicit def enrichedTuple12( tuple: Tuple12[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple12(tuple)
+  implicit def enrichedTuple13( tuple: Tuple13[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple13(tuple)
+  implicit def enrichedTuple14( tuple: Tuple14[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple14(tuple)
+  implicit def enrichedTuple15( tuple: Tuple15[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple15(tuple)
+  implicit def enrichedTuple16( tuple: Tuple16[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple16(tuple)
+  implicit def enrichedTuple17( tuple: Tuple17[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple17(tuple)
+  implicit def enrichedTuple18( tuple: Tuple18[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple18(tuple)
+  implicit def enrichedTuple19( tuple: Tuple19[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple19(tuple)
+  implicit def enrichedTuple20( tuple: Tuple20[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple20(tuple)
+  implicit def enrichedTuple21( tuple: Tuple21[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple21(tuple)
+  implicit def enrichedTuple22( tuple: Tuple22[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple22(tuple)
+
 
 }
