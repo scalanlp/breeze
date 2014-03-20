@@ -29,6 +29,7 @@ import breeze.macros.expand
 import scala.math.BigInt
 import scala.collection.mutable.ArrayBuffer
 import CanTraverseValues.ValuesVisitor
+import breeze.signal.JavaArrayOps
 
 /**
  * A DenseMatrix is a matrix with all elements found in an array. It is column major unless isTranspose is true,
@@ -62,29 +63,32 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
   /** Creates a matrix with the specified data array and rows. columns inferred automatically */
   def this(rows: Int, data: Array[V], offset: Int = 0) = this(rows, {assert(data.length % rows == 0); data.length/rows}, data, offset)
 
-  /** Constructs DenseMatrix from Array[Array[V]] input. Input is in row-major like
-    * format, similar to DenseMatrix( (1,2 3), (4,5,6),... ) syntax, which is defined in [[breeze.linalg.Matrix]].
-    * This constructor was written for JavaCompatible.
-    * @param values
-    * @return
-    */
-  def this(values: Array[Array[V]]) = this( values.length, values(0).length, {
-          val tempret = new Array[V](rows*cols)
-          var rowIndex = 0
-          var tempretIndex = 0
-          while(rowIndex<cols) {
-            require( values(rowIndex).length==cols, "Input Array[Array[V]] is not square!")
-            var colIndex = 0
-            while(colIndex<rows){
-              tempret(tempretIndex)=values(colIndex)(rowIndex)
-              colIndex += 1
-              tempretIndex += 1
-            }
-            rowIndex += 1
-          }
-          tempret
-          }
-  )
+//  /** Constructs DenseMatrix from Array[Array[V]] input. Input is in row-major like
+//    * format, similar to DenseMatrix( (1,2 3), (4,5,6),... ) syntax, which is defined in [[breeze.linalg.Matrix]].
+//    * This constructor was written for JavaCompatible.
+//    * @param values
+//    * @return
+//    */
+//  def this(values: Array[Array[V]])(implicit man: ClassTag[V]) = this( values.length, values(0).length, {
+//    val tempRows= values.length
+//    val tempCols = values(0).length
+//    val tempret = new Array[V]( tempRows*tempCols )
+//
+//    var rowIndex = 0
+//    var tempretIndex = 0
+//    while(rowIndex<cols) {
+//      require( values(rowIndex).length==cols, "Input Array[Array[V]] is not square!")
+//      var colIndex = 0
+//      while(colIndex<rows){
+//        tempret(tempretIndex)=values(colIndex)(rowIndex)
+//        colIndex += 1
+//        tempretIndex += 1
+//      }
+//      rowIndex += 1
+//    }
+//    tempret
+//    }
+//  )
 
   def apply(row: Int, col: Int) = {
     if(row < - rows || row >= rows) throw new IndexOutOfBoundsException((row,col) + " not in [-"+rows+","+rows+") x [-"+cols+"," + cols+")")
@@ -338,32 +342,13 @@ with MatrixConstructors[DenseMatrix] {
     r
   }
 
-  /** Constructs DenseMatrix from Array[Array[V]] input. Input is in row-major like
-    * format, similar to DenseMatrix( (1,2 3), (4,5,6),... ) syntax, which is defined in [[breeze.linalg.Matrix]].
-    * @param values
-    * @tparam V
-    * @return
-    */
-  def apply[@specialized(Double, Float, Int) V: ClassTag](values: Array[Array[V]]) = {
-    val rows = values.length
-    val cols = values(0).length
-    val tempret = new Array[V](rows*cols)
-
-    var rowIndex = 0
-    var tempretIndex = 0
-    while(rowIndex<cols) {
-      require( values(rowIndex).length==cols, "Input Array[Array[V]] is not square!")
-      var colIndex = 0
-      while(colIndex<rows){
-        tempret(tempretIndex)=values(colIndex)(rowIndex)
-        colIndex += 1
-        tempretIndex += 1
-      }
-      rowIndex += 1
-    }
-
-    new DenseMatrix(rows, cols, tempret)
-  }
+//  /** Constructs DenseMatrix from Array[Array[V]] input. Input is in row-major like
+//    * format, similar to DenseMatrix( (1,2 3), (4,5,6),... ) syntax, which is defined in [[breeze.linalg.Matrix]].
+//    * @param values
+//    * @tparam V
+//    * @return
+//    */
+//  def apply[@specialized(Double, Float, Int) V: ClassTag](values: Array[Array[V]]) = new DenseMatrix(values)
 
 
   /** Horizontally tiles some matrices. They must have the same number of rows */
