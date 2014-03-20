@@ -252,6 +252,80 @@ trait MMRegistry2[R] {
   }
 }
 
+
+// TODO: switch to identity hashing!
+trait MMRegistry3[R] {
+  protected val ops = HashMap[(Class[_],Class[_], Class[_]), R]()
+  protected val cache = new ConcurrentHashMap[(Class[_], Class[_], Class[_]), Option[R]]()
+
+  def register(a: Class[_], b: Class[_], c: Class[_], op: R) {
+    ops( (a, b, c)) = op
+
+    def choicesFor(a: Class[_]) = if(a.isPrimitive) Seq(a, ReflectionUtil.boxedFromPrimitive(a)) else Seq(a)
+
+    for(ac <- choicesFor(a); bc <- choicesFor(b); cc <- choicesFor(c)) {
+      ops( (ac, bc, cc)) = op
+
+    }
+
+    cache.clear()
+  }
+
+  private def closeSupertypes(a: Class[_]) = {
+    val result = collection.mutable.Set[Class[_]]()
+    val queue = new mutable.Queue[Class[_]]()
+    queue.enqueue(a)
+    while(queue.nonEmpty) {
+      val t = queue.dequeue()
+      result += t
+      val s = t.getSuperclass
+      if(s != null) {
+        queue += s
+      }
+      for(i <- t.getInterfaces) {
+        if(!result(i)) {
+          queue += i
+        }
+      }
+    }
+    result
+  }
+
+
+  def resolve(a: Class[_], b: Class[_], c: Class[_]):Map[(Class[_], Class[_], Class[_]), R] = {
+    ops.get((a,b,c)) match {
+      case Some(m) => Map((a, b, c) -> m)
+      case None =>
+        val sa = closeSupertypes(a)
+        val sb = closeSupertypes(b)
+        val sc = closeSupertypes(c)
+        val candidates = ArrayBuffer[((Class[_], Class[_], Class[_]), R)]()
+        for( aa <- sa; bb <- sb; cc <- sc; op <- ops.get((aa,bb,cc))) {
+          candidates += ((aa, bb, cc) -> op)
+        }
+        candidates.toMap[(Class[_], Class[_], Class[_]), R]
+    }
+
+  }
+
+  /** This selects based on the partial order induced by the inheritance hierarchy.
+    *  If there is ambiguity, all are returned.
+    **/
+  protected def selectBestOption(options:Map[(Class[_],Class[_], Class[_]),R]) = {
+    var bestCandidates = Set[(Class[_],Class[_], Class[_])]()
+    for ( pair@(aa,bb,cc) <- options.keys) {
+      // if there is no option (aaa,bbb) s.t. aaa <: aa && bbb <: bb, then add it to the list
+      if (!bestCandidates.exists(pair => aa.isAssignableFrom(pair._1) && bb.isAssignableFrom(pair._2))  && cc.isAssignableFrom(pair._3)) {
+        bestCandidates = bestCandidates.filterNot(pair => pair._1.isAssignableFrom(aa) && pair._2.isAssignableFrom(bb) && pair._3.isAssignableFrom(cc))
+        bestCandidates += pair
+      }
+    }
+
+
+    options.filterKeys(bestCandidates)
+  }
+}
+
 trait MMRegistry1[M] {
   protected val ops = HashMap[Class[_], M]()
   protected val cache = new ConcurrentHashMap[Class[_], M]()

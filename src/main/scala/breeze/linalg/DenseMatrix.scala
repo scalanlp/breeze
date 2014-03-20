@@ -310,6 +310,22 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
     }
   }
 
+  private def majorSize = if(isTranspose) rows else cols
+  private def footprint = majorSize * majorStride
+
+
+  /** Returns true if this dense matrix overlaps any content with the other matrix */
+  private[linalg] def overlaps(other: DenseMatrix[V]):Boolean = (this.data eq other.data) && {
+    val astart = offset
+    val aend = offset+ footprint
+    val bstart = other.offset
+    val bend = other.offset + other.footprint
+    Range(astart, aend).contains(bstart) ||
+      Range(astart, aend).contains(bend) ||
+      Range(bstart, bend).contains(astart) ||
+      Range(bstart, bend).contains(aend)
+  }
+
 }
 
 object DenseMatrix extends LowPriorityDenseMatrix
@@ -879,10 +895,10 @@ with MatrixConstructors[DenseMatrix] {
   implicit val zipMap_f: CanZipMapValuesDenseMatrix[Float, Float] = new CanZipMapValuesDenseMatrix[Float, Float]
   implicit val zipMap_i: CanZipMapValuesDenseMatrix[Int, Int] = new CanZipMapValuesDenseMatrix[Int, Int]
 
-  implicit def canGaxpy[V: Semiring]: CanAxpy[V, DenseMatrix[V], DenseMatrix[V]] = {
-    new CanAxpy[V, DenseMatrix[V], DenseMatrix[V]] {
+  implicit def canGaxpy[V: Semiring]: scaleAdd.InPlaceImpl3[DenseMatrix[V], V, DenseMatrix[V]] = {
+    new scaleAdd.InPlaceImpl3[DenseMatrix[V], V, DenseMatrix[V]] {
       val ring = implicitly[Semiring[V]]
-      def apply(s: V, b: DenseMatrix[V], a: DenseMatrix[V]) {
+      def apply(a: DenseMatrix[V], s: V, b: DenseMatrix[V]) {
         require(a.rows == b.rows, "Vector row dimensions must match!")
         require(a.cols == b.cols, "Vector col dimensions must match!")
 
@@ -901,4 +917,5 @@ with MatrixConstructors[DenseMatrix] {
 
   @noinline
   private def init() = {}
+
 }

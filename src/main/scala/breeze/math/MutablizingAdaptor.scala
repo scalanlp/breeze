@@ -1,6 +1,6 @@
 package breeze.math
 
-import breeze.linalg.{norm, NumericOps}
+import breeze.linalg.{scaleAdd, norm, NumericOps}
 import breeze.linalg.support._
 import breeze.linalg.operators._
 import breeze.util.Isomorphism
@@ -113,9 +113,9 @@ object MutablizingAdaptor {
         }
       }
 
-      implicit def axpyVV: CanAxpy[S, Wrapper, Wrapper] = {
-        new CanAxpy[S, Wrapper, Wrapper] {
-          def apply(a: S, x: Wrapper, y: Wrapper) {y += x * a}
+      implicit def scaleAddVV: scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] = {
+        new scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] {
+          def apply(y: Wrapper, a: S, x: Wrapper) {y += x * a}
         }
       }
 
@@ -199,9 +199,10 @@ object MutablizingAdaptor {
         }
       }
 
-      implicit def axpyVV: CanAxpy[S, Wrapper, Wrapper] = {
-        new CanAxpy[S, Wrapper, Wrapper] {
-          def apply(a: S, x: Wrapper, y: Wrapper) {y += x * a}
+
+      implicit def scaleAddVV: scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] = {
+        new scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] {
+          def apply(y: Wrapper, a: S, x: Wrapper) {y += x * a}
         }
       }
 
@@ -288,9 +289,9 @@ object MutablizingAdaptor {
         }
       }
 
-      implicit def axpyVV: CanAxpy[S, Wrapper, Wrapper] = {
-        new CanAxpy[S, Wrapper, Wrapper] {
-          def apply(a: S, x: Wrapper, y: Wrapper) {y += x * a}
+      implicit def scaleAddVV: scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] = {
+        new scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] {
+          def apply(y: Wrapper, a: S, x: Wrapper) {y += x * a}
         }
       }
 
