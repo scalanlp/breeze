@@ -3,7 +3,6 @@ package breeze.features
 import breeze.linalg._
 import java.util
 import breeze.linalg.operators._
-import breeze.linalg.support.CanAxpy
 
 /**
  * Represents a feature vector of indicator (i.e. binary) features.
@@ -49,8 +48,8 @@ object FeatureVector {
     implicit def fromArrayInt(arr: Array[Int]) = new FeatureVector(arr)
   }
 
-  implicit object FVCanDaxpy extends CanAxpy[Double, FeatureVector, DenseVector[Double]] {
-    def apply(a: Double, x: FeatureVector, y: DenseVector[Double]) {
+  implicit object FVCanDaxpy extends scaleAdd.InPlaceImpl3[DenseVector[Double], Double, FeatureVector] {
+    def apply(y: DenseVector[Double], a: Double, x: FeatureVector) {
       var i = 0
       while(i < x.activeLength) {
         y(x(i)) += a

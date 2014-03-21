@@ -2,7 +2,7 @@ package breeze.math
 
 import breeze.linalg.support._
 import breeze.linalg.operators._
-import breeze.linalg.{norm, NumericOps}
+import breeze.linalg.{scaleAdd, norm, NumericOps}
 
 /**
  * A coordinate space is like a [[breeze.math.InnerProductSpace]], but
@@ -130,7 +130,7 @@ object MutableCoordinateSpace {
                    _subVV:  OpSub.Impl2[V, V, V],
                    _neg:  OpNeg.Impl[V, V],
                    _isNumericOps: V <:< NumericOps[V],
-                   _axpy:  CanAxpy[S, V, V],
+                   _scaleAddVV: scaleAdd.InPlaceImpl3[V, S, V],
                    _dotVV:  OpMulInner.Impl2[V, V, S]):MutableCoordinateSpace[V, S] = new MutableCoordinateSpace[V, S] {
     implicit def normImplDouble = _norm
 
@@ -206,6 +206,6 @@ object MutableCoordinateSpace {
 
     implicit def dotVV: OpMulInner.Impl2[V, V, S] = _dotVV
 
-    implicit def axpyVV: CanAxpy[S, V, V] = _axpy
- }
+    implicit def scaleAddVV: scaleAdd.InPlaceImpl3[V, S, V] = _scaleAddVV
+  }
 }

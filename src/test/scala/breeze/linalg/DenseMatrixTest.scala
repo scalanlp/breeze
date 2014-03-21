@@ -554,6 +554,13 @@ class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with Do
 //    assert( (dm(::, 2 until 0 by -1) * dm(2 until 0 by -1, ::)) === dm)
   }
 
+  test("Ensure a += a.t gives the right result") {
+    val dm = DenseMatrix.rand[Double](3,3)
+    val dmdmt = dm + dm.t
+    dm += dm.t
+    assert(dm === dmdmt)
+  }
+
 
 
   def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6) {

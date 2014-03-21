@@ -17,7 +17,7 @@ package breeze.math
 */
 import breeze.linalg.operators._
 import breeze.linalg.support._
-import breeze.linalg.{norm, QuasiTensor, NumericOps}
+import breeze.linalg._
 
 /**
  *
@@ -71,7 +71,7 @@ trait MutableVectorSpace[V, S] extends VectorSpace[V, S] {
 
   implicit def setIntoVV: OpSet.InPlaceImpl2[V, V]
 
-  implicit def axpyVV: CanAxpy[S, V, V]
+  implicit def scaleAddVV: scaleAdd.InPlaceImpl3[V, S, V]
 }
 
 object MutableVectorSpace {
@@ -90,7 +90,7 @@ object MutableVectorSpace {
                     _addIntoVV: OpAdd.InPlaceImpl2[V, V],
                     _subIntoVV: OpSub.InPlaceImpl2[V, V],
                     _setIntoVV: OpSet.InPlaceImpl2[V, V],
-                    _axpy: CanAxpy[S, V, V]): MutableVectorSpace[V, S] = new MutableVectorSpace[V, S] {
+                    _scaleAddVSV: scaleAdd.InPlaceImpl3[V, S, V]): MutableVectorSpace[V, S] = new MutableVectorSpace[V, S] {
     def field: Field[S] = _field
 
 
@@ -109,7 +109,7 @@ object MutableVectorSpace {
     implicit def addIntoVV: OpAdd.InPlaceImpl2[V, V] = _addIntoVV
     implicit def subIntoVV: OpSub.InPlaceImpl2[V, V] = _subIntoVV
     implicit def setIntoVV: OpSet.InPlaceImpl2[V, V] = _setIntoVV
-    implicit def axpyVV: CanAxpy[S, V, V] = _axpy
+    implicit def scaleAddVV: scaleAdd.InPlaceImpl3[V, S, V] = _scaleAddVSV
   }
 }
 
@@ -134,7 +134,7 @@ object MutableInnerProductSpace {
                  _addIntoVV: OpAdd.InPlaceImpl2[V, V],
                  _subIntoVV: OpSub.InPlaceImpl2[V, V],
                  _setIntoVV: OpSet.InPlaceImpl2[V, V],
-                 _axpy: CanAxpy[S, V, V]): MutableInnerProductSpace[V, S] = new MutableInnerProductSpace[V, S] {
+                 _scaleAddVSV: scaleAdd.InPlaceImpl3[V, S, V]): MutableInnerProductSpace[V, S] = new MutableInnerProductSpace[V, S] {
     def field: Field[S] = _field
 
     implicit def scalarNorm = _scalarNorm
@@ -153,7 +153,7 @@ object MutableInnerProductSpace {
     implicit def addIntoVV: OpAdd.InPlaceImpl2[V, V] = _addIntoVV
     implicit def subIntoVV: OpSub.InPlaceImpl2[V, V] = _subIntoVV
     implicit def setIntoVV: OpSet.InPlaceImpl2[V, V] = _setIntoVV
-    implicit def axpyVV: CanAxpy[S, V, V] = _axpy
+    implicit def scaleAddVV: scaleAdd.InPlaceImpl3[V, S, V] = _scaleAddVSV
   }
 }
 
@@ -190,7 +190,7 @@ object TensorSpace {
 //                   _powIntoVS:  OpPow.InPlaceImpl2[V, S],
 //                   _modIntoVV:  OpMod.InPlaceImpl2[V, V],
 //                   _modIntoVS:  OpMod.InPlaceImpl2[V, S],
-                   _axpy:  CanAxpy[S, V, V],
+                   _scaleAddVSV: scaleAdd.InPlaceImpl3[V, S, V],
                    _field:  Field[S],
                    _zeros:  CanCreateZerosLike[V, V],
                    _mulVS:  OpMulScalar.Impl2[V, S, V],
@@ -274,6 +274,6 @@ object TensorSpace {
 
     implicit def setIntoVS: OpSet.InPlaceImpl2[V, S] = _setIntoVS
 
-    implicit def axpyVV: CanAxpy[S, V, V] = _axpy
+    implicit def scaleAddVV: scaleAdd.InPlaceImpl3[V, S, V] = _scaleAddVSV
   }
 }

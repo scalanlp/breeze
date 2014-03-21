@@ -38,7 +38,7 @@ package object signal {
 
   // <editor-fold desc="fourierFreq">
 
-  /**Returns the frequencies for each tap in a discrete Fourier transform, useful for graphing.
+  /**Returns the frequencies for each tap in a discrete Fourier transform, useful for plotting.
     * You must specify either an fs or a dt argument. If you specify both, which is redundant,
     * fs == 1.0/dt must be true.
     *
@@ -130,9 +130,9 @@ package object signal {
     *
     * @param data data to be filtered
     * @param taps  number of taps to use (default = 512)
-    * @param omegas sequence of two filter band parameters, in units of the nyquist frequency,
+    * @param omegas sequence of two filter band parameters, in units of the Nyquist frequency,
     *              or in Hz if the sampleRate is set to a specific value other than 2d.
-    * @param sampleRate default of 2.0 means that the nyquist frequency is 1.0
+    * @param sampleRate default of 2.0 means that the Nyquist frequency is 1.0
     * @param kernelDesign  currently only supports OptKernelType.Firwin. See [[breeze.signal.OptDesignMethod]]
     * @param overhang  whether to have overhanging values when filtering. See [[breeze.signal.OptOverhang]]
     * @param padding  how to pad the values when filtering. See [[breeze.signal.OptPadding]]
@@ -140,23 +140,23 @@ package object signal {
     * @return
     */
   def filterBP[Input, Output](data: Input,
-                              omegas: (Double, Double), taps: Int = 512,
+                              omegas: (Double, Double),
                               sampleRate: Double = 2d,
+                              taps: Int = 512,
                               kernelDesign: OptDesignMethod = OptDesignMethod.Firwin,
                               overhang: OptOverhang = OptOverhang.None,
                               padding: OptPadding = OptPadding.Boundary)
         (implicit canFilterBPBS: CanFilterBPBS[Input, Output]): Output =
-    canFilterBPBS(data, omegas, taps,
-      sampleRate, bandStop = false,
+    canFilterBPBS(data, omegas, sampleRate, taps, bandStop = false,
               kernelDesign, overhang, padding)
 
   /** Bandstop filter the input data.
     *
     * @param data data to be filtered
     * @param taps  number of taps to use (default = 512)
-    * @param omegas sequence of two filter band parameters, in units of the nyquist frequency,
+    * @param omegas sequence of two filter band parameters, in units of the Nyquist frequency,
     *              or in Hz if the sampleRate is set to a specific value other than 2d.
-    * @param sampleRate default of 2.0 means that the nyquist frequency is 1.0
+    * @param sampleRate default of 2.0 means that the Nyquist frequency is 1.0
     * @param kernelDesign  currently only supports OptKernelType.Firwin. See [[breeze.signal.OptDesignMethod]]
     * @param overhang  whether to have overhanging values when filtering. See [[breeze.signal.OptOverhang]]
     * @param padding  how to pad the values when filtering. See [[breeze.signal.OptPadding]]
@@ -164,14 +164,14 @@ package object signal {
     * @return
     */
   def filterBS[Input, Output](data: Input,
-                              omegas: (Double, Double), taps: Int = 512,
+                              omegas: (Double, Double),
                               sampleRate: Double = 2d,
+                              taps: Int = 512,
                               kernelDesign: OptDesignMethod = OptDesignMethod.Firwin,
                               overhang: OptOverhang = OptOverhang.None,
                               padding: OptPadding = OptPadding.Boundary)
          (implicit canFilterBPBS: CanFilterBPBS[Input, Output]): Output =
-    canFilterBPBS(data, omegas, taps,
-      sampleRate, bandStop = true,
+    canFilterBPBS(data, omegas, sampleRate, taps,bandStop = true,
       kernelDesign, overhang, padding)
 
   // </editor-fold>
@@ -182,9 +182,9 @@ package object signal {
     *
     * @param data data to be filtered
     * @param taps  number of taps to use (default = 512)
-    * @param omega cutoff frequency, in units of the nyquist frequency,
+    * @param omega cutoff frequency, in units of the Nyquist frequency,
     *              or in Hz if the sampleRate is set to a specific value other than 2d.
-    * @param sampleRate default of 2.0 means that the nyquist frequency is 1.0
+    * @param sampleRate default of 2.0 means that the Nyquist frequency is 1.0
     * @param kernelDesign  currently only supports OptKernelType.Firwin. See [[breeze.signal.OptDesignMethod]]
     * @param overhang  whether to have overhanging valueswhen filtering. See [[breeze.signal.OptOverhang]]
     * @param padding  how to pad the values when filtering. See [[breeze.signal.OptPadding]]
@@ -192,21 +192,22 @@ package object signal {
     * @return
     */
   def filterLP[Input, Output](data: Input,
-                              omega: Double, taps: Int = 512,
+                              omega: Double,
                               sampleRate: Double = 2d,
+                              taps: Int = 512,
                               kernelDesign: OptDesignMethod = OptDesignMethod.Firwin,
                               overhang: OptOverhang = OptOverhang.None,
                               padding: OptPadding = OptPadding.Boundary)
                              (implicit canFilterLPHP: CanFilterLPHP[Input, Output]): Output =
-    canFilterLPHP(data, omega, taps, sampleRate, lowPass = true, kernelDesign, overhang, padding)
+    canFilterLPHP(data, omega, sampleRate, taps, lowPass = true, kernelDesign, overhang, padding)
 
   /** Highpass filter the input data.
     *
     * @param data data to be filtered
     * @param taps  number of taps to use (default = 512)
-    * @param omega cutoff frequency, in units of the nyquist frequency,
+    * @param omega cutoff frequency, in units of the Nyquist frequency,
     *              or in Hz if the sampleRate is set to a specific value other than 2d.
-    * @param sampleRate default of 2.0 means that the nyquist frequency is 1.0
+    * @param sampleRate default of 2.0 means that the Nyquist frequency is 1.0
     * @param kernelDesign  currently only supports OptKernelType.Firwin. See [[breeze.signal.OptDesignMethod]]
     * @param overhang  whether to have overhanging values when filtering. See [[breeze.signal.OptOverhang]]
     * @param padding  how to pad the values when filtering. See [[breeze.signal.OptPadding]]
@@ -214,13 +215,14 @@ package object signal {
     * @return
     */
   def filterHP[Input, Output](data: Input,
-                              omega: Double, taps: Int = 512,
+                              omega: Double,
                               sampleRate: Double = 2d,
+                              taps: Int = 512,
                               kernelDesign: OptDesignMethod = OptDesignMethod.Firwin,
                               overhang: OptOverhang = OptOverhang.None,
                               padding: OptPadding = OptPadding.Boundary)
                              (implicit canFilterLPHP: CanFilterLPHP[Input, Output]): Output =
-    canFilterLPHP(data, omega, taps, sampleRate, lowPass = false, kernelDesign, overhang, padding)
+    canFilterLPHP(data, omega, sampleRate, taps, lowPass = false, kernelDesign, overhang, padding)
 
   // </editor-fold>
 
