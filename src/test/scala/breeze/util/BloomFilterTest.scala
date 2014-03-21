@@ -28,10 +28,50 @@ class BloomFilterTest extends FunSuite with Checkers {
   test("add a bunch of strings and they're all there") {
     check { (strings: List[String], _numBuckets: Int, _numHashes: Int) => {
       val numHashes = _numHashes.abs % 1000 + 1
-      val numBuckets = _numBuckets.abs % 1000 + 1
+      val numBuckets = (_numBuckets/1000).abs % 1000 + 1
+      assert(numBuckets >= 0, numBuckets + " " +  _numBuckets)
         val bf = new BloomFilter[String](numBuckets,numHashes.abs)
         strings foreach { bf += _ }
         strings forall { bf contains _ }
     }}
+  }
+
+  test("union with empty is a copy") {
+    check { (strings: List[String], _numBuckets: Int, _numHashes: Int) => {
+      val numHashes = _numHashes.abs % 1000 + 1
+      val numBuckets = (_numBuckets/1000).abs % 1000 + 1
+      assert(numBuckets >= 0, numBuckets + " " +  _numBuckets)
+      val bf = new BloomFilter[String](numBuckets,numHashes.abs)
+      val bf2 = new BloomFilter[String](numBuckets,numHashes.abs)
+      strings foreach { bf += _ }
+      bf2 |=  bf
+      strings forall { bf2 contains _ }
+    }}
+  }
+
+
+  test("bloom filter mostly returns false for missing things") {
+    check { (strings: Set[String], strings2: Set[String], _numBuckets: Int, _numHashes: Int) => {
+      val numHashes =  5
+      val numBuckets = 1000
+      assert(numBuckets >= 0, numBuckets + " " +  _numBuckets)
+      (
+        attempt1(numBuckets, numHashes, strings, strings2)
+        || attempt1(numBuckets + 1, numHashes + 1, strings, strings2)
+        )
+    }}
+  }
+
+  def attempt1(numBuckets: Int, numHashes: Int, strings: Set[String], strings2: Set[String]): Boolean = {
+    val bf = new BloomFilter[String](numBuckets, numHashes.abs)
+    val bf2 = new BloomFilter[String](numBuckets, numHashes.abs)
+    strings foreach {
+      bf += _
+    }
+    bf2 |= bf
+    val numBad = (strings2 -- strings).count {
+      bf2 contains _
+    }
+    numBad <= ((strings2 -- strings).size / 100) + 1
   }
 }
