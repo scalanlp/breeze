@@ -29,7 +29,6 @@ import breeze.macros.expand
 import scala.math.BigInt
 import scala.collection.mutable.ArrayBuffer
 import CanTraverseValues.ValuesVisitor
-import breeze.signal.JavaArrayOps
 
 /**
  * A DenseMatrix is a matrix with all elements found in an array. It is column major unless isTranspose is true,
@@ -62,7 +61,6 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
   def this(rows: Int, cols: Int, data: Array[V], offset: Int = 0) = this(rows, cols, data, offset, rows)
   /** Creates a matrix with the specified data array and rows. columns inferred automatically */
   def this(rows: Int, data: Array[V], offset: Int = 0) = this(rows, {assert(data.length % rows == 0); data.length/rows}, data, offset)
-
 
   def apply(row: Int, col: Int) = {
     if(row < - rows || row >= rows) throw new IndexOutOfBoundsException((row,col) + " not in [-"+rows+","+rows+") x [-"+cols+"," + cols+")")
@@ -331,15 +329,6 @@ with MatrixConstructors[DenseMatrix] {
     breeze.linalg.diag.diagDMDVImpl.apply(r) := implicitly[Semiring[V]].one
     r
   }
-
-//  /** Constructs DenseMatrix from Array[Array[V]] input. Input is in row-major like
-//    * format, similar to DenseMatrix( (1,2 3), (4,5,6),... ) syntax, which is defined in [[breeze.linalg.Matrix]].
-//    * @param values
-//    * @tparam V
-//    * @return
-//    */
-//  def apply[@specialized(Double, Float, Int) V: ClassTag](values: Array[Array[V]]) = new DenseMatrix(values)
-
 
   /** Horizontally tiles some matrices. They must have the same number of rows */
   def horzcat[M,V](matrices: M*)(implicit ev: M <:< Matrix[V], opset: OpSet.InPlaceImpl2[DenseMatrix[V], M], vman: ClassTag[V], dav: DefaultArrayValue[V]) = {

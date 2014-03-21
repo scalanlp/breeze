@@ -175,7 +175,7 @@ object JavaCompatible {
   // </editor-fold>
 
   /**Root mean square of a vector.*/
-  def rootMeanSquareD( data: Array[Double] ) = dvDToArray( breeze.signal.rootMeanSquare( arrayDToDv(data) ) )
+  def rootMeanSquareD( data: Array[Double] ): Double = breeze.signal.rootMeanSquare( arrayDToDv(data) )
 
 
 
