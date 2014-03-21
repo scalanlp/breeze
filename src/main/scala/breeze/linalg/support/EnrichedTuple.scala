@@ -174,7 +174,7 @@ class EnrichedTupleBase {
 
 //  @arityize(22)
 //  class EnrichedTuple(tuple: (Tuple[Any @arityize.repeat] @arityize.relative(EnrichedTuple)) ) extends EnrichedTupleBase {
-//    def v() = arrayToDenseVector( anyToArray(tuple) )
+//    def v() = arrayToDv( anyToArray(tuple) )
 //    def m() = arrayArrayToDenseMatrix( tuple.productIterator.map( anyToArray(_) ).toArray )
 //  }
 
