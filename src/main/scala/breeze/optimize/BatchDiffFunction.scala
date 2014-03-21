@@ -2,6 +2,7 @@ package breeze.optimize
 
 import breeze.stats.distributions.Rand
 import scala.collection.immutable
+import breeze.linalg.support.CanCopy
 
 /**
 * A diff function that supports subsets of the data. By default it evaluates on all the data
@@ -10,7 +11,7 @@ trait BatchDiffFunction[T] extends DiffFunction[T] with ((T,IndexedSeq[Int])=>Do
   /**
   * Calculates the gradient of the function on a subset of the data
   */
-  def gradientAt(x:T, batch: IndexedSeq[Int]) : T = calculate(x,batch)._2;
+  def gradientAt(x:T, batch: IndexedSeq[Int]) : T = calculate(x,batch)._2
   /**
   * Calculates the value of the function on a subset of the data
   */
@@ -20,11 +21,21 @@ trait BatchDiffFunction[T] extends DiffFunction[T] with ((T,IndexedSeq[Int])=>Do
   */
   def calculate(x:T, batch: IndexedSeq[Int]): (Double,T)
 
-  override def calculate(x:T):(Double,T) = calculate(x,fullRange);
+  override def calculate(x:T):(Double,T) = calculate(x,fullRange)
   override def valueAt(x:T):Double = valueAt(x,fullRange)
   override def gradientAt(x:T):T = gradientAt(x,fullRange)
 
-  def apply(x:T, batch:IndexedSeq[Int]) = valueAt(x,batch);
+  def apply(x:T, batch:IndexedSeq[Int]) = valueAt(x,batch)
+
+  override def cached(implicit copy: CanCopy[T]) = {
+    if (this.isInstanceOf[CachedBatchDiffFunction[_]]) {
+      this
+    } else {
+      new CachedBatchDiffFunction[T](this)
+    }
+  }
+
+
 
   /**
   * The full size of the data

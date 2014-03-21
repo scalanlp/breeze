@@ -27,7 +27,7 @@ import breeze.generic.UFunc
  * We use this when we don't care about the index into the Tensor, or if we don't really have an index.
  * @author dlwh
  */
-trait NumericOps[+This] {
+trait NumericOps[+This] extends Any {
   def repr : This
 
   final def unary_-[TT>:This,That](implicit op : OpNeg.Impl[TT, That]) = op(repr)

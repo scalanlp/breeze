@@ -37,7 +37,7 @@ class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with Do
     assert(m === DenseMatrix((0,2,3),(3,5,6)))
 
     // slice row
-    val s2 : DenseMatrix[Int] = m(0, ::)
+    val s2 = m(0, ::)
     assert(s2 === DenseVector(0,2,3).t)
     s2 *= 2
     assert(m === DenseMatrix((0,4,6),(3,5,6)))
@@ -50,7 +50,7 @@ class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with Do
 
     // slice rows
     val s4 = m(1 to 1, ::)
-//    assert(s4 === DenseMatrix((3,4,6)))
+    assert(s4 === DenseMatrix((3,4,6)))
 
     val mbig = DenseMatrix(
       (0,1,2,3,4,5),
@@ -138,11 +138,11 @@ class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with Do
     val s2 = m(0 to 1, 1)
 
     val t2 = m.t(1, 0 to 1)
-    assert(s2.valuesIterator sameElements t2.valuesIterator)
+    assert(s2 === t2.t)
 
     val s3 = m(0, 0 to 1)
     val t3 = m.t(0 to 1, 0)
-    assert(s3.toDenseVector === t3)
+    assert(s3.t === t3)
 
     {
       val s2 = m(0 to 1, ::)
@@ -445,7 +445,7 @@ class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with Do
     // handle odd sized matrices (test for a bug.)
     val dm = DenseMatrix.tabulate(2,5)( (i,j) => i * j * 1.0 + 1)
     dm := normalize(dm, Axis._1, 2)
-    assert(abs(sum(dm(0,::).map(x => x * x)) - 1.0) < 1E-4, dm.toString + " not normalized!")
+    assert(abs(sum(dm(0,::).t.map(x => x * x)) - 1.0) < 1E-4, dm.toString + " not normalized!")
   }
 
   test("Generic Dense ops") {
@@ -483,7 +483,7 @@ class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with Do
     val res = i \ A.t(::,1)
     assert(res === DenseVector(1.0,-1.0))
     val res2 = i \ A(1,::).t
-    assert(res2 === DenseMatrix(1.0,-1.0))
+    assert(res2 === DenseVector(1.0,-1.0))
   }
 
   test("GH #148: out of bounds slice throws") {
@@ -552,6 +552,13 @@ class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with Do
     assert( (dm(::, 0 until 0) * dm(0 until 0, ::)) === dm)
     assert( (dm(0 until 0, ::) * dm(::, 0 until 0)) === DenseMatrix.zeros[Double](0, 0))
 //    assert( (dm(::, 2 until 0 by -1) * dm(2 until 0 by -1, ::)) === dm)
+  }
+
+  test("Ensure a += a.t gives the right result") {
+    val dm = DenseMatrix.rand[Double](3,3)
+    val dmdmt = dm + dm.t
+    dm += dm.t
+    assert(dm === dmdmt)
   }
 
 

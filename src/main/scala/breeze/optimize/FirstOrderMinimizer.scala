@@ -2,21 +2,21 @@ package breeze.optimize
 
 import breeze.math.{NormedVectorSpace, MutableCoordinateSpace}
 import breeze.util.Implicits._
-import com.typesafe.scalalogging.slf4j.Logging
 import breeze.linalg.norm
 import breeze.stats.distributions.{RandBasis, ThreadLocalRandomGenerator}
 import org.apache.commons.math3.random.MersenneTwister
+import breeze.util.SerializableLogging
 
 /**
  *
  * @param minImprovementWindow How many iterations to improve function by at least improvementTol
  * @author dlwh
  */
-abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: Int = -1,
+abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](maxIter: Int = -1,
                                                                      tolerance: Double=1E-6,
                                                                      improvementTol: Double=1E-3,
                                                                      val minImprovementWindow: Int = 10,
-                                                                     val numberOfImprovementFailures: Int = 1)(implicit vspace: NormedVectorSpace[T, Double]) extends Minimizer[T,DF] with Logging {
+                                                                     val numberOfImprovementFailures: Int = 1)(implicit vspace: NormedVectorSpace[T, Double]) extends Minimizer[T,DF] with SerializableLogging {
 
   type History
   case class State(x: T,
@@ -33,6 +33,7 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
   import vspace.normImpl
 
   protected def initialHistory(f: DF, init: T): History
+  protected def adjustFunction(f: DF): DF = f
   protected def adjust(newX: T, newGrad: T, newVal: Double):(Double,T) = (newVal,newGrad)
   protected def chooseDescentDirection(state: State, f: DF):T
   protected def determineStepSize(state: State, f: DF, direction: T):Double
@@ -60,16 +61,17 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
 
   def iterations(f: DF,init: T): Iterator[State] = {
     var failedOnce = false
-    val it = Iterator.iterate(initialState(f,init)) { state => try {
-        val dir = chooseDescentDirection(state, f)
-        val stepSize = determineStepSize(state, f, dir)
+    val adjustedFun = adjustFunction(f)
+    val it = Iterator.iterate(initialState(adjustedFun,init)) { state => try {
+        val dir = chooseDescentDirection(state, adjustedFun)
+        val stepSize = determineStepSize(state, adjustedFun, dir)
         logger.info(f"Step Size: $stepSize%.4g")
         val x = takeStep(state,dir,stepSize)
-        val (value,grad) = calculateObjective(f, x, state.history)
+        val (value,grad) = calculateObjective(adjustedFun, x, state.history)
         val (adjValue,adjGrad) = adjust(x,grad,value)
         val oneOffImprovement = (state.adjustedValue - adjValue)/(state.adjustedValue.abs max adjValue.abs max 1E-6 * state.initialAdjVal.abs)
         logger.info(f"Val and Grad Norm: $adjValue%.6g (rel: $oneOffImprovement%.3g) ${norm(adjGrad)}%.6g")
-        val history = updateHistory(x,grad,value, f, state)
+        val history = updateHistory(x,grad,value, adjustedFun, state)
         val newAverage = updateFValWindow(state, adjValue)
         failedOnce = false
         var s = State(x,value,grad,adjValue,adjGrad,state.iter + 1, state.initialAdjVal, history, newAverage, 0)
@@ -81,7 +83,7 @@ abstract class FirstOrderMinimizer[T,-DF<:StochasticDiffFunction[T]](maxIter: In
         case x: FirstOrderException if !failedOnce =>
           failedOnce = true
           logger.error("Failure! Resetting history: " + x)
-          state.copy(history = initialHistory(f, state.x))
+          state.copy(history = initialHistory(adjustedFun, state.x))
         case x: FirstOrderException =>
           logger.error("Failure again! Giving up and returning. Maybe the objective is just poorly behaved?")
           state.copy(searchFailed = true)

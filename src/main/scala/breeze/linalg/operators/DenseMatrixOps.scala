@@ -384,13 +384,19 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
       val bd = b.data
       var c = 0
 
-      while(c < a.cols) {
-        var r = 0
-        while(r < a.rows) {
-          ad(a.linearIndex(r, c)) = op(ad(a.linearIndex(r,c)), bd(b.linearIndex(r,c)))
-          r += 1
+      if(a.overlaps(b)) {
+        val ac = a.copy
+        apply(ac,b)
+        a := ac
+      } else {
+        while(c < a.cols) {
+          var r = 0
+          while(r < a.rows) {
+            ad(a.linearIndex(r, c)) = op(ad(a.linearIndex(r,c)), bd(b.linearIndex(r,c)))
+            r += 1
+          }
+          c += 1
         }
-        c += 1
       }
 
     }

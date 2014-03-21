@@ -9,7 +9,10 @@ import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 
 object max extends UFunc {
   @expand
-  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S](implicit iter: CanTraverseValues[T, S], @expand.sequence[S](Int.MinValue, Double.NegativeInfinity, Float.NegativeInfinity, Long.MinValue) init: S): Impl[T, S] = new Impl[T, S] {
+  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S]
+            (implicit iter: CanTraverseValues[T, S],
+             @expand.sequence[S](Int.MinValue, Double.NegativeInfinity, Float.NegativeInfinity, Long.MinValue) init: S): Impl[T, S] = new Impl[T, S] {
+
     def apply(v: T): S = {
       class SumVisitor extends ValuesVisitor[S] {
         var max = init
@@ -75,11 +78,15 @@ object max extends UFunc {
  */
 object min extends UFunc {
   @expand
-  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S](implicit iter: CanTraverseValues[T, S], @expand.sequence[S](Int.MaxValue, Double.PositiveInfinity, Float.PositiveInfinity, Long.MaxValue) init: S): Impl[T, S] = new Impl[T, S] {
+  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S]
+            (implicit iter: CanTraverseValues[T, S],
+             @expand.sequence[S](Int.MaxValue, Double.PositiveInfinity, Float.PositiveInfinity, Long.MaxValue) init: S): Impl[T, S] = new Impl[T, S] {
+
     def apply(v: T): S = {
       class MinVisitor extends ValuesVisitor[S] {
         var min = init
         var visitedOne = false
+
         def visit(a: S): Unit = {
           visitedOne = true
           min = scala.math.min(min, a)
@@ -116,6 +123,7 @@ object min extends UFunc {
   }
 }
 
+
 /**
  * clip(a, lower, upper) returns an array such that all elements are "clipped" at the range (lower, upper)
  */
@@ -140,16 +148,20 @@ object clip extends UFunc {
 }
 
 
-
-
+/** Peak-to-peak, ie the Range of values (maximum - minimum) along an axis.
+  */
 object ptp extends UFunc {
   @expand
-  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S](implicit iter: CanTraverseValues[T, S], @expand.sequence[S](Int.MinValue, Double.NegativeInfinity, Float.NegativeInfinity, Long.MinValue) init: S): Impl[T, S] = new Impl[T, S] {
+  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S]
+  (implicit iter: CanTraverseValues[T, S],
+   @expand.sequence[S](Int.MaxValue, Double.PositiveInfinity, Float.PositiveInfinity, Long.MaxValue) init: S): Impl[T, S] = new Impl[T, S] {
+
     def apply(v: T): S = {
       class SumVisitor extends ValuesVisitor[S] {
-        var max = init
-        var min = -init
+        var max = - init
+        var min = init
         var visitedOne = false
+
         def visit(a: S): Unit = {
           visitedOne = true
           max = scala.math.max(max, a)
@@ -186,6 +198,58 @@ object ptp extends UFunc {
     }
 
   }
+}
 
+/** Minimum and maximum in one traversal, along an axis.
+  */
+object minMax extends UFunc {
+  @expand
+  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S]
+  (implicit iter: CanTraverseValues[T, S],
+   @expand.sequence[S](Int.MaxValue, Double.PositiveInfinity, Float.PositiveInfinity, Long.MaxValue) init: S): Impl[T, (S, S)] = new Impl[T, (S, S)] {
+
+    def apply(v: T): (S, S) = {
+      //the next 30 lines are common with "object ptp extends UFunc"
+      class SumVisitor extends ValuesVisitor[S] {
+        var max = - init
+        var min = init
+        var visitedOne = false
+        def visit(a: S): Unit = {
+          visitedOne = true
+          max = scala.math.max(max, a)
+          min = scala.math.min(min, a)
+        }
+
+        def zeros(numZero: Int, zeroValue: S): Unit = {
+          if(numZero != 0) {
+            visitedOne = true
+            max = scala.math.max(zeroValue, max)
+            min = scala.math.min(zeroValue, min)
+          }
+        }
+
+        override def visitArray(arr: Array[S], offset: Int, length: Int, stride: Int): Unit = {
+          var i = 0
+          var off = offset
+          while(i < length) {
+            visitedOne = true
+            max = scala.math.max(max, arr(off))
+            min = scala.math.min(min, arr(off))
+            i += 1
+            off += stride
+          }
+        }
+      }
+
+      val visit = new SumVisitor
+
+      iter.traverse(v, visit)
+      if(!visit.visitedOne) throw new IllegalArgumentException(s"No values in $v!")
+
+      (visit.min, visit.max)
+
+    }
+
+  }
 
 }

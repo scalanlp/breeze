@@ -41,7 +41,7 @@ package object linalg {
   /**
    * Computes y += x * a, possibly doing less work than actually doing that operation
    */
-  def axpy[A, X, Y](a: A, x: X, y: Y)(implicit axpy: CanAxpy[A, X, Y]) { axpy(a,x,y) }
+  def axpy[A, X, Y](a: A, x: X, y: Y)(implicit axpy: scaleAdd.InPlaceImpl3[Y, A, X]) { axpy(y, a, x) }
 
   /**
    * Generates a vector of linearly spaced values between a and b (inclusive).

@@ -282,9 +282,10 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   }
 
   @expand
-  implicit def axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) V]: CanAxpy[V, DenseVector[V], DenseVector[V]] = {
-    new CanAxpy[V, DenseVector[V], DenseVector[V]] {
-      def apply(s: V, b: DenseVector[V], a: DenseVector[V]) {
+  @expand.valify
+  implicit def axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) V]: scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] = {
+    new scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] {
+      def apply(a: DenseVector[V], s: V, b: DenseVector[V]) {
         require(b.length == a.length, "Vectors must be the same length!")
         val ad = a.data
         val bd = b.data
@@ -299,6 +300,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
           i += 1
         }
       }
+      implicitly[TernaryUpdateRegistry[Vector[V], V, Vector[V], scaleAdd.type]].register(this)
     }
   }
 
@@ -493,10 +495,10 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
     }
   }
 
-  implicit def canGaxpy[V:Semiring]: CanAxpy[V, DenseVector[V], DenseVector[V]] = {
-    new CanAxpy[V, DenseVector[V], DenseVector[V]] {
+  implicit def canGaxpy[V:Semiring]: scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] = {
+    new scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] {
       val ring = implicitly[Semiring[V]]
-      def apply(s: V, b: DenseVector[V], a: DenseVector[V]) {
+      def apply(a: DenseVector[V], s: V, b: DenseVector[V]) {
         require(b.length == a.length, "Vectors must be the same length!")
         val ad = a.data
         val bd = b.data
@@ -527,6 +529,18 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
       }
     }
 //    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], OpSet.type]].register(this)
+  }
+
+  implicit def liftDMOpToDVTransposeOp[Tag, V, LHS, R]
+      (implicit op: UFunc.UImpl2[Tag, LHS, DenseMatrix[V], R]):UFunc.UImpl2[Tag, LHS, Transpose[DenseVector[V]], R] = {
+    new UFunc.UImpl2[Tag, LHS, Transpose[DenseVector[V]], R] {
+      def apply(v: LHS, v2: Transpose[DenseVector[V]]): R = {
+        val dv = v2.inner
+        val dm = new DenseMatrix(data = dv.data, offset = dv.offset, cols = dv.length, rows = 1, majorStride = dv.stride)
+        op(v, dm)
+      }
+    }
+
   }
 
 

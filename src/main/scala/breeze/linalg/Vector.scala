@@ -407,9 +407,9 @@ trait VectorOps { this: Vector.type =>
 
   @expand
   @expand.valify
-  implicit def axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) V]: CanAxpy[V, Vector[V], Vector[V]] = {
-    new CanAxpy[V, Vector[V], Vector[V]] {
-      def apply(s: V, b: Vector[V], a: Vector[V]) {
+  implicit def axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) V]: TernaryUpdateRegistry[Vector[V], V, Vector[V], scaleAdd.type]  = {
+    new TernaryUpdateRegistry[Vector[V], V, Vector[V], scaleAdd.type] {
+      override def bindingMissing(a: Vector[V], s: V, b: Vector[V]) {
         require(b.length == a.length, "Vectors must be the same length!")
         if(s == 0) return
 
