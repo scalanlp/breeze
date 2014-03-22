@@ -27,7 +27,8 @@ import java.util
  *
  * @author dlwh
  */
-class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFunctions: Int, val bits: util.BitSet) extends (T=>Boolean) {
+@SerialVersionUID(1L)
+class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFunctions: Int, val bits: util.BitSet) extends (T=>Boolean) with Serializable {
   def this(numBuckets: Int, numHashFunctions: Int) = this(numBuckets, numHashFunctions, new util.BitSet(numBuckets))
   def this(numBuckets: Int) = this(numBuckets, 3)
 
@@ -43,6 +44,14 @@ class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFun
   }
 
   def contains(o: T) = apply(o)
+
+  /**
+   *
+   * Calculates the load of the bloom filter. If this is near 1, there will be lots of false positives.
+   *
+   * @return the fraction of bits that are set
+   */
+  def load: Double = bits.cardinality().toDouble / numBuckets
 
   override def equals(other: Any) = other match {
     case that: BloomFilter[_] =>
