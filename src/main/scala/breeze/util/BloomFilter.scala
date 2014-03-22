@@ -44,6 +44,14 @@ class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFun
 
   def contains(o: T) = apply(o)
 
+  /**
+   *
+   * Calculates the load of the bloom filter. If this is near 1, there will be lots of false positives.
+   *
+   * @return the fraction of bits that are set
+   */
+  def load: Double = bits.cardinality().toDouble / numBuckets
+
   override def equals(other: Any) = other match {
     case that: BloomFilter[_] =>
       this.numBuckets == that.numBuckets && this.numHashFunctions == that.numHashFunctions && this.bits == that.bits
