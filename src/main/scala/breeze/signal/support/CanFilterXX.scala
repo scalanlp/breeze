@@ -16,8 +16,8 @@ import breeze.signal._
 * @author ktakagaki
 */
 trait CanFilterBPBS[Input, Output] {
-  def apply(data: Input, omega: (Double, Double), taps: Int,
-            sampleRate: Double, bandStop: Boolean,
+  def apply(data: Input, omega: (Double, Double), sampleRate: Double, taps: Int,
+            bandStop: Boolean,
             kernelType: OptDesignMethod,
             overhang: OptOverhang,
             padding: OptPadding): Output
@@ -32,8 +32,8 @@ trait CanFilterBPBS[Input, Output] {
  * @author ktakagaki
  */
 trait CanFilterLPHP[Input, Output] {
-  def apply(data: Input, omega: Double, taps: Int,
-            sampleRate: Double, lowPass: Boolean,
+  def apply(data: Input, omega: Double, sampleRate: Double, taps: Int,
+            lowPass: Boolean,
             kernelType: OptDesignMethod,
             overhang: OptOverhang,
             padding: OptPadding): Output
@@ -47,8 +47,8 @@ object CanFilterBPBS {
     */
   implicit val dvDouble1DFilterBPBS : CanFilterBPBS[DenseVector[Double], DenseVector[Double]] = {
     new CanFilterBPBS[DenseVector[Double], DenseVector[Double]] {
-      def apply(data: DenseVector[Double], omega: (Double, Double), taps: Int,
-                sampleRate: Double, bandStop: Boolean,
+      def apply(data: DenseVector[Double], omega: (Double, Double), sampleRate: Double, taps: Int,
+                bandStop: Boolean,
                 kernelType: OptDesignMethod,
                 overhang: OptOverhang,
                 padding: OptPadding): DenseVector[Double] = {
@@ -83,8 +83,8 @@ object CanFilterLPHP {
     */
   implicit val dvDouble1DFilterLPHP : CanFilterLPHP[DenseVector[Double], DenseVector[Double]] = {
     new CanFilterLPHP[DenseVector[Double], DenseVector[Double]] {
-      def apply(data: DenseVector[Double], omega: Double, taps: Int,
-                sampleRate: Double, lowPass: Boolean,
+      def apply(data: DenseVector[Double], omega: Double, sampleRate: Double, taps: Int,
+                lowPass: Boolean,
                 kernelType: OptDesignMethod,
                 overhang: OptOverhang,
                 padding: OptPadding): DenseVector[Double] = {

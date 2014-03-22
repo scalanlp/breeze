@@ -366,6 +366,12 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(util.Arrays.equals(a.toArray, a.data))
     assert(util.Arrays.equals(a(0 until 3 by 2).toArray, Array(1,3)))
     assert(util.Arrays.equals(a(1 until 3 by 1).toArray, Array(2,3)))
+
+    val b = DenseVector(1d*breeze.math.i, 0d*breeze.math.i, 2d*breeze.math.i).toArray
+    //assert( util.Arrays.equals( b.toArray, Array(1d*breeze.math.i, 0d, 2d)) )
+    assert(b(0) == Complex(0, 1))
+    assert(b(1) == Complex(0, 0))
+    assert(b(2) == Complex(0, 2))
   }
 
   test("OpEq and friends") {
