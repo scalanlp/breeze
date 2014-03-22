@@ -14,14 +14,13 @@ import breeze.math.Field
 
 trait UnivariateInterpolator[T] {
   def apply(x: T): T
-  def apply(x: Vector[T])(implicit canMapValues: CanMapValues[Vector[T], T, T, Vector[T]]): Vector[T] = x map apply
+  def applyCol[ColIn, ColOut](x: ColIn)(implicit cmv: CanMapValues[ColIn, T, T, ColOut]) = cmv.map(x, apply _)
+  //def apply(x: Vector[T])(implicit canMapValues: CanMapValues[Vector[T], T, T, Vector[T]]): Vector[T] = x map apply
 }
 
-abstract class HandyUnivariateInterpolator[T <% Ordered[T]]
+abstract class HandyUnivariateInterpolator[T <% Ordered[T] : ClassTag : Field]
     (x_coords: Vector[T],
      y_coords: Vector[T])
-    (implicit field: Field[T],
-     classtag: ClassTag[T])
      extends UnivariateInterpolator[T] {//extends UnivariateInterpolator{
 
   if (x_coords.size != x_coords.toArray.toSet.size)
@@ -46,16 +45,15 @@ abstract class HandyUnivariateInterpolator[T <% Ordered[T]]
 }
 
 
-class LinearInterpolator[T <% Ordered[T]]
+class LinearInterpolator[T <% Ordered[T] : ClassTag : Field]
     (x_coords: Vector[T],
      y_coords: Vector[T])
-    (implicit field: Field[T],
-     classtag: ClassTag[T])
     extends HandyUnivariateInterpolator[T](x_coords, y_coords) {
 
   override protected def valueAt(x: T): T = {
     // TODO use binary search
 
+    val field: Field[T] = implicitly[Field[T]]
     X.zipWithIndex.find{case (e, i) => e >= x} match {
       case None => throw new Exception("Out of the domain")
       case Some((_, index)) =>

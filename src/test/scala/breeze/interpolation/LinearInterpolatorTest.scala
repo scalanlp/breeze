@@ -18,7 +18,7 @@ class LinearInterpolatorTest extends FunSuite {
     assert(f(1.5) == 3.0)
     assert(f(2.5) == 4.0)
     assert(f(2.25) == 4.5)
-    assert(f(DenseVector(1.5, 2.25)) == DenseVector(3.0, 4.5))
+    assert(f.applyCol(DenseVector(1.5, 2.25)) == DenseVector(3.0, 4.5))
   }
 
   test("unordered nodes") {
