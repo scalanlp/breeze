@@ -27,7 +27,8 @@ import java.util
  *
  * @author dlwh
  */
-class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFunctions: Int, val bits: util.BitSet) extends (T=>Boolean) {
+@SerialVersionUID(1L)
+class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFunctions: Int, val bits: util.BitSet) extends (T=>Boolean) with Serializable {
   def this(numBuckets: Int, numHashFunctions: Int) = this(numBuckets, numHashFunctions, new util.BitSet(numBuckets))
   def this(numBuckets: Int) = this(numBuckets, 3)
 
