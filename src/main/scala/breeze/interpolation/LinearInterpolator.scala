@@ -32,10 +32,10 @@ abstract class HandyUnivariateInterpolator[T:Ordering:ClassTag:Field]
   private val nodes = x_coords.toArray zip y_coords.toArray sortBy {n => n._1}
   protected val X: Array[T] = nodes map {n => n._1}
   protected val Y: Array[T] = nodes map {n => n._2}
-  private val ordering = implicitly[Ordering[T]]
 
   def apply(x: T): T = {
-    if (ordering.lt(x, X(0)) || ordering.gt(x, X(X.size - 1)))
+    if (implicitly[Ordering[T]].lt(x, X(0)) ||
+        implicitly[Ordering[T]].gt(x, X(X.size - 1)))
       throw new Exception("Out of the domain")
 
     valueAt(x)
@@ -53,19 +53,18 @@ class LinearInterpolator[T:Ordering:ClassTag:Field]
   override protected def valueAt(x: T): T = {
     // TODO use binary search
 
-    val field = implicitly[Field[T]]
-    val ordering = implicitly[Ordering[T]]
+    val f = implicitly[Field[T]]
 
-    X.zipWithIndex.find{case (e, i) => ordering.gteq(e, x)} match {
+    X.zipWithIndex.find{case (e, i) => implicitly[Ordering[T]].gteq(e, x)} match {
       case None => throw new Exception("Out of the domain")
       case Some((_, index)) =>
-        val w = field./(field.-(x,
-                                X(index-1)),
-                        field.-(X(index),
-                                X(index-1)))
-        val u = field.-(field.one, w)
-        field.+(field.*(Y(index-1), u),
-                field.*(Y(index), w))
+        val w = f./(f.-(x,
+                        X(index-1)),
+                    f.-(X(index),
+                        X(index-1)))
+        val u = f.-(f.one, w)
+        f.+(f.*(Y(index-1), u),
+            f.*(Y(index), w))
     }
   }
 }
