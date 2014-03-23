@@ -51,20 +51,24 @@ class LinearInterpolator[T:Ordering:ClassTag:Field]
     extends HandyUnivariateInterpolator[T](x_coords, y_coords) {
 
   override protected def valueAt(x: T): T = {
-    // TODO use binary search
+    def bisearch(low: Int, high: Int): Int = (low+high)/2 match {
+      case mid if low == high => mid
+      case mid if implicitly[Ordering[T]].lt(X(mid), x) => bisearch(mid+1, high)
+      case mid => bisearch(low, mid)
+    }
+    val index = bisearch(0, X.length-1)
 
     val f = implicitly[Field[T]]
+    // w = (x - x1) / (x2 - x1)
+    val w = f./(f.-(x,
+                    X(index-1)),
+                f.-(X(index),
+                    X(index-1)))
+    // u = 1 - w
+    val u = f.-(f.one, w)
 
-    X.zipWithIndex.find{case (e, i) => implicitly[Ordering[T]].gteq(e, x)} match {
-      case None => throw new Exception("Out of the domain")
-      case Some((_, index)) =>
-        val w = f./(f.-(x,
-                        X(index-1)),
-                    f.-(X(index),
-                        X(index-1)))
-        val u = f.-(f.one, w)
-        f.+(f.*(Y(index-1), u),
-            f.*(Y(index), w))
-    }
+    // result = y1 * u + y2 * w
+    f.+(f.*(Y(index-1), u),
+        f.*(Y(index), w))
   }
 }
