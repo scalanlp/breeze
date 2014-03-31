@@ -11,7 +11,6 @@ lazy val (root, natives, benchmark) = {
   (root, natives, benchmark)
 }
 
-
 scalaVersion := "2.10.3"
 
 addCompilerPlugin("org.scala-lang.plugins" % "macro-paradise" % "2.0.0-SNAPSHOT" cross CrossVersion.full)
@@ -76,6 +75,8 @@ libraryDependencies ++= Seq(
   "org.apache.logging.log4j" % "log4j-api" % "2.0-beta9" % "test",
   "com.chuusai" % "shapeless_2.10.3" % "2.0.0-M1" % "test"
 )
+
+EclipseKeys.skipParents in ThisBuild := false
 
 // see https://github.com/typesafehub/scalalogging/issues/23
 testOptions in Test += Tests.Setup(classLoader =>
