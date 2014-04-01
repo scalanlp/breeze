@@ -33,9 +33,11 @@ abstract class HandyUnivariateInterpolator[T:Ordering:ClassTag:Field]
   protected val X: Array[T] = nodes map {n => n._1}
   protected val Y: Array[T] = nodes map {n => n._2}
 
+  private val ord = implicitly[Ordering[T]]
+  import ord.mkOrderingOps
+
   def apply(x: T): T = {
-    if (implicitly[Ordering[T]].lt(x, X(0)) ||
-        implicitly[Ordering[T]].gt(x, X(X.size - 1)))
+    if (x < X(0) || x > X(X.size - 1))
       throw new Exception("Out of the domain")
 
     valueAt(x)
@@ -50,10 +52,13 @@ class LinearInterpolator[T:Ordering:ClassTag:Field]
      y_coords: Vector[T])
     extends HandyUnivariateInterpolator[T](x_coords, y_coords) {
 
+  private val ord = implicitly[Ordering[T]]
+  import ord.mkOrderingOps
+
   override protected def valueAt(x: T): T = {
     def bisearch(low: Int, high: Int): Int = (low+high)/2 match {
       case mid if low == high => mid
-      case mid if implicitly[Ordering[T]].lt(X(mid), x) => bisearch(mid+1, high)
+      case mid if X(mid) < x => bisearch(mid+1, high)
       case mid => bisearch(low, mid)
     }
     val index = bisearch(0, X.length-1)
