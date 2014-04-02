@@ -16,7 +16,7 @@ package breeze
 */
 import io.{CSVWriter, CSVReader}
 import linalg.operators._
-import breeze.linalg.support.{LiteralRow, CanAxpy, CanCopy}
+import breeze.linalg.support.{LiteralRow, CanCopy}
 import breeze.linalg.support.enrichedTuple._
 import math.Semiring
 import storage.DefaultArrayValue
