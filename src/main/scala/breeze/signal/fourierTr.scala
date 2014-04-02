@@ -10,7 +10,7 @@ import breeze.numerics.{sin, cos}
 
 
 /**
- * Returns the fast fourier transform of a DenseVector or DenseMatrix. Currently,
+ * Returns the discrete fourier transform of a DenseVector or DenseMatrix. Currently,
  * DenseVector/DenseMatrix types of Double and Complex are supported. Scaling
  * follows the common signal processing convention, i.e. <b>no scaling on forward DFT</b>,
  * and 1/n scaling for the inverse DFT. Of note, fft(x: DenseMatrix[Double]) will
@@ -24,9 +24,6 @@ import breeze.numerics.{sin, cos}
  */
 object fourierTr extends UFunc {
 
-  /** Use via implicit delegate syntax fourierTr(x: DenseVector)
-    *
-    */
   implicit val dvDouble1DFFT : fourierTr.Impl[DenseVector[Double], DenseVector[Complex]] = {
     new fourierTr.Impl[DenseVector[Double], DenseVector[Complex]] {
       def apply(v: DenseVector[Double]) = {
@@ -42,17 +39,6 @@ object fourierTr extends UFunc {
       }
     }
   }
-
-  /** Use via implicit delegate syntax fourierTr(x: DenseVector)
-    *     For some reason this breaks scaladoc... No good reason why.
-  @expand
-  @expand.valify
-  implicit def dvDT1DFFT[@expand.args(Float, Long, Int) T]: Impl[DenseVector[T], DenseVector[Complex]] = {
-    new Impl[DenseVector[T], DenseVector[Complex]] {
-      def apply(v: DenseVector[T]) = fourierTr( v.map( _.toDouble) )
-    }
-  }
-    */
 
   implicit def dvDT1DFFT_Float: Impl[DenseVector[Float], DenseVector[Complex]] = {
     new Impl[DenseVector[Float], DenseVector[Complex]] {
@@ -72,9 +58,6 @@ object fourierTr extends UFunc {
     }
   }
 
-   /** Use via implicit delegate syntax fourierTr(x: DenseVector)
-    *
-    */
   implicit val dvComplex1DFFT : fourierTr.Impl[DenseVector[Complex], DenseVector[Complex]] = {
     new fourierTr.Impl[DenseVector[Complex], DenseVector[Complex]] {
       def apply(v: DenseVector[Complex]) = {
@@ -91,9 +74,6 @@ object fourierTr extends UFunc {
     }
   }
 
-  /** Use via implicit delegate syntax fourierTr(x: DenseMatrix)
-    *
-    */
   implicit val dmComplex2DFFT : fourierTr.Impl[DenseMatrix[Complex], DenseMatrix[Complex]] = {
     new fourierTr.Impl[DenseMatrix[Complex], DenseMatrix[Complex]] {
       def apply(v: DenseMatrix[Complex]) = {
@@ -110,9 +90,6 @@ object fourierTr extends UFunc {
     }
   }
 
-  /** Use via implicit delegate syntax fft(x: DenseMatrix)
-    *
-    */
   implicit val dmDouble2DFFT : fourierTr.Impl[DenseMatrix[Double], DenseMatrix[Complex]] = {
     new fourierTr.Impl[DenseMatrix[Double], DenseMatrix[Complex]] {
       def apply(v: DenseMatrix[Double]) = {

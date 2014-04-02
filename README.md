@@ -10,13 +10,15 @@ The current version is 0.8-SNAPSHOT. The latest release is 0.7.
 * https://github.com/scalanlp/breeze/wiki/UserGuide
 * [Scaladoc](http://www.scalanlp.org/api/breeze/)
 
-Note:  
+Note:
 
 Breeze used to have more components, but they are getting sharded out to different libraries. Their new homes are described below:
 
 * breeze-viz: a (barely maintained) visualization library in its own repository. It is available at [https://github.com/scalanlp/breeze-viz](https://github.com/scalanlp/breeze-viz).
 * breeze-learn (machine learning) is now in [Nak](https://github.com/scalanlp/nak).
 * breeze-process (natural language processing) has become [Chalk](https://github.com/scalanlp/chalk).
+
+There is also the [scala-breeze google group](https://groups.google.com/forum/#!forum/scala-breeze) for general questions and discussion.
 
 ## Using Breeze
 
