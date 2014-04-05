@@ -3,10 +3,8 @@ package breeze.stats
 import breeze.generic.UFunc
 import breeze.macros.expand
 import breeze.linalg._
-import breeze.linalg.support.{CanTransformValues, CanMapValues, CanTraverseValues}
+import breeze.linalg.support.CanTraverseValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
-
-//ToDo: minMax function to find both in one go
 
 object hist extends UFunc {
   @expand
