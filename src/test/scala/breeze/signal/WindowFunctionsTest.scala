@@ -4,6 +4,8 @@ import org.scalatest._
 import breeze._
 import breeze.linalg._
 import breeze.signal.support.WindowFunctions
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 //{norm, DenseVector}
 import WindowFunctions.hammingWindow
@@ -15,6 +17,7 @@ import WindowFunctions.hammingWindow
  * Time: 02:31
  * To change this template use File | Settings | File Templates.
  */
+@RunWith(classOf[JUnitRunner])
 class WindowFunctionsTest extends FunSuite {
 
   val testThreshold = 1.0E-15
