@@ -26,7 +26,9 @@ import scala.reflect.ClassTag
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import breeze.macros.expand
 import scala.math.BigInt
+import spire.implicits.cfor
 import CanTraverseValues.ValuesVisitor
+import CanZipAndTraverseValues.PairValuesVisitor
 
 /**
  * A DenseVector is the "obvious" implementation of a Vector, with one twist.
@@ -338,6 +340,18 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
       }
 
     }
+  }
+
+  implicit def canTraverseZipValues[V,W]:CanZipAndTraverseValues[DenseVector[V], DenseVector[W], V,W] = new CanZipAndTraverseValues[DenseVector[V], DenseVector[W], V,W] {
+      /** Iterates all key-value pairs from the given collection. */
+      def traverse(from1: DenseVector[V], from2: DenseVector[W], fn: PairValuesVisitor[V,W]): Unit = {
+        if (from1.size != from2.size) {
+          throw new IllegalArgumentException("Vectors to be zipped must have same size")
+        }
+        cfor(0)(i => i < from1.size, i => i+1)(i => {
+          fn.visit(from1.unsafeValueAt(i), from2.unsafeValueAt(i))
+        })
+      }
   }
 
   implicit def canTraverseKeyValuePairs[V]:CanTraverseKeyValuePairs[DenseVector[V], Int, V] = {
