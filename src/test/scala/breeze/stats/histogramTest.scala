@@ -14,6 +14,7 @@ import org.scalatest.junit.JUnitRunner
 class histogramTest extends FunSuite {
 
   val testDV = DenseVector(0.0, 0.1, 2.8, 2.9, 5)
+  val testWeights = DenseVector(0.5, 0.5, 1.0, 3.0, 7.0)
 
   test("histogram returns correct values") {
     assert( hist(testDV, 3) == DenseVector(2.0,2.0,1.0) )
@@ -21,6 +22,10 @@ class histogramTest extends FunSuite {
 
   test("histogram respects range argument") {
     assert( hist(testDV, 3, (0.0, 3.0)) == DenseVector(2.0,0.0,2.0) )
+  }
+
+  test("histogram handles weights") {
+    assert( hist(testDV, 3, testWeights) == DenseVector(1.0,4.0,7.0) )
   }
 
   test("fails for empty array") {
