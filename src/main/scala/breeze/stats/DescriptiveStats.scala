@@ -27,6 +27,10 @@ import breeze.macros.expand
 import breeze.math.Complex
 import breeze.numerics.isOdd
 
+case class MeanAndVariance(mean: Double, variance: Double, count: Long) {
+  def stdDev: Double = math.sqrt(variance)
+}
+
 trait DescriptiveStatsTrait {
   object accumulateAndCount extends UFunc {
     @expand
@@ -65,14 +69,15 @@ trait DescriptiveStatsTrait {
     }
 
   }
+
   /**
     * A [[breeze.generic.UFunc]] for computing the mean and variance of objects.
     * This uses an efficient, numerically stable, one pass algorithm for computing both
     * the mean and the variance.
     */
   object meanAndVariance extends UFunc {
-    implicit def reduceDouble[T](implicit iter: CanTraverseValues[T, Double]): Impl[T, (Double, Double, Long)] = new Impl[T, (Double, Double, Long)] {
-      def apply(v: T): (Double, Double,Long) = {
+    implicit def reduceDouble[T](implicit iter: CanTraverseValues[T, Double]): Impl[T, MeanAndVariance] = new Impl[T, MeanAndVariance] {
+      def apply(v: T): MeanAndVariance = {
         val visit = new ValuesVisitor[Double] {
           var mu = 0.0
           var s = 0.0
@@ -91,9 +96,9 @@ trait DescriptiveStatsTrait {
         iter.traverse(v, visit)
         import visit._
         if (n > 1) {
-          (mu, s/(n-1), n)
+          MeanAndVariance(mu, s/(n-1), n)
         } else {
-          (mu, 0, n)
+          MeanAndVariance(mu, 0, n)
         }
       }
     }
@@ -104,8 +109,8 @@ trait DescriptiveStatsTrait {
     * The method just calls meanAndVariance and returns the second result.
     */
   object variance extends UFunc {
-    implicit def reduceDouble[T](implicit mv: meanAndVariance.Impl[T, (Double, Double,Long)]): Impl[T, Double] = new Impl[T, Double] {
-      def apply(v: T): Double = mv(v)._2
+    implicit def reduceDouble[T](implicit mv: meanAndVariance.Impl[T, MeanAndVariance]): Impl[T, Double] = new Impl[T, Double] {
+      def apply(v: T): Double = mv(v).variance
     }
   }
 

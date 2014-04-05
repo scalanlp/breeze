@@ -61,9 +61,9 @@ class GammaTest extends FunSuite with Checkers with MomentsTestBase[Double] with
 
   test("logDraw for small values") {
     val g = new Gamma(0.0001, 1)
-    val (m, v, n) =  breeze.stats.meanAndVariance(Array.fill(100000)(g.logDraw()).map(math.exp _))
-    assert((paramsClose(m -> v, g.mean -> g.variance)), (m -> v) -> (g.mean -> g.variance))
-    assert(n == 100000)
+    val mav = breeze.stats.meanAndVariance(Array.fill(100000)(g.logDraw()).map(math.exp _))
+    assert((paramsClose(mav.mean -> mav.variance, g.mean -> g.variance)), (mav.mean -> mav.variance) -> (g.mean -> g.variance))
+    assert(mav.count == 100000)
   }
 
   test("endpoint, shape > 1") {
