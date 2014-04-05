@@ -13,7 +13,13 @@ import breeze.math.{DoubleValuedTensorSpaceTestBase, TensorSpace, TensorSpaceTes
  * @author dlwh
  */
 
-class VectorTest {
+@RunWith(classOf[JUnitRunner])
+class VectorTest extends FunSuite {
+
+  val dvTest = DenseVector(1,2,3,4)
+  test("scan"){
+    assert( dvTest.scanLeft(0)( (p: (Int, Int)) => p._1 + p._2)) == DenseVector(0,1,3,6,10))
+  }
 
 }
 

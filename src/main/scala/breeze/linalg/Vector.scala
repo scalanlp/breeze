@@ -89,6 +89,44 @@ trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]]{
   /**Returns copy of this [[breeze.linalg.Vector]] as a [[scala.Vector]]*/
   def toVector(implicit cm: ClassTag[E]) = Vector[E]( toArray )
 
+  // <editor-fold defaultstate="collapsed" desc=" scala.collection -like padTo, fold/scan/reduce ">
+
+  /** See [[scala.collection.mutable.ArrayOps.padTo]].
+    */
+  def padTo(len: Int, elem: E)(implicit cm: ClassTag[E]): Vector[E] = Vector[E]( toArray.padTo(len, elem) )
+
+  /** See [[scala.collection.mutable.ArrayOps.fold]].
+    */
+  def fold[E1 >: E](z: E1)(op: (E1, E1) => E1 )(implicit cm: ClassTag[E]): E1 = toArray.fold(z)( op )
+  /** See [[scala.collection.mutable.ArrayOps.foldLeft]].
+    */
+  def foldLeft[B >: E](z: B)(op: (B, E) => B )(implicit cm: ClassTag[E]): B = toArray.foldLeft(z)( op )
+  /** See [[scala.collection.mutable.ArrayOps.foldRight]].
+    */
+  def foldRight[B >: E](z: B)(op: (E, B) => B )(implicit cm: ClassTag[E]): B = toArray.foldRight(z)( op )
+
+  /** See [[scala.collection.mutable.ArrayOps.reduce]].
+    */
+  def reduce[E1 >: E](op: (E1, E1) => E1 )(implicit cm: ClassTag[E], cm1: ClassTag[E1]): Vector[E1] = Vector[E1]( toArray.reduce( op ))
+  /** See [[scala.collection.mutable.ArrayOps.reduceLeft]].
+    */
+  def reduceLeft[B >: E](op: (B, E) => B )(implicit cm: ClassTag[E]): B = toArray.reduceLeft( op )
+  /** See [[scala.collection.mutable.ArrayOps.reduceRight]].
+    */
+  def reduceRight[B >: E](op: (E, B) => B )(implicit cm: ClassTag[E]): B = toArray.reduceRight( op )
+
+  /** See [[scala.collection.mutable.ArrayOps.scan]].
+    */
+  def scan[E1 >: E](z: E1)(op: (E1, E1) => E1 )(implicit cm: ClassTag[E], cm1: ClassTag[E1]): Vector[E1] = Vector[E1]( toArray.scan(z)( op ))
+  /** See [[scala.collection.mutable.ArrayOps.scanLeft]].
+    */
+  def scanLeft[B >: E](z: B)(op: (B, E) => B )(implicit cm: ClassTag[E], cm1: ClassTag[B]): Vector[B] = Vector[B]( toArray.scanLeft(z)( op ) )
+  /** See [[scala.collection.mutable.ArrayOps.scanRight]].
+    */
+  def scanRight[B >: E](z: B)(op: (E, B) => B )(implicit cm: ClassTag[E], cm1: ClassTag[B]): Vector[B] = Vector[B]( toArray.scanRight(z)( op ) )
+
+  // </editor-fold>
+
 }
 
 object Vector extends VectorConstructors[Vector] with VectorOps {
