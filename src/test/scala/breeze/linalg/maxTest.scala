@@ -1,7 +1,6 @@
 package breeze.linalg
 
 import org.scalatest.FunSuite
-import breeze.linalg.max
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
