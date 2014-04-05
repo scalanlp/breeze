@@ -49,11 +49,6 @@ object CanTraverseValues {
     def zeros(numZero: Int, zeroValue: A)
   }
 
-
-
-
-
-
   //
   // Arrays
   //
