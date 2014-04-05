@@ -17,15 +17,21 @@ class histogramTest extends FunSuite {
   val testWeights = DenseVector(0.5, 0.5, 1.0, 3.0, 7.0)
 
   test("histogram returns correct values") {
-    assert( hist(testDV, 3) == DenseVector(2.0,2.0,1.0) )
+    val result = hist(testDV, 3)
+    assert( result.hist == DenseVector(2.0,2.0,1.0) )
+    assert( result.binEdges == DenseVector(0.0, 5.0/3.0, 2*5.0/3.0, 5.0) )
   }
 
   test("histogram respects range argument") {
-    assert( hist(testDV, 3, (0.0, 3.0)) == DenseVector(2.0,0.0,2.0) )
+    val result = hist(testDV, 3, (0.0, 3.0))
+    assert( result.hist == DenseVector(2.0,0.0,2.0) )
+    assert( result.binEdges == DenseVector(0.0, 1.0, 2.0, 3.0) )
   }
 
   test("histogram handles weights") {
-    assert( hist(testDV, 3, testWeights) == DenseVector(1.0,4.0,7.0) )
+    val result = hist(testDV, 3, testWeights)
+    assert( result.hist == DenseVector(1.0,4.0,7.0) )
+    assert( result.binEdges == DenseVector(0.0, 5.0/3.0, 2*5.0/3.0, 5.0) )
   }
 
   test("fails for empty array") {
