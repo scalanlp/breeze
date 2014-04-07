@@ -2,6 +2,8 @@ package breeze.signal
 
 import org.scalatest._
 import breeze.linalg.{DenseVector}
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 /**
  * Created with IntelliJ IDEA.
@@ -10,6 +12,7 @@ import breeze.linalg.{DenseVector}
  * Time: 02:31
  * To change this template use File | Settings | File Templates.
  */
+@RunWith(classOf[JUnitRunner])
 class ConvolveTest extends FunSuite {
 
   test("convolve/correlate double") {
