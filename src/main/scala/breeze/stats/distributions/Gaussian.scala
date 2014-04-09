@@ -20,6 +20,7 @@ package distributions
 
 import breeze.numerics._
 import breeze.optimize.DiffFunction
+import breeze.linalg.support.CanTraverseValues
 import math.{Pi,log1p}
 
 /**
@@ -124,6 +125,15 @@ object Gaussian extends ExponentialFamily[Gaussian,Double] with ContinuousDistri
           - mu * mu /sigma2 /sigma2/2
           + .5 / (sigma2))
         (objective,(gradientMu,gradientSig))
+      }
+    }
+  }
+
+  object fit extends DistributionFitter[Gaussian] {
+    implicit def fromMeanAndVariance[T](implicit iter: CanTraverseValues[T,Double]): FImpl[T] = new FImpl[T] {
+      def apply(v: T): Gaussian = {
+        val mav = breeze.stats.meanAndVariance(v)
+        Gaussian(mav.mean, mav.stdDev)
       }
     }
   }

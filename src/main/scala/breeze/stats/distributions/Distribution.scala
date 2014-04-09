@@ -85,3 +85,10 @@ trait DiscreteDistr[T] extends Density[T] with Rand[T] {
   def apply(x:T) = unnormalizedProbabilityOf(x)
   override def logApply(x:T) = unnormalizedLogProbabilityOf(x)
 }
+
+trait DistributionFitter[D] extends UFunc {
+  type FImpl[V] = Impl[V,D]
+  type FImpl2[V1,V2] = Impl2[V1,V2,D]
+  type FImpl3[V1,V2,V3] = Impl3[V1,V2,V3,D]
+  type FImpl4[V1,V2,V3,V4] = Impl4[V1,V2,V3,V4,D]
+}
