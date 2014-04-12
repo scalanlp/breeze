@@ -197,7 +197,9 @@ package object util {
 
   implicit class AwesomeScalaBitSet(val bs: scala.collection.BitSet) extends AnyVal {
     def toJavaBitSet = {
-      java.util.BitSet.valueOf(bs.toBitMask)
+      val jbs = new java.util.BitSet(bs.lastOption.getOrElse(0) + 1)
+      bs.foreach(jbs.set(_))
+      jbs
     }
   }
 
