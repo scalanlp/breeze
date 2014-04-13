@@ -148,6 +148,7 @@ object BloomFilter {
    * @return
    */
   def optimallySized[T](expectedNumItems: Double, falsePositiveRate: Double): BloomFilter[T] = {
-    (new BloomFilter[T](_, _)).tupled(optimalSize( expectedNumItems, falsePositiveRate))
+    val (buckets, funs) = optimalSize(expectedNumItems, falsePositiveRate)
+    new BloomFilter(buckets, funs)
   }
 }
