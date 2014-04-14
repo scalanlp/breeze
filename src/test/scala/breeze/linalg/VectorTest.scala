@@ -23,6 +23,16 @@ class VectorTest extends FunSuite {
     assert( dvTest.scanRight(0)( (p1: Int, p2: Int) => p1 + p2 )  == DenseVector(10,9,7,4,0) )
   }
 
+  test("fold"){
+    assert( dvTest.foldLeft(0)( (p1: Int, p2: Int) => 2 * p1  - p2 )  == - 26 )
+    assert( dvTest.foldRight(0)( (p1: Int, p2: Int) => 2 * p1 - p2 )  == -4 )
+  }
+
+  test("reduce"){
+    assert( dvTest.reduceLeft( (p1: Int, p2: Int) => 2 * p1  - p2 )  == - 10 )
+    assert( dvTest.reduceRight( (p1: Int, p2: Int) => 2 * p1 - p2 )  == 0 )
+  }
+
 }
 
 

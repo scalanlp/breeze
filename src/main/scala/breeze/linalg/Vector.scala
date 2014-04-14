@@ -89,6 +89,7 @@ trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]]{
   /**Returns copy of this [[breeze.linalg.Vector]] as a [[scala.Vector]]*/
   def toVector(implicit cm: ClassTag[E]) = Vector[E]( toArray )
 
+  //ToDo 2: implement fold/scan/reduce to operate along one axis of a matrix/tensor
   // <editor-fold defaultstate="collapsed" desc=" scala.collection -like padTo, fold/scan/reduce ">
 
   /** See [[scala.collection.mutable.ArrayOps.padTo]].
