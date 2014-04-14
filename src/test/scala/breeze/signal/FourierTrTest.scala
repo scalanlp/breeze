@@ -13,6 +13,7 @@ import breeze.math.Complex
  * Time: 02:31
  * To change this template use File | Settings | File Templates.
  */
+@RunWith(classOf[JUnitRunner])
 class FourierTrTest extends FunSuite {
 
 

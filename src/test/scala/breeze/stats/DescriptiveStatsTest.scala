@@ -13,7 +13,7 @@ class DescriptiveStatsTest extends WordSpec with ShouldMatchers {
     }
     "variance should not explode when size of list is 1" in {
       val a = List(1.0)
-      meanAndVariance(a) should be ((1.0,0,1))
+      meanAndVariance(a) should be (MeanAndVariance(1.0,0,1))
     }
     "mean should give correct value" in {
       val a = List(1.0,2.0,3.0,4.0)

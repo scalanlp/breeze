@@ -1,9 +1,7 @@
 package breeze.signal
 
-import breeze.linalg.{DenseMatrix, DenseVector}
 import breeze.math.Complex
-import breeze.signal.JavaArrayOps._
-import breeze.signal.support.CanHaarTr
+import breeze.util.JavaArrayOps._
 
 /**This class is a converter for using breeze.signal functions on Arrays of Double and Complex, from Java/Matlab/Mathematica.
   *

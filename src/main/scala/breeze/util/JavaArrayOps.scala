@@ -1,4 +1,4 @@
-package breeze.signal
+package breeze.util
 
 import breeze.linalg.{DenseVector, DenseMatrix}
 import scala.reflect.ClassTag
@@ -62,15 +62,21 @@ object JavaArrayOps {
 
     var rowIndex = 0
     var tempretIndex = 0
-    while(rowIndex < tempCols) {
-      require( values(rowIndex).length == tempCols, "Input Array[Array[V]] is not square!")
-      var colIndex = 0
-      while(colIndex < tempRows){
-        tempret(tempretIndex)=values(colIndex)(rowIndex)
-        colIndex += 1
-        tempretIndex += 1
-      }
+    while(rowIndex < tempRows) {
+      //raggedness check
+      require(values(rowIndex).length == tempCols, "Input Array[Array[V]] is ragged!")
       rowIndex += 1
+    }
+
+    var colIndex = 0
+    while(colIndex < tempCols) {
+      rowIndex = 0
+      while (rowIndex < tempRows) {
+        tempret(tempretIndex) = values(rowIndex)(colIndex)
+        tempretIndex += 1
+        rowIndex += 1
+      }
+      colIndex += 1
     }
     new DenseMatrix(tempRows, tempCols, tempret)
   }

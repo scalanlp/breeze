@@ -450,7 +450,7 @@ with MatrixConstructors[DenseMatrix] {
           if(cols.last >= m.cols) {
             throw new IndexOutOfBoundsException(s"Col slice of $cols was bigger than matrix cols of ${m.cols}")
           }
-          new DenseMatrix(rows.length, cols.length, m.data, m.offset + first * m.rows + rows.head, m.majorStride * cols.step)
+          new DenseMatrix(rows.length, cols.length, m.data, m.offset + first * m.majorStride + rows.head, m.majorStride * cols.step)
         } else {
           require(cols.step == 1, "Sorry, we can't support col ranges with step sizes other than 1 for transposed matrices")
           canSliceColsAndRows(m.t, cols, rows).t
@@ -485,7 +485,7 @@ with MatrixConstructors[DenseMatrix] {
           if(rows.last >= m.rows) {
             throw new IndexOutOfBoundsException(s"Row slice of $rows was bigger than matrix rows of ${m.rows}")
           }
-          new DenseVector(m.data, col * m.rows + m.offset + rows.head, rows.step, rows.length)
+          new DenseVector(m.data, col * m.majorStride + m.offset + rows.head, rows.step, rows.length)
         } else {
           // row major, so consecutive rows are separated by m.majorStride
           // we move rows.step * m.majorStride per step in the range

@@ -60,6 +60,13 @@ trait UFunc {
   @specialized(Int, Double, Float) VR]
   (v1: V1, v2: V2, v3: V3)(implicit impl: Impl3[V1, V2, V3, VR]):VR = impl(v1, v2, v3)
 
+  final def apply[@specialized(Int, Double, Float) V1,
+  @specialized(Int, Double, Float) V2,
+  @specialized(Int, Double, Float) V3,
+  @specialized(Int, Double, Float) V4,
+  @specialized(Int, Double, Float) VR]
+  (v1: V1, v2: V2, v3: V3, v4: V4)(implicit impl: Impl4[V1, V2, V3, V4, VR]):VR = impl(v1, v2, v3, v4)
+
   final def inPlace[V](v: V)(implicit impl: UFunc.InPlaceImpl[this.type, V]) = impl(v)
   final def inPlace[V, V2](v: V, v2: V2)(implicit impl: UFunc.InPlaceImpl2[this.type, V, V2]) = impl(v, v2)
   final def inPlace[V, V2, V3](v: V, v2: V2, v3: V3)(implicit impl: UFunc.InPlaceImpl3[this.type, V, V2, V3]) = impl(v, v2, v3)
@@ -71,6 +78,8 @@ trait UFunc {
   type Impl2[V1, V2, VR] = UFunc.UImpl2[this.type, V1, V2, VR]
   @implicitNotFound("Could not find an implicit implementation for this UFunc with arguments ${V1}, ${V2}, ${V3}")
   type Impl3[V1, V2, V3, VR] = UFunc.UImpl3[this.type, V1, V2, V3, VR]
+  @implicitNotFound("Could not find an implicit implementation for this UFunc with arguments ${V1}, ${V2}, ${V3}, ${V4}")
+  type Impl4[V1, V2, V3, V4, VR] = UFunc.UImpl4[this.type, V1, V2, V3, V4, VR]
   @implicitNotFound("Could not find an implicit inplace implementation for this UFunc with arguments ${V}")
   type InPlaceImpl[V] = UFunc.InPlaceImpl[this.type, V]
   @implicitNotFound("Could not find an inplace implicit implementation for this UFunc with arguments ${V1}, ${V2}")
@@ -148,6 +157,15 @@ object UFunc {
                     @specialized(Int, Double, Float) V3,
                     @specialized(Int, Double, Float) +VR] {
     def apply(v: V1, v2: V2, v3: V3):VR
+  }
+
+  @implicitNotFound("Could not find an implicit implementation for ${Tag} with arguments ${V1}, ${V2}, ${V3}, ${V4}")
+  trait UImpl4[Tag, @specialized(Int, Double, Float) V1,
+                    @specialized(Int, Double, Float) V2,
+                    @specialized(Int, Double, Float) V3,
+                    @specialized(Int, Double, Float) V4,
+                    @specialized(Int, Double, Float) +VR] {
+    def apply(v: V1, v2: V2, v3: V3, v4: V4):VR
   }
 
   @implicitNotFound("Could not find an implicit inplace implementation for ${Tag} with arguments ${V}")

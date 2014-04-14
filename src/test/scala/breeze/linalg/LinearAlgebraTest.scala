@@ -208,12 +208,11 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
   test("mean and variance") {
     val r = new Random(0)
     val data =  Array.fill(100000)(r.nextGaussian)
-    val (m,v,_) = meanAndVariance(data)
-    val (m2,v2,_) = meanAndVariance(data.iterator)
-    assert(breeze.numerics.closeTo(m,0.0,1E-2), m + " should be 0")
-    assert(breeze.numerics.closeTo(v,1.0,1E-2), v + " should be 1")
-    assert(m2 === m)
-    assert(v2 === v)
+    val mav = meanAndVariance(data)
+    val mav2 = meanAndVariance(data.iterator)
+    assert(breeze.numerics.closeTo(mav.mean,0.0,1E-2), mav.mean + " should be 0")
+    assert(breeze.numerics.closeTo(mav.variance,1.0,1E-2), mav.variance + " should be 1")
+    assert(mav == mav2)
   }
 
 //  test("complex mean") {

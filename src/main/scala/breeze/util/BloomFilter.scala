@@ -34,7 +34,7 @@ class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFun
 
   def apply(o: T): Boolean = {
     var h = 0
-    val hi = o.hashCode()
+    val hi = o.##
     while(h < numHashFunctions) {
       val hash = computeHash(h, hi)
       if(!bits.get(hash % numBuckets)) return false
@@ -117,3 +117,38 @@ class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFun
 }
 
 
+object BloomFilter {
+  /**
+   * Returns the optimal number of buckets  (m) and hash functions (k)
+   *
+   * The formula is:
+   * {{{
+   * val m = ceil(-(n * log(p)) / log(pow(2.0, log(2.0))))
+   * val k = round(log(2.0) * m / n)
+   * }}}
+   *
+   * @param expectedNumItems
+   * @param falsePositiveRate
+   * @return
+   */
+  def optimalSize(expectedNumItems: Double, falsePositiveRate: Double): (Int, Int) = {
+    val n = expectedNumItems
+    val p = falsePositiveRate
+    import scala.math._
+    val m = ceil(-(n * log(p)) / log(pow(2.0, log(2.0))))
+    val k = round(log(2.0) * m / n)
+    (m.toInt, k.toInt)
+  }
+
+  /**
+   * Returns a BloomFilter that is optimally sized for the expected number of inputs and false positive rate
+   * @param expectedNumItems
+   * @param falsePositiveRate
+   * @tparam T
+   * @return
+   */
+  def optimallySized[T](expectedNumItems: Double, falsePositiveRate: Double): BloomFilter[T] = {
+    val (buckets, funs) = optimalSize(expectedNumItems, falsePositiveRate)
+    new BloomFilter(buckets, funs)
+  }
+}

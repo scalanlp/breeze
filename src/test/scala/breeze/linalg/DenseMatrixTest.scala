@@ -561,11 +561,33 @@ class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with Do
     assert(dm === dmdmt)
   }
 
+  test("#221") {
+    val data = Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+    val mat = new DenseMatrix(rows = 10, data, offset = 0).t
+    val area = mat(3 until 6, 2 until 7)
+    assert(area === DenseMatrix((3,4,5,6,7),
+      (3,4,5,6,7),
+      (3,4,5,6,7)))
+
+    assert(area.t ===  DenseMatrix((3,4,5,6,7),
+      (3,4,5,6,7),
+      (3,4,5,6,7)).t)
+
+    val sl2t = area.t(0 until area.cols, 1 until area.rows)
+    assert(sl2t.offset === area.offset + area.majorStride, sl2t.data(area.offset + area.majorStride) + " " + area.offset)
+    assert(sl2t.t === DenseMatrix(      (3,4,5,6,7),
+      (3,4,5,6,7)))
+
+    val sl2 = area(1 until area.rows, 0 until area.cols)
+    assert(sl2 === DenseMatrix(      (3,4,5,6,7),
+      (3,4,5,6,7)))
+  }
+
 
 
   def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6) {
     for(i <- 0 until A.rows; j <- 0 until A.cols)
-      A(i,j) should be (B(i, j) plusOrMinus threshold)
+      A(i,j) should be (B(i, j) +- threshold)
   }
 }
 
