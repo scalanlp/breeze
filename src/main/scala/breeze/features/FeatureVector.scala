@@ -44,6 +44,8 @@ class FeatureVector(val data: Array[Int]) extends NumericOps[FeatureVector] {
 
 object FeatureVector {
 
+  def apply(ints: Int*) = new FeatureVector(ints.toArray)
+
   object Implicits {
     implicit def fromArrayInt(arr: Array[Int]) = new FeatureVector(arr)
   }
@@ -54,6 +56,18 @@ object FeatureVector {
       while(i < x.activeLength) {
         y(x(i)) += a
         i += 1
+      }
+    }
+  }
+
+  implicit object FVCanDaxpyIntoVB extends scaleAdd.InPlaceImpl3[VectorBuilder[Double], Double, FeatureVector] {
+    def apply(y: VectorBuilder[Double], a: Double, x: FeatureVector) {
+      if(a != 0.0) {
+        var i = 0
+        while(i < x.activeLength) {
+          y.add(x(i), a)
+          i += 1
+        }
       }
     }
   }
