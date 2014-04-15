@@ -13,7 +13,26 @@ import breeze.math.{DoubleValuedTensorSpaceTestBase, TensorSpace, TensorSpaceTes
  * @author dlwh
  */
 
-class VectorTest {
+@RunWith(classOf[JUnitRunner])
+class VectorTest extends FunSuite {
+
+  val dvTest = DenseVector(1,2,3,4)
+  //val dmTest = DenseMatrix((1,2,3,4), (5,6,7,8))
+
+  test("scan"){
+    assert( dvTest.scanLeft(0)( (p1: Int, p2: Int) => p1 + p2 )  == DenseVector(0,1,3,6,10) )
+    assert( dvTest.scanRight(0)( (p1: Int, p2: Int) => p1 + p2 )  == DenseVector(10,9,7,4,0) )
+  }
+
+  test("fold"){
+    assert( dvTest.foldLeft(0)( (p1: Int, p2: Int) => 2 * p1  - p2 )  == - 26 )
+    assert( dvTest.foldRight(0)( (p1: Int, p2: Int) => 2 * p1 - p2 )  == -4 )
+  }
+
+  test("reduce"){
+    assert( dvTest.reduceLeft( (p1: Int, p2: Int) => 2 * p1  - p2 )  == - 10 )
+    assert( dvTest.reduceRight( (p1: Int, p2: Int) => 2 * p1 - p2 )  == 0 )
+  }
 
 }
 
