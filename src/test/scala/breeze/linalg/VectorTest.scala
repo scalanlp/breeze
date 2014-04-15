@@ -17,6 +17,7 @@ import breeze.math.{DoubleValuedTensorSpaceTestBase, TensorSpace, TensorSpaceTes
 class VectorTest extends FunSuite {
 
   val dvTest = DenseVector(1,2,3,4)
+//  val dmTest = DenseMatrix[Int]((1,2,3,4), (5,6,7,8))
 
   test("scan"){
     assert( dvTest.scanLeft(0)( (p1: Int, p2: Int) => p1 + p2 )  == DenseVector(0,1,3,6,10) )
