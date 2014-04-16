@@ -248,3 +248,4 @@ package object linalg {
     (sum(x:*x,Axis._0) / (x.rows-1.0)).map(scala.math.sqrt).toDenseVector
 
 }
+
