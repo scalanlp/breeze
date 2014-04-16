@@ -21,6 +21,7 @@ import math.Semiring
 import storage.DefaultArrayValue
 import java.io.{File, FileReader}
 import scala.reflect.ClassTag
+import breeze.signal.support.CanConvolve
 
 
 /**
@@ -237,6 +238,10 @@ package object linalg {
     (xc.t * xc) /= xc.rows - 1.0
   }
 
+  import breeze.linalg.CanPadOpts._
+  def padRight[T]( v: DenseVector[T], dimensions: Dimensions1, mode: OptPadMode = Zero)
+                              (implicit canPad: CanPadRight[T, Dimensions1]): DenseVector[T] =
+              canPad(v, dimensions, mode)
 
 
 
