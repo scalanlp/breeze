@@ -29,6 +29,7 @@ import scala.math.BigInt
 import spire.implicits.cfor
 import CanTraverseValues.ValuesVisitor
 import CanZipAndTraverseValues.PairValuesVisitor
+import java.io.ObjectStreamException
 
 /**
  * A DenseVector is the "obvious" implementation of a Vector, with one twist.
@@ -45,7 +46,7 @@ import CanZipAndTraverseValues.PairValuesVisitor
  * @param stride separation between elements
  * @param length number of elements
  */
-@SerialVersionUID(1L)
+@SerialVersionUID(1L) // TODO: scala doesn't propagate this to specialized subclasses. Sigh.
 class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
                                                val offset: Int,
                                                val stride: Int,
@@ -207,6 +208,11 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
 
   /**Returns copy of this [[breeze.linalg.DenseVector]] as a [[scala.Vector]]*/
   def toScalaVector()(implicit cm: ClassTag[E]): scala.Vector[E] = this.toArray.toVector
+
+  @throws(classOf[ObjectStreamException])
+  protected def writeReplace():Object = {
+    new DenseVector.SerializedForm(data, offset, stride, length)
+  }
 
 }
 
@@ -642,6 +648,38 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
       def backward(t: DenseVector[Double]) = { assert(t.size == 2); (t(0),t(1))}
     }
   }
+
+
+  /**
+   * This class exists because @specialized instances don't respect the serial
+   * @param data
+   * @param offset
+   * @param stride
+   * @param length
+   */
+  @SerialVersionUID(1L)
+  case class SerializedForm(data: Array[_],
+                            offset: Int,
+                            stride: Int,
+                            length: Int) extends Serializable {
+
+    @throws(classOf[ObjectStreamException])
+    def readResolve():Object = {
+      data match {//switch to make specialized happy
+        case x: Array[Int] => new DenseVector(x, offset, stride, length)
+        case x: Array[Long] => new DenseVector(x, offset, stride, length)
+        case x: Array[Double] => new DenseVector(x, offset, stride, length)
+        case x: Array[Float] => new DenseVector(x, offset, stride, length)
+        case x: Array[Short] => new DenseVector(x, offset, stride, length)
+        case x: Array[Byte] => new DenseVector(x, offset, stride, length)
+        case x: Array[Char] => new DenseVector(x, offset, stride, length)
+        case x: Array[_] => new DenseVector(x, offset, stride, length)
+      }
+
+    }
+  }
+
+
 
 
 
