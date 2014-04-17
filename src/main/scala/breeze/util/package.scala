@@ -12,45 +12,71 @@ import java.util.BitSet
  */
 package object util {
 
-/**
+  /**
    * Deserializes an object using java serialization
    */
   def readObject[T](loc: File) = {
-    val oin = new ObjectInputStream(new BufferedInputStream(new GZIPInputStream(new FileInputStream(loc))));
+    val stream = new BufferedInputStream(new GZIPInputStream(new FileInputStream(loc)))
+    val oin = nonstupidObjectInputStream(stream)
     val result = oin.readObject().asInstanceOf[T]
-    oin.close();
-    result;
+    oin.close()
+    result
   }
+
+  /**
+   * For reasons that are best described as asinine, ObjectInputStream does not take into account
+   * Thread.currentThread.getContextClassLoader. This fixes that.
+   *
+   * @param stream
+   * @return
+   */
+  def nonstupidObjectInputStream(stream: InputStream):ObjectInputStream =  {
+    new ObjectInputStream(stream) {
+      @throws[IOException]
+      @throws[ClassNotFoundException]
+      override def resolveClass(desc: ObjectStreamClass): Class[_] = {
+        try {
+          val currentTccl: ClassLoader = Thread.currentThread.getContextClassLoader
+          currentTccl.loadClass(desc.getName)
+        } catch {
+          case e: Exception =>
+            super.resolveClass(desc)
+        }
+      }
+    }
+  }
+
+
 
   /**
    * Serializes an object using java serialization
    */
   def writeObject[T](out: File, parser: T): Unit = {
-    val stream = new ObjectOutputStream(new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(out))));
-    stream.writeObject(parser);
-    stream.close();
+    val stream = new ObjectOutputStream(new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(out))))
+    stream.writeObject(parser)
+    stream.close()
   }
 
   /**
    * You can write TODO in your code, and get an exception at runtime for any expression.
    */
-  def TODO = sys.error("TODO (Not implemented)");
+  def TODO = sys.error("TODO (Not implemented)")
 
   /**
    * You can write XXX in your code and get an exception at runtime for any expression.
    */
-  def XXX = sys.error("XXX Not Implemented");
+  def XXX = sys.error("XXX Not Implemented")
   /**
    * Similar to the TODO expression, except this one is for types.
    */
-  type TODO = Nothing;
+  type TODO = Nothing
 
   /**
    * Computes the current source file and line number.
    */
   @noinline def LOCATION = {
-    val e = new Exception().getStackTrace()(1);
-    e.getFileName() + ":" + e.getLineNumber();
+    val e = new Exception().getStackTrace()(1)
+    e.getFileName() + ":" + e.getLineNumber()
   }
 
   /**
@@ -58,18 +84,18 @@ package object util {
    * 0 is equivalent to LOCATION
    */
   @noinline def CALLER(nth : Int) = {
-    val e = new Exception().getStackTrace()(nth+1);
-    e.getFileName() + ":" + e.getLineNumber();
+    val e = new Exception().getStackTrace()(nth+1)
+    e.getFileName() + ":" + e.getLineNumber()
   }
 
   /**
    * Returns a string with info about the available and used space.
    */
   def memoryString = {
-    val r = Runtime.getRuntime;
-    val free = r.freeMemory / (1024 * 1024);
-    val total = r.totalMemory / (1024 * 1024);
-    ((total - free) + "M used; " + free  + "M free; " + total  + "M total");
+    val r = Runtime.getRuntime
+    val free = r.freeMemory / (1024 * 1024)
+    val total = r.totalMemory / (1024 * 1024)
+    ((total - free) + "M used; " + free  + "M free; " + total  + "M total")
   }
 
   /**
@@ -80,10 +106,10 @@ package object util {
   // this should be a separate trait but Scala is freaking out
   class SeqExtras[T](s: Seq[T]) {
     def argmax(implicit ordering: Ordering[T]) = {
-      s.zipWithIndex.reduceLeft( (a,b) => if(ordering.gt(a._1,b._1)) a else b)._2;
+      s.zipWithIndex.reduceLeft( (a,b) => if(ordering.gt(a._1,b._1)) a else b)._2
     }
     def argmin(implicit ordering: Ordering[T]) = {
-      s.zipWithIndex.reduceLeft( (a,b) => if(ordering.lt(a._1,b._1)) a else b)._2;
+      s.zipWithIndex.reduceLeft( (a,b) => if(ordering.lt(a._1,b._1)) a else b)._2
     }
 
     def unfold[U,To](init: U)(f: (U,T)=>U)(implicit cbf: CanBuildFrom[Seq[T], U, To]) = {
@@ -99,9 +125,9 @@ package object util {
     }
   }
 
-  implicit def seqExtras[T](s: Seq[T]) = new SeqExtras(s);
+  implicit def seqExtras[T](s: Seq[T]) = new SeqExtras(s)
 
-  implicit def arraySeqExtras[T](s: Array[T]) = new SeqExtras(s);
+  implicit def arraySeqExtras[T](s: Array[T]) = new SeqExtras(s)
 
 
   implicit class AwesomeBitSet(val bs: java.util.BitSet) extends AnyVal {
