@@ -238,9 +238,9 @@ package object linalg {
     (xc.t * xc) /= xc.rows - 1.0
   }
 
-  import breeze.linalg.CanPadOpts._
+  import breeze.linalg.Options._
   def padRight[T]( v: DenseVector[T], dimensions: Dimensions1, mode: OptPadMode = Zero)
-                              (implicit canPad: CanPadRight[T, Dimensions1]): DenseVector[T] =
+                              (implicit canPad: CanPadRight[DenseVector[T], Dimensions1, DenseVector[T]]): DenseVector[T] =
               canPad(v, dimensions, mode)
 
 
