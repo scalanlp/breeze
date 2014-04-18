@@ -169,17 +169,6 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
     }
   }
 
-  /** Creates a copy of this DenseVector that is represented as a 1 by length DenseMatrix */
-  def toDenseMatrix: DenseMatrix[E] = {
-     copy.asDenseMatrix
-  }
-
-  /** Creates a view of this DenseVector that is represented as a 1 by length DenseMatrix */
-  def asDenseMatrix: DenseMatrix[E] = {
-    new DenseMatrix[E](1, length, data, offset, stride)
-  }
-
-
   /**
    * Slices the DenseVector, in the range [start,end] with a stride stride.
    * @param start
@@ -191,6 +180,20 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
     if(end > length || end < 0) throw new IllegalArgumentException("End " + end + "is out of bounds for slice of DenseVector of length " + length)
     new DenseVector(data, start * this.stride + offset, stride * this.stride, (end-start)/stride)
   }
+
+  // <editor-fold defaultstate="collapsed" desc=" Conversions (DenseMatrix, Array, Scala Vector) ">
+
+  /** Creates a copy of this DenseVector that is represented as a 1 by length DenseMatrix */
+  def toDenseMatrix: DenseMatrix[E] = {
+     copy.asDenseMatrix
+  }
+
+  /** Creates a view of this DenseVector that is represented as a 1 by length DenseMatrix */
+  def asDenseMatrix: DenseMatrix[E] = {
+    new DenseMatrix[E](1, length, data, offset, stride)
+  }
+
+
 
   override def toArray(implicit cm: ClassTag[E]) = if(stride == 1){
     ArrayUtil.copyOfRange(data, offset, offset + length)
@@ -208,6 +211,7 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
 
   /**Returns copy of this [[breeze.linalg.DenseVector]] as a [[scala.Vector]]*/
   def toScalaVector()(implicit cm: ClassTag[E]): scala.Vector[E] = this.toArray.toVector
+  // </editor-fold>
 
   @throws(classOf[ObjectStreamException])
   protected def writeReplace():Object = {
