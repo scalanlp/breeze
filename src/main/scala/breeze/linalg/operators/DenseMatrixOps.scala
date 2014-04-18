@@ -13,6 +13,17 @@ import breeze.storage.DefaultArrayValue
 import scala.reflect.ClassTag
 
 trait DenseMatrixMultiplyStuff extends DenseMatrixOps with DenseMatrixMultOps { this: DenseMatrix.type =>
+
+  implicit def dvTransTimesDM[T](implicit op:  OpMulMatrix.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]]): OpMulMatrix.Impl2[Transpose[DenseVector[T]], DenseMatrix[T], Transpose[DenseVector[T]]] = {
+    new OpMulMatrix.Impl2[Transpose[DenseVector[T]], DenseMatrix[T], Transpose[DenseVector[T]]] {
+      override def apply(v: Transpose[DenseVector[T]], v2: DenseMatrix[T]): Transpose[DenseVector[T]] = {
+        (v.inner.asDenseMatrix * v2) apply (0, ::)
+      }
+    }
+
+  }
+
+
   implicit object DenseMatrixDMulDenseMatrixD
     extends OpMulMatrix.Impl2[DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double]] {
     def apply(_a : DenseMatrix[Double], _b : DenseMatrix[Double]): DenseMatrix[Double] = {

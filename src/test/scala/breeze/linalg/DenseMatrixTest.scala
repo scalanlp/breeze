@@ -250,7 +250,9 @@ class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with Do
     assert(a * cs === DenseVector(19.0,52.0))
     assert(b * cs === DenseVector(62.0, -21.0, 87.0))
     assert(b.t * c === DenseVector(72.0, -18.0, 65.0))
+
     assert(a.t * DenseVector(4.0, 3.0) === DenseVector(16.0, 23.0, 30.0))
+    assert(c.t * a.t === (a * c).t)
 
     // should be dense
     val x:DenseMatrix[Double] = a * a.t
