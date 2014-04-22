@@ -16,7 +16,7 @@ scalaVersion := "2.11.0"
 
 crossScalaVersions  := Seq("2.11.0", "2.10.3")
 
-addCompilerPlugin("org.scala-lang.plugins" % "macro-paradise" % "2.0.0-SNAPSHOT" cross CrossVersion.full)
+addCompilerPlugin("org.scalamacros" %% "paradise" % "2.0.0-M8" cross CrossVersion.full)
 
 publishMavenStyle := true
 
