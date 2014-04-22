@@ -61,7 +61,6 @@ scalacOptions ++= Seq("-deprecation","-language:_")
 
 libraryDependencies ++= Seq(
   "org.scalanlp" %% "breeze-macros" % "0.3" % "compile",
-  "com.thoughtworks.paranamer" % "paranamer" % "2.2",
   "com.github.fommil.netlib" % "core" % "1.1.2",
   "net.sourceforge.f2j" % "arpack_combined_all" % "0.1",
   "net.sf.opencsv" % "opencsv" % "2.3",
