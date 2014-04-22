@@ -12,7 +12,9 @@ lazy val (root, natives, benchmark) = {
 }
 
 
-scalaVersion := "2.10.3"
+scalaVersion := "2.11.0"
+
+crossScalaVersions  := Seq("2.11.0", "2.10.3")
 
 addCompilerPlugin("org.scala-lang.plugins" % "macro-paradise" % "2.0.0-SNAPSHOT" cross CrossVersion.full)
 
@@ -69,8 +71,8 @@ libraryDependencies ++= Seq(
   "org.apache.commons" % "commons-math3" % "3.2",
   "org.spire-math" %% "spire" % "0.7.1",
   "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
-  "org.scalatest" %% "scalatest" % "2.1.0" % "test",
-  "com.typesafe" %% "scalalogging-slf4j" % "1.0.1",
+  "org.scalatest" %% "scalatest" % "2.1.3" % "test",
+  "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.0.4",
   "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.0-beta9" % "test",
   "org.apache.logging.log4j" % "log4j-core" % "2.0-beta9" % "test",
   "org.apache.logging.log4j" % "log4j-api" % "2.0-beta9" % "test",
@@ -85,7 +87,7 @@ try {
     .getMethod("getLogger", classLoader.loadClass("java.lang.String"))
     .invoke(null, "ROOT")
     } catch {
-      case e: Exception => 
+      case e: Exception =>
     }
 )
 
@@ -97,5 +99,3 @@ resolvers ++= Seq(
     )
 
 testOptions in Test += Tests.Argument("-oDF")
-
-
