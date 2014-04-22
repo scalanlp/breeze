@@ -4,7 +4,6 @@ import breeze.macros.expand
 import breeze.linalg.Options._
 import breeze.stats.{median, mean}
 import scala.reflect.ClassTag
-import breeze.linalg.DenseVector
 
 /**
  * @author ktakagaki
