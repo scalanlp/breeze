@@ -39,7 +39,7 @@ package object linalg {
   /**
    * Computes y += x * a, possibly doing less work than actually doing that operation
    */
-  def axpy[A, X, Y](a: A, x: X, y: Y)(implicit axpy: scaleAdd.InPlaceImpl3[Y, A, X]) { axpy(y, a, x) }
+  def axpy[A, X, Y](a: A, x: X, y: Y)(implicit axpy: scaleAdd.InPlaceImpl3[Y, A, X]): Unit = { axpy(y, a, x) }
 
   /**
    * Generates a vector of linearly spaced values between a and b (inclusive).
@@ -57,7 +57,9 @@ package object linalg {
 
 
 
-  // io stuff
+  // <editor-fold defaultstate="collapsed" desc=" io stuff ">
+
+
   /**
    * Reads in a DenseMatrix from a CSV File
    */
@@ -81,9 +83,11 @@ package object linalg {
                separator: Char=',',
                quote: Char='\0',
                escape: Char='\\',
-               skipLines: Int = 0) {
+               skipLines: Int = 0): Unit = {
     CSVWriter.writeFile(file, IndexedSeq.tabulate(mat.rows,mat.cols)(mat(_,_).toString), separator, quote, escape)
   }
+
+  // </editor-fold>
 
 
   implicit def RangeToRangeExtender(re: Range):RangeExtender = new support.RangeExtender(re)
@@ -99,15 +103,15 @@ package object linalg {
  */
   //  import breeze.linalg._
 
-  private[linalg] def requireNonEmptyMatrix[V](mat: Matrix[V]) =
+  private[linalg] def requireNonEmptyMatrix[V](mat: Matrix[V]): Unit =
     if (mat.cols == 0 || mat.rows == 0)
       throw new MatrixEmptyException
 
-  private[linalg] def requireSquareMatrix[V](mat: Matrix[V]) =
+  private[linalg] def requireSquareMatrix[V](mat: Matrix[V]): Unit =
     if (mat.rows != mat.cols)
       throw new MatrixNotSquareException
 
-  private[linalg] def requireSymmetricMatrix[V](mat: Matrix[V]) = {
+  private[linalg] def requireSymmetricMatrix[V](mat: Matrix[V]): Unit = {
     requireSquareMatrix(mat)
 
     for (i <- 0 until mat.rows; j <- 0 until i)
@@ -192,7 +196,7 @@ package object linalg {
   def princomp(
     x: DenseMatrix[Double],
     covmatOpt: Option[DenseMatrix[Double]] = None
-  ) = {
+  ): PCA = {
     covmatOpt match {
       case Some(covmat) => new PCA(x, covmat)
       case None => new PCA(x, cov(x))
@@ -212,7 +216,7 @@ package object linalg {
              x: DenseMatrix[Double],
              center: Boolean = true,
              scale: Boolean = false
-             ) = {
+             ): DenseMatrix[Double] = {
     import breeze.stats.{mean, stddev}
     if (center) {
       val xc = x(*,::) - mean(x, Axis._0).toDenseVector
@@ -232,7 +236,7 @@ package object linalg {
    * Compute the covariance matrix from the given data, centering
    * if necessary. Very simple, just does the basic thing.
    */
-  def cov(x: DenseMatrix[Double], center: Boolean = true) = {
+  def cov(x: DenseMatrix[Double], center: Boolean = true): DenseMatrix[Double] = {
     val xc = scale(x,center,false)
     (xc.t * xc) /= xc.rows - 1.0
   }
@@ -244,7 +248,7 @@ package object linalg {
    * Helper function to compute the root-mean-square of the columns of a
    * matrix. Feel free to make this more general.
    */
-  private def columnRMS(x: DenseMatrix[Double]) =
-    (sum(x:*x,Axis._0) / (x.rows-1.0)).map(scala.math.sqrt).toDenseVector
+  private def columnRMS(x: DenseMatrix[Double]): DenseVector[Double] =
+    (sum(x:*x,Axis._0) / (x.rows-1.0)).map( scala.math.sqrt _ ).toDenseVector
 
 }
