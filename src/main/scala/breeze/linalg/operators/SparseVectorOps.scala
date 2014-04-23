@@ -140,6 +140,7 @@ trait SparseVector_DenseVector_Ops { this: SparseVector.type =>
 }
 
 
+
 trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
   import breeze.math.PowImplicits._
 
