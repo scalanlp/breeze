@@ -64,19 +64,19 @@ trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]]{
   def keysIterator = Iterator.range(0, size)
 
 
-  override def equals(p1: Any) = p1 match {
+  override def equals(p1: Any): Boolean = p1 match {
     case x: Vector[_] =>
         this.length == x.length &&
           (valuesIterator sameElements x.valuesIterator)
     case _ => false
   }
 
-  def toDenseVector(implicit cm: ClassTag[E]) = {
+  def toDenseVector(implicit cm: ClassTag[E]): DenseVector[E] = {
     new DenseVector(toArray)
   }
 
   /**Returns copy of this [[breeze.linalg.Vector]] as a [[scala.Array]]*/
-  def toArray(implicit cm: ClassTag[E]) = {
+  def toArray(implicit cm: ClassTag[E]): Array[E] = {
     val result = new Array[E](length)
     var i = 0
     while(i < length) {
@@ -191,12 +191,12 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
   implicit def canMapValues[V, V2](implicit man: ClassTag[V2]):CanMapValues[Vector[V], V, V2, Vector[V2]] = {
     new CanMapValues[Vector[V], V, V2, Vector[V2]] {
       /**Maps all key-value pairs from the given collection. */
-      def map(from: Vector[V], fn: (V) => V2) = {
+      def map(from: Vector[V], fn: (V) => V2): DenseVector[V2] = {
         DenseVector.tabulate(from.length)(i => fn(from(i)))
       }
 
       /**Maps all active key-value pairs from the given collection. */
-      def mapActive(from: Vector[V], fn: (V) => V2) = {
+      def mapActive(from: Vector[V], fn: (V) => V2): DenseVector[V2] = {
         map(from, fn)
       }
     }
@@ -206,7 +206,7 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
 
   implicit def negFromScale[@specialized(Int, Float, Double) V, Double](implicit scale: OpMulScalar.Impl2[Vector[V], V, Vector[V]], ring: Ring[V]) = {
     new OpNeg.Impl[Vector[V], Vector[V]] {
-      override def apply(a : Vector[V]) = {
+      override def apply(a : Vector[V]): Vector[V] = {
         scale(a, ring.negate(ring.one))
       }
     }
