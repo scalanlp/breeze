@@ -314,7 +314,7 @@ object SparseVector extends SparseVectorOps
 
   implicit val space_d: TensorSpace[SparseVector[Double], Int, Double] = TensorSpace.make[SparseVector[Double], Int, Double]
   implicit val space_f: TensorSpace[SparseVector[Float], Int, Float] = {
-    val nop = this.negFromScale[Float]
+    val nop = this.implOpNeg_SVT_eq_SVT[Float]
     TensorSpace.make[SparseVector[Float], Int, Float]
   }
   implicit val space_i: TensorSpace[SparseVector[Int], Int, Int] = TensorSpace.make[SparseVector[Int], Int, Int]
