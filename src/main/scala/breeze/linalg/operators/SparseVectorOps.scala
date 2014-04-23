@@ -13,7 +13,7 @@ import breeze.storage.DefaultArrayValue
 import breeze.generic.UFunc.UImpl
 import scala.{specialized=>spec}
 
-trait SparseVector_DenseVector_Ops extends DenseVector_SparseVector_Ops { this: SparseVector.type =>
+trait SparseVector_DenseVector_Ops { this: SparseVector.type =>
   import breeze.math.PowImplicits._
 
   @expand
@@ -21,13 +21,13 @@ trait SparseVector_DenseVector_Ops extends DenseVector_SparseVector_Ops { this: 
   @expand.exclude(BigInt, OpPow)
   @expand.valify
   implicit def sv_dv_UpdateOp[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
-  @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+                              @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _}, {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: Op.Impl2[T, T, T]):Op.InPlaceImpl2[SparseVector[T], DenseVector[T]] = new Op.InPlaceImpl2[SparseVector[T], DenseVector[T]] {
-    def apply(a: SparseVector[T], b: DenseVector[T]):Unit = {
+    def apply(a: SparseVector[T], b: DenseVector[T]): Unit = {
       require(a.length == b.length, "Vectors must have the same length")
-      val result = new VectorBuilder[T](a.length, a.length)
-      val bd = b.data
+      val result: VectorBuilder[T] = new VectorBuilder[T](a.length, a.length)
+      val bd: Array[T] = b.data
       val adefault = a.array.default
       var boff = b.offset
       val asize = a.activeSize
@@ -313,6 +313,7 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
   }
 
 }
+
 
 trait SparseVectorOps { this: SparseVector.type =>
   import breeze.math.PowImplicits._
