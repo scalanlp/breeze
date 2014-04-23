@@ -67,9 +67,9 @@ trait UFunc {
   @specialized(Int, Double, Float) VR]
   (v1: V1, v2: V2, v3: V3, v4: V4)(implicit impl: Impl4[V1, V2, V3, V4, VR]):VR = impl(v1, v2, v3, v4)
 
-  final def inPlace[V](v: V)(implicit impl: UFunc.InPlaceImpl[this.type, V]) = impl(v)
-  final def inPlace[V, V2](v: V, v2: V2)(implicit impl: UFunc.InPlaceImpl2[this.type, V, V2]) = impl(v, v2)
-  final def inPlace[V, V2, V3](v: V, v2: V2, v3: V3)(implicit impl: UFunc.InPlaceImpl3[this.type, V, V2, V3]) = impl(v, v2, v3)
+  final def inPlace[V](v: V)(implicit impl: UFunc.InPlaceImpl[this.type, V]): Unit = impl(v)
+  final def inPlace[V, V2](v: V, v2: V2)(implicit impl: UFunc.InPlaceImpl2[this.type, V, V2]): Unit = impl(v, v2)
+  final def inPlace[V, V2, V3](v: V, v2: V2, v3: V3)(implicit impl: UFunc.InPlaceImpl3[this.type, V, V2, V3]): Unit = impl(v, v2, v3)
 
 
   @implicitNotFound("Could not find an implicit implementation for this UFunc with arguments ${V}")
@@ -170,17 +170,17 @@ object UFunc {
 
   @implicitNotFound("Could not find an implicit inplace implementation for ${Tag} with arguments ${V}")
   trait InPlaceImpl[Tag, V] {
-    def apply(v: V)
+    def apply(v: V): Unit
   }
 
   @implicitNotFound("Could not find an implicit inplace implementation for ${Tag} with arguments ${V}, ${V2}")
   trait InPlaceImpl2[Tag, V,  @specialized(Int, Double, Float) V2] {
-    def apply(v: V, v2: V2)
+    def apply(v: V, v2: V2): Unit
   }
 
   @implicitNotFound("Could not find an implicit inplace implementation for ${Tag} with arguments ${V}, ${V2}, ${V3}")
   trait InPlaceImpl3[Tag, V, V2, V3] {
-    def apply(v: V, v2: V2, v3: V3)
+    def apply(v: V, v2: V2, v3: V3): Unit
   }
 
   // implicits for add impl's
@@ -196,7 +196,7 @@ object UFunc {
   implicit def canTransformValuesUFunc[Tag, T, V](implicit canTransform: CanTransformValues[T, V, V],
                                                   impl: UImpl[Tag, V, V]):InPlaceImpl[Tag, T] = {
     new InPlaceImpl[Tag, T] {
-      def apply(v: T) = { canTransform.transform(v, impl.apply) }
+      def apply(v: T): Unit = { canTransform.transform(v, impl.apply) }
     }
   }
 

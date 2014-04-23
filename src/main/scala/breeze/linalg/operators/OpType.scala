@@ -101,7 +101,7 @@ object OpPow extends OpPow with UFunc
 sealed trait OpLT  extends OpType
 object OpLT  extends OpLT with UFunc {
   implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
-    val ord = implicitly[Ordering[T]]
+    val ord: Ordering[T] = implicitly[Ordering[T]]
     new Impl2[T, T, Boolean] {
       def apply(v: T, v2: T): Boolean = ord.lt(v, v2)
     }
@@ -116,7 +116,7 @@ object OpLT  extends OpLT with UFunc {
 sealed trait OpLTE extends OpType
 object OpLTE extends OpLTE with UFunc {
   implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
-    val ord = implicitly[Ordering[T]]
+    val ord: Ordering[T] = implicitly[Ordering[T]]
     new Impl2[T, T, Boolean] {
       def apply(v: T, v2: T): Boolean = ord.lteq(v, v2)
     }
@@ -131,7 +131,7 @@ object OpLTE extends OpLTE with UFunc {
 sealed trait OpGT  extends OpType
 object OpGT  extends OpGT with UFunc {
   implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
-    val ord = implicitly[Ordering[T]]
+    val ord: Ordering[T] = implicitly[Ordering[T]]
     new Impl2[T, T, Boolean] {
       def apply(v: T, v2: T): Boolean = ord.gt(v, v2)
     }
@@ -146,7 +146,7 @@ object OpGT  extends OpGT with UFunc {
 sealed trait OpGTE extends OpType
 object OpGTE extends OpGTE with UFunc {
   implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
-    val ord = implicitly[Ordering[T]]
+    val ord: Ordering[T] = implicitly[Ordering[T]]
     new Impl2[T, T, Boolean] {
       def apply(v: T, v2: T): Boolean = ord.gteq(v, v2)
     }
@@ -161,7 +161,7 @@ object OpGTE extends OpGTE with UFunc {
 sealed trait OpEq  extends OpType
 object OpEq  extends OpEq with UFunc {
   implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
-    val ord = implicitly[Ordering[T]]
+    val ord: Ordering[T] = implicitly[Ordering[T]]
     new Impl2[T, T, Boolean] {
       def apply(v: T, v2: T): Boolean = ord.equiv(v, v2)
     }
@@ -176,7 +176,7 @@ object OpEq  extends OpEq with UFunc {
 sealed trait OpNe  extends OpType
 object OpNe  extends OpNe with UFunc {
   implicit def impl2FromOrdering[T:Ordering]:Impl2[T, T, Boolean] = {
-    val ord = implicitly[Ordering[T]]
+    val ord: Ordering[T] = implicitly[Ordering[T]]
     new Impl2[T, T, Boolean] {
       def apply(v: T, v2: T): Boolean = !ord.equiv(v, v2)
     }

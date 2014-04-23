@@ -51,7 +51,7 @@ object FeatureVector {
   }
 
   implicit object FVCanDaxpy extends scaleAdd.InPlaceImpl3[DenseVector[Double], Double, FeatureVector] {
-    def apply(y: DenseVector[Double], a: Double, x: FeatureVector) {
+    def apply(y: DenseVector[Double], a: Double, x: FeatureVector): Unit = {
       var i = 0
       while(i < x.activeLength) {
         y(x(i)) += a
@@ -61,7 +61,7 @@ object FeatureVector {
   }
 
   implicit object FVCanDaxpyIntoVB extends scaleAdd.InPlaceImpl3[VectorBuilder[Double], Double, FeatureVector] {
-    def apply(y: VectorBuilder[Double], a: Double, x: FeatureVector) {
+    def apply(y: VectorBuilder[Double], a: Double, x: FeatureVector): Unit = {
       if(a != 0.0) {
         var i = 0
         while(i < x.activeLength) {
@@ -90,7 +90,7 @@ object FeatureVector {
   }
 
   implicit object FVAddIntoDV extends OpMulInner.InPlaceImpl2[DenseVector[Double], FeatureVector] {
-    def apply(a: DenseVector[Double], b: FeatureVector) {
+    def apply(a: DenseVector[Double], b: FeatureVector): Unit = {
       var i = 0
       while(i < b.activeLength) {
         a(b(i)) += 1
