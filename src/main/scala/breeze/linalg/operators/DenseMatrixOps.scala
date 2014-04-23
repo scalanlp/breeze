@@ -31,7 +31,8 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps with DenseMatrixMultOps { 
   // for BLAS.dgemm/dgemv
   private def transposeString(a: DenseMatrix[Double]): String = if (a.isTranspose) "T" else "N"
 
-  implicit object implOpMulMatrix_DMD_DMD_eq_DMD  extends OpMulMatrix.Impl2[DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double]] {
+  implicit object implOpMulMatrix_DMD_DMD_eq_DMD
+    extends OpMulMatrix.Impl2[DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double]] {
     def apply(_a : DenseMatrix[Double], _b : DenseMatrix[Double]): DenseMatrix[Double] = {
 
       require(_a.cols == _b.rows, "Dimension mismatch!")
