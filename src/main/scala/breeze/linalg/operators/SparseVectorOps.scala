@@ -187,45 +187,48 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
 
 
 
-  // this shouldn't be necessary but it is:
-  @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
-  @expand.valify
-  implicit def dv_sv_op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
-                        @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType] = {
-    val op = DenseVector.pureFromUpdate(implicitly[Op.InPlaceImpl2[DenseVector[T], SparseVector[T]]])
-    implicitly[BinaryRegistry[DenseVector[T], Vector[T], Op.type, Vector[T]]].register(op)
-    implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(op)
-  }
+//  // this shouldn't be necessary but it is:
+//  @expand
+//  @expand.exclude(Complex, OpMod)
+//  @expand.exclude(BigInt, OpPow)
+//  @expand.valify
+//  implicit def dv_sv_op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+//                        @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType] = {
+//    val op = DenseVector.pureFromUpdate(implicitly[Op.InPlaceImpl2[DenseVector[T], SparseVector[T]]])
+//    implicitly[BinaryRegistry[DenseVector[T], Vector[T], Op.type, Vector[T]]].register(op)
+//    implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(op)
+//  }
 
 
   @expand
   implicit def dv_sv_Update_Zero_Idempotent[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
-  @expand.args(OpAdd, OpSub) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ + _},  {_ - _}) op: Op.Impl2[T, T, T]):Op.InPlaceImpl2[DenseVector[T], SparseVector[T]] = new Op.InPlaceImpl2[DenseVector[T], SparseVector[T]] {
-    def apply(a: DenseVector[T], b: SparseVector[T]):Unit = {
-      require(a.length == b.length, "Vectors must have the same length")
-      val ad: Array[T] = a.data
-      val bd: Array[T] = b.data
-      val bi: Array[Int] = b.index
-      val bsize: Int = b.iterableSize
+                                            @expand.args(OpAdd, OpSub) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _},  {_ - _}) op: Op.Impl2[T, T, T]):
+  Op.InPlaceImpl2[DenseVector[T], SparseVector[T]] =
 
-      var i = 0
-      while(i < bsize) {
-        val aoff: Int = a.offset + bi(i) * a.stride
-        ad(aoff) = op(ad(aoff), bd(i))
-        i += 1
+    new Op.InPlaceImpl2[DenseVector[T], SparseVector[T]] {
+      def apply(a: DenseVector[T], b: SparseVector[T]): Unit = {
+        require(a.length == b.length, "Vectors must have the same length")
+        val ad: Array[T] = a.data
+        val bd: Array[T] = b.data
+        val bi: Array[Int] = b.index
+        val bsize: Int = b.iterableSize
+
+        var i: Int = 0
+        while(i < bsize) {
+          val aoff: Int = a.offset + bi(i) * a.stride
+          ad(aoff) = op(ad(aoff), bd(i))
+          i += 1
+        }
       }
+      implicitly[BinaryUpdateRegistry[DenseVector[T], Vector[T], Op.type]].register(this)
+      implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
     }
-    implicitly[BinaryUpdateRegistry[DenseVector[T], Vector[T], Op.type]].register(this)
-    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
-  }
 
 
   @expand
   @expand.valify
-  implicit def canDot_DV_SV[@expand.args(Int, Double, Float, Long, BigInt, Complex) T]
+  implicit def implOpMulInner_DVT_SVT_eq_T[@expand.args(Int, Double, Float, Long, BigInt, Complex) T]
   (implicit @expand.sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T):
   OpMulInner.Impl2[DenseVector[T], SparseVector[T], T] =
 
@@ -264,11 +267,13 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
 
   @expand
   @expand.valify
-  implicit def canZipValues_DV_SV[@expand.args(Int, Double, Float, Long, BigInt, Complex) T]
+  implicit def implZipValues_DVT_SVT_eq_ZVTT[@expand.args(Int, Double, Float, Long, BigInt, Complex) T]
   (implicit @expand.sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T):
-  zipValues.Impl2[DenseVector[T], SparseVector[T], ZippedValues[T, T]] = {
-    val res = new zipValues.Impl2[DenseVector[T], SparseVector[T], ZippedValues[T, T]] {
-      def apply(du: DenseVector[T], sv: SparseVector[T]) = {
+  zipValues.Impl2[DenseVector[T], SparseVector[T], ZippedValues[T, T]] =
+
+    new zipValues.Impl2[DenseVector[T], SparseVector[T], ZippedValues[T, T]] {
+
+      def apply(du: DenseVector[T], sv: SparseVector[T]): ZippedValues[T, T] = {
         require(sv.length == du.length, "vector length mismatch")
         new ZippedValues[T, T] {
           def foreach(fn: (T, T) => Unit): Unit = {
@@ -306,29 +311,33 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
         }
 
       }
+      implicitly[BinaryRegistry[Vector[T], Vector[T], zipValues.type, ZippedValues[T, T]]]
+
     }
 
-    implicitly[BinaryRegistry[Vector[T], Vector[T], zipValues.type, ZippedValues[T, T]]]
-
-    res
-  }
 
   @expand
-  implicit def sv_dv_axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) T] (implicit  @expand.sequence[T](0, 0.0, 0f, 0l, BigInt(0), Complex.zero) zero: T):scaleAdd.InPlaceImpl3[DenseVector[T], T, SparseVector[T]] = new scaleAdd.InPlaceImpl3[DenseVector[T], T, SparseVector[T]] {
-    def apply(y: DenseVector[T], a: T, x: SparseVector[T]) {
-      require(x.length == y.length, "Vectors must be the same length!")
-      val xsize = x.activeSize
+  implicit def implScaleAdd_DVT_T_SVT_InPlace[@expand.args(Int, Double, Float, Long, BigInt, Complex) T]
+  (implicit  @expand.sequence[T](0, 0.0, 0f, 0l, BigInt(0), Complex.zero) zero: T):
+  scaleAdd.InPlaceImpl3[DenseVector[T], T, SparseVector[T]] =
 
-      if(a == zero) return
+    new scaleAdd.InPlaceImpl3[DenseVector[T], T, SparseVector[T]] {
+      def apply(y: DenseVector[T], a: T, x: SparseVector[T]): Unit = {
+        require(x.length == y.length, "Vectors must be the same length!")
+        val xsize = x.activeSize
 
-      var xoff = 0
-      while(xoff < xsize) {
-        y(x.indexAt(xoff)) += a * x.valueAt(xoff)
-        xoff += 1
+        if(a != zero) {
+
+          var xoff: Int = 0
+          while (xoff < xsize) {
+            y(x.indexAt(xoff)) += a * x.valueAt(xoff)
+            xoff += 1
+          }
+
+        }
+
       }
-
     }
-  }
 
 }
 
