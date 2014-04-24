@@ -421,65 +421,70 @@ trait DenseVector_OrderingOps extends DenseVectorOps { this: DenseVector.type =>
  * @author dlwh
  **/
 trait DenseVector_GenericOps { this: DenseVector.type =>
+
+
   @expand
   implicit def pureFromUpdate[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
-  Other,
-  Op<:OpType](op: UFunc.InPlaceImpl2[Op, DenseVector[T], Other])
-             (implicit copy: CanCopy[DenseVector[T]]): UFunc.UImpl2[Op, DenseVector[T], Other, DenseVector[T]] = {
-    new  UFunc.UImpl2[Op, DenseVector[T], Other, DenseVector[T]] {
-      override def apply(a : DenseVector[T], b : Other) = {
-        val c = copy(a)
+                              Other,
+                              Op<:OpType](op: UFunc.InPlaceImpl2[Op, DenseVector[T], Other])(implicit copy: CanCopy[DenseVector[T]]):
+  UFunc.UImpl2[Op, DenseVector[T], Other, DenseVector[T]] =
+
+    new UFunc.UImpl2[Op, DenseVector[T], Other, DenseVector[T]] {
+      override def apply(a : DenseVector[T], b : Other): DenseVector[T] = {
+        val c: DenseVector[T] = copy(a)
         op(c, b)
         c
       }
     }
-  }
+
+
 
   implicit def pureFromUpdate[T, Other, Op<:OpType](op: UFunc.InPlaceImpl2[Op, DenseVector[T], Other])
-                                                   (implicit copy: CanCopy[DenseVector[T]]): UFunc.UImpl2[Op, DenseVector[T], Other, DenseVector[T]] = {
+                                                   (implicit copy: CanCopy[DenseVector[T]]):
+  UFunc.UImpl2[Op, DenseVector[T], Other, DenseVector[T]] =
+
     new  UFunc.UImpl2[Op, DenseVector[T], Other, DenseVector[T]] {
-      override def apply(a : DenseVector[T], b : Other) = {
-        val c = copy(a)
+      override def apply(a : DenseVector[T], b : Other): DenseVector[T] = {
+        val c: DenseVector[T] = copy(a)
         op(c, b)
         c
       }
     }
-  }
 
 
 
-  implicit def canSet_DV_Generic[V]: OpSet.InPlaceImpl2[DenseVector[V], V] = {
+  implicit def implOpSet_DV_V_InPlace[V]: OpSet.InPlaceImpl2[DenseVector[V], V] =
+
     new OpSet.InPlaceImpl2[DenseVector[V], V] {
-      def apply(a: DenseVector[V], b: V) {
-        val ad = a.data
+      def apply(a: DenseVector[V], b: V): Unit = {
+        val ad: Array[V] = a.data
         if(a.stride == 1) {
           ArrayUtil.fill(ad, a.offset, a.length, b)
-          return
+        } else {
+          var i = 0
+          var aoff = a.offset
+          while (i < a.length) {
+            ad(aoff) = b
+            aoff += a.stride
+            i += 1
+          }
         }
-
-        var i = 0
-        var aoff = a.offset
-        while(i < a.length) {
-          ad(aoff) = b
-          aoff += a.stride
-          i += 1
-        }
-
       }
     }
-  }
 
-  implicit def canSet_DV_DV_Generic[V]: breeze.linalg.operators.OpSet.InPlaceImpl2[DenseVector[V], DenseVector[V]] = {
+
+  implicit def implOpSet_DV_DV_InPlace[V]: OpSet.InPlaceImpl2[DenseVector[V], DenseVector[V]] =
+
     new OpSet.InPlaceImpl2[DenseVector[V], DenseVector[V]] {
-      def apply(a: DenseVector[V], b: DenseVector[V]) {
+      def apply(a: DenseVector[V], b: DenseVector[V]): Unit = {
         require(b.length == a.length, "Vectors must be the same length!")
         if(a.stride == b.stride && a.stride == 1) {
           System.arraycopy(b.data, b.offset, a.data, a.offset, a.length)
           return
         }
 
-        val ad = a.data
-        val bd = b.data
+        val ad: Array[V] = a.data
+        val bd: Array[V] = b.data
         var aoff = a.offset
         var boff = b.offset
 
@@ -493,15 +498,16 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
 
       }
     }
-  }
 
-  implicit def canGaxpy[V:Semiring]: scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] = {
+
+  implicit def canGaxpy[V:Semiring]: scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] =
+
     new scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] {
       val ring = implicitly[Semiring[V]]
-      def apply(a: DenseVector[V], s: V, b: DenseVector[V]) {
+      def apply(a: DenseVector[V], s: V, b: DenseVector[V]): Unit = {
         require(b.length == a.length, "Vectors must be the same length!")
-        val ad = a.data
-        val bd = b.data
+        val ad: Array[V] = a.data
+        val bd: Array[V] = b.data
         var aoff = a.offset
         var boff = b.offset
 
@@ -514,34 +520,38 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
         }
       }
     }
-  }
 
-  implicit def dv_v_OpSet[T, Vec](implicit ev: Vec <:< Vector[T]):OpSet.InPlaceImpl2[DenseVector[T], Vec] = new OpSet.InPlaceImpl2[DenseVector[T], Vec] {
-    def apply(a: DenseVector[T], b: Vec):Unit = {
-      val ad = a.data
-      var aoff = a.offset
 
-      var i = 0
-      while(i < a.length) {
-        ad(aoff) = b(i)
-        aoff += a.stride
-        i += 1
+  implicit def implOpSet_DV_Vector_InPlace[T, Vec](implicit ev: Vec <:< Vector[T]):
+  OpSet.InPlaceImpl2[DenseVector[T], Vec] =
+
+    new OpSet.InPlaceImpl2[DenseVector[T], Vec] {
+      def apply(a: DenseVector[T], b: Vec):Unit = {
+        val ad: Array[T] = a.data
+        var aoff: Int = a.offset
+
+        var i = 0
+        while(i < a.length) {
+          ad(aoff) = b(i)
+          aoff += a.stride
+          i += 1
+        }
       }
+  //    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], OpSet.type]].register(this)
     }
-//    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], OpSet.type]].register(this)
-  }
 
-  implicit def liftDMOpToDVTransposeOp[Tag, V, LHS, R]
-      (implicit op: UFunc.UImpl2[Tag, LHS, DenseMatrix[V], R]):UFunc.UImpl2[Tag, LHS, Transpose[DenseVector[V]], R] = {
+
+
+  implicit def liftDMOpToDVTransposeOp[Tag, V, LHS, R](implicit op: UFunc.UImpl2[Tag, LHS, DenseMatrix[V], R]):
+  UFunc.UImpl2[Tag, LHS, Transpose[DenseVector[V]], R] =
+
     new UFunc.UImpl2[Tag, LHS, Transpose[DenseVector[V]], R] {
       def apply(v: LHS, v2: Transpose[DenseVector[V]]): R = {
-        val dv = v2.inner
-        val dm = new DenseMatrix(data = dv.data, offset = dv.offset, cols = dv.length, rows = 1, majorStride = dv.stride)
+        val dv: DenseVector[V] = v2.inner
+        val dm: DenseMatrix[V] = new DenseMatrix(data = dv.data, offset = dv.offset, cols = dv.length, rows = 1, majorStride = dv.stride)
         op(v, dm)
       }
     }
-
-  }
 
 
 
