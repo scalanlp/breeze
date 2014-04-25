@@ -11,7 +11,7 @@ import breeze.signal.OptRange.RangeOpt
 import breeze.numerics.isOdd
 import breeze.signal.OptRange.RangeOpt
 import scala.reflect.ClassTag
-import com.typesafe.scalalogging.Logging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 
 //ToDo 1: provide convolve of Integer and other DenseVectors
 //ToDo 1: provide convolve of DenseMatrix
@@ -41,7 +41,7 @@ trait CanConvolve[Input, KernelType, Output] {
  *
  * @author ktakagaki
  */
-object CanConvolve extends Logging {
+object CanConvolve extends LazyLogging {
 
   @expand
   @expand.valify
