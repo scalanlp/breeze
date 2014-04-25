@@ -249,7 +249,7 @@ package object util {
     }
   }
 
-  implicit def _bitsetcbf[U] = new CanBuildFrom[java.util.BitSet, U, Set[U]] {
+  implicit def _bitsetcbf[U]:CanBuildFrom[java.util.BitSet, U, Set[U]] = new CanBuildFrom[java.util.BitSet, U, Set[U]] {
     def apply(from: BitSet): mutable.Builder[U, Set[U]] = Set.newBuilder[U]
     def apply(): mutable.Builder[U, Set[U]] = Set.newBuilder[U]
   }
