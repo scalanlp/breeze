@@ -63,8 +63,6 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
   def this(rows: Int, cols: Int, data: Array[V]) = this(rows, cols, data, 0, rows)
   /** Creates a matrix with the specified data array and rows. columns inferred automatically */
   def this(rows: Int, data: Array[V], offset: Int) = this(rows, {assert(data.length % rows == 0); data.length/rows}, data, offset)
-  /** Creates a matrix with the specified data array and rows. columns inferred automatically */
-  def this(rows: Int, data: Array[V]) = this(rows, {assert(data.length % rows == 0); data.length/rows}, data, 0)
 
   def apply(row: Int, col: Int) = {
     if(row < - rows || row >= rows) throw new IndexOutOfBoundsException((row,col) + " not in [-"+rows+","+rows+") x [-"+cols+"," + cols+")")

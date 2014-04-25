@@ -85,12 +85,12 @@ class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with Do
   }
 
   test("Multiple Slicing") {
-    val m = new DenseMatrix(6, (1 to 36).toArray)
+    val m = new DenseMatrix[Int](6, 6, (1 to 36).toArray)
     val slice1 = m(1 to 3, 1 to 3)
     assert(slice1(::, 1) === DenseVector(14, 15, 16))
     assert(slice1(::, 1 to 2) === DenseMatrix((14, 20), (15, 21), (16, 22)))
   }
-  
+
   test("Transpose") {
     val m = DenseMatrix((1,2,3),(4,5,6))
 
@@ -320,7 +320,7 @@ class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with Do
     val z : DenseMatrix[Float] = b * (b + 1.0f)
     assert(z === DenseMatrix((164.0f,5.0f,107.0f),(-5.0f,10.0f,-27.0f),(161.0f,-7.0f,138.0f)))
   }
-  
+
   test("Multiply Complex") {
     val a = DenseMatrix((Complex(1,1), Complex(2,2), Complex(3,3)),
                         (Complex(4,4), Complex(5,5), Complex(6,6)))
@@ -352,7 +352,7 @@ class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with Do
     assert(a === DenseMatrix((1,4,3), (4,5,6)))
   }
 
-  
+
   test("Trace") {
     assert(trace(DenseMatrix((1,2),(4,5))) === 1 + 5)
     assert(trace(DenseMatrix((1,2,3),(3,4,5),(5,6,7))) == 1 + 4 + 7)
@@ -592,4 +592,3 @@ class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with Do
       A(i,j) should be (B(i, j) +- threshold)
   }
 }
-
