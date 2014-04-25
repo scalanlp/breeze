@@ -11,7 +11,7 @@ import breeze.signal.OptRange.RangeOpt
 import breeze.numerics.isOdd
 import breeze.signal.OptRange.RangeOpt
 import scala.reflect.ClassTag
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.Logging
 
 //ToDo 1: provide convolve of Integer and other DenseVectors
 //ToDo 1: provide convolve of DenseMatrix
