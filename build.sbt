@@ -62,14 +62,14 @@ scalacOptions ++= Seq("-deprecation","-language:_")
 
 
 libraryDependencies ++= Seq(
-  "org.scalanlp" %% "breeze-macros" % "0.3" % "compile",
+  "org.scalanlp" %% "breeze-macros" % "0.3.1" % "compile",
   "com.thoughtworks.paranamer" % "paranamer" % "2.2",
   "com.github.fommil.netlib" % "core" % "1.1.2",
   "net.sourceforge.f2j" % "arpack_combined_all" % "0.1",
   "net.sf.opencsv" % "opencsv" % "2.3",
   "com.github.rwl" % "jtransforms" % "2.4.0",
   "org.apache.commons" % "commons-math3" % "3.2",
-  "org.spire-math" %% "spire" % "0.7.1",
+  "org.spire-math" %% "spire" % "0.7.4",
   "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
   "org.scalatest" %% "scalatest" % "2.1.3" % "test",
   "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.0.4",
