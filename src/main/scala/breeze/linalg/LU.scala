@@ -3,6 +3,7 @@ package breeze.linalg
 import org.netlib.util.intW
 import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 import breeze.generic.UFunc
+import DenseMatrix.canMapValues
 
 /**
  * Computes the LU factorization of the given real M-by-N matrix X such that

@@ -21,6 +21,7 @@ import math.Semiring
 import storage.DefaultArrayValue
 import java.io.{File, FileReader}
 import scala.reflect.ClassTag
+import breeze.linalg.DenseMatrix.canMapValues
 
 
 /**
