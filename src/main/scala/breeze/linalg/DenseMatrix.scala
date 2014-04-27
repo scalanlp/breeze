@@ -83,7 +83,7 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
       offset + row + col * majorStride
   }
 
-  def rowColumnFromLinearIndex(index: Int) = {
+  def rowColumnFromLinearIndex(index: Int): (Int, Int) = {
     val r = (index - offset)%majorStride
     val c = (index - offset)/majorStride
     if(isTranspose) {
@@ -93,7 +93,7 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
     }
   }
 
-  def update(row: Int, col: Int, v: V) = {
+  def update(row: Int, col: Int, v: V): Unit = {
     if(row < - rows || row >= rows) throw new IndexOutOfBoundsException((row,col) + " not in [-"+rows+","+rows+") x [-"+cols+"," + cols+")")
     if(col < - cols || col >= cols) throw new IndexOutOfBoundsException((row,col) + " not in [-"+rows+","+rows+") x [-"+cols+"," + cols+")")
     val trueRow = if(row<0) row + rows else row
@@ -101,7 +101,7 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
     data(linearIndex(trueRow, trueCol)) = v
   }
 
-  def unsafeUpdate(row: Int, col: Int, v: V) = { data(linearIndex(row, col)) = v }
+  def unsafeUpdate(row: Int, col: Int, v: V): Unit = { data(linearIndex(row, col)) = v }
 
   /** Converts this matrix to a DenseVector (column-major) */
   def toDenseVector: DenseVector[V] = {
@@ -126,7 +126,7 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
     *
     * Views are only possible (if(isTranspose) majorStride == cols else majorStride == rows) == true
     */
-  def flatten(view: View=View.Prefer):DenseVector[V] = view match {
+  def flatten(view: View=View.Prefer): DenseVector[V] = view match {
     case View.Require =>
       if(!canFlattenView)
         throw new UnsupportedOperationException("Cannot make a view of this matrix.")
@@ -153,7 +153,7 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
     * @param rows the number of rows
     * @param cols the number of columns, or -1 to auto determine based on size and rows
     */
-  def reshape(rows: Int, cols: Int, view: View=View.Prefer):DenseMatrix[V] = {
+  def reshape(rows: Int, cols: Int, view: View=View.Prefer): DenseMatrix[V] = {
     val _cols = cols//if(cols < 0) size / rows else cols
     require(rows * _cols == size, "Cannot reshape a (%d,%d) matrix to a (%d,%d) matrix!".format(this.rows, this.cols, rows, _cols))
 
@@ -173,17 +173,17 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
     }
   }
 
-  def repr = this
+  def repr: DenseMatrix[V] = this
 
-  def activeIterator = iterator
+  def activeIterator: Iterator[((Int, Int), V)] = iterator
 
-  def activeValuesIterator = valuesIterator
+  def activeValuesIterator: Iterator[V] = valuesIterator
 
-  def activeKeysIterator = keysIterator
+  def activeKeysIterator: Iterator[(Int, Int)] = keysIterator
 
   /** Computes the sum along the diagonal. */
   @deprecated("use trace(dm) instead", "0.6")
-  def trace(implicit numeric: Numeric[V]) = diag(this:DenseMatrix[V]).sum
+  def trace(implicit numeric: Numeric[V]): V = diag(this:DenseMatrix[V]).sum
 
   override def equals(p1: Any) = p1 match {
     case x: DenseMatrix[_] =>
@@ -195,9 +195,9 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
 
   def activeSize = data.length
 
-  def valueAt(i: Int) = data(i)
-  def valueAt(row: Int, col: Int) = apply(row,col)
-  def unsafeValueAt(row: Int, col: Int) = data(linearIndex(row, col))
+  def valueAt(i: Int): V = data(i)
+  def valueAt(row: Int, col: Int): V = apply(row,col)
+  def unsafeValueAt(row: Int, col: Int): V = data(linearIndex(row, col))
 
   def indexAt(i: Int) = i
 
@@ -237,7 +237,7 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
     else DenseMatrix.horzcat(this(::, 0 until col), this(::, (col+1) until cols))
   }
 
-  def delete(rows: Seq[Int], axis: Axis._0.type):DenseMatrix[V] = {
+  def delete(rows: Seq[Int], axis: Axis._0.type): DenseMatrix[V] = {
     implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
     if(rows.isEmpty) copy
     else if(rows.size == 1) delete(rows(0), axis)
@@ -261,7 +261,7 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
   }
 
 
-  def delete(cols: Seq[Int], axis: Axis._1.type):DenseMatrix[V] = {
+  def delete(cols: Seq[Int], axis: Axis._1.type): DenseMatrix[V] = {
     implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
     if(cols.isEmpty) copy
     else if(cols.size == 1) delete(cols(0), axis)
@@ -326,7 +326,7 @@ with MatrixConstructors[DenseMatrix] {
   /**
    * Creates a square diagonal array of size dim x dim, with 1's along the diagonal.
    */
-  def eye[@specialized(Int, Float, Double) V: ClassTag:DefaultArrayValue:Semiring](dim: Int) = {
+  def eye[@specialized(Int, Float, Double) V: ClassTag:DefaultArrayValue:Semiring](dim: Int): DenseMatrix[V] = {
     val r = zeros[V](dim, dim)
     breeze.linalg.diag.diagDMDVImpl.apply(r) := implicitly[Semiring[V]].one
     r
@@ -507,7 +507,7 @@ with MatrixConstructors[DenseMatrix] {
 
   implicit def canMapValues[V, R:ClassTag] = {
     new CanMapValues[DenseMatrix[V],V,R,DenseMatrix[R]] {
-      override def map(from : DenseMatrix[V], fn : (V=>R)) = {
+      override def map(from : DenseMatrix[V], fn : (V=>R)): DenseMatrix[R] = {
         val data = new Array[R](from.size)
         var j = 0
         var off = 0
@@ -529,7 +529,7 @@ with MatrixConstructors[DenseMatrix] {
   }
   implicit def handholdCMV[T]= new CanMapValues.HandHold[DenseMatrix[T], T]
 
-  implicit def canIterateValues[V]:CanTraverseValues[DenseMatrix[V], V] = {
+  implicit def canIterateValues[V]: CanTraverseValues[DenseMatrix[V], V] = {
     new CanTraverseValues[DenseMatrix[V], V] {
       def isTraversableAgain(from: DenseMatrix[V]): Boolean = true
 
@@ -563,7 +563,7 @@ with MatrixConstructors[DenseMatrix] {
     }
   }
 
-  implicit def canTraverseKeyValuePairs[V]:CanTraverseKeyValuePairs[DenseMatrix[V], (Int, Int), V] = {
+  implicit def canTraverseKeyValuePairs[V]: CanTraverseKeyValuePairs[DenseMatrix[V], (Int, Int), V] = {
     new CanTraverseKeyValuePairs[DenseMatrix[V], (Int, Int), V] {
       def isTraversableAgain(from: DenseMatrix[V]): Boolean = true
 
