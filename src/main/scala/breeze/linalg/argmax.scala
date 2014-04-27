@@ -50,7 +50,6 @@ object argmax extends UFunc {
             i += 1
             off += stride
           }
-          max
         }
       }
 
@@ -107,7 +106,6 @@ object argmin extends UFunc {
             i += 1
             off += stride
           }
-          min
         }
       }
 

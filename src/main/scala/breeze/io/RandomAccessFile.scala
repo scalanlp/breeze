@@ -40,7 +40,7 @@ import java.io.{File, DataInput, DataOutput, Closeable, IOException}
 class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteConverter = ByteConverterBigEndian)
   extends DataInput with DataOutput with Closeable /*extends java.io.RandomAccessFile(file, arg0)*/ {
 
-  def this(filename: String, arg0: String)(implicit converter: ByteConverter = ByteConverterBigEndian) = this(new File(filename), arg0)(converter)
+  def this(filename: String, arg0: String)(implicit converter: ByteConverter) = this(new File(filename), arg0)(converter)
 
   val rafObj = new java.io.RandomAccessFile(file, arg0)
   //protected var fileEnded = false
