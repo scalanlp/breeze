@@ -38,7 +38,6 @@ object max extends UFunc {
             i += 1
             off += stride
           }
-          max
         }
       }
 
@@ -108,7 +107,6 @@ object min extends UFunc {
             i += 1
             off += stride
           }
-          min
         }
       }
 
