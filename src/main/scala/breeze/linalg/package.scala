@@ -21,7 +21,7 @@ import math.Semiring
 import storage.DefaultArrayValue
 import java.io.{File, FileReader}
 import scala.reflect.ClassTag
-import breeze.signal.support.CanConvolve
+import breeze.linalg.DenseMatrix.canMapValues
 
 
 /**
@@ -82,7 +82,7 @@ package object linalg {
 
   def csvwrite(file: File, mat: Matrix[Double],
                separator: Char=',',
-               quote: Char='\0',
+               quote: Char='\u0000',
                escape: Char='\\',
                skipLines: Int = 0): Unit = {
     CSVWriter.writeFile(file, IndexedSeq.tabulate(mat.rows,mat.cols)(mat(_,_).toString), separator, quote, escape)

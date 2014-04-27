@@ -12,7 +12,9 @@ import breeze.numerics.constants._
 @RunWith(classOf[JUnitRunner])
 class constantsTest extends FunSuite {
 
-  assert( Database.unit("atomic mass constant energy equivalent")=="J" )
-  assert( Database.unit(""".*Planck.*""".r).size == 12 )
+  test("constants test") {
+    assert(Database.unit("atomic mass constant energy equivalent") == "J")
+    assert(Database.unit( """.*Planck.*""".r).size == 12)
+  }
 
 }

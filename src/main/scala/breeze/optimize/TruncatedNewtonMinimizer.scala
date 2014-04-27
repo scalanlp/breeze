@@ -4,7 +4,7 @@ import breeze.math.{MutableCoordinateSpace, MutableInnerProductSpace}
 import breeze.linalg.operators.{OpMulMatrix, BinaryOp}
 import breeze.util.Implicits._
 import linear.ConjugateGradient
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.Logging
 import breeze.linalg.norm
 import breeze.util.SerializableLogging
 
