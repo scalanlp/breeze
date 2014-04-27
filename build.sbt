@@ -72,12 +72,27 @@ libraryDependencies ++= Seq(
   "org.spire-math" %% "spire" % "0.7.4",
   "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
   "org.scalatest" %% "scalatest" % "2.1.3" % "test",
-  "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.0.4",
   "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.0-beta9" % "test",
   "org.apache.logging.log4j" % "log4j-core" % "2.0-beta9" % "test",
-  "org.apache.logging.log4j" % "log4j-api" % "2.0-beta9" % "test",
-  "com.chuusai" %% "shapeless" % "2.0.0" % "test"
+  "org.apache.logging.log4j" % "log4j-api" % "2.0-beta9" % "test"
 )
+
+
+libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
+  sv match {
+    case x if x startsWith "2.10" =>
+      (deps :+ ("com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2")
+           :+ ("com.chuusai" %% "shapeless" % "2.0.0" % "test" cross CrossVersion.full))
+    case x if x.startsWith("2.11") =>
+      (deps :+ ("com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2")
+           :+ ("com.chuusai" %% "shapeless" % "2.0.0" % "test"  ))
+    case _       =>
+      deps
+  }
+}
+
+
+
 
 // see https://github.com/typesafehub/scalalogging/issues/23
 testOptions in Test += Tests.Setup(classLoader =>
