@@ -1,6 +1,6 @@
 organization := "org.scalanlp"
 
-name := "breeze"
+name := "breeze-parent"
 
 lazy val root = project.in( file(".") )
     .aggregate(math, natives).settings(aggregate in test := false, aggregate in compile := false)

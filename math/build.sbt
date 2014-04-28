@@ -1,6 +1,6 @@
 organization := "org.scalanlp"
 
-name := "breeze-math"
+name := "breeze"
 
 scalaVersion := "2.11.0"
 
