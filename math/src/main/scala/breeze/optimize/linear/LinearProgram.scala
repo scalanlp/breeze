@@ -271,7 +271,7 @@ object LinearProgram {
     def maximize(lp: LinearProgram)(obj: lp.Problem):lp.Result
   }
 
-  implicit val mySolver = try {
+  implicit val mySolver = {
 //    NativeLPSolver
 //  } catch {
 //    case ex: SecurityException =>
