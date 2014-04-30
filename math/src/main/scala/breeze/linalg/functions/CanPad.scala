@@ -23,7 +23,7 @@ object CanPadRight {
     new CanPadRight[DenseVector[T], Dimensions1, DenseVector[T]] {
       def apply(v: DenseVector[T], optDim: Dimensions1, optMode: OptPadMode): DenseVector[T] = {
         optMode match {
-          case Zero     => padRight1ImplFixed[T](v, optDim, v(0) * 0)
+          case Zero     => padRight1ImplZero(  v, optDim, v(0) )
           case Max      => padRight1ImplFixed( v, optDim, max(v) )
           case Min      => padRight1ImplFixed( v, optDim, min(v) )
           case Mean     => padRight1ImplFixed( v, optDim, convert( mean(convert(v, Double)), T)  )  //option "Mean" with Int will return approximate Int mean for padding....
@@ -41,6 +41,11 @@ object CanPadRight {
   // </editor-fold>
 
   // <editor-fold defaultstate="collapsed" desc=" 1D Padding Implementation ">
+
+  def padRight1ImplZero[@expand.args(Int, Long, Float, Double) T]
+            (v: DenseVector[T], optDim: Dimensions1, padValue: T)(implicit ct: ClassTag[T], @expand.sequence[T](0, 0L, 0f, 0d) zero: T): DenseVector[T] = {
+    padRight1ImplFixed(v, optDim, zero)
+  }
 
   def padRight1ImplFixed[@expand.args(Int, Long, Float, Double) T: ClassTag](v: DenseVector[T], optDim: Dimensions1, padValue: T): DenseVector[T] = {
     require( optDim.n1 > 0, "Cannot pad to zero or negative length!")
@@ -71,32 +76,32 @@ object CanPadRight {
 
   // <editor-fold defaultstate="collapsed" desc=" DenseVector 2D padding ">
 
-  implicit def implDM_OptPadDim_OptPadMode[@expand.args(Int, Long, Float, Double) T: ClassTag]: CanPadRight[DenseMatrix[T], Dimensions2, DenseMatrix[T]] =
-    new CanPadRight[DenseMatrix[T], Dimensions2, DenseMatrix[T]] {
-      def apply(m: DenseMatrix[T], optDim: Dimensions2, optMode: OptPadMode): DenseMatrix[T] = {
-        val zero: T = m(0,0) * 0
-        optMode match {
-          case Zero     => padRight2ImplFixed( m, optDim, zero )
-          case Max      => padRight2ImplFixed( m, optDim, max(m) )
-          case Min      => padRight2ImplFixed( m, optDim, min(m) )
-          case Mean     => padRight2ImplFixed( m, optDim, convert( mean(convert(m, Double)), T)  )   //option "Mean" with Int will return approximate Int mean for padding....
-          case Median   => padRight2ImplFixed( m, optDim, convert( median(m), T) )    //option "Median" with Int will return approximate Int median for padding....
-          case Value(n: T)    => padRight2ImplFixed( m, optDim, n )
-
-          case Wrap     => throw new IllegalArgumentException("Option <Wrap> is not supported for 2D padding.")
-          case Reflect  => throw new IllegalArgumentException("Option <Reflect> is not supported for 2D padding.")
-
-          case _        => throw new IllegalArgumentException("Option " + optMode.toString + " is not supported!")
-        }
-      }
-    }
+//  implicit def implDM_OptPadDim_OptPadMode[@expand.args(Int, Long, Float, Double) T: ClassTag]: CanPadRight[DenseMatrix[T], Dimensions2, DenseMatrix[T]] =
+//    new CanPadRight[DenseMatrix[T], Dimensions2, DenseMatrix[T]] {
+//      def apply(m: DenseMatrix[T], optDim: Dimensions2, optMode: OptPadMode): DenseMatrix[T] = {
+//        val zero: T = m(0,0) * 0
+//        optMode match {
+//          case Zero     => padRight2ImplFixed( m, optDim, zero )
+//          case Max      => padRight2ImplFixed( m, optDim, max(m) )
+//          case Min      => padRight2ImplFixed( m, optDim, min(m) )
+//          case Mean     => padRight2ImplFixed( m, optDim, convert( mean(convert(m, Double)), T)  )   //option "Mean" with Int will return approximate Int mean for padding....
+//          case Median   => padRight2ImplFixed( m, optDim, convert( median(m), T) )    //option "Median" with Int will return approximate Int median for padding....
+//          case Value(n: T)    => padRight2ImplFixed( m, optDim, n )
+//
+//          case Wrap     => throw new IllegalArgumentException("Option <Wrap> is not supported for 2D padding.")
+//          case Reflect  => throw new IllegalArgumentException("Option <Reflect> is not supported for 2D padding.")
+//
+//          case _        => throw new IllegalArgumentException("Option " + optMode.toString + " is not supported!")
+//        }
+//      }
+//    }
 
   // </editor-fold>
 
   // <editor-fold defaultstate="collapsed" desc=" 2D Padding Implementation ">
 
-  private def padRight2ImplFixed[@expand.args(Int, Long, Float, Double) T: ClassTag](m: DenseMatrix[T], optDim: Dimensions2, padValue: T): DenseMatrix[T] = {
-    require( optDim.n1 > 0 && optDim.n2 > 0, "Cannot pad to zero or negative length!")
+//  private def padRight2ImplFixed[@expand.args(Int, Long, Float, Double) T: ClassTag](m: DenseMatrix[T], optDim: Dimensions2, padValue: T): DenseMatrix[T] = {
+//    require( optDim.n1 > 0 && optDim.n2 > 0, "Cannot pad to zero or negative length!")
 
 
 //    m.cols match {
@@ -110,7 +115,7 @@ object CanPadRight {
 //      case num: Int if optDim.n2 < num => m(0 until optDim.n2, *).map( (v: DenseVector[T]) => padRight1ImplFixed( v, Dimensions1(optDim.n1), padValue) )
 //      case _ => throw new IllegalArgumentException("(n) specification incorrect: " + optDim.toString + " !")
 //    }
-  }
+//  }
 
   // </editor-fold>
 
