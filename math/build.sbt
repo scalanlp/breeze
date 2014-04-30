@@ -1,7 +1,6 @@
 organization := "org.scalanlp"
 
-// lazy val breeze = project in file("core")
-name := "breeze-natives"
+name := "breeze"
 
 scalaVersion := "2.11.0"
 
@@ -13,8 +12,8 @@ publishMavenStyle := true
 
 publishTo <<= version { (v: String) =>
   val nexus = "https://oss.sonatype.org/"
-  if (v.trim.endsWith("SNAPSHOT")) 
-    Some("snapshots" at nexus + "content/repositories/snapshots") 
+  if (v.trim.endsWith("SNAPSHOT"))
+    Some("snapshots" at nexus + "content/repositories/snapshots")
   else
     Some("releases"  at nexus + "service/local/staging/deploy/maven2")
 }
@@ -49,19 +48,51 @@ scalacOptions ++= Seq("-deprecation","-language:_")
 // scalacOptions in (Compile, console) += "-Xlog-implicits"
 
 
-  javacOptions ++= Seq("-target", "1.6", "-source","1.6")
+javacOptions ++= Seq("-target", "1.6", "-source","1.6")
 
 
 libraryDependencies ++= Seq(
-  "com.github.fommil.netlib" % "all" % "1.1.2" pomOnly()
-  )
+  "org.scalanlp" %% "breeze-macros" % "0.3.1" % "compile",
+  "com.github.fommil.netlib" % "core" % "1.1.2",
+  "net.sourceforge.f2j" % "arpack_combined_all" % "0.1",
+  "net.sf.opencsv" % "opencsv" % "2.3",
+  "com.github.rwl" % "jtransforms" % "2.4.0",
+  "org.apache.commons" % "commons-math3" % "3.2",
+  "org.spire-math" %% "spire" % "0.7.4",
+  "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
+  "org.scalatest" %% "scalatest" % "2.1.3" % "test",
+  "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.0-beta9" % "test",
+  "org.apache.logging.log4j" % "log4j-core" % "2.0-beta9" % "test",
+  "org.apache.logging.log4j" % "log4j-api" % "2.0-beta9" % "test"
+)
+
+
+libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
+  sv match {
+    case x if x startsWith "2.10" =>
+      (deps :+ ("com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2")
+           :+ ("com.chuusai" %% "shapeless" % "2.0.0" % "test" cross CrossVersion.full))
+    case x if x.startsWith("2.11") =>
+      (deps :+ ("com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2")
+           :+ ("com.chuusai" %% "shapeless" % "2.0.0" % "test"  ))
+    case _       =>
+      deps
+  }
+}
+
+
+
 
 // see https://github.com/typesafehub/scalalogging/issues/23
 testOptions in Test += Tests.Setup(classLoader =>
+try {
   classLoader
     .loadClass("org.slf4j.LoggerFactory")
     .getMethod("getLogger", classLoader.loadClass("java.lang.String"))
     .invoke(null, "ROOT")
+    } catch {
+      case e: Exception =>
+    }
 )
 
 resolvers ++= Seq(

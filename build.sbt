@@ -1,20 +1,21 @@
 organization := "org.scalanlp"
 
-name := "breeze"
+name := "breeze-parent"
 
-lazy val (root, natives, benchmark) = {
-  var root = project.in(file("."))
-  var natives = project.in(file("natives"))
-  var benchmark = project.in(file("benchmark")).dependsOn(root, natives)
-  root = root.aggregate(natives, benchmark).settings(aggregate in test := false, aggregate in compile := false)
-  natives = natives.dependsOn(root)
-  (root, natives, benchmark)
-}
+lazy val root = project.in( file(".") )
+    .aggregate(math, natives).settings(aggregate in test := false, aggregate in compile := false)
 
+lazy val math = project.in( file("math"))
 
-scalaVersion := "2.10.3"
+lazy val natives = project.in(file("natives")).dependsOn(math)
 
-addCompilerPlugin("org.scala-lang.plugins" % "macro-paradise" % "2.0.0-SNAPSHOT" cross CrossVersion.full)
+lazy val benchmark = project.in(file("benchmark")).dependsOn(math, natives)
+
+scalaVersion := "2.11.0"
+
+crossScalaVersions  := Seq("2.11.0", "2.10.3")
+
+addCompilerPlugin("org.scalamacros" %% "paradise" % "2.0.0-M8" cross CrossVersion.full)
 
 publishMavenStyle := true
 
@@ -50,51 +51,4 @@ pomExtra := (
       <url>http://cs.berkeley.edu/~dlwh/</url>
     </developer>
   </developers>)
-
-scalacOptions ++= Seq("-deprecation","-language:_")
-
-// scalacOptions in (Compile, console) += "-Xlog-implicits"
-
-
-  javacOptions ++= Seq("-target", "1.6", "-source","1.6")
-
-
-libraryDependencies ++= Seq(
-  "org.scalanlp" %% "breeze-macros" % "0.3" % "compile",
-  "com.github.fommil.netlib" % "core" % "1.1.2",
-  "net.sourceforge.f2j" % "arpack_combined_all" % "0.1",
-  "net.sf.opencsv" % "opencsv" % "2.3",
-  "com.github.rwl" % "jtransforms" % "2.4.0",
-  "org.apache.commons" % "commons-math3" % "3.2",
-  "org.spire-math" %% "spire" % "0.7.1",
-  "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
-  "org.scalatest" %% "scalatest" % "2.1.0" % "test",
-  "com.typesafe" %% "scalalogging-slf4j" % "1.0.1",
-  "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.0-beta9" % "test",
-  "org.apache.logging.log4j" % "log4j-core" % "2.0-beta9" % "test",
-  "org.apache.logging.log4j" % "log4j-api" % "2.0-beta9" % "test",
-  "com.chuusai" % "shapeless_2.10.3" % "2.0.0-M1" % "test"
-)
-
-// see https://github.com/typesafehub/scalalogging/issues/23
-testOptions in Test += Tests.Setup(classLoader =>
-try {
-  classLoader
-    .loadClass("org.slf4j.LoggerFactory")
-    .getMethod("getLogger", classLoader.loadClass("java.lang.String"))
-    .invoke(null, "ROOT")
-    } catch {
-      case e: Exception => 
-    }
-)
-
-resolvers ++= Seq(
-    Resolver.mavenLocal,
-    Resolver.sonatypeRepo("snapshots"),
-    Resolver.sonatypeRepo("releases"),
-    Resolver.typesafeRepo("releases")
-    )
-
-testOptions in Test += Tests.Argument("-oDF")
-
 
