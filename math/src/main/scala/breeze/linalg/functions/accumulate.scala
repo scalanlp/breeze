@@ -2,6 +2,7 @@ package breeze.linalg
 
 import breeze.generic.UFunc
 import breeze.macros.expand
+import breeze.linalg.DenseVector
 
 /**
 * Returns a cumulative sum of the vector (ie cumsum).
