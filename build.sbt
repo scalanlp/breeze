@@ -3,7 +3,7 @@ organization := "org.scalanlp"
 name := "breeze-parent"
 
 lazy val root = project.in( file(".") )
-    .aggregate(math, natives).settings(aggregate in test := false, aggregate in compile := false)
+    .aggregate(math, natives)
 
 lazy val math = project.in( file("math"))
 
