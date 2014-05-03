@@ -276,7 +276,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
 
   // capabilities
 
-  implicit def canCreateZerosLike[V:ClassTag:DefaultArrayValue] =
+  implicit def canCreateZerosLike[V:ClassTag:DefaultArrayValue]:CanCreateZerosLike[DenseVector[V], DenseVector[V]] =
   new CanCreateZerosLike[DenseVector[V], DenseVector[V]] {
     def apply(v1: DenseVector[V]): DenseVector[V] = {
       zeros[V](v1.length)
@@ -311,8 +311,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   }
 
 
-  implicit def canMapValues[V, V2](implicit man: ClassTag[V2]):
-  CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] = {
+  implicit def canMapValues[V, V2](implicit man: ClassTag[V2]): CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] = {
     new CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] {
       /**Maps all key-value pairs from the given collection. */
       def map(from: DenseVector[V], fn: (V) => V2): DenseVector[V2] = {
@@ -438,7 +437,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   // slicing
   implicit def canSlice[V]: CanSlice[DenseVector[V], Range, DenseVector[V]] = __canSlice.asInstanceOf[CanSlice[DenseVector[V], Range, DenseVector[V]]]
 
-  private val __canSlice = {
+  private val __canSlice: CanSlice[DenseVector[Any], Range, DenseVector[Any]]  = {
     new CanSlice[DenseVector[Any], Range, DenseVector[Any]] {
       def apply(v: DenseVector[Any], re: Range): DenseVector[Any] = {
 
