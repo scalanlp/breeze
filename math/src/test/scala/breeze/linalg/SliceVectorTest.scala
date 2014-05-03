@@ -37,5 +37,12 @@ class SliceVectorTest extends FunSuite {
 
   }
 
+  test("map on SliceVector") {
+    val tempDV = DenseVector(0, 1, 2, 3, 4, 5, 6)
+    val slice = tempDV(IndexedSeq(6,4,3,2,5))
+    assert(slice.mapValues(k => k * 2) === DenseVector(12, 8, 6, 4, 10))
+
+  }
+
 
 }

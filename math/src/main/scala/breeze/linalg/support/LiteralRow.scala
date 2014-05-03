@@ -39,6 +39,16 @@ object LiteralRow {
     def length(arr : Array[V]) = arr.length
   }
 
+  implicit def seq[V, S](implicit ev: S <:< Seq[V]) : LiteralRow[S, V] = new LiteralRow[S, V] {
+    def foreach[X](arr : S, fn : ((Int,V) => X)) = {
+      for (i <- 0 until arr.length) {
+        fn(i, arr(i))
+      }
+    }
+
+    def length(arr : S) = arr.length
+  }
+
   implicit def vLiteral[V<:AnyVal] : LiteralRow[V,V] = new LiteralRow[V,V] {
     def foreach[X](tup : V, fn : ((Int,V) => X)) = {
       fn(0, tup)

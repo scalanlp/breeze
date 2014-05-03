@@ -585,10 +585,17 @@ class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with Do
       (3,4,5,6,7)))
   }
 
+  test("DenseMatrix construction with list of lists") {
+    val dm = DenseMatrix(List(List(1, 2, 3, 0, 0, 0, 0, 0, 0), List(0, 0, 0, 1, 2, 3, 0, 0, 0), List(0, 0, 0, 0, 0, 0, 1, 2, 3)):_*)
+  }
+
+
 
 
   def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6) {
     for(i <- 0 until A.rows; j <- 0 until A.cols)
       A(i,j) should be (B(i, j) +- threshold)
   }
+
+
 }
