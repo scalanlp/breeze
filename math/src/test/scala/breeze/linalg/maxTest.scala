@@ -19,6 +19,9 @@ class maxTest extends FunSuite {
                            (1, 10000000, 30, -500, 6) )
 
   test("max, min, minMax, ptp") {
+    assert( max(-1, 10) == 10 )
+    assert( min(-1, 10) == -1 )
+
     assert( max(testDV) == 10000000 )
     assert( min(testDV) == -500 )
     assert( ptp(testDV) == 500 + 10000000 )
