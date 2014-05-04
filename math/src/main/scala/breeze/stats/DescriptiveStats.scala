@@ -20,7 +20,7 @@ import util.Sorting
  */
 
 import breeze.generic.UFunc
-import breeze.linalg.{DenseVector, convert}
+import breeze.linalg.{DenseMatrix, DenseVector, convert}
 import breeze.linalg.support.CanTraverseValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.macros.expand
@@ -127,6 +127,7 @@ trait DescriptiveStatsTrait {
     * A [[breeze.generic.UFunc]] for computing the median of objects
     */
   object median extends UFunc {
+
     @expand
     implicit def reduce[@expand.args(Int, Long, Double) T]: Impl[DenseVector[T], Double] =
       new Impl[DenseVector[T], Double] {
@@ -139,6 +140,12 @@ trait DescriptiveStatsTrait {
             ( temp(index2 -1) + temp(index2) )/2d
           }
         }
+      }
+
+    @expand
+    implicit def reduceM[@expand.args(Int, Long, Double) T]: Impl[DenseMatrix[T], Double] =
+      new Impl[DenseMatrix[T], Double] {
+        def apply(m: DenseMatrix[T]) = median(m.toDenseVector)
       }
 
     implicit def reduceFloat: Impl[DenseVector[Float], Float] =
