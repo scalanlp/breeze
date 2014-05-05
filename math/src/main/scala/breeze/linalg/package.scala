@@ -204,6 +204,8 @@ package object linalg {
     }
   }
 
+
+
   /**
    * A generic function (based on the R function of the same name) whose
    * default method centers and/or scales the columns of a numeric matrix.
