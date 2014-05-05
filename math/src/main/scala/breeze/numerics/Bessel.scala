@@ -28,6 +28,9 @@ object Bessel {
 
 
   object i0 extends UFunc {
+    implicit object ImplInt extends Impl[Int, Double] {
+      def apply(x: Int): Double = ImplDouble(x.toDouble)
+    }
     implicit object ImplDouble extends Impl[Double, Double] {
 
       def apply(x: Double): Double = {

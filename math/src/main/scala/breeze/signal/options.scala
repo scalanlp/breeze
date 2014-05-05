@@ -1,6 +1,7 @@
 package breeze.signal
 
 import breeze.linalg.DenseVector
+import breeze.util.Opt
 
 /**Specifies all possible option objects for the breeze.signal package
   *
@@ -9,10 +10,6 @@ import breeze.linalg.DenseVector
 
 
 ///General options-related
-
-
-/**Base class for all options*/
-abstract class Opt
 
 //Generic options with implicit specialization cannot be employed for case objects
 // (they can for parameterless case classes)
