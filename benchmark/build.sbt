@@ -36,7 +36,7 @@ libraryDependencies ++= Seq(
       )
 
 lazy val key: sbt.AttributeKey[Boolean] = AttributeKey[Boolean]("javaOptionsPatched")
-
+/*
 onLoad in Global ~= { previous => state =>
   val k = key.asInstanceOf[sbt.AttributeKey[Boolean]]
   previous {
@@ -55,6 +55,7 @@ onLoad in Global ~= { previous => state =>
     }
   }
 }
+*/
 
 pomIncludeRepository := { _ => false }
 

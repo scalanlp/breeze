@@ -6,6 +6,7 @@ import org.junit.runner.RunWith
 import breeze.linalg._
 import breeze.stats.mean
 import breeze.numerics.abs
+import breeze.stats.distributions.RandBasis
 
 /**
  * @author ktakagaki
@@ -14,6 +15,8 @@ import breeze.numerics.abs
 @RunWith(classOf[JUnitRunner])
 class randomTest extends FunSuite {
 
+  implicit val basis = RandBasis.mt0
+
   test("rand/randn") {
     val rand1000 = rand( 1000 )
     val maxR1000: Double = max(rand1000)
@@ -21,8 +24,8 @@ class randomTest extends FunSuite {
 
     assert( maxR1000 > 0.95 && maxR1000 <= 1 && minR1000 < 0.05 && minR1000 >= 0)
 
-    val randn1000 = randn( 1000 )
-    assert( abs( mean(randn1000) ) < 0.05)
+    val randn10000 = randn( 10000 )
+    assert( abs( mean(randn10000) ) < 0.05, mean(randn10000))
   }
 
   test("randomDouble/randomInt"){
@@ -34,7 +37,7 @@ class randomTest extends FunSuite {
     val randI1000 = randomInt( (17, 202), (5, 9) )
     val maxRI1000: Int = max(randI1000)
     val minRI1000: Int = min(randI1000)
-    assert(  maxRI1000 > 8 && maxRI1000 <= 9 && minRI1000 < 6 && minRI1000 >= 5 )
+    assert(  maxRI1000 > 8 && maxRI1000 <= 9 && minRI1000 < 6 && minRI1000 >= 5, maxRI1000 + " " + maxRI1000 + " " + minRI1000 + " " + minRI1000)
     assert( randI1000.rows == 17 && randI1000.cols == 202)
   }
 

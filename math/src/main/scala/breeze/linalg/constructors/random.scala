@@ -1,7 +1,9 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
-import breeze.stats.distributions.Rand
+import breeze.stats.distributions.{RandBasis, Rand}
+import scala.reflect.ClassTag
+import breeze.storage.DefaultArrayValue
 
 /**Gives a random Double.
   * +  randomDouble()... returns a random double, in [0, 1]
@@ -13,37 +15,16 @@ import breeze.stats.distributions.Rand
  * @author ktakagaki
  * @date 04/30/2014.
  */
-object randomDouble extends UFunc {
-
-  lazy val randU = Rand.uniform
-
-  def apply() = randU.get()
-
-  implicit object implRandomDouble_1D extends Impl[Int, DenseVector[Double]] {
-    def apply(dimensions1: Int): DenseVector[Double] = DenseVector.tabulate(dimensions1)(p => randU.get())
+object randomDouble extends RandomGeneratorUFunc[Double] {
+  protected def gen(implicit basis: RandBasis = Rand):Rand[Double] = basis.uniform
+  protected def genRange(low: Double, high:Double)(implicit basis: RandBasis = Rand):Rand[Double] = {
+    require(high >= low, s"High term must be greater than low term. ($low, $high)")
+    val range = (high - low)
+    basis.uniform.map(_ * range + low)
   }
 
-  implicit object implRandomDouble_1DRange extends Impl2[Int, (Double, Double), DenseVector[Double]] {
-    def apply(dimensions1: Int, range: (Double, Double) ): DenseVector[Double] = {
-      require(range._1 <= range._2, "First range value must be smaller than second: " + range.toString() )
-      val factor = range._2 - range._1
-      DenseVector.tabulate[Double](dimensions1)( p => randU.get()*factor + range._1 )
-    }
-  }
-
-  implicit object implRandomDouble_2D extends Impl[(Int, Int), DenseMatrix[Double]] {
-    def apply( dimensions2: (Int, Int) ): DenseMatrix[Double] = {
-      DenseMatrix.tabulate(dimensions2._1, dimensions2._2)((p1: Int, p2: Int) => randU.get())
-    }
-  }
-
-  implicit object implRandomDouble_2DRange extends Impl2[ (Int, Int), (Double, Double), DenseMatrix[Double]] {
-    def apply(dimensions2: (Int, Int), range: (Double, Double) ): DenseMatrix[Double] = {
-      require(range._1 <= range._2, "First range value must be smaller than second: " + range.toString() )
-      val factor = range._2 - range._1
-      DenseMatrix.tabulate(dimensions2._1, dimensions2._2)( (p1: Int, p2: Int) => randU.get()*factor + range._1 )
-    }
-  }
+  protected val _classTag: ClassTag[Double] = scala.reflect.classTag[Double]
+  protected val _dav = DefaultArrayValue[Double](0.0)
 
 }
 
@@ -57,64 +38,22 @@ object randomDouble extends UFunc {
   * @author ktakagaki
   * @date 04/30/2014.
   */
-object randomInt extends UFunc {
+object randomInt extends RandomGeneratorUFunc[Int] {
 
-  lazy val rand0or1 = Rand.randInt(2)
 
-  def apply(): Int = rand0or1.get()
+  protected def gen(implicit basis: RandBasis = Rand):Rand[Int] = genRange(0, 1)
+  protected def genRange(low: Int, high:Int)(implicit basis: RandBasis = Rand):Rand[Int] = {
+    require(high >= low, s"High term must be greater than low term. ($low, $high)")
+    basis.randInt(high - low + 1).map(_ + low)
+  }
 
-  implicit val implRandomInt_1D: Impl[Int, DenseVector[Int]] =
-    new Impl[Int, DenseVector[Int]] {
-      def apply(dimensions1: Int): DenseVector[Int] = {
-        DenseVector.tabulate(dimensions1)( p => rand0or1.get() )
-      }
-    }
 
-  implicit val implRandomInt_1DRange: Impl2[Int, (Int, Int), DenseVector[Int]] =
-    new Impl2[Int, (Int, Int), DenseVector[Int]] {
-      def apply(dimensions1: Int, range: (Int, Int) ): DenseVector[Int] = {
-        require(range._1 <= range._2, "First range value must be smaller than second: " + range.toString() )
-        val randInt = Rand.randInt( range._2 - range._1 + 1)
-        DenseVector.tabulate(dimensions1)( p => randInt.get() + range._1 )
-      }
-    }
-
-  implicit val implRandomInt_2D: Impl [(Int, Int), DenseMatrix[Int]] =
-    new Impl[ (Int, Int), DenseMatrix[Int]] {
-      def apply( dimensions2: (Int, Int) ): DenseMatrix[Int] = {
-        DenseMatrix.tabulate(dimensions2._1, dimensions2._2)((p1: Int, p2: Int) => rand0or1.get())
-      }
-    }
-
-  implicit val implRandomInt_2DRange: Impl2[ (Int, Int), (Int, Int), DenseMatrix[Int]] =
-    new Impl2[(Int, Int), (Int, Int), DenseMatrix[Int]] {
-      def apply(dimensions2: (Int, Int), range: (Int, Int) ): DenseMatrix[Int] = {
-        require(range._1 <= range._2, "First range value must be smaller than second: " + range.toString() )
-        val randInt = Rand.randInt(range._2 - range._1 + 1)
-        DenseMatrix.tabulate(dimensions2._1, dimensions2._2)( (p1: Int, p2: Int) => randInt.get() + range._1 )
-      }
-    }
+  protected val _classTag: ClassTag[Int] = scala.reflect.classTag[Int]
+  protected val _dav = DefaultArrayValue[Int](0)
 
 }
 
-/**Alias for [[randomDouble]]
-  *
-  * @author ktakagaki
-  * @date 04/30/2014.
-  */
-object rand extends UFunc {
 
-  implicit val implRandDouble_1D: Impl[Int, DenseVector[Double]] =
-    new Impl[Int, DenseVector[Double]] {
-      def apply(dimensions1: Int): DenseVector[Double] = randomDouble(dimensions1)
-    }
-
-  implicit val implRandDouble_2D: Impl [(Int, Int), DenseMatrix[Double]] =
-    new Impl[ (Int, Int), DenseMatrix[Double]] {
-      def apply(dimensions2: (Int, Int)): DenseMatrix[Double] = randomDouble(dimensions2)
-    }
-
-}
 
 /**Gives Gaussian-distributed random Double(s)
   * +  randn()... returns a Gaussian random variable with mean 0, variance 1
@@ -124,26 +63,45 @@ object rand extends UFunc {
   * @author ktakagaki
   * @date 04/30/2014.
   */
-object randn extends UFunc {
+object randn extends RandomGeneratorUFunc[Double] {
 
-  lazy val randnDistr = Rand.gaussian
+  protected def gen(implicit basis: RandBasis = Rand):Rand[Double] = basis.gaussian
+  protected def genRange(low: Double, high:Double)(implicit basis: RandBasis = Rand):Rand[Double] = basis.gaussian(low, high)
+  protected val _classTag: ClassTag[Double] = scala.reflect.classTag[Double]
+  protected val _dav = DefaultArrayValue[Double](0.0)
 
-  def apply(): Double = randnDistr.get()
+}
 
-  implicit val implRandn_1D: Impl[Int, DenseVector[Double]] =
-    new Impl[Int, DenseVector[Double]] {
-      def apply(dimensions1: Int): DenseVector[Double] = {
-        DenseVector.tabulate(dimensions1)( p => randnDistr.get() )
-      }
+
+trait RandomGeneratorUFunc[T] extends UFunc {
+  protected def gen(implicit basis: RandBasis = Rand):Rand[T]
+  protected def genRange(low: T, high:T)(implicit basis: RandBasis = Rand):Rand[T]
+  protected implicit val _classTag: ClassTag[T]
+  protected implicit val _dav: DefaultArrayValue[T]
+
+  def apply()(implicit basis: RandBasis = Rand) = gen(basis).draw()
+
+  implicit def implRandomT_1D(implicit basis: RandBasis = Rand):Impl[Int, DenseVector[T]] = new Impl[Int, DenseVector[T]] {
+    def apply(dimensions1: Int): DenseVector[T] = DenseVector.rand(dimensions1, gen)
+  }
+
+  implicit def implRandomT_1DRange(implicit basis: RandBasis = Rand): Impl2[Int, (T, T), DenseVector[T]] = new  Impl2[Int, (T, T), DenseVector[T]] {
+    def apply(dimensions1: Int, range: (T, T) ): DenseVector[T] = {
+      DenseVector.rand(dimensions1, genRange(range._1, range._2))
     }
+  }
 
-
-  implicit val implRandn_2D: Impl [(Int, Int), DenseMatrix[Double]] =
-    new Impl[ (Int, Int), DenseMatrix[Double]] {
-      def apply( dimensions2: (Int, Int) ): DenseMatrix[Double] = {
-        DenseMatrix.tabulate(dimensions2._1, dimensions2._2)((p1: Int, p2: Int) => randnDistr.get())
-      }
+  implicit def implRandomT_2D(implicit basis: RandBasis = Rand):Impl[(Int, Int), DenseMatrix[T]] = new Impl[(Int, Int), DenseMatrix[T]] {
+    def apply( dimensions2: (Int, Int) ): DenseMatrix[T] = {
+      DenseMatrix.rand(dimensions2._1, dimensions2._2, gen)
     }
+  }
+
+  implicit def implRandomT_2DRange(implicit basis: RandBasis = Rand): Impl2[(Int, Int), (T, T), DenseMatrix[T]] = new  Impl2[(Int, Int), (T, T), DenseMatrix[T]] {
+    def apply(dimensions2: (Int, Int), range: (T, T) ): DenseMatrix[T] = {
+      DenseMatrix.rand(dimensions2._1, dimensions2._2, genRange(range._1, range._2))
+    }
+  }
 
 
 }

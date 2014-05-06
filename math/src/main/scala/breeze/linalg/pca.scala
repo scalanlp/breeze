@@ -53,6 +53,9 @@ class PCA(val x: DenseMatrix[Double], val covmat: DenseMatrix[Double]) {
   /**
    * Translate the original data points to the PC axes.
    */
-  lazy val scores = (loadings * (x(*,::) - center).t).t
+  lazy val scores:DenseMatrix[Double] =  (loadings * (x(*,::) - center).t).t
+
 
 }
+
+
