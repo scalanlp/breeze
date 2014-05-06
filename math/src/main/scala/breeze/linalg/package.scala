@@ -276,5 +276,8 @@ package object linalg {
   private def columnRMS(x: DenseMatrix[Double]): DenseVector[Double] =
     (sum(x:*x,Axis._0) / (x.rows-1.0)).map( scala.math.sqrt _ ).toDenseVector
 
+
+  /** Alias for randomDouble */
+  val rand: randomDouble.type = randomDouble
 }
 
