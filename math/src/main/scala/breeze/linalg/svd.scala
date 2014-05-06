@@ -6,6 +6,7 @@ import com.github.fommil.netlib.ARPACK
 import org.netlib.util.intW
 import org.netlib.util.doubleW
 import breeze.linalg.operators.OpMulMatrix
+import breeze.linalg.support.CanTranspose
 
 /**
   * Computes the SVD of a m by n matrix
@@ -48,50 +49,62 @@ object svd extends UFunc {
     }
   }
 
-  trait OpMulMatrixDenseVector[Mat] extends
-    OpMulMatrix.Impl3[Mat, DenseVector[Double], Boolean, DenseVector[Double]]
+  type OpMulMatrixDenseVector[Mat] = OpMulMatrix.Impl2[Mat, DenseVector[Double], DenseVector[Double]]
 
   /**
    * Implementation of svds for a sparse matrix. The caller provides two operations: mul - matrix
    * multiplies a DenseVector, and mulTranspose - the transpose of matrix multiplies a DenseVector.
    *
-   * @param mul operation that multiples a matrix with a DenseVector with a boolean parameter
-   *            indicating if the matrix should be transposed.
+   * @param mul operation that multiples a matrix with a DenseVector. Example:
+   *            implicit object Op_Mul_Mat_V extends OpMulMatrixDenseVector[UserMatrixType] {
+   *              def apply(mt: UserMatrixType, iv: DenseVector[Double]) = {
+   *                // return another DenseVector[Double] = mt * iv
+   *              }
+   *            }
+   * @param trans operator for transposing the matrix. Example:
+   *              implicit object Op_Mat_Trans extends CanTranspose[UserMatrixType, UserMatrixType] {
+   *                def apply(mt: UserMatrixType) = {
+   *                  // return another UserMatrixType which is the transpose of mt
+   *                }
+   *              }
    * @tparam Mat type of the input matrix of size n*m.
    * @return left singular vectors matrix of size n*k, singular value vector of length k, and
    *         transpose of right singular vectors matrix of size k*m.
    */
-  implicit def Svd_Sparse_Impl[Mat](implicit mul: OpMulMatrix.Impl3[Mat, DenseVector[Double],
-      Boolean, DenseVector[Double]]):Impl4[Mat, Int, Int, Double, (DenseMatrix[Double],
-      DenseVector[Double], DenseMatrix[Double])] = {
+  implicit def Svd_Sparse_Impl[Mat](implicit mul: OpMulMatrixDenseVector[Mat],
+                                    trans: CanTranspose[Mat, Mat])
+    :Impl4[Mat, Int, Int, Double, (DenseMatrix[Double], DenseVector[Double], DenseMatrix[Double])] = {
 
     class Svd_Sparse_Impl_Instance extends Impl4[Mat, Int, Int, Double, (DenseMatrix[Double],
         DenseVector[Double], DenseMatrix[Double])] {
       val arpack  = ARPACK.getInstance()
 
-      def av( mat: Mat, n: Int, k: Int, work:Array[Double], input_offset:Int, output_offset:Int) {
+      def av( mat: Mat, matTrans: Mat, n: Int, k: Int, work:Array[Double], input_offset:Int, output_offset:Int) {
         val w = DenseVector(work)
         val x = w(input_offset until input_offset+n)
         val y = w(output_offset until output_offset+n)
 
-        val z = mul(mat, x, true)
+        val z = mul(matTrans, x)
         if (z.length <= k) throw new IllegalArgumentException("The number of rows or columns " +
             "should be bigger than k.")
-        y := mul(mat, z, false)
+        y := mul(mat, z)
       }
 
       /**
-       * @param mt input matrix of size n x m.
+       * @param mt input matrix of size n x m. Usually the caller should make sure n < m so that
+       *           less working memory is required by ARPACK.
        * @param k number of desired singular values.
        * @param n number of rows of the input matrix.
        * @param tol tolerance of the svd computation.
        * @return left singular vectors matrix of size n*k, singular value vector of length k, and
        *         transpose of right singular vectors matrix of size k*m.
        */
-      def apply(mt: Mat, k: Int, n: Int, tol : Double): (DenseMatrix[Double], DenseVector[Double],
+      def apply(mt: Mat, k: Int, n: Int, tol: Double): (DenseMatrix[Double], DenseVector[Double],
           DenseMatrix[Double]) = {
         if (n <= k) throw new IllegalArgumentException("The number of rows or columns should be " +
             "bigger than k.")
+
+        val mtTrans = trans.apply(mt)
 
         val tolW = new doubleW(tol)
 
@@ -120,7 +133,7 @@ object svd extends UFunc {
         while(ido.`val` !=99) {
           if (ido.`val` != -1 && ido.`val` != 1)
             throw new IllegalStateException("ido = " + ido.`val`)
-          av(mt, n, k, workd, ipntr(0) - 1, ipntr(1) - 1)
+          av(mt, mtTrans, n, k, workd, ipntr(0) - 1, ipntr(1) - 1)
           arpack.dsaupd(ido, bmat, n, which, nev.`val`, tolW, resid, ncv, v, n, iparam, ipntr,
             workd, workl, workl.length, info)
         }
@@ -151,11 +164,11 @@ object svd extends UFunc {
         val sp = mp.map(_._1)
 
         val s = DenseVector(sp.toArray)
-        val si = DenseVector(sp.map(u => 1/u).toArray)
+        val siMatrix: DenseMatrix[Double] = diag(DenseVector(sp.map(u => 1/u).toArray))
 
         val va = mp.map{case(ek,ev) => ev}
         val uOutput = DenseMatrix(va.map(r => r.toArray).toSeq:_*).t
-        val vtOutput = diag(si) * DenseMatrix(va.map(r => mul(mt, r, true).toArray).toSeq:_*)
+        val vtOutput = siMatrix * DenseMatrix(va.map(r => mul(mtTrans, r).toArray).toSeq:_*)
         (uOutput,s,vtOutput)
       }
     }
@@ -176,36 +189,19 @@ object svd extends UFunc {
   implicit object Svd_SM_Impl extends
     Impl2[CSCMatrix[Double],Int, (DenseMatrix[Double], DenseVector[Double], DenseMatrix[Double])] {
 
-    def apply(mt: CSCMatrix[Double],eigenvals:Int):
+    def apply(mt: CSCMatrix[Double], eigenvals: Int):
         (DenseMatrix[Double], DenseVector[Double], DenseMatrix[Double]) = {
       if (eigenvals >= mt.cols || eigenvals >= mt.rows) {
         throw new IllegalArgumentException("The desired number of singular values is greater " +
             "than or equal to min(mt.cols, mt.rows). Please use the full svd.")
       }
 
-      /**
-       * Helper class that holds a matrix and its transpose
-       *
-       * @param mmt input matrix
-       * @param isTranspose set to true if the input is a slim matrix so that arpack uses less
-       *                    memory when computing eigen-decomposition
-       */
-      class CSCMatrixWithTranspose(mmt: CSCMatrix[Double], isTranspose : Boolean) {
-        private val dmtTranspose = mmt.t
-        def getMatrix = if (isTranspose) dmtTranspose else mmt
-        def getMatrixTranspose = if (isTranspose) mmt else dmtTranspose
-      }
-
-      implicit object Op_Mul_Mat_V extends OpMulMatrixDenseVector[CSCMatrixWithTranspose] {
-        def apply(mtt : CSCMatrixWithTranspose, iv : DenseVector[Double], ist : Boolean) = {
-          if (ist) mtt.getMatrixTranspose * iv else mtt.getMatrix * iv
-        }
-      }
-
-      val svdImpl = svd.Svd_Sparse_Impl[CSCMatrixWithTranspose]
+      val svdImpl = svd.Svd_Sparse_Impl[CSCMatrix[Double]]
       val isSlimMatrix = mt.rows > mt.cols
-      val (u, s, vt) = svdImpl(new CSCMatrixWithTranspose(mt, isSlimMatrix), eigenvals,
-        if (isSlimMatrix) mt.cols else mt.rows, 1e-6)
+      val (u, s, vt) = if (isSlimMatrix)
+          svdImpl(mt.t, eigenvals, mt.cols, 1e-6)
+        else
+          svdImpl(mt, eigenvals, mt.rows, 1e-6)
 
       if (isSlimMatrix) (vt.t, s, u.t) else (u, s, vt)
     }
