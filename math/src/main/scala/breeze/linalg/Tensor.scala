@@ -179,7 +179,11 @@ trait TensorLike[@spec(Int) K, @specialized(Int, Float, Double) V, +This<:Tensor
   }
 
   /** Returns true if and only if the given predicate is true for all elements. */
-  def forallValues(fn : V => Boolean) : Boolean = {
+  @deprecated("Please use 'forall' with the same arguments, which is more in accordance with scala.collections syntax", "0.8")
+  def forallValues(fn : V => Boolean) : Boolean = forall(fn)
+
+  /** Returns true if and only if the given predicate is true for all elements. */
+  def forall(fn : V => Boolean) : Boolean = {
     foreachValue(v => if (!fn(v)) return false)
     true
   }
