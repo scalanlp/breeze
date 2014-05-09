@@ -194,16 +194,6 @@ object svd extends UFunc {
     new Svd_Sparse_Impl_Instance
   }
 
-/*
- returns
- u : shape=(M, k)
- Unitary matrix having left singular vectors as columns.
-
- s : Dense vector of singular values.
-
- vt : shape=(k, N)
- Unitary matrix having right singular vectors as rows.
-*/
   implicit object Svd_SM_Impl extends
     Impl2[CSCMatrix[Double],Int, (DenseMatrix[Double], DenseVector[Double], DenseMatrix[Double])] {
 
