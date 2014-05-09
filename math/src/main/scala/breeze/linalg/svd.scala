@@ -52,53 +52,71 @@ object svd extends UFunc {
   type OpMulMatrixDenseVector[Mat] = OpMulMatrix.Impl2[Mat, DenseVector[Double], DenseVector[Double]]
 
   /**
-   * Implementation of svds for a sparse matrix. The caller provides two operations: mul - matrix
-   * multiplies a DenseVector, and mulTranspose - the transpose of matrix multiplies a DenseVector.
-   *
-   * @param mul operation that multiples a matrix with a DenseVector. Example:
-   *            implicit object Op_Mul_Mat_V extends OpMulMatrixDenseVector[UserMatrixType] {
-   *              def apply(mt: UserMatrixType, iv: DenseVector[Double]) = {
-   *                // return another DenseVector[Double] = mt * iv
-   *              }
-   *            }
-   * @param trans operator for transposing the matrix. Example:
-   *              implicit object Op_Mat_Trans extends CanTranspose[UserMatrixType, UserMatrixType] {
-   *                def apply(mt: UserMatrixType) = {
-   *                  // return another UserMatrixType which is the transpose of mt
-   *                }
-   *              }
-   * @tparam Mat type of the input matrix of size n*m.
-   * @return left singular vectors matrix of size n*k, singular value vector of length k, and
-   *         transpose of right singular vectors matrix of size k*m.
-   */
-  implicit def Svd_Sparse_Impl[Mat](implicit mul: OpMulMatrixDenseVector[Mat],
-                                    trans: CanTranspose[Mat, Mat])
+    * Implementation of svds for a sparse matrix. The caller provides two operations: mul - matrix
+    * multiplies a DenseVector, and trans - matrix transpose.
+    *
+    * @param mul Operation that multiples a matrix with a DenseVector. Example:
+    * {{{
+    * implicit object Op_Mul_Mat_V extends OpMulMatrixDenseVector[UserMatrixType] {
+    *   def apply(mt: UserMatrixType, iv: DenseVector[Double]) = {
+    *     // return another DenseVector[Double] = mt * iv
+    *   }
+    * }
+    * }}}
+    * @param trans Operator for transposing the matrix. Example:
+    * {{{
+    * implicit object Op_Mat_Trans extends CanTranspose[UserMatrixType, UserMatrixTypeTranspose] {
+    *   def apply(mt: UserMatrixType) = {
+    *     // return a UserMatrixTypeTranspose which is the transpose of mt
+    *   }
+    * }
+    * }}}
+    * @param mulTrans Operation that multiples a transposed matrix with a DenseVector. Example:
+    * {{{
+    * // if UserMatrixType and UserMatrixTypeTranspose are actually the same type, you do not need this
+    * implicit object Op_Mul_Mat_V extends OpMulMatrixDenseVector[UserMatrixTypeTranspose] {
+    *   def apply(mtTrans: UserMatrixTypeTranspose, iv: DenseVector[Double]) = {
+    *     // return another DenseVector[Double] = mtTrans * iv
+    *   }
+    * }
+    * }}}
+    * @tparam Mat Type of the input matrix of size n*m.
+    * @tparam MatTranspose Type of the transpose of input matrix of size m*n.
+    * @return Left singular vectors matrix of size n*k, singular value vector of length k, and
+    *         transpose of right singular vectors matrix of size k*m.
+    */
+  implicit def Svd_Sparse_Impl[Mat, MatTranspose](implicit mul: OpMulMatrixDenseVector[Mat],
+                                                  trans: CanTranspose[Mat, MatTranspose],
+                                                  mulTrans: OpMulMatrixDenseVector[MatTranspose])
     :Impl4[Mat, Int, Int, Double, (DenseMatrix[Double], DenseVector[Double], DenseMatrix[Double])] = {
 
     class Svd_Sparse_Impl_Instance extends Impl4[Mat, Int, Int, Double, (DenseMatrix[Double],
         DenseVector[Double], DenseMatrix[Double])] {
       val arpack  = ARPACK.getInstance()
 
-      def av( mat: Mat, matTrans: Mat, n: Int, k: Int, work:Array[Double], input_offset:Int, output_offset:Int) {
+      def av( mat: Mat, matTrans: MatTranspose, n: Int, k: Int, work:Array[Double], input_offset:Int, output_offset:Int) {
         val w = DenseVector(work)
         val x = w(input_offset until input_offset+n)
         val y = w(output_offset until output_offset+n)
 
-        val z = mul(matTrans, x)
+        val z = mulTrans(matTrans, x)
         if (z.length <= k) throw new IllegalArgumentException("The number of rows or columns " +
             "should be bigger than k.")
         y := mul(mat, z)
       }
 
       /**
-       * @param mt input matrix of size n x m. Usually the caller should make sure n < m so that
-       *           less working memory is required by ARPACK.
-       * @param k number of desired singular values.
-       * @param n number of rows of the input matrix.
-       * @param tol tolerance of the svd computation.
-       * @return left singular vectors matrix of size n*k, singular value vector of length k, and
-       *         transpose of right singular vectors matrix of size k*m.
-       */
+        * Generic svds computation. This function computes the largest k singular values and
+        * corresponding singular vectors.
+        *
+        * @param mt Input matrix of size n x m. Usually the caller should make sure n < m so that
+        *           less working memory is required by ARPACK.
+        * @param k Number of desired singular values.
+        * @param n Number of rows of the input matrix.
+        * @param tol Tolerance of the svd computation.
+        * @return Left singular vectors matrix of size n*k, singular value vector of length k, and
+        *         transpose of right singular vectors matrix of size k*m.
+        */
       def apply(mt: Mat, k: Int, n: Int, tol: Double): (DenseMatrix[Double], DenseVector[Double],
           DenseMatrix[Double]) = {
         if (n <= k) throw new IllegalArgumentException("The number of rows or columns should be " +
@@ -168,7 +186,7 @@ object svd extends UFunc {
 
         val va = mp.map{case(ek,ev) => ev}
         val uOutput = DenseMatrix(va.map(r => r.toArray).toSeq:_*).t
-        val vtOutput = siMatrix * DenseMatrix(va.map(r => mul(mtTrans, r).toArray).toSeq:_*)
+        val vtOutput = siMatrix * DenseMatrix(va.map(r => mulTrans(mtTrans, r).toArray).toSeq:_*)
         (uOutput,s,vtOutput)
       }
     }
@@ -189,19 +207,29 @@ object svd extends UFunc {
   implicit object Svd_SM_Impl extends
     Impl2[CSCMatrix[Double],Int, (DenseMatrix[Double], DenseVector[Double], DenseMatrix[Double])] {
 
-    def apply(mt: CSCMatrix[Double], eigenvals: Int):
+    /**
+      * Svds for CSCMatrix[Double]. This function computes the largest k singular values and
+      * corresponding singular vectors. Default tolerance is set to 1e-6.
+      *
+      * @param mt Input matrix of type CSCMatrix[Double].
+      * @param k Number of desired singular values.
+      * @return Left singular vectors matrix of size n*k, singular value vector of length k, and
+      *         transpose of right singular vectors matrix of size k*m.
+      */
+    def apply(mt: CSCMatrix[Double], k: Int):
         (DenseMatrix[Double], DenseVector[Double], DenseMatrix[Double]) = {
-      if (eigenvals >= mt.cols || eigenvals >= mt.rows) {
+      val tol = 1e-6
+      if (k >= mt.cols || k >= mt.rows) {
         throw new IllegalArgumentException("The desired number of singular values is greater " +
             "than or equal to min(mt.cols, mt.rows). Please use the full svd.")
       }
 
-      val svdImpl = svd.Svd_Sparse_Impl[CSCMatrix[Double]]
+      val svdImpl = svd.Svd_Sparse_Impl[CSCMatrix[Double],CSCMatrix[Double]]
       val isSlimMatrix = mt.rows > mt.cols
       val (u, s, vt) = if (isSlimMatrix)
-          svdImpl(mt.t, eigenvals, mt.cols, 1e-6)
+          svdImpl(mt.t, k, mt.cols, tol)
         else
-          svdImpl(mt, eigenvals, mt.rows, 1e-6)
+          svdImpl(mt, k, mt.rows, tol)
 
       if (isSlimMatrix) (vt.t, s, u.t) else (u, s, vt)
     }
