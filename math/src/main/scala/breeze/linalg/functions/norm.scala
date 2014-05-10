@@ -13,6 +13,12 @@ object norm extends UFunc {
     def apply(v1: T): Double = v1.abs.toDouble
   }
 
+  implicit def normalNormToNormUnit[T](implicit normImpl: Impl[T, Double]):Impl2[T, Unit, Double] = {
+    new Impl2[T, Unit, Double] {
+      def apply(v: T, x: Unit): Double = normImpl(v)
+    }
+  }
+
 
 
   implicit def normDoubleToNormalNorm[T](implicit normImpl: Impl2[T, Double, Double]):Impl[T, Double] = {

@@ -228,10 +228,9 @@ trait NumericOps[+This] extends Any {
   }
 
   /** Represents the "natural" norm of this vector, for types that don't support arbitrary norms */
-  final def norm[TT>:This, R]()(implicit op: breeze.linalg.norm.Impl[TT, R]): R = {
+  final def norm[TT>:This, R](implicit op: breeze.linalg.norm.Impl[TT, R]): R = {
     op(repr)
   }
-
 
   /** Represents the norm of this vector */
   final def norm[TT>:This, B, R](b: B)(implicit op: breeze.linalg.norm.Impl2[TT, B, R]): R = {
