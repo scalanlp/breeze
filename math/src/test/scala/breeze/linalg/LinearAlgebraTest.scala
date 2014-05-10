@@ -22,7 +22,6 @@ import org.scalatest.prop._
 import org.junit.runner.RunWith
 import breeze.util.DoubleImplicits
 import breeze.numerics._
-import breeze.math.{Complex}
 import breeze.stats.{mean, median, meanAndVariance}
 import breeze.{math => bmath}
 
@@ -198,35 +197,6 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     assert(max(abs(_QQ * _RR - ap)) < 1E-8)
   }
 
-  test("complex mean") {
-    import breeze.{math=>bmath}
-    import breeze.math.Complex
-    val data =  DenseVector[Complex]( (0.0 + 1.0 * bmath.i), (1.0 + 0.0 * bmath.i), (2.0 + 2.0 * bmath.i) )
-    assert( mean(data) === (1.0 + 1.0 * bmath.i))
-  }
-
-  test("mean and variance") {
-    val r = new Random(0)
-    val data =  Array.fill(100000)(r.nextGaussian)
-    val mav = meanAndVariance(data)
-    val mav2 = meanAndVariance(data.iterator)
-    assert(breeze.numerics.closeTo(mav.mean,0.0,1E-2), mav.mean + " should be 0")
-    assert(breeze.numerics.closeTo(mav.variance,1.0,1E-2), mav.variance + " should be 1")
-    assert(mav == mav2)
-  }
-
-//  test("complex mean") {
-//    val data =  DenseVector[Complex]( (0.0 + 1.0 * bmath.i), (1.0 + 0.0 * bmath.i), (2.0 + 2.0 * bmath.i) )
-//    assert( mean(data) == (1.0 + 1.0 * bmath.i), "complex mean incorrect")
-//  }
-
-  test("median") {
-    val dataOdd =  DenseVector(0,1,2,3,400000)
-    val dataEven =  DenseVector(0f,1f,2f,100f)
-
-    assert( median(dataOdd)==2, "median (odd length) should be 2 instead of "+ median(dataOdd))
-    assert( median(dataEven)==1.5f, "median (even length) should be 1.5f instead of "+ median(dataOdd))
-  }
 
   test("simple eig test") {
     val (w, _, v) = eig(diag(DenseVector(1.0, 2.0, 3.0)))
