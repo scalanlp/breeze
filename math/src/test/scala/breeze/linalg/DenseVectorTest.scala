@@ -402,6 +402,16 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert( !any(a :== (b - 1)))
   }
 
+  test("boolean op") {
+    val a = DenseVector(true, false, false)
+    val b = DenseVector(true, true, false)
+
+    assert(a :& b === DenseVector(true, false, false))
+    assert(a :| b === DenseVector(true, true, false))
+    assert(a :^^ b === DenseVector(false, true, false))
+    assert(!a === DenseVector(false, true, true))
+  }
+
 }
 
 /**

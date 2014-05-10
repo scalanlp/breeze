@@ -192,20 +192,30 @@ sealed trait OpSet extends OpType
 object OpSet extends OpSet with UFunc
 
 /**
- * Type marker for BinaryOp A :&& B
+ * Type marker for BinaryOp A :& B
  *
  * @author dramage
  */
 sealed trait OpAnd extends OpType
-object OpAnd extends OpAnd with UFunc
+object OpAnd extends OpAnd with UFunc {
+  implicit object opAndBoolean extends Impl2[Boolean, Boolean, Boolean] {
+    override def apply(v: Boolean, v2: Boolean): Boolean = v && v2
+  }
+
+}
 
 /**
- * Type marker for BinaryOp A :|| B
+ * Type marker for BinaryOp A :| B
  *
  * @author dramage
  */
 sealed trait OpOr extends OpType
-object OpOr extends OpOr with UFunc
+object OpOr extends OpOr with UFunc {
+  implicit object opOrBoolean extends Impl2[Boolean, Boolean, Boolean] {
+    override def apply(v: Boolean, v2: Boolean): Boolean = v || v2
+  }
+
+}
 
 /**
  * Type marker for BinaryOp A :^^ B
@@ -213,7 +223,12 @@ object OpOr extends OpOr with UFunc
  * @author dramage
  */
 sealed trait OpXor extends OpType
-object OpXor extends OpXor with UFunc
+object OpXor extends OpXor with UFunc {
+  implicit object opXorBoolean extends Impl2[Boolean, Boolean, Boolean] {
+    override def apply(v: Boolean, v2: Boolean): Boolean = v ^ v2
+  }
+
+}
 
 /**
  * Type marker for UnaryOp -A.
@@ -233,7 +248,12 @@ object OpNeg extends OpNeg with UFunc {
  * @author dramage
  */
 sealed trait OpNot extends OpType
-object OpNot extends OpNot with UFunc
+object OpNot extends OpNot with UFunc with MappingUFunc {
+  implicit object opNotBoolean extends Impl[Boolean, Boolean] {
+    override def apply(v: Boolean): Boolean = !v
+  }
+
+}
 
 
 /**
