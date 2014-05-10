@@ -64,10 +64,14 @@ class DescriptiveStatsTest2 extends FunSuite {
 
   test("median") {
     val dataOdd =  DenseVector(0,1,2,3,400000)
+    val dataOddDuplicate =  DenseVector(0,0,0,1,2,2,2,3,400000)
     val dataEven =  DenseVector(0f,1f,2f,100f)
+    val dataEvenDuplicate =  DenseVector(100,200,200,300,400,500)
 
     assert( median(dataOdd)==2, "median (odd length) should be 2 instead of "+ median(dataOdd))
+    assert( median(dataOddDuplicate)==2)
     assert( median(dataEven)==1.5f, "median (even length) should be 1.5f instead of "+ median(dataOdd))
+    assert( median(dataEvenDuplicate)==250)
   }
 
 }
