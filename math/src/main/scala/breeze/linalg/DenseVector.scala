@@ -283,24 +283,15 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     }
   }
 
-  implicit def canCopyDenseVector[V:ClassTag]: CanCopy[DenseVector[V]] =
-  new CanCopy[DenseVector[V]] {
-    def apply(v1: DenseVector[V]): DenseVector[V] = {
-      v1.copy
-    }
-  }
-
-  def binaryOpFromUpdateOp[Op<:OpType, V, Other]
-  (implicit copy: CanCopy[DenseVector[V]], op: UFunc.InPlaceImpl2[Op, DenseVector[V], Other], man: ClassTag[V]):
-  UFunc.UImpl2[Op, DenseVector[V], Other, DenseVector[V]] = {
-    new UFunc.UImpl2[Op, DenseVector[V], Other, DenseVector[V]] {
-      override def apply(a : DenseVector[V], b : Other): DenseVector[V] = {
-        val c = copy(a)
-        op(c, b)
-        c
+  implicit def canCopyDenseVector[V:ClassTag]: CanCopy[DenseVector[V]] = {
+    new CanCopy[DenseVector[V]] {
+      def apply(v1: DenseVector[V]): DenseVector[V] = {
+        v1.copy
       }
     }
   }
+
+
 
   implicit def negFromScale[V](implicit scale: OpMulScalar.Impl2[DenseVector[V], V, DenseVector[V]], field: Ring[V]) = {
     new OpNeg.Impl[DenseVector[V], DenseVector[V]] {
@@ -501,10 +492,10 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   }
 
 
-  implicit def zipMap[V, R:ClassTag] = new CanZipMapValuesDenseVector[V, R]
-  implicit val zipMap_d = new CanZipMapValuesDenseVector[Double, Double]
-  implicit val zipMap_f = new CanZipMapValuesDenseVector[Float, Float]
-  implicit val zipMap_i = new CanZipMapValuesDenseVector[Int, Int]
+  implicit def zipMap[V, R:ClassTag]: CanZipMapValuesDenseVector[V, R] = new CanZipMapValuesDenseVector[V, R]
+  implicit val zipMap_d: CanZipMapValuesDenseVector[Double, Double] = new CanZipMapValuesDenseVector[Double, Double]
+  implicit val zipMap_f: CanZipMapValuesDenseVector[Float, Float] = new CanZipMapValuesDenseVector[Float, Float]
+  implicit val zipMap_i: CanZipMapValuesDenseVector[Int, Int] = new CanZipMapValuesDenseVector[Int, Int]
 
   implicit val canAddIntoD: OpAdd.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = {
     new OpAdd.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
@@ -650,6 +641,7 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   implicit val space_d = TensorSpace.make[DenseVector[Double], Int, Double]
   implicit val space_f = TensorSpace.make[DenseVector[Float], Int, Float]
   implicit val space_i = TensorSpace.make[DenseVector[Int], Int, Int]
+  implicit val space_c = TensorSpace.make[DenseVector[Complex], Int, Complex]
 
   object TupleIsomorphisms {
     implicit object doubleIsVector extends Isomorphism[Double,DenseVector[Double]] {
