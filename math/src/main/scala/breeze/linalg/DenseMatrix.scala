@@ -104,10 +104,10 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
 
   def unsafeUpdate(row: Int, col: Int, v: V): Unit = { data(linearIndex(row, col)) = v }
 
-  /** Converts this matrix to a DenseVector (column-major) */
-  def toDenseVector: DenseVector[V] = {
+  /** Converts this matrix to a flat Array (column-major) */
+  def toArray: Array[V] = {
     implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
-    val ret = DenseVector(new Array[V](rows * cols))
+    val ret = new Array[V](rows * cols)
     var i = 0
     while (i < cols) {
       var j = 0
@@ -119,6 +119,9 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
     }
     ret
   }
+
+  /** Converts this matrix to a DenseVector (column-major) */
+  def toDenseVector: DenseVector[V] = DenseVector( toArray )
 
   /** Converts this matrix to a DenseVector (column-major)
     * If view = true (or View.Require), throws an exception if we cannot return a view. otherwise returns a view.
