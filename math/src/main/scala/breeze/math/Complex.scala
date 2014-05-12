@@ -206,6 +206,9 @@ object Complex { outer =>
 
     val defaultArrayValue = DefaultArrayValue(Complex(0, 0))
 
+    override def close(a: Complex, b: Complex, tolerance: Double): Boolean = {
+      norm(a-b) <= tolerance * math.max(norm(a), norm(b))
+    }
   }
 
   implicit val complexNorm: norm.Impl[Complex, Double] = new norm.Impl[Complex, Double] {

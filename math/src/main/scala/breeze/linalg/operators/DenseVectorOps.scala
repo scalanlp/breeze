@@ -16,9 +16,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 
   @expand
   @expand.valify
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
-  implicit def dv_v_Op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  implicit def dv_v_Op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: Op.Impl2[T, T, T]):BinaryRegistry[DenseVector[T], Vector[T], Op.type, DenseVector[T]] = new BinaryRegistry[DenseVector[T], Vector[T], Op.type, DenseVector[T]] {
@@ -42,9 +40,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 
   @expand
   @expand.valify
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
-  implicit def dv_v_InPlaceOp[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  implicit def dv_v_InPlaceOp[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: Op.Impl2[T, T, T]):BinaryUpdateRegistry[DenseVector[T], Vector[T], Op.type] = new BinaryUpdateRegistry[DenseVector[T], Vector[T], Op.type] {
@@ -66,8 +62,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   @expand
   @expand.valify
   @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
-  implicit def dv_v_ZeroIdempotent_InPlaceOp[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  implicit def dv_v_ZeroIdempotent_InPlaceOp[@expand.args(Int, Double, Float, Long, Complex) T,
   @expand.args(OpAdd, OpSub) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _})
   op: Op.Impl2[T, T, T]):BinaryUpdateRegistry[DenseVector[T], Vector[T], Op.type] = new BinaryUpdateRegistry[DenseVector[T], Vector[T], Op.type] {
@@ -89,8 +84,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   @expand
   @expand.valify
   @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
-  implicit def dv_s_Op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  implicit def dv_s_Op[@expand.args(Int, Double, Float, Long, Complex) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: Op.Impl2[T, T, T]):Op.Impl2[DenseVector[T], T, DenseVector[T]] = new Op.Impl2[DenseVector[T], T, DenseVector[T]] {
@@ -115,9 +109,8 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 
   @expand
   @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
   @expand.valify
-  implicit def dv_dv_Op[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  implicit def dv_dv_Op[@expand.args(Int, Double, Float, Long, Complex) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _ },  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: Op.Impl2[T, T, T]):Op.Impl2[DenseVector[T], DenseVector[T], DenseVector[T]] = {
@@ -149,8 +142,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   @expand
   @expand.valify
   @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
-  implicit def dv_dv_UpdateOp[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  implicit def dv_dv_UpdateOp[@expand.args(Int, Double, Float, Long, Complex) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: Op.Impl2[T, T, T]):Op.InPlaceImpl2[DenseVector[T], DenseVector[T]] = new Op.InPlaceImpl2[DenseVector[T], DenseVector[T]] {
@@ -175,8 +167,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   @expand
   @expand.valify
   @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
-  implicit def dv_s_UpdateOp[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  implicit def dv_s_UpdateOp[@expand.args(Int, Double, Float, Long, Complex) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _})
   op: Op.Impl2[T, T, T]):Op.InPlaceImpl2[DenseVector[T], T] = new Op.InPlaceImpl2[DenseVector[T], T] {
@@ -198,7 +189,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 
   @expand
   @expand.valify
-  implicit def canDot_DV_DV[@expand.args(Int, Long, BigInt, Complex) T](implicit @expand.sequence[T](0, 0l, BigInt(0), Complex.zero) zero: T): breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], DenseVector[T], T] = {
+  implicit def canDot_DV_DV[@expand.args(Int, Long, Complex) T](implicit @expand.sequence[T](0, 0l, Complex.zero) zero: T): breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], DenseVector[T], T] = {
     new breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], DenseVector[T], T] {
       def apply(a: DenseVector[T], b: DenseVector[T]) = {
         require(b.length == a.length, "Vectors must be the same length!")
@@ -225,7 +216,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 
   @expand
   @expand.valify
-  implicit def canDot_DV_V[@expand.args(Int, Double, Float, Long, BigInt, Complex) T](implicit @expand.sequence[T](0, 0.0, 0.0f, 0l, BigInt(0), Complex.zero) zero: T): breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], Vector[T], T] = {
+  implicit def canDot_DV_V[@expand.args(Int, Double, Float, Long, Complex) T](implicit @expand.sequence[T](0, 0.0, 0.0f, 0l, Complex.zero) zero: T): breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], Vector[T], T] = {
     new breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], Vector[T], T] {
       def apply(a: DenseVector[T], b: Vector[T]) = {
         require(b.length == a.length, "Vectors must be the same length!")
@@ -250,7 +241,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 
   @expand
   @expand.valify
-  implicit def canZipValues_DV_DV[@expand.args(Int, Double, Float, Long, BigInt, Complex) T]()
+  implicit def canZipValues_DV_DV[@expand.args(Int, Double, Float, Long, Complex) T]()
   : zipValues.Impl2[DenseVector[T], DenseVector[T], ZippedValues[T, T]] = {
     val res = new zipValues.Impl2[DenseVector[T], DenseVector[T], ZippedValues[T, T]] {
       def apply(v1: DenseVector[T], v2: DenseVector[T]) = {
@@ -283,7 +274,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 
   @expand
   @expand.valify
-  implicit def axpy[@expand.args(Int, Double, Float, Long, BigInt, Complex) V]: scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] = {
+  implicit def axpy[@expand.args(Int, Double, Float, Long, Complex) V]: scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] = {
     new scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] {
       def apply(a: DenseVector[V], s: V, b: DenseVector[V]) {
         require(b.length == a.length, "Vectors must be the same length!")
@@ -424,7 +415,7 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
 
 
   @expand
-  implicit def pureFromUpdate[@expand.args(Int, Double, Float, Long, BigInt, Complex) T,
+  implicit def pureFromUpdate[@expand.args(Int, Double, Float, Long, Complex) T,
                               Other,
                               Op<:OpType](op: UFunc.InPlaceImpl2[Op, DenseVector[T], Other])(implicit copy: CanCopy[DenseVector[T]]):
   UFunc.UImpl2[Op, DenseVector[T], Other, DenseVector[T]] =

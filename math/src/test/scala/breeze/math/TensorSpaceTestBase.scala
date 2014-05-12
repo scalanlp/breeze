@@ -58,7 +58,10 @@ trait TensorSpaceTestBase[V, I, S] extends MutableVectorSpaceTestBase[V, S] {
   test("dot product distributes") {
     check(Prop.forAll{ (trip: (V, V, V)) =>
       val (a, b, c) = trip
-      field.close(field.+(a dot b,a dot c),(a dot (b + c)), 2E-4 )
+      val res = field.close(field.+(a dot b,a dot c),(a dot (b + c)), 1E-3 )
+      if(!res)
+        println(field.+(a dot b,a dot c) + " " + (a dot (b + c)))
+      res
     })
 
     check(Prop.forAll{ (trip: (V, V, V), s: S) =>

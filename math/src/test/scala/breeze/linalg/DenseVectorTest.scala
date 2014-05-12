@@ -461,6 +461,27 @@ class DenseVectorOps_IntTest extends TensorSpaceTestBase[DenseVector[Int], Int, 
 }
 
 @RunWith(classOf[JUnitRunner])
+class DenseVectorOps_ComplexTest extends TensorSpaceTestBase[DenseVector[Complex], Int, Complex] {
+  val space: TensorSpace[DenseVector[Complex], Int, Complex] = implicitly
+
+  val N = 30
+  implicit def genTriple: Arbitrary[(DenseVector[Complex], DenseVector[Complex], DenseVector[Complex])] = {
+    Arbitrary {
+      for{x <- Arbitrary.arbitrary[Complex]
+          y <- Arbitrary.arbitrary[Complex]
+          z <- Arbitrary.arbitrary[Complex]
+      } yield {
+        (DenseVector.fill(N)(math.random * x),
+          DenseVector.fill(N)(math.random * y),
+          DenseVector.fill(N)(math.random * z))
+      }
+    }
+  }
+
+  implicit def genScalar: Arbitrary[Complex] = Arbitrary{for(r  <- Arbitrary.arbitrary[Double]; i <- Arbitrary.arbitrary[Double]) yield Complex(r % 100,i % 100)}
+}
+
+@RunWith(classOf[JUnitRunner])
 class DenseVectorOps_FloatTest extends TensorSpaceTestBase[DenseVector[Float], Int, Float] {
  val space: TensorSpace[DenseVector[Float], Int, Float] = implicitly
 
