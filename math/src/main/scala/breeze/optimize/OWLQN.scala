@@ -21,7 +21,16 @@ class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-
 
 
   override protected def chooseDescentDirection(state: State, fn: DiffFunction[T]) = {
-    super.chooseDescentDirection(state.copy(grad = state.adjustedGradient), fn)
+    val descentDir = super.chooseDescentDirection(state.copy(grad = state.adjustedGradient), fn)
+
+    // The original paper requires that the descent direction be corrected to be in the same
+    // directional space (within the same hypercube) as the adjusted gradient for proof.
+    // Although this doesn't seem to affect the outcome that much in most of cases, there are some cases
+    // where the algorithm won't converge (confirmed with the author).
+    // However, this requires operations like below that don't seem to work currently.
+    // val correctedDir = descentDir :* ((descentDir :* state.adjustedGradient) :< 0.0)
+
+    descentDir
   }
 
   override protected def determineStepSize(state: State, f: DiffFunction[T], dir: T) = {
@@ -60,7 +69,7 @@ class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-
 
   override protected def takeStep(state: State, dir: T, stepSize: Double) = {
     val stepped = state.x + dir * stepSize
-    val orthant = computeOrthant(state.x,state.grad)
+    val orthant = computeOrthant(state.x, state.adjustedGradient)
     vspace.zipMapValues.map(stepped, orthant, { case (v, ov) =>
       v * I(math.signum(v) == math.signum(ov))
     })
@@ -69,11 +78,15 @@ class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-
   // Adds in the regularization stuff to the gradient
   override protected def adjust(newX: T, newGrad: T, newVal: Double) = {
     val res = vspace.zipMapValues.map(newX, newGrad, {case (xv, v) =>
-      val delta_+ = v + (if(xv == 0.0) l1reg else math.signum(xv) * l1reg)
-      val delta_- = v + (if(xv == 0.0) -l1reg else math.signum(xv) * l1reg)
+      xv match {
+        case 0.0 => {
+          val delta_+ = v + l1reg
+          val delta_- = v - l1reg
+          if (delta_- > 0) delta_- else if (delta_+ < 0) delta_+ else 0.0
+        }
 
-      val g = if(delta_- > 0) delta_- else if(delta_+ < 0) delta_+ else 0.0
-      g
+        case _ => v + math.signum(xv) * l1reg
+      }
     })
     val adjValue = newVal + l1reg * norm(newX, 1)
     adjValue -> res
