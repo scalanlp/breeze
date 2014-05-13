@@ -2,16 +2,14 @@ package breeze.linalg
 
 import breeze.collection.mutable.OpenAddressHashArray
 import breeze.linalg.operators._
-import breeze.storage.{ConfigurableDefault, DefaultArrayValue}
+import breeze.storage.DefaultArrayValue
 import breeze.generic._
 import breeze.linalg.support._
-import breeze.math.{Complex, Semiring, TensorSpace, Ring}
+import breeze.math.TensorSpace
 import scala.reflect.ClassTag
 import scala.util.hashing.MurmurHash3
 import breeze.macros.expand
-import scala.math.BigInt
 import CanTraverseValues.ValuesVisitor
-import breeze.generic.UFunc.UImpl2
 import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 
 /**
@@ -224,8 +222,6 @@ object HashVector extends HashVectorOps
 
 
   @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
   implicit def dv_hv_UpdateOp[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
@@ -248,8 +244,6 @@ object HashVector extends HashVectorOps
 
   // this shouldn't be necessary but it is:
   @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
   implicit def dv_hv_op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType] = {
     DenseVector.pureFromUpdate(implicitly[Op.InPlaceImpl2[DenseVector[T], HashVector[T]]])
