@@ -8,7 +8,6 @@ import breeze.math.{Ring, Field, Semiring}
 import breeze.util.ArrayUtil
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import breeze.macros.expand
-import scala.math.BigInt
 import breeze.math.PowImplicits._
 import breeze.storage.DefaultArrayValue
 import scala.reflect.ClassTag
@@ -438,7 +437,7 @@ trait DenseVector_SpecialOps extends DenseVectorOps { this: DenseVector.type =>
 trait DenseVector_OrderingOps extends DenseVectorOps { this: DenseVector.type =>
 
   @expand
-  implicit def dv_dv_Op[@expand.args(Int, Double, Float, Long, BigInt) T,
+  implicit def dv_dv_Op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpGT, OpGTE, OpLTE, OpLT, OpEq, OpNe) Op <: OpType]
   (implicit @expand.sequence[Op]({_ > _},  {_ >= _}, {_ <= _}, {_ < _}, { _ == _}, {_ != _})
   op: Op.Impl2[T, T, T]):Op.Impl2[DenseVector[T], DenseVector[T], BitVector] = new Op.Impl2[DenseVector[T], DenseVector[T], BitVector] {
@@ -462,7 +461,7 @@ trait DenseVector_OrderingOps extends DenseVectorOps { this: DenseVector.type =>
   }
 
   @expand
-  implicit def dv_v_Op[@expand.args(Int, Double, Float, Long, BigInt) T,
+  implicit def dv_v_Op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpGT, OpGTE, OpLTE, OpLT, OpEq, OpNe) Op <: OpType]
   (implicit @expand.sequence[Op]({_ > _},  {_ >= _}, {_ <= _}, {_ < _}, { _ == _}, {_ != _})
   op: Op.Impl2[T, T, Boolean]):Op.Impl2[DenseVector[T], Vector[T], BitVector] = new Op.Impl2[DenseVector[T], Vector[T], BitVector] {
@@ -486,7 +485,7 @@ trait DenseVector_OrderingOps extends DenseVectorOps { this: DenseVector.type =>
 
 
   @expand
-  implicit def dv_s_CompOp[@expand.args(Int, Double, Float, Long, BigInt) T,
+  implicit def dv_s_CompOp[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpGT, OpGTE, OpLTE, OpLT, OpEq, OpNe) Op <: OpType]
   (implicit @expand.sequence[Op]({_ > _},  {_ >= _}, {_ <= _}, {_ < _}, { _ == _}, {_ != _})
   op: Op.Impl2[T, T, Boolean]):Op.Impl2[DenseVector[T], T, BitVector] = new Op.Impl2[DenseVector[T], T, BitVector] {
