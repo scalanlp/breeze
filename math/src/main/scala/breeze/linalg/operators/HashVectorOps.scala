@@ -1,8 +1,7 @@
 package breeze.linalg.operators
 
 import breeze.macros.expand
-import breeze.math.{Field, Ring, Semiring, Complex}
-import scala.math.BigInt
+import breeze.math.{Field, Ring, Semiring}
 import breeze.linalg._
 import breeze.generic.{UFunc}
 import breeze.linalg.support.{CanZipMapValues, CanCopy}
@@ -71,8 +70,6 @@ trait HashVector_DenseVector_Ops extends DenseVector_HashVector_Ops { this: Hash
 
 
   @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
   implicit def hv_dv_UpdateOp[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _}, {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
@@ -90,8 +87,6 @@ trait HashVector_DenseVector_Ops extends DenseVector_HashVector_Ops { this: Hash
 
 
   @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
   implicit def hv_dv_op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _}, {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
@@ -131,8 +126,6 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
 
 
   @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
   implicit def hv_hv_Idempotent_Op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _}, {_ - _})
@@ -166,8 +159,6 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
 
 
   @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
   implicit def hv_hv_Op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
@@ -185,8 +176,6 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
   }
 
   @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
   implicit def hv_v_Op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
@@ -206,8 +195,6 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
   }
 
   @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
   implicit def hv_s_Op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
@@ -229,8 +216,6 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
 
 
   @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
   implicit def hv_hv_UpdateOp[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
@@ -246,8 +231,6 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
   }
 
   @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
   implicit def hv_hv_Idempotent_UpdateOp[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _}, {_ - _})
@@ -261,8 +244,6 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
   }
 
   @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
   implicit def hv_s_UpdateOp[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _})
@@ -335,8 +316,6 @@ trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type 
 
 
   @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
   implicit def hv_sv_Op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
@@ -372,8 +351,6 @@ trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type 
 
 
   @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
   implicit def hv_sv_Idempotent_Op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _}, {_ - _})
@@ -426,8 +403,6 @@ trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type 
   }
 
   @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
   implicit def hv_sv_UpdateOp[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   :Op.InPlaceImpl2[HashVector[T], SparseVector[T]] = updateFromPure
@@ -442,8 +417,6 @@ trait SparseVector_HashVector_Ops extends HashVectorOps with HashVector_SparseVe
 
 
   @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
   implicit def sv_hv_Op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
@@ -478,8 +451,6 @@ trait SparseVector_HashVector_Ops extends HashVectorOps with HashVector_SparseVe
 
 
   @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
   implicit def sv_hv_Idempotent_Op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _}, {_ - _})
@@ -525,8 +496,6 @@ trait SparseVector_HashVector_Ops extends HashVectorOps with HashVector_SparseVe
   }
 
   @expand
-  @expand.exclude(Complex, OpMod)
-  @expand.exclude(BigInt, OpPow)
   implicit def sv_hv_update[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   :Op.InPlaceImpl2[SparseVector[T], HashVector[T]] = updateFromPureS
