@@ -43,6 +43,8 @@ class FilterTest  extends FunSuite {
     val result1 = filterMedian(dataSmall, 5, OptOverhang.None).toScalaVector
     val result2 = filterMedian(dataSmall, 5, OptOverhang.PreserveLength).toScalaVector
 
+    println(result1)
+    println(result2)
     assert( result1 == Array.tabulate[Int](11)( _ + 2 ).toVector, "median filter failed for small data and OptOverhang.None" )
     assert( result2 == (Array(0, 1) ++ result1 ++ Array(13,14)).toVector, "median filter failed for small data and OptOverhang.PreserveLength" )
 
