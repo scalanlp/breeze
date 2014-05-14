@@ -3,6 +3,7 @@ package breeze.signal.support
 import breeze.signal.{filterMedian, OptOverhang}
 import breeze.stats._
 import breeze.linalg.{convert, DenseVector}
+import breeze.util.quickSelectImpl
 import breeze.macros.expand
 import scala.collection.mutable
 import breeze.numerics.isOdd
@@ -23,7 +24,69 @@ object CanFilterMedian {
 
     new CanFilterMedian[T] {
       def apply(data: DenseVector[T], windowLength: Int, overhang: OptOverhang): DenseVector[T] = {
-        convert( filterMedian( convert(data, Double), windowLength, overhang ), T)
+
+        require(isOdd(windowLength), "median filter can only take odd windowLength values, since even values will cause a half-frame time shift")
+        require(data.length >= 3, "data must be longer than 3")
+        require(windowLength >= 1, "window length must be longer than 1")
+
+        if( windowLength == 1 ) data.copy
+        else {
+          val tempret = new Array[T](data.length)
+          val halfWindow = (windowLength-1)/2
+
+          //calculate beginning and end separately
+          for( indexFromBeginning <- 0 until halfWindow ) tempret(indexFromBeginning) = median( data(0 to indexFromBeginning*2) )
+          for( indexToEnd <- 0 until halfWindow ) tempret(data.length-indexToEnd-1) = median( data(data.length-2*indexToEnd-1 until data.length) )
+
+          var index = 0
+          val tempDataExtract = data(index until index + windowLength).toArray
+          var (currentMean, currentPivotIndex) = quickSelectImpl(tempDataExtract, halfWindow)
+          tempret(index) = currentMean
+          index += 1
+
+//          while( index < data.length - (windowLength-1)/2 ){
+//            findAndReplaceInstanceInPlace( tempDataExtract, data(index-windowLength))
+//            (currentMean, currentPivotIndex) = quickSelectImpl(tempDataExtract)
+//          }
+
+        }
+
+        DenseVector.zeros[T](4)
+
+      }
+
+      def findAndReplaceInstanceInPlace( arr: Array[T], fromValue: T, toValue: T, pivotPoint: Int): Unit = {
+        val pivotValue: T = arr(pivotPoint)
+        var found = false
+
+        if( fromValue == pivotValue ) {
+          arr(pivotPoint) = toValue
+          found = true
+        } else if( fromValue < pivotValue ){
+          var count = pivotPoint - 1
+          while( count >= 0 ){
+            if( arr(count) == fromValue ) {
+              arr(count) = toValue
+              count = Int.MinValue
+              found = true
+            }else {
+              count -= 1
+            }
+          }
+        } else { //if( fromValue > pivotValue ){
+          var count = pivotPoint + 1
+          while( count < arr.length ){
+            if( arr(count) == fromValue ){
+              arr(count) = toValue
+              count = Int.MaxValue
+              found = true
+            }else {
+              count += 1
+            }
+          }
+        }
+
+        require(found, "The fromValue was not found within the given array, something is wrong!")
       }
     }
 
