@@ -3,7 +3,7 @@ package breeze.linalg
 import org.scalatest._
 import org.scalatest.junit._
 import org.junit.runner.RunWith
-import breeze.math.{TensorSpaceTestBase, TensorSpace, DoubleValuedTensorSpaceTestBase}
+import breeze.math.{Complex, TensorSpaceTestBase, TensorSpace, DoubleValuedTensorSpaceTestBase}
 import breeze.stats.mean
 import org.scalacheck.Arbitrary
 
@@ -317,4 +317,32 @@ class HashVectorOps_IntTest extends TensorSpaceTestBase[HashVector[Int], Int, In
   }
 
   def genScalar: Arbitrary[Int] = Arbitrary(Arbitrary.arbitrary[Int].map{ _ % 1000 })
+}
+
+@RunWith(classOf[JUnitRunner])
+class HashVectorOps_ComplexTest extends TensorSpaceTestBase[HashVector[Complex], Int, Complex] {
+  val space: TensorSpace[HashVector[Complex], Int, Complex] = {
+    //    implicit val cannorm = HashVector.canNorm[Complex]
+    TensorSpace.make[HashVector[Complex], Int, Complex]
+  }
+
+
+  val N = 30
+  implicit def genTriple: Arbitrary[(HashVector[Complex], HashVector[Complex], HashVector[Complex])] = {
+    Arbitrary {
+      for{x <- Arbitrary.arbitrary[Complex]
+          xl <- Arbitrary.arbitrary[List[Int]]
+          y <- Arbitrary.arbitrary[Complex]
+          yl <- Arbitrary.arbitrary[List[Int]]
+          z <- Arbitrary.arbitrary[Complex]
+          zl <- Arbitrary.arbitrary[List[Int]]
+      } yield {
+        ( HashVector(N)( xl.map(i => (i % N).abs -> (math.random * x )):_*),
+          HashVector(N)( yl.map(i => (i % N).abs -> (math.random * y )):_*),
+          HashVector(N)( zl.map(i => (i % N).abs ->(math.random * z )):_*))
+      }
+    }
+  }
+
+  implicit def genScalar: Arbitrary[Complex] = Arbitrary{for(r  <- Arbitrary.arbitrary[Double]; i <- Arbitrary.arbitrary[Double]) yield Complex(r % 100,i % 100)}
 }

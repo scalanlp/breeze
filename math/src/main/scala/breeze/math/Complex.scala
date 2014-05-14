@@ -206,6 +206,9 @@ object Complex { outer =>
 
     val defaultArrayValue = DefaultArrayValue(Complex(0, 0))
 
+    override def close(a: Complex, b: Complex, tolerance: Double): Boolean = {
+      norm(a-b) <= tolerance * math.max(norm(a), norm(b))
+    }
   }
 
   implicit val complexNorm: norm.Impl[Complex, Double] = new norm.Impl[Complex, Double] {
@@ -346,6 +349,13 @@ object Complex { outer =>
 
   implicit object DivCD extends OpDiv.Impl2[Complex, Double, Complex]
   { def apply(a : Complex, b : Double) = a / b}
+
+  // pow
+  implicit object PowCD extends OpPow.Impl2[Complex, Double, Complex]
+  { def apply(a : Complex, b : Double) = a pow b}
+
+  implicit object PowCC extends OpPow.Impl2[Complex, Complex, Complex]
+  { def apply(a : Complex, b : Complex) = a pow b}
 
   //
   // scala.math.Numeric and scala.math.Fractional

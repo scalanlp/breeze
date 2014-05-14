@@ -82,6 +82,22 @@ object Field {
   }
 
   @SerialVersionUID(1L)
+  implicit object fieldBigDecimal extends Field[BigDecimal] {
+    def zero = 0l
+    def one = 1l
+    def ==(a : BigDecimal, b : BigDecimal) = a == b
+    def !=(a : BigDecimal, b : BigDecimal) = a != b
+    def +(a : BigDecimal, b : BigDecimal) = a + b
+    def -(a : BigDecimal, b : BigDecimal) = a - b
+    def *(a : BigDecimal, b : BigDecimal) = a * b
+    def /(a : BigDecimal, b : BigDecimal) = a / b
+
+    override def close(a: BigDecimal, b: BigDecimal, tolerance: Double): Boolean = {
+      (a-b).abs <= tolerance * (a.abs max b.abs)
+    }
+  }
+
+  @SerialVersionUID(1L)
   implicit object fieldFloat extends Field[Float] {
     def zero = 0.0f
     def one = 1.0f

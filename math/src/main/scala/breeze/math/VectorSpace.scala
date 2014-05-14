@@ -165,7 +165,7 @@ trait TensorSpace[V, I, S] extends MutableCoordinateSpace[V, S] {
 }
 
 object TensorSpace {
-  def make[V, I, S](implicit
+  implicit def make[V, I, S](implicit
                     _norm:  norm.Impl2[V, Double, Double],
                     _scalarNorm: norm.Impl[S, Double] ,
                    _mapValues:  CanMapValues[V, S, S, V],

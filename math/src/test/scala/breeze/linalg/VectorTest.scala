@@ -5,7 +5,7 @@ import org.scalatest._
 import org.scalatest.junit._
 import org.scalatest.prop._
 import org.junit.runner.RunWith
-import breeze.math.{DoubleValuedTensorSpaceTestBase, TensorSpace, TensorSpaceTestBase}
+import breeze.math.{Complex, DoubleValuedTensorSpaceTestBase, TensorSpace, TensorSpaceTestBase}
 
 
 /**
@@ -122,4 +122,35 @@ class VectorOps_IntTest extends TensorSpaceTestBase[Vector[Int], Int, Int] {
   }
 
   def genScalar: Arbitrary[Int] = Arbitrary(Arbitrary.arbitrary[Int].map{ _ % 1000 })
+}
+
+@RunWith(classOf[JUnitRunner])
+class VectorOps_ComplexTest extends TensorSpaceTestBase[Vector[Complex], Int, Complex] {
+  val space: TensorSpace[Vector[Complex], Int, Complex] = {
+//    implicit val cannorm = Vector.canNorm[Complex]
+    TensorSpace.make[Vector[Complex], Int, Complex]
+  }
+
+
+  val N = 30
+  implicit def genTriple: Arbitrary[(Vector[Complex], Vector[Complex], Vector[Complex])] = {
+    Arbitrary {
+      for{x <- Arbitrary.arbitrary[Complex]
+          bx <- Arbitrary.arbitrary[Boolean]
+          xl <- Arbitrary.arbitrary[List[Int]]
+          y <- Arbitrary.arbitrary[Complex]
+          by <- Arbitrary.arbitrary[Boolean]
+          yl <- Arbitrary.arbitrary[List[Int]]
+          z <- Arbitrary.arbitrary[Complex]
+          bz <- Arbitrary.arbitrary[Boolean]
+          zl <- Arbitrary.arbitrary[List[Int]]
+      } yield {
+        (if(bx) DenseVector.fill(N)(math.random * x ) else SparseVector(N)( xl.map(i => (i % N).abs -> (math.random * x )):_*),
+          if(by) DenseVector.fill(N)(math.random * y ) else SparseVector(N)( yl.map(i => (i % N).abs -> (math.random * y )):_*),
+          if(bz) DenseVector.fill(N)(math.random * z ) else SparseVector(N)( zl.map(i => (i % N).abs ->(math.random * z )):_*))
+      }
+    }
+  }
+
+  implicit def genScalar: Arbitrary[Complex] = Arbitrary{for(r  <- Arbitrary.arbitrary[Double]; i <- Arbitrary.arbitrary[Double]) yield Complex(r % 100,i % 100)}
 }
