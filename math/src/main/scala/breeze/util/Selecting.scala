@@ -24,6 +24,10 @@ object quickSelect extends UFunc  {
   * swaps in place, and therefore,
   * allows other functions to access the intermediate results of the sorting procedure.
   *
+  * After quickSelectImpl is run, it is guaranteed that the input array will be swapped
+  * around such that every number left of position will equal or smaller than the element at position,
+  * and every number right of position will be equal or larger than the element at position.
+  *
   * This can be useful when further using the results downstream.
   * For example, appending an element or updating an element to an array which has already
   * been through `quickSelectImpl` and then re-calculating `quickSelectImpl`

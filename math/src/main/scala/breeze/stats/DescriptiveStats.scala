@@ -138,9 +138,9 @@ trait DescriptiveStatsTrait {
           } else {
             val tempArray: Array[T] = v.toArray.clone()
             val secondMedianPosition = v.length/2
-            //quickSelectImpl does not clone the array, allowing us to access intermediate semi-sorted results for reuse
-            ( quickSelectImpl(tempArray, secondMedianPosition)._1 +
-              quickSelectImpl(tempArray, secondMedianPosition-1)._1 )/2
+            //quickSelectImpl does not clone the array, allowing us to access intermediate semi-sorted results for reuse in the second calculation
+            ( quickSelectImpl(tempArray, secondMedianPosition) +
+              quickSelectImpl(tempArray, secondMedianPosition-1) )/2
           }
         }
       }
