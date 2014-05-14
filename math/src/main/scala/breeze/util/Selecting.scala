@@ -20,16 +20,14 @@ object quickSelect extends UFunc  {
 
 }
 
-/**quickSelectImpl does not clone the input array before doing a quickSelect-sort, and therefore,
+/**quickSelectImpl does not clone the input array before doing a quickSelect-sort but instead
+  * swaps in place, and therefore,
   * allows other functions to access the intermediate results of the sorting procedure.
-  * This is useful, for example, when calculating a median for a vector with even elements...
-  * `````Scala
-  * (4thSmallestValue, indexOf4thSmallestValue) = quickSelectImpl( length6DV, 4 - 1 )
-  * `````
-  * will allow you to calculate the median directly by accessing the 3rd smallest value as well:
-  * `````Scala
-  * (4thSmallestValue + length6DV(indexOf4thSmallestValue -1))/2
-  * `````
+  *
+  * This can be useful when further using the results downstream.
+  * For example, appending an element or updating an element to an array which has already
+  * been through `quickSelectImpl` and then re-calculating `quickSelectImpl`
+  * will be faster than applying quickSelectImpl de-novo to the original unsorted array.
  *
  */
 object quickSelectImpl extends UFunc  {
