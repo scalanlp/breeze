@@ -487,12 +487,12 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
 trait CSCMatrixOpsLowPrio { this: CSCMatrixOps =>
 
 
-  implicit def canMulM_V_def[@expand.args(Int, Float, Double, Long) T, A, B](implicit bb :  B <:< Vector[T], op: OpMulMatrix.Impl2[CSCMatrix[T], Vector[T], Vector[T]]) = (
+  implicit def canMulM_V_def[T, A, B<:Vector[T]](implicit bb :  B <:< Vector[T], op: OpMulMatrix.Impl2[CSCMatrix[T], Vector[T], Vector[T]]) = (
     implicitly[OpMulMatrix.Impl2[CSCMatrix[T], Vector[T], Vector[T]]].asInstanceOf[breeze.linalg.operators.OpMulMatrix.Impl2[A, B, Vector[T]]]
     )
 
   // ibid.
-  implicit def canMulM_M_def[@expand.args(Int, Float, Double, Long) T, B](implicit bb :  B <:< Matrix[T],
+  implicit def canMulM_M_def[T, B <: Matrix[T]](implicit bb :  B <:< Matrix[T],
                                                                           op: OpMulMatrix.Impl2[CSCMatrix[T], Matrix[T], CSCMatrix[T]]) = (
     op.asInstanceOf[OpMulMatrix.Impl2[CSCMatrix[T], B, CSCMatrix[T]]]
     )

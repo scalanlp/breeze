@@ -567,13 +567,13 @@ trait DenseMatrixOpsLowPrio { this: DenseMatrixOps =>
   // LOL, if we explicitly annotate the type, then the implicit resolution thing will load this recursively.
   // If we don't, then everything works ok.
 
-  implicit def canMulM_V_def[@expand.args(Int, Float, Double, Long) T, A, B](implicit bb :  B <:< Vector[T], op: OpMulMatrix.Impl2[DenseMatrix[T], Vector[T], DenseVector[T]]) = (
-    implicitly[OpMulMatrix.Impl2[DenseMatrix[T], Vector[T], DenseVector[T]]].asInstanceOf[breeze.linalg.operators.OpMulMatrix.Impl2[A, B, DenseVector[T]]]
+  implicit def canMulM_V_def[T, B <: Vector[T]](implicit bb :  B <:< Vector[T], op: OpMulMatrix.Impl2[DenseMatrix[T], Vector[T], DenseVector[T]]) = (
+    implicitly[OpMulMatrix.Impl2[DenseMatrix[T], Vector[T], DenseVector[T]]].asInstanceOf[breeze.linalg.operators.OpMulMatrix.Impl2[DenseMatrix[T], B, DenseVector[T]]]
     )
 
   // ibid.
-  implicit def canMulM_M_def[@expand.args(Int, Float, Double, Long) T, B](implicit bb :  B <:< Matrix[T],
-                                                                                   op: OpMulMatrix.Impl2[DenseMatrix[T], Matrix[T], DenseMatrix[T]]) = (
+  implicit def canMulM_M_def[T, B  <: Matrix[T]](implicit bb :  B <:< Matrix[T],
+                                                 op: OpMulMatrix.Impl2[DenseMatrix[T], Matrix[T], DenseMatrix[T]]) = (
      op.asInstanceOf[OpMulMatrix.Impl2[DenseMatrix[T], B, DenseMatrix[T]]]
     )
 
