@@ -5,7 +5,7 @@ import breeze.linalg._
 import org.netlib.util.intW
 import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 import breeze.macros.expand
-import breeze.math.{Semiring, Complex}
+import breeze.math.{Complex, Semiring}
 import scala.math.BigInt
 import breeze.linalg.support.{CanCollapseAxis, CanSlice2}
 import breeze.util.ArrayUtil
@@ -423,7 +423,7 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
-  implicit def dm_dm_UpdateOp[@expand.args(Int, Double, Float, Long, Complex) T,
+  implicit def dm_dm_UpdateOp[@expand.args(Int, Double, Float, Long) T,
                               @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _}) op: Op.Impl2[T, T, T]):
   Op.InPlaceImpl2[DenseMatrix[T], DenseMatrix[T]] =
@@ -461,7 +461,7 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
-  implicit def dm_s_UpdateOp[@expand.args(Int, Double, Float, Long, Complex) T,
+  implicit def dm_s_UpdateOp[@expand.args(Int, Double, Float, Long) T,
                              @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _}) op: Op.Impl2[T, T, T]):
   Op.InPlaceImpl2[DenseMatrix[T], T] =
@@ -492,7 +492,7 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
-  implicit def op_DM_S[@expand.args(Int, Long, Float, Double, Complex) T,
+  implicit def op_DM_S[@expand.args(Int, Long, Float, Double) T,
                        @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpMod, OpDiv, OpPow) Op]:
   Op.Impl2[DenseMatrix[T], T, DenseMatrix[T]] = {
     val uop = implicitly[Op.InPlaceImpl2[DenseMatrix[T], T]]
@@ -514,7 +514,7 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
-  implicit def s_dm_op[@expand.args(Int, Double, Float, Long, Complex) T,
+  implicit def s_dm_op[@expand.args(Int, Double, Float, Long) T,
                        @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {_ % _}, {_ pow _}) op: Op.Impl2[T, T, T]):
   Op.Impl2[T, DenseMatrix[T], DenseMatrix[T]] =
@@ -551,7 +551,7 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
-  implicit def op_DM_DM[@expand.args(Int, Long, Float, Double, Complex) T,
+  implicit def op_DM_DM[@expand.args(Int, Long, Float, Double) T,
                         @expand.args(OpAdd, OpSub, OpMulScalar, OpMod, OpDiv, OpPow) Op]:
   Op.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]] = {
     val uop = implicitly[Op.InPlaceImpl2[DenseMatrix[T], DenseMatrix[T]]]
@@ -583,7 +583,7 @@ trait DenseMatrixOpsLowPrio { this: DenseMatrixOps =>
     )
 
   // ibid.
-  implicit def canMulM_M_def[@expand.args(Int, Float, Double, Long, Complex) T, B](implicit bb :  B <:< Matrix[T],
+  implicit def canMulM_M_def[@expand.args(Int, Float, Double, Long) T, B](implicit bb :  B <:< Matrix[T],
                                                                                    op: OpMulMatrix.Impl2[DenseMatrix[T], Matrix[T], DenseMatrix[T]]) = (
      op.asInstanceOf[OpMulMatrix.Impl2[DenseMatrix[T], B, DenseMatrix[T]]]
     )
@@ -633,7 +633,7 @@ trait DenseMatrixMultOps extends DenseMatrixOps with DenseMatrixOpsLowPrio { thi
 
   @expand
   @expand.valify
-  implicit def op_DM_M[@expand.args(Int, Long, Float, Double, Complex) T]:
+  implicit def op_DM_M[@expand.args(Int, Long, Float, Double) T]:
   BinaryRegistry[DenseMatrix[T], Matrix[T], OpMulMatrix.type, DenseMatrix[T]] =
 
   new BinaryRegistry[DenseMatrix[T], Matrix[T], OpMulMatrix.type, DenseMatrix[T]] {
@@ -712,7 +712,7 @@ trait DenseMatrixMultOps extends DenseMatrixOps with DenseMatrixOpsLowPrio { thi
 
   @expand
   @expand.valify
-  implicit def op_DM_DM[@expand.args(Int, Long, Float, Double, Complex) T]:
+  implicit def op_DM_DM[@expand.args(Int, Long, Float, Double) T]:
   OpMulMatrix.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]] =
 
   new OpMulMatrix.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]] {

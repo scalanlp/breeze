@@ -131,7 +131,7 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
 
   @expand
   @expand.valify
-  implicit def canMulDM_M[@expand.args(Int, Float, Double, Long, Complex) T]:breeze.linalg.operators.OpMulMatrix.Impl2[DenseMatrix[T], CSCMatrix[T], DenseMatrix[T]] = new breeze.linalg.operators.OpMulMatrix.Impl2[DenseMatrix[T], CSCMatrix[T], DenseMatrix[T]] {
+  implicit def canMulDM_M[@expand.args(Int, Float, Double, Long) T]:breeze.linalg.operators.OpMulMatrix.Impl2[DenseMatrix[T], CSCMatrix[T], DenseMatrix[T]] = new breeze.linalg.operators.OpMulMatrix.Impl2[DenseMatrix[T], CSCMatrix[T], DenseMatrix[T]] {
     def apply(a: DenseMatrix[T], b: CSCMatrix[T]) = {
       if(a.cols != b.rows) throw new RuntimeException("Dimension Mismatch!")
 
