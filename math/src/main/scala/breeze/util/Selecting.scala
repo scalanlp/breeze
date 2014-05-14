@@ -15,7 +15,7 @@ object quickSelect extends UFunc  {
   @expand
   implicit def reduce[@expand.args(Int, Long, Double, Float) T]:Impl2[Array[T], Int, T] =
     new Impl2[Array[T], Int, T] {
-      def apply(a: Array[T], position: Int): T = quickSelectImpl(a.clone(), position)._1
+      def apply(a: Array[T], position: Int): T = quickSelectImpl(a.clone(), position)
     }
 
 }
@@ -34,11 +34,11 @@ object quickSelectImpl extends UFunc  {
 
   /** Quickselect from an array of T. */
   @expand
-  implicit def impl[@expand.args(Int, Long, Double, Float) T]: Impl2[Array[T], Int, (T, Int)] =
+  implicit def impl[@expand.args(Int, Long, Double, Float) T]: Impl2[Array[T], Int, T] =
 
-    new Impl2[Array[T], Int, (T, Int)] {
+    new Impl2[Array[T], Int, T] {
 
-      def apply(x: Array[T], position: Int): (T, Int) = {
+      def apply(x: Array[T], position: Int): T = {
 
         var pivotIndex = -1
 
@@ -80,7 +80,7 @@ object quickSelectImpl extends UFunc  {
         }
 
         implQuickSelectSort(x, position)
-        (x(pivotIndex), pivotIndex) // return
+        x(pivotIndex) // return
 
       }
     }

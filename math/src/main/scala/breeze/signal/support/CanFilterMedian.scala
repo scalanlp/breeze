@@ -40,7 +40,7 @@ object CanFilterMedian {
 
           var index = 0
           val tempDataExtract = data(index until index + windowLength).toArray
-          var (currentMean, currentPivotIndex) = quickSelectImpl(tempDataExtract, halfWindow)
+          var currentMean = quickSelectImpl(tempDataExtract, halfWindow)
           tempret(index) = currentMean
           index += 1
 
