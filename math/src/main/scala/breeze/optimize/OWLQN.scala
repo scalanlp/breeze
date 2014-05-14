@@ -23,14 +23,13 @@ class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-
   override protected def chooseDescentDirection(state: State, fn: DiffFunction[T]) = {
     val descentDir = super.chooseDescentDirection(state.copy(grad = state.adjustedGradient), fn)
 
-    // The original paper requires that the descent direction be corrected to be in the same
-    // directional space (within the same hypercube) as the adjusted gradient for proof.
+    // The original paper requires that the descent direction be corrected to be
+    // in the same directional (within the same hypercube) as the adjusted gradient for proof.
     // Although this doesn't seem to affect the outcome that much in most of cases, there are some cases
-    // where the algorithm won't converge (confirmed with the author).
-    // However, this requires operations like below that don't seem to work currently.
-    // val correctedDir = descentDir :* ((descentDir :* state.adjustedGradient) :< 0.0)
+    // where the algorithm won't converge (confirmed with the author, Galen Andrew).
+    val correctedDir = vspace.zipMapValues.map(descentDir, state.adjustedGradient, { case (d, g) => if (d * g < 0) d else 0.0 })
 
-    descentDir
+    correctedDir
   }
 
   override protected def determineStepSize(state: State, f: DiffFunction[T], dir: T) = {
@@ -55,6 +54,11 @@ class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-
          val (v, newG) =  f.calculate(newX)
          val (adjv, adjgrad) = adjust(newX, newG, v)
          // TODO not sure if this is quite right...
+
+         // Technically speaking, this is not quite right.
+         // dir should be (newX - state.x) according to the paper and the author.
+         // However, in practice, this seems fine.
+         // And interestingly the MSR reference implementation does the same thing (but they don't do wolfe condition checks.).
          adjv -> (adjgrad dot dir)
        }
     }
