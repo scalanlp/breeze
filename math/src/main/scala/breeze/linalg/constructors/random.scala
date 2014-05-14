@@ -67,6 +67,7 @@ object randn extends RandomGeneratorUFunc[Double] {
 
   protected def gen(implicit basis: RandBasis = Rand):Rand[Double] = basis.gaussian
   protected def genRange(low: Double, high:Double)(implicit basis: RandBasis = Rand):Rand[Double] = basis.gaussian(low, high)
+
   protected val _classTag: ClassTag[Double] = scala.reflect.classTag[Double]
   protected val _dav = DefaultArrayValue[Double](0.0)
 

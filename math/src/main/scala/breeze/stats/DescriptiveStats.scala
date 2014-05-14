@@ -1,6 +1,7 @@
 package breeze.stats
 
 import util.Sorting
+import breeze.util.{quickSelectImpl, quickSelect}
 
 
 /*
@@ -129,15 +130,18 @@ trait DescriptiveStatsTrait {
   object median extends UFunc {
 
     @expand
-    implicit def reduce[@expand.args(Int, Long, Double) T]: Impl[DenseVector[T], Double] =
-      new Impl[DenseVector[T], Double] {
-        def apply(v: DenseVector[T]): Double = {
-          val temp: DenseVector[Double] = convert(v, Double)
-          val temp2 = temp.toScalaVector.sorted
-          if( isOdd(v.length) ) temp2( (v.length - 1)/2 )
-          else {
-            val index2 = v.length/2
-            ( temp(index2 -1) + temp(index2) )/2d
+    implicit def reduce[@expand.args(Int, Long, Double, Float) T]: Impl[DenseVector[T], T] =
+      new Impl[DenseVector[T], T] {
+        def apply(v: DenseVector[T]): T = {
+          if(isOdd(v.length)){
+            quickSelect(v.toArray, (v.length - 1)/2 )
+          } else {
+            val tempArray: Array[T] = v.toArray.clone()
+            val secondMedianPosition = v.length/2
+            //quickSelectImpl does not clone the array, and will left-sort 'tempArray', allowing us to access the intermediate results
+            //this allows us to extract the two values needed to obtain an odd median
+            val (secondMedianValue: T, secondMedianValueArrayIndex: Int) = quickSelectImpl(tempArray, secondMedianPosition)
+            ( secondMedianValue + tempArray(secondMedianValueArrayIndex-1) )/2
           }
         }
       }
@@ -148,17 +152,6 @@ trait DescriptiveStatsTrait {
         def apply(m: DenseMatrix[T]) = median(m.toDenseVector)
       }
 
-    implicit def reduceFloat: Impl[DenseVector[Float], Float] =
-      new Impl[DenseVector[Float], Float] {
-        def apply(v: DenseVector[Float]): Float = {
-          val temp = v.toScalaVector.sorted
-          if( isOdd(v.length) ) temp( (v.length - 1)/2 )
-          else {
-            val index2 = v.length/2
-            (temp(index2 -1) + temp(index2))/2f
-          }
-        }
-      }
   }
 }
 

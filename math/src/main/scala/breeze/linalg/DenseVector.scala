@@ -195,7 +195,7 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
 
 
 
-  override def toArray(implicit cm: ClassTag[E]) = if(stride == 1){
+  override def toArray(implicit cm: ClassTag[E]): Array[E] = if(stride == 1){
     ArrayUtil.copyOfRange(data, offset, offset + length)
   } else {
     val arr = new Array[E](length)
