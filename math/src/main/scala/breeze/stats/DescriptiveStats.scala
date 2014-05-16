@@ -138,10 +138,9 @@ trait DescriptiveStatsTrait {
           } else {
             val tempArray: Array[T] = v.toArray.clone()
             val secondMedianPosition = v.length/2
-            //quickSelectImpl does not clone the array, and will left-sort 'tempArray', allowing us to access the intermediate results
-            //this allows us to extract the two values needed to obtain an odd median
-            val (secondMedianValue: T, secondMedianValueArrayIndex: Int) = quickSelectImpl(tempArray, secondMedianPosition)
-            ( secondMedianValue + tempArray(secondMedianValueArrayIndex-1) )/2
+            //quickSelectImpl does not clone the array, allowing us to access intermediate semi-sorted results for reuse in the second calculation
+            ( quickSelectImpl(tempArray, secondMedianPosition) +
+              quickSelectImpl(tempArray, secondMedianPosition-1) )/2
           }
         }
       }

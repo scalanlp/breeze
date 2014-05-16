@@ -15,32 +15,34 @@ object quickSelect extends UFunc  {
   @expand
   implicit def reduce[@expand.args(Int, Long, Double, Float) T]:Impl2[Array[T], Int, T] =
     new Impl2[Array[T], Int, T] {
-      def apply(a: Array[T], position: Int): T = quickSelectImpl(a.clone(), position)._1
+      def apply(a: Array[T], position: Int): T = quickSelectImpl(a.clone(), position)
     }
 
 }
 
-/**quickSelectImpl does not clone the input array before doing a quickSelect-sort, and therefore,
+/**quickSelectImpl does not clone the input array before doing a quickSelect-sort but instead
+  * swaps in place, and therefore,
   * allows other functions to access the intermediate results of the sorting procedure.
-  * This is useful, for example, when calculating a median for a vector with even elements...
-  * `````Scala
-  * (4thSmallestValue, indexOf4thSmallestValue) = quickSelectImpl( length6DV, 4 - 1 )
-  * `````
-  * will allow you to calculate the median directly by accessing the 3rd smallest value as well:
-  * `````Scala
-  * (4thSmallestValue + length6DV(indexOf4thSmallestValue -1))/2
-  * `````
+  *
+  * After quickSelectImpl is run, it is guaranteed that the input array will be swapped
+  * around such that every number left of position will be equal or smaller than the element at position,
+  * and every number right of position will be equal or larger than the element at position.
+  *
+  * This can be useful when further using the intermediate results downstream.
+  * For example, appending an element or updating an element to an array which has already
+  * been through `quickSelectImpl` and then re-calculating `quickSelectImpl`
+  * will be faster than applying quickSelectImpl de-novo to the original unsorted array.
  *
  */
 object quickSelectImpl extends UFunc  {
 
   /** Quickselect from an array of T. */
   @expand
-  implicit def impl[@expand.args(Int, Long, Double, Float) T]: Impl2[Array[T], Int, (T, Int)] =
+  implicit def impl[@expand.args(Int, Long, Double, Float) T]: Impl2[Array[T], Int, T] =
 
-    new Impl2[Array[T], Int, (T, Int)] {
+    new Impl2[Array[T], Int, T] {
 
-      def apply(x: Array[T], position: Int): (T, Int) = {
+      def apply(x: Array[T], position: Int): T = {
 
         var pivotIndex = -1
 
@@ -82,7 +84,7 @@ object quickSelectImpl extends UFunc  {
         }
 
         implQuickSelectSort(x, position)
-        (x(pivotIndex), pivotIndex) // return
+        x(pivotIndex) // return
 
       }
     }
