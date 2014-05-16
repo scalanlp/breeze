@@ -11,7 +11,7 @@ import breeze.generic.UFunc
  */
 object quickSelect extends UFunc  {
 
-  /** Quickselect from an array of T. */
+//  /** Quickselect from an array of T. */
   @expand
   implicit def reduce[@expand.args(Int, Long, Double, Float) T]:Impl2[Array[T], Int, T] =
     new Impl2[Array[T], Int, T] {
@@ -36,7 +36,6 @@ object quickSelect extends UFunc  {
  */
 object quickSelectImpl extends UFunc  {
 
-  /** Quickselect from an array of T. */
   @expand
   implicit def impl[@expand.args(Int, Long, Double, Float) T]: Impl2[Array[T], Int, T] =
 
