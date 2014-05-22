@@ -7,8 +7,9 @@ import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 
 /**
  * TODO
- * @ dwhl: What does enforceLength exactly do?
  *
+ * @param enforceLength if false, then the BitVector won't throw exceptions if it's used in
+ *                      operations with vectors longer than it.
  * @author dlwh
  * @author Martin Senne
  **/
@@ -115,5 +116,6 @@ object BitVector extends BitVectorOps {
 
     def isTraversableAgain(from: BitVector): Boolean = true
   }
+
 }
 

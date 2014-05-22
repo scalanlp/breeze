@@ -5,7 +5,9 @@ import breeze.macros.expand
 import java.util
 import scala.math.BigInt
 import breeze.math.{Semiring, Complex}
-
+import breeze.linalg.support.CanMapValues
+import scala.reflect.ClassTag
+import breeze.storage.DefaultArrayValue
 
 
 trait BitVectorOps {
@@ -146,9 +148,22 @@ trait BitVectorOps {
 
   implicit def canDot_Other_BV[T, Other](implicit op: OpMulInner.Impl2[BitVector, Other, T]):OpMulInner.Impl2[Other, BitVector, T] = {
     new OpMulInner.Impl2[Other, BitVector, T] {
-      def apply(a: Other, b: BitVector) = {
+      def apply(a: Other, b: BitVector): T = {
         op(b,a)
       }
     }
   }
+
+
+  implicit def canMapValues[R:ClassTag:DefaultArrayValue]:CanMapValues[BitVector, Boolean, R, DenseVector[R]] = new CanMapValues[BitVector, Boolean, R, DenseVector[R]] {
+    /** Maps all key-value pairs from the given collection. */
+    override def map(from: BitVector, fn: (Boolean) => R): DenseVector[R] = {
+      DenseVector.tabulate(from.length)(i => fn(from(i)))
+    }
+
+    /** Maps all active key-value pairs from the given collection. */
+    override def mapActive(from: BitVector, fn: (Boolean) => R): DenseVector[R] = map(from, fn)
+  }
+
+  implicit object cmvHandHold extends CanMapValues.HandHold[BitVector, Boolean]
 }
