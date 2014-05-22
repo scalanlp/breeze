@@ -35,28 +35,6 @@ libraryDependencies ++= Seq(
       "com.google.code.gson" % "gson" % "1.7.1"
       )
 
-lazy val key: sbt.AttributeKey[Boolean] = AttributeKey[Boolean]("javaOptionsPatched")
-/*
-onLoad in Global ~= { previous => state =>
-  val k = key.asInstanceOf[sbt.AttributeKey[Boolean]]
-  previous {
-    state.get(k) match {
-      case None =>
-        // get the runtime classpath, turn into a colon-delimited string
-        // return a state with javaOptionsPatched = true and javaOptions set correctly
-        val extracted = Project.extract(state)
-        val set = for(proj <- extracted.structure.allProjectRefs) yield {
-          val classPath = Project.runTask(fullClasspath in Runtime in proj, state).get._2.toEither.right.map(_.files.mkString(":")).right.getOrElse("")
-          javaOptions in (proj, Runtime) ++= Seq("-cp", classPath)
-        }
-        extracted.append(set, state.put(k, true))
-        case Some(_) =>
-        state // the javaOptions are already patched
-    }
-  }
-}
-*/
-
 pomIncludeRepository := { _ => false }
 
 fork := true

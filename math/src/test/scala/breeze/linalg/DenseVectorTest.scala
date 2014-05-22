@@ -186,6 +186,7 @@ class DenseVectorTest extends FunSuite with Checkers {
   }
 
 
+
   test("Slice and Transpose Float") {
     val x = DenseVector[Float](1, 2, 3, 4, 5)
 
@@ -206,6 +207,13 @@ class DenseVectorTest extends FunSuite with Checkers {
     val y = x.t
     val expected = new DenseMatrix(1, 2, Array(Complex(1, -1), Complex(1, 1)))
     assert(y === expected)
+  }
+
+
+  test("Transpose Apply") {
+    val x = DenseVector(1, 2, 3)
+    val xt = x.t
+    assert(xt(1) === 2)
   }
 
   test("Map(Active)Pairs Double") {

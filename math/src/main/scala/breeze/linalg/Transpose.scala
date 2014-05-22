@@ -62,4 +62,9 @@ trait TransposeLowPrio {
     }
 
   }
+
+  implicit class LiftApply[K, T](_trans: Transpose[Tensor[K, T]]) {
+    def apply(i: K):T = _trans.inner(i)
+  }
+
 }
