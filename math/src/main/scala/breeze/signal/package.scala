@@ -269,6 +269,8 @@ package object signal {
 
   // </editor-fold>
 
+  def designFilterButterworth()
+    
   // <editor-fold defaultstate="collapsed" desc=" filterMedian ">
 
   /** Median filter the input data.
