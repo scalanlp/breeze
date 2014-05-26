@@ -514,7 +514,18 @@ with MatrixConstructors[DenseMatrix] {
 
   implicit def canMapValues[V, R:ClassTag]: CanMapValues[DenseMatrix[V], V, R, DenseMatrix[R]] = {
     new CanMapValues[DenseMatrix[V],V,R,DenseMatrix[R]] {
-      override def map(from : DenseMatrix[V], fn : (V=>R)): DenseMatrix[R] = {
+      private def simpleMap(from : DenseMatrix[V], fn : (V=>R)): DenseMatrix[R] = {
+        val data = new Array[R](from.size)
+        var i=from.offset
+        val iMax = data.size + from.offset
+        while (i < iMax) {
+          data(i) == fn(from.data(i))
+          i += 1
+        }
+        return new DenseMatrix[R](from.rows, from.cols, data)
+      }
+
+      private def generalMap(from : DenseMatrix[V], fn : (V=>R)): DenseMatrix[R] = {
         val data = new Array[R](from.size)
         var j = 0
         var off = 0
@@ -528,6 +539,11 @@ with MatrixConstructors[DenseMatrix] {
           j += 1
         }
         new DenseMatrix[R](from.rows, from.cols, data)
+      }
+
+      override def map(from : DenseMatrix[V], fn : (V=>R)): DenseMatrix[R] = (from.isTranspose, from.rows, from.cols, from.majorStride) match {
+        case (false, rows, _, majorStride) if rows == majorStride => simpleMap(from, fn)
+        case _ => generalMap(from, fn)
       }
 
       override def mapActive(from : DenseMatrix[V], fn : (V=>R)) =
