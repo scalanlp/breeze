@@ -25,6 +25,11 @@ class MappingUfuncBenchmark extends BreezeBenchmark with BuildsRandomMatrices wi
     addOne(mat)
   })
 
+  def timeMappingUfuncDenseMatWithStride(reps: Int) = runWith(reps, {randomMatrix(2048,2048*2)})((mat:DenseMatrix[Double]) => {
+    val newMat = new DenseMatrix(2048, 2048, mat.data, offset=0, majorStride=2048)
+    addOne(newMat)
+  })
+
   def timeMappingUfuncDenseMatHarder(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
     harderUfunc(mat)
   })
