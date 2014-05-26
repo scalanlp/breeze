@@ -428,8 +428,9 @@ with MatrixConstructors[DenseMatrix] {
 
         val cols = colsWNegative.getRangeWithoutNegativeIndexes(m.cols)
 
-        if(cols.isEmpty) new DenseMatrix(m.rows, 0, m.data, 0, 1)
-        else if(!m.isTranspose) {
+        if(cols.isEmpty) {
+          new DenseMatrix(m.rows, 0, m.data, 0, m.rows)
+        } else if(!m.isTranspose) {
           val first = cols.head
           if(cols.last >= m.cols) {
             throw new IndexOutOfBoundsException(s"Col slice of $cols was bigger than matrix cols of ${m.cols}")
