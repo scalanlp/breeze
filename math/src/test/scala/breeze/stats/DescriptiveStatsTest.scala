@@ -1,12 +1,12 @@
 package breeze.stats
 
 import org.scalatest.{FunSuite, WordSpec}
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.Matchers
 import scala.util.Random
 import breeze.linalg.DenseVector
 import breeze.math.Complex
 
-class DescriptiveStatsTest extends WordSpec with ShouldMatchers {
+class DescriptiveStatsTest extends WordSpec with Matchers {
   "DescriptiveStats" should {
     "percentile should not explode when p = 1" in {
       val a = List.fill(100)(1.0)
@@ -29,15 +29,11 @@ class DescriptiveStatsTest extends WordSpec with ShouldMatchers {
       val a = List(1.0,2.0,3.0,4)
       val b = List(2.0,-3,4.0,5)
       DescriptiveStats.cov(a,b) should be (2+(2.0/3))
-
     }
   }
-
-
 }
 
 class DescriptiveStatsTest2 extends FunSuite {
-
   //Tests copied over from LinearAlgebraTests.scala
 
   test("complex mean") {
@@ -75,5 +71,5 @@ class DescriptiveStatsTest2 extends FunSuite {
     assert( median(dataEvenDuplicate)==250)
     assert( median(dataEvenDuplicate2)==450)
   }
-
 }
+

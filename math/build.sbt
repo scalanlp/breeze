@@ -2,11 +2,11 @@ organization := "org.scalanlp"
 
 name := "breeze"
 
-scalaVersion := "2.11.0"
+scalaVersion := "2.11.1"
 
-crossScalaVersions  := Seq("2.11.0", "2.10.3")
+crossScalaVersions  := Seq("2.11.1", "2.11.0", "2.10.3")
 
-addCompilerPlugin("org.scalamacros" %% "paradise" % "2.0.0-M8" cross CrossVersion.full)
+addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0-M1" cross CrossVersion.full)
 
 publishMavenStyle := true
 
@@ -47,9 +47,7 @@ scalacOptions ++= Seq("-deprecation","-language:_")
 
 // scalacOptions in (Compile, console) += "-Xlog-implicits"
 
-
 javacOptions ++= Seq("-target", "1.6", "-source","1.6")
-
 
 libraryDependencies ++= Seq(
   "org.scalanlp" %% "breeze-macros" % "0.3.1" % "compile",
@@ -67,7 +65,6 @@ libraryDependencies ++= Seq(
   "org.apache.logging.log4j" % "log4j-api" % "2.0-beta9" % "test"
 )
 
-
 libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
   sv match {
     case x if x startsWith "2.10" =>
@@ -80,9 +77,6 @@ libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
       deps
   }
 }
-
-
-
 
 // see https://github.com/typesafehub/scalalogging/issues/23
 testOptions in Test += Tests.Setup(classLoader =>
@@ -104,3 +98,4 @@ resolvers ++= Seq(
     )
 
 testOptions in Test += Tests.Argument("-oDF")
+
