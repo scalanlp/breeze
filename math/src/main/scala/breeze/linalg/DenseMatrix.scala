@@ -520,7 +520,7 @@ with MatrixConstructors[DenseMatrix] {
         var i=from.offset
         val iMax = data.size + from.offset
         while (i < iMax) {
-          data(i) == fn(from.data(i))
+          data(i) = fn(from.data(i))
           i += 1
         }
         return new DenseMatrix[R](from.rows, from.cols, data)
