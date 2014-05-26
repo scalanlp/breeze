@@ -65,14 +65,10 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
   /** Creates a matrix with the specified data array and rows. columns inferred automatically */
   def this(rows: Int, data: Array[V], offset: Int) = this(rows, {assert(data.length % rows == 0); data.length/rows}, data, offset)
 
-  if (isTranspose) {
-    if (majorStride < cols) { throw new IndexOutOfBoundsException("MajorStride == " + majorStride + " is smaller than cols == " + cols + ", which is impossible") }
-    if (data.size < offset + (cols-1) + (rows-1)*majorStride) { throw new IndexOutOfBoundsException("Storage array has size " + data.size + " but indices can grow as large as " + (offset + (cols-1) + (rows-1)*majorStride)) }
-  }
-  if (!isTranspose) {
-    if (majorStride < rows) { throw new IndexOutOfBoundsException("MajorStride == " + majorStride + " is smaller than rows == " + rows + ", which is impossible") }
-    if (data.size < offset + (rows-1) + (cols-1)*majorStride) { throw new IndexOutOfBoundsException("Storage array has size " + data.size + " but indices can grow as large as " + (offset + (rows-1) + (cols-1)*majorStride)) }
-  }
+  if (isTranspose && (majorStride < cols)) { throw new IndexOutOfBoundsException("MajorStride == " + majorStride + " is smaller than cols == " + cols + ", which is impossible") }
+  if ((!isTranspose) && (majorStride < rows)) { throw new IndexOutOfBoundsException("MajorStride == " + majorStride + " is smaller than rows == " + rows + ", which is impossible") }
+
+if (data.size < linearIndex(rows-1, cols-1)) { throw new IndexOutOfBoundsException("Storage array has size " + data.size + " but indices can grow as large as " + linearIndex(rows-1,cols-1)) }
 
   def apply(row: Int, col: Int) = {
     if(row < - rows || row >= rows) throw new IndexOutOfBoundsException((row,col) + " not in [-"+rows+","+rows+") x [-"+cols+"," + cols+")")
