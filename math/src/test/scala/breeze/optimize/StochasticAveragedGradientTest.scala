@@ -26,14 +26,13 @@ import breeze.linalg._
 
 @RunWith(classOf[JUnitRunner])
 class StochasticAveragedGradientTest extends OptimizeTestBase {
-
   test("optimize a simple multivariate gaussian") {
     val lbfgs = new StochasticAveragedGradient [DenseVector[Double]](100)
 
     def optimizeThis(init: DenseVector[Double]) = {
       val f = BatchDiffFunction.wrap(new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
-          (((x - 3.0) :^ 2.0).sum,(x * 2.0) - 6.0)
+          ((sum((x - 3.0) :^ 2.0)), (x * 2.0) - 6.0)
         }
       })
 
@@ -42,7 +41,6 @@ class StochasticAveragedGradientTest extends OptimizeTestBase {
     }
 
     check(Prop.forAll(optimizeThis _))
-
   }
 
   test("optimize a simple multivariate gaussian with l2 regularization") {
@@ -62,10 +60,7 @@ class StochasticAveragedGradientTest extends OptimizeTestBase {
     }
 
     check(Prop.forAll(optimizeThis _))
-
    }
-
-
 
   /*
    test("lbfgs-c rosenbroch example") {
@@ -102,13 +97,7 @@ class StochasticAveragedGradientTest extends OptimizeTestBase {
     init(0 until init.length by 2) := -1.2
     init(1 until init.length by 2) := 1.0
     assert(optimizeThis(init))
-
-
    }
    */
-
-
-
-
 }
 

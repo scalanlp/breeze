@@ -3,18 +3,18 @@ organization := "org.scalanlp"
 // lazy val breeze = project in file("core")
 name := "breeze-natives"
 
-scalaVersion := "2.11.0"
+scalaVersion := "2.11.1"
 
-crossScalaVersions  := Seq("2.11.0", "2.10.3")
+crossScalaVersions  := Seq("2.11.1", "2.11.0", "2.10.3")
 
-addCompilerPlugin("org.scalamacros" %% "paradise" % "2.0.0-M8" cross CrossVersion.full)
+addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0-M1" cross CrossVersion.full)
 
 publishMavenStyle := true
 
 publishTo <<= version { (v: String) =>
   val nexus = "https://oss.sonatype.org/"
   if (v.trim.endsWith("SNAPSHOT")) 
-    Some("snapshots" at nexus + "content/repositories/snapshots") 
+    Some("snapshots" at nexus + "content/repositories/snapshots")
   else
     Some("releases"  at nexus + "service/local/staging/deploy/maven2")
 }
@@ -48,9 +48,7 @@ scalacOptions ++= Seq("-deprecation","-language:_")
 
 // scalacOptions in (Compile, console) += "-Xlog-implicits"
 
-
   javacOptions ++= Seq("-target", "1.6", "-source","1.6")
-
 
 libraryDependencies ++= Seq(
   "com.github.fommil.netlib" % "all" % "1.1.2" pomOnly()
@@ -72,3 +70,4 @@ resolvers ++= Seq(
     )
 
 testOptions in Test += Tests.Argument("-oDF")
+
