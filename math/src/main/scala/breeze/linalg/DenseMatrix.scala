@@ -437,7 +437,7 @@ with MatrixConstructors[DenseMatrix] {
           if(cols.last >= m.cols) {
             throw new IndexOutOfBoundsException(s"Col slice of $cols was bigger than matrix cols of ${m.cols}")
           }
-          new DenseMatrix(m.rows, cols.length, m.data, m.offset + first * m.majorStride, m.majorStride * cols.step * math.signum(cols.step))
+          new DenseMatrix(m.rows, cols.length, m.data, m.offset + first * m.majorStride, m.majorStride * cols.step)
         } else {
           canSliceRows(m.t, cols, ::).t
         }
