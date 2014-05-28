@@ -13,7 +13,7 @@ lazy val benchmark = project.in(file("benchmark")).dependsOn(math, natives)
 
 scalaVersion := "2.11.1"
 
-crossScalaVersions  := Seq("2.11.1", "2.11.0", "2.10.3")
+crossScalaVersions  := Seq("2.11.1", "2.10.3")
 
 addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0-M1" cross CrossVersion.full)
 

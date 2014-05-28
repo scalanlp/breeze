@@ -15,7 +15,7 @@ import scala.reflect.ClassTag
 
 
 
-trait DenseMatrixMultiplyStuff extends DenseMatrixOps with DenseMatrixMultOps { this: DenseMatrix.type =>
+trait DenseMatrixMultiplyStuff extends DenseMatrixOps with DenseMatrixMultOps with LowPriorityDenseMatrix { this: DenseMatrix.type =>
 
   // <editor-fold defaultstate="collapsed" desc=" OpMulMatrix implementations ">
 
