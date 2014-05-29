@@ -173,6 +173,9 @@ class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with Do
 
     val b2 : DenseMatrix[Double] = a.mapValues(_ + 1.0)
     assert(b2 === DenseMatrix((2.0,1.0,1.0),(3.0,4.0,0.0)))
+
+    val b3 = a.t.mapValues(_ + 1)
+    assert(b3 === DenseMatrix((2,3), (1,4), (1,0)))
   }
 
   /*

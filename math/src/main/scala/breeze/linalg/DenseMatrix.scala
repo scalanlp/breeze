@@ -524,7 +524,7 @@ with MatrixConstructors[DenseMatrix] {
 
   implicit def canMapValues[V, R:ClassTag]: CanMapValues[DenseMatrix[V], V, R, DenseMatrix[R]] = {
     new CanMapValues[DenseMatrix[V],V,R,DenseMatrix[R]] {
-      private def simpleMap(from : DenseMatrix[V], fn : (V=>R)): DenseMatrix[R] = {
+      private def simpleMap(from : DenseMatrix[V], fn : (V=>R), isTranspose: Boolean): DenseMatrix[R] = {
         val data = new Array[R](from.size)
         var i=from.offset
         val iMax = data.size + from.offset
@@ -532,7 +532,7 @@ with MatrixConstructors[DenseMatrix] {
           data(i) = fn(from.data(i))
           i += 1
         }
-        return new DenseMatrix[R](from.rows, from.cols, data)
+        return new DenseMatrix[R](from.rows, from.cols, data, 0, if (isTranspose) { from.cols } else { from.rows }, isTranspose)
       }
 
       private def generalMap(from : DenseMatrix[V], fn : (V=>R)): DenseMatrix[R] = {
@@ -552,7 +552,8 @@ with MatrixConstructors[DenseMatrix] {
       }
 
       override def map(from : DenseMatrix[V], fn : (V=>R)): DenseMatrix[R] = (from.isTranspose, from.rows, from.cols, from.majorStride) match {
-        case (false, rows, _, majorStride) if rows == majorStride => simpleMap(from, fn)
+        case (false, rows, _, majorStride) if rows == majorStride => simpleMap(from, fn, false)
+        case (true, _, cols, majorStride) if cols == majorStride => simpleMap(from, fn, true)
         case _ => generalMap(from, fn)
       }
 
