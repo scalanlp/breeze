@@ -45,7 +45,7 @@ import breeze.linalg.Axis._1
  *             Note that this matrix may be a view of the data.
  *             Use linearIndex(r,c) to calculate indices.
  * @param offset starting point into array
- * @param majorStride distance separating columns (or rows, for isTranspose). should be >= rows (or cols, for isTranspose)
+ * @param majorStride distance separating columns (or rows, for isTranspose). should have absolute value >= rows (or cols, for isTranspose)
  * @param isTranspose if true, then the matrix is considered to be "transposed" (that is, row major)
  */
 @SerialVersionUID(1L)
@@ -64,6 +64,18 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
   def this(rows: Int, cols: Int, data: Array[V]) = this(rows, cols, data, 0, rows)
   /** Creates a matrix with the specified data array and rows. columns inferred automatically */
   def this(rows: Int, data: Array[V], offset: Int) = this(rows, {assert(data.length % rows == 0); data.length/rows}, data, offset)
+
+  if (isTranspose && (math.abs(majorStride) < cols)) { throw new IndexOutOfBoundsException("MajorStride == " + majorStride + " is smaller than cols == " + cols + ", which is impossible") }
+  if ((!isTranspose) && (math.abs(majorStride) < rows)) { throw new IndexOutOfBoundsException("MajorStride == " + majorStride + " is smaller than rows == " + rows + ", which is impossible") }
+  if (rows < 0) { throw new IndexOutOfBoundsException("Rows must be larger than zero. It was " + rows) }
+  if (cols < 0) { throw new IndexOutOfBoundsException("Cols must be larger than zero. It was " + cols) }
+  if (offset < 0) { throw new IndexOutOfBoundsException("Offset must be larger than zero. It was " + offset) }
+  if (majorStride > 0) {
+    if (data.size < linearIndex(rows-1, cols-1)) { throw new IndexOutOfBoundsException("Storage array has size " + data.size + " but indices can grow as large as " + linearIndex(rows-1,cols-1)) }
+  } else {
+    if (data.size < linearIndex(rows-1,0)) { throw new IndexOutOfBoundsException("Storage array has size " + data.size + " but indices can grow as large as " + linearIndex(rows-1,cols-1)) }
+    if (linearIndex(0, cols-1) < 0) { throw new IndexOutOfBoundsException("Storage array has negative stride " + majorStride + " and offset " + offset + " which can result in negative indices.") }
+  }
 
   def apply(row: Int, col: Int) = {
     if(row < - rows || row >= rows) throw new IndexOutOfBoundsException((row,col) + " not in [-"+rows+","+rows+") x [-"+cols+"," + cols+")")
@@ -425,13 +437,14 @@ with MatrixConstructors[DenseMatrix] {
 
         val cols = colsWNegative.getRangeWithoutNegativeIndexes(m.cols)
 
-        if(cols.isEmpty) new DenseMatrix(m.rows, 0, m.data, 0, 1)
-        else if(!m.isTranspose) {
+        if(cols.isEmpty) {
+          new DenseMatrix(m.rows, 0, m.data, 0, m.rows)
+        } else if(!m.isTranspose) {
           val first = cols.head
           if(cols.last >= m.cols) {
             throw new IndexOutOfBoundsException(s"Col slice of $cols was bigger than matrix cols of ${m.cols}")
           }
-          new DenseMatrix(m.rows, cols.length, m.data, m.offset + first * m.majorStride, m.majorStride * cols.step)
+          new DenseMatrix(m.rows, cols.length, m.data, m.offset + first * m.majorStride, m.majorStride * cols.step )
         } else {
           canSliceRows(m.t, cols, ::).t
         }
@@ -511,7 +524,18 @@ with MatrixConstructors[DenseMatrix] {
 
   implicit def canMapValues[V, R:ClassTag]: CanMapValues[DenseMatrix[V], V, R, DenseMatrix[R]] = {
     new CanMapValues[DenseMatrix[V],V,R,DenseMatrix[R]] {
-      override def map(from : DenseMatrix[V], fn : (V=>R)): DenseMatrix[R] = {
+      private def simpleMap(from : DenseMatrix[V], fn : (V=>R), isTranspose: Boolean): DenseMatrix[R] = {
+        val data = new Array[R](from.size)
+        var i=from.offset
+        val iMax = data.size + from.offset
+        while (i < iMax) {
+          data(i) = fn(from.data(i))
+          i += 1
+        }
+        return new DenseMatrix[R](from.rows, from.cols, data, 0, if (isTranspose) { from.cols } else { from.rows }, isTranspose)
+      }
+
+      private def generalMap(from : DenseMatrix[V], fn : (V=>R)): DenseMatrix[R] = {
         val data = new Array[R](from.size)
         var j = 0
         var off = 0
@@ -525,6 +549,12 @@ with MatrixConstructors[DenseMatrix] {
           j += 1
         }
         new DenseMatrix[R](from.rows, from.cols, data)
+      }
+
+      override def map(from : DenseMatrix[V], fn : (V=>R)): DenseMatrix[R] = (from.isTranspose, from.rows, from.cols, from.majorStride) match {
+        case (false, rows, _, majorStride) if rows == majorStride => simpleMap(from, fn, false)
+        case (true, _, cols, majorStride) if cols == majorStride => simpleMap(from, fn, true)
+        case _ => generalMap(from, fn)
       }
 
       override def mapActive(from : DenseMatrix[V], fn : (V=>R)) =
