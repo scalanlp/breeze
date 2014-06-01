@@ -82,3 +82,8 @@ class LinearInterpolator
         f.*(Y(index), w))
   }
 }
+
+object LinearInterpolator {
+  def apply(x_coords: Vector[Double],
+            y_coords: Vector[Double]) = new LinearInterpolator(x_coords, y_coords)
+}
