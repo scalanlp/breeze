@@ -9,21 +9,23 @@ import scala.reflect.ClassTag
 
 import breeze.generic.{UFunc, MappingUFunc, VariableUFunc}
 import breeze.linalg._
-import breeze.linalg.support.CanMapValues
 import breeze.math.Field
 
 
-object UnivariateInterpolatorImpl[T] extends UFunc with MappingUFunc {
-  implicit object impl extends Impl2[UnivariateInterpolator[T],Double,Double] {
+object UnivariateInterpolatorImpl extends UFunc with MappingUFunc {
+  /*implicit object impl[T] extends Impl2[UnivariateInterpolator[T],Double,Double] {
     def apply(k: UnivariateInterpolator[T], v: Double) = k(v)
+  }*/
+  implicit def impl[T]: Impl2[UnivariateInterpolator[T], T, T] = new Impl2[UnivariateInterpolator[T], T, T] {
+    def apply(k: UnivariateInterpolator[T], v: T): T = k(v)
   }
 }
 
 trait UnivariateInterpolator[T] extends VariableUFunc[UnivariateInterpolatorImpl.type, UnivariateInterpolator[T]] {
-  def apply(x: Double): Double
+  def apply(x: T): T
 }
 
-abstract class HandyUnivariateInterpolator[T]
+abstract class HandyUnivariateInterpolator[T:ClassTag:Field:Ordering]
     (x_coords: Vector[T],
      y_coords: Vector[T])
     extends UnivariateInterpolator[T] {
@@ -52,7 +54,7 @@ abstract class HandyUnivariateInterpolator[T]
   protected def valueAt(b: T): T
 }
 
-class LinearInterpolator[T]
+class LinearInterpolator[T:ClassTag:Field:Ordering]
     (x_coords: Vector[T],
      y_coords: Vector[T])
     extends HandyUnivariateInterpolator[T](x_coords, y_coords) {
@@ -84,6 +86,7 @@ class LinearInterpolator[T]
 }
 
 object LinearInterpolator {
-  def apply[T](x_coords: Vector[T],
-               y_coords: Vector[T]) = new LinearInterpolator(x_coords, y_coords)
+  def apply[T:ClassTag:Field:Ordering](
+     x_coords: Vector[T],
+     y_coords: Vector[T]) = new LinearInterpolator(x_coords, y_coords)
 }
