@@ -37,12 +37,4 @@ class LinearInterpolatorTest extends FunSuite {
       f(0.5)
     }
   }
-
-  /*
-  test("MyTest2") {
-    assert(new MyInterpolatorUFuncWrapper(2.0)(2.0) == 4.0)
-    assert(new MyInterpolatorUFuncWrapper(2.0)(DenseVector(2.0, 3.0)) == DenseVector(4.0, 5.0))
-    assert(new MyInterpolatorUFuncWrapper2(1.0)(DenseVector(2.0, 3.0)) == DenseVector(4.0, 5.0))
-  }
-  */
 }
