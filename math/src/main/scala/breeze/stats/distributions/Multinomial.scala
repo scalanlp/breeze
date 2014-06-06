@@ -1,4 +1,4 @@
-import package breeze.stats.distributions
+package breeze.stats.distributions
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
