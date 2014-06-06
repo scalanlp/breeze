@@ -1,6 +1,4 @@
-package lllm.main
-
-import breeze.stats.distributions._
+import package breeze.stats.distributions
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
