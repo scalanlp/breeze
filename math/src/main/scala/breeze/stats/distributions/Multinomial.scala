@@ -35,7 +35,6 @@ import collection.mutable
  * @author dlwh
  */
 case class Multinomial[T,I](params: T)(implicit ev: T=>QuasiTensor[I, Double], sumImpl: breeze.linalg.sum.Impl[T, Double], rand: RandBasis=Rand) extends DiscreteDistr[I] {
-
   val sum = breeze.linalg.sum(params)
   require(sum != 0.0, "There's no mass!")
 
@@ -45,7 +44,7 @@ case class Multinomial[T,I](params: T)(implicit ev: T=>QuasiTensor[I, Double], s
   var aliasTable: DenseVector[Int] = null
   var outcomeTable: IndexedSeq[I] = null
 
-  // check repnOutcomes
+  // check rep
   for ((k,v) <- params.activeIterator) {
     if (v < 0) {
       throw new IllegalArgumentException("Multinomial has negative mass at index "+k)
