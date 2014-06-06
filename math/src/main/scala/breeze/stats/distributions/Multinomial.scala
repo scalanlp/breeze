@@ -1,4 +1,6 @@
-package breeze.stats.distributions
+package lllm.main
+
+import breeze.stats.distributions._
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
@@ -22,6 +24,7 @@ import breeze.math.{MutablizingAdaptor, VectorSpace, TensorSpace, MutableCoordin
 import breeze.numerics._
 import breeze.numerics
 import breeze.storage.DefaultArrayValue
+import collection.mutable
 
 /**
  * Represents a Multinomial distribution over elements.
@@ -34,10 +37,17 @@ import breeze.storage.DefaultArrayValue
  * @author dlwh
  */
 case class Multinomial[T,I](params: T)(implicit ev: T=>QuasiTensor[I, Double], sumImpl: breeze.linalg.sum.Impl[T, Double], rand: RandBasis=Rand) extends DiscreteDistr[I] {
+
   val sum = breeze.linalg.sum(params)
   require(sum != 0.0, "There's no mass!")
 
-  // check rep
+  var haveSampled = false
+  var nOutcomes: Int = 0
+  var probTable: DenseVector[Double] = null
+  var aliasTable: DenseVector[Int] = null
+  var outcomeTable: IndexedSeq[I] = null
+
+  // check repnOutcomes
   for ((k,v) <- params.activeIterator) {
     if (v < 0) {
       throw new IllegalArgumentException("Multinomial has negative mass at index "+k)
@@ -45,6 +55,21 @@ case class Multinomial[T,I](params: T)(implicit ev: T=>QuasiTensor[I, Double], s
   }
 
   def draw():I = {
+    // if this is the first sample, use linear-time sampling algorithm
+    // otherwise, set up and use the alias method
+    val result =
+      if (haveSampled) {
+        if (aliasTable == null)
+          buildAliasTable()
+        drawAlias()
+      } else {
+        drawNaive()
+      }
+    haveSampled = true
+    result
+  }
+
+  def drawNaive():I = {
     var prob = rand.uniform.get() * sum
     assert(!prob.isNaN, "NaN Probability!")
     for((i,w) <- params.activeIterator) {
@@ -52,6 +77,39 @@ case class Multinomial[T,I](params: T)(implicit ev: T=>QuasiTensor[I, Double], s
       if(prob <= 0) return i
     }
     params.activeKeysIterator.next()
+  }
+
+  def buildAliasTable() = {
+    nOutcomes = params.iterator.length
+    probTable = DenseVector.zeros[Double](nOutcomes)
+    aliasTable = DenseVector.zeros[Int](nOutcomes)
+
+    probTable = DenseVector(params.iterator.map { case (label, param) => param / sum * nOutcomes }.toArray)
+    val (iSmaller, iLarger) = (0 until nOutcomes).partition(probTable(_) < 1d)
+    val smaller = mutable.Stack(iSmaller:_*)
+    val larger = mutable.Stack(iLarger:_*)
+
+    while (smaller.nonEmpty && larger.nonEmpty) {
+      val small = smaller.pop()
+      val large = larger.pop()
+      aliasTable(small) = large
+      probTable(large) -= (1d - probTable(small))
+      if (probTable(large) < 1)
+        smaller.push(large)
+      else
+        larger.push(large)
+    }
+
+    outcomeTable = params.keysIterator.toIndexedSeq
+  }
+
+  def drawAlias():I = {
+    val roll = rand.randInt(nOutcomes).get()
+    val toss = rand.uniform.get()
+    if (toss < probTable(roll))
+      outcomeTable(roll)
+    else
+      outcomeTable(aliasTable(roll))
   }
 
   def probabilityOf(e : I) = params(e) / sum
