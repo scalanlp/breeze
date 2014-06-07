@@ -7,16 +7,17 @@ import breeze.generic.UFunc
 /**Quickselect for linear-time medians, etc.
   * See [[scala.util.Sorting]] and [[breeze.util.Sorting]]
  * @author ktakagaki
- * @date 05/09/2014.
  */
 object quickSelect extends UFunc  {
 
 //  /** Quickselect from an array of T. */
-  @expand
-  implicit def reduce[@expand.args(Int, Long, Double, Float) T]:Impl2[Array[T], Int, T] =
+
+  implicit def implFromQSInPlace[T](implicit op: quickSelectImpl.Impl2[Array[T], Int, T]):Impl2[Array[T], Int, T] = {
     new Impl2[Array[T], Int, T] {
       def apply(a: Array[T], position: Int): T = quickSelectImpl(a.clone(), position)
     }
+  }
+
 
 }
 
