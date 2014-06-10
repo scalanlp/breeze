@@ -22,6 +22,7 @@ import collection.Set
 import operators._
 import breeze.linalg.support._
 import CanTraverseValues.ValuesVisitor
+import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 
 /**
  * A map-like tensor that acts like a collection of key-value pairs where
@@ -148,6 +149,17 @@ object Counter extends CounterOps {
       }
     }
 
+  }
+
+  implicit def canTraverseKeyValuePairs[K,V]: CanTraverseKeyValuePairs[Counter[K,V],K,V] = new CanTraverseKeyValuePairs[Counter[K,V],K,V] {
+    /** Traverses all values from the given collection. */
+    override def traverse(from: Counter[K, V], fn: KeyValuePairsVisitor[K, V]): Unit = {
+      for ((k,v) <- from.activeIterator) {
+        fn.visit(k,v)
+      }
+    }
+
+    override def isTraversableAgain(from: Counter[K, V]): Boolean = true
   }
 
   implicit def tensorspace[K, V](implicit field: Field[V], dfv: DefaultArrayValue[V], normImpl: norm.Impl[V, Double]) = {
