@@ -1,7 +1,7 @@
 package breeze.stats.distributions
 
 /*
- Copyright 2009 David Hall, Daniel Ramage
+ Copyright 2014 David Hall, Daniel Ramage, Jacob Andreas
  
  Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package breeze.stats.distributions
 
 import breeze.optimize.DiffFunction
 import breeze.linalg._
-import breeze.math.{MutablizingAdaptor, VectorSpace, TensorSpace, MutableCoordinateSpace}
+import breeze.math.{MutablizingAdaptor, VectorSpace, TensorSpace}
 import breeze.numerics._
 import breeze.numerics
 import breeze.storage.DefaultArrayValue

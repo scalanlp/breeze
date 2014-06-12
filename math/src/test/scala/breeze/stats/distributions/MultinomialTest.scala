@@ -1,7 +1,7 @@
 package breeze.stats.distributions
 
 /*
- Copyright 2009 David Hall, Daniel Ramage
+ Copyright 2014 Jacob Andreas
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -19,9 +19,8 @@ package breeze.stats.distributions
 import org.scalatest._
 import org.scalatest.junit._
 import org.scalatest.prop._
-import org.scalacheck._
 import org.junit.runner.RunWith
-import breeze.linalg.{SparseVector, DenseVector}
+import breeze.linalg.DenseVector
 
 @RunWith(classOf[JUnitRunner])
 class MultinomialTest extends FunSuite with Checkers with Matchers {
