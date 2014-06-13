@@ -1,7 +1,7 @@
 package breeze.stats.distributions
 
 /*
- Copyright 2009 David Hall, Daniel Ramage
+ Copyright 2014 David Hall, Daniel Ramage, Jacob Andreas
  
  Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
@@ -18,10 +18,11 @@ package breeze.stats.distributions
 
 import breeze.optimize.DiffFunction
 import breeze.linalg._
-import breeze.math.{MutablizingAdaptor, VectorSpace, TensorSpace, MutableCoordinateSpace}
+import breeze.math.{MutablizingAdaptor, VectorSpace, TensorSpace}
 import breeze.numerics._
 import breeze.numerics
 import breeze.storage.DefaultArrayValue
+import collection.mutable
 
 /**
  * Represents a Multinomial distribution over elements.
@@ -37,6 +38,9 @@ case class Multinomial[T,I](params: T)(implicit ev: T=>QuasiTensor[I, Double], s
   val sum = breeze.linalg.sum(params)
   require(sum != 0.0, "There's no mass!")
 
+  private var haveSampled = false
+  private lazy val aliasTable = buildAliasTable()
+
   // check rep
   for ((k,v) <- params.activeIterator) {
     if (v < 0) {
@@ -45,6 +49,18 @@ case class Multinomial[T,I](params: T)(implicit ev: T=>QuasiTensor[I, Double], s
   }
 
   def draw():I = {
+    // if this is the first sample, use linear-time sampling algorithm
+    // otherwise, set up and use the alias method
+    val result =
+      if (haveSampled)
+        aliasTable.draw()
+      else
+        drawNaive()
+    haveSampled = true
+    result
+  }
+
+  def drawNaive():I = {
     var prob = rand.uniform.get() * sum
     assert(!prob.isNaN, "NaN Probability!")
     for((i,w) <- params.activeIterator) {
@@ -52,6 +68,31 @@ case class Multinomial[T,I](params: T)(implicit ev: T=>QuasiTensor[I, Double], s
       if(prob <= 0) return i
     }
     params.activeKeysIterator.next()
+  }
+
+  private def buildAliasTable(): AliasTable[I] = {
+    val nOutcomes = params.iterator.length
+    val aliases = DenseVector.zeros[Int](nOutcomes)
+
+    val probs = DenseVector(params.iterator.map { case (label, param) => param / sum * nOutcomes }.toArray)
+    val (iSmaller, iLarger) = (0 until nOutcomes).partition(probs(_) < 1d)
+    val smaller = mutable.Stack(iSmaller:_*)
+    val larger = mutable.Stack(iLarger:_*)
+
+    while (smaller.nonEmpty && larger.nonEmpty) {
+      val small = smaller.pop()
+      val large = larger.pop()
+      aliases(small) = large
+      probs(large) -= (1d - probs(small))
+      if (probs(large) < 1)
+        smaller.push(large)
+      else
+        larger.push(large)
+    }
+
+    val outcomes = params.keysIterator.toIndexedSeq
+
+    AliasTable(probs, aliases, outcomes, rand)
   }
 
   def probabilityOf(e : I) = params(e) / sum
@@ -75,9 +116,21 @@ case class Multinomial[T,I](params: T)(implicit ev: T=>QuasiTensor[I, Double], s
     unwrap(acc)
   }
 
-
 }
 
+case class AliasTable[I](probs: DenseVector[Double], 
+                         aliases: DenseVector[Int],
+                         outcomes: IndexedSeq[I],
+                         rand: RandBasis) {
+  def draw():I = {
+    val roll = rand.randInt(outcomes.length).get()
+    val toss = rand.uniform.get()
+    if (toss < probs(roll))
+      outcomes(roll)
+    else
+      outcomes(aliases(roll))
+  }
+}
 
 /**
  * Provides routines to create Multinomials
