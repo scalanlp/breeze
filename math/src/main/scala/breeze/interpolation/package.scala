@@ -38,12 +38,16 @@ package object interpolation {
 
     def apply(x: T): T = {
       if (x < X(0) || x > X(X.size - 1))
-        throw new IndexOutOfBoundsException("Out of the domain [" + X(0) + "," + X(X.size-1) + "]")
-
-      valueAt(x)
+        extrapolate(x)
+      else
+        interpolate(x)
     }
 
-    protected def valueAt(b: T): T
+    protected def interpolate(x: T): T
+
+    protected def extrapolate(x: T): T = {
+      throw new IndexOutOfBoundsException("Out of the domain [" + X(0) + "," + X(X.size-1) + "]")
+    }
   }
 
 }
