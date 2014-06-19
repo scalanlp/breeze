@@ -24,24 +24,11 @@ class LinearInterpolator[T:ClassTag:Field:Ordering]
       case mid if X(mid) < x => bisearch(mid+1, high)
       case mid => bisearch(low, mid)
     }
+
     val index = bisearch(0, X.length-1)
 
-    if (index == 0) {
-      Y(0)
-    } else {
-      val f = implicitly[Field[T]]
-      // w = (x - x1) / (x2 - x1)
-      val w = f./(f.-(x,
-                      X(index-1)),
-                  f.-(X(index),
-                      X(index-1)))
-      // u = 1 - w
-      val u = f.-(f.one, w)
-
-      // result = y1 * u + y2 * w
-      f.+(f.*(Y(index-1), u),
-          f.*(Y(index), w))
-    }
+    if (index == 0) Y(0)
+    else interpolate(index, x)
   }
 
   override protected def extrapolate(x: T): T = {
@@ -50,23 +37,17 @@ class LinearInterpolator[T:ClassTag:Field:Ordering]
     }
 
     val index = if (x < X(0)) 1 else X.length-1
-
-    val f = implicitly[Field[T]]
-
-    // w = (x - x1) / (x2 - x1)
-    val w = f./(f.-(x,
-                    X(index-1)),
-                f.-(X(index),
-                    X(index-1)))
-    // u = 1 - w
-    val u = f.-(f.one, w)
-
-    // result = y1 * u + y2 * w
-    f.+(f.*(Y(index-1), u),
-        f.*(Y(index), w))
+    interpolate(index, x)
   }
 
-  private def interpolate(x1, x2, y1, y2, x) = {
+  private def interpolate(index: Int, x: T): T = {
+    /* Interpolate or extrapolate linearly between point number index-1 and index. */
+    assert(index > 0)
+
+    val x1 = X(index-1)
+    val x2 = X(index)
+    val y1 = Y(index-1)
+    val y2 = Y(index)
     val f = implicitly[Field[T]]
 
     // w = (x - x1) / (x2 - x1)
