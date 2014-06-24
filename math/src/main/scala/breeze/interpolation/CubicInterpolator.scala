@@ -43,15 +43,17 @@ class CubicInterpolator
     case (k, 3) => (m(k+1) - m(k))/6/h(k)
   }
 
-  println(DenseVector(h(0), h(1), h(2)))
-  println(DenseVector(d(0), d(1), d(2)))
-  println(DenseVector(lambda(1), lambda(2)))
-  println(DenseVector(ro(1), ro(2)))
-  println(M)
-  println(b)
-  println(mp)
-  println(A)
+  /*
+  println("h", DenseVector(h(0), h(1), h(2)))
+  println("d", DenseVector(d(0), d(1), d(2)))
+  println("lambda", DenseVector(lambda(1), lambda(2)))
+  println("ro", DenseVector(ro(1), ro(2)))
+  println("M", M)
+  println("b", b)
+  println("mp", mp)
+  println("A", A)
   println()
+  */
 
   override protected def interpolate(x: Double): Double = {
     def bisearch(low: Int, high: Int): Int = (low+high)/2 match {
