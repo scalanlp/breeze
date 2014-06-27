@@ -30,10 +30,9 @@ abstract class StochasticGradientDescent[T](val defaultStepSize: Double,
                                             val maxIter: Int,
                                             tolerance: Double=1E-5,
                                             improvementTol: Double=1E-4,
-                                            minImprovementWindow: Int = 50,
-                                             minIter: Int = -1)
+                                            minImprovementWindow: Int = 50)
                                             (implicit protected val vspace: MutableCoordinateSpace[T, Double])
-  extends FirstOrderMinimizer[T,StochasticDiffFunction[T]](maxIter, tolerance, improvementTol, minImprovementWindow, 2, minIter) with SerializableLogging {
+  extends FirstOrderMinimizer[T,StochasticDiffFunction[T]](maxIter, tolerance, improvementTol, minImprovementWindow, 2) with SerializableLogging {
 
   import vspace._
 
