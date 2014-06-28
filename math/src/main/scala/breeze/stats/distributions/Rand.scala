@@ -60,6 +60,19 @@ trait Rand[@specialized(Int, Double) +T] { outer =>
   }
 
   /**
+    * Return a vector of samples.
+    */
+  def samplesVector[U >: T](size: Int)(implicit m: ClassTag[U]): DenseVector[U] = {
+    val result = new DenseVector[U](new Array[U](size))
+    var i=0
+    while (i < size) {
+      result.unsafeUpdate(i, draw())
+      i += 1
+    }
+    result
+  }
+
+  /**
    * Converts a random sampler of one type to a random sampler of another type.
    * Examples:
    * randInt(10).flatMap(x => randInt(3 * x.asInstanceOf[Int]) gives a Rand[Int] in the range [0,30]
