@@ -137,7 +137,8 @@ private final case class SinglePredicate[@specialized(Int, Double) T](rand: Rand
     MultiplePredicates(rand, newPredicates)
   }
 
-  def draw() = {
+  def draw() = { // Not the most efficient implementation ever, but meh.
+
     var x = rand.draw()
     while(!predicate(x)) {
       x = rand.draw()
@@ -146,7 +147,12 @@ private final case class SinglePredicate[@specialized(Int, Double) T](rand: Rand
   }
 
   override def drawOpt() = {
-    Some(rand.get()).filter(predicate)
+    val x = rand.get()
+    if (predicate(x)) {
+      Some(x)
+    } else {
+      None
+    }
   }
 }
 
@@ -170,7 +176,7 @@ private final case class MultiplePredicates[@specialized(Int, Double) T](rand: R
     result
   }
 
-  def draw() = {
+  def draw() = {// Not the most efficient implementation ever, but meh.
     var x = rand.draw()
     while(!p(x)) {
       x = rand.draw()
@@ -179,7 +185,12 @@ private final case class MultiplePredicates[@specialized(Int, Double) T](rand: R
   }
 
   override def drawOpt() = {
-    Some(rand.get()).filter(p _)
+    val x = rand.get()
+    if (p(x)) {
+      Some(x)
+    } else {
+      None
+    }
   }
 }
 
