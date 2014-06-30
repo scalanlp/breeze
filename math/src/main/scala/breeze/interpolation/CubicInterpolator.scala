@@ -16,6 +16,9 @@ class CubicInterpolator
      y_coords: Vector[Double])
     extends HandyUnivariateInterpolator[Double](x_coords, y_coords) {
 
+  if (X.length < 3)
+    throw new Exception("You must provide at least 3 points for CubicInterpolator.")
+
   private def h(k: Int): Double = X(k+1) - X(k)
   private def d(k: Int): Double = (Y(k+1) - Y(k)) / h(k)
   private def lambda(k: Int): Double = h(k) / (h(k-1) + h(k))
@@ -43,26 +46,8 @@ class CubicInterpolator
     case (k, 3) => (m(k+1) - m(k))/6/h(k)
   }
 
-  /*
-  println("h", DenseVector(h(0), h(1), h(2)))
-  println("d", DenseVector(d(0), d(1), d(2)))
-  println("lambda", DenseVector(lambda(1), lambda(2)))
-  println("ro", DenseVector(ro(1), ro(2)))
-  println("M", M)
-  println("b", b)
-  println("mp", mp)
-  println("A", A)
-  println()
-  */
-
   override protected def interpolate(x: Double): Double = {
-    def bisearch(low: Int, high: Int): Int = (low+high)/2 match {
-      case mid if low == high => mid
-      case mid if X(mid) < x => bisearch(mid+1, high)
-      case mid => bisearch(low, mid)
-    }
-
-    val index = bisearch(0, X.length-1) - 1
+    val index = bisearch(x) - 1
 
     if (index == -1) Y(0)
     else {
