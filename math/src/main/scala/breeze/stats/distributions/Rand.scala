@@ -101,12 +101,7 @@ trait Rand[@specialized(Int, Double) +T] { outer =>
    * @param f the transform to apply to the sampled value.
    *
    */
-  def map[E](f : T=>E):Rand[E] =  {
-    new Rand[E] {
-      def draw() = f(outer.get())
-      override def drawOpt() = outer.drawOpt().map(f)
-    }
-  }
+  def map[E](f : T=>E):Rand[E] = MappedRand(outer, f)
 
   /**
    * Samples one element and qpplies the provided function to it.
@@ -122,15 +117,17 @@ trait Rand[@specialized(Int, Double) +T] { outer =>
   def withFilter(p: T=>Boolean) = condition(p)
 
   // Not the most efficient implementation ever, but meh.
-  def condition(p : T => Boolean):Rand[T] = outer match {
-    case (cr:MultiplePredicates[T]) => cr.addCondition(p)
-    case (cr:SinglePredicate[T]) => cr.addCondition(p)
-    case x => SinglePredicate[T](x, p)
-  }
+  def condition(p : T => Boolean):Rand[T] = SinglePredicate[T](outer, p)
+}
+
+private final case class MappedRand[@specialized(Int, Double) T, @specialized(Int, Double) U](rand: Rand[T], func: T => U) extends Rand[U] {
+  def draw() = func(rand.draw())
+  override def drawOpt() = rand.drawOpt().map(func)
+  override def map[E](f : U=>E):Rand[E] = MappedRand(rand, (x:T) => f(func(x)))
 }
 
 private final case class SinglePredicate[@specialized(Int, Double) T](rand: Rand[T], predicate: T => Boolean) extends Rand[T] {
-  def addCondition(p: T => Boolean): MultiplePredicates[T] = {
+  override def condition(p: T => Boolean): Rand[T] = {
     val newPredicates = new Array[T => Boolean](2)
     newPredicates(0) = predicate
     newPredicates(1) = p
@@ -157,7 +154,7 @@ private final case class SinglePredicate[@specialized(Int, Double) T](rand: Rand
 }
 
 private final case class MultiplePredicates[@specialized(Int, Double) T](rand: Rand[T], private val predicates: Array[T => Boolean]) extends Rand[T] {
-  def addCondition(p: T => Boolean): MultiplePredicates[T] = {
+  override def condition(p: T => Boolean): Rand[T] = {
     val newPredicates = new Array[T => Boolean](predicates.size + 1)
     newPredicates(predicates.size) = p
     cfor(0)(i => i < predicates.size, i => i+1)(i => {
