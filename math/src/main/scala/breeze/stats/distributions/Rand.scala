@@ -124,16 +124,11 @@ private final case class FlatMappedRand[@specialized(Int, Double) T, @specialize
   override def flatMap[E](f: U => Rand[E]): Rand[E] = FlatMappedRand(rand, (x:T) => f(func(x).draw()))
 }
 
-private final case class SinglePredicateRand[@specialized(Int, Double) T](rand: Rand[T], predicate: T => Boolean) extends Rand[T] {
-  override def condition(p: T => Boolean): Rand[T] = {
-    val newPredicates = new Array[T => Boolean](2)
-    newPredicates(0) = predicate
-    newPredicates(1) = p
-    MultiplePredicatesRand(rand, newPredicates)
-  }
+private trait PredicateRandDraws[@specialized(Int, Double) T] extends Rand[T] {
+  protected val rand: Rand[T]
+  protected def predicate(x: T): Boolean
 
   def draw() = { // Not the most efficient implementation ever, but meh.
-
     var x = rand.draw()
     while(!predicate(x)) {
       x = rand.draw()
@@ -151,17 +146,28 @@ private final case class SinglePredicateRand[@specialized(Int, Double) T](rand: 
   }
 }
 
-private final case class MultiplePredicatesRand[@specialized(Int, Double) T](rand: Rand[T], private val predicates: Array[T => Boolean]) extends Rand[T] {
+private final case class SinglePredicateRand[@specialized(Int, Double) T](rand: Rand[T], pred: T => Boolean) extends PredicateRandDraws[T] {
+  protected final def predicate(x: T): Boolean = pred(x)
+
+  override def condition(p: T => Boolean): Rand[T] = {
+    val newPredicates = new Array[T => Boolean](2)
+    newPredicates(0) = pred
+    newPredicates(1) = p
+    MultiplePredicatesRand(rand, newPredicates)
+  }
+}
+
+private final case class MultiplePredicatesRand[@specialized(Int, Double) T](rand: Rand[T], private val predicates: Array[T => Boolean]) extends PredicateRandDraws[T] {
   override def condition(p: T => Boolean): Rand[T] = {
     val newPredicates = new Array[T => Boolean](predicates.size + 1)
-    newPredicates(predicates.size) = p
     cfor(0)(i => i < predicates.size, i => i+1)(i => {
       newPredicates(i) = predicates(i)
     })
+    newPredicates(predicates.size) = p
     MultiplePredicatesRand(rand, newPredicates)
   }
 
-  private def p(x: T) = {
+  protected final def predicate(x:T) = {
     var result: Boolean = true
     var i=0
     while ((i < predicates.size) && result) {
@@ -169,23 +175,6 @@ private final case class MultiplePredicatesRand[@specialized(Int, Double) T](ran
       i = i + 1
     }
     result
-  }
-
-  def draw() = {// Not the most efficient implementation ever, but meh.
-    var x = rand.draw()
-    while(!p(x)) {
-      x = rand.draw()
-    }
-    x
-  }
-
-  override def drawOpt() = {
-    val x = rand.get()
-    if (p(x)) {
-      Some(x)
-    } else {
-      None
-    }
   }
 }
 
