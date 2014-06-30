@@ -595,6 +595,12 @@ class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with Do
   }
 
 
+  test("#265: slices of :: and IndexedSeq") {
+    val dm = DenseMatrix( (0, 1, 2), (3, 4, 5))
+    assert(dm(::, IndexedSeq(2,1, 0)).toDenseMatrix === fliplr(dm))
+    assert(dm(IndexedSeq(1, 0), ::).toDenseMatrix === flipud(dm))
+  }
+
 
 
   def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6) {

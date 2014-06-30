@@ -763,6 +763,14 @@ trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
     }
   }
 
+  implicit def canSliceWeirdCols[V]: CanSlice2[DenseMatrix[V], ::.type, Seq[Int], SliceMatrix[Int, Int, V]] = {
+    new CanSlice2[DenseMatrix[V], ::.type, Seq[Int], SliceMatrix[Int, Int, V]] {
+      def apply(from: DenseMatrix[V], slice2: ::.type, slice: Seq[Int]): SliceMatrix[Int, Int, V] = {
+        new SliceMatrix(from, (0 until from.rows), slice.toIndexedSeq)
+      }
+    }
+  }
+
   // <editor-fold defaultstate="collapsed" desc=" implicit implementations for OpSet ">
 
   class SetDMDMOp[@specialized(Int, Double, Float) V] extends OpSet.InPlaceImpl2[DenseMatrix[V], DenseMatrix[V]] {
