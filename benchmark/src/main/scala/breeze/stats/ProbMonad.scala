@@ -33,6 +33,11 @@ class ProbMonadBenchmark extends BreezeBenchmark {
     mg.samplesVector(size)
   }
 
+  def timeFlatMapRepeated(reps: Int) = run(reps) {
+    val mg = gaussian.flatMap(fm).flatMap(fm).flatMap(fm)
+    mg.samplesVector(size)
+  }
+
   def timeCondition(reps: Int) = run(reps) {
     val mg = gaussian.condition(x => x > 0)
     mg.samplesVector(size)
