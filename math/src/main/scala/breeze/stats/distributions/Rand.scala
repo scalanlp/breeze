@@ -23,6 +23,7 @@ import breeze.linalg.DenseVector
 import org.apache.commons.math3.random.{MersenneTwister, RandomGenerator}
 import java.util.concurrent.atomic.AtomicInteger
 import scala.reflect.ClassTag
+import spire.implicits.cfor
 
 
 /**
@@ -57,6 +58,19 @@ trait Rand[@specialized(Int, Double) +T] { outer =>
   def samples:Iterator[T] = new Iterator[T] {
     def hasNext = true
     def next() = get()
+  }
+
+  /**
+    * Return a vector of samples.
+    */
+  def samplesVector[U >: T](size: Int)(implicit m: ClassTag[U]): DenseVector[U] = {
+    val result = new DenseVector[U](new Array[U](size))
+    var i=0
+    while (i < size) {
+      result.unsafeUpdate(i, draw())
+      i += 1
+    }
+    result
   }
 
   /**
@@ -108,20 +122,76 @@ trait Rand[@specialized(Int, Double) +T] { outer =>
   def withFilter(p: T=>Boolean) = condition(p)
 
   // Not the most efficient implementation ever, but meh.
-  def condition(p : T => Boolean):Rand[T] = new Rand[T] {
-    def draw() = {
-      var x = outer.get()
-      while(!p(x)) {
-        x = outer.get()
-      }
-      x
-    }
+  def condition(p : T => Boolean):Rand[T] = outer match {
+    case (cr:MultiplePredicates[T]) => cr.addCondition(p)
+    case (cr:SinglePredicate[T]) => cr.addCondition(p)
+    case x => SinglePredicate[T](x, p)
+  }
+}
 
-    override def drawOpt() = {
-      Some(outer.get()).filter(p)
-    }
+private final case class SinglePredicate[@specialized(Int, Double) T](rand: Rand[T], predicate: T => Boolean) extends Rand[T] {
+  def addCondition(p: T => Boolean): MultiplePredicates[T] = {
+    val newPredicates = new Array[T => Boolean](2)
+    newPredicates(0) = predicate
+    newPredicates(1) = p
+    MultiplePredicates(rand, newPredicates)
   }
 
+  def draw() = { // Not the most efficient implementation ever, but meh.
+
+    var x = rand.draw()
+    while(!predicate(x)) {
+      x = rand.draw()
+    }
+    x
+  }
+
+  override def drawOpt() = {
+    val x = rand.get()
+    if (predicate(x)) {
+      Some(x)
+    } else {
+      None
+    }
+  }
+}
+
+private final case class MultiplePredicates[@specialized(Int, Double) T](rand: Rand[T], private val predicates: Array[T => Boolean]) extends Rand[T] {
+  def addCondition(p: T => Boolean): MultiplePredicates[T] = {
+    val newPredicates = new Array[T => Boolean](predicates.size + 1)
+    newPredicates(predicates.size) = p
+    cfor(0)(i => i < predicates.size, i => i+1)(i => {
+      newPredicates(i) = predicates(i)
+    })
+    MultiplePredicates(rand, newPredicates)
+  }
+
+  private def p(x: T) = {
+    var result: Boolean = true
+    var i=0
+    while ((i < predicates.size) && result) {
+      result = result && predicates(i)(x)
+      i = i + 1
+    }
+    result
+  }
+
+  def draw() = {// Not the most efficient implementation ever, but meh.
+    var x = rand.draw()
+    while(!p(x)) {
+      x = rand.draw()
+    }
+    x
+  }
+
+  override def drawOpt() = {
+    val x = rand.get()
+    if (p(x)) {
+      Some(x)
+    } else {
+      None
+    }
+  }
 }
 
 /**
