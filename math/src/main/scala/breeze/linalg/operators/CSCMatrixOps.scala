@@ -30,27 +30,37 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
         //        require(a.defaultValue == b.defaultValue, "Matrices must share default value.")
 
         val ai = a.activeIterator
-        var aKV = ai.next()
         val bi = b.activeIterator
-        var bKV = bi.next()
-        while (ai.hasNext || bi.hasNext) {
-          val ((ac, ar), av) = aKV
-          val ((bc, br), bv) = bKV
-          // Same Index
-          if (ac == bc && ar == br) {
-            a.update(ac, ar, op(av, bv))
-            aKV = ai.next()
-            bKV = bi.next()
-          }
-          // A is before B
-          else if (ac <= bc && ar < br) {
-            a.update(ac, ar, op(av, mZero))
-            aKV = ai.next()
-          }
-          // B is before A
-          else {
-            a.update(bc, br, op(mZero, bv))
-            bKV = bi.next()
+
+        var updateI = 0
+        if (ai.hasNext && bi.hasNext) {
+          var last: (((Int,Int),T),((Int,Int),T)) = null
+          while (ai.hasNext || bi.hasNext) {
+            // Move ai and/or bi forward
+            val (aKV,bKV) = updateI match {
+              case 0 => (ai.next(), bi.next())
+              case 1 => (ai.next(),last._2)
+              case 2 => (last._1,bi.next())
+            }
+            last = (aKV, bKV)
+
+            val ((ac, ar), av) = aKV
+            val ((bc, br), bv) = bKV
+            // Same Index
+            if (ac == bc && ar == br) {
+              a.update(ac, ar, op(av, bv))
+              updateI = 0
+            }
+            // A is before B
+            else if (ac <= bc && ar < br) {
+              a.update(ac, ar, op(av, mZero))
+              updateI = 1
+            }
+            // B is before A
+            else {
+              a.update(bc, br, op(mZero, bv))
+              updateI = 2
+            }
           }
         }
       }
