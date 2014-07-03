@@ -159,6 +159,12 @@ class CSCMatrix[@specialized(Int, Float, Double) V:DefaultArrayValue] private[li
     new CSCMatrix[V](ArrayUtil.copyOf(_data, activeSize), rows, cols, colPtrs.clone(), activeSize, _rowIndices.clone)
   }
 
+  def flatten(implicit c: ClassTag[V]): SparseVector[V] = {
+    val (inds, vals) = activeIterator.
+      foldLeft((mutable.ArrayBuilder.make[Int](), mutable.ArrayBuilder.make[V]()))(
+    { case ((ind, vs), ((r, c), v)) => (ind += r * cols + c, vs += v)})
+    SparseVector[V](rows * cols)(inds.result().zip(vals.result()): _*)
+  }
 
   def toDense:DenseMatrix[V] = {
     implicit val ctg = ClassTag(data.getClass.getComponentType).asInstanceOf[ClassTag[V]]
@@ -175,6 +181,7 @@ class CSCMatrix[@specialized(Int, Float, Double) V:DefaultArrayValue] private[li
     res
   }
 
+  def defaultValue: V = this.zero
 }
 
 object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
@@ -271,7 +278,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
     new CanTranspose[CSCMatrix[V], CSCMatrix[V]] {
       def apply(from: CSCMatrix[V]) = {
         val transposedMtx = new CSCMatrix.Builder[V](from.cols, from.rows, from.activeSize)
-        
+
         var j = 0
         while(j < from.cols) {
           var ip = from.colPtrs(j)
@@ -287,12 +294,12 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
       }
     }
   }
-    
+
   implicit def canTransposeComplex: CanTranspose[CSCMatrix[Complex], CSCMatrix[Complex]] = {
     new CanTranspose[CSCMatrix[Complex], CSCMatrix[Complex]] {
       def apply(from: CSCMatrix[Complex]) = {
         val transposedMtx = CSCMatrix.zeros[Complex](from.cols, from.rows)
-        
+
         var j = 0
         while(j < from.cols) {
           var ip = from.colPtrs(j)
@@ -307,7 +314,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
       }
     }
   }
-    
+
 
   /**
    * This is basically an unsorted coordinate matrix.

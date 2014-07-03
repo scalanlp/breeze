@@ -19,6 +19,48 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
 
   @expand
   @expand.valify
+  implicit def csc_csc_UpdateOp[@expand.args(Int, Double, Float, Long) T,
+  @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _}) op: Op.Impl2[T, T, T],
+            @expand.sequence[T](0, 0.0, 0.0f, 0l)  zero: T):
+  Op.InPlaceImpl2[CSCMatrix[T], CSCMatrix[T]] = {
+    val mZero = implicitly[T](zero)
+    new Op.InPlaceImpl2[CSCMatrix[T], CSCMatrix[T]] {
+      def apply(a: CSCMatrix[T], b: CSCMatrix[T]): Unit = {
+        //        require(a.defaultValue == b.defaultValue, "Matrices must share default value.")
+
+        val ai = a.activeIterator
+        var aKV = ai.next()
+        val bi = b.activeIterator
+        var bKV = bi.next()
+        while (ai.hasNext || bi.hasNext) {
+          val ((ac, ar), av) = aKV
+          val ((bc, br), bv) = bKV
+          // Same Index
+          if (ac == bc && ar == br) {
+            a.update(ac, ar, op(av, bv))
+            aKV = ai.next()
+            bKV = bi.next()
+          }
+          // A is before B
+          else if (ac <= bc && ar < br) {
+            a.update(ac, ar, op(av, mZero))
+            aKV = ai.next()
+          }
+          // B is before A
+          else {
+            a.update(bc, br, op(mZero, bv))
+            bKV = bi.next()
+          }
+        }
+      }
+
+      implicitly[BinaryUpdateRegistry[Matrix[T], Matrix[T], Op.type]].register(this)
+    }
+  }
+
+  @expand
+  @expand.valify
   implicit def canMulM_V[@expand.args(Int, Float, Double, Long) T]: BinaryRegistry[CSCMatrix[T], Vector[T],OpMulMatrix.type, Vector[T]] = new BinaryRegistry[CSCMatrix[T], Vector[T], OpMulMatrix.type, Vector[T]] {
     override def bindingMissing(a: CSCMatrix[T], b: Vector[T]) = {
       require(a.cols == b.length, "Dimension Mismatch!")
