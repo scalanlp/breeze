@@ -19,6 +19,50 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
 
   @expand
   @expand.valify
+  implicit def csc_csc_UpdateOp[@expand.args(Int, Double, Float, Long) T,
+  @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _}) op: Op.Impl2[T, T, T],
+            @expand.sequence[T](0, 0.0, 0.0f, 0l)  zero: T):
+  Op.InPlaceImpl2[CSCMatrix[T], CSCMatrix[T]] = {
+    val mZero = implicitly[T](zero)
+    new Op.InPlaceImpl2[CSCMatrix[T], CSCMatrix[T]] {
+      def apply(a: CSCMatrix[T], b: CSCMatrix[T]): Unit = {
+        //        require(a.defaultValue == b.defaultValue, "Matrices must share default value.")
+        var ar = 0
+        var ac = 0
+        var br = 0
+        var bc = 0
+        while (ac < a.cols && bc < b.cols) {
+          var aip = a.colPtrs(ac)
+          var bip = b.colPtrs(bc)
+
+          while (aip < a.colPtrs(ac + 1) && bip < b.colPtrs(bc + 1)) {
+            val ar = a.rowIndices(aip)
+            val br = b.rowIndices(bip)
+
+            if (ac == bc && ar == br) {
+              a(ar,ac) = op(a(ar,ac),b(br,bc))
+              aip += 1
+              bip += 1
+            } else if (ac <= bc && ar < br) {
+              a(ar,ac) = op(a(ar,ac),mZero)
+              aip += 1
+            } else {
+              a(ar,ac) = op(mZero,b(br,bc))
+              bip += 1
+            }
+          }
+          ac += 1
+          bc += 1
+        }
+      }
+
+      implicitly[BinaryUpdateRegistry[Matrix[T], Matrix[T], Op.type]].register(this)
+    }
+  }
+
+  @expand
+  @expand.valify
   implicit def canMulM_V[@expand.args(Int, Float, Double, Long) T]: BinaryRegistry[CSCMatrix[T], Vector[T],OpMulMatrix.type, Vector[T]] = new BinaryRegistry[CSCMatrix[T], Vector[T], OpMulMatrix.type, Vector[T]] {
     override def bindingMissing(a: CSCMatrix[T], b: Vector[T]) = {
       require(a.cols == b.length, "Dimension Mismatch!")

@@ -147,6 +147,18 @@ class SparseVector[@spec(Double,Int, Float) E](val array: SparseArray[E])
    */
   def allVisitableIndicesActive: Boolean = true
 
+  def asCSCMatrix()(implicit man: ClassTag[E]): CSCMatrix[E] = {
+    // zero SV
+    if (index.length == 0)
+      CSCMatrix.zeros[E](1, length)
+    else {
+      var ii = 0
+      val nIndex = Array.tabulate[Int](length + 1)( (cp: Int) =>
+        if (cp < length && cp == index(ii)) {ii += 1; ii - 1}
+        else ii )
+      new CSCMatrix[E](data, 1, length, nIndex, data.length, Array.fill[Int](data.length)(0))
+    }
+  }
 }
 
 object SparseVector extends SparseVectorOps
@@ -318,7 +330,7 @@ object SparseVector extends SparseVectorOps
     TensorSpace.make[SparseVector[Float], Int, Float]
   }
   implicit val space_i: TensorSpace[SparseVector[Int], Int, Int] = TensorSpace.make[SparseVector[Int], Int, Int]
-  
+
   implicit def canTranspose[V:ClassTag:Zero]: CanTranspose[SparseVector[V], CSCMatrix[V]] = {
     new CanTranspose[SparseVector[V], CSCMatrix[V]] {
       def apply(from: SparseVector[V]): CSCMatrix[V] = {
@@ -333,7 +345,7 @@ object SparseVector extends SparseVectorOps
       }
     }
   }
-  
+
   implicit def canTransposeComplex: CanTranspose[SparseVector[Complex], CSCMatrix[Complex]] = {
     new CanTranspose[SparseVector[Complex], CSCMatrix[Complex]] {
       def apply(from: SparseVector[Complex]) = {
