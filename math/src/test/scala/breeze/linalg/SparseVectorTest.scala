@@ -88,6 +88,26 @@ class SparseVectorTest extends FunSuite {
     assert(m === SparseVector(1, 2, 3, 4, 5))
   }
 
+  test("asCSCMatrix") {
+    val a = SparseVector(1.0,2.0,3.0,4.0)
+    val b = SparseVector.zeros[Double](5)
+    val c = CSCMatrix.zeros[Double](1,5)
+
+    // Test full
+    assert(a.asCSCMatrix() === CSCMatrix((1.0,2.0,3.0,4.0)))
+    // Test zero
+    assert(b.asCSCMatrix() === c)
+    // Test middle
+    b(2) = 2.0; c(0,2) = 2.0
+    assert(b.asCSCMatrix() === c)
+    // Test end
+    b(4) = 4.0; c(0,4) = 4.0
+    assert(b.asCSCMatrix() === c)
+    // Test beginning
+    b(0) = 0.1; c(0,0) = 0.1
+    assert(b.asCSCMatrix() === c)
+  }
+
   test("MapPairs Double") {
     val a: SparseVector[Double] = SparseVector(1, 2, 3, 4, 5)
     val m: SparseVector[Double] = a.mapPairs( (i, x) => x + 1)

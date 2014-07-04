@@ -28,40 +28,32 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
     new Op.InPlaceImpl2[CSCMatrix[T], CSCMatrix[T]] {
       def apply(a: CSCMatrix[T], b: CSCMatrix[T]): Unit = {
         //        require(a.defaultValue == b.defaultValue, "Matrices must share default value.")
+        var ar = 0
+        var ac = 0
+        var br = 0
+        var bc = 0
+        while (ac < a.cols && bc < b.cols) {
+          var aip = a.colPtrs(ac)
+          var bip = b.colPtrs(bc)
 
-        val ai = a.activeIterator
-        val bi = b.activeIterator
+          while (aip < a.colPtrs(ac + 1) && bip < b.colPtrs(bc + 1)) {
+            val ar = a.rowIndices(aip)
+            val br = b.rowIndices(bip)
 
-        var updateI = 0
-        if (ai.hasNext && bi.hasNext) {
-          var last: (((Int,Int),T),((Int,Int),T)) = null
-          while (ai.hasNext || bi.hasNext) {
-            // Move ai and/or bi forward
-            val (aKV,bKV) = updateI match {
-              case 0 => (ai.next(), bi.next())
-              case 1 => (ai.next(),last._2)
-              case 2 => (last._1,bi.next())
-            }
-            last = (aKV, bKV)
-
-            val ((ac, ar), av) = aKV
-            val ((bc, br), bv) = bKV
-            // Same Index
             if (ac == bc && ar == br) {
-              a.update(ac, ar, op(av, bv))
-              updateI = 0
-            }
-            // A is before B
-            else if (ac <= bc && ar < br) {
-              a.update(ac, ar, op(av, mZero))
-              updateI = 1
-            }
-            // B is before A
-            else {
-              a.update(bc, br, op(mZero, bv))
-              updateI = 2
+              a(ar,ac) = op(a(ar,ac),b(br,bc))
+              aip += 1
+              bip += 1
+            } else if (ac <= bc && ar < br) {
+              a(ar,ac) = op(a(ar,ac),mZero)
+              aip += 1
+            } else {
+              a(ar,ac) = op(mZero,b(br,bc))
+              bip += 1
             }
           }
+          ac += 1
+          bc += 1
         }
       }
 

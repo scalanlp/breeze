@@ -159,11 +159,21 @@ class CSCMatrix[@specialized(Int, Float, Double) V:DefaultArrayValue] private[li
     new CSCMatrix[V](ArrayUtil.copyOf(_data, activeSize), rows, cols, colPtrs.clone(), activeSize, _rowIndices.clone)
   }
 
-  def flatten(implicit c: ClassTag[V]): SparseVector[V] = {
-    val (inds, vals) = activeIterator.
-      foldLeft((mutable.ArrayBuilder.make[Int](), mutable.ArrayBuilder.make[V]()))(
-    { case ((ind, vs), ((r, c), v)) => (ind += r * cols + c, vs += v)})
-    SparseVector[V](rows * cols)(inds.result().zip(vals.result()): _*)
+  def flatten()(implicit c: ClassTag[V]): SparseVector[V] = {
+    val sv = SparseVector.zeros[V](rows * cols)
+    var j = 0
+    while (j < cols) {
+      var ip = colPtrs(j)
+      var lastI = 0
+      while (ip < colPtrs(j + 1)) {
+        val i = rowIndices(ip)
+        sv(i * cols + j) = data(ip)
+        lastI += 1
+        ip += 1
+      }
+      j += 1
+    }
+    sv
   }
 
   def toDense:DenseMatrix[V] = {

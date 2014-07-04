@@ -32,15 +32,13 @@ object diag extends UFunc with diagLowPrio2 {
   implicit def diagCSCSVImpl[V: ClassTag : DefaultArrayValue]: diag.Impl[CSCMatrix[V], SparseVector[V]] = new diag.Impl[CSCMatrix[V], SparseVector[V]] {
     def apply(cm: CSCMatrix[V]): SparseVector[V] = {
       require(cm.rows == cm.cols, "CSC Matrix must be square")
-      val (inds,vals) = (0 until cm.rows).
-        foldLeft(mutable.ArrayBuilder.make[Int](),mutable.ArrayBuilder.make[V]())(
-      { case ((is,vs), rc) =>
-        val v = cm(rc, rc)
-        if (v != cm.defaultValue)
-          (is += rc,vs += cm(rc, rc))
-        else (is,vs)
-      })
-      SparseVector[V](cm.rows)(inds.result().zip(vals.result()): _*)
+      var rc = 0
+      val sv = SparseVector.zeros[V](cm.rows)
+      while (rc < cm.rows) {
+        sv(rc) = cm(rc, rc)
+        rc += 1
+      }
+      sv
     }
   }
 
