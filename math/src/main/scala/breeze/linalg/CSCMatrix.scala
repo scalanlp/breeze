@@ -317,68 +317,70 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
     private def ring = implicitly[Semiring[T]]
     def add(r: Int, c: Int, v: T) {
       numAdded += 1
-      rs += r
-      cs += c
       vs += v
+      indices += (c.toLong << 32)|(r & 0xFFFFFFFFL)
     }
 
-    private val rs = new mutable.ArrayBuilder.ofInt()
-    private val cs = new mutable.ArrayBuilder.ofInt()
+    // we pack rows and columns into a single long. (most significant bits get the column, so columns are the major axis)
+    private val indices = new mutable.ArrayBuilder.ofLong()
     private val vs = mutable.ArrayBuilder.make[T]()
     private var numAdded = 0
     def activeSize = numAdded
 
     def sizeHint(nnz: Int) = {
-      rs.sizeHint(nnz)
-      cs.sizeHint(nnz)
+      indices.sizeHint(nnz)
       vs.sizeHint(nnz)
     }
     sizeHint(initNnz)
 
     def result:CSCMatrix[T] = result(false, false)
 
+    private def rowFromIndex(idx: Long) = idx.toInt
+    private def colFromIndex(idx: Long) = (idx >>> 32).toInt
+
     def result(keysAlreadyUnique: Boolean = false, keysAlreadySorted: Boolean = false):CSCMatrix[T] = {
-      val rs = this.rs.result()
-      val cs = this.cs.result()
+      val indices = this.indices.result()
       val vs = this.vs.result()
       // at most this many nnz
-      val nnz = rs.length
+      val nnz = indices.length
       val outCols = new Array[Int](cols+1)
 
       if(nnz == 0) {
-        return new CSCMatrix(vs, rows, cols, outCols, 0, rs)
+        return new CSCMatrix(vs, rows, cols, outCols, 0, Array())
       }
 
       val order: Array[Int] = if(keysAlreadySorted) {
-        VectorBuilder.range(cs.length)
+        VectorBuilder.range(nnz)
       } else {
-        sortedIndices(rs, cs)
+        sortedIndices(indices)
       }
 
       val outRows = new Array[Int](nnz)
       val outData = new Array[T](nnz)
 
-      if (cs.length > 0) {
-        outRows(0) = rs(order(0))
-        outData(0) = vs(order(0))
-      }
+      outRows(0) = rowFromIndex(indices(order(0)))
+      outData(0) = vs(order(0))
+
       var outDataIndex = 0
       var i = 1
-      var lastCol = cs(order(0))
+      var lastCol = colFromIndex(indices(order(0)))
       while (i < nnz) {
-        val colsEqual = cs(order(i)) == lastCol
-        if (colsEqual && rs(order(i)) == rs(order(i-1))) {
+        val index = indices(order(i))
+        val col = colFromIndex(index)
+        val colsEqual = col == lastCol
+        val row = rowFromIndex(index)
+        if (colsEqual && row == rowFromIndex(indices(order(i-1)))) {
           // TODO: might need to codegen to make this fast.
           outData(outDataIndex) = ring.+(outData(outDataIndex), vs(order(i)))
         } else {
           outDataIndex += 1
-          outRows(outDataIndex) = rs(order(i))
+          outRows(outDataIndex) = row
           outData(outDataIndex) = vs(order(i))
         }
 
-        // we need the outCols array to point to the
+        // we need to pad the outCols array with zeros until we reach the next non-zero column
         if(!colsEqual) {
-          while(lastCol < cs(order(i))) {
+          while(lastCol < col) {
             outCols(lastCol+1) = outDataIndex
             lastCol += 1
           }
@@ -399,11 +401,16 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
       out
     }
 
-    // returns indices of a lexicgraphic sort of cs then rs
-    private def sortedIndices(rs: Array[Int], cs: Array[Int]) = {
-      Array.range(0, rs.length).sortWith { (i, j) =>
-        (cs(i) < cs(j))  || (cs(i) == cs(j) && rs(i) < rs(j))
-      }
+    // returns indices of a lexicgraphic sort of the indices (columns major, rows minor)
+    private def sortedIndices(indices: Array[Long]) = {
+      val sortedOffsets = Sorting.indexSort(VectorBuilder.range(indices.length), 0, indices.length, indices)
+//      val qq = Array.range(0, rs.length).sortWith { (i, j) =>
+//        (cs(i) < cs(j))  || (cs(i) == cs(j) && rs(i) < rs(j))
+//      }
+//
+//      assert(util.Arrays.equals(qq.map(indices), sortedOffsets.map(indices)), qq.map(indices).deep + " " + sortedOffsets.map(indices).deep)
+
+      sortedOffsets
     }
   }
 
