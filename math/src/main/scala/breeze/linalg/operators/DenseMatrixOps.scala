@@ -104,7 +104,9 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps with DenseMatrixMultOps wi
     override def apply(A : DenseMatrix[Double], V : DenseMatrix[Double]): DenseMatrix[Double] = {
       require(A.rows == V.rows, "Non-conformant matrix sizes")
 
-      if (A.rows == A.cols) {
+      if (A.size == 0) {
+        DenseMatrix.zeros[Double](0, 0)
+      } else if (A.rows == A.cols) {
         // square: LUSolve
         val X = DenseMatrix.zeros[Double](V.rows, V.cols)
         X := V
@@ -297,7 +299,9 @@ trait DenseMatrixFloatMultiplyStuff extends DenseMatrixOps with DenseMatrixMultO
     override def apply(A : DenseMatrix[Float], V: DenseMatrix[Float]) = {
       require(A.rows == V.rows, "Non-conformant matrix sizes")
 
-      if (A.rows == A.cols) {
+      if (A.size == 0) {
+        DenseMatrix.zeros[Float](0, 0)
+      } else if (A.rows == A.cols) {
         // square: LUSolve
         val X = DenseMatrix.zeros[Float](V.rows, V.cols)
         X := V

@@ -601,11 +601,19 @@ class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with Do
     assert(dm(IndexedSeq(1, 0), ::).toDenseMatrix === flipud(dm))
   }
 
+  test("#278: don't crash on solve when majorStride == 0") {
+    val d = DenseVector[Double]()
+    val m = DenseMatrix.tabulate(0,0) { case x => 0.0 }
+    assert( m \ d  === d)
+
+  }
+
 
 
   def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6) {
     for(i <- 0 until A.rows; j <- 0 until A.cols)
       A(i,j) should be (B(i, j) +- threshold)
+
   }
 
 
