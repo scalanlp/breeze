@@ -3,7 +3,7 @@ package breeze.linalg
 import breeze.generic.UFunc
 import breeze.stats.distributions.{RandBasis, Rand}
 import scala.reflect.ClassTag
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 
 /**Gives a random Double.
   * +  randomDouble()... returns a random double, in [0, 1]
@@ -24,7 +24,7 @@ object randomDouble extends RandomGeneratorUFunc[Double] {
   }
 
   protected val _classTag: ClassTag[Double] = scala.reflect.classTag[Double]
-  protected val _dav = DefaultArrayValue[Double](0.0)
+  protected val _zero = Zero[Double](0.0)
 
 }
 
@@ -49,7 +49,7 @@ object randomInt extends RandomGeneratorUFunc[Int] {
 
 
   protected val _classTag: ClassTag[Int] = scala.reflect.classTag[Int]
-  protected val _dav = DefaultArrayValue[Int](0)
+  protected val _zero = Zero[Int](0)
 
 }
 
@@ -69,7 +69,7 @@ object randn extends RandomGeneratorUFunc[Double] {
   protected def genRange(low: Double, high:Double)(implicit basis: RandBasis = Rand):Rand[Double] = basis.gaussian(low, high)
 
   protected val _classTag: ClassTag[Double] = scala.reflect.classTag[Double]
-  protected val _dav = DefaultArrayValue[Double](0.0)
+  protected val _zero = Zero.DoubleZero
 
 }
 
@@ -78,7 +78,7 @@ trait RandomGeneratorUFunc[T] extends UFunc {
   protected def gen(implicit basis: RandBasis = Rand):Rand[T]
   protected def genRange(low: T, high:T)(implicit basis: RandBasis = Rand):Rand[T]
   protected implicit val _classTag: ClassTag[T]
-  protected implicit val _dav: DefaultArrayValue[T]
+  protected implicit val _zero: Zero[T]
 
   def apply()(implicit basis: RandBasis = Rand) = gen(basis).draw()
 

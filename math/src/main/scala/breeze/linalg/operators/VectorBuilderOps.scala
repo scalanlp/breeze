@@ -3,7 +3,7 @@ package breeze.linalg.operators
 import breeze.macros.expand
 import breeze.generic.UFunc.{UImpl2, InPlaceImpl2}
 import breeze.math.{Ring, MutableVectorSpace, Semiring}
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 import scala.reflect.ClassTag
 import breeze.linalg._
 
@@ -67,7 +67,7 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
 
   implicit def opFromCopyAndUpdate[Op, V, Other](implicit op: InPlaceImpl2[Op, VectorBuilder[V], Other],
                                                  semi: Semiring[V],
-                                                 dev: DefaultArrayValue[V],
+                                                 dev: Zero[V],
                                                  classTag: ClassTag[V]): UImpl2[Op, VectorBuilder[V], Other, VectorBuilder[V]] = {
     BinaryOp.fromCopyAndUpdate[VectorBuilder[V], Other, Op](op, canCopyBuilder[V])
   }

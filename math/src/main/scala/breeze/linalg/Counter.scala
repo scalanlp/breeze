@@ -15,7 +15,7 @@ package breeze.linalg
  limitations under the License.
 */
 
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 import breeze.math.{TensorSpace, Ring, Semiring, Field}
 import breeze.generic._
 import collection.Set
@@ -87,15 +87,15 @@ trait Counter[K, V] extends Tensor[K,V] with CounterLike[K, V, collection.mutabl
 
 object Counter extends CounterOps {
   /** Returns an empty counter. */
-  def apply[K,V:DefaultArrayValue:Semiring]() : Counter[K,V] =
+  def apply[K,V:Zero:Semiring]() : Counter[K,V] =
     new Impl(scala.collection.mutable.HashMap[K,V]())
 
   /** Returns a counter by summing all the given values. */
-  def apply[K,V:DefaultArrayValue:Semiring](values : (K,V)*) : Counter[K,V] =
+  def apply[K,V:Zero:Semiring](values : (K,V)*) : Counter[K,V] =
     apply(values)
 
   /** Returns a counter by summing all the given values. */
-  def apply[K,V:DefaultArrayValue:Semiring](values : TraversableOnce[(K,V)]) : Counter[K,V] = {
+  def apply[K,V:Zero:Semiring](values : TraversableOnce[(K,V)]) : Counter[K,V] = {
     val rv = apply[K,V]()
     val field = implicitly[Semiring[V]]
     values.foreach({ case (k,v) => rv(k) = field.+(v,rv(k)) })
@@ -114,12 +114,12 @@ object Counter extends CounterOps {
   @SerialVersionUID(2872445575657408160L)
   class Impl[K, V]
   (override val data : scala.collection.mutable.Map[K,V])
-  (implicit defaultArrayValue : DefaultArrayValue[V])
+  (implicit zero : Zero[V])
   extends Counter[K,V] {
-    def default = defaultArrayValue.value
+    def default = zero.zero
   }
 
-  implicit def canMapValues[K, V, RV:Semiring:DefaultArrayValue]: CanMapValues[Counter[K, V], V, RV, Counter[K, RV]]
+  implicit def canMapValues[K, V, RV:Semiring]: CanMapValues[Counter[K, V], V, RV, Counter[K, RV]]
   = new CanMapValues[Counter[K,V],V,RV,Counter[K,RV]] {
     override def map(from : Counter[K,V], fn : (V=>RV)) = {
       val rv = Counter[K,RV]()
@@ -162,7 +162,7 @@ object Counter extends CounterOps {
     override def isTraversableAgain(from: Counter[K, V]): Boolean = true
   }
 
-  implicit def tensorspace[K, V](implicit field: Field[V], dfv: DefaultArrayValue[V], normImpl: norm.Impl[V, Double]) = {
+  implicit def tensorspace[K, V](implicit field: Field[V], normImpl: norm.Impl[V, Double]) = {
     implicit def zipMap = Counter.zipMap[K, V, V]
     TensorSpace.make[Counter[K, V], K, V]
   }

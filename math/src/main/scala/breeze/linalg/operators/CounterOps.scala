@@ -1,13 +1,13 @@
 package breeze.linalg.operators
 
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 import breeze.math.{Field, Ring, Semiring}
 import breeze.linalg.support.{CanTransformValues, CanZipMapValues, CanCopy}
 import breeze.generic.UFunc
 import breeze.linalg._
 
 trait CounterOps {
-  implicit def canCopy[K1, V:DefaultArrayValue:Semiring]:CanCopy[Counter[K1, V]] = new CanCopy[Counter[K1, V]] {
+  implicit def canCopy[K1, V:Zero:Semiring]:CanCopy[Counter[K1, V]] = new CanCopy[Counter[K1, V]] {
     def apply(t: Counter[K1, V]): Counter[K1, V] = {
       Counter(t.iterator)
     }
@@ -44,7 +44,7 @@ trait CounterOps {
     }
   }
 
-  implicit def addVV[K1, V:Semiring:DefaultArrayValue]:OpAdd.Impl2[Counter[K1, V], Counter[K1, V], Counter[K1,V]] = {
+  implicit def addVV[K1, V:Semiring:Zero]:OpAdd.Impl2[Counter[K1, V], Counter[K1, V], Counter[K1,V]] = {
     binaryOpFromBinaryUpdateOp(canCopy, addIntoVV)
   }
 
@@ -58,7 +58,7 @@ trait CounterOps {
   }
 
 
-  implicit def addVS[K1, V:Semiring:DefaultArrayValue]:OpAdd.Impl2[Counter[K1, V], V, Counter[K1,V]] = {
+  implicit def addVS[K1, V:Semiring:Zero]:OpAdd.Impl2[Counter[K1, V], V, Counter[K1,V]] = {
     binaryOpFromBinaryUpdateOp(canCopy, addIntoVS)
   }
 
@@ -74,7 +74,7 @@ trait CounterOps {
   }
 
 
-  implicit def subVV[K1, V:Ring:DefaultArrayValue]:OpSub.Impl2[Counter[K1, V], Counter[K1, V], Counter[K1,V]] = {
+  implicit def subVV[K1, V:Ring:Zero]:OpSub.Impl2[Counter[K1, V], Counter[K1, V], Counter[K1,V]] = {
     binaryOpFromBinaryUpdateOp(canCopy, subIntoVV)
   }
 
@@ -88,7 +88,7 @@ trait CounterOps {
   }
 
 
-  implicit def subVS[K1, V:Ring:DefaultArrayValue]:OpSub.Impl2[Counter[K1, V], V, Counter[K1,V]] = {
+  implicit def subVS[K1, V:Ring:Zero]:OpSub.Impl2[Counter[K1, V], V, Counter[K1,V]] = {
     binaryOpFromBinaryUpdateOp(canCopy, subIntoVS)
   }
 
@@ -101,8 +101,7 @@ trait CounterOps {
     }
   }
 
-  implicit def canMulVV[K1, V](implicit semiring: Semiring[V],
-                               d: DefaultArrayValue[V]): OpMulScalar.Impl2[Counter[K1, V], Counter[K1, V], Counter[K1, V]] = {
+  implicit def canMulVV[K1, V](implicit semiring: Semiring[V]): OpMulScalar.Impl2[Counter[K1, V], Counter[K1, V], Counter[K1, V]] = {
     new OpMulScalar.Impl2[Counter[K1, V], Counter[K1, V], Counter[K1, V]] {
       override def apply(a : Counter[K1, V], b : Counter[K1, V]) = {
         val r = Counter[K1, V]()
@@ -135,8 +134,7 @@ trait CounterOps {
     }
   }
 
-  implicit def canMulVS[K2, K1<:K2, V](implicit semiring: Semiring[V],
-                                       d: DefaultArrayValue[V]):OpMulScalar.Impl2[Counter[K1, V], V, Counter[K1, V]] = {
+  implicit def canMulVS[K2, K1<:K2, V](implicit semiring: Semiring[V]):OpMulScalar.Impl2[Counter[K1, V], V, Counter[K1, V]] = {
     new OpMulScalar.Impl2[Counter[K1, V], V, Counter[K1, V]] {
       override def apply(a : Counter[K1, V], b : V) = {
         val r = Counter[K1, V]()
@@ -149,8 +147,7 @@ trait CounterOps {
     }
   }
 
-  implicit def canMulVS_M[K2, K1<:K2, V](implicit semiring: Semiring[V],
-                                         d: DefaultArrayValue[V]):OpMulMatrix.Impl2[Counter[K1, V], V, Counter[K1, V]] = {
+  implicit def canMulVS_M[K2, K1<:K2, V](implicit semiring: Semiring[V]):OpMulMatrix.Impl2[Counter[K1, V], V, Counter[K1, V]] = {
     new OpMulMatrix.Impl2[Counter[K1, V], V, Counter[K1, V]] {
       override def apply(a : Counter[K1, V], b : V) = {
         val r = Counter[K1, V]()
@@ -176,8 +173,7 @@ trait CounterOps {
   }
 
   implicit def canDivVV[K1, V](implicit copy: CanCopy[Counter[K1, V]],
-                               semiring: Field[V],
-                               d: DefaultArrayValue[V]):OpDiv.Impl2[Counter[K1, V], Counter[K1, V], Counter[K1, V]] = {
+                               semiring: Field[V]):OpDiv.Impl2[Counter[K1, V], Counter[K1, V], Counter[K1, V]] = {
     new OpDiv.Impl2[Counter[K1, V], Counter[K1, V], Counter[K1, V]] {
       override def apply(a : Counter[K1, V], b : Counter[K1, V]) = {
         val r = Counter[K1, V]()
@@ -192,8 +188,7 @@ trait CounterOps {
 
 
   implicit def canDivVS[K1, V](implicit copy: CanCopy[Counter[K1, V]],
-                               semiring: Field[V],
-                               d: DefaultArrayValue[V]):OpDiv.Impl2[Counter[K1, V], V, Counter[K1, V]] = {
+                               semiring: Field[V]):OpDiv.Impl2[Counter[K1, V], V, Counter[K1, V]] = {
     new OpDiv.Impl2[Counter[K1, V], V, Counter[K1, V]] {
       override def apply(a : Counter[K1, V], b : V) = {
         val r = Counter[K1, V]()
@@ -236,7 +231,7 @@ trait CounterOps {
     }
   }
 
-  implicit def canNegate[K1, V](implicit ring: Ring[V], d: DefaultArrayValue[V]):OpNeg.Impl[Counter[K1, V], Counter[K1, V]] = {
+  implicit def canNegate[K1, V](implicit ring: Ring[V]):OpNeg.Impl[Counter[K1, V], Counter[K1, V]] = {
     new OpNeg.Impl[Counter[K1, V], Counter[K1, V]] {
       override def apply(a : Counter[K1, V]) = {
         val result = Counter[K1, V]()
@@ -251,8 +246,7 @@ trait CounterOps {
 
 
   implicit def canMulInner[K1, V](implicit copy: CanCopy[Counter[K1, V]],
-                                  semiring: Semiring[V],
-                                  d: DefaultArrayValue[V]):OpMulInner.Impl2[Counter[K1, V], Counter[K1, V], V] = {
+                                  semiring: Semiring[V]):OpMulInner.Impl2[Counter[K1, V], Counter[K1, V], V] = {
     new OpMulInner.Impl2[Counter[K1, V], Counter[K1, V], V] {
       val zero = semiring.zero
       override def apply(a : Counter[K1, V], b : Counter[K1, V]) = {
@@ -290,7 +284,7 @@ trait CounterOps {
     }
   }
 
-  class CanZipMapValuesCounter[K, V, RV:DefaultArrayValue:Semiring] extends CanZipMapValues[Counter[K, V],V,RV,Counter[K, RV]] {
+  class CanZipMapValuesCounter[K, V, RV:Zero:Semiring] extends CanZipMapValues[Counter[K, V],V,RV,Counter[K, RV]] {
 
     /**Maps all corresponding values from the two collection. */
     def map(from: Counter[K, V], from2: Counter[K, V], fn: (V, V) => RV) = {
@@ -303,7 +297,7 @@ trait CounterOps {
   }
 
 
-  implicit def zipMap[K, V, R:DefaultArrayValue:Semiring] = new CanZipMapValuesCounter[K, V, R]
+  implicit def zipMap[K, V, R:Zero:Semiring] = new CanZipMapValuesCounter[K, V, R]
 
 
   implicit def canTransformValues[L, V]:CanTransformValues[Counter[L, V], V, V] = {

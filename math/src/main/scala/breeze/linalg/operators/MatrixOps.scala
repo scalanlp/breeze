@@ -2,7 +2,7 @@ package breeze.linalg.operators
 
 import scala.reflect.ClassTag
 import breeze.linalg.support.{LiteralRow, CanCopy}
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 import breeze.math.{Field, Ring, Complex, Semiring}
 import scala.specialized
 import scala.util.Random
@@ -34,7 +34,7 @@ trait MatrixGenericOps { this: Matrix.type =>
 
   import breeze.math.PowImplicits._
 
-  implicit def m_m_OpAdd_Update_Semi[T:Semiring:ClassTag:DefaultArrayValue]: OpAdd.InPlaceImpl2[Matrix[T], Matrix[T]] = new OpAdd.InPlaceImpl2[Matrix[T], Matrix[T]] {
+  implicit def m_m_OpAdd_Update_Semi[T:Semiring:ClassTag:Zero]: OpAdd.InPlaceImpl2[Matrix[T], Matrix[T]] = new OpAdd.InPlaceImpl2[Matrix[T], Matrix[T]] {
     override def apply(a: Matrix[T], b: Matrix[T]):Unit = {
       val ring = implicitly[Semiring[T]]
       var c = 0
@@ -51,7 +51,7 @@ trait MatrixGenericOps { this: Matrix.type =>
     }
   }
 
-  implicit def m_m_OpMul_Update_Semi[T:Semiring:ClassTag:DefaultArrayValue]: OpMulScalar.InPlaceImpl2[Matrix[T], Matrix[T]] = new OpMulScalar.InPlaceImpl2[Matrix[T], Matrix[T]] {
+  implicit def m_m_OpMul_Update_Semi[T:Semiring:ClassTag:Zero]: OpMulScalar.InPlaceImpl2[Matrix[T], Matrix[T]] = new OpMulScalar.InPlaceImpl2[Matrix[T], Matrix[T]] {
     override def apply(a: Matrix[T], b: Matrix[T]):Unit = {
       val ring = implicitly[Semiring[T]]
       var c = 0
@@ -68,7 +68,7 @@ trait MatrixGenericOps { this: Matrix.type =>
     }
   }
 
-  implicit def m_m_OpSub_Update_Ring[T:Ring:ClassTag:DefaultArrayValue]: OpSub.InPlaceImpl2[Matrix[T], Matrix[T]] = new OpSub.InPlaceImpl2[Matrix[T], Matrix[T]] {
+  implicit def m_m_OpSub_Update_Ring[T:Ring:ClassTag:Zero]: OpSub.InPlaceImpl2[Matrix[T], Matrix[T]] = new OpSub.InPlaceImpl2[Matrix[T], Matrix[T]] {
     override def apply(a: Matrix[T], b: Matrix[T]):Unit = {
       val ring = implicitly[Ring[T]]
       var c = 0
@@ -85,7 +85,7 @@ trait MatrixGenericOps { this: Matrix.type =>
     }
   }
 
-  implicit def m_m_OpDiv_Update_Ring[T:Field:ClassTag:DefaultArrayValue]: OpDiv.InPlaceImpl2[Matrix[T], Matrix[T]] = new OpDiv.InPlaceImpl2[Matrix[T], Matrix[T]] {
+  implicit def m_m_OpDiv_Update_Ring[T:Field:ClassTag:Zero]: OpDiv.InPlaceImpl2[Matrix[T], Matrix[T]] = new OpDiv.InPlaceImpl2[Matrix[T], Matrix[T]] {
     override def apply(a: Matrix[T], b: Matrix[T]):Unit = {
       val ring = implicitly[Field[T]]
       var c = 0
@@ -256,7 +256,7 @@ trait MatrixMultOps extends MatrixOps with MatrixOpsLowPrio { this: Matrix.type 
     }
   }
 
-  implicit def op_M_V_Semiring[T:Semiring:DefaultArrayValue:ClassTag]:OpMulMatrix.Impl2[Matrix[T], Vector[T], Vector[T]] = new OpMulMatrix.Impl2[Matrix[T], Vector[T], Vector[T]] {
+  implicit def op_M_V_Semiring[T:Semiring:Zero:ClassTag]:OpMulMatrix.Impl2[Matrix[T], Vector[T], Vector[T]] = new OpMulMatrix.Impl2[Matrix[T], Vector[T], Vector[T]] {
     override def apply(a: Matrix[T], b: Vector[T]): Vector[T] = {
       val ring = implicitly[Semiring[T]]
 
@@ -305,7 +305,7 @@ trait MatrixMultOps extends MatrixOps with MatrixOpsLowPrio { this: Matrix.type 
     }
   }
 
-  implicit def op_M_M_Semiring[T:Semiring:DefaultArrayValue:ClassTag]:OpMulMatrix.Impl2[Matrix[T], Matrix[T], Matrix[T]] = new OpMulMatrix.Impl2[Matrix[T], Matrix[T], Matrix[T]] {
+  implicit def op_M_M_Semiring[T:Semiring:Zero:ClassTag]:OpMulMatrix.Impl2[Matrix[T], Matrix[T], Matrix[T]] = new OpMulMatrix.Impl2[Matrix[T], Matrix[T], Matrix[T]] {
     override def apply(a: Matrix[T], b: Matrix[T]): Matrix[T] = {
       val ring = implicitly[Semiring[T]]
 

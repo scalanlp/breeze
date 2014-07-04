@@ -22,7 +22,7 @@ import breeze.numerics._
 import breeze.linalg.operators.{OpDiv, BinaryOp}
 import breeze.math.{TensorSpace, MutableCoordinateSpace}
 import breeze.numerics
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 
 /**
  * Represents a Dirichlet distribution, the conjugate prior to the multinomial.
@@ -30,7 +30,7 @@ import breeze.storage.DefaultArrayValue
  */
 case class Dirichlet[T,@specialized(Int) I](params: T)(implicit space: TensorSpace[T, I, Double],
                                                        rand: RandBasis=Rand,
-                                                       dav: DefaultArrayValue[T]) extends ContinuousDistr[T] {
+                                                       dav: Zero[T]) extends ContinuousDistr[T] {
   import space._
   /**
    * Returns a Multinomial distribution over the iterator
@@ -94,7 +94,7 @@ object Dirichlet {
   def apply(arr: Array[Double]): Dirichlet[DenseVector[Double], Int] = Dirichlet( new DenseVector[Double](arr))
 
 
-  class ExpFam[T,I](exemplar: T)(implicit space: TensorSpace[T, I, Double], dav: DefaultArrayValue[T]) extends ExponentialFamily[Dirichlet[T,I],T] {
+  class ExpFam[T,I](exemplar: T)(implicit space: TensorSpace[T, I, Double]) extends ExponentialFamily[Dirichlet[T,I],T] {
     import space._
     type Parameter = T
     case class SufficientStatistic(n: Double, t: T) extends breeze.stats.distributions.SufficientStatistic[SufficientStatistic] {
