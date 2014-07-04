@@ -330,7 +330,7 @@ object SparseVector extends SparseVectorOps
     TensorSpace.make[SparseVector[Float], Int, Float]
   }
   implicit val space_i: TensorSpace[SparseVector[Int], Int, Int] = TensorSpace.make[SparseVector[Int], Int, Int]
-  
+
   implicit def canTranspose[V:ClassTag:Zero]: CanTranspose[SparseVector[V], CSCMatrix[V]] = {
     new CanTranspose[SparseVector[V], CSCMatrix[V]] {
       def apply(from: SparseVector[V]): CSCMatrix[V] = {
@@ -345,7 +345,7 @@ object SparseVector extends SparseVectorOps
       }
     }
   }
-  
+
   implicit def canTransposeComplex: CanTranspose[SparseVector[Complex], CSCMatrix[Complex]] = {
     new CanTranspose[SparseVector[Complex], CSCMatrix[Complex]] {
       def apply(from: SparseVector[Complex]) = {
