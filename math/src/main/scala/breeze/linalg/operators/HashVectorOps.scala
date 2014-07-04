@@ -652,7 +652,7 @@ trait HashVector_GenericOps { this: HashVector.type =>
   implicit def vSubSField[T](implicit field: Ring[T], ct: ClassTag[T]):OpSub.Impl2[HashVector[T], T, HashVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vSubIntoSField, ct)
   implicit def vMulScalarSField[T](implicit field: Semiring[T], ct: ClassTag[T]):OpMulScalar.Impl2[HashVector[T], T, HashVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vMulScalarIntoSField, ct)
   implicit def vDivSField[T](implicit field: Field[T], ct: ClassTag[T]):OpDiv.Impl2[HashVector[T], T, HashVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vDivIntoSField, ct)
-  implicit def vPowS[T](implicit pow: OpPow.Impl2[T, T, T], ct: ClassTag[T]):OpPow.Impl2[HashVector[T], T, HashVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vPowIntoS, ct)
+  implicit def vPowS[T](implicit pow: OpPow.Impl2[T, T, T], ct: ClassTag[T], zero: Zero[T]):OpPow.Impl2[HashVector[T], T, HashVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vPowIntoS, ct)
 
 
   implicit def vSubIntoSField[T](implicit field: Ring[T], ct: ClassTag[T]):OpSub.InPlaceImpl2[HashVector[T], T] = {

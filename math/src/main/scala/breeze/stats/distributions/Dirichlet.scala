@@ -29,8 +29,7 @@ import breeze.storage.Zero
  * @author dlwh
  */
 case class Dirichlet[T,@specialized(Int) I](params: T)(implicit space: TensorSpace[T, I, Double],
-                                                       rand: RandBasis=Rand,
-                                                       dav: Zero[T]) extends ContinuousDistr[T] {
+                                                       rand: RandBasis=Rand) extends ContinuousDistr[T] {
   import space._
   /**
    * Returns a Multinomial distribution over the iterator
