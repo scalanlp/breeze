@@ -3,7 +3,7 @@ package breeze.stats.distributions
 import breeze.linalg.{sum, Counter, NumericOps}
 import breeze.math.{TensorSpace, MutableCoordinateSpace}
 import breeze.numerics._
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 
 
 /*
@@ -30,8 +30,7 @@ import breeze.storage.DefaultArrayValue
  * @author dlwh
  */
 class Polya[T,@specialized(Int) I](params: T)(implicit space: TensorSpace[T, I, Double],
-                                              rand: RandBasis=Rand,
-                                              dav: DefaultArrayValue[T]) extends DiscreteDistr[I] {
+                                              rand: RandBasis=Rand) extends DiscreteDistr[I] {
   import space._
   private val innerDirichlet = new Dirichlet(params)
   def draw() = {

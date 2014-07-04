@@ -2,7 +2,7 @@ package breeze.linalg
 
 import scala.reflect.ClassTag
 import breeze.linalg.support._
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 
@@ -65,7 +65,7 @@ object SliceVector {
     }
   }
 
-  implicit def canCreateZerosLike[K, V: ClassTag : DefaultArrayValue]: CanCreateZerosLike[SliceVector[K, V], DenseVector[V]] = {
+  implicit def canCreateZerosLike[K, V: ClassTag : Zero]: CanCreateZerosLike[SliceVector[K, V], DenseVector[V]] = {
     new CanCreateZerosLike[SliceVector[K, V], DenseVector[V]] {
       def apply(v1: SliceVector[K, V]): DenseVector[V] = {
         DenseVector.zeros[V](v1.length)

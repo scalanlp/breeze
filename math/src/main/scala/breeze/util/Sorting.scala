@@ -1,5 +1,7 @@
 package breeze.util
 
+import breeze.macros.expand
+
 /**
  *
  * @author dlwh
@@ -14,12 +16,26 @@ object Sorting {
   //**                          |/                                          **
   //\*                                                                      */
 
+
+  def indexSort(x: Array[Int], off: Int, len: Int, order: Array[Int]): Array[Int] = {
+    indexSort_Int(x, off, len, order)
+  }
+
+  def indexSort(x: Array[Int], off: Int, len: Int, order: Array[Long]): Array[Int] = {
+    indexSort_Long(x, off, len, order)
+  }
+
+  def indexSort(x: Array[Int], off: Int, len: Int, order: Array[Double]): Array[Int] = {
+    indexSort_Double(x, off, len, order)
+  }
+
   /**
    *
    * Sorts the array x where each element has order order.
    * Used to build sparse vectors.
    */
-  def indexSort(x: Array[Int], off: Int, len: Int, order: Array[Int]) {
+  @expand
+  def indexSort[@expand.args(Int, Long, Float, Double) T](x: Array[Int], off: Int, len: Int, order: Array[T]): Array[Int] = {
     def swap(a: Int, b: Int) {
       val t = x(a)
       x(a) = x(b)
@@ -118,6 +134,8 @@ object Sorting {
       }
     }
     sort2(off, len)
+
+    x
   }
 
 

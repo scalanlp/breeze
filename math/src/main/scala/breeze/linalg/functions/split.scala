@@ -3,7 +3,7 @@ package breeze.linalg
 import breeze.generic.UFunc
 import scala.reflect.ClassTag
 import spire.implicits._
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 
 /**
  * split the array
@@ -58,7 +58,7 @@ object split extends UFunc {
     }
   }
 
-  implicit def implIntMatrix[T: ClassTag](implicit dfv: DefaultArrayValue[T]): Impl3[DenseMatrix[T], Int, Int, Seq[DenseMatrix[T]]] = new Impl3[DenseMatrix[T], Int, Int, Seq[DenseMatrix[T]]] {
+  implicit def implIntMatrix[T: ClassTag](implicit zero: Zero[T]): Impl3[DenseMatrix[T], Int, Int, Seq[DenseMatrix[T]]] = new Impl3[DenseMatrix[T], Int, Int, Seq[DenseMatrix[T]]] {
     def apply(v: DenseMatrix[T], n: Int, axis: Int): Seq[DenseMatrix[T]] = axis match {
       case 0 => vsplit(v,n)
       case 1 => hsplit(v,n)
@@ -76,7 +76,7 @@ object hsplit extends UFunc {
     def apply(v: DenseVector[T], n: Seq[Int]): Seq[DenseVector[T]] = hsplit(v,n)
   }
 
-  implicit def implIntMat[T: ClassTag](implicit dfv: DefaultArrayValue[T]): Impl2[DenseMatrix[T], Int, Seq[DenseMatrix[T]]] = new Impl2[DenseMatrix[T],Int, Seq[DenseMatrix[T]]] { //for matrices
+  implicit def implIntMat[T: ClassTag](implicit zero: Zero[T]): Impl2[DenseMatrix[T], Int, Seq[DenseMatrix[T]]] = new Impl2[DenseMatrix[T],Int, Seq[DenseMatrix[T]]] { //for matrices
     def apply(v: DenseMatrix[T], n: Int): Seq[DenseMatrix[T]] = {
       require(n >= 0)
       require(n < v.cols)
@@ -102,7 +102,7 @@ object hsplit extends UFunc {
 }
 
 object vsplit extends UFunc {
-  implicit def implIntMat[T: ClassTag](implicit dfv: DefaultArrayValue[T]): Impl2[DenseMatrix[T], Int, Seq[DenseMatrix[T]]] = new Impl2[DenseMatrix[T],Int, Seq[DenseMatrix[T]]] { //for matrices
+  implicit def implIntMat[T: ClassTag](implicit zero: Zero[T]): Impl2[DenseMatrix[T], Int, Seq[DenseMatrix[T]]] = new Impl2[DenseMatrix[T],Int, Seq[DenseMatrix[T]]] { //for matrices
     def apply(v: DenseMatrix[T], n: Int): Seq[DenseMatrix[T]] = {
       require(n >= 0)
       require(n < v.cols)

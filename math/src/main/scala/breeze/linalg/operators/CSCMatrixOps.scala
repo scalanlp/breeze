@@ -4,7 +4,7 @@ package operators
 import breeze.macros.expand
 import breeze.linalg.{DenseMatrix, SparseVector}
 import breeze.math._
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 import scala.reflect.ClassTag
 import java.util
 
@@ -85,7 +85,7 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
     implicitly[BinaryRegistry[Matrix[T], Vector[T], OpMulMatrix.type, Vector[T]]].register(this)
   }
 
-  implicit def canMulM_V_Semiring[T:Semiring:DefaultArrayValue:ClassTag]: BinaryRegistry[CSCMatrix[T], Vector[T],OpMulMatrix.type, Vector[T]] = new BinaryRegistry[CSCMatrix[T], Vector[T], OpMulMatrix.type, Vector[T]] {
+  implicit def canMulM_V_Semiring[T:Semiring:Zero:ClassTag]: BinaryRegistry[CSCMatrix[T], Vector[T],OpMulMatrix.type, Vector[T]] = new BinaryRegistry[CSCMatrix[T], Vector[T], OpMulMatrix.type, Vector[T]] {
     implicit val ring = implicitly[Semiring[T]]
 
     override def bindingMissing(a: CSCMatrix[T], b: Vector[T]) = {
@@ -164,7 +164,7 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
     implicitly[BinaryRegistry[Matrix[T], Vector[T], OpMulMatrix.type, Vector[T]]].register(this)
   }
 
-  implicit def canMulM_SV_Semiring[T:Semiring:DefaultArrayValue:ClassTag]
+  implicit def canMulM_SV_Semiring[T:Semiring:Zero:ClassTag]
   : BinaryRegistry[CSCMatrix[T], SparseVector[T], OpMulMatrix.type, SparseVector[T]] = new BinaryRegistry[CSCMatrix[T], SparseVector[T], OpMulMatrix.type, SparseVector[T]] {
     override def bindingMissing(a: CSCMatrix[T], b: SparseVector[T]) = {
       val ring = implicitly[Semiring[T]]
@@ -227,7 +227,7 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
     implicitly[BinaryRegistry[Matrix[T], Matrix[T], OpMulMatrix.type, Matrix[T]]].register(this)
   }
 
-  implicit def canMulM_DM_Semiring[T:Semiring:DefaultArrayValue:ClassTag]
+  implicit def canMulM_DM_Semiring[T:Semiring:Zero:ClassTag]
   : breeze.linalg.operators.OpMulMatrix.Impl2[CSCMatrix[T], DenseMatrix[T], DenseMatrix[T]]= new breeze.linalg.operators.OpMulMatrix.Impl2[CSCMatrix[T], DenseMatrix[T], DenseMatrix[T]] {
     def apply(a: CSCMatrix[T], b: DenseMatrix[T]) = {
       val ring = implicitly[Semiring[T]]
@@ -284,7 +284,7 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
     implicitly[BinaryRegistry[DenseMatrix[T], Matrix[T], OpMulMatrix.type, Matrix[T]]].register(this)
   }
 
-  implicit def canMulDM_M_Semiring[T:Semiring:DefaultArrayValue:ClassTag]
+  implicit def canMulDM_M_Semiring[T:Semiring:Zero:ClassTag]
   :breeze.linalg.operators.OpMulMatrix.Impl2[DenseMatrix[T], CSCMatrix[T], DenseMatrix[T]] = {
     new breeze.linalg.operators.OpMulMatrix.Impl2[DenseMatrix[T], CSCMatrix[T], DenseMatrix[T]] {
       def apply(a: DenseMatrix[T], b: CSCMatrix[T]) = {
@@ -354,7 +354,7 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
   }
 
 
-  implicit def canMulM_M_Semiring[T:Semiring:DefaultArrayValue:ClassTag]: breeze.linalg.operators.OpMulMatrix.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] = new breeze.linalg.operators.OpMulMatrix.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] {
+  implicit def canMulM_M_Semiring[T:Semiring:Zero:ClassTag]: breeze.linalg.operators.OpMulMatrix.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] = new breeze.linalg.operators.OpMulMatrix.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] {
     def apply(a: CSCMatrix[T], b: CSCMatrix[T]) = {
       val ring = implicitly[Semiring[T]]
 
@@ -439,7 +439,7 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
     implicitly[BinaryRegistry[Matrix[A], Matrix[A], OpMulScalar.type, Matrix[A]]].register(this)
   }
 
-  implicit def CSCMatrixCanMulM_M_Semiring[A:Semiring:ClassTag:DefaultArrayValue]: OpMulScalar.Impl2[CSCMatrix[A], CSCMatrix[A], CSCMatrix[A]] = new OpMulScalar.Impl2[CSCMatrix[A], CSCMatrix[A], CSCMatrix[A]] {
+  implicit def CSCMatrixCanMulM_M_Semiring[A:Semiring:ClassTag:Zero]: OpMulScalar.Impl2[CSCMatrix[A], CSCMatrix[A], CSCMatrix[A]] = new OpMulScalar.Impl2[CSCMatrix[A], CSCMatrix[A], CSCMatrix[A]] {
 
     final def apply(a: CSCMatrix[A], b: CSCMatrix[A]): CSCMatrix[A] = {
       val ring = implicitly[Semiring[A]]
@@ -482,7 +482,7 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
 
   }
 
-  implicit def CSCMatrixCanAdd_M_M[A:Semiring:DefaultArrayValue:ClassTag]: OpAdd.Impl2[CSCMatrix[A], CSCMatrix[A], CSCMatrix[A]] = new OpAdd.Impl2[CSCMatrix[A], CSCMatrix[A], CSCMatrix[A]] {
+  implicit def CSCMatrixCanAdd_M_M[A:Semiring:Zero:ClassTag]: OpAdd.Impl2[CSCMatrix[A], CSCMatrix[A], CSCMatrix[A]] = new OpAdd.Impl2[CSCMatrix[A], CSCMatrix[A], CSCMatrix[A]] {
     def apply(a: CSCMatrix[A], b: CSCMatrix[A]): CSCMatrix[A] = {
       val bldr = CSCMatrix.Builder.fromMatrix(a)
       bldr.sizeHint(a.activeSize + b.activeSize)
@@ -501,7 +501,7 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
     }
   }
 
-  implicit def CSCMatrixCanSubM_M[A:Ring:DefaultArrayValue:ClassTag]: OpSub.Impl2[CSCMatrix[A], CSCMatrix[A], CSCMatrix[A]] = new OpSub.Impl2[CSCMatrix[A], CSCMatrix[A], CSCMatrix[A]] {
+  implicit def CSCMatrixCanSubM_M[A:Ring:Zero:ClassTag]: OpSub.Impl2[CSCMatrix[A], CSCMatrix[A], CSCMatrix[A]] = new OpSub.Impl2[CSCMatrix[A], CSCMatrix[A], CSCMatrix[A]] {
     val ring = implicitly[Ring[A]]
     def apply(a: CSCMatrix[A], b: CSCMatrix[A]): CSCMatrix[A] = {
       val bldr = CSCMatrix.Builder.fromMatrix(a)

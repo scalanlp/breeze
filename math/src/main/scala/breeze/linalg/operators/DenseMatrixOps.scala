@@ -8,7 +8,7 @@ import breeze.macros.expand
 import breeze.math.Semiring
 import breeze.linalg.support.{CanCollapseAxis, CanSlice2}
 import breeze.util.ArrayUtil
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 import scala.reflect.ClassTag
 
 
@@ -104,7 +104,9 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps with DenseMatrixMultOps wi
     override def apply(A : DenseMatrix[Double], V : DenseMatrix[Double]): DenseMatrix[Double] = {
       require(A.rows == V.rows, "Non-conformant matrix sizes")
 
-      if (A.rows == A.cols) {
+      if (A.size == 0) {
+        DenseMatrix.zeros[Double](0, 0)
+      } else if (A.rows == A.cols) {
         // square: LUSolve
         val X = DenseMatrix.zeros[Double](V.rows, V.cols)
         X := V
@@ -297,7 +299,9 @@ trait DenseMatrixFloatMultiplyStuff extends DenseMatrixOps with DenseMatrixMultO
     override def apply(A : DenseMatrix[Float], V: DenseMatrix[Float]) = {
       require(A.rows == V.rows, "Non-conformant matrix sizes")
 
-      if (A.rows == A.cols) {
+      if (A.size == 0) {
+        DenseMatrix.zeros[Float](0, 0)
+      } else if (A.rows == A.cols) {
         // square: LUSolve
         val X = DenseMatrix.zeros[Float](V.rows, V.cols)
         X := V
@@ -664,7 +668,7 @@ trait DenseMatrixMultOps extends DenseMatrixOps with DenseMatrixOpsLowPrio { thi
 
   // <editor-fold defaultstate="collapsed" desc=" implicit implementations for OpMulMatrix ">
 
-  implicit def op_DM_DM_Semiring[T:Semiring:ClassTag:DefaultArrayValue]:
+  implicit def op_DM_DM_Semiring[T:Semiring:ClassTag:Zero]:
   OpMulMatrix.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]] =
 
   new OpMulMatrix.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]] {
@@ -763,6 +767,14 @@ trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
     }
   }
 
+  implicit def canSliceWeirdCols[V]: CanSlice2[DenseMatrix[V], ::.type, Seq[Int], SliceMatrix[Int, Int, V]] = {
+    new CanSlice2[DenseMatrix[V], ::.type, Seq[Int], SliceMatrix[Int, Int, V]] {
+      def apply(from: DenseMatrix[V], slice2: ::.type, slice: Seq[Int]): SliceMatrix[Int, Int, V] = {
+        new SliceMatrix(from, (0 until from.rows), slice.toIndexedSeq)
+      }
+    }
+  }
+
   // <editor-fold defaultstate="collapsed" desc=" implicit implementations for OpSet ">
 
   class SetDMDMOp[@specialized(Int, Double, Float) V] extends OpSet.InPlaceImpl2[DenseMatrix[V], DenseMatrix[V]] {
@@ -845,7 +857,7 @@ trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
 
   // </editor-fold>
 
-  implicit def op_DM_V_Semiring[T](implicit ring: Semiring[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):
+  implicit def op_DM_V_Semiring[T](implicit ring: Semiring[T], ct: ClassTag[T]):
   BinaryRegistry[DenseMatrix[T], Vector[T], OpMulMatrix.type, DenseVector[T]] =
 
     new BinaryRegistry[DenseMatrix[T], Vector[T], OpMulMatrix.type, DenseVector[T]] {
@@ -878,7 +890,7 @@ trait LowPriorityDenseMatrix1 {
    * @tparam R
    * @return
    */
-  implicit def canCollapseRows[V, R:ClassTag:DefaultArrayValue]: CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], R, DenseMatrix[R]]  =
+  implicit def canCollapseRows[V, R:ClassTag:Zero]: CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], R, DenseMatrix[R]]  =
 
   new CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], R, DenseMatrix[R]] {
     def apply(from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => R): DenseMatrix[R] = {
@@ -896,7 +908,7 @@ trait LowPriorityDenseMatrix1 {
    * @tparam R
    * @return
    */
-  implicit def canCollapseCols[V, R:ClassTag:DefaultArrayValue] =
+  implicit def canCollapseCols[V, R:ClassTag:Zero] =
 
   new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], R, DenseVector[R]] {
     def apply(from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => R): DenseVector[R] = {

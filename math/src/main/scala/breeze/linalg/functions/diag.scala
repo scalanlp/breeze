@@ -4,7 +4,7 @@ import breeze.generic.UFunc
 import breeze.math.Semiring
 import scala.collection.mutable
 import scala.reflect.ClassTag
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 
 /**
  * returns a vector along the diagonal of v.
@@ -14,7 +14,7 @@ import breeze.storage.DefaultArrayValue
  */
 object diag extends UFunc with diagLowPrio2 {
 
-  implicit def diagDVDMImpl[V:ClassTag:DefaultArrayValue]:diag.Impl[DenseVector[V], DenseMatrix[V]] = new diag.Impl[DenseVector[V], DenseMatrix[V]] {
+  implicit def diagDVDMImpl[V:ClassTag:Zero]:diag.Impl[DenseVector[V], DenseMatrix[V]] = new diag.Impl[DenseVector[V], DenseMatrix[V]] {
     def apply(t: DenseVector[V]): DenseMatrix[V] = {
       val r = DenseMatrix.zeros[V](t.length, t.length)
       diag(r) := t
