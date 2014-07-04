@@ -65,11 +65,9 @@ trait Rand[@specialized(Int, Double) +T] { outer =>
     */
   def samplesVector[U >: T](size: Int)(implicit m: ClassTag[U]): DenseVector[U] = {
     val result = new DenseVector[U](new Array[U](size))
-    var i=0
-    while (i < size) {
+    cfor(0)(i => i < size, i => i+1)(i => {
       result.unsafeUpdate(i, draw())
-      i += 1
-    }
+    })
     result
   }
 
@@ -82,15 +80,7 @@ trait Rand[@specialized(Int, Double) +T] { outer =>
    * @param f the transform to apply to the sampled value.
    *
    */
-  def flatMap[E](f : T => Rand[E] ):Rand[E] = new Rand[E] {
-    def draw():E = {
-      f(outer.draw()).drawOpt() match {
-        case Some(x) => x
-        case None => draw
-      }
-    }
-    override def drawOpt() = outer.drawOpt().flatMap(t => f(t).drawOpt())
-  }
+  def flatMap[E](f : T => Rand[E] ):Rand[E] = FlatMappedRand(outer, f)
 
   /**
    * Converts a random sampler of one type to a random sampler of another type.
@@ -101,12 +91,7 @@ trait Rand[@specialized(Int, Double) +T] { outer =>
    * @param f the transform to apply to the sampled value.
    *
    */
-  def map[E](f : T=>E):Rand[E] =  {
-    new Rand[E] {
-      def draw() = f(outer.get())
-      override def drawOpt() = outer.drawOpt().map(f)
-    }
-  }
+  def map[E](f : T=>E):Rand[E] = MappedRand(outer, f)
 
   /**
    * Samples one element and qpplies the provided function to it.
@@ -122,23 +107,26 @@ trait Rand[@specialized(Int, Double) +T] { outer =>
   def withFilter(p: T=>Boolean) = condition(p)
 
   // Not the most efficient implementation ever, but meh.
-  def condition(p : T => Boolean):Rand[T] = outer match {
-    case (cr:MultiplePredicates[T]) => cr.addCondition(p)
-    case (cr:SinglePredicate[T]) => cr.addCondition(p)
-    case x => SinglePredicate[T](x, p)
-  }
+  def condition(p : T => Boolean):Rand[T] = SinglePredicateRand[T](outer, p)
 }
 
-private final case class SinglePredicate[@specialized(Int, Double) T](rand: Rand[T], predicate: T => Boolean) extends Rand[T] {
-  def addCondition(p: T => Boolean): MultiplePredicates[T] = {
-    val newPredicates = new Array[T => Boolean](2)
-    newPredicates(0) = predicate
-    newPredicates(1) = p
-    MultiplePredicates(rand, newPredicates)
-  }
+private final case class MappedRand[@specialized(Int, Double) T, @specialized(Int, Double) U](rand: Rand[T], func: T => U) extends Rand[U] {
+  def draw() = func(rand.draw())
+  override def drawOpt() = rand.drawOpt().map(func)
+  override def map[E](f : U=>E):Rand[E] = MappedRand(rand, (x:T) => f(func(x)))
+}
+
+private final case class FlatMappedRand[@specialized(Int, Double) T, @specialized(Int, Double) U](rand: Rand[T], func: T => Rand[U]) extends Rand[U] {
+  def draw() = func(rand.draw()).draw()
+  override def drawOpt() = rand.drawOpt().flatMap(x => func(x).drawOpt())
+  override def flatMap[E](f: U => Rand[E]): Rand[E] = FlatMappedRand(rand, (x:T) => f(func(x).draw()))
+}
+
+private trait PredicateRandDraws[@specialized(Int, Double) T] extends Rand[T] {
+  protected val rand: Rand[T]
+  protected def predicate(x: T): Boolean
 
   def draw() = { // Not the most efficient implementation ever, but meh.
-
     var x = rand.draw()
     while(!predicate(x)) {
       x = rand.draw()
@@ -156,17 +144,28 @@ private final case class SinglePredicate[@specialized(Int, Double) T](rand: Rand
   }
 }
 
-private final case class MultiplePredicates[@specialized(Int, Double) T](rand: Rand[T], private val predicates: Array[T => Boolean]) extends Rand[T] {
-  def addCondition(p: T => Boolean): MultiplePredicates[T] = {
+private final case class SinglePredicateRand[@specialized(Int, Double) T](rand: Rand[T], pred: T => Boolean) extends PredicateRandDraws[T] {
+  protected final def predicate(x: T): Boolean = pred(x)
+
+  override def condition(p: T => Boolean): Rand[T] = {
+    val newPredicates = new Array[T => Boolean](2)
+    newPredicates(0) = pred
+    newPredicates(1) = p
+    MultiplePredicatesRand(rand, newPredicates)
+  }
+}
+
+private final case class MultiplePredicatesRand[@specialized(Int, Double) T](rand: Rand[T], private val predicates: Array[T => Boolean]) extends PredicateRandDraws[T] {
+  override def condition(p: T => Boolean): Rand[T] = {
     val newPredicates = new Array[T => Boolean](predicates.size + 1)
-    newPredicates(predicates.size) = p
     cfor(0)(i => i < predicates.size, i => i+1)(i => {
       newPredicates(i) = predicates(i)
     })
-    MultiplePredicates(rand, newPredicates)
+    newPredicates(predicates.size) = p
+    MultiplePredicatesRand(rand, newPredicates)
   }
 
-  private def p(x: T) = {
+  protected final def predicate(x:T) = {
     var result: Boolean = true
     var i=0
     while ((i < predicates.size) && result) {
@@ -174,23 +173,6 @@ private final case class MultiplePredicates[@specialized(Int, Double) T](rand: R
       i = i + 1
     }
     result
-  }
-
-  def draw() = {// Not the most efficient implementation ever, but meh.
-    var x = rand.draw()
-    while(!p(x)) {
-      x = rand.draw()
-    }
-    x
-  }
-
-  override def drawOpt() = {
-    val x = rand.get()
-    if (p(x)) {
-      Some(x)
-    } else {
-      None
-    }
   }
 }
 

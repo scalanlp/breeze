@@ -19,13 +19,7 @@ class LinearInterpolator[T:ClassTag:Field:Ordering]
   import ord.mkOrderingOps
 
   override protected def interpolate(x: T): T = {
-    def bisearch(low: Int, high: Int): Int = (low+high)/2 match {
-      case mid if low == high => mid
-      case mid if X(mid) < x => bisearch(mid+1, high)
-      case mid => bisearch(low, mid)
-    }
-
-    val index = bisearch(0, X.length-1)
+    val index = bisearch(x)
 
     if (index == 0) Y(0)
     else interpolate(index, x)
