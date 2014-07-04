@@ -8,7 +8,7 @@ import breeze.macros.expand
 import breeze.math.Semiring
 import breeze.linalg.support.{CanCollapseAxis, CanSlice2}
 import breeze.util.ArrayUtil
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 import scala.reflect.ClassTag
 
 
@@ -668,7 +668,7 @@ trait DenseMatrixMultOps extends DenseMatrixOps with DenseMatrixOpsLowPrio { thi
 
   // <editor-fold defaultstate="collapsed" desc=" implicit implementations for OpMulMatrix ">
 
-  implicit def op_DM_DM_Semiring[T:Semiring:ClassTag:DefaultArrayValue]:
+  implicit def op_DM_DM_Semiring[T:Semiring:ClassTag:Zero]:
   OpMulMatrix.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]] =
 
   new OpMulMatrix.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]] {
@@ -857,7 +857,7 @@ trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
 
   // </editor-fold>
 
-  implicit def op_DM_V_Semiring[T](implicit ring: Semiring[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):
+  implicit def op_DM_V_Semiring[T](implicit ring: Semiring[T], ct: ClassTag[T]):
   BinaryRegistry[DenseMatrix[T], Vector[T], OpMulMatrix.type, DenseVector[T]] =
 
     new BinaryRegistry[DenseMatrix[T], Vector[T], OpMulMatrix.type, DenseVector[T]] {
@@ -890,7 +890,7 @@ trait LowPriorityDenseMatrix1 {
    * @tparam R
    * @return
    */
-  implicit def canCollapseRows[V, R:ClassTag:DefaultArrayValue]: CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], R, DenseMatrix[R]]  =
+  implicit def canCollapseRows[V, R:ClassTag:Zero]: CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], R, DenseMatrix[R]]  =
 
   new CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], R, DenseMatrix[R]] {
     def apply(from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => R): DenseMatrix[R] = {
@@ -908,7 +908,7 @@ trait LowPriorityDenseMatrix1 {
    * @tparam R
    * @return
    */
-  implicit def canCollapseCols[V, R:ClassTag:DefaultArrayValue] =
+  implicit def canCollapseCols[V, R:ClassTag:Zero] =
 
   new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], R, DenseVector[R]] {
     def apply(from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => R): DenseVector[R] = {

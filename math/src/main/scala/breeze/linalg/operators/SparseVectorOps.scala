@@ -9,7 +9,7 @@ import breeze.math._
 import scala.math.BigInt
 import breeze.generic.{UFunc}
 import scala.specialized
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 import breeze.generic.UFunc.UImpl
 import scala.{specialized=>spec}
 
@@ -775,7 +775,7 @@ trait SparseVectorOps { this: SparseVector.type =>
       }
     }
 
-  class CanZipMapValuesSparseVector[@spec(Int, Double, Float) V, @spec(Int, Double) RV:ClassTag:DefaultArrayValue]
+  class CanZipMapValuesSparseVector[@spec(Int, Double, Float) V, @spec(Int, Double) RV:ClassTag:Zero]
   extends CanZipMapValues[SparseVector[V],V,RV,SparseVector[RV]] {
     def create(length : Int): SparseVector[RV] = zeros(length)
 
@@ -791,7 +791,7 @@ trait SparseVectorOps { this: SparseVector.type =>
       result
     }
   }
-  implicit def zipMap[V, R:ClassTag:DefaultArrayValue] = new CanZipMapValuesSparseVector[V, R]
+  implicit def zipMap[V, R:ClassTag:Zero] = new CanZipMapValuesSparseVector[V, R]
   implicit val zipMap_d: CanZipMapValuesSparseVector[Double, Double] = new CanZipMapValuesSparseVector[Double, Double]
   implicit val zipMap_f: CanZipMapValuesSparseVector[Float, Float] = new CanZipMapValuesSparseVector[Float, Float]
   implicit val zipMap_i: CanZipMapValuesSparseVector[Int, Int] = new CanZipMapValuesSparseVector[Int, Int]

@@ -16,7 +16,7 @@ package breeze.collection.mutable
  limitations under the License.
 */
 
-import breeze.storage.{Storage, ConfigurableDefault, DefaultArrayValue}
+import breeze.storage.{Storage, ConfigurableDefault, Zero}
 import java.util
 import scala.reflect.ClassTag
 import scala.util.hashing.MurmurHash3
@@ -34,13 +34,13 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
                                  val size: Int,
                                  val default: ConfigurableDefault[Elem] = ConfigurableDefault.default[Elem])
                                 (implicit protected val manElem: ClassTag[Elem],
-                                 val defaultArrayValue: DefaultArrayValue[Elem]) extends Storage[Elem] with ArrayLike[Elem] with Serializable {
+                                 val zero: Zero[Elem]) extends Storage[Elem] with ArrayLike[Elem] with Serializable {
   require(size > 0, "Size must be positive, but got " + size)
 
   def this(size: Int, default: ConfigurableDefault[Elem],
            initialSize: Int)
           (implicit manElem: ClassTag[Elem],
-           defaultArrayValue: DefaultArrayValue[Elem]) = {
+           zero: Zero[Elem]) = {
     this(OpenAddressHashArray.emptyIndexArray(OpenAddressHashArray.calculateSize(initialSize)),
       default.makeArray(OpenAddressHashArray.calculateSize(initialSize)),
       0,
@@ -51,18 +51,18 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
   def this(size: Int,
            default: ConfigurableDefault[Elem])
           (implicit manElem: ClassTag[Elem],
-           defaultArrayValue: DefaultArrayValue[Elem]) = {
+           zero: Zero[Elem]) = {
     this(size, default, 16)
   }
 
-  def this(size: Int)(implicit manElem: ClassTag[Elem], defaultArrayValue: DefaultArrayValue[Elem]) = {
+  def this(size: Int)(implicit manElem: ClassTag[Elem], zero: Zero[Elem]) = {
     this(size, ConfigurableDefault.default[Elem])
   }
 
   def data = _data
   def index = _index
 
-  def defaultValue = default.value(defaultArrayValue)
+  def defaultValue = default.value(zero)
 
   /**
    * Only iterates "active" elements
@@ -194,10 +194,10 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
 }
 
 object OpenAddressHashArray {
-  def apply[@specialized(Int, Float, Long, Double) T:ClassTag:DefaultArrayValue](values : T*) = {
+  def apply[@specialized(Int, Float, Long, Double) T:ClassTag:Zero](values : T*) = {
     val rv = new OpenAddressHashArray[T](values.length)
-    val default = implicitly[DefaultArrayValue[T]].value
-    for( (v,i) <- values.zipWithIndex if v != default) {
+    val zero = implicitly[Zero[T]].zero
+    for( (v,i) <- values.zipWithIndex if v != zero) {
       rv(i) = v
     }
     rv

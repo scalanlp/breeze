@@ -7,7 +7,7 @@ import breeze.generic.{UFunc}
 import breeze.linalg.support.{CanZipMapValues, CanCopy}
 import breeze.generic.UFunc.{UImpl, UImpl2}
 import scala.reflect.ClassTag
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 
 trait DenseVector_HashVector_Ops { this: HashVector.type =>
   import breeze.math.PowImplicits._
@@ -562,7 +562,7 @@ trait HashVector_GenericOps { this: HashVector.type =>
     }
   }
 
-  class CanZipMapValuesHashVector[@specialized(Int, Double, Float) V, @specialized(Int, Double) RV:ClassTag:DefaultArrayValue] extends CanZipMapValues[HashVector[V],V,RV,HashVector[RV]] {
+  class CanZipMapValuesHashVector[@specialized(Int, Double, Float) V, @specialized(Int, Double) RV:ClassTag:Zero] extends CanZipMapValues[HashVector[V],V,RV,HashVector[RV]] {
     def create(length : Int) = zeros(length)
 
     /**Maps all corresponding values from the two collection. */
@@ -577,7 +577,7 @@ trait HashVector_GenericOps { this: HashVector.type =>
       result
     }
   }
-  implicit def zipMap[V, R:ClassTag:DefaultArrayValue] = new CanZipMapValuesHashVector[V, R]
+  implicit def zipMap[V, R:ClassTag:Zero] = new CanZipMapValuesHashVector[V, R]
   implicit val zipMap_d: CanZipMapValuesHashVector[Double, Double] = new CanZipMapValuesHashVector[Double, Double]
   implicit val zipMap_f: CanZipMapValuesHashVector[Float, Float] = new CanZipMapValuesHashVector[Float, Float]
   implicit val zipMap_i: CanZipMapValuesHashVector[Int, Int] = new CanZipMapValuesHashVector[Int, Int]
@@ -591,7 +591,7 @@ trait HashVector_GenericOps { this: HashVector.type =>
     }
   }
 
-  implicit def vAddIntoField[T](implicit field: Field[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpAdd.InPlaceImpl2[HashVector[T], HashVector[T]] = {
+  implicit def vAddIntoField[T](implicit field: Field[T], ct: ClassTag[T]):OpAdd.InPlaceImpl2[HashVector[T], HashVector[T]] = {
     new OpAdd.InPlaceImpl2[HashVector[T], HashVector[T]] {
       override def apply(v: HashVector[T], v2: HashVector[T]) = {
         for(i <- 0 until v.length) v(i) = field.+(v(i), v2(i))
@@ -600,7 +600,7 @@ trait HashVector_GenericOps { this: HashVector.type =>
 
   }
 
-  implicit def vSubIntoField[T](implicit field: Field[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpSub.InPlaceImpl2[HashVector[T], HashVector[T]] = {
+  implicit def vSubIntoField[T](implicit field: Field[T], ct: ClassTag[T]):OpSub.InPlaceImpl2[HashVector[T], HashVector[T]] = {
     new OpSub.InPlaceImpl2[HashVector[T], HashVector[T]] {
       override def apply(v: HashVector[T], v2: HashVector[T]) = {
         for(i <- 0 until v.length) v(i) = field.-(v(i), v2(i))
@@ -609,7 +609,7 @@ trait HashVector_GenericOps { this: HashVector.type =>
 
   }
 
-  implicit def vMulIntoField[T](implicit field: Field[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpMulScalar.InPlaceImpl2[HashVector[T], HashVector[T]] = {
+  implicit def vMulIntoField[T](implicit field: Field[T], ct: ClassTag[T]):OpMulScalar.InPlaceImpl2[HashVector[T], HashVector[T]] = {
     new OpMulScalar.InPlaceImpl2[HashVector[T], HashVector[T]] {
       override def apply(v: HashVector[T], v2: HashVector[T]) = {
         for(i <- 0 until v.length) v(i) = field.*(v(i), v2(i))
@@ -618,7 +618,7 @@ trait HashVector_GenericOps { this: HashVector.type =>
 
   }
 
-  implicit def vDivIntoField[T](implicit field: Field[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpDiv.InPlaceImpl2[HashVector[T], HashVector[T]] = {
+  implicit def vDivIntoField[T](implicit field: Field[T], ct: ClassTag[T]):OpDiv.InPlaceImpl2[HashVector[T], HashVector[T]] = {
     new OpDiv.InPlaceImpl2[HashVector[T], HashVector[T]] {
       override def apply(v: HashVector[T], v2: HashVector[T]) = {
         for(i <- 0 until v.length) v(i) = field./(v(i), v2(i))
@@ -628,7 +628,7 @@ trait HashVector_GenericOps { this: HashVector.type =>
   }
 
 
-  implicit def vPowInto[T](implicit pow: OpPow.Impl2[T, T, T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpPow.InPlaceImpl2[HashVector[T], HashVector[T]] = {
+  implicit def vPowInto[T](implicit pow: OpPow.Impl2[T, T, T], ct: ClassTag[T]):OpPow.InPlaceImpl2[HashVector[T], HashVector[T]] = {
     new OpPow.InPlaceImpl2[HashVector[T], HashVector[T]] {
       override def apply(v: HashVector[T], v2: HashVector[T]) = {
         for(i <- 0 until v.length) v(i) = pow(v(i), v2(i))
@@ -637,7 +637,7 @@ trait HashVector_GenericOps { this: HashVector.type =>
 
   }
 
-  implicit def vAddIntoSField[T](implicit field: Semiring[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpAdd.InPlaceImpl2[HashVector[T], T] = {
+  implicit def vAddIntoSField[T](implicit field: Semiring[T], ct: ClassTag[T]):OpAdd.InPlaceImpl2[HashVector[T], T] = {
     new OpAdd.InPlaceImpl2[HashVector[T], T] {
       override def apply(v: HashVector[T], v2: T) = {
         for(i <- 0 until v.length) v(i) = field.+(v(i), v2)
@@ -646,16 +646,16 @@ trait HashVector_GenericOps { this: HashVector.type =>
 
   }
 
-  implicit def vAddSField[T](implicit field: Semiring[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpAdd.Impl2[HashVector[T], T, HashVector[T]] = {
+  implicit def vAddSField[T](implicit field: Semiring[T], ct: ClassTag[T]):OpAdd.Impl2[HashVector[T], T, HashVector[T]] = {
     binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vAddIntoSField, ct)
   }
-  implicit def vSubSField[T](implicit field: Ring[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpSub.Impl2[HashVector[T], T, HashVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vSubIntoSField, ct)
-  implicit def vMulScalarSField[T](implicit field: Semiring[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpMulScalar.Impl2[HashVector[T], T, HashVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vMulScalarIntoSField, ct)
-  implicit def vDivSField[T](implicit field: Field[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpDiv.Impl2[HashVector[T], T, HashVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vDivIntoSField, ct)
-  implicit def vPowS[T](implicit pow: OpPow.Impl2[T, T, T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpPow.Impl2[HashVector[T], T, HashVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vPowIntoS, ct)
+  implicit def vSubSField[T](implicit field: Ring[T], ct: ClassTag[T]):OpSub.Impl2[HashVector[T], T, HashVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vSubIntoSField, ct)
+  implicit def vMulScalarSField[T](implicit field: Semiring[T], ct: ClassTag[T]):OpMulScalar.Impl2[HashVector[T], T, HashVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vMulScalarIntoSField, ct)
+  implicit def vDivSField[T](implicit field: Field[T], ct: ClassTag[T]):OpDiv.Impl2[HashVector[T], T, HashVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vDivIntoSField, ct)
+  implicit def vPowS[T](implicit pow: OpPow.Impl2[T, T, T], ct: ClassTag[T]):OpPow.Impl2[HashVector[T], T, HashVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vPowIntoS, ct)
 
 
-  implicit def vSubIntoSField[T](implicit field: Ring[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpSub.InPlaceImpl2[HashVector[T], T] = {
+  implicit def vSubIntoSField[T](implicit field: Ring[T], ct: ClassTag[T]):OpSub.InPlaceImpl2[HashVector[T], T] = {
     new OpSub.InPlaceImpl2[HashVector[T], T] {
       override def apply(v: HashVector[T], v2: T) = {
         for(i <- 0 until v.length) v(i) = field.-(v(i), v2)
@@ -665,7 +665,7 @@ trait HashVector_GenericOps { this: HashVector.type =>
   }
 
 
-  implicit def vMulScalarIntoSField[T](implicit field: Semiring[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpMulScalar.InPlaceImpl2[HashVector[T], T] = {
+  implicit def vMulScalarIntoSField[T](implicit field: Semiring[T], ct: ClassTag[T]):OpMulScalar.InPlaceImpl2[HashVector[T], T] = {
     new OpMulScalar.InPlaceImpl2[HashVector[T], T] {
       override def apply(v: HashVector[T], v2: T) = {
         for(i <- 0 until v.length) v(i) = field.*(v(i), v2)
@@ -673,7 +673,7 @@ trait HashVector_GenericOps { this: HashVector.type =>
     }
   }
 
-  implicit def vDivIntoSField[T](implicit field: Field[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpDiv.InPlaceImpl2[HashVector[T], T] = {
+  implicit def vDivIntoSField[T](implicit field: Field[T], ct: ClassTag[T]):OpDiv.InPlaceImpl2[HashVector[T], T] = {
     new OpDiv.InPlaceImpl2[HashVector[T], T] {
       override def apply(v: HashVector[T], v2: T) = {
         for(i <- 0 until v.length) v(i) = field./(v(i), v2)
@@ -681,7 +681,7 @@ trait HashVector_GenericOps { this: HashVector.type =>
     }
   }
 
-  implicit def vPowIntoS[T](implicit pow: OpPow.Impl2[T, T, T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpPow.InPlaceImpl2[HashVector[T], T] = {
+  implicit def vPowIntoS[T](implicit pow: OpPow.Impl2[T, T, T], ct: ClassTag[T]):OpPow.InPlaceImpl2[HashVector[T], T] = {
     new OpPow.InPlaceImpl2[HashVector[T], T] {
       override def apply(v: HashVector[T], v2: T) = {
         for(i <- 0 until v.length) v(i) = pow(v(i), v2)

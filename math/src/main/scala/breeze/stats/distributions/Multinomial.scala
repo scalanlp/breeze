@@ -21,7 +21,7 @@ import breeze.linalg._
 import breeze.math.{MutablizingAdaptor, VectorSpace, TensorSpace}
 import breeze.numerics._
 import breeze.numerics
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 import collection.mutable
 
 /**
@@ -138,7 +138,7 @@ case class AliasTable[I](probs: DenseVector[Double],
  */
 object Multinomial {
 
-  class ExpFam[T,I](exemplar: T)(implicit space: TensorSpace[T, I, Double], dav: DefaultArrayValue[T]) extends ExponentialFamily[Multinomial[T,I],I] with HasConjugatePrior[Multinomial[T,I],I] {
+  class ExpFam[T,I](exemplar: T)(implicit space: TensorSpace[T, I, Double]) extends ExponentialFamily[Multinomial[T,I],I] with HasConjugatePrior[Multinomial[T,I],I] {
 
     import space._
     type ConjugatePrior = Dirichlet[T,I]

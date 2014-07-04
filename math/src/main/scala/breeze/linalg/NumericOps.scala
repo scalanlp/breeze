@@ -17,7 +17,7 @@ package breeze.linalg
 
 import breeze.linalg.operators._
 import breeze.linalg.support.{CanTranspose, CanSlice2}
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 import scala.reflect.ClassTag
 import breeze.generic.UFunc
 
@@ -354,7 +354,7 @@ object NumericOps {
 
     implicit def binaryOpFromDVOp[V,Other,Op<:OpType,U](implicit op: UFunc.UImpl2[Op, DenseVector[V], Other, DenseVector[U]],
                                                         man: ClassTag[U],
-                                                        dav: DefaultArrayValue[U]) = {
+                                                        zero: Zero[U]) = {
       new UFunc.UImpl2[Op, Array[V], Other, Array[U]] {
         def apply(a: Array[V], b: Other): Array[U] = {
           val r = op(new DenseVector(a),b)

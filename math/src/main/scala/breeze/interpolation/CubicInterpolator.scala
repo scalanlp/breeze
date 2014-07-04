@@ -9,7 +9,7 @@ import scala.reflect.ClassTag
 
 import breeze.linalg._
 import breeze.math.Field
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 
 class CubicInterpolator
     (x_coords: Vector[Double],

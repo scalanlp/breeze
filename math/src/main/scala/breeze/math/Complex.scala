@@ -15,7 +15,7 @@ package breeze.math
  limitations under the License.
 */
 import breeze.linalg.operators._
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 import scala.reflect.ClassTag
 import breeze.linalg.norm
 
@@ -204,7 +204,7 @@ object Complex { outer =>
 
     val manifest = implicitly[ClassTag[Complex]]
 
-    val defaultArrayValue = DefaultArrayValue(Complex(0, 0))
+    val defaultArrayValue = Zero(Complex(0, 0))
 
     override def close(a: Complex, b: Complex, tolerance: Double): Boolean = {
       norm(a-b) <= tolerance * math.max(norm(a), norm(b))
@@ -215,8 +215,8 @@ object Complex { outer =>
     def apply(v1: Complex): Double = v1.abs
   }
   
-  implicit object ComplexDefaultArrayValue extends DefaultArrayValue[Complex] {
-    val value = Complex(0, 0)
+  implicit object ComplexZero extends Zero[Complex] {
+    val zero = Complex(0, 0)
   }
 
   //

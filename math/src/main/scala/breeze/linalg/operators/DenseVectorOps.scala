@@ -9,7 +9,7 @@ import breeze.util.ArrayUtil
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import breeze.macros.expand
 import breeze.math.PowImplicits._
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 import scala.reflect.ClassTag
 
 trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
@@ -294,7 +294,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 
 
 
-  implicit def dvAddIntoField[T](implicit field: Field[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpAdd.InPlaceImpl2[DenseVector[T], DenseVector[T]] = {
+  implicit def dvAddIntoField[T](implicit field: Field[T], ct: ClassTag[T]):OpAdd.InPlaceImpl2[DenseVector[T], DenseVector[T]] = {
     new OpAdd.InPlaceImpl2[DenseVector[T], DenseVector[T]] {
       override def apply(v: DenseVector[T], v2: DenseVector[T]) = {
         for(i <- 0 until v.length) v(i) = field.+(v(i), v2(i))
@@ -303,7 +303,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 
   }
 
-  implicit def dvSubIntoField[T](implicit field: Field[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpSub.InPlaceImpl2[DenseVector[T], DenseVector[T]] = {
+  implicit def dvSubIntoField[T](implicit field: Field[T], ct: ClassTag[T]):OpSub.InPlaceImpl2[DenseVector[T], DenseVector[T]] = {
     new OpSub.InPlaceImpl2[DenseVector[T], DenseVector[T]] {
       override def apply(v: DenseVector[T], v2: DenseVector[T]) = {
         for(i <- 0 until v.length) v(i) = field.-(v(i), v2(i))
@@ -312,7 +312,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 
   }
 
-  implicit def dvMulIntoField[T](implicit field: Field[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpMulScalar.InPlaceImpl2[DenseVector[T], DenseVector[T]] = {
+  implicit def dvMulIntoField[T](implicit field: Field[T], ct: ClassTag[T]):OpMulScalar.InPlaceImpl2[DenseVector[T], DenseVector[T]] = {
     new OpMulScalar.InPlaceImpl2[DenseVector[T], DenseVector[T]] {
       override def apply(v: DenseVector[T], v2: DenseVector[T]) = {
         for(i <- 0 until v.length) v(i) = field.*(v(i), v2(i))
@@ -321,7 +321,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 
   }
 
-  implicit def dvDivIntoField[T](implicit field: Field[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpDiv.InPlaceImpl2[DenseVector[T], DenseVector[T]] = {
+  implicit def dvDivIntoField[T](implicit field: Field[T], ct: ClassTag[T]):OpDiv.InPlaceImpl2[DenseVector[T], DenseVector[T]] = {
     new OpDiv.InPlaceImpl2[DenseVector[T], DenseVector[T]] {
       override def apply(v: DenseVector[T], v2: DenseVector[T]) = {
         for(i <- 0 until v.length) v(i) = field./(v(i), v2(i))
@@ -331,7 +331,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   }
 
 
-  implicit def dvPowInto[T](implicit pow: OpPow.Impl2[T, T, T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpPow.InPlaceImpl2[DenseVector[T], DenseVector[T]] = {
+  implicit def dvPowInto[T](implicit pow: OpPow.Impl2[T, T, T], ct: ClassTag[T]):OpPow.InPlaceImpl2[DenseVector[T], DenseVector[T]] = {
     new OpPow.InPlaceImpl2[DenseVector[T], DenseVector[T]] {
       override def apply(v: DenseVector[T], v2: DenseVector[T]) = {
         for(i <- 0 until v.length) v(i) = pow(v(i), v2(i))
@@ -340,7 +340,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 
   }
 
-  implicit def dvAddIntoSField[T](implicit field: Semiring[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpAdd.InPlaceImpl2[DenseVector[T], T] = {
+  implicit def dvAddIntoSField[T](implicit field: Semiring[T], ct: ClassTag[T]):OpAdd.InPlaceImpl2[DenseVector[T], T] = {
     new OpAdd.InPlaceImpl2[DenseVector[T], T] {
       override def apply(v: DenseVector[T], v2: T) = {
         for(i <- 0 until v.length) v(i) = field.+(v(i), v2)
@@ -349,16 +349,16 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 
   }
 
-  implicit def dvAddSField[T](implicit field: Semiring[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpAdd.Impl2[DenseVector[T], T, DenseVector[T]] = {
+  implicit def dvAddSField[T](implicit field: Semiring[T], ct: ClassTag[T]):OpAdd.Impl2[DenseVector[T], T, DenseVector[T]] = {
     binaryOpFromUpdateOp(implicitly[CanCopy[DenseVector[T]]], dvAddIntoSField, ct)
   }
-  implicit def dvSubSField[T](implicit field: Ring[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpSub.Impl2[DenseVector[T], T, DenseVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[DenseVector[T]]], dvSubIntoSField, ct)
-  implicit def dvMulScalarSField[T](implicit field: Semiring[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpMulScalar.Impl2[DenseVector[T], T, DenseVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[DenseVector[T]]], dvMulScalarIntoSField, ct)
-  implicit def dvDivSField[T](implicit field: Field[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpDiv.Impl2[DenseVector[T], T, DenseVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[DenseVector[T]]], dvDivIntoSField, ct)
-  implicit def dvPowS[T](implicit pow: OpPow.Impl2[T, T, T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpPow.Impl2[DenseVector[T], T, DenseVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[DenseVector[T]]], dvPowIntoS, ct)
+  implicit def dvSubSField[T](implicit field: Ring[T], ct: ClassTag[T]):OpSub.Impl2[DenseVector[T], T, DenseVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[DenseVector[T]]], dvSubIntoSField, ct)
+  implicit def dvMulScalarSField[T](implicit field: Semiring[T], ct: ClassTag[T]):OpMulScalar.Impl2[DenseVector[T], T, DenseVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[DenseVector[T]]], dvMulScalarIntoSField, ct)
+  implicit def dvDivSField[T](implicit field: Field[T], ct: ClassTag[T]):OpDiv.Impl2[DenseVector[T], T, DenseVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[DenseVector[T]]], dvDivIntoSField, ct)
+  implicit def dvPowS[T](implicit pow: OpPow.Impl2[T, T, T], ct: ClassTag[T]):OpPow.Impl2[DenseVector[T], T, DenseVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[DenseVector[T]]], dvPowIntoS, ct)
 
 
-  implicit def dvSubIntoSField[T](implicit field: Ring[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpSub.InPlaceImpl2[DenseVector[T], T] = {
+  implicit def dvSubIntoSField[T](implicit field: Ring[T], ct: ClassTag[T]):OpSub.InPlaceImpl2[DenseVector[T], T] = {
     new OpSub.InPlaceImpl2[DenseVector[T], T] {
       override def apply(v: DenseVector[T], v2: T) = {
         for(i <- 0 until v.length) v(i) = field.-(v(i), v2)
@@ -368,7 +368,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   }
 
 
-  implicit def dvMulScalarIntoSField[T](implicit field: Semiring[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpMulScalar.InPlaceImpl2[DenseVector[T], T] = {
+  implicit def dvMulScalarIntoSField[T](implicit field: Semiring[T], ct: ClassTag[T]):OpMulScalar.InPlaceImpl2[DenseVector[T], T] = {
     new OpMulScalar.InPlaceImpl2[DenseVector[T], T] {
       override def apply(v: DenseVector[T], v2: T) = {
         for(i <- 0 until v.length) v(i) = field.*(v(i), v2)
@@ -376,7 +376,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
     }
   }
 
-  implicit def dvDivIntoSField[T](implicit field: Field[T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpDiv.InPlaceImpl2[DenseVector[T], T] = {
+  implicit def dvDivIntoSField[T](implicit field: Field[T], ct: ClassTag[T]):OpDiv.InPlaceImpl2[DenseVector[T], T] = {
     new OpDiv.InPlaceImpl2[DenseVector[T], T] {
       override def apply(v: DenseVector[T], v2: T) = {
         for(i <- 0 until v.length) v(i) = field./(v(i), v2)
@@ -384,7 +384,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
     }
   }
 
-  implicit def dvPowIntoS[T](implicit pow: OpPow.Impl2[T, T, T], dav: DefaultArrayValue[T], ct: ClassTag[T]):OpPow.InPlaceImpl2[DenseVector[T], T] = {
+  implicit def dvPowIntoS[T](implicit pow: OpPow.Impl2[T, T, T], ct: ClassTag[T]):OpPow.InPlaceImpl2[DenseVector[T], T] = {
     new OpPow.InPlaceImpl2[DenseVector[T], T] {
       override def apply(v: DenseVector[T], v2: T) = {
         for(i <- 0 until v.length) v(i) = pow(v(i), v2)

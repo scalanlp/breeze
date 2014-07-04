@@ -7,7 +7,7 @@ import scala.math.BigInt
 import breeze.math.{Semiring, Complex}
 import breeze.linalg.support.CanMapValues
 import scala.reflect.ClassTag
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 
 
 trait BitVectorOps {
@@ -155,7 +155,7 @@ trait BitVectorOps {
   }
 
 
-  implicit def canMapValues[R:ClassTag:DefaultArrayValue]:CanMapValues[BitVector, Boolean, R, DenseVector[R]] = new CanMapValues[BitVector, Boolean, R, DenseVector[R]] {
+  implicit def canMapValues[R:ClassTag:Zero]:CanMapValues[BitVector, Boolean, R, DenseVector[R]] = new CanMapValues[BitVector, Boolean, R, DenseVector[R]] {
     /** Maps all key-value pairs from the given collection. */
     override def map(from: BitVector, fn: (Boolean) => R): DenseVector[R] = {
       DenseVector.tabulate(from.length)(i => fn(from(i)))
