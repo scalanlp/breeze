@@ -759,7 +759,7 @@ trait DenseMatrixMultOps extends DenseMatrixOps with DenseMatrixOpsLowPrio { thi
 
 trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
 
-  implicit def canSliceWeirdRows[V]: CanSlice2[DenseMatrix[V], Seq[Int], ::.type, SliceMatrix[Int, Int, V]] = {
+  implicit def canSliceWeirdRows[V:Semiring:ClassTag]: CanSlice2[DenseMatrix[V], Seq[Int], ::.type, SliceMatrix[Int, Int, V]] = {
     new CanSlice2[DenseMatrix[V], Seq[Int], ::.type, SliceMatrix[Int, Int, V]] {
       def apply(from: DenseMatrix[V], slice: Seq[Int], slice2: ::.type): SliceMatrix[Int, Int, V] = {
         new SliceMatrix(from, slice.toIndexedSeq, (0 until from.cols))
@@ -767,7 +767,7 @@ trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
     }
   }
 
-  implicit def canSliceWeirdCols[V]: CanSlice2[DenseMatrix[V], ::.type, Seq[Int], SliceMatrix[Int, Int, V]] = {
+  implicit def canSliceWeirdCols[V:Semiring:ClassTag]: CanSlice2[DenseMatrix[V], ::.type, Seq[Int], SliceMatrix[Int, Int, V]] = {
     new CanSlice2[DenseMatrix[V], ::.type, Seq[Int], SliceMatrix[Int, Int, V]] {
       def apply(from: DenseMatrix[V], slice2: ::.type, slice: Seq[Int]): SliceMatrix[Int, Int, V] = {
         new SliceMatrix(from, (0 until from.rows), slice.toIndexedSeq)

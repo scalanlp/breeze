@@ -20,6 +20,8 @@ publishTo <<= version { (v: String) =>
 
 publishArtifact in Test := false
 
+publishArtifact in (Compile, packageDoc) := false
+
 pomIncludeRepository := { _ => false }
 
 pomExtra := (

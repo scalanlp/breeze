@@ -29,16 +29,7 @@ import org.junit.runner.RunWith
  */
 @RunWith(classOf[JUnitRunner])
 class diagTest extends FunSuite with Checkers {
-  val testDV = DenseVector(0.1,1.1,2.1,3.1,4.1)
-  val testDM = DenseMatrix.tabulate[Double](5,5)((r,c) => if (r == c) r.toDouble + 0.1 else 0.0)
-  val testCSC = CSCMatrix.tabulate[Double](5,5)((r,c) => if (r == c) r.toDouble + 0.1 else 0.0)
-  val testSV = SparseVector(0.1,1.1,2.1,3.1,4.1)
 
-  test("diagEquiv") {
-    assert(diag(testDV) === testDM)
-    assert(diag(testDM) === testDV)
-    assert(diag(testSV) === testCSC)
-    assert(diag(testCSC) === testSV)
-  }
+
 
 }
