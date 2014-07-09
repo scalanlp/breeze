@@ -21,7 +21,7 @@ import breeze.util.{Sorting, Terminal, ArrayUtil}
 import scala.collection.mutable
 import breeze.math.{Ring, Complex, Semiring}
 import scala.reflect.ClassTag
-import breeze.linalg.support.{CanTranspose, CanTraverseValues, CanMapValues}
+import breeze.linalg.support.{CanCreateZerosLike, CanTranspose, CanTraverseValues, CanMapValues}
 import CanTraverseValues.ValuesVisitor
 
 /**
@@ -39,6 +39,9 @@ class CSCMatrix[@specialized(Int, Float, Double) V:Zero] private[linalg] (privat
                                                                                private var used : Int,
                                                                                private var _rowIndices: Array[Int]) // len >= used
   extends Matrix[V] with MatrixLike[V, CSCMatrix[V]] with Serializable {
+
+  def this(data: Array[V],rows: Int, cols: Int, colPtrs: Array[Int],rowIndices: Array[Int]) =
+    this(data,rows,cols,colPtrs,data.length,rowIndices)
 
   def rowIndices = _rowIndices
   def data = _data
@@ -159,21 +162,40 @@ class CSCMatrix[@specialized(Int, Float, Double) V:Zero] private[linalg] (privat
     new CSCMatrix[V](ArrayUtil.copyOf(_data, activeSize), rows, cols, colPtrs.clone(), activeSize, _rowIndices.clone)
   }
 
-  def flatten()(implicit c: ClassTag[V]): SparseVector[V] = {
-    val sv = SparseVector.zeros[V](rows * cols)
-    var j = 0
-    while (j < cols) {
-      var ip = colPtrs(j)
-      var lastI = 0
-      while (ip < colPtrs(j + 1)) {
-        val i = rowIndices(ip)
-        sv(i * cols + j) = data(ip)
-        lastI += 1
-        ip += 1
-      }
-      j += 1
+  def flatten(view: View=View.Copy): SparseVector[V] = {
+    view match {
+        // This seems kind of silly, since you don't save a ton of time, but for parity with DenseMatrix...
+      case View.Require =>
+        val indices = new Array[Int](data.length)
+        var j = 0
+        var ind = 0
+        while (j < cols) {
+          var ip = colPtrs(j)
+          while (ip < colPtrs(j + 1)) {
+            val i = rowIndices(ip)
+            indices(ind) = i * rows + j
+            ip += 1
+            ind += 1
+          }
+          j += 1
+        }
+        new SparseVector[V](indices,data,activeSize,rows * cols)
+      case View.Copy =>
+        implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+        val sv = SparseVector.zeros[V](rows * cols)
+        var j = 0
+        while (j < cols) {
+          var ip = colPtrs(j)
+          while (ip < colPtrs(j + 1)) {
+            val i = rowIndices(ip)
+            sv(i * cols + j) = data(ip)
+            ip += 1
+          }
+          j += 1
+        }
+        sv
+      case View.Prefer => flatten(View.Require)
     }
-    sv
   }
 
   def toDense:DenseMatrix[V] = {
@@ -218,6 +240,12 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
   }
 
 
+  implicit def canCreateZerosLike[V:ClassTag:Zero]: CanCreateZerosLike[CSCMatrix[V], CSCMatrix[V]] =
+    new CanCreateZerosLike[CSCMatrix[V], CSCMatrix[V]] {
+      def apply(v1: CSCMatrix[V]): CSCMatrix[V] = {
+        zeros[V](v1.rows,v1.cols)
+      }
+    }
 
   implicit def canMapValues[V, R:ClassTag:Zero:Semiring]:CanMapValues[CSCMatrix[V], V, R, CSCMatrix[R]] = {
     val z = implicitly[Zero[R]].zero

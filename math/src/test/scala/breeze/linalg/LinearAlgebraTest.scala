@@ -14,8 +14,8 @@ package breeze.linalg
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import org.scalacheck.{Arbitrary,Gen}
-import scala.util.Random
+
+import org.scalacheck.{Arbitrary,Gen,Prop}
 import org.scalatest._
 import org.scalatest.junit._
 import org.scalatest.prop._
@@ -285,6 +285,61 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     assert( reverse(xDouble) == DenseVector(.8, .3, .2, .7)  )
     val xEmpty = DenseVector[Long]()
     assert( reverse(xEmpty) == DenseVector[Long]() )
+
+    val a = SparseVector.tabulate(5)(identity)
+    val b = SparseVector.zeros[Double](5)
+    assert(reverse(a) === SparseVector.tabulate(5)((i: Int) => 4 - i))
+    assert(reverse(b) === b)
+    b(2) = 2.0
+    assert(reverse(b) === b)
+    b(0) = 0.1
+    assert(reverse(b) === SparseVector[Double](5)((2,2.0),(4,0.1)))
+    b(4) = 4.0
+    assert(reverse(b) === SparseVector[Double](5)((0,4.0),(2,2.0),(4,0.1)))
+  }
+
+  test("reshape test") {
+
+    val asv = SparseVector.tabulate(6)(identity(_) + 1)
+    assert(reshape(asv,2,3) === CSCMatrix((1,2,3),(4,5,6)))
+    assert(reshape(asv,3,2) === CSCMatrix((1,2),(3,4),(5,6)))
+
+    val bsv = SparseVector.zeros[Double](6)
+    assert(reshape(bsv,2,3) === CSCMatrix.zeros[Double](2,3))
+
+    val acsc = CSCMatrix.tabulate(2,3)((i,j) => (i+1) * (j+1) + (i+1))
+    val ad = DenseMatrix.tabulate(2,3)((i,j) => (i+1) * (j+1) + (i+1))
+    assert(reshape(acsc,3,2).toDense == reshape(ad,3,2))
+    assert(reshape(acsc,1,6).toDense == reshape(ad,1,6))
+    assert(reshape(acsc,6,1).toDense == reshape(ad,6,1))
+
+    val bcsc = CSCMatrix.zeros[Int](5,3)
+    val rcsc = CSCMatrix.zeros[Int](3,5)
+    val colRowGen = for {
+      r <- Gen.choose(0,4)
+      c <- Gen.choose(0,2)
+    } yield (r,c)
+
+    val pcLists = Prop.forAll(colRowGen){ case (r: Int,c: Int) =>
+      val dld = c * 5 + r
+      bcsc(r, c) = dld
+      rcsc(dld % 3, dld / 3) = dld
+      reshape(bcsc, 3, 5) === rcsc &&
+        reshape(rcsc, 5, 3) === bcsc
+    }
+    check(pcLists)
+  }
+
+  test("diag test") {
+    val testDV = DenseVector(0.1,1.1,2.1,3.1,4.1)
+    val testDM = DenseMatrix.tabulate[Double](5,5)((r,c) => if (r == c) r.toDouble + 0.1 else 0.0)
+    val testCSC = CSCMatrix.tabulate[Double](5,5)((r,c) => if (r == c) r.toDouble + 0.1 else 0.0)
+    val testSV = SparseVector(0.1,1.1,2.1,3.1,4.1)
+
+    assert(diag(testDV) === testDM)
+    assert(diag(testDM) === testDV)
+    assert(diag(testSV) === testCSC)
+    assert(diag(testCSC) === testSV)
   }
 
   test("accumulate test") {
