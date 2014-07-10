@@ -29,11 +29,6 @@ object Sorting {
     indexSort_Double(x, off, len, order)
   }
 
-  /**
-   *
-   * Sorts the array x where each element has order order.
-   * Used to build sparse vectors.
-   */
   @expand
   def indexSort[@expand.args(Int, Long, Float, Double) T](x: Array[Int], off: Int, len: Int, order: Array[T]): Array[Int] = {
     def swap(a: Int, b: Int) {
