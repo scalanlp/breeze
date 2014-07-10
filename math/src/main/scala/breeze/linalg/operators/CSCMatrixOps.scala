@@ -63,6 +63,34 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
 
   @expand
   @expand.valify
+  implicit def implOps_CSCT_T_eq_CSCT[@expand.args(Int, Double, Float, Long) T,
+  @expand.args(OpMulScalar, OpMulMatrix) Op<:OpType]
+  (implicit @expand.sequence[T](0, 0.0, 0.0f, 0l)
+  zero: T):
+  Op.Impl2[CSCMatrix[T], T, CSCMatrix[T]] =
+
+    new Op.Impl2[CSCMatrix[T], T, CSCMatrix[T]] {
+      def apply(a: CSCMatrix[T], b: T): CSCMatrix[T] = {
+        val result: CSCMatrix.Builder[T] = new CSCMatrix.Builder[T](a.rows,a.cols,a.activeSize)
+
+        var c = 0
+        while (c < a.cols) {
+          var ip = a.colPtrs(c)
+          while (ip < a.colPtrs(c+1)) {
+            val r = a.rowIndices(ip)
+            result.add(r,c,a.data(ip) * b)
+            ip += 1
+          }
+          c += 1
+        }
+
+        result.result(true, true)
+      }
+      implicitly[BinaryRegistry[Matrix[T], T, Op.type, Matrix[T]]].register(this)
+    }
+
+  @expand
+  @expand.valify
   implicit def canMulM_V[@expand.args(Int, Float, Double, Long) T]: BinaryRegistry[CSCMatrix[T], Vector[T],OpMulMatrix.type, Vector[T]] = new BinaryRegistry[CSCMatrix[T], Vector[T], OpMulMatrix.type, Vector[T]] {
     override def bindingMissing(a: CSCMatrix[T], b: Vector[T]) = {
       require(a.cols == b.length, "Dimension Mismatch!")

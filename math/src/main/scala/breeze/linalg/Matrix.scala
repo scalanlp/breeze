@@ -129,6 +129,8 @@ trait Matrix[@spec(Int, Float, Double) E] extends MatrixLike[E, Matrix[E]] {
 
   def copy:Matrix[E]
 
+  def flatten(view: View=View.Prefer): Vector[E]
+
 }
 
 object Matrix extends MatrixConstructors[Matrix]
@@ -141,11 +143,11 @@ object Matrix extends MatrixConstructors[Matrix]
 
   def create[@specialized(Int, Float, Double) V:Zero](rows: Int, cols: Int, data: Array[V]): Matrix[V] = DenseMatrix.create(rows, cols, data)
 
-  private[linalg] def zeroRows[V](cols: Int):Matrix[V] = emptyMatrix(0, cols)
-  private[linalg] def zeroCols[V](rows: Int):Matrix[V] = emptyMatrix(rows, 0)
+  private[linalg] def zeroRows[V:ClassTag](cols: Int):Matrix[V] = emptyMatrix(0, cols)
+  private[linalg] def zeroCols[V:ClassTag](rows: Int):Matrix[V] = emptyMatrix(rows, 0)
 
 
-  private[linalg] def emptyMatrix[V](_rows: Int, _cols: Int):Matrix[V] = new Matrix[V] {
+  private[linalg] def emptyMatrix[V:ClassTag](_rows: Int, _cols: Int):Matrix[V] = new Matrix[V] {
     def activeIterator: Iterator[((Int, Int), V)] = Iterator.empty
 
     def activeValuesIterator: Iterator[V] = Iterator.empty
@@ -167,6 +169,8 @@ object Matrix extends MatrixConstructors[Matrix]
     def activeSize: Int = 0
 
     def repr: Matrix[V] = this
+
+    def flatten(view: View) = Vector[V]()
   }
 }
 
