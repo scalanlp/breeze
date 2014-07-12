@@ -97,6 +97,8 @@ object CanFirwin {
 
     val win = optWindow match {
       case OptWindowFunction.Hamming(alpha, beta) => WindowFunctions.hammingWindow( taps, alpha, beta )
+      case OptWindowFunction.Hanning(alpha, beta) => WindowFunctions.hanningWindow( taps, alpha, beta )
+      case OptWindowFunction.Blackman(a0, a1, a2) => WindowFunctions.blackmanWindow( taps, a0, a1, a2)
       case OptWindowFunction.None => DenseVector.ones[Double]( taps )
       case OptWindowFunction.User(dv) => {
         require(dv.length == taps, "Length of specified window function is not the same as taps option!")
