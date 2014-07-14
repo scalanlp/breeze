@@ -88,9 +88,10 @@ abstract class BaseThreadedBufferedMetropolisHastings[T](val logLikelihood: T =>
 
   override protected val uniformDist: Uniform = checkUniformDist(uniform.getOrElse({ Uniform(0,1) }))
 
-  private val queue = new java.util.concurrent.LinkedBlockingQueue[Array[T]](2)
-  queue.put(new Array[T](bufferSize))
-  queue.put(new Array[T](bufferSize))
+  private val usedArrayQueue = new java.util.concurrent.LinkedBlockingQueue[Array[T]](2)
+  private val newArrayQueue = new java.util.concurrent.LinkedBlockingQueue[Array[T]](2)
+  usedArrayQueue.put(new Array[T](bufferSize))
+  usedArrayQueue.put(new Array[T](bufferSize))
 
   @volatile private var stopWorker = false
 
@@ -99,12 +100,14 @@ abstract class BaseThreadedBufferedMetropolisHastings[T](val logLikelihood: T =>
       var last = init
 
       //Burn in
-      cfor(0)(i => i< burnIn, i => i+1)(i => {
-        last = getNext(last)
-      })
+      if (burnIn > 0) {
+        cfor(0)(i => i< burnIn, i => i+1)(i => {
+          last = getNext(last)
+        })
+      }
 
       while (!stopWorker) {
-        val buff = queue.poll(1, java.util.concurrent.TimeUnit.SECONDS)
+        val buff = usedArrayQueue.poll(1, java.util.concurrent.TimeUnit.SECONDS)
         if (buff != null) {
           cfor(0)(i => i<bufferSize, i => i+1)(i => {
             cfor(0)(j => j<dropCount, j => j+1)(j => {
@@ -113,7 +116,7 @@ abstract class BaseThreadedBufferedMetropolisHastings[T](val logLikelihood: T =>
             last = getNext(last)
             buff(i) = last
           })
-          queue.put(buff)
+          newArrayQueue.put(buff)
         }
       }
     }
@@ -122,7 +125,7 @@ abstract class BaseThreadedBufferedMetropolisHastings[T](val logLikelihood: T =>
   worker.setName("worker thread for " + this)
   worker.start()
 
-  private var buffer: Array[T] = queue.take()
+  private var buffer: Array[T] = newArrayQueue.take()
   private var position: Int = 0
 
   private def getNext(last: T): T = {
@@ -148,8 +151,8 @@ abstract class BaseThreadedBufferedMetropolisHastings[T](val logLikelihood: T =>
       position += 1
       buffer(position-1)
     } else {
-      queue.put(buffer)
-      buffer = queue.take()
+      usedArrayQueue.put(buffer)
+      buffer = newArrayQueue.take()
       position = 1
       buffer(0)
     }
