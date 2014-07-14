@@ -26,31 +26,24 @@ trait MetropolisHastings[T] extends Rand[T] {
 
   def likelihood(x:T): Double = math.exp(logLikelihood(x))
   def likelihoodRatio(x: T, y: T): Double = math.exp(logLikelihood(x) - logLikelihood(y))
+  def rand:RandBasis
 
-  protected val uniformDist: Uniform
-
-  protected def checkUniformDist(uniform: Uniform): Uniform = {
-    require(uniform.low == 0.0)
-    require(uniform.high == 1.0)
-    uniform
-  }
+  protected def nextDouble: Double = this.rand.generator.nextDouble //uniform random variable
 }
 
-abstract class BaseMetropolisHastings[T](val logLikelihood: T => Double, init: T, uniform: Option[Uniform] = None, burnIn: Long = 0, dropCount: Int = 0)(implicit rand:RandBasis=Rand) extends MetropolisHastings[T] with Process[T] {
+abstract class BaseMetropolisHastings[T](val logLikelihood: T => Double, init: T, burnIn: Long = 0, dropCount: Int = 0)(implicit val rand:RandBasis=Rand) extends MetropolisHastings[T] with Process[T] {
   //Everything but the proposalDraw is implemented
-
-  override protected val uniformDist: Uniform = checkUniformDist(uniform.getOrElse({ Uniform(0,1) }))
 
   private var last: T = init
 
   private def getNext(): T = {
     val maybeNext = proposalDraw(last)
     val acceptanceRatio = likelihoodRatio(maybeNext, last)
-    if (acceptanceRatio > 1.0) { //This is logically unnecessary, but allows us to skip a call to uniformDist.draw()
+    if (acceptanceRatio > 1.0) { //This is logically unnecessary, but allows us to skip a call to nextDouble
       last = maybeNext
       maybeNext
     } else {
-      if (uniformDist.draw() < acceptanceRatio) {
+      if (nextDouble < acceptanceRatio) {
         last = maybeNext
         maybeNext
       } else {
@@ -77,16 +70,14 @@ abstract class BaseMetropolisHastings[T](val logLikelihood: T => Double, init: T
   }
 }
 
-case class ArbitraryMetropolisHastings[T](override val logLikelihood: T => Double, val proposal: T => Rand[T], init: T, uniform: Option[Uniform] = None, burnIn: Long = 0, dropCount: Int = 0)(implicit rand:RandBasis=Rand) extends BaseMetropolisHastings[T](logLikelihood, init, uniform, burnIn, dropCount)(rand) {
+case class ArbitraryMetropolisHastings[T](override val logLikelihood: T => Double, val proposal: T => Rand[T], init: T, burnIn: Long = 0, dropCount: Int = 0)(implicit rand:RandBasis=Rand) extends BaseMetropolisHastings[T](logLikelihood, init, burnIn, dropCount)(rand) {
   def proposalDraw(x: T) = proposal(x).draw()
 
   def observe(x: T) = this.copy(burnIn=0, init = x)
 }
 
-abstract class BaseThreadedBufferedMetropolisHastings[T](val logLikelihood: T => Double, init: T, uniform: Option[Uniform] = None, burnIn: Long = 0, dropCount: Int = 0, bufferSize: Int = 1024*8)(implicit m: ClassTag[T]) extends MetropolisHastings[T] with ThreadedMCMC {
+abstract class BaseThreadedBufferedMetropolisHastings[T](val logLikelihood: T => Double, init: T, burnIn: Long = 0, dropCount: Int = 0, bufferSize: Int = 1024*8)(implicit m: ClassTag[T], val rand:RandBasis=Rand) extends MetropolisHastings[T] with ThreadedMCMC {
   require(bufferSize > 0)
-
-  override protected val uniformDist: Uniform = checkUniformDist(uniform.getOrElse({ Uniform(0,1) }))
 
   private val usedArrayQueue = new java.util.concurrent.LinkedBlockingQueue[Array[T]](2)
   private val newArrayQueue = new java.util.concurrent.LinkedBlockingQueue[Array[T]](2)
@@ -134,7 +125,7 @@ abstract class BaseThreadedBufferedMetropolisHastings[T](val logLikelihood: T =>
     if (acceptanceRatio > 1.0) {
       maybeNext
     } else {
-      if (uniformDist.draw() < acceptanceRatio) {
+      if (nextDouble < acceptanceRatio) {
         maybeNext
       } else {
         last
@@ -160,9 +151,9 @@ abstract class BaseThreadedBufferedMetropolisHastings[T](val logLikelihood: T =>
 }
 
 object ArbitraryThreadedBufferedMetropolisHastings {
-  def apply[T](logLikelihood: T => Double, proposal: T => Rand[T], init: T, uniform: Option[Uniform] = None, burnIn: Long = 0, dropCount: Int = 0, bufferSize: Int = 1024*8)(implicit m: ClassTag[T]) = new ArbitraryThreadedBufferedMetropolisHastings[T](logLikelihood, proposal, init, uniform, burnIn, dropCount, bufferSize)(m)
+  def apply[T](logLikelihood: T => Double, proposal: T => Rand[T], init: T, burnIn: Long = 0, dropCount: Int = 0, bufferSize: Int = 1024*8)(implicit m: ClassTag[T], rand:RandBasis=Rand) = new ArbitraryThreadedBufferedMetropolisHastings[T](logLikelihood, proposal, init, burnIn, dropCount, bufferSize)(m, rand)
 }
 
-class ArbitraryThreadedBufferedMetropolisHastings[T](override val logLikelihood: T => Double, val proposal: T => Rand[T], init: T, uniform: Option[Uniform] = None, burnIn: Long = 0, dropCount: Int = 0, bufferSize: Int = 1024*8)(m: ClassTag[T]) extends BaseThreadedBufferedMetropolisHastings(logLikelihood, init, uniform, burnIn, dropCount, bufferSize)(m) {
+class ArbitraryThreadedBufferedMetropolisHastings[T](override val logLikelihood: T => Double, val proposal: T => Rand[T], init: T, burnIn: Long = 0, dropCount: Int = 0, bufferSize: Int = 1024*8)(m: ClassTag[T], rand:RandBasis) extends BaseThreadedBufferedMetropolisHastings(logLikelihood, init, burnIn, dropCount, bufferSize)(m, rand) {
   def proposalDraw(x: T) = proposal(x).draw()
 }
