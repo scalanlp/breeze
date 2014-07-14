@@ -36,12 +36,6 @@ trait MetropolisHastings[T] extends Rand[T] {
   }
 }
 
-trait TracksAcceptancesRejections { self:MetropolisHastings[_] =>
-  def acceptances: Long
-  def rejections: Long
-  def acceptanceRatio: Double = acceptances.toDouble / (acceptances + rejections).toDouble
-}
-
 abstract class BaseMetropolisHastings[T](val logLikelihood: T => Double, init: T, uniform: Option[Uniform] = None, burnIn: Long = 0, dropCount: Int = 0)(implicit rand:RandBasis=Rand) extends MetropolisHastings[T] with Process[T] {
   //Everything but the proposalDraw is implemented
 
