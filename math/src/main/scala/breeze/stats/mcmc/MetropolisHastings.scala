@@ -52,7 +52,7 @@ abstract class BaseMetropolisHastings[T](val logLikelihood: T => Double, init: T
   private def getNext(): T = {
     val maybeNext = proposalDraw(last)
     val acceptanceRatio = likelihoodRatio(maybeNext, last)
-    if (acceptanceRatio > 1.0) {
+    if (acceptanceRatio > 1.0) { //This is logically unnecessary, but allows us to skip a call to uniformDist.draw()
       last = maybeNext
       maybeNext
     } else {
