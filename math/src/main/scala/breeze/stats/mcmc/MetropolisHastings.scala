@@ -113,7 +113,7 @@ case class AffineStepMetropolisHastings[T](override val logLikelihood: T => Doub
   def observe(x: T) = this.copy(burnIn=0, init = x)
 }
 
-case class ThreadedBufferedRand[T](wrapped: Rand[T], bufferSize: Int = 1024*8)(implicit m: ClassTag[T]) extends Rand[T] with ThreadedMCMC {
+case class ThreadedBufferedRand[T](wrapped: Rand[T], bufferSize: Int = 1024*8)(implicit m: ClassTag[T]) extends Rand[T] {
   require(bufferSize > 0)
 
   private val usedArrayQueue = new java.util.concurrent.LinkedBlockingQueue[Array[T]](2)
