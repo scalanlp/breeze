@@ -33,6 +33,11 @@ trait MetropolisHastings[T] extends Rand[T] {
 }
 
 trait TracksStatistics { self:MetropolisHastings[_] =>
+  /* This obviously can't track stats for you, so you need to build it in.
+   * Tracking stats appears to have minimal performance implication, probably
+   * because incrementing a few longs is far cheaper than generating random
+   * numbers.
+   */
   def total: Long
   def acceptanceCount: Long
   def aboveOneCount: Long
