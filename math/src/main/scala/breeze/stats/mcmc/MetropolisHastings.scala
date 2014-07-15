@@ -17,6 +17,7 @@ package breeze.stats.mcmc
 */
 
 import breeze.stats.distributions._
+import breeze.math._
 import spire.implicits.cfor
 import scala.reflect.ClassTag
 
@@ -31,20 +32,38 @@ trait MetropolisHastings[T] extends Rand[T] {
   protected def nextDouble: Double = this.rand.generator.nextDouble //uniform random variable
 }
 
-abstract class BaseMetropolisHastings[T](val logLikelihood: T => Double, init: T, burnIn: Long = 0, dropCount: Int = 0)(implicit val rand:RandBasis=Rand) extends MetropolisHastings[T] with Process[T] {
+trait TracksStatistics { self:MetropolisHastings[_] =>
+  def total: Long
+  def acceptanceCount: Long
+  def aboveOneCount: Long
+  def rejectionCount: Long = total - acceptanceCount
+  def aboveOneFrac: Double = aboveOneCount.toDouble / total.toDouble
+  def rejectionFrac: Double = rejectionCount.toDouble / total.toDouble
+}
+
+abstract class BaseMetropolisHastings[T](val logLikelihood: T => Double, init: T, burnIn: Long = 0, dropCount: Int = 0)(implicit val rand:RandBasis=Rand) extends MetropolisHastings[T] with Process[T] with TracksStatistics {
   //Everything but the proposalDraw is implemented
 
   private var last: T = init
+  private var acceptances: Long = 0
+  private var totalCount: Long = 0
+  private var acceptanceAboveOne: Long = 0
+  def aboveOneCount = acceptanceAboveOne
+  def total = totalCount
+  def acceptanceCount = acceptances
 
   private def getNext(): T = {
+    totalCount += 1
     val maybeNext = proposalDraw(last)
     val acceptanceRatio = likelihoodRatio(maybeNext, last)
     if (acceptanceRatio > 1.0) { //This is logically unnecessary, but allows us to skip a call to nextDouble
       last = maybeNext
+      acceptanceAboveOne += 1
       maybeNext
     } else {
       if (nextDouble < acceptanceRatio) {
         last = maybeNext
+        acceptances += 1
         maybeNext
       } else {
         last
@@ -72,6 +91,19 @@ abstract class BaseMetropolisHastings[T](val logLikelihood: T => Double, init: T
 
 case class ArbitraryMetropolisHastings[T](override val logLikelihood: T => Double, val proposal: T => Rand[T], init: T, burnIn: Long = 0, dropCount: Int = 0)(implicit rand:RandBasis=Rand) extends BaseMetropolisHastings[T](logLikelihood, init, burnIn, dropCount)(rand) {
   def proposalDraw(x: T) = proposal(x).draw()
+
+  def observe(x: T) = this.copy(burnIn=0, init = x)
+}
+
+case class AffineStepMetropolisHastings[T](override val logLikelihood: T => Double, val proposalStep: Rand[T], init: T, burnIn: Long = 0, dropCount: Int = 0)(implicit rand:RandBasis=Rand, vectorSpace: VectorSpace[T,_]) extends BaseMetropolisHastings[T](logLikelihood, init, burnIn, dropCount)(rand) {
+  /*
+   *  Handles typical case of x => x + random().
+   *
+   *  Performance motivation: if you use ArbitraryMetropolisHastings,
+   *  you are obligated to create an unnecessary Rand[T] object at every step.
+   *
+   */
+  def proposalDraw(x: T): T = vectorSpace.addVV(proposalStep.draw(),x)
 
   def observe(x: T) = this.copy(burnIn=0, init = x)
 }
