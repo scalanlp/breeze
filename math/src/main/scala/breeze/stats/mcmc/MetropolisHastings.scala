@@ -113,7 +113,7 @@ case class AffineStepMetropolisHastings[T](override val logLikelihood: T => Doub
   def observe(x: T) = this.copy(burnIn=0, init = x)
 }
 
-abstract class BaseThreadedBufferedMetropolisHastings[T](val logLikelihood: T => Double, init: T, burnIn: Long = 0, dropCount: Int = 0, bufferSize: Int = 1024*8)(implicit m: ClassTag[T], val rand:RandBasis=Rand) extends MetropolisHastings[T] with ThreadedMCMC {
+case class ThreadedBufferedRand[T](wrapped: Rand[T], bufferSize: Int = 1024*8)(implicit m: ClassTag[T]) extends Rand[T] with ThreadedMCMC {
   require(bufferSize > 0)
 
   private val usedArrayQueue = new java.util.concurrent.LinkedBlockingQueue[Array[T]](2)
@@ -125,24 +125,11 @@ abstract class BaseThreadedBufferedMetropolisHastings[T](val logLikelihood: T =>
 
   private val worker = new Thread {
     override def run() {
-      var last = init
-
-      //Burn in
-      if (burnIn > 0) {
-        cfor(0)(i => i< burnIn, i => i+1)(i => {
-          last = getNext(last)
-        })
-      }
-
       while (!stopWorker) {
         val buff = usedArrayQueue.poll(1, java.util.concurrent.TimeUnit.SECONDS)
         if (buff != null) {
           cfor(0)(i => i<bufferSize, i => i+1)(i => {
-            cfor(0)(j => j<dropCount, j => j+1)(j => {
-              last = getNext(last)
-            })
-            last = getNext(last)
-            buff(i) = last
+            buff(i) = wrapped.draw()
           })
           newArrayQueue.put(buff)
         }
@@ -155,20 +142,6 @@ abstract class BaseThreadedBufferedMetropolisHastings[T](val logLikelihood: T =>
 
   private var buffer: Array[T] = newArrayQueue.take()
   private var position: Int = 0
-
-  private def getNext(last: T): T = {
-    val maybeNext = proposalDraw(last)
-    val acceptanceRatio = likelihoodRatio(maybeNext, last)
-    if (acceptanceRatio > 1.0) {
-      maybeNext
-    } else {
-      if (nextDouble < acceptanceRatio) {
-        maybeNext
-      } else {
-        last
-      }
-    }
-  }
 
   def stop() = { //In order to allow this class to be garbage collected, you must set this to true.
     stopWorker = true
@@ -185,12 +158,4 @@ abstract class BaseThreadedBufferedMetropolisHastings[T](val logLikelihood: T =>
       buffer(0)
     }
   }
-}
-
-object ArbitraryThreadedBufferedMetropolisHastings {
-  def apply[T](logLikelihood: T => Double, proposal: T => Rand[T], init: T, burnIn: Long = 0, dropCount: Int = 0, bufferSize: Int = 1024*8)(implicit m: ClassTag[T], rand:RandBasis=Rand) = new ArbitraryThreadedBufferedMetropolisHastings[T](logLikelihood, proposal, init, burnIn, dropCount, bufferSize)(m, rand)
-}
-
-class ArbitraryThreadedBufferedMetropolisHastings[T](override val logLikelihood: T => Double, val proposal: T => Rand[T], init: T, burnIn: Long = 0, dropCount: Int = 0, bufferSize: Int = 1024*8)(m: ClassTag[T], rand:RandBasis) extends BaseThreadedBufferedMetropolisHastings(logLikelihood, init, burnIn, dropCount, bufferSize)(m, rand) {
-  def proposalDraw(x: T) = proposal(x).draw()
 }

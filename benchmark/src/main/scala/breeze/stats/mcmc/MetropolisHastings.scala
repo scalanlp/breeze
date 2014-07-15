@@ -28,9 +28,9 @@ class MetropolisHastingsBenchmark extends BreezeBenchmark {
 
   def pullAllSamplesWithWork(m: Rand[Double]) = {
     var result = 0.0
-    cfor(0)(i => i<numSamples, i => i+1)(i => {
+    cfor(0)(i => i<numSamples/4, i => i+1)(i => {
       val x = m.draw()
-      cfor(0)(j => j < 100, j => j+1)(j => {
+      cfor(0)(j => j < 400, j => j+1)(j => {
         result += math.log(math.exp(x)) / (1+x*x)
       })
     })
@@ -58,7 +58,8 @@ class MetropolisHastingsBenchmark extends BreezeBenchmark {
   }
 
   def timeThreadedBufferedWithWork(reps: Int) = run(reps) {
-    val m = ArbitraryThreadedBufferedMetropolisHastings(likelihood _, (_:Double) => Uniform(0,1), init = 0.5, burnIn = 0, dropCount = dropCount, bufferSize=bufferSize)
+    val wrapped = ArbitraryMetropolisHastings(likelihood _, (_:Double) =>  Uniform(0,1), 0.5, burnIn=0, dropCount=dropCount)
+    val m = ThreadedBufferedRand(wrapped, bufferSize=bufferSize)
     val result = pullAllSamplesWithWork(m)
     m.stop()
     result
