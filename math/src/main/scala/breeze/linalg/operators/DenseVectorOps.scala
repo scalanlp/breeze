@@ -268,6 +268,28 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
     res
   }
 
+  implicit def axpy[V:Field:ClassTag]: scaleAdd.InPlaceImpl3[DenseVector[V],V,DenseVector[V]] = {
+    new scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] {
+      val f = implicitly[Field[V]]
+      def apply(a: DenseVector[V], s: V, b: DenseVector[V]) {
+        require(b.length == a.length, "Vectors must be the same length!")
+        val ad = a.data
+        val bd = b.data
+        var aoff = a.offset
+        var boff = b.offset
+
+        var i = 0
+        while(i < a.length) {
+          ad(aoff) = f.+(ad(aoff),f.*(s,bd(boff)))
+          aoff += a.stride
+          boff += b.stride
+          i += 1
+        }
+      }
+      implicitly[TernaryUpdateRegistry[Vector[V], V, Vector[V], scaleAdd.type]].register(this)
+    }
+  }
+
   @expand
   @expand.valify
   implicit def axpy[@expand.args(Int, Double, Float, Long) V]: scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] = {

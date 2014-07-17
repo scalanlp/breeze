@@ -23,7 +23,7 @@ trait StochasticDiffFunction[T] extends (T=>Double) { outer =>
    * use to convert something to a DenseVector or other Tensor for optimization purposes.
    */
   def throughLens[U](implicit l: Isomorphism[T,U]) = new DiffFunction[U] {
-    def calculate(u: U) = {
+    override def calculate(u: U) = {
       val t = l.backward(u)
       val (obj,gu) = outer.calculate(t)
       (obj,l.forward(gu))

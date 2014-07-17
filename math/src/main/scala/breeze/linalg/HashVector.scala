@@ -5,7 +5,7 @@ import breeze.linalg.operators._
 import breeze.storage.Zero
 import breeze.generic._
 import breeze.linalg.support._
-import breeze.math.TensorSpace
+import breeze.math.{MutableVectorField, Field}
 import scala.reflect.ClassTag
 import scala.util.hashing.MurmurHash3
 import breeze.macros.expand
@@ -111,6 +111,13 @@ object HashVector extends HashVectorOps
   // implicits
 
 
+  implicit def canCreateZeros[V:ClassTag:Zero]: CanCreateZeros[HashVector[V],Int] =
+    new CanCreateZeros[HashVector[V],Int] {
+      def apply(d: Int): HashVector[V] = {
+        zeros[V](d)
+      }
+    }
+
 
   // implicits
   class CanCopyHashVector[@specialized(Int, Float, Double) V:ClassTag:Zero] extends CanCopy[HashVector[V]] {
@@ -204,18 +211,8 @@ object HashVector extends HashVectorOps
     }
   }
 
-
-  implicit val space_d = {
-    implicit val neg: OpNeg.Impl[HashVector[Double], HashVector[Double]] = this.negFromScale[Double]
-    TensorSpace.make[HashVector[Double], Int, Double]
-  }
-  implicit val space_f = {
-    implicit val neg: OpNeg.Impl[HashVector[Float], HashVector[Float]] = this.negFromScale[Float]
-    TensorSpace.make[HashVector[Float], Int, Float]
-  }
-  implicit val space_i = {
-    implicit val neg: OpNeg.Impl[HashVector[Int], HashVector[Int]] = this.negFromScale[Int]
-    TensorSpace.make[HashVector[Int], Int, Int]
+  implicit def space[E:Field:ClassTag:Zero]: MutableVectorField[HashVector[E],Int,E] = {
+    MutableVectorField.make[HashVector[E], Int, E]
   }
 
   import breeze.math.PowImplicits._

@@ -1,6 +1,7 @@
 package breeze.math
 
-import breeze.linalg.{scaleAdd, norm, NumericOps}
+import breeze.linalg._
+import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
 import breeze.linalg.operators._
 import breeze.util.Isomorphism
@@ -12,10 +13,10 @@ import breeze.generic.UFunc.UImpl2
  *
  * @author dlwh
  */
-trait MutablizingAdaptor[+VS[_, _], MVS[_,_], V, S] {
+trait MutablizingAdaptor[+VS[_, _, _], MVS[_,_,_], V, I, S] {
   type Wrapper
-  val underlying: VS[V, S]
-  implicit val mutaVspace: MVS[Wrapper, S]
+  val underlying: VS[V, I, S]
+  implicit val mutaVspace: MVS[Wrapper, I, S]
 
   implicit val isomorphism:Isomorphism[V, Wrapper] = new Isomorphism[V, Wrapper] {
     def forward(value: V): Wrapper = wrap(value)
@@ -23,36 +24,48 @@ trait MutablizingAdaptor[+VS[_, _], MVS[_,_], V, S] {
     def backward(u: Wrapper): V = unwrap(u)
   }
 
+  implicit def mutaVSpaceIdent(wrapper: Wrapper): MVS[Wrapper,I,S] = mutaVspace
+
   def wrap(v: V):Wrapper
   def unwrap(w: Wrapper):V
 }
 
 object MutablizingAdaptor {
-  def ensureMutable[V, S](vs: VectorSpace[V, S]):MutablizingAdaptor[VectorSpace, MutableVectorSpace, V, S] = {
-    if(vs.isInstanceOf[MutableVectorSpace[_, _]]) IdentityWrapper(vs.asInstanceOf[MutableVectorSpace[V, S]])
+
+  def ensureMutable[V, I, S](vs: VectorSpace[V, I, S]):MutablizingAdaptor[VectorSpace, MutableModuleSpace, V, I, S] = {
+    if(vs.isInstanceOf[MutableModuleSpace[_, _, _]])
+      IdentityWrapper[MutableModuleSpace,V,I,S](vs.asInstanceOf[MutableModuleSpace[V, I, S]])
     else VectorSpaceAdaptor(vs)
   }
 
-  def ensureMutable[V, S](vs: InnerProductSpace[V, S]):MutablizingAdaptor[InnerProductSpace, MutableInnerProductSpace, V, S] = {
-    if(vs.isInstanceOf[MutableInnerProductSpace[_, _]]) IdentityWrapper(vs.asInstanceOf[MutableInnerProductSpace[V, S]])
+  def ensureMutable[V, I, S](vs: InnerProductVectorSpace[V, I, S]):MutablizingAdaptor[InnerProductVectorSpace, MutableInnerProductVectorSpace, V, I, S] = {
+    if(vs.isInstanceOf[MutableInnerProductVectorSpace[_, _, _]])
+      IdentityWrapper[MutableInnerProductVectorSpace,V,I,S](vs.asInstanceOf[MutableInnerProductVectorSpace[V, I, S]])
     else InnerProductSpaceAdaptor(vs)
   }
 
-
-  def ensureMutable[V, S](vs: CoordinateSpace[V, S]):MutablizingAdaptor[CoordinateSpace, MutableCoordinateSpace, V, S] = {
-    if(vs.isInstanceOf[MutableCoordinateSpace[_, _]]) IdentityWrapper(vs.asInstanceOf[MutableCoordinateSpace[V, S]])
-    else CoordinateSpaceAdaptor(vs)
+  def ensureMutable[V, I, S](vs: VectorField[V, I, S]):MutablizingAdaptor[VectorField, MutableVectorField, V, I, S] = {
+    if(vs.isInstanceOf[MutableVectorField[_, _, _]])
+      IdentityWrapper[MutableVectorField,V,I,S](vs.asInstanceOf[MutableVectorField[V, I, S]])
+    else VectorFieldAdaptor(vs)
   }
 
-  case class IdentityWrapper[VS[_, _], V, S](underlying: VS[V, S]) extends MutablizingAdaptor[VS, VS, V, S] {
+
+//  def ensureMutable[V, I, S](vs: CoordinateSpace[V, I, S]):MutablizingAdaptor[CoordinateSpace, MutableCoordinateSpace, V, I, S] = {
+//    if(vs.isInstanceOf[MutableCoordinateSpace[_, _, _]])
+//      IdentityWrapper[MutableCoordinateSpace,V,I,S](vs.asInstanceOf[MutableCoordinateSpace[V, I, S]])
+//    else CoordinateSpaceAdaptor(vs)
+//  }
+
+  case class IdentityWrapper[VS[_, _, _], V, I, S](underlying: VS[V, I, S]) extends MutablizingAdaptor[VS, VS, V, I, S] {
     type Wrapper = V
-    implicit val mutaVspace: VS[Wrapper, S] = underlying
+    implicit val mutaVspace: VS[Wrapper, I, S] = underlying
 
     def wrap(v: V): Wrapper = v
     def unwrap(v: Wrapper):V = v
   }
 
-  case class VectorSpaceAdaptor[V, S](val underlying: VectorSpace[V, S]) extends MutablizingAdaptor[VectorSpace, MutableVectorSpace, V, S] {
+  case class VectorSpaceAdaptor[V, I, S](val underlying: VectorSpace[V, I, S]) extends MutablizingAdaptor[VectorSpace, MutableModuleSpace, V, I, S] {
     type Wrapper = Ref[V]
 
 
@@ -60,20 +73,56 @@ object MutablizingAdaptor {
 
     def unwrap(w: Wrapper): V = w.value
 
-    implicit val mutaVspace: MutableVectorSpace[Wrapper, S] = new MutableVectorSpace[Wrapper, S] {
+    implicit val mutaVspace: MutableModuleSpace[Wrapper, I, S] = new MutableModuleSpace[Wrapper, I, S] {
       val u = underlying
-      def field: Field[S] = underlying.field
+      def scalars: Field[S] = underlying.scalars
       implicit def isNumericOps(v: Wrapper) = v
 
-      implicit def zeros: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
+      implicit def hasOps(v: Wrapper): MutableFieldElemOps[Wrapper] = v
+
+//      implicit def mapValues: CanMapValues[Wrapper, S, S, Wrapper] = new CanMapValues[Wrapper, S, S, Wrapper] {
+//        /** Maps all key-value pairs from the given collection. */
+//        def map(from: Wrapper, fn: (S) => S): Wrapper = {
+//          from.map(u.mapValues.map(_, fn))
+//        }
+//
+//        /** Maps all active key-value pairs from the given collection. */
+//        def mapActive(from: Wrapper, fn: (S) => S): Wrapper = {
+//          from.map(u.mapValues.mapActive(_, fn))
+//        }
+//      }
+//
+//      implicit def zipMapValues: CanZipMapValues[Wrapper, S, S, Wrapper] = new CanZipMapValues[Wrapper, S, S, Wrapper] {
+//        /** Maps all corresponding values from the two collections. */
+//        def map(from: Wrapper, from2: Wrapper, fn: (S, S) => S): Wrapper = {
+//          from.map(u.zipMapValues.map(_, from2.value, fn))
+//        }
+//      }
+//
+//      implicit def iterateValues: CanTraverseValues[Wrapper, S] = new CanTraverseValues[Wrapper,S] {
+//        /** Traverses all values from the given collection. */
+//        override def traverse(from: Wrapper, fn: ValuesVisitor[S]): Unit = {
+//          from.map(u.iterateValues.traverse(_,fn))
+//        }
+//
+//        override def isTraversableAgain(from: Wrapper): Boolean = u.iterateValues.isTraversableAgain(from.value)
+//      }
+
+      implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
-        def apply(from: Wrapper): Wrapper = from.map(underlying.zeros apply)
+        def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike apply)
       }
+
+//      implicit def zero: CanCreateZeros[Wrapper,I] = new CanCreateZeros[Wrapper,I] {
+//        override def apply(dw: I): Wrapper = wrap(u.z(dw))
+//      }
 
       implicit def copy: CanCopy[Wrapper] = new CanCopy[Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
         def apply(from: Wrapper): Wrapper = from
       }
+
+
 
       def liftUpdate[Op<:OpType](implicit op: UFunc.UImpl2[Op, V, S, V]):UFunc.InPlaceImpl2[Op, Wrapper, S] = new UFunc.InPlaceImpl2[Op, Wrapper, S] {
         def apply(a: Wrapper, b: S) {
@@ -136,27 +185,66 @@ object MutablizingAdaptor {
     }
   }
 
-  case class InnerProductSpaceAdaptor[V, S](val underlying: InnerProductSpace[V, S]) extends MutablizingAdaptor[InnerProductSpace, MutableInnerProductSpace, V, S] {
+  case class InnerProductSpaceAdaptor[V, I, S](val underlying: InnerProductVectorSpace[V, I, S]) extends MutablizingAdaptor[InnerProductVectorSpace, MutableInnerProductVectorSpace, V, I, S] {
     type Wrapper = Ref[V]
 
     def wrap(v: V): Wrapper = Ref(v)
 
     def unwrap(w: Wrapper): V = w.value
 
-    implicit val mutaVspace: MutableInnerProductSpace[Wrapper, S] = new MutableInnerProductSpace[Wrapper, S] {
+    implicit val mutaVspace: MutableInnerProductVectorSpace[Wrapper, I, S] = new MutableInnerProductVectorSpace[Wrapper, I, S] {
       val u = underlying
-      def field: Field[S] = underlying.field
-      implicit def isNumericOps(v: Wrapper) = v
+      def scalars: Field[S] = underlying.scalars
 
-      implicit def zeros: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
+      implicit def hasOps(v: Wrapper) = v
+
+      implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
-        def apply(from: Wrapper): Wrapper = from.map(underlying.zeros apply)
+        def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike apply)
       }
+
+//      implicit def zero: CanCreateZeros[Wrapper,I] = new CanCreateZeros[Wrapper,I] {
+//        override def apply(d: I): Wrapper = wrap(u.zero(d))
+//      }
 
       implicit def copy: CanCopy[Wrapper] = new CanCopy[Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
         def apply(from: Wrapper): Wrapper = from
       }
+
+
+      implicit def normImplDouble: norm.Impl2[Wrapper, Double, Double] = new norm.Impl2[Wrapper, Double, Double] {
+        def apply(v1: Wrapper, v2: Double): Double = u.normImplDouble(v1.value, v2)
+      }
+
+//      implicit def iterateValues: CanTraverseValues[Wrapper, S] = new CanTraverseValues[Wrapper,S] {
+//        /** Traverses all values from the given collection. */
+//        override def traverse(from: Wrapper, fn: ValuesVisitor[S]): Unit = {
+//          from.map(u.iterateValues.traverse(_,fn))
+//        }
+//
+//        override def isTraversableAgain(from: Wrapper): Boolean = u.iterateValues.isTraversableAgain(from.value)
+//      }
+//
+//      implicit def mapValues: CanMapValues[Wrapper, S, S, Wrapper] = new CanMapValues[Wrapper, S, S, Wrapper] {
+//        /** Maps all key-value pairs from the given collection. */
+//        def map(from: Wrapper, fn: (S) => S): Wrapper = {
+//          from.map(u.mapValues.map(_, fn))
+//        }
+//
+//        /** Maps all active key-value pairs from the given collection. */
+//        def mapActive(from: Wrapper, fn: (S) => S): Wrapper = {
+//          from.map(u.mapValues.mapActive(_, fn))
+//        }
+//      }
+//
+//      implicit def zipMapValues: CanZipMapValues[Wrapper, S, S, Wrapper] = new CanZipMapValues[Wrapper, S, S, Wrapper] {
+//        /** Maps all corresponding values from the two collections. */
+//        def map(from: Wrapper, from2: Wrapper, fn: (S, S) => S): Wrapper = {
+//          from.map(u.zipMapValues.map(_, from2.value, fn))
+//        }
+//      }
+
 
       def liftUpdate[Op <: OpType](implicit op: UImpl2[Op, V, S, V]):UFunc.InPlaceImpl2[Op, Wrapper, S] = new UFunc.InPlaceImpl2[Op, Wrapper, S] {
         def apply(a: Wrapper, b: S) {
@@ -183,8 +271,6 @@ object MutablizingAdaptor {
       }
 
 
-      implicit def scalarNorm = u.scalarNorm
-
       implicit def mulIntoVS: OpMulScalar.InPlaceImpl2[Wrapper, S] = liftUpdate(u.mulVS)
 
       implicit def divIntoVS: OpDiv.InPlaceImpl2[Wrapper, S] = liftUpdate(u.divVS)
@@ -229,21 +315,26 @@ object MutablizingAdaptor {
     }
   }
 
-  case class CoordinateSpaceAdaptor[V, S](underlying: CoordinateSpace[V, S]) extends MutablizingAdaptor[CoordinateSpace, MutableCoordinateSpace, V, S] {
+  case class VectorFieldAdaptor[V, I, S](val underlying: VectorField[V, I, S]) extends MutablizingAdaptor[VectorField, MutableVectorField, V, I, S] {
     type Wrapper = Ref[V]
 
     def wrap(v: V): Wrapper = Ref(v)
 
     def unwrap(w: Wrapper): V = w.value
 
-    implicit val mutaVspace: MutableCoordinateSpace[Wrapper, S] = new MutableCoordinateSpace[Wrapper, S] {
+    implicit val mutaVspace: MutableVectorField[Wrapper, I, S] = new MutableVectorField[Wrapper, I, S] {
       val u = underlying
-      def field: Field[S] = underlying.field
-      implicit def isNumericOps(v: Wrapper) = v
+      def scalars: Field[S] = underlying.scalars
 
-      implicit def zeros: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
+      implicit def hasOps(v: Wrapper) = v
+
+      implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
-        def apply(from: Wrapper): Wrapper = from.map(underlying.zeros apply)
+        def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike apply)
+      }
+
+      implicit def zero: CanCreateZeros[Wrapper,I] = new CanCreateZeros[Wrapper,I] {
+        override def apply(d: I): Wrapper = wrap(u.zero(d))
       }
 
       implicit def copy: CanCopy[Wrapper] = new CanCopy[Wrapper] {
@@ -251,77 +342,20 @@ object MutablizingAdaptor {
         def apply(from: Wrapper): Wrapper = from
       }
 
-      def liftUpdate[Op <: OpType](implicit op: UFunc.UImpl2[Op, V, S, V]):UFunc.InPlaceImpl2[Op, Wrapper, S] = new UFunc.InPlaceImpl2[Op, Wrapper, S] {
-        def apply(a: Wrapper, b: S) {
-          a.value = op(a.value, b)
-        }
-      }
 
-      def liftUpdateV[Op <: OpType](implicit op:UFunc.UImpl2[Op, V, V, V]):UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] = new UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] {
-        def apply(a: Wrapper, b: Wrapper) {
-          a.value = op(a.value, b.value)
-        }
-      }
-
-      def liftOp[Op <: OpType](implicit op:UFunc.UImpl2[Op, V, S, V]):UFunc.UImpl2[Op, Wrapper, S, Wrapper] = new UFunc.UImpl2[Op, Wrapper, S, Wrapper] {
-        def apply(a: Wrapper, b: S) = {
-          a.map(op(_, b))
-        }
-      }
-
-      def liftOpV[Op <: OpType](implicit op: UFunc.UImpl2[Op, V, V, V]): UFunc.UImpl2[Op, Wrapper, Wrapper, Wrapper] = new UFunc.UImpl2[Op, Wrapper, Wrapper, Wrapper] {
-        def apply(a: Wrapper, b: Wrapper) = {
-          a.map(op(_, b.value))
-        }
-      }
-
-      implicit def mulIntoVS: OpMulScalar.InPlaceImpl2[Wrapper, S] = liftUpdate(u.mulVS)
-
-      implicit def divIntoVS: OpDiv.InPlaceImpl2[Wrapper, S] = liftUpdate(u.divVS)
-
-      implicit def addIntoVV: OpAdd.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.addVV)
-
-      implicit def subIntoVV: OpSub.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.subVV)
-
-      implicit def setIntoVV: OpSet.InPlaceImpl2[Wrapper, Wrapper] = new OpSet.InPlaceImpl2[Wrapper, Wrapper] {
-        def apply(a: Wrapper, b: Wrapper) {
-          a.value = b.value
-        }
-      }
-
-      implicit def scaleAddVV: scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] = {
-        new scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] {
-          def apply(y: Wrapper, a: S, x: Wrapper) {y += x * a}
-        }
-      }
-
-      implicit def mulVS: OpMulScalar.Impl2[Wrapper, S, Wrapper] = liftOp(u.mulVS)
-
-      implicit def divVS: OpDiv.Impl2[Wrapper, S, Wrapper] = liftOp(u.divVS)
-
-      implicit def addVV: OpAdd.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.addVV)
-
-      implicit def subVV: OpSub.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.subVV)
-
-      override def close(a: Wrapper, b: Wrapper, tolerance: Double): Boolean = u.close(a.value, b.value, tolerance)
-
-      // default implementations
-      implicit def neg: OpNeg.Impl[Wrapper, Wrapper] = new OpNeg.Impl[Wrapper, Wrapper] {
-        def apply(a: Wrapper): Wrapper = a.map(u.neg apply)
-      }
-
-      implicit def dotVV: OpMulInner.Impl2[Wrapper, Wrapper, S] = new OpMulInner.Impl2[Wrapper, Wrapper, S] {
-        def apply(a: Wrapper, b: Wrapper): S = {
-          u.dotVV(a.value, b.value)
-        }
-      }
-
-      implicit def normImplDouble: norm.Impl2[Wrapper, Double, Double]  = new norm.Impl2[Wrapper, Double, Double] {
+      implicit def normImplDouble: norm.Impl2[Wrapper, Double, Double] = new norm.Impl2[Wrapper, Double, Double] {
         def apply(v1: Wrapper, v2: Double): Double = u.normImplDouble(v1.value, v2)
       }
 
 
-      implicit def scalarNorm = u.scalarNorm
+      implicit def iterateValues: CanTraverseValues[Wrapper, S] = new CanTraverseValues[Wrapper,S] {
+        /** Traverses all values from the given collection. */
+        override def traverse(from: Wrapper, fn: ValuesVisitor[S]): Unit = {
+          from.map(u.iterateValues.traverse(_,fn))
+        }
+
+        override def isTraversableAgain(from: Wrapper): Boolean = u.iterateValues.isTraversableAgain(from.value)
+      }
 
       implicit def mapValues: CanMapValues[Wrapper, S, S, Wrapper] = new CanMapValues[Wrapper, S, S, Wrapper] {
         /** Maps all key-value pairs from the given collection. */
@@ -342,13 +376,45 @@ object MutablizingAdaptor {
         }
       }
 
-      implicit def addVS: OpAdd.Impl2[Wrapper, S, Wrapper] = liftOp(u.addVS)
 
-      implicit def subVS: OpSub.Impl2[Wrapper, S, Wrapper] = liftOp(u.subVS)
+      def liftUpdate[Op <: OpType](implicit op: UImpl2[Op, V, S, V]):UFunc.InPlaceImpl2[Op, Wrapper, S] = new UFunc.InPlaceImpl2[Op, Wrapper, S] {
+        def apply(a: Wrapper, b: S) {
+          a.value = op(a.value, b)
+        }
+      }
 
-      implicit def mulVV: OpMulScalar.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.mulVV)
+      def liftUpdateV[Op <: OpType](implicit op: UImpl2[Op, V, V, V]):UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] = new UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] {
+        def apply(a: Wrapper, b: Wrapper) {
+          a.value = op(a.value, b.value)
+        }
+      }
 
-      implicit def divVV: OpDiv.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.divVV)
+      def liftOp[Op <: OpType](implicit op: UImpl2[Op, V, S, V]):UImpl2[Op, Wrapper, S, Wrapper] = new UImpl2[Op, Wrapper, S, Wrapper] {
+        def apply(a: Wrapper, b: S) = {
+          a.map(op(_, b))
+        }
+      }
+
+      def liftOpV[Op <: OpType](implicit op: UImpl2[Op, V, V, V]):UImpl2[Op, Wrapper, Wrapper, Wrapper] = new UImpl2[Op, Wrapper, Wrapper, Wrapper] {
+        def apply(a: Wrapper, b: Wrapper) = {
+          a.map(op(_, b.value))
+        }
+      }
+
+
+      implicit def mulIntoVS: OpMulScalar.InPlaceImpl2[Wrapper, S] = liftUpdate(u.mulVS)
+
+      implicit def divIntoVS: OpDiv.InPlaceImpl2[Wrapper, S] = liftUpdate(u.divVS)
+
+      implicit def addIntoVV: OpAdd.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.addVV)
+
+      implicit def subIntoVV: OpSub.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.subVV)
+
+      implicit def setIntoVV: OpSet.InPlaceImpl2[Wrapper, Wrapper] = new OpSet.InPlaceImpl2[Wrapper, Wrapper] {
+        def apply(a: Wrapper, b: Wrapper) {
+          a.value = b.value
+        }
+      }
 
       implicit def addIntoVS: OpAdd.InPlaceImpl2[Wrapper, S] = liftUpdate(u.addVS)
 
@@ -356,15 +422,192 @@ object MutablizingAdaptor {
 
       implicit def mulIntoVV: OpMulScalar.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.mulVV)
 
+      implicit def setIntoVS: OpSet.InPlaceImpl2[Wrapper, S] = new OpSet.InPlaceImpl2[Wrapper,S] {
+        override def apply(v: Wrapper, v2: S): Unit = ???
+      }
+
+      implicit def mulVV: OpMulScalar.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.mulVV)
+
+      implicit def subVS: OpSub.Impl2[Wrapper, S, Wrapper] = liftOp(u.subVS)
+
+      implicit def addVS: OpAdd.Impl2[Wrapper, S, Wrapper] = liftOp(u.addVS)
+
+      implicit def divVV: OpDiv.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.divVV)
+
       implicit def divIntoVV: OpDiv.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.divVV)
 
-      implicit def setIntoVS: OpSet.InPlaceImpl2[Wrapper, S] = new OpSet.InPlaceImpl2[Wrapper, S] {
-        def apply(a: Wrapper, b: S) {
-          a.value = (zeros(a) + b).value
+      implicit def scaleAddVV: scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] = {
+        new scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] {
+          def apply(y: Wrapper, a: S, x: Wrapper) {y += x * a}
+        }
+      }
+
+      implicit def mulVS: OpMulScalar.Impl2[Wrapper, S, Wrapper] = liftOp(u.mulVS)
+
+      implicit def divVS: OpDiv.Impl2[Wrapper, S, Wrapper] = liftOp(u.divVS)
+
+      implicit def addVV: OpAdd.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.addVV)
+
+      implicit def subVV: OpSub.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.subVV)
+
+      override def close(a: Wrapper, b: Wrapper, tolerance: Double): Boolean = u.close(a.value, b.value, tolerance)
+
+      // default implementations
+      implicit def neg: OpNeg.Impl[Wrapper, Wrapper] = new OpNeg.Impl[Wrapper, Wrapper] {
+        def apply(a: Wrapper): Wrapper = a.map(u.neg apply)
+      }
+
+      implicit def dotVV: OpMulInner.Impl2[Wrapper, Wrapper, S] = new OpMulInner.Impl2[Wrapper, Wrapper, S] {
+        def apply(a: Wrapper, b: Wrapper): S = {
+          u.dotVV(a.value, b.value)
         }
       }
     }
   }
+
+//  case class CoordinateSpaceAdaptor[V, I, S](underlying: CoordinateSpace[V, I, S]) extends MutablizingAdaptor[CoordinateSpace, MutableCoordinateSpace, V, I, S] {
+//    type Wrapper = Ref[V]
+//
+//    def wrap(v: V): Wrapper = Ref(v)
+//
+//    def unwrap(w: Wrapper): V = w.value
+//
+//    implicit val mutaVspace: MutableCoordinateSpace[Wrapper, I, S] = new MutableCoordinateSpace[Wrapper, I, S] {
+//      val u = underlying
+//      def field: Field[S] = underlying.field
+//      implicit def isNumericOps(v: Wrapper) = v
+//
+//      implicit def isFieldElemOps(v: Wrapper): FieldElemOps[Wrapper] = v
+//
+//      implicit def isRingElemOps(v: Wrapper): RingElemOps[Wrapper] = v
+//
+//      override def ring: Ring[S] = field
+//
+//      implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
+//        // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
+//        def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike apply)
+//      }
+//
+//      override implicit def zero: CanCreateZeros[Wrapper] = new CanCreateZeros[Wrapper] {
+//        override def apply(): Wrapper = wrap(u.zero())
+//      }
+//
+//      implicit def copy: CanCopy[Wrapper] = new CanCopy[Wrapper] {
+//        // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
+//        def apply(from: Wrapper): Wrapper = from
+//      }
+//
+//      def liftUpdate[Op <: OpType](implicit op: UFunc.UImpl2[Op, V, S, V]):UFunc.InPlaceImpl2[Op, Wrapper, S] = new UFunc.InPlaceImpl2[Op, Wrapper, S] {
+//        def apply(a: Wrapper, b: S) {
+//          a.value = op(a.value, b)
+//        }
+//      }
+//
+//      def liftUpdateV[Op <: OpType](implicit op:UFunc.UImpl2[Op, V, V, V]):UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] = new UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] {
+//        def apply(a: Wrapper, b: Wrapper) {
+//          a.value = op(a.value, b.value)
+//        }
+//      }
+//
+//      def liftOp[Op <: OpType](implicit op:UFunc.UImpl2[Op, V, S, V]):UFunc.UImpl2[Op, Wrapper, S, Wrapper] = new UFunc.UImpl2[Op, Wrapper, S, Wrapper] {
+//        def apply(a: Wrapper, b: S) = {
+//          a.map(op(_, b))
+//        }
+//      }
+//
+//      def liftOpV[Op <: OpType](implicit op: UFunc.UImpl2[Op, V, V, V]): UFunc.UImpl2[Op, Wrapper, Wrapper, Wrapper] = new UFunc.UImpl2[Op, Wrapper, Wrapper, Wrapper] {
+//        def apply(a: Wrapper, b: Wrapper) = {
+//          a.map(op(_, b.value))
+//        }
+//      }
+//
+//      implicit def mulIntoVS: OpMulScalar.InPlaceImpl2[Wrapper, S] = liftUpdate(u.mulVS)
+//
+//      implicit def divIntoVS: OpDiv.InPlaceImpl2[Wrapper, S] = liftUpdate(u.divVS)
+//
+//      implicit def addIntoVV: OpAdd.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.addVV)
+//
+//      implicit def subIntoVV: OpSub.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.subVV)
+//
+//      implicit def setIntoVV: OpSet.InPlaceImpl2[Wrapper, Wrapper] = new OpSet.InPlaceImpl2[Wrapper, Wrapper] {
+//        def apply(a: Wrapper, b: Wrapper) {
+//          a.value = b.value
+//        }
+//      }
+//
+//      implicit def scaleAddVV: scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] = {
+//        new scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] {
+//          def apply(y: Wrapper, a: S, x: Wrapper) {y += x * a}
+//        }
+//      }
+//
+//      implicit def mulVS: OpMulScalar.Impl2[Wrapper, S, Wrapper] = liftOp(u.mulVS)
+//
+//      implicit def divVS: OpDiv.Impl2[Wrapper, S, Wrapper] = liftOp(u.divVS)
+//
+//      implicit def addVV: OpAdd.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.addVV)
+//
+//      implicit def subVV: OpSub.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.subVV)
+//
+//      override def close(a: Wrapper, b: Wrapper, tolerance: Double): Boolean = u.close(a.value, b.value, tolerance)
+//
+//      // default implementations
+//      implicit def neg: OpNeg.Impl[Wrapper, Wrapper] = new OpNeg.Impl[Wrapper, Wrapper] {
+//        def apply(a: Wrapper): Wrapper = a.map(u.neg apply)
+//      }
+//
+//      implicit def dotVV: OpMulInner.Impl2[Wrapper, Wrapper, S] = new OpMulInner.Impl2[Wrapper, Wrapper, S] {
+//        def apply(a: Wrapper, b: Wrapper): S = {
+//          u.dotVV(a.value, b.value)
+//        }
+//      }
+//
+//      implicit def normImplDouble: norm.Impl2[Wrapper, Double, Double]  = new norm.Impl2[Wrapper, Double, Double] {
+//        def apply(v1: Wrapper, v2: Double): Double = u.normImplDouble(v1.value, v2)
+//      }
+//
+//      implicit def mapValues: CanMapValues[Wrapper, S, S, Wrapper] = new CanMapValues[Wrapper, S, S, Wrapper] {
+//        /** Maps all key-value pairs from the given collection. */
+//        def map(from: Wrapper, fn: (S) => S): Wrapper = {
+//          from.map(u.mapValues.map(_, fn))
+//        }
+//
+//        /** Maps all active key-value pairs from the given collection. */
+//        def mapActive(from: Wrapper, fn: (S) => S): Wrapper = {
+//          from.map(u.mapValues.mapActive(_, fn))
+//        }
+//      }
+//
+//      implicit def zipMapValues: CanZipMapValues[Wrapper, S, S, Wrapper] = new CanZipMapValues[Wrapper, S, S, Wrapper] {
+//        /** Maps all corresponding values from the two collections. */
+//        def map(from: Wrapper, from2: Wrapper, fn: (S, S) => S): Wrapper = {
+//          from.map(u.zipMapValues.map(_, from2.value, fn))
+//        }
+//      }
+//
+//      implicit def addVS: OpAdd.Impl2[Wrapper, S, Wrapper] = liftOp(u.addVS)
+//
+//      implicit def subVS: OpSub.Impl2[Wrapper, S, Wrapper] = liftOp(u.subVS)
+//
+//      implicit def mulVV: OpMulScalar.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.mulVV)
+//
+//      implicit def divVV: OpDiv.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.divVV)
+//
+//      implicit def addIntoVS: OpAdd.InPlaceImpl2[Wrapper, S] = liftUpdate(u.addVS)
+//
+//      implicit def subIntoVS: OpSub.InPlaceImpl2[Wrapper, S] = liftUpdate(u.subVS)
+//
+//      implicit def mulIntoVV: OpMulScalar.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.mulVV)
+//
+//      implicit def divIntoVV: OpDiv.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.divVV)
+//
+//      implicit def setIntoVS: OpSet.InPlaceImpl2[Wrapper, S] = new OpSet.InPlaceImpl2[Wrapper, S] {
+//        def apply(a: Wrapper, b: S) {
+//          a.value = (zeroLike(a) + b).value
+//        }
+//      }
+//    }
+//  }
 
 
 

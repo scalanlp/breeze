@@ -307,6 +307,33 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
     }
   }
 
+  implicit def canNorm[T:Field:ClassTag]: norm.Impl2[HashVector[T], Double, Double] = {
+
+    new norm.Impl2[HashVector[T], Double, Double] {
+      val f = implicitly[Field[T]]
+      def apply(v: HashVector[T], n: Double): Double = {
+        import v._
+        if (n == 1) {
+          var sum = 0.0
+          activeValuesIterator foreach (v => sum += f.sNorm(v) )
+          sum
+        } else if (n == 2) {
+          var sum = 0.0
+          activeValuesIterator  foreach (v => { val nn = f.sNorm(v); sum += nn * nn })
+          math.sqrt(sum)
+        } else if (n == Double.PositiveInfinity) {
+          var max = 0.0
+          activeValuesIterator foreach (v => { val nn = f.sNorm(v); if (nn > max) max = nn })
+          max
+        } else {
+          var sum = 0.0
+          activeValuesIterator foreach (v => { val nn = f.sNorm(v); sum += math.pow(nn,n) })
+          math.pow(sum, 1.0 / n)
+        }
+      }
+    }
+  }
+
 }
 
 

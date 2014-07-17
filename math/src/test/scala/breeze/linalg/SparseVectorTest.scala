@@ -3,7 +3,7 @@ package breeze.linalg
 import org.scalatest._
 import org.scalatest.junit._
 import org.junit.runner.RunWith
-import breeze.math.{Complex, TensorSpaceTestBase, TensorSpace, DoubleValuedTensorSpaceTestBase}
+import breeze.math._
 import org.scalacheck.Arbitrary
 import breeze.stats.mean
 
@@ -263,7 +263,7 @@ class SparseVectorTest extends FunSuite {
  */
 @RunWith(classOf[JUnitRunner])
 class SparseVectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[SparseVector[Double], Int] {
- val space: TensorSpace[SparseVector[Double], Int, Double] = implicitly
+ val space: MutableVectorField[SparseVector[Double], Int, Double] = SparseVector.space[Double]
 
   val N = 30
   implicit def genTriple: Arbitrary[(SparseVector[Double], SparseVector[Double], SparseVector[Double])] = {
@@ -291,7 +291,7 @@ class SparseVectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[SparseV
  */
 @RunWith(classOf[JUnitRunner])
 class SparseVectorOps_FloatTest extends TensorSpaceTestBase[SparseVector[Float], Int, Float] {
- val space: TensorSpace[SparseVector[Float], Int, Float] = implicitly
+ val space: MutableVectorField[SparseVector[Float], Int, Float] = SparseVector.space[Float]
 
   override val TOL: Double = 1E-2
   val N = 30
@@ -320,7 +320,7 @@ class SparseVectorOps_FloatTest extends TensorSpaceTestBase[SparseVector[Float],
  */
 @RunWith(classOf[JUnitRunner])
 class SparseVectorOps_IntTest extends TensorSpaceTestBase[SparseVector[Int], Int, Int] {
- val space: TensorSpace[SparseVector[Int], Int, Int] = implicitly
+ val space: MutableVectorField[SparseVector[Int], Int, Int] = SparseVector.space[Int]
 
   val N = 100
   implicit def genTriple: Arbitrary[(SparseVector[Int], SparseVector[Int], SparseVector[Int])] = {

@@ -32,7 +32,7 @@ class LBFGSTest extends OptimizeTestBase {
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
-          (norm((x - 3.0) :^ 2.0, 1), (x * 2.0) - 6.0)
+          (norm((x - 3.0) :^ 2.0, 1), (x :* 2.0) - 6.0)
         }
       }
 
@@ -50,7 +50,7 @@ class LBFGSTest extends OptimizeTestBase {
     def optimizeThis(init: Counter[String,Double]) = {
       val f = new DiffFunction[Counter[String,Double]] {
         def calculate(x: Counter[String,Double]) = {
-          ((x - 3.0) dot (x - 3.0),(x * 2.0) - 6.0)
+          ((x - 3.0) dot (x - 3.0),(x :* 2.0) - 6.0)
         }
       }
 
@@ -69,13 +69,13 @@ class LBFGSTest extends OptimizeTestBase {
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
-          (norm((x -3.0) :^ 2.0,1), (x * 2.0) - 6.0)
+          ((x - 3.0) dot (x - 3.0), (x :* 2.0) - 6.0)
         }
       }
 
       val targetValue = 3 / (1.0 / 2 + 1)
       val result = lbfgs.minimize(DiffFunction.withL2Regularization(f, 1.0),init)
-      val ok = norm(result :- DenseVector.ones[Double](init.size) * targetValue,2)/result.size < 3E-3
+      val ok = norm(result :- (DenseVector.ones[Double](init.size) :* targetValue),2)/result.size < 3E-3
       ok || (throw new RuntimeException("Failed to find optimum for init " + init))
     }
 
@@ -97,7 +97,7 @@ class LBFGSTest extends OptimizeTestBase {
 
           for(i <- 0 until x.length by 2) {
             val t1 = 1.0 - x(i)
-            val t2 = 10.0 * (x(i+1) - x(i) * x(i))
+            val t2 = 10.0 * (x(i+1) - (x(i) * x(i)))
             g(i+1) = 20 * t2
             g(i) = -2 * (x(i) * g(i+1) + t1)
             fx += t1 * t1 + t2 * t2

@@ -3,7 +3,7 @@ package breeze.linalg
 import org.scalatest._
 import org.scalatest.junit._
 import org.junit.runner.RunWith
-import breeze.math.{Complex, TensorSpaceTestBase, TensorSpace, DoubleValuedTensorSpaceTestBase}
+import breeze.math._
 import breeze.stats.mean
 import org.scalacheck.Arbitrary
 
@@ -240,7 +240,7 @@ class HashVectorTest extends FunSuite {
  */
 @RunWith(classOf[JUnitRunner])
 class HashVectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[HashVector[Double], Int] {
- val space: TensorSpace[HashVector[Double], Int, Double] = implicitly
+ val space: MutableVectorField[HashVector[Double], Int, Double] = HashVector.space[Double]
 
   val N = 30
   implicit def genTriple: Arbitrary[(HashVector[Double], HashVector[Double], HashVector[Double])] = {
@@ -268,7 +268,7 @@ class HashVectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[HashVecto
  */
 @RunWith(classOf[JUnitRunner])
 class HashVectorOps_FloatTest extends TensorSpaceTestBase[HashVector[Float], Int, Float] {
- val space: TensorSpace[HashVector[Float], Int, Float] = implicitly
+ val space: MutableVectorField[HashVector[Float], Int, Float] = HashVector.space[Float]
 
   override val TOL: Double = 1E-2
   val N = 30
@@ -297,7 +297,7 @@ class HashVectorOps_FloatTest extends TensorSpaceTestBase[HashVector[Float], Int
  */
 @RunWith(classOf[JUnitRunner])
 class HashVectorOps_IntTest extends TensorSpaceTestBase[HashVector[Int], Int, Int] {
- val space: TensorSpace[HashVector[Int], Int, Int] = implicitly
+ val space: MutableVectorField[HashVector[Int], Int, Int] = HashVector.space[Int]
 
   val N = 100
   implicit def genTriple: Arbitrary[(HashVector[Int], HashVector[Int], HashVector[Int])] = {
@@ -321,10 +321,7 @@ class HashVectorOps_IntTest extends TensorSpaceTestBase[HashVector[Int], Int, In
 
 @RunWith(classOf[JUnitRunner])
 class HashVectorOps_ComplexTest extends TensorSpaceTestBase[HashVector[Complex], Int, Complex] {
-  val space: TensorSpace[HashVector[Complex], Int, Complex] = {
-    //    implicit val cannorm = HashVector.canNorm[Complex]
-    TensorSpace.make[HashVector[Complex], Int, Complex]
-  }
+  val space: MutableVectorField[HashVector[Complex], Int, Complex] = HashVector.space[Complex]
 
 
   val N = 30

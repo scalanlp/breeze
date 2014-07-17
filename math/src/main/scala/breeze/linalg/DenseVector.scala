@@ -19,7 +19,7 @@ import scala.{specialized=>spec}
 import breeze.generic._
 import breeze.linalg.support._
 import breeze.linalg.operators._
-import breeze.math.{Complex, TensorSpace, Semiring, Ring}
+import breeze.math._
 import breeze.util.{ArrayUtil, Isomorphism}
 import breeze.storage.Zero
 import scala.reflect.ClassTag
@@ -575,6 +575,44 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
   }
 
 
+  implicit def canNormField[T:Field]: norm.Impl2[DenseVector[T],Double,Double] = {
+    val f = implicitly[Field[T]]
+    new norm.Impl2[DenseVector[T],Double,Double] {
+      def apply(v: DenseVector[T],n: Double) = {
+        import v._
+        if (n == 1) {
+          var sum = 0.0
+          foreach (v => sum += f.sNorm(v) )
+          sum
+        } else if (n == 2) {
+          var sum = 0.0
+          foreach (v => { val nn = f.sNorm(v); sum += nn * nn })
+          math.sqrt(sum)
+        } else if (n == Double.PositiveInfinity) {
+          var max = 0.0
+          foreach (v => { val nn = f.sNorm(v); if (nn > max) max = nn })
+          max
+        } else {
+          var sum = 0.0
+          foreach (v => { val nn = f.sNorm(v); sum += math.pow(nn,n) })
+          math.pow(sum, 1.0 / n)
+        }
+      }
+    }
+  }
+
+  implicit def canNorm[T:Field]: norm.Impl[DenseVector[T],Double] = {
+    val f = implicitly[Field[T]]
+    new norm.Impl[DenseVector[T],Double] {
+      override def apply(v: DenseVector[T]): Double = {
+        import v._
+        var sum = 0.0
+        foreach (v => { val nn = f.sNorm(v); sum += nn * nn })
+        math.sqrt(sum)
+      }
+    }
+  }
+
   /*
   TODO: scaladoc crashes on this. I don't know why. It makes me want to die a little.
   Returns the k-norm of this Vector.
@@ -638,10 +676,11 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     }
   }
 
-  implicit val space_d = TensorSpace.make[DenseVector[Double], Int, Double]
-  implicit val space_f = TensorSpace.make[DenseVector[Float], Int, Float]
-  implicit val space_i = TensorSpace.make[DenseVector[Int], Int, Int]
-  implicit val space_c = TensorSpace.make[DenseVector[Complex], Int, Complex]
+  implicit def space[E](implicit field: Field[E], zz:Zero[E], man: ClassTag[E]): MutableVectorField[DenseVector[E],Int,E] = {
+    import field._
+    implicit val cmv = canMapValues[E,E]
+    MutableVectorField.make[DenseVector[E],Int,E]
+  }
 
   object TupleIsomorphisms {
     implicit object doubleIsVector extends Isomorphism[Double,DenseVector[Double]] {

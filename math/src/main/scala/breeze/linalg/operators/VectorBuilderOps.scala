@@ -2,7 +2,7 @@ package breeze.linalg.operators
 
 import breeze.macros.expand
 import breeze.generic.UFunc.{UImpl2, InPlaceImpl2}
-import breeze.math.{Ring, MutableVectorSpace, Semiring}
+import breeze.math._
 import breeze.storage.Zero
 import scala.reflect.ClassTag
 import breeze.linalg._
@@ -25,6 +25,20 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
 
   }
 
+  @expand
+  implicit def canOpInto_V_S[@expand.args(OpMulScalar, OpDiv) Op,
+  T:Field:ClassTag](implicit @expand.sequence[Op]({f.*(_,_)}, {f./(_,_)}) op: Q): Op.InPlaceImpl2[VectorBuilder[T], T] =  {
+    new  Op.InPlaceImpl2[VectorBuilder[T], T]  {
+      val f = implicitly[Field[T]]
+      def apply(a: VectorBuilder[T], b: T) {
+        var i = 0
+        while(i < a.activeSize) {
+          a.data(i) = op(a.data(i), b)
+          i += 1
+        }
+      }
+    }
+  }
 
   @expand
   @expand.valify
@@ -43,7 +57,25 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
         }
       }
     }
+  }
 
+  @expand
+  implicit def canOpInto_V_V[@expand.args(OpAdd, OpSub) Op,
+  T:Field:ClassTag](implicit @expand.sequence[Op]((x => x), {f.negate(_)}) op: Q): Op.InPlaceImpl2[VectorBuilder[T], VectorBuilder[T]] =  {
+    new  Op.InPlaceImpl2[VectorBuilder[T], VectorBuilder[T]]  {
+      val f = implicitly[Field[T]]
+      def apply(a: VectorBuilder[T], b: VectorBuilder[T]) {
+        require(a.length == b.length, "Dimension mismatch!")
+        a.reserve(a.activeSize + b.activeSize)
+        var i = 0
+        // read once here in case we're doing a += a
+        val bActiveSize = b.activeSize
+        while(i < bActiveSize) {
+          a.add(b.index(i), op(b.data(i)))
+          i += 1
+        }
+      }
+    }
   }
 
 
@@ -62,7 +94,21 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
         }
       }
     }
+  }
 
+  implicit def canSet[T]: OpSet.InPlaceImpl2[VectorBuilder[T], VectorBuilder[T]] =  {
+    new  OpSet.InPlaceImpl2[VectorBuilder[T], VectorBuilder[T]]  {
+      def apply(a: VectorBuilder[T], b: VectorBuilder[T]) {
+        if(a eq b) return
+        a.clear()
+        a.reserve(b.activeSize)
+        var i = 0
+        while(i < b.activeSize) {
+          a.add(b.index(i), b.data(i))
+          i += 1
+        }
+      }
+    }
   }
 
   implicit def opFromCopyAndUpdate[Op, V, Other](implicit op: InPlaceImpl2[Op, VectorBuilder[V], Other],
@@ -95,15 +141,37 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
     }
   }
 
-  @expand
-  @expand.valify
-  implicit def mvector_space[@expand.args(Double, Long, Float, Int) T]: MutableVectorSpace[VectorBuilder[T], T] = {
-    MutableVectorSpace.make[VectorBuilder[T], T] { (a:VectorBuilder[T], b: VectorBuilder[T], tolerance: Double) =>
+  implicit def canAxpy[T:Field:ClassTag]: scaleAdd.InPlaceImpl3[VectorBuilder[T], T, VectorBuilder[T]] = {
+    new  scaleAdd.InPlaceImpl3[VectorBuilder[T], T, VectorBuilder[T]]  {
+      val f = implicitly[Field[T]]
+      def apply(a: VectorBuilder[T], s: T, b: VectorBuilder[T]) {
+        require(a.length == b.length, "Dimension mismatch!")
+        if(a eq b) {
+          a :*= f.+(f.one,s)
+        } else {
+          val bActiveSize: Int = b.activeSize
+          a.reserve(bActiveSize + a.activeSize)
+          var i = 0
+          val bd = b.data
+          while(i < bActiveSize) {
+            a.add(b.index(i), f.*(s, bd(i)))
+            i += 1
+          }
+        }
+      }
+    }
+  }
+
+  def space[T:Field:Zero:ClassTag]: MutableModuleSpace[VectorBuilder[T], Int, T] = {
+    MutableModuleSpace.make[VectorBuilder[T], Int, T] ({ (a:VectorBuilder[T], b: VectorBuilder[T], tolerance: Double) =>
+      val aHV = a.toHashVector
+      implicit val hvSpace:MutableVectorField[HashVector[T],Int,T] = HashVector.space[T]
+      import hvSpace._
       val diff: Double = (a.toHashVector - b.toHashVector).norm(2)
       if(diff > tolerance)
         println((a,b,a.toHashVector, b.toHashVector,diff))
       diff < tolerance
-    }
+    })
   }
 
 

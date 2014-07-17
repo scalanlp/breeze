@@ -19,7 +19,7 @@ import scala.{specialized=>spec}
 import breeze.storage.Zero
 import breeze.linalg.support._
 import breeze.util.ArrayUtil
-import breeze.math.{Complex, Ring, TensorSpace}
+import breeze.math._
 import breeze.collection.mutable.SparseArray
 import collection.mutable
 import scala.reflect.ClassTag
@@ -271,6 +271,13 @@ object SparseVector extends SparseVectorOps
     }
   }
 
+  implicit def canCreateZeros[V:ClassTag:Zero]: CanCreateZeros[SparseVector[V], Int] =
+    new CanCreateZeros[SparseVector[V], Int] {
+      def apply(d: Int): SparseVector[V] = {
+        zeros[V](d)
+      }
+    }
+
   implicit def canTransformValues[V:Zero:ClassTag]:CanTransformValues[SparseVector[V], V, V] = {
     new CanTransformValues[SparseVector[V], V, V] {
       val z = implicitly[Zero[V]]
@@ -324,12 +331,6 @@ object SparseVector extends SparseVectorOps
     }
   }
 
-  implicit val space_d: TensorSpace[SparseVector[Double], Int, Double] = TensorSpace.make[SparseVector[Double], Int, Double]
-  implicit val space_f: TensorSpace[SparseVector[Float], Int, Float] = {
-    val nop = this.implOpNeg_SVT_eq_SVT[Float]
-    TensorSpace.make[SparseVector[Float], Int, Float]
-  }
-  implicit val space_i: TensorSpace[SparseVector[Int], Int, Int] = TensorSpace.make[SparseVector[Int], Int, Int]
 
   implicit def canTranspose[V:ClassTag:Zero]: CanTranspose[SparseVector[V], CSCMatrix[V]] = {
     new CanTranspose[SparseVector[V], CSCMatrix[V]] {
@@ -361,6 +362,9 @@ object SparseVector extends SparseVectorOps
     }
   }
 
+  implicit def space[E:Field:ClassTag:Zero]: MutableVectorField[SparseVector[E],Int,E] = {
+    MutableVectorField.make[SparseVector[E], Int, E]
+  }
 
   @noinline
   private def init() = {}

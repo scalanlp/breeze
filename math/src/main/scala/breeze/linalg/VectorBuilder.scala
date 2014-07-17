@@ -18,7 +18,7 @@ import operators._
 import scala.{specialized=>spec}
 import support._
 import breeze.util.{Sorting, ArrayUtil}
-import breeze.math.{Field, MutableVectorSpace, Semiring, Ring}
+import breeze.math.{Field, MutableModuleSpace, Semiring, Ring}
 import breeze.storage.Zero
 import scala.reflect.ClassTag
 import breeze.macros.expand
@@ -323,6 +323,11 @@ object VectorBuilder extends VectorBuilderOps {
 
   implicit def canCopyBuilder[@spec(Int, Float, Double) V: ClassTag: Semiring:Zero] = new CanCopyBuilder[V]
   implicit def canZerosBuilder[@spec(Int, Float, Double) V: ClassTag: Semiring:Zero] = new CanZerosBuilder[V]
+
+  implicit def canZeroBuilder[@spec(Int, Float, Double) V:Semiring:Zero:ClassTag] =
+    new CanCreateZeros[VectorBuilder[V],Int] {
+    def apply(d: Int): VectorBuilder[V] = zeros(d)
+  }
 
   implicit def negFromScale[@spec(Int, Float, Double)  V](implicit scale: OpMulScalar.Impl2[VectorBuilder[V], V, VectorBuilder[V]], field: Ring[V]) = {
     new OpNeg.Impl[VectorBuilder[V], VectorBuilder[V]] {

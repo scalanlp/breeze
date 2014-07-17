@@ -21,36 +21,154 @@ import breeze.storage.Zero
 import scala.reflect.ClassTag
 import breeze.generic.UFunc
 
-/**
- * In some sense, this is the real root of the linalg hierarchy. It provides
- * methods for doing operations on a Tensor-like thing. All methods farm out to some implicit or another.
- * We use this when we don't care about the index into the Tensor, or if we don't really have an index.
- * @author dlwh
- */
-trait NumericOps[+This] extends Any {
+trait Ops[+This] extends Any {
+  def repr: This
+}
+
+// Main Immutable and Mutable Op Hierarchy
+trait SemiringElemOps[+This] extends Ops[This] {
   def repr : This
-
-  final def unary_-[TT>:This,That](implicit op : OpNeg.Impl[TT, That]) = op(repr)
-
-  final def unary_![TT>:This,That](implicit op : OpNot.Impl[TT, That]) = op(repr)
-
   /** Element-wise sum of this and b. */
   final def :+ [TT>:This,B,That](b : B)(implicit op : OpAdd.Impl2[TT, B, That]) = op(repr,b)
-
-  /** Element-wise difference of this and b. */
-  final def :- [TT>:This,B,That](b : B)(implicit op : OpSub.Impl2[TT, B, That]) = op(repr,b)
 
   /** Element-wise product of this and b. */
   final def :* [TT>:This,B,That](b : B)(implicit op : OpMulScalar.Impl2[TT, B, That]) = op(repr,b)
 
-  /** Element-wise quotient of this and b. */
-  final def :/ [TT>:This,B,That](b : B)(implicit op : OpDiv.Impl2[TT, B, That]) = op(repr,b)
+  /** Matrix multiplication */
+  // Matrix multiplication shouldn't really be allowed in a module, which uses this,
+  // but element-wise (:*) doesn't follow order of operations, and the module only has implicits
+  // for scalar multiplication, so it's better left as a notational convenience.
+  final def * [TT>:This,B,That](b : B)(implicit op : OpMulMatrix.Impl2[TT, B, That]) = {
+    op(repr, b)
+  }
+
+  /** Alias for :+(b) for all b. */
+  final def + [TT>:This,B,That](b : B)(implicit op : OpAdd.Impl2[TT, B, That]) = {
+    op(repr, b)
+  }
+
+  /** Element-wise equality comparator of this and b. */
+  final def :== [TT>:This,B,That](b : B)(implicit op : OpEq.Impl2[TT, B, That]) = op(repr,b)
+
+  /** Element-wise inequality comparator of this and b. */
+  final def :!= [TT>:This,B,That](b : B)(implicit op : OpNe.Impl2[TT, B, That]) = op(repr,b)
+}
+
+trait MutableSemiringElemOps[+This] extends SemiringElemOps[This] {
+  def repr: This
+
+  /** Mutates this by element-wise assignment of b into this. */
+  final def := [TT>:This,B](b : B)(implicit op : OpSet.InPlaceImpl2[TT, B]) : This = {
+    op(repr,b)
+    repr
+  }
+
+  /** Mutates this by element-wise addition of b into this. */
+  final def :+= [TT>:This,B](b : B)(implicit op : OpAdd.InPlaceImpl2[TT, B]) : This = {
+    op(repr,b)
+    repr
+  }
+
+  /** Mutates this by element-wise multiplication of b into this. */
+  final def :*= [TT>:This,B](b : B)(implicit op : OpMulScalar.InPlaceImpl2[TT, B]) : This = {
+    op(repr,b)
+    repr
+  }
+
+  /** Alias for :+=(b) for all b. */
+  final def += [TT>:This,B](b : B)(implicit op : OpAdd.InPlaceImpl2[TT, B]) =
+    this.:+=[TT,B](b)
+
+  /** Alias for :*=(b) when b is a scalar. */
+  final def *= [TT>:This,B](b : B)(implicit op : OpMulScalar.InPlaceImpl2[TT, B]) =
+    this.:*=[TT,B](b)
+}
+
+trait RingElemOps[+This] extends SemiringElemOps[This] {
+  def repr : This
+
+  final def unary_-[TT>:This,That](implicit op : OpNeg.Impl[TT, That]) = op(repr)
+
+  /** Element-wise difference of this and b. */
+  final def :- [TT>:This,B,That](b : B)(implicit op : OpSub.Impl2[TT, B, That]) = op(repr,b)
+
+  /** Alias for :-(b) for all b. */
+  final def - [TT>:This,B,That](b : B)(implicit op : OpSub.Impl2[TT, B, That]) = {
+    op(repr, b)
+  }
 
   /** Element-wise modulo of this and b. */
   final def :% [TT>:This,B,That](b : B)(implicit op : OpMod.Impl2[TT, B, That]) = op(repr,b)
 
+  /** Alias for :%(b) when b is a scalar. */
+  final def % [TT>:This,B,That](b : B)(implicit op : OpMod.Impl2[TT, B, That]) = {
+    op(repr, b)
+  }
+}
+
+trait MutableRingElemOps[+This] extends RingElemOps[This] with MutableSemiringElemOps[This] {
+  def repr: This
+
+  /** Mutates this by element-wise subtraction of b from this */
+  final def :-= [TT>:This,B](b : B)(implicit op : OpSub.InPlaceImpl2[TT, B]) : This = {
+    op(repr,b)
+    repr
+  }
+
+  /** Mutates this by element-wise modulo of b into this. */
+  final def :%= [TT>:This,B](b : B)(implicit op : OpMod.InPlaceImpl2[TT, B]) : This = {
+    op(repr,b)
+    repr
+  }
+
+  /** Alias for :%=(b) when b is a scalar. */
+  final def %= [TT>:This,B](b : B)(implicit op : OpMod.InPlaceImpl2[TT, B]) =
+    this.:%=[TT,B](b)
+
+
+  /** Alias for :-=(b) for all b. */
+  final def -= [TT>:This,B](b : B)(implicit op : OpSub.InPlaceImpl2[TT, B]) =
+    this.:-=[TT,B](b)
+}
+
+trait FieldElemOps[+This] extends RingElemOps[This] {
+  def repr : This
+
+  /** Element-wise quotient of this and b. */
+  final def :/ [TT>:This,B,That](b : B)(implicit op : OpDiv.Impl2[TT, B, That]) = op(repr,b)
+
+  /** Alias for :/(b) when b is a scalar. */
+  final def / [TT>:This,B,That](b : B)(implicit op : OpDiv.Impl2[TT, B, That]) = {
+    op(repr, b)
+  }
+
   /** Element-wise exponentiation of this and b. */
   final def :^ [TT>:This,B,That](b : B)(implicit op : OpPow.Impl2[TT, B, That]) = op(repr,b)
+}
+
+trait MutableFieldElemOps[+This] extends FieldElemOps[This] with MutableRingElemOps[This] {
+  def repr: This
+
+  /** Mutates this by element-wise division of b into this */
+  final def :/= [TT>:This,B](b : B)(implicit op : OpDiv.InPlaceImpl2[TT, B]) : This = {
+    op(repr,b)
+    repr
+  }
+
+  /** Mutates this by element-wise exponentiation of this by b. */
+  final def :^= [TT>:This,B](b : B)(implicit op : OpPow.InPlaceImpl2[TT, B]) : This = {
+    op(repr,b)
+    repr
+  }
+
+  /** Alias for :/=(b) when b is a scalar. */
+  final def /= [TT>:This,B](b : B)(implicit op : OpDiv.InPlaceImpl2[TT, B]) =
+    this.:/=[TT,B](b)
+}
+
+// Mixin Ops
+trait OrderingOps[+This] extends Ops[This] {
+  def repr : This
 
   /** Element-wise less=than comparator of this and b. */
   final def :< [TT>:This,B,That](b : B)(implicit op : OpLT.Impl2[TT, B, That]) = op(repr,b)
@@ -63,12 +181,12 @@ trait NumericOps[+This] extends Any {
 
   /** Element-wise greater-than-or-equal-to comparator of this and b. */
   final def :>= [TT>:This,B,That](b : B)(implicit op : OpGTE.Impl2[TT, B, That]) = op(repr,b)
+}
 
-  /** Element-wise equality comparator of this and b. */
-  final def :== [TT>:This,B,That](b : B)(implicit op : OpEq.Impl2[TT, B, That]) = op(repr,b)
+trait LogicalOps[+This] extends Ops[This] {
+  def repr : This
 
-  /** Element-wise inequality comparator of this and b. */
-  final def :!= [TT>:This,B,That](b : B)(implicit op : OpNe.Impl2[TT, B, That]) = op(repr,b)
+  final def unary_![TT>:This,That](implicit op : OpNot.Impl[TT, That]) = op(repr)
 
   /** Element-wise logical "and" operator -- returns true if corresponding elements are non-zero. */
   final def :& [TT>:This,B,That](b : B)(implicit op : OpAnd.Impl2[TT, B, That]) = op(repr,b)
@@ -78,39 +196,6 @@ trait NumericOps[+This] extends Any {
 
   /** Element-wise logical "xor" operator -- returns true if only one of the corresponding elements is non-zero. */
   final def :^^ [TT>:This,B,That](b : B)(implicit op : OpXor.Impl2[TT, B, That]) = op(repr,b)
-
-  /** Inner product of this and b. */
-  final def dot [TT>:This,B,BB>:B, That](b : B)(implicit op : OpMulInner.Impl2[TT, BB, That]) = op(repr,b)
-
-  //
-  // Operator aliases
-  //
-
-  /** Alias for :+(b) for all b. */
-  final def + [TT>:This,B,That](b : B)(implicit op : OpAdd.Impl2[TT, B, That]) = {
-    op(repr, b)
-  }
-
-  /** Alias for :-(b) for all b. */
-  final def - [TT>:This,B,That](b : B)(implicit op : OpSub.Impl2[TT, B, That]) = {
-    op(repr, b)
-  }
-
-  /** Matrix multiplication */
-  final def * [TT>:This,B,That](b : B)(implicit op : OpMulMatrix.Impl2[TT, B, That]) = {
-    op(repr, b)
-  }
-
-
-  /** Alias for :/(b) when b is a scalar. */
-  final def / [TT>:This,B,That](b : B)(implicit op : OpDiv.Impl2[TT, B, That]) = {
-    op(repr, b)
-  }
-
-  /** Alias for :%(b) when b is a scalar. */
-  final def % [TT>:This,B,That](b : B)(implicit op : OpMod.Impl2[TT, B, That]) = {
-    op(repr, b)
-  }
 
   /** Alias for :&&(b) for all b. */
   final def & [TT>:This,B,That](b : B)(implicit op : OpAnd.Impl2[TT, B, That]) = {
@@ -126,70 +211,6 @@ trait NumericOps[+This] extends Any {
   final def ^^ [TT>:This,B,That](b : B)(implicit op : OpXor.Impl2[TT, B, That]):That = {
     op(repr, b)
   }
-
-  // Mutable Ops
-  /** Mutates this by element-wise assignment of b into this. */
-  final def := [TT>:This,B](b : B)(implicit op : OpSet.InPlaceImpl2[TT, B]) : This = {
-    op(repr,b)
-    repr
-  }
-
-  /** Mutates this by element-wise addition of b into this. */
-  final def :+= [TT>:This,B](b : B)(implicit op : OpAdd.InPlaceImpl2[TT, B]) : This = {
-    op(repr,b)
-    repr
-  }
-
-  /** Mutates this by element-wise subtraction of b from this */
-  final def :-= [TT>:This,B](b : B)(implicit op : OpSub.InPlaceImpl2[TT, B]) : This = {
-    op(repr,b)
-    repr
-  }
-
-  /** Mutates this by element-wise multiplication of b into this. */
-  final def :*= [TT>:This,B](b : B)(implicit op : OpMulScalar.InPlaceImpl2[TT, B]) : This = {
-    op(repr,b)
-    repr
-  }
-
-  /** Mutates this by element-wise division of b into this */
-  final def :/= [TT>:This,B](b : B)(implicit op : OpDiv.InPlaceImpl2[TT, B]) : This = {
-    op(repr,b)
-    repr
-  }
-
-  /** Mutates this by element-wise modulo of b into this. */
-  final def :%= [TT>:This,B](b : B)(implicit op : OpMod.InPlaceImpl2[TT, B]) : This = {
-    op(repr,b)
-    repr
-  }
-
-  /** Mutates this by element-wise exponentiation of this by b. */
-  final def :^= [TT>:This,B](b : B)(implicit op : OpPow.InPlaceImpl2[TT, B]) : This = {
-    op(repr,b)
-    repr
-  }
-
-  /** Alias for :+=(b) for all b. */
-  final def += [TT>:This,B](b : B)(implicit op : OpAdd.InPlaceImpl2[TT, B]) =
-    this.:+=[TT,B](b)
-
-  /** Alias for :-=(b) for all b. */
-  final def -= [TT>:This,B](b : B)(implicit op : OpSub.InPlaceImpl2[TT, B]) =
-    this.:-=[TT,B](b)
-
-  /** Alias for :*=(b) when b is a scalar. */
-  final def *= [TT>:This,B](b : B)(implicit op : OpMulScalar.InPlaceImpl2[TT, B]) =
-    this.:*=[TT,B](b)
-
-  /** Alias for :/=(b) when b is a scalar. */
-  final def /= [TT>:This,B](b : B)(implicit op : OpDiv.InPlaceImpl2[TT, B]) =
-    this.:/=[TT,B](b)
-
-  /** Alias for :%=(b) when b is a scalar. */
-  final def %= [TT>:This,B](b : B)(implicit op : OpMod.InPlaceImpl2[TT, B]) =
-    this.:%=[TT,B](b)
-
 
   /** Mutates this by element-wise and of this and b. */
   final def :&= [TT>:This,B](b : B)(implicit op : OpAnd.InPlaceImpl2[TT, B]) : This = {
@@ -226,19 +247,33 @@ trait NumericOps[+This] extends Any {
     op(repr,b)
     repr
   }
+}
+
+trait NormOps[+This] extends Ops[This]  {
+  def repr: This
 
   /** Represents the "natural" norm of this vector, for types that don't support arbitrary norms */
   final def norm[TT>:This, R]()(implicit op: breeze.linalg.norm.Impl[TT, R]): R = {
     op(repr)
   }
 
-
   /** Represents the norm of this vector */
   final def norm[TT>:This, B, R](b: B)(implicit op: breeze.linalg.norm.Impl2[TT, B, R]): R = {
     op(repr, b)
   }
 
-  // matrix-y ops
+}
+
+trait InnerProductOps[+This] extends Ops[This]  {
+  def repr : This
+
+  /** Inner product of this and b. */
+  final def dot [TT>:This,B,BB>:B, That](b : B)(implicit op : OpMulInner.Impl2[TT, BB, That]) = op(repr,b)
+}
+
+trait MatrixyOps[+This] extends Ops[This]  {
+
+  def repr : This
 
   /** A transposed view of this object. */
   final def t [TT>:This,That](implicit op : CanTranspose[TT,That]) =
@@ -255,6 +290,23 @@ trait NumericOps[+This] extends Any {
                                                  (implicit op : CanTranspose[TT,That],
                                                   canSlice: CanSlice2[That, Slice1, Slice2, Result]):Result =
     canSlice(op.apply(repr), a, b)
+}
+
+trait OptimizationOps[+This] extends MutableFieldElemOps[This] with NormOps[This] with InnerProductOps[This]{
+  def repr: This
+}
+
+/**
+ * In some sense, this is the real root of the linalg hierarchy. It provides
+ * methods for doing operations on a Tensor-like thing. All methods farm out to some implicit or another.
+ * We use this when we don't care about the index into the Tensor, or if we don't really have an index.
+ * @author dlwh
+ */
+trait NumericOps[+This] extends OptimizationOps[This]
+                                with OrderingOps[This]
+                                with LogicalOps[This]
+                                with MatrixyOps[This] {
+  def repr: This
 }
 
 object NumericOps {

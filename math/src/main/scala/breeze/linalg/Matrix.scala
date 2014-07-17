@@ -18,7 +18,7 @@ package breeze.linalg
 import scala.{specialized=>spec}
 import breeze.storage.{Zero, Storage}
 import breeze.util.Terminal
-import breeze.linalg.support.{CanMapValues, CanCopy, LiteralRow}
+import breeze.linalg.support.{CanCreateZeros, CanMapValues, CanCopy, LiteralRow}
 import util.Random
 import breeze.math.{Complex, Semiring}
 import breeze.linalg.operators._
@@ -211,6 +211,14 @@ trait MatrixConstructors[Mat[T]<:Matrix[T]] {
     finishLiteral(rv, rl, rows)
     rv
   }
+
+  implicit def canCreateZeros[T:ClassTag:Zero]: CanCreateZeros[Mat[T],(Int,Int)] =
+    new CanCreateZeros[Mat[T],(Int,Int)] {
+      def apply(dims: (Int,Int)): Mat[T] = {
+        zeros[T](dims._1,dims._2)
+      }
+    }
+
 
   // This method only exists because of trouble in Scala-specialization land.
   // basically, we turn off specialization for this loop, since it's not going to be fast anyway.

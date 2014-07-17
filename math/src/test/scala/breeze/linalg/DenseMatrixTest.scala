@@ -24,7 +24,7 @@ import org.scalatest.matchers.ShouldMatchers
 import breeze.util.DoubleImplicits
 
 @RunWith(classOf[JUnitRunner])
-class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with DoubleImplicits {
+class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleImplicits {
 
   test("Slicing") {
     val m = DenseMatrix((0,1,2),

@@ -16,13 +16,12 @@ package breeze.stats.distributions
  limitations under the License. 
 */
 
-import breeze.optimize.DiffFunction
 import breeze.linalg._
-import breeze.math.{MutablizingAdaptor, VectorSpace, TensorSpace}
-import breeze.numerics._
+import breeze.math._
 import breeze.numerics
-import breeze.storage.Zero
-import collection.mutable
+import breeze.numerics._
+import breeze.optimize.DiffFunction
+import scala.collection.mutable
 
 /**
  * Represents a Multinomial distribution over elements.
@@ -100,10 +99,10 @@ case class Multinomial[T,I](params: T)(implicit ev: T=>QuasiTensor[I, Double], s
 
   override def toString = ev(params).activeIterator.mkString("Multinomial{",",","}")
 
-  def expectedValue[U](f: I=>U)(implicit vs: VectorSpace[U, Double]) = {
+  def expectedValue[U](f: I=>U)(implicit vs: VectorSpace[U, I, Double]) = {
     val wrapped = MutablizingAdaptor.ensureMutable(vs)
-    import wrapped.mutaVspace._
     import wrapped._
+    import wrapped.mutaVspace._
     var acc: Wrapper = null.asInstanceOf[Wrapper]
     for ( (k, v) <- params.activeIterator) {
       if(acc == null) {
@@ -138,7 +137,7 @@ case class AliasTable[I](probs: DenseVector[Double],
  */
 object Multinomial {
 
-  class ExpFam[T,I](exemplar: T)(implicit space: TensorSpace[T, I, Double]) extends ExponentialFamily[Multinomial[T,I],I] with HasConjugatePrior[Multinomial[T,I],I] {
+  class ExpFam[T,I](exemplar: T)(implicit space: MutableVectorField[T, I, Double]) extends ExponentialFamily[Multinomial[T,I],I] with HasConjugatePrior[Multinomial[T,I],I] {
 
     import space._
     type ConjugatePrior = Dirichlet[T,I]
@@ -147,11 +146,11 @@ object Multinomial {
     def predictive(parameter: conjugateFamily.Parameter) = new Polya(parameter)
 
     def posterior(prior: conjugateFamily.Parameter, evidence: TraversableOnce[I]) = {
-      val copy : T = space.copy(prior)
+      val localCopy : T = space.copy(prior)
       for( e <- evidence) {
-        copy(e)  += 1.0
+        localCopy(e)  += 1.0
       }
-      copy
+      localCopy
 
     }
 
@@ -161,10 +160,10 @@ object Multinomial {
       def *(w: Double) = SufficientStatistic(counts * w)
     }
 
-    def emptySufficientStatistic = SufficientStatistic(zeros(exemplar))
+    def emptySufficientStatistic = SufficientStatistic(zeroLike(exemplar))
 
     def sufficientStatisticFor(t: I) = {
-      val r = zeros(exemplar)
+      val r = zeroLike(exemplar)
       r(t) = 1.0
       SufficientStatistic(r)
     }
