@@ -20,8 +20,4 @@ package object integrate {
     val s = sum(for (i <- 0 until nodes-1) yield f(start+(i+0.5)*h))
     trapezoid(f, start, end, nodes) / 3.0 + s * 2/3.0 * h
   }
-
-  def foo() {
-    println("BLB!")
-  }
 }
