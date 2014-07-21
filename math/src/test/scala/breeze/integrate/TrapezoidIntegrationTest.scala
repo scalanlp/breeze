@@ -11,7 +11,7 @@ import breeze.numerics._
  * @author chrismedrela
  **/
 
-class TrapezoidInterpolation extends FunSuite {
+class TrapezoidIntegrationTest extends FunSuite {
   val f = (x: Double) => 2*x
   val f2 = (x: Double) => x*x
 
