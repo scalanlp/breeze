@@ -2,7 +2,7 @@ package breeze
 
 import breeze.linalg._
 
-package object integration {
+package object integrate {
   def trapezoid_integrate(f: Double => Double, start: Double, end: Double, nodes: Int) : Double = {
     if (nodes < 2)
       throw new Exception("When using trapezoid_integrate, you have to use at least two nodes.")

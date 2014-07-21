@@ -1,8 +1,8 @@
-package breeze.integration
+package breeze.integrate
 
 import org.scalatest.FunSuite
 
-import breeze.integration._
+import breeze.integrate._
 import breeze.linalg._
 import breeze.numerics._
 
