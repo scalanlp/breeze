@@ -484,59 +484,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
   }
 
   object FrobeniusInnerProductCSCMatrixSpace {
-    implicit def canNorm[S](implicit iter: CanTraverseValues[CSCMatrix[S], S],
-                            field: Field[S]): norm.Impl2[CSCMatrix[S], Double, Double] = {
-      new norm.Impl2[CSCMatrix[S], Double, Double] {
-        def apply(v: CSCMatrix[S], n: Double): Double = {
-          class NormVisitor extends ValuesVisitor[S] {
-            var agg: Double = 0.0
-            val (op, opEnd) =
-              if (n == 1) ((v: S) => agg += field.sNorm(v), identity[Double] _)
-              else if (n == 2) ((v: S) => {
-                val nn = field.sNorm(v)
-                agg += nn * nn
-              }, (e: Double) => sqrt(e))
-              else if (n == Int.MaxValue || n == Float.PositiveInfinity || n == Double.PositiveInfinity) {
-                ((v: S) => {
-                  val nn = field.sNorm(v)
-                  if (nn > agg) agg = nn
-                }, identity[Double] _)
-              } else {
-                ((v: S) => {
-                  val nn = field.sNorm(v)
-                  agg += pow(nn, n)
-                }, (e: Double) => pow(e, 1.0 / n))
-              }
-
-
-            def visit(a: S): Unit = op(a)
-
-            def zeros(numZero: Int, zeroValue: S): Unit = {}
-
-            def norm = opEnd(agg)
-          }
-
-          val visit = new NormVisitor
-          iter.traverse(v, visit)
-          visit.norm
-        }
-      }
-    }
-
-    implicit def canFrobInnerProduct[S](implicit hadamard: OpMulScalar.Impl2[CSCMatrix[S],CSCMatrix[S],CSCMatrix[S]],
-                                        semiring: Semiring[S], iter: CanTraverseValues[CSCMatrix[S],S]) =
-      new OpMulInner.Impl2[CSCMatrix[S],CSCMatrix[S],S] {
-        override def apply(v: CSCMatrix[S], v2: CSCMatrix[S]): S = {
-          sum(hadamard(v,v2))
-        }
-      }
-
-    implicit def canFrobNorm[S](implicit hadamard: OpMulScalar.Impl2[CSCMatrix[S],CSCMatrix[S],CSCMatrix[S]],
-                                ring: Ring[S],
-                                iter: CanTraverseValues[CSCMatrix[S],S]) =
-      new norm.Impl[CSCMatrix[S],Double] {
-        override def apply(v: CSCMatrix[S]): Double = ring.sNorm(sum(hadamard(v,v)))
-      }
+    import FrobeniusMatrixInnerProductNorms._
 
     implicit def canAddM_S_Semiring[T:Semiring:ClassTag]: OpAdd.Impl2[CSCMatrix[T],T,CSCMatrix[T]] =
       new OpAdd.Impl2[CSCMatrix[T],T,CSCMatrix[T]] {

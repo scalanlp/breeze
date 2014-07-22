@@ -930,59 +930,7 @@ with MatrixConstructors[DenseMatrix] {
   }
 
   object FrobeniusInnerProductDenseMatrixSpace {
-    implicit def canNorm[S](implicit iter: CanTraverseValues[DenseMatrix[S], S],
-                            field: Field[S]): norm.Impl2[DenseMatrix[S], Double, Double] = {
-      new norm.Impl2[DenseMatrix[S], Double, Double] {
-        def apply(v: DenseMatrix[S], n: Double): Double = {
-          class NormVisitor extends ValuesVisitor[S] {
-            var agg: Double = 0.0
-            val (op, opEnd) =
-              if (n == 1) ((v: S) => agg += field.sNorm(v), identity[Double] _)
-              else if (n == 2) ((v: S) => {
-                val nn = field.sNorm(v)
-                agg += nn * nn
-              }, (e: Double) => sqrt(e))
-              else if (n == Int.MaxValue || n == Float.PositiveInfinity || n == Double.PositiveInfinity) {
-                ((v: S) => {
-                  val nn = field.sNorm(v)
-                  if (nn > agg) agg = nn
-                }, identity[Double] _)
-              } else {
-                ((v: S) => {
-                  val nn = field.sNorm(v)
-                  agg += pow(nn, n)
-                }, (e: Double) => pow(e, 1.0 / n))
-              }
-
-
-            def visit(a: S): Unit = op(a)
-
-            def zeros(numZero: Int, zeroValue: S): Unit = {}
-
-            def norm = opEnd(agg)
-          }
-
-          val visit = new NormVisitor
-          iter.traverse(v, visit)
-          visit.norm
-        }
-      }
-    }
-
-    implicit def canFrobInnerProduct[S](implicit hadamard: OpMulScalar.Impl2[DenseMatrix[S],DenseMatrix[S],DenseMatrix[S]],
-                                         semiring: Semiring[S], iter: CanTraverseValues[DenseMatrix[S],S]) =
-      new OpMulInner.Impl2[DenseMatrix[S],DenseMatrix[S],S] {
-        override def apply(v: DenseMatrix[S], v2: DenseMatrix[S]): S = {
-          sum(hadamard(v,v2))
-        }
-      }
-
-    implicit def canFrobNorm[S](implicit hadamard: OpMulScalar.Impl2[DenseMatrix[S],DenseMatrix[S],DenseMatrix[S]],
-                                ring: Ring[S],
-                                iter: CanTraverseValues[DenseMatrix[S],S]) =
-      new norm.Impl[DenseMatrix[S],Double] {
-        override def apply(v: DenseMatrix[S]): Double = ring.sNorm(sum(hadamard(v,v)))
-      }
+    import FrobeniusMatrixInnerProductNorms._
 
     implicit def space[S:Field:Zero:ClassTag] = MutableRestrictedDomainTensorField.make[DenseMatrix[S],(Int,Int),S]
   }
