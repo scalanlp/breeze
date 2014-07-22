@@ -16,7 +16,7 @@ class MetropolisHastingsBenchmark extends BreezeBenchmark {
   val bufferSize = 1024*32
 
   val epsilon = 1e-8
-  def likelihood(x: Double) = 2*math.log(1+epsilon-x) + 3*math.log(x*x*x+epsilon) //Epsilon is present to avoid throwing exceptions in the unlikely event either 0 or 1 is sampled
+  def likelihood(x: Double) = 2*math.log1p(1+epsilon-x) + 3*math.log1p(x*x*x+epsilon) //Epsilon is present to avoid throwing exceptions in the unlikely event either 0 or 1 is sampled
 
   def pullAllSamples(m: Rand[Double]) = {
     var result = 0.0
