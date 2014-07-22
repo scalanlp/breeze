@@ -22,14 +22,21 @@ import spire.implicits.cfor
 import scala.reflect.ClassTag
 
 trait MetropolisHastings[T] extends Rand[T] {
-  def logLikelihood: T => Double
+  def logLikelihood(x: T): Double
+  def logTransitionProbability(start: T, end: T): Double
+
   def proposalDraw(x: T): T // This is a random function, which returns a random y given a deterministic x
 
   def likelihood(x:T): Double = math.exp(logLikelihood(x))
-  def likelihoodRatio(x: T, y: T): Double = math.exp(logLikelihood(x) - logLikelihood(y))
+  def likelihoodRatio(start: T, end: T): Double = math.exp(logLikelihood(end) - logLikelihood(start) + logTransitionProbability(end, start) - logTransitionProbability(start, end))
   def rand:RandBasis
 
   protected def nextDouble: Double = this.rand.generator.nextDouble //uniform random variable
+}
+
+trait SymmetricMetropolisHastings[T] extends MetropolisHastings[T] {
+  def logTransitionProbability(start: T, end: T): Double = 0.0
+  override def likelihoodRatio(start: T, end: T): Double = math.exp(logLikelihood(end) - logLikelihood(start))
 }
 
 trait TracksStatistics { self:MetropolisHastings[_] =>
@@ -46,13 +53,16 @@ trait TracksStatistics { self:MetropolisHastings[_] =>
   def rejectionFrac: Double = rejectionCount.toDouble / total.toDouble
 }
 
-abstract class BaseMetropolisHastings[T](val logLikelihood: T => Double, init: T, burnIn: Long = 0, dropCount: Int = 0)(implicit val rand:RandBasis=Rand) extends MetropolisHastings[T] with Process[T] with TracksStatistics {
+abstract class BaseMetropolisHastings[T](logLikelihoodFunc: T => Double, init: T, burnIn: Long = 0, dropCount: Int = 0)(implicit val rand:RandBasis=Rand) extends MetropolisHastings[T] with Process[T] with TracksStatistics {
   //Everything but the proposalDraw is implemented
 
   private var last: T = init
   private var acceptances: Long = 0
   private var totalCount: Long = 0
   private var acceptanceAboveOne: Long = 0
+
+  def logLikelihood(x: T) = logLikelihoodFunc(x)
+
   def aboveOneCount = acceptanceAboveOne
   def total = totalCount
   def acceptanceCount = acceptances
@@ -94,13 +104,14 @@ abstract class BaseMetropolisHastings[T](val logLikelihood: T => Double, init: T
   }
 }
 
-case class ArbitraryMetropolisHastings[T](override val logLikelihood: T => Double, val proposal: T => Rand[T], init: T, burnIn: Long = 0, dropCount: Int = 0)(implicit rand:RandBasis=Rand) extends BaseMetropolisHastings[T](logLikelihood, init, burnIn, dropCount)(rand) {
+case class ArbitraryMetropolisHastings[T](logLikelihood: T => Double, val proposal: T => Rand[T], val logProposalDensity: (T, T) => Double, init: T, burnIn: Long = 0, dropCount: Int = 0)(implicit rand:RandBasis=Rand) extends BaseMetropolisHastings[T](logLikelihood, init, burnIn, dropCount)(rand) {
   def proposalDraw(x: T) = proposal(x).draw()
+  def logTransitionProbability(start: T, end: T): Double = logProposalDensity(start, end)
 
   def observe(x: T) = this.copy(burnIn=0, init = x)
 }
 
-case class AffineStepMetropolisHastings[T](override val logLikelihood: T => Double, val proposalStep: Rand[T], init: T, burnIn: Long = 0, dropCount: Int = 0)(implicit rand:RandBasis=Rand, vectorSpace: VectorSpace[T,_]) extends BaseMetropolisHastings[T](logLikelihood, init, burnIn, dropCount)(rand) {
+case class AffineStepMetropolisHastings[T](logLikelihood: T => Double, val proposalStep: Rand[T], init: T, burnIn: Long = 0, dropCount: Int = 0)(implicit rand:RandBasis=Rand, vectorSpace: VectorSpace[T,_]) extends BaseMetropolisHastings[T](logLikelihood, init, burnIn, dropCount)(rand) with SymmetricMetropolisHastings[T] {
   /*
    *  Handles typical case of x => x + random().
    *
