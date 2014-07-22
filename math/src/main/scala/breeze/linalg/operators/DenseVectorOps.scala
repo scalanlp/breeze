@@ -682,6 +682,16 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
       }
     }
 
+  implicit def liftDMMulOpToDVOpRHS[Tag, V, R](implicit op: OpMulMatrix.Impl2[DenseMatrix[V], DenseMatrix[V], R]):
+  OpMulMatrix.Impl2[DenseVector[V], DenseMatrix[V], R] =
+
+    new OpMulMatrix.Impl2[DenseVector[V], DenseMatrix[V], R] {
+      def apply(v: DenseVector[V], v2: DenseMatrix[V]): R = {
+        val dm: DenseMatrix[V] = new DenseMatrix(data = v.data, offset = v.offset, cols = 1, rows = v.length, majorStride = v.length)
+        op(dm,v2)
+      }
+    }
+
 
   implicit def canNormField[T:Field]: norm.Impl2[DenseVector[T],Double,Double] = {
     val f = implicitly[Field[T]]
