@@ -28,7 +28,7 @@ trait MetropolisHastings[T] extends Rand[T] {
   def proposalDraw(x: T): T // This is a random function, which returns a random y given a deterministic x
 
   def likelihood(x:T): Double = math.exp(logLikelihood(x))
-  def likelihoodRatio(start: T, end: T): Double = math.exp(logLikelihood(end) - logLikelihood(start) + logTransitionProbability(end, start) - logTransitionProbability(start, end))
+  def likelihoodRatio(start: T, end: T): Double = math.exp(logLikelihood(start) - logLikelihood(end) + logTransitionProbability(start, end) - logTransitionProbability(end, start))
   def rand:RandBasis
 
   protected def nextDouble: Double = this.rand.generator.nextDouble //uniform random variable
