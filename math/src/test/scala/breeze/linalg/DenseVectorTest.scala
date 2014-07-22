@@ -170,6 +170,21 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(emptySlice2 === DenseVector[Double]())
   }
 
+  test("DenseVector * DenseMatrix Lifted OpMulMatrix") {
+    val x = DenseVector[Double](1, 2, 3)
+    val m = DenseMatrix((1.0,2.0,3.0),
+                        (2.0,4.0,6.0),
+                        (3.0,6.0,9.0))
+    val mr = DenseMatrix((1.0,2.0,3.0))
+
+    val xxt = x * x.t
+    assert(xxt === m)
+
+    val xm = x * mr
+    assert(xm === m)
+
+  }
+
   test("Slice and Transpose Int") {
     val x = DenseVector[Int](1, 2, 3, 4, 5)
 
