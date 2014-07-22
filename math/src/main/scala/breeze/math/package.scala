@@ -27,6 +27,8 @@ package object math {
     def - (c : Complex) : Complex = Complex(value,0) - c
     def * (c : Complex) : Complex = Complex(value,0) * c
     def / (c : Complex) : Complex = Complex(value,0) / c
+    def % (c : Complex) : Complex = Complex(value,0) % c
+    def pow(c : Complex) : Complex = Complex(value,0) pow c
   }
 
   implicit def richInt(value : Int) =

@@ -1,7 +1,7 @@
 package breeze.optimize
 
+import breeze.math.InnerProductModule
 import breeze.util.Implicits._
-import breeze.math.InnerProductSpace
 
 trait MinimizingLineSearch {
   def minimize(f: DiffFunction[Double], init: Double = 1.0):Double
@@ -27,7 +27,7 @@ trait ApproximateLineSearch extends MinimizingLineSearch {
 }
 
 object LineSearch {
-  def functionFromSearchDirection[T](f: DiffFunction[T], x: T, direction: T)(implicit prod: InnerProductSpace[T, Double]):DiffFunction[Double] = new DiffFunction[Double] {
+  def functionFromSearchDirection[T, I](f: DiffFunction[T], x: T, direction: T)(implicit prod: InnerProductModule[T, Double]):DiffFunction[Double] = new DiffFunction[Double] {
     import prod._
 
     /** calculates the value at a point */

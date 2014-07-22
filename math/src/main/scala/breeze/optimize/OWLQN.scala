@@ -3,7 +3,7 @@ package breeze.optimize
 import breeze.util._
 import breeze.linalg._
 import breeze.numerics._
-import breeze.math.MutableCoordinateSpace
+import breeze.math.{MutableVectorRing, MutableVectorField, MutableInnerProductModule}
 
 
 /**
@@ -14,11 +14,11 @@ import breeze.math.MutableCoordinateSpace
  *
  * @author dlwh
  */
-class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-8)(implicit vspace: MutableCoordinateSpace[T, Double]) extends LBFGS[T](maxIter, m, tolerance=tolerance) with SerializableLogging {
-  import vspace._
+class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-8)(implicit space: MutableVectorRing[T, Double]) extends LBFGS[T](maxIter, m, tolerance=tolerance) with SerializableLogging {
   require(m > 0)
   require(l1reg >= 0)
 
+  import space._
 
   override protected def chooseDescentDirection(state: State, fn: DiffFunction[T]) = {
     val descentDir = super.chooseDescentDirection(state.copy(grad = state.adjustedGradient), fn)
@@ -27,7 +27,7 @@ class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-
     // in the same directional (within the same hypercube) as the adjusted gradient for proof.
     // Although this doesn't seem to affect the outcome that much in most of cases, there are some cases
     // where the algorithm won't converge (confirmed with the author, Galen Andrew).
-    val correctedDir = vspace.zipMapValues.map(descentDir, state.adjustedGradient, { case (d, g) => if (d * g < 0) d else 0.0 })
+    val correctedDir = space.zipMapValues.map(descentDir, state.adjustedGradient, { case (d, g) => if (d * g < 0) d else 0.0 })
 
     correctedDir
   }
@@ -74,14 +74,14 @@ class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-
   override protected def takeStep(state: State, dir: T, stepSize: Double) = {
     val stepped = state.x + dir * stepSize
     val orthant = computeOrthant(state.x, state.adjustedGradient)
-    vspace.zipMapValues.map(stepped, orthant, { case (v, ov) =>
+    space.zipMapValues.map(stepped, orthant, { case (v, ov) =>
       v * I(math.signum(v) == math.signum(ov))
     })
   }
 
   // Adds in the regularization stuff to the gradient
   override protected def adjust(newX: T, newGrad: T, newVal: Double) = {
-    val res = vspace.zipMapValues.map(newX, newGrad, {case (xv, v) =>
+    val res = space.zipMapValues.map(newX, newGrad, {case (xv, v) =>
       xv match {
         case 0.0 => {
           val delta_+ = v + l1reg
@@ -97,7 +97,7 @@ class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-
   }
 
   private def computeOrthant(x: T, grad: T) = {
-    val orth = vspace.zipMapValues.map(x, grad, {case (v, gv) =>
+    val orth = space.zipMapValues.map(x, grad, {case (v, gv) =>
       if(v != 0) math.signum(v)
       else math.signum(-gv)
     })

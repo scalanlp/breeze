@@ -1,11 +1,10 @@
 package breeze.optimize
 
-import breeze.math.{MutableCoordinateSpace, MutableInnerProductSpace}
-import breeze.linalg.operators.{OpMulMatrix, BinaryOp}
-import breeze.util.Implicits._
-import linear.ConjugateGradient
-import com.typesafe.scalalogging.Logging
 import breeze.linalg.norm
+import breeze.linalg.operators.OpMulMatrix
+import breeze.math.MutableVectorField
+import breeze.optimize.linear.ConjugateGradient
+import breeze.util.Implicits._
 import breeze.util.SerializableLogging
 
 
@@ -19,7 +18,7 @@ class TruncatedNewtonMinimizer[T, H](maxIterations: Int = -1,
                                      tolerance: Double = 1E-6,
                                      l2Regularization: Double = 0,
                                      m: Int = 0)
-                                    (implicit vs: MutableCoordinateSpace[T, Double],
+                                    (implicit space: MutableVectorField[T, Double],
                                      mult: OpMulMatrix.Impl2[H, T, T]) extends Minimizer[T, SecondOrderFunction[T, H]] with SerializableLogging {
 
   def minimize(f: SecondOrderFunction[T, H], initial: T): T = iterations(f, initial).takeUpToWhere(_.converged).last.x
@@ -27,7 +26,7 @@ class TruncatedNewtonMinimizer[T, H](maxIterations: Int = -1,
 
 
 
-  import vs._
+  import space._
   case class State(iter: Int,
                    initialGNorm: Double,
                    delta: Double,

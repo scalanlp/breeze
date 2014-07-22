@@ -62,6 +62,14 @@ package object numerics {
     implicit object powFloatIntImpl extends Impl2[Float, Int, Float] {
       def apply(v: Float, v2: Int) = java.lang.Math.pow(v, v2).toFloat
     }
+
+    implicit object powIntIntImpl extends Impl2[Int,Int,Int] {
+      def apply(v: Int, v2: Int) = IntMath.ipow(v,v2)
+    }
+
+    implicit object powIntDoubleImpl extends Impl2[Int,Double,Double] {
+      def apply(v: Int, v2: Double) = java.lang.Math.pow(v,v2)
+    }
   }
 
 

@@ -2,6 +2,7 @@ package breeze.optimize
 
 import breeze.linalg._
 import breeze.collection.mutable.RingBuffer
+import breeze.math.{MutableInnerProductModule, MutableVectorField}
 import breeze.util.SerializableLogging
 
 // Compact representation of an n x n Hessian, maintained via L-BFGS updates
@@ -68,7 +69,7 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
                            val maxNumIt: Int = 500,
                            val maxSrchIt: Int = 50,
                            val gamma: Double = 1e-4,
-                           val projection: DenseVector[Double] => DenseVector[Double] = identity) extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]](maxIter = maxNumIt, tolerance = tolerance) with Projecting[DenseVector[Double]] with SerializableLogging {
+                           val projection: DenseVector[Double] => DenseVector[Double] = identity)(implicit space: MutableInnerProductModule[DenseVector[Double],Double]) extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]](maxIter = maxNumIt, tolerance = tolerance) with Projecting[DenseVector[Double]] with SerializableLogging {
   val innerOptimizer = new SpectralProjectedGradient[DenseVector[Double], DiffFunction[DenseVector[Double]]](
     testOpt = true,
     tolerance = tolerance,

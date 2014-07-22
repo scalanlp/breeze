@@ -1,9 +1,8 @@
 package breeze.stats.distributions
 
-import breeze.linalg.{sum, Counter, NumericOps}
-import breeze.math.{TensorSpace, MutableCoordinateSpace}
+import breeze.linalg.{Counter, QuasiTensor, sum}
+import breeze.math.{MutableTensorField, VectorField}
 import breeze.numerics._
-import breeze.storage.Zero
 
 
 /*
@@ -29,7 +28,7 @@ import breeze.storage.Zero
  *
  * @author dlwh
  */
-class Polya[T,@specialized(Int) I](params: T)(implicit space: TensorSpace[T, I, Double],
+class Polya[T,@specialized(Int) I](params: T)(implicit space: MutableTensorField[T, I, Double],
                                               rand: RandBasis=Rand) extends DiscreteDistr[I] {
   import space._
   private val innerDirichlet = new Dirichlet(params)

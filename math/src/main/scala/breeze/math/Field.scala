@@ -1,4 +1,7 @@
 package breeze.math
+
+import breeze.linalg.norm
+import breeze.numerics
 /*
  Copyright 2012 David Hall
 
@@ -25,7 +28,7 @@ package breeze.math
 trait Field[@specialized(Int,Short,Long,Float,Double) V] extends Ring[V] {
   def /(a : V, b : V) : V
   def inverse(a: V) = /(one, a)
-
+  def pow(a: V, b: V): V
 }
 
 object Field {
@@ -40,6 +43,12 @@ object Field {
     def -(a : Int, b : Int) = a - b
     def *(a : Int, b : Int) = a * b
     def /(a : Int, b : Int) = a / b
+    def %(a: Int, b: Int) = a % b
+    def pow(a: Int, b: Int) = Math.pow(a,b).toInt
+
+    implicit val normImpl: norm.Impl[Int, Double] = new norm.Impl[Int,Double] {
+      def apply(v: Int) = v.abs.toDouble
+    }
   }
 
   /** Not a field, but whatever. */
@@ -53,6 +62,12 @@ object Field {
     def -(a : Short, b : Short) = (a - b).asInstanceOf[Short]
     def *(a : Short, b : Short) = (a * b).asInstanceOf[Short]
     def /(a : Short, b : Short) = (a / b).asInstanceOf[Short]
+    def %(a: Short, b: Short) = (a % b).asInstanceOf[Short]
+    def pow(a: Short, b: Short) = Math.pow(a,b).toShort
+
+    implicit val normImpl: norm.Impl[Short, Double] = new norm.Impl[Short,Double] {
+      def apply(v: Short) = v.abs.toDouble
+    }
   }
 
   /** Not a field, but whatever. */
@@ -66,6 +81,12 @@ object Field {
     def -(a : Long, b : Long) = a - b
     def *(a : Long, b : Long) = a * b
     def /(a : Long, b : Long) = a / b
+    def %(a: Long, b: Long) = a % b.toLong
+    def pow(a: Long, b: Long) = Math.pow(a,b).toLong
+
+    implicit val normImpl: norm.Impl[Long, Double] = new norm.Impl[Long,Double] {
+      def apply(v: Long) = v.abs.toDouble
+    }
   }
 
   /** Not a field, but whatever. */
@@ -79,6 +100,12 @@ object Field {
     def -(a : BigInt, b : BigInt) = a - b
     def *(a : BigInt, b : BigInt) = a * b
     def /(a : BigInt, b : BigInt) = a / b
+    def %(a: BigInt, b: BigInt) = a % b
+    def pow(a: BigInt, b: BigInt): BigInt = a.pow(b.toInt)
+
+    implicit val normImpl: norm.Impl[BigInt, Double] = new norm.Impl[BigInt,Double] {
+      def apply(v: BigInt) = v.abs.toDouble
+    }
   }
 
   @SerialVersionUID(1L)
@@ -91,9 +118,15 @@ object Field {
     def -(a : BigDecimal, b : BigDecimal) = a - b
     def *(a : BigDecimal, b : BigDecimal) = a * b
     def /(a : BigDecimal, b : BigDecimal) = a / b
+    def %(a: BigDecimal, b: BigDecimal) = a % b
+    def pow(a: BigDecimal, b: BigDecimal): BigDecimal = a.pow(b.toInt)
 
     override def close(a: BigDecimal, b: BigDecimal, tolerance: Double): Boolean = {
       (a-b).abs <= tolerance * (a.abs max b.abs)
+    }
+
+    implicit val normImpl: norm.Impl[BigDecimal, Double] = new norm.Impl[BigDecimal,Double] {
+      def apply(v: BigDecimal) = v.abs.toDouble
     }
   }
 
@@ -107,22 +140,34 @@ object Field {
     def -(a : Float, b : Float) = a - b
     def *(a : Float, b : Float) = a * b
     def /(a : Float, b : Float) = a / b
+    def %(a: Float, b: Float) = a % b
+    def pow(a: Float, b: Float) = numerics.pow(a,b)
 
     override def close(a: Float, b: Float, tolerance: Double) = (a-b).abs <= math.max(a.abs, b.abs) * tolerance
+
+    implicit val normImpl: norm.Impl[Float, Double] = new norm.Impl[Float,Double] {
+      def apply(v: Float) = v.abs.toDouble
+    }
   }
 
   @SerialVersionUID(-5955467582882664220L)
   implicit object fieldD extends Field[Double] {
     def zero = 0.0
     def one = 1.0
-    def ==(a : Double, b : Double) = a == b
-    def !=(a : Double, b : Double) = a != b
-    def +(a : Double, b : Double) = a + b
-    def -(a : Double, b : Double) = a - b
-    def *(a : Double, b : Double) = a * b
-    def /(a : Double, b : Double) = a / b
+    def ==(a: Double, b: Double) = a == b
+    def !=(a: Double, b: Double) = a != b
+    def +(a: Double, b: Double) = a + b
+    def -(a: Double, b: Double) = a - b
+    def *(a: Double, b: Double) = a * b
+    def /(a: Double, b: Double) = a / b
+    def %(a: Double, b: Double): Double = a % b
+    def pow(a: Double, b: Double): Double = Math.pow(a, b)
 
-    override def close(a: Double, b: Double, tolerance: Double) = (a-b).abs <= math.max(a.abs, b.abs) * tolerance
+    override def close(a: Double, b: Double, tolerance: Double) = (a - b).abs <= math.max(a.abs, b.abs) * tolerance
+
+    implicit val normImpl: norm.Impl[Double, Double] = new norm.Impl[Double, Double] {
+      def apply(v: Double) = v.abs
+    }
   }
 }
 
