@@ -18,7 +18,7 @@ import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 import org.junit.runner.RunWith
 import org.scalatest.prop.Checkers
-import breeze.math.{MutableVectorField, VectorField, TensorSpaceTestBase}
+import breeze.math.{MutableTensorField, MutableVectorField, VectorField, TensorSpaceTestBase}
 import org.scalacheck.Arbitrary
 import breeze.stats.mean
 
@@ -88,7 +88,7 @@ class CounterTest extends FunSuite with Checkers {
 
 @RunWith(classOf[JUnitRunner])
 class CounterOps_IntTest extends TensorSpaceTestBase[Counter[Int, Int], Int, Int] {
- val space: MutableVectorField[Counter[Int, Int], Int, Int] = Counter.space[Int,Int]
+ val space: MutableTensorField[Counter[Int, Int], Int, Int] = Counter.space[Int,Int]
 
   val N = 30
   def genTriple: Arbitrary[(Counter[Int, Int], Counter[Int, Int], Counter[Int, Int])] = {

@@ -43,7 +43,7 @@ class VectorTest extends FunSuite {
  */
 @RunWith(classOf[JUnitRunner])
 class VectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[Vector[Double], Int] {
- val space: MutableVectorField[Vector[Double], Int, Double] = Vector.space[Double]
+ val space: MutableTensorField[Vector[Double], Int, Double] = Vector.space[Double]
 
 
   val N = 30
@@ -71,7 +71,7 @@ class VectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[Vector[Double
 
 @RunWith(classOf[JUnitRunner])
 class VectorOps_FloatTest extends TensorSpaceTestBase[Vector[Float], Int, Float] {
- val space: MutableVectorField[Vector[Float], Int, Float] = Vector.space[Float]
+ val space: MutableTensorField[Vector[Float], Int, Float] = Vector.space[Float]
 
   override val TOL: Double = 1E-2
   val N = 30
@@ -99,7 +99,7 @@ class VectorOps_FloatTest extends TensorSpaceTestBase[Vector[Float], Int, Float]
 
 @RunWith(classOf[JUnitRunner])
 class VectorOps_IntTest extends TensorSpaceTestBase[Vector[Int], Int, Int] {
- val space: MutableVectorField[Vector[Int], Int, Int] = Vector.space[Int]
+ val space: MutableTensorField[Vector[Int], Int, Int] = Vector.space[Int]
 
   val N = 30
   implicit def genTriple: Arbitrary[(Vector[Int], Vector[Int], Vector[Int])] = {
@@ -126,7 +126,7 @@ class VectorOps_IntTest extends TensorSpaceTestBase[Vector[Int], Int, Int] {
 
 @RunWith(classOf[JUnitRunner])
 class VectorOps_ComplexTest extends TensorSpaceTestBase[Vector[Complex], Int, Complex] {
-  val space: MutableVectorField[Vector[Complex], Int, Complex] = Vector.space[Complex]
+  val space: MutableTensorField[Vector[Complex], Int, Complex] = Vector.space[Complex]
 
 
   val N = 30

@@ -99,7 +99,7 @@ case class Multinomial[T,I](params: T)(implicit ev: T=>QuasiTensor[I, Double], s
 
   override def toString = ev(params).activeIterator.mkString("Multinomial{",",","}")
 
-  def expectedValue[U](f: I=>U)(implicit vs: VectorSpace[U, I, Double]) = {
+  def expectedValue[U](f: I=>U)(implicit vs: VectorSpace[U, Double]) = {
     val wrapped = MutablizingAdaptor.ensureMutable(vs)
     import wrapped._
     import wrapped.mutaVspace._
@@ -137,7 +137,7 @@ case class AliasTable[I](probs: DenseVector[Double],
  */
 object Multinomial {
 
-  class ExpFam[T,I](exemplar: T)(implicit space: MutableVectorField[T, I, Double]) extends ExponentialFamily[Multinomial[T,I],I] with HasConjugatePrior[Multinomial[T,I],I] {
+  class ExpFam[T,I](exemplar: T)(implicit space: MutableTensorField[T, I, Double]) extends ExponentialFamily[Multinomial[T,I],I] with HasConjugatePrior[Multinomial[T,I],I] {
 
     import space._
     type ConjugatePrior = Dirichlet[T,I]

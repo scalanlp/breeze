@@ -20,7 +20,7 @@ import breeze.optimize._
 import breeze.linalg._
 import breeze.numerics._
 import breeze.linalg.operators.{OpDiv, BinaryOp}
-import breeze.math.{Field, MutableVectorField, InnerProductVectorSpace, VectorField}
+import breeze.math._
 import breeze.numerics
 import breeze.storage.Zero
 
@@ -28,7 +28,7 @@ import breeze.storage.Zero
  * Represents a Dirichlet distribution, the conjugate prior to the multinomial.
  * @author dlwh
  */
-case class Dirichlet[T, @specialized(Int) I](params: T)(implicit space: VectorField[T, I, Double],
+case class Dirichlet[T, @specialized(Int) I](params: T)(implicit space: MutableTensorField[T, I, Double],
                                                         rand: RandBasis = Rand) extends ContinuousDistr[T] {
   import space._
   /**
@@ -93,7 +93,7 @@ object Dirichlet {
   def apply(arr: Array[Double]): Dirichlet[DenseVector[Double], Int] = Dirichlet( new DenseVector[Double](arr))
 
 
-  class ExpFam[T,I](exemplar: T)(implicit space: MutableVectorField[T, I, Double]) extends ExponentialFamily[Dirichlet[T,I],T] {
+  class ExpFam[T,I](exemplar: T)(implicit space: MutableTensorField[T, I, Double]) extends ExponentialFamily[Dirichlet[T,I],T] {
     import space._
     type Parameter = T
     case class SufficientStatistic(n: Double, t: T) extends breeze.stats.distributions.SufficientStatistic[SufficientStatistic] {

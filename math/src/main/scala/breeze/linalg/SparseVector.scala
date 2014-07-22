@@ -362,8 +362,16 @@ object SparseVector extends SparseVectorOps
     }
   }
 
-  implicit def space[E:Field:ClassTag:Zero]: MutableVectorField[SparseVector[E],Int,E] = {
-    MutableVectorField.make[SparseVector[E], Int, E]
+  implicit def canDim[E]: dim.Impl[SparseVector[E],Int] = new dim.Impl[SparseVector[E],Int] {
+    def apply(v: SparseVector[E]): Int = v.size
+  }
+
+  implicit def canTabulate[E:ClassTag:Zero] = new CanTabulate[Int,SparseVector[E],E] {
+    def apply(d: Int, f: (Int) => E): SparseVector[E] = tabulate[E](d)(f)
+  }
+
+  implicit def space[E:Field:ClassTag:Zero]: MutableTensorField[SparseVector[E],Int,E] = {
+    MutableRestrictedDomainTensorField.make[SparseVector[E], Int, E]
   }
 
   @noinline

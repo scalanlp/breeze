@@ -66,17 +66,17 @@ trait MutableModuleTestBase[V, S] extends FunSuite with Checkers {
      })
    }
 
-   test("a + -a == 0") {
+   test("a - a == 0") {
      check(Prop.forAll{ (trip: (V, V, V)) =>
        val (a, b, c) = trip
        val z = zeroLike(a)
-       close(a + -a, z, TOL)
+       close(a - a, z, TOL)
      })
 
      check(Prop.forAll{ (trip: (V, V, V)) =>
        val (a, b, _) = trip
        val z = zeroLike(a)
-       a += -a
+       a -= a
        close(a, z, TOL)
      })
 

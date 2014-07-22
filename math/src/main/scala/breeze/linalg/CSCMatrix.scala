@@ -15,13 +15,14 @@ package breeze.linalg
  limitations under the License.
 */
 import breeze.linalg.operators._
+import breeze.numerics._
 import breeze.storage.Zero
 import java.util
 import breeze.util.{Sorting, Terminal, ArrayUtil}
 import scala.collection.mutable
-import breeze.math.{Ring, Complex, Semiring}
+import breeze.math._
 import scala.reflect.ClassTag
-import breeze.linalg.support.{CanCreateZerosLike, CanTranspose, CanTraverseValues, CanMapValues}
+import breeze.linalg.support._
 import CanTraverseValues.ValuesVisitor
 
 /**
@@ -476,6 +477,110 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
 
       bldr
     }
+  }
+
+  implicit def canDim[E] = new dim.Impl[CSCMatrix[E], (Int,Int)] {
+    def apply(v: CSCMatrix[E]): (Int, Int) = (v.rows,v.cols)
+  }
+
+  object FrobeniusInnerProductCSCMatrixSpace {
+    implicit def canNorm[S](implicit iter: CanTraverseValues[CSCMatrix[S], S],
+                            field: Field[S]): norm.Impl2[CSCMatrix[S], Double, Double] = {
+      new norm.Impl2[CSCMatrix[S], Double, Double] {
+        def apply(v: CSCMatrix[S], n: Double): Double = {
+          class NormVisitor extends ValuesVisitor[S] {
+            var agg: Double = 0.0
+            val (op, opEnd) =
+              if (n == 1) ((v: S) => agg += field.sNorm(v), identity[Double] _)
+              else if (n == 2) ((v: S) => {
+                val nn = field.sNorm(v)
+                agg += nn * nn
+              }, (e: Double) => sqrt(e))
+              else if (n == Int.MaxValue || n == Float.PositiveInfinity || n == Double.PositiveInfinity) {
+                ((v: S) => {
+                  val nn = field.sNorm(v)
+                  if (nn > agg) agg = nn
+                }, identity[Double] _)
+              } else {
+                ((v: S) => {
+                  val nn = field.sNorm(v)
+                  agg += pow(nn, n)
+                }, (e: Double) => pow(e, 1.0 / n))
+              }
+
+
+            def visit(a: S): Unit = op(a)
+
+            def zeros(numZero: Int, zeroValue: S): Unit = {}
+
+            def norm = opEnd(agg)
+          }
+
+          val visit = new NormVisitor
+          iter.traverse(v, visit)
+          visit.norm
+        }
+      }
+    }
+
+    implicit def canFrobInnerProduct[S](implicit hadamard: OpMulScalar.Impl2[CSCMatrix[S],CSCMatrix[S],CSCMatrix[S]],
+                                        semiring: Semiring[S], iter: CanTraverseValues[CSCMatrix[S],S]) =
+      new OpMulInner.Impl2[CSCMatrix[S],CSCMatrix[S],S] {
+        override def apply(v: CSCMatrix[S], v2: CSCMatrix[S]): S = {
+          sum(hadamard(v,v2))
+        }
+      }
+
+    implicit def canFrobNorm[S](implicit hadamard: OpMulScalar.Impl2[CSCMatrix[S],CSCMatrix[S],CSCMatrix[S]],
+                                ring: Ring[S],
+                                iter: CanTraverseValues[CSCMatrix[S],S]) =
+      new norm.Impl[CSCMatrix[S],Double] {
+        override def apply(v: CSCMatrix[S]): Double = ring.sNorm(sum(hadamard(v,v)))
+      }
+
+    implicit def canAddM_S_Semiring[T:Semiring:ClassTag]: OpAdd.Impl2[CSCMatrix[T],T,CSCMatrix[T]] =
+      new OpAdd.Impl2[CSCMatrix[T],T,CSCMatrix[T]] {
+        override def apply(v: CSCMatrix[T], v2: T): CSCMatrix[T] = {
+          throw new UnsupportedOperationException("Adding a scalar to a sparse matrix will make it dense under the current implementation." +
+            " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
+        }
+      }
+
+    implicit def mapVals[S] = new CanMapValues[CSCMatrix[S],S,S,CSCMatrix[S]] {
+      /** Maps all key-value pairs from the given collection. */
+      override def map(from: CSCMatrix[S], fn: (S) => S): CSCMatrix[S] = ???
+
+      /** Maps all active key-value pairs from the given collection. */
+      override def mapActive(from: CSCMatrix[S], fn: (S) => S): CSCMatrix[S] = ???
+    }
+
+    implicit def zipMapVals[S] = new CanZipMapValues[CSCMatrix[S],S,S,CSCMatrix[S]] {
+      /** Maps all corresponding values from the two collections. */
+      override def map(from: CSCMatrix[S], from2: CSCMatrix[S], fn: (S, S) => S): CSCMatrix[S] = ???
+    }
+
+    implicit def canAddInPlaceM_S_Semiring[T:Semiring:ClassTag]: OpAdd.InPlaceImpl2[CSCMatrix[T],T] =
+      throw new UnsupportedOperationException("Adding a scalar to a sparse matrix will make it dense under the current implementation." +
+        " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
+
+    implicit def canSubM_S_Ring[T:Ring:ClassTag]: OpSub.Impl2[CSCMatrix[T],T,CSCMatrix[T]] =
+      throw new UnsupportedOperationException("Subtracting a scalar to a sparse matrix will make it dense under the current implementation." +
+        " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
+
+    implicit def canSubInPlaceM_S_Ring[T:Ring:ClassTag]: OpSub.InPlaceImpl2[CSCMatrix[T],T] =
+      throw new UnsupportedOperationException("Subtracting a scalar to a sparse matrix will make it dense under the current implementation." +
+        " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
+
+    implicit def canSetInPlaceM_S_Ring[T:Ring:ClassTag]: OpSet.InPlaceImpl2[CSCMatrix[T],T] =
+      throw new UnsupportedOperationException("Setting a sparse matrix to a scalar will make it dense under the current implementation." +
+        " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
+
+    implicit def canSetM_S_Ring[T:Ring:ClassTag]: OpSet.Impl2[CSCMatrix[T],T, CSCMatrix[T]] =
+      throw new UnsupportedOperationException("Setting a sparse matrix to a scalar will make it dense under the current implementation." +
+        " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
+
+    implicit def space[S:Field:ClassTag] = MutableRestrictedDomainTensorField.make[CSCMatrix[S],(Int,Int),S]
+
   }
 
   @noinline

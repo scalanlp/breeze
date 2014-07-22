@@ -1,6 +1,7 @@
 package breeze.optimize
 
 import breeze.linalg._
+import breeze.linalg.support.{CanMapValues, CanZipMapValues, CanTraverseValues}
 import breeze.math.{MutableVectorRing, MutableVectorField}
 import breeze.numerics._
 import breeze.stats.distributions.{Rand, RandBasis}
@@ -25,11 +26,12 @@ object AdaptiveGradientDescent {
    *
    * where g_ti is the gradient and s_ti = \sqrt(\sum_t'^{t} g_ti^2)
    */
-  class L2Regularization[T,I](val regularizationConstant: Double = 1.0,
+  class L2Regularization[T](val regularizationConstant: Double = 1.0,
                             stepSize: Double, maxIter: Int,
                             tolerance: Double = 1E-5,
-                            improvementTolerance: Double= 1E-4,
-                            minImprovementWindow: Int = 50)(implicit vspace: MutableVectorField[T, I, Double], rand: RandBasis = Rand)
+                            improvementTolerance: Double = 1E-4,
+                            minImprovementWindow: Int = 50)(implicit vspace: MutableVectorField[T, Double],
+                                                            rand: RandBasis = Rand)
     extends StochasticGradientDescent[T](stepSize, maxIter, tolerance, improvementTolerance, minImprovementWindow) {
 
     val delta = 1E-4
@@ -83,10 +85,11 @@ object AdaptiveGradientDescent {
    *
    * where g_ti is the gradient and s_ti = \sqrt(\sum_t'^{t} g_ti^2)
    */
-  class L1Regularization[T, I](val lambda: Double=1.0,
+  class L1Regularization[T](val lambda: Double=1.0,
                             delta: Double = 1E-5,
-                            eta: Double=4,
-                            maxIter: Int=100)(implicit space: MutableVectorField[T, I, Double], rand: RandBasis = Rand) extends StochasticGradientDescent[T](eta,maxIter) {
+                            eta: Double = 4,
+                            maxIter: Int = 100)(implicit space: MutableVectorField[T, Double],
+                                                rand: RandBasis = Rand) extends StochasticGradientDescent[T](eta, maxIter) {
 
 
 

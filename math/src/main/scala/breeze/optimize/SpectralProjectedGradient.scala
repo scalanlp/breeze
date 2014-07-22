@@ -30,7 +30,7 @@ class SpectralProjectedGradient[T, DF <: DiffFunction[T]](
   maxIter: Int = 500,
   val testOpt: Boolean = true,
   val initFeas: Boolean = false,
-  val maxSrchIt: Int = 30)(implicit space: MutableInnerProductModule[T, Double]) extends FirstOrderMinimizer[T, DF](minImprovementWindow = minImprovementWindow, maxIter = maxIter, tolerance = tolerance) with Projecting[T] with SerializableLogging {
+  val maxSrchIt: Int = 30)(implicit space: MutableVectorField[T, Double]) extends FirstOrderMinimizer[T, DF](minImprovementWindow = minImprovementWindow, maxIter = maxIter, tolerance = tolerance) with Projecting[T] with SerializableLogging {
   import space._
   type History = Double
   protected def initialHistory(f: DF, init: T): History = 1.0

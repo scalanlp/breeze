@@ -18,7 +18,7 @@ import operators._
 import scala.{specialized=>spec}
 import support._
 import breeze.util.{Sorting, ArrayUtil}
-import breeze.math.{Field, MutableModuleSpace, Semiring, Ring}
+import breeze.math.{Field, MutableVectorSpace, Semiring, Ring}
 import breeze.storage.Zero
 import scala.reflect.ClassTag
 import breeze.macros.expand

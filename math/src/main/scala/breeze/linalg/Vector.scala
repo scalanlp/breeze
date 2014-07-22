@@ -261,10 +261,10 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
 
 
 
-  def space[V:Field:Zero:ClassTag] = {
+  implicit def space[V:Field:Zero:ClassTag] = {
     val f = implicitly[Field[V]]
     import f.normImpl
-    MutableVectorField.make[Vector[V], Int, V]
+    MutableTensorField.make[Vector[V], Int, V]
   }
 }
 
@@ -491,16 +491,16 @@ trait VectorOps { this: Vector.type =>
   }
 
 
-  implicit def axpy[V:Field:ClassTag]: TernaryUpdateRegistry[Vector[V], V, Vector[V], scaleAdd.type]  = {
+  implicit def axpy[V:Semiring:ClassTag]: TernaryUpdateRegistry[Vector[V], V, Vector[V], scaleAdd.type]  = {
     new TernaryUpdateRegistry[Vector[V], V, Vector[V], scaleAdd.type] {
-      val f = implicitly[Field[V]]
+      val sr = implicitly[Semiring[V]]
       override def bindingMissing(a: Vector[V], s: V, b: Vector[V]) {
         require(b.length == a.length, "Vectors must be the same length!")
         if(s == 0) return
 
         var i = 0
         for( (k, v) <- b.activeIterator) {
-          a(k) = f.+(a(k), f.*(s, v))
+          a(k) = sr.+(a(k), sr.*(s, v))
           i += 1
         }
       }
@@ -773,13 +773,6 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
     apply(b.result )
   }
 
-  implicit def hasDim[V](v: Vec[V]): Int = dim(v)
-
-//  implicit def hasImplicitDim[V](implicit man: ClassTag[V], zero: Zero[V], canDimView: Vec[V] => Int, hasDimImpl: Int) =
-//    new CanCreateZeros[Vec[V]] {
-//      override def apply(): Vec[V] = zeros[V](hasDimImpl)
-//    }
-
   implicit def canCreateZeros[V:ClassTag:Zero]: CanCreateZeros[Vec[V], Int] =
     new CanCreateZeros[Vec[V], Int] {
       def apply(d: Int): Vec[V] = {
@@ -787,6 +780,9 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
       }
     }
 
+  implicit def canTabulate[V:ClassTag:Zero] = new CanTabulate[Int,Vec[V],V] {
+    def apply(d: Int, f: (Int) => V): Vec[V] = tabulate(d)(f)
+  }
 
   /**
    * Creates a Vector of uniform random numbers in (0,1)

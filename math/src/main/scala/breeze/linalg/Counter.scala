@@ -173,7 +173,7 @@ object Counter extends CounterOps {
   implicit def space[K, V](implicit field: Field[V]) = {
     import field._
     implicit def zipMap = Counter.zipMap[K, V, V]
-    MutableVectorField.make[Counter[K, V], K, V]
+    MutableTensorField.make[Counter[K, V], K, V]
   }
 }
 

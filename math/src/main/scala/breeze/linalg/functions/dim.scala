@@ -9,18 +9,13 @@ import breeze.generic.UFunc
  *
  *
  */
-//
-//trait CanDim[Input,Dim] {
-//  def apply(v: Input): Dim
-//}
-
 object dim extends UFunc {
-  implicit def implVDim[T, V <% Vector[T]]: Impl[V,Int] =
+  implicit def implVDim[T, V <:Vector[T]]: Impl[V,Int] =
   new Impl[V,Int] {
     override def apply(v: V): Int = v.length
   }
 
-  implicit def implMDim[T, M <% Matrix[T]]: Impl[M,(Int,Int)] =
+  implicit def implMDim[T, M <: Matrix[T]]: Impl[M,(Int,Int)] =
   new Impl[M,(Int,Int)] {
     override def apply(v: M): (Int, Int) = (v.rows,v.cols)
   }

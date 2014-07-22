@@ -14,11 +14,11 @@ import breeze.util.SerializableLogging
  *
  * @author dlwh
  */
-class TruncatedNewtonMinimizer[K, T, H](maxIterations: Int = -1,
+class TruncatedNewtonMinimizer[T, H](maxIterations: Int = -1,
                                      tolerance: Double = 1E-6,
                                      l2Regularization: Double = 0,
                                      m: Int = 0)
-                                    (implicit space: MutableVectorField[T, K, Double],
+                                    (implicit space: MutableVectorField[T, Double],
                                      mult: OpMulMatrix.Impl2[H, T, T]) extends Minimizer[T, SecondOrderFunction[T, H]] with SerializableLogging {
 
   def minimize(f: SecondOrderFunction[T, H], initial: T): T = iterations(f, initial).takeUpToWhere(_.converged).last.x
@@ -64,7 +64,7 @@ class TruncatedNewtonMinimizer[K, T, H](maxIterations: Int = -1,
   def iterations(f: SecondOrderFunction[T, H], initial: T):Iterator[State] = {
     Iterator.iterate(initialState(f, initial)){ (state: State) =>
       import state._
-      val cg = new ConjugateGradient[T, K, H](maxNormValue = delta,
+      val cg = new ConjugateGradient[T, H](maxNormValue = delta,
         tolerance = .1 * norm(adjGrad),
         maxIterations = 400,
         normSquaredPenalty = l2Regularization)

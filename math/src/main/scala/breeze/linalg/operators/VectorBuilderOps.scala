@@ -25,15 +25,26 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
 
   }
 
-  @expand
-  implicit def canOpInto_V_S[@expand.args(OpMulScalar, OpDiv) Op,
-  T:Field:ClassTag](implicit @expand.sequence[Op]({f.*(_,_)}, {f./(_,_)}) op: Q): Op.InPlaceImpl2[VectorBuilder[T], T] =  {
-    new  Op.InPlaceImpl2[VectorBuilder[T], T]  {
+  implicit def canMulInto_V_S[T:Semiring:ClassTag]: OpMulScalar.InPlaceImpl2[VectorBuilder[T], T] =  {
+    new  OpMulScalar.InPlaceImpl2[VectorBuilder[T], T]  {
+      val sr = implicitly[Semiring[T]]
+      def apply(a: VectorBuilder[T], b: T) {
+        var i = 0
+        while(i < a.activeSize) {
+          a.data(i) = sr.*(a.data(i), b)
+          i += 1
+        }
+      }
+    }
+  }
+
+  implicit def canDivInto_V_S[T:Field:ClassTag]: OpDiv.InPlaceImpl2[VectorBuilder[T], T] =  {
+    new  OpDiv.InPlaceImpl2[VectorBuilder[T], T]  {
       val f = implicitly[Field[T]]
       def apply(a: VectorBuilder[T], b: T) {
         var i = 0
         while(i < a.activeSize) {
-          a.data(i) = op(a.data(i), b)
+          a.data(i) = f./(a.data(i), b)
           i += 1
         }
       }
@@ -61,9 +72,9 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
 
   @expand
   implicit def canOpInto_V_V[@expand.args(OpAdd, OpSub) Op,
-  T:Field:ClassTag](implicit @expand.sequence[Op]((x => x), {f.negate(_)}) op: Q): Op.InPlaceImpl2[VectorBuilder[T], VectorBuilder[T]] =  {
+  T:Ring:ClassTag](implicit @expand.sequence[Op]((x => x), {r.negate(_)}) op: Q): Op.InPlaceImpl2[VectorBuilder[T], VectorBuilder[T]] =  {
     new  Op.InPlaceImpl2[VectorBuilder[T], VectorBuilder[T]]  {
-      val f = implicitly[Field[T]]
+      val r = implicitly[Ring[T]]
       def apply(a: VectorBuilder[T], b: VectorBuilder[T]) {
         require(a.length == b.length, "Dimension mismatch!")
         a.reserve(a.activeSize + b.activeSize)
@@ -72,6 +83,22 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
         val bActiveSize = b.activeSize
         while(i < bActiveSize) {
           a.add(b.index(i), op(b.data(i)))
+          i += 1
+        }
+      }
+    }
+  }
+
+  @expand
+  implicit def canOpInto_V_S[@expand.args(OpAdd, OpSub) Op,
+  T:Ring:ClassTag](implicit @expand.sequence[Op]((x => x), {r.negate(_)}) op: Q): Op.InPlaceImpl2[VectorBuilder[T], T] =  {
+    new  Op.InPlaceImpl2[VectorBuilder[T], T]  {
+      val r = implicitly[Ring[T]]
+      def apply(a: VectorBuilder[T], b: T) {
+        var i = 0
+        // read once here in case we're doing a += a
+        while(i < a.activeSize) {
+          a.add(i, op(b))
           i += 1
         }
       }
@@ -141,20 +168,20 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
     }
   }
 
-  implicit def canAxpy[T:Field:ClassTag]: scaleAdd.InPlaceImpl3[VectorBuilder[T], T, VectorBuilder[T]] = {
+  implicit def canAxpy[T:Semiring:ClassTag]: scaleAdd.InPlaceImpl3[VectorBuilder[T], T, VectorBuilder[T]] = {
     new  scaleAdd.InPlaceImpl3[VectorBuilder[T], T, VectorBuilder[T]]  {
-      val f = implicitly[Field[T]]
+      val sr = implicitly[Semiring[T]]
       def apply(a: VectorBuilder[T], s: T, b: VectorBuilder[T]) {
         require(a.length == b.length, "Dimension mismatch!")
         if(a eq b) {
-          a :*= f.+(f.one,s)
+          a :*= sr.+(sr.one,s)
         } else {
           val bActiveSize: Int = b.activeSize
           a.reserve(bActiveSize + a.activeSize)
           var i = 0
           val bd = b.data
           while(i < bActiveSize) {
-            a.add(b.index(i), f.*(s, bd(i)))
+            a.add(b.index(i), sr.*(s, bd(i)))
             i += 1
           }
         }
@@ -162,10 +189,10 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
     }
   }
 
-  def space[T:Field:Zero:ClassTag]: MutableModuleSpace[VectorBuilder[T], Int, T] = {
-    MutableModuleSpace.make[VectorBuilder[T], Int, T] ({ (a:VectorBuilder[T], b: VectorBuilder[T], tolerance: Double) =>
+  implicit def space[T:Field:ClassTag]: MutableModule[VectorBuilder[T], T] = {
+    MutableModule.make[VectorBuilder[T], T] ({ (a:VectorBuilder[T], b: VectorBuilder[T], tolerance: Double) =>
       val aHV = a.toHashVector
-      implicit val hvSpace:MutableVectorField[HashVector[T],Int,T] = HashVector.space[T]
+      implicit val hvSpace:MutableVectorField[HashVector[T],T] = HashVector.space[T]
       import hvSpace._
       val diff: Double = (a.toHashVector - b.toHashVector).norm(2)
       if(diff > tolerance)

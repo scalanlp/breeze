@@ -142,15 +142,15 @@ object FirstOrderMinimizer {
                        randomSeed: Int = 0) {
     private implicit val random = new RandBasis(new ThreadLocalRandomGenerator(new MersenneTwister(randomSeed)))
 
-    def minimize[T, I](f: BatchDiffFunction[T], init: T)(implicit space: MutableVectorField[T, I, Double]): T = {
+    def minimize[T](f: BatchDiffFunction[T], init: T)(implicit space: MutableVectorField[T, Double]): T = {
       this.iterations(f, init).last.x
     }
 
-    def minimize[T, I](f: DiffFunction[T], init: T)(implicit space: MutableVectorField[T, I, Double]): T = {
+    def minimize[T](f: DiffFunction[T], init: T)(implicit space: MutableVectorField[T, Double]): T = {
       this.iterations(f, init).last.x
     }
 
-    def iterations[T, I](f: BatchDiffFunction[T], init: T)(implicit space: MutableVectorField[T, I, Double]): Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State] = {
+    def iterations[T](f: BatchDiffFunction[T], init: T)(implicit space: MutableVectorField[T, Double]): Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State] = {
       val it = if(useStochastic) {
          this.iterations(f.withRandomBatches(batchSize), init)(space)
       } else {
@@ -160,11 +160,11 @@ object FirstOrderMinimizer {
       it.asInstanceOf[Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State]]
     }
 
-    def iterations[T, I](f: StochasticDiffFunction[T], init:T)(implicit space: MutableVectorField[T, I, Double]):Iterator[FirstOrderMinimizer[T, StochasticDiffFunction[T]]#State] = {
+    def iterations[T](f: StochasticDiffFunction[T], init:T)(implicit space: MutableVectorField[T, Double]):Iterator[FirstOrderMinimizer[T, StochasticDiffFunction[T]]#State] = {
       val r = if(useL1) {
-        new AdaptiveGradientDescent.L1Regularization[T, I](regularization, eta=alpha, maxIter = maxIterations)(space, random)
+        new AdaptiveGradientDescent.L1Regularization[T](regularization, eta=alpha, maxIter = maxIterations)(space, random)
       } else { // L2
-        new AdaptiveGradientDescent.L2Regularization[T, I](regularization, alpha,  maxIterations)(space, random)
+        new AdaptiveGradientDescent.L2Regularization[T](regularization, alpha,  maxIterations)(space, random)
       }
       r.iterations(f,init)
     }

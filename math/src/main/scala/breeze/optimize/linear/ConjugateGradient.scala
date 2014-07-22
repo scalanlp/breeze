@@ -13,11 +13,11 @@ import breeze.util.SerializableLogging
  * Based on the code from "Trust Region Newton Method for Large-Scale Logistic Regression"
  * * @author dlwh
  */
-class ConjugateGradient[T,I,M](maxNormValue: Double = Double.PositiveInfinity,
+class ConjugateGradient[T,M](maxNormValue: Double = Double.PositiveInfinity,
                              maxIterations: Int = -1,
                              normSquaredPenalty: Double = 0,
                              tolerance: Double = 1E-5)
-                            (implicit space: MutableInnerProductVectorSpace[T, I, Double], mult: OpMulMatrix.Impl2[M, T, T]) extends SerializableLogging {
+                            (implicit space: MutableInnerProductVectorSpace[T, Double], mult: OpMulMatrix.Impl2[M, T, T]) extends SerializableLogging {
   import space._
 
   def minimize(a: T, B: M): T = minimize(a, B, zeroLike(a))

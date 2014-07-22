@@ -5,7 +5,7 @@ import breeze.linalg.operators._
 import breeze.storage.Zero
 import breeze.generic._
 import breeze.linalg.support._
-import breeze.math.{MutableVectorField, Field}
+import breeze.math.{MutableTensorField, MutableVectorField, Field}
 import scala.reflect.ClassTag
 import scala.util.hashing.MurmurHash3
 import breeze.macros.expand
@@ -211,8 +211,8 @@ object HashVector extends HashVectorOps
     }
   }
 
-  implicit def space[E:Field:ClassTag:Zero]: MutableVectorField[HashVector[E],Int,E] = {
-    MutableVectorField.make[HashVector[E], Int, E]
+  implicit def space[E:Field:ClassTag:Zero]: MutableTensorField[HashVector[E],Int,E] = {
+    MutableTensorField.make[HashVector[E], Int, E]
   }
 
   import breeze.math.PowImplicits._

@@ -1,6 +1,7 @@
 package breeze.optimize
 
 import breeze.linalg.operators.OpMulMatrix
+import breeze.linalg.support.{CanZipMapValues, CanMapValues, CanTraverseValues}
 import breeze.math.{VectorField, MutableVectorField, MutablizingAdaptor}
 import breeze.optimize.FirstOrderMinimizer.OptParams
 import breeze.util.Implicits._
@@ -14,50 +15,54 @@ trait OptimizationPackage[Function, Vector] {
 }
 
 object OptimizationPackage {
-  class FirstOrderOptimizationPackage[DF, K, Vector]()(implicit space: MutableVectorField[Vector, K, Double],
+  class FirstOrderOptimizationPackage[DF, Vector]()(implicit space: MutableVectorField[Vector, Double],
                                                     df: DF <:< DiffFunction[Vector]) extends OptimizationPackage[DF, Vector] {
     def minimize(fn: DF, init: Vector, options: OptimizationOption*):Vector = {
       options.foldLeft(OptParams())( (a,b) => b apply a).minimize(new CachedDiffFunction(fn)(space.copy), init)
     }
   }
 
-  implicit def firstOrderPackage[DF, K, Vector](implicit space: MutableVectorField[Vector, K, Double], df: DF <:< DiffFunction[Vector]) = new FirstOrderOptimizationPackage[DF, K, Vector]()
+  implicit def firstOrderPackage[DF, Vector](implicit space: MutableVectorField[Vector, Double], df: DF <:< DiffFunction[Vector]) = new FirstOrderOptimizationPackage[DF, Vector]()
 
-  class SecondOrderOptimizationPackage[K, Vector, Hessian]()(implicit space: MutableVectorField[Vector, K, Double],
+  class SecondOrderOptimizationPackage[Vector, Hessian]()(implicit space: MutableVectorField[Vector, Double],
                                                           mult: OpMulMatrix.Impl2[Hessian, Vector, Vector]) extends OptimizationPackage[SecondOrderFunction[Vector, Hessian], Vector] {
     def minimize(fn: SecondOrderFunction[Vector, Hessian], init: Vector, options: OptimizationOption*):Vector = {
       val params = options.foldLeft(OptParams())( (a,b) => b apply a)
       if(params.useL1) throw new UnsupportedOperationException("Can't use L1 with second order optimizer right now")
-      val minimizer = new TruncatedNewtonMinimizer[K,Vector,Hessian](params.maxIterations, params.tolerance, params.regularization)
+      val minimizer = new TruncatedNewtonMinimizer[Vector,Hessian](params.maxIterations, params.tolerance, params.regularization)
       minimizer.minimize(fn, init)
     }
   }
 
-  implicit def secondOrderPackage[K, Vector, Hessian](implicit space: MutableVectorField[Vector, K, Double],
-                                                   mult: OpMulMatrix.Impl2[Hessian, Vector, Vector]) = new SecondOrderOptimizationPackage[K, Vector, Hessian]()
+  implicit def secondOrderPackage[Vector, Hessian](implicit space: MutableVectorField[Vector, Double],
+                                                   mult: OpMulMatrix.Impl2[Hessian, Vector, Vector]) = new SecondOrderOptimizationPackage[Vector, Hessian]()
 
-  class FirstOrderStochasticOptimizationPackage[K, Vector]()(implicit space: MutableVectorField[Vector, K, Double]) extends OptimizationPackage[StochasticDiffFunction[Vector], Vector] {
+  class FirstOrderStochasticOptimizationPackage[Vector]()(implicit space: MutableVectorField[Vector, Double]) extends OptimizationPackage[StochasticDiffFunction[Vector], Vector] {
     def minimize(fn: StochasticDiffFunction[Vector], init: Vector, options: OptimizationOption*):Vector = {
       options.foldLeft(OptParams())( (a,b) => b apply a).iterations(fn, init).last.x
     }
   }
 
-  implicit def firstOrderStochasticPackage[K, Vector](implicit space: MutableVectorField[Vector, K, Double]) = new FirstOrderStochasticOptimizationPackage[K,Vector]()
+  implicit def firstOrderStochasticPackage[Vector](implicit space: MutableVectorField[Vector, Double]) = new FirstOrderStochasticOptimizationPackage[Vector]()
 
-  class FirstOrderBatchOptimizationPackage[K, Vector]()(implicit space: MutableVectorField[Vector, K, Double]) extends OptimizationPackage[BatchDiffFunction[Vector], Vector] {
+  class FirstOrderBatchOptimizationPackage[Vector]()(implicit space: MutableVectorField[Vector, Double]) extends OptimizationPackage[BatchDiffFunction[Vector], Vector] {
     def minimize(fn: BatchDiffFunction[Vector], init: Vector, options: OptimizationOption*):Vector = {
       options.foldLeft(OptParams())( (a,b) => b apply a).iterations(new CachedBatchDiffFunction(fn)(space.copy), init).last.x
     }
   }
 
-  implicit def firstOrderBatchPackage[K, Vector](implicit space: MutableVectorField[Vector, K, Double]) = new FirstOrderBatchOptimizationPackage[K, Vector]()
+  implicit def firstOrderBatchPackage[Vector](implicit space: MutableVectorField[Vector, Double]) = new FirstOrderBatchOptimizationPackage[Vector]()
 }
 
 
 trait OptimizationPackageLowPriority {
-  class ImmutableFirstOrderOptimizationPackage[DF, K, Vector]()(implicit space: VectorField[Vector, K, Double],
-                                                    df: DF <:< DiffFunction[Vector]) extends OptimizationPackage[DF, Vector] {
-    def minimize(fn: DF, init: Vector, options: OptimizationOption*):Vector = {
+
+  class ImmutableFirstOrderOptimizationPackage[DF, Vector]()(implicit space: VectorField[Vector, Double],
+                                                             canIterate: CanTraverseValues[Vector, Double],
+                                                             canMap: CanMapValues[Vector, Double, Double, Vector],
+                                                             canZipMap: CanZipMapValues[Vector, Double, Double, Vector],
+                                                             df: DF <:< DiffFunction[Vector]) extends OptimizationPackage[DF, Vector] {
+    def minimize(fn: DF, init: Vector, options: OptimizationOption*): Vector = {
       val mut = MutablizingAdaptor.ensureMutable(space)
       import mut._
 
@@ -68,5 +73,8 @@ trait OptimizationPackageLowPriority {
     }
   }
 
-  implicit def imFirstOrderPackage[DF, K, Vector](implicit space: MutableVectorField[Vector, K, Double], df: DF <:< DiffFunction[Vector])  = new ImmutableFirstOrderOptimizationPackage[DF, K, Vector]()
+  implicit def imFirstOrderPackage[DF, Vector](implicit space: MutableVectorField[Vector, Double],
+                                               canIterate: CanTraverseValues[Vector, Double],
+                                               canMap: CanMapValues[Vector, Double, Double, Vector],
+                                               canZipMap: CanZipMapValues[Vector, Double, Double, Vector],df: DF <:< DiffFunction[Vector])  = new ImmutableFirstOrderOptimizationPackage[DF, Vector]()
 }

@@ -14,13 +14,15 @@ package breeze.linalg
  See the License for the specific language governing permissions and
  limitations under the License.
 */
+
+import breeze.numerics._
 import operators._
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
 import breeze.util.ArrayUtil
 import support._
 import breeze.generic._
-import breeze.math.{Complex, Ring, Semiring}
+import breeze.math._
 import breeze.storage.Zero
 import breeze.storage.Zero._
 import scala.reflect.ClassTag
@@ -921,6 +923,68 @@ with MatrixConstructors[DenseMatrix] {
         }
       }
     }
+  }
+
+  implicit def canDim[E] = new dim.Impl[DenseMatrix[E],(Int,Int)] {
+    def apply(v: DenseMatrix[E]): (Int, Int) = (v.rows,v.cols)
+  }
+
+  object FrobeniusInnerProductDenseMatrixSpace {
+    implicit def canNorm[S](implicit iter: CanTraverseValues[DenseMatrix[S], S],
+                            field: Field[S]): norm.Impl2[DenseMatrix[S], Double, Double] = {
+      new norm.Impl2[DenseMatrix[S], Double, Double] {
+        def apply(v: DenseMatrix[S], n: Double): Double = {
+          class NormVisitor extends ValuesVisitor[S] {
+            var agg: Double = 0.0
+            val (op, opEnd) =
+              if (n == 1) ((v: S) => agg += field.sNorm(v), identity[Double] _)
+              else if (n == 2) ((v: S) => {
+                val nn = field.sNorm(v)
+                agg += nn * nn
+              }, (e: Double) => sqrt(e))
+              else if (n == Int.MaxValue || n == Float.PositiveInfinity || n == Double.PositiveInfinity) {
+                ((v: S) => {
+                  val nn = field.sNorm(v)
+                  if (nn > agg) agg = nn
+                }, identity[Double] _)
+              } else {
+                ((v: S) => {
+                  val nn = field.sNorm(v)
+                  agg += pow(nn, n)
+                }, (e: Double) => pow(e, 1.0 / n))
+              }
+
+
+            def visit(a: S): Unit = op(a)
+
+            def zeros(numZero: Int, zeroValue: S): Unit = {}
+
+            def norm = opEnd(agg)
+          }
+
+          val visit = new NormVisitor
+          iter.traverse(v, visit)
+          visit.norm
+        }
+      }
+    }
+
+    implicit def canFrobInnerProduct[S](implicit hadamard: OpMulScalar.Impl2[DenseMatrix[S],DenseMatrix[S],DenseMatrix[S]],
+                                         semiring: Semiring[S], iter: CanTraverseValues[DenseMatrix[S],S]) =
+      new OpMulInner.Impl2[DenseMatrix[S],DenseMatrix[S],S] {
+        override def apply(v: DenseMatrix[S], v2: DenseMatrix[S]): S = {
+          sum(hadamard(v,v2))
+        }
+      }
+
+    implicit def canFrobNorm[S](implicit hadamard: OpMulScalar.Impl2[DenseMatrix[S],DenseMatrix[S],DenseMatrix[S]],
+                                ring: Ring[S],
+                                iter: CanTraverseValues[DenseMatrix[S],S]) =
+      new norm.Impl[DenseMatrix[S],Double] {
+        override def apply(v: DenseMatrix[S]): Double = ring.sNorm(sum(hadamard(v,v)))
+      }
+
+    implicit def space[S:Field:Zero:ClassTag] = MutableRestrictedDomainTensorField.make[DenseMatrix[S],(Int,Int),S]
   }
 
   @noinline

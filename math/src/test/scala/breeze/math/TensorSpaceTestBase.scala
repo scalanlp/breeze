@@ -26,7 +26,7 @@ import breeze.linalg.norm
  */
 
 trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
-  implicit val space: MutableVectorField[V, I, S]
+  implicit val space: MutableTensorField[V, I, S]
 
   import space._
 
