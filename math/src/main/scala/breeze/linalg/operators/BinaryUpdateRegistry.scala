@@ -18,6 +18,7 @@ package breeze.linalg.operators
 import breeze.generic.{UFunc, MMRegistry2}
 import breeze.generic.UFunc.InPlaceImpl2
 
+import scala.reflect.ClassTag
 
 /**
  * This is a special kind of BinaryUpdateOp that supports registration
@@ -66,7 +67,7 @@ trait BinaryUpdateRegistry[A<:AnyRef, B, Op<:OpType] extends UFunc.InPlaceImpl2[
     }
   }
 
-  def register[AA<:A, BB<:B](op: InPlaceImpl2[Op, AA, BB])(implicit manA: Manifest[AA], manB: Manifest[BB]) {
-    super.register(manA.runtimeClass, manB.runtimeClass, op)
+  def register[AA<:A, BB<:B](op: InPlaceImpl2[Op, AA, BB])(implicit cA: ClassTag[AA], cB: ClassTag[BB]) {
+    super.register(cA.runtimeClass, cB.runtimeClass, op)
   }
 }

@@ -15,12 +15,15 @@ package breeze.linalg
  limitations under the License.
 */
 
+import breeze.linalg.support.CanTraverseValues.ValuesVisitor
+import breeze.numerics._
+
 import scala.{specialized=>spec}
 import breeze.storage.{Zero, Storage}
 import breeze.util.Terminal
-import breeze.linalg.support.{CanMapValues, CanCopy, LiteralRow}
+import breeze.linalg.support._
 import util.Random
-import breeze.math.{Complex, Semiring}
+import breeze.math._
 import breeze.linalg.operators._
 import scala.reflect.ClassTag
 import breeze.macros.expand
@@ -211,6 +214,18 @@ trait MatrixConstructors[Mat[T]<:Matrix[T]] {
     finishLiteral(rv, rl, rows)
     rv
   }
+
+  implicit def canCreateZeros[T:ClassTag:Zero]: CanCreateZeros[Mat[T],(Int,Int)] =
+    new CanCreateZeros[Mat[T],(Int,Int)] {
+      def apply(dims: (Int,Int)): Mat[T] = {
+        zeros[T](dims._1,dims._2)
+      }
+    }
+
+  implicit def canTabulate[T:ClassTag:Zero] = new CanTabulate[(Int,Int),Mat[T],T] {
+    def apply(d: (Int, Int), f: ((Int, Int)) => T): Mat[T] = tabulate[T](d._1,d._2)((r: Int, c: Int) => f((r,c)))
+  }
+
 
   // This method only exists because of trouble in Scala-specialization land.
   // basically, we turn off specialization for this loop, since it's not going to be fast anyway.

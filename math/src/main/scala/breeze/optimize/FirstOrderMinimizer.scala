@@ -1,11 +1,11 @@
 package breeze.optimize
 
-import breeze.math.{NormedVectorSpace, MutableCoordinateSpace}
-import breeze.util.Implicits._
 import breeze.linalg.norm
+import breeze.math.{MutableVectorRing, MutableVectorField, NormedModule}
 import breeze.stats.distributions.{RandBasis, ThreadLocalRandomGenerator}
-import org.apache.commons.math3.random.MersenneTwister
+import breeze.util.Implicits._
 import breeze.util.SerializableLogging
+import org.apache.commons.math3.random.MersenneTwister
 
 /**
  *
@@ -16,7 +16,7 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](maxIter: In
                                                                      tolerance: Double=1E-6,
                                                                      improvementTol: Double=1E-3,
                                                                      val minImprovementWindow: Int = 10,
-                                                                     val numberOfImprovementFailures: Int = 1)(implicit vspace: NormedVectorSpace[T, Double]) extends Minimizer[T,DF] with SerializableLogging {
+                                                                     val numberOfImprovementFailures: Int = 1)(implicit space: NormedModule[T, Double]) extends Minimizer[T,DF] with SerializableLogging {
 
   type History
   case class State(x: T,
@@ -30,7 +30,7 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](maxIter: In
                    searchFailed: Boolean = false) {
   }
 
-  import vspace.normImpl
+  import space.normImpl
 
   protected def initialHistory(f: DF, init: T): History
   protected def adjustFunction(f: DF): DF = f
@@ -142,17 +142,17 @@ object FirstOrderMinimizer {
                        randomSeed: Int = 0) {
     private implicit val random = new RandBasis(new ThreadLocalRandomGenerator(new MersenneTwister(randomSeed)))
 
-    def minimize[T](f: BatchDiffFunction[T], init: T)(implicit arith: MutableCoordinateSpace[T, Double]): T = {
+    def minimize[T](f: BatchDiffFunction[T], init: T)(implicit space: MutableVectorField[T, Double]): T = {
       this.iterations(f, init).last.x
     }
 
-    def minimize[T](f: DiffFunction[T], init: T)(implicit arith: MutableCoordinateSpace[T, Double]): T = {
+    def minimize[T](f: DiffFunction[T], init: T)(implicit space: MutableVectorField[T, Double]): T = {
       this.iterations(f, init).last.x
     }
 
-    def iterations[T](f: BatchDiffFunction[T], init: T)(implicit arith: MutableCoordinateSpace[T, Double]): Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State] = {
+    def iterations[T](f: BatchDiffFunction[T], init: T)(implicit space: MutableVectorField[T, Double]): Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State] = {
       val it = if(useStochastic) {
-         this.iterations(f.withRandomBatches(batchSize), init)(arith)
+         this.iterations(f.withRandomBatches(batchSize), init)(space)
       } else {
         iterations(f:DiffFunction[T], init)
       }
@@ -160,18 +160,18 @@ object FirstOrderMinimizer {
       it.asInstanceOf[Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State]]
     }
 
-    def iterations[T](f: StochasticDiffFunction[T], init:T)(implicit arith: MutableCoordinateSpace[T, Double]):Iterator[FirstOrderMinimizer[T, StochasticDiffFunction[T]]#State] = {
+    def iterations[T](f: StochasticDiffFunction[T], init:T)(implicit space: MutableVectorField[T, Double]):Iterator[FirstOrderMinimizer[T, StochasticDiffFunction[T]]#State] = {
       val r = if(useL1) {
-        new AdaptiveGradientDescent.L1Regularization[T](regularization, eta=alpha, maxIter = maxIterations)(arith, random)
+        new AdaptiveGradientDescent.L1Regularization[T](regularization, eta=alpha, maxIter = maxIterations)(space, random)
       } else { // L2
-        new AdaptiveGradientDescent.L2Regularization[T](regularization, alpha,  maxIterations)(arith, random)
+        new AdaptiveGradientDescent.L2Regularization[T](regularization, alpha,  maxIterations)(space, random)
       }
       r.iterations(f,init)
     }
 
-    def iterations[T](f: DiffFunction[T], init:T)(implicit vspace: MutableCoordinateSpace[T, Double]): Iterator[LBFGS[T]#State] = {
-       if(useL1) new OWLQN[T](maxIterations, 5, regularization, tolerance)(vspace).iterations(f,init)
-      else (new LBFGS[T](maxIterations, 5, tolerance=tolerance)(vspace)).iterations(DiffFunction.withL2Regularization(f,regularization),init)
+    def iterations[T](f: DiffFunction[T], init:T)(implicit space: MutableVectorRing[T, Double]): Iterator[LBFGS[T]#State] = {
+       if(useL1) new OWLQN[T](maxIterations, 5, regularization, tolerance)(space).iterations(f,init)
+      else (new LBFGS[T](maxIterations, 5, tolerance=tolerance)(space)).iterations(DiffFunction.withL2Regularization(f,regularization),init)
     }
   }
 }

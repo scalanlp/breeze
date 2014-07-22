@@ -1,9 +1,7 @@
 package breeze.optimize
 
+import breeze.math.NormedModule
 import breeze.util._
-import breeze.stats.distributions._
-import breeze.math.MutableCoordinateSpace
-
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
@@ -31,8 +29,8 @@ abstract class StochasticGradientDescent[T](val defaultStepSize: Double,
                                             tolerance: Double=1E-5,
                                             improvementTol: Double=1E-4,
                                             minImprovementWindow: Int = 50)
-                                            (implicit protected val vspace: MutableCoordinateSpace[T, Double])
-  extends FirstOrderMinimizer[T,StochasticDiffFunction[T]](maxIter, tolerance, improvementTol, minImprovementWindow, 2) with SerializableLogging {
+                                            (implicit protected val vspace: NormedModule[T, Double])
+  extends FirstOrderMinimizer[T, StochasticDiffFunction[T]](maxIter, tolerance, improvementTol, minImprovementWindow, 2) with SerializableLogging {
 
   import vspace._
 
@@ -70,13 +68,13 @@ abstract class StochasticGradientDescent[T](val defaultStepSize: Double,
 }
 
 object StochasticGradientDescent {
-  def apply[T](initialStepSize: Double=4, maxIter: Int=100)(implicit vs: MutableCoordinateSpace[T, Double]) :StochasticGradientDescent[T]  = {
+  def apply[T](initialStepSize: Double=4, maxIter: Int=100)(implicit vs: NormedModule[T, Double]) :StochasticGradientDescent[T]  = {
     new SimpleSGD(initialStepSize,maxIter)
   }
 
   class SimpleSGD[T](eta: Double=4,
                      maxIter: Int=100)
-                    (implicit vs: MutableCoordinateSpace[T, Double]) extends StochasticGradientDescent[T](eta,maxIter) {
+                    (implicit vs: NormedModule[T, Double]) extends StochasticGradientDescent[T](eta,maxIter) {
     type History = Unit
     def initialHistory(f: StochasticDiffFunction[T],init: T)= ()
     def updateHistory(newX: T, newGrad: T, newValue: Double, f: StochasticDiffFunction[T], oldState: State) = ()

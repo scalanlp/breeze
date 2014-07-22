@@ -268,6 +268,28 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
     res
   }
 
+  implicit def axpy[V:Semiring:ClassTag]: scaleAdd.InPlaceImpl3[DenseVector[V],V,DenseVector[V]] = {
+    new scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] {
+      val sr = implicitly[Semiring[V]]
+      def apply(a: DenseVector[V], s: V, b: DenseVector[V]) {
+        require(b.length == a.length, "Vectors must be the same length!")
+        val ad = a.data
+        val bd = b.data
+        var aoff = a.offset
+        var boff = b.offset
+
+        var i = 0
+        while(i < a.length) {
+          ad(aoff) = sr.+(ad(aoff),sr.*(s,bd(boff)))
+          aoff += a.stride
+          boff += b.stride
+          i += 1
+        }
+      }
+      implicitly[TernaryUpdateRegistry[Vector[V], V, Vector[V], scaleAdd.type]].register(this)
+    }
+  }
+
   @expand
   @expand.valify
   implicit def axpy[@expand.args(Int, Double, Float, Long) V]: scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] = {
@@ -661,5 +683,42 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
     }
 
 
+  implicit def canNormField[T:Field]: norm.Impl2[DenseVector[T],Double,Double] = {
+    val f = implicitly[Field[T]]
+    new norm.Impl2[DenseVector[T],Double,Double] {
+      def apply(v: DenseVector[T],n: Double) = {
+        import v._
+        if (n == 1) {
+          var sum = 0.0
+          foreach (v => sum += f.sNorm(v) )
+          sum
+        } else if (n == 2) {
+          var sum = 0.0
+          foreach (v => { val nn = f.sNorm(v); sum += nn * nn })
+          math.sqrt(sum)
+        } else if (n == Double.PositiveInfinity) {
+          var max = 0.0
+          foreach (v => { val nn = f.sNorm(v); if (nn > max) max = nn })
+          max
+        } else {
+          var sum = 0.0
+          foreach (v => { val nn = f.sNorm(v); sum += math.pow(nn,n) })
+          math.pow(sum, 1.0 / n)
+        }
+      }
+    }
+  }
+
+  implicit def canNorm[T:Field]: norm.Impl[DenseVector[T],Double] = {
+    val f = implicitly[Field[T]]
+    new norm.Impl[DenseVector[T],Double] {
+      override def apply(v: DenseVector[T]): Double = {
+        import v._
+        var sum = 0.0
+        foreach (v => { val nn = f.sNorm(v); sum += nn * nn })
+        math.sqrt(sum)
+      }
+    }
+  }
 
 }

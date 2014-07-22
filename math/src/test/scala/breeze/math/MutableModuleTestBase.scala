@@ -8,8 +8,8 @@ import org.scalatest.prop.Checkers
  * 
  * @author dlwh
  */
-trait MutableVectorSpaceTestBase[V, S] extends FunSuite with Checkers {
-  implicit val space: MutableVectorSpace[V,  S]
+trait MutableModuleTestBase[V, S] extends FunSuite with Checkers {
+  implicit val space: MutableModule[V,  S]
   import space._
 
 
@@ -53,43 +53,43 @@ trait MutableVectorSpaceTestBase[V, S] extends FunSuite with Checkers {
    test("Zero is Zero") {
      check(Prop.forAll{ (trip: (V, V, V)) =>
        val (a, b, c) = trip
-       val z = zeros(a)
+       val z = zeroLike(a)
        close(a :+ z, a, TOL)
      })
 
      check(Prop.forAll{ (trip: (V, V, V)) =>
        val (a, b, _) = trip
        val ab = copy(a)
-       val z = zeros(a)
+       val z = zeroLike(a)
        ab :+= z
        close(a, ab, TOL)
      })
    }
 
-   test("a + -a == 0") {
+   test("a - a == 0") {
      check(Prop.forAll{ (trip: (V, V, V)) =>
        val (a, b, c) = trip
-       val z = zeros(a)
-       close(a + -a, z, TOL)
+       val z = zeroLike(a)
+       close(a - a, z, TOL)
      })
 
      check(Prop.forAll{ (trip: (V, V, V)) =>
        val (a, b, _) = trip
-       val z = zeros(a)
-       a += -a
+       val z = zeroLike(a)
+       a -= a
        close(a, z, TOL)
      })
 
      check(Prop.forAll{ (trip: (V, V, V)) =>
        val (a, b, _) = trip
-       val z = zeros(a)
+       val z = zeroLike(a)
        a :-= a
        close(a, z, TOL)
      })
 
      check(Prop.forAll{ (trip: (V, V, V)) =>
        val (a, b, _) = trip
-       val z = zeros(a)
+       val z = zeroLike(a)
        val ab = a :- b
        a -= b
        close(a, ab, TOL)
@@ -99,7 +99,7 @@ trait MutableVectorSpaceTestBase[V, S] extends FunSuite with Checkers {
    test("Scalar mult distributes over vector addition") {
      check(Prop.forAll{ (trip: (V, V, V), s: S) =>
        val (a, b, _) = trip
-       close( (a + b) * s, (b * s +a * s), TOL)
+       close( (a + b) :* s, (b :* s) + (a :* s), TOL)
      })
 
  //    check(Prop.forAll{ (trip: (V, V, V), s: S) =>
@@ -112,8 +112,8 @@ trait MutableVectorSpaceTestBase[V, S] extends FunSuite with Checkers {
        val ab = copy(a)
        ab += b
        ab *= s
-       val ba = copy(a) * s
-       ba += (b * s)
+       val ba = copy(a) :* s
+       ba += (b :* s)
        close(ab, ba, TOL)
      })
 
@@ -125,7 +125,7 @@ trait MutableVectorSpaceTestBase[V, S] extends FunSuite with Checkers {
     check(Prop.forAll{ (trip: (V, V, V), s: S) =>
       val (a, b, _) = trip
       val ac = copy(a)
-      val prod = a + b * s
+      val prod = a + (b :* s)
       breeze.linalg.axpy(s, b, ac)
       close( prod, ac, TOL)
     })
@@ -136,16 +136,16 @@ trait MutableVectorSpaceTestBase[V, S] extends FunSuite with Checkers {
    test("Scalar mult distributes over field addition") {
      check(Prop.forAll{ (trip: (V, V, V), s: S, t: S) =>
        val (a, _, _) = trip
-       close( (a) * field.+(s,t), (a * s + a * t), 1E-4)
+       close( (a) :* scalars.+(s,t), (a :* s) + (a :* t), 1E-4)
      })
 
      check(Prop.forAll{ (trip: (V, V, V), s: S, t: S) =>
        val (a, _, _) = trip
        val ab = copy(a)
        ab *= s
-       ab += (a * t)
+       ab += (a :* t)
        val ba = copy(a)
-       ba *= field.+(s,t)
+       ba *= scalars.+(s,t)
        close(ab, ba, 1e-4)
      })
    }
@@ -153,7 +153,7 @@ trait MutableVectorSpaceTestBase[V, S] extends FunSuite with Checkers {
    test("Compatibility of scalar multiplication with field multiplication") {
      check(Prop.forAll{ (trip: (V, V, V), s: S, t: S) =>
        val (a, _, _) = trip
-       close( (a) * field.*(s,t), a * s * t, TOL)
+       close( (a) :* scalars.*(s,t), a :* s :* t, TOL)
      })
 
      check(Prop.forAll{ (trip: (V, V, V), s: S, t: S) =>
@@ -162,21 +162,21 @@ trait MutableVectorSpaceTestBase[V, S] extends FunSuite with Checkers {
        ab *= s
        ab *= t
        val ba = copy(a)
-       ba *= field.*(s, t)
+       ba *= scalars.*(s, t)
        close(ab, ba, TOL)
      })
 
-     check(Prop.forAll{ (trip: (V, V, V), s: S, t: S) =>
-       val (a, _, _) = trip
-       s == field.zero || t == field.zero || {
-       val ab = copy(a)
-         ab /= s
-         ab /= t
-         val ba = copy(a)
-         ba /= field.*(s, t)
-         close(ab, ba, TOL)
-       }
-     })
+//     check(Prop.forAll{ (trip: (V, V, V), s: S, t: S) =>
+//       val (a, _, _) = trip
+//       s == scalars.zero || t == scalars.zero || {
+//       val ab = copy(a)
+//         ab /= s
+//         ab /= t
+//         val ba = copy(a)
+//         ba /= scalars.*(s, t)
+//         close(ab, ba, TOL)
+//       }
+//     })
    }
 
   // op set
@@ -194,13 +194,13 @@ trait MutableVectorSpaceTestBase[V, S] extends FunSuite with Checkers {
   test("1 is 1") {
     check(Prop.forAll{ (trip: (V, V, V)) =>
       val (a, b, c) = trip
-      close(a * field.one, a, TOL)
+      close(a :* scalars.one, a, TOL)
     })
 
     check(Prop.forAll{ (trip: (V, V, V)) =>
       val (a, b, _) = trip
       val ab = copy(a)
-      ab *= field.one
+      ab *= scalars.one
       close(a, ab, TOL)
     })
   }

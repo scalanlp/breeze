@@ -260,10 +260,12 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
   }
 
 
-  implicit val space_d = TensorSpace.make[Vector[Double], Int, Double]
-  implicit val space_f = TensorSpace.make[Vector[Float], Int, Float]
-  implicit val space_i = TensorSpace.make[Vector[Int], Int, Int]
 
+  implicit def space[V:Field:Zero:ClassTag] = {
+    val f = implicitly[Field[V]]
+    import f.normImpl
+    MutableTensorField.make[Vector[V], Int, V]
+  }
 }
 
 
@@ -360,6 +362,23 @@ trait VectorOps { this: Vector.type =>
     }
   }
 
+  @expand
+  implicit def v_sField_Op[@expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpMod, OpPow) Op <: OpType, T:Field:ClassTag]
+  (implicit @expand.sequence[Op]({f.+(_,_)},  {f.-(_,_)}, {f.*(_,_)}, {f.*(_,_)}, {f./(_,_)}, {f.%(_,_)}, {f.pow(_,_)}) op: Op.Impl2[T, T, T]):
+  BinaryRegistry[Vector[T], T, Op.type, Vector[T]] = new BinaryRegistry[Vector[T], T, Op.type, Vector[T]] {
+    val f = implicitly[Field[T]]
+    override def bindingMissing(a: Vector[T], b: T): Vector[T] = {
+      val result = Vector.zeros[T](a.length)
+
+      var i = 0
+      while(i < a.length) {
+        result(i) = op(a(i), b)
+        i += 1
+      }
+      result
+    }
+  }
+
 
 
   @expand
@@ -419,6 +438,20 @@ trait VectorOps { this: Vector.type =>
     }
   }
 
+  @expand
+  implicit def v_s_UpdateOp[@expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType, T:Field:ClassTag]
+  (implicit @expand.sequence[Op]({f.+(_,_)},  {f.-(_, _)}, {f.*(_, _)}, {f.*(_, _)}, {f./(_, _)}, {(a,b) => b}, {f.%(_,_)}, {f.pow(_,_)})
+  op: Op.Impl2[T, T, T]):BinaryUpdateRegistry[Vector[T], T, Op.type] = new BinaryUpdateRegistry[Vector[T], T, Op.type] {
+    val f = implicitly[Field[T]]
+    override def bindingMissing(a: Vector[T], b: T):Unit = {
+      var i = 0
+      while(i < a.length) {
+        a(i) = op(a(i), b)
+        i += 1
+      }
+    }
+  }
+
 
   @expand
   @expand.valify
@@ -458,7 +491,21 @@ trait VectorOps { this: Vector.type =>
   }
 
 
+  implicit def axpy[V:Semiring:ClassTag]: TernaryUpdateRegistry[Vector[V], V, Vector[V], scaleAdd.type]  = {
+    new TernaryUpdateRegistry[Vector[V], V, Vector[V], scaleAdd.type] {
+      val sr = implicitly[Semiring[V]]
+      override def bindingMissing(a: Vector[V], s: V, b: Vector[V]) {
+        require(b.length == a.length, "Vectors must be the same length!")
+        if(s == 0) return
 
+        var i = 0
+        for( (k, v) <- b.activeIterator) {
+          a(k) = sr.+(a(k), sr.*(s, v))
+          i += 1
+        }
+      }
+    }
+  }
 
   @expand
   @expand.valify
@@ -726,8 +773,16 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
     apply(b.result )
   }
 
+  implicit def canCreateZeros[V:ClassTag:Zero]: CanCreateZeros[Vec[V], Int] =
+    new CanCreateZeros[Vec[V], Int] {
+      def apply(d: Int): Vec[V] = {
+        zeros[V](d)
+      }
+    }
 
-
+  implicit def canTabulate[V:ClassTag:Zero] = new CanTabulate[Int,Vec[V],V] {
+    def apply(d: Int, f: (Int) => V): Vec[V] = tabulate(d)(f)
+  }
 
   /**
    * Creates a Vector of uniform random numbers in (0,1)
