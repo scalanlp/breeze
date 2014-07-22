@@ -616,7 +616,6 @@ object MutableRestrictedDomainTensorField {
     override implicit def canDim: dim.Impl[V, I] = _dim
     override implicit def tabulateTensor: CanTabulate[I, V, S] = _tabulate
 
-
     //    override implicit def powIntoVV: OpPow.InPlaceImpl2[V, V] = _powIntoVV
 //    override implicit def powIntoVS: OpPow.InPlaceImpl2[V, S] = _powIntoVS
 //    override implicit def modIntoVV: OpMod.InPlaceImpl2[V, V] = _modIntoVV
