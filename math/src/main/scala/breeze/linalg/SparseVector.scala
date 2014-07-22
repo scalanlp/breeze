@@ -370,7 +370,7 @@ object SparseVector extends SparseVectorOps
     def apply(d: Int, f: (Int) => E): SparseVector[E] = tabulate[E](d)(f)
   }
 
-  implicit def space[E:Field:ClassTag:Zero]: MutableRestrictedDomainTensorField[SparseVector[E],Int,E] = {
+  implicit def space[E: Field : ClassTag : Zero]: MutableRestrictedDomainTensorField[SparseVector[E], Int, E] = {
     MutableRestrictedDomainTensorField.make[SparseVector[E], Int, E]
   }
 

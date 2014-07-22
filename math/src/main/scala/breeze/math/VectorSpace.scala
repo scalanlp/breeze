@@ -581,7 +581,7 @@ object MutableRestrictedDomainTensorField {
                     _zipMapVals: CanZipMapValues[V, S, S, V],
                     _traverseVals: CanTraverseValues[V, S],
                     _mapVals: CanMapValues[V, S, S, V]
-                     ): MutableTensorField[V, I, S] = new MutableRestrictedDomainTensorField[V, I, S] {
+                     ): MutableRestrictedDomainTensorField[V, I, S] = new MutableRestrictedDomainTensorField[V, I, S] {
     def scalars: Field[S] = _field
     override implicit def hasOps(v: V): NumericOps[V] with QuasiTensor[I, S] = _ops(v)
     override implicit def normImpl: norm.Impl[V, Double] = _norm
