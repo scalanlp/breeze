@@ -20,6 +20,7 @@ class metropolisTest extends FunSuite {
   case object C extends State
 
   private val NUM_TESTS = 900000
+  private val DROP_COUNT = 2
 
   private val l6 = math.log(6) //performance hack
   private val l2 = math.log(2)
@@ -35,7 +36,7 @@ class metropolisTest extends FunSuite {
   val TOLERANCE = 0.05
 
   test("stupidly simple mcmc") {
-    val mh = ArbitraryMetropolisHastings(logLikelihood _, (_:State) => proposal, (_:State,_:State) => 0.0, A, burnIn = 10000, dropCount=32)
+    val mh = ArbitraryMetropolisHastings(logLikelihood _, (_:State) => proposal, (_:State,_:State) => 0.0, A, burnIn = 10000, dropCount=DROP_COUNT)
     var aCount: Double = 0
     var bCount: Double = 0
     var cCount: Double = 0
@@ -61,7 +62,7 @@ class metropolisTest extends FunSuite {
   }
 
   test("stupidly simple mcmc, anisotropic") {
-    val mh = ArbitraryMetropolisHastings(logLikelihood _, skewedProposal _, logSkewedTransitionProbability _, A, burnIn = 30000, dropCount=32)
+    val mh = ArbitraryMetropolisHastings(logLikelihood _, skewedProposal _, logSkewedTransitionProbability _, A, burnIn = 30000, dropCount=DROP_COUNT)
     var aCount: Double = 0
     var bCount: Double = 0
     var cCount: Double = 0
