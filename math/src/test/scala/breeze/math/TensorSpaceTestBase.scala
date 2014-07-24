@@ -71,7 +71,6 @@ trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
     })
   }
 
-
   // zip map values
   test("zip map of + is the same as +") {
     check(Prop.forAll{ (trip: (V, V, V)) =>
