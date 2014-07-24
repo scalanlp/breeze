@@ -452,16 +452,6 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
 //    }
 //  }
 
-  /*
-  implicit def canTranspose[V]: CanTranspose[DenseVector[V], DenseMatrix[V]] = {
-    new CanTranspose[DenseVector[V], DenseMatrix[V]] {
-      def apply(from: DenseVector[V]) = {
-        new DenseMatrix(data = from.data, offset = from.offset, cols = from.length, rows = 1, majorStride = from.stride)
-      }
-    }
-  }
-  */
-
   implicit def canTransposeComplex: CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] = {
     new CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] {
       def apply(from: DenseVector[Complex]): DenseMatrix[Complex] = {

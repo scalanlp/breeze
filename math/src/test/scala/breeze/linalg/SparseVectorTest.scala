@@ -198,16 +198,44 @@ class SparseVectorTest extends FunSuite {
     assert(m === SparseVector(2f, 0f, 4f, 0f, 6f))
   }
 
-  test("Transpose") {
-    val a = SparseVector.zeros[Int](4)
-    a(1) = 1
-    a(2) = 2
+  test("SparseVector * CSCMatrix Lifted OpMulMatrix & Transpose") {
+    val sv = SparseVector.zeros[Int](4)
+    sv(1) = 1
+    sv(2) = 2
 
-    val expected = CSCMatrix.zeros[Int](1, 4)
-    expected(0, 1) = 1
-    expected(0, 2) = 2
+    val csc = CSCMatrix.zeros[Int](4,4)
+    csc(1, 1) = 1
+    csc(1, 2) = 2
+    csc(2, 1) = 2
+    csc(2, 2) = 4
 
-    assert(a.t === expected)
+    val svr = SparseVector.zeros[Int](4)
+    svr(1) = 5
+    svr(2) = 10
+    val svrt = svr.t
+    val svt = sv * sv.t
+    assert(svt === csc)
+
+    val svv = sv.t * csc
+    assert(svv === svrt)
+
+    sv(3) = 3
+    csc(3,2) = 1
+    csc(3,3) = 3
+    svr(2) = 13
+    svr(3) = 9
+    val svvv = sv.t * csc
+    assert(svvv === svr.t)
+
+    sv(0) = 5
+    csc(0,0) = 2
+    csc(0,1) = 1
+    svr(0) = 10
+    svr(1) += 5
+    val svvvv = sv.t * csc
+    assert(svvvv === svr.t)
+
+
   }
 
   test("Transpose Complex") {

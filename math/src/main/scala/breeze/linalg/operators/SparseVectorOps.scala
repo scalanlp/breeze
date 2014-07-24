@@ -12,7 +12,7 @@ import scala.math.BigInt
 import breeze.generic.{UFunc}
 import scala.specialized
 import breeze.storage.Zero
-import breeze.generic.UFunc.UImpl
+import breeze.generic.UFunc.{UImpl2, UImpl}
 import scala.{specialized=>spec}
 
 trait SparseVector_DenseVector_Ops { this: SparseVector.type =>
@@ -341,6 +341,15 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
 
 trait SparseVectorOps { this: SparseVector.type =>
   import breeze.math.PowImplicits._
+
+  implicit def liftCSCOpToSVTransposeOp[Tag,V,LHS,R](implicit op: UFunc.UImpl2[Tag,LHS,CSCMatrix[V],R],
+                                            zero: Zero[V], ct: ClassTag[V]):
+  UFunc.UImpl2[Tag,LHS,Transpose[SparseVector[V]],R] =
+    new UFunc.UImpl2[Tag,LHS,Transpose[SparseVector[V]],R] {
+      def apply(v: LHS, v2: Transpose[SparseVector[V]]): R = {
+        op(v,v2.inner.asCSCMatrix())
+      }
+    }
 
   @expand
   @expand.valify
