@@ -332,20 +332,20 @@ object SparseVector extends SparseVectorOps
   }
 
 
-  implicit def canTranspose[V:ClassTag:Zero]: CanTranspose[SparseVector[V], CSCMatrix[V]] = {
-    new CanTranspose[SparseVector[V], CSCMatrix[V]] {
-      def apply(from: SparseVector[V]): CSCMatrix[V] = {
-        val transposedMtx: CSCMatrix[V] = CSCMatrix.zeros[V](1, from.length)
-        var i = 0
-        while (i < from.activeSize) {
-          val c = from.index(i)
-          transposedMtx(0, c) = from.data(i)
-          i += 1
-        }
-        transposedMtx
-      }
-    }
-  }
+//  implicit def canTranspose[V:ClassTag:Zero]: CanTranspose[SparseVector[V], CSCMatrix[V]] = {
+//    new CanTranspose[SparseVector[V], CSCMatrix[V]] {
+//      def apply(from: SparseVector[V]): CSCMatrix[V] = {
+//        val transposedMtx: CSCMatrix[V] = CSCMatrix.zeros[V](1, from.length)
+//        var i = 0
+//        while (i < from.activeSize) {
+//          val c = from.index(i)
+//          transposedMtx(0, c) = from.data(i)
+//          i += 1
+//        }
+//        transposedMtx
+//      }
+//    }
+//  }
 
   implicit def canTransposeComplex: CanTranspose[SparseVector[Complex], CSCMatrix[Complex]] = {
     new CanTranspose[SparseVector[Complex], CSCMatrix[Complex]] {

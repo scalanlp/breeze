@@ -548,9 +548,7 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
         val z = DenseVector.zeros[Double](5)
         (z + one)
       """
-
     }
-
   }
 
   test("ensure we don't crash on weird strides") {

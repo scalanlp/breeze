@@ -11,10 +11,6 @@ import breeze.util.ArrayUtil
 import breeze.storage.Zero
 import scala.reflect.ClassTag
 
-
-
-
-
 trait DenseMatrixMultiplyStuff extends DenseMatrixOps with DenseMatrixMultOps with LowPriorityDenseMatrix { this: DenseMatrix.type =>
 
   // <editor-fold defaultstate="collapsed" desc=" OpMulMatrix implementations ">
@@ -25,6 +21,15 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps with DenseMatrixMultOps wi
     new OpMulMatrix.Impl2[Transpose[DenseVector[T]], DenseMatrix[T], Transpose[DenseVector[T]]] {
       override def apply(v: Transpose[DenseVector[T]], v2: DenseMatrix[T]): Transpose[DenseVector[T]] = {
         (v.inner.asDenseMatrix * v2) apply (0, ::)
+      }
+    }
+
+  implicit def implOpMulMatrix_DVT_DMT_eq_DMT[T](implicit op: OpMulMatrix.Impl2[DenseMatrix[T],DenseMatrix[T],DenseMatrix[T]]): OpMulMatrix.Impl2[DenseVector[T],DenseMatrix[T],DenseMatrix[T]] =
+    new OpMulMatrix.Impl2[DenseVector[T],DenseMatrix[T],DenseMatrix[T]] {
+      def apply(v: DenseVector[T], v2: DenseMatrix[T]): DenseMatrix[T] = {
+        require(v2.rows == 1)
+        val dm = new DenseMatrix[T](v.length,1,v.data,v.offset,v.length)
+        op(dm,v2)
       }
     }
 

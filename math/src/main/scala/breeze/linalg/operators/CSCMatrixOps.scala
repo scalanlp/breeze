@@ -17,6 +17,37 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
   // don't remove
   import breeze.math.PowImplicits._
 
+  implicit def canMulSV_CSC_eq_CSC[T](implicit op: OpMulMatrix.Impl2[CSCMatrix[T],CSCMatrix[T],CSCMatrix[T]],zero: Zero[T]):
+  OpMulMatrix.Impl2[SparseVector[T],CSCMatrix[T],CSCMatrix[T]] =
+    new OpMulMatrix.Impl2[SparseVector[T],CSCMatrix[T],CSCMatrix[T]] {
+      def apply(v: SparseVector[T], v2: CSCMatrix[T]): CSCMatrix[T] = {
+        require(v2.rows == 1)
+        val csc = new CSCMatrix[T](v.data,v.length,1,Array(0,v.length),v.index)
+        op(csc,v2)
+      }
+    }
+
+  implicit def canMulSVt_CSC_eq_SVt[T](implicit op: OpMulMatrix.Impl2[CSCMatrix[T],CSCMatrix[T],CSCMatrix[T]],zero: Zero[T],ct: ClassTag[T]):
+  OpMulMatrix.Impl2[Transpose[SparseVector[T]],CSCMatrix[T],Transpose[SparseVector[T]]] =
+    new OpMulMatrix.Impl2[Transpose[SparseVector[T]],CSCMatrix[T],Transpose[SparseVector[T]]] {
+      def apply(v: Transpose[SparseVector[T]], v2: CSCMatrix[T]): Transpose[SparseVector[T]] = {
+        require(v2.rows == v.inner.length)
+        val csc = v.inner.asCSCMatrix()
+        val cscr = op(csc,v2)
+        val ind = Array.ofDim[Int](cscr.data.length)
+        var i = 0
+        var c = 1
+        while (c < cscr.colPtrs.length) {
+          if (cscr.colPtrs(c-1) != cscr.colPtrs(c)) {
+            ind(i) = c-1
+            i += 1
+          }
+          c += 1
+        }
+        new Transpose[SparseVector[T]](new SparseVector[T](ind,cscr.data,cscr.activeSize,cscr.cols))
+      }
+    }
+
   @expand
   @expand.valify
   implicit def csc_csc_UpdateOp[@expand.args(Int, Double, Float, Long) T,
