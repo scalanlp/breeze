@@ -103,6 +103,8 @@ abstract class OptDesignMethod extends Opt
 object OptDesignMethod {
   /**Option value: use firwin() to design FIR kernel using window method.*/
   case object Firwin extends OptDesignMethod
+  case object IIR extends OptDesignMethod
+  case object SOS extends OptDesignMethod
   case object Cheby1 extends OptDesignMethod
 }
 
@@ -127,3 +129,12 @@ object OptRange {
   implicit def rangeToRangeOpt(r: Range) = OptRange.RangeOpt( r )
 }
 
+// filter flavour options of IIR/ SOS filter designs
+abstract class OptFilterFlavour extends Opt
+
+object OptFilterFlavour {
+  case object LoPass extends OptFilterFlavour
+  case object HiPass extends OptFilterFlavour
+  case object BandPass extends OptFilterFlavour
+  case object BandStop extends OptFilterFlavour
+}
