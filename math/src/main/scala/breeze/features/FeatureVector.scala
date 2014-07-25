@@ -3,6 +3,7 @@ package breeze.features
 import breeze.linalg._
 import java.util
 import breeze.linalg.operators._
+import spire.syntax.cfor._
 
 /**
  * Represents a feature vector of indicator (i.e. binary) features.
@@ -101,7 +102,24 @@ object FeatureVector {
 
   implicit object CanMulDMFV extends OpMulMatrix.Impl2[DenseMatrix[Double], FeatureVector, DenseVector[Double]] {
     def apply(a: DenseMatrix[Double], b: FeatureVector): DenseVector[Double] = {
-      a(*, ::) dot b
+      val result = DenseVector.zeros[Double](a.rows)
+      cforRange(0 until b.activeLength) { i =>
+        result += a(::, b(i))
+      }
+      result
+    }
+  }
+
+  implicit object CanMulCSCFV extends OpMulMatrix.Impl2[CSCMatrix[Double], FeatureVector, SparseVector[Double]] {
+    def apply(a: CSCMatrix[Double], b: FeatureVector): SparseVector[Double] = {
+      val result = new VectorBuilder[Double](a.rows)
+      cforRange(0 until b.activeLength) { i =>
+        val column = b(i)
+        cforRange(a.colPtrs(column) until a.colPtrs(column + 1)) { off =>
+          result.add(a.rowIndices(off), a.data(off))
+        }
+      }
+      result.toSparseVector
     }
   }
 
