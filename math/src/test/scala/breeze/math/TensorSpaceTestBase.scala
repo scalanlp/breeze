@@ -25,8 +25,8 @@ import breeze.linalg.norm
  * @author dlwh
  */
 
-trait TensorSpaceTestBase[V, I, S] extends MutableVectorSpaceTestBase[V, S] {
-  implicit val space: TensorSpace[V, I, S]
+trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
+  implicit val space: MutableTensorField[V, I, S]
 
   import space._
 
@@ -49,7 +49,7 @@ trait TensorSpaceTestBase[V, I, S] extends MutableVectorSpaceTestBase[V, S] {
   test("norm(v) == 0 iff v == 0") {
     check(Prop.forAll{ (trip: (V, V, V)) =>
       val (a, b, c) = trip
-      val z = zeros(a)
+      val z = zeroLike(a)
       norm(z) == 0.0 && ( (z == a) || norm(a) != 0.0)
     })
   }
@@ -58,25 +58,24 @@ trait TensorSpaceTestBase[V, I, S] extends MutableVectorSpaceTestBase[V, S] {
   test("dot product distributes") {
     check(Prop.forAll{ (trip: (V, V, V)) =>
       val (a, b, c) = trip
-      val res = field.close(field.+(a dot b,a dot c),(a dot (b + c)), 1E-3 )
+      val res = scalars.close(scalars.+(a dot b,a dot c),(a dot (b + c)), 1E-3 )
       if(!res)
-        println(field.+(a dot b,a dot c) + " " + (a dot (b + c)))
+        println(scalars.+(a dot b,a dot c) + " " + (a dot (b + c)))
       res
     })
 
     check(Prop.forAll{ (trip: (V, V, V), s: S) =>
       val (a, b, c) = trip
-      field.close(field.*(a dot b,s),(a dot (b * s)) )
-      field.close(field.*(s, a dot b),( (a * s) dot (b)) )
+      scalars.close(scalars.*(a dot b,s),(a dot (b :* s)) )
+      scalars.close(scalars.*(s, a dot b),( (a :* s) dot (b)) )
     })
   }
-
 
   // zip map values
   test("zip map of + is the same as +") {
     check(Prop.forAll{ (trip: (V, V, V)) =>
       val (a, b, _) = trip
-      zipMapValues.map(a,b,{field.+(_:S,_:S)}) == (a + b)
+      zipMapValues.map(a,b,{scalars.+(_:S,_:S)}) == (a + b)
     })
 
   }

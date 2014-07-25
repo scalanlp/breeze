@@ -15,13 +15,14 @@ package breeze.linalg
  limitations under the License.
 */
 import breeze.linalg.operators._
+import breeze.numerics._
 import breeze.storage.Zero
 import java.util
 import breeze.util.{Sorting, Terminal, ArrayUtil}
 import scala.collection.mutable
-import breeze.math.{Ring, Complex, Semiring}
+import breeze.math._
 import scala.reflect.ClassTag
-import breeze.linalg.support.{CanCreateZerosLike, CanTranspose, CanTraverseValues, CanMapValues}
+import breeze.linalg.support._
 import CanTraverseValues.ValuesVisitor
 
 /**
@@ -476,6 +477,61 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
 
       bldr
     }
+  }
+
+  implicit def canDim[E] = new dim.Impl[CSCMatrix[E], (Int,Int)] {
+    def apply(v: CSCMatrix[E]): (Int, Int) = (v.rows,v.cols)
+  }
+
+  object FrobeniusInnerProductCSCMatrixSpace {
+    import FrobeniusMatrixInnerProductNorms._
+
+    implicit def canAddM_S_Semiring[T:Semiring:ClassTag]: OpAdd.Impl2[CSCMatrix[T],T,CSCMatrix[T]] =
+      new OpAdd.Impl2[CSCMatrix[T],T,CSCMatrix[T]] {
+        override def apply(v: CSCMatrix[T], v2: T): CSCMatrix[T] = {
+          throw new UnsupportedOperationException("Adding a scalar to a sparse matrix will make it dense under the current implementation." +
+            " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
+        }
+      }
+
+    implicit def zipMapVals[S,R:ClassTag:Zero] = new CanZipMapValues[CSCMatrix[S],S,R,CSCMatrix[R]] {
+      /** Maps all corresponding values from the two collections. */
+      override def map(from: CSCMatrix[S], from2: CSCMatrix[S], fn: (S, S) => R): CSCMatrix[R] = ???
+    }
+
+    implicit def canAddInPlaceM_S_Semiring[T:Semiring:ClassTag]: OpAdd.InPlaceImpl2[CSCMatrix[T],T] = {
+      new OpAdd.InPlaceImpl2[CSCMatrix[T],T] {
+        def apply(v: CSCMatrix[T],v2: T) = throw new UnsupportedOperationException("Adding a scalar to a sparse matrix will make it dense under the current implementation." +
+          " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
+      }
+    }
+
+    implicit def canSubM_S_Ring[T:Ring:ClassTag]: OpSub.Impl2[CSCMatrix[T],T,CSCMatrix[T]] =
+      new OpSub.Impl2[CSCMatrix[T],T,CSCMatrix[T]] {
+        def apply(v: CSCMatrix[T], v2: T): CSCMatrix[T] = throw new UnsupportedOperationException("Subtracting a scalar to a sparse matrix will make it dense under the current implementation." +
+          " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
+      }
+
+    implicit def canSubInPlaceM_S_Ring[T:Ring:ClassTag]: OpSub.InPlaceImpl2[CSCMatrix[T],T] =
+      new OpSub.InPlaceImpl2[CSCMatrix[T],T] {
+        def apply(v: CSCMatrix[T], v2: T): Unit = throw new UnsupportedOperationException("Subtracting a scalar to a sparse matrix will make it dense under the current implementation." +
+          " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
+      }
+
+    implicit def canSetInPlaceM_S_Ring[T:Ring:ClassTag]: OpSet.InPlaceImpl2[CSCMatrix[T],T] =
+      new OpSet.InPlaceImpl2[CSCMatrix[T],T] {
+        def apply(v: CSCMatrix[T], v2: T): Unit = throw new UnsupportedOperationException("Setting a sparse matrix to a scalar will make it dense under the current implementation." +
+          " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
+      }
+
+    implicit def canSetM_S_Ring[T:Ring:ClassTag]: OpSet.Impl2[CSCMatrix[T],T, CSCMatrix[T]] =
+      new OpSet.Impl2[CSCMatrix[T],T,CSCMatrix[T]] {
+        def apply(v: CSCMatrix[T], v2: T): CSCMatrix[T] = throw new UnsupportedOperationException("Setting a sparse matrix to a scalar will make it dense under the current implementation." +
+          " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
+      }
+
+    implicit def space[S:Field:ClassTag] = MutableRestrictedDomainTensorField.make[CSCMatrix[S],(Int,Int),S]
+
   }
 
   @noinline

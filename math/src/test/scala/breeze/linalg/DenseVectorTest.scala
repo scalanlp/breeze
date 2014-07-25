@@ -5,7 +5,7 @@ import org.scalatest._
 import org.scalatest.junit._
 import org.scalatest.prop._
 import org.junit.runner.RunWith
-import breeze.math.{Complex, DoubleValuedTensorSpaceTestBase, TensorSpace, TensorSpaceTestBase}
+import breeze.math._
 import breeze.stats.mean
 import java.util
 
@@ -168,6 +168,21 @@ class DenseVectorTest extends FunSuite with Checkers {
     val emptySlice2 = x.slice(2,2)
     assert(emptySlice === DenseVector[Double]())
     assert(emptySlice2 === DenseVector[Double]())
+  }
+
+  test("DenseVector * DenseMatrix Lifted OpMulMatrix") {
+    val x = DenseVector[Int](1, 2, 3)
+    val m = DenseMatrix((1,2,3),
+                        (2,4,6),
+                        (3,6,9))
+    val mr = DenseMatrix((1,2,3))
+
+    val xxt = x * x.t
+    assert(xxt === m)
+
+    val xm = x * mr
+    assert(xm === m)
+
   }
 
   test("Slice and Transpose Int") {
@@ -428,7 +443,7 @@ class DenseVectorTest extends FunSuite with Checkers {
  */
 @RunWith(classOf[JUnitRunner])
 class DenseVectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[DenseVector[Double], Int] {
- val space: TensorSpace[DenseVector[Double], Int, Double] = implicitly
+ val space: MutableTensorField[DenseVector[Double], Int, Double] = DenseVector.space[Double]
 
   val N = 30
   implicit def genTriple: Arbitrary[(DenseVector[Double], DenseVector[Double], DenseVector[Double])] = {
@@ -449,7 +464,7 @@ class DenseVectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[DenseVec
 
 @RunWith(classOf[JUnitRunner])
 class DenseVectorOps_IntTest extends TensorSpaceTestBase[DenseVector[Int], Int, Int] {
- val space: TensorSpace[DenseVector[Int], Int, Int] = implicitly
+ val space: MutableTensorField[DenseVector[Int], Int, Int] = DenseVector.space[Int]
 
   val N = 30
   implicit def genTriple: Arbitrary[(DenseVector[Int], DenseVector[Int], DenseVector[Int])] = {
@@ -470,7 +485,7 @@ class DenseVectorOps_IntTest extends TensorSpaceTestBase[DenseVector[Int], Int, 
 
 @RunWith(classOf[JUnitRunner])
 class DenseVectorOps_ComplexTest extends TensorSpaceTestBase[DenseVector[Complex], Int, Complex] {
-  val space: TensorSpace[DenseVector[Complex], Int, Complex] = implicitly
+  val space: MutableTensorField[DenseVector[Complex], Int, Complex] = DenseVector.space[Complex]
 
   val N = 30
   implicit def genTriple: Arbitrary[(DenseVector[Complex], DenseVector[Complex], DenseVector[Complex])] = {
@@ -491,7 +506,7 @@ class DenseVectorOps_ComplexTest extends TensorSpaceTestBase[DenseVector[Complex
 
 @RunWith(classOf[JUnitRunner])
 class DenseVectorOps_FloatTest extends TensorSpaceTestBase[DenseVector[Float], Int, Float] {
- val space: TensorSpace[DenseVector[Float], Int, Float] = implicitly
+ val space: MutableTensorField[DenseVector[Float], Int, Float] = DenseVector.space[Float]
 
   val N = 30
   implicit def genTriple: Arbitrary[(DenseVector[Float], DenseVector[Float], DenseVector[Float])] = {

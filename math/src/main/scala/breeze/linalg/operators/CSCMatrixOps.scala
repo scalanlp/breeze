@@ -17,6 +17,37 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
   // don't remove
   import breeze.math.PowImplicits._
 
+  implicit def canMulSV_CSC_eq_CSC[T](implicit op: OpMulMatrix.Impl2[CSCMatrix[T],CSCMatrix[T],CSCMatrix[T]],zero: Zero[T]):
+  OpMulMatrix.Impl2[SparseVector[T],CSCMatrix[T],CSCMatrix[T]] =
+    new OpMulMatrix.Impl2[SparseVector[T],CSCMatrix[T],CSCMatrix[T]] {
+      def apply(v: SparseVector[T], v2: CSCMatrix[T]): CSCMatrix[T] = {
+        require(v2.rows == 1)
+        val csc = new CSCMatrix[T](v.data,v.length,1,Array(0,v.length),v.index)
+        op(csc,v2)
+      }
+    }
+
+  implicit def canMulSVt_CSC_eq_SVt[T](implicit op: OpMulMatrix.Impl2[CSCMatrix[T],CSCMatrix[T],CSCMatrix[T]],zero: Zero[T],ct: ClassTag[T]):
+  OpMulMatrix.Impl2[Transpose[SparseVector[T]],CSCMatrix[T],Transpose[SparseVector[T]]] =
+    new OpMulMatrix.Impl2[Transpose[SparseVector[T]],CSCMatrix[T],Transpose[SparseVector[T]]] {
+      def apply(v: Transpose[SparseVector[T]], v2: CSCMatrix[T]): Transpose[SparseVector[T]] = {
+        require(v2.rows == v.inner.length)
+        val csc = v.inner.asCSCMatrix()
+        val cscr = op(csc,v2)
+        val ind = Array.ofDim[Int](cscr.data.length)
+        var i = 0
+        var c = 1
+        while (c < cscr.colPtrs.length) {
+          if (cscr.colPtrs(c-1) != cscr.colPtrs(c)) {
+            ind(i) = c-1
+            i += 1
+          }
+          c += 1
+        }
+        new Transpose[SparseVector[T]](new SparseVector[T](ind,cscr.data,cscr.activeSize,cscr.cols))
+      }
+    }
+
   @expand
   @expand.valify
   implicit def csc_csc_UpdateOp[@expand.args(Int, Double, Float, Long) T,
@@ -62,6 +93,164 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
   }
 
   @expand
+  implicit def csc_csc_UpdateOp[@expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType, T:Field:ClassTag]
+  (implicit @expand.sequence[Op]({f.+(_,_)}, {f.-(_,_)}, {f.*(_,_)}, {f./(_,_)}, {(a,b) => b},{f.%(_,_)},{f.pow(_,_)}) op: Op.Impl2[T, T, T]):
+  Op.InPlaceImpl2[CSCMatrix[T], CSCMatrix[T]] = {
+    val f = implicitly[Field[T]]
+    new Op.InPlaceImpl2[CSCMatrix[T], CSCMatrix[T]] {
+      def apply(a: CSCMatrix[T], b: CSCMatrix[T]): Unit = {
+        //        require(a.defaultValue == b.defaultValue, "Matrices must share default value.")
+        var ar = 0
+        var ac = 0
+        var br = 0
+        var bc = 0
+        while (ac < a.cols && bc < b.cols) {
+          var aip = a.colPtrs(ac)
+          var bip = b.colPtrs(bc)
+
+          while (aip < a.colPtrs(ac + 1) && bip < b.colPtrs(bc + 1)) {
+            val ar = a.rowIndices(aip)
+            val br = b.rowIndices(bip)
+
+            if (ac == bc && ar == br) {
+              a(ar,ac) = op(a(ar,ac),b(br,bc))
+              aip += 1
+              bip += 1
+            } else if (ac <= bc && ar < br) {
+              a(ar,ac) = op(a(ar,ac),f.zero)
+              aip += 1
+            } else {
+              a(ar,ac) = op(f.zero,b(br,bc))
+              bip += 1
+            }
+          }
+          ac += 1
+          bc += 1
+        }
+      }
+
+      implicitly[BinaryUpdateRegistry[Matrix[T], Matrix[T], Op.type]].register(this)
+    }
+  }
+
+  @expand
+  implicit def csc_csc_Op[@expand.args(OpDiv, OpMod, OpPow) Op <: OpType, T:Field:ClassTag]:
+  Op.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] = {
+    val uop = implicitly[Op.InPlaceImpl2[CSCMatrix[T], CSCMatrix[T]]]
+
+    new Op.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] {
+      def apply(a: CSCMatrix[T], b: CSCMatrix[T]): CSCMatrix[T] = {
+        val c = copy(a)
+        uop(c, b)
+        c
+      }
+
+//      implicitly[BinaryRegistry[Matrix[T], Matrix[T], Op.type, Matrix[T]]].register(this)
+    }
+  }
+//
+  @expand
+  implicit def csc_T_UpdateOp[@expand.args(OpMulScalar, OpDiv, OpMod, OpPow) Op <: OpType, T:Field:ClassTag]
+  (implicit @expand.sequence[Op]({f.*(_,_)}, {f./(_,_)}, {f.%(_,_)},{f.pow(_,_)}) op: Op.Impl2[T,T,T]):
+  Op.InPlaceImpl2[CSCMatrix[T], T] = {
+    val f = implicitly[Field[T]]
+    new Op.InPlaceImpl2[CSCMatrix[T], T] {
+      def apply(a: CSCMatrix[T], b: T): Unit = {
+        var c = 0
+        while (c < a.cols) {
+          var ip = a.colPtrs(c)
+          while (ip < a.colPtrs(c+1)) {
+            val r = a.rowIndices(ip)
+            a.update(r,c,op(a.data(ip),b))
+            ip += 1
+          }
+          c += 1
+        }
+      }
+
+      implicitly[BinaryUpdateRegistry[Matrix[T], T, Op.type]].register(this)
+    }
+  }
+
+  @expand
+  implicit def csc_T_Op[@expand.args(OpDiv, OpMod, OpPow) Op <: OpType, T:Field:ClassTag]
+  (implicit @expand.sequence[Op]({f./(_,_)}, {f.%(_,_)},{f.pow(_,_)}) op: Op.Impl2[T,T,T]):
+  Op.Impl2[CSCMatrix[T], T, CSCMatrix[T]] = {
+    val uop = implicitly[Op.InPlaceImpl2[CSCMatrix[T], T]]
+    new Op.Impl2[CSCMatrix[T], T, CSCMatrix[T]] {
+      def apply(a: CSCMatrix[T], b: T): CSCMatrix[T] = {
+        val c = copy(a)
+        uop(c, b)
+        c
+      }
+
+      implicitly[BinaryRegistry[Matrix[T], T, Op.type, Matrix[T]]].register(this)
+    }
+  }
+
+  implicit def csc_OpNeg[T:Ring:ClassTag]: OpNeg.Impl[CSCMatrix[T], CSCMatrix[T]] = {
+    new OpNeg.Impl[CSCMatrix[T], CSCMatrix[T]] {
+      val ring = implicitly[Ring[T]]
+      def apply(a: CSCMatrix[T]): CSCMatrix[T] = {
+        val result: CSCMatrix.Builder[T] = new CSCMatrix.Builder[T](a.rows, a.cols, a.activeSize)
+
+        var c = 0
+        while (c < a.cols) {
+          var ip = a.colPtrs(c)
+          while (ip < a.colPtrs(c + 1)) {
+            val r = a.rowIndices(ip)
+            result.add(r, c, ring.negate(a.data(ip)))
+            ip += 1
+          }
+          c += 1
+        }
+
+        result.result(true, true)
+      }
+    }
+  }
+
+  implicit def cscScaleAdd[T:Semiring:ClassTag]: scaleAdd.InPlaceImpl3[CSCMatrix[T],T,CSCMatrix[T]] = {
+    new scaleAdd.InPlaceImpl3[CSCMatrix[T],T,CSCMatrix[T]] {
+      override def apply(a: CSCMatrix[T], s: T, b: CSCMatrix[T]): Unit = {
+        val ring = implicitly[Semiring[T]]
+        val rows  = a.rows
+        val cols  = a.cols
+        require(rows == b.rows, "Matrices must have same number of rows!")
+        require(cols == b.cols, "Matrices must have same number of cols!")
+
+        if (cols == 0 || rows == 0) return Unit
+
+        var ci      = 0             // column index [0 ... cols)
+        var apStop  = a.colPtrs(0)  // pointer into row indices and data
+        var bpStop  = b.colPtrs(0)  // pointer into row indices and data
+        while (ci < cols) {
+          val ci1 = ci + 1
+          var ap  = apStop
+          var bp  = bpStop
+          apStop = a.colPtrs(ci1)
+          bpStop = b.colPtrs(ci1)
+          while (ap < apStop && bp < bpStop) {
+            val ari = a.rowIndices(ap) // row index [0 ... rows)
+            val bri = b.rowIndices(bp)
+            if (ari == bri) {           // column and row match, this cell goes into result matrix
+              val v = ring.+(a.data(ap), ring.*(s,b.data(bp)))
+              a.update(ari, ci, v)
+              ap += 1
+              bp += 1
+            } else if (ari < bri) {     // next b row starts further down, therefore increase a pointer
+              ap += 1
+            } else /* ari > bri */ {    // next a row starts further down, therefore increase b pointer
+              bp += 1
+            }
+          }
+          ci = ci1
+        }
+      }
+    }
+  }
+
+  @expand
   @expand.valify
   implicit def implOps_CSCT_T_eq_CSCT[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpMulScalar, OpMulMatrix) Op<:OpType]
@@ -88,6 +277,32 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
       }
       implicitly[BinaryRegistry[Matrix[T], T, Op.type, Matrix[T]]].register(this)
     }
+
+  @expand
+  implicit def implOps_CSCT_T_eq_CSCT[@expand.args(OpMulScalar, OpMulMatrix) Op<:OpType, T:Field:ClassTag]:
+  Op.Impl2[CSCMatrix[T], T, CSCMatrix[T]] = {
+    val f = implicitly[Field[T]]
+    new Op.Impl2[CSCMatrix[T], T, CSCMatrix[T]] {
+      def apply(a: CSCMatrix[T], b: T): CSCMatrix[T] = {
+        val result: CSCMatrix.Builder[T] = new CSCMatrix.Builder[T](a.rows, a.cols, a.activeSize)
+
+        var c = 0
+        while (c < a.cols) {
+          var ip = a.colPtrs(c)
+          while (ip < a.colPtrs(c + 1)) {
+            val r = a.rowIndices(ip)
+            result.add(r, c, f.*(a.data(ip),b))
+            ip += 1
+          }
+          c += 1
+        }
+
+        result.result(true, true)
+      }
+
+      implicitly[BinaryRegistry[Matrix[T], T, Op.type, Matrix[T]]].register(this)
+    }
+  }
 
   @expand
   @expand.valify

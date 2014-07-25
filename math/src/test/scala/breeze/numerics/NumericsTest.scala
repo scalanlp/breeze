@@ -53,9 +53,7 @@ class NumericsTest extends FunSuite with Checkers with Matchers {
     (logDiff(log(5), log(2)) should be (log(3) +- 1e-10))
     (logDiff(log(5), log(5)) should be (Double.NegativeInfinity))
 
-    evaluating {
-      logDiff(log(5), log(6))
-    } should produce[IllegalArgumentException]
+    an [IllegalArgumentException] should be thrownBy logDiff(log(5), log(6))
   }
 
   import Arbitrary._

@@ -1,6 +1,5 @@
 package breeze.util
 
-import breeze.util.quickSelect
 import org.scalatest.FunSuite
 import breeze.linalg.{min, max, shuffle, DenseVector}
 

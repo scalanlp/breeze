@@ -14,13 +14,15 @@ package breeze.linalg
  See the License for the specific language governing permissions and
  limitations under the License.
 */
+
+import breeze.numerics._
 import operators._
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
 import breeze.util.ArrayUtil
 import support._
 import breeze.generic._
-import breeze.math.{Complex, Ring, Semiring}
+import breeze.math._
 import breeze.storage.Zero
 import breeze.storage.Zero._
 import scala.reflect.ClassTag
@@ -922,6 +924,16 @@ with MatrixConstructors[DenseMatrix] {
         }
       }
     }
+  }
+
+  implicit def canDim[E] = new dim.Impl[DenseMatrix[E],(Int,Int)] {
+    def apply(v: DenseMatrix[E]): (Int, Int) = (v.rows,v.cols)
+  }
+
+  object FrobeniusInnerProductDenseMatrixSpace {
+    import FrobeniusMatrixInnerProductNorms._
+
+    implicit def space[S:Field:Zero:ClassTag] = MutableRestrictedDomainTensorField.make[DenseMatrix[S],(Int,Int),S]
   }
 
   @noinline

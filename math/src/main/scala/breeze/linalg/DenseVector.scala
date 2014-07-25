@@ -19,7 +19,7 @@ import scala.{specialized=>spec}
 import breeze.generic._
 import breeze.linalg.support._
 import breeze.linalg.operators._
-import breeze.math.{Complex, TensorSpace, Semiring, Ring}
+import breeze.math._
 import breeze.util.{ArrayUtil, Isomorphism}
 import breeze.storage.Zero
 import scala.reflect.ClassTag
@@ -452,16 +452,6 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
 //    }
 //  }
 
-  /*
-  implicit def canTranspose[V]: CanTranspose[DenseVector[V], DenseMatrix[V]] = {
-    new CanTranspose[DenseVector[V], DenseMatrix[V]] {
-      def apply(from: DenseVector[V]) = {
-        new DenseMatrix(data = from.data, offset = from.offset, cols = from.length, rows = 1, majorStride = from.stride)
-      }
-    }
-  }
-  */
-
   implicit def canTransposeComplex: CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] = {
     new CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] {
       def apply(from: DenseVector[Complex]): DenseMatrix[Complex] = {
@@ -574,7 +564,6 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     implicitly[BinaryUpdateRegistry[Vector[Double], Vector[Double], OpSet.type]].register(this)
   }
 
-
   /*
   TODO: scaladoc crashes on this. I don't know why. It makes me want to die a little.
   Returns the k-norm of this Vector.
@@ -638,10 +627,15 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     }
   }
 
-  implicit val space_d = TensorSpace.make[DenseVector[Double], Int, Double]
-  implicit val space_f = TensorSpace.make[DenseVector[Float], Int, Float]
-  implicit val space_i = TensorSpace.make[DenseVector[Int], Int, Int]
-  implicit val space_c = TensorSpace.make[DenseVector[Complex], Int, Complex]
+  implicit def canDim[E]: dim.Impl[DenseVector[E],Int] = new dim.Impl[DenseVector[E],Int] {
+    def apply(v: DenseVector[E]): Int = v.length
+  }
+
+  implicit def space[E](implicit field: Field[E], man: ClassTag[E]): MutableRestrictedDomainTensorField[DenseVector[E],Int,E] = {
+    import field._
+    implicit val cmv = canMapValues[E,E]
+    MutableRestrictedDomainTensorField.make[DenseVector[E],Int,E]
+  }
 
   object TupleIsomorphisms {
     implicit object doubleIsVector extends Isomorphism[Double,DenseVector[Double]] {

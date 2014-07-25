@@ -1,16 +1,18 @@
 package breeze.linalg
 package operators
 
+import breeze.util.ArrayUtil
 import support._
 import scala.reflect.ClassTag
 import java.util
 import breeze.macros.expand
+import breeze.macros.expand.sequence
 import breeze.math._
 import scala.math.BigInt
 import breeze.generic.{UFunc}
 import scala.specialized
 import breeze.storage.Zero
-import breeze.generic.UFunc.UImpl
+import breeze.generic.UFunc.{UImpl2, UImpl}
 import scala.{specialized=>spec}
 
 trait SparseVector_DenseVector_Ops { this: SparseVector.type =>
@@ -340,6 +342,15 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
 trait SparseVectorOps { this: SparseVector.type =>
   import breeze.math.PowImplicits._
 
+  implicit def liftCSCOpToSVTransposeOp[Tag,V,LHS,R](implicit op: UFunc.UImpl2[Tag,LHS,CSCMatrix[V],R],
+                                            zero: Zero[V], ct: ClassTag[V]):
+  UFunc.UImpl2[Tag,LHS,Transpose[SparseVector[V]],R] =
+    new UFunc.UImpl2[Tag,LHS,Transpose[SparseVector[V]],R] {
+      def apply(v: LHS, v2: Transpose[SparseVector[V]]): R = {
+        op(v,v2.inner.asCSCMatrix())
+      }
+    }
+
   @expand
   @expand.valify
   implicit def implOps_SVT_SVT_eq_SVT[@expand.args(Int, Double, Float, Long) T,
@@ -519,6 +530,47 @@ trait SparseVectorOps { this: SparseVector.type =>
     }
 
   @expand
+  implicit def implOpSVT_Field_SVT[@expand.args(OpAdd,OpSub,OpDiv,OpMod,OpPow) Op <: OpType, T:Field:ClassTag]
+  (implicit @expand.sequence[Op]({f.+(_,_)}, {f.-(_,_)}, {f./(_,_)}, {f.%(_,_)},{f.pow(_,_)}) op: Op.Impl2[T,T,T]): Op.Impl2[SparseVector[T],T,SparseVector[T]] = {
+
+    new Op.Impl2[SparseVector[T], T, SparseVector[T]] {
+      def apply(a: SparseVector[T], b: T): SparseVector[T] = {
+        val result: VectorBuilder[T] = new VectorBuilder[T](a.length)
+        val f = implicitly[Field[T]]
+        var i: Int = 0
+        while (i < a.length) {
+          val r = op(a(i), b)
+          if (r != f.zero)
+            result.add(i, r)
+          i += 1
+        }
+        result.toSparseVector(true, true)
+      }
+
+      implicitly[BinaryRegistry[Vector[T], T, Op.type, Vector[T]]].register(this)
+    }
+  }
+
+  @expand
+  implicit def implOps_SVT_Field_eq_SVT[@expand.args(OpMulScalar, OpMulMatrix) Op<:OpType, T:Field:ClassTag]:
+  Op.Impl2[SparseVector[T], T, SparseVector[T]] =
+
+    new Op.Impl2[SparseVector[T], T, SparseVector[T]] {
+      val f = implicitly[Field[T]]
+      def apply(a: SparseVector[T], b: T): SparseVector[T] = {
+        val result: VectorBuilder[T] = new VectorBuilder[T](a.length)
+
+        var i: Int = 0
+        while(i < a.activeSize) {
+          result.add(a.indexAt(i), f.*(a.valueAt(i), b))
+          i += 1
+        }
+        result.toSparseVector(true, true)
+      }
+      implicitly[BinaryRegistry[Vector[T], T, Op.type, Vector[T]]].register(this)
+    }
+
+  @expand
   @expand.valify
   implicit def implOps_SVT_T_eq_SVT[@expand.args(Int, Double, Float, Long) T,
                                     @expand.args(OpAdd, OpSub, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
@@ -610,6 +662,15 @@ trait SparseVectorOps { this: SparseVector.type =>
     implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(uop)
     uop
   }
+
+  @expand
+  implicit def implOps_SVT_Field_InPlace[@expand.args(OpAdd, OpSub, OpDiv, OpPow, OpMod, OpMulScalar, OpMulMatrix) Op <: OpType, T:Field:ClassTag]:
+  Op.InPlaceImpl2[SparseVector[T], T]  = {
+    val uop: Op.InPlaceImpl2[SparseVector[T], T] = updateFromPure(implicitly[Op.Impl2[SparseVector[T], T, SparseVector[T]]])
+    implicitly[BinaryUpdateRegistry[Vector[T], T, Op.type]].register(uop)
+    uop
+  }
+
 
   @expand
   @expand.valify
@@ -746,6 +807,94 @@ trait SparseVectorOps { this: SparseVector.type =>
       implicitly[TernaryUpdateRegistry[Vector[T], T, Vector[T], scaleAdd.type]].register(this)
     }
 
+  @expand
+  implicit def implScaleAdd_SVT_Field_SVT_InPlace[T:Field:ClassTag]:
+  scaleAdd.InPlaceImpl3[SparseVector[T], T, SparseVector[T]] =
+
+    new scaleAdd.InPlaceImpl3[SparseVector[T], T, SparseVector[T]] {
+      val f = implicitly[Field[T]]
+      def apply(y: SparseVector[T], a: T, x: SparseVector[T]): Unit = {
+        require(x.length == y.length, "Vectors must be the same length!")
+        val asize: Int = y.activeSize
+        val bsize: Int = x.activeSize
+
+        if(a != f.zero) {
+
+          val resultI: Array[Int] = new Array[Int](asize + bsize)
+          val resultV: Array[T] = new Array[T](asize + bsize)
+          var resultOff: Int = 0
+
+          var aoff: Int = 0
+          var boff: Int = 0
+
+
+
+          // double loop:
+          // b moves to catch up with a, then a takes a step (possibly bringing b along)
+          while (aoff < asize) {
+
+            while (boff < bsize && x.indexAt(boff) < y.indexAt(aoff)) {
+              resultI(resultOff) = x.indexAt(boff)
+              resultV(resultOff) = f.*(a, x.valueAt(boff))
+              resultOff += 1
+              boff += 1
+            }
+
+            val bvalue: T = if (boff < bsize && x.indexAt(boff) == y.indexAt(aoff)) {
+              val bv: T = f.*(a, x.valueAt(boff))
+              boff += 1
+              bv
+            } else {
+              f.zero
+            }
+            resultI(resultOff) = y.indexAt(aoff)
+            resultV(resultOff) = f.+(y.valueAt(aoff), bvalue)
+            resultOff += 1
+            aoff += 1
+          }
+
+          while (boff < bsize) {
+            resultI(resultOff) = x.indexAt(boff)
+            resultV(resultOff) = f.*(a,x.valueAt(boff))
+            resultOff += 1
+            boff += 1
+          }
+
+          if (resultOff != resultI.length) {
+            y.use(util.Arrays.copyOf(resultI, resultOff), ArrayUtil.copyOf[T](resultV, resultOff), resultOff)
+          } else {
+            y.use(resultI, resultV, resultOff)
+          }
+        }
+      }
+      implicitly[TernaryUpdateRegistry[Vector[T], T, Vector[T], scaleAdd.type]].register(this)
+    }
+
+  implicit def implNorm_SVT_Field_eq_D[T](implicit f: Field[T]):
+  norm.Impl2[SparseVector[T], Double, Double] =
+
+    new norm.Impl2[SparseVector[T], Double, Double] {
+      def apply(v: SparseVector[T], n: Double): Double = {
+        import v._
+        if (n == 1) {
+          var sum: Double = 0.0
+          activeValuesIterator foreach (v => sum += f.sNorm(v) )
+          sum
+        } else if (n == 2) {
+          var sum: Double = 0.0
+          activeValuesIterator  foreach (v => { val nn = f.sNorm(v); sum += nn * nn })
+          math.sqrt(sum)
+        } else if (n == Double.PositiveInfinity) {
+          var max: Double = 0.0
+          activeValuesIterator foreach (v => { val nn = f.sNorm(v); if (nn > max) max = nn })
+          max
+        } else {
+          var sum: Double = 0.0
+          activeValuesIterator foreach (v => { val nn = f.sNorm(v); sum += math.pow(nn,n) })
+          math.pow(sum, 1.0 / n)
+        }
+      }
+    }
 
   @expand
   @expand.valify
