@@ -73,6 +73,18 @@ object FeatureVector {
     }
   }
 
+  implicit object FVCanDaxpyIntoSV extends scaleAdd.InPlaceImpl3[SparseVector[Double], Double, FeatureVector] {
+    def apply(y: SparseVector[Double], a: Double, x: FeatureVector) {
+      if(a != 0.0) {
+        var i = 0
+        while(i < x.activeLength) {
+          y(x(i)) += a
+          i += 1
+        }
+      }
+    }
+  }
+
   implicit object DotProductFVDV extends OpMulInner.Impl2[FeatureVector, DenseVector[Double], Double] {
     def apply(a: FeatureVector, b: DenseVector[Double]): Double = {
       var score = 0.0
