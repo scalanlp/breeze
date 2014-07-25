@@ -601,11 +601,19 @@ class DenseMatrixTest extends FunSuite with Checkers with ShouldMatchers with Do
     assert(dm(IndexedSeq(1, 0), ::).toDenseMatrix === flipud(dm))
   }
 
+
+
   test("#278: don't crash on solve when majorStride == 0") {
     val d = DenseVector[Double]()
     val m = DenseMatrix.tabulate(0,0) { case x => 0.0 }
     assert( m \ d  === d)
 
+  }
+
+  test("#283: slice of dm by dm boolean") {
+    val dm = DenseMatrix( (0, 1, 2), (3, 4, 5))
+    dm(dm :>= 2) := 3
+    assert(dm === DenseMatrix( (0, 1, 3), (3, 3, 3)))
   }
 
 

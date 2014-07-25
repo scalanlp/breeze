@@ -321,6 +321,7 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
 
 object DenseMatrix extends LowPriorityDenseMatrix
 with DenseMatrixOps
+with DenseMatrix_OrderingOps
 with DenseMatrixMultOps
 with DenseMatrixMultiplyStuff
 with DenseMatrixFloatMultiplyStuff
