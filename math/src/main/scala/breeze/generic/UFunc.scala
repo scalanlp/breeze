@@ -54,18 +54,15 @@ trait UFunc {
                   @specialized(Int, Double, Float) VR]
                    (v1: V1, v2: V2)(implicit impl: Impl2[V1, V2, VR]):VR = impl(v1, v2)
 
-  final def apply[@specialized(Int, Double, Float) V1,
+  // if there are three arguments, the first one is almost always a vector or something,
+  // so no point specializing.
+  final def apply[V1,
   @specialized(Int, Double, Float) V2,
   @specialized(Int, Double, Float) V3,
   @specialized(Int, Double, Float) VR]
   (v1: V1, v2: V2, v3: V3)(implicit impl: Impl3[V1, V2, V3, VR]):VR = impl(v1, v2, v3)
 
-  final def apply[@specialized(Int, Double, Float) V1,
-  @specialized(Int, Double, Float) V2,
-  @specialized(Int, Double, Float) V3,
-  @specialized(Int, Double, Float) V4,
-  @specialized(Int, Double, Float) VR]
-  (v1: V1, v2: V2, v3: V3, v4: V4)(implicit impl: Impl4[V1, V2, V3, V4, VR]):VR = impl(v1, v2, v3, v4)
+  final def apply[V1,V2, V3, V4, VR](v1: V1, v2: V2, v3: V3, v4: V4)(implicit impl: Impl4[V1, V2, V3, V4, VR]):VR = impl(v1, v2, v3, v4)
 
   final def inPlace[V](v: V)(implicit impl: UFunc.InPlaceImpl[this.type, V]) = impl(v)
   final def inPlace[V, V2](v: V, v2: V2)(implicit impl: UFunc.InPlaceImpl2[this.type, V, V2]) = impl(v, v2)
