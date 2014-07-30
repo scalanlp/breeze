@@ -14,11 +14,16 @@ package breeze.linalg
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import breeze.math.Complex
+
+import breeze.math.MutableOptimizationSpace.SparseOptimizationSpace
+import breeze.math.{Field, Complex}
+import breeze.storage.Zero
 import org.scalatest._
 import org.scalatest.junit._
 import org.scalatest.prop._
 import org.junit.runner.RunWith
+
+import scala.reflect.ClassTag
 
 @RunWith(classOf[JUnitRunner])
 class CSCMatrixTest extends FunSuite with Checkers {
@@ -203,6 +208,33 @@ class CSCMatrixTest extends FunSuite with Checkers {
     assert(a.flatten() === SparseVector(1.0,2.0,3.0,4.0,5.0,6.0))
     assert(z.flatten() === SparseVector.zeros[Double](15))
     assert(b.flatten() === SparseVector(6)((1,1.0),(5,3.0)))
+  }
+
+  test("CSCxCSC: OpAddInPlace2:Field") {
+    def testAddInPlace[T:Field:Zero:ClassTag](a: CSCMatrix[T],b: CSCMatrix[T]) = {
+      val optspace = SparseOptimizationSpace.sparseOptSpace[T]
+      import optspace._
+      a += b
+      a
+    }
+    val cscA = CSCMatrix.zeros[Double](3,4)
+    cscA(1,1) = 1.0
+    val cscB = CSCMatrix.zeros[Double](3,4)
+    cscB(1,1) = 1.3
+    cscB(0,0) = 1.0
+    cscB(2,3) = 1.8
+    cscB(2,0) = 1.6
+    val cscR = testAddInPlace[Double](cscA,cscB)
+    println(s"CSCA: ${cscA.data.toList}")
+    println(s"CSCA: ${cscA.colPtrs.toList}")
+    println(s"CSCA: ${cscA.rowIndices.toList}")
+    println(s"CSCR: ${cscR.data.toList}")
+    println(s"CSCR: ${cscR.colPtrs.toList}")
+    println(s"CSCR: ${cscR.rowIndices.toList}")
+    println(s"CSCB: ${cscB.data.toList}")
+    println(s"CSCB: ${cscB.colPtrs.toList}")
+    println(s"CSCB: ${cscB.rowIndices.toList}")
+    assert(cscR === cscB)
   }
 }
 

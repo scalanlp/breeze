@@ -290,6 +290,21 @@ trait VectorOps { this: Vector.type =>
     }
   }
 
+  @expand
+  implicit def v_v_Idempotent_Op[T:Ring, @expand.args(OpAdd, OpSub) Op <: OpType]
+  (implicit @expand.sequence[Op]({r.+(_,_)}, {r.-(_,_)})
+  op: Op.Impl2[T, T, T]):BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]] = new BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]] {
+    val r = implicitly[Ring[T]]
+    override def bindingMissing(a: Vector[T], b: Vector[T]): Vector[T] = {
+      require(b.length == a.length, "Vectors must be the same length!")
+      val result = a.copy
+      for((k,v) <- b.activeIterator) {
+        result(k) = op(a(k), v)
+      }
+      result
+    }
+  }
+
 
 
   @expand
@@ -465,6 +480,24 @@ trait VectorOps { this: Vector.type =>
           var result : T = zero
           for( (k,v) <- a.activeIterator) {
             result += v * b(k)
+          }
+          result
+        }
+      }
+    }
+  }
+
+  implicit def canDot_V_V[T:ClassTag:Semiring]: BinaryRegistry[Vector[T], Vector[T], breeze.linalg.operators.OpMulInner.type, T] = {
+    new BinaryRegistry[Vector[T], Vector[T], breeze.linalg.operators.OpMulInner.type, T] {
+      val s = implicitly[Semiring[T]]
+      override def bindingMissing(a: Vector[T], b: Vector[T]):T = {
+        require(b.length == a.length, "Vectors must be the same length!")
+        if (a.activeSize > b.activeSize) {
+          bindingMissing(b, a)
+        } else {
+          var result : T = s.zero
+          for( (k,v) <- a.activeIterator) {
+            result = s.+(result,s.*(v, b(k)))
           }
           result
         }

@@ -92,11 +92,22 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](maxIter: In
     it: Iterator[State]
   }
   def iteratingShouldStop(state: State) = {
-    ((state.iter >= maxIter && maxIter >= 0)
-      || (!state.fVals.isEmpty && (state.adjustedValue - state.fVals.max).abs <= tolerance)
-      || (state.numImprovementFailures >= numberOfImprovementFailures)
-      || (norm(state.adjustedGradient) <= math.max(tolerance * state.adjustedValue.abs,1E-8))
-      || state.searchFailed)
+    val causes = Seq("maximum iterations reached","value decrease below tolerance",
+      "improvement failures","small gradient","search failed")
+    val conds = Seq((state.iter >= maxIter && maxIter >= 0),
+       (!state.fVals.isEmpty && (state.adjustedValue - state.fVals.max).abs <= tolerance),
+       (state.numImprovementFailures >= numberOfImprovementFailures),
+       (norm(state.adjustedGradient) <= math.max(tolerance * state.adjustedValue.abs,1E-8)),
+       state.searchFailed)
+
+    causes.zip(conds).collectFirst({
+      case (caus,cond) if cond => caus
+    }) match {
+      case Some(c) =>
+        logger.debug(s"Iteration stopped due to: $c")
+        true
+      case None => false
+    }
   }
 
   def minimize(f: DF, init: T): T = {

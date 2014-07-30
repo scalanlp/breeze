@@ -159,7 +159,7 @@ class CSCMatrix[@specialized(Int, Float, Double) V:Zero] private[linalg] (privat
 
   override def toString: String = toString(maxLines = Terminal.terminalHeight - 3)
 
-  def copy: Matrix[V] = {
+  def copy: CSCMatrix[V] = {
     new CSCMatrix[V](ArrayUtil.copyOf(_data, activeSize), rows, cols, colPtrs.clone(), activeSize, _rowIndices.clone)
   }
 
@@ -240,6 +240,13 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
     res
   }
 
+  class CanCopyCSCMatrix[@specialized(Int, Float, Double) V:ClassTag:Zero] extends CanCopy[CSCMatrix[V]] {
+    def apply(v1: CSCMatrix[V]) = {
+      v1.copy
+    }
+  }
+
+  implicit def canCopySparse[@specialized(Int, Float, Double) V: ClassTag: Zero] = new CanCopyCSCMatrix[V]
 
   implicit def canCreateZerosLike[V:ClassTag:Zero]: CanCreateZerosLike[CSCMatrix[V], CSCMatrix[V]] =
     new CanCreateZerosLike[CSCMatrix[V], CSCMatrix[V]] {
@@ -484,53 +491,106 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
   }
 
   object FrobeniusInnerProductCSCMatrixSpace {
-    import FrobeniusMatrixInnerProductNorms._
 
-    implicit def canAddM_S_Semiring[T:Semiring:ClassTag]: OpAdd.Impl2[CSCMatrix[T],T,CSCMatrix[T]] =
-      new OpAdd.Impl2[CSCMatrix[T],T,CSCMatrix[T]] {
+
+    implicit def zipMapVals[S, R: ClassTag:Semiring:Zero] = new CanZipMapValues[CSCMatrix[S], S, R, CSCMatrix[R]] {
+      /** Maps all corresponding values from the two collections. */
+      override def map(a: CSCMatrix[S], b: CSCMatrix[S], fn: (S, S) => R): CSCMatrix[R] = {
+
+        val builder = new CSCMatrix.Builder[R](a.rows,a.cols,a.used)
+        var ac = 0
+        var bc = 0
+        while (ac < a.cols && bc < b.cols) {
+          var aip = a.colPtrs(ac)
+          var bip = b.colPtrs(bc)
+
+          while (aip < a.colPtrs(ac + 1) && bip < b.colPtrs(bc + 1)) {
+            val ar = a.rowIndices(aip)
+            val br = b.rowIndices(bip)
+
+            if (ac == bc && ar == br) {
+              builder.add(ar,ac,fn(a(ar,ac),b(br,bc)))
+              aip += 1
+              bip += 1
+            } else if (ac <= bc && ar < br) {
+              builder.add(ar,ac, fn(a(ar,ac),b.zero))
+              aip += 1
+            } else {
+              builder.add(ar,ac, fn(a.zero,b(br,bc)))
+              bip += 1
+            }
+          }
+          ac += 1
+          bc += 1
+        }
+        builder.result(true,true)
+      }
+    }
+
+    implicit def canAddInPlaceM_S_Semiring[T: Semiring : ClassTag]: OpAdd.InPlaceImpl2[CSCMatrix[T], T] = {
+      new OpAdd.InPlaceImpl2[CSCMatrix[T], T] {
+        val s = implicitly[Semiring[T]]
+
+        override def apply(v: CSCMatrix[T], v2: T): Unit = {
+          var c = 0
+          while (c < v.cols) {
+            var ip = v.colPtrs(c)
+            while (ip < v.colPtrs(c + 1)) {
+              val r = v.rowIndices(ip)
+              v.update(r, c, s.+(v.data(ip), v2))
+              ip += 1
+            }
+            c += 1
+          }
+          //         throw new UnsupportedOperationException("Adding a scalar to a sparse matrix will make it dense under the current implementation." +
+          //          " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
+        }
+      }
+    }
+
+    implicit def canAddM_S_Semiring[T: Semiring : ClassTag]: OpAdd.Impl2[CSCMatrix[T], T, CSCMatrix[T]] =
+      new OpAdd.Impl2[CSCMatrix[T], T, CSCMatrix[T]] {
+        val uop = implicitly[OpAdd.InPlaceImpl2[CSCMatrix[T], T]]
+
+        //          throw new UnsupportedOperationException("Adding a scalar to a sparse matrix will make it dense under the current implementation." +
+        //            " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
         override def apply(v: CSCMatrix[T], v2: T): CSCMatrix[T] = {
-          throw new UnsupportedOperationException("Adding a scalar to a sparse matrix will make it dense under the current implementation." +
-            " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
+          val c = copy(v)
+          uop(c, v2)
+          c
         }
       }
 
-    implicit def zipMapVals[S,R:ClassTag:Zero] = new CanZipMapValues[CSCMatrix[S],S,R,CSCMatrix[R]] {
-      /** Maps all corresponding values from the two collections. */
-      override def map(from: CSCMatrix[S], from2: CSCMatrix[S], fn: (S, S) => R): CSCMatrix[R] = ???
-    }
 
-    implicit def canAddInPlaceM_S_Semiring[T:Semiring:ClassTag]: OpAdd.InPlaceImpl2[CSCMatrix[T],T] = {
-      new OpAdd.InPlaceImpl2[CSCMatrix[T],T] {
-        def apply(v: CSCMatrix[T],v2: T) = throw new UnsupportedOperationException("Adding a scalar to a sparse matrix will make it dense under the current implementation." +
-          " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
-      }
-    }
-
-    implicit def canSubM_S_Ring[T:Ring:ClassTag]: OpSub.Impl2[CSCMatrix[T],T,CSCMatrix[T]] =
-      new OpSub.Impl2[CSCMatrix[T],T,CSCMatrix[T]] {
+    implicit def canSubM_S_Ring[T: Ring : ClassTag]: OpSub.Impl2[CSCMatrix[T], T, CSCMatrix[T]] =
+      new OpSub.Impl2[CSCMatrix[T], T, CSCMatrix[T]] {
         def apply(v: CSCMatrix[T], v2: T): CSCMatrix[T] = throw new UnsupportedOperationException("Subtracting a scalar to a sparse matrix will make it dense under the current implementation." +
           " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
       }
 
-    implicit def canSubInPlaceM_S_Ring[T:Ring:ClassTag]: OpSub.InPlaceImpl2[CSCMatrix[T],T] =
-      new OpSub.InPlaceImpl2[CSCMatrix[T],T] {
+    implicit def canSubInPlaceM_S_Ring[T: Ring : ClassTag]: OpSub.InPlaceImpl2[CSCMatrix[T], T] =
+      new OpSub.InPlaceImpl2[CSCMatrix[T], T] {
         def apply(v: CSCMatrix[T], v2: T): Unit = throw new UnsupportedOperationException("Subtracting a scalar to a sparse matrix will make it dense under the current implementation." +
           " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
       }
 
-    implicit def canSetInPlaceM_S_Ring[T:Ring:ClassTag]: OpSet.InPlaceImpl2[CSCMatrix[T],T] =
-      new OpSet.InPlaceImpl2[CSCMatrix[T],T] {
+    implicit def canSetInPlaceM_S_Ring[T: Ring : ClassTag]: OpSet.InPlaceImpl2[CSCMatrix[T], T] =
+      new OpSet.InPlaceImpl2[CSCMatrix[T], T] {
         def apply(v: CSCMatrix[T], v2: T): Unit = throw new UnsupportedOperationException("Setting a sparse matrix to a scalar will make it dense under the current implementation." +
           " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
       }
 
-    implicit def canSetM_S_Ring[T:Ring:ClassTag]: OpSet.Impl2[CSCMatrix[T],T, CSCMatrix[T]] =
-      new OpSet.Impl2[CSCMatrix[T],T,CSCMatrix[T]] {
+    implicit def canSetM_S_Ring[T: Ring : ClassTag]: OpSet.Impl2[CSCMatrix[T], T, CSCMatrix[T]] =
+      new OpSet.Impl2[CSCMatrix[T], T, CSCMatrix[T]] {
         def apply(v: CSCMatrix[T], v2: T): CSCMatrix[T] = throw new UnsupportedOperationException("Setting a sparse matrix to a scalar will make it dense under the current implementation." +
           " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
       }
 
-    implicit def space[S:Field:ClassTag] = MutableRestrictedDomainTensorField.make[CSCMatrix[S],(Int,Int),S]
+    implicit def space[S: Field : ClassTag] = {
+      val norms = FrobeniusMatrixInnerProductNorms.makeMatrixNorms[CSCMatrix[S], S]
+      import norms._
+      MutableRestrictedDomainTensorField.make[CSCMatrix[S], (Int, Int), S]
+    }
 
   }
 
