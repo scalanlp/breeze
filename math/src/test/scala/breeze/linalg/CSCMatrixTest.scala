@@ -15,6 +15,8 @@ package breeze.linalg
  limitations under the License.
 */
 
+import breeze.generic.UFunc
+import breeze.linalg.operators.{OpAdd, OpType}
 import breeze.math.MutableOptimizationSpace.SparseOptimizationSpace
 import breeze.math.{Field, Complex}
 import breeze.storage.Zero
@@ -215,26 +217,86 @@ class CSCMatrixTest extends FunSuite with Checkers {
       val optspace = SparseOptimizationSpace.sparseOptSpace[T]
       import optspace._
       a += b
-      a
     }
     val cscA = CSCMatrix.zeros[Double](3,4)
-    cscA(1,1) = 1.0
     val cscB = CSCMatrix.zeros[Double](3,4)
     cscB(1,1) = 1.3
     cscB(0,0) = 1.0
     cscB(2,3) = 1.8
     cscB(2,0) = 1.6
-    val cscR = testAddInPlace[Double](cscA,cscB)
-    println(s"CSCA: ${cscA.data.toList}")
-    println(s"CSCA: ${cscA.colPtrs.toList}")
-    println(s"CSCA: ${cscA.rowIndices.toList}")
-    println(s"CSCR: ${cscR.data.toList}")
-    println(s"CSCR: ${cscR.colPtrs.toList}")
-    println(s"CSCR: ${cscR.rowIndices.toList}")
-    println(s"CSCB: ${cscB.data.toList}")
-    println(s"CSCB: ${cscB.colPtrs.toList}")
-    println(s"CSCB: ${cscB.rowIndices.toList}")
-    assert(cscR === cscB)
+    testAddInPlace[Double](cscA,cscB)
+    assert(cscA === cscB)
+    testAddInPlace[Double](cscA,cscB)
+    assert(cscA === cscB * 2.0)
+    testAddInPlace[Double](cscA,CSCMatrix.zeros[Double](3,4))
+    assert(cscA === cscB * 2.0)
+  }
+  test("CSCxCSC: OpSubInPlace2:Field") {
+    def testSubInPlace[T:Field:Zero:ClassTag](a: CSCMatrix[T],b: CSCMatrix[T]) = {
+      val optspace = SparseOptimizationSpace.sparseOptSpace[T]
+      import optspace._
+      a -= b
+    }
+    val cscA = CSCMatrix.zeros[Double](3,4)
+    val cscB = CSCMatrix.zeros[Double](3,4)
+    cscB(1,1) = 1.3
+    cscB(0,0) = 1.0
+    cscB(2,3) = 1.8
+    cscB(2,0) = 1.6
+    testSubInPlace[Double](cscA,cscB)
+    assert(cscA === cscB * -1.0)
+    testSubInPlace[Double](cscA,cscB)
+    assert(cscA === cscB * -2.0)
+    testSubInPlace[Double](cscA,CSCMatrix.zeros[Double](3,4))
+    assert(cscA === cscB * -2.0)
+  }
+  test("CSCxCSC: OpMulScalarInPlace2:Field") {
+    def testMulScalarInPlace[T:Field:Zero:ClassTag](a: CSCMatrix[T],b: CSCMatrix[T]) = {
+      val optspace = SparseOptimizationSpace.sparseOptSpace[T]
+      import optspace._
+      a *= b
+    }
+    val cscA = CSCMatrix.zeros[Double](3,4)
+    val cscB = CSCMatrix.zeros[Double](3,4)
+    cscB(1,1) = 1.3
+    cscB(0,0) = 1.0
+    cscB(2,3) = 1.8
+    cscB(2,0) = 1.6
+    testMulScalarInPlace[Double](cscA,cscB)
+    assert(cscA === cscA)
+    cscA(1,1) = 2.0
+    cscA(0,0) = 2.0
+    cscA(1,0) = 2.0
+    testMulScalarInPlace[Double](cscA,cscB)
+    val cscR = CSCMatrix.zeros[Double](3,4)
+    cscR(1,1) = 2.6
+    cscR(0,0) = 2.0
+    assert(cscA === cscR)
+    testMulScalarInPlace[Double](cscA,CSCMatrix.zeros[Double](3,4))
+    assert(cscA === CSCMatrix.zeros[Double](3,4))
+  }
+
+  test("CSCxCSC: OpSetInPlace2:Field") {
+    def testSetInPlace[T:Field:Zero:ClassTag](a: CSCMatrix[T],b: CSCMatrix[T]) = {
+      val optspace = SparseOptimizationSpace.sparseOptSpace[T]
+      import optspace._
+      a := b
+    }
+    val cscA = CSCMatrix.zeros[Double](3,4)
+    val cscB = CSCMatrix.zeros[Double](3,4)
+    cscB(1,1) = 1.3
+    cscB(0,0) = 1.0
+    cscB(2,3) = 1.8
+    cscB(2,0) = 1.6
+    testSetInPlace[Double](cscA,cscB)
+    assert(cscA === cscB)
+    cscB(1,1) = 1.4
+    cscB(1,0) = 1.9
+    cscA(0,1) = 2.1
+    testSetInPlace[Double](cscA,cscB)
+    assert(cscA === cscB)
+    testSetInPlace[Double](cscA,CSCMatrix.zeros[Double](3,4))
+    assert(cscA === CSCMatrix.zeros[Double](3,4))
   }
 }
 

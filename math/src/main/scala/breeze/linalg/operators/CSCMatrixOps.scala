@@ -93,39 +93,75 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
   }
 
   @expand
-  implicit def csc_csc_UpdateOp[@expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType, T:Field:ClassTag]
-  (implicit @expand.sequence[Op]({f.+(_,_)}, {f.-(_,_)}, {f.*(_,_)}, {f./(_,_)}, {(a,b) => b},{f.%(_,_)},{f.pow(_,_)}) op: Op.Impl2[T, T, T]):
+  implicit def csc_csc_BadUpdateOps[@expand.args(OpDiv,OpPow, OpMod) Op <: OpType,T:Field:ClassTag]
+  (implicit @expand.sequence[Op]({f./(_,_)},{f.pow(_,_)},{f.%(_,_)}) op: Op.Impl2[T,T,T]):
+  Op.InPlaceImpl2[CSCMatrix[T],CSCMatrix[T]] = {
+    new Op.InPlaceImpl2[CSCMatrix[T],CSCMatrix[T]] {
+      def apply(a: CSCMatrix[T],b: CSCMatrix[T]): Unit = {
+        throw new UnsupportedOperationException(s"Performing a Matrix x Matrix operation of this kind will result in a non-sparse matrix, possibly full of NaNs.")
+      }
+      implicitly[BinaryUpdateRegistry[Matrix[T], Matrix[T], Op.type]].register(this)
+    }
+  }
+
+  @expand
+  implicit def csc_csc_UpdateOp[@expand.args(OpAdd, OpSub, OpMulScalar,  OpSet) Op <: OpType, T:Field:ClassTag]
+  (implicit @expand.sequence[Op]({f.+(_,_)}, {f.-(_,_)}, {f.*(_,_)}, {(a,b) => b}) op: Op.Impl2[T, T, T]):
   Op.InPlaceImpl2[CSCMatrix[T], CSCMatrix[T]] = {
     val f = implicitly[Field[T]]
     new Op.InPlaceImpl2[CSCMatrix[T], CSCMatrix[T]] {
       def apply(a: CSCMatrix[T], b: CSCMatrix[T]): Unit = {
-        //        require(a.defaultValue == b.defaultValue, "Matrices must share default value.")
-        var ar = 0
-        var ac = 0
-        var br = 0
-        var bc = 0
-        while (ac < a.cols || bc < b.cols) {
-          var aip = a.colPtrs(ac)
-          var bip = b.colPtrs(bc)
 
-          while (aip < a.colPtrs(ac + 1) || bip < b.colPtrs(bc + 1)) {
-            val ar = a.rowIndices(aip)
-            val br = b.rowIndices(bip)
-
-            if (ac == bc && ar == br) {
-              a.update(ar,ac,op(a(ar,ac),b(br,bc)))
-              aip += 1
-              bip += 1
-            } else if (ac <= bc && ar < br) {
-              a.update(ar,ac,op(a(ar,ac),f.zero))
-              aip += 1
-            } else {
-              a.update(ar,ac,op(f.zero,b(br,bc)))
-              bip += 1
-            }
+        if (a.activeSize == 0) {
+          val newData = Array.ofDim[T](b.data.length)
+          System.arraycopy(b.data,0,newData,0,b.data.length)
+          var i = 0
+          while (i < newData.length) {
+            newData(i) = op(f.zero,newData(i))
+            i += 1
           }
-          ac += 1
-          bc += 1
+          a.use(newData, b.colPtrs, util.Arrays.copyOf(b.rowIndices, b.rowIndices.length), b.activeSize)
+        } else if (b.activeSize != 0) {
+          var ar = 0
+          var ac = 0
+          var br = 0
+          var bc = 0
+          var aNonemptyCol = false
+          var bNonEmptyCol = false
+          while (ac < a.cols || bc < b.cols) {
+            var aip = a.colPtrs(ac)
+            val aNCol = a.colPtrs(ac + 1)
+            var bip = b.colPtrs(bc)
+            val bNCol = b.colPtrs(bc + 1)
+            aNonemptyCol = aNCol != aip
+            bNonEmptyCol = bNCol != bip
+            while (aip < aNCol || bip < bNCol) {
+              val ar = a.rowIndices(aip)
+              val br = b.rowIndices(bip)
+
+              if (aNonemptyCol && bNonEmptyCol && ac == bc && ar == br) {
+                a.update(ar, ac, op(a(ar, ac), b(br, bc)))
+                aip += 1
+                bip += 1
+              } else if (aNonemptyCol && ac <= bc && ar < br) {
+                a.update(ar, ac, op(a(ar, ac), f.zero))
+                aip += 1
+              } else if (bNonEmptyCol) {
+                a.update(br, bc, op(f.zero, b(br, bc)))
+                bip += 1
+                aip += 1 // Because we just inserted a new value behind the pointer in A
+              }
+            }
+            ac += 1
+            bc += 1
+          }
+        } else {
+          val aData = a.data
+          var i = 0
+          while (i < aData.length) {
+            aData(i) = op(aData(i),f.zero)
+            i += 1
+          }
         }
       }
 

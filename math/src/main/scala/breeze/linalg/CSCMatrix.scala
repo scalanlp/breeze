@@ -159,6 +159,17 @@ class CSCMatrix[@specialized(Int, Float, Double) V:Zero] private[linalg] (privat
 
   override def toString: String = toString(maxLines = Terminal.terminalHeight - 3)
 
+  def use(data: Array[V],colPtrs: Array[Int], rowIndices: Array[Int], used: Int): Unit = {
+    require(colPtrs.length == this.colPtrs.length)
+    require(used > 0)
+    require(data.length >= used)
+    require(rowIndices.length >= used)
+    this._data = data
+    System.arraycopy(colPtrs,0,this.colPtrs,0,colPtrs.length)
+    this._rowIndices = rowIndices
+    this.used = used
+  }
+
   def copy: CSCMatrix[V] = {
     new CSCMatrix[V](ArrayUtil.copyOf(_data, activeSize), rows, cols, colPtrs.clone(), activeSize, _rowIndices.clone)
   }
