@@ -672,14 +672,20 @@ object MutableRestrictedDomainTensorField {
 
 object MutableOptimizationSpace {
   object SparseOptimizationSpace {
-    import FrobeniusMatrixInnerProductNorms._
     import CSCMatrix.FrobeniusInnerProductCSCMatrixSpace._
-    implicit def sparseOptSpace[S:Field:Zero:ClassTag] = make[CSCMatrix[S],SparseVector[S],S](_.asCSCMatrix(),_.flatten())
+    implicit def sparseOptSpace[S:Field:Zero:ClassTag] = {
+      val norms = FrobeniusMatrixInnerProductNorms.makeMatrixNorms[CSCMatrix[S],S]
+      import norms._
+      make[CSCMatrix[S],SparseVector[S],S](_.asCSCMatrix(),_.flatten())
+    }
   }
 
   object DenseOptimizationSpace {
-    import FrobeniusMatrixInnerProductNorms._
-    implicit def denseOptSpace[S:Field:ClassTag] = make[DenseMatrix[S],DenseVector[S],S](_.asDenseMatrix,_.flatten())
+    implicit def denseOptSpace[S:Field:ClassTag] = {
+      val norms = FrobeniusMatrixInnerProductNorms.makeMatrixNorms[DenseMatrix[S],S]
+      import norms._
+      make[DenseMatrix[S],DenseVector[S],S](_.asDenseMatrix,_.flatten())
+    }
   }
 
   def make[M,V,S](toMat: V => M, toVec: M => V)(implicit

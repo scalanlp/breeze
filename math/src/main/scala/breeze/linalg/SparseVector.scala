@@ -156,7 +156,7 @@ class SparseVector[@spec(Double,Int, Float) E](val array: SparseArray[E])
       val nIndex = Array.tabulate[Int](length + 1)( (cp: Int) =>
         if (cp < length && cp == index(ii)) {ii += 1; ii - 1}
         else ii )
-      new CSCMatrix[E](data, 1, length, nIndex, data.length, Array.fill[Int](data.length)(0))
+      new CSCMatrix[E](data, 1, length, nIndex, activeSize, Array.fill[Int](data.length)(0))
     }
   }
 }
