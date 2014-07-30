@@ -298,5 +298,34 @@ class CSCMatrixTest extends FunSuite with Checkers {
     testSetInPlace[Double](cscA,CSCMatrix.zeros[Double](3,4))
     assert(cscA === CSCMatrix.zeros[Double](3,4))
   }
+  test("ZipMapVals Test") {
+    def testZipMap[T:Field:Zero:ClassTag](a: CSCMatrix[T],b: CSCMatrix[T]): CSCMatrix[T] = {
+      val f = implicitly[Field[T]]
+      val optspace = SparseOptimizationSpace.sparseOptSpace[T]
+      import optspace._
+      val addMapFn = (t1: T, t2: T) => f.+(t1,t2)
+
+      zipMapValuesM.map(a,b,addMapFn)
+    }
+    val cscA = CSCMatrix.zeros[Double](3,4)
+    val cscB = CSCMatrix.zeros[Double](3,4)
+    cscB(1,1) = 1.3
+    cscB(0,0) = 1.0
+    cscB(2,3) = 1.8
+    cscB(2,0) = 1.6
+    val cscR = testZipMap(cscA,cscB)
+    assert(cscR === cscB)
+    val cscR1 = testZipMap(cscR,cscB)
+    assert(cscR1 === cscB * 2.0)
+    cscR(1,0) = 1.1
+    cscB(0,1) = 1.2
+    val cscR2 = testZipMap(cscR,cscB)
+    val cscR3 = cscR * 2.0
+    cscR3(1,0) = 1.1
+    cscR3(0,1) = 1.2
+    assert(cscR2 === cscR3)
+    val cscR4 = testZipMap(cscB,cscA)
+    assert(cscR4 === cscB)
+  }
 }
 

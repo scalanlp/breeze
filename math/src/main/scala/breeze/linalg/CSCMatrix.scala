@@ -507,34 +507,62 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
     implicit def zipMapVals[S, R: ClassTag:Semiring:Zero] = new CanZipMapValues[CSCMatrix[S], S, R, CSCMatrix[R]] {
       /** Maps all corresponding values from the two collections. */
       override def map(a: CSCMatrix[S], b: CSCMatrix[S], fn: (S, S) => R): CSCMatrix[R] = {
+        val rows  = a.rows
+        val cols  = a.cols
+        require(rows == b.rows, "Matrices must have same number of rows!")
+        require(cols == b.cols, "Matrices must have same number of cols!")
 
-        val builder = new CSCMatrix.Builder[R](a.rows,a.cols,a.used)
-        var ac = 0
-        var bc = 0
-        while (ac < a.cols && bc < b.cols) {
-          var aip = a.colPtrs(ac)
-          var bip = b.colPtrs(bc)
-
-          while (aip < a.colPtrs(ac + 1) && bip < b.colPtrs(bc + 1)) {
-            val ar = a.rowIndices(aip)
-            val br = b.rowIndices(bip)
-
-            if (ac == bc && ar == br) {
-              builder.add(ar,ac,fn(a(ar,ac),b(br,bc)))
-              aip += 1
-              bip += 1
-            } else if (ac <= bc && ar < br) {
-              builder.add(ar,ac, fn(a(ar,ac),b.zero))
-              aip += 1
-            } else {
-              builder.add(ar,ac, fn(a.zero,b(br,bc)))
-              bip += 1
-            }
+        if (a.activeSize == 0) {
+          val newData = Array.ofDim[R](b.data.length)
+          var i = 0
+          while (i < b.data.length) {
+            newData(i) = fn(a.zero,b.data(i))
+            i += 1
           }
-          ac += 1
-          bc += 1
+          new CSCMatrix[R](newData, rows, cols, util.Arrays.copyOf(b.colPtrs,b.colPtrs.length),
+            b.activeSize, util.Arrays.copyOf(b.rowIndices, b.rowIndices.length))
+        } else if (b.activeSize == 0) {
+          val newData = Array.ofDim[R](a.data.length)
+          var i = 0
+          while (i < a.data.length) {
+            newData(i) = fn(a.data(i),b.zero)
+            i += 1
+          }
+          new CSCMatrix[R](newData, rows, cols, util.Arrays.copyOf(a.colPtrs,a.colPtrs.length),
+            a.activeSize, util.Arrays.copyOf(a.rowIndices, a.rowIndices.length))
+
+        } else {
+          val builder = new CSCMatrix.Builder[R](a.rows, a.cols, a.used)
+          var ci = 0
+          var apStop = a.colPtrs(0)
+          var bpStop = b.colPtrs(0)
+          while (ci < cols) {
+            val ci1 = ci + 1
+            var ap = apStop
+            var bp = bpStop
+            apStop = a.colPtrs(ci1)
+            bpStop = b.colPtrs(ci1)
+            while (ap < apStop && bp < bpStop) {
+              val ar = a.rowIndices(ap)
+              val br = b.rowIndices(bp)
+
+              if (ar == br) {
+                builder.add(ar, ci, fn(a.data(ap), b.data(bp)))
+                ap += 1
+                bp += 1
+              } else if (ar < br) {
+                // a is behind
+                builder.add(ar, ci, fn(a.data(ap), b.zero))
+                ap += 1
+              } else {
+                builder.add(br, ci, fn(a.zero, b.data(bp)))
+                bp += 1
+              }
+            }
+            ci = ci1
+          }
+          builder.result(true, true)
         }
-        builder.result(true,true)
       }
     }
 
@@ -543,18 +571,18 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
         val s = implicitly[Semiring[T]]
 
         override def apply(v: CSCMatrix[T], v2: T): Unit = {
-          var c = 0
-          while (c < v.cols) {
-            var ip = v.colPtrs(c)
-            while (ip < v.colPtrs(c + 1)) {
-              val r = v.rowIndices(ip)
-              v.update(r, c, s.+(v.data(ip), v2))
-              ip += 1
-            }
-            c += 1
-          }
-          //         throw new UnsupportedOperationException("Adding a scalar to a sparse matrix will make it dense under the current implementation." +
-          //          " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
+//          var c = 0
+//          while (c < v.cols) {
+//            var ip = v.colPtrs(c)
+//            while (ip < v.colPtrs(c + 1)) {
+//              val r = v.rowIndices(ip)
+//              v.update(r, c, s.+(v.data(ip), v2))
+//              ip += 1
+//            }
+//            c += 1
+//          }
+            throw new UnsupportedOperationException("Adding a scalar to a sparse matrix will make it dense under the current implementation." +
+                    " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
         }
       }
     }
@@ -563,12 +591,13 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
       new OpAdd.Impl2[CSCMatrix[T], T, CSCMatrix[T]] {
         val uop = implicitly[OpAdd.InPlaceImpl2[CSCMatrix[T], T]]
 
-        //          throw new UnsupportedOperationException("Adding a scalar to a sparse matrix will make it dense under the current implementation." +
-        //            " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
         override def apply(v: CSCMatrix[T], v2: T): CSCMatrix[T] = {
-          val c = copy(v)
-          uop(c, v2)
-          c
+          throw new UnsupportedOperationException("Adding a scalar to a sparse matrix will make it dense under the current implementation." +
+            " You probably don't want to do this. Eventually non-zero default elements will be supported and this can be made efficient.")
+
+//          val c = copy(v)
+//          uop(c, v2)
+//          c
         }
       }
 
