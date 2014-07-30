@@ -10,6 +10,7 @@ import breeze.linalg.support.{CanCollapseAxis, CanSlice2}
 import breeze.util.ArrayUtil
 import breeze.storage.Zero
 import scala.reflect.ClassTag
+import spire.syntax.cfor._
 
 trait DenseMatrixMultiplyStuff extends DenseMatrixOps with DenseMatrixMultOps with LowPriorityDenseMatrix { this: DenseMatrix.type =>
 
@@ -1039,5 +1040,84 @@ trait LowPriorityDenseMatrix1 {
   implicit def setMV[V]: OpSet.InPlaceImpl2[DenseMatrix[V], Vector[V]] = new SetDMVOp[V]
 
   // </editor-fold>
+
+}
+
+/**
+ * TODO
+ *
+ * @author dlwh
+ **/
+trait DenseMatrix_OrderingOps extends DenseMatrixOps { this: DenseMatrix.type =>
+
+  @expand
+  implicit def dm_dm_Op[@expand.args(Int, Double, Float, Long) T,
+  @expand.args(OpGT, OpGTE, OpLTE, OpLT, OpEq, OpNe) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ > _},  {_ >= _}, {_ <= _}, {_ < _}, { _ == _}, {_ != _})
+  op: Op.Impl2[T, T, T]):Op.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[Boolean]] = new Op.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[Boolean]] {
+    def apply(a: DenseMatrix[T], b: DenseMatrix[T]): DenseMatrix[Boolean] = {
+      if(a.isTranspose) {
+        apply(a.t, b.t).t
+      } else {
+        if(a.rows != b.rows) throw new ArrayIndexOutOfBoundsException(s"Rows don't match for operator $Op ${a.rows} ${b.rows}")
+        if(a.cols != b.cols) throw new ArrayIndexOutOfBoundsException(s"Cols don't match for operator $Op ${a.cols} ${b.cols}")
+        val result = DenseMatrix.zeros[Boolean](a.rows, a.cols)
+
+
+        cforRange2(0 until a.cols, 0 until a.rows) { (j, i) =>
+          result(i, j) = op(a(i,j), b(i, j))
+        }
+
+        result
+      }
+    }
+  }
+
+  @expand
+  implicit def dm_v_Op[@expand.args(Int, Double, Float, Long) T,
+  @expand.args(OpGT, OpGTE, OpLTE, OpLT, OpEq, OpNe) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ > _},  {_ >= _}, {_ <= _}, {_ < _}, { _ == _}, {_ != _})
+  op: Op.Impl2[T, T, Boolean]):Op.Impl2[DenseMatrix[T], Matrix[T], DenseMatrix[Boolean]] = new Op.Impl2[DenseMatrix[T], Matrix[T], DenseMatrix[Boolean]] {
+    def apply(a: DenseMatrix[T], b: Matrix[T]): DenseMatrix[Boolean] = {
+      if(a.rows != b.rows) throw new ArrayIndexOutOfBoundsException(s"Rows don't match for operator $Op ${a.rows} ${b.rows}")
+      if(a.cols != b.cols) throw new ArrayIndexOutOfBoundsException(s"Cols don't match for operator $Op ${a.cols} ${b.cols}")
+      val result = DenseMatrix.zeros[Boolean](a.rows, a.cols)
+
+
+      cforRange2(0 until a.cols, 0 until a.rows) { (j, i) =>
+        result(i, j) = op(a(i,j), b(i, j))
+      }
+
+      result
+    }
+  }
+
+
+
+
+
+  @expand
+  implicit def dm_s_CompOp[@expand.args(Int, Double, Float, Long) T,
+  @expand.args(OpGT, OpGTE, OpLTE, OpLT, OpEq, OpNe) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ > _},  {_ >= _}, {_ <= _}, {_ < _}, { _ == _}, {_ != _})
+  op: Op.Impl2[T, T, Boolean]):Op.Impl2[DenseMatrix[T], T, DenseMatrix[Boolean]] = new Op.Impl2[DenseMatrix[T], T, DenseMatrix[Boolean]] {
+    def apply(a: DenseMatrix[T], b: T): DenseMatrix[Boolean] = {
+      if(a.isTranspose) {
+        apply(a.t, b).t
+      } else {
+        val result = DenseMatrix.zeros[Boolean](a.rows, a.cols)
+
+        cforRange2(0 until a.cols, 0 until a.rows) { (j, i) =>
+          result(i, j) = op(a(i,j), b)
+        }
+
+        result
+      }
+    }
+  }
+
+
+
+
 
 }
