@@ -22,7 +22,7 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
     new OpMulMatrix.Impl2[SparseVector[T],CSCMatrix[T],CSCMatrix[T]] {
       def apply(v: SparseVector[T], v2: CSCMatrix[T]): CSCMatrix[T] = {
         require(v2.rows == 1)
-        val csc = new CSCMatrix[T](v.data,v.length,1,Array(0,v.length),v.index)
+        val csc = new CSCMatrix[T](v.data,v.length,1,Array(0,v.activeSize),v.activeSize,v.index)
         op(csc,v2)
       }
     }
@@ -59,32 +59,57 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
     new Op.InPlaceImpl2[CSCMatrix[T], CSCMatrix[T]] {
       def apply(a: CSCMatrix[T], b: CSCMatrix[T]): Unit = {
         //        require(a.defaultValue == b.defaultValue, "Matrices must share default value.")
-        var ar = 0
-        var ac = 0
-        var br = 0
-        var bc = 0
-        while (ac < a.cols && bc < b.cols) {
-          var aip = a.colPtrs(ac)
-          var bip = b.colPtrs(bc)
 
-          while (aip < a.colPtrs(ac + 1) && bip < b.colPtrs(bc + 1)) {
-            val ar = a.rowIndices(aip)
-            val br = b.rowIndices(bip)
-
-            if (ac == bc && ar == br) {
-              a(ar,ac) = op(a(ar,ac),b(br,bc))
-              aip += 1
-              bip += 1
-            } else if (ac <= bc && ar < br) {
-              a(ar,ac) = op(a(ar,ac),mZero)
-              aip += 1
-            } else {
-              a(ar,ac) = op(mZero,b(br,bc))
-              bip += 1
-            }
+        if (a.activeSize == 0) {
+          val newData = Array.ofDim[T](b.data.length)
+          System.arraycopy(b.data,0,newData,0,b.data.length)
+          var i = 0
+          while (i < newData.length) {
+            newData(i) = op(mZero,newData(i))
+            i += 1
           }
-          ac += 1
-          bc += 1
+          a.use(newData, b.colPtrs, util.Arrays.copyOf(b.rowIndices, b.rowIndices.length), b.activeSize)
+        } else if (b.activeSize != 0) {
+          var ar = 0
+          var ac = 0
+          var br = 0
+          var bc = 0
+          var aNonemptyCol = false
+          var bNonEmptyCol = false
+          while (ac < a.cols || bc < b.cols) {
+            var aip = a.colPtrs(ac)
+            val aNCol = a.colPtrs(ac + 1)
+            var bip = b.colPtrs(bc)
+            val bNCol = b.colPtrs(bc + 1)
+            aNonemptyCol = aNCol != aip
+            bNonEmptyCol = bNCol != bip
+            while (aip < aNCol || bip < bNCol) {
+              val ar = a.rowIndices(aip)
+              val br = b.rowIndices(bip)
+
+              if (aNonemptyCol && bNonEmptyCol && ac == bc && ar == br) {
+                a.update(ar, ac, op(a(ar, ac), b(br, bc)))
+                aip += 1
+                bip += 1
+              } else if (aNonemptyCol && ac <= bc && ar < br) {
+                a.update(ar, ac, op(a(ar, ac), mZero))
+                aip += 1
+              } else if (bNonEmptyCol) {
+                a.update(br, bc, op(mZero, b(br, bc)))
+                bip += 1
+                aip += 1 // Because we just inserted a new value behind the pointer in A
+              }
+            }
+            ac += 1
+            bc += 1
+          }
+        } else {
+          val aData = a.data
+          var i = 0
+          while (i < aData.length) {
+            aData(i) = op(aData(i),mZero)
+            i += 1
+          }
         }
       }
 
@@ -93,39 +118,74 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
   }
 
   @expand
-  implicit def csc_csc_UpdateOp[@expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType, T:Field:ClassTag]
-  (implicit @expand.sequence[Op]({f.+(_,_)}, {f.-(_,_)}, {f.*(_,_)}, {f./(_,_)}, {(a,b) => b},{f.%(_,_)},{f.pow(_,_)}) op: Op.Impl2[T, T, T]):
+  implicit def csc_csc_BadUpdateOps[@expand.args(OpDiv,OpPow, OpMod) Op <: OpType,T:Field:ClassTag]
+  (implicit @expand.sequence[Op]({f./(_,_)},{f.pow(_,_)},{f.%(_,_)}) op: Op.Impl2[T,T,T]):
+  Op.InPlaceImpl2[CSCMatrix[T],CSCMatrix[T]] = {
+    new Op.InPlaceImpl2[CSCMatrix[T],CSCMatrix[T]] {
+      def apply(a: CSCMatrix[T],b: CSCMatrix[T]): Unit = {
+        throw new UnsupportedOperationException(s"Performing a Matrix x Matrix operation of this kind will result in a non-sparse matrix, possibly full of NaNs.")
+      }
+      implicitly[BinaryUpdateRegistry[Matrix[T], Matrix[T], Op.type]].register(this)
+    }
+  }
+
+  @expand
+  implicit def csc_csc_UpdateOp[@expand.args(OpAdd, OpSub, OpMulScalar,  OpSet) Op <: OpType, T:Field:ClassTag]
+  (implicit @expand.sequence[Op]({f.+(_,_)}, {f.-(_,_)}, {f.*(_,_)}, {(a,b) => b}) op: Op.Impl2[T, T, T]):
   Op.InPlaceImpl2[CSCMatrix[T], CSCMatrix[T]] = {
     val f = implicitly[Field[T]]
     new Op.InPlaceImpl2[CSCMatrix[T], CSCMatrix[T]] {
       def apply(a: CSCMatrix[T], b: CSCMatrix[T]): Unit = {
-        //        require(a.defaultValue == b.defaultValue, "Matrices must share default value.")
-        var ar = 0
-        var ac = 0
-        var br = 0
-        var bc = 0
-        while (ac < a.cols && bc < b.cols) {
-          var aip = a.colPtrs(ac)
-          var bip = b.colPtrs(bc)
+        val rows  = a.rows
+        val cols  = a.cols
+        require(rows == b.rows, "Matrices must have same number of rows!")
+        require(cols == b.cols, "Matrices must have same number of cols!")
 
-          while (aip < a.colPtrs(ac + 1) && bip < b.colPtrs(bc + 1)) {
-            val ar = a.rowIndices(aip)
-            val br = b.rowIndices(bip)
-
-            if (ac == bc && ar == br) {
-              a(ar,ac) = op(a(ar,ac),b(br,bc))
-              aip += 1
-              bip += 1
-            } else if (ac <= bc && ar < br) {
-              a(ar,ac) = op(a(ar,ac),f.zero)
-              aip += 1
-            } else {
-              a(ar,ac) = op(f.zero,b(br,bc))
-              bip += 1
-            }
+        if (a.activeSize == 0) {
+          val newData = Array.ofDim[T](b.data.length)
+          var i = 0
+          while (i < newData.length) {
+            newData(i) = op(f.zero,b.data(i))
+            i += 1
           }
-          ac += 1
-          bc += 1
+          a.use(newData, b.colPtrs, util.Arrays.copyOf(b.rowIndices, b.rowIndices.length), b.activeSize)
+        } else if (b.activeSize == 0) {
+          val aData = a.data
+          var i = 0
+          while (i < aData.length) {
+            aData(i) = op(aData(i),f.zero)
+            i += 1
+          }
+        } else {
+          var ci = 0
+          var apStop  = a.colPtrs(0)
+          var bpStop  = b.colPtrs(0)
+          while (ci < cols) {
+            val ci1 = ci + 1
+            var ap = apStop
+            var bp = bpStop
+            apStop = a.colPtrs(ci1)
+            bpStop = b.colPtrs(ci1)
+            while (ap < apStop && bp < bpStop) {
+              val ar = a.rowIndices(ap)
+              val br = b.rowIndices(bp)
+
+              if (ar == br) {
+                a.update(ar, ci, op(a.data(ap), b.data(bp)))
+                ap += 1
+                bp += 1
+              } else if (ar < br) { // a is behind
+                a.update(ar, ci, op(a.data(ap), f.zero))
+                ap += 1
+              } else {
+                a.update(br, ci, op(f.zero, b.data(bp)))
+                bp += 1
+                ap += 1 // Because we just inserted a new value behind the pointer in A
+                apStop = a.colPtrs(ci1)
+              }
+            }
+            ci = ci1
+          }
         }
       }
 
@@ -167,7 +227,6 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
           c += 1
         }
       }
-
       implicitly[BinaryUpdateRegistry[Matrix[T], T, Op.type]].register(this)
     }
   }
@@ -437,6 +496,54 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
       res.toSparseVector
     }
   }
+
+
+//  implicit def canMulM_SV_Semiring[T:Semiring:Zero:ClassTag]
+//  : BinaryRegistry[CSCMatrix[T], SparseVector[T], OpMulMatrix.type, SparseVector[T]] = new BinaryRegistry[CSCMatrix[T], SparseVector[T], OpMulMatrix.type, SparseVector[T]] {
+//    override def bindingMissing(a: CSCMatrix[T], b: SparseVector[T]) = {
+//      val ring = implicitly[Semiring[T]]
+//      require(a.cols == b.length, "Dimension Mismatch!")
+//
+//      val res = new VectorBuilder[T](a.rows, b.iterableSize min a.rows)
+//
+//      val at = a.t
+//      val r = 0
+//      while (r < a.rows) {
+//        val rSize = at.colPtrs(r+1)-at.colPtrs(r)
+//        val dat = Array.ofDim[T](rSize)
+//        Array.copy(at.data,at.colPtrs(r),dat,0,rSize)
+//        val ind = Array.ofDim[Int](rSize)
+//        Array.copy(at.rowIndices,at.colPtrs(r),ind,0,rSize)
+//        val svr = new SparseVector[T](ind,dat,rSize,at.rows)
+//        val svrtb = svr.t * b
+//        res.add(r, svrtb.)
+//      }
+//
+
+//      var c = 0
+//      var lastOffset = 0
+//      while(c < a.cols) {
+//        var rr = a.colPtrs(c)
+//        val rrlast = a.colPtrs(c+1)
+//        if(rr < rrlast) {
+//          val newBOffset = util.Arrays.binarySearch(b.index, lastOffset, math.min(b.activeSize, c+1), c)
+//          if(newBOffset < 0) {
+//            lastOffset = ~newBOffset
+//          } else {
+//            while (rr < rrlast) {
+//              val r = a.rowIndices(rr)
+//              res.add(r, ring.*(a.data(rr), b.valueAt(newBOffset)))
+//              rr += 1
+//            }
+//            lastOffset = newBOffset + 1
+//          }
+//        }
+//        c += 1
+//      }
+//
+//      res.toSparseVector
+//    }
+//  }
 
 
 
