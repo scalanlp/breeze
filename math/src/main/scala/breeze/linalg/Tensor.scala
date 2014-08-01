@@ -15,12 +15,13 @@ package breeze.linalg
  limitations under the License.
 */
 
-import scala.{specialized=>spec}
 import support._
 import breeze.collection.mutable.Beam
-import breeze.math.Semiring
-import scala.reflect.ClassTag
 import breeze.generic.UFunc
+import breeze.math.Semiring
+
+import scala.{specialized=>spec}
+import scala.reflect.ClassTag
 
 
 /**
@@ -86,7 +87,10 @@ sealed trait QuasiTensor[@spec(Int) K, @spec(Double, Int, Float) V] {
 
 
 
-trait TensorLike[@spec(Int) K, @specialized(Int, Float, Double) V, +This<:Tensor[K, V]] extends QuasiTensor[K,V] with NumericOps[This] {
+trait TensorLike[@spec(Int) K, @specialized(Int, Float, Double) V, +This<:Tensor[K, V]]
+          extends QuasiTensor[K,V]
+          with NumericOps[This] {
+
   def apply(i: K): V
   def update(i: K, v: V)
 

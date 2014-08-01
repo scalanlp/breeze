@@ -37,12 +37,12 @@ trait MatrixLike[@spec(Int, Float, Double) V, +Self  <: Matrix[V]] extends Tenso
 trait Matrix[@spec(Int, Float, Double) V] extends MatrixLike[V, Matrix[V]] {
 
   final def apply(i: (Int, Int)) = apply(i._1, i._2)
-  final def update(i: (Int, Int), e: V) {
+  final def update(i: (Int, Int), e: V): Unit = {
     update(i._1, i._2, e)
   }
 
-  def apply(i: Int, j: Int):V
-  def update(i: Int, j: Int, e: V)
+  def apply(i: Int, j: Int): V
+  def update(i: Int, j: Int, e: V): Unit
 
   def size = rows * cols
   def rows: Int
@@ -124,7 +124,7 @@ trait Matrix[@spec(Int, Float, Double) V] extends MatrixLike[V, Matrix[V]] {
     DenseMatrix.tabulate(rows, cols){ (i,j) => apply(i, j)}
   }
 
-  def copy:Matrix[V]
+  def copy: Matrix[V]
 
   def flatten(view: View=View.Prefer): Vector[V]
 

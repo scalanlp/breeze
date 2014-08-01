@@ -14,17 +14,16 @@ package breeze.linalg
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import breeze.linalg.operators._
-import breeze.numerics._
-import breeze.storage.Zero
 import java.util
-import breeze.util.{Sorting, Terminal, ArrayUtil}
+import scala.{specialized=>spec}
 import scala.collection.mutable
-import breeze.math._
 import scala.reflect.ClassTag
+import breeze.storage.Zero
+import breeze.util.{Sorting, Terminal, ArrayUtil}
+import breeze.math._
 import breeze.linalg.support._
+import breeze.linalg.operators._
 import CanTraverseValues.ValuesVisitor
-
 /**
  * A compressed sparse column matrix, as used in Matlab and CSparse, etc.
  *
@@ -33,7 +32,7 @@ import CanTraverseValues.ValuesVisitor
  * @author dlwh
  */
 // TODO: maybe put columns in own array of sparse vectors, making slicing easier?
-class CSCMatrix[@specialized(Int, Float, Double) V:Zero] private[linalg] (private var _data: Array[V],
+class CSCMatrix[@spec(Int, Float, Double) V:Zero] private[linalg] (private var _data: Array[V],
                                                                                val rows: Int,
                                                                                val cols: Int,
                                                                                val colPtrs: Array[Int], // len cols + 1
@@ -228,7 +227,9 @@ class CSCMatrix[@specialized(Int, Float, Double) V:Zero] private[linalg] (privat
   def defaultValue: V = this.zero
 }
 
-object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps {
+object CSCMatrix extends MatrixConstructors[CSCMatrix]
+                 with CSCMatrixOps {
+
   def zeros[@specialized(Int, Float, Double) V:ClassTag:Zero](rows: Int, cols: Int, initialNonzero: Int) = {
     new CSCMatrix[V](new Array(initialNonzero), rows, cols, new Array(cols + 1), 0, new Array(initialNonzero))
   }

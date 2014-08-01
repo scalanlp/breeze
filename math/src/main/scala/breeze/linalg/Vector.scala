@@ -15,20 +15,20 @@ package breeze.linalg
  limitations under the License.
 */
 import operators._
-import scala.{specialized=>spec}
+import support._
+import support.CanTraverseValues.ValuesVisitor
 import breeze.generic.{UFunc}
-import breeze.math._
-import scala.math.BigInt
-import collection.immutable.BitSet
-import breeze.linalg.support._
-import breeze.storage.{Zero, Storage}
-import scala.reflect.ClassTag
-import breeze.stats.distributions.Rand
-import breeze.macros.expand
-import scala.annotation.unchecked.uncheckedVariance
-import CanTraverseValues.ValuesVisitor
-import scala.collection.mutable.ArrayBuilder
 import breeze.generic.UFunc.{UImpl2, UImpl, InPlaceImpl2}
+import breeze.macros.expand
+import breeze.math._
+import breeze.stats.distributions.Rand
+import breeze.storage.{Zero, Storage}
+
+import scala.{specialized=>spec}
+import scala.annotation.unchecked.uncheckedVariance
+import scala.collection.mutable.ArrayBuilder
+import scala.collection.immutable.BitSet
+import scala.reflect.ClassTag
 
 /**
  * Trait for operators and such used in vectors.
@@ -86,6 +86,7 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]]{
     result
   }
 
+  //ToDo 2: Should this be deprecated and changed to `toScalaVector`?
   /**Returns copy of this [[breeze.linalg.Vector]] as a [[scala.Vector]]*/
   def toVector(implicit cm: ClassTag[V]) = Vector[V]( toArray )
 
@@ -745,7 +746,7 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @tparam V
    * @return
    */
-  def zeros[V:ClassTag:Zero](size: Int):Vec[V]
+  def zeros[V:ClassTag:Zero](size: Int): Vec[V]
 
   /**
    * Creates a vector with the specified elements
@@ -753,7 +754,7 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @tparam V
    * @return
    */
-  def apply[@spec(Double, Int, Float) V](values: Array[V]):Vec[V]
+  def apply[@spec(Double, Int, Float) V](values: Array[V]): Vec[V]
 
   /**
    * Creates a vector with the specified elements
@@ -761,7 +762,7 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @tparam V
    * @return
    */
-  def apply[V:ClassTag](values: V*):Vec[V] = {
+  def apply[V:ClassTag](values: V*): Vec[V] = {
     // manual specialization so that we create the right DenseVector specialization... @specialized doesn't work here
     val man = implicitly[ClassTag[V]]
     if(man == manifest[Double]) apply(values.toArray.asInstanceOf[Array[Double]]).asInstanceOf[Vec[V]]
@@ -771,6 +772,7 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
 //     apply(values.toArray)
   }
 
+  //ToDo 2: I'm not sure fill/tabulate are really useful outside of the context of a DenseVector?
   /**
    * Analogous to Array.fill
    * @param size
@@ -778,7 +780,8 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @tparam V
    * @return
    */
-  def fill[@spec(Double, Int, Float) V:ClassTag](size: Int)(v: =>V):Vec[V] = apply(Array.fill(size)(v))
+  def fill[@spec(Double, Int, Float) V:ClassTag](size: Int)(v: =>V): Vec[V] = apply(Array.fill(size)(v))
+
 
   /**
    * Analogous to Array.tabulate

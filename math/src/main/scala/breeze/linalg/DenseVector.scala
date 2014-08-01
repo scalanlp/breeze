@@ -222,7 +222,8 @@ class DenseVector[@spec(Double, Int, Float) V](val data: Array[V],
 
 
 
-object DenseVector extends VectorConstructors[DenseVector] with DenseVector_GenericOps
+object DenseVector extends VectorConstructors[DenseVector]
+                      with DenseVector_GenericOps
                       with DenseVectorOps
                       with DenseVector_OrderingOps
                       with DenseVector_SpecialOps {

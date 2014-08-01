@@ -14,21 +14,22 @@ package breeze.linalg
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import operators._
-import scala.{specialized=>spec}
-import breeze.storage.Zero
-import breeze.linalg.support._
-import breeze.util.ArrayUtil
-import breeze.math._
+
+import support._
+import support.CanTraverseValues.ValuesVisitor
 import breeze.collection.mutable.SparseArray
-import collection.mutable
+import operators._
+import breeze.math._
+import breeze.storage.Zero
+import breeze.util.ArrayUtil
+
+import scala.{specialized=>spec}
+import scala.collection.mutable
 import scala.reflect.ClassTag
-import CanTraverseValues.ValuesVisitor
-import breeze.generic.UFunc.UImpl
 
 
 /**
- * A Binary-search backed vector.
+ * A vector backed by binary search (with [[breeze.collection.mutable.SparseArray]]).
  * There is a parallel array of ints (in 0 until length) and values, sorted by index value.
  * To quickly access all stored values use the following loop:
  *

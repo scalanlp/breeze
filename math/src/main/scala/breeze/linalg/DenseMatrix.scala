@@ -15,23 +15,21 @@ package breeze.linalg
  limitations under the License.
 */
 
-import breeze.numerics._
+import Axis._1
 import operators._
-import com.github.fommil.netlib.BLAS.{getInstance => blas}
-import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
-import breeze.util.ArrayUtil
 import support._
+import support.CanTraverseValues.ValuesVisitor
 import breeze.generic._
 import breeze.math._
 import breeze.storage.Zero
 import breeze.storage.Zero._
+import breeze.util.ArrayUtil
+
+import com.github.fommil.netlib.BLAS.{getInstance => blas}
+import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
+
 import scala.reflect.ClassTag
-import org.netlib.util.intW
-import breeze.macros.expand
-import scala.math.BigInt
 import scala.collection.mutable.ArrayBuffer
-import CanTraverseValues.ValuesVisitor
-import breeze.linalg.Axis._1
 
 /**
  * A DenseMatrix is a matrix with all elements found in an array. It is column major unless isTranspose is true,
@@ -118,6 +116,8 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
 
   def unsafeUpdate(row: Int, col: Int, v: V): Unit = { data(linearIndex(row, col)) = v }
 
+  // <editor-fold defaultstate="collapsed" desc=" conversions (toArray, toDenseVector) ">
+
   /** Converts this matrix to a flat Array (column-major) */
   def toArray: Array[V] = {
     implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
@@ -136,6 +136,8 @@ final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
 
   /** Converts this matrix to a DenseVector (column-major) */
   def toDenseVector: DenseVector[V] = DenseVector( toArray )
+
+  // </editor-fold>
 
   /** Converts this matrix to a DenseVector (column-major)
     * If view = true (or View.Require), throws an exception if we cannot return a view. otherwise returns a view.
