@@ -614,6 +614,12 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     assert(dm === DenseMatrix( (0, 1, 3), (3, 3, 3)))
   }
 
+  test("#286: argsort diverging implicit") {
+    val dm = DenseMatrix( (0.1f), (0.0f))
+
+    assert(argsort(dm) === IndexedSeq((1, 0), (0, 0)))
+ }
+
 
 
   def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6) {
@@ -621,6 +627,8 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
       A(i,j) should be (B(i, j) +- threshold)
 
   }
+
+
 
 
 }
