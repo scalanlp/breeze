@@ -35,7 +35,7 @@ import breeze.generic.UFunc.{UImpl2, UImpl, InPlaceImpl2}
  * @author dlwh
  */
 trait VectorLike[@spec V, +Self <: Vector[V]] extends Tensor[Int, V] with TensorLike[Int, V, Self] {
-  def map[E2, That](fn: V=>E2)(implicit canMapValues: CanMapValues[Self  @uncheckedVariance, V, E2, That]):That = values map fn
+  def map[V2, That](fn: V=>V2)(implicit canMapValues: CanMapValues[Self  @uncheckedVariance, V, V2, That]):That = values map fn
 
   def foreach[U](fn: V=>U): Unit = { values foreach fn }
 
