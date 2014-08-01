@@ -16,18 +16,20 @@ package breeze.storage
  limitations under the License.
 */
 
+import scala.{specialized=>spec}
+
 /**
  * Interface for an unboxed iterable, of sorts, for
  * things backed by a flat array of elements.
  *
  * @author dlwh
  */
-trait Storage[@specialized(Double, Int, Float, Long) E] {
+trait Storage[@spec(Double, Int, Float, Long) V] {
   /**
    * Returns the actual flat array of elements used.
    * @return
    */
-  def data: Array[E]
+  def data: Array[V]
 
   /**
    * How many elements are logically stored here. This may be <= activeSize.
@@ -54,7 +56,7 @@ trait Storage[@specialized(Double, Int, Float, Long) E] {
    * @param i index into the data array
    * @return
    */
-  def valueAt(i: Int): E
+  def valueAt(i: Int): V
 
   /**
    * Gives the logical index from the physical index.
