@@ -22,12 +22,12 @@ package breeze.storage
  *
  * @author dlwh
  */
-trait Storage[@specialized(Int,Double,Float,Long) Elem] {
+trait Storage[@specialized(Int,Double,Float,Long) E] {
   /**
    * Returns the actual flat array of elements used.
    * @return
    */
-  def data: Array[Elem]
+  def data: Array[E]
 
   /**
    * How many elements are logically stored here. This may be <= activeSize.
@@ -42,6 +42,7 @@ trait Storage[@specialized(Int,Double,Float,Long) Elem] {
    */
   def activeSize: Int
 
+  //ToDo: clarify and document---redundant with activeSize?
   /**
    * How many elements must be iterated over using valueAt/indexAt.
    * @return
@@ -53,7 +54,7 @@ trait Storage[@specialized(Int,Double,Float,Long) Elem] {
    * @param i index into the data array
    * @return
    */
-  def valueAt(i: Int): Elem
+  def valueAt(i: Int): E
 
   /**
    * Gives the logical index from the physical index.

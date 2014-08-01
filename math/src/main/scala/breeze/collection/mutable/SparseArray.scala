@@ -32,24 +32,24 @@ import scala.reflect.ClassTag
  * @author dlwh, dramage
  */
 @SerialVersionUID(1L)
-final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[Int],
-                        var data: Array[Elem],
+final class SparseArray[@specialized(Int, Float, Double) V](var index: Array[Int],
+                        var data: Array[V],
                         private var used: Int,
                         val size: Int,
-                        val default: Elem) extends ArrayLike[Elem] with Storage[Elem] with Serializable {
+                        val default: V) extends ArrayLike[V] with Storage[V] with Serializable {
 
 
 
-  def this(size: Int, default: Elem)(implicit manElem: ClassTag[Elem]) = {
+  def this(size: Int, default: V)(implicit manElem: ClassTag[V]) = {
     this(Array.empty,Array.empty,0, size, default)
   }
 
-  def this(size: Int)(implicit manElem: ClassTag[Elem], zero: Zero[Elem]) = {
-    this(size, ConfigurableDefault.default[Elem].value(zero))
+  def this(size: Int)(implicit manElem: ClassTag[V], zero: Zero[V]) = {
+    this(size, ConfigurableDefault.default[V].value(zero))
   }
 
   @inline
-  final def apply(i: Int):Elem = {
+  final def apply(i: Int):V = {
     val offset = findOffset(i)
     if (offset >= 0) data(offset) else default
   }
@@ -65,17 +65,17 @@ final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[
   def keysIterator = index.iterator.take(used)
 
 
-  def get(i: Int) : Option[Elem] = {
+  def get(i: Int) : Option[V] = {
     val offset = findOffset(i)
     if (offset >= 0) Some(data(offset)) else None
   }
 
-  def getOrElse(i : Int, value : =>Elem) : Elem = {
+  def getOrElse(i : Int, value : =>V) : V = {
     val offset = findOffset(i)
     if (offset >= 0) data(offset) else value
   }
 
-  def getOrElseUpdate(i : Int, value : =>Elem) : Elem = {
+  def getOrElseUpdate(i : Int, value : =>V) : V = {
     val offset = findOffset(i)
     if (offset >= 0) data(offset)
     else {
@@ -91,7 +91,7 @@ final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[
    * value, the result may be an efficiently dense (or almost dense) paired
    * array.
    */
-  def map[B:ClassTag:Zero](f : Elem=>B) : SparseArray[B] = {
+  def map[B:ClassTag:Zero](f : V=>B) : SparseArray[B] = {
     val newZero = implicitly[Zero[B]].zero
     if (used <= length && f(default) == newZero) {
       // some default values but f(default) is still default
@@ -141,7 +141,7 @@ final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[
   /**
    * Filter's the array by removing all values for which f is false.
    */
-  def filter(f : Elem=>Boolean) : SparseArray[Elem] = {
+  def filter(f : V=>Boolean) : SparseArray[V] = {
     val newIndex = new Array[Int](used)
     val newData = ArrayUtil.copyOf(data, used)
     var i = 0; var o = 0
@@ -165,13 +165,13 @@ final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[
         ii -= 1
         newLength -= 1
       }
-      new SparseArray[Elem](newIndex, newData, o, newLength, default)
+      new SparseArray[V](newIndex, newData, o, newLength, default)
     } else {
       // if default values are not accepted, return a "dense" array by
       // setting each position in newIndex consecutively to forget missing
       // values
       val newLength = o
-      new SparseArray[Elem](Array.range(0,newLength), newData.take(newLength), newLength, newLength, default)
+      new SparseArray[V](Array.range(0,newLength), newData.take(newLength), newLength, newLength, default)
     }
   }
 
@@ -311,7 +311,7 @@ final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[
    * new arrays.
    */
   @inline
-  final def update(i : Int, value : Elem) {
+  final def update(i : Int, value : V) {
     val offset = findOffset(i)
     if (offset >= 0) {
       // found at offset
@@ -363,6 +363,7 @@ final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[
 
   /** Compacts the array by removing all stored default values. */
   def compact() {
+    //ToDo 3: will require changes if non-zero defaults are implemented
     val nz = { // number of non-zeros
       var _nz = 0
       var i = 0
@@ -375,7 +376,7 @@ final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[
       _nz
     }
 
-    val newData  = ClassTag[Elem](data.getClass.getComponentType).newArray(nz)
+    val newData  = ClassTag[V](data.getClass.getComponentType).newArray(nz)
     val newIndex = new Array[Int](nz)
 
     var i = 0
@@ -395,7 +396,7 @@ final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[
   }
 
 
-  def use(index: Array[Int], data: Array[Elem], used: Int) {
+  def use(index: Array[Int], data: Array[V], used: Int) {
     this.index = index
     this.data = data
     this.used = used
@@ -415,7 +416,7 @@ final class SparseArray[@specialized(Int, Float, Double) Elem](var index: Array[
     reserve(used)
   }
 
-  def concatenate(that:SparseArray[Elem])(implicit man :ClassTag[Elem]):SparseArray[Elem]={ 
+  def concatenate(that:SparseArray[V])(implicit man :ClassTag[V]):SparseArray[V]={
     if(this.default!=that.default) throw new IllegalArgumentException("default values should be equal")
     new SparseArray((this.index.slice(0,this.used) union that.index.slice(0,that.used).map(_ + this.size)).toArray,
 		    (this.data.slice(0,this.used) union that.data.slice(0,that.used)).toArray,

@@ -34,10 +34,10 @@ import breeze.generic.UFunc.{UImpl2, UImpl, InPlaceImpl2}
  * Trait for operators and such used in vectors.
  * @author dlwh
  */
-trait VectorLike[@spec E, +Self <: Vector[E]] extends Tensor[Int, E] with TensorLike[Int, E, Self] {
-  def map[E2, That](fn: E=>E2)(implicit canMapValues: CanMapValues[Self  @uncheckedVariance, E, E2, That]):That = values map fn
+trait VectorLike[@spec V, +Self <: Vector[V]] extends Tensor[Int, V] with TensorLike[Int, V, Self] {
+  def map[E2, That](fn: V=>E2)(implicit canMapValues: CanMapValues[Self  @uncheckedVariance, V, E2, That]):That = values map fn
 
-  def foreach[U](fn: E=>U) { values foreach fn }
+  def foreach[U](fn: V=>U): Unit = { values foreach fn }
 
   def copy: Self
 }
@@ -45,9 +45,9 @@ trait VectorLike[@spec E, +Self <: Vector[E]] extends Tensor[Int, E] with Tensor
 
 /**
  * A Vector represents the mathematical concept of a vector in math.
- * @tparam E
+ * @tparam V
  */
-trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]]{
+trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]]{
 
   /**
    * @return the set of keys in this vector (0 until length)
@@ -71,13 +71,13 @@ trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]]{
     case _ => false
   }
 
-  def toDenseVector(implicit cm: ClassTag[E]) = {
+  def toDenseVector(implicit cm: ClassTag[V]) = {
     new DenseVector(toArray)
   }
 
   /**Returns copy of this [[breeze.linalg.Vector]] as a [[scala.Array]]*/
-  def toArray(implicit cm: ClassTag[E]) = {
-    val result = new Array[E](length)
+  def toArray(implicit cm: ClassTag[V]) = {
+    val result = new Array[V](length)
     var i = 0
     while(i < length) {
       result(i) = apply(i)
@@ -87,53 +87,53 @@ trait Vector[@spec(Int, Double, Float) E] extends VectorLike[E, Vector[E]]{
   }
 
   /**Returns copy of this [[breeze.linalg.Vector]] as a [[scala.Vector]]*/
-  def toVector(implicit cm: ClassTag[E]) = Vector[E]( toArray )
+  def toVector(implicit cm: ClassTag[V]) = Vector[V]( toArray )
 
   //ToDo 2: implement fold/scan/reduce to operate along one axis of a matrix/tensor
   // <editor-fold defaultstate="collapsed" desc=" scala.collection -like padTo, fold/scan/reduce ">
 
   /** See [[scala.collection.mutable.ArrayOps.padTo]].
     */
-  def padTo(len: Int, elem: E)(implicit cm: ClassTag[E]): Vector[E] = Vector[E]( toArray.padTo(len, elem) )
+  def padTo(len: Int, elem: V)(implicit cm: ClassTag[V]): Vector[V] = Vector[V]( toArray.padTo(len, elem) )
 
   /** See [[scala.collection.mutable.ArrayOps.fold]].
     */
-  def fold[E1 >: E](z: E1)(op: (E1, E1) => E1 )(implicit cm: ClassTag[E]): E1 = toArray.fold(z)( op )
+  def fold[E1 >: V](z: E1)(op: (E1, E1) => E1 )(implicit cm: ClassTag[V]): E1 = toArray.fold(z)( op )
   /** See [[scala.collection.mutable.ArrayOps.foldLeft]].
     */
-  def foldLeft[B >: E](z: B)(op: (B, E) => B )(implicit cm: ClassTag[E]): B = {
+  def foldLeft[B >: V](z: B)(op: (B, V) => B )(implicit cm: ClassTag[V]): B = {
     val it = valuesIterator
     it.foldLeft(z)( op )
   }
   /** See [[scala.collection.mutable.ArrayOps.foldRight]].
     */
-  def foldRight[B >: E](z: B)(op: (E, B) => B )(implicit cm: ClassTag[E]): B = toArray.foldRight(z)( op )
+  def foldRight[B >: V](z: B)(op: (V, B) => B )(implicit cm: ClassTag[V]): B = toArray.foldRight(z)( op )
 
   /** See [[scala.collection.mutable.ArrayOps.reduce]].
     */
-  def reduce[E1 >: E](op: (E1, E1) => E1 )(implicit cm: ClassTag[E], cm1: ClassTag[E1]): Vector[E1] = Vector[E1]( toArray.reduce( op ))
+  def reduce[E1 >: V](op: (E1, E1) => E1 )(implicit cm: ClassTag[V], cm1: ClassTag[E1]): Vector[E1] = Vector[E1]( toArray.reduce( op ))
   /** See [[scala.collection.mutable.ArrayOps.reduceLeft]].
     */
-  def reduceLeft[B >: E](op: (B, E) => B )(implicit cm: ClassTag[E]): B = {
+  def reduceLeft[B >: V](op: (B, V) => B )(implicit cm: ClassTag[V]): B = {
     val it = valuesIterator
     it.reduceLeft( op )
   }
   /** See [[scala.collection.mutable.ArrayOps.reduceRight]].
     */
-  def reduceRight[B >: E](op: (E, B) => B )(implicit cm: ClassTag[E]): B = toArray.reduceRight( op )
+  def reduceRight[B >: V](op: (V, B) => B )(implicit cm: ClassTag[V]): B = toArray.reduceRight( op )
 
   /** See [[scala.collection.mutable.ArrayOps.scan]].
     */
-  def scan[E1 >: E](z: E1)(op: (E1, E1) => E1 )(implicit cm: ClassTag[E], cm1: ClassTag[E1]): Vector[E1] = Vector[E1]( toArray.scan(z)( op ))
+  def scan[E1 >: V](z: E1)(op: (E1, E1) => E1 )(implicit cm: ClassTag[V], cm1: ClassTag[E1]): Vector[E1] = Vector[E1]( toArray.scan(z)( op ))
   /** See [[scala.collection.mutable.ArrayOps.scanLeft]].
     */
-  def scanLeft[B >: E](z: B)(op: (B, E) => B )(implicit cm: ClassTag[E], cm1: ClassTag[B]): Vector[B] = {
+  def scanLeft[B >: V](z: B)(op: (B, V) => B )(implicit cm: ClassTag[V], cm1: ClassTag[B]): Vector[B] = {
     val it = valuesIterator
     Vector[B]( it.scanLeft(z)( op ).toArray )
   }
   /** See [[scala.collection.mutable.ArrayOps.scanRight]].
     */
-  def scanRight[B >: E](z: B)(op: (E, B) => B )(implicit cm: ClassTag[E], cm1: ClassTag[B]): Vector[B] = Vector[B]( toArray.scanRight(z)( op ) )
+  def scanRight[B >: V](z: B)(op: (V, B) => B )(implicit cm: ClassTag[V], cm1: ClassTag[B]): Vector[B] = Vector[B]( toArray.scanRight(z)( op ) )
 
   // </editor-fold>
 
@@ -863,4 +863,4 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
   }
 }
 
-trait StorageVector[E] extends Vector[E] with Storage[E]
+trait StorageVector[V] extends Vector[V] with Storage[V]

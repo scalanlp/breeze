@@ -29,14 +29,14 @@ import scala.reflect.ClassTag
  * @author dlwh
  */
 // TODO: perhaps these should be called sparse Arrays
-trait ArrayLike[T] {
-  def apply(i: Int): T
-  def update(i: Int, t: T)
+trait ArrayLike[V] {
+  def apply(i: Int): V
+  def update(i: Int, t: V): Unit
 
   /**
    * Only iterates "active" elements
    */
-  def valuesIterator: Iterator[T]
+  def valuesIterator: Iterator[V]
 
 
   /**
@@ -44,6 +44,8 @@ trait ArrayLike[T] {
    */
   def keysIterator: Iterator[Int]
 
+  /** Mainly for marking the underlying data array extent in SparseVector/SparseArray
+    */
   def activeSize: Int
 
   def size: Int
@@ -58,7 +60,7 @@ trait ArrayLike[T] {
    * @tparam U
    */
   // TODO: maybe make this iterate all elements?
-  def foreach[U](f: (T) => U) = valuesIterator foreach f
+  def foreach[U](f: (V) => U) = valuesIterator foreach f
 
 
   /**
@@ -66,7 +68,7 @@ trait ArrayLike[T] {
    */
   def iterator = keysIterator zip valuesIterator
 
-  def toArray[U>:T:ClassTag] = Array.tabulate[U](length)(apply)
+  def toArray[U>:V:ClassTag] = Array.tabulate[U](length)(apply)
 
   def toList = List.tabulate(length)(apply)
 

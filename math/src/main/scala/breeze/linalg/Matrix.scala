@@ -29,20 +29,20 @@ import breeze.stats.distributions.Rand
  *
  * @author dlwh
  */
-trait MatrixLike[@spec(Int, Float, Double) E, +Self  <: Matrix[E]] extends Tensor[(Int, Int), E] with TensorLike[(Int, Int), E, Self] {
-  def map[E2, That](fn: E=>E2)(implicit canMapValues: CanMapValues[Self @uncheckedVariance , E, E2, That]):That = values map fn
+trait MatrixLike[@spec(Int, Float, Double) V, +Self  <: Matrix[V]] extends Tensor[(Int, Int), V] with TensorLike[(Int, Int), V, Self] {
+  def map[V2, That](fn: V=>V2)(implicit canMapValues: CanMapValues[Self @uncheckedVariance , V, V2, That]):That = values map fn
 
 }
 
-trait Matrix[@spec(Int, Float, Double) E] extends MatrixLike[E, Matrix[E]] {
+trait Matrix[@spec(Int, Float, Double) V] extends MatrixLike[V, Matrix[V]] {
 
   final def apply(i: (Int, Int)) = apply(i._1, i._2)
-  final def update(i: (Int, Int), e: E) {
+  final def update(i: (Int, Int), e: V) {
     update(i._1, i._2, e)
   }
 
-  def apply(i: Int, j: Int):E
-  def update(i: Int, j: Int, e: E)
+  def apply(i: Int, j: Int):V
+  def update(i: Int, j: Int, e: V)
 
   def size = rows * cols
   def rows: Int
@@ -120,13 +120,13 @@ trait Matrix[@spec(Int, Float, Double) E] extends MatrixLike[E, Matrix[E]] {
 
   override def toString : String = toString(Terminal.terminalHeight, Terminal.terminalWidth)
 
-  def toDenseMatrix(implicit cm: ClassTag[E], zero: Zero[E]) = {
+  def toDenseMatrix(implicit cm: ClassTag[V], zero: Zero[V]) = {
     DenseMatrix.tabulate(rows, cols){ (i,j) => apply(i, j)}
   }
 
-  def copy:Matrix[E]
+  def copy:Matrix[V]
 
-  def flatten(view: View=View.Prefer): Vector[E]
+  def flatten(view: View=View.Prefer): Vector[V]
 
 }
 

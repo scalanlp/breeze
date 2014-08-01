@@ -28,9 +28,9 @@ import breeze.generic.UFunc
  * @tparam K
  * @tparam V
  */
-sealed trait QuasiTensor[@specialized(Int) K, @specialized(Int, Float, Double) V] {
-  def apply(i: K):V
-  def update(i: K, v: V)
+sealed trait QuasiTensor[@spec(Int) K, @spec(Double, Int, Float) V] {
+  def apply(i: K): V
+  def update(i: K, v: V): Unit
   def keySet: scala.collection.Set[K]
 
     // Aggregators
@@ -87,7 +87,7 @@ sealed trait QuasiTensor[@specialized(Int) K, @specialized(Int, Float, Double) V
 
 
 trait TensorLike[@spec(Int) K, @specialized(Int, Float, Double) V, +This<:Tensor[K, V]] extends QuasiTensor[K,V] with NumericOps[This] {
-  def apply(i: K):V
+  def apply(i: K): V
   def update(i: K, v: V)
 
   def size: Int

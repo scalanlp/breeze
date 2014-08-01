@@ -47,13 +47,13 @@ import java.io.ObjectStreamException
  * @param length number of elements
  */
 @SerialVersionUID(1L) // TODO: scala doesn't propagate this to specialized subclasses. Sigh.
-class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
+class DenseVector[@spec(Double, Int, Float) V](val data: Array[V],
                                                val offset: Int,
                                                val stride: Int,
-                                               val length: Int) extends StorageVector[E]
-                                              with VectorLike[E, DenseVector[E]] with Serializable{
-  def this(data: Array[E]) = this(data, 0, 1, data.length)
-  def this(data: Array[E], offset: Int) = this(data, offset, 1, data.length)
+                                               val length: Int) extends StorageVector[V]
+                                              with VectorLike[V, DenseVector[V]] with Serializable{
+  def this(data: Array[V]) = this(data, 0, 1, data.length)
+  def this(data: Array[V], offset: Int) = this(data, offset, 1, data.length)
 
 
   // uncomment to get all the ridiculous places where specialization fails.
@@ -62,28 +62,28 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
   // ensure that operators are all loaded.
   DenseVector.init()
 
-  def repr: DenseVector[E] = this
+  def repr: DenseVector[V] = this
 
   def activeSize = length
 
-  def apply(i: Int): E = {
+  def apply(i: Int): V = {
     if(i < - size || i >= size) throw new IndexOutOfBoundsException(i + " not in [-"+size+","+size+")")
     val trueI = if(i<0) i+size else i
     data(offset + trueI * stride)
   }
 
-  def update(i: Int, v: E): Unit = {
+  def update(i: Int, v: V): Unit = {
     if(i < - size || i >= size) throw new IndexOutOfBoundsException(i + " not in [-"+size+","+size+")")
     val trueI = if(i<0) i+size else i
     data(offset + trueI * stride) = v
   }
 
   private val noOffsetOrStride = offset == 0 && stride == 1
-  def unsafeUpdate(i: Int, v: E): Unit = if (noOffsetOrStride) data(i) = v else data(offset+i*stride) = v
+  def unsafeUpdate(i: Int, v: V): Unit = if (noOffsetOrStride) data(i) = v else data(offset+i*stride) = v
 
-  def activeIterator: Iterator[(Int, E)] = iterator
+  def activeIterator: Iterator[(Int, V)] = iterator
 
-  def activeValuesIterator: Iterator[E] = valuesIterator
+  def activeValuesIterator: Iterator[V] = valuesIterator
 
   def activeKeysIterator: Iterator[Int] = keysIterator
 
@@ -110,9 +110,9 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
    * Returns a copy of this DenseVector. stride will always be 1, offset will always be 0.
    * @return
    */
-  def copy: DenseVector[E] = {
-    implicit val man = ClassTag[E](data.getClass.getComponentType.asInstanceOf[Class[E]])
-    val r = new DenseVector(new Array[E](length))
+  def copy: DenseVector[V] = {
+    implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+    val r = new DenseVector(new Array[V](length))
     r := this
     r
   }
@@ -122,12 +122,12 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
    * @param i index into the data array
    * @return apply(i)
    */
-  def valueAt(i: Int): E = apply(i)
+  def valueAt(i: Int): V = apply(i)
 
   /**
     * Unsafe version of above, a way to skip the checks.
     */
-  def unsafeValueAt(i: Int): E = data(offset + i * stride)
+  def unsafeValueAt(i: Int): V = data(offset + i * stride)
 
   /**
    * Gives the logical index from the physical index.
@@ -159,7 +159,7 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
    * @param fn
    * @tparam U
    */
-  override def foreach[@specialized(Unit) U](fn: (E) => U): Unit = {
+  override def foreach[@specialized(Unit) U](fn: (V) => U): Unit = {
     var i = offset
     var j = 0
     while(j < length) {
@@ -175,7 +175,7 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
    * @param end
    * @param stride
    */
-  def slice(start: Int, end: Int, stride: Int=1): DenseVector[E] = {
+  def slice(start: Int, end: Int, stride: Int=1): DenseVector[V] = {
     if(start > end || start < 0) throw new IllegalArgumentException("Slice arguments " + start +", " +end +" invalid.")
     if(end > length || end < 0) throw new IllegalArgumentException("End " + end + "is out of bounds for slice of DenseVector of length " + length)
     new DenseVector(data, start * this.stride + offset, stride * this.stride, (end-start)/stride)
@@ -184,21 +184,21 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
   // <editor-fold defaultstate="collapsed" desc=" Conversions (DenseMatrix, Array, Scala Vector) ">
 
   /** Creates a copy of this DenseVector that is represented as a 1 by length DenseMatrix */
-  def toDenseMatrix: DenseMatrix[E] = {
+  def toDenseMatrix: DenseMatrix[V] = {
      copy.asDenseMatrix
   }
 
   /** Creates a view of this DenseVector that is represented as a 1 by length DenseMatrix */
-  def asDenseMatrix: DenseMatrix[E] = {
-    new DenseMatrix[E](1, length, data, offset, stride)
+  def asDenseMatrix: DenseMatrix[V] = {
+    new DenseMatrix[V](1, length, data, offset, stride)
   }
 
 
 
-  override def toArray(implicit cm: ClassTag[E]): Array[E] = if(stride == 1){
+  override def toArray(implicit cm: ClassTag[V]): Array[V] = if(stride == 1){
     ArrayUtil.copyOfRange(data, offset, offset + length)
   } else {
-    val arr = new Array[E](length)
+    val arr = new Array[V](length)
     var i = 0
     var off = offset
     while(i < length) {
@@ -210,7 +210,7 @@ class DenseVector[@spec(Double, Int, Float) E](val data: Array[E],
   }
 
   /**Returns copy of this [[breeze.linalg.DenseVector]] as a [[scala.Vector]]*/
-  def toScalaVector()(implicit cm: ClassTag[E]): scala.Vector[E] = this.toArray.toVector
+  def toScalaVector()(implicit cm: ClassTag[V]): scala.Vector[V] = this.toArray.toVector
   // </editor-fold>
 
   @throws(classOf[ObjectStreamException])
