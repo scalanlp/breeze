@@ -22,7 +22,7 @@ package breeze.storage
  *
  * @author dlwh
  */
-trait Storage[@specialized(Int,Double,Float) Elem] {
+trait Storage[@specialized(Int,Double,Float,Long) Elem] {
   /**
    * Returns the actual flat array of elements used.
    * @return
