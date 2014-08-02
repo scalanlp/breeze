@@ -39,15 +39,17 @@ trait Storage[@spec(Double, Int, Float, Long) V] {
 
   /**
    * How many elements are stored in terms of space.
-   *
-   * @return
+   * In HashVectors, activeSize is the number of non-zero elements,
+   * while iterableSize is the number of buckets currently allocated.
+   * (activeSize <= iterableSize in general, activeSize == iterableSize for everything except hashing implementations.)
    */
   def activeSize: Int
 
-  //ToDo: clarify and document---redundant with activeSize?
   /**
    * How many elements must be iterated over using valueAt/indexAt.
-   * @return
+   * In HashVectors, activeSize is the number of non-zero elements,
+   * while iterableSize is the number of buckets currently allocated.
+   * (activeSize <= iterableSize in general, activeSize == iterableSize for everything except hashing implementations.)
    */
   def iterableSize: Int = activeSize
 
