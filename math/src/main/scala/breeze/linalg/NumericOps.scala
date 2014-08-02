@@ -159,12 +159,13 @@ trait NumericOps[+This] {
     this.:/=[TT, B](b)
 
   /** Represents the "natural" norm of this vector, for types that don't support arbitrary norms */
+  @deprecated("Use norm(XXX) instead of XXX.norm", "0.9")
   final def norm[TT >: This, R]()(implicit op: breeze.linalg.norm.Impl[TT, R]): R = {
     op(repr)
   }
 
-  //ToDo 2: deprecate in favor of UFunc?
   /** Represents the norm of this vector */
+  @deprecated("Use norm(XXX) instead of XXX.norm", "0.9")
   final def norm[TT >: This, B, R](b: B)(implicit op: breeze.linalg.norm.Impl2[TT, B, R]): R = {
     op(repr, b)
   }
