@@ -15,6 +15,7 @@ package breeze.linalg
  limitations under the License.
 */
 
+import breeze.linalg.svd.SVD
 import org.scalacheck.{Arbitrary,Gen,Prop}
 import org.scalatest._
 import org.scalatest.junit._
@@ -215,7 +216,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
 
   test("svd") {
     val m = DenseMatrix((2.0,4.0),(1.0,3.0),(0.0,0.0),(0.0,0.0))
-    val (u, s, vt) = svd(m)
+    val SVD(u, s, vt) = svd(m)
 
     // u and vt are unitary
     trace(u.t * u) should be (u.rows.toDouble +- 1E-5)
@@ -250,14 +251,14 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
       }
     }
 
-    val (u1, s1, vt1) = svd(m1)
-    val (u2, s2, vt2) = svd(m2,2)
+    val SVD(u1, s1, vt1) = svd(m1)
+    val SVD(u2, s2, vt2) = svd(m2,2)
     assert(max(abs(s1.slice(0,2) - s2)) < 1E-5)
     checkCols(u1(::, 0 until 2), u2)
     checkCols(vt1(0 until 2, ::).t, vt2.t)
 
-    val (u1t, s1t, vt1t) = svd(m1.t)
-    val (u2t, s2t, vt2t) = svd(m2.t,2)
+    val SVD(u1t, s1t, vt1t) = svd(m1.t)
+    val SVD(u2t, s2t, vt2t) = svd(m2.t,2)
     assert(max(abs(s1t.slice(0,2) - s2t)) < 1E-5)
     checkCols(u1t(::, 0 until 2), u2t)
     checkCols(vt1t(0 until 2, ::).t, vt2t.t)
