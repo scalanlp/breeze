@@ -4,6 +4,7 @@ import breeze.generic.UFunc.InPlaceImpl3
 import breeze.linalg._
 import java.util
 import breeze.linalg.operators._
+import breeze.linalg.support.CanTranspose
 import breeze.macros.expand
 import breeze.math.Semiring
 import spire.syntax.cfor._
@@ -52,6 +53,13 @@ object FeatureVector {
 
   object Implicits {
     implicit def fromArrayInt(arr: Array[Int]): FeatureVector = new FeatureVector(arr)
+  }
+
+
+  implicit object TransposeFV extends CanTranspose[FeatureVector, Transpose[FeatureVector]] {
+    override def apply(from: FeatureVector): Transpose[FeatureVector] = {
+      new Transpose(from)
+    }
   }
 
   @expand
@@ -174,6 +182,16 @@ object FeatureVector {
           }
         }
         result.toSparseVector
+      }
+    }
+  }
+
+  implicit def mulMatrixTrans[M, MTrans, MulResult, MRTrans](implicit trans: CanTranspose[M, MTrans],
+                                                    mul: OpMulMatrix.Impl2[MTrans, FeatureVector, MulResult],
+                                                    mrTrans: CanTranspose[MulResult, MRTrans]): OpMulMatrix.Impl2[Transpose[FeatureVector], M, MRTrans] = {
+    new OpMulMatrix.Impl2[Transpose[FeatureVector], M, MRTrans] {
+      override def apply(v: Transpose[FeatureVector], v2: M): MRTrans = {
+        mrTrans(mul(trans(v2), v.inner))
       }
     }
   }
