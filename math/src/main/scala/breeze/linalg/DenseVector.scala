@@ -47,7 +47,7 @@ import java.io.ObjectStreamException
  * @param length number of elements
  */
 @SerialVersionUID(1L) // TODO: scala doesn't propagate this to specialized subclasses. Sigh.
-class DenseVector[@spec(Double, Int, Float) V](val data: Array[V],
+class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
                                                val offset: Int,
                                                val stride: Int,
                                                val length: Int) extends StorageVector[V]
@@ -159,7 +159,7 @@ class DenseVector[@spec(Double, Int, Float) V](val data: Array[V],
    * @param fn
    * @tparam U
    */
-  override def foreach[@specialized(Unit) U](fn: (V) => U): Unit = {
+  override def foreach[@spec(Unit) U](fn: (V) => U): Unit = {
     var i = offset
     var j = 0
     while(j < length) {
@@ -228,18 +228,18 @@ object DenseVector extends VectorConstructors[DenseVector]
                       with DenseVector_OrderingOps
                       with DenseVector_SpecialOps {
 
-  def zeros[@spec(Double, Float, Int) V: ClassTag : Zero](size: Int): DenseVector[V] = {
+  def zeros[@spec(Double, Int, Float, Long) V: ClassTag : Zero](size: Int): DenseVector[V] = {
     val data = new Array[V](size)
     if(size != 0 && data(0) != implicitly[Zero[V]].zero)
       ArrayUtil.fill(data, 0, data.length, implicitly[Zero[V]].zero)
     new DenseVector(data)
   }
 
-  def apply[@spec(Double, Float, Int) V](values: Array[V]): DenseVector[V] = new DenseVector(values)
+  def apply[@spec(Double, Int, Float, Long) V](values: Array[V]): DenseVector[V] = new DenseVector(values)
 
-  def ones[@spec(Double, Float, Int) V: ClassTag:Semiring](size: Int): DenseVector[V] = fill[V](size, implicitly[Semiring[V]].one)
+  def ones[@spec(Double, Int, Float, Long) V: ClassTag:Semiring](size: Int): DenseVector[V] = fill[V](size, implicitly[Semiring[V]].one)
 
-  def fill[@spec(Double, Float, Int) V: ClassTag:Semiring](size: Int, v: V): DenseVector[V] = {
+  def fill[@spec(Double, Int, Float, Long) V: ClassTag:Semiring](size: Int, v: V): DenseVector[V] = {
     val r = apply(new Array[V](size))
     assert(r.stride == 1)
     ArrayUtil.fill(r.data, r.offset, r.length, v)
@@ -466,7 +466,7 @@ object DenseVector extends VectorConstructors[DenseVector]
   }
 
   // There's a bizarre error specializing float's here.
-  class CanZipMapValuesDenseVector[@specialized(Int, Double, Float) V, @specialized(Int, Double) RV:ClassTag] extends CanZipMapValues[DenseVector[V],V,RV,DenseVector[RV]] {
+  class CanZipMapValuesDenseVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag] extends CanZipMapValues[DenseVector[V],V,RV,DenseVector[RV]] {
     def create(length : Int) = new DenseVector(new Array[RV](length))
 
     /**Maps all corresponding values from the two collection. */

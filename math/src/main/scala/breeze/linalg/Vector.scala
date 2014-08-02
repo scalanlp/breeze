@@ -158,7 +158,7 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
    * @tparam V
    * @return
    */
-  def apply[@specialized(Int, Float, Double) V](values: Array[V]): Vector[V] = DenseVector(values)
+  def apply[@spec(Double, Int, Float, Long) V](values: Array[V]): Vector[V] = DenseVector(values)
 
   implicit def canCopy[E]:CanCopy[Vector[E]] = new CanCopy[Vector[E]] {
     // Should not inherit from T=>T because those get  used by the compiler.
@@ -166,7 +166,7 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
   }
 
   // There's a bizarre error specializing float's here.
-  class CanZipMapValuesVector[@specialized(Int, Double) V, @specialized(Int, Double) RV:ClassTag] extends CanZipMapValues[Vector[V],V,RV,Vector[RV]] {
+  class CanZipMapValuesVector[@spec(Int, Double) V, @spec(Int, Double) RV:ClassTag] extends CanZipMapValues[Vector[V],V,RV,Vector[RV]] {
     def create(length : Int) = new DenseVector(new Array[RV](length))
 
     /**Maps all corresponding values from the two collection. */
@@ -205,7 +205,7 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
 
   implicit def handholdCMV[T]= new CanMapValues.HandHold[Vector[T], T]
 
-  implicit def negFromScale[@specialized(Int, Float, Double) V, Double](implicit scale: OpMulScalar.Impl2[Vector[V], V, Vector[V]], ring: Ring[V]) = {
+  implicit def negFromScale[@spec(Double, Int, Float, Long) V, Double](implicit scale: OpMulScalar.Impl2[Vector[V], V, Vector[V]], ring: Ring[V]) = {
     new OpNeg.Impl[Vector[V], Vector[V]] {
       override def apply(a : Vector[V]) = {
         scale(a, ring.negate(ring.one))
@@ -558,8 +558,8 @@ trait VectorOps { this: Vector.type =>
     op.asInstanceOf[zipValues.Impl2[Vec1, Vec2, ZippedValues[T, U]]]
   }
 
-  case class ZippedVectorValues[@specialized(Int, Double, Long, Float) T,
-                                @specialized(Int, Double, Long, Float) U](a: Vector[T], b: Vector[U]) extends ZippedValues[T, U] {
+  case class ZippedVectorValues[@spec(Double, Int, Float, Long) T,
+                                @spec(Double, Int, Float, Long) U](a: Vector[T], b: Vector[U]) extends ZippedValues[T, U] {
     def foreach(f: (T, U) => Unit): Unit = {
       var i = 0
       while(i < a.length) {
@@ -754,7 +754,7 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @tparam V
    * @return
    */
-  def apply[@spec(Double, Int, Float) V](values: Array[V]): Vec[V]
+  def apply[@spec(Double, Int, Float, Long) V](values: Array[V]): Vec[V]
 
   /**
    * Creates a vector with the specified elements
@@ -780,7 +780,7 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @tparam V
    * @return
    */
-  def fill[@spec(Double, Int, Float) V:ClassTag](size: Int)(v: =>V): Vec[V] = apply(Array.fill(size)(v))
+  def fill[@spec(Double, Int, Float, Long) V:ClassTag](size: Int)(v: =>V): Vec[V] = apply(Array.fill(size)(v))
 
 
   /**
@@ -790,7 +790,7 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @tparam V
    * @return
    */
-  def tabulate[@spec(Double, Int, Float) V:ClassTag](size: Int)(f: Int=>V):Vec[V]= apply(Array.tabulate(size)(f))
+  def tabulate[@spec(Double, Int, Float, Long) V:ClassTag](size: Int)(f: Int=>V):Vec[V]= apply(Array.tabulate(size)(f))
 
   /**
    * Analogous to Array.tabulate, but taking a scala.Range to iterate over, instead of an index.
@@ -798,7 +798,7 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @tparam V
    * @return
    */
-  def tabulate[@spec(Double, Int, Float) V:ClassTag](range: Range)(f: Int=>V):Vec[V]= {
+  def tabulate[@spec(Double, Int, Float, Long) V:ClassTag](range: Range)(f: Int=>V):Vec[V]= {
     val b = ArrayBuilder.make[V]()
     b.sizeHint(range.length)
     var i = 0

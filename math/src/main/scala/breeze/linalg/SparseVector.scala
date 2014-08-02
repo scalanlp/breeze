@@ -46,7 +46,7 @@ import scala.reflect.ClassTag
  *@author dlwh
  */
 @SerialVersionUID(1)
-class SparseVector[@spec(Double,Int, Float) V](val array: SparseArray[V])
+class SparseVector[@spec(Double, Int, Float, Long) V](val array: SparseArray[V])
                                               (implicit zero: Zero[V])
                                               extends StorageVector[V]
                                               with VectorLike[V, SparseVector[V]] with Serializable {
@@ -168,12 +168,12 @@ object SparseVector extends SparseVectorOps
             with SparseVector_DenseVector_Ops
              {
 
-  def zeros[@spec(Double, Float, Int) V: ClassTag:Zero](size: Int) = new SparseVector(Array.empty, Array.empty[V], 0, size)
-  def apply[@spec(Double, Float, Int) V:Zero](values: Array[V]) = new SparseVector(Array.range(0,values.length), values, values.length, values.length)
+  def zeros[@spec(Double, Int, Float, Long) V: ClassTag:Zero](size: Int) = new SparseVector(Array.empty, Array.empty[V], 0, size)
+  def apply[@spec(Double, Int, Float, Long) V:Zero](values: Array[V]) = new SparseVector(Array.range(0,values.length), values, values.length, values.length)
 
   def apply[V:ClassTag:Zero](values: V*):SparseVector[V] = apply(values.toArray)
-  def fill[@spec(Double, Int, Float) V:ClassTag:Zero](size: Int)(v: =>V):SparseVector[V] = apply(Array.fill(size)(v))
-  def tabulate[@spec(Double, Int, Float) V:ClassTag:Zero](size: Int)(f: Int=>V):SparseVector[V]= apply(Array.tabulate(size)(f))
+  def fill[@spec(Double, Int, Float, Long) V:ClassTag:Zero](size: Int)(v: =>V):SparseVector[V] = apply(Array.fill(size)(v))
+  def tabulate[@spec(Double, Int, Float, Long) V:ClassTag:Zero](size: Int)(f: Int=>V):SparseVector[V]= apply(Array.tabulate(size)(f))
 
   def apply[V:ClassTag:Zero](length: Int)(values: (Int, V)*): SparseVector[V] = {
     val r = zeros[V](length)
@@ -213,13 +213,13 @@ object SparseVector extends SparseVectorOps
   }
 
   // implicits
-  class CanCopySparseVector[@spec(Int, Float, Double) V:ClassTag:Zero] extends CanCopy[SparseVector[V]] {
+  class CanCopySparseVector[@spec(Double, Int, Float, Long) V:ClassTag:Zero] extends CanCopy[SparseVector[V]] {
     def apply(v1: SparseVector[V]) = {
       v1.copy
     }
   }
 
-  implicit def canCopySparse[@spec(Int, Float, Double) V: ClassTag: Zero] = new CanCopySparseVector[V]
+  implicit def canCopySparse[@spec(Double, Int, Float, Long) V: ClassTag: Zero] = new CanCopySparseVector[V]
 
   implicit def canMapValues[V, V2: ClassTag: Zero]:CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] = {
     new CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] {

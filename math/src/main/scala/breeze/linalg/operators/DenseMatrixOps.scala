@@ -1,16 +1,20 @@
 package breeze.linalg.operators
 
-import com.github.fommil.netlib.BLAS.{getInstance=>blas}
 import breeze.linalg._
-import org.netlib.util.intW
-import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
+import breeze.linalg.support.{CanCollapseAxis, CanSlice2}
 import breeze.macros.expand
 import breeze.math.{Field, Semiring}
-import breeze.linalg.support.{CanCollapseAxis, CanSlice2}
-import breeze.util.ArrayUtil
 import breeze.storage.Zero
-import scala.reflect.ClassTag
+import breeze.util.ArrayUtil
+
+import org.netlib.util.intW
+import com.github.fommil.netlib.BLAS.{getInstance=>blas}
+import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
+
 import spire.syntax.cfor._
+
+import scala.{specialized=>spec}
+import scala.reflect.ClassTag
 
 trait DenseMatrixMultiplyStuff extends DenseMatrixOps with DenseMatrixMultOps with LowPriorityDenseMatrix { this: DenseMatrix.type =>
 
@@ -851,7 +855,7 @@ trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
 
   // <editor-fold defaultstate="collapsed" desc=" implicit implementations for OpSet ">
 
-  class SetDMDMOp[@specialized(Int, Double, Float) V] extends OpSet.InPlaceImpl2[DenseMatrix[V], DenseMatrix[V]] {
+  class SetDMDMOp[@spec(Double, Int, Float, Long) V] extends OpSet.InPlaceImpl2[DenseMatrix[V], DenseMatrix[V]] {
 
     def apply(a: DenseMatrix[V], b: DenseMatrix[V]): Unit = {
       require(a.rows == b.rows, "Matrixs must have same number of rows")
@@ -882,7 +886,7 @@ trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
     }
   }
 
-  class SetDMDVOp[@specialized(Int, Double, Float) V] extends OpSet.InPlaceImpl2[DenseMatrix[V], DenseVector[V]] {
+  class SetDMDVOp[@spec(Double, Int, Float, Long) V] extends OpSet.InPlaceImpl2[DenseMatrix[V], DenseVector[V]] {
 
     def apply(a: DenseMatrix[V], b: DenseVector[V]): Unit = {
       require(a.rows == b.length && a.cols == 1 || a.cols == b.length && a.rows == 1, "DenseMatrix must have same number of rows, or same number of columns, as DenseVector, and the other dim must be 1.")
@@ -903,7 +907,7 @@ trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
     }
   }
 
-  class SetMSOp[@specialized(Int, Double, Float) V] extends OpSet.InPlaceImpl2[DenseMatrix[V], V] {
+  class SetMSOp[@spec(Double, Int, Float, Long) V] extends OpSet.InPlaceImpl2[DenseMatrix[V], V] {
 
     def apply(a: DenseMatrix[V], b: V): Unit = {
       if(a.data.length - a.offset == a.rows * a.cols) {
@@ -997,7 +1001,7 @@ trait LowPriorityDenseMatrix1 {
 
   // <editor-fold defaultstate="collapsed" desc=" implicit implementations for OpSet ">
 
-  class SetMMOp[@specialized(Int, Double, Float) V] extends OpSet.InPlaceImpl2[DenseMatrix[V], Matrix[V]] {
+  class SetMMOp[@spec(Double, Int, Float, Long) V] extends OpSet.InPlaceImpl2[DenseMatrix[V], Matrix[V]] {
     def apply(a: DenseMatrix[V], b: Matrix[V]): Unit = {
       require(a.rows == b.rows, "Matrixs must have same number of rows")
       require(a.cols == b.cols, "Matrixs must have same number of columns")
@@ -1018,7 +1022,7 @@ trait LowPriorityDenseMatrix1 {
 
 
 
-  class SetDMVOp[@specialized(Int, Double, Float) V] extends OpSet.InPlaceImpl2[DenseMatrix[V], Vector[V]] {
+  class SetDMVOp[@spec(Double, Int, Float, Long) V] extends OpSet.InPlaceImpl2[DenseMatrix[V], Vector[V]] {
     def apply(a: DenseMatrix[V], b: Vector[V]) {
       require(a.rows == b.length && a.cols == 1 || a.cols == b.length && a.rows == 1, "DenseMatrix must have same number of rows, or same number of columns, as DenseVector, and the other dim must be 1.")
       val ad = a.data

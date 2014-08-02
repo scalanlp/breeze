@@ -28,6 +28,7 @@ import breeze.util.ArrayUtil
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
 
+import scala.{specialized=>spec}
 import scala.reflect.ClassTag
 import scala.collection.mutable.ArrayBuffer
 
@@ -49,7 +50,7 @@ import scala.collection.mutable.ArrayBuffer
  * @param isTranspose if true, then the matrix is considered to be "transposed" (that is, row major)
  */
 @SerialVersionUID(1L)
-final class DenseMatrix[@specialized(Int, Float, Double) V](val rows: Int,
+final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
                                                             val cols: Int,
                                                             val data: Array[V],
                                                             val offset: Int,
@@ -334,21 +335,21 @@ with MatrixConstructors[DenseMatrix] {
   /**
    * The standard way to create an empty matrix, size is rows * cols
    */
-  def zeros[@specialized(Int, Float, Double) V:ClassTag:Zero](rows: Int, cols: Int): DenseMatrix[V] = {
+  def zeros[@spec(Double, Int, Float, Long) V:ClassTag:Zero](rows: Int, cols: Int): DenseMatrix[V] = {
     val data = new Array[V](rows * cols)
     if(implicitly[Zero[V]] != null && rows * cols != 0 && data(0) != implicitly[Zero[V]].zero)
       ArrayUtil.fill(data, 0, data.length, implicitly[Zero[V]].zero)
     new DenseMatrix(rows, cols, data)
   }
 
-  def create[@specialized(Int, Float, Double) V:Zero](rows: Int, cols: Int, data: Array[V]): DenseMatrix[V] = {
+  def create[@spec(Double, Int, Float, Long) V:Zero](rows: Int, cols: Int, data: Array[V]): DenseMatrix[V] = {
     new DenseMatrix(rows, cols, data)
   }
 
   /**
    * Creates a square diagonal array of size dim x dim, with 1's along the diagonal.
    */
-  def eye[@specialized(Int, Float, Double) V: ClassTag:Zero:Semiring](dim: Int): DenseMatrix[V] = {
+  def eye[@spec(Double, Int, Float, Long) V: ClassTag:Zero:Semiring](dim: Int): DenseMatrix[V] = {
     val r = zeros[V](dim, dim)
     breeze.linalg.diag.diagDMDVImpl.apply(r) := implicitly[Semiring[V]].one
     r
@@ -882,7 +883,7 @@ with MatrixConstructors[DenseMatrix] {
   implicit val setMV_I: OpSet.InPlaceImpl2[DenseMatrix[Int], DenseVector[Int]] = new SetDMDVOp[Int]();
 
   // There's a bizarre error specializing float's here.
-  class CanZipMapValuesDenseMatrix[@specialized(Int, Double, Float) V, @specialized(Int, Double) RV: ClassTag] extends CanZipMapValues[DenseMatrix[V], V, RV, DenseMatrix[RV]] {
+  class CanZipMapValuesDenseMatrix[@spec(Double, Int, Float, Long) V, @specialized(Int, Double) RV: ClassTag] extends CanZipMapValues[DenseMatrix[V], V, RV, DenseMatrix[RV]] {
     def create(rows: Int, cols: Int) = new DenseMatrix(rows, cols, new Array[RV](rows * cols))
 
     /**Maps all corresponding values from the two collection. */

@@ -589,7 +589,7 @@ trait HashVector_GenericOps { this: HashVector.type =>
     }
   }
 
-  class CanZipMapValuesHashVector[@specialized(Int, Double, Float) V, @specialized(Int, Double) RV:ClassTag:Zero] extends CanZipMapValues[HashVector[V],V,RV,HashVector[RV]] {
+  class CanZipMapValuesHashVector[@specialized(Double, Int, Float, Long) V, @specialized(Int, Double) RV:ClassTag:Zero] extends CanZipMapValues[HashVector[V],V,RV,HashVector[RV]] {
     def create(length : Int) = zeros(length)
 
     /**Maps all corresponding values from the two collection. */

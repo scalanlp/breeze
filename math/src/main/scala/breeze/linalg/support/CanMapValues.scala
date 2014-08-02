@@ -16,8 +16,10 @@ package breeze.linalg.support
  limitations under the License.
 */
 import breeze.math.Complex
-import scala.reflect.ClassTag
 import breeze.linalg.support.CanMapValues.HandHold
+
+import scala.{specialized=>spec}
+import scala.reflect.ClassTag
 
 /**
  * Marker for being able to map the keys and values in a value collection
@@ -64,7 +66,7 @@ object CanMapValues extends CanMapValuesLowPrio {
   // Arrays
   //
 
-  class OpArray[@specialized(Int, Float, Double) A, @specialized(Int, Float, Double) B: ClassTag]
+  class OpArray[@spec(Double, Int, Float, Long)  A, @spec(Double, Int, Float, Long) B: ClassTag]
     extends Op[Array[A], A, B, Array[B]] {
 
     /**Maps all values from the given collection. */
@@ -81,7 +83,7 @@ object CanMapValues extends CanMapValuesLowPrio {
   }
 
 
-  implicit def opArray[@specialized A, @specialized B: ClassTag] =
+  implicit def opArray[@spec A, @spec B: ClassTag] =
     new OpArray[A, B]
 
   implicit object OpArrayII extends OpArray[Int, Int]
