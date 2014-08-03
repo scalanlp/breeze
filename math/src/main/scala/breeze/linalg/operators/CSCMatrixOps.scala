@@ -278,7 +278,7 @@ trait CSCMatrixOps extends CSCMatrixOpsLowPrio {  this: CSCMatrix.type =>
         require(rows == b.rows, "Matrices must have same number of rows!")
         require(cols == b.cols, "Matrices must have same number of cols!")
 
-        if (cols == 0 || rows == 0) return Unit
+        if (cols == 0 || rows == 0) return
 
         var ci      = 0             // column index [0 ... cols)
         var apStop  = a.colPtrs(0)  // pointer into row indices and data
