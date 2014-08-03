@@ -16,7 +16,10 @@ import spire.syntax.cfor._
 import scala.{specialized=>spec}
 import scala.reflect.ClassTag
 
-trait DenseMatrixMultiplyStuff extends DenseMatrixOps with DenseMatrixMultOps with LowPriorityDenseMatrix { this: DenseMatrix.type =>
+
+trait DenseMatrixMultiplyStuff extends DenseMatrixOps
+                               with DenseMatrixMultOps
+                               with LowPriorityDenseMatrix { this: DenseMatrix.type =>
 
   // <editor-fold defaultstate="collapsed" desc=" OpMulMatrix implementations ">
 
@@ -223,15 +226,12 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps with DenseMatrixMultOps wi
 
   // </editor-fold>
 
-
 }
 
 
-
-
-
 // TODO: fix expand to allow us to remove this code duplication
-trait DenseMatrixFloatMultiplyStuff extends DenseMatrixOps with DenseMatrixMultOps { this: DenseMatrix.type =>
+trait DenseMatrixFloatMultiplyStuff extends DenseMatrixOps
+                                    with DenseMatrixMultOps { this: DenseMatrix.type =>
 
   // <editor-fold defaultstate="collapsed" desc=" OpMulMatrix implementations ">
 
@@ -421,8 +421,6 @@ trait DenseMatrixFloatMultiplyStuff extends DenseMatrixOps with DenseMatrixMultO
   // </editor-fold>
 
 }
-
-
 
 
 
@@ -643,8 +641,6 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
 
 
 
-
-
 trait DenseMatrixOpsLowPrio { this: DenseMatrixOps =>
   // LOL, if we explicitly annotate the type, then the implicit resolution thing will load this recursively.
   // If we don't, then everything works ok.
@@ -665,7 +661,8 @@ trait DenseMatrixOpsLowPrio { this: DenseMatrixOps =>
 
 
 
-trait DenseMatrixMultOps extends DenseMatrixOps with DenseMatrixOpsLowPrio { this: DenseMatrix.type =>
+trait DenseMatrixMultOps extends DenseMatrixOps
+                         with DenseMatrixOpsLowPrio { this: DenseMatrix.type =>
   // I don't know why this import is necessary to make the DefaultArrayValue do the right thing.
   // If I remove the import breeze.storage.DefaultArrayValue._, everything breaks, for some reason.
 
@@ -830,8 +827,6 @@ trait DenseMatrixMultOps extends DenseMatrixOps with DenseMatrixOpsLowPrio { thi
   // </editor-fold>
 
 }
-
-
 
 
 
