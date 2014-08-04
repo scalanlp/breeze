@@ -38,4 +38,13 @@ class FeatureVectorTest extends FunSuite {
     assert(res === dm * SparseVector(13)(f.data.map(_ -> 1.0):_*))
   }
 
+  test("DM trans mult") {
+    val f = FeatureVector(3,4,5,6,10)
+    val dm = DenseMatrix.rand(12, 13)
+    val res = f.t * dm.t
+
+    assert(res.t === dm * SparseVector(13)(f.data.map(_ -> 1.0):_*))
+
+  }
+
 }

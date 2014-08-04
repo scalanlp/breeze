@@ -1,6 +1,7 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
+import breeze.linalg.svd.SVD
 import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 import breeze.linalg.support.CanTraverseValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
@@ -18,12 +19,12 @@ import breeze.linalg.support.CanTraverseValues.ValuesVisitor
  * @return the rank of the matrix (number of singular values)
  */
 object rank extends UFunc {
-  implicit def implRankFromSVD[M, S](implicit canSVD: svd.Impl[M, (_, S, _)],
+  implicit def implRankFromSVD[M, S](implicit canSVD: svd.Impl[M, SVD[_, S]],
                                      maxS: max.Impl[S, Double],
                                      travS: CanTraverseValues[S, Double]):Impl[M, Int] = {
     new Impl[M, Int] {
       def apply(m: M): Int = {
-        val (u, s, vt) = svd(m)
+        val SVD(u, s, vt) = svd(m)
         // we called LAPACK for the SVD method, so this is the LAPACK definition of eps.
         val eps: Double = 2.0 * lapack.dlamch("e")
         val tol = eps * max(s)

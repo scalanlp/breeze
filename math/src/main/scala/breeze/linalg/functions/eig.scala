@@ -19,8 +19,13 @@ import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
  * Based on EVD.java from MTJ 0.9.12
  */
 object eig extends UFunc {
-  implicit object Eig_DM_Impl extends Impl[DenseMatrix[Double], (DenseVector[Double], DenseVector[Double], DenseMatrix[Double])] {
-    def apply(m: DenseMatrix[Double]): (DenseVector[Double], DenseVector[Double], DenseMatrix[Double]) = {
+
+  case class Eig[V, M](eigenvalues: V, eigenvectorsComplex: V, eigenvectors: M)
+  type DenseEig = Eig[DenseVector[Double], DenseMatrix[Double]]
+
+
+  implicit object Eig_DM_Impl extends Impl[DenseMatrix[Double], DenseEig] {
+    def apply(m: DenseMatrix[Double]): DenseEig = {
       requireNonEmptyMatrix(m)
       requireSquareMatrix(m)
 
@@ -69,7 +74,7 @@ object eig extends UFunc {
       else if (info.`val` < 0)
         throw new IllegalArgumentException()
 
-      (Wr, Wi, Vr)
+      Eig(Wr, Wi, Vr)
     }
   }
 
@@ -82,10 +87,12 @@ object eig extends UFunc {
  * real symmetric matrix X.
  */
 object eigSym extends UFunc {
-  implicit object EigSym_DM_Impl extends Impl[DenseMatrix[Double], (DenseVector[Double], DenseMatrix[Double])] {
-    def apply(X: DenseMatrix[Double]): (DenseVector[Double], DenseMatrix[Double]) = {
+  case class EigSym[V, M](eigenvalues: V, eigenvectors: M)
+  type DenseEigSym = EigSym[DenseVector[Double], DenseMatrix[Double]]
+  implicit object EigSym_DM_Impl extends Impl[DenseMatrix[Double], DenseEigSym] {
+    def apply(X: DenseMatrix[Double]): DenseEigSym = {
       doEigSym(X, true) match {
-        case (ev, Some(rev)) => (ev, rev)
+        case (ev, Some(rev)) => EigSym(ev, rev)
         case _ => throw new RuntimeException("Shouldn't be here!")
       }
 

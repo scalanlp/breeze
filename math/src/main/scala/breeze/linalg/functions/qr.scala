@@ -14,9 +14,15 @@ import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
  *
  */
 object qr extends UFunc {
-  implicit object impl_DM_Double extends Impl[DenseMatrix[Double], (DenseMatrix[Double], DenseMatrix[Double])] {
-    def apply(v: DenseMatrix[Double]): (DenseMatrix[Double], DenseMatrix[Double]) = {
-      doQr(v, false)
+
+  case class QR[M](q: M, r: M)
+
+  type DenseQR = QR[DenseMatrix[Double]]
+
+  implicit object impl_DM_Double extends Impl[DenseMatrix[Double],DenseQR] {
+    def apply(v: DenseMatrix[Double]): DenseQR = {
+      val (q, r) = doQr(v, false)
+      QR(q, r)
     }
   }
 
@@ -30,9 +36,9 @@ object qr extends UFunc {
       }
     }
 
-    implicit def canJustRIfWeCanQR[T,Q,R](implicit qrImpl: qr.Impl[T, (Q, R)]):Impl[T, R] = {
-      new Impl[T, R] {
-        def apply(v: T): R = qrImpl(v)._2
+    implicit def canJustQIfWeCanQR[T,M](implicit qrImpl: qr.Impl[T, QR[M]]):Impl[T, M] = {
+      new Impl[T, M] {
+        def apply(v: T): M = qrImpl(v).r
       }
 
     }
@@ -43,9 +49,9 @@ object qr extends UFunc {
    */
   object justQ extends UFunc {
 
-    implicit def canJustRIfWeCanQR[T,Q,R](implicit qrImpl: qr.Impl[T, (Q, R)]):Impl[T, Q] = {
-      new Impl[T, Q] {
-        def apply(v: T): Q = qrImpl(v)._1
+    implicit def canJustQIfWeCanQR[T,M](implicit qrImpl: qr.Impl[T, QR[M]]):Impl[T, M] = {
+      new Impl[T, M] {
+        def apply(v: T): M = qrImpl(v).q
       }
 
     }
@@ -127,9 +133,12 @@ object qr extends UFunc {
  *   pvt : pivot indices
  */
 object qrp extends UFunc {
+  case class QRP[M, PivotMatrix](q: M, r: M, pivotMatrix: PivotMatrix, pivotIndices: Array[Int])
 
-  implicit object impl_DM_Double extends Impl[DenseMatrix[Double], (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Int], Array[Int])] {
-    def apply(A: DenseMatrix[Double]): (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Int], Array[Int]) = {
+  type DenseQRP = QRP[DenseMatrix[Double], DenseMatrix[Int]]
+
+  implicit object impl_DM_Double extends Impl[DenseMatrix[Double], DenseQRP] {
+    def apply(A: DenseMatrix[Double]): DenseQRP = {
       val m = A.rows
       val n = A.cols
 
@@ -183,7 +192,7 @@ object qrp extends UFunc {
       for(i <- 0 until n)
         P(pvt(i), i) = 1
 
-      (Q,R,P,pvt)
+      QRP(Q,R,P,pvt)
     }
   }
 }
