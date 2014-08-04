@@ -148,9 +148,9 @@ trait Encoder[T] {
     Map.empty ++ array.zipWithIndex.map{ case (v,i) => (index.get(i),v)}
   }
 
-  def fillSparseArrayMap[V:ClassTag:DefaultArrayValue](default: =>V) = new SparseArrayMap[V](index.size, default)
+  def fillSparseArrayMap[V:ClassTag:Zero](default: =>V) = new SparseArrayMap[V](index.size, default)
 
-  def mkSparseArray[V:ClassTag:DefaultArrayValue] = new SparseArray[V](index.size)
+  def mkSparseArray[V:ClassTag:Zero] = new SparseArray[V](index.size)
   def decode[V](array: SparseArray[V]):Map[T,V] = {
     Map.empty ++ array.iterator.map{ case (i,v) => (index.get(i),v)}
   }

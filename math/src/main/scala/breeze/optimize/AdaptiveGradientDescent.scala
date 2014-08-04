@@ -1,8 +1,9 @@
 package breeze.optimize
 
 import breeze.linalg._
+import breeze.linalg.support.{CanMapValues, CanZipMapValues, CanTraverseValues}
+import breeze.math.{MutableVectorRing, MutableVectorField}
 import breeze.numerics._
-import breeze.math.MutableCoordinateSpace
 import breeze.stats.distributions.{Rand, RandBasis}
 
 /**
@@ -28,17 +29,16 @@ object AdaptiveGradientDescent {
   class L2Regularization[T](val regularizationConstant: Double = 1.0,
                             stepSize: Double, maxIter: Int,
                             tolerance: Double = 1E-5,
-                            improvementTolerance: Double= 1E-4,
-                            minImprovementWindow: Int = 50)(implicit vspace: MutableCoordinateSpace[T, Double], rand: RandBasis = Rand)
+                            improvementTolerance: Double = 1E-4,
+                            minImprovementWindow: Int = 50)(implicit vspace: MutableVectorField[T, Double],
+                                                            rand: RandBasis = Rand)
     extends StochasticGradientDescent[T](stepSize, maxIter, tolerance, improvementTolerance, minImprovementWindow) {
 
     val delta = 1E-4
     import vspace._
 
-
-
     case class History(sumOfSquaredGradients: T)
-    override def initialHistory(f: StochasticDiffFunction[T],init: T) = History(zeros(init))
+    override def initialHistory(f: StochasticDiffFunction[T],init: T) = History(zeroLike(init))
 
     override def updateHistory(newX: T, newGrad: T, newValue: Double, f: StochasticDiffFunction[T], oldState: State) = {
       val oldHistory = oldState.history
@@ -87,14 +87,15 @@ object AdaptiveGradientDescent {
    */
   class L1Regularization[T](val lambda: Double=1.0,
                             delta: Double = 1E-5,
-                            eta: Double=4,
-                            maxIter: Int=100)(implicit vspace: MutableCoordinateSpace[T, Double], rand: RandBasis = Rand) extends StochasticGradientDescent[T](eta,maxIter) {
+                            eta: Double = 4,
+                            maxIter: Int = 100)(implicit space: MutableVectorField[T, Double],
+                                                rand: RandBasis = Rand) extends StochasticGradientDescent[T](eta, maxIter) {
 
 
 
-    import vspace._
+    import space._
     case class History(sumOfSquaredGradients: T)
-    def initialHistory(f: StochasticDiffFunction[T],init: T)= History(zeros(init))
+    def initialHistory(f: StochasticDiffFunction[T],init: T)= History(zeroLike(init))
     /*
     override def updateHistory(newX: T, newGrad: T, newValue: Double, oldState: State) = {
       val oldHistory = oldState.history
@@ -108,7 +109,7 @@ object AdaptiveGradientDescent {
       val newG = (oldState.grad :* oldState.grad)
       val maxAge = 200.0
       if(oldState.iter > maxAge) {
-        newG *= 1/maxAge
+        newG *= (1/maxAge)
         axpy((maxAge - 1)/maxAge, oldHistory.sumOfSquaredGradients, newG)
       } else {
         newG += oldHistory.sumOfSquaredGradients
@@ -119,9 +120,9 @@ object AdaptiveGradientDescent {
     override protected def takeStep(state: State, dir: T, stepSize: Double) = {
       import state._
       val s:T = sqrt(state.history.sumOfSquaredGradients :+ (grad :* grad) :+ delta)
-      val res:T = x + (dir * stepSize :/ s)
+      val res:T = x + (dir :* stepSize :/ s)
       val tlambda = lambda * stepSize
-      vspace.zipMapValues.map(res, s, { case (x_half ,s_i) =>
+      space.zipMapValues.map(res, s, { case (x_half ,s_i) =>
         if(x_half.abs < tlambda / s_i) {
           0.0
         } else {
@@ -136,7 +137,7 @@ object AdaptiveGradientDescent {
 
     override protected def adjust(newX: T, newGrad: T, newVal: Double) = {
       val av = newVal + norm(newX, 1.0) * lambda
-      val ag = newGrad + signum(newX) * lambda
+      val ag = newGrad + (signum(newX) :* lambda)
       (av -> ag)
     }
 

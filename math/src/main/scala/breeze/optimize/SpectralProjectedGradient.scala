@@ -1,6 +1,6 @@
 package breeze.optimize
 
-import breeze.math.MutableCoordinateSpace
+import breeze.math.{MutableInnerProductModule, MutableVectorField}
 import breeze.linalg.norm
 import breeze.util.SerializableLogging
 
@@ -30,13 +30,13 @@ class SpectralProjectedGradient[T, DF <: DiffFunction[T]](
   maxIter: Int = 500,
   val testOpt: Boolean = true,
   val initFeas: Boolean = false,
-  val maxSrchIt: Int = 30)(implicit coord: MutableCoordinateSpace[T, Double]) extends FirstOrderMinimizer[T, DF](minImprovementWindow = minImprovementWindow, maxIter = maxIter, tolerance = tolerance) with Projecting[T] with SerializableLogging {
-  import coord._
+  val maxSrchIt: Int = 30)(implicit space: MutableVectorField[T, Double]) extends FirstOrderMinimizer[T, DF](minImprovementWindow = minImprovementWindow, maxIter = maxIter, tolerance = tolerance) with Projecting[T] with SerializableLogging {
+  import space._
   type History = Double
   protected def initialHistory(f: DF, init: T): History = 1.0
-  protected def chooseDescentDirection(state: State, f: DF): T = projectedVector(state.x, state.grad * -state.history)
+  protected def chooseDescentDirection(state: State, f: DF): T = projectedVector(state.x, state.grad :* -state.history)
   override protected def adjust(newX: T, newGrad: T, newVal: Double):(Double,T) = (newVal,-projectedVector(newX, - newGrad))
-  protected def takeStep(state: State, dir: T, stepSize: Double): T = projection(state.x + dir * stepSize)
+  protected def takeStep(state: State, dir: T, stepSize: Double): T = projection(state.x + dir :* stepSize)
   protected def updateHistory(newX: T, newGrad: T, newVal: Double, f: DF, oldState: State): History = {
     val y = newGrad - oldState.grad
     val s = newX - oldState.x

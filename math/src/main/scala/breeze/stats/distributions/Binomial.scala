@@ -2,7 +2,7 @@ package breeze.stats.distributions
 /*
  Copyright 2009 David Hall, Daniel Ramage
 
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
 
@@ -15,7 +15,7 @@ package breeze.stats.distributions
  limitations under the License.
 */
 
-import breeze.numerics.lgamma
+import breeze.numerics.{logI, lgamma}
 import math._
 
 /**
@@ -27,16 +27,20 @@ import math._
 * @param p the probability of any one being true
 */
 case class Binomial(n: Int, p: Double)(implicit rand: RandBasis=Rand) extends DiscreteDistr[Int] with Moments[Double, Double] {
-  require(n > 0, "n must be positive!");
-  require(p >= 0.0, "p must be non-negative!");
-  def probabilityOf(k: Int) = exp(logProbabilityOf(k));
+  require(n > 0, "n must be positive!")
+  require(p >= 0.0, "p must be non-negative!")
+  def probabilityOf(k: Int) = exp(logProbabilityOf(k))
 
-  override def toString() = "Binomial(" + n + ", " + p + ")";
+  override def toString() = "Binomial(" + n + ", " + p + ")"
 
   override def logProbabilityOf(k: Int) = {
-    require(n >= k);
-    require(k >= 0);
-    lgamma(n+1) - lgamma(k+1) - lgamma(n-k+1) + k * log(p) + (n-k) * log(1-p)
+    require(n >= k)
+    require(k >= 0)
+    if (p == 0) logI(k == 0)
+    else if (p == 1) logI(k == n)
+    else {
+      lgamma(n+1) - lgamma(k+1) - lgamma(n-k+1) + k * log(p) + (n-k) * log(1-p)
+    }
   }
 
   // faster binomial from NR
@@ -50,7 +54,7 @@ case class Binomial(n: Int, p: Double)(implicit rand: RandBasis=Rand) extends Di
       }
     } else if (np < 1.0) {
       val g=exp(-np)
-      var t=1.0;
+      var t=1.0
       var j = 0
       var ok = true
       while(j < n && ok) {
@@ -93,11 +97,11 @@ case class Binomial(n: Int, p: Double)(implicit rand: RandBasis=Rand) extends Di
   //}
 
 
-  def mean = n * p;
-  def variance = mean * (1 - p);
-  def mode = math.floor((n + 1)*p);
+  def mean = n * p
+  def variance = mean * (1 - p)
+  def mode = math.floor((n + 1)*p)
   /** with an additive O(1/n) term */
-  def entropy = .5 * math.log(2 * math.Pi * variance);
+  def entropy = .5 * math.log(2 * math.Pi * variance)
 
 }
 

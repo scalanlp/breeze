@@ -3,7 +3,7 @@ package breeze.linalg
 import org.scalatest._
 import org.scalatest.junit._
 import org.junit.runner.RunWith
-import breeze.math.{Complex, TensorSpaceTestBase, TensorSpace, DoubleValuedTensorSpaceTestBase}
+import breeze.math._
 import org.scalacheck.Arbitrary
 import breeze.stats.mean
 
@@ -86,6 +86,26 @@ class SparseVectorTest extends FunSuite {
   test("Tabulate") {
     val m = SparseVector.tabulate(5)(i => i + 1)
     assert(m === SparseVector(1, 2, 3, 4, 5))
+  }
+
+  test("asCSCMatrix") {
+    val a = SparseVector(1.0,2.0,3.0,4.0)
+    val b = SparseVector.zeros[Double](5)
+    val c = CSCMatrix.zeros[Double](1,5)
+
+    // Test full
+    assert(a.asCSCMatrix() === CSCMatrix((1.0,2.0,3.0,4.0)))
+    // Test zero
+    assert(b.asCSCMatrix() === c)
+    // Test middle
+    b(2) = 2.0; c(0,2) = 2.0
+    assert(b.asCSCMatrix() === c)
+    // Test end
+    b(4) = 4.0; c(0,4) = 4.0
+    assert(b.asCSCMatrix() === c)
+    // Test beginning
+    b(0) = 0.1; c(0,0) = 0.1
+    assert(b.asCSCMatrix() === c)
   }
 
   test("MapPairs Double") {
@@ -178,16 +198,44 @@ class SparseVectorTest extends FunSuite {
     assert(m === SparseVector(2f, 0f, 4f, 0f, 6f))
   }
 
-  test("Transpose") {
-    val a = SparseVector.zeros[Int](4)
-    a(1) = 1
-    a(2) = 2
+  test("SparseVector * CSCMatrix Lifted OpMulMatrix & Transpose") {
+    val sv = SparseVector.zeros[Int](4)
+    sv(1) = 1
+    sv(2) = 2
 
-    val expected = CSCMatrix.zeros[Int](1, 4)
-    expected(0, 1) = 1
-    expected(0, 2) = 2
+    val csc = CSCMatrix.zeros[Int](4,4)
+    csc(1, 1) = 1
+    csc(1, 2) = 2
+    csc(2, 1) = 2
+    csc(2, 2) = 4
 
-    assert(a.t === expected)
+    val svr = SparseVector.zeros[Int](4)
+    svr(1) = 5
+    svr(2) = 10
+    val svrt = svr.t
+    val svt = sv * sv.t
+    assert(svt === csc)
+
+    val svv = sv.t * csc
+    assert(svv === svrt)
+
+    sv(3) = 3
+    csc(3,2) = 1
+    csc(3,3) = 3
+    svr(2) = 13
+    svr(3) = 9
+    val svvv = sv.t * csc
+    assert(svvv === svr.t)
+
+    sv(0) = 5
+    csc(0,0) = 2
+    csc(0,1) = 1
+    svr(0) = 10
+    svr(1) += 5
+    val svvvv = sv.t * csc
+    assert(svvvv === svr.t)
+
+
   }
 
   test("Transpose Complex") {
@@ -243,7 +291,7 @@ class SparseVectorTest extends FunSuite {
  */
 @RunWith(classOf[JUnitRunner])
 class SparseVectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[SparseVector[Double], Int] {
- val space: TensorSpace[SparseVector[Double], Int, Double] = implicitly
+ val space: MutableTensorField[SparseVector[Double], Int, Double] = SparseVector.space[Double]
 
   val N = 30
   implicit def genTriple: Arbitrary[(SparseVector[Double], SparseVector[Double], SparseVector[Double])] = {
@@ -271,7 +319,7 @@ class SparseVectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[SparseV
  */
 @RunWith(classOf[JUnitRunner])
 class SparseVectorOps_FloatTest extends TensorSpaceTestBase[SparseVector[Float], Int, Float] {
- val space: TensorSpace[SparseVector[Float], Int, Float] = implicitly
+ val space: MutableTensorField[SparseVector[Float], Int, Float] = SparseVector.space[Float]
 
   override val TOL: Double = 1E-2
   val N = 30
@@ -300,7 +348,7 @@ class SparseVectorOps_FloatTest extends TensorSpaceTestBase[SparseVector[Float],
  */
 @RunWith(classOf[JUnitRunner])
 class SparseVectorOps_IntTest extends TensorSpaceTestBase[SparseVector[Int], Int, Int] {
- val space: TensorSpace[SparseVector[Int], Int, Int] = implicitly
+ val space: MutableTensorField[SparseVector[Int], Int, Int] = SparseVector.space[Int]
 
   val N = 100
   implicit def genTriple: Arbitrary[(SparseVector[Int], SparseVector[Int], SparseVector[Int])] = {

@@ -2,7 +2,7 @@ package breeze.linalg.operators
 
 import scala.reflect.ClassTag
 import breeze.linalg.support.{LiteralRow, CanCopy}
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 import breeze.math.{Field, Ring, Complex, Semiring}
 import scala.specialized
 import scala.util.Random
@@ -34,7 +34,7 @@ trait MatrixGenericOps { this: Matrix.type =>
 
   import breeze.math.PowImplicits._
 
-  implicit def m_m_OpAdd_Update_Semi[T:Semiring:ClassTag:DefaultArrayValue]: OpAdd.InPlaceImpl2[Matrix[T], Matrix[T]] = new OpAdd.InPlaceImpl2[Matrix[T], Matrix[T]] {
+  implicit def m_m_OpAdd_Update_Semi[T:Semiring:ClassTag:Zero]: OpAdd.InPlaceImpl2[Matrix[T], Matrix[T]] = new OpAdd.InPlaceImpl2[Matrix[T], Matrix[T]] {
     override def apply(a: Matrix[T], b: Matrix[T]):Unit = {
       val ring = implicitly[Semiring[T]]
       var c = 0
@@ -51,7 +51,7 @@ trait MatrixGenericOps { this: Matrix.type =>
     }
   }
 
-  implicit def m_m_OpMul_Update_Semi[T:Semiring:ClassTag:DefaultArrayValue]: OpMulScalar.InPlaceImpl2[Matrix[T], Matrix[T]] = new OpMulScalar.InPlaceImpl2[Matrix[T], Matrix[T]] {
+  implicit def m_m_OpMul_Update_Semi[T:Semiring:ClassTag:Zero]: OpMulScalar.InPlaceImpl2[Matrix[T], Matrix[T]] = new OpMulScalar.InPlaceImpl2[Matrix[T], Matrix[T]] {
     override def apply(a: Matrix[T], b: Matrix[T]):Unit = {
       val ring = implicitly[Semiring[T]]
       var c = 0
@@ -68,7 +68,7 @@ trait MatrixGenericOps { this: Matrix.type =>
     }
   }
 
-  implicit def m_m_OpSub_Update_Ring[T:Ring:ClassTag:DefaultArrayValue]: OpSub.InPlaceImpl2[Matrix[T], Matrix[T]] = new OpSub.InPlaceImpl2[Matrix[T], Matrix[T]] {
+  implicit def m_m_OpSub_Update_Ring[T:Ring:ClassTag:Zero]: OpSub.InPlaceImpl2[Matrix[T], Matrix[T]] = new OpSub.InPlaceImpl2[Matrix[T], Matrix[T]] {
     override def apply(a: Matrix[T], b: Matrix[T]):Unit = {
       val ring = implicitly[Ring[T]]
       var c = 0
@@ -85,7 +85,7 @@ trait MatrixGenericOps { this: Matrix.type =>
     }
   }
 
-  implicit def m_m_OpDiv_Update_Ring[T:Field:ClassTag:DefaultArrayValue]: OpDiv.InPlaceImpl2[Matrix[T], Matrix[T]] = new OpDiv.InPlaceImpl2[Matrix[T], Matrix[T]] {
+  implicit def m_m_OpDiv_Update_Ring[T:Field:ClassTag:Zero]: OpDiv.InPlaceImpl2[Matrix[T], Matrix[T]] = new OpDiv.InPlaceImpl2[Matrix[T], Matrix[T]] {
     override def apply(a: Matrix[T], b: Matrix[T]):Unit = {
       val ring = implicitly[Field[T]]
       var c = 0
@@ -134,6 +134,26 @@ trait MatrixOps extends MatrixGenericOps { this: Matrix.type =>
   }
 
   @expand
+  implicit def m_m_UpdateOp[@expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType, T:Field:Zero:ClassTag]
+  (implicit @expand.sequence[Op]({f.+(_,_)}, {f.-(_,_)}, {f.*(_,_)}, {f./(_,_)}, {(a,b) => b}, {f.%(_,_)},{f.pow(_,_)}) op: Op.Impl2[T,T,T]):
+  BinaryUpdateRegistry[Matrix[T], Matrix[T], Op.type] = new BinaryUpdateRegistry[Matrix[T], Matrix[T], Op.type] {
+    val f = implicitly[Field[T]]
+    override def bindingMissing(a: Matrix[T], b: Matrix[T]):Unit = {
+      var c = 0
+
+      while(c < a.cols) {
+        var r = 0
+        while(r < a.rows) {
+          a(r, c) = op(a(r,c), b(r,c))
+          r += 1
+        }
+        c += 1
+      }
+
+    }
+  }
+
+  @expand
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
@@ -141,6 +161,26 @@ trait MatrixOps extends MatrixGenericOps { this: Matrix.type =>
   @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: Op.Impl2[T, T, T]):BinaryUpdateRegistry[Matrix[T], T, Op.type] = new BinaryUpdateRegistry[Matrix[T], T, Op.type] {
+    override def bindingMissing(a: Matrix[T], b: T):Unit = {
+      var c = 0
+
+      while(c < a.cols) {
+        var r = 0
+        while(r < a.rows) {
+          a(r, c) = op(a(r,c), b)
+          r += 1
+        }
+        c += 1
+      }
+
+    }
+  }
+
+  @expand
+  implicit def m_s_UpdateOp[@expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpMod, OpPow) Op <: OpType, T:Field:Zero:ClassTag]
+  (implicit @expand.sequence[Op]({f.+(_,_)}, {f.-(_,_)}, {f.*(_,_)}, {f.*(_,_)}, {f./(_,_)}, {f.%(_,_)},{f.pow(_,_)}) op: Op.Impl2[T,T,T])
+  :BinaryUpdateRegistry[Matrix[T], T, Op.type] = new BinaryUpdateRegistry[Matrix[T], T, Op.type] {
+    val f = implicitly[Field[T]]
     override def bindingMissing(a: Matrix[T], b: T):Unit = {
       var c = 0
 
@@ -175,6 +215,21 @@ trait MatrixOps extends MatrixGenericOps { this: Matrix.type =>
   }
 
   @expand
+  implicit def op_M_S[@expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpMod, OpPow) Op <: OpType, T:Field:Zero:ClassTag]
+//  (implicit @expand.sequence[Op]({f.+(_,_)}, {f.-(_,_)}, {f.*(_,_)}, {f.*(_,_)}, {f./(_,_)}, {f.%(_,_)},{f.pow(_,_)}) op: Op.Impl2[T,T,T])
+  : BinaryRegistry[Matrix[T], T, Op.type, Matrix[T]] = {
+    val uop = implicitly[Op.InPlaceImpl2[Matrix[T], T]]
+    new BinaryRegistry[Matrix[T],  T, Op.type, Matrix[T]] {
+      override def bindingMissing(a : Matrix[T], b: T) = {
+        val c = copy(a)
+        uop(c, b)
+        c
+      }
+      //      implicitly[BinaryRegistry[Matrix[T], T, Op, Matrix[T]]].register(this)
+    }
+  }
+
+  @expand
   @expand.valify
   @expand.exclude(Complex, OpMod)
   @expand.exclude(BigInt, OpPow)
@@ -182,6 +237,31 @@ trait MatrixOps extends MatrixGenericOps { this: Matrix.type =>
   @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpMod,  OpPow) Op]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {_ % _}, {_ pow _}) op: Op.Impl2[T, T, T])
   : BinaryRegistry[T, Matrix[T], Op.type, Matrix[T]] = {
+    new BinaryRegistry[T, Matrix[T], Op.type, Matrix[T]] {
+      override def bindingMissing(b: T, a : Matrix[T]) = {
+        val res = DenseMatrix.zeros[T](a.rows,a.cols)
+        val resd = res.data
+        var c = 0
+
+        var off = 0
+        while(c < a.cols) {
+          var r = 0
+          while(r < a.rows) {
+            resd(off) = op(a(r,c), b)
+            r += 1
+            off += 1
+          }
+          c += 1
+        }
+        res
+      }
+    }
+  }
+  @expand
+  implicit def op_S_M[@expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpMod,  OpPow) Op <: OpType, T:Field:Zero:ClassTag]
+  (implicit @expand.sequence[Op]({f.+(_,_)}, {f.-(_,_)}, {f.*(_,_)}, {f.*(_,_)}, {f./(_,_)}, {f.%(_,_)},{f.pow(_,_)}) op: Op.Impl2[T,T,T])
+  : BinaryRegistry[T, Matrix[T], Op.type, Matrix[T]] = {
+    val f = implicitly[Field[T]]
     new BinaryRegistry[T, Matrix[T], Op.type, Matrix[T]] {
       override def bindingMissing(b: T, a : Matrix[T]) = {
         val res = DenseMatrix.zeros[T](a.rows,a.cols)
@@ -256,7 +336,7 @@ trait MatrixMultOps extends MatrixOps with MatrixOpsLowPrio { this: Matrix.type 
     }
   }
 
-  implicit def op_M_V_Semiring[T:Semiring:DefaultArrayValue:ClassTag]:OpMulMatrix.Impl2[Matrix[T], Vector[T], Vector[T]] = new OpMulMatrix.Impl2[Matrix[T], Vector[T], Vector[T]] {
+  implicit def op_M_V_Semiring[T:Semiring:Zero:ClassTag]:OpMulMatrix.Impl2[Matrix[T], Vector[T], Vector[T]] = new OpMulMatrix.Impl2[Matrix[T], Vector[T], Vector[T]] {
     override def apply(a: Matrix[T], b: Vector[T]): Vector[T] = {
       val ring = implicitly[Semiring[T]]
 
@@ -305,7 +385,7 @@ trait MatrixMultOps extends MatrixOps with MatrixOpsLowPrio { this: Matrix.type 
     }
   }
 
-  implicit def op_M_M_Semiring[T:Semiring:DefaultArrayValue:ClassTag]:OpMulMatrix.Impl2[Matrix[T], Matrix[T], Matrix[T]] = new OpMulMatrix.Impl2[Matrix[T], Matrix[T], Matrix[T]] {
+  implicit def op_M_M_Semiring[T:Semiring:Zero:ClassTag]:OpMulMatrix.Impl2[Matrix[T], Matrix[T], Matrix[T]] = new OpMulMatrix.Impl2[Matrix[T], Matrix[T], Matrix[T]] {
     override def apply(a: Matrix[T], b: Matrix[T]): Matrix[T] = {
       val ring = implicitly[Semiring[T]]
 

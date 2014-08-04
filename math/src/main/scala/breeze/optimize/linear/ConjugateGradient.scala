@@ -1,9 +1,9 @@
 package breeze.optimize.linear
 
-import breeze.math.{MutableInnerProductSpace, TensorSpace}
-import breeze.util.Implicits._
-import breeze.linalg.operators.{OpMulMatrix, BinaryOp}
 import breeze.linalg._
+import breeze.linalg.operators.OpMulMatrix
+import breeze.math.MutableInnerProductVectorSpace
+import breeze.util.Implicits._
 import breeze.util.SerializableLogging
 
 /**
@@ -17,10 +17,10 @@ class ConjugateGradient[T,M](maxNormValue: Double = Double.PositiveInfinity,
                              maxIterations: Int = -1,
                              normSquaredPenalty: Double = 0,
                              tolerance: Double = 1E-5)
-                            (implicit space: MutableInnerProductSpace[T, Double], mult: OpMulMatrix.Impl2[M, T, T]) extends SerializableLogging {
+                            (implicit space: MutableInnerProductVectorSpace[T, Double], mult: OpMulMatrix.Impl2[M, T, T]) extends SerializableLogging {
   import space._
 
-  def minimize(a: T, B: M): T = minimize(a, B, zeros(a))
+  def minimize(a: T, B: M): T = minimize(a, B, zeroLike(a))
   def minimize(a: T, B: M, initX: T): T = minimizeAndReturnResidual(a, B, initX)._1
 
   case class State private[ConjugateGradient](x: T, residual: T, private[ConjugateGradient] val direction: T, iter: Int, converged: Boolean)  {
@@ -67,15 +67,15 @@ class ConjugateGradient[T,M](maxNormValue: Double = Double.PositiveInfinity,
 
       assert(!alphaNext.isNaN, xtd +" " + normSquare + " " + xtx + "  " + xtd + " " + radius + " " +  dtd)
       axpy(alphaNext, d, x)
-      axpy(-alphaNext, Bd + d * normSquaredPenalty, r)
+      axpy(-alphaNext, Bd + (d :* normSquaredPenalty), r)
 
       State(x, r, d, iter + 1, converged = true)
     } else {
       x := nextX
-      r -= (Bd + d * normSquaredPenalty) * alpha
+      r -= (Bd + (d :* normSquaredPenalty)) :* alpha
       val newrtr = r dot r
       val beta = newrtr / rtr
-      d *= beta
+      d :*= beta
       d += r
       rtr = newrtr
       val normr = norm(r)
@@ -95,7 +95,7 @@ class ConjugateGradient[T,M](maxNormValue: Double = Double.PositiveInfinity,
   }.takeUpToWhere(_.converged)
 
   private def initialState(a: T, B: M, initX: T) = {
-    val r = a - mult(B, initX) - initX * normSquaredPenalty
+    val r = a - mult(B, initX) - (initX :* normSquaredPenalty)
     val d = copy(r)
     val rnorm = norm(r)
     State(initX, r, d, 0, rnorm <= tolerance)

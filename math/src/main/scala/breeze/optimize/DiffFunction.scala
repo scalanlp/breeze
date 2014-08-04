@@ -1,6 +1,7 @@
 package breeze.optimize
 
-import breeze.math.{InnerProductSpace, CoordinateSpace}
+import breeze.linalg.norm
+import breeze.math.{VectorRing, NormedModule, InnerProductVectorSpace}
 import breeze.linalg.support.CanCopy
 
 /*
@@ -35,8 +36,8 @@ trait DiffFunction[T] extends StochasticDiffFunction[T] {
 }
 
 object DiffFunction {
-  def withL2Regularization[T](d: DiffFunction[T],weight: Double)(implicit vspace: InnerProductSpace[T, Double]) = new DiffFunction[T] {
-    import vspace._
+  def withL2Regularization[T, I](d: DiffFunction[T],weight: Double)(implicit space: VectorRing[T, Double]) = new DiffFunction[T] {
+    import space._
     override def gradientAt(x:T):T = {
       val grad = d.gradientAt(x)
       myGrad(grad,x)
@@ -61,8 +62,8 @@ object DiffFunction {
     }
   }
 
-  def withL2Regularization[T](d: BatchDiffFunction[T],weight: Double)(implicit vspace: CoordinateSpace[T, Double]):BatchDiffFunction[T] = new BatchDiffFunction[T] {
-    import vspace._
+  def withL2Regularization[T, I](d: BatchDiffFunction[T],weight: Double)(implicit space: NormedModule[T, Double]):BatchDiffFunction[T] = new BatchDiffFunction[T] {
+    import space._
     override def gradientAt(x:T, batch: IndexedSeq[Int]):T = {
       val grad = d.gradientAt(x, batch)
       myGrad(grad,x)
@@ -74,7 +75,7 @@ object DiffFunction {
     }
 
     private def myValueAt(x:T) = {
-      weight * math.pow(normImplDouble(x,2),2) / 2
+      weight * math.pow(norm(x,2),2) / 2
     }
 
     private def myGrad(g: T, x: T) = {

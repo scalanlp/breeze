@@ -19,7 +19,7 @@ import scala.{specialized=>spec}
 import support._
 import breeze.util.{Sorting, ArrayUtil}
 import breeze.math.{Field, MutableVectorSpace, Semiring, Ring}
-import breeze.storage.DefaultArrayValue
+import breeze.storage.Zero
 import scala.reflect.ClassTag
 import breeze.macros.expand
 import breeze.generic.UFunc.{UImpl2, InPlaceImpl2}
@@ -48,11 +48,11 @@ class VectorBuilder[@spec(Double,Int, Float) E](private var _index: Array[Int],
                                                 private var used: Int,
                                                 var length: Int)
                                                (implicit ring: Semiring[E],
-                                                dfv: DefaultArrayValue[E]) extends NumericOps[VectorBuilder[E]] with Serializable {
+                                                zero: Zero[E]) extends NumericOps[VectorBuilder[E]] with Serializable {
 
   def this(length: Int, initialNonZero: Int = 0)(implicit ring: Semiring[E],
                                                  man: ClassTag[E],
-                                                 dfv: DefaultArrayValue[E]) = this(new Array[Int](0), new Array[E](0), 0, length)
+                                                 zero: Zero[E]) = this(new Array[Int](0), new Array[E](0), 0, length)
 
 
 
@@ -292,14 +292,14 @@ class VectorBuilder[@spec(Double,Int, Float) E](private var _index: Array[Int],
 
 object VectorBuilder extends VectorBuilderOps {
 
-  def zeros[@spec(Double, Float, Int) V: ClassTag:Semiring:DefaultArrayValue](size: Int, initialNonzero: Int = 16) = new VectorBuilder(size, initialNonzero)
-  def apply[@spec(Double, Float, Int) V:Semiring:DefaultArrayValue](values: Array[V]) = new VectorBuilder(Array.range(0,values.length), values, values.length, values.length)
+  def zeros[@spec(Double, Float, Int) V: ClassTag:Semiring:Zero](size: Int, initialNonzero: Int = 16) = new VectorBuilder(size, initialNonzero)
+  def apply[@spec(Double, Float, Int) V:Semiring:Zero](values: Array[V]) = new VectorBuilder(Array.range(0,values.length), values, values.length, values.length)
 
-  def apply[V:ClassTag:Semiring:DefaultArrayValue](values: V*):VectorBuilder[V] = apply(values.toArray)
-  def fill[@spec(Double, Int, Float) V:ClassTag:Semiring:DefaultArrayValue](size: Int)(v: =>V):VectorBuilder[V] = apply(Array.fill(size)(v))
-  def tabulate[@spec(Double, Int, Float) V:ClassTag:Semiring:DefaultArrayValue](size: Int)(f: Int=>V):VectorBuilder[V]= apply(Array.tabulate(size)(f))
+  def apply[V:ClassTag:Semiring:Zero](values: V*):VectorBuilder[V] = apply(values.toArray)
+  def fill[@spec(Double, Int, Float) V:ClassTag:Semiring:Zero](size: Int)(v: =>V):VectorBuilder[V] = apply(Array.fill(size)(v))
+  def tabulate[@spec(Double, Int, Float) V:ClassTag:Semiring:Zero](size: Int)(f: Int=>V):VectorBuilder[V]= apply(Array.tabulate(size)(f))
 
-  def apply[V:ClassTag:Semiring:DefaultArrayValue](length: Int)(values: (Int, V)*) = {
+  def apply[V:ClassTag:Semiring:Zero](length: Int)(values: (Int, V)*) = {
     val r = zeros[V](length)
     for( (i, v) <- values) {
       r.add(i, v)
@@ -309,20 +309,25 @@ object VectorBuilder extends VectorBuilderOps {
 
 
   // implicits
-  class CanCopyBuilder[@spec(Int, Float, Double) V:ClassTag:Semiring:DefaultArrayValue] extends CanCopy[VectorBuilder[V]] {
+  class CanCopyBuilder[@spec(Int, Float, Double) V:ClassTag:Semiring:Zero] extends CanCopy[VectorBuilder[V]] {
     def apply(v1: VectorBuilder[V]) = {
       v1.copy
     }
   }
 
-  class CanZerosBuilder[@spec(Int, Float, Double) V:ClassTag:Semiring:DefaultArrayValue] extends CanCreateZerosLike[VectorBuilder[V], VectorBuilder[V]] {
+  class CanZerosBuilder[@spec(Int, Float, Double) V:ClassTag:Semiring:Zero] extends CanCreateZerosLike[VectorBuilder[V], VectorBuilder[V]] {
     def apply(v1: VectorBuilder[V]) = {
       v1.zerosLike
     }
   }
 
-  implicit def canCopyBuilder[@spec(Int, Float, Double) V: ClassTag: Semiring:DefaultArrayValue] = new CanCopyBuilder[V]
-  implicit def canZerosBuilder[@spec(Int, Float, Double) V: ClassTag: Semiring:DefaultArrayValue] = new CanZerosBuilder[V]
+  implicit def canCopyBuilder[@spec(Int, Float, Double) V: ClassTag: Semiring:Zero] = new CanCopyBuilder[V]
+  implicit def canZerosBuilder[@spec(Int, Float, Double) V: ClassTag: Semiring:Zero] = new CanZerosBuilder[V]
+
+  implicit def canZeroBuilder[@spec(Int, Float, Double) V:Semiring:Zero:ClassTag] =
+    new CanCreateZeros[VectorBuilder[V],Int] {
+    def apply(d: Int): VectorBuilder[V] = zeros(d)
+  }
 
   implicit def negFromScale[@spec(Int, Float, Double)  V](implicit scale: OpMulScalar.Impl2[VectorBuilder[V], V, VectorBuilder[V]], field: Ring[V]) = {
     new OpNeg.Impl[VectorBuilder[V], VectorBuilder[V]] {

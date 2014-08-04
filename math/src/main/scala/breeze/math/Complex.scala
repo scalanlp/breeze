@@ -14,8 +14,11 @@ package breeze.math
  See the License for the specific language governing permissions and
  limitations under the License.
 */
+
+import breeze.linalg
 import breeze.linalg.operators._
-import breeze.storage.DefaultArrayValue
+import breeze.numerics.floor
+import breeze.storage.Zero
 import scala.reflect.ClassTag
 import breeze.linalg.norm
 
@@ -101,6 +104,16 @@ case class Complex(real : Double, imag : Double) {
 
   def /(that : Double) =
     Complex(this.real / that, this.imag / that)
+
+  def %(that: Complex) = {
+    val div = this./(that)
+    this - (Complex(floor(div.re()), floor(div.im())) * div)
+  }
+
+  def %(that : Int): Complex = this.%(Complex(that,0))
+  def %(that : Long): Complex = %(Complex(that,0))
+  def %(that : Float): Complex = %(Complex(that,0))
+  def %(that : Double): Complex = %(Complex(that,0))
 
   def unary_- =
     Complex(-real, -imag)
@@ -194,8 +207,6 @@ object Complex { outer =>
 
     def /(a : Complex, b : Complex) = a / b
 
-    def norm(a : Complex) = a.abs
-
     def toDouble(a : Complex) =
       throw new UnsupportedOperationException("Cannot automatically convert complex numbers to doubles")
 
@@ -204,19 +215,28 @@ object Complex { outer =>
 
     val manifest = implicitly[ClassTag[Complex]]
 
-    val defaultArrayValue = DefaultArrayValue(Complex(0, 0))
+    val defaultArrayValue = Zero(Complex(0, 0))
+
+    implicit val normImpl: linalg.norm.Impl[Complex, Double] =
+      new linalg.norm.Impl[Complex, Double] {
+        def apply(v: Complex): Double = v.abs
+      }
 
     override def close(a: Complex, b: Complex, tolerance: Double): Boolean = {
-      norm(a-b) <= tolerance * math.max(norm(a), norm(b))
+      sNorm(a-b) <= tolerance * math.max(sNorm(a), sNorm(b))
     }
+
+    def pow(a: Complex, b: Complex): Complex = a.pow(b)
+
+    def %(a: Complex, b: Complex): Complex = a.%(b)
   }
 
   implicit val complexNorm: norm.Impl[Complex, Double] = new norm.Impl[Complex, Double] {
     def apply(v1: Complex): Double = v1.abs
   }
   
-  implicit object ComplexDefaultArrayValue extends DefaultArrayValue[Complex] {
-    val value = Complex(0, 0)
+  implicit object ComplexZero extends Zero[Complex] {
+    val zero = Complex(0, 0)
   }
 
   //
@@ -349,6 +369,35 @@ object Complex { outer =>
 
   implicit object DivCD extends OpDiv.Impl2[Complex, Double, Complex]
   { def apply(a : Complex, b : Double) = a / b}
+
+  // mod
+  implicit object ModCD extends OpMod.Impl2[Complex,Double,Complex]
+  { def apply(a: Complex, b: Double) = a % b }
+
+  implicit object ModCC extends OpMod.Impl2[Complex,Complex,Complex]
+  { def apply(a: Complex, b: Complex) = a % b }
+
+  implicit object ModCL extends OpMod.Impl2[Complex,Long,Complex]
+  { def apply(a: Complex, b: Long) = a % b }
+
+  implicit object ModCF extends OpMod.Impl2[Complex,Float,Complex]
+  { def apply(a: Complex, b: Float) = a % b }
+
+  implicit object ModCI extends OpMod.Impl2[Complex,Int,Complex]
+  { def apply(a: Complex, b: Int) = a % b }
+
+  implicit object ModDC extends OpMod.Impl2[Double,Complex,Complex]
+  { def apply(a: Double, b: Complex) = a % b }
+
+  implicit object ModIC extends OpMod.Impl2[Int,Complex,Complex]
+  { def apply(a: Int, b: Complex) = a % b }
+
+  implicit object ModLC extends OpMod.Impl2[Long,Complex,Complex]
+  { def apply(a: Long, b: Complex) = a % b }
+
+  implicit object ModFC extends OpMod.Impl2[Float,Complex,Complex]
+  { def apply(a: Float, b: Complex) = a % b }
+
 
   // pow
   implicit object PowCD extends OpPow.Impl2[Complex, Double, Complex]

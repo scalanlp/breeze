@@ -19,6 +19,7 @@ import breeze.math.{Field, Ring, Semiring}
 import breeze.linalg.support.CanCopy
 import breeze.numerics.IntMath
 import scala.annotation.unchecked.uncheckedVariance
+import scala.reflect.ClassTag
 
 object BinaryOp {
   def fromCopyAndUpdate[A,B,Op](implicit op: UFunc.InPlaceImpl2[Op, A, B], copy: CanCopy[A]):UFunc.UImpl2[Op, A, B, A] = {
@@ -83,8 +84,8 @@ trait BinaryRegistry[A, B, Op, +R] extends UFunc.UImpl2[Op, A, B, R] with MMRegi
     }
   }
 
-  def register[AA<:A, BB<:B](op: UFunc.UImpl2[Op,AA, BB, R @uncheckedVariance])(implicit manA: Manifest[AA], manB: Manifest[BB]) = {
-    super.register(manA.runtimeClass, manB.runtimeClass, op)
+  def register[AA<:A, BB<:B](op: UFunc.UImpl2[Op,AA, BB, R @uncheckedVariance])(implicit cA: ClassTag[AA], cB: ClassTag[BB]) = {
+    super.register(cA.runtimeClass, cB.runtimeClass, op)
     op
   }
 

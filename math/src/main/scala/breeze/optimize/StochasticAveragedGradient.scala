@@ -1,6 +1,6 @@
 package breeze.optimize
 
-import breeze.math.MutableInnerProductSpace
+import breeze.math.{MutableInnerProductModule, MutableInnerProductVectorSpace}
 import breeze.stats.distributions.Rand
 import breeze.linalg._
 
@@ -11,7 +11,7 @@ import breeze.linalg._
  * @author dlwh
  */
 class StochasticAveragedGradient[T](maxIter: Int = -1, initialStepSize: Double = 0.25, tuneStepFrequency: Int = 10,
-                                    l2Regularization: Double = 0.0)(implicit vs: MutableInnerProductSpace[T, Double]) extends FirstOrderMinimizer[T, BatchDiffFunction[T]](maxIter) {
+                                    l2Regularization: Double = 0.0)(implicit vs: MutableInnerProductModule[T, Double]) extends FirstOrderMinimizer[T, BatchDiffFunction[T]](maxIter) {
   import vs._
 
   case class History(stepSize: Double, range: IndexedSeq[Int],
@@ -20,8 +20,8 @@ class StochasticAveragedGradient[T](maxIter: Int = -1, initialStepSize: Double =
                      nextPos: Int)
 
   protected def initialHistory(f: BatchDiffFunction[T], init: T): History = {
-    val zero = zeros(init)
-    History(initialStepSize, f.fullRange, zeros(init), IndexedSeq.fill(f.fullRange.length)(zero), 0)
+    val zero = zeroLike(init)
+    History(initialStepSize, f.fullRange, zeroLike(init), IndexedSeq.fill(f.fullRange.length)(zero), 0)
   }
 
   protected def chooseDescentDirection(state: State, f: BatchDiffFunction[T]): T = {

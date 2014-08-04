@@ -23,7 +23,7 @@ import scala.reflect.ClassTag
  */
 @SerialVersionUID(1L)
 trait ConfigurableDefault[@specialized V] extends Serializable { outer =>
-  def value(implicit default: DefaultArrayValue[V]):V
+  def value(implicit zero: Zero[V]):V
 
   def fillArray(arr: Array[V], v: V) = arr.asInstanceOf[AnyRef] match {
     case x: Array[Int] => Arrays.fill(arr.asInstanceOf[Array[Int]], v.asInstanceOf[Int])
@@ -37,14 +37,14 @@ trait ConfigurableDefault[@specialized V] extends Serializable { outer =>
     case _ => throw new RuntimeException("shouldn't be here!")
   }
 
-  def makeArray(size:Int)(implicit default: DefaultArrayValue[V], man: ClassTag[V]) = {
+  def makeArray(size:Int)(implicit zero: Zero[V], man: ClassTag[V]) = {
     val arr = new Array[V](size)
-    fillArray(arr,value(default))
+    fillArray(arr,value(zero))
     arr
   }
 
-  def map[U](f: V=>U)(implicit dav: DefaultArrayValue[V]) = new ConfigurableDefault[U] {
-    def value(implicit default: DefaultArrayValue[U]) = f(outer.value(dav))
+  def map[U](f: V=>U)(implicit zero: Zero[V]) = new ConfigurableDefault[U] {
+    def value(implicit default: Zero[U]) = f(outer.value(zero))
   }
 }
 
@@ -53,7 +53,7 @@ trait ConfigurableDefault[@specialized V] extends Serializable { outer =>
 trait LowPriorityConfigurableImplicits {
   implicit def default[V]: ConfigurableDefault[V] = {
     new ConfigurableDefault[V] {
-      def value(implicit default: DefaultArrayValue[V]) = default.value
+      def value(implicit default: Zero[V]) = default.zero
     }
   }
 
@@ -62,7 +62,7 @@ trait LowPriorityConfigurableImplicits {
 object ConfigurableDefault extends LowPriorityConfigurableImplicits {
   implicit def fromV[V](v: V):ConfigurableDefault[V] = {
     new ConfigurableDefault[V] {
-      def value(implicit default: DefaultArrayValue[V]) = v
+      def value(implicit default: Zero[V]) = v
     }
   }
 }

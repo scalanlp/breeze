@@ -15,15 +15,13 @@ package breeze.linalg
  limitations under the License.
 */
 
-import breeze.storage.DefaultArrayValue
-import breeze.math.{TensorSpace, Ring, Semiring, Field}
-import breeze.generic._
-import collection.Set
-import operators._
+import breeze.linalg.operators._
 import breeze.linalg.support._
+import breeze.math._
+import CanTraverseKeyValuePairs.KeyValuePairsVisitor
 import CanTraverseValues.ValuesVisitor
-import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
-
+import breeze.storage.Zero
+import collection.Set
 /**
  * A map-like tensor that acts like a collection of key-value pairs where
  * the set of values may grow arbitrarily.
@@ -87,15 +85,15 @@ trait Counter[K, V] extends Tensor[K,V] with CounterLike[K, V, collection.mutabl
 
 object Counter extends CounterOps {
   /** Returns an empty counter. */
-  def apply[K,V:DefaultArrayValue:Semiring]() : Counter[K,V] =
+  def apply[K,V:Zero:Semiring]() : Counter[K,V] =
     new Impl(scala.collection.mutable.HashMap[K,V]())
 
   /** Returns a counter by summing all the given values. */
-  def apply[K,V:DefaultArrayValue:Semiring](values : (K,V)*) : Counter[K,V] =
+  def apply[K,V:Zero:Semiring](values : (K,V)*) : Counter[K,V] =
     apply(values)
 
   /** Returns a counter by summing all the given values. */
-  def apply[K,V:DefaultArrayValue:Semiring](values : TraversableOnce[(K,V)]) : Counter[K,V] = {
+  def apply[K,V:Zero:Semiring](values : TraversableOnce[(K,V)]) : Counter[K,V] = {
     val rv = apply[K,V]()
     val field = implicitly[Semiring[V]]
     values.foreach({ case (k,v) => rv(k) = field.+(v,rv(k)) })
@@ -114,12 +112,12 @@ object Counter extends CounterOps {
   @SerialVersionUID(2872445575657408160L)
   class Impl[K, V]
   (override val data : scala.collection.mutable.Map[K,V])
-  (implicit defaultArrayValue : DefaultArrayValue[V])
+  (implicit zero : Zero[V])
   extends Counter[K,V] {
-    def default = defaultArrayValue.value
+    def default = zero.zero
   }
 
-  implicit def canMapValues[K, V, RV:Semiring:DefaultArrayValue]: CanMapValues[Counter[K, V], V, RV, Counter[K, RV]]
+  implicit def canMapValues[K, V, RV:Semiring]: CanMapValues[Counter[K, V], V, RV, Counter[K, RV]]
   = new CanMapValues[Counter[K,V],V,RV,Counter[K,RV]] {
     override def map(from : Counter[K,V], fn : (V=>RV)) = {
       val rv = Counter[K,RV]()
@@ -162,9 +160,20 @@ object Counter extends CounterOps {
     override def isTraversableAgain(from: Counter[K, V]): Boolean = true
   }
 
-  implicit def tensorspace[K, V](implicit field: Field[V], dfv: DefaultArrayValue[V], normImpl: norm.Impl[V, Double]) = {
+  implicit def canCreateZeros[K,V:Zero:Semiring]: CanCreateZeros[Counter[K,V],K] =
+    new CanCreateZeros[Counter[K,V],K] {
+      // Shouldn't need to supply a key value here, but it really mixes up the
+      // VectorSpace hierarchy since it would require separate types for
+      // implicitly full-domain spaces (like Counter), and finite domain spaces, like Vector
+      def apply(d: K): Counter[K, V] = {
+        Counter.apply()
+      }
+    }
+
+  implicit def space[K, V](implicit field: Field[V]) = {
+    import field._
     implicit def zipMap = Counter.zipMap[K, V, V]
-    TensorSpace.make[Counter[K, V], K, V]
+    MutableTensorField.make[Counter[K, V], K, V]
   }
 }
 
