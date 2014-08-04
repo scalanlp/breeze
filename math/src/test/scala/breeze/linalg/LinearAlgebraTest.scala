@@ -15,6 +15,11 @@ package breeze.linalg
  limitations under the License.
 */
 
+import breeze.linalg.eig.Eig
+import breeze.linalg.eigSym.EigSym
+import breeze.linalg.qr.QR
+import breeze.linalg.qrp.QRP
+import breeze.linalg.svd.SVD
 import org.scalacheck.{Arbitrary,Gen,Prop}
 import org.scalatest._
 import org.scalatest.junit._
@@ -53,7 +58,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
 
   test("eigSym") {
     val A = DenseMatrix((9.0,0.0,0.0),(0.0,82.0,0.0),(0.0,0.0,25.0))
-    val (lambda, evs) = eigSym(A)
+    val EigSym(lambda, evs) = eigSym(A)
     assert(lambda === DenseVector(9.0,25.0,82.0))
     assert(evs === DenseMatrix((1.0,0.0,0.0),(0.0,0.0,1.0),(0.0,1.0,0.0)))
   }
@@ -169,7 +174,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
 
   test("qr") {
     val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
-    val (_Q, _R) = qr(A)
+    val QR(_Q, _R) = qr(A)
 
     assert( trace(_Q.t * _Q).closeTo(_Q.rows) )
     for(i <- 0 until _R.rows; j <- 0 until i) {
@@ -184,7 +189,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
 
   test("qr just[QR]") {
     val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
-    val (_Q, _R) = qr(A)
+    val QR(_Q, _R) = qr(A)
     val _Q2 = qr.justQ(A)
     assert (_Q2 === _Q)
     assert (_R === qr.justR(A))
@@ -192,21 +197,21 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
 
   test("qrp") {
     val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
-    val (_QQ, _RR, _P, _) = qrp(A)
+    val QRP(_QQ, _RR, _P, _) = qrp(A)
     val ap = A * convert(_P, Double)
     assert(max(abs(_QQ * _RR - ap)) < 1E-8)
   }
 
 
   test("simple eig test") {
-    val (w, _, v) = eig(diag(DenseVector(1.0, 2.0, 3.0)))
+    val Eig(w, _, v) = eig(diag(DenseVector(1.0, 2.0, 3.0)))
     assert(w === DenseVector(1.0, 2.0, 3.0))
     assert(v === diag(DenseVector(1.0, 1.0, 1.0)))
   }
 
   test("complex eig test") {
     // complex, get it?
-    val (w, wi, v) = eig(DenseMatrix((1.0, -1.0), (1.0, 1.0)))
+    val Eig(w, wi, v) = eig(DenseMatrix((1.0, -1.0), (1.0, 1.0)))
     assert(w === DenseVector(1.0, 1.0))
     assert(wi === DenseVector(1.0, -1.0))
     assert(max(abs(v - diag(DenseVector(0.7071067811865475, -0.7071067811865475)))) < 1E-7)
@@ -215,7 +220,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
 
   test("svd") {
     val m = DenseMatrix((2.0,4.0),(1.0,3.0),(0.0,0.0),(0.0,0.0))
-    val (u, s, vt) = svd(m)
+    val SVD(u, s, vt) = svd(m)
 
     // u and vt are unitary
     trace(u.t * u) should be (u.rows.toDouble +- 1E-5)
@@ -250,14 +255,14 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
       }
     }
 
-    val (u1, s1, vt1) = svd(m1)
-    val (u2, s2, vt2) = svd(m2,2)
+    val SVD(u1, s1, vt1) = svd(m1)
+    val SVD(u2, s2, vt2) = svd(m2,2)
     assert(max(abs(s1.slice(0,2) - s2)) < 1E-5)
     checkCols(u1(::, 0 until 2), u2)
     checkCols(vt1(0 until 2, ::).t, vt2.t)
 
-    val (u1t, s1t, vt1t) = svd(m1.t)
-    val (u2t, s2t, vt2t) = svd(m2.t,2)
+    val SVD(u1t, s1t, vt1t) = svd(m1.t)
+    val SVD(u2t, s2t, vt2t) = svd(m2.t,2)
     assert(max(abs(s1t.slice(0,2) - s2t)) < 1E-5)
     checkCols(u1t(::, 0 until 2), u2t)
     checkCols(vt1t(0 until 2, ::).t, vt2t.t)

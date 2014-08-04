@@ -931,12 +931,16 @@ with MatrixConstructors[DenseMatrix] {
   }
 
   object FrobeniusInnerProductDenseMatrixSpace {
-    import FrobeniusMatrixInnerProductNorms._
 
-    implicit def space[S:Field:Zero:ClassTag] = MutableRestrictedDomainTensorField.make[DenseMatrix[S],(Int,Int),S]
+    implicit def space[S:Field:Zero:ClassTag] = {
+      val norms = FrobeniusMatrixInnerProductNorms.makeMatrixNorms[DenseMatrix[S],S]
+      import norms._
+      MutableRestrictedDomainTensorField.make[DenseMatrix[S],(Int,Int),S]
+    }
   }
 
   @noinline
   private def init() = {}
+
 
 }

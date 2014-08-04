@@ -11,7 +11,7 @@ import breeze.signal.OptRange.RangeOpt
 import breeze.numerics.isOdd
 import breeze.signal.OptRange.RangeOpt
 import scala.reflect.ClassTag
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import breeze.util.SerializableLogging
 
 //ToDo 1: provide convolve of Integer and other DenseVectors
 //ToDo 1: provide convolve of DenseMatrix
@@ -41,7 +41,7 @@ trait CanConvolve[Input, KernelType, Output] {
  *
  * @author ktakagaki
  */
-object CanConvolve extends LazyLogging {
+object CanConvolve extends SerializableLogging {
 
   @expand
   @expand.valify
@@ -186,8 +186,7 @@ object CanConvolve extends LazyLogging {
         require( data.length * kernel.length != 0, "data and kernel must be non-empty DenseVectors")
         require( data.length >= kernel.length, "kernel (" + kernel.length + ") cannot be longer than data(" + data.length + ") to be convolved/correlated!")
         require( range.start >= 0 && range.last <= (data.length - kernel.length + 1),
-          logger.error("range (start {}, end {}, step {}, inclusive {}) is OOB for data (length {}) and kernel (length {})!",
-            range.start.toString, range.end.toString, range.step.toString, range.isInclusive.toString, data.length.toString, kernel.length.toString )
+          logger.error(s"range (start ${range.start}, end ${range.end}, step ${range.step}, inclusive ${range.isInclusive}) is OOB for data (length ${data.length}) and kernel (length ${kernel.length})!")
         )
 
         val dataVect = data.toScalaVector() //make immutable
@@ -217,8 +216,7 @@ object CanConvolve extends LazyLogging {
         require( data.length * kernel.length != 0, "data and kernel must be non-empty DenseVectors")
         require( data.length >= kernel.length, "kernel cannot be longer than data to be convolved/corelated!")
         require( range.start >= 0 && range.last <= (data.length - kernel.length + 1),
-          logger.error("range (start {}, end {}, step {}, inclusive {}) is OOB for data (length {}) and kernel (length {})!",
-            range.start.toString, range.end.toString, range.step.toString, range.isInclusive.toString, data.length.toString, kernel.length.toString )
+          logger.error(s"range (start ${range.start}, end ${range.end}, step ${range.step}, inclusive ${range.isInclusive}) is OOB for data (length ${data.length}) and kernel (length ${kernel.length})!")
         )
 
         val dataL = convert(data, Long).toScalaVector() //make immutable
