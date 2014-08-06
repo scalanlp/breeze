@@ -283,6 +283,23 @@ class SparseVectorTest extends FunSuite {
     b += a
     assert(b === SparseVector(1,3,3))
   }
+
+  test("DenseMatrix * SparseVector OpMulMatrix") {
+    val x = SparseVector[Int](6)( 1 -> 2, 3 -> 4 )
+    val xd = DenseVector[Int](0, 2, 0, 4, 0, 0)
+    assert(x === xd)
+    val m = DenseMatrix(
+      ( 1, 2, 3,  4,  5,  6),
+      ( 2, 4, 6,  8, 10, 12),
+      ( 3, 6, 9, 12, 15, 18),
+      (12, 1, 1,  0,  3,  4)
+    )
+
+    assert((m * x) ===
+      m * xd)
+
+
+  }
 }
 
 /**
