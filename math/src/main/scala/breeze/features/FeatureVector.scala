@@ -143,6 +143,23 @@ object FeatureVector {
     }
   }
 
+  @expand
+  @expand.valify
+  implicit def DotProductFVV[@expand.args(Int, Float, Double) T]:BinaryRegistry[FeatureVector, Vector[T], OpMulInner.type, T] = {
+    new BinaryRegistry[FeatureVector, Vector[T], OpMulInner.type, T] {
+      override def bindingMissing(a: FeatureVector, b: Vector[T]): T = {
+        var score: T = 0
+        var i = 0
+        while (i < a.activeLength) {
+          score += b(a(i))
+          i += 1
+        }
+
+        score
+      }
+    }
+  }
+
 
 
 
