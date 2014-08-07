@@ -858,7 +858,6 @@ with MatrixConstructors[DenseMatrix] {
   /**
    * iterates over each column
    * @tparam V
-   * @tparam R
    * @return
    */
   implicit def canIterateRows[V:ClassTag:Zero] = new CanIterateAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]] {
@@ -933,7 +932,7 @@ with MatrixConstructors[DenseMatrix] {
   object FrobeniusInnerProductDenseMatrixSpace {
 
     implicit def space[S:Field:Zero:ClassTag] = {
-      val norms = FrobeniusMatrixInnerProductNorms.makeMatrixNorms[DenseMatrix[S],S]
+      val norms = EntrywiseMatrixNorms.make[DenseMatrix[S],S]
       import norms._
       MutableRestrictedDomainTensorField.make[DenseMatrix[S],(Int,Int),S]
     }
