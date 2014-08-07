@@ -2,6 +2,7 @@ package breeze.linalg
 package operators
 
 import breeze.util.ArrayUtil
+import spire.syntax.cfor._
 import support._
 import scala.reflect.ClassTag
 import java.util
@@ -1076,6 +1077,27 @@ trait SparseVectorOps { this: SparseVector.type =>
         scale(a, field.negate(field.one))
       }
     }
+  }
+
+}
+
+trait SparseVector_DenseMatrixOps { this: SparseVector.type =>
+  @expand
+  @expand.valify
+  implicit def implOpMulMatrix_DM_SV_eq_DV[@expand.args(Int, Float, Long, Double) T]:OpMulMatrix.Impl2[DenseMatrix[T], SparseVector[T], DenseVector[T]] = {
+    new OpMulMatrix.Impl2[DenseMatrix[T], SparseVector[T], DenseVector[T]] {
+      override def apply(v: DenseMatrix[T], v2: SparseVector[T]): DenseVector[T] = {
+        require(v.cols == v2.length)
+        val result = DenseVector.zeros[T](v.rows)
+        cforRange(0 until v2.activeSize) { i =>
+          axpy(v2.valueAt(i), v(::, v2.indexAt(i)), result)
+        }
+
+        result
+      }
+      implicitly[BinaryRegistry[DenseMatrix[T], Vector[T], OpMulMatrix.type, DenseVector[T]]].register(this)
+    }
+
   }
 
 }

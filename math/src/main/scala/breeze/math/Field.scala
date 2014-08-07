@@ -34,7 +34,7 @@ trait Field[@specialized(Int,Short,Long,Float,Double) V] extends Ring[V] {
 object Field {
   /** Not a field, but whatever. */
   @SerialVersionUID(1L)
-  implicit object fieldInt extends Field[Int] {
+  implicit object fieldInt extends Field[Int] with Serializable {
     def zero = 0
     def one = 1
     def ==(a : Int, b : Int) = a == b
@@ -53,7 +53,7 @@ object Field {
 
   /** Not a field, but whatever. */
   @SerialVersionUID(1L)
-  implicit object fieldShort extends Field[Short] {
+  implicit object fieldShort extends Field[Short] with Serializable {
     def zero = 0.asInstanceOf[Short]
     def one = 1.asInstanceOf[Short]
     def ==(a : Short, b : Short) = a == b
@@ -72,7 +72,7 @@ object Field {
 
   /** Not a field, but whatever. */
   @SerialVersionUID(1L)
-  implicit object fieldLong extends Field[Long] {
+  implicit object fieldLong extends Field[Long] with Serializable {
     def zero = 0l
     def one = 1l
     def ==(a : Long, b : Long) = a == b
@@ -91,7 +91,7 @@ object Field {
 
   /** Not a field, but whatever. */
   @SerialVersionUID(1L)
-  implicit object fieldBigInt extends Field[BigInt] {
+  implicit object fieldBigInt extends Field[BigInt] with Serializable {
     def zero = 0l
     def one = 1l
     def ==(a : BigInt, b : BigInt) = a == b
@@ -109,7 +109,7 @@ object Field {
   }
 
   @SerialVersionUID(1L)
-  implicit object fieldBigDecimal extends Field[BigDecimal] {
+  implicit object fieldBigDecimal extends Field[BigDecimal] with Serializable {
     def zero = 0l
     def one = 1l
     def ==(a : BigDecimal, b : BigDecimal) = a == b
@@ -131,7 +131,7 @@ object Field {
   }
 
   @SerialVersionUID(1L)
-  implicit object fieldFloat extends Field[Float] {
+  implicit object fieldFloat extends Field[Float] with Serializable {
     def zero = 0.0f
     def one = 1.0f
     def ==(a : Float, b : Float) = a == b
@@ -151,7 +151,7 @@ object Field {
   }
 
   @SerialVersionUID(-5955467582882664220L)
-  implicit object fieldD extends Field[Double] {
+  implicit object fieldDouble extends Field[Double] with Serializable {
     def zero = 0.0
     def one = 1.0
     def ==(a: Double, b: Double) = a == b
