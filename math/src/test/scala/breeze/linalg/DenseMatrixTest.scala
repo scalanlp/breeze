@@ -620,6 +620,12 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     assert(argsort(dm) === IndexedSeq((1, 0), (0, 0)))
  }
 
+  test("#289: sigmoid dm slice") {
+    val m = DenseMatrix.zeros[Double](10, 10)
+    assert(sigmoid(m(::,0 to 5)) === DenseMatrix.fill(10, 6)(0.5))
+    assert(sigmoid(m(::,3 to 5)) === DenseMatrix.fill(10, 3)(0.5))
+  }
+
 
 
   def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6) {

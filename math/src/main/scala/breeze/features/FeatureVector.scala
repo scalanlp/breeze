@@ -64,7 +64,24 @@ object FeatureVector {
 
   @expand
   @expand.valify
-  implicit def FVScaleAdd[@expand.args(Int, Float, Double) T]:scaleAdd.InPlaceImpl3[DenseVector[T], T, FeatureVector] = {
+  implicit def FVScaleAddIntoV[@expand.args(Int, Float, Double) T]:TernaryUpdateRegistry[Vector[T], T, FeatureVector, scaleAdd.type] = {
+    new TernaryUpdateRegistry[Vector[T], T, FeatureVector, scaleAdd.type] {
+      override def bindingMissing(y: Vector[T], a: T, x: FeatureVector) {
+        if (a != 0.0) {
+          var i = 0
+          while (i < x.activeLength) {
+            y(x(i)) += a
+            i += 1
+          }
+        }
+      }
+    }
+  }
+
+
+  @expand
+  @expand.valify
+  implicit def FVScaleAddIntoDV[@expand.args(Int, Float, Double) T]:scaleAdd.InPlaceImpl3[DenseVector[T], T, FeatureVector] = {
     new scaleAdd.InPlaceImpl3[DenseVector[T], T, FeatureVector] {
       def apply(y: DenseVector[T], a: T, x: FeatureVector) {
         var i = 0
@@ -73,7 +90,9 @@ object FeatureVector {
           i += 1
         }
       }
+      implicitly[TernaryUpdateRegistry[Vector[T], T, FeatureVector, scaleAdd.type]].register(this)
     }
+
   }
 
   // specialzied doesn't work here, so we're expanding
@@ -120,8 +139,29 @@ object FeatureVector {
           }
         }
       }
+      implicitly[TernaryUpdateRegistry[Vector[T], T, FeatureVector, scaleAdd.type]].register(this)
     }
   }
+
+  @expand
+  @expand.valify
+  implicit def DotProductFVV[@expand.args(Int, Float, Double) T]:BinaryRegistry[FeatureVector, Vector[T], OpMulInner.type, T] = {
+    new BinaryRegistry[FeatureVector, Vector[T], OpMulInner.type, T] {
+      override def bindingMissing(a: FeatureVector, b: Vector[T]): T = {
+        var score: T = 0
+        var i = 0
+        while (i < a.activeLength) {
+          score += b(a(i))
+          i += 1
+        }
+
+        score
+      }
+    }
+  }
+
+
+
 
   @expand
   @expand.valify

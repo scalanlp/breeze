@@ -538,13 +538,13 @@ with MatrixConstructors[DenseMatrix] {
     new CanMapValues[DenseMatrix[V],V,R,DenseMatrix[R]] {
       private def simpleMap(from : DenseMatrix[V], fn : (V=>R), isTranspose: Boolean): DenseMatrix[R] = {
         val data = new Array[R](from.size)
-        var i=from.offset
-        val iMax = data.size + from.offset
+        var i= 0
+        val iMax = data.size
         while (i < iMax) {
-          data(i) = fn(from.data(i))
+          data(i) = fn(from.data(i + from.offset))
           i += 1
         }
-        return new DenseMatrix[R](from.rows, from.cols, data, 0, if (isTranspose) { from.cols } else { from.rows }, isTranspose)
+        new DenseMatrix[R](from.rows, from.cols, data, 0, if (isTranspose) { from.cols } else { from.rows }, isTranspose)
       }
 
       private def generalMap(from : DenseMatrix[V], fn : (V=>R)): DenseMatrix[R] = {
