@@ -56,7 +56,6 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
       val z = zeroLikeM(a)
       closeM(a :+ z, a, TOL)
     })
-
     check(Prop.forAll{ (trip: (M, M, M)) =>
       val (a, b, _) = trip
       val ab = copyM(a)
@@ -70,7 +69,8 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
     check(Prop.forAll{ (trip: (M, M, M)) =>
       val (a, b, c) = trip
       val z = zeroLikeM(a)
-      closeM(a - a, z, TOL)
+      val ama: M = a - a
+      closeM(ama, z, TOL)
     })
 
     check(Prop.forAll{ (trip: (M, M, M)) =>
@@ -116,9 +116,6 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
       ba += (b :* s)
       closeM(ab, ba, TOL)
     })
-
-
-
   }
 
   test("daxpy is consistent - Matrix") {
@@ -185,8 +182,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
       val ab = copyM(a)
       ab := b
       a + b == (a + ab)
-    })
-
+    } )
   }
 
 
@@ -328,13 +324,16 @@ class SparseOptimizationSpaceTest_Double extends OptimizationSpaceTest[CSCMatrix
   override implicit val space: MutableOptimizationSpace[CSCMatrix[Double], SparseVector[Double], Double] =
     MutableOptimizationSpace.SparseOptimizationSpace.sparseOptSpace[Double]
 
+  // TODO: generate arbitrarily dimensioned matrices
   val N = 30
-  val indices = Seq.range[Int](0,N-1)
+  val M = 30c
 
   def genScalar: Arbitrary[Double] = Arbitrary(Arbitrary.arbitrary[Double].map{ _ % 1E10 })
-  val arbIndex = Arbitrary(Gen.choose[Int](0,N-1))
+
+  val arbColIndex = Arbitrary(Gen.choose[Int](0,N-1))
+  val arbRowIndex = Arbitrary(Gen.choose[Int](0,M-1))
   val genAS = Gen.chooseNum(0, pow(N, 2))
-  implicit val arbEntry = Arbitrary.arbTuple3[Int,Int,Double](arbIndex, arbIndex,
+  implicit val arbEntry = Arbitrary.arbTuple3[Int,Int,Double](arbRowIndex, arbColIndex,
     Arbitrary(Arbitrary.arbitrary[Double].map(_ % 1E100)))
   implicit val arbVals = Arbitrary(genAS flatMap( activeSize => Gen.listOfN[(Int,Int,Double)](activeSize,Arbitrary.arbitrary[(Int,Int,Double)])))
   def addToBuilder(bldr: CSCMatrix.Builder[Double],v: (Int,Int,Double)) = bldr.add(v._1,v._2,v._3)
@@ -361,6 +360,7 @@ class SparseOptimizationSpaceTest_Double extends OptimizationSpaceTest[CSCMatrix
     }
   }
 
+  val indices = Seq.range[Int](0,N-1)
   override implicit def genTriple: Arbitrary[(SparseVector[Double], SparseVector[Double], SparseVector[Double])] = {
     Arbitrary {
       for{
@@ -381,70 +381,3 @@ class SparseOptimizationSpaceTest_Double extends OptimizationSpaceTest[CSCMatrix
     }
   }
 }
-
-// TODO: Ensure all optimization space functions are using specific
-//       implementations of methods, rather than generic (i.e. for DenseVector rather than Vector)
-// TODO: Ensure optimization space methods are not too much slower than specific methods (same as above?)
-/*
-                  _addVS: OpAdd.Impl2[V, S, V],
-                  _subVS: OpSub.Impl2[V, S, V],
-                  _mulVV: OpMulScalar.Impl2[V, V, V],
-                  _divVV: OpDiv.Impl2[V, V, V],
-                  _copy: CanCopy[V],
-                  _mulIntoVS: OpMulScalar.InPlaceImpl2[V, S],
-                  _divIntoVS: OpDiv.InPlaceImpl2[V, S],
-                  _addIntoVV: OpAdd.InPlaceImpl2[V, V],
-                  _subIntoVV: OpSub.InPlaceImpl2[V, V],
-                  _addIntoVS: OpAdd.InPlaceImpl2[V, S],
-                  _subIntoVS: OpSub.InPlaceImpl2[V, S],
-                  _mulIntoVV: OpMulScalar.InPlaceImpl2[V, V],
-                  _divIntoVV: OpDiv.InPlaceImpl2[V, V],
-                  _setIntoVV: OpSet.InPlaceImpl2[V, V],
-                  _scaleAddVSV: scaleAdd.InPlaceImpl3[V, S, V],
-                  _zeroLike: CanCreateZerosLike[V, V],
-                  _zero: CanCreateZeros[V, Int],
-                  _dim: dim.Impl[V, Int],
-                  _mulVS: OpMulScalar.Impl2[V, S, V],
-                  _divVS: OpDiv.Impl2[V, S, V],
-                  _addVV: OpAdd.Impl2[V, V, V],
-                  _subVV: OpSub.Impl2[V, V, V],
-                  _neg: OpNeg.Impl[V, V],
-                  _tabulate: CanTabulate[Int,V,S],
-                  _ops: V <:< NumericOps[V] with QuasiTensor[Int, S],
-                  _dotVV: OpMulInner.Impl2[V, V, S],
-                  _traverseVals: CanTraverseValues[V, S],
-                  _mapVals: CanMapValues[V, S, S, V],
-                  _norm2M: norm.Impl2[M, Double, Double],
-                  _normM: norm.Impl[M, Double],
-                  _addMS: OpAdd.Impl2[M, S, M],
-                  _subMS: OpSub.Impl2[M, S, M],
-                  _mulMM: OpMulScalar.Impl2[M, M, M],
-                  _divMM: OpDiv.Impl2[M, M, M],
-                  _mulIntoMS: OpMulScalar.InPlaceImpl2[M, S],
-                  _divIntoMS: OpDiv.InPlaceImpl2[M, S],
-                  _addIntoMM: OpAdd.InPlaceImpl2[M, M],
-                  _subIntoMM: OpSub.InPlaceImpl2[M, M],
-                  _addIntoMS: OpAdd.InPlaceImpl2[M, S],
-                  _subIntoMS: OpSub.InPlaceImpl2[M, S],
-                  _mulIntoMM: OpMulScalar.InPlaceImpl2[M, M],
-                  _divIntoMM: OpDiv.InPlaceImpl2[M, M],
-                  _setIntoMM: OpSet.InPlaceImpl2[M, M],
-                  _scaleAddMSM: scaleAdd.InPlaceImpl3[M, S, M],
-                  _zeroLikeM: CanCreateZerosLike[M, M],
-                  _zeroM: CanCreateZeros[M, (Int,Int)],
-                  _dimM: dim.Impl[M, (Int,Int)],
-                  _mulMS: OpMulScalar.Impl2[M, S, M],
-                  _divMS: OpDiv.Impl2[M, S, M],
-                  _addMM: OpAdd.Impl2[M, M, M],
-                  _subMM: OpSub.Impl2[M, M, M],
-                  _negM: OpNeg.Impl[M, M],
-                  _tabulateM: CanTabulate[(Int,Int),M,S],
-                  _opsM: M <:< NumericOps[M] with QuasiTensor[(Int,Int), S],
-                  _dotMM: OpMulInner.Impl2[M, M, S],
-                  _traverseValsM: CanTraverseValues[M, S],
-                  _mapValsM: CanMapValues[M, S, S, M],
-                  _mulMMM: OpMulMatrix.Impl2[M, M, M],
-                  _mulMVV: OpMulMatrix.Impl2[M, V, V],
-                  _mulVTM: OpMulMatrix.Impl2[V, Transpose[V], M],
-                  _canTrans: CanTranspose[V,Transpose[V]]
- */

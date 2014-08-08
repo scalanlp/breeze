@@ -378,12 +378,11 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps with Se
   class Builder[@specialized(Int, Float, Double) T:ClassTag:Semiring:Zero](rows: Int, cols: Int, initNnz: Int = 16) {
     private def ring = implicitly[Semiring[T]]
     private def zero = implicitly[Zero[T]]
+
     def add(r: Int, c: Int, v: T) {
-      if (v != zero.zero) {
-        numAdded += 1
-        vs += v
-        indices += (c.toLong << 32) | (r & 0xFFFFFFFFL)
-      }
+      numAdded += 1
+      vs += v
+      indices += (c.toLong << 32) | (r & 0xFFFFFFFFL)
     }
 
     // we pack rows and columns into a single long. (most significant bits get the column, so columns are the major axis)
