@@ -8,7 +8,7 @@ import breeze.linalg.{DenseMatrix, SparseVector}
 import breeze.math._
 import breeze.numerics.pow
 import breeze.storage.Zero
-import breeze.util.SerializableLogging
+import breeze.util.{ArrayUtil, SerializableLogging}
 import scala.reflect.ClassTag
 import java.util
 
@@ -87,6 +87,7 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring {  this: CSCMatrix.type =>
           var ci = 0
           var apStop  = a.colPtrs(0)
           var bpStop  = b.colPtrs(0)
+          val builder = new CSCMatrix.Builder[T](a.rows, a.cols)
           while (ci < cols) {
             val ci1 = ci + 1
             var ap = apStop
@@ -97,14 +98,14 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring {  this: CSCMatrix.type =>
             val ar = if (ap < apStop) a.rowIndices(ap) else rows
               val br = if (bp < bpStop) b.rowIndices(bp) else rows
               if (ar == br) {
-                a.update(ar, ci, op(a.data(ap), b.data(bp)))
+                builder.add(ar, ci, op(a.data(ap), b.data(bp)))
                 ap += 1
                 bp += 1
               } else if (ar < br) { // a is behind
-                a.update(ar, ci, op(a.data(ap), mZero))
+                builder.add(ar, ci, op(a.data(ap),  mZero))
                 ap += 1
               } else {
-                a.update(br, ci, op(mZero, b.data(bp)))
+                builder.add(br, ci, op(mZero, b.data(bp)))
                 bp += 1
                 ap += 1 // Because we just inserted a new value behind the pointer in A
                 apStop = a.colPtrs(ci1)
@@ -112,6 +113,8 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring {  this: CSCMatrix.type =>
             }
             ci = ci1
           }
+
+          a.use(builder.result(true, true))
         }
       }
 
@@ -121,9 +124,22 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring {  this: CSCMatrix.type =>
 
   @expand
   @expand.valify
+  implicit def csc_csc_OpSetUpdateOp[@expand.args(Int, Double, Float, Long) T](implicit  @expand.sequence[T](0, 0.0, 0.0f, 0l)  zero: T): OpSet.InPlaceImpl2[CSCMatrix[T], CSCMatrix[T]] = {
+    new  OpSet.InPlaceImpl2[CSCMatrix[T], CSCMatrix[T]] {
+      override def apply(v: CSCMatrix[T], v2: CSCMatrix[T]): Unit = {
+        v.use(java.util.Arrays.copyOf(v2.data, v2.activeSize), java.util.Arrays.copyOf(v2.colPtrs, v2.activeSize), java.util.Arrays.copyOf(v2.rowIndices, v2.activeSize), v2.activeSize)
+      }
+    }
+
+  }
+
+
+  /*
+  @expand
+  @expand.valify
   implicit def csc_csc_UpdateOp[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpAdd, OpSub, OpMulScalar, OpSet) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {(a,b) => b}) op: Op.Impl2[T, T, T],
+  @expand.args(OpAdd, OpSub) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _},  {_ - _}) op: Op.Impl2[T, T, T],
             @expand.sequence[T](0, 0.0, 0.0f, 0l)  zero: T):
   Op.InPlaceImpl2[CSCMatrix[T], CSCMatrix[T]] = {
     val mZero = implicitly[T](zero)
@@ -182,6 +198,64 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring {  this: CSCMatrix.type =>
       }
 
       implicitly[BinaryUpdateRegistry[Matrix[T], Matrix[T], Op.type]].register(this)
+    }
+  }
+  */
+
+  @expand
+  @expand.valify
+  implicit def csc_csc_Op[@expand.args(Int, Double, Float, Long) A,
+  @expand.args(OpAdd, OpSub) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _},  {_ - _}) op: Op.Impl2[A, A, A],
+   @expand.sequence[A](0, 0.0, 0.0f, 0l)  zero: A):Op.Impl2[CSCMatrix[A], CSCMatrix[A], CSCMatrix[A]] = {
+    new Op.Impl2[CSCMatrix[A], CSCMatrix[A], CSCMatrix[A]] {
+      def apply(a: CSCMatrix[A], b: CSCMatrix[A]): CSCMatrix[A] = {
+        require(a.rows == b.rows, "Matrix dimensions must match")
+        require(a.cols == b.cols, "Matrix dimensions must match")
+        val rows = a.rows
+        val cols = a.cols
+        if (cols == 0 || rows == 0) return CSCMatrix.zeros[A](rows, cols)
+
+        if (a.activeSize == 0)
+          b.copy
+        else if (b.activeSize == 0)
+          a.copy
+        else {
+          val bldr = new CSCMatrix.Builder[A](rows, cols, math.max(a.activeSize, b.activeSize))
+          var ci = 0 // column index [0 ... cols)
+          var apStop = a.colPtrs(0) // pointer into row indices and data
+          var bpStop = b.colPtrs(0) // pointer into row indices and data
+          while (ci < cols) {
+            val ci1 = ci + 1
+            var ap = apStop
+            var bp = bpStop
+            apStop = a.colPtrs(ci1)
+            bpStop = b.colPtrs(ci1)
+            while (ap < apStop || bp < bpStop) {
+              val ari = if (ap < apStop) a.rowIndices(ap) else rows // row index [0 ... rows)
+              val bri = if (bp < bpStop) b.rowIndices(bp) else rows
+              if (ari == bri) {
+                // column and row match, this cell goes into result matrix
+                bldr.add(ari, ci, op(a.data(ap), b.data(bp)))
+                ap += 1
+                bp += 1
+              } else if (ari < bri) {
+                // next b row starts further down, therefore increase a pointer
+                bldr.add(ari, ci, a.data(ap))
+                ap += 1
+              } else /* ari > bri */ {
+                // next a row starts further down, therefore increase b pointer
+                bldr.add(bri, ci, op(0, b.data(bp)))
+                bp += 1
+              }
+            }
+            ci = ci1
+          }
+
+          bldr.result(true, true)
+        }
+      }
+      implicitly[BinaryRegistry[Matrix[A], Matrix[A], Op.type, Matrix[A]]].register(this)
     }
   }
 
