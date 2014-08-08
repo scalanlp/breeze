@@ -232,6 +232,18 @@ class CSCMatrixTest extends FunSuite with Checkers {
     assert(ac :^ bc === ac.toDense :^ bc.toDense)
   }
 
+  test("csc scalar \"bad\" mod ops") {
+    val a = CSCMatrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
+    val b = CSCMatrix((7.0, -2.0, 8.0),(-3.0, -3.0, 1.0))
+
+    assert(a :% b === a.toDense :% b.toDense)
+
+    val ac = convert(a, Complex)
+    val bc = convert(b, Complex)
+    assert(ac :% bc === ac.toDense :% bc.toDense)
+
+  }
+
   test("flatten") {
     val a = CSCMatrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
     val b = CSCMatrix.zeros[Double](3,2)
