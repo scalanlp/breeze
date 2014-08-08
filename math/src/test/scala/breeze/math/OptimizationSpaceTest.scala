@@ -326,7 +326,7 @@ class SparseOptimizationSpaceTest_Double extends OptimizationSpaceTest[CSCMatrix
 
   // TODO: generate arbitrarily dimensioned matrices
   val N = 30
-  val M = 30c
+  val M = 30
 
   def genScalar: Arbitrary[Double] = Arbitrary(Arbitrary.arbitrary[Double].map{ _ % 1E10 })
 
