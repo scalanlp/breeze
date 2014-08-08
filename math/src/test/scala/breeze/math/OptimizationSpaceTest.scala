@@ -328,7 +328,7 @@ class SparseOptimizationSpaceTest_Double extends OptimizationSpaceTest[CSCMatrix
   override implicit val space: MutableOptimizationSpace[CSCMatrix[Double], SparseVector[Double], Double] =
     MutableOptimizationSpace.SparseOptimizationSpace.sparseOptSpace[Double]
 
-  val N = 5
+  val N = 30
   val indices = Seq.range[Int](0,N-1)
 
   def genScalar: Arbitrary[Double] = Arbitrary(Arbitrary.arbitrary[Double].map{ _ % 1E10 })
@@ -337,8 +337,7 @@ class SparseOptimizationSpaceTest_Double extends OptimizationSpaceTest[CSCMatrix
   implicit val arbEntry = Arbitrary.arbTuple3[Int,Int,Double](arbIndex, arbIndex,
     Arbitrary(Arbitrary.arbitrary[Double].map(_ % 1E100)))
   implicit val arbVals = Arbitrary(genAS flatMap( activeSize => Gen.listOfN[(Int,Int,Double)](activeSize,Arbitrary.arbitrary[(Int,Int,Double)])))
-  def addToBuilder(bldr: CSCMatrix.Builder[Double],v: (Int,Int,Double)) =
-    bldr.add(v._1,v._2,v._3)
+  def addToBuilder(bldr: CSCMatrix.Builder[Double],v: (Int,Int,Double)) = bldr.add(v._1,v._2,v._3)
   override implicit def genTripleM: Arbitrary[(CSCMatrix[Double], CSCMatrix[Double], CSCMatrix[Double])] = {
     Arbitrary {
       val xb = new CSCMatrix.Builder[Double](N, N)

@@ -475,7 +475,6 @@ trait CSCMatrixOps_Ring extends CSCMatrixOpsLowPrio with SerializableLogging {
       def apply(a: CSCMatrix[T],b: CSCMatrix[T]): Unit = {
         throw new UnsupportedOperationException(s"Performing a Matrix x Matrix operation of this kind will result in a non-sparse matrix, possibly full of NaNs.")
       }
-      implicitly[BinaryUpdateRegistry[Matrix[T], Matrix[T], Op.type]].register(this)
     }
   }
 
@@ -537,8 +536,6 @@ trait CSCMatrixOps_Ring extends CSCMatrixOpsLowPrio with SerializableLogging {
           }
         }
       }
-
-      implicitly[BinaryUpdateRegistry[Matrix[T], Matrix[T], Op.type]].register(this)
     }
   }
 
@@ -553,11 +550,9 @@ trait CSCMatrixOps_Ring extends CSCMatrixOpsLowPrio with SerializableLogging {
         uop(c, b)
         c
       }
-
-      //      implicitly[BinaryRegistry[Matrix[T], Matrix[T], Op.type, Matrix[T]]].register(this)
     }
   }
-  //
+
   @expand
   implicit def csc_T_UpdateOp[@expand.args(OpMulScalar, OpDiv, OpMod, OpPow) Op <: OpType, T:Field:ClassTag]
   (implicit @expand.sequence[Op]({f.*(_,_)}, {f./(_,_)}, {f.%(_,_)},{f.pow(_,_)}) op: Op.Impl2[T,T,T]):

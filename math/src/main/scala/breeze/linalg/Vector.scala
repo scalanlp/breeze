@@ -290,10 +290,10 @@ trait VectorOps { this: Vector.type =>
     }
   }
 
-  implicit def v_v_Idempotent_OpSub[T:Ring]
-  :BinaryRegistry[Vector[T], Vector[T], OpSub.type, Vector[T]] = new BinaryRegistry[Vector[T], Vector[T], OpSub.type, Vector[T]] {
+  implicit def v_v_Idempotent_OpSub[T:Ring]:OpSub.Impl2[Vector[T], Vector[T], Vector[T]] =
+    new OpSub.Impl2[Vector[T], Vector[T], Vector[T]] {
     val r = implicitly[Ring[T]]
-    override def bindingMissing(a: Vector[T], b: Vector[T]): Vector[T] = {
+    def apply(a: Vector[T], b: Vector[T]): Vector[T] = {
       require(b.length == a.length, "Vectors must be the same length!")
       val result = a.copy
       for((k,v) <- b.activeIterator) {
@@ -303,10 +303,10 @@ trait VectorOps { this: Vector.type =>
     }
   }
 
-  implicit def v_v_Idempotent_OpAdd[T:Semiring]
-  :BinaryRegistry[Vector[T], Vector[T], OpAdd.type, Vector[T]] = new BinaryRegistry[Vector[T], Vector[T], OpAdd.type, Vector[T]] {
+  implicit def v_v_Idempotent_OpAdd[T:Semiring]:OpAdd.Impl2[Vector[T], Vector[T], Vector[T]] =
+    new OpAdd.Impl2[Vector[T], Vector[T], Vector[T]] {
     val r = implicitly[Semiring[T]]
-    override def bindingMissing(a: Vector[T], b: Vector[T]): Vector[T] = {
+    def apply(a: Vector[T], b: Vector[T]): Vector[T] = {
       require(b.length == a.length, "Vectors must be the same length!")
       val result = a.copy
       for((k,v) <- b.activeIterator) {
