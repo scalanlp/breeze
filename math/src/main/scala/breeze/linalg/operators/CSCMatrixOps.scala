@@ -2,10 +2,8 @@ package breeze.linalg
 package operators
 
 import breeze.generic.UFunc
-import breeze.linalg.operators.OpType
 import breeze.linalg.support.CanZipMapValues
 import breeze.macros.expand
-import breeze.linalg.{DenseMatrix, SparseVector}
 import breeze.math._
 import breeze.numerics.pow
 import breeze.storage.Zero
@@ -247,6 +245,8 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring {  this: CSCMatrix.type =>
     }
   }
 
+  // code based on that provided by sciss:
+  // https://github.com/Sciss/breeze/blob/bb5cf8a1969545e1a7b0cd7ddde5f974be8301cd/math/src/main/scala/breeze/linalg/CSCMatrixExtraOps.scala
   @expand
   @expand.valify
   implicit def csc_csc_OpMulScalar[@expand.args(Int, Double, Float, Long) T]
@@ -570,8 +570,6 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring {  this: CSCMatrix.type =>
   implicit def csc_csc_InPlace[@expand.args(Int,Float,Double,Long) T, @expand.args(OpAdd, OpSub, OpDiv, OpPow, OpMod, OpMulScalar) Op <: OpType]
   : Op.InPlaceImpl2[CSCMatrix[T],CSCMatrix[T]] = updateFromPure(implicitly[Op.Impl2[CSCMatrix[T],CSCMatrix[T],CSCMatrix[T]]])
 
-  // code based on that provided by sciss:
-  // https://github.com/Sciss/breeze/blob/bb5cf8a1969545e1a7b0cd7ddde5f974be8301cd/math/src/main/scala/breeze/linalg/CSCMatrixExtraOps.scala
 }
 
 trait CSCMatrixOps_Ring extends CSCMatrixOpsLowPrio with SerializableLogging {
