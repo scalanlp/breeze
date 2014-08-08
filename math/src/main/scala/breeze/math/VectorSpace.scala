@@ -206,6 +206,8 @@ trait MutableRestrictedDomainTensorField[V, I, S] extends RestrictedDomainTensor
 trait MutableOptimizationSpace[M,V,S] extends MutableRestrictedDomainTensorField[V,Int,S] {
   def toMatrix(v: V): M
   def toVector(m: M): V
+  def closeM(a: M, b: M, tolerance: Double): Boolean
+  implicit def fieldNorm: norm.Impl[S,Double]
   implicit def mulMMS: OpMulScalar.Impl2[M,M,M]
   implicit def mulMMM: OpMulMatrix.Impl2[M,M,M]
   implicit def mulMVV: OpMulMatrix.Impl2[M,V,V]
@@ -217,10 +219,12 @@ trait MutableOptimizationSpace[M,V,S] extends MutableRestrictedDomainTensorField
   implicit def canDimM: dim.Impl[M, (Int,Int)]
   implicit def hasMOps(v: M): NumericOps[M] with QuasiTensor[(Int,Int), S]
   implicit def normMImplDouble: norm.Impl2[M, Double, Double]
+  implicit def normM: norm.Impl[M,Double]
   implicit def divMM: OpDiv.Impl2[M,M,M]
   implicit def subMS: OpSub.Impl2[M,S,M]
   implicit def subMM: OpSub.Impl2[M, M, M]
   implicit def mulMS: OpMulScalar.Impl2[M, S, M]
+  implicit def mulMSMat: OpMulMatrix.Impl2[M, S, M]
   implicit def zeroLikeM: CanCreateZerosLike[M, M]
   implicit def addMS: OpAdd.Impl2[M, S, M]
   implicit def addMM: OpAdd.Impl2[M, M, M]
@@ -674,7 +678,7 @@ object MutableOptimizationSpace {
   object SparseOptimizationSpace {
     import CSCMatrix.FrobeniusInnerProductCSCMatrixSpace._
     implicit def sparseOptSpace[S:Field:Zero:ClassTag] = {
-      val norms = FrobeniusMatrixInnerProductNorms.makeMatrixNorms[CSCMatrix[S],S]
+      val norms = EntrywiseMatrixNorms.make[CSCMatrix[S],S]
       import norms._
       make[CSCMatrix[S],SparseVector[S],S](_.asCSCMatrix(),_.flatten())
     }
@@ -682,16 +686,19 @@ object MutableOptimizationSpace {
 
   object DenseOptimizationSpace {
     implicit def denseOptSpace[S:Field:ClassTag] = {
-      val norms = FrobeniusMatrixInnerProductNorms.makeMatrixNorms[DenseMatrix[S],S]
+      val norms = EntrywiseMatrixNorms.make[DenseMatrix[S],S]
       import norms._
       make[DenseMatrix[S],DenseVector[S],S](_.asDenseMatrix,_.flatten())
     }
   }
 
-  def make[M,V,S](toMat: V => M, toVec: M => V)(implicit
+  def make[M,V,S](toMat: V => M,
+                  toVec: M => V)
+                 (implicit
                   _norm2: norm.Impl2[V, Double, Double],
                   _norm: norm.Impl[V, Double],
                   _field: Field[S],
+                  _mulMSMat: OpMulMatrix.Impl2[M,S,M],
                   _addVS: OpAdd.Impl2[V, S, V],
                   _subVS: OpSub.Impl2[V, S, V],
                   _mulVV: OpMulScalar.Impl2[V, V, V],
@@ -761,9 +768,15 @@ object MutableOptimizationSpace {
     ): MutableOptimizationSpace[M,V,S] =  new MutableOptimizationSpace[M,V,S] {
     def toMatrix(v: V): M = toMat(v)
     def toVector(m: M): V = toVec(m)
+
+    def closeM(a: M, b: M, tolerance: Double): Boolean = normM(subMM(a, b)) <= tolerance * math.max(normM(a), normM(b))
+
+    implicit def fieldNorm: norm.Impl[S,Double] = _field.normImpl
     implicit def setIntoMM: OpSet.InPlaceImpl2[M, M] = _setIntoMM
+    implicit def mulMSMat: OpMulMatrix.Impl2[M,S,M] = _mulMSMat
     implicit def divMS: OpDiv.Impl2[M, S, M] = _divMS
     implicit def normMImplDouble: norm.Impl2[M, Double, Double] = _norm2M
+    implicit def normM: norm.Impl[M,Double] = _normM
     implicit def divMM: OpDiv.Impl2[M, M, M] = _divMM
     implicit def zeroLikeM: CanCreateZerosLike[M, M] = _zeroLikeM
     implicit def scaleAddMM: scaleAdd.InPlaceImpl3[M, S, M] = _scaleAddMSM
