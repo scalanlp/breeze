@@ -302,6 +302,7 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
 
 
   @expand
+  @expand.valify
   implicit def implScaleAdd_DVT_T_SVT_InPlace[@expand.args(Int, Double, Float, Long) T]
   (implicit  @expand.sequence[T](0, 0.0, 0f, 0l) zero: T):
   scaleAdd.InPlaceImpl3[DenseVector[T], T, SparseVector[T]] =
@@ -322,6 +323,7 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
         }
 
       }
+      implicitly[TernaryUpdateRegistry[Vector[T], T, Vector[T], scaleAdd.type]].register(this)
     }
 
   // this shouldn't be necessary but it is:

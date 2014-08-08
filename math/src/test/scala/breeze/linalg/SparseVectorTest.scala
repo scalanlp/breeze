@@ -272,6 +272,10 @@ class SparseVectorTest extends FunSuite {
     assert(a.dot(b) === 2)
     assert(a + b === DenseVector(1,3,3))
     assert(a :* b === DenseVector(0, 2, 0))
+
+    axpy(4, b, a)
+    assert( a === DenseVector(1, 6, 3))
+
   }
 
   test("SV/DV ops") {
