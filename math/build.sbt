@@ -98,4 +98,6 @@ resolvers ++= Seq(
 
 testOptions in Test += Tests.Argument("-oDF")
 
+fork in Test := true
+
 jacoco.settings
