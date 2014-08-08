@@ -190,6 +190,18 @@ class CSCMatrixTest extends FunSuite with Checkers {
     assert(a - b === CSCMatrix((1, -1, 0), (0,0,0)))
   }
 
+  test("inplace addition/subtraction") {
+    val a : CSCMatrix[Int] = CSCMatrix((1,0,0),(2,3,-1))
+    val b : CSCMatrix[Int] = CSCMatrix((0,1,0),(2,3,-1))
+    a += b
+    assert(a === CSCMatrix((1, 1, 0), (4,6,-2)))
+    assert(a.activeSize === 5)
+    a -= b
+    a -= b
+    assert(a === CSCMatrix((1, -1, 0), (0,0,0)))
+    assert(a.activeSize === 2)
+  }
+
   test("InPlace Ops") {
     var a = CSCMatrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
     val b = CSCMatrix((7.0, -2.0, 8.0),(-3.0, -3.0, 1.0))

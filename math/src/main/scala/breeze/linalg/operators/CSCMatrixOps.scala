@@ -4,6 +4,7 @@ package operators
 import breeze.generic.UFunc
 import breeze.linalg.support.CanZipMapValues
 import breeze.macros.expand
+import breeze.linalg.{DenseMatrix, SparseVector}
 import breeze.math._
 import breeze.numerics.pow
 import breeze.storage.Zero

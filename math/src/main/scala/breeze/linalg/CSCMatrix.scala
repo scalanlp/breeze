@@ -15,17 +15,17 @@ package breeze.linalg
  limitations under the License.
 */
 
-import breeze.generic.UFunc
-import breeze.linalg.operators._
-import breeze.numerics._
-import breeze.storage.Zero
 import java.util
-import breeze.util.{SerializableLogging, Sorting, Terminal, ArrayUtil}
-import scala.collection.mutable
-import breeze.math._
-import scala.reflect.ClassTag
+
+import breeze.linalg.operators._
+import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
-import CanTraverseValues.ValuesVisitor
+import breeze.math._
+import breeze.storage.Zero
+import breeze.util.{ArrayUtil, SerializableLogging, Sorting, Terminal}
+
+import scala.collection.mutable
+import scala.reflect.ClassTag
 
 /**
  * A compressed sparse column matrix, as used in Matlab and CSparse, etc.
@@ -42,6 +42,7 @@ class CSCMatrix[@specialized(Int, Float, Double) V:Zero] private[linalg] (privat
                                                                                private var used : Int,
                                                                                private var _rowIndices: Array[Int]) // len >= used
   extends Matrix[V] with MatrixLike[V, CSCMatrix[V]] with Serializable {
+
 
   def this(data: Array[V],rows: Int, cols: Int, colPtrs: Array[Int],rowIndices: Array[Int]) =
     this(data,rows,cols,colPtrs,data.length,rowIndices)
@@ -158,6 +159,12 @@ class CSCMatrix[@specialized(Int, Float, Double) V:Zero] private[linalg] (privat
   }
 
   override def toString: String = toString(maxLines = Terminal.terminalHeight - 3)
+
+
+  /** just uses the data from this matrix. No copies are made. designed for temporaries */
+  private[breeze] def use(matrix: CSCMatrix[V]): Unit = {
+    use(matrix.data, matrix.colPtrs, matrix.rowIndices, matrix.used)
+  }
 
   def use(data: Array[V],colPtrs: Array[Int], rowIndices: Array[Int], used: Int): Unit = {
     require(colPtrs.length == this.colPtrs.length)
@@ -380,9 +387,11 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps with Se
     private def zero = implicitly[Zero[T]]
 
     def add(r: Int, c: Int, v: T) {
-      numAdded += 1
-      vs += v
-      indices += (c.toLong << 32) | (r & 0xFFFFFFFFL)
+      if(v != 0) {
+        numAdded += 1
+        vs += v
+        indices += (c.toLong << 32) | (r & 0xFFFFFFFFL)
+      }
     }
 
     // we pack rows and columns into a single long. (most significant bits get the column, so columns are the major axis)
