@@ -100,4 +100,6 @@ testOptions in Test += Tests.Argument("-oDF")
 
 fork in Test := true
 
+javaOptions := Seq("-Xmx4g")
+
 jacoco.settings
