@@ -16,18 +16,16 @@ package breeze.stats.distributions;
  limitations under the License. 
 */
 
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.scalacheck._;
 import org.junit.runner.RunWith
-
-import breeze.stats.DescriptiveStats._
+import org.scalacheck._
+import org.scalatest._
+import org.scalatest.junit._
+import org.scalatest.prop._
 
 @RunWith(classOf[JUnitRunner])
 class GaussianTest extends FunSuite with Checkers with MomentsTestBase[Double] with ExpFamTest[Gaussian,Double] {
   val expFam = Gaussian
-  import Arbitrary.arbitrary;
+  import org.scalacheck.Arbitrary.arbitrary;
 
   def arbParameter = Arbitrary{
     for( mean <- arbitrary[Double].map{_ % 10000.0};
@@ -47,6 +45,11 @@ class GaussianTest extends FunSuite with Checkers with MomentsTestBase[Double] w
         b.unnormalizedLogPdf(m) == 0.0;
       }
     })
+  }
+
+  test("#295, cdf/icdf broken")  {
+    val gaussian = Gaussian(0, 1)
+    assert( (gaussian.cdf(gaussian.icdf(0.1)) - 0.1).abs <= 1E-3, gaussian.cdf(gaussian.icdf(0.1)) + " was not close to " + 0.1)
   }
 
 

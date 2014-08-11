@@ -46,13 +46,13 @@ case class Gaussian(mu :Double, sigma : Double)(implicit rand: RandBasis = Rand)
     require( p >= 0 )
     require( p <= 1 )
 
-    mu + sigma * Gaussian.sqrt2 * erfi(2 * p - 1)
+    mu + sigma * Gaussian.sqrt2 * erfinv(2 * p - 1)
   }
 
   /**
   * Computes the cumulative density function of the value x.
   */
-  def cdf(x: Double) = .5 * (1 + erf( (x - mu)/Gaussian.sqrt2 / sigma))
+  def cdf(x: Double) = .5 * (1 + erf( (x - mu)/ (Gaussian.sqrt2 * sigma)))
 
   override def unnormalizedLogPdf(t: Double) = {
     val d = (t - mu)/sigma
