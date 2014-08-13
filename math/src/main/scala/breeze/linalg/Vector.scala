@@ -261,10 +261,11 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
 
 
 
-  implicit def space[V:Field:Zero:ClassTag] = {
+  implicit def space[V:Field:Zero:ClassTag]: MutableFiniteCoordinateField[Vector[V], Int, V] = {
     val f = implicitly[Field[V]]
     import f.normImpl
-    MutableTensorField.make[Vector[V], Int, V]
+    implicit val _dim = dim.implVDim[V, Vector[V]]
+    MutableFiniteCoordinateField.make[Vector[V], Int, V]
   }
 }
 

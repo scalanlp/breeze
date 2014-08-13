@@ -631,10 +631,10 @@ object DenseVector extends VectorConstructors[DenseVector] with DenseVector_Gene
     def apply(v: DenseVector[E]): Int = v.length
   }
 
-  implicit def space[E](implicit field: Field[E], man: ClassTag[E]): MutableRestrictedDomainTensorField[DenseVector[E],Int,E] = {
+  implicit def space[E](implicit field: Field[E], man: ClassTag[E]): MutableFiniteCoordinateField[DenseVector[E],Int,E] = {
     import field._
     implicit val cmv = canMapValues[E,E]
-    MutableRestrictedDomainTensorField.make[DenseVector[E],Int,E]
+    MutableFiniteCoordinateField.make[DenseVector[E],Int,E]
   }
 
   object TupleIsomorphisms {

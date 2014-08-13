@@ -2,7 +2,7 @@ package breeze.optimize
 
 import breeze.linalg._
 import breeze.linalg.support.{CanMapValues, CanZipMapValues, CanTraverseValues}
-import breeze.math.{MutableVectorRing, MutableVectorField}
+import breeze.math.{MutableFiniteCoordinateField, MutableVectorRing, MutableVectorField}
 import breeze.numerics._
 import breeze.stats.distributions.{Rand, RandBasis}
 
@@ -30,7 +30,7 @@ object AdaptiveGradientDescent {
                             stepSize: Double, maxIter: Int,
                             tolerance: Double = 1E-5,
                             improvementTolerance: Double = 1E-4,
-                            minImprovementWindow: Int = 50)(implicit vspace: MutableVectorField[T, Double],
+                            minImprovementWindow: Int = 50)(implicit vspace: MutableFiniteCoordinateField[T, _, Double],
                                                             rand: RandBasis = Rand)
     extends StochasticGradientDescent[T](stepSize, maxIter, tolerance, improvementTolerance, minImprovementWindow) {
 
@@ -88,7 +88,7 @@ object AdaptiveGradientDescent {
   class L1Regularization[T](val lambda: Double=1.0,
                             delta: Double = 1E-5,
                             eta: Double = 4,
-                            maxIter: Int = 100)(implicit space: MutableVectorField[T, Double],
+                            maxIter: Int = 100)(implicit space: MutableFiniteCoordinateField[T, _, Double],
                                                 rand: RandBasis = Rand) extends StochasticGradientDescent[T](eta, maxIter) {
 
 

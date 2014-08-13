@@ -14,17 +14,17 @@ package breeze.linalg
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import operators._
-import scala.{specialized=>spec}
-import breeze.storage.Zero
-import breeze.linalg.support._
-import breeze.util.ArrayUtil
-import breeze.math._
 import breeze.collection.mutable.SparseArray
-import collection.mutable
+import breeze.linalg.operators._
+import breeze.linalg.support.CanTraverseValues.ValuesVisitor
+import breeze.linalg.support._
+import breeze.math._
+import breeze.storage.Zero
+import breeze.util.ArrayUtil
+
+import scala.collection.mutable
 import scala.reflect.ClassTag
-import CanTraverseValues.ValuesVisitor
-import breeze.generic.UFunc.UImpl
+import scala.{specialized => spec}
 
 
 /**
@@ -366,12 +366,12 @@ object SparseVector extends SparseVectorOps
     def apply(v: SparseVector[E]): Int = v.size
   }
 
-  implicit def canTabulate[E:ClassTag:Zero] = new CanTabulate[Int,SparseVector[E],E] {
+  implicit def canTabulate[E:ClassTag:Zero]: CanTabulate[Int, SparseVector[E], E] = new CanTabulate[Int,SparseVector[E],E] {
     def apply(d: Int, f: (Int) => E): SparseVector[E] = tabulate[E](d)(f)
   }
 
-  implicit def space[E: Field : ClassTag : Zero]: MutableRestrictedDomainTensorField[SparseVector[E], Int, E] = {
-    MutableRestrictedDomainTensorField.make[SparseVector[E], Int, E]
+  implicit def space[E: Field : ClassTag : Zero]: MutableFiniteCoordinateField[SparseVector[E], Int, E] = {
+    MutableFiniteCoordinateField.make[SparseVector[E], Int, E]
   }
 
   @noinline

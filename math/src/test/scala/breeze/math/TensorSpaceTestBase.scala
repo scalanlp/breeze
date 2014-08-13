@@ -15,10 +15,8 @@ package breeze.math
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import org.scalatest.FunSuite
-import org.scalatest.prop.Checkers
-import org.scalacheck.{Prop, Arbitrary}
 import breeze.linalg.norm
+import org.scalacheck.Prop
 
 /**
  *
@@ -26,7 +24,7 @@ import breeze.linalg.norm
  */
 
 trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
-  implicit val space: MutableTensorField[V, I, S]
+  implicit val space: MutableEnumeratedCoordinateField[V, I, S]
 
   import space._
 

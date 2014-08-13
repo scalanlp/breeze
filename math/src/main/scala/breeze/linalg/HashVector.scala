@@ -5,7 +5,7 @@ import breeze.linalg.operators._
 import breeze.storage.Zero
 import breeze.generic._
 import breeze.linalg.support._
-import breeze.math.{MutableTensorField, MutableVectorField, Field}
+import breeze.math._
 import scala.reflect.ClassTag
 import scala.util.hashing.MurmurHash3
 import breeze.macros.expand
@@ -211,8 +211,13 @@ object HashVector extends HashVectorOps
     }
   }
 
-  implicit def space[E:Field:ClassTag:Zero]: MutableTensorField[HashVector[E],Int,E] = {
-    MutableTensorField.make[HashVector[E], Int, E]
+  implicit def canTabulate[E:ClassTag:Zero]: CanTabulate[Int, HashVector[E], E] = new CanTabulate[Int,HashVector[E],E] {
+    def apply(d: Int, f: (Int) => E): HashVector[E] = tabulate[E](d)(f)
+  }
+
+  implicit def space[E:Field:ClassTag:Zero]: MutableFiniteCoordinateField[HashVector[E],Int,E] = {
+    implicit val _dim = dim.implVDim[E, HashVector[E]]
+    MutableFiniteCoordinateField.make[HashVector[E], Int, E]
   }
 
   import breeze.math.PowImplicits._

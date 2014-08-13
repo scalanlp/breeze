@@ -53,7 +53,7 @@ class SpectralProjectedGradient[T, DF <: DiffFunction[T]](
     import state._
     val funRef = if (fVals.isEmpty) Double.PositiveInfinity else fVals.max
     val t = if (iter == 0) {
-      scala.math.min(1.0, (1.0 / norm(grad, 1)))
+      scala.math.min(1.0, 1.0 / norm(grad))
     } else {
       1.0
     }
