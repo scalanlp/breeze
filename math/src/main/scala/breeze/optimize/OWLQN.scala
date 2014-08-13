@@ -14,7 +14,7 @@ import breeze.math.{MutableVectorRing, MutableVectorField, MutableInnerProductMo
  *
  * @author dlwh
  */
-class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-8)(implicit space: MutableVectorRing[T, Double]) extends LBFGS[T](maxIter, m, tolerance=tolerance) with SerializableLogging {
+class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-8)(implicit space: MutableVectorField[T, Double]) extends LBFGS[T](maxIter, m, tolerance=tolerance) with SerializableLogging {
   require(m > 0)
   require(l1reg >= 0)
 

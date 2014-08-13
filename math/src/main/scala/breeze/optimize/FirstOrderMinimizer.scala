@@ -1,7 +1,7 @@
 package breeze.optimize
 
 import breeze.linalg.norm
-import breeze.math.{MutableVectorRing, MutableVectorField, NormedModule}
+import breeze.math._
 import breeze.optimize.FirstOrderMinimizer.ConvergenceReason
 import breeze.stats.distributions.{RandBasis, ThreadLocalRandomGenerator}
 import breeze.util.Implicits._
@@ -237,7 +237,7 @@ object FirstOrderMinimizer {
       r.iterations(f,init)
     }
 
-    def iterations[T](f: DiffFunction[T], init:T)(implicit space: MutableVectorRing[T, Double]): Iterator[LBFGS[T]#State] = {
+    def iterations[T](f: DiffFunction[T], init:T)(implicit space: MutableVectorField[T, Double]): Iterator[LBFGS[T]#State] = {
        if(useL1) new OWLQN[T](maxIterations, 5, regularization, tolerance)(space).iterations(f,init)
       else (new LBFGS[T](maxIterations, 5, tolerance=tolerance)(space)).iterations(DiffFunction.withL2Regularization(f,regularization),init)
     }

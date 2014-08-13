@@ -1,7 +1,7 @@
 package breeze.optimize
 
 import breeze.linalg.norm
-import breeze.math.{VectorRing, NormedModule, InnerProductVectorSpace}
+import breeze.math.{LebesgueVectorSpace, VectorRing, NormedModule, InnerProductVectorSpace}
 import breeze.linalg.support.CanCopy
 
 /*
@@ -62,7 +62,7 @@ object DiffFunction {
     }
   }
 
-  def withL2Regularization[T, I](d: BatchDiffFunction[T],weight: Double)(implicit space: NormedModule[T, Double]):BatchDiffFunction[T] = new BatchDiffFunction[T] {
+  def withL2Regularization[T, I](d: BatchDiffFunction[T],weight: Double)(implicit space: LebesgueVectorSpace[T, Double]):BatchDiffFunction[T] = new BatchDiffFunction[T] {
     import space._
     override def gradientAt(x:T, batch: IndexedSeq[Int]):T = {
       val grad = d.gradientAt(x, batch)

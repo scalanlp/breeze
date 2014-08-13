@@ -159,6 +159,12 @@ object MutablizingAdaptor {
 
       override implicit def subVS: OpSub.Impl2[Wrapper, S, Wrapper] = liftOp(u.subVS)
 
+      implicit def neg: OpNeg.Impl[Wrapper, Wrapper] = new OpNeg.Impl[Wrapper,Wrapper] {
+        def apply(a: Wrapper) = {
+          a.map(u.neg(_))
+        }
+      }
+
       implicit def setIntoVV: OpSet.InPlaceImpl2[Wrapper, Wrapper] = new OpSet.InPlaceImpl2[Wrapper, Wrapper] {
         def apply(a: Wrapper, b: Wrapper) {
           a.value = b.value
@@ -211,9 +217,9 @@ object MutablizingAdaptor {
       }
 
 
-      implicit def normImplDouble: norm.Impl2[Wrapper, Double, Double] = new norm.Impl2[Wrapper, Double, Double] {
-        def apply(v1: Wrapper, v2: Double): Double = u.normImplDouble(v1.value, v2)
-      }
+//      implicit def normImplDouble: norm.Impl2[Wrapper, Double, Double] = new norm.Impl2[Wrapper, Double, Double] {
+//        def apply(v1: Wrapper, v2: Double): Double = u.normImplDouble(v1.value, v2)
+//      }
 
 //      implicit def iterateValues: CanTraverseValues[Wrapper, S] = new CanTraverseValues[Wrapper,S] {
 //        /** Traverses all values from the given collection. */
@@ -268,6 +274,11 @@ object MutablizingAdaptor {
         }
       }
 
+
+      // Inverse module operator since Fields have multiplicative inverse
+      implicit def neg: OpNeg.Impl[Wrapper, Wrapper] = new OpNeg.Impl[Wrapper, Wrapper] {
+        def apply(a: Wrapper): Wrapper = a.map(u.neg apply)
+      }
 
       implicit def mulIntoVS: OpMulScalar.InPlaceImpl2[Wrapper, S] = liftUpdate(u.mulVS)
 
@@ -450,7 +461,6 @@ object MutablizingAdaptor {
 
       override def close(a: Wrapper, b: Wrapper, tolerance: Double): Boolean = u.close(a.value, b.value, tolerance)
 
-      // default implementations
       implicit def neg: OpNeg.Impl[Wrapper, Wrapper] = new OpNeg.Impl[Wrapper, Wrapper] {
         def apply(a: Wrapper): Wrapper = a.map(u.neg apply)
       }

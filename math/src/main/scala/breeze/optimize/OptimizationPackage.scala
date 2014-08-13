@@ -2,7 +2,7 @@ package breeze.optimize
 
 import breeze.linalg.operators.OpMulMatrix
 import breeze.linalg.support.{CanZipMapValues, CanMapValues, CanTraverseValues}
-import breeze.math.{VectorField, MutableVectorField, MutablizingAdaptor}
+import breeze.math._
 import breeze.optimize.FirstOrderMinimizer.OptParams
 import breeze.util.Implicits._
 
