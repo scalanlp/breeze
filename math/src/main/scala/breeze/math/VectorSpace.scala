@@ -425,10 +425,7 @@ object MutableVectorField {
                  _subVV: OpSub.Impl2[V, V, V],
                  _neg: OpNeg.Impl[V, V],
                  _ops: V <:< NumericOps[V],
-                 _dotVV: OpMulInner.Impl2[V, V, S],
-                 _zipMapVals: CanZipMapValues[V, S, S, V],
-                 _traverseVals: CanTraverseValues[V, S],
-                 _mapVals: CanMapValues[V, S, S, V]
+                 _dotVV: OpMulInner.Impl2[V, V, S]
 //                 _modVV: OpMod.Impl2[V, V, V],
 //                 _modVS: OpMod.Impl2[V, S, V],
 //                 _powVV: OpPow.Impl2[V, V, V],
