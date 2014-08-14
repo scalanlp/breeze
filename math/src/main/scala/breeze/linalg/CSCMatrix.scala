@@ -514,7 +514,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps with Se
     implicit def space[S: Field : ClassTag] = {
       val norms = EntrywiseMatrixNorms.make[CSCMatrix[S], S]
       import norms._
-      MutableRestrictedDomainTensorField.make[CSCMatrix[S], (Int, Int), S]
+      MutableFiniteCoordinateField.make[CSCMatrix[S], (Int, Int), S]
     }
   }
 

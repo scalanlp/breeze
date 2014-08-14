@@ -934,7 +934,7 @@ with MatrixConstructors[DenseMatrix] {
     implicit def space[S:Field:Zero:ClassTag] = {
       val norms = EntrywiseMatrixNorms.make[DenseMatrix[S],S]
       import norms._
-      MutableRestrictedDomainTensorField.make[DenseMatrix[S],(Int,Int),S]
+      MutableFiniteCoordinateField.make[DenseMatrix[S],(Int,Int),S]
     }
   }
 

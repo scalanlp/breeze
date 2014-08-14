@@ -1,7 +1,7 @@
 package breeze.optimize
 
 import breeze.linalg.operators.OpMulMatrix
-import breeze.linalg.support.{CanZipMapValues, CanMapValues, CanTraverseValues}
+import breeze.linalg.support.{CanMapValues, CanTraverseValues, CanZipMapValues}
 import breeze.math._
 import breeze.optimize.FirstOrderMinimizer.OptParams
 import breeze.util.Implicits._
@@ -15,16 +15,16 @@ trait OptimizationPackage[Function, Vector] {
 }
 
 object OptimizationPackage {
-  class FirstOrderOptimizationPackage[DF, Vector]()(implicit space: MutableVectorField[Vector, Double],
+  class FirstOrderOptimizationPackage[DF, Vector]()(implicit space: MutableFiniteCoordinateField[Vector, _, Double],
                                                     df: DF <:< DiffFunction[Vector]) extends OptimizationPackage[DF, Vector] {
     def minimize(fn: DF, init: Vector, options: OptimizationOption*):Vector = {
       options.foldLeft(OptParams())( (a,b) => b apply a).minimize(new CachedDiffFunction(fn)(space.copy), init)
     }
   }
 
-  implicit def firstOrderPackage[DF, Vector](implicit space: MutableVectorField[Vector, Double], df: DF <:< DiffFunction[Vector]) = new FirstOrderOptimizationPackage[DF, Vector]()
+  implicit def firstOrderPackage[DF, Vector](implicit space: MutableFiniteCoordinateField[Vector, _, Double], df: DF <:< DiffFunction[Vector]) = new FirstOrderOptimizationPackage[DF, Vector]()
 
-  class SecondOrderOptimizationPackage[Vector, Hessian]()(implicit space: MutableVectorField[Vector, Double],
+  class SecondOrderOptimizationPackage[Vector, Hessian]()(implicit space: MutableFiniteCoordinateField[Vector, _, Double],
                                                           mult: OpMulMatrix.Impl2[Hessian, Vector, Vector]) extends OptimizationPackage[SecondOrderFunction[Vector, Hessian], Vector] {
     def minimize(fn: SecondOrderFunction[Vector, Hessian], init: Vector, options: OptimizationOption*):Vector = {
       val params = options.foldLeft(OptParams())( (a,b) => b apply a)
@@ -34,30 +34,30 @@ object OptimizationPackage {
     }
   }
 
-  implicit def secondOrderPackage[Vector, Hessian](implicit space: MutableVectorField[Vector, Double],
+  implicit def secondOrderPackage[Vector, Hessian](implicit space: MutableFiniteCoordinateField[Vector, _, Double],
                                                    mult: OpMulMatrix.Impl2[Hessian, Vector, Vector]) = new SecondOrderOptimizationPackage[Vector, Hessian]()
 
-  class FirstOrderStochasticOptimizationPackage[Vector]()(implicit space: MutableVectorField[Vector, Double]) extends OptimizationPackage[StochasticDiffFunction[Vector], Vector] {
+  class FirstOrderStochasticOptimizationPackage[Vector]()(implicit space: MutableFiniteCoordinateField[Vector, _, Double]) extends OptimizationPackage[StochasticDiffFunction[Vector], Vector] {
     def minimize(fn: StochasticDiffFunction[Vector], init: Vector, options: OptimizationOption*):Vector = {
       options.foldLeft(OptParams())( (a,b) => b apply a).iterations(fn, init).last.x
     }
   }
 
-  implicit def firstOrderStochasticPackage[Vector](implicit space: MutableVectorField[Vector, Double]) = new FirstOrderStochasticOptimizationPackage[Vector]()
+  implicit def firstOrderStochasticPackage[Vector](implicit space: MutableFiniteCoordinateField[Vector, _, Double]) = new FirstOrderStochasticOptimizationPackage[Vector]()
 
-  class FirstOrderBatchOptimizationPackage[Vector]()(implicit space: MutableVectorField[Vector, Double]) extends OptimizationPackage[BatchDiffFunction[Vector], Vector] {
+  class FirstOrderBatchOptimizationPackage[Vector]()(implicit space: MutableFiniteCoordinateField[Vector, _, Double]) extends OptimizationPackage[BatchDiffFunction[Vector], Vector] {
     def minimize(fn: BatchDiffFunction[Vector], init: Vector, options: OptimizationOption*):Vector = {
       options.foldLeft(OptParams())( (a,b) => b apply a).iterations(new CachedBatchDiffFunction(fn)(space.copy), init).last.x
     }
   }
 
-  implicit def firstOrderBatchPackage[Vector](implicit space: MutableVectorField[Vector, Double]) = new FirstOrderBatchOptimizationPackage[Vector]()
+  implicit def firstOrderBatchPackage[Vector](implicit space: MutableFiniteCoordinateField[Vector, _, Double]) = new FirstOrderBatchOptimizationPackage[Vector]()
 }
 
 
 trait OptimizationPackageLowPriority {
 
-  class ImmutableFirstOrderOptimizationPackage[DF, Vector]()(implicit space: VectorField[Vector, Double],
+  class ImmutableFirstOrderOptimizationPackage[DF, Vector]()(implicit space: CoordinateField[Vector, Double],
                                                              canIterate: CanTraverseValues[Vector, Double],
                                                              canMap: CanMapValues[Vector, Double, Double, Vector],
                                                              canZipMap: CanZipMapValues[Vector, Double, Double, Vector],
@@ -73,7 +73,7 @@ trait OptimizationPackageLowPriority {
     }
   }
 
-  implicit def imFirstOrderPackage[DF, Vector](implicit space: MutableVectorField[Vector, Double],
+  implicit def imFirstOrderPackage[DF, Vector](implicit space: CoordinateField[Vector, Double],
                                                canIterate: CanTraverseValues[Vector, Double],
                                                canMap: CanMapValues[Vector, Double, Double, Vector],
                                                canZipMap: CanZipMapValues[Vector, Double, Double, Vector],df: DF <:< DiffFunction[Vector])  = new ImmutableFirstOrderOptimizationPackage[DF, Vector]()

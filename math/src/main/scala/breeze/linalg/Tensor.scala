@@ -28,7 +28,7 @@ import breeze.generic.UFunc
  * @tparam K
  * @tparam V
  */
-sealed trait QuasiTensor[@specialized(Int) K, @specialized(Int, Float, Double) V] {
+trait QuasiTensor[@specialized(Int) K, @specialized(Int, Float, Double) V] {
   def apply(i: K):V
   def update(i: K, v: V)
   def keySet: scala.collection.Set[K]

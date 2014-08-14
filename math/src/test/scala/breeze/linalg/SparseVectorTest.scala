@@ -312,7 +312,7 @@ class SparseVectorTest extends FunSuite {
  */
 @RunWith(classOf[JUnitRunner])
 class SparseVectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[SparseVector[Double], Int] {
- val space: MutableTensorField[SparseVector[Double], Int, Double] = SparseVector.space[Double]
+ val space = SparseVector.space[Double]
 
   val N = 30
   implicit def genTriple: Arbitrary[(SparseVector[Double], SparseVector[Double], SparseVector[Double])] = {
@@ -340,7 +340,7 @@ class SparseVectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[SparseV
  */
 @RunWith(classOf[JUnitRunner])
 class SparseVectorOps_FloatTest extends TensorSpaceTestBase[SparseVector[Float], Int, Float] {
- val space: MutableTensorField[SparseVector[Float], Int, Float] = SparseVector.space[Float]
+ val space = SparseVector.space[Float]
 
   override val TOL: Double = 1E-2
   val N = 30
@@ -369,7 +369,7 @@ class SparseVectorOps_FloatTest extends TensorSpaceTestBase[SparseVector[Float],
  */
 @RunWith(classOf[JUnitRunner])
 class SparseVectorOps_IntTest extends TensorSpaceTestBase[SparseVector[Int], Int, Int] {
- val space: MutableTensorField[SparseVector[Int], Int, Int] = SparseVector.space[Int]
+ val space = SparseVector.space[Int]
 
   val N = 100
   implicit def genTriple: Arbitrary[(SparseVector[Int], SparseVector[Int], SparseVector[Int])] = {

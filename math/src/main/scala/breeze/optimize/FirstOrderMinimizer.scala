@@ -1,7 +1,7 @@
 package breeze.optimize
 
 import breeze.linalg.norm
-import breeze.math._
+import breeze.math.{MutableCoordinateField, MutableFiniteCoordinateField, NormedModule}
 import breeze.optimize.FirstOrderMinimizer.ConvergenceReason
 import breeze.stats.distributions.{RandBasis, ThreadLocalRandomGenerator}
 import breeze.util.Implicits._
@@ -210,15 +210,15 @@ object FirstOrderMinimizer {
                        randomSeed: Int = 0) {
     private implicit val random = new RandBasis(new ThreadLocalRandomGenerator(new MersenneTwister(randomSeed)))
 
-    def minimize[T](f: BatchDiffFunction[T], init: T)(implicit space: MutableVectorField[T, Double]): T = {
+    def minimize[T](f: BatchDiffFunction[T], init: T)(implicit space: MutableFiniteCoordinateField[T, _, Double]): T = {
       this.iterations(f, init).last.x
     }
 
-    def minimize[T](f: DiffFunction[T], init: T)(implicit space: MutableVectorField[T, Double]): T = {
+    def minimize[T](f: DiffFunction[T], init: T)(implicit space: MutableCoordinateField[T, Double]): T = {
       this.iterations(f, init).last.x
     }
 
-    def iterations[T](f: BatchDiffFunction[T], init: T)(implicit space: MutableVectorField[T, Double]): Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State] = {
+    def iterations[T](f: BatchDiffFunction[T], init: T)(implicit space: MutableFiniteCoordinateField[T, _, Double]): Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State] = {
       val it = if(useStochastic) {
          this.iterations(f.withRandomBatches(batchSize), init)(space)
       } else {
@@ -228,7 +228,7 @@ object FirstOrderMinimizer {
       it.asInstanceOf[Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State]]
     }
 
-    def iterations[T](f: StochasticDiffFunction[T], init:T)(implicit space: MutableVectorField[T, Double]):Iterator[FirstOrderMinimizer[T, StochasticDiffFunction[T]]#State] = {
+    def iterations[T](f: StochasticDiffFunction[T], init:T)(implicit space: MutableFiniteCoordinateField[T, _, Double]):Iterator[FirstOrderMinimizer[T, StochasticDiffFunction[T]]#State] = {
       val r = if(useL1) {
         new AdaptiveGradientDescent.L1Regularization[T](regularization, eta=alpha, maxIter = maxIterations)(space, random)
       } else { // L2
@@ -237,7 +237,7 @@ object FirstOrderMinimizer {
       r.iterations(f,init)
     }
 
-    def iterations[T](f: DiffFunction[T], init:T)(implicit space: MutableVectorField[T, Double]): Iterator[LBFGS[T]#State] = {
+    def iterations[T](f: DiffFunction[T], init:T)(implicit space: MutableCoordinateField[T, Double]): Iterator[LBFGS[T]#State] = {
        if(useL1) new OWLQN[T](maxIterations, 5, regularization, tolerance)(space).iterations(f,init)
       else (new LBFGS[T](maxIterations, 5, tolerance=tolerance)(space)).iterations(DiffFunction.withL2Regularization(f,regularization),init)
     }
