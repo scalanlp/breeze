@@ -34,7 +34,7 @@ trait Ring[@specialized(Int,Short,Long,Float,Double) V] extends Semiring[V]  {
 
 object Ring {
   import Field._
-  implicit val ringD: Ring[Double] = fieldD
+  implicit val ringD: Ring[Double] = fieldDouble
   implicit val ringFloat: Ring[Float] = fieldFloat
   implicit val ringInt: Ring[Int] = fieldInt
   implicit val ringLong: Ring[Long] = fieldLong

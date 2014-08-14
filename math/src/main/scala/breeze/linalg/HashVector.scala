@@ -7,7 +7,7 @@ import support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 import breeze.collection.mutable.OpenAddressHashArray
 import breeze.storage.Zero
 import breeze.macros.expand
-import breeze.math.{MutableTensorField, MutableVectorField, Field}
+import breeze.math._
 
 import scala.{specialized=>spec}
 import scala.reflect.ClassTag
@@ -212,8 +212,13 @@ object HashVector extends HashVectorOps
     }
   }
 
-  implicit def space[E:Field:ClassTag:Zero]: MutableTensorField[HashVector[E],Int,E] = {
-    MutableTensorField.make[HashVector[E], Int, E]
+  implicit def canTabulate[E:ClassTag:Zero]: CanTabulate[Int, HashVector[E], E] = new CanTabulate[Int,HashVector[E],E] {
+    def apply(d: Int, f: (Int) => E): HashVector[E] = tabulate[E](d)(f)
+  }
+
+  implicit def space[E:Field:ClassTag:Zero]: MutableFiniteCoordinateField[HashVector[E],Int,E] = {
+    implicit val _dim = dim.implVDim[E, HashVector[E]]
+    MutableFiniteCoordinateField.make[HashVector[E], Int, E]
   }
 
   import breeze.math.PowImplicits._

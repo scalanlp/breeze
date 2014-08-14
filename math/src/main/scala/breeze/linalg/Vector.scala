@@ -262,10 +262,11 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
 
 
 
-  implicit def space[V:Field:Zero:ClassTag] = {
+  implicit def space[V:Field:Zero:ClassTag]: MutableFiniteCoordinateField[Vector[V], Int, V] = {
     val f = implicitly[Field[V]]
     import f.normImpl
-    MutableTensorField.make[Vector[V], Int, V]
+    implicit val _dim = dim.implVDim[V, Vector[V]]
+    MutableFiniteCoordinateField.make[Vector[V], Int, V]
   }
 }
 
@@ -291,22 +292,31 @@ trait VectorOps { this: Vector.type =>
     }
   }
 
-  @expand
-  implicit def v_v_Idempotent_Op[T:Ring, @expand.args(OpAdd, OpSub) Op <: OpType]
-  (implicit @expand.sequence[Op]({r.+(_,_)}, {r.-(_,_)})
-  op: Op.Impl2[T, T, T]):BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]] = new BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]] {
+  implicit def v_v_Idempotent_OpSub[T:Ring]:OpSub.Impl2[Vector[T], Vector[T], Vector[T]] =
+    new OpSub.Impl2[Vector[T], Vector[T], Vector[T]] {
     val r = implicitly[Ring[T]]
-    override def bindingMissing(a: Vector[T], b: Vector[T]): Vector[T] = {
+    def apply(a: Vector[T], b: Vector[T]): Vector[T] = {
       require(b.length == a.length, "Vectors must be the same length!")
       val result = a.copy
       for((k,v) <- b.activeIterator) {
-        result(k) = op(a(k), v)
+        result(k) = r.-(a(k), v)
       }
       result
     }
   }
 
-
+  implicit def v_v_Idempotent_OpAdd[T:Semiring]:OpAdd.Impl2[Vector[T], Vector[T], Vector[T]] =
+    new OpAdd.Impl2[Vector[T], Vector[T], Vector[T]] {
+    val r = implicitly[Semiring[T]]
+    def apply(a: Vector[T], b: Vector[T]): Vector[T] = {
+      require(b.length == a.length, "Vectors must be the same length!")
+      val result = a.copy
+      for((k,v) <- b.activeIterator) {
+        result(k) = r.+(a(k), v)
+      }
+      result
+    }
+  }
 
   @expand
   @expand.valify

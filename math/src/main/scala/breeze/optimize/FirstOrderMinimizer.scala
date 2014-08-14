@@ -1,7 +1,8 @@
 package breeze.optimize
 
 import breeze.linalg.norm
-import breeze.math.{MutableVectorRing, MutableVectorField, NormedModule}
+import breeze.math.{MutableCoordinateField, MutableFiniteCoordinateField, NormedModule}
+import breeze.optimize.FirstOrderMinimizer.ConvergenceReason
 import breeze.stats.distributions.{RandBasis, ThreadLocalRandomGenerator}
 import breeze.util.Implicits._
 import breeze.util.SerializableLogging
@@ -18,7 +19,29 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](maxIter: In
                                                                      val minImprovementWindow: Int = 10,
                                                                      val numberOfImprovementFailures: Int = 1)(implicit space: NormedModule[T, Double]) extends Minimizer[T,DF] with SerializableLogging {
 
+  import space.normImpl
+
+  /**
+    * Any history the derived minimization function needs to do its updates. typically an approximation
+   * to the second derivative/hessian matrix.
+    */
   type History
+
+  /**
+   * Tracks the information about the optimizer, including the current point, its value, gradient, and then any history.
+   * Also includes information for checking convergence.
+   * @param x the current point being considered
+   * @param value f(x)
+   * @param grad f.gradientAt(x)
+   * @param adjustedValue  f(x) + r(x), where r is any regularization added to the objective. For LBFGS, this is f(x).
+   * @param adjustedGradient f'(x) + r'(x), where r is any regularization added to the objective. For LBFGS, this is f'(x).
+   * @param iter what iteration number we are on.
+   * @param initialAdjVal f(x_0) + r(x_0), used for checking convergence
+   * @param history any information needed by the optimizer to do updates.
+   * @param fVals the sequence of the last minImprovementWindow values, used for checking if the "value" isn't improving
+   * @param numImprovementFailures the number of times in a row the objective hasn't improved, mostly for SGD
+   * @param searchFailed did the line search fail?
+   */
   case class State(x: T,
                    value: Double, grad: T,
                    adjustedValue: Double, adjustedGradient: T,
@@ -28,9 +51,35 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](maxIter: In
                    fVals: IndexedSeq[Double] = Vector(Double.PositiveInfinity),
                    numImprovementFailures: Int = 0,
                    searchFailed: Boolean = false) {
+
+    def convergedReason:Option[ConvergenceReason] = {
+      if (iter >= maxIter && maxIter >= 0)
+        Some(FirstOrderMinimizer.MaxIterations)
+      else if (!fVals.isEmpty && (adjustedValue - fVals.max).abs <= tolerance * initialAdjVal)
+        Some(FirstOrderMinimizer.FunctionValuesConverged)
+      else if (numImprovementFailures >= numberOfImprovementFailures)
+        Some(FirstOrderMinimizer.ObjectiveNotImproving)
+      else if (norm(adjustedGradient) <= math.max(tolerance * adjustedValue.abs, 1E-8))
+        Some(FirstOrderMinimizer.GradientConverged)
+      else if (searchFailed)
+        Some(FirstOrderMinimizer.SearchFailed)
+      else
+        None
+    }
+
+    /** True if the optimizer thinks it's done. */
+    def converged = convergedReason.nonEmpty
+
+    /**
+     * true if the function value hasn't changed for several iterations or if the gradient's norm is near 0
+     * @return
+     */
+    def actuallyConverged = (
+      convergedReason == Some(FirstOrderMinimizer.FunctionValuesConverged)
+      || convergedReason == Some(FirstOrderMinimizer.GradientConverged)
+    )
   }
 
-  import space.normImpl
 
   protected def initialHistory(f: DF, init: T): History
   protected def adjustFunction(f: DF): DF = f
@@ -88,21 +137,18 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](maxIter: In
           logger.error("Failure again! Giving up and returning. Maybe the objective is just poorly behaved?")
           state.copy(searchFailed = true)
       }
-    }.takeUpToWhere(iteratingShouldStop)
+    }.takeUpToWhere(_.converged)
     it: Iterator[State]
-  }
-  def iteratingShouldStop(state: State) = {
-    ((state.iter >= maxIter && maxIter >= 0)
-      || (!state.fVals.isEmpty && (state.adjustedValue - state.fVals.max).abs <= tolerance)
-      || (state.numImprovementFailures >= numberOfImprovementFailures)
-      || (norm(state.adjustedGradient) <= math.max(tolerance * state.adjustedValue.abs,1E-8))
-      || state.searchFailed)
   }
 
   def minimize(f: DF, init: T): T = {
-    iterations(f, init).last.x
+    minimizeAndReturnState(f, init).x
   }
 
+
+  def minimizeAndReturnState(f: DF, init: T):State = {
+    iterations(f, init).last
+  }
 }
 
 sealed class FirstOrderException(msg: String="") extends RuntimeException(msg)
@@ -112,6 +158,28 @@ class StepSizeOverflow extends FirstOrderException
 class LineSearchFailed(gradNorm: Double, dirNorm: Double) extends FirstOrderException("Grad norm: %.4f Dir Norm: %.4f".format(gradNorm, dirNorm))
 
 object FirstOrderMinimizer {
+
+
+  sealed trait ConvergenceReason {
+    def reason: String
+  }
+  case object MaxIterations extends ConvergenceReason {
+    override def reason: String = "max iterations reached"
+  }
+  case object FunctionValuesConverged extends ConvergenceReason {
+    override def reason: String = "function values converged"
+  }
+  case object GradientConverged extends ConvergenceReason {
+    override def reason: String = "gradient converged"
+  }
+  case object SearchFailed extends ConvergenceReason {
+    override def reason: String = "line search failed!"
+  }
+  case object ObjectiveNotImproving extends ConvergenceReason {
+    override def reason: String = "objective is not improving"
+  }
+
+
 
   /**
    * OptParams is a Configuration-compatible case class that can be used to select optimization
@@ -142,15 +210,15 @@ object FirstOrderMinimizer {
                        randomSeed: Int = 0) {
     private implicit val random = new RandBasis(new ThreadLocalRandomGenerator(new MersenneTwister(randomSeed)))
 
-    def minimize[T](f: BatchDiffFunction[T], init: T)(implicit space: MutableVectorField[T, Double]): T = {
+    def minimize[T](f: BatchDiffFunction[T], init: T)(implicit space: MutableFiniteCoordinateField[T, _, Double]): T = {
       this.iterations(f, init).last.x
     }
 
-    def minimize[T](f: DiffFunction[T], init: T)(implicit space: MutableVectorField[T, Double]): T = {
+    def minimize[T](f: DiffFunction[T], init: T)(implicit space: MutableCoordinateField[T, Double]): T = {
       this.iterations(f, init).last.x
     }
 
-    def iterations[T](f: BatchDiffFunction[T], init: T)(implicit space: MutableVectorField[T, Double]): Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State] = {
+    def iterations[T](f: BatchDiffFunction[T], init: T)(implicit space: MutableFiniteCoordinateField[T, _, Double]): Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State] = {
       val it = if(useStochastic) {
          this.iterations(f.withRandomBatches(batchSize), init)(space)
       } else {
@@ -160,7 +228,7 @@ object FirstOrderMinimizer {
       it.asInstanceOf[Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State]]
     }
 
-    def iterations[T](f: StochasticDiffFunction[T], init:T)(implicit space: MutableVectorField[T, Double]):Iterator[FirstOrderMinimizer[T, StochasticDiffFunction[T]]#State] = {
+    def iterations[T](f: StochasticDiffFunction[T], init:T)(implicit space: MutableFiniteCoordinateField[T, _, Double]):Iterator[FirstOrderMinimizer[T, StochasticDiffFunction[T]]#State] = {
       val r = if(useL1) {
         new AdaptiveGradientDescent.L1Regularization[T](regularization, eta=alpha, maxIter = maxIterations)(space, random)
       } else { // L2
@@ -169,7 +237,7 @@ object FirstOrderMinimizer {
       r.iterations(f,init)
     }
 
-    def iterations[T](f: DiffFunction[T], init:T)(implicit space: MutableVectorRing[T, Double]): Iterator[LBFGS[T]#State] = {
+    def iterations[T](f: DiffFunction[T], init:T)(implicit space: MutableCoordinateField[T, Double]): Iterator[LBFGS[T]#State] = {
        if(useL1) new OWLQN[T](maxIterations, 5, regularization, tolerance)(space).iterations(f,init)
       else (new LBFGS[T](maxIterations, 5, tolerance=tolerance)(space)).iterations(DiffFunction.withL2Regularization(f,regularization),init)
     }

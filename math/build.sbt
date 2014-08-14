@@ -43,7 +43,7 @@ pomExtra := (
     </developer>
   </developers>)
 
-scalacOptions ++= Seq("-deprecation","-language:_")
+scalacOptions ++= Seq("-deprecation","-language:_")//, "-no-specialization")
 
 // scalacOptions in (Compile, console) += "-Xlog-implicits"
 
@@ -98,3 +98,8 @@ resolvers ++= Seq(
 
 testOptions in Test += Tests.Argument("-oDF")
 
+fork in Test := true
+
+javaOptions := Seq("-Xmx4g")
+
+jacoco.settings

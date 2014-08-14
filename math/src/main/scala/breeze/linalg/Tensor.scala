@@ -29,7 +29,7 @@ import scala.reflect.ClassTag
  * @tparam K
  * @tparam V
  */
-sealed trait QuasiTensor[@spec(Int) K, @spec(Double, Int, Float, Long) V] {
+trait QuasiTensor[@spec(Int) K, @spec(Double, Int, Float, Long) V] {
   def apply(i: K): V
   def update(i: K, v: V): Unit
   def keySet: scala.collection.Set[K]

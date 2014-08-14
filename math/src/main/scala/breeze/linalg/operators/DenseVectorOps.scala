@@ -14,7 +14,6 @@ import scala.reflect.ClassTag
 
 trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 
-
   @expand
   @expand.valify
   implicit def dv_v_Op[@expand.args(Int, Double, Float, Long) T,
@@ -78,9 +77,6 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
     implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
   }
 
-
-
-
   @expand
   @expand.valify
   implicit def dv_s_Op[@expand.args(Int, Double, Float, Long) T,
@@ -103,8 +99,6 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
     }
     implicitly[BinaryRegistry[Vector[T], T, Op.type, Vector[T]]].register(this)
   }
-
-
 
   @expand
   @expand.valify
@@ -180,8 +174,6 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
       implicitly[BinaryUpdateRegistry[Vector[T], T, Op.type]].register(this)
     }
   }
-
-
 
   @expand
   @expand.valify

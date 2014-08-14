@@ -8,7 +8,6 @@ import spire.syntax.cfor._
  * method for representing scaleAdd(y, a, x) == y + a * x
  *
  * This method is designed to eventually replace [[breeze.linalg.axpy]]
- *
  * @author dlwh
  **/
 object scaleAdd extends UFunc {

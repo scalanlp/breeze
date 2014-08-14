@@ -542,13 +542,13 @@ with MatrixConstructors[DenseMatrix] {
     new CanMapValues[DenseMatrix[V],V,R,DenseMatrix[R]] {
       private def simpleMap(from : DenseMatrix[V], fn : (V=>R), isTranspose: Boolean): DenseMatrix[R] = {
         val data = new Array[R](from.size)
-        var i=from.offset
-        val iMax = data.size + from.offset
+        var i= 0
+        val iMax = data.size
         while (i < iMax) {
-          data(i) = fn(from.data(i))
+          data(i) = fn(from.data(i + from.offset))
           i += 1
         }
-        return new DenseMatrix[R](from.rows, from.cols, data, 0, if (isTranspose) { from.cols } else { from.rows }, isTranspose)
+        new DenseMatrix[R](from.rows, from.cols, data, 0, if (isTranspose) { from.cols } else { from.rows }, isTranspose)
       }
 
       private def generalMap(from : DenseMatrix[V], fn : (V=>R)): DenseMatrix[R] = {
@@ -862,7 +862,6 @@ with MatrixConstructors[DenseMatrix] {
   /**
    * iterates over each column
    * @tparam V
-   * @tparam R
    * @return
    */
   implicit def canIterateRows[V:ClassTag:Zero] = new CanIterateAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]] {
@@ -939,9 +938,9 @@ with MatrixConstructors[DenseMatrix] {
   object FrobeniusInnerProductDenseMatrixSpace {
 
     implicit def space[S:Field:Zero:ClassTag] = {
-      val norms = FrobeniusMatrixInnerProductNorms.makeMatrixNorms[DenseMatrix[S],S]
+      val norms = EntrywiseMatrixNorms.make[DenseMatrix[S],S]
       import norms._
-      MutableRestrictedDomainTensorField.make[DenseMatrix[S],(Int,Int),S]
+      MutableFiniteCoordinateField.make[DenseMatrix[S],(Int,Int),S]
     }
   }
 

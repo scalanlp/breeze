@@ -15,10 +15,8 @@ package breeze.math
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import org.scalatest.FunSuite
-import org.scalatest.prop.Checkers
-import org.scalacheck.{Prop, Arbitrary}
 import breeze.linalg.norm
+import org.scalacheck.Prop
 
 /**
  *
@@ -26,7 +24,7 @@ import breeze.linalg.norm
  */
 
 trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
-  implicit val space: MutableTensorField[V, I, S]
+  implicit val space: MutableEnumeratedCoordinateField[V, I, S]
 
   import space._
 
@@ -80,16 +78,6 @@ trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
 
   }
 
-  test("op set of scalars works") {
-    check(Prop.forAll{ (trip: (V, V, V), s: S) =>
-      val (a, b, _) = trip
-      val ab = copy(a)
-      ab := s
-      a + s == (a + ab)
-    })
-  }
-
-
   test("Elementwise mult of vectors distributes over vector addition") {
     check(Prop.forAll{ (trip: (V, V, V)) =>
       val (a, b, c) = trip
@@ -124,7 +112,6 @@ trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
       close(ab, ba, TOL)
     })
   }
-
 }
 
 trait DoubleValuedTensorSpaceTestBase[V <: breeze.linalg.Vector[Double], I] extends TensorSpaceTestBase[V, I, Double] {
@@ -139,8 +126,6 @@ trait DoubleValuedTensorSpaceTestBase[V <: breeze.linalg.Vector[Double], I] exte
       val v = breeze.linalg.norm(normalized, nn)
       (v - 1.0).abs <= TOL || norm(normalized) == 0.0
     })
-
-
   }
 
 }

@@ -279,5 +279,12 @@ package object linalg {
 
   /** Alias for randomDouble */
   val rand: randomDouble.type = randomDouble
+
+
+  /**
+   * val to determine if breeze is using natives or f2jblas
+   */
+  lazy val usingNatives = com.github.fommil.netlib.BLAS.getInstance.getClass.getName != "com.github.fommil.netlib.F2jBLAS"
+
 }
 

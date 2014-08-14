@@ -1,9 +1,7 @@
 package breeze.generic
 
+import breeze.linalg.Axis
 import breeze.linalg.support._
-import breeze.linalg.{BroadcastedColumns, Axis}
-import breeze.generic.UFunc.{InPlaceImpl2, UImpl2}
-import scala.annotation.implicitNotFound
 
 /*
  Copyright 2012 David Hall
@@ -135,12 +133,12 @@ trait UFuncZ { this: UFunc =>
 
 object UFunc {
 //  @implicitNotFound("Could not find an implicit implementation for ${Tag} with arguments ${V}")
-  trait UImpl[Tag, @specialized(Int, Double, Float) V, @specialized(Int, Double, Float) +VR] {
+  trait UImpl[Tag, @specialized(Int, Double, Float) V, @specialized(Int, Double, Float) +VR] extends Serializable {
     def apply(v: V):VR
   }
 
 //  @implicitNotFound("Could not find an implicit implementation for ${Tag} with arguments ${V1}, ${V2}")
-  trait UImpl2[Tag, @specialized(Int, Double, Float) V1, @specialized(Int, Double, Float) V2, @specialized(Int, Double, Float) +VR] {
+  trait UImpl2[Tag, @specialized(Int, Double, Float) V1, @specialized(Int, Double, Float) V2, @specialized(Int, Double, Float) +VR] extends Serializable {
     def apply(v: V1, v2: V2):VR
   }
 
@@ -148,7 +146,7 @@ object UFunc {
   trait UImpl3[Tag, @specialized(Int, Double, Float) V1,
                     @specialized(Int, Double, Float) V2,
                     @specialized(Int, Double, Float) V3,
-                    @specialized(Int, Double, Float) +VR] {
+                    @specialized(Int, Double, Float) +VR] extends Serializable {
     def apply(v: V1, v2: V2, v3: V3):VR
   }
 
@@ -157,22 +155,22 @@ object UFunc {
                     @specialized(Int, Double, Float) V2,
                     @specialized(Int, Double, Float) V3,
                     @specialized(Int, Double, Float) V4,
-                    @specialized(Int, Double, Float) +VR] {
+                    @specialized(Int, Double, Float) +VR] extends Serializable {
     def apply(v: V1, v2: V2, v3: V3, v4: V4):VR
   }
 
 //  @implicitNotFound("Could not find an implicit inplace implementation for ${Tag} with arguments ${V}")
-  trait InPlaceImpl[Tag, V] {
+  trait InPlaceImpl[Tag, V] extends Serializable {
     def apply(v: V)
   }
 
 //  @implicitNotFound("Could not find an implicit inplace implementation for ${Tag} with arguments ${V}, ${V2}")
-  trait InPlaceImpl2[Tag, V,  @specialized(Int, Double, Float) V2] {
+  trait InPlaceImpl2[Tag, V,  @specialized(Int, Double, Float) V2] extends Serializable {
     def apply(v: V, v2: V2)
   }
 
 //  @implicitNotFound("Could not find an implicit inplace implementation for ${Tag} with arguments ${V}, ${V2}, ${V3}")
-  trait InPlaceImpl3[Tag, V, V2, V3] {
+  trait InPlaceImpl3[Tag, V, V2, V3] extends Serializable {
     def apply(v: V, v2: V2, v3: V3)
   }
 
