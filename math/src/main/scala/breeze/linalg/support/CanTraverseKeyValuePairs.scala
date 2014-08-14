@@ -54,7 +54,7 @@ object CanTraverseKeyValuePairs {
   // Arrays
   //
 
-  class OpArray[@specialized(Int, Float, Double) A]
+  class OpArray[@specialized(Double, Int, Float, Long) A]
     extends CanTraverseKeyValuePairs[Array[A], Int, A] {
     /** Traverses all values from the given collection. */
     def traverse(from: Array[A], fn: KeyValuePairsVisitor[Int, A]): Unit = {

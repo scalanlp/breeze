@@ -3,7 +3,7 @@ package breeze.optimize
 import breeze.util._
 import breeze.linalg._
 import breeze.numerics._
-import breeze.math.{MutableVectorRing, MutableVectorField, MutableInnerProductModule}
+import breeze.math._
 
 
 /**
@@ -14,7 +14,7 @@ import breeze.math.{MutableVectorRing, MutableVectorField, MutableInnerProductMo
  *
  * @author dlwh
  */
-class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-8)(implicit space: MutableVectorRing[T, Double]) extends LBFGS[T](maxIter, m, tolerance=tolerance) with SerializableLogging {
+class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-8)(implicit space: MutableCoordinateField[T, Double]) extends LBFGS[T](maxIter, m, tolerance=tolerance) with SerializableLogging {
   require(m > 0)
   require(l1reg >= 0)
 
@@ -80,7 +80,7 @@ class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-
   }
 
   // Adds in the regularization stuff to the gradient
-  override protected def adjust(newX: T, newGrad: T, newVal: Double) = {
+  override protected def adjust(newX: T, newGrad: T, newVal: Double): (Double, T) = {
     val res = space.zipMapValues.map(newX, newGrad, {case (xv, v) =>
       xv match {
         case 0.0 => {
@@ -92,7 +92,7 @@ class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-
         case _ => v + math.signum(xv) * l1reg
       }
     })
-    val adjValue = newVal + l1reg * norm(newX, 1)
+    val adjValue = newVal + l1reg * norm(newX, 1.0)
     adjValue -> res
   }
 

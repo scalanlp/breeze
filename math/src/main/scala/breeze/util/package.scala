@@ -15,14 +15,21 @@ package object util {
   /**
    * Deserializes an object using java serialization
    */
-  def readObject[T](loc: File) = {
-    val stream = new BufferedInputStream(new GZIPInputStream(new FileInputStream(loc)))
-    val oin = nonstupidObjectInputStream(stream)
-    val result = oin.readObject().asInstanceOf[T]
-    oin.close()
-    result
-  }
+  def readObject[T](loc: File): T = readObject(loc, false)
 
+
+  /**
+   * Deserializes an object using java serialization
+   */
+  def readObject[T](loc: File, ignoreSerialVersionUID: Boolean) = {
+    val stream = new BufferedInputStream(new GZIPInputStream(new FileInputStream(loc)))
+    val oin = nonstupidObjectInputStream(stream, ignoreSerialVersionUID)
+    try {
+      oin.readObject().asInstanceOf[T]
+    } finally {
+      oin.close()
+    }
+  }
   /**
    * For reasons that are best described as asinine, ObjectInputStream does not take into account
    * Thread.currentThread.getContextClassLoader. This fixes that.

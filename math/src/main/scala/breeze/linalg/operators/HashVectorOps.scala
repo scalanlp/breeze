@@ -1,13 +1,15 @@
 package breeze.linalg.operators
 
+import breeze.linalg._
+import breeze.linalg.support.{CanZipMapValues, CanCopy}
+import breeze.generic.{UFunc}
+import breeze.generic.UFunc.{UImpl, UImpl2}
 import breeze.macros.expand
 import breeze.math.{Field, Ring, Semiring}
-import breeze.linalg._
-import breeze.generic.{UFunc}
-import breeze.linalg.support.{CanZipMapValues, CanCopy}
-import breeze.generic.UFunc.{UImpl, UImpl2}
-import scala.reflect.ClassTag
 import breeze.storage.Zero
+
+import scala.{specialized=>spec}
+import scala.reflect.ClassTag
 
 trait DenseVector_HashVector_Ops { this: HashVector.type =>
   import breeze.math.PowImplicits._
@@ -589,10 +591,12 @@ trait HashVector_GenericOps { this: HashVector.type =>
     }
   }
 
-  class CanZipMapValuesHashVector[@specialized(Int, Double, Float) V, @specialized(Int, Double) RV:ClassTag:Zero] extends CanZipMapValues[HashVector[V],V,RV,HashVector[RV]] {
+  class CanZipMapValuesHashVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag:Zero]
+    extends CanZipMapValues[HashVector[V],V,RV,HashVector[RV]] {
+
     def create(length : Int) = zeros(length)
 
-    /**Maps all corresponding values from the two collection. */
+    /**Maps all corresponding values from the two collections. */
     def map(from: HashVector[V], from2: HashVector[V], fn: (V, V) => RV) = {
       require(from.length == from2.length, "Vector lengths must match!")
       val result = create(from.length)

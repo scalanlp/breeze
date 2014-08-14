@@ -194,9 +194,7 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
       val aHV = a.toHashVector
       implicit val hvSpace:MutableVectorField[HashVector[T],T] = HashVector.space[T]
       import hvSpace._
-      val diff: Double = (a.toHashVector - b.toHashVector).norm(2)
-      if(diff > tolerance)
-        println((a,b,a.toHashVector, b.toHashVector,diff))
+      val diff: Double = norm(a.toHashVector - b.toHashVector)
       diff < tolerance
     })
   }

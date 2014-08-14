@@ -16,11 +16,12 @@ package breeze.linalg
  limitations under the License.
 */
 
-import breeze.linalg.operators._
-import breeze.linalg.support.{CanTranspose, CanSlice2}
-import breeze.storage.Zero
-import scala.reflect.ClassTag
+import operators._
+import support.{CanTranspose, CanSlice2}
 import breeze.generic.UFunc
+import breeze.storage.Zero
+
+import scala.reflect.ClassTag
 
 /**
  * In some sense, this is the real root of the linalg hierarchy. It provides
@@ -158,11 +159,13 @@ trait NumericOps[+This] {
     this.:/=[TT, B](b)
 
   /** Represents the "natural" norm of this vector, for types that don't support arbitrary norms */
+  @deprecated("Use norm(XXX) instead of XXX.norm", "0.9")
   final def norm[TT >: This, R]()(implicit op: breeze.linalg.norm.Impl[TT, R]): R = {
     op(repr)
   }
 
   /** Represents the norm of this vector */
+  @deprecated("Use norm(XXX) instead of XXX.norm", "0.9")
   final def norm[TT >: This, B, R](b: B)(implicit op: breeze.linalg.norm.Impl2[TT, B, R]): R = {
     op(repr, b)
   }

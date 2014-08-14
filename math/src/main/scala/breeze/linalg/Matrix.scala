@@ -15,19 +15,13 @@ package breeze.linalg
  limitations under the License.
 */
 
-import breeze.linalg.support.CanTraverseValues.ValuesVisitor
-import breeze.numerics._
-
 import scala.{specialized=>spec}
-import breeze.storage.{Zero, Storage}
+import breeze.storage.Zero
 import breeze.util.Terminal
 import breeze.linalg.support._
-import util.Random
 import breeze.math._
 import breeze.linalg.operators._
 import scala.reflect.ClassTag
-import breeze.macros.expand
-import scala.math.BigInt
 import scala.annotation.unchecked.uncheckedVariance
 import breeze.stats.distributions.Rand
 
@@ -35,20 +29,20 @@ import breeze.stats.distributions.Rand
  *
  * @author dlwh
  */
-trait MatrixLike[@spec(Int, Float, Double) E, +Self  <: Matrix[E]] extends Tensor[(Int, Int), E] with TensorLike[(Int, Int), E, Self] {
-  def map[E2, That](fn: E=>E2)(implicit canMapValues: CanMapValues[Self @uncheckedVariance , E, E2, That]):That = values map fn
+trait MatrixLike[@spec(Double, Int, Float, Long) V, +Self  <: Matrix[V]] extends Tensor[(Int, Int), V] with TensorLike[(Int, Int), V, Self] {
+  def map[V2, That](fn: V=>V2)(implicit canMapValues: CanMapValues[Self @uncheckedVariance , V, V2, That]):That = values map fn
 
 }
 
-trait Matrix[@spec(Int, Float, Double) E] extends MatrixLike[E, Matrix[E]] {
+trait Matrix[@spec(Double, Int, Float, Long) V] extends MatrixLike[V, Matrix[V]] {
 
   final def apply(i: (Int, Int)) = apply(i._1, i._2)
-  final def update(i: (Int, Int), e: E) {
+  final def update(i: (Int, Int), e: V): Unit = {
     update(i._1, i._2, e)
   }
 
-  def apply(i: Int, j: Int):E
-  def update(i: Int, j: Int, e: E)
+  def apply(i: Int, j: Int): V
+  def update(i: Int, j: Int, e: V): Unit
 
   def size = rows * cols
   def rows: Int
@@ -126,13 +120,13 @@ trait Matrix[@spec(Int, Float, Double) E] extends MatrixLike[E, Matrix[E]] {
 
   override def toString : String = toString(Terminal.terminalHeight, Terminal.terminalWidth)
 
-  def toDenseMatrix(implicit cm: ClassTag[E], zero: Zero[E]) = {
+  def toDenseMatrix(implicit cm: ClassTag[V], zero: Zero[V]) = {
     DenseMatrix.tabulate(rows, cols){ (i,j) => apply(i, j)}
   }
 
-  def copy:Matrix[E]
+  def copy: Matrix[V]
 
-  def flatten(view: View=View.Prefer): Vector[E]
+  def flatten(view: View=View.Prefer): Vector[V]
 
 }
 
@@ -142,9 +136,9 @@ object Matrix extends MatrixConstructors[Matrix]
                       with MatrixOps
                       with MatrixMultOps {
 
-  def zeros[@specialized(Int, Float, Double) V: ClassTag:Zero](rows: Int, cols: Int): Matrix[V] = DenseMatrix.zeros(rows, cols)
+  def zeros[@spec(Double, Int, Float, Long) V: ClassTag:Zero](rows: Int, cols: Int): Matrix[V] = DenseMatrix.zeros(rows, cols)
 
-  def create[@specialized(Int, Float, Double) V:Zero](rows: Int, cols: Int, data: Array[V]): Matrix[V] = DenseMatrix.create(rows, cols, data)
+  def create[@spec(Double, Int, Float, Long) V:Zero](rows: Int, cols: Int, data: Array[V]): Matrix[V] = DenseMatrix.create(rows, cols, data)
 
   private[linalg] def zeroRows[V:ClassTag](cols: Int):Matrix[V] = emptyMatrix(0, cols)
   private[linalg] def zeroCols[V:ClassTag](rows: Int):Matrix[V] = emptyMatrix(rows, 0)
@@ -179,8 +173,8 @@ object Matrix extends MatrixConstructors[Matrix]
 
 
 trait MatrixConstructors[Mat[T]<:Matrix[T]] {
-  def zeros[@specialized(Int, Float, Double) V:ClassTag:Zero](rows: Int, cols: Int):Mat[V]
-  def create[@specialized(Int, Float, Double) V:Zero](rows: Int, cols: Int, data: Array[V]):Mat[V]
+  def zeros[@spec(Double, Int, Float, Long) V:ClassTag:Zero](rows: Int, cols: Int):Mat[V]
+  def create[@spec(Double, Int, Float, Long) V:Zero](rows: Int, cols: Int, data: Array[V]):Mat[V]
 
   /**
    * Creates a matrix of all ones.
@@ -189,12 +183,12 @@ trait MatrixConstructors[Mat[T]<:Matrix[T]] {
    * @tparam V
    * @return
    */
-  def ones[@specialized(Int, Float, Double) V:ClassTag:Zero:Semiring](rows: Int, cols: Int):Mat[V] = {
+  def ones[@spec(Double, Int, Float, Long) V:ClassTag:Zero:Semiring](rows: Int, cols: Int):Mat[V] = {
     fill(rows,cols)(implicitly[Semiring[V]].one)
   }
 
-  def fill[@spec(Double, Int, Float) V:ClassTag:Zero](rows: Int, cols: Int)(v: =>V):Mat[V] = create(rows, cols, Array.fill(rows * cols)(v))
-  def tabulate[@spec(Double, Int, Float) V:ClassTag:Zero](rows: Int, cols: Int)(f: (Int,Int)=>V):Mat[V]= {
+  def fill[@spec(Double, Int, Float, Long) V:ClassTag:Zero](rows: Int, cols: Int)(v: =>V):Mat[V] = create(rows, cols, Array.fill(rows * cols)(v))
+  def tabulate[@spec(Double, Int, Float, Long) V:ClassTag:Zero](rows: Int, cols: Int)(f: (Int,Int)=>V):Mat[V]= {
     val z = zeros(rows, cols)
     for(c <- 0 until cols; r <- 0 until rows) {
       z(r, c) = f(r, c)
@@ -207,7 +201,7 @@ trait MatrixConstructors[Mat[T]<:Matrix[T]] {
   }
 
   /** Static constructor for a literal matrix. */
-  def apply[R,@specialized(Int, Float, Double) V](rows : R*)(implicit rl : LiteralRow[R,V], man : ClassTag[V], zero: Zero[V]) = {
+  def apply[R,@spec(Double, Int, Float, Long) V](rows : R*)(implicit rl : LiteralRow[R,V], man : ClassTag[V], zero: Zero[V]) = {
     val nRows = rows.length
     val ns = rl.length(rows(0))
     val rv = zeros(nRows, ns)
