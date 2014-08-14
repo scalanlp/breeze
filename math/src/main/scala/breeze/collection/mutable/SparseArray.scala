@@ -32,7 +32,7 @@ import scala.reflect.ClassTag
  * @author dlwh, dramage
  */
 @SerialVersionUID(1L)
-final class SparseArray[@specialized(Int, Float, Double) V](var index: Array[Int],
+final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Array[Int],
                         var data: Array[V],
                         private var used: Int,
                         val size: Int,

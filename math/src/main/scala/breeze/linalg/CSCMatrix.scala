@@ -24,6 +24,10 @@ import breeze.math._
 import breeze.storage.Zero
 import breeze.util.{ArrayUtil, SerializableLogging, Sorting, Terminal}
 
+import scala.collection.mutable
+import scala.reflect.ClassTag
+import scala.{specialized=>spec}
+
 /**
  * A compressed sparse column matrix, as used in Matlab and CSparse, etc.
  *
@@ -230,8 +234,9 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero] private[linalg] (privat
   }
 }
 
-object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps with SerializableLogging {
-                 with CSCMatrixOps {
+object CSCMatrix extends MatrixConstructors[CSCMatrix]
+                 with CSCMatrixOps with SerializableLogging {
+  def zeros[@specialized(Int, Float, Double) V:ClassTag:Zero](rows: Int, cols: Int, initialNonzero: Int) = {
     new CSCMatrix[V](new Array(initialNonzero), rows, cols, new Array(cols + 1), 0, new Array(initialNonzero))
   }
 
