@@ -15,8 +15,6 @@ package breeze.math
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import breeze.storage.Zero
-import scala.reflect.ClassTag
 
 /**
  *
@@ -37,7 +35,7 @@ trait Semiring[@specialized(Int,Short,Long,Float,Double) V] extends Serializable
 }
 
 object Semiring {
-  import Ring._
+  import breeze.math.Ring._
   implicit val semiringD: Semiring[Double] = ringD
   implicit val semiringFloat: Semiring[Float] = ringFloat
   implicit val semiringInt: Semiring[Int] = ringInt
@@ -46,6 +44,7 @@ object Semiring {
   implicit val semiringShort: Semiring[Short] = ringShort
   implicit val semiringCmplx: Semiring[Complex] = ringComplex
 
+  @SerialVersionUID(1L)
   implicit object fieldB extends Semiring[Boolean] {
     def zero = false
     def one = true

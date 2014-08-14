@@ -272,6 +272,10 @@ class SparseVectorTest extends FunSuite {
     assert(a.dot(b) === 2)
     assert(a + b === DenseVector(1,3,3))
     assert(a :* b === DenseVector(0, 2, 0))
+
+    axpy(4, b, a)
+    assert( a === DenseVector(1, 6, 3))
+
   }
 
   test("SV/DV ops") {
@@ -283,6 +287,23 @@ class SparseVectorTest extends FunSuite {
     b += a
     assert(b === SparseVector(1,3,3))
   }
+
+  test("DenseMatrix * SparseVector OpMulMatrix") {
+    val x = SparseVector[Int](6)( 1 -> 2, 3 -> 4 )
+    val xd = DenseVector[Int](0, 2, 0, 4, 0, 0)
+    assert(x === xd)
+    val m = DenseMatrix(
+      ( 1, 2, 3,  4,  5,  6),
+      ( 2, 4, 6,  8, 10, 12),
+      ( 3, 6, 9, 12, 15, 18),
+      (12, 1, 1,  0,  3,  4)
+    )
+
+    assert((m * x) ===
+      m * xd)
+
+
+  }
 }
 
 /**
@@ -291,7 +312,7 @@ class SparseVectorTest extends FunSuite {
  */
 @RunWith(classOf[JUnitRunner])
 class SparseVectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[SparseVector[Double], Int] {
- val space: MutableTensorField[SparseVector[Double], Int, Double] = SparseVector.space[Double]
+ val space = SparseVector.space[Double]
 
   val N = 30
   implicit def genTriple: Arbitrary[(SparseVector[Double], SparseVector[Double], SparseVector[Double])] = {
@@ -319,7 +340,7 @@ class SparseVectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[SparseV
  */
 @RunWith(classOf[JUnitRunner])
 class SparseVectorOps_FloatTest extends TensorSpaceTestBase[SparseVector[Float], Int, Float] {
- val space: MutableTensorField[SparseVector[Float], Int, Float] = SparseVector.space[Float]
+ val space = SparseVector.space[Float]
 
   override val TOL: Double = 1E-2
   val N = 30
@@ -348,7 +369,7 @@ class SparseVectorOps_FloatTest extends TensorSpaceTestBase[SparseVector[Float],
  */
 @RunWith(classOf[JUnitRunner])
 class SparseVectorOps_IntTest extends TensorSpaceTestBase[SparseVector[Int], Int, Int] {
- val space: MutableTensorField[SparseVector[Int], Int, Int] = SparseVector.space[Int]
+ val space = SparseVector.space[Int]
 
   val N = 100
   implicit def genTriple: Arbitrary[(SparseVector[Int], SparseVector[Int], SparseVector[Int])] = {

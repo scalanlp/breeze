@@ -6,7 +6,7 @@ import scala.reflect.ClassTag
 
 class SliceMatrix[@specialized(Int) K1,
                   @specialized(Int) K2,
-                  @specialized(Int, Double, Float) V:Semiring:ClassTag](val tensor: Tensor[(K1, K2),V],
+                  @specialized(Double, Int, Float, Long) V:Semiring:ClassTag](val tensor: Tensor[(K1, K2),V],
                                                       val slice1: IndexedSeq[K1], val slice2: IndexedSeq[K2]) extends Matrix[V] {
 
   def apply(i: Int, j: Int): V = tensor(slice1(i)->slice2(j))

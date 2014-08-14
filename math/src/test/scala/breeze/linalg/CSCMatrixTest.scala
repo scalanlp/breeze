@@ -14,11 +14,18 @@ package breeze.linalg
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import breeze.math.Complex
+
+import breeze.generic.UFunc
+import breeze.linalg.operators.{OpAdd, OpType}
+import breeze.math.MutableOptimizationSpace.SparseOptimizationSpace
+import breeze.math.{Field, Complex}
+import breeze.storage.Zero
 import org.scalatest._
 import org.scalatest.junit._
 import org.scalatest.prop._
 import org.junit.runner.RunWith
+
+import scala.reflect.ClassTag
 
 @RunWith(classOf[JUnitRunner])
 class CSCMatrixTest extends FunSuite with Checkers {
@@ -183,6 +190,18 @@ class CSCMatrixTest extends FunSuite with Checkers {
     assert(a - b === CSCMatrix((1, -1, 0), (0,0,0)))
   }
 
+  test("inplace addition/subtraction") {
+    val a : CSCMatrix[Int] = CSCMatrix((1,0,0),(2,3,-1))
+    val b : CSCMatrix[Int] = CSCMatrix((0,1,0),(2,3,-1))
+    a += b
+    assert(a === CSCMatrix((1, 1, 0), (4,6,-2)))
+    assert(a.activeSize === 5)
+    a -= b
+    a -= b
+    assert(a === CSCMatrix((1, -1, 0), (0,0,0)))
+    assert(a.activeSize === 2)
+  }
+
   test("InPlace Ops") {
     var a = CSCMatrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
     val b = CSCMatrix((7.0, -2.0, 8.0),(-3.0, -3.0, 1.0))
@@ -195,6 +214,36 @@ class CSCMatrixTest extends FunSuite with Checkers {
     assert(a === CSCMatrix((1.0/7.0,-1.0,3.0/8.0),(4.0/(-3.0),5.0/(-3.0),6.0)))
   }
 
+  test("csc scalar \"bad\" ops") {
+    val a : CSCMatrix[Int] = CSCMatrix((1,0,0),(2,3,-1))
+    assert(a :/ 3 === CSCMatrix((0, 0, 0), (0, 1, 0)))
+
+    val b : CSCMatrix[Complex] = CSCMatrix((Complex(1,0), Complex(0, 0), Complex(0, 0)), (Complex(2, 0), Complex(3, 0), Complex(-1, 0)))
+    assert(b :/ Complex(3, 0) === CSCMatrix((Complex(1.0 / 3.0, 0), Complex(0, 0), Complex(0, 0)), (Complex(2.0 / 3.0, 0), Complex(1, 0), Complex(-1.0 / 3.0, 0))))
+  }
+
+  test("csc scalar \"bad\" pow ops") {
+    val a = CSCMatrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
+    val b = CSCMatrix((7.0, -2.0, 8.0),(-3.0, -3.0, 1.0))
+
+    assert(a :^ b === a.toDense :^ b.toDense)
+    val ac = convert(a, Complex)
+    val bc = convert(b, Complex)
+    assert(ac :^ bc === ac.toDense :^ bc.toDense)
+  }
+
+  test("csc scalar \"bad\" mod ops") {
+    val a = CSCMatrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
+    val b = CSCMatrix((7.0, -2.0, 8.0),(-3.0, -3.0, 1.0))
+
+    assert(a :% b === a.toDense :% b.toDense)
+
+    val ac = convert(a, Complex)
+    val bc = convert(b, Complex)
+    assert(ac :% bc === ac.toDense :% bc.toDense)
+
+  }
+
   test("flatten") {
     val a = CSCMatrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
     val b = CSCMatrix.zeros[Double](3,2)
@@ -203,6 +252,121 @@ class CSCMatrixTest extends FunSuite with Checkers {
     assert(a.flatten() === SparseVector(1.0,2.0,3.0,4.0,5.0,6.0))
     assert(z.flatten() === SparseVector.zeros[Double](15))
     assert(b.flatten() === SparseVector(6)((1,1.0),(5,3.0)))
+  }
+
+  test("CSCxCSC: OpAddInPlace2:Field") {
+    def testAddInPlace[T:Field:Zero:ClassTag](a: CSCMatrix[T],b: CSCMatrix[T]) = {
+      val optspace = SparseOptimizationSpace.sparseOptSpace[T]
+      import optspace._
+      a += b
+    }
+    val cscA = CSCMatrix.zeros[Double](3,4)
+    val cscB = CSCMatrix.zeros[Double](3,4)
+    cscB(1,1) = 1.3
+    cscB(0,0) = 1.0
+    cscB(2,3) = 1.8
+    cscB(2,0) = 1.6
+    testAddInPlace[Double](cscA,cscB)
+    assert(cscA === cscB)
+    testAddInPlace[Double](cscA,cscB)
+    assert(cscA === cscB * 2.0)
+    testAddInPlace[Double](cscA,CSCMatrix.zeros[Double](3,4))
+    assert(cscA === cscB * 2.0)
+  }
+
+  test("CSCxCSC: OpSubInPlace2:Field") {
+    def testSubInPlace[T:Field:Zero:ClassTag](a: CSCMatrix[T],b: CSCMatrix[T]) = {
+      val optspace = SparseOptimizationSpace.sparseOptSpace[T]
+      import optspace._
+      a -= b
+    }
+    val cscA = CSCMatrix.zeros[Double](3,4)
+    val cscB = CSCMatrix.zeros[Double](3,4)
+    cscB(1,1) = 1.3
+    cscB(0,0) = 1.0
+    cscB(2,3) = 1.8
+    cscB(2,0) = 1.6
+    testSubInPlace[Double](cscA,cscB)
+    assert(cscA === cscB * -1.0)
+    testSubInPlace[Double](cscA,cscB)
+    assert(cscA === cscB * -2.0)
+    testSubInPlace[Double](cscA,CSCMatrix.zeros[Double](3,4))
+    assert(cscA === cscB * -2.0)
+  }
+  test("CSCxCSC: OpMulScalarInPlace2:Field") {
+    def testMulScalarInPlace[T:Field:Zero:ClassTag](a: CSCMatrix[T],b: CSCMatrix[T]) = {
+      val optspace = SparseOptimizationSpace.sparseOptSpace[T]
+      import optspace._
+      a *= b
+    }
+    val cscA = CSCMatrix.zeros[Double](3,4)
+    val cscB = CSCMatrix.zeros[Double](3,4)
+    cscB(1,1) = 1.3
+    cscB(0,0) = 1.0
+    cscB(2,3) = 1.8
+    cscB(2,0) = 1.6
+    testMulScalarInPlace[Double](cscA,cscB)
+    assert(cscA === cscA)
+    cscA(1,1) = 2.0
+    cscA(0,0) = 2.0
+    cscA(1,0) = 2.0
+    testMulScalarInPlace[Double](cscA,cscB)
+    val cscR = CSCMatrix.zeros[Double](3,4)
+    cscR(1,1) = 2.6
+    cscR(0,0) = 2.0
+    assert(cscA === cscR)
+    testMulScalarInPlace[Double](cscA,CSCMatrix.zeros[Double](3,4))
+    assert(cscA === CSCMatrix.zeros[Double](3,4))
+  }
+
+  test("CSCxCSC: OpSetInPlace:Scalar:Field") {
+    def testSetInPlace[T:Field:Zero:ClassTag](a: CSCMatrix[T], b: T) = {
+      val optspace = SparseOptimizationSpace.sparseOptSpace[T]
+      import optspace._
+      a := b
+    }
+    val cscA = CSCMatrix.zeros[Double](3,4)
+    val b = 4
+    testSetInPlace[Double](cscA,b)
+    assert(cscA === CSCMatrix.fill(3, 4)(b))
+    testSetInPlace[Double](cscA,0)
+    assert(cscA === CSCMatrix.zeros[Double](3, 4))
+  }
+  test("ZipMapVals Test") {
+    def testZipMap[T:Field:Zero:ClassTag](a: CSCMatrix[T],b: CSCMatrix[T]): CSCMatrix[T] = {
+      val f = implicitly[Field[T]]
+      val optspace = SparseOptimizationSpace.sparseOptSpace[T]
+      import optspace._
+      val addMapFn = (t1: T, t2: T) => f.+(t1,t2)
+
+      zipMapValuesM.map(a,b,addMapFn)
+    }
+    val cscA = CSCMatrix.zeros[Double](3,4)
+    val cscB = CSCMatrix.zeros[Double](3,4)
+    cscB(1,1) = 1.3
+    cscB(0,0) = 1.0
+    cscB(2,3) = 1.8
+    cscB(2,0) = 1.6
+    val cscR = testZipMap(cscA,cscB)
+    assert(cscR === cscB)
+    val cscR1 = testZipMap(cscR,cscB)
+    assert(cscR1 === cscB * 2.0)
+    cscR(1,0) = 1.1
+    cscB(0,1) = 1.2
+    val cscR2 = testZipMap(cscR,cscB)
+    val cscR3 = cscR * 2.0
+    cscR3(1,0) = 1.1
+    cscR3(0,1) = 1.2
+    assert(cscR2 === cscR3)
+    val cscR4 = testZipMap(cscB,cscA)
+    assert(cscR4 === cscB)
+  }
+
+  test("axpy") {
+    val a : CSCMatrix[Int] = CSCMatrix((1,0,0),(2,3,-1))
+    val b : CSCMatrix[Int] = CSCMatrix((0,1,0),(2,3,-1))
+    axpy(2, b, a)
+    assert(a === CSCMatrix((1,2,0),(6,9,-3)))
   }
 }
 

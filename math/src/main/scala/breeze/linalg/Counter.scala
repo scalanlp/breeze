@@ -16,12 +16,13 @@ package breeze.linalg
 */
 
 import breeze.linalg.operators._
+import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
+import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
 import breeze.math._
-import CanTraverseKeyValuePairs.KeyValuePairsVisitor
-import CanTraverseValues.ValuesVisitor
 import breeze.storage.Zero
-import collection.Set
+
+import scala.collection.Set
 /**
  * A map-like tensor that acts like a collection of key-value pairs where
  * the set of values may grow arbitrarily.
@@ -160,6 +161,16 @@ object Counter extends CounterOps {
     override def isTraversableAgain(from: Counter[K, V]): Boolean = true
   }
 
+  implicit def normImplDouble[K, V:Field]:norm.Impl2[Counter[K, V], Double, Double] = new norm.Impl2[Counter[K, V], Double, Double] {
+    override def apply(ctr: Counter[K, V], p: Double): Double = {
+      var result = 0.0
+      for( v <- ctr.valuesIterator) {
+        result += math.pow(implicitly[Field[V]].normImpl(v), p)
+      }
+      math.pow(result, 1/p)
+    }
+  }
+
   implicit def canCreateZeros[K,V:Zero:Semiring]: CanCreateZeros[Counter[K,V],K] =
     new CanCreateZeros[Counter[K,V],K] {
       // Shouldn't need to supply a key value here, but it really mixes up the
@@ -170,10 +181,9 @@ object Counter extends CounterOps {
       }
     }
 
-  implicit def space[K, V](implicit field: Field[V]) = {
-    import field._
+  implicit def space[K, V](implicit field: Field[V]): MutableEnumeratedCoordinateField[Counter[K, V], K, V] = {
     implicit def zipMap = Counter.zipMap[K, V, V]
-    MutableTensorField.make[Counter[K, V], K, V]
+    MutableEnumeratedCoordinateField.make[Counter[K, V], K, V]
   }
 }
 

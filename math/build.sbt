@@ -43,7 +43,7 @@ pomExtra := (
     </developer>
   </developers>)
 
-scalacOptions ++= Seq("-deprecation","-language:_")
+scalacOptions ++= Seq("-deprecation","-language:_")//, "-no-specialization")
 
 // scalacOptions in (Compile, console) += "-Xlog-implicits"
 
@@ -57,6 +57,7 @@ libraryDependencies ++= Seq(
   "com.github.rwl" % "jtransforms" % "2.4.0",
   "org.apache.commons" % "commons-math3" % "3.2",
   "org.spire-math" %% "spire" % "0.7.4",
+  "org.slf4j" % "slf4j-api" % "1.7.5",
   "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
   "org.scalatest" %% "scalatest" % "2.1.3" % "test",
   "org.scala-lang.modules" % "scala-xml_2.11" % "1.0.1" % "test",
@@ -68,11 +69,9 @@ libraryDependencies ++= Seq(
 libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
   sv match {
     case x if x startsWith "2.10" =>
-      (deps :+ ("com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2")
-           :+ ("com.chuusai" %% "shapeless" % "2.0.0" % "test" cross CrossVersion.full))
+      (deps :+ ("com.chuusai" %% "shapeless" % "2.0.0" % "test" cross CrossVersion.full))
     case x if x.startsWith("2.11") =>
-      (deps :+ ("com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2")
-           :+ ("com.chuusai" %% "shapeless" % "2.0.0" % "test"  ))
+      (deps :+ ("com.chuusai" %% "shapeless" % "2.0.0" % "test"  ))
     case _       =>
       deps
   }
@@ -99,3 +98,8 @@ resolvers ++= Seq(
 
 testOptions in Test += Tests.Argument("-oDF")
 
+fork in Test := true
+
+javaOptions := Seq("-Xmx4g")
+
+jacoco.settings
