@@ -57,6 +57,7 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
                                                             val majorStride: Int,
                                                             val isTranspose: Boolean = false)
   extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
+
   /** Creates a matrix with the specified data array, rows, and columns. */
   def this(rows: Int, cols: Int)(implicit man: ClassTag[V]) = this(rows, cols, new Array[V](rows * cols), 0, rows)
   /** Creates a matrix with the specified data array, rows, and columns. Data must be column major */
@@ -883,7 +884,9 @@ with MatrixConstructors[DenseMatrix] {
   implicit val setMV_I: OpSet.InPlaceImpl2[DenseMatrix[Int], DenseVector[Int]] = new SetDMDVOp[Int]();
 
   // There's a bizarre error specializing float's here.
-  class CanZipMapValuesDenseMatrix[@spec(Double, Int, Float, Long) V, @specialized(Int, Double) RV: ClassTag] extends CanZipMapValues[DenseMatrix[V], V, RV, DenseMatrix[RV]] {
+  class CanZipMapValuesDenseMatrix[@spec(Double, Int, Float, Long) V, @specialized(Int, Double) RV: ClassTag]
+    extends CanZipMapValues[DenseMatrix[V], V, RV, DenseMatrix[RV]] {
+
     def create(rows: Int, cols: Int) = new DenseMatrix(rows, cols, new Array[RV](rows * cols))
 
     /**Maps all corresponding values from the two collection. */
