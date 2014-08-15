@@ -23,30 +23,29 @@ import scala.reflect.ClassTag
  *
  * @author dlwh
  */
-trait CanCopy[T] {
+trait CanCopy[V] {
   // Should not inherit from T=>T because those get  used by the compiler.
-  def apply(t: T):T
+  def apply(t: V):V
 }
 
 object CanCopy {
 
-  class OpArray[@specialized V]
-  extends CanCopy[Array[V]] {
+  class OpArray[@specialized V] extends CanCopy[Array[V]] {
     override def apply(from : Array[V]) = {
       ArrayUtil.copyOf(from, from.length)
     }
   }
 
-  class OpMapValues[From,A](implicit op : CanCopy[A], map : CanMapValues[From,A,A,From]) extends CanCopy[From] {
+  class OpMapValues[From,V](implicit op : CanCopy[V], map : CanMapValues[From,V,V,From]) extends CanCopy[From] {
     def apply(v : From) = map.map(v, op.apply(_))
   }
 
-  implicit def opMapValues[From,A](implicit map : CanMapValues[From,A,A,From], op : CanCopy[A])
-  : CanCopy[From] = new OpMapValues[From,A]()(op, map)
+  // <editor-fold defaultstate="collapsed" desc=" implicit CanCopy[V] implementations ">
 
-  implicit def OpArrayAny[V:ClassTag:Field] : OpArray[V] =
-    new OpArray[V]
+  implicit def opMapValues[From,V](implicit map : CanMapValues[From,V,V,From], op : CanCopy[V]): CanCopy[From] =
+    new OpMapValues[From,V]()(op, map)
 
+  implicit def opArrayAny[V:ClassTag:Field] : OpArray[V] = new OpArray[V]
   implicit object OpArrayI extends OpArray[Int]
   implicit object OpArrayS extends OpArray[Short]
   implicit object OpArrayL extends OpArray[Long]
@@ -56,4 +55,6 @@ object CanCopy {
   implicit def canCopyField[V:Field]:CanCopy[V] = new CanCopy[V] {
     def apply(v1: V) = v1
   }
+
+  // </editor-fold>
 }

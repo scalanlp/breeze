@@ -42,7 +42,7 @@ object CanTransformValues {
   // Arrays
   //
 
-  class OpArray[@specialized(Int, Float, Double) A]
+  class OpArray[@specialized(Double, Int, Float, Long) A]
     extends Op[Array[A], A, A] {
 
     /**Transforms all values from the given collection. */

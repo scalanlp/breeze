@@ -28,19 +28,19 @@ import scala.util.hashing.MurmurHash3
  * @author dlwh
  */
 @SerialVersionUID(1L)
-final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] private[mutable] (protected var _index: Array[Int],
-                                protected var _data: Array[Elem],
+final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) V] private[mutable] (protected var _index: Array[Int],
+                                protected var _data: Array[V],
                                  protected var load: Int,
                                  val size: Int,
-                                 val default: ConfigurableDefault[Elem] = ConfigurableDefault.default[Elem])
-                                (implicit protected val manElem: ClassTag[Elem],
-                                 val zero: Zero[Elem]) extends Storage[Elem] with ArrayLike[Elem] with Serializable {
+                                 val default: ConfigurableDefault[V] = ConfigurableDefault.default[V])
+                                (implicit protected val manElem: ClassTag[V],
+                                 val zero: Zero[V]) extends Storage[V] with ArrayLike[V] with Serializable {
   require(size > 0, "Size must be positive, but got " + size)
 
-  def this(size: Int, default: ConfigurableDefault[Elem],
+  def this(size: Int, default: ConfigurableDefault[V],
            initialSize: Int)
-          (implicit manElem: ClassTag[Elem],
-           zero: Zero[Elem]) = {
+          (implicit manElem: ClassTag[V],
+           zero: Zero[V]) = {
     this(OpenAddressHashArray.emptyIndexArray(OpenAddressHashArray.calculateSize(initialSize)),
       default.makeArray(OpenAddressHashArray.calculateSize(initialSize)),
       0,
@@ -49,14 +49,14 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
   }
 
   def this(size: Int,
-           default: ConfigurableDefault[Elem])
-          (implicit manElem: ClassTag[Elem],
-           zero: Zero[Elem]) = {
+           default: ConfigurableDefault[V])
+          (implicit manElem: ClassTag[V],
+           zero: Zero[V]) = {
     this(size, default, 16)
   }
 
-  def this(size: Int)(implicit manElem: ClassTag[Elem], zero: Zero[Elem]) = {
-    this(size, ConfigurableDefault.default[Elem])
+  def this(size: Int)(implicit manElem: ClassTag[V], zero: Zero[V]) = {
+    this(size, ConfigurableDefault.default[V])
   }
 
   def data = _data
@@ -88,7 +88,7 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
     else data(locate(i))
   }
 
-  final def update(i: Int, v: Elem) {
+  final def update(i: Int, v: V) {
     if(i < 0 || i >= size) throw new IndexOutOfBoundsException(i + " is out of bounds for size " + size)
     val pos = locate(i)
     _data(pos) = v
@@ -140,7 +140,7 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
     val newSize = OpenAddressHashArray.calculateSize(oldIndex.size+1)
     _index = new Array[Int](newSize)
     util.Arrays.fill(_index, -1)
-    _data = new Array[Elem](newSize)
+    _data = new Array[V](newSize)
     default.fillArray(_data, default.value)
     load = 0
     var i = 0
@@ -160,8 +160,8 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
 
   override def toString: String = activeIterator.mkString("OpenAddressHashArray(",", ", ")")
 
-  def copy:OpenAddressHashArray[Elem] = {
-    new OpenAddressHashArray[Elem](util.Arrays.copyOf(_index, _index.length),
+  def copy:OpenAddressHashArray[V] = {
+    new OpenAddressHashArray[V](util.Arrays.copyOf(_index, _index.length),
       breeze.util.ArrayUtil.copyOf(_data, _data.length),
       load, size, default
     )
@@ -172,7 +172,7 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) Elem] pr
   override def hashCode() = MurmurHash3.unorderedHash(iterator.filter(_._2 != default.value), 43)
 
   override def equals(that: Any): Boolean = that match {
-    case that: OpenAddressHashArray[Elem] =>
+    case that: OpenAddressHashArray[V] =>
       (this eq that) ||
       (this.size == that.size) && {
       try {
