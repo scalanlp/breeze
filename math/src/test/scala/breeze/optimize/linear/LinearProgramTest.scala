@@ -1,7 +1,7 @@
 package breeze.optimize.linear
 
 import org.scalatest.FunSuite
-import breeze.linalg.DenseVector
+import breeze.linalg.{norm, DenseVector}
 
 /**
  * TODO
@@ -43,7 +43,7 @@ class LinearProgramTest extends FunSuite {
 
     val result = maximize( lpp)
 
-    assert( (result.result - DenseVector(40.0,17.5,42.5)).norm(2) < 1E-4)
+    assert( norm(result.result - DenseVector(40.0,17.5,42.5), 2) < 1E-4)
 
 
   }

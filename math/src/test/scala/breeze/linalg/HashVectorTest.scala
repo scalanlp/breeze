@@ -55,21 +55,21 @@ class HashVectorTest extends FunSuite {
     val bdd = bd - ad
     b -= a
     bd -= a
-    assertClose(b.norm(2), bd.norm(2))
-    assertClose(bdd.norm(2), bd.norm(2))
-    assertClose(bss.norm(2), bd.norm(2))
+    assertClose(norm(b, 2), norm(bd, 2))
+    assertClose(norm(bdd, 2), norm(bd, 2))
+    assertClose(norm(bss, 2), norm(bd, 2))
   }
 
 
   test("Norm") {
     val v = HashVector(-0.4326, -1.6656, 0.1253, 0.2877, -1.1465)
-    assertClose(v.norm(1), 3.6577)
-    assertClose(v.norm(2), 2.0915)
-    assertClose(v.norm(3), 1.8405)
-    assertClose(v.norm(4), 1.7541)
-    assertClose(v.norm(5), 1.7146)
-    assertClose(v.norm(6), 1.6940)
-    assertClose(v.norm(Double.PositiveInfinity), 1.6656)
+    assertClose(norm(v, 1), 3.6577)
+    assertClose(norm(v, 2), 2.0915)
+    assertClose(norm(v, 3), 1.8405)
+    assertClose(norm(v, 4), 1.7541)
+    assertClose(norm(v, 5), 1.7146)
+    assertClose(norm(v, 6), 1.6940)
+    assertClose(norm(v, Double.PositiveInfinity), 1.6656)
   }
 
   test("SV ops work as Vector") {
