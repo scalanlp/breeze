@@ -167,6 +167,16 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     assert(ptp(m) === 4)
   }
 
+  test("elementwise max") {
+    val v = DenseVector(2, 0, 3, 2, -1).asDenseMatrix
+    val v2 = DenseVector(3, -1, 3, 4, -4).asDenseMatrix
+
+    assert(max(v, v2) === DenseVector(3, 0, 3, 4, -1).asDenseMatrix)
+    assert(max(v, 2) === DenseVector(2, 2, 3, 2, 2).asDenseMatrix)
+
+    assert(min(v, 2) === DenseVector(2, 0, 2, 2, -1).asDenseMatrix)
+  }
+
   test("Min/Max[Float]") {
     val m = convert(DenseMatrix((1,0,0),(2,3,-1)), Float)
     assert(argmin(m) === (1,2))
