@@ -85,6 +85,16 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(max(v) === 3)
   }
 
+  test("elemenwise max") {
+    val v = DenseVector(2, 0, 3, 2, -1)
+    val v2 = DenseVector(3, -1, 3, 4, -4)
+
+    assert(max(v, v2) === DenseVector(3, 0, 3, 4, -1))
+    assert(max(v, 2) === DenseVector(2, 2, 3, 2, 2))
+
+    assert(min(v, 2) === DenseVector(2, 0, 2, 2, -1))
+  }
+
   test("Topk") {
     val v = DenseVector(2, 0, 3, 4, -1)
 
