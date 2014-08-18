@@ -53,7 +53,7 @@ object CanTraverseValues {
   // Arrays
   //
 
-  class OpArray[@specialized(Int, Float, Double) A]
+  class OpArray[@specialized(Double, Int, Float, Long) A]
     extends CanTraverseValues[Array[A], A] {
     /** Traverses all values from the given collection. */
     def traverse(from: Array[A], fn: ValuesVisitor[A]): Unit = {

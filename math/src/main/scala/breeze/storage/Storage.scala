@@ -16,18 +16,20 @@ package breeze.storage
  limitations under the License.
 */
 
+import scala.{specialized=>spec}
+
 /**
  * Interface for an unboxed iterable, of sorts, for
  * things backed by a flat array of elements.
  *
  * @author dlwh
  */
-trait Storage[@specialized(Int,Double,Float) Elem] {
+trait Storage[@spec(Double, Int, Float, Long) V] {
   /**
    * Returns the actual flat array of elements used.
    * @return
    */
-  def data: Array[Elem]
+  def data: Array[V]
 
   /**
    * How many elements are logically stored here. This may be <= activeSize.
@@ -37,14 +39,17 @@ trait Storage[@specialized(Int,Double,Float) Elem] {
 
   /**
    * How many elements are stored in terms of space.
-   *
-   * @return
+   * In HashVectors, activeSize is the number of non-zero elements,
+   * while iterableSize is the number of buckets currently allocated.
+   * (activeSize <= iterableSize in general, activeSize == iterableSize for everything except hashing implementations.)
    */
   def activeSize: Int
 
   /**
    * How many elements must be iterated over using valueAt/indexAt.
-   * @return
+   * In HashVectors, activeSize is the number of non-zero elements,
+   * while iterableSize is the number of buckets currently allocated.
+   * (activeSize <= iterableSize in general, activeSize == iterableSize for everything except hashing implementations.)
    */
   def iterableSize: Int = activeSize
 
@@ -53,7 +58,7 @@ trait Storage[@specialized(Int,Double,Float) Elem] {
    * @param i index into the data array
    * @return
    */
-  def valueAt(i: Int): Elem
+  def valueAt(i: Int): V
 
   /**
    * Gives the logical index from the physical index.

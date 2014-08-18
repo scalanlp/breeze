@@ -15,12 +15,13 @@ package breeze.linalg
  limitations under the License.
 */
 
-import scala.{specialized=>spec}
 import support._
 import breeze.collection.mutable.Beam
-import breeze.math.Semiring
-import scala.reflect.ClassTag
 import breeze.generic.UFunc
+import breeze.math.Semiring
+
+import scala.{specialized=>spec}
+import scala.reflect.ClassTag
 
 
 /**
@@ -28,9 +29,9 @@ import breeze.generic.UFunc
  * @tparam K
  * @tparam V
  */
-trait QuasiTensor[@specialized(Int) K, @specialized(Int, Float, Double) V] {
-  def apply(i: K):V
-  def update(i: K, v: V)
+trait QuasiTensor[@spec(Int) K, @spec(Double, Int, Float, Long) V] {
+  def apply(i: K): V
+  def update(i: K, v: V): Unit
   def keySet: scala.collection.Set[K]
 
     // Aggregators
@@ -86,8 +87,11 @@ trait QuasiTensor[@specialized(Int) K, @specialized(Int, Float, Double) V] {
 
 
 
-trait TensorLike[@spec(Int) K, @specialized(Int, Float, Double) V, +This<:Tensor[K, V]] extends QuasiTensor[K,V] with NumericOps[This] {
-  def apply(i: K):V
+trait TensorLike[@spec(Int) K, @spec(Double, Int, Float, Long) V, +This<:Tensor[K, V]]
+          extends QuasiTensor[K,V]
+          with NumericOps[This] {
+
+  def apply(i: K): V
   def update(i: K, v: V)
 
   def size: Int
@@ -196,7 +200,7 @@ trait TensorLike[@spec(Int) K, @specialized(Int, Float, Double) V, +This<:Tensor
  *
  * @author dlwh
  */
-trait Tensor[@spec(Int) K, @specialized(Int, Float, Double) V] extends TensorLike[K, V, Tensor[K, V]]
+trait Tensor[@spec(Int) K, @spec(Double, Int, Float, Long) V] extends TensorLike[K, V, Tensor[K, V]]
 
 object Tensor {
 
