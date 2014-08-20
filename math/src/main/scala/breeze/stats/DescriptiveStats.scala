@@ -21,12 +21,13 @@ import breeze.util.{quickSelectImpl, quickSelect}
  */
 
 import breeze.generic.UFunc
-import breeze.linalg.{DenseMatrix, DenseVector, convert}
+import breeze.linalg.{DenseMatrix, DenseVector, convert, cov}
 import breeze.linalg.support.CanTraverseValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.macros.expand
 import breeze.math.Complex
 import breeze.numerics.isOdd
+import spire.implicits.cfor
 
 case class MeanAndVariance(mean: Double, variance: Double, count: Long) {
   def stdDev: Double = math.sqrt(variance)
@@ -151,6 +152,29 @@ trait DescriptiveStatsTrait {
         def apply(m: DenseMatrix[T]) = median(m.toDenseVector)
       }
 
+  }
+
+  object corrcoeff extends UFunc {
+    implicit def matrixCorrelation: Impl[DenseMatrix[Double], DenseMatrix[Double]] = new Impl[DenseMatrix[Double], DenseMatrix[Double]] {
+      def apply(data: DenseMatrix[Double]) = {
+        val covariance = cov(data)
+        val d = new Array[Double](covariance.rows)
+        cfor(0)(i => i < covariance.rows, i => i+1)(i => {
+          d(i) = math.sqrt(covariance.unsafeValueAt(i,i))
+        })
+
+        cfor(0)(i => i < covariance.rows, i => i+1)(i => {
+          cfor(0)(j => j < covariance.rows, j => j+1)(j => {
+            if (i != j) {
+              covariance.unsafeUpdate(i,j, covariance.unsafeValueAt(i,j) / (d(i) * d(j)) )
+            } else {
+              covariance.unsafeUpdate(i,j, 1.0)
+            }
+          })
+        })
+        covariance
+      }
+    }
   }
 }
 

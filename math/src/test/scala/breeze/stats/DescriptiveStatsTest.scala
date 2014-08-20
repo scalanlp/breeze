@@ -3,7 +3,7 @@ package breeze.stats
 import org.scalatest.{FunSuite, WordSpec}
 import org.scalatest.Matchers
 import scala.util.Random
-import breeze.linalg.DenseVector
+import breeze.linalg.{DenseVector, DenseMatrix}
 import breeze.math.Complex
 
 class DescriptiveStatsTest extends WordSpec with Matchers {
@@ -29,6 +29,14 @@ class DescriptiveStatsTest extends WordSpec with Matchers {
       val a = List(1.0,2.0,3.0,4)
       val b = List(2.0,-3,4.0,5)
       DescriptiveStats.cov(a,b) should be (2+(2.0/3))
+    }
+    "corrcoeff should produce correct values" in {
+      val d = DenseMatrix((1.0,2.0), (2.0, -3.0),(3.0, 4.0), (4.0, 5.0))
+      val result: DenseMatrix[Double] = corrcoeff(d)
+      assert( math.abs( result(0,1) - 0.580381) < 1e-7)
+      assert( math.abs( result(1,0) - 0.580381) < 1e-7)
+      assert( math.abs( result(0,0) - 1.0) < 1e-7)
+      assert( math.abs( result(1,1) - 1.0) < 1e-7)
     }
   }
 }
@@ -72,4 +80,3 @@ class DescriptiveStatsTest2 extends FunSuite {
     assert( median(dataEvenDuplicate2)==450)
   }
 }
-
