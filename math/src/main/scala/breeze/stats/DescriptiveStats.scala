@@ -154,10 +154,57 @@ trait DescriptiveStatsTrait {
 
   }
 
+  object covmat extends UFunc {
+    implicit val matrixCovariance: Impl[DenseMatrix[Double], DenseMatrix[Double]] = new Impl[DenseMatrix[Double], DenseMatrix[Double]] {
+      def apply(data: DenseMatrix[Double]) = cov(data)
+    }
+
+    implicit val sequenceCovariance: Impl[Seq[DenseVector[Double]], DenseMatrix[Double]] = new Impl[Seq[DenseVector[Double]], DenseMatrix[Double]] {
+      /*
+       * We roughly follow the two_pass_covariance algorithm from here: http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Covariance
+       * However, we also use Bessel's correction, in order to agree with the rest of breeze.
+       */
+      def apply(data: Seq[DenseVector[Double]]): DenseMatrix[Double] = {
+        data.headOption.map(firstRow => {
+          val result = new DenseMatrix[Double](firstRow.size, firstRow.size)
+          val dataSize = firstRow.size
+          //First compute the mean
+          var mean = firstRow.copy
+          var numRows: Long = 1
+          data.tail.foreach( x => {
+            numRows += 1
+            if (mean.size != x.size) {
+              throw new IllegalArgumentException("Attempting to compute covariance of dataset where elements have different sizes")
+            }
+            cfor(0)(i => i < firstRow.size, i => i+1)(i => {
+              mean.unsafeUpdate(i, mean.unsafeValueAt(i) + x.unsafeValueAt(i))
+            })
+
+          })
+          val numRowsD = numRows.toDouble
+          mean = mean / numRowsD
+
+          //Second compute the covariance
+          data.map(x => {
+            cfor(0)(i => i < dataSize, i => i+1)(i => {
+              val a = x.unsafeValueAt(i) - mean.unsafeValueAt(i)
+              cfor(0)(j => j < dataSize, j => j+1)(j => {
+                val b = x.unsafeValueAt(j) - mean.unsafeValueAt(j)
+                result.unsafeUpdate(i, j, result.unsafeValueAt(i,j) + (a*b/(numRowsD-1))) //Use
+              })
+            })
+          })
+
+          result
+        }).getOrElse(new DenseMatrix[Double](0,0))
+      }
+    }
+  }
+
   object corrcoeff extends UFunc {
-    implicit def matrixCorrelation: Impl[DenseMatrix[Double], DenseMatrix[Double]] = new Impl[DenseMatrix[Double], DenseMatrix[Double]] {
-      def apply(data: DenseMatrix[Double]) = {
-        val covariance = cov(data)
+    implicit def matrixCorrelation[T](implicit covarianceCalculator: covmat.Impl[T,DenseMatrix[Double]]): Impl[T, DenseMatrix[Double]] = new Impl[T, DenseMatrix[Double]] {
+      def apply(data: T) = {
+        val covariance = covarianceCalculator(data)
         val d = new Array[Double](covariance.rows)
         cfor(0)(i => i < covariance.rows, i => i+1)(i => {
           d(i) = math.sqrt(covariance.unsafeValueAt(i,i))

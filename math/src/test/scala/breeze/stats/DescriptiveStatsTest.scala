@@ -30,8 +30,34 @@ class DescriptiveStatsTest extends WordSpec with Matchers {
       val b = List(2.0,-3,4.0,5)
       DescriptiveStats.cov(a,b) should be (2+(2.0/3))
     }
+    "covmat should produce correct values for matrix" in {
+      val d = DenseMatrix((1.0,2.0), (2.0, -3.0),(3.0, 4.0), (4.0, 5.0))
+      val result: DenseMatrix[Double] = covmat(d)
+      assert( math.abs( result(0,1) - 2.66666667) < 1e-7)
+      assert( math.abs( result(1,0) - 2.66666667) < 1e-7)
+      assert( math.abs( result(0,0) - 1.66666667) < 1e-7)
+      assert( math.abs( result(1,1) - 12.66666667) < 1e-7)
+    }
+
+    "covmat should produce correct values for seq of vectors" in {
+      val d = Seq(DenseVector(1.0,2.0), DenseVector(2.0, -3.0),DenseVector(3.0, 4.0), DenseVector(4.0, 5.0))
+      val result: DenseMatrix[Double] = covmat(d)
+      assert( math.abs( result(0,1) - 2.66666667) < 1e-7)
+      assert( math.abs( result(1,0) - 2.66666667) < 1e-7)
+      assert( math.abs( result(0,0) - 1.66666667) < 1e-7)
+      assert( math.abs( result(1,1) - 12.66666667) < 1e-7)
+    }
+
     "corrcoeff should produce correct values" in {
       val d = DenseMatrix((1.0,2.0), (2.0, -3.0),(3.0, 4.0), (4.0, 5.0))
+      val result: DenseMatrix[Double] = corrcoeff(d)
+      assert( math.abs( result(0,1) - 0.580381) < 1e-7)
+      assert( math.abs( result(1,0) - 0.580381) < 1e-7)
+      assert( math.abs( result(0,0) - 1.0) < 1e-7)
+      assert( math.abs( result(1,1) - 1.0) < 1e-7)
+    }
+    "corrcoeff should produce correct values for list of vectors" in {
+      val d = Seq(DenseVector(1.0,2.0), DenseVector(2.0, -3.0),DenseVector(3.0, 4.0), DenseVector(4.0, 5.0))
       val result: DenseMatrix[Double] = corrcoeff(d)
       assert( math.abs( result(0,1) - 0.580381) < 1e-7)
       assert( math.abs( result(1,0) - 0.580381) < 1e-7)
