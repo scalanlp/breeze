@@ -14,10 +14,7 @@ object logNormalize extends UFunc {
       else op(value, max)
     }
   }
-
 }
-
-
 
 object logAndNormalize extends UFunc {
   implicit def logNormalizeImpl[V](implicit logImpl: breeze.numerics.log.Impl[V, V],

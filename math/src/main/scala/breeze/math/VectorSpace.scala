@@ -155,7 +155,7 @@ trait MutableVectorField[V, S] extends VectorField[V, S] with MutableVectorRing[
 /** A [[breeze.math.VectorField]] and a [[breeze.math.LPSpace]] */
 trait LPVectorField[V, S] extends VectorField[V, S] with LPSpace[V, S]
 
-trait MutableLPVectorField[V, S] extends LPVectorField[V, S] with MutableVectorRing[V, S] with MutableInnerProductVectorSpace[V, S] {
+trait MutableLPVectorField[V, S] extends LPVectorField[V, S] with MutableVectorField[V,S] {
   implicit def divIntoVV: OpDiv.InPlaceImpl2[V, V]
 }
 
@@ -163,7 +163,7 @@ trait MutableLPVectorField[V, S] extends LPVectorField[V, S] with MutableVectorR
 trait CoordinateField[V, S] extends LPVectorField[V, S] with Coordinated[V, S] {
 }
 
-trait MutableCoordinateField[V, S] extends CoordinateField[V, S] with MutableVectorField[V, S]
+trait MutableCoordinateField[V, S] extends CoordinateField[V, S] with MutableLPVectorField[V, S]
 
 /**
  * A CoordinateField that has an addressable index set. This set may not be finite, and it may
