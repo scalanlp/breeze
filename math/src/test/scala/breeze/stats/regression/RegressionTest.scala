@@ -34,5 +34,14 @@ class RegressionTest extends WordSpec with Matchers {
       assert(norm(result.coefficients - DenseVector(1.0, 1.0)) < 1e-7)
       assert(result.rSquared < 1e-7)
     }
+    "preserve original arrays" in {
+      val a = DenseMatrix((1.0,1.0), (2.0, -2.0),(3.0, 3.0), (4.0, 5.0))
+      val aCopy = a.copy
+      val b = DenseVector(2.0, 0.0, 6.0, 9.0)
+      val bCopy = b.copy
+      val result = leastSquares(a,b)
+      assert(a == aCopy)
+      assert(b == bCopy)
+    }
   }
 }
