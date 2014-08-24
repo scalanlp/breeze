@@ -40,10 +40,11 @@ private case class LassoCalculator(data: DenseMatrix[Double], outputs: DenseVect
       })
     }
 
-    LassoResult(resultVec, 0.0, lambda)
+    LassoResult(resultVec, computeRsquared, lambda)
   }
 
   private def shrink(x: Double): Double = {
+    // Soft thresholding
     val sb = math.signum(x)
     val ab = sb*x
     if (ab > lambda) {
@@ -54,10 +55,16 @@ private case class LassoCalculator(data: DenseMatrix[Double], outputs: DenseVect
   }
 
   private def copyColumn(column: Int): Unit = {
+    /* After running this routine, outputCopy should consist of the residuals after multiplying
+     * data against resultVec, excluding the specified column.
+     *
+     * The single column matrix should then be set to equal the data from that column.
+     */
     require(column < data.cols)
     require(column >= 0)
     cfor(0)(i => i < outputs.size, i => i+1)(i => {
       singleColumnMatrix.unsafeUpdate(i, 0, data.unsafeValueAt(i, column))
+
       var o = outputs.unsafeValueAt(i)
       cfor(0)(j => j < data.cols, j => j+1)(j => {
         if (j != column) {
@@ -68,7 +75,23 @@ private case class LassoCalculator(data: DenseMatrix[Double], outputs: DenseVect
     })
   }
 
+  private def computeRsquared = {
+    var r2 = 0.0
+    cfor(0)(i => i < outputs.size, i => i+1)(i => {
+      var o = outputs.unsafeValueAt(i)
+      cfor(0)(j => j < data.cols, j => j+1)(j => {
+        o -= data.unsafeValueAt(i,j) * resultVec.unsafeValueAt(j)
+      })
+      r2 += o*o
+    })
+    r2
+  }
+
   private def estimateOneColumn(column: Int): LeastSquaresRegressionResult = {
+    /*
+     * Goal of this routine is to use the specified column to explain as much of the residual
+     * as possible, after using the already specified values in other columns.
+     */
     copyColumn(column)
     leastSquaresDestructive(singleColumnMatrix, outputCopy, workArray)
   }
@@ -80,6 +103,12 @@ case class LassoResult(coefficients: DenseVector[Double], rSquared: Double, lamb
 }
 
 object lasso extends UFunc {
+  /*
+   * This ufunc implements lasso regression, as described in section 2.2 of
+   * Coordinate Descent Optimization for l1 Minimization with Application to Compressed Sensing; a Greedy Algorithm
+   * by Yingying Li Stanley Osher
+   * Download at: ftp://ftp.math.ucla.edu/pub/camreport/cam09-17.pdf
+   */
   implicit val matrixVectorWithWorkArray: Impl4[DenseMatrix[Double], DenseVector[Double], Double, Array[Double], LassoResult] = new Impl4[DenseMatrix[Double], DenseVector[Double], Double, Array[Double], LassoResult] {
     def apply(data: DenseMatrix[Double], outputs: DenseVector[Double], lambda: Double, workArray: Array[Double]): LassoResult = LassoCalculator(data, outputs, lambda, workArray).result
   }
