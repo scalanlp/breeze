@@ -20,7 +20,7 @@ private object leastSquaresImplementation {
     }
 
     val resultVec = new DenseVector[Double](Arrays.copyOf(outputs.data, data.cols))
-    LeastSquaresRegressionResult(resultVec, outputs.data(data.cols+1))
+    LeastSquaresRegressionResult(resultVec, math.pow(outputs.data(data.cols+1), 2))
   }
 }
 
