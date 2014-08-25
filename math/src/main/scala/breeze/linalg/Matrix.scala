@@ -66,8 +66,9 @@ trait Matrix[@spec(Double, Int, Float, Long) V] extends MatrixLike[V, Matrix[V]]
   def toString(maxLines : Int = Terminal.terminalHeight - 3,
                maxWidth : Int = Terminal.terminalWidth) : String = {
     val showRows = if (rows > maxLines) maxLines - 1 else rows
+
     def colWidth(col : Int) =
-      if (showRows > 0) (0 until showRows).map(row => this(row,col).toString.length+2).max else 0
+      if (showRows > 0) (0 until showRows).map(row => if(this(row,col)!=null) this(row,col).toString.length+2 else 3).max else 0
 
     val colWidths = new scala.collection.mutable.ArrayBuffer[Int]
     var col = 0
@@ -90,7 +91,7 @@ trait Matrix[@spec(Double, Int, Float, Long) V] extends MatrixLike[V, Matrix[V]]
 
     val rv = new scala.StringBuilder
     for (row <- 0 until showRows; col <- 0 until colWidths.length) {
-      val cell = this(row,col).toString
+      val cell = if (this(row,col)!=null) this(row,col).toString else "--"
       rv.append(cell)
       rv.append(" " * (colWidths(col) - cell.length))
       if (col == colWidths.length - 1) {
