@@ -14,40 +14,63 @@ trait OptimizationPackage[Function, Vector] {
   def minimize(fn: Function, init: Vector, options: OptimizationOption*):Vector
 }
 
+trait IterableOptimizationPackage[Function, Vector, State] extends OptimizationPackage[Function, Vector] {
+  def iterations(fn: Function, init: Vector, options: OptimizationOption*):Iterator[State]
+}
+
 object OptimizationPackage {
-  class FirstOrderOptimizationPackage[DF, Vector]()(implicit space: MutableFiniteCoordinateField[Vector, _, Double],
-                                                    df: DF <:< DiffFunction[Vector]) extends OptimizationPackage[DF, Vector] {
+  class LBFGSMinimizationPackage[DF, Vector]()(implicit space: MutableCoordinateField[Vector, Double],
+                                                    df: DF <:< DiffFunction[Vector]) extends IterableOptimizationPackage[DF, Vector, LBFGS[Vector]#State] {
     def minimize(fn: DF, init: Vector, options: OptimizationOption*):Vector = {
-      options.foldLeft(OptParams())( (a,b) => b apply a).minimize(new CachedDiffFunction(fn)(space.copy), init)
+      iterations(fn, init, options:_*).last.x
+    }
+
+    override def iterations(fn: DF, init: Vector, options: OptimizationOption*): Iterator[LBFGS[Vector]#State] = {
+      options.foldLeft(OptParams())( (a,b) => b apply a).iterations(new CachedDiffFunction(fn)(space.copy), init)
     }
   }
 
-  implicit def firstOrderPackage[DF, Vector](implicit space: MutableFiniteCoordinateField[Vector, _, Double], df: DF <:< DiffFunction[Vector]) = new FirstOrderOptimizationPackage[DF, Vector]()
+  implicit def lbfgsMinimizationPackage[DF, Vector](implicit space: MutableFiniteCoordinateField[Vector, _, Double], df: DF <:< DiffFunction[Vector]): LBFGSMinimizationPackage[DF, Vector] = {
+    new LBFGSMinimizationPackage[DF, Vector]()
+  }
 
   class SecondOrderOptimizationPackage[Vector, Hessian]()(implicit space: MutableFiniteCoordinateField[Vector, _, Double],
-                                                          mult: OpMulMatrix.Impl2[Hessian, Vector, Vector]) extends OptimizationPackage[SecondOrderFunction[Vector, Hessian], Vector] {
+                                                          mult: OpMulMatrix.Impl2[Hessian, Vector, Vector]) extends IterableOptimizationPackage[SecondOrderFunction[Vector, Hessian], Vector, TruncatedNewtonMinimizer[Vector, Hessian]#State] {
     def minimize(fn: SecondOrderFunction[Vector, Hessian], init: Vector, options: OptimizationOption*):Vector = {
+      iterations(fn, init, options:_*).last.x
+    }
+
+    override def iterations(fn: SecondOrderFunction[Vector, Hessian], init: Vector, options: OptimizationOption*): Iterator[TruncatedNewtonMinimizer[Vector, Hessian]#State] = {
       val params = options.foldLeft(OptParams())( (a,b) => b apply a)
       if(params.useL1) throw new UnsupportedOperationException("Can't use L1 with second order optimizer right now")
       val minimizer = new TruncatedNewtonMinimizer[Vector,Hessian](params.maxIterations, params.tolerance, params.regularization)
-      minimizer.minimize(fn, init)
+      minimizer.iterations(fn, init)
     }
   }
 
   implicit def secondOrderPackage[Vector, Hessian](implicit space: MutableFiniteCoordinateField[Vector, _, Double],
                                                    mult: OpMulMatrix.Impl2[Hessian, Vector, Vector]) = new SecondOrderOptimizationPackage[Vector, Hessian]()
 
-  class FirstOrderStochasticOptimizationPackage[Vector]()(implicit space: MutableFiniteCoordinateField[Vector, _, Double]) extends OptimizationPackage[StochasticDiffFunction[Vector], Vector] {
+  class FirstOrderStochasticOptimizationPackage[Vector]()(implicit space: MutableFiniteCoordinateField[Vector, _, Double]) extends IterableOptimizationPackage[StochasticDiffFunction[Vector], Vector, FirstOrderMinimizer[Vector, StochasticDiffFunction[Vector]]#State] {
     def minimize(fn: StochasticDiffFunction[Vector], init: Vector, options: OptimizationOption*):Vector = {
-      options.foldLeft(OptParams())( (a,b) => b apply a).iterations(fn, init).last.x
+      iterations(fn, init, options:_*).last.x
+    }
+
+    override def iterations(fn: StochasticDiffFunction[Vector], init: Vector, options: OptimizationOption*): Iterator[FirstOrderMinimizer[Vector, StochasticDiffFunction[Vector]]#State] = {
+      options.foldLeft(OptParams())( (a,b) => b apply a).iterations(fn, init)
     }
   }
 
   implicit def firstOrderStochasticPackage[Vector](implicit space: MutableFiniteCoordinateField[Vector, _, Double]) = new FirstOrderStochasticOptimizationPackage[Vector]()
 
-  class FirstOrderBatchOptimizationPackage[Vector]()(implicit space: MutableFiniteCoordinateField[Vector, _, Double]) extends OptimizationPackage[BatchDiffFunction[Vector], Vector] {
+  class FirstOrderBatchOptimizationPackage[Vector]()(implicit space: MutableFiniteCoordinateField[Vector, _, Double]) extends IterableOptimizationPackage[BatchDiffFunction[Vector], Vector, FirstOrderMinimizer[Vector, BatchDiffFunction[Vector]]#State] {
     def minimize(fn: BatchDiffFunction[Vector], init: Vector, options: OptimizationOption*):Vector = {
-      options.foldLeft(OptParams())( (a,b) => b apply a).iterations(new CachedBatchDiffFunction(fn)(space.copy), init).last.x
+      iterations(fn, init, options:_*).last.x
+    }
+
+    override def iterations(fn: BatchDiffFunction[Vector], init: Vector, options: OptimizationOption*): Iterator[FirstOrderMinimizer[Vector, BatchDiffFunction[Vector]]#State] = {
+      options.foldLeft(OptParams())( (a,b) => b apply a).iterations(new CachedBatchDiffFunction(fn)(space.copy), init)
+
     }
   }
 
