@@ -167,6 +167,16 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     assert(ptp(m) === 4)
   }
 
+  test("elementwise max") {
+    val v = DenseVector(2, 0, 3, 2, -1).asDenseMatrix
+    val v2 = DenseVector(3, -1, 3, 4, -4).asDenseMatrix
+
+    assert(max(v, v2) === DenseVector(3, 0, 3, 4, -1).asDenseMatrix)
+    assert(max(v, 2) === DenseVector(2, 2, 3, 2, 2).asDenseMatrix)
+
+    assert(min(v, 2) === DenseVector(2, 0, 2, 2, -1).asDenseMatrix)
+  }
+
   test("Min/Max[Float]") {
     val m = convert(DenseMatrix((1,0,0),(2,3,-1)), Float)
     assert(argmin(m) === (1,2))
@@ -421,7 +431,7 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
 
     // matrix-vector solve
     val r2 : DenseVector[Double] = DenseMatrix((1.0,3.0,4.0),(2.0,0.0,6.0)) \ DenseVector(1.0,3.0)
-    assert( (r2 - DenseVector(0.1813186813186811, -0.3131868131868131, 0.43956043956043944)).norm(inf) < 1E-5)
+    assert( norm(r2 - DenseVector(0.1813186813186811, -0.3131868131868131, 0.43956043956043944), inf) < 1E-5)
 
     // wide matrix solve
     val r3 : DenseMatrix[Double] = DenseMatrix((1.0,3.0,4.0),(2.0,0.0,6.0)) \ DenseMatrix((1.0,2.0),(3.0,4.0))
@@ -443,7 +453,7 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
 
     // matrix-vector solve
     val r2 : DenseVector[Float] = DenseMatrix((1.0f,3.0f,4.0f),(2.0f,0.0f,6.0f)) \ DenseVector(1.0f,3.0f)
-    assert( (r2 - DenseVector(0.1813186813186811f, -0.3131868131868131f, 0.43956043956043944f)).norm(inf) < 1E-5)
+    assert( norm(r2 - DenseVector(0.1813186813186811f, -0.3131868131868131f, 0.43956043956043944f)) < 1E-5)
 
     // wide matrix solve
     val r3 : DenseMatrix[Float] = DenseMatrix((1.0f,3.0f,4.0f),(2.0f,0.0f,6.0f)) \ DenseMatrix((1.0f,2.0f),(3.0f,4.0f))
