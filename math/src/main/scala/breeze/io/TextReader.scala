@@ -75,7 +75,7 @@ trait TextReader { self =>
     var c = peek();
 
     if (c < 0) {
-      null;
+      return null;
     }
 
     while (c >= 0 && c != '\r' && c != '\n') {
@@ -107,7 +107,7 @@ trait TextReader { self =>
     var c = peek();
 
     if (c < 0) {
-      null;
+      return null;
     }
 
     while (c >= 0 && fn(c)) {
@@ -180,7 +180,7 @@ trait TextReader { self =>
     var c = peek();
 
     if (c < 0) {
-      null;
+      return null;
     }
 
     if (c == '-') {
