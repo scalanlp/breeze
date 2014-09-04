@@ -8,7 +8,7 @@ class cosineDistanceTest extends FunSuite {
   test("it should be correct with dense vectors") {
     val v1 = DenseVector(1.0, 2.0)
     val v2 = DenseVector(3.0, 4.0)
-    assert(cosineDistance(v2, v2) === 0.01613008990009257)
+    assert(cosineDistance(v1, v2) === 0.01613008990009257)
   }
 
   test("it should be correct with sparse vectors") {
