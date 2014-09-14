@@ -1,6 +1,5 @@
-package breeze.linalg.functions
+package breeze.linalg
 
-import breeze.linalg.{SparseVector, DenseVector}
 import org.scalatest.FunSuite
 
 class euclideanDistanceTest extends FunSuite {
