@@ -1,7 +1,7 @@
 package breeze.optimize
 
 import breeze.linalg.norm
-import breeze.math.{MutableCoordinateField, MutableFiniteCoordinateField, NormedModule}
+import breeze.math.{MutableEnumeratedCoordinateField, MutableCoordinateField, MutableFiniteCoordinateField, NormedModule}
 import breeze.optimize.FirstOrderMinimizer.ConvergenceReason
 import breeze.stats.distributions.{RandBasis, ThreadLocalRandomGenerator}
 import breeze.util.Implicits._
@@ -216,7 +216,7 @@ object FirstOrderMinimizer {
     }
 
     @deprecated("Use breeze.optimize.minimize(f, init, params) instead.", "0.10")
-    def minimize[T](f: DiffFunction[T], init: T)(implicit space: MutableCoordinateField[T, Double]): T = {
+    def minimize[T](f: DiffFunction[T], init: T)(implicit space: MutableEnumeratedCoordinateField[T, _, Double]): T = {
       this.iterations(f, init).last.x
     }
 
@@ -242,8 +242,8 @@ object FirstOrderMinimizer {
     }
 
     @deprecated("Use breeze.optimize.iterations(f, init, params) instead.", "0.10")
-    def iterations[T](f: DiffFunction[T], init:T)(implicit space: MutableCoordinateField[T, Double]): Iterator[LBFGS[T]#State] = {
-       if(useL1) new OWLQN[T](maxIterations, 5, regularization, tolerance)(space).iterations(f,init)
+    def iterations[T, K](f: DiffFunction[T], init:T)(implicit space: MutableEnumeratedCoordinateField[T, K, Double]): Iterator[LBFGS[T]#State] = {
+       if(useL1) new OWLQN[T, K](maxIterations, 5, regularization, tolerance)(space).iterations(f,init)
       else (new LBFGS[T](maxIterations, 5, tolerance=tolerance)(space)).iterations(DiffFunction.withL2Regularization(f,regularization),init)
     }
   }

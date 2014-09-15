@@ -19,7 +19,7 @@ trait IterableOptimizationPackage[Function, Vector, State] extends OptimizationP
 }
 
 object OptimizationPackage {
-  class LBFGSMinimizationPackage[DF, Vector]()(implicit space: MutableCoordinateField[Vector, Double],
+  class LBFGSMinimizationPackage[DF, Vector]()(implicit space: MutableEnumeratedCoordinateField[Vector, _, Double],
                                                     df: DF <:< DiffFunction[Vector]) extends IterableOptimizationPackage[DF, Vector, LBFGS[Vector]#State] {
     def minimize(fn: DF, init: Vector, options: OptimizationOption*):Vector = {
       iterations(fn, init, options:_*).last.x
@@ -91,7 +91,11 @@ trait OptimizationPackageLowPriority {
 
       val wrapped = fn.throughLens[Wrapper]
 
-      val res = options.foldLeft(OptParams())( (a,b) => b apply a).minimize(new CachedDiffFunction(wrapped)(mutaVspace.copy), wrap(init))
+
+      val params: OptParams = options.foldLeft(OptParams())((a, b) => b apply a)
+      require(!params.useL1, "Sorry, we can't use L1 with immutable objects right now...")
+      val lbfgs: LBFGS[Wrapper] = new LBFGS[Wrapper](tolerance = params.tolerance, maxIter = params.maxIterations)
+      val res = lbfgs.minimize(DiffFunction.withL2Regularization(wrapped, params.regularization), wrap(init))
       unwrap(res)
     }
   }
