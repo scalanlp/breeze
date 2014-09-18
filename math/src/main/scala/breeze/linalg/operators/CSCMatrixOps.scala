@@ -186,7 +186,7 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring {  this: CSCMatrix.type =>
         }
         val colPtrs: Array[Int] = Array.tabulate[Int](cols + 1)((i: Int) => i * rows)
         val rowIndices: Array[Int] = Array.tabulate[Int](nData.length)((i: Int) => i % rows)
-        new CSCMatrix[T](nData,rows,cols,colPtrs,rowIndices)
+        new CSCMatrix[T](nData,rows,cols,colPtrs,nData.length,rowIndices)
       }
     }
   }
@@ -1181,7 +1181,7 @@ trait CSCMatrixOps_Ring extends CSCMatrixOpsLowPrio with SerializableLogging {
         }
         val colPtrs: Array[Int] = Array.tabulate[Int](cols + 1)((i: Int) => i * rows)
         val rowIndices: Array[Int] = Array.tabulate[Int](nData.length)((i: Int) => i % rows)
-        new CSCMatrix[T](nData,rows,cols,colPtrs,rowIndices)
+        new CSCMatrix[T](nData,rows,cols,colPtrs,nData.length,rowIndices)
       }
     }
   }
