@@ -40,11 +40,11 @@ package object linalg {
   /*
    * Distance metric types to use with generic distance function
    */
-  type euclidean = euclideanDistance.type
-  type manhattan = manhattanDistance.type
-  type squared = squaredDistance.type
-  type tanimoto = tanimotoDistance.type
-  type minkowski = minkowskiDistance.type
+//  type euclidean = euclideanDistance.type
+//  type manhattan = manhattanDistance.type
+//  type squared = squaredDistance.type
+//  type tanimoto = tanimotoDistance.type
+//  type minkowski = minkowskiDistance.type
 
 //  object euclidean extends DistanceMeasure
 //  object manhattan extends DistanceMeasure

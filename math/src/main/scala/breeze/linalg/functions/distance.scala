@@ -10,21 +10,21 @@ import breeze.numerics._
  * @author Gabriel Schubiner <gabeos@cs.washington.edu>
  */
 
-trait DistanceMeasure extends UFunc {
-}
+trait DistanceMeasure extends UFunc {}
 
-object distance extends UFunc {
-  implicit def genericDistance[DistanceType, T, U](implicit dist: DistanceType <:< DistanceMeasure,
-                                                   dm: UFunc.UImpl2[DistanceType,T,U,Double]): Impl3[DistanceType,T,U,Double] =
-    new Impl3[DistanceType, T, U, Double] {
-      def apply(v: DistanceType, v2: T, v3: U): Double = v.apply(v2,v3)(dm)
-    }
-}
+//
+//object distance extends UFunc {
+//  implicit def genericDistance[DistanceType, T, U](implicit dist: DistanceType <:< DistanceMeasure): Impl3[DistanceType,T,U,Double] =
+//    new Impl3[DistanceType, T, U, Double] {
+//      def apply(v: DistanceType, v2: T, v3: U): Double = v.apply(v2,v3)
+//    }
+//}
 
 /**
  * A Euclidean distance metric implementation between two points
  */
 object euclideanDistance extends DistanceMeasure {
+
   implicit def euclideanDistanceFromZippedValues[T, U]
   (implicit zipImpl: zipValues.Impl2[T, U, ZippedValues[Double, Double]]): Impl2[T, U, Double] = {
     new Impl2[T, U, Double] {
