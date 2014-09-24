@@ -1,7 +1,7 @@
 package breeze.linalg.support
 
-import breeze.linalg.{DenseVector, argtopk, QuasiTensor}
 import breeze.collection.mutable.Beam
+import breeze.linalg.{QuasiTensor, argtopk}
 
 /**
  * TODO
@@ -16,7 +16,7 @@ private[linalg] trait LowPriorityArgTopK {
         implicit val ordK = ord.on(q.apply)
         val queue = new Beam[I](k)
         queue ++= q.keysIterator
-        queue.toIndexedSeq.reverse
+        queue.toIndexedSeq.sorted(ordK.reverse)
       }
     }
   }
