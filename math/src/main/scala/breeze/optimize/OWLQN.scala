@@ -14,7 +14,7 @@ import breeze.math._
  *
  * @author dlwh
  */
-class OWLQN[T, K](maxIter: Int, m: Int, l1reg: K => Double, tolerance: Double)(implicit space: MutableEnumeratedCoordinateField[T, K, Double]) extends LBFGS[T](maxIter, m, tolerance=tolerance) with SerializableLogging {
+class OWLQN[K, T](maxIter: Int, m: Int, l1reg: K => Double, tolerance: Double)(implicit space: MutableEnumeratedCoordinateField[T, K, Double]) extends LBFGS[T](maxIter, m, tolerance=tolerance) with SerializableLogging {
 
   def this(maxIter: Int, m: Int, l1reg: K => Double)(implicit space: MutableEnumeratedCoordinateField[T, K, Double]) = this(maxIter, m, l1reg, 1E-8)
 
