@@ -4,7 +4,7 @@ import breeze.linalg.{DenseVector, DenseMatrix}
 import scala.reflect.ClassTag
 import breeze.math.Complex
 
-/**
+/**This utility class facilitates transparent access of breeze data objects from plain Java without Scala-related Generic complications.
  * @author ktakagaki
  * @date 03/20/2014.
  */
