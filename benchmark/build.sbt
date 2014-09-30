@@ -3,9 +3,11 @@ organization := "org.scalanlp"
 // lazy val breeze = project in file("core")
 name := "breeze-benchmark"
 
-scalaVersion := "2.10.3"
+scalaVersion := "2.11.1"
 
-addCompilerPlugin("org.scala-lang.plugins" % "macro-paradise" % "2.0.0-SNAPSHOT" cross CrossVersion.full)
+crossScalaVersions  := Seq("2.11.1", "2.11.0", "2.10.3")
+
+addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0-M1" cross CrossVersion.full)
 
 publishMavenStyle := true
 
@@ -19,7 +21,6 @@ publishTo <<= version { (v: String) =>
 
 publishArtifact in Test := false
 
-
 libraryDependencies ++= Seq(
       "org.apfloat" % "apfloat" % "1.6.3",
       "org.jscience" % "jscience" % "4.3.1",
@@ -32,27 +33,6 @@ libraryDependencies ++= Seq(
       "com.google.code.caliper" % "caliper" % "1.0-SNAPSHOT" from "http://plastic-idolatry.com/jars/caliper-1.0-SNAPSHOT.jar",
       "com.google.code.gson" % "gson" % "1.7.1"
       )
-
-lazy val key: sbt.AttributeKey[Boolean] = AttributeKey[Boolean]("javaOptionsPatched")
-
-onLoad in Global ~= { previous => state =>
-  val k = key.asInstanceOf[sbt.AttributeKey[Boolean]]
-  previous {
-    state.get(k) match {
-      case None =>
-        // get the runtime classpath, turn into a colon-delimited string
-        // return a state with javaOptionsPatched = true and javaOptions set correctly
-        val extracted = Project.extract(state)
-        val set = for(proj <- extracted.structure.allProjectRefs) yield {
-          val classPath = Project.runTask(fullClasspath in Runtime in proj, state).get._2.toEither.right.map(_.files.mkString(":")).right.getOrElse("")
-          javaOptions in (proj, Runtime) ++= Seq("-cp", classPath)
-        }
-        extracted.append(set, state.put(k, true))
-        case Some(_) =>
-        state // the javaOptions are already patched
-    }
-  }
-}
 
 pomIncludeRepository := { _ => false }
 
@@ -83,11 +63,7 @@ scalacOptions ++= Seq("-deprecation","-language:_")
 
 // scalacOptions in (Compile, console) += "-Xlog-implicits"
 
-
   javacOptions ++= Seq("-target", "1.6", "-source","1.6")
-
-
-
 
 resolvers ++= Seq(
     Resolver.mavenLocal,
@@ -98,11 +74,9 @@ resolvers ++= Seq(
 
 testOptions in Test += Tests.Argument("-oDF")
 
-
 publish := ()
 
 publishLocal := ()
 
 publishArtifact := false
-
 

@@ -30,7 +30,7 @@ trait BuildsRandomVectors {
       d(i) = uniform.draw()
       i += 1
     }
-    new DenseMatrix(m, n, d, 0, 1)
+    new DenseMatrix(m, n, d, 0, m)
   }
 }
 

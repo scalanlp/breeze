@@ -2,7 +2,7 @@
 
 Breeze is a library for numerical processing. It aims to be generic, clean, and powerful without sacrificing (much) efficiency.
 
-The current version is 0.8-SNAPSHOT. The latest release is 0.7.
+The current version is 0.10-SNAPSHOT. The latest release is 0.9.
 ## Documentation
 
 * https://github.com/scalanlp/breeze/wiki/Quickstart
@@ -35,10 +35,10 @@ For **SBT**, Add these lines to your SBT project definition:
 ```scala
 libraryDependencies  ++= Seq(
             // other dependencies here
-            "org.scalanlp" % "breeze_2.10" % "0.7",
+            "org.scalanlp" %% "breeze" % "0.8.1",
             // native libraries are not included by default. add this if you want them (as of 0.7)
             // native libraries greatly improve performance, but increase jar sizes.
-            "org.scalanlp" % "breeze-natives_2.10" % "0.7",
+            "org.scalanlp" %% "breeze-natives" % "0.8.1"
 )
 
 resolvers ++= Seq(
@@ -60,8 +60,8 @@ Maven looks like this:
 ```xml
 <dependency>
   <groupId>org.scalanlp</groupId>
-	<artifactId>breeze_2.10</artifactId>
-	<version>0.6.1</version>
+	<artifactId>breeze_2.10</artifactId> <!-- or 2.11 -->
+	<version>0.8.1</version>
 </dependency>
 ```
 
@@ -98,5 +98,8 @@ Contributions from:
 * Sam Halliday (@fommil)
 * Chris Stucchio (@stucchio)
 * Xiangrui Meng (@mengxr)
+* Gabriel Schubiner (@gabeos)
+
+
 
 And others (contact David Hall if you've contributed code and aren't listed).
