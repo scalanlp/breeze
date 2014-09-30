@@ -1113,6 +1113,24 @@ trait SparseVectorOps { this: SparseVector.type =>
   implicit val zipMap_f: CanZipMapValuesSparseVector[Float, Float] = new CanZipMapValuesSparseVector[Float, Float]
   implicit val zipMap_i: CanZipMapValuesSparseVector[Int, Int] = new CanZipMapValuesSparseVector[Int, Int]
 
+  class CanZipMapKeyValuesSparseVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag:Zero]
+    extends CanZipMapKeyValues[SparseVector[V],Int, V,RV,SparseVector[RV]] {
+    def create(length : Int): SparseVector[RV] = zeros(length)
+
+    /**Maps all corresponding values from the two collection. */
+    def map(from: SparseVector[V], from2: SparseVector[V], fn: (Int, V, V) => RV): SparseVector[RV] = {
+      require(from.length == from2.length, "Vector lengths must match!")
+      val result: SparseVector[RV] = create(from.length)
+      var i = 0
+      while (i < from.length) {
+        result(i) = fn(i, from(i), from2(i))
+        i += 1
+      }
+      result
+    }
+  }
+  implicit def zipMapKV[V, R:ClassTag:Zero] = new CanZipMapKeyValuesSparseVector[V, R]
+
 
   implicit def implOpNeg_SVT_eq_SVT[@spec(Double, Int, Float, Long)  V]
   (implicit scale: OpMulScalar.Impl2[SparseVector[V], V, SparseVector[V]], field: Ring[V]):

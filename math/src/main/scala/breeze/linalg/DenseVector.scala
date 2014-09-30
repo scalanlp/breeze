@@ -489,6 +489,25 @@ object DenseVector extends VectorConstructors[DenseVector]
   implicit val zipMap_f: CanZipMapValuesDenseVector[Float, Float] = new CanZipMapValuesDenseVector[Float, Float]
   implicit val zipMap_i: CanZipMapValuesDenseVector[Int, Int] = new CanZipMapValuesDenseVector[Int, Int]
 
+  class CanZipMapKeyValuesDenseVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag] extends CanZipMapKeyValues[DenseVector[V],Int, V,RV,DenseVector[RV]] {
+    def create(length : Int) = new DenseVector(new Array[RV](length))
+
+    /**Maps all corresponding values from the two collection. */
+    def map(from: DenseVector[V], from2: DenseVector[V], fn: (Int, V, V) => RV): DenseVector[RV] = {
+      require(from.length == from2.length, "Vector lengths must match!")
+      val result = create(from.length)
+      var i = 0
+      while (i < from.length) {
+        result.data(i) = fn(i, from(i), from2(i))
+        i += 1
+      }
+      result
+    }
+  }
+
+
+  implicit def zipMapKV[V, R:ClassTag]: CanZipMapKeyValuesDenseVector[V, R] = new CanZipMapKeyValuesDenseVector[V, R]
+
   implicit val canAddIntoD: OpAdd.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = {
     new OpAdd.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
       def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
@@ -610,11 +629,11 @@ object DenseVector extends VectorConstructors[DenseVector]
           math.sqrt(sq)
         } else if (p == 1) {
           var sum = 0.0
-          v.foreach (x => sum += x.abs)
+          v.foreach (x => sum += math.abs(x))
           sum
         } else if (p == Double.PositiveInfinity) {
           var max = 0.0
-          v.foreach (x => max = math.max(max, x.abs))
+          v.foreach (x => max = math.max(max, math.abs(x)))
           max
         } else if (p == 0) {
           var nnz = 0
@@ -622,7 +641,7 @@ object DenseVector extends VectorConstructors[DenseVector]
           nnz
         } else {
           var sum = 0.0
-          v.foreach (x => sum += math.pow(x.abs, p))
+          v.foreach (x => sum += math.pow(math.abs(x), p))
           math.pow(sum, 1.0 / p)
         }
       }
