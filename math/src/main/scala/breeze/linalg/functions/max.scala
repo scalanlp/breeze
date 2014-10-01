@@ -5,9 +5,8 @@ import breeze.macros.expand
 import breeze.linalg.support.{CanTransformValues, CanMapValues, CanTraverseValues}
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 
-//ToDo: minMax function to find both in one go
-
 object max extends UFunc {
+
 
   @expand
   @expand.valify
@@ -66,6 +65,15 @@ object max extends UFunc {
 
   }
 
+
+  implicit def maxVS[T, U, LHS, RHS, RV](implicit cmvH: CanMapValues.HandHold[T, LHS],
+                                         maxImpl: max.Impl2[LHS, RHS, LHS],
+                                         cmv: CanMapValues[T, LHS, LHS, U]):Impl2[T, RHS, U] = {
+    new Impl2[T, RHS, U] {
+      override def apply(v: T, v2: RHS): U = cmv.map(v, maxImpl(_, v2))
+    }
+  }
+
   /**
    * Method for computing the max of the first length elements of an array. Arrays
    * of size 0 give Double.NegativeInfinity
@@ -82,6 +90,7 @@ object max extends UFunc {
     }
     accum
   }
+
 }
 
 
@@ -148,6 +157,14 @@ object min extends UFunc {
       visit.min
     }
 
+  }
+
+  implicit def minVS[T, U, LHS, RHS, RV](implicit cmvH: CanMapValues.HandHold[T, LHS],
+                                         maxImpl: min.Impl2[LHS, RHS, LHS],
+                                         cmv: CanMapValues[T, LHS, LHS, U]):Impl2[T, RHS, U] = {
+    new Impl2[T, RHS, U] {
+      override def apply(v: T, v2: RHS): U = cmv.map(v, maxImpl(_, v2))
+    }
   }
 }
 

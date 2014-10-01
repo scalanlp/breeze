@@ -69,7 +69,9 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
                            val maxNumIt: Int = 500,
                            val maxSrchIt: Int = 50,
                            val gamma: Double = 1e-4,
-                           val projection: DenseVector[Double] => DenseVector[Double] = identity)(implicit space: MutableInnerProductModule[DenseVector[Double],Double]) extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]](maxIter = maxNumIt, tolerance = tolerance) with Projecting[DenseVector[Double]] with SerializableLogging {
+                           val projection: DenseVector[Double] => DenseVector[Double] = identity)
+                          (implicit space: MutableInnerProductModule[DenseVector[Double],Double])
+  extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]](maxIter = maxNumIt, tolerance = tolerance) with Projecting[DenseVector[Double]] with SerializableLogging {
   val innerOptimizer = new SpectralProjectedGradient[DenseVector[Double], DiffFunction[DenseVector[Double]]](
     testOpt = true,
     tolerance = tolerance,
@@ -89,7 +91,7 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
   override protected def adjust(newX: DenseVector[Double], newGrad: DenseVector[Double], newVal: Double):(Double,DenseVector[Double]) = (newVal,-projectedVector(newX, -newGrad))
 
   private def computeGradient(x: DenseVector[Double], g: DenseVector[Double]): DenseVector[Double] = projectedVector(x, -g)
-  private def computeGradientNorm(x: DenseVector[Double], g: DenseVector[Double]): Double = computeGradient(x, g).norm(Double.PositiveInfinity)
+  private def computeGradientNorm(x: DenseVector[Double], g: DenseVector[Double]): Double = norm(computeGradient(x, g),Double.PositiveInfinity)
 
   protected def chooseDescentDirection(state: State, fn: DiffFunction[DenseVector[Double]]): DenseVector[Double] = {
     import state._
@@ -109,8 +111,8 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
 
   protected def determineStepSize(state: State, fn: DiffFunction[DenseVector[Double]], dir: DenseVector[Double]): Double = {
     if (state.iter == 0)
-      return scala.math.min(1.0, 1.0 / state.grad.norm(1.0))
-    val dirnorm = dir.norm(Double.PositiveInfinity)
+      return scala.math.min(1.0, 1.0 / norm(state.grad,1.0))
+    val dirnorm = norm(dir, Double.PositiveInfinity)
     if(dirnorm < 1E-10) return 0.0
     import state._
     // Backtracking line-search
@@ -140,7 +142,7 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
 
     if (srchit >= maxSrchIt) {
       logger.info("PQN: Line search cannot make further progress")
-      throw new LineSearchFailed(state.grad.norm(Double.PositiveInfinity), dir.norm(Double.PositiveInfinity))
+      throw new LineSearchFailed(norm(state.grad,Double.PositiveInfinity), norm(dir, Double.PositiveInfinity))
     }
     lambda
   }

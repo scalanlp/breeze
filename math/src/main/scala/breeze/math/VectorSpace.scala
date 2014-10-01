@@ -176,6 +176,8 @@ trait MutableCoordinateField[V, S] extends CoordinateField[V, S] with MutableVec
  */
 trait EnumeratedCoordinateField[V, I, S] extends CoordinateField[V, S] {
   implicit def hasOps(v: V): NumericOps[V] with QuasiTensor[I, S]
+
+  implicit def zipMapKeyValues: CanZipMapKeyValues[V, I, S, S, V]
 }
 
 /**
@@ -265,7 +267,6 @@ object VectorField {
                  _field: Field[S],
                  _mulVV: OpMulScalar.Impl2[V, V, V],
                  _divVV: OpDiv.Impl2[V, V, V],
-                 _scaleAddVSV: scaleAdd.InPlaceImpl3[V, S, V],
                  _zeroLike: CanCreateZerosLike[V, V],
                  _mulVS: OpMulScalar.Impl2[V, S, V],
                  _divVS: OpDiv.Impl2[V, S, V],
@@ -274,10 +275,6 @@ object VectorField {
                  _dotVV: OpMulInner.Impl2[V, V, S],
                  _neg: OpNeg.Impl[V, V],
                  _ops: V <:< NumericOps[V]
-//                 _modVV: OpMod.Impl2[V, V, V],
-//                 _modVS: OpMod.Impl2[V, S, V],
-//                 _powVV: OpPow.Impl2[V, V, V],
-//                 _powVS: OpPow.Impl2[V, S, V]
                   ): VectorField[V, S] = new VectorField[V, S] {
     def scalars: Field[S] = _field
     override implicit def hasOps(v: V): NumericOps[V] = _ops(v)
@@ -291,10 +288,6 @@ object VectorField {
     override implicit def addVV: OpAdd.Impl2[V, V, V] = _addVV
     override implicit def subVV: OpSub.Impl2[V, V, V] = _subVV
     override implicit def neg: OpNeg.Impl[V, V] = _neg
-//    override implicit def modVV: OpMod.Impl2[V, V, V] = _modVV
-//    override implicit def modVS: OpMod.Impl2[V, S, V] = _modVS
-//    override implicit def powVS: OpPow.Impl2[V, S, V] = _powVS
-//    override implicit def powVV: OpPow.Impl2[V, V, V] = _powVV
   }
 }
 
@@ -306,7 +299,6 @@ object MutableModule {
                                                      _mulVS: OpMulScalar.Impl2[V, S, V],
                                                      _addVV: OpAdd.Impl2[V, V, V],
                                                      _subVV: OpSub.Impl2[V, V, V],
-                                                     _neg: OpNeg.Impl[V, V],
                                                      _copy: CanCopy[V],
                                                      _mulIntoVS: OpMulScalar.InPlaceImpl2[V, S],
                                                      _addIntoVV: OpAdd.InPlaceImpl2[V, V],
@@ -340,7 +332,6 @@ object MutableInnerProductVectorSpace {
                  _divVS: OpDiv.Impl2[V, S, V],
                  _addVV: OpAdd.Impl2[V, V, V],
                  _subVV: OpSub.Impl2[V, V, V],
-                 _neg: OpNeg.Impl[V, V],
                  _dotVV: OpMulInner.Impl2[V, V, S],
                  _copy: CanCopy[V],
                  _mulIntoVS: OpMulScalar.InPlaceImpl2[V, S],
@@ -376,15 +367,12 @@ object MutableInnerProductModule {
                  _mulVS: OpMulScalar.Impl2[V, S, V],
                  _addVV: OpAdd.Impl2[V, V, V],
                  _subVV: OpSub.Impl2[V, V, V],
-                 _neg: OpNeg.Impl[V, V],
                  _dotVV: OpMulInner.Impl2[V, V, S],
                  _copy: CanCopy[V],
                  _mulIntoVS: OpMulScalar.InPlaceImpl2[V, S],
                  _addIntoVV: OpAdd.InPlaceImpl2[V, V],
                  _subIntoVV: OpSub.InPlaceImpl2[V, V],
                  _setIntoVV: OpSet.InPlaceImpl2[V, V],
-                 _addIntoVS: OpAdd.InPlaceImpl2[V, S],
-                 _subIntoVS: OpSub.InPlaceImpl2[V, S],
                  _scaleAddVSV: scaleAdd.InPlaceImpl3[V, S, V]
                   ): MutableInnerProductModule[V, S] = new MutableInnerProductModule[V, S] {
     def scalars: Ring[S] = _ring
@@ -425,18 +413,7 @@ object MutableVectorField {
                  _subVV: OpSub.Impl2[V, V, V],
                  _neg: OpNeg.Impl[V, V],
                  _ops: V <:< NumericOps[V],
-                 _dotVV: OpMulInner.Impl2[V, V, S],
-                 _zipMapVals: CanZipMapValues[V, S, S, V],
-                 _traverseVals: CanTraverseValues[V, S],
-                 _mapVals: CanMapValues[V, S, S, V]
-//                 _modVV: OpMod.Impl2[V, V, V],
-//                 _modVS: OpMod.Impl2[V, S, V],
-//                 _powVV: OpPow.Impl2[V, V, V],
-//                 _powVS: OpPow.Impl2[V, S, V],
-//                 _modIntoVV: OpMod.InPlaceImpl2[V, V],
-//                 _modIntoVS: OpMod.InPlaceImpl2[V, S],
-//                 _powIntoVV: OpPow.InPlaceImpl2[V, V],
-//                 _powIntoVS: OpPow.InPlaceImpl2[V, S]
+                 _dotVV: OpMulInner.Impl2[V, V, S]
                   ): MutableVectorField[V, S] = new MutableVectorField[V, S] {
 
     def scalars: Field[S] = _field
@@ -445,10 +422,6 @@ object MutableVectorField {
     override implicit def zeroLike: CanCreateZerosLike[V, V] = _zeroLike
     override implicit def mulVV: OpMulScalar.Impl2[V, V, V] = _mulVV
     override implicit def divVV: OpDiv.Impl2[V, V, V] = _divVV
-//    override implicit def powVV: OpPow.Impl2[V, V, V] = _powVV
-//    override implicit def powVS: OpPow.Impl2[V, S, V] = _powVS
-//    override implicit def modVV: OpMod.Impl2[V, V, V] = _modVV
-//    override implicit def modVS: OpMod.Impl2[V, S, V] = _modVS
     override implicit def copy: CanCopy[V] = _copy
     override implicit def mulIntoVS: OpMulScalar.InPlaceImpl2[V, S] = _mulIntoVS
     override implicit def divIntoVS: OpDiv.InPlaceImpl2[V, S] = _divIntoVS
@@ -456,10 +429,57 @@ object MutableVectorField {
     override implicit def subIntoVV: OpSub.InPlaceImpl2[V, V] = _subIntoVV
     override implicit def mulIntoVV: OpMulScalar.InPlaceImpl2[V, V] = _mulIntoVV
     override implicit def divIntoVV: OpDiv.InPlaceImpl2[V, V] = _divIntoVV
-//    override implicit def powIntoVV: OpPow.InPlaceImpl2[V, V] = _powIntoVV
-//    override implicit def powIntoVS: OpPow.InPlaceImpl2[V, S] = _powIntoVS
-//    override implicit def modIntoVV: OpMod.InPlaceImpl2[V, V] = _modIntoVV
-//    override implicit def modIntoVS: OpMod.InPlaceImpl2[V, S] = _modIntoVS
+    override implicit def mulVS: OpMulScalar.Impl2[V, S, V] = _mulVS
+    override implicit def divVS: OpDiv.Impl2[V, S, V] = _divVS
+    override implicit def addVV: OpAdd.Impl2[V, V, V] = _addVV
+    override implicit def subVV: OpSub.Impl2[V, V, V] = _subVV
+    override implicit def neg: OpNeg.Impl[V, V] = _neg
+    override implicit def dotVV: OpMulInner.Impl2[V, V, S] = _dotVV
+    override implicit def setIntoVV: OpSet.InPlaceImpl2[V, V] = _setIntoVV
+    override implicit def scaleAddVV: scaleAdd.InPlaceImpl3[V, S, V] = _scaleAddVSV
+  }
+}
+
+object MutableLPVectorField {
+  def make[V, S](implicit
+                 _norm: norm.Impl[V, Double],
+                 _norm2: norm.Impl2[V,Double,Double],
+                 _field: Field[S],
+                 _mulVV: OpMulScalar.Impl2[V, V, V],
+                 _divVV: OpDiv.Impl2[V, V, V],
+                 _copy: CanCopy[V],
+                 _mulIntoVS: OpMulScalar.InPlaceImpl2[V, S],
+                 _divIntoVS: OpDiv.InPlaceImpl2[V, S],
+                 _addIntoVV: OpAdd.InPlaceImpl2[V, V],
+                 _subIntoVV: OpSub.InPlaceImpl2[V, V],
+                 _mulIntoVV: OpMulScalar.InPlaceImpl2[V, V],
+                 _divIntoVV: OpDiv.InPlaceImpl2[V, V],
+                 _setIntoVV: OpSet.InPlaceImpl2[V, V],
+                 _scaleAddVSV: scaleAdd.InPlaceImpl3[V, S, V],
+                 _zeroLike: CanCreateZerosLike[V, V],
+                 _mulVS: OpMulScalar.Impl2[V, S, V],
+                 _divVS: OpDiv.Impl2[V, S, V],
+                 _addVV: OpAdd.Impl2[V, V, V],
+                 _subVV: OpSub.Impl2[V, V, V],
+                 _neg: OpNeg.Impl[V, V],
+                 _ops: V <:< NumericOps[V],
+                 _dotVV: OpMulInner.Impl2[V, V, S]
+                  ): MutableLPVectorField[V, S] = new MutableLPVectorField[V, S] {
+
+    def scalars: Field[S] = _field
+    override implicit def hasOps(v: V): NumericOps[V] = _ops(v)
+    override implicit def normImpl: norm.Impl[V, Double] = _norm
+    override implicit def normImpl2: norm.Impl2[V, Double, Double] = _norm2
+    override implicit def zeroLike: CanCreateZerosLike[V, V] = _zeroLike
+    override implicit def mulVV: OpMulScalar.Impl2[V, V, V] = _mulVV
+    override implicit def divVV: OpDiv.Impl2[V, V, V] = _divVV
+    override implicit def copy: CanCopy[V] = _copy
+    override implicit def mulIntoVS: OpMulScalar.InPlaceImpl2[V, S] = _mulIntoVS
+    override implicit def divIntoVS: OpDiv.InPlaceImpl2[V, S] = _divIntoVS
+    override implicit def addIntoVV: OpAdd.InPlaceImpl2[V, V] = _addIntoVV
+    override implicit def subIntoVV: OpSub.InPlaceImpl2[V, V] = _subIntoVV
+    override implicit def mulIntoVV: OpMulScalar.InPlaceImpl2[V, V] = _mulIntoVV
+    override implicit def divIntoVV: OpDiv.InPlaceImpl2[V, V] = _divIntoVV
     override implicit def mulVS: OpMulScalar.Impl2[V, S, V] = _mulVS
     override implicit def divVS: OpDiv.Impl2[V, S, V] = _divVS
     override implicit def addVV: OpAdd.Impl2[V, V, V] = _addVV
@@ -494,24 +514,16 @@ object MutableCoordinateField {
                     _addVV: OpAdd.Impl2[V, V, V],
                     _subVV: OpSub.Impl2[V, V, V],
                     _neg: OpNeg.Impl[V, V],
-//                    _modVV: OpMod.Impl2[V, V, V],
-//                    _modVS: OpMod.Impl2[V, S, V],
-//                    _powVV: OpPow.Impl2[V, V, V],
-//                    _powVS: OpPow.Impl2[V, S, V],
-//                    _modIntoVV: OpMod.InPlaceImpl2[V, V],
-//                    _modIntoVS: OpMod.InPlaceImpl2[V, S],
-//                    _powIntoVV: OpPow.InPlaceImpl2[V, V],
-//                    _powIntoVS: OpPow.InPlaceImpl2[V, S],
                     _dotVV: OpMulInner.Impl2[V, V, S],
                     _zipMapVals: CanZipMapValues[V, S, S, V],
                     _traverseVals: CanTraverseValues[V, S],
                     _mapVals: CanMapValues[V, S, S, V]): MutableCoordinateField[V, S] = new MutableCoordinateField[V, S] {
 
-    override implicit def normImpl2: norm.Impl2[V, Double, Double] = _normImpl2
 
     def scalars: Field[S] = _field
     override implicit def hasOps(v: V): NumericOps[V] = _ops(v)
     override implicit def normImpl: norm.Impl[V, Double] = _norm
+    override implicit def normImpl2: norm.Impl2[V, Double, Double] = _normImpl2
     override implicit def zeroLike: CanCreateZerosLike[V, V] = _zeroLike
     override implicit def mulVV: OpMulScalar.Impl2[V, V, V] = _mulVV
     override implicit def divVV: OpDiv.Impl2[V, V, V] = _divVV
@@ -533,17 +545,8 @@ object MutableCoordinateField {
     override implicit def mapValues: CanMapValues[V, S, S, V] = _mapVals
     override implicit def zipMapValues: CanZipMapValues[V, S, S, V] = _zipMapVals
     override implicit def iterateValues: CanTraverseValues[V, S] = _traverseVals
-//    override implicit def powIntoVV: OpPow.InPlaceImpl2[V, V] = _powIntoVV
-//    override implicit def powIntoVS: OpPow.InPlaceImpl2[V, S] = _powIntoVS
-//    override implicit def modIntoVV: OpMod.InPlaceImpl2[V, V] = _modIntoVV
-//    override implicit def modIntoVS: OpMod.InPlaceImpl2[V, S] = _modIntoVS
-//    override implicit def powVV: OpPow.Impl2[V, V, V] = _powVV
-//    override implicit def powVS: OpPow.Impl2[V, S, V] = _powVS
-//    override implicit def modVV: OpMod.Impl2[V, V, V] = _modVV
-//    override implicit def modVS: OpMod.Impl2[V, S, V] = _modVS
   }
 }
-
 
 object MutableFiniteCoordinateField {
   def make[V, I, S](implicit
@@ -575,24 +578,14 @@ object MutableFiniteCoordinateField {
                     _subVV: OpSub.Impl2[V, V, V],
                     _neg: OpNeg.Impl[V, V],
                     _tabulate: CanTabulate[I,V,S],
-//                    _modVV: OpMod.Impl2[V, V, V],
-//                    _modVS: OpMod.Impl2[V, S, V],
-//                    _powVV: OpPow.Impl2[V, V, V],
-//                    _powVS: OpPow.Impl2[V, S, V],
-//                    _modIntoVV: OpMod.InPlaceImpl2[V, V],
-//                    _modIntoVS: OpMod.InPlaceImpl2[V, S],
-//                    _powIntoVV: OpPow.InPlaceImpl2[V, V],
-//                    _powIntoVS: OpPow.InPlaceImpl2[V, S],
                     _ops: V <:< NumericOps[V] with QuasiTensor[I, S],
                     _dotVV: OpMulInner.Impl2[V, V, S],
                     _zipMapVals: CanZipMapValues[V, S, S, V],
+                    _zipMapKeyVals: CanZipMapKeyValues[V, I, S, S, V],
                     _traverseVals: CanTraverseValues[V, S],
-                    _mapVals: CanMapValues[V, S, S, V]//,
-//                    _evQuasiTensor: <:<[V, QuasiTensor[I, S]]
+                    _mapVals: CanMapValues[V, S, S, V]
                      ): MutableFiniteCoordinateField[V, I, S] = new MutableFiniteCoordinateField[V, I, S] {
     def scalars: Field[S] = _field
-
-//    override implicit def evQuasiTensor: <:<[V, QuasiTensor[I, S]] = _evQuasiTensor
 
     override implicit def hasOps(v: V): NumericOps[V] with QuasiTensor[I, S] = _ops(v)
     override implicit def normImpl: norm.Impl[V, Double] = _norm
@@ -622,19 +615,11 @@ object MutableFiniteCoordinateField {
     override implicit def scaleAddVV: scaleAdd.InPlaceImpl3[V, S, V] = _scaleAddVSV
     override implicit def mapValues: CanMapValues[V, S, S, V] = _mapVals
     override implicit def zipMapValues: CanZipMapValues[V, S, S, V] = _zipMapVals
+    override implicit def zipMapKeyValues: CanZipMapKeyValues[V, I, S, S, V] = _zipMapKeyVals
     override implicit def iterateValues: CanTraverseValues[V, S] = _traverseVals
     override implicit def zero: CanCreateZeros[V, I] = _zero
     override implicit def canDim: dim.Impl[V, I] = _dim
     override implicit def tabulateTensor: CanTabulate[I, V, S] = _tabulate
-
-    //    override implicit def powIntoVV: OpPow.InPlaceImpl2[V, V] = _powIntoVV
-//    override implicit def powIntoVS: OpPow.InPlaceImpl2[V, S] = _powIntoVS
-//    override implicit def modIntoVV: OpMod.InPlaceImpl2[V, V] = _modIntoVV
-//    override implicit def modIntoVS: OpMod.InPlaceImpl2[V, S] = _modIntoVS
-//    override implicit def powVV: OpPow.Impl2[V, V, V] = _powVV
-//    override implicit def powVS: OpPow.Impl2[V, S, V] = _powVS
-//    override implicit def modVV: OpMod.Impl2[V, V, V] = _modVV
-//    override implicit def modVS: OpMod.Impl2[V, S, V] = _modVS
   }
 }
 
@@ -643,8 +628,6 @@ object MutableEnumeratedCoordinateField {
                     _norm2: norm.Impl2[V, Double, Double],
                     _norm: norm.Impl[V, Double],
                     _field: Field[S],
-                    _addVS: OpAdd.Impl2[V, S, V],
-                    _subVS: OpSub.Impl2[V, S, V],
                     _mulVV: OpMulScalar.Impl2[V, V, V],
                     _divVV: OpDiv.Impl2[V, V, V],
                     _copy: CanCopy[V],
@@ -655,33 +638,21 @@ object MutableEnumeratedCoordinateField {
                     _mulIntoVV: OpMulScalar.InPlaceImpl2[V, V],
                     _divIntoVV: OpDiv.InPlaceImpl2[V, V],
                     _setIntoVV: OpSet.InPlaceImpl2[V, V],
-                    _setIntoVS: OpSet.InPlaceImpl2[V, S],
                     _scaleAddVSV: scaleAdd.InPlaceImpl3[V, S, V],
                     _zeroLike: CanCreateZerosLike[V, V],
-                    _zero: CanCreateZeros[V, I],
                     _mulVS: OpMulScalar.Impl2[V, S, V],
                     _divVS: OpDiv.Impl2[V, S, V],
                     _addVV: OpAdd.Impl2[V, V, V],
                     _subVV: OpSub.Impl2[V, V, V],
                     _neg: OpNeg.Impl[V, V],
-//                    _modVV: OpMod.Impl2[V, V, V],
-//                    _modVS: OpMod.Impl2[V, S, V],
-//                    _powVV: OpPow.Impl2[V, V, V],
-//                    _powVS: OpPow.Impl2[V, S, V],
-//                    _modIntoVV: OpMod.InPlaceImpl2[V, V],
-//                    _modIntoVS: OpMod.InPlaceImpl2[V, S],
-//                    _powIntoVV: OpPow.InPlaceImpl2[V, V],
-//                    _powIntoVS: OpPow.InPlaceImpl2[V, S],
                     _ops: V <:< NumericOps[V] with QuasiTensor[I, S],
                     _dotVV: OpMulInner.Impl2[V, V, S],
                     _zipMapVals: CanZipMapValues[V, S, S, V],
+                    _zipMapKeyVals: CanZipMapKeyValues[V, I, S, S, V],
                     _traverseVals: CanTraverseValues[V, S],
-                    _mapVals: CanMapValues[V, S, S, V]//,
-//                    _evQuasiTensor: <:<[V, QuasiTensor[I, S]]
+                    _mapVals: CanMapValues[V, S, S, V]
                      ): MutableEnumeratedCoordinateField[V, I, S] = new MutableEnumeratedCoordinateField[V, I, S] {
     def scalars: Field[S] = _field
-
-//    override implicit def evQuasiTensor: <:<[V, QuasiTensor[I, S]] = _evQuasiTensor
 
     override implicit def hasOps(v: V): NumericOps[V] with QuasiTensor[I, S] = _ops(v)
     override implicit def normImpl: norm.Impl[V, Double] = _norm
@@ -706,16 +677,8 @@ object MutableEnumeratedCoordinateField {
     override implicit def scaleAddVV: scaleAdd.InPlaceImpl3[V, S, V] = _scaleAddVSV
     override implicit def mapValues: CanMapValues[V, S, S, V] = _mapVals
     override implicit def zipMapValues: CanZipMapValues[V, S, S, V] = _zipMapVals
+    override implicit def zipMapKeyValues: CanZipMapKeyValues[V, I, S, S, V] = _zipMapKeyVals
     override implicit def iterateValues: CanTraverseValues[V, S] = _traverseVals
-
-    //    override implicit def powIntoVV: OpPow.InPlaceImpl2[V, V] = _powIntoVV
-//    override implicit def powIntoVS: OpPow.InPlaceImpl2[V, S] = _powIntoVS
-//    override implicit def modIntoVV: OpMod.InPlaceImpl2[V, V] = _modIntoVV
-//    override implicit def modIntoVS: OpMod.InPlaceImpl2[V, S] = _modIntoVS
-//    override implicit def powVV: OpPow.Impl2[V, V, V] = _powVV
-//    override implicit def powVS: OpPow.Impl2[V, S, V] = _powVS
-//    override implicit def modVV: OpMod.Impl2[V, V, V] = _modVV
-//    override implicit def modVS: OpMod.Impl2[V, S, V] = _modVS
   }
 }
 
@@ -803,6 +766,7 @@ object MutableOptimizationSpace {
                   _opsM: M <:< NumericOps[M] with QuasiTensor[(Int,Int), S],
                   _dotMM: OpMulInner.Impl2[M, M, S],
                   _zipMapValsM: CanZipMapValues[M, S, S, M],
+                  _zipMapKeyVals: CanZipMapKeyValues[V, Int, S, S, V],
                   _traverseValsM: CanTraverseValues[M, S],
                   _mapValsM: CanMapValues[M, S, S, M],
                   _mulMMM: OpMulMatrix.Impl2[M, M, M],
@@ -858,6 +822,7 @@ object MutableOptimizationSpace {
     implicit def mulIntoVV: OpMulScalar.InPlaceImpl2[V, V] = _mulIntoVV
     implicit def setIntoVS: OpSet.InPlaceImpl2[V, S] = _setIntoVS
     implicit def zipMapValues: CanZipMapValues[V, S, S, V] = _zipMapVals
+    override implicit def zipMapKeyValues: CanZipMapKeyValues[V, Int, S, S, V] = _zipMapKeyVals
     implicit def iterateValues: CanTraverseValues[V, S] = _traverseVals
     implicit def mapValues: CanMapValues[V, S, S, V] = _mapVals
     implicit def divVV: OpDiv.Impl2[V, V, V] = _divVV
