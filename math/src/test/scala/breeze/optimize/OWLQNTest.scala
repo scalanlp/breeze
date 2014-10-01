@@ -28,7 +28,7 @@ import breeze.linalg._
 @RunWith(classOf[JUnitRunner])
 class OWLQNTest extends OptimizeTestBase {
   test("super simple") {
-    val lbfgs = new OWLQN[DenseVector[Double]](100,4)
+    val lbfgs = new OWLQN[Int, DenseVector[Double]](100,4)
 
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
@@ -47,7 +47,7 @@ class OWLQNTest extends OptimizeTestBase {
 
 
   test("optimize a simple multivariate gaussian") {
-    val lbfgs = new OWLQN[DenseVector[Double]](100,4,1.0)
+    val lbfgs = new OWLQN[Int, DenseVector[Double]](100,4,1.0)
 
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
@@ -69,26 +69,4 @@ class OWLQNTest extends OptimizeTestBase {
 
   }
 
-  test("optimize a simple multivariate gaussian with counters") {
-    val lbfgsString = new OWLQN[Counter[String,Double]](100,4, 1.0)
-
-    def optimizeThis(init: Counter[String,Double]) = {
-      val f = new DiffFunction[Counter[String,Double]] {
-        def calculate(x: Counter[String,Double]) = {
-          ((x - 3.0) dot (x - 3.0),(x * 2.0) - 6.0)
-        }
-      }
-
-      val result = lbfgsString.minimize(f,init)
-      val ok = norm(result - 2.5,2) < 1E-4
-      if(ok) {
-        true
-      } else {
-        throw new Exception(result.toString + " is not close enough to 2.5: " + norm(result - 2.5, 2))
-      }
-    }
-
-    check(Prop.forAll(optimizeThis _ ))
-
-  }
 }

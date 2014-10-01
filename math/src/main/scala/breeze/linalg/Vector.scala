@@ -219,6 +219,25 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
   implicit val zipMap_f = new CanZipMapValuesVector[Float, Float]
   implicit val zipMap_i = new CanZipMapValuesVector[Int, Int]
 
+  class CanZipMapKeyValuesVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag] extends CanZipMapKeyValues[Vector[V],Int, V,RV,Vector[RV]] {
+    def create(length : Int) = new DenseVector(new Array[RV](length))
+
+    /**Maps all corresponding values from the two collection. */
+    def map(from: Vector[V], from2: Vector[V], fn: (Int, V, V) => RV): Vector[RV] = {
+      require(from.length == from2.length, "Vector lengths must match!")
+      val result = create(from.length)
+      var i = 0
+      while (i < from.length) {
+        result.data(i) = fn(i, from(i), from2(i))
+        i += 1
+      }
+      result
+    }
+  }
+
+
+  implicit def zipMapKV[V, R:ClassTag]: CanZipMapKeyValuesVector[V, R] = new CanZipMapKeyValuesVector[V, R]
+
 
   /**Returns the k-norm of this Vector. */
   implicit def canNorm[T](implicit canNormS: norm.Impl[T, Double]): norm.Impl2[Vector[T], Double, Double] = {

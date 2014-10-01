@@ -433,15 +433,16 @@ object DenseVector extends VectorConstructors[DenseVector]
     new CanSlice[DenseVector[Any], Range, DenseVector[Any]] {
       def apply(v: DenseVector[Any], re: Range): DenseVector[Any] = {
 
-        val r = re.getRangeWithoutNegativeIndexes( v.length )
+        val r: Range = re.getRangeWithoutNegativeIndexes( v.length )
 
-        require(r.isEmpty || r.last < v.length)
-        require(r.isEmpty || r.start >= 0)
+        require(r.isEmpty || r.last < v.length, s"Processed slice range must be empty (=${r.isEmpty}) " +
+          s"or the last entry (=${r.last}) must be less than target dimension length v.length (=${v.length})")
+        require(r.isEmpty || r.start >= 0, s"Processed slice range must be empty (=${r.isEmpty}) " +
+          s"or start (=${r.start}) must be >=0")
         new DenseVector(v.data, offset = v.offset + v.stride * r.start, stride = v.stride * r.step, length = r.length)
       }
     }
   }
-
 
 //  implicit def canSliceExtender[V]: CanSlice[DenseVector[V], RangeExtender, DenseVector[V]] = __canSliceExtender.asInstanceOf[CanSlice[DenseVector[V], RangeExtender, DenseVector[V]]]
 //
@@ -471,7 +472,7 @@ object DenseVector extends VectorConstructors[DenseVector]
 
     /**Maps all corresponding values from the two collection. */
     def map(from: DenseVector[V], from2: DenseVector[V], fn: (V, V) => RV): DenseVector[RV] = {
-      require(from.length == from2.length, "Vector lengths must match!")
+      require(from.length == from2.length, s"Vectors must have same length: ${from.length} != ${from2.length}")
       val result = create(from.length)
       var i = 0
       while (i < from.length) {
@@ -488,10 +489,29 @@ object DenseVector extends VectorConstructors[DenseVector]
   implicit val zipMap_f: CanZipMapValuesDenseVector[Float, Float] = new CanZipMapValuesDenseVector[Float, Float]
   implicit val zipMap_i: CanZipMapValuesDenseVector[Int, Int] = new CanZipMapValuesDenseVector[Int, Int]
 
+  class CanZipMapKeyValuesDenseVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag] extends CanZipMapKeyValues[DenseVector[V],Int, V,RV,DenseVector[RV]] {
+    def create(length : Int) = new DenseVector(new Array[RV](length))
+
+    /**Maps all corresponding values from the two collection. */
+    def map(from: DenseVector[V], from2: DenseVector[V], fn: (Int, V, V) => RV): DenseVector[RV] = {
+      require(from.length == from2.length, "Vector lengths must match!")
+      val result = create(from.length)
+      var i = 0
+      while (i < from.length) {
+        result.data(i) = fn(i, from(i), from2(i))
+        i += 1
+      }
+      result
+    }
+  }
+
+
+  implicit def zipMapKV[V, R:ClassTag]: CanZipMapKeyValuesDenseVector[V, R] = new CanZipMapKeyValuesDenseVector[V, R]
+
   implicit val canAddIntoD: OpAdd.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = {
     new OpAdd.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
       def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
-        require(a.length == b.length, "Vectors must have same length")
+        require(a.length == b.length, s"Vectors must have same length: ${a.length} != ${b.length}")
         blas.daxpy(
           a.length, 1.0, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
@@ -501,7 +521,7 @@ object DenseVector extends VectorConstructors[DenseVector]
 
   implicit object canDaxpy extends scaleAdd.InPlaceImpl3[DenseVector[Double], Double, DenseVector[Double]] with Serializable {
     def apply(y: DenseVector[Double], a: Double, x: DenseVector[Double]) {
-      require(x.length == y.length, "Vectors must have same length")
+      require(x.length == y.length, s"Vectors must have same length: ${x.length} != ${y.length}")
       blas.daxpy(
         x.length, a, x.data, x.offset, x.stride, y.data, y.offset, y.stride)
     }
@@ -516,7 +536,7 @@ object DenseVector extends VectorConstructors[DenseVector]
   implicit val canSubIntoD: OpSub.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = {
     new OpSub.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
       def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
-        require(a.length == b.length, "Vectors must have same length")
+        require(a.length == b.length, s"Vectors must have same length: ${a.length} != ${b.length}")
         blas.daxpy(
           a.length, -1.0, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
@@ -532,7 +552,7 @@ object DenseVector extends VectorConstructors[DenseVector]
   implicit val canDotD: OpMulInner.Impl2[DenseVector[Double], DenseVector[Double], Double] = {
     new OpMulInner.Impl2[DenseVector[Double], DenseVector[Double], Double] {
       def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
-        require(a.length == b.length, "Vectors must have same length")
+        require(a.length == b.length, s"Vectors must have same length: ${a.length} != ${b.length}")
         blas.ddot(
           a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
       }
@@ -558,7 +578,7 @@ object DenseVector extends VectorConstructors[DenseVector]
 
   implicit val canSetD: OpSet.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = new OpSet.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
     def apply(a: DenseVector[Double], b: DenseVector[Double]) {
-      require(a.length == b.length, "Vector lengths must match!")
+      require(a.length == b.length, s"Vectors must have same length: ${a.length} != ${b.length}")
       blas.dcopy(
         a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
     }
@@ -609,11 +629,11 @@ object DenseVector extends VectorConstructors[DenseVector]
           math.sqrt(sq)
         } else if (p == 1) {
           var sum = 0.0
-          v.foreach (x => sum += x.abs)
+          v.foreach (x => sum += math.abs(x))
           sum
         } else if (p == Double.PositiveInfinity) {
           var max = 0.0
-          v.foreach (x => max = math.max(max, x.abs))
+          v.foreach (x => max = math.max(max, math.abs(x)))
           max
         } else if (p == 0) {
           var nnz = 0
@@ -621,7 +641,7 @@ object DenseVector extends VectorConstructors[DenseVector]
           nnz
         } else {
           var sum = 0.0
-          v.foreach (x => sum += math.pow(x.abs, p))
+          v.foreach (x => sum += math.pow(math.abs(x), p))
           math.pow(sum, 1.0 / p)
         }
       }

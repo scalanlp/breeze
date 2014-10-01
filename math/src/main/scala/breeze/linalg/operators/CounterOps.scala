@@ -2,7 +2,7 @@ package breeze.linalg.operators
 
 import breeze.storage.Zero
 import breeze.math.{Field, Ring, Semiring}
-import breeze.linalg.support.{CanTransformValues, CanZipMapValues, CanCopy}
+import breeze.linalg.support.{CanZipMapKeyValues, CanTransformValues, CanZipMapValues, CanCopy}
 import breeze.generic.UFunc
 import breeze.linalg._
 
@@ -288,7 +288,7 @@ trait CounterOps {
 
     /**Maps all corresponding values from the two collection. */
     def map(from: Counter[K, V], from2: Counter[K, V], fn: (V, V) => RV) = {
-      val result = Counter[K, RV]
+      val result = Counter[K, RV]()
       for ( k <- (from.keySet ++ from2.keySet)) {
         result(k) = fn(from(k), from2(k))
       }
@@ -298,6 +298,21 @@ trait CounterOps {
 
 
   implicit def zipMap[K, V, R:Zero:Semiring] = new CanZipMapValuesCounter[K, V, R]
+
+    class CanZipMapKeyValuesCounter[K, V, RV:Zero:Semiring] extends CanZipMapKeyValues[Counter[K, V],K, V,RV,Counter[K, RV]] {
+
+    /**Maps all corresponding values from the two collection. */
+    def map(from: Counter[K, V], from2: Counter[K, V], fn: (K, V, V) => RV) = {
+      val result = Counter[K, RV]()
+      for ( k <- (from.keySet ++ from2.keySet)) {
+        result(k) = fn(k, from(k), from2(k))
+      }
+      result
+    }
+  }
+
+
+  implicit def zipMapKeyValues[K, V, R:Zero:Semiring] = new CanZipMapKeyValuesCounter[K, V, R]
 
 
   implicit def canTransformValues[L, V]:CanTransformValues[Counter[L, V], V, V] = {
