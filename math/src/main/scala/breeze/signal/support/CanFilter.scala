@@ -70,29 +70,31 @@ object CanFilter {
     }
   }
 
-  /**
-   * IIRFilter delegate implementation
-   */
-  implicit val dvDoubleIIRFilterKernel : CanFilter[DenseVector[Double], IIRKernel1D[Double], DenseVector[Double]] = {
-    new CanFilter[DenseVector[Double], IIRKernel1D[Double], DenseVector[Double]] {
-      def apply(data: DenseVector[Double], kernel: IIRKernel1D[Double],
-                overhang: OptOverhang,
-                padding: OptPadding): DenseVector[Double] = {
-        // TODO: apply IIRFilter to data vector
-      }
-    }
-  }
+//  /**
+//   * IIRFilter delegate implementation
+//   */
+//  implicit val dvDoubleIIRFilterKernel : CanFilter[DenseVector[Double], IIRKernel1D[Double], DenseVector[Double]] = {
+//    new CanFilter[DenseVector[Double], IIRKernel1D[Double], DenseVector[Double]] {
+//      def apply(data: DenseVector[Double], kernel: IIRKernel1D[Double],
+//                overhang: OptOverhang,
+//                padding: OptPadding): DenseVector[Double] = {
+//        // TODO: apply IIRFilter to data vector
+//      }
+//    }
+//  }
+//
+//  /**
+//   * SOSFilter delegate implementation
+//   */
+//  implicit val dvDoubleSOSFilterKernel : CanFilter[DenseVector[Double], SOSKernel1D[Double], DenseVector[Double]] = {
+//    new CanFilter[DenseVector[Double], SOSKernel1D[Double], DenseVector[Double]] {
+//      def apply(data: DenseVector[Double], kernel: SOSKernel1D[Double],
+//                overhang: OptOverhang,
+//                padding: OptPadding): DenseVector[Double] = {
+//        // TODO: apply SOSFilter to data vector
+//      }
+//    }
+//  }
 
-  /**
-   * SOSFilter delegate implementation
-   */
-  implicit val dvDoubleSOSFilterKernel : CanFilter[DenseVector[Double], SOSKernel1D[Double], DenseVector[Double]] = {
-    new CanFilter[DenseVector[Double], SOSKernel1D[Double], DenseVector[Double]] {
-      def apply(data: DenseVector[Double], kernel: SOSKernel1D[Double],
-                overhang: OptOverhang,
-                padding: OptPadding): DenseVector[Double] = {
-        // TODO: apply SOSFilter to data vector
-      }
-    }
-  }
+
 }
