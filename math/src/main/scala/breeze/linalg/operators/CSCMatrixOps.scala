@@ -2,7 +2,7 @@ package breeze.linalg
 package operators
 
 import breeze.generic.UFunc
-import breeze.linalg.support.CanZipMapValues
+import breeze.linalg.support.{CanZipMapKeyValues, CanZipMapValues}
 import breeze.macros.expand
 import breeze.linalg.{DenseMatrix, SparseVector}
 import breeze.math._
@@ -789,7 +789,7 @@ trait CSCMatrixOps_Ring extends CSCMatrixOpsLowPrio with SerializableLogging {
       }
     }
 
-  implicit def zipMapVals[S, R: ClassTag : Semiring : Zero] = new CanZipMapValues[CSCMatrix[S], S, R, CSCMatrix[R]] {
+  implicit def zipMapVals[S, R: ClassTag : Semiring : Zero]: CanZipMapValues[CSCMatrix[S], S, R, CSCMatrix[R]] = new CanZipMapValues[CSCMatrix[S], S, R, CSCMatrix[R]] {
     /** Maps all corresponding values from the two collections. */
     override def map(a: CSCMatrix[S], b: CSCMatrix[S], fn: (S, S) => R): CSCMatrix[R] = {
       logger.warn("Using CSCMatrix.zipMapVals. Note that this implementation currently ZipMaps over active values only, ignoring zeros.")
@@ -849,6 +849,23 @@ trait CSCMatrixOps_Ring extends CSCMatrixOpsLowPrio with SerializableLogging {
         }
         builder.result
       }
+    }
+  }
+
+  implicit def zipMapKeyVals[S, R: ClassTag : Semiring : Zero]: CanZipMapKeyValues[CSCMatrix[S], (Int, Int), S, R, CSCMatrix[R]] = new CanZipMapKeyValues[CSCMatrix[S], (Int, Int), S, R, CSCMatrix[R]] {
+    /** Maps all corresponding values from the two collections. */
+    override def map(a: CSCMatrix[S], b: CSCMatrix[S], fn: ((Int, Int), S, S) => R): CSCMatrix[R] = {
+      val rows = a.rows
+      val cols = a.cols
+      require(rows == b.rows, "Matrices must have same number of rows!")
+      require(cols == b.cols, "Matrices must have same number of cols!")
+
+      val builder = new CSCMatrix.Builder[R](rows, cols)
+      for (c <- 0 until cols; r <- 0 until rows) {
+        builder.add(r, c, fn((r, c), a(r, c), b(r, c)))
+      }
+
+      builder.result(true, true)
     }
   }
 

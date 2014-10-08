@@ -176,6 +176,8 @@ trait MutableCoordinateField[V, S] extends CoordinateField[V, S] with MutableLPV
  */
 trait EnumeratedCoordinateField[V, I, S] extends CoordinateField[V, S] {
   implicit def hasOps(v: V): NumericOps[V] with QuasiTensor[I, S]
+
+  implicit def zipMapKeyValues: CanZipMapKeyValues[V, I, S, S, V]
 }
 
 /**
@@ -579,6 +581,7 @@ object MutableFiniteCoordinateField {
                     _ops: V <:< NumericOps[V] with QuasiTensor[I, S],
                     _dotVV: OpMulInner.Impl2[V, V, S],
                     _zipMapVals: CanZipMapValues[V, S, S, V],
+                    _zipMapKeyVals: CanZipMapKeyValues[V, I, S, S, V],
                     _traverseVals: CanTraverseValues[V, S],
                     _mapVals: CanMapValues[V, S, S, V]
                      ): MutableFiniteCoordinateField[V, I, S] = new MutableFiniteCoordinateField[V, I, S] {
@@ -612,6 +615,7 @@ object MutableFiniteCoordinateField {
     override implicit def scaleAddVV: scaleAdd.InPlaceImpl3[V, S, V] = _scaleAddVSV
     override implicit def mapValues: CanMapValues[V, S, S, V] = _mapVals
     override implicit def zipMapValues: CanZipMapValues[V, S, S, V] = _zipMapVals
+    override implicit def zipMapKeyValues: CanZipMapKeyValues[V, I, S, S, V] = _zipMapKeyVals
     override implicit def iterateValues: CanTraverseValues[V, S] = _traverseVals
     override implicit def zero: CanCreateZeros[V, I] = _zero
     override implicit def canDim: dim.Impl[V, I] = _dim
@@ -644,6 +648,7 @@ object MutableEnumeratedCoordinateField {
                     _ops: V <:< NumericOps[V] with QuasiTensor[I, S],
                     _dotVV: OpMulInner.Impl2[V, V, S],
                     _zipMapVals: CanZipMapValues[V, S, S, V],
+                    _zipMapKeyVals: CanZipMapKeyValues[V, I, S, S, V],
                     _traverseVals: CanTraverseValues[V, S],
                     _mapVals: CanMapValues[V, S, S, V]
                      ): MutableEnumeratedCoordinateField[V, I, S] = new MutableEnumeratedCoordinateField[V, I, S] {
@@ -672,6 +677,7 @@ object MutableEnumeratedCoordinateField {
     override implicit def scaleAddVV: scaleAdd.InPlaceImpl3[V, S, V] = _scaleAddVSV
     override implicit def mapValues: CanMapValues[V, S, S, V] = _mapVals
     override implicit def zipMapValues: CanZipMapValues[V, S, S, V] = _zipMapVals
+    override implicit def zipMapKeyValues: CanZipMapKeyValues[V, I, S, S, V] = _zipMapKeyVals
     override implicit def iterateValues: CanTraverseValues[V, S] = _traverseVals
   }
 }
@@ -760,6 +766,7 @@ object MutableOptimizationSpace {
                   _opsM: M <:< NumericOps[M] with QuasiTensor[(Int,Int), S],
                   _dotMM: OpMulInner.Impl2[M, M, S],
                   _zipMapValsM: CanZipMapValues[M, S, S, M],
+                  _zipMapKeyVals: CanZipMapKeyValues[V, Int, S, S, V],
                   _traverseValsM: CanTraverseValues[M, S],
                   _mapValsM: CanMapValues[M, S, S, M],
                   _mulMMM: OpMulMatrix.Impl2[M, M, M],
@@ -815,6 +822,7 @@ object MutableOptimizationSpace {
     implicit def mulIntoVV: OpMulScalar.InPlaceImpl2[V, V] = _mulIntoVV
     implicit def setIntoVS: OpSet.InPlaceImpl2[V, S] = _setIntoVS
     implicit def zipMapValues: CanZipMapValues[V, S, S, V] = _zipMapVals
+    override implicit def zipMapKeyValues: CanZipMapKeyValues[V, Int, S, S, V] = _zipMapKeyVals
     implicit def iterateValues: CanTraverseValues[V, S] = _traverseVals
     implicit def mapValues: CanMapValues[V, S, S, V] = _mapVals
     implicit def divVV: OpDiv.Impl2[V, V, V] = _divVV

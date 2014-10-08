@@ -14,9 +14,17 @@ import breeze.math._
  *
  * @author dlwh
  */
-class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-8)(implicit space: MutableCoordinateField[T, Double]) extends LBFGS[T](maxIter, m, tolerance=tolerance) with SerializableLogging {
+class OWLQN[K, T](maxIter: Int, m: Int, l1reg: K => Double, tolerance: Double)(implicit space: MutableEnumeratedCoordinateField[T, K, Double]) extends LBFGS[T](maxIter, m, tolerance=tolerance) with SerializableLogging {
+
+  def this(maxIter: Int, m: Int, l1reg: K => Double)(implicit space: MutableEnumeratedCoordinateField[T, K, Double]) = this(maxIter, m, l1reg, 1E-8)
+
+  def this(maxIter: Int, m: Int, l1reg: Double, tolerance: Double = 1E-8)(implicit space:MutableEnumeratedCoordinateField[T, K, Double]) = this(maxIter, m, (_: K) => l1reg, tolerance)
+
+  def this(maxIter: Int, m: Int, l1reg: Double)(implicit space: MutableEnumeratedCoordinateField[T, K, Double]) = this(maxIter, m, (_: K) => l1reg, 1E-8)
+
+  def this(maxIter: Int, m: Int)(implicit space: MutableEnumeratedCoordinateField[T, K, Double]) = this(maxIter, m, (_: K) => 1.0, 1E-8)
+
   require(m > 0)
-  require(l1reg >= 0)
 
   import space._
 
@@ -81,18 +89,25 @@ class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-
 
   // Adds in the regularization stuff to the gradient
   override protected def adjust(newX: T, newGrad: T, newVal: Double): (Double, T) = {
-    val res = space.zipMapValues.map(newX, newGrad, {case (xv, v) =>
-      xv match {
-        case 0.0 => {
-          val delta_+ = v + l1reg
-          val delta_- = v - l1reg
-          if (delta_- > 0) delta_- else if (delta_+ < 0) delta_+ else 0.0
-        }
+    var adjValue = newVal
+    val res = space.zipMapKeyValues.map(newX, newGrad, {case (i, xv, v) =>
+      val l1regValue = l1reg(i)
+      require(l1regValue >= 0.0)
 
-        case _ => v + math.signum(xv) * l1reg
+      if(l1regValue == 0.0) {
+        v
+      } else {
+        adjValue += Math.abs(l1regValue * xv)
+        xv match {
+          case 0.0 => {
+            val delta_+ = v + l1regValue
+            val delta_- = v - l1regValue
+            if (delta_- > 0) delta_- else if (delta_+ < 0) delta_+ else 0.0
+          }
+          case _ => v + math.signum(xv) * l1regValue
+        }
       }
     })
-    val adjValue = newVal + l1reg * norm(newX, 1.0)
     adjValue -> res
   }
 
@@ -105,26 +120,3 @@ class OWLQN[T](maxIter: Int, m: Int,  l1reg: Double=1.0, tolerance: Double = 1E-
   }
 
 }
-
-
-object OWLQN {
-  def main(args: Array[String]) {
-    val lbfgs = new OWLQN[DenseVector[Double]](100,4)
-
-    def optimizeThis(init: DenseVector[Double]) = {
-      val f = new DiffFunction[DenseVector[Double]] {
-        def calculate(x: DenseVector[Double]) = {
-          (sum((x - 3.0) :^ 2.0),(x * 2.0) - 6.0)
-        }
-      }
-
-      val result = lbfgs.minimize(f,init)
-    }
-
-    //    optimizeThis(Counter(1->1.0,2->2.0,3->3.0))
-    //    optimizeThis(Counter(3-> -2.0,2->3.0,1-> -10.0))
-    //        optimizeThis(DenseVector(1.0,2.0,3.0))
-    optimizeThis(DenseVector( -0.0,0.0, -0.0))
-  }
-}
-

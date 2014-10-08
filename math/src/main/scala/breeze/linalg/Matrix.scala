@@ -201,8 +201,10 @@ trait MatrixConstructors[Mat[T]<:Matrix[T]] {
     fill(rows, cols)(rand.draw())
   }
 
+  // @specialized() R because of https://issues.scala-lang.org/browse/SI-8886
   /** Static constructor for a literal matrix. */
-  def apply[R,@spec(Double, Int, Float, Long) V](rows : R*)(implicit rl : LiteralRow[R,V], man : ClassTag[V], zero: Zero[V]) = {
+  def apply[@specialized(/* Don't remove until SI-8886 is closed*/) R,
+            @spec(Double, Int, Float, Long) V](rows : R*)(implicit rl : LiteralRow[R,V], man : ClassTag[V], zero: Zero[V]) = {
     val nRows = rows.length
     val ns = rl.length(rows(0))
     val rv = zeros(nRows, ns)
