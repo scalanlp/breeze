@@ -85,7 +85,7 @@ package object signal {
                               data: Input, kernel: KernelType, range: OptRange = OptRange.All,
                               overhang: OptOverhang = OptOverhang.None,
                               padding: OptPadding = OptPadding.Zero,
-                              method: OptMethod = OptMethod.Automatic
+                              method: OptConvolveMethod = OptConvolveMethod.Automatic
                               )
                              (implicit canConvolve: CanConvolve[Input, KernelType, Output]): Output =
     canConvolve(data, kernel, range, correlate=false, overhang, padding, method)
@@ -99,7 +99,7 @@ package object signal {
                               data: Input, kernel: KernelType, range: OptRange = OptRange.All,
                               overhang: OptOverhang = OptOverhang.None,
                               padding: OptPadding = OptPadding.Zero,
-                              method: OptMethod = OptMethod.Automatic
+                              method: OptConvolveMethod = OptConvolveMethod.Automatic
                                )
                              (implicit canConvolve: CanConvolve[Input, KernelType, Output]): Output =
     canConvolve(data, kernel, range, correlate=true, overhang, padding, method)
@@ -253,6 +253,7 @@ package object signal {
     *              or (B) at nyquist if the first passband ends at nyquist, or (C) the center of the first passband. Default is true.
     * @param nyquist The nyquist frequency, default is 1.
     */
+  @deprecated("use FilterFirwin.design() instead", "0.11")
   def designFilterFirwin[Output](taps: Int, omegas: DenseVector[Double], nyquist: Double = 1d,
                 zeroPass: Boolean = true,
                 scale: Boolean = true, multiplier: Double = 1d,

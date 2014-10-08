@@ -31,6 +31,8 @@ trait CanFilter[Input, KernelType, Output] {
 */
 object CanFilter {
 
+  // <editor-fold defaultstate="collapsed" desc=" 1D FIR filtering ">
+
   /** Use via implicit delegate syntax filter(x: DenseVector)
     *
     */
@@ -67,6 +69,20 @@ object CanFilter {
                 padding: OptPadding): DenseVector[Double] = {
         convolve(data, kernel, /*new FIRKernel1D(kernel, "User-specified kernel"),*/ OptRange.All, overhang, padding)
       }
+    }
+  }
+
+  // </editor-fold>
+
+
+  /** Use via implicit delegate syntax filter(x: DenseVector)
+    *
+    */
+  implicit val dvDouble1DIIR : CanFilter[DenseVector[Double], IIRKernel1D[Double], DenseVector[Double]] = {
+    new CanFilter[DenseVector[Double], IIRKernel1D[Double], DenseVector[Double]] {
+      def apply(data: DenseVector[Double], kernel: IIRKernel1D[Double],
+                overhang: OptOverhang,
+                padding: OptPadding): DenseVector[Double] = ???
     }
   }
 

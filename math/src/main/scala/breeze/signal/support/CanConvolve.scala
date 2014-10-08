@@ -30,7 +30,7 @@ trait CanConvolve[Input, KernelType, Output] {
             correlate: Boolean,
             overhang: OptOverhang,
             padding: OptPadding,
-            method: OptMethod): Output
+            method: OptConvolveMethod): Output
 }
 
 /**
@@ -51,12 +51,12 @@ object CanConvolve extends SerializableLogging {
                 correlate: Boolean,
                 overhang: OptOverhang,
                 padding: OptPadding,
-                method: OptMethod): DenseVector[T] = {
+                method: OptConvolveMethod): DenseVector[T] = {
 
 
         //val parsedOptMethod =
         method match {
-          case OptMethod.Automatic => require(true)
+          case OptConvolveMethod.Automatic => require(true)
           case _ => require(false, "currently, only loop convolutions are supported.")
         }
 
@@ -160,7 +160,7 @@ object CanConvolve extends SerializableLogging {
                 correlateVal: Boolean,
                 overhang: OptOverhang,
                 padding: OptPadding,
-                method: OptMethod): DenseVector[T] =
+                method: OptConvolveMethod): DenseVector[T] =
         //this is to be expanded to use the fft results within the FIRKernel1D, when using fft convolution
         if(correlateVal) correlate(data, kernel.kernel, range, overhang, padding, method)
         else convolve(data, kernel.kernel, range, overhang, padding, method)

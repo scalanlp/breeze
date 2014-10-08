@@ -31,27 +31,6 @@ import breeze.util.Opt
 
 ///Individual Options
 
-/**Option values: window function for filter design.*/
-abstract class OptWindowFunction extends Opt
-object OptWindowFunction {
-  case class Hamming(alpha: Double = 0.54, beta: Double = 0.46) extends OptWindowFunction {
-    override def toString = "Hamming window ("+ alpha + ", " + beta + ")"
-  }
-  case class Hanning(alpha: Double = 0.5, beta: Double = 0.5) extends OptWindowFunction {
-    override def toString = "Hanning window ("+ alpha + "," + beta + ")"
-  }
-  case class Blackman(a0: Double = 0.42, a1: Double  = 0.5, a2: Double = 0.08) extends OptWindowFunction {
-    override def toString = "Blackman window ("+ a0 + a1 + a2 + ")"
-  }
-  case class User(dv: DenseVector[Double]) extends OptWindowFunction {
-    override def toString = "user-specified window"
-  }
-  case object None extends OptWindowFunction{
-    override def toString = "no window"
-  }
-}
-
-
 /**Option values: how to deal with convolution overhangs.*/
 abstract class OptOverhang extends Opt
 object OptOverhang{
@@ -89,17 +68,34 @@ object OptPadding{
   case object Zero extends OptPadding
 }
 
+/**slices specific result ranges out of results for convolve, etc*/
+abstract class OptRange extends Opt
+object OptRange {
+  case object All extends OptRange {
+    override def toString() = "OptRange.All"
+  }
+  case class RangeOpt(r: Range) extends OptRange {
+    override def toString() = "OptRange.RangeOpt( "+ r.start + ", "+ r.end+", "+r.step +"), isInclusive=" + r.isInclusive
+  }
+  //  case class Single(i: Int) extends OptRange {
+  //    override def toString() = "OptRange.Single("+ i +")"
+  //  }
+  implicit def rangeToRangeOpt(r: Range) = OptRange.RangeOpt( r )
+}
+
 /**Option values: how to deal with convolution and filter padding.*/
-abstract class OptMethod extends Opt
-object OptMethod{
+abstract class OptConvolveMethod extends Opt
+object OptConvolveMethod{
   /**Option value: Decides on the fastest convolve method based on data size and type.*/
-  case object Automatic extends OptMethod
+  case object Automatic extends OptConvolveMethod
   /**Option value: Convolve using FFT.*/
-  case object FFT extends OptMethod
+  case object FFT extends OptConvolveMethod
   /**Option value: Convolve using for loop.*/
 }
 
+@deprecated("filter design functions are distributed to different objects, eg FilterButterworth", "0.11")
 abstract class OptDesignMethod extends Opt
+@deprecated("filter design functions are distributed to different objects, eg FilterButterworth", "0.11")
 object OptDesignMethod {
   /**Option value: use firwin() to design FIR kernel using window method.*/
   case object Firwin extends OptDesignMethod
@@ -114,27 +110,32 @@ object OptFilterTaps {
   case class IntOpt(n: Int) extends OptFilterTaps
 }
 
-/**slices specific result ranges out of results for convolve, etc*/
-abstract class OptRange extends Opt
-object OptRange {
-  case object All extends OptRange {
-    override def toString() = "OptRange.All"
+/**Option values: window function for filter design.*/
+abstract class OptWindowFunction extends Opt
+object OptWindowFunction {
+  case class Hamming(alpha: Double = 0.54, beta: Double = 0.46) extends OptWindowFunction {
+    override def toString = "Hamming window ("+ alpha + ", " + beta + ")"
   }
-  case class RangeOpt(r: Range) extends OptRange {
-    override def toString() = "OptRange.RangeOpt( "+ r.start + ", "+ r.end+", "+r.step +"), isInclusive=" + r.isInclusive
+  case class Hanning(alpha: Double = 0.5, beta: Double = 0.5) extends OptWindowFunction {
+    override def toString = "Hanning window ("+ alpha + "," + beta + ")"
   }
-//  case class Single(i: Int) extends OptRange {
-//    override def toString() = "OptRange.Single("+ i +")"
-//  }
-  implicit def rangeToRangeOpt(r: Range) = OptRange.RangeOpt( r )
+  case class Blackman(a0: Double = 0.42, a1: Double  = 0.5, a2: Double = 0.08) extends OptWindowFunction {
+    override def toString = "Blackman window ("+ a0 + a1 + a2 + ")"
+  }
+  case class User(dv: DenseVector[Double]) extends OptWindowFunction {
+    override def toString = "user-specified window"
+  }
+  case object None extends OptWindowFunction{
+    override def toString = "no window"
+  }
 }
 
 // filter flavour options of IIR/ SOS filter designs
-abstract class OptFilterFlavour extends Opt
+abstract class OptFilterTpe extends Opt
 
-object OptFilterFlavour {
-  case object LoPass extends OptFilterFlavour
-  case object HiPass extends OptFilterFlavour
-  case object BandPass extends OptFilterFlavour
-  case object BandStop extends OptFilterFlavour
+object OptFilterTpe {
+  case object LowPass extends OptFilterTpe
+  case object HighPass extends OptFilterTpe
+  case object BandPass extends OptFilterTpe
+  case object BandStop extends OptFilterTpe
 }
