@@ -1,8 +1,11 @@
 package breeze.signal.filter.iir
 
+import breeze.signal.support.IIRKernel1D
+import breeze.signal.{OptFilterType, OptOmega, OptOrder}
+
 object FilterButterworth {
   
-  def design[T](order: OptOrder, omega: OptOmega, tpe: OptFilterType): IIRKernel1D[T] = {
+  def design[Input](order: OptOrder, omega: OptOmega, tpe: OptFilterType): IIRKernel1D[Input] = {
     ???
   }
   
