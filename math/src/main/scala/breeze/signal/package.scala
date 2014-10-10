@@ -26,7 +26,8 @@ import breeze.macros.expand
  * @author ktakagaki
  */
 package object signal {
-
+  
+  
   @deprecated("use fourierTr", "v.0.6")
   val fft: fourierTr.type = fourierTr
   @deprecated("use iFourierTr", "v.0.6")
@@ -106,6 +107,7 @@ package object signal {
 
   // </editor-fold>
 
+  /*
   // <editor-fold desc="filter">
   /** Filter input data with the specified kernel and options.
     *
@@ -290,6 +292,7 @@ package object signal {
 
 
   // </editor-fold>
+*/
 
   /**Return the padded fast haar transformation of a DenseVector or DenseMatrix. Note that
    * the output will always be padded to a power of 2.</p>

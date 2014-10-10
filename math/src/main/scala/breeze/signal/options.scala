@@ -130,12 +130,24 @@ object OptWindowFunction {
   }
 }
 
-// filter flavour options of IIR/ SOS filter designs
+// filter type options of IIR/ SOS filter designs
 abstract class OptFilterTpe extends Opt
 
-object OptFilterTpe {
-  case object LowPass extends OptFilterTpe
-  case object HighPass extends OptFilterTpe
-  case object BandPass extends OptFilterTpe
-  case object BandStop extends OptFilterTpe
+object OptFilterTpe{
+  case object LowPass extends OptFilterType
+  case object HighPass extends OptFilterType
+  case object BandPass extends OptFilterType
+  case object BandStop extends OptFilterType
 }
+
+// filter order options
+abstract class OptOrder extends Opt
+
+object OptOrder {
+  case object Automatic extends OptOrder
+  case class IntValue(n: Int) extends OptOrder
+}
+
+// filter cutoff freq options
+abstract class OptOmega extends Opt
+
