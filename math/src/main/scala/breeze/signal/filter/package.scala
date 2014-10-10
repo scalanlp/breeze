@@ -13,13 +13,13 @@ package object filter {
   // implicit conversion for filter cuttoffs
   // If sampling rate is the default Nyqist frequency (i.e. samplingRate == 2),
   // values must be in (0,1)
-  implicit def doubleToOptOmega(omega: Double): OptOmega = new OptOmega.Scalar(omega)
+  implicit def doubleToOptOmega(omega: Double): OptOmega = new OptOmega.DoubleValue(omega)
   //can be specified as a Tuple of Doubles for band-stop or band-pass filters
   //(i.e. filters with 2 cutoff frequencies
-  implicit def tuple2ToOptOmega(omega: Tuple2[Double, Double]):OptOmega = new OptOmega.Tuple(omega._1, omega._2)
+  implicit def tuple2ToOptOmega(omega: Tuple2[Double, Double]):OptOmega = new OptOmega.TupleValue(omega._1, omega._2)
   
   // design shorthands for filter design
-  def designFiltButterworth[T](order: OptOrder, omega: OptOmega, tpe: OptFilterType) = iir.FilterButterworth.design[T](order, omega, tpe)
+  def designFiltButterworth[Input](order: OptOrder, omega: OptOmega, tpe: OptFilterType) = iir.FilterButterworth.design[Input](order, omega, tpe)
   
   
   // <editor-fold desc="filter">

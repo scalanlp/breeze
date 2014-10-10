@@ -145,6 +145,6 @@ object OptOrder {
 abstract class OptOmega extends Opt
 
 object OptOmega {
-  case class Scalar(omega: Double) extends OptOmega
-  case class Tuple(omega1: Double, omega2: Double) extends OptOmega
+  case class DoubleValue(omega: Double) extends OptOmega
+  case class TupleValue(omega1: Double, omega2: Double) extends OptOmega
 }
