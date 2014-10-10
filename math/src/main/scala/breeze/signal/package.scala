@@ -26,7 +26,8 @@ import breeze.macros.expand
  * @author ktakagaki
  */
 package object signal {
-
+  
+  
   @deprecated("use fourierTr", "v.0.6")
   val fft: fourierTr.type = fourierTr
   @deprecated("use iFourierTr", "v.0.6")

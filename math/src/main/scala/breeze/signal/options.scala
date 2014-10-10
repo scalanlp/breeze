@@ -123,12 +123,28 @@ object OptRange {
   implicit def rangeToRangeOpt(r: Range) = OptRange.RangeOpt( r )
 }
 
-// filter flavour options of IIR/ SOS filter designs
-abstract class OptFilterFlavour extends Opt
+// filter type options of IIR/ SOS filter designs
+abstract class OptFilterType extends Opt
 
-object OptFilterFlavour {
-  case object LoPass extends OptFilterFlavour
-  case object HiPass extends OptFilterFlavour
-  case object BandPass extends OptFilterFlavour
-  case object BandStop extends OptFilterFlavour
+object OptFilterType{
+  case object LowPass extends OptFilterType
+  case object HighPass extends OptFilterType
+  case object BandPass extends OptFilterType
+  case object BandStop extends OptFilterType
+}
+
+// filter order options
+abstract class OptOrder extends Opt
+
+object OptOrder {
+  case object Automatic extends OptOrder
+  case class IntValue(n: Int) extends OptOrder
+}
+
+// filter cutoff freq options
+abstract class OptOmega extends Opt
+
+object OptOmega {
+  case class Scalar(omega: Double) extends OptOmega
+  case class Tuple(omega1: Double, omega2: Double) extends OptOmega
 }
