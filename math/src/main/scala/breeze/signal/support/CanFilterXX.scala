@@ -65,7 +65,7 @@ object CanFilterBPBS {
 //        println(kernel)
 //        println(kernel.kernel)
 
-        filter(data, kernel, overhang, padding)
+        filter.filter(data, kernel, overhang, padding)
       }
     }
   }
@@ -99,7 +99,7 @@ object CanFilterLPHP {
           }
         }
 
-        filter(data, kernel, overhang, padding)
+        filter.filter(data, kernel, overhang, padding)
       }
     }
   }

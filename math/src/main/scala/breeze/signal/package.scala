@@ -227,7 +227,7 @@ package object signal {
     canFilterLPHP(data, omega, sampleRate, taps, lowPass = false, kernelDesign, overhang, padding)
 
   // </editor-fold>
-
+*/
   // <editor-fold desc="filter design">
 
   /** FIR filter design using the window method.
@@ -272,8 +272,8 @@ package object signal {
 
   // </editor-fold>
 
-//ToDo  def designFilterButterworth()
-    
+
+
   // <editor-fold defaultstate="collapsed" desc=" filterMedian ">
 
   /** Median filter the input data.
@@ -283,6 +283,7 @@ package object signal {
     *                 for OptOverhang.PreserveLength, the edges will feature symmetrical odd windows of increasing size,
     *                 ie ( median( {0} ), median( {0, 1, 2} ), median( {0, 1, 2, 3, 4} )... )
     */
+  @deprecated("use FilterMedian.design() instead", "0.11")
   def filterMedian[Input](data: DenseVector[Input], windowLength: Int, overhang: OptOverhang = OptOverhang.PreserveLength)
                              (implicit canFilterMedian: CanFilterMedian[Input]): DenseVector[Input] =
     canFilterMedian(data, windowLength, overhang)
@@ -292,7 +293,7 @@ package object signal {
 
 
   // </editor-fold>
-*/
+
 
   /**Return the padded fast haar transformation of a DenseVector or DenseMatrix. Note that
    * the output will always be padded to a power of 2.</p>

@@ -134,10 +134,10 @@ object OptWindowFunction {
 abstract class OptFilterTpe extends Opt
 
 object OptFilterTpe{
-  case object LowPass extends OptFilterType
-  case object HighPass extends OptFilterType
-  case object BandPass extends OptFilterType
-  case object BandStop extends OptFilterType
+  case object LowPass extends OptFilterTpe
+  case object HighPass extends OptFilterTpe
+  case object BandPass extends OptFilterTpe
+  case object BandStop extends OptFilterTpe
 }
 
 // filter order options
@@ -150,4 +150,9 @@ object OptOrder {
 
 // filter cutoff freq options
 abstract class OptOmega extends Opt
+
+object OptOmega{
+  case class DoubleValue(omega: Double) extends OptOmega
+  case class TupleValue(omega1: Double, omega2: Double) extends OptOmega
+}
 

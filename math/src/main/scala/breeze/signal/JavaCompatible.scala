@@ -77,80 +77,81 @@ object JavaCompatible {
   // </editor-fold>
 
   // <editor-fold defaultstate="collapsed" desc=" (FIR) filters ">
-  /**Bandpass filter the data using a windowed FIR filter.
-   * See/use [[breeze.signal.filterBP()]] for more details, and to set advanced options.
-   *
-   * @param data data to filter
-   * @param omegaLow  low frequency (in units of Nyquist frequency or Hz if sampleRate is set to specific value other than 2d)
-   * @param omegaHigh high frequency (in units of Nyquist frequency or Hz if sampleRate is set to specific value other than 2d)
-   * @param sampleRate  in Hz, default 2d (omegaLow/High will then be in units of Nyquist frequency)
-   * @param taps  number of taps to use, default 512
-   * @return
-   */
-  def filterBP(data: Array[Double], omegaLow: Double, omegaHigh: Double, sampleRate: Double, taps: Int): Array[Double] =
-    dvDToArray( breeze.signal.filterBP(arrayDToDv(data), (omegaLow, omegaHigh), sampleRate, taps) )
-  /**See [[filterBP]]
-    */
-  def filterBP(data: Array[Double], omegaLow: Double, omegaHigh: Double, sampleRate: Double): Array[Double] = filterBP(data, omegaLow, omegaHigh, sampleRate, 512)
-  /**See [[filterBP]]
-    */
-  def filterBP(data: Array[Double], omegaLow: Double, omegaHigh: Double): Array[Double] = filterBP(data, omegaLow, omegaHigh, 2d, 512)
-
-  /**Bandstop filter the data using a windowed FIR filter.
-    * See/use [[breeze.signal.filterBS()]] for more details, and to set advanced options.
-    *
-    * @param data data to filter
-    * @param omegaLow  low frequency (in units of Nyquist frequency or Hz if sampleRate is set to specific value other than 2d)
-    * @param omegaHigh high frequency (in units of Nyquist frequency or Hz if sampleRate is set to specific value other than 2d)
-    * @param sampleRate  in Hz, default 2d (omegaLow/High will then be in units of Nyquist frequency)
-    * @param taps  number of taps to use, default 512
-    * @return
-    */
-  def filterBS(data: Array[Double], omegaLow: Double, omegaHigh: Double, sampleRate: Double, taps: Int): Array[Double] =
-    dvDToArray( breeze.signal.filterBS(arrayDToDv(data), (omegaLow, omegaHigh), sampleRate, taps) )
-  /**See [[filterBS]]
-    */
-  def filterBS(data: Array[Double], omegaLow: Double, omegaHigh: Double, sampleRate: Double): Array[Double] = filterBS(data, omegaLow, omegaHigh, sampleRate, 512)
-  /**See [[filterBS]]
-    */
-  def filterBS(data: Array[Double], omegaLow: Double, omegaHigh: Double): Array[Double] = filterBS(data, omegaLow, omegaHigh, 2d, 512)
-
-  /**Low pass filter the data using a windowed FIR filter.
-    * See/use [[breeze.signal.filterLP()]] for more details, and to set advanced options.
-    *
-    * @param data data to filter
-    * @param omega  cutoff frequency (in units of Nyquist frequency or Hz if sampleRate is set to specific value other than 2d)
-    * @param sampleRate  in Hz, default 2d (omega will then be in units of Nyquist frequency)
-    * @param taps  number of taps to use, default 512
-    * @return
-    */
-  def filterLP(data: Array[Double], omega: Double, sampleRate: Double, taps: Int): Array[Double] =
-    dvDToArray( breeze.signal.filterLP(arrayDToDv(data), omega, sampleRate, taps) )
-  /**See [[filterLP]]
-    */
-  def filterLP(data: Array[Double], omega: Double, sampleRate: Double): Array[Double] = filterLP(data, omega, sampleRate, 512)
-  /**See [[filterLP]]
-    */
-  def filterLP(data: Array[Double], omega: Double): Array[Double] = filterLP(data, omega, 2d, 512)
-
-  /**High pass filter the data using a windowed FIR filter.
-    * See/use [[breeze.signal.filterHP()]] for more details, and to set advanced options.
-    *
-    * @param data data to filter
-    * @param omega  cutoff frequency (in units of Nyquist frequency or Hz if sampleRate is set to specific value other than 2d)
-    * @param sampleRate  in Hz, default 2d (omega will then be in units of Nyquist frequency)
-    * @param taps  number of taps to use, default 512
-    * @return
-    */
-  def filterHP(data: Array[Double], omega: Double, sampleRate: Double, taps: Int): Array[Double] =
-    dvDToArray( breeze.signal.filterHP(arrayDToDv(data), omega, sampleRate, taps) )
-  /**See [[filterHP]]
-    */
-  def filterHP(data: Array[Double], omega: Double, sampleRate: Double): Array[Double] = filterHP(data, omega, sampleRate, 512)
-  /**See [[filterHP]]
-    */
-  def filterHP(data: Array[Double], omega: Double): Array[Double] = filterHP(data, omega, 2d, 512)
-
+  //ToDo 2: reinstate once refactoring is done
+//  /**Bandpass filter the data using a windowed FIR filter.
+//   * See/use [[breeze.signal.filterBP()]] for more details, and to set advanced options.
+//   *
+//   * @param data data to filter
+//   * @param omegaLow  low frequency (in units of Nyquist frequency or Hz if sampleRate is set to specific value other than 2d)
+//   * @param omegaHigh high frequency (in units of Nyquist frequency or Hz if sampleRate is set to specific value other than 2d)
+//   * @param sampleRate  in Hz, default 2d (omegaLow/High will then be in units of Nyquist frequency)
+//   * @param taps  number of taps to use, default 512
+//   * @return
+//   */
+//  def filterBP(data: Array[Double], omegaLow: Double, omegaHigh: Double, sampleRate: Double, taps: Int): Array[Double] =
+//    dvDToArray( breeze.signal.filterBP(arrayDToDv(data), (omegaLow, omegaHigh), sampleRate, taps) )
+//  /**See [[filterBP]]
+//    */
+//  def filterBP(data: Array[Double], omegaLow: Double, omegaHigh: Double, sampleRate: Double): Array[Double] = filterBP(data, omegaLow, omegaHigh, sampleRate, 512)
+//  /**See [[filterBP]]
+//    */
+//  def filterBP(data: Array[Double], omegaLow: Double, omegaHigh: Double): Array[Double] = filterBP(data, omegaLow, omegaHigh, 2d, 512)
+//
+//  /**Bandstop filter the data using a windowed FIR filter.
+//    * See/use [[breeze.signal.filterBS()]] for more details, and to set advanced options.
+//    *
+//    * @param data data to filter
+//    * @param omegaLow  low frequency (in units of Nyquist frequency or Hz if sampleRate is set to specific value other than 2d)
+//    * @param omegaHigh high frequency (in units of Nyquist frequency or Hz if sampleRate is set to specific value other than 2d)
+//    * @param sampleRate  in Hz, default 2d (omegaLow/High will then be in units of Nyquist frequency)
+//    * @param taps  number of taps to use, default 512
+//    * @return
+//    */
+//  def filterBS(data: Array[Double], omegaLow: Double, omegaHigh: Double, sampleRate: Double, taps: Int): Array[Double] =
+//    dvDToArray( breeze.signal.filterBS(arrayDToDv(data), (omegaLow, omegaHigh), sampleRate, taps) )
+//  /**See [[filterBS]]
+//    */
+//  def filterBS(data: Array[Double], omegaLow: Double, omegaHigh: Double, sampleRate: Double): Array[Double] = filterBS(data, omegaLow, omegaHigh, sampleRate, 512)
+//  /**See [[filterBS]]
+//    */
+//  def filterBS(data: Array[Double], omegaLow: Double, omegaHigh: Double): Array[Double] = filterBS(data, omegaLow, omegaHigh, 2d, 512)
+//
+//  /**Low pass filter the data using a windowed FIR filter.
+//    * See/use [[breeze.signal.filterLP()]] for more details, and to set advanced options.
+//    *
+//    * @param data data to filter
+//    * @param omega  cutoff frequency (in units of Nyquist frequency or Hz if sampleRate is set to specific value other than 2d)
+//    * @param sampleRate  in Hz, default 2d (omega will then be in units of Nyquist frequency)
+//    * @param taps  number of taps to use, default 512
+//    * @return
+//    */
+//  def filterLP(data: Array[Double], omega: Double, sampleRate: Double, taps: Int): Array[Double] =
+//    dvDToArray( breeze.signal.filterLP(arrayDToDv(data), omega, sampleRate, taps) )
+//  /**See [[filterLP]]
+//    */
+//  def filterLP(data: Array[Double], omega: Double, sampleRate: Double): Array[Double] = filterLP(data, omega, sampleRate, 512)
+//  /**See [[filterLP]]
+//    */
+//  def filterLP(data: Array[Double], omega: Double): Array[Double] = filterLP(data, omega, 2d, 512)
+//
+//  /**High pass filter the data using a windowed FIR filter.
+//    * See/use [[breeze.signal.filterHP()]] for more details, and to set advanced options.
+//    *
+//    * @param data data to filter
+//    * @param omega  cutoff frequency (in units of Nyquist frequency or Hz if sampleRate is set to specific value other than 2d)
+//    * @param sampleRate  in Hz, default 2d (omega will then be in units of Nyquist frequency)
+//    * @param taps  number of taps to use, default 512
+//    * @return
+//    */
+//  def filterHP(data: Array[Double], omega: Double, sampleRate: Double, taps: Int): Array[Double] =
+//    dvDToArray( breeze.signal.filterHP(arrayDToDv(data), omega, sampleRate, taps) )
+//  /**See [[filterHP]]
+//    */
+//  def filterHP(data: Array[Double], omega: Double, sampleRate: Double): Array[Double] = filterHP(data, omega, sampleRate, 512)
+//  /**See [[filterHP]]
+//    */
+//  def filterHP(data: Array[Double], omega: Double): Array[Double] = filterHP(data, omega, 2d, 512)
+//
   // </editor-fold>
 
   // <editor-fold defaultstate="collapsed" desc=" wavelets ">

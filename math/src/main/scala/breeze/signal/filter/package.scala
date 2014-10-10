@@ -19,7 +19,7 @@ package object filter {
   implicit def tuple2ToOptOmega(omega: Tuple2[Double, Double]):OptOmega = new OptOmega.TupleValue(omega._1, omega._2)
   
   // design shorthands for filter design
-  def designFiltButterworth[Input](order: OptOrder, omega: OptOmega, tpe: OptFilterType) = iir.FilterButterworth.design[Input](order, omega, tpe)
+  def designFiltButterworth[Input](order: OptOrder, omega: OptOmega, tpe: OptFilterTpe) = iir.FilterButterworth.design[Input](order, omega, tpe)
   
   
   // <editor-fold desc="filter">
