@@ -1,11 +1,6 @@
-package breeze.signal.support
+package breeze.signal.filter.support
 
-import breeze.linalg.{sum, DenseVector, diff}
-import breeze.numerics.{cos, sincpi, isOdd, isEven}
-import breeze.signal._
-import scala.math.{sin, Pi}
-import breeze.math.Complex
-import breeze.macros.expand
+import breeze.linalg.DenseVector
 
 /**
  * Portions of the code are translated from scipy (scipy.org) based on provisions of the BSD license.

@@ -3,6 +3,7 @@ package breeze.signal.support
 import org.scalatest._
 import breeze.linalg.{norm, DenseVector}
 import breeze.signal._
+import breeze.signal.filter._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 

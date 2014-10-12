@@ -1,7 +1,8 @@
-package breeze.signal.support
+package breeze.signal.filter
 
 import breeze.linalg.DenseVector
-import scala.math.{cos, Pi}
+
+import scala.math.{Pi, cos}
 
 /**
  * @author ktakagaki

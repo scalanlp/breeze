@@ -16,6 +16,8 @@ limitations under the License.
 */
 
 import breeze.signal._
+import breeze.signal.filter._
+import breeze.signal.filter.support.{CanDesignFilterDecimation, FIRKernel1D, CanFirwin, CanFilterMedian}
 import breeze.signal.support._
 import breeze.linalg.DenseVector
 import breeze.numerics.isEven

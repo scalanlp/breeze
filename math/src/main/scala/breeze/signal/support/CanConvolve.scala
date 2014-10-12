@@ -10,6 +10,7 @@ import breeze.signal._
 import breeze.signal.OptRange.RangeOpt
 import breeze.numerics.isOdd
 import breeze.signal.OptRange.RangeOpt
+import breeze.signal.filter.support.FIRKernel1D
 import scala.reflect.ClassTag
 import breeze.util.SerializableLogging
 

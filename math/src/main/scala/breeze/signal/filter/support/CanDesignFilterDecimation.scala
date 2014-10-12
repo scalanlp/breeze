@@ -1,7 +1,8 @@
-package breeze.signal.support
+package breeze.signal.filter.support
 
+import breeze.linalg.{DenseVector, convert}
 import breeze.signal._
-import breeze.linalg.{convert, DenseVector}
+import breeze.signal.filter._
 
 
 /**
@@ -35,7 +36,7 @@ object CanDesignFilterDecimation {
 
         optDesignMethod match {
           case OptDesignMethod.Firwin => {
-            import OptFilterTaps._
+            import breeze.signal.filter.OptFilterTaps._
             val realOrder = optFilterOrder match {
               case Automatic => 31
               case IntOpt(ord) => ord

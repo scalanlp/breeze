@@ -1,9 +1,9 @@
 package breeze.signal
 
+import breeze.signal.filter.WindowFunctions
 import org.scalatest._
 import breeze._
 import breeze.linalg._
-import breeze.signal.support.WindowFunctions
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 

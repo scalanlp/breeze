@@ -1,4 +1,4 @@
-package breeze.signal.filter.iir
+package breeze.signal.filter
 
 object FilterElliptical {
   

@@ -1,7 +1,8 @@
 package breeze.signal
 
 import breeze.signal._
-import breeze.signal.support._
+import breeze.signal.filter.support._
+import breeze.signal.filter._
 import breeze.linalg.DenseVector
 import breeze.numerics.isEven
 import breeze.macros.expand
@@ -18,9 +19,9 @@ package object filter {
   //(i.e. filters with 2 cutoff frequencies
   implicit def tuple2ToOptOmega(omega: Tuple2[Double, Double]):OptOmega = new OptOmega.TupleValue(omega._1, omega._2)
   
-  // design shorthands for filter design
-  def designFiltButterworth[Input](order: OptOrder, omega: OptOmega, tpe: OptFilterTpe) = iir.FilterButterworth.design[Input](order, omega, tpe)
-  
+//  // design shorthands for filter design
+//  def designFiltButterworth[Input](order: OptOrder, omega: OptOmega, tpe: OptFilterTpe) = FilterButterworth.design[Input](order, omega, tpe)
+
   
   // <editor-fold desc="filter">
   /** Filter input data with the specified kernel and options.

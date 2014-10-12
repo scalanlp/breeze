@@ -1,8 +1,7 @@
-package breeze.signal.filter.fir
+package breeze.signal.filter
 
 import breeze.linalg.DenseVector
-import breeze.signal.OptOrder
-import breeze.signal.support.FIRKernel1D
+import breeze.signal.filter.support.FIRKernel1D
 
 object FilterDecimation {
 

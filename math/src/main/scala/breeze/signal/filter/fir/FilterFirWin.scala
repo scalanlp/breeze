@@ -1,7 +1,7 @@
-package breeze.signal.filter.fir
+package breeze.signal.filter
 
 import breeze.linalg.DenseVector
-import breeze.signal.support.{CanFirwin, FIRKernel1D}
+import breeze.signal.filter.support.{FIRKernel1D, CanFirwin}
 import breeze.signal._
 
 object FilterFirwin {

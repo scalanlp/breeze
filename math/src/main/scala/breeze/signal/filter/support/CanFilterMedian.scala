@@ -1,12 +1,11 @@
-package breeze.signal.support
+package breeze.signal.filter.support
 
-import breeze.signal.{filterMedian, OptOverhang}
-import breeze.stats._
-import breeze.linalg.{convert, DenseVector}
-import breeze.util.quickSelectImpl
+import breeze.linalg.DenseVector
 import breeze.macros.expand
-import scala.collection.mutable
 import breeze.numerics.isOdd
+import breeze.signal.OptOverhang
+import breeze.stats._
+import breeze.util.quickSelectImpl
 
 /**A relatively optimized median filter, using TreeSet
  * @author ktakagaki

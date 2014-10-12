@@ -1,10 +1,11 @@
-package breeze.signal.support
+package breeze.signal.filter.support
 
 /**Implementation for BP, BS, LP and HP filters (CanFilterBPBS, CanFilterLPHP)
 * @author ktakagaki
 */
-import breeze.linalg.{DenseVector, DenseMatrix}
+import breeze.linalg.DenseVector
 import breeze.signal._
+import breeze.signal.filter._
 
 
 /**
@@ -65,7 +66,7 @@ object CanFilterBPBS {
 //        println(kernel)
 //        println(kernel.kernel)
 
-        filter.filter(data, kernel, overhang, padding)
+        breeze.signal.filter.filter(data, kernel, overhang, padding)
       }
     }
   }
@@ -99,7 +100,7 @@ object CanFilterLPHP {
           }
         }
 
-        filter.filter(data, kernel, overhang, padding)
+        breeze.signal.filter.filter(data, kernel, overhang, padding)
       }
     }
   }
