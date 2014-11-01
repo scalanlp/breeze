@@ -2,7 +2,7 @@
 
 Breeze is a library for numerical processing. It aims to be generic, clean, and powerful without sacrificing (much) efficiency.
 
-The current version is 0.10-SNAPSHOT. The latest release is 0.9.
+The current version is 0.10. The latest release is 0.10.
 ## Documentation
 
 * https://github.com/scalanlp/breeze/wiki/Quickstart
@@ -16,7 +16,7 @@ Breeze used to have more components, but they are getting sharded out to differe
 
 * breeze-viz: a (barely maintained) visualization library in its own repository. It is available at [https://github.com/scalanlp/breeze-viz](https://github.com/scalanlp/breeze-viz).
 * breeze-learn (machine learning) is now in [Nak](https://github.com/scalanlp/nak).
-* breeze-process (natural language processing) has become [Chalk](https://github.com/scalanlp/chalk).
+* breeze-process (natural language processing) has become [Epic](https://github.com/dlwh/epic).
 
 There is also the [scala-breeze google group](https://groups.google.com/forum/#!forum/scala-breeze) for general questions and discussion.
 
@@ -30,7 +30,7 @@ This project can be built with sbt 0.13
 
 For **SBT**, Add these lines to your SBT project definition:
 
-* For SBT versions 0.10.x or later
+* For SBT versions 0.13.x or later
 
 ```scala
 libraryDependencies  ++= Seq(
@@ -48,8 +48,7 @@ resolvers ++= Seq(
             "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 )
 
-// Scala 2.9.2 is still supported for 0.2.1, but is dropped afterwards.
-// Don't use an earlier version of 2.10, you will probably get weird compiler crashes.
+// or 2.11.2
 scalaVersion := "2.10.3"
 ```
 
@@ -61,13 +60,13 @@ Maven looks like this:
 <dependency>
   <groupId>org.scalanlp</groupId>
 	<artifactId>breeze_2.10</artifactId> <!-- or 2.11 -->
-	<version>0.8.1</version>
+	<version>0.10</version>
 </dependency>
 ```
 
 ### Other build tools
 
-http://mvnrepository.com/artifact/org.scalanlp/breeze-math_2.10/0.6.1 (as an example) is a great resource for finding other configuration examples for other build tools.
+http://mvnrepository.com/artifact/org.scalanlp/breeze_2.10/0.10 (as an example) is a great resource for finding other configuration examples for other build tools.
 
 See documentation (linked above!) for more information on using Breeze.
 
