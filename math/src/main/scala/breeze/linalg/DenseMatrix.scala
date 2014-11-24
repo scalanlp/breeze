@@ -916,6 +916,11 @@ with MatrixConstructors[DenseMatrix] {
 
     def create(rows: Int, cols: Int) = new DenseMatrix(rows, cols, new Array[RV](rows * cols))
 
+
+    override def mapActive(from: DenseMatrix[V], from2: DenseMatrix[V], fn: ((Int, Int), V, V) => RV): DenseMatrix[RV] = {
+      map(from, from2, fn)
+    }
+
     /**Maps all corresponding values from the two collection. */
     def map(from: DenseMatrix[V], from2: DenseMatrix[V], fn: ((Int, Int), V, V) => RV) = {
       require(from.rows == from2.rows, "Vector row dimensions must match!")

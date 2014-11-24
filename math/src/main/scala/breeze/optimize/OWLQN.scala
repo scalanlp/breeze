@@ -90,7 +90,7 @@ class OWLQN[K, T](maxIter: Int, m: Int, l1reg: K => Double, tolerance: Double)(i
   // Adds in the regularization stuff to the gradient
   override protected def adjust(newX: T, newGrad: T, newVal: Double): (Double, T) = {
     var adjValue = newVal
-    val res = space.zipMapKeyValues.map(newX, newGrad, {case (i, xv, v) =>
+    val res = space.zipMapKeyValues.mapActive(newX, newGrad, {case (i, xv, v) =>
       val l1regValue = l1reg(i)
       require(l1regValue >= 0.0)
 

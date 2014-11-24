@@ -1092,28 +1092,62 @@ trait SparseVectorOps { this: SparseVector.type =>
       }
     }
 
-  class CanZipMapValuesSparseVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag:Zero]
+  class CanZipMapValuesSparseVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag:Zero:Semiring]
   extends CanZipMapValues[SparseVector[V],V,RV,SparseVector[RV]] {
     def create(length : Int): SparseVector[RV] = zeros(length)
 
     /**Maps all corresponding values from the two collection. */
     def map(from: SparseVector[V], from2: SparseVector[V], fn: (V, V) => RV): SparseVector[RV] = {
       require(from.length == from2.length, "Vector lengths must match!")
-      val result: SparseVector[RV] = create(from.length)
-      var i = 0
-      while (i < from.length) {
-        result(i) = fn(from(i), from2(i))
-        i += 1
+
+      val zz = fn(from.default, from2.default)
+      if(zz != implicitly[Zero[RV]].zero) {
+
+        val result: SparseVector[RV] = create(from.length)
+        var i = 0
+        while (i < from.length) {
+          result(i) = fn(from(i), from2(i))
+          i += 1
+        }
+        result
+      } else {
+        val vb = new VectorBuilder[RV](from.length)
+        var off1, off2 = 0
+        while(off1 < from.activeSize) {
+          while(off2 < from2.activeSize && from2.indexAt(off2) < from.indexAt(off1)) {
+            val index = from2.indexAt(off2)
+            vb.add(index, fn(from.default, from2.valueAt(off2)))
+            off2 += 1
+          }
+
+          if (off2 < from2.activeSize && from.indexAt(off1) == from2.indexAt(off2)) {
+            val index = from2.indexAt(off2)
+            vb.add(index, fn(from.valueAt(off1), from2.valueAt(off2)))
+            off2 += 1
+          } else {
+            val index = from.indexAt(off1)
+            vb.add(index, fn(from.valueAt(off1), from2.default))
+          }
+
+          off1 += 1
+        }
+
+        while(off2 < from2.activeSize) {
+          val index = from2.indexAt(off2)
+          vb.add(index, fn(from.default, from2.valueAt(off2)))
+          off2 += 1
+        }
+
+        vb.toSparseVector(true, true)
       }
-      result
     }
   }
-  implicit def zipMap[V, R:ClassTag:Zero] = new CanZipMapValuesSparseVector[V, R]
+  implicit def zipMap[V, R:ClassTag:Zero:Semiring]: CanZipMapValuesSparseVector[V, R] = new CanZipMapValuesSparseVector[V, R]
   implicit val zipMap_d: CanZipMapValuesSparseVector[Double, Double] = new CanZipMapValuesSparseVector[Double, Double]
   implicit val zipMap_f: CanZipMapValuesSparseVector[Float, Float] = new CanZipMapValuesSparseVector[Float, Float]
   implicit val zipMap_i: CanZipMapValuesSparseVector[Int, Int] = new CanZipMapValuesSparseVector[Int, Int]
 
-  class CanZipMapKeyValuesSparseVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag:Zero]
+  class CanZipMapKeyValuesSparseVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag:Zero:Semiring]
     extends CanZipMapKeyValues[SparseVector[V],Int, V,RV,SparseVector[RV]] {
     def create(length : Int): SparseVector[RV] = zeros(length)
 
@@ -1128,8 +1162,41 @@ trait SparseVectorOps { this: SparseVector.type =>
       }
       result
     }
+
+    override def mapActive(from: SparseVector[V], from2: SparseVector[V], fn: (Int, V, V) => RV): SparseVector[RV] = {
+      require(from.length == from2.length, "Vector lengths must match!")
+      val vb = new VectorBuilder[RV](from.length)
+      var off1, off2 = 0
+      while(off1 < from.activeSize) {
+        while(off2 < from2.activeSize && from2.indexAt(off2) < from.indexAt(off1)) {
+          val index = from2.indexAt(off2)
+          vb.add(index, fn(index, from.default, from2.valueAt(off2)))
+          off2 += 1
+        }
+
+        if(off2 < from2.activeSize && from.indexAt(off1) == from2.indexAt(off2)) {
+          val index = from2.indexAt(off2)
+          vb.add(index, fn(index, from.valueAt(off1), from2.valueAt(off2)))
+          off2 += 1
+        } else {
+          val index = from.indexAt(off1)
+          vb.add(index, fn(index, from.valueAt(off1), from2.default))
+        }
+
+        off1 += 1
+      }
+
+      while(off2 < from2.activeSize) {
+        val index = from2.indexAt(off2)
+        vb.add(index, fn(index, from.default, from2.valueAt(off2)))
+        off2 += 1
+      }
+
+      vb.toSparseVector(true, true)
+    }
   }
-  implicit def zipMapKV[V, R:ClassTag:Zero] = new CanZipMapKeyValuesSparseVector[V, R]
+
+  implicit def zipMapKV[V, R:ClassTag:Zero:Semiring] = new CanZipMapKeyValuesSparseVector[V, R]
 
 
   implicit def implOpNeg_SVT_eq_SVT[@spec(Double, Int, Float, Long)  V]
