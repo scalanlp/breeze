@@ -1,15 +1,15 @@
 package breeze.stats.distributions
 
-import scala.runtime.ScalaRunTime
 import breeze.optimize.DiffFunction
-import breeze.numerics._
+
+import scala.runtime.ScalaRunTime
 
 /**
  * Chi-Squared distribution with k degrees of freedom.
  *
  * @author dlwh
  **/
-case class ChiSquared(k: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double] with Moments[Double, Double] {
+case class ChiSquared(k: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double] with Moments[Double, Double] with HasCdf with HasInverseCdf{
   private val innerGamma = Gamma(k/2, 2)
 
 
@@ -39,6 +39,14 @@ case class ChiSquared(k: Double)(implicit rand: RandBasis = Rand) extends Contin
   def entropy: Double = innerGamma.entropy
 
   override def toString: String = ScalaRunTime._toString(this)
+
+  override def probability(x: Double, y: Double): Double = {
+    innerGamma.probability(x, y)
+  }
+
+  override def inverseCdf(p: Double): Double = {
+    innerGamma.inverseCdf(p)
+  }
 }
 
 object ChiSquared extends ExponentialFamily[ChiSquared, Double] with ContinuousDistributionUFuncProvider[Double,ChiSquared] {

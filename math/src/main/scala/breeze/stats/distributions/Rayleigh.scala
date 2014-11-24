@@ -1,14 +1,14 @@
 package breeze.stats.distributions
 
-import breeze.numerics.constants.{γ, Pi}
-import breeze.numerics.{sqrt, exp, log}
+import breeze.numerics.constants.{Pi, γ}
+import breeze.numerics.{expm1, log, sqrt}
 
 /**
  * TODO
  *
  * @author dlwh
  **/
-case class Rayleigh(scale: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double] with Moments[Double, Double] {
+case class Rayleigh(scale: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double] with Moments[Double, Double] with HasCdf {
   def mean: Double = scale * sqrt(Pi/2)
 
   def mode: Double = scale
@@ -31,5 +31,12 @@ case class Rayleigh(scale: Double)(implicit rand: RandBasis = Rand) extends Cont
     log(x/(scale * scale)) - x * x / (2 * scale * scale)
   }
 
+  def cdf(x: Double): Double = {
+    val xs = x/scale
+    -expm1(-(xs * xs)/2)
+  }
 
+  override def probability(x: Double, y: Double): Double = {
+    cdf(y) - cdf(x)
+  }
 }

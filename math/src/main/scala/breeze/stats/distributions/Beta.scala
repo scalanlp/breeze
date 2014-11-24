@@ -16,12 +16,12 @@ package distributions
  limitations under the License.
 */
 
-import math._
-
-import breeze.numerics.{lgamma,digamma}
 import breeze.linalg._
+import breeze.numerics.{digamma, lgamma}
 import breeze.optimize._
-import breeze.numerics
+import org.apache.commons.math3.distribution.BetaDistribution
+
+import scala.math._
 
 /**
  * The Beta distribution, which is the conjugate prior for the Bernoulli distribution
@@ -30,7 +30,7 @@ import breeze.numerics
  * @param a the number of pseudo-observations for true
  * @param b the number of pseudo-observations for false
  */
-class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double]  with Moments[Double, Double] {
+class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double]  with Moments[Double, Double] with HasCdf {
   require(a > 0.0)
   require(b > 0.0)
 
@@ -48,6 +48,10 @@ class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand) extends Contin
       case 1.0 => if (b > 1) { 0 } else if (b == 1) { normalizer } else { Double.PositiveInfinity }
       case x => math.exp(logPdf(x))
     }
+  }
+
+  override def probability(x: Double, y: Double): Double = {
+    new BetaDistribution(a, b).probability(x, y)
   }
 
   lazy val logNormalizer =  lgamma(a) + lgamma(b) - lgamma(a+b)

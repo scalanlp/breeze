@@ -43,6 +43,8 @@ case class Binomial(n: Int, p: Double)(implicit rand: RandBasis=Rand) extends Di
     }
   }
 
+
+
   // faster binomial from NR
   override def draw():Int = {
     var bnl = 0.0

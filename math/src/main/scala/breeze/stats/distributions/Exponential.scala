@@ -1,5 +1,7 @@
 package breeze.stats.distributions
 
+import org.apache.commons.math3.distribution.ExponentialDistribution
+
 import runtime.ScalaRunTime
 import breeze.optimize.DiffFunction
 
@@ -8,7 +10,7 @@ import breeze.optimize.DiffFunction
  * @author dlwh
  */
 
-case class Exponential(rate: Double)(implicit basis: RandBasis=Rand) extends ContinuousDistr[Double] {
+case class Exponential(rate: Double)(implicit basis: RandBasis=Rand) extends ContinuousDistr[Double] with HasCdf with HasInverseCdf {
   override def toString() = ScalaRunTime._toString(this)
   require(rate > 0)
 
@@ -16,9 +18,15 @@ case class Exponential(rate: Double)(implicit basis: RandBasis=Rand) extends Con
 
   lazy val logNormalizer = - math.log(rate)
 
-  def draw() = { for {
-    x <- basis.uniform
-  } yield - math.log(x) / rate} get
+  def draw() = -math.log(basis.uniform.draw())/rate
+
+  override def probability(x: Double, y: Double): Double = {
+    new ExponentialDistribution(rate).probability(x, y)
+  }
+
+  override def inverseCdf(p: Double): Double = {
+    new ExponentialDistribution(rate).inverseCumulativeProbability(p)
+  }
 }
 
 object Exponential extends ExponentialFamily[Exponential,Double] with ContinuousDistributionUFuncProvider[Double,Exponential] {
