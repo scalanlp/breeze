@@ -159,6 +159,10 @@ case class Gamma(shape : Double, scale : Double)(implicit rand: RandBasis = Rand
 //    gammp(this.shape, p / this.scale);
     new GammaDistribution(shape, scale).inverseCumulativeProbability(p)
   }
+
+  override def cdf(x: Double): Double = {
+    new GammaDistribution(shape, scale).cumulativeProbability(x)
+  }
 }
 
 object Gamma extends ExponentialFamily[Gamma,Double] with ContinuousDistributionUFuncProvider[Double,Gamma] {

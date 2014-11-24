@@ -52,6 +52,7 @@ trait ContinuousDistr[T] extends Density[T] with Rand[T] {
 
 trait HasCdf {
   def probability(x: Double, y: Double): Double // Probability that x < a <= Y
+  def cdf(x: Double):Double
 }
 
 trait HasInverseCdf {
@@ -65,7 +66,6 @@ trait PdfIsUFunc[U <: UFunc,T,P <: PdfIsUFunc[U,T,P]] { self:P =>
 }
 
 trait ContinuousDistributionUFuncProvider[T,D <: ContinuousDistr[T]] extends UFunc with MappingUFunc { self:UFunc =>
-  import breeze.linalg.{DenseVector, DenseMatrix}
   implicit object basicImpl extends Impl2[ContinuousDistrUFuncWrapper,T,Double] { def apply(w: ContinuousDistrUFuncWrapper, v: T) = w.dist.pdf(v) }
   implicit class ContinuousDistrUFuncWrapper(val dist: D) extends PdfIsUFunc[self.type,T,ContinuousDistrUFuncWrapper]
 }

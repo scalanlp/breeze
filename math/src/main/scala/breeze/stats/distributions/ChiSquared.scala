@@ -47,6 +47,11 @@ case class ChiSquared(k: Double)(implicit rand: RandBasis = Rand) extends Contin
   override def inverseCdf(p: Double): Double = {
     innerGamma.inverseCdf(p)
   }
+
+  // Probability that x < a <= Y
+  override def cdf(x: Double): Double = {
+    innerGamma.cdf(x)
+  }
 }
 
 object ChiSquared extends ExponentialFamily[ChiSquared, Double] with ContinuousDistributionUFuncProvider[Double,ChiSquared] {

@@ -27,6 +27,11 @@ case class Exponential(rate: Double)(implicit basis: RandBasis=Rand) extends Con
   override def inverseCdf(p: Double): Double = {
     new ExponentialDistribution(rate).inverseCumulativeProbability(p)
   }
+
+  // Probability that x < a <= Y
+  override def cdf(x: Double): Double = {
+    new ExponentialDistribution(rate).cumulativeProbability(x)
+  }
 }
 
 object Exponential extends ExponentialFamily[Exponential,Double] with ContinuousDistributionUFuncProvider[Double,Exponential] {
