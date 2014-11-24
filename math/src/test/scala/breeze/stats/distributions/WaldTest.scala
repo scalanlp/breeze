@@ -24,6 +24,7 @@ import org.junit.runner.RunWith
 
 @RunWith(classOf[JUnitRunner])
 class WaldTest extends FunSuite with Checkers with MomentsTestBase[Double] {
+  type Distr = Wald
   import Arbitrary.arbitrary
   override val numSamples = 40000
 
@@ -31,7 +32,7 @@ class WaldTest extends FunSuite with Checkers with MomentsTestBase[Double] {
 
   def fromDouble(x: Double) = x
 
-  implicit def arbDistr = Arbitrary {
+  implicit def arbDistr: Arbitrary[Distr] = Arbitrary {
     for(location <- arbitrary[Double].map{x => math.abs(x) % 5.0 + 1.1}; // Wald pdf at 0 not defined when location == 1
         scale <- arbitrary[Double].map {x => math.abs(x) % 4.0 + 1.0}) yield new Wald(location,scale)(RandBasis.mt0)
   }

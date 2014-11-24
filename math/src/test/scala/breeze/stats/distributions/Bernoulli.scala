@@ -27,6 +27,7 @@ import breeze.numerics._
 
 @RunWith(classOf[JUnitRunner])
 class BernoulliTest extends FunSuite with Checkers with MomentsTestBase[Boolean] with ExpFamTest[Bernoulli,Boolean] {
+  type Distr = Bernoulli
   val expFam = Bernoulli
 
   import Arbitrary.arbitrary

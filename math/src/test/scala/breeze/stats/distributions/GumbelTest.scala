@@ -24,6 +24,7 @@ import org.scalatest.prop._
 
 @RunWith(classOf[JUnitRunner])
 class GumbelTest extends FunSuite with Checkers with MomentsTestBase[Double] {
+  type Distr = Gumbel
   import org.scalacheck.Arbitrary.arbitrary
 
 

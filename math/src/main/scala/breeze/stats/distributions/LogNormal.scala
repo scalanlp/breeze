@@ -15,7 +15,9 @@ import scala.math.sqrt
  *
  * @author dlwh
  **/
-case class LogNormal(mu: Double, sigma: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double] with Moments[Double, Double] with HasCdf with HasInverseCdf {
+case class LogNormal(mu: Double, sigma: Double)
+                    (implicit rand: RandBasis = Rand)
+  extends ContinuousDistr[Double] with Moments[Double, Double] with HasCdf with HasInverseCdf {
   private val myGaussian = Gaussian(mu, sigma)
   require(sigma > 0, "Sigma must be positive, but got " + sigma)
   /**
@@ -26,7 +28,11 @@ case class LogNormal(mu: Double, sigma: Double)(implicit rand: RandBasis = Rand)
   }
 
 
-  def unnormalizedLogPdf(x: Double): Double = myGaussian.unnormalizedLogPdf(log(x))
+  def unnormalizedLogPdf(x: Double): Double = {
+    val logx = log(x)
+    val rad = (logx - mu)/sigma
+    -(rad * rad / 2) - logx
+  }
 
   lazy val logNormalizer: Double = -sqrt(2 * math.Pi) * sigma
 

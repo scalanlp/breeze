@@ -31,7 +31,9 @@ case class Uniform(low: Double, high: Double)(implicit rand: RandBasis = Rand)
     else (x-low)/(high - low)
   }
 
-  override def probability(x: Double, y: Double): Double = ???
+  override def probability(x: Double, y: Double): Double = {
+    (y - x)/(high - low)
+  }
 
   override def inverseCdf(p: Double): Double = (high - low) * p + low
 }

@@ -27,6 +27,7 @@ import math._
 * @param p the probability of any one being true
 */
 case class Binomial(n: Int, p: Double)(implicit rand: RandBasis=Rand) extends DiscreteDistr[Int] with Moments[Double, Double] {
+  type Distr = Gamma
   require(n > 0, "n must be positive!")
   require(p >= 0.0, "p must be non-negative!")
   def probabilityOf(k: Int) = exp(logProbabilityOf(k))
