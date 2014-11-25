@@ -840,7 +840,7 @@ trait SparseVectorOps { this: SparseVector.type =>
         val asize: Int = a.activeSize
         val bsize: Int = b.activeSize
 
-        var result: T = zero
+        var result: T = s.zero
         var aoff: Int = 0
         var boff: Int = 0
     
@@ -850,7 +850,7 @@ trait SparseVectorOps { this: SparseVector.type =>
           else if (b.indexAt(boff) < a.indexAt(aoff))
             boff += 1
           else {
-            result += a.valueAt(aoff) * b.valueAt(boff)
+            result += s.+(result,s.*(a.valueAt(aoff), b.valueAt(boff)))
             aoff += 1
             boff += 1
           }
