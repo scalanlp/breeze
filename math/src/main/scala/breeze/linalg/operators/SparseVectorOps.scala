@@ -803,52 +803,27 @@ trait SparseVectorOps { this: SparseVector.type =>
 
     new OpMulInner.Impl2[SparseVector[T], SparseVector[T], T] {
       def apply(a: SparseVector[T], b: SparseVector[T]): T = {
-        if(b.activeSize < a.activeSize) {
-          apply(b, a)
-        } else {
-          require(b.length == a.length, "Vectors must be the same length!")
-          val asize: Int = a.activeSize
-          val bsize: Int = b.activeSize
+        require(b.length == a.length, "Vectors must be the same length!")
+        val asize: Int = a.activeSize
+        val bsize: Int = b.activeSize
 
-          var result: T = zero
-
-          var aoff: Int = 0
-          var boff: Int = 0
-          // in principle we could do divide and conquer here
-          // by picking the middle of a, figuring out where that is in b, and then recursing,
-          // using it as a bracketing.
-
-          // double loop:
-          // b moves to catch up with a, then a takes a step (possibly bringing b along)
-          while (aoff < asize) {
-            val aind: Int = a.indexAt(aoff)
-            boff = util.Arrays.binarySearch(b.index, boff, math.min(bsize, aind + 1), aind)
-            if (boff < 0) {
-              boff = ~boff
-              if (boff == bsize) {
-                // we're through the b array, so we're done.
-                aoff = asize
-              } else {
-                // fast forward a until we get to the b we just got to
-                val bind: Int = b.indexAt(boff)
-                var newAoff: Int = util.Arrays.binarySearch(a.index, aoff, math.min(asize, bind + 1), bind)
-                if (newAoff < 0) {
-                  newAoff = ~newAoff
-                  boff += 1
-                }
-                assert(newAoff > aoff, aoff + " " + newAoff)
-                aoff = newAoff
-              }
-            } else {
-              // b is there, a is there, do the multiplication!
-              result += a.valueAt(aoff) * b.valueAt(boff)
-              aoff += 1
-              boff += 1
-            }
+        var result: T = zero
+        var aoff: Int = 0
+        var boff: Int = 0
+    
+        while (aoff < asize && boff < bsize) {
+          if (a.indexAt(aoff) < b.indexAt(boff))
+            aoff += 1
+          else if (b.indexAt(boff) < a.indexAt(aoff))
+            boff += 1
+          else {
+            result += a.valueAt(aoff) * b.valueAt(boff)
+            aoff += 1
+            boff += 1
           }
-
-          result
         }
+        result
+        
       }
 
       implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulInner.type, T]].register(this)
@@ -861,52 +836,27 @@ trait SparseVectorOps { this: SparseVector.type =>
     new OpMulInner.Impl2[SparseVector[T], SparseVector[T], T] {
       val s = implicitly[Semiring[T]]
       def apply(a: SparseVector[T], b: SparseVector[T]): T = {
-        if(b.activeSize < a.activeSize) {
-          apply(b, a)
-        } else {
-          require(b.length == a.length, "Vectors must be the same length!")
-          val asize: Int = a.activeSize
-          val bsize: Int = b.activeSize
+        require(b.length == a.length, "Vectors must be the same length!")
+        val asize: Int = a.activeSize
+        val bsize: Int = b.activeSize
 
-          var result: T = s.zero
-
-          var aoff: Int = 0
-          var boff: Int = 0
-          // in principle we could do divide and conquer here
-          // by picking the middle of a, figuring out where that is in b, and then recursing,
-          // using it as a bracketing.
-
-          // double loop:
-          // b moves to catch up with a, then a takes a step (possibly bringing b along)
-          while (aoff < asize) {
-            val aind: Int = a.indexAt(aoff)
-            boff = util.Arrays.binarySearch(b.index, boff, math.min(bsize, aind + 1), aind)
-            if (boff < 0) {
-              boff = ~boff
-              if (boff == bsize) {
-                // we're through the b array, so we're done.
-                aoff = asize
-              } else {
-                // fast forward a until we get to the b we just got to
-                val bind: Int = b.indexAt(boff)
-                var newAoff: Int = util.Arrays.binarySearch(a.index, aoff, math.min(asize, bind + 1), bind)
-                if (newAoff < 0) {
-                  newAoff = ~newAoff
-                  boff += 1
-                }
-                assert(newAoff > aoff, aoff + " " + newAoff)
-                aoff = newAoff
-              }
-            } else {
-              // b is there, a is there, do the multiplication!
-              result = s.+(result,s.*(a.valueAt(aoff), b.valueAt(boff)))
-              aoff += 1
-              boff += 1
-            }
+        var result: T = s.zero
+        var aoff: Int = 0
+        var boff: Int = 0
+    
+        while (aoff < asize && boff < bsize) {
+          if (a.indexAt(aoff) < b.indexAt(boff))
+            aoff += 1
+          else if (b.indexAt(boff) < a.indexAt(aoff))
+            boff += 1
+          else {
+            result += s.+(result,s.*(a.valueAt(aoff), b.valueAt(boff)))
+            aoff += 1
+            boff += 1
           }
-
-          result
         }
+        result
+        
       }
     }
 
