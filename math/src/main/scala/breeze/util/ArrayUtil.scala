@@ -283,6 +283,9 @@ object ArrayUtil {
 
   def gallopSearch(objs: Array[Int], fromIndex: Int, toIndex: Int, toFind: Int):Int = {
     if(objs.length == 0) return ~0
+
+//    if(toIndex - fromIndex <= 16) return linearSearch(objs, fromIndex, toIndex, toFind)
+
     var low = fromIndex
 
     var step = 1
@@ -300,6 +303,22 @@ object ArrayUtil {
       Arrays.binarySearch(objs, low, math.min(high, toIndex), toFind)
     }
   }
+
+  // only works on sorted arrays
+  private def linearSearch(objs: Array[Int], fromIndex: Int, toIndex: Int, toFind: Int):Int =  {
+    import spire.syntax.cfor._
+    cforRange(fromIndex until toIndex) { i =>
+      val o = objs(i)
+      if (toFind == o) {
+        return i
+      } else if (o > toFind) {
+        return ~i
+      }
+    }
+
+    ~toIndex
+  }
+
 
  
 

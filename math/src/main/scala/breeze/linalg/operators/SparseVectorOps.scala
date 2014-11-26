@@ -805,6 +805,8 @@ trait SparseVectorOps { this: SparseVector.type =>
       def apply(a: SparseVector[T], b: SparseVector[T]): T = {
         if(b.activeSize < a.activeSize) {
           apply(b, a)
+        } else if (a.activeSize == 0) {
+          zero
         } else {
           require(b.length == a.length, "Vectors must be the same length!")
           val asize: Int = a.activeSize
@@ -814,6 +816,9 @@ trait SparseVectorOps { this: SparseVector.type =>
 
           var aoff: Int = 0
           var boff: Int = 0
+          // used for finding upper bounds for location of b
+          var bLastOff = 0
+          var bLastInd = 0
           // in principle we could do divide and conquer here
           // by picking the middle of a, figuring out where that is in b, and then recursing,
           // using it as a bracketing.
@@ -822,7 +827,8 @@ trait SparseVectorOps { this: SparseVector.type =>
           // b moves to catch up with a, then a takes a step (possibly bringing b along)
           while (aoff < asize) {
             val aind: Int = a.indexAt(aoff)
-            boff = ArrayUtil.gallopSearch(b.index, boff, math.min(bsize, aind + 1), aind)
+            val bMax = math.min(bsize, bLastOff + aind - bLastInd + 1)
+            boff = ArrayUtil.gallopSearch(b.index, boff, bMax, aind)
 //            boff = util.Arrays.binarySearch(b.index, boff, math.min(bsize, aind + 1), aind)
             if (boff < 0) {
               boff = ~boff
@@ -832,7 +838,10 @@ trait SparseVectorOps { this: SparseVector.type =>
               } else {
                 // fast forward a until we get to the b we just got to
                 val bind: Int = b.indexAt(boff)
-                var newAoff: Int = ArrayUtil.gallopSearch(a.index, aoff, math.min(asize, bind + 1), bind)
+                bLastOff = boff
+                bLastInd = bind
+                val aMax = math.min(asize, aoff + bind  - aind + 1)
+                var newAoff: Int = ArrayUtil.gallopSearch(a.index, aoff, aMax, bind)
 //                var newAoff: Int = util.Arrays.binarySearch(a.index, aoff, math.min(asize, bind + 1), bind)
                 if (newAoff < 0) {
                   newAoff = ~newAoff
@@ -842,6 +851,8 @@ trait SparseVectorOps { this: SparseVector.type =>
                 aoff = newAoff
               }
             } else {
+              bLastOff = boff
+              bLastInd = aind
               // b is there, a is there, do the multiplication!
               result += a.valueAt(aoff) * b.valueAt(boff)
               aoff += 1
