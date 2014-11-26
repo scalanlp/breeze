@@ -1,9 +1,8 @@
 package breeze.linalg
 
 import breeze.benchmark._
-
-import breeze.linalg._
 import breeze.stats.distributions._
+import spire.syntax.cfor._
 
 object DenseVectorBenchmark extends MyRunner(classOf[DenseVectorBenchmark])
 
@@ -31,6 +30,19 @@ trait BuildsRandomVectors {
       i += 1
     }
     new DenseMatrix(m, n, d, 0, m)
+  }
+
+  def randomSparseVector(size: Int, sparsity: Double = 0.01): SparseVector[Double] = {
+    val nnz = (size * sparsity).toInt
+    val vb = VectorBuilder.zeros[Double](size)
+    cforRange(0 until nnz) { i =>
+      val ind = (Math.random() * size).toInt
+      val v = Math.random()
+      vb.add(ind, v)
+    }
+//    val values = Array.fill(size)((size * Math.random()).toInt -> Math.random())
+//    val result = SparseVector(size)(values:_*)
+    vb.toSparseVector
   }
 }
 

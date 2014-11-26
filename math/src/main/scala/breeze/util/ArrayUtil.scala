@@ -17,6 +17,9 @@ package breeze.util
 */
 
 import java.util.Arrays
+import breeze.linalg.diff
+import spire.std.float
+
 import scala.reflect.ClassTag
 import scala.collection.mutable
 
@@ -277,5 +280,27 @@ object ArrayUtil {
 
 
   }
+
+  def gallopSearch(objs: Array[Int], fromIndex: Int, toIndex: Int, toFind: Int):Int = {
+    if(objs.length == 0) return ~0
+    var low = fromIndex
+
+    var step = 1
+    var high = fromIndex + step
+
+    while (high < toIndex && objs(high) < toFind) {
+      low = high
+      step *= 2
+      high = fromIndex + step
+    }
+
+    if (high < toIndex && objs(high) == toFind) {
+      high
+    } else {
+      Arrays.binarySearch(objs, low, math.min(high, toIndex), toFind)
+    }
+  }
+
+ 
 
 }
