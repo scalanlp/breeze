@@ -805,8 +805,6 @@ trait SparseVectorOps { this: SparseVector.type =>
       def apply(a: SparseVector[T], b: SparseVector[T]): T = {
         if(b.activeSize < a.activeSize) {
           apply(b, a)
-        } else if (a.activeSize == 0) {
-          zero
         } else {
           require(b.length == a.length, "Vectors must be the same length!")
           val asize: Int = a.activeSize
@@ -816,7 +814,6 @@ trait SparseVectorOps { this: SparseVector.type =>
 
           var aoff: Int = 0
           var boff: Int = 0
-          var bind = b.index(boff)
           // in principle we could do divide and conquer here
           // by picking the middle of a, figuring out where that is in b, and then recursing,
           // using it as a bracketing.
@@ -825,9 +822,6 @@ trait SparseVectorOps { this: SparseVector.type =>
           // b moves to catch up with a, then a takes a step (possibly bringing b along)
           while (aoff < asize) {
             val aind: Int = a.indexAt(aoff)
-            // we know that b.index(boff) == bind,
-            // so the latest place that aind can be (in b.index) is boff + (aind - bind)
-//            val bOffMax = math.max(boff, math.min(bsize, boff + (aind - bind) + 1) )
             boff = ArrayUtil.gallopSearch(b.index, boff, math.min(bsize, aind + 1), aind)
 //            boff = util.Arrays.binarySearch(b.index, boff, math.min(bsize, aind + 1), aind)
             if (boff < 0) {
@@ -837,7 +831,7 @@ trait SparseVectorOps { this: SparseVector.type =>
                 aoff = asize
               } else {
                 // fast forward a until we get to the b we just got to
-                bind = b.indexAt(boff)
+                val bind: Int = b.indexAt(boff)
                 var newAoff: Int = ArrayUtil.gallopSearch(a.index, aoff, math.min(asize, bind + 1), bind)
 //                var newAoff: Int = util.Arrays.binarySearch(a.index, aoff, math.min(asize, bind + 1), bind)
                 if (newAoff < 0) {
