@@ -607,6 +607,12 @@ trait HashVector_GenericOps { this: HashVector.type =>
       }
       result
     }
+
+    def mapActive(from: HashVector[V], from2: HashVector[V], fn: (V, V) => RV) = {
+      map(from, from2, fn)
+    }
+
+
   }
   implicit def zipMap[V, R:ClassTag:Zero] = new CanZipMapValuesHashVector[V, R]
   implicit val zipMap_d: CanZipMapValuesHashVector[Double, Double] = new CanZipMapValuesHashVector[Double, Double]
@@ -628,6 +634,10 @@ trait HashVector_GenericOps { this: HashVector.type =>
         i += 1
       }
       result
+    }
+
+    override def mapActive(from: HashVector[V], from2: HashVector[V], fn: (Int, V, V) => RV): HashVector[RV] = {
+        map(from, from2, fn)
     }
   }
   implicit def zipMapKV[V, R:ClassTag:Zero] = new CanZipMapKeyValuesHashVector[V, R]

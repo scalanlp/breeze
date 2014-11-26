@@ -47,6 +47,8 @@ trait CanZipMapKeyValues[From, @spec(Int) K, @spec(Double, Int, Float, Long) V, 
   /** Maps all corresponding values from the two collections. */
   def map(from: From, from2: From, fn : (K,V,V)=>RV): To
 
+  def mapActive(from: From, from2: From, fn: (K, V, V) => RV): To
+
 }
 
 object CanZipMapKeyValues {
@@ -55,6 +57,8 @@ object CanZipMapKeyValues {
     /** Maps all corresponding values from the two collections. */
     /** Maps all corresponding values from the two collections. */
     override def map(from: S, from2: S, fn: (Unit, S, S) => S): S = fn((), from, from2)
+
+    override def mapActive(from: S, from2: S, fn: (Unit, S, S) => S): S = fn((), from, from2)
   }
 
 
@@ -75,6 +79,9 @@ object CanZipMapKeyValues {
       arr
     }
 
+    override def mapActive(from: Array[V], from2: Array[V], fn: (Int, V, V) => RV): Array[RV] = {
+      map(from, from2, fn)
+    }
   }
 
   // <editor-fold defaultstate="collapsed" desc=" implicit CanZipMapValues[V, RV] implementations ">

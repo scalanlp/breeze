@@ -16,16 +16,16 @@ package breeze.stats.distributions;
  limitations under the License.
 */
 
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.scalacheck._;
 import org.junit.runner.RunWith
-import org.apache.commons.math3.random.MersenneTwister
+import org.scalacheck._
+import org.scalatest._
+import org.scalatest.junit._
+import org.scalatest.prop._
 
 @RunWith(classOf[JUnitRunner])
-class GammaTest extends FunSuite with Checkers with MomentsTestBase[Double] with ExpFamTest[Gamma,Double] {
-  import Arbitrary.arbitrary
+class GammaTest extends FunSuite with Checkers with MomentsTestBase[Double] with ExpFamTest[Gamma,Double] with HasCdfTestBase {
+  type Distr = Gamma
+  import org.scalacheck.Arbitrary.arbitrary
 
   val expFam = Gamma
 

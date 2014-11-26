@@ -867,6 +867,21 @@ trait CSCMatrixOps_Ring extends CSCMatrixOpsLowPrio with SerializableLogging {
 
       builder.result(true, true)
     }
+
+    override def mapActive(a: CSCMatrix[S], b: CSCMatrix[S], fn: ((Int, Int), S, S) => R): CSCMatrix[R] = {
+      // TODO: sparsify this
+      val rows = a.rows
+      val cols = a.cols
+      require(rows == b.rows, "Matrices must have same number of rows!")
+      require(cols == b.cols, "Matrices must have same number of cols!")
+
+      val builder = new CSCMatrix.Builder[R](rows, cols)
+      for (c <- 0 until cols; r <- 0 until rows) {
+        builder.add(r, c, fn((r, c), a(r, c), b(r, c)))
+      }
+
+      builder.result(true, true)
+    }
   }
 
   implicit def canAddM_S_Semiring[T: Semiring : ClassTag]: OpAdd.Impl2[CSCMatrix[T], T, CSCMatrix[T]] =

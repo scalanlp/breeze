@@ -503,6 +503,11 @@ object DenseVector extends VectorConstructors[DenseVector]
       }
       result
     }
+
+
+    override def mapActive(from: DenseVector[V], from2: DenseVector[V], fn: ((Int), V, V) => RV): DenseVector[RV] = {
+      map(from, from2, fn)
+    }
   }
 
 

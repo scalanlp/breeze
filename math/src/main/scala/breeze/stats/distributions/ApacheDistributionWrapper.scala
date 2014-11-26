@@ -17,8 +17,7 @@ package distributions
  limitations under the License.
 */
 
-import org.apache.commons.math3.distribution.{FDistribution => ApacheFDistribution, AbstractRealDistribution => ApacheRealDistribution, AbstractIntegerDistribution => ApacheIntegerDistribution}
-import math._
+import org.apache.commons.math3.distribution.{AbstractIntegerDistribution => ApacheIntegerDistribution, AbstractRealDistribution => ApacheRealDistribution, FDistribution => ApacheFDistribution}
 
 trait ApacheContinuousDistribution extends ContinuousDistr[Double] with HasCdf with HasInverseCdf {
   protected val inner: ApacheRealDistribution
@@ -32,6 +31,8 @@ trait ApacheContinuousDistribution extends ContinuousDistr[Double] with HasCdf w
   def inverseCdf(p: Double) = inner.inverseCumulativeProbability(p)
   def mean: Double = inner.getNumericalMean()
   def variance: Double = inner.getNumericalVariance()
+
+  override def cdf(x: Double): Double = inner.cumulativeProbability(x)
 }
 
 trait ApacheDiscreteDistribution extends DiscreteDistr[Int] {

@@ -233,6 +233,10 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
       }
       result
     }
+
+    override def mapActive(from: Vector[V], from2: Vector[V], fn: (Int, V, V) => RV): Vector[RV] = {
+      map(from, from2, fn)
+    }
   }
 
 

@@ -28,13 +28,16 @@ import math.{Pi,log1p}
  * @author dlwh
  */
 case class Gaussian(mu :Double, sigma : Double)(implicit rand: RandBasis = Rand)
-    extends ContinuousDistr[Double] with Moments[Double, Double] {
+    extends ContinuousDistr[Double] with Moments[Double, Double] with HasCdf {
   private val inner = rand.gaussian(mu,sigma)
   def draw() = inner.get()
 
 
   override def toString() =  "Gaussian(" + mu + ", " + sigma + ")"
 
+
+  // obviously could be more efficient, but eh.
+  override def probability(x: Double, y: Double): Double = cdf(y) - cdf(x)
 
   /**
   * Computes the inverse cdf of the p-value for this gaussian.

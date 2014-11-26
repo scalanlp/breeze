@@ -1,10 +1,12 @@
 package breeze.stats.distributions
 
-import breeze.numerics.constants.{γ, Pi}
-import breeze.numerics.{exp, log}
+import breeze.numerics.constants.Pi
+import breeze.numerics.log
 
 /**
- * TODO
+ * Also known as the inverse Gaussian Distribution
+ *
+ * http://en.wikipedia.org/wiki/Inverse_Gaussian_distribution
  *
  * @author dlwh
  **/

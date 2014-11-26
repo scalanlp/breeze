@@ -19,8 +19,10 @@ package distributions
 
 import breeze.numerics._
 import breeze.optimize.DiffFunction
-import math.pow
-import annotation.tailrec
+import org.apache.commons.math3.distribution.GammaDistribution
+
+import scala.annotation.tailrec
+import scala.math.pow
 
 
 /**
@@ -29,8 +31,8 @@ import annotation.tailrec
  *
  * @author dlwh
  */
-case class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasis = Rand)
-    extends ContinuousDistr[Double] with Moments[Double, Double] {
+case class Gamma(shape : Double, scale : Double)(implicit rand: RandBasis = Rand)
+    extends ContinuousDistr[Double] with Moments[Double, Double] with HasCdf with HasInverseCdf {
   if(shape <= 0.0 || scale <= 0.0)
     throw new IllegalArgumentException("Shape and scale must be positive")
 
@@ -148,11 +150,24 @@ case class Gamma(val shape : Double, val scale : Double)(implicit rand: RandBasi
   def variance = mean * scale
   def mode = { require(shape >= 1); mean - scale}
   def entropy = logNormalizer - (shape - 1) * digamma(shape) + shape
+
+  override def probability(x: Double, y: Double): Double = {
+    new GammaDistribution(shape, scale).probability(x, y)
+  }
+
+  override def inverseCdf(p: Double): Double = {
+//    gammp(this.shape, p / this.scale);
+    new GammaDistribution(shape, scale).inverseCumulativeProbability(p)
+  }
+
+  override def cdf(x: Double): Double = {
+    new GammaDistribution(shape, scale).cumulativeProbability(x)
+  }
 }
 
 object Gamma extends ExponentialFamily[Gamma,Double] with ContinuousDistributionUFuncProvider[Double,Gamma] {
   type Parameter = (Double,Double)
-  import breeze.stats.distributions.{SufficientStatistic=>BaseSuffStat}
+  import breeze.stats.distributions.{SufficientStatistic => BaseSuffStat}
   case class SufficientStatistic(n: Double, meanOfLogs: Double, mean: Double) extends BaseSuffStat[SufficientStatistic] {
     def *(weight: Double) = SufficientStatistic(n*weight, meanOfLogs, mean)
     def +(t: SufficientStatistic) = {

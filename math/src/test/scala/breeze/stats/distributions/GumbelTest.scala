@@ -16,16 +16,16 @@ package breeze.stats.distributions
  limitations under the License.
 */
 
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.scalacheck._;
 import org.junit.runner.RunWith
-import org.apache.commons.math3.random.MersenneTwister
+import org.scalacheck._
+import org.scalatest._
+import org.scalatest.junit._
+import org.scalatest.prop._
 
 @RunWith(classOf[JUnitRunner])
 class GumbelTest extends FunSuite with Checkers with MomentsTestBase[Double] {
-  import Arbitrary.arbitrary
+  type Distr = Gumbel
+  import org.scalacheck.Arbitrary.arbitrary
 
 
   override val numSamples = 40000
@@ -38,7 +38,6 @@ class GumbelTest extends FunSuite with Checkers with MomentsTestBase[Double] {
     for(location <- arbitrary[Double].map{x => math.abs(x) % 1000.0 + 1.1}; // Gumbel pdf at 0 not defined when location == 1
         scale <- arbitrary[Double].map {x => math.abs(x) % 8.0 + 1.0}) yield new Gumbel(location,scale)(RandBasis.mt0)
   }
-
 
 
 }
