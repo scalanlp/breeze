@@ -1,6 +1,5 @@
 package breeze.stats.distributions
 
-import breeze.numerics.constants.{γ, Pi}
 import breeze.numerics.{exp, log}
 
 /**
@@ -40,7 +39,7 @@ case class Laplace(location: Double, scale: Double)(implicit rand: RandBasis = R
     cdf(y) - cdf(x)
   }
 
-  private def cdf(x: Double) = x match {
+  def cdf(x: Double) = x match {
     case Double.NegativeInfinity => 0.0
     case Double.PositiveInfinity => 1.0
     case x if x < location =>

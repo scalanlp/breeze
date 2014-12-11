@@ -16,17 +16,15 @@ package breeze.stats.distributions
  limitations under the License. 
 */
 
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.scalacheck._;
 import org.junit.runner.RunWith
-
-import org.apache.commons.math3.random.MersenneTwister
+import org.scalacheck._
+import org.scalatest._
+import org.scalatest.junit._
+import org.scalatest.prop._
 
 @RunWith(classOf[JUnitRunner])
 class LogarthmicTest extends FunSuite with Checkers with MomentsTestBase[Int]  {
-  import Arbitrary.arbitrary
+  import org.scalacheck.Arbitrary.arbitrary
 
   val expFam = Logarthmic
 
@@ -42,10 +40,12 @@ class LogarthmicTest extends FunSuite with Checkers with MomentsTestBase[Int]  {
     for(p <- arbitrary[Double].map{m => (math.abs(m) % 1.0) + 1E-3}) yield p
   }
 
-  implicit def arbDistr = Arbitrary {
+  implicit def arbDistr: Arbitrary[Logarthmic] = Arbitrary {
     for(p <- arbitrary[Double].map{m => (math.abs(m) % 1.0) + 1E-3}) yield new Logarthmic(p)(RandBasis.mt0)
   }
 
   def asDouble(x: Int) = x.toDouble
   def fromDouble(x: Double) = x.toInt
+
+  override type Distr = Logarthmic
 }

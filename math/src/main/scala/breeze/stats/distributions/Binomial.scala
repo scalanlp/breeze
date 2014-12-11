@@ -27,6 +27,7 @@ import math._
 * @param p the probability of any one being true
 */
 case class Binomial(n: Int, p: Double)(implicit rand: RandBasis=Rand) extends DiscreteDistr[Int] with Moments[Double, Double] {
+  type Distr = Gamma
   require(n > 0, "n must be positive!")
   require(p >= 0.0, "p must be non-negative!")
   def probabilityOf(k: Int) = exp(logProbabilityOf(k))
@@ -42,6 +43,8 @@ case class Binomial(n: Int, p: Double)(implicit rand: RandBasis=Rand) extends Di
       lgamma(n+1) - lgamma(k+1) - lgamma(n-k+1) + k * log(p) + (n-k) * log(1-p)
     }
   }
+
+
 
   // faster binomial from NR
   override def draw():Int = {

@@ -22,7 +22,7 @@ trait SparseVector_DenseVector_Ops { this: SparseVector.type =>
   @expand
   @expand.valify
   implicit def implOps_SVT_DVT_InPlace[@expand.args(Int, Double, Float, Long) T,
-                                       @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _}, {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _}) op: Op.Impl2[T, T, T]):
   Op.InPlaceImpl2[SparseVector[T], DenseVector[T]] =
 
@@ -73,7 +73,7 @@ trait SparseVector_DenseVector_Ops { this: SparseVector.type =>
   @expand
   @expand.valify
   implicit def implOps_SVT_DVT_eq_DVT[@expand.args(Int, Double, Float, Long) T,
-                                      @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _}, {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _}) op: Op.Impl2[T, T, T]):
   Op.Impl2[SparseVector[T], DenseVector[T], DenseVector[T]] =
 
@@ -147,7 +147,7 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
   @expand
   @expand.valify
   implicit def implOps_DVT_SVT_InPlace[@expand.args(Int, Double, Float, Long) T,
-                                       @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _}) op: Op.Impl2[T, T, T]):
   Op.InPlaceImpl2[DenseVector[T], SparseVector[T]] =
 
@@ -188,7 +188,7 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
   @expand
   @expand.valify
   implicit def implOps_DVT_SVT_InPlace[@expand.args(Int, Double, Float, Long) T,
-                                       @expand.args(OpAdd, OpSub) Op <: OpType]
+  @expand.args(OpAdd, OpSub) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}) op: Op.Impl2[T, T, T]):
   Op.InPlaceImpl2[DenseVector[T], SparseVector[T]] =
 
@@ -244,7 +244,7 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
         result
       }
       implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulInner.type, T]].register(this)
-//      implicitly[BinaryRegistry[DenseVector[T], Vector[T], OpMulInner.type, T]].register(this)
+      //      implicitly[BinaryRegistry[DenseVector[T], Vector[T], OpMulInner.type, T]].register(this)
     }
 
 
@@ -342,7 +342,7 @@ trait SparseVectorOps { this: SparseVector.type =>
   import breeze.math.PowImplicits._
 
   implicit def liftCSCOpToSVTransposeOp[Tag,V,LHS,R](implicit op: UFunc.UImpl2[Tag,LHS,CSCMatrix[V],R],
-                                            zero: Zero[V], ct: ClassTag[V]):
+                                                     zero: Zero[V], ct: ClassTag[V]):
   UFunc.UImpl2[Tag,LHS,Transpose[SparseVector[V]],R] =
     new UFunc.UImpl2[Tag,LHS,Transpose[SparseVector[V]],R] {
       def apply(v: LHS, v2: Transpose[SparseVector[V]]): R = {
@@ -353,9 +353,9 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand
   @expand.valify
   implicit def implOps_SVT_SVT_eq_SVT[@expand.args(Int, Double, Float, Long) T,
-                                      @expand.args(OpAdd, OpSub) Op <: OpType]
+  @expand.args(OpAdd, OpSub) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _}, {_ - _}) op: Op.Impl2[T, T, T],
-            @expand.sequence[T](0, 0.0, 0f, 0l) zero: T):
+   @expand.sequence[T](0, 0.0, 0f, 0l) zero: T):
   Op.Impl2[SparseVector[T], SparseVector[T], SparseVector[T]] =
 
     new Op.Impl2[SparseVector[T], SparseVector[T], SparseVector[T]] {
@@ -605,7 +605,7 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand
   @expand.valify
   implicit def implOps_SVT_SVT_eq_SVT[@expand.args(Int, Double, Float, Long) T,
-                                      @expand.args(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  @expand.args(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _}) op: Op.Impl2[T, T, T]):
   Op.Impl2[SparseVector[T], SparseVector[T], SparseVector[T]] =
 
@@ -628,7 +628,7 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand
   @expand.valify
   implicit def implOps_SVT_VT_eq_SVT[@expand.args(Int, Double, Float, Long) T,
-                                     @expand.args(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  @expand.args(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _}) op: Op.Impl2[T, T, T]):
   Op.Impl2[SparseVector[T], Vector[T], SparseVector[T]] =
 
@@ -688,9 +688,9 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand
   @expand.valify
   implicit def implOps_SVT_T_eq_SVT[@expand.args(Int, Double, Float, Long) T,
-                                    @expand.args(OpAdd, OpSub, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  @expand.args(OpAdd, OpSub, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _}) op: Op.Impl2[T, T, T],
-            @expand.sequence[T](0, 0.0, 0.0f, 0l)  zero: T):
+   @expand.sequence[T](0, 0.0, 0.0f, 0l)  zero: T):
   Op.Impl2[SparseVector[T], T, SparseVector[T]] =
 
     new Op.Impl2[SparseVector[T], T, SparseVector[T]] {
@@ -714,7 +714,7 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand
   @expand.valify
   implicit def implOps_SVT_T_eq_SVT[@expand.args(Int, Double, Float, Long) T,
-                                    @expand.args(OpMulScalar, OpMulMatrix) Op<:OpType]
+  @expand.args(OpMulScalar, OpMulMatrix) Op<:OpType]
   (implicit @expand.sequence[T](0, 0.0, 0.0f, 0l)
   zero: T):
   Op.Impl2[SparseVector[T], T, SparseVector[T]] =
@@ -771,7 +771,7 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand
   @expand.valify
   implicit def implOps_SVT_SVT_InPlace[@expand.args(Int, Double, Float, Long) T,
-                            @expand.args(OpAdd, OpSub, OpDiv, OpPow, OpMod, OpMulScalar) Op <: OpType]:
+  @expand.args(OpAdd, OpSub, OpDiv, OpPow, OpMod, OpMulScalar) Op <: OpType]:
   Op.InPlaceImpl2[SparseVector[T], SparseVector[T]] = {
     val uop: Op.InPlaceImpl2[SparseVector[T], SparseVector[T]] = updateFromPure(implicitly[Op.Impl2[SparseVector[T], SparseVector[T], SparseVector[T]]])
     implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(uop)
@@ -789,7 +789,7 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand
   @expand.valify
   implicit def implOps_SVT_T_InPlace[@expand.args(Int, Double, Float, Long) T,
-                           @expand.args(OpAdd, OpSub, OpDiv, OpPow, OpMod, OpMulScalar, OpMulMatrix) Op <: OpType]:
+  @expand.args(OpAdd, OpSub, OpDiv, OpPow, OpMod, OpMulScalar, OpMulMatrix) Op <: OpType]:
   Op.InPlaceImpl2[SparseVector[T], T]  = {
     val uop: Op.InPlaceImpl2[SparseVector[T], T] = updateFromPure(implicitly[Op.Impl2[SparseVector[T], T, SparseVector[T]]])
     uop
@@ -803,56 +803,95 @@ trait SparseVectorOps { this: SparseVector.type =>
 
     new OpMulInner.Impl2[SparseVector[T], SparseVector[T], T] {
       def apply(a: SparseVector[T], b: SparseVector[T]): T = {
-        if(b.activeSize < a.activeSize) {
+        require(b.length == a.length, "Vectors must be the same length!")
+        if (b.activeSize < a.activeSize) {
           apply(b, a)
+        } else if (a.activeSize == 0) {
+          zero
+        } else if (b.activeSize <= 32) { // b is bigger than a
+          smallVectors(a, b)
         } else {
-          require(b.length == a.length, "Vectors must be the same length!")
-          val asize: Int = a.activeSize
-          val bsize: Int = b.activeSize
-
-          var result: T = zero
-
-          var aoff: Int = 0
-          var boff: Int = 0
-          // in principle we could do divide and conquer here
-          // by picking the middle of a, figuring out where that is in b, and then recursing,
-          // using it as a bracketing.
-
-          // double loop:
-          // b moves to catch up with a, then a takes a step (possibly bringing b along)
-          while (aoff < asize) {
-            val aind: Int = a.indexAt(aoff)
-            boff = util.Arrays.binarySearch(b.index, boff, math.min(bsize, aind + 1), aind)
-            if (boff < 0) {
-              boff = ~boff
-              if (boff == bsize) {
-                // we're through the b array, so we're done.
-                aoff = asize
-              } else {
-                // fast forward a until we get to the b we just got to
-                val bind: Int = b.indexAt(boff)
-                var newAoff: Int = util.Arrays.binarySearch(a.index, aoff, math.min(asize, bind + 1), bind)
-                if (newAoff < 0) {
-                  newAoff = ~newAoff
-                  boff += 1
-                }
-                assert(newAoff > aoff, aoff + " " + newAoff)
-                aoff = newAoff
-              }
-            } else {
-              // b is there, a is there, do the multiplication!
-              result += a.valueAt(aoff) * b.valueAt(boff)
-              aoff += 1
-              boff += 1
-            }
-          }
-
-          result
+          bigVectors(a, b)
         }
       }
 
-      implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulInner.type, T]].register(this)
+      def smallVectors(a: SparseVector[T], b: SparseVector[T]): T = {
+        val asize: Int = a.activeSize
+        val bsize: Int = b.activeSize
 
+        var result: T = zero
+        var aoff: Int = 0
+        var boff: Int = 0
+
+        while (aoff < asize && boff < bsize) {
+          if (a.indexAt(aoff) < b.indexAt(boff))
+            aoff += 1
+          else if (b.indexAt(boff) < a.indexAt(aoff))
+            boff += 1
+          else {
+            result += a.valueAt(aoff) * b.valueAt(boff)
+            aoff += 1
+            boff += 1
+          }
+        }
+        result
+      }
+
+      def bigVectors(a: SparseVector[T], b: SparseVector[T]): T = {
+        val asize: Int = a.activeSize
+        val bsize: Int = b.activeSize
+
+        var result: T = zero
+
+        var aoff: Int = 0
+        var boff: Int = 0
+        // used for finding upper bounds for location of b
+//        var bLastOff = 0
+//        var bLastInd = 0
+        // in principle we could do divide and conquer here
+        // by picking the middle of a, figuring out where that is in b, and then recursing,
+        // using it as a bracketing.
+
+        // double loop:
+        // b moves to catch up with a, then a takes a step (possibly bringing b along)
+        while (aoff < asize) {
+          val aind: Int = a.indexAt(aoff)
+          val bMax = math.min(bsize, aind + 1)
+          //math.min(bsize, bLastOff + aind - bLastInd + 1)
+          // we use gallop search because we expect aind to be closish to b.index(boff)
+          boff = ArrayUtil.gallopSearch(b.index, boff, bMax, aind)
+          if (boff < 0) {
+            boff = ~boff
+            if (boff == bsize) {
+              // we're through the b array, so we're done.
+              aoff = asize
+            } else {
+              // fast forward a until we get to the b we just got to
+              val bind: Int = b.indexAt(boff)
+//              bLastOff = boff
+//              bLastInd = bind
+//              val aMax = math.min(asize, aoff + bind  - aind + 1)
+              val aMax = math.min(asize, bind + 1)
+              var newAoff: Int = ArrayUtil.gallopSearch(a.index, aoff, aMax, bind)
+              if (newAoff < 0) {
+                newAoff = ~newAoff
+                boff += 1
+              }
+              aoff = newAoff
+            }
+          } else {
+//            bLastOff = boff
+//            bLastInd = aind
+            // b is there, a is there, do the multiplication!
+            result += a.valueAt(aoff) * b.valueAt(boff)
+            aoff += 1
+            boff += 1
+          }
+        }
+
+        result
+      }
+      implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulInner.type, T]].register(this)
     }
 
   implicit def implOpMulInner_SVT_SVT_eq_T [T:ClassTag:Zero:Semiring]:
@@ -1092,28 +1131,62 @@ trait SparseVectorOps { this: SparseVector.type =>
       }
     }
 
-  class CanZipMapValuesSparseVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag:Zero]
-  extends CanZipMapValues[SparseVector[V],V,RV,SparseVector[RV]] {
+  class CanZipMapValuesSparseVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag:Zero:Semiring]
+    extends CanZipMapValues[SparseVector[V],V,RV,SparseVector[RV]] {
     def create(length : Int): SparseVector[RV] = zeros(length)
 
     /**Maps all corresponding values from the two collection. */
     def map(from: SparseVector[V], from2: SparseVector[V], fn: (V, V) => RV): SparseVector[RV] = {
       require(from.length == from2.length, "Vector lengths must match!")
-      val result: SparseVector[RV] = create(from.length)
-      var i = 0
-      while (i < from.length) {
-        result(i) = fn(from(i), from2(i))
-        i += 1
+
+      val zz = fn(from.default, from2.default)
+      if(zz != implicitly[Zero[RV]].zero) {
+
+        val result: SparseVector[RV] = create(from.length)
+        var i = 0
+        while (i < from.length) {
+          result(i) = fn(from(i), from2(i))
+          i += 1
+        }
+        result
+      } else {
+        val vb = new VectorBuilder[RV](from.length)
+        var off1, off2 = 0
+        while(off1 < from.activeSize) {
+          while(off2 < from2.activeSize && from2.indexAt(off2) < from.indexAt(off1)) {
+            val index = from2.indexAt(off2)
+            vb.add(index, fn(from.default, from2.valueAt(off2)))
+            off2 += 1
+          }
+
+          if (off2 < from2.activeSize && from.indexAt(off1) == from2.indexAt(off2)) {
+            val index = from2.indexAt(off2)
+            vb.add(index, fn(from.valueAt(off1), from2.valueAt(off2)))
+            off2 += 1
+          } else {
+            val index = from.indexAt(off1)
+            vb.add(index, fn(from.valueAt(off1), from2.default))
+          }
+
+          off1 += 1
+        }
+
+        while(off2 < from2.activeSize) {
+          val index = from2.indexAt(off2)
+          vb.add(index, fn(from.default, from2.valueAt(off2)))
+          off2 += 1
+        }
+
+        vb.toSparseVector(true, true)
       }
-      result
     }
   }
-  implicit def zipMap[V, R:ClassTag:Zero] = new CanZipMapValuesSparseVector[V, R]
+  implicit def zipMap[V, R:ClassTag:Zero:Semiring]: CanZipMapValuesSparseVector[V, R] = new CanZipMapValuesSparseVector[V, R]
   implicit val zipMap_d: CanZipMapValuesSparseVector[Double, Double] = new CanZipMapValuesSparseVector[Double, Double]
   implicit val zipMap_f: CanZipMapValuesSparseVector[Float, Float] = new CanZipMapValuesSparseVector[Float, Float]
   implicit val zipMap_i: CanZipMapValuesSparseVector[Int, Int] = new CanZipMapValuesSparseVector[Int, Int]
 
-  class CanZipMapKeyValuesSparseVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag:Zero]
+  class CanZipMapKeyValuesSparseVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag:Zero:Semiring]
     extends CanZipMapKeyValues[SparseVector[V],Int, V,RV,SparseVector[RV]] {
     def create(length : Int): SparseVector[RV] = zeros(length)
 
@@ -1128,8 +1201,41 @@ trait SparseVectorOps { this: SparseVector.type =>
       }
       result
     }
+
+    override def mapActive(from: SparseVector[V], from2: SparseVector[V], fn: (Int, V, V) => RV): SparseVector[RV] = {
+      require(from.length == from2.length, "Vector lengths must match!")
+      val vb = new VectorBuilder[RV](from.length)
+      var off1, off2 = 0
+      while(off1 < from.activeSize) {
+        while(off2 < from2.activeSize && from2.indexAt(off2) < from.indexAt(off1)) {
+          val index = from2.indexAt(off2)
+          vb.add(index, fn(index, from.default, from2.valueAt(off2)))
+          off2 += 1
+        }
+
+        if(off2 < from2.activeSize && from.indexAt(off1) == from2.indexAt(off2)) {
+          val index = from2.indexAt(off2)
+          vb.add(index, fn(index, from.valueAt(off1), from2.valueAt(off2)))
+          off2 += 1
+        } else {
+          val index = from.indexAt(off1)
+          vb.add(index, fn(index, from.valueAt(off1), from2.default))
+        }
+
+        off1 += 1
+      }
+
+      while(off2 < from2.activeSize) {
+        val index = from2.indexAt(off2)
+        vb.add(index, fn(index, from.default, from2.valueAt(off2)))
+        off2 += 1
+      }
+
+      vb.toSparseVector(true, true)
+    }
   }
-  implicit def zipMapKV[V, R:ClassTag:Zero] = new CanZipMapKeyValuesSparseVector[V, R]
+
+  implicit def zipMapKV[V, R:ClassTag:Zero:Semiring] = new CanZipMapKeyValuesSparseVector[V, R]
 
 
   implicit def implOpNeg_SVT_eq_SVT[@spec(Double, Int, Float, Long)  V]

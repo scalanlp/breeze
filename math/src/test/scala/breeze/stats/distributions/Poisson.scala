@@ -16,20 +16,18 @@ package breeze.stats.distributions
  limitations under the License. 
 */
 
+import org.junit.runner.RunWith
+import org.scalacheck._
 import org.scalatest._
 import org.scalatest.junit._
 import org.scalatest.prop._
-import org.scalacheck._
-import org.junit.runner.RunWith
-
-import breeze.stats.DescriptiveStats._
 
 @RunWith(classOf[JUnitRunner])
 class PoissonTest extends FunSuite with Checkers with MomentsTestBase[Int] with ExpFamTest[Poisson,Int] {
-  import Arbitrary.arbitrary
+  import org.scalacheck.Arbitrary.arbitrary
   val expFam = Poisson
 
-  implicit def arbDistr = Arbitrary {
+  implicit def arbDistr: Arbitrary[Poisson] = Arbitrary {
     for(p <- arbitrary[Double].map{_.abs % 200 + 1}) yield new Poisson(p)
   }
   def arbParameter = Arbitrary(arbitrary[Double].map(x => math.abs(x) % 20))
@@ -48,4 +46,6 @@ class PoissonTest extends FunSuite with Checkers with MomentsTestBase[Int] with 
     val poi = new Poisson(mean)
     assert( closeTo(poi.cdf(0),exp(-mean)), poi.cdf(0) + " " + exp(-mean) )
   }
+
+  override type Distr = Poisson
 }

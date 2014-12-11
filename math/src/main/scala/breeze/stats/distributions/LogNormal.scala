@@ -15,7 +15,9 @@ import scala.math.sqrt
  *
  * @author dlwh
  **/
-case class LogNormal(mu: Double, sigma: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double] with Moments[Double, Double] {
+case class LogNormal(mu: Double, sigma: Double)
+                    (implicit rand: RandBasis = Rand)
+  extends ContinuousDistr[Double] with Moments[Double, Double] with HasCdf with HasInverseCdf {
   private val myGaussian = Gaussian(mu, sigma)
   require(sigma > 0, "Sigma must be positive, but got " + sigma)
   /**
@@ -26,7 +28,11 @@ case class LogNormal(mu: Double, sigma: Double)(implicit rand: RandBasis = Rand)
   }
 
 
-  def unnormalizedLogPdf(x: Double): Double = myGaussian.unnormalizedLogPdf(log(x))
+  def unnormalizedLogPdf(x: Double): Double = {
+    val logx = log(x)
+    val rad = (logx - mu)/sigma
+    -(rad * rad / 2) - logx
+  }
 
   lazy val logNormalizer: Double = -sqrt(2 * math.Pi) * sigma
 
@@ -36,12 +42,17 @@ case class LogNormal(mu: Double, sigma: Double)(implicit rand: RandBasis = Rand)
    * @param p: a probability in [0,1]
    * @return x s.t. cdf(x) = numYes
    */
-  def icdf(p: Double) = exp(myGaussian.icdf(p))
+  def inverseCdf(p: Double) = exp(myGaussian.icdf(p))
 
   /**
    * Computes the cumulative density function of the value x.
    */
   def cdf(x: Double) = myGaussian.cdf(log(x))
+
+
+  override def probability(x: Double, y: Double): Double = {
+    myGaussian.probability(log(x), log(y))
+  }
 
   override def toString: String = ScalaRunTime._toString(this)
 
@@ -52,6 +63,8 @@ case class LogNormal(mu: Double, sigma: Double)(implicit rand: RandBasis = Rand)
   def entropy: Double = 0.5 + 0.5 * math.log(2 * math.Pi * sigma * sigma) + mu
 
   def mode: Double = exp(mu - sigma * sigma)
+
+
 }
 
 

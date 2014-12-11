@@ -294,12 +294,13 @@ trait CounterOps {
       }
       result
     }
+
   }
 
 
   implicit def zipMap[K, V, R:Zero:Semiring] = new CanZipMapValuesCounter[K, V, R]
 
-    class CanZipMapKeyValuesCounter[K, V, RV:Zero:Semiring] extends CanZipMapKeyValues[Counter[K, V],K, V,RV,Counter[K, RV]] {
+  class CanZipMapKeyValuesCounter[K, V, RV:Zero:Semiring] extends CanZipMapKeyValues[Counter[K, V],K, V,RV,Counter[K, RV]] {
 
     /**Maps all corresponding values from the two collection. */
     def map(from: Counter[K, V], from2: Counter[K, V], fn: (K, V, V) => RV) = {
@@ -308,6 +309,10 @@ trait CounterOps {
         result(k) = fn(k, from(k), from2(k))
       }
       result
+    }
+
+    override def mapActive(from: Counter[K, V], from2: Counter[K, V], fn: (K, V, V) => RV): Counter[K, RV] = {
+      map(from, from2, fn)
     }
   }
 

@@ -48,7 +48,7 @@ case class Pareto(scale: Double, shape: Double)(implicit rand: RandBasis = Rand)
     cdf(y) - cdf(x)
   }
 
-  private def cdf(x: Double) = x match {
+  def cdf(x: Double) = x match {
     case x if x < scale => 0.0
     case Double.PositiveInfinity => 1.0
     case x =>
