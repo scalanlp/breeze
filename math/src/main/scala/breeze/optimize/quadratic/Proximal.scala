@@ -27,8 +27,9 @@ import scala.math.sqrt
 import scala.math.abs
 import scala.Double.NegativeInfinity
 import scala.Double.PositiveInfinity
-import org.jblas.DoubleMatrix
-import org.jblas.Solve
+import breeze.linalg.DenseMatrix
+import breeze.linalg.DenseVector
+import breeze.linalg.norm
 
 //TO DO : BLAS the functions
 object Proximal {
@@ -84,21 +85,25 @@ object Proximal {
   //Projection onto Affine set
   //Let C = { x \in R^{n} | Ax = b } where A \in R^{m x n}
   //If A is full rank matrix then the projection is given by v - A'(Av - b) where A' is the cached Moore-Penrose pseudo-inverse of A  
-  def projectEquality(x: DoubleMatrix, Aeq: DoubleMatrix, invAeq: DoubleMatrix, beq: DoubleMatrix) {
-    val Av = Aeq.mul(x)
-    Av.subi(beq)
-    x.subi(Av.muli(invAeq))
+  def projectEquality(
+      x: DenseVector[Double], 
+      Aeq: DenseMatrix[Double], 
+      invAeq: DenseMatrix[Double], 
+      beq: DenseVector[Double]) {
+    val Av = Aeq*x
+    Av -= beq
+    x += invAeq*Av
   }
   
   //Projection onto hyper-plane is a special case of projection onto affine set and is given by
   //x + ((b - a'x)/||a||_2^2)a
-  def projectHyperPlane(x: DoubleMatrix, a: DoubleMatrix, b: Double) {
-    val at = a.transpose()
-    val atx = at.dot(x)
-    val anorm = a.norm2()
+  def projectHyperPlane(x: DenseVector[Double], a: DenseVector[Double], b: Double) {
+    val at = a.t
+    val atx = at*x
+    val anorm = norm(a, 2)
     val scale = (b - atx)/(anorm*anorm)
-    val ascaled = a.mul(scale)
-    x.addi(ascaled)
+    val ascaled = a*scale
+    x += ascaled
   }
   
   def shrinkage(x: Array[Double], scale: Double) {
