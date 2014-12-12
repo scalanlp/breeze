@@ -2,24 +2,18 @@ package breeze.optimize.quadratic
 
 import org.scalatest._
 import org.scalatest.junit._
-import org.scalatest.prop._
 import org.junit.runner.RunWith
 import breeze.linalg.DenseVector
 import breeze.optimize.OptimizeTestBase
-import org.scalatest.matchers.ShouldMatchers
 import breeze.optimize.LBFGS
 import breeze.optimize.OWLQN
 import breeze.optimize.DiffFunction
 import breeze.linalg.norm
 import breeze.linalg.DenseMatrix
-import breeze.numerics._
 import breeze.optimize.quadratic.Constraint._
-import org.jblas.DoubleMatrix
 import breeze.linalg.sum
 import breeze.linalg.cholesky
 import breeze.linalg.LU
-import org.jblas.Solve
-import org.jblas.DoubleMatrix
 import breeze.numerics._
 
 @RunWith(classOf[JUnitRunner])
@@ -160,24 +154,22 @@ class QuadraticMinimizerTest extends OptimizeTestBase with Matchers {
 
   test("Quadratic Minimization with bounds compared to Octave with NNLS Example") {
     val n = 5
-    val ata = new DoubleMatrix(Array(
-      Array(4.377, -3.531, -1.306, -0.139, 3.418),
-      Array(-3.531, 4.344, 0.934, 0.305, -2.140),
-      Array(-1.306, 0.934, 2.644, -0.203, -0.170),
-      Array(-0.139, 0.305, -0.203, 5.883, 1.428),
-      Array(3.418, -2.140, -0.170, 1.428, 4.684)))
+    val ata = new DenseMatrix[Double](5, 5,
+      Array(4.377, -3.531, -1.306, -0.139, 3.418,
+      -3.531, 4.344, 0.934, 0.305, -2.140,
+      -1.306, 0.934, 2.644, -0.203, -0.170,
+      -0.139, 0.305, -0.203, 5.883, 1.428,
+      3.418, -2.140, -0.170, 1.428, 4.684))
 
-    val atb = new DoubleMatrix(Array(-1.632, 2.115, 1.094, -1.025, -0.636))
+    val atb = DenseVector(-1.632, 2.115, 1.094, -1.025, -0.636)
 
     val goodBounds = DenseVector(0.0, 0.25000000000236045, 0.2499999999945758, 0.0, 0.0)
 
-    val Hpos = new DenseMatrix[Double](5, 5, ata.data)
-    val fpos = new DenseVector(atb.data)
-
     val lb = DenseVector.zeros[Double](5)
     val ub = DenseVector.ones[Double](5) :* 0.25
+
     val qpSolverBounds = new QuadraticMinimizer(5, Some(lb), Some(ub), None).setProximal(BOUNDS)
-    val (boundsResult, converged) = qpSolverBounds.solve(Hpos, fpos :* (-1.0))
+    val (boundsResult, converged) = qpSolverBounds.solve(ata, atb :* (-1.0))
     
     assert(converged)
     assert(norm(boundsResult - goodBounds) < 1E-4)

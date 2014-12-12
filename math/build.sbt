@@ -58,7 +58,6 @@ libraryDependencies ++= Seq(
   "org.apache.commons" % "commons-math3" % "3.2",
   "org.spire-math" %% "spire" % "0.7.4",
   "org.slf4j" % "slf4j-api" % "1.7.5",
-  "org.jblas" % "jblas" % "1.2.3",
   "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
   "org.scalatest" %% "scalatest" % "2.1.3" % "test",
   "org.scala-lang.modules" % "scala-xml_2.11" % "1.0.1" % "test",
@@ -101,5 +100,3 @@ testOptions in Test += Tests.Argument("-oDF")
 
 //fork in Test := true
 javaOptions := Seq("-Xmx4g")
-
-jacoco.settings
