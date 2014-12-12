@@ -153,6 +153,15 @@ class QuadraticMinimizer(nGram: Int,
     wsH.update(row, col, value)
   }
   
+  def project(x: DenseVector[Double]) = {
+    var i = 0
+    while (i < x.length) {
+      if (abs(x.data(i)) <= EPS) x.data(i) = 0.0
+      i = i + 1
+    }
+    x
+  }
+  
   def solve(q: DenseVector[Double]): (DenseVector[Double], Boolean) = {
     //Dense cholesky factorization if the gram matrix is well defined
     if (!addEqualityToGram) {
@@ -287,12 +296,12 @@ class QuadraticMinimizer(nGram: Int,
       
       if (residualNorm < epsPrimal && sNorm < epsDual) {
         iterations += k
-        return (z, true)
+        return (x, true)
       }
       k += 1
     }
     iterations += MAX_ITER
-    (z, false)
+    (x, false)
   }
 
   private def normColumn(H: DenseMatrix[Double]): Double = {
