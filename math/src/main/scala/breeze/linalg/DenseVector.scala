@@ -371,7 +371,7 @@ object DenseVector extends VectorConstructors[DenseVector]
       def traverse(from: DenseVector[V], fn: CanTraverseKeyValuePairs.KeyValuePairsVisitor[Int, V]): Unit = {
         import from._
 
-        fn.visitArray((ind: Int)=> (ind - offset)/stride, data, offset, length, 1)
+        fn.visitArray((ind: Int)=> (ind - offset)/stride, data, offset, length, stride)
       }
 
     }
