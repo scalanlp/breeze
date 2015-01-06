@@ -234,13 +234,15 @@ object Counter2 extends LowPriorityCounter2 with Counter2Ops {
    * @tparam V
    * @return
    */
-  implicit def canMapRows[K1, K2, V:ClassTag:Zero:Semiring]: CanCollapseAxis[Counter2[K1, K2,V], Axis._0.type, Counter[K1, V], Counter[K1, V], Counter2[K1, K2, V]]  = new CanCollapseAxis[Counter2[K1, K2,V], Axis._0.type, Counter[K1, V], Counter[K1, V], Counter2[K1,K2,V]] {
-    def apply(from: Counter2[K1, K2,V], axis: Axis._0.type)(f: (Counter[K1, V]) => Counter[K1, V]): Counter2[K1, K2, V] = {
-      val result = Counter2[K1, K2, V]()
-      for( dom <- from.keySet.map(_._2)) {
-        result(::, dom) := f(from(::, dom))
+  implicit def canMapRows[K1, K2, V, R:Zero:Semiring]: CanCollapseAxis[Counter2[K1, K2,V], Axis._0.type, Counter[K1, V], Counter[K1, R], Counter2[K1, K2, R]]  = {
+    new CanCollapseAxis[Counter2[K1, K2, V], Axis._0.type, Counter[K1, V], Counter[K1, R], Counter2[K1, K2, R]] {
+      def apply(from: Counter2[K1, K2, V], axis: Axis._0.type)(f: (Counter[K1, V]) => Counter[K1, R]): Counter2[K1, K2, R] = {
+        val result = Counter2[K1, K2, R]()
+        for (dom <- from.keySet.map(_._2)) {
+          result(::, dom) := f(from(::, dom))
+        }
+        result
       }
-      result
     }
   }
 
@@ -252,9 +254,9 @@ object Counter2 extends LowPriorityCounter2 with Counter2Ops {
    * @tparam R
    * @return
    */
-  implicit def canMapCols[K1, K2, V:ClassTag:Zero:Semiring]: CanCollapseAxis[Counter2[K1, K2,V], Axis._1.type, Counter[K2, V], Counter[K2, V], Counter2[K1, K2, V]]  = new CanCollapseAxis[Counter2[K1, K2,V], Axis._1.type, Counter[K2, V], Counter[K2, V], Counter2[K1,K2,V]] {
-    def apply(from: Counter2[K1, K2,V], axis: Axis._1.type)(f: (Counter[K2, V]) => Counter[K2, V]): Counter2[K1, K2, V] = {
-      val result = Counter2[K1, K2, V]()
+  implicit def canMapCols[K1, K2, V, R:ClassTag:Zero:Semiring]: CanCollapseAxis[Counter2[K1, K2,V], Axis._1.type, Counter[K2, V], Counter[K2, R], Counter2[K1, K2, R]]  = new CanCollapseAxis[Counter2[K1, K2,V], Axis._1.type, Counter[K2, V], Counter[K2, R], Counter2[K1,K2,R]] {
+    def apply(from: Counter2[K1, K2,V], axis: Axis._1.type)(f: (Counter[K2, V]) => Counter[K2, R]): Counter2[K1, K2, R] = {
+      val result = Counter2[K1, K2, R]()
       for( (dom,c) <- from.data) {
         result(dom, ::) := f(c)
       }
