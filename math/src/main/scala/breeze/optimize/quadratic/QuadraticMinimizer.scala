@@ -20,12 +20,10 @@ package breeze.optimize.quadratic
 import breeze.linalg.pinv
 import breeze.linalg.cholesky
 import breeze.linalg.LU
-import scala.math.min
 import scala.math.max
 import scala.math.sqrt
 import breeze.optimize.LBFGS
 import breeze.optimize.OWLQN
-import breeze.linalg.DenseVector
 import breeze.optimize.DiffFunction
 import org.netlib.util.intW
 import breeze.optimize.quadratic.Constraint._
@@ -35,9 +33,9 @@ import breeze.linalg.DenseMatrix
 import breeze.numerics._
 import breeze.linalg.LapackException
 import breeze.linalg.norm
-import com.github.fommil.netlib.BLAS.{getInstance=>blas}
 import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 import breeze.optimize.linear.ConjugateGradient
+import breeze.stats.distributions.Rand
 
 /*
  * Proximal operators and ADMM based Primal-Dual QP Solver 
@@ -367,7 +365,7 @@ class QuadraticMinimizer(nGram: Int,
  */
 object QpGenerator {
   def getGram(nGram: Int) = {
-    val hrand = DenseMatrix.rand[Double](nGram, nGram)
+    val hrand = DenseMatrix.rand[Double](nGram, nGram, Rand.gaussian(0, 1))
     val hrandt = hrand.t
     val hposdef = hrandt * hrand
     val H = hposdef.t + hposdef
@@ -402,7 +400,7 @@ object QuadraticMinimizer {
   def solveTriangularLU(A: DenseMatrix[Double], pivot: Array[Int], B: DenseVector[Double]) = {
     require(A.rows == A.cols)
     
-    var X = new DenseMatrix(B.length, 1, B.data.clone)
+    val X = new DenseMatrix(B.length, 1, B.data.clone)
     
     val n = A.rows
     val nrhs = X.cols
@@ -419,7 +417,7 @@ object QuadraticMinimizer {
   def solveTriangular(A: DenseMatrix[Double], B: DenseVector[Double]) = {
     require(A.rows == A.cols)
     
-    var X = new DenseMatrix(B.length, 1, B.data.clone)
+    val X = new DenseMatrix(B.length, 1, B.data.clone)
     
     val n = A.rows
     val nrhs = X.cols
@@ -461,7 +459,19 @@ object QuadraticMinimizer {
     val res = (x.t*h*x)*0.5 + q.dot(x)
     res
   }
-  
+
+  def optimizeWithLBFGS(init: DenseVector[Double],
+                         H: DenseMatrix[Double],
+                         q: DenseVector[Double]) = {
+    val lbfgs = new LBFGS[DenseVector[Double]](-1, 7)
+    val f = new DiffFunction[DenseVector[Double]] {
+      def calculate(x: DenseVector[Double]) = {
+        (computeObjective(H, q, x), H * x + q)
+      }
+    }
+    lbfgs.minimize(f, init)
+  }
+
   def main(args: Array[String]) {
     if (args.length < 4) {
       println("Usage: QpSolver n m lambda beta")
@@ -478,7 +488,7 @@ object QuadraticMinimizer {
     println(s"Generating randomized QPs with rank ${problemSize} equalities ${nequalities}")
     val (aeq, b, bl, bu, q, h) = QpGenerator(problemSize, nequalities)
     
-    println(s"Test QuadraticMinimizer, CG and OWLQN with n $problemSize m $nequalities")
+    println(s"Test QuadraticMinimizer, CG , BFGS and OWLQN with $problemSize variables and $nequalities equality constraints")
     
     val luStart = System.nanoTime()
     val luResult = h \ q:*(-1.0)
@@ -494,10 +504,22 @@ object QuadraticMinimizer {
     val qpStart = System.nanoTime()
     val (result, converged) = qpSolver.solve(h, q)
     val qpTime = System.nanoTime() - qpStart
-    
+
+    val startBFGS = System.nanoTime()
+    val bfgsResult = optimizeWithLBFGS(DenseVector.rand[Double](problemSize), h, q)
+    val bfgsTime = System.nanoTime() - startBFGS
+
     println(s"||qp - lu|| norm ${norm(result - luResult, 2)} max-norm ${norm(result - luResult, inf)}")
     println(s"||cg - lu|| norm ${norm(cgResult - luResult,2)} max-norm ${norm(cgResult - luResult, inf)}")
-    println(s"dim ${problemSize} lu ${luTime/1e6} qp ${qpTime/1e6} cg ${cgTime/1e6}")
+    println(s"||bfgs - lu|| norm ${norm(bfgsResult - luResult, 2)} max-norm ${norm(bfgsResult - luResult, inf)}")
+
+    val luObj = computeObjective(h, q, luResult)
+    val bfgsObj = computeObjective(h, q, bfgsResult)
+    val qpObj = computeObjective(h, q, result)
+
+    println(s"Objective lu $luObj bfgs $bfgsObj qp $qpObj")
+
+    println(s"dim ${problemSize} lu ${luTime/1e6} ms qp ${qpTime/1e6} ms cg ${cgTime/1e6} ms bfgs ${bfgsTime/1e6} ms")
     
     val lambdaL1 = lambda * beta
     val lambdaL2 = lambda * (1 - beta)
