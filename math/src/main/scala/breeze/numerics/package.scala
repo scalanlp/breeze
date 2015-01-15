@@ -17,6 +17,9 @@ package breeze
 */
 
 import breeze.generic.{MappingUFunc, UFunc}
+import breeze.math.Semiring
+import breeze.storage.Zero
+import com.sun.istack.internal.Pool.Impl
 import scala.math._
 import org.apache.commons.math3.special.{Gamma => G, Erf}
 import breeze.linalg.support.CanTraverseValues
@@ -648,10 +651,15 @@ package object numerics {
 
   /**
    * The indicator function. 1.0 iff b, else 0.0
+   * For non-boolean arguments, 1.0 iff b != 0, else 0.0
    */
   object I extends UFunc with MappingUFunc {
     implicit object iBoolImpl extends Impl[Boolean, Double] {
       def apply(b: Boolean) = if (b) 1.0 else 0.0
+    }
+
+    implicit def vImpl[V:Zero]: Impl[V, Double] = new Impl[V, Double] {
+      def apply(b: V) = if (b != implicitly[Zero[V]].zero) 1.0 else 0.0
     }
   }
 
