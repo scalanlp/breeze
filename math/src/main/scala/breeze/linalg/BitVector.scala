@@ -1,9 +1,13 @@
 package breeze.linalg
 
 import java.util
+import breeze.linalg.support.CanZipAndTraverseValues.PairValuesVisitor
 import operators.BitVectorOps
-import breeze.linalg.support.CanTraverseValues
+import breeze.linalg.support._
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
+import spire.implicits._
+
+import scala.reflect.ClassTag
 
 /**
  * TODO
@@ -116,6 +120,84 @@ object BitVector extends BitVectorOps {
 
     def isTraversableAgain(from: BitVector): Boolean = true
   }
+
+  implicit def canMapValues[V2](implicit man: ClassTag[V2]): CanMapValues[BitVector, Boolean, V2, DenseVector[V2]] = {
+    new CanMapValues[BitVector, Boolean, V2, DenseVector[V2]] {
+      /**Maps all key-value pairs from the given collection. */
+      def map(from: BitVector, fn: (Boolean) => V2): DenseVector[V2] = {
+        DenseVector.tabulate(from.length)(i => fn(from(i)))
+      }
+
+      /**Maps all active key-value pairs from the given collection. */
+      def mapActive(from: BitVector, fn: (Boolean) => V2): DenseVector[V2] = {
+        map(from, fn)
+      }
+    }
+  }
+  implicit def handholdCMV[T]= new CanMapValues.HandHold[BitVector, Boolean]
+
+
+  implicit def canIterateValues: CanTraverseValues[BitVector, Boolean] =
+
+    new CanTraverseValues[BitVector, Boolean] {
+
+      def isTraversableAgain(from: BitVector): Boolean = true
+
+      /** Iterates all key-value pairs from the given collection. */
+      def traverse(from: BitVector, fn: ValuesVisitor[Boolean]): Unit = {
+        for(i <- 0 until from.length) {
+          fn.visit(from(i))
+        }
+//        fn.visitArray(from.data, from.offset, from.length, from.stride)
+      }
+
+    }
+
+
+  implicit def canTraverseKeyValuePairs: CanTraverseKeyValuePairs[BitVector, Int, Boolean] =
+
+    new CanTraverseKeyValuePairs[BitVector, Int, Boolean] {
+      def isTraversableAgain(from: BitVector): Boolean = true
+
+      /** Iterates all key-value pairs from the given collection. */
+      def traverse(from: BitVector, fn: CanTraverseKeyValuePairs.KeyValuePairsVisitor[Int, Boolean]): Unit = {
+        for(i <- 0 until from.length) {
+          fn.visit(i, from(i))
+        }
+      }
+
+    }
+
+
+  implicit def canTransformValues: CanTransformValues[BitVector, Boolean, Boolean] =
+
+    new CanTransformValues[BitVector, Boolean, Boolean] {
+      def transform(from: BitVector, fn: (Boolean) => Boolean) {
+        for(i <- 0 until from.length) {
+          from(i) = fn(from(i))
+        }
+      }
+
+      def transformActive(from: BitVector, fn: (Boolean) => Boolean) {
+        transform(from, fn)
+      }
+    }
+
+
+  implicit def canMapPairs[V2](implicit man: ClassTag[V2]):CanMapKeyValuePairs[BitVector, Int, Boolean, V2, DenseVector[V2]] =
+
+    new CanMapKeyValuePairs[BitVector, Int, Boolean, V2, DenseVector[V2]] {
+      /**Maps all key-value pairs from the given collection. */
+      def map(from: BitVector, fn: (Int, Boolean) => V2): DenseVector[V2] = {
+        DenseVector.tabulate(from.length)(i => fn(i, from(i)))
+      }
+
+      /**Maps all active key-value pairs from the given collection. */
+      def mapActive(from: BitVector, fn: (Int, Boolean) => V2): DenseVector[V2] = {
+        map(from, fn)
+      }
+    }
+
 
 }
 
