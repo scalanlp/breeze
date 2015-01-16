@@ -68,13 +68,47 @@ trait SparseVector_DenseVector_Ops { this: SparseVector.type =>
       implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
     }
 
+  @expand
+  @expand.valify
+  implicit def implOps_SVT_DVT_eq_SVT[@expand.args(Int, Double, Float, Long) T,
+  @expand.args(OpMulScalar, OpDiv) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ * _}, {_ / _}) op: Op.Impl2[T, T, T]):
+  Op.Impl2[SparseVector[T], DenseVector[T], SparseVector[T]] = {
+
+    new Op.Impl2[SparseVector[T], DenseVector[T], SparseVector[T]] {
+
+      def apply(a: SparseVector[T], b: DenseVector[T]): SparseVector[T] = {
+
+        require(a.length == b.length, "Vectors must have the same length")
+        val result = VectorBuilder.zeros[T](a.length)
+        val bd: Array[T] = b.data
+        val adefault: T = a.array.default
+        var boff:    Int = b.offset
+        val asize:   Int = a.activeSize
+        val bstride: Int = b.stride
+        val ad: Array[T] = a.data
+        val ai: Array[Int] = a.index
+
+        cforRange(0 until a.activeSize) { i =>
+          val ind = a.indexAt(i)
+          val res: T = op(a.valueAt(i), b(ind))
+          if(res != 0)
+            result.add(ind, res)
+        }
+
+        result.toSparseVector(true, true)
+      }
+      implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
+    }
+
+  }
 
 
   @expand
   @expand.valify
   implicit def implOps_SVT_DVT_eq_DVT[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ + _}, {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _}) op: Op.Impl2[T, T, T]):
+  @expand.args(OpAdd, OpSub, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _}, {_ - _}, {(a,b) => b}, {_ % _}, {_ pow _}) op: Op.Impl2[T, T, T]):
   Op.Impl2[SparseVector[T], DenseVector[T], DenseVector[T]] =
 
     new Op.Impl2[SparseVector[T], DenseVector[T], DenseVector[T]] {
@@ -210,6 +244,34 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
       implicitly[BinaryUpdateRegistry[DenseVector[T], Vector[T], Op.type]].register(this)
       implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
     }
+
+  @expand
+  @expand.valify
+  implicit def implOps_DVT_SVT_eq_SVT[@expand.args(Int, Double, Float, Long) T,
+  @expand.args(OpMulScalar, OpDiv) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ * _}, {_ / _}) op: Op.Impl2[T, T, T]):
+  Op.Impl2[DenseVector[T], SparseVector[T], SparseVector[T]] = {
+
+    new Op.Impl2[DenseVector[T], SparseVector[T], SparseVector[T]] {
+
+      def apply(a: DenseVector[T], b: SparseVector[T]): SparseVector[T] = {
+
+        require(a.length == b.length, "Vectors must have the same length")
+        val result = VectorBuilder.zeros[T](a.length)
+
+        cforRange(0 until b.activeSize) { i =>
+          val ind = b.indexAt(i)
+          val res: T = op(a(ind), b.valueAt(i))
+          if(res != 0)
+            result.add(ind, res)
+        }
+
+        result.toSparseVector(true, true)
+      }
+      implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
+    }
+
+  }
 
   @expand
   @expand.valify

@@ -60,6 +60,20 @@ class SparseVectorTest extends FunSuite {
     assertClose(norm(bss, 2), norm(bd, 2))
   }
 
+  test("elementwise multiplication") {
+    val sv = SparseVector.zeros[Int](4)
+    sv(1) = 1
+    sv(2) = 2
+
+    val dv = DenseVector(1, 2, 0, 4)
+
+    val res: SparseVector[Int] = sv :* dv
+
+    assert(res === SparseVector(0,2,0,0))
+    assert(res.activeSize == 1)
+
+  }
+
 
   test("Norm") {
     val v = SparseVector(-0.4326, -1.6656, 0.1253, 0.2877, -1.1465)
