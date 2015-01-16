@@ -446,7 +446,7 @@ class DenseVectorTest extends FunSuite with Checkers {
     val dv = DenseVector.range(0, 10)
     assert(clip(dv.t, 1, 8) === DenseVector(1,1,2,3,4,5,6,7,8,8).t)
     clip.inPlace(dv.t, 1, 8)
-    assert(dv === DenseVector(1,1,2,3,4,5,6,7,8,8).t)
+    assert(dv.t === DenseVector(1,1,2,3,4,5,6,7,8,8).t)
   }
 
   test("any and all") {
