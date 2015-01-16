@@ -318,6 +318,26 @@ class SparseVectorTest extends FunSuite {
 
 
   }
+
+  test("#350: Dense +  SparseVector == Dense") {
+    val v1 = DenseVector(0,0,0,0)
+    val v2 = SparseVector(0,1,0,0)
+
+    // do in two stages to ensure that telling the return type doesn't change type inference
+    val r = v1 + v2 //type mismatch; found : breeze.linalg.Vector[Int] required: breeze.linalg.DenseVector[Int]
+    val q = r:DenseVector[Int]
+    assert(q == DenseVector(0,1,0,0))
+  }
+
+  test("#350: Sparse + DenseVector == Dense") {
+    val v1 = DenseVector(0,0,0,0)
+    val v2 = SparseVector(0,1,0,0)
+
+    // do in two stages to ensure that telling the return type doesn't change type inference
+    val r =  v2  + v1//type mismatch; found : breeze.linalg.Vector[Int] required: breeze.linalg.DenseVector[Int]
+    val q = r:DenseVector[Int]
+    assert(q == DenseVector(0,1,0,0))
+  }
 }
 
 /**
@@ -375,6 +395,7 @@ class SparseVectorOps_FloatTest extends TensorSpaceTestBase[SparseVector[Float],
   }
 
   def genScalar: Arbitrary[Float] = Arbitrary(Arbitrary.arbitrary[Float].map{ _ % 1000 })
+
 }
 
 /**
