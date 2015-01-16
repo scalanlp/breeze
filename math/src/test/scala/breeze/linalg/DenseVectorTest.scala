@@ -95,6 +95,15 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(min(v, 2) === DenseVector(2, 0, 2, 2, -1))
   }
 
+  test("Scalars on the LHS") {
+    val v = DenseVector(2, 1, 3, 2, -1)
+    assert(1 :+ v == v + 1)
+    assert(1 :- v == -v + 1)
+    assert(6 :/ v == v.mapValues(6 / _) )
+    assert(6 :* v == v.mapValues(6 * _) )
+
+  }
+
   test("Topk") {
     val v = DenseVector(2, 0, 3, 4, -1)
 
