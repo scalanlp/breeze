@@ -353,7 +353,9 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
           }
           j += 1
         }
-        assert(transposedMtx.activeSize == from.activeSize)
+        // this doesn't hold if there are zeros in the matrix
+//        assert(transposedMtx.activeSize == from.activeSize,
+//          s"We seem to have lost some elements?!?! ${transposedMtx.activeSize} ${from.activeSize}")
         transposedMtx.result(false, false)
       }
     }

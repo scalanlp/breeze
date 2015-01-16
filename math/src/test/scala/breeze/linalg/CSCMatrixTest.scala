@@ -368,5 +368,16 @@ class CSCMatrixTest extends FunSuite with Checkers {
     axpy(2, b, a)
     assert(a === CSCMatrix((1,2,0),(6,9,-3)))
   }
+
+  test("#344") {
+    val builder = new CSCMatrix.Builder[Double](rows = 10, cols = 10)
+    builder.add(0, 0, 1.0)
+    builder.add(1, 0, 1.0)
+
+    val a = builder.result
+
+    a.update(0, 0, 0.0)
+    assert(a.t.rows === a.cols)
+  }
 }
 
