@@ -363,8 +363,8 @@ class CSCMatrixTest extends FunSuite with Checkers {
   }
 
   test("axpy") {
-    val a : CSCMatrix[Int] = CSCMatrix((1,0,0),(2,3,-1))
-    val b : CSCMatrix[Int] = CSCMatrix((0,1,0),(2,3,-1))
+    val a  = CSCMatrix((1,0,0),(2,3,-1))
+    val b  = CSCMatrix((0,1,0),(2,3,-1))
     axpy(2, b, a)
     assert(a === CSCMatrix((1,2,0),(6,9,-3)))
   }
@@ -378,6 +378,12 @@ class CSCMatrixTest extends FunSuite with Checkers {
 
     a.update(0, 0, 0.0)
     assert(a.t.rows === a.cols)
+  }
+
+  test("#348") {
+    val a = DenseMatrix((2,2),(3,3))
+    val b = CSCMatrix((2,2),(3,3))
+    assert(a + b === a + b.toDense)
   }
 }
 
