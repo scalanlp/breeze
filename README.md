@@ -52,6 +52,9 @@ resolvers ++= Seq(
 scalaVersion := "2.10.3"
 ```
 
+For more details on the optional `breeze-natives` module, please watch Sam Halliday's talk at Scala eXchange 2014 [High Performance Linear Algebra in Scala](https://skillsmatter.com/skillscasts/5849-high-performance-linear-algebra-in-scala) ([follow along with high-res slides](http://fommil.github.io/scalax14/#/)).
+
+
 ### Maven
 
 Maven looks like this:
