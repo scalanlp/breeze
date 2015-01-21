@@ -36,7 +36,7 @@ import breeze.linalg.DenseMatrix.canMapValues
  * @author dlwh
  */
 package object linalg {
-  
+
   /**
    * Computes y += x * a, possibly doing less work than actually doing that operation
    */

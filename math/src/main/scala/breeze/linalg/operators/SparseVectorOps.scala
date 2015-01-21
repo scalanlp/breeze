@@ -168,6 +168,8 @@ trait SparseVector_DenseVector_Ops { this: SparseVector.type =>
       }
       implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulInner.type, T]].register(this)
     }
+
+
 }
 
 
