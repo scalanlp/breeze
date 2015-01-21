@@ -1,5 +1,6 @@
-package breeze.linalg
+package breeze.linalg.functions
 
+import breeze.linalg.{SparseVector, DenseVector}
 import org.scalatest.FunSuite
 
 class minkowskiDistanceTest extends FunSuite {
