@@ -3,13 +3,15 @@ organization := "org.scalanlp"
 name := "breeze-parent"
 
 lazy val root = project.in( file(".") )
-    .aggregate(math, natives, viz).dependsOn(math, viz)
+    .aggregate(math, natives, viz, macros).dependsOn(math, viz)
 
-lazy val math = project.in( file("math"))
+lazy val macros = project.in( file("macros"))
+
+lazy val math = project.in( file("math")).dependsOn(macros)
 
 lazy val natives = project.in(file("natives")).dependsOn(math)
 
-lazy val viz = project.in( file("viz"))
+lazy val viz = project.in( file("viz")).dependsOn(math)
 
 lazy val benchmark = project.in(file("benchmark")).dependsOn(math, natives)
 

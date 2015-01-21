@@ -1,12 +1,6 @@
 name := "breeze-macros"
 
-version := "0.3.1"
-
 organization := "org.scalanlp"
-
-scalaVersion := "2.11.0"
-
-crossScalaVersions  := Seq("2.11.0", "2.10.3")
 
 resolvers ++= Seq(
   "ScalaNLP Maven2" at "http://repo.scalanlp.org/repo",
@@ -29,7 +23,6 @@ libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
 
 
 
-
 libraryDependencies ++= Seq(
   "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
   "org.scalatest"  %% "scalatest"  % "2.1.3"  % "test"
@@ -45,7 +38,7 @@ scalacOptions ++= Seq("-deprecation", "-language:_", "-optimize")
 javaOptions += "-Xmx2g"
 
 
-addCompilerPlugin("org.scalamacros" %% "paradise" % "2.0.0-M8" cross CrossVersion.full)
+addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0-M1" cross CrossVersion.full)
 
 pomExtra := (
     <url>http://scalanlp.org/</url>
