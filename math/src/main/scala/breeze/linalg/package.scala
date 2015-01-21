@@ -36,22 +36,7 @@ import breeze.linalg.DenseMatrix.canMapValues
  * @author dlwh
  */
 package object linalg {
-
-  /*
-   * Distance metric types to use with generic distance function
-   */
-//  type euclidean = euclideanDistance.type
-//  type manhattan = manhattanDistance.type
-//  type squared = squaredDistance.type
-//  type tanimoto = tanimotoDistance.type
-//  type minkowski = minkowskiDistance.type
-
-//  object euclidean extends DistanceMeasure
-//  object manhattan extends DistanceMeasure
-//  object squared extends DistanceMeasure
-//  object tanimoto extends DistanceMeasure
-//  object minkowski extends DistanceMeasure
-
+  
   /**
    * Computes y += x * a, possibly doing less work than actually doing that operation
    */
