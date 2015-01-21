@@ -48,8 +48,7 @@ import scala.annotation.{Annotation, StaticAnnotation}
  *@author dlwh
  **/
 class expand extends Annotation with StaticAnnotation {
-  def macroTransform(annottees: Any*) = macro expand.expandImpl
-
+  def macroTransform(annottees: Any*):Any = macro expand.expandImpl
 }
 
 

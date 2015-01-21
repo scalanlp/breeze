@@ -8,8 +8,8 @@ import scala.reflect.macros.Context
  *
  * @author dlwh
  **/
-class arityize(val count: Int) extends Annotation with StaticAnnotation {
-  def macroTransform(annottees: Any*) = macro arityize.arityizeImpl
+class arityize extends Annotation with StaticAnnotation {
+  def macroTransform(annottees: Any*):Any = macro arityize.arityizeImpl
 
 }
 

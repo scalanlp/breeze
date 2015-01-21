@@ -1,12 +1,6 @@
 name := "breeze-viz"
 
-version := "0.9"
-
 organization := "org.scalanlp"
-
-scalaVersion := "2.11.1"
-
-crossScalaVersions  := Seq("2.11.1", "2.10.3")
 
 resolvers ++= Seq(
   "ScalaNLP Maven2" at "http://repo.scalanlp.org/repo",
@@ -25,17 +19,19 @@ libraryDependencies ++= Seq(
     "com.lowagie" % "itext" % "2.1.5" intransitive()  // for pdf gen
 )
 
+scalaVersion := "2.11.5"
+
+crossScalaVersions  := Seq("2.11.5", "2.10.4")
 
 libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _)
 
 credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
 
-
 scalacOptions ++= Seq("-deprecation", "-language:_", "-optimize")
 
 javaOptions += "-Xmx2g"
 
-addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.0" cross CrossVersion.full)
+addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.1" cross CrossVersion.full)
 
 pomExtra := (
     <url>http://scalanlp.org/</url>

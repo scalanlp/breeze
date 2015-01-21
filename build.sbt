@@ -15,11 +15,11 @@ lazy val viz = project.in( file("viz")).dependsOn(math)
 
 lazy val benchmark = project.in(file("benchmark")).dependsOn(math, natives)
 
-scalaVersion := "2.11.5"
+scalaVersion := "2.11.4"
 
-crossScalaVersions  := Seq("2.11.5", "2.10.4")
+crossScalaVersions  := Seq("2.11.4", "2.10.4")
 
-addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0-M1" cross CrossVersion.full)
+addCompilerPlugin("org.scalamacros" %% "paradise" % "2.0.1" cross CrossVersion.full)
 
 publishMavenStyle := true
 
