@@ -371,7 +371,7 @@ object DenseVector extends VectorConstructors[DenseVector]
       def traverse(from: DenseVector[V], fn: CanTraverseKeyValuePairs.KeyValuePairsVisitor[Int, V]): Unit = {
         import from._
 
-        fn.visitArray((ind: Int)=> (ind - offset)/stride, data, offset, length, 1)
+        fn.visitArray((ind: Int)=> (ind - offset)/stride, data, offset, length, stride)
       }
 
     }
@@ -502,6 +502,11 @@ object DenseVector extends VectorConstructors[DenseVector]
         i += 1
       }
       result
+    }
+
+
+    override def mapActive(from: DenseVector[V], from2: DenseVector[V], fn: ((Int), V, V) => RV): DenseVector[RV] = {
+      map(from, from2, fn)
     }
   }
 

@@ -214,6 +214,11 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero] (private var _data: Arr
     }
   }
 
+
+  override def toDenseMatrix(implicit cm: ClassTag[V], zero: Zero[V]): DenseMatrix[V] = {
+    toDense
+  }
+
   def toDense:DenseMatrix[V] = {
     implicit val ctg = ClassTag(data.getClass.getComponentType).asInstanceOf[ClassTag[V]]
     val res = DenseMatrix.zeros[V](rows, cols)
@@ -349,7 +354,9 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
           }
           j += 1
         }
-        assert(transposedMtx.activeSize == from.activeSize)
+        // this doesn't hold if there are zeros in the matrix
+//        assert(transposedMtx.activeSize == from.activeSize,
+//          s"We seem to have lost some elements?!?! ${transposedMtx.activeSize} ${from.activeSize}")
         transposedMtx.result(false, false)
       }
     }

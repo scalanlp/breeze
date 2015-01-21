@@ -3,17 +3,19 @@ organization := "org.scalanlp"
 name := "breeze-parent"
 
 lazy val root = project.in( file(".") )
-    .aggregate(math, natives).dependsOn(math)
+    .aggregate(math, natives, viz).dependsOn(math, viz)
 
 lazy val math = project.in( file("math"))
 
 lazy val natives = project.in(file("natives")).dependsOn(math)
 
+lazy val viz = project.in( file("viz"))
+
 lazy val benchmark = project.in(file("benchmark")).dependsOn(math, natives)
 
-scalaVersion := "2.11.2"
+scalaVersion := "2.11.5"
 
-crossScalaVersions  := Seq("2.11.2", "2.10.4")
+crossScalaVersions  := Seq("2.11.5", "2.10.4")
 
 addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0-M1" cross CrossVersion.full)
 

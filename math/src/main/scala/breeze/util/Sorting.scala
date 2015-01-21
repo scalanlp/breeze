@@ -24,6 +24,10 @@ object Sorting {
   def indexSort(x: Array[Int], off: Int, len: Int, order: Array[Long]): Array[Int] = {
     indexSort_Long(x, off, len, order)
   }
+  
+  def indexSort(x: Array[Int], off: Int, len: Int, order: Array[Float]): Array[Int] = {
+    indexSort_Float(x, off, len, order)
+  }
 
   def indexSort(x: Array[Int], off: Int, len: Int, order: Array[Double]): Array[Int] = {
     indexSort_Double(x, off, len, order)

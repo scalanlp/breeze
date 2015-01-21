@@ -24,6 +24,7 @@ import org.scalatest.prop._
 
 @RunWith(classOf[JUnitRunner])
 class BinomialTest extends FunSuite with Checkers with MomentsTestBase[Int] {
+  type Distr = Binomial
   import org.scalacheck.Arbitrary.arbitrary;
 
   override val numSamples: Int = 100000

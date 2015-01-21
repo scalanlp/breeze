@@ -745,19 +745,19 @@ with MatrixConstructors[DenseMatrix] {
    * @tparam R
    * @return
    */
-  implicit def canMapRows[V:ClassTag:Zero]: CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], DenseVector[V], DenseMatrix[V]]  = new CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], DenseVector[V], DenseMatrix[V]] {
-    def apply(from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => DenseVector[V]): DenseMatrix[V] = {
-      var result:DenseMatrix[V] = null
+  implicit def canMapRows[V, R:ClassTag:Zero]: CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], DenseVector[R], DenseMatrix[R]]  = new CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], DenseVector[R], DenseMatrix[R]] {
+    def apply(from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => DenseVector[R]): DenseMatrix[R] = {
+      var result:DenseMatrix[R] = null
       for(c <- 0 until from.cols) {
         val col = f(from(::, c))
         if(result eq null) {
-          result = DenseMatrix.zeros[V](col.length, from.cols)
+          result = DenseMatrix.zeros[R](col.length, from.cols)
         }
         result(::, c) := col
       }
 
       if(result eq null){
-        DenseMatrix.zeros[V](0, from.cols)
+        DenseMatrix.zeros[R](0, from.cols)
       } else {
         result
       }
@@ -791,32 +791,35 @@ with MatrixConstructors[DenseMatrix] {
    * @tparam V value type
    * @return
    */
-  implicit def canMapCols[V:ClassTag:Zero]: CanCollapseAxis[DenseMatrix[V], _1.type, DenseVector[V], DenseVector[V], DenseMatrix[V]]  = new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], DenseVector[V], DenseMatrix[V]] {
-    def apply(from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => DenseVector[V]): DenseMatrix[V] = {
-      var result:DenseMatrix[V] = null
-      import from.{rows, cols}
-      val t = from.t
-      for(r <- 0 until from.rows) {
-        val row = f(t(::, r))
-        if(result eq null) {
-          // scala has decided this method is overloaded, and needs a result type.
-          // It has a result type, and is not overloaded.
-//          result = DenseMatrix.zeros[V](from.rows, row.length)
-          val data = new Array[V](rows * row.length)
-          result = new DenseMatrix(rows, row.length, data)
+  implicit def canMapCols[V, Res:ClassTag:Zero]: CanCollapseAxis[DenseMatrix[V], _1.type, DenseVector[V], DenseVector[Res], DenseMatrix[Res]] = {
+    new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], DenseVector[Res], DenseMatrix[Res]] {
+      def apply (from: DenseMatrix[V], axis: Axis._1.type) (f: (DenseVector[V] ) => DenseVector[Res] ): DenseMatrix[Res] = {
+        var result: DenseMatrix[Res] = null
+        import from. {rows, cols}
+        val t = from.t
+        for (r <- 0 until from.rows) {
+          val row = f (t (::, r) )
+          if (result eq null) {
+            // scala has decided this method is overloaded, and needs a result type.
+            // It has a result type, and is not overloaded.
+            //          result = DenseMatrix.zeros[V](from.rows, row.length)
+            val data = new Array[Res] (rows * row.length)
+            result = new DenseMatrix (rows, row.length, data)
+          }
+          result.t apply (::, r) := row
         }
-        result.t apply (::, r) := row
-      }
 
-      if(result ne null) {
-        result
-      } else {
-        val data = new Array[V](0)
-        result = new DenseMatrix(rows, 0, data)
-        result
+        if (result ne null) {
+          result
+        } else {
+          val data = new Array[Res] (0)
+          result = new DenseMatrix (rows, 0, data)
+          result
+        }
       }
     }
   }
+
   implicit def handholdCanMapCols[V]: CanCollapseAxis.HandHold[DenseMatrix[V], Axis._1.type, DenseVector[V]] = new CanCollapseAxis.HandHold[DenseMatrix[V], Axis._1.type, DenseVector[V]]()
 
   implicit def canMapColsBitVector[V:ClassTag:Zero] = new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], BitVector, DenseMatrix[Boolean]] {
@@ -915,6 +918,11 @@ with MatrixConstructors[DenseMatrix] {
     extends CanZipMapKeyValues[DenseMatrix[V], (Int, Int), V, RV, DenseMatrix[RV]] {
 
     def create(rows: Int, cols: Int) = new DenseMatrix(rows, cols, new Array[RV](rows * cols))
+
+
+    override def mapActive(from: DenseMatrix[V], from2: DenseMatrix[V], fn: ((Int, Int), V, V) => RV): DenseMatrix[RV] = {
+      map(from, from2, fn)
+    }
 
     /**Maps all corresponding values from the two collection. */
     def map(from: DenseMatrix[V], from2: DenseMatrix[V], fn: ((Int, Int), V, V) => RV) = {
