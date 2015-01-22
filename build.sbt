@@ -2,6 +2,8 @@ organization := "org.scalanlp"
 
 name := "breeze-parent"
 
+version := "0.11-SNAPSHOT"
+
 lazy val root = project.in( file(".") )
     .aggregate(math, natives, viz).dependsOn(math, viz)
 

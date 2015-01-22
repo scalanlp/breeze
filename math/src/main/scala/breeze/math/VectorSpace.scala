@@ -699,6 +699,15 @@ object MutableOptimizationSpace {
     }
   }
 
+  object DenseDoubleOptimizationSpace {
+    implicit def denseDoubleOptSpace = {
+      val norms = EntrywiseMatrixNorms.make[DenseMatrix[Double],Double]
+      import norms.canNorm_Double
+      import norms.canInnerProduct
+      make[DenseMatrix[Double], DenseVector[Double], Double](_.asDenseMatrix,_.flatten())
+    }
+  }
+
   def make[M,V,S](toMat: V => M,
                   toVec: M => V)
                  (implicit

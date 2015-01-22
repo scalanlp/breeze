@@ -1,6 +1,6 @@
 name := "breeze-viz"
 
-version := "0.9"
+version := "0.9-SNAPSHOT"
 
 organization := "org.scalanlp"
 
