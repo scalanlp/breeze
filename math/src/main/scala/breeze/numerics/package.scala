@@ -658,8 +658,8 @@ package object numerics {
       def apply(b: Boolean) = if (b) 1.0 else 0.0
     }
 
-    implicit def vImpl[V:Zero]: Impl[V, Double] = new Impl[V, Double] {
-      def apply(b: V) = if (b != implicitly[Zero[V]].zero) 1.0 else 0.0
+    implicit def vImpl[V:Semiring]: Impl[V, Double] = new Impl[V, Double] {
+      def apply(b: V) = if (b != implicitly[Semiring[V]].zero) 1.0 else 0.0
     }
   }
 

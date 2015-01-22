@@ -43,14 +43,14 @@ pomExtra := (
     </license>
   </licenses>
   <scm>
-    <url>git@github.com:dlwh/breeze.git</url>
-    <connection>scm:git:git@github.com:dlwh/breeze.git</connection>
+    <url>git@github.com:scalanlp/breeze.git</url>
+    <connection>scm:git:git@github.com:scalanlp/breeze.git</connection>
   </scm>
   <developers>
     <developer>
       <id>dlwh</id>
       <name>David Hall</name>
-      <url>http://cs.berkeley.edu/~dlwh/</url>
+      <url>http://www.dlwh.org/</url>
     </developer>
   </developers>)
 
