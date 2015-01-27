@@ -3,8 +3,6 @@ organization := "org.scalanlp"
 // lazy val breeze = project in file("core")
 name := "breeze-natives"
 
-version := "0.11-SNAPSHOT"
-
 scalaVersion := "2.11.1"
 
 crossScalaVersions  := Seq("2.11.1", "2.11.0", "2.10.3")
