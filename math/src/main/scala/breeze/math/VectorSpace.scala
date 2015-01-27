@@ -19,6 +19,7 @@ package breeze.math
 import breeze.linalg._
 import breeze.linalg.operators._
 import breeze.linalg.support._
+import breeze.macros.expand
 import breeze.storage._
 import scala.reflect.ClassTag
 
@@ -684,7 +685,8 @@ object MutableEnumeratedCoordinateField {
 
 object MutableOptimizationSpace {
   object SparseOptimizationSpace {
-    implicit def sparseOptSpace[S:Field:Zero:ClassTag] = {
+    @expand
+    implicit def sparseOptSpace[@expand.args(Double,Float) S] = {
       val norms = EntrywiseMatrixNorms.make[CSCMatrix[S],S]
       import norms._
       make[CSCMatrix[S],SparseVector[S],S](_.asCSCMatrix(),_.flatten())
@@ -692,19 +694,11 @@ object MutableOptimizationSpace {
   }
 
   object DenseOptimizationSpace {
-    implicit def denseOptSpace[S:Field:ClassTag] = {
+    @expand
+    implicit def denseOptSpace[@expand.args(Double,Float) S] = {
       val norms = EntrywiseMatrixNorms.make[DenseMatrix[S],S]
       import norms._
       make[DenseMatrix[S],DenseVector[S],S](_.asDenseMatrix,_.flatten())
-    }
-  }
-
-  object DenseDoubleOptimizationSpace {
-    implicit def denseDoubleOptSpace = {
-      val norms = EntrywiseMatrixNorms.make[DenseMatrix[Double],Double]
-      import norms.canNorm_Double
-      import norms.canInnerProduct
-      make[DenseMatrix[Double], DenseVector[Double], Double](_.asDenseMatrix,_.flatten())
     }
   }
 

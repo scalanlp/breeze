@@ -1329,19 +1329,7 @@ trait SparseVector_DenseMatrixOps { this: SparseVector.type =>
       }
       implicitly[BinaryRegistry[DenseMatrix[T], Vector[T], OpMulMatrix.type, DenseVector[T]]].register(this)
     }
+
   }
 
-  implicit def implOpMulMatrix_DM_SV_eq_DV[T:Semiring:ClassTag]:OpMulMatrix.Impl2[DenseMatrix[T], SparseVector[T], DenseVector[T]] = {
-    new OpMulMatrix.Impl2[DenseMatrix[T], SparseVector[T], DenseVector[T]] {
-      override def apply(v: DenseMatrix[T], v2: SparseVector[T]): DenseVector[T] = {
-        require(v.cols == v2.length)
-        val result = DenseVector.zeros[T](v.rows)
-        cforRange(0 until v2.activeSize) { i =>
-          axpy(v2.valueAt(i), v(::, v2.indexAt(i)), result)
-        }
-
-        result
-      }
-    }
-  }
 }
