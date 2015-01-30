@@ -21,7 +21,6 @@ import breeze.linalg.DenseMatrix
 import breeze.linalg.DenseVector
 import breeze.linalg.norm
 import breeze.numerics._
-import breeze.optimize.quadratic.Constraint._
 
 class NNLSTest extends OptimizeTestBase {
   /** Generate an NNLS problem whose optimal solution is the all-ones vector. */
@@ -37,7 +36,7 @@ class NNLSTest extends OptimizeTestBase {
   
   test("NNLS: exact solution cases") {
     val n = 20
-    val nnls = NNLS(n)
+    val nnls = new NNLS()
     var numSolved = 0
     
     // About 15% of random 20x20 [-1,1]-matrices have a singular value less than 1e-3.  NNLS
@@ -45,7 +44,7 @@ class NNLSTest extends OptimizeTestBase {
     // sample of these matrices and make sure that we solved a substantial fraction of them.    
     for (k <- 0 until 100) {
       val (ata, atb) = genOnesData(n)
-      val x = DenseVector(nnls.solve(ata, atb))
+      val x = nnls.minimize(ata, atb)
       atb *= -1.0
       val golden = DenseVector.ones[Double](n)
       x -= golden
@@ -67,8 +66,8 @@ class NNLSTest extends OptimizeTestBase {
     
     val goodx = Array(0.13025, 0.54506, 0.2874, 0.0, 0.028628)
 
-    val nnls = NNLS(n)
-    val x = nnls.solve(ata, atb)
+    val nnls = new NNLS()
+    val x = nnls.minimize(ata, atb)
     for (i <- 0 until n) {
       assert(abs(x(i) - goodx(i)) < 1E-3)
       assert(x(i) >= 0)
@@ -91,8 +90,8 @@ class NNLSTest extends OptimizeTestBase {
     val refx = DenseVector(34.90751, 103.96254, 0.00000, 27.82094, 58.79627)
     val refObj = NNLS.computeObjectiveValue(ata, atb, refx)
     
-    val nnls = NNLS(n)
-    val x = DenseVector(nnls.solve(ata, atb))
+    val nnls = new NNLS()
+    val x = nnls.minimize(ata, atb)
     val obj = NNLS.computeObjectiveValue(ata, atb, x)
     
     assert(obj < refObj + 1E-5)

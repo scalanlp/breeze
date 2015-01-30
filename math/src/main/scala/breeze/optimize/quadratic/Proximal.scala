@@ -30,38 +30,43 @@ import scala.Double.PositiveInfinity
 import breeze.linalg.DenseMatrix
 import breeze.linalg.DenseVector
 import breeze.linalg.norm
+import breeze.linalg.pinv
 
-//TO DO : BLAS the functions
-object Proximal {
-  // ==================== PROJECTIONS ====================
+trait Proximal {
+  def prox(x: DenseVector[Double], rho: Double)
+}
 
-  // f = I(l <= x <= u)
-  def projectBox(x: Array[Double], l: Array[Double], u: Array[Double]) {
+case class ProjectBox(l: DenseVector[Double], u: DenseVector[Double]) extends Proximal {
+  def prox(x: DenseVector[Double], rho: Double = 0.0) = {
     var i = 0
     while (i < x.length) {
       x.update(i, max(l(i), min(x(i), u(i))))
       i = i + 1
     }
   }
+}
 
-  // f = I(x >= 0)
-  def projectPos(x: Array[Double]) {
+case class ProjectPos() extends Proximal {
+  def prox(x: DenseVector[Double], rho: Double = 0.0) = {
     var i = 0
     while (i < x.length) {
       x.update(i, max(0, x(i)))
       i = i + 1
     }
   }
+}
 
-  def projectSoc(x: Array[Double], n: Int) {
+case class ProjectSoc() extends Proximal {
+  def prox(x: DenseVector[Double], rho: Double = 0.0) = {
     var nx: Double = 0.0
     var i: Int = 1
+    val n = x.length
 
     while (i < n) {
       nx += x(i) * x(i)
       i = i + 1
     }
-    nx = sqrt(nx);
+    nx = sqrt(nx)
 
     if (nx > x(0)) {
       if (nx <= -x(0)) {
@@ -81,41 +86,92 @@ object Proximal {
       }
     }
   }
-  
-  //Projection onto Affine set
-  //Let C = { x \in R^{n} | Ax = b } where A \in R^{m x n}
-  //If A is full rank matrix then the projection is given by v - A'(Av - b) where A' is the cached Moore-Penrose pseudo-inverse of A  
-  def projectEquality(
-      x: DenseVector[Double], 
-      Aeq: DenseMatrix[Double], 
-      invAeq: DenseMatrix[Double], 
-      beq: DenseVector[Double]) {
+}
+
+//Projection onto Affine set
+//Let C = { x \in R^{n} | Ax = b } where A \in R^{m x n}
+//If A is full rank matrix then the projection is given by v - A'(Av - b) where A' is the cached Moore-Penrose pseudo-inverse of A
+case class ProjectEquality(Aeq: DenseMatrix[Double], beq: DenseVector[Double]) extends Proximal {
+  val invAeq = pinv(Aeq)
+  def prox(x: DenseVector[Double], rho: Double = 0.0) = {
     val Av = Aeq*x
     Av -= beq
     x += invAeq*Av
   }
-  
-  //Projection onto hyper-plane is a special case of projection onto affine set and is given by
-  //x + ((b - a'x)/||a||_2^2)a
-  def projectHyperPlane(x: DenseVector[Double], a: DenseVector[Double], b: Double) {
-    val at = a.t
-    val atx = at*x
+}
+
+//Projection onto hyper-plane is a special case of projection onto affine set and is given by
+//x + ((b - a'x)/||a||_2^2)a
+case class ProjectHyperPlane(a: DenseVector[Double], b: Double) extends Proximal {
+  val at = a.t
+
+  def prox(x: DenseVector[Double], rho: Double = 0.0) = {
+    val atx = at * x
     val anorm = norm(a, 2)
-    val scale = (b - atx)/(anorm*anorm)
-    val ascaled = a*scale
+    val scale = (b - atx) / (anorm * anorm)
+    val ascaled = a * scale
     x += ascaled
   }
-  
-  def shrinkage(x: Array[Double], scale: Double) {
-    for (i <- 0 until x.length) {
-      x.update(i, max(0, x(i) - scale) - max(0, -x(i) - scale))
+}
+
+case class ProximalL1() extends Proximal {
+  def prox(x: DenseVector[Double], rho: Double) = {
+    var i = 0
+    while (i < x.length) {
+      x.update(i, max(0, x(i) - rho) - max(0, -x(i) - rho))
+      i = i + 1
     }
   }
-  // ==================== SEPARABLE FUNCTION ====================
+}
 
+case class ProximalL2() extends Proximal {
+  def prox(x: DenseVector[Double], rho: Double) {
+    var normSquare: Double = 0.0
+    var i = 0
+
+    while (i < x.length) {
+      normSquare = normSquare + x(i) * x(i)
+      i = i + 1
+    }
+
+    val norm = sqrt(normSquare)
+    i = 0
+    while (i < x.length) {
+      if (norm >= 1/ rho) x.update(i, x(i) * (1 - 1/(rho * norm)))
+      else x.update(i, 0)
+      i = i + 1
+    }
+  }
+}
+
+// f = (1/2)||.||_2^2
+case class ProximalSumSquare() extends Proximal {
+  def prox(x: DenseVector[Double], rho: Double) {
+    var i = 0
+    while (i < x.length) {
+      x.update(i, x(i) * (rho / (1 + rho)))
+      i = i + 1
+    }
+  }
+}
+
+// f = -sum(log(x))
+case class ProximalLogBarrier() extends Proximal {
+  def prox(x: DenseVector[Double], rho: Double) {
+    var i = 0
+    while (i < x.length) {
+      x.update(i, 0.5 * (x(i) + sqrt(x(i) * x(i) + 4 / rho)))
+      i = i + 1
+    }
+  }
+}
+
+// f = huber = x^2 if |x|<=1, 2|x| - 1 otherwise
+case class ProximalHuber() extends Proximal {
   def proxScalar(v: Double, rho: Double, oracle: Double => Double, l: Double, u: Double, x0: Double): Double = {
-    var MAX_ITER = 1000
-    var tol = 1e-8
+    val MAX_ITER = 1000
+    val tol = 1e-8
+
     var g: Double = 0.0
     var x = max(l, min(x0, u));
 
@@ -139,7 +195,7 @@ object Proximal {
     x
   }
 
-  def proxSeparable(x: Array[Double], rho: Double, oracle: Double => Double, l: Double, u: Double) {
+  def proxSeparable(x: DenseVector[Double], rho: Double, oracle: Double => Double, l: Double, u: Double) {
     var i = 0
     while (i < x.length) {
       x.update(i, proxScalar(x(i), rho, oracle, l, u, 0))
@@ -147,56 +203,6 @@ object Proximal {
     }
   }
 
-  // ==================== NORMS ====================
-
-  // f = ||.||_1
-  def proxL1(x: Array[Double], rho: Double) {
-    var i = 0
-    while (i < x.length) {
-      x.update(i, max(0, x(i) - 1.0 / rho) - max(0, -x(i) - 1.0 / rho))
-      i = i + 1
-    }
-  }
-
-  // f = ||.||_2
-  def proxL2(x: Array[Double], rho: Double) {
-    var normSquare: Double = 0.0
-    var i = 0
-
-    while (i < x.length) {
-      normSquare = normSquare + x(i) * x(i)
-      i = i + 1
-    }
-
-    val norm = sqrt(normSquare)
-    i = 0
-    while (i < x.length) {
-      if (norm >= 1/ rho) x.update(i, x(i) * (1 - 1/(rho * norm)))
-      else x.update(i, 0)
-      i = i + 1
-    }
-  }
-
-  // ==================== OTHER ====================
-
-  // f = (1/2)||.||_2^2
-  def proxSumSquare(x: Array[Double], rho: Double) {
-    var i = 0
-    while (i < x.length) {
-      x.update(i, x(i) * (rho / (1 + rho)))
-      i = i + 1
-    }
-  }
-
-  // f = -sum(log(x))
-  def proxLogBarrier(x: Array[Double], rho: Double) {
-    var i = 0
-    while (i < x.length) {
-      x.update(i, 0.5 * (x(i) + sqrt(x(i) * x(i) + 4/rho)))
-    }
-  }
-
-  // f = huber = x^2 if |x|<=1, 2|x| - 1 otherwise
   def subgradHuber(x: Double): Double = {
     if (abs(x) <= 1) {
       2 * x
@@ -206,21 +212,25 @@ object Proximal {
     }
   }
 
-  def proxHuber(x: Array[Double], rho: Double) {
-    proxSeparable(x, rho, subgradHuber, NegativeInfinity, PositiveInfinity);
+  def prox(x: DenseVector[Double], rho: Double) {
+    proxSeparable(x, rho, subgradHuber, NegativeInfinity, PositiveInfinity)
   }
+}
 
-  // f = c'*x
-  def proxLinear(x: Array[Double], rho: Double, c: Array[Double]) {
+// f = c'*x
+case class ProximalLinear(c: DenseVector[Double]) extends Proximal {
+  def prox(x: DenseVector[Double], rho: Double) {
     var i = 0
     while (i < x.length) {
       x.update(i, x(i) - c(i) / rho)
       i = i + 1
     }
   }
+}
 
-  // f = c'*x + I(x >= 0)
-  def proxLp(x: Array[Double], rho: Double, c: Array[Double]) {
+// f = c'*x + I(x >= 0)
+case class ProximalLp(c: DenseVector[Double]) extends Proximal {
+  def prox(x: DenseVector[Double], rho: Double) {
     var i = 0
     while (i < x.length) {
       x.update(i, max(0, x(i) - c(i) / rho))

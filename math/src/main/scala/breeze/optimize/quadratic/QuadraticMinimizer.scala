@@ -17,7 +17,6 @@
 
 package breeze.optimize.quadratic
 
-import breeze.linalg.pinv
 import breeze.linalg.cholesky
 import breeze.linalg.LU
 import scala.math.max
@@ -58,22 +57,25 @@ import breeze.stats.distributions.Rand
  */
 
 class QuadraticMinimizer(nGram: Int,
-  lb: Option[DenseVector[Double]] = None, ub: Option[DenseVector[Double]] = None,
-  Aeq: Option[DenseMatrix[Double]] = None, beq: Option[DenseVector[Double]] = None,
-  addEqualityToGram: Boolean = false) {
+                         Aeq: Option[DenseMatrix[Double]] = None,
+                         beq: Option[DenseVector[Double]] = None,
+                         maxIters: Int = -1) {
+  type BDM = DenseMatrix[Double]
+  type BDV = DenseVector[Double]
 
-  //if addEquality is true, add the contribution of the equality constraint to gram matrix workspace
+  case class State(x: BDV, u: BDV, z: BDV, iterations: Int, converged: Boolean)
+
   val linearEquality = if (Aeq != None) Aeq.get.rows else 0
+
+  if(linearEquality > 0)
+    require(beq.get.length == linearEquality, s"QuadraticMinimizer linear equalities should match beq vector")
 
   val n = nGram + linearEquality
 
   var alpha: Double = 1.0
   var rho: Double = 0.0
 
-  var solveTime: Long = 0
-  var iterations: Long = 0
-
-  val wsH = if (addEqualityToGram && linearEquality > 0) {
+  val wsH = if (linearEquality > 0) {
     //Aeq is l x rank
     //H is rank x rank
     /* wsH is a quasi-definite matrix */
@@ -96,37 +98,15 @@ class QuadraticMinimizer(nGram: Int,
     DenseMatrix.zeros[Double](n, n)
   }
 
-  val MAX_ITER = Math.max(400, 20 * n)
-  
+  val MAX_ITER = if (maxIters < 0) Math.max(400, 20 * n) else maxIters
+
   val ABSTOL = 1e-8
   val RELTOL = 1e-4
   val EPS = 1e-4
 
-  val z = DenseVector.zeros[Double](nGram)
-  val u = DenseVector.zeros[Double](nGram)
-
-  val xHat = DenseVector.zeros[Double](nGram)
-  val zOld = DenseVector.zeros[Double](nGram)
-
-  //scale will hold q + linearEqualities
-  val scale = DenseVector.zeros[Double](n)
-
-  val residual = DenseVector.zeros[Double](nGram)
-  val s = DenseVector.zeros[Double](nGram)
-
   /* L1 regularization */
   var lambda: Double = 1.0
-  var constraint: Constraint = SMOOTH
-
-  var R: DenseMatrix[Double] = null
-  var pivot: Array[Int] = null
-
-  /* If Aeq exists and rows > 1, cache the pseudo-inverse to be used later */
-  /* If Aeq exist and rows = 1, cache the transpose */
-  val invAeq = if (!addEqualityToGram && Aeq != None && Aeq.get.rows > 1)
-    Some(pinv(Aeq.get))
-  else
-    None
+  var proximal: Proximal = null
 
   /*Regularization for Elastic Net */
   def setLambda(lambda: Double): QuadraticMinimizer = {
@@ -136,8 +116,18 @@ class QuadraticMinimizer(nGram: Int,
 
   //TO DO : This can take a proximal function as input
   //TO DO : alpha needs to be scaled based on Nesterov's acceleration
-  def setProximal(constraint: Constraint): QuadraticMinimizer = {
-    this.constraint = constraint
+  def setProximal(constraint: Constraint,
+                  lb: Option[DenseVector[Double]] = None,
+                  ub: Option[DenseVector[Double]] = None): QuadraticMinimizer = {
+    this.proximal = constraint match {
+      case POSITIVE => ProjectPos()
+      case BOUNDS => {
+        if (lb == None && ub == None)
+          throw new IllegalArgumentException("QuadraticMinimizer proximal operator on box needs lower and upper bounds")
+        ProjectBox(lb.get, ub.get)
+      }
+      case SPARSE => ProximalL1()
+    }
     this
   }
 
@@ -159,37 +149,39 @@ class QuadraticMinimizer(nGram: Int,
     }
     x
   }
-  
-  def solve(q: DenseVector[Double]): (DenseVector[Double], Boolean) = {
+
+  def iterations(q: DenseVector[Double]): State = {
+    var R: DenseMatrix[Double] = null
+    var pivot: Array[Int] = null
+
     //Dense cholesky factorization if the gram matrix is well defined
-    if (!addEqualityToGram) {
-      R = cholesky(wsH).t
-    } else {
+    if (linearEquality > 0) {
       val lu = LU(wsH)
       R = lu._1
       pivot = lu._2
+    } else {
+      R = cholesky(wsH).t
     }
     
     val x = DenseVector.zeros[Double](nGram)
 
-    z := 0.0
-    u := 0.0
+    val z = DenseVector.zeros[Double](nGram)
+    val u = DenseVector.zeros[Double](nGram)
 
-    residual := 0.0
-    s := 0.0
+    val xHat = DenseVector.zeros[Double](nGram)
+    val zOld = DenseVector.zeros[Double](nGram)
+
+    //scale will hold q + linearEqualities
+    val scale = DenseVector.zeros[Double](n)
+
+    val residual = DenseVector.zeros[Double](nGram)
+    val s = DenseVector.zeros[Double](nGram)
 
     var k = 0
 
     //u is the langrange multiplier
     //z is for the proximal operator application
 
-    /* Check if linearEqualities and beq matches */
-    if (linearEquality > 0 && beq.get.length != linearEquality) {
-      throw new IllegalArgumentException("QuadraticMinimizer beq vector should match the number of linear equalities")
-    }
-
-    //Memory for x and tempR are allocated by Solve.solve calls
-    //TO DO : See how this is implemented in breeze, why a workspace can't be used  
     while (k < MAX_ITER) {
       //scale = rho*(z - u) - q
       for (i <- 0 until z.length) {
@@ -203,7 +195,7 @@ class QuadraticMinimizer(nGram: Int,
 
       //TO DO : Use LDL' decomposition for efficiency if the Gram matrix is sparse
       //TO DO : Do we need a full newton step or we should take a damped newton step
-      val xlambda = if (addEqualityToGram) {
+      val xlambda = if (linearEquality > 0) {
         // If the Gram matrix is positive definite then use Cholesky else use LU Decomposition
         // x = U \ (L \ q)
         QuadraticMinimizer.solveTriangularLU(R, pivot, scale)
@@ -216,8 +208,8 @@ class QuadraticMinimizer(nGram: Int,
       for (i <- 0 until x.length) x.update(i, xlambda(i))
       
       //Unconstrained Quadratic Minimization does need any proximal step
-      if (constraint == SMOOTH) return (x, true)
-      
+      if (proximal == null) return State(x, u, z, 0, true)
+
       //z-update with relaxation
 
       //zold = (1-alpha)*z
@@ -237,31 +229,7 @@ class QuadraticMinimizer(nGram: Int,
       z += u
       
       //Apply proximal operator
-
-      //Pick the correct proximal operator based on options
-      //We will test the following
-
-      //1. projectPos
-      //2. projectBounds
-      //3. projectEquality/projectHyperPlane based on the structure of Aeq
-      //4. proxL1
-      //Other options not tried yet
-      //5. proxHuber
-      constraint match {
-        case POSITIVE => Proximal.projectPos(z.data)
-        case BOUNDS => {
-          if (lb == None && ub == None)
-            throw new IllegalArgumentException("QuadraticMinimizer proximal operator on box needs lower and upper bounds")
-          Proximal.projectBox(z.data, lb.get.data, ub.get.data)
-        }
-        case EQUALITY => {
-          if (Aeq == None) throw new IllegalArgumentException("QuadraticMinimizer proximal operator on equality needs Aeq")
-          if (beq == None) throw new IllegalArgumentException("QuadraticMinimizer proximal operator on equality needs beq")
-          if (Aeq.get.rows > 1) Proximal.projectEquality(z, Aeq.get, invAeq.get, beq.get)
-          else Proximal.projectHyperPlane(z, Aeq.get.toDenseVector, beq.get.data(0))
-        }
-        case SPARSE => Proximal.shrinkage(z.data, lambda / rho)
-      }
+      proximal.prox(z, lambda/rho)
 
       //z has proximal(x_hat)
 
@@ -293,13 +261,11 @@ class QuadraticMinimizer(nGram: Int,
       val epsDual = sqrt(n) * ABSTOL + RELTOL * norm(s, 2)
       
       if (residualNorm < epsPrimal && sNorm < epsDual) {
-        iterations += k
-        return (x, true)
+        return State(x, u, z, k, true)
       }
       k += 1
     }
-    iterations += MAX_ITER
-    (x, false)
+    State(x, u, z, k, false)
   }
 
   private def normColumn(H: DenseMatrix[Double]): Double = {
@@ -317,8 +283,8 @@ class QuadraticMinimizer(nGram: Int,
 
   //TO DO : Replace eigenMin using inverse power law for 5-10 iterations
   private def computeRho(H: DenseMatrix[Double]): Double = {
-    constraint match {
-      case SMOOTH => 0.0
+    proximal match {
+      case null => 0.0
       case SPARSE => {
         val eigenMax = normColumn(H)
         //TO DO: Make sure it calls Dposv.dposv
@@ -330,7 +296,11 @@ class QuadraticMinimizer(nGram: Int,
     }
   }
 
-  def solve(H: DenseMatrix[Double], q: DenseVector[Double]): (DenseVector[Double], Boolean) = {
+  def minimize(H: DenseMatrix[Double], q: DenseVector[Double]): DenseVector[Double] = {
+    iterations(H, q).x
+  }
+
+  def iterations(H: DenseMatrix[Double], q: DenseVector[Double]): State = {
     for (i <- 0 until H.rows)
       for (j <- 0 until H.cols) {
         wsH.update(i, j, H(i, j))
@@ -338,9 +308,7 @@ class QuadraticMinimizer(nGram: Int,
     rho = computeRho(wsH)
     for (i <- 0 until H.rows) wsH.update(i, i, wsH(i, i) + rho)
 
-    val solveStart = System.nanoTime()
-    val result = solve(q)
-    solveTime += System.nanoTime() - solveStart
+    val result = iterations(q)
     result
   }
 }
@@ -373,7 +341,6 @@ object QpGenerator {
   }
   
   def apply(nHessian: Int, nEqualities: Int) = {
-    val em = DenseVector.ones[Double](nEqualities)
     val en = DenseVector.ones[Double](nHessian)
     val zn = DenseVector.zeros[Double](nHessian)
 
@@ -404,7 +371,7 @@ object QuadraticMinimizer {
     
     val n = A.rows
     val nrhs = X.cols
-    var info: intW = new intW(0)
+    val info: intW = new intW(0)
 
     lapack.dgetrs("No transpose", n, nrhs, A.data, 0, A.rows, pivot, 0, X.data, 0, X.rows, info)
 
@@ -421,7 +388,7 @@ object QuadraticMinimizer {
     
     val n = A.rows
     val nrhs = X.cols
-    var info: intW = new intW(0)
+    val info: intW = new intW(0)
 
     lapack.dpotrs("L", n, nrhs, A.data, 0, A.rows, X.data, 0, X.rows, info)
 
@@ -438,13 +405,13 @@ object QuadraticMinimizer {
         //Direct QP with bounds
         val lb = DenseVector.zeros[Double](rank)
         val ub = DenseVector.ones[Double](rank)
-        new QuadraticMinimizer(rank, Some(lb), Some(ub)).setProximal(BOUNDS)
+        new QuadraticMinimizer(rank).setProximal(BOUNDS, Some(lb), Some(ub))
       }
       case EQUALITY => {
         //Direct QP with equality and positivity constraint
         val Aeq = DenseMatrix.ones[Double](1, rank)
         val beq = DenseVector.ones[Double](1)
-        val qm = new QuadraticMinimizer(rank, None, None, Some(Aeq), Some(beq), true).setProximal(POSITIVE)
+        val qm = new QuadraticMinimizer(rank, Some(Aeq), Some(beq)).setProximal(POSITIVE)
         qm
       }
       case SPARSE => {
@@ -502,7 +469,7 @@ object QuadraticMinimizer {
     
     val qpSolver = new QuadraticMinimizer(problemSize)
     val qpStart = System.nanoTime()
-    val (result, converged) = qpSolver.solve(h, q)
+    val result = qpSolver.minimize(h, q)
     val qpTime = System.nanoTime() - qpStart
 
     val startBFGS = System.nanoTime()
@@ -523,45 +490,56 @@ object QuadraticMinimizer {
     
     val lambdaL1 = lambda * beta
     val lambdaL2 = lambda * (1 - beta)
-    val regularizedGram = h + DenseMatrix.eye[Double](h.rows) :* lambdaL2
+
+    val regularizedGram = h + (DenseMatrix.eye[Double](h.rows) :* lambdaL2)
     
     val owlqn = new OWLQN[Int, DenseVector[Double]](-1, 7, lambdaL1)
     
     def optimizeWithOWLQN(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
-          (computeObjective(regularizedGram, q, x), regularizedGram*x + q)
+          (computeObjective(regularizedGram, q, x), regularizedGram * x + q)
         }
       }
       owlqn.minimize(f, init)
     }
     
     val sparseQp = QuadraticMinimizer(h.rows, SPARSE, lambdaL1)
-    val (sparseQpResult, sparseQpConverged) = sparseQp.solve(regularizedGram, q)
-    
+    val sparseQpStart = System.nanoTime()
+    val sparseQpResult = sparseQp.iterations(regularizedGram, q)
+    val sparseQpTime = System.nanoTime() - sparseQpStart
+
     val startOWLQN = System.nanoTime()
     val owlqnResult = optimizeWithOWLQN(DenseVector.rand[Double](problemSize))
     val owlqnTime = System.nanoTime() - startOWLQN
     
-    println(s"||owlqn - sparseqp|| norm ${norm(owlqnResult - sparseQpResult, 2)} inf-norm ${norm(owlqnResult - sparseQpResult, inf)}")
-    println(s"sparseQp ${sparseQp.solveTime/1e6} ms iters ${sparseQp.iterations} owlqn ${owlqnTime/1e6} ms")
+    println(s"||owlqn - sparseqp|| norm ${norm(owlqnResult - sparseQpResult.x, 2)} inf-norm ${norm(owlqnResult - sparseQpResult.x, inf)}")
+    println(s"sparseQp ${sparseQpTime/1e6} ms iters ${sparseQpResult.iterations} owlqn ${owlqnTime/1e6} ms")
 
     val posQp = new QuadraticMinimizer(h.rows).setProximal(POSITIVE)
-    val (posQpResult, posQpConverged) = posQp.solve(h, q)
+    val posQpStart = System.nanoTime()
+    val posQpResult = posQp.iterations(h, q)
+    val posQpTime = System.nanoTime() - posQpStart
 
-    val nnls = NNLS(h.rows)
-    val nnlsResult = nnls.solve(h, q)
+    val nnls = new NNLS()
+    val nnlsStart = System.nanoTime()
+    val nnlsResult = nnls.iterations(h, q)
+    val nnlsTime = System.nanoTime() - nnlsStart
+
+    println(s"posQp ${posQpTime/1e6} ms iters ${posQpResult.iterations} nnls ${nnlsTime/1e6} ms iters ${nnlsResult.iterations}")
     
-    println(s"posQp ${posQp.solveTime/1e6} ms iters ${posQp.iterations} nnls ${nnls.solveTime/1e6} ms iters ${nnls.iterations}")
-    
-    val boundsQp = new QuadraticMinimizer(h.rows, Some(bl), Some(bu)).setProximal(BOUNDS)
-    val (boundsQpResult, boundsQpConverged) = boundsQp.solve(h, q)
+    val boundsQp = new QuadraticMinimizer(h.rows).setProximal(BOUNDS,Some(bl), Some(bu))
+    val boundsQpStart = System.nanoTime()
+    val boundsQpResult = boundsQp.iterations(h, q)
+    val boundsQpTime = System.nanoTime() - boundsQpStart
 
-    println(s"boundsQp ${boundsQp.solveTime/1e6} ms iters ${boundsQp.iterations} converged $boundsQpConverged")
+    println(s"boundsQp ${boundsQpTime/1e6} ms iters ${boundsQpResult.iterations} converged ${boundsQpResult.converged}")
 
-    val qpEquality = new QuadraticMinimizer(h.rows, None, None, Some(aeq), Some(b), true).setProximal(POSITIVE)
-    val (qpEqualityResult, qpEqualityConverged) = qpEquality.solve(h, q)
+    val qpEquality = new QuadraticMinimizer(h.rows, Some(aeq), Some(b)).setProximal(POSITIVE)
+    val qpEqualityStart = System.nanoTime()
+    val qpEqualityResult = qpEquality.iterations(h, q)
+    val qpEqualityTime = System.nanoTime() - qpEqualityStart
 
-    println(s"Qp Equality ${qpEquality.solveTime/1e6} ms iters ${qpEquality.iterations} converged $qpEqualityConverged")
+    println(s"Qp Equality ${qpEqualityTime/1e6} ms iters ${qpEqualityResult.iterations} converged ${qpEqualityResult.converged}")
   }
 }
