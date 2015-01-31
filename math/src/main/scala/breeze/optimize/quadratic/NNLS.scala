@@ -20,16 +20,13 @@ package breeze.optimize.quadratic
 import breeze.linalg.DenseVector
 import breeze.linalg.DenseMatrix
 import breeze.linalg.axpy
-import breeze.linalg.operators.OpMulMatrix
 import breeze.stats.distributions.Rand
 /**
  * Object used to solve nonnegative least squares problems using a modified
  * projected gradient method.
  */
 
-class NNLS(val maxIters: Int = -1)
-          (implicit mult: OpMulMatrix.Impl2[DenseMatrix[Double], DenseVector[Double], DenseVector[Double]]) {
-
+class NNLS(val maxIters: Int = -1) {
   type BDM = DenseMatrix[Double]
   type BDV = DenseVector[Double]
 
@@ -39,7 +36,7 @@ class NNLS(val maxIters: Int = -1)
   def steplen(ata: BDM, dir: BDV, res: BDV,
               tmp: BDV): Double = {
     val top = dir.dot(res)
-    tmp := mult(ata, dir)
+    tmp := ata*dir
     // Push the denominator upward very slightly to avoid infinities and silliness
     top / (tmp.dot(dir) + 1e-20)
   }
@@ -94,9 +91,9 @@ class NNLS(val maxIters: Int = -1)
 
     while (iterno < iterMax) {
       // find the residual
-      res := mult(ata, x)
-      axpy(-1.0, atb, res)
-      grad := res      
+      res := ata*x
+      res -= atb
+      grad := res
       
       // project the gradient
       i = 0

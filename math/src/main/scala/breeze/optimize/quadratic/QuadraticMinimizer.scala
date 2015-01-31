@@ -102,7 +102,6 @@ class QuadraticMinimizer(nGram: Int,
 
   val ABSTOL = 1e-8
   val RELTOL = 1e-4
-  val EPS = 1e-4
 
   /* L1 regularization */
   var lambda: Double = 1.0
@@ -139,15 +138,6 @@ class QuadraticMinimizer(nGram: Int,
       throw new IllegalArgumentException("QuadraticMinimizer column out of bounds for gram matrix update")
     }
     wsH.update(row, col, value)
-  }
-  
-  def project(x: DenseVector[Double]) = {
-    var i = 0
-    while (i < x.length) {
-      if (abs(x.data(i)) <= EPS) x.data(i) = 0.0
-      i = i + 1
-    }
-    x
   }
 
   def iterations(q: DenseVector[Double]): State = {

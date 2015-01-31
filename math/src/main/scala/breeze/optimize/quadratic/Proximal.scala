@@ -27,10 +27,7 @@ import scala.math.sqrt
 import scala.math.abs
 import scala.Double.NegativeInfinity
 import scala.Double.PositiveInfinity
-import breeze.linalg.DenseMatrix
-import breeze.linalg.DenseVector
-import breeze.linalg.norm
-import breeze.linalg.pinv
+import breeze.linalg._
 
 trait Proximal {
   def prox(x: DenseVector[Double], rho: Double)
@@ -173,7 +170,7 @@ case class ProximalHuber() extends Proximal {
     val tol = 1e-8
 
     var g: Double = 0.0
-    var x = max(l, min(x0, u));
+    var x = max(l, min(x0, u))
 
     var lIter = l
     var uIter = u
@@ -196,6 +193,8 @@ case class ProximalHuber() extends Proximal {
   }
 
   def proxSeparable(x: DenseVector[Double], rho: Double, oracle: Double => Double, l: Double, u: Double) {
+    x.map(proxScalar(_, rho, oracle, l, u, 0))
+
     var i = 0
     while (i < x.length) {
       x.update(i, proxScalar(x(i), rho, oracle, l, u, 0))
