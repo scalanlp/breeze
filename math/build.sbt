@@ -32,8 +32,8 @@ pomExtra := (
     </license>
   </licenses>
   <scm>
-    <url>git@github.com:dlwh/breeze.git</url>
-    <connection>scm:git:git@github.com:dlwh/breeze.git</connection>
+    <url>git@github.com:scalanlp/breeze.git</url>
+    <connection>scm:git:git@github.com:scalanlp/breeze.git</connection>
   </scm>
   <developers>
     <developer>
@@ -45,12 +45,11 @@ pomExtra := (
 
 scalacOptions ++= Seq("-deprecation","-language:_")//, "-no-specialization")
 
-// scalacOptions in (Compile, console) += "-Xlog-implicits"
-
 javacOptions ++= Seq("-target", "1.6", "-source","1.6")
 
+addCompilerPlugin("org.scalamacros" %% "paradise" % "2.0.1" cross CrossVersion.full)
+
 libraryDependencies ++= Seq(
-  "org.scalanlp" %% "breeze-macros" % "0.3.1" % "compile",
   "com.github.fommil.netlib" % "core" % "1.1.2",
   "net.sourceforge.f2j" % "arpack_combined_all" % "0.1",
   "net.sf.opencsv" % "opencsv" % "2.3",
