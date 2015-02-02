@@ -115,7 +115,7 @@ class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
   })
   */
 
-  def timeIntMatrixMultiply(reps: Int) = runWith(reps, randomIntMatrix(500, 500)) { dm =>
+  def timeIntMatrixMultiply(reps: Int) = runWith(reps, randomIntMatrix(1000, 1000)) { dm =>
     dm * dm
   }
 }

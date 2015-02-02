@@ -785,9 +785,9 @@ trait DenseMatrixMultOps extends DenseMatrixOps
 
 
   new OpMulMatrix.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]] {
-    val blockSizeRow = 64
-    val blockSizeInner = 64
-    val blockSizeCol = 64
+    val blockSizeRow = 256
+    val blockSizeInner = 256
+    val blockSizeCol = 256
 
     def multBlock[T](M: Int, N: Int, K: Int,
                      aTrans: Array[T], b: Array[T],
@@ -804,21 +804,9 @@ trait DenseMatrixMultOps extends DenseMatrixOps
         rd(rOff + i + k * res.majorStride) = sum
       }
 
-
-
     }
 
     override def apply(a: DenseMatrix[T], b: DenseMatrix[T]): DenseMatrix[T] = {
-      // Martin Senne:
-      // Accessing consequent areas in memory in the innermost loop ( a(i,l), a(i+1,l) ) is faster
-      // than accessing ( b(c, j), b(c, j+1) as data layout in memory is column-like (Fortran), that is a(0,0), a(1,0), a(2,0), ...
-      // Thus (adapted from dgemm in BLAS):
-      //   - exchanged loop order
-      //   - so to access consequent entries in the innermost loop and to hopefully avoid cache-misses
-      // Improved performance: DenseMatrix[Int] ( 1000 x 1000 now runs in 12sec than in 16sec )
-      //    as comparison      DenseMatrix[Double] (1000 x 1000) takes ~1sec via BLAS.dgemm (native (0.8sec) and f2j (1sec) )
-      // so there seems room for improvement ;)
-
       val res: DenseMatrix[T] = DenseMatrix.zeros[T](a.rows, b.cols)
       require(a.cols == b.rows)
 
