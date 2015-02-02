@@ -1,8 +1,25 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"), you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package breeze.optimize.quadratic
 
-import breeze.linalg.{norm, pinv, DenseVector, DenseMatrix}
-import breeze.optimize.{LBFGS, DiffFunction}
+import breeze.linalg.{norm, DenseVector}
 import breeze.optimize.quadratic.Constraint._
+import breeze.optimize.{LBFGS, DiffFunction}
 import breeze.stats.distributions.Rand
 import scala.math._
 
@@ -13,17 +30,17 @@ import scala.math._
  *
  * It solves the problem that has the following structure
  * minimize f(x) + g(x)
- * s.t ax = b
  *
- *
- * We are not yet decided on the exact strategy to handle ax = b. Needs further experimentation
  *
  * g(x) represents the following constraints
  *
  * 1. x >= 0
  * 2. lb <= x <= ub
  * 3. L1(x)
- * 4. Generic regularization on x
+ * 4. Aeq*x = beq
+ * 5. aeq'x = beq
+ * 6. 1'x = 1, x >= 0 which is called ProbabilitySimplex from the following reference
+ *    Proximal Algorithms by Boyd et al.
  *
  * f(x) can be either a convex or a non-linear function.
  *
@@ -32,38 +49,39 @@ import scala.math._
  * For non-linear functions we will experiment with B matrix with 1 column to mimic a CG solver
  */
 
-class NonlinearMinimizer(ndim: Int,
-                         lb: Option[DenseVector[Double]] = None, ub: Option[DenseVector[Double]],
-                         Aeq: Option[DenseMatrix[Double]] = None, beq: Option[DenseVector[Double]],
-                         maxIter: Int = -1, m: Int = 10, tolerance: Double=1E-9) {
+class NonlinearMinimizer(ndim: Int, maxIters: Int = -1, m: Int = 10, tolerance: Double=1E-9) {
+  type BDV = DenseVector[Double]
+
+  case class State(x: BDV, u: BDV, z: BDV, iterations: Int, converged: Boolean)
+
+  /*
+    Proximal modifications to Primal algorithm
+    AdmmObj(x, u, z) = f(x) + u'(x-z) + rho/2*||x - z||^{2}
+    dAdmmObj/dx = df/dx + u' + rho(x - z)
+  */
+  case class ProximalPrimal(primal: DiffFunction[DenseVector[Double]],
+                            u: BDV, z: BDV,
+                            rho: Double) extends DiffFunction[DenseVector[Double]] {
+    override def calculate(x: DenseVector[Double]) = {
+      val (f, g) = primal.calculate(x)
+      val proxObj = f + u.dot(x - z) + 0.5 * rho * norm(x - z, 2)
+      val proxGrad = g + u + (x - z):*rho
+      (proxObj, proxGrad)
+    }
+  }
+
   val alpha: Double = 1.0
   val rho: Double = 1.0
 
-  var solveTime: Long = 0
-  var iterations: Long = 0
-
   val ABSTOL = 1e-8
   val RELTOL = 1e-4
-  val EPS = 1e-4
 
-  val z = DenseVector.zeros[Double](ndim)
-  val u = DenseVector.zeros[Double](ndim)
-
-  val xHat = DenseVector.zeros[Double](ndim)
-  val zOld = DenseVector.zeros[Double](ndim)
-
-  val residual = DenseVector.zeros[Double](ndim)
-  val s = DenseVector.zeros[Double](ndim)
-
-  var constraint: Constraint = SMOOTH
-
-  /* If Aeq exists and rows > 1, cache the pseudo-inverse to be used later */
-  val invAeq = if (Aeq != None && Aeq.get.rows > 1) Some(pinv(Aeq.get)) else None
+  var proximal: Proximal = null
 
   //TO DO : This can take a proximal function as input
   //TO DO : alpha needs to be scaled based on Nesterov's acceleration
-  def setProximal(constraint: Constraint): NonlinearMinimizer = {
-    this.constraint = constraint
+  def setProximal(proximal: Proximal): NonlinearMinimizer = {
+    this.proximal = proximal
     this
   }
 
@@ -77,40 +95,29 @@ class NonlinearMinimizer(ndim: Int,
 
   val innerIters = 10
 
-  def solve(primal: DiffFunction[DenseVector[Double]]) : (DenseVector[Double], Boolean) = {
+  def iterations(primal: DiffFunction[DenseVector[Double]]) : State = {
+
+    val iters = if (proximal == null) maxIters else innerIters
+    val lbfgs = new LBFGS[DenseVector[Double]](iters, m, tolerance)
     val init = DenseVector.rand[Double](ndim, Rand.gaussian(0, 1))
 
-    val iters = if (constraint == SMOOTH) maxIter else innerIters
+    val z = DenseVector.zeros[Double](ndim)
+    val u = DenseVector.zeros[Double](ndim)
 
-    val lbfgs = new LBFGS[DenseVector[Double]](iters, m, tolerance)
+    if (proximal == null) return State(lbfgs.minimize(primal, init), u, z, 0, true)
 
-    /* Primal modification
-    ADMM-Objective = f(x) + u'(x-z) + rho/2*||x - z||^{2}
-     */
-    val modifiedPrimal = new DiffFunction[DenseVector[Double]]  {
-          def calculate(x: DenseVector[Double]) = {
-            val (f, g) = primal.calculate(x)
-            val modifiedObj = f // + f-blah
-            val modifiedGrad = g // + g-blah
-            (modifiedObj, modifiedGrad)
-      }
-    }
+    val proxPrimal = ProximalPrimal(primal, u, z, rho)
 
-    z := 0.0
-    u := 0.0
+    val xHat = DenseVector.zeros[Double](ndim)
+    val zOld = DenseVector.zeros[Double](ndim)
 
-    residual := 0.0
-    s := 0.0
+    val residual = DenseVector.zeros[Double](ndim)
+    val s = DenseVector.zeros[Double](ndim)
 
     var k = 0
 
-    if (constraint == SMOOTH) return (lbfgs.minimize(primal, init), true)
-
-    while(k < maxIter) {
-      //Try lbfgs.minimize or lbfgsb.minimize
-      //Currently breeze does not have support for lbfgsb, for positive/bounds constraint try ProjectedQuasiNewton solver
-      val result = lbfgs.minimize(modifiedPrimal, init)
-
+    while(k < maxIters) {
+      val result = lbfgs.minimize(proxPrimal, init)
       //z-update with relaxation
 
       //zold = (1-alpha)*z
@@ -130,31 +137,7 @@ class NonlinearMinimizer(ndim: Int,
       z += u
 
       //Apply proximal operator
-
-      //Pick the correct proximal operator based on options
-      //We will test the following
-
-      //1. projectPos
-      //2. projectBounds
-      //3. projectEquality/projectHyperPlane based on the structure of Aeq
-      //4. proxL1
-      //Other options not tried yet
-      //5. proxHuber
-      constraint match {
-        case POSITIVE => Proximal.projectPos(z.data)
-        case BOUNDS => {
-          if (lb == None && ub == None)
-            throw new IllegalArgumentException("NonlinearMinimizer proximal operator on box needs lower and upper bounds")
-          Proximal.projectBox(z.data, lb.get.data, ub.get.data)
-        }
-        case EQUALITY => {
-          if (Aeq == None) throw new IllegalArgumentException("NonlinearMinimizer proximal operator on equality needs Aeq")
-          if (beq == None) throw new IllegalArgumentException("NonlinearMinimizer proximal operator on equality needs beq")
-          if (Aeq.get.rows > 1) Proximal.projectEquality(z, Aeq.get, invAeq.get, beq.get)
-          else Proximal.projectHyperPlane(z, Aeq.get.toDenseVector, beq.get.data(0))
-        }
-        case SPARSE => Proximal.shrinkage(z.data, lambda / rho)
-      }
+      proximal.prox(z, lambda/rho)
 
       //z has proximal(x_hat)
 
@@ -186,12 +169,40 @@ class NonlinearMinimizer(ndim: Int,
       val epsDual = sqrt(ndim) * ABSTOL + RELTOL * norm(s, 2)
 
       if (residualNorm < epsPrimal && sNorm < epsDual) {
-        iterations += k
-        return (result, true)
+        State(result, u, z, k, true)
       }
       k += 1
       init := result
     }
-    (init, false)
+    State(init, u, z, maxIters, false)
+  }
+
+  def minimize(primal: DiffFunction[DenseVector[Double]]) : DenseVector[Double] = {
+    iterations(primal).x
+  }
+}
+
+object NonlinearMinimizer {
+  def apply(ndim: Int, constraint: Constraint, lambda: Double): NonlinearMinimizer = {
+    val minimizer = new NonlinearMinimizer(ndim)
+    constraint match {
+      case POSITIVE => minimizer.setProximal(ProjectPos())
+      case BOUNDS => {
+        val lb = DenseVector.zeros[Double](ndim)
+        val ub = DenseVector.ones[Double](ndim)
+        minimizer.setProximal(ProjectBox(lb, ub))
+      }
+      case EQUALITY => {
+        val aeq = DenseVector.ones[Double](ndim)
+        val beq = 1.0
+        minimizer.setProximal(ProjectHyperPlane(aeq, beq))
+      }
+      case SPARSE => minimizer.setProximal(ProximalL1())
+      //TO DO: ProximalSimplex : for PLSA
+    }
+  }
+
+  def main(args: Array[String]) {
+    ???
   }
 }

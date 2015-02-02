@@ -21,10 +21,9 @@ import breeze.linalg.operators.OpMulMatrix
 import breeze.math.MutableInnerProductModule
 import breeze.util.SerializableLogging
 
-
 /**
  * Port of LBFGS to Scala.
- * 
+ *
  * Special note for LBFGS:
  *  If you use it in published work, you must cite one of:
  *     * J. Nocedal. Updating  Quasi-Newton  Matrices  with  Limited  Storage
@@ -81,6 +80,29 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
     alpha
   }
 
+  /**
+   * Get the minimum approximate eigen value of the quadratic approximation of the convex function
+   * specified through DiffFunction through power iteration on ApproximateInverseHessian,
+   * get the largest eigenvalue e and return 1/e
+   *
+   * @param state the current state of the optimization
+   * @return maximum eigen value
+   */
+  protected def minEigen(state: State) : Double = {
+    ???
+  }
+
+  /**
+   * Get the maximum approximate eigen value of the quadratic approximation convex function specified
+   * through DiffFunction by doing a inverse power iteration using the CompactHessian representation
+   * generated from ApproximateInverseHessian, get the largest eigenvalue e
+   *
+   * @param state the current state of the optimization
+   * @return minimum eigen value
+   */
+  protected def maxEigen(state: State) : Double = {
+    ???
+  }
 }
 
 object LBFGS {

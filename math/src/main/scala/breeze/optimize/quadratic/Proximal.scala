@@ -112,6 +112,13 @@ case class ProjectHyperPlane(a: DenseVector[Double], b: Double) extends Proximal
 }
 
 case class ProximalL1() extends Proximal {
+  var lambda = 1.0
+
+  def setLambda(lambda: Double) = {
+    this.lambda = lambda
+    this
+  }
+
   def prox(x: DenseVector[Double], rho: Double) = {
     var i = 0
     while (i < x.length) {

@@ -361,7 +361,7 @@ object QuadraticMinimizer {
     
     val n = A.rows
     val nrhs = X.cols
-    val info: intW = new intW(0)
+    var info: intW = new intW(0)
 
     lapack.dgetrs("No transpose", n, nrhs, A.data, 0, A.rows, pivot, 0, X.data, 0, X.rows, info)
 
@@ -378,7 +378,7 @@ object QuadraticMinimizer {
     
     val n = A.rows
     val nrhs = X.cols
-    val info: intW = new intW(0)
+    var info: intW = new intW(0)
 
     lapack.dpotrs("L", n, nrhs, A.data, 0, A.rows, X.data, 0, X.rows, info)
 
