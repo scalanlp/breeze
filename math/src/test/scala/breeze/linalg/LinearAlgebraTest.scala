@@ -211,6 +211,63 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
   }
 
 
+  test("qr reduced A[m, n], m < n") {
+    val A = DenseMatrix((1.0, 1.0, 1.0, 1.0), (4.0, 2.0, 1.0, 1.0), (16.0, 4.0, 1.0, 1.0))
+    val QR(_Q, _R) = qr.reduced(A)
+
+    assert((_Q.rows, _Q.cols) == (A.rows, min(A.rows, A.cols)))
+    assert((_R.rows, _R.cols) == (min(A.rows, A.cols), A.cols))
+
+    assert( trace(_Q.t * _Q).closeTo(min(A.rows, A.cols)) )
+    for(i <- 0 until _R.rows; j <- 0 until i) {
+      assert(_R(i,j) === 0.0)
+    }
+
+    val reA: DenseMatrix[Double] = _Q * _R
+    matricesNearlyEqual(reA, A)
+  }
+
+  test("qr reduced on square matrix") {
+    val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
+    val QR(_Q, _R) = qr.reduced(A)
+
+    assert((_Q.rows, _Q.cols) == (A.rows, min(A.rows, A.cols)))
+    assert((_R.rows, _R.cols) == (min(A.rows, A.cols), A.cols))
+
+    assert( trace(_Q.t * _Q).closeTo(min(A.rows, A.cols)) )
+    for(i <- 0 until _R.rows; j <- 0 until i) {
+      assert(_R(i,j) === 0.0)
+    }
+
+    val reA: DenseMatrix[Double] = _Q * _R
+    matricesNearlyEqual(reA, A)
+  }
+
+  test("qr reduced A[m, n], m > n") {
+    val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0), (32.0, 8.0, 1.0))
+    val QR(_Q, _R) = qr.reduced(A)
+
+    assert((_Q.rows, _Q.cols) == (A.rows, min(A.rows, A.cols)))
+    assert((_R.rows, _R.cols) == (min(A.rows, A.cols), A.cols))
+
+    assert( trace(_Q.t * _Q).closeTo(min(A.rows, A.cols)) )
+    for(i <- 0 until _R.rows; j <- 0 until i) {
+      assert(_R(i,j) === 0.0)
+    }
+
+    val reA: DenseMatrix[Double] = _Q * _R
+    matricesNearlyEqual(reA, A)
+  }
+
+  test("qr reduced just[QR]") {
+    val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
+    val QR(_Q, _R) = qr.reduced(A)
+    val _Q2 = qr.reduced.justQ(A)
+    assert (_Q2 === _Q)
+    assert (_R === qr.reduced.justR(A))
+  }
+
+
   test("simple eig test") {
     val Eig(w, _, v) = eig(diag(DenseVector(1.0, 2.0, 3.0)))
     assert(w === DenseVector(1.0, 2.0, 3.0))
