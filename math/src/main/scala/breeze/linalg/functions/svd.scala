@@ -25,6 +25,7 @@ object svd extends UFunc {
 
 
   type DenseSVD = SVD[DenseMatrix[Double], DenseVector[Double]]
+  type SDenseSVD = SVD[DenseMatrix[Float], DenseVector[Float]]
 
 
   // implementations
@@ -50,6 +51,43 @@ object svd extends UFunc {
       val cm = copy(mat)
 
       lapack.dgesdd(
+        "A", m, n,
+        cm.data, scala.math.max(1,m),
+        S.data, U.data, scala.math.max(1,m),
+        Vt.data, scala.math.max(1,n),
+        work,work.length,iwork, info)
+
+      if (info.`val` > 0)
+        throw new NotConvergedException(NotConvergedException.Iterations)
+      else if (info.`val` < 0)
+        throw new IllegalArgumentException()
+
+      SVD(U,S,Vt)
+    }
+  }
+
+
+  implicit object Svd_DM_Impl_Float extends Impl[DenseMatrix[Float], SDenseSVD] {
+    def apply(mat: DenseMatrix[Float]): SDenseSVD = {
+      requireNonEmptyMatrix(mat)
+
+      val m = mat.rows
+      val n = mat.cols
+      val S = DenseVector.zeros[Float](m min n)
+      val U = DenseMatrix.zeros[Float](m,m)
+      val Vt = DenseMatrix.zeros[Float](n,n)
+      val iwork = new Array[Int](8 * (m min n) )
+      val workSize = ( 3
+        * scala.math.min(m, n)
+        * scala.math.min(m, n)
+        + scala.math.max(scala.math.max(m, n), 4 * scala.math.min(m, n)
+        * scala.math.min(m, n) + 4 * scala.math.min(m, n))
+        )
+      val work = new Array[Float](workSize)
+      val info = new intW(0)
+      val cm = copy(mat)
+
+      lapack.sgesdd(
         "A", m, n,
         cm.data, scala.math.max(1,m),
         S.data, U.data, scala.math.max(1,m),
