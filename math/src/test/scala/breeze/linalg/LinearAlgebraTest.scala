@@ -135,6 +135,14 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     matricesNearlyEqual(pinv(X) * X, I)
   }
 
+  test("pinv conditioning: #304") {
+    val m = DenseMatrix((0d,3d,6d), (0d,4d,7d), (0d,5d,9d))
+    val mi = pinv(m)
+    val eye: DenseMatrix[Double] = DenseMatrix.eye[Double](3)
+    eye(0, 0) = 0.0
+    matricesNearlyEqual(mi * m, eye)
+  }
+
   test("cross") {
     // specific example; with prime elements
     val (v1, v2, r) = (DenseVector(13, 3, 7), DenseVector(5, 11, 17), DenseVector(-26, -186, 128))

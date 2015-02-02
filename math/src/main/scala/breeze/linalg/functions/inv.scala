@@ -1,5 +1,6 @@
 package breeze.linalg
 
+import breeze.macros.expand
 import org.netlib.util.intW
 import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 import breeze.generic.UFunc
@@ -51,7 +52,30 @@ object inv extends UFunc {
  *        A^T AX = A^T B
  *     =>      X = (A^T A)^(-1) A^T B
  */
-object pinv extends UFunc {
+object pinv extends UFunc with pinvLowPrio {
+
+  @expand
+  @expand.valify
+  implicit def pinvFromSVD[@expand.args(Float, Double) T]:Impl[DenseMatrix[T], DenseMatrix[T]] = {
+    new Impl[DenseMatrix[T], DenseMatrix[T]] {
+      // http://en.wikipedia.org/wiki/Singular_value_decomposition#Applications_of_the_SVD
+      override def apply(v: DenseMatrix[T]): DenseMatrix[T] = {
+        val svd.SVD(s, svs, d) = svd(v)
+        val vi = svs.map { v => if(v == 0.0) 0.0f else 1 / v}
+
+        val svDiag = DenseMatrix.tabulate[T](s.cols, d.rows) { (i,j) =>
+          if(i == j && i < math.min(s.cols, d.rows)) vi(i)
+          else 0.0f
+        }
+        val res = s * svDiag * d
+        res.t
+      }
+    }
+  }
+
+}
+
+trait pinvLowPrio { this: pinv.type =>
   /**
    * pinv for anything that can be transposed, multiplied with that transposed, and then solved.
    * This signature looks intense, but take it one step at a time.
