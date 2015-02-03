@@ -14,13 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package breeze.optimize.quadratic
+package breeze.optimize.linear
 
-import breeze.optimize.OptimizeTestBase
-import breeze.linalg.DenseMatrix
-import breeze.linalg.DenseVector
-import breeze.linalg.norm
+import breeze.linalg.{DenseMatrix, DenseVector, norm}
 import breeze.numerics._
+import breeze.optimize.OptimizeTestBase
 
 class NNLSTest extends OptimizeTestBase {
   /** Generate an NNLS problem whose optimal solution is the all-ones vector. */

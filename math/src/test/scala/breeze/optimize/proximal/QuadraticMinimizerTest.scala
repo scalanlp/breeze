@@ -1,16 +1,14 @@
-package breeze.optimize.quadratic
+package breeze.optimize.proximal
 
+import breeze.optimize.linear.NNLS
 import org.scalatest._
 import org.scalatest.junit._
 import org.junit.runner.RunWith
 import breeze.linalg.DenseVector
-import breeze.optimize.OptimizeTestBase
-import breeze.optimize.LBFGS
-import breeze.optimize.OWLQN
-import breeze.optimize.DiffFunction
+import breeze.optimize._
 import breeze.linalg.norm
 import breeze.linalg.DenseMatrix
-import breeze.optimize.quadratic.Constraint._
+import breeze.optimize.proximal.Constraint._
 import breeze.linalg.sum
 import breeze.linalg.cholesky
 import breeze.linalg.LU
@@ -118,7 +116,7 @@ class QuadraticMinimizerTest extends OptimizeTestBase with Matchers {
     val H = DenseMatrix.eye[Double](problemSize) :* 2.0
     val f = DenseVector.ones[Double](problemSize) :* (-6.0)
 
-    val qpSolverL1 = new QuadraticMinimizer(problemSize).setProximal(SPARSE)
+    val qpSolverL1 = QuadraticMinimizer(problemSize, SPARSE, 1.0)
 
     val l1Result = qpSolverL1.minimize(H, f)
 
@@ -144,7 +142,7 @@ class QuadraticMinimizerTest extends OptimizeTestBase with Matchers {
     val qpSolverPos = QuadraticMinimizer(n, POSITIVE, 0.0)
     
     atb *= -1.0
-    val posResult = qpSolverPos.iterations(ata, atb)
+    val posResult = qpSolverPos.minimizeAndReturnState(ata, atb)
     assert(posResult.converged)
     assert(norm(posResult.x - goodx, 2) < 1E-3)
   }
@@ -165,8 +163,8 @@ class QuadraticMinimizerTest extends OptimizeTestBase with Matchers {
     val lb = DenseVector.zeros[Double](5)
     val ub = DenseVector.ones[Double](5) :* 0.25
 
-    val qpSolverBounds = new QuadraticMinimizer(5).setProximal(BOUNDS,Some(lb), Some(ub))
-    val boundsResult = qpSolverBounds.iterations(ata, atb :* (-1.0))
+    val qpSolverBounds = new QuadraticMinimizer(5, ProjectBox(lb, ub))
+    val boundsResult = qpSolverBounds.minimizeAndReturnState(ata, atb :* (-1.0))
     
     assert(boundsResult.converged)
     assert(norm(boundsResult.x - goodBounds) < 1E-4)
@@ -177,14 +175,8 @@ class QuadraticMinimizerTest extends OptimizeTestBase with Matchers {
     val fml = DenseVector(-1219.296604, -1126.029219, -1202.257728, -1022.064083, -1047.414836, -1155.507387, -1169.502847, -1091.655366, -1063.832607, -1015.829142, -1075.864072, -1101.427162, -1058.907539, -1115.171116, -1205.015211, -1090.627084, -1143.206126, -1140.107801, -1100.285642, -1198.992795, -1246.276120, -1159.678276, -1194.177391, -1056.458015, -1058.791892)
     val ml = 25
 
-    val Aeq = DenseMatrix.ones[Double](1, ml)
-    val beq = DenseVector.ones[Double](1)
-    val lbeq = DenseVector.zeros[Double](ml)
-    val ubeq = DenseVector.ones[Double](ml)
-    val directQpMl = new QuadraticMinimizer(ml,Some(Aeq), Some(beq))
-    directQpMl.setProximal(BOUNDS, Some(lbeq), Some(ubeq))
-
-    val directQpResult = directQpMl.iterations(Hml, fml)
+    val directQpMl = QuadraticMinimizer(ml, EQUALITY, 0.0)
+    val directQpResult = directQpMl.minimizeAndReturnState(Hml, fml)
 
     val golden = DenseVector(0.3131862265452959, 0.0, 0.01129486116330884, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.060642310566736704, 0.0, 0.0, 0.0, 0.0, 0.0, 0.6151756449091074, 0.0, 0.0, 0.0, 0.0)
     
@@ -199,7 +191,7 @@ class QuadraticMinimizerTest extends OptimizeTestBase with Matchers {
 
     val qpSolverMlL1 = QuadraticMinimizer(25, SPARSE, 2.0)
 
-    val qpMlL1Result = qpSolverMlL1.iterations(Hl1, fl1)
+    val qpMlL1Result = qpSolverMlL1.minimizeAndReturnState(Hl1, fl1)
 
     val octaveL1 = DenseVector(0.18611, 0.00000, 0.06317, -0.10417, 0.11262,
       -0.20495, 0.52668, 0.32790, 0.19421, 0.72180,
@@ -217,7 +209,7 @@ class QuadraticMinimizerTest extends OptimizeTestBase with Matchers {
     val q1 = DenseVector(-1880.240029, -1920.949941, -2030.476172, -1956.642164, -2021.502985, -2090.503157, -1965.934820, -2072.855628, -2098.075034, -2035.059185, -1999.005923, -2121.515181, -1944.759586, -2035.397706, -1939.872057, -1888.635008, -1986.031605, -1973.738457, -2024.468051, -2003.765736)
 
     val qpIters = QuadraticMinimizer(20, POSITIVE, 0.0)
-    val qpItersResult = qpIters.iterations(P1, q1)
+    val qpItersResult = qpIters.minimizeAndReturnState(P1, q1)
 
     val nnls = new NNLS()
     val nnlsResult = nnls.minimize(P1, q1 :* (-1.0))
@@ -230,7 +222,7 @@ class QuadraticMinimizerTest extends OptimizeTestBase with Matchers {
     val q3 = DenseVector(-3.640583, -5.563638, -7.040787, -7.387618, -6.410455, -6.452543, -5.698284, -2.604581, -6.184568, -8.450254, -7.746985, -6.173699, -6.072464, -5.954310, -2.867163, -5.751653, -3.362224, -8.631145, -8.238493, -4.198840, -7.653769, -5.764195, -6.387377, -8.917469, -9.348541)
 
     val nnlsResult2 = nnls.minimize(P2, q2 :* (-1.0))
-    val posResult2 = qpIters.iterations(P2, q2)
+    val posResult2 = qpIters.minimizeAndReturnState(P2, q2)
     
     assert(posResult2.converged)
     assert(norm(posResult2.x - nnlsResult2, 2) < 1e-4)
@@ -239,7 +231,7 @@ class QuadraticMinimizerTest extends OptimizeTestBase with Matchers {
     val qpIters2 = QuadraticMinimizer(25, POSITIVE, 0.0)
     val nnlsResult3 = nnls2.minimize(P3, q3 :* (-1.0))
     
-    val posResult3 = qpIters2.iterations(P3, q3)
+    val posResult3 = qpIters2.minimizeAndReturnState(P3, q3)
     
     assert(posResult3.converged)
     assert(norm(posResult3.x - nnlsResult3, 2) <= 1e-2)
@@ -259,18 +251,19 @@ class QuadraticMinimizerTest extends OptimizeTestBase with Matchers {
     val Psparse = new DenseMatrix(20, 20, data)
     val qsparse = DenseVector(-2.631990, -1.894166, -1.225159, -1.254382, -0.816634, -1.018898, -1.763319, -0.929908, -3.243997, -0.969543, -3.519254, -1.402682, -0.451124, -3.055922, -2.747532, -2.151673, -2.272190, -3.494880, -2.813748, -0.852818)
 
-    val qpSparse = QuadraticMinimizer(20, SPARSE, 0.06435)
+    val proxL1 = ProximalL1()
+    val qpSparse = new QuadraticMinimizer(20, proxL1.setLambda(0.06435))
     val qpSparseGold = qpSparse.minimize(Psparse, qsparse)
-    
-    qpSparse.setProximal(POSITIVE).setLambda(0.0)
+
+    proxL1.setLambda(0.0)
 
     val P1 = new DenseMatrix(20, 20, Array(539.101887, 494.598042, 505.700671, 505.846716, 504.700928, 516.629473, 507.958246, 514.096818, 514.801371, 505.735357, 507.322795, 522.547578, 498.320793, 502.829895, 505.847128, 488.934012, 516.116942, 501.906569, 505.627629, 496.409513, 494.598042, 565.723334, 513.239749, 519.155649, 514.070934, 524.154020, 521.694985, 523.512877, 521.122745, 513.862711, 518.653059, 530.426712, 511.054588, 510.096410, 521.373582, 503.132142, 531.736861, 514.161101, 515.005997, 500.799198, 505.700671, 513.239749, 602.920633, 524.780488, 547.978722, 558.807137, 526.999189, 553.273432, 552.657103, 547.690555, 537.912646, 563.616990, 527.634170, 541.947698, 524.060188, 507.650395, 534.403391, 534.406246, 546.625588, 535.221534, 505.846716, 519.155649, 524.780488, 585.686194, 522.548624, 537.124362, 534.911663, 530.505003, 533.364761, 525.544862, 530.149606, 543.063850, 518.884670, 517.707324, 531.252004, 511.635097, 541.217141, 522.706817, 526.063019, 513.574796, 504.700928, 514.070934, 547.978722, 522.548624, 602.711620, 557.824564, 523.454584, 556.453086, 551.975932, 548.308951, 537.908414, 562.811202, 530.685949, 544.687533, 523.961961, 507.966023, 534.868428, 535.823631, 546.491009, 534.209994, 516.629473, 524.154020, 558.807137, 537.124362, 557.824564, 624.863357, 539.305550, 566.795282, 566.357133, 560.044835, 550.021868, 578.832952, 538.509515, 554.979692, 535.459614, 518.812719, 546.530562, 546.168894, 558.181118, 548.792405, 507.958246, 521.694985, 526.999189, 534.911663, 523.454584, 539.305550, 591.413305, 532.696713, 536.852122, 527.232598, 531.751544, 545.578374, 520.832790, 521.212336, 533.128446, 513.908219, 544.084087, 525.037440, 527.089172, 515.549361, 514.096818, 523.512877, 553.273432, 530.505003, 556.453086, 566.795282, 532.696713, 621.615462, 562.996181, 554.493454, 545.658444, 574.476466, 538.757428, 555.556328, 533.365769, 517.189079, 543.997925, 544.795736, 554.632016, 544.157448, 514.801371, 521.122745, 552.657103, 533.364761, 551.975932, 566.357133, 536.852122, 562.996181, 621.891951, 552.016433, 544.239294, 573.926455, 532.639189, 553.095240, 530.294369, 516.269094, 544.643533, 537.922422, 549.757806, 545.057129, 505.735357, 513.862711, 547.690555, 525.544862, 548.308951, 560.044835, 527.232598, 554.493454, 552.016433, 603.860301, 539.638699, 564.591708, 529.636837, 543.558799, 524.759472, 506.968931, 534.506284, 537.156481, 547.911779, 536.271289, 507.322795, 518.653059, 537.912646, 530.149606, 537.908414, 550.021868, 531.751544, 545.658444, 544.239294, 539.638699, 589.023204, 554.623574, 528.460278, 532.243589, 530.559000, 512.720156, 539.864087, 531.591296, 538.972277, 527.533747, 522.547578, 530.426712, 563.616990, 543.063850, 562.811202, 578.832952, 545.578374, 574.476466, 573.926455, 564.591708, 554.623574, 638.367746, 544.269457, 561.616144, 541.245807, 524.820018, 552.498719, 552.102404, 563.397777, 554.806495, 498.320793, 511.054588, 527.634170, 518.884670, 530.685949, 538.509515, 520.832790, 538.757428, 532.639189, 529.636837, 528.460278, 544.269457, 576.086269, 524.503702, 521.427126, 503.797286, 531.685079, 525.230922, 529.783815, 520.222911, 502.829895, 510.096410, 541.947698, 517.707324, 544.687533, 554.979692, 521.212336, 555.556328, 553.095240, 543.558799, 532.243589, 561.616144, 524.503702, 597.742352, 520.329969, 504.306186, 530.688065, 531.679956, 541.233986, 531.982099, 505.847128, 521.373582, 524.060188, 531.252004, 523.961961, 535.459614, 533.128446, 533.365769, 530.294369, 524.759472, 530.559000, 541.245807, 521.427126, 520.329969, 586.613767, 513.362642, 542.438988, 524.690396, 526.354706, 511.243067, 488.934012, 503.132142, 507.650395, 511.635097, 507.966023, 518.812719, 513.908219, 517.189079, 516.269094, 506.968931, 512.720156, 524.820018, 503.797286, 504.306186, 513.362642, 550.229150, 523.966242, 506.244433, 507.769334, 495.459277, 516.116942, 531.736861, 534.403391, 541.217141, 534.868428, 546.530562, 544.084087, 543.997925, 544.643533, 534.506284, 539.864087, 552.498719, 531.685079, 530.688065, 542.438988, 523.966242, 606.957114, 533.719037, 534.295092, 522.409881, 501.906569, 514.161101, 534.406246, 522.706817, 535.823631, 546.168894, 525.037440, 544.795736, 537.922422, 537.156481, 531.591296, 552.102404, 525.230922, 531.679956, 524.690396, 506.244433, 533.719037, 583.853405, 536.033903, 522.009144, 505.627629, 515.005997, 546.625588, 526.063019, 546.491009, 558.181118, 527.089172, 554.632016, 549.757806, 547.911779, 538.972277, 563.397777, 529.783815, 541.233986, 526.354706, 507.769334, 534.295092, 536.033903, 599.942302, 535.001472, 496.409513, 500.799198, 535.221534, 513.574796, 534.209994, 548.792405, 515.549361, 544.157448, 545.057129, 536.271289, 527.533747, 554.806495, 520.222911, 531.982099, 511.243067, 495.459277, 522.409881, 522.009144, 535.001472, 593.140288))
     val q1 = DenseVector(-1880.240029, -1920.949941, -2030.476172, -1956.642164, -2021.502985, -2090.503157, -1965.934820, -2072.855628, -2098.075034, -2035.059185, -1999.005923, -2121.515181, -1944.759586, -2035.397706, -1939.872057, -1888.635008, -1986.031605, -1973.738457, -2024.468051, -2003.765736)
     
     qpSparse.minimize(P1, q1)
     
-    qpSparse.setProximal(SPARSE).setLambda(0.06435)
-    
+    proxL1.setLambda(0.06435)
+
     val qpSparseResult = qpSparse.minimize(Psparse, qsparse)
     assert(norm(qpSparseResult - qpSparseGold, 2) < 1E-8)
   }

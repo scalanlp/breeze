@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-package breeze.optimize.quadratic
+package breeze.optimize.proximal
 
-import breeze.linalg.{norm, DenseVector}
-import breeze.optimize.quadratic.Constraint._
-import breeze.optimize.{LBFGS, DiffFunction}
+import breeze.linalg.{DenseVector, norm}
+import breeze.optimize.{DiffFunction, LBFGS}
 import breeze.stats.distributions.Rand
+
 import scala.math._
 
 /**

@@ -8,6 +8,10 @@ Copyright (c) 2014 by Debasish Das (Verizon), all rights reserved.
 
 ===============================================================================
 
+QuadraticMinimizer class in package breeze.optimize.proximal is distributed with Copyright (c)
+2014, Debasish Das (Verizon), all rights reserved.
+
+===============================================================================
+
 NonlinearMinimizer class in package breeze.optimize.quadratic is distributed with Copyright (c)
 2015, Debasish Das (Verizon), all rights reserved.
-
