@@ -370,6 +370,7 @@ object QuadraticMinimizer {
             constraint: Constraint,
             lambda: Double): QuadraticMinimizer = {
     constraint match {
+      case SMOOTH => new QuadraticMinimizer(rank)
       case POSITIVE => new QuadraticMinimizer(rank, ProjectPos())
       case BOX => {
         //Direct QP with bounds
@@ -392,16 +393,26 @@ object QuadraticMinimizer {
     res
   }
 
+  case class Cost(H: DenseMatrix[Double],
+                  q: DenseVector[Double]) extends DiffFunction[DenseVector[Double]] {
+    def calculate(x: DenseVector[Double]) = {
+      (computeObjective(H, q, x), H * x + q)
+    }
+  }
+
   def optimizeWithLBFGS(init: DenseVector[Double],
                          H: DenseMatrix[Double],
                          q: DenseVector[Double]) = {
     val lbfgs = new LBFGS[DenseVector[Double]](-1, 7)
-    val f = new DiffFunction[DenseVector[Double]] {
-      def calculate(x: DenseVector[Double]) = {
-        (computeObjective(H, q, x), H * x + q)
-      }
-    }
-    lbfgs.minimize(f, init)
+    lbfgs.minimize(Cost(H, q), init)
+  }
+
+  def optimizeWithOWLQN(init: DenseVector[Double],
+                        regularizedGram: DenseMatrix[Double],
+                        q: DenseVector[Double],
+                        lambdaL1: Double) = {
+    val owlqn = new OWLQN[Int, DenseVector[Double]](-1, 7, lambdaL1, 1e-6)
+    owlqn.minimizeAndReturnState(Cost(regularizedGram, q), init)
   }
 
   def main(args: Array[String]) {
@@ -458,24 +469,13 @@ object QuadraticMinimizer {
 
     val regularizedGram = h + (DenseMatrix.eye[Double](h.rows) :* lambdaL2)
     
-    val owlqn = new OWLQN[Int, DenseVector[Double]](-1, 7, lambdaL1)
-    
-    def optimizeWithOWLQN(init: DenseVector[Double]) = {
-      val f = new DiffFunction[DenseVector[Double]] {
-        def calculate(x: DenseVector[Double]) = {
-          (computeObjective(regularizedGram, q, x), regularizedGram * x + q)
-        }
-      }
-      owlqn.minimizeAndReturnState(f, init)
-    }
-    
     val sparseQp = QuadraticMinimizer(h.rows, SPARSE, lambdaL1)
     val sparseQpStart = System.nanoTime()
     val sparseQpResult = sparseQp.minimizeAndReturnState(regularizedGram, q)
     val sparseQpTime = System.nanoTime() - sparseQpStart
 
     val startOWLQN = System.nanoTime()
-    val owlqnResult = optimizeWithOWLQN(DenseVector.rand[Double](problemSize))
+    val owlqnResult = optimizeWithOWLQN(DenseVector.rand[Double](problemSize), regularizedGram, q, lambdaL1)
     val owlqnTime = System.nanoTime() - startOWLQN
     
     println(s"||owlqn - sparseqp|| norm ${norm(owlqnResult.x - sparseQpResult.x, 2)} inf-norm ${norm(owlqnResult.x - sparseQpResult.x, inf)}")

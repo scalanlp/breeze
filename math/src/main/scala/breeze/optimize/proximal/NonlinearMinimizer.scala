@@ -17,11 +17,14 @@
 
 package breeze.optimize.proximal
 
-import breeze.linalg.{DenseVector, norm}
+import breeze.linalg.{DenseMatrix, DenseVector, norm}
+import breeze.numerics._
 import breeze.optimize.{DiffFunction, LBFGS}
 import breeze.stats.distributions.Rand
-
+import breeze.optimize.proximal.Constraint._
 import scala.math._
+import scala.math.pow
+import scala.math.sqrt
 
 /**
  * Created by debasish83 on 12/11/14.
@@ -31,7 +34,6 @@ import scala.math._
  * It solves the problem that has the following structure
  * minimize f(x) + g(x)
  *
- *
  * g(x) represents the following constraints
  *
  * 1. x >= 0
@@ -39,17 +41,18 @@ import scala.math._
  * 3. L1(x)
  * 4. Aeq*x = beq
  * 5. aeq'x = beq
- * 6. 1'x = 1, x >= 0 which is called ProbabilitySimplex from the following reference
- *    Proximal Algorithms by Boyd et al.
+ * 6. 1'x = 1, x >= 0 ProbabilitySimplex from the reference Proximal Algorithms by Boyd et al.
  *
  * f(x) can be either a convex or a non-linear function.
  *
  * For convex functions we will use B matrix with 7/10 columns
  *
- * For non-linear functions we will experiment with B matrix with 1 column to mimic a CG solver
+ * TO DO : For non-linear functions we will experiment with TRON-like Primal solver
  */
 
-class NonlinearMinimizer(ndim: Int, maxIters: Int = -1, m: Int = 10, tolerance: Double=1E-9) {
+class NonlinearMinimizer(ndim: Int,
+                         proximal: Proximal = null,
+                         maxIters: Int = -1, m: Int = 10, tolerance: Double=1E-4) {
   type BDV = DenseVector[Double]
 
   case class State(x: BDV, u: BDV, z: BDV, iterations: Int, converged: Boolean)
@@ -64,39 +67,21 @@ class NonlinearMinimizer(ndim: Int, maxIters: Int = -1, m: Int = 10, tolerance: 
                             rho: Double) extends DiffFunction[DenseVector[Double]] {
     override def calculate(x: DenseVector[Double]) = {
       val (f, g) = primal.calculate(x)
-      val proxObj = f + u.dot(x - z) + 0.5 * rho * norm(x - z, 2)
+      val proxObj = f + u.dot(x - z) + 0.5 * rho * pow(norm(x - z), 2)
       val proxGrad = g + u + (x - z):*rho
       (proxObj, proxGrad)
     }
   }
 
+  //TO DO : alpha needs to be scaled based on Nesterov's acceleration
   val alpha: Double = 1.0
-  val rho: Double = 1.0
 
   val ABSTOL = 1e-8
   val RELTOL = 1e-4
-
-  var proximal: Proximal = null
-
-  //TO DO : This can take a proximal function as input
-  //TO DO : alpha needs to be scaled based on Nesterov's acceleration
-  def setProximal(proximal: Proximal): NonlinearMinimizer = {
-    this.proximal = proximal
-    this
-  }
-
-  var lambda: Double = 1.0
-
-  /*Regularization for Elastic Net */
-  def setLambda(lambda: Double): NonlinearMinimizer = {
-    this.lambda = lambda
-    this
-  }
-
   val innerIters = 10
 
-  def iterations(primal: DiffFunction[DenseVector[Double]]) : State = {
-
+  def iterations(primal: DiffFunction[DenseVector[Double]],
+                 rho: Double = 1.0) : State = {
     val iters = if (proximal == null) maxIters else innerIters
     val lbfgs = new LBFGS[DenseVector[Double]](iters, m, tolerance)
     val init = DenseVector.rand[Double](ndim, Rand.gaussian(0, 1))
@@ -137,7 +122,7 @@ class NonlinearMinimizer(ndim: Int, maxIters: Int = -1, m: Int = 10, tolerance: 
       z += u
 
       //Apply proximal operator
-      proximal.prox(z, lambda/rho)
+      proximal.prox(z, rho)
 
       //z has proximal(x_hat)
 
@@ -184,25 +169,70 @@ class NonlinearMinimizer(ndim: Int, maxIters: Int = -1, m: Int = 10, tolerance: 
 
 object NonlinearMinimizer {
   def apply(ndim: Int, constraint: Constraint, lambda: Double): NonlinearMinimizer = {
-    val minimizer = new NonlinearMinimizer(ndim)
     constraint match {
-      case POSITIVE => minimizer.setProximal(ProjectPos())
-      case BOUNDS => {
+      case SMOOTH => new NonlinearMinimizer(ndim)
+      case POSITIVE => new NonlinearMinimizer(ndim, ProjectPos())
+      case BOX => {
         val lb = DenseVector.zeros[Double](ndim)
         val ub = DenseVector.ones[Double](ndim)
-        minimizer.setProximal(ProjectBox(lb, ub))
+        new NonlinearMinimizer(ndim, ProjectBox(lb, ub))
       }
       case EQUALITY => {
         val aeq = DenseVector.ones[Double](ndim)
-        val beq = 1.0
-        minimizer.setProximal(ProjectHyperPlane(aeq, beq))
+        new NonlinearMinimizer(ndim, ProjectHyperPlane(aeq, 1.0))
       }
-      case SPARSE => minimizer.setProximal(ProximalL1())
+      case SPARSE => new NonlinearMinimizer(ndim, ProximalL1().setLambda(lambda))
       //TO DO: ProximalSimplex : for PLSA
     }
   }
 
   def main(args: Array[String]) {
-    ???
+    if (args.length < 4) {
+      println("Usage: NonlinearMinimizer n m lambda beta")
+      println("Test NonlinearMinimizer with a quadratic function of dimenion n and m equalities with lambda beta for elasticNet")
+      sys.exit(1)
+    }
+
+    val problemSize = args(0).toInt
+    val nequalities = args(1).toInt
+
+    val lambda = args(2).toDouble
+    val beta = args(3).toDouble
+
+    println(s"Generating randomized QPs with rank ${problemSize} equalities ${nequalities}")
+    val (aeq, b, bl, bu, q, h) = QpGenerator(problemSize, nequalities)
+
+    val qpSolver = new QuadraticMinimizer(problemSize)
+    val qpStart = System.nanoTime()
+    val qpResult = qpSolver.minimize(h, q)
+    val qpTime = System.nanoTime() - qpStart
+
+    val nlStart = System.nanoTime()
+    val nlResult = NonlinearMinimizer(problemSize, SMOOTH, 0.0).minimize(QuadraticMinimizer.Cost(h, q))
+    val nlTime = System.nanoTime() - nlStart
+
+    println(s"||qp - nl|| norm ${norm(qpResult - nlResult, 2)} max-norm ${norm(qpResult - nlResult, inf)}")
+
+    val qpObj = QuadraticMinimizer.computeObjective(h, q, qpResult)
+    val nlObj = QuadraticMinimizer.computeObjective(h, q, nlResult)
+    println(s"Objective qp $qpObj nl $nlObj")
+
+    println(s"dim ${problemSize} qp ${qpTime/1e6} ms nl ${nlTime/1e6} ms")
+
+    val lambdaL1 = lambda * beta
+    val lambdaL2 = lambda * (1 - beta)
+
+    val regularizedGram = h + (DenseMatrix.eye[Double](h.rows) :* lambdaL2)
+
+    val nlSparseStart = System.nanoTime()
+    val nlSparseResult = NonlinearMinimizer(problemSize, SPARSE, lambdaL1).iterations(QuadraticMinimizer.Cost(regularizedGram,q))
+    val nlSparseTime = System.nanoTime() - nlSparseStart
+
+    val owlqnStart = System.nanoTime()
+    val owlqnResult = QuadraticMinimizer.optimizeWithOWLQN(DenseVector.rand[Double](problemSize), regularizedGram, q, lambdaL1)
+    val owlqnTime = System.nanoTime() - owlqnStart
+
+    println(s"||owlqn - sparseqp|| norm ${norm(owlqnResult.x - nlSparseResult.x, 2)} inf-norm ${norm(owlqnResult.x - nlSparseResult.x, inf)}")
+    println(s"nlSparse ${nlSparseTime/1e6} ms iters ${nlSparseResult.iterations} owlqn ${owlqnTime/1e6} ms iters ${owlqnResult.iter}")
   }
 }

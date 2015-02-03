@@ -2,7 +2,7 @@ package breeze.optimize
 
 import breeze.linalg._
 import breeze.collection.mutable.RingBuffer
-import breeze.math.{MutableInnerProductModule, MutableVectorField}
+import breeze.math.{MutableInnerProductModule}
 import breeze.util.SerializableLogging
 
 // Compact representation of an n x n Hessian, maintained via L-BFGS updates
