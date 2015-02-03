@@ -19,7 +19,7 @@
  * Library of Proximal Algorithms adapted from https://github.com/cvxgrp/proximal
  */
 
-package breeze.optimize.quadratic
+package breeze.optimize.proximal
 
 import scala.math.max
 import scala.math.min
@@ -112,10 +112,17 @@ case class ProjectHyperPlane(a: DenseVector[Double], b: Double) extends Proximal
 }
 
 case class ProximalL1() extends Proximal {
+  var lambda = 1.0
+
+  def setLambda(lambda: Double) = {
+    this.lambda = lambda
+    this
+  }
+
   def prox(x: DenseVector[Double], rho: Double) = {
     var i = 0
     while (i < x.length) {
-      x.update(i, max(0, x(i) - rho) - max(0, -x(i) - rho))
+      x.update(i, max(0, x(i) - lambda/rho) - max(0, -x(i) - lambda/rho))
       i = i + 1
     }
   }

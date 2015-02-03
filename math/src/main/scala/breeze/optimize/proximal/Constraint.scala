@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package breeze.optimize.quadratic
+package breeze.optimize.proximal
 
 object Constraint extends Enumeration {
   type Constraint = Value
-  val SMOOTH, POSITIVE, BOUNDS, SPARSE, EQUALITY = Value
+  val SMOOTH, POSITIVE, BOX, SPARSE, EQUALITY = Value
 }

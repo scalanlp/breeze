@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-package breeze.optimize.quadratic
+package breeze.optimize.linear
 
-import breeze.linalg.DenseVector
-import breeze.linalg.DenseMatrix
-import breeze.linalg.axpy
+import breeze.linalg.{DenseMatrix, DenseVector, axpy}
+import breeze.optimize.proximal.QpGenerator
 import breeze.stats.distributions.Rand
+import breeze.util.Implicits._
 /**
  * Object used to solve nonnegative least squares problems using a modified
  * projected gradient method.
@@ -30,13 +30,14 @@ class NNLS(val maxIters: Int = -1) {
   type BDM = DenseMatrix[Double]
   type BDV = DenseVector[Double]
 
-  case class State(x: BDV, grad: BDV, res: BDV, iterations: Int, converged: Boolean)
+  case class State(x: BDV, grad: BDV, dir: BDV, lastDir: BDV, res: BDV,
+                   lastNorm: Double, lastWall: Int, iter: Int, converged: Boolean)
 
   // find the optimal unconstrained step
   def steplen(ata: BDM, dir: BDV, res: BDV,
               tmp: BDV): Double = {
     val top = dir.dot(res)
-    tmp := ata*dir
+    tmp := ata * dir
     // Push the denominator upward very slightly to avoid infinities and silliness
     top / (tmp.dot(dir) + 1e-20)
   }
@@ -56,8 +57,8 @@ class NNLS(val maxIters: Int = -1) {
    * projected gradient method.  That is, find x minimising ||Ax - b||_2 given A^T A and A^T b.
    *
    * We solve the problem
-   *   min_x      1/2 x' ata x' - x'atb
-   *   subject to x >= 0
+   * min_x      1/2 x' ata x' - x'atb
+   * subject to x >= 0
    *
    * The method used is similar to one described by Polyak (B. T. Polyak, The conjugate gradient
    * method in extremal problems, Zh. Vychisl. Mat. Mat. Fiz. 9(4)(1969), pp. 94-112) for bound-
@@ -65,38 +66,36 @@ class NNLS(val maxIters: Int = -1) {
    * direction, however, while this method only uses a conjugate gradient direction if the last
    * iteration did not cause a previously-inactive constraint to become active.
    */
-  def minimize(ata: DenseMatrix[Double], atb: DenseVector[Double]) : DenseVector[Double] = {
-    iterations(ata, atb).x
-  }
-
-  def iterations(ata: DenseMatrix[Double], atb: DenseVector[Double]) : State = {
+  def initialState(ata: DenseMatrix[Double], atb: DenseVector[Double], n: Int): State = {
     require(ata.cols == ata.rows, s"NNLS:iterations gram matrix must be symmetric")
     require(ata.rows == atb.length, s"NNLS:iterations gram matrix rows must be same as length of linear term")
 
-    val n = atb.length
-
-    val tmp = DenseVector.zeros[Double](n)
     val grad = DenseVector.zeros[Double](n)
-    val x =  DenseVector.zeros[Double](n)
+    val x = DenseVector.zeros[Double](n)
     val dir = DenseVector.zeros[Double](n)
     val lastDir = DenseVector.zeros[Double](n)
     val res = DenseVector.zeros[Double](n)
+    val lastNorm = 0.0
+    val lastWall = 0
+    State(x, grad, dir, lastDir, res, lastNorm, lastWall, 0, false)
+  }
 
-    val iterMax = if (maxIters < 0) Math.max(400, 20 * n) else maxIters
+  def iterations(ata: DenseMatrix[Double],
+                 atb: DenseVector[Double]): Iterator[State] =
+    Iterator.iterate(initialState(ata, atb, atb.length)) { state =>
+      import state._
+      val n = atb.length
+      val tmp = DenseVector.zeros[Double](atb.length)
 
-    var lastNorm = 0.0
-    var iterno = 0
-    var lastWall = 0 // Last iteration when we hit a bound constraint.
-    var i = 0
+      val iterMax = if (maxIters < 0) Math.max(400, 20 * n) else maxIters
 
-    while (iterno < iterMax) {
       // find the residual
-      res := ata*x
+      res := ata * x
       res -= atb
       grad := res
-      
+
       // project the gradient
-      i = 0
+      var i = 0
       while (i < n) {
         if (grad.data(i) > 0.0 && x.data(i) == 0.0) {
           grad.data(i) = 0.0
@@ -105,13 +104,13 @@ class NNLS(val maxIters: Int = -1) {
       }
       val ngrad = grad.dot(grad)
       dir := grad
-          
+
       // use a CG direction under certain conditions
       var step = steplen(ata, grad, res, tmp)
       var ndir = 0.0
       val nx = x.dot(x)
-      
-      if (iterno > lastWall + 1) {
+
+      if (iter > lastWall + 1) {
         val alpha = ngrad / lastNorm
         axpy(alpha, lastDir, dir)
         val dstep = steplen(ata, dir, res, tmp)
@@ -128,36 +127,44 @@ class NNLS(val maxIters: Int = -1) {
       }
 
       // terminate?
-      if (stop(step, ndir, nx)) {
-        return State(x, grad, res, iterno, true)
-      }
-      
-      // don't run through the walls
-      i = 0
-      while (i < n) {
-        if (step * dir.data(i) > x.data(i)) {
-          step = x.data(i) / dir.data(i)
+      if (stop(step, ndir, nx) || iter > iterMax)
+        State(x, grad, dir, lastDir, res, lastNorm, lastWall, iter + 1, true)
+      else {
+        // don't run through the walls
+        i = 0
+        while (i < n) {
+          if (step * dir.data(i) > x.data(i)) {
+            step = x.data(i) / dir.data(i)
+          }
+          i = i + 1
         }
-        i = i + 1
-      }
 
-      // take the step
-      i = 0
-      while (i < n) {
-        if (step * dir.data(i) > x.data(i) * (1 - 1e-14)) {
-          x.data(i) = 0
-          lastWall = iterno
-        } else {
-          x.data(i) -= step * dir.data(i)
+        var nextWall = lastWall
+
+        // take the step
+        i = 0
+        while (i < n) {
+          if (step * dir.data(i) > x.data(i) * (1 - 1e-14)) {
+            x.data(i) = 0
+            nextWall = iter
+          } else {
+            x.data(i) -= step * dir.data(i)
+          }
+          i = i + 1
         }
-        i = i + 1
+        lastDir := dir
+        val nextNorm = ngrad
+        State(x, grad, dir, lastDir, res, nextNorm, nextWall, iter + 1, false)
       }
+    }.takeUpToWhere(_.converged)
 
-      iterno = iterno + 1
-      lastDir := dir
-      lastNorm = ngrad
-    }
-    State(x, grad, res, iterno, false)
+  def minimizeAndReturnState(ata: DenseMatrix[Double],
+                             atb: DenseVector[Double]): State = {
+    iterations(ata, atb).last
+  }
+
+  def minimize(ata: DenseMatrix[Double], atb: DenseVector[Double]): DenseVector[Double] = {
+    minimizeAndReturnState(ata, atb).x
   }
 }
 
