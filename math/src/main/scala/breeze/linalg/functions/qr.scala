@@ -5,9 +5,9 @@ import org.netlib.util.intW
 import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 
 
-sealed trait Mode
-case object Complete extends Mode
-case object Reduced extends Mode
+sealed trait QRMode
+case object CompleteQR extends QRMode
+case object ReducedQR extends QRMode
 
 
 /**
@@ -38,7 +38,7 @@ object qr extends UFunc {
 
   implicit object impl_DM_Double extends Impl[DenseMatrix[Double],DenseQR] {
     def apply(v: DenseMatrix[Double]): DenseQR = {
-      val (q, r) = doQr(v, skipQ = false)(mode = Complete)
+      val (q, r) = doQr(v, skipQ = false)(mode = CompleteQR)
       QR(q, r)
     }
   }
@@ -49,7 +49,7 @@ object qr extends UFunc {
   object justR extends UFunc {
     implicit object impl_DM_Double extends Impl[DenseMatrix[Double], DenseMatrix[Double]] {
       def apply(v: DenseMatrix[Double]): DenseMatrix[Double] = {
-        doQr(v, skipQ = true)(mode = Complete)._2
+        doQr(v, skipQ = true)(mode = CompleteQR)._2
       }
     }
 
@@ -82,7 +82,7 @@ object qr extends UFunc {
 
     implicit object impl_reduced_DM_Double extends Impl[DenseMatrix[Double],DenseQR] {
       def apply(v: DenseMatrix[Double]): DenseQR = {
-        val (q, r) = doQr(v, skipQ = false)(mode = Reduced)
+        val (q, r) = doQr(v, skipQ = false)(mode = ReducedQR)
         QR(q, r)
       }
     }
@@ -91,7 +91,7 @@ object qr extends UFunc {
     object justR extends UFunc {
       implicit object impl_reduced_DM_Double extends Impl[DenseMatrix[Double], DenseMatrix[Double]] {
         def apply(v: DenseMatrix[Double]): DenseMatrix[Double] = {
-          doQr(v, skipQ = true)(mode = Reduced)._2
+          doQr(v, skipQ = true)(mode = ReducedQR)._2
         }
       }
 
@@ -113,10 +113,10 @@ object qr extends UFunc {
   }
 
 
-  private def doQr(A: DenseMatrix[Double], skipQ : Boolean = false)(mode: Mode): (DenseMatrix[Double], DenseMatrix[Double]) = {
+  private def doQr(A: DenseMatrix[Double], skipQ : Boolean = false)(mode: QRMode): (DenseMatrix[Double], DenseMatrix[Double]) = {
     mode match {
-      case Complete => qrFactorization(A, skipQ)(complete = true)
-      case Reduced => qrFactorization(A, skipQ)(complete = false)
+      case CompleteQR => qrFactorization(A, skipQ)(complete = true)
+      case ReducedQR => qrFactorization(A, skipQ)(complete = false)
     }
   }
 
