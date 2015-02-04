@@ -2,6 +2,7 @@ package breeze.optimize
 
 import breeze.linalg._
 import breeze.collection.mutable.RingBuffer
+import breeze.linalg.operators.OpMulMatrix
 import breeze.math.{MutableInnerProductModule}
 import breeze.util.SerializableLogging
 
@@ -182,6 +183,12 @@ object ProjectedQuasiNewton {
       val f = fk + d.dot(gk) + (0.5 * d.dot(Bd))
       val g = gk + Bd
       (f, g)
+    }
+  }
+
+  implicit def multiplyCompactHessian[T](implicit vspace: MutableInnerProductModule[T, Double]): OpMulMatrix.Impl2[CompactHessian, T, T] = {
+    new OpMulMatrix.Impl2[CompactHessian, T, T] {
+      def apply(a: CompactHessian, b: T): T = a * b
     }
   }
 }

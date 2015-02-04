@@ -17,7 +17,7 @@
 package breeze.optimize.linear
 
 import breeze.linalg.operators.OpMulMatrix
-import breeze.math.MutableInnerProductVectorSpace
+import breeze.math.{MutableInnerProductModule}
 import breeze.numerics.abs
 import breeze.util.SerializableLogging
 import breeze.linalg.norm
@@ -27,7 +27,8 @@ import breeze.util.Implicits._
  * Created by debasish83 on 2/3/15.
  */
 class PowerMethod[T, M](maxIterations: Int = 10,tolerance: Double = 1E-5)
-                       (implicit space: MutableInnerProductVectorSpace[T, Double], mult: OpMulMatrix.Impl2[M, T, T]) extends SerializableLogging {
+                       (implicit space: MutableInnerProductModule[T, Double],
+                        mult: OpMulMatrix.Impl2[M, T, T]) extends SerializableLogging {
 
   import space._
 
@@ -57,7 +58,10 @@ class PowerMethod[T, M](maxIterations: Int = 10,tolerance: Double = 1E-5)
 
     val val_dif = abs(lambda - eigenValue)
     if (val_dif <= tolerance || iter > maxIterations) State(lambda, ay, iter + 1, true)
-    else State(lambda, ay/lambda, iter + 1, false)
+    else {
+      ay *= 1.0/lambda
+      State(lambda, ay, iter + 1, false)
+    }
   }.takeUpToWhere(_.converged)
 
   def iterateAndReturnState(y: T, A: M): State = {

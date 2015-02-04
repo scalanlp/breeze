@@ -20,8 +20,6 @@ import breeze.linalg._
 import breeze.linalg.operators.OpMulMatrix
 import breeze.math.MutableInnerProductModule
 import breeze.optimize.linear.PowerMethod
-import breeze.optimize.proximal.QuadraticMinimizer
-import breeze.stats.distributions.Rand
 import breeze.util.SerializableLogging
 
 /**
@@ -88,13 +86,12 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
    * specified through DiffFunction through power iteration on ApproximateInverseHessian,
    * get the largest eigenvalue e and return 1/e
    *
-   * @param n the size of the problem, can be infered from memStep/memGradDelta
+   * @param init initial guess for eigen vector
    * @param state the current state of the optimization
    * @return minimium eigen eigen value
    */
-  protected def minEigen(n: Int, state: State) : Double = {
-    val pm = new PowerMethod[DenseVector[Double], LBFGS.ApproximateInverseHessian[T]]
-    val init = DenseVector.rand[Double](n, Rand.gaussian(0, 1))
+  protected def minEigen(init: T, state: State) : Double = {
+    val pm = new PowerMethod[T, LBFGS.ApproximateInverseHessian[T]]()(space,LBFGS.multiplyInverseHessian)
     val eigenMax = pm.eigen(init, state.history)
     1.0/eigenMax
   }
@@ -104,17 +101,16 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
    * through DiffFunction by doing a inverse power iteration using the CompactHessian representation
    * generated from ApproximateInverseHessian, get the largest eigenvalue e
    *
-   * @param n the size of the problem, can be infered from memStep/memGradDelta
+   * @param init initial guess for the eigen vector
    * @param state the current state of the optimization
    * @return maximum eigen value
    */
-  protected def maxEigen(n: Int, state: State, init: DenseVector[Double]) : Double = {
+  protected def maxEigen(init:T, state: State) : Double = {
     val compactHessian = new CompactHessian(state.history.m)
     val memStep = state.history.memStep.asInstanceOf[Seq[DenseVector[Double]]]
     val memGradDelta = state.history.memGradDelta.asInstanceOf[Seq[DenseVector[Double]]]
     (0 to state.history.historyLength).map{i => compactHessian.updated(memStep(i), memGradDelta(i))}
-    val init = DenseVector.rand[Double](n, Rand.gaussian(0, 1))
-    val pm = new PowerMethod[DenseVector[Double], CompactHessian]
+    val pm = new PowerMethod[T, CompactHessian]()(space, ProjectedQuasiNewton.multiplyCompactHessian)
     pm.eigen(init, compactHessian)
   }
 }
