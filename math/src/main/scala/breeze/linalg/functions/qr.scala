@@ -6,8 +6,8 @@ import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 
 
 sealed trait QRMode
-case object CompleteQR extends QRMode
-case object ReducedQR extends QRMode
+case object CompleteQR extends QRMode  // Q and R have dimensions (m, m), (m, n)
+case object ReducedQR extends QRMode   // Q and R have dimensions (m, k), (k, n) with k = min(m, n)
 
 
 /**
@@ -17,7 +17,7 @@ case object ReducedQR extends QRMode
  * skip the computation in making Q if we didn't want it. That is now supplanted by qr.justR(m)
  *
  * Supports complete and reduced mode of factorization of matrix A with dimensions (m, n).
- * If mode is complete matrices Q and R have dimensions (m, k), (k, n).
+ * If mode is complete matrices Q and R have dimensions (m, m), (m, n).
  * If mode is reduced matrices Q and R have dimensions (m, k), (k, n) with k = min(m, n).
  *
  * Complete QR factorization can be called by qr(A).
@@ -87,7 +87,9 @@ object qr extends UFunc {
       }
     }
 
-    /** QR that just returns R with reduced size. */
+    /**
+     * QR that just returns R with reduced size.
+     */
     object justR extends UFunc {
       implicit object impl_reduced_DM_Double extends Impl[DenseMatrix[Double], DenseMatrix[Double]] {
         def apply(v: DenseMatrix[Double]): DenseMatrix[Double] = {
@@ -102,7 +104,9 @@ object qr extends UFunc {
       }
     }
 
-    /** QR that just returns Q with reduced size. */
+    /**
+     * QR that just returns Q with reduced size.
+     */
     object justQ extends UFunc {
       implicit def canJustQIfWeCanQR[T, M](implicit qrImpl: qr.Impl[T, QR[M]]): Impl[T, M] = {
         new Impl[T, M] {
@@ -112,16 +116,8 @@ object qr extends UFunc {
     }
   }
 
-
-  private def doQr(A: DenseMatrix[Double], skipQ : Boolean = false)(mode: QRMode): (DenseMatrix[Double], DenseMatrix[Double]) = {
-    mode match {
-      case CompleteQR => qrFactorization(A, skipQ)(complete = true)
-      case ReducedQR => qrFactorization(A, skipQ)(complete = false)
-    }
-  }
-
-  private def qrFactorization(A: DenseMatrix[Double], skipQ : Boolean)
-                             (complete: Boolean): (DenseMatrix[Double], DenseMatrix[Double]) = {
+  private def doQr(A: DenseMatrix[Double], skipQ : Boolean)
+                  (mode: QRMode): (DenseMatrix[Double], DenseMatrix[Double]) = {
     val m = A.rows
     val n = A.cols
 
@@ -152,8 +148,10 @@ object qr extends UFunc {
     else if (info.`val` < 0)
       throw new IllegalArgumentException()
 
-    val R = if (complete) DenseMatrix.zeros[Double](m,n)
-            else DenseMatrix.zeros[Double](mind,n)
+    val R = mode match {
+      case CompleteQR => DenseMatrix.zeros[Double](m,n)
+      case ReducedQR => DenseMatrix.zeros[Double](mind,n)
+    }
 
     for(c <- 0 until maxd if c < n; r <- 0 until m if r <= c)
       R(r,c) = outputMat(r,c)
@@ -161,17 +159,21 @@ object qr extends UFunc {
     //unless the skipq flag is set
     if(!skipQ){
       //Get Q from the matrix returned by dgep3
-      val Q = if (complete) DenseMatrix.zeros[Double](m,m)
-              else DenseMatrix.zeros[Double](m,mind)
+      val Q = mode match {
+        case CompleteQR => DenseMatrix.zeros[Double](m,m)
+        case ReducedQR => DenseMatrix.zeros[Double](m,mind)
+      }
 
-      if (complete) {
-        lapack.dorgqr(m, m, scala.math.min(m, n), outputMat.data, m, tau, workspace, workspace.length, info)
-        for (r <- 0 until m; c <- 0 until maxd if c < m)
-          Q(r, c) = outputMat(r, c)
-      } else {
-        lapack.dorgqr(m, mind, mind, outputMat.data, m, tau, workspace, workspace.length, info)
-        for(r <- 0 until m; c <- 0 until mind)
-          Q(r,c) = outputMat(r,c)
+      mode match {
+        case CompleteQR =>
+          lapack.dorgqr(m, m, scala.math.min(m, n), outputMat.data, m, tau, workspace, workspace.length, info)
+          for (r <- 0 until m; c <- 0 until maxd if c < m)
+            Q(r, c) = outputMat(r, c)
+
+        case ReducedQR =>
+          lapack.dorgqr(m, mind, mind, outputMat.data, m, tau, workspace, workspace.length, info)
+          for(r <- 0 until m; c <- 0 until mind)
+            Q(r,c) = outputMat(r,c)
       }
 
       //Error check
