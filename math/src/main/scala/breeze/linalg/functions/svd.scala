@@ -16,8 +16,8 @@ case object ReducedSVD extends SVDMode("S")   // the first min(M,N) columns of U
 
 
 /**
-  * Computes the SVD of a m by n matrix
-  * Returns an m*m matrix U, a vector of singular values, and a n*n matrix V'
+  * Computes the SVD of a M-by-N matrix
+  * Returns an M-by-M matrix U, a vector of singular values, and a N-by-N matrix V'
   */
 object svd extends UFunc {
 
@@ -46,12 +46,12 @@ object svd extends UFunc {
 
 
   /**
-   * Option for computing part of the matrix U:
+   * Option for computing part of the M-by-N matrix U:
    *       The first min(M,N) columns of U and the first min(M,N)
    *       rows of V**T are returned in the arrays U and VT;
    */
   object reduced extends UFunc {
-    implicit object reduce_Svd_DM_Impl extends Impl[DenseMatrix[Double], DenseSVD] {
+    implicit object reduced_Svd_DM_Impl extends Impl[DenseMatrix[Double], DenseSVD] {
       def apply(mat: DenseMatrix[Double]): DenseSVD = doSVD_Double(mat)(mode = ReducedSVD)
     }
 
