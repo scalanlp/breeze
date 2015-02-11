@@ -31,7 +31,7 @@ import breeze.numerics._
 import breeze.linalg.LapackException
 import breeze.linalg.norm
 import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
-import breeze.optimize.linear.{NNLS, ConjugateGradient}
+import breeze.optimize.linear.{PowerMethod, NNLS, ConjugateGradient}
 import breeze.stats.distributions.Rand
 import breeze.util.Implicits._
 
@@ -233,31 +233,15 @@ class QuadraticMinimizer(nGram: Int,
     }
   }.takeUpToWhere(_.converged)
 
-  private def normColumn(H: DenseMatrix[Double]): Double = {
-    var absColSum = 0.0
-    var maxColSum = 0.0
-    for (c <- 0 until H.cols) {
-      for (r <- 0 until H.rows) {
-        absColSum += abs(H(r, c))
-      }
-      if (absColSum > maxColSum) maxColSum = absColSum
-      absColSum = 0.0
-    }
-    maxColSum
-  }
-
-  //TO DO : Replace eigenMin using inverse power law for 5-10 iterations
   private def computeRho(H: DenseMatrix[Double]): Double = {
     proximal match {
       case null => 0.0
       case ProximalL1() => {
-        val eigenMax = normColumn(H)
-        //TO DO: Make sure it calls Dposv.dposv
-        val inverse = H \ DenseMatrix.eye[Double](H.rows)
-        val eigenMin = 1 / normColumn(inverse)
+        val eigenMax = QuadraticMinimizer.normColumn(H)
+        val eigenMin = QuadraticMinimizer.approximateMinEigen(H)
         sqrt(eigenMin * eigenMax)
       }
-      case _ => sqrt(normColumn(H))
+      case _ => sqrt(QuadraticMinimizer.normColumn(H))
     }
   }
 
@@ -329,11 +313,40 @@ object QpGenerator {
 }
 
 object QuadraticMinimizer {
+  //upper bound on max eigen value
+  def normColumn(H: DenseMatrix[Double]): Double = {
+    var absColSum = 0.0
+    var maxColSum = 0.0
+    for (c <- 0 until H.cols) {
+      for (r <- 0 until H.rows) {
+        absColSum += abs(H(r, c))
+      }
+      if (absColSum > maxColSum) maxColSum = absColSum
+      absColSum = 0.0
+    }
+    maxColSum
+  }
+
+  //approximate max eigen using inverse power method
+  def approximateMaxEigen(H: DenseMatrix[Double]) : Double = {
+    val pm = new PowerMethod[DenseVector[Double], DenseMatrix[Double]]()
+    val init = DenseVector.rand[Double](H.rows, Rand.gaussian(0, 1))
+    pm.eigen(init, H)
+  }
+
+  //approximate min eigen using inverse power method
+  def approximateMinEigen(H: DenseMatrix[Double]) : Double = {
+    val R = cholesky(H).t
+    val pmInv = new PowerMethod[DenseVector[Double], DenseMatrix[Double]](10, 1e-5, true)
+    val init = DenseVector.rand[Double](H.rows, Rand.gaussian(0, 1))
+    1.0/pmInv.eigen(init, R)
+  }
+
   /* 
    * Triangular LU solve for A*X = B 
    * TO DO : Add appropriate exception from LAPACK
    */
-  def solveTriangularLU(A: DenseMatrix[Double], pivot: Array[Int], B: DenseVector[Double]) = {
+  def solveTriangularLU(A: DenseMatrix[Double], pivot: Array[Int], B: DenseVector[Double]) : DenseVector[Double] = {
     require(A.rows == A.cols)
     
     val X = new DenseMatrix(B.length, 1, B.data.clone)
@@ -350,7 +363,7 @@ object QuadraticMinimizer {
   }
 
   /*Triangular cholesky solve for A*X = B */
-  def solveTriangular(A: DenseMatrix[Double], B: DenseVector[Double]) = {
+  def solveTriangular(A: DenseMatrix[Double], B: DenseVector[Double]) : DenseVector[Double] = {
     require(A.rows == A.cols)
     
     val X = new DenseMatrix(B.length, 1, B.data.clone)
