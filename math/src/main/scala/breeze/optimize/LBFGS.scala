@@ -90,7 +90,7 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
    * @param state the current state of the optimization
    * @return minimium eigen eigen value
    */
-  protected def minEigen(init: T, state: State) : Double = {
+  def minEigen(init:T, state: State) : Double = {
     val pm = new PowerMethod[T, LBFGS.ApproximateInverseHessian[T]]()(space,LBFGS.multiplyInverseHessian)
     val eigenMax = pm.eigen(init, state.history)
     1.0/eigenMax
@@ -105,11 +105,12 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
    * @param state the current state of the optimization
    * @return maximum eigen value
    */
-  protected def maxEigen(init:T, state: State) : Double = {
+  def maxEigen(init:T, state: State) : Double = {
+    println(s"m ${state.history.m} historyLength ${state.history.historyLength}")
     val compactHessian = new CompactHessian(state.history.m)
     val memStep = state.history.memStep.asInstanceOf[Seq[DenseVector[Double]]]
     val memGradDelta = state.history.memGradDelta.asInstanceOf[Seq[DenseVector[Double]]]
-    (0 to state.history.historyLength).map{i => compactHessian.updated(memStep(i), memGradDelta(i))}
+    (0 to state.history.historyLength - 1).map{i => compactHessian.updated(memStep(i), memGradDelta(i))}
     val pm = new PowerMethod[T, CompactHessian]()(space, ProjectedQuasiNewton.multiplyCompactHessian)
     pm.eigen(init, compactHessian)
   }
