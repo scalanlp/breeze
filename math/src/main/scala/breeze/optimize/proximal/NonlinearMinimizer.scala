@@ -181,12 +181,14 @@ class NonlinearMinimizer(ndim: Int,
     val z = DenseVector.zeros[Double](ndim)
     val u = DenseVector.zeros[Double](ndim)
 
-    if (proximal == null) return State(primalSolve.minimize(primal, init), u, z, 0, true)
+    if (proximal == null) {
+      return State(primalSolve.minimize(primal, init), u, z, 0, true)
+    }
 
     var initialState = primalSolve.minimizeAndReturnState(primal, init)
 
     println(s"Quadratic Model minEigen ${primalSolve.minEigen(init, initialState)}")
-    
+
     val proxPrimal = ProximalPrimal(primal, u, z, rho)
 
     val xHat = DenseVector.zeros[Double](ndim)
@@ -271,6 +273,35 @@ class NonlinearMinimizer(ndim: Int,
   }
 }
 
+object LinearGenerator {
+  case class Cost(data: DenseMatrix[Double], labels: DenseVector[Double]) extends DiffFunction[DenseVector[Double]] {
+    def calculate(x: DenseVector[Double]) = {
+      val cumGradient = DenseVector.zeros[Double](x.length)
+      var cumLoss = 0.0
+      var i = 0
+      while (i < data.rows) {
+        val brzData = data(i, ::).t
+        val diff = x.dot(brzData) - labels(i)
+        cumGradient += brzData * (2.0 * diff)
+        cumLoss += diff * diff
+        i = i + 1
+      }
+      (cumLoss, cumGradient)
+    }
+  }
+
+  def apply(ndim: Int) : (DiffFunction[DenseVector[Double]], DenseMatrix[Double], DenseVector[Double]) = {
+    val rand = Rand.gaussian(0, 1)
+    val data = DenseMatrix.rand[Double](ndim, ndim, rand)
+    val labels = DenseVector.rand[Double](ndim, rand).map { x => if (x > 0.5) 1.0 else 0.0}
+    //||ax - b||_2^{2} = x'a'ax - 2*x'a'*b + c
+    val h = (data.t*data)*2.0
+    val q = (data.t*labels)
+    q *= -2.0
+    (Cost(data, labels), h, q)
+  }
+}
+
 object LogisticGenerator {
   case class Cost(data: DenseMatrix[Double],
                   labels: DenseVector[Double]) extends DiffFunction[DenseVector[Double]] {
@@ -350,40 +381,44 @@ object NonlinearMinimizer {
   }
 
   def main(args: Array[String]) {
-    if (args.length < 4) {
-      println("Usage: NonlinearMinimizer n m lambda beta")
+    if (args.length < 3) {
+      println("Usage: NonlinearMinimizer n lambda beta")
       println("Test NonlinearMinimizer with a quadratic function of dimenion n and m equalities with lambda beta for elasticNet")
       sys.exit(1)
     }
 
     val problemSize = args(0).toInt
-    val nequalities = args(1).toInt
+    val lambda = args(1).toDouble
+    val beta = args(2).toDouble
 
-    val lambda = args(2).toDouble
-    val beta = args(3).toDouble
+    println(s"Generating Linear Loss with rank ${problemSize}")
 
-    println(s"Generating randomized QPs with rank ${problemSize} equalities ${nequalities}")
-    val (aeq, b, bl, bu, q, h) = QpGenerator(problemSize, nequalities)
+    val init = DenseVector.rand[Double](problemSize, Rand.gaussian(0, 1))
+
+    val (quadraticCost, h, q) = LinearGenerator(problemSize)
 
     val qpSolver = new QuadraticMinimizer(problemSize)
     val qpStart = System.nanoTime()
     val qpResult = qpSolver.minimize(h, q)
     val qpTime = System.nanoTime() - qpStart
 
-    val quadraticCost = QuadraticMinimizer.Cost(h, q)
-
     val nlStart = System.nanoTime()
     val nlResult = NonlinearMinimizer(problemSize, SMOOTH, 0.0).minimize(quadraticCost)
     val nlTime = System.nanoTime() - nlStart
 
+    val bfgsStart = System.nanoTime()
+    val bfgsResult = QuadraticMinimizer.optimizeWithLBFGS(init, h, q)
+    val bfgsTime = System.nanoTime() - bfgsStart
+
     println(s"||qp - nl|| norm ${norm(qpResult - nlResult, 2)} max-norm ${norm(qpResult - nlResult, inf)}")
+    println(s"||bfgs - nl|| norm ${norm(bfgsResult - nlResult, 2)} max-norm ${norm(bfgsResult - nlResult, inf)}")
 
     val qpObj = QuadraticMinimizer.computeObjective(h, q, qpResult)
     val nlObj = QuadraticMinimizer.computeObjective(h, q, nlResult)
+    val bfgsObj = QuadraticMinimizer.computeObjective(h, q, bfgsResult)
 
-    println(s"Objective qp $qpObj nl $nlObj")
-
-    println(s"dim ${problemSize} qp ${qpTime / 1e6} ms nl ${nlTime / 1e6} ms")
+    println(s"Objective qp $qpObj nl $nlObj bfgs $bfgsObj")
+    println(s"dim ${problemSize} qp ${qpTime / 1e6} ms nl ${nlTime / 1e6} ms bfgs ${bfgsTime/1e6} ms")
 
     val lambdaL1 = lambda * beta
     val lambdaL2 = lambda * (1 - beta)
@@ -399,15 +434,12 @@ object NonlinearMinimizer {
     val owlqnResult = QuadraticMinimizer.optimizeWithOWLQN(DenseVector.rand[Double](problemSize), regularizedGram, q, lambdaL1)
     val owlqnTime = System.nanoTime() - owlqnStart
 
-    println(s"||sparseQp - owlqn|| norm ${norm(sparseQpResult.x - owlqnResult.x, 2)} inf-norm ${norm(sparseQpResult.x - owlqnResult.x, inf)}")
-
     val nlSparse = NonlinearMinimizer(problemSize, SPARSE, lambdaL1)
-    val rhoStart = QuadraticMinimizer.minEigen(regularizedGram)
-    val rhoRef = QuadraticMinimizer.computeRho(regularizedGram, nlSparse.getProximal)
-    val rhoEnd = QuadraticMinimizer.maxEigen(regularizedGram)
+    val rhoStart = QuadraticMinimizer.approximateMinEigen(regularizedGram)
+    val rhoEnd = QuadraticMinimizer.approximateMaxEigen(regularizedGram)
 
     val lambdaMax = norm(regularizedGram * q, inf)
-    println(s"rhoStart $rhoStart rhoRef $rhoRef rhoEnd $rhoEnd lambdaMax $lambdaMax")
+    println(s"rhoStart $rhoStart rhoEnd $rhoEnd lambdaMax $lambdaMax")
 
     println("ElasticNet Formulation")
 
@@ -416,17 +448,24 @@ object NonlinearMinimizer {
     println(s"owlqn ${owlqnTime / 1e6} ms iters ${owlqnResult.iter} sparseQp ${sparseQpTime / 1e6} ms iters ${sparseQpResult.iter}")
     println(s"||sparseQp - owlqn|| norm ${norm(sparseQpResult.x - owlqnResult.x, 2)} inf-norm ${norm(sparseQpResult.x - owlqnResult.x, inf)}")
 
+    val owlqnObj = QuadraticMinimizer.computeObjective(regularizedGram, q, owlqnResult.x) + lambdaL1*owlqnResult.x.foldLeft(0.0){(agg, entry) => agg + abs(entry)}
+    val sparseQpObj = QuadraticMinimizer.computeObjective(regularizedGram, q, sparseQpResult.x) + lambdaL1*sparseQpResult.x.foldLeft(0.0){(agg, entry) => agg + abs(entry)}
+    println(s"owlqnObj $owlqnObj sparseQpObj $sparseQpObj")
+
     val nlSparseStart = System.nanoTime()
     val nlSparseResult = nlSparse.iterationsADMM(QuadraticMinimizer.Cost(regularizedGram, q))
     val nlSparseTime = System.nanoTime() - nlSparseStart
+    val nlSparseObj = QuadraticMinimizer.computeObjective(regularizedGram, q, nlSparseResult.x) + lambdaL1*nlSparseResult.x.foldLeft(0.0){(agg, entry) => agg + abs(entry)}
 
     val nlSparseHistoryStart = System.nanoTime()
     val nlSparseHistoryResult = nlSparse.iterationsADMMWithHistory(QuadraticMinimizer.Cost(regularizedGram, q))
     val nlSparseHistoryTime = System.nanoTime() - nlSparseHistoryStart
+    val nlSparseHistoryObj = QuadraticMinimizer.computeObjective(regularizedGram, q, nlSparseHistoryResult.x) + lambdaL1*nlSparseResult.x.foldLeft(0.0){(agg, entry) => agg + abs(entry)}
 
     println(s"nlSparse ${nlSparseTime / 1e6} ms iters ${nlSparseResult.iterations} nlSparseHistory ${nlSparseHistoryTime / 1e6} ms iters ${nlSparseHistoryResult.iterations}")
     println(s"||owlqn - nlSparse|| norm ${norm(owlqnResult.x - nlSparseResult.x, 2)} inf-norm ${norm(owlqnResult.x - nlSparseResult.x, inf)}")
     println(s"||owlqn - nlSparseHistory|| norm ${norm(owlqnResult.x - nlSparseHistoryResult.x, 2)} inf-norm ${norm(owlqnResult.x - nlSparseHistoryResult.x, inf)}")
+    println(s"nlSparseObj $nlSparseObj nlSparseHistoryObj $nlSparseHistoryObj")
 
     println("Logistic Regression")
 
@@ -444,7 +483,6 @@ object NonlinearMinimizer {
 
     println(s"owlqn ${owlqnLogisticTime / 1e6} ms iters ${owlqnLogisticResult.iter} nlLogistic ${nlLogisticTime / 1e6} ms iters ${nlLogisticResult.iterations}")
     println(s"||owlqn - nlLogistic|| norm ${norm(owlqnLogisticResult.x - nlLogisticResult.x, 2)} inf-norm ${norm(owlqnLogisticResult.x - nlLogisticResult.x, inf)}")
-
     println(s"owlqnLogistic objective $owlqnLogisticObj")
 
     val nlLogisticObj = elasticNetLoss.calculate(nlLogisticResult.x)._1 + lambdaL1 * nlLogisticResult.x.foldLeft(0.0) { (agg, entry) => agg + abs(entry)}
@@ -456,22 +494,36 @@ object NonlinearMinimizer {
     val nlBoxStart = System.nanoTime()
     val nlBoxResult = nlBox.iterationsADMM(quadraticCost)
     val nlBoxTime = System.nanoTime() - nlBoxStart
+    val nlBoxObj = QuadraticMinimizer.computeObjective(h, q, nlBoxResult.x)
 
     val nlBoxHistoryStart = System.nanoTime()
     val nlBoxHistoryResult = nlBox.iterationsADMMWithHistory(quadraticCost)
     val nlBoxHistoryTime = System.nanoTime() - nlBoxHistoryStart
+    val nlBoxHistoryObj = QuadraticMinimizer.computeObjective(h, q, nlBoxHistoryResult.x)
 
     val qpBox = QuadraticMinimizer(problemSize, BOX, 0.0)
     val qpBoxStart = System.nanoTime()
     val qpBoxResult = qpBox.minimizeAndReturnState(h, q)
     val qpBoxTime = System.nanoTime() - qpBoxStart
+    val qpBoxObj = QuadraticMinimizer.computeObjective(h, q, qpBoxResult.x)
+
+    val pqnBoxStart = System.nanoTime()
+    val pqnBoxResult = optimizeWithPQN(problemSize, quadraticCost)
+    val pqnBoxTime = System.nanoTime() - pqnBoxStart
+    val pqnBoxObj = QuadraticMinimizer.computeObjective(h, q, pqnBoxResult.x)
 
     println(s"qpBox ${qpBoxTime/1e6} ms iters ${qpBoxResult.iter}")
     println(s"nlBox ${nlBoxTime/1e6} ms iters ${nlBoxResult.iterations} nlBoxHistory ${nlBoxHistoryTime/1e6} ms ${nlBoxHistoryResult.iterations}")
+    println(s"pqnBox ${pqnBoxTime/1e6} ms iters ${pqnBoxResult.iter}")
+
     println(s"||qpBox - nlBox|| norm ${norm(qpBoxResult.x - nlBoxResult.x, 2)} inf-norm ${norm(qpBoxResult.x - nlBoxResult.x, inf)}")
     println(s"||qpBox - nlBoxHistory|| norm ${norm(qpBoxResult.x - nlBoxHistoryResult.x, 2)} inf-norm ${norm(qpBoxResult.x - nlBoxHistoryResult.x, inf)}")
+    println(s"||qpBox - nlBox|| norm ${norm(qpBoxResult.x - pqnBoxResult.x, 2)} inf-norm ${norm(qpBoxResult.x - pqnBoxResult.x, inf)}")
+    println(s"qpBoxObj $qpBoxObj nlBoxObj $nlBoxObj nlBoxHistoryObj $nlBoxHistoryObj pqnBoxObj $pqnBoxObj")
+
 
     println("Logistic Regression with Bounds")
+
     val nlBoxLogisticStart = System.nanoTime()
     val nlBoxLogisticResult = nlBox.iterationsADMM(elasticNetLoss)
     val nlBoxLogisticTime = System.nanoTime() - nlBoxLogisticStart
