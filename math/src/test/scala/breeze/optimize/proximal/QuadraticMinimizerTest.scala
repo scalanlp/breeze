@@ -46,20 +46,27 @@ class QuadraticMinimizerTest extends OptimizeTestBase with Matchers {
     assert(norm(golden - x) < 1E-8)
   }
 
+  val n = 5
+  val gram = new DenseMatrix[Double](n, n, Array(5.6880,-4.5286,6.7923,0.3049,-6.0388,
+    -4.5286,8.0638,-6.9012,-2.6776,6.1795,
+    6.7923,-6.9012,12.5510,-1.1917,-8.3500,
+    0.3049,-2.6776,-1.1917,4.0684,-1.7535,
+    -6.0388,6.1795,-8.3500,-1.7535,8.2831))
+  val init = DenseVector(0.1770,0.2505,1.5957,0.7204,0.9246)
+  val eigs = eigSym(gram)
+
   test("min eigen computed using inverse power law approximately same as min eigen") {
-    val H = QpGenerator.getGram(5)
-    val eigs = eigSym(H)
+    val eigs = eigSym(gram)
     val eigenMin = min(eigs.eigenvalues)
-    val approxEigenMin = QuadraticMinimizer.approximateMinEigen(H)
-    assert(abs(eigenMin - approxEigenMin) < 1e-2)
+    val approxEigenMin = QuadraticMinimizer.approximateMinEigen(gram)
+    assert(abs(eigenMin - approxEigenMin) < 1e-3)
   }
 
   test("max eigen computed using power law approximately same as max eigen") {
-    val H = QpGenerator.getGram(5)
-    val eigs = eigSym(H)
+    val eigs = eigSym(gram)
     val eigenMax = max(eigs.eigenvalues)
-    val approxEigenMax = QuadraticMinimizer.approximateMaxEigen(H)
-    assert(abs(eigenMax - approxEigenMax) < 1e-2)
+    val approxEigenMax = QuadraticMinimizer.approximateMaxEigen(gram)
+    assert(abs(eigenMax - approxEigenMax) < 1e-3)
   }
 
   test("Unconstrained Quadratic Minimization compared to LU Solve") {

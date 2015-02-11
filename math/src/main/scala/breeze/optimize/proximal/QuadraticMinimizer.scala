@@ -19,6 +19,7 @@ package breeze.optimize.proximal
 
 import breeze.linalg.cholesky
 import breeze.linalg.LU
+import breeze.util.SerializableLogging
 import scala.math.max
 import scala.math.sqrt
 import breeze.optimize.{LBFGS, OWLQN, DiffFunction}
@@ -59,7 +60,7 @@ class QuadraticMinimizer(nGram: Int,
                          proximal: Proximal = null,
                          Aeq: DenseMatrix[Double] = null,
                          beq: DenseVector[Double] = null,
-                         maxIters: Int = -1) {
+                         maxIters: Int = -1) extends SerializableLogging {
   type BDM = DenseMatrix[Double]
   type BDV = DenseVector[Double]
 
