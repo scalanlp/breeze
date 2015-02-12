@@ -54,6 +54,7 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
                                               with VectorLike[V, DenseVector[V]] with Serializable{
   def this(data: Array[V]) = this(data, 0, 1, data.length)
   def this(data: Array[V], offset: Int) = this(data, offset, 1, data.length)
+  def this(length: Int)(implicit man: ClassTag[V]) = this(new Array[V](length), 0, 1, length)
 
 
   // uncomment to get all the ridiculous places where specialization fails.
