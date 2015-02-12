@@ -186,9 +186,6 @@ class NonlinearMinimizer(ndim: Int,
     }
 
     var initialState = primalSolve.minimizeAndReturnState(primal, init)
-
-    println(s"Quadratic Model minEigen ${primalSolve.minEigen(init, initialState)}")
-
     val proxPrimal = ProximalPrimal(primal, u, z, rho)
 
     val xHat = DenseVector.zeros[Double](ndim)

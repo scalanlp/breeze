@@ -188,7 +188,10 @@ object ProjectedQuasiNewton {
 
   implicit def multiplyCompactHessian[T](implicit vspace: MutableInnerProductModule[T, Double]): OpMulMatrix.Impl2[CompactHessian, T, T] = {
     new OpMulMatrix.Impl2[CompactHessian, T, T] {
-      def apply(a: CompactHessian, b: T): T = a * b
+      def apply(a: CompactHessian, b: T): T = {
+        val result = a * b.asInstanceOf[DenseVector[Double]]
+        result.asInstanceOf[T]
+      }
     }
   }
 }

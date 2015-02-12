@@ -90,10 +90,11 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
    * @param state the current state of the optimization
    * @return minimium eigen eigen value
    */
-  def minEigen(init:T, state: State) : Double = {
+  def minEigen(state: State, init: T) : Double = {
     val pm = new PowerMethod[T, LBFGS.ApproximateInverseHessian[T]]()(space,LBFGS.multiplyInverseHessian)
-    val eigenMax = pm.eigen(init, state.history)
-    1.0/eigenMax
+    val eigenState = pm.iterateAndReturnState(init, state.history)
+    logger.info(s"LBFGS Min Eigen iterations ${eigenState.iter}")
+    1.0/eigenState.eigenValue
   }
 
   /**
@@ -105,14 +106,15 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
    * @param state the current state of the optimization
    * @return maximum eigen value
    */
-  def maxEigen(init:T, state: State) : Double = {
-    println(s"m ${state.history.m} historyLength ${state.history.historyLength}")
+  def maxEigen(state: State, init: T) : Double = {
     val compactHessian = new CompactHessian(state.history.m)
     val memStep = state.history.memStep.asInstanceOf[Seq[DenseVector[Double]]]
     val memGradDelta = state.history.memGradDelta.asInstanceOf[Seq[DenseVector[Double]]]
     (0 to state.history.historyLength - 1).map{i => compactHessian.updated(memStep(i), memGradDelta(i))}
     val pm = new PowerMethod[T, CompactHessian]()(space, ProjectedQuasiNewton.multiplyCompactHessian)
-    pm.eigen(init, compactHessian)
+    val eigenState = pm.iterateAndReturnState(init, compactHessian)
+    logger.info(s"LBFGS Max Eigen iterations ${eigenState.iter}")
+    eigenState.eigenValue
   }
 }
 

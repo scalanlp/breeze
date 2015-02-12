@@ -17,20 +17,14 @@
 
 package breeze.optimize.proximal
 
-import breeze.linalg.cholesky
-import breeze.linalg.LU
+import breeze.linalg._
 import breeze.util.SerializableLogging
-import scala.math.max
 import scala.math.sqrt
 import breeze.optimize.{LBFGS, OWLQN, DiffFunction}
 import org.netlib.util.intW
 import breeze.optimize.proximal.Constraint._
 import scala.math.abs
-import breeze.linalg.DenseVector
-import breeze.linalg.DenseMatrix
 import breeze.numerics._
-import breeze.linalg.LapackException
-import breeze.linalg.norm
 import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 import breeze.optimize.linear.{PowerMethod, NNLS, ConjugateGradient}
 import breeze.stats.distributions.Rand
@@ -418,7 +412,16 @@ object QuadraticMinimizer {
                          H: DenseMatrix[Double],
                          q: DenseVector[Double]) = {
     val lbfgs = new LBFGS[DenseVector[Double]](-1, 7)
-    lbfgs.minimize(Cost(H, q), init)
+    val state = lbfgs.minimizeAndReturnState(Cost(H, q), init)
+    val approxMinEigen = lbfgs.minEigen(state, init)
+    val approxMaxEigen = lbfgs.maxEigen(state, init)
+    val eigs = eigSym(H).eigenvalues
+
+    val minEigen = min(eigs)
+    val maxEigen = max(eigs)
+    println(s"minEigen $minEigen approx $approxMinEigen maxEigen $maxEigen approx $approxMaxEigen")
+
+    state.x
   }
 
   def optimizeWithOWLQN(init: DenseVector[Double],
