@@ -60,7 +60,7 @@ class QuadraticMinimizer(nGram: Int,
                          proximal: Proximal = null,
                          Aeq: DenseMatrix[Double] = null,
                          beq: DenseVector[Double] = null,
-                         maxIters: Int = -1) extends SerializableLogging {
+                         maxIters: Int = -1, abstol: Double = 1e-8, reltol: Double = 1e-4) extends SerializableLogging {
   type BDM = DenseMatrix[Double]
   type BDV = DenseVector[Double]
 
@@ -99,10 +99,9 @@ class QuadraticMinimizer(nGram: Int,
     DenseMatrix.zeros[Double](n, n)
   }
 
-  val MAX_ITERS = if (maxIters < 0) Math.max(400, 20 * n) else maxIters
+  val admmIters = if (maxIters < 0) Math.max(400, 20 * n) else maxIters
 
-  val ABSTOL = 1e-8
-  val RELTOL = 1e-4
+  def getProximal = proximal
 
   def updateGram(row: Int, col: Int, value: Double) {
     if (row < 0 || row >= n)
@@ -148,6 +147,7 @@ class QuadraticMinimizer(nGram: Int,
 
     //scale will hold q + linearEqualities
     val scale = DenseVector.zeros[Double](n)
+    val convergenceScale = sqrt(n)
 
     //scale = rho*(z - u) - q
     for (i <- 0 until z.length) {
@@ -225,10 +225,10 @@ class QuadraticMinimizer(nGram: Int,
       s := u
       s *= rho
 
-      val epsPrimal = sqrt(n) * ABSTOL + RELTOL * max(norm(x, 2), norm(residual, 2))
-      val epsDual = sqrt(n) * ABSTOL + RELTOL * norm(s, 2)
+      val epsPrimal = convergenceScale * abstol + reltol * max(norm(x, 2), norm(residual, 2))
+      val epsDual = convergenceScale * abstol + reltol * norm(s, 2)
 
-      val converged = residualNorm < epsPrimal && sNorm < epsDual || iter > MAX_ITERS
+      val converged = residualNorm < epsPrimal && sNorm < epsDual || iter > admmIters
 
       State(x, u, z, R, pivot, xHat, zOld, residual, s, iter + 1, converged)
     }

@@ -61,8 +61,6 @@ class PowerMethodTest extends FunSuite {
     val inverseGram = gram \ DenseMatrix.eye[Double](gram.rows)
     val pm = new PowerMethod[DenseVector[Double], DenseMatrix[Double]]()
     val eigenApproxInv = 1.0/pm.eigen(init, inverseGram)
-
-    println(s"eigenApprox $eigenApprox eigenApproxInv $eigenApproxInv eigenGold $eigenGold")
     assert(abs(eigenGold - eigenApprox) < 1e-3)
   }
 }
