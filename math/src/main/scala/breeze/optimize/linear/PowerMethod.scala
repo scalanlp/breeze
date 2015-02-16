@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package breeze.optimize.linear
 
 import breeze.linalg.operators.OpMulMatrix
@@ -24,7 +8,9 @@ import breeze.linalg.{DenseMatrix, DenseVector, norm}
 import breeze.util.Implicits._
 import breeze.optimize.proximal.QuadraticMinimizer
 /**
- * Created by debasish83 on 2/3/15.
+ * Power Method/Inverse Power Method to compute maximum/minimum eigen value
+ * @param inverse if true run inverse power method for DenseMatrix[Double], DenseVector[Double]
+ * @author debasish83
  */
 class PowerMethod[T, M](maxIterations: Int = 10,tolerance: Double = 1E-5, inverse: Boolean = false)
                        (implicit space: MutableInnerProductModule[T, Double],
@@ -42,7 +28,7 @@ class PowerMethod[T, M](maxIterations: Int = 10,tolerance: Double = 1E-5, invers
     val ay = if (inverse)
       QuadraticMinimizer.solveTriangular(A.asInstanceOf[DenseMatrix[Double]], y.asInstanceOf[DenseVector[Double]]).asInstanceOf[T]
     else mult(A, y)
-
+    
     val lambda = y dot ay
 
     y := ay

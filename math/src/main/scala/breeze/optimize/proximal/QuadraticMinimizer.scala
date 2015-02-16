@@ -1,20 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"), you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package breeze.optimize.proximal
 
 import breeze.linalg.cholesky
@@ -36,7 +19,7 @@ import breeze.optimize.linear.{PowerMethod, NNLS, ConjugateGradient}
 import breeze.stats.distributions.Rand
 import breeze.util.Implicits._
 
-/*
+/**
  * Proximal operators and ADMM based Primal-Dual QP Solver 
  * 
  * Reference: http://www.stanford.edu/~boyd/papers/admm/quadprog/quadprog.html
@@ -44,23 +27,28 @@ import breeze.util.Implicits._
  * 
  * It solves problem that has the following structure
  * 
- * 1/2 x*'Hx + f*'x + g(x) 
- * s.t ax = b
+ * 1/2 x'Hx + f'x + g(x)
+ * s.t Aeqx = b
  *
- * g(x) represents the following constraints which covers matrix factorization use-cases
+ * g(x) represents the following constraints which covers ALS based matrix factorization use-cases
  * 
  * 1. x >= 0
  * 2. lb <= x <= ub
  * 3. L1(x)
  * 4. L2(x)
  * 5. Generic regularization on x
+ *
+ * @param nGram rank of dense gram matrix
+ * @param proximal proximal operator to be used
+ * @param Aeq rhs matrix for equality constraints
+ * @param beq lhs constants for equality constraints
+ * @author debasish83
  */
-
 class QuadraticMinimizer(nGram: Int,
                          proximal: Proximal = null,
                          Aeq: DenseMatrix[Double] = null,
                          beq: DenseVector[Double] = null,
-                         maxIters: Int = -1, abstol: Double = 1e-8, reltol: Double = 1e-4) extends SerializableLogging {
+                         maxIters: Int = -1, abstol: Double = 1e-6, reltol: Double = 1e-4) extends SerializableLogging {
   type BDM = DenseMatrix[Double]
   type BDV = DenseVector[Double]
 
@@ -120,7 +108,7 @@ class QuadraticMinimizer(nGram: Int,
 
     //Dense cholesky factorization if the gram matrix is well defined
     if (linearEquality > 0) {
-      val lu = LU(wsH)
+      val lu= LU(wsH.asInstanceOf[DenseMatrix[Double]])
       R = lu._1
       pivot = lu._2
     } else {
@@ -160,9 +148,8 @@ class QuadraticMinimizer(nGram: Int,
     }
 
     //TO DO : Use LDL' decomposition for efficiency if the Gram matrix is sparse
-    //TO DO : Do we need a full newton step or we should take a damped newton step
+    // If the Gram matrix is positive definite then use Cholesky else use LU Decomposition
     val xlambda = if (linearEquality > 0) {
-      // If the Gram matrix is positive definite then use Cholesky else use LU Decomposition
       // x = U \ (L \ q)
       QuadraticMinimizer.solveTriangularLU(R, pivot, scale)
     } else {
@@ -254,20 +241,30 @@ class QuadraticMinimizer(nGram: Int,
     iterations(H, q).last
   }
 
+  def minimizeAndReturnState(q: DenseVector[Double]) : State = {
+    iterations(q).last
+  }
+
+  def minimize(q: DenseVector[Double]): DenseVector[Double] = {
+    minimizeAndReturnState(q).x
+  }
+
+  def iterations(q: DenseVector[Double]) : Iterator[State] = {
+    val rho = computeRho(wsH)
+    for (i <- 0 until q.length) wsH.update(i, i, wsH(i, i) + rho)
+    iterations(q, rho)
+  }
+
   def iterations(H: DenseMatrix[Double], q: DenseVector[Double]): Iterator[State] = {
     for (i <- 0 until H.rows)
       for (j <- 0 until H.cols) {
         wsH.update(i, j, H(i, j))
       }
-    val rho = computeRho(wsH)
-    for (i <- 0 until H.rows) wsH.update(i, i, wsH(i, i) + rho)
-
-    val result = iterations(q, rho)
-    result
+    iterations(q)
   }
 }
 
-/* 
+/**
  * PDCO dense quadratic program generator
  *  
  * Reference
@@ -275,15 +272,15 @@ class QuadraticMinimizer(nGram: Int,
  * Generates random instances of Quadratic Programming Problems
  * 0.5x'Px + q'x
  * s.t Ax = b
- *  lb <= x <= ub  
- 
- * @param A is the equality constraint
- * @param b is the equality parameters
- * @param lb is vector of lower bounds
- * @param ub is vector of upper bounds
- * @param q is linear representation of the function
- * @param H is the quadratic representation of the function 
- * 
+ *  lb <= x <= ub
+ *
+ * nGram rank of quadratic problems to be generated
+ * @return A is the equality constraint
+ * @return b is the equality parameters
+ * @return lb is vector of lower bounds (default at 0.0)
+ * @return ub is vector of upper bounds (default at 10.0)
+ * @return q is linear representation of the function
+ * @return H is the quadratic representation of the function
  */
 object QpGenerator {
   def getGram(nGram: Int) = {
@@ -294,20 +291,20 @@ object QpGenerator {
     H
   }
   
-  def apply(nHessian: Int, nEqualities: Int) = {
-    val en = DenseVector.ones[Double](nHessian)
-    val zn = DenseVector.zeros[Double](nHessian)
+  def apply(nGram: Int, nEqualities: Int) = {
+    val en = DenseVector.ones[Double](nGram)
+    val zn = DenseVector.zeros[Double](nGram)
 
-    val A = DenseMatrix.rand[Double](nEqualities, nHessian)
+    val A = DenseMatrix.rand[Double](nEqualities, nGram)
     val x = en
 
     val b = A * x
-    val q = DenseVector.rand[Double](nHessian)
+    val q = DenseVector.rand[Double](nGram)
 
     val lb = zn.copy
     val ub = en :* 10.0
     
-    val H = getGram(nHessian)
+    val H = getGram(nGram)
     
     (A, b, lb, ub, q, H)
   }
