@@ -116,7 +116,7 @@ object qr extends UFunc {
     }
   }
 
-  private def doQr(M: DenseMatrix[Double], skipQ : Boolean)
+  private def doQr(M: DenseMatrix[Double], skipQ: Boolean)
                   (mode: QRMode): (DenseMatrix[Double], DenseMatrix[Double]) = {
 
     val A = M.copy
@@ -133,7 +133,7 @@ object qr extends UFunc {
     lapack.dgeqrf(m, n, A.data, m, tau, work, -1, info)
 
     // do QR
-    val lwork = if(info.`val` != 0) n else work(0).toInt
+    val lwork = if (info.`val` != 0) n else work(0).toInt
     val workspace = new Array[Double](lwork)
 
     lapack.dgeqrf(m, n, A.data, m, tau, workspace, lwork, info)
@@ -144,12 +144,11 @@ object qr extends UFunc {
     else if (info.`val` < 0)
       throw new IllegalArgumentException()
 
-    // Handle modes that don't return Q
-    if (skipQ) {
-      (null, upperTriangular(A(0 until mn, ::)))
-    } else {
+    // Handle mode that don't return Q
+    if (skipQ) (null, upperTriangular(A(0 until mn, ::)))
+    else {
       val Q = if (mode == CompleteQR && m > n) DenseMatrix.zeros[Double](m, m)
-      else DenseMatrix.zeros[Double](m, n)
+              else DenseMatrix.zeros[Double](m, n)
 
       val mc = if (mode == CompleteQR && m > n) m else mn
 
@@ -159,7 +158,7 @@ object qr extends UFunc {
       lapack.dorgqr(m, mc, mn, Q.data, m, tau, work, -1, info)
       // Compute Q
       val lwork1 = if (info.`val` != 0) n else work(0).toInt
-      val workspace1 = new Array[Double](lwork)
+      val workspace1 = new Array[Double](lwork1)
       lapack.dorgqr(m, mc, mn, Q.data, m, tau, workspace1, lwork1, info)
 
       //Error check
@@ -168,16 +167,17 @@ object qr extends UFunc {
       else if (info.`val` < 0)
         throw new IllegalArgumentException()
 
+      // Upper triangle
       for {
         i <- 0 until mc
         j <- 0 until A.cols
-      } if (j < i) {
-        A(i, j) = 0.0
-      }
+        if j < i
+      } A(i, j) = 0.0
 
       (Q(::, 0 until mc), A(0 until mc, ::))
     }
   }
+}
 
 
 /**
