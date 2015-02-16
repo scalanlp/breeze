@@ -116,31 +116,27 @@ object qr extends UFunc {
     }
   }
 
-  private def doQr(A: DenseMatrix[Double], skipQ : Boolean)
+  private def doQr(M: DenseMatrix[Double], skipQ : Boolean)
                   (mode: QRMode): (DenseMatrix[Double], DenseMatrix[Double]) = {
+
+    val A = M.copy
+
     val m = A.rows
     val n = A.cols
 
-    //Get optimal workspace size
-    // we do this by sending -1 as lwork to the lapack function
-    // can't pass in null arrays on linux to new lapack, so passing in a length 1 called scratch
-    val scratch, work = new Array[Double](1)
-    val info = new intW(0)
-    lapack.dgeqrf(m, n, scratch, m, scratch, work, -1, info)
-    val lwork1 = if(info.`val` != 0) n else work(0).toInt
-    lapack.dorgqr(m, m, scala.math.min(m,n), scratch, m, scratch, work, -1, info)
-    val lwork2 = if(info.`val` != 0) n else work(0).toInt
-    //allocate workspace mem. as max of lwork1 and lwork2
-    val workspace = new Array[Double](scala.math.max(lwork1, lwork2))
+    val mn = scala.math.min(m,n)
+    val tau = new Array[Double](mn)
 
-    //Perform the QR factorization with dgeqrf
-    val maxd = scala.math.max(m,n)
-    val mind = scala.math.min(m,n)
-    val tau = new Array[Double](mind)
-    val outputMat = DenseMatrix.zeros[Double](m,maxd)
-    for(r <- 0 until m; c <- 0 until n)
-      outputMat(r,c) = A(r,c)
-    lapack.dgeqrf(m, n, outputMat.data, m, tau, workspace, workspace.length, info)
+    // Calculate optimal size of work data 'work'
+    val work = new Array[Double](1)
+    val info = new intW(0)
+    lapack.dgeqrf(m, n, A.data, m, tau, work, -1, info)
+
+    // do QR
+    val lwork = if(info.`val` != 0) n else work(0).toInt
+    val workspace = new Array[Double](lwork)
+
+    lapack.dgeqrf(m, n, A.data, m, tau, workspace, lwork, info)
 
     //Error check
     if (info.`val` > 0)
@@ -148,45 +144,40 @@ object qr extends UFunc {
     else if (info.`val` < 0)
       throw new IllegalArgumentException()
 
-    val R = mode match {
-      case CompleteQR => DenseMatrix.zeros[Double](m,n)
-      case ReducedQR => DenseMatrix.zeros[Double](mind,n)
-    }
+    // Handle modes that don't return Q
+    if (skipQ) {
+      (null, upperTriangular(A(0 until mn, ::)))
+    } else {
+      val Q = if (mode == CompleteQR && m > n) DenseMatrix.zeros[Double](m, m)
+      else DenseMatrix.zeros[Double](m, n)
 
-    for(c <- 0 until maxd if c < n; r <- 0 until m if r <= c)
-      R(r,c) = outputMat(r,c)
+      val mc = if (mode == CompleteQR && m > n) m else mn
 
-    //unless the skipq flag is set
-    if(!skipQ){
-      //Get Q from the matrix returned by dgep3
-      val Q = mode match {
-        case CompleteQR => DenseMatrix.zeros[Double](m,m)
-        case ReducedQR => DenseMatrix.zeros[Double](m,mind)
-      }
+      Q(::, 0 until n) := A
 
-      mode match {
-        case CompleteQR =>
-          lapack.dorgqr(m, m, scala.math.min(m, n), outputMat.data, m, tau, workspace, workspace.length, info)
-          for (r <- 0 until m; c <- 0 until maxd if c < m)
-            Q(r, c) = outputMat(r, c)
-
-        case ReducedQR =>
-          lapack.dorgqr(m, mind, mind, outputMat.data, m, tau, workspace, workspace.length, info)
-          for(r <- 0 until m; c <- 0 until mind)
-            Q(r,c) = outputMat(r,c)
-      }
+      // Determine optimal size
+      lapack.dorgqr(m, mc, mn, Q.data, m, tau, work, -1, info)
+      // Compute Q
+      val lwork1 = if (info.`val` != 0) n else work(0).toInt
+      val workspace1 = new Array[Double](lwork)
+      lapack.dorgqr(m, mc, mn, Q.data, m, tau, workspace1, lwork1, info)
 
       //Error check
       if (info.`val` > 0)
         throw new NotConvergedException(NotConvergedException.Iterations)
       else if (info.`val` < 0)
         throw new IllegalArgumentException()
-      (Q,R)
+
+      for {
+        i <- 0 until mc
+        j <- 0 until A.cols
+      } if (j < i) {
+        A(i, j) = 0.0
+      }
+
+      (Q(::, 0 until mc), A(0 until mc, ::))
     }
-    //skip Q and just return R
-    else (null,R)
   }
-}
 
 
 /**
