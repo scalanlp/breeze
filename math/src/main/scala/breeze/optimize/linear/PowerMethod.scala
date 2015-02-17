@@ -1,32 +1,17 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package breeze.optimize.linear
 
 import breeze.linalg.operators.OpMulMatrix
-import breeze.math.{MutableInnerProductModule}
+import breeze.math.MutableInnerProductModule
 import breeze.numerics.abs
+import breeze.optimize.proximal.QuadraticMinimizer
 import breeze.util.SerializableLogging
 import breeze.linalg.{DenseMatrix, DenseVector, norm}
 import breeze.util.Implicits._
-import breeze.optimize.proximal.QuadraticMinimizer
 /**
- * Created by debasish83 on 2/3/15.
+ * Power Method to compute maximum eigen value
+ * @author debasish83
  */
-class PowerMethod[T, M](maxIterations: Int = 10,tolerance: Double = 1E-5, inverse: Boolean = false)
+class PowerMethod[T, M](maxIters: Int = 10,tolerance: Double = 1E-5)
                        (implicit space: MutableInnerProductModule[T, Double],
                         mult: OpMulMatrix.Impl2[M, T, T]) extends SerializableLogging {
 
@@ -34,38 +19,38 @@ class PowerMethod[T, M](maxIterations: Int = 10,tolerance: Double = 1E-5, invers
 
   case class State(eigenValue: Double, eigenVector: T, iter: Int, converged: Boolean)
 
-  def initialState(y: T, A: M): State = {
-    //Force y to be a vector of unit norm
+  //memory allocation for the eigen vector result
+  def normalize(y: T) : T = {
     val normInit = norm(y)
-    y *= 1.0 / normInit
-    //TO DO : How to fix the asInstanceOf, at least throw a exception/require
-    val ay = if (inverse)
-      QuadraticMinimizer.solveTriangular(A.asInstanceOf[DenseMatrix[Double]], y.asInstanceOf[DenseVector[Double]]).asInstanceOf[T]
-    else mult(A, y)
+    val init = copy(y)
+    init *= 1.0/normInit
+  }
 
-    val lambda = y dot ay
-
-    y := ay
+  //in-place modification of eigen vector
+  def nextEigen(eigenVector: T, ay: T) = {
+    val lambda = eigenVector dot ay
+    eigenVector := ay
     val norm1 = norm(ay)
-    y *= 1.0/norm1
-    if (lambda < 0.0) y *= -1.0
-    State(lambda, y, 0, false)
+    eigenVector *= 1.0/norm1
+    if (lambda < 0.0) eigenVector *= -1.0
+    lambda
+  }
+
+  def initialState(y: T, A: M): State = {
+    val ynorm = normalize(y)
+    val ay = mult(A, ynorm)
+    val lambda = nextEigen(ynorm, ay)
+    State(lambda, ynorm, 0, false)
   }
 
   def iterations(y: T,
                  A: M): Iterator[State] = Iterator.iterate(initialState(y, A)) { state =>
     import state._
-    val ay = if (inverse)
-      QuadraticMinimizer.solveTriangular(A.asInstanceOf[DenseMatrix[Double]], eigenVector.asInstanceOf[DenseVector[Double]]).asInstanceOf[T]
-      else mult(A, eigenVector)
-    val lambda = eigenVector dot ay
-    val norm1 = norm(ay)
-    ay *= 1.0 / norm1
-    if (lambda < 0.0) ay *= -1.0
-
+    val ay = mult(A, eigenVector)
+    val lambda = nextEigen(eigenVector, ay)
     val val_dif = abs(lambda - eigenValue)
-    if (val_dif <= tolerance || iter > maxIterations) State(lambda, ay, iter + 1, true)
-    else State(lambda, ay, iter + 1, false)
+    if (val_dif <= tolerance || iter > maxIters) State(lambda, eigenVector, iter + 1, true)
+    else State(lambda, eigenVector, iter + 1, false)
   }.takeUpToWhere(_.converged)
 
   def iterateAndReturnState(y: T, A: M): State = {
@@ -74,5 +59,25 @@ class PowerMethod[T, M](maxIterations: Int = 10,tolerance: Double = 1E-5, invers
 
   def eigen(y: T, A: M): Double = {
     iterateAndReturnState(y, A).eigenValue
+  }
+}
+
+object PowerMethod {
+  def inverse(maxIters: Int = 10, tolerance: Double = 1E-5) = new PowerMethod[DenseVector[Double], DenseMatrix[Double]](maxIters, tolerance) {
+    override def initialState(y: DenseVector[Double], A: DenseMatrix[Double]): State = {
+      val ynorm = normalize(y)
+      val ay = QuadraticMinimizer.solveTriangular(A, ynorm)
+      val lambda = nextEigen(ynorm, ay)
+      State(lambda, ynorm, 0, false)
+    }
+    override def iterations(y: DenseVector[Double],
+                            A: DenseMatrix[Double]): Iterator[State] = Iterator.iterate(initialState(y, A)) { state =>
+      import state._
+      val ay = QuadraticMinimizer.solveTriangular(A, eigenVector)
+      val lambda = nextEigen(eigenVector, ay)
+      val val_dif = abs(lambda - eigenValue)
+      if (val_dif <= tolerance || iter > maxIters) State(lambda, eigenVector, iter + 1, true)
+      else State(lambda, eigenVector, iter + 1, false)
+    }.takeUpToWhere(_.converged)
   }
 }
