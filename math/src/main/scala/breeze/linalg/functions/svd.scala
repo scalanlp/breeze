@@ -10,7 +10,7 @@ import breeze.linalg.support.CanTranspose
 
 
 //  Options fot the singular value decomposition (SVD) of a real M-by-N matrix
-sealed class SVDMode(val JOBZ: String)
+sealed abstract class SVDMode(val JOBZ: String)
 case object CompleteSVD extends SVDMode("A")  // all M columns of U and all N rows of V**T are returned in the arrays U and VT
 case object ReducedSVD extends SVDMode("S")   // the first min(M,N) columns of U and the first min(M,N) rows of V**T are returned in the arrays U and VT
 
