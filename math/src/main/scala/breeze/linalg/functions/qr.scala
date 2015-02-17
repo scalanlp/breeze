@@ -4,13 +4,30 @@ import breeze.generic.UFunc
 import org.netlib.util.intW
 import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 
+
+sealed trait QRMode
+case object CompleteQR extends QRMode  // Q and R have dimensions (m, m), (m, n)
+case object ReducedQR extends QRMode   // Q and R have dimensions (m, k), (k, n) with k = min(m, n)
+
+
 /**
  * QR Factorization
  *
  * Previous versions of Breeze had qr(m, skipQ), where we could
- * skip the computation in making q if we didn't want it. That is now supplanted by qr.justR(m)
+ * skip the computation in making Q if we didn't want it. That is now supplanted by qr.justR(m)
  *
- * @return (Q,R) Q: m x m R: m x n
+ * Supports complete and reduced mode of factorization of matrix A with dimensions (m, n).
+ * If mode is complete matrices Q and R have dimensions (m, m), (m, n).
+ * If mode is reduced matrices Q and R have dimensions (m, k), (k, n) with k = min(m, n).
+ *
+ * Complete QR factorization can be called by qr(A).
+ *
+ * Reduced QR factorization can be called by qr.reduced(A). If computation of Q is unnecessary, it
+ * can be skipped by qr.reduced.justR(A)
+ *
+ * @return (Q, R)
+ *         Q - A matrix with orthonormal columns
+ *         R - The upper-triangular matrix
  *
  */
 object qr extends UFunc {
@@ -21,7 +38,7 @@ object qr extends UFunc {
 
   implicit object impl_DM_Double extends Impl[DenseMatrix[Double],DenseQR] {
     def apply(v: DenseMatrix[Double]): DenseQR = {
-      val (q, r) = doQr(v, false)
+      val (q, r) = doQr(v, skipQ = false)(mode = CompleteQR)
       QR(q, r)
     }
   }
@@ -32,7 +49,7 @@ object qr extends UFunc {
   object justR extends UFunc {
     implicit object impl_DM_Double extends Impl[DenseMatrix[Double], DenseMatrix[Double]] {
       def apply(v: DenseMatrix[Double]): DenseMatrix[Double] = {
-        doQr(v, true)._2
+        doQr(v, skipQ = true)(mode = CompleteQR)._2
       }
     }
 
@@ -59,13 +76,48 @@ object qr extends UFunc {
 
 
   /**
-   * QR Factorization
-   *
-   * @param A m x n matrix
-   * @param skipQ (optional) if true, don't reconstruct orthogonal matrix Q (instead returns (null,R))
-   * @return (Q,R) Q: m x m R: m x n
+   * QR Factorization that returns Q and R with dimensions (m, k), (k, n) where k = min(m, n)
    */
-  private def doQr(A: DenseMatrix[Double], skipQ : Boolean = false): (DenseMatrix[Double], DenseMatrix[Double]) = {
+  object reduced extends UFunc {
+
+    implicit object impl_reduced_DM_Double extends Impl[DenseMatrix[Double],DenseQR] {
+      def apply(v: DenseMatrix[Double]): DenseQR = {
+        val (q, r) = doQr(v, skipQ = false)(mode = ReducedQR)
+        QR(q, r)
+      }
+    }
+
+    /**
+     * QR that just returns R with reduced size.
+     */
+    object justR extends UFunc {
+      implicit object impl_reduced_DM_Double extends Impl[DenseMatrix[Double], DenseMatrix[Double]] {
+        def apply(v: DenseMatrix[Double]): DenseMatrix[Double] = {
+          doQr(v, skipQ = true)(mode = ReducedQR)._2
+        }
+      }
+
+      implicit def canJustQIfWeCanQR[T,M](implicit qrImpl: qr.reduced.Impl[T, QR[M]]):Impl[T, M] = {
+        new Impl[T, M] {
+          def apply(v: T): M = qrImpl(v).r
+        }
+      }
+    }
+
+    /**
+     * QR that just returns Q with reduced size.
+     */
+    object justQ extends UFunc {
+      implicit def canJustQIfWeCanQR[T, M](implicit qrImpl: qr.reduced.Impl[T, QR[M]]): Impl[T, M] = {
+        new Impl[T, M] {
+          def apply(v: T): M = qrImpl(v).q
+        }
+      }
+    }
+  }
+
+  private def doQr(A: DenseMatrix[Double], skipQ : Boolean)
+                  (mode: QRMode): (DenseMatrix[Double], DenseMatrix[Double]) = {
     val m = A.rows
     val n = A.cols
 
@@ -78,7 +130,7 @@ object qr extends UFunc {
     val lwork1 = if(info.`val` != 0) n else work(0).toInt
     lapack.dorgqr(m, m, scala.math.min(m,n), scratch, m, scratch, work, -1, info)
     val lwork2 = if(info.`val` != 0) n else work(0).toInt
-    //allocate workspace mem. as max of lwork1 and lwork3
+    //allocate workspace mem. as max of lwork1 and lwork2
     val workspace = new Array[Double](scala.math.max(lwork1, lwork2))
 
     //Perform the QR factorization with dgeqrf
@@ -96,18 +148,33 @@ object qr extends UFunc {
     else if (info.`val` < 0)
       throw new IllegalArgumentException()
 
-    //Get R
-    val R = DenseMatrix.zeros[Double](m,n)
-    for(c <- 0 until maxd if(c < n); r <- 0 until m if(r <= c))
+    val R = mode match {
+      case CompleteQR => DenseMatrix.zeros[Double](m,n)
+      case ReducedQR => DenseMatrix.zeros[Double](mind,n)
+    }
+
+    for(c <- 0 until maxd if c < n; r <- 0 until m if r <= c)
       R(r,c) = outputMat(r,c)
 
     //unless the skipq flag is set
     if(!skipQ){
       //Get Q from the matrix returned by dgep3
-      val Q = DenseMatrix.zeros[Double](m,m)
-      lapack.dorgqr(m, m, scala.math.min(m,n), outputMat.data, m, tau, workspace, workspace.length, info)
-      for(r <- 0 until m; c <- 0 until maxd if(c < m))
-        Q(r,c) = outputMat(r,c)
+      val Q = mode match {
+        case CompleteQR => DenseMatrix.zeros[Double](m,m)
+        case ReducedQR => DenseMatrix.zeros[Double](m,mind)
+      }
+
+      mode match {
+        case CompleteQR =>
+          lapack.dorgqr(m, m, scala.math.min(m, n), outputMat.data, m, tau, workspace, workspace.length, info)
+          for (r <- 0 until m; c <- 0 until maxd if c < m)
+            Q(r, c) = outputMat(r, c)
+
+        case ReducedQR =>
+          lapack.dorgqr(m, mind, mind, outputMat.data, m, tau, workspace, workspace.length, info)
+          for(r <- 0 until m; c <- 0 until mind)
+            Q(r,c) = outputMat(r,c)
+      }
 
       //Error check
       if (info.`val` > 0)
