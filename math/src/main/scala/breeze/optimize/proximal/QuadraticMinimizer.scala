@@ -15,7 +15,7 @@ import breeze.numerics._
 import breeze.linalg.LapackException
 import breeze.linalg.norm
 import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
-import breeze.optimize.linear.{PowerMethod, NNLS, ConjugateGradient}
+import breeze.optimize.linear.{InversePowerMethod, PowerMethod, NNLS, ConjugateGradient}
 import breeze.stats.distributions.Rand
 import breeze.util.Implicits._
 
@@ -184,7 +184,7 @@ class QuadraticMinimizer(nGram: Int,
       z += u
 
       //Apply proximal operator
-      proximal.prox(z, rho)
+      z := proximal.prox(z, rho)
 
       //z has proximal(x_hat)
 
@@ -335,7 +335,7 @@ object QuadraticMinimizer {
   //approximate min eigen using inverse power method
   def approximateMinEigen(H: DenseMatrix[Double]) : Double = {
     val R = cholesky(H).t
-    val pmInv = new PowerMethod[DenseVector[Double], DenseMatrix[Double]](10, 1e-5, true)
+    val pmInv = new InversePowerMethod()
     val init = DenseVector.rand[Double](H.rows, Rand.gaussian(0, 1))
     1.0/pmInv.eigen(init, R)
   }

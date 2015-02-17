@@ -14,7 +14,7 @@ import scala.Double.PositiveInfinity
 import breeze.linalg._
 
 trait Proximal {
-  def prox(x: DenseVector[Double], rho: Double)
+  def prox(x: DenseVector[Double], rho: Double) : DenseVector[Double]
 }
 
 case class ProjectBox(l: DenseVector[Double], u: DenseVector[Double]) extends Proximal {
@@ -24,6 +24,7 @@ case class ProjectBox(l: DenseVector[Double], u: DenseVector[Double]) extends Pr
       x.update(i, max(l(i), min(x(i), u(i))))
       i = i + 1
     }
+    x
   }
 }
 
@@ -34,6 +35,7 @@ case class ProjectPos() extends Proximal {
       x.update(i, max(0, x(i)))
       i = i + 1
     }
+    x
   }
 }
 
@@ -66,6 +68,7 @@ case class ProjectSoc() extends Proximal {
         }
       }
     }
+    x
   }
 }
 
@@ -78,6 +81,7 @@ case class ProjectEquality(Aeq: DenseMatrix[Double], beq: DenseVector[Double]) e
     val Av = Aeq*x
     Av -= beq
     x += invAeq*Av
+    x
   }
 }
 
@@ -92,6 +96,7 @@ case class ProjectHyperPlane(a: DenseVector[Double], b: Double) extends Proximal
     val scale = (b - atx) / (anorm * anorm)
     val ascaled = a * scale
     x += ascaled
+    x
   }
 }
 
@@ -109,11 +114,12 @@ case class ProximalL1() extends Proximal {
       x.update(i, max(0, x(i) - lambda/rho) - max(0, -x(i) - lambda/rho))
       i = i + 1
     }
+    x
   }
 }
 
 case class ProximalL2() extends Proximal {
-  def prox(x: DenseVector[Double], rho: Double) {
+  def prox(x: DenseVector[Double], rho: Double) = {
     var normSquare: Double = 0.0
     var i = 0
 
@@ -129,28 +135,31 @@ case class ProximalL2() extends Proximal {
       else x.update(i, 0)
       i = i + 1
     }
+    x
   }
 }
 
 // f = (1/2)||.||_2^2
 case class ProximalSumSquare() extends Proximal {
-  def prox(x: DenseVector[Double], rho: Double) {
+  def prox(x: DenseVector[Double], rho: Double) = {
     var i = 0
     while (i < x.length) {
       x.update(i, x(i) * (rho / (1 + rho)))
       i = i + 1
     }
+    x
   }
 }
 
 // f = -sum(log(x))
 case class ProximalLogBarrier() extends Proximal {
-  def prox(x: DenseVector[Double], rho: Double) {
+  def prox(x: DenseVector[Double], rho: Double) = {
     var i = 0
     while (i < x.length) {
       x.update(i, 0.5 * (x(i) + sqrt(x(i) * x(i) + 4 / rho)))
       i = i + 1
     }
+    x
   }
 }
 
@@ -183,7 +192,7 @@ case class ProximalHuber() extends Proximal {
     x
   }
 
-  def proxSeparable(x: DenseVector[Double], rho: Double, oracle: Double => Double, l: Double, u: Double) {
+  def proxSeparable(x: DenseVector[Double], rho: Double, oracle: Double => Double, l: Double, u: Double) = {
     x.map(proxScalar(_, rho, oracle, l, u, 0))
 
     var i = 0
@@ -191,6 +200,7 @@ case class ProximalHuber() extends Proximal {
       x.update(i, proxScalar(x(i), rho, oracle, l, u, 0))
       i = i + 1
     }
+    x
   }
 
   def subgradHuber(x: Double): Double = {
@@ -202,29 +212,31 @@ case class ProximalHuber() extends Proximal {
     }
   }
 
-  def prox(x: DenseVector[Double], rho: Double) {
+  def prox(x: DenseVector[Double], rho: Double) = {
     proxSeparable(x, rho, subgradHuber, NegativeInfinity, PositiveInfinity)
   }
 }
 
 // f = c'*x
 case class ProximalLinear(c: DenseVector[Double]) extends Proximal {
-  def prox(x: DenseVector[Double], rho: Double) {
+  def prox(x: DenseVector[Double], rho: Double) = {
     var i = 0
     while (i < x.length) {
       x.update(i, x(i) - c(i) / rho)
       i = i + 1
     }
+    x
   }
 }
 
 // f = c'*x + I(x >= 0)
 case class ProximalLp(c: DenseVector[Double]) extends Proximal {
-  def prox(x: DenseVector[Double], rho: Double) {
+  def prox(x: DenseVector[Double], rho: Double) = {
     var i = 0
     while (i < x.length) {
       x.update(i, max(0, x(i) - c(i) / rho))
       i = i + 1
     }
+    x
   }
 }

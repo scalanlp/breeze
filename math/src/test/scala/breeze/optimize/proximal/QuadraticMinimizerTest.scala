@@ -302,8 +302,6 @@ class QuadraticMinimizerTest extends OptimizeTestBase with Matchers {
     val qpSolverPos = QuadraticMinimizer(n, POSITIVE, 0.0)
     val posResult = qpSolverPos.minimize(ata, atb)
 
-    println(posResult)
-
     val qpSolverPosTest = QuadraticMinimizer(n, POSITIVE, 0.0)
     ata.iterator.foreach{
       case ((row, col), entry) => qpSolverPosTest.updateGram(row, col, entry)
