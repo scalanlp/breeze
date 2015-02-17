@@ -15,7 +15,7 @@ import breeze.numerics._
 import breeze.linalg.LapackException
 import breeze.linalg.norm
 import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
-import breeze.optimize.linear.{InversePowerMethod, PowerMethod, NNLS, ConjugateGradient}
+import breeze.optimize.linear.{PowerMethod, NNLS, ConjugateGradient}
 import breeze.stats.distributions.Rand
 import breeze.util.Implicits._
 
@@ -108,7 +108,7 @@ class QuadraticMinimizer(nGram: Int,
 
     //Dense cholesky factorization if the gram matrix is well defined
     if (linearEquality > 0) {
-      val lu= LU(wsH.asInstanceOf[DenseMatrix[Double]])
+      val lu= LU(wsH)
       R = lu._1
       pivot = lu._2
     } else {
@@ -335,7 +335,7 @@ object QuadraticMinimizer {
   //approximate min eigen using inverse power method
   def approximateMinEigen(H: DenseMatrix[Double]) : Double = {
     val R = cholesky(H).t
-    val pmInv = new InversePowerMethod()
+    val pmInv = PowerMethod.inverse()
     val init = DenseVector.rand[Double](H.rows, Rand.gaussian(0, 1))
     1.0/pmInv.eigen(init, R)
   }

@@ -3,14 +3,15 @@ package breeze.optimize.linear
 import breeze.linalg.operators.OpMulMatrix
 import breeze.math.MutableInnerProductModule
 import breeze.numerics.abs
+import breeze.optimize.proximal.QuadraticMinimizer
 import breeze.util.SerializableLogging
-import breeze.linalg.norm
+import breeze.linalg.{DenseMatrix, DenseVector, norm}
 import breeze.util.Implicits._
 /**
  * Power Method to compute maximum eigen value
  * @author debasish83
  */
-class PowerMethod[T, M](maxIterations: Int = 10,tolerance: Double = 1E-5)
+class PowerMethod[T, M](maxIters: Int = 10,tolerance: Double = 1E-5)
                        (implicit space: MutableInnerProductModule[T, Double],
                         mult: OpMulMatrix.Impl2[M, T, T]) extends SerializableLogging {
 
@@ -48,7 +49,7 @@ class PowerMethod[T, M](maxIterations: Int = 10,tolerance: Double = 1E-5)
     val ay = mult(A, eigenVector)
     val lambda = nextEigen(eigenVector, ay)
     val val_dif = abs(lambda - eigenValue)
-    if (val_dif <= tolerance || iter > maxIterations) State(lambda, eigenVector, iter + 1, true)
+    if (val_dif <= tolerance || iter > maxIters) State(lambda, eigenVector, iter + 1, true)
     else State(lambda, eigenVector, iter + 1, false)
   }.takeUpToWhere(_.converged)
 
@@ -58,5 +59,25 @@ class PowerMethod[T, M](maxIterations: Int = 10,tolerance: Double = 1E-5)
 
   def eigen(y: T, A: M): Double = {
     iterateAndReturnState(y, A).eigenValue
+  }
+}
+
+object PowerMethod {
+  def inverse(maxIters: Int = 10, tolerance: Double = 1E-5) = new PowerMethod[DenseVector[Double], DenseMatrix[Double]](maxIters, tolerance) {
+    override def initialState(y: DenseVector[Double], A: DenseMatrix[Double]): State = {
+      val ynorm = normalize(y)
+      val ay = QuadraticMinimizer.solveTriangular(A, ynorm)
+      val lambda = nextEigen(ynorm, ay)
+      State(lambda, ynorm, 0, false)
+    }
+    override def iterations(y: DenseVector[Double],
+                            A: DenseMatrix[Double]): Iterator[State] = Iterator.iterate(initialState(y, A)) { state =>
+      import state._
+      val ay = QuadraticMinimizer.solveTriangular(A, eigenVector)
+      val lambda = nextEigen(eigenVector, ay)
+      val val_dif = abs(lambda - eigenValue)
+      if (val_dif <= tolerance || iter > maxIters) State(lambda, eigenVector, iter + 1, true)
+      else State(lambda, eigenVector, iter + 1, false)
+    }.takeUpToWhere(_.converged)
   }
 }
