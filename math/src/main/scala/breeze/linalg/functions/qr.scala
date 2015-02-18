@@ -134,7 +134,7 @@ object qr extends UFunc {
 
     // do QR
     val lwork = if (info.`val` != 0) n else work(0).toInt
-    val workspace = new Array[Double](lwork)
+    var workspace = new Array[Double](lwork)
 
     lapack.dgeqrf(m, n, A.data, m, tau, workspace, lwork, info)
 
@@ -158,8 +158,8 @@ object qr extends UFunc {
       lapack.dorgqr(m, mc, mn, Q.data, m, tau, work, -1, info)
       // Compute Q
       val lwork1 = if (info.`val` != 0) n else work(0).toInt
-      val workspace1 = new Array[Double](lwork1)
-      lapack.dorgqr(m, mc, mn, Q.data, m, tau, workspace1, lwork1, info)
+      workspace = new Array[Double](lwork1)
+      lapack.dorgqr(m, mc, mn, Q.data, m, tau, workspace, lwork1, info)
 
       //Error check
       if (info.`val` > 0)
