@@ -184,7 +184,7 @@ class QuadraticMinimizer(nGram: Int,
       z += u
 
       //Apply proximal operator
-      z := proximal.prox(z, rho)
+      proximal.prox(z, rho)
 
       //z has proximal(x_hat)
 
