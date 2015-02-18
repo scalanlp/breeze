@@ -154,11 +154,11 @@ object qr extends UFunc {
 
       Q(::, 0 until n) := A
 
-      // Determine optimal size
+      // Calculate optimal size of workspace
       lapack.dorgqr(m, mc, mn, Q.data, m, tau, work, -1, info)
-      // Compute Q
       val lwork1 = if (info.`val` != 0) n else work(0).toInt
       workspace = new Array[Double](lwork1)
+      // Compute Q
       lapack.dorgqr(m, mc, mn, Q.data, m, tau, workspace, lwork1, info)
 
       //Error check
