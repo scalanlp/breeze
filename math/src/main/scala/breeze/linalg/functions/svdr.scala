@@ -3,23 +3,15 @@ package breeze.linalg.functions
 
 import breeze.generic.UFunc
 import breeze.linalg._
-import breeze.linalg.svd.SVD
+import breeze.linalg.svd.{DenseSVD, SVD}
 import breeze.numerics.{abs, signum}
 import breeze.stats.distributions.Rand
+
 
 /**
  * Approximate truncated randomized SVD
  */
 object svdr extends UFunc {
-
-  case class SVDR[M, V](leftVectors: M, singularValues: V, rightVectors: M) {
-    def U: M = leftVectors
-    def ∑ : V = singularValues
-    def S = ∑
-    def Vt: M = rightVectors
-  }
-
-  type DenseSVD = SVDR[DenseMatrix[Double], DenseVector[Double]]
 
   implicit object SvdR_DM_Impl2 extends Impl2[DenseMatrix[Double], Int, DenseSVD] {
     def apply(M: DenseMatrix[Double], k: Int): DenseSVD =
@@ -77,7 +69,7 @@ object svdr extends UFunc {
 
     val (u, v) = flipSVDSigns(_u, _v)
 
-    SVDR(u(::, 0 until k), _s(0 until k), v(0 until k, ::))
+    SVD(u(::, 0 until k), _s(0 until k), v(0 until k, ::))
   }
 
   /**
@@ -98,7 +90,7 @@ object svdr extends UFunc {
                                     size: Int,
                                     nIter: Int): DenseMatrix[Double] = {
     val R = DenseMatrix.rand(M.cols, size, rand = Rand.gaussian)
-    var Y = M * R
+    val Y = M * R
     for (a <- 0 until nIter) Y := M * (M.t * Y)
     val q = qr.reduced.justQ(Y)
     q

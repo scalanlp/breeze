@@ -18,7 +18,6 @@ package breeze.linalg
 import breeze.linalg.eig.Eig
 import breeze.linalg.eigSym.EigSym
 import breeze.linalg.functions.svdr
-import breeze.linalg.functions.svdr.SVDR
 import breeze.linalg.qr.QR
 import breeze.linalg.qrp.QRP
 import breeze.linalg.svd.SVD
@@ -549,7 +548,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
 
     for (m <- List(a, a.t)) {
       val SVD(u, s, v) = svd.reduced(m)
-      val SVDR(ur, sr, vr) = svdr(m, m.rows min m.cols)
+      val SVD(ur, sr, vr) = svdr(m, m.rows min m.cols)
 
       vectorsNearlyEqual(s, sr)
       matricesNearlyEqual(abs(u), abs(ur))
@@ -567,7 +566,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
       (0.0, 7.0, 0.0)
     ).t
 
-    val SVDR(u, sr, vt) = svdr(m, m.rows min m.cols)
+    val SVD(u, sr, vt) = svdr(m, m.rows min m.cols)
 
     val reM = u * diag(sr) * vt
     matricesNearlyEqual(reM, m)
@@ -583,7 +582,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
       (0.0, 7.0, 0.0)
     )
 
-    val SVDR(u, sr, vt) = svdr(m, m.rows min m.cols)
+    val SVD(u, sr, vt) = svdr(m, m.rows min m.cols)
 
     val reM = u * diag(sr) * vt
     matricesNearlyEqual(reM, m)
