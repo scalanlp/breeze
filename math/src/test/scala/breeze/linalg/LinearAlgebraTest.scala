@@ -17,7 +17,7 @@ package breeze.linalg
 
 import breeze.linalg.eig.Eig
 import breeze.linalg.eigSym.EigSym
-import breeze.linalg.functions.svdr
+import breeze.linalg.functions.{evdr, svdr}
 import breeze.linalg.qr.QR
 import breeze.linalg.qrp.QRP
 import breeze.linalg.svd.SVD
@@ -62,6 +62,21 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val EigSym(lambda, evs) = eigSym(A)
     assert(lambda === DenseVector(9.0,25.0,82.0))
     assert(evs === DenseMatrix((1.0,0.0,0.0),(0.0,0.0,1.0),(0.0,1.0,0.0)))
+  }
+
+  test("EVDR") {
+    val A = DenseMatrix((9.0, 0.0, 0.0), (0.0, 82.0, 0.0), (0.0, 0.0, 25.0))
+    val eigVals = DenseVector(9.0,25.0,82.0)
+    val eigVect = DenseMatrix((1.0, 0.0, 0.0), (0.0, 0.0, 1.0), (0.0, 1.0, 0.0))
+
+    val EigSym(lambda, evs) = evdr(A, 1)
+
+    val idx = argsort(lambda)
+
+    idx.zipWithIndex.map{ i =>
+      lambda(i._1) should be (eigVals(i._2) +- 1E-6)
+      vectorsNearlyEqual(evs(::, i._1), eigVect(::, i._2), 1E-6)
+    }
   }
 
   test("LUfactorization") {
