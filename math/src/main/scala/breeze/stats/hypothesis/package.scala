@@ -19,31 +19,22 @@ package object hypothesis {
 
   def tTest[X](it1 : X, it2 : X)(implicit ct: CanTraverseValues[X,Double]): Double = {
     //first sample
-    val res1 = meanAndVariance(it1)
-    val mu1 = res1.mean.toDouble;
-    val var1 = res1.variance.toDouble //Convert to doubles because sqrt
-    val N1 = res1.count
+    val MeanAndVariance(mu1, var1, n1) = meanAndVariance(it1)
     //second sample
-    val res2 = meanAndVariance(it2)
-    val mu2 = res2.mean.toDouble;
-    val var2 = res2.variance.toDouble
-    val N2 = res2.count
+    val MeanAndVariance(mu2, var2, n2) = meanAndVariance(it2)
     require(var1 > 0 && var2 > 0, "Two Sample T Test requires that both"
         +"samples have variance > 0")
-    val tScore = (mu1 - mu2).toDouble / sqrt( ((var1/N1) + (var2/N2)) ) // T statistic
-    val dof = pow((var1/N1) + (var2/N2), 2) / ( pow(var1,2)/( pow(N1,2)*(N1-1) ) +
-        pow(var2,2)/(pow(N2,2)*(N2-1)) ) //Welch–Satterthwaite equation
+    val tScore = (mu1 - mu2) / sqrt( (var1 / n1) + (var2 / n2) ) // T statistic
+    val dof = pow((var1/n1) + (var2/n2), 2) / ( pow(var1,2)/( pow(n1,2)*(n1-1) ) +
+        pow(var2,2)/(pow(n2,2)*(n2-1)) ) //Welch–Satterthwaite equation
     new StudentsT(dof)(RandBasis.mt0).unnormalizedPdf(tScore) //return p value
   }
 
   def tTest[T](it1: Traversable[T])(implicit numeric: Numeric[T]):Double = tTest(it1.map(numeric.toDouble))
   def tTest[X](it1: X)(implicit ct:CanTraverseValues[X,Double]):Double = {
-    val res1 = meanAndVariance(it1)
-    val mu1 = res1.mean.toDouble;
-    val var1 = res1.variance.toDouble //Convert to doubles because sqrt
-    val N1 = res1.count
-    val Z = mu1 / sqrt( var1/N1 )
-    val dof = N1-1
+    val MeanAndVariance(mu1, var1, n1) = meanAndVariance(it1)
+    val Z = mu1 / sqrt( var1/n1 )
+    val dof = n1-1
     new StudentsT(dof)(RandBasis.mt0).unnormalizedPdf(Z) //return p value
   }
 }
