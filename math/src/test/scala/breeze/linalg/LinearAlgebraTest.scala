@@ -17,6 +17,7 @@ package breeze.linalg
 
 import breeze.linalg.eig.Eig
 import breeze.linalg.eigSym.EigSym
+import breeze.linalg.functions.svdr
 import breeze.linalg.qr.QR
 import breeze.linalg.qrp.QRP
 import breeze.linalg.svd.SVD
@@ -194,6 +195,38 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
 
   }
 
+  test("qr A[m, n], m < n") {
+    val A = DenseMatrix((1.0, 1.0, 1.0, 1.0), (4.0, 2.0, 1.0, 1.0), (16.0, 4.0, 1.0, 1.0))
+    val QR(_Q, _R) = qr(A)
+
+    assert((_Q.rows, _Q.cols) == (A.rows, A.rows))
+    assert((_R.rows, _R.cols) == (A.rows, A.cols))
+
+    assert( trace(_Q.t * _Q).closeTo(min(A.rows, A.cols)) )
+    for(i <- 0 until _R.rows; j <- 0 until i) {
+      assert(_R(i,j) === 0.0)
+    }
+
+    val reA: DenseMatrix[Double] = _Q * _R
+    matricesNearlyEqual(reA, A)
+  }
+
+  test("qr A[m, n], m > n") {
+    val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0), (32.0, 8.0, 1.0))
+    val QR(_Q, _R) = qr(A)
+
+    assert((_Q.rows, _Q.cols) == (A.rows, A.rows))
+    assert((_R.rows, _R.cols) == (A.rows, A.cols))
+
+    assert( trace(_Q.t * _Q).closeTo(max(A.rows, A.cols)) )
+    for(i <- 0 until _R.rows; j <- 0 until i) {
+      assert(_R(i,j) === 0.0)
+    }
+
+    val reA: DenseMatrix[Double] = _Q * _R
+    matricesNearlyEqual(reA, A)
+  }
+
 
   test("qr just[QR]") {
     val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
@@ -208,6 +241,63 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val QRP(_QQ, _RR, _P, _) = qrp(A)
     val ap = A * convert(_P, Double)
     assert(max(abs(_QQ * _RR - ap)) < 1E-8)
+  }
+
+
+  test("qr reduced A[m, n], m < n") {
+    val A = DenseMatrix((1.0, 1.0, 1.0, 1.0), (4.0, 2.0, 1.0, 1.0), (16.0, 4.0, 1.0, 1.0))
+    val QR(_Q, _R) = qr.reduced(A)
+
+    assert((_Q.rows, _Q.cols) == (A.rows, min(A.rows, A.cols)))
+    assert((_R.rows, _R.cols) == (min(A.rows, A.cols), A.cols))
+
+    assert( trace(_Q.t * _Q).closeTo(min(A.rows, A.cols)) )
+    for(i <- 0 until _R.rows; j <- 0 until i) {
+      assert(_R(i,j) === 0.0)
+    }
+
+    val reA: DenseMatrix[Double] = _Q * _R
+    matricesNearlyEqual(reA, A)
+  }
+
+  test("qr reduced A[m, n], m = n") {
+    val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
+    val QR(_Q, _R) = qr.reduced(A)
+
+    assert((_Q.rows, _Q.cols) == (A.rows, min(A.rows, A.cols)))
+    assert((_R.rows, _R.cols) == (min(A.rows, A.cols), A.cols))
+
+    assert( trace(_Q.t * _Q).closeTo(min(A.rows, A.cols)) )
+    for(i <- 0 until _R.rows; j <- 0 until i) {
+      assert(_R(i,j) === 0.0)
+    }
+
+    val reA: DenseMatrix[Double] = _Q * _R
+    matricesNearlyEqual(reA, A)
+  }
+
+  test("qr reduced A[m, n], m > n") {
+    val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0), (32.0, 8.0, 1.0))
+    val QR(_Q, _R) = qr.reduced(A)
+
+    assert((_Q.rows, _Q.cols) == (A.rows, min(A.rows, A.cols)))
+    assert((_R.rows, _R.cols) == (min(A.rows, A.cols), A.cols))
+
+    assert( trace(_Q.t * _Q).closeTo(min(A.rows, A.cols)) )
+    for(i <- 0 until _R.rows; j <- 0 until i) {
+      assert(_R(i,j) === 0.0)
+    }
+
+    val reA: DenseMatrix[Double] = _Q * _R
+    matricesNearlyEqual(reA, A)
+  }
+
+  test("qr reduced just[QR]") {
+    val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
+    val QR(_Q, _R) = qr.reduced(A)
+    val _Q2 = qr.reduced.justQ(A)
+    assert (_Q2 === _Q)
+    assert (_R === qr.reduced.justR(A))
   }
 
 
@@ -226,7 +316,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     // TODO, we seem to throw out VI... these seems bad...
   }
 
-  test("svd") {
+  test("svd A(m, n), m > n") {
     val m = DenseMatrix((2.0,4.0),(1.0,3.0),(0.0,0.0),(0.0,0.0))
     val SVD(u, s, vt) = svd(m)
 
@@ -244,6 +334,257 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val ss = DenseMatrix.zeros[Double](m.rows, m.cols)
     diag(ss(0 until s.length, 0 until s.length)) := s
     val reM: DenseMatrix[Double] =  u * ss * vt
+    matricesNearlyEqual(reM, m)
+  }
+
+  test("svd A(m, n), m < n") {
+    val m = DenseMatrix((2.0,4.0),(1.0,3.0),(0.0,0.0),(0.0,0.0)).t
+    val SVD(u, s, vt) = svd(m)
+
+    // u and vt are unitary
+    trace(u.t * u) should be (u.rows.toDouble +- 1E-5)
+    trace(vt * vt.t) should be (vt.rows.toDouble +- 1E-5)
+
+    // s is sorted by size of singular value, and be nonnegative
+    for(i <- 1 until s.length) {
+      assert(s(i) <= s(i-1), s"s($i) > s(${i-1}): ${s(i)} > ${s(i-1)}")
+      assert(s(i) >= 0, s"s($i) < 0: ${s(i)}")
+    }
+
+
+    val ss = DenseMatrix.zeros[Double](m.rows, m.cols)
+    diag(ss(0 until s.length, 0 until s.length)) := s
+    val reM: DenseMatrix[Double] =  u * ss * vt
+    matricesNearlyEqual(reM, m)
+  }
+
+  test("svd float A(m, n), m > n") {
+    val m: DenseMatrix[Float] = DenseMatrix((2.0f,4.0f),(1.0f,3.0f),(0.0f,0.0f),(0.0f,0.0f))
+    val SVD(u, s, vt) = svd(m)
+
+    // u and vt are unitary
+    trace(u.t * u) should be (u.rows.toFloat +- 1E-5f)
+    trace(vt * vt.t) should be (vt.rows.toFloat +- 1E-5f)
+
+    // s is sorted by size of singular value, and be nonnegative
+    for(i <- 1 until s.length) {
+      assert(s(i) <= s(i-1), s"s($i) > s(${i-1}): ${s(i)} > ${s(i-1)}")
+      assert(s(i) >= 0, s"s($i) < 0: ${s(i)}")
+    }
+
+
+    val ss = DenseMatrix.zeros[Float](m.rows, m.cols)
+    diag(ss(0 until s.length, 0 until s.length)) := s
+    val reM: DenseMatrix[Float] =  u * ss * vt
+    // matricesNearlyEqual(reM, m)
+    for(i <- 0 until reM.rows; j <- 0 until reM.cols)
+      reM(i,j) should be (m(i, j) +- 1E-6f)
+  }
+
+  test("svd float A(m, n), m < n") {
+    val m: DenseMatrix[Float] = DenseMatrix((2.0f,4.0f),(1.0f,3.0f),(0.0f,0.0f),(0.0f,0.0f)).t
+    val SVD(u, s, vt) = svd(m)
+
+    // u and vt are unitary
+    trace(u.t * u) should be (u.rows.toFloat +- 1E-5f)
+    trace(vt * vt.t) should be (vt.rows.toFloat +- 1E-5f)
+
+    // s is sorted by size of singular value, and be nonnegative
+    for(i <- 1 until s.length) {
+      assert(s(i) <= s(i-1), s"s($i) > s(${i-1}): ${s(i)} > ${s(i-1)}")
+      assert(s(i) >= 0, s"s($i) < 0: ${s(i)}")
+    }
+
+
+    val ss = DenseMatrix.zeros[Float](m.rows, m.cols)
+    diag(ss(0 until s.length, 0 until s.length)) := s
+    val reM: DenseMatrix[Float] =  u * ss * vt
+    // matricesNearlyEqual(reM, m)
+    for(i <- 0 until reM.rows; j <- 0 until reM.cols)
+      reM(i,j) should be (m(i, j) +- 1E-5f)
+  }
+
+  test("svd reduced A(m, n), m > n") {
+    val m = DenseMatrix((2.0,4.0),(1.0,3.0),(0.0,0.0),(0.0,0.0))
+    val SVD(u, s, vt) = svd.reduced(m)
+
+    // u and vt are unitary
+    trace(u.t * u) should be (u.cols.toDouble +- 1E-5)
+    trace(vt * vt.t) should be (vt.rows.toDouble +- 1E-5)
+
+    // s is sorted by size of singular value, and be nonnegative
+    for(i <- 1 until s.length) {
+      assert(s(i) <= s(i-1), s"s($i) > s(${i-1}): ${s(i)} > ${s(i-1)}")
+      assert(s(i) >= 0, s"s($i) < 0: ${s(i)}")
+    }
+
+
+    val ss = DenseMatrix.zeros[Double](m.rows min m.cols, m.rows min m.cols)
+    diag(ss(0 until s.length, 0 until s.length)) := s
+    val reM: DenseMatrix[Double] =  u * ss * vt
+    matricesNearlyEqual(reM, m)
+  }
+
+  test("svd reduced A(m, n), m < n") {
+    val m = DenseMatrix((2.0,4.0),(1.0,3.0),(0.0,0.0),(0.0,0.0)).t
+    val SVD(u, s, vt) = svd.reduced(m)
+
+    // u and vt are unitary
+    trace(u.t * u) should be (u.cols.toDouble +- 1E-5)
+    trace(vt * vt.t) should be (vt.rows.toDouble +- 1E-5)
+
+    // s is sorted by size of singular value, and be nonnegative
+    for(i <- 1 until s.length) {
+      assert(s(i) <= s(i-1), s"s($i) > s(${i-1}): ${s(i)} > ${s(i-1)}")
+      assert(s(i) >= 0, s"s($i) < 0: ${s(i)}")
+    }
+
+
+    val ss = DenseMatrix.zeros[Double](m.rows min m.cols, m.rows min m.cols)
+    diag(ss(0 until s.length, 0 until s.length)) := s
+    val reM: DenseMatrix[Double] =  u * ss * vt
+    matricesNearlyEqual(reM, m)
+  }
+
+  test("svd reduced A(m, n), m = n") {
+    val m = DenseMatrix((2.0,4.0),(1.0,3.0))
+    val SVD(u, s, vt) = svd.reduced(m)
+
+    // u and vt are unitary
+    trace(u.t * u) should be (u.cols.toDouble +- 1E-5)
+    trace(vt * vt.t) should be (vt.rows.toDouble +- 1E-5)
+
+    // s is sorted by size of singular value, and be nonnegative
+    for(i <- 1 until s.length) {
+      assert(s(i) <= s(i-1), s"s($i) > s(${i-1}): ${s(i)} > ${s(i-1)}")
+      assert(s(i) >= 0, s"s($i) < 0: ${s(i)}")
+    }
+
+
+    val ss = DenseMatrix.zeros[Double](m.rows min m.cols, m.rows min m.cols)
+    diag(ss(0 until s.length, 0 until s.length)) := s
+    val reM: DenseMatrix[Double] =  u * ss * vt
+    matricesNearlyEqual(reM, m)
+  }
+
+  test("svd reduced float A(m, n), m > n") {
+    val m = DenseMatrix((2.0f,4.0f),(1.0f,3.0f),(0.0f,0.0f),(0.0f,0.0f))
+    val SVD(u, s, vt) = svd.reduced(m)
+
+    // u and vt are unitary
+    trace(u.t * u) should be (u.cols.toFloat +- 1E-5f)
+    trace(vt * vt.t) should be (vt.rows.toFloat +- 1E-5f)
+
+    // s is sorted by size of singular value, and be nonnegative
+    for(i <- 1 until s.length) {
+      assert(s(i) <= s(i-1), s"s($i) > s(${i-1}): ${s(i)} > ${s(i-1)}")
+      assert(s(i) >= 0, s"s($i) < 0: ${s(i)}")
+    }
+
+
+    val ss = DenseMatrix.zeros[Float](m.rows min m.cols, m.rows min m.cols)
+    diag(ss(0 until s.length, 0 until s.length)) := s
+    val reM: DenseMatrix[Float] =  u * ss * vt
+    // matricesNearlyEqual(reM, m)
+    for(i <- 0 until reM.rows; j <- 0 until reM.cols)
+      reM(i,j) should be (m(i, j) +- 1E-6f)
+  }
+
+  test("svd reduced float A(m, n), m = n") {
+    val m = DenseMatrix((2.0f,4.0f),(1.0f,3.0f))
+    val SVD(u, s, vt) = svd.reduced(m)
+
+    // u and vt are unitary
+    trace(u.t * u) should be (u.cols.toFloat +- 1E-5f)
+    trace(vt * vt.t) should be (vt.rows.toFloat +- 1E-5f)
+
+    // s is sorted by size of singular value, and be nonnegative
+    for(i <- 1 until s.length) {
+      assert(s(i) <= s(i-1), s"s($i) > s(${i-1}): ${s(i)} > ${s(i-1)}")
+      assert(s(i) >= 0, s"s($i) < 0: ${s(i)}")
+    }
+
+
+    val ss = DenseMatrix.zeros[Float](m.rows min m.cols, m.rows min m.cols)
+    diag(ss(0 until s.length, 0 until s.length)) := s
+    val reM: DenseMatrix[Float] =  u * ss * vt
+    // matricesNearlyEqual(reM, m)
+    for(i <- 0 until reM.rows; j <- 0 until reM.cols)
+      reM(i,j) should be (m(i, j) +- 1E-5f)
+  }
+
+  test("svd reduced float A(m, n), m < n") {
+    val m = DenseMatrix((2.0f,4.0f),(1.0f,3.0f),(0.0f,0.0f),(0.0f,0.0f)).t
+    val SVD(u, s, vt) = svd.reduced(m)
+
+    // u and vt are unitary
+    trace(u.t * u) should be (u.cols.toFloat +- 1E-5f)
+    trace(vt * vt.t) should be (vt.rows.toFloat +- 1E-5f)
+
+    // s is sorted by size of singular value, and be nonnegative
+    for(i <- 1 until s.length) {
+      assert(s(i) <= s(i-1), s"s($i) > s(${i-1}): ${s(i)} > ${s(i-1)}")
+      assert(s(i) >= 0, s"s($i) < 0: ${s(i)}")
+    }
+
+
+    val ss = DenseMatrix.zeros[Float](m.rows min m.cols, m.rows min m.cols)
+    diag(ss(0 until s.length, 0 until s.length)) := s
+    val reM: DenseMatrix[Float] =  u * ss * vt
+    // matricesNearlyEqual(reM, m)
+    for(i <- 0 until reM.rows; j <- 0 until reM.cols)
+      reM(i,j) should be (m(i, j) +- 1E-5f)
+  }
+
+  test("svd and svdr singular values are equal") {
+    val a = DenseMatrix(
+      (2.0, 4.0, 0.0),
+      (1.0, 3.0, 4.0),
+      (5.0, 0.0, 0.9),
+      (3.0, 5.0, 0.5),
+      (7.5, 1.0, 6.0),
+      (0.0, 7.0, 0.0)
+    )
+
+    for (m <- List(a, a.t)) {
+      val SVD(u, s, v) = svd.reduced(m)
+      val SVD(ur, sr, vr) = svdr(m, m.rows min m.cols)
+
+      vectorsNearlyEqual(s, sr)
+      matricesNearlyEqual(abs(u), abs(ur))
+      matricesNearlyEqual(abs(v), abs(vr))
+    }
+  }
+
+  test("svdr A[m, n], m < n") {
+    val m = DenseMatrix(
+      (2.0, 4.0, 0.0),
+      (1.0, 3.0, 4.0),
+      (5.0, 0.0, 0.9),
+      (3.0, 5.0, 0.5),
+      (7.5, 1.0, 6.0),
+      (0.0, 7.0, 0.0)
+    ).t
+
+    val SVD(u, sr, vt) = svdr(m, m.rows min m.cols)
+
+    val reM = u * diag(sr) * vt
+    matricesNearlyEqual(reM, m)
+  }
+
+  test("svdr A[m, n], m > n") {
+    val m = DenseMatrix(
+      (2.0, 4.0, 0.0),
+      (1.0, 3.0, 4.0),
+      (5.0, 0.0, 0.9),
+      (3.0, 5.0, 0.5),
+      (7.5, 1.0, 6.0),
+      (0.0, 7.0, 0.0)
+    )
+
+    val SVD(u, sr, vt) = svdr(m, m.rows min m.cols)
+
+    val reM = u * diag(sr) * vt
     matricesNearlyEqual(reM, m)
   }
 

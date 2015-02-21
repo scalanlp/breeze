@@ -9,10 +9,15 @@ import breeze.linalg.operators.OpMulMatrix
 import breeze.linalg.support.CanTranspose
 
 
+//  Options fot the singular value decomposition (SVD) of a real M-by-N matrix
+sealed abstract class SVDMode(val JOBZ: String)
+case object CompleteSVD extends SVDMode("A")  // all M columns of U and all N rows of V**T are returned in the arrays U and VT
+case object ReducedSVD extends SVDMode("S")   // the first min(M,N) columns of U and the first min(M,N) rows of V**T are returned in the arrays U and VT
+
 
 /**
-  * Computes the SVD of a m by n matrix
-  * Returns an m*m matrix U, a vector of singular values, and a n*n matrix V'
+  * Computes the SVD of a M-by-N matrix
+  * Returns an M-by-M matrix U, a vector of singular values, and a N-by-N matrix V'
   */
 object svd extends UFunc {
 
@@ -31,76 +36,133 @@ object svd extends UFunc {
   // implementations
 
   implicit object Svd_DM_Impl extends Impl[DenseMatrix[Double], DenseSVD] {
-    def apply(mat: DenseMatrix[Double]): DenseSVD = {
-      requireNonEmptyMatrix(mat)
-
-      val m = mat.rows
-      val n = mat.cols
-      val S = DenseVector.zeros[Double](m min n)
-      val U = DenseMatrix.zeros[Double](m,m)
-      val Vt = DenseMatrix.zeros[Double](n,n)
-      val iwork = new Array[Int](8 * (m min n) )
-      val workSize = ( 3
-        * scala.math.min(m, n)
-        * scala.math.min(m, n)
-        + scala.math.max(scala.math.max(m, n), 4 * scala.math.min(m, n)
-          * scala.math.min(m, n) + 4 * scala.math.min(m, n))
-      )
-      val work = new Array[Double](workSize)
-      val info = new intW(0)
-      val cm = copy(mat)
-
-      lapack.dgesdd(
-        "A", m, n,
-        cm.data, scala.math.max(1,m),
-        S.data, U.data, scala.math.max(1,m),
-        Vt.data, scala.math.max(1,n),
-        work,work.length,iwork, info)
-
-      if (info.`val` > 0)
-        throw new NotConvergedException(NotConvergedException.Iterations)
-      else if (info.`val` < 0)
-        throw new IllegalArgumentException()
-
-      SVD(U,S,Vt)
-    }
+    def apply(mat: DenseMatrix[Double]): DenseSVD = doSVD_Double(mat)(mode = CompleteSVD)
   }
 
 
   implicit object Svd_DM_Impl_Float extends Impl[DenseMatrix[Float], SDenseSVD] {
-    def apply(mat: DenseMatrix[Float]): SDenseSVD = {
-      requireNonEmptyMatrix(mat)
+    def apply(mat: DenseMatrix[Float]): SDenseSVD = doSVD_Float(mat)(mode = CompleteSVD)
+  }
 
-      val m = mat.rows
-      val n = mat.cols
-      val S = DenseVector.zeros[Float](m min n)
-      val U = DenseMatrix.zeros[Float](m,m)
-      val Vt = DenseMatrix.zeros[Float](n,n)
-      val iwork = new Array[Int](8 * (m min n) )
-      val workSize = ( 3
-        * scala.math.min(m, n)
-        * scala.math.min(m, n)
-        + scala.math.max(scala.math.max(m, n), 4 * scala.math.min(m, n)
-        * scala.math.min(m, n) + 4 * scala.math.min(m, n))
-        )
-      val work = new Array[Float](workSize)
-      val info = new intW(0)
-      val cm = copy(mat)
 
-      lapack.sgesdd(
-        "A", m, n,
-        cm.data, scala.math.max(1,m),
-        S.data, U.data, scala.math.max(1,m),
-        Vt.data, scala.math.max(1,n),
-        work,work.length,iwork, info)
-
-      if (info.`val` > 0)
-        throw new NotConvergedException(NotConvergedException.Iterations)
-      else if (info.`val` < 0)
-        throw new IllegalArgumentException()
-
-      SVD(U,S,Vt)
+  /**
+   * Option for computing part of the M-by-N matrix U:
+   *       The first min(M,N) columns of U and the first min(M,N)
+   *       rows of V**T are returned in the arrays U and VT;
+   */
+  object reduced extends UFunc {
+    implicit object reduced_Svd_DM_Impl extends Impl[DenseMatrix[Double], DenseSVD] {
+      def apply(mat: DenseMatrix[Double]): DenseSVD = doSVD_Double(mat)(mode = ReducedSVD)
     }
+
+    implicit object reduced_Svd_DM_Impl_Float extends Impl[DenseMatrix[Float], SDenseSVD] {
+      def apply(mat: DenseMatrix[Float]): SDenseSVD = doSVD_Float(mat)(mode = ReducedSVD)
+    }
+  }
+
+  /**
+   * Computes the singular value decomposition (SVD) of a real M-by-N matrix
+   *
+   * @param mat Real M-by-N matrix (DOUBLE PRECISION)
+   * @param mode Mode of the SVD
+   * @return The singular value decomposition (SVD) with the singular values,
+   *         the left and right singular vectors (DOUBLE PRECISION)
+   */
+  private def doSVD_Double(mat: DenseMatrix[Double])(mode: SVDMode): DenseSVD = {
+    requireNonEmptyMatrix(mat)
+
+    val m = mat.rows
+    val n = mat.cols
+    val S = DenseVector.zeros[Double](m min n)
+    val U = mode match {
+      case CompleteSVD => DenseMatrix.zeros[Double](m,m)
+      case ReducedSVD => DenseMatrix.zeros[Double](m,m min n)
+    }
+    val Vt = mode match {
+      case CompleteSVD => DenseMatrix.zeros[Double](n,n)
+      case ReducedSVD => DenseMatrix.zeros[Double](m min n,n)
+    }
+    val iwork = new Array[Int](8 * (m min n) )
+    val workSize = ( 3
+      * scala.math.min(m, n)
+      * scala.math.min(m, n)
+      + scala.math.max(scala.math.max(m, n), 4 * scala.math.min(m, n)
+      * scala.math.min(m, n) + 4 * scala.math.min(m, n))
+      )
+    val work = new Array[Double](workSize)
+    val info = new intW(0)
+    val cm = copy(mat)
+
+    val LDVT = mode match {
+      case CompleteSVD => scala.math.max(1,n)
+      case ReducedSVD => m min n
+    }
+
+    lapack.dgesdd(
+      mode.JOBZ, m, n,
+      cm.data, scala.math.max(1,m),
+      S.data, U.data, scala.math.max(1,m),
+      Vt.data, LDVT,
+      work,work.length,iwork, info)
+
+    if (info.`val` > 0)
+      throw new NotConvergedException(NotConvergedException.Iterations)
+    else if (info.`val` < 0)
+      throw new IllegalArgumentException()
+
+    SVD(U,S,Vt)
+  }
+
+  /**
+   * Computes the singular value decomposition (SVD) of a real M-by-N matrix
+   * @param mat Real M-by-N matrix (SINGLE PRECISION)
+   * @param mode Mode of the SVD
+   * @return The singular value decomposition (SVD) with the singular values,
+   *         the left and right singular vectors (SINGLE PRECISION)
+   */
+  private def doSVD_Float(mat: DenseMatrix[Float])(mode: SVDMode): SDenseSVD = {
+    requireNonEmptyMatrix(mat)
+
+    val m = mat.rows
+    val n = mat.cols
+    val S = DenseVector.zeros[Float](m min n)
+    val U = mode.JOBZ match {
+      case "A" => DenseMatrix.zeros[Float](m,m)
+      case "S" => DenseMatrix.zeros[Float](m,m min n)
+    }
+    val Vt = mode.JOBZ match {
+      case "A" => DenseMatrix.zeros[Float](n,n)
+      case "S" => DenseMatrix.zeros[Float](m min n,n)
+    }
+    val iwork = new Array[Int](8 * (m min n) )
+    val workSize = ( 3
+      * scala.math.min(m, n)
+      * scala.math.min(m, n)
+      + scala.math.max(scala.math.max(m, n), 4 * scala.math.min(m, n)
+      * scala.math.min(m, n) + 4 * scala.math.min(m, n))
+      )
+    val work = new Array[Float](workSize)
+    val info = new intW(0)
+    val cm = copy(mat)
+
+    val LDVT = mode.JOBZ match {
+      case "A" => scala.math.max(1,n)
+      case "S" => m min n
+    }
+
+    lapack.sgesdd(
+      mode.JOBZ, m, n,
+      cm.data, scala.math.max(1,m),
+      S.data, U.data, scala.math.max(1,m),
+      Vt.data, LDVT,
+      work,work.length,iwork, info)
+
+    if (info.`val` > 0)
+      throw new NotConvergedException(NotConvergedException.Iterations)
+    else if (info.`val` < 0)
+      throw new IllegalArgumentException()
+
+    SVD(U,S,Vt)
   }
 
   type OpMulMatrixDenseVector[Mat] = OpMulMatrix.Impl2[Mat, DenseVector[Double], DenseVector[Double]]

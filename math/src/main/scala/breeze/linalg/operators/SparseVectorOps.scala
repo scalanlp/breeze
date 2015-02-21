@@ -751,8 +751,8 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand
   @expand.valify
   implicit def implOps_SVT_T_eq_SVT[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpAdd, OpSub, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _}) op: Op.Impl2[T, T, T],
+  @expand.args(OpAdd, OpSub, OpSet, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {(a,b) => b}, {_ pow _}) op: Op.Impl2[T, T, T],
    @expand.sequence[T](0, 0.0, 0.0f, 0l)  zero: T):
   Op.Impl2[SparseVector[T], T, SparseVector[T]] =
 
@@ -766,6 +766,36 @@ trait SparseVectorOps { this: SparseVector.type =>
           if(r  != zero)
             result.add(i,r)
           i += 1
+        }
+        result.toSparseVector(true, true)
+      }
+      implicitly[BinaryRegistry[Vector[T], T, Op.type, Vector[T]]].register(this)
+    }
+
+  @expand
+  @expand.valify
+  implicit def implOps_SVT_T_eq_SVT[@expand.args(Int, Double, Float, Long) T, @expand.args(OpDiv, OpMod) Op <: OpType]
+  (implicit  @expand.sequence[Op]({_ / _},  {_ % _}) op: Op.Impl2[T, T, T],
+   @expand.sequence[T](0, 0.0, 0.0f, 0l)  zero: T): Op.Impl2[SparseVector[T], T, SparseVector[T]] =
+
+    new Op.Impl2[SparseVector[T], T, SparseVector[T]] {
+      def apply(a: SparseVector[T], b: T): SparseVector[T] = {
+        val result: VectorBuilder[T] = new VectorBuilder[T](a.length)
+        if(b == zero) {
+          var i: Int = 0
+          while(i < a.length) {
+            val r =  op(a(i), b)
+            if(r  != zero)
+              result.add(i,r)
+            i += 1
+          }
+        } else {
+          var i: Int = 0
+          cforRange(0 until a.activeSize) { i =>
+            val r =  op(a(i),b)
+            if(r  != zero)
+              result.add(i,r)
+          }
         }
         result.toSparseVector(true, true)
       }
