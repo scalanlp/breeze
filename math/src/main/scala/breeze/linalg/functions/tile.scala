@@ -15,8 +15,7 @@ object tile extends UFunc {
   implicit def tile_DV_Impl2[T:ClassTag:Semiring:Zero]: Impl2[DenseVector[T], Int, DenseVector[T]] = {
     new Impl2[DenseVector[T],Int,DenseVector[T]] {
       def apply(x:DenseVector[T], n:Int):DenseVector[T] = {
-        // Note: DenseVector is column-major, i.e., it can be considered a matrix of size (v.length x 1)
-//        var out = new ArrayBuffer[T]()
+        // DenseVector is column-major, i.e., it can be considered a matrix of size (v.length x 1)
         val out = new DenseVector[T](x.length * n)
         var i = 0
         while(i < n) {
@@ -32,7 +31,7 @@ object tile extends UFunc {
   Impl3[DenseVector[T], Int, Int, DenseMatrix[T]] =
     new Impl3[DenseVector[T],Int, Int, DenseMatrix[T]] {
       def apply(x: DenseVector[T], m: Int, n: Int): DenseMatrix[T] = {
-        // Note: DenseVector is column-major, i.e., it can be considered a matrix of size (v.length x 1)
+        // DenseVector is column-major, i.e., it can be considered a matrix of size (v.length x 1)
         // So, first construct the tiled column.
         val col = impl2(x, m)
         // Now, replicate the col.
