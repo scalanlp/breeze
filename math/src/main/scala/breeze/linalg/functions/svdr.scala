@@ -56,9 +56,6 @@ object svdr extends UFunc {
 
     val nRandom = k + nOversamples
 
-    val n_samples = M.rows
-    val n_features = M.cols
-
     val Q = randomizedStateFinder(M, nRandom, nIter)
 
     val b = Q.t * M
