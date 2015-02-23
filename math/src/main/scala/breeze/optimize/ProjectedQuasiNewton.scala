@@ -2,8 +2,10 @@ package breeze.optimize
 
 import breeze.linalg._
 import breeze.collection.mutable.RingBuffer
-import breeze.linalg.operators.OpMulMatrix
 import breeze.math.{MutableInnerProductModule}
+import breeze.optimize.proximal.Constraint.Constraint
+import breeze.optimize.proximal.Constraint._
+import breeze.optimize.proximal._
 import breeze.util.SerializableLogging
 
 // Compact representation of an n x n Hessian, maintained via L-BFGS updates
@@ -84,7 +86,6 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
 
   type History = CompactHessian
 
-
   protected def initialHistory(f: DiffFunction[DenseVector[Double]], init: DenseVector[Double]): History = {
     new CompactHessian(m)
   }
@@ -108,7 +109,6 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
       //	time += subprob.time
     }
   }
-
 
   protected def determineStepSize(state: State, fn: DiffFunction[DenseVector[Double]], dir: DenseVector[Double]): Double = {
     if (state.iter == 0)
@@ -153,14 +153,12 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
     projection(state.x + dir * stepSize)
   }
 
-
   protected def updateHistory(newX: DenseVector[Double], newGrad: DenseVector[Double], newVal: Double,  f: DiffFunction[DenseVector[Double]], oldState: State): History = {
     import oldState._
-    val s = newX - oldState.x
-    val y = newGrad - oldState.grad
+    val s = newX - x
+    val y = newGrad - grad
     oldState.history.updated(y, s)
   }
-
 }
 
 object ProjectedQuasiNewton {
@@ -186,12 +184,29 @@ object ProjectedQuasiNewton {
     }
   }
 
-  implicit def multiplyCompactHessian[T](implicit vspace: MutableInnerProductModule[T, Double]): OpMulMatrix.Impl2[CompactHessian, T, T] = {
-    new OpMulMatrix.Impl2[CompactHessian, T, T] {
-      def apply(a: CompactHessian, b: T): T = {
-        val result = a * b.asInstanceOf[DenseVector[Double]]
-        result.asInstanceOf[T]
+  case class Projection(proximal: Proximal) {
+    def project(x: DenseVector[Double]) : DenseVector[Double] = {
+      proximal.prox(x)
+      x
+    }
+  }
+
+  def proximal(proximal: Proximal) = new ProjectedQuasiNewton(projection = Projection(proximal).project)
+
+  def apply(ndim: Int, constraint: Constraint, lambda: Double=1.0): ProjectedQuasiNewton = {
+    constraint match {
+      case POSITIVE => proximal(ProjectPos())
+      case BOX => {
+        val lb = DenseVector.zeros[Double](ndim)
+        val ub = DenseVector.ones[Double](ndim)
+        proximal(ProjectBox(lb, ub))
       }
+      case EQUALITY => {
+        val aeq = DenseVector.ones[Double](ndim)
+        proximal(ProjectHyperPlane(aeq, 1.0))
+      }
+      case SPARSE => proximal(ProjectL1(lambda))
+      case PROBABILITYSIMPLEX => proximal(ProjectProbabilitySimplex(lambda))
     }
   }
 }

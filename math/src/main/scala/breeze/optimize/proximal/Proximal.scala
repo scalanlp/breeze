@@ -15,7 +15,37 @@ import scala.Double.PositiveInfinity
 import breeze.linalg._
 
 trait Proximal {
-  def prox(x: DenseVector[Double], rho: Double)
+  def prox(x: DenseVector[Double], rho: Double = 1.0)
+}
+
+//TO DO: Implement the binary search algorithm from Boyd's reference and compare performance
+case class ProjectProbabilitySimplex(s: Double) extends Proximal {
+  require(s > 0, s"Proximal:ProjectProbabilitySimplex Radius s must be strictly positive")
+  def prox(x: DenseVector[Double], rho: Double = 1.0)  = {
+    val sorted = x.data.sorted(Ordering[Double].reverse)
+    val cum = sorted.scanLeft(0.0)(_ + _).slice(1, x.length + 1)
+    val cs = DenseVector(cum.zipWithIndex.map{elem => (elem._1 - s)/(elem._2 + 1)})
+    val ndx = (DenseVector(sorted) - cs).data.filter{elem => elem >= 0.0}.length - 1
+    var i = 0
+    while(i < x.length) {
+      x.update(i, max(x(i) - cs(ndx), 0.0))
+      i = i + 1
+    }
+  }
+}
+
+case class ProjectL1(s: Double) extends Proximal {
+  val projectSimplex = ProjectProbabilitySimplex(s)
+  override def prox(x: DenseVector[Double], rho: Double = 1.0) = {
+    val u = x.mapValues { elem => abs(elem)}
+    projectSimplex.prox(u)
+    var i = 0
+    while (i < x.length) {
+      val signed = if (x(i) >= 0) u(i) else -u(i)
+      x.update(i, signed)
+      i = i + 1
+    }
+  }
 }
 
 case class ProjectBox(l: DenseVector[Double], u: DenseVector[Double]) extends Proximal {
@@ -110,6 +140,10 @@ case class ProximalL1() extends Proximal {
       x.update(i, max(0, x(i) - lambda/rho) - max(0, -x(i) - lambda/rho))
       i = i + 1
     }
+  }
+
+  def valueAt(x: DenseVector[Double]) = {
+    lambda*x.foldLeft(0.0){(agg, entry) => agg + abs(entry)}
   }
 }
 

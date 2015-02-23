@@ -373,7 +373,7 @@ object QuadraticMinimizer {
 
   def apply(rank: Int,
             constraint: Constraint,
-            lambda: Double): QuadraticMinimizer = {
+            lambda: Double=1.0): QuadraticMinimizer = {
     constraint match {
       case SMOOTH => new QuadraticMinimizer(rank)
       case POSITIVE => new QuadraticMinimizer(rank, ProjectPos())
@@ -411,13 +411,10 @@ object QuadraticMinimizer {
     val lbfgs = new LBFGS[DenseVector[Double]](-1, 7)
     val state = lbfgs.minimizeAndReturnState(Cost(H, q), init)
     val approxMinEigen = lbfgs.minEigen(state, init)
-    val approxMaxEigen = lbfgs.maxEigen(state, init)
     val eigs = eigSym(H).eigenvalues
 
     val minEigen = min(eigs)
-    val maxEigen = max(eigs)
-    println(s"minEigen $minEigen approx $approxMinEigen maxEigen $maxEigen approx $approxMaxEigen")
-
+    println(s"minEigen $minEigen approx $approxMinEigen")
     state.x
   }
 

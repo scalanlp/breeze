@@ -96,26 +96,6 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
     logger.info(s"LBFGS Min Eigen iterations ${eigenState.iter}")
     1.0/eigenState.eigenValue
   }
-
-  /**
-   * Get the maximum approximate eigen value of the quadratic approximation convex function specified
-   * through DiffFunction by doing a inverse power iteration using the CompactHessian representation
-   * generated from ApproximateInverseHessian, get the largest eigenvalue e
-   *
-   * @param init initial guess for the eigen vector
-   * @param state the current state of the optimization
-   * @return maximum eigen value
-   */
-  def maxEigen(state: State, init: T) : Double = {
-    val compactHessian = new CompactHessian(state.history.m)
-    val memStep = state.history.memStep.asInstanceOf[Seq[DenseVector[Double]]]
-    val memGradDelta = state.history.memGradDelta.asInstanceOf[Seq[DenseVector[Double]]]
-    (0 to state.history.historyLength - 1).map{i => compactHessian.updated(memStep(i), memGradDelta(i))}
-    val pm = new PowerMethod[T, CompactHessian]()(space, ProjectedQuasiNewton.multiplyCompactHessian)
-    val eigenState = pm.iterateAndReturnState(init, compactHessian)
-    logger.info(s"LBFGS Max Eigen iterations ${eigenState.iter}")
-    eigenState.eigenValue
-  }
 }
 
 object LBFGS {
@@ -180,6 +160,5 @@ object LBFGS {
       def apply(a: ApproximateInverseHessian[T], b: T): T = a * b
     }
   }
-
 }
 

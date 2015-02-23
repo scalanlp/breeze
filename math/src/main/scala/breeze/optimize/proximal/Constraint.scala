@@ -6,5 +6,5 @@ package breeze.optimize.proximal
  */
 object Constraint extends Enumeration {
   type Constraint = Value
-  val SMOOTH, POSITIVE, BOX, SPARSE, EQUALITY = Value
+  val SMOOTH, POSITIVE, BOX, SPARSE, EQUALITY, PROBABILITYSIMPLEX = Value
 }
