@@ -10,6 +10,7 @@ import scala.math.max
 import scala.math.min
 import scala.math.sqrt
 import scala.math.abs
+import scala.math.signum
 import scala.Double.NegativeInfinity
 import scala.Double.PositiveInfinity
 import breeze.linalg._
@@ -37,12 +38,11 @@ case class ProjectProbabilitySimplex(s: Double) extends Proximal {
 case class ProjectL1(s: Double) extends Proximal {
   val projectSimplex = ProjectProbabilitySimplex(s)
   override def prox(x: DenseVector[Double], rho: Double = 1.0) = {
-    val u = x.mapValues { elem => abs(elem)}
-    projectSimplex.prox(u)
+    val u = x.mapValues {elem => abs(elem)}
+    projectSimplex.prox(u, rho)
     var i = 0
     while (i < x.length) {
-      val signed = if (x(i) >= 0) u(i) else -u(i)
-      x.update(i, signed)
+      x.update(i, signum(x(i))*u(i))
       i = i + 1
     }
   }

@@ -1,6 +1,7 @@
 package breeze.optimize.proximal
 
-import breeze.linalg.{DenseMatrix, DenseVector, norm}
+import breeze.linalg.{sum, DenseMatrix, DenseVector, norm}
+import breeze.numerics._
 import breeze.optimize.{ProjectedQuasiNewton, OWLQN, DiffFunction, LBFGS}
 import breeze.stats.distributions.Rand
 import breeze.optimize.proximal.Constraint._
@@ -8,6 +9,7 @@ import scala.math._
 import scala.math.pow
 import scala.math.sqrt
 import scala.math.abs
+import breeze.linalg.norm
 
 /**
  * Proximal operators and ADMM based primal-dual Nonlinear Solver
@@ -377,9 +379,9 @@ object NonlinearMinimizer {
 
     println("Linear Regression")
 
-    val owlqnObj = QuadraticMinimizer.computeObjective(regularizedGram, q, owlqnResult.x) + lambdaL1*owlqnResult.x.foldLeft(0.0){(agg, entry) => agg + abs(entry)}
-    val sparseQpL1Obj = lambdaL1*sparseQpResult.x.foldLeft(0.0){(agg, entry) => agg + abs(entry)}
-    val sparseQpObj = QuadraticMinimizer.computeObjective(regularizedGram, q, sparseQpResult.x) + sparseQpL1Obj
+    val owlqnObj = QuadraticMinimizer.computeObjective(regularizedGram, q, owlqnResult.x) + lambdaL1 * owlqnResult.x.foldLeft(0.0) { (agg, entry) => agg + abs(entry)}
+    val sparseQpL1Obj = sparseQpResult.x.foldLeft(0.0) { (agg, entry) => agg + abs(entry)}
+    val sparseQpObj = QuadraticMinimizer.computeObjective(regularizedGram, q, sparseQpResult.x) + lambdaL1 * sparseQpL1Obj
     val quadraticCostWithL2 = QuadraticMinimizer.Cost(regularizedGram, q)
 
     val pqnSparseStart = System.nanoTime()
@@ -392,13 +394,13 @@ object NonlinearMinimizer {
 
     val nlSparse = NonlinearMinimizer(problemSize, SPARSE, lambdaL1)
     val nlSparseStart = System.nanoTime()
-    val nlSparseResult = nlSparse.iterationsADMM(quadraticCostWithL2, 2.0)
+    val nlSparseResult = nlSparse.iterationsADMMWithHistory(quadraticCostWithL2)
     val nlSparseTime = System.nanoTime() - nlSparseStart
-    val nlSparseObj = QuadraticMinimizer.computeObjective(regularizedGram, q, nlSparseResult.x) + lambdaL1*nlSparseResult.x.foldLeft(0.0){(agg, entry) => agg + abs(entry)}
+    val nlSparseObj = QuadraticMinimizer.computeObjective(regularizedGram, q, nlSparseResult.x) + lambdaL1 * nlSparseResult.x.foldLeft(0.0) { (agg, entry) => agg + abs(entry)}
 
     println(s"owlqn ${owlqnTime / 1e6} ms iters ${owlqnResult.iter} sparseQp ${sparseQpTime / 1e6} ms iters ${sparseQpResult.iter}")
     println(s"pqnSparseTime ${pqnSparseTime / 1e6} ms iters ${pqnSparseResult.iter}")
-    println(s"nlSparseTime ${nlSparseTime/1e6} ms iters ${nlSparseResult.iterations}")
+    println(s"nlSparseTime ${nlSparseTime / 1e6} ms iters ${nlSparseResult.iterations}")
 
     println(s"owlqnObj $owlqnObj sparseQpObj $sparseQpObj sparseQpL1Obj $sparseQpL1Obj pqnSparseObj $pqnSparseObj nlSparseObj $nlSparseObj")
 
@@ -410,11 +412,11 @@ object NonlinearMinimizer {
     val owlqnLogisticStart = System.nanoTime()
     val owlqnLogisticResult = optimizeWithOWLQN(problemSize, elasticNetLoss, lambdaL1)
     val owlqnLogisticTime = System.nanoTime() - owlqnLogisticStart
-    val owlqnL1Obj = lambdaL1 * owlqnLogisticResult.x.foldLeft(0.0) { (agg, entry) => agg + abs(entry)}
-    val owlqnLogisticObj = elasticNetLoss.calculate(owlqnLogisticResult.x)._1 + owlqnL1Obj
+    val owlqnL1Obj = owlqnLogisticResult.x.foldLeft(0.0) { (agg, entry) => agg + abs(entry)}
+    val owlqnLogisticObj = elasticNetLoss.calculate(owlqnLogisticResult.x)._1 + lambdaL1*owlqnL1Obj
 
     val pqnLogisticStart = System.nanoTime()
-    val pqnLogisticResult = ProjectedQuasiNewton(problemSize, SPARSE, owlqnL1Obj).minimizeAndReturnState(elasticNetLoss,init)
+    val pqnLogisticResult = ProjectedQuasiNewton(problemSize, SPARSE, owlqnL1Obj).minimizeAndReturnState(elasticNetLoss, init)
     val pqnLogisticTime = System.nanoTime() - pqnLogisticStart
     val pqnLogisticObj = elasticNetLoss.calculate(pqnLogisticResult.x)._1
 
@@ -424,35 +426,98 @@ object NonlinearMinimizer {
     val nlLogisticObj = elasticNetLoss.calculate(nlLogisticResult.x)._1 + lambdaL1 * nlLogisticResult.x.foldLeft(0.0) { (agg, entry) => agg + abs(entry)}
 
     println(s"owlqn ${owlqnLogisticTime / 1e6} ms iters ${owlqnLogisticResult.iter} pqn ${pqnLogisticTime / 1e6} ms iters ${pqnLogisticResult.iter}")
-    println(s"nl ${nlLogisticTime/1e6} ms iters ${nlLogisticResult.iterations}")
-    println(s"objective owlqnLogistic $owlqnLogisticObj L1 $owlqnL1Obj pqnLogistic $pqnLogisticObj nlLogistic objective $nlLogisticObj")
+    println(s"nl ${nlLogisticTime / 1e6} ms iters ${nlLogisticResult.iterations}")
+    println(s"objective owlqnLogistic $owlqnLogisticObj L1 $owlqnL1Obj pqnLogistic $pqnLogisticObj nlLogistic $nlLogisticObj")
 
     println("Linear Regression with Bounds")
+
     init := 0.0
+
+    val nlBox = NonlinearMinimizer(problemSize, BOX)
 
     val pqnBox = ProjectedQuasiNewton(problemSize, BOX)
     val pqnBoxStart = System.nanoTime()
-    val pqnBoxResult = pqnBox.minimizeAndReturnState(quadraticCost, init)
+    val pqnBoxResult = pqnBox.minimizeAndReturnState(quadraticCostWithL2, init)
     val pqnBoxTime = System.nanoTime() - pqnBoxStart
-    val pqnBoxObj = QuadraticMinimizer.computeObjective(h, q, pqnBoxResult.x)
+    val pqnBoxObj = quadraticCostWithL2.calculate(pqnBoxResult.x)._1
+
+    val nlBoxStart = System.nanoTime()
+    val nlBoxResult = nlBox.iterationsADMMWithHistory(quadraticCostWithL2)
+    val nlBoxTime = System.nanoTime() - nlBoxStart
+    val nlBoxObj = quadraticCostWithL2.calculate(nlBoxResult.x)._1
 
     val qpBox = QuadraticMinimizer(problemSize, BOX)
     val qpBoxStart = System.nanoTime()
-    val qpBoxResult = qpBox.minimizeAndReturnState(h, q)
+    val qpBoxResult = qpBox.minimizeAndReturnState(regularizedGram, q)
     val qpBoxTime = System.nanoTime() - qpBoxStart
-    val qpBoxObj = QuadraticMinimizer.computeObjective(h, q, qpBoxResult.x)
+    val qpBoxObj = QuadraticMinimizer.computeObjective(regularizedGram, q, qpBoxResult.x)
 
-    println(s"qpBox ${qpBoxTime/1e6} ms iters ${qpBoxResult.iter}")
-    println(s"pqnBox ${pqnBoxTime/1e6} ms iters ${pqnBoxResult.iter}")
-    println(s"qpBoxObj $qpBoxObj pqnBoxObj $pqnBoxObj")
+    println(s"qpBox ${qpBoxTime / 1e6} ms iters ${qpBoxResult.iter}")
+    println(s"pqnBox ${pqnBoxTime / 1e6} ms iters ${pqnBoxResult.iter}")
+    println(s"nlBox ${nlBoxTime/1e6} ms iters ${nlBoxResult.iterations}")
+    println(s"qpBoxObj $qpBoxObj pqnBoxObj $pqnBoxObj nlBoxObj $nlBoxObj")
 
     println("Logistic Regression with Bounds")
 
+    init := 0.0
     val pqnBoxLogisticStart = System.nanoTime()
     val pqnBoxLogisticResult = pqnBox.minimizeAndReturnState(elasticNetLoss, init)
     val pqnBoxLogisticTime = System.nanoTime() - pqnBoxLogisticStart
+    val pqnBoxLogisticObj = elasticNetLoss.calculate(pqnBoxLogisticResult.x)._1
 
-    println(s"pqnBox ${pqnBoxLogisticTime/1e6} ms iters ${pqnBoxLogisticResult.iter}")
-    println(s"pqn loss ${elasticNetLoss.calculate(pqnBoxLogisticResult.x)._1}")
+    val nlBoxLogisticStart = System.nanoTime()
+    val nlBoxLogisticResult = nlBox.iterationsADMM(elasticNetLoss)
+    val nlBoxLogisticTime = System.nanoTime() - nlBoxLogisticStart
+    val nlBoxLogisticObj = elasticNetLoss.calculate(nlBoxLogisticResult.x)._1
+
+    println(s"time pqnBox ${pqnBoxLogisticTime / 1e6} ms nlBox ${nlBoxLogisticTime/1e6} ms")
+    println(s"objective pqnBox $pqnBoxLogisticObj nlBox $nlBoxLogisticObj")
+
+    println("Linear Regression with ProbabilitySimplex")
+
+    val pqnSimplex = ProjectedQuasiNewton(problemSize, PROBABILITYSIMPLEX)
+    val nlSimplex = NonlinearMinimizer(problemSize, PROBABILITYSIMPLEX)
+
+    init := 0.0
+    val pqnSimplexStart = System.nanoTime()
+    val pqnSimplexResult = pqnSimplex.minimizeAndReturnState(quadraticCost, init)
+    val pqnSimplexTime = System.nanoTime() - pqnSimplexStart
+    val pqnSimplexObj = quadraticCost.calculate(pqnSimplexResult.x)._1
+    require(norm(pqnSimplexResult.x, inf) >= 0.0)
+
+    val nlSimplexStart = System.nanoTime()
+    val nlSimplexResult = nlSimplex.iterationsADMMWithHistory(quadraticCost)
+    val nlSimplexTime = System.nanoTime() - nlSimplexStart
+    val nlSimplexObj = quadraticCost.calculate(nlSimplexResult.x)._1
+    require(norm(nlSimplexResult.x, inf) >= 0.0)
+
+    val qpSimplexStart = System.nanoTime()
+    val qpSimplexResult = QuadraticMinimizer(problemSize, EQUALITY).minimizeAndReturnState(h, q)
+    val qpSimplexTime = System.nanoTime() - qpSimplexStart
+    val qpSimplexObj = quadraticCost.calculate(qpSimplexResult.x)._1
+    require(norm(qpSimplexResult.x, inf) >= 0.0)
+
+    println(s"Objective pqn $pqnSimplexObj nl $nlSimplexObj qp $qpSimplexObj")
+    println(s"Constraint pqn ${sum(pqnSimplexResult.x)} nl ${sum(nlSimplexResult.x)} qp ${sum(qpSimplexResult.x)}")
+    println(s"time pqn ${pqnSimplexTime / 1e6} ms nl ${nlSimplexTime / 1e6} ms qp ${qpSimplexTime / 1e6} ms")
+
+    println("Logistic Regression with ProbabilitySimplex")
+
+    init := 0.0
+    val pqnLogisticSimplexStart = System.nanoTime()
+    val pqnLogisticSimplexResult = pqnSimplex.minimizeAndReturnState(elasticNetLoss, init)
+    val pqnLogisticSimplexTime = System.nanoTime() - pqnLogisticSimplexStart
+    val pqnLogisticSimplexObj = elasticNetLoss.calculate(pqnLogisticSimplexResult.x)._1
+    require(norm(pqnLogisticSimplexResult.x, inf) >= 0.0)
+
+    val nlLogisticSimplexStart = System.nanoTime()
+    val nlLogisticSimplexResult = nlSimplex.iterationsADMM(elasticNetLoss)
+    val nlLogisticSimplexTime = System.nanoTime() - nlLogisticSimplexStart
+    val nlLogisticSimplexObj = elasticNetLoss.calculate(nlLogisticSimplexResult.x)._1
+    require(norm(nlLogisticSimplexResult.x, inf) >= 0.0)
+
+    println(s"Objective pqn ${pqnLogisticSimplexObj} nl ${nlLogisticSimplexObj}")
+    println(s"Constraint pqn ${sum(pqnLogisticSimplexResult.x)} nl ${sum(nlLogisticSimplexResult.x)}")
+    println(s"time pqn ${pqnLogisticSimplexTime / 1e6} ms nl ${nlLogisticSimplexTime / 1e6} ms")
   }
 }
