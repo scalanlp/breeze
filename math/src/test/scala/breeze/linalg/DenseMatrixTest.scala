@@ -683,6 +683,11 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     assert(max(m(2, ::).t) === 3.0)
   }
 
+  test("lhs scalars") {
+    assert(1.0 :/ (DenseMatrix.fill(2,2)(10.0)) === DenseMatrix.fill(2,2)(1/10.0))
+    assert(1.0 :- (DenseMatrix.fill(2,2)(10.0)) === DenseMatrix.fill(2,2)(-9.0))
+  }
+
 
 
 }

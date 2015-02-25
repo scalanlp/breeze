@@ -602,7 +602,7 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
       while(c < a.cols) {
         var r = 0
         while(r < a.rows) {
-          resd(off) = op(ad(a.linearIndex(r,c)), b)
+          resd(off) = op(b, ad(a.linearIndex(r,c)))
           r += 1
           off += 1
         }
