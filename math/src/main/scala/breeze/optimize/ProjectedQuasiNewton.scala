@@ -2,7 +2,7 @@ package breeze.optimize
 
 import breeze.linalg._
 import breeze.collection.mutable.RingBuffer
-import breeze.math.{MutableInnerProductModule, MutableVectorField}
+import breeze.math.{MutableInnerProductModule}
 import breeze.util.SerializableLogging
 
 // Compact representation of an n x n Hessian, maintained via L-BFGS updates
@@ -62,6 +62,8 @@ class CompactHessian(M: DenseMatrix[Double], Y: RingBuffer[DenseVector[Double]],
   lazy val N = DenseMatrix.horzcat(collectionOfVectorsToMatrix(S).t * sigma, collectionOfVectorsToMatrix(Y).t)
 }
 
+//TO DO:
+//1. Modify SpectralProjectedGradient to implement SpaRSA so that it can handle proximal algorithms
 class ProjectedQuasiNewton(tolerance: Double = 1e-6,
                            val m: Int = 10,
                            val initFeas: Boolean = false,
@@ -83,7 +85,6 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
 
   type History = CompactHessian
 
-
   protected def initialHistory(f: DiffFunction[DenseVector[Double]], init: DenseVector[Double]): History = {
     new CompactHessian(m)
   }
@@ -101,13 +102,12 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
       // Update the limited-memory BFGS approximation to the Hessian
       //B.update(y, s)
       // Solve subproblem; we use the current iterate x as a guess
-      val subprob = new ProjectedQuasiNewton.QuadraticSubproblem(fn, state.adjustedValue, x, grad, history)
+      val subprob = new ProjectedQuasiNewton.QuadraticSubproblem(state.adjustedValue, x, grad, history)
       val p = innerOptimizer.minimize(new CachedDiffFunction(subprob), x)
       p - x
       //	time += subprob.time
     }
   }
-
 
   protected def determineStepSize(state: State, fn: DiffFunction[DenseVector[Double]], dir: DenseVector[Double]): Double = {
     if (state.iter == 0)
@@ -152,21 +152,18 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
     projection(state.x + dir * stepSize)
   }
 
-
   protected def updateHistory(newX: DenseVector[Double], newGrad: DenseVector[Double], newVal: Double,  f: DiffFunction[DenseVector[Double]], oldState: State): History = {
     import oldState._
-    val s = newX - oldState.x
-    val y = newGrad - oldState.grad
+    val s = newX - x
+    val y = newGrad - grad
     oldState.history.updated(y, s)
   }
-
 }
 
-object ProjectedQuasiNewton {
+object ProjectedQuasiNewton extends SerializableLogging {
   // Forms a quadratic model around fun, the argmin of which is then a feasible
   // quasi-Newton descent direction
-  class QuadraticSubproblem(fun: DiffFunction[DenseVector[Double]],
-                            fk: Double,
+  class QuadraticSubproblem(fk: Double,
                             xk: DenseVector[Double],
                             gk: DenseVector[Double],
                             B: CompactHessian) extends DiffFunction[DenseVector[Double]] {

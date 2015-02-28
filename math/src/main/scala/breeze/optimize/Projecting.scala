@@ -1,6 +1,6 @@
 package breeze.optimize
 
-import breeze.math.{Module, NormedVectorSpace}
+import breeze.math.{Module}
 
 trait Projecting[T] {
   def projection: T => T

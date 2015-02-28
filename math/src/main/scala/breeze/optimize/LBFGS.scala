@@ -19,12 +19,12 @@ package breeze.optimize
 import breeze.linalg._
 import breeze.linalg.operators.OpMulMatrix
 import breeze.math.MutableInnerProductModule
+import breeze.optimize.linear.PowerMethod
 import breeze.util.SerializableLogging
-
 
 /**
  * Port of LBFGS to Scala.
- * 
+ *
  * Special note for LBFGS:
  *  If you use it in published work, you must cite one of:
  *     * J. Nocedal. Updating  Quasi-Newton  Matrices  with  Limited  Storage
@@ -81,6 +81,21 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
     alpha
   }
 
+  /**
+   * Get the minimum approximate eigen value of the quadratic approximation of the convex function
+   * specified through DiffFunction through power iteration on ApproximateInverseHessian,
+   * get the largest eigenvalue e and return 1/e
+   *
+   * @param init initial guess for eigen vector
+   * @param state the current state of the optimization
+   * @return minimium eigen eigen value
+   */
+  def minEigen(state: State, init: T) : Double = {
+    val pm = new PowerMethod[T, LBFGS.ApproximateInverseHessian[T]]()(space,LBFGS.multiplyInverseHessian)
+    val eigenState = pm.iterateAndReturnState(init, state.history)
+    logger.info(s"LBFGS Min Eigen iterations ${eigenState.iter}")
+    1.0/eigenState.eigenValue
+  }
 }
 
 object LBFGS {
@@ -140,13 +155,10 @@ object LBFGS {
     }
   }
 
-
   implicit def multiplyInverseHessian[T](implicit vspace: MutableInnerProductModule[T, Double]):OpMulMatrix.Impl2[ApproximateInverseHessian[T], T, T] = {
     new OpMulMatrix.Impl2[ApproximateInverseHessian[T], T, T] {
       def apply(a: ApproximateInverseHessian[T], b: T): T = a * b
     }
-
   }
-
 }
 

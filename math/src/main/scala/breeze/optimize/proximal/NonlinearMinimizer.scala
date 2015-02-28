@@ -1,6 +1,6 @@
 package breeze.optimize.proximal
 
-import breeze.linalg.DenseVector
+import breeze.linalg.{DenseMatrix, DenseVector, norm}
 import breeze.math.MutableInnerProductModule
 import breeze.optimize._
 import breeze.optimize.proximal.Constraint._
@@ -8,47 +8,35 @@ import breeze.util.SerializableLogging
 import scala.math._
 import scala.math.pow
 import scala.math.sqrt
-import breeze.linalg.norm
 
 /**
- * Proximal operators and ADMM based primal-dual Nonlinear Solver
+ * NonlinearMinimizer extends Project Quasi Newton method to Proximal Quasi Newton method
  *
- * It solves the problem that has the following structure
- * minimize f(x) + g(x)
+ * The idea has been proposed in multiple papers but our flow is adapted from Lee et al's paper on
+ * Proximal Newton-type methods for minimizing composite functions http://arxiv.org/abs/1206.1623
  *
- * g(x) represents the following constraints
+ * Currently two inner optimizers are implemented
  *
- * 1. x >= 0
- * 2. lb <= x <= ub
- * 3. L1(x)
- * 4. Aeq*x = beq
- * 5. aeq'x = beq
- * 6. 1'x = 1, x >= 0 ProbabilitySimplex from the reference Proximal Algorithms by Boyd et al.
+ * 1. SpaRSA as the inner optimizer which is line search based
+ * 2. History preserving ADMM as the inner optimizer which uses fixed rho
  *
- * f(x) can be either a convex or a non-linear function.
+ * TO DO:
  *
- * For convex functions we will use B matrix with 7/10 columns
- *
- * TO DO : For non-linear functions we will experiment with TRON-like Primal solver
+ * Implement FISTA from TFOCS (L parameter) and compare against SpaRSA/ADMM based innerOptimizer
  *
  * @author debasish83
  */
-
-//TO DO:
-//1. Implement FISTA from TFOCS (L parameter) and compare against PQN based innerOptimizer
-//2. Test with ADMM based inner optimization, it did not work fast enough in our trials yet
-class NonlinearMinimizer(tolerance: Double = 1e-6,
+class NonlinearMinimizer(val proximal: Proximal,
+                         val admm: Boolean = false,
+                         tolerance: Double = 1e-6,
                          val m: Int = 10,
                          val initFeas: Boolean = false,
                          val testOpt: Boolean = true,
                          val maxNumIt: Int = 500,
                          val maxSrchIt: Int = 50,
-                         val gamma: Double = 1e-4,
-                         val proximal: Proximal)
+                         val gamma: Double = 1e-4)
                         (implicit space: MutableInnerProductModule[DenseVector[Double],Double])
   extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]](maxIter = maxNumIt, tolerance = tolerance) with SerializableLogging {
-
-  val admm = true
 
   val innerOptimizer = new SpectralProximalGradient[DenseVector[Double], DiffFunction[DenseVector[Double]]](
       proximal,
@@ -272,31 +260,32 @@ object NonlinearMinimizer {
     }
   }
 
-  def apply(ndim: Int, constraint: Constraint, lambda: Double = 1.0): NonlinearMinimizer = {
+  def apply(ndim: Int, constraint: Constraint=IDENTITY, lambda: Double=1.0): NonlinearMinimizer = {
     constraint match {
-      case SMOOTH => new NonlinearMinimizer(proximal = Identity())
-      case POSITIVE => new NonlinearMinimizer(proximal = ProjectPos())
+      case IDENTITY => new NonlinearMinimizer(ProjectIdentity())
+      case POSITIVE => new NonlinearMinimizer(ProjectPos())
       case BOX => {
         val lb = DenseVector.zeros[Double](ndim)
         val ub = DenseVector.ones[Double](ndim)
-        new NonlinearMinimizer(proximal=ProjectBox(lb, ub))
+        new NonlinearMinimizer(ProjectBox(lb, ub))
       }
       case EQUALITY => {
         val aeq = DenseVector.ones[Double](ndim)
-        new NonlinearMinimizer(proximal = ProjectHyperPlane(aeq, 1.0))
+        new NonlinearMinimizer(ProjectHyperPlane(aeq, 1.0))
       }
-      case SPARSE => new NonlinearMinimizer(proximal = ProximalL1().setLambda(lambda))
-      case PROBABILITYSIMPLEX => new NonlinearMinimizer(proximal=ProjectProbabilitySimplex(1.0))
+      case PROBABILITYSIMPLEX => new NonlinearMinimizer(ProjectProbabilitySimplex(lambda))
+      case SPARSE => new NonlinearMinimizer(ProximalL1().setLambda(lambda))
+      case _ => throw new IllegalArgumentException("NonlinearMinimizer does not support the Proximal Operator")
     }
   }
 
   def main(args: Array[String]) {
     if (args.length < 3) {
-      println("Usage: ProjectedQuasiNewton n lambda beta")
+      println("Usage: NonlinearMinimizer n lambda beta")
       println("Test NonlinearMinimizer with a quadratic function of dimenion n and m equalities with lambda beta for elasticNet")
       sys.exit(1)
     }
-    
+
     val problemSize = args(0).toInt
     val lambda = args(1).toDouble
     val beta = args(2).toDouble
@@ -307,6 +296,7 @@ object NonlinearMinimizer {
 
     val lambdaL1 = lambda * beta
     val lambdaL2 = lambda * (1 - beta)
+    val init = DenseVector.zeros[Double](problemSize)
 
     val regularizedGram = h + (DenseMatrix.eye[Double](h.rows) :* lambdaL2)
 
@@ -316,7 +306,7 @@ object NonlinearMinimizer {
     val sparseQpTime = System.nanoTime() - sparseQpStart
 
     val owlqnStart = System.nanoTime()
-    val owlqnResult = QuadraticMinimizer.optimizeWithOWLQN(DenseVector.rand[Double](problemSize), regularizedGram, q, lambdaL1)
+    val owlqnResult = QuadraticMinimizer.optimizeWithOWLQN(init, regularizedGram, q, lambdaL1)
     val owlqnTime = System.nanoTime() - owlqnStart
 
     println("ElasticNet Formulation")
@@ -328,9 +318,8 @@ object NonlinearMinimizer {
     val sparseQpObj = QuadraticMinimizer.computeObjective(regularizedGram, q, sparseQpResult.x) + lambdaL1 * sparseQpL1Obj
     val quadraticCostWithL2 = QuadraticMinimizer.Cost(regularizedGram, q)
 
+    init := 0.0
     val nlSparseStart = System.nanoTime()
-    val init = DenseVector.zeros[Double](problemSize)
-
     val nlSparseResult = NonlinearMinimizer(problemSize, SPARSE, lambdaL1).minimizeAndReturnState(quadraticCostWithL2, init)
     val nlSparseTime = System.nanoTime() - nlSparseStart
     val nlSparseL1Obj = nlSparseResult.x.foldLeft(0.0) { (agg, entry) => agg + abs(entry)}

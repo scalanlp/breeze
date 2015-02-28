@@ -6,6 +6,8 @@
 
 package breeze.optimize.proximal
 
+import breeze.numerics.signum
+
 import scala.math.max
 import scala.math.min
 import scala.math.sqrt
@@ -15,7 +17,80 @@ import scala.Double.PositiveInfinity
 import breeze.linalg._
 
 trait Proximal {
-  def prox(x: DenseVector[Double], rho: Double)
+  def prox(x: DenseVector[Double], rho: Double = 1.0)
+  def valueAt(x: DenseVector[Double], rho: Double = 1.0) = 0.0
+}
+
+case class ProjectIdentity() extends Proximal {
+  def prox(x: DenseVector[Double], rho: Double = 1.0) {}
+}
+
+//TO DO:
+//1. Implement the binary search algorithm from http://see.stanford.edu/materials/lsocoee364b/hw4sol.pdf and compare performance
+//2. Implement randomized algorithm from Duchi et al's paper Efficient Projections onto the l1-Ball for Learning in High Dimensions
+case class ProjectProbabilitySimplex(s: Double) extends Proximal {
+  require(s > 0, s"Proximal:ProjectProbabilitySimplex Radius s must be strictly positive")
+  def prox(x: DenseVector[Double], rho: Double = 1.0)  = {
+    val sorted = x.data.sorted(Ordering[Double].reverse)
+    val cum = sorted.scanLeft(0.0)(_ + _).slice(1, x.length + 1)
+    val cs = DenseVector(cum.zipWithIndex.map{elem => (elem._1 - s)/(elem._2 + 1)})
+    val ndx = (DenseVector(sorted) - cs).data.filter{elem => elem >= 0.0}.length - 1
+    var i = 0
+    while(i < x.length) {
+      x.update(i, max(x(i) - cs(ndx), 0.0))
+      i = i + 1
+    }
+  }
+}
+
+/**
+  * Adapted from TFOCS project (BSD license) https://github.com/cvxr/TFOCS/blob/master/proj_l1.m
+  *
+  * s      = sort(abs(nonzeros(x)),'descend');
+  * cs     = cumsum(s);
+  * ndx    = find( cs - (1:numel(s))' .* [ s(2:end) ; 0 ] >= q, 1 );
+  * if ~isempty( ndx )
+  *   thresh = ( cs(ndx) - q ) / ndx;
+  * x = x .* ( 1 - thresh ./ max( abs(x), thresh ) ); % May divide very small numbers
+  *
+  */
+case class ProjectL1TFOCS(s: Double) extends Proximal {
+  def prox(x: DenseVector[Double], rho: Double = 1.0) = {
+    val sorted = x.data.map {
+      _.abs
+    }.sorted(Ordering[Double].reverse)
+    val cum = sorted.scanLeft(0.0)(_ + _).slice(1, x.length + 1)
+    val cs = cum.zipWithIndex.map { elem =>
+      val elemS = if (elem._2 == x.length - 1) 0.0 else sorted(elem._2 + 1)
+      elem._1 - (elem._2 + 1) * elemS
+    }
+    val ndx = cs.indexWhere { case (elem) => elem >= s}
+    if (ndx >= 0) {
+      val thresh = (cum(ndx) - s) / (ndx + 1)
+      var i = 0
+      while (i < x.length) {
+        x.update(i, x(i) * (1 - (thresh / max(abs(x(i)), thresh))))
+        i = i + 1
+      }
+    }
+  }
+}
+
+/**
+ * Projection formula from Duchi et al's paper Efficient Projections onto the l1-Ball for Learning in High Dimensions
+ * */
+case class ProjectL1(s: Double) extends Proximal {
+  val projectSimplex = ProjectProbabilitySimplex(s)
+
+  def prox(x: DenseVector[Double], rho: Double = 1.0) = {
+    val u = x.mapValues {_.abs}
+    projectSimplex.prox(u, rho)
+    var i = 0
+    while (i < x.length) {
+      x.update(i, signum(x(i)) * u(i))
+      i = i + 1
+    }
+  }
 }
 
 case class ProjectBox(l: DenseVector[Double], u: DenseVector[Double]) extends Proximal {
@@ -111,6 +186,10 @@ case class ProximalL1() extends Proximal {
       i = i + 1
     }
   }
+
+  override def valueAt(x: DenseVector[Double], rho: Double = 1.0) = {
+    lambda * rho * x.foldLeft(0.0) { (agg, entry) => agg + abs(entry)}
+  }
 }
 
 case class ProximalL2() extends Proximal {
@@ -126,7 +205,7 @@ case class ProximalL2() extends Proximal {
     val norm = sqrt(normSquare)
     i = 0
     while (i < x.length) {
-      if (norm >= 1/ rho) x.update(i, x(i) * (1 - 1/(rho * norm)))
+      if (norm >= 1 / rho) x.update(i, x(i) * (1 - 1 / (rho * norm)))
       else x.update(i, 0)
       i = i + 1
     }
