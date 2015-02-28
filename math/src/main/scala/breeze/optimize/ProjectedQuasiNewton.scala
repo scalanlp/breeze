@@ -3,9 +3,6 @@ package breeze.optimize
 import breeze.linalg._
 import breeze.collection.mutable.RingBuffer
 import breeze.math.{MutableInnerProductModule}
-import breeze.optimize.proximal.Constraint.Constraint
-import breeze.optimize.proximal.Constraint._
-import breeze.optimize.proximal._
 import breeze.util.SerializableLogging
 
 // Compact representation of an n x n Hessian, maintained via L-BFGS updates
@@ -65,6 +62,8 @@ class CompactHessian(M: DenseMatrix[Double], Y: RingBuffer[DenseVector[Double]],
   lazy val N = DenseMatrix.horzcat(collectionOfVectorsToMatrix(S).t * sigma, collectionOfVectorsToMatrix(Y).t)
 }
 
+//TO DO:
+//1. Modify SpectralProjectedGradient to implement SpaRSA so that it can handle proximal algorithms
 class ProjectedQuasiNewton(tolerance: Double = 1e-6,
                            val m: Int = 10,
                            val initFeas: Boolean = false,
@@ -103,7 +102,7 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
       // Update the limited-memory BFGS approximation to the Hessian
       //B.update(y, s)
       // Solve subproblem; we use the current iterate x as a guess
-      val subprob = new ProjectedQuasiNewton.QuadraticSubproblem(fn, state.adjustedValue, x, grad, history)
+      val subprob = new ProjectedQuasiNewton.QuadraticSubproblem(state.adjustedValue, x, grad, history)
       val p = innerOptimizer.minimize(new CachedDiffFunction(subprob), x)
       p - x
       //	time += subprob.time
@@ -161,11 +160,10 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
   }
 }
 
-object ProjectedQuasiNewton {
+object ProjectedQuasiNewton extends SerializableLogging {
   // Forms a quadratic model around fun, the argmin of which is then a feasible
   // quasi-Newton descent direction
-  class QuadraticSubproblem(fun: DiffFunction[DenseVector[Double]],
-                            fk: Double,
+  class QuadraticSubproblem(fk: Double,
                             xk: DenseVector[Double],
                             gk: DenseVector[Double],
                             B: CompactHessian) extends DiffFunction[DenseVector[Double]] {
@@ -181,32 +179,6 @@ object ProjectedQuasiNewton {
       val f = fk + d.dot(gk) + (0.5 * d.dot(Bd))
       val g = gk + Bd
       (f, g)
-    }
-  }
-
-  case class Projection(proximal: Proximal) {
-    def project(x: DenseVector[Double]) : DenseVector[Double] = {
-      proximal.prox(x)
-      x
-    }
-  }
-
-  def proximal(proximal: Proximal) = new ProjectedQuasiNewton(projection = Projection(proximal).project)
-
-  def apply(ndim: Int, constraint: Constraint, lambda: Double=1.0): ProjectedQuasiNewton = {
-    constraint match {
-      case POSITIVE => proximal(ProjectPos())
-      case BOX => {
-        val lb = DenseVector.zeros[Double](ndim)
-        val ub = DenseVector.ones[Double](ndim)
-        proximal(ProjectBox(lb, ub))
-      }
-      case EQUALITY => {
-        val aeq = DenseVector.ones[Double](ndim)
-        proximal(ProjectHyperPlane(aeq, 1.0))
-      }
-      case SPARSE => proximal(ProjectL1(lambda))
-      case PROBABILITYSIMPLEX => proximal(ProjectProbabilitySimplex(lambda))
     }
   }
 }
