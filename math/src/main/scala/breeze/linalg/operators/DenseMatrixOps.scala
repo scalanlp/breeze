@@ -124,7 +124,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps
         // square: LUSolve
         val X = DenseMatrix.zeros[Double](V.rows, V.cols)
         X := V
-        LUSolve(X,A)
+        LUSolve(X, A)
         X
       } else {
         // non-square: QRSolve
@@ -137,15 +137,13 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps
     /** X := A \ X, for square A */
     def LUSolve(X: DenseMatrix[Double], A: DenseMatrix[Double]): DenseMatrix[Double] = {
 
-      require(X.offset == 0)
-      require(A.offset == 0)
       val piv = new Array[Int](A.rows)
       val newA = A.copy
       assert(!newA.isTranspose)
 
       val info: Int = {
         val info = new intW(0)
-        lapack.dgesv(A.rows, X.cols, newA.data, newA.majorStride, piv, X.data, X.majorStride, info)
+        lapack.dgesv(A.rows, X.cols, newA.data, newA.offset, newA.majorStride, piv, 0, X.data, X.offset, X.majorStride, info)
         info.`val`
       }
 

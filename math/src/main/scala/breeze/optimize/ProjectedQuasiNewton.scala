@@ -68,16 +68,16 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
                            val m: Int = 10,
                            val initFeas: Boolean = false,
                            val testOpt: Boolean = true,
-                           val maxNumIt: Int = 500,
+                           maxIter: Int = -1,
                            val maxSrchIt: Int = 50,
                            val gamma: Double = 1e-4,
                            val projection: DenseVector[Double] => DenseVector[Double] = identity)
                           (implicit space: MutableInnerProductModule[DenseVector[Double],Double])
-  extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]](maxIter = maxNumIt, tolerance = tolerance) with Projecting[DenseVector[Double]] with SerializableLogging {
-  val innerOptimizer = new SpectralProjectedGradient[DenseVector[Double], DiffFunction[DenseVector[Double]]](
-    testOpt = true,
+  extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]](maxIter = maxIter, tolerance = tolerance) with Projecting[DenseVector[Double]] with SerializableLogging {
+  val innerOptimizer = new SpectralProjectedGradient[DenseVector[Double]](
     tolerance = tolerance,
-    maxIter = 500,
+    maxIter = 50,
+    fMemory = 5,
     initFeas = true,
     minImprovementWindow = 10,
     projection = projection

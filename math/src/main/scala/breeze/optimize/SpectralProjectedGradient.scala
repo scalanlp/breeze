@@ -1,7 +1,7 @@
 package breeze.optimize
 
-import breeze.math.{MutableInnerProductModule, MutableVectorField}
-import breeze.linalg.norm
+import breeze.math.{InnerProductModule, MutableInnerProductModule, MutableVectorField}
+import breeze.linalg.{*, clip, norm}
 import breeze.util.SerializableLogging
 
 
@@ -15,70 +15,85 @@ import breeze.util.SerializableLogging
  * @param alphaMax longest step
  * @param alphaMin shortest step
  * @param maxNumIt maximum number of iterations
- * @param testOpt perform optimality check based on projected gradient at each iteration
  * @param initFeas is the initial guess feasible, or should it be projected?
  * @param maxSrchIt maximum number of line search attempts
  * @param projection projection operations
  */
-class SpectralProjectedGradient[T, DF <: DiffFunction[T]](
+class SpectralProjectedGradient[T](
   val projection: T => T = { (t: T) => t },
   tolerance: Double = 1e-6,
-  val suffDec: Double = 1e-4,
-  minImprovementWindow: Int = 10,
-  val alphaMax: Double = 1e10,
-  val alphaMin: Double = 1e-10,
-  maxIter: Int = 500,
-  val testOpt: Boolean = true,
+  suffDec: Double = 1e-4,
+  minImprovementWindow: Int = 30,
+  alphaMax: Double = 1e10,
+  alphaMin: Double = 1e-10,
+  fMemory: Int = 10,
+  maxIter: Int = -1,
   val initFeas: Boolean = false,
-  val maxSrchIt: Int = 30)(implicit space: MutableVectorField[T, Double]) extends FirstOrderMinimizer[T, DF](minImprovementWindow = minImprovementWindow, maxIter = maxIter, tolerance = tolerance) with Projecting[T] with SerializableLogging {
+  val maxSrchIt: Int = 30)(implicit space: MutableVectorField[T, Double]) extends FirstOrderMinimizer[T, DiffFunction[T]](minImprovementWindow = minImprovementWindow, maxIter = maxIter, tolerance = tolerance, improvementTol = tolerance) with Projecting[T] with SerializableLogging {
   import space._
-  type History = Double
-  protected def initialHistory(f: DF, init: T): History = 1.0
-  protected def chooseDescentDirection(state: State, f: DF): T = projectedVector(state.x, state.grad :* -state.history)
-  override protected def adjust(newX: T, newGrad: T, newVal: Double):(Double,T) = (newVal,-projectedVector(newX, - newGrad))
-  protected def takeStep(state: State, dir: T, stepSize: Double): T = projection(state.x + dir :* stepSize)
-  protected def updateHistory(newX: T, newGrad: T, newVal: Double, f: DF, oldState: State): History = {
-    val y = newGrad - oldState.grad
+  case class History(alphaBB: Double, fvals: IndexedSeq[Double])
+
+  override protected def initialHistory(f: DiffFunction[T], init: T): History = {
+    History(0.1, IndexedSeq.empty)
+  }
+
+  override protected def updateHistory(newX: T, newGrad: T, newVal: Double, f: DiffFunction[T], oldState: State): History = {
     val s = newX - oldState.x
-    val alpha = s.dot(s) / s.dot(y)
-    if (alpha.isNaN())
-      0.0
-    else if (alpha < alphaMin || alpha > alphaMax)
-      1
-    else
-      alpha
-  }
-
-  protected def determineStepSize(state: State, f: DF, direction: T): Double = {
-    import state._
-    val funRef = if (fVals.isEmpty) Double.PositiveInfinity else fVals.max
-    val t = if (iter == 0) {
-      scala.math.min(1.0, 1.0 / norm(grad))
-    } else {
-      1.0
+    val y = newGrad - oldState.grad
+    var alpha = (y dot y) / (s dot y)
+    if(alpha.isNaN) {
+      alpha = 1.0
     }
-    val searchStep = direction * t
-    val sufficientDecrease = grad.dot(searchStep) * suffDec
-    val requiredValue = funRef + sufficientDecrease
-
-    val lineSearchFunction = LineSearch.functionFromSearchDirection(f, x, direction)
-    val ls = new SimpleLineSearch(requiredValue, maxSrchIt)
-    ls.minimize(lineSearchFunction, t)
+    History(alpha, (newVal +: oldState.history.fvals).take(fMemory))
   }
-  class SimpleLineSearch(requiredValue: Double, maxIterations: Int) extends ApproximateLineSearch {
-    def iterations(f: DiffFunction[Double], init: Double = 1.0): Iterator[State] = {
-      val (initfval, initfderiv) = f.calculate(init)
-      Iterator.iterate((State(init, initfval, initfderiv), 0)) {
-        case (State(alpha, fval, fderiv), iter) =>
-          val newAlpha = alpha / 2.0
-          val (fvalnew, fderivnew) = f.calculate(newAlpha)
-          (State(newAlpha, fvalnew, fderivnew), iter + 1)
-      }.takeWhile {
-        case (state, iterations) =>
-          (iterations == 0) ||
-            (iterations < maxIterations &&
-              state.value > requiredValue)
-      }.map(_._1)
+
+
+  override protected def takeStep(state: State, dir: T, stepSize: Double): T = {
+    val qq = projection(state.x + dir * stepSize)
+    assert(projection(qq) == qq)
+    qq
+  }
+
+  override protected def chooseDescentDirection(state: State, f: DiffFunction[T]): T = {
+    projection(state.x - state.grad * state.history.alphaBB) - state.x
+  }
+
+  override protected def determineStepSize(state: State, f: DiffFunction[T], direction: T): Double = {
+    val fb = if(state.history.fvals.isEmpty) state.value else state.value max state.history.fvals.max
+    val searchFun = functionFromSearchDirection(f, state.x, direction, projection)
+    var normGradInDir: Double = state.grad dot direction
+    if(normGradInDir > 0) {
+      direction *= -1.0
+      normGradInDir *= -1.0
+    }
+    var alpha = 1.0
+    var fVal = searchFun(alpha)
+    while (fVal > fb + alpha * (normGradInDir * suffDec) && alpha > 1E-10) {
+      alpha *= 0.5
+      fVal = searchFun(alpha)
+    }
+
+    if(alpha < 1E-10) {
+      throw new LineSearchFailed(normGradInDir, norm(direction))
+    }
+
+    alpha
+  }
+
+  // because of the projection, we have to do our own verstion
+  private def functionFromSearchDirection[T, I](f: DiffFunction[T], x: T, direction: T, project: T=>T)(implicit prod: InnerProductModule[T, Double]):DiffFunction[Double] = new DiffFunction[Double] {
+    import prod._
+
+    /** calculates the value at a point */
+    override def valueAt(alpha: Double): Double = f.valueAt(project(x + direction * alpha))
+
+    /** calculates the gradient at a point */
+    override def gradientAt(alpha: Double): Double = f.gradientAt(project(x + direction * alpha)) dot direction
+
+    /** Calculates both the value and the gradient at a point */
+    def calculate(alpha: Double): (Double, Double) = {
+      val (ff, grad) = f.calculate(x + direction * alpha)
+      ff -> (grad dot direction)
     }
   }
 }
