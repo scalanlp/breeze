@@ -4,6 +4,7 @@ import breeze.linalg._
 import breeze.linalg.support.{CanCollapseAxis, CanSlice2}
 import breeze.macros.expand
 import breeze.math.{Field, Semiring}
+import breeze.numerics.Bessel.i1
 import breeze.storage.Zero
 import breeze.util.ArrayUtil
 
@@ -601,7 +602,7 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
       while(c < a.cols) {
         var r = 0
         while(r < a.rows) {
-          resd(off) = op(ad(a.linearIndex(r,c)), b)
+          resd(off) = op(b, ad(a.linearIndex(r,c)))
           r += 1
           off += 1
         }
@@ -782,42 +783,68 @@ trait DenseMatrixMultOps extends DenseMatrixOps
   implicit def op_DM_DM[@expand.args(Int, Long, Float, Double) T]:
   OpMulMatrix.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]] =
 
+
   new OpMulMatrix.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]] {
+    val blockSizeRow = 256
+    val blockSizeInner = 256
+    val blockSizeCol = 256
+
+    def multBlock[T](M: Int, N: Int, K: Int,
+                     aTrans: Array[T], b: Array[T],
+                     res: DenseMatrix[T],
+                     resRowOff: Int, resColOff: Int): Unit = {
+      val rd = res.data
+      val rOff = res.offset + resRowOff + resColOff * res.majorStride
+
+      cforRange2(0 until M, 0 until K) { (i, k) =>
+        var sum: T  = 0
+        cforRange(0 until N) { (j) =>
+          sum += aTrans(i * N + j) * b(k * N + j)
+        }
+        rd(rOff + i + k * res.majorStride) = sum
+      }
+
+    }
+
     override def apply(a: DenseMatrix[T], b: DenseMatrix[T]): DenseMatrix[T] = {
-      // Martin Senne:
-      // Accessing consequent areas in memory in the innermost loop ( a(i,l), a(i+1,l) ) is faster
-      // than accessing ( b(c, j), b(c, j+1) as data layout in memory is column-like (Fortran), that is a(0,0), a(1,0), a(2,0), ...
-      // Thus (adapted from dgemm in BLAS):
-      //   - exchanged loop order
-      //   - so to access consequent entries in the innermost loop and to hopefully avoid cache-misses
-      // Improved performance: DenseMatrix[Int] ( 1000 x 1000 now runs in 12sec than in 16sec )
-      //    as comparison      DenseMatrix[Double] (1000 x 1000) takes ~1sec via BLAS.dgemm (native (0.8sec) and f2j (1sec) )
-      // so there seems room for improvement ;)
-
-      // TODO: @dlwh: Why does implicitly(DM, M, Op, DM) occur twice (top and bottom) and at different positions
-
       val res: DenseMatrix[T] = DenseMatrix.zeros[T](a.rows, b.cols)
       require(a.cols == b.rows)
 
-      val colsB = b.cols
-      val colsA = a.cols
-      val rowsA = a.rows
+      val aTrans = new Array[T](blockSizeRow * blockSizeInner)
+      val bBuf = new Array[T](blockSizeInner * blockSizeCol)
+      
+      val numRowBlocks = (a.rows + blockSizeRow - 1) / blockSizeRow
+      val numInnerBlocks = (a.cols + blockSizeCol - 1) / blockSizeCol
+      val numColBlocks = (b.cols + blockSizeInner - 1) / blockSizeInner
+      
 
-      var j = 0
-      while (j < colsB) {
-        var l = 0;
-        while (l < colsA) {
-
-          val v = b(l, j)
-          var i = 0
-          while (i < rowsA) {
-            res(i, j) += v * a(i,l)
-            i += 1
+      cforRange(0 until numRowBlocks) { r =>
+        val mBegin = r * blockSizeRow
+        val mEnd = math.min(mBegin + blockSizeRow, a.rows)
+        val M = mEnd - mBegin
+        cforRange(0 until numInnerBlocks) { i =>
+          val nBegin = r * blockSizeInner
+          val nEnd = math.min(nBegin + blockSizeInner, a.cols)
+          val N = nEnd - nBegin
+          cforRange2(0 until N, 0 until M) { (n, m) =>
+            aTrans(m * N + n) = a(m + mBegin, n + nBegin)
           }
-          l += 1
+
+          cforRange(0 until numColBlocks) { c =>
+            val oBegin = c * blockSizeCol
+            val oEnd = math.min(oBegin + blockSizeCol, b.cols)
+            val O = oEnd - oBegin
+
+            cforRange2(0 until O, 0 until N) { (o, n) =>
+              bBuf(o * N + n) = b(n + nBegin, o + oBegin)
+            }
+
+            multBlock(M, N, O, aTrans, bBuf, res, mBegin, oBegin)
+
+          }
         }
-        j += 1
       }
+
       res
     }
     implicitly[BinaryRegistry[Matrix[T], Matrix[T], OpMulMatrix.type, Matrix[T]]].register(this)

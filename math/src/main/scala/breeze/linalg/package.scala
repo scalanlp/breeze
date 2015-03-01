@@ -97,12 +97,14 @@ package object linalg {
   import math.Ring
   import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 
+  // implicits for lifting scalars with appropriate operators
+  implicit class InjectNumericOps[T](val repr: T) extends AnyVal with ImmutableNumericOps[T]
+
 /**
  * Basic linear algebraic operations.
  *
  * @author dlwh,dramage,retronym,afwlehmann,lancelet
  */
-  //  import breeze.linalg._
 
   private[linalg] def requireNonEmptyMatrix[V](mat: Matrix[V]): Unit =
     if (mat.cols == 0 || mat.rows == 0)
@@ -285,6 +287,8 @@ package object linalg {
    * val to determine if breeze is using natives or f2jblas
    */
   lazy val usingNatives = com.github.fommil.netlib.BLAS.getInstance.getClass.getName != "com.github.fommil.netlib.F2jBLAS"
+
+
 
 }
 

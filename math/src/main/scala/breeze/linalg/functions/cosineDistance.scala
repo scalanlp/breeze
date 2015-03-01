@@ -2,39 +2,28 @@ package breeze.linalg.functions
 
 import breeze.generic.UFunc
 import breeze.linalg._
+import breeze.linalg.operators.OpMulInner
 
 /**
- * A Cosine distance measure implementation between two points
+ * The cosine distance between two points: cosineDistance(a,b) = (a dot b)/(norm(a) * norm(b))
  */
 object cosineDistance extends UFunc {
-
-  implicit def cosineDistanceFromZippedValues[T, U]
-      (implicit zipImpl: zipValues.Impl2[T, U, ZippedValues[Double, Double]]): Impl2[T, U, Double] = {
+  implicit def cosineDistanceFromDotProductAndNorm[T, U](implicit dot: OpMulInner.Impl2[T, U, Double],
+                                                          normT: norm.Impl[T, Double],
+                                                          normU: norm.Impl[U, Double]): Impl2[T, U, Double] = {
     new Impl2[T, U, Double] {
-      def apply(v: T, v2: U): Double = {
-        var dotProduct = 0.0
-        var denominator1 = 0.0
-        var denominator2 = 0.0
-
-        zipValues(v, v2).foreach { (a, b) =>
-          dotProduct += a * b
-          denominator1 += a * a
-          denominator2 += b * b
+      override def apply(v: T, v2: U): Double = {
+        val denom = norm(v) * norm(v2)
+        val dotProduct = dot(v, v2)
+        if(denom == 0.0) {
+          0.0
+        } else {
+          1 - dotProduct/denom
         }
-
-        var denominator = Math.sqrt(denominator1) * Math.sqrt(denominator2)
-
-        // correct for floating-point rounding errors
-        if(denominator < dotProduct) {
-          denominator = dotProduct
-        }
-
-        // correct for zero-vector corner case
-        if(denominator == 0 && dotProduct == 0) {
-          return 0.0
-        }
-        1.0 - (dotProduct / denominator)
       }
     }
   }
+
 }
+
+

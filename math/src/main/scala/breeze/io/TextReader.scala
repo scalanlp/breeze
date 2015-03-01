@@ -70,20 +70,38 @@ trait TextReader { self =>
   }
 
   /** Reads the next line from the input. Does not return the newline, which is left in the stream.  Returns null if there are no more lines. */
-  def readLine() : String = {
+  def readLine(consumeNewLine: Boolean = false) : String = {
     builder.setLength(0);
     var c = peek();
-
-    if (c < 0) {
-      null;
-    }
 
     while (c >= 0 && c != '\r' && c != '\n') {
       builder.appendCodePoint(read());
       c = peek();
     }
 
+    if (c < 0)
+      return null
+    if (consumeNewLine)
+      readNewline()
+
     builder.toString;
+  }
+
+  def lineIteratorWithClose() = {
+    new Iterator[String] {
+      var _next = readLine(true)
+      def hasNext: Boolean = {
+        if (_next == null) close()
+        _next != null
+      }
+
+      def next(): String = {
+        if(!hasNext) throw new NoSuchElementException("Next on empty iterator.")
+        val x = _next
+        _next = readLine(true)
+        x
+      }
+    }
   }
 
   /** Reads and returns a newline character at the current position.  Throws an exception if a newline does not follow. */
@@ -107,7 +125,7 @@ trait TextReader { self =>
     var c = peek();
 
     if (c < 0) {
-      null;
+      return null;
     }
 
     while (c >= 0 && fn(c)) {
@@ -180,7 +198,7 @@ trait TextReader { self =>
     var c = peek();
 
     if (c < 0) {
-      null;
+      return null;
     }
 
     if (c == '-') {

@@ -45,9 +45,6 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero] private[linalg] (privat
   extends Matrix[V] with MatrixLike[V, CSCMatrix[V]] with Serializable {
 
 
-  def this(data: Array[V],rows: Int, cols: Int, colPtrs: Array[Int],rowIndices: Array[Int]) =
-    this(data,rows,cols,colPtrs,data.length,rowIndices)
-
   def rowIndices = _rowIndices
   def data = _data
 
@@ -218,6 +215,11 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero] private[linalg] (privat
     }
   }
 
+
+  override def toDenseMatrix(implicit cm: ClassTag[V], zero: Zero[V]): DenseMatrix[V] = {
+    toDense
+  }
+
   def toDense:DenseMatrix[V] = {
     implicit val ctg = ClassTag(data.getClass.getComponentType).asInstanceOf[ClassTag[V]]
     val res = DenseMatrix.zeros[V](rows, cols)
@@ -353,7 +355,9 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
           }
           j += 1
         }
-        assert(transposedMtx.activeSize == from.activeSize)
+        // this doesn't hold if there are zeros in the matrix
+//        assert(transposedMtx.activeSize == from.activeSize,
+//          s"We seem to have lost some elements?!?! ${transposedMtx.activeSize} ${from.activeSize}")
         transposedMtx.result(false, false)
       }
     }

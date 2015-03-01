@@ -3,7 +3,7 @@ package breeze.signal
 import org.junit.runner.RunWith
 import org.scalatest._
 import org.scalatest.junit._
-import breeze.linalg.{DenseVector, DenseMatrix, norm}
+import breeze.linalg.{*, DenseVector, DenseMatrix, norm}
 import breeze.math.Complex
 
 /**
@@ -32,6 +32,14 @@ class FourierTrTest extends FunSuite {
 
   test("ifft 1D of DenseVector[Double]") {
     assert( norm( iFourierTr(test16) - test16ifftC ) < testNormThreshold )
+  }
+
+
+  test("fft 1D of DenseMatrix[Double] columns") {
+    val dm = test16.asDenseMatrix.t
+    assert(dm.cols === 1)
+    val transformed = fourierTr(dm(::, *))
+    assert( norm( transformed(::, 0) - test16fftC ) < testNormThreshold, s"$transformed $test16fftC")
   }
 
 

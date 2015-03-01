@@ -1,6 +1,7 @@
 package breeze.optimize
 
 import breeze.stats.distributions.Rand
+import breeze.util.Isomorphism
 import scala.collection.immutable
 import breeze.linalg.support.CanCopy
 
@@ -75,6 +76,29 @@ trait BatchDiffFunction[T] extends DiffFunction[T] with ((T,IndexedSeq[Int])=>Do
      * The full size of the data
      */
     def fullRange: IndexedSeq[Int] = (0 until groups.length)
+  }
+
+  override def throughLens[U](implicit l: Isomorphism[T,U]):BatchDiffFunction[U] = new BatchDiffFunction[U] {
+
+    /**
+     * Calculates the value and gradient of the function on a subset of the data
+     */
+    override def calculate(u: U, batch: IndexedSeq[Int]): (Double, U) = {
+      val t = l.backward(u)
+      val (obj,gu) = outer.calculate(t, batch)
+      (obj,l.forward(gu))
+    }
+
+    /**
+     * The full size of the data
+     */
+    override def fullRange: IndexedSeq[Int] = outer.fullRange
+
+    override def calculate(u: U) = {
+      val t = l.backward(u)
+      val (obj,gu) = outer.calculate(t)
+      (obj,l.forward(gu))
+    }
   }
 
 }

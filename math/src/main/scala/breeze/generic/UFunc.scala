@@ -101,7 +101,7 @@ trait VariableUFunc[U <: UFunc, T <: VariableUFunc[U,T]] { self:T =>
                    (v1: V1, v2: V2)(implicit impl: UFunc.UImpl3[U,T,V1, V2, VR]):VR = impl(self, v1, v2)
 }
 
-trait MappingUFunc extends UFuncZ { this: UFunc =>
+trait MappingUFunc extends MappingUFuncLowPrio { this: UFunc =>
   implicit def fromLowOrderCanMapValues[T, V, V2, U](implicit handhold: CanMapValues.HandHold[T, V], impl: Impl[V, V2], canMapValues: CanMapValues[T, V, V2, U]): Impl[T, U] = {
     new Impl[T, U] {
       def apply(v: T): U = canMapValues.map(v, impl.apply)
@@ -122,7 +122,7 @@ trait MappingUFunc extends UFuncZ { this: UFunc =>
 
 }
 
-trait UFuncZ { this: UFunc =>
+sealed trait MappingUFuncLowPrio { this: UFunc =>
   implicit def canMapV2Values[T, V1, V2, VR, U](implicit handhold: CanMapValues.HandHold[T, V2], impl: Impl2[V1, V2, VR], canMapValues: CanMapValues[T, V2, VR, U]): Impl2[V1, T, U] = {
     new Impl2[V1, T, U] {
       def apply(v1: V1, v2: T): U = canMapValues.map(v2, impl.apply(v1, _))
