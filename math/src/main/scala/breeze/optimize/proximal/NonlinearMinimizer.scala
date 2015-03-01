@@ -40,7 +40,7 @@ object NonlinearMinimizer extends SerializableLogging {
     }
   }
 
-  def proximal(proximal: Proximal, maxIter: Int = -1, m: Int=10, tolerance: Double=1E-6) : FirstOrderMinimizer[BDV, DiffFunction[BDV]] = {
+  def proximal(proximal: Proximal, maxIter: Int = -1, m: Int=10, tolerance: Double=1E-7) : FirstOrderMinimizer[BDV, DiffFunction[BDV]] = {
     proximal match {
       case ProximalL1() => new OWLQN[Int, DenseVector[Double]](maxIter, m, proximal.asInstanceOf[ProximalL1].lambda, tolerance)
       case _ => new ProjectedQuasiNewton(projection = Projection(proximal).project)
