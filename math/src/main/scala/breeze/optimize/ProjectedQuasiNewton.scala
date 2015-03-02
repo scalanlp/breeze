@@ -62,8 +62,6 @@ class CompactHessian(M: DenseMatrix[Double], Y: RingBuffer[DenseVector[Double]],
   lazy val N = DenseMatrix.horzcat(collectionOfVectorsToMatrix(S).t * sigma, collectionOfVectorsToMatrix(Y).t)
 }
 
-//TO DO:
-//1. Modify SpectralProjectedGradient to implement SpaRSA so that it can handle proximal algorithms
 class ProjectedQuasiNewton(tolerance: Double = 1e-6,
                            val m: Int = 10,
                            val initFeas: Boolean = false,
@@ -109,44 +107,26 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
     }
   }
 
-  protected def determineStepSize(state: State, fn: DiffFunction[DenseVector[Double]], dir: DenseVector[Double]): Double = {
-    if (state.iter == 0)
-      return scala.math.min(1.0, 1.0 / norm(state.grad,1.0))
-    val dirnorm = norm(dir, Double.PositiveInfinity)
-    if(dirnorm < 1E-10) return 0.0
-    import state._
-    // Backtracking line-search
-    var accepted = false
-    var lambda = 1.0
-    val gTd = grad dot dir
-    var srchit = 0
+  /**
+   * Given a direction, perform a Strong Wolfe Line Search
+   *
+   * @param state the current state
+   * @param f The objective
+   * @param dir The step direction
+   * @return stepSize
+   */
+  protected def determineStepSize(state: State, f: DiffFunction[DenseVector[Double]], dir: DenseVector[Double]) = {
+    val x = state.x
+    val grad = state.grad
 
-    do {
-      val candx = x + dir * lambda
-      val candf = fn.valueAt(candx)
-      val suffdec = gamma * lambda * gTd
+    val ff = LineSearch.functionFromSearchDirection(f, x, dir)
+    val search = new StrongWolfeLineSearch(maxZoomIter = 10, maxLineSearchIter = maxSrchIt) // TODO: Need good default values here.
+    val alpha = search.minimize(ff, if(state.iter == 0.0) min(1.0, 1.0/norm(dir)) else 1.0)
 
-      if (testOpt && srchit > 0) {
-        logger.debug(f"PQN:    SrchIt $srchit%4d: f $candf%-10.4f t $lambda%-10.4f\n")
-      }
-
-      if (candf < state.adjustedValue + suffdec) {
-        accepted = true
-      } else if (srchit >= maxSrchIt) {
-        accepted = true
-      } else {
-        lambda *= 0.5
-        srchit = srchit + 1
-      }
-    } while (!accepted)
-
-    if (srchit >= maxSrchIt) {
-      logger.info("PQN: Line search cannot make further progress")
-      throw new LineSearchFailed(norm(state.grad,Double.PositiveInfinity), norm(dir, Double.PositiveInfinity))
-    }
-    lambda
+    if(alpha * norm(grad) < 1E-10)
+      throw new StepSizeUnderflow
+    alpha
   }
-
 
   protected def takeStep(state: State, dir: DenseVector[Double], stepSize: Double): DenseVector[Double] = {
     projection(state.x + dir * stepSize)
