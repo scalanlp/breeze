@@ -44,6 +44,8 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero] private[linalg] (privat
                                                                                private var _rowIndices: Array[Int]) // len >= used
   extends Matrix[V] with MatrixLike[V, CSCMatrix[V]] with Serializable {
 
+  def this(data: Array[V], rows: Int, cols: Int, colPtrs: Array[Int], rowIndices: Array[Int]) =
+    this(data, rows, cols, colPtrs, data.length, rowIndices)
 
   def rowIndices = _rowIndices
   def data = _data
