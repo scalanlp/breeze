@@ -1,7 +1,7 @@
 package breeze.optimize
 
 import breeze.linalg.norm
-import breeze.math.{MutableEnumeratedCoordinateField, MutableCoordinateField, MutableFiniteCoordinateField, NormedModule}
+import breeze.math.{MutableEnumeratedCoordinateField, MutableFiniteCoordinateField, NormedModule}
 import breeze.optimize.FirstOrderMinimizer.ConvergenceReason
 import breeze.stats.distributions.{RandBasis, ThreadLocalRandomGenerator}
 import breeze.util.Implicits._

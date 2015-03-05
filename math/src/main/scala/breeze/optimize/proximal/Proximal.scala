@@ -44,45 +44,12 @@ case class ProjectProbabilitySimplex(s: Double) extends Proximal {
 }
 
 /**
-  * Adapted from TFOCS project (BSD license) https://github.com/cvxr/TFOCS/blob/master/proj_l1.m
-  *
-  * s      = sort(abs(nonzeros(x)),'descend');
-  * cs     = cumsum(s);
-  * ndx    = find( cs - (1:numel(s))' .* [ s(2:end) ; 0 ] >= q, 1 );
-  * if ~isempty( ndx )
-  *   thresh = ( cs(ndx) - q ) / ndx;
-  * x = x .* ( 1 - thresh ./ max( abs(x), thresh ) ); % May divide very small numbers
-  *
-  */
-case class ProjectL1TFOCS(s: Double) extends Proximal {
-  def prox(x: DenseVector[Double], rho: Double = 1.0) = {
-    val sorted = x.data.map {
-      _.abs
-    }.sorted(Ordering[Double].reverse)
-    val cum = sorted.scanLeft(0.0)(_ + _).slice(1, x.length + 1)
-    val cs = cum.zipWithIndex.map { elem =>
-      val elemS = if (elem._2 == x.length - 1) 0.0 else sorted(elem._2 + 1)
-      elem._1 - (elem._2 + 1) * elemS
-    }
-    val ndx = cs.indexWhere { case (elem) => elem >= s}
-    if (ndx >= 0) {
-      val thresh = (cum(ndx) - s) / (ndx + 1)
-      var i = 0
-      while (i < x.length) {
-        x.update(i, x(i) * (1 - (thresh / max(abs(x(i)), thresh))))
-        i = i + 1
-      }
-    }
-  }
-}
-
-/**
  * Projection formula from Duchi et al's paper Efficient Projections onto the l1-Ball for Learning in High Dimensions
  * */
 case class ProjectL1(s: Double) extends Proximal {
   val projectSimplex = ProjectProbabilitySimplex(s)
 
-  def prox(x: DenseVector[Double], rho: Double = 1.0) = {
+  def prox(x: DenseVector[Double], rho: Double = 1.0) : Unit = {
     val u = x.mapValues {_.abs}
     projectSimplex.prox(u, rho)
     var i = 0

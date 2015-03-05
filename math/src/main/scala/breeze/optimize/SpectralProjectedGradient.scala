@@ -1,23 +1,39 @@
 package breeze.optimize
 
-import breeze.math.{InnerProductModule, MutableInnerProductModule, MutableVectorField}
-import breeze.linalg.{*, clip, norm}
-import breeze.util.SerializableLogging
+/*
+ Copyright 2015 David Hall, Daniel Ramage, Debasish Das
 
+ Licensed under the Apache License, Version 2.0 (the "License")
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+*/
+
+import breeze.math.{InnerProductModule, MutableVectorField}
+import breeze.linalg.norm
+import breeze.util.SerializableLogging
 
 /**
  * SPG is a Spectral Projected Gradient minimizer; it minimizes a differentiable
  * function subject to the optimum being in some set, given by the projection operator  projection
  * @tparam T vector type
- * @param optTol termination criterion: tolerance for norm of projected gradient
- * @param gamma  sufficient decrease parameter
- * @param M number of history entries for linesearch
+ * @param tolerance termination criterion: tolerance for norm of projected gradient
+ * @param suffDec  sufficient decrease parameter
+ * @param bbMemory number of history entries for linesearch
  * @param alphaMax longest step
  * @param alphaMin shortest step
- * @param maxNumIt maximum number of iterations
+ * @param maxIter maximum number of iterations
+ * @param maxSrcht maximum number of iterations inside line search
  * @param initFeas is the initial guess feasible, or should it be projected?
- * @param maxSrchIt maximum number of line search attempts
  * @param projection projection operations
+ * @param curvilinear if curvilinear true, do the projection inside line search in place of doing it in chooseDescentDirection
  */
 class SpectralProjectedGradient[T](
   val projection: T => T = { (t: T) => t },
@@ -26,10 +42,12 @@ class SpectralProjectedGradient[T](
   minImprovementWindow: Int = 30,
   alphaMax: Double = 1e10,
   alphaMin: Double = 1e-10,
-  fMemory: Int = 10,
+  bbMemory: Int = 10,
   maxIter: Int = -1,
   val initFeas: Boolean = false,
-  val maxSrchIt: Int = 30)(implicit space: MutableVectorField[T, Double]) extends FirstOrderMinimizer[T, DiffFunction[T]](minImprovementWindow = minImprovementWindow, maxIter = maxIter, tolerance = tolerance, improvementTol = tolerance) with Projecting[T] with SerializableLogging {
+  val curvilinear: Boolean = false,
+  val bbType: Int = 1,
+  val maxSrcht: Int = 30)(implicit space: MutableVectorField[T, Double]) extends FirstOrderMinimizer[T, DiffFunction[T]](minImprovementWindow = minImprovementWindow, maxIter = maxIter, tolerance = tolerance, improvementTol = tolerance) with Projecting[T] with SerializableLogging {
   import space._
   case class History(alphaBB: Double, fvals: IndexedSeq[Double])
 
@@ -37,16 +55,27 @@ class SpectralProjectedGradient[T](
     History(0.1, IndexedSeq.empty)
   }
 
+  /**
+   * From Mark Schmidt's Matlab code
+   * if bbType == 1
+   *  alpha = (s'*s)/(s'*y);
+   * else
+   *  alpha = (s'*y)/(y'*y);
+   */
+  protected def bbAlpha(s: T, y: T) : Double = {
+    var alpha =
+      if (bbType == 1) (s dot s) / (s dot y)
+      else (s dot y) / (y dot y)
+    if (alpha <= alphaMin || alpha > alphaMax) alpha = 1.0
+    if (alpha.isNaN) alpha = 1.0
+    alpha
+  }
+
   override protected def updateHistory(newX: T, newGrad: T, newVal: Double, f: DiffFunction[T], oldState: State): History = {
     val s = newX - oldState.x
     val y = newGrad - oldState.grad
-    var alpha = (y dot y) / (s dot y)
-    if(alpha.isNaN) {
-      alpha = 1.0
-    }
-    History(alpha, (newVal +: oldState.history.fvals).take(fMemory))
+    History(bbAlpha(s, y), (newVal +: oldState.history.fvals).take(bbMemory))
   }
-
 
   override protected def takeStep(state: State, dir: T, stepSize: Double): T = {
     val qq = projection(state.x + dir * stepSize)
@@ -55,29 +84,45 @@ class SpectralProjectedGradient[T](
   }
 
   override protected def chooseDescentDirection(state: State, f: DiffFunction[T]): T = {
-    projection(state.x - state.grad * state.history.alphaBB) - state.x
+    if (curvilinear) state.x - state.grad * state.history.alphaBB
+    else projection(state.x - state.grad * state.history.alphaBB) - state.x
   }
 
   override protected def determineStepSize(state: State, f: DiffFunction[T], direction: T): Double = {
-    val fb = if(state.history.fvals.isEmpty) state.value else state.value max state.history.fvals.max
-    val searchFun = functionFromSearchDirection(f, state.x, direction, projection)
-    var normGradInDir: Double = state.grad dot direction
-    if(normGradInDir > 0) {
-      direction *= -1.0
-      normGradInDir *= -1.0
-    }
-    var alpha = 1.0
-    var fVal = searchFun(alpha)
-    while (fVal > fb + alpha * (normGradInDir * suffDec) && alpha > 1E-10) {
-      alpha *= 0.5
-      fVal = searchFun(alpha)
-    }
+    val fb = if (state.history.fvals.isEmpty) state.value else state.value max state.history.fvals.max
+    val normGradInDir = state.grad dot direction
 
-    if(alpha < 1E-10) {
+    var gamma =
+      if (state.iter == 0) scala.math.min(1.0, 1.0 / norm(state.grad))
+      else 1.0
+
+    val searchFun =
+      if (curvilinear) functionFromSearchDirection(f, state.x, direction, projection)
+      else LineSearch.functionFromSearchDirection(f, state.x, direction)
+
+    //TO DO :
+    // 1. Add cubic interpolation and see it's performance. Bisection did not work for L1 projection
+    // 2. StrongWolfe right now show failures on zoom. As per Mark, Strong Wolfe needs to modified cautiously
+    //    if we are doing projection inside LineSearch
+    gamma =
+      if (curvilinear) {
+        var fVal = searchFun(gamma)
+        while (fVal > fb + gamma * (normGradInDir * suffDec) && gamma > alphaMin) {
+          gamma *= 0.5
+          fVal = searchFun(gamma)
+        }
+        gamma
+      }
+      else {
+        val search = new StrongWolfeLineSearch(maxZoomIter = 10, maxLineSearchIter = maxSrcht)
+        search.minimize(searchFun, gamma)
+      }
+
+    if (gamma < 1e-10) {
       throw new LineSearchFailed(normGradInDir, norm(direction))
     }
 
-    alpha
+    gamma
   }
 
   // because of the projection, we have to do our own verstion

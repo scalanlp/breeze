@@ -75,7 +75,7 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
   val innerOptimizer = new SpectralProjectedGradient[DenseVector[Double]](
     tolerance = tolerance,
     maxIter = 50,
-    fMemory = 5,
+    bbMemory = 5,
     initFeas = true,
     minImprovementWindow = 10,
     projection = projection
@@ -115,11 +115,13 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
    * @param dir The step direction
    * @return stepSize
    */
+
   protected def determineStepSize(state: State, f: DiffFunction[DenseVector[Double]], dir: DenseVector[Double]) = {
     val x = state.x
     val grad = state.grad
 
     val ff = LineSearch.functionFromSearchDirection(f, x, dir)
+    //TO DO : Compare performance with Cubic Interpolation based line search from Mark's paper
     val search = new StrongWolfeLineSearch(maxZoomIter = 10, maxLineSearchIter = maxSrchIt) // TODO: Need good default values here.
     val alpha = search.minimize(ff, if(state.iter == 0.0) min(1.0, 1.0/norm(dir)) else 1.0)
 
