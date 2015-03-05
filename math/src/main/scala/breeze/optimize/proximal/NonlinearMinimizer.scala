@@ -1,7 +1,6 @@
 package breeze.optimize.proximal
 
 import breeze.linalg.{sum, DenseMatrix, DenseVector}
-import breeze.math.MutableInnerProductModule
 import breeze.optimize.{FirstOrderMinimizer, OWLQN, DiffFunction, ProjectedQuasiNewton}
 import breeze.optimize.proximal.Constraint._
 import breeze.util.SerializableLogging
@@ -119,7 +118,7 @@ object NonlinearMinimizer extends SerializableLogging {
     println(s"owlqn ${owlqnTime / 1e6} ms iters ${owlqnResult.iter} sparseQp ${sparseQpTime / 1e6} ms iters ${sparseQpResult.iter}")
     println(s"nlSparseTime ${nlSparseTime / 1e6} ms iters ${nlSparseResult.iter}")
     println(s"owlqnObj $owlqnObj sparseQpObj $sparseQpObj nlSparseObj $nlSparseObj")
-    
+
     val logisticLoss = LogisticGenerator(problemSize)
     val elasticNetLoss = DiffFunction.withL2Regularization(logisticLoss, lambdaL2)
 
@@ -140,7 +139,7 @@ object NonlinearMinimizer extends SerializableLogging {
     val qpBoxObj = QuadraticMinimizer.computeObjective(regularizedGram, q, qpBoxResult.x)
 
     println(s"qpBox ${qpBoxTime / 1e6} ms iters ${qpBoxResult.iter}")
-    println(s"pqnBox ${nlBoxTime / 1e6} ms iters ${nlBoxResult.iter}")
+    println(s"nlBox ${nlBoxTime / 1e6} ms iters ${nlBoxResult.iter}")
     println(s"qpBoxObj $qpBoxObj nlBoxObj $nlBoxObj")
 
     println("Logistic Regression with Bounds")
@@ -149,8 +148,8 @@ object NonlinearMinimizer extends SerializableLogging {
     val nlBoxLogisticStart = System.nanoTime()
     val nlBoxLogisticResult = nlBox.minimizeAndReturnState(elasticNetLoss, init)
     val nlBoxLogisticTime = System.nanoTime() - nlBoxLogisticStart
-    val pqnBoxLogisticObj = elasticNetLoss.calculate(nlBoxLogisticResult.x)._1
-    println(s"Objective pqn ${pqnBoxLogisticObj} time ${nlBoxLogisticTime / 1e6} ms")
+    val nlBoxLogisticObj = elasticNetLoss.calculate(nlBoxLogisticResult.x)._1
+    println(s"Objective nl ${nlBoxLogisticObj} time ${nlBoxLogisticTime / 1e6} ms")
 
     println("Linear Regression with ProbabilitySimplex")
 
@@ -167,9 +166,9 @@ object NonlinearMinimizer extends SerializableLogging {
     val qpSimplexTime = System.nanoTime() - qpSimplexStart
     val qpSimplexObj = quadraticCost.calculate(qpSimplexResult.x)._1
 
-    println(s"Objective pqn $nlSimplexObj qp $qpSimplexObj")
-    println(s"Constraint pqn ${sum(nlSimplexResult.x)} qp ${sum(qpSimplexResult.x)}")
-    println(s"time pqn ${nlSimplexTime / 1e6} ms qp ${qpSimplexTime / 1e6} ms")
+    println(s"Objective nl $nlSimplexObj qp $qpSimplexObj")
+    println(s"Constraint nl ${sum(nlSimplexResult.x)} qp ${sum(qpSimplexResult.x)}")
+    println(s"time nl ${nlSimplexTime / 1e6} ms qp ${qpSimplexTime / 1e6} ms")
 
     println("Logistic Regression with ProbabilitySimplex")
 
@@ -179,9 +178,9 @@ object NonlinearMinimizer extends SerializableLogging {
     val nlLogisticSimplexTime = System.nanoTime() - nlLogisticSimplexStart
     val nlLogisticSimplexObj = elasticNetLoss.calculate(nlLogisticSimplexResult.x)._1
 
-    println(s"Objective pqn ${nlLogisticSimplexObj}")
-    println(s"Constraint pqn ${sum(nlLogisticSimplexResult.x)}")
-    println(s"time pqn ${nlLogisticSimplexTime / 1e6} ms")
+    println(s"Objective nl ${nlLogisticSimplexObj}")
+    println(s"Constraint nl ${sum(nlLogisticSimplexResult.x)}")
+    println(s"time nl ${nlLogisticSimplexTime / 1e6} ms")
 
     println("Logistic Regression with ProximalL1 and ProjectL1")
 
