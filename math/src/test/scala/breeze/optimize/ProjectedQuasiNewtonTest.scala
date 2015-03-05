@@ -15,7 +15,7 @@ package breeze.optimize
  limitations under the License.
 */
 
-import breeze.optimize.proximal.{NonlinearMinimizer, QuadraticMinimizer}
+import breeze.optimize.proximal.QuadraticMinimizer
 import org.scalatest._
 import org.scalatest.junit._
 import org.scalatest.prop._

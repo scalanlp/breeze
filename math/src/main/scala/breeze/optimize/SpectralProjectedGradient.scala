@@ -22,7 +22,7 @@ import breeze.util.SerializableLogging
 
 /**
  * SPG is a Spectral Projected Gradient minimizer; it minimizes a differentiable
- * function subject to the optimum being in some set, given by the projection operator  projection
+ * function subject to the optimum being in some set, given by the projection operator projection
  * @tparam T vector type
  * @param tolerance termination criterion: tolerance for norm of projected gradient
  * @param suffDec  sufficient decrease parameter
@@ -102,21 +102,8 @@ class SpectralProjectedGradient[T](
 
     //TO DO :
     // 1. Add cubic interpolation and see it's performance. Bisection did not work for L1 projection
-    // 2. StrongWolfe right now show failures on zoom. As per Mark, Strong Wolfe needs to modified cautiously
-    //    if we are doing projection inside LineSearch
-    gamma =
-      if (curvilinear) {
-        var fVal = searchFun(gamma)
-        while (fVal > fb + gamma * (normGradInDir * suffDec) && gamma > alphaMin) {
-          gamma *= 0.5
-          fVal = searchFun(gamma)
-        }
-        gamma
-      }
-      else {
-        val search = new StrongWolfeLineSearch(maxZoomIter = 10, maxLineSearchIter = maxSrcht)
-        search.minimize(searchFun, gamma)
-      }
+    val search = new BacktrackingLineSearch(maxIterations=maxSrcht)
+    gamma = search.minimize(searchFun, gamma)
 
     if (gamma < 1e-10) {
       throw new LineSearchFailed(normGradInDir, norm(direction))

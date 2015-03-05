@@ -24,7 +24,7 @@ class NonlinearMinimizerTest extends OptimizeTestBase with Matchers {
     val x = H \ f
 
     init := 0.0
-    val nlResult = NonlinearMinimizer(n).minimize(cost, init)
+    val nlResult = NonlinearMinimizer(n,IDENTITY,0.0).minimize(cost, init)
     assert(norm(x - nlResult, inf) < 1e-4)
   }
 
@@ -38,14 +38,14 @@ class NonlinearMinimizerTest extends OptimizeTestBase with Matchers {
 
     val atb = DenseVector(-1.632, 2.115, 1.094, -1.025, -0.636)
     val goodx = DenseVector(0.13025, 0.54506, 0.2874, 0.0, 0.028628)
-    val nlResult = NonlinearMinimizer(n,POSITIVE).minimize(QuadraticMinimizer.Cost(ata, atb:*(-1.0)), DenseVector.zeros[Double](n))
+    val nlResult = NonlinearMinimizer(n,POSITIVE,0.0).minimize(QuadraticMinimizer.Cost(ata, atb:*(-1.0)), DenseVector.zeros[Double](n))
     assert(norm(nlResult - goodx, 2) < 1E-3)
   }
 
   test("Nonlinear Minimization with bounds constraint compared to QuadraticMinimizer") {
     init := 0.0
     val gold = QuadraticMinimizer(n, BOX).minimize(H, f:*(-1.0))
-    val nlResult = NonlinearMinimizer(n, BOX).minimize(cost, init)
+    val nlResult = NonlinearMinimizer(n, BOX, 0.0).minimize(cost, init)
     assert(norm(nlResult - gold) < 1E-4)
   }
 
@@ -54,7 +54,7 @@ class NonlinearMinimizerTest extends OptimizeTestBase with Matchers {
     val fml = DenseVector(-1219.296604, -1126.029219, -1202.257728, -1022.064083, -1047.414836, -1155.507387, -1169.502847, -1091.655366, -1063.832607, -1015.829142, -1075.864072, -1101.427162, -1058.907539, -1115.171116, -1205.015211, -1090.627084, -1143.206126, -1140.107801, -1100.285642, -1198.992795, -1246.276120, -1159.678276, -1194.177391, -1056.458015, -1058.791892)
     val cost = QuadraticMinimizer.Cost(Hml, fml)
 
-    val nlResult = NonlinearMinimizer(25, PROBABILITYSIMPLEX).minimize(cost, DenseVector.zeros[Double](25))
+    val nlResult = NonlinearMinimizer(25, PROBABILITYSIMPLEX, 1.0).minimize(cost, DenseVector.zeros[Double](25))
 
     val golden = DenseVector(0.3131862265452959, 0.0, 0.01129486116330884, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.060642310566736704, 0.0, 0.0, 0.0, 0.0, 0.0, 0.6151756449091074, 0.0, 0.0, 0.0, 0.0)
 
@@ -90,7 +90,7 @@ class NonlinearMinimizerTest extends OptimizeTestBase with Matchers {
 
     val s = octaveL1.foldLeft(0.0) { case (agg, entry) => agg + abs(entry)}
     val projectL1 = ProjectL1(s)
-    val nlResult = NonlinearMinimizer.proximal(proximal = projectL1, tolerance = 1e-4).minimizeAndReturnState(cost, DenseVector.zeros[Double](25))
+    val nlResult = NonlinearMinimizer(proximal = projectL1).minimizeAndReturnState(cost, DenseVector.zeros[Double](25))
 
     assert(norm(nlResult.x - octaveL1, 2) < 1e-4)
   }

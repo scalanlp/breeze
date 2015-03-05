@@ -1,6 +1,7 @@
 package breeze.optimize.proximal
 
 import breeze.linalg.{sum, DenseMatrix, DenseVector}
+import breeze.math.MutableInnerProductModule
 import breeze.optimize.{FirstOrderMinimizer, OWLQN, DiffFunction, ProjectedQuasiNewton}
 import breeze.optimize.proximal.Constraint._
 import breeze.util.SerializableLogging
@@ -40,28 +41,28 @@ object NonlinearMinimizer extends SerializableLogging {
     }
   }
 
-  def proximal(proximal: Proximal, maxIter: Int = -1, m: Int=10, tolerance: Double=1E-7) : FirstOrderMinimizer[BDV, DiffFunction[BDV]] = {
+  def apply(proximal: Proximal, maxIter: Int = -1, m: Int = 10, tolerance: Double = 1e-6): FirstOrderMinimizer[BDV, DiffFunction[BDV]] = {
     proximal match {
       case ProximalL1() => new OWLQN[Int, DenseVector[Double]](maxIter, m, proximal.asInstanceOf[ProximalL1].lambda, tolerance)
-      case _ => new ProjectedQuasiNewton(projection = Projection(proximal).project)
+      case _ => new ProjectedQuasiNewton(projection = NonlinearMinimizer.Projection(proximal).project, tolerance = tolerance, m = m, maxIter = maxIter)
     }
   }
 
-  def apply(ndim: Int, constraint: Constraint=IDENTITY, lambda: Double=1.0): FirstOrderMinimizer[BDV, DiffFunction[BDV]] = {
+  def apply(ndim: Int, constraint: Constraint, lambda: Double): FirstOrderMinimizer[BDV, DiffFunction[BDV]] = {
     constraint match {
-      case IDENTITY => proximal(ProjectIdentity())
-      case POSITIVE => proximal(ProjectPos())
+      case IDENTITY => NonlinearMinimizer(ProjectIdentity())
+      case POSITIVE => NonlinearMinimizer(ProjectPos())
       case BOX => {
         val lb = DenseVector.zeros[Double](ndim)
         val ub = DenseVector.ones[Double](ndim)
-        proximal(ProjectBox(lb, ub))
+        NonlinearMinimizer(ProjectBox(lb, ub))
       }
       case EQUALITY => {
         val aeq = DenseVector.ones[Double](ndim)
-        proximal(ProjectHyperPlane(aeq, 1.0))
+        NonlinearMinimizer(ProjectHyperPlane(aeq, 1.0))
       }
-      case PROBABILITYSIMPLEX => proximal(ProjectProbabilitySimplex(lambda))
-      case SPARSE => proximal(ProximalL1().setLambda(lambda))
+      case PROBABILITYSIMPLEX => NonlinearMinimizer(ProjectProbabilitySimplex(lambda))
+      case SPARSE => NonlinearMinimizer(ProximalL1().setLambda(lambda))
       case _ => throw new IllegalArgumentException("NonlinearMinimizer does not support the Proximal Operator")
     }
   }
@@ -107,8 +108,9 @@ object NonlinearMinimizer extends SerializableLogging {
     val quadraticCostWithL2 = QuadraticMinimizer.Cost(regularizedGram, q)
 
     init := 0.0
+    val projectL1Linear = ProjectL1(sparseQpL1Obj)
     val nlSparseStart = System.nanoTime()
-    val nlSparseResult = NonlinearMinimizer(problemSize, SPARSE, lambdaL1).minimizeAndReturnState(quadraticCostWithL2, init)
+    val nlSparseResult = NonlinearMinimizer(projectL1Linear).minimizeAndReturnState(quadraticCostWithL2, init)
     val nlSparseTime = System.nanoTime() - nlSparseStart
     val nlSparseL1Obj = nlSparseResult.x.foldLeft(0.0) { (agg, entry) => agg + abs(entry)}
     val nlSparseObj = QuadraticMinimizer.computeObjective(regularizedGram, q, nlSparseResult.x) + lambdaL1*nlSparseL1Obj
@@ -117,21 +119,21 @@ object NonlinearMinimizer extends SerializableLogging {
     println(s"owlqn ${owlqnTime / 1e6} ms iters ${owlqnResult.iter} sparseQp ${sparseQpTime / 1e6} ms iters ${sparseQpResult.iter}")
     println(s"nlSparseTime ${nlSparseTime / 1e6} ms iters ${nlSparseResult.iter}")
     println(s"owlqnObj $owlqnObj sparseQpObj $sparseQpObj nlSparseObj $nlSparseObj")
-
+    
     val logisticLoss = LogisticGenerator(problemSize)
     val elasticNetLoss = DiffFunction.withL2Regularization(logisticLoss, lambdaL2)
 
     println("Linear Regression with Bounds")
 
     init := 0.0
-    val nlBox = NonlinearMinimizer(problemSize, BOX)
+    val nlBox = NonlinearMinimizer(problemSize, BOX, 0.0)
 
     val nlBoxStart = System.nanoTime()
     val nlBoxResult = nlBox.minimizeAndReturnState(quadraticCostWithL2, init)
     val nlBoxTime = System.nanoTime() - nlBoxStart
     val nlBoxObj = quadraticCostWithL2.calculate(nlBoxResult.x)._1
 
-    val qpBox = QuadraticMinimizer(problemSize, BOX)
+    val qpBox = QuadraticMinimizer(problemSize, BOX, 0.0)
     val qpBoxStart = System.nanoTime()
     val qpBoxResult = qpBox.minimizeAndReturnState(regularizedGram, q)
     val qpBoxTime = System.nanoTime() - qpBoxStart
@@ -152,7 +154,7 @@ object NonlinearMinimizer extends SerializableLogging {
 
     println("Linear Regression with ProbabilitySimplex")
 
-    val nlSimplex = NonlinearMinimizer(problemSize, PROBABILITYSIMPLEX)
+    val nlSimplex = NonlinearMinimizer(problemSize, PROBABILITYSIMPLEX, 1.0)
 
     init := 0.0
     val nlSimplexStart = System.nanoTime()
@@ -180,5 +182,26 @@ object NonlinearMinimizer extends SerializableLogging {
     println(s"Objective pqn ${nlLogisticSimplexObj}")
     println(s"Constraint pqn ${sum(nlLogisticSimplexResult.x)}")
     println(s"time pqn ${nlLogisticSimplexTime / 1e6} ms")
+
+    println("Logistic Regression with ProximalL1 and ProjectL1")
+
+    init := 0.0
+    val proximalL1 = ProximalL1().setLambda(lambdaL1)
+    val nlLogisticProximalL1Start = System.nanoTime()
+    val nlLogisticProximalL1Result = NonlinearMinimizer(proximalL1).minimizeAndReturnState(elasticNetLoss, init)
+    val nlLogisticProximalL1Time = System.nanoTime() - nlLogisticProximalL1Start
+    val s = nlLogisticProximalL1Result.x.foldLeft(0.0){case(agg, entry) => agg + abs(entry)}
+
+    init := 0.0
+    val projectL1 = ProjectL1(s)
+    val nlLogisticProjectL1Start = System.nanoTime()
+    val nlLogisticProjectL1Result = NonlinearMinimizer(projectL1).minimizeAndReturnState(elasticNetLoss, init)
+    val nlLogisticProjectL1Time = System.nanoTime() - nlLogisticProjectL1Start
+
+    val proximalL1Obj = elasticNetLoss.calculate(nlLogisticProximalL1Result.x)._1
+    val projectL1Obj = elasticNetLoss.calculate(nlLogisticProjectL1Result.x)._1
+
+    println(s"Objective proximalL1 $proximalL1Obj projectL1 $projectL1Obj")
+    println(s"time proximalL1 ${nlLogisticProximalL1Time/1e6} ms projectL1 ${nlLogisticProjectL1Time/1e6} ms")
   }
 }

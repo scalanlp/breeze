@@ -1,5 +1,21 @@
 package breeze.optimize
 
+/*
+ Copyright 2015 David Hall, Debasish Das
+
+ Licensed under the Apache License, Version 2.0 (the "License")
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+*/
+
 import breeze.linalg._
 import breeze.collection.mutable.RingBuffer
 import breeze.math.{MutableInnerProductModule}
@@ -110,20 +126,21 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
   /**
    * Given a direction, perform a Strong Wolfe Line Search
    *
+   * TO DO: Compare performance with Cubic Interpolation based line search from Mark's PQN paper
+   *
    * @param state the current state
    * @param f The objective
    * @param dir The step direction
    * @return stepSize
    */
-
   protected def determineStepSize(state: State, f: DiffFunction[DenseVector[Double]], dir: DenseVector[Double]) = {
     val x = state.x
     val grad = state.grad
 
     val ff = LineSearch.functionFromSearchDirection(f, x, dir)
-    //TO DO : Compare performance with Cubic Interpolation based line search from Mark's paper
-    val search = new StrongWolfeLineSearch(maxZoomIter = 10, maxLineSearchIter = maxSrchIt) // TODO: Need good default values here.
-    val alpha = search.minimize(ff, if(state.iter == 0.0) min(1.0, 1.0/norm(dir)) else 1.0)
+    val search = new BacktrackingLineSearch(maxIterations = maxSrchIt)
+    var alpha = if(state.iter == 0.0) min(1.0, 1.0/norm(dir)) else 1.0
+    alpha = search.minimize(ff, alpha)
 
     if(alpha * norm(grad) < 1E-10)
       throw new StepSizeUnderflow

@@ -154,10 +154,7 @@ class QuadraticMinimizerTest extends OptimizeTestBase with Matchers {
 
     val atb = DenseVector(-1.632, 2.115, 1.094, -1.025, -0.636)
 
-    val nnls = new NNLS()
-    val nnlsBounds = nnls.minimize(ata, atb)
     val goodx = DenseVector(0.13025, 0.54506, 0.2874, 0.0, 0.028628)
-
     val qpSolverPos = QuadraticMinimizer(n, POSITIVE, 0.0)
     
     atb *= -1.0
