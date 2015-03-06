@@ -27,6 +27,9 @@ import breeze.linalg._
  */
 @RunWith(classOf[JUnitRunner])
 class FinancialTest extends FunSuite {
+
+  val DOUBLE_ROUND5_MIN = 1E-5;
+
   test("NetPresentValue") {
     assert(netPresentValue(1.0, Seq(1)) == 1.0)
     assert(netPresentValue(1.0, Seq(1,1)) == 1.5)
@@ -58,4 +61,41 @@ class FinancialTest extends FunSuite {
     assert(norm(expectedInterestPayment - interest) < 1e-1)
   }
 
+  test("IRR vs MIRR") {
+
+    //Some(0.2809484211599611)
+    var expectNormalIRR = DenseVector[Double](-100, 39, 59, 55, 20);
+    assert(math.abs(interalRateReturn(expectNormalIRR).get - 0.2809484211599611) < DOUBLE_ROUND5_MIN)
+    //Some(0.08859833852775578)
+    expectNormalIRR = DenseVector[Double](-5, 10.5, 1, -8, 1);
+    assert(math.abs(interalRateReturn(expectNormalIRR).get - 0.08859833852775578) < DOUBLE_ROUND5_MIN)
+    //Some(-0.09549583034897258)
+    val  expectNegativeIRR = DenseVector[Double](-100, 0, 0, 74)
+    assert(math.abs(interalRateReturn(expectNegativeIRR).get + 0.09549583034897258) < DOUBLE_ROUND5_MIN)
+
+    val expectZeroIRR = DenseVector[Double](-2000, 500, 500, 1000)
+    assert(math.abs(interalRateReturn(expectZeroIRR).get) < DOUBLE_ROUND5_MIN)
+
+
+    val expectNormalMIRR = modifiedInternalRateReturn(DenseVector[Double](-180, 42, 39, 40, 32, 48), 0.08, 0.11);
+    assert(math.abs(expectNormalMIRR - 0.06782) < DOUBLE_ROUND5_MIN)
+    val expectNegativeMIRR = modifiedInternalRateReturn(DenseVector[Double](-180, 42, 39, 40), 0.08, 0.11)
+    assert(math.abs(expectNegativeMIRR + 0.091354) < DOUBLE_ROUND5_MIN)
+    val withMultiNegMIRR = modifiedInternalRateReturn(DenseVector[Double](-180, 42, 39,-50, 40, 32, 48), 0.08, 0.11);
+    assert(math.abs(withMultiNegMIRR - 0.0303) < DOUBLE_ROUND5_MIN)
+  }
+
+  test("number periodic vs solve rate of annuity") {
+
+    val normalRate = 0.07/12  //~0.00583191332402286
+    val expectNormal = numberPeriodicPayments(normalRate, -150, 8000)
+    //expect 64.07335
+    assert(math.abs(expectNormal - 64.07335) < DOUBLE_ROUND5_MIN)
+    //expect -53.33333
+    val testZeroRate = numberPeriodicPayments(0, -150, 8000)
+    assert(math.abs(testZeroRate - -53.33333) < DOUBLE_ROUND5_MIN)
+
+    val expectNormalRate = ratePeriodicPayments(expectNormal, -150, 8000, 0).get
+    assert(math.abs(expectNormalRate - normalRate) < DOUBLE_ROUND5_MIN)
+  }
 }
