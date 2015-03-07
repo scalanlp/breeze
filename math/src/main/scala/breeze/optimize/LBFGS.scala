@@ -38,7 +38,7 @@ import breeze.util.SerializableLogging
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
 class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
-              (implicit space: MutableInnerProductModule[T, Double]) extends FirstOrderMinimizer[T, DiffFunction[T]](maxIter, tolerance) with SerializableLogging {
+              (implicit space: MutableInnerProductModule[T, Double]) extends FirstOrderMinimizer[T, DiffFunction[T]](maxIter, tolerance, tolerance) with SerializableLogging {
 
   import space._
   require(m > 0)
