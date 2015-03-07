@@ -12,6 +12,7 @@ import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 import breeze.optimize.linear.{PowerMethod, NNLS, ConjugateGradient}
 import breeze.stats.distributions.Rand
 import breeze.util.Implicits._
+import spire.syntax.cfor._
 
 /**
  * Proximal operators and ADMM based Primal-Dual QP Solver 
@@ -42,11 +43,13 @@ class QuadraticMinimizer(nGram: Int,
                          proximal: Proximal = null,
                          Aeq: DenseMatrix[Double] = null,
                          beq: DenseVector[Double] = null,
-                         maxIters: Int = -1, abstol: Double = 1e-6, reltol: Double = 1e-4) extends SerializableLogging {
+                         maxIters: Int = -1, abstol: Double = 1e-6, reltol: Double = 1e-4)
+  extends SerializableLogging {
+
   type BDM = DenseMatrix[Double]
   type BDV = DenseVector[Double]
 
-  case class State(x: BDV, u: BDV, z: BDV, R: BDM, pivot: Array[Int], xHat: BDV, zOld: BDV, residual: BDV, s: BDV, iter: Int, converged: Boolean)
+  case class State private[QuadraticMinimizer](x: BDV, u: BDV, z: BDV, R: BDM, pivot: Array[Int], xHat: BDV, zOld: BDV, residual: BDV, s: BDV, iter: Int, converged: Boolean)
 
   val linearEquality = if (Aeq != null) Aeq.rows else 0
 
@@ -58,28 +61,47 @@ class QuadraticMinimizer(nGram: Int,
   //TO DO: Tune alpha based on Nesterov's acceleration
   val alpha: Double = 1.0
 
-  val wsH = if (linearEquality > 0) {
-    /**
-     * Aeq is l x rank
-     * H is rank x rank
-     * wsH is a quasi-definite matrix
-     * [ P + rho*I, A' ]
-	   * [ A        , 0  ]
-	  */
-    val ws = DenseMatrix.zeros[Double](n, n)
-    val transAeq = Aeq.t
+  /**
+   * wsH is the workspace for gram matrix / quasi definite system based on the problem definition
+   * Quasi definite system is formed if we have a set of affine constraints in quadratic minimization
+   * minimize 0.5x'Hx + c'x + g(x)
+   * s.t Aeq x = beq
+   *
+   * Proximal formulations can handle different g(x) as specified above but if Aeq x = beq is not
+   * a probability simplex (1'x = s, x >=0) and arbitrary equality constraint, then we form the
+   * quasi definite system by adding affine constraint Aeq x = beq in x-update and handling bound
+   * constraints like lb <= z <= ub in g(z) update.
+   *
+   * Capability of adding affine constraints let us support all the features that an interior point
+   * method like Matlab QuadProg and Mosek can handle
+   *
+   * The affine system looks as follows:
+   *
+   * Aeq is l x rank
+   * H is rank x rank
+   *
+   * wsH is a quasi-definite matrix
+   * [ P + rho*I, Aeq' ]
+   * [ Aeq        , 0  ]
+   *
+   * if wsH is positive definite then we use cholesky factorization and cache the factorization
+   * if wsH is quasi definite then we use lu factorization and cache the factorization
+   *
+   * Preparing the wsH workspace is expensive and so memory is allocated at the construct time and
+   * an API updateGram is exposed to users so that the workspace can be used by many solves that show
+   * up in distributed frameworks like Spark mllib ALS
+   */
 
-    for (row <- 0 until Aeq.rows)
-      for (column <- 0 until Aeq.cols)
-        ws(row + nGram, column) = Aeq.valueAt(row, column)
-
-    for (row <- 0 until transAeq.rows)
-      for (column <- 0 until transAeq.cols)
-        ws(row, column + nGram) = transAeq.valueAt(row, column)
-    ws
-  } else {
-    DenseMatrix.zeros[Double](n, n)
-  }
+  private val wsH =
+    if (linearEquality > 0) {
+      val ws = DenseMatrix.zeros[Double](n, n)
+      val transAeq = Aeq.t
+      ws(nGram until (nGram + Aeq.rows), 0 until Aeq.cols) := Aeq
+      ws(0 until nGram, nGram until (nGram + Aeq.rows)) := transAeq
+      ws
+    } else {
+      DenseMatrix.zeros[Double](n, n)
+    }
 
   val admmIters = if (maxIters < 0) Math.max(400, 20 * n) else maxIters
 
@@ -96,7 +118,7 @@ class QuadraticMinimizer(nGram: Int,
   //u is the langrange multiplier
   //z is for the proximal operator application
 
-  def initialState(nGram: Int) = {
+  private def initialState(nGram: Int) = {
     var R: DenseMatrix[Double] = null
     var pivot: Array[Int] = null
 
@@ -128,18 +150,16 @@ class QuadraticMinimizer(nGram: Int,
     import state._
 
     //scale will hold q + linearEqualities
-    val scale = DenseVector.zeros[Double](n)
     val convergenceScale = sqrt(n)
 
     //scale = rho*(z - u) - q
-    for (i <- 0 until z.length) {
+    val scale = DenseVector.zeros[Double](n)
+    cforRange(0 until z.length) { i =>
       val entryScale = rho * (z(i) - u(i)) - q(i)
       scale.update(i, entryScale)
     }
-
-    if (linearEquality > 0) {
-      for (i <- 0 until beq.data.length) scale.update(nGram + i, beq.data(i))
-    }
+    if (linearEquality > 0)
+      cforRange(0 until beq.length) { i => scale.update(nGram + i, beq(i)) }
 
     //TO DO : Use LDL' decomposition for efficiency if the Gram matrix is sparse
     // If the Gram matrix is positive definite then use Cholesky else use LU Decomposition
@@ -152,7 +172,7 @@ class QuadraticMinimizer(nGram: Int,
       //Step 2 : R * x = y
       QuadraticMinimizer.solveTriangular(R, scale)
     }
-    for (i <- 0 until x.length) x.update(i, xlambda(i))
+    cforRange(0 until x.length) {i => x.update(i, xlambda(i))}
 
     //Unconstrained Quadratic Minimization does need any proximal step
     if (proximal == null) {
@@ -245,15 +265,12 @@ class QuadraticMinimizer(nGram: Int,
 
   def iterations(q: DenseVector[Double]) : Iterator[State] = {
     val rho = computeRho(wsH)
-    for (i <- 0 until q.length) wsH.update(i, i, wsH(i, i) + rho)
+    cforRange(0 until q.length) {i => wsH.update(i, i, wsH(i, i) + rho)}
     iterations(q, rho)
   }
 
   def iterations(H: DenseMatrix[Double], q: DenseVector[Double]): Iterator[State] = {
-    for (i <- 0 until H.rows)
-      for (j <- 0 until H.cols) {
-        wsH.update(i, j, H(i, j))
-      }
+    wsH(0 until H.rows, 0 until H.cols) := H
     iterations(q)
   }
 }
