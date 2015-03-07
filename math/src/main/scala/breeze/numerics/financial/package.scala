@@ -141,19 +141,18 @@ package object financial {
 
     val res = roots(reverse(cashflow))
 
-    val rate = if (res.length <= 0) {
+    val realRes = DenseVector[Double](
+      for(c:Complex <- res.toArray
+          if ((c.im() == 0) && (0 < c.re())))
+      yield c.re()
+    )
+    val rates = realRes.mapValues(v =>1.0 / v - 1.0)
+
+    val rate = if (rates.length <= 0) {
       None
     } else {
-      val realRes = DenseVector[Double](
-        for(c:Complex <- res.toArray
-            if ((c.im() == 0) && (0 < c.re())))
-        yield c.re()
-      )
-      val rates = realRes.mapValues(v =>1.0 / v - 1.0)
-
       Option[Double](rates(argmin(abs(rates))))
     }
-
     rate
   }
 
