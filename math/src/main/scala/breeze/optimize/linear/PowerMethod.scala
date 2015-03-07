@@ -8,22 +8,29 @@ import breeze.util.SerializableLogging
 import breeze.linalg.{DenseMatrix, DenseVector, norm}
 import breeze.util.Implicits._
 /**
- * Power Method to compute maximum eigen value
+ * Power Method to compute maximum eigen value and companion object to compute minimum eigen value through inverse power
+ * iterations
  * @author debasish83
  */
 class PowerMethod[T, M](maxIters: Int = 10,tolerance: Double = 1E-5)
-                       (implicit space: MutableInnerProductModule[T, Double],
-                        mult: OpMulMatrix.Impl2[M, T, T]) extends SerializableLogging {
+                       (implicit space: MutableInnerProductModule[T, Double], mult: OpMulMatrix.Impl2[M, T, T]) extends SerializableLogging {
 
   import space._
 
-  case class State(eigenValue: Double, eigenVector: T, iter: Int, converged: Boolean)
+  case class State private[PowerMethod] (eigenValue: Double, eigenVector: T, iter: Int, converged: Boolean)
 
   //memory allocation for the eigen vector result
   def normalize(y: T) : T = {
     val normInit = norm(y)
     val init = copy(y)
     init *= 1.0/normInit
+  }
+
+  def initialState(y: T, A: M): State = {
+    val ynorm = normalize(y)
+    val ay = mult(A, ynorm)
+    val lambda = nextEigen(ynorm, ay)
+    State(lambda, ynorm, 0, false)
   }
 
   //in-place modification of eigen vector
@@ -34,13 +41,6 @@ class PowerMethod[T, M](maxIters: Int = 10,tolerance: Double = 1E-5)
     eigenVector *= 1.0/norm1
     if (lambda < 0.0) eigenVector *= -1.0
     lambda
-  }
-
-  def initialState(y: T, A: M): State = {
-    val ynorm = normalize(y)
-    val ay = mult(A, ynorm)
-    val lambda = nextEigen(ynorm, ay)
-    State(lambda, ynorm, 0, false)
   }
 
   def iterations(y: T,
@@ -63,7 +63,7 @@ class PowerMethod[T, M](maxIters: Int = 10,tolerance: Double = 1E-5)
 }
 
 object PowerMethod {
-  def inverse(maxIters: Int = 10, tolerance: Double = 1E-5) = new PowerMethod[DenseVector[Double], DenseMatrix[Double]](maxIters, tolerance) {
+  def inverse(maxIters: Int = 10, tolerance: Double = 1E-5) : PowerMethod[DenseVector[Double], DenseMatrix[Double]] = new PowerMethod[DenseVector[Double], DenseMatrix[Double]](maxIters, tolerance) {
     override def initialState(y: DenseVector[Double], A: DenseMatrix[Double]): State = {
       val ynorm = normalize(y)
       val ay = QuadraticMinimizer.solveTriangular(A, ynorm)

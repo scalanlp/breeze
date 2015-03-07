@@ -6,6 +6,8 @@
 
 package breeze.optimize.proximal
 
+import breeze.numerics.pow
+
 import scala.math.max
 import scala.math.min
 import scala.math.sqrt
@@ -13,6 +15,8 @@ import scala.math.abs
 import scala.Double.NegativeInfinity
 import scala.Double.PositiveInfinity
 import breeze.linalg._
+import spire.syntax.cfor._
+import breeze.linalg.norm
 
 trait Proximal {
   def prox(x: DenseVector[Double], rho: Double)
@@ -20,50 +24,35 @@ trait Proximal {
 
 case class ProjectBox(l: DenseVector[Double], u: DenseVector[Double]) extends Proximal {
   def prox(x: DenseVector[Double], rho: Double = 0.0) = {
-    var i = 0
-    while (i < x.length) {
-      x.update(i, max(l(i), min(x(i), u(i))))
-      i = i + 1
-    }
+    cforRange(0 until x.length) { i => x.update(i, max(l(i), min(x(i), u(i))))}
   }
 }
 
 case class ProjectPos() extends Proximal {
   def prox(x: DenseVector[Double], rho: Double = 0.0) = {
-    var i = 0
-    while (i < x.length) {
-      x.update(i, max(0, x(i)))
-      i = i + 1
-    }
+    cforRange(0 until x.length) { i => x.update(i, max(0, x(i)))}
   }
 }
 
 case class ProjectSoc() extends Proximal {
   def prox(x: DenseVector[Double], rho: Double = 0.0) = {
     var nx: Double = 0.0
-    var i: Int = 1
     val n = x.length
-
-    while (i < n) {
+    cforRange(1 until n) { i =>
       nx += x(i) * x(i)
-      i = i + 1
     }
     nx = sqrt(nx)
 
     if (nx > x(0)) {
       if (nx <= -x(0)) {
-        i = 0
-        while (i < n) {
-          x(i) = 0
-          i = i + 1
+        cforRange(0 until n ) {
+          i => x(i) = 0
         }
       } else {
         val alpha = 0.5 * (1 + x(0) / nx)
         x.update(0, alpha * nx)
-        i = 1
-        while (i < n) {
-          x.update(i, alpha * x(i))
-          i = i + 1
+        cforRange(1 until n) {
+          i => x.update(i, alpha * x(i))
         }
       }
     }
@@ -105,30 +94,18 @@ case class ProximalL1() extends Proximal {
   }
 
   def prox(x: DenseVector[Double], rho: Double) = {
-    var i = 0
-    while (i < x.length) {
-      x.update(i, max(0, x(i) - lambda/rho) - max(0, -x(i) - lambda/rho))
-      i = i + 1
+    cforRange(0 until x.length) { i =>
+      x.update(i, max(0, x(i) - lambda / rho) - max(0, -x(i) - lambda / rho))
     }
   }
 }
 
 case class ProximalL2() extends Proximal {
   def prox(x: DenseVector[Double], rho: Double) = {
-    var normSquare: Double = 0.0
-    var i = 0
-
-    while (i < x.length) {
-      normSquare = normSquare + x(i) * x(i)
-      i = i + 1
-    }
-
-    val norm = sqrt(normSquare)
-    i = 0
-    while (i < x.length) {
-      if (norm >= 1/ rho) x.update(i, x(i) * (1 - 1/(rho * norm)))
+    val xnorm = norm(x)
+    cforRange(0 until x.length) { i =>
+      if (xnorm >= 1 / rho) x.update(i, x(i) * (1 - 1 / (rho * xnorm)))
       else x.update(i, 0)
-      i = i + 1
     }
   }
 }
@@ -136,10 +113,8 @@ case class ProximalL2() extends Proximal {
 // f = (1/2)||.||_2^2
 case class ProximalSumSquare() extends Proximal {
   def prox(x: DenseVector[Double], rho: Double) = {
-    var i = 0
-    while (i < x.length) {
+    cforRange(0 until x.length) { i =>
       x.update(i, x(i) * (rho / (1 + rho)))
-      i = i + 1
     }
   }
 }
@@ -147,10 +122,8 @@ case class ProximalSumSquare() extends Proximal {
 // f = -sum(log(x))
 case class ProximalLogBarrier() extends Proximal {
   def prox(x: DenseVector[Double], rho: Double) = {
-    var i = 0
-    while (i < x.length) {
+    cforRange(0 until x.length) { i =>
       x.update(i, 0.5 * (x(i) + sqrt(x(i) * x(i) + 4 / rho)))
-      i = i + 1
     }
   }
 }
@@ -186,11 +159,8 @@ case class ProximalHuber() extends Proximal {
 
   def proxSeparable(x: DenseVector[Double], rho: Double, oracle: Double => Double, l: Double, u: Double) = {
     x.map(proxScalar(_, rho, oracle, l, u, 0))
-
-    var i = 0
-    while (i < x.length) {
+    cforRange(0 until x.length) { i =>
       x.update(i, proxScalar(x(i), rho, oracle, l, u, 0))
-      i = i + 1
     }
   }
 
@@ -211,10 +181,8 @@ case class ProximalHuber() extends Proximal {
 // f = c'*x
 case class ProximalLinear(c: DenseVector[Double]) extends Proximal {
   def prox(x: DenseVector[Double], rho: Double) = {
-    var i = 0
-    while (i < x.length) {
+    cforRange(0 until x.length) { i =>
       x.update(i, x(i) - c(i) / rho)
-      i = i + 1
     }
   }
 }
@@ -222,10 +190,8 @@ case class ProximalLinear(c: DenseVector[Double]) extends Proximal {
 // f = c'*x + I(x >= 0)
 case class ProximalLp(c: DenseVector[Double]) extends Proximal {
   def prox(x: DenseVector[Double], rho: Double) = {
-    var i = 0
-    while (i < x.length) {
+    cforRange(0 until x.length) { i =>
       x.update(i, max(0, x(i) - c(i) / rho))
-      i = i + 1
     }
   }
 }

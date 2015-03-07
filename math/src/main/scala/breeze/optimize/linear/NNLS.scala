@@ -4,6 +4,7 @@ import breeze.linalg.{DenseMatrix, DenseVector, axpy}
 import breeze.optimize.proximal.QpGenerator
 import breeze.stats.distributions.Rand
 import breeze.util.Implicits._
+import spire.syntax.cfor._
 
 /**
  * NNLS solves nonnegative least squares problems using a modified
@@ -16,11 +17,10 @@ class NNLS(val maxIters: Int = -1) {
   type BDM = DenseMatrix[Double]
   type BDV = DenseVector[Double]
 
-  case class State(x: BDV, grad: BDV, dir: BDV, lastDir: BDV, res: BDV,
-                   lastNorm: Double, lastWall: Int, iter: Int, converged: Boolean)
+  case class State private[NNLS](x: BDV, grad: BDV, dir: BDV, lastDir: BDV, res: BDV, lastNorm: Double, lastWall: Int, iter: Int, converged: Boolean)
 
   // find the optimal unconstrained step
-  def steplen(ata: BDM, dir: BDV, res: BDV,
+  private def steplen(ata: BDM, dir: BDV, res: BDV,
               tmp: BDV): Double = {
     val top = dir.dot(res)
     tmp := ata * dir
@@ -29,7 +29,7 @@ class NNLS(val maxIters: Int = -1) {
   }
 
   // stopping condition
-  def stop(step: Double, ndir: Double, nx: Double): Boolean = {
+  private def stop(step: Double, ndir: Double, nx: Double): Boolean = {
     ((step.isNaN) // NaN
       || (step < 1e-7) // too small or negative
       || (step > 1e40) // too small; almost certainly numerical problems
@@ -52,7 +52,7 @@ class NNLS(val maxIters: Int = -1) {
    * direction, however, while this method only uses a conjugate gradient direction if the last
    * iteration did not cause a previously-inactive constraint to become active.
    */
-  def initialState(ata: DenseMatrix[Double], atb: DenseVector[Double], n: Int): State = {
+  private def initialState(ata: DenseMatrix[Double], atb: DenseVector[Double], n: Int): State = {
     require(ata.cols == ata.rows, s"NNLS:iterations gram matrix must be symmetric")
     require(ata.rows == atb.length, s"NNLS:iterations gram matrix rows must be same as length of linear term")
 
@@ -81,12 +81,10 @@ class NNLS(val maxIters: Int = -1) {
       grad := res
 
       // project the gradient
-      var i = 0
-      while (i < n) {
-        if (grad.data(i) > 0.0 && x.data(i) == 0.0) {
-          grad.data(i) = 0.0
+      cforRange(0 until n) { i =>
+        if (grad(i) > 0.0 && x(i) == 0.0) {
+          grad(i) = 0.0
         }
-        i = i + 1
       }
       val ngrad = grad.dot(grad)
       dir := grad
@@ -117,26 +115,22 @@ class NNLS(val maxIters: Int = -1) {
         State(x, grad, dir, lastDir, res, lastNorm, lastWall, iter + 1, true)
       else {
         // don't run through the walls
-        i = 0
-        while (i < n) {
-          if (step * dir.data(i) > x.data(i)) {
-            step = x.data(i) / dir.data(i)
+        cforRange(0 until n){ i =>
+          if (step * dir(i) > x(i)) {
+            step = x(i) / dir(i)
           }
-          i = i + 1
         }
 
         var nextWall = lastWall
 
         // take the step
-        i = 0
-        while (i < n) {
-          if (step * dir.data(i) > x.data(i) * (1 - 1e-14)) {
-            x.data(i) = 0
+        cforRange(0 until n) { i =>
+          if (step * dir(i) > x(i) * (1 - 1e-14)) {
+            x(i) = 0
             nextWall = iter
           } else {
-            x.data(i) -= step * dir.data(i)
+            x(i) -= step * dir(i)
           }
-          i = i + 1
         }
         lastDir := dir
         val nextNorm = ngrad
