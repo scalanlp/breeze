@@ -138,7 +138,7 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
     val grad = state.grad
 
     val ff = LineSearch.functionFromSearchDirection(f, x, dir)
-    val search = new BacktrackingLineSearch(maxIterations = maxSrchIt)
+    val search = new BacktrackingLineSearch(state.value, maxIterations = maxSrchIt, shrinkStep= if(state.iter < 1) 0.1 else 0.5)
     var alpha = if(state.iter == 0.0) min(1.0, 1.0/norm(dir)) else 1.0
     alpha = search.minimize(ff, alpha)
 

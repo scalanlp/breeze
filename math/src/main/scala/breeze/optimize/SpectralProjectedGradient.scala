@@ -102,7 +102,7 @@ class SpectralProjectedGradient[T](
 
     //TO DO :
     // 1. Add cubic interpolation and see it's performance. Bisection did not work for L1 projection
-    val search = new BacktrackingLineSearch(maxIterations=maxSrcht)
+    val search = new BacktrackingLineSearch(state.value, maxIterations=maxSrcht)
     gamma = search.minimize(searchFun, gamma)
 
     if (gamma < 1e-10) {
