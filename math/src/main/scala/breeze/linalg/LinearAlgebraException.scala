@@ -31,3 +31,5 @@ class MatrixEmptyException extends IllegalArgumentException("Matrix is empty") w
  * @author dramage, dlwh
  */
 class MatrixSingularException(msg : String="") extends RuntimeException(msg)  with LinearAlgebraException
+
+class LapackException(msg: String="") extends RuntimeException(msg) with LinearAlgebraException
