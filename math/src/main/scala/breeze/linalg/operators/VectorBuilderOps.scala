@@ -4,6 +4,7 @@ import breeze.macros.expand
 import breeze.generic.UFunc.{UImpl2, InPlaceImpl2}
 import breeze.math._
 import breeze.storage.Zero
+import spire.syntax.cfor._
 import scala.reflect.ClassTag
 import breeze.linalg._
 
@@ -300,7 +301,7 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
     }
   }
 
-  implicit def canAxpy_V_VB_Double[V, Vec](implicit ev: Vec <:< Vector[V], semi: Semiring[V]): scaleAdd.InPlaceImpl3[Vec, V, VectorBuilder[V]] = {
+  implicit def canAxpy_V_VB_Semi[V, Vec](implicit ev: Vec <:< Vector[V], semi: Semiring[V]): scaleAdd.InPlaceImpl3[Vec, V, VectorBuilder[V]] = {
     new scaleAdd.InPlaceImpl3[Vec, V, VectorBuilder[V]]  {
       def apply(a: Vec, s: V, b: VectorBuilder[V]) {
         require(a.length == b.length, "Dimension mismatch!")
@@ -324,6 +325,32 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
         while(i < b.activeSize) {
           result = semi.+(result, semi.*(bd(i), a(b.index(i))))
           i += 1
+        }
+        result
+      }
+    }
+  }
+
+  @expand
+  @expand.valify
+  implicit def canMulDMVB[@expand.args(Double, Int, Float, Long) T]: OpMulMatrix.Impl2[DenseMatrix[T], VectorBuilder[T], DenseVector[T]] = {
+    new OpMulMatrix.Impl2[DenseMatrix[T], VectorBuilder[T], DenseVector[T]] {
+      def apply(a: DenseMatrix[T], b: VectorBuilder[T]): DenseVector[T] = {
+        val result = DenseVector.zeros[T](a.rows)
+        cforRange(0 until b.activeSize) { i =>
+          axpy(b.data(i), a(::, b.index(i)), result)
+        }
+        result
+      }
+    }
+  }
+
+  implicit def canMulDMVB_Semi[T:ClassTag](implicit semi: Semiring[T]): OpMulMatrix.Impl2[DenseMatrix[T], VectorBuilder[T], DenseVector[T]] = {
+    new OpMulMatrix.Impl2[DenseMatrix[T], VectorBuilder[T], DenseVector[T]] {
+      def apply(a: DenseMatrix[T], b: VectorBuilder[T]): DenseVector[T] = {
+        val result = DenseVector.zeros[T](a.rows)
+        cforRange(0 until b.activeSize) { i =>
+          axpy(b.data(i), a(::, b.index(i)), result)
         }
         result
       }
