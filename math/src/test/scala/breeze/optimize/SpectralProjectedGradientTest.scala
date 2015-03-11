@@ -37,7 +37,7 @@ package breeze.optimize
 import breeze.linalg._
 import breeze.numerics._
 import breeze.optimize.proximal.NonlinearMinimizer.Projection
-import breeze.optimize.proximal.{NonlinearMinimizer, ProjectL1, QuadraticMinimizer}
+import breeze.optimize.proximal.{ProjectL1, QuadraticMinimizer}
 import org.junit.runner.RunWith
 import org.scalatest._
 import org.scalatest.junit._
@@ -89,8 +89,8 @@ class SpectralProjectedGradientTest extends PropSpec with PropertyChecks with Op
     val x = H \ f
 
     init := 0.0
-    val nlResult = new SpectralProjectedGradient[DenseVector[Double]]().minimize(cost, init)
-    assert(norm(x - nlResult, inf) < 1e-4, s"$x $nlResult")
+    val spgResult = new SpectralProjectedGradient[DenseVector[Double]]().minimize(cost, init)
+    assert(norm(x - spgResult, inf) < 1e-4, s"$x $spgResult")
   }
 
   property("simple linear solve with L1 projection") {
@@ -107,6 +107,7 @@ class SpectralProjectedGradientTest extends PropSpec with PropertyChecks with Op
     val s = octaveL1.foldLeft(0.0) { case (agg, entry) => agg + abs(entry)}
     val projectL1 = ProjectL1(s)
     val spgResult = new SpectralProjectedGradient[DenseVector[Double]](Projection(projectL1).project).minimizeAndReturnState(cost, DenseVector.zeros[Double](25))
+    println(s"SpectralProjectedGradient L1 projection iters ${spgResult.iter}")
     assert(norm(spgResult.x - octaveL1, 2) < 1e-4)
   }
 }

@@ -19,7 +19,7 @@ import breeze.linalg.norm
 
 trait Proximal {
   def prox(x: DenseVector[Double], rho: Double = 1.0)
-  def valueAt(x: DenseVector[Double], rho: Double = 1.0) = 0.0
+  def valueAt(x: DenseVector[Double]) = 0.0
 }
 
 case class ProjectIdentity() extends Proximal {
@@ -122,8 +122,7 @@ case class ProjectHyperPlane(a: DenseVector[Double], b: Double) extends Proximal
   }
 }
 
-case class ProximalL1() extends Proximal {
-  var lambda = 1.0
+case class ProximalL1(var lambda: Double = 1.0) extends Proximal {
 
   def setLambda(lambda: Double) = {
     this.lambda = lambda
@@ -136,8 +135,8 @@ case class ProximalL1() extends Proximal {
     }
   }
 
-  override def valueAt(x: DenseVector[Double], rho: Double = 1.0) = {
-    lambda * rho * x.foldLeft(0.0) { (agg, entry) => agg + abs(entry)}
+  override def valueAt(x: DenseVector[Double]) = {
+    lambda * x.foldLeft(0.0) { (agg, entry) => agg + abs(entry)}
   }
 }
 

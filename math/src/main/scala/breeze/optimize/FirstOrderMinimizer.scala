@@ -108,10 +108,11 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](maxIter: In
      f.calculate(x)
   }
 
-  def infiniteIterations(f: DF, init: T): Iterator[State] = {
+  def infiniteIterations(f: DF, state: State): Iterator[State] = {
     var failedOnce = false
     val adjustedFun = adjustFunction(f)
-    Iterator.iterate(initialState(adjustedFun,init)) { state => try {
+
+    Iterator.iterate(state) { state => try {
         val dir = chooseDescentDirection(state, adjustedFun)
         val stepSize = determineStepSize(state, adjustedFun, dir)
         logger.info(f"Step Size: $stepSize%.4g")
@@ -141,9 +142,10 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](maxIter: In
   }
 
   def iterations(f: DF, init: T): Iterator[State] = {
-    infiniteIterations(f, init).takeUpToWhere(_.converged)
+    val adjustedFun = adjustFunction(f)
+    infiniteIterations(f, initialState(adjustedFun, init)).takeUpToWhere(_.converged)
   }
-  
+
   def minimize(f: DF, init: T): T = {
     minimizeAndReturnState(f, init).x
   }

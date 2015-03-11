@@ -2,7 +2,7 @@ Breeze is distributed under an Apache License V2.0 (See LICENSE)
 
 ===============================================================================
 
-Proximal algorithms outlined in Proximal.scala (package breeze.optimize.quadratic)
+Proximal algorithms outlined in Proximal.scala (package breeze.optimize.proximal)
 are based on https://github.com/cvxgrp/proximal (see LICENSE for details) and distributed with 
 Copyright (c) 2014 by Debasish Das (Verizon), all rights reserved.
 
@@ -13,5 +13,5 @@ QuadraticMinimizer class in package breeze.optimize.proximal is distributed with
 
 ===============================================================================
 
-NonlinearMinimizer class in package breeze.optimize.quadratic is distributed with Copyright (c)
+NonlinearMinimizer class in package breeze.optimize.proximal is distributed with Copyright (c)
 2015, Debasish Das (Verizon), all rights reserved.

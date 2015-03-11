@@ -18,7 +18,7 @@ package breeze.optimize
 
 import breeze.linalg._
 import breeze.collection.mutable.RingBuffer
-import breeze.math.{MutableInnerProductModule}
+import breeze.math.MutableInnerProductModule
 import breeze.util.SerializableLogging
 
 // Compact representation of an n x n Hessian, maintained via L-BFGS updates
@@ -88,7 +88,9 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
                            val projection: DenseVector[Double] => DenseVector[Double] = identity)
                           (implicit space: MutableInnerProductModule[DenseVector[Double],Double])
   extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]](maxIter = maxIter, tolerance = tolerance) with Projecting[DenseVector[Double]] with SerializableLogging {
-  val innerOptimizer = new SpectralProjectedGradient[DenseVector[Double]](
+  type BDV = DenseVector[Double]
+
+  val innerOptimizer = new SpectralProjectedGradient[BDV](
     tolerance = tolerance,
     maxIter = 50,
     bbMemory = 5,
@@ -103,10 +105,9 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
     new CompactHessian(m)
   }
 
-  override protected def adjust(newX: DenseVector[Double], newGrad: DenseVector[Double], newVal: Double):(Double,DenseVector[Double]) = (newVal,-projectedVector(newX, -newGrad))
+  override protected def adjust(newX: DenseVector[Double], newGrad: DenseVector[Double], newVal: Double):(Double,DenseVector[Double]) = (newVal,projectedVector(newX, -newGrad))
 
   private def computeGradient(x: DenseVector[Double], g: DenseVector[Double]): DenseVector[Double] = projectedVector(x, -g)
-  private def computeGradientNorm(x: DenseVector[Double], g: DenseVector[Double]): Double = norm(computeGradient(x, g),Double.PositiveInfinity)
 
   protected def chooseDescentDirection(state: State, fn: DiffFunction[DenseVector[Double]]): DenseVector[Double] = {
     import state._
@@ -117,8 +118,9 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
       //B.update(y, s)
       // Solve subproblem; we use the current iterate x as a guess
       val subprob = new ProjectedQuasiNewton.QuadraticSubproblem(state.adjustedValue, x, grad, history)
-      val p = innerOptimizer.minimize(new CachedDiffFunction(subprob), x)
-      p - x
+      val spgResult = innerOptimizer.minimizeAndReturnState(new CachedDiffFunction(subprob), x)
+      logger.info(f"ProjectedQuasiNewton: outerIter ${state.iter} innerIters ${spgResult.iter}")
+      spgResult.x - x
       //	time += subprob.time
     }
   }
@@ -142,8 +144,8 @@ class ProjectedQuasiNewton(tolerance: Double = 1e-6,
     var alpha = if(state.iter == 0.0) min(1.0, 1.0/norm(dir)) else 1.0
     alpha = search.minimize(ff, alpha)
 
-    if(alpha * norm(grad) < 1E-10)
-      throw new StepSizeUnderflow
+    if(alpha * norm(grad) < 1E-10) throw new StepSizeUnderflow
+
     alpha
   }
 

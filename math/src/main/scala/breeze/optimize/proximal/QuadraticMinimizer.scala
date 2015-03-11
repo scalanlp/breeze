@@ -238,7 +238,7 @@ class QuadraticMinimizer(nGram: Int,
   private def computeRho(H: DenseMatrix[Double]): Double = {
     proximal match {
       case null => 0.0
-      case ProximalL1() => {
+      case ProximalL1(lambda:Double) => {
         val eigenMax = QuadraticMinimizer.normColumn(H)
         val eigenMin = QuadraticMinimizer.approximateMinEigen(H)
         sqrt(eigenMin * eigenMax)
