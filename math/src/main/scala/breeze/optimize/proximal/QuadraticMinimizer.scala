@@ -381,14 +381,9 @@ object QuadraticMinimizer {
                          q: DenseVector[Double]) = {
     val lbfgs = new LBFGS[DenseVector[Double]](-1, 7)
     val state = lbfgs.minimizeAndReturnState(Cost(H, q), init)
-    val approxMinEigen = lbfgs.minEigen(state, init)
-    val eigs = eigSym(H).eigenvalues
-
-    val minEigen = min(eigs)
-    println(s"minEigen $minEigen approx $approxMinEigen")
     state.x
   }
-
+  
   def optimizeWithOWLQN(init: DenseVector[Double],
                         regularizedGram: DenseMatrix[Double],
                         q: DenseVector[Double],
