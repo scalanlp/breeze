@@ -3,19 +3,23 @@ organization := "org.scalanlp"
 name := "breeze-parent"
 
 lazy val root = project.in( file(".") )
-    .aggregate(math, natives).dependsOn(math)
+    .aggregate(math, natives, viz, macros).dependsOn(math, viz)
 
-lazy val math = project.in( file("math"))
+lazy val macros = project.in( file("macros"))
+
+lazy val math = project.in( file("math")).dependsOn(macros)
 
 lazy val natives = project.in(file("natives")).dependsOn(math)
 
+lazy val viz = project.in( file("viz")).dependsOn(math)
+
 lazy val benchmark = project.in(file("benchmark")).dependsOn(math, natives)
 
-scalaVersion := "2.11.2"
+scalaVersion := "2.11.4"
 
-crossScalaVersions  := Seq("2.11.2", "2.10.4")
+crossScalaVersions  := Seq("2.11.4", "2.10.4")
 
-addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0-M1" cross CrossVersion.full)
+addCompilerPlugin("org.scalamacros" %% "paradise" % "2.0.1" cross CrossVersion.full)
 
 publishMavenStyle := true
 
@@ -41,13 +45,13 @@ pomExtra := (
     </license>
   </licenses>
   <scm>
-    <url>git@github.com:dlwh/breeze.git</url>
-    <connection>scm:git:git@github.com:dlwh/breeze.git</connection>
+    <url>git@github.com:scalanlp/breeze.git</url>
+    <connection>scm:git:git@github.com:scalanlp/breeze.git</connection>
   </scm>
   <developers>
     <developer>
       <id>dlwh</id>
       <name>David Hall</name>
-      <url>http://cs.berkeley.edu/~dlwh/</url>
+      <url>http://www.dlwh.org/</url>
     </developer>
   </developers>)

@@ -29,7 +29,7 @@ object CSVReader {
            separator: Char=',',
            quote: Char='"',
            escape: Char='\\',
-           skipLines: Int = 0):Iterator[IndexedSeq[String]] = {
+           skipLines: Int = 0) = {
     val rdr = new OpenCSVReader(input, separator, quote, escape, skipLines)
     new Iterator[IndexedSeq[String]] {
       var _next = rdr.readNext()
@@ -40,6 +40,11 @@ object CSVReader {
         val x = _next
         _next = rdr.readNext
         x
+      }
+
+      def close() = {
+        rdr.close()
+        _next = null
       }
     }
   }

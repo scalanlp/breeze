@@ -35,18 +35,21 @@ class TruncatedNewtonMinimizer[T, H](maxIterations: Int = -1,
                    grad: T,
                    h: H,
                    adjFval: Double,
-                   adjGrad: T, history: History) {
-    def converged = (iter >= maxIterations && maxIterations > 0) || norm(adjGrad) <= tolerance * initialGNorm
+                   adjGrad: T,
+                   stop: Boolean,
+                   accept: Boolean, history: History) {
+    def converged = (iter >= maxIterations && maxIterations > 0 && accept == true) || norm(adjGrad) <= tolerance * initialGNorm || stop
   }
 
   private def initialState(f: SecondOrderFunction[T, H], initial: T): State = {
     val (v, grad, h) = f.calculate2(initial)
     val adjgrad = grad + initial * l2Regularization
     val initDelta = norm(adjgrad)
+    val adjfval = v + 0.5 * l2Regularization * (initial dot initial)
+    val f_too_small = if (adjfval < -1.0e+32) true else false
     State(0, initDelta, initDelta,
-      initial, v, grad, h,
-      v + 0.5 * l2Regularization * (initial dot initial),
-      adjgrad, initialHistory(f, initial))
+      initial, v, grad, h, adjfval,
+      adjgrad, f_too_small, true, initialHistory(f, initial))
   }
 
   // from tron
@@ -101,11 +104,18 @@ class TruncatedNewtonMinimizer[T, H](maxIterations: Int = -1,
 
       if (actualReduction > eta0 * predictedReduction) {
         logger.info("Accept %d d=%.2E newv=%.4E newG=%.4E resNorm=%.2E pred=%.2E actual=%.2E".format(iter, delta, adjNewV, norm(adjNewG), norm(residual), predictedReduction, actualReduction))
+        val stop_cond = if (adjNewV < -1.0e+32 ||
+                             (math.abs(actualReduction) <= math.abs(adjNewV) * 1.0e-12
+                               && math.abs(predictedReduction) <= math.abs(adjNewV) * 1.0e-12)) true else false
         val newHistory = updateHistory(x_new, adjNewG, adjNewV, state)
-        State(iter + 1, initialGNorm, newDelta, x_new, newv, newg, newh, adjNewV, adjNewG, newHistory)
+        val this_iter = if (state.accept == true) iter + 1 else iter
+        State(this_iter, initialGNorm, newDelta, x_new, newv, newg, newh, adjNewV, adjNewG, stop_cond, true, newHistory)
       } else {
+        val this_iter = if (state.accept == true) iter + 1 else iter
+        val stop_cond = if (adjFval < -1.0e+32 ||
+                             (math.abs(actualReduction) <= math.abs(adjFval) * 1.0e-12 && math.abs(predictedReduction) <= math.abs(adjFval) * 1.0e-12)) true else false
         logger.info("Reject %d d=%.2f resNorm=%.2f pred=%.2f actual=%.2f".format(iter, delta, norm(residual), predictedReduction, actualReduction))
-        state.copy(iter + 1, delta = newDelta)
+        state.copy(this_iter, delta = newDelta, stop = stop_cond, accept = false)
       }
 
     }

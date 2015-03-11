@@ -412,6 +412,26 @@ trait VectorOps { this: Vector.type =>
   }
 
   @expand
+  @expand.valify
+  implicit def s_v_Op[@expand.args(Int, Double, Float, Long) T,
+  @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: Op.Impl2[T, T, T],
+   @expand.sequence[T](0, 0.0, 0.0f, 0l)
+   zero: T):BinaryRegistry[T, Vector[T], Op.type, Vector[T]] = new BinaryRegistry[T, Vector[T], Op.type, Vector[T]] {
+    override def bindingMissing(b: T, a: Vector[T]): Vector[T] = {
+      val result = Vector.zeros[T](a.length)
+
+      var i = 0
+      while(i < a.length) {
+        result(i) = op(b, a(i))
+        i += 1
+      }
+      result
+    }
+  }
+
+  @expand
   implicit def v_sField_Op[@expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpMod, OpPow) Op <: OpType, T:Field:ClassTag]
   (implicit @expand.sequence[Op]({f.+(_,_)},  {f.-(_,_)}, {f.*(_,_)}, {f.*(_,_)}, {f./(_,_)}, {f.%(_,_)}, {f.pow(_,_)}) op: Op.Impl2[T, T, T]):
   BinaryRegistry[Vector[T], T, Op.type, Vector[T]] = new BinaryRegistry[Vector[T], T, Op.type, Vector[T]] {
@@ -813,7 +833,9 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @tparam V
    * @return
    */
-  def fill[@spec(Double, Int, Float, Long) V:ClassTag](size: Int)(v: =>V): Vec[V] = apply(Array.fill(size)(v))
+  def fill[@spec(Double, Int, Float, Long) V:ClassTag](size: Int)(v: =>V): Vec[V] = {
+    apply(Array.fill(size)(v))
+  }
 
 
   /**
@@ -823,7 +845,9 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @tparam V
    * @return
    */
-  def tabulate[@spec(Double, Int, Float, Long) V:ClassTag](size: Int)(f: Int=>V):Vec[V]= apply(Array.tabulate(size)(f))
+  def tabulate[@spec(Double, Int, Float, Long) V:ClassTag](size: Int)(f: Int=>V): Vec[V] = {
+    apply(Array.tabulate(size)(f))
+  }
 
   /**
    * Analogous to Array.tabulate, but taking a scala.Range to iterate over, instead of an index.
@@ -849,7 +873,7 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
       }
     }
 
-  implicit def canTabulate[V:ClassTag:Zero] = new CanTabulate[Int,Vec[V],V] {
+  implicit def canTabulate[V:ClassTag:Zero]: CanTabulate[Int, Vec[V], V] = new CanTabulate[Int,Vec[V],V] {
     def apply(d: Int, f: (Int) => V): Vec[V] = tabulate(d)(f)
   }
 
@@ -859,7 +883,7 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @param rand
    * @return
    */
-  def rand[T:ClassTag](size: Int, rand: Rand[T] = Rand.uniform) = {
+  def rand[T:ClassTag](size: Int, rand: Rand[T] = Rand.uniform): Vec[T] = {
     // Array#fill is slow.
     val arr = new Array[T](size)
     var i = 0

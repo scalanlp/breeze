@@ -17,7 +17,7 @@ package breeze.linalg
 
 import breeze.generic.UFunc
 import breeze.linalg.operators.{OpAdd, OpType}
-import breeze.math.MutableOptimizationSpace.SparseOptimizationSpace
+import breeze.math.MutableOptimizationSpace.SparseFieldOptimizationSpace
 import breeze.math.{Field, Complex}
 import breeze.storage.Zero
 import org.scalatest._
@@ -256,7 +256,7 @@ class CSCMatrixTest extends FunSuite with Checkers {
 
   test("CSCxCSC: OpAddInPlace2:Field") {
     def testAddInPlace[T:Field:Zero:ClassTag](a: CSCMatrix[T],b: CSCMatrix[T]) = {
-      val optspace = SparseOptimizationSpace.sparseOptSpace[T]
+      val optspace = SparseFieldOptimizationSpace.sparseOptSpace[T]
       import optspace._
       a += b
     }
@@ -276,7 +276,7 @@ class CSCMatrixTest extends FunSuite with Checkers {
 
   test("CSCxCSC: OpSubInPlace2:Field") {
     def testSubInPlace[T:Field:Zero:ClassTag](a: CSCMatrix[T],b: CSCMatrix[T]) = {
-      val optspace = SparseOptimizationSpace.sparseOptSpace[T]
+      val optspace = SparseFieldOptimizationSpace.sparseOptSpace[T]
       import optspace._
       a -= b
     }
@@ -295,7 +295,7 @@ class CSCMatrixTest extends FunSuite with Checkers {
   }
   test("CSCxCSC: OpMulScalarInPlace2:Field") {
     def testMulScalarInPlace[T:Field:Zero:ClassTag](a: CSCMatrix[T],b: CSCMatrix[T]) = {
-      val optspace = SparseOptimizationSpace.sparseOptSpace[T]
+      val optspace = SparseFieldOptimizationSpace.sparseOptSpace[T]
       import optspace._
       a *= b
     }
@@ -321,7 +321,7 @@ class CSCMatrixTest extends FunSuite with Checkers {
 
   test("CSCxCSC: OpSetInPlace:Scalar:Field") {
     def testSetInPlace[T:Field:Zero:ClassTag](a: CSCMatrix[T], b: T) = {
-      val optspace = SparseOptimizationSpace.sparseOptSpace[T]
+      val optspace = SparseFieldOptimizationSpace.sparseOptSpace[T]
       import optspace._
       a := b
     }
@@ -335,7 +335,7 @@ class CSCMatrixTest extends FunSuite with Checkers {
   test("ZipMapVals Test") {
     def testZipMap[T:Field:Zero:ClassTag](a: CSCMatrix[T],b: CSCMatrix[T]): CSCMatrix[T] = {
       val f = implicitly[Field[T]]
-      val optspace = SparseOptimizationSpace.sparseOptSpace[T]
+      val optspace = SparseFieldOptimizationSpace.sparseOptSpace[T]
       import optspace._
       val addMapFn = (t1: T, t2: T) => f.+(t1,t2)
 
@@ -363,10 +363,27 @@ class CSCMatrixTest extends FunSuite with Checkers {
   }
 
   test("axpy") {
-    val a : CSCMatrix[Int] = CSCMatrix((1,0,0),(2,3,-1))
-    val b : CSCMatrix[Int] = CSCMatrix((0,1,0),(2,3,-1))
+    val a  = CSCMatrix((1,0,0),(2,3,-1))
+    val b  = CSCMatrix((0,1,0),(2,3,-1))
     axpy(2, b, a)
     assert(a === CSCMatrix((1,2,0),(6,9,-3)))
+  }
+
+  test("#344") {
+    val builder = new CSCMatrix.Builder[Double](rows = 10, cols = 10)
+    builder.add(0, 0, 1.0)
+    builder.add(1, 0, 1.0)
+
+    val a = builder.result
+
+    a.update(0, 0, 0.0)
+    assert(a.t.rows === a.cols)
+  }
+
+  test("#348") {
+    val a = DenseMatrix((2,2),(3,3))
+    val b = CSCMatrix((2,2),(3,3))
+    assert(a + b === a + b.toDense)
   }
 }
 

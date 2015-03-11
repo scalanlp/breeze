@@ -38,7 +38,7 @@ import breeze.util.SerializableLogging
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
 class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
-              (implicit space: MutableInnerProductModule[T, Double]) extends FirstOrderMinimizer[T, DiffFunction[T]](maxIter, tolerance) with SerializableLogging {
+              (implicit space: MutableInnerProductModule[T, Double]) extends FirstOrderMinimizer[T, DiffFunction[T]](maxIter, tolerance, tolerance) with SerializableLogging {
 
   import space._
   require(m > 0)
@@ -79,22 +79,6 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
     if(alpha * norm(grad) < 1E-10)
       throw new StepSizeUnderflow
     alpha
-  }
-
-  /**
-   * Get the minimum approximate eigen value of the quadratic approximation of the convex function
-   * specified through DiffFunction through power iteration on ApproximateInverseHessian,
-   * get the largest eigenvalue e and return 1/e
-   *
-   * @param init initial guess for eigen vector
-   * @param state the current state of the optimization
-   * @return minimium eigen eigen value
-   */
-  def minEigen(state: State, init: T) : Double = {
-    val pm = new PowerMethod[T, LBFGS.ApproximateInverseHessian[T]]()(space,LBFGS.multiplyInverseHessian)
-    val eigenState = pm.iterateAndReturnState(init, state.history)
-    logger.info(s"LBFGS Min Eigen iterations ${eigenState.iter}")
-    1.0/eigenState.eigenValue
   }
 }
 

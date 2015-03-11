@@ -95,6 +95,15 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(min(v, 2) === DenseVector(2, 0, 2, 2, -1))
   }
 
+  test("Scalars on the LHS") {
+    val v = DenseVector(2, 1, 3, 2, -1)
+    assert(1 :+ v == v + 1)
+    assert(1 :- v == -v + 1)
+    assert(6 :/ v == v.mapValues(6 / _) )
+    assert(6 :* v == v.mapValues(6 * _) )
+
+  }
+
   test("Topk") {
     val v = DenseVector(2, 0, 3, 4, -1)
 
@@ -106,6 +115,7 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(mean(DenseVector(0.0,1.0,2.0)) === 1.0)
     assert(mean(DenseVector(0.0,3.0)) === 1.5)
     assert(mean(DenseVector(3.0)) === 3.0)
+    assert(mean(DenseVector(3.0).t) === 3.0)
   }
 
   test("Norm") {
@@ -116,6 +126,7 @@ class DenseVectorTest extends FunSuite with Checkers {
     assertClose(norm(v, 4), 1.7541)
     assertClose(norm(v, 5), 1.7146)
     assertClose(norm(v, 6), 1.6940)
+    assertClose(norm(v.t, 6), 1.6940)
     assertClose(norm(v, Double.PositiveInfinity), 1.6656)
   }
 
@@ -347,6 +358,12 @@ class DenseVectorTest extends FunSuite with Checkers {
 
   }
 
+  test("Negation Tranpose") {
+    val a1 = DenseVector(1.0, 2.0, 3.0)
+    assert(-a1.t == DenseVector(-1.0, -2.0, -3.0).t)
+
+  }
+
   test("DV ops work as Vector") {
     val a = DenseVector(1.0, 2.0, 3.0)
     val b = DenseVector(3.0, 4.0, 5.0)
@@ -423,6 +440,13 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(clip(dv, 1, 8) === DenseVector(1,1,2,3,4,5,6,7,8,8))
     clip.inPlace(dv, 1, 8)
     assert(dv === DenseVector(1,1,2,3,4,5,6,7,8,8))
+  }
+
+  test("clip tranpose") {
+    val dv = DenseVector.range(0, 10)
+    assert(clip(dv.t, 1, 8) === DenseVector(1,1,2,3,4,5,6,7,8,8).t)
+    clip.inPlace(dv.t, 1, 8)
+    assert(dv.t === DenseVector(1,1,2,3,4,5,6,7,8,8).t)
   }
 
   test("any and all") {

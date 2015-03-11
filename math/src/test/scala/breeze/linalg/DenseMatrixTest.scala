@@ -676,6 +676,17 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
 
   }
 
+  test("#336 argmax for Dense Matrices") {
+    val m = DenseMatrix.zeros[Double](3, 3)
+    m(2, ::) := DenseVector(1.0, 2.0, 3.0).t
+    assert(argmax(m(2, ::).t) === 2)
+    assert(max(m(2, ::).t) === 3.0)
+  }
+
+  test("lhs scalars") {
+    assert(1.0 :/ (DenseMatrix.fill(2,2)(10.0)) === DenseMatrix.fill(2,2)(1/10.0))
+    assert(1.0 :- (DenseMatrix.fill(2,2)(10.0)) === DenseMatrix.fill(2,2)(-9.0))
+  }
 
 
 

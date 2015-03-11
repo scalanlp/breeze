@@ -95,9 +95,32 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
         aoff += a.stride
         i += 1
       }
-      result
+     result
     }
     implicitly[BinaryRegistry[Vector[T], T, Op.type, Vector[T]]].register(this)
+  }
+
+  @expand
+  @expand.valify
+  implicit def s_dv_Op[@expand.args(Int, Double, Float, Long) T,
+  @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: Op.Impl2[T, T, T]):Op.Impl2[T, DenseVector[T], DenseVector[T]] = new Op.Impl2[T, DenseVector[T], DenseVector[T]] {
+    def apply(a: T, b: DenseVector[T]): DenseVector[T] = {
+      val bd = b.data
+      var boff = b.offset
+      val result = DenseVector.zeros[T](b.length)
+      val rd = result.data
+
+      var i = 0
+      while(i < b.length) {
+        rd(i) = op(a, bd(boff))
+        boff += b.stride
+        i += 1
+      }
+      result
+    }
+    implicitly[BinaryRegistry[T, Vector[T], Op.type, Vector[T]]].register(this)
   }
 
   @expand

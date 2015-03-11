@@ -26,3 +26,9 @@ package breeze.linalg.support
 trait CanTranspose[From, +To] {
   def apply(from: From):To
 }
+
+object CanTranspose {
+ implicit def transposeOfScalarIsScalar[T <: AnyVal]:CanTranspose[T, T] = new CanTranspose[T, T] {
+  override def apply(from: T): T = from
+ }
+}

@@ -1,7 +1,7 @@
 package breeze.optimize
 
 import breeze.linalg.norm
-import breeze.math.{MutableEnumeratedCoordinateField, MutableCoordinateField, MutableFiniteCoordinateField, NormedModule}
+import breeze.math.{MutableEnumeratedCoordinateField, MutableFiniteCoordinateField, NormedModule}
 import breeze.optimize.FirstOrderMinimizer.ConvergenceReason
 import breeze.stats.distributions.{RandBasis, ThreadLocalRandomGenerator}
 import breeze.util.Implicits._
@@ -108,43 +108,42 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](maxIter: In
      f.calculate(x)
   }
 
-  def iterations(f: DF, state: State): Iterator[State] = {
+  def infiniteIterations(f: DF, state: State): Iterator[State] = {
     var failedOnce = false
     val adjustedFun = adjustFunction(f)
 
-    val it = Iterator.iterate(state) { state => try {
-      val dir = chooseDescentDirection(state, adjustedFun)
-      val stepSize = determineStepSize(state, adjustedFun, dir)
-      logger.info(f"Step Size: $stepSize%.4g")
-      val x = takeStep(state, dir, stepSize)
-      val (value, grad) = calculateObjective(adjustedFun, x, state.history)
-      val (adjValue, adjGrad) = adjust(x, grad, value)
-      val oneOffImprovement = (state.adjustedValue - adjValue) / (state.adjustedValue.abs max adjValue.abs max 1E-6 * state.initialAdjVal.abs)
-      logger.info(f"Val and Grad Norm: $adjValue%.6g (rel: $oneOffImprovement%.3g) ${norm(adjGrad)}%.6g")
-      val history = updateHistory(x, grad, value, adjustedFun, state)
-      val newAverage = updateFValWindow(state, adjValue)
-      failedOnce = false
-      var s = State(x, value, grad, adjValue, adjGrad, state.iter + 1, state.initialAdjVal, history, newAverage, 0)
-      val improvementFailure = (state.fVals.length >= minImprovementWindow && state.fVals.nonEmpty && state.fVals.last > state.fVals.head * (1 - improvementTol))
-      if (improvementFailure)
-        s = s.copy(fVals = IndexedSeq.empty, numImprovementFailures = state.numImprovementFailures + 1)
-      s
-    } catch {
-      case x: FirstOrderException if !failedOnce =>
-        failedOnce = true
-        logger.error("Failure! Resetting history: " + x)
-        state.copy(history = initialHistory(adjustedFun, state.x))
-      case x: FirstOrderException =>
-        logger.error("Failure again! Giving up and returning. Maybe the objective is just poorly behaved?")
-        state.copy(searchFailed = true)
+    Iterator.iterate(state) { state => try {
+        val dir = chooseDescentDirection(state, adjustedFun)
+        val stepSize = determineStepSize(state, adjustedFun, dir)
+        logger.info(f"Step Size: $stepSize%.4g")
+        val x = takeStep(state,dir,stepSize)
+        val (value,grad) = calculateObjective(adjustedFun, x, state.history)
+        val (adjValue,adjGrad) = adjust(x,grad,value)
+        val oneOffImprovement = (state.adjustedValue - adjValue)/(state.adjustedValue.abs max adjValue.abs max 1E-6 * state.initialAdjVal.abs)
+        logger.info(f"Val and Grad Norm: $adjValue%.6g (rel: $oneOffImprovement%.3g) ${norm(adjGrad)}%.6g")
+        val history = updateHistory(x,grad,value, adjustedFun, state)
+        val newAverage = updateFValWindow(state, adjValue)
+        failedOnce = false
+        var s = State(x,value,grad,adjValue,adjGrad,state.iter + 1, state.initialAdjVal, history, newAverage, 0)
+        val improvementFailure = (state.fVals.length >= minImprovementWindow && state.fVals.nonEmpty && state.fVals.last > state.fVals.head * (1-improvementTol))
+        if(improvementFailure)
+          s = s.copy(fVals = IndexedSeq.empty, numImprovementFailures = state.numImprovementFailures + 1)
+        s
+      } catch {
+        case x: FirstOrderException if !failedOnce =>
+          failedOnce = true
+          logger.error("Failure! Resetting history: " + x)
+          state.copy(history = initialHistory(adjustedFun, state.x))
+        case x: FirstOrderException =>
+          logger.error("Failure again! Giving up and returning. Maybe the objective is just poorly behaved?")
+          state.copy(searchFailed = true)
+      }
     }
-    }
-    it
   }
 
   def iterations(f: DF, init: T): Iterator[State] = {
     val adjustedFun = adjustFunction(f)
-    iterations(f, initialState(adjustedFun, init)).takeUpToWhere(_.converged)
+    infiniteIterations(f, initialState(adjustedFun, init)).takeUpToWhere(_.converged)
   }
 
   def minimize(f: DF, init: T): T = {
