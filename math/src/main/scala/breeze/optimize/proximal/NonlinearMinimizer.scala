@@ -47,14 +47,12 @@ import breeze.util.Implicits._
  * @author debasish83
  */
 
-class NonlinearMinimizer(proximal: Proximal, maxIters: Int = -1, innerIters: Int = 3, bfgsMemory: Int = 10,
+class NonlinearMinimizer(proximal: Proximal, maxIters: Int = -1, innerIters: Int = 3, bfgsMemory: Int = 7,
                          rho: Double = 1.0, alpha: Double = 1.0,
                          abstol: Double = 1e-6, reltol: Double = 1e-4) extends SerializableLogging {
   import NonlinearMinimizer.BDV
 
-  val quadraticIters = 10
-
-  val lbfgs = new LBFGS[BDV](m=bfgsMemory,tolerance=abstol)
+  val lbfgs = new LBFGS[BDV](m=bfgsMemory,tolerance=abstol,maxIter=innerIters)
 
   case class State private[NonlinearMinimizer](bfgsState: lbfgs.State, u: BDV, z: BDV, xHat: BDV, zOld: BDV, residual: BDV, s: BDV, admmIters: Int, iter: Int, converged: Boolean)
 
@@ -68,13 +66,7 @@ class NonlinearMinimizer(proximal: Proximal, maxIters: Int = -1, innerIters: Int
     val residual = init.copy
     val s = init.copy
 
-    val resultIterator = lbfgs.iterations(primal, xHat)
-    var resultState = resultIterator.next()
-    var i = 0
-    while (i < quadraticIters && !resultState.converged) {
-      resultState = resultIterator.next()
-      i = i + 1
-    }
+    val resultState = lbfgs.minimizeAndReturnState(primal, xHat)
     val admmIters = if (maxIters < 0) max(400, 20*z.length) else maxIters
     State(resultState, u, z, xHat, zOld, residual, s, admmIters, 0, false)
   }
@@ -85,13 +77,7 @@ class NonlinearMinimizer(proximal: Proximal, maxIters: Int = -1, innerIters: Int
     val scale = sqrt(init.size) * abstol
     val proxPrimal = NonlinearMinimizer.ProximalPrimal(primal, u, z, rho)
 
-    val resultIterator = lbfgs.iterations(proxPrimal, bfgsState.x)
-    var resultState = resultIterator.next()
-    var i = 0
-    while (i < innerIters && !resultState.converged) {
-      resultState = resultIterator.next()
-      i = i + 1
-    }
+    val resultState = lbfgs.minimizeAndReturnState(proxPrimal, bfgsState.x)
     //z-update with relaxation
 
     //zold = (1-alpha)*z
