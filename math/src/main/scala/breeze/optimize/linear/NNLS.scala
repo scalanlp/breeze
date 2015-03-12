@@ -4,6 +4,7 @@ import breeze.linalg.{DenseMatrix, DenseVector, axpy}
 import breeze.optimize.proximal.QpGenerator
 import breeze.stats.distributions.Rand
 import breeze.util.Implicits._
+import breeze.util.SerializableLogging
 import spire.syntax.cfor._
 
 /**
@@ -13,7 +14,7 @@ import spire.syntax.cfor._
  * @author debasish83, coderxiang
  */
 
-class NNLS(val maxIters: Int = -1) {
+class NNLS(val maxIters: Int = -1) extends SerializableLogging {
   type BDM = DenseMatrix[Double]
   type BDV = DenseVector[Double]
 
