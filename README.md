@@ -100,7 +100,7 @@ Contributions from:
 * Chris Stucchio (@stucchio)
 * Xiangrui Meng (@mengxr)
 * Gabriel Schubiner (@gabeos)
-
+* Debasish Das (@debasish83)
 
 
 And others (contact David Hall if you've contributed code and aren't listed).
