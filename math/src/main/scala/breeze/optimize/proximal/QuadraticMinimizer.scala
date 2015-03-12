@@ -1,19 +1,13 @@
 package breeze.optimize.proximal
 
-import breeze.linalg.cholesky
-import breeze.linalg.LU
+import breeze.linalg._
 import breeze.util.SerializableLogging
-import scala.math.max
 import scala.math.sqrt
 import breeze.optimize.{LBFGS, OWLQN, DiffFunction}
 import org.netlib.util.intW
 import breeze.optimize.proximal.Constraint._
 import scala.math.abs
-import breeze.linalg.DenseVector
-import breeze.linalg.DenseMatrix
 import breeze.numerics._
-import breeze.linalg.LapackException
-import breeze.linalg.norm
 import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 import breeze.optimize.linear.{PowerMethod, NNLS, ConjugateGradient}
 import breeze.stats.distributions.Rand
@@ -244,7 +238,7 @@ class QuadraticMinimizer(nGram: Int,
   private def computeRho(H: DenseMatrix[Double]): Double = {
     proximal match {
       case null => 0.0
-      case ProximalL1() => {
+      case ProximalL1(lambda:Double) => {
         val eigenMax = QuadraticMinimizer.normColumn(H)
         val eigenMin = QuadraticMinimizer.approximateMinEigen(H)
         sqrt(eigenMin * eigenMax)
@@ -278,52 +272,6 @@ class QuadraticMinimizer(nGram: Int,
   def iterations(H: DenseMatrix[Double], q: DenseVector[Double]): Iterator[State] = {
     wsH(0 until H.rows, 0 until H.cols) := H
     iterations(q)
-  }
-}
-
-/**
- * PDCO dense quadratic program generator
- *  
- * Reference
- * 
- * Generates random instances of Quadratic Programming Problems
- * 0.5x'Px + q'x
- * s.t Ax = b
- *  lb <= x <= ub
- *
- * nGram rank of quadratic problems to be generated
- * @return A is the equality constraint
- * @return b is the equality parameters
- * @return lb is vector of lower bounds (default at 0.0)
- * @return ub is vector of upper bounds (default at 10.0)
- * @return q is linear representation of the function
- * @return H is the quadratic representation of the function
- */
-object QpGenerator {
-  def getGram(nGram: Int) = {
-    val hrand = DenseMatrix.rand[Double](nGram, nGram, Rand.gaussian(0, 1))
-    val hrandt = hrand.t
-    val hposdef = hrandt * hrand
-    val H = hposdef.t + hposdef
-    H
-  }
-  
-  def apply(nGram: Int, nEqualities: Int) = {
-    val en = DenseVector.ones[Double](nGram)
-    val zn = DenseVector.zeros[Double](nGram)
-
-    val A = DenseMatrix.rand[Double](nEqualities, nGram)
-    val x = en
-
-    val b = A * x
-    val q = DenseVector.rand[Double](nGram)
-
-    val lb = zn.copy
-    val ub = en :* 10.0
-    
-    val H = getGram(nGram)
-    
-    (A, b, lb, ub, q, H)
   }
 }
 
@@ -396,8 +344,9 @@ object QuadraticMinimizer {
 
   def apply(rank: Int,
             constraint: Constraint,
-            lambda: Double): QuadraticMinimizer = {
+            lambda: Double=1.0): QuadraticMinimizer = {
     constraint match {
+      case SMOOTH => new QuadraticMinimizer(rank)
       case POSITIVE => new QuadraticMinimizer(rank, ProjectPos())
       case BOX => {
         //Direct QP with bounds
@@ -420,16 +369,27 @@ object QuadraticMinimizer {
     res
   }
 
+  case class Cost(H: DenseMatrix[Double],
+                  q: DenseVector[Double]) extends DiffFunction[DenseVector[Double]] {
+    def calculate(x: DenseVector[Double]) = {
+      (computeObjective(H, q, x), H * x + q)
+    }
+  }
+
   def optimizeWithLBFGS(init: DenseVector[Double],
                          H: DenseMatrix[Double],
                          q: DenseVector[Double]) = {
     val lbfgs = new LBFGS[DenseVector[Double]](-1, 7)
-    val f = new DiffFunction[DenseVector[Double]] {
-      def calculate(x: DenseVector[Double]) = {
-        (computeObjective(H, q, x), H * x + q)
-      }
-    }
-    lbfgs.minimize(f, init)
+    val state = lbfgs.minimizeAndReturnState(Cost(H, q), init)
+    state.x
+  }
+  
+  def optimizeWithOWLQN(init: DenseVector[Double],
+                        regularizedGram: DenseMatrix[Double],
+                        q: DenseVector[Double],
+                        lambdaL1: Double) = {
+    val owlqn = new OWLQN[Int, DenseVector[Double]](-1, 7, lambdaL1, 1e-6)
+    owlqn.minimizeAndReturnState(Cost(regularizedGram, q), init)
   }
 
   def main(args: Array[String]) {
@@ -486,24 +446,13 @@ object QuadraticMinimizer {
 
     val regularizedGram = h + (DenseMatrix.eye[Double](h.rows) :* lambdaL2)
     
-    val owlqn = new OWLQN[Int, DenseVector[Double]](-1, 7, lambdaL1)
-    
-    def optimizeWithOWLQN(init: DenseVector[Double]) = {
-      val f = new DiffFunction[DenseVector[Double]] {
-        def calculate(x: DenseVector[Double]) = {
-          (computeObjective(regularizedGram, q, x), regularizedGram * x + q)
-        }
-      }
-      owlqn.minimizeAndReturnState(f, init)
-    }
-    
     val sparseQp = QuadraticMinimizer(h.rows, SPARSE, lambdaL1)
     val sparseQpStart = System.nanoTime()
     val sparseQpResult = sparseQp.minimizeAndReturnState(regularizedGram, q)
     val sparseQpTime = System.nanoTime() - sparseQpStart
 
     val startOWLQN = System.nanoTime()
-    val owlqnResult = optimizeWithOWLQN(DenseVector.rand[Double](problemSize))
+    val owlqnResult = optimizeWithOWLQN(DenseVector.rand[Double](problemSize), regularizedGram, q, lambdaL1)
     val owlqnTime = System.nanoTime() - startOWLQN
     
     println(s"||owlqn - sparseqp|| norm ${norm(owlqnResult.x - sparseQpResult.x, 2)} inf-norm ${norm(owlqnResult.x - sparseQpResult.x, inf)}")

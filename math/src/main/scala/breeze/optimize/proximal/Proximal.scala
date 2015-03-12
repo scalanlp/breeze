@@ -6,8 +6,7 @@
 
 package breeze.optimize.proximal
 
-import breeze.numerics.pow
-
+import breeze.numerics.signum
 import scala.math.max
 import scala.math.min
 import scala.math.sqrt
@@ -19,7 +18,45 @@ import spire.syntax.cfor._
 import breeze.linalg.norm
 
 trait Proximal {
-  def prox(x: DenseVector[Double], rho: Double)
+  def prox(x: DenseVector[Double], rho: Double = 1.0)
+  def valueAt(x: DenseVector[Double]) = 0.0
+}
+
+case class ProjectIdentity() extends Proximal {
+  def prox(x: DenseVector[Double], rho: Double = 1.0) {}
+}
+
+//TO DO:
+//1. Implement the binary search algorithm from http://see.stanford.edu/materials/lsocoee364b/hw4sol.pdf and compare performance
+//2. Implement randomized O(n) algorithm from Duchi et al's paper Efficient Projections onto the l1-Ball for Learning in High Dimensions
+case class ProjectProbabilitySimplex(s: Double) extends Proximal {
+  require(s > 0, s"Proximal:ProjectProbabilitySimplex Radius s must be strictly positive")
+  def prox(x: DenseVector[Double], rho: Double = 1.0)  = {
+    val sorted = x.data.sorted(Ordering[Double].reverse)
+    val cum = sorted.scanLeft(0.0)(_ + _).slice(1, x.length + 1)
+    val cs = DenseVector(cum.zipWithIndex.map { elem => (elem._1 - s) / (elem._2 + 1)})
+    val ndx = (DenseVector(sorted) - cs).data.filter { elem => elem >= 0.0}.length - 1
+    cforRange(0 until x.length) { i =>
+      x.update(i, max(x(i) - cs(ndx), 0.0))
+    }
+  }
+}
+
+/**
+ * Projection formula from Duchi et al's paper Efficient Projections onto the l1-Ball for Learning in High Dimensions
+ * */
+case class ProjectL1(s: Double) extends Proximal {
+  val projectSimplex = ProjectProbabilitySimplex(s)
+
+  def prox(x: DenseVector[Double], rho: Double = 1.0): Unit = {
+    val u = x.mapValues {
+      _.abs
+    }
+    projectSimplex.prox(u, rho)
+    cforRange(0 until x.length) { i =>
+      x.update(i, signum(x(i)) * u(i))
+    }
+  }
 }
 
 case class ProjectBox(l: DenseVector[Double], u: DenseVector[Double]) extends Proximal {
@@ -85,8 +122,7 @@ case class ProjectHyperPlane(a: DenseVector[Double], b: Double) extends Proximal
   }
 }
 
-case class ProximalL1() extends Proximal {
-  var lambda = 1.0
+case class ProximalL1(var lambda: Double = 1.0) extends Proximal {
 
   def setLambda(lambda: Double) = {
     this.lambda = lambda
@@ -97,6 +133,10 @@ case class ProximalL1() extends Proximal {
     cforRange(0 until x.length) { i =>
       x.update(i, max(0, x(i) - lambda / rho) - max(0, -x(i) - lambda / rho))
     }
+  }
+
+  override def valueAt(x: DenseVector[Double]) = {
+    lambda * x.foldLeft(0.0) { (agg, entry) => agg + abs(entry)}
   }
 }
 

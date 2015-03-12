@@ -19,12 +19,12 @@ package breeze.optimize
 import breeze.linalg._
 import breeze.linalg.operators.OpMulMatrix
 import breeze.math.MutableInnerProductModule
+import breeze.optimize.linear.PowerMethod
 import breeze.util.SerializableLogging
-
 
 /**
  * Port of LBFGS to Scala.
- * 
+ *
  * Special note for LBFGS:
  *  If you use it in published work, you must cite one of:
  *     * J. Nocedal. Updating  Quasi-Newton  Matrices  with  Limited  Storage
@@ -80,7 +80,6 @@ class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
       throw new StepSizeUnderflow
     alpha
   }
-
 }
 
 object LBFGS {
@@ -140,13 +139,10 @@ object LBFGS {
     }
   }
 
-
   implicit def multiplyInverseHessian[T](implicit vspace: MutableInnerProductModule[T, Double]):OpMulMatrix.Impl2[ApproximateInverseHessian[T], T, T] = {
     new OpMulMatrix.Impl2[ApproximateInverseHessian[T], T, T] {
       def apply(a: ApproximateInverseHessian[T], b: T): T = a * b
     }
-
   }
-
 }
 
