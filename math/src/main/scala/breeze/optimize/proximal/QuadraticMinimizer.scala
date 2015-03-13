@@ -112,6 +112,8 @@ class QuadraticMinimizer(nGram: Int,
    * of update. No exceptions are thrown explicitly to optimize on the runtime
    */
   def updateGram(row: Int, col: Int, value: Double) {
+    require(row >= 0 && row < n, s"QuadraticMinimizer:updateGram row index out of bounds")
+    require(col >= 0 && col < n, s"QuadraticMinimizer:updateGram col index out of bounds")
     wsH.update(row, col, value)
   }
 
