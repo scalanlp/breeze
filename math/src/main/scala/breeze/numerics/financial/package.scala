@@ -156,12 +156,13 @@ package object financial {
     rate
   }
 
+
   def modifiedInternalRateReturn(values:DenseVector[Double], financeRate:Double, reinvestRate:Double = 0) = {
     val n = values.length
-    val positives = values.mapValues(x => if (0 < x) x else 0)
-    val posCnt = values.foldLeft(0.0)((cnt, x) => if (0 < x) (cnt + 1) else cnt)
-    val negatives = values.mapValues(x => if (x < 0) x else 0)
-    val negCnt = values.foldLeft(0.0)((cnt, x) => if (x < 0) (cnt + 1) else cnt)
+    var posCnt:Int = 0
+    val positives = values.mapValues(x => if (0 < x) {posCnt += 1;  x} else 0)
+    var negCnt:Int = 0
+    val negatives = values.mapValues(x => if (x < 0) {negCnt += 1;  x} else 0)
     if (posCnt == 0 || negCnt == 0) {
       throw new IllegalArgumentException("The values must has one positive and negative value!")
     }
@@ -202,7 +203,7 @@ package object financial {
     if (close) Option[Double](rate) else None
   }
   //f(annuity)/f'(annuity)
-  def annuityFDivGradf(nper: Double, pmt: Double, pv: Double, fv: Double, when: PaymentTime, rate: Double) = {
+  private def annuityFDivGradf(nper: Double, pmt: Double, pv: Double, fv: Double, when: PaymentTime, rate: Double) = {
     val t1 = pow(1.0 + rate, nper)
     val t2 = pow(1.0 + rate, nper - 1.0)
     val annuityF = fv + pv * t1 + pmt * (t1 - 1) * (1.0 + rate * when.t) / rate
