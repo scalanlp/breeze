@@ -55,4 +55,3 @@ pomExtra := (
       <url>http://www.dlwh.org/</url>
     </developer>
   </developers>)
-

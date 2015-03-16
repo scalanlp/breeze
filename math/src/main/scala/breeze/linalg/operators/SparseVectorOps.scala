@@ -792,9 +792,9 @@ trait SparseVectorOps { this: SparseVector.type =>
         } else {
           var i: Int = 0
           cforRange(0 until a.activeSize) { i =>
-            val r =  op(a(i),b)
+            val r =  op(a.valueAt(i),b)
             if(r  != zero)
-              result.add(i,r)
+              result.add(a.indexAt(i),r)
           }
         }
         result.toSparseVector(true, true)

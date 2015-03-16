@@ -44,6 +44,18 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero] private[linalg] (privat
                                                                                private var _rowIndices: Array[Int]) // len >= used
   extends Matrix[V] with MatrixLike[V, CSCMatrix[V]] with Serializable {
 
+  /**
+   * Constructs a [[CSCMatrix]] instance. We don't validate the input data for performance reasons.
+   * So make sure you understand the [[http://en.wikipedia.org/wiki/Sparse_matrix CSC format]] correctly.
+   * Otherwise, please use the factory methods under [[CSCMatrix$]] and [[CSCMatrix$#Builder]] to construct CSC matrices.
+   * @param data active values
+   * @param rows number of rows
+   * @param cols number of columns
+   * @param colPtrs the locations in `data` that start a column
+   * @param rowIndices row indices of the elements in `data`
+   */
+  def this(data: Array[V], rows: Int, cols: Int, colPtrs: Array[Int], rowIndices: Array[Int]) =
+    this(data, rows, cols, colPtrs, data.length, rowIndices)
 
   def rowIndices = _rowIndices
   def data = _data

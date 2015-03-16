@@ -33,22 +33,22 @@ For **SBT**, Add these lines to your SBT project definition:
 
 ```scala
 libraryDependencies  ++= Seq(
-            // other dependencies here
-            "org.scalanlp" %% "breeze" % "0.10",
-            // native libraries are not included by default. add this if you want them (as of 0.7)
-            // native libraries greatly improve performance, but increase jar sizes.
-            "org.scalanlp" %% "breeze-natives" % "0.10"
+  // other dependencies here
+  "org.scalanlp" %% "breeze" % "0.10",
+  // native libraries are not included by default. add this if you want them (as of 0.7)
+  // native libraries greatly improve performance, but increase jar sizes.
+  "org.scalanlp" %% "breeze-natives" % "0.10"
 )
 
 resolvers ++= Seq(
-            // other resolvers here
-            // if you want to use snapshot builds (currently 0.11-SNAPSHOT), use this.
-            "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
-            "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/"
+  // other resolvers here
+  // if you want to use snapshot builds (currently 0.11-SNAPSHOT), use this.
+  "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
+  "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 )
 
-// or 2.11.2
-scalaVersion := "2.10.3"
+// or 2.11.5
+scalaVersion := "2.10.4"
 ```
 
 For more details on the optional `breeze-natives` module, please watch Sam Halliday's talk at Scala eXchange 2014 [High Performance Linear Algebra in Scala](https://skillsmatter.com/skillscasts/5849-high-performance-linear-algebra-in-scala) ([follow along with high-res slides](http://fommil.github.io/scalax14/#/)).
@@ -61,8 +61,8 @@ Maven looks like this:
 ```xml
 <dependency>
   <groupId>org.scalanlp</groupId>
-	<artifactId>breeze_2.10</artifactId> <!-- or 2.11 -->
-	<version>0.10</version>
+  <artifactId>breeze_2.10</artifactId> <!-- or 2.11 -->
+  <version>0.10</version>
 </dependency>
 ```
 
@@ -100,7 +100,7 @@ Contributions from:
 * Chris Stucchio (@stucchio)
 * Xiangrui Meng (@mengxr)
 * Gabriel Schubiner (@gabeos)
-
+* Debasish Das (@debasish83)
 
 
 And others (contact David Hall if you've contributed code and aren't listed).
