@@ -107,11 +107,13 @@ class QuadraticMinimizer(nGram: Int,
 
   def getProximal = proximal
 
+  /**
+   * updateGram API is meant to be called iteratively from the user and the user should guarantee correctness
+   * of update. No exceptions are thrown explicitly to optimize on the runtime
+   */
   def updateGram(row: Int, col: Int, value: Double) {
-    if (row < 0 || row >= n)
-      throw new IllegalArgumentException("QuadraticMinimizer row out of bounds for gram matrix update")
-    if (col < 0 || col >= n)
-      throw new IllegalArgumentException("QuadraticMinimizer column out of bounds for gram matrix update")
+    require(row >= 0 && row < n, s"QuadraticMinimizer:updateGram row index out of bounds")
+    require(col >= 0 && col < n, s"QuadraticMinimizer:updateGram col index out of bounds")
     wsH.update(row, col, value)
   }
 
