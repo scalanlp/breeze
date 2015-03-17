@@ -69,7 +69,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
   def contains(i: Int) = _index.contains(i)
 
   def apply(i: Int) = {
-    if(i < 0 || i > size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
+    if(i < 0 || i >= size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
 
     var off = 0
     var acc = ring.zero
@@ -82,7 +82,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
   }
 
   def update(i: Int, v: E) {
-    if(i < 0 || i > size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
+    if(i < 0 || i >= size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
     var marked = false
     var off = 0
     while(off < used) {
@@ -98,7 +98,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
   }
 
   def add(i: Int, v: E) {
-    if(i < 0 || i > size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
+    if(i < 0 || i >= size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
 
     if(_data.length <= used) {
       _data = ArrayUtil.copyOf(_data, math.max(_data.length * 2, 1))
