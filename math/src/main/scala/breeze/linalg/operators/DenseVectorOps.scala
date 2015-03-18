@@ -458,8 +458,10 @@ trait DenseVector_SpecialOps extends DenseVectorOps { this: DenseVector.type =>
     new breeze.linalg.operators.OpMulInner.Impl2[DenseVector[Float], DenseVector[Float], Float] {
       def apply(a: DenseVector[Float], b: DenseVector[Float]) = {
         require(b.length == a.length, "Vectors must be the same length!")
+        val boff = if (b.stride >= 0) b.offset else (b.offset + b.stride * (b.length - 1))
+        val aoff = if (a.stride >= 0) a.offset else (a.offset + a.stride * (a.length - 1))
         blas.sdot(
-          a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
+          a.length, b.data, boff, b.stride, a.data, aoff, a.stride)
       }
       implicitly[BinaryRegistry[Vector[Float], Vector[Float], OpMulInner.type, Float]].register(this)
     }

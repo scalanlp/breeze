@@ -1,5 +1,6 @@
 package breeze.linalg
 
+import org.netlib.blas.Ddot
 import org.scalacheck._
 import org.scalatest._
 import org.scalatest.junit._
@@ -469,6 +470,36 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(!a === DenseVector(false, true, true))
   }
 
+  // blas causes me so many headaches
+  test("negative step sizes and dot -- Double") {
+    val foo = DenseVector(1.0, 2.0, 3.0, 4.0)
+    val fneg = foo(3 to 0 by -1)
+    println(fneg, fneg.offset, fneg.data, fneg.length, fneg.stride)
+    assert((foo dot foo(3 to 0 by -1)) === 20.0)
+  }
+
+  test("negative step sizes and + -- Double") {
+    val foo = DenseVector(1.0, 2.0, 3.0, 4.0)
+    val fneg = foo(3 to 0 by -1)
+    assert(foo + fneg === DenseVector(5.0, 5.0, 5.0, 5.0))
+  }
+
+
+  test("negative step sizes and scale -- Double") {
+    val foo = DenseVector(1.0, 2.0, 3.0, 4.0)
+    val fneg = foo(3 to 0 by -1)
+    fneg *= 1.0
+    assert(fneg * 3.0 === DenseVector(12.0, 9.0, 6.0, 3.0))
+  }
+
+  test("negative step sizes and assignment -- Double") {
+    val foo = DenseVector(1.0, 2.0, 3.0, 4.0)
+    val fneg = foo(3 to 0 by -1)
+    fneg.copy
+    val fy = DenseVector.zeros[Double](fneg.length)
+    fy := fneg
+    assert(fy === DenseVector(4.0, 3.0, 2.0, 1.0))
+  }
 }
 
 /**
