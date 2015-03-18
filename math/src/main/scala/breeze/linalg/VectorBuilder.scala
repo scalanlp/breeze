@@ -50,10 +50,14 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
                                                (implicit ring: Semiring[E],
                                                 zero: Zero[E]) extends NumericOps[VectorBuilder[E]] with Serializable {
 
+
   def this(length: Int, initialNonZero: Int = 0)(implicit ring: Semiring[E],
                                                  man: ClassTag[E],
                                                  zero: Zero[E]) = this(new Array[Int](0), new Array[E](0), 0, length)
 
+  def this()(implicit ring: Semiring[E],
+             man: ClassTag[E],
+             zero: Zero[E]) = this(-1)
 
 
   def size = length
@@ -69,7 +73,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
   def contains(i: Int) = _index.contains(i)
 
   def apply(i: Int) = {
-    if(i < 0 || i >= size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
+    boundsCheck(i)
 
     var off = 0
     var acc = ring.zero
@@ -81,8 +85,13 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
     acc
   }
 
+  private def boundsCheck(i: Int): Unit = {
+    if (length >= 0 && (i < 0 || i >= size))
+      throw new scala.IndexOutOfBoundsException(i + " not in [0," + size + ")")
+  }
+
   def update(i: Int, v: E) {
-    if(i < 0 || i >= size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
+    boundsCheck(i)
     var marked = false
     var off = 0
     while(off < used) {
@@ -98,7 +107,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
   }
 
   def add(i: Int, v: E) {
-    if(i < 0 || i >= size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
+    boundsCheck(i)
 
     if(_data.length <= used) {
       _data = ArrayUtil.copyOf(_data, math.max(_data.length * 2, 1))
@@ -142,6 +151,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
   }
 
   def toHashVector: HashVector[E] = {
+    requirePositiveLength()
     implicit val man = ClassTag[E](_data.getClass.getComponentType.asInstanceOf[Class[E]])
     val hv = HashVector.zeros[E](length)
     var i = 0
@@ -152,7 +162,14 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
     hv
   }
 
+  private def requirePositiveLength(): Unit = {
+    if (size < 0) {
+      throw new scala.UnsupportedOperationException("Can't make a vector with a negative length!")
+    }
+  }
+
   def toDenseVector: DenseVector[E] = {
+    requirePositiveLength()
     implicit val man = ClassTag[E](_data.getClass.getComponentType.asInstanceOf[Class[E]])
     val hv = DenseVector.zeros[E](length)
     var i = 0
@@ -166,6 +183,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
   def toSparseVector:SparseVector[E] = toSparseVector(alreadySorted=false)
 
   def toSparseVector(alreadySorted: Boolean = false, keysAlreadyUnique: Boolean = false): SparseVector[E] = {
+    requirePositiveLength()
     val index = this.index
     val values = this.data
     if(alreadySorted && keysAlreadyUnique) {
@@ -281,6 +299,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
   def allVisitableIndicesActive: Boolean = true
 
   def toVector = {
+    requirePositiveLength()
     if(size < 40 || activeSize > size / 2) {
       toDenseVector
     } else {
@@ -321,15 +340,22 @@ object VectorBuilder extends VectorBuilderOps {
     }
   }
 
-  implicit def canCopyBuilder[@spec(Double, Int, Float, Long) V: ClassTag: Semiring:Zero] = new CanCopyBuilder[V]
-  implicit def canZerosBuilder[@spec(Double, Int, Float, Long) V: ClassTag: Semiring:Zero] = new CanZerosBuilder[V]
-
-  implicit def canZeroBuilder[@spec(Double, Int, Float, Long) V:Semiring:Zero:ClassTag] =
-    new CanCreateZeros[VectorBuilder[V],Int] {
-    def apply(d: Int): VectorBuilder[V] = zeros(d)
+  implicit def canCopyBuilder[@spec(Double, Int, Float, Long) V: ClassTag: Semiring:Zero]: CanCopyBuilder[V] = {
+    new CanCopyBuilder[V]
+  }
+  implicit def canZerosBuilder[@spec(Double, Int, Float, Long) V: ClassTag: Semiring:Zero]: CanZerosBuilder[V] = {
+    new CanZerosBuilder[V]
   }
 
-  implicit def negFromScale[@spec(Double, Int, Float, Long)  V](implicit scale: OpMulScalar.Impl2[VectorBuilder[V], V, VectorBuilder[V]], field: Ring[V]) = {
+  implicit def canZeroBuilder[@spec(Double, Int, Float, Long) V:Semiring:Zero:ClassTag]: CanCreateZeros[VectorBuilder[V], Int] = {
+    new CanCreateZeros[VectorBuilder[V],Int] {
+      def apply(d: Int): VectorBuilder[V] = zeros(d)
+    }
+  }
+
+  implicit def negFromScale[@spec(Double, Int, Float, Long)  V]
+            (implicit scale: OpMulScalar.Impl2[VectorBuilder[V], V, VectorBuilder[V]],
+             field: Ring[V]):OpNeg.Impl[VectorBuilder[V], VectorBuilder[V]] = {
     new OpNeg.Impl[VectorBuilder[V], VectorBuilder[V]] {
       override def apply(a : VectorBuilder[V]) = {
         scale(a, field.negate(field.one))
