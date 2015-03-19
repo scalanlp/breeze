@@ -68,19 +68,19 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](maxIter: In
     )
   }
 
-  val maxIterationsReached: ConvergenceCheck = {
+  def maxIterationsReached(maxIter: Int): ConvergenceCheck = {
     case s: State if (s.iter >= maxIter && maxIter >= 0) =>
       FirstOrderMinimizer.MaxIterations
   }
-  val functionValuesConverged: ConvergenceCheck = {
+  def functionValuesConverged(tolerance: Double): ConvergenceCheck = {
     case s: State if (!s.fVals.isEmpty && (s.adjustedValue - s.fVals.max).abs <= tolerance * s.initialAdjVal) =>
     FirstOrderMinimizer.FunctionValuesConverged
   }
-  val objectiveNotImproving: ConvergenceCheck = {
+  def objectiveNotImproving(tolerance: Double): ConvergenceCheck = {
     case s: State if (!s.fVals.isEmpty && (s.adjustedValue - s.fVals.max).abs <= tolerance * s.initialAdjVal) =>
       FirstOrderMinimizer.FunctionValuesConverged
   }
-  val gradientConverged: ConvergenceCheck = {
+  def gradientConverged(tolerance: Double): ConvergenceCheck = {
     case s: State if (norm(s.adjustedGradient) <= math.max(tolerance * s.adjustedValue.abs, 1E-8)) =>
       FirstOrderMinimizer.GradientConverged
   }
@@ -89,7 +89,7 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](maxIter: In
       FirstOrderMinimizer.SearchFailed
   }
   val defaultConvergenceChecks: Seq[ConvergenceCheck] =
-    Seq(maxIterationsReached, functionValuesConverged, objectiveNotImproving, gradientConverged, searchFailed)
+    Seq(maxIterationsReached(maxIter), functionValuesConverged(tolerance), objectiveNotImproving(tolerance), gradientConverged(tolerance), searchFailed)
   protected def initialHistory(f: DF, init: T): History
   protected def adjustFunction(f: DF): DF = f
   protected def adjust(newX: T, newGrad: T, newVal: Double):(Double,T) = (newVal,newGrad)
