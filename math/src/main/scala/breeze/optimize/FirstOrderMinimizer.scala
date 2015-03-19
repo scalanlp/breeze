@@ -29,8 +29,9 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](val converg
            tolerance: Double = 1E-6,
            improvementTol: Double = 1E-3,
            minImprovementWindow: Int = 10,
-           numberOfImprovementFailures: Int = 1)(implicit space: NormedModule[T, Double]) =
-    this(FirstOrderMinimizer.createConvergenceCheck[T, FirstOrderMinimizer[T, DF]#History](maxIter, tolerance), improvementTol, minImprovementWindow, numberOfImprovementFailures)
+           numberOfImprovementFailures: Int = 1,
+           relativeTolerance: Boolean = true)(implicit space: NormedModule[T, Double]) =
+    this(FirstOrderMinimizer.createConvergenceCheck[T, FirstOrderMinimizer[T, DF]#History](maxIter, tolerance, relativeTolerance), improvementTol, minImprovementWindow, numberOfImprovementFailures)
   import space.normImpl
 
 
@@ -169,18 +170,18 @@ object FirstOrderMinimizer {
     case s: State[_, _] if (s.iter >= maxIter && maxIter >= 0) =>
       MaxIterations
   }
-  def functionValuesConverged[T, History](tolerance: Double): ConvergenceCheck[T, History] = {
-    case s: State[_, _] if (!s.fVals.isEmpty && (s.adjustedValue - s.fVals.max).abs <= tolerance * s.initialAdjVal) =>
+  def functionValuesConverged[T, History](tolerance: Double, relative: Boolean = true): ConvergenceCheck[T, History] = {
+    case s: State[_, _] if (!s.fVals.isEmpty && (s.adjustedValue - s.fVals.max).abs <= tolerance * (if (relative) s.initialAdjVal else 1.0)) =>
       FunctionValuesConverged
   }
-  def objectiveNotImproving[T, History](tolerance: Double): ConvergenceCheck[T, History] = {
-    case s: State[_, _] if (!s.fVals.isEmpty && (s.adjustedValue - s.fVals.max).abs <= tolerance * s.initialAdjVal) =>
+  def objectiveNotImproving[T, History](tolerance: Double, relative: Boolean = true): ConvergenceCheck[T, History] = {
+    case s: State[_, _] if (!s.fVals.isEmpty && (s.adjustedValue - s.fVals.max).abs <= tolerance * (if (relative) s.initialAdjVal else 1.0)) =>
       FunctionValuesConverged
   }
-  def gradientConverged[T, History](tolerance: Double)(implicit space: NormedModule[T, Double]): ConvergenceCheck[T, History] = {
+  def gradientConverged[T, History](tolerance: Double, relative: Boolean = true)(implicit space: NormedModule[T, Double]): ConvergenceCheck[T, History] = {
     import space.normImpl
     {
-      case s: State[_, _] if (norm(s.adjustedGradient) <= math.max(tolerance * s.adjustedValue.abs, 1E-8)) =>
+      case s: State[_, _] if (norm(s.adjustedGradient) <= math.max(tolerance * (if (relative) s.adjustedValue else 1.0), 1E-8)) =>
         GradientConverged
     }
   }
@@ -188,12 +189,12 @@ object FirstOrderMinimizer {
     case s: State[_, _] if (s.searchFailed) =>
       SearchFailed
   }
-  def createConvergenceCheck[T, History](maxIter: Int, tolerance: Double)(implicit space: NormedModule[T, Double]): State[T, History] => Option[ConvergenceReason] =
+  def createConvergenceCheck[T, History](maxIter: Int, tolerance: Double, relative: Boolean = true)(implicit space: NormedModule[T, Double]): State[T, History] => Option[ConvergenceReason] =
     convergedWhen(
       maxIterationsReached[T, History](maxIter),
-      functionValuesConverged[T, History](tolerance),
-      objectiveNotImproving[T, History](tolerance),
-      gradientConverged[T, History](tolerance),
+      functionValuesConverged[T, History](tolerance, relative),
+      objectiveNotImproving[T, History](tolerance, relative),
+      gradientConverged[T, History](tolerance, relative),
       searchFailed[T, History]
     )
   def convergedWhen[T, History](convergenceChecks: ConvergenceCheck[T, History]*): State[T, History] => Option[ConvergenceReason] = {
