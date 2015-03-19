@@ -7,89 +7,33 @@ import breeze.stats.distributions.{RandBasis, ThreadLocalRandomGenerator}
 import breeze.util.Implicits._
 import breeze.util.SerializableLogging
 import org.apache.commons.math3.random.MersenneTwister
+import FirstOrderMinimizer.ConvergenceCheck
 
 /**
  *
  * @param minImprovementWindow How many iterations to improve function by at least improvementTol
  * @author dlwh
  */
-abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](maxIter: Int = -1,
-                                                                     tolerance: Double=1E-6,
-                                                                     improvementTol: Double=1E-3,
-                                                                     val minImprovementWindow: Int = 10,
-                                                                     val numberOfImprovementFailures: Int = 1)(implicit space: NormedModule[T, Double]) extends Minimizer[T,DF] with SerializableLogging {
+abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](val convergenceCheck: FirstOrderMinimizer.State[T, FirstOrderMinimizer[T, DF]#History] => Option[ConvergenceReason],
+                                                                     improvementTol: Double,
+                                                                     val minImprovementWindow: Int,
+                                                                     val numberOfImprovementFailures: Int)(implicit space: NormedModule[T, Double]) extends Minimizer[T,DF] with SerializableLogging {
+  /**
+   * Any history the derived minimization function needs to do its updates. typically an approximation
+   * to the second derivative/hessian matrix.
+   */
+  type History
+  type State = FirstOrderMinimizer.State[T, History]
 
+  def this(maxIter: Int = -1,
+           tolerance: Double = 1E-6,
+           improvementTol: Double = 1E-3,
+           minImprovementWindow: Int = 10,
+           numberOfImprovementFailures: Int = 1)(implicit space: NormedModule[T, Double]) =
+    this(FirstOrderMinimizer.createConvergenceCheck[T, FirstOrderMinimizer[T, DF]#History](maxIter, tolerance), improvementTol, minImprovementWindow, numberOfImprovementFailures)
   import space.normImpl
 
-  /**
-    * Any history the derived minimization function needs to do its updates. typically an approximation
-   * to the second derivative/hessian matrix.
-    */
-  type History
 
-  type ConvergenceCheck = PartialFunction[State, ConvergenceReason]
-  /**
-   * Tracks the information about the optimizer, including the current point, its value, gradient, and then any history.
-   * Also includes information for checking convergence.
-   * @param x the current point being considered
-   * @param value f(x)
-   * @param grad f.gradientAt(x)
-   * @param adjustedValue  f(x) + r(x), where r is any regularization added to the objective. For LBFGS, this is f(x).
-   * @param adjustedGradient f'(x) + r'(x), where r is any regularization added to the objective. For LBFGS, this is f'(x).
-   * @param iter what iteration number we are on.
-   * @param initialAdjVal f(x_0) + r(x_0), used for checking convergence
-   * @param history any information needed by the optimizer to do updates.
-   * @param fVals the sequence of the last minImprovementWindow values, used for checking if the "value" isn't improving
-   * @param numImprovementFailures the number of times in a row the objective hasn't improved, mostly for SGD
-   * @param searchFailed did the line search fail?
-   */
-  case class State(x: T,
-                   value: Double, grad: T,
-                   adjustedValue: Double, adjustedGradient: T,
-                   iter: Int,
-                   initialAdjVal: Double,
-                   history: History,
-                   fVals: IndexedSeq[Double] = Vector(Double.PositiveInfinity),
-                   numImprovementFailures: Int = 0,
-                   searchFailed: Boolean = false) {
-    def convergenceCheck = defaultConvergenceChecks.reduceLeft(_ orElse _).lift
-    def convergedReason: Option[ConvergenceReason] = convergenceCheck(this)
-
-    /** True if the optimizer thinks it's done. */
-    def converged = convergedReason.nonEmpty
-
-    /**
-     * true if the function value hasn't changed for several iterations or if the gradient's norm is near 0
-     * @return
-     */
-    def actuallyConverged = (
-      convergedReason == Some(FirstOrderMinimizer.FunctionValuesConverged)
-      || convergedReason == Some(FirstOrderMinimizer.GradientConverged)
-    )
-  }
-
-  def maxIterationsReached(maxIter: Int): ConvergenceCheck = {
-    case s: State if (s.iter >= maxIter && maxIter >= 0) =>
-      FirstOrderMinimizer.MaxIterations
-  }
-  def functionValuesConverged(tolerance: Double): ConvergenceCheck = {
-    case s: State if (!s.fVals.isEmpty && (s.adjustedValue - s.fVals.max).abs <= tolerance * s.initialAdjVal) =>
-    FirstOrderMinimizer.FunctionValuesConverged
-  }
-  def objectiveNotImproving(tolerance: Double): ConvergenceCheck = {
-    case s: State if (!s.fVals.isEmpty && (s.adjustedValue - s.fVals.max).abs <= tolerance * s.initialAdjVal) =>
-      FirstOrderMinimizer.FunctionValuesConverged
-  }
-  def gradientConverged(tolerance: Double): ConvergenceCheck = {
-    case s: State if (norm(s.adjustedGradient) <= math.max(tolerance * s.adjustedValue.abs, 1E-8)) =>
-      FirstOrderMinimizer.GradientConverged
-  }
-  val searchFailed: ConvergenceCheck = {
-    case s: State if (s.searchFailed) =>
-      FirstOrderMinimizer.SearchFailed
-  }
-  val defaultConvergenceChecks: Seq[ConvergenceCheck] =
-    Seq(maxIterationsReached(maxIter), functionValuesConverged(tolerance), objectiveNotImproving(tolerance), gradientConverged(tolerance), searchFailed)
   protected def initialHistory(f: DF, init: T): History
   protected def adjustFunction(f: DF): DF = f
   protected def adjust(newX: T, newGrad: T, newVal: Double):(Double,T) = (newVal,newGrad)
@@ -104,12 +48,12 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](maxIter: In
     else interm
   }
 
-  protected def initialState(f: DF, init: T) = {
+  protected def initialState(f: DF, init: T): State = {
     val x = init
     val history = initialHistory(f,init)
     val (value, grad) = calculateObjective(f, x, history)
     val (adjValue,adjGrad) = adjust(x,grad,value)
-    State(x,value,grad,adjValue,adjGrad,0,adjValue,history)
+    FirstOrderMinimizer.State(x,value,grad,adjValue,adjGrad,0,adjValue,history)
   }
 
 
@@ -133,7 +77,7 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](maxIter: In
         val history = updateHistory(x,grad,value, adjustedFun, state)
         val newAverage = updateFValWindow(state, adjValue)
         failedOnce = false
-        var s = State(x,value,grad,adjValue,adjGrad,state.iter + 1, state.initialAdjVal, history, newAverage, 0)
+        var s = FirstOrderMinimizer.State(x,value,grad,adjValue,adjGrad,state.iter + 1, state.initialAdjVal, history, newAverage, 0)
         val improvementFailure = (state.fVals.length >= minImprovementWindow && state.fVals.nonEmpty && state.fVals.last > state.fVals.head * (1-improvementTol))
         if(improvementFailure)
           s = s.copy(fVals = IndexedSeq.empty, numImprovementFailures = state.numImprovementFailures + 1)
@@ -152,7 +96,7 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](maxIter: In
 
   def iterations(f: DF, init: T): Iterator[State] = {
     val adjustedFun = adjustFunction(f)
-    infiniteIterations(f, initialState(adjustedFun, init)).takeUpToWhere(_.converged)
+    infiniteIterations(f, initialState(adjustedFun, init)).takeUpToWhere(convergenceCheck(_).isDefined)
   }
 
   def minimize(f: DF, init: T): T = {
@@ -172,6 +116,34 @@ class StepSizeOverflow extends FirstOrderException
 class LineSearchFailed(gradNorm: Double, dirNorm: Double) extends FirstOrderException("Grad norm: %.4f Dir Norm: %.4f".format(gradNorm, dirNorm))
 
 object FirstOrderMinimizer {
+
+  /**
+   * Tracks the information about the optimizer, including the current point, its value, gradient, and then any history.
+   * Also includes information for checking convergence.
+   * @param x the current point being considered
+   * @param value f(x)
+   * @param grad f.gradientAt(x)
+   * @param adjustedValue  f(x) + r(x), where r is any regularization added to the objective. For LBFGS, this is f(x).
+   * @param adjustedGradient f'(x) + r'(x), where r is any regularization added to the objective. For LBFGS, this is f'(x).
+   * @param iter what iteration number we are on.
+   * @param initialAdjVal f(x_0) + r(x_0), used for checking convergence
+   * @param history any information needed by the optimizer to do updates.
+   * @param fVals the sequence of the last minImprovementWindow values, used for checking if the "value" isn't improving
+   * @param numImprovementFailures the number of times in a row the objective hasn't improved, mostly for SGD
+   * @param searchFailed did the line search fail?
+   */
+  case class State[T, +History](x: T,
+                   value: Double, grad: T,
+                   adjustedValue: Double, adjustedGradient: T,
+                   iter: Int,
+                   initialAdjVal: Double,
+                   history: History,
+                   fVals: IndexedSeq[Double] = Vector(Double.PositiveInfinity),
+                   numImprovementFailures: Int = 0,
+                   searchFailed: Boolean = false) {
+  }
+
+  type ConvergenceCheck[T, History] = PartialFunction[State[T, History], ConvergenceReason]
 
 
   sealed trait ConvergenceReason {
@@ -193,7 +165,40 @@ object FirstOrderMinimizer {
     override def reason: String = "objective is not improving"
   }
 
-
+  def maxIterationsReached[T, History](maxIter: Int): ConvergenceCheck[T, History] = {
+    case s: State[_, _] if (s.iter >= maxIter && maxIter >= 0) =>
+      MaxIterations
+  }
+  def functionValuesConverged[T, History](tolerance: Double): ConvergenceCheck[T, History] = {
+    case s: State[_, _] if (!s.fVals.isEmpty && (s.adjustedValue - s.fVals.max).abs <= tolerance * s.initialAdjVal) =>
+      FunctionValuesConverged
+  }
+  def objectiveNotImproving[T, History](tolerance: Double): ConvergenceCheck[T, History] = {
+    case s: State[_, _] if (!s.fVals.isEmpty && (s.adjustedValue - s.fVals.max).abs <= tolerance * s.initialAdjVal) =>
+      FunctionValuesConverged
+  }
+  def gradientConverged[T, History](tolerance: Double)(implicit space: NormedModule[T, Double]): ConvergenceCheck[T, History] = {
+    import space.normImpl
+    {
+      case s: State[_, _] if (norm(s.adjustedGradient) <= math.max(tolerance * s.adjustedValue.abs, 1E-8)) =>
+        GradientConverged
+    }
+  }
+  def searchFailed[T, History]: ConvergenceCheck[T, History] = {
+    case s: State[_, _] if (s.searchFailed) =>
+      SearchFailed
+  }
+  def createConvergenceCheck[T, History](maxIter: Int, tolerance: Double)(implicit space: NormedModule[T, Double]): State[T, History] => Option[ConvergenceReason] =
+    convergedWhen(
+      maxIterationsReached[T, History](maxIter),
+      functionValuesConverged[T, History](tolerance),
+      objectiveNotImproving[T, History](tolerance),
+      gradientConverged[T, History](tolerance),
+      searchFailed[T, History]
+    )
+  def convergedWhen[T, History](convergenceChecks: ConvergenceCheck[T, History]*): State[T, History] => Option[ConvergenceReason] = {
+    convergenceChecks.reduceLeft(_ orElse _).lift
+  }
 
   /**
    * OptParams is a Configuration-compatible case class that can be used to select optimization
