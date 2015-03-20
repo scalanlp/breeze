@@ -19,9 +19,9 @@ libraryDependencies ++= Seq(
     "com.lowagie" % "itext" % "2.1.5" intransitive()  // for pdf gen
 )
 
-scalaVersion := "2.11.5"
+scalaVersion := Common.scalaVersion
 
-crossScalaVersions  := Seq("2.11.5", "2.10.4")
+crossScalaVersions  := Common.crossScalaVersions
 
 libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _)
 
