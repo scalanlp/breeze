@@ -254,7 +254,10 @@ class LinearProgram {
     def value = valueOf(problem.objective)
   }
 
-  def maximize(objective: Problem)(implicit solver: LinearProgram.Solver) = solver.maximize(this)(objective)
+  def maximize(objective: Problem)(implicit solver: LinearProgram.Solver) =
+    solver.maximize(this)(objective)
+  def minimize(objective: Problem)(implicit solver: LinearProgram.Solver) =
+    solver.minimize(this)(objective)
 }
 
 
@@ -262,6 +265,7 @@ class LinearProgram {
 object LinearProgram {
   trait Solver {
     def maximize(lp: LinearProgram)(obj: lp.Problem): lp.Result
+    def minimize(lp: LinearProgram)(obj: lp.Problem): lp.Result
   }
 
   implicit val mySolver = {
@@ -283,17 +287,51 @@ object LinearProgram {
         case EQ => Relationship.EQ
       }
 
-      val obj = new LinearObjectiveFunction(objective.objective.coefficients.toDenseVector.data, objective.objective.scalarComponent)
+      val obj = new LinearObjectiveFunction(
+        objective.objective.coefficients.toDenseVector.data,
+        objective.objective.scalarComponent)
 
-      for(v <- variables) if(!v.isInstanceOf[lp.Variable]) throw new UnsupportedOperationException("Apache Solver can only handle real-valued lps!")
+      for (v <- variables)
+        if (!v.isInstanceOf[lp.Variable])
+          throw new UnsupportedOperationException("Apache Solver can only handle real-valued lps!")
 
-      val constraints = for( c: Constraint <- objective.constraints) yield {
+      val constraints = for (c: Constraint <- objective.constraints) yield {
         val cs = c.standardize
-        new LinearConstraint(cs.lhs.coefficients.toDenseVector.data, relationToConstraintType(c.relation), cs.rhs.scalarComponent)
+        new LinearConstraint(cs.lhs.coefficients.toDenseVector.data,
+          relationToConstraintType(c.relation), cs.rhs.scalarComponent)
       }
 
-      val sol = new SimplexSolver().optimize(obj, new LinearConstraintSet(constraints.asJava), GoalType.MAXIMIZE)
-      Result(new DenseVector(sol.getPoint),objective)
+      val sol = new SimplexSolver().optimize(obj,
+        new LinearConstraintSet(constraints.asJava), GoalType.MAXIMIZE)
+      Result(new DenseVector(sol.getPoint), objective)
+    }
+
+    def minimize(lp: LinearProgram)(objective: lp.Problem): lp.Result = {
+      import lp._
+
+      def relationToConstraintType(r: Relation) = r match {
+        case LTE => Relationship.LEQ
+        case GTE => Relationship.GEQ
+        case EQ => Relationship.EQ
+      }
+
+      val obj = new LinearObjectiveFunction(
+        objective.objective.coefficients.toDenseVector.data,
+        objective.objective.scalarComponent)
+
+      for (v <- variables)
+        if (!v.isInstanceOf[lp.Variable])
+          throw new UnsupportedOperationException("Apache Solver can only handle real-valued lps!")
+
+      val constraints = for (c: Constraint <- objective.constraints) yield {
+        val cs = c.standardize
+        new LinearConstraint(cs.lhs.coefficients.toDenseVector.data,
+          relationToConstraintType(c.relation), cs.rhs.scalarComponent)
+      }
+
+      val sol = new SimplexSolver().optimize(obj,
+        new LinearConstraintSet(constraints.asJava), GoalType.MINIMIZE)
+      Result(new DenseVector(sol.getPoint), objective)
     }
   }
 
