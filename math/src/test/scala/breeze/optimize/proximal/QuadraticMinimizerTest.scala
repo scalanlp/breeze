@@ -30,7 +30,8 @@ class QuadraticMinimizerTest extends OptimizeTestBase with Matchers {
     val R = cholesky(H)
     val q = DenseVector.rand[Double](3)
     val goldenBefore = H \ q
-    val x = QuadraticMinimizer.solveTriangular(R, q)
+    val x = copy(q)
+    QuadraticMinimizer.dpotrs(R, x)
     val goldenAfter = H \ q
 
     assert(norm(goldenBefore.toDenseVector - x, inf) < 1E-5)
@@ -41,7 +42,8 @@ class QuadraticMinimizerTest extends OptimizeTestBase with Matchers {
     val H = QpGenerator.getGram(5)
     val lu = LU(H)
     val q = DenseVector.rand[Double](5)
-    val x = QuadraticMinimizer.solveTriangularLU(lu._1, lu._2, q)
+    val x = copy(q)
+    QuadraticMinimizer.dgetrs(lu._1, lu._2, x)
     val golden = H \ q
     assert(norm(golden - x) < 1E-8)
   }
@@ -320,9 +322,7 @@ class QuadraticMinimizerTest extends OptimizeTestBase with Matchers {
     val posResult = qpSolverPos.minimize(ata, atb)
 
     val qpSolverPosTest = QuadraticMinimizer(n, POSITIVE, 0.0)
-    ata.iterator.foreach{
-      case ((row, col), entry) => qpSolverPosTest.updateGram(row, col, entry)
-    }
+    qpSolverPosTest.updateGram(ata)
     val posResultTest = qpSolverPosTest.minimize(atb)
     assert(norm(posResult - posResultTest, inf) < 1E-6)
   }
