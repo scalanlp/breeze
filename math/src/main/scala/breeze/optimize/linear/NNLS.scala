@@ -26,11 +26,11 @@ class NNLS(val maxIters: Int = -1) extends SerializableLogging {
 
   // find the optimal unconstrained step
   private def steplen(ata: BDM, dir: BDV, res: BDV,
-              tmp: BDV): Double = {
+                      tmp: BDV): Double = {
     val top = dir dot res
     gemv(1.0, ata, dir, 0.0, tmp)
     // Push the denominator upward very slightly to avoid infinities and silliness
-    top / (tmp dot dir + 1e-20)
+    top / (tmp.dot(dir) + 1e-20)
   }
 
   // stopping condition
@@ -84,14 +84,8 @@ class NNLS(val maxIters: Int = -1) extends SerializableLogging {
     State(x, grad, dir, lastDir, res, tmp, 0.0, 0, 0, false)
   }
 
-  def iterations(ata: DenseMatrix[Double],
-                 atb: DenseVector[Double]): State = {
-    val initialState = initialize(atb.length)
-    iterations(ata, atb, initialState, resetState = false)
-  }
-
   /**
-   * iterations API provide users to hot start the solver using initialState. If a initialState is provided and
+   * minimizeAndReturnState allows users to hot start the solver using initialState. If a initialState is provided and
    * resetState is set to false, the optimizer will hot start using the previous state. By default resetState is
    * true and every time reset will be called on the incoming state
    *
@@ -101,10 +95,10 @@ class NNLS(val maxIters: Int = -1) extends SerializableLogging {
    * @param resetState reset the state based on the flag
    * @return converged state
    */
-  def iterations(ata: DenseMatrix[Double],
-                 atb: DenseVector[Double],
-                 initialState: State,
-                 resetState: Boolean = true): State = {
+  def minimizeAndReturnState(ata: DenseMatrix[Double],
+                             atb: DenseVector[Double],
+                             initialState: State,
+                             resetState: Boolean = true): State = {
     val startState = if (resetState) reset(ata, atb, initialState) else initialState
     import startState._
     val n = atb.length
@@ -179,18 +173,13 @@ class NNLS(val maxIters: Int = -1) extends SerializableLogging {
     State(x, grad, dir, lastDir, res, tmp, nextNorm, nextWall, nextIter, false)
   }
 
-  def minimizeAndReturnState(ata: DenseMatrix[Double],
-                             atb: DenseVector[Double]): State = {
-    iterations(ata, atb)
+  def minimizeAndReturnState(ata: DenseMatrix[Double], atb: DenseVector[Double]): State = {
+    val initialState = initialize(atb.length)
+    minimizeAndReturnState(ata, atb, initialState)
   }
 
   def minimize(ata: DenseMatrix[Double], atb: DenseVector[Double]): DenseVector[Double] = {
     minimizeAndReturnState(ata, atb).x
-  }
-
-  def minimizeAndReturnState(ata: DenseMatrix[Double],
-                             atb: DenseVector[Double], init: State): State = {
-    iterations(ata, atb, init)
   }
 
   def minimize(ata: DenseMatrix[Double],
