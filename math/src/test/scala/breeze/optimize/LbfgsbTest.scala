@@ -1,4 +1,4 @@
-package breezetest
+package breeze.optimize
 
 import breeze.linalg.DenseVector
 import breeze.numerics.pow
@@ -8,11 +8,11 @@ import org.scalatest.{FlatSpec, Matchers}
 /**
  * Created by Administrator on 2015/3/14 0014.
  */
-class LbfgsbTest extends FlatSpec with Matchers{
+class LBFGSBTest extends FlatSpec with Matchers{
 
-  "LbfgsbSolver" should "get the result with precision" in {
-    val solver = new LbfgsbSolver()
-    val x0 = DenseVector[Double](-1.2, 1.0)
+  "Lbfgsb solve with bound constraint"  {
+    val solver = new LBFGSB()
+    val nearX0 = DenseVector[Double](-1.2, 1.0)
 
     val f = new DiffFunction[DenseVector[Double]] {
       override def calculate(x: DenseVector[Double]): (Double, DenseVector[Double]) = {
@@ -33,15 +33,19 @@ class LbfgsbTest extends FlatSpec with Matchers{
         (cost, grad)
       }
     }*/
-    val (fv, gg) = f.calculate(DenseVector[Double](-1.056347, 1.122971));
     solver.hasLowerBound  = true
     solver.hasUpperBound = true
     solver.upperBounds = DenseVector[Double](100, 100);
     solver.lowerBounds = DenseVector[Double](-100, -100);
-    val optX = solver.internalSolve(x0, f)
+    var optX = solver.internalSolve(nearX0, f)
     val expectFx = 0.0
     f(optX) should equal (expectFx +- 1E-4)
 
+    val farX0 = DenseVector[Double](12.0, 8.2)
+    optX = solver.internalSolve(farX0, f)
+    f(optX) should equal (expectFx +- 1E-4)
+
+    0
   }
 
 }
