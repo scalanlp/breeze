@@ -70,7 +70,8 @@ class LBFGSB(maxIter:Int = 100, m:Int = 5, tolerance:Double = 1E-8,
 
   //return a iterate which will next until convergeTest return true.
   override def iterations(f: DiffFunction[DenseVector[Double]], init: DenseVector[Double]): Iterator[State] = {
-    infiniteIterations(f, init).takeUpToWhere(convergeTest)
+    val adjustedFun = adjustFunction(f)
+    infiniteIterations(f, initialState(adjustedFun, init)).takeUpToWhere(convergeTest)
   }
 
   private def initialize(f: DiffFunction[DenseVector[Double]], x0: DenseVector[Double]) = {
