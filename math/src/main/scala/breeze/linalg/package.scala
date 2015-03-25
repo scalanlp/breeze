@@ -178,6 +178,18 @@ package object linalg {
   }
 
   /**
+   * The lower triangular portion of the given real quadratic matrix X with
+   * the diagnal elements is zero!
+   */
+  def strictlyLowerTriangular[T: Semiring: ClassTag:Zero](X: Matrix[T]): DenseMatrix[T] = {
+    val N = X.rows
+    DenseMatrix.tabulate(N, N)( (i, j) =>
+      if(j < i) X(i,j)
+      else implicitly[Semiring[T]].zero
+    )
+  }
+
+  /**
    * The upper triangular portion of the given real quadratic matrix X. Note
    * that no check will be performed regarding the symmetry of X.
    */
@@ -185,6 +197,18 @@ package object linalg {
     val N = X.rows
     DenseMatrix.tabulate(N, N)( (i, j) =>
       if(j >= i) X(i,j)
+      else implicitly[Semiring[T]].zero
+    )
+  }
+
+  /**
+   * The upper triangular portion of the given real quadratic matrix X with
+   * the diagnal elements is zero!
+   */
+  def strictlyUpperTriangular[T: Semiring: ClassTag:Zero](X: Matrix[T]): DenseMatrix[T] = {
+    val N = X.rows
+    DenseMatrix.tabulate(N, N)( (i, j) =>
+      if(j > i) X(i,j)
       else implicitly[Semiring[T]].zero
     )
   }

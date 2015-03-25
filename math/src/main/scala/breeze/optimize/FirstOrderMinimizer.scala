@@ -51,6 +51,8 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](maxIter: In
                    fVals: IndexedSeq[Double] = Vector(Double.PositiveInfinity),
                    numImprovementFailures: Int = 0,
                    searchFailed: Boolean = false) {
+    //In LBFGSB, the converge test differ from others, so convergedReason is setted by subclass.
+    var lastConvergenceReason:Option[ConvergenceReason] = None
 
     def convergedReason:Option[ConvergenceReason] = {
       if (iter >= maxIter && maxIter >= 0)
@@ -64,7 +66,7 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](maxIter: In
       else if (searchFailed)
         Some(FirstOrderMinimizer.SearchFailed)
       else
-        None
+        lastConvergenceReason
     }
 
     /** True if the optimizer thinks it's done. */
