@@ -22,7 +22,7 @@ trait StochasticDiffFunction[T] extends (T=>Double) { outer =>
    * Lenses provide a way of mapping between two types, which we typically
    * use to convert something to a DenseVector or other Tensor for optimization purposes.
    */
-  def throughLens[U](implicit l: Isomorphism[T,U]) = new DiffFunction[U] {
+  def throughLens[U](implicit l: Isomorphism[T,U]):StochasticDiffFunction[U] = new StochasticDiffFunction[U] {
     override def calculate(u: U) = {
       val t = l.backward(u)
       val (obj,gu) = outer.calculate(t)

@@ -338,6 +338,14 @@ class SparseVectorTest extends FunSuite {
     val q = r:DenseVector[Int]
     assert(q == DenseVector(0,1,0,0))
   }
+
+  test("#382: dividing a sparse vector") {
+    val vec = SparseVector(5)(0 -> 0.0, 3 -> 60.0, 4 -> 80.0)
+    val n = 60.0
+    val answer1 = vec :/ n
+    val answer2 = vec.toDenseVector :/ n
+    assert(answer1.toDenseVector === answer2)
+  }
 }
 
 /**

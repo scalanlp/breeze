@@ -8,7 +8,8 @@ package breeze.optimize
  *
  * @author dlwh
  */
-class BacktrackingLineSearch(maxIterations: Int = 20,
+class BacktrackingLineSearch(initfval: Double,
+                             maxIterations: Int = 20,
                              shrinkStep: Double = 0.5,
                              growStep: Double = 2.1,
                              cArmijo: Double = 1E-4,
@@ -24,7 +25,8 @@ class BacktrackingLineSearch(maxIterations: Int = 20,
   require(cWolfe < 1.0)
   def iterations(f: DiffFunction[Double], init: Double = 1.0): Iterator[State] = {
     val (f0, df0) = f.calculate(0.0)
-    val (initfval, initfderiv) = f.calculate(init)
+    val initfderiv = f.calculate(init)._2
+    //val (initfval, initfderiv) = f.calculate(init)
     Iterator.iterate( (State(init, initfval, initfderiv), false, 0)) { case (state@State(alpha, fval, fderiv), _, iter) =>
       val multiplier =  if(fval > f0 + alpha * df0 * cArmijo) {
         shrinkStep

@@ -17,6 +17,7 @@ package breeze.linalg
 
 import breeze.linalg.eig.Eig
 import breeze.linalg.eigSym.EigSym
+import breeze.linalg.functions.{evdr, svdr}
 import breeze.linalg.qr.QR
 import breeze.linalg.qrp.QRP
 import breeze.linalg.svd.SVD
@@ -61,6 +62,21 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val EigSym(lambda, evs) = eigSym(A)
     assert(lambda === DenseVector(9.0,25.0,82.0))
     assert(evs === DenseMatrix((1.0,0.0,0.0),(0.0,0.0,1.0),(0.0,1.0,0.0)))
+  }
+
+  test("EVDR") {
+    val A = DenseMatrix((9.0, 0.0, 0.0), (0.0, 82.0, 0.0), (0.0, 0.0, 25.0))
+    val eigVals = DenseVector(9.0,25.0,82.0)
+    val eigVect = DenseMatrix((1.0, 0.0, 0.0), (0.0, 0.0, 1.0), (0.0, 1.0, 0.0))
+
+    val EigSym(lambda, evs) = evdr(A, 1)
+
+    val idx = argsort(lambda)
+
+    idx.zipWithIndex.map{ i =>
+      lambda(i._1) should be (eigVals(i._2) +- 1E-6)
+      vectorsNearlyEqual(evs(::, i._1), eigVect(::, i._2), 1E-6)
+    }
   }
 
   test("LUfactorization") {
@@ -533,6 +549,58 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     // matricesNearlyEqual(reM, m)
     for(i <- 0 until reM.rows; j <- 0 until reM.cols)
       reM(i,j) should be (m(i, j) +- 1E-5f)
+  }
+
+  test("svd and svdr singular values are equal") {
+    val a = DenseMatrix(
+      (2.0, 4.0, 0.0),
+      (1.0, 3.0, 4.0),
+      (5.0, 0.0, 0.9),
+      (3.0, 5.0, 0.5),
+      (7.5, 1.0, 6.0),
+      (0.0, 7.0, 0.0)
+    )
+
+    for (m <- List(a, a.t)) {
+      val SVD(u, s, v) = svd.reduced(m)
+      val SVD(ur, sr, vr) = svdr(m, m.rows min m.cols)
+
+      vectorsNearlyEqual(s, sr)
+      matricesNearlyEqual(abs(u), abs(ur))
+      matricesNearlyEqual(abs(v), abs(vr))
+    }
+  }
+
+  test("svdr A[m, n], m < n") {
+    val m = DenseMatrix(
+      (2.0, 4.0, 0.0),
+      (1.0, 3.0, 4.0),
+      (5.0, 0.0, 0.9),
+      (3.0, 5.0, 0.5),
+      (7.5, 1.0, 6.0),
+      (0.0, 7.0, 0.0)
+    ).t
+
+    val SVD(u, sr, vt) = svdr(m, m.rows min m.cols)
+
+    val reM = u * diag(sr) * vt
+    matricesNearlyEqual(reM, m)
+  }
+
+  test("svdr A[m, n], m > n") {
+    val m = DenseMatrix(
+      (2.0, 4.0, 0.0),
+      (1.0, 3.0, 4.0),
+      (5.0, 0.0, 0.9),
+      (3.0, 5.0, 0.5),
+      (7.5, 1.0, 6.0),
+      (0.0, 7.0, 0.0)
+    )
+
+    val SVD(u, sr, vt) = svdr(m, m.rows min m.cols)
+
+    val reM = u * diag(sr) * vt
+    matricesNearlyEqual(reM, m)
   }
 
   test("csc svd"){
