@@ -671,10 +671,27 @@ object DenseVector extends VectorConstructors[DenseVector]
     def apply(v: DenseVector[E]): Int = v.length
   }
 
+  // this produces bad spaces for builtins (inefficient because of bad implicit lookup)
   implicit def space[E](implicit field: Field[E], man: ClassTag[E]): MutableFiniteCoordinateField[DenseVector[E],Int,E] = {
     import field._
     implicit val cmv = canMapValues[E,E]
     MutableFiniteCoordinateField.make[DenseVector[E],Int,E]
+  }
+
+  implicit val space_Double: MutableFiniteCoordinateField[DenseVector[Double], Int, Double] = {
+    MutableFiniteCoordinateField.make[DenseVector[Double],Int,Double]
+  }
+
+  implicit val space_Float: MutableFiniteCoordinateField[DenseVector[Float], Int, Float] = {
+    MutableFiniteCoordinateField.make[DenseVector[Float],Int,Float]
+  }
+
+  implicit val space_Int: MutableFiniteCoordinateField[DenseVector[Int], Int, Int] = {
+    MutableFiniteCoordinateField.make[DenseVector[Int],Int,Int]
+  }
+
+  implicit val space_Long: MutableFiniteCoordinateField[DenseVector[Long], Int, Long] = {
+    MutableFiniteCoordinateField.make[DenseVector[Long],Int,Long]
   }
 
   object TupleIsomorphisms {
