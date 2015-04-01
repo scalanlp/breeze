@@ -184,6 +184,7 @@ class QuadraticMinimizer(nGram: Int,
       // TO DO : Use LDL' for symmetric quasi definite matrix lapack.dsytrf
       wsH(nGram until (nGram + Aeq.rows), 0 until Aeq.cols) := Aeq
       wsH(0 until nGram, nGram until (nGram + Aeq.rows)) := transAeq
+      wsH(nGram until (nGram + Aeq.rows), nGram until (nGram + Aeq.rows)) := 0.0
       lapack.dgetrf(n, n, wsH.data, scala.math.max(1, n), pivot, info)
     }
     else {
