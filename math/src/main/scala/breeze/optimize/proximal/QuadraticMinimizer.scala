@@ -241,9 +241,10 @@ class QuadraticMinimizer(nGram: Int,
     import startState._
 
     // Unconstrained Quadratic Minimization with/without affine constraints does not need
-    // proxima update
+    // proximal update
     if (proximal == null) {
       updatePrimal(q, x, u, z, scale, rho, R, pivot)
+      z := x
       return State(x, u, z, scale, R, pivot, xHat, zOld, residual, s, 1, true)
     }
 
@@ -374,7 +375,7 @@ class QuadraticMinimizer(nGram: Int,
    * @return converged solution
    */
   def minimize(q: DenseVector[Double], initialState: State): DenseVector[Double] = {
-    minimizeAndReturnState(q, initialState).x
+    minimizeAndReturnState(q, initialState).z
   }
 
   /**
@@ -386,7 +387,7 @@ class QuadraticMinimizer(nGram: Int,
    * @return converged solution
    */
   def minimize(H: DenseMatrix[Double], q: DenseVector[Double], initialState: State): DenseVector[Double] = {
-    minimizeAndReturnState(H, q, initialState).x
+    minimizeAndReturnState(H, q, initialState).z
   }
 
   /**
@@ -398,7 +399,7 @@ class QuadraticMinimizer(nGram: Int,
    * @return converged solution
    */
   def minimize(upper: Array[Double], q: DenseVector[Double], initialState: State): DenseVector[Double] = {
-    minimizeAndReturnState(upper, q, initialState).x
+    minimizeAndReturnState(upper, q, initialState).z
   }
 
   def minimizeAndReturnState(H: DenseMatrix[Double], q: DenseVector[Double]): State = minimizeAndReturnState(H, q, initialize)
