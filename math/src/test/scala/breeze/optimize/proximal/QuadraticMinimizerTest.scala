@@ -212,9 +212,7 @@ class QuadraticMinimizerTest extends OptimizeTestBase with Matchers {
     val directQpResult = directQpMl.minimizeAndReturnState(Hml, fml)
 
     val golden = DenseVector(0.3131862265452959, 0.0, 0.01129486116330884, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.060642310566736704, 0.0, 0.0, 0.0, 0.0, 0.0, 0.6151756449091074, 0.0, 0.0, 0.0, 0.0)
-
-    println(directQpResult.iter)
-
+    
     assert(directQpResult.converged)
     assert(norm(directQpResult.z - golden) < 1e-3)
     assert(abs(sum(directQpResult.z) - 1.0) < 1e-4)
