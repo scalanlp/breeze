@@ -218,7 +218,7 @@ object FeatureVector {
         cforRange(0 until b.activeLength) { i =>
           val column = b(i)
           cforRange(a.colPtrs(column) until a.colPtrs(column + 1)) { off =>
-            result.add(a.rowIndices(off), a.data(off))
+            result.add(a.rowIndices(off), a.internalData(off))
           }
         }
         result.toSparseVector

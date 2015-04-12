@@ -409,7 +409,7 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
   test("Reshape") {
     val m : DenseMatrix[Int] = DenseMatrix((1,2,3),(4,5,6))
     val r : DenseMatrix[Int] = m.reshape(3, 2, true)
-    assert(m.data eq r.data)
+    assert(m.internalData eq r.internalData)
     assert(r.rows === 3)
     assert(r.cols === 2)
     assert(r === DenseMatrix((1,5),(4,3),(2,6)))
@@ -418,7 +418,7 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
   test("Reshape transpose") {
     val m : DenseMatrix[Int] = DenseMatrix((1,2,3),(4,5,6)).t
     val r : DenseMatrix[Int] = m.reshape(2, 3, true)
-    assert(m.data eq r.data)
+    assert(m.internalData eq r.internalData)
     assert(r.rows === 2)
     assert(r.cols === 3)
     assert(r === DenseMatrix((1,5),(4,3),(2,6)).t)

@@ -458,7 +458,7 @@ object DenseVector extends VectorConstructors[DenseVector]
   implicit def canTransposeComplex: CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] = {
     new CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] {
       def apply(from: DenseVector[Complex]): DenseMatrix[Complex] = {
-        new DenseMatrix(data = from.data map { _.conjugate },
+        new DenseMatrix(internalData = from.data map { _.conjugate },
                         offset = from.offset,
                         cols = from.length,
                         rows = 1,

@@ -9,9 +9,9 @@ import breeze.optimize.proximal.Constraint._
 import scala.math.abs
 import breeze.numerics._
 import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
-import com.github.fommil.netlib.BLAS.{getInstance=>blas}
 import breeze.optimize.linear.{PowerMethod, NNLS, ConjugateGradient}
 import breeze.stats.distributions.Rand
+import breeze.util.Implicits._
 import spire.syntax.cfor._
 
 /**
@@ -37,36 +37,29 @@ import spire.syntax.cfor._
  * @param proximal proximal operator to be used
  * @param Aeq rhs matrix for equality constraints
  * @param beq lhs constants for equality constraints
- * @param abstol ADMM absolute tolerance
- * @param reltol ADMM relative tolerance
- * @param alpha over-relaxation parameter default 1.0 1.5 - 1.8 can improve convergence
  * @author debasish83
  */
 class QuadraticMinimizer(nGram: Int,
                          proximal: Proximal = null,
                          Aeq: DenseMatrix[Double] = null,
                          beq: DenseVector[Double] = null,
-                         maxIters: Int = -1,
-                         abstol: Double = 1e-6, reltol: Double = 1e-4, alpha: Double = 1.0)
+                         maxIters: Int = -1, abstol: Double = 1e-6, reltol: Double = 1e-4)
   extends SerializableLogging {
 
   type BDM = DenseMatrix[Double]
   type BDV = DenseVector[Double]
 
-  case class State private[QuadraticMinimizer](x: BDV, u: BDV, z: BDV, scale: BDV,
-                                               R: BDM, pivot: Array[Int],
-                                               xHat: BDV, zOld: BDV, residual: BDV,
-                                               s: BDV, iter: Int, converged: Boolean) {
-  }
+  case class State private[QuadraticMinimizer](x: BDV, u: BDV, z: BDV, R: BDM, pivot: Array[Int], xHat: BDV, zOld: BDV, residual: BDV, s: BDV, iter: Int, converged: Boolean)
 
   val linearEquality = if (Aeq != null) Aeq.rows else 0
 
-  if (linearEquality > 0)
+  if(linearEquality > 0)
     require(beq.length == linearEquality, s"QuadraticMinimizer linear equalities should match beq vector")
 
   val n = nGram + linearEquality
-  val full = n * n
-  val upperSize = nGram*(nGram + 1)/2
+
+  //TO DO: Tune alpha based on Nesterov's acceleration
+  val alpha: Double = 1.0
 
   /**
    * wsH is the workspace for gram matrix / quasi definite system based on the problem definition
@@ -98,108 +91,71 @@ class QuadraticMinimizer(nGram: Int,
    * an API updateGram is exposed to users so that the workspace can be used by many solves that show
    * up in distributed frameworks like Spark mllib ALS
    */
-  private val wsH = DenseMatrix.zeros[Double](n, n)
 
-  val transAeq = if (linearEquality > 0) Aeq.t else null
+  private val wsH =
+    if (linearEquality > 0) {
+      val ws = DenseMatrix.zeros[Double](n, n)
+      val transAeq = Aeq.t
+      ws(nGram until (nGram + Aeq.rows), 0 until Aeq.cols) := Aeq
+      ws(0 until nGram, nGram until (nGram + Aeq.rows)) := transAeq
+      ws
+    } else {
+      DenseMatrix.zeros[Double](n, n)
+    }
 
   val admmIters = if (maxIters < 0) Math.max(400, 20 * n) else maxIters
 
   def getProximal = proximal
 
   /**
-   * updateGram allows the user to seed QuadraticMinimizer with symmetric gram matrix most useful for cases
-   * where the gram matrix does not change but the linear term changes for multiple solves. It should be
-   * called iteratively from Normal Equations constructed by the user
-   * @param H rank * rank size full gram matrix
+   * updateGram API is meant to be called iteratively from the user and the user should guarantee correctness
+   * of update. No exceptions are thrown explicitly to optimize on the runtime
    */
-  def updateGram(H: DenseMatrix[Double]): Unit = {
-    wsH(0 until nGram, 0 until nGram) := H
+  def updateGram(row: Int, col: Int, value: Double) {
+    require(row >= 0 && row < n, s"QuadraticMinimizer:updateGram row index out of bounds")
+    require(col >= 0 && col < n, s"QuadraticMinimizer:updateGram col index out of bounds")
+    wsH.update(row, col, value)
   }
 
-  /**
-   * updateGram API allows user to seed QuadraticMinimizer with upper triangular gram matrix (memory
-   * optimization by 50%) specified through primitive arrays. It is exposed for advanced users like
-   * Spark ALS where ALS constructs normal equations as primitive arrays
-   * @param upper upper triangular gram matrix specified in primitive array
-   */
-  def updateGram(upper: Array[Double]): Unit = {
-    require(upper.length == upperSize, s"QuadraticMinimizer:updateGram upper triangular size mismatch")
-    var i = 0
-    var pos = 0
-    var h = 0.0
-    while (i < nGram) {
-      var j = 0
-      while (j <= i) {
-        h = upper(pos)
-        wsH.unsafeUpdate(i, j, h)
-        wsH.unsafeUpdate(j, i, h)
-        pos += 1
-        j += 1
-      }
-      i += 1
-    }
-  }
+  //u is the langrange multiplier
+  //z is for the proximal operator application
 
-  /**
-   * Public API to get an initialState for solver hot start such that subsequent calls can reuse
-   * state memmory
-   *
-   * @return the state for the optimizer
-   */
-  def initialize = {
+  private def initialState(nGram: Int) = {
+    var R: DenseMatrix[Double] = null
     var pivot: Array[Int] = null
-    // Allocate memory for pivot
-    if (linearEquality > 0) pivot = Array.fill[Int](n)(0)
+
+    //Dense cholesky factorization if the gram matrix is well defined
+    if (linearEquality > 0) {
+      val lu= LU(wsH)
+      R = lu._1
+      pivot = lu._2
+    } else {
+      R = cholesky(wsH).t
+    }
 
     val x = DenseVector.zeros[Double](nGram)
+
     val z = DenseVector.zeros[Double](nGram)
     val u = DenseVector.zeros[Double](nGram)
-    // scale = rho*(z - u) - q
-    val scale = DenseVector.zeros[Double](n)
 
-    if (proximal == null) {
-      State(x, u, z, scale, null, pivot, null, null, null, null, 0, false)
-    } else {
-      val xHat = DenseVector.zeros[Double](nGram)
-      val zOld = DenseVector.zeros[Double](nGram)
+    val xHat = DenseVector.zeros[Double](nGram)
+    val zOld = DenseVector.zeros[Double](nGram)
 
-      val residual = DenseVector.zeros[Double](nGram)
-      val s = DenseVector.zeros[Double](nGram)
+    val residual = DenseVector.zeros[Double](nGram)
+    val s = DenseVector.zeros[Double](nGram)
 
-      State(x, u, z, scale, null, pivot, xHat, zOld, residual, s, 0, false)
-    }
+    State(x, u, z, R, pivot, xHat, zOld, residual, s, 0, false)
   }
 
-  //u is the lagrange multiplier
-  //z is for the proximal operator application
-  private def reset(q: DenseVector[Double], state: State) = {
+  def iterations(q: DenseVector[Double],
+                 rho: Double): Iterator[State] = Iterator.iterate(initialState(nGram)) { state =>
     import state._
-    val nlinear = q.length
-    val info = new intW(0)
 
-    //TO DO : Mutate wsH and put the factors in it, the arraycopy is not required
-    if (linearEquality > 0) {
-      val equality = nlinear + beq.length
-      require(wsH.rows == equality && wsH.cols == equality, s"QuadraticMinimizer:reset quasi definite and linear size mismatch")
-      // TO DO : Use LDL' for symmetric quasi definite matrix lapack.dsytrf
-      wsH(nGram until (nGram + Aeq.rows), 0 until Aeq.cols) := Aeq
-      wsH(0 until nGram, nGram until (nGram + Aeq.rows)) := transAeq
-      lapack.dgetrf(n, n, wsH.data, scala.math.max(1, n), pivot, info)
-    }
-    else {
-      require(wsH.rows == nlinear && wsH.cols == nlinear, s"QuadraticMinimizer:reset cholesky and linear size mismatch")
-      lapack.dpotrf("L", n, wsH.data, scala.math.max(1, n), info)
-    }
+    //scale will hold q + linearEqualities
+    val convergenceScale = sqrt(n)
 
-    x := 0.0
-    u := 0.0
-    z := 0.0
-
-    State(x, u, z, scale, wsH, pivot, xHat, zOld, residual, s, 0, false)
-  }
-
-  private def updatePrimal(q: BDV, x: BDV, u: BDV, z: BDV, scale: BDV, rho: Double, R: BDM, pivot: Array[Int]) = {
     //scale = rho*(z - u) - q
+    val scale = DenseVector.zeros[Double](n)
     cforRange(0 until z.length) { i =>
       val entryScale = rho * (z(i) - u(i)) - q(i)
       scale.update(i, entryScale)
@@ -207,54 +163,25 @@ class QuadraticMinimizer(nGram: Int,
     if (linearEquality > 0)
       cforRange(0 until beq.length) { i => scale.update(nGram + i, beq(i)) }
 
-    // TO DO : Use LDL' based solver for quasi definite / sparse gram
-    if (linearEquality > 0) {
+    //TO DO : Use LDL' decomposition for efficiency if the Gram matrix is sparse
+    // If the Gram matrix is positive definite then use Cholesky else use LU Decomposition
+    val xlambda = if (linearEquality > 0) {
       // x = U \ (L \ q)
-      QuadraticMinimizer.dgetrs(R, pivot, scale)
+      QuadraticMinimizer.solveTriangularLU(R, pivot, scale)
     } else {
       // x = R \ (R' \ scale)
-      // Step 1 : R' * y = scale
-      // Step 2 : R * x = y
-      QuadraticMinimizer.dpotrs(R, scale)
+      //Step 1 : R' * y = scale
+      //Step 2 : R * x = y
+      QuadraticMinimizer.solveTriangular(R, scale)
     }
-    cforRange(0 until x.length) { i => x.update(i, scale(i)) }
-  }
+    cforRange(0 until x.length) {i => x.update(i, xlambda(i))}
 
-  /**
-   * minimizeAndReturnState API gives an advanced control for users who would like to use
-   * QuadraticMinimizer in 2 steps, update the gram matrix first using updateGram API and
-   * followed by doing the solve by providing a user defined initialState. It also exposes
-   * rho control to users who would like to experiment with rho parameters of the admm
-   * algorithm. Use user-defined rho only if you understand the proximal algorithm well
-   * @param q linear term for the quadratic optimization
-   * @param rho rho parameter for ADMM algorithm
-   * @param initialState provide a initialState using initialState API
-   * @param resetState use true if you want to hot start based on the provided state
-   * @return converged state from ADMM algorithm
-   */
-  def minimizeAndReturnState(q: DenseVector[Double],
-                             rho: Double,
-                             initialState: State,
-                             resetState: Boolean = true): State = {
-    val startState = if (resetState) reset(q, initialState) else initialState
-    import startState._
-
-    // Unconstrained Quadratic Minimization with/without affine constraints does not need
-    // proxima update
+    //Unconstrained Quadratic Minimization does need any proximal step
     if (proximal == null) {
-      updatePrimal(q, x, u, z, scale, rho, R, pivot)
-      return State(x, u, z, scale, R, pivot, xHat, zOld, residual, s, 1, true)
+      State(x, u, z, R, pivot, xHat, zOld, residual, s, iter + 1, true)
     }
-
-    //scale will hold q + linearEqualities
-    val convergenceScale = sqrt(n)
-
-    var nextIter = 0
-    while (nextIter <= admmIters) {
-      //primal update
-      updatePrimal(q, x, u, z, scale, rho, R, pivot)
-
-      //proximal z-update with relaxation
+    else {
+      //z-update with relaxation
 
       //zold = (1-alpha)*z
       //x_hat = alpha*x + zold
@@ -293,6 +220,7 @@ class QuadraticMinimizer(nGram: Int,
       s *= -rho
       val sNorm = norm(s, 2)
 
+      //TO DO : Make sure z.muli(-1) is actually needed in norm calculation
       residual := z
       residual *= -1.0
 
@@ -303,20 +231,17 @@ class QuadraticMinimizer(nGram: Int,
       val epsPrimal = convergenceScale * abstol + reltol * max(norm(x, 2), norm(residual, 2))
       val epsDual = convergenceScale * abstol + reltol * norm(s, 2)
 
-      if (residualNorm < epsPrimal && sNorm < epsDual) {
-        return State(x, u, z, scale, R, pivot, xHat, zOld, residual, s, nextIter, true)
-      }
-      nextIter += 1
+      val converged = residualNorm < epsPrimal && sNorm < epsDual || iter > admmIters
+
+      State(x, u, z, R, pivot, xHat, zOld, residual, s, iter + 1, converged)
     }
-    State(x, u, z, scale, R, pivot, xHat, zOld, residual, s, nextIter, false)
-  }
+  }.takeUpToWhere(_.converged)
 
   private def computeRho(H: DenseMatrix[Double]): Double = {
     proximal match {
       case null => 0.0
-      case ProximalL1(lambda: Double) => {
+      case ProximalL1(lambda:Double) => {
         val eigenMax = QuadraticMinimizer.normColumn(H)
-        require(linearEquality <= 0, s"QuadraticMinimizer:computeRho L1 with affine not supported")
         val eigenMin = QuadraticMinimizer.approximateMinEigen(H)
         sqrt(eigenMin * eigenMax)
       }
@@ -324,141 +249,35 @@ class QuadraticMinimizer(nGram: Int,
     }
   }
 
-  /**
-   * minimizeAndReturnState API gives an advanced control for users who would like to use
-   * QuadraticMinimizer in 2 steps, update the gram matrix first using updateGram API and
-   * followed by doing the solve by providing a user defined initialState. rho is
-   * automatically calculated by QuadraticMinimizer from problem structure
-   * @param q linear term for the quadratic optimization
-   * @param initialState provide a initialState using initialState API
-   * @return converged state from QuadraticMinimizer
-   */
-  def minimizeAndReturnState(q: DenseVector[Double], initialState: State): State = {
+  def minimize(H: DenseMatrix[Double], q: DenseVector[Double]): DenseVector[Double] = {
+    minimizeAndReturnState(H, q).x
+  }
+
+  def minimizeAndReturnState(H: DenseMatrix[Double], q: DenseVector[Double]): State = {
+    iterations(H, q).last
+  }
+
+  def minimizeAndReturnState(q: DenseVector[Double]) : State = {
+    iterations(q).last
+  }
+
+  def minimize(q: DenseVector[Double]): DenseVector[Double] = {
+    minimizeAndReturnState(q).x
+  }
+
+  def iterations(q: DenseVector[Double]) : Iterator[State] = {
     val rho = computeRho(wsH)
-    cforRange(0 until q.length) { i => wsH.update(i, i, wsH(i, i) + rho) }
-    minimizeAndReturnState(q, rho, initialState)
+    cforRange(0 until q.length) {i => wsH.update(i, i, wsH(i, i) + rho)}
+    iterations(q, rho)
   }
 
-  /**
-   * minimizeAndReturnState API that takes a symmetric full gram matrix and the linear term for
-   * quadratic minimization
-   * @param H gram matrix, symmetric of size rank x rank
-   * @param q linear term
-   * @param initialState provide a initialState using initialState API for memory optimization
-   * @return converged state from QuadraticMinimizer
-   */
-  def minimizeAndReturnState(H: DenseMatrix[Double], q: DenseVector[Double], initialState: State): State = {
-    updateGram(H)
-    minimizeAndReturnState(q, initialState)
+  def iterations(H: DenseMatrix[Double], q: DenseVector[Double]): Iterator[State] = {
+    wsH(0 until H.rows, 0 until H.cols) := H
+    iterations(q)
   }
-
-  /**
-   * minimizeAndReturnState API that takes upper triangular entries of the gram matrix specified through primitive
-   * array for performance reason and the linear term for quadratic minimization
-   * @param upper upper triangular gram matrix specified as primitive array
-   * @param q linear term
-   * @param initialState provide a initialState using initialState API for memory optimization
-   * @return converged state from QuadraticMinimizer
-   */
-  def minimizeAndReturnState(upper: Array[Double], q: DenseVector[Double], initialState: State): State = {
-    updateGram(upper)
-    minimizeAndReturnState(q, initialState)
-  }
-
-  /**
-   * minimize API for cases where gram matrix is updated through updateGram API. If a initialState is not provided
-   * by default it constructs it through initialize
-   * @param q linear term for quadratic optimization
-   * @param initialState provide an optional initialState for memory optimization
-   * @return converged solution
-   */
-  def minimize(q: DenseVector[Double], initialState: State): DenseVector[Double] = {
-    minimizeAndReturnState(q, initialState).x
-  }
-
-  /**
-   * minimize API for cases where gram matrix is provided by the user. If a initialState is not provided
-   * by default it constructs it through initialize
-   * @param H symmetric gram matrix of size rank x rank
-   * @param q linear term for quadratic optimization
-   * @param initialState provide an optional initialState for memory optimization
-   * @return converged solution
-   */
-  def minimize(H: DenseMatrix[Double], q: DenseVector[Double], initialState: State): DenseVector[Double] = {
-    minimizeAndReturnState(H, q, initialState).x
-  }
-
-  /**
-   * minimize API for cases where upper triangular gram matrix is provided by user as primitive array.
-   * If a initialState is not provided by default it constructs it through initialize
-   * @param upper upper triangular gram matrix of size rank x (rank + 1)/2
-   * @param q linear term for quadratic optimization
-   * @param initialState provide an optional initialState for memory optimization
-   * @return converged solution
-   */
-  def minimize(upper: Array[Double], q: DenseVector[Double], initialState: State): DenseVector[Double] = {
-    minimizeAndReturnState(upper, q, initialState).x
-  }
-
-  def minimizeAndReturnState(H: DenseMatrix[Double], q: DenseVector[Double]): State = minimizeAndReturnState(H, q, initialize)
-
-  def minimizeAndReturnState(q: DenseVector[Double]): State = minimizeAndReturnState(q, initialize)
-
-  def minimize(H: DenseMatrix[Double], q: DenseVector[Double]): DenseVector[Double] = minimize(H, q, initialize)
-
-  def minimize(q: DenseVector[Double]): DenseVector[Double] = minimize(q, initialize)
 }
 
 object QuadraticMinimizer {
-  /**
-   * y := alpha * A * x + beta * y
-   * For `DenseMatrix` A.
-   */
-  def gemv(alpha: Double,
-           A: DenseMatrix[Double],
-           x: DenseVector[Double],
-           beta: Double,
-           y: DenseVector[Double]): Unit =  {
-    val tStrA = if (A.isTranspose) "T" else "N"
-    val mA = if (!A.isTranspose) A.rows else A.cols
-    val nA = if (!A.isTranspose) A.rows else A.cols
-    blas.dgemv(tStrA, mA, nA, alpha, A.data, mA, x.data, 1, beta, y.data, 1)
-  }
-
-  /**
-   * Triangular LU solve for finding y such that y := Ax where A is the LU factorization
-   *
-   * @param A vector representation of LU factorization
-   * @param pivot pivot from LU factorization
-   * @param x the linear term for the solve which will also host the result
-   */
-  def dgetrs(A: DenseMatrix[Double],
-             pivot: Array[Int],
-             x: DenseVector[Double]): Unit = {
-    val n = x.length
-    require(A.rows == n)
-    val nrhs = 1
-    val info: intW = new intW(0)
-
-    lapack.dgetrs("No transpose", n, nrhs, A.data, 0, n, pivot, 0, x.data, 0, n, info)
-    if (info.`val` > 0) throw new LapackException("DGETRS: LU solve unsuccessful")
-  }
-  /**
-   * Triangular Cholesky solve for finding y through backsolves such that y := Ax
-   *
-   * @param A vector representation of lower triangular cholesky factorization
-   * @param x the linear term for the solve which will also host the result
-   */
-  def dpotrs(A: DenseMatrix[Double], x: DenseVector[Double]) : Unit = {
-    val n = x.length
-    val nrhs = 1
-    require(A.rows == n)
-    val info: intW = new intW(0)
-    lapack.dpotrs("L", n, nrhs, A.data, 0, n, x.data, 0, n, info)
-
-    if (info.`val` > 0) throw new LapackException("DPOTRS : Leading minor of order i of A is not positive definite.")
-  }
-
   //upper bound on max eigen value
   def normColumn(H: DenseMatrix[Double]): Double = {
     var absColSum = 0.0
@@ -475,9 +294,9 @@ object QuadraticMinimizer {
 
   //approximate max eigen using inverse power method
   def approximateMaxEigen(H: DenseMatrix[Double]) : Double = {
-    val pm = new PowerMethod()
+    val pm = new PowerMethod[DenseVector[Double], DenseMatrix[Double]]()
     val init = DenseVector.rand[Double](H.rows, Rand.gaussian(0, 1))
-    pm.eigen(H, init)
+    pm.eigen(init, H)
   }
 
   //approximate min eigen using inverse power method
@@ -485,7 +304,44 @@ object QuadraticMinimizer {
     val R = cholesky(H).t
     val pmInv = PowerMethod.inverse()
     val init = DenseVector.rand[Double](H.rows, Rand.gaussian(0, 1))
-    1.0/pmInv.eigen(R, init)
+    1.0/pmInv.eigen(init, R)
+  }
+
+  /* 
+   * Triangular LU solve for A*X = B 
+   * TO DO : Add appropriate exception from LAPACK
+   */
+  def solveTriangularLU(A: DenseMatrix[Double], pivot: Array[Int], B: DenseVector[Double]) : DenseVector[Double] = {
+    require(A.rows == A.cols)
+    
+    val X = new DenseMatrix(B.length, 1, B.data.clone)
+    
+    val n = A.rows
+    val nrhs = X.cols
+    var info: intW = new intW(0)
+
+    lapack.dgetrs("No transpose", n, nrhs, A.internalData, 0, A.rows, pivot, 0, X.internalData, 0, X.rows, info)
+
+    if (info.`val` > 0) throw new LapackException("DGETRS: LU solve unsuccessful")
+
+    DenseVector(X.internalData)
+  }
+
+  /*Triangular cholesky solve for A*X = B */
+  def solveTriangular(A: DenseMatrix[Double], B: DenseVector[Double]) : DenseVector[Double] = {
+    require(A.rows == A.cols)
+    
+    val X = new DenseMatrix(B.length, 1, B.data.clone)
+    
+    val n = A.rows
+    val nrhs = X.cols
+    var info: intW = new intW(0)
+
+    lapack.dpotrs("L", n, nrhs, A.internalData, 0, A.rows, X.internalData, 0, X.rows, info)
+
+    if (info.`val` > 0) throw new LapackException("DPOTRS : Leading minor of order i of A is not positive definite.")
+    
+    DenseVector(X.internalData)
   }
 
   def apply(rank: Int,
@@ -499,9 +355,6 @@ object QuadraticMinimizer {
         val lb = DenseVector.zeros[Double](rank)
         val ub = DenseVector.ones[Double](rank)
         new QuadraticMinimizer(rank, ProjectBox(lb, ub))
-      }
-      case PROBABILITYSIMPLEX => {
-        new QuadraticMinimizer(rank, ProjectProbabilitySimplex(lambda))
       }
       case EQUALITY => {
         //Direct QP with equality and positivity constraint
@@ -531,6 +384,14 @@ object QuadraticMinimizer {
     val lbfgs = new LBFGS[DenseVector[Double]](-1, 7)
     val state = lbfgs.minimizeAndReturnState(Cost(H, q), init)
     state.x
+  }
+  
+  def optimizeWithOWLQN(init: DenseVector[Double],
+                        regularizedGram: DenseMatrix[Double],
+                        q: DenseVector[Double],
+                        lambdaL1: Double) = {
+    val owlqn = new OWLQN[Int, DenseVector[Double]](-1, 7, lambdaL1, 1e-6)
+    owlqn.minimizeAndReturnState(Cost(regularizedGram, q), init)
   }
 
   def main(args: Array[String]) {
@@ -592,10 +453,8 @@ object QuadraticMinimizer {
     val sparseQpResult = sparseQp.minimizeAndReturnState(regularizedGram, q)
     val sparseQpTime = System.nanoTime() - sparseQpStart
 
-    val owlqn = new OWLQN[Int, DenseVector[Double]](-1, 7, lambdaL1, 1e-6)
-    val init = DenseVector.rand[Double](problemSize)
     val startOWLQN = System.nanoTime()
-    val owlqnResult = owlqn.minimizeAndReturnState(Cost(regularizedGram, q), init)
+    val owlqnResult = optimizeWithOWLQN(DenseVector.rand[Double](problemSize), regularizedGram, q, lambdaL1)
     val owlqnTime = System.nanoTime() - startOWLQN
     
     println(s"||owlqn - sparseqp|| norm ${norm(owlqnResult.x - sparseQpResult.x, 2)} inf-norm ${norm(owlqnResult.x - sparseQpResult.x, inf)}")

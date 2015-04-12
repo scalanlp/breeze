@@ -25,7 +25,7 @@ object inv extends UFunc {
         val work      = Array.ofDim[Double](lwork)
         val info      = new intW(0)
         lapack.dgetri(
-          N, m.data, scala.math.max(1, N) /* LDA */,
+          N, m.internalData, scala.math.max(1, N) /* LDA */,
           ipiv,
           work /* workspace */, lwork /* workspace size */,
           info

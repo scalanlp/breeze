@@ -54,7 +54,7 @@ object reshape extends UFunc {
         // in-place set method should be used to take advantage of blas.dcopy for T = Double
         // Unsure how blas.dcopy compares to System.arraycopy, which could also be used
         nDM := dm
-        new DenseMatrix(rows, cols, nDM.data, dm.offset, if(dm.isTranspose) cols else rows, dm.isTranspose)
+        new DenseMatrix(rows, cols, nDM.internalData, dm.offset, if(dm.isTranspose) cols else rows, dm.isTranspose)
       }
     }
 
@@ -64,7 +64,7 @@ object reshape extends UFunc {
         require(csc.rows * csc.cols == rows * cols, "Size of matrix must match new dimensions (i.e. m.rows * m.cols == rows * cols")
         // Copy data
         val nData = new Array[T](csc.activeSize)
-        System.arraycopy(csc.data,0,nData,0,csc.activeSize)
+        System.arraycopy(csc.internalData,0,nData,0,csc.activeSize)
 
         // calculate colPtrs and rowIndices
         val rIndex = new Array[Int](csc.activeSize)
