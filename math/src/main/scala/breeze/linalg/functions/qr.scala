@@ -35,10 +35,18 @@ object qr extends UFunc {
   case class QR[M](q: M, r: M)
 
   type DenseQR = QR[DenseMatrix[Double]]
+  type SDenseQR = QR[DenseMatrix[Float]]
 
-  implicit object impl_DM_Double extends Impl[DenseMatrix[Double],DenseQR] {
+  implicit object impl_DM_Double extends Impl[DenseMatrix[Double], DenseQR] {
     def apply(v: DenseMatrix[Double]): DenseQR = {
       val (q, r) = doQr(v, skipQ = false)(mode = CompleteQR)
+      QR(q, r)
+    }
+  }
+
+  implicit object impl_DM_Float extends Impl[DenseMatrix[Float], SDenseQR] {
+    def apply(v: DenseMatrix[Float]): SDenseQR = {
+      val (q, r) = doQr_Float(v, skipQ = false)(mode = CompleteQR)
       QR(q, r)
     }
   }
@@ -47,13 +55,20 @@ object qr extends UFunc {
    * QR that just returns R.
    */
   object justR extends UFunc {
+
     implicit object impl_DM_Double extends Impl[DenseMatrix[Double], DenseMatrix[Double]] {
       def apply(v: DenseMatrix[Double]): DenseMatrix[Double] = {
         doQr(v, skipQ = true)(mode = CompleteQR)._2
       }
     }
 
-    implicit def canJustQIfWeCanQR[T,M](implicit qrImpl: qr.Impl[T, QR[M]]):Impl[T, M] = {
+    implicit object impl_DM_Float extends Impl[DenseMatrix[Float], DenseMatrix[Float]] {
+      def apply(v: DenseMatrix[Float]): DenseMatrix[Float] = {
+        doQr_Float(v, skipQ = true)(mode = CompleteQR)._2
+      }
+    }
+
+    implicit def canJustQIfWeCanQR[T, M](implicit qrImpl: qr.Impl[T, QR[M]]): Impl[T, M] = {
       new Impl[T, M] {
         def apply(v: T): M = qrImpl(v).r
       }
@@ -66,7 +81,7 @@ object qr extends UFunc {
    */
   object justQ extends UFunc {
 
-    implicit def canJustQIfWeCanQR[T,M](implicit qrImpl: qr.Impl[T, QR[M]]):Impl[T, M] = {
+    implicit def canJustQIfWeCanQR[T, M](implicit qrImpl: qr.Impl[T, QR[M]]): Impl[T, M] = {
       new Impl[T, M] {
         def apply(v: T): M = qrImpl(v).q
       }
@@ -80,9 +95,16 @@ object qr extends UFunc {
    */
   object reduced extends UFunc {
 
-    implicit object impl_reduced_DM_Double extends Impl[DenseMatrix[Double],DenseQR] {
+    implicit object impl_reduced_DM_Double extends Impl[DenseMatrix[Double], DenseQR] {
       def apply(v: DenseMatrix[Double]): DenseQR = {
         val (q, r) = doQr(v, skipQ = false)(mode = ReducedQR)
+        QR(q, r)
+      }
+    }
+
+    implicit object impl_reduced_DM_Float extends Impl[DenseMatrix[Float], SDenseQR] {
+      def apply(v: DenseMatrix[Float]): SDenseQR = {
+        val (q, r) = doQr_Float(v, skipQ = false)(mode = ReducedQR)
         QR(q, r)
       }
     }
@@ -91,13 +113,20 @@ object qr extends UFunc {
      * QR that just returns R with reduced size.
      */
     object justR extends UFunc {
+
       implicit object impl_reduced_DM_Double extends Impl[DenseMatrix[Double], DenseMatrix[Double]] {
         def apply(v: DenseMatrix[Double]): DenseMatrix[Double] = {
           doQr(v, skipQ = true)(mode = ReducedQR)._2
         }
       }
 
-      implicit def canJustQIfWeCanQR[T,M](implicit qrImpl: qr.reduced.Impl[T, QR[M]]):Impl[T, M] = {
+      implicit object impl_reduced_DM_Float extends Impl[DenseMatrix[Float], DenseMatrix[Float]] {
+        def apply(v: DenseMatrix[Float]): DenseMatrix[Float] = {
+          doQr_Float(v, skipQ = true)(mode = ReducedQR)._2
+        }
+      }
+
+      implicit def canJustQIfWeCanQR[T, M](implicit qrImpl: qr.reduced.Impl[T, QR[M]]): Impl[T, M] = {
         new Impl[T, M] {
           def apply(v: T): M = qrImpl(v).r
         }
@@ -114,6 +143,7 @@ object qr extends UFunc {
         }
       }
     }
+
   }
 
   private def doQr(M: DenseMatrix[Double], skipQ: Boolean)
@@ -124,7 +154,7 @@ object qr extends UFunc {
     val m = A.rows
     val n = A.cols
 
-    val mn = scala.math.min(m,n)
+    val mn = scala.math.min(m, n)
     val tau = new Array[Double](mn)
 
     // Calculate optimal size of work data 'work'
@@ -148,7 +178,7 @@ object qr extends UFunc {
     if (skipQ) (null, upperTriangular(A(0 until mn, ::)))
     else {
       val Q = if (mode == CompleteQR && m > n) DenseMatrix.zeros[Double](m, m)
-              else DenseMatrix.zeros[Double](m, n)
+      else DenseMatrix.zeros[Double](m, n)
 
       val mc = if (mode == CompleteQR && m > n) m else mn
 
@@ -173,6 +203,68 @@ object qr extends UFunc {
         j <- 0 until A.cols
         if j < i
       } A(i, j) = 0.0
+
+      (Q(::, 0 until mc), A(0 until mc, ::))
+    }
+  }
+
+  private def doQr_Float(M: DenseMatrix[Float], skipQ: Boolean)
+                        (mode: QRMode): (DenseMatrix[Float], DenseMatrix[Float]) = {
+
+    val A = M.copy
+
+    val m = A.rows
+    val n = A.cols
+
+    val mn = scala.math.min(m, n)
+    val tau = new Array[Float](mn)
+
+    // Calculate optimal size of work data 'work'
+    val work = new Array[Float](1)
+    val info = new intW(0)
+    lapack.sgeqrf(m, n, A.data, m, tau, work, -1, info)
+
+    // do QR
+    val lwork = if (info.`val` != 0) n else work(0).toInt
+    var workspace = new Array[Float](lwork)
+
+    lapack.sgeqrf(m, n, A.data, m, tau, workspace, lwork, info)
+
+    //Error check
+    if (info.`val` > 0)
+      throw new NotConvergedException(NotConvergedException.Iterations)
+    else if (info.`val` < 0)
+      throw new IllegalArgumentException()
+
+    // Handle mode that don't return Q
+    if (skipQ) (null, upperTriangular(A(0 until mn, ::)))
+    else {
+      val Q = if (mode == CompleteQR && m > n) DenseMatrix.zeros[Float](m, m)
+      else DenseMatrix.zeros[Float](m, n)
+
+      val mc = if (mode == CompleteQR && m > n) m else mn
+
+      Q(::, 0 until n) := A
+
+      // Calculate optimal size of workspace
+      lapack.sorgqr(m, mc, mn, Q.data, m, tau, work, -1, info)
+      val lwork1 = if (info.`val` != 0) n else work(0).toInt
+      workspace = new Array[Float](lwork1)
+      // Compute Q
+      lapack.sorgqr(m, mc, mn, Q.data, m, tau, workspace, lwork1, info)
+
+      //Error check
+      if (info.`val` > 0)
+        throw new NotConvergedException(NotConvergedException.Iterations)
+      else if (info.`val` < 0)
+        throw new IllegalArgumentException()
+
+      // Upper triangle
+      for {
+        i <- 0 until mc
+        j <- 0 until A.cols
+        if j < i
+      } A(i, j) = 0.0f
 
       (Q(::, 0 until mc), A(0 until mc, ::))
     }

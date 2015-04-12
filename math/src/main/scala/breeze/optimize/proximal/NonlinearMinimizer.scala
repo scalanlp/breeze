@@ -3,6 +3,7 @@ package breeze.optimize.proximal
 import breeze.linalg.{norm, DenseVector}
 import breeze.math.MutableInnerProductModule
 import breeze.optimize._
+import breeze.optimize.proximal.LinearGenerator.Cost
 import breeze.util.SerializableLogging
 import breeze.optimize.proximal.Constraint._
 import scala.math._
@@ -246,9 +247,8 @@ object NonlinearMinimizer {
     val sparseQpTime = System.nanoTime() - sparseQpStart
 
     val init = DenseVector.zeros[Double](problemSize)
-
     val owlqnStart = System.nanoTime()
-    val owlqnResult = QuadraticMinimizer.optimizeWithOWLQN(init, regularizedGram, q, lambdaL1)
+    val owlqnResult = owlqn.minimizeAndReturnState(Cost(regularizedGram, q), init)
     val owlqnTime = System.nanoTime() - owlqnStart
 
     println("ElasticNet Formulation")

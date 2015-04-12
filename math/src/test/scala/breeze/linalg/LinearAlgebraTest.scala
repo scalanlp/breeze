@@ -251,6 +251,47 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     assert (_R === qr.justR(A))
   }
 
+  test("qr float A[m, n], m < n") {
+    val A = DenseMatrix((1.0f, 1.0f, 1.0f, 1.0f), (4.0f, 2.0f, 1.0f, 1.0f), (16.0f, 4.0f, 1.0f, 1.0f))
+    val QR(_Q, _R) = qr(A)
+
+    assert((_Q.rows, _Q.cols) == (A.rows, A.rows))
+    assert((_R.rows, _R.cols) == (A.rows, A.cols))
+
+    assert( trace(_Q.t * _Q).closeTo(min(A.rows, A.cols)) )
+    for(i <- 0 until _R.rows; j <- 0 until i) {
+      assert(_R(i,j) === 0.0f)
+    }
+
+    val reA: DenseMatrix[Float] = _Q * _R
+    matricesNearlyEqual_Float(reA, A)
+  }
+
+  test("qr float A[m, n], m > n") {
+    val A = DenseMatrix((1.0f, 1.0f, 1.0f), (4.0f, 2.0f, 1.0f), (16.0f, 4.0f, 1.0f), (32.0f, 8.0f, 1.0f))
+    val QR(_Q, _R) = qr(A)
+
+    assert((_Q.rows, _Q.cols) == (A.rows, A.rows))
+    assert((_R.rows, _R.cols) == (A.rows, A.cols))
+
+    assert( trace(_Q.t * _Q).closeTo(max(A.rows, A.cols)) )
+    for(i <- 0 until _R.rows; j <- 0 until i) {
+      assert(_R(i,j) === 0.0f)
+    }
+
+    val reA: DenseMatrix[Float] = _Q * _R
+    matricesNearlyEqual_Float(reA, A)
+  }
+
+
+  test("qr float just[QR]") {
+    val A = DenseMatrix((1.0f, 1.0f, 1.0f), (4.0f, 2.0f, 1.0f), (16.0f, 4.0f, 1.0f))
+    val QR(_Q, _R) = qr(A)
+    val _Q2 = qr.justQ(A)
+    assert (_Q2 === _Q)
+    assert (_R === qr.justR(A))
+  }
+
   test("qrp") {
     val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
     val QRP(_QQ, _RR, _P, _) = qrp(A)
@@ -309,6 +350,62 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
 
   test("qr reduced just[QR]") {
     val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
+    val QR(_Q, _R) = qr.reduced(A)
+    val _Q2 = qr.reduced.justQ(A)
+    assert (_Q2 === _Q)
+    assert (_R === qr.reduced.justR(A))
+  }
+
+  test("qr float reduced A[m, n], m < n") {
+    val A = DenseMatrix((1.0f, 1.0f, 1.0f, 1.0f), (4.0f, 2.0f, 1.0f, 1.0f), (16.0f, 4.0f, 1.0f, 1.0f))
+    val QR(_Q, _R) = qr.reduced(A)
+
+    assert((_Q.rows, _Q.cols) == (A.rows, min(A.rows, A.cols)))
+    assert((_R.rows, _R.cols) == (min(A.rows, A.cols), A.cols))
+
+    assert( trace(_Q.t * _Q).closeTo(min(A.rows, A.cols)) )
+    for(i <- 0 until _R.rows; j <- 0 until i) {
+      assert(_R(i,j) === 0.0f)
+    }
+
+    val reA: DenseMatrix[Float] = _Q * _R
+    matricesNearlyEqual_Float(reA, A)
+  }
+
+  test("qr float reduced A[m, n], m = n") {
+    val A = DenseMatrix((1.0f, 1.0f, 1.0f), (4.0f, 2.0f, 1.0f), (16.0f, 4.0f, 1.0f))
+    val QR(_Q, _R) = qr.reduced(A)
+
+    assert((_Q.rows, _Q.cols) == (A.rows, min(A.rows, A.cols)))
+    assert((_R.rows, _R.cols) == (min(A.rows, A.cols), A.cols))
+
+    assert( trace(_Q.t * _Q).closeTo(min(A.rows, A.cols)) )
+    for(i <- 0 until _R.rows; j <- 0 until i) {
+      assert(_R(i,j) === 0.0f)
+    }
+
+    val reA: DenseMatrix[Float] = _Q * _R
+    matricesNearlyEqual_Float(reA, A)
+  }
+
+  test("qr float reduced A[m, n], m > n") {
+    val A = DenseMatrix((1.0f, 1.0f, 1.0f), (4.0f, 2.0f, 1.0f), (16.0f, 4.0f, 1.0f), (32.0f, 8.0f, 1.0f))
+    val QR(_Q, _R) = qr.reduced(A)
+
+    assert((_Q.rows, _Q.cols) == (A.rows, min(A.rows, A.cols)))
+    assert((_R.rows, _R.cols) == (min(A.rows, A.cols), A.cols))
+
+    assert( trace(_Q.t * _Q).closeTo(min(A.rows, A.cols)) )
+    for(i <- 0 until _R.rows; j <- 0 until i) {
+      assert(_R(i,j) === 0.0f)
+    }
+
+    val reA: DenseMatrix[Float] = _Q * _R
+    matricesNearlyEqual_Float(reA, A)
+  }
+
+  test("qr float reduced just[QR]") {
+    val A = DenseMatrix((1.0f, 1.0f, 1.0f), (4.0f, 2.0f, 1.0f), (16.0f, 4.0f, 1.0f))
     val QR(_Q, _R) = qr.reduced(A)
     val _Q2 = qr.reduced.justQ(A)
     assert (_Q2 === _Q)
@@ -789,6 +886,11 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
   }
 
   def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6) {
+    for(i <- 0 until A.rows; j <- 0 until A.cols)
+      A(i,j) should be (B(i, j) +- threshold)
+  }
+
+  def matricesNearlyEqual_Float(A: DenseMatrix[Float], B: DenseMatrix[Float], threshold: Float = 1E-6f) {
     for(i <- 0 until A.rows; j <- 0 until A.cols)
       A(i,j) should be (B(i, j) +- threshold)
   }

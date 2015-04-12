@@ -2,9 +2,9 @@ organization := "org.scalanlp"
 
 name := "breeze"
 
-scalaVersion := "2.11.5"
+scalaVersion := Common.scalaVersion
 
-crossScalaVersions  := Seq("2.11.5", "2.10.4")
+crossScalaVersions  := Common.crossScalaVersions
 
 addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0-M1" cross CrossVersion.full)
 

@@ -518,8 +518,11 @@ object DenseVector extends VectorConstructors[DenseVector]
     new OpAdd.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
       def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
         require(a.length == b.length, s"Vectors must have same length: ${a.length} != ${b.length}")
+        // negative strides want the offset to be the *last* logical element, not the first. so weird.
+        val boff = if (b.stride >= 0) b.offset else (b.offset + b.stride * (b.length - 1))
+        val aoff = if (a.stride >= 0) a.offset else (a.offset + a.stride * (a.length - 1))
         blas.daxpy(
-          a.length, 1.0, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
+          a.length, 1.0, b.data, boff, b.stride, a.data, aoff, a.stride)
       }
       implicitly[BinaryUpdateRegistry[Vector[Double], Vector[Double], OpAdd.type]].register(this)
     }
@@ -528,8 +531,10 @@ object DenseVector extends VectorConstructors[DenseVector]
   implicit object canDaxpy extends scaleAdd.InPlaceImpl3[DenseVector[Double], Double, DenseVector[Double]] with Serializable {
     def apply(y: DenseVector[Double], a: Double, x: DenseVector[Double]) {
       require(x.length == y.length, s"Vectors must have same length: ${x.length} != ${y.length}")
+      val xoff = if (x.stride >= 0) x.offset else (x.offset + x.stride * (x.length - 1))
+      val yoff = if (y.stride >= 0) y.offset else (y.offset + y.stride * (y.length - 1))
       blas.daxpy(
-        x.length, a, x.data, x.offset, x.stride, y.data, y.offset, y.stride)
+        x.length, a, x.data, xoff, x.stride, y.data, yoff, y.stride)
     }
   }
   implicitly[TernaryUpdateRegistry[Vector[Double], Double, Vector[Double], scaleAdd.type]].register(canDaxpy)
@@ -543,8 +548,10 @@ object DenseVector extends VectorConstructors[DenseVector]
     new OpSub.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
       def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
         require(a.length == b.length, s"Vectors must have same length: ${a.length} != ${b.length}")
+        val boff = if (b.stride >= 0) b.offset else (b.offset + b.stride * (b.length - 1))
+        val aoff = if (a.stride >= 0) a.offset else (a.offset + a.stride * (a.length - 1))
         blas.daxpy(
-          a.length, -1.0, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
+          a.length, -1.0, b.data, boff, b.stride, a.data, aoff, a.stride)
       }
       implicitly[BinaryUpdateRegistry[Vector[Double], Vector[Double], OpSub.type]].register(this)
     }
@@ -559,8 +566,10 @@ object DenseVector extends VectorConstructors[DenseVector]
     new OpMulInner.Impl2[DenseVector[Double], DenseVector[Double], Double] {
       def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
         require(a.length == b.length, s"Vectors must have same length: ${a.length} != ${b.length}")
+        val boff = if (b.stride >= 0) b.offset else (b.offset + b.stride * (b.length - 1))
+        val aoff = if (a.stride >= 0) a.offset else (a.offset + a.stride * (a.length - 1))
         blas.ddot(
-          a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
+          a.length, b.data, boff, b.stride, a.data, aoff, a.stride)
       }
       implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpMulInner.type, Double]].register(this)
     }
@@ -570,6 +579,8 @@ object DenseVector extends VectorConstructors[DenseVector]
   implicit val canScaleIntoD: OpMulScalar.InPlaceImpl2[DenseVector[Double], Double] = {
     new OpMulScalar.InPlaceImpl2[DenseVector[Double], Double] {
       def apply(a: DenseVector[Double], b: Double) = {
+        // in stark contrast to the above, this works the way you expect w.r.t. negative strides.
+        // Fuck BLAS
         blas.dscal(
           a.length, b, a.data, a.offset, a.stride)
       }
@@ -585,8 +596,10 @@ object DenseVector extends VectorConstructors[DenseVector]
   implicit val canSetD: OpSet.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = new OpSet.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
     def apply(a: DenseVector[Double], b: DenseVector[Double]) {
       require(a.length == b.length, s"Vectors must have same length: ${a.length} != ${b.length}")
+      val boff = if (b.stride >= 0) b.offset else (b.offset + b.stride * (b.length - 1))
+      val aoff = if (a.stride >= 0) a.offset else (a.offset + a.stride * (a.length - 1))
       blas.dcopy(
-        a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
+        a.length, b.data, boff, b.stride, a.data, aoff, a.stride)
     }
     implicitly[BinaryUpdateRegistry[Vector[Double], Vector[Double], OpSet.type]].register(this)
   }

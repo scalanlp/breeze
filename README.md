@@ -2,22 +2,15 @@
 
 Breeze is a library for numerical processing. It aims to be generic, clean, and powerful without sacrificing (much) efficiency.
 
-The current version is 0.11-SNAPSHOT. The latest release is 0.11-M0.
+The current version is 0.11.2. The latest release is 0.11.2.
+
 ## Documentation
 
 * https://github.com/scalanlp/breeze/wiki/Quickstart
 * https://github.com/scalanlp/breeze/wiki/Breeze-Linear-Algebra
 * https://github.com/scalanlp/breeze/wiki/UserGuide
 * [Scaladoc](http://www.scalanlp.org/api/breeze/)
-
-Note:
-
-Breeze used to have more components. Their new homes are described below:
-
-* breeze-learn (machine learning) is now in [Nak](https://github.com/scalanlp/nak).
-* breeze-process (natural language processing) has become [Epic](https://github.com/dlwh/epic).
-
-There is also the [scala-breeze google group](https://groups.google.com/forum/#!forum/scala-breeze) for general questions and discussion.
+* There is also the [scala-breeze google group](https://groups.google.com/forum/#!forum/scala-breeze) for general questions and discussion.
 
 ## Using Breeze
 
@@ -34,15 +27,15 @@ For **SBT**, Add these lines to your SBT project definition:
 ```scala
 libraryDependencies  ++= Seq(
   // other dependencies here
-  "org.scalanlp" %% "breeze" % "0.10",
+  "org.scalanlp" %% "breeze" % "0.11.2",
   // native libraries are not included by default. add this if you want them (as of 0.7)
   // native libraries greatly improve performance, but increase jar sizes.
-  "org.scalanlp" %% "breeze-natives" % "0.10"
+  "org.scalanlp" %% "breeze-natives" % "0.11.2"
 )
 
 resolvers ++= Seq(
   // other resolvers here
-  // if you want to use snapshot builds (currently 0.11-SNAPSHOT), use this.
+  // if you want to use snapshot builds (currently 0.12-SNAPSHOT), use this.
   "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
   "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 )
