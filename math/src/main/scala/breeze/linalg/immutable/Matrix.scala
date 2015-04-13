@@ -37,12 +37,12 @@ class Matrix[@spec(Double, Int, Float, Long) V](private var data: Array[V], priv
 
   /** A list of transpositions. Take for example transposition=[0, 2, 1].
     * This means that:
-    *    the 0th dimension in the internal array is the 0th dimension in the result
-    *    the 1th dimension in the internal array is the 2th dimension in the result
-    *    the 2th dimension in the internal array is the 1th dimension in the result
+    *    the 0th dimension of output is the 0th dimension internally
+    *    the 1th dimension of output is the 2th dimension internally
+    *    the 2th dimension of output is the 1th dimension internally
     */
-  protected var internalTransposition = null
-  protected var internalDimensionMultipliers: Array[Int] = null
+  protected var outputDimensionToInternal = null
+  protected var outputDimensionMultipliers: Array[Int] = null
   protected var indicesTolinearIndex: (Array[Int] => Int) = null
   protected var linearIndexToIndices: (Int => Array[Int]) = null
 
@@ -52,7 +52,7 @@ class Matrix[@spec(Double, Int, Float, Long) V](private var data: Array[V], priv
       var cum = 1
       internalDimensionMultipliers(internalDimensionality-1) = 1
       for( c <- internalDimensionality-1 to 0 by -1){
-        cum *= 
+        cum *=
 
       }
 
