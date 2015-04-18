@@ -11,17 +11,14 @@ import scala.{specialized=>spec}
  */
 trait Matrix[@spec(Double, Int, Float, Long) V] {
 
+  /** Order of the matrix, from 0(wrapped scalar) to 1(vector), ...
+    */
   def getOrder(): Int
+  /** Matrix dimensions. Order zero (wrapped scalar) will return an empty Array[Int]*/
   def getDimensions(): Array[Int]
   //def getDataLength(): Int
 
-  def indicesToLinearIndex(indices: Indices): Int
-  def linearIndexToIndices(linearIndex: Int): Indices
-
-}
-
-trait Matrix3[@spec(Double, Int, Float, Long) V] extends Matrix[V] {
-
-  override def indicesToLinearIndex(indices: Indices3)
+  def indicesToLinearIndex(): (Seq[Int] => Int)
+  def linearIndexToIndices(): (Int => Seq[Int])
 
 }
