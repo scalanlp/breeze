@@ -5,6 +5,7 @@ import breeze.linalg.support.{CanCollapseAxis, CanSlice2}
 import breeze.macros.expand
 import breeze.math.{Field, Semiring}
 import breeze.numerics.Bessel.i1
+import breeze.numerics.pow
 import breeze.storage.Zero
 import breeze.util.ArrayUtil
 
@@ -432,33 +433,49 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
   @expand
   @expand.valify
   implicit def dm_dm_UpdateOp[@expand.args(Int, Double, Float, Long) T,
-                              @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _}) op: Op.Impl2[T, T, T]):
-  Op.InPlaceImpl2[DenseMatrix[T], DenseMatrix[T]] =
+  @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _}) op: Op.Impl2[T, T, T],
+    @expand.sequence[Op]({_ += _},  {_ -= _}, {_ :*= _}, {_ :/= _}, {_ := _}, {_ %= _}, {_ :^= _}) vecOp: Op.Impl2[T, T, T]):
+    Op.InPlaceImpl2[DenseMatrix[T], DenseMatrix[T]] = {
 
-  new Op.InPlaceImpl2[DenseMatrix[T], DenseMatrix[T]] {
-    def apply(a: DenseMatrix[T], b: DenseMatrix[T]): Unit = {
-      val ad = a.data
-      val bd = b.data
-      var c = 0
 
-      if(a.overlaps(b)) {
-        val ac = a.copy
-        apply(ac,b)
-        a := ac
-      } else {
-        while(c < a.cols) {
-          var r = 0
-          while(r < a.rows) {
-            ad(a.linearIndex(r, c)) = op(ad(a.linearIndex(r,c)), bd(b.linearIndex(r,c)))
-            r += 1
+    new Op.InPlaceImpl2[DenseMatrix[T], DenseMatrix[T]] {
+      def apply(a: DenseMatrix[T], b: DenseMatrix[T]): Unit = {
+        require(a.rows == b.rows, "Row dimension mismatch!")
+        require(a.cols == b.cols, "Col dimension mismatch!")
+        val ad = a.data
+        val bd = b.data
+        var c = 0
+
+        val minorSize = if(a.isTranspose) a.cols else a.rows
+
+        if (a.overlaps(b)) {
+          val ac = a.copy
+          apply(ac, b)
+          a := ac
+          // gives a roughly 5-10x speedup
+          // if a and b are both nicely and identically shaped, add them as though they were vectors
+        } else if (a.isTranspose == b.isTranspose
+          && a.majorStride == minorSize
+          && b.majorStride == a.majorStride) {
+          vecOp(new DenseVector(a.data, a.offset, 1, a.size), new DenseVector(b.data, b.offset, 1, b.size))
+        } else if (a.isTranspose) {
+          apply(a.t, b.t)
+        } else {
+          while (c < a.cols) {
+            var r = 0
+            while (r < a.rows) {
+              ad(a.linearIndex(r, c)) = op(ad(a.linearIndex(r, c)), bd(b.linearIndex(r, c)))
+              r += 1
+            }
+            c += 1
           }
-          c += 1
         }
+
       }
 
+      implicitly[BinaryUpdateRegistry[Matrix[T], Matrix[T], Op.type]].register(this)
     }
-    implicitly[BinaryUpdateRegistry[Matrix[T], Matrix[T], Op.type]].register(this)
   }
 
   @expand
