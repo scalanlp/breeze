@@ -15,9 +15,9 @@ lazy val viz = project.in( file("viz")).dependsOn(math)
 
 lazy val benchmark = project.in(file("benchmark")).dependsOn(math, natives)
 
-scalaVersion := "2.11.4"
+scalaVersion := Common.scalaVersion
 
-crossScalaVersions  := Seq("2.11.4", "2.10.4")
+crossScalaVersions  := Common.crossScalaVersions
 
 addCompilerPlugin("org.scalamacros" %% "paradise" % "2.0.1" cross CrossVersion.full)
 

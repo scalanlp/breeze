@@ -21,9 +21,9 @@ libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
   }
 }
 
-scalaVersion := "2.11.4"
+scalaVersion := Common.scalaVersion
 
-crossScalaVersions  := Seq("2.11.4", "2.10.4")
+crossScalaVersions  := Common.crossScalaVersions
 
 libraryDependencies ++= Seq(
   "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
