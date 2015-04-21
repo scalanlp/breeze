@@ -654,6 +654,36 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring {  this: CSCMatrix.type =>
   implicit def csc_csc_InPlace[@expand.args(Int,Float,Double,Long) T, @expand.args(OpAdd, OpSub, OpDiv, OpPow, OpMod, OpMulScalar) Op <: OpType]
   : Op.InPlaceImpl2[CSCMatrix[T],CSCMatrix[T]] = updateFromPure(implicitly[Op.Impl2[CSCMatrix[T],CSCMatrix[T],CSCMatrix[T]]])
 
+
+  @expand
+  @expand.valify
+  implicit def axpyCSC_DM_DM[@expand.args(Int, Float, Double, Long) T]
+  : scaleAdd.InPlaceImpl3[DenseMatrix[T], CSCMatrix[T], DenseMatrix[T]] = {
+    new scaleAdd.InPlaceImpl3[DenseMatrix[T], CSCMatrix[T], DenseMatrix[T]] {
+      override def apply(sink: DenseMatrix[T],
+                         a: CSCMatrix[T],
+                         x: DenseMatrix[T]): Unit = {
+        require(a.rows == sink.rows)
+        require(x.cols == sink.cols)
+        require(a.cols == x.rows)
+
+        var i = 0
+        while (i < x.cols) {
+          var j = 0
+          while (j < a.cols) {
+            val v = x(j, i)
+            var k = a.colPtrs(j)
+            while (k < a.colPtrs(j + 1)) {
+              sink(a.rowIndices(k), i) += v * a.data(k)
+              k += 1
+            }
+            j += 1
+          }
+          i += 1
+        }
+      }
+    }
+  }
 }
 
 trait CSCMatrixOps_Ring extends CSCMatrixOpsLowPrio with SerializableLogging {
