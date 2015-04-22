@@ -31,6 +31,21 @@ import spire.implicits.cfor
 
 case class MeanAndVariance(mean: Double, variance: Double, count: Long) {
   def stdDev: Double = math.sqrt(variance)
+
+  def +(other: MeanAndVariance): MeanAndVariance = {
+    val d = other.mean - this.mean
+    val newMean = this.mean + d * other.count / (other.count + this.count)
+
+    val m2a = this.variance * (this.count - 1)
+    val m2b = other.variance * (other.count - 1)
+
+    val m2x = m2a + m2b + d * d * (other.count * this.count)/ (other.count + this.count)
+
+    val newVariance = m2x / (other.count + this.count - 1)
+
+    MeanAndVariance(newMean, newVariance, this.count + other.count)
+
+  }
 }
 
 object accumulateAndCount extends UFunc {
