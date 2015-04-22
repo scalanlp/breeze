@@ -112,16 +112,17 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]]{
 
   /** See [[scala.collection.mutable.ArrayOps.reduce]].
     */
-  def reduce[E1 >: V](op: (E1, E1) => E1 )(implicit cm: ClassTag[V], cm1: ClassTag[E1]): Vector[E1] = Vector[E1]( toArray.reduce( op ))
+  def reduce[E1 >: V](op: (E1, E1) => E1 )(implicit cm: ClassTag[V], cm1: ClassTag[E1]): E1 = valuesIterator.reduce( op )
   /** See [[scala.collection.mutable.ArrayOps.reduceLeft]].
     */
   def reduceLeft[B >: V](op: (B, V) => B )(implicit cm: ClassTag[V]): B = {
-    val it = valuesIterator
-    it.reduceLeft( op )
+    valuesIterator.reduceLeft( op )
   }
   /** See [[scala.collection.mutable.ArrayOps.reduceRight]].
     */
-  def reduceRight[B >: V](op: (V, B) => B )(implicit cm: ClassTag[V]): B = toArray.reduceRight( op )
+  def reduceRight[B >: V](op: (V, B) => B )(implicit cm: ClassTag[V]): B = {
+    valuesIterator.reduceRight( op )
+  }
 
   /** See [[scala.collection.mutable.ArrayOps.scan]].
     */
