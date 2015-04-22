@@ -69,6 +69,7 @@ class DescriptiveStatsTest extends WordSpec with Matchers {
       assert( math.abs( result(0,0) - 1.0) < 1e-7)
       assert( math.abs( result(1,1) - 1.0) < 1e-7)
     }
+
   }
 }
 
@@ -92,10 +93,19 @@ class DescriptiveStatsTest2 extends FunSuite {
     assert(mav == mav2)
   }
 
-  //  test("complex mean") {
-  //    val data =  DenseVector[Complex]( (0.0 + 1.0 * bmath.i), (1.0 + 0.0 * bmath.i), (2.0 + 2.0 * bmath.i) )
-  //    assert( mean(data) == (1.0 + 1.0 * bmath.i), "complex mean incorrect")
-  //  }
+  test("mean and variance addition") {
+    val r = new Random(0)
+    val data =  Array.fill(100000)(r.nextGaussian)
+    val data2 =  Array.fill(100000)(r.nextGaussian * 5 + 3)
+    val mav = meanAndVariance(data)
+    val mav2 = meanAndVariance(data2)
+    val mavTotal = meanAndVariance(data ++ data2)
+    val mavSum = mav + mav2
+    assert(breeze.numerics.closeTo(mavTotal.mean, mavSum.mean, 1E-5))
+    assert(breeze.numerics.closeTo(mavTotal.variance, mavSum.variance, 1E-5))
+    assert(mavSum.count == mavTotal.count)
+  }
+
 
   test("median") {
     val dataOdd =  DenseVector(0,1,2,3,400000)
