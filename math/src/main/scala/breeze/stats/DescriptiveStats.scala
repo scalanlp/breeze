@@ -64,10 +64,28 @@ trait DescriptiveStats {
    */
   object mean extends UFunc {
     @expand
-    implicit def reduce[T, @expand.args(Double, Complex, Float) Scalar](implicit iter: CanTraverseValues[T, Scalar], @expand.sequence[Scalar](0.0, Complex.zero, 0.0f) zero: Scalar): Impl[T, Scalar] = new Impl[T, Scalar] {
-      def apply(v: T): Scalar = {
-        val (sum, count) = accumulateAndCount(v)
-        sum / count
+    implicit def reduce[@expand.args(Float, Double, Complex) S, T](implicit iter: CanTraverseValues[T, S],
+                                                                   @expand.sequence[S](0f, 0d, Complex.zero) z: S): Impl[T, S] = new Impl[T, S] {
+      def apply(v: T): S = {
+        val visit = new ValuesVisitor[S] {
+          var mu: S = z
+          var n: Long = 0
+
+          def visit(y: S): Unit = {
+            n += 1
+            val d = y - mu
+            mu = mu + d / n
+          }
+
+          def zeros(numZero: Int, zeroValue: S): Unit = {
+            if (numZero != 0)
+              mu = mu * n / (n + numZero)
+            n += numZero
+          }
+        }
+        iter.traverse(v, visit)
+        import visit._
+        mu
       }
     }
 

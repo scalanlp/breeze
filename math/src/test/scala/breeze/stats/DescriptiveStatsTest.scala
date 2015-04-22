@@ -3,7 +3,7 @@ package breeze.stats
 import org.scalatest.{FunSuite, WordSpec}
 import org.scalatest.Matchers
 import scala.util.Random
-import breeze.linalg.{DenseVector, DenseMatrix}
+import breeze.linalg.{SparseVector, DenseVector, DenseMatrix}
 import breeze.math.Complex
 
 class DescriptiveStatsTest extends WordSpec with Matchers {
@@ -19,6 +19,11 @@ class DescriptiveStatsTest extends WordSpec with Matchers {
     "mean should give correct value" in {
       val a = List(1.0,2.0,3.0,4.0)
       mean(a) should be (2.5)
+    }
+    "mean should give correct value for SparseVectors" in {
+      val a = SparseVector.zeros[Double](1000)
+      a(10) = 100.0
+      mean(a) should be (0.1)
     }
     "covariance should not explode when size of list is 1" in {
       val a = List(1.0)
