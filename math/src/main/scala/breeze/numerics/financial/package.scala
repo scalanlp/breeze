@@ -157,10 +157,10 @@ package object financial {
 
   def modifiedInternalRateReturn(values:DenseVector[Double], financeRate:Double, reinvestRate:Double = 0) = {
     val n = values.length
-    var posCnt:Int = 0
-    val positives = values.mapValues(x => if (0 < x) {posCnt += 1;  x} else 0)
-    var negCnt:Int = 0
-    val negatives = values.mapValues(x => if (x < 0) {negCnt += 1;  x} else 0)
+    var posCnt:Int = values.valuesIterator.count(0 < _)
+    val positives = values.mapValues(x => if (0 < x) x else 0)
+    var negCnt:Int = values.valuesIterator.count(_ < 0)
+    val negatives = values.mapValues(x => if (x < 0) x else 0)
     if (posCnt == 0 || negCnt == 0) {
       throw new IllegalArgumentException("The values must has one positive and negative value!")
     }
