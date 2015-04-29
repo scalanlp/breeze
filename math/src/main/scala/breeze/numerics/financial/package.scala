@@ -165,8 +165,8 @@ package object financial {
       throw new IllegalArgumentException("The values must has one positive and negative value!")
     }
 
-    val inflowNPV:Double = netPresentValue(reinvestRate, positives)
-    val outflowNPV:Double = netPresentValue(financeRate, negatives)
+    val inflowNPV:Double = netPresentValue(reinvestRate, Seq(positives))
+    val outflowNPV:Double = netPresentValue(financeRate, Seq(negatives))
     val mirr = (pow(math.abs(inflowNPV/outflowNPV), (1.0 / (n-1))) * (1.0 + reinvestRate) - 1.0)
     mirr
   }
