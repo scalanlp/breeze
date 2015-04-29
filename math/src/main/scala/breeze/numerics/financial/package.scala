@@ -102,10 +102,8 @@ package object financial {
 
   private def roots(coeffs: DenseVector[Double]) = {
     val coeffsArray = coeffs.toArray;
-    val trailingZeros = coeffsArray.indexWhere(x =>
-      if (0 != x) true else false);
-    val tailZerosIdx = coeffsArray.lastIndexWhere(x =>
-      if (0 != x) true else false)
+    val trailingZeros = coeffsArray.indexWhere(0 != _);
+    val tailZerosIdx = coeffsArray.lastIndexWhere(0 != _)
     val nonZeroCoeffs = coeffs.slice(trailingZeros, tailZerosIdx + 1)
 
     val N = nonZeroCoeffs.length - 1;
@@ -160,9 +158,9 @@ package object financial {
   def modifiedInternalRateReturn(values:DenseVector[Double], financeRate:Double, reinvestRate:Double = 0) = {
     val n = values.length
     var posCnt:Int = 0
-    val positives = values.mapValues(x => if (0 < x) {posCnt += 1;  x} else 0)
+    val positives = values.iterator.count(0 < _)
     var negCnt:Int = 0
-    val negatives = values.mapValues(x => if (x < 0) {negCnt += 1;  x} else 0)
+    val negatives = values.iterator.count(_ < 0)
     if (posCnt == 0 || negCnt == 0) {
       throw new IllegalArgumentException("The values must has one positive and negative value!")
     }
