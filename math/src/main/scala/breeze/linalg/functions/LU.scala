@@ -73,12 +73,4 @@ object LU extends UFunc {
     }
   }
 
-  implicit def LU_DM_Cast_Impl_Float[T](implicit cast: T=>Float):Impl[DenseMatrix[T], (DenseMatrix[Float], Array[Int])] = {
-    new Impl[DenseMatrix[T], (DenseMatrix[Float], Array[Int])] {
-      def apply(v: DenseMatrix[T]): (DenseMatrix[Float], Array[Int]) = {
-        LU_DM_Impl_Float(v.mapValues(cast))
-      }
-    }
-  }
-
 }
