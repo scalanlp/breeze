@@ -29,12 +29,13 @@ case class LogNormal(mu: Double, sigma: Double)
 
 
   def unnormalizedLogPdf(x: Double): Double = {
+    if (x <= 0.0) return Double.NegativeInfinity
     val logx = log(x)
     val rad = (logx - mu)/sigma
     -(rad * rad / 2) - logx
   }
 
-  lazy val logNormalizer: Double = -sqrt(2 * math.Pi) * sigma
+  lazy val logNormalizer: Double = log(sqrt(2 * Math.PI)) + log(sigma)
 
   /**
    * Computes the inverse cdf of the p-value for this gaussian.
