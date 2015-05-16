@@ -70,6 +70,19 @@ class DescriptiveStatsTest extends WordSpec with Matchers {
       assert( math.abs( result(1,1) - 1.0) < 1e-7)
     }
 
+    "mode should produce the correct values" in {
+      val vector = DenseVector(1.0, 2.0, 3.0, 2.0, 3.0, 3.0)
+      val result = mode(vector)
+      assert(result.mode == 3.0)
+      assert(result.frequency == 3)
+    }
+    "mode should return Double.NaN for an empty collection" in {
+      val vector = DenseVector[Double]()
+      val result = mode(vector)
+      assert(result.mode.isNaN)
+      assert(result.frequency == 0)
+    }
+
   }
 }
 
