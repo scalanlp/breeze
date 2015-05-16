@@ -1,6 +1,7 @@
 package breeze.signal.support
 
 import edu.emory.mathcs.jtransforms.fft.{DoubleFFT_1D, DoubleFFT_2D}
+import spire.syntax.cfor._
 import breeze.linalg.{DenseVector, DenseMatrix}
 import breeze.math.Complex
 
@@ -38,7 +39,9 @@ object JTransformsSupport {
 
   private[signal] def tempToDenseVector(tempArr: Array[Double]): DenseVector[Complex] = {
     val tempRet = DenseVector.zeros[Complex](tempArr.length/2)
-    for (n <- 0 until tempRet.length) tempRet(n) = new Complex( tempArr(2*n), tempArr(2*n+1))
+    cforRange(0 until tempRet.length) { n =>
+      tempRet(n) = new Complex( tempArr(2*n), tempArr(2*n+1))
+    }
     tempRet
   }
 
