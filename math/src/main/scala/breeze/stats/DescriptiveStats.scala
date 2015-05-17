@@ -28,6 +28,7 @@ import breeze.macros.expand
 import breeze.math.Complex
 import breeze.numerics.isOdd
 import spire.implicits.cfor
+import scala.collection.mutable
 
 case class MeanAndVariance(mean: Double, variance: Double, count: Long) {
   def stdDev: Double = math.sqrt(variance)
@@ -258,6 +259,42 @@ trait DescriptiveStats {
         covariance
       }
     }
+  }
+
+  object mode extends UFunc {
+    @expand
+    implicit def reduce[T, @expand.args(Double, Complex, Float, Int) Scalar](
+        implicit iter: CanTraverseValues[T, Scalar],
+        @expand.sequence[Scalar](Double.NaN, Complex.nan, 0.0f, 0) initialValue: Scalar): Impl[T, ModeResult[Scalar]] =
+      new Impl[T, ModeResult[Scalar]] {
+        def apply(v: T): ModeResult[Scalar] = {
+          val visitor = new ModeVisitor[Scalar](initialValue)
+          iter.traverse(v, visitor)
+          ModeResult(visitor.runningMode, visitor.maxFrequency)
+        }
+      }
+
+  }
+
+  private class ModeVisitor[@expand.args(Double, Complex, Float, Int) Scalar](initialValue: Scalar)
+    extends ValuesVisitor[Scalar] {
+
+    val frequencyCounts = mutable.Map[Scalar,Int]()
+    var maxFrequency = 0
+    var runningMode = initialValue
+
+    def visit(value: Scalar): Unit = recordOccurrences(value, 1)
+
+    def zeros(numZeros: Int, zeroValue: Scalar): Unit = recordOccurrences(zeroValue, numZeros)
+
+    private def recordOccurrences(value: Scalar, count: Int): Unit = {
+      frequencyCounts(value) = frequencyCounts.getOrElse(value, 0) + count
+      if (frequencyCounts(value) > maxFrequency) {
+        maxFrequency = frequencyCounts(value)
+        runningMode = value
+      }
+    }
+
   }
 
 }
