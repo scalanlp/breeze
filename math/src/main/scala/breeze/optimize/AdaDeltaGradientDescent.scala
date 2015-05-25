@@ -1,4 +1,4 @@
-package com.semanticmachines.optimize
+package breeze.optimize
 
 import breeze.math.MutableFiniteCoordinateField
 import breeze.numerics.sqrt
