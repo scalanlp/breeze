@@ -1,5 +1,7 @@
 package breeze.linalg
 
+import java.util
+
 import breeze.macros.expand
 import breeze.linalg.Options._
 import breeze.stats.{median, mean}
@@ -142,16 +144,21 @@ object CanPadLeft {
         }
       }
 
-      def padLeft1ImplZero[T]
+      def padLeft1ImplZero
       (v: DenseVector[T], optDim: Dimensions1): DenseVector[T] = {
         padLeft1ImplFixed(v, optDim, implicitly[Semiring[T]].zero)
       }
 
-      def padLeft1ImplFixed[T](v: DenseVector[T], optDim: Dimensions1, padValue: T): DenseVector[T] = {
+      def padLeft1ImplFixed(v: DenseVector[T], optDim: Dimensions1, padValue: T): DenseVector[T] = {
         require( optDim.n1 > 0, "Cannot pad to zero or negative length!")
         v.length match {
           case optDim.n1 => v.copy
-          case num: Int if num < optDim.n1 => DenseVector( Array.tabulate(optDim.n1 - num)(p => padValue) ++ v.toArray )
+          case num: Int if num < optDim.n1 =>
+            val res = new Array[T](optDim.n1)
+            util.Arrays.fill(res, padValue)
+            val r = new DenseVector(res)
+            r((optDim.n1 - num) until optDim.n1) := v
+            r
           case num: Int if optDim.n1 < num => v(v.length - optDim.n1 until v.length).copy //function should return a copy
           case _ => throw new IllegalArgumentException("(n) specification incorrect: " + optDim.toString + " !")
         }

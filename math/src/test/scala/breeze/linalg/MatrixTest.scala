@@ -25,7 +25,6 @@ import breeze.math.Complex
 
 @RunWith(classOf[JUnitRunner])
 class MatrixTest extends FunSuite with Checkers {
-  /*
   test("Multiply") {
     val a = Matrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
     val ad = DenseMatrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
@@ -33,7 +32,6 @@ class MatrixTest extends FunSuite with Checkers {
     val bd = DenseMatrix((7.0, -2.0, 8.0),(-3.0, -3.0, 1.0),(12.0, 0.0, 5.0))
     val c = DenseVector(6.0,2.0,3.0)
     assert( (a * b: Matrix[Double]) === Matrix((37.0, -8.0, 25.0), (85.0, -23.0, 67.0)))
-    assert((a * bd :DenseMatrix[Double])=== DenseMatrix((37.0, -8.0, 25.0), (85.0, -23.0, 67.0)))
     assert((ad * b :DenseMatrix[Double])=== DenseMatrix((37.0, -8.0, 25.0), (85.0, -23.0, 67.0)))
     assert(a * c === DenseVector(19.0,52.0))
     assert(b * c === DenseVector(62.0, -21.0, 87.0))
@@ -51,7 +49,14 @@ class MatrixTest extends FunSuite with Checkers {
 //    val z : DenseMatrix[Double] = b * (b + 1.0)
 //    assert(z === DenseMatrix((164.0,5.0,107.0),(-5.0,10.0,-27.0),(161.0,-7.0,138.0)))
   }
-  */
+
+  test("big multiply bug around 256") {
+    val phi2: Matrix[Double] = DenseMatrix.ones[Double](400, 5)
+    val w2: Matrix[Double] = DenseMatrix.ones[Double](5, 24)
+
+    val theta2 = (phi2 * w2)//.toDenseMatrix
+    assert(theta2(256,0) != 0)
+  }
 
   test("Setting") {
     val a: immutable.Matrix[Double] = Matrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
