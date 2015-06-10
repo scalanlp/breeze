@@ -33,6 +33,11 @@ class VectorTest extends FunSuite {
     assert( dvTest.reduceRight( (p1: Int, p2: Int) => 2 * p1 - p2 )  == 0 )
   }
 
+  test("unary !") {
+    val b = Vector(true, false, false)
+    assert(!b == Vector(false, true, true))
+  }
+
 }
 
 

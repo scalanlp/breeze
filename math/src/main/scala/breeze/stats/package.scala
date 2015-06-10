@@ -1,3 +1,3 @@
 package breeze
 
-package object stats extends DescriptiveStatsTrait
+package object stats extends DescriptiveStats

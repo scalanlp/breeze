@@ -1,8 +1,6 @@
 package breeze.linalg
 
 import breeze.benchmark._
-
-import breeze.linalg._
 import breeze.stats.distributions._
 import spire.implicits._
 
@@ -115,7 +113,7 @@ class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
   })
   */
 
-  def timeIntMatrixMultiply(reps: Int) = runWith(reps, randomIntMatrix(1000, 1000)) { dm =>
+  def timeIntMatrixMultiply(reps: Int) = runWith(reps, randomIntMatrix(2500, 2500)) { dm =>
     dm * dm
   }
 }
