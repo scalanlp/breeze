@@ -1,6 +1,7 @@
 package breeze.optimize
 
 import breeze.linalg.operators.OpMulMatrix
+import breeze.linalg.support.CanCopy
 import breeze.linalg.{DenseMatrix, DenseVector}
 import breeze.math.{InnerProductVectorSpace, MutableInnerProductVectorSpace, VectorSpace}
 import breeze.stats.distributions.Rand
@@ -102,24 +103,26 @@ object EmpiricalHessian {
    */
   def hessian(df: DiffFunction[DenseVector[Double]],
                   x: DenseVector[Double],
-                  eps: Double = 1E-5)(implicit vs: VectorSpace[DenseVector[Double], Double]): DenseMatrix[Double] = {
+                  eps: Double = 1E-5)
+             (implicit vs: VectorSpace[DenseVector[Double], Double],
+              copy: CanCopy[DenseVector[Double]]): DenseMatrix[Double] = {
     import vs._
     val n = x.length
     val H = DenseMatrix.zeros[Double](n, n)
 
     // second order differential using central differences
+    val xx = copy(x)
     for (i <- 0 until n) {
-      x(i) = x(i) + eps
-      val df1 = df.gradientAt(x)
+      xx(i) = x(i) + eps
+      val df1 = df.gradientAt(xx)
 
-      x(i) = x(i) - 2 * eps
-      val df2 = df.gradientAt(x)
+      xx(i) = x(i) - eps
+      val df2 = df.gradientAt(xx)
 
-      val grad = (df1 - df2)/(2*eps)
-      for (j <- 0 until n) {
-        H(i,j) = grad(j)
-      }
-      x(i) = x(i) + eps
+      val gradient = (df1 - df2)/(2*eps)
+      H(i, ::) := gradient.t
+
+      xx(i) = x(i)
     }
 
     // symmetrize the hessian
