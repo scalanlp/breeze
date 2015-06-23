@@ -145,7 +145,9 @@ object FirstOrderMinimizer {
   }
 
   type ConvergenceCheck[T, History] = PartialFunction[State[T, History], ConvergenceReason]
-
+  implicit class RichConvergenceCheck[T, History](val check: ConvergenceCheck[T, History]) extends AnyVal {
+    def ||(otherCheck: ConvergenceCheck[T, History]): ConvergenceCheck[T, History] = check orElse otherCheck
+  }
 
   sealed trait ConvergenceReason {
     def reason: String
@@ -190,16 +192,13 @@ object FirstOrderMinimizer {
       SearchFailed
   }
   def createConvergenceCheck[T, History](maxIter: Int, tolerance: Double, relative: Boolean = true)(implicit space: NormedModule[T, Double]): State[T, History] => Option[ConvergenceReason] =
-    convergedWhen(
-      maxIterationsReached[T, History](maxIter),
-      functionValuesConverged[T, History](tolerance, relative),
-      objectiveNotImproving[T, History](tolerance, relative),
-      gradientConverged[T, History](tolerance, relative),
+    (
+      maxIterationsReached[T, History](maxIter) ||
+      functionValuesConverged[T, History](tolerance, relative) ||
+      objectiveNotImproving[T, History](tolerance, relative) ||
+      gradientConverged[T, History](tolerance, relative) ||
       searchFailed[T, History]
-    )
-  def convergedWhen[T, History](convergenceChecks: ConvergenceCheck[T, History]*): State[T, History] => Option[ConvergenceReason] = {
-    convergenceChecks.reduceLeft(_ orElse _).lift
-  }
+    ).lift
 
   /**
    * OptParams is a Configuration-compatible case class that can be used to select optimization
