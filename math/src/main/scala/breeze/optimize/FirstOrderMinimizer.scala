@@ -149,7 +149,7 @@ object FirstOrderMinimizer {
     def ||(otherCheck: ConvergenceCheck[T, History]): ConvergenceCheck[T, History] = check orElse otherCheck
   }
 
-  sealed trait ConvergenceReason {
+  trait ConvergenceReason {
     def reason: String
   }
   case object MaxIterations extends ConvergenceReason {
