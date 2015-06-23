@@ -31,7 +31,7 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](val converg
            minImprovementWindow: Int = 10,
            numberOfImprovementFailures: Int = 1,
            relativeTolerance: Boolean = true)(implicit space: NormedModule[T, Double]) =
-    this(FirstOrderMinimizer.createConvergenceCheck[T, FirstOrderMinimizer[T, DF]#History](maxIter, tolerance, relativeTolerance), improvementTol, minImprovementWindow, numberOfImprovementFailures)
+    this(FirstOrderMinimizer.defaultConvergenceCheck[T, FirstOrderMinimizer[T, DF]#History](maxIter, tolerance, relativeTolerance), improvementTol, minImprovementWindow, numberOfImprovementFailures)
   import space.normImpl
 
 
@@ -191,7 +191,7 @@ object FirstOrderMinimizer {
     case s: State[_, _] if (s.searchFailed) =>
       SearchFailed
   }
-  def createConvergenceCheck[T, History](maxIter: Int, tolerance: Double, relative: Boolean = true)(implicit space: NormedModule[T, Double]): State[T, History] => Option[ConvergenceReason] =
+  def defaultConvergenceCheck[T, History](maxIter: Int, tolerance: Double, relative: Boolean = true)(implicit space: NormedModule[T, Double]): State[T, History] => Option[ConvergenceReason] =
     (
       maxIterationsReached[T, History](maxIter) ||
       functionValuesConverged[T, History](tolerance, relative) ||
