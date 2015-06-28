@@ -14,6 +14,8 @@ package breeze
  See the License for the specific language governing permissions and
  limitations under the License.
 */
+
+import breeze.numerics.abs
 import io.{CSVWriter, CSVReader}
 import linalg.operators._
 import breeze.linalg.support.{RangeExtender, CanCopy}
@@ -114,11 +116,11 @@ package object linalg {
     if (mat.rows != mat.cols)
       throw new MatrixNotSquareException
 
-  private[linalg] def requireSymmetricMatrix[V](mat: Matrix[V]): Unit = {
+  private[linalg] def requireSymmetricMatrix(mat: Matrix[Double], tol: Double = 1e-7): Unit = {
     requireSquareMatrix(mat)
 
     for (i <- 0 until mat.rows; j <- 0 until i)
-      if (mat(i,j) != mat(j,i))
+      if (abs(mat(i,j) -  mat(j,i)) > abs(mat(i,j)) * tol )
         throw new MatrixNotSymmetricException
   }
 

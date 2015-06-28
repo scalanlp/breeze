@@ -21,6 +21,7 @@ import breeze.linalg.functions.{evdr, svdr}
 import breeze.linalg.qr.QR
 import breeze.linalg.qrp.QRP
 import breeze.linalg.svd.SVD
+import breeze.stats.distributions.{RandBasis, MultivariateGaussian}
 import org.scalacheck.{Arbitrary,Gen,Prop}
 import org.scalatest._
 import org.scalatest.junit._
@@ -922,6 +923,17 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     assert( xInt( rangeExcl ) == DenseVector(0, 1, 2, 3, 4), "range exclusive" )
     intercept[IllegalArgumentException]{ xInt(rangeExclN1) }
     intercept[IllegalArgumentException]{ xInt(rangeExclN2) }
+  }
+
+  test("#356 symmetric matrix sensitivity") {
+    val n = 20
+    val q = DenseVector.rand[Double](n, RandBasis.mt0.uniform)
+    val A = DenseMatrix.eye[Double](n) + q * q.t
+    val B = inv(A)
+    val u = DenseVector.zeros[Double](n)
+
+    // this throws the error
+    val D = MultivariateGaussian(u, B)
   }
 
 }
