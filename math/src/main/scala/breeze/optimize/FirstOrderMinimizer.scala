@@ -31,7 +31,7 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](val converg
            minImprovementWindow: Int = 10,
            numberOfImprovementFailures: Int = 1,
            relativeTolerance: Boolean = true)(implicit space: NormedModule[T, Double]) =
-    this(FirstOrderMinimizer.defaultConvergenceCheck[T, FirstOrderMinimizer[T, DF]#History](maxIter, tolerance, relativeTolerance), improvementTol, minImprovementWindow, numberOfImprovementFailures)
+    this(FirstOrderMinimizer.defaultConvergenceCheck[T, FirstOrderMinimizer[T, DF]#History](maxIter, tolerance, relativeTolerance).lift, improvementTol, minImprovementWindow, numberOfImprovementFailures)
   import space.normImpl
 
 
@@ -191,14 +191,14 @@ object FirstOrderMinimizer {
     case s: State[_, _] if (s.searchFailed) =>
       SearchFailed
   }
-  def defaultConvergenceCheck[T, History](maxIter: Int, tolerance: Double, relative: Boolean = true)(implicit space: NormedModule[T, Double]): State[T, History] => Option[ConvergenceReason] =
+  def defaultConvergenceCheck[T, History](maxIter: Int, tolerance: Double, relative: Boolean = true)(implicit space: NormedModule[T, Double]): PartialFunction[State[T, History], ConvergenceReason] =
     (
       maxIterationsReached[T, History](maxIter) ||
       functionValuesConverged[T, History](tolerance, relative) ||
       objectiveNotImproving[T, History](tolerance, relative) ||
       gradientConverged[T, History](tolerance, relative) ||
       searchFailed[T, History]
-    ).lift
+    )
 
   /**
    * OptParams is a Configuration-compatible case class that can be used to select optimization

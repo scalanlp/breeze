@@ -100,7 +100,7 @@ class ProjectedQuasiNewton(convergenceCheck: FirstOrderMinimizer.State[DenseVect
   projection: DenseVector[Double] => DenseVector[Double] = identity,
   relativeTolerance: Boolean = true)
   (implicit space: MutableInnerProductModule[DenseVector[Double],Double]) = this(
-    convergenceCheck = FirstOrderMinimizer.defaultConvergenceCheck[DenseVector[Double], FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]]#History](maxIter, tolerance, relativeTolerance),
+    convergenceCheck = FirstOrderMinimizer.defaultConvergenceCheck[DenseVector[Double], FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]]#History](maxIter, tolerance, relativeTolerance).lift,
     m = m,
     initFeas = initFeas,
     testOpt = testOpt,
