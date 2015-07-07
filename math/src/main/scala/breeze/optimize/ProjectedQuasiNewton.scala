@@ -19,6 +19,7 @@ package breeze.optimize
 import breeze.linalg._
 import breeze.collection.mutable.RingBuffer
 import breeze.math.MutableInnerProductModule
+import breeze.optimize.FirstOrderMinimizer.ConvergenceReason
 import breeze.util.SerializableLogging
 
 // Compact representation of an n x n Hessian, maintained via L-BFGS updates
@@ -78,26 +79,43 @@ class CompactHessian(M: DenseMatrix[Double], Y: RingBuffer[DenseVector[Double]],
   lazy val N = DenseMatrix.horzcat(collectionOfVectorsToMatrix(S).t * sigma, collectionOfVectorsToMatrix(Y).t)
 }
 
-class ProjectedQuasiNewton(tolerance: Double = 1e-6,
-                           val m: Int = 10,
-                           val initFeas: Boolean = false,
-                           val testOpt: Boolean = true,
-                           maxIter: Int = -1,
-                           val maxSrchIt: Int = 50,
-                           val gamma: Double = 1e-4,
-                           val projection: DenseVector[Double] => DenseVector[Double] = identity)
+class ProjectedQuasiNewton(convergenceCheck: FirstOrderMinimizer.State[DenseVector[Double], FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]]#History] => Option[ConvergenceReason],
+                           val innerOptimizer: SpectralProjectedGradient[DenseVector[Double]],
+                           val m: Int,
+                           val initFeas: Boolean,
+                           val testOpt: Boolean,
+                           val maxSrchIt: Int,
+                           val gamma: Double,
+                           val projection: DenseVector[Double] => DenseVector[Double])
                           (implicit space: MutableInnerProductModule[DenseVector[Double],Double])
-  extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]](maxIter = maxIter, tolerance = tolerance) with Projecting[DenseVector[Double]] with SerializableLogging {
+  extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]](convergenceCheck, 1E-3, 10, 1) with Projecting[DenseVector[Double]] with SerializableLogging {
   type BDV = DenseVector[Double]
-
-  val innerOptimizer = new SpectralProjectedGradient[BDV](
-    tolerance = tolerance,
-    maxIter = 50,
-    bbMemory = 5,
-    initFeas = true,
-    minImprovementWindow = 10,
-    projection = projection
-  )
+  def this(tolerance: Double = 1e-6,
+    m: Int = 10,
+    initFeas: Boolean = false,
+    testOpt: Boolean = true,
+    maxIter: Int = -1,
+    maxSrchIt: Int = 50,
+    gamma: Double = 1e-4,
+    projection: DenseVector[Double] => DenseVector[Double] = identity,
+    relativeTolerance: Boolean = true)
+    (implicit space: MutableInnerProductModule[DenseVector[Double],Double]) = this(
+      convergenceCheck = FirstOrderMinimizer.defaultConvergenceCheck[DenseVector[Double], FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]]#History](maxIter, tolerance, relativeTolerance).lift,
+      m = m,
+      initFeas = initFeas,
+      testOpt = testOpt,
+      maxSrchIt = maxSrchIt,
+      gamma = gamma,
+      projection = projection,
+      innerOptimizer = new SpectralProjectedGradient[DenseVector[Double]](
+        tolerance = tolerance,
+        maxIter = 50,
+        bbMemory = 5,
+        initFeas = true,
+        minImprovementWindow = 10,
+        projection = projection
+      )
+    )
 
   type History = CompactHessian
 
@@ -183,4 +201,3 @@ object ProjectedQuasiNewton extends SerializableLogging {
     }
   }
 }
-
