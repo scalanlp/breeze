@@ -91,31 +91,31 @@ class ProjectedQuasiNewton(convergenceCheck: FirstOrderMinimizer.State[DenseVect
   extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]](convergenceCheck, 1E-3, 10, 1) with Projecting[DenseVector[Double]] with SerializableLogging {
   type BDV = DenseVector[Double]
   def this(tolerance: Double = 1e-6,
-  m: Int = 10,
-  initFeas: Boolean = false,
-  testOpt: Boolean = true,
-  maxIter: Int = -1,
-  maxSrchIt: Int = 50,
-  gamma: Double = 1e-4,
-  projection: DenseVector[Double] => DenseVector[Double] = identity,
-  relativeTolerance: Boolean = true)
-  (implicit space: MutableInnerProductModule[DenseVector[Double],Double]) = this(
-    convergenceCheck = FirstOrderMinimizer.defaultConvergenceCheck[DenseVector[Double], FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]]#History](maxIter, tolerance, relativeTolerance).lift,
-    m = m,
-    initFeas = initFeas,
-    testOpt = testOpt,
-    maxSrchIt = maxSrchIt,
-    gamma = gamma,
-    projection = projection,
-    innerOptimizer = new SpectralProjectedGradient[DenseVector[Double]](
-      tolerance = tolerance,
-      maxIter = 50,
-      bbMemory = 5,
-      initFeas = true,
-      minImprovementWindow = 10,
-      projection = projection
+    m: Int = 10,
+    initFeas: Boolean = false,
+    testOpt: Boolean = true,
+    maxIter: Int = -1,
+    maxSrchIt: Int = 50,
+    gamma: Double = 1e-4,
+    projection: DenseVector[Double] => DenseVector[Double] = identity,
+    relativeTolerance: Boolean = true)
+    (implicit space: MutableInnerProductModule[DenseVector[Double],Double]) = this(
+      convergenceCheck = FirstOrderMinimizer.defaultConvergenceCheck[DenseVector[Double], FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]]#History](maxIter, tolerance, relativeTolerance).lift,
+      m = m,
+      initFeas = initFeas,
+      testOpt = testOpt,
+      maxSrchIt = maxSrchIt,
+      gamma = gamma,
+      projection = projection,
+      innerOptimizer = new SpectralProjectedGradient[DenseVector[Double]](
+        tolerance = tolerance,
+        maxIter = 50,
+        bbMemory = 5,
+        initFeas = true,
+        minImprovementWindow = 10,
+        projection = projection
+      )
     )
-  )
 
   type History = CompactHessian
 
