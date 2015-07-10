@@ -543,37 +543,44 @@ with MatrixConstructors[DenseMatrix] {
 
   implicit def canMapValues[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) R](implicit r: ClassTag[R]): CanMapValues[DenseMatrix[V], V, R, DenseMatrix[R]] = {
     new CanMapValues[DenseMatrix[V],V,R,DenseMatrix[R]] {
-      private def simpleMap(from : DenseMatrix[V], fn : (V=>R), isTranspose: Boolean): DenseMatrix[R] = {
-        val data = new Array[R](from.size)
-        var i= 0
-        val iMax = data.length
-        while (i < iMax) {
-          data(i) = fn(from.data(i + from.offset))
-          i += 1
-        }
-        new DenseMatrix[R](from.rows, from.cols, data, 0, if (isTranspose) { from.cols } else { from.rows }, isTranspose)
-      }
 
-      private def generalMap(from : DenseMatrix[V], fn : (V=>R)): DenseMatrix[R] = {
-        val data = new Array[R](from.size)
-        var j = 0
-        var off = 0
-        while (j < from.cols) {
-          var i = 0
-          while(i < from.rows) {
-            data(off) = fn(from(i, j))
-            off += 1
-            i += 1
+      override def map(from : DenseMatrix[V], fn : (V=>R)): DenseMatrix[R] = {
+        if (from.isContiguous) {
+          val data = new Array[R](from.size)
+          val isTranspose = from.isTranspose
+          val off = from.offset
+          val fd = from.data
+          if (off == 0) {
+            var i = 0
+            val iMax = data.length
+            while (i < iMax) {
+              data(i) = fn(fd(i))
+              i += 1
+            }
+          } else {
+            var i = 0
+            val iMax = data.length
+            while (i < iMax) {
+              data(i) = fn(fd(i + off))
+              i += 1
+            }
           }
-          j += 1
+          new DenseMatrix[R](from.rows, from.cols, data, 0, if (isTranspose) from.cols else from.rows, isTranspose)
+        } else {
+          val data = new Array[R](from.size)
+          var j = 0
+          var off = 0
+          while (j < from.cols) {
+            var i = 0
+            while (i < from.rows) {
+              data(off) = fn(from(i, j))
+              off += 1
+              i += 1
+            }
+            j += 1
+          }
+          new DenseMatrix[R](from.rows, from.cols, data)
         }
-        new DenseMatrix[R](from.rows, from.cols, data)
-      }
-
-      override def map(from : DenseMatrix[V], fn : (V=>R)): DenseMatrix[R] = (from.isTranspose, from.rows, from.cols, from.majorStride) match {
-        case (false, rows, _, majorStride) if rows == majorStride => simpleMap(from, fn, false)
-        case (true, _, cols, majorStride) if cols == majorStride => simpleMap(from, fn, true)
-        case _ => generalMap(from, fn)
       }
 
       override def mapActive(from : DenseMatrix[V], fn : (V=>R)) =
