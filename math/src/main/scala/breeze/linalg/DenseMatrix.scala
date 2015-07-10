@@ -15,22 +15,20 @@ package breeze.linalg
  limitations under the License.
 */
 
-import Axis._1
-import operators._
-import support._
-import support.CanTraverseValues.ValuesVisitor
 import breeze.generic._
+import breeze.linalg.Axis._1
+import breeze.linalg.operators._
+import breeze.linalg.support.CanTraverseValues.ValuesVisitor
+import breeze.linalg.support._
 import breeze.math._
 import breeze.storage.Zero
 import breeze.storage.Zero._
 import breeze.util.ArrayUtil
+import spire.syntax.cfor._
 
-import com.github.fommil.netlib.BLAS.{getInstance => blas}
-import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
-
-import scala.{specialized=>spec}
-import scala.reflect.ClassTag
 import scala.collection.mutable.ArrayBuffer
+import scala.reflect.ClassTag
+import scala.{specialized => spec}
 
 /**
  * A DenseMatrix is a matrix with all elements found in an array. It is column major unless isTranspose is true,
@@ -58,6 +56,7 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
                                                             val isTranspose: Boolean = false)
   extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
 
+
   /** Creates a matrix with the specified data array, rows, and columns. */
   def this(rows: Int, cols: Int)(implicit man: ClassTag[V]) = this(rows, cols, new Array[V](rows * cols), 0, rows)
   /** Creates a matrix with the specified data array, rows, and columns. Data must be column major */
@@ -78,6 +77,7 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
     if (data.size < linearIndex(rows-1,0)) { throw new IndexOutOfBoundsException("Storage array has size " + data.size + " but indices can grow as large as " + linearIndex(rows-1,cols-1)) }
     if (linearIndex(0, cols-1) < 0) { throw new IndexOutOfBoundsException("Storage array has negative stride " + majorStride + " and offset " + offset + " which can result in negative indices.") }
   }
+
 
   def apply(row: Int, col: Int) = {
     if(row < - rows || row >= rows) throw new IndexOutOfBoundsException((row,col) + " not in [-"+rows+","+rows+") x [-"+cols+"," + cols+")")
@@ -309,6 +309,8 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
 
   private def majorSize = if(isTranspose) rows else cols
   private def footprint = majorSize * majorStride
+  /** Returns true if this dense matrix takes up a contiguous segment of the array */
+  def isContiguous: Boolean = (isTranspose && cols == majorStride) || (!isTranspose && rows == majorStride)
 
 
   /** Returns true if this dense matrix overlaps any content with the other matrix */
@@ -543,7 +545,7 @@ with MatrixConstructors[DenseMatrix] {
       private def simpleMap(from : DenseMatrix[V], fn : (V=>R), isTranspose: Boolean): DenseMatrix[R] = {
         val data = new Array[R](from.size)
         var i= 0
-        val iMax = data.size
+        val iMax = data.length
         while (i < iMax) {
           data(i) = fn(from.data(i + from.offset))
           i += 1
@@ -647,17 +649,24 @@ with MatrixConstructors[DenseMatrix] {
   }
 
 
-  implicit def canTransformValues[V]:CanTransformValues[DenseMatrix[V], V] = {
+  implicit def canTransformValues[@specialized(Int, Float, Double) V]:CanTransformValues[DenseMatrix[V], V] = {
     new CanTransformValues[DenseMatrix[V], V] {
       def transform(from: DenseMatrix[V], fn: (V) => V) {
-        var j = 0
-        while (j < from.cols) {
-          var i = 0
-          while(i < from.rows) {
-            from(i, j) = fn(from(i, j))
-            i += 1
+        if (from.isContiguous) {
+          val d = from.data
+          cforRange(from.offset until from.offset + from.size) { j =>
+            d(j) = fn(d(j))
           }
-          j += 1
+        } else {
+          var j = 0
+          while (j < from.cols) {
+            var i = 0
+            while(i < from.rows) {
+              from(i, j) = fn(from(i, j))
+              i += 1
+            }
+            j += 1
+          }
         }
       }
 
@@ -795,7 +804,7 @@ with MatrixConstructors[DenseMatrix] {
     new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], DenseVector[Res], DenseMatrix[Res]] {
       def apply (from: DenseMatrix[V], axis: Axis._1.type) (f: (DenseVector[V] ) => DenseVector[Res] ): DenseMatrix[Res] = {
         var result: DenseMatrix[Res] = null
-        import from. {rows, cols}
+        import from.rows
         val t = from.t
         for (r <- 0 until from.rows) {
           val row = f (t (::, r) )
@@ -825,7 +834,7 @@ with MatrixConstructors[DenseMatrix] {
   implicit def canMapColsBitVector[V:ClassTag:Zero] = new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], BitVector, DenseMatrix[Boolean]] {
     def apply(from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => BitVector): DenseMatrix[Boolean] = {
       var result:DenseMatrix[Boolean] = null
-      import from.{rows, cols}
+      import from.rows
       val t = from.t
       for(r <- 0 until from.rows) {
         val row = f(t(::, r))

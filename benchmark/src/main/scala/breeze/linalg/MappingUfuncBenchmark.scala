@@ -16,9 +16,12 @@ object harderUfunc extends UFunc with MappingUFunc {
 }
 
 class MappingUfuncBenchmark extends BreezeBenchmark with BuildsRandomMatrices with BuildsRandomVectors {
-  /*
   def timeMappingUfuncDenseMat(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
     addOne(mat)
+  })
+
+  def timeMappingUfuncDenseMatInPlace(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
+    addOne.inPlace(mat)
   })
 
   def timeMappingUfuncDenseMatWithStride(reps: Int) = runWith(reps, {randomMatrix(2048,2048*2)})((mat:DenseMatrix[Double]) => {
@@ -30,11 +33,14 @@ class MappingUfuncBenchmark extends BreezeBenchmark with BuildsRandomMatrices wi
     harderUfunc(mat)
   })
 
+  def timeMappingUfuncDenseMatHarderInPlace(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
+    harderUfunc.inPlace(mat)
+  })
+
   def timeMappingUfuncDenseMatHarderWithStride(reps: Int) = runWith(reps, {randomMatrix(2048,2048*2)})((mat:DenseMatrix[Double]) => {
     val newMat = new DenseMatrix(2048, 2048, mat.data, offset=0, majorStride=2048)
     harderUfunc(newMat)
   })
-  */
 
   def timeMappingUfuncDenseVec(reps: Int) = runWith(reps, {randomArray(2048*2048)})((arr:DenseVector[Double]) => {
     addOne(arr)
@@ -52,7 +58,7 @@ class MappingUfuncBenchmark extends BreezeBenchmark with BuildsRandomMatrices wi
     harderUfunc.inPlace(arr)
   })
 
-  def timeMappingUfuncArray(reps: Int) = runWith(reps, {randomArray(2048*2048)})((arr:DenseVector[Double]) => {
+  def timeMappingUfuncArrayInPlace(reps: Int) = runWith(reps, {randomArray(2048*2048)})((arr:DenseVector[Double]) => {
     val data = arr.data
     var i=0
     while (i < data.length) {
@@ -62,7 +68,7 @@ class MappingUfuncBenchmark extends BreezeBenchmark with BuildsRandomMatrices wi
     data
   })
 
-  def timeMappingUfuncArrayHarder(reps: Int) = runWith(reps, {randomArray(2048*2048)})((arr:DenseVector[Double]) => {
+  def timeMappingUfuncArrayHarderInPlace(reps: Int) = runWith(reps, {randomArray(2048*2048)})((arr:DenseVector[Double]) => {
     val data = arr.data
     var i=0
     while (i < data.length) {
@@ -72,7 +78,18 @@ class MappingUfuncBenchmark extends BreezeBenchmark with BuildsRandomMatrices wi
     data
   })
 
-  def timeMappingUfuncArrayHarderInline(reps: Int) = runWith(reps, {randomArray(2048*2048)})((arr:DenseVector[Double]) => {
+  def timeMappingUfuncArrayHarder(reps: Int) = runWith(reps, {randomArray(2048*2048)})((arr:DenseVector[Double]) => {
+    val data = arr.data
+    val nd = new Array[Double](data.length)
+    var i=0
+    while (i < data.length) {
+      nd(i) = harderUfunc(data(i))
+      i += 1
+    }
+    nd
+  })
+
+  def timeMappingUfuncArrayHarderInlineInPlace(reps: Int) = runWith(reps, {randomArray(2048*2048)})((arr:DenseVector[Double]) => {
     val data = arr.data
     var i=0
     while (i < data.length) {

@@ -314,15 +314,23 @@ object DenseVector extends VectorConstructors[DenseVector]
 
         val d = from.data
         val stride = from.stride
+        val off = from.offset
 
-        if (stride == 1 && from.offset + from.length == arr.length) {
-          cforRange(0 until arr.length) { j =>
-            arr(j) = fn(d(j))
+        // https://wikis.oracle.com/display/HotSpotInternals/RangeCheckElimination
+        if (stride == 1) {
+          if (off == 0 && from.length == d.length) {
+            cforRange(0 until arr.length) { j =>
+              arr(j) = fn(d(j + off))
+            }
+          } else {
+            cforRange(0 until arr.length) { j =>
+              arr(j) = fn(d(j))
+            }
           }
 
         } else {
           var i = 0
-          var j = from.offset
+          var j = off
           while(i < arr.length) {
             arr(i) = fn(d(j))
             i += 1
