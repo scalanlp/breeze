@@ -33,6 +33,10 @@ class MappingUfuncBenchmark extends BreezeBenchmark with BuildsRandomMatrices wi
     harderUfunc(mat)
   })
 
+  def timeMappingUfuncDenseMatHarderMapValues(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
+    mat.mapValues(harderUfunc(_))
+  })
+
   def timeMappingUfuncDenseMatHarderInPlace(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
     harderUfunc.inPlace(mat)
   })
@@ -48,6 +52,10 @@ class MappingUfuncBenchmark extends BreezeBenchmark with BuildsRandomMatrices wi
 
   def timeMappingUfuncDenseVecHarder(reps: Int) = runWith(reps, {randomArray(2048*2048)})((arr:DenseVector[Double]) => {
     harderUfunc(arr)
+  })
+
+  def timeMappingUfuncDenseVecHarderMapValues(reps: Int) = runWith(reps, {randomArray(2048*2048)})((arr:DenseVector[Double]) => {
+    arr.mapValues(harderUfunc(_))
   })
 
   def timeMappingUfuncDenseVecInPlace(reps: Int) = runWith(reps, {randomArray(2048*2048)})((arr:DenseVector[Double]) => {
