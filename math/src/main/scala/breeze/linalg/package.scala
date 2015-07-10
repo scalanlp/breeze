@@ -15,6 +15,7 @@ package breeze
  limitations under the License.
 */
 
+import breeze.linalg.DenseMatrix
 import breeze.numerics.abs
 import io.{CSVWriter, CSVReader}
 import linalg.operators._
@@ -23,7 +24,7 @@ import math.Semiring
 import storage.Zero
 import java.io.{File, FileReader}
 import scala.reflect.ClassTag
-import breeze.linalg.DenseMatrix.canMapValues
+import DenseMatrix.canMapValues
 
 
 /**

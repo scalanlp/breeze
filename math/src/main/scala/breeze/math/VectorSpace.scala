@@ -21,6 +21,7 @@ import breeze.linalg.operators._
 import breeze.linalg.support._
 import breeze.storage._
 import scala.reflect.ClassTag
+import DenseMatrix.canMapValues
 
 /**
  * Used for those vector-types that are "coordinated", meaning that t. (Possibly the coordinates

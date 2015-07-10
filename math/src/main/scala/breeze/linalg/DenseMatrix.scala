@@ -18,6 +18,7 @@ package breeze.linalg
 import breeze.generic._
 import breeze.linalg.Axis._1
 import breeze.linalg.operators._
+import breeze.linalg.support.CanMapValues.HandHold
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
 import breeze.math._
@@ -540,7 +541,7 @@ with MatrixConstructors[DenseMatrix] {
     }
   }
 
-  implicit def canMapValues[V, R:ClassTag]: CanMapValues[DenseMatrix[V], V, R, DenseMatrix[R]] = {
+  implicit def canMapValues[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) R](implicit r: ClassTag[R]): CanMapValues[DenseMatrix[V], V, R, DenseMatrix[R]] = {
     new CanMapValues[DenseMatrix[V],V,R,DenseMatrix[R]] {
       private def simpleMap(from : DenseMatrix[V], fn : (V=>R), isTranspose: Boolean): DenseMatrix[R] = {
         val data = new Array[R](from.size)
@@ -579,7 +580,7 @@ with MatrixConstructors[DenseMatrix] {
         map(from, fn)
     }
   }
-  implicit def handholdCMV[T]= new CanMapValues.HandHold[DenseMatrix[T], T]
+  implicit def handholdCMV[T]: HandHold[DenseMatrix[T], T] = new CanMapValues.HandHold[DenseMatrix[T], T]
 
   implicit def canIterateValues[V]: CanTraverseValues[DenseMatrix[V], V] = {
     new CanTraverseValues[DenseMatrix[V], V] {

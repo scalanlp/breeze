@@ -3,7 +3,6 @@ package breeze.linalg
 import org.netlib.util.intW
 import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 import breeze.generic.UFunc
-import DenseMatrix.canMapValues
 
 /**
  * Computes the LU factorization of the given real M-by-N matrix X such that
@@ -47,6 +46,7 @@ object LU extends UFunc {
   implicit def LU_DM_Cast_Impl_Double[T](implicit cast: T=>Double):Impl[DenseMatrix[T], (DenseMatrix[Double], Array[Int])] = {
     new Impl[DenseMatrix[T], (DenseMatrix[Double], Array[Int])] {
       def apply(v: DenseMatrix[T]): (DenseMatrix[Double], Array[Int]) = {
+        import DenseMatrix.canMapValues
         LU_DM_Impl_Double(v.mapValues(cast))
       }
     }

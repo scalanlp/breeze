@@ -400,8 +400,8 @@ object DenseVector extends VectorConstructors[DenseVector]
         val d = from.data
         val stride = from.stride
 
-        if (stride == 1 && from.offset + from.length == from.data.length)  {
-          cforRange(from.offset until from.data.length) { j =>
+        if (stride == 1)  {
+          cforRange(from.offset until from.offset + from.size) { j =>
             d(j) = fn(d(j))
           }
         } else {

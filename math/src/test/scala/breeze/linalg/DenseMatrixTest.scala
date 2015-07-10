@@ -688,6 +688,23 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     assert(1.0 :- (DenseMatrix.fill(2,2)(10.0)) === DenseMatrix.fill(2,2)(-9.0))
   }
 
+  test("mapping ufunc") {
+    val r = DenseMatrix.rand(100, 100)
+    val explicit = new DenseMatrix(100, 100, r.data.map(math.sin))
+    assert(sin(r) == explicit)
+    sin.inPlace(r)
+    assert(explicit == r)
+  }
+
+  test("mapping ufunc, strides") {
+    val r = (DenseMatrix.rand(100, 100)).apply(10 until 27, 4 until 37 by 4)
+    var explicit = new DenseMatrix(100, 100, r.data.map(math.sin))
+    explicit = explicit(10 until 27, 4 until 37 by 4)
+    assert(sin(r) == explicit)
+    sin.inPlace(r)
+    assert(explicit == r)
+  }
+
 
 
 }
