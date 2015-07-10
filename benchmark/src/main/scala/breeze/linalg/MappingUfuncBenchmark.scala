@@ -3,11 +3,6 @@ package breeze.linalg
 import breeze.benchmark._
 import breeze.generic.{MappingUFunc, UFunc}
 
-import breeze.linalg._
-import breeze.stats.distributions._
-import breeze.numerics._
-import spire.implicits._
-
 object MappingUfuncBenchmark extends MyRunner(classOf[MappingUfuncBenchmark])
 
 object addOne extends UFunc with MappingUFunc {
@@ -21,6 +16,7 @@ object harderUfunc extends UFunc with MappingUFunc {
 }
 
 class MappingUfuncBenchmark extends BreezeBenchmark with BuildsRandomMatrices with BuildsRandomVectors {
+  /*
   def timeMappingUfuncDenseMat(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
     addOne(mat)
   })
@@ -38,6 +34,7 @@ class MappingUfuncBenchmark extends BreezeBenchmark with BuildsRandomMatrices wi
     val newMat = new DenseMatrix(2048, 2048, mat.data, offset=0, majorStride=2048)
     harderUfunc(newMat)
   })
+  */
 
   def timeMappingUfuncDenseVec(reps: Int) = runWith(reps, {randomArray(2048*2048)})((arr:DenseVector[Double]) => {
     addOne(arr)
@@ -47,10 +44,18 @@ class MappingUfuncBenchmark extends BreezeBenchmark with BuildsRandomMatrices wi
     harderUfunc(arr)
   })
 
+  def timeMappingUfuncDenseVecInPlace(reps: Int) = runWith(reps, {randomArray(2048*2048)})((arr:DenseVector[Double]) => {
+    addOne.inPlace(arr)
+  })
+
+  def timeMappingUfuncDenseVecHarderInPlace(reps: Int) = runWith(reps, {randomArray(2048*2048)})((arr:DenseVector[Double]) => {
+    harderUfunc.inPlace(arr)
+  })
+
   def timeMappingUfuncArray(reps: Int) = runWith(reps, {randomArray(2048*2048)})((arr:DenseVector[Double]) => {
     val data = arr.data
     var i=0
-    while (i < data.size) {
+    while (i < data.length) {
       data(i) = addOne(data(i))
       i += 1
     }
@@ -60,8 +65,19 @@ class MappingUfuncBenchmark extends BreezeBenchmark with BuildsRandomMatrices wi
   def timeMappingUfuncArrayHarder(reps: Int) = runWith(reps, {randomArray(2048*2048)})((arr:DenseVector[Double]) => {
     val data = arr.data
     var i=0
-    while (i < data.size) {
+    while (i < data.length) {
       data(i) = harderUfunc(data(i))
+      i += 1
+    }
+    data
+  })
+
+  def timeMappingUfuncArrayHarderInline(reps: Int) = runWith(reps, {randomArray(2048*2048)})((arr:DenseVector[Double]) => {
+    val data = arr.data
+    var i=0
+    while (i < data.length) {
+      val v = data(i)
+      data(i) = (v+1)/(1+v*v)
       i += 1
     }
     data

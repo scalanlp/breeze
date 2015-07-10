@@ -1,11 +1,10 @@
 package breeze.linalg
 
 import java.util
-import breeze.linalg.support.CanZipAndTraverseValues.PairValuesVisitor
-import operators.BitVectorOps
-import breeze.linalg.support._
+
+import breeze.linalg.operators.BitVectorOps
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
-import spire.implicits._
+import breeze.linalg.support._
 
 import scala.reflect.ClassTag
 
@@ -169,9 +168,9 @@ object BitVector extends BitVectorOps {
     }
 
 
-  implicit def canTransformValues: CanTransformValues[BitVector, Boolean, Boolean] =
+  implicit def canTransformValues: CanTransformValues[BitVector, Boolean] =
 
-    new CanTransformValues[BitVector, Boolean, Boolean] {
+    new CanTransformValues[BitVector, Boolean] {
       def transform(from: BitVector, fn: (Boolean) => Boolean) {
         for(i <- 0 until from.length) {
           from(i) = fn(from(i))

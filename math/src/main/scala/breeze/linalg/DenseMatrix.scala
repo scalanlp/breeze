@@ -647,8 +647,8 @@ with MatrixConstructors[DenseMatrix] {
   }
 
 
-  implicit def canTransformValues[V]:CanTransformValues[DenseMatrix[V], V, V] = {
-    new CanTransformValues[DenseMatrix[V], V, V] {
+  implicit def canTransformValues[V]:CanTransformValues[DenseMatrix[V], V] = {
+    new CanTransformValues[DenseMatrix[V], V] {
       def transform(from: DenseMatrix[V], fn: (V) => V) {
         var j = 0
         while (j < from.cols) {

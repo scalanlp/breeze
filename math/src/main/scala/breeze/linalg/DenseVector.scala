@@ -26,7 +26,7 @@ import scala.reflect.ClassTag
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import breeze.macros.expand
 import scala.math.BigInt
-import spire.implicits.cfor
+import spire.syntax.cfor._
 import CanTraverseValues.ValuesVisitor
 import CanZipAndTraverseValues.PairValuesVisitor
 import java.io.ObjectStreamException
@@ -304,7 +304,7 @@ object DenseVector extends VectorConstructors[DenseVector]
   }
 
 
-  implicit def canMapValues[V, V2](implicit man: ClassTag[V2]): CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] = {
+  implicit def canMapValues[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) V2](implicit man: ClassTag[V2]): CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] = {
     new CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] {
       /**Maps all key-value pairs from the given collection. */
       def map(from: DenseVector[V], fn: (V) => V2): DenseVector[V2] = {
@@ -315,12 +315,19 @@ object DenseVector extends VectorConstructors[DenseVector]
         val d = from.data
         val stride = from.stride
 
-        var i = 0
-        var j = from.offset
-        while(i < arr.length) {
-          arr(i) = fn(d(j))
-          i += 1
-          j += stride
+        if (stride == 1 && from.offset + from.length == arr.length) {
+          cforRange(0 until arr.length) { j =>
+            arr(j) = fn(d(j))
+          }
+
+        } else {
+          var i = 0
+          var j = from.offset
+          while(i < arr.length) {
+            arr(i) = fn(d(j))
+            i += 1
+            j += stride
+          }
         }
         new DenseVector[V2](arr)
       }
@@ -378,19 +385,26 @@ object DenseVector extends VectorConstructors[DenseVector]
     }
 
 
-  implicit def canTransformValues[V]: CanTransformValues[DenseVector[V], V, V] =
+  implicit def canTransformValues[@specialized(Int, Float, Double) V]: CanTransformValues[DenseVector[V], V] =
 
-    new CanTransformValues[DenseVector[V], V, V] {
+    new CanTransformValues[DenseVector[V], V] {
       def transform(from: DenseVector[V], fn: (V) => V) {
         val d = from.data
         val stride = from.stride
 
-        var i = 0
-        var j = from.offset
-        while(i < from.length) {
-          from.data(j) = fn(d(j))
-          i += 1
-          j += stride
+        if (stride == 1 && from.offset + from.length == from.data.length)  {
+          cforRange(from.offset until from.data.length) { j =>
+            d(j) = fn(d(j))
+          }
+        } else {
+          var i = 0
+          var j = from.offset
+          while(i < from.length) {
+            d(j) = fn(d(j))
+            i += 1
+            j += stride
+          }
+
         }
       }
 

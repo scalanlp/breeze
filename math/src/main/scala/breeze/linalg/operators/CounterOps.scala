@@ -320,8 +320,8 @@ trait CounterOps {
   implicit def zipMapKeyValues[K, V, R:Zero:Semiring] = new CanZipMapKeyValuesCounter[K, V, R]
 
 
-  implicit def canTransformValues[L, V]:CanTransformValues[Counter[L, V], V, V] = {
-    new CanTransformValues[Counter[L, V], V, V] {
+  implicit def canTransformValues[L, V]:CanTransformValues[Counter[L, V], V] = {
+    new CanTransformValues[Counter[L, V], V] {
       def transform(from: Counter[L, V], fn: (V) => V) {
         for( (k,v) <- from.activeIterator) {
           from(k) = fn(v)

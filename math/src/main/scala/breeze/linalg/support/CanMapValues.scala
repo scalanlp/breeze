@@ -28,7 +28,7 @@ import scala.reflect.ClassTag
  * @author dramage
  * @author dlwh
  */
-trait CanMapValues[From, +A, B, +To] {
+trait CanMapValues[From, @specialized(Int, Float, Double) +A, @specialized(Int, Float, Double) B, +To] {
   /**Maps all key-value pairs from the given collection. */
   def map(from: From, fn: (A => B)): To
 

@@ -187,7 +187,7 @@ object UFunc {
 //  }
 
 
-  implicit def canTransformValuesUFunc[Tag, T, V](implicit canTransform: CanTransformValues[T, V, V],
+  implicit def canTransformValuesUFunc[Tag, T, V](implicit canTransform: CanTransformValues[T, V],
                                                   impl: UImpl[Tag, V, V]):InPlaceImpl[Tag, T] = {
     new InPlaceImpl[Tag, T] {
       def apply(v: T) = { canTransform.transform(v, impl.apply) }

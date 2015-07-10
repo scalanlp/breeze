@@ -182,10 +182,18 @@ object clip extends UFunc {
     }
   }
 
-  implicit def clipInPlaceOrdering[T,V](implicit ordering: Ordering[V], cmv: CanTransformValues[T, V, V]):InPlaceImpl3[T, V, V] = {
+  implicit def clipInPlaceOrdering[T, V](implicit ordering: Ordering[V], cmv: CanTransformValues[T, V]):InPlaceImpl3[T, V, V] = {
     import ordering.mkOrderingOps
     new InPlaceImpl3[T, V, V] {
       def apply(v: T, v2: V, v3: V):Unit = {
+        cmv.transform(v, x => if(x < v2) v2 else if (x > v3) v3 else x)
+      }
+    }
+  }
+
+  implicit def clipInPlaceOrdering[T](cmv: CanTransformValues[T, Double]):InPlaceImpl3[T, Double, Double] = {
+    new InPlaceImpl3[T, Double, Double] {
+      def apply(v: T, v2: Double, v3: Double):Unit = {
         cmv.transform(v, x => if(x < v2) v2 else if (x > v3) v3 else x)
       }
     }
