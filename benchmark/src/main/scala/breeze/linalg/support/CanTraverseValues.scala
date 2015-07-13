@@ -50,7 +50,10 @@ class CanTraverseValuesBenchmark extends BreezeBenchmark with BuildsRandomVector
   }
   */
 
-
+  /*
+  def timeSumMatrix(reps: Int) = runWith(reps, {randomMatrix(1024, 40)}){ arr =>
+    sum(arr)
+  }
 
   def timeSumMatrixRows(reps: Int) = runWith(reps, {randomMatrix(1024, 40)}){ arr =>
     sum(arr(*, ::))
@@ -74,6 +77,23 @@ class CanTraverseValuesBenchmark extends BreezeBenchmark with BuildsRandomVector
       result += arr(i, ::).t
     }
     result
+  }
+  */
+
+  def timeMaxMatrixCols(reps: Int) = runWith(reps, {randomMatrix(40, 1024)}){ arr =>
+    max(arr(::, *))
+  }
+
+  def timeMaxMatrixRows(reps: Int) = runWith(reps, {randomMatrix(40, 1024)}){ arr =>
+    max(arr(*, ::))
+  }
+
+  def timeMinMatrixCols(reps: Int) = runWith(reps, {randomMatrix(40, 1024)}){ arr =>
+    min(arr(::, *))
+  }
+
+  def timeMinMatrixRows(reps: Int) = runWith(reps, {randomMatrix(40, 1024)}){ arr =>
+    max(arr(*, ::))
   }
 
 }

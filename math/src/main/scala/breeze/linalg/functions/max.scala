@@ -84,7 +84,7 @@ object max extends UFunc with VectorizedReduceUFunc {
       r
     }
 
-    override def combine(x: T, y: T): T = math.max(x, y)
+    override def combine(x: T, y: T): T = java.lang.Math.max(x, y)
   }
 
   /**
