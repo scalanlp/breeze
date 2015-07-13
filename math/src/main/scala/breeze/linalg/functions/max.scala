@@ -191,9 +191,12 @@ object clip extends UFunc {
     }
   }
 
-  implicit def clipInPlaceOrdering[T](cmv: CanTransformValues[T, Double]):InPlaceImpl3[T, Double, Double] = {
-    new InPlaceImpl3[T, Double, Double] {
-      def apply(v: T, v2: Double, v3: Double):Unit = {
+  @expand
+  implicit def clipInPlace[Vec,
+                           @expand.args(Double, Float, Int, Long)
+                           T](cmv: CanTransformValues[Vec, T]):InPlaceImpl3[Vec, T, T] = {
+    new InPlaceImpl3[Vec, T, T] {
+      def apply(v: Vec, v2: T, v3: T):Unit = {
         cmv.transform(v, x => if(x < v2) v2 else if (x > v3) v3 else x)
       }
     }
