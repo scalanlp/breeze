@@ -5,7 +5,7 @@ import breeze.macros.expand
 import breeze.linalg.support.{CanTransformValues, CanMapValues, CanTraverseValues}
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 
-object max extends UFunc {
+object max extends UFunc with VectorizedReduceUFunc {
 
 
   @expand
@@ -72,6 +72,19 @@ object max extends UFunc {
     new Impl2[T, RHS, U] {
       override def apply(v: T, v2: RHS): U = cmv.map(v, maxImpl(_, v2))
     }
+  }
+
+  @expand
+  implicit def helper[@expand.args(Int, Float, Long, Double) T]
+                     (implicit @expand.sequence[T](Int.MinValue, Float.NegativeInfinity, Long.MinValue, Double.NegativeInfinity)
+                     init: T):VectorizeHelper[T] = new VectorizeHelper[T] {
+    override def zerosLike(len: Int): DenseVector[T] = {
+      val r = DenseVector.zeros[T](len)
+      r := init
+      r
+    }
+
+    override def combine(x: T, y: T): T = math.max(x, y)
   }
 
   /**

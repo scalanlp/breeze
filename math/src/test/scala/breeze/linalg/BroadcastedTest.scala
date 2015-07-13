@@ -36,7 +36,7 @@ class BroadcastedTest extends FunSuite {
   test("mean") {
     val m = DenseMatrix((1.0, 3.0), (4.0, 4.0))
     assert(mean(m(*, ::)) === DenseVector(2.0, 4.0))
-    assert(mean(m(::, *)) === DenseMatrix((2.5, 3.5)))
+    assert(mean(m(::, *)) === DenseVector(2.5, 3.5).t)
   }
 
   test("broadcast map to normalize") {

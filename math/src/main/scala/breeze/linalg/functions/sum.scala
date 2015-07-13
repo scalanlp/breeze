@@ -84,9 +84,9 @@ trait VectorizedReduceUFunc extends UFunc {
   }
 
   @expand
-  implicit def vectorizeCols[@expand.args(Double, Float, Int, Long) T:ClassTag:Zero](implicit helper: VectorizeHelper[T]): Impl[BroadcastedColumns[DenseMatrix[T], DenseVector[T]], DenseVector[T]] = {
-    new Impl[BroadcastedColumns[DenseMatrix[T], DenseVector[T]], DenseVector[T]] {
-      override def apply(v: BroadcastedColumns[DenseMatrix[T], DenseVector[T]]): DenseVector[T] = {
+  implicit def vectorizeCols[@expand.args(Double, Float, Int, Long) T:ClassTag:Zero](implicit helper: VectorizeHelper[T]): Impl[BroadcastedColumns[DenseMatrix[T], DenseVector[T]], Transpose[DenseVector[T]]] = {
+    new Impl[BroadcastedColumns[DenseMatrix[T], DenseVector[T]], Transpose[DenseVector[T]]] {
+      override def apply(v: BroadcastedColumns[DenseMatrix[T], DenseVector[T]]): Transpose[DenseVector[T]] = {
         val mat = v.underlying
         val res = helper.zerosLike(mat.cols)
 
@@ -109,7 +109,7 @@ trait VectorizedReduceUFunc extends UFunc {
             res(i) = r
           }
         }
-        res
+        res.t
       }
     }
   }

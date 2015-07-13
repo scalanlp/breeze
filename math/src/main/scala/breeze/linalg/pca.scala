@@ -21,7 +21,7 @@ class PCA(val x: DenseMatrix[Double], val covmat: DenseMatrix[Double]) {
   /**
    * The means of each column (axis) of the data.
    */
-  lazy val center = mean(x,Axis._0).toDenseVector
+  lazy val center = mean(x,Axis._0).t
 
   /**
    * Do SVD on the covariance matrix.

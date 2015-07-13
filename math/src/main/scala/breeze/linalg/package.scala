@@ -227,9 +227,9 @@ package object linalg {
              ): DenseMatrix[Double] = {
     import breeze.stats.{mean, stddev}
     if (center) {
-      val xc = x(*,::) - mean(x, Axis._0).toDenseVector
+      val xc = x(*,::) - mean(x, Axis._0).t
       if (scale)
-        xc(*,::) :/ stddev(x(::, *)).toDenseVector
+        xc(*,::) :/ stddev(x(::, *)).t
       else
         xc
     } else {
@@ -279,7 +279,7 @@ package object linalg {
    * matrix. Feel free to make this more general.
    */
   private def columnRMS(x: DenseMatrix[Double]): DenseVector[Double] =
-    (sum(x:*x,Axis._0) / (x.rows-1.0)).map( scala.math.sqrt _ ).toDenseVector
+    (sum(x:*x,Axis._0) / (x.rows-1.0)).t.map( scala.math.sqrt _ )
 
 
   /** Alias for randomDouble */
