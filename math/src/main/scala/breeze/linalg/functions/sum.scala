@@ -7,6 +7,7 @@ import breeze.linalg.support.CanTraverseValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.math.Semiring
 import breeze.storage.Zero
+import com.sun.istack.internal.Pool.Impl
 
 import scala.reflect.ClassTag
 import spire.syntax.cfor._
@@ -68,8 +69,8 @@ trait VectorizedReduceUFunc extends UFunc {
     def combine(x: T, y: T):T
   }
 
-  implicit def vectorizeRows[T:ClassTag](implicit baseOp: UFunc.InPlaceImpl2[Op, DenseVector[T], DenseVector[T]],
-                                         helper: VectorizeHelper[T]): Impl[BroadcastedRows[DenseMatrix[T], DenseVector[T]], DenseVector[T]] = {
+  implicit def vectorizeRows[T:ClassTag](implicit helper: VectorizeHelper[T],
+                                         baseOp: UFunc.InPlaceImpl2[Op, DenseVector[T], DenseVector[T]]): Impl[BroadcastedRows[DenseMatrix[T], DenseVector[T]], DenseVector[T]] = {
     new Impl[BroadcastedRows[DenseMatrix[T], DenseVector[T]], DenseVector[T]] {
       override def apply(v: BroadcastedRows[DenseMatrix[T], DenseVector[T]]): DenseVector[T] = {
         val mat = v.underlying

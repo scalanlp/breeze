@@ -6,7 +6,7 @@ scalaVersion := Common.scalaVersion
 
 crossScalaVersions  := Common.crossScalaVersions
 
-addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0-M1" cross CrossVersion.full)
+addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0-M5" cross CrossVersion.full)
 
 publishMavenStyle := true
 
@@ -46,8 +46,6 @@ pomExtra := (
 scalacOptions ++= Seq("-deprecation","-language:_")//, "-no-specialization")
 
 javacOptions ++= Seq("-target", "1.6", "-source","1.6")
-
-addCompilerPlugin("org.scalamacros" %% "paradise" % "2.0.1" cross CrossVersion.full)
 
 libraryDependencies ++= Seq(
   "com.github.fommil.netlib" % "core" % "1.1.2",

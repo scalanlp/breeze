@@ -1,12 +1,12 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
-import breeze.macros.expand
 import breeze.linalg.support.{CanTransformValues, CanMapValues, CanTraverseValues}
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
+import breeze.macros.expand
 
-object max extends UFunc with VectorizedReduceUFunc {
-
+object max extends UFunc /*with VectorizedReduceUFunc <-- doesn't work with 2.10, because god knows */{
+  type Op = this.type
 
   @expand
   @expand.valify
@@ -74,6 +74,7 @@ object max extends UFunc with VectorizedReduceUFunc {
     }
   }
 
+  /*
   @expand
   implicit def helper[@expand.args(Int, Float, Long, Double) T]
                      (implicit @expand.sequence[T](Int.MinValue, Float.NegativeInfinity, Long.MinValue, Double.NegativeInfinity)
@@ -86,6 +87,7 @@ object max extends UFunc with VectorizedReduceUFunc {
 
     override def combine(x: T, y: T): T = java.lang.Math.max(x, y)
   }
+  */
 
   /**
    * Method for computing the max of the first length elements of an array. Arrays
