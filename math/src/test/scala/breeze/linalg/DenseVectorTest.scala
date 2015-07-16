@@ -269,6 +269,14 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(mav === DenseVector(2.0, 3.0, 4.0, 5.0, 6.0))
   }
 
+  test("Strided Map(Active)Values Double") {
+    val a: DenseVector[Double] = DenseVector(1, 2, 3, 4, 5)
+    val mv: DenseVector[Double] = a(2 to -1).mapValues(_ + 1)
+    val mav: DenseVector[Double] = a(2 to -1).mapActiveValues(_ + 1)
+    assert(mv === DenseVector(4.0, 5.0, 6.0))
+    assert(mav === DenseVector(4.0, 5.0, 6.0))
+  }
+
   test("Map(Active)Pairs Int") {
     val a: DenseVector[Int] = DenseVector(1, 2, 3, 4, 5)
     val mv: DenseVector[Int] = a.mapPairs((i,x) => x + 1)

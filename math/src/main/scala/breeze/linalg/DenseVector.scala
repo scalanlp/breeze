@@ -318,16 +318,9 @@ object DenseVector extends VectorConstructors[DenseVector]
 
         // https://wikis.oracle.com/display/HotSpotInternals/RangeCheckElimination
         if (stride == 1) {
-          if (off == 0 && from.length == d.length) {
-            cforRange(0 until arr.length) { j =>
-              arr(j) = fn(d(j + off))
-            }
-          } else {
-            cforRange(0 until arr.length) { j =>
-              arr(j) = fn(d(j))
-            }
+          cforRange(0 until arr.length) { j =>
+            arr(j) = fn(d(j + off))
           }
-
         } else {
           var i = 0
           var j = off
