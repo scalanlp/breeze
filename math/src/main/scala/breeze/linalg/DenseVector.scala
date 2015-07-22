@@ -318,8 +318,14 @@ object DenseVector extends VectorConstructors[DenseVector]
 
         // https://wikis.oracle.com/display/HotSpotInternals/RangeCheckElimination
         if (stride == 1) {
-          cforRange(0 until arr.length) { j =>
-            arr(j) = fn(d(j + off))
+          if (off == 0) {
+            cforRange(0 until arr.length) { j =>
+              arr(j) = fn(d(j))
+            }
+          } else {
+            cforRange(0 until arr.length) { j =>
+              arr(j) = fn(d(j + off))
+            }
           }
         } else {
           var i = 0
@@ -393,13 +399,20 @@ object DenseVector extends VectorConstructors[DenseVector]
         val d = from.data
         val stride = from.stride
 
+        val offset = from.offset
         if (stride == 1)  {
-          cforRange(from.offset until from.offset + from.size) { j =>
-            d(j) = fn(d(j))
+          if (offset == 0) {
+            cforRange(0 until d.length) { j =>
+              d(j) = fn(d(j))
+            }
+          } else {
+            cforRange(offset until offset + from.size) { j =>
+              d(j - offset) = fn(d(j))
+            }
           }
         } else {
           var i = 0
-          var j = from.offset
+          var j = offset
           while(i < from.length) {
             d(j) = fn(d(j))
             i += 1
