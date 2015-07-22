@@ -953,4 +953,9 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val D = MultivariateGaussian(u, B)
   }
 
+  test("#410 sum colls") {
+    val dvs = Iterator.tabulate(100)(i => DenseVector(i))
+    assert(sum(dvs) == DenseVector((0 until 100).sum))
+  }
+
 }
