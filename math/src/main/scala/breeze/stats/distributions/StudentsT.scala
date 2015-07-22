@@ -39,7 +39,7 @@ case class StudentsT(degreesOfFreedom: Double)(implicit randBasis: RandBasis = R
 
   def unnormalizedLogPdf(x: Double): Double = -(degreesOfFreedom  + 1)/2 * math.log(1 + (x * x)/degreesOfFreedom)
 
-  lazy val logNormalizer: Double = math.sqrt(math.Pi * degreesOfFreedom) + lgamma((degreesOfFreedom / 2) - lgamma(degreesOfFreedom + 1)/2)
+  lazy val logNormalizer: Double = math.sqrt(math.Pi * degreesOfFreedom) + lgamma(degreesOfFreedom / 2) - lgamma((degreesOfFreedom + 1)/2)
 
   def mean: Double = innerInstance.getNumericalMean
 
