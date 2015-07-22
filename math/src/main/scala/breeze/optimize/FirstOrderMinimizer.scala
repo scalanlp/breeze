@@ -168,6 +168,10 @@ object FirstOrderMinimizer {
     override def reason: String = "objective is not improving"
   }
 
+  case object ProjectedStepConverged extends ConvergenceReason {
+    override def reason: String = "projected step converged"
+  }
+
   def maxIterationsReached[T, History](maxIter: Int): ConvergenceCheck[T, History] = {
     case s: State[_, _] if (s.iter >= maxIter && maxIter >= 0) =>
       MaxIterations
