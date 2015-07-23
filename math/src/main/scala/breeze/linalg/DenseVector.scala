@@ -407,10 +407,10 @@ object DenseVector extends VectorConstructors[DenseVector]
           }
         } else {
           val end = offset + stride * length
-          var i = offset
-          while (i != end) {
-            d(i) = fn(d(i))
-            i += stride
+          var j = offset
+          while (j != end) {
+            d(j) = fn(d(j))
+            j += stride
           }
 
         }
