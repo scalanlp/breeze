@@ -209,7 +209,7 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
   def trace(implicit numeric: Numeric[V]): V = diag(this:DenseMatrix[V]).sum
 
   override def equals(p1: Any) = p1 match {
-    case x: DenseMatrix[_] =>
+    case x: Matrix[_] =>
       // todo: make this faster in obvious cases
       rows == x.rows && cols == x.cols && (valuesIterator sameElements x.valuesIterator )
 
