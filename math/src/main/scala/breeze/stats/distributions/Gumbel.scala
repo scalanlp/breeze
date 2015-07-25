@@ -20,7 +20,7 @@ case class Gumbel(location: Double, scale: Double)
 
   def entropy: Double = log(scale) + γ + 1
 
-  def logNormalizer: Double = scale
+  def logNormalizer: Double = math.log(scale)
 
   /**
    * Gets one sample from the distribution. Equivalent to sample()
