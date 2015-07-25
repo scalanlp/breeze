@@ -24,7 +24,7 @@ import org.junit.runner.RunWith
 import org.apache.commons.math3.random.MersenneTwister
 
 @RunWith(classOf[JUnitRunner])
-class ChiSquaredTest extends FunSuite with Checkers with MomentsTestBase[Double] with ExpFamTest[ChiSquared,Double] with HasCdfTestBase {
+class ChiSquaredTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase with MomentsTestBase[Double] with ExpFamTest[ChiSquared,Double] with HasCdfTestBase {
   type Distr = ChiSquared
   import Arbitrary.arbitrary
 

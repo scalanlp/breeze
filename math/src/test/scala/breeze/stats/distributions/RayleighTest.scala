@@ -23,7 +23,7 @@ import org.scalatest.junit._
 import org.scalatest.prop._
 
 @RunWith(classOf[JUnitRunner])
-class RayleighTest extends FunSuite with Checkers with MomentsTestBase[Double] with HasCdfTestBase {
+class RayleighTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase with MomentsTestBase[Double] with HasCdfTestBase {
   import org.scalacheck.Arbitrary.arbitrary
 
 
