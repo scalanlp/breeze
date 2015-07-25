@@ -46,7 +46,7 @@ object hist extends UFunc {
       val visitor = new ValuesVisitor[S] {
         def visit(a: S) = {
           val ad = a.toDouble
-          val i: Int = math.floor(bins * ((ad-minima)/maxima)).toInt
+          val i: Int = math.floor(bins * ((ad-minima)/(maxima - minima))).toInt
           if ((i >= 0) && (i < bins)) {
             result.unsafeUpdate(i, result.unsafeValueAt(i) + 1)
           }
@@ -95,7 +95,7 @@ object hist extends UFunc {
       val visitor = new PairValuesVisitor[S,S] {
         def visit(a: S, w: S) = {
           val ad = a.toDouble
-          val i: Int = math.floor(bins * ((ad-minima)/maxima)).toInt
+          val i: Int = math.floor(bins * ((ad-minima)/(maxima - minima))).toInt
           if ((i >= 0) && (i < bins)) {
             result.unsafeUpdate(i, result.unsafeValueAt(i) + w)
           }

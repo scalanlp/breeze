@@ -40,4 +40,17 @@ class histogramTest extends FunSuite {
     }
   }
 
+  test("negative values") {
+    val v_neg = DenseVector(  -4,-3,-4,  1,1,1,  4,3,4  )
+    val h_neg = hist(v_neg,3)
+
+    assert(h_neg.hist == DenseVector(3,3,3))
+
+    val v_ok = v_neg+4
+
+    val h_ok = hist(v_ok,3)
+    assert(h_ok.hist == DenseVector(3,3,3))
+
+  }
+
 }
