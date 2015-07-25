@@ -43,7 +43,7 @@ trait UnivariateContinuousDistrTestBase extends FunSuite with Checkers {
 
       val inRange = samples.count(x => x >= low && x <= high) / (samples.length * 1.0)
       val prob = trapezoid(distr.pdf _, low, high, 2000)
-      if(prob >= 0 && math.abs(inRange - prob) <= 2E-2) {
+      if(prob >= 0 && math.abs(inRange - prob) <= 4E-2) {
         true
       } else {
         info(s"low: $low, high: $high")
