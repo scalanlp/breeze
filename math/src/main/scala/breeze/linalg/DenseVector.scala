@@ -397,25 +397,19 @@ object DenseVector extends VectorConstructors[DenseVector]
     new CanTransformValues[DenseVector[V], V] {
       def transform(from: DenseVector[V], fn: (V) => V) {
         val d = from.data
+        val length = from.length
         val stride = from.stride
 
         val offset = from.offset
         if (stride == 1)  {
-          if (offset == 0) {
-            cforRange(0 until d.length) { j =>
-              d(j) = fn(d(j))
-            }
-          } else {
-            cforRange(offset until offset + from.size) { j =>
-              d(j - offset) = fn(d(j))
-            }
+          cforRange(offset until offset + length) { j =>
+            d(j) = fn(d(j))
           }
         } else {
-          var i = 0
+          val end = offset + stride * length
           var j = offset
-          while(i < from.length) {
+          while (j != end) {
             d(j) = fn(d(j))
-            i += 1
             j += stride
           }
 
