@@ -176,17 +176,6 @@ object UFunc {
 
   // implicits for add impl's
 
-
-// DEPRECATED
-// ToDo: add Int => Double implicits for all necessary UFuncs
-// (see https://github.com/scalanlp/breeze/issues/236)
-//  implicit def implicitDoubleUTag[Tag, V, VR](implicit conv: V=>Double, impl: UImpl[Tag, Double, VR]):UImpl[Tag, V, VR] = {
-//    new UImpl[Tag, V, VR] {
-//      def apply(v: V): VR = impl(v)
-//    }
-//  }
-
-
   implicit def canTransformValuesUFunc[Tag, T, V](implicit canTransform: CanTransformValues[T, V],
                                                   impl: UImpl[Tag, V, V]):InPlaceImpl[Tag, T] = {
     new InPlaceImpl[Tag, T] {
