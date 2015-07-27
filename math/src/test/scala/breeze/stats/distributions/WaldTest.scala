@@ -23,7 +23,7 @@ import org.scalacheck._;
 import org.junit.runner.RunWith
 
 @RunWith(classOf[JUnitRunner])
-class WaldTest extends FunSuite with Checkers with MomentsTestBase[Double] {
+class WaldTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase with MomentsTestBase[Double] {
   type Distr = Wald
   import Arbitrary.arbitrary
   override val numSamples = 40000
