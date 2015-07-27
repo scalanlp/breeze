@@ -25,7 +25,7 @@ import org.junit.runner.RunWith
 
 
 @RunWith(classOf[JUnitRunner])
-class UniformTest extends FunSuite with Checkers with MomentsTestBase[Double] with HasCdfTestBase {
+class UniformTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase with MomentsTestBase[Double] with HasCdfTestBase {
 
   import Arbitrary.arbitrary;
 

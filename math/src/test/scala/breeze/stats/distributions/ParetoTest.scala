@@ -24,7 +24,7 @@ import org.junit.runner.RunWith
 import org.apache.commons.math3.random.MersenneTwister
 
 @RunWith(classOf[JUnitRunner])
-class ParetoTest extends FunSuite with Checkers with MomentsTestBase[Double] {
+class ParetoTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase with MomentsTestBase[Double] with HasCdfTestBase {
   import Arbitrary.arbitrary
 
 

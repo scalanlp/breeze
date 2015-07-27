@@ -23,7 +23,7 @@ import org.scalatest.junit._
 import org.scalatest.prop._
 
 @RunWith(classOf[JUnitRunner])
-class GaussianTest extends FunSuite with Checkers with MomentsTestBase[Double] with ExpFamTest[Gaussian,Double] with HasCdfTestBase {
+class GaussianTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase with MomentsTestBase[Double] with ExpFamTest[Gaussian,Double] with HasCdfTestBase {
   override type Distr = Gaussian
   val expFam = Gaussian
   import org.scalacheck.Arbitrary.arbitrary;

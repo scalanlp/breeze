@@ -16,17 +16,15 @@ package breeze.stats.distributions
  limitations under the License. 
 */
 
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.scalacheck._;
 import org.junit.runner.RunWith
-
-import breeze.stats.DescriptiveStats._;
+import org.scalacheck._
+import org.scalatest._
+import org.scalatest.junit._
+import org.scalatest.prop._;
 
 // VonMises variance depends on some reasonable handling of % 2 * pi, so we'll not include it.
 @RunWith(classOf[JUnitRunner])
-class VonMisesTest extends FunSuite with Checkers with ExpFamTest[VonMises,Double] {
+class VonMisesTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase with ExpFamTest[VonMises,Double] {
   import Arbitrary.arbitrary;
 
   val expFam = VonMises
@@ -51,5 +49,6 @@ class VonMisesTest extends FunSuite with Checkers with ExpFamTest[VonMises,Doubl
         scale <- arbitrary[Double].map {x => math.abs(x) % 3.0 + 1.1}) yield new VonMises(shape,scale);
   }
 
+  type Distr = VonMises
 
 }  
