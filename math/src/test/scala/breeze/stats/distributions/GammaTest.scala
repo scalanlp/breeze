@@ -23,7 +23,7 @@ import org.scalatest.junit._
 import org.scalatest.prop._
 
 @RunWith(classOf[JUnitRunner])
-class GammaTest extends FunSuite with Checkers with MomentsTestBase[Double] with ExpFamTest[Gamma,Double] with HasCdfTestBase {
+class GammaTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase with MomentsTestBase[Double] with ExpFamTest[Gamma,Double] with HasCdfTestBase {
   type Distr = Gamma
   import org.scalacheck.Arbitrary.arbitrary
 

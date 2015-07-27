@@ -24,7 +24,7 @@ import org.junit.runner.RunWith
 
 
 @RunWith(classOf[JUnitRunner])
-class LogNormalTest extends FunSuite with Checkers
+class LogNormalTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase
   with MomentsTestBase[Double] with ExpFamTest[LogNormal,Double] with HasCdfTestBase {
   import Arbitrary.arbitrary
   val expFam = LogNormal

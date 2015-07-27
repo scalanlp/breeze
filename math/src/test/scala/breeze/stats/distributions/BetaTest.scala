@@ -24,7 +24,7 @@ import org.scalatest.junit._
 import org.scalatest.prop._
 
 @RunWith(classOf[JUnitRunner])
-class BetaTest extends FunSuite with Checkers with MomentsTestBase[Double] with HasCdfTestBase {
+class BetaTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase with MomentsTestBase[Double] with HasCdfTestBase {
   type Distr = Beta
 
   val expFam = Beta

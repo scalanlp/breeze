@@ -30,7 +30,7 @@ case class Pareto(scale: Double, shape: Double)(implicit rand: RandBasis = Rand)
     log(scale/shape) + 1.0/shape + 1.0
   }
 
-  lazy val logNormalizer: Double = 1/(shape * math.pow(scale, shape))
+  lazy val logNormalizer: Double = - math.log(shape) - shape * math.log(scale)
 
   /**
    * Gets one sample from the distribution. Equivalent to sample()
