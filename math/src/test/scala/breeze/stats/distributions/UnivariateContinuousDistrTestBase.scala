@@ -24,8 +24,6 @@ import org.scalatest.prop.Checkers
 import breeze.integrate.trapezoid
 
 /**
- * TODO
- *
  * @author jrj-d
  **/
 trait UnivariateContinuousDistrTestBase extends FunSuite with Checkers {
