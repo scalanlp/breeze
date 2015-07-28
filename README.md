@@ -99,6 +99,11 @@ Contributions from:
 * Xiangrui Meng (@mengxr)
 * Gabriel Schubiner (@gabeos)
 * Debasish Das (@debasish83)
+* Julien Dumazert (@DumazertJulien)
+
+Corporate Contributors:
+* [Semantic Machines](http://www.semanticmachines.com/) (@semanticmachines)
+* [ContentSquare](http://www.contentsquare.com/en/)
 
 
 And others (contact David Hall if you've contributed code and aren't listed).
