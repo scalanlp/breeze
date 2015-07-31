@@ -104,6 +104,7 @@ Contributions from:
 Corporate Contributors:
 * [Semantic Machines](http://www.semanticmachines.com/) (@semanticmachines)
 * [ContentSquare](http://www.contentsquare.com/en/)
+* Big Data Analytics,Verizon Lab, Palo Alto
 
 
 And others (contact David Hall if you've contributed code and aren't listed).
