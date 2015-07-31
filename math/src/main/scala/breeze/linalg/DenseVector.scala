@@ -161,12 +161,16 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
    * @tparam U
    */
   override def foreach[@spec(Unit) U](fn: (V) => U): Unit = {
-    var i = offset
-    var j = 0
-    while(j < length) {
-      fn(data(i))
-      i += stride
-      j += 1
+    if (stride == 1) { // ABCE stuff
+      cforRange(offset until (offset + length)) { j =>
+        fn(data(j))
+      }
+    } else {
+      var i = offset
+      cforRange(0 until length) { j =>
+        fn(data(i))
+        i += stride
+      }
     }
   }
 
