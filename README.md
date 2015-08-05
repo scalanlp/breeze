@@ -100,6 +100,7 @@ Contributions from:
 * Gabriel Schubiner (@gabeos)
 * Debasish Das (@debasish83)
 * Julien Dumazert (@DumazertJulien)
+* Matthias Langer (@bashimao)
 
 Corporate Contributors:
 * [Semantic Machines](http://www.semanticmachines.com/) (@semanticmachines)
