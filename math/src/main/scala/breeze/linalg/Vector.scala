@@ -24,6 +24,7 @@ import breeze.math._
 import breeze.stats.distributions.Rand
 import breeze.storage.{Zero, Storage}
 
+import scala.util.hashing.MurmurHash3
 import scala.{specialized=>spec}
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.mutable.ArrayBuilder
@@ -69,6 +70,18 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]]{
         this.length == x.length &&
           (valuesIterator sameElements x.valuesIterator)
     case _ => false
+  }
+
+  // TODO: this is only consistent if the hashcode of inactive elements is 0!!!
+  override def hashCode() = {
+    var hash = 43
+    for(v <- activeValuesIterator) {
+      val hh = v.##
+      if (hh != 0)
+        hash = MurmurHash3.mix(hash, hh)
+    }
+
+    hash
   }
 
   def toDenseVector(implicit cm: ClassTag[V]) = {

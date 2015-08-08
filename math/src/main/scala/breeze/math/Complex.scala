@@ -139,8 +139,7 @@ case class Complex(real : Double, imag : Double) {
     else if (this == Complex.zero) {
       if (b.imag != 0.0 || b.real < 0.0) Complex.nan
       else Complex.zero
-    }
-    else {
+    } else {
       val c = log * b
       val expReal = math.exp(c.real)
       Complex(expReal * math.cos(c.imag), expReal * math.sin(c.imag))
@@ -156,6 +155,10 @@ case class Complex(real : Double, imag : Double) {
     case real : Float => this.real == real && this.imag == 0
     case _ => false
   }
+
+  // ensure hashcode contract is maintained for comparison to non-Complex numbers
+  // x ^ 0 is x
+  override def hashCode() = real.## ^ imag.##
 }
 
 object Complex { outer =>
