@@ -264,21 +264,21 @@ class RandBasis(val generator: RandomGenerator) {
    * Uniformly samples a long integer in [0,MAX_LONG]
    */
   val randLong: Rand[Long] = new Rand[Long] {
-    def draw = generator.nextLong
+    def draw = Math.abs(generator.nextLong)
   }
 
   /**
    * Uniformly samples a long integer in [0,n)
    */
   def randLong(n: Long): Rand[Long] = new Rand[Long] {
-    def draw = generator.nextLong % n
+    def draw = Math.abs(generator.nextLong) % n
   }
 
   /**
    * Uniformly samples a long integer in [n,m)
    */
   def randLong(n: Long, m: Long): Rand[Long] = new Rand[Long] {
-    def draw = generator.nextLong % (m - n) + n
+    def draw = Math.abs(generator.nextLong) % (m - n) + n
   }
 
   /**
