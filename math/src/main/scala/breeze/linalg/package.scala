@@ -15,8 +15,12 @@ package breeze
  limitations under the License.
 */
 
+<<<<<<< HEAD
 import breeze.linalg.DenseMatrix
 import breeze.numerics.abs
+=======
+import breeze.linalg.immutable
+>>>>>>> ff55711415c7e3151f76488211a74e5321f40de8
 import io.{CSVWriter, CSVReader}
 import linalg.operators._
 import breeze.linalg.support.{RangeExtender, CanCopy}
@@ -83,7 +87,7 @@ package object linalg {
     }
   }
 
-  def csvwrite(file: File, mat: Matrix[Double],
+  def csvwrite(file: File, mat: immutable.Matrix[Double],
                separator: Char=',',
                quote: Char='\u0000',
                escape: Char='\\',
@@ -109,15 +113,19 @@ package object linalg {
  * @author dlwh,dramage,retronym,afwlehmann,lancelet
  */
 
-  private[linalg] def requireNonEmptyMatrix[V](mat: Matrix[V]): Unit =
+  private[linalg] def requireNonEmptyMatrix[V](mat: immutable.Matrix[V]): Unit =
     if (mat.cols == 0 || mat.rows == 0)
       throw new MatrixEmptyException
 
-  private[linalg] def requireSquareMatrix[V](mat: Matrix[V]): Unit =
+  private[linalg] def requireSquareMatrix[V](mat: immutable.Matrix[V]): Unit =
     if (mat.rows != mat.cols)
       throw new MatrixNotSquareException
 
+<<<<<<< HEAD
   private[linalg] def requireSymmetricMatrix(mat: Matrix[Double], tol: Double = 1e-7): Unit = {
+=======
+  private[linalg] def requireSymmetricMatrix[V](mat: immutable.Matrix[V]): Unit = {
+>>>>>>> ff55711415c7e3151f76488211a74e5321f40de8
     requireSquareMatrix(mat)
 
     for (i <- 0 until mat.rows; j <- 0 until i)
@@ -172,7 +180,7 @@ package object linalg {
    * The lower triangular portion of the given real quadratic matrix X. Note
    * that no check will be performed regarding the symmetry of X.
    */
-  def lowerTriangular[T: Semiring: ClassTag:Zero](X: Matrix[T]): DenseMatrix[T] = {
+  def lowerTriangular[T: Semiring: ClassTag:Zero](X: immutable.Matrix[T]): DenseMatrix[T] = {
     val N = X.rows
     DenseMatrix.tabulate(N, N)( (i, j) =>
       if(j <= i) X(i,j)
@@ -196,7 +204,7 @@ package object linalg {
    * The upper triangular portion of the given real quadratic matrix X. Note
    * that no check will be performed regarding the symmetry of X.
    */
-  def upperTriangular[T: Semiring: ClassTag: Zero](X: Matrix[T]): DenseMatrix[T] = {
+  def upperTriangular[T: Semiring: ClassTag: Zero](X: immutable.Matrix[T]): DenseMatrix[T] = {
     val N = X.rows
     DenseMatrix.tabulate(N, N)( (i, j) =>
       if(j >= i) X(i,j)

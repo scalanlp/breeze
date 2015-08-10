@@ -25,7 +25,7 @@ object diag extends UFunc with diagLowPrio2 {
   implicit def diagDMDVImpl[V]:diag.Impl[DenseMatrix[V], DenseVector[V]] = new diag.Impl[DenseMatrix[V], DenseVector[V]] {
     def apply(m: DenseMatrix[V]): DenseVector[V] = {
       require(m.rows == m.cols, "m must be square")
-      new DenseVector(m.data, m.offset, m.majorStride + 1, m.rows)
+      new DenseVector(m.internalData, m.offset, m.majorStride + 1, m.rows)
     }
   }
 

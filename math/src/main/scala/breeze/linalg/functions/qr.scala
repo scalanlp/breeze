@@ -160,13 +160,13 @@ object qr extends UFunc {
     // Calculate optimal size of work data 'work'
     val work = new Array[Double](1)
     val info = new intW(0)
-    lapack.dgeqrf(m, n, A.data, m, tau, work, -1, info)
+    lapack.dgeqrf(m, n, A.internalData, m, tau, work, -1, info)
 
     // do QR
     val lwork = if (info.`val` != 0) n else work(0).toInt
     var workspace = new Array[Double](lwork)
 
-    lapack.dgeqrf(m, n, A.data, m, tau, workspace, lwork, info)
+    lapack.dgeqrf(m, n, A.internalData, m, tau, workspace, lwork, info)
 
     //Error check
     if (info.`val` > 0)
@@ -185,11 +185,11 @@ object qr extends UFunc {
       Q(::, 0 until n) := A
 
       // Calculate optimal size of workspace
-      lapack.dorgqr(m, mc, mn, Q.data, m, tau, work, -1, info)
+      lapack.dorgqr(m, mc, mn, Q.internalData, m, tau, work, -1, info)
       val lwork1 = if (info.`val` != 0) n else work(0).toInt
       workspace = new Array[Double](lwork1)
       // Compute Q
-      lapack.dorgqr(m, mc, mn, Q.data, m, tau, workspace, lwork1, info)
+      lapack.dorgqr(m, mc, mn, Q.internalData, m, tau, workspace, lwork1, info)
 
       //Error check
       if (info.`val` > 0)
@@ -309,7 +309,7 @@ object qrp extends UFunc {
       val pvt = new Array[Int](n)
       val tau = new Array[Double](scala.math.min(m,n))
       for(r <- 0 until m; c <- 0 until n) AFact(r,c) = A(r,c)
-      lapack.dgeqp3(m, n, AFact.data, m, pvt, tau, workspace, workspace.length, info)
+      lapack.dgeqp3(m, n, AFact.internalData, m, pvt, tau, workspace, workspace.length, info)
 
       //Error check
       if (info.`val` > 0)
@@ -325,7 +325,7 @@ object qrp extends UFunc {
 
       //Get Q from the matrix returned by dgep3
       val Q = DenseMatrix.zeros[Double](m,m)
-      lapack.dorgqr(m, m, scala.math.min(m,n), AFact.data, m, tau, workspace, workspace.length, info)
+      lapack.dorgqr(m, m, scala.math.min(m,n), AFact.internalData, m, tau, workspace, workspace.length, info)
       for(r <- 0 until m; c <- 0 until maxd if(c < m))
         Q(r,c) = AFact(r,c)
 

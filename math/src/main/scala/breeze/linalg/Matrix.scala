@@ -15,6 +15,8 @@ package breeze.linalg
  limitations under the License.
 */
 
+import breeze.linalg.immutable
+
 import scala.{specialized=>spec}
 import breeze.storage.Zero
 import breeze.util.Terminal
@@ -29,12 +31,12 @@ import breeze.stats.distributions.Rand
  *
  * @author dlwh
  */
-trait MatrixLike[@spec(Double, Int, Float, Long) V, +Self  <: Matrix[V]] extends Tensor[(Int, Int), V] with TensorLike[(Int, Int), V, Self] {
+trait MatrixLike[@spec(Double, Int, Float, Long) V, +Self  <: immutable.Matrix[V]] extends Tensor[(Int, Int), V] with TensorLike[(Int, Int), V, Self] {
   def map[V2, That](fn: V=>V2)(implicit canMapValues: CanMapValues[Self @uncheckedVariance , V, V2, That]):That = values map fn
 
 }
 
-trait Matrix[@spec(Double, Int, Float, Long) V] extends MatrixLike[V, Matrix[V]] {
+trait Matrix[@spec(Double, Int, Float, Long) V] extends MatrixLike[V, immutable.Matrix[V]] {
 
   final def apply(i: (Int, Int)) = apply(i._1, i._2)
   final def update(i: (Int, Int), e: V): Unit = {
@@ -125,27 +127,27 @@ trait Matrix[@spec(Double, Int, Float, Long) V] extends MatrixLike[V, Matrix[V]]
     DenseMatrix.tabulate(rows, cols){ (i,j) => apply(i, j)}
   }
 
-  def copy: Matrix[V]
+  def copy: immutable.Matrix[V]
 
   def flatten(view: View=View.Prefer): Vector[V]
 
 }
 
-object Matrix extends MatrixConstructors[Matrix]
+object Matrix extends MatrixConstructors[immutable.Matrix]
                       with MatrixGenericOps
                       with MatrixOpsLowPrio
                       with MatrixOps
                       with MatrixMultOps {
 
-  def zeros[@spec(Double, Int, Float, Long) V: ClassTag:Zero](rows: Int, cols: Int): Matrix[V] = DenseMatrix.zeros(rows, cols)
+  def zeros[@spec(Double, Int, Float, Long) V: ClassTag:Zero](rows: Int, cols: Int): immutable.Matrix[V] = DenseMatrix.zeros(rows, cols)
 
-  def create[@spec(Double, Int, Float, Long) V:Zero](rows: Int, cols: Int, data: Array[V]): Matrix[V] = DenseMatrix.create(rows, cols, data)
+  def create[@spec(Double, Int, Float, Long) V:Zero](rows: Int, cols: Int, data: Array[V]): immutable.Matrix[V] = DenseMatrix.create(rows, cols, data)
 
-  private[linalg] def zeroRows[V:ClassTag](cols: Int):Matrix[V] = emptyMatrix(0, cols)
-  private[linalg] def zeroCols[V:ClassTag](rows: Int):Matrix[V] = emptyMatrix(rows, 0)
+  private[linalg] def zeroRows[V:ClassTag](cols: Int):immutable.Matrix[V] = emptyMatrix(0, cols)
+  private[linalg] def zeroCols[V:ClassTag](rows: Int):immutable.Matrix[V] = emptyMatrix(rows, 0)
 
 
-  private[linalg] def emptyMatrix[V:ClassTag](_rows: Int, _cols: Int):Matrix[V] = new Matrix[V] {
+  private[linalg] def emptyMatrix[V:ClassTag](_rows: Int, _cols: Int):immutable.Matrix[V] = new immutable.Matrix[V] {
     def activeIterator: Iterator[((Int, Int), V)] = Iterator.empty
 
     def activeValuesIterator: Iterator[V] = Iterator.empty
@@ -162,18 +164,18 @@ object Matrix extends MatrixConstructors[Matrix]
 
     def cols: Int = _cols
 
-    def copy: Matrix[V] = this
+    def copy: immutable.Matrix[V] = this
 
     def activeSize: Int = 0
 
-    def repr: Matrix[V] = this
+    def repr: immutable.Matrix[V] = this
 
     def flatten(view: View) = Vector[V]()
   }
 }
 
 
-trait MatrixConstructors[Mat[T]<:Matrix[T]] {
+trait MatrixConstructors[Mat[T]<:immutable.Matrix[T]] {
   def zeros[@spec(Double, Int, Float, Long) V:ClassTag:Zero](rows: Int, cols: Int):Mat[V]
   def create[@spec(Double, Int, Float, Long) V:Zero](rows: Int, cols: Int, data: Array[V]):Mat[V]
 
@@ -226,7 +228,7 @@ trait MatrixConstructors[Mat[T]<:Matrix[T]] {
 
   // This method only exists because of trouble in Scala-specialization land.
   // basically, we turn off specialization for this loop, since it's not going to be fast anyway.
-  private def finishLiteral[V, R](rv: Matrix[V], rl : LiteralRow[R,V], rows: Seq[R]) {
+  private def finishLiteral[V, R](rv: immutable.Matrix[V], rl : LiteralRow[R,V], rows: Seq[R]) {
     for ((row,i) <- rows.zipWithIndex) {
       rl.foreach(row, {(j, v) => rv(i,j) = v})
     }
