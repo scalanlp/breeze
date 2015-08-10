@@ -16,8 +16,12 @@ package breeze
 */
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 import breeze.linalg.DenseMatrix
 import breeze.numerics.abs
+=======
+import breeze.linalg.immutable
+>>>>>>> ff55711415c7e3151f76488211a74e5321f40de8
 =======
 import breeze.linalg.immutable
 >>>>>>> ff55711415c7e3151f76488211a74e5321f40de8
@@ -122,7 +126,11 @@ package object linalg {
       throw new MatrixNotSquareException
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   private[linalg] def requireSymmetricMatrix(mat: Matrix[Double], tol: Double = 1e-7): Unit = {
+=======
+  private[linalg] def requireSymmetricMatrix[V](mat: immutable.Matrix[V]): Unit = {
+>>>>>>> ff55711415c7e3151f76488211a74e5321f40de8
 =======
   private[linalg] def requireSymmetricMatrix[V](mat: immutable.Matrix[V]): Unit = {
 >>>>>>> ff55711415c7e3151f76488211a74e5321f40de8

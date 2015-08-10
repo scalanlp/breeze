@@ -64,7 +64,10 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
                                                             val majorStride: Int,
                                                             val isTranspose: Boolean = false)
   extends immutable.Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
+<<<<<<< HEAD
 
+=======
+>>>>>>> ff55711415c7e3151f76488211a74e5321f40de8
 
   /** Creates a matrix with the specified data array, rows, and columns. */
   def this(rows: Int, cols: Int)(implicit man: ClassTag[V]) = this(rows, cols, new Array[V](rows * cols), 0, rows)
