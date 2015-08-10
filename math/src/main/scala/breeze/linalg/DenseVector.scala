@@ -91,16 +91,7 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
   override def equals(p1: Any) = p1 match {
     case y: DenseVector[_] =>
       y.length == length && ArrayUtil.nonstupidEquals(data, offset, stride, length, y.data, y.offset, y.stride, y.length)
-    case x: Vector[_] =>
-//      length == x.length && (( stride == x.stride
-//        && offset == x.offset
-//        && data.length == x.data.length
-//        && ArrayUtil.equals(data, x.data)
-//      )  ||  (
-          valuesIterator sameElements x.valuesIterator
-//        ))
-
-    case _ => false
+    case _ => super.equals(p1)
   }
 
   override def toString = {
@@ -161,12 +152,16 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
    * @tparam U
    */
   override def foreach[@spec(Unit) U](fn: (V) => U): Unit = {
-    var i = offset
-    var j = 0
-    while(j < length) {
-      fn(data(i))
-      i += stride
-      j += 1
+    if (stride == 1) { // ABCE stuff
+      cforRange(offset until (offset + length)) { j =>
+        fn(data(j))
+      }
+    } else {
+      var i = offset
+      cforRange(0 until length) { j =>
+        fn(data(i))
+        i += stride
+      }
     }
   }
 

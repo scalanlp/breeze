@@ -100,8 +100,9 @@ Contributions from:
 * Gabriel Schubiner (@gabeos)
 * Debasish Das (@debasish83)
 * Julien Dumazert (@DumazertJulien)
+* Matthias Langer (@bashimao)
 
-Corporate Contributors:
+Corporate (Code) Contributors:
 * [Semantic Machines](http://www.semanticmachines.com/) (@semanticmachines)
 * [ContentSquare](http://www.contentsquare.com/en/)
 * Big Data Analytics, Verizon Lab, Palo Alto

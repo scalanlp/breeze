@@ -54,6 +54,21 @@ class DenseVectorBenchmark extends BreezeBenchmark with BuildsRandomVectors {
     DenseVector.fill[Double](1024, 23)
   }
 
+  def timeForeach(reps: Int) = runWith(reps, randomArray(4000)) { arr =>
+    var sum = 0.0
+    arr.foreach(sum += _)
+    sum
+  }
+
+  def timeLoop(reps: Int) = runWith(reps, randomArray(4000)) { arr =>
+    var sum = 0.0
+    val d = arr.data
+    cforRange(0 until arr.length) { i =>
+      sum += d(i)
+    }
+    sum
+  }
+
   def valueAtBench(reps: Int, size: Int, stride: Int) = runWith(reps, {randomArray(size, stride=stride)})(arr => {
     var i=0
     var t: Double = 0
