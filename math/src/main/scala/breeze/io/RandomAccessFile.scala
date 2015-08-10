@@ -612,7 +612,7 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
     * Will throw error if value < 0.
     */
   @throws(classOf[IOException])
-  final def writeUInt64(v: Long): Unit = {
+  final def writeUInt64(v: BigInt): Unit = {
     rafObj.write(converter.uInt64ToBytes(v))
   }
 
@@ -620,7 +620,7 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
     * Will throw error if value < 0.
     */
   @throws(classOf[IOException])
-  final def writeUInt64(v: Array[Long]): Unit = {
+  final def writeUInt64(v: Array[BigInt]): Unit = {
     rafObj.write( v.flatMap(converter.uInt64ToBytes(_)) )
   }
 
@@ -964,7 +964,7 @@ object ByteConverterBigEndian extends ByteConverter {
 //    if ((b0/*.toInt*/ & 0x80) != 0x00) {
 //      throw new IOException("UInt64 too big to read given limitations of Long format.")
 //    } else {
-      (b0.toLong & 0xFFL) << 56 | (b1.toLong & 0xFFL) << 48 | (b2.toLong & 0xFFL) << 40 | (b3.toLong & 0xFFL) << 32 |
+      (BigInt(b0) & 0xFFL) << 56 | (b1.toLong & 0xFFL) << 48 | (b2.toLong & 0xFFL) << 40 | (b3.toLong & 0xFFL) << 32 |
         (b4.toLong & 0xFFL) << 24 | (b5.toLong & 0xFFL) << 16 | (b6.toLong & 0xFFL) << 8 | (b7.toLong & 0xFFL)
 //    }
   }
@@ -1134,8 +1134,8 @@ object ByteConverterLittleEndian extends ByteConverter  {
   }
 
   def uInt64ToBytes(value: BigInt): Array[Byte] = {
-    require(value >= BigIntZERO, s"Value $value is out of range of 4-byte unsigned array.")
-    require(value <= BigIntuInt64Max, s"Value $value is out of range of 4-byte unsigned array.")
+    require(value >= ZERO, s"Value $value is out of range of 4-byte unsigned array.")
+    require(value <= uInt64Max, s"Value $value is out of range of 4-byte unsigned array.")
 
     val tempret = new Array[Byte](8)
     tempret(7) = ((value >> 56) & 0xFF).toByte
