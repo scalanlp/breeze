@@ -28,8 +28,8 @@ import java.io.{File, DataInput, DataOutput, Closeable, IOException}
   * </table>
   *
   * *note: given that the JVM/Scala does not have a UInt64 type, nor a Int128 to promote to, UInt64s are dealt with in two
-  * ways... as a truncated Int64 (which will only allow half of the range of UInt64 to be actually used, but which
-  * is compatible with + - * / operations), or as a shifted Int64, where UInt64 are subtracted and shifted down to cover
+  * ways... as a BigInt (which is the Scala wrapper for the java BigInteger)
+  * or as a shifted Int64, where UInt64 is shifted down in its range to cover
   * both positive and negative values of Int64 (this is compatible with + and -, for use as timestamps, for example,
   * but is of course not compatible with * and / operations)
   *
@@ -1075,7 +1075,7 @@ object ByteConverterLittleEndian extends ByteConverter  {
   override def bytesToUInt64Shifted(b0: Byte, b1 : Byte, b2 : Byte, b3 : Byte, b4 : Byte, b5 : Byte, b6 : Byte, b7 : Byte)
   = ByteConverterBigEndian.bytesToUInt64Shifted(b7, b6, b5, b4, b3, b2, b1, b0)
 
-//reverse is pretty slow, time hog.
+//reverse is pretty slow, and a time hog. Therefore, unfortunately, the following code reuse is not practical
 //  override def int16ToBytes(value: Short): Array[Byte]  = ByteConverterBigEndian.int16ToBytes(value).reverse
 //  override def uInt16ToBytes(value: Char): Array[Byte]   = ByteConverterBigEndian.uInt16ToBytes(value).reverse
 //  override def int32ToBytes(value: Int): Array[Byte]    = ByteConverterBigEndian.int32ToBytes(value).reverse
@@ -1083,6 +1083,7 @@ object ByteConverterLittleEndian extends ByteConverter  {
 //  override def int64ToBytes(value: Long): Array[Byte]   = ByteConverterBigEndian.int64ToBytes(value).reverse
 //  override def uInt64ToBytes(value: Long): Array[Byte]  = ByteConverterBigEndian.uInt64ToBytes(value).reverse
 //  override def uInt64ShiftedToBytes(value: Long): Array[Byte] = ByteConverterBigEndian.uInt64ShiftedToBytes(value).reverse
+
   ///// XXXToByte /////
   def int16ToBytes(value: Short): Array[Byte] = {
     val tempret = new Array[Byte](2)
