@@ -579,7 +579,7 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
     * Will throw an exception if it encounters an end of file.
     */
   @throws(classOf[IOException])
-  final def readUInt64(): Long = {
+  final def readUInt64(): BigInt = {
     val ba = readByte(8)
     converter.bytesToUInt64(ba(0), ba(1), ba(2), ba(3), ba(4), ba(5), ba(6), ba(7))
   }
@@ -589,10 +589,10 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
     * Will throw an exception if it encounters an end of file.
     */
   @throws(classOf[IOException])
-  final def readUInt64(n: Int): Array[Long] = {
+  final def readUInt64(n: Int): Array[BigInt] = {
     val ba = new Array[Byte](n * 8)
     rafObj.readFully(ba) //reading is much faster if many bytes are read simultaneously
-    val tr = new Array[Long](n)
+    val tr = new Array[BigInt](n)
     //the following is a hack to avoid the heavier Scala for loop
     var c = 0
     while (c < n) {
@@ -876,6 +876,10 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
   */
 abstract class ByteConverter {
 
+  final val ZERO = BigInt("0")
+  final val uInt64Max = BigInt("18446744073709551615")
+  final val Int64Max = BigInt( Long.MaxValue )
+
   ///// bytesToXXX /////
   /**Takes 1 Byte and returns a UInt8 (as Short)*/
   def byteToUInt8(b0: Byte): Short = {
@@ -895,7 +899,7 @@ abstract class ByteConverter {
   def bytesToUInt32(b0: Byte, b1: Byte, b2: Byte, b3: Byte): Long
 
   /**Takes 8 Bytes and returns a UInt64 (as Long), throwing an error if it overflows Long, which is Int64*/
-  def bytesToUInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Long
+  def bytesToUInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): BigInt
 
   /**Takes 8 Bytes and returns a Int64 (Long)*/
   def bytesToInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Long
@@ -928,7 +932,7 @@ abstract class ByteConverter {
   def int64ToBytes(value: Long): Array[Byte]
 
   /**Takes a UInt64 (as Long), and returns an array of 8 bytes*/
-  def uInt64ToBytes(value: Long): Array[Byte]
+  def uInt64ToBytes(value: BigInt): Array[Byte]
 
   /**Takes an Int64 (Long), and returns an array of 8 bytes, shifted up to a UInt64. See [[breeze.io.ByteConverter.bytesToUInt64Shifted()]]*/
   def uInt64ShiftedToBytes(value: Long): Array[Byte]
@@ -956,13 +960,13 @@ object ByteConverterBigEndian extends ByteConverter {
     (b0.toLong & 0xFFL) << 24 | (b1.toLong & 0xFFL) << 16 | (b2.toLong & 0xFFL) << 8 | (b3.toLong & 0xFFL)
   }
 
-  def bytesToUInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Long = {
-    if ((b0/*.toInt*/ & 0x80) != 0x00) {
-      throw new IOException("UInt64 too big to read given limitations of Long format.")
-    } else {
+  def bytesToUInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): BigInt = {
+//    if ((b0/*.toInt*/ & 0x80) != 0x00) {
+//      throw new IOException("UInt64 too big to read given limitations of Long format.")
+//    } else {
       (b0.toLong & 0xFFL) << 56 | (b1.toLong & 0xFFL) << 48 | (b2.toLong & 0xFFL) << 40 | (b3.toLong & 0xFFL) << 32 |
         (b4.toLong & 0xFFL) << 24 | (b5.toLong & 0xFFL) << 16 | (b6.toLong & 0xFFL) << 8 | (b7.toLong & 0xFFL)
-    }
+//    }
   }
 
   def bytesToInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Long = {
@@ -1024,8 +1028,9 @@ object ByteConverterBigEndian extends ByteConverter {
     tempret
   }
 
-  def uInt64ToBytes(value: Long): Array[Byte] = {
-    require(value >= 0, "Value " + value + " is out of range of 4-byte unsigned array.")
+  def uInt64ToBytes(value: BigInt): Array[Byte] = {
+    require(value >= ZERO, s"Value $value is out of range of 4-byte unsigned array.")
+    require(value <= uInt64Max, s"Value $value is out of range of 4-byte unsigned array.")
 
     val tempret = new Array[Byte](8)
     tempret(0) = ((value >> 56) & 0xFF).toByte
@@ -1128,8 +1133,9 @@ object ByteConverterLittleEndian extends ByteConverter  {
     tempret
   }
 
-  def uInt64ToBytes(value: Long): Array[Byte] = {
-    require(value >= 0, "Value " + value + " is out of range of 4-byte unsigned array.")
+  def uInt64ToBytes(value: BigInt): Array[Byte] = {
+    require(value >= BigIntZERO, s"Value $value is out of range of 4-byte unsigned array.")
+    require(value <= BigIntuInt64Max, s"Value $value is out of range of 4-byte unsigned array.")
 
     val tempret = new Array[Byte](8)
     tempret(7) = ((value >> 56) & 0xFF).toByte
