@@ -238,11 +238,13 @@ sealed trait RandomAccessFileTest extends FunSuite {
     val stream2 = new RAF(file, "r")
     val result2 = stream2.readUInt64(3)
 
-    assert(result2(0) === 0L )
-    assert(result2(1) === 1L )
-    assert(result2(2) === 32767L )
-    assert(stream2.readUInt64 ===  9223372036854775807L)
-    assert(stream2.readUInt64 === 9223372036854775807L)
+    //Strange failure here of === with implicit conversion ULong => Long
+    //  needs explicit casting *.toLong just when running on Travis
+    assert(result2(0).toLong === 0L )
+    assert(result2(1).toLong === 1L )
+    assert(result2(2).toLong === 32767L )
+    assert(stream2.readUInt64.toLong ===  9223372036854775807L)
+    assert(stream2.readUInt64.toLong === 9223372036854775807L)
     //println( stream2.readUInt8(8).toList )
     assert(stream2.readUInt8(8).forall( _ == 0xFF ))
     assert(stream2.readUInt64 == UInt64Max )
