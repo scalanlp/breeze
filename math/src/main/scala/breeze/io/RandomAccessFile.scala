@@ -2,6 +2,8 @@ package breeze.io
 
 import java.io.{File, DataInput, DataOutput, Closeable, IOException}
 
+import spire.math.ULong
+
 
 /** Wrapper for [[java.io.RandomAccessFile]].
   *
@@ -570,16 +572,16 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
   //</editor-fold>
 
 
-  ///// UInt64 (Long) /////
+  ///// UInt64 (ULong) /////
 
   //<editor-fold desc="Reading">
 
-  /** Tries to read a UInt64 as Long at the current getFilePointer().
+  /** Tries to read a UInt64 as [[spire.math.ULong]] at the current getFilePointer().
     * Will throw an exception for UInt64 values which are larger than the maximum Long.
     * Will throw an exception if it encounters an end of file.
     */
   @throws(classOf[IOException])
-  final def readUInt64(): BigInt = {
+  final def readUInt64(): ULong = {
     val ba = readByte(8)
     converter.bytesToUInt64(ba(0), ba(1), ba(2), ba(3), ba(4), ba(5), ba(6), ba(7))
   }
@@ -589,10 +591,10 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
     * Will throw an exception if it encounters an end of file.
     */
   @throws(classOf[IOException])
-  final def readUInt64(n: Int): Array[BigInt] = {
+  final def readUInt64(n: Int): Array[ULong] = {
     val ba = new Array[Byte](n * 8)
     rafObj.readFully(ba) //reading is much faster if many bytes are read simultaneously
-    val tr = new Array[BigInt](n)
+    val tr = new Array[ULong](n)
     //the following is a hack to avoid the heavier Scala for loop
     var c = 0
     while (c < n) {
@@ -612,7 +614,7 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
     * Will throw error if value < 0.
     */
   @throws(classOf[IOException])
-  final def writeUInt64(v: BigInt): Unit = {
+  final def writeUInt64(v: ULong): Unit = {
     rafObj.write(converter.uInt64ToBytes(v))
   }
 
@@ -620,7 +622,7 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
     * Will throw error if value < 0.
     */
   @throws(classOf[IOException])
-  final def writeUInt64(v: Array[BigInt]): Unit = {
+  final def writeUInt64(v: Array[ULong]): Unit = {
     rafObj.write( v.flatMap(converter.uInt64ToBytes(_)) )
   }
 
@@ -898,8 +900,8 @@ abstract class ByteConverter {
   /**Takes 4 Bytes and returns a UInt32 (as Long)*/
   def bytesToUInt32(b0: Byte, b1: Byte, b2: Byte, b3: Byte): Long
 
-  /**Takes 8 Bytes and returns a UInt64 (as Long), throwing an error if it overflows Long, which is Int64*/
-  def bytesToUInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): BigInt
+  /**Takes 8 Bytes and returns a UInt64 (as ULong), throwing an error if it overflows Long, which is Int64*/
+  def bytesToUInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): ULong
 
   /**Takes 8 Bytes and returns a Int64 (Long)*/
   def bytesToInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Long
@@ -931,8 +933,8 @@ abstract class ByteConverter {
   /**Takes an Int64 (Long), and returns an array of 8 bytes*/
   def int64ToBytes(value: Long): Array[Byte]
 
-  /**Takes a UInt64 (as Long), and returns an array of 8 bytes*/
-  def uInt64ToBytes(value: BigInt): Array[Byte]
+  /**Takes a UInt64 (as ULong), and returns an array of 8 bytes*/
+  def uInt64ToBytes(value: ULong): Array[Byte]
 
   /**Takes an Int64 (Long), and returns an array of 8 bytes, shifted up to a UInt64. See [[breeze.io.ByteConverter.bytesToUInt64Shifted()]]*/
   def uInt64ShiftedToBytes(value: Long): Array[Byte]
@@ -960,7 +962,7 @@ object ByteConverterBigEndian extends ByteConverter {
     (b0.toLong & 0xFFL) << 24 | (b1.toLong & 0xFFL) << 16 | (b2.toLong & 0xFFL) << 8 | (b3.toLong & 0xFFL)
   }
 
-  def bytesToUInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): BigInt = {
+  def bytesToUInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): ULong = {
 //    if ((b0/*.toInt*/ & 0x80) != 0x00) {
 //      throw new IOException("UInt64 too big to read given limitations of Long format.")
 //    } else {
