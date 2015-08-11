@@ -901,7 +901,9 @@ abstract class ByteConverter {
   def bytesToUInt32(b0: Byte, b1: Byte, b2: Byte, b3: Byte): Long
 
   /**Takes 8 Bytes and returns a UInt64 (as ULong), throwing an error if it overflows Long, which is Int64*/
-  def bytesToUInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): ULong
+  final def bytesToUInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): ULong = {
+    ULong( bytesToInt64(b0,b1,b2,b3,b4,b5,b6,b7) )
+  }
 
   /**Takes 8 Bytes and returns a Int64 (Long)*/
   def bytesToInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Long
@@ -962,14 +964,14 @@ object ByteConverterBigEndian extends ByteConverter {
     (b0.toLong & 0xFFL) << 24 | (b1.toLong & 0xFFL) << 16 | (b2.toLong & 0xFFL) << 8 | (b3.toLong & 0xFFL)
   }
 
-  def bytesToUInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): ULong = {
-//    if ((b0/*.toInt*/ & 0x80) != 0x00) {
-//      throw new IOException("UInt64 too big to read given limitations of Long format.")
-//    } else {
-      (BigInt(b0) & 0xFFL) << 56 | (b1.toLong & 0xFFL) << 48 | (b2.toLong & 0xFFL) << 40 | (b3.toLong & 0xFFL) << 32 |
-        (b4.toLong & 0xFFL) << 24 | (b5.toLong & 0xFFL) << 16 | (b6.toLong & 0xFFL) << 8 | (b7.toLong & 0xFFL)
-//    }
-  }
+//  def bytesToUInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): ULong = {
+////    if ((b0/*.toInt*/ & 0x80) != 0x00) {
+////      throw new IOException("UInt64 too big to read given limitations of Long format.")
+////    } else {
+//      (BigInt(b0) & 0xFFL) << 56 | (b1.toLong & 0xFFL) << 48 | (b2.toLong & 0xFFL) << 40 | (b3.toLong & 0xFFL) << 32 |
+//        (b4.toLong & 0xFFL) << 24 | (b5.toLong & 0xFFL) << 16 | (b6.toLong & 0xFFL) << 8 | (b7.toLong & 0xFFL)
+////    }
+//  }
 
   def bytesToInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Long = {
     b0.toLong << 56 | (b1.toLong & 0xFFL) << 48 | (b2.toLong & 0xFFL) << 40 | (b3.toLong & 0xFFL) << 32 |
@@ -1030,19 +1032,21 @@ object ByteConverterBigEndian extends ByteConverter {
     tempret
   }
 
-  def uInt64ToBytes(value: BigInt): Array[Byte] = {
-    require(value >= ZERO, s"Value $value is out of range of 4-byte unsigned array.")
-    require(value <= uInt64Max, s"Value $value is out of range of 4-byte unsigned array.")
+  def uInt64ToBytes(value: ULong): Array[Byte] = {
+//    require(value >= ZERO, s"Value $value is out of range of 4-byte unsigned array.")
+//    require(value <= uInt64Max, s"Value $value is out of range of 4-byte unsigned array.")
 
     val tempret = new Array[Byte](8)
-    tempret(0) = ((value >> 56) & 0xFF).toByte
-    tempret(1) = ((value >> 48) & 0xFF).toByte
-    tempret(2) = ((value >> 40) & 0xFF).toByte
-    tempret(3) = ((value >> 32) & 0xFF).toByte
-    tempret(4) = ((value >> 24) & 0xFF).toByte
-    tempret(5) = ((value >> 16) & 0xFF).toByte
-    tempret(6) = ((value >> 8)  & 0xFF).toByte
-    tempret(7) =  (value        & 0xFF).toByte
+    val longValue = value.longValue()
+
+    tempret(0) = ((longValue >> 56) & 0xFF).toByte
+    tempret(1) = ((longValue >> 48) & 0xFF).toByte
+    tempret(2) = ((longValue >> 40) & 0xFF).toByte
+    tempret(3) = ((longValue >> 32) & 0xFF).toByte
+    tempret(4) = ((longValue >> 24) & 0xFF).toByte
+    tempret(5) = ((longValue >> 16) & 0xFF).toByte
+    tempret(6) = ((longValue >> 8)  & 0xFF).toByte
+    tempret(7) =  (longValue        & 0xFF).toByte
     tempret
   }
 
@@ -1072,8 +1076,8 @@ object ByteConverterLittleEndian extends ByteConverter  {
   override def bytesToUInt32(b0: Byte, b1: Byte, b2: Byte, b3: Byte) = ByteConverterBigEndian.bytesToUInt32(b3, b2, b1, b0)
   override def bytesToInt64(b0: Byte, b1 : Byte, b2 : Byte, b3 : Byte, b4 : Byte, b5 : Byte, b6 : Byte, b7 : Byte)
   = ByteConverterBigEndian.bytesToInt64(b7, b6, b5, b4, b3, b2, b1, b0)
-  override def bytesToUInt64(b0: Byte, b1 : Byte, b2 : Byte, b3 : Byte, b4 : Byte, b5 : Byte, b6 : Byte, b7 : Byte)
-  = ByteConverterBigEndian.bytesToUInt64(b7, b6, b5, b4, b3, b2, b1, b0)
+//  override def bytesToUInt64(b0: Byte, b1 : Byte, b2 : Byte, b3 : Byte, b4 : Byte, b5 : Byte, b6 : Byte, b7 : Byte)
+//  = ByteConverterBigEndian.bytesToUInt64(b7, b6, b5, b4, b3, b2, b1, b0)
   override def bytesToUInt64Shifted(b0: Byte, b1 : Byte, b2 : Byte, b3 : Byte, b4 : Byte, b5 : Byte, b6 : Byte, b7 : Byte)
   = ByteConverterBigEndian.bytesToUInt64Shifted(b7, b6, b5, b4, b3, b2, b1, b0)
 
@@ -1136,19 +1140,20 @@ object ByteConverterLittleEndian extends ByteConverter  {
     tempret
   }
 
-  def uInt64ToBytes(value: BigInt): Array[Byte] = {
+  def uInt64ToBytes(value: ULong): Array[Byte] = {
     require(value >= ZERO, s"Value $value is out of range of 4-byte unsigned array.")
     require(value <= uInt64Max, s"Value $value is out of range of 4-byte unsigned array.")
 
     val tempret = new Array[Byte](8)
-    tempret(7) = ((value >> 56) & 0xFF).toByte
-    tempret(6) = ((value >> 48) & 0xFF).toByte
-    tempret(5) = ((value >> 40) & 0xFF).toByte
-    tempret(4) = ((value >> 32) & 0xFF).toByte
-    tempret(3) = ((value >> 24) & 0xFF).toByte
-    tempret(2) = ((value >> 16) & 0xFF).toByte
-    tempret(1) = ((value >> 8)  & 0xFF).toByte
-    tempret(0) =  (value        & 0xFF).toByte
+    val longValue = value.longValue()
+    tempret(7) = ((longValue >> 56) & 0xFF).toByte
+    tempret(6) = ((longValue >> 48) & 0xFF).toByte
+    tempret(5) = ((longValue >> 40) & 0xFF).toByte
+    tempret(4) = ((longValue >> 32) & 0xFF).toByte
+    tempret(3) = ((longValue >> 24) & 0xFF).toByte
+    tempret(2) = ((longValue >> 16) & 0xFF).toByte
+    tempret(1) = ((longValue >> 8)  & 0xFF).toByte
+    tempret(0) =  (longValue        & 0xFF).toByte
     tempret
   }
 

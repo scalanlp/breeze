@@ -1,9 +1,8 @@
 package breeze.io
 
 import org.scalatest.FunSuite
-import java.io.{File, IOException}
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
+import java.io.{File}
+import spire.math.ULong
 
 /**
  * Created with IntelliJ IDEA.
@@ -228,11 +227,11 @@ sealed trait RandomAccessFileTest extends FunSuite {
   test("writeUInt64"){
     val file = getResource(fileHead + "UInt64")
     val stream = new RAF(file, "rw")
-    val UInt64Max = BigInt("18446744073709551615")
+    val UInt64Max = ULong("18446744073709551615")
 
-    stream.writeUInt64( 0L)
-    stream.writeUInt64( Array[BigInt](1L, 32767L, 9223372036854775807L) )
-    stream.writeUInt64( 9223372036854775807L )
+    stream.writeUInt64( ULong(0L))
+    stream.writeUInt64( Array[ULong](ULong(1L), ULong(32767L), ULong(9223372036854775807L)) )
+    stream.writeUInt64( ULong(9223372036854775807L) )
     stream.writeUInt64( Array(UInt64Max, UInt64Max ) )
     stream.close
 
