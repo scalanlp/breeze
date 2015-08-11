@@ -261,6 +261,45 @@ class RandBasis(val generator: RandomGenerator) {
   }
 
   /**
+   * Uniformly samples a long integer in [0,MAX_LONG]
+   */
+  val randLong: Rand[Long] = new Rand[Long] {
+    def draw = {
+      var value = generator.nextLong
+      if (value < 0L) {
+        value -= Long.MinValue
+      }
+      value
+    }
+  }
+
+  /**
+   * Uniformly samples a long integer in [0,n)
+   */
+  def randLong(n: Long): Rand[Long] = new Rand[Long] {
+    def draw = {
+      var value = generator.nextLong
+      if (value < 0L) {
+        value -= Long.MinValue
+      }
+      value % n
+    }
+  }
+
+  /**
+   * Uniformly samples a long integer in [n,m)
+   */
+  def randLong(n: Long, m: Long): Rand[Long] = new Rand[Long] {
+    def draw = {
+      var value = generator.nextLong
+      if (value < 0L) {
+        value -= Long.MinValue
+      }
+      value % (m - n) + n
+    }
+  }
+
+  /**
    * Samples a gaussian with 0 mean and 1 std
    */
   val gaussian :Rand[Double] = new Rand[Double] {

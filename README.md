@@ -2,7 +2,7 @@
 
 Breeze is a library for numerical processing. It aims to be generic, clean, and powerful without sacrificing (much) efficiency.
 
-The current version is 0.11.2. The latest release is 0.11.2.
+The current version is 0.12-SNAPSHOT. The latest release is 0.11.2.
 
 ## Documentation
 
@@ -66,7 +66,7 @@ Maven looks like this:
 
 ### Other build tools
 
-http://mvnrepository.com/artifact/org.scalanlp/breeze_2.10/0.10 (as an example) is a great resource for finding other configuration examples for other build tools.
+http://mvnrepository.com/artifact/org.scalanlp/breeze_2.10/0.11.2 (as an example) is a great resource for finding other configuration examples for other build tools.
 
 See documentation (linked above!) for more information on using Breeze.
 
@@ -99,6 +99,14 @@ Contributions from:
 * Xiangrui Meng (@mengxr)
 * Gabriel Schubiner (@gabeos)
 * Debasish Das (@debasish83)
+* Julien Dumazert (@DumazertJulien)
+* Matthias Langer (@bashimao)
+
+Corporate (Code) Contributors:
+* [Semantic Machines](http://www.semanticmachines.com/) (@semanticmachines)
+* [ContentSquare](http://www.contentsquare.com/en/)
+* Big Data Analytics, Verizon Lab, Palo Alto
+* [crealytics GmbH, Berlin/Passau, Germany](https://crealytics.com/)
 
 
 And others (contact David Hall if you've contributed code and aren't listed).

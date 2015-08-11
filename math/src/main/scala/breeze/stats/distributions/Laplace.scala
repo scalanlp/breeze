@@ -16,7 +16,7 @@ case class Laplace(location: Double, scale: Double)(implicit rand: RandBasis = R
 
   def entropy: Double = 1 + log(2 * scale)
 
-  def logNormalizer: Double = 2 * scale
+  def logNormalizer: Double = math.log(2 * scale)
 
   /**
    * Gets one sample from the distribution. Equivalent to sample()

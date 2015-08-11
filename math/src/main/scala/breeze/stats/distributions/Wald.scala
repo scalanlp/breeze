@@ -24,7 +24,7 @@ case class Wald(mean: Double, shape: Double)(implicit rand: RandBasis = Rand) ex
 
   def entropy: Double = ???
 
-  def logNormalizer: Double = math.sqrt(2 * Pi / shape)
+  def logNormalizer: Double = 0.5 * math.log(2 * Pi / shape)
 
   /**
    * Gets one sample from the distribution. Equivalent to sample()
