@@ -618,7 +618,7 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
     rafObj.write(converter.uInt64ToBytes(v))
   }
 
-  /** Tries to write an array of UInt64s (described as Longs) to the current getFilePointer().
+  /** Tries to write an array of UInt64s (input as [[spire.math.ULong]]) to the current getFilePointer().
     * Will throw error if value < 0.
     */
   @throws(classOf[IOException])
@@ -878,10 +878,6 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
   */
 abstract class ByteConverter {
 
-  final val ZERO = BigInt("0")
-  final val uInt64Max = BigInt("18446744073709551615")
-  final val Int64Max = BigInt( Long.MaxValue )
-
   ///// bytesToXXX /////
   /**Takes 1 Byte and returns a UInt8 (as Short)*/
   def byteToUInt8(b0: Byte): Short = {
@@ -938,7 +934,8 @@ abstract class ByteConverter {
   /**Takes a UInt64 (as ULong), and returns an array of 8 bytes*/
   def uInt64ToBytes(value: ULong): Array[Byte]
 
-  /**Takes an Int64 (Long), and returns an array of 8 bytes, shifted up to a UInt64. See [[breeze.io.ByteConverter.bytesToUInt64Shifted()]]*/
+  /**Takes an Int64 (Long), and returns an array of 8 bytes, shifted up to a UInt64.
+    * See [[breeze.io.ByteConverter.bytesToUInt64Shifted()]]*/
   def uInt64ShiftedToBytes(value: Long): Array[Byte]
 
 }
@@ -1033,8 +1030,8 @@ object ByteConverterBigEndian extends ByteConverter {
   }
 
   def uInt64ToBytes(value: ULong): Array[Byte] = {
-//    require(value >= ZERO, s"Value $value is out of range of 4-byte unsigned array.")
-//    require(value <= uInt64Max, s"Value $value is out of range of 4-byte unsigned array.")
+//    require(value >= ZERO, s"Value $value is out of range of 8-byte unsigned array.")
+//    require(value <= uInt64Max, s"Value $value is out of range of 8-byte unsigned array.")
 
     val tempret = new Array[Byte](8)
     val longValue = value.longValue()
@@ -1141,8 +1138,8 @@ object ByteConverterLittleEndian extends ByteConverter  {
   }
 
   def uInt64ToBytes(value: ULong): Array[Byte] = {
-    require(value >= ZERO, s"Value $value is out of range of 4-byte unsigned array.")
-    require(value <= uInt64Max, s"Value $value is out of range of 4-byte unsigned array.")
+//    require(value >= ZERO, s"Value $value is out of range of 8-byte unsigned array.")
+//    require(value <= uInt64Max, s"Value $value is out of range of 8-byte unsigned array.")
 
     val tempret = new Array[Byte](8)
     val longValue = value.longValue()
