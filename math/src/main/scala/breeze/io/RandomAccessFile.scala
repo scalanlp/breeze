@@ -25,13 +25,22 @@ import spire.math.ULong
   * <tr><td>Int32: Signed 32-bit integer  </td>   <td>int</td>        <td>Int</td>        <td>[-2147483648, 2147483647]</td>        </tr>
   * <tr><td>UInt32: Unsigned 32-bit integer  </td> <td>(long)</td>         <td>(Long)</td>        <td>[0, 4294967295]</td> </tr>
   * <tr><td>Int64: Signed 64-bit integer  </td>   <td>long</td>        <td>Long</td>        <td>[-9223372036854775808, 9223372036854775807]</td>        </tr>
-  * <tr><td>UInt64: Unsigned 64-bit integer*  </td> <td>long</td>         <td>Long</td>        <td>[0, <b>9223372036854775807</b>]</td> </tr>
+  * <tr><td>UInt64: Unsigned 64-bit integer*  </td> <td>(spire.math.Ulong)</td>         <td>(spire.math.ULong)</td>        <td>[0, <b>18446744073709551615</b>]</td> </tr>
   * <tr><td>UInt64Shifted: Unsigned 64-bit integer, shifted to signed range*  </td>   <td>(long)*</td>        <td>(Long)*</td>        <td>[0, 18446744073709551615*]</td>        </tr>
   * </table>
   *
   * *note: given that the JVM/Scala does not have a UInt64 type, nor a Int128 to promote to, UInt64s are dealt with in two
-  * ways... as a BigInt (which is the Scala wrapper for the java BigInteger)
-  * or as a shifted Int64, where UInt64 is shifted down in its range to cover
+  * ways... (1) as a [[spire.math.ULong]] (which represents UInt64 wrapped as a regular Long where the negative
+  * values represent their unsigned two's complement equivalent:
+  * <table border="2">
+  * <tr><th>Unsigned ULong value</th> <th>Internal Long (signed) wrapped by ULong</th></tr>
+  * <tr><th>0</th> <th>0</th></tr>
+  * <tr><th>2&#94;63-1</th> <th>2&#94;63-1</th></tr>
+  * <tr><th>2&#94;63</th> <th>-2&#94;63</th></tr>
+  * <tr><th>2&#94;64-1</th> <th>-1</th></tr>
+  * </table>
+  *
+  * or (2) as a shifted Int64, where UInt64 is shifted down by 2&#94;63 in its range to cover
   * both positive and negative values of Int64 (this is compatible with + and -, for use as timestamps, for example,
   * but is of course not compatible with * and / operations)
   *
