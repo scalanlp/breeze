@@ -1,6 +1,7 @@
 package breeze.linalg
 
 import breeze.benchmark.{MyRunner, BreezeBenchmark}
+import breeze.linalg.operators.DenseVectorSupportMethods
 import breeze.numerics._
 import spire.syntax.cfor._
 
@@ -9,7 +10,7 @@ import spire.syntax.cfor._
  */
 class DenseDotProductBenchmark extends BreezeBenchmark {
 
-  val dv, dv2 = DenseVector.rand(200)
+  val dv, dv2 = DenseVector.rand(5)
 
   def timeSmallDVDot(reps: Int) = {
     var sum = 0.0
@@ -31,8 +32,23 @@ class DenseDotProductBenchmark extends BreezeBenchmark {
     sum
   }
 
+  def timeSmallSupport(reps: Int) = {
+    var sum = 0.0
+    cforRange(0 until reps) { rep =>
+      sum += DenseVectorSupportMethods.smallDotProduct_Double(dv.data, dv2.data, dv.length)
+    }
+    sum
+  }
 
-  /*
+  def timeSmallOverhead(reps: Int) = {
+    var sum = 0.0
+    cforRange(0 until reps) { rep =>
+      sum += DenseVector.canDotD(dv, dv2)
+    }
+    sum
+  }
+
+
   def timeSmallDVDotInline(reps: Int) = {
     var sum = 0.0
     cforRange(0 until reps) ( rep =>
@@ -44,7 +60,6 @@ class DenseDotProductBenchmark extends BreezeBenchmark {
     )
     sum
   }
-  */
 }
 
 object DenseDotProductBenchmark extends MyRunner(classOf[DenseDotProductBenchmark])
