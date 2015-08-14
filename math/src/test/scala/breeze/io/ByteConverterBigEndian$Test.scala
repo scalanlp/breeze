@@ -2,6 +2,7 @@ package breeze.io
 
 import org.scalatest.FunSuite
 import breeze.io.ByteConverterBigEndian._
+import spire.math.ULong
 
 /**
  * Created by Kenta on 12/10/13.
@@ -129,16 +130,24 @@ class ByteConverterBigEndian$Test extends FunSuite {
   }
 
   test("UInt64"){
-    var valueL: Long = 0L
+    var valueL: ULong = ULong(0L)
     var ba = uInt64ToBytes( valueL )
     assert(ba.length == 8)
     assert(valueL == bytesToUInt64(ba(0), ba(1), ba(2), ba(3), ba(4), ba(5), ba(6), ba(7)))
 
-    valueL = 9223372036854775807L
+    valueL = ULong(9223372036854775807L)
     ba = uInt64ToBytes( valueL )
     assert(valueL == bytesToUInt64(ba(0), ba(1), ba(2), ba(3), ba(4), ba(5), ba(6), ba(7)))
 
-    valueL = 4000000000000000000L
+    valueL = ULong(9223372036854775807L)+ ULong(1000)
+    ba = uInt64ToBytes( valueL )
+    assert(valueL == bytesToUInt64(ba(0), ba(1), ba(2), ba(3), ba(4), ba(5), ba(6), ba(7)))
+
+    valueL = ULong(9223372036854775807L)+ ULong(1)
+    ba = uInt64ToBytes( valueL )
+    assert( ( - 9223372036854775807L - 1L == ( bytesToInt64(ba(0), ba(1), ba(2), ba(3), ba(4), ba(5), ba(6), ba(7)) ) ) )
+
+    valueL = ULong(4000000000000000000L)
     ba = uInt64ToBytes( valueL )
     assert(valueL == bytesToUInt64(ba(0), ba(1), ba(2), ba(3), ba(4), ba(5), ba(6), ba(7)))
   }
