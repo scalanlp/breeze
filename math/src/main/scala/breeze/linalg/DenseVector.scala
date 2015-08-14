@@ -534,12 +534,8 @@ object DenseVector extends VectorConstructors[DenseVector]
   implicit val canAddIntoD: OpAdd.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = {
     new OpAdd.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
       def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
-        require(a.length == b.length, s"Vectors must have same length: ${a.length} != ${b.length}")
-        // negative strides want the offset to be the *last* logical element, not the first. so weird.
-        val boff = if (b.stride >= 0) b.offset else (b.offset + b.stride * (b.length - 1))
-        val aoff = if (a.stride >= 0) a.offset else (a.offset + a.stride * (a.length - 1))
-        blas.daxpy(
-          a.length, 1.0, b.data, boff, b.stride, a.data, aoff, a.stride)
+        canDaxpy(a, 1.0, b)
+
       }
       implicitly[BinaryUpdateRegistry[Vector[Double], Vector[Double], OpAdd.type]].register(this)
     }
@@ -548,11 +544,20 @@ object DenseVector extends VectorConstructors[DenseVector]
   implicit object canDaxpy extends scaleAdd.InPlaceImpl3[DenseVector[Double], Double, DenseVector[Double]] with Serializable {
     def apply(y: DenseVector[Double], a: Double, x: DenseVector[Double]) {
       require(x.length == y.length, s"Vectors must have same length: ${x.length} != ${y.length}")
-      val xoff = if (x.stride >= 0) x.offset else (x.offset + x.stride * (x.length - 1))
-      val yoff = if (y.stride >= 0) y.offset else (y.offset + y.stride * (y.length - 1))
-      blas.daxpy(
-        x.length, a, x.data, xoff, x.stride, y.data, yoff, y.stride)
+      // using blas here is always a bad idea.
+      if (x.offset == 0 && y.offset == 0 && x.stride == 1 && y.stride == 1) {
+        val ad = x.data
+        val bd = y.data
+        cforRange(0 until x.length) { i =>
+          bd(i) += ad(i) * a
+        }
+      } else {
+        cforRange(0 until x.length) { i =>
+          y(i) += x(i) * a
+        }
+      }
     }
+
   }
   implicitly[TernaryUpdateRegistry[Vector[Double], Double, Vector[Double], scaleAdd.type]].register(canDaxpy)
 
@@ -564,11 +569,7 @@ object DenseVector extends VectorConstructors[DenseVector]
   implicit val canSubIntoD: OpSub.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = {
     new OpSub.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
       def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
-        require(a.length == b.length, s"Vectors must have same length: ${a.length} != ${b.length}")
-        val boff = if (b.stride >= 0) b.offset else (b.offset + b.stride * (b.length - 1))
-        val aoff = if (a.stride >= 0) a.offset else (a.offset + a.stride * (a.length - 1))
-        blas.daxpy(
-          a.length, -1.0, b.data, boff, b.stride, a.data, aoff, a.stride)
+        canDaxpy(a, -1.0, b)
       }
       implicitly[BinaryUpdateRegistry[Vector[Double], Vector[Double], OpSub.type]].register(this)
     }
@@ -585,13 +586,6 @@ object DenseVector extends VectorConstructors[DenseVector]
       if (a.length < 200) { // benchmarks suggest breakeven point is around length 200
         if (a.offset == 0 && b.offset == 0 && a.stride == 1 && b.stride == 1) {
           DenseVectorSupportMethods.smallDotProduct_Double(a.data, b.data, a.length);
-          //            val ad = a.data
-          //            val bd = b.data
-          //            var sum = 0.0
-          //            cforRange(0 until a.length) { i =>
-          //              sum += ad(i) * bd(i)
-          //            }
-          //            sum
         } else {
           var sum = 0.0
           cforRange(0 until a.length) { i =>
