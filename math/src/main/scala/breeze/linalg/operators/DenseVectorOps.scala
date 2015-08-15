@@ -89,14 +89,30 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
       var aoff = a.offset
       val result = DenseVector.zeros[T](a.length)
       val rd = result.data
+      val stride = a.stride
 
-      var i = 0
-      while(i < a.length) {
-        rd(i) = op(ad(aoff), b)
-        aoff += a.stride
-        i += 1
+      // https://wikis.oracle.com/display/HotSpotInternals/RangeCheckElimination
+      if (stride == 1) {
+        if (aoff == 0) {
+          cforRange(0 until rd.length) { j =>
+            rd(j) = op(ad(j), b)
+          }
+        } else {
+          cforRange(0 until rd.length) { j =>
+            rd(j) = op(ad(j + aoff), b)
+          }
+        }
+      } else {
+        var i = 0
+        var j = aoff
+        while(i < rd.length) {
+          rd(i) = op(ad(j), b)
+          i += 1
+          j += stride
+        }
       }
-     result
+
+      result
     }
     implicitly[BinaryRegistry[Vector[T], T, Op.type, Vector[T]]].register(this)
   }
@@ -187,16 +203,32 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   op: Op.Impl2[T, T, T]):Op.InPlaceImpl2[DenseVector[T], T] = new Op.InPlaceImpl2[DenseVector[T], T] {
     def apply(a: DenseVector[T], b: T):Unit = {
       val ad = a.data
-      var aoff = a.offset
+      val aoff = a.offset
+      val stride = a.stride
 
-      var i = 0
-      while(i < a.length) {
-        ad(aoff) = op(ad(aoff), b)
-        aoff += a.stride
-        i += 1
+      // https://wikis.oracle.com/display/HotSpotInternals/RangeCheckElimination
+      if (stride == 1) {
+        if (aoff == 0) {
+          cforRange(0 until ad.length) { j =>
+            ad(j) = op(ad(j), b)
+          }
+        } else {
+          cforRange(0 until ad.length) { j =>
+            ad(j) = op(ad(j + aoff), b)
+          }
+        }
+      } else {
+        var i = 0
+        var j = aoff
+        while(i < ad.length) {
+          ad(i) = op(ad(j), b)
+          i += 1
+          j += stride
+        }
       }
-      implicitly[BinaryUpdateRegistry[Vector[T], T, Op.type]].register(this)
+
     }
+    implicitly[BinaryUpdateRegistry[Vector[T], T, Op.type]].register(this)
   }
 
   @expand

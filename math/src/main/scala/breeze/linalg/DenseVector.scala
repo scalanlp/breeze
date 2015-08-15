@@ -603,23 +603,6 @@ object DenseVector extends VectorConstructors[DenseVector]
   }
   implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpMulInner.type, Double]].register(canDotD)
 
-  implicit val canScaleIntoD: OpMulScalar.InPlaceImpl2[DenseVector[Double], Double] = {
-    new OpMulScalar.InPlaceImpl2[DenseVector[Double], Double] {
-      def apply(a: DenseVector[Double], b: Double) = {
-        // in stark contrast to the above, this works the way you expect w.r.t. negative strides.
-        // Fuck BLAS
-        blas.dscal(
-          a.length, b, a.data, a.offset, a.stride)
-      }
-      implicitly[BinaryUpdateRegistry[Vector[Double], Double, OpMulScalar.type]].register(this)
-    }
-
-  }
-  implicit val canScaleD: OpMulScalar.Impl2[DenseVector[Double], Double, DenseVector[Double]] = {
-    binaryOpFromUpdateOp(implicitly[CanCopy[DenseVector[Double]]], canScaleIntoD, implicitly[ClassTag[Double]])
-  }
-  implicitly[BinaryRegistry[Vector[Double], Double, OpMulScalar.type, Vector[Double]]].register(canScaleD)
-
   implicit val canSetD: OpSet.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = new OpSet.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
     def apply(a: DenseVector[Double], b: DenseVector[Double]) {
       require(a.length == b.length, s"Vectors must have same length: ${a.length} != ${b.length}")
