@@ -603,16 +603,6 @@ object DenseVector extends VectorConstructors[DenseVector]
   }
   implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpMulInner.type, Double]].register(canDotD)
 
-  implicit val canSetD: OpSet.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = new OpSet.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
-    def apply(a: DenseVector[Double], b: DenseVector[Double]) {
-      require(a.length == b.length, s"Vectors must have same length: ${a.length} != ${b.length}")
-      val boff = if (b.stride >= 0) b.offset else (b.offset + b.stride * (b.length - 1))
-      val aoff = if (a.stride >= 0) a.offset else (a.offset + a.stride * (a.length - 1))
-      blas.dcopy(
-        a.length, b.data, boff, b.stride, a.data, aoff, a.stride)
-    }
-    implicitly[BinaryUpdateRegistry[Vector[Double], Vector[Double], OpSet.type]].register(this)
-  }
 
   /*
   TODO: scaladoc crashes on this. I don't know why. It makes me want to die a little.

@@ -524,10 +524,12 @@ class DenseVectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[DenseVec
       for{x <- Arbitrary.arbitrary[Double].map { _  % 1E100}
           y <- Arbitrary.arbitrary[Double].map { _ % 1E100 }
           z <- Arbitrary.arbitrary[Double].map { _ % 1E100 }
+          stride <- Gen.choose(1, 4)
+          offset <- Gen.choose(0, 5)
       } yield {
-        (DenseVector.fill(N)(math.random * x),
-          DenseVector.fill(N)(math.random * y),
-          DenseVector.fill(N)(math.random * z))
+        (DenseVector.fill(N * stride + offset)(math.random * x).apply(offset until (N * stride + offset) by stride),
+          DenseVector.fill(N * stride + offset)(math.random * y).apply(offset until (N * stride + offset) by stride),
+          DenseVector.fill(N * stride + offset)(math.random * z).apply(offset until (N * stride + offset) by stride))
       }
     }
   }

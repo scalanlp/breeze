@@ -9,7 +9,8 @@ import spire.syntax.cfor._
 class DenseScaleBenchmark extends BreezeBenchmark {
   assert(usingNatives)
 
-  val dv, dv2 = DenseVector.rand(5)
+//  val dv, dv2 = DenseVector.rand(5000)
+  val dv, dv2 = DenseVector.rand(100000).apply(0 to -1 by 2)
 
   def timeSmallDVScale(reps: Int) = {
     var sum = 0.0
@@ -23,7 +24,7 @@ class DenseScaleBenchmark extends BreezeBenchmark {
     cforRange(0 until reps) { rep =>
       val ad = dv.data
       cforRange(0 until dv.length) { i =>
-        ad(i) *= 1.0001
+        ad(2 * i) *= 1.0001
       }
     }
     dv2

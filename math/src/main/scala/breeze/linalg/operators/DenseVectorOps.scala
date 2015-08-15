@@ -178,17 +178,29 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
   op: Op.Impl2[T, T, T]):Op.InPlaceImpl2[DenseVector[T], DenseVector[T]] = new Op.InPlaceImpl2[DenseVector[T], DenseVector[T]] {
     def apply(a: DenseVector[T], b: DenseVector[T]):Unit = {
+      require(a.length == b.length, "Lengths must match!")
       val ad = a.data
       val bd = b.data
-      var aoff = a.offset
-      var boff = b.offset
+      val aoff = a.offset
+      val boff = b.offset
+      val astride = a.stride
+      val bstride = b.stride
+      val length = a.length
 
-      var i = 0
-      while(i < a.length) {
-        ad(aoff) = op(ad(aoff), bd(boff))
-        aoff += a.stride
-        boff += b.stride
-        i += 1
+      if (astride == 1 && bstride == 1) {
+        if (aoff == 0 && boff == 0) {
+          cforRange(0 until length) { j =>
+            ad(j) = op(ad(j), bd(j))
+          }
+        } else {
+          cforRange(0 until length) { j =>
+            ad(j + aoff) = op(ad(j + aoff), bd(j + boff))
+          }
+        }
+      } else {
+        cforRange(0 until length) { i =>
+          ad(aoff + astride * i) = op(ad(aoff + astride * i), bd(boff + bstride * i))
+        }
       }
     }
 //    implicitly[BinaryUpdateRegistry[DenseVector[T], Vector[T], Op.type]].register(op)
@@ -205,23 +217,24 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
       val ad = a.data
       val aoff = a.offset
       val stride = a.stride
+      val length = a.length
 
       // https://wikis.oracle.com/display/HotSpotInternals/RangeCheckElimination
       if (stride == 1) {
         if (aoff == 0) {
-          cforRange(0 until ad.length) { j =>
+          cforRange(0 until length) { j =>
             ad(j) = op(ad(j), b)
           }
         } else {
-          cforRange(0 until ad.length) { j =>
-            ad(j) = op(ad(j + aoff), b)
+          cforRange(0 until length) { j =>
+            ad(j + aoff) = op(ad(j + aoff), b)
           }
         }
       } else {
         var i = 0
         var j = aoff
-        while(i < ad.length) {
-          ad(i) = op(ad(j), b)
+        while(i < length) {
+          ad(j) = op(ad(j), b)
           i += 1
           j += stride
         }
