@@ -20,7 +20,8 @@ import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
  */
 object eig extends UFunc {
 
-  case class Eig[V, M](eigenvalues: V, eigenvectorsComplex: V, eigenvectors: M)
+  // TODO: probably we should just return an eigenValues: DV[Complex] ?
+  case class Eig[V, M](eigenvalues: V, eigenvaluesComplex: V, eigenvectors: M)
   type DenseEig = Eig[DenseVector[Double], DenseMatrix[Double]]
 
 
