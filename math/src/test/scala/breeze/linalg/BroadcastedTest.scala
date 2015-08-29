@@ -99,4 +99,18 @@ class BroadcastedTest extends FunSuite {
     assert(sum(ctr(::, *)) ===   Counter(1-> 5.0, 4 -> 5.0))
   }
 
+  test("foreach") {
+    val dm = DenseMatrix((-1.0,-2.0,-3.0),
+      (1.0,2.0,3.0),
+      (4.0,5.0,6.0))
+    var sum = 0.0
+    dm(*, ::).foreach(sum += _(1))
+    assert(sum == 5)
+
+    sum = 0.0
+    dm(::, *).foreach(sum += _(1))
+    assert(sum == 6)
+
+  }
+
 }
