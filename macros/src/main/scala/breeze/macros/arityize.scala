@@ -1,7 +1,7 @@
 package breeze.macros
 
 import scala.annotation.{StaticAnnotation, Annotation}
-import scala.reflect.macros.Context
+import scala.reflect.macros.blackbox.Context
 
 /**
  * TODO
