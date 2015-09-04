@@ -10,7 +10,7 @@ import breeze.numerics._
  *
  * @author dlwh
  **/
-case class StudentsT(degreesOfFreedom: Double)(implicit randBasis: RandBasis = Rand) extends ContinuousDistr[Double] with Moments[Double, Double] {
+case class StudentsT(degreesOfFreedom: Double)(implicit randBasis: RandBasis = Rand) extends ContinuousDistr[Double] with Moments[Double, Double] with HasCdf {
   require(degreesOfFreedom > 0, "degreesOfFreedom must be positive, but got " + degreesOfFreedom)
   override def toString: String = ScalaRunTime._toString(this)
 
@@ -25,9 +25,21 @@ case class StudentsT(degreesOfFreedom: Double)(implicit randBasis: RandBasis = R
     X
   }
 
+
+  override def probability(x: Double, y: Double): Double = {
+    val t = new org.apache.commons.math3.distribution.TDistribution(degreesOfFreedom)
+    t.probability(x, y)
+  }
+
+  def cdf(x: Double):Double = {
+    val t = new org.apache.commons.math3.distribution.TDistribution(degreesOfFreedom)
+    t.cumulativeProbability(x)
+  }
+
+
   def unnormalizedLogPdf(x: Double): Double = -(degreesOfFreedom  + 1)/2 * math.log(1 + (x * x)/degreesOfFreedom)
 
-  lazy val logNormalizer: Double = math.sqrt(math.Pi * degreesOfFreedom) + lgamma((degreesOfFreedom / 2) - lgamma(degreesOfFreedom + 1)/2)
+  lazy val logNormalizer: Double = 0.5 * math.log(math.Pi * degreesOfFreedom) + lgamma(degreesOfFreedom / 2) - lgamma((degreesOfFreedom + 1)/2)
 
   def mean: Double = innerInstance.getNumericalMean
 

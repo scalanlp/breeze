@@ -15,6 +15,8 @@ package breeze.linalg
  See the License for the specific language governing permissions and
  limitations under the License.
 */
+
+import breeze.linalg.immutable
 import org.scalatest._
 import org.scalatest.junit._
 import org.scalatest.prop._
@@ -23,7 +25,6 @@ import breeze.math.Complex
 
 @RunWith(classOf[JUnitRunner])
 class MatrixTest extends FunSuite with Checkers {
-  /*
   test("Multiply") {
     val a = Matrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
     val ad = DenseMatrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
@@ -31,7 +32,6 @@ class MatrixTest extends FunSuite with Checkers {
     val bd = DenseMatrix((7.0, -2.0, 8.0),(-3.0, -3.0, 1.0),(12.0, 0.0, 5.0))
     val c = DenseVector(6.0,2.0,3.0)
     assert( (a * b: Matrix[Double]) === Matrix((37.0, -8.0, 25.0), (85.0, -23.0, 67.0)))
-    assert((a * bd :DenseMatrix[Double])=== DenseMatrix((37.0, -8.0, 25.0), (85.0, -23.0, 67.0)))
     assert((ad * b :DenseMatrix[Double])=== DenseMatrix((37.0, -8.0, 25.0), (85.0, -23.0, 67.0)))
     assert(a * c === DenseVector(19.0,52.0))
     assert(b * c === DenseVector(62.0, -21.0, 87.0))
@@ -49,10 +49,17 @@ class MatrixTest extends FunSuite with Checkers {
 //    val z : DenseMatrix[Double] = b * (b + 1.0)
 //    assert(z === DenseMatrix((164.0,5.0,107.0),(-5.0,10.0,-27.0),(161.0,-7.0,138.0)))
   }
-  */
+
+  test("big multiply bug around 256") {
+    val phi2: Matrix[Double] = DenseMatrix.ones[Double](400, 5)
+    val w2: Matrix[Double] = DenseMatrix.ones[Double](5, 24)
+
+    val theta2 = (phi2 * w2)//.toDenseMatrix
+    assert(theta2(256,0) != 0)
+  }
 
   test("Setting") {
-    val a: Matrix[Double] = Matrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
+    val a: immutable.Matrix[Double] = Matrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
     val b = Matrix((7.0, -2.0, 8.0),(-3.0, -3.0, 1.0))
     val c = DenseMatrix((3.0, -1.0, 9.0),(-2.0, -2.0, 2.0))
     a := b
@@ -88,7 +95,7 @@ class MatrixTest extends FunSuite with Checkers {
       (Complex(12,12), Complex(0,0), Complex(5,5)))
     val c = DenseVector(Complex(6,0), Complex(2,0), Complex(3,0))
     val cs = SparseVector(Complex(6,0), Complex(2,0), Complex(3,0))
-    val value: Matrix[Complex] = a * b
+    val value: immutable.Matrix[Complex] = a * b
     assert(value === Matrix((Complex(0,74), Complex(0,-16), Complex(0,50)),
       (Complex(0,170), Complex(0,-46), Complex(0,134))))
     assert(b * c === DenseVector(Complex(62,62), Complex(-21,-21), Complex(87,87)))

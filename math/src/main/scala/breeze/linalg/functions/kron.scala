@@ -1,5 +1,6 @@
 package breeze.linalg
 
+import breeze.linalg.immutable.Matrix
 import breeze.linalg.operators.OpMulScalar
 import scala.reflect.ClassTag
 import breeze.storage.Zero

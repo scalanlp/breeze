@@ -25,7 +25,7 @@ import org.junit.runner.RunWith
 
 
 @RunWith(classOf[JUnitRunner])
-class UniformTest extends FunSuite with Checkers with MomentsTestBase[Double] {
+class UniformTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase with MomentsTestBase[Double] with HasCdfTestBase {
 
   import Arbitrary.arbitrary;
 
@@ -36,12 +36,12 @@ class UniformTest extends FunSuite with Checkers with MomentsTestBase[Double] {
 
   implicit def arbDistr = Arbitrary {
     for(a <- arbitrary[Double].map{_.abs % 10000.0};
-        b <- arbitrary[Double].map {_.abs % 10000.0}) yield new Uniform(a min b,b min a);
+        b <- arbitrary[Double].map {_.abs % 10000.0}
+        if a != b) yield new Uniform(a min b,a max b)
   }
 
   test("pdf outside range should be 0.0") {
     assert(Uniform(0,1).pdf(1.2) === 0.0)
   }
-
-
-}  
+  override type Distr = Uniform
+}

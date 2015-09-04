@@ -1,6 +1,7 @@
 package breeze.signal.support
 
 import edu.emory.mathcs.jtransforms.fft.{DoubleFFT_1D, DoubleFFT_2D}
+import spire.syntax.cfor._
 import breeze.linalg.{DenseVector, DenseMatrix}
 import breeze.math.Complex
 
@@ -15,26 +16,32 @@ import breeze.math.Complex
 object JTransformsSupport {
 
   //maintain instance of transform to eliminate repeated initialization
-  private var fft_instD1D: (Int, DoubleFFT_1D) = (0, null)
+  private val fft_instD1D = new ThreadLocal[(Int, DoubleFFT_1D)]
+
   def getD1DInstance(length: Int): DoubleFFT_1D = {
-    if(length == fft_instD1D._1) fft_instD1D._2
+    if (fft_instD1D.get != null && length == fft_instD1D.get._1) fft_instD1D.get._2
     else {
-      fft_instD1D = (length, new DoubleFFT_1D(length))
-      fft_instD1D._2
-    }
-  }
-  private var fft_instD2D: (Int, Int, DoubleFFT_2D) = (0, 0, null)
-  def getD2DInstance(rows: Int, columns: Int): DoubleFFT_2D = {
-    if(rows == fft_instD2D._1 && columns == fft_instD2D._2) fft_instD2D._3
-    else {
-      fft_instD2D = (rows, columns, new DoubleFFT_2D(rows, columns))
-      fft_instD2D._3
+      fft_instD1D.set((length, new DoubleFFT_1D(length)))
+      fft_instD1D.get()._2
     }
   }
 
-  def tempToDenseVector(tempArr: Array[Double]): DenseVector[Complex] = {
+  private val fft_instD2D = new ThreadLocal[(Int, Int, DoubleFFT_2D)]
+
+  def getD2DInstance(rows: Int, columns: Int): DoubleFFT_2D = {
+    val inst = fft_instD2D.get
+    if(inst != null && rows == inst._1 && columns == inst._2) inst._3
+    else {
+      fft_instD2D.set((rows, columns, new DoubleFFT_2D(rows, columns)))
+      fft_instD2D.get()._3
+    }
+  }
+
+  private[signal] def tempToDenseVector(tempArr: Array[Double]): DenseVector[Complex] = {
     val tempRet = DenseVector.zeros[Complex](tempArr.length/2)
-    for (n <- 0 until tempRet.length) tempRet(n) = new Complex( tempArr(2*n), tempArr(2*n+1))
+    cforRange(0 until tempRet.length) { n =>
+      tempRet(n) = new Complex( tempArr(2*n), tempArr(2*n+1))
+    }
     tempRet
   }
 
@@ -43,7 +50,7 @@ object JTransformsSupport {
    * @param tempDV
    * @return
    */
-  def denseVectorCToTemp(tempDV: DenseVector[Complex]): Array[Double] = {
+  private[signal] def denseVectorCToTemp(tempDV: DenseVector[Complex]): Array[Double] = {
     val tempRet = new Array[Double](tempDV.length*2)
     for(n <- 0 until tempDV.length) {
       tempDV(n) match {
@@ -61,7 +68,7 @@ object JTransformsSupport {
    * @param tempDV
    * @return
    */
-  def denseVectorDToTemp(tempDV: DenseVector[Double]): Array[Double] = {
+  private[signal] def denseVectorDToTemp(tempDV: DenseVector[Double]): Array[Double] = {
     val tempArr = new Array[Double](tempDV.length*2)
     for(n <- 0 until tempDV.length) tempArr(n) = tempDV(n)
     tempArr
@@ -72,7 +79,7 @@ object JTransformsSupport {
    * @param tempDM
    * @return
    */
-  def denseMatrixCToTemp(tempDM: DenseMatrix[Complex]): Array[Double] = {
+  private[signal] def denseMatrixCToTemp(tempDM: DenseMatrix[Complex]): Array[Double] = {
     val tempCols = tempDM.cols
     val tempRet = new Array[Double](tempDM.rows * tempCols * 2)
     for(r <- 0 until tempDM.rows; c <- 0 until tempDM.cols) {
@@ -91,7 +98,7 @@ object JTransformsSupport {
    * @param tempDM
    * @return
    */
-  def denseMatrixDToTemp(tempDM: DenseMatrix[Double]): Array[Double] = {
+  private[signal] def denseMatrixDToTemp(tempDM: DenseMatrix[Double]): Array[Double] = {
     val tempCols = tempDM.cols
     val tempRet = new Array[Double](tempDM.rows * tempCols * 2)
     for(r <- 0 until tempDM.rows; c <- 0 until tempDM.cols) {
@@ -100,7 +107,7 @@ object JTransformsSupport {
     tempRet
   }
 
-  def tempToDenseMatrix(tempArr: Array[Double], rows: Int, cols: Int): DenseMatrix[Complex] = {
+  private[signal] def tempToDenseMatrix(tempArr: Array[Double], rows: Int, cols: Int): DenseMatrix[Complex] = {
     val tempRet = DenseMatrix.zeros[Complex](rows, cols)
     for (r <- 0 until rows; c <- 0 until cols) {
       val ind = r*2*cols + 2*c

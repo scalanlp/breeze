@@ -33,6 +33,18 @@ class VectorTest extends FunSuite {
     assert( dvTest.reduceRight( (p1: Int, p2: Int) => 2 * p1 - p2 )  == 0 )
   }
 
+  test("unary !") {
+    val b = Vector(true, false, false)
+    assert(!b == Vector(false, true, true))
+  }
+
+  test("hashcode") {
+    val v: DenseVector[Int] = DenseVector(1, 2, 0, 0, 3)
+    val v2: SparseVector[Int] = SparseVector(5)((0 ->1), (1 -> 2), (4->3))
+    assert(v === v2)
+    assert(v.hashCode == v2.hashCode)
+  }
+
 }
 
 

@@ -14,6 +14,17 @@ package breeze
  See the License for the specific language governing permissions and
  limitations under the License.
 */
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+import breeze.linalg.DenseMatrix
+import breeze.numerics.abs
+=======
+import breeze.linalg.immutable
+>>>>>>> ff55711415c7e3151f76488211a74e5321f40de8
+=======
+import breeze.linalg.immutable
+>>>>>>> ff55711415c7e3151f76488211a74e5321f40de8
 import io.{CSVWriter, CSVReader}
 import linalg.operators._
 import breeze.linalg.support.{RangeExtender, CanCopy}
@@ -22,7 +33,7 @@ import math.Semiring
 import storage.Zero
 import java.io.{File, FileReader}
 import scala.reflect.ClassTag
-import breeze.linalg.DenseMatrix.canMapValues
+import DenseMatrix.canMapValues
 
 
 /**
@@ -81,7 +92,7 @@ package object linalg {
     }
   }
 
-  def csvwrite(file: File, mat: Matrix[Double],
+  def csvwrite(file: File, mat: immutable.Matrix[Double],
                separator: Char=',',
                quote: Char='\u0000',
                escape: Char='\\',
@@ -98,26 +109,36 @@ package object linalg {
   import math.Ring
   import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 
+  // implicits for lifting scalars with appropriate operators
+  implicit class InjectNumericOps[T](val repr: T) extends AnyVal with ImmutableNumericOps[T]
+
 /**
  * Basic linear algebraic operations.
  *
  * @author dlwh,dramage,retronym,afwlehmann,lancelet
  */
-  //  import breeze.linalg._
 
-  private[linalg] def requireNonEmptyMatrix[V](mat: Matrix[V]): Unit =
+  private[linalg] def requireNonEmptyMatrix[V](mat: immutable.Matrix[V]): Unit =
     if (mat.cols == 0 || mat.rows == 0)
       throw new MatrixEmptyException
 
-  private[linalg] def requireSquareMatrix[V](mat: Matrix[V]): Unit =
+  private[linalg] def requireSquareMatrix[V](mat: immutable.Matrix[V]): Unit =
     if (mat.rows != mat.cols)
       throw new MatrixNotSquareException
 
-  private[linalg] def requireSymmetricMatrix[V](mat: Matrix[V]): Unit = {
+<<<<<<< HEAD
+<<<<<<< HEAD
+  private[linalg] def requireSymmetricMatrix(mat: Matrix[Double], tol: Double = 1e-7): Unit = {
+=======
+  private[linalg] def requireSymmetricMatrix[V](mat: immutable.Matrix[V]): Unit = {
+>>>>>>> ff55711415c7e3151f76488211a74e5321f40de8
+=======
+  private[linalg] def requireSymmetricMatrix[V](mat: immutable.Matrix[V]): Unit = {
+>>>>>>> ff55711415c7e3151f76488211a74e5321f40de8
     requireSquareMatrix(mat)
 
     for (i <- 0 until mat.rows; j <- 0 until i)
-      if (mat(i,j) != mat(j,i))
+      if (abs(mat(i,j) -  mat(j,i)) > abs(mat(i,j)) * tol )
         throw new MatrixNotSymmetricException
   }
 
@@ -168,7 +189,7 @@ package object linalg {
    * The lower triangular portion of the given real quadratic matrix X. Note
    * that no check will be performed regarding the symmetry of X.
    */
-  def lowerTriangular[T: Semiring: ClassTag:Zero](X: Matrix[T]): DenseMatrix[T] = {
+  def lowerTriangular[T: Semiring: ClassTag:Zero](X: immutable.Matrix[T]): DenseMatrix[T] = {
     val N = X.rows
     DenseMatrix.tabulate(N, N)( (i, j) =>
       if(j <= i) X(i,j)
@@ -177,13 +198,37 @@ package object linalg {
   }
 
   /**
+   * The lower triangular portion of the given real quadratic matrix X with
+   * the diagnal elements is zero!
+   */
+  def strictlyLowerTriangular[T: Semiring: ClassTag:Zero](X: Matrix[T]): DenseMatrix[T] = {
+    val N = X.rows
+    DenseMatrix.tabulate(N, N)( (i, j) =>
+      if(j < i) X(i,j)
+      else implicitly[Semiring[T]].zero
+    )
+  }
+
+  /**
    * The upper triangular portion of the given real quadratic matrix X. Note
    * that no check will be performed regarding the symmetry of X.
    */
-  def upperTriangular[T: Semiring: ClassTag: Zero](X: Matrix[T]): DenseMatrix[T] = {
+  def upperTriangular[T: Semiring: ClassTag: Zero](X: immutable.Matrix[T]): DenseMatrix[T] = {
     val N = X.rows
     DenseMatrix.tabulate(N, N)( (i, j) =>
       if(j >= i) X(i,j)
+      else implicitly[Semiring[T]].zero
+    )
+  }
+
+  /**
+   * The upper triangular portion of the given real quadratic matrix X with
+   * the diagnal elements is zero!
+   */
+  def strictlyUpperTriangular[T: Semiring: ClassTag:Zero](X: Matrix[T]): DenseMatrix[T] = {
+    val N = X.rows
+    DenseMatrix.tabulate(N, N)( (i, j) =>
+      if(j > i) X(i,j)
       else implicitly[Semiring[T]].zero
     )
   }
@@ -223,9 +268,9 @@ package object linalg {
              ): DenseMatrix[Double] = {
     import breeze.stats.{mean, stddev}
     if (center) {
-      val xc = x(*,::) - mean(x, Axis._0).toDenseVector
+      val xc = x(*,::) - mean(x, Axis._0).t
       if (scale)
-        xc(*,::) :/ stddev(x(::, *)).toDenseVector
+        xc(*,::) :/ stddev(x(::, *)).t
       else
         xc
     } else {
@@ -275,7 +320,7 @@ package object linalg {
    * matrix. Feel free to make this more general.
    */
   private def columnRMS(x: DenseMatrix[Double]): DenseVector[Double] =
-    (sum(x:*x,Axis._0) / (x.rows-1.0)).map( scala.math.sqrt _ ).toDenseVector
+    (sum(x:*x,Axis._0) / (x.rows-1.0)).t.map( scala.math.sqrt _ )
 
 
   /** Alias for randomDouble */

@@ -1,4 +1,5 @@
 package breeze.linalg
+
 /*
  Copyright 2012 David Hall
 
@@ -409,7 +410,7 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
   test("Reshape") {
     val m : DenseMatrix[Int] = DenseMatrix((1,2,3),(4,5,6))
     val r : DenseMatrix[Int] = m.reshape(3, 2, true)
-    assert(m.data eq r.data)
+    assert(m.internalData eq r.internalData)
     assert(r.rows === 3)
     assert(r.cols === 2)
     assert(r === DenseMatrix((1,5),(4,3),(2,6)))
@@ -418,7 +419,7 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
   test("Reshape transpose") {
     val m : DenseMatrix[Int] = DenseMatrix((1,2,3),(4,5,6)).t
     val r : DenseMatrix[Int] = m.reshape(2, 3, true)
-    assert(m.data eq r.data)
+    assert(m.internalData eq r.internalData)
     assert(r.rows === 2)
     assert(r.cols === 3)
     assert(r === DenseMatrix((1,5),(4,3),(2,6)).t)
@@ -478,19 +479,22 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
 
   test("sum") {
     // Test square and rectangular matrices
-  	assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._0) === DenseMatrix((3.0, 7.0)))
-    assert(sum(DenseMatrix((1.0,3.0,5.0),(2.0,4.0,6.0)), Axis._0) === DenseMatrix((3.0, 7.0,11.0)))
-    assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0),(5.0, 6.0)), Axis._0) === DenseMatrix((8.0, 13.0)))
+    val A = DenseMatrix((1.0, 3.0), (2.0, 4.0))
+  	assert(sum(A, Axis._0) === DenseVector(3.0, 7.0).t)
+    assert(sum(A(::, *)) === DenseVector(3.0, 7.0).t)
+    assert(sum(DenseMatrix((1.0,3.0,5.0),(2.0,4.0,6.0)), Axis._0) === DenseVector(3.0, 7.0,11.0).t)
+    assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0),(5.0, 6.0)), Axis._0) === DenseVector(8.0, 13.0).t)
 
-    assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._1) === DenseVector(4.0, 6.0))
+    assert(sum(A, Axis._1) === DenseVector(4.0, 6.0))
     assert(sum(DenseMatrix((1.0,3.0,5.0),(2.0,4.0,6.0)), Axis._1) === DenseVector(9.0, 12.0))
     assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0),(5.0, 6.0)), Axis._1) === DenseVector(4.0, 6.0, 11.0))
-    assert(sum(DenseMatrix((1.0,3.0),(2.0,4.0))) === 10.0)
+    assert(sum(A) === 10.0)
   }
 
   test("normalize rows and columns") {
-    assert(normalize(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._0, 1) === DenseMatrix((1.0/3.0, 3.0/7.0), (2.0/3.0,4.0/7.0)))
-    assert(normalize(DenseMatrix((1.0,3.0),(2.0,4.0)), Axis._1, 1) === DenseMatrix((1.0/4.0, 3.0/4.0), (2.0/6.0,4.0/6.0)))
+    val A = DenseMatrix((1.0, 3.0), (2.0, 4.0))
+    assert(normalize(A, Axis._0, 1) === DenseMatrix((1.0/3.0, 3.0/7.0), (2.0/3.0,4.0/7.0)))
+    assert(normalize(A, Axis._1, 1) === DenseMatrix((1.0/4.0, 3.0/4.0), (2.0/6.0,4.0/6.0)))
     // handle odd sized matrices (test for a bug.)
     val dm = DenseMatrix.tabulate(2,5)( (i,j) => i * j * 1.0 + 1)
     dm := normalize(dm, Axis._1, 2)
@@ -676,6 +680,34 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
 
   }
 
+  test("#336 argmax for Dense Matrices") {
+    val m = DenseMatrix.zeros[Double](3, 3)
+    m(2, ::) := DenseVector(1.0, 2.0, 3.0).t
+    assert(argmax(m(2, ::).t) === 2)
+    assert(max(m(2, ::).t) === 3.0)
+  }
+
+  test("lhs scalars") {
+    assert(1.0 :/ (DenseMatrix.fill(2,2)(10.0)) === DenseMatrix.fill(2,2)(1/10.0))
+    assert(1.0 :- (DenseMatrix.fill(2,2)(10.0)) === DenseMatrix.fill(2,2)(-9.0))
+  }
+
+  test("mapping ufunc") {
+    val r = DenseMatrix.rand(100, 100)
+    val explicit = new DenseMatrix(100, 100, r.data.map(math.sin))
+    assert(sin(r) == explicit)
+    sin.inPlace(r)
+    assert(explicit == r)
+  }
+
+  test("mapping ufunc, strides") {
+    val r = (DenseMatrix.rand(100, 100)).apply(10 until 27, 4 until 37 by 4)
+    var explicit = new DenseMatrix(100, 100, r.data.map(math.sin))
+    explicit = explicit(10 until 27, 4 until 37 by 4)
+    assert(sin(r) == explicit)
+    sin.inPlace(r)
+    assert(explicit == r)
+  }
 
 
 

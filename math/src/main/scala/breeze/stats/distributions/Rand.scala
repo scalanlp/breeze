@@ -243,7 +243,7 @@ class RandBasis(val generator: RandomGenerator) {
    * Uniformly samples an integer in [0,MAX_INT]
    */
   val randInt:Rand[Int] = new Rand[Int] {
-    def draw = generator.nextInt
+    def draw = generator.nextInt & Int.MaxValue
   }
 
   /**
@@ -258,6 +258,33 @@ class RandBasis(val generator: RandomGenerator) {
    */
   def randInt(n : Int, m: Int):Rand[Int] = new Rand[Int] {
     def draw = generator.nextInt(m-n)+n
+  }
+
+  /**
+   * Uniformly samples a long integer in [0,MAX_LONG]
+   */
+  val randLong: Rand[Long] = new Rand[Long] {
+    def draw = generator.nextLong & Long.MaxValue
+  }
+
+  /**
+   * Uniformly samples a long integer in [0,n)
+   */
+  def randLong(n: Long): Rand[Long] = new Rand[Long] {
+    def draw = {
+      val value = generator.nextLong & Long.MaxValue
+      value % n
+    }
+  }
+
+  /**
+   * Uniformly samples a long integer in [n,m)
+   */
+  def randLong(n: Long, m: Long): Rand[Long] = new Rand[Long] {
+    def draw = {
+      val value = generator.nextLong & Long.MaxValue
+      value % (m - n) + n
+    }
   }
 
   /**

@@ -1,13 +1,12 @@
 organization := "org.scalanlp"
 
-// lazy val breeze = project in file("core")
 name := "breeze-natives"
 
-scalaVersion := "2.11.1"
+scalaVersion := Common.scalaVersion
 
-crossScalaVersions  := Seq("2.11.1", "2.11.0", "2.10.3")
+crossScalaVersions  := Common.crossScalaVersions
 
-addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0-M1" cross CrossVersion.full)
+addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0-M5" cross CrossVersion.full)
 
 publishMavenStyle := true
 

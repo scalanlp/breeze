@@ -24,7 +24,7 @@ import org.junit.runner.RunWith
 import org.apache.commons.math3.random.MersenneTwister
 
 @RunWith(classOf[JUnitRunner])
-class LaplaceTest extends FunSuite with Checkers with MomentsTestBase[Double] {
+class LaplaceTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase with MomentsTestBase[Double] with HasCdfTestBase {
   import Arbitrary.arbitrary
 
 
@@ -39,6 +39,5 @@ class LaplaceTest extends FunSuite with Checkers with MomentsTestBase[Double] {
         scale <- arbitrary[Double].map {x => math.abs(x) % 8.0 + 1.0}) yield new Laplace(location,scale)(new RandBasis(new MersenneTwister(0)))
   }
 
-
-
+  override type Distr = Laplace
 }

@@ -28,7 +28,7 @@ import scala.reflect.ClassTag
  * @author dramage
  * @author dlwh
  */
-trait CanMapValues[From, +A, B, +To] {
+trait CanMapValues[From, @specialized(Int, Float, Double) +A, @specialized(Int, Float, Double) B, +To] {
   /**Maps all key-value pairs from the given collection. */
   def map(from: From, fn: (A => B)): To
 
@@ -51,14 +51,14 @@ trait CanMapValuesLowPrio {
 object CanMapValues extends CanMapValuesLowPrio {
   class HandHold[From, ValueType]
 
-  /*
-  implicit def canMapSelf[V, V2]: CanMapValues[V, V, V2, V2] = {
-    new CanMapValues[V, V, V2, V2] {
-      def map(from: V, fn: (V) => V2) = fn(from)
-      def mapActive(from: V, fn: (V) => V2) = fn(from)
-    }
-  }
-  */
+  implicit def canMapSelfDouble[V2]: CanMapValues[Double, Double, V2, V2] = canMapSelf[Double, V2]
+  implicit def canMapSelfInt[V2]: CanMapValues[Int, Int, V2, V2] = canMapSelf[Int, V2]
+  implicit def canMapSelfFloat[V2]: CanMapValues[Float, Float, V2, V2] = canMapSelf[Float, V2]
+  implicit def canMapSelfLong[V2]: CanMapValues[Long, Long, V2, V2] = canMapSelf[Long, V2]
+  implicit def canMapSelfShort[V2]: CanMapValues[Short, Short, V2, V2] = canMapSelf[Short, V2]
+  implicit def canMapSelfByte[V2]: CanMapValues[Byte, Byte, V2, V2] = canMapSelf[Byte, V2]
+  implicit def canMapSelfChar[V2]: CanMapValues[Char, Char, V2, V2] = canMapSelf[Char, V2]
+
 
   type Op[From, A, B, To] = CanMapValues[From, A, B, To]
 

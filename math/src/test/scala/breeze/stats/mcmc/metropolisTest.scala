@@ -14,6 +14,8 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class metropolisTest extends FunSuite {
 
+  val rand: RandBasis = RandBasis.mt0
+
   sealed trait State
   case object A extends State
   case object B extends State
@@ -31,7 +33,7 @@ class metropolisTest extends FunSuite {
     case C => l1
   }
 
-  val proposal = Rand.choose(Seq(A,B,C))
+  val proposal = rand.choose(Seq(A,B,C))
 
   val TOLERANCE = 0.05
 
@@ -52,7 +54,7 @@ class metropolisTest extends FunSuite {
     assert(math.abs(bCount / cCount - 2) < TOLERANCE)
   }
 
-  def skewedProposal(x: State) = Rand.choose(Seq(A,A,B,C).filter(_ != x) )
+  def skewedProposal(x: State) = rand.choose(Seq(A,A,B,C).filter(_ != x) )
 
   def logSkewedTransitionProbability(start: State, end: State) = (start, end) match {
     case (a,b) if (a == b) => ???

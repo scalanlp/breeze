@@ -16,20 +16,19 @@ package breeze.stats.distributions;
  limitations under the License.
 */
 
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.scalacheck._;
+import breeze.linalg.{DenseVector, norm}
 import org.junit.runner.RunWith
-
-import breeze.stats.DescriptiveStats._;
-import breeze.linalg.{DenseVector, DenseMatrix, norm}
+import org.scalacheck._
+import org.scalatest._
+import org.scalatest.junit._
+import org.scalatest.prop._
 
 @RunWith(classOf[JUnitRunner])
-class BetaTest extends FunSuite with Checkers with MomentsTestBase[Double] /*with ExpFamTest[Beta,Double]*/ {
+class BetaTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase with MomentsTestBase[Double] with HasCdfTestBase {
+  type Distr = Beta
 
   val expFam = Beta
-  import Arbitrary.arbitrary;
+  import org.scalacheck.Arbitrary.arbitrary;
 
   def arbParameter = Arbitrary{
     for( mean <- arbitrary[Double].map{x => math.abs(x) % 100.0 + 1E-4};
@@ -44,7 +43,7 @@ class BetaTest extends FunSuite with Checkers with MomentsTestBase[Double] /*wit
   }
 
 
-  import Arbitrary.arbitrary;
+  import org.scalacheck.Arbitrary.arbitrary;
 
   def asDouble(x: Double) = x
 

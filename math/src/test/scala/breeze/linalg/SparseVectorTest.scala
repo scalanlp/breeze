@@ -60,6 +60,20 @@ class SparseVectorTest extends FunSuite {
     assertClose(norm(bss, 2), norm(bd, 2))
   }
 
+  test("elementwise multiplication") {
+    val sv = SparseVector.zeros[Int](4)
+    sv(1) = 1
+    sv(2) = 2
+
+    val dv = DenseVector(1, 2, 0, 4)
+
+    val res: SparseVector[Int] = sv :* dv
+
+    assert(res === SparseVector(0,2,0,0))
+    assert(res.activeSize == 1)
+
+  }
+
 
   test("Norm") {
     val v = SparseVector(-0.4326, -1.6656, 0.1253, 0.2877, -1.1465)
@@ -304,6 +318,34 @@ class SparseVectorTest extends FunSuite {
 
 
   }
+
+  test("#350: Dense +  SparseVector == Dense") {
+    val v1 = DenseVector(0,0,0,0)
+    val v2 = SparseVector(0,1,0,0)
+
+    // do in two stages to ensure that telling the return type doesn't change type inference
+    val r = v1 + v2 //type mismatch; found : breeze.linalg.Vector[Int] required: breeze.linalg.DenseVector[Int]
+    val q = r:DenseVector[Int]
+    assert(q == DenseVector(0,1,0,0))
+  }
+
+  test("#350: Sparse + DenseVector == Dense") {
+    val v1 = DenseVector(0,0,0,0)
+    val v2 = SparseVector(0,1,0,0)
+
+    // do in two stages to ensure that telling the return type doesn't change type inference
+    val r =  v2  + v1//type mismatch; found : breeze.linalg.Vector[Int] required: breeze.linalg.DenseVector[Int]
+    val q = r:DenseVector[Int]
+    assert(q == DenseVector(0,1,0,0))
+  }
+
+  test("#382: dividing a sparse vector") {
+    val vec = SparseVector(5)(0 -> 0.0, 3 -> 60.0, 4 -> 80.0)
+    val n = 60.0
+    val answer1 = vec :/ n
+    val answer2 = vec.toDenseVector :/ n
+    assert(answer1.toDenseVector === answer2)
+  }
 }
 
 /**
@@ -361,6 +403,7 @@ class SparseVectorOps_FloatTest extends TensorSpaceTestBase[SparseVector[Float],
   }
 
   def genScalar: Arbitrary[Float] = Arbitrary(Arbitrary.arbitrary[Float].map{ _ % 1000 })
+
 }
 
 /**

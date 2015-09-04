@@ -1,6 +1,7 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
+import breeze.linalg.immutable.Matrix
 import org.netlib.util.intW
 import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 
@@ -20,7 +21,8 @@ import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
  */
 object eig extends UFunc {
 
-  case class Eig[V, M](eigenvalues: V, eigenvectorsComplex: V, eigenvectors: M)
+  // TODO: probably we should just return an eigenValues: DV[Complex] ?
+  case class Eig[V, M](eigenvalues: V, eigenvaluesComplex: V, eigenvectors: M)
   type DenseEig = Eig[DenseVector[Double], DenseMatrix[Double]]
 
 
@@ -63,10 +65,10 @@ object eig extends UFunc {
       A := m
       lapack.dgeev(
         "N", "V", n,
-        A.data, scala.math.max(1,n),
+        A.internalData, scala.math.max(1,n),
         Wr.data, Wi.data,
         Array.empty[Double], scala.math.max(1,n),
-        Vr.data, scala.math.max(1,n),
+        Vr.internalData, scala.math.max(1,n),
         work, work.length, info)
 
       if (info.`val` > 0)
@@ -129,7 +131,7 @@ object eigSym extends UFunc {
     lapack.dsyev(
       if (rightEigenvectors) "V" else "N" /* eigenvalues N, eigenvalues & eigenvectors "V" */,
       "L" /* lower triangular */,
-      N /* number of rows */, A.data, scala.math.max(1, N) /* LDA */,
+      N /* number of rows */, A.internalData, scala.math.max(1, N) /* LDA */,
       evs.data,
       work /* workspace */, lwork /* workspace size */,
       info

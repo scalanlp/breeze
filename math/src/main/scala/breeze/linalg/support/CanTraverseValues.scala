@@ -15,9 +15,8 @@ package breeze.linalg.support
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import breeze.math.Complex
-import scala.reflect.ClassTag
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
+import breeze.math.Complex
 
 /**
  * Marker for being able to traverse over the values in a collection/tensor
@@ -29,6 +28,24 @@ trait CanTraverseValues[From, A] {
   /**Traverses all values from the given collection. */
   def traverse(from: From, fn: ValuesVisitor[A]): Unit
   def isTraversableAgain(from: From):Boolean
+
+  def foldLeft[B](from: From, b: B)(fn: (B, A)=>B):B = {
+    var bb = b
+
+    traverse(from, new ValuesVisitor[A] {
+      override def visit(a: A): Unit = {
+        bb = fn(bb, a)
+      }
+
+      override def zeros(numZero: Int, zeroValue: A): Unit = {
+        for(i <- 0 until numZero) {
+          bb = fn(bb, zeroValue)
+        }
+      }
+    })
+
+    bb
+  }
 }
 
 
@@ -40,10 +57,16 @@ object CanTraverseValues {
     def visitArray(arr: Array[A]):Unit = visitArray(arr, 0, arr.length, 1)
 
     def visitArray(arr: Array[A], offset: Int, length: Int, stride: Int):Unit = {
-      var i = 0
-      while(i < length) {
-        visit(arr(i * stride + offset))
-        i += 1
+      import spire.syntax.cfor._
+      // Standard array bounds check stuff
+      if (stride == 1) {
+        cforRange(offset until length + offset) { i =>
+          visit(arr(i))
+        }
+      } else {
+        cforRange(0 until length) { i =>
+          visit(arr(i * stride + offset))
+        }
       }
     }
     def zeros(numZero: Int, zeroValue: A)

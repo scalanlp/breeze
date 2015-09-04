@@ -23,7 +23,8 @@ import org.scalatest.junit._
 import org.scalatest.prop._
 
 @RunWith(classOf[JUnitRunner])
-class GaussianTest extends FunSuite with Checkers with MomentsTestBase[Double] with ExpFamTest[Gaussian,Double] {
+class GaussianTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase with MomentsTestBase[Double] with ExpFamTest[Gaussian,Double] with HasCdfTestBase {
+  override type Distr = Gaussian
   val expFam = Gaussian
   import org.scalacheck.Arbitrary.arbitrary;
 
@@ -61,7 +62,7 @@ class GaussianTest extends FunSuite with Checkers with MomentsTestBase[Double] w
 
   override val VARIANCE_TOLERANCE: Double = 9E-2
 
-  implicit def arbDistr = Arbitrary {
+  implicit def arbDistr: Arbitrary[Distr] = Arbitrary {
     for(mean <- arbitrary[Double].map{x => math.abs(x) % 10000.0};
         std <- arbitrary[Double].map {x => math.abs(x) % 8.0 + .1}) yield new Gaussian(mean,std);
   }

@@ -24,6 +24,7 @@ import breeze.math._
 import breeze.stats.distributions.Rand
 import breeze.storage.{Zero, Storage}
 
+import scala.util.hashing.MurmurHash3
 import scala.{specialized=>spec}
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.mutable.ArrayBuilder
@@ -71,6 +72,18 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]]{
     case _ => false
   }
 
+  // TODO: this is only consistent if the hashcode of inactive elements is 0!!!
+  override def hashCode() = {
+    var hash = 43
+    for(v <- activeValuesIterator) {
+      val hh = v.##
+      if (hh != 0)
+        hash = MurmurHash3.mix(hash, hh)
+    }
+
+    hash
+  }
+
   def toDenseVector(implicit cm: ClassTag[V]) = {
     new DenseVector(toArray)
   }
@@ -112,16 +125,17 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]]{
 
   /** See [[scala.collection.mutable.ArrayOps.reduce]].
     */
-  def reduce[E1 >: V](op: (E1, E1) => E1 )(implicit cm: ClassTag[V], cm1: ClassTag[E1]): Vector[E1] = Vector[E1]( toArray.reduce( op ))
+  def reduce[E1 >: V](op: (E1, E1) => E1 )(implicit cm: ClassTag[V], cm1: ClassTag[E1]): E1 = valuesIterator.reduce( op )
   /** See [[scala.collection.mutable.ArrayOps.reduceLeft]].
     */
   def reduceLeft[B >: V](op: (B, V) => B )(implicit cm: ClassTag[V]): B = {
-    val it = valuesIterator
-    it.reduceLeft( op )
+    valuesIterator.reduceLeft( op )
   }
   /** See [[scala.collection.mutable.ArrayOps.reduceRight]].
     */
-  def reduceRight[B >: V](op: (V, B) => B )(implicit cm: ClassTag[V]): B = toArray.reduceRight( op )
+  def reduceRight[B >: V](op: (V, B) => B )(implicit cm: ClassTag[V]): B = {
+    valuesIterator.reduceRight( op )
+  }
 
   /** See [[scala.collection.mutable.ArrayOps.scan]].
     */
@@ -182,13 +196,6 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
     }
   }
 
-  // the canmapvalues implicit in UFunc should take care of this, but limits of scala type inference, blah blah blah
-  implicit def mapUFuncImpl[Tag, V,  U](implicit impl: UFunc.UImpl[Tag, V, U], canMapValues: CanMapValues[Vector[V], V, U, Vector[U]]): UFunc.UImpl[Tag, Vector[V], Vector[U]] = {
-    new UFunc.UImpl[Tag, Vector[V], Vector[U]] {
-      def apply(v: Vector[V]): Vector[U] = canMapValues.map(v, impl.apply)
-    }
-  }
-
   implicit def canMapValues[V, V2](implicit man: ClassTag[V2]):CanMapValues[Vector[V], V, V2, Vector[V2]] = {
     new CanMapValues[Vector[V], V, V2, Vector[V2]] {
       /**Maps all key-value pairs from the given collection. */
@@ -232,6 +239,10 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
         i += 1
       }
       result
+    }
+
+    override def mapActive(from: Vector[V], from2: Vector[V], fn: (Int, V, V) => RV): Vector[RV] = {
+      map(from, from2, fn)
     }
   }
 
@@ -401,6 +412,26 @@ trait VectorOps { this: Vector.type =>
       var i = 0
       while(i < a.length) {
         result(i) = op(a(i), b)
+        i += 1
+      }
+      result
+    }
+  }
+
+  @expand
+  @expand.valify
+  implicit def s_v_Op[@expand.args(Int, Double, Float, Long) T,
+  @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: Op.Impl2[T, T, T],
+   @expand.sequence[T](0, 0.0, 0.0f, 0l)
+   zero: T):BinaryRegistry[T, Vector[T], Op.type, Vector[T]] = new BinaryRegistry[T, Vector[T], Op.type, Vector[T]] {
+    override def bindingMissing(b: T, a: Vector[T]): Vector[T] = {
+      val result = Vector.zeros[T](a.length)
+
+      var i = 0
+      while(i < a.length) {
+        result(i) = op(b, a(i))
         i += 1
       }
       result
@@ -809,7 +840,9 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @tparam V
    * @return
    */
-  def fill[@spec(Double, Int, Float, Long) V:ClassTag](size: Int)(v: =>V): Vec[V] = apply(Array.fill(size)(v))
+  def fill[@spec(Double, Int, Float, Long) V:ClassTag](size: Int)(v: =>V): Vec[V] = {
+    apply(Array.fill(size)(v))
+  }
 
 
   /**
@@ -819,7 +852,9 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @tparam V
    * @return
    */
-  def tabulate[@spec(Double, Int, Float, Long) V:ClassTag](size: Int)(f: Int=>V):Vec[V]= apply(Array.tabulate(size)(f))
+  def tabulate[@spec(Double, Int, Float, Long) V:ClassTag](size: Int)(f: Int=>V): Vec[V] = {
+    apply(Array.tabulate(size)(f))
+  }
 
   /**
    * Analogous to Array.tabulate, but taking a scala.Range to iterate over, instead of an index.
@@ -845,7 +880,7 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
       }
     }
 
-  implicit def canTabulate[V:ClassTag:Zero] = new CanTabulate[Int,Vec[V],V] {
+  implicit def canTabulate[V:ClassTag:Zero]: CanTabulate[Int, Vec[V], V] = new CanTabulate[Int,Vec[V],V] {
     def apply(d: Int, f: (Int) => V): Vec[V] = tabulate(d)(f)
   }
 
@@ -855,7 +890,7 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @param rand
    * @return
    */
-  def rand[T:ClassTag](size: Int, rand: Rand[T] = Rand.uniform) = {
+  def rand[T:ClassTag](size: Int, rand: Rand[T] = Rand.uniform): Vec[T] = {
     // Array#fill is slow.
     val arr = new Array[T](size)
     var i = 0

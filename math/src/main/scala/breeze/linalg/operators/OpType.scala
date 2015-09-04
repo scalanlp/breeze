@@ -1,7 +1,8 @@
 package breeze.linalg.operators
 
 import breeze.generic.{MappingUFunc, UFunc}
-import breeze.math.{Field, Semiring, Ring}
+import breeze.generic.UFunc.UImpl
+import breeze.math.{Field, Ring, Semiring}
 
 /*
  Copyright 2012 Daniel Ramage
@@ -237,7 +238,7 @@ object OpXor extends OpXor with UFunc {
  */
 sealed trait OpNeg extends OpType
 object OpNeg extends OpNeg with UFunc {
-  implicit def ringNegation[S:Ring] = new Impl[S, S] {
+  implicit def ringNegation[S:Ring]: UImpl[OpNeg.this.type, S, S]  = new Impl[S, S] {
     def apply(v: S): S = implicitly[Ring[S]].negate(v)
   }
 }

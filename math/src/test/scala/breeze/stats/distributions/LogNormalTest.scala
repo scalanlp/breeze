@@ -2,18 +2,18 @@ package breeze.stats.distributions
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
- 
+
  Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
- You may obtain a copy of the License at 
- 
+ You may obtain a copy of the License at
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
- limitations under the License. 
+ limitations under the License.
 */
 
 import org.scalatest._
@@ -24,12 +24,13 @@ import org.junit.runner.RunWith
 
 
 @RunWith(classOf[JUnitRunner])
-class LogNormalTest extends FunSuite with Checkers with MomentsTestBase[Double] with ExpFamTest[LogNormal,Double] {
+class LogNormalTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase
+  with MomentsTestBase[Double] with ExpFamTest[LogNormal,Double] with HasCdfTestBase {
   import Arbitrary.arbitrary
   val expFam = LogNormal
 
   def arbParameter = Arbitrary{
-    for( mean <- arbitrary[Double].map{_ % 100.0};
+    for( mean <- arbitrary[Double].map{_ % 10.0};
       std <- arbitrary[Double].map{x => math.abs(x) % 8.0 + .1}
     ) yield (mean,std)
   }
@@ -40,20 +41,28 @@ class LogNormalTest extends FunSuite with Checkers with MomentsTestBase[Double] 
     y1 && y2
   }
 
-
-
-  test("Probability of logN(0,1)(exp(1)) propto exp(-.5))") {
-    assert(new LogNormal(0,1).unnormalizedLogPdf(math.exp(1.0)) === -0.5)
-  }
-
   override val VARIANCE_TOLERANCE: Double = 9E-2
 
+  type Distr = LogNormal
+
   implicit def arbDistr = Arbitrary {
-    for(mean <- arbitrary[Double].map{x => math.abs(x) % 100.0};
-        std <- arbitrary[Double].map {x => math.abs(x) % 8.0 + .1}) yield new Gaussian(mean,std)
+    for(mean <- arbitrary[Double].map{x => math.abs(x) % 10.0};
+        std <- arbitrary[Double].map {x => math.abs(x) % 1.0 + .1}) yield new LogNormal(mean,std)
   }
 
   def asDouble(x: Double) = x
 
   def fromDouble(x: Double) = x
+
+  test("pdf should return the correct value") {
+    val dist = LogNormal(0.0, 1.0)
+    assert(dist.pdf(1.0) == (1.0 / Math.sqrt(2 * Math.PI)));
+  }
+
+  test("the probability of non-positive numbers should be 0.0") {
+    val dist = LogNormal(0.0, 1.0)
+    assert(dist.pdf(0.0) == 0.0)
+    assert(dist.pdf(-1.0) == 0.0)
+  }
+
 }

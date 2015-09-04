@@ -36,7 +36,7 @@ class BroadcastedTest extends FunSuite {
   test("mean") {
     val m = DenseMatrix((1.0, 3.0), (4.0, 4.0))
     assert(mean(m(*, ::)) === DenseVector(2.0, 4.0))
-    assert(mean(m(::, *)) === DenseMatrix((2.5, 3.5)))
+    assert(mean(m(::, *)) === DenseVector(2.5, 3.5).t)
   }
 
   test("broadcast map to normalize") {
@@ -97,6 +97,20 @@ class BroadcastedTest extends FunSuite {
     val ctr = Counter2( ('a, 1, 2.0), ('b, 1, 3.0), ('b, 4, 5.0))
     assert(sum(ctr(*, ::)) ===   Counter('b -> 8.0, 'a -> 2.0))
     assert(sum(ctr(::, *)) ===   Counter(1-> 5.0, 4 -> 5.0))
+  }
+
+  test("foreach") {
+    val dm = DenseMatrix((-1.0,-2.0,-3.0),
+      (1.0,2.0,3.0),
+      (4.0,5.0,6.0))
+    var sum = 0.0
+    dm(*, ::).foreach(sum += _(1))
+    assert(sum == 5)
+
+    sum = 0.0
+    dm(::, *).foreach(sum += _(1))
+    assert(sum == 6)
+
   }
 
 }

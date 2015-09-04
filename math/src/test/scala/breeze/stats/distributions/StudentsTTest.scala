@@ -16,16 +16,15 @@ package breeze.stats.distributions
  limitations under the License. 
 */
 
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.scalacheck._;
 import org.junit.runner.RunWith
-import org.apache.commons.math3.random.MersenneTwister
+import org.scalacheck._
+import org.scalatest._
+import org.scalatest.junit._
+import org.scalatest.prop._
 
 @RunWith(classOf[JUnitRunner])
-class StudentsTTest extends FunSuite with Checkers with MomentsTestBase[Double] {
-  import Arbitrary.arbitrary
+class StudentsTTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase with MomentsTestBase[Double] with HasCdfTestBase {
+  import org.scalacheck.Arbitrary.arbitrary
 
   override val numSamples = 40000
 
@@ -39,6 +38,5 @@ class StudentsTTest extends FunSuite with Checkers with MomentsTestBase[Double] 
     yield new StudentsT(dof)(RandBasis.mt0)
   }
 
-
-
+  override type Distr = StudentsT
 }

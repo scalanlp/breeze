@@ -1,10 +1,12 @@
 package breeze.stats.distributions
 
-import breeze.numerics.constants.{γ, Pi}
-import breeze.numerics.{exp, log}
+import breeze.numerics.constants.Pi
+import breeze.numerics.log
 
 /**
- * TODO
+ * Also known as the inverse Gaussian Distribution
+ *
+ * http://en.wikipedia.org/wiki/Inverse_Gaussian_distribution
  *
  * @author dlwh
  **/
@@ -22,7 +24,7 @@ case class Wald(mean: Double, shape: Double)(implicit rand: RandBasis = Rand) ex
 
   def entropy: Double = ???
 
-  def logNormalizer: Double = math.sqrt(2 * Pi / shape)
+  def logNormalizer: Double = 0.5 * math.log(2 * Pi / shape)
 
   /**
    * Gets one sample from the distribution. Equivalent to sample()

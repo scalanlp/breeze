@@ -10,6 +10,7 @@ import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import breeze.macros.expand
 import breeze.math.PowImplicits._
 import breeze.storage.Zero
+import spire.syntax.cfor._
 import scala.reflect.ClassTag
 
 trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
@@ -95,9 +96,32 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
         aoff += a.stride
         i += 1
       }
-      result
+     result
     }
     implicitly[BinaryRegistry[Vector[T], T, Op.type, Vector[T]]].register(this)
+  }
+
+  @expand
+  @expand.valify
+  implicit def s_dv_Op[@expand.args(Int, Double, Float, Long) T,
+  @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: Op.Impl2[T, T, T]):Op.Impl2[T, DenseVector[T], DenseVector[T]] = new Op.Impl2[T, DenseVector[T], DenseVector[T]] {
+    def apply(a: T, b: DenseVector[T]): DenseVector[T] = {
+      val bd = b.data
+      var boff = b.offset
+      val result = DenseVector.zeros[T](b.length)
+      val rd = result.data
+
+      var i = 0
+      while(i < b.length) {
+        rd(i) = op(a, bd(boff))
+        boff += b.stride
+        i += 1
+      }
+      result
+    }
+    implicitly[BinaryRegistry[T, Vector[T], Op.type, Vector[T]]].register(this)
   }
 
   @expand
@@ -434,9 +458,30 @@ trait DenseVector_SpecialOps extends DenseVectorOps { this: DenseVector.type =>
   implicit val canDot_DV_DV_Float: breeze.linalg.operators.OpMulInner.Impl2[DenseVector[Float], DenseVector[Float], Float] = {
     new breeze.linalg.operators.OpMulInner.Impl2[DenseVector[Float], DenseVector[Float], Float] {
       def apply(a: DenseVector[Float], b: DenseVector[Float]) = {
-        require(b.length == a.length, "Vectors must be the same length!")
-        blas.sdot(
-          a.length, b.data, b.offset, b.stride, a.data, a.offset, a.stride)
+        require(a.length == b.length, s"Vectors must have same length: ${a.length} != ${b.length}")
+        if (a.length < 200) { // benchmarks suggest breakeven point is around length 200
+          if (a.offset == 0 && b.offset == 0 && a.stride == 1 && b.stride == 1) {
+            DenseVectorSupportMethods.smallDotProduct_Float(a.data, b.data, a.length);
+            //            val ad = a.data
+            //            val bd = b.data
+            //            var sum = 0.0
+            //            cforRange(0 until a.length) { i =>
+            //              sum += ad(i) * bd(i)
+            //            }
+            //            sum
+          } else {
+            var sum = 0.0f
+            cforRange(0 until a.length) { i =>
+              sum += a(i) * b(i)
+            }
+            sum
+          }
+        } else {
+          val boff = if (b.stride >= 0) b.offset else (b.offset + b.stride * (b.length - 1))
+          val aoff = if (a.stride >= 0) a.offset else (a.offset + a.stride * (a.length - 1))
+          blas.sdot(
+            a.length, b.data, boff, b.stride, a.data, aoff, a.stride)
+        }
       }
       implicitly[BinaryRegistry[Vector[Float], Vector[Float], OpMulInner.type, Float]].register(this)
     }
@@ -669,7 +714,7 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
     new UFunc.UImpl2[Tag, LHS, Transpose[DenseVector[V]], R] {
       def apply(v: LHS, v2: Transpose[DenseVector[V]]): R = {
         val dv: DenseVector[V] = v2.inner
-        val dm: DenseMatrix[V] = new DenseMatrix(data = dv.data, offset = dv.offset, cols = dv.length, rows = 1, majorStride = dv.stride)
+        val dm: DenseMatrix[V] = new DenseMatrix(internalData = dv.data, offset = dv.offset, cols = dv.length, rows = 1, majorStride = dv.stride)
         op(v, dm)
       }
     }

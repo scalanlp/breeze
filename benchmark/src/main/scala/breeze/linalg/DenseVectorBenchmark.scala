@@ -1,9 +1,8 @@
 package breeze.linalg
 
 import breeze.benchmark._
-
-import breeze.linalg._
 import breeze.stats.distributions._
+import spire.syntax.cfor._
 
 object DenseVectorBenchmark extends MyRunner(classOf[DenseVectorBenchmark])
 
@@ -32,6 +31,19 @@ trait BuildsRandomVectors {
     }
     new DenseMatrix(m, n, d, 0, m)
   }
+
+  def randomSparseVector(size: Int, sparsity: Double = 0.01): SparseVector[Double] = {
+    val nnz = (size * sparsity).toInt
+    val vb = VectorBuilder.zeros[Double](size)
+    cforRange(0 until nnz) { i =>
+      val ind = (Math.random() * size).toInt
+      val v = Math.random()
+      vb.add(ind, v)
+    }
+//    val values = Array.fill(size)((size * Math.random()).toInt -> Math.random())
+//    val result = SparseVector(size)(values:_*)
+    vb.toSparseVector
+  }
 }
 
 class DenseVectorBenchmark extends BreezeBenchmark with BuildsRandomVectors {
@@ -40,6 +52,21 @@ class DenseVectorBenchmark extends BreezeBenchmark with BuildsRandomVectors {
   }
   def timeFill(reps: Int) = run(reps) {
     DenseVector.fill[Double](1024, 23)
+  }
+
+  def timeForeach(reps: Int) = runWith(reps, randomArray(4000)) { arr =>
+    var sum = 0.0
+    arr.foreach(sum += _)
+    sum
+  }
+
+  def timeLoop(reps: Int) = runWith(reps, randomArray(4000)) { arr =>
+    var sum = 0.0
+    val d = arr.data
+    cforRange(0 until arr.length) { i =>
+      sum += d(i)
+    }
+    sum
   }
 
   def valueAtBench(reps: Int, size: Int, stride: Int) = runWith(reps, {randomArray(size, stride=stride)})(arr => {

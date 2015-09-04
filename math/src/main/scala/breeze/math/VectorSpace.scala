@@ -21,6 +21,7 @@ import breeze.linalg.operators._
 import breeze.linalg.support._
 import breeze.storage._
 import scala.reflect.ClassTag
+import DenseMatrix.canMapValues
 
 /**
  * Used for those vector-types that are "coordinated", meaning that t. (Possibly the coordinates
@@ -683,7 +684,8 @@ object MutableEnumeratedCoordinateField {
 }
 
 object MutableOptimizationSpace {
-  object SparseOptimizationSpace {
+
+  object SparseFieldOptimizationSpace {
     implicit def sparseOptSpace[S:Field:Zero:ClassTag] = {
       val norms = EntrywiseMatrixNorms.make[CSCMatrix[S],S]
       import norms._
@@ -691,11 +693,27 @@ object MutableOptimizationSpace {
     }
   }
 
-  object DenseOptimizationSpace {
+  object DenseFieldOptimizationSpace {
     implicit def denseOptSpace[S:Field:ClassTag] = {
       val norms = EntrywiseMatrixNorms.make[DenseMatrix[S],S]
       import norms._
       make[DenseMatrix[S],DenseVector[S],S](_.asDenseMatrix,_.flatten())
+    }
+  }
+
+  object DenseDoubleOptimizationSpace {
+    implicit def denseDoubleOptSpace = {
+      val norms = EntrywiseMatrixNorms.make[DenseMatrix[Double],Double]
+      import norms.{canNorm_Double,canInnerProduct}
+      make[DenseMatrix[Double], DenseVector[Double], Double](_.asDenseMatrix,_.flatten())
+    }
+  }
+
+  object SparseDoubleOptimizationSpace {
+    implicit def sparseDoubleOptSpace = {
+      val norms = EntrywiseMatrixNorms.make[CSCMatrix[Double],Double]
+      import norms.{canNorm_Double,canInnerProduct}
+      make[CSCMatrix[Double], SparseVector[Double], Double](_.asCSCMatrix,_.flatten())
     }
   }
 

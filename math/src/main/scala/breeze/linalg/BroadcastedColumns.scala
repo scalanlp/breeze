@@ -94,6 +94,16 @@ object BroadcastedColumns {
   }
 
 
+  implicit def canForeachColumns[T, ColumnType, ResultColumn, Result]
+  (implicit iter: CanIterateAxis[T, Axis._0.type, ColumnType]):CanForeachValues[BroadcastedColumns[T, ColumnType], ColumnType] = {
+    new CanForeachValues[BroadcastedColumns[T, ColumnType], ColumnType] {
+      /** Maps all key-value pairs from the given collection. */
+      override def foreach[U](from: BroadcastedColumns[T, ColumnType], fn: (ColumnType) => U): Unit = {
+        iter(from.underlying, Axis._0)(fn)
+      }
+    }
+
+  }
 
 }
 

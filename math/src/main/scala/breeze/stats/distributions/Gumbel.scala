@@ -9,7 +9,9 @@ import breeze.numerics.{exp, log}
  *
  * @author dlwh
  **/
-case class Gumbel(location: Double, scale: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double] with Moments[Double, Double] {
+case class Gumbel(location: Double, scale: Double)
+                 (implicit rand: RandBasis = Rand)
+  extends ContinuousDistr[Double] with Moments[Double, Double] with HasCdf {
   def mean: Double = location + scale * γ
 
   def mode: Double = location
@@ -18,7 +20,7 @@ case class Gumbel(location: Double, scale: Double)(implicit rand: RandBasis = Ra
 
   def entropy: Double = log(scale) + γ + 1
 
-  def logNormalizer: Double = scale
+  def logNormalizer: Double = math.log(scale)
 
   /**
    * Gets one sample from the distribution. Equivalent to sample()
@@ -34,5 +36,11 @@ case class Gumbel(location: Double, scale: Double)(implicit rand: RandBasis = Ra
     -(z + exp(-z))
   }
 
+  def cdf(x: Double):Double = {
+    math.exp(-math.exp(-(x-location)/scale))
+  }
 
+  override def probability(x: Double, y: Double): Double = {
+    cdf(y) - cdf(x)
+  }
 }

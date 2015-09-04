@@ -2,6 +2,7 @@ package breeze.optimize
 
 import breeze.linalg.support.CanCopy
 import breeze.math.InnerProductModule
+import breeze.util.Isomorphism
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
@@ -24,12 +25,20 @@ import breeze.math.InnerProductModule
 *
 * @author dlwh
 */
-trait DiffFunction[T] extends StochasticDiffFunction[T] {
+trait DiffFunction[T] extends StochasticDiffFunction[T] { outer =>
   def cached(implicit copy: CanCopy[T]) = {
     if (this.isInstanceOf[CachedDiffFunction[_]]) {
       this
     } else {
       new CachedDiffFunction(this)
+    }
+  }
+
+  override def throughLens[U](implicit l: Isomorphism[T,U]):DiffFunction[U] = new DiffFunction[U] {
+    override def calculate(u: U) = {
+      val t = l.backward(u)
+      val (obj,gu) = outer.calculate(t)
+      (obj,l.forward(gu))
     }
   }
 }

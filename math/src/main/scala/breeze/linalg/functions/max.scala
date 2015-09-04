@@ -1,12 +1,12 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
-import breeze.macros.expand
 import breeze.linalg.support.{CanTransformValues, CanMapValues, CanTraverseValues}
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
+import breeze.macros.expand
 
-object max extends UFunc {
-
+object max extends UFunc /*with VectorizedReduceUFunc <-- doesn't work with 2.10, because god knows */{
+  type Op = this.type
 
   @expand
   @expand.valify
@@ -73,6 +73,21 @@ object max extends UFunc {
       override def apply(v: T, v2: RHS): U = cmv.map(v, maxImpl(_, v2))
     }
   }
+
+  /*
+  @expand
+  implicit def helper[@expand.args(Int, Float, Long, Double) T]
+                     (implicit @expand.sequence[T](Int.MinValue, Float.NegativeInfinity, Long.MinValue, Double.NegativeInfinity)
+                     init: T):VectorizeHelper[T] = new VectorizeHelper[T] {
+    override def zerosLike(len: Int): DenseVector[T] = {
+      val r = DenseVector.zeros[T](len)
+      r := init
+      r
+    }
+
+    override def combine(x: T, y: T): T = java.lang.Math.max(x, y)
+  }
+  */
 
   /**
    * Method for computing the max of the first length elements of an array. Arrays
@@ -182,10 +197,21 @@ object clip extends UFunc {
     }
   }
 
-  implicit def clipInPlaceOrdering[T,V](implicit ordering: Ordering[V], cmv: CanTransformValues[T, V, V]):InPlaceImpl3[T, V, V] = {
+  implicit def clipInPlaceOrdering[T, V](implicit ordering: Ordering[V], cmv: CanTransformValues[T, V]):InPlaceImpl3[T, V, V] = {
     import ordering.mkOrderingOps
     new InPlaceImpl3[T, V, V] {
       def apply(v: T, v2: V, v3: V):Unit = {
+        cmv.transform(v, x => if(x < v2) v2 else if (x > v3) v3 else x)
+      }
+    }
+  }
+
+  @expand
+  implicit def clipInPlace[Vec,
+                           @expand.args(Double, Float, Int, Long)
+                           T](cmv: CanTransformValues[Vec, T]):InPlaceImpl3[Vec, T, T] = {
+    new InPlaceImpl3[Vec, T, T] {
+      def apply(v: Vec, v2: T, v3: T):Unit = {
         cmv.transform(v, x => if(x < v2) v2 else if (x > v3) v3 else x)
       }
     }

@@ -1,6 +1,6 @@
 package breeze.linalg
 
-import breeze.linalg.support.{CanMapValues, CanCollapseAxis, CanIterateAxis}
+import breeze.linalg.support.{CanForeachValues, CanMapValues, CanCollapseAxis, CanIterateAxis}
 import breeze.generic.UFunc.{InPlaceImpl, UImpl, InPlaceImpl2, UImpl2}
 
 /**
@@ -75,5 +75,15 @@ object BroadcastedRows {
     }
   }
 
+  implicit def canForeachRows[T, RowType, ResultRow, Result]
+  (implicit iter: CanIterateAxis[T, Axis._1.type, RowType]):CanForeachValues[BroadcastedRows[T, RowType], RowType] = {
+    new CanForeachValues[BroadcastedRows[T, RowType], RowType] {
+      /** Maps all key-value pairs from the given collection. */
+      override def foreach[U](from: BroadcastedRows[T, RowType], fn: (RowType) => U): Unit = {
+        iter(from.underlying, Axis._1)(fn)
+      }
+    }
+
+  }
 
 }

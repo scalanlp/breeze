@@ -1,5 +1,6 @@
 package breeze.linalg
 
+import breeze.macros.expand
 import org.netlib.util.intW
 import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 import breeze.generic.UFunc
@@ -14,7 +15,7 @@ import breeze.linalg.support.CanTranspose
  * A \ B.
  */
 object inv extends UFunc {
-  implicit def canInvUsingLU[T](implicit luImpl: LU.Impl[T, (DenseMatrix[Double], Array[Int])]):Impl[T, DenseMatrix[Double]] = {
+  implicit def canInvUsingLU_Double[T](implicit luImpl: LU.Impl[T, (DenseMatrix[Double], Array[Int])]):Impl[T, DenseMatrix[Double]] = {
     new Impl[T, DenseMatrix[Double]] {
       def apply(X: T): DenseMatrix[Double] = {
         // Should these type hints be necessary?
@@ -24,6 +25,31 @@ object inv extends UFunc {
         val work      = Array.ofDim[Double](lwork)
         val info      = new intW(0)
         lapack.dgetri(
+          N, m.internalData, scala.math.max(1, N) /* LDA */,
+          ipiv,
+          work /* workspace */, lwork /* workspace size */,
+          info
+        )
+        assert(info.`val` >= 0, "Malformed argument %d (LAPACK)".format(-info.`val`))
+
+        if (info.`val` > 0)
+          throw new MatrixSingularException
+
+        m
+      }
+    }
+  }
+
+  implicit def canInvUsingLU_Float[T](implicit luImpl: LU.Impl[T, (DenseMatrix[Float], Array[Int])]):Impl[T, DenseMatrix[Float]] = {
+    new Impl[T, DenseMatrix[Float]] {
+      def apply(X: T): DenseMatrix[Float] = {
+        // Should these type hints be necessary?
+        val (m:DenseMatrix[Float], ipiv:Array[Int]) = LU(X)
+        val N         = m.rows
+        val lwork     = scala.math.max(1, N)
+        val work      = Array.ofDim[Float](lwork)
+        val info      = new intW(0)
+        lapack.sgetri(
           N, m.data, scala.math.max(1, N) /* LDA */,
           ipiv,
           work /* workspace */, lwork /* workspace size */,
@@ -38,6 +64,7 @@ object inv extends UFunc {
       }
     }
   }
+
 }
 
 
@@ -51,7 +78,30 @@ object inv extends UFunc {
  *        A^T AX = A^T B
  *     =>      X = (A^T A)^(-1) A^T B
  */
-object pinv extends UFunc {
+object pinv extends UFunc with pinvLowPrio {
+
+  @expand
+  @expand.valify
+  implicit def pinvFromSVD[@expand.args(Float, Double) T]:Impl[DenseMatrix[T], DenseMatrix[T]] = {
+    new Impl[DenseMatrix[T], DenseMatrix[T]] {
+      // http://en.wikipedia.org/wiki/Singular_value_decomposition#Applications_of_the_SVD
+      override def apply(v: DenseMatrix[T]): DenseMatrix[T] = {
+        val svd.SVD(s, svs, d) = svd(v)
+        val vi = svs.map { v => if(v == 0.0) 0.0f else 1 / v}
+
+        val svDiag = DenseMatrix.tabulate[T](s.cols, d.rows) { (i,j) =>
+          if(i == j && i < math.min(s.cols, d.rows)) vi(i)
+          else 0.0f
+        }
+        val res = s * svDiag * d
+        res.t
+      }
+    }
+  }
+
+}
+
+trait pinvLowPrio { this: pinv.type =>
   /**
    * pinv for anything that can be transposed, multiplied with that transposed, and then solved.
    * This signature looks intense, but take it one step at a time.

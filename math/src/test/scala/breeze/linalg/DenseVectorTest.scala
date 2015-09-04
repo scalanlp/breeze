@@ -1,5 +1,6 @@
 package breeze.linalg
 
+import org.netlib.blas.Ddot
 import org.scalacheck._
 import org.scalatest._
 import org.scalatest.junit._
@@ -95,6 +96,15 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(min(v, 2) === DenseVector(2, 0, 2, 2, -1))
   }
 
+  test("Scalars on the LHS") {
+    val v = DenseVector(2, 1, 3, 2, -1)
+    assert(1 :+ v == v + 1)
+    assert(1 :- v == -v + 1)
+    assert(6 :/ v == v.mapValues(6 / _) )
+    assert(6 :* v == v.mapValues(6 * _) )
+
+  }
+
   test("Topk") {
     val v = DenseVector(2, 0, 3, 4, -1)
 
@@ -106,6 +116,7 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(mean(DenseVector(0.0,1.0,2.0)) === 1.0)
     assert(mean(DenseVector(0.0,3.0)) === 1.5)
     assert(mean(DenseVector(3.0)) === 3.0)
+    assert(mean(DenseVector(3.0).t) === 3.0)
   }
 
   test("Norm") {
@@ -116,6 +127,7 @@ class DenseVectorTest extends FunSuite with Checkers {
     assertClose(norm(v, 4), 1.7541)
     assertClose(norm(v, 5), 1.7146)
     assertClose(norm(v, 6), 1.6940)
+    assertClose(norm(v.t, 6), 1.6940)
     assertClose(norm(v, Double.PositiveInfinity), 1.6656)
   }
 
@@ -257,6 +269,14 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(mav === DenseVector(2.0, 3.0, 4.0, 5.0, 6.0))
   }
 
+  test("Strided Map(Active)Values Double") {
+    val a: DenseVector[Double] = DenseVector(1, 2, 3, 4, 5)
+    val mv: DenseVector[Double] = a(2 to -1).mapValues(_ + 1)
+    val mav: DenseVector[Double] = a(2 to -1).mapActiveValues(_ + 1)
+    assert(mv === DenseVector(4.0, 5.0, 6.0))
+    assert(mav === DenseVector(4.0, 5.0, 6.0))
+  }
+
   test("Map(Active)Pairs Int") {
     val a: DenseVector[Int] = DenseVector(1, 2, 3, 4, 5)
     val mv: DenseVector[Int] = a.mapPairs((i,x) => x + 1)
@@ -347,6 +367,12 @@ class DenseVectorTest extends FunSuite with Checkers {
 
   }
 
+  test("Negation Tranpose") {
+    val a1 = DenseVector(1.0, 2.0, 3.0)
+    assert(-a1.t == DenseVector(-1.0, -2.0, -3.0).t)
+
+  }
+
   test("DV ops work as Vector") {
     val a = DenseVector(1.0, 2.0, 3.0)
     val b = DenseVector(3.0, 4.0, 5.0)
@@ -425,6 +451,13 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(dv === DenseVector(1,1,2,3,4,5,6,7,8,8))
   }
 
+  test("clip tranpose") {
+    val dv = DenseVector.range(0, 10)
+    assert(clip(dv.t, 1, 8) === DenseVector(1,1,2,3,4,5,6,7,8,8).t)
+    clip.inPlace(dv.t, 1, 8)
+    assert(dv.t === DenseVector(1,1,2,3,4,5,6,7,8,8).t)
+  }
+
   test("any and all") {
     val a = DenseVector(1, 2, 3)
     val b = DenseVector(1, 4, 1)
@@ -445,6 +478,36 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(!a === DenseVector(false, true, true))
   }
 
+  // blas causes me so many headaches
+  test("negative step sizes and dot -- Double") {
+    val foo = DenseVector(1.0, 2.0, 3.0, 4.0)
+    val fneg = foo(3 to 0 by -1)
+    println(fneg, fneg.offset, fneg.data, fneg.length, fneg.stride)
+    assert((foo dot foo(3 to 0 by -1)) === 20.0)
+  }
+
+  test("negative step sizes and + -- Double") {
+    val foo = DenseVector(1.0, 2.0, 3.0, 4.0)
+    val fneg = foo(3 to 0 by -1)
+    assert(foo + fneg === DenseVector(5.0, 5.0, 5.0, 5.0))
+  }
+
+
+  test("negative step sizes and scale -- Double") {
+    val foo = DenseVector(1.0, 2.0, 3.0, 4.0)
+    val fneg = foo(3 to 0 by -1)
+    fneg *= 1.0
+    assert(fneg * 3.0 === DenseVector(12.0, 9.0, 6.0, 3.0))
+  }
+
+  test("negative step sizes and assignment -- Double") {
+    val foo = DenseVector(1.0, 2.0, 3.0, 4.0)
+    val fneg = foo(3 to 0 by -1)
+    fneg.copy
+    val fy = DenseVector.zeros[Double](fneg.length)
+    fy := fneg
+    assert(fy === DenseVector(4.0, 3.0, 2.0, 1.0))
+  }
 }
 
 /**

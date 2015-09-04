@@ -71,12 +71,12 @@ class SparseVector[@spec(Double, Int, Float, Long) V](val array: SparseArray[V])
   def contains(i: Int) = array.contains(i)
 
   def apply(i: Int): V = {
-    if(i < 0 || i > size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
+    if(i < 0 || i >= size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
     array(i)
   }
 
   def update(i: Int, v: V): Unit = {
-    if(i < 0 || i > size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
+    if(i < 0 || i >= size) throw new IndexOutOfBoundsException(i + " not in [0,"+size+")")
     array(i) = v
   }
 
@@ -280,8 +280,8 @@ object SparseVector extends SparseVectorOps
       }
     }
 
-  implicit def canTransformValues[V:Zero:ClassTag]:CanTransformValues[SparseVector[V], V, V] = {
-    new CanTransformValues[SparseVector[V], V, V] {
+  implicit def canTransformValues[V:Zero:ClassTag]:CanTransformValues[SparseVector[V], V] = {
+    new CanTransformValues[SparseVector[V], V] {
       val z = implicitly[Zero[V]]
       /**Transforms all key-value pairs from the given collection. */
       def transform(from: SparseVector[V], fn: (V) => V): Unit = {
