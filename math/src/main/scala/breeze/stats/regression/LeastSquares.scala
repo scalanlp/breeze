@@ -14,7 +14,7 @@ private object leastSquaresImplementation {
     require(workArray.size >= 2*data.rows*data.cols)
 
     val info = new intW(0)
-    lapack.dgels("N", data.rows, data.cols, 1, data.data, data.rows, outputs.data, data.rows, workArray, workArray.size, info)
+    lapack.dgels("N", data.rows, data.cols, 1, data.internalData, data.rows, outputs.data, data.rows, workArray, workArray.size, info)
     if (info.`val` < 0) {
       throw new ArithmeticException("Least squares did not converge.")
     }

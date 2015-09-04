@@ -15,11 +15,20 @@ package breeze
  limitations under the License.
 */
 
+<<<<<<< HEAD
+<<<<<<< HEAD
 import breeze.linalg.DenseMatrix
 import breeze.numerics.abs
+=======
+import breeze.linalg.immutable
+>>>>>>> ff55711415c7e3151f76488211a74e5321f40de8
+=======
+import breeze.linalg.immutable
+>>>>>>> ff55711415c7e3151f76488211a74e5321f40de8
 import io.{CSVWriter, CSVReader}
 import linalg.operators._
 import breeze.linalg.support.{RangeExtender, CanCopy}
+import breeze.linalg.support.enrichedTuple._
 import math.Semiring
 import storage.Zero
 import java.io.{File, FileReader}
@@ -83,7 +92,7 @@ package object linalg {
     }
   }
 
-  def csvwrite(file: File, mat: Matrix[Double],
+  def csvwrite(file: File, mat: immutable.Matrix[Double],
                separator: Char=',',
                quote: Char='\u0000',
                escape: Char='\\',
@@ -109,15 +118,23 @@ package object linalg {
  * @author dlwh,dramage,retronym,afwlehmann,lancelet
  */
 
-  private[linalg] def requireNonEmptyMatrix[V](mat: Matrix[V]): Unit =
+  private[linalg] def requireNonEmptyMatrix[V](mat: immutable.Matrix[V]): Unit =
     if (mat.cols == 0 || mat.rows == 0)
       throw new MatrixEmptyException
 
-  private[linalg] def requireSquareMatrix[V](mat: Matrix[V]): Unit =
+  private[linalg] def requireSquareMatrix[V](mat: immutable.Matrix[V]): Unit =
     if (mat.rows != mat.cols)
       throw new MatrixNotSquareException
 
+<<<<<<< HEAD
+<<<<<<< HEAD
   private[linalg] def requireSymmetricMatrix(mat: Matrix[Double], tol: Double = 1e-7): Unit = {
+=======
+  private[linalg] def requireSymmetricMatrix[V](mat: immutable.Matrix[V]): Unit = {
+>>>>>>> ff55711415c7e3151f76488211a74e5321f40de8
+=======
+  private[linalg] def requireSymmetricMatrix[V](mat: immutable.Matrix[V]): Unit = {
+>>>>>>> ff55711415c7e3151f76488211a74e5321f40de8
     requireSquareMatrix(mat)
 
     for (i <- 0 until mat.rows; j <- 0 until i)
@@ -172,7 +189,7 @@ package object linalg {
    * The lower triangular portion of the given real quadratic matrix X. Note
    * that no check will be performed regarding the symmetry of X.
    */
-  def lowerTriangular[T: Semiring: ClassTag:Zero](X: Matrix[T]): DenseMatrix[T] = {
+  def lowerTriangular[T: Semiring: ClassTag:Zero](X: immutable.Matrix[T]): DenseMatrix[T] = {
     val N = X.rows
     DenseMatrix.tabulate(N, N)( (i, j) =>
       if(j <= i) X(i,j)
@@ -196,7 +213,7 @@ package object linalg {
    * The upper triangular portion of the given real quadratic matrix X. Note
    * that no check will be performed regarding the symmetry of X.
    */
-  def upperTriangular[T: Semiring: ClassTag: Zero](X: Matrix[T]): DenseMatrix[T] = {
+  def upperTriangular[T: Semiring: ClassTag: Zero](X: immutable.Matrix[T]): DenseMatrix[T] = {
     val N = X.rows
     DenseMatrix.tabulate(N, N)( (i, j) =>
       if(j >= i) X(i,j)
@@ -315,6 +332,43 @@ package object linalg {
    */
   lazy val usingNatives = com.github.fommil.netlib.BLAS.getInstance.getClass.getName != "com.github.fommil.netlib.F2jBLAS"
 
+//  /**
+//   * @author ktakagaki
+//   * @author dlwh
+//   * @date 3/1/14.
+//   */
+//  implicit class EnrichedTuple[Row, V]( tuple: Row )(implicit lr: LiteralRow[Row, V], ct: ClassTag[V], dav: DefaultArrayValue[V]) {
+//    def v = {
+//      val len = lr.length(tuple)
+//      val dv = DenseVector.zeros[V](len)
+//      lr.foreach(tuple, dv(_) = _)
+//      dv
+//    }
+//  }
+
+//  @arityize(22)
+  implicit def enrichedTuple1( tuple: Tuple1[Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple1(tuple)
+  implicit def enrichedTuple2( tuple: Tuple2[Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple2(tuple)
+  implicit def enrichedTuple3( tuple: Tuple3[Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple3(tuple)
+  implicit def enrichedTuple4( tuple: Tuple4[Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple4(tuple)
+  implicit def enrichedTuple5( tuple: Tuple5[Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple5(tuple)
+  implicit def enrichedTuple6( tuple: Tuple6[Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple6(tuple)
+  implicit def enrichedTuple7( tuple: Tuple7[Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple7(tuple)
+  implicit def enrichedTuple8( tuple: Tuple8[Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple8(tuple)
+  implicit def enrichedTuple9( tuple: Tuple9[Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple9(tuple)
+  implicit def enrichedTuple10( tuple: Tuple10[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple10(tuple)
+  implicit def enrichedTuple11( tuple: Tuple11[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple11(tuple)
+  implicit def enrichedTuple12( tuple: Tuple12[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple12(tuple)
+  implicit def enrichedTuple13( tuple: Tuple13[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple13(tuple)
+  implicit def enrichedTuple14( tuple: Tuple14[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple14(tuple)
+  implicit def enrichedTuple15( tuple: Tuple15[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple15(tuple)
+  implicit def enrichedTuple16( tuple: Tuple16[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple16(tuple)
+  implicit def enrichedTuple17( tuple: Tuple17[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple17(tuple)
+  implicit def enrichedTuple18( tuple: Tuple18[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple18(tuple)
+  implicit def enrichedTuple19( tuple: Tuple19[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple19(tuple)
+  implicit def enrichedTuple20( tuple: Tuple20[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple20(tuple)
+  implicit def enrichedTuple21( tuple: Tuple21[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple21(tuple)
+  implicit def enrichedTuple22( tuple: Tuple22[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any] ) =  new breeze.linalg.support.enrichedTuple.EnrichedTuple22(tuple)
 
 
 }

@@ -100,9 +100,9 @@ object svd extends UFunc {
 
     lapack.dgesdd(
       mode.JOBZ, m, n,
-      cm.data, scala.math.max(1,m),
-      S.data, U.data, scala.math.max(1,m),
-      Vt.data, LDVT,
+      cm.internalData, scala.math.max(1,m),
+      S.data, U.internalData, scala.math.max(1,m),
+      Vt.internalData, LDVT,
       work,work.length,iwork, info)
 
     if (info.`val` > 0)
@@ -152,9 +152,9 @@ object svd extends UFunc {
 
     lapack.sgesdd(
       mode.JOBZ, m, n,
-      cm.data, scala.math.max(1,m),
-      S.data, U.data, scala.math.max(1,m),
-      Vt.data, LDVT,
+      cm.internalData, scala.math.max(1,m),
+      S.data, U.internalData, scala.math.max(1,m),
+      Vt.internalData, LDVT,
       work,work.length,iwork, info)
 
     if (info.`val` > 0)

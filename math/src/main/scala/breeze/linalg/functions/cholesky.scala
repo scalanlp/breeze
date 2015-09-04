@@ -32,7 +32,7 @@ object cholesky extends UFunc {
       val info = new intW(0)
       lapack.dpotrf(
         "L" /* lower triangular */,
-        N /* number of rows */, A.data, scala.math.max(1, N) /* LDA */,
+        N /* number of rows */, A.internalData, scala.math.max(1, N) /* LDA */,
         info
       )
       // A value of info.`val` < 0 would tell us that the i-th argument
