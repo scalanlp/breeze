@@ -118,7 +118,7 @@ package object financial {
       val nonZeroEigNum = rootEig.eigenvalues.length;
       val complexEig = DenseVector.zeros[Complex](nonZeroEigNum)
       for (i <- 0 until nonZeroEigNum) {
-        complexEig(i) = Complex(rootEig.eigenvalues(i), rootEig.eigenvectorsComplex(i))
+        complexEig(i) = Complex(rootEig.eigenvalues(i), rootEig.eigenvaluesComplex(i))
       }
 
       complexEig

@@ -18,6 +18,16 @@ object normalize extends UFunc {
     }
   }
 
+  implicit def normalizeFloatImpl[T, U>:T](implicit div: OpDiv.Impl2[T, Float, U], canNorm: norm.Impl2[T, Float, Float]):Impl2[T, Float, U] = {
+    new Impl2[T, Float, U] {
+      def apply(t: T, n: Float): U = {
+        val norm = canNorm(t, n)
+        if(norm == 0) t
+        else div(t,norm)
+      }
+    }
+  }
+
 
   implicit def normalizeImpl[T, U>:T](implicit impl: Impl2[T, Double, U]):Impl[T, U] = {
     new Impl[T, U] {

@@ -2,6 +2,8 @@ package breeze.io
 
 import java.io.{File, DataInput, DataOutput, Closeable, IOException}
 
+import spire.math.ULong
+
 
 /** Wrapper for [[java.io.RandomAccessFile]].
   *
@@ -23,13 +25,22 @@ import java.io.{File, DataInput, DataOutput, Closeable, IOException}
   * <tr><td>Int32: Signed 32-bit integer  </td>   <td>int</td>        <td>Int</td>        <td>[-2147483648, 2147483647]</td>        </tr>
   * <tr><td>UInt32: Unsigned 32-bit integer  </td> <td>(long)</td>         <td>(Long)</td>        <td>[0, 4294967295]</td> </tr>
   * <tr><td>Int64: Signed 64-bit integer  </td>   <td>long</td>        <td>Long</td>        <td>[-9223372036854775808, 9223372036854775807]</td>        </tr>
-  * <tr><td>UInt64: Unsigned 64-bit integer*  </td> <td>long</td>         <td>Long</td>        <td>[0, <b>9223372036854775807</b>]</td> </tr>
+  * <tr><td>UInt64: Unsigned 64-bit integer*  </td> <td>(spire.math.Ulong)</td>         <td>(spire.math.ULong)</td>        <td>[0, <b>18446744073709551615</b>]</td> </tr>
   * <tr><td>UInt64Shifted: Unsigned 64-bit integer, shifted to signed range*  </td>   <td>(long)*</td>        <td>(Long)*</td>        <td>[0, 18446744073709551615*]</td>        </tr>
   * </table>
   *
   * *note: given that the JVM/Scala does not have a UInt64 type, nor a Int128 to promote to, UInt64s are dealt with in two
-  * ways... as a truncated Int64 (which will only allow half of the range of UInt64 to be actually used, but which
-  * is compatible with + - * / operations), or as a shifted Int64, where UInt64 are subtracted and shifted down to cover
+  * ways... (1) as a [[spire.math.ULong]] (which represents UInt64 wrapped as a regular Long where the negative
+  * values represent their unsigned two's complement equivalent:
+  * <table border="2">
+  * <tr><th>Unsigned ULong value</th> <th>Internal Long (signed) wrapped by ULong</th></tr>
+  * <tr><th>0</th> <th>0</th></tr>
+  * <tr><th>2&#94;63-1</th> <th>2&#94;63-1</th></tr>
+  * <tr><th>2&#94;63</th> <th>-2&#94;63</th></tr>
+  * <tr><th>2&#94;64-1</th> <th>-1</th></tr>
+  * </table>
+  *
+  * or (2) as a shifted Int64, where UInt64 is shifted down by 2&#94;63 in its range to cover
   * both positive and negative values of Int64 (this is compatible with + and -, for use as timestamps, for example,
   * but is of course not compatible with * and / operations)
   *
@@ -570,16 +581,16 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
   //</editor-fold>
 
 
-  ///// UInt64 (Long) /////
+  ///// UInt64 (ULong) /////
 
   //<editor-fold desc="Reading">
 
-  /** Tries to read a UInt64 as Long at the current getFilePointer().
+  /** Tries to read a UInt64 as [[spire.math.ULong]] at the current getFilePointer().
     * Will throw an exception for UInt64 values which are larger than the maximum Long.
     * Will throw an exception if it encounters an end of file.
     */
   @throws(classOf[IOException])
-  final def readUInt64(): BigInt = {
+  final def readUInt64(): ULong = {
     val ba = readByte(8)
     converter.bytesToUInt64(ba(0), ba(1), ba(2), ba(3), ba(4), ba(5), ba(6), ba(7))
   }
@@ -589,10 +600,10 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
     * Will throw an exception if it encounters an end of file.
     */
   @throws(classOf[IOException])
-  final def readUInt64(n: Int): Array[BigInt] = {
+  final def readUInt64(n: Int): Array[ULong] = {
     val ba = new Array[Byte](n * 8)
     rafObj.readFully(ba) //reading is much faster if many bytes are read simultaneously
-    val tr = new Array[BigInt](n)
+    val tr = new Array[ULong](n)
     //the following is a hack to avoid the heavier Scala for loop
     var c = 0
     while (c < n) {
@@ -612,15 +623,15 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
     * Will throw error if value < 0.
     */
   @throws(classOf[IOException])
-  final def writeUInt64(v: Long): Unit = {
+  final def writeUInt64(v: ULong): Unit = {
     rafObj.write(converter.uInt64ToBytes(v))
   }
 
-  /** Tries to write an array of UInt64s (described as Longs) to the current getFilePointer().
+  /** Tries to write an array of UInt64s (input as [[spire.math.ULong]]) to the current getFilePointer().
     * Will throw error if value < 0.
     */
   @throws(classOf[IOException])
-  final def writeUInt64(v: Array[Long]): Unit = {
+  final def writeUInt64(v: Array[ULong]): Unit = {
     rafObj.write( v.flatMap(converter.uInt64ToBytes(_)) )
   }
 
@@ -876,10 +887,6 @@ class RandomAccessFile(file: File, arg0: String = "r")(implicit converter: ByteC
   */
 abstract class ByteConverter {
 
-  final val ZERO = BigInt("0")
-  final val uInt64Max = BigInt("18446744073709551615")
-  final val Int64Max = BigInt( Long.MaxValue )
-
   ///// bytesToXXX /////
   /**Takes 1 Byte and returns a UInt8 (as Short)*/
   def byteToUInt8(b0: Byte): Short = {
@@ -898,8 +905,10 @@ abstract class ByteConverter {
   /**Takes 4 Bytes and returns a UInt32 (as Long)*/
   def bytesToUInt32(b0: Byte, b1: Byte, b2: Byte, b3: Byte): Long
 
-  /**Takes 8 Bytes and returns a UInt64 (as Long), throwing an error if it overflows Long, which is Int64*/
-  def bytesToUInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): BigInt
+  /**Takes 8 Bytes and returns a UInt64 (as ULong), throwing an error if it overflows Long, which is Int64*/
+  final def bytesToUInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): ULong = {
+    ULong( bytesToInt64(b0,b1,b2,b3,b4,b5,b6,b7) )
+  }
 
   /**Takes 8 Bytes and returns a Int64 (Long)*/
   def bytesToInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Long
@@ -931,10 +940,11 @@ abstract class ByteConverter {
   /**Takes an Int64 (Long), and returns an array of 8 bytes*/
   def int64ToBytes(value: Long): Array[Byte]
 
-  /**Takes a UInt64 (as Long), and returns an array of 8 bytes*/
-  def uInt64ToBytes(value: BigInt): Array[Byte]
+  /**Takes a UInt64 (as ULong), and returns an array of 8 bytes*/
+  def uInt64ToBytes(value: ULong): Array[Byte]
 
-  /**Takes an Int64 (Long), and returns an array of 8 bytes, shifted up to a UInt64. See [[breeze.io.ByteConverter.bytesToUInt64Shifted()]]*/
+  /**Takes an Int64 (Long), and returns an array of 8 bytes, shifted up to a UInt64.
+    * See [[breeze.io.ByteConverter.bytesToUInt64Shifted()]]*/
   def uInt64ShiftedToBytes(value: Long): Array[Byte]
 
 }
@@ -960,14 +970,14 @@ object ByteConverterBigEndian extends ByteConverter {
     (b0.toLong & 0xFFL) << 24 | (b1.toLong & 0xFFL) << 16 | (b2.toLong & 0xFFL) << 8 | (b3.toLong & 0xFFL)
   }
 
-  def bytesToUInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): BigInt = {
-//    if ((b0/*.toInt*/ & 0x80) != 0x00) {
-//      throw new IOException("UInt64 too big to read given limitations of Long format.")
-//    } else {
-      (b0.toLong & 0xFFL) << 56 | (b1.toLong & 0xFFL) << 48 | (b2.toLong & 0xFFL) << 40 | (b3.toLong & 0xFFL) << 32 |
-        (b4.toLong & 0xFFL) << 24 | (b5.toLong & 0xFFL) << 16 | (b6.toLong & 0xFFL) << 8 | (b7.toLong & 0xFFL)
-//    }
-  }
+//  def bytesToUInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): ULong = {
+////    if ((b0/*.toInt*/ & 0x80) != 0x00) {
+////      throw new IOException("UInt64 too big to read given limitations of Long format.")
+////    } else {
+//      (BigInt(b0) & 0xFFL) << 56 | (b1.toLong & 0xFFL) << 48 | (b2.toLong & 0xFFL) << 40 | (b3.toLong & 0xFFL) << 32 |
+//        (b4.toLong & 0xFFL) << 24 | (b5.toLong & 0xFFL) << 16 | (b6.toLong & 0xFFL) << 8 | (b7.toLong & 0xFFL)
+////    }
+//  }
 
   def bytesToInt64(b0: Byte, b1: Byte, b2: Byte, b3: Byte, b4: Byte, b5: Byte, b6: Byte, b7: Byte): Long = {
     b0.toLong << 56 | (b1.toLong & 0xFFL) << 48 | (b2.toLong & 0xFFL) << 40 | (b3.toLong & 0xFFL) << 32 |
@@ -1028,19 +1038,21 @@ object ByteConverterBigEndian extends ByteConverter {
     tempret
   }
 
-  def uInt64ToBytes(value: BigInt): Array[Byte] = {
-    require(value >= ZERO, s"Value $value is out of range of 4-byte unsigned array.")
-    require(value <= uInt64Max, s"Value $value is out of range of 4-byte unsigned array.")
+  def uInt64ToBytes(value: ULong): Array[Byte] = {
+//    require(value >= ZERO, s"Value $value is out of range of 8-byte unsigned array.")
+//    require(value <= uInt64Max, s"Value $value is out of range of 8-byte unsigned array.")
 
     val tempret = new Array[Byte](8)
-    tempret(0) = ((value >> 56) & 0xFF).toByte
-    tempret(1) = ((value >> 48) & 0xFF).toByte
-    tempret(2) = ((value >> 40) & 0xFF).toByte
-    tempret(3) = ((value >> 32) & 0xFF).toByte
-    tempret(4) = ((value >> 24) & 0xFF).toByte
-    tempret(5) = ((value >> 16) & 0xFF).toByte
-    tempret(6) = ((value >> 8)  & 0xFF).toByte
-    tempret(7) =  (value        & 0xFF).toByte
+    val longValue = value.longValue()
+
+    tempret(0) = ((longValue >> 56) & 0xFF).toByte
+    tempret(1) = ((longValue >> 48) & 0xFF).toByte
+    tempret(2) = ((longValue >> 40) & 0xFF).toByte
+    tempret(3) = ((longValue >> 32) & 0xFF).toByte
+    tempret(4) = ((longValue >> 24) & 0xFF).toByte
+    tempret(5) = ((longValue >> 16) & 0xFF).toByte
+    tempret(6) = ((longValue >> 8)  & 0xFF).toByte
+    tempret(7) =  (longValue        & 0xFF).toByte
     tempret
   }
 
@@ -1070,12 +1082,12 @@ object ByteConverterLittleEndian extends ByteConverter  {
   override def bytesToUInt32(b0: Byte, b1: Byte, b2: Byte, b3: Byte) = ByteConverterBigEndian.bytesToUInt32(b3, b2, b1, b0)
   override def bytesToInt64(b0: Byte, b1 : Byte, b2 : Byte, b3 : Byte, b4 : Byte, b5 : Byte, b6 : Byte, b7 : Byte)
   = ByteConverterBigEndian.bytesToInt64(b7, b6, b5, b4, b3, b2, b1, b0)
-  override def bytesToUInt64(b0: Byte, b1 : Byte, b2 : Byte, b3 : Byte, b4 : Byte, b5 : Byte, b6 : Byte, b7 : Byte)
-  = ByteConverterBigEndian.bytesToUInt64(b7, b6, b5, b4, b3, b2, b1, b0)
+//  override def bytesToUInt64(b0: Byte, b1 : Byte, b2 : Byte, b3 : Byte, b4 : Byte, b5 : Byte, b6 : Byte, b7 : Byte)
+//  = ByteConverterBigEndian.bytesToUInt64(b7, b6, b5, b4, b3, b2, b1, b0)
   override def bytesToUInt64Shifted(b0: Byte, b1 : Byte, b2 : Byte, b3 : Byte, b4 : Byte, b5 : Byte, b6 : Byte, b7 : Byte)
   = ByteConverterBigEndian.bytesToUInt64Shifted(b7, b6, b5, b4, b3, b2, b1, b0)
 
-//reverse is pretty slow, time hog.
+//reverse is pretty slow, and a time hog. Therefore, unfortunately, the following code reuse is not practical
 //  override def int16ToBytes(value: Short): Array[Byte]  = ByteConverterBigEndian.int16ToBytes(value).reverse
 //  override def uInt16ToBytes(value: Char): Array[Byte]   = ByteConverterBigEndian.uInt16ToBytes(value).reverse
 //  override def int32ToBytes(value: Int): Array[Byte]    = ByteConverterBigEndian.int32ToBytes(value).reverse
@@ -1083,6 +1095,7 @@ object ByteConverterLittleEndian extends ByteConverter  {
 //  override def int64ToBytes(value: Long): Array[Byte]   = ByteConverterBigEndian.int64ToBytes(value).reverse
 //  override def uInt64ToBytes(value: Long): Array[Byte]  = ByteConverterBigEndian.uInt64ToBytes(value).reverse
 //  override def uInt64ShiftedToBytes(value: Long): Array[Byte] = ByteConverterBigEndian.uInt64ShiftedToBytes(value).reverse
+
   ///// XXXToByte /////
   def int16ToBytes(value: Short): Array[Byte] = {
     val tempret = new Array[Byte](2)
@@ -1133,19 +1146,20 @@ object ByteConverterLittleEndian extends ByteConverter  {
     tempret
   }
 
-  def uInt64ToBytes(value: BigInt): Array[Byte] = {
-    require(value >= BigIntZERO, s"Value $value is out of range of 4-byte unsigned array.")
-    require(value <= BigIntuInt64Max, s"Value $value is out of range of 4-byte unsigned array.")
+  def uInt64ToBytes(value: ULong): Array[Byte] = {
+//    require(value >= ZERO, s"Value $value is out of range of 8-byte unsigned array.")
+//    require(value <= uInt64Max, s"Value $value is out of range of 8-byte unsigned array.")
 
     val tempret = new Array[Byte](8)
-    tempret(7) = ((value >> 56) & 0xFF).toByte
-    tempret(6) = ((value >> 48) & 0xFF).toByte
-    tempret(5) = ((value >> 40) & 0xFF).toByte
-    tempret(4) = ((value >> 32) & 0xFF).toByte
-    tempret(3) = ((value >> 24) & 0xFF).toByte
-    tempret(2) = ((value >> 16) & 0xFF).toByte
-    tempret(1) = ((value >> 8)  & 0xFF).toByte
-    tempret(0) =  (value        & 0xFF).toByte
+    val longValue = value.longValue()
+    tempret(7) = ((longValue >> 56) & 0xFF).toByte
+    tempret(6) = ((longValue >> 48) & 0xFF).toByte
+    tempret(5) = ((longValue >> 40) & 0xFF).toByte
+    tempret(4) = ((longValue >> 32) & 0xFF).toByte
+    tempret(3) = ((longValue >> 24) & 0xFF).toByte
+    tempret(2) = ((longValue >> 16) & 0xFF).toByte
+    tempret(1) = ((longValue >> 8)  & 0xFF).toByte
+    tempret(0) =  (longValue        & 0xFF).toByte
     tempret
   }
 
