@@ -86,7 +86,7 @@ trait Counter[K, V] extends Tensor[K,V] with CounterLike[K, V, collection.mutabl
 
 object Counter extends CounterOps {
   /** Returns an empty counter. */
-  def apply[K,V:Zero:Semiring]() : Counter[K,V] =
+  def apply[K,V:Zero]() : Counter[K,V] =
     new Impl(scala.collection.mutable.HashMap[K,V]())
 
   /** Returns a counter by summing all the given values. */
@@ -118,22 +118,23 @@ object Counter extends CounterOps {
     def default = zero.zero
   }
 
-  implicit def canMapValues[K, V, RV:Semiring]: CanMapValues[Counter[K, V], V, RV, Counter[K, RV]]
-  = new CanMapValues[Counter[K,V],V,RV,Counter[K,RV]] {
-    override def map(from : Counter[K,V], fn : (V=>RV)) = {
-      val rv = Counter[K,RV]()
-      for( (k,v) <- from.iterator) {
-        rv(k) = fn(from.data(k))
+  implicit def canMapValues[K, V, RV: Zero]: CanMapValues[Counter[K, V], V, RV, Counter[K, RV]] = {
+    new CanMapValues[Counter[K,V],V,RV,Counter[K,RV]] {
+      override def map(from : Counter[K,V], fn : (V=>RV)) = {
+        val rv = Counter[K,RV]()
+        for( (k,v) <- from.iterator) {
+          rv(k) = fn(from.data(k))
+        }
+        rv
       }
-      rv
-    }
 
-    override def mapActive(from : Counter[K,V], fn : (V=>RV)) = {
-      val rv = Counter[K,RV]()
-      for( (k,v) <- from.activeIterator) {
-        rv(k) = fn(from.data(k))
+      override def mapActive(from : Counter[K,V], fn : (V=>RV)) = {
+        val rv = Counter[K,RV]()
+        for( (k,v) <- from.activeIterator) {
+          rv(k) = fn(from.data(k))
+        }
+        rv
       }
-      rv
     }
   }
 
@@ -149,6 +150,9 @@ object Counter extends CounterOps {
     }
 
   }
+
+  implicit def scalarOf[K, V]: ScalarOf[Counter[K, V], V] = ScalarOf.dummy
+  implicit def handHold[K, V]: CanMapValues.HandHold[Counter[K, V], V] = new CanMapValues.HandHold[Counter[K, V], V]
 
   implicit def canTraverseKeyValuePairs[K,V]: CanTraverseKeyValuePairs[Counter[K,V],K,V] = new CanTraverseKeyValuePairs[Counter[K,V],K,V] {
     /** Traverses all values from the given collection. */

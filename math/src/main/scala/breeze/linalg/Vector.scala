@@ -211,6 +211,7 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
   }
 
   implicit def handholdCMV[T]= new CanMapValues.HandHold[Vector[T], T]
+  implicit def scalarOf[T]: ScalarOf[Vector[T], T] = ScalarOf.dummy
 
   implicit def negFromScale[@spec(Double, Int, Float, Long) V, Double](implicit scale: OpMulScalar.Impl2[Vector[V], V, Vector[V]], ring: Ring[V]) = {
     new OpNeg.Impl[Vector[V], Vector[V]] {

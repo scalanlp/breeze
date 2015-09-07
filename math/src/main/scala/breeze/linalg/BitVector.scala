@@ -133,7 +133,8 @@ object BitVector extends BitVectorOps {
       }
     }
   }
-  implicit def handholdCMV[T]= new CanMapValues.HandHold[BitVector, Boolean]
+
+  implicit def scalarOf[T]: ScalarOf[DenseMatrix[T], T] = ScalarOf.dummy
 
 
   implicit def canIterateValues: CanTraverseValues[BitVector, Boolean] =

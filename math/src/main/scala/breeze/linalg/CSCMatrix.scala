@@ -18,6 +18,7 @@ package breeze.linalg
 import java.util
 
 import breeze.linalg.operators._
+import breeze.linalg.support.CanMapValues.HandHold
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
 import breeze.math._
@@ -334,7 +335,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
     }
   }
 
-  implicit def handholdCMV[T] = new CanMapValues.HandHold[CSCMatrix[T], T]
+  implicit def scalarOf[T]: ScalarOf[CSCMatrix[T], T] = ScalarOf.dummy
 
   implicit def canIterateValues[V]:CanTraverseValues[CSCMatrix[V], V] = {
     new CanTraverseValues[CSCMatrix[V],V] {

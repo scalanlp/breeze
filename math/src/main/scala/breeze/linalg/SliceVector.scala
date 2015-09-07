@@ -1,12 +1,12 @@
 package breeze.linalg
 
-import support._
-import support.CanTraverseValues.ValuesVisitor
-import support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
+import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
+import breeze.linalg.support.CanTraverseValues.ValuesVisitor
+import breeze.linalg.support._
 import breeze.storage.Zero
 
-import scala.{specialized=>spec}
 import scala.reflect.ClassTag
+import scala.{specialized => spec}
 
 /**
  * A SliceVector is a vector that is a view of another underlying tensor. For instance:
@@ -41,7 +41,7 @@ class SliceVector[@spec(Int) K, @spec(Double, Int, Float, Long) V:ClassTag](val 
 
 
 object SliceVector {
-  implicit def handholdCMV[K, T] = new CanMapValues.HandHold[SliceVector[K, T], T]
+  implicit def scalarOf[K, T]: ScalarOf[SliceVector[K, T], T] = ScalarOf.dummy
 
   implicit def canMapKeyValuePairs[K, V, V2: ClassTag]: CanMapKeyValuePairs[SliceVector[K, V], Int, V, V2, DenseVector[V2]] = {
     new CanMapKeyValuePairs[SliceVector[K, V], Int, V, V2, DenseVector[V2]] {

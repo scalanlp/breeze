@@ -165,5 +165,4 @@ trait BitVectorOps {
     override def mapActive(from: BitVector, fn: (Boolean) => R): DenseVector[R] = map(from, fn)
   }
 
-  implicit object cmvHandHold extends CanMapValues.HandHold[BitVector, Boolean]
 }

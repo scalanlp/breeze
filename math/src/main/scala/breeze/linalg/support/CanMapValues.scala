@@ -16,10 +16,9 @@ package breeze.linalg.support
  limitations under the License.
 */
 import breeze.math.Complex
-import breeze.linalg.support.CanMapValues.HandHold
 
-import scala.{specialized=>spec}
 import scala.reflect.ClassTag
+import scala.{specialized => spec}
 
 /**
  * Marker for being able to map the keys and values in a value collection
@@ -37,7 +36,6 @@ trait CanMapValues[From, @specialized(Int, Float, Double) +A, @specialized(Int, 
 }
 
 trait CanMapValuesLowPrio {
-  implicit def handHoldFromCMV[From, ValueType](implicit cmv: CanMapValues[From, ValueType, ValueType, From]) = new HandHold[From, ValueType]
 
   /*implicit*/ def canMapSelf[V, V2]: CanMapValues[V, V, V2, V2] = {
     new CanMapValues[V, V, V2, V2] {

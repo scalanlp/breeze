@@ -700,6 +700,9 @@ case class CoordinateFieldAdaptor[V, S](underlying: CoordinateField[V, S])(impli
         }
       }
 
+
+      override implicit def scalarOf: ScalarOf[Wrapper, S] = ScalarOf.dummy
+
       implicit def zipMapValues: CanZipMapValues[Wrapper, S, S, Wrapper] = new CanZipMapValues[Wrapper, S, S, Wrapper] {
         /** Maps all corresponding values from the two collections. */
         def map(from: Wrapper, from2: Wrapper, fn: (S, S) => S): Wrapper = {

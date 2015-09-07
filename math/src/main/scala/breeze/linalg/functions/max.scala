@@ -1,7 +1,7 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
-import breeze.linalg.support.{CanTransformValues, CanMapValues, CanTraverseValues}
+import breeze.linalg.support.{ScalarOf, CanTransformValues, CanMapValues, CanTraverseValues}
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.macros.expand
 
@@ -66,7 +66,7 @@ object max extends UFunc /*with VectorizedReduceUFunc <-- doesn't work with 2.10
   }
 
 
-  implicit def maxVS[T, U, LHS, RHS, RV](implicit cmvH: CanMapValues.HandHold[T, LHS],
+  implicit def maxVS[T, U, LHS, RHS, RV](implicit cmvH: ScalarOf[T, LHS],
                                          maxImpl: max.Impl2[LHS, RHS, LHS],
                                          cmv: CanMapValues[T, LHS, LHS, U]):Impl2[T, RHS, U] = {
     new Impl2[T, RHS, U] {
@@ -174,7 +174,7 @@ object min extends UFunc {
 
   }
 
-  implicit def minVS[T, U, LHS, RHS, RV](implicit cmvH: CanMapValues.HandHold[T, LHS],
+  implicit def minVS[T, U, LHS, RHS, RV](implicit cmvH: ScalarOf[T, LHS],
                                          maxImpl: min.Impl2[LHS, RHS, LHS],
                                          cmv: CanMapValues[T, LHS, LHS, U]):Impl2[T, RHS, U] = {
     new Impl2[T, RHS, U] {

@@ -1,5 +1,6 @@
 package breeze.linalg
 
+import breeze.linalg.support.CanMapValues.HandHold
 import operators._
 import support._
 import support.CanTraverseValues.ValuesVisitor
@@ -149,7 +150,8 @@ object HashVector extends HashVectorOps
       }
     }
   }
-  implicit def handholdCMV[T]= new CanMapValues.HandHold[HashVector[T], T]
+
+  implicit def scalarOf[T]: ScalarOf[HashVector[T], T] = ScalarOf.dummy
 
   implicit def canIterateValues[V]:CanTraverseValues[HashVector[V], V] = {
     new CanTraverseValues[HashVector[V],V] {

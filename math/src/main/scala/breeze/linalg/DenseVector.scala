@@ -340,7 +340,8 @@ object DenseVector extends VectorConstructors[DenseVector]
       }
     }
   }
-  implicit def handholdCMV[T]= new CanMapValues.HandHold[DenseVector[T], T]
+
+  implicit def scalarOf[T]: ScalarOf[DenseVector[T], T] = ScalarOf.dummy
 
 
   implicit def canIterateValues[V]: CanTraverseValues[DenseVector[V], V] =

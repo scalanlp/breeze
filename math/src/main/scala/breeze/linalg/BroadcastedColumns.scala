@@ -18,8 +18,8 @@
 
 package breeze.linalg
 
+import breeze.generic.UFunc.{InPlaceImpl, InPlaceImpl2, UImpl, UImpl2}
 import breeze.linalg.support._
-import breeze.generic.UFunc.{InPlaceImpl, UImpl, InPlaceImpl2, UImpl2}
 
 /**
  * Class for classes that are broadcasting their columns.
@@ -50,7 +50,7 @@ object BroadcastedColumns {
 
   }
 
-  implicit def handholdCMV[T, ColumnType] = new CanMapValues.HandHold[BroadcastedColumns[T, ColumnType], ColumnType]
+  implicit def scalarOf[T, ColumnType]: ScalarOf[BroadcastedColumns[T, ColumnType], ColumnType] = ScalarOf.dummy
 
 
   implicit def broadcastOp[Op, T, ColumnType, OpResult, Result](implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, ColumnType],
