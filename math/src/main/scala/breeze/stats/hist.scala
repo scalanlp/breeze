@@ -48,16 +48,16 @@ object hist extends UFunc {
           val ad = a.toDouble
           val i: Int = math.floor(bins * ((ad-minima)/(maxima - minima))).toInt
           if ((i >= 0) && (i < bins)) {
-            result.unsafeUpdate(i, result.unsafeValueAt(i) + 1)
+            result(i) += 1
           }
           if (ad == maxima) { //Include the endpoint
-            result.unsafeUpdate(bins-1, result.unsafeValueAt(bins-1) + 1)
+            result(bins-1) += 1
           }
         }
         def zeros(numZero: Int, zeroValue: S): Unit = {
           val i = math.floor(bins * ((zeroValue.toDouble-minima)/maxima)).toInt
           if ((i >= 0) && (i < bins)) {
-            result.unsafeUpdate(i, result.unsafeValueAt(i) + numZero)
+            result(i) += numZero
           }
         }
       }
@@ -97,10 +97,10 @@ object hist extends UFunc {
           val ad = a.toDouble
           val i: Int = math.floor(bins * ((ad-minima)/(maxima - minima))).toInt
           if ((i >= 0) && (i < bins)) {
-            result.unsafeUpdate(i, result.unsafeValueAt(i) + w)
+            result(i) += w
           }
           if (ad == maxima) { //Include the endpoint
-            result.unsafeUpdate(bins-1, result.unsafeValueAt(bins-1) + w)
+            result(bins-1) += w
           }
         }
       }

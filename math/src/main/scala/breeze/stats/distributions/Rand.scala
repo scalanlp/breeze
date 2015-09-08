@@ -66,7 +66,7 @@ trait Rand[@specialized(Int, Double) +T] { outer =>
   def samplesVector[U >: T](size: Int)(implicit m: ClassTag[U]): DenseVector[U] = {
     val result = new DenseVector[U](new Array[U](size))
     cfor(0)(i => i < size, i => i+1)(i => {
-      result.unsafeUpdate(i, draw())
+      result(i) = draw()
     })
     result
   }

@@ -214,7 +214,7 @@ trait DescriptiveStats {
               throw new IllegalArgumentException("Attempting to compute covariance of dataset where elements have different sizes")
             }
             cfor(0)(i => i < firstRow.size, i => i + 1)(i => {
-              mean.unsafeUpdate(i, mean.unsafeValueAt(i) + x.unsafeValueAt(i))
+              mean(i) = mean(i) + x(i)
             })
 
           })

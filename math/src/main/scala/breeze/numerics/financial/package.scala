@@ -1,6 +1,5 @@
 package breeze.numerics
 
-import breeze.optimize._
 import breeze.generic.UFunc
 import breeze.linalg._
 import breeze.linalg.support.CanTraverseValues
@@ -84,10 +83,10 @@ package object financial {
       val ip = -1*math.max(interest, 0)
       interest += ip
       principal += (pmt - ip)
-      principalRemaining.unsafeUpdate(i, principal)
-      interestPayment.unsafeUpdate(i, ip)
-      principalPayment.unsafeUpdate(i, pmt-ip)
-      interest += (principal+interest)*rate
+      principalRemaining(i) = principal
+      interestPayment(i) = ip
+      principalPayment(i) = pmt - ip
+      interest += (principal + interest)*rate
     })
     (principalPayment, interestPayment, principalRemaining)
   }

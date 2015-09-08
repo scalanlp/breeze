@@ -25,7 +25,7 @@ object split extends UFunc {
         val offsetInOriginalVector = k*individualVectorSize
         val chunk = new Array[T](individualVectorSize)
         cfor(0)(i => i < individualVectorSize, i => i+1)(i => {
-          chunk(i) = v.unsafeValueAt(offsetInOriginalVector+i)
+          chunk(i) = v(offsetInOriginalVector+i)
         })
         result += new DenseVector[T](chunk)
       })
@@ -42,7 +42,7 @@ object split extends UFunc {
       nSeq.foreach(n => {
         val chunk = new Array[T](n - lastN)
         cfor(lastN)(i => i < n, i => i + 1)(i => {
-          chunk(i-lastN) = v.unsafeValueAt(i)
+          chunk(i-lastN) = v(i)
         })
         result += new DenseVector[T](chunk)
         lastN = n
@@ -50,7 +50,7 @@ object split extends UFunc {
       if (lastN < v.size) { //If we did not already add last chunk to result, do it now.
         val chunk = new Array[T](v.size - lastN)
         cfor(lastN)(i => i < v.size, i => i + 1)(i => {
-          chunk(i-lastN) = v.unsafeValueAt(i)
+          chunk(i-lastN) = v(i)
         })
         result += new DenseVector[T](chunk)
       }

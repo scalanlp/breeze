@@ -24,12 +24,12 @@ trait DensePolynomial {
       def apply(k: PolyDenseUFuncWrapper, v: DenseVector[Double]) = {
         val coeffs: Array[Double] = k.p.coeffs
         var i = coeffs.length - 1
-        var result = DenseVector.fill[Double](v.size, coeffs(i))
+        val result = DenseVector.fill[Double](v.size, coeffs(i))
         while (i > 0) {
           i -= 1
           val c = coeffs(i)
           cfor(0)(j => j < result.size, j => j+1)( j => {
-            result.unsafeUpdate(j, result.unsafeValueAt(j)*v.unsafeValueAt(j)+c)
+            result(j) = result(j)*v(j)+c
           })
         }
         result

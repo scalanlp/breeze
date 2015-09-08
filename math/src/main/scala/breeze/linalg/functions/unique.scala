@@ -5,7 +5,7 @@ import breeze.macros.expand
 import spire.implicits._
 
 /**
- * roll the array
+ * deduplicates the array
  *
  * @author stucchio
  */
@@ -16,7 +16,7 @@ object unique extends UFunc {
     def apply(v: DenseVector[S]): DenseVector[S] = if (v.size > 0) {
       val data = new Array[S](v.size)
       cfor(0)(i => i < v.size, i => i+1)(i => {
-        data(i) = v.unsafeValueAt(i)
+        data(i) = v(i)
       })
       java.util.Arrays.sort(data)
 

@@ -2,9 +2,7 @@ package breeze.stats.regression
 
 import breeze.generic.UFunc
 import breeze.linalg._
-import org.netlib.util.intW
-import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
-import java.util.Arrays
+import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
 import spire.implicits.cfor
 
 private case class LassoCalculator(data: DenseMatrix[Double], outputs: DenseVector[Double], lambda: Double, workArray: Array[Double], MAX_ITER: Int=100, IMPROVE_THRESHOLD: Double=1e-8) {
@@ -32,9 +30,9 @@ private case class LassoCalculator(data: DenseMatrix[Double], outputs: DenseVect
       improvedResult = false
       cfor(0)(i => i<data.cols, i=>i+1)(i => {
         val eoc = estimateOneColumn(i)
-        val oldCoefficient = resultVec.unsafeValueAt(i)
-        resultVec.unsafeUpdate(i, shrink(eoc.coefficients(0)))
-        if (oldCoefficient != resultVec.unsafeValueAt(i)) {
+        val oldCoefficient = resultVec(i)
+        resultVec(i) = shrink(eoc.coefficients(0))
+        if (oldCoefficient != resultVec(i)) {
           improvedResult = true
         }
       })
@@ -65,22 +63,22 @@ private case class LassoCalculator(data: DenseMatrix[Double], outputs: DenseVect
     cfor(0)(i => i < outputs.size, i => i+1)(i => {
       singleColumnMatrix.unsafeUpdate(i, 0, data.unsafeValueAt(i, column))
 
-      var o = outputs.unsafeValueAt(i)
+      var o = outputs(i)
       cfor(0)(j => j < data.cols, j => j+1)(j => {
         if (j != column) {
-          o -= data.unsafeValueAt(i,j) * resultVec.unsafeValueAt(j)
+          o -= data.unsafeValueAt(i,j) * resultVec(j)
         }
       })
-      outputCopy.unsafeUpdate(i, o)
+      outputCopy(i) = o
     })
   }
 
   private def computeRsquared = {
     var r2 = 0.0
     cfor(0)(i => i < outputs.size, i => i+1)(i => {
-      var o = outputs.unsafeValueAt(i)
+      var o = outputs(i)
       cfor(0)(j => j < data.cols, j => j+1)(j => {
-        o -= data.unsafeValueAt(i,j) * resultVec.unsafeValueAt(j)
+        o -= data.unsafeValueAt(i,j) * resultVec(j)
       })
       r2 += o*o
     })

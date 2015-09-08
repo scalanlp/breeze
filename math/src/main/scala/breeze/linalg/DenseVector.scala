@@ -89,6 +89,7 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
   }
 
   private[linalg] val noOffsetOrStride = offset == 0 && stride == 1
+  @deprecated("This isn't actually any faster any more", "0.12-SNAPSHOT")
   def unsafeUpdate(i: Int, v: V): Unit = if (noOffsetOrStride) data(i) = v else data(offset+i*stride) = v
 
   def activeIterator: Iterator[(Int, V)] = iterator
@@ -128,6 +129,7 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
   /**
     * Unsafe version of above, a way to skip the checks.
     */
+  @deprecated("This isn't actually any faster any more", "0.12-SNAPSHOT")
   def unsafeValueAt(i: Int): V = data(offset + i * stride)
 
   /**
@@ -375,7 +377,7 @@ object DenseVector extends VectorConstructors[DenseVector]
           throw new IllegalArgumentException("Vectors to be zipped must have same size")
         }
         cfor(0)(i => i < from1.size, i => i+1)(i => {
-          fn.visit(from1.unsafeValueAt(i), from2.unsafeValueAt(i))
+          fn.visit(from1(i), from2(i))
         })
       }
   }
