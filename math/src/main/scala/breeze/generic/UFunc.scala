@@ -1,6 +1,6 @@
 package breeze.generic
 
-import breeze.linalg.{mapValues, Axis}
+import breeze.linalg.Axis
 import breeze.linalg.support._
 
 /*
@@ -226,10 +226,10 @@ object UFunc {
   }
 
 
-  final class WithSinkHelp[Tag, S](private val s: S) extends AnyVal {
-    def apply[V](v: V)(implicit impl: UFunc.SinkImpl[Tag, S, V]) = {impl(s, v); s}
-    def apply[V, V2](v: V, v2: V2)(implicit impl: UFunc.SinkImpl2[Tag, S, V, V2]) = {impl(s, v, v2); s}
-    def apply[V, V2, V3](v: V, v2: V2, v3: V3)(implicit impl: UFunc.SinkImpl3[Tag, S, V, V2, V3]) = {impl(s, v, v2, v3); s}
+  final class WithSinkHelp[Tag, S](val __s: S) extends AnyVal {
+    def apply[V](v: V)(implicit impl: UFunc.SinkImpl[Tag, S, V]) = {impl(__s, v); __s}
+    def apply[V, V2](v: V, v2: V2)(implicit impl: UFunc.SinkImpl2[Tag, S, V, V2]) = {impl(__s, v, v2); __s}
+    def apply[V, V2, V3](v: V, v2: V2, v3: V3)(implicit impl: UFunc.SinkImpl3[Tag, S, V, V2, V3]) = {impl(__s, v, v2, v3); __s}
   }
 
 }
