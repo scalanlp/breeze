@@ -82,7 +82,7 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
     if(i < - size || i >= size) throw new IndexOutOfBoundsException(i + " not in [-"+size+","+size+")")
     val trueI = if(i<0) i+size else i
     if (noOffsetOrStride) {
-      data(trueI)
+      data(trueI) = v
     } else {
       data(offset + trueI * stride) = v
     }
