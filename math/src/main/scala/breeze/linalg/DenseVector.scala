@@ -88,7 +88,7 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
     }
   }
 
-  private val noOffsetOrStride = offset == 0 && stride == 1
+  private[linalg] val noOffsetOrStride = offset == 0 && stride == 1
   def unsafeUpdate(i: Int, v: V): Unit = if (noOffsetOrStride) data(i) = v else data(offset+i*stride) = v
 
   def activeIterator: Iterator[(Int, V)] = iterator
@@ -462,13 +462,11 @@ object DenseVector extends VectorConstructors[DenseVector]
     new CanSlice[DenseVector[V], Range, DenseVector[V]] {
       def apply(v: DenseVector[V], re: Range): DenseVector[V] = {
 
-        val r: Range = re.getRangeWithoutNegativeIndexes( v.length )
+        val range: Range = re.getRangeWithoutNegativeIndexes( v.length )
 
-        require(r.isEmpty || r.last < v.length, s"Processed slice range must be empty (=${r.isEmpty}) " +
-          s"or the last entry (=${r.last}) must be less than target dimension length v.length (=${v.length})")
-        require(r.isEmpty || r.start >= 0, s"Processed slice range must be empty (=${r.isEmpty}) " +
-          s"or start (=${r.start}) must be >=0")
-        new DenseVector(v.data, offset = v.offset + v.stride * r.start, stride = v.stride * r.step, length = r.length)
+        require(range.isEmpty || range.last < v.length)
+        require(range.isEmpty || range.start >= 0)
+        new DenseVector(v.data, offset = v.offset + v.stride * range.start, stride = v.stride * range.step, length = range.length)
       }
     }
   }
@@ -535,7 +533,6 @@ object DenseVector extends VectorConstructors[DenseVector]
     new OpAdd.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
       def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
         canDaxpy(a, 1.0, b)
-
       }
       implicitly[BinaryUpdateRegistry[Vector[Double], Vector[Double], OpAdd.type]].register(this)
     }

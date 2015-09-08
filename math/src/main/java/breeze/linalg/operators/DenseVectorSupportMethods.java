@@ -32,10 +32,18 @@ final public class DenseVectorSupportMethods {
             case 1:
                 sum += a[0] * b[0];
             case 0:
+            default:
+                return sum;
         }
-        return sum;
     }
 
+    /**
+     * WARNING: only returns the right answer for vectors of length MAX_SMALL_DOT_PRODUCT_LENGTH or less
+     * @param a
+     * @param b
+     * @param length
+     * @return
+     */
     public static float smallDotProduct_Float(float[] a, float[] b, int length) {
         float sum = 0.0f;
         switch (length) {
@@ -52,12 +60,7 @@ final public class DenseVectorSupportMethods {
             case 1:
                 sum += a[0] * b[0];
             case 0:
-                return sum;
             default:
-                for (int i = 0; i < length; i++) {
-                    sum += a[i] * b[i];
-                }
-
                 return sum;
         }
     }
