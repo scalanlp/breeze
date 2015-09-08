@@ -140,8 +140,8 @@ class QuadraticMinimizer(nGram: Int,
       var j = 0
       while (j <= i) {
         h = upper(pos)
-        wsH.unsafeUpdate(i, j, h)
-        wsH.unsafeUpdate(j, i, h)
+        wsH(i, j) = h
+        wsH(j, i) = h
         pos += 1
         j += 1
       }

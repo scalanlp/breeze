@@ -27,7 +27,6 @@ trait BuildsRandomMatrices {
 }
 
 class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
-  /*
   def timeValueAtRowCol(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
     val size = 2048
     var t: Double = 0
@@ -38,16 +37,18 @@ class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
     })
     t
   })
+
   def timeUnsafeValueAtRowCol(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
     val size = 2048
     var t: Double = 0
-    cfor(0)(j=>j<size, j=>j+1)(j => {
-      cfor(0)(i=>i<size, i=>i+1)(i => {
+    cfor(0)(i=>i<size, i=>i+1)(i => {
+      cfor(0)(j=>j<size, j=>j+1)(j => {
         t += mat.unsafeValueAt(i,j)
       })
     })
     t
   })
+
   def timeValueAtColRow(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
     val size = 2048
     var t: Double = 0
@@ -58,11 +59,13 @@ class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
     })
     t
   })
-  def timeUnsafeValueAtColRow(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
+
+
+    def timeUnsafeValueAtColRow(reps: Int) = runWith(reps, {randomMatrix(2048,2048)})((mat:DenseMatrix[Double]) => {
     val size = 2048
     var t: Double = 0
-    cfor(0)(i=>i<size, i=>i+1)(i => {
-      cfor(0)(j=>j<size, j=>j+1)(j => {
+    cfor(0)(j=>j<size, j=>j+1)(j => {
+      cfor(0)(i=>i<size, i=>i+1)(i => {
         t += mat.unsafeValueAt(i,j)
       })
     })
@@ -112,7 +115,6 @@ class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
   def timeMapPairsTranspose(reps: Int) = runWith(reps, {randomMatrix(2048,2048, true)})((mat:DenseMatrix[Double]) => {
     mat.mapPairs( (x:(Int,Int), v: Double) => (x._1*x._2*v) )
   })
-  */
 
   def timeSinMatrix(reps: Int) = runWith(reps, randomMatrix(2500, 2500)) { dm =>
     sin(dm)

@@ -116,6 +116,7 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
     data(linearIndex(trueRow, trueCol)) = v
   }
 
+  @deprecated("This isn't actually any faster according to benchmarks", "0.12-SNAPSHOT")
   def unsafeUpdate(row: Int, col: Int, v: V): Unit = { data(linearIndex(row, col)) = v }
 
   // <editor-fold defaultstate="collapsed" desc=" conversions (toArray, toDenseVector) ">
@@ -219,6 +220,8 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
 
   def valueAt(i: Int): V = data(i)
   def valueAt(row: Int, col: Int): V = apply(row,col)
+
+  @deprecated("This isn't actually any faster according to benchmarks", "0.12-SNAPSHOT")
   def unsafeValueAt(row: Int, col: Int): V = data(linearIndex(row, col))
 
   def indexAt(i: Int) = i

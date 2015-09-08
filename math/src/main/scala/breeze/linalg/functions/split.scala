@@ -91,7 +91,7 @@ object hsplit extends UFunc {
         val chunk = DenseMatrix.create(v.rows, newCols, new Array[T](newSize))
         cfor(0)(i => i < v.rows, i => i+1)(i => {
           cfor(0)(j => j < newCols, j => j+1)(j => {
-            chunk.unsafeUpdate(i,j, v.unsafeValueAt(i,j+offsetInOriginalMatrix))
+            chunk(i,j) = v(i,j+offsetInOriginalMatrix)
           })
         })
         result += chunk
@@ -116,7 +116,7 @@ object vsplit extends UFunc {
         val chunk = DenseMatrix.create(newRows, v.cols, new Array[T](v.cols * newRows))
         cfor(0)(i => i < newRows, i => i+1)(i => {
           cfor(0)(j => j < v.cols, j => j+1)(j => {
-            chunk.unsafeUpdate(i,j, v.unsafeValueAt(i+offsetInOriginalMatrix,j))
+            chunk(i,j) = v(i+offsetInOriginalMatrix,j)
           })
         })
         result += chunk

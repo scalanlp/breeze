@@ -222,15 +222,15 @@ trait DescriptiveStats {
           mean = mean / numRowsD
 
           //Second compute the covariance
-          data.map(x => {
+          data.foreach { x =>
             cfor(0)(i => i < dataSize, i => i + 1)(i => {
-              val a = x.unsafeValueAt(i) - mean.unsafeValueAt(i)
+              val a = x(i) - mean(i)
               cfor(0)(j => j < dataSize, j => j + 1)(j => {
-                val b = x.unsafeValueAt(j) - mean.unsafeValueAt(j)
-                result.unsafeUpdate(i, j, result.unsafeValueAt(i, j) + (a * b / (numRowsD - 1))) //Use
+                val b = x(j) - mean(j)
+                result(i, j) = result(i, j) + (a * b / (numRowsD - 1)) //Use
               })
             })
-          })
+          }
 
           result
         }).getOrElse(new DenseMatrix[Double](0, 0))
@@ -244,15 +244,15 @@ trait DescriptiveStats {
         val covariance = covarianceCalculator(data)
         val d = new Array[Double](covariance.rows)
         cfor(0)(i => i < covariance.rows, i => i + 1)(i => {
-          d(i) = math.sqrt(covariance.unsafeValueAt(i, i))
+          d(i) = math.sqrt(covariance(i, i))
         })
 
         cfor(0)(i => i < covariance.rows, i => i + 1)(i => {
           cfor(0)(j => j < covariance.rows, j => j + 1)(j => {
             if (i != j) {
-              covariance.unsafeUpdate(i, j, covariance.unsafeValueAt(i, j) / (d(i) * d(j)))
+              covariance(i, j) /= (d(i) * d(j))
             } else {
-              covariance.unsafeUpdate(i, j, 1.0)
+              covariance(i, j) = 1.0
             }
           })
         })

@@ -61,12 +61,12 @@ private case class LassoCalculator(data: DenseMatrix[Double], outputs: DenseVect
     require(column < data.cols)
     require(column >= 0)
     cfor(0)(i => i < outputs.size, i => i+1)(i => {
-      singleColumnMatrix.unsafeUpdate(i, 0, data.unsafeValueAt(i, column))
+      singleColumnMatrix(i, 0) = data(i, column)
 
       var o = outputs(i)
       cfor(0)(j => j < data.cols, j => j+1)(j => {
         if (j != column) {
-          o -= data.unsafeValueAt(i,j) * resultVec(j)
+          o -= data(i,j) * resultVec(j)
         }
       })
       outputCopy(i) = o
@@ -78,7 +78,7 @@ private case class LassoCalculator(data: DenseMatrix[Double], outputs: DenseVect
     cfor(0)(i => i < outputs.size, i => i+1)(i => {
       var o = outputs(i)
       cfor(0)(j => j < data.cols, j => j+1)(j => {
-        o -= data.unsafeValueAt(i,j) * resultVec(j)
+        o -= data(i,j) * resultVec(j)
       })
       r2 += o*o
     })
