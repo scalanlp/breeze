@@ -6,13 +6,19 @@ package breeze.linalg.operators;
  * Created because I need fallthrough
  */
 final public class DenseVectorSupportMethods {
+
+    public static final int MAX_SMALL_DOT_PRODUCT_LENGTH = 6;
+
+    /**
+     * WARNING: only returns the right answer for vectors of length MAX_SMALL_DOT_PRODUCT_LENGTH or less
+     * @param a
+     * @param b
+     * @param length
+     * @return
+     */
     public static double smallDotProduct_Double(double[] a, double[] b, int length) {
         double sum = 0.0;
         switch (length) {
-//            case 8:
-//                sum += a[7] * b[7];
-//            case 7:
-//                sum += a[6] * b[6];
             case 6:
                 sum += a[5] * b[5];
             case 5:
@@ -26,23 +32,13 @@ final public class DenseVectorSupportMethods {
             case 1:
                 sum += a[0] * b[0];
             case 0:
-                return sum;
-            default:
-                for (int i = 0; i < length; i++) {
-                    sum += a[i] * b[i];
-                }
-
-                return sum;
         }
+        return sum;
     }
 
     public static float smallDotProduct_Float(float[] a, float[] b, int length) {
         float sum = 0.0f;
         switch (length) {
-//            case 8:
-//                sum += a[7] * b[7];
-//            case 7:
-//                sum += a[6] * b[6];
             case 6:
                 sum += a[5] * b[5];
             case 5:

@@ -70,13 +70,21 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
   def apply(i: Int): V = {
     if(i < - size || i >= size) throw new IndexOutOfBoundsException(i + " not in [-"+size+","+size+")")
     val trueI = if(i<0) i+size else i
-    data(offset + trueI * stride)
+    if (noOffsetOrStride) {
+      data(trueI)
+    } else {
+      data(offset + trueI * stride)
+    }
   }
 
   def update(i: Int, v: V): Unit = {
     if(i < - size || i >= size) throw new IndexOutOfBoundsException(i + " not in [-"+size+","+size+")")
     val trueI = if(i<0) i+size else i
-    data(offset + trueI * stride) = v
+    if (noOffsetOrStride) {
+      data(trueI)
+    } else {
+      data(offset + trueI * stride) = v
+    }
   }
 
   private val noOffsetOrStride = offset == 0 && stride == 1
@@ -303,37 +311,41 @@ object DenseVector extends VectorConstructors[DenseVector]
     new CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] {
       /**Maps all key-value pairs from the given collection. */
       def apply(from: DenseVector[V], fn: (V) => V2): DenseVector[V2] = {
-        // this is slow
-        // DenseVector.tabulate(from.length)(i => fn(from(i)))
-        val arr = new Array[V2](from.length)
+        val out = new Array[V2](from.length)
 
-        val d = from.data
-        val stride = from.stride
-        val off = from.offset
-
+        // threeway fork, following benchmarks and hotspot docs on Array Bounds Check Elimination (ABCE)
         // https://wikis.oracle.com/display/HotSpotInternals/RangeCheckElimination
-        if (stride == 1) {
-          if (off == 0) {
-            cforRange(0 until arr.length) { j =>
-              arr(j) = fn(d(j))
-            }
-          } else {
-            cforRange(0 until arr.length) { j =>
-              arr(j) = fn(d(j + off))
-            }
-          }
+        if (from.noOffsetOrStride) {
+          fastestPath(out, fn, from.data)
+        } else if (from.stride == 1) {
+          mediumPath(out, fn, from.data, from.offset)
         } else {
-          var i = 0
-          var j = off
-          while(i < arr.length) {
-            arr(i) = fn(d(j))
-            i += 1
-            j += stride
-          }
+          slowPath(out, fn, from.data, from.offset, from.stride)
         }
-        new DenseVector[V2](arr)
+        new DenseVector[V2](out)
       }
 
+      private def mediumPath(out: Array[V2], fn: (V) => V2, data: Array[V], off: Int): Unit = {
+        cforRange(0 until out.length) { j =>
+          out(j) = fn(data(j + off))
+        }
+      }
+
+      private def fastestPath(out: Array[V2], fn: (V) => V2, data: Array[V]): Unit = {
+        cforRange(0 until out.length) { j =>
+          out(j) = fn(data(j))
+        }
+      }
+
+      final private def slowPath(out: Array[V2], fn: (V) => V2, data: Array[V], off: Int, stride: Int): Unit = {
+        var i = 0
+        var j = off
+        while (i < out.length) {
+          out(i) = fn(data(j))
+          i += 1
+          j += stride
+        }
+      }
     }
   }
 
@@ -387,23 +399,26 @@ object DenseVector extends VectorConstructors[DenseVector]
 
     new CanTransformValues[DenseVector[V], V] {
       def transform(from: DenseVector[V], fn: (V) => V) {
-        val d = from.data
+        val data = from.data
         val length = from.length
         val stride = from.stride
 
         val offset = from.offset
         if (stride == 1)  {
           cforRange(offset until offset + length) { j =>
-            d(j) = fn(d(j))
+            data(j) = fn(data(j))
           }
         } else {
-          val end = offset + stride * length
-          var j = offset
-          while (j != end) {
-            d(j) = fn(d(j))
-            j += stride
-          }
+          slowPath(fn, data, length, stride, offset)
+        }
+      }
 
+      private def slowPath(fn: (V) => V, data: Array[V], length: Int, stride: Int, offset: Int): Unit = {
+        val end = offset + stride * length
+        var j = offset
+        while (j != end) {
+          data(j) = fn(data(j))
+          j += stride
         }
       }
 
@@ -441,11 +456,10 @@ object DenseVector extends VectorConstructors[DenseVector]
     }
 
   // slicing
-  implicit def canSlice[V]: CanSlice[DenseVector[V], Range, DenseVector[V]] = __canSlice.asInstanceOf[CanSlice[DenseVector[V], Range, DenseVector[V]]]
-
-  private val __canSlice: CanSlice[DenseVector[Any], Range, DenseVector[Any]]  = {
-    new CanSlice[DenseVector[Any], Range, DenseVector[Any]] {
-      def apply(v: DenseVector[Any], re: Range): DenseVector[Any] = {
+  // specialize to get the good class
+  implicit def canSlice[@specialized(Int, Float, Double) V]: CanSlice[DenseVector[V], Range, DenseVector[V]] = {
+    new CanSlice[DenseVector[V], Range, DenseVector[V]] {
+      def apply(v: DenseVector[V], re: Range): DenseVector[V] = {
 
         val r: Range = re.getRangeWithoutNegativeIndexes( v.length )
 
@@ -457,16 +471,6 @@ object DenseVector extends VectorConstructors[DenseVector]
       }
     }
   }
-
-//  implicit def canSliceExtender[V]: CanSlice[DenseVector[V], RangeExtender, DenseVector[V]] = __canSliceExtender.asInstanceOf[CanSlice[DenseVector[V], RangeExtender, DenseVector[V]]]
-//
-//  private val __canSliceExtender = {
-//    new CanSlice[DenseVector[Any], RangeExtender, DenseVector[Any]] {
-//      def apply(v: DenseVector[Any], re: RangeExtender) = {
-//        canSlice(v, re.getRange(v.length) )
-//      }
-//    }
-//  }
 
   implicit def canTransposeComplex: CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] = {
     new CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] {
@@ -480,7 +484,6 @@ object DenseVector extends VectorConstructors[DenseVector]
     }
   }
 
-  // There's a bizarre error specializing float's here.
   class CanZipMapValuesDenseVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag] extends CanZipMapValues[DenseVector[V],V,RV,DenseVector[RV]] {
     def create(length : Int) = new DenseVector(new Array[RV](length))
 
@@ -541,7 +544,7 @@ object DenseVector extends VectorConstructors[DenseVector]
     def apply(y: DenseVector[Double], a: Double, x: DenseVector[Double]) {
       require(x.length == y.length, s"Vectors must have same length: ${x.length} != ${y.length}")
       // using blas here is always a bad idea.
-      if (x.offset == 0 && y.offset == 0 && x.stride == 1 && y.stride == 1) {
+      if (x.noOffsetOrStride && y.noOffsetOrStride) {
         val ad = x.data
         val bd = y.data
         cforRange(0 until x.length) { i =>
@@ -579,22 +582,42 @@ object DenseVector extends VectorConstructors[DenseVector]
   implicit object canDotD extends OpMulInner.Impl2[DenseVector[Double], DenseVector[Double], Double] {
     def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
       require(a.length == b.length, s"Vectors must have same length: ${a.length} != ${b.length}")
-      if (a.length < 200) { // benchmarks suggest breakeven point is around length 200
-        if (a.offset == 0 && b.offset == 0 && a.stride == 1 && b.stride == 1) {
-          DenseVectorSupportMethods.smallDotProduct_Double(a.data, b.data, a.length);
+      if (a.length < DenseVectorSupportMethods.MAX_SMALL_DOT_PRODUCT_LENGTH) {
+        DenseVectorSupportMethods.smallDotProduct_Double(a.data, b.data, a.length)
+      } else if (a.length < 200) { // benchmarks suggest break-even point is around length 200
+        if (a.noOffsetOrStride && b.noOffsetOrStride) {
+          fastMediumSizePath(a, b)
         } else {
-          var sum = 0.0
-          cforRange(0 until a.length) { i =>
-            sum += a(i) * b(i)
-          }
-          sum
+          slowMediumSizePath(a, b)
         }
       } else {
-        val boff = if (b.stride >= 0) b.offset else (b.offset + b.stride * (b.length - 1))
-        val aoff = if (a.stride >= 0) a.offset else (a.offset + a.stride * (a.length - 1))
-        blas.ddot(
-          a.length, b.data, boff, b.stride, a.data, aoff, a.stride)
+        blasPath(a, b)
       }
+    }
+
+    private def blasPath(a: DenseVector[Double], b: DenseVector[Double]): Double = {
+      val boff = if (b.stride >= 0) b.offset else (b.offset + b.stride * (b.length - 1))
+      val aoff = if (a.stride >= 0) a.offset else (a.offset + a.stride * (a.length - 1))
+      blas.ddot(
+        a.length, b.data, boff, b.stride, a.data, aoff, a.stride)
+    }
+
+    private def slowMediumSizePath(a: DenseVector[Double], b: DenseVector[Double]): Double = {
+      var sum = 0.0
+      cforRange(0 until a.length) { i =>
+        sum += a(i) * b(i)
+      }
+      sum
+    }
+
+    private def fastMediumSizePath(a: DenseVector[Double], b: DenseVector[Double]): Double = {
+      var sum = 0.0
+      val ad = a.data
+      val bd = b.data
+      cforRange(0 until a.length) { i =>
+        sum += ad(i) * bd(i)
+      }
+      sum
     }
   }
   implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpMulInner.type, Double]].register(canDotD)
