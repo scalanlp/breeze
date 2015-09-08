@@ -112,8 +112,8 @@ object impl
     def newValDef(name: String, rhs: Tree, tpe: Type = null) = {
       ValDef(
         NoMods,
-        TermName(c.freshName(name)),
-        TypeTree(Option(tpe).getOrElse(rhs.tpe.dealias)),
+        newTermName(c.fresh(name)),
+        TypeTree(Option(tpe).getOrElse(rhs.tpe.normalize)),
         rhs
       )
     }
@@ -132,7 +132,7 @@ object impl
       case _ => false
     }
 
-    val typedCondition = c.typecheck(condition.tree)//, typeOf[Boolean])
+    val typedCondition = c.typeCheck(condition.tree)//, typeOf[Boolean])
     c.Expr[Unit](
       typedCondition match
       {
