@@ -15,11 +15,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import breeze.signal._
 import breeze.signal.support._
 import breeze.linalg.DenseVector
 import breeze.numerics.isEven
-import breeze.macros.expand
+import scalaxy.debug._
 
 /**This package provides digital signal processing functions.
  *

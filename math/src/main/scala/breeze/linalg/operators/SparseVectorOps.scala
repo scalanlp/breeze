@@ -7,14 +7,12 @@ import support._
 import scala.reflect.ClassTag
 import java.util
 import breeze.macros.expand
-import breeze.macros.expand.sequence
 import breeze.math._
-import scala.math.BigInt
-import breeze.generic.{UFunc}
-import scala.specialized
+import breeze.generic.UFunc
 import breeze.storage.Zero
 import breeze.generic.UFunc.{UImpl2, UImpl}
 import scala.{specialized=>spec}
+import scalaxy.debug._
 
 trait SparseVector_DenseVector_Ops { this: SparseVector.type =>
   import breeze.math.PowImplicits._
