@@ -30,6 +30,7 @@ import spire.syntax.cfor._
 import CanTraverseValues.ValuesVisitor
 import CanZipAndTraverseValues.PairValuesVisitor
 import java.io.ObjectStreamException
+import scalaxy.debug._
 
 /**
  * A DenseVector is the "obvious" implementation of a Vector, with one twist.
@@ -489,7 +490,7 @@ object DenseVector extends VectorConstructors[DenseVector]
 
     /**Maps all corresponding values from the two collection. */
     def map(from: DenseVector[V], from2: DenseVector[V], fn: (V, V) => RV): DenseVector[RV] = {
-      require(from.length == from2.length, s"Vectors must have same length: ${from.length} != ${from2.length}")
+      require(from.length == from2.length, s"Vectors must have same length")
       val result = create(from.length)
       var i = 0
       while (i < from.length) {
@@ -542,7 +543,7 @@ object DenseVector extends VectorConstructors[DenseVector]
 
   implicit object canDaxpy extends scaleAdd.InPlaceImpl3[DenseVector[Double], Double, DenseVector[Double]] with Serializable {
     def apply(y: DenseVector[Double], a: Double, x: DenseVector[Double]) {
-      require(x.length == y.length, s"Vectors must have same length: ${x.length} != ${y.length}")
+      require(x.length == y.length, s"Vectors must have same length")
       // using blas here is always a bad idea.
       if (x.noOffsetOrStride && y.noOffsetOrStride) {
         val ad = x.data
@@ -581,7 +582,7 @@ object DenseVector extends VectorConstructors[DenseVector]
 
   implicit object canDotD extends OpMulInner.Impl2[DenseVector[Double], DenseVector[Double], Double] {
     def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
-      require(a.length == b.length, s"Vectors must have same length: ${a.length} != ${b.length}")
+      require(a.length == b.length, s"Vectors must have same length")
       if (a.length < DenseVectorSupportMethods.MAX_SMALL_DOT_PRODUCT_LENGTH) {
         DenseVectorSupportMethods.smallDotProduct_Double(a.data, b.data, a.length)
       } else if (a.length < 200) { // benchmarks suggest break-even point is around length 200
