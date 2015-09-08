@@ -518,18 +518,20 @@ class DenseVectorTest extends FunSuite with Checkers {
 class DenseVectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[DenseVector[Double], Int] {
  val space = DenseVector.space[Double]
 
-  val N = 30
   implicit def genTriple: Arbitrary[(DenseVector[Double], DenseVector[Double], DenseVector[Double])] = {
+    val N = 30
     Arbitrary {
       for{x <- Arbitrary.arbitrary[Double].map { _  % 1E100}
           y <- Arbitrary.arbitrary[Double].map { _ % 1E100 }
           z <- Arbitrary.arbitrary[Double].map { _ % 1E100 }
+          n <- Gen.choose(1, N)
           stride <- Gen.choose(1, 4)
           offset <- Gen.choose(0, 5)
       } yield {
-        (DenseVector.fill(N * stride + offset)(math.random * x).apply(offset until (N * stride + offset) by stride),
-          DenseVector.fill(N * stride + offset)(math.random * y).apply(offset until (N * stride + offset) by stride),
-          DenseVector.fill(N * stride + offset)(math.random * z).apply(offset until (N * stride + offset) by stride))
+        (DenseVector.fill(n * stride + offset)(math.random * x),//.apply(offset until (n * stride + offset) by stride),
+          DenseVector.fill(n * stride + offset)(math.random * y),//.apply(offset until (n * stride + offset) by stride),
+          DenseVector.fill(n * stride + offset)(math.random * z)//.apply(offset until (n * stride + offset) by stride)
+          )
       }
     }
   }
@@ -547,10 +549,11 @@ class DenseVectorOps_IntTest extends TensorSpaceTestBase[DenseVector[Int], Int, 
       for{x <- Arbitrary.arbitrary[Int].map { _  % 1000}
           y <- Arbitrary.arbitrary[Int].map { _ % 1000}
           z <- Arbitrary.arbitrary[Int].map { _ % 1000}
+          n <- Gen.choose(1, N)
       } yield {
-        (DenseVector.fill(N)(math.random * x toInt),
-          DenseVector.fill(N)(math.random * y toInt),
-          DenseVector.fill(N)(math.random * z toInt))
+        (DenseVector.fill(n)(math.random * x toInt),
+          DenseVector.fill(n)(math.random * y toInt),
+          DenseVector.fill(n)(math.random * z toInt))
       }
     }
   }
@@ -568,10 +571,11 @@ class DenseVectorOps_ComplexTest extends TensorSpaceTestBase[DenseVector[Complex
       for{x <- Arbitrary.arbitrary[Complex]
           y <- Arbitrary.arbitrary[Complex]
           z <- Arbitrary.arbitrary[Complex]
+          n <- Gen.choose(1, N)
       } yield {
-        (DenseVector.fill(N)(math.random * x),
-          DenseVector.fill(N)(math.random * y),
-          DenseVector.fill(N)(math.random * z))
+        (DenseVector.fill(n)(math.random * x),
+          DenseVector.fill(n)(math.random * y),
+          DenseVector.fill(n)(math.random * z))
       }
     }
   }
@@ -589,10 +593,13 @@ class DenseVectorOps_FloatTest extends TensorSpaceTestBase[DenseVector[Float], I
       for{x <- Arbitrary.arbitrary[Float].map { _  % 1000}
           y <- Arbitrary.arbitrary[Float].map { _ % 1000}
           z <- Arbitrary.arbitrary[Float].map { _ % 1000}
+          n <- Gen.choose(1, N)
+          stride <- Gen.choose(1, 4)
+          offset <- Gen.choose(0, 5)
       } yield {
-        (DenseVector.fill(N)(math.random * x toFloat),
-          DenseVector.fill(N)(math.random * y toFloat),
-          DenseVector.fill(N)(math.random * z toFloat))
+        (DenseVector.fill(n * stride + offset)(math.random * x toFloat).apply(offset until (n * stride + offset) by stride),
+          DenseVector.fill(n * stride + offset)(math.random * y toFloat).apply(offset until (n * stride + offset) by stride),
+          DenseVector.fill(n * stride + offset)(math.random * z toFloat).apply(offset until (n * stride + offset) by stride))
       }
     }
   }

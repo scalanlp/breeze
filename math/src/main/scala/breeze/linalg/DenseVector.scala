@@ -580,7 +580,7 @@ object DenseVector extends VectorConstructors[DenseVector]
   implicit object canDotD extends OpMulInner.Impl2[DenseVector[Double], DenseVector[Double], Double] {
     def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
       require(a.length == b.length, s"Vectors must have same length")
-      if (a.length < DenseVectorSupportMethods.MAX_SMALL_DOT_PRODUCT_LENGTH) {
+      if (a.noOffsetOrStride && b.noOffsetOrStride && a.length < DenseVectorSupportMethods.MAX_SMALL_DOT_PRODUCT_LENGTH) {
         DenseVectorSupportMethods.smallDotProduct_Double(a.data, b.data, a.length)
       } else if (a.length < 200) { // benchmarks suggest break-even point is around length 200
         if (a.noOffsetOrStride && b.noOffsetOrStride) {

@@ -318,8 +318,8 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   : zipValues.Impl2[DenseVector[T], DenseVector[T], ZippedValues[T, T]] = {
     val res = new zipValues.Impl2[DenseVector[T], DenseVector[T], ZippedValues[T, T]] {
       def apply(v1: DenseVector[T], v2: DenseVector[T]) = {
+        require(v2.length == v1.length, "vector length mismatch")
         val n = v1.length
-        require(v2.length == n, "vector length mismatch")
         new ZippedValues[T, T] {
           def foreach(fn: (T, T) => Unit) {
             val data1 = v1.data
@@ -388,9 +388,6 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
       implicitly[TernaryUpdateRegistry[Vector[V], V, Vector[V], scaleAdd.type]].register(this)
     }
   }
-
-
-
 
   implicit def dvAddIntoField[T](implicit field: Field[T], ct: ClassTag[T]):OpAdd.InPlaceImpl2[DenseVector[T], DenseVector[T]] = {
     new OpAdd.InPlaceImpl2[DenseVector[T], DenseVector[T]] {
@@ -465,7 +462,6 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 
   }
 
-
   implicit def dvMulScalarIntoSField[T](implicit field: Semiring[T], ct: ClassTag[T]):OpMulScalar.InPlaceImpl2[DenseVector[T], T] = {
     new OpMulScalar.InPlaceImpl2[DenseVector[T], T] {
       override def apply(v: DenseVector[T], v2: T) = {
@@ -514,12 +510,11 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
  **/
 trait DenseVector_SpecialOps extends DenseVectorOps { this: DenseVector.type =>
 
-
   implicit val canDot_DV_DV_Float: breeze.linalg.operators.OpMulInner.Impl2[DenseVector[Float], DenseVector[Float], Float] = {
     new breeze.linalg.operators.OpMulInner.Impl2[DenseVector[Float], DenseVector[Float], Float] {
       def apply(a: DenseVector[Float], b: DenseVector[Float]) = {
         require(a.length == b.length, s"Vectors must have same length")
-        if (a.length < DenseVectorSupportMethods.MAX_SMALL_DOT_PRODUCT_LENGTH) {
+        if (a.noOffsetOrStride && b.noOffsetOrStride && a.length < DenseVectorSupportMethods.MAX_SMALL_DOT_PRODUCT_LENGTH) {
           DenseVectorSupportMethods.smallDotProduct_Float(a.data, b.data, a.length)
         } else if (a.length < 200) { // benchmarks suggest break-even point is around length 200
           if (a.noOffsetOrStride && b.noOffsetOrStride) {

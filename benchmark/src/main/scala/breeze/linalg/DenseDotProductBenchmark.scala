@@ -32,6 +32,9 @@ class DenseDotProductBenchmark extends BreezeBenchmark {
     sum
   }
 
+  /*
+  overhead is negligible.
+
   def timeSmallSupport(reps: Int) = {
     var sum = 0.0
     cforRange(0 until reps) { rep =>
@@ -47,6 +50,7 @@ class DenseDotProductBenchmark extends BreezeBenchmark {
     }
     sum
   }
+  */
 
 
   def timeSmallDVDotInline(reps: Int) = {
