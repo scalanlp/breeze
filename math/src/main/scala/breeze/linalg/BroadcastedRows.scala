@@ -20,20 +20,13 @@ object BroadcastedRows {
   (implicit cc: CanCollapseAxis[T, Axis._1.type, RowType, ResultRow, Result])
   :CanMapValues[BroadcastedRows[T, RowType], RowType, ResultRow, Result] = {
     new CanMapValues[BroadcastedRows[T, RowType], RowType, ResultRow, Result] {
-      def map(from: BroadcastedRows[T, RowType], fn: (RowType) => ResultRow): Result = {
-        cc(from.underlying, Axis._1){fn}
-      }
-
-      /** Maps all active key-value pairs from the given collection. */
-      def mapActive(from: BroadcastedRows[T, RowType], fn: (RowType) => ResultRow): Result = {
+      def apply(from: BroadcastedRows[T, RowType], fn: (RowType) => ResultRow): Result = {
         cc(from.underlying, Axis._1){fn}
       }
     }
-
   }
 
   implicit def scalarOf[T, RowType]: ScalarOf[BroadcastedRows[T, RowType], RowType] = ScalarOf.dummy
-
 
   implicit def broadcastOp[Op, T, RowType, OpResult, Result](implicit handhold: CanCollapseAxis.HandHold[T, Axis._1.type, RowType],
                                                                 op: UImpl[Op, RowType, OpResult],

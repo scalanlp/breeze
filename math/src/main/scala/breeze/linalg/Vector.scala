@@ -199,18 +199,21 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
   implicit def canMapValues[V, V2](implicit man: ClassTag[V2]):CanMapValues[Vector[V], V, V2, Vector[V2]] = {
     new CanMapValues[Vector[V], V, V2, Vector[V2]] {
       /**Maps all key-value pairs from the given collection. */
-      def map(from: Vector[V], fn: (V) => V2) = {
+      def apply(from: Vector[V], fn: (V) => V2) = {
         DenseVector.tabulate(from.length)(i => fn(from(i)))
-      }
-
-      /**Maps all active key-value pairs from the given collection. */
-      def mapActive(from: Vector[V], fn: (V) => V2) = {
-        map(from, fn)
       }
     }
   }
 
-  implicit def handholdCMV[T]= new CanMapValues.HandHold[Vector[T], T]
+  implicit def canMapActiveValues[V, V2](implicit man: ClassTag[V2]):CanMapActiveValues[Vector[V], V, V2, Vector[V2]] = {
+    new CanMapActiveValues[Vector[V], V, V2, Vector[V2]] {
+      /**Maps all key-value pairs from the given collection. */
+      def apply(from: Vector[V], fn: (V) => V2) = {
+        DenseVector.tabulate(from.length)(i => fn(from(i)))
+      }
+    }
+  }
+
   implicit def scalarOf[T]: ScalarOf[Vector[T], T] = ScalarOf.dummy
 
   implicit def negFromScale[@spec(Double, Int, Float, Long) V, Double](implicit scale: OpMulScalar.Impl2[Vector[V], V, Vector[V]], ring: Ring[V]) = {

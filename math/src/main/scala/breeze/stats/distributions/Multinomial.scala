@@ -21,6 +21,7 @@ import breeze.math._
 import breeze.numerics
 import breeze.numerics._
 import breeze.optimize.DiffFunction
+
 import scala.collection.mutable
 
 /**

@@ -123,19 +123,13 @@ object BitVector extends BitVectorOps {
   implicit def canMapValues[V2](implicit man: ClassTag[V2]): CanMapValues[BitVector, Boolean, V2, DenseVector[V2]] = {
     new CanMapValues[BitVector, Boolean, V2, DenseVector[V2]] {
       /**Maps all key-value pairs from the given collection. */
-      def map(from: BitVector, fn: (Boolean) => V2): DenseVector[V2] = {
+      def apply(from: BitVector, fn: (Boolean) => V2): DenseVector[V2] = {
         DenseVector.tabulate(from.length)(i => fn(from(i)))
-      }
-
-      /**Maps all active key-value pairs from the given collection. */
-      def mapActive(from: BitVector, fn: (Boolean) => V2): DenseVector[V2] = {
-        map(from, fn)
       }
     }
   }
 
   implicit def scalarOf[T]: ScalarOf[DenseMatrix[T], T] = ScalarOf.dummy
-
 
   implicit def canIterateValues: CanTraverseValues[BitVector, Boolean] =
 

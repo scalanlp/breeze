@@ -1,6 +1,5 @@
 package breeze.linalg
 
-import breeze.linalg.support.CanMapValues.HandHold
 import operators._
 import support._
 import support.CanTraverseValues.ValuesVisitor
@@ -128,17 +127,19 @@ object HashVector extends HashVectorOps
     }
   }
 
-  implicit def canCopyHash[@specialized(Int, Float, Double) V: ClassTag: Zero] = new CanCopyHashVector[V]
+  implicit def canCopyHash[@specialized(Int, Float, Double) V: ClassTag: Zero]: CanCopyHashVector[V] = new CanCopyHashVector[V]
 
   implicit def canMapValues[V, V2: ClassTag: Zero]:CanMapValues[HashVector[V], V, V2, HashVector[V2]] = {
     new CanMapValues[HashVector[V], V, V2, HashVector[V2]] {
-      /**Maps all key-value pairs from the given collection. */
-      def map(from: HashVector[V], fn: (V) => V2) = {
+      def apply(from: HashVector[V], fn: (V) => V2) = {
         HashVector.tabulate(from.length)(i => fn(from(i)))
       }
+    }
+  }
 
-      /**Maps all active key-value pairs from the given collection. */
-      def mapActive(from: HashVector[V], fn: (V) => V2) = {
+  implicit def canMapActiveValues[V, V2: ClassTag: Zero]:CanMapActiveValues[HashVector[V], V, V2, HashVector[V2]] = {
+    new CanMapActiveValues[HashVector[V], V, V2, HashVector[V2]] {
+      def apply(from: HashVector[V], fn: (V) => V2) = {
         val out = new OpenAddressHashArray[V2](from.length)
         var i = 0
         while(i < from.iterableSize) {

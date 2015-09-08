@@ -138,7 +138,6 @@ case class VectorSpaceAdaptor[V, S](underlying: VectorSpace[V, S]) extends Mutab
 //      }
 
       implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
-        // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
         def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike apply)
       }
 
@@ -394,14 +393,14 @@ case class VectorSpaceAdaptor[V, S](underlying: VectorSpace[V, S]) extends Mutab
 
       implicit def mapValues: CanMapValues[Wrapper, S, S, Wrapper] = new CanMapValues[Wrapper, S, S, Wrapper] {
         /** Maps all key-value pairs from the given collection. */
-        def map(from: Wrapper, fn: (S) => S): Wrapper = {
-          from.map(canMap.map(_, fn))
+        override def apply(from: Wrapper, fn: (S) => S): Wrapper = {
+          from.map(canMap(_, fn))
         }
 
-        /** Maps all active key-value pairs from the given collection. */
-        def mapActive(from: Wrapper, fn: (S) => S): Wrapper = {
-          from.map(canMap.mapActive(_, fn))
-        }
+//        /** Maps all active key-value pairs from the given collection. */
+//        def mapActive(from: Wrapper, fn: (S) => S): Wrapper = {
+//          from.map(canMap.mapActive(_, fn))
+//        }
       }
 
       implicit def zipMapValues: CanZipMapValues[Wrapper, S, S, Wrapper] = new CanZipMapValues[Wrapper, S, S, Wrapper] {
@@ -548,13 +547,8 @@ case class VectorRingAdaptor[V, S](val underlying: VectorRing[V, S])(implicit ca
 
       implicit def mapValues: CanMapValues[Wrapper, S, S, Wrapper] = new CanMapValues[Wrapper, S, S, Wrapper] {
         /** Maps all key-value pairs from the given collection. */
-        def map(from: Wrapper, fn: (S) => S): Wrapper = {
-          from.map(canMap.map(_, fn))
-        }
-
-        /** Maps all active key-value pairs from the given collection. */
-        def mapActive(from: Wrapper, fn: (S) => S): Wrapper = {
-          from.map(canMap.mapActive(_, fn))
+        override def apply(from: Wrapper, fn: (S) => S): Wrapper = {
+          from.map(canMap(_, fn))
         }
       }
 
@@ -650,7 +644,9 @@ case class VectorRingAdaptor[V, S](val underlying: VectorRing[V, S])(implicit ca
 
 
 case class CoordinateFieldAdaptor[V, S](underlying: CoordinateField[V, S])(implicit canIterate: CanTraverseValues[V,S],
-  canMap: CanMapValues[V,S,S,V], canZipMap: CanZipMapValues[V,S,S,V]) extends MutablizingAdaptor[CoordinateField, MutableCoordinateField, V, S] {
+  canMap: CanMapValues[V,S,S,V],
+  canMapActive: CanMapActiveValues[V,S,S,V],
+  canZipMap: CanZipMapValues[V,S,S,V]) extends MutablizingAdaptor[CoordinateField, MutableCoordinateField, V, S] {
     type Wrapper = Ref[V]
 
     def wrap(v: V): Wrapper = Ref(v)
@@ -680,7 +676,6 @@ case class CoordinateFieldAdaptor[V, S](underlying: CoordinateField[V, S])(impli
 
 
       implicit def iterateValues: CanTraverseValues[Wrapper, S] = new CanTraverseValues[Wrapper,S] {
-        /** Traverses all values from the given collection. */
         override def traverse(from: Wrapper, fn: ValuesVisitor[S]): Unit = {
           from.map(canIterate.traverse(_,fn))
         }
@@ -689,27 +684,25 @@ case class CoordinateFieldAdaptor[V, S](underlying: CoordinateField[V, S])(impli
       }
 
       implicit def mapValues: CanMapValues[Wrapper, S, S, Wrapper] = new CanMapValues[Wrapper, S, S, Wrapper] {
-        /** Maps all key-value pairs from the given collection. */
-        def map(from: Wrapper, fn: (S) => S): Wrapper = {
-          from.map(canMap.map(_, fn))
-        }
-
-        /** Maps all active key-value pairs from the given collection. */
-        def mapActive(from: Wrapper, fn: (S) => S): Wrapper = {
-          from.map(canMap.mapActive(_, fn))
+        override def apply(from: Wrapper, fn: (S) => S): Wrapper = {
+          from.map(canMap(_, fn))
         }
       }
 
+
+      implicit def mapActiveValues: CanMapActiveValues[Wrapper, S, S, Wrapper] = new CanMapActiveValues[Wrapper, S, S, Wrapper] {
+        override def apply(from: Wrapper, fn: (S) => S): Wrapper = {
+          from.map(canMapActive(_, fn))
+        }
+      }
 
       override implicit def scalarOf: ScalarOf[Wrapper, S] = ScalarOf.dummy
 
       implicit def zipMapValues: CanZipMapValues[Wrapper, S, S, Wrapper] = new CanZipMapValues[Wrapper, S, S, Wrapper] {
-        /** Maps all corresponding values from the two collections. */
         def map(from: Wrapper, from2: Wrapper, fn: (S, S) => S): Wrapper = {
           from.map(canZipMap.map(_, from2.value, fn))
         }
       }
-
 
       def liftUpdate[Op <: OpType](implicit op: UImpl2[Op, V, S, V]):UFunc.InPlaceImpl2[Op, Wrapper, S] = new UFunc.InPlaceImpl2[Op, Wrapper, S] {
         def apply(a: Wrapper, b: S) {
@@ -748,23 +741,9 @@ case class CoordinateFieldAdaptor[V, S](underlying: CoordinateField[V, S])(impli
         }
       }
 
-//      implicit def addIntoVS: OpAdd.InPlaceImpl2[Wrapper, S] = liftUpdate(u.addVS)
-//
-//      implicit def subIntoVS: OpSub.InPlaceImpl2[Wrapper, S] = liftUpdate(u.subVS)
-//
-//
-//      implicit def setIntoVS: OpSet.InPlaceImpl2[Wrapper, S] = new OpSet.InPlaceImpl2[Wrapper,S] {
-//        override def apply(v: Wrapper, v2: S): Unit = ???
-//      }
-
       implicit def mulVV: OpMulScalar.Impl2[Wrapper, Wrapper, Wrapper] = liftOpV(u.mulVV)
 
       implicit def mulIntoVV: OpMulScalar.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.mulVV)
-
-//      implicit def subVS: OpSub.Impl2[Wrapper, S, Wrapper] = liftOp(u.subVS)
-//
-//      implicit def addVS: OpAdd.Impl2[Wrapper, S, Wrapper] = liftOp(u.addVS)
-
 
       implicit def scaleAddVV: scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] = {
         new scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] {

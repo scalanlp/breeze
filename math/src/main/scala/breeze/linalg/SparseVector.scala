@@ -224,12 +224,16 @@ object SparseVector extends SparseVectorOps
   implicit def canMapValues[V, V2: ClassTag: Zero]:CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] = {
     new CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] {
       /**Maps all key-value pairs from the given collection. */
-      def map(from: SparseVector[V], fn: (V) => V2): SparseVector[V2] = {
+      override def apply(from: SparseVector[V], fn: (V) => V2): SparseVector[V2] = {
         SparseVector.tabulate(from.length)(i => fn(from(i)))
       }
+    }
+  }
 
+  implicit def canMapActiveValues[V, V2: ClassTag: Zero]:CanMapActiveValues[SparseVector[V], V, V2, SparseVector[V2]] = {
+    new CanMapActiveValues[SparseVector[V], V, V2, SparseVector[V2]] {
       /**Maps all active key-value pairs from the given collection. */
-      def mapActive(from: SparseVector[V], fn: (V) => V2): SparseVector[V2] = {
+      override def apply(from: SparseVector[V], fn: (V) => V2): SparseVector[V2] = {
         val out = new Array[V2](from.activeSize)
         var i = 0
         while(i < from.activeSize) {
@@ -274,12 +278,21 @@ object SparseVector extends SparseVectorOps
     }
   }
 
-  implicit def canCreateZeros[V:ClassTag:Zero]: CanCreateZeros[SparseVector[V], Int] =
+  implicit def canCreateZeros[V:ClassTag:Zero]: CanCreateZeros[SparseVector[V], Int] = {
     new CanCreateZeros[SparseVector[V], Int] {
       def apply(d: Int): SparseVector[V] = {
         zeros[V](d)
       }
     }
+  }
+
+  implicit def canCreateZerosLike[V:ClassTag:Zero]: CanCreateZerosLike[SparseVector[V], SparseVector[V]] = {
+    new CanCreateZerosLike[SparseVector[V], SparseVector[V]] {
+      def apply(d: SparseVector[V]): SparseVector[V] = {
+        zeros[V](d.length)
+      }
+    }
+  }
 
   implicit def canTransformValues[V:Zero:ClassTag]:CanTransformValues[SparseVector[V], V] = {
     new CanTransformValues[SparseVector[V], V] {

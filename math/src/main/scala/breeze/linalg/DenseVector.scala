@@ -302,7 +302,7 @@ object DenseVector extends VectorConstructors[DenseVector]
   implicit def canMapValues[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) V2](implicit man: ClassTag[V2]): CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] = {
     new CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] {
       /**Maps all key-value pairs from the given collection. */
-      def map(from: DenseVector[V], fn: (V) => V2): DenseVector[V2] = {
+      def apply(from: DenseVector[V], fn: (V) => V2): DenseVector[V2] = {
         // this is slow
         // DenseVector.tabulate(from.length)(i => fn(from(i)))
         val arr = new Array[V2](from.length)
@@ -334,15 +334,10 @@ object DenseVector extends VectorConstructors[DenseVector]
         new DenseVector[V2](arr)
       }
 
-      /**Maps all active key-value pairs from the given collection. */
-      def mapActive(from: DenseVector[V], fn: (V) => V2): DenseVector[V2] = {
-        map(from, fn)
-      }
     }
   }
 
   implicit def scalarOf[T]: ScalarOf[DenseVector[T], T] = ScalarOf.dummy
-
 
   implicit def canIterateValues[V]: CanTraverseValues[DenseVector[V], V] =
 

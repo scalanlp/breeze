@@ -1,6 +1,6 @@
 package breeze.generic
 
-import breeze.linalg.Axis
+import breeze.linalg.{mapValues, Axis}
 import breeze.linalg.support._
 
 /*
@@ -31,7 +31,7 @@ import breeze.linalg.support._
  * with syntactic sugar provided by way of [[breeze.linalg.NumericOps]].
  *
  * Additional implementations can be added as implicits by extending a UFunc's
- * Impl or InPlaceImpl traits. For example, [[breeze.math.Complex]] extends [[breeze.numerics.log]]
+ * Impl, InPlaceImpl, or SinkImpl traits. For example, [[breeze.math.Complex]] extends [[breeze.numerics.log]]
  * with the following implicit:
  *
  * {{{
@@ -62,9 +62,11 @@ trait UFunc {
 
   final def apply[V1,V2, V3, V4, VR](v1: V1, v2: V2, v3: V3, v4: V4)(implicit impl: Impl4[V1, V2, V3, V4, VR]):VR = impl(v1, v2, v3, v4)
 
-  final def inPlace[V](v: V)(implicit impl: UFunc.InPlaceImpl[this.type, V]) = impl(v)
-  final def inPlace[V, V2](v: V, v2: V2)(implicit impl: UFunc.InPlaceImpl2[this.type, V, V2]) = impl(v, v2)
-  final def inPlace[V, V2, V3](v: V, v2: V2, v3: V3)(implicit impl: UFunc.InPlaceImpl3[this.type, V, V2, V3]) = impl(v, v2, v3)
+  final def inPlace[V](v: V)(implicit impl: UFunc.InPlaceImpl[this.type, V]) = {impl(v); v}
+  final def inPlace[V, V2](v: V, v2: V2)(implicit impl: UFunc.InPlaceImpl2[this.type, V, V2]) = {impl(v, v2); v}
+  final def inPlace[V, V2, V3](v: V, v2: V2, v3: V3)(implicit impl: UFunc.InPlaceImpl3[this.type, V, V2, V3]) = {impl(v, v2, v3); v}
+
+  final def withSink[S](s: S) = new UFunc.WithSinkHelp[this.type, S](s)
 
 //  @implicitNotFound("Could not find an implicit implementation for this UFunc with arguments ${V}")
   type Impl[V, VR] = UFunc.UImpl[this.type, V, VR]
@@ -81,9 +83,18 @@ trait UFunc {
 //  @implicitNotFound("Could not find an inplace implicit implementation for this UFunc with arguments ${V1}, ${V2}, ${V3}")
   type InPlaceImpl3[V1, V2, V3] = UFunc.InPlaceImpl3[this.type, V1, V2, V3]
 
+  //  @implicitNotFound("Could not find an implicit with-sink implementation for this UFunc with arguments ${S} ${V}")
+  type SinkImpl[S, V] = UFunc.SinkImpl[this.type, S, V]
+  //  @implicitNotFound("Could not find an implicit with-sink  implementation for this UFunc with arguments ${S} ${V1}, ${V2}")
+  type SinkImpl2[S, V1, V2] = UFunc.SinkImpl2[this.type, S, V1, V2]
+  //  @implicitNotFound("Could not find an implicit with-sink implementation for this UFunc with arguments ${S} ${V1}, ${V2}, ${V3}")
+  type SinkImpl3[S, V1, V2, V3] = UFunc.SinkImpl3[this.type, S, V1, V2, V3]
 
 
-  implicit def canZipMapValuesImpl[T, V1, VR, U](implicit handhold: ScalarOf[T, V1], impl: Impl2[V1, V1, VR], canZipMapValues: CanZipMapValues[T, V1, VR, U]): Impl2[T, T, U] = {
+
+  implicit def canZipMapValuesImpl[T, V1, VR, U](implicit handhold: ScalarOf[T, V1],
+                                                 impl: Impl2[V1, V1, VR],
+                                                 canZipMapValues: CanZipMapValues[T, V1, VR, U]): Impl2[T, T, U] = {
     new Impl2[T, T, U] {
       def apply(v1: T, v2: T): U = canZipMapValues.map(v1, v2, impl.apply)
     }
@@ -102,9 +113,11 @@ trait VariableUFunc[U <: UFunc, T <: VariableUFunc[U,T]] { self:T =>
 }
 
 trait MappingUFunc extends MappingUFuncLowPrio { this: UFunc =>
-  implicit def fromLowOrderCanMapValues[T, V, V2, U](implicit handhold: ScalarOf[T, V], impl: Impl[V, V2], canMapValues: CanMapValues[T, V, V2, U]): Impl[T, U] = {
+  implicit def fromLowOrderCanMapValues[T, V, V2, U](implicit handhold: ScalarOf[T, V],
+                                                     impl: Impl[V, V2],
+                                                     canMapValues: CanMapValues[T, V, V2, U]): Impl[T, U] = {
     new Impl[T, U] {
-      def apply(v: T): U = canMapValues.map(v, impl.apply)
+      def apply(v: T): U = canMapValues(v, impl.apply)
     }
   }
 
@@ -114,18 +127,16 @@ trait MappingUFunc extends MappingUFuncLowPrio { this: UFunc =>
                                             impl: Impl2[V1, V2, VR],
                                             canMapValues: CanMapValues[T, V1, VR, U]): Impl2[T, V2, U] = {
     new Impl2[T, V2, U] {
-      def apply(v1: T, v2: V2): U = canMapValues.map(v1, impl.apply(_, v2))
+      def apply(v1: T, v2: V2): U = canMapValues(v1, impl.apply(_, v2))
     }
   }
-
-
 
 }
 
 sealed trait MappingUFuncLowPrio { this: UFunc =>
   implicit def canMapV2Values[T, V1, V2, VR, U](implicit handhold: ScalarOf[T, V2], impl: Impl2[V1, V2, VR], canMapValues: CanMapValues[T, V2, VR, U]): Impl2[V1, T, U] = {
     new Impl2[V1, T, U] {
-      def apply(v1: V1, v2: T): U = canMapValues.map(v2, impl.apply(v1, _))
+      def apply(v1: V1, v2: T): U = canMapValues(v2, impl.apply(v1, _))
     }
   }
 
@@ -174,18 +185,21 @@ object UFunc {
     def apply(v: V, v2: V2, v3: V3)
   }
 
-  // implicits for add impl's
 
+//  @implicitNotFound("Could not find an implicit inplace implementation for ${Tag} with arguments ${V}")
+  trait SinkImpl[Tag, S, V] extends Serializable {
+    def apply(sink: S, v: V)
+  }
 
-// DEPRECATED
-// ToDo: add Int => Double implicits for all necessary UFuncs
-// (see https://github.com/scalanlp/breeze/issues/236)
-//  implicit def implicitDoubleUTag[Tag, V, VR](implicit conv: V=>Double, impl: UImpl[Tag, Double, VR]):UImpl[Tag, V, VR] = {
-//    new UImpl[Tag, V, VR] {
-//      def apply(v: V): VR = impl(v)
-//    }
-//  }
+//  @implicitNotFound("Could not find an implicit inplace implementation for ${Tag} with arguments ${V}, ${V2}")
+  trait SinkImpl2[Tag, S, V, @specialized(Int, Double, Float) V2] extends Serializable {
+    def apply(sink: S, v: V, v2: V2)
+  }
 
+//  @implicitNotFound("Could not find an implicit inplace implementation for ${Tag} with arguments ${V}, ${V2}, ${V3}")
+  trait SinkImpl3[Tag, S, V, V2, V3] extends Serializable {
+    def apply(sink: S, v: V, v2: V2, v3: V3)
+  }
 
   implicit def canTransformValuesUFunc[Tag, T, V](implicit canTransform: CanTransformValues[T, V],
                                                   impl: UImpl[Tag, V, V]):InPlaceImpl[Tag, T] = {
@@ -195,12 +209,27 @@ object UFunc {
   }
 
 
-  implicit def collapseUred[Tag, V1, AxisT<:Axis, TA, VR, Result](implicit handhold: CanCollapseAxis.HandHold[V1, AxisT, TA], impl: UImpl[Tag, TA, VR], collapse: CanCollapseAxis[V1, AxisT, TA, VR, Result]) = new UImpl2[Tag, V1, AxisT, Result] {
-    def apply(v: V1, v2: AxisT): Result = collapse.apply(v, v2)(impl(_))
+  implicit def collapseUred[Tag, V1, AxisT<:Axis, TA, VR, Result](implicit handhold: CanCollapseAxis.HandHold[V1, AxisT, TA],
+                                                                  impl: UImpl[Tag, TA, VR],
+                                                                  collapse: CanCollapseAxis[V1, AxisT, TA, VR, Result]): UImpl2[Tag, V1, AxisT, Result]  = {
+    new UImpl2[Tag, V1, AxisT, Result] {
+      def apply(v: V1, v2: AxisT): Result = collapse.apply(v, v2)(impl(_))
+    }
   }
 
-  implicit def collapseUred3[Tag, V1, AxisT<:Axis, V3, TA, VR, Result](implicit handhold: CanCollapseAxis.HandHold[V1, AxisT, TA], impl: UImpl2[Tag, TA, V3, VR], collapse: CanCollapseAxis[V1, AxisT, TA, VR, Result]) = new UImpl3[Tag, V1, AxisT, V3, Result] {
-    def apply(v: V1, v2: AxisT, v3: V3): Result = collapse.apply(v, v2)(impl(_, v3))
+  implicit def collapseUred3[Tag, V1, AxisT<:Axis, V3, TA, VR, Result](implicit handhold: CanCollapseAxis.HandHold[V1, AxisT, TA],
+                                                                       impl: UImpl2[Tag, TA, V3, VR],
+                                                                       collapse: CanCollapseAxis[V1, AxisT, TA, VR, Result]): UImpl3[Tag, V1, AxisT, V3, Result] = {
+    new UImpl3[Tag, V1, AxisT, V3, Result] {
+      def apply(v: V1, v2: AxisT, v3: V3): Result = collapse.apply(v, v2)(impl(_, v3))
+    }
+  }
+
+
+  final class WithSinkHelp[Tag, S](private val s: S) extends AnyVal {
+    def apply[V](v: V)(implicit impl: UFunc.SinkImpl[Tag, S, V]) = {impl(s, v); s}
+    def apply[V, V2](v: V, v2: V2)(implicit impl: UFunc.SinkImpl2[Tag, S, V, V2]) = {impl(s, v, v2); s}
+    def apply[V, V2, V3](v: V, v2: V2, v3: V3)(implicit impl: UFunc.SinkImpl3[Tag, S, V, V2, V3]) = {impl(s, v, v2, v3); s}
   }
 
 }

@@ -155,14 +155,4 @@ trait BitVectorOps {
   }
 
 
-  implicit def canMapValues[R:ClassTag:Zero]:CanMapValues[BitVector, Boolean, R, DenseVector[R]] = new CanMapValues[BitVector, Boolean, R, DenseVector[R]] {
-    /** Maps all key-value pairs from the given collection. */
-    override def map(from: BitVector, fn: (Boolean) => R): DenseVector[R] = {
-      DenseVector.tabulate(from.length)(i => fn(from(i)))
-    }
-
-    /** Maps all active key-value pairs from the given collection. */
-    override def mapActive(from: BitVector, fn: (Boolean) => R): DenseVector[R] = map(from, fn)
-  }
-
 }

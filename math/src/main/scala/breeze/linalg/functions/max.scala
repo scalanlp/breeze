@@ -70,7 +70,7 @@ object max extends UFunc /*with VectorizedReduceUFunc <-- doesn't work with 2.10
                                          maxImpl: max.Impl2[LHS, RHS, LHS],
                                          cmv: CanMapValues[T, LHS, LHS, U]):Impl2[T, RHS, U] = {
     new Impl2[T, RHS, U] {
-      override def apply(v: T, v2: RHS): U = cmv.map(v, maxImpl(_, v2))
+      override def apply(v: T, v2: RHS): U = cmv(v, maxImpl(_, v2))
     }
   }
 
@@ -176,9 +176,9 @@ object min extends UFunc {
 
   implicit def minVS[T, U, LHS, RHS, RV](implicit cmvH: ScalarOf[T, LHS],
                                          maxImpl: min.Impl2[LHS, RHS, LHS],
-                                         cmv: CanMapValues[T, LHS, LHS, U]):Impl2[T, RHS, U] = {
+                                         cmv: mapValues.Impl2[T, LHS => LHS, U]):Impl2[T, RHS, U] = {
     new Impl2[T, RHS, U] {
-      override def apply(v: T, v2: RHS): U = cmv.map(v, maxImpl(_, v2))
+      override def apply(v: T, v2: RHS): U = cmv(v, maxImpl(_, v2))
     }
   }
 }
@@ -192,7 +192,7 @@ object clip extends UFunc {
     new Impl3[T, V, V, T] {
       import ordering.mkOrderingOps
       def apply(v: T, v2: V, v3: V): T = {
-        cmv.map(v, x => if(x < v2) v2 else if (x > v3) v3 else x)
+        cmv(v, x => if(x < v2) v2 else if (x > v3) v3 else x)
       }
     }
   }

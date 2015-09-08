@@ -1328,7 +1328,7 @@ trait SparseVectorOps { this: SparseVector.type =>
     }
   }
 
-  implicit def zipMapKV[V, R:ClassTag:Zero:Semiring] = new CanZipMapKeyValuesSparseVector[V, R]
+  implicit def zipMapKV[V, R:ClassTag:Zero:Semiring]: CanZipMapKeyValuesSparseVector[V, R] = new CanZipMapKeyValuesSparseVector[V, R]
 
 
   implicit def implOpNeg_SVT_eq_SVT[@spec(Double, Int, Float, Long)  V]

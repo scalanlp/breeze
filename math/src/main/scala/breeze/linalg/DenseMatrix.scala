@@ -543,7 +543,7 @@ with MatrixConstructors[DenseMatrix] {
   implicit def canMapValues[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) R](implicit r: ClassTag[R]): CanMapValues[DenseMatrix[V], V, R, DenseMatrix[R]] = {
     new CanMapValues[DenseMatrix[V],V,R,DenseMatrix[R]] {
 
-      override def map(from : DenseMatrix[V], fn : (V=>R)): DenseMatrix[R] = {
+      override def apply(from : DenseMatrix[V], fn : (V=>R)): DenseMatrix[R] = {
         if (from.isContiguous) {
           val data = new Array[R](from.size)
           val isTranspose = from.isTranspose
@@ -582,8 +582,6 @@ with MatrixConstructors[DenseMatrix] {
         }
       }
 
-      override def mapActive(from : DenseMatrix[V], fn : (V=>R)) =
-        map(from, fn)
     }
   }
 

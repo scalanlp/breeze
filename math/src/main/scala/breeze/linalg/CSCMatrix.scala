@@ -18,7 +18,6 @@ package breeze.linalg
 import java.util
 
 import breeze.linalg.operators._
-import breeze.linalg.support.CanMapValues.HandHold
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
 import breeze.math._
@@ -48,7 +47,7 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero] private[linalg] (privat
   /**
    * Constructs a [[CSCMatrix]] instance. We don't validate the input data for performance reasons.
    * So make sure you understand the [[http://en.wikipedia.org/wiki/Sparse_matrix CSC format]] correctly.
-   * Otherwise, please use the factory methods under [[CSCMatrix$]] and [[CSCMatrix$#Builder]] to construct CSC matrices.
+   * Otherwise, please use the factory methods under [[CSCMatrix]] and [[CSCMatrix#Builder]] to construct CSC matrices.
    * @param data active values
    * @param rows number of rows
    * @param cols number of columns
@@ -290,18 +289,18 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
 
   implicit def canMapValues[V, R:ClassTag:Zero:Semiring]:CanMapValues[CSCMatrix[V], V, R, CSCMatrix[R]] = {
     val z = implicitly[Zero[R]].zero
-    new CanMapValues[CSCMatrix[V],V,R,CSCMatrix[R]] {
-      override def map(from : CSCMatrix[V], fn : (V=>R)) = {
+    new CanMapValues[CSCMatrix[V], V, R, CSCMatrix[R]] {
+      override def apply(from: CSCMatrix[V], fn: (V => R)) = {
         val fz = fn(from.zero)
         val fzIsNotZero = fz != z
         val builder = new Builder[R](from.rows, from.cols, from.activeSize)
         var j = 0
-        while(j < from.cols) {
+        while (j < from.cols) {
           var ip = from.colPtrs(j)
           var lastI = 0
-          while(ip < from.colPtrs(j+1)) {
+          while (ip < from.colPtrs(j + 1)) {
             val i = from.rowIndices(ip)
-            while(fzIsNotZero && lastI < i) {
+            while (fzIsNotZero && lastI < i) {
               builder.add(lastI, j, fz)
               lastI += 1
             }
@@ -314,17 +313,23 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
             ip += 1
           }
 
-          while(fzIsNotZero && lastI < from.rows) {
+          while (fzIsNotZero && lastI < from.rows) {
             builder.add(lastI, j, fz)
-              lastI += 1
+            lastI += 1
           }
           j += 1
         }
 
         builder.result()
       }
+    }
+  }
 
-      override def mapActive(from : CSCMatrix[V], fn : (V=>R)) = {
+
+  implicit def canMapActiveValues[V, R:ClassTag:Zero:Semiring]:CanMapActiveValues[CSCMatrix[V], V, R, CSCMatrix[R]] = {
+    val z = implicitly[Zero[R]].zero
+    new CanMapActiveValues[CSCMatrix[V], V, R, CSCMatrix[R]] {
+      override def apply(from : CSCMatrix[V], fn : (V=>R)) = {
         var zeroSeen = false
         def ff(v: V) = { val r = fn(v); if (r == z) zeroSeen = true; r}
         val newData = from.data.map(ff)

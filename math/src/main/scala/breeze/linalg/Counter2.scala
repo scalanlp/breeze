@@ -16,7 +16,6 @@ package breeze.linalg
 */
 import breeze.linalg.Counter2.Curried
 import breeze.linalg.operators.Counter2Ops
-import breeze.linalg.support.CanMapValues.HandHold
 import breeze.storage.Zero
 import collection.mutable.HashMap
 import breeze.math.Semiring
@@ -150,38 +149,39 @@ object Counter2 extends LowPriorityCounter2 with Counter2Ops {
   }
 
 
-  implicit def CanMapValuesCounter[K1, K2, V, RV:Semiring:Zero]: CanMapValues[Counter2[K1, K2, V], V, RV, Counter2[K1, K2, RV]]
-  = new CanMapValues[Counter2[K1, K2, V],V,RV,Counter2[K1, K2, RV]] {
-    override def map(from : Counter2[K1, K2, V], fn : (V=>RV)) = {
-      val rv = Counter2[K1, K2, RV]()
-      for( (k,v) <- from.iterator) {
-        rv(k) = fn(v)
+  implicit def CanMapValuesCounter[K1, K2, V, RV:Semiring:Zero]: CanMapValues[Counter2[K1, K2, V], V, RV, Counter2[K1, K2, RV]] = {
+    new CanMapValues[Counter2[K1, K2, V], V, RV, Counter2[K1, K2, RV]] {
+      override def apply (from: Counter2[K1, K2, V], fn: (V => RV) ) = {
+        val rv = Counter2[K1, K2, RV] ()
+        for ((k, v) <- from.iterator) {
+          rv (k) = fn (v)
+        }
+        rv
       }
-      rv
     }
+  }
 
-    override def mapActive(from : Counter2[K1, K2, V], fn : (V=>RV)) = {
-      val rv = Counter2[K1,K2, RV]()
-      for( (k,v) <- from.activeIterator) {
-        rv(k) = fn(v)
+  implicit def CanMapActiveValuesCounter[K1, K2, V, RV:Semiring:Zero]: CanMapActiveValues[Counter2[K1, K2, V], V, RV, Counter2[K1, K2, RV]] = {
+    new CanMapActiveValues[Counter2[K1, K2, V],V,RV,Counter2[K1, K2, RV]] {
+      override def apply(from: Counter2[K1, K2, V], fn: (V => RV)) = {
+        val rv = Counter2[K1,K2, RV]()
+        for( (k,v) <- from.activeIterator) {
+          rv(k) = fn(v)
+        }
+        rv
       }
-      rv
     }
   }
 
 
   implicit def canIterateValues[K1, K2, V]: CanTraverseValues[Counter2[K1, K2,V], V] = new CanTraverseValues[Counter2[K1, K2, V], V] {
-
-
     def isTraversableAgain(from: Counter2[K1, K2, V]): Boolean = true
 
-    /** Iterates all key-value pairs from the given collection. */
     def traverse(from: Counter2[K1, K2, V], fn: ValuesVisitor[V]): Unit = {
       for( v <- from.valuesIterator) {
         fn.visit(v)
       }
     }
-
   }
 
   // slicing
@@ -280,7 +280,6 @@ object Counter2 extends LowPriorityCounter2 with Counter2Ops {
 
 
   implicit def scalarOf[K1, K2, V]: ScalarOf[Counter2[K1, K2, V], V] = ScalarOf.dummy
-  implicit def handhold[K1, K2, V]: CanMapValues.HandHold[Counter2[K1, K2, V], V] = new HandHold
 }
 
 

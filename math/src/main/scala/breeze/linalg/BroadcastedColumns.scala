@@ -38,16 +38,10 @@ object BroadcastedColumns {
                             (implicit cc: CanCollapseAxis[T, Axis._0.type, ColumnType, ResultColumn, Result])
                             :CanMapValues[BroadcastedColumns[T, ColumnType], ColumnType, ResultColumn, Result] = {
     new CanMapValues[BroadcastedColumns[T, ColumnType], ColumnType, ResultColumn, Result] {
-      def map(from: BroadcastedColumns[T, ColumnType], fn: (ColumnType) => ResultColumn): Result = {
-        cc(from.underlying, Axis._0){fn}
-      }
-
-      /** Maps all active key-value pairs from the given collection. */
-      def mapActive(from: BroadcastedColumns[T, ColumnType], fn: (ColumnType) => ResultColumn): Result = {
+      def apply(from: BroadcastedColumns[T, ColumnType], fn: (ColumnType) => ResultColumn): Result = {
         cc(from.underlying, Axis._0){fn}
       }
     }
-
   }
 
   implicit def scalarOf[T, ColumnType]: ScalarOf[BroadcastedColumns[T, ColumnType], ColumnType] = ScalarOf.dummy

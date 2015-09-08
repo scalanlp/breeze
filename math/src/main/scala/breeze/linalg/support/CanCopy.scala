@@ -24,7 +24,6 @@ import scala.reflect.ClassTag
  * @author dlwh
  */
 trait CanCopy[V] {
-  // Should not inherit from T=>T because those get  used by the compiler.
   def apply(t: V):V
 }
 
@@ -37,7 +36,7 @@ object CanCopy {
   }
 
   class OpMapValues[From,V](implicit op : CanCopy[V], map : CanMapValues[From,V,V,From]) extends CanCopy[From] {
-    def apply(v : From) = map.map(v, op.apply(_))
+    def apply(v : From) = map(v, op.apply(_))
   }
 
   // <editor-fold defaultstate="collapsed" desc=" implicit CanCopy[V] implementations ">

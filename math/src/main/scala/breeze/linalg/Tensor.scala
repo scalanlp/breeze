@@ -147,12 +147,12 @@ trait TensorLike[@spec(Int) K, @spec(Double, Int, Float, Long) V, +This<:Tensor[
 
   /** Creates a new map containing a transformed copy of this map. */
   def mapValues[TT>:This,O,That](f : V => O)(implicit bf : CanMapValues[TT, V, O, That]) : That = {
-    bf.map(repr.asInstanceOf[TT], f)
+    bf(repr.asInstanceOf[TT], f)
   }
 
   /** Maps all non-zero values. */
-  def mapActiveValues[TT>:This,O,That](f : V => O)(implicit bf : CanMapValues[TT, V, O, That]) : That = {
-    bf.mapActive(repr.asInstanceOf[TT], f)
+  def mapActiveValues[TT>:This,O,That](f : V => O)(implicit bf : CanMapActiveValues[TT, V, O, That]) : That = {
+    bf(repr.asInstanceOf[TT], f)
   }
 
 
