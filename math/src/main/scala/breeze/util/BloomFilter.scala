@@ -38,9 +38,9 @@ class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFun
 
     for {
       i <- 0 to numHashFunctions
-      h = hash1 + i * hash2
-      nextHash =  if (h < 0) ~h else h
     } yield {
+      val h = hash1 + i * hash2
+      val nextHash = if (h < 0) ~h else h
       nextHash % numBuckets
     }
   }
