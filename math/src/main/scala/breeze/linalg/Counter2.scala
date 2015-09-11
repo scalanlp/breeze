@@ -21,6 +21,7 @@ import collection.mutable.HashMap
 import breeze.math.Semiring
 import breeze.linalg.support._
 import scala.collection.Set
+import scala.collection.parallel.mutable
 import scala.reflect.ClassTag
 import CanTraverseValues.ValuesVisitor
 
@@ -122,17 +123,18 @@ object Counter2 extends LowPriorityCounter2 with Counter2Ops {
   }
 
   /** Returns a new empty counter. */
-  def apply[K1,K2,V:Zero:Semiring]() : Counter2[K1,K2,V] = {
-    val map = new HashMap[K1,Counter[K2,V]] {
-      override def default(k: K1) = Counter[K2,V]()
-    }
-    new Impl[K1,K2,V](map)
+  def apply[K1,K2,V:Zero](): Counter2[K1,K2,V] = {
+    new Impl(new CounterHashMap)
   }
 
+  @SerialVersionUID(1L)
+  private class CounterHashMap[K1, K2, V:Zero] extends HashMap[K1, Counter[K2, V]] with Serializable {
+    override def default(k: K1) = Counter[K2,V]()
+  }
 
   /** Aggregates the counts in the given items. */
   def apply[K1,K2,V:Semiring:Zero](values : (K1,K2,V)*) : Counter2[K1,K2,V] =
-    apply(values)
+    apply(values.iterator)
 
   /** Aggregates the counts in the given items. */
   def apply[K1,K2,V:Semiring:Zero](values : TraversableOnce[(K1,K2,V)]) : Counter2[K1,K2,V] = {
