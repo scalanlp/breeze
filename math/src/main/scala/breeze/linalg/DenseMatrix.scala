@@ -763,7 +763,7 @@ with MatrixConstructors[DenseMatrix] {
    * @tparam R
    * @return
    */
-  implicit def canMapRows[V, R:ClassTag:Zero]: CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], DenseVector[R], DenseMatrix[R]]  = new CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], DenseVector[R], DenseMatrix[R]] {
+  implicit def canMapRows[V, R:ClassTag:Zero](implicit implSet: OpSet.InPlaceImpl2[DenseVector[R], DenseVector[R]]): CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], DenseVector[R], DenseMatrix[R]]  = new CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], DenseVector[R], DenseMatrix[R]] {
     def apply(from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => DenseVector[R]): DenseMatrix[R] = {
       var result:DenseMatrix[R] = null
       for(c <- 0 until from.cols) {
@@ -809,7 +809,7 @@ with MatrixConstructors[DenseMatrix] {
    * @tparam V value type
    * @return
    */
-  implicit def canMapCols[V, Res:ClassTag:Zero]: CanCollapseAxis[DenseMatrix[V], _1.type, DenseVector[V], DenseVector[Res], DenseMatrix[Res]] = {
+  implicit def canMapCols[V, Res:ClassTag:Zero](implicit implSet: OpSet.InPlaceImpl2[DenseVector[Res], DenseVector[Res]]): CanCollapseAxis[DenseMatrix[V], _1.type, DenseVector[V], DenseVector[Res], DenseMatrix[Res]] = {
     new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], DenseVector[Res], DenseMatrix[Res]] {
       def apply (from: DenseMatrix[V], axis: Axis._1.type) (f: (DenseVector[V] ) => DenseVector[Res] ): DenseMatrix[Res] = {
         var result: DenseMatrix[Res] = null
@@ -872,10 +872,12 @@ with MatrixConstructors[DenseMatrix] {
    * Iterates over each columns
    * @return
    */
-  implicit def canIterateCols[V:ClassTag:Zero]: CanIterateAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]]  = new CanIterateAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]] {
-    def apply[A](from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => A) {
-      for(c <- 0 until from.cols) {
-        f(from(::, c))
+  implicit def canIterateCols[V]: CanIterateAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]]  = {
+    new CanIterateAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]] {
+      def apply[A](from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => A) {
+        cforRange(0 until from.cols) { c =>
+          f(from(::, c))
+        }
       }
     }
   }
@@ -885,11 +887,13 @@ with MatrixConstructors[DenseMatrix] {
    * @tparam V
    * @return
    */
-  implicit def canIterateRows[V:ClassTag:Zero] = new CanIterateAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]] {
-    def apply[A](from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => A) {
-      val t = from.t
-      for(r <- 0 until from.rows) {
-        f(t(::, r))
+  implicit def canIterateRows[V]: CanIterateAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]]  = {
+    new CanIterateAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]] {
+      def apply[A](from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => A) {
+        val t = from.t
+        cforRange(0 until from.rows) { r =>
+          f(t(::, r))
+        }
       }
     }
   }
