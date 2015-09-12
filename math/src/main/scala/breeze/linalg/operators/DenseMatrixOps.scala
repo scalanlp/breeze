@@ -453,7 +453,7 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
 
         val minorSize = if(a.isTranspose) a.cols else a.rows
 
-        if (a.overlaps(b)) {
+        if ((a ne b) && a.overlaps(b)) {
           val ac = a.copy
           apply(ac, b)
           a := ac
@@ -526,19 +526,35 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
 
   new Op.InPlaceImpl2[DenseMatrix[T], T] {
     def apply(a: DenseMatrix[T], b: T):Unit = {
-      val ad: Array[T] = a.data
-      var c = 0
 
-      while(c < a.cols) {
-        var r = 0
-        while(r < a.rows) {
-          ad(a.linearIndex(r, c)) = op(ad(a.linearIndex(r,c)), b)
-          r += 1
-        }
-        c += 1
+      if (a.isContiguous) {
+        fastPath(a, b)
+      } else {
+        slowPath(a, b)
       }
 
     }
+
+    def fastPath(a: DenseMatrix[T], b: T): Unit = {
+      val ad: Array[T] = a.data
+      cforRange(a.offset until (a.offset + a.size)) { i =>
+        ad(i) = op(ad(i), b)
+      }
+    }
+
+    def slowPath(a: DenseMatrix[T], b: T): Unit = {
+      val ad = a.data
+      if (!a.isTranspose) {
+        cforRange2(0 until a.cols, 0 until a.rows) { (c, r) =>
+          ad(a.linearIndex(r, c)) = op(ad(a.linearIndex(r, c)), b)
+        }
+      } else {
+        cforRange2(0 until a.rows, 0 until a.cols) { (r, c) =>
+          ad(a.linearIndex(r, c)) = op(ad(a.linearIndex(r, c)), b)
+        }
+      }
+    }
+
     implicitly[BinaryUpdateRegistry[Matrix[T], T, Op.type]].register(this)
   }
 

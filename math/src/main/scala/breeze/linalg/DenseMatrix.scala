@@ -72,11 +72,12 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
   if (cols < 0) { throw new IndexOutOfBoundsException("Cols must be larger than zero. It was " + cols) }
   if (offset < 0) { throw new IndexOutOfBoundsException("Offset must be larger than zero. It was " + offset) }
   if (majorStride > 0) {
-    if (data.size < linearIndex(rows-1, cols-1)) { throw new IndexOutOfBoundsException("Storage array has size " + data.size + " but indices can grow as large as " + linearIndex(rows-1,cols-1)) }
+    if (data.length < linearIndex(rows-1, cols-1)) { throw new IndexOutOfBoundsException("Storage array has size " + data.size + " but indices can grow as large as " + linearIndex(rows-1,cols-1)) }
   } else {
-    if (data.size < linearIndex(rows-1,0)) { throw new IndexOutOfBoundsException("Storage array has size " + data.size + " but indices can grow as large as " + linearIndex(rows-1,cols-1)) }
+    if (data.length< linearIndex(rows-1,0)) { throw new IndexOutOfBoundsException("Storage array has size " + data.size + " but indices can grow as large as " + linearIndex(rows-1,cols-1)) }
     if (linearIndex(0, cols-1) < 0) { throw new IndexOutOfBoundsException("Storage array has negative stride " + majorStride + " and offset " + offset + " which can result in negative indices.") }
   }
+
 
 
   def apply(row: Int, col: Int) = {
@@ -349,6 +350,21 @@ with MatrixConstructors[DenseMatrix] {
   }
 
   def create[@spec(Double, Int, Float, Long) V:Zero](rows: Int, cols: Int, data: Array[V]): DenseMatrix[V] = {
+    new DenseMatrix(rows, cols, data)
+  }
+
+
+  /**
+   * Creates a matrix of all ones.
+   * @param rows
+   * @param cols
+   * @tparam V
+   * @return
+   */
+  override def ones[@specialized(Int, Float, Double, Long) V: ClassTag : Zero : Semiring](rows: Int, cols: Int): DenseMatrix[V] = {
+    val data = new Array[V](rows * cols)
+    if(rows * cols != 0 && data(0) != implicitly[Semiring[V]].one)
+      ArrayUtil.fill(data, 0, data.length, implicitly[Semiring[V]].one)
     new DenseMatrix(rows, cols, data)
   }
 
