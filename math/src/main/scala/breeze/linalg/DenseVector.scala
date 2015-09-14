@@ -58,8 +58,6 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
   def this(length: Int)(implicit man: ClassTag[V]) = this(new Array[V](length), 0, 1, length)
 
 
-  // uncomment to get all the ridiculous places where specialization fails.
- // if(data.isInstanceOf[Array[Double]] && getClass.getName() == "breeze.linalg.DenseVector") throw new Exception("...")
 
   // ensure that operators are all loaded.
   DenseVector.init()
@@ -91,6 +89,13 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
   private[linalg] val noOffsetOrStride = offset == 0 && stride == 1
   @deprecated("This isn't actually any faster any more", "0.12-SNAPSHOT")
   def unsafeUpdate(i: Int, v: V): Unit = if (noOffsetOrStride) data(i) = v else data(offset+i*stride) = v
+
+  private def checkIfSpecialized(): Unit = {
+    if(data.isInstanceOf[Array[Double]] && getClass.getName() == "breeze.linalg.DenseVector") throw new Exception("...")
+  }
+  // uncomment to debug places where specialization fails
+  //  checkIfSpecialized()
+
 
   def activeIterator: Iterator[(Int, V)] = iterator
 
@@ -235,14 +240,45 @@ object DenseVector extends VectorConstructors[DenseVector]
                       with DenseVector_OrderingOps
                       with DenseVector_SpecialOps {
 
+
   def zeros[@spec(Double, Int, Float, Long) V: ClassTag : Zero](size: Int): DenseVector[V] = {
     val data = new Array[V](size)
     if(size != 0 && data(0) != implicitly[Zero[V]].zero)
       ArrayUtil.fill(data, 0, data.length, implicitly[Zero[V]].zero)
-    new DenseVector(data)
+    apply(data)
   }
 
-  def apply[@spec(Double, Int, Float, Long) V](values: Array[V]): DenseVector[V] = new DenseVector(values)
+  def apply[@spec(Double, Int, Float, Long) V](values: Array[V]): DenseVector[V] = {
+    // ensure we get specialized implementations even from non-specialized calls
+    (values:AnyRef) match {
+      case v: Array[Double] => new DenseVector(v).asInstanceOf[DenseVector[V]]
+      case v: Array[Float] => new DenseVector(v).asInstanceOf[DenseVector[V]]
+      case v: Array[Int] => new DenseVector(v).asInstanceOf[DenseVector[V]]
+      case v: Array[Long] => new DenseVector(v).asInstanceOf[DenseVector[V]]
+      case _ => new DenseVector(values)
+    }
+  }
+
+  /**
+   *
+   * Creates a new DenseVector using the provided array (not making a copy!). In generic contexts, prefer to
+   * use this (or apply) instead of `new DenseVector[V](data, offset, stride, length)`, which in general
+   * won't give specialized implementations.
+   * @param rows
+   * @param cols
+   * @param data
+   * @tparam V
+   * @return
+   */
+  def create[V](data: Array[V], offset: Int, stride: Int, length: Int): DenseVector[V] = {
+    (data:AnyRef) match {
+      case v: Array[Double] => new DenseVector(v, offset = offset, stride = stride, length = length).asInstanceOf[DenseVector[V]]
+      case v: Array[Float] => new DenseVector(v, offset = offset, stride = stride, length = length).asInstanceOf[DenseVector[V]]
+      case v: Array[Int] => new DenseVector(v, offset = offset, stride = stride, length = length).asInstanceOf[DenseVector[V]]
+      case v: Array[Long] => new DenseVector(v, offset = offset, stride = stride, length = length).asInstanceOf[DenseVector[V]]
+      case _ => new DenseVector(data, offset = offset, stride = stride, length = length)
+    }
+  }
 
   def ones[@spec(Double, Int, Float, Long) V: ClassTag:Semiring](size: Int): DenseVector[V] = fill[V](size, implicitly[Semiring[V]].one)
 
@@ -325,7 +361,7 @@ object DenseVector extends VectorConstructors[DenseVector]
         } else {
           slowPath(out, fn, from.data, from.offset, from.stride)
         }
-        new DenseVector[V2](out)
+        DenseVector[V2](out)
       }
 
       private def mediumPath(out: Array[V2], fn: (V) => V2, data: Array[V], off: Int): Unit = {
@@ -449,7 +485,7 @@ object DenseVector extends VectorConstructors[DenseVector]
           i += 1
           j += stride
         }
-        new DenseVector[V2](arr)
+        DenseVector[V2](arr)
       }
 
       /**Maps all active key-value pairs from the given collection. */
@@ -460,7 +496,7 @@ object DenseVector extends VectorConstructors[DenseVector]
 
   // slicing
   // specialize to get the good class
-  implicit def canSlice[@specialized(Int, Float, Double) V]: CanSlice[DenseVector[V], Range, DenseVector[V]] = {
+  implicit def canSlice[V]: CanSlice[DenseVector[V], Range, DenseVector[V]] = {
     new CanSlice[DenseVector[V], Range, DenseVector[V]] {
       def apply(v: DenseVector[V], re: Range): DenseVector[V] = {
 
@@ -468,7 +504,7 @@ object DenseVector extends VectorConstructors[DenseVector]
 
         require(range.isEmpty || range.last < v.length)
         require(range.isEmpty || range.start >= 0)
-        new DenseVector(v.data, offset = v.offset + v.stride * range.start, stride = v.stride * range.step, length = range.length)
+        DenseVector.create(v.data, offset = v.offset + v.stride * range.start, stride = v.stride * range.step, length = range.length)
       }
     }
   }
@@ -486,7 +522,7 @@ object DenseVector extends VectorConstructors[DenseVector]
   }
 
   class CanZipMapValuesDenseVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag] extends CanZipMapValues[DenseVector[V],V,RV,DenseVector[RV]] {
-    def create(length : Int) = new DenseVector(new Array[RV](length))
+    def create(length : Int) = DenseVector(new Array[RV](length))
 
     /**Maps all corresponding values from the two collection. */
     def map(from: DenseVector[V], from2: DenseVector[V], fn: (V, V) => RV): DenseVector[RV] = {
@@ -508,7 +544,7 @@ object DenseVector extends VectorConstructors[DenseVector]
   implicit val zipMap_i: CanZipMapValuesDenseVector[Int, Int] = new CanZipMapValuesDenseVector[Int, Int]
 
   class CanZipMapKeyValuesDenseVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag] extends CanZipMapKeyValues[DenseVector[V],Int, V,RV,DenseVector[RV]] {
-    def create(length : Int) = new DenseVector(new Array[RV](length))
+    def create(length : Int) = DenseVector(new Array[RV](length))
 
     /**Maps all corresponding values from the two collection. */
     def map(from: DenseVector[V], from2: DenseVector[V], fn: (Int, V, V) => RV): DenseVector[RV] = {

@@ -19,17 +19,17 @@ object split extends UFunc {
       require(v.size % n == 0)
 
       val individualVectorSize = v.size / n
-      val result = new collection.mutable.ListBuffer[DenseVector[T]]()
+      val result = new collection.mutable.ArrayBuffer[DenseVector[T]]()
 
-      cfor(0)(k => k < n, k => k+1)(k => {
+      cforRange(0 until n) { k =>
         val offsetInOriginalVector = k*individualVectorSize
         val chunk = new Array[T](individualVectorSize)
-        cfor(0)(i => i < individualVectorSize, i => i+1)(i => {
+        cforRange(0 until individualVectorSize){i =>
           chunk(i) = v(offsetInOriginalVector+i)
-        })
-        result += new DenseVector[T](chunk)
-      })
-      result.toSeq
+        }
+        result += DenseVector[T](chunk)
+      }
+      result
     }
   }
 
@@ -44,7 +44,7 @@ object split extends UFunc {
         cfor(lastN)(i => i < n, i => i + 1)(i => {
           chunk(i-lastN) = v(i)
         })
-        result += new DenseVector[T](chunk)
+        result += DenseVector[T](chunk)
         lastN = n
       })
       if (lastN < v.size) { //If we did not already add last chunk to result, do it now.
@@ -52,7 +52,7 @@ object split extends UFunc {
         cfor(lastN)(i => i < v.size, i => i + 1)(i => {
           chunk(i-lastN) = v(i)
         })
-        result += new DenseVector[T](chunk)
+        result += DenseVector[T](chunk)
       }
       result.toSeq
     }

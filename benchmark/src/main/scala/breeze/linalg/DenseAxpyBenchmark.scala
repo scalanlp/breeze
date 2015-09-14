@@ -41,7 +41,27 @@ class DenseAxpyBenchmark extends BreezeBenchmark {
     dv
   }
 
+  val largeDV, largeDV2 = DenseVector.rand(400)
+  val largeDM, largeDM2 = DenseMatrix.rand(20, 20)
+
+  def timeLargeDMAddInPlace(reps: Int) = {
+    cforRange(0 until reps) { rep =>
+      largeDM += largeDM2
+    }
+  }
+
+  def timeLargeDVAddInPlace(reps: Int) = {
+    cforRange(0 until reps) { rep =>
+      largeDV += largeDV2
+    }
+  }
+
 }
 
 
 object DenseAxpyBenchmark extends MyRunner(classOf[DenseAxpyBenchmark])
+object DenseAxpyX {
+  def main(args: Array[String]):Unit = {
+    (new DenseAxpyBenchmark).timeSmallDVScaleAddInline(44400000)
+  }
+}

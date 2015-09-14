@@ -85,7 +85,7 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]]{
   }
 
   def toDenseVector(implicit cm: ClassTag[V]) = {
-    new DenseVector(toArray)
+    DenseVector(toArray)
   }
 
   /**Returns copy of this [[breeze.linalg.Vector]] as a [[scala.Array]]*/
@@ -181,7 +181,7 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
 
   // There's a bizarre error specializing float's here.
   class CanZipMapValuesVector[@spec(Int, Double) V, @spec(Int, Double) RV:ClassTag] extends CanZipMapValues[Vector[V],V,RV,Vector[RV]] {
-    def create(length : Int) = new DenseVector(new Array[RV](length))
+    def create(length : Int) = DenseVector(new Array[RV](length))
 
     /**Maps all corresponding values from the two collection. */
     def map(from: Vector[V], from2: Vector[V], fn: (V, V) => RV) = {
@@ -231,7 +231,7 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
   implicit val zipMap_i = new CanZipMapValuesVector[Int, Int]
 
   class CanZipMapKeyValuesVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag] extends CanZipMapKeyValues[Vector[V],Int, V,RV,Vector[RV]] {
-    def create(length : Int) = new DenseVector(new Array[RV](length))
+    def create(length : Int) = DenseVector(new Array[RV](length))
 
     /**Maps all corresponding values from the two collection. */
     def map(from: Vector[V], from2: Vector[V], fn: (Int, V, V) => RV): Vector[RV] = {

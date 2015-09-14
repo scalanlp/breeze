@@ -29,6 +29,7 @@ import spire.syntax.cfor._
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 import scala.{specialized => spec}
+import scalaxy.debug._
 
 /**
  * A DenseMatrix is a matrix with all elements found in an array. It is column major unless isTranspose is true,
@@ -155,7 +156,7 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
       if(!canFlattenView)
         throw new UnsupportedOperationException("Cannot make a view of this matrix.")
       else
-        new DenseVector(data, offset, 1, rows * cols)
+        DenseVector.create(data, offset, 1, rows * cols)
     case View.Copy =>
       toDenseVector
     case View.Prefer =>
@@ -189,7 +190,7 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
           new DenseMatrix(rows, _cols, data, offset, if(isTranspose) cols else rows, isTranspose)
       case View.Copy =>
         // calling copy directly gives a verify error. TODO: submit bug
-        val result = new DenseMatrix[V](this.rows, this.cols, ArrayUtil.newArrayLike(data, size))
+        val result = new DenseMatrix(this.rows, this.cols, ArrayUtil.newArrayLike(data, size))
         result := this
         result.reshape(rows, _cols, View.Require)
       case View.Prefer =>
@@ -232,14 +233,14 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
 
 
   override def toDenseMatrix(implicit cm: ClassTag[V], zero: Zero[V]): DenseMatrix[V] = {
-    val result = new DenseMatrix[V](rows, cols, new Array[V](size))
+    val result = DenseMatrix.create[V](rows, cols, new Array[V](size))
     result := this
     result
   }
 
   def copy: DenseMatrix[V] = {
     implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
-    val result = new DenseMatrix[V](rows, cols, new Array[V](size))
+    val result = DenseMatrix.create[V](rows, cols, new Array[V](size))
     result := this
     result
   }
@@ -329,6 +330,12 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
       Range(bstart, bend).contains(aend)
   }
 
+  private def checkIsSpecialized(): Unit = {
+    if(data.isInstanceOf[Array[Double]] && getClass.getName() == "breeze.linalg.DenseMatrix") throw new Exception("...")
+  }
+  // uncomment to debug places where specialization fails
+//  checkIsSpecialized()
+
 }
 
 object DenseMatrix extends LowPriorityDenseMatrix
@@ -346,11 +353,43 @@ with MatrixConstructors[DenseMatrix] {
     val data = new Array[V](rows * cols)
     if(implicitly[Zero[V]] != null && rows * cols != 0 && data(0) != implicitly[Zero[V]].zero)
       ArrayUtil.fill(data, 0, data.length, implicitly[Zero[V]].zero)
-    new DenseMatrix(rows, cols, data)
+    DenseMatrix.create(rows, cols, data)
   }
 
+  /**
+   *
+   * Creates a new DenseMatrix using the provided array (not making a copy!). In generic contexts, prefer to
+   * use this (or the other create methd) instead of `new DenseMatrix[V](rows, cols, data)`, which in general
+   * won't give specialized implementations.
+   * @param rows
+   * @param cols
+   * @param data
+   * @tparam V
+   * @return
+   */
   def create[@spec(Double, Int, Float, Long) V:Zero](rows: Int, cols: Int, data: Array[V]): DenseMatrix[V] = {
-    new DenseMatrix(rows, cols, data)
+    create(rows, cols, data, 0, rows, isTranspose = false)
+  }
+
+  /**
+   *
+   * Creates a new DenseMatrix using the provided array (not making a copy!). In generic contexts, prefer to
+   * use this (or the other create methd) instead of `new DenseMatrix[V](rows, cols, data)`, which in general
+   * won't give specialized implementations.
+   * @param rows
+   * @param cols
+   * @param data
+   * @tparam V
+   * @return
+   */
+  def create[@spec(Double, Int, Float, Long) V](rows: Int, cols: Int, data: Array[V], offset: Int, majorStride: Int, isTranspose: Boolean = false): DenseMatrix[V] = {
+    (data: Any) match {
+      case d: Array[Double] => new DenseMatrix(rows, cols, d, offset, majorStride, isTranspose).asInstanceOf[DenseMatrix[V]]
+      case d: Array[Float] => new DenseMatrix(rows, cols, d, offset, majorStride, isTranspose).asInstanceOf[DenseMatrix[V]]
+      case d: Array[Long] => new DenseMatrix(rows, cols, d, offset, majorStride, isTranspose).asInstanceOf[DenseMatrix[V]]
+      case d: Array[Int] => new DenseMatrix(rows, cols, d, offset, majorStride, isTranspose).asInstanceOf[DenseMatrix[V]]
+      case _ => new DenseMatrix(rows, cols, data, offset, majorStride, isTranspose)
+    }
   }
 
 
@@ -365,7 +404,7 @@ with MatrixConstructors[DenseMatrix] {
     val data = new Array[V](rows * cols)
     if(rows * cols != 0 && data(0) != implicitly[Semiring[V]].one)
       ArrayUtil.fill(data, 0, data.length, implicitly[Semiring[V]].one)
-    new DenseMatrix(rows, cols, data)
+    DenseMatrix.create(rows, cols, data)
   }
 
   /**
@@ -431,9 +470,9 @@ with MatrixConstructors[DenseMatrix] {
         val col = if(colWNegative<0) colWNegative+m.cols else colWNegative
 
         if(!m.isTranspose)
-          new DenseVector(m.data, length = m.rows, offset = col * m.majorStride + m.offset, stride=1)
+          DenseVector.create(m.data, length = m.rows, offset = col * m.majorStride + m.offset, stride=1)
         else
-          new DenseVector(m.data, length=m.rows, offset = m.offset + col, stride = m.majorStride)
+          DenseVector.create(m.data, length=m.rows, offset = m.offset + col, stride = m.majorStride)
       }
     }
   }
@@ -452,7 +491,7 @@ with MatrixConstructors[DenseMatrix] {
 
         val rows = rowsWNegative.getRangeWithoutNegativeIndexes(m.rows)
 
-        if(rows.isEmpty) new DenseMatrix(0, m.cols, m.data, 0, 0)
+        if(rows.isEmpty) DenseMatrix.create(0, m.cols, m.data, 0, 0)
         else if(!m.isTranspose) {
           require(rows.step == 1, "Sorry, we can't support row ranges with step sizes other than 1")
           val first = rows.head
@@ -460,7 +499,7 @@ with MatrixConstructors[DenseMatrix] {
           if(rows.last >= m.rows) {
             throw new IndexOutOfBoundsException(s"Row slice of $rows was bigger than matrix rows of ${m.rows}")
           }
-          new DenseMatrix(rows.length, m.cols, m.data, m.offset + first, m.majorStride)
+          DenseMatrix.create(rows.length, m.cols, m.data, m.offset + first, m.majorStride)
         } else {
           canSliceCols(m.t, ::, rows).t
         }
@@ -475,13 +514,13 @@ with MatrixConstructors[DenseMatrix] {
         val cols = colsWNegative.getRangeWithoutNegativeIndexes(m.cols)
 
         if(cols.isEmpty) {
-          new DenseMatrix(m.rows, 0, m.data, 0, m.rows)
+          DenseMatrix.create(m.rows, 0, m.data, 0, m.rows)
         } else if(!m.isTranspose) {
           val first = cols.head
           if(cols.last >= m.cols) {
             throw new IndexOutOfBoundsException(s"Col slice of $cols was bigger than matrix cols of ${m.cols}")
           }
-          new DenseMatrix(m.rows, cols.length, m.data, m.offset + first * m.majorStride, m.majorStride * cols.step )
+          DenseMatrix.create(m.rows, cols.length, m.data, m.offset + first * m.majorStride, m.majorStride * cols.step )
         } else {
           canSliceRows(m.t, cols, ::).t
         }
@@ -496,7 +535,7 @@ with MatrixConstructors[DenseMatrix] {
         val rows = rowsWNegative.getRangeWithoutNegativeIndexes(m.rows)
         val cols = colsWNegative.getRangeWithoutNegativeIndexes(m.cols)
 
-        if(rows.isEmpty || cols.isEmpty) new DenseMatrix(rows.size, cols.size, m.data, 0, 1)
+        if(rows.isEmpty || cols.isEmpty) DenseMatrix.create(rows.size, cols.size, m.data, 0, 1)
         else if(!m.isTranspose) {
           require(rows.step == 1, "Sorry, we can't support row ranges with step sizes other than 1 for non transposed matrices")
           val first = cols.head
@@ -506,7 +545,7 @@ with MatrixConstructors[DenseMatrix] {
           if(cols.last >= m.cols) {
             throw new IndexOutOfBoundsException(s"Col slice of $cols was bigger than matrix cols of ${m.cols}")
           }
-          new DenseMatrix(rows.length, cols.length, m.data, m.offset + first * m.majorStride + rows.head, m.majorStride * cols.step)
+          DenseMatrix.create(rows.length, cols.length, m.data, m.offset + first * m.majorStride + rows.head, m.majorStride * cols.step)
         } else {
           require(cols.step == 1, "Sorry, we can't support col ranges with step sizes other than 1 for transposed matrices")
           canSliceColsAndRows(m.t, cols, rows).t
@@ -536,16 +575,16 @@ with MatrixConstructors[DenseMatrix] {
         val col = if(colWNegative<0) colWNegative + m.cols else colWNegative
 
         if(rows.isEmpty) {
-          new DenseVector(m.data, 0, 0, 0)
+          DenseVector.create(m.data, 0, 0, 0)
         } else if(!m.isTranspose) {
           if(rows.last >= m.rows) {
             throw new IndexOutOfBoundsException(s"Row slice of $rows was bigger than matrix rows of ${m.rows}")
           }
-          new DenseVector(m.data, col * m.majorStride + m.offset + rows.head, rows.step, rows.length)
+          DenseVector.create(m.data, col * m.majorStride + m.offset + rows.head, rows.step, rows.length)
         } else {
           // row major, so consecutive rows are separated by m.majorStride
           // we move rows.step * m.majorStride per step in the range
-          new DenseVector(m.data, m.offset + col + rows.head * m.majorStride, m.majorStride * rows.step, rows.length)
+          DenseVector.create(m.data, m.offset + col + rows.head * m.majorStride, m.majorStride * rows.step, rows.length)
         }
       }
     }
@@ -583,7 +622,7 @@ with MatrixConstructors[DenseMatrix] {
               i += 1
             }
           }
-          new DenseMatrix[R](from.rows, from.cols, data, 0, if (isTranspose) from.cols else from.rows, isTranspose)
+          DenseMatrix.create(from.rows, from.cols, data, 0, if (isTranspose) from.cols else from.rows, isTranspose)
         } else {
           val data = new Array[R](from.size)
           var j = 0
@@ -597,7 +636,7 @@ with MatrixConstructors[DenseMatrix] {
             }
             j += 1
           }
-          new DenseMatrix[R](from.rows, from.cols, data)
+          DenseMatrix.create[R](from.rows, from.cols, data, 0, from.rows)
         }
       }
 
@@ -716,7 +755,7 @@ with MatrixConstructors[DenseMatrix] {
           }
           j += 1
         }
-        new DenseMatrix(from.rows, from.cols, data)
+        DenseMatrix.create(from.rows, from.cols, data, 0, from.rows)
       }
 
       override def mapActive(from : DenseMatrix[V], fn : (((Int,Int),V)=>R)) =
@@ -727,7 +766,7 @@ with MatrixConstructors[DenseMatrix] {
   implicit def canTranspose[V]: CanTranspose[DenseMatrix[V], DenseMatrix[V]] = {
     new CanTranspose[DenseMatrix[V], DenseMatrix[V]] {
       def apply(from: DenseMatrix[V]) = {
-        new DenseMatrix(data = from.data, offset = from.offset, cols = from.rows, rows = from.cols, majorStride = from.majorStride, isTranspose = !from.isTranspose)
+        DenseMatrix.create(data = from.data, offset = from.offset, cols = from.rows, rows = from.cols, majorStride = from.majorStride, isTranspose = !from.isTranspose)
       }
     }
   }
@@ -838,7 +877,7 @@ with MatrixConstructors[DenseMatrix] {
             // It has a result type, and is not overloaded.
             //          result = DenseMatrix.zeros[V](from.rows, row.length)
             val data = new Array[Res] (rows * row.length)
-            result = new DenseMatrix (rows, row.length, data)
+            result = DenseMatrix.create(rows, row.length, data)
           }
           result.t apply (::, r) := row
         }
@@ -847,7 +886,7 @@ with MatrixConstructors[DenseMatrix] {
           result
         } else {
           val data = new Array[Res] (0)
-          result = new DenseMatrix (rows, 0, data)
+          result = DenseMatrix.create(rows, 0, data)
           result
         }
       }
@@ -868,7 +907,7 @@ with MatrixConstructors[DenseMatrix] {
           // It has a result type, and is not overloaded.
           //          result = DenseMatrix.zeros[V](from.rows, row.length)
           val data = new Array[Boolean](rows * row.length)
-          result = new DenseMatrix(rows, row.length, data)
+          result = DenseMatrix.create(rows, row.length, data)
         }
         result.t apply (::, r) := row
       }
@@ -877,7 +916,7 @@ with MatrixConstructors[DenseMatrix] {
         result
       } else {
         val data = new Array[Boolean](0)
-        result = new DenseMatrix(rows, 0, data)
+        result = DenseMatrix.create(rows, 0, data)
         result
       }
     }
@@ -927,7 +966,7 @@ with MatrixConstructors[DenseMatrix] {
   class CanZipMapValuesDenseMatrix[@spec(Double, Int, Float, Long) V, @specialized(Int, Double) RV: ClassTag]
     extends CanZipMapValues[DenseMatrix[V], V, RV, DenseMatrix[RV]] {
 
-    def create(rows: Int, cols: Int) = new DenseMatrix(rows, cols, new Array[RV](rows * cols))
+    def create(rows: Int, cols: Int) = DenseMatrix.create(rows, cols, new Array[RV](rows * cols), 0, rows)
 
     /**Maps all corresponding values from the two collection. */
     def map(from: DenseMatrix[V], from2: DenseMatrix[V], fn: (V, V) => RV) = {
@@ -955,7 +994,7 @@ with MatrixConstructors[DenseMatrix] {
   class CanZipMapKeyValuesDenseMatrix[@spec(Double, Int, Float, Long) V, @specialized(Int, Double) RV: ClassTag]
     extends CanZipMapKeyValues[DenseMatrix[V], (Int, Int), V, RV, DenseMatrix[RV]] {
 
-    def create(rows: Int, cols: Int) = new DenseMatrix(rows, cols, new Array[RV](rows * cols))
+    def create(rows: Int, cols: Int) = DenseMatrix.create(rows, cols, new Array[RV](rows * cols), 0, rows)
 
 
     override def mapActive(from: DenseMatrix[V], from2: DenseMatrix[V], fn: ((Int, Int), V, V) => RV): DenseMatrix[RV] = {

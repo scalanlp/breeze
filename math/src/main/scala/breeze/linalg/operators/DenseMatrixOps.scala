@@ -447,9 +447,6 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
       def apply(a: DenseMatrix[T], b: DenseMatrix[T]): Unit = {
         require(a.rows == b.rows, "Row dimension mismatch!")
         require(a.cols == b.cols, "Col dimension mismatch!")
-        val ad = a.data
-        val bd = b.data
-        var c = 0
 
         val minorSize = if(a.isTranspose) a.cols else a.rows
 
@@ -463,9 +460,19 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
           && a.majorStride == minorSize
           && b.majorStride == a.majorStride) {
           vecOp(new DenseVector(a.data, a.offset, 1, a.size), new DenseVector(b.data, b.offset, 1, b.size))
-        } else if (a.isTranspose) {
+        } else {
+          slowPath(a, b)
+        }
+
+      }
+
+      private def slowPath(a: DenseMatrix[T], b: DenseMatrix[T]): Unit = {
+        if (a.isTranspose) {
           apply(a.t, b.t)
         } else {
+          val ad = a.data
+          val bd = b.data
+          var c = 0
           while (c < a.cols) {
             var r = 0
             while (r < a.rows) {
@@ -475,7 +482,6 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
             c += 1
           }
         }
-
       }
 
       implicitly[BinaryUpdateRegistry[Matrix[T], Matrix[T], Op.type]].register(this)
@@ -493,7 +499,7 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
         val bd = b.data
         var c = 0
 
-        if (a.overlaps(b)) {
+        if ((a ne b) && a.overlaps(b)) {
           val ac = a.copy
           apply(ac, b)
           a := ac

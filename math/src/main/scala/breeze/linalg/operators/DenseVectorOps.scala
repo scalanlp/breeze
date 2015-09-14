@@ -774,7 +774,7 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
     new UFunc.UImpl2[Tag, LHS, Transpose[DenseVector[V]], R] {
       def apply(v: LHS, v2: Transpose[DenseVector[V]]): R = {
         val dv: DenseVector[V] = v2.inner
-        val dm: DenseMatrix[V] = new DenseMatrix(data = dv.data, offset = dv.offset, cols = dv.length, rows = 1, majorStride = dv.stride)
+        val dm: DenseMatrix[V] = DenseMatrix.create(data = dv.data, offset = dv.offset, cols = dv.length, rows = 1, majorStride = dv.stride)
         op(v, dm)
       }
     }

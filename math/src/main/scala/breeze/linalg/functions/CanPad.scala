@@ -156,7 +156,7 @@ object CanPadLeft {
           case num: Int if num < optDim.n1 =>
             val res = new Array[T](optDim.n1)
             util.Arrays.fill(res, padValue)
-            val r = new DenseVector(res)
+            val r = DenseVector(res)
             r((optDim.n1 - num) until optDim.n1) := v
             r
           case num: Int if optDim.n1 < num => v(v.length - optDim.n1 until v.length).copy //function should return a copy
