@@ -17,6 +17,7 @@ import spire.syntax.cfor._
 
 import scala.{specialized=>spec}
 import scala.reflect.ClassTag
+import scalaxy.debug._
 
 
 trait DenseMatrixMultiplyStuff extends DenseMatrixOps
@@ -448,17 +449,13 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
         require(a.rows == b.rows, "Row dimension mismatch!")
         require(a.cols == b.cols, "Col dimension mismatch!")
 
-        val minorSize = if(a.isTranspose) a.cols else a.rows
-
         if ((a ne b) && a.overlaps(b)) {
           val ac = a.copy
           apply(ac, b)
           a := ac
           // gives a roughly 5-10x speedup
           // if a and b are both nicely and identically shaped, add them as though they were vectors
-        } else if (a.isTranspose == b.isTranspose
-          && a.majorStride == minorSize
-          && b.majorStride == a.majorStride) {
+        } else if (a.isTranspose == b.isTranspose && a.isContiguous && b.isContiguous) {
           vecOp(new DenseVector(a.data, a.offset, 1, a.size), new DenseVector(b.data, b.offset, 1, b.size))
         } else {
           slowPath(a, b)
