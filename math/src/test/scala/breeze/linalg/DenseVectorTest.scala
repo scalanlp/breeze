@@ -108,7 +108,8 @@ class DenseVectorTest extends FunSuite with Checkers {
   test("Topk") {
     val v = DenseVector(2, 0, 3, 4, -1)
 
-    assert(argtopk(v, 3) === IndexedSeq(3,2,0))
+    // order doesn't matter
+    assert(argtopk(v, 3).toSet === Set(3,2,0))
   }
 
 
