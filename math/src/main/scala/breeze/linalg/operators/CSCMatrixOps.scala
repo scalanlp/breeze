@@ -11,6 +11,7 @@ import breeze.storage.Zero
 import breeze.util.SerializableLogging
 import scala.reflect.ClassTag
 import java.util
+import scalaxy.debug._
 
 /**
  * TODO
@@ -36,7 +37,7 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring {  this: CSCMatrix.type =>
     new OpMulMatrix.Impl2[Transpose[SparseVector[T]],CSCMatrix[T],Transpose[SparseVector[T]]] {
       def apply(v: Transpose[SparseVector[T]], v2: CSCMatrix[T]): Transpose[SparseVector[T]] = {
         require(v2.rows == v.inner.length)
-        val csc = v.inner.asCSCMatrix()
+        val csc = v.inner.asCSCRow
         val cscr = op(csc,v2)
         val ind = Array.ofDim[Int](cscr.data.length)
         var i = 0
@@ -600,7 +601,7 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring {  this: CSCMatrix.type =>
   implicit def canMulM_M[@expand.args(Int, Float, Double, Long) T]: breeze.linalg.operators.OpMulMatrix.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] = new breeze.linalg.operators.OpMulMatrix.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] {
     def apply(a: CSCMatrix[T], b: CSCMatrix[T]) = {
 
-      if(a.cols != b.rows) throw new RuntimeException("Dimension Mismatch!")
+      require(a.cols == b.rows, "Dimension Mismatch")
 
       var numnz = 0
       var i = 0

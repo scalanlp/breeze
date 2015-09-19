@@ -407,7 +407,7 @@ trait SparseVectorOps { this: SparseVector.type =>
   UFunc.UImpl2[Tag,LHS,Transpose[SparseVector[V]],R] =
     new UFunc.UImpl2[Tag,LHS,Transpose[SparseVector[V]],R] {
       def apply(v: LHS, v2: Transpose[SparseVector[V]]): R = {
-        op(v,v2.inner.asCSCMatrix())
+        op(v,v2.inner.asCSCRow)
       }
     }
 

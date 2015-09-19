@@ -108,18 +108,18 @@ class SparseVectorTest extends FunSuite {
     val c = CSCMatrix.zeros[Double](1,5)
 
     // Test full
-    assert(a.asCSCMatrix() === CSCMatrix((1.0,2.0,3.0,4.0)))
+    assert(a.asCSCRow === CSCMatrix((1.0,2.0,3.0,4.0)))
     // Test zero
-    assert(b.asCSCMatrix() === c)
+    assert(b.asCSCRow === c)
     // Test middle
     b(2) = 2.0; c(0,2) = 2.0
-    assert(b.asCSCMatrix() === c)
+    assert(b.asCSCRow === c)
     // Test end
     b(4) = 4.0; c(0,4) = 4.0
-    assert(b.asCSCMatrix() === c)
+    assert(b.asCSCRow === c)
     // Test beginning
     b(0) = 0.1; c(0,0) = 0.1
-    assert(b.asCSCMatrix() === c)
+    assert(b.asCSCRow === c)
   }
 
   test("MapPairs Double") {
@@ -345,6 +345,14 @@ class SparseVectorTest extends FunSuite {
     val answer1 = vec :/ n
     val answer2 = vec.toDenseVector :/ n
     assert(answer1.toDenseVector === answer2)
+  }
+
+  test("#446") {
+    val x = SparseVector.zeros[Float](10)
+
+    x.reserve(1)
+    x(0) = 1
+    x.asCSCRow
   }
 }
 
