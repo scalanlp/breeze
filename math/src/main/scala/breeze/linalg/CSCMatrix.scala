@@ -163,11 +163,6 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero](private var _data: Arra
   }
 
 
-  override def equals(p1: Any): Boolean = p1 match {
-    case m:Matrix[V] if m.rows == rows && m.cols == cols => valuesIterator.sameElements(m.valuesIterator)
-    case _ => false
-  }
-
   override def toString: String = toString(maxLines = Terminal.terminalHeight - 3)
 
 

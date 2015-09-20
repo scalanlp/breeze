@@ -34,20 +34,18 @@ class SqDistBenchmark extends BreezeBenchmark {
   }
 
   def timeMrkaspasImpl(reps: Int) = {
-    val dataSet = DenseMatrix.rand[Double](1934, 3)
-    val dataSetSize = dataSet.rows
-    val input = DenseMatrix(Array(1000.0, 2.0, 5.0))
-    val labels  = DenseVector.rand(dataSet.rows)
+    val dataSet = DenseMatrix.rand[Double](1024, 1934)
+    val input = DenseVector.rand(1024)
+    val labels  = DenseVector.rand(dataSet.cols)
     cforRange(0 until reps) { i =>
 
-      val tiled = tile(input, dataSetSize, 1) // tiled data set
       // calculates the distance => √(x2-x1)^ + (y2-y1)^
-      val diffMat = tiled - dataSet // tiled - dataSet
+      val diffMat = dataSet(::, *) - input
       val sqDiffMat = diffMat :^ 2.0
-      val sqDistances = sum(sqDiffMat(*, ::)) // sum per row
+      val sqDistances = sum(sqDiffMat(::, *)) // sum per column
       val distances = sqDistances :^ 0.5 // sqrt
       val k = 5
-      val sortedDistances = argtopk(distances *= -1.0, k) // sort the arguments
+      val sortedDistances = argtopk(distances.t *= -1.0, k) // sort the arguments
       val mapAcc = (0 until k).map { i => labels(sortedDistances(i)) }.groupBy(identity).mapValues(_.size)
       val res = mapAcc.foldLeft((0.0, 0)) { (t, curr) => if (t._2 > curr._2) t else curr }
       res._1.toInt
@@ -133,6 +131,6 @@ class SqDistBenchmark extends BreezeBenchmark {
 object SqDistBenchmark extends MyRunner(classOf[SqDistBenchmark])
 
 object SqDistX extends App {
-  (new SqDistBenchmark).timeVectorized(10000)
+  (new SqDistBenchmark).timeMrkaspasImpl(1000)
 //  (new SqDistBenchmark).timeVectorizedCopyX1(10000)
 }

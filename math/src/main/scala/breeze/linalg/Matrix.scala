@@ -129,6 +129,13 @@ trait Matrix[@spec(Double, Int, Float, Long) V] extends MatrixLike[V, Matrix[V]]
 
   def flatten(view: View=View.Prefer): Vector[V]
 
+  override def equals(p1: Any) = p1 match {
+    case x: Matrix[_] =>
+      this.rows == x.rows && this.cols == x.cols &&
+        keysIterator.forall(k => this(k) == x(k))
+    case _ => false
+  }
+
 }
 
 object Matrix extends MatrixConstructors[Matrix]
@@ -231,5 +238,7 @@ trait MatrixConstructors[Mat[T]<:Matrix[T]] {
       rl.foreach(row, {(j, v) => rv(i,j) = v})
     }
   }
+
+
 
 }

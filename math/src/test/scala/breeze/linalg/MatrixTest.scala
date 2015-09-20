@@ -117,6 +117,19 @@ class MatrixTest extends FunSuite with Checkers {
       (Complex(4,4), Complex(5,5), Complex(6,6))))
   }
 
+  test("hashcode") {
+    val v: DenseMatrix[Int] = DenseMatrix(1, 2, 0, 0, 3)
+    val v2: CSCMatrix[Int] = {
+      val mt = new CSCMatrix.Builder[Int](5, 1)
+      mt.add(0,0,1)
+      mt.add(1,0,2)
+      mt.add(4,0,3)
+      mt.result
+    }
+    assert(v === v2)
+    assert(v.hashCode == v2.hashCode)
+  }
+
 
 //  test("MapValues") {
 //    val a : Matrix[Int] = Matrix((1,0,0),(2,3,-1))

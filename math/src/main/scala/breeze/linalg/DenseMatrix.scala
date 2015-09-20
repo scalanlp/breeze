@@ -210,14 +210,6 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
   @deprecated("use trace(dm) instead", "0.6")
   def trace(implicit numeric: Numeric[V]): V = diag(this:DenseMatrix[V]).sum
 
-  override def equals(p1: Any) = p1 match {
-    case x: Matrix[_] =>
-      // todo: make this faster in obvious cases
-      rows == x.rows && cols == x.cols && (valuesIterator sameElements x.valuesIterator )
-
-    case _ => false
-  }
-
   def activeSize = data.length
 
   def valueAt(i: Int): V = data(i)

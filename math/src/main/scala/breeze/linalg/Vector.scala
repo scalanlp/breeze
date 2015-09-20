@@ -72,17 +72,7 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]]{
     case _ => false
   }
 
-  // TODO: this is only consistent if the hashcode of inactive elements is 0!!!
-  override def hashCode() = {
-    var hash = 43
-    for(v <- activeValuesIterator) {
-      val hh = v.##
-      if (hh != 0)
-        hash = MurmurHash3.mix(hash, hh)
-    }
 
-    hash
-  }
 
   def toDenseVector(implicit cm: ClassTag[V]) = {
     DenseVector(toArray)

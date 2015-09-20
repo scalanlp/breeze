@@ -20,6 +20,7 @@ import breeze.collection.mutable.Beam
 import breeze.generic.UFunc
 import breeze.math.Semiring
 
+import scala.util.hashing.MurmurHash3
 import scala.{specialized=>spec}
 import scala.reflect.ClassTag
 
@@ -83,6 +84,18 @@ trait QuasiTensor[@spec(Int) K, @spec(Double, Int, Float, Long) V] {
   /** Returns true if some element is non-zero */
   @deprecated("Use breeze.linalg.any instead", "0.6")
   def any(implicit semi: Semiring[V]) = valuesIterator.exists(_ != semi.zero)
+
+  // TODO: this is only consistent if the hashcode of inactive elements is 0!!!
+  override def hashCode() = {
+    var hash = 43
+    for(v <- activeValuesIterator) {
+      val hh = v.##
+      if (hh != 0)
+        hash = MurmurHash3.mix(hash, hh)
+    }
+
+    hash
+  }
 }
 
 
