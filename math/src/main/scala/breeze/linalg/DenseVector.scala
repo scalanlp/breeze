@@ -109,6 +109,10 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
     case _ => super.equals(p1)
   }
 
+
+  // TODO: this is only consistent if the hashcode of inactive elements is 0!!!
+  override def hashCode(): Int = ArrayUtil.zeroSkippingHashCode(data, offset, stride, length)
+
   override def toString = {
     valuesIterator.mkString("DenseVector(",", ", ")")
   }
