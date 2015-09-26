@@ -11,6 +11,7 @@ class SqDistBenchmark extends BreezeBenchmark {
 
   val x1, x2 = DenseMatrix.rand(20, 200)
 
+  /*
   def timeCopying(reps: Int) = {
     cforRange(0 until reps) { i =>
       val t1 = -2.0 * (x1.t * x2)
@@ -49,6 +50,25 @@ class SqDistBenchmark extends BreezeBenchmark {
       val mapAcc = (0 until k).map { i => labels(sortedDistances(i)) }.groupBy(identity).mapValues(_.size)
       val res = mapAcc.foldLeft((0.0, 0)) { (t, curr) => if (t._2 > curr._2) t else curr }
       res._1.toInt
+    }
+  }
+  */
+
+  def timeBroadcastSubtract(reps: Int) = {
+    val dataSet = DenseMatrix.rand[Double](1024, 1934)
+    val input = DenseVector.rand(1024)
+    cforRange(0 until reps) { i =>
+      // calculates the distance => √(x2-x1)^ + (y2-y1)^
+      dataSet(::, *) - input
+    }
+  }
+
+  def timeBroadcastRowSubtract(reps: Int) = {
+    val dataSet = DenseMatrix.rand[Double](1934, 1024)
+    val input = DenseVector.rand(1024)
+    cforRange(0 until reps) { i =>
+      // calculates the distance => √(x2-x1)^ + (y2-y1)^
+      dataSet(*, ::) - input
     }
   }
 
@@ -131,6 +151,6 @@ class SqDistBenchmark extends BreezeBenchmark {
 object SqDistBenchmark extends MyRunner(classOf[SqDistBenchmark])
 
 object SqDistX extends App {
-  (new SqDistBenchmark).timeMrkaspasImpl(1000)
-//  (new SqDistBenchmark).timeVectorizedCopyX1(10000)
+  (new SqDistBenchmark).timeBroadcastSubtract(1000)
+  //  (new SqDistBenchmark).timeVectorizedCopyX1(10000)
 }
