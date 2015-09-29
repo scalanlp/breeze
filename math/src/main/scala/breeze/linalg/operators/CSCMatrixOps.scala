@@ -37,7 +37,7 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring {  this: CSCMatrix.type =>
     new OpMulMatrix.Impl2[Transpose[SparseVector[T]],CSCMatrix[T],Transpose[SparseVector[T]]] {
       def apply(v: Transpose[SparseVector[T]], v2: CSCMatrix[T]): Transpose[SparseVector[T]] = {
         require(v2.rows == v.inner.length)
-        val csc = v.inner.asCSCRow
+        val csc = v.inner.asCscRow
         val cscr = op(csc,v2)
         val ind = Array.ofDim[Int](cscr.data.length)
         var i = 0

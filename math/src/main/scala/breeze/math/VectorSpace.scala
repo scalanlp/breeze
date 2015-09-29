@@ -705,7 +705,7 @@ object MutableOptimizationSpace {
     implicit def sparseOptSpace[S:Field:Zero:ClassTag]: MutableOptimizationSpace[CSCMatrix[S], SparseVector[S], S] = {
       val norms = EntrywiseMatrixNorms.make[CSCMatrix[S],S]
       import norms._
-      make[CSCMatrix[S],SparseVector[S],S](_.asCSCRow,_.flatten())
+      make[CSCMatrix[S],SparseVector[S],S](_.asCscRow,_.flatten())
     }
   }
 
@@ -731,7 +731,7 @@ object MutableOptimizationSpace {
     implicit def sparseDoubleOptSpace: MutableOptimizationSpace[CSCMatrix[Double], SparseVector[Double], Double] = {
       val norms = EntrywiseMatrixNorms.make[CSCMatrix[Double],Double]
       import norms.{canInnerProduct, canNorm_Double}
-      make[CSCMatrix[Double], SparseVector[Double], Double](_.asCSCRow,_.flatten())
+      make[CSCMatrix[Double], SparseVector[Double], Double](_.asCscRow,_.flatten())
     }
   }
 
