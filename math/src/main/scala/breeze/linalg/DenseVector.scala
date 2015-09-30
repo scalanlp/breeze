@@ -624,41 +624,24 @@ object DenseVector extends VectorConstructors[DenseVector]
       require(a.length == b.length, s"Vectors must have same length")
       if (a.noOffsetOrStride && b.noOffsetOrStride && a.length < DenseVectorSupportMethods.MAX_SMALL_DOT_PRODUCT_LENGTH) {
         DenseVectorSupportMethods.smallDotProduct_Double(a.data, b.data, a.length)
-      } else if (a.length < 200) { // benchmarks suggest break-even point is around length 200
-        if (a.noOffsetOrStride && b.noOffsetOrStride) {
-          fastMediumSizePath(a, b)
-        } else {
-          slowMediumSizePath(a, b)
-        }
       } else {
         blasPath(a, b)
       }
     }
 
+    val UNROLL_FACTOR = 6
+
     private def blasPath(a: DenseVector[Double], b: DenseVector[Double]): Double = {
-      val boff = if (b.stride >= 0) b.offset else (b.offset + b.stride * (b.length - 1))
-      val aoff = if (a.stride >= 0) a.offset else (a.offset + a.stride * (a.length - 1))
-      blas.ddot(
-        a.length, b.data, boff, b.stride, a.data, aoff, a.stride)
+      if ((a.length <= 300 || !usingNatives) && a.stride == 1 && b.stride == 1) {
+        DenseVectorSupportMethods.dotProduct_Double(a.data, a.offset, b.data, b.offset, a.length)
+      } else  {
+        val boff = if (b.stride >= 0) b.offset else (b.offset + b.stride * (b.length - 1))
+        val aoff = if (a.stride >= 0) a.offset else (a.offset + a.stride * (a.length - 1))
+        blas.ddot(
+          a.length, b.data, boff, b.stride, a.data, aoff, a.stride)
+      }
     }
 
-    private def slowMediumSizePath(a: DenseVector[Double], b: DenseVector[Double]): Double = {
-      var sum = 0.0
-      cforRange(0 until a.length) { i =>
-        sum += a(i) * b(i)
-      }
-      sum
-    }
-
-    private def fastMediumSizePath(a: DenseVector[Double], b: DenseVector[Double]): Double = {
-      var sum = 0.0
-      val ad = a.data
-      val bd = b.data
-      cforRange(0 until a.length) { i =>
-        sum += ad(i) * bd(i)
-      }
-      sum
-    }
   }
   implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpMulInner.type, Double]].register(canDotD)
 
