@@ -208,6 +208,13 @@ object UFunc {
     }
   }
 
+  implicit def canTransformValuesUFunc2[Tag, T, V, V2](implicit canTransform: CanTransformValues[T, V],
+                                                       impl: UImpl2[Tag, V, V2, V]):InPlaceImpl2[Tag, T, V2] = {
+    new InPlaceImpl2[Tag, T, V2] {
+      def apply(v: T, v2: V2) = { canTransform.transform(v, impl.apply(_, v2)) }
+    }
+  }
+
 
   implicit def collapseUred[Tag, V1, AxisT<:Axis, TA, VR, Result](implicit handhold: CanCollapseAxis.HandHold[V1, AxisT, TA],
                                                                   impl: UImpl[Tag, TA, VR],

@@ -97,27 +97,6 @@ trait Index[T] extends Iterable[T] with (T=>Int) with Serializable {
 }
 
 /**
- * A proxy passing all calls to the underlying index instance.
- *
- * @author dramage
- */
-trait IndexProxy[T] extends Index[T] with IterableProxy[T] {
-  override def self : Index[T]
-
-  override def size = self.size
-  override def apply(t : T) = self.apply(t)
-  override def unapply(i : Int) = self.unapply(i)
-  override def contains(t : T) = self.contains(t)
-  override def indexOpt(t : T) = self.indexOpt(t)
-  override def indexOf(t : T) = self.indexOf(t)
-  override def get(i : Int) = self.get(i)
-  override def equals(other : Any) = self.equals(other)
-  override def hashCode = self.hashCode
-  /** Returns the indexed items along with their indicies */
-  def pairs: Iterator[(T,Int)] = self.pairs
-}
-
-/**
  * Synchronized view of an Index for thread-safe access.
  *
  * @author dramage
@@ -149,15 +128,6 @@ trait MutableIndex[T] extends Index[T] {
   def index(t : T) : Int
 }
 
-/**
- * A proxy for MutableIndex instances.
- *
- * @author dramage
- */
-trait MutableIndexProxy[T] extends IndexProxy[T] with MutableIndex[T] {
-  override def self : MutableIndex[T]
-  override def index(t : T) = self.index(t)
-}
 
 /**
  * A synchronized view of a MutableIndex.
