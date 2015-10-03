@@ -104,4 +104,36 @@ final public class DenseVectorSupportMethods {
                 return sum;
         }
     }
+
+    public static float dotProduct_Float(float[] a, int aoff, float[] b, int boff, int length) {
+        int extra = length % UNROLL_LENGTH;
+        int loops = length / UNROLL_LENGTH;
+        float sum0 = 0.0f;
+        float sum1 = 0.0f;
+        float sum2 = 0.0f;
+        float sum3 = 0.0f;
+        float sum4 = 0.0f;
+        float sum5 = 0.0f;
+        float sum6 = 0.0f;
+        float sum7 = 0.0f;
+
+        for(int i = 0; i < extra; i++) {
+            sum0 += a[aoff + i] * b[boff + i];
+        }
+        aoff += extra;
+        boff += extra;
+
+        for(int i = 0; i < loops; i++, aoff += UNROLL_LENGTH, boff += UNROLL_LENGTH) {
+            sum0 += a[aoff + 0] * b[boff + 0];
+            sum1 += a[aoff + 1] * b[boff + 1];
+            sum2 += a[aoff + 2] * b[boff + 2];
+            sum3 += a[aoff + 3] * b[boff + 3];
+            sum4 += a[aoff + 4] * b[boff + 4];
+            sum5 += a[aoff + 5] * b[boff + 5];
+            sum6 += a[aoff + 6] * b[boff + 6];
+            sum7 += a[aoff + 7] * b[boff + 7];
+        }
+
+        return sum0 + sum1 + sum2 + sum3 + sum4 + sum5 + sum6 + sum7;
+    }
 }

@@ -510,46 +510,81 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
  **/
 trait DenseVector_SpecialOps extends DenseVectorOps { this: DenseVector.type =>
 
+
+  implicit val canAddIntoF: OpAdd.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] = {
+    new OpAdd.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] {
+      def apply(a: DenseVector[Float], b: DenseVector[Float]) = {
+        canSaxpy(a, 1.0f, b)
+      }
+      implicitly[BinaryUpdateRegistry[Vector[Float], Vector[Float], OpAdd.type]].register(this)
+    }
+  }
+
+  implicit object canSaxpy extends scaleAdd.InPlaceImpl3[DenseVector[Float], Float, DenseVector[Float]] with Serializable {
+    def apply(y: DenseVector[Float], a: Float, x: DenseVector[Float]) {
+      require(x.length == y.length, s"Vectors must have same length")
+      // using blas here is always a bad idea.
+      if (x.noOffsetOrStride && y.noOffsetOrStride) {
+        val ad = x.data
+        val bd = y.data
+
+        cforRange(0 until x.length) { i =>
+          bd(i) += ad(i) * a
+        }
+
+      } else {
+        slowPath(y, a, x)
+      }
+    }
+
+    private def slowPath(y: DenseVector[Float], a: Float, x: DenseVector[Float]): Unit = {
+      cforRange(0 until x.length) { i =>
+        y(i) += x(i) * a
+      }
+    }
+  }
+  implicitly[TernaryUpdateRegistry[Vector[Float], Float, Vector[Float], scaleAdd.type]].register(canSaxpy)
+
+  implicit val canAddF: OpAdd.Impl2[DenseVector[Float], DenseVector[Float], DenseVector[Float]] = {
+    pureFromUpdate_Float(canAddIntoF)
+  }
+  implicitly[BinaryRegistry[Vector[Float], Vector[Float], OpAdd.type, Vector[Float]]].register(canAddF)
+
+  implicit val canSubIntoF: OpSub.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] = {
+    new OpSub.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] {
+      def apply(a: DenseVector[Float], b: DenseVector[Float]) = {
+        canSaxpy(a, -1.0f, b)
+      }
+      implicitly[BinaryUpdateRegistry[Vector[Float], Vector[Float], OpSub.type]].register(this)
+    }
+
+  }
+  implicit val canSubF: OpSub.Impl2[DenseVector[Float], DenseVector[Float], DenseVector[Float]] = {
+    pureFromUpdate_Float(canSubIntoF)
+  }
+
   implicit val canDot_DV_DV_Float: breeze.linalg.operators.OpMulInner.Impl2[DenseVector[Float], DenseVector[Float], Float] = {
     new breeze.linalg.operators.OpMulInner.Impl2[DenseVector[Float], DenseVector[Float], Float] {
       def apply(a: DenseVector[Float], b: DenseVector[Float]) = {
         require(a.length == b.length, s"Vectors must have same length")
         if (a.noOffsetOrStride && b.noOffsetOrStride && a.length < DenseVectorSupportMethods.MAX_SMALL_DOT_PRODUCT_LENGTH) {
           DenseVectorSupportMethods.smallDotProduct_Float(a.data, b.data, a.length)
-        } else if (a.length < 200) { // benchmarks suggest break-even point is around length 200
-          if (a.noOffsetOrStride && b.noOffsetOrStride) {
-            fastMediumSizePath(a, b)
-          } else {
-            slowMediumSizePath(a, b)
-          }
         } else {
           blasPath(a, b)
         }
       }
 
+      val UNROLL_FACTOR = 6
+
       private def blasPath(a: DenseVector[Float], b: DenseVector[Float]): Float = {
-        val boff = if (b.stride >= 0) b.offset else (b.offset + b.stride * (b.length - 1))
-        val aoff = if (a.stride >= 0) a.offset else (a.offset + a.stride * (a.length - 1))
-        blas.sdot(
-          a.length, b.data, boff, b.stride, a.data, aoff, a.stride)
-      }
-
-      private def slowMediumSizePath(a: DenseVector[Float], b: DenseVector[Float]): Float = {
-        var sum = 0.0f
-        cforRange(0 until a.length) { i =>
-          sum += a(i) * b(i)
+        if ((a.length <= 300 || !usingNatives) && a.stride == 1 && b.stride == 1) {
+          DenseVectorSupportMethods.dotProduct_Float(a.data, a.offset, b.data, b.offset, a.length)
+        } else  {
+          val boff = if (b.stride >= 0) b.offset else (b.offset + b.stride * (b.length - 1))
+          val aoff = if (a.stride >= 0) a.offset else (a.offset + a.stride * (a.length - 1))
+          blas.sdot(
+            a.length, b.data, boff, b.stride, a.data, aoff, a.stride)
         }
-        sum
-      }
-
-      private def fastMediumSizePath(a: DenseVector[Float], b: DenseVector[Float]): Float = {
-        var sum = 0.0f
-        val ad = a.data
-        val bd = b.data
-        cforRange(0 until a.length) { i =>
-          sum += ad(i) * bd(i)
-        }
-        sum
       }
       implicitly[BinaryRegistry[Vector[Float], Vector[Float], OpMulInner.type, Float]].register(this)
     }
