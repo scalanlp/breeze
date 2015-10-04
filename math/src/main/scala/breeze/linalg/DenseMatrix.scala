@@ -919,8 +919,8 @@ with MatrixConstructors[DenseMatrix] {
    * Iterates over each columns
    * @return
    */
-  implicit def canIterateCols[V]: CanIterateAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]]  = {
-    new CanIterateAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]] {
+  implicit def canIterateCols[V]: CanTraverseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]]  = {
+    new CanTraverseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]] {
       def apply[A](from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => A) {
         cforRange(0 until from.cols) { c =>
           f(from(::, c))
@@ -934,8 +934,8 @@ with MatrixConstructors[DenseMatrix] {
    * @tparam V
    * @return
    */
-  implicit def canIterateRows[V]: CanIterateAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]]  = {
-    new CanIterateAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]] {
+  implicit def canIterateRows[V]: CanTraverseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]]  = {
+    new CanTraverseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]] {
       def apply[A](from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => A) {
         val t = from.t
         cforRange(0 until from.rows) { r =>

@@ -102,43 +102,44 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]]{
 
   /** See [[scala.collection.mutable.ArrayOps.fold]].
     */
-  def fold[E1 >: V](z: E1)(op: (E1, E1) => E1 )(implicit cm: ClassTag[V]): E1 = toArray.fold(z)( op )
+  def fold[E1 >: V](z: E1)(op: (E1, E1) => E1 ): E1 = valuesIterator.fold(z)( op )
   /** See [[scala.collection.mutable.ArrayOps.foldLeft]].
     */
-  def foldLeft[B >: V](z: B)(op: (B, V) => B )(implicit cm: ClassTag[V]): B = {
-    val it = valuesIterator
-    it.foldLeft(z)( op )
-  }
+  def foldLeft[B >: V](z: B)(op: (B, V) => B ): B = valuesIterator.foldLeft(z)( op )
+
   /** See [[scala.collection.mutable.ArrayOps.foldRight]].
     */
-  def foldRight[B >: V](z: B)(op: (V, B) => B )(implicit cm: ClassTag[V]): B = toArray.foldRight(z)( op )
+  def foldRight[B >: V](z: B)(op: (V, B) => B ): B = valuesIterator.foldRight(z)( op )
 
   /** See [[scala.collection.mutable.ArrayOps.reduce]].
     */
-  def reduce[E1 >: V](op: (E1, E1) => E1 )(implicit cm: ClassTag[V], cm1: ClassTag[E1]): E1 = valuesIterator.reduce( op )
+  def reduce[E1 >: V](op: (E1, E1) => E1 ): E1 = valuesIterator.reduce( op )
   /** See [[scala.collection.mutable.ArrayOps.reduceLeft]].
     */
-  def reduceLeft[B >: V](op: (B, V) => B )(implicit cm: ClassTag[V]): B = {
+  def reduceLeft[B >: V](op: (B, V) => B ): B = {
     valuesIterator.reduceLeft( op )
   }
   /** See [[scala.collection.mutable.ArrayOps.reduceRight]].
     */
-  def reduceRight[B >: V](op: (V, B) => B )(implicit cm: ClassTag[V]): B = {
+  def reduceRight[B >: V](op: (V, B) => B ): B = {
     valuesIterator.reduceRight( op )
   }
 
   /** See [[scala.collection.mutable.ArrayOps.scan]].
     */
-  def scan[E1 >: V](z: E1)(op: (E1, E1) => E1 )(implicit cm: ClassTag[V], cm1: ClassTag[E1]): Vector[E1] = Vector[E1]( toArray.scan(z)( op ))
+  def scan[E1 >: V](z: E1)(op: (E1, E1) => E1 )(implicit cm: ClassTag[V], cm1: ClassTag[E1]): Vector[E1] = {
+    Vector[E1]( toArray.scan(z)( op ))
+  }
+
   /** See [[scala.collection.mutable.ArrayOps.scanLeft]].
     */
-  def scanLeft[B >: V](z: B)(op: (B, V) => B )(implicit cm: ClassTag[V], cm1: ClassTag[B]): Vector[B] = {
-    val it = valuesIterator
-    Vector[B]( it.scanLeft(z)( op ).toArray )
+  def scanLeft[B >: V](z: B)(op: (B, V) => B )(implicit cm1: ClassTag[B]): Vector[B] = {
+    Vector[B]( valuesIterator.scanLeft(z)( op ).toArray )
   }
+
   /** See [[scala.collection.mutable.ArrayOps.scanRight]].
     */
-  def scanRight[B >: V](z: B)(op: (V, B) => B )(implicit cm: ClassTag[V], cm1: ClassTag[B]): Vector[B] = Vector[B]( toArray.scanRight(z)( op ) )
+  def scanRight[B >: V](z: B)(op: (V, B) => B )(implicit cm1: ClassTag[B]): Vector[B] = Vector[B]( valuesIterator.scanRight(z)( op ).toArray )
 
   // </editor-fold>
 

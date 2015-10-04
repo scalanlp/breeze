@@ -59,7 +59,7 @@ object BroadcastedColumns {
 
   implicit def broadcastInplaceOp[Op, T, ColumnType, RHS, OpResult](implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, ColumnType],
                                                                      op: InPlaceImpl[Op, ColumnType],
-                                                                     cc: CanIterateAxis[T, Axis._0.type, ColumnType]):InPlaceImpl[Op, BroadcastedColumns[T, ColumnType]] = {
+                                                                     cc: CanTraverseAxis[T, Axis._0.type, ColumnType]):InPlaceImpl[Op, BroadcastedColumns[T, ColumnType]] = {
     new InPlaceImpl[Op, BroadcastedColumns[T, ColumnType]] {
       def apply(v: BroadcastedColumns[T, ColumnType]) {
         cc(v.underlying, Axis._0){op(_)}
@@ -79,7 +79,7 @@ object BroadcastedColumns {
 
   implicit def broadcastInplaceOp2[Op, T, ColumnType, RHS, OpResult](implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, ColumnType],
                                                                     op: InPlaceImpl2[Op, ColumnType, RHS],
-                                                                    cc: CanIterateAxis[T, Axis._0.type, ColumnType]):InPlaceImpl2[Op, BroadcastedColumns[T, ColumnType], RHS] = {
+                                                                    cc: CanTraverseAxis[T, Axis._0.type, ColumnType]):InPlaceImpl2[Op, BroadcastedColumns[T, ColumnType], RHS] = {
     new InPlaceImpl2[Op, BroadcastedColumns[T, ColumnType], RHS] {
       def apply(v: BroadcastedColumns[T, ColumnType], v2: RHS) {
         cc(v.underlying, Axis._0){op(_, v2)}
@@ -89,7 +89,7 @@ object BroadcastedColumns {
 
 
   implicit def canForeachColumns[T, ColumnType, ResultColumn, Result]
-  (implicit iter: CanIterateAxis[T, Axis._0.type, ColumnType]):CanForeachValues[BroadcastedColumns[T, ColumnType], ColumnType] = {
+  (implicit iter: CanTraverseAxis[T, Axis._0.type, ColumnType]):CanForeachValues[BroadcastedColumns[T, ColumnType], ColumnType] = {
     new CanForeachValues[BroadcastedColumns[T, ColumnType], ColumnType] {
       /** Maps all key-value pairs from the given collection. */
       override def foreach[U](from: BroadcastedColumns[T, ColumnType], fn: (ColumnType) => U): Unit = {

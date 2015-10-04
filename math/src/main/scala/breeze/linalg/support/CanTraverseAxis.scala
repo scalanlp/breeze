@@ -26,7 +26,7 @@ package breeze.linalg.support
  * @tparam Axis which axis is being collapsed. Usually a subtype of [[breeze.linalg.Axis.Value]]
  * @tparam ColType the type of the "column" (or row or...) being collapsed.
  */
-trait CanIterateAxis[From, Axis, ColType] {
+trait CanTraverseAxis[From, Axis, ColType] {
   def apply[A](from: From, axis: Axis)(f: ColType=>A)
 
 }
