@@ -630,6 +630,10 @@ package object numerics {
     implicit object sigmoidImplDouble extends Impl[Double, Double] {
       def apply(x:Double) = 1d/(1d+scala.math.exp(-x))
     }
+
+    implicit object sigmoidImplFloat extends Impl[Float, Float] {
+      def apply(x:Float) = 1f/(1f+scala.math.exp(-x).toFloat)
+    }
   }
 
   /**
