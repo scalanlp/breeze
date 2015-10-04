@@ -709,6 +709,20 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     assert(explicit == r)
   }
 
+  test("#449") {
+
+    val m = DenseMatrix.rand(10, 10)
+
+    m(List(1, 2, 3), 0 to 0) := 5d //WORKS FINE
+    m(List(1, 2, 3), 0) := 5d //NOT WORKING
+    m(1 to 3, 0) := 5d //WORKING
+
+    m(List(1, 2, 3), 0 to 0) := m(List(1, 2, 3), 0 to 0) //WORKS FINE
+    m(List(1, 2, 3), 0) := m(List(1, 2, 3), 0) //NOT WORKING
+    m(1 to 3, 0) := m(1 to 3, 0) //WORKS FINE
+
+  }
+
 
 
 }
