@@ -27,9 +27,16 @@ import breeze.linalg.support._
  * @param underlying the tensor (or equivalent) being broadcasted
  * @tparam T the type of the tensor
  */
-case class BroadcastedColumns[T, B](underlying: T) extends BroadcastedLike[T, B, BroadcastedColumns[T, B]] {
+case class BroadcastedColumns[T, ColType](underlying: T) extends BroadcastedLike[T, ColType, BroadcastedColumns[T, ColType]] {
   def repr = this
 
+  def iterator(implicit canIterateAxis: CanIterateAxis[T, Axis._0.type, ColType]) = canIterateAxis(underlying, Axis._0)
+
+  def foldLeft[B](z: B)(f: (B,ColType)=>B)(implicit canTraverseAxis: CanTraverseAxis[T, Axis._0.type, ColType]):B = {
+    var acc = z
+    canTraverseAxis(underlying, Axis._0){c => acc = f(acc, c)}
+    acc
+  }
 }
 
 object BroadcastedColumns {

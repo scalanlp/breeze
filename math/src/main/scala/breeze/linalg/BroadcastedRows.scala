@@ -11,6 +11,14 @@ import breeze.generic.UFunc.{InPlaceImpl, UImpl, InPlaceImpl2, UImpl2}
  */
 case class BroadcastedRows[T, RowType](underlying: T) extends BroadcastedLike[T, RowType, BroadcastedRows[T, RowType]] {
   def repr = this
+
+  def iterator(implicit canIterateAxis: CanIterateAxis[T, Axis._1.type, RowType]) = canIterateAxis(underlying, Axis._1)
+
+  def foldLeft[B](z: B)(f: (B,RowType)=>B)(implicit canTraverseAxis: CanTraverseAxis[T, Axis._1.type, RowType]):B = {
+    var acc = z
+    canTraverseAxis(underlying, Axis._1){c => acc = f(acc, c)}
+    acc
+  }
 }
 
 object BroadcastedRows {

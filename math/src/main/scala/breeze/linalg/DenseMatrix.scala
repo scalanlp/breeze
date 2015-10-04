@@ -16,7 +16,7 @@ package breeze.linalg
 */
 
 import breeze.generic._
-import breeze.linalg.Axis._1
+import breeze.linalg.Axis.{_0, _1}
 import breeze.linalg.operators._
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
@@ -637,7 +637,7 @@ with MatrixConstructors[DenseMatrix] {
 
   implicit def scalarOf[T]: ScalarOf[DenseMatrix[T], T] = ScalarOf.dummy
 
-  implicit def canIterateValues[V]: CanTraverseValues[DenseMatrix[V], V] = {
+  implicit def canTraverseValues[V]: CanTraverseValues[DenseMatrix[V], V] = {
     new CanTraverseValues[DenseMatrix[V], V] {
       def isTraversableAgain(from: DenseMatrix[V]): Boolean = true
 
@@ -919,7 +919,7 @@ with MatrixConstructors[DenseMatrix] {
    * Iterates over each columns
    * @return
    */
-  implicit def canIterateCols[V]: CanTraverseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]]  = {
+  implicit def canTraverseCols[V]: CanTraverseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]]  = {
     new CanTraverseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]] {
       def apply[A](from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => A) {
         cforRange(0 until from.cols) { c =>
@@ -934,7 +934,7 @@ with MatrixConstructors[DenseMatrix] {
    * @tparam V
    * @return
    */
-  implicit def canIterateRows[V]: CanTraverseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]]  = {
+  implicit def canTraverseRows[V]: CanTraverseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]]  = {
     new CanTraverseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]] {
       def apply[A](from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => A) {
         val t = from.t
@@ -942,6 +942,34 @@ with MatrixConstructors[DenseMatrix] {
           f(t(::, r))
         }
       }
+    }
+  }
+
+  /**
+   * Iterates over each columns
+   * @return
+   */
+  implicit def canIterateCols[V]: CanIterateAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]]  = {
+    new CanIterateAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]] {
+
+      override def apply[A](from: DenseMatrix[V], axis: _0.type): Iterator[DenseVector[V]] = {
+        (0 until from.cols).iterator.map(from(::, _))
+      }
+    }
+  }
+
+  /**
+   * iterates over each column
+   * @tparam V
+   * @return
+   */
+  implicit def canIterateRows[V]: CanIterateAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]]  = {
+    new CanIterateAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]] {
+
+      override def apply[A](from: DenseMatrix[V], axis: _1.type): Iterator[DenseVector[V]] = {
+        (0 until from.rows).iterator.map(from(_, ::).t)
+      }
+
     }
   }
 

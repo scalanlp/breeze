@@ -113,4 +113,13 @@ class BroadcastedTest extends FunSuite {
 
   }
 
+  test("fold") {
+    val dm = DenseMatrix((-1.0,-2.0,-3.0),
+      (1.0,2.0,3.0),
+      (4.0,5.0,6.0))
+    assert(dm(*, ::).foldLeft(0.0)(_ + _(1)) == 5)
+    assert(dm(::, *).foldLeft(0.0)(_ + _(1)) == 6)
+
+  }
+
 }
