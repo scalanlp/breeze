@@ -17,14 +17,14 @@ package breeze
 
 import breeze.linalg.DenseMatrix
 import breeze.numerics.abs
-import io.{CSVWriter, CSVReader}
+import breeze.io.{FileStreams, CSVWriter, CSVReader}
 import linalg.operators._
 import breeze.linalg.support.{RangeExtender, CanCopy}
 import math.Semiring
 import storage.Zero
-import java.io.{File, FileReader}
+import java.io.{PrintWriter, File, FileReader}
 import scala.reflect.ClassTag
-import DenseMatrix.canMapValues
+import spire.syntax.cfor._
 
 
 /**
@@ -89,6 +89,28 @@ package object linalg {
                escape: Char='\\',
                skipLines: Int = 0): Unit = {
     CSVWriter.writeFile(file, IndexedSeq.tabulate(mat.rows,mat.cols)(mat(_,_).toString), separator, quote, escape)
+  }
+
+  def mmwrite[T:Numeric](file: File, mat: Matrix[T]): Unit = {
+    if (mat.activeSize == mat.size) {
+      val out = new PrintWriter(FileStreams.output(file))
+      out.println("%%MatrixMarket matrix array real general")
+      out.println(s"% produced by ${getClass}")
+      out.println(s"${mat.rows} ${mat.cols}")
+      cforRange2(0 until mat.cols, 0 until mat.rows){(j, i) =>
+        out.println(mat(i, j))
+      }
+      out.close()
+    } else {
+      val out = new PrintWriter(FileStreams.output(file))
+      out.println("%%MatrixMarket matrix coordinate real general")
+      out.println(s"% produced by ${getClass}")
+      out.println(s"${mat.rows} ${mat.cols} ${mat.activeSize}")
+      mat.activeIterator foreach { case ((i, j), v) =>
+          out.println(s"${i + 1} ${j + 1} $v")
+      }
+      out.close()
+    }
   }
 
   // </editor-fold>
