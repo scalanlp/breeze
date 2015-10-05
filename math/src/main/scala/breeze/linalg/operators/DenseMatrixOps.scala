@@ -1033,7 +1033,7 @@ trait LowPriorityDenseMatrix1 {
   new CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], R, Transpose[DenseVector[R]]] {
     def apply(from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => R): Transpose[DenseVector[R]] = {
       val result = DenseVector.zeros[R](from.cols)
-      for(c <- 0 until from.cols) {
+      cforRange(0 until from.cols) { c =>
         result(c) = f(from(::, c))
       }
       result.t

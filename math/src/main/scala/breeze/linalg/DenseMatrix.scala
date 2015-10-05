@@ -714,15 +714,19 @@ with MatrixConstructors[DenseMatrix] {
             d(j) = fn(d(j))
           }
         } else {
-          var j = 0
-          while (j < from.cols) {
-            var i = 0
-            while(i < from.rows) {
-              from(i, j) = fn(from(i, j))
-              i += 1
-            }
-            j += 1
+          slowPath(from, fn)
+        }
+      }
+
+      private def slowPath(from: DenseMatrix[V], fn: (V) => V): Unit = {
+        var j = 0
+        while (j < from.cols) {
+          var i = 0
+          while (i < from.rows) {
+            from(i, j) = fn(from(i, j))
+            i += 1
           }
+          j += 1
         }
       }
 
