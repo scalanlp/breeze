@@ -199,6 +199,10 @@ object FirstOrderMinimizer {
     override def reason: String = "objective is not improving"
   }
 
+  case object MonitorFunctionNotImproving extends ConvergenceReason {
+    override def reason: String = "monitor function is not improving"
+  }
+
   case object ProjectedStepConverged extends ConvergenceReason {
     override def reason: String = "projected step converged"
   }
@@ -243,6 +247,49 @@ object FirstOrderMinimizer {
   def searchFailed[T]: ConvergenceCheck[T] = ConvergenceCheck.fromPartialFunction {
     case s: State[_, _, _] if (s.searchFailed) =>
       SearchFailed
+  }
+
+  /**
+   * Runs the function, and if it fails to decreased by at least improvementRequirement numFailures times in a row,
+   * then we abort
+   * @param f
+   * @param numFailures
+   * @param evalFrequency how often we run the evaluation
+   * @tparam T
+   */
+  def monitorFunctionValues[T](f: T=>Double,
+                               numFailures: Int = 5,
+                               improvementRequirement: Double = 1E-2,
+                               evalFrequency: Int = 10):ConvergenceCheck[T] = new MonitorFunctionValuesCheck(f, numFailures, improvementRequirement, evalFrequency)
+
+  case class MonitorFunctionValuesCheck[T](f: T=>Double, numFailures: Int, improvementRequirement: Double, evalFrequency: Int) extends ConvergenceCheck[T] with SerializableLogging {
+    case class Info(bestValue: Double, numFailures: Int)
+
+    override def update(newX: T, newGrad: T, newVal: Double, oldState: State[T, _, _], oldInfo: Info): Info = {
+      if (oldState.iter % evalFrequency == 0) {
+        val newValue = f(newX)
+        if (newValue <= oldInfo.bestValue * (1 - improvementRequirement)) {
+          logger.info(f"External function improved: current ${newValue}%.3f old: ${oldInfo.bestValue}%.3f")
+          Info(numFailures = 0, bestValue = newValue)
+        } else {
+          logger.info(f"External function failed to improve sufficiently! current ${newValue}%.3f old: ${oldInfo.bestValue}%.3f")
+          oldInfo.copy(numFailures = oldInfo.numFailures + 1)
+        }
+      } else {
+        oldInfo
+      }
+    }
+
+
+    override def apply(state: State[T, _, _], info: Info): Option[ConvergenceReason] = {
+      if(info.numFailures >= numFailures) {
+        Some(MonitorFunctionNotImproving)
+      } else {
+        None
+      }
+    }
+
+    override def initialInfo: Info = Info(Double.PositiveInfinity, 0)
   }
 
   def defaultConvergenceCheck[T](maxIter: Int, tolerance: Double, relative: Boolean = true, fvalMemory: Int = 20)(implicit space: NormedModule[T, Double]): ConvergenceCheck[T] =
