@@ -17,11 +17,9 @@ package breeze.optimize
 
 import breeze.linalg.{DenseMatrix, DenseVector}
 import breeze.linalg._
-import breeze.optimize.FirstOrderMinimizer.{State, ProjectedStepConverged, ConvergenceCheck, ConvergenceReason}
+import breeze.optimize.FirstOrderMinimizer.{State, ProjectedStepConverged, ConvergenceCheck}
 import breeze.util.SerializableLogging
 import breeze.util.Implicits._
-
-import FirstOrderMinimizer.RichConvergenceCheck
 
 /**
  * This algorithm is refered the paper
@@ -29,13 +27,13 @@ import FirstOrderMinimizer.RichConvergenceCheck
  * Richard H.Byrd   Peihuang Lu   Jorge Nocedal  and Ciyou Zhu
  * Created by fanming.chen on 2015/3/7 0007.
  * If StrongWolfeLineSearch(maxZoomIter,maxLineSearchIter) is small, the wolfeRuleSearch.minimize may throw FirstOrderException,
- * it should increase the two varialbes to appropriate value
+ * it should increase the two variables to appropriate value
  */
 class LBFGSB(lowerBounds: DenseVector[Double],
              upperBounds: DenseVector[Double],
              maxIter:Int = 100, m:Int = 5, tolerance:Double = 1E-8,
              maxZoomIter:Int = 64, maxLineSearchIter:Int = 64) extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]](
-LBFGSB.defaultConvergenceCheck(lowerBounds, upperBounds, tolerance, maxIter), tolerance, 10, -1) with SerializableLogging {
+      LBFGSB.defaultConvergenceCheck(lowerBounds, upperBounds, tolerance, maxIter)) with SerializableLogging {
   protected val EPS = 2.2E-16
 
   /**
@@ -298,15 +296,15 @@ LBFGSB.defaultConvergenceCheck(lowerBounds, upperBounds, tolerance, maxIter), to
 object LBFGSB {
   def defaultConvergenceCheck(lowerBounds: DenseVector[Double], upperBounds: DenseVector[Double], tolerance: Double, maxIter: Int) = {
     bfgsbConvergenceTest(lowerBounds, upperBounds) || FirstOrderMinimizer.functionValuesConverged(tolerance) || FirstOrderMinimizer.maxIterationsReached(maxIter)
-  }.lift
+  }
 
   protected val PROJ_GRADIENT_EPS = 1E-5
-  protected def bfgsbConvergenceTest[H](lowerBounds: DenseVector[Double],
-                                     upperBounds: DenseVector[Double]):ConvergenceCheck[DenseVector[Double], H] = {
+  protected def bfgsbConvergenceTest(lowerBounds: DenseVector[Double],
+                                     upperBounds: DenseVector[Double]):ConvergenceCheck[DenseVector[Double]] = ConvergenceCheck.fromPartialFunction {
     case state if boundedConvCheck(state, lowerBounds, upperBounds) => ProjectedStepConverged
   }
 
-  private def boundedConvCheck[H](state: State[DenseVector[Double], H], lowerBounds: DenseVector[Double], upperBounds: DenseVector[Double]): Boolean = {
+  private def boundedConvCheck[H](state: State[DenseVector[Double], _, H], lowerBounds: DenseVector[Double], upperBounds: DenseVector[Double]): Boolean = {
     val x = state.x
     val g = state.grad
     val pMinusX = (x - g).mapPairs { (i, v) =>

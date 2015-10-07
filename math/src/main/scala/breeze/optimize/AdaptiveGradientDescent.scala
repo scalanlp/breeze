@@ -28,11 +28,10 @@ object AdaptiveGradientDescent {
    */
   class L2Regularization[T](val regularizationConstant: Double = 1.0,
                             stepSize: Double, maxIter: Int,
-                            tolerance: Double = 1E-5,
-                            improvementTolerance: Double = 1E-4,
+                            tolerance: Double = 1E-8,
                             minImprovementWindow: Int = 50)(implicit vspace: MutableFiniteCoordinateField[T, _, Double],
                                                             rand: RandBasis = Rand)
-    extends StochasticGradientDescent[T](stepSize, maxIter, tolerance, improvementTolerance, minImprovementWindow) {
+    extends StochasticGradientDescent[T](stepSize, maxIter, tolerance, minImprovementWindow) {
 
     val delta = 1E-4
     import vspace._

@@ -2,7 +2,6 @@ package breeze.optimize
 
 import breeze.math.MutableFiniteCoordinateField
 import breeze.numerics.sqrt
-import breeze.optimize.{StochasticDiffFunction, StochasticGradientDescent}
 import breeze.stats.distributions.{Rand, RandBasis}
 
 /**
@@ -15,7 +14,7 @@ class AdaDeltaGradientDescent[T](rho: Double,
                                  minImprovementWindow: Int = 50)
                                 (implicit vspace: MutableFiniteCoordinateField[T, _, Double],
                                  rand: RandBasis = Rand)
-    extends StochasticGradientDescent[T](1d, maxIter, tolerance, improvementTolerance, minImprovementWindow) {
+    extends StochasticGradientDescent[T](1d, maxIter, tolerance, minImprovementWindow) {
 
   val epsilon = 1e-6
   import vspace._

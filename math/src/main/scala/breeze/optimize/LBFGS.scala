@@ -19,6 +19,7 @@ package breeze.optimize
 import breeze.linalg._
 import breeze.linalg.operators.OpMulMatrix
 import breeze.math.MutableInnerProductModule
+import breeze.optimize.FirstOrderMinimizer.{ConvergenceCheck, ConvergenceReason}
 import breeze.optimize.linear.PowerMethod
 import breeze.util.SerializableLogging
 
@@ -34,12 +35,12 @@ import breeze.util.SerializableLogging
  *    pp. 503-528.
  *  * 
  * 
- * @param maxIter: maximum number of iterations, or <= 0 for unlimited
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
-class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
-              (implicit space: MutableInnerProductModule[T, Double]) extends FirstOrderMinimizer[T, DiffFunction[T]](maxIter, tolerance, tolerance) with SerializableLogging {
+class LBFGS[T](convergenceCheck: ConvergenceCheck[T], m: Int)(implicit space: MutableInnerProductModule[T, Double]) extends FirstOrderMinimizer[T, DiffFunction[T]](convergenceCheck) with SerializableLogging {
 
+  def this(maxIter: Int = -1, m: Int=7, tolerance: Double=1E-9)
+          (implicit space: MutableInnerProductModule[T, Double]) = this(FirstOrderMinimizer.defaultConvergenceCheck(maxIter, tolerance), m )
   import space._
   require(m > 0)
 
