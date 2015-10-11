@@ -400,5 +400,16 @@ class CSCMatrixTest extends FunSuite with Checkers {
     val b = CSCMatrix((2,2),(3,3))
     assert(a + b === a + b.toDense)
   }
+
+  test("#313") {
+    val builder = new CSCMatrix.Builder[Double](rows = -1, cols = -1)
+    builder.add(0, 0, 1.0)
+    builder.add(1, 0, 1.0)
+
+    val a = builder.result
+
+    assert(a.rows == 2)
+    assert(a.cols == 1)
+  }
 }
 

@@ -28,6 +28,8 @@ import scala.collection.mutable
 import scala.reflect.ClassTag
 import scala.{specialized=>spec}
 
+import scalaxy.debug._
+
 /**
  * A compressed sparse column matrix, as used in Matlab and CSparse, etc.
  *
@@ -399,11 +401,12 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
 
   /**
    * This is basically an unsorted coordinate matrix.
+   * @param rows if negative, result will automatically infer size
+   * @param cols if negative, result will automatically infer size
    * @param initNnz initial number of nonzero entries
    */
-  class Builder[@spec(Double, Int, Float, Long) T:ClassTag:Semiring:Zero](rows: Int, cols: Int, initNnz: Int = 16) {
+  class Builder[@spec(Double, Int, Float, Long) T:ClassTag:Semiring:Zero](val rows: Int, val cols: Int, initNnz: Int = 16) {
     private def ring = implicitly[Semiring[T]]
-    private def zero = implicitly[Zero[T]]
 
     def add(r: Int, c: Int, v: T) {
       if(v != 0) {
@@ -435,10 +438,15 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
       val vs = this.vs.result()
       // at most this many nnz
       val nnz = indices.length
-      val outCols = new Array[Int](cols+1)
+
+
+      val _rows = if (rows >= 0) rows else indices.map(i => (i & 0xFFFFFFFFL).toInt).foldLeft(0)(_ max _) + 1
+      val _cols = if (cols >= 0) cols else indices.map(i => (i >> 32).toInt).foldLeft(0)(_ max _) + 1
+
+      val outCols = new Array[Int](_cols+1)
 
       if(nnz == 0) {
-        return new CSCMatrix(vs, rows, cols, outCols, 0, Array())
+        return new CSCMatrix(vs, _rows,  _cols, outCols, 0, Array())
       }
 
       val order: Array[Int] = if(keysAlreadySorted) {
@@ -482,12 +490,12 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
       }
       outDataIndex += 1
 
-      while(lastCol < cols) {
+      while(lastCol < _cols) {
         outCols(lastCol+1) = outDataIndex
         lastCol += 1
       }
 
-      val out = new CSCMatrix[T](outData, rows, cols, outCols, outDataIndex, outRows)
+      val out = new CSCMatrix[T](outData, _rows, _cols, outCols, outDataIndex, outRows)
       if(!keysAlreadyUnique)
         out.compact()
       out
