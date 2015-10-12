@@ -16,7 +16,13 @@ class DenseDotProductBenchmark extends BreezeBenchmark {
   val fv, fv2 = DenseVector.rand(5, Rand.uniform.map(_.toFloat))
   val fvBig, fv2Big = DenseVector.rand(3000, Rand.uniform.map(_.toFloat))
 
-
+  def timeBigDVDotMasked(reps: Int) = {
+    var sum = 0.0
+    cforRange(0 until reps) { rep =>
+      sum += (dvBig: Vector[Double]) dot (dv2Big: Vector[Double])
+    }
+    sum
+  }
 
   def timeDirectBigDV(reps: Int) = {
     var sum = 0.0
@@ -79,7 +85,11 @@ class DenseDotProductBenchmark extends BreezeBenchmark {
     sum
   }
 
-  val UNROLL_FACTOR = 8
 }
 
 object DenseDotProductBenchmark extends MyRunner(classOf[DenseDotProductBenchmark])
+
+object DenseDotProductX extends App {
+  println((new DenseDotProductBenchmark).timeBigDVDotMasked(10000000))
+  //  (new DenseDotProductBenchmark).timeVectorizedCopyX1(10000)
+}
