@@ -327,7 +327,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
               val offset1 = v1.offset
               val data2 = v2.data
               val offset2 = v2.offset
-              cforRange(0 until v1.stride) { i =>
+              cforRange(0 until v1.length) { i =>
                 fn(data1(offset1 + i), data2(offset2 + i))
               }
             } else {
