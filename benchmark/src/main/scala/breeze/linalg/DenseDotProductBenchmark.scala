@@ -90,6 +90,6 @@ class DenseDotProductBenchmark extends BreezeBenchmark {
 object DenseDotProductBenchmark extends MyRunner(classOf[DenseDotProductBenchmark])
 
 object DenseDotProductX extends App {
-  println((new DenseDotProductBenchmark).timeBigDVDotMasked(10000000))
+  println((new DenseDotProductBenchmark).timeBigDVDotMasked(100000000))
   //  (new DenseDotProductBenchmark).timeVectorizedCopyX1(10000)
 }
