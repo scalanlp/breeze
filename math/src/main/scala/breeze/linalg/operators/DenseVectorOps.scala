@@ -322,6 +322,20 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
         val n = v1.length
         new ZippedValues[T, T] {
           def foreach(fn: (T, T) => Unit) {
+            if (v1.stride == 1 && v2.stride == 1) {
+              val data1 = v1.data
+              val offset1 = v1.offset
+              val data2 = v2.data
+              val offset2 = v2.offset
+              cforRange(0 until v1.stride) { i =>
+                fn(data1(offset1 + i), data2(offset2 + i))
+              }
+            } else {
+              slowPath(fn)
+            }
+          }
+
+          def slowPath(fn: (T, T) => Unit): Unit = {
             val data1 = v1.data
             val stride1 = v1.stride
             var offset1 = v1.offset

@@ -122,10 +122,15 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
    * @return
    */
   def copy: DenseVector[V] = {
-    implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
-    val r = new DenseVector(new Array[V](length))
-    r := this
-    r
+    if (stride == 1) {
+      val newData = ArrayUtil.copyOfRange(data, offset, offset + length)
+      new DenseVector(newData)
+    } else {
+      implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+      val r = new DenseVector(new Array[V](length))
+      r := this
+      r
+    }
   }
 
   /**
