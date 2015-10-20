@@ -7,9 +7,8 @@ The current version is 0.12-SNAPSHOT. The latest release is 0.11.2.
 ## Documentation
 
 * https://github.com/scalanlp/breeze/wiki/Quickstart
-* https://github.com/scalanlp/breeze/wiki/Breeze-Linear-Algebra
-* https://github.com/scalanlp/breeze/wiki/UserGuide
-* [Scaladoc](http://www.scalanlp.org/api/breeze/)
+* https://github.com/scalanlp/breeze/wiki/Linear-Algebra-Cheat-Sheet
+* [Scaladoc](http://www.scalanlp.org/api/breeze/) (Scaladoc is typically horribly out of date, and not a good way to learn Breeze.)
 * There is also the [scala-breeze google group](https://groups.google.com/forum/#!forum/scala-breeze) for general questions and discussion.
 
 ## Using Breeze
