@@ -64,4 +64,8 @@ class splitTest extends FunSuite {
     ))
     assert(vsplit(mbig, 2) == expectedResult)
   }
+
+  test("#459") {
+    assert(split(DenseVector(0.0,1.0),2) === IndexedSeq(DenseVector(0.0),DenseVector(1.0)))
+  }
 }

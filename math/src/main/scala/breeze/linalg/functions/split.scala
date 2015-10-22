@@ -12,32 +12,34 @@ import breeze.storage.Zero
  */
 object split extends UFunc {
 
-  implicit def implIntVec[T: ClassTag]: Impl2[DenseVector[T], Int, Seq[DenseVector[T]]] = new Impl2[DenseVector[T], Int, Seq[DenseVector[T]]] {
-    def apply(v: DenseVector[T], n: Int): Seq[DenseVector[T]] = {
-      require(n >= 0)
-      require(n < v.size)
-      require(v.size % n == 0)
+  implicit def implIntVec[T: ClassTag]: Impl2[DenseVector[T], Int, IndexedSeq[DenseVector[T]]] = {
+    new Impl2[DenseVector[T], Int, IndexedSeq[DenseVector[T]]] {
+      def apply(v: DenseVector[T], n: Int): IndexedSeq[DenseVector[T]] = {
+        require(n >= 0)
+        require(n <= v.size)
+        require(v.size % n == 0)
 
-      val individualVectorSize = v.size / n
-      val result = new collection.mutable.ArrayBuffer[DenseVector[T]]()
+        val individualVectorSize = v.size / n
+        val result = new collection.mutable.ArrayBuffer[DenseVector[T]]()
 
-      cforRange(0 until n) { k =>
-        val offsetInOriginalVector = k*individualVectorSize
-        val chunk = new Array[T](individualVectorSize)
-        cforRange(0 until individualVectorSize){i =>
-          chunk(i) = v(offsetInOriginalVector+i)
+        cforRange(0 until n) { k =>
+          val offsetInOriginalVector = k*individualVectorSize
+          val chunk = new Array[T](individualVectorSize)
+          cforRange(0 until individualVectorSize){i =>
+            chunk(i) = v(offsetInOriginalVector+i)
+          }
+          result += DenseVector[T](chunk)
         }
-        result += DenseVector[T](chunk)
+        result
       }
-      result
     }
   }
 
-  implicit def implSeqVec[T: ClassTag]: Impl2[DenseVector[T], Seq[Int], Seq[DenseVector[T]]] = new Impl2[DenseVector[T], Seq[Int], Seq[DenseVector[T]]] {
-    def apply(v: DenseVector[T], nSeq: Seq[Int]): Seq[DenseVector[T]] = {
+  implicit def implSeqVec[T: ClassTag]: Impl2[DenseVector[T], Seq[Int], IndexedSeq[DenseVector[T]]] = new Impl2[DenseVector[T], Seq[Int], IndexedSeq[DenseVector[T]]] {
+    def apply(v: DenseVector[T], nSeq: Seq[Int]): IndexedSeq[DenseVector[T]] = {
       require(nSeq.size < v.size)
 
-      val result = new collection.mutable.ListBuffer[DenseVector[T]]()
+      val result = new collection.mutable.ArrayBuffer[DenseVector[T]]()
       var lastN: Int = 0
       nSeq.foreach(n => {
         val chunk = new Array[T](n - lastN)
@@ -54,12 +56,12 @@ object split extends UFunc {
         })
         result += DenseVector[T](chunk)
       }
-      result.toSeq
+      result
     }
   }
 
-  implicit def implIntMatrix[T: ClassTag](implicit zero: Zero[T]): Impl3[DenseMatrix[T], Int, Int, Seq[DenseMatrix[T]]] = new Impl3[DenseMatrix[T], Int, Int, Seq[DenseMatrix[T]]] {
-    def apply(v: DenseMatrix[T], n: Int, axis: Int): Seq[DenseMatrix[T]] = axis match {
+  implicit def implIntMatrix[T: ClassTag](implicit zero: Zero[T]): Impl3[DenseMatrix[T], Int, Int, IndexedSeq[DenseMatrix[T]]] = new Impl3[DenseMatrix[T], Int, Int, IndexedSeq[DenseMatrix[T]]] {
+    def apply(v: DenseMatrix[T], n: Int, axis: Int): IndexedSeq[DenseMatrix[T]] = axis match {
       case 0 => vsplit(v,n)
       case 1 => hsplit(v,n)
       case _ => throw new IllegalArgumentException("Matrices have only two axes.")
@@ -68,21 +70,21 @@ object split extends UFunc {
 }
 
 object hsplit extends UFunc {
-  implicit def implIntVec[T: ClassTag]: Impl2[DenseVector[T], Int, Seq[DenseVector[T]]] = new Impl2[DenseVector[T], Int, Seq[DenseVector[T]]] { //For vectors just an alias
-    def apply(v: DenseVector[T], n: Int): Seq[DenseVector[T]] = hsplit(v,n)
+  implicit def implIntVec[T: ClassTag]: Impl2[DenseVector[T], Int, IndexedSeq[DenseVector[T]]] = new Impl2[DenseVector[T], Int, IndexedSeq[DenseVector[T]]] { //For vectors just an alias
+    def apply(v: DenseVector[T], n: Int): IndexedSeq[DenseVector[T]] = hsplit(v,n)
   }
 
-  implicit def implSeqVec[T: ClassTag]: Impl2[DenseVector[T], Seq[Int], Seq[DenseVector[T]]] = new Impl2[DenseVector[T], Seq[Int], Seq[DenseVector[T]]] { //For vectors just an alias
-    def apply(v: DenseVector[T], n: Seq[Int]): Seq[DenseVector[T]] = hsplit(v,n)
+  implicit def implSeqVec[T: ClassTag]: Impl2[DenseVector[T], Seq[Int], IndexedSeq[DenseVector[T]]] = new Impl2[DenseVector[T], Seq[Int], IndexedSeq[DenseVector[T]]] { //For vectors just an alias
+    def apply(v: DenseVector[T], n: Seq[Int]): IndexedSeq[DenseVector[T]] = hsplit(v,n)
   }
 
-  implicit def implIntMat[T: ClassTag](implicit zero: Zero[T]): Impl2[DenseMatrix[T], Int, Seq[DenseMatrix[T]]] = new Impl2[DenseMatrix[T],Int, Seq[DenseMatrix[T]]] { //for matrices
-    def apply(v: DenseMatrix[T], n: Int): Seq[DenseMatrix[T]] = {
+  implicit def implIntMat[T: ClassTag](implicit zero: Zero[T]): Impl2[DenseMatrix[T], Int, IndexedSeq[DenseMatrix[T]]] = new Impl2[DenseMatrix[T],Int, IndexedSeq[DenseMatrix[T]]] { //for matrices
+    def apply(v: DenseMatrix[T], n: Int): IndexedSeq[DenseMatrix[T]] = {
       require(n >= 0)
       require(n < v.cols)
       require(v.cols % n == 0)
 
-      val result = new collection.mutable.ListBuffer[DenseMatrix[T]]()
+      val result = new collection.mutable.ArrayBuffer[DenseMatrix[T]]()
       val newCols = v.cols / n
       val newSize = v.rows * newCols
 
@@ -96,19 +98,19 @@ object hsplit extends UFunc {
         })
         result += chunk
       })
-      result.toSeq
+      result
     }
   }
 }
 
 object vsplit extends UFunc {
-  implicit def implIntMat[T: ClassTag](implicit zero: Zero[T]): Impl2[DenseMatrix[T], Int, Seq[DenseMatrix[T]]] = new Impl2[DenseMatrix[T],Int, Seq[DenseMatrix[T]]] { //for matrices
-    def apply(v: DenseMatrix[T], n: Int): Seq[DenseMatrix[T]] = {
+  implicit def implIntMat[T: ClassTag](implicit zero: Zero[T]): Impl2[DenseMatrix[T], Int, IndexedSeq[DenseMatrix[T]]] = new Impl2[DenseMatrix[T],Int, IndexedSeq[DenseMatrix[T]]] { //for matrices
+    def apply(v: DenseMatrix[T], n: Int): IndexedSeq[DenseMatrix[T]] = {
       require(n >= 0)
       require(n < v.cols)
       require(v.cols % n == 0)
 
-      val result = new collection.mutable.ListBuffer[DenseMatrix[T]]()
+      val result = new collection.mutable.ArrayBuffer[DenseMatrix[T]]()
       val newRows = v.rows / n
 
       cfor(0)(k => k < n, k => k+1)(k => {
@@ -121,7 +123,7 @@ object vsplit extends UFunc {
         })
         result += chunk
       })
-      result.toSeq
+      result
     }
   }
 }
