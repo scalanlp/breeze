@@ -1,6 +1,7 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
+import spire.implicits.cforRange
 
 
 /**
@@ -25,8 +26,9 @@ object det extends UFunc {
         val numExchangedRows = ipiv.map(_ - 1).zipWithIndex.count { piv => piv._1 != piv._2 }
 
         var acc = if (numExchangedRows % 2 == 1) -1.0 else 1.0
-        for (i <- 0 until m.rows)
+        cforRange(0 until m.rows){ i =>
           acc *= m(i,i)
+        }
 
         acc
       }

@@ -7,12 +7,13 @@ import org.netlib.util.intW
 import org.netlib.util.doubleW
 import breeze.linalg.operators.OpMulMatrix
 import breeze.linalg.support.CanTranspose
+import spire.implicits.cforRange
 
 
 //  Options fot the singular value decomposition (SVD) of a real M-by-N matrix
-sealed abstract class SVDMode(val JOBZ: String)
-case object CompleteSVD extends SVDMode("A")  // all M columns of U and all N rows of V**T are returned in the arrays U and VT
-case object ReducedSVD extends SVDMode("S")   // the first min(M,N) columns of U and the first min(M,N) rows of V**T are returned in the arrays U and VT
+sealed private[this] abstract class SVDMode(val JOBZ: String)
+private[this] case object CompleteSVD extends SVDMode("A")  // all M columns of U and all N rows of V**T are returned in the arrays U and VT
+private[this] case object ReducedSVD extends SVDMode("S")   // the first min(M,N) columns of U and the first min(M,N) rows of V**T are returned in the arrays U and VT
 
 
 /**
@@ -286,10 +287,10 @@ object svd extends UFunc {
 
         var mp = new Array[(Double,DenseVector[Double])](computed)
 
-        for( i <- 0 until computed){
+        cforRange(0 until computed){ i =>
           val eigenVal = d(i)
           if (eigenVal < 0.0) throw new IllegalStateException("encountered negative eigenvalue, " +
-              "please make sure your multiplication operators are applied to the same matrix.")
+            "please make sure your multiplication operators are applied to the same matrix.")
           val eigenVec = eigenVectors(i*n until i*n + n)
           mp(i) = (scala.math.sqrt(eigenVal),eigenVec)
         }
