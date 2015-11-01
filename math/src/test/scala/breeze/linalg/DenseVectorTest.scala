@@ -509,6 +509,16 @@ class DenseVectorTest extends FunSuite with Checkers {
     fy := fneg
     assert(fy === DenseVector(4.0, 3.0, 2.0, 1.0))
   }
+
+  implicit def genTriple: Arbitrary[DenseVector[Double]] = Arbitrary {
+    Arbitrary.arbitrary[Double].map(DenseVector.rand[Double](30) * _)
+  }
+
+
+  test("isClose") {
+    check((a: DenseVector[Double]) => isClose(a, a))
+    check((a: DenseVector[Double], b: DenseVector[Double]) => isClose(a,b) == zipValues(a, b).forall((a, b) => (a - b).abs < 1E-8))
+  }
 }
 
 /**
