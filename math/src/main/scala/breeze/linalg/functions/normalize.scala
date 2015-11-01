@@ -28,6 +28,26 @@ object normalize extends UFunc {
     }
   }
 
+  implicit def normalizeInPlaceDoubleImpl[T, U>:T](implicit div: OpDiv.InPlaceImpl2[T, Double], canNorm: norm.Impl2[T, Double, Double]):InPlaceImpl2[T, Double] = {
+    new InPlaceImpl2[T, Double] {
+      def apply(t: T, n: Double): Unit = {
+        val norm = canNorm(t, n)
+        if (norm != 0)
+          div(t,norm)
+      }
+    }
+  }
+
+  implicit def normalizeInPlaceFloatImpl[T, U>:T](implicit div: OpDiv.InPlaceImpl2[T, Float], canNorm: norm.Impl2[T, Float, Float]):InPlaceImpl2[T, Float] = {
+    new InPlaceImpl2[T, Float] {
+      def apply(t: T, n: Float):Unit = {
+        val norm = canNorm(t, n)
+        if (norm != 0)
+          div(t,norm)
+      }
+    }
+  }
+
 
   implicit def normalizeImpl[T, U>:T](implicit impl: Impl2[T, Double, U]):Impl[T, U] = {
     new Impl[T, U] {

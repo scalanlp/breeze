@@ -18,8 +18,6 @@ package breeze
 
 import breeze.generic.{MappingUFunc, UFunc}
 import breeze.math.Semiring
-import breeze.storage.Zero
-import com.sun.istack.internal.Pool.Impl
 import scala.math._
 import org.apache.commons.math3.special.{Gamma => G, Erf}
 import breeze.linalg.support.CanTraverseValues
@@ -365,6 +363,30 @@ package object numerics {
   val inf, Inf = Double.PositiveInfinity
   val nan, NaN = Double.NaN
 
+  object isNonfinite extends UFunc with MappingUFunc {
+    @expand
+    @expand.valify
+    implicit def isNonfiniteImpl[@expand.args(Double, Float) T]: Impl[T, Boolean] = {
+      new Impl[T, Boolean] {
+        override def apply(v: T): Boolean = {
+          !java.lang.Double.isFinite(v)
+        }
+      }
+    }
+  }
+
+  object isFinite extends UFunc with MappingUFunc {
+    @expand
+    @expand.valify
+    implicit def isFiniteImpl[@expand.args(Double, Float) T]: Impl[T, Boolean] = {
+      new Impl[T, Boolean] {
+        override def apply(v: T): Boolean = {
+          java.lang.Double.isFinite(v)
+        }
+      }
+    }
+  }
+
   /**
    * Computes the log of the gamma function. The two parameter version
    * is the log Incomplete gamma function = \log \int_0x \exp(-t)pow(t,a-1) dt
@@ -658,7 +680,6 @@ package object numerics {
     a == b || (scala.math.abs(a-b) < scala.math.max(scala.math.max(scala.math.abs(a),scala.math.abs(b)) ,1) * relDiff)
   }
 
-
   /**
    * The indicator function. 1.0 iff b, else 0.0
    * For non-boolean arguments, 1.0 iff b != 0, else 0.0
@@ -679,7 +700,7 @@ package object numerics {
    */
   object logI extends UFunc with breeze.generic.MappingUFunc {
     implicit object logIBoolImpl extends Impl[Boolean, Double] {
-      def apply(b: Boolean) = if (b) 0.0 else Double.NegativeInfinity
+      def apply(b: Boolean) = if (b) 0.0 else -inf
     }
   }
 

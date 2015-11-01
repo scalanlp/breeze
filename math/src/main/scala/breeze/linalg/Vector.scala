@@ -100,6 +100,9 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]]{
     */
   def padTo(len: Int, elem: V)(implicit cm: ClassTag[V]): Vector[V] = Vector[V]( toArray.padTo(len, elem) )
 
+  def exists(f: V=>Boolean) = valuesIterator.exists(f)
+  override def forall(f: V=>Boolean) = valuesIterator.forall(f)
+
   /** See [[scala.collection.mutable.ArrayOps.fold]].
     */
   def fold[E1 >: V](z: E1)(op: (E1, E1) => E1 ): E1 = valuesIterator.fold(z)( op )

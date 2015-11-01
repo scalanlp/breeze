@@ -1,27 +1,27 @@
 package breeze.linalg
 
+import breeze.generic.UFunc
 import breeze.linalg.support.CanTraverseValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
-import breeze.generic.UFunc
 import breeze.storage.Zero
 
 import scala.util.control.ControlThrowable
 
+
 /**
-  * any(t) true if any element of t is non-zero
-  * any(f, t) returns true if any element of t satisfies f
-  *
+  * all(t) true if all elements of t are non-zero
+  * all(f, t) returns true if all elements of t satisfy f
   *
   * @author dlwh
   **/
-object any extends UFunc {
+object all extends UFunc {
   private case object Found extends ControlThrowable
 
   implicit def reduceUFunc[F, T, S](implicit impl2: Impl2[S => Boolean, T, Boolean],
                                     base: UFunc.UImpl[F, S, Boolean]): Impl2[F, T, Boolean] = {
     new Impl2[F, T, Boolean]  {
       override def apply(v: F, v2: T): Boolean = {
-        any((x: S) => base(x), v2)
+        all((x: S) => base(x), v2)
       }
     }
   }
@@ -32,20 +32,20 @@ object any extends UFunc {
 
         object Visitor extends ValuesVisitor[S] {
           def visit(a: S): Unit = {
-            if (f(a)) throw Found
+            if (!f(a)) throw Found
           }
 
           def zeros(numZero: Int, zeroValue: S): Unit = {
-            if (numZero != 0 && f(zeroValue)) throw Found
+            if (numZero != 0 && !f(zeroValue)) throw Found
           }
 
         }
 
         try {
           ctv.traverse(v2, Visitor)
-          false
+          true
         } catch {
-          case Found => true
+          case Found => false
         }
 
       }
@@ -54,10 +54,9 @@ object any extends UFunc {
 
   implicit def reduceZero[T, S](implicit impl2: Impl2[S=> Boolean, T, Boolean], z: Zero[S]): Impl[T, Boolean] = new Impl[T, Boolean] {
     override def apply(v: T): Boolean = {
-      any((_: S) != z.zero, v)
+      all((_: S) != z.zero, v)
     }
   }
 
+
 }
-
-
