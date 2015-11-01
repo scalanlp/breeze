@@ -41,19 +41,19 @@ object split extends UFunc {
 
       val result = new collection.mutable.ArrayBuffer[DenseVector[T]]()
       var lastN: Int = 0
-      nSeq.foreach(n => {
+      nSeq.foreach{ n =>
         val chunk = new Array[T](n - lastN)
-        cfor(lastN)(i => i < n, i => i + 1)(i => {
+        cforRange(lastN until n) { i =>
           chunk(i-lastN) = v(i)
-        })
+        }
         result += DenseVector[T](chunk)
         lastN = n
-      })
+      }
       if (lastN < v.size) { //If we did not already add last chunk to result, do it now.
         val chunk = new Array[T](v.size - lastN)
-        cfor(lastN)(i => i < v.size, i => i + 1)(i => {
+        cforRange(lastN until v.size) { i =>
           chunk(i-lastN) = v(i)
-        })
+        }
         result += DenseVector[T](chunk)
       }
       result
@@ -81,23 +81,21 @@ object hsplit extends UFunc {
   implicit def implIntMat[T: ClassTag](implicit zero: Zero[T]): Impl2[DenseMatrix[T], Int, IndexedSeq[DenseMatrix[T]]] = new Impl2[DenseMatrix[T],Int, IndexedSeq[DenseMatrix[T]]] { //for matrices
     def apply(v: DenseMatrix[T], n: Int): IndexedSeq[DenseMatrix[T]] = {
       require(n >= 0)
-      require(n < v.cols)
+      require(n <= v.cols)
       require(v.cols % n == 0)
 
       val result = new collection.mutable.ArrayBuffer[DenseMatrix[T]]()
       val newCols = v.cols / n
       val newSize = v.rows * newCols
 
-      cfor(0)(k => k < n, k => k+1)(k => {
+      cforRange(0 until n) { k =>
         val offsetInOriginalMatrix = k*newCols
         val chunk = DenseMatrix.create(v.rows, newCols, new Array[T](newSize))
-        cfor(0)(i => i < v.rows, i => i+1)(i => {
-          cfor(0)(j => j < newCols, j => j+1)(j => {
-            chunk(i,j) = v(i,j+offsetInOriginalMatrix)
-          })
-        })
+        cforRange2(0 until v.rows, 0 until newCols) { (i, j) =>
+          chunk(i,j) = v(i,j+offsetInOriginalMatrix)
+        }
         result += chunk
-      })
+      }
       result
     }
   }
@@ -107,22 +105,20 @@ object vsplit extends UFunc {
   implicit def implIntMat[T: ClassTag](implicit zero: Zero[T]): Impl2[DenseMatrix[T], Int, IndexedSeq[DenseMatrix[T]]] = new Impl2[DenseMatrix[T],Int, IndexedSeq[DenseMatrix[T]]] { //for matrices
     def apply(v: DenseMatrix[T], n: Int): IndexedSeq[DenseMatrix[T]] = {
       require(n >= 0)
-      require(n < v.cols)
+      require(n <= v.cols)
       require(v.cols % n == 0)
 
       val result = new collection.mutable.ArrayBuffer[DenseMatrix[T]]()
       val newRows = v.rows / n
 
-      cfor(0)(k => k < n, k => k+1)(k => {
+      cforRange(0 until n) { k =>
         val offsetInOriginalMatrix = k*newRows
         val chunk = DenseMatrix.create(newRows, v.cols, new Array[T](v.cols * newRows))
-        cfor(0)(i => i < newRows, i => i+1)(i => {
-          cfor(0)(j => j < v.cols, j => j+1)(j => {
-            chunk(i,j) = v(i+offsetInOriginalMatrix,j)
-          })
-        })
+        cforRange2(0 until newRows, 0 until v.cols) { (i, j) =>
+          chunk(i,j) = v(i+offsetInOriginalMatrix,j)
+        }
         result += chunk
-      })
+      }
       result
     }
   }
