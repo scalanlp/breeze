@@ -33,4 +33,23 @@ class SliceMatrixTest extends FunSuite {
     assert( tempDM( 0, -5 ) == 0, "Failed> tempDM( 0, -5 ) =  " + tempDM( 0, -5 ) )
   }
 
+  test("operations on slices"){
+    val a = DenseMatrix.ones[Double](5,5)
+    val b = DenseMatrix.ones[Double](5,5)
+    val indices = Seq(0,1)
+
+    val expected = DenseMatrix.ones[Double](5,5)
+
+    for (row <- indices; col <- indices) {
+      expected(row, col) += 1
+    }
+
+    val as = a(indices, indices)
+    val bs = b(indices, indices)
+
+    as += bs
+
+    assert(expected.equals(a), "Failed to execute the addition on the slices")
+  }
+
  }
