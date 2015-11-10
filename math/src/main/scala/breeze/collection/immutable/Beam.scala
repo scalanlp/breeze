@@ -1,9 +1,9 @@
-package breeze.collection.immutable;
+package breeze.collection.immutable
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
  
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at 
  
@@ -18,86 +18,69 @@ package breeze.collection.immutable;
 
 
 
-import scala.collection._;
+import scala.collection._
 import mutable.{Builder, PriorityQueue}
-import scala.collection.generic._;
+import scala.collection.generic._
 
 /**
- * Represents a beam, which is essentially a priority queue
- * with a maximum size.
- * 
- * @author dlwh
- */
+  * Represents a beam, which is essentially a priority queue
+  * with a maximum size.
+  *
+  * @author dlwh
+  */
 class Beam[T](val maxSize:Int, xs : T*)(implicit o : Ordering[T]) extends Iterable[T] with IterableLike[T,Beam[T]] { outer =>
   assert(maxSize >= 0)
-  val heap = trim(BinomialHeap(xs:_*));
+  val heap = trim(BinomialHeap(xs:_*))
 
-  override def size = heap.size;
-  def this(maxSize: Int)(implicit o: Ordering[T]) = this(maxSize,Nil:_*)(o);
+  override def size = heap.size
+  def this(maxSize: Int)(implicit o: Ordering[T]) = this(maxSize,Nil:_*)(o)
 
   private def trim(h2 : BinomialHeap[T]) = {
-    var h = h2;
+    var h = h2
     while(h.size > maxSize) {
-      h = h.delMin;
+      h = h.delMin
     }
     h
   }
 
   private def cat(h : BinomialHeap[T], x : T) = {
-    if(h.size < maxSize) h + x;
-    else if (o.compare(h.min,x) < 0) h.delMin + x;
-    else h;
-  }
-
-  /** Just convert each element to the new value. Will trigger
-   * a reordering.
-   */
-  def map[U](f: T=>U)(implicit ordering: Ordering[U]) = new Beam[U](maxSize) { 
-    override val heap = BinomialHeap[U]() ++ outer.heap.map(f);
-  }
-
-  def flatMap[U](f: T=>Iterable[U])(implicit oU: Ordering[U]) = new Beam[U](maxSize) {
-    override val heap = {
-      val queue = new PriorityQueue[U]()(oU.reverse);
-      for(x <- outer.heap;
-          y <- f(x)) {
-        if(queue.size < maxSize) {
-          queue += y;
-        } else if (oU.compare(queue.head,y) < 0) { // q.max is the smallest element.
-          queue.dequeue();
-          queue += y;
-        }
-      }
-      BinomialHeap[U]() ++ queue;
-    }
-  }
-  
-  override def filter(f : T=>Boolean) = new Beam[T](maxSize) {
-    override val heap = BinomialHeap[T]() ++ outer.heap.filter(f);
+    if(h.size < maxSize) h + x
+    else if (o.compare(h.min,x) < 0) h.delMin + x
+    else h
   }
 
   override protected def newBuilder = new Builder[T,Beam[T]] {
-    var beam: Beam[T] = new Beam(maxSize);
-    def result() = beam;
+    var beam: Beam[T] = new Beam(maxSize)
+    def result() = beam
 
-    def clear() = beam = new Beam(maxSize);
+    def clear() = beam = new Beam(maxSize)
 
     def +=(elem: T) = {beam += elem; this}
   }
 
 
   def +(x:T) = new Beam[T](maxSize) {
-    override val heap = cat(outer.heap,x);
+    override val heap = cat(outer.heap,x)
   }
-  
-  def iterator = heap.iterator;
-  override def toString() = iterator.mkString("Beam(",",",")");
+
+  def iterator = heap.iterator
+  override def toString() = iterator.mkString("Beam(",",",")")
+
+  override def equals(other: Any) = other match {
+    case b: Beam[T @unchecked] => (maxSize == b.maxSize) && this.iterator.sameElements(b.iterator)
+    case _ => false
+  }
+
+  def min = heap.head
+  def best = heap.reduceOption(o.max(_, _))
 }
 
 object Beam {
- implicit def canBuildFrom[T<%Ordered[T]] = new CanBuildFrom[Beam[T],T,Beam[T]] {
-   def apply() = sys.error("Sorry, need a max size")
+  def apply[T:Ordering](maxSize: Int)(items: T*): Beam[T] = new Beam(maxSize, items:_*)
 
-   def apply(from: Beam[T]) = from.newBuilder;
- }
+  implicit def canBuildFrom[T: Ordering]:CanBuildFrom[Beam[T], T, Beam[T]] = new CanBuildFrom[Beam[T],T,Beam[T]] {
+    def apply() = sys.error("Sorry, need a max size")
+
+    def apply(from: Beam[T]) = from.newBuilder
+  }
 }

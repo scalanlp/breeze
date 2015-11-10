@@ -39,29 +39,7 @@ class Beam[T](val maxSize:Int, xs:T*)(implicit o : Ordering[T]) extends Iterable
 
   def min = queue.head
 
-  def map[U](f: T=>U)(implicit oU: Ordering[U]) = {
-    val q = new PriorityQueue[U]()(oU.reverse)
-    for(t <- queue) q += f(t)
-    new Beam[U](maxSize) {
-      queue ++= q
-    }
-  }
-
-  def flatMap[U](f: T=>Iterable[U])(implicit oU: Ordering[U]) = new Beam[U](maxSize) {
-      for(x <- outer.queue;
-          y <- f(x)) {
-        if(queue.size < maxSize) {
-          queue += y
-        } else if (oU.compare(queue.head,y) < 0) { // q.head is the smallest element.
-          queue.dequeue()
-          queue += y
-        }
-      }
-  }
-
-  def filter[U](f: T=>Boolean) = new Beam[T](maxSize)  {
-    queue ++= outer.queue.filter(f)
-  }
+  def best = queue.reduceOption(o.max(_, _))
 
   def +(x:T) = {this += x; this}
   def +=(x:T) = { cat(queue,x); this }
@@ -81,9 +59,22 @@ class Beam[T](val maxSize:Int, xs:T*)(implicit o : Ordering[T]) extends Iterable
   override def toString() = iterator.mkString("Beam(",",",")")
   def clear = queue.clear
 
-  override protected[this] def newBuilder = new GrowingBuilder(new Beam[T](maxSize))
+  override protected def newBuilder = new GrowingBuilder(new Beam[T](maxSize))
+
+  override def equals(other: Any): Boolean = other match {
+    case b: Beam[T @unchecked] => (maxSize == b.maxSize) && (iterator sameElements b.iterator)
+  }
 }
 
 object Beam {
-  def apply[T](maxSize:Int, xs:T*)(implicit ordering: Ordering[T]) = new Beam[T](maxSize, xs:_*)
+  def apply[T:Ordering](maxSize:Int)(xs:T*): Beam[T] = new Beam[T](maxSize, xs:_*)
+
+  @deprecated("Use Beam(maxSize)(xs) instead", "0.12")
+  def apply[T](maxSize:Int, xs:T*)(implicit ordering: Ordering[T], dummyImplicit: DummyImplicit): Beam[T] = new Beam[T](maxSize, xs:_*)
+
+  implicit def canBuildFrom[T: Ordering]:CanBuildFrom[Beam[T], T, Beam[T]] = new CanBuildFrom[Beam[T],T,Beam[T]] {
+    def apply() = sys.error("Sorry, need a max size")
+
+    def apply(from: Beam[T]) = from.newBuilder
+  }
 }
