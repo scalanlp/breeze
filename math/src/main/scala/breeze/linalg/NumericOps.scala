@@ -17,7 +17,7 @@ package breeze.linalg
 */
 
 import operators._
-import support.{CanTranspose, CanSlice2}
+import breeze.linalg.support.{CanSlice, CanTranspose, CanSlice2}
 import breeze.generic.UFunc
 import breeze.storage.Zero
 
@@ -150,6 +150,11 @@ trait ImmutableNumericOps[+This] extends Any {
                                                        (implicit op: CanTranspose[TT, That],
                                                         canSlice: CanSlice2[That, Slice1, Slice2, Result]): Result =
     canSlice(op.apply(repr), a, b)
+
+  /** A transposed view of this object, followed by a slice. Sadly frequently necessary. */
+  final def t[TT >: This, That, Slice1, Result](a: Slice1)(implicit op: CanTranspose[TT, That],
+                                                           canSlice: CanSlice[That, Slice1, Result]): Result =
+    canSlice(op.apply(repr), a)
 
 }
 

@@ -527,6 +527,10 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(all(isNonfinite, DenseVector[Double]())(all.reduceUFunc))
     assert(!any(isNonfinite, DenseVector[Double]()))
   }
+
+  test("#467 can slice transpose") {
+    assert(DenseVector(3, 4).t(0 until 1) == DenseVector(3).t)
+  }
 }
 
 /**
