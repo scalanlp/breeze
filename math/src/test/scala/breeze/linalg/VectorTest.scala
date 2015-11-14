@@ -45,6 +45,20 @@ class VectorTest extends FunSuite {
     assert(v.hashCode == v2.hashCode)
   }
 
+  test("Min/Max") {
+    val v: Vector[Int] = DenseVector(2, 0, 3, 2, -1)
+    assert(argmin(v) === 4)
+    assert(argmax(v) === 2)
+    assert(min(v) === -1)
+    assert(max(v) === 3)
+
+    val v2: Vector[Int] = SparseVector(2, 0, 3, 2, -1)
+    assert(argmin(v2) === 4)
+    assert(argmax(v2) === 2)
+    assert(min(v2) === -1)
+    assert(max(v2) === 3)
+  }
+
 }
 
 

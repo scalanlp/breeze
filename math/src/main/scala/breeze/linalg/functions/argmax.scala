@@ -19,7 +19,7 @@ object argmax extends UFunc {
 
         def visit(k: I, a: S): Unit = {
           visitedOne = true
-          if(a > max) {
+          if(a >= max) {
             max = a
             amax = k
           }
@@ -29,7 +29,7 @@ object argmax extends UFunc {
         def zeros(numZero: Int, zeroKeys: Iterator[I], zeroValue: S): Unit = {
           if(numZero != 0) {
             visitedOne = true
-            if(zeroValue > max) {
+            if(zeroValue >= max) {
               max = zeroValue
               amax = zeroKeys.next()
             }
@@ -43,7 +43,7 @@ object argmax extends UFunc {
           while(i < length) {
             visitedOne = true
             val a = arr(off)
-            if(a > max) {
+            if(a >= max) {
               max = a
               amax = indices(off)
             }

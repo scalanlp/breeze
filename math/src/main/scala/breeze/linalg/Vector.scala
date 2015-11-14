@@ -279,7 +279,6 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
 
     def isTraversableAgain(from: Vector[V]): Boolean = true
 
-    /** Iterates all values from the given collection. */
     def traverse(from: Vector[V], fn: ValuesVisitor[V]): Unit = {
       for( v <- from.valuesIterator) {
         fn.visit(v)
@@ -287,6 +286,18 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
     }
 
   }
+
+  implicit def canTraverseKeyValuePairs[V]: CanTraverseKeyValuePairs[Vector[V], Int, V] =
+
+    new CanTraverseKeyValuePairs[Vector[V], Int, V] {
+      def isTraversableAgain(from: Vector[V]): Boolean = true
+
+      def traverse(from: Vector[V], fn: CanTraverseKeyValuePairs.KeyValuePairsVisitor[Int, V]): Unit = {
+        for(i <- 0 until from.length)
+          fn.visit(i, from(i))
+      }
+
+    }
 
 
 

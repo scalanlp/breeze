@@ -433,7 +433,6 @@ object DenseVector extends VectorConstructors[DenseVector]
     new CanTraverseKeyValuePairs[DenseVector[V], Int, V] {
       def isTraversableAgain(from: DenseVector[V]): Boolean = true
 
-      /** Iterates all key-value pairs from the given collection. */
       def traverse(from: DenseVector[V], fn: CanTraverseKeyValuePairs.KeyValuePairsVisitor[Int, V]): Unit = {
         import from._
 
