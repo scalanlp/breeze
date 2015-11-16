@@ -39,3 +39,4 @@ class maxTest extends FunSuite {
   }
 
 }
+

@@ -16,6 +16,7 @@ package breeze.linalg
 */
 import breeze.linalg.Counter2.Curried
 import breeze.linalg.operators.Counter2Ops
+import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 import breeze.storage.Zero
 import collection.mutable.HashMap
 import breeze.math.Semiring
@@ -183,6 +184,19 @@ object Counter2 extends LowPriorityCounter2 with Counter2Ops {
       for( v <- from.valuesIterator) {
         fn.visit(v)
       }
+    }
+  }
+
+  implicit def canTraverseKeyValuePairs[K1, K2, V]: CanTraverseKeyValuePairs[Counter2[K1, K2, V], (K1, K2), V] = {
+    new CanTraverseKeyValuePairs[Counter2[K1, K2, V], (K1, K2), V] {
+      /** Traverses all values from the given collection. */
+      override def traverse(from: Counter2[K1, K2, V], fn: KeyValuePairsVisitor[(K1, K2), V]): Unit = {
+        for ((k,v) <- from.activeIterator) {
+          fn.visit(k,v)
+        }
+      }
+
+      override def isTraversableAgain(from: Counter2[K1, K2, V]): Boolean = true
     }
   }
 

@@ -340,7 +340,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
   implicit def scalarOf[T]: ScalarOf[CSCMatrix[T], T] = ScalarOf.dummy
 
   implicit def canIterateValues[V]:CanTraverseValues[CSCMatrix[V], V] = {
-    new CanTraverseValues[CSCMatrix[V],V] {
+    new CanTraverseValues[CSCMatrix[V], V] {
 
       def isTraversableAgain(from: CSCMatrix[V]): Boolean = true
 
@@ -352,8 +352,20 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
     }
   }
 
+  implicit def canIterateKeysValues[V:Zero]:CanTraverseKeyValuePairs[CSCMatrix[V], (Int, Int), V] = {
+    new CanTraverseKeyValuePairs[CSCMatrix[V], (Int, Int), V] {
 
+      def isTraversableAgain(from: CSCMatrix[V]): Boolean = true
 
+      /** Iterates all key-value pairs from the given collection. */
+      def traverse(from: CSCMatrix[V], fn: CanTraverseKeyValuePairs.KeyValuePairsVisitor[(Int, Int), V]): Unit = {
+        val zero = implicitly[Zero[V]].zero
+        fn.zeros(from.size - from.activeSize, from.iterator.collect { case (k, v) if v != zero => k}, zero)
+        // TODO: I can use visitArray if I want to be clever
+        from.activeIterator.foreach((fn.visit _).tupled)
+      }
+    }
+  }
 
   implicit def canTranspose[V:ClassTag:Zero:Semiring]: CanTranspose[CSCMatrix[V], CSCMatrix[V]] = {
     new CanTranspose[CSCMatrix[V], CSCMatrix[V]] {

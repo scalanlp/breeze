@@ -80,7 +80,7 @@ object SliceVector {
 
       /** Iterates all key-value pairs from the given collection. */
       def traverse(from: SliceVector[K, V], fn: ValuesVisitor[V]): Unit = {
-        from.activeValuesIterator foreach {
+        from.valuesIterator foreach {
           fn.visit(_)
         }
       }
@@ -91,7 +91,7 @@ object SliceVector {
     new CanTraverseKeyValuePairs[SliceVector[K, V], Int, V] {
       /** Traverses all values from the given collection. */
       override def traverse(from: SliceVector[K, V], fn: KeyValuePairsVisitor[Int, V]): Unit = {
-        from.activeIterator foreach {
+        from.iterator foreach {
           case (k, v) => fn.visit(k, v)
         }
 
