@@ -18,21 +18,21 @@ object argmax extends UFunc {
         var visitedOne = false
 
         def visit(k: I, a: S): Unit = {
-          visitedOne = true
-          if(a >= max) {
+          if(a > max || !visitedOne) {
             max = a
             amax = k
           }
+          visitedOne = true
         }
 
 
         def zeros(numZero: Int, zeroKeys: Iterator[I], zeroValue: S): Unit = {
           if(numZero != 0) {
-            visitedOne = true
-            if(zeroValue >= max) {
+            if(zeroValue > max || !visitedOne) {
               max = zeroValue
               amax = zeroKeys.next()
             }
+            visitedOne = true
           }
         }
 
@@ -41,12 +41,12 @@ object argmax extends UFunc {
           var i = 0
           var off = offset
           while(i < length) {
-            visitedOne = true
             val a = arr(off)
-            if(a >= max) {
+            if(a > max || !visitedOne) {
               max = a
               amax = indices(off)
             }
+            visitedOne = true
             i += 1
             off += stride
           }
