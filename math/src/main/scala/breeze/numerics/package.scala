@@ -371,7 +371,7 @@ package object numerics {
         override def apply(v: T): Boolean = {
           // TODO: only in Java 8
 //          !java.lang.Double.isFinite(v)
-          java.lang.Double.isNaN(v) || java.lang.Double.isInfinite(v)
+          !isFinite(v)
         }
       }
     }
@@ -383,9 +383,7 @@ package object numerics {
     implicit def isFiniteImpl[@expand.args(Double, Float) T]: Impl[T, Boolean] = {
       new Impl[T, Boolean] {
         override def apply(v: T): Boolean = {
-          // TODO: only in Java 8
-          //          !java.lang.Double.isFinite(v)
-          !java.lang.Double.isNaN(v) && !java.lang.Double.isInfinite(v)
+          m.abs(v) <= Double.MaxValue
         }
       }
     }
