@@ -2,6 +2,7 @@ package breeze.linalg.operators
 
 import breeze.generic.UFunc
 import breeze.generic.UFunc.UImpl2
+import shapeless.=:!=
 
 import scala.reflect.ClassTag
 import breeze.linalg.support.{LiteralRow, CanCopy}
@@ -105,9 +106,9 @@ trait MatrixGenericOps { this: Matrix.type =>
     }
   }
 
-  implicit def castOps[M1, M2, T, Op <: OpType, MR](implicit v1ev: M1<:<Matrix[T],
-                                                    v2ev: M2<:<Matrix[T],
-                                                    op: UImpl2[Op, Matrix[T], Matrix[T], MR]): UImpl2[Op, M1, M2, MR] = {
+  implicit def castOps[M1, M2, T, Op, MR](implicit v1ev: M1<:<Matrix[T], v1ne: M1 =:!= Matrix[T],
+                                          v2ev: M2<:<Matrix[T], v2ne: M2 =:!= Matrix[T],
+                                          op: UImpl2[Op, Matrix[T], Matrix[T], MR]): UImpl2[Op, M1, M2, MR] = {
     op.asInstanceOf[UFunc.UImpl2[Op, M1, M2, MR]]
   }
 

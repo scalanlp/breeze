@@ -518,7 +518,9 @@ trait VectorOps { this: Vector.type =>
 //    op.asInstanceOf[UFunc.UImpl2[Op, T, V1, VR]]
 //  }
 
-  implicit def castFunc[V1, T, Op, VR](implicit v1ev: V1<:<Vector[T],
+  import shapeless._
+
+  implicit def castFunc[V1, T, Op, VR](implicit v1ev: V1<:<Vector[T], v1ne: V1 =:!= Vector[T],
                                        op: UImpl[Op, Vector[T], VR]): UImpl[Op, V1, VR] = {
     op.asInstanceOf[UFunc.UImpl[Op, V1, VR]]
   }
