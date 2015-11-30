@@ -53,6 +53,7 @@ object EnforceUFuncCoverage {
 
   // linear algebra
   EnforceUFuncCoverage.vectors1(norm)
+  EnforceUFuncCoverage.vectors1(normalize)
   EnforceUFuncCoverage.vectorsAndMatrices1(dim)
 
   // numerics

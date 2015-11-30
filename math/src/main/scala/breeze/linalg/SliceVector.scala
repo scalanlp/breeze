@@ -1,5 +1,8 @@
 package breeze.linalg
 
+import breeze.generic.UFunc
+import breeze.generic.UFunc.{UImpl2, InPlaceImpl2}
+import breeze.linalg.operators.OpType
 import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
@@ -16,7 +19,8 @@ import scala.{specialized => spec}
  * }}}
  *
  * will give a SliceVector such that apply/update at index 0 will map to m(1,2), index 1 to m(3,4), etc.
- * @author dlwh
+  *
+  * @author dlwh
  */
 class SliceVector[@spec(Int) K, @spec(Double, Int, Float, Long) V:ClassTag](val tensor: Tensor[K,V],
                                                                                     val slices: IndexedSeq[K]) extends Vector[V] {
@@ -87,7 +91,7 @@ object SliceVector {
 
     }
 
-  implicit def canIterateKeyValuePAirs[K, V]: CanTraverseKeyValuePairs[SliceVector[K, V], Int, V] = {
+  implicit def canIterateKeyValuePairs[K, V]: CanTraverseKeyValuePairs[SliceVector[K, V], Int, V] = {
     new CanTraverseKeyValuePairs[SliceVector[K, V], Int, V] {
       /** Traverses all values from the given collection. */
       override def traverse(from: SliceVector[K, V], fn: KeyValuePairsVisitor[Int, V]): Unit = {
@@ -116,35 +120,6 @@ object SliceVector {
       }
     }
   }
-
-  /**Returns the k-norm of this Vector. */
-  implicit def canNorm[K, T](implicit canNormS: norm.Impl[T, Double]): norm.Impl2[SliceVector[K, T], Double, Double] = {
-
-    new norm.Impl2[SliceVector[K, T], Double, Double] {
-      def apply(v: SliceVector[K, T], n: Double): Double = {
-        import v._
-        if (n == 1) {
-          var sum = 0.0
-          activeValuesIterator foreach (v => sum += canNormS(v) )
-          sum
-        } else if (n == 2) {
-          var sum = 0.0
-          activeValuesIterator foreach (v => { val nn = canNormS(v); sum += nn * nn })
-          math.sqrt(sum)
-        } else if (n == Double.PositiveInfinity) {
-          var max = 0.0
-          activeValuesIterator foreach (v => { val nn = canNormS(v); if (nn > max) max = nn })
-          max
-        } else {
-          var sum = 0.0
-          activeValuesIterator foreach (v => { val nn = canNormS(v); sum += math.pow(nn,n) })
-          math.pow(sum, 1.0 / n)
-        }
-      }
-    }
-  }
-
-
 
 
 }
