@@ -23,6 +23,10 @@ case class BroadcastedRows[T, RowType](underlying: T) extends BroadcastedLike[T,
 
 object BroadcastedRows {
 
+  implicit class BroadcastRowsDMToIndexedSeq[T](bc: BroadcastedRows[DenseMatrix[T], DenseVector[T]]) {
+    def toIndexedSeq: IndexedSeq[Transpose[DenseVector[T]]] = new BroadcastedDMRowsISeq(bc.underlying)
+  }
+
 
   implicit def canMapValues[T, RowType, ResultRow, Result]
   (implicit cc: CanCollapseAxis[T, Axis._1.type, RowType, ResultRow, Result])
@@ -87,4 +91,11 @@ object BroadcastedRows {
 
   }
 
+  // This is a more memory efficient representation if the sequence is long-lived but rarely accessed.
+  @SerialVersionUID(1L)
+  class BroadcastedDMRowsISeq[T](val underlying: DenseMatrix[T]) extends IndexedSeq[Transpose[DenseVector[T]]] with Serializable {
+    override def length: Int = underlying.cols
+
+    override def apply(idx: Int): Transpose[DenseVector[T]] = underlying(idx, ::)
+  }
 }

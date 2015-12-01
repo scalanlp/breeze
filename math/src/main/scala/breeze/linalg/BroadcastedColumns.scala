@@ -37,9 +37,17 @@ case class BroadcastedColumns[T, ColType](underlying: T) extends BroadcastedLike
     canTraverseAxis(underlying, Axis._0){c => acc = f(acc, c)}
     acc
   }
+
+
+
 }
 
 object BroadcastedColumns {
+
+  implicit class BroadcastColumnsDMToIndexedSeq[T](bc: BroadcastedColumns[DenseMatrix[T], DenseVector[T]]) {
+    def toIndexedSeq: IndexedSeq[DenseVector[T]] = new BroadcastedDMColsISeq(bc.underlying)
+  }
+
 
   implicit def canMapValues[T, ColumnType, ResultColumn, Result]
                             (implicit cc: CanCollapseAxis[T, Axis._0.type, ColumnType, ResultColumn, Result])
@@ -50,6 +58,7 @@ object BroadcastedColumns {
       }
     }
   }
+
 
   implicit def scalarOf[T, ColumnType]: ScalarOf[BroadcastedColumns[T, ColumnType], ColumnType] = ScalarOf.dummy
 
@@ -106,5 +115,13 @@ object BroadcastedColumns {
 
   }
 
+  // This is a more memory efficient representation if the sequence is long-lived but rarely accessed.
+  @SerialVersionUID(1L)
+  class BroadcastedDMColsISeq[T](val underlying: DenseMatrix[T]) extends IndexedSeq[DenseVector[T]] with Serializable {
+    override def length: Int = underlying.cols
+
+    override def apply(idx: Int): DenseVector[T] = underlying(::, idx)
+  }
 }
+
 
