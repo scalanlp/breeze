@@ -79,6 +79,10 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps
 
       require(a.cols == b.length, "Dimension mismatch!")
 
+      if (a.rows == 0 || a.cols == 0) {
+        return DenseVector.zeros[Double](a.rows)
+      }
+
       val rv = DenseVector.zeros[Double](a.rows)
 
       blas.dgemv(transposeString(a),

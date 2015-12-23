@@ -723,6 +723,15 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
 
   }
 
+  test("#476: DM * DV when rows == 0") {
+    val m = DenseMatrix.zeros[Double](0, 10)
+    val v = DenseVector.zeros[Double](10)
+    assert(m * v == DenseVector.zeros[Double](0))
+    val m2 = DenseMatrix.zeros[Double](10, 0)
+    val v2 = DenseVector.zeros[Double](0)
+    assert(m2 * v2 == DenseVector.zeros[Double](10))
+  }
+
 
 
 }
