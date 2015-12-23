@@ -89,7 +89,7 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](val converg
     infiniteIterations(f, initialState(adjustedFun, init)).takeUpToWhere{s =>
       convergenceCheck.apply(s, s.convergenceInfo) match {
         case Some(converged) =>
-          logger.info(s"Converged because ${converged}")
+          logger.info(s"Converged because ${converged.reason}")
           true
         case None =>
           false
@@ -194,9 +194,6 @@ object FirstOrderMinimizer {
   }
   case object SearchFailed extends ConvergenceReason {
     override def reason: String = "line search failed!"
-  }
-  case object ObjectiveNotImproving extends ConvergenceReason {
-    override def reason: String = "objective is not improving"
   }
 
   case object MonitorFunctionNotImproving extends ConvergenceReason {
