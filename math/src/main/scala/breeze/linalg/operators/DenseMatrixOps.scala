@@ -418,7 +418,7 @@ trait DenseMatrixFloatMultiplyStuff extends DenseMatrixOps
     }
   }
 
-  implicit object DenseMatrixFloatCanSolveDenseVectorFloat
+  implicit object implOpSolveMatrixBy_DMF_DVF_eq_DVF
   extends OpSolveMatrixBy.Impl2[DenseMatrix[Float], DenseVector[Float], DenseVector[Float]] {
 
     override def apply(a: DenseMatrix[Float], b : DenseVector[Float]): DenseVector[Float] = {
