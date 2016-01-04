@@ -18,7 +18,7 @@ import operators._
 import support._
 import support.CanTraverseValues.ValuesVisitor
 import breeze.generic.{UFunc}
-import breeze.generic.UFunc.{UImpl2, UImpl, InPlaceImpl2}
+import breeze.generic.UFunc.{InPlaceImpl3, UImpl2, UImpl, InPlaceImpl2}
 import breeze.macros.expand
 import breeze.math._
 import breeze.stats.distributions.Rand
@@ -506,6 +506,12 @@ trait VectorOps { this: Vector.type =>
                                           V2ev: V2<:<Vector[T],
                                           op: UImpl2[Op, Vector[T], Vector[T], VR]): UImpl2[Op, V1, V2, VR] = {
     op.asInstanceOf[UFunc.UImpl2[Op, V1, V2, VR]]
+  }
+
+  implicit def castUpdateOps3[V1, V2, T, Op](implicit v1ev: V1<:<Vector[T],
+                                             V2ev: V2<:<Vector[T],
+                                             op: InPlaceImpl3[Op, Vector[T], T, Vector[T]]): InPlaceImpl3[Op, V1, T, V2] = {
+    op.asInstanceOf[InPlaceImpl3[Op, V1, T, V2]]
   }
 
 //  implicit def castScalarOps[V1, T, Op, VR](implicit v1ev: V1<:<Vector[T],

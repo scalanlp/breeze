@@ -1,5 +1,7 @@
 package breeze.linalg.operators
 
+import breeze.generic.UFunc
+import breeze.linalg.support.CanCopy
 import breeze.macros.expand
 import breeze.generic.UFunc.{UImpl2, InPlaceImpl2}
 import breeze.math._
@@ -12,8 +14,8 @@ import breeze.linalg._
 trait VectorBuilderOps { this: VectorBuilder.type =>
   @expand
   @expand.valify
-  implicit def canOpInto_V_S[@expand.args(OpMulScalar, OpDiv) Op,
-  @expand.args(Double, Long, Float, Int) T](implicit @expand.sequence[Op]((_ * _), (_ / _)) op: Q): Op.InPlaceImpl2[VectorBuilder[T], T] =  {
+  implicit def canOpInto_V_S[@expand.args(OpMulMatrix, OpMulScalar, OpDiv) Op,
+  @expand.args(Double, Long, Float, Int) T](implicit @expand.sequence[Op]((_ * _), (_ * _), (_ / _)) op: Q): Op.InPlaceImpl2[VectorBuilder[T], T] =  {
     new  Op.InPlaceImpl2[VectorBuilder[T], T]  {
       def apply(a: VectorBuilder[T], b: T) {
         var i = 0
