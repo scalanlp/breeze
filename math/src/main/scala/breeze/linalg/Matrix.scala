@@ -132,8 +132,11 @@ trait Matrix[@spec(Double, Int, Float, Long) V] extends MatrixLike[V, Matrix[V]]
   def flatten(view: View=View.Prefer): Vector[V]
 
   override def equals(p1: Any) = p1 match {
-    case x: Matrix[_] =>
-      this.rows == x.rows && this.cols == x.cols &&
+    case (x: CSCMatrix[V], p1: CSCMatrix[V]) =>
+      x.rows == p1.rows && x.cols == p1.cols && x.activeSize == p1.activeSize &&
+        activeKeysIterator.forall(k => this(k) == x(k))
+    case (x: Matrix[V], p1: Matrix[_]) =>
+      x.rows == p1.rows && x.cols == p1.cols &&
         keysIterator.forall(k => this(k) == x(k))
     case _ => false
   }
