@@ -137,13 +137,7 @@ class MatrixTest extends FunSuite with Checkers {
       mt.add(4, 0, 3)
       mt.result
     }
-    val v2: CSCMatrix[Int] = {
-      val mt = new CSCMatrix.Builder[Int](5, 1)
-      mt.add(1, 0, 2)
-      mt.add(4, 0, 3)
-      mt.result
-    }
-    v2(0,0) = 0
+    val v2: CSCMatrix[Int] = CSCMatrix(0, 2, 0, 0, 3)
     val diff = v - v2
     val zeros = CSCMatrix.zeros[Int](5, 1)
     assert(v == v2)
