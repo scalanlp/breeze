@@ -130,6 +130,26 @@ class MatrixTest extends FunSuite with Checkers {
     assert(v.hashCode == v2.hashCode)
   }
 
+  test("Sparse equality") {
+    val v: CSCMatrix[Int] = {
+      val mt = new CSCMatrix.Builder[Int](5, 1)
+      mt.add(1, 0, 2)
+      mt.add(4, 0, 3)
+      mt.result
+    }
+    val v2: CSCMatrix[Int] = {
+      val mt = new CSCMatrix.Builder[Int](5, 1)
+      mt.add(1, 0, 2)
+      mt.add(4, 0, 3)
+      mt.result
+    }
+    v2(0,0) = 0
+    val diff = v - v2
+    val zeros = CSCMatrix.zeros[Int](5, 1)
+    assert(v == v2)
+    assert(diff == zeros)
+    assert(diff.activeSize == 0)
+  }
 
 //  test("MapValues") {
 //    val a : Matrix[Int] = Matrix((1,0,0),(2,3,-1))
