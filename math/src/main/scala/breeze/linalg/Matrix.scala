@@ -131,33 +131,10 @@ trait Matrix[@spec(Double, Int, Float, Long) V] extends MatrixLike[V, Matrix[V]]
 
   def flatten(view: View=View.Prefer): Vector[V]
 
-  override def equals(p1: Any) : Boolean = (this, p1) match {
-    case (x: CSCMatrix[V], y: CSCMatrix[V]) =>
-      if(x.rows != y.rows || x.cols != y.cols){
-        return false
-      } else {
-        val xIter = x.activeIterator
-        val yIter = y.activeIterator
-
-        while(xIter.hasNext && yIter.hasNext){
-          var xkeyval = xIter.next()
-          var ykeyval = yIter.next()
-          while(xkeyval._2 == 0 && xIter.hasNext) xkeyval = xIter.next()
-          while(ykeyval._2 == 0 && yIter.hasNext) ykeyval = yIter.next()
-          if(xkeyval != ykeyval) return false
-        }
-        if(xIter.hasNext && !yIter.hasNext){
-          while(xIter.hasNext) if(xIter.next()._2 != 0) return false
-        }
-
-        if(!xIter.hasNext && yIter.hasNext){
-          while(yIter.hasNext) if(yIter.next()._2 != 0) return false
-        }
-      }
-      return true
-    case (x: Matrix[V], y: Matrix[_]) =>
-      x.rows == y.rows && x.cols == y.cols &&
-        keysIterator.forall(k => x(k) == y(k))
+  override def equals(p1: Any) : Boolean = p1 match {
+    case x: Matrix[_] =>
+      this.rows == x.rows && this.cols == x.cols &&
+        keysIterator.forall(k => this(k) == x(k))
     case _ =>
       return false
   }
