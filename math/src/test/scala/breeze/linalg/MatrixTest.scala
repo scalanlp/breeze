@@ -140,9 +140,15 @@ class MatrixTest extends FunSuite with Checkers {
     val v2: CSCMatrix[Int] = CSCMatrix(0, 2, 0, 0, 3)
     val diff = v - v2
     val zeros = CSCMatrix.zeros[Int](5, 1)
-    assert(v == v2)
-    assert(diff == zeros)
+    val v4 = v2.copy
+    v4.update(1, 0, 0)
+    v4.update(4, 0, 0)
+    assert(v == v2) // similar matrices are same
+    assert(diff == zeros) // automatic removal of explicit zeros
     assert(diff.activeSize == 0)
+    assert(zeros == v4) // implicit vs explicit
+    assert(v4 == zeros) // explicit vs implicit
+    assert(zeros != v)
   }
 
 //  test("MapValues") {
