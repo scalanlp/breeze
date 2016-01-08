@@ -146,11 +146,11 @@ trait Matrix[@spec(Double, Int, Float, Long) V] extends MatrixLike[V, Matrix[V]]
           while(ykeyval._2 == 0 && yIter.hasNext) ykeyval = yIter.next()
           if(xkeyval != ykeyval) return false
         }
-        if(xIter.hasNext == true && yIter.hasNext == false){
+        if(xIter.hasNext && !yIter.hasNext){
           while(xIter.hasNext) if(xIter.next()._2 != 0) return false
         }
 
-        if(xIter.hasNext == false && yIter.hasNext == true){
+        if(!xIter.hasNext && yIter.hasNext){
           while(yIter.hasNext) if(yIter.next()._2 != 0) return false
         }
       }
