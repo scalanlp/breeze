@@ -131,11 +131,12 @@ trait Matrix[@spec(Double, Int, Float, Long) V] extends MatrixLike[V, Matrix[V]]
 
   def flatten(view: View=View.Prefer): Vector[V]
 
-  override def equals(p1: Any) = p1 match {
+  override def equals(p1: Any) : Boolean = p1 match {
     case x: Matrix[_] =>
       this.rows == x.rows && this.cols == x.cols &&
         keysIterator.forall(k => this(k) == x(k))
-    case _ => false
+    case _ =>
+      return false
   }
 
 }
