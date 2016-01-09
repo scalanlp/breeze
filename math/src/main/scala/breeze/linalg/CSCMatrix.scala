@@ -243,6 +243,37 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero](private var _data: Arra
     }
     res
   }
+
+  override def equals(p1 : Any) : Boolean = p1 match {
+    case y: CSCMatrix[_] =>
+      if(this.rows != y.rows || this.cols != y.cols){
+        return false
+      } else {
+        val xIter = this.activeIterator
+        val yIter = y.activeIterator
+
+        while(xIter.hasNext && yIter.hasNext){
+          var xkeyval = xIter.next()
+          var ykeyval = yIter.next()
+          while(xkeyval._2 == 0 && xIter.hasNext) xkeyval = xIter.next()
+          while(ykeyval._2 == 0 && yIter.hasNext) ykeyval = yIter.next()
+          if(xkeyval != ykeyval) return false
+        }
+        if(xIter.hasNext && !yIter.hasNext){
+          while(xIter.hasNext) if(xIter.next()._2 != 0) return false
+        }
+
+        if(!xIter.hasNext && yIter.hasNext){
+          while(yIter.hasNext) if(yIter.next()._2 != 0) return false
+        }
+      }
+      return true
+    case y: Matrix[_] =>
+      return y == this
+    case _ =>
+      return false
+  }
+
 }
 
 object CSCMatrix extends MatrixConstructors[CSCMatrix]
