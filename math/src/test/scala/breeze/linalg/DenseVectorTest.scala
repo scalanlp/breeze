@@ -610,6 +610,8 @@ class DenseVectorOps_ComplexTest extends TensorSpaceTestBase[DenseVector[Complex
 class DenseVectorOps_FloatTest extends TensorSpaceTestBase[DenseVector[Float], Int, Float] {
  val space = DenseVector.space[Float]
 
+  override val TOL: Double = 1E-3
+
   val N = 30
   implicit def genTriple: Arbitrary[(DenseVector[Float], DenseVector[Float], DenseVector[Float])] = {
     Arbitrary {
