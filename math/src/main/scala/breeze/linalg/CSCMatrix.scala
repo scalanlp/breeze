@@ -513,6 +513,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
         val colsEqual = col == lastCol
         val row = rowFromIndex(index)
         if (colsEqual && row == rowFromIndex(indices(order(i-1)))) {
+          assert(!keysAlreadyUnique)
           // TODO: might need to codegen to make this fast.
           outData(outDataIndex) = ring.+(outData(outDataIndex), vs(order(i)))
         } else {
@@ -532,6 +533,10 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
         i += 1
       }
       outDataIndex += 1
+
+      if (keysAlreadyUnique) {
+        assert(outDataIndex == nnz)
+      }
 
       while(lastCol < _cols) {
         outCols(lastCol+1) = outDataIndex

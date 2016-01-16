@@ -244,6 +244,8 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring {  this: CSCMatrix.type =>
           bldr.result(true, true)
         }
       }
+
+      implicitly[BinaryRegistry[Matrix[T], Matrix[T], OpAdd.type, Matrix[T]]].register(this)
     }
   }
 
