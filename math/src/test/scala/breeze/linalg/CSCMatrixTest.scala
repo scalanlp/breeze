@@ -29,7 +29,6 @@ import scala.reflect.ClassTag
 
 @RunWith(classOf[JUnitRunner])
 class CSCMatrixTest extends FunSuite with Checkers {
-  /*
   test("Multiply") {
     val a = CSCMatrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
     val ad = DenseMatrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
@@ -412,7 +411,6 @@ class CSCMatrixTest extends FunSuite with Checkers {
     assert(a.rows == 2)
     assert(a.cols == 1)
   }
-  */
 
   test("#479") {
     val m1: Matrix[Double] = new CSCMatrix[Double](Array(1.0, 1, 1), 3, 3, Array(0, 1, 2, 3), Array(0, 1, 2))
