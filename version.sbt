@@ -1,1 +1,1 @@
-version in ThisBuild := "0.12"
+version in ThisBuild := "0.13-SNAPSHOT"
