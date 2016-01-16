@@ -1,5 +1,7 @@
 package breeze.optimize.linear
 
+import breeze.optimize.linear.DualSimplex.ComputationalForm
+
 import collection.mutable.ArrayBuffer
 import breeze.linalg._
 import org.apache.commons.math3.optim.linear._
@@ -30,11 +32,16 @@ class LinearProgram {
     _nextId += 1
     _nextId - 1
   }
-  private val variables = new ArrayBuffer[Variable]()
+
+  def variables: IndexedSeq[Variable] = _variables
+
+  private val _variables = new ArrayBuffer[Variable]()
 
   sealed trait Problem { outer =>
     def objective: Expression
     def constraints: IndexedSeq[Constraint]
+
+    def lp: LinearProgram.this.type = LinearProgram.this
 
     def subjectTo(constraints : Constraint*):Problem = {
       val cons = constraints
@@ -45,23 +52,21 @@ class LinearProgram {
     }
 
     override def toString = (
-      "maximize    " + objective + {
+      "optimize    " + objective + {
         if(constraints.nonEmpty) {
           "\nsubject to  " + constraints.mkString("\n" + " " * "subject to  ".length)
         } else ""
       }
     )
+
   }
 
   /**
    * Anything that can be built up from adding/subtracting/dividing and multiplying by constants
    */
-  sealed trait Expression extends Problem { outer =>
+  sealed trait Expression { outer =>
     def coefficients: VectorBuilder[Double]
     def scalarComponent: Double = 0
-    def objective = this
-
-    def constraints: IndexedSeq[Constraint] = IndexedSeq.empty
 
     def +(other: Expression): Expression = new Expression {
       def coefficients: VectorBuilder[Double] = outer.coefficients + other.coefficients
@@ -113,6 +118,14 @@ class LinearProgram {
       override def scalarComponent = outer.scalarComponent * c
       override def toString = s"$c * ($outer)"
     }
+
+    def subjectTo(constraints : Constraint*):Problem = {
+      val cons = constraints
+      new Problem {
+        def objective = outer
+        def constraints = cons.toIndexedSeq
+      }
+    }
   }
 
   sealed abstract class Relation(val operator: String)
@@ -129,7 +142,7 @@ class LinearProgram {
     def standardized: Constraint = {
       val outLHS = lhs.coefficients - rhs.coefficients
       val outRHS = rhs.scalarComponent - lhs.scalarComponent
-      Constraint(new VectorExpression(outLHS), relation, rhs)
+      Constraint(new VectorExpression(outLHS), relation, outRHS)
     }
 
     override def toString: String = s"$lhs ${relation.operator} $rhs"
@@ -145,7 +158,7 @@ class LinearProgram {
     def upperBound: Double
 
     def coefficients = {
-      val v = VectorBuilder.zeros[Double](variables.length)
+      val v = VectorBuilder.zeros[Double](_variables.length)
       for(i <- 0 until size) v.add(id + i, 1.0)
       v
     }
@@ -154,15 +167,15 @@ class LinearProgram {
   case class Real(name: String = "x_" + nextId,
                   lowerBound: Double = Double.NegativeInfinity,
                   upperBound: Double = Double.PositiveInfinity) extends Variable { variable =>
-    val id = variables.length
-    variables += this
+    val id = _variables.length
+    _variables += this
   }
 
   case class Integer(name: String = "x_" + nextId,
                      lowerBound: Double = Double.NegativeInfinity,
                      upperBound: Double = Double.PositiveInfinity) extends Variable { variable =>
-    val id = variables.length
-    variables += this
+    val id = _variables.length
+    _variables += this
 
   }
 
@@ -172,8 +185,8 @@ class LinearProgram {
 
     override def upperBound: Double = 1
 
-    val id = variables.length
-    variables += this
+    val id = _variables.length
+    _variables += this
 
   }
 
@@ -193,15 +206,24 @@ class LinearProgram {
     // sshhhhhh
     coeffs.length = -1
     override def coefficients: VectorBuilder[Double] = {
-      VectorBuilder.zeros[Double](variables.length) += coeffs
+      VectorBuilder.zeros[Double](_variables.length) += coeffs
     }
+
+    override def toString() = {
+      coeffs.activeIterator.map { case (i, c) => s"$c * ${variables(i)}" }.mkString(" + ")
+    }
+
+
   }
 
   private[linear] implicit class ScalarExpression(override val scalarComponent: Double) extends Expression {
     override def coefficients: VectorBuilder[Double] = {
-      VectorBuilder.zeros(variables.length)
+      VectorBuilder.zeros(_variables.length)
     }
+
+    override def toString: String = scalarComponent.toString
   }
+
 }
 
 
@@ -212,13 +234,75 @@ object LinearProgram {
     def minimize(lp: LinearProgram)(obj: lp.Problem): lp.Result
   }
 
-  implicit val mySolver = {
+  implicit val mySolver: Solver = {
 //    NativeLPSolver
 //  } catch {
 //    case ex: SecurityException =>
-      ApacheSimplexSolver
+//      ApacheSimplexSolver
+    DualSimplexSolver
 //    case ex: UnsatisfiedLinkError =>
 //      ApacheSimplexSolver
+  }
+
+  object DualSimplexSolver extends Solver {
+    override def maximize(lp: LinearProgram)(obj: lp.Problem): lp.Result = {
+      val res = minimize(lp)(obj.objective * -1.0 subjectTo(obj.constraints:_*))
+      lp.Result(res.result, obj)
+    }
+
+    override def minimize(lp: LinearProgram)(obj: lp.Problem): lp.Result = {
+      import lp._
+      // The dual solver solves:
+      // min c dot x s.t. A * x == b, lb <= x <= ub
+      // to handle <=, we introduce a slack variable, with value >= 0
+      // to handle >=, we invert and then introduce a slack variable >= 0
+      val numOrigVars = obj.objective.coefficients.length
+      var nextVar = obj.objective.coefficients.length
+      assert(nextVar != 0)
+
+      val (rows, bs) = {
+        for (c <- obj.constraints) yield {
+          val s = c.standardized
+          assert(s.lhs.scalarComponent == 0.0)
+          assert(s.rhs.coefficients.activeSize == 0, s.rhs)
+          c.relation match {
+            case EQ =>
+              s.lhs.coefficients.copy -> s.rhs.scalarComponent
+            case LTE =>
+              val vb = s.lhs.coefficients.copy
+              vb.length = -1
+              vb.add(nextVar, 1.0)
+              nextVar += 1
+              vb -> s.rhs.scalarComponent
+            case GTE =>
+              val vb = s.lhs.coefficients.copy
+              vb.length = -1
+              vb *= -1.0
+              vb.add(nextVar, 1.0)
+              nextVar += 1
+              vb -> -s.rhs.scalarComponent
+          }
+        }
+      }.unzip
+
+      val numExtraVars = nextVar - numOrigVars
+      val extraZeros = DenseVector.zeros[Double](numExtraVars)
+
+      rows.foreach(_.length = nextVar)
+      val constraintMatrix = DenseMatrix(rows.map(_.toDenseVector):_*)
+
+      val compForm = new ComputationalForm(
+        c = DenseVector.vertcat(obj.objective.coefficients.toDenseVector, extraZeros),
+        A = constraintMatrix,
+        b = DenseVector(bs:_*),
+        lowerBounds = DenseVector.vertcat(DenseVector(variables.map(_.lowerBound):_*), extraZeros),
+        upperBounds = DenseVector.vertcat(DenseVector(variables.map(_.upperBound):_*), DenseVector.fill(numExtraVars)(Double.PositiveInfinity))
+      )
+
+      val result = DualSimplex.minimize(compForm)
+
+      new lp.Result(result.x(0 until obj.objective.coefficients.length), obj)
+    }
   }
 
   object ApacheSimplexSolver extends Solver {
@@ -250,9 +334,16 @@ object LinearProgram {
       Result(new DenseVector(sol.getPoint), objective)
     }
 
+
     private def buildConstraints(lp: LinearProgram)(objective: lp.Problem)
         : LinearConstraintSet = {
       import lp._
+
+      def indicatorAt(i: Int) = {
+        val v = new Array[Double](_variables.length)
+        v(i) = 1.0
+        v
+      }
 
       def relationToConstraintType(r: Relation) = r match {
         case LTE => Relationship.LEQ
@@ -260,17 +351,29 @@ object LinearProgram {
         case EQ => Relationship.EQ
       }
 
-      for (v <- variables)
-        if (!v.isInstanceOf[lp.Variable])
+      val boundConstraints = ArrayBuffer[LinearConstraint]()
+
+      for (v <- variables) {
+        if (!v.isInstanceOf[lp.Real])
           throw new UnsupportedOperationException(
             "Apache Solver can only handle real-valued linear programs.")
 
+        if (v.lowerBound != Double.NegativeInfinity) {
+          boundConstraints += new LinearConstraint(indicatorAt(v.id), Relationship.GEQ, v.lowerBound)
+        }
+
+        if (v.upperBound != Double.PositiveInfinity) {
+          boundConstraints += new LinearConstraint(indicatorAt(v.id), Relationship.LEQ, v.upperBound)
+        }
+
+      }
+
       val constraints = for (c: Constraint <- objective.constraints) yield {
-        val cs = c.standardize
+        val cs = c.standardized
         new LinearConstraint(cs.lhs.coefficients.toDenseVector.data,
           relationToConstraintType(c.relation), cs.rhs.scalarComponent)
       }
-      new LinearConstraintSet(constraints.asJava)
+      new LinearConstraintSet((constraints ++ boundConstraints).asJava)
     }
   }
 

@@ -19,6 +19,9 @@ import org.junit.runner.RunWith
 class LPMaxFlowTest extends FunSuite {
 
   test("LPMaxFlowTest") {
+    for(i <- 0 until 10) {
+      val in = System.currentTimeMillis()
+
     val g = new FlowGraph[Int] {
 
       def source = 0
@@ -39,5 +42,7 @@ class LPMaxFlowTest extends FunSuite {
     val lpm = new LPMaxFlow(g)
     assert((lpm.maxFlow._2 - 4).abs < 1E-5, lpm)
     assert((lpm.minCostFlow()._2 - 20).abs < 1E-5, lpm)
+      println((System.currentTimeMillis() - in))
+  }
   }
 }
