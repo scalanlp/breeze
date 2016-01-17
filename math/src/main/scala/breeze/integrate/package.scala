@@ -30,7 +30,7 @@ package object integrate {
     absTol: Array[Double] = Array.empty
     ) : Array[DenseVector[Double]] = {
     
-    RungeKuttaODESolver(DormandPrinceTableau, f, y0, t, relTol, absTol)
+    RungeKuttaOdeSolver(DormandPrinceTableau, f, y0, t, relTol, absTol)
   }
 
   def ode23(
@@ -41,6 +41,6 @@ package object integrate {
     absTol: Array[Double] = Array.empty
     ) : Array[DenseVector[Double]] = {
     
-    RungeKuttaODESolver(BogackiShampineTableau, f, y0, t, relTol, absTol)
+    RungeKuttaOdeSolver(BogackiShampineTableau, f, y0, t, relTol, absTol)
   }
 }

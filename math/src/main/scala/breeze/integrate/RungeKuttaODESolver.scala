@@ -11,10 +11,10 @@ import scala.annotation.tailrec
 *
 * @author jaketimothy
 */
-object RungeKuttaODESolver {
+object RungeKuttaOdeSolver {
   
-  val defaultRelTol = 1.0e-3
-  val defaultAbsTol = 1.0e-6
+  val defaultRelTol = 1.49012e-8
+  val defaultAbsTol = 1.49012e-8
   
   def apply(
     tableau: RungeKuttaButcherTableau,
@@ -45,29 +45,32 @@ object RungeKuttaODESolver {
       lastEvaluation: Option[DenseVector[Double]] = None
       ) : (DenseVector[Double], Double, Option[DenseVector[Double]]) = {
 
-      val (y, error) = stepper(yInit, t0, t0 + h)
       val k = Array.fill[DenseVector[Double]](tableau.stages)(DenseVector.zeros(yInit.length))
       
       k(0) = if (tableau.hasFirstSameAsLast)
-        lastEvaluation getOrElse f(yInit, start)
+        lastEvaluation getOrElse f(yInit, t0)
       else
-        f(yInit, start)
+        f(yInit, t0)
 
       for (i <- 0 until (tableau.stages - 1)) {
-        k(i) = f(yInit + h * sum(for (j <- 0 until i) yield tableau.a(i)(j) * k(j)), start + h * tableau.c(i))
+        k(i) = f(yInit + h * sum(for (j <- 0 to i) yield tableau.a(i)(j) * k(j)), t0 + h * tableau.c(i))
       }
 
-      val y = yInit + h * sum(for (i <- 0 until tableau.stages) yield tableau.b(i) * k(i))
-      val error = y - (yInit + h * sum(for (i <- 0 until tableau.stages) yield tableau.bStar(i) * k(i)))
-      
-      val errorLimits = for (i <- 0 until y.length) yield max(rTol(i) * abs(y(i)), aTol(i))
-      if ((for (i <- 0 until y.length) yield abs(error(i)) < errorLimits(i)).foldLeft(true)(_ & _)) {
-        return (y, h, if (tableau.hasFirstSameAsLast) Some(k.last) else None)
-      }
+      val dy = h * sum(for (i <- 0 until tableau.stages) yield tableau.b(i) * k(i))
+      val dyStar = h * sum(for (i <- 0 until tableau.stages) yield tableau.bStar(i) * k(i))
+      val y = yInit + dy
+      val error = dy - dyStar
 
       // updates step size from error estimate
-      val hUpdate = h * pow(max(for (i <- 0 until error.length) yield errorLimits(i) / abs(error(i))), 0.2)
-      computeStep(yInit, t0, if (t0 + hUpdate <= tLimit) { hUpdate } else { tLimit - t0 }, tLimit, lastEvaluation)
+      val errorWeights = for (i <- 0 until y.length) yield rTol(i) * abs(y(i)) + aTol(i)
+      val errorFactor = max(for (i <- 0 until error.length) yield abs(error(i) / errorWeights(i)))
+      val hUpdate = 0.9 * h / errorFactor
+      val hNext = if (t0 + hUpdate <= tLimit) hUpdate else tLimit - t0
+      if (errorFactor <= 1.0) {
+        return (y, hNext, if (tableau.hasFirstSameAsLast) Some(k.last) else None)
+      }
+
+      computeStep(yInit, t0, hNext, tLimit, lastEvaluation)
     }
 
     val finalStates = Array.fill[DenseVector[Double]](t.length)(DenseVector.zeros(y0.length))
@@ -77,19 +80,20 @@ object RungeKuttaODESolver {
       // TODO: Capture intermediate states and provide option for returning them
       var state = finalStates(i - 1)
       var time = t(i - 1)
-      // TODO: Is there a more intelligent step size initialization?
       var stepSize = t(i) - t(i - 1)
+      var lastEval: Option[DenseVector[Double]] = None
       do {
-        val (s, dt) = computeStep(state, time, stepSize, t(i))
+        val (s, dt, lastF) = computeStep(state, time, stepSize, t(i), lastEval)
         state = s
         time = time + dt
         stepSize = dt
+        lastEval = lastF
         // TODO: Are there cases where this comparison of Doubles becomes problematic? Tolerance needed?
       } while (time < t(i))
 
       finalStates(i) = state
     }
-    
+
     finalStates
   }
 }
