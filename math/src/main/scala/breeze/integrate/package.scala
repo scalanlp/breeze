@@ -26,8 +26,8 @@ package object integrate {
     f: (DenseVector[Double], Double) => DenseVector[Double],
     y0: DenseVector[Double],
     t: Array[Double],
-    relTol: Array[Double] = Array.empty,
-    absTol: Array[Double] = Array.empty
+    relTol: DenseVector[Double] = null,
+    absTol: DenseVector[Double] = null
     ) : Array[DenseVector[Double]] = {
     
     RungeKuttaOdeSolver(DormandPrinceTableau, f, y0, t, relTol, absTol)
@@ -37,8 +37,8 @@ package object integrate {
     f: (DenseVector[Double], Double) => DenseVector[Double],
     y0: DenseVector[Double],
     t: Array[Double],
-    relTol: Array[Double] = Array.empty,
-    absTol: Array[Double] = Array.empty
+    relTol: DenseVector[Double] = null,
+    absTol: DenseVector[Double] = null
     ) : Array[DenseVector[Double]] = {
     
     RungeKuttaOdeSolver(BogackiShampineTableau, f, y0, t, relTol, absTol)

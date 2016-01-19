@@ -20,17 +20,17 @@ class RungeKuttaOdeTest extends FunSuite {
   test("ode45") {
 
     val steps = integrate.ode45(f, DenseVector(1.0, 0.0), Array(0.0, scala.math.Pi / 2.0))
-    assert(closeTo(steps.last(0), 0.0))
-    assert(closeTo(steps.last(1), -1.0))
+    assert(closeTo(steps.last(0), 0.0, 1e-2))
+    assert(closeTo(steps.last(1), -1.0, 1e-2))
   }
 
   test("incompatible dimensions") {
 
     intercept[Exception] {
-      integrate.RungeKuttaOdeSolver(DormandPrinceTableau, f, DenseVector(1.0, 0.0), Array(0.0, scala.math.Pi), Array(1.0), Array.empty)
+      integrate.RungeKuttaOdeSolver(DormandPrinceTableau, f, DenseVector(1.0, 0.0), Array(0.0, scala.math.Pi), relTol = DenseVector(1.0))
     }
     intercept[Exception] {
-      integrate.RungeKuttaOdeSolver(DormandPrinceTableau, f, DenseVector(1.0, 0.0), Array(0.0, scala.math.Pi), Array.empty, Array(1.0))
+      integrate.RungeKuttaOdeSolver(DormandPrinceTableau, f, DenseVector(1.0, 0.0), Array(0.0, scala.math.Pi), absTol = DenseVector(1.0))
     }
   }
 }
