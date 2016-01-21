@@ -1,5 +1,6 @@
 package breeze.stats
 
+import scala.reflect.ClassTag
 import util.Sorting
 import breeze.util.{quickSelectImpl, quickSelect}
 
@@ -181,6 +182,12 @@ trait DescriptiveStats {
               quickSelectImpl(tempArray, secondMedianPosition - 1)) / 2
           }
         }
+      }
+
+    @expand
+    implicit def reduceSeq[@expand.args(Int, Long, Double, Float) T]: Impl[Seq[T], T] =
+      new Impl[Seq[T], T] {
+        def apply(v: Seq[T]): T = { median(DenseVector(v.toArray)) }
       }
 
     @expand
