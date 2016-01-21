@@ -6,8 +6,7 @@ import scala.annotation.tailrec
 
 /**
 * Runge-Kutta ODE solver
-* Returns array of states corresponding to array of independent variable t
-* TODO: Integrate support for native LSODE implementation
+* TODO: Integrate support for native LSODE implementation (needed?)
 * TODO: Test integrating backwards through time
 *
 * @author jaketimothy
@@ -17,6 +16,18 @@ object RungeKuttaOdeSolver {
   val defaultRelTol = 1.49012e-8
   val defaultAbsTol = 1.49012e-8
   
+  /*
+   * Given the derivatives function f and the initial state values y0, integrates to
+   * each time specified in t.  Returns a sequence of states corresponding to each
+   * value in t.
+   *
+   * @param tableau defines the type of solver
+   * @param f a first order differential equation of the form dy = f(y, t)
+   * @param y0 the initial values of the state y at initial time t(0)
+   * @param t the times at which a calculation of state y is desired
+   * @param relTol relative error tolerance values, must be same length as y0
+   * @param absTol absolute error tolerance values, must be same length as y0
+   */
   def apply(
     tableau: RungeKuttaButcherTableau,
     f: (DenseVector[Double], Double) => DenseVector[Double],
@@ -41,7 +52,10 @@ object RungeKuttaOdeSolver {
     val rTol = someRelTol getOrElse DenseVector.fill(y0.length)(defaultRelTol)
     val aTol = someAbsTol getOrElse DenseVector.fill(y0.length)(defaultAbsTol)
     
-    // returns (state, step increment, last function evaluation)
+    /*
+     * Computes the integration step, adjusting the step size.
+     * Returns (state, step increment, last function evaluation)
+     */
     @tailrec def computeStep(
       yInit: DenseVector[Double],
       t0: Double,
@@ -80,7 +94,10 @@ object RungeKuttaOdeSolver {
       computeStep(yInit, t0, hNext, maxStepSize, tLimit, lastEvaluation)
     }
 
-    // TODO: Capture intermediate states and provide option for returning them
+    /*
+     * Integrates from one time to the next.
+     * TODO: Capture intermediate states and provide option for returning them
+     */
     @tailrec def integrateToNext(
       yInit: DenseVector[Double],
       t0: Double,
