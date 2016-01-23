@@ -3,6 +3,7 @@ package breeze
 import breeze.linalg._
 
 package object integrate {
+  
   def trapezoid(f: Double => Double, start: Double, end: Double, nodes: Int) : Double = {
     if (nodes < 2)
       throw new Exception("When using trapezoid, you have to use at least two nodes.")
@@ -19,5 +20,37 @@ package object integrate {
     val h = (end-start) / (nodes-1)
     val s = sum(for (i <- 0 until nodes-1) yield f(start+(i+0.5)*h))
     trapezoid(f, start, end, nodes) / 3.0 + s * 2/3.0 * h
+  }
+
+  /*
+   * ODE functions return a sequence of states corresponding to each value in t.
+   *
+   * @param f a first order differential equation of the form dy = f(y, t)
+   * @param y0 the initial values of the state y at initial time t(0)
+   * @param t the times at which a calculation of state y is desired
+   * @param relTol relative error tolerance values, must be same length as y0
+   * @param absTol absolute error tolerance values, must be same length as y0
+   */
+
+  def ode45(
+    f: (DenseVector[Double], Double) => DenseVector[Double],
+    y0: DenseVector[Double],
+    t: Array[Double],
+    relTol: DenseVector[Double] = null,
+    absTol: DenseVector[Double] = null
+    ) : Array[DenseVector[Double]] = {
+    
+    RungeKuttaOdeSolver(DormandPrinceTableau, f, y0, t, relTol, absTol)
+  }
+
+  def ode23(
+    f: (DenseVector[Double], Double) => DenseVector[Double],
+    y0: DenseVector[Double],
+    t: Array[Double],
+    relTol: DenseVector[Double] = null,
+    absTol: DenseVector[Double] = null
+    ) : Array[DenseVector[Double]] = {
+    
+    RungeKuttaOdeSolver(BogackiShampineTableau, f, y0, t, relTol, absTol)
   }
 }
