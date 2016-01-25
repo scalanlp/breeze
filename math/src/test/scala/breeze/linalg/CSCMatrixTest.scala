@@ -411,5 +411,19 @@ class CSCMatrixTest extends FunSuite with Checkers {
     assert(a.rows == 2)
     assert(a.cols == 1)
   }
+
+  test("#479") {
+    val m1: Matrix[Double] = new CSCMatrix[Double](Array(1.0, 1, 1), 3, 3, Array(0, 1, 2, 3), Array(0, 1, 2))
+    val m2: Matrix[Double] = new CSCMatrix[Double](Array(1.0, 2, 2, 4), 3, 3, Array(0, 0, 2, 4), Array(1, 2, 1, 2))
+
+    val sum = (m1 + m2).asInstanceOf[CSCMatrix[Double]]
+    require(sum.colPtrs.last == sum.rowIndices.length, s"${sum.colPtrs.last} not equal to ${sum.rowIndices.length}")
+  }
+
+  test("CSCMatrix Solve") {
+    val r2 : DenseVector[Double] = CSCMatrix((1.0,3.0,4.0),(2.0,0.0,6.0)) \ DenseVector(1.0,3.0)
+    import breeze.numerics.inf
+    assert( norm(r2 - DenseVector(0.1813186813186811, -0.3131868131868131, 0.43956043956043944), inf) < 1E-5)
+  }
 }
 

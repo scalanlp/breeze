@@ -2,7 +2,7 @@ package breeze.linalg
 package operators
 
 import breeze.generic.UFunc
-import breeze.linalg.support.{CanZipMapKeyValues, CanZipMapValues}
+import breeze.linalg.support.{CanTranspose, CanZipMapKeyValues, CanZipMapValues}
 import breeze.macros.expand
 import breeze.linalg.{DenseMatrix, SparseVector}
 import breeze.math._
@@ -244,6 +244,8 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring {  this: CSCMatrix.type =>
           bldr.result(true, true)
         }
       }
+
+      implicitly[BinaryRegistry[Matrix[T], Matrix[T], OpAdd.type, Matrix[T]]].register(this)
     }
   }
 
@@ -1471,6 +1473,17 @@ trait CSCMatrixOps_Ring extends CSCMatrixOpsLowPrio with SerializableLogging {
   implicit def csc_T_UpdateOp[@expand.args(OpMulMatrix, OpSet, OpSub, OpAdd, OpMulScalar, OpDiv, OpMod, OpPow) Op <: OpType, T:Field:ClassTag]
   : Op.InPlaceImpl2[CSCMatrix[T],T] = {
     updateFromPure_CSC_T(implicitly[Op.Impl2[CSCMatrix[T], T, CSCMatrix[T]]])
+  }
+
+
+
+  implicit def implOpSolveMatrixBy_CSCD_DVD_eq_DVD[V](implicit multMV: OpMulMatrix.Impl2[CSCMatrix[Double], V, V],
+                                                      ispace: MutableInnerProductVectorSpace[V, Double]): OpSolveMatrixBy.Impl2[CSCMatrix[Double], V, V] = {
+    new OpSolveMatrixBy.Impl2[CSCMatrix[Double], V, V] {
+      override def apply(a : CSCMatrix[Double], b : V): V = {
+        LSMR.solve(a, b, quiet = true)
+      }
+    }
   }
 }
 

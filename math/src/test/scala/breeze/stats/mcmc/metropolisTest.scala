@@ -1,7 +1,7 @@
 package breeze.stats.mcmc
 
 import breeze.stats.distributions._
-import spire.implicits.cfor
+import spire.syntax.cfor._
 import org.scalatest.FunSuite
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -35,20 +35,20 @@ class metropolisTest extends FunSuite {
 
   val proposal = rand.choose(Seq(A,B,C))
 
-  val TOLERANCE = 0.05
+  val TOLERANCE = 0.1
 
   test("stupidly simple mcmc") {
     val mh = ArbitraryMetropolisHastings(logLikelihood _, (_:State) => proposal, (_:State,_:State) => 0.0, A, burnIn = 10000, dropCount=DROP_COUNT)
     var aCount: Double = 0
     var bCount: Double = 0
     var cCount: Double = 0
-    cfor(0)(i => i < NUM_TESTS, i => i+1)(i => {
+    cforRange(0 until NUM_TESTS) { i =>
       mh.draw() match {
         case A => aCount += 1
         case B => bCount += 1
         case C => cCount += 1
       }
-    })
+    }
     assert(math.abs(aCount / cCount - 6) < TOLERANCE)
     assert(math.abs(aCount / bCount - 3) < TOLERANCE)
     assert(math.abs(bCount / cCount - 2) < TOLERANCE)
@@ -68,13 +68,13 @@ class metropolisTest extends FunSuite {
     var aCount: Double = 0
     var bCount: Double = 0
     var cCount: Double = 0
-    cfor(0)(i => i < NUM_TESTS, i => i+1)(i => {
+    cforRange(0 until NUM_TESTS) { i =>
       mh.draw() match {
         case A => aCount += 1
         case B => bCount += 1
         case C => cCount += 1
       }
-    })
+    }
     assert(math.abs(aCount / cCount - 6) < TOLERANCE)
     assert(math.abs(aCount / bCount - 3) < TOLERANCE)
     assert(math.abs(bCount / cCount - 2) < TOLERANCE)
