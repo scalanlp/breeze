@@ -304,6 +304,55 @@ trait DescriptiveStats {
 
   }
 
+  /**
+    * A [[breeze.generic.UFunc]] for digitizing arrays.
+    *
+    * Each element in the bins array is assumed to be the *right* endpoint of a given bin.
+    * For instance, bins=[1,3,5] represents a bin from (-infty,1], (1,3], (3,5] and (5,\infty).
+    * The result returned is the index of the bin of the inputs.
+    *
+    * E.g., digitize([-3, 0.5, 1, 1.5, 4], [0,1,2]) = [0, 1, 1, 2, 3]
+    */
+  object digitize extends UFunc {
+
+    @expand
+    implicit def arrayVersion[@expand.args(Int, Long, Double, Float) T]: Impl2[Array[T], Array[Double], Array[Int]] =
+      new Impl2[Array[T], Array[Double], Array[Int]] {
+        def apply(x: Array[T], bins: Array[Double]): Array[Int] = {
+          val vecResult = digitize(DenseVector(x), DenseVector(bins))
+          vecResult.data
+        }
+      }
+
+    @expand
+    implicit def vecVersion[@expand.args(Int, Long, Double, Float) T]: Impl2[DenseVector[T], DenseVector[Double], DenseVector[Int]] =
+      new Impl2[DenseVector[T], DenseVector[Double], DenseVector[Int]] {
+        def apply(x: DenseVector[T], bins: DenseVector[Double]): DenseVector[Int] = {
+          errorCheckBins(bins)
+          val result = new DenseVector[Int](x.length)
+          cfor(0)(i => i < x.length, i => i+1)(i => {
+            result(i) = bins.length
+            var j=bins.length-1
+            while (j >= 0) {
+              if (x(i) <= bins(j)) {
+                result(i) = j
+              } else {
+                j = -1
+              }
+              j -= 1
+            }
+          })
+          result
+        }
+      }
+
+    private def errorCheckBins(bins: DenseVector[Double]) {
+      cfor(0)(i => i < bins.length-1, i => i+1)(i => {
+        require( bins(i) < bins(i+1) )
+      })
+    }
+  }
+
 }
 
 /**
@@ -365,4 +414,3 @@ object DescriptiveStats {
   }
 
 }
-

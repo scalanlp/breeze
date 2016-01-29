@@ -82,6 +82,13 @@ class DescriptiveStatsTest extends WordSpec with Matchers {
       assert(result.mode.isNaN)
       assert(result.frequency == 0)
     }
+    "digitize should return proper bins" in {
+      val x = DenseVector[Double](-0.5, 0.5, 1.5, 2,0, 2.5)
+      val bins = DenseVector[Double](0.0,1.0,2.0)
+      val result = digitize(x, bins)
+      val desiredResult = DenseVector[Int](0, 1, 2, 2, 0, 3)
+      assert(result == desiredResult)
+    }
 
   }
 }
