@@ -43,7 +43,7 @@ case class LogNormal(mu: Double, sigma: Double)
    * @param p: a probability in [0,1]
    * @return x s.t. cdf(x) = numYes
    */
-  def inverseCdf(p: Double) = exp(myGaussian.icdf(p))
+  def inverseCdf(p: Double) = exp(myGaussian.inverseCdf(p))
 
   /**
    * Computes the cumulative density function of the value x.
