@@ -27,8 +27,8 @@ import math.{Pi,log1p}
  *
  * @author dlwh
  */
-case class Gaussian(mu :Double, sigma : Double)(implicit rand: RandBasis = Rand)
-    extends ContinuousDistr[Double] with Moments[Double, Double] with HasCdf {
+case class Gaussian(mu: Double, sigma: Double)(implicit rand: RandBasis = Rand)
+    extends ContinuousDistr[Double] with Moments[Double, Double] with HasCdf with HasInverseCdf {
   private val inner = rand.gaussian(mu,sigma)
   def draw() = inner.get()
 
@@ -45,7 +45,7 @@ case class Gaussian(mu :Double, sigma : Double)(implicit rand: RandBasis = Rand)
   * @param p: a probability in [0,1]
   * @return x s.t. cdf(x) = numYes
   */
-  def icdf(p: Double) = {
+  def inverseCdf(p: Double) = {
     require( p >= 0 )
     require( p <= 1 )
 
