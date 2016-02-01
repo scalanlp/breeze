@@ -62,7 +62,7 @@ class BaseUniformHaltonGenerator(val dimension: Int) extends QuasiMonteCarloGene
   private val bases = java.util.Arrays.copyOfRange(Halton.PRIMES, 0, dimension)
 
   private var count: Long = 0
-  private val counters: Array[UnboxedVectorLike] = List.fill(dimension)({ new UnboxedVectorLike(16) }).toArray
+  private val counters: Array[UnboxedIntVector] = List.fill(dimension)({ new UnboxedIntVector(16) }).toArray
   val permutations: Array[Array[Long]] =
     (0 to dimension).map(i => {
       val vv = new Array[Long](Halton.PRIMES(i))
@@ -106,9 +106,11 @@ class BaseUniformHaltonGenerator(val dimension: Int) extends QuasiMonteCarloGene
     currentValue
   }
 
-  private class UnboxedVectorLike(initialSize: Int = 256) {
+  private class UnboxedIntVector(initialSize: Int = 256) {
     /*
-     * This is totally unsafe to use anywhere besides here
+     * This is totally unsafe to use anywhere besides here.
+     * I ran the code with bounds checks, they slowed things down,
+     * but the internal code here seems to make them unnecessary.
      */
     private var storage: Array[Int] = new Array[Int](initialSize)
     private var actualSize: Int = 0
