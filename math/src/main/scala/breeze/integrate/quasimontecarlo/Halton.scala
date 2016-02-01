@@ -16,7 +16,6 @@ package breeze.integrate.quasimontecarlo
  limitations under the License.
 */
 
-import java.util.Vector
 import spire.implicits.cfor
 import breeze.linalg._
 
@@ -63,7 +62,7 @@ class BaseUniformHaltonGenerator(val dimension: Int) extends QuasiMonteCarloGene
   private val bases = java.util.Arrays.copyOfRange(Halton.PRIMES, 0, dimension)
 
   private var count: Long = 0
-  private val counters: Array[Vector[Int]] = List.fill(dimension)({ new java.util.Vector[Int]() }).toArray
+  private val counters: Array[UnboxedVectorLike] = List.fill(dimension)({ new UnboxedVectorLike(16) }).toArray
   val permutations: Array[Array[Long]] =
     (0 to dimension).map(i => {
       val vv = new Array[Long](Halton.PRIMES(i))
@@ -105,5 +104,30 @@ class BaseUniformHaltonGenerator(val dimension: Int) extends QuasiMonteCarloGene
     })
     generatedCount += 1
     currentValue
+  }
+
+  private class UnboxedVectorLike(initialSize: Int = 256) {
+    /*
+     * This is totally unsafe to use anywhere besides here
+     */
+    private var storage: Array[Int] = new Array[Int](initialSize)
+    private var actualSize: Int = 0
+
+    def add(x: Int) = {
+      if (actualSize == storage.size) {
+        val oldStorage = storage
+        storage = new Array[Int](oldStorage.size*2)
+      }
+      storage(actualSize) = x
+      actualSize += 1
+    }
+
+    def size(): Int = actualSize
+
+    def get(i: Int): Int = storage(i)
+
+    def set(i: Int, x: Int) = {
+      storage(i) = x
+    }
   }
 }
