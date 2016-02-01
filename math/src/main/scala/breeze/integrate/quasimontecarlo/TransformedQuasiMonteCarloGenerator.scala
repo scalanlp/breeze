@@ -1,7 +1,7 @@
 package breeze.integrate.quasimontecarlo
 
 /*
- Copyright 2009 Chris Stucchio
+ Copyright 2016 Chris Stucchio
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
