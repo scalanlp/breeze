@@ -27,8 +27,22 @@ import org.scalatest.FunSuite
  **/
 class RandTest extends FunSuite {
   test("randInt is always non-negative") {
-    RandBasis.mt0.randInt.sample(10000).forall(_ >= 0)
-    RandBasis.mt0.randLong.sample(10000).forall(_ >= 0)
+    assert( RandBasis.mt0.randInt.sample(10000).forall(_ >= 0) )
+    assert( RandBasis.mt0.randLong.sample(10000).forall(_ >= 0) )
+  }
+
+  test("RandBasis.withSeed lets users specify a random seed") {
+    {
+      val a = RandBasis.withSeed(0).randInt.sample(100)
+      val b = RandBasis.withSeed(0).randInt.sample(100)
+      assert(a == b)
+    }
+
+    {
+      val a = RandBasis.withSeed(0).randInt.sample(100)
+      val b = RandBasis.withSeed(1).randInt.sample(100)
+      assert(a != b)
+    }
   }
 
 }
