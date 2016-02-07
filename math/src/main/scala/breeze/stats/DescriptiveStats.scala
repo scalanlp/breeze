@@ -353,6 +353,53 @@ trait DescriptiveStats {
     }
   }
 
+  /**
+    * A [[breeze.generic.UFunc]] for counting bins.
+    *
+    * If passed a traversable object full of Int's, provided
+    * those ints are larger than 0, it will return an
+    * array of the bin counts. E.g.:
+    * bincount(DenseVector[Int](0,1,2,3,1,3,3,3)) == DenseVector[Int](1,2,1,4)
+    *
+    * One can also call this on two dense vectors - the second will be treated
+    * as an array of weights. E.g.:
+    * val x = DenseVector[Int](0,1,2,3,1)
+    * val weights = DenseVector[Double](1.0,2.0,1.0,7.0,1.0)
+    * result is bincount(x, weights) == DenseVector[Double](1.0,3.0,1,7.0)
+    */
+  object bincount extends UFunc {
+    import breeze.linalg._
+
+    @expand
+    implicit def vecVersion[@expand.args(Double, Complex, Float) T]: Impl2[DenseVector[Int], DenseVector[T], DenseVector[T]] =
+      new Impl2[DenseVector[Int], DenseVector[T], DenseVector[T]] {
+        def apply(x: DenseVector[Int], weights: DenseVector[T]): DenseVector[T] = {
+          require(min(x) >= 0)
+          require(x.length == weights.length)
+          val result = new DenseVector[T](max(x)+1)
+          cfor(0)(i => i < x.length, i => i+1)(i => {
+            result(x(i)) = result(x(i)) + weights(i)
+          })
+          result
+        }
+      }
+
+    implicit def reduce[T](implicit iter: CanTraverseValues[T, Int]): Impl[T, DenseVector[Int]] =
+      new Impl[T, DenseVector[Int]] {
+        def apply(x: T): DenseVector[Int] = {
+          require(min(x) >= 0)
+          val result = new DenseVector[Int](max(x)+1)
+          class BincountVisitor extends ValuesVisitor[Int] {
+            def visit(a: Int): Unit = { result(a) = result(a) + 1 }
+            def zeros(numZero: Int, zeroValue: Int) = {
+              result(0) = result(0) + numZero
+            }
+          }
+          iter.traverse(x, new BincountVisitor)
+          result
+        }
+      }
+  }
 }
 
 /**

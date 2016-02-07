@@ -90,6 +90,24 @@ class DescriptiveStatsTest extends WordSpec with Matchers {
       assert(result == desiredResult)
     }
 
+    "bincount should compute bins for DenseVector" in {
+      val x = DenseVector[Int](0,1,2,3,1)
+      val result = DenseVector[Int](1,2,1,1)
+      assert(result == bincount(x))
+    }
+
+    "bincount should compute bins for DenseVector with weights" in {
+      val x = DenseVector[Int](0,1,2,3,1)
+      val weights = DenseVector[Double](1.0,2.0,1.0,7.0,1.0)
+      val result = DenseVector[Double](1.0,3.0,1,7.0)
+      assert(result == bincount(x, weights))
+    }
+
+    "bincount should compute bins for DenseMatrix" in {
+      val x = DenseMatrix((1,2), (2, 3),(3, 4), (4, 5))
+      val result = DenseVector[Int](0,1,2,2,2,1)
+      assert(result == bincount(x))
+    }
   }
 }
 
