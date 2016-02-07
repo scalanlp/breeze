@@ -360,6 +360,12 @@ trait DescriptiveStats {
     * those ints are larger than 0, it will return an
     * array of the bin counts. E.g.:
     * bincount(DenseVector[Int](0,1,2,3,1,3,3,3)) == DenseVector[Int](1,2,1,4)
+    *
+    * One can also call this on two dense vectors - the second will be treated
+    * as an array of weights. E.g.:
+    * val x = DenseVector[Int](0,1,2,3,1)
+    * val weights = DenseVector[Double](1.0,2.0,1.0,7.0,1.0)
+    * result is bincount(x, weights) == DenseVector[Double](1.0,3.0,1,7.0)
     */
   object bincount extends UFunc {
     import breeze.linalg._
