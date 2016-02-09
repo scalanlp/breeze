@@ -360,7 +360,8 @@ object RandBasis {
    * Returns a new MersenneTwister backed rand basis with seed set to a specific value
    */
   def withSeed(seed: Int) = {
-    new RandBasis(new ThreadLocalRandomGenerator(new MersenneTwister(seed)))
+    val int = new AtomicInteger(seed)
+    new RandBasis(new ThreadLocalRandomGenerator(new MersenneTwister(int.getAndIncrement())))
   }
 
 }

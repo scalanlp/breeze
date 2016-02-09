@@ -31,6 +31,23 @@ class RandTest extends FunSuite {
     assert( RandBasis.mt0.randLong.sample(10000).forall(_ >= 0) )
   }
 
+  test("RandBasis.withSeed ensures distinct seeds in different threads") {
+    implicit val basis: RandBasis = RandBasis.withSeed(2)
+    var t2 = new Gaussian(0, 1).sample(10)
+    var t3 = new Gaussian(0, 1).sample(10)
+
+    assert { t2 != t3 }  // sanity check
+
+    val threads = for (i <- 1 to 2) yield new Thread {
+      override def run() { t2 = new Gaussian(0, 1).sample(10) }
+    }
+    threads map(_.start)
+    threads map(_.join)
+
+    // ensure that both threads use different seeds
+    assert { t2 != t3 }
+  }
+
   test("RandBasis.withSeed lets users specify a random seed") {
     {
       val a = RandBasis.withSeed(0).randInt.sample(100)
