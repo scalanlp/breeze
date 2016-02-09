@@ -38,7 +38,7 @@ class NonstiffOdeTest extends FunSuite {
 
     val integrator = new DormandPrince54Integrator(0.0, 1.0)
 
-    val steps = integrator.integrate(f2, y0_2, t2)
+    val steps = integrator.integrate(f, y0, t)
     assert(abs((steps(1)(0) - ans(0)) / ans(0)) < limit)
     assert(abs((steps(1)(1) - ans(1)) / ans(1)) < limit)
     assert(abs((steps(1)(2) - ans(2)) / ans(2)) < limit)
@@ -48,7 +48,7 @@ class NonstiffOdeTest extends FunSuite {
 
     val integrator = new DormandPrince853Integrator(0.0, 1.0)
 
-    val steps = integrator.integrate(f2, y0_2, t2)
+    val steps = integrator.integrate(f, y0, t)
     assert(abs((steps(1)(0) - ans(0)) / ans(0)) < limit)
     assert(abs((steps(1)(1) - ans(1)) / ans(1)) < limit)
     assert(abs((steps(1)(2) - ans(2)) / ans(2)) < limit)
@@ -58,7 +58,7 @@ class NonstiffOdeTest extends FunSuite {
 
     val integrator = new GraggBulirschStoerIntegrator(0.0, 1.0)
 
-    val steps = integrator.integrate(f2, y0_2, t2)
+    val steps = integrator.integrate(f, y0, t)
     assert(abs((steps(1)(0) - ans(0)) / ans(0)) < limit)
     assert(abs((steps(1)(1) - ans(1)) / ans(1)) < limit)
     assert(abs((steps(1)(2) - ans(2)) / ans(2)) < limit)
@@ -68,7 +68,7 @@ class NonstiffOdeTest extends FunSuite {
 
     val integrator = new AdamsBashforthIntegrator(5, 0.0, 1.0)
 
-    val steps = integrator.integrate(f2, y0_2, t2)
+    val steps = integrator.integrate(f, y0, t)
     assert(abs((steps(1)(0) - ans(0)) / ans(0)) < limit)
     assert(abs((steps(1)(1) - ans(1)) / ans(1)) < limit)
     assert(abs((steps(1)(2) - ans(2)) / ans(2)) < limit)
@@ -78,7 +78,7 @@ class NonstiffOdeTest extends FunSuite {
 
     val integrator = new AdamsMoultonIntegrator(5, 0.0, 1.0)
 
-    val steps = integrator.integrate(f2, y0_2, t2)
+    val steps = integrator.integrate(f, y0, t)
     assert(abs((steps(1)(0) - ans(0)) / ans(0)) < limit)
     assert(abs((steps(1)(1) - ans(1)) / ans(1)) < limit)
     assert(abs((steps(1)(2) - ans(2)) / ans(2)) < limit)
