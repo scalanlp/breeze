@@ -4,31 +4,29 @@ import breeze.linalg._
 import org.apache.commons.math3.ode.{AbstractIntegrator, FirstOrderDifferentialEquations}
 import org.apache.commons.math3.ode.nonstiff.AdaptiveStepsizeIntegrator
 
-abstract class ApacheAdaptiveStepIntegrator(
-    minStep: Double,
-    maxStep: Double,
+abstract class ApacheAdaptiveStepIntegrator[T <: AdaptiveStepsizeIntegrator](
     relTol: DenseVector[Double] = null,
     absTol: DenseVector[Double] = null)
-  extends ApacheOdeIntegrator {
-
-  protected val inner: AdaptiveStepsizeIntegrator
+  extends ApacheOdeIntegrator[T] {
 
   // implicit Option allows user to input DenseVector[Double] rather than Some(DenseVector[Double])
   private val someRelTol = Option(relTol)
   private val someAbsTol = Option(absTol)
   
-  override def integrate(
-    f: (DenseVector[Double], Double) => DenseVector[Double],
-    y0: DenseVector[Double],
-    t: Array[Double]): Array[DenseVector[Double]] = {
+  // If error tolerances are not specified, fill with default.
+  protected val (aTol, rTol) : (Array[Double], Array[Double]) = if (someRelTol.isEmpty && someAbsTol.isEmpty)
+    (Array.empty, Array.empty)
+  else if (!someRelTol.isEmpty && !someAbsTol.isEmpty)
+    (someAbsTol.get.toArray, someRelTol.get.toArray)
+  else if (someRelTol.isEmpty)
+    (someAbsTol.get.toArray, Array.fill(someAbsTol.get.length)(ApacheAdaptiveStepIntegrator.defaultRelTol))
+  else
+    (Array.fill(someRelTol.get.length)(ApacheAdaptiveStepIntegrator.defaultAbsTol), someRelTol.get.toArray)
 
-    // If error tolerances are not specified, fill with default.
-    val relativeTolerance = someRelTol getOrElse DenseVector.fill(y0.length)(ApacheAdaptiveStepIntegrator.defaultRelTol)
-    val absoluteTolerance = someAbsTol getOrElse DenseVector.fill(y0.length)(ApacheAdaptiveStepIntegrator.defaultAbsTol)
-
-    inner.setStepSizeControl(minStep, maxStep, absoluteTolerance.toArray, relativeTolerance.toArray)
-    super.integrate(f, y0, t)
-  }
+  if (!aTol.isEmpty && !rTol.isEmpty)
+    inner.setStepSizeControl(inner.getMinStep, inner.getMaxStep, aTol, rTol)
+  else
+    inner.setStepSizeControl(inner.getMinStep, inner.getMaxStep, ApacheAdaptiveStepIntegrator.defaultAbsTol, ApacheAdaptiveStepIntegrator.defaultRelTol)
 }
 
 object ApacheAdaptiveStepIntegrator {

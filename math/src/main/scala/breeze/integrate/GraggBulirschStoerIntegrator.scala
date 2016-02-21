@@ -8,7 +8,8 @@ class GraggBulirschStoerIntegrator(
     maxStep: Double,
     relTol: DenseVector[Double] = null,
     absTol: DenseVector[Double] = null)
-  extends ApacheAdaptiveStepIntegrator(minStep, maxStep, relTol, absTol) {
+  extends ApacheAdaptiveStepIntegrator[ApacheGraggBulirschStoerIntegrator](relTol, absTol) {
 
-  protected final val inner = new ApacheGraggBulirschStoerIntegrator(minStep, maxStep, ApacheAdaptiveStepIntegrator.defaultAbsTol, ApacheAdaptiveStepIntegrator.defaultRelTol)
+  protected final def create: ApacheGraggBulirschStoerIntegrator =
+    new ApacheGraggBulirschStoerIntegrator(minStep, maxStep, ApacheAdaptiveStepIntegrator.defaultAbsTol, ApacheAdaptiveStepIntegrator.defaultRelTol)
 }

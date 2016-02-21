@@ -8,7 +8,8 @@ class HighamHall54Integrator(
     maxStep: Double,
     relTol: DenseVector[Double] = null,
     absTol: DenseVector[Double] = null)
-  extends ApacheAdaptiveStepIntegrator(minStep, maxStep, relTol, absTol) {
+  extends ApacheAdaptiveStepIntegrator[ApacheHighamHall54Integrator](relTol, absTol) {
 
-  protected final val inner = new ApacheHighamHall54Integrator(minStep, maxStep, ApacheAdaptiveStepIntegrator.defaultAbsTol, ApacheAdaptiveStepIntegrator.defaultRelTol)
+  protected final def create: ApacheHighamHall54Integrator =
+    new ApacheHighamHall54Integrator(minStep, maxStep, ApacheAdaptiveStepIntegrator.defaultAbsTol, ApacheAdaptiveStepIntegrator.defaultRelTol)
 }

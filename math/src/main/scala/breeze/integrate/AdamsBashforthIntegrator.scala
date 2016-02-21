@@ -9,7 +9,8 @@ class AdamsBashforthIntegrator(
     maxStep: Double,
     relTol: DenseVector[Double] = null,
     absTol: DenseVector[Double] = null)
-  extends ApacheAdamsIntegrator(order, minStep, maxStep, relTol, absTol) {
+  extends ApacheAdamsIntegrator[ApacheAdamsBashforthIntegrator](relTol, absTol) {
 
-  protected final val inner = new ApacheAdamsBashforthIntegrator(order, minStep, maxStep, ApacheAdaptiveStepIntegrator.defaultAbsTol, ApacheAdaptiveStepIntegrator.defaultRelTol)
+  protected final def create: ApacheAdamsBashforthIntegrator =
+    new ApacheAdamsBashforthIntegrator(order, minStep, maxStep, ApacheAdaptiveStepIntegrator.defaultAbsTol, ApacheAdaptiveStepIntegrator.defaultRelTol)
 }

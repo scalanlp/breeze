@@ -8,7 +8,8 @@ class DormandPrince853Integrator(
     maxStep: Double,
     relTol: DenseVector[Double] = null,
     absTol: DenseVector[Double] = null)
-  extends ApacheAdaptiveStepIntegrator(minStep, maxStep, relTol, absTol) {
+  extends ApacheAdaptiveStepIntegrator[ApacheDormandPrince853Integrator](relTol, absTol) {
 
-  protected final val inner = new ApacheDormandPrince853Integrator(minStep, maxStep, ApacheAdaptiveStepIntegrator.defaultAbsTol, ApacheAdaptiveStepIntegrator.defaultRelTol)
+  protected final def create: ApacheDormandPrince853Integrator =
+    new ApacheDormandPrince853Integrator(minStep, maxStep, ApacheAdaptiveStepIntegrator.defaultAbsTol, ApacheAdaptiveStepIntegrator.defaultRelTol)
 }

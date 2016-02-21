@@ -9,7 +9,8 @@ class AdamsMoultonIntegrator(
     maxStep: Double,
     relTol: DenseVector[Double] = null,
     absTol: DenseVector[Double] = null)
-  extends ApacheAdamsIntegrator(order, minStep, maxStep, relTol, absTol) {
+  extends ApacheAdamsIntegrator[ApacheAdamsMoultonIntegrator](relTol, absTol) {
 
-  protected final val inner = new ApacheAdamsMoultonIntegrator(order - 1, minStep, maxStep, ApacheAdaptiveStepIntegrator.defaultAbsTol, ApacheAdaptiveStepIntegrator.defaultRelTol)
+  protected final def create: ApacheAdamsMoultonIntegrator =
+    new ApacheAdamsMoultonIntegrator(order - 1, minStep, maxStep, ApacheAdaptiveStepIntegrator.defaultAbsTol, ApacheAdaptiveStepIntegrator.defaultRelTol)
 }

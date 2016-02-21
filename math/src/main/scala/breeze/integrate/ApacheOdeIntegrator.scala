@@ -2,11 +2,12 @@ package breeze.integrate
 
 import breeze.linalg._
 import org.apache.commons.math3.ode.{AbstractIntegrator, FirstOrderDifferentialEquations}
-import org.apache.commons.math3.ode.nonstiff.AdaptiveStepsizeIntegrator
 
-trait ApacheOdeIntegrator extends OdeIntegrator {
+trait ApacheOdeIntegrator[T <: AbstractIntegrator] extends OdeIntegrator {
 
-  protected val inner: AbstractIntegrator
+  protected def create: T
+
+  protected final val inner: T = create
 
   override def integrate(
     f: (DenseVector[Double], Double) => DenseVector[Double],
