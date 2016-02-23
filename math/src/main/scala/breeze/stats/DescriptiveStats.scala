@@ -399,7 +399,6 @@ trait DescriptiveStats {
           result
         }
       }
-  }
 
   /**
     * A [[breeze.generic.UFunc]] for counting bins.
@@ -410,41 +409,44 @@ trait DescriptiveStats {
     * still a lot faster than using bincount.
     *
     */
-  object bincountSparse extends UFunc {
-    import breeze.linalg._
+    object sparse extends UFunc {
+      import breeze.linalg._
 
-    @expand
-    implicit def vecVersion[@expand.args(Double, Complex, Float) T]: Impl2[DenseVector[Int], DenseVector[T], SparseVector[T]] =
-      new Impl2[DenseVector[Int], DenseVector[T], SparseVector[T]] {
-        def apply(x: DenseVector[Int], weights: DenseVector[T]): SparseVector[T] = {
-          require(min(x) >= 0)
-          require(x.length == weights.length)
-          val counter = Counter[Int,T]()
-          cfor(0)(i => i < x.length, i => i+1)(i => {
-            counter.update(x(i), counter(x(i)) + weights(i))
-          })
-          val sortedDataArray = counter.toMap.toArray.sortWith((x,y) => x._1 < y._1).toArray
-          SparseVector(sortedDataArray(sortedDataArray.size-1)._1+1)(sortedDataArray: _*)
-        }
-      }
-
-    implicit def reduce[T](implicit iter: CanTraverseValues[T, Int]): Impl[T, SparseVector[Int]] =
-      new Impl[T, SparseVector[Int]] {
-        def apply(x: T): SparseVector[Int] = {
-          require(min(x) >= 0)
-          val counter = Counter[Int,Int]()
-
-          class BincountVisitor extends ValuesVisitor[Int] {
-            def visit(a: Int): Unit = { counter.update(a,counter(a) + 1) }
-            def zeros(numZero: Int, zeroValue: Int) = {
-              counter.update(zeroValue, counter(zeroValue) + numZero)
-            }
+      @expand
+      implicit def vecVersion[@expand.args(Double, Complex, Float) T]: Impl2[DenseVector[Int], DenseVector[T], SparseVector[T]] =
+        new Impl2[DenseVector[Int], DenseVector[T], SparseVector[T]] {
+          def apply(x: DenseVector[Int], weights: DenseVector[T]): SparseVector[T] = {
+            require(min(x) >= 0)
+            require(x.length == weights.length)
+            val counter = Counter[Int,T]()
+            cfor(0)(i => i < x.length, i => i+1)(i => {
+              counter.update(x(i), counter(x(i)) + weights(i))
+            })
+            val builder = new VectorBuilder[T](max(x)+1)
+            counter.iterator.foreach(x => builder.add(x._1, x._2))
+            builder.toSparseVector
           }
-          iter.traverse(x, new BincountVisitor)
-          val sortedDataArray = counter.toMap.toArray.sortWith((x,y) => x._1 < y._1).toArray
-          SparseVector(sortedDataArray(sortedDataArray.size-1)._1+1)(sortedDataArray: _*)
         }
-      }
+
+      implicit def reduce[T](implicit iter: CanTraverseValues[T, Int]): Impl[T, SparseVector[Int]] =
+        new Impl[T, SparseVector[Int]] {
+          def apply(x: T): SparseVector[Int] = {
+            require(min(x) >= 0)
+            val counter = Counter[Int,Int]()
+
+            class BincountVisitor extends ValuesVisitor[Int] {
+              def visit(a: Int): Unit = { counter.update(a,counter(a) + 1) }
+              def zeros(numZero: Int, zeroValue: Int) = {
+                counter.update(zeroValue, counter(zeroValue) + numZero)
+              }
+            }
+            iter.traverse(x, new BincountVisitor)
+            val builder = new VectorBuilder[Int](max(x)+1)
+            counter.iterator.foreach(x => builder.add(x._1, x._2))
+            builder.toSparseVector
+          }
+        }
+    }
   }
 }
 
