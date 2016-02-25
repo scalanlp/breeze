@@ -8,7 +8,9 @@ class DormandPrince54Integrator(
     maxStep: Double,
     relTol: DenseVector[Double] = null,
     absTol: DenseVector[Double] = null)
-  extends ApacheAdaptiveStepIntegrator[ApacheDormandPrince54Integrator](relTol, absTol) {
+  extends ApacheAdaptiveStepIntegrator(relTol, absTol) {
+
+  type T = ApacheDormandPrince54Integrator
 
   protected final def create: ApacheDormandPrince54Integrator =
     new ApacheDormandPrince54Integrator(minStep, maxStep, ApacheAdaptiveStepIntegrator.defaultAbsTol, ApacheAdaptiveStepIntegrator.defaultRelTol)

@@ -8,7 +8,9 @@ class DormandPrince853Integrator(
     maxStep: Double,
     relTol: DenseVector[Double] = null,
     absTol: DenseVector[Double] = null)
-  extends ApacheAdaptiveStepIntegrator[ApacheDormandPrince853Integrator](relTol, absTol) {
+  extends ApacheAdaptiveStepIntegrator(relTol, absTol) {
+
+  type T = ApacheDormandPrince853Integrator
 
   protected final def create: ApacheDormandPrince853Integrator =
     new ApacheDormandPrince853Integrator(minStep, maxStep, ApacheAdaptiveStepIntegrator.defaultAbsTol, ApacheAdaptiveStepIntegrator.defaultRelTol)
