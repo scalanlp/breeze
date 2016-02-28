@@ -30,11 +30,8 @@ package object hypothesis {
     new StudentsT(dof)(RandBasis.mt0).unnormalizedPdf(tScore) //return p value
   }
 
-  def tTest[T](it1: Traversable[T])(implicit numeric: Numeric[T]):Double = tTest(it1.map(numeric.toDouble))
-  def tTest(it1: Traversable[Double]):Double = tTestImpl(it1) // Specialized case of tTest[T](it1: Traversable[T])(implicit numeric: Numeric[T]) - if we don't specialize to Traversable[Double] then it will stack overflow as it repeatedly calls itself.
-  def tTest[X](it1: X)(implicit ct:CanTraverseValues[X,Double]):Double = tTestImpl(it1)
-
-  private def tTestImpl[X](it1: X)(implicit ct:CanTraverseValues[X,Double]):Double = {
+  def tTest[T](it1: Traversable[T])(implicit numeric: Numeric[T]):Double = tTest[TraversableOnce[Double]](it1.map(numeric.toDouble)) //explicit type annotation ensures that the compiler runs the CanTraverseValues implementation of it
+  def tTest[X](it1: X)(implicit ct:CanTraverseValues[X,Double]):Double = {
     val MeanAndVariance(mu1, var1, n1) = meanAndVariance(it1)
     val Z = mu1 / sqrt( var1/n1 )
     val dof = n1-1
