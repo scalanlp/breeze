@@ -30,11 +30,13 @@ package object hypothesis {
     new StudentsT(dof)(RandBasis.mt0).unnormalizedPdf(tScore) //return p value
   }
 
-  def tTest[T](it1: Traversable[T])(implicit numeric: Numeric[T]):Double = tTest(it1.map(numeric.toDouble))
+  def tTest[T](it1: Traversable[T])(implicit numeric: Numeric[T]):Double = tTest[TraversableOnce[Double]](it1.map(numeric.toDouble)) //explicit type annotation ensures that the compiler runs the CanTraverseValues implementation of it
   def tTest[X](it1: X)(implicit ct:CanTraverseValues[X,Double]):Double = {
     val MeanAndVariance(mu1, var1, n1) = meanAndVariance(it1)
     val Z = mu1 / sqrt( var1/n1 )
     val dof = n1-1
     new StudentsT(dof)(RandBasis.mt0).unnormalizedPdf(Z) //return p value
   }
+
+
 }
