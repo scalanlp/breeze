@@ -399,6 +399,54 @@ trait DescriptiveStats {
           result
         }
       }
+
+  /**
+    * A [[breeze.generic.UFunc]] for counting bins.
+    *
+    * This differs from bincount in that the result it returns is a SparseVector.
+    * The internal implementation of this could probably be significantly sped
+    * up by avoiding the use of counter. Then again, in sparse situations it's
+    * still a lot faster than using bincount.
+    *
+    */
+    object sparse extends UFunc {
+      import breeze.linalg._
+
+      @expand
+      implicit def vecVersion[@expand.args(Double, Complex, Float) T]: Impl2[DenseVector[Int], DenseVector[T], SparseVector[T]] =
+        new Impl2[DenseVector[Int], DenseVector[T], SparseVector[T]] {
+          def apply(x: DenseVector[Int], weights: DenseVector[T]): SparseVector[T] = {
+            require(min(x) >= 0)
+            require(x.length == weights.length)
+            val counter = Counter[Int,T]()
+            cfor(0)(i => i < x.length, i => i+1)(i => {
+              counter.update(x(i), counter(x(i)) + weights(i))
+            })
+            val builder = new VectorBuilder[T](max(x)+1)
+            counter.iterator.foreach(x => builder.add(x._1, x._2))
+            builder.toSparseVector
+          }
+        }
+
+      implicit def reduce[T](implicit iter: CanTraverseValues[T, Int]): Impl[T, SparseVector[Int]] =
+        new Impl[T, SparseVector[Int]] {
+          def apply(x: T): SparseVector[Int] = {
+            require(min(x) >= 0)
+            val counter = Counter[Int,Int]()
+
+            class BincountVisitor extends ValuesVisitor[Int] {
+              def visit(a: Int): Unit = { counter.update(a,counter(a) + 1) }
+              def zeros(numZero: Int, zeroValue: Int) = {
+                counter.update(zeroValue, counter(zeroValue) + numZero)
+              }
+            }
+            iter.traverse(x, new BincountVisitor)
+            val builder = new VectorBuilder[Int](max(x)+1)
+            counter.iterator.foreach(x => builder.add(x._1, x._2))
+            builder.toSparseVector
+          }
+        }
+    }
   }
 }
 
