@@ -39,18 +39,8 @@ package object integrate {
     relTol: DenseVector[Double] = null,
     absTol: DenseVector[Double] = null
     ) : Array[DenseVector[Double]] = {
-    
-    RungeKuttaOdeSolver(DormandPrinceTableau, f, y0, t, relTol, absTol)
-  }
 
-  def ode23(
-    f: (DenseVector[Double], Double) => DenseVector[Double],
-    y0: DenseVector[Double],
-    t: Array[Double],
-    relTol: DenseVector[Double] = null,
-    absTol: DenseVector[Double] = null
-    ) : Array[DenseVector[Double]] = {
-    
-    RungeKuttaOdeSolver(BogackiShampineTableau, f, y0, t, relTol, absTol)
+    val integrator = new DormandPrince54Integrator(0.0, 1.0, relTol, absTol)
+    integrator.integrate(f, y0, t)
   }
 }
