@@ -55,45 +55,45 @@ package object hypothesis {
     Chi2Result(chi2, pVal)
   }
 
+  /**
+    * Takes a sequence of N Bernoulli trials, and determines using a chi2 test whether there is a
+    * statistically significant difference between the N variants and a control.
+    * I.e., the variants may differ from each other, but this only determines whether
+    * they differ from control.
+    *
+    * The pVal reported in the results is the probability (assuming the null hypothesis) of
+    * a false positive at least this large in *any* variant, not in one particular variant.
+    * I.e., multiple comparisons are corrected for.
+    */
   def chi2Test(control: (Long, Long), trials: Seq[(Long, Long)]): Seq[Chi2Result] = {
-    /*
-     * Takes a sequence of N Bernoulli trials, and determines using a chi2 test whether there is a
-     * statistically significant difference between the N variants and a control.
-     * I.e., the variants may differ from each other, but this only determines whether
-     * they differ from control.
-     *
-     * The pVal reported in the results is the probability (assuming the null hypothesis) of
-     * a false positive at least this large in *any* variant, not in one particular variant.
-     * I.e., multiple comparisons are corrected for.
-     */
     val numTrials = trials.size
     trials.map( x => chi2Test(control._1, control._2, x._1, x._2) ).map(r => Chi2Result(r.chi2, sidakCorrectedPVal(r.pVal, numTrials)))
   }
 
+  /**
+    * Takes a p-value run for a single statistical test,
+    * and then corrects for multiple comparisons.
+    *
+    * I.e., if you run n tests with a p-value cutoff of 5%
+    * yielding p-values p1, p2, ..., pn, then if
+    * sidakCorrectedPVal(p1,n) < 5% or sidakCorrectedPVal(p2, n) < 5%, etc,
+    * you can reject the null hypothesis.
+    */
   def sidakCorrectedPVal(p: Double, n: Int): Double = {
-    /*
-     * Takes a p-value run for a single statistical test,
-     * and then corrects for multiple comparisons.
-     *
-     * I.e., if you run n tests with a p-value cutoff of 5%
-     * yielding p-values p1, p2, ..., pn, then if
-     * sidakCorrectedPVal(p1,n) < 5% or sidakCorrectedPVal(p2, n) < 5%, etc,
-     * you can reject the null hypothesis.
-     */
     1.0 - pow(1.0-p, n)
   }
 
+  /**
+    * Takes a p-value run for a single statistical test,
+    * and then corrects for multiple comparisons.
+    *
+    * This function is the inverse of sidakCorrectedPVal.
+    * If you run n tests and want a 5% chance of false positive (assuming null
+    * hypothesis is true) across *all* tests, then you can
+    * run each individual test with a p-value cutoff of
+    * sidakCorrectedPValCutoff(0.05, n).
+    */
   def sidakCorrectedPValCutoff(p: Double, n: Int): Double = {
-    /*
-     * Takes a p-value run for a single statistical test,
-     * and then corrects for multiple comparisons.
-     *
-     * This function is the inverse of sidakCorrectedPVal.
-     * If you run n tests and want a 5% chance of false positive (assuming null
-     * hypothesis is true) across *all* tests, then you can
-     * run each individual test with a p-value cutoff of
-     * sidakCorrectedPValCutoff(0.05, n).
-     */
     1.0 - pow(1.0-p, 1.0/n.toDouble)
   }
 
