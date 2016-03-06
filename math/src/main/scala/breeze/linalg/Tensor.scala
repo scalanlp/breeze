@@ -27,15 +27,17 @@ import scala.reflect.ClassTag
 
 /**
  * We occasionally need a Tensor that doesn't extend NumericOps directly. This is that tensor.
- * @tparam K
- * @tparam V
+  *
+ * @tparam K index type: Int, (Int, Int), ...
+ * @tparam V stored value type
  */
 trait QuasiTensor[@spec(Int) K, @spec(Double, Int, Float, Long) V] {
   def apply(i: K): V
   def update(i: K, v: V): Unit
   def keySet: scala.collection.Set[K]
 
-    // Aggregators
+  // <editor-fold defaultstate="collapsed" desc=" deprecated aggregators, etc. ">
+
   @deprecated("Use max(t) instead of t.max", "0.6")
   def max(implicit ord: Ordering[V]) = valuesIterator.max
   @deprecated("Use min(t) instead of t.min", "0.6")
@@ -46,8 +48,6 @@ trait QuasiTensor[@spec(Int) K, @spec(Double, Int, Float, Long) V] {
   def argmin(implicit ord: Ordering[V]) = keysIterator.minBy( apply _)
   @deprecated("Use sum(t) instead of t.sum", "0.6")
   def sum(implicit num: Numeric[V]) = activeValuesIterator.sum
-
-
   @deprecated("Use argsort(t) instead of t.argsort", "0.6")
   def argsort(implicit ord : Ordering[V]) : IndexedSeq[K] =
     keysIterator.toIndexedSeq.sorted(ord.on[K](apply _))
@@ -66,14 +66,50 @@ trait QuasiTensor[@spec(Int) K, @spec(Double, Int, Float, Long) V] {
     queue.toIndexedSeq.reverse
   }
 
+  // </editor-fold>
+
+  // <editor-fold defaultstate="collapsed" desc=" iterators ">
+
+  /**
+    * Provides a index key -> value pair iterator for all elements of this [[Tensor]].
+    * e.g. iterator() => Iterator[(K, V)]( (0,0)->1d, (0,1)->0d, .... )
+    *
+    * @see [[activeIterator]]
+    */
   def iterator: Iterator[(K, V)]
+  /**
+    * Provides a index key -> value pair iterator for all active elements of a sparse [[Tensor]].
+    * For dense [[Tensor]] implementations, equivalent to [[iterator]].
+    *
+    * @see [[iterator]]
+    */
   def activeIterator: Iterator[(K, V)]
 
+  /**
+    * @see [[activeValuesIterator]]
+    */
   def valuesIterator: Iterator[V]
+  /**
+    * Provides a value iterator to process all active values of a sparse [[Tensor]].
+    * For dense [[Tensor]] implementations, equivalent to [[valuesIterator]].
+    *
+    * @see [[iterator]]
+    */
   def activeValuesIterator: Iterator[V]
 
+  /**
+    * @see [[activeValuesIterator]]
+    */
   def keysIterator: Iterator[K]
+  /**
+    * Provides a key iterator to process all active keys of a sparse [[Tensor]].
+    * For dense [[Tensor]] implementations, equivalent to [[valuesIterator]].
+    *
+    * @see [[iterator]]
+    */
   def activeKeysIterator: Iterator[K]
+
+  // </editor-fold>
 
   /** Returns all indices k whose value satisfies a predicate. */
   def findAll(f: V=>Boolean) = activeIterator.filter(p => f(p._2)).map(_._1).toIndexedSeq

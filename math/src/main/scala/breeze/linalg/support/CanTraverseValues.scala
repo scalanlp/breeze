@@ -25,9 +25,12 @@ import breeze.math.Complex
  * @author dlwh
  */
 trait CanTraverseValues[From, A] {
-  /**Traverses all values from the given collection. */
+
+  /** Traverses all values from the given collection. */
   def traverse(from: From, fn: ValuesVisitor[A]): Unit
-  def isTraversableAgain(from: From):Boolean
+
+  @deprecated
+  final def isTraversableAgain(from: From): Boolean = true
 
   def foldLeft[B](from: From, b: B)(fn: (B, A)=>B):B = {
     var bb = b
@@ -83,7 +86,8 @@ object CanTraverseValues {
       fn.visitArray(from)
     }
 
-    def isTraversableAgain(from: Array[A]): Boolean = true
+    //def isTraversableAgain(from: Array[A]): Boolean = true
+
   }
 
 

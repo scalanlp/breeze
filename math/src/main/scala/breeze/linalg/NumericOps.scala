@@ -16,7 +16,7 @@ package breeze.linalg
  limitations under the License.
 */
 
-import operators._
+import breeze.linalg.operators._
 import breeze.linalg.support.{CanSlice, CanTranspose, CanSlice2}
 import breeze.generic.UFunc
 import breeze.storage.Zero
@@ -25,6 +25,8 @@ import scala.reflect.ClassTag
 
 
 trait ImmutableNumericOps[+This] extends Any {
+
+  //ToDo: Could this be renamed to be more informative? Kind of sounds like Python repr()
   def repr: This
 
   // Immutable
