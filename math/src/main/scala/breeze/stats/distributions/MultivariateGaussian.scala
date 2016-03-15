@@ -51,7 +51,7 @@ case class MultivariateGaussian(mean: DenseVector[Double],
     // determinant of the cholesky decomp is the sqrt of the determinant of the cov matrix
     // this is the log det of the cholesky decomp
     val det = sum(log(diag(root)))
-    mean.length/2 *  log(2 * Pi) + det
+    mean.length/2.0 *  log(2 * Pi) + det
   }
 
   def variance = covariance
