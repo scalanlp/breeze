@@ -68,7 +68,7 @@ libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
     case x if x startsWith "2.10" =>
       (deps :+ ("com.chuusai" %% "shapeless" % "2.0.0" cross CrossVersion.full))
     case x if x.startsWith("2.11") =>
-      (deps :+ ("com.chuusai" %% "shapeless" % "2.0.0" ))
+      (deps :+ ("com.chuusai" %% "shapeless" % "2.2.5" ))
     case _       =>
       deps
   }
