@@ -63,6 +63,13 @@ package object linalg {
 
   // <editor-fold defaultstate="collapsed" desc=" io stuff ">
 
+  /**
+    * Add methods to the string class in order to make file reading easier
+    * @param s
+    */
+  implicit class String2File(s: String) {
+    def toFile:File = new File(s)
+  }
 
   /**
    * Reads in a DenseMatrix from a CSV File

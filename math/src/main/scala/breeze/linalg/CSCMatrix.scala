@@ -48,7 +48,7 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero](private var _data: Arra
 
   /**
    * Constructs a [[CSCMatrix]] instance. We don't validate the input data for performance reasons.
-   * So make sure you understand the [[http://en.wikipedia.org/wiki/Sparse_matrix CSC format]] correctly.
+   * So make sure you understand the [[https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29]] correctly.
    * Otherwise, please use the factory methods under [[CSCMatrix]] and [[CSCMatrix#Builder]] to construct CSC matrices.
    * @param data active values
    * @param rows number of rows

@@ -1,5 +1,6 @@
 package breeze.stats
 
+import scala.reflect.ClassTag
 import util.Sorting
 import breeze.util.{quickSelectImpl, quickSelect}
 
@@ -184,6 +185,12 @@ trait DescriptiveStats {
       }
 
     @expand
+    implicit def reduceSeq[@expand.args(Int, Long, Double, Float) T]: Impl[Seq[T], T] =
+      new Impl[Seq[T], T] {
+        def apply(v: Seq[T]): T = { median(DenseVector(v.toArray)) }
+      }
+
+    @expand
     implicit def reduceM[@expand.args(Int, Long, Double) T]: Impl[DenseMatrix[T], Double] =
       new Impl[DenseMatrix[T], Double] {
         def apply(m: DenseMatrix[T]) = median(m.toDenseVector)
@@ -297,6 +304,150 @@ trait DescriptiveStats {
 
   }
 
+  /**
+    * A [[breeze.generic.UFunc]] for digitizing arrays.
+    *
+    * Each element in the bins array is assumed to be the *right* endpoint of a given bin.
+    * For instance, bins=[1,3,5] represents a bin from (-infty,1], (1,3], (3,5] and (5,\infty).
+    * The result returned is the index of the bin of the inputs.
+    *
+    * E.g., digitize([-3, 0.5, 1, 1.5, 4], [0,1,2]) = [0, 1, 1, 2, 3]
+    */
+  object digitize extends UFunc {
+
+    @expand
+    implicit def arrayVersion[@expand.args(Int, Long, Double, Float) T]: Impl2[Array[T], Array[Double], Array[Int]] =
+      new Impl2[Array[T], Array[Double], Array[Int]] {
+        def apply(x: Array[T], bins: Array[Double]): Array[Int] = {
+          val vecResult = digitize(DenseVector(x), DenseVector(bins))
+          vecResult.data
+        }
+      }
+
+    @expand
+    implicit def vecVersion[@expand.args(Int, Long, Double, Float) T]: Impl2[DenseVector[T], DenseVector[Double], DenseVector[Int]] =
+      new Impl2[DenseVector[T], DenseVector[Double], DenseVector[Int]] {
+        def apply(x: DenseVector[T], bins: DenseVector[Double]): DenseVector[Int] = {
+          errorCheckBins(bins)
+          val result = new DenseVector[Int](x.length)
+          cfor(0)(i => i < x.length, i => i+1)(i => {
+            result(i) = bins.length
+            var j=bins.length-1
+            while (j >= 0) {
+              if (x(i) <= bins(j)) {
+                result(i) = j
+              } else {
+                j = -1
+              }
+              j -= 1
+            }
+          })
+          result
+        }
+      }
+
+    private def errorCheckBins(bins: DenseVector[Double]) {
+      cfor(0)(i => i < bins.length-1, i => i+1)(i => {
+        require( bins(i) < bins(i+1) )
+      })
+    }
+  }
+
+  /**
+    * A [[breeze.generic.UFunc]] for counting bins.
+    *
+    * If passed a traversable object full of Int's, provided
+    * those ints are larger than 0, it will return an
+    * array of the bin counts. E.g.:
+    * bincount(DenseVector[Int](0,1,2,3,1,3,3,3)) == DenseVector[Int](1,2,1,4)
+    *
+    * One can also call this on two dense vectors - the second will be treated
+    * as an array of weights. E.g.:
+    * val x = DenseVector[Int](0,1,2,3,1)
+    * val weights = DenseVector[Double](1.0,2.0,1.0,7.0,1.0)
+    * result is bincount(x, weights) == DenseVector[Double](1.0,3.0,1,7.0)
+    */
+  object bincount extends UFunc {
+    import breeze.linalg._
+
+    @expand
+    implicit def vecVersion[@expand.args(Double, Complex, Float) T]: Impl2[DenseVector[Int], DenseVector[T], DenseVector[T]] =
+      new Impl2[DenseVector[Int], DenseVector[T], DenseVector[T]] {
+        def apply(x: DenseVector[Int], weights: DenseVector[T]): DenseVector[T] = {
+          require(min(x) >= 0)
+          require(x.length == weights.length)
+          val result = new DenseVector[T](max(x)+1)
+          cfor(0)(i => i < x.length, i => i+1)(i => {
+            result(x(i)) = result(x(i)) + weights(i)
+          })
+          result
+        }
+      }
+
+    implicit def reduce[T](implicit iter: CanTraverseValues[T, Int]): Impl[T, DenseVector[Int]] =
+      new Impl[T, DenseVector[Int]] {
+        def apply(x: T): DenseVector[Int] = {
+          require(min(x) >= 0)
+          val result = new DenseVector[Int](max(x)+1)
+          class BincountVisitor extends ValuesVisitor[Int] {
+            def visit(a: Int): Unit = { result(a) = result(a) + 1 }
+            def zeros(numZero: Int, zeroValue: Int) = {
+              result(0) = result(0) + numZero
+            }
+          }
+          iter.traverse(x, new BincountVisitor)
+          result
+        }
+      }
+
+  /**
+    * A [[breeze.generic.UFunc]] for counting bins.
+    *
+    * This differs from bincount in that the result it returns is a SparseVector.
+    * The internal implementation of this could probably be significantly sped
+    * up by avoiding the use of counter. Then again, in sparse situations it's
+    * still a lot faster than using bincount.
+    *
+    */
+    object sparse extends UFunc {
+      import breeze.linalg._
+
+      @expand
+      implicit def vecVersion[@expand.args(Double, Complex, Float) T]: Impl2[DenseVector[Int], DenseVector[T], SparseVector[T]] =
+        new Impl2[DenseVector[Int], DenseVector[T], SparseVector[T]] {
+          def apply(x: DenseVector[Int], weights: DenseVector[T]): SparseVector[T] = {
+            require(min(x) >= 0)
+            require(x.length == weights.length)
+            val counter = Counter[Int,T]()
+            cfor(0)(i => i < x.length, i => i+1)(i => {
+              counter.update(x(i), counter(x(i)) + weights(i))
+            })
+            val builder = new VectorBuilder[T](max(x)+1)
+            counter.iterator.foreach(x => builder.add(x._1, x._2))
+            builder.toSparseVector
+          }
+        }
+
+      implicit def reduce[T](implicit iter: CanTraverseValues[T, Int]): Impl[T, SparseVector[Int]] =
+        new Impl[T, SparseVector[Int]] {
+          def apply(x: T): SparseVector[Int] = {
+            require(min(x) >= 0)
+            val counter = Counter[Int,Int]()
+
+            class BincountVisitor extends ValuesVisitor[Int] {
+              def visit(a: Int): Unit = { counter.update(a,counter(a) + 1) }
+              def zeros(numZero: Int, zeroValue: Int) = {
+                counter.update(zeroValue, counter(zeroValue) + numZero)
+              }
+            }
+            iter.traverse(x, new BincountVisitor)
+            val builder = new VectorBuilder[Int](max(x)+1)
+            counter.iterator.foreach(x => builder.add(x._1, x._2))
+            builder.toSparseVector
+          }
+        }
+    }
+  }
 }
 
 /**
@@ -358,4 +509,3 @@ object DescriptiveStats {
   }
 
 }
-

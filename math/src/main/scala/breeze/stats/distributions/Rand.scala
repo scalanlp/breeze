@@ -356,4 +356,12 @@ object RandBasis {
     new RandBasis(new ThreadLocalRandomGenerator(new MersenneTwister(int.getAndIncrement())))
   }
 
+  /**
+   * Returns a new MersenneTwister backed rand basis with seed set to a specific value
+   */
+  def withSeed(seed: Int) = {
+    val int = new AtomicInteger(seed)
+    new RandBasis(new ThreadLocalRandomGenerator(new MersenneTwister(int.getAndIncrement())))
+  }
+
 }
