@@ -1,11 +1,13 @@
-package breeze.macros
+package breeze.util
 
 import java.io.File
 
-import breeze.macros.util.FileMacro
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
-class utilTest extends FunSuite {
+@RunWith(classOf[JUnitRunner])
+class FileUtilTest extends FunSuite {
 
   val testPath = System.getProperty("java.io.tmpdir")
 
