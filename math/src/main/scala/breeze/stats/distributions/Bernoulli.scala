@@ -27,7 +27,7 @@ import breeze.optimize.DiffFunction
  * @author dlwh
  * @param numYes the probability of true
  */
-class Bernoulli(p: Double, rand: RandBasis = Rand) extends DiscreteDistr[Boolean] with Moments[Double, Double] {
+class Bernoulli(p: Double)(implicit rand: RandBasis = Rand) extends DiscreteDistr[Boolean] with Moments[Double, Double] {
   require(p >= 0.0)
   require(p <= 1.0)
   def probabilityOf(b: Boolean) = if(b) p else (1-p)
