@@ -87,7 +87,10 @@ package object util {
     }
   }
 
+  implicit class FileUtil(val sc: StringContext) extends AnyVal {
 
+    def file(args: Any*): File = new File(sc.s(args: _*))
+  }
 
   /**
    * Serializes an object using java serialization
