@@ -82,6 +82,10 @@ object Zero extends ZeroLowPriority {
     override def zero = BigInt(0)
   }
 
+  implicit object BigDecimalZero extends Zero[BigDecimal] {
+    override def zero = BigDecimal(0L)
+  }
+
 
 }
 

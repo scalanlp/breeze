@@ -44,6 +44,8 @@ object Semiring {
   implicit val semiringShort: Semiring[Short] = ringShort
   implicit val semiringCmplx: Semiring[Complex] = ringComplex
 
+  implicit def semiringFromRing[T](implicit ring: Ring[T]): Semiring[T] = ring
+
   @SerialVersionUID(1L)
   implicit object fieldB extends Semiring[Boolean] {
     def zero = false

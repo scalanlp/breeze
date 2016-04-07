@@ -26,9 +26,9 @@ package breeze.linalg
 package object support {
 
   /**
+    * Type alias marking
     *
-    *
-    * @tparam From Orininal
+    * @tparam From Original
     * @tparam A
     * @tparam B
     * @tparam To

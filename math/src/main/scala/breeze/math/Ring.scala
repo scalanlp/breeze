@@ -41,4 +41,6 @@ object Ring {
   implicit val ringBigInt: Ring[BigInt] = fieldBigInt
   implicit val ringShort: Ring[Short] = fieldShort
   implicit val ringComplex: Ring[Complex] = Complex.scalar
+
+  implicit def ringFromField[T](implicit field: Field[T]): Ring[T] = field
 }

@@ -19,6 +19,7 @@ package support
 
 /**
  * Class that is kind of like a collection view of the values in a tensor.
+  *
  * @author dlwh
  */
 class TensorValues[K, V, +This](private val tensor: This, active: Boolean = false, f: (V) => Boolean = { (x: Any) => true })(implicit ev: This <:< Tensor[K, V]) {

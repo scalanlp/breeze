@@ -4,6 +4,7 @@ package support
 
 /**
  * Class that is kind of like a collection view of the pairs in a tensor.
+  *
  * @author dlwh
  */
 class TensorPairs[K, V, +This](private val tensor: This, active: Boolean, f: ((K,V)) => Boolean = { (x: (K, V)) => true })(implicit ev: This <:< Tensor[K, V]) {

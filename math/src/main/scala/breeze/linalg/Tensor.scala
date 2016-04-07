@@ -147,6 +147,7 @@ trait TensorLike[@spec(Int) K, @spec(Double, Int, Float, Long) V, +This<:Tensor[
   def activeSize: Int
 
   // iteration and such
+  @deprecated("Use QuasiTensor.keysIterator/activeKeysIterator instead", "xx")
   def keys: TensorKeys[K, V, This] = new TensorKeys[K, V, This](repr, false)
   def values: TensorValues[K, V, This] = new TensorValues[K, V, This](repr, false)
   def pairs: TensorPairs[K, V, This] = new TensorPairs[K, V, This](repr, false)

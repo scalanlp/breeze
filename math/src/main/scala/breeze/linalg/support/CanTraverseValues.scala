@@ -19,7 +19,8 @@ import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.math.Complex
 
 /**
- * Marker for being able to traverse over the values in a collection/tensor
+ * Marker for being able to traverse over the values in a collection/tensor.
+ * //ToDo convert to UFuncs, leave type aliases for compatibility (as was done for CanMapValues)
  *
  * @author dramage
  * @author dlwh
