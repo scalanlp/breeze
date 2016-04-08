@@ -26,7 +26,7 @@ import scala.reflect.ClassTag
 
 trait ImmutableNumericOps[+This] extends Any {
 
-  //ToDo: Could this be renamed to be more informative? Kind of sounds like Python repr()
+  /**"Representation," a reference to ```this```.*/
   def repr: This
 
   // Immutable

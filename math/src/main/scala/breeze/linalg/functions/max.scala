@@ -108,7 +108,8 @@ object max extends UFunc /*with VectorizedReduceUFunc <-- doesn't work with 2.10
   /**
    * Method for computing the max of the first length elements of an array. Arrays
    * of size 0 give Double.NegativeInfinity
-   * @param arr
+    *
+    * @param arr
    * @param length
    * @return
    */
@@ -167,7 +168,7 @@ object min extends UFunc {
             }
 
             def zeros(numZero: Int, zeroValue: V): Unit = {
-              if(numZero != 0) {
+              if (numZero != 0) {
                 visitedOne = true
                 min = scala.math.min(zeroValue, min)
               }
@@ -176,7 +177,7 @@ object min extends UFunc {
             override def visitArray(arr: Array[V], offset: Int, length: Int, stride: Int): Unit = {
               var i = 0
               var off = offset
-              while(i < length) {
+              while (i < length) {
                 visitedOne = true
                 min = scala.math.min(min, arr(off))
                 i += 1
@@ -190,11 +191,12 @@ object min extends UFunc {
           val visit = new MinVisitor
 
           iter.traverse(v, visit)
-          if(!visit.visitedOne) throw new IllegalArgumentException(s"No values in $v!")
+          if (!visit.visitedOne) throw new IllegalArgumentException(s"No values in $v!")
 
           visit.min
         }
 
+      }
   }
 
   implicit def minVS[T, U, LHS, RHS, RV](implicit cmvH: ScalarOf[T, LHS],

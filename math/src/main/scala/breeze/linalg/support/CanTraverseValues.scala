@@ -73,10 +73,10 @@ object CanTraverseValues {
     */
   trait ValuesVisitor[@specialized V] {
 
-    def visit(a: V)
+    def visit(a: V): Unit
 
     /** Visits an array assuming offset of zero and stride of 1 */
-    final def visitArray(arr: Array[V]): Unit = visitArray(arr, 0, arr.length, 1)
+    final def visitArray(arr: Array[V]): Unit = visitArray(arr, 0, arr.length, 1): Unit
 
     def visitArray(arr: Array[V], offset: Int, length: Int, stride: Int): Unit = {
       import spire.syntax.cfor._
@@ -88,6 +88,19 @@ object CanTraverseValues {
       }
     }
 
+    /**
+      * Allows separate iteration over zero values in sparse representations
+      * such as [[breeze.linalg.CSCMatrix]], [[breeze.linalg.HashVector]], and [[breeze.linalg.SparseVector]].
+      *
+      * Use as follows:
+      * `````
+      * override def traverse(from: CSCMatrix[V], fn: ValuesVisitor[V]): Unit = {
+      *    fn.zeros(from.size - from.activeSize, from.zero)
+      *    fn.visitArray(from.data, 0, from.activeSize, 1)
+      *  }
+      * `````
+      *
+      */
     def zeros(numZero: Int, zeroValue: V): Unit
 
   }
@@ -104,7 +117,7 @@ object CanTraverseValues {
       fn.visitArray(from)
     }
 
-    def isTraversableAgain(from: Array[V]): Boolean = true
+    override def isTraversableAgain(from: Array[V]): Boolean = true
 
   }
 
@@ -151,7 +164,7 @@ object CanTraverseValues {
   }
 }
 
-@deprecated("1.0")
+@deprecated("not used","1.0")
 trait LowPrioCanTraverseValues {
   this: CanTraverseValues.type =>
 
@@ -160,8 +173,6 @@ trait LowPrioCanTraverseValues {
 
       /** Traverses all values from the given collection. */
       override def traverse(from: V, fn: CanTraverseValues.ValuesVisitor[V]): Unit = fn.visit(from)
-
-      def isTraversableAgain(from: V): Boolean = true
 
       override def isTraversableAgain(from: V): Boolean = true
     }
