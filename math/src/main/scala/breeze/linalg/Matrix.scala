@@ -195,7 +195,7 @@ object Matrix extends MatrixConstructors[Matrix]
 
   implicit def canTraverseValues[V]: CanTraverseValues[Matrix[V], V] = {
     new CanTraverseValues[Matrix[V], V] {
-      def isTraversableAgain(from: Matrix[V]): Boolean = true
+      override def isTraversableAgain(from: Matrix[V]): Boolean = true
 
 
       /** Iterates all key-value pairs from the given collection. */

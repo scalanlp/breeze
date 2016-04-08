@@ -373,7 +373,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
   implicit def canIterateValues[V]:CanTraverseValues[CSCMatrix[V], V] = {
     new CanTraverseValues[CSCMatrix[V], V] {
 
-      def isTraversableAgain(from: CSCMatrix[V]): Boolean = true
+      override def isTraversableAgain(from: CSCMatrix[V]): Boolean = true
 
       /** Iterates all key-value pairs from the given collection. */
       def traverse(from: CSCMatrix[V], fn: ValuesVisitor[V]): Unit = {

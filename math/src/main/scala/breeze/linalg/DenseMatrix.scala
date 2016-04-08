@@ -639,7 +639,7 @@ with MatrixConstructors[DenseMatrix] {
 
   implicit def canTraverseValues[V]: CanTraverseValues[DenseMatrix[V], V] = {
     new CanTraverseValues[DenseMatrix[V], V] {
-      def isTraversableAgain(from: DenseMatrix[V]): Boolean = true
+      override def isTraversableAgain(from: DenseMatrix[V]): Boolean = true
 
 
       /** Iterates all key-value pairs from the given collection. */

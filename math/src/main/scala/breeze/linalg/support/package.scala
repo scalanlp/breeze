@@ -19,23 +19,26 @@
 package breeze.linalg
 
 /**
- * TODO
+ * Provides extra aliases for [[breeze.linalg]], to maintain backward compatibility.
+ *
  *
  * @author dlwh
  **/
 package object support {
 
   /**
-    * Type alias marking
+    * Type alias. This was originally a trait, but was refactored into [[breeze.generic.UFunc]] objects,
+    * and this alias provides backward compatibility.
     *
-    * @tparam From Original
-    * @tparam A
-    * @tparam B
-    * @tparam To
+    * @see [[breeze.linalg.mapValues]]
     */
   type CanMapValues[From, A, B, To] = mapValues.Impl2[From, A=>B, To]
+
   /**
-    * @see CanMapValues
+    * Type alias. This was originally a trait, but was refactored into [[breeze.generic.UFunc]] objects,
+    * and this alias provides backward compatibility.
+    *
+    * @see [[breeze.linalg.mapValues]]
     */
   type CanMapActiveValues[From, A, B, To] = mapActiveValues.Impl2[From, A=>B, To]
 

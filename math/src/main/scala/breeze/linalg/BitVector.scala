@@ -117,7 +117,7 @@ object BitVector extends BitVectorOps {
       for(i <- from.valuesIterator) fn.visit(i)
     }
 
-    def isTraversableAgain(from: BitVector): Boolean = true
+    override def isTraversableAgain(from: BitVector): Boolean = true
   }
 
   implicit def canMapValues[V2](implicit man: ClassTag[V2]): CanMapValues[BitVector, Boolean, V2, DenseVector[V2]] = {
@@ -135,7 +135,7 @@ object BitVector extends BitVectorOps {
 
     new CanTraverseValues[BitVector, Boolean] {
 
-      def isTraversableAgain(from: BitVector): Boolean = true
+      override def isTraversableAgain(from: BitVector): Boolean = true
 
       /** Iterates all key-value pairs from the given collection. */
       def traverse(from: BitVector, fn: ValuesVisitor[Boolean]): Unit = {

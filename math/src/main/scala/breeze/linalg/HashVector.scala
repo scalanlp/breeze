@@ -158,7 +158,7 @@ object HashVector extends HashVectorOps
     new CanTraverseValues[HashVector[V],V] {
 
 
-      def isTraversableAgain(from: HashVector[V]): Boolean = true
+      override def isTraversableAgain(from: HashVector[V]): Boolean = true
 
       def traverse(from: HashVector[V], fn: ValuesVisitor[V]): Unit = {
         fn.zeros(from.size - from.activeSize, from.default)

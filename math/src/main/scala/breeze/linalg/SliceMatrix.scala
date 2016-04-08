@@ -91,7 +91,7 @@ object SliceMatrix {
 
     new CanTraverseValues[SliceMatrix[K1, K2, V], V] {
 
-      def isTraversableAgain(from: SliceMatrix[K1, K2, V]): Boolean = true
+      override def isTraversableAgain(from: SliceMatrix[K1, K2, V]): Boolean = true
 
       /** Iterates all key-value pairs from the given collection. */
       def traverse(from: SliceMatrix[K1, K2, V], fn: ValuesVisitor[V]): Unit = {

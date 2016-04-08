@@ -403,7 +403,7 @@ object DenseVector extends VectorConstructors[DenseVector]
 
     new CanTraverseValues[DenseVector[V], V] {
 
-      def isTraversableAgain(from: DenseVector[V]): Boolean = true
+      override def isTraversableAgain(from: DenseVector[V]): Boolean = true
 
       /** Iterates all key-value pairs from the given collection. */
       def traverse(from: DenseVector[V], fn: ValuesVisitor[V]): Unit = {
