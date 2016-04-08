@@ -370,7 +370,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
 
   implicit def scalarOf[T]: ScalarOf[CSCMatrix[T], T] = ScalarOf.dummy
 
-  implicit def canIterateValues[V]:CanTraverseValues[CSCMatrix[V], V] = {
+  implicit def canIterateValues[V]: CanTraverseValues[CSCMatrix[V], V] = {
     new CanTraverseValues[CSCMatrix[V], V] {
 
       override def isTraversableAgain(from: CSCMatrix[V]): Boolean = true

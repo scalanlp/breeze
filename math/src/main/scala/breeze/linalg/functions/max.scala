@@ -147,46 +147,53 @@ object min extends UFunc {
     }
 
   @expand
-  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S]
-            (implicit iter: CanTraverseValues[T, S],
-             @expand.sequence[S](Int.MaxValue, Double.PositiveInfinity, Float.PositiveInfinity, Long.MaxValue) init: S): Impl[T, S] = new Impl[T, S] {
+  implicit def reduce[T, @expand.args(Int, Double, Float, Long) V](
+      implicit iter: CanTraverseValues[T, V],
+      @expand.sequence[V](Int.MaxValue, Double.PositiveInfinity, Float.PositiveInfinity, Long.MaxValue) init: V): Impl[T, V] = {
 
-    def apply(v: T): S = {
-      class MinVisitor extends ValuesVisitor[S] {
-        var min = init
-        var visitedOne = false
+      new Impl[T, V] {
 
-        def visit(a: S): Unit = {
-          visitedOne = true
-          min = scala.math.min(min, a)
-        }
+        def apply(v: T): V = {
 
-        def zeros(numZero: Int, zeroValue: S): Unit = {
-          if(numZero != 0) {
-            visitedOne = true
-            min = scala.math.min(zeroValue, min)
+          // <editor-fold defaultstate="collapsed" desc=" ValuesVisitor implementation (MinVisitor) ">
+
+          class MinVisitor extends ValuesVisitor[V] {
+            var min = init
+            var visitedOne = false
+
+            def visit(a: V): Unit = {
+              visitedOne = true
+              min = scala.math.min(min, a)
+            }
+
+            def zeros(numZero: Int, zeroValue: V): Unit = {
+              if(numZero != 0) {
+                visitedOne = true
+                min = scala.math.min(zeroValue, min)
+              }
+            }
+
+            override def visitArray(arr: Array[V], offset: Int, length: Int, stride: Int): Unit = {
+              var i = 0
+              var off = offset
+              while(i < length) {
+                visitedOne = true
+                min = scala.math.min(min, arr(off))
+                i += 1
+                off += stride
+              }
+            }
           }
+
+          // </editor-fold>
+
+          val visit = new MinVisitor
+
+          iter.traverse(v, visit)
+          if(!visit.visitedOne) throw new IllegalArgumentException(s"No values in $v!")
+
+          visit.min
         }
-
-        override def visitArray(arr: Array[S], offset: Int, length: Int, stride: Int): Unit = {
-          var i = 0
-          var off = offset
-          while(i < length) {
-            visitedOne = true
-            min = scala.math.min(min, arr(off))
-            i += 1
-            off += stride
-          }
-        }
-      }
-
-      val visit = new MinVisitor
-
-      iter.traverse(v, visit)
-      if(!visit.visitedOne) throw new IllegalArgumentException(s"No values in $v!")
-
-      visit.min
-    }
 
   }
 

@@ -80,30 +80,37 @@ trait DescriptiveStats {
    * A [[breeze.generic.UFunc]] for computing the mean of objects
    */
   object mean extends UFunc {
+
     @expand
-    implicit def reduce[@expand.args(Float, Double, Complex) S, T](implicit iter: CanTraverseValues[T, S],
-                                                                   @expand.sequence[S](0f, 0d, Complex.zero) z: S): Impl[T, S] = new Impl[T, S] {
-      def apply(v: T): S = {
-        val visit = new ValuesVisitor[S] {
-          var mu: S = z
-          var n: Long = 0
+    implicit def reduce[@expand.args(Float, Double, Complex) V, T](
+        implicit iter: CanTraverseValues[T, V],
+        @expand.sequence[V](0f, 0d, Complex.zero) zero: V): Impl[T, V] = {
 
-          def visit(y: S): Unit = {
-            n += 1
-            val d = y - mu
-            mu = mu + d / n
+          new Impl[T, V] {
+
+            override def apply(v: T): V = {
+              val visit = new ValuesVisitor[V] {
+                var mu: V = zero
+                var n: Long = 0
+
+                def visit(y: V): Unit = {
+                  n += 1
+                  mu = mu + (y - mu) / n
+                }
+
+                def zeros(numZero: Int, zeroValue: V): Unit = {
+                  if (numZero != 0){
+                    mu = mu * n / (n + numZero)
+                  }
+                  n += numZero
+                }
+              }
+
+              iter.traverse(v, visit)
+              visit.mu
+            }
           }
 
-          def zeros(numZero: Int, zeroValue: S): Unit = {
-            if (numZero != 0)
-              mu = mu * n / (n + numZero)
-            n += numZero
-          }
-        }
-        iter.traverse(v, visit)
-        import visit._
-        mu
-      }
     }
 
   }
@@ -149,8 +156,10 @@ trait DescriptiveStats {
    * The method just calls meanAndVariance and returns the second result.
    */
   object variance extends UFunc {
-    implicit def reduceDouble[T](implicit mv: meanAndVariance.Impl[T, MeanAndVariance]): Impl[T, Double] = new Impl[T, Double] {
-      def apply(v: T): Double = mv(v).variance
+    implicit def reduceDouble[T](implicit mv: meanAndVariance.Impl[T, MeanAndVariance]): Impl[T, Double] = {
+      new Impl[T, Double] {
+        def apply(v: T): Double = mv(v).variance
+      }
     }
   }
 
@@ -158,8 +167,10 @@ trait DescriptiveStats {
    * Computes the standard deviation by calling variance and then sqrt'ing
    */
   object stddev extends UFunc {
-    implicit def reduceDouble[T](implicit vari: variance.Impl[T, Double]): Impl[T, Double] = new Impl[T, Double] {
-      def apply(v: T): Double = scala.math.sqrt(vari(v))
+    implicit def reduceDouble[T](implicit vari: variance.Impl[T, Double]): Impl[T, Double] = {
+      new Impl[T, Double] {
+        def apply(v: T): Double = scala.math.sqrt(vari(v))
+      }
     }
   }
 

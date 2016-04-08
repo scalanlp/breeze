@@ -1,3 +1,5 @@
+package breeze.linalg
+
 /*
  *
  *  Copyright 2015 David Hall
@@ -13,10 +15,8 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- * /
+ *
  */
-
-package breeze.linalg
 
 /**
  * Provides extra aliases for [[breeze.linalg]], to maintain backward compatibility.
