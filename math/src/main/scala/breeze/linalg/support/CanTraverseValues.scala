@@ -15,19 +15,24 @@ package breeze.linalg.support
  See the License for the specific language governing permissions and
  limitations under the License.
 */
+
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.math.Complex
 
 /**
- * Marker for being able to traverse over the values in a collection/tensor
+ * Marker for being able to traverse over the values in a breeze collection/tensor.
+ * Implicit conversions to this trait allow regular scala collections and Array
+ * to be traversed in the same way
  *
  * @author dramage
  * @author dlwh
  */
 trait CanTraverseValues[From, A] {
-  /**Traverses all values from the given collection. */
+
+  /**Traverses all values from the given breeze collection. */
   def traverse(from: From, fn: ValuesVisitor[A]): Unit
-  def isTraversableAgain(from: From):Boolean
+
+  def isTraversableAgain(from: From): Boolean
 
   def foldLeft[B](from: From, b: B)(fn: (B, A)=>B):B = {
     var bb = b
@@ -52,57 +57,76 @@ trait CanTraverseValues[From, A] {
 
 object CanTraverseValues {
 
-  trait ValuesVisitor[@specialized A] {
-    def visit(a: A)
-    def visitArray(arr: Array[A]):Unit = visitArray(arr, 0, arr.length, 1)
+  /**
+    * This trait can be implemented and used to apply a function over a breeze collection/tensor,
+    * using [[CanTraverseValues.traverse()]].
+    *
+    * @tparam V
+    */
+  trait ValuesVisitor[@specialized V] {
 
-    def visitArray(arr: Array[A], offset: Int, length: Int, stride: Int):Unit = {
+    def visit(a: V)
+
+    /** Visits an array assuming offset of zero and stride of 1 */
+    final def visitArray(arr: Array[V]): Unit = visitArray(arr, 0, arr.length, 1)
+
+    def visitArray(arr: Array[V], offset: Int, length: Int, stride: Int): Unit = {
       import spire.syntax.cfor._
       // Standard array bounds check stuff
       if (stride == 1) {
-        cforRange(offset until length + offset) { i =>
-          visit(arr(i))
-        }
+        cforRange(offset until length + offset) { i => visit(arr(i)) }
       } else {
-        cforRange(0 until length) { i =>
-          visit(arr(i * stride + offset))
-        }
+        cforRange(0 until length) { i => visit(arr(i * stride + offset)) }
       }
     }
-    def zeros(numZero: Int, zeroValue: A)
+
+    def zeros(numZero: Int, zeroValue: V): Unit
+
   }
 
   //
   // Arrays
   //
 
-  class OpArray[@specialized(Double, Int, Float, Long) A]
-    extends CanTraverseValues[Array[A], A] {
+  class OpArray[@specialized(Double, Int, Float, Long) V]
+    extends CanTraverseValues[Array[V], V] {
+
     /** Traverses all values from the given collection. */
-    def traverse(from: Array[A], fn: ValuesVisitor[A]): Unit = {
+    def traverse(from: Array[V], fn: ValuesVisitor[V]): Unit = {
       fn.visitArray(from)
     }
 
-    def isTraversableAgain(from: Array[A]): Boolean = true
+    def isTraversableAgain(from: Array[V]): Boolean = true
+
   }
 
+  implicit def opArray[@specialized A] = new OpArray[A]
 
-  implicit def opArray[@specialized A] =
-    new OpArray[A]
+  /** Implicit object to apply breeze traversable operations to Array[Int].*/
+  implicit object ImplicitOpArrayInt extends OpArray[Int]
 
-  implicit object OpArrayII extends OpArray[Int]
+  /** Implicit object to apply breeze traversable operations to Array[Short].*/
+  implicit object ImplicitOpArrayShort extends OpArray[Short]
 
-  implicit object OpArraySS extends OpArray[Short]
+  /** Implicit object to apply breeze traversable operations to Array[Short].*/
+  implicit object ImplicitOpArrayLong extends OpArray[Long]
 
-  implicit object OpArrayLL extends OpArray[Long]
+  /** Implicit object to apply breeze traversable operations to Array[Float].*/
+  implicit object ImplicitOpArrayFloat extends OpArray[Float]
 
-  implicit object OpArrayFF extends OpArray[Float]
+  /** Implicit object to apply breeze traversable operations to Array[Double].*/
+  implicit object ImplicitOpArrayDouble extends OpArray[Double]
 
-  implicit object OpArrayDD extends OpArray[Double]
+  /** Implicit object to apply breeze traversable operations to Array[Complex].*/
+  implicit object ImplicitOpArrayComplex extends OpArray[Complex]
 
-  implicit object OpArrayCC extends OpArray[Complex]
+  /**
+    * Implicit conversion to apply breeze traversing operations to
+    * scala collections or iterators ([[scala.TraversableOnce]] objects).
+    */
   implicit def canTraverseTraversable[V,X <: TraversableOnce[V]]: CanTraverseValues[X, V] = {
     new CanTraverseValues[X, V] {
+
       /** Traverses all values from the given collection. */
       override def traverse(from: X, fn: CanTraverseValues.ValuesVisitor[V]): Unit = {
         for(v <- from) {
@@ -111,22 +135,23 @@ object CanTraverseValues {
       }
 
       def isTraversableAgain(from: X): Boolean = from.isTraversableAgain
+
     }
   }
 }
 
-trait LowPrioCanTraverseValues { this: CanTraverseValues.type =>
+@deprecated("1.0")
+trait LowPrioCanTraverseValues {
+  this: CanTraverseValues.type =>
+
   implicit def canTraverseSelf[V, V2]: CanTraverseValues[V, V] = {
     new CanTraverseValues[V, V] {
-      /** Traverses all values from the given collection. */
-      override def traverse(from: V, fn: CanTraverseValues.ValuesVisitor[V]): Unit = {
-        fn.visit(from)
-      }
 
+      /** Traverses all values from the given collection. */
+      override def traverse(from: V, fn: CanTraverseValues.ValuesVisitor[V]): Unit = fn.visit(from)
 
       def isTraversableAgain(from: V): Boolean = true
+
     }
   }
-
-
 }
