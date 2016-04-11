@@ -277,8 +277,8 @@ trait NumericOps[+This] extends ImmutableNumericOps[This] {
   final def :<[TT >: This, B, That](b: B)(implicit op: OpLT.Impl2[TT, B, That]) = op(repr, b)
 
   /** Element-wise less-than-or-equal-to comparator of this and b. */
-  final def <=:<=[TT >: This, B, That](b: B)(implicit op: OpLTE.Impl2[TT, B, That]) = op(repr, b)
-  @deprecated("use <=:<= instead", "0.13")
+  final def <:=[TT >: This, B, That](b: B)(implicit op: OpLTE.Impl2[TT, B, That]) = op(repr, b)
+  @deprecated("use <:= instead", "0.13")
   final def :<=[TT >: This, B, That](b: B)(implicit op: OpLTE.Impl2[TT, B, That]) = op(repr, b)
 
   /** Element-wise greater-than comparator of this and b. */
@@ -287,8 +287,8 @@ trait NumericOps[+This] extends ImmutableNumericOps[This] {
   final def :>[TT >: This, B, That](b: B)(implicit op: OpGT.Impl2[TT, B, That]) = op(repr, b)
 
   /** Element-wise greater-than-or-equal-to comparator of this and b. */
-  final def >=:>=[TT >: This, B, That](b: B)(implicit op: OpGTE.Impl2[TT, B, That]) = op(repr, b)
-  @deprecated("use >=:>= instead", "0.13")
+  final def >:=[TT >: This, B, That](b: B)(implicit op: OpGTE.Impl2[TT, B, That]) = op(repr, b)
+  @deprecated("use >:= instead", "0.13")
   final def :>=[TT >: This, B, That](b: B)(implicit op: OpGTE.Impl2[TT, B, That]) = op(repr, b)
 
 
