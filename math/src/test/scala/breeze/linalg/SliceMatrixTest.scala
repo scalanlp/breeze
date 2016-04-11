@@ -52,4 +52,26 @@ class SliceMatrixTest extends FunSuite {
     assert(expected.equals(a), "Failed to execute the addition on the slices")
   }
 
+  test("slices of a slice matrix") {
+    val a = DenseMatrix.tabulate[Int](5,5){ (i, j) => 5 * i + j + 1}
+
+    // first matrix with the 4th row and 3rd column removed
+    val b = a(Seq(0, 1, 2, 4), Seq(0, 1, 3, 4))
+
+    // check row slice
+    assert(b(1, ::) == DenseVector(6, 7, 9, 10), "Failed> b(1, ::) = " + b(1, ::))
+
+    // check column slice
+    assert(b(::, 1) == DenseVector(2, 7, 12, 22), "Failed> b(::, 1) = " + b(::, 1))
+
+    // check arb ro5w slice
+    assert(b(Seq(1, 3), ::) ==  DenseMatrix.create(2, 4,  Array(6, 7, 9, 10, 21, 22, 24, 25), 0, 4, true), "Failed> b(Seq(1, 3), ::) = " + b(Seq(1,3), ::))
+
+    // check arb col slice
+    assert(b(::, Seq(1, 3)) == DenseMatrix.create( 4, 2,  Array(2, 7, 12, 22, 5, 10, 15, 25), 0, 4, false), "Failed> b(::, Seq(1,3) = " + b(Seq(1, 3), ::))
+
+
+
+  }
+
  }

@@ -120,6 +120,4 @@ object SliceVector {
       }
     }
   }
-
-
 }

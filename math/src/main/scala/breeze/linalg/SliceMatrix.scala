@@ -11,7 +11,8 @@ import scala.reflect.ClassTag
 class SliceMatrix[@specialized(Int) K1,
                   @specialized(Int) K2,
                   @specialized(Double, Int, Float, Long) V:Semiring:ClassTag](val tensor: Tensor[(K1, K2),V],
-                                                      val slice1: IndexedSeq[K1], val slice2: IndexedSeq[K2]) extends Matrix[V] {
+                                                      val slice1: IndexedSeq[K1], val slice2: IndexedSeq[K2])
+  extends Matrix[V] with MatrixLike[V, SliceMatrix[K1, K2, V]] {
 
   def apply(i: Int, j: Int): V = tensor(slice1(i)->slice2(j))
 
@@ -27,7 +28,7 @@ class SliceMatrix[@specialized(Int) K1,
 
   def activeSize: Int = size
 
-  def repr: Matrix[V] = this
+  def repr: SliceMatrix[K1, K2, V] = this
 
   def copy: Matrix[V] = {
     if (rows == 0) Matrix.zeroRows[V](cols)
@@ -57,7 +58,7 @@ class SliceMatrix[@specialized(Int) K1,
 }
 
 
-object SliceMatrix {
+object SliceMatrix extends LowPrioritySliceMatrix {
   implicit def canMapKeyValuePairs[K1, K2, V, V2: ClassTag: Zero]: CanMapKeyValuePairs[SliceMatrix[K1, K2, V], (Int, Int), V, V2, DenseMatrix[V2]] = {
     new CanMapKeyValuePairs[SliceMatrix[K1, K2, V], (Int, Int), V, V2, DenseMatrix[V2]] {
       override def map(from: SliceMatrix[K1, K2, V], fn: ((Int, Int), V) => V2): DenseMatrix[V2] = {
@@ -70,7 +71,7 @@ object SliceMatrix {
     }
   }
 
-  implicit def canMapValues[K1, K2, V, V2: ClassTag: Zero]: CanMapValues[SliceMatrix[K1, K2, V], V, V2, DenseMatrix[V2]] = {
+  implicit def canMapValues[K1, K2, @specialized(Int, Float, Double) V, @specialized(Int, Float, Double) V2: ClassTag: Zero]: CanMapValues[SliceMatrix[K1, K2, V], V, V2, DenseMatrix[V2]] = {
     new CanMapValues[SliceMatrix[K1, K2, V], V, V2, DenseMatrix[V2]] {
       override def apply(from: SliceMatrix[K1, K2, V], fn: (V) => V2): DenseMatrix[V2] = {
         DenseMatrix.tabulate(from.rows, from.cols)((i, j) => fn(from(i, j)))
@@ -128,6 +129,77 @@ object SliceMatrix {
 
       def transformActive(from: SliceMatrix[K1, K2, V], fn: (V) => V) {
         transform(from, fn)
+      }
+    }
+  }
+
+  // slices
+  implicit def canSliceRow[V: Semiring : ClassTag]: CanSlice2[SliceMatrix[Int, Int, V], Int, ::.type, SliceVector[(Int, Int), V]] = {
+    new CanSlice2[SliceMatrix[Int, Int, V], Int, ::.type, SliceVector[(Int, Int), V]] {
+      def apply(from: SliceMatrix[Int, Int, V], row: Int, ignored: ::.type): SliceVector[(Int, Int), V] = {
+        new SliceVector(from.tensor, from.slice2.map(col => (row, col)))
+      }
+    }
+  }
+
+  implicit def canSliceCol[V: Semiring : ClassTag]: CanSlice2[SliceMatrix[Int, Int, V], ::.type, Int, SliceVector[(Int, Int), V]] = {
+    new CanSlice2[SliceMatrix[Int, Int, V], ::.type, Int, SliceVector[(Int, Int), V]] {
+      def apply(from: SliceMatrix[Int, Int, V], ignored: ::.type, col: Int): SliceVector[(Int, Int), V] = {
+        new SliceVector(from.tensor, from.slice1.map(row => (row, col)))
+      }
+    }
+  }
+}
+
+trait LowPrioritySliceMatrix {
+  // Note: can't have a separate implicit for Range and Seq since they will be ambiguous as both will return a
+  // SliceMatrix which differs from dense matrix where a Range will return another DenseMatrix and only a seq will
+  // return a SliceMatrix
+  implicit def canSliceWeirdRows[V: Semiring : ClassTag]: CanSlice2[SliceMatrix[Int, Int, V], Seq[Int], ::.type, SliceMatrix[Int, Int, V]] = {
+    new CanSlice2[SliceMatrix[Int, Int, V], Seq[Int], ::.type, SliceMatrix[Int, Int, V]] {
+      def apply(from: SliceMatrix[Int, Int, V], rows: Seq[Int], ignored: ::.type): SliceMatrix[Int, Int, V] = rows match {
+        case range: Range =>
+          new SliceMatrix(from.tensor, range.getRangeWithoutNegativeIndexes(from.rows).map(from.slice1.apply), from.slice2)
+        case _ =>
+          new SliceMatrix(from.tensor, rows.map(from.slice1.apply).toIndexedSeq, from.slice2)
+      }
+    }
+  }
+
+  // Note: can't have a separate implicit for Range and Seq since they will be ambiguous as both will return a
+  // SliceMatrix which differs from dense matrix where a Range will return another DenseMatrix and only a seq will
+  // return a SliceMatrix
+  implicit def canSliceWeirdCols[V: Semiring : ClassTag]: CanSlice2[SliceMatrix[Int, Int, V], ::.type, Seq[Int], SliceMatrix[Int, Int, V]] = {
+    new CanSlice2[SliceMatrix[Int, Int, V], ::.type, Seq[Int], SliceMatrix[Int, Int, V]] {
+      def apply(from: SliceMatrix[Int, Int, V], ignored: ::.type, cols: Seq[Int]): SliceMatrix[Int, Int, V] = cols match {
+        case range: Range =>
+          new SliceMatrix(from.tensor, from.slice1, range.getRangeWithoutNegativeIndexes(from.cols).map(from.slice2.apply))
+        case _ =>
+          new SliceMatrix(from.tensor, from.slice1, cols.map(from.slice2.apply).toIndexedSeq)
+      }
+    }
+  }
+
+  implicit def canSliceTensorBooleanRowsAndWeirdCols[V: Semiring : ClassTag]: CanSlice2[SliceMatrix[Int, Int, V], Tensor[Int, Boolean], Seq[Int], SliceMatrix[Int, Int, V]] = {
+    new CanSlice2[SliceMatrix[Int, Int, V], Tensor[Int, Boolean], Seq[Int], SliceMatrix[Int, Int, V]] {
+      def apply(from: SliceMatrix[Int, Int, V], rows: Tensor[Int, Boolean], cols: Seq[Int]): SliceMatrix[Int, Int, V] = {
+        new SliceMatrix(from.tensor, rows.findAll(_ == true).map(from.slice1.apply), cols.map(from.slice2.apply).toIndexedSeq)
+      }
+    }
+  }
+
+  implicit def canSliceTensorWeirdRowsAndBooleanCols[V: Semiring : ClassTag]: CanSlice2[SliceMatrix[Int, Int, V], Seq[Int], Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] = {
+    new CanSlice2[SliceMatrix[Int, Int, V], Seq[Int], Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] {
+      def apply(from: SliceMatrix[Int, Int, V], rows: Seq[Int], cols: Tensor[Int, Boolean]): SliceMatrix[Int, Int, V] = {
+        new SliceMatrix(from.tensor, rows.map(from.slice1.apply).toIndexedSeq, cols.findAll(_ == true).map(from.slice2.apply))
+      }
+    }
+  }
+
+  implicit def canSliceTensorBooleanRowsAndCols[V: Semiring : ClassTag]: CanSlice2[SliceMatrix[Int, Int, V], Tensor[Int, Boolean], Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] = {
+    new CanSlice2[SliceMatrix[Int, Int, V], Tensor[Int, Boolean], Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] {
+      def apply(from: SliceMatrix[Int, Int, V], rows: Tensor[Int, Boolean], cols: Tensor[Int, Boolean]): SliceMatrix[Int, Int, V] = {
+        new SliceMatrix(from.tensor, rows.findAll(_ == true).map(from.slice1.apply), cols.findAll(_ == true).map(from.slice2.apply))
       }
     }
   }
