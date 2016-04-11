@@ -166,7 +166,7 @@ object NonlinearMinimizer {
       val (f, g) = primal.calculate(x)
       val scale = x - z + u
       val proxObj = f + 0.5 * rho * pow(norm(scale), 2)
-      val proxGrad = g + scale :* rho
+      val proxGrad = g + scale *:* rho
       (proxObj, proxGrad)
     }
   }
@@ -239,7 +239,7 @@ object NonlinearMinimizer {
 
     val owlqn = new OWLQN[Int, DenseVector[Double]](-1, 10, lambdaL1, 1e-6)
 
-    val regularizedGram = h + (DenseMatrix.eye[Double](h.rows) :* lambdaL2)
+    val regularizedGram = h + (DenseMatrix.eye[Double](h.rows) *:* lambdaL2)
 
     val sparseQp = QuadraticMinimizer(h.rows, SPARSE, lambdaL1)
     val sparseQpStart = System.nanoTime()
