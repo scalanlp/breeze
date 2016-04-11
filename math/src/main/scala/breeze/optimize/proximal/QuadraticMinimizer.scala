@@ -564,13 +564,13 @@ object QuadraticMinimizer {
     println(s"Test QuadraticMinimizer, CG , BFGS and OWLQN with $problemSize variables and $nequalities equality constraints")
     
     val luStart = System.nanoTime()
-    val luResult = h \ q:*(-1.0)
+    val luResult = h \ q *:* (-1.0)
     val luTime = System.nanoTime() - luStart
 
     val cg = new ConjugateGradient[DenseVector[Double], DenseMatrix[Double]]()
     
     val startCg = System.nanoTime()
-    val cgResult = cg.minimize(q:*(-1.0), h)
+    val cgResult = cg.minimize(q *:* (-1.0), h)
     val cgTime = System.nanoTime() - startCg
     
     val qpSolver = new QuadraticMinimizer(problemSize)
@@ -597,7 +597,7 @@ object QuadraticMinimizer {
     val lambdaL1 = lambda * beta
     val lambdaL2 = lambda * (1 - beta)
 
-    val regularizedGram = h + (DenseMatrix.eye[Double](h.rows) :* lambdaL2)
+    val regularizedGram = h + (DenseMatrix.eye[Double](h.rows) *:* lambdaL2)
     
     val sparseQp = QuadraticMinimizer(h.rows, SPARSE, lambdaL1)
     val sparseQpStart = System.nanoTime()

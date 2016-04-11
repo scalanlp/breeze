@@ -111,7 +111,7 @@ package object financial {
       //fill the 1th diagnal below the main diagnal with ones
       val downDiagIdxs = for(i <-(1 until N)) yield (i, i - 1)
       A(downDiagIdxs) := 1.0
-      A(0 until 1, ::) := nonZeroCoeffs(1 to N) :/ -nonZeroCoeffs(0)
+      A(0 until 1, ::) := nonZeroCoeffs(1 to N) /:/ -nonZeroCoeffs(0)
       val rootEig = eig(A)
 
       val nonZeroEigNum = rootEig.eigenvalues.length;

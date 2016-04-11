@@ -84,7 +84,7 @@ object InteriorPoint {
     val newC = DenseVector.zeros[Double](c.size + 1)
     newC(c.size) = 1
     val newX = DenseVector.tabulate(x0.size + 1)(i => if(i < x0.size) x0(i) else s)
-    if ( any((newA * newX - newB) :> 0.0) ) {
+    if ( any((newA * newX - newB) >:> 0.0) ) {
       throw new RuntimeException("Problem seems to be infeasible!")
     }
     val r = minimize(newA,newB,newC,newX)
@@ -100,7 +100,7 @@ object InteriorPoint {
   }
 
   private def computeAffineScalingDir(A: DenseMatrix[Double], b: DenseVector[Double], c: DenseVector[Double], x: DenseVector[Double], s: DenseVector[Double], z: DenseVector[Double]): (DenseVector[Double], DenseVector[Double], DenseVector[Double]) = {
-    val XiZ = diag(z :/ s)
+    val XiZ = diag(z /:/ s)
 
     val AtXiZ = (A.t * XiZ).asInstanceOf[DenseMatrix[Double]]
 
@@ -127,7 +127,7 @@ object InteriorPoint {
     diag(mat) += 1E-20
 
     val r = DenseVector.zeros[Double](m + n + m)
-    r.slice((m+n), (m+n+m)) -= (dsaff :* dzaff - sigma/m * (s dot z) )
+    r.slice((m+n), (m+n+m)) -= (dsaff *:* dzaff - sigma/m * (s dot z) )
     val sol = mat \ r
     (sol.slice(0, m),sol.slice(m, (n+m)),sol.slice((n+m), (n+m+m)))
   }
