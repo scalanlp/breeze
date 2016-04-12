@@ -110,7 +110,7 @@ object Dirichlet {
 
     def mle(stats: SufficientStatistic) = {
       val likelihood = likelihoodFunction(stats)
-      val result = minimize(likelihood, zeroLike(stats.t) :+ 1.0)
+      val result = minimize(likelihood, zeroLike(stats.t) +:+ 1.0)
       result
     }
 
