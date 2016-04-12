@@ -1,4 +1,5 @@
 package breeze.linalg
+
 /*
  Copyright 2012 David Hall
 
@@ -15,9 +16,9 @@ package breeze.linalg
  limitations under the License.
 */
 
-import support._
 import breeze.collection.mutable.Beam
 import breeze.generic.UFunc
+import breeze.linalg.support._
 import breeze.math.Semiring
 
 import scala.util.hashing.MurmurHash3
@@ -32,11 +33,12 @@ import scala.reflect.ClassTag
  * @tparam V stored value type
  */
 trait QuasiTensor[@spec(Int) K, @spec(Double, Int, Float, Long) V] {
+
   def apply(i: K): V
   def update(i: K, v: V): Unit
   def keySet: scala.collection.Set[K]
 
-  // <editor-fold defaultstate="collapsed" desc=" deprecated aggregators, etc. ">
+  // <editor-fold defaultstate="collapsed" desc=" DEPRECATED max/min/argmax/etc. ">
 
   @deprecated("Use max(t) instead of t.max", "0.6")
   def max(implicit ord: Ordering[V]) = valuesIterator.max
@@ -54,7 +56,8 @@ trait QuasiTensor[@spec(Int) K, @spec(Double, Int, Float, Long) V] {
 
   /**
    * Returns the k indices with maximum value. (NOT absolute value.)
-   * @param k how many to return
+    *
+    * @param k how many to return
    * @param ordering
    * @return
    */
@@ -114,12 +117,17 @@ trait QuasiTensor[@spec(Int) K, @spec(Double, Int, Float, Long) V] {
   /** Returns all indices k whose value satisfies a predicate. */
   def findAll(f: V=>Boolean) = activeIterator.filter(p => f(p._2)).map(_._1).toIndexedSeq
 
+  // <editor-fold defaultstate="collapsed" desc=" DEPRECATED all/any ">
+
   /** Returns true if all elements are non-zero */
   @deprecated("Use breeze.linalg.all instead", "0.6")
   def all(implicit semi: Semiring[V]) = valuesIterator.forall(_ != semi.zero)
+
   /** Returns true if some element is non-zero */
   @deprecated("Use breeze.linalg.any instead", "0.6")
   def any(implicit semi: Semiring[V]) = valuesIterator.exists(_ != semi.zero)
+
+  // </editor-fold>
 
   // TODO: this is only consistent if the hashcode of inactive elements is 0!!!
   override def hashCode() = {
@@ -157,7 +165,8 @@ trait TensorLike[@spec(Int) K, @spec(Double, Int, Float, Long) V, +This<:Tensor[
   // slicing
   /**
    * method for slicing a tensor. For instance, DenseVectors support efficient slicing by a Range object.
-   * @return
+    *
+    * @return
    */
   def apply[Slice, Result](slice: Slice)(implicit canSlice: CanSlice[This, Slice, Result]) = {
     canSlice(repr, slice)
@@ -165,7 +174,8 @@ trait TensorLike[@spec(Int) K, @spec(Double, Int, Float, Long) V, +This<:Tensor[
 
   /**
    * Slice a sequence of elements. Must be at least 2.
-   * @param a
+    *
+    * @param a
    * @param slice
    * @param canSlice
    * @tparam Result
@@ -176,14 +186,13 @@ trait TensorLike[@spec(Int) K, @spec(Double, Int, Float, Long) V, +This<:Tensor[
   }
 
   /**
-   * Method for slicing that is tuned for Matrices.
-   * @return
+    * Implementation for slicing that is tuned for Matrices.
+    *
+    * @return
    */
-  def apply[Slice1, Slice2, Result](slice1: Slice1, slice2: Slice2)(implicit canSlice: CanSlice2[This, Slice1, Slice2, Result]) = {
-    canSlice(repr, slice1, slice2)
-  }
-
-
+  def apply[Slice1, Slice2, Result](slice1: Slice1, slice2: Slice2)(
+      implicit canSlice: CanSlice2[This, Slice1, Slice2, Result]
+  ) = canSlice(repr, slice1, slice2)
 
   /** Creates a new map containing a transformed copy of this map. */
   def mapPairs[TT>:This,O,That](f : (K,V) => O)(implicit bf : CanMapKeyValuePairs[TT, K, V, O, That]) : That = {
@@ -280,13 +289,19 @@ object Tensor {
   }
 
 
-  implicit def canSliceTensor[K, V:ClassTag]:CanSlice[Tensor[K,V], Seq[K], SliceVector[K, V]] = new CanSlice[Tensor[K,V], Seq[K], SliceVector[K, V]] {
-    def apply(from: Tensor[K, V], slice: Seq[K]): SliceVector[K, V] = new SliceVector(from, slice.toIndexedSeq)
+  implicit def canSliceTensor[K, V:ClassTag]: CanSlice[Tensor[K,V], Seq[K], SliceVector[K, V]] = {
+    new CanSlice[Tensor[K,V], Seq[K], SliceVector[K, V]] {
+      override def apply(from: Tensor[K, V], slice: Seq[K]): SliceVector[K, V] = {
+        new SliceVector(from, slice.toIndexedSeq)
+      }
+    }
   }
 
-  implicit def canSliceTensorBoolean[K, V:ClassTag]:CanSlice[Tensor[K,V], Tensor[K, Boolean], SliceVector[K, V]] = new CanSlice[Tensor[K,V], Tensor[K, Boolean], SliceVector[K, V]] {
-    override def apply(from: Tensor[K, V], slice: Tensor[K, Boolean]): SliceVector[K, V] = {
-      new SliceVector(from, slice.findAll(_ == true))
+  implicit def canSliceTensorBoolean[K, V:ClassTag]:CanSlice[Tensor[K,V], Tensor[K, Boolean], SliceVector[K, V]] ={
+    new CanSlice[Tensor[K,V], Tensor[K, Boolean], SliceVector[K, V]] {
+      override def apply(from: Tensor[K, V], slice: Tensor[K, Boolean]): SliceVector[K, V] = {
+        new SliceVector(from, slice.findAll(_ == true))
+      }
     }
   }
 

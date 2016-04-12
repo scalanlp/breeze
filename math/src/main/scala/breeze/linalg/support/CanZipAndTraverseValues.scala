@@ -15,23 +15,32 @@ package breeze.linalg.support
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import breeze.math.Complex
-import scala.reflect.ClassTag
+
 import breeze.linalg.support.CanZipAndTraverseValues.PairValuesVisitor
 
 /**
- * Marker for being able to traverse over the values in a pair oof collections
- *
- * @author stucchio
- */
-trait CanZipAndTraverseValues[From, From2,A,B] {
-  /**Traverses all values from the given collection. */
+  * Marker for being able to zip-traverse over a pair of collections with
+  * the same dimensions in a pairwise manner.
+  *
+  * @author stucchio
+  */
+trait CanZipAndTraverseValues[From, From2, A, B] {
+
+  /**Traverses all values from the two given collections in a pairwise manner. */
   def traverse(from1: From, from2: From2, fn: PairValuesVisitor[A,B]): Unit
+
 }
 
 object CanZipAndTraverseValues {
-  trait PairValuesVisitor[A,B] {
-    def visit(a: A, b: B)
+
+  /**
+    * Marks a visitor function which can zip-traverse two collections of equal dimensions
+    * in a pairwise manner.
+    */
+  trait PairValuesVisitor[A, B] {
+
+    def visit(a: A, b: B): Unit
+
     def visitArray(arr: Array[A], arr2: Array[B]):Unit = {
       var i = 0
       if (arr.size != arr2.size) {
@@ -43,4 +52,5 @@ object CanZipAndTraverseValues {
       }
     }
   }
+
 }

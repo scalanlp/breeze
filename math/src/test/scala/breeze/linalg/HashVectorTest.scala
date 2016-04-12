@@ -1,11 +1,14 @@
 package breeze.linalg
 
+import org.scalacheck.Arbitrary
+
 import org.scalatest._
 import org.scalatest.junit._
+
 import org.junit.runner.RunWith
+
 import breeze.math._
 import breeze.stats.mean
-import org.scalacheck.Arbitrary
 
 /**
  *

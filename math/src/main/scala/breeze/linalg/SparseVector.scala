@@ -271,7 +271,7 @@ object SparseVector extends SparseVectorOps
 
       /** Iterates all key-value pairs from the given collection. */
       def traverse(from: SparseVector[V], fn: ValuesVisitor[V]): Unit = {
-        fn.zeros(from.size - from.activeSize, from.default)
+        fn.visitZeros(from.size - from.activeSize, from.default)
         fn.visitArray(from.data, 0, from.activeSize, 1)
       }
     }
@@ -287,7 +287,7 @@ object SparseVector extends SparseVectorOps
 
         fn.visitArray(index, data, 0, activeSize, 1)
         if(activeSize != size) {
-          fn.zeros(size - activeSize, Iterator.range(0, size).filterNot(index contains _), from.default)
+          fn.visitZeros(size - activeSize, Iterator.range(0, size).filterNot(index contains _), from.default)
         }
       }
 

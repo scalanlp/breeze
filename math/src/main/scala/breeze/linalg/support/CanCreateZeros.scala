@@ -16,16 +16,22 @@ trait CanCreateZeros[+T, I] {
 }
 
 object ArrayCanCreateZeros {
+
   class OpArray[@specialized V:ClassTag:Semiring]
     extends CanCreateZeros[Array[V],Int] {
     override def apply(d: Int) = {
       Array.fill(d)(implicitly[Semiring[V]].zero)
     }
   }
+
+  // <editor-fold defaultstate="collapsed" desc=" implicit CanCreateZeros[Array[V],Int] implementations ">
+
   implicit object OpArrayI extends OpArray[Int]
   implicit object OpArrayS extends OpArray[Short]
   implicit object OpArrayL extends OpArray[Long]
   implicit object OpArrayF extends OpArray[Float]
   implicit object OpArrayD extends OpArray[Double]
   implicit def OpArrayAny[V:ClassTag:Semiring] : OpArray[V] = new OpArray[V]
+
+  // </editor-fold>
 }

@@ -16,17 +16,21 @@ package breeze.linalg.support
 */
 
 /**
- * Capability trait for slices like denseVector(0 until 5)
- * @author dlwh
- */
+  * Capability trait for slices like denseVector(0 until 5).
+  * Used implicitly for objects such as [[breeze.linalg.Tensor]] and [[breeze.linalg.DenseVector]].
+  *
+  * @author dlwh
+  */
 trait CanSlice[-From, -Slice, +To] {
  def apply(from: From, slice: Slice):To
 }
 
 /**
- * Capability trait for slices like denseMatrix(1 until 5, 3 until 20 by 2)
- * @author dlwh
- */
+  * Capability trait for slices like denseMatrix(1 until 5, 3 until 20 by 2).
+  * Used implicitly for objects such as [[breeze.linalg.Broadcasted]] and [[breeze.linalg.DenseMatrix]].
+  *
+  * @author dlwh
+  */
 trait CanSlice2[-From, -Slice1, -Slice2, +To] {
   def apply(from: From, slice: Slice1, slice2: Slice2):To
 }

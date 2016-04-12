@@ -26,6 +26,7 @@ import scala.reflect.ClassTag
 /**
  * Used for those vector-types that are "coordinated", meaning that t. (Possibly the coordinates
  * are enumerable as well, in which case you want an XXX
+  *
  * @tparam V Vector type
  * @tparam S Scalar type
  * @author gabeos, dlwh

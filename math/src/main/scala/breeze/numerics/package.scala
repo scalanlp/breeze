@@ -511,7 +511,7 @@ package object numerics {
             lgSum += lgamma(a)
           }
 
-          def zeros(numZero: Int, zeroValue: Double): Unit = {
+          def visitZeros(numZero: Int, zeroValue: Double): Unit = {
             sum += numZero * zeroValue
             lgSum += lgamma(zeroValue)
           }

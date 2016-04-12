@@ -17,21 +17,33 @@ object sum extends UFunc with sumLowPrio with VectorizedReduceUFunc {
   override type Op = OpAdd.type
 
   @expand
-  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S](implicit iter: CanTraverseValues[T, S]): Impl[T, S] = new Impl[T, S] {
-    def apply(v: T): S = {
-      class SumVisitor extends ValuesVisitor[S] {
-        var sum : S = 0
-        def visit(a: S): Unit = {
-          sum += a
+  implicit def reduce[T, @expand.args(Int, Double, Float, Long) V](
+      implicit iter: CanTraverseValues[T, V],
+      @expand.sequence[V](0, 0d, 0f, 0L) zero: V): Impl[T, V] = {
+
+    new Impl[T, V] {
+      def apply(v: T): V = {
+
+        // <editor-fold defaultstate="collapsed" desc=" SumVisitor ">
+
+        class SumVisitor extends ValuesVisitor[V] {
+          var sum: V = zero
+
+          def visit(a: V): Unit = {
+            sum += a
+          }
+
+          def visitZeros(numZero: Int, zeroValue: V): Unit = {
+            sum += numZero * zeroValue
+          }
         }
 
-        def zeros(numZero: Int, zeroValue: S): Unit = {
-          sum += numZero * zeroValue
-        }
+        // </editor-fold>
+
+        val visit = new SumVisitor
+        iter.traverse(v, visit)
+        visit.sum
       }
-      val visit = new SumVisitor
-      iter.traverse(v, visit)
-      visit.sum
     }
   }
 
@@ -43,7 +55,7 @@ object sum extends UFunc with sumLowPrio with VectorizedReduceUFunc {
           sum = semiring.+(sum, a)
         }
 
-        def zeros(numZero: Int, zeroValue: S): Unit = {
+        def visitZeros(numZero: Int, zeroValue: S): Unit = {
         }
 
       }

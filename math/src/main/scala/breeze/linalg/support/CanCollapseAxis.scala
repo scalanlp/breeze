@@ -1,6 +1,5 @@
 package breeze.linalg.support
 
-
 /*
  Copyright 2012 David Hall
 
@@ -16,6 +15,7 @@ package breeze.linalg.support
  See the License for the specific language governing permissions and
  limitations under the License.
 */
+
 /**
  *
  * This trait is for multi-dimensional tensors that can logically have one of their
@@ -35,6 +35,7 @@ trait CanCollapseAxis[From, Axis, ColType, R, TR] {
 }
 
 object CanCollapseAxis {
+
   /** Sometimes Scala can't deal with the R/TR part if it's being chained. This
     * delays some of the inference of [[breeze.linalg.support.CanCollapseAxis]]'s parameters
     * until they can be further resolved. (See [[breeze.generic.UFunc.collapseUred]] for an example.) */

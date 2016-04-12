@@ -24,7 +24,7 @@ object where extends UFunc {
             if(a != semi.zero) result += k
           }
 
-          override def zeros(numZero: Int, zeroKeys: Iterator[K], zeroValue: V): Unit = {
+          override def visitZeros(numZero: Int, zeroKeys: Iterator[K], zeroValue: V): Unit = {
             if(zeroValue != semi.zero) result ++= zeroKeys
           }
         })

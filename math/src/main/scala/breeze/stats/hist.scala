@@ -54,7 +54,7 @@ object hist extends UFunc {
             result(bins-1) += 1
           }
         }
-        def zeros(numZero: Int, zeroValue: S): Unit = {
+        def visitZeros(numZero: Int, zeroValue: S): Unit = {
           val i = math.floor(bins * ((zeroValue.toDouble-minima)/maxima)).toInt
           if ((i >= 0) && (i < bins)) {
             result(i) += numZero

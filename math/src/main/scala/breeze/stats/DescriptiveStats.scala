@@ -62,7 +62,7 @@ object accumulateAndCount extends UFunc {
           n += 1
         }
 
-        def zeros(numZero: Int, zeroValue: Scalar): Unit = {
+        def visitZeros(numZero: Int, zeroValue: Scalar): Unit = {
           sum += (numZero * zeroValue)
           n += numZero
         }
@@ -98,7 +98,7 @@ trait DescriptiveStats {
                   mu = mu + (y - mu) / n
                 }
 
-                def zeros(numZero: Int, zeroValue: V): Unit = {
+                def visitZeros(numZero: Int, zeroValue: V): Unit = {
                   if (numZero != 0){
                     mu = mu * n / (n + numZero)
                   }
@@ -136,7 +136,7 @@ trait DescriptiveStats {
             s = s + (n - 1) * d / n * d
           }
 
-          def zeros(numZero: Int, zeroValue: S): Unit = {
+          def visitZeros(numZero: Int, zeroValue: S): Unit = {
             for (i <- 0 until numZero) visit(zeroValue)
           }
         }
@@ -303,7 +303,7 @@ trait DescriptiveStats {
 
     def visit(value: Scalar): Unit = recordOccurrences(value, 1)
 
-    def zeros(numZeros: Int, zeroValue: Scalar): Unit = recordOccurrences(zeroValue, numZeros)
+    def visitZeros(numZeros: Int, zeroValue: Scalar): Unit = recordOccurrences(zeroValue, numZeros)
 
     private def recordOccurrences(value: Scalar, count: Int): Unit = {
       frequencyCounts(value) = frequencyCounts.getOrElse(value, 0) + count
@@ -402,7 +402,7 @@ trait DescriptiveStats {
           val result = new DenseVector[Int](max(x)+1)
           class BincountVisitor extends ValuesVisitor[Int] {
             def visit(a: Int): Unit = { result(a) = result(a) + 1 }
-            def zeros(numZero: Int, zeroValue: Int) = {
+            def visitZeros(numZero: Int, zeroValue: Int) = {
               result(0) = result(0) + numZero
             }
           }
@@ -447,7 +447,7 @@ trait DescriptiveStats {
 
             class BincountVisitor extends ValuesVisitor[Int] {
               def visit(a: Int): Unit = { counter.update(a,counter(a) + 1) }
-              def zeros(numZero: Int, zeroValue: Int) = {
+              def visitZeros(numZero: Int, zeroValue: Int) = {
                 counter.update(zeroValue, counter(zeroValue) + numZero)
               }
             }

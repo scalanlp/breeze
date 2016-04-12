@@ -35,7 +35,7 @@ object all extends UFunc {
             if (!f(a)) throw Found
           }
 
-          def zeros(numZero: Int, zeroValue: S): Unit = {
+          def visitZeros(numZero: Int, zeroValue: S): Unit = {
             if (numZero != 0 && !f(zeroValue)) throw Found
           }
 

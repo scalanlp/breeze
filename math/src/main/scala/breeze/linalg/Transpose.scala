@@ -45,7 +45,11 @@ object Transpose extends TransposeLowPrio {
 }
 
 trait TransposeLowPrio {
-  implicit def liftOps[Op, T, U, R, RT](implicit op: UFunc.UImpl2[Op, T, U, R], canTranspose: CanTranspose[R, RT]):UFunc.UImpl2[Op, Transpose[T], Transpose[U], RT] = {
+
+  implicit def liftOps[Op, T, U, R, RT](
+      implicit op: UFunc.UImpl2[Op, T, U, R], canTranspose: CanTranspose[R, RT]
+  ):UFunc.UImpl2[Op, Transpose[T], Transpose[U], RT] = {
+
     new UFunc.UImpl2[Op, Transpose[T], Transpose[U], RT] {
       def apply(a: Transpose[T], b: Transpose[U]) = {
         canTranspose(op(a.inner,b.inner))
@@ -68,12 +72,16 @@ trait TransposeLowPrio {
   }
 
   // TODO: make CanSlice a UFunc
-  implicit def liftSlice[Op, T, S, U, UT](implicit op: CanSlice[T, S, U], trans: CanTranspose[U, UT]): CanSlice[Transpose[T], S, UT] = {
+  implicit def liftSlice[Op, T, S, U, UT](
+      implicit op: CanSlice[T, S, U], trans: CanTranspose[U, UT]
+  ): CanSlice[Transpose[T], S, UT] = {
+
     new CanSlice[Transpose[T], S, UT] {
       override def apply(from: Transpose[T], slice: S): UT = {
         op(from.inner, slice).t
       }
     }
+
   }
 
   implicit def liftUFunc[Op, T, U, UT](implicit op: UFunc.UImpl[Op, T, U], trans: CanTranspose[U, UT]):UFunc.UImpl[Op, Transpose[T], UT] = {
@@ -96,6 +104,7 @@ trait TransposeLowPrio {
         trans(op(v.inner, v2, v3))
       }
     }
+
   }
 
   implicit def liftUFuncInplace3_1[Op, T, T2, T3](implicit op: UFunc.InPlaceImpl3[Op, T, T2, T3]):UFunc.InPlaceImpl3[Op, Transpose[T], T2, T3] = {

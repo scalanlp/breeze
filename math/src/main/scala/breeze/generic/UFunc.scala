@@ -39,10 +39,10 @@ import breeze.linalg.support._
  * }}}
  *
  *
- *
  *@author dlwh
  */
 trait UFunc {
+
   final def apply[@specialized(Int, Double, Float) V,
                   @specialized(Int, Double, Float) VR]
                   (v: V)(implicit impl: Impl[V, VR]):VR = impl(v)
@@ -50,17 +50,18 @@ trait UFunc {
   final def apply[@specialized(Int, Double, Float) V1,
                   @specialized(Int, Double, Float) V2,
                   @specialized(Int, Double, Float) VR]
-                   (v1: V1, v2: V2)(implicit impl: Impl2[V1, V2, VR]):VR = impl(v1, v2)
+                  (v1: V1, v2: V2)(implicit impl: Impl2[V1, V2, VR]):VR = impl(v1, v2)
 
   // if there are three arguments, the first one is almost always a vector or something,
   // so no point specializing.
   final def apply[V1,
-  @specialized(Int, Double, Float) V2,
-  @specialized(Int, Double, Float) V3,
-  @specialized(Int, Double, Float) VR]
-  (v1: V1, v2: V2, v3: V3)(implicit impl: Impl3[V1, V2, V3, VR]):VR = impl(v1, v2, v3)
+                  @specialized(Int, Double, Float) V2,
+                  @specialized(Int, Double, Float) V3,
+                  @specialized(Int, Double, Float) VR]
+                  (v1: V1, v2: V2, v3: V3)(implicit impl: Impl3[V1, V2, V3, VR]):VR = impl(v1, v2, v3)
 
-  final def apply[V1,V2, V3, V4, VR](v1: V1, v2: V2, v3: V3, v4: V4)(implicit impl: Impl4[V1, V2, V3, V4, VR]):VR = impl(v1, v2, v3, v4)
+  final def apply[V1,V2, V3, V4, VR](v1: V1, v2: V2, v3: V3, v4: V4)(
+    implicit impl: Impl4[V1, V2, V3, V4, VR]):VR = impl(v1, v2, v3, v4)
 
   final def inPlace[V](v: V)(implicit impl: UFunc.InPlaceImpl[this.type, V]) = {impl(v); v}
   final def inPlace[V, V2](v: V, v2: V2)(implicit impl: UFunc.InPlaceImpl2[this.type, V, V2]) = {impl(v, v2); v}
@@ -68,19 +69,19 @@ trait UFunc {
 
   final def withSink[S](s: S) = new UFunc.WithSinkHelp[this.type, S](s)
 
-//  @implicitNotFound("Could not find an implicit implementation for this UFunc with arguments ${V}")
+  //  @implicitNotFound("Could not find an implicit implementation for this UFunc with arguments ${V}")
   type Impl[V, VR] = UFunc.UImpl[this.type, V, VR]
-//  @implicitNotFound("Could not find an implicit implementation for this UFunc with arguments ${V1}, ${V2}")
+  //  @implicitNotFound("Could not find an implicit implementation for this UFunc with arguments ${V1}, ${V2}")
   type Impl2[V1, V2, VR] = UFunc.UImpl2[this.type, V1, V2, VR]
-//  @implicitNotFound("Could not find an implicit implementation for this UFunc with arguments ${V1}, ${V2}, ${V3}")
+  //  @implicitNotFound("Could not find an implicit implementation for this UFunc with arguments ${V1}, ${V2}, ${V3}")
   type Impl3[V1, V2, V3, VR] = UFunc.UImpl3[this.type, V1, V2, V3, VR]
-//  @implicitNotFound("Could not find an implicit implementation for this UFunc with arguments ${V1}, ${V2}, ${V3}, ${V4}")
+  //  @implicitNotFound("Could not find an implicit implementation for this UFunc with arguments ${V1}, ${V2}, ${V3}, ${V4}")
   type Impl4[V1, V2, V3, V4, VR] = UFunc.UImpl4[this.type, V1, V2, V3, V4, VR]
-//  @implicitNotFound("Could not find an implicit inplace implementation for this UFunc with arguments ${V}")
+  //  @implicitNotFound("Could not find an implicit inplace implementation for this UFunc with arguments ${V}")
   type InPlaceImpl[V] = UFunc.InPlaceImpl[this.type, V]
-//  @implicitNotFound("Could not find an inplace implicit implementation for this UFunc with arguments ${V1}, ${V2}")
+  //  @implicitNotFound("Could not find an inplace implicit implementation for this UFunc with arguments ${V1}, ${V2}")
   type InPlaceImpl2[V1, V2] = UFunc.InPlaceImpl2[this.type, V1, V2]
-//  @implicitNotFound("Could not find an inplace implicit implementation for this UFunc with arguments ${V1}, ${V2}, ${V3}")
+  //  @implicitNotFound("Could not find an inplace implicit implementation for this UFunc with arguments ${V1}, ${V2}, ${V3}")
   type InPlaceImpl3[V1, V2, V3] = UFunc.InPlaceImpl3[this.type, V1, V2, V3]
 
   //  @implicitNotFound("Could not find an implicit with-sink implementation for this UFunc with arguments ${S} ${V}")
@@ -89,7 +90,6 @@ trait UFunc {
   type SinkImpl2[S, V1, V2] = UFunc.SinkImpl2[this.type, S, V1, V2]
   //  @implicitNotFound("Could not find an implicit with-sink implementation for this UFunc with arguments ${S} ${V1}, ${V2}, ${V3}")
   type SinkImpl3[S, V1, V2, V3] = UFunc.SinkImpl3[this.type, S, V1, V2, V3]
-
 
 
   implicit def canZipMapValuesImpl[T, V1, VR, U](implicit handhold: ScalarOf[T, V1],
@@ -137,13 +137,19 @@ trait MappingUFunc extends MappingUFuncLowPrio { this: UFunc =>
 
 }
 
-sealed trait MappingUFuncLowPrio { this: UFunc =>
-  implicit def canMapV2Values[T, V1, V2, VR, U](implicit handhold: ScalarOf[T, V2], impl: Impl2[V1, V2, VR], canMapValues: CanMapValues[T, V2, VR, U]): Impl2[V1, T, U] = {
+sealed trait MappingUFuncLowPrio {
+  this: UFunc =>
+
+  implicit def canMapV2Values[T, V1, V2, VR, U](
+      implicit handhold: ScalarOf[T, V2],
+      impl: Impl2[V1, V2, VR],
+      canMapValues: CanMapValues[T, V2, VR, U]): Impl2[V1, T, U] = {
+
     new Impl2[V1, T, U] {
       def apply(v1: V1, v2: T): U = canMapValues(v2, impl.apply(v1, _))
     }
-  }
 
+  }
 }
 
 object UFunc {

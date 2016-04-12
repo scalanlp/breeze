@@ -1,4 +1,5 @@
 package breeze.linalg.support
+
 /*
  Copyright 2012 Daniel Ramage
 
@@ -23,9 +24,11 @@ package breeze.linalg.support
  * @author dlwh
  */
 trait CanMapKeyValuePairs[-From, +K, +A, -B, +To] {
+
   /** Maps all key-value pairs from the given collection. */
   def map(from : From, fn : ((K,A) => B)) : To
 
   /** Maps all active key-value pairs from the given collection. */
   def mapActive(from : From, fn : ((K,A) => B)) : To
+
 }

@@ -20,17 +20,19 @@ import scala.reflect.ClassTag
 import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 
 /**
- * Marker for being able to traverse over the values in a collection/tensor
- *
- * @author dramage
- * @author dlwh
- */
-trait CanTraverseKeyValuePairs[From, K, A] {
-  /**Traverses all values from the given collection. */
-  def traverse(from: From, fn: KeyValuePairsVisitor[K, A]): Unit
-  def isTraversableAgain(from: From):Boolean
-}
+  * Marker for being able to traverse over the values in a collection/tensor.
+  * Particularly useful to traverse sparse collections such as [[breeze.linalg.CSCMatrix]].
+  *
+  * @author dramage
+  * @author dlwh
+  */
+trait CanTraverseKeyValuePairs[From, K, V] {
 
+  def traverse(from: From, fn: KeyValuePairsVisitor[K, V]): Unit
+
+  def isTraversableAgain(from: From):Boolean
+
+}
 
 
 object CanTraverseKeyValuePairs {
@@ -46,7 +48,7 @@ object CanTraverseKeyValuePairs {
         i += 1
       }
     }
-    def zeros(numZero: Int, zeroKeys: Iterator[K], zeroValue: A)
+    def visitZeros(numZero: Int, zeroKeys: Iterator[K], zeroValue: A)
   }
 
 
@@ -54,30 +56,25 @@ object CanTraverseKeyValuePairs {
   // Arrays
   //
 
-  class OpArray[@specialized(Double, Int, Float, Long) A]
-    extends CanTraverseKeyValuePairs[Array[A], Int, A] {
+  class OpArray[@specialized(Double, Int, Float, Long) V]
+    extends CanTraverseKeyValuePairs[Array[V], Int, V] {
     /** Traverses all values from the given collection. */
-    def traverse(from: Array[A], fn: KeyValuePairsVisitor[Int, A]): Unit = {
+    def traverse(from: Array[V], fn: KeyValuePairsVisitor[Int, V]): Unit = {
       fn.visitArray(0 until from.length, from)
     }
 
-    def isTraversableAgain(from: Array[A]): Boolean = true
+    def isTraversableAgain(from: Array[V]): Boolean = true
   }
 
 
-  implicit def opArray[@specialized A] =
-    new OpArray[A]
+  // <editor-fold defaultstate="collapsed" desc=" implicit CanTraverseKeyValuePairs[Array[V], Int, V] implementations ">
 
+  implicit def opArray[@specialized V] = new OpArray[V]
   implicit object OpArrayII extends OpArray[Int]
-
   implicit object OpArraySS extends OpArray[Short]
-
   implicit object OpArrayLL extends OpArray[Long]
-
   implicit object OpArrayFF extends OpArray[Float]
-
   implicit object OpArrayDD extends OpArray[Double]
-
   implicit object OpArrayCC extends OpArray[Complex]
 }
 

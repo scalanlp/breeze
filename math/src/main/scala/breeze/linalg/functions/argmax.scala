@@ -26,7 +26,7 @@ object argmax extends UFunc {
         }
 
 
-        def zeros(numZero: Int, zeroKeys: Iterator[I], zeroValue: S): Unit = {
+        def visitZeros(numZero: Int, zeroKeys: Iterator[I], zeroValue: S): Unit = {
           if(numZero != 0) {
             if(zeroValue > max || !visitedOne) {
               max = zeroValue
@@ -81,8 +81,7 @@ object argmin extends UFunc {
           }
         }
 
-
-        def zeros(numZero: Int, zeroKeys: Iterator[I], zeroValue: S): Unit = {
+        def visitZeros(numZero: Int, zeroKeys: Iterator[I], zeroValue: S): Unit = {
           if(numZero != 0) {
             visitedOne = true
             if(zeroValue <= min) {
@@ -91,7 +90,6 @@ object argmin extends UFunc {
             }
           }
         }
-
 
         override def visitArray(indices: Int=>I, arr: Array[S], offset: Int, length: Int, stride: Int): Unit = {
           var i = 0

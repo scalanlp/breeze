@@ -15,6 +15,7 @@ import breeze.numerics.{pow, sqrt}
  * of norms that do not require CanTraverseValues.
  */
 trait MatrixNorms[M, S] {
+
   implicit def canNorm_Int(implicit iter: CanTraverseValues[M,Int]): norm.Impl2[M, Int, Double]
   implicit def canNorm_Float(implicit iter: CanTraverseValues[M,Float]): norm.Impl2[M, Float, Double]
   implicit def canNorm_Double(implicit iter: CanTraverseValues[M,Double]): norm.Impl2[M, Double, Double]
@@ -80,7 +81,7 @@ object EntrywiseMatrixNorms {
 
           def visit(a: Int): Unit = op(a)
 
-          def zeros(numZero: Int, zeroValue: Int): Unit = {
+          def visitZeros(numZero: Int, zeroValue: Int): Unit = {
           }
 
           def norm = opEnd(agg)
@@ -118,7 +119,7 @@ object EntrywiseMatrixNorms {
 
           def visit(a: Float): Unit = op(a)
 
-          def zeros(numZero: Int, zeroValue: Float): Unit = {
+          def visitZeros(numZero: Int, zeroValue: Float): Unit = {
           }
 
           def norm = opEnd(agg)
@@ -156,7 +157,7 @@ object EntrywiseMatrixNorms {
 
           def visit(a: Double): Unit = op(a)
 
-          def zeros(numZero: Int, zeroValue: Double): Unit = {
+          def visitZeros(numZero: Int, zeroValue: Double): Unit = {
           }
 
           def norm = opEnd(agg)
@@ -194,7 +195,7 @@ object EntrywiseMatrixNorms {
 
           def visit(a: S): Unit = op(a)
 
-          def zeros(numZero: Int, zeroValue: S): Unit = {}
+          def visitZeros(numZero: Int, zeroValue: S): Unit = {}
 
           def norm = opEnd(agg)
         }

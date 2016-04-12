@@ -27,6 +27,7 @@ object softmax extends UFunc {
   /**
    * Method for computing the max of the first length elements of an array. Arrays
    * of size 0 give Double.NegativeInfinity
+ *
    * @param arr
    * @param length
    * @return
@@ -61,7 +62,7 @@ object softmax extends UFunc {
           accum += scala.math.exp(a - max)
         }
 
-        def zeros(numZero: Int, zeroValue: Double): Unit = {
+        def visitZeros(numZero: Int, zeroValue: Double): Unit = {
           if(numZero != 0) {
             accum += (numZero * scala.math.exp(zeroValue - max))
           }
@@ -101,7 +102,7 @@ object softmax extends UFunc {
           accum += scala.math.exp(a - max).toFloat
         }
 
-        def zeros(numZero: Int, zeroValue: Float): Unit = {
+        def visitZeros(numZero: Int, zeroValue: Float): Unit = {
           if(numZero != 0) {
             accum += (numZero * scala.math.exp(zeroValue - max)).toFloat
           }

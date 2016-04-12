@@ -50,7 +50,7 @@ trait CanTraverseValues[From, A] {
         bb = fn(bb, a)
       }
 
-      override def zeros(numZero: Int, zeroValue: A): Unit = {
+      override def visitZeros(numZero: Int, zeroValue: A): Unit = {
         for(i <- 0 until numZero) {
           bb = fn(bb, zeroValue)
         }
@@ -69,7 +69,6 @@ object CanTraverseValues {
     * This trait can be implemented and used to apply a function over a breeze collection/tensor,
     * using [[CanTraverseValues.traverse()]].
     *
-    * @tparam V
     */
   trait ValuesVisitor[@specialized V] {
 
@@ -90,7 +89,8 @@ object CanTraverseValues {
 
     /**
       * Allows separate iteration over zero values in sparse representations
-      * such as [[breeze.linalg.CSCMatrix]], [[breeze.linalg.HashVector]], and [[breeze.linalg.SparseVector]].
+      * such as [[breeze.linalg.CSCMatrix]], [[breeze.linalg.HashVector]], and [[breeze.linalg.SparseVector]],
+      * to circumvent expensive unnecessary operations.
       *
       * Use as follows:
       * `````
@@ -101,7 +101,7 @@ object CanTraverseValues {
       * `````
       *
       */
-    def zeros(numZero: Int, zeroValue: V): Unit
+    def visitZeros(numZero: Int, zeroValue: V): Unit
 
   }
 
@@ -109,9 +109,9 @@ object CanTraverseValues {
   // Arrays
   //
 
+
   class OpArray[@specialized(Double, Int, Float, Long) V]
     extends CanTraverseValues[Array[V], V] {
-
 
     def traverse(from: Array[V], fn: ValuesVisitor[V]): Unit = {
       fn.visitArray(from)
@@ -121,34 +121,31 @@ object CanTraverseValues {
 
   }
 
+  // <editor-fold defaultstate="collapsed" desc=" implicit CanTraverseValues[Array[V], V] implementations ">
+
   implicit def opArray[@specialized A] = new OpArray[A]
 
-  /** Implicit object to apply breeze traversable operations to Array[Int].*/
-  implicit object ImplicitOpArrayInt extends OpArray[Int]
+  implicit object ImplicitOpArrayI extends OpArray[Int]
 
-  /** Implicit object to apply breeze traversable operations to Array[Short].*/
-  implicit object ImplicitOpArrayShort extends OpArray[Short]
+  implicit object ImplicitOpArrayS extends OpArray[Short]
 
-  /** Implicit object to apply breeze traversable operations to Array[Short].*/
-  implicit object ImplicitOpArrayLong extends OpArray[Long]
+  implicit object ImplicitOpArrayL extends OpArray[Long]
 
-  /** Implicit object to apply breeze traversable operations to Array[Float].*/
-  implicit object ImplicitOpArrayFloat extends OpArray[Float]
+  implicit object ImplicitOpArrayF extends OpArray[Float]
 
-  /** Implicit object to apply breeze traversable operations to Array[Double].*/
-  implicit object ImplicitOpArrayDouble extends OpArray[Double]
+  implicit object ImplicitOpArrayD extends OpArray[Double]
 
-  /** Implicit object to apply breeze traversable operations to Array[Complex].*/
-  implicit object ImplicitOpArrayComplex extends OpArray[Complex]
+  implicit object ImplicitOpArrayC extends OpArray[Complex]
+
+  // </editor-fold>
+
+  // <editor-fold defaultstate="collapsed" desc=" implicit CanTraverseValues[scala.Traversableonce[V], V] implementation for  ">
 
   /**
     * Implicit conversion to apply breeze traversing operations to
     * scala collections or iterators ([[scala.TraversableOnce]] objects).
     */
-
-  /**Implicit implementation which allows traversal of
-    * scala collection objects implementing [[scala.collection.TraversableOnce]]. */
-  implicit def canTraverseTraversable[V,X <: TraversableOnce[V]]: CanTraverseValues[X, V] = {
+  implicit def canTraverseTraversable[X <: TraversableOnce[V], V]: CanTraverseValues[X, V] = {
     new CanTraverseValues[X, V] {
 
       /** Traverses all values from the given collection. */
@@ -162,6 +159,9 @@ object CanTraverseValues {
 
     }
   }
+
+  // </editor-fold>
+
 }
 
 @deprecated("not used","1.0")

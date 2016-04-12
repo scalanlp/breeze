@@ -50,7 +50,7 @@ package object financial {
             decayUntilNow *= decayConst
           }
 
-          def zeros(numZero: Int, zeroValue: Scalar): Unit = ()
+          def visitZeros(numZero: Int, zeroValue: Scalar): Unit = ()
         }
 
         iter.traverse(revenueStream, visit)

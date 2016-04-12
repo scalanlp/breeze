@@ -37,7 +37,7 @@ object max extends UFunc /*with VectorizedReduceUFunc <-- doesn't work with 2.10
           max = scala.math.max(max, a)
         }
 
-        def zeros(numZero: Int, zeroValue: S): Unit = {
+        def visitZeros(numZero: Int, zeroValue: S): Unit = {
           if(numZero != 0) {
             visitedOne = true
             max = scala.math.max(zeroValue, max)
@@ -167,8 +167,8 @@ object min extends UFunc {
               min = scala.math.min(min, a)
             }
 
-            def zeros(numZero: Int, zeroValue: V): Unit = {
-              if (numZero != 0) {
+            def visitZeros(numZero: Int, zeroValue: V): Unit = {
+              if(numZero != 0) {
                 visitedOne = true
                 min = scala.math.min(zeroValue, min)
               }
@@ -177,7 +177,7 @@ object min extends UFunc {
             override def visitArray(arr: Array[V], offset: Int, length: Int, stride: Int): Unit = {
               var i = 0
               var off = offset
-              while (i < length) {
+              while(i < length) {
                 visitedOne = true
                 min = scala.math.min(min, arr(off))
                 i += 1
@@ -191,7 +191,7 @@ object min extends UFunc {
           val visit = new MinVisitor
 
           iter.traverse(v, visit)
-          if (!visit.visitedOne) throw new IllegalArgumentException(s"No values in $v!")
+          if(!visit.visitedOne) throw new IllegalArgumentException(s"No values in $v!")
 
           visit.min
         }
@@ -264,7 +264,7 @@ object ptp extends UFunc {
           min = scala.math.min(min, a)
         }
 
-        def zeros(numZero: Int, zeroValue: S): Unit = {
+        def visitZeros(numZero: Int, zeroValue: S): Unit = {
           if(numZero != 0) {
             visitedOne = true
             max = scala.math.max(zeroValue, max)
@@ -316,7 +316,7 @@ object minMax extends UFunc {
           min = scala.math.min(min, a)
         }
 
-        def zeros(numZero: Int, zeroValue: S): Unit = {
+        def visitZeros(numZero: Int, zeroValue: S): Unit = {
           if(numZero != 0) {
             visitedOne = true
             max = scala.math.max(zeroValue, max)

@@ -18,7 +18,7 @@ object product extends UFunc {
           product *= a
         }
 
-        def zeros(numZero: Int, zeroValue: S): Unit = {
+        def visitZeros(numZero: Int, zeroValue: S): Unit = {
           if(numZero > 0)
             product = 0
         }
@@ -37,7 +37,7 @@ object product extends UFunc {
           product = semiring.*(product, a)
         }
 
-        def zeros(numZero: Int, zeroValue: S): Unit = {
+        def visitZeros(numZero: Int, zeroValue: S): Unit = {
           if(numZero > 0)
             product = semiring.zero
         }

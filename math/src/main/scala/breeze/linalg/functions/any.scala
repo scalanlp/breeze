@@ -11,7 +11,6 @@ import scala.util.control.ControlThrowable
   * any(t) true if any element of t is non-zero
   * any(f, t) returns true if any element of t satisfies f
   *
-  *
   * @author dlwh
   **/
 object any extends UFunc {
@@ -35,7 +34,7 @@ object any extends UFunc {
             if (f(a)) throw Found
           }
 
-          def zeros(numZero: Int, zeroValue: S): Unit = {
+          def visitZeros(numZero: Int, zeroValue: S): Unit = {
             if (numZero != 0 && f(zeroValue)) throw Found
           }
 
