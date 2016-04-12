@@ -925,50 +925,10 @@ trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
     }
   }
 
-  implicit def canSliceTensorBooleanRowsAndCol[V: Semiring : ClassTag]: CanSlice2[DenseMatrix[V], Tensor[Int, Boolean], Int, SliceVector[(Int, Int), V]] = {
-    new CanSlice2[DenseMatrix[V], Tensor[Int, Boolean], Int, SliceVector[(Int, Int), V]] {
-      def apply(from: DenseMatrix[V], rows: Tensor[Int, Boolean], col: Int): SliceVector[(Int, Int), V] = {
-        new SliceVector(from, rows.findAll(_ == true).map(row => (row, col)))
-      }
-    }
-  }
-
   implicit def canSliceTensorBooleanCols[V: Semiring : ClassTag]: CanSlice2[DenseMatrix[V], ::.type, Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] = {
     new CanSlice2[DenseMatrix[V], ::.type, Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] {
       def apply(from: DenseMatrix[V], rows: ::.type, cols: Tensor[Int, Boolean]): SliceMatrix[Int, Int, V] = {
         new SliceMatrix(from, (0 until from.rows), cols.findAll(_ == true))
-      }
-    }
-  }
-
-  implicit def canSliceTensorRowAndBooleanCols[V: Semiring : ClassTag]: CanSlice2[DenseMatrix[V], Int, Tensor[Int, Boolean], SliceVector[(Int, Int), V]] = {
-    new CanSlice2[DenseMatrix[V], Int, Tensor[Int, Boolean], SliceVector[(Int, Int), V]] {
-      def apply(from: DenseMatrix[V], row: Int, cols: Tensor[Int, Boolean]): SliceVector[(Int, Int), V] = {
-        new SliceVector(from, cols.findAll(_ == true).map(col => (row, col)))
-      }
-    }
-  }
-
-  implicit def canSliceTensorBooleanRowsAndCols[V: Semiring : ClassTag]: CanSlice2[DenseMatrix[V], Tensor[Int, Boolean], Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] = {
-    new CanSlice2[DenseMatrix[V], Tensor[Int, Boolean], Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] {
-      def apply(from: DenseMatrix[V], rows: Tensor[Int, Boolean], cols: Tensor[Int, Boolean]): SliceMatrix[Int, Int, V] = {
-        new SliceMatrix(from, rows.findAll(_ == true), cols.findAll(_ == true))
-      }
-    }
-  }
-
-  implicit def canSliceTensorBooleanRowsAndWeirdCols[V: Semiring : ClassTag]: CanSlice2[DenseMatrix[V], Tensor[Int, Boolean], Seq[Int], SliceMatrix[Int, Int, V]] = {
-    new CanSlice2[DenseMatrix[V], Tensor[Int, Boolean], Seq[Int], SliceMatrix[Int, Int, V]] {
-      def apply(from: DenseMatrix[V], rows: Tensor[Int, Boolean], cols: Seq[Int]): SliceMatrix[Int, Int, V] = {
-        new SliceMatrix(from, rows.findAll(_ == true), cols.toIndexedSeq)
-      }
-    }
-  }
-
-  implicit def canSliceWeirdRowsAndTensorBooleanCols[V: Semiring : ClassTag]: CanSlice2[DenseMatrix[V], Seq[Int], Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] = {
-    new CanSlice2[DenseMatrix[V], Seq[Int], Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] {
-      def apply(from: DenseMatrix[V], rows: Seq[Int], cols: Tensor[Int, Boolean]): SliceMatrix[Int, Int, V] = {
-        new SliceMatrix(from, rows.toIndexedSeq, cols.findAll(_ == true))
       }
     }
   }

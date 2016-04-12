@@ -7,8 +7,12 @@ import org.scalatest.FunSuite
   * @author dlwh
   */
 class SliceMatrixTest extends FunSuite {
+  val originalMatrix = DenseMatrix.tabulate[Int](5,5){ (i, j) => 5 * i + j + 1}
 
-   test("basic slices of a counter2") {
+  // first matrix with the 4th row and 3rd column removed
+  val sliceMatrix = originalMatrix(Seq(0, 1, 2, 4), Seq(0, 1, 3, 4))
+
+  test("basic slices of a counter2") {
      val ctr = Counter2( ('a,0, 1), ('b, 1, 10), ('a,1, 6))
      val v:Matrix[Int] = ctr(Seq('a, 'b), Seq(1, 0))
      assert(v(0,0) === ctr('a,1))
@@ -53,25 +57,63 @@ class SliceMatrixTest extends FunSuite {
   }
 
   test("slices of a slice matrix") {
-    val a = DenseMatrix.tabulate[Int](5,5){ (i, j) => 5 * i + j + 1}
-
-    // first matrix with the 4th row and 3rd column removed
-    val b = a(Seq(0, 1, 2, 4), Seq(0, 1, 3, 4))
-
     // check row slice
-    assert(b(1, ::) == DenseVector(6, 7, 9, 10), "Failed> b(1, ::) = " + b(1, ::))
+    assert(sliceMatrix(1, ::) == DenseVector(6, 7, 9, 10), "Failed> b(1, ::) = " + sliceMatrix(1, ::))
 
     // check column slice
-    assert(b(::, 1) == DenseVector(2, 7, 12, 22), "Failed> b(::, 1) = " + b(::, 1))
+    assert(sliceMatrix(::, 1) == DenseVector(2, 7, 12, 22), "Failed> b(::, 1) = " + sliceMatrix(::, 1))
 
-    // check arb ro5w slice
-    assert(b(Seq(1, 3), ::) ==  DenseMatrix.create(2, 4,  Array(6, 7, 9, 10, 21, 22, 24, 25), 0, 4, true), "Failed> b(Seq(1, 3), ::) = " + b(Seq(1,3), ::))
+    // check arb row slice
+    assert(sliceMatrix(Seq(1, 3), ::) == DenseMatrix.create(2, 4,  Array(6, 7, 9, 10, 21, 22, 24, 25), 0, 4, true), "Failed> b(Seq(1, 3), ::) = " + sliceMatrix(Seq(1,3), ::))
 
     // check arb col slice
-    assert(b(::, Seq(1, 3)) == DenseMatrix.create( 4, 2,  Array(2, 7, 12, 22, 5, 10, 15, 25), 0, 4, false), "Failed> b(::, Seq(1,3) = " + b(Seq(1, 3), ::))
-
-
-
+    assert(sliceMatrix(::, Seq(1, 3)) == DenseMatrix.create( 4, 2,  Array(2, 7, 12, 22, 5, 10, 15, 25), 0, 4, false), "Failed> b(::, Seq(1,3) = " + sliceMatrix(Seq(1, 3), ::))
   }
 
+  test("canSliceRow") {
+    assert(sliceMatrix(0, ::) == DenseVector( 1,  2,  4,  5), "Failed> sliceMatrix(0, ::) = " + sliceMatrix(0, ::))
+    assert(sliceMatrix(1, ::) == DenseVector( 6,  7,  9, 10), "Failed> sliceMatrix(1, ::) = " + sliceMatrix(1, ::))
+    assert(sliceMatrix(2, ::) == DenseVector(11, 12, 14, 15), "Failed> sliceMatrix(2, ::) = " + sliceMatrix(2, ::))
+    assert(sliceMatrix(3, ::) == DenseVector(21, 22, 24, 25), "Failed> sliceMatrix(3, ::) = " + sliceMatrix(3, ::))
+  }
+
+  test("canSliceRowAndWeirdCols") {
+    assert(sliceMatrix(0, Seq(0, 2)) == DenseVector( 1,  4), "Failed> sliceMatrix(0, ::) = " + sliceMatrix(0, Seq(0, 2)))
+    assert(sliceMatrix(1, Seq(0, 2)) == DenseVector( 6,  9), "Failed> sliceMatrix(1, ::) = " + sliceMatrix(1, Seq(0, 2)))
+    assert(sliceMatrix(2, Seq(0, 2)) == DenseVector(11,  14), "Failed> sliceMatrix(2, ::) = " + sliceMatrix(2, Seq(0, 2)))
+    assert(sliceMatrix(3, Seq(0, 2)) == DenseVector(21,  24), "Failed> sliceMatrix(3, ::) = " + sliceMatrix(3, Seq(0, 2)))
+  }
+
+  test("canSliceCol") {
+    assert(sliceMatrix(::, 0) == DenseVector( 1,  6, 11, 21), "Failed> sliceMatrix(::, 0) = " + sliceMatrix(::, 0))
+    assert(sliceMatrix(::, 1) == DenseVector( 2,  7, 12, 22), "Failed> sliceMatrix(::, 1) = " + sliceMatrix(::, 1))
+    assert(sliceMatrix(::, 2) == DenseVector( 4,  9, 14, 24), "Failed> sliceMatrix(::, 2) = " + sliceMatrix(::, 2))
+    assert(sliceMatrix(::, 3) == DenseVector( 5, 10, 15, 25), "Failed> sliceMatrix(::, 3) = " + sliceMatrix(::, 3))
+  }
+
+  test("canSliceWeirdRowsAndCol") {
+    assert(sliceMatrix(Seq(0, 2), 0) == DenseVector( 1, 11), "Failed> sliceMatrix(::, 0) = " + sliceMatrix(Seq(0, 2), 0))
+    assert(sliceMatrix(Seq(0, 2), 1) == DenseVector( 2, 12), "Failed> sliceMatrix(::, 1) = " + sliceMatrix(Seq(0, 2), 1))
+    assert(sliceMatrix(Seq(0, 2), 2) == DenseVector( 4, 14), "Failed> sliceMatrix(::, 2) = " + sliceMatrix(Seq(0, 2), 2))
+    assert(sliceMatrix(Seq(0, 2), 3) == DenseVector( 5, 15), "Failed> sliceMatrix(::, 3) = " + sliceMatrix(Seq(0, 2), 3))
+  }
+
+  test("canSliceTensorBoolean") {
+    val booleanTensor = BitVector(true, false, true, false)
+    assert(sliceMatrix(booleanTensor, ::) == DenseMatrix.create(2, 4, Array(1, 2, 4, 5, 11, 12, 14, 15), 0, 4, true))
+
+    assert(sliceMatrix(::, booleanTensor) == DenseMatrix.create(4, 2, Array(1, 6, 11, 21, 4, 9, 14, 24), 0, 4, false))
+
+    assert(sliceMatrix(booleanTensor, booleanTensor) == DenseMatrix.create(2, 2, Array(1, 4, 11, 14), 0, 2, true))
+
+    assert(sliceMatrix(booleanTensor, 0) == DenseVector(1, 11))
+    assert(sliceMatrix(booleanTensor, 1) == DenseVector(2, 12))
+    assert(sliceMatrix(booleanTensor, 2) == DenseVector(4, 14))
+    assert(sliceMatrix(booleanTensor, 3) == DenseVector(5, 15))
+
+    assert(sliceMatrix(0, booleanTensor) == DenseVector(1, 4))
+    assert(sliceMatrix(1, booleanTensor) == DenseVector(6, 9))
+    assert(sliceMatrix(2, booleanTensor) == DenseVector(11, 14))
+    assert(sliceMatrix(3, booleanTensor) == DenseVector(21, 24))
+  }
  }

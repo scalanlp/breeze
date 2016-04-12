@@ -1,11 +1,10 @@
 package breeze.linalg
 
-import breeze.generic.UFunc
-import breeze.generic.UFunc.{UImpl2, InPlaceImpl2}
-import breeze.linalg.operators.OpType
+import breeze.linalg.operators.{OpMulScalar, OpSet}
 import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
+import breeze.math.{Semiring}
 import breeze.storage.Zero
 
 import scala.reflect.ClassTag
@@ -23,28 +22,34 @@ import scala.{specialized => spec}
   * @author dlwh
  */
 class SliceVector[@spec(Int) K, @spec(Double, Int, Float, Long) V:ClassTag](val tensor: Tensor[K,V],
-                                                                                    val slices: IndexedSeq[K]) extends Vector[V] {
+                                                                            val slices: IndexedSeq[K])
+  extends Vector[V] with VectorLike[V, SliceVector[K, V]] {
+
   def apply(i: Int): V = tensor(slices(i))
 
   def update(i: Int, v: V) {tensor(slices(i)) = v}
 
-  def copy: Vector[V] = DenseVector( (slices map (tensor.apply _)):_*)
+  def copy: DenseVector[V] = DenseVector((slices map (tensor.apply _)): _*)
 
   def length: Int = slices.length
 
   def activeSize: Int = slices.length
 
-  def repr: Vector[V] = this
+  def repr: SliceVector[K, V] = this
 
   def activeKeysIterator: Iterator[Int] = keysIterator
 
   def activeIterator: Iterator[(Int, V)] = iterator
 
   def activeValuesIterator: Iterator[V] = valuesIterator
+
+  override def toString = {
+    valuesIterator.mkString("SliceVector(", ", ", ")")
+  }
 }
 
 
-object SliceVector {
+object SliceVector extends SliceVectorOps {
   implicit def scalarOf[K, T]: ScalarOf[SliceVector[K, T], T] = ScalarOf.dummy
 
   implicit def canMapKeyValuePairs[K, V, V2: ClassTag]: CanMapKeyValuePairs[SliceVector[K, V], Int, V, V2, DenseVector[V2]] = {
@@ -119,5 +124,36 @@ object SliceVector {
         transform(from, fn)
       }
     }
+  }
+}
+
+trait SliceVectorOps {
+  // todo: all all the other ops (can this be done with some macro magic?
+  implicit def opSetInPlace[K, V]: OpSet.InPlaceImpl2[SliceVector[K, V], V] = new SVOpSetInPlace[K, V]
+
+  implicit def opMulScalar[K, V : ClassTag : Semiring]: OpMulScalar.Impl2[SliceVector[K, V], V, DenseVector[V]] = new SVOpMulScalar[K, V]
+
+  implicit def opMulScalarInPlace[K, V : ClassTag : Semiring]: OpMulScalar.InPlaceImpl2[SliceVector[K, V], V] = new SVOpMulScalarInPlace[K, V]
+
+  class SVOpSetInPlace[@specialized(Int) K, @specialized(Double, Int, Float, Long) V] extends OpSet.InPlaceImpl2[SliceVector[K, V], V] {
+    def apply(a: SliceVector[K, V], b: V): Unit = a.keysIterator.foreach(k => a.update(k, b))
+  }
+
+  class SVOpMulScalar[@specialized(Int) K, @specialized(Double, Int, Float, Long) V: ClassTag : Semiring] extends OpMulScalar.Impl2[SliceVector[K, V], V, DenseVector[V]] {
+    val semiring = implicitly[Semiring[V]]
+
+    def apply(a: SliceVector[K, V], b: V): DenseVector[V] = a.iterator.foldLeft(new VectorBuilder[V](a.length))({
+      case (builder, (k, v)) =>
+        builder.add(k, semiring.*(v, b))
+        builder
+    }).toDenseVector
+  }
+
+  class SVOpMulScalarInPlace[@specialized(Int) K, @specialized(Double, Int, Float, Long) V: ClassTag : Semiring] extends OpMulScalar.InPlaceImpl2[SliceVector[K, V], V] {
+    val semiring = implicitly[Semiring[V]]
+
+    def apply(a: SliceVector[K, V], b: V): Unit = a.iterator.foreach({
+      case (k, v) => a(k) = semiring.*(v, b)
+    })
   }
 }
