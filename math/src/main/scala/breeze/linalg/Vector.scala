@@ -39,8 +39,6 @@ trait VectorLike[@spec V, +Self <: Vector[V]] extends Tensor[Int, V] with Tensor
   def map[V2, That](fn: V=>V2)(implicit canMapValues: CanMapValues[Self  @uncheckedVariance, V, V2, That]):That = values map fn
 
   def foreach[U](fn: V=>U): Unit = { values foreach fn }
-
-  def copy: Self
 }
 
 
@@ -64,6 +62,7 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]]{
 
   def keysIterator = Iterator.range(0, size)
 
+  def copy: Vector[V]
 
   override def equals(p1: Any) = p1 match {
     case x: Vector[_] =>

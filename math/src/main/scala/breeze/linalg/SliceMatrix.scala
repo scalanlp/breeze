@@ -1,5 +1,6 @@
 package breeze.linalg
 
+import breeze.linalg.operators.OpSet
 import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
@@ -11,7 +12,9 @@ import scala.reflect.ClassTag
 class SliceMatrix[@specialized(Int) K1,
                   @specialized(Int) K2,
                   @specialized(Double, Int, Float, Long) V:Semiring:ClassTag](val tensor: Tensor[(K1, K2),V],
-                                                      val slice1: IndexedSeq[K1], val slice2: IndexedSeq[K2]) extends Matrix[V] {
+                                                                              val slice1: IndexedSeq[K1],
+                                                                              val slice2: IndexedSeq[K2])
+  extends Matrix[V] with MatrixLike[V, SliceMatrix[K1, K2, V]] {
 
   def apply(i: Int, j: Int): V = tensor(slice1(i)->slice2(j))
 
@@ -27,7 +30,7 @@ class SliceMatrix[@specialized(Int) K1,
 
   def activeSize: Int = size
 
-  def repr: Matrix[V] = this
+  def repr: SliceMatrix[K1, K2, V] = this
 
   def copy: Matrix[V] = {
     if (rows == 0) Matrix.zeroRows[V](cols)
@@ -56,8 +59,8 @@ class SliceMatrix[@specialized(Int) K1,
   }
 }
 
+object SliceMatrix extends LowPrioritySliceMatrix with SliceMatrixOps {
 
-object SliceMatrix {
   implicit def canMapKeyValuePairs[K1, K2, V, V2: ClassTag: Zero]: CanMapKeyValuePairs[SliceMatrix[K1, K2, V], (Int, Int), V, V2, DenseMatrix[V2]] = {
     new CanMapKeyValuePairs[SliceMatrix[K1, K2, V], (Int, Int), V, V2, DenseMatrix[V2]] {
       override def map(from: SliceMatrix[K1, K2, V], fn: ((Int, Int), V) => V2): DenseMatrix[V2] = {
@@ -70,7 +73,7 @@ object SliceMatrix {
     }
   }
 
-  implicit def canMapValues[K1, K2, V, V2: ClassTag: Zero]: CanMapValues[SliceMatrix[K1, K2, V], V, V2, DenseMatrix[V2]] = {
+  implicit def canMapValues[K1, K2, @specialized(Int, Float, Double) V, @specialized(Int, Float, Double) V2: ClassTag: Zero]: CanMapValues[SliceMatrix[K1, K2, V], V, V2, DenseMatrix[V2]] = {
     new CanMapValues[SliceMatrix[K1, K2, V], V, V2, DenseMatrix[V2]] {
       override def apply(from: SliceMatrix[K1, K2, V], fn: (V) => V2): DenseMatrix[V2] = {
         DenseMatrix.tabulate(from.rows, from.cols)((i, j) => fn(from(i, j)))
@@ -130,5 +133,64 @@ object SliceMatrix {
         transform(from, fn)
       }
     }
+  }
+
+  // slices
+  implicit def canSliceRow[V: Semiring : ClassTag]: CanSlice2[SliceMatrix[Int, Int, V], Int, ::.type, SliceVector[(Int, Int), V]] = {
+    new CanSlice2[SliceMatrix[Int, Int, V], Int, ::.type, SliceVector[(Int, Int), V]] {
+      def apply(from: SliceMatrix[Int, Int, V], sliceRow: Int, ignored: ::.type): SliceVector[(Int, Int), V] = {
+        val row = SliceUtils.mapRow(sliceRow, from.rows)
+        val cols = 0 until from.cols
+        new SliceVector(from, cols.map(col => (row, col)))
+      }
+    }
+  }
+
+  implicit def canSliceCol[V: Semiring : ClassTag]: CanSlice2[SliceMatrix[Int, Int, V], ::.type, Int, SliceVector[(Int, Int), V]] = {
+    new CanSlice2[SliceMatrix[Int, Int, V], ::.type, Int, SliceVector[(Int, Int), V]] {
+      def apply(from: SliceMatrix[Int, Int, V], ignored: ::.type, sliceCol: Int): SliceVector[(Int, Int), V] = {
+        val col = SliceUtils.mapColumn(sliceCol, from.cols)
+        val rows = 0 until from.rows
+        new SliceVector(from, rows.map(row => (row, col)))
+      }
+    }
+  }
+}
+
+trait LowPrioritySliceMatrix {
+  // Note: can't have a separate implicit for Range and Seq since they will be ambiguous as both will return a
+  // SliceMatrix which differs from dense matrix where a Range will return another DenseMatrix and only a seq will
+  // return a SliceMatrix
+  implicit def canSliceWeirdRows[V: Semiring : ClassTag]: CanSlice2[SliceMatrix[Int, Int, V], Seq[Int], ::.type, SliceMatrix[Int, Int, V]] = {
+    new CanSlice2[SliceMatrix[Int, Int, V], Seq[Int], ::.type, SliceMatrix[Int, Int, V]] {
+      def apply(from: SliceMatrix[Int, Int, V], rows: Seq[Int], ignored: ::.type): SliceMatrix[Int, Int, V] = {
+        val cols = 0 until from.cols
+        new SliceMatrix(from, SliceUtils.mapRowSeq(rows, from.rows), cols)
+      }
+    }
+  }
+
+  // Note: can't have a separate implicit for Range and Seq since they will be ambiguous as both will return a
+  // SliceMatrix which differs from dense matrix where a Range will return another DenseMatrix and only a seq will
+  // return a SliceMatrix
+  implicit def canSliceWeirdCols[V: Semiring : ClassTag]: CanSlice2[SliceMatrix[Int, Int, V], ::.type, Seq[Int], SliceMatrix[Int, Int, V]] = {
+    new CanSlice2[SliceMatrix[Int, Int, V], ::.type, Seq[Int], SliceMatrix[Int, Int, V]] {
+      def apply(from: SliceMatrix[Int, Int, V], ignored: ::.type, cols: Seq[Int]): SliceMatrix[Int, Int, V] = {
+        val rows = 0 until from.rows
+        new SliceMatrix(from, rows, SliceUtils.mapColumnSeq(cols, from.cols))
+      }
+    }
+  }
+}
+
+
+trait SliceMatrixOps {
+  // todo: all all the other ops (can this be done with some macro magic?
+  implicit def opSetInPlace[K1, K2, V]: OpSet.InPlaceImpl2[SliceMatrix[K1, K2, V], V] = new SMOpSetInPlace[K1, K2, V]
+
+  class SMOpSetInPlace[@specialized(Int) K1,
+                @specialized(Int) K2,
+                @specialized(Double, Int, Float, Long) V] extends OpSet.InPlaceImpl2[SliceMatrix[K1, K2, V], V] {
+    def apply(a: SliceMatrix[K1, K2, V], b: V): Unit = a.keysIterator.foreach(k => a.update(k, b))
   }
 }

@@ -917,6 +917,22 @@ trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
     }
   }
 
+  implicit def canSliceTensorBooleanRows[V: Semiring : ClassTag]: CanSlice2[DenseMatrix[V], Tensor[Int, Boolean], ::.type, SliceMatrix[Int, Int, V]] = {
+    new CanSlice2[DenseMatrix[V], Tensor[Int, Boolean], ::.type, SliceMatrix[Int, Int, V]] {
+      def apply(from: DenseMatrix[V], rows: Tensor[Int, Boolean], cols: ::.type): SliceMatrix[Int, Int, V] = {
+        new SliceMatrix(from, rows.findAll(_ == true), (0 until from.cols))
+      }
+    }
+  }
+
+  implicit def canSliceTensorBooleanCols[V: Semiring : ClassTag]: CanSlice2[DenseMatrix[V], ::.type, Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] = {
+    new CanSlice2[DenseMatrix[V], ::.type, Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] {
+      def apply(from: DenseMatrix[V], rows: ::.type, cols: Tensor[Int, Boolean]): SliceMatrix[Int, Int, V] = {
+        new SliceMatrix(from, (0 until from.rows), cols.findAll(_ == true))
+      }
+    }
+  }
+
   // <editor-fold defaultstate="collapsed" desc=" implicit implementations for OpSet ">
 
   class SetDMDMOp[@spec(Double, Int, Float, Long) V] extends OpSet.InPlaceImpl2[DenseMatrix[V], DenseMatrix[V]] {
