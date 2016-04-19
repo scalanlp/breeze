@@ -16,7 +16,7 @@ libraryDependencies ++= Seq(
 libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
   sv match {
     case x if x.startsWith("2.10") =>
-      deps :+ ("org.scalamacros" %% "quasiquotes" % "2.0.0-M8")
+      deps :+ ("org.scalamacros" %% "quasiquotes" % "2.1.0")
     case _ => deps
   }
 }
@@ -38,7 +38,7 @@ scalacOptions ++= Seq("-deprecation", "-language:_", "-optimize")
 
 javaOptions += "-Xmx2g"
 
-addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0-M5" cross CrossVersion.full)
+addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.full)
 
 pomExtra := (
     <url>http://scalanlp.org/</url>
