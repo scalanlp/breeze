@@ -6,7 +6,7 @@ scalaVersion := Common.scalaVersion
 
 crossScalaVersions  := Common.crossScalaVersions
 
-addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0-M5" cross CrossVersion.full)
+addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.full)
 
 publishMavenStyle := true
 
