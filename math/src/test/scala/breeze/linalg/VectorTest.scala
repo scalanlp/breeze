@@ -59,6 +59,17 @@ class VectorTest extends FunSuite {
     assert(max(v2) === 3)
   }
 
+  test("assert operations of different size fail") {
+    val a = Vector[Double](1D, 2D, 3D)
+    val b = Vector[Double](1D, 2D, 3D, 4D)
+    intercept[IllegalArgumentException] {
+      a + b
+    }
+    intercept[IllegalArgumentException] {
+      b + a
+    }
+  }
+
 }
 
 
