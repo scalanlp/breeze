@@ -46,17 +46,16 @@ class LBFGS[T](convergenceCheck: ConvergenceCheck[T], m: Int)(implicit space: Mu
 
   type History = LBFGS.ApproximateInverseHessian[T]
 
-
   override protected def adjustFunction(f: DiffFunction[T]): DiffFunction[T] = f.cached
 
   protected def takeStep(state: State, dir: T, stepSize: Double) = state.x + dir * stepSize
-  protected def initialHistory(f: DiffFunction[T], x: T):History = new LBFGS.ApproximateInverseHessian(m)
+  protected def initialHistory(f: DiffFunction[T], x: T): History = new LBFGS.ApproximateInverseHessian(m)
   protected def chooseDescentDirection(state: State, fn: DiffFunction[T]):T = {
     state.history * state.grad
   }
 
   protected def updateHistory(newX: T, newGrad: T, newVal: Double,  f: DiffFunction[T], oldState: State): History = {
-    oldState.history.updated(newX - oldState.x, newGrad :- oldState.grad)
+    oldState.history.updated(newX - oldState.x, newGrad -:- oldState.grad)
   }
 
   /**
