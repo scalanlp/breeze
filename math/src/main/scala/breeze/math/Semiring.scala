@@ -27,7 +27,7 @@ trait Semiring[@specialized(Int,Short,Long,Float,Double) V] extends Serializable
 
   def +(a : V, b : V) : V
   def *(a : V, b : V) : V
-
+ // def ^(a : V, b : V) : V
   def ==(a : V, b : V) : Boolean
   def !=(a : V, b : V) : Boolean
   def close(a: V, b: V, tolerance: Double=1E-4):Boolean = a == b

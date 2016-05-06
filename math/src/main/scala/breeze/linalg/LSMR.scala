@@ -1,6 +1,7 @@
 package breeze.linalg
 
 import breeze.linalg.operators.OpMulMatrix
+import breeze.linalg.operators.OpPowMatrix
 import breeze.linalg.support.CanTranspose
 import breeze.math.MutableInnerProductVectorSpace
 import breeze.numerics.{abs, sqrt}

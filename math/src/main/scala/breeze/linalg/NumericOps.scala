@@ -161,6 +161,12 @@ trait ImmutableNumericOps[+This] extends Any {
   final def *[TT >: This, B, That](b: B)(implicit op: OpMulMatrix.Impl2[TT, B, That]) = {
     op(repr, b)
   }
+  
+  /*Author acampbell*/
+    /** Matrix power (and scalar power that follows standard order of operations) */
+  final def ^[TT >: This, B, That](b: B)(implicit op: OpPow.Impl2[TT, B, That]) = {
+    op.apply(repr, b)
+ }
 
   /** A transposed view of this object. */
   final def t[TT >: This, That](implicit op: CanTranspose[TT, That]) =
@@ -222,6 +228,13 @@ trait NumericOps[+This] extends ImmutableNumericOps[This] {
     op(repr, b)
     repr
   }
+  
+    /** Mutates matrix power of b into this. */
+  final def ^=[TT >: This, B](b: B)(implicit op: OpPowMatrix.InPlaceImpl2[TT, B]): This = {
+    op(repr, b)
+    repr
+  }
+
 
   /** Alias for :+=(b) for all b. */
   final def +=[TT >: This, B](b: B)(implicit op: OpAdd.InPlaceImpl2[TT, B]) =

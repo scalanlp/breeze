@@ -699,6 +699,15 @@ trait VectorOps { this: Vector.type =>
     }
 
   }
+  
+   implicit def vPowMatrixInto[T](implicit pow: OpPowMatrix.Impl2[T, T, T], zero: Zero[T], ct: ClassTag[T]):OpPowMatrix.InPlaceImpl2[Vector[T], Vector[T]] = {
+    new OpPowMatrix.InPlaceImpl2[Vector[T], Vector[T]] {
+      override def apply(v: Vector[T], v2: Vector[T]) = {
+        for(i <- 0 until v.length) v(i) = pow(v(i), v2(i))
+      }
+    }
+
+  }
 
   implicit def vAddIntoSField[T](implicit field: Semiring[T], zero: Zero[T], ct: ClassTag[T]):OpAdd.InPlaceImpl2[Vector[T], T] = {
     new OpAdd.InPlaceImpl2[Vector[T], T] {
@@ -751,7 +760,15 @@ trait VectorOps { this: Vector.type =>
       }
     }
   }
-
+  /*
+   implicit def vPowMatrixIntoS[T](implicit pow: OpPowMatrix.Impl2[T, T, T], zero: Zero[T], ct: ClassTag[T]):OpPowMatrix.InPlaceImpl2[Vector[T], T] = {
+    new OpPowMatrix.InPlaceImpl2[Vector[T], T] {
+      override def apply(v: Vector[T], v2: T) = {
+        for(i <- 0 until v.length) v(i) = pow(v(i), v2)
+      }
+    }
+  }
+*/
   implicit def dotField[T](implicit field: Semiring[T]):OpMulInner.Impl2[Vector[T], Vector[T], T] = {
     new OpMulInner.Impl2[Vector[T], Vector[T], T] {
       override def apply(v: Vector[T], v2: Vector[T]): T = {

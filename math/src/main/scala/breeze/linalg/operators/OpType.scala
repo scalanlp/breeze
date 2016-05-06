@@ -67,6 +67,20 @@ object OpMulScalar extends OpMulScalar with UFunc {
 }
 
 /**
+ * Type marker for BinaryOp A :* B and BinaryUpdateOp A :*= B.
+ *
+ * @author acampbell
+ */
+/*
+sealed trait OpPowScalar extends OpType
+object OpPowScalar extends OpPowScalar with UFunc {
+  implicit def opPowScalarFromSemiring[S:Semiring]: Impl2[S, S, S] = new Impl2[S, S, S] {
+    def apply(v: S, v2: S): S = implicitly[Semiring[S]].^(v, v2)
+  }
+}
+*/
+
+/**
  * Type marker for BinaryOp A :/ B and BinaryUpdateOp A:/= B.
  *
  * @author dramage
@@ -285,4 +299,12 @@ object OpSolveMatrixBy extends OpSolveMatrixBy with UFunc
  */
 sealed trait OpMulMatrix extends OpType
 object OpMulMatrix extends OpMulMatrix with UFunc
+
+/**
+ * Type marker for power (^)  of A to the B power.
+ *
+ * @author acampbell
+ */
+sealed trait OpPowMatrix extends OpType
+object OpPowMatrix extends OpPowMatrix with UFunc
 
