@@ -9,14 +9,25 @@ import breeze.linalg.eig.Eig
  */
 object mpow extends UFunc {
 
+  def pow(exp: Double, value: DenseMatrix[Double]): DenseMatrix[Double] = {
+    if (exp == 1) value
+    else if (exp % 2 == 1) value * (pow(exp - 1, value))
+    else {
+      val half = pow(exp / 2, value)
+      half * half
+    }
+  }
+  
   implicit object implDM_Double_Double extends Impl2[DenseMatrix[Double], Double, DenseMatrix[Double]] {
     def apply(m: DenseMatrix[Double], exp: Double): DenseMatrix[Double] = {
       requireSquareMatrix(m)
       val Eig(real, imag, evectors) = eig(m)
-      require(norm(imag, 1.0) == 0.0, "We cannot handle complex eigenvalues yet.")
-      val exped = new DenseVector(real.data.map(scala.math.pow(_, exp)))
-
-      (evectors.t \ (evectors * diag(exped)).t).t
+      norm(imag, 1.0) match {
+        case 0.0 =>
+          val exped = new DenseVector(real.data.map(scala.math.pow(_, exp)))
+          (evectors.t \ (evectors * diag(exped)).t).t
+        case _ => pow(exp, m)
+      }
     }
   }
 
