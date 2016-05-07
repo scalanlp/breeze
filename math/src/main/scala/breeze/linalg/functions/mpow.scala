@@ -23,10 +23,11 @@ object mpow extends UFunc {
       requireSquareMatrix(m)
       val Eig(real, imag, evectors) = eig(m)
       norm(imag, 1.0) match {
-	case 0.0 => pow(exp,m)
-	case _=>
-	  val exped = new DenseVector(real.data.map(scala.math.pow(_, exp)))
-	  (evectors.t \ (evectors * diag(exped)).t).t
+        case 0.0 =>
+          val exped = new DenseVector(real.data.map(scala.math.pow(_, exp)))
+          (evectors.t \ (evectors * diag(exped)).t).t
+        case _ => pow(exp, m)
+
       }
     }
   }
