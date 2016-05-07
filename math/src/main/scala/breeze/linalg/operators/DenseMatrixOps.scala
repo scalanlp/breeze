@@ -21,7 +21,7 @@ import scalaxy.debug._
 import breeze.generic.UFunc
 import breeze.linalg.eig.Eig
 
-/*Author acampbell */
+/*@author acampbell */
 trait DenseMatrixPowerStuff extends DenseMatrixOps
 			       with DenseMatrixPowerOps
 			       with LowPriorityDenseMatrix { this: DenseMatrix.type =>
