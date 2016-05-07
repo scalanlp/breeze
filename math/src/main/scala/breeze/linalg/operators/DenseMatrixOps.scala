@@ -36,8 +36,6 @@ trait DenseMatrixPowerStuff extends DenseMatrixOps
     }
   }
   
-
-
 implicit object implOpPow_DMD_Deq_DMD
 extends OpPow.Impl2[DenseMatrix[Double], Double, DenseMatrix[Double]] {
   def apply(_a: DenseMatrix[Double], _b: Double): DenseMatrix[Double] = {
@@ -53,6 +51,14 @@ extends OpPow.Impl2[DenseMatrix[Double], Double, DenseMatrix[Double]] {
   }
   implicitly[BinaryRegistry[Matrix[Double], Double, OpPow.type, Matrix[Double]]].register(this)
   implicitly[BinaryRegistry[DenseMatrix[Double], Double, OpPow.type, DenseMatrix[Double]]].register(this)
+}
+
+  
+implicit object implOpPow_DMD_Ieq_DMD
+extends OpPow.Impl2[DenseMatrix[Double], Int, DenseMatrix[Double]] {
+  def apply(_a: DenseMatrix[Double], _b: Int): DenseMatrix[Double] = {
+    implOpPow_DMD_Deq_DMD(_a,_b)
+  } 
 }
 
 implicit object implOpPow_IMI_Ieq_IMI

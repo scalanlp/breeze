@@ -115,7 +115,7 @@ trait ImmutableNumericOps[+This] extends Any {
   /** Inner product of this and b. */
   final def dot[TT >: This, B, BB >: B, That](b: B)(implicit op: OpMulInner.Impl2[TT, BB, That]) = op(repr, b)
 
-  /*[b]author[/b] acampbell*/
+  /*@author  acampbell*/
        /** Mutates matrix power of b into this. */
   final def ^=[TT >: This, B](b: B)(implicit op: OpPow.InPlaceImpl2[TT, B]): This = {
     op(repr, b)

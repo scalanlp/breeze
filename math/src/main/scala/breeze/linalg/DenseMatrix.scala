@@ -335,6 +335,7 @@ with DenseMatrixOps
 with DenseMatrix_OrderingOps
 with DenseMatrixMultOps
 with DenseMatrixMultiplyStuff
+with DenseMatrixPowerStuff
 with DenseMatrixFloatMultiplyStuff
 with MatrixConstructors[DenseMatrix] {
 
