@@ -10,17 +10,22 @@ addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.f
 
 publishMavenStyle := true
 
-publishTo <<= version { (v: String) =>
-  val nexus = "https://oss.sonatype.org/"
-  if (v.trim.endsWith("SNAPSHOT"))
-    Some("snapshots" at nexus + "content/repositories/snapshots")
-  else
-    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
-}
+
+publishTo <<= version { v: String =>
+      val nexus = "http://think-station:8081/nexus/"
+      if (v.trim.endsWith("SNAPSHOT"))
+        Some("snapshots" at nexus + "content/repositories/snapshots")
+      else
+        Some("releases" at nexus + "content/repositories/releases")
+    }
+
+ 
 
 publishArtifact in Test := false
 
 pomIncludeRepository := { _ => false }
+
+ 
 
 pomExtra := (
   <url>http://scalanlp.org/</url>
@@ -95,5 +100,14 @@ resolvers ++= Seq(
 
 testOptions in Test += Tests.Argument("-oDF")
 
-//fork in Test := true
-javaOptions := Seq("-Xmx4g")
+// fork  := true
+
+// fork  in run:= true
+
+// fork in Test := true
+
+// javaOptions  ++= Seq("-Xms128M", "-Xmx1000M",   "-XX:+UseConcMarkSweepGC" , "-XX:+CMSClassUnloadingEnabled" , "-XX:+UseParallelGC" ,"-XX:-UseGCOverheadLimit")
+
+// javaOptions in run  ++= Seq("-Xms128M", "-Xmx1000M",   "-XX:+UseConcMarkSweepGC" , "-XX:+CMSClassUnloadingEnabled" , "-XX:+UseParallelGC" ,"-XX:-UseGCOverheadLimit")
+
+//  javaOptions in Test ++= Seq("-Xms128M", "-Xmx1000M",   "-XX:+UseConcMarkSweepGC" , "-XX:+CMSClassUnloadingEnabled" , "-XX:+UseParallelGC" ,"-XX:-UseGCOverheadLimit")

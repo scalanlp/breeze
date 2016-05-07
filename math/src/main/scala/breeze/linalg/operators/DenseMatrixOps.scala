@@ -18,7 +18,73 @@ import spire.syntax.cfor._
 import scala.{specialized=>spec}
 import scala.reflect.ClassTag
 import scalaxy.debug._
+import breeze.generic.UFunc
+import breeze.linalg.eig.Eig
 
+/*Author acampbell */
+trait DenseMatrixPowerStuff extends DenseMatrixOps
+			       with DenseMatrixPowerOps
+			       with LowPriorityDenseMatrix { this: DenseMatrix.type =>
+  // <editor-fold defaultstate="collapsed" desc=" OpPow implementations ">
+
+  def expBySq(exp: Double, mat: DenseMatrix[Double]): DenseMatrix[Double] = {
+    if (exp == 1) mat
+    else if (exp % 2 == 1) mat * expBySq(exp - 1, mat)
+    else {
+      val h = expBySq(exp / 2, mat)
+      h * h
+    }
+  }
+  
+
+
+implicit object implOpPow_DMD_Deq_DMD
+extends OpPow.Impl2[DenseMatrix[Double], Double, DenseMatrix[Double]] {
+  def apply(_a: DenseMatrix[Double], _b: Double): DenseMatrix[Double] = {
+    requireSquareMatrix(_a)
+    val Eig(real, imag, evectors) = eig(_a)
+    norm(imag, 1.0) match {
+      case 0.0 =>
+	val exped = new DenseVector(real.data.map(scala.math.pow(_, _b)))
+	val r = (implOpSolveMatrixBy_DMD_DMD_eq_DMD(evectors.t, (evectors * diag(exped)).t)).t
+	r
+      case _ => expBySq(_b, _a)
+    }
+  }
+  implicitly[BinaryRegistry[Matrix[Double], Double, OpPow.type, Matrix[Double]]].register(this)
+  implicitly[BinaryRegistry[DenseMatrix[Double], Double, OpPow.type, DenseMatrix[Double]]].register(this)
+}
+
+implicit object implOpPow_IMI_Ieq_IMI
+extends OpPow.Impl2[DenseMatrix[Int], Int, DenseMatrix[Int]] {
+  def apply(_a: DenseMatrix[Int], _b: Int): DenseMatrix[Int] = {
+    val t = DenseMatrix((0, 0, 0), (0, 0, 0), (0, 0, 0))
+    t
+  }
+  implicitly[BinaryRegistry[Matrix[Int], Int, OpPow.type, Matrix[Int]]].register(this)
+  implicitly[BinaryRegistry[DenseMatrix[Int], Int, OpPow.type, DenseMatrix[Int]]].register(this)
+}
+
+}
+trait DenseMatrixPowerOps extends DenseMatrixOps
+			     with DenseMatrixOpsLowPrio { this: DenseMatrix.type =>
+  // <editor-fold defaultstate="collapsed" desc=" implicit implementations for BinaryRegistry ">
+
+  @expand
+  @expand.valify
+  implicit def op_DM_D[@expand.args(Int, Long, Float, Double) T]: BinaryRegistry[DenseMatrix[T], T, OpPow.type, DenseMatrix[T]] =
+
+    new BinaryRegistry[DenseMatrix[T], T, OpPow.type, DenseMatrix[T]] {
+      override def bindingMissing(a: DenseMatrix[T], b: T): DenseMatrix[T] = {
+
+        val res: DenseMatrix[T] = DenseMatrix.zeros[T](a.rows, a.rows)
+        res
+      }
+
+      implicitly[BinaryRegistry[Matrix[T], T, OpPow.type, Matrix[T]]].register(this)
+    }
+  // </editor-fold>
+}
 
 trait DenseMatrixMultiplyStuff extends DenseMatrixOps
                                with DenseMatrixMultOps
