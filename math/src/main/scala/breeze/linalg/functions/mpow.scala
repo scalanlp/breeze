@@ -17,7 +17,7 @@ object mpow extends UFunc {
       half * half
     }
   }
-  
+
   implicit object implDM_Double_Double extends Impl2[DenseMatrix[Double], Double, DenseMatrix[Double]] {
     def apply(m: DenseMatrix[Double], exp: Double): DenseMatrix[Double] = {
       requireSquareMatrix(m)
