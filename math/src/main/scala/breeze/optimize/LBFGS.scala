@@ -33,8 +33,7 @@ import breeze.util.SerializableLogging
  *  * D.C. Liu and J. Nocedal. On the  Limited  mem  Method  for  Large
  *    Scale  Optimization  (1989),  Mathematical  Programming  B,  45,  3,
  *    pp. 503-528.
- *  * 
- * 
+ *
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
 class LBFGS[T](convergenceCheck: ConvergenceCheck[T], m: Int)(implicit space: MutableInnerProductModule[T, Double]) extends FirstOrderMinimizer[T, DiffFunction[T]](convergenceCheck) with SerializableLogging {
