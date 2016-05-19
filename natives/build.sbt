@@ -6,13 +6,13 @@ scalaVersion := Common.scalaVersion
 
 crossScalaVersions  := Common.crossScalaVersions
 
-addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0-M5" cross CrossVersion.full)
+addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.full)
 
 publishMavenStyle := true
 
 publishTo <<= version { (v: String) =>
   val nexus = "https://oss.sonatype.org/"
-  if (v.trim.endsWith("SNAPSHOT")) 
+  if (v.trim.endsWith("SNAPSHOT"))
     Some("snapshots" at nexus + "content/repositories/snapshots")
   else
     Some("releases"  at nexus + "service/local/staging/deploy/maven2")
@@ -69,4 +69,3 @@ resolvers ++= Seq(
     )
 
 testOptions in Test += Tests.Argument("-oDF")
-

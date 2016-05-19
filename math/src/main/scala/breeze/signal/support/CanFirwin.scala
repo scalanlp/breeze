@@ -91,8 +91,8 @@ object CanFirwin {
 
     val h = DenseVector.zeros[Double]( m.length )
     for(band <- scaledCutoff.toArray.zipWithIndex ) {
-      if( isEven(band._2) ) h -= sincpi(m :* band._1) :* band._1
-      else h += sincpi(m :* band._1) :* band._1
+      if( isEven(band._2) ) h -= sincpi(m *:* band._1) *:* band._1
+      else h += sincpi(m *:* band._1) *:* band._1
     }
 
     val win = optWindow match {
@@ -113,8 +113,8 @@ object CanFirwin {
         if(scaledCutoff(0) == 0d) 0d
         else if(scaledCutoff(1) == 1d) 1d
         else (scaledCutoff(0) + scaledCutoff(1))/2d
-      val c: DenseVector[Double] = cos( m :* (Pi * scaleFrequency) )
-      val s: Double = sum( h :* c )
+      val c: DenseVector[Double] = cos( m *:* (Pi * scaleFrequency) )
+      val s: Double = sum( h *:* c )
       h /= s
     }
 

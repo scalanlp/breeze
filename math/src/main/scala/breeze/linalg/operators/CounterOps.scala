@@ -249,13 +249,17 @@ trait CounterOps {
                                   semiring: Semiring[V]):OpMulInner.Impl2[Counter[K1, V], Counter[K1, V], V] = {
     new OpMulInner.Impl2[Counter[K1, V], Counter[K1, V], V] {
       val zero = semiring.zero
-      override def apply(a : Counter[K1, V], b : Counter[K1, V]) = {
-        var result = zero
-        for( (k, v) <- a.activeIterator) {
-          val vr = semiring.*(v, b(k))
-          result  = semiring.+(result, vr)
+      override def apply(a : Counter[K1, V], b : Counter[K1, V]): V = {
+        if (a.activeSize > b.activeSize) {
+          apply(b, a)
+        } else {
+          var result = zero
+          for( (k, v) <- a.activeIterator) {
+            val vr = semiring.*(v, b(k))
+            result = semiring.+(result, vr)
+          }
+          result
         }
-        result
       }
     }
   }

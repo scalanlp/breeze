@@ -754,6 +754,12 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     assert(m2 * v2 == DenseVector.zeros[Double](10))
   }
 
+  test("#534: DenseMatrix construction from empty row sequence") {
+    val rows = Seq.empty[Seq[Double]]
+    val matrix = DenseMatrix(rows: _*)
+    assert(matrix.rows == 0)
+    assert(matrix.cols == 0)
+  }
 
 
 }

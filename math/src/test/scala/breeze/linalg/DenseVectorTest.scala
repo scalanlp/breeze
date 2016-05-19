@@ -400,8 +400,29 @@ class DenseVectorTest extends FunSuite with Checkers {
       a(3)
       assert(false, "Shouldn't be here!")
     }
+  }
 
-
+  test("Vector <op> Vector should ensure vectors are same size") {
+    {
+      val a = Vector[Double](1D, 2D, 3D)
+      val b = Vector[Double](1D, 2D, 3D, 4D)
+      intercept[IllegalArgumentException] {
+        a + b
+      }
+      intercept[IllegalArgumentException] {
+        b + a
+      }
+    }
+    {
+      val a = Vector[Int](1, 2, 3)
+      val b = Vector[Int](1, 2, 3, 4)
+      intercept[IllegalArgumentException] {
+        a + b
+      }
+      intercept[IllegalArgumentException] {
+        b + a
+      }
+    }
   }
 
   test("Complex OpSet") {

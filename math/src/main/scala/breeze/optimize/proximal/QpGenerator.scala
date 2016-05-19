@@ -41,7 +41,7 @@ object QpGenerator {
     val q = DenseVector.rand[Double](nGram)
 
     val lb = zn.copy
-    val ub = en :* 10.0
+    val ub = en *:* 10.0
 
     val H = getGram(nGram)
 

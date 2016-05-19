@@ -171,7 +171,7 @@ class TruncatedNewtonMinimizer[T, H](maxIterations: Int = -1,
   }
 
   protected def updateHistory(newX: T, newGrad: T, newVal: Double, oldState: State): History = {
-    val gradDelta : T = (newGrad :- oldState.adjGrad)
+    val gradDelta : T = (newGrad -:- oldState.adjGrad)
     val step:T = (newX - oldState.x)
 
     val memStep = (step +: oldState.history.memStep) take m
