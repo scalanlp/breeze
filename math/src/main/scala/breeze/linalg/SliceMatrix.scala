@@ -136,12 +136,12 @@ object SliceMatrix extends LowPrioritySliceMatrix with SliceMatrixOps {
   }
 
   // slices
-  implicit def canSliceRow[V: Semiring : ClassTag]: CanSlice2[SliceMatrix[Int, Int, V], Int, ::.type, SliceVector[(Int, Int), V]] = {
-    new CanSlice2[SliceMatrix[Int, Int, V], Int, ::.type, SliceVector[(Int, Int), V]] {
-      def apply(from: SliceMatrix[Int, Int, V], sliceRow: Int, ignored: ::.type): SliceVector[(Int, Int), V] = {
+  implicit def canSliceRow[V: Semiring : ClassTag]: CanSlice2[SliceMatrix[Int, Int, V], Int, ::.type, Transpose[SliceVector[(Int, Int), V]]] = {
+    new CanSlice2[SliceMatrix[Int, Int, V], Int, ::.type, Transpose[SliceVector[(Int, Int), V]]] {
+      def apply(from: SliceMatrix[Int, Int, V], sliceRow: Int, ignored: ::.type): Transpose[SliceVector[(Int, Int), V]] = {
         val row = SliceUtils.mapRow(sliceRow, from.rows)
         val cols = 0 until from.cols
-        new SliceVector(from, cols.map(col => (row, col)))
+        new SliceVector(from, cols.map(col => (row, col))).t
       }
     }
   }

@@ -297,12 +297,12 @@ trait LowPriorityMatrix {
     }
   }
 
-  implicit def canSliceRowAndTensorBooleanCols[V: Semiring : ClassTag]: CanSlice2[Matrix[V], Int, Tensor[Int, Boolean], SliceVector[(Int, Int), V]] = {
-    new CanSlice2[Matrix[V], Int, Tensor[Int, Boolean], SliceVector[(Int, Int), V]] {
-      def apply(from: Matrix[V], sliceRow: Int, sliceCols: Tensor[Int, Boolean]): SliceVector[(Int, Int), V] = {
+  implicit def canSliceRowAndTensorBooleanCols[V: Semiring : ClassTag]: CanSlice2[Matrix[V], Int, Tensor[Int, Boolean], Transpose[SliceVector[(Int, Int), V]]] = {
+    new CanSlice2[Matrix[V], Int, Tensor[Int, Boolean], Transpose[SliceVector[(Int, Int), V]]] {
+      def apply(from: Matrix[V], sliceRow: Int, sliceCols: Tensor[Int, Boolean]): Transpose[SliceVector[(Int, Int), V]] = {
         val row = SliceUtils.mapRow(sliceRow, from.rows)
         val cols = SliceUtils.mapColumnSeq(sliceCols.findAll(_ == true), from.cols)
-        new SliceVector(from, slices = cols.map(col => (row, col)))
+        new SliceVector(from, slices = cols.map(col => (row, col))).t
       }
     }
   }
