@@ -202,6 +202,20 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
     new DenseVector(data, start * this.stride + offset, stride * this.stride, (end-start)/stride)
   }
 
+  /**
+    * Creates a windowed version of the vector of the specified length and step
+    *
+    * @param length
+    * @param step
+    * @param canSlice
+    * @param handhold
+    * @return windowed dense vector
+    */
+  def windowed(length: Int, step: Int = 1)(implicit canSlice: CanSlice[DenseVector[V], Window, WindowedDenseVector[V]],
+                                           handhold: CanCollapseWindow.HandHold[DenseVector[V], DenseVector[V]]) = {
+    apply(StandardWindow(length, step))
+  }
+
   // <editor-fold defaultstate="collapsed" desc=" Conversions (DenseMatrix, Array, Scala Vector) ">
 
   /** Creates a copy of this DenseVector that is represented as a 1 by length DenseMatrix */
@@ -516,6 +530,15 @@ object DenseVector extends VectorConstructors[DenseVector]
       }
     }
   }
+
+  // windowing
+  implicit def handholdCanWindowDenseVector[V]: CanCollapseWindow.HandHold[DenseVector[V], DenseVector[V]] =
+    new CanCollapseWindow.HandHold[DenseVector[V], DenseVector[V]]()
+
+  implicit def canWindowDenseVector[T](implicit handhold: CanCollapseWindow.HandHold[DenseVector[T], DenseVector[T]]) : CanSlice[DenseVector[T], Window, WindowedDenseVector[T]] =
+    new CanSlice[DenseVector[T], Window, WindowedDenseVector[T]] {
+      def apply(from: DenseVector[T], window: Window) = WindowedDenseVector[T](from, window)
+    }
 
   implicit def canTransposeComplex: CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] = {
     new CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] {
