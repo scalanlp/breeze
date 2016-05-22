@@ -127,7 +127,6 @@ package object linalg {
 
 
   import math.Ring
-  import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 
   // implicits for lifting scalars with appropriate operators
   implicit class InjectNumericOps[T](val repr: T) extends AnyVal with ImmutableNumericOps[T]

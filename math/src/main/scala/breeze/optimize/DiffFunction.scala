@@ -1,5 +1,9 @@
 package breeze.optimize
 
+import breeze.generic.UFunc
+import breeze.generic.UFunc.UImpl2
+import breeze.linalg.NumericOps
+import breeze.linalg.operators.{ OpAdd, OpDiv, OpMulMatrix, OpSub }
 import breeze.linalg.support.CanCopy
 import breeze.math.InnerProductModule
 import breeze.util.Isomorphism
@@ -25,7 +29,10 @@ import breeze.util.Isomorphism
 *
 * @author dlwh
 */
-trait DiffFunction[T] extends StochasticDiffFunction[T] { outer =>
+trait DiffFunction[T] extends StochasticDiffFunction[T] with NumericOps[DiffFunction[T]] { outer =>
+
+  override def repr: DiffFunction[T] = this
+
   def cached(implicit copy: CanCopy[T]) = {
     if (this.isInstanceOf[CachedDiffFunction[_]]) {
       this
@@ -43,7 +50,7 @@ trait DiffFunction[T] extends StochasticDiffFunction[T] { outer =>
   }
 }
 
-object DiffFunction {
+object DiffFunction extends DiffFunctionOpImplicits {
   def withL2Regularization[T, I](d: DiffFunction[T],weight: Double)(implicit space: InnerProductModule[T, Double]) = new DiffFunction[T] {
     import space._
     override def gradientAt(x:T):T = {
@@ -99,4 +106,106 @@ object DiffFunction {
   }
 }
 
+sealed trait DiffFunctionOpImplicits { this: DiffFunction.type =>
+
+  implicit def opAddDiffFunction[T](implicit opAdd: OpAdd.Impl2[T, T, T]): OpAdd.Impl2[DiffFunction[T], DiffFunction[T], DiffFunction[T]] = {
+    new OpAdd.Impl2[DiffFunction[T], DiffFunction[T], DiffFunction[T]] {
+      override def apply(f: DiffFunction[T], f2: DiffFunction[T]): DiffFunction[T] = {
+        new DiffFunction[T] {
+          override def calculate(x: T): (Double, T) = {
+            val (v1, g1) = f.calculate(x)
+            val (v2, g2) = f2.calculate(x)
+
+            (v1 + v2, opAdd(g1, g2))
+          }
+        }
+
+      }
+    }
+  }
+
+  implicit def opSubDiffFunction[T](implicit opSub: OpSub.Impl2[T, T, T]): OpSub.Impl2[DiffFunction[T], DiffFunction[T], DiffFunction[T]] = {
+    new OpSub.Impl2[DiffFunction[T], DiffFunction[T], DiffFunction[T]] {
+      override def apply(f: DiffFunction[T], f2: DiffFunction[T]): DiffFunction[T] = {
+        new DiffFunction[T] {
+          override def calculate(x: T): (Double, T) = {
+            val (v1, g1) = f.calculate(x)
+            val (v2, g2) = f2.calculate(x)
+
+            (v1 - v2, opSub(g1, g2))
+          }
+        }
+
+      }
+    }
+  }
+
+  implicit def opMulDiffFunction[T](implicit opMul: OpMulMatrix.Impl2[T, Double, T]): OpMulMatrix.Impl2[DiffFunction[T], Double, DiffFunction[T]] = {
+    new OpMulMatrix.Impl2[DiffFunction[T], Double, DiffFunction[T]] {
+      override def apply(f: DiffFunction[T], v: Double): DiffFunction[T] = {
+        new DiffFunction[T] {
+          override def calculate(x: T): (Double, T) = {
+            val (v1, g1) = f.calculate(x)
+
+            (v1 * v, opMul(g1, v))
+          }
+        }
+
+      }
+    }
+  }
+
+  implicit def opMulLHSDiffFunction[T](implicit opMul: OpMulMatrix.Impl2[Double, T, T]): OpMulMatrix.Impl2[Double, DiffFunction[T], DiffFunction[T]] = {
+    new OpMulMatrix.Impl2[Double, DiffFunction[T], DiffFunction[T]] {
+      override def apply(v: Double, f: DiffFunction[T]): DiffFunction[T] = {
+        new DiffFunction[T] {
+          override def calculate(x: T): (Double, T) = {
+            val (v1, g1) = f.calculate(x)
+
+            (v1 * v, opMul(v, g1))
+          }
+        }
+
+      }
+    }
+  }
+
+  implicit def opDivDiffFunction[T](implicit opDiv: OpDiv.Impl2[T, Double, T]): OpDiv.Impl2[DiffFunction[T], Double, DiffFunction[T]] = {
+    new OpDiv.Impl2[DiffFunction[T], Double, DiffFunction[T]] {
+      override def apply(f: DiffFunction[T], v: Double): DiffFunction[T] = {
+        new DiffFunction[T] {
+          override def calculate(x: T): (Double, T) = {
+            val (v1, g1) = f.calculate(x)
+
+            (v1 / v, opDiv(g1, v))
+          }
+        }
+
+      }
+    }
+  }
+
+  // d/dx a/f(x) = -a * f'(x) / f(x)^2
+  implicit def opDivLHSDiffFunction[T](implicit opMul: OpMulMatrix.Impl2[Double, T, T]): OpDiv.Impl2[Double, DiffFunction[T], DiffFunction[T]] = {
+    new OpDiv.Impl2[Double, DiffFunction[T], DiffFunction[T]] {
+      override def apply(v: Double, f: DiffFunction[T]): DiffFunction[T] = {
+        new DiffFunction[T] {
+          override def calculate(x: T): (Double, T) = {
+            val (v1, g1) = f.calculate(x)
+
+            (v / v1, opMul(-v / (v1 * v1), g1))
+          }
+        }
+
+      }
+    }
+  }
+
+  implicit def castOps[V1, V2, T, Op, VR](implicit v1ev: V1<:<DiffFunction[T],
+                                          V2ev: V2<:<DiffFunction[T],
+                                          op: UImpl2[Op, DiffFunction[T], DiffFunction[T], VR]): UImpl2[Op, V1, V2, VR] = {
+    op.asInstanceOf[UFunc.UImpl2[Op, V1, V2, VR]]
+  }
+
+}
 

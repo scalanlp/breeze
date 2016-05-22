@@ -15,9 +15,7 @@ package breeze.optimize
  limitations under the License. 
 */
 
-import org.scalatest._
 import org.scalatest.junit._
-import org.scalatest.prop._
 import org.scalacheck._
 import org.junit.runner.RunWith
 

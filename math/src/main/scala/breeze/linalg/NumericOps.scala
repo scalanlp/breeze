@@ -99,19 +99,6 @@ trait ImmutableNumericOps[+This] extends Any {
     "This operator has confusing and often surprising precedence that leads to bugs. Use ^:^ instead.", "0.13")
   final def :^[TT >: This, B, That](b: B)(implicit op: OpPow.Impl2[TT, B, That]) = op(repr, b)
 
-
-  /** Represents the "natural" norm of this vector, for types that don't support arbitrary norms */
-  @deprecated("Use norm(XXX) instead of XXX.norm", "0.9")
-  final def norm[TT >: This, R]()(implicit op: breeze.linalg.norm.Impl[TT, R]): R = {
-    op(repr)
-  }
-
-  /** Represents the norm of this vector */
-  @deprecated("Use norm(XXX) instead of XXX.norm", "0.9")
-  final def norm[TT >: This, B, R](b: B)(implicit op: breeze.linalg.norm.Impl2[TT, B, R]): R = {
-    op(repr, b)
-  }
-
   /** Inner product of this and b. */
   final def dot[TT >: This, B, BB >: B, That](b: B)(implicit op: OpMulInner.Impl2[TT, BB, That]) = op(repr, b)
 
@@ -195,14 +182,9 @@ trait NumericOps[+This] extends ImmutableNumericOps[This] {
 
   // We move this here because of ambiguities with any2stringadd
   /** Alias for :+(b) for all b. */
-  final def +[TT >: This, B, That](b: B)(implicit op: OpAdd.Impl2[TT, B, That]) = {
+  final def +[TT >: This, B, C, That](b: B)(implicit op: OpAdd.Impl2[TT, B, That]) = {
     op(repr, b)
   }
-
-  /*
-   * Semiring Element Ops
-   */
-
 
   // Mutable
   /** Mutates this by element-wise assignment of b into this. */

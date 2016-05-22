@@ -266,7 +266,7 @@ trait CounterOps {
   /** Returns the k-norm of this Vector. */
   implicit def canNorm[K, V](implicit normImpl: norm.Impl[V, Double]):norm.Impl2[Counter[K, V], Double, Double] = new norm.Impl2[Counter[K, V], Double, Double] {
     def apply(c: Counter[K, V], n: Double): Double = {
-      import c.{norm => _, _}
+      import c._
 
       if (n == 1) {
         var sum = 0.0
