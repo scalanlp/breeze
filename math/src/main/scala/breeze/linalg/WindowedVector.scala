@@ -3,7 +3,6 @@ package breeze.linalg
 import breeze.linalg.Options.OptPadMode
 import breeze.math.Semiring
 
-import scala.collection.AbstractIterator
 import scala.reflect.ClassTag
 
 case class WindowedVector[VectorType, WindowType](underlying: VectorType, window: Window)
@@ -27,15 +26,15 @@ object WindowedVector
 abstract class WindowedVectorIterator[ElementType,
                                       VectorType <: Vector[ElementType],
                                       WindowType <: Vector[ElementType]](underlying: VectorType, window: Window)
-  extends AbstractIterator[WindowType] {
+  extends Iterator[WindowType] {
 
   val numOfChunks = ((underlying.length - window.length) / window.step) + 1
   var cursor = 0
   var start = 0
 
-  def padResult(chunk: WindowType, length: Int, padMode: Options.OptPadMode) : WindowType
+  protected def padResult(chunk: WindowType, length: Int, padMode: Options.OptPadMode) : WindowType
 
-  def sliceUnderlying(start: Int, end: Int) : WindowType
+  protected def sliceUnderlying(start: Int, end: Int) : WindowType
 
   override def length: Int = numOfChunks
 
@@ -69,7 +68,7 @@ abstract class WindowedVectorIterator[ElementType,
 /**
   * DenseVector implementation of windowed vector iterator
   */
-case class WindowedDenseVectorIterator[T: ClassTag : Semiring](underlying: DenseVector[T], window: Window)
+private case class WindowedDenseVectorIterator[T: ClassTag : Semiring](underlying: DenseVector[T], window: Window)
   extends WindowedVectorIterator[T, DenseVector[T], DenseVector[T]](underlying, window) {
 
   def sliceUnderlying(start: Int, end: Int): DenseVector[T] = underlying.slice(start, end)
