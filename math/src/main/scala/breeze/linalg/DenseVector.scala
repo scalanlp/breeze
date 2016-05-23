@@ -15,21 +15,26 @@ package breeze.linalg
  limitations under the License.
 */
 
-import scala.{specialized=>spec}
+import scala.{specialized => spec}
 import breeze.generic._
 import breeze.linalg.support._
 import breeze.linalg.operators._
 import breeze.math._
 import breeze.util.{ArrayUtil, Isomorphism}
 import breeze.storage.Zero
+
 import scala.reflect.ClassTag
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import breeze.macros.expand
+
 import scala.math.BigInt
 import spire.syntax.cfor._
 import CanTraverseValues.ValuesVisitor
 import CanZipAndTraverseValues.PairValuesVisitor
 import java.io.ObjectStreamException
+
+import scala.collection.generic.CanBuildFrom
+import scala.collection.mutable
 import scalaxy.debug._
 
 /**
@@ -41,8 +46,7 @@ import scalaxy.debug._
  * The i'th element is at offset + i * stride
  *
  * @author dlwh
- *
- * @param data data array
+  * @param data data array
  * @param offset index of the 0'th element
  * @param stride separation between elements
  * @param length number of elements
@@ -52,7 +56,7 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
                                                val offset: Int,
                                                val stride: Int,
                                                val length: Int) extends StorageVector[V]
-                                              with VectorLike[V, DenseVector[V]] with Serializable{
+                                              with VectorLike[V, DenseVector[V]] with Serializable {
   def this(data: Array[V]) = this(data, 0, 1, data.length)
   def this(data: Array[V], offset: Int) = this(data, offset, 1, data.length)
   def this(length: Int)(implicit man: ClassTag[V]) = this(new Array[V](length), 0, 1, length)
@@ -119,7 +123,8 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
 
   /**
    * Returns a copy of this DenseVector. stride will always be 1, offset will always be 0.
-   * @return
+    *
+    * @return
    */
   def copy: DenseVector[V] = {
     if (stride == 1) {
@@ -135,7 +140,8 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
 
   /**
    * same as apply(i). Gives the value at the underlying offset.
-   * @param i index into the data array
+    *
+    * @param i index into the data array
    * @return apply(i)
    */
   def valueAt(i: Int): V = apply(i)
@@ -148,7 +154,8 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
 
   /**
    * Gives the logical index from the physical index.
-   * @param i
+    *
+    * @param i
    * @return i
    */
   def indexAt(i: Int): Int = i
@@ -159,7 +166,8 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
    * Some storages (namely HashStorage) won't have active
    * indices packed. This lets you know if the bin is
    * actively in use.
-   * @param i index into index/data arrays
+    *
+    * @param i index into index/data arrays
    * @return
    */
   def isActive(i: Int): Boolean = true
@@ -167,13 +175,15 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
 
   /**
    * Always returns true.
-   * @return
+    *
+    * @return
    */
   def allVisitableIndicesActive: Boolean = true
 
   /**
    * Faster foreach
-   * @param fn
+    *
+    * @param fn
    * @tparam U
    */
   override def foreach[@spec(Unit) U](fn: (V) => U): Unit = {
@@ -192,28 +202,15 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
 
   /**
    * Slices the DenseVector, in the range [start,end] with a stride stride.
+ *
    * @param start
    * @param end
    * @param stride
    */
-  def slice(start: Int, end: Int, stride: Int=1): DenseVector[V] = {
+  override def slice(start: Int, end: Int, stride: Int=1): DenseVector[V] = {
     if(start > end || start < 0) throw new IllegalArgumentException("Slice arguments " + start +", " +end +" invalid.")
     if(end > length || end < 0) throw new IllegalArgumentException("End " + end + "is out of bounds for slice of DenseVector of length " + length)
     new DenseVector(data, start * this.stride + offset, stride * this.stride, (end-start)/stride)
-  }
-
-  /**
-    * Creates a windowed version of the vector of the specified length and step
-    *
-    * @param length
-    * @param step
-    * @param canSlice
-    * @param handhold
-    * @return windowed dense vector
-    */
-  def windowed(length: Int, step: Int = 1)(implicit canSlice: CanSlice[DenseVector[V], Window, WindowedDenseVector[V]],
-                                           handhold: CanCollapseWindow.HandHold[DenseVector[V], DenseVector[V]]) = {
-    apply(StandardWindow(length, step))
   }
 
   // <editor-fold defaultstate="collapsed" desc=" Conversions (DenseMatrix, Array, Scala Vector) ">
@@ -227,8 +224,6 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
   def asDenseMatrix: DenseMatrix[V] = {
     new DenseMatrix[V](1, length, data, offset, stride)
   }
-
-
 
   override def toArray(implicit cm: ClassTag[V]): Array[V] = if(stride == 1){
     ArrayUtil.copyOfRange(data, offset, offset + length)
@@ -287,9 +282,11 @@ object DenseVector extends VectorConstructors[DenseVector]
    * Creates a new DenseVector using the provided array (not making a copy!). In generic contexts, prefer to
    * use this (or apply) instead of `new DenseVector[V](data, offset, stride, length)`, which in general
    * won't give specialized implementations.
-   * @param rows
-   * @param cols
+   *
    * @param data
+   * @param offset
+   * @param stride
+   * @param length
    * @tparam V
    * @return
    */
@@ -315,7 +312,8 @@ object DenseVector extends VectorConstructors[DenseVector]
     // concatenation
   /**
    * Horizontal concatenation of two or more vectors into one matrix.
-   * @throws IllegalArgumentException if vectors have different sizes
+    *
+    * @throws IllegalArgumentException if vectors have different sizes
    */
   def horzcat[V: ClassTag:Zero](vectors: DenseVector[V]*): DenseMatrix[V] = {
     val size = vectors.head.size
@@ -342,7 +340,6 @@ object DenseVector extends VectorConstructors[DenseVector]
   }
 
   // capabilities
-
   implicit def canCreateZerosLike[V:ClassTag:Zero]:CanCreateZerosLike[DenseVector[V], DenseVector[V]] =
   new CanCreateZerosLike[DenseVector[V], DenseVector[V]] {
     def apply(v1: DenseVector[V]): DenseVector[V] = {
@@ -535,10 +532,29 @@ object DenseVector extends VectorConstructors[DenseVector]
   implicit def handholdCanWindowDenseVector[V]: CanCollapseWindow.HandHold[DenseVector[V], DenseVector[V]] =
     new CanCollapseWindow.HandHold[DenseVector[V], DenseVector[V]]()
 
-  implicit def canWindowDenseVector[T](implicit handhold: CanCollapseWindow.HandHold[DenseVector[T], DenseVector[T]]) : CanSlice[DenseVector[T], Window, WindowedDenseVector[T]] =
-    new CanSlice[DenseVector[T], Window, WindowedDenseVector[T]] {
-      def apply(from: DenseVector[T], window: Window) = WindowedDenseVector[T](from, window)
+  implicit def canCollapseWindow[V : ClassTag : Semiring, CollapsedType : ClassTag : Zero] : CanCollapseWindow[DenseVector[V], DenseVector[V], CollapsedType, DenseVector[CollapsedType]] = {
+    new CanCollapseWindow[DenseVector[V], DenseVector[V], CollapsedType, DenseVector[CollapsedType]] {
+      def apply(from: DenseVector[V], window: Window)(f: (DenseVector[V]) => CollapsedType): DenseVector[CollapsedType] = {
+        WindowedDenseVectorIterator(from, window).map(f).to
+      }
     }
+  }
+
+  implicit def canTraverseWindow[V : ClassTag : Semiring] : CanTraverseWindow[DenseVector[V], DenseVector[V]] = {
+    new CanTraverseWindow[DenseVector[V], DenseVector[V]] {
+      def apply[A](from: DenseVector[V], window: Window)(f: (DenseVector[V]) => A): Unit = {
+        WindowedDenseVectorIterator(from, window).foreach(f)
+      }
+    }
+  }
+
+  implicit def canIterateWindow[V : ClassTag : Semiring]: CanIterateWindow[DenseVector[V], DenseVector[V]] = {
+    new CanIterateWindow[DenseVector[V], DenseVector[V]] {
+      def apply[A](from: DenseVector[V], window: Window): Iterator[DenseVector[V]] = {
+        WindowedDenseVectorIterator(from, window)
+      }
+    }
+  }
 
   implicit def canTransposeComplex: CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] = {
     new CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] {
@@ -778,7 +794,8 @@ object DenseVector extends VectorConstructors[DenseVector]
 
   /**
    * This class exists because @specialized instances don't respect the serial
-   * @param data
+    *
+    * @param data
    * @param offset
    * @param stride
    * @param length

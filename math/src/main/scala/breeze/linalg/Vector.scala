@@ -17,23 +17,25 @@ package breeze.linalg
 import operators._
 import support._
 import support.CanTraverseValues.ValuesVisitor
-import breeze.generic.{UFunc}
-import breeze.generic.UFunc.{UImpl2, UImpl, InPlaceImpl2}
+import breeze.generic.UFunc
+import breeze.generic.UFunc.{InPlaceImpl2, UImpl, UImpl2}
 import breeze.macros.expand
 import breeze.math._
 import breeze.stats.distributions.Rand
-import breeze.storage.{Zero, Storage}
+import breeze.storage.{Storage, Zero}
 
-import scala.util.hashing.MurmurHash3
-import scala.{specialized=>spec}
+import scala.{specialized => spec}
 import scala.annotation.unchecked.uncheckedVariance
-import scala.collection.mutable.ArrayBuilder
+import scala.collection.generic.CanBuildFrom
 import scala.collection.immutable.BitSet
+import scala.collection.mutable
 import scala.reflect.ClassTag
+import scala.language.higherKinds
 
 /**
  * Trait for operators and such used in vectors.
- * @author dlwh
+  *
+  * @author dlwh
  */
 trait VectorLike[@spec V, +Self <: Vector[V]] extends Tensor[Int, V] with TensorLike[Int, V, Self] {
   def map[V2, That](fn: V=>V2)(implicit canMapValues: CanMapValues[Self  @uncheckedVariance, V, V2, That]):That = values map fn
@@ -44,7 +46,8 @@ trait VectorLike[@spec V, +Self <: Vector[V]] extends Tensor[Int, V] with Tensor
 
 /**
  * A Vector represents the mathematical concept of a vector in math.
- * @tparam V
+  *
+  * @tparam V
  */
 trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]]{
 
@@ -61,6 +64,10 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]]{
   def valuesIterator = Iterator.range(0, size).map{i => apply(i)}
 
   def keysIterator = Iterator.range(0, size)
+
+  def slice(from: Int, end: Int, stride: Int) : Vector[V] = ???
+  /// would like to do this but we have no class tag for V
+  /// new DenseVector(from.to(end).by(stride).map(i => apply(i)).toArray[V])
 
   def copy: Vector[V]
 
@@ -152,7 +159,8 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
 
   /**
    * Creates a Vector of size size.
-   * @param size
+    *
+    * @param size
    * @tparam V
    * @return
    */
@@ -161,7 +169,8 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
 
   /**
    * Creates a vector with the specified elements
-   * @param values
+    *
+    * @param values
    * @tparam V
    * @return
    */
@@ -822,12 +831,14 @@ trait VectorOps { this: Vector.type =>
 
 /**
  * Trait that can mixed to companion objects to enable utility methods for creating vectors.
- * @tparam Vec
+  *
+  * @tparam Vec
  */
 trait VectorConstructors[Vec[T]<:Vector[T]] {
   /**
    * Creates a Vector of size size.
-   * @param size
+    *
+    * @param size
    * @tparam V
    * @return
    */
@@ -835,7 +846,8 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
 
   /**
    * Creates a vector with the specified elements
-   * @param values
+    *
+    * @param values
    * @tparam V
    * @return
    */
@@ -843,7 +855,8 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
 
   /**
    * Creates a vector with the specified elements
-   * @param values
+    *
+    * @param values
    * @tparam V
    * @return
    */
@@ -857,10 +870,24 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
 //     apply(values.toArray)
   }
 
+  /**
+    * Allow sequences to be converted into vectors
+    */
+  implicit def canBuildFrom[V : ClassTag]: CanBuildFrom[Nothing, V, Vec[V]] = {
+    def newBuilder() = mutable.ArrayBuilder.make[V].mapResult(apply)
+
+    new CanBuildFrom[Nothing, V, Vec[V]] {
+      def apply(from: Nothing): mutable.Builder[V, Vec[V]] = apply()
+
+      def apply(): mutable.Builder[V, Vec[V]] = newBuilder()
+    }
+  }
+
   //ToDo 2: I'm not sure fill/tabulate are really useful outside of the context of a DenseVector?
   /**
    * Analogous to Array.fill
-   * @param size
+    *
+    * @param size
    * @param v
    * @tparam V
    * @return
@@ -872,7 +899,8 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
 
   /**
    * Analogous to Array.tabulate
-   * @param size
+    *
+    * @param size
    * @param f
    * @tparam V
    * @return
@@ -883,12 +911,13 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
 
   /**
    * Analogous to Array.tabulate, but taking a scala.Range to iterate over, instead of an index.
-   * @param f
+    *
+    * @param f
    * @tparam V
    * @return
    */
   def tabulate[@spec(Double, Int, Float, Long) V:ClassTag](range: Range)(f: Int=>V):Vec[V]= {
-    val b = ArrayBuilder.make[V]()
+    val b = mutable.ArrayBuilder.make[V]()
     b.sizeHint(range.length)
     var i = 0
     while (i < range.length) {
@@ -911,7 +940,8 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
 
   /**
    * Creates a Vector of uniform random numbers in (0,1)
-   * @param size
+    *
+    * @param size
    * @param rand
    * @return
    */
