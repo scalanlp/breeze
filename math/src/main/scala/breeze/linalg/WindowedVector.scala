@@ -1,9 +1,6 @@
 package breeze.linalg
 
-import breeze.linalg.Options.OptPadMode
-import breeze.math.Semiring
-
-import scala.reflect.ClassTag
+import breeze.linalg.Options.{Dimensions1, OptPadMode}
 
 case class WindowedVector[VectorType, WindowType](underlying: VectorType, window: Window)
   extends WindowedLike[VectorType, WindowType, WindowedVector[VectorType, WindowType]] with Windowed[VectorType, WindowType]
@@ -23,9 +20,7 @@ object WindowedVector
 /**
   * Base class for iterating over a windowed vector. Handles both padded and standard windows
   */
-abstract class WindowedVectorIterator[ElementType,
-                                      VectorType <: Vector[ElementType],
-                                      WindowType <: Vector[ElementType]](underlying: VectorType, window: Window)
+abstract class WindowedVectorIterator[VectorType <: Vector[_], WindowType <: Vector[_]](underlying: VectorType, window: Window)
   extends Iterator[WindowType] {
 
   val numOfChunks = ((underlying.length - window.length) / window.step) + 1
@@ -68,19 +63,13 @@ abstract class WindowedVectorIterator[ElementType,
 /**
   * DenseVector implementation of windowed vector iterator
   */
-private case class WindowedDenseVectorIterator[T: ClassTag : Semiring](underlying: DenseVector[T], window: Window)
-  extends WindowedVectorIterator[T, DenseVector[T], DenseVector[T]](underlying, window) {
+case class WindowedDenseVectorIterator[T](underlying: DenseVector[T], window: Window)
+                                                 (implicit canPadRight: CanPadRight[DenseVector[T], Dimensions1, DenseVector[T]])
+  extends WindowedVectorIterator[DenseVector[T], DenseVector[T]](underlying, window) {
 
-  def sliceUnderlying(start: Int, end: Int): DenseVector[T] = underlying.slice(start, end)
+  def sliceUnderlying(start: Int, end: Int): DenseVector[T] = underlying(start until end)
 
-  def padResult(chunk: DenseVector[T], length: Int, padMode: OptPadMode): DenseVector[T] = {
-    //    this doesn't work as scala complains it can't find the canPad implicit, any idea???
-    //    import CanPadRight._
-    //    import Options._
-    //
-    //    padRight[T](chunk, dimensions = window.length, mode = padMode)
-
-    chunk
-  }
+  def padResult(chunk: DenseVector[T], length: Int, padMode: OptPadMode): DenseVector[T] =
+    canPadRight(chunk, optDim = window.length, optMode = padMode)
 }
 

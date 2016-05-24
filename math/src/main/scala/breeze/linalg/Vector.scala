@@ -65,10 +65,6 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]]{
 
   def keysIterator = Iterator.range(0, size)
 
-  def slice(from: Int, end: Int, stride: Int) : Vector[V] = ???
-  /// would like to do this but we have no class tag for V
-  /// new DenseVector(from.to(end).by(stride).map(i => apply(i)).toArray[V])
-
   def copy: Vector[V]
 
   override def equals(p1: Any) = p1 match {

@@ -20,7 +20,7 @@ trait Windowed[+T, B] extends NumericOps[Windowed[T, B]] {
   * A windowed object can be thought of as a sequence of views on the underlying type as defined by their window.
   */
 trait WindowedLike[UnderlyingType, WindowType, Self <: Windowed[UnderlyingType, WindowType]]
-  extends NumericOps[Self] with Windowed[UnderlyingType, WindowType] {
+  extends Windowed[UnderlyingType, WindowType] with NumericOps[Self] {
 
   def repr: Self = this.asInstanceOf[Self]
 
