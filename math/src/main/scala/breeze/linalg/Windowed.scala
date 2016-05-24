@@ -50,10 +50,16 @@ trait WindowedLike[UnderlyingType, WindowType, Self <: Windowed[UnderlyingType, 
   * A template trait for companion objects of Windowed which provide implicits for windowing UFuncs
   */
 trait WindowedOps[CC[T, B] <: Windowed[T, B]] {
+  // Note: the ordering of the implicits (handhold, op, canCollapseWindow) in the below methods is important. Having op
+  // before canCollapseWindow helps with the left recursion by enabling the compiler to identify Op and UnderlyingType
+  // upfront. The handhold being first helps with Collapsed type being identified as unconstrained as it prevents greedy
+  // type inference until after its found an implicit for the Op. See dlwh blog post
+  // http://dlwh.org/scala-implicit-search for the details
+
   implicit def windowedOp[Op, UnderlyingType, WindowedType, CollapsedType, ResultType]
   (implicit handhold: CanCollapseWindow.HandHold[UnderlyingType, WindowedType],
-   canCollapseWindow: CanCollapseWindow[UnderlyingType, WindowedType, CollapsedType, ResultType],
-   op: UImpl[Op, WindowedType, CollapsedType]) = {
+   op: UImpl[Op, WindowedType, CollapsedType],
+   canCollapseWindow: CanCollapseWindow[UnderlyingType, WindowedType, CollapsedType, ResultType]) = {
     new UImpl[Op, CC[UnderlyingType, WindowedType], ResultType] {
       def apply(v: CC[UnderlyingType, WindowedType]): ResultType = {
         canCollapseWindow(v.underlying, v.window) {
@@ -65,8 +71,8 @@ trait WindowedOps[CC[T, B] <: Windowed[T, B]] {
 
   implicit def windowedOp2[Op, UnderlyingType, WindowType, ArgumentType, CollapsedType, ResultType]
   (implicit handhold: CanCollapseWindow.HandHold[WindowType, WindowType],
-   canCollapseWindow: CanCollapseWindow[UnderlyingType, WindowType, CollapsedType, ResultType],
-   op: UImpl2[Op, WindowType, ArgumentType, CollapsedType]) = {
+   op: UImpl2[Op, WindowType, ArgumentType, CollapsedType],
+     canCollapseWindow: CanCollapseWindow[UnderlyingType, WindowType, CollapsedType, ResultType]) = {
     new UImpl2[Op, CC[UnderlyingType, WindowType], ArgumentType, ResultType] {
       def apply(windowed: CC[UnderlyingType, WindowType], argument: ArgumentType): ResultType = {
         canCollapseWindow(windowed.underlying, windowed.window) {
