@@ -26,7 +26,7 @@ import org.junit.runner.RunWith
 class BeamTest extends FunSuite with Checkers {
   test("creation doesn't go over size") {
     check( Prop.forAll{ (size: Int, cl: List[Int]) => size <= 0 || {
-      val beam = new Beam[Int](size.abs,cl:_*)
+      val beam = Beam[Int](size.abs)(cl:_*)
       beam.size <= size.abs && (cl.size < size.abs || beam.size == size.abs)
     }
     })
@@ -36,7 +36,7 @@ class BeamTest extends FunSuite with Checkers {
     check( Prop.forAll{ (size: Int, cl: List[Int]) => (size <= 0) || {
       val beam = new Beam[Int](size.abs)
       beam ++= cl
-      beam.size <= size.abs && (cl.size < size.abs || beam.size == size.abs)
+      beam.size <= size.abs && (cl.size < size.abs || beam.size == size.abs) && (beam.isEmpty || beam.min == cl.sorted.reverse.take(size).min)
     }
     })
   }
