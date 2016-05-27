@@ -16,13 +16,14 @@ package breeze.collection.mutable
  limitations under the License. 
 */
 
-
-
-
 import scala.collection.{ mutable, _ }
 import scala.collection.generic._
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
+
+trait IBeam[T] extends Iterable[T] with IterableLike[T, IBeam[T]] with mutable.Builder[T, IndexedSeq[T]] with Shrinkable[T] with scala.Cloneable {
+  override protected[this] def newBuilder: mutable.Builder[T, IBeam[T]] = throw new NotImplementedError("This should have been overridden")
+}
 
 /**
   * Represents a beam, which is essentially a priority queue
@@ -30,14 +31,11 @@ import scala.collection.mutable.ArrayBuffer
   *
   * @author dlwh
   */
+@SerialVersionUID(1L)
 class Beam[T](val maxSize:Int)(implicit ord: Ordering[T]) extends AbstractIterable[T]
-  with Iterable[T]
+  with IBeam[T]
   with IterableLike[T, Beam[T]]
-  with Growable[T]
-  with Shrinkable[T]
-  with mutable.Builder[T, IndexedSeq[T]]
-  with Serializable
-  with scala.Cloneable {
+  with Serializable {
   assert(maxSize >= 0)
   protected val queue = new java.util.PriorityQueue[T](ord)
 
@@ -90,6 +88,8 @@ class Beam[T](val maxSize:Int)(implicit ord: Ordering[T]) extends AbstractIterab
     case x: Beam[T @unchecked] => maxSize == x.maxSize && iterator.sameElements(x.iterator)
     case _ => false
   }
+
+  override def clone(): Beam[T] = new Beam[T](maxSize) ++= this.iterator
 }
 
 object Beam {
