@@ -16,13 +16,29 @@ package breeze.collection.mutable
  limitations under the License. 
 */
 
+import breeze.collection.mutable.Beam.{ BeamResult, NotAdded }
+
 import scala.collection.{ mutable, _ }
 import scala.collection.generic._
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 
-trait IBeam[T] extends Iterable[T] with IterableLike[T, IBeam[T]] with mutable.Builder[T, IndexedSeq[T]] with Shrinkable[T] with scala.Cloneable {
+trait IBeam[T] extends Iterable[T] with IterableLike[T, IBeam[T]] with mutable.Builder[T, IndexedSeq[T]] with Shrinkable[T] with mutable.Cloneable[IBeam[T]] {
   override protected[this] def newBuilder: mutable.Builder[T, IBeam[T]] = throw new NotImplementedError("This should have been overridden")
+  def freshEmpty: IBeam[T] = newBuilder.result()
+
+  /**
+    * Returns information on whether or not it made it onto the beam, and also what got
+    * evicted
+    * @param x
+    * @return
+    */
+  def checkedAdd(x: T): Beam.BeamResult[T]
+
+  def +=(x:T): this.type = {
+    checkedAdd(x)
+    this
+  }
 }
 
 /**
@@ -49,10 +65,10 @@ class Beam[T](val maxSize:Int)(implicit ord: Ordering[T]) extends AbstractIterab
     }
   }
 
-  def +=(x:T): this.type = {
+  override def +=(x:T): this.type = {
     if(queue.size < maxSize) {
       queue.add(x)
-    } else if (ord.compare(min,x) < 0) {
+    } else if (maxSize > 0 && ord.compare(min,x) < 0) {
       queue.poll()
       queue.add(x)
     }
@@ -63,6 +79,19 @@ class Beam[T](val maxSize:Int)(implicit ord: Ordering[T]) extends AbstractIterab
   override def -=(elem: T): this.type = {
     queue.remove(elem)
     this
+  }
+
+  override def checkedAdd(x: T): BeamResult[T] = {
+    if(queue.size < maxSize) {
+      queue.add(x)
+      Beam.NothingEvicted
+    } else if (maxSize > 0 && ord.compare(min,x) < 0) {
+      val r = queue.poll()
+      queue.add(x)
+      Beam.Added(Iterable(r))
+    } else {
+      NotAdded
+    }
   }
 
   def iterator: Iterator[T] = queue.iterator.asScala
@@ -93,6 +122,17 @@ class Beam[T](val maxSize:Int)(implicit ord: Ordering[T]) extends AbstractIterab
 }
 
 object Beam {
+
+  sealed trait BeamResult[+T] {
+    def deleted: Iterable[T]
+  }
+  case object NotAdded extends BeamResult[Nothing] {
+    def deleted = Iterable.empty
+  }
+  case class Added[+T](deleted: Iterable[T]) extends BeamResult[T]
+
+  val NothingEvicted: BeamResult[Nothing] = Added(Iterable.empty)
+
   implicit def canBuildFrom[T: Ordering]:CanBuildFrom[Beam[T], T, Beam[T]] = new CanBuildFrom[Beam[T],T,Beam[T]] {
     def apply() = sys.error("Sorry, need a max size")
 
