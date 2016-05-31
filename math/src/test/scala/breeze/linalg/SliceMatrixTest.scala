@@ -58,7 +58,7 @@ class SliceMatrixTest extends FunSuite {
 
   test("slices of a slice matrix") {
     // check row slice
-    assert(sliceMatrix(1, ::) == DenseVector(6, 7, 9, 10), "Failed> b(1, ::) = " + sliceMatrix(1, ::))
+    assert(sliceMatrix(1, ::) == DenseVector(6, 7, 9, 10).t, "Failed> b(1, ::) = " + sliceMatrix(1, ::))
 
     // check column slice
     assert(sliceMatrix(::, 1) == DenseVector(2, 7, 12, 22), "Failed> b(::, 1) = " + sliceMatrix(::, 1))
@@ -71,17 +71,17 @@ class SliceMatrixTest extends FunSuite {
   }
 
   test("canSliceRow") {
-    assert(sliceMatrix(0, ::) == DenseVector( 1,  2,  4,  5), "Failed> sliceMatrix(0, ::) = " + sliceMatrix(0, ::))
-    assert(sliceMatrix(1, ::) == DenseVector( 6,  7,  9, 10), "Failed> sliceMatrix(1, ::) = " + sliceMatrix(1, ::))
-    assert(sliceMatrix(2, ::) == DenseVector(11, 12, 14, 15), "Failed> sliceMatrix(2, ::) = " + sliceMatrix(2, ::))
-    assert(sliceMatrix(3, ::) == DenseVector(21, 22, 24, 25), "Failed> sliceMatrix(3, ::) = " + sliceMatrix(3, ::))
+    assert(sliceMatrix(0, ::) == DenseVector( 1,  2,  4,  5).t, "Failed> sliceMatrix(0, ::) = " + sliceMatrix(0, ::))
+    assert(sliceMatrix(1, ::) == DenseVector( 6,  7,  9, 10).t, "Failed> sliceMatrix(1, ::) = " + sliceMatrix(1, ::))
+    assert(sliceMatrix(2, ::) == DenseVector(11, 12, 14, 15).t, "Failed> sliceMatrix(2, ::) = " + sliceMatrix(2, ::))
+    assert(sliceMatrix(3, ::) == DenseVector(21, 22, 24, 25).t, "Failed> sliceMatrix(3, ::) = " + sliceMatrix(3, ::))
   }
 
   test("canSliceRowAndWeirdCols") {
-    assert(sliceMatrix(0, Seq(0, 2)) == DenseVector( 1,  4), "Failed> sliceMatrix(0, ::) = " + sliceMatrix(0, Seq(0, 2)))
-    assert(sliceMatrix(1, Seq(0, 2)) == DenseVector( 6,  9), "Failed> sliceMatrix(1, ::) = " + sliceMatrix(1, Seq(0, 2)))
-    assert(sliceMatrix(2, Seq(0, 2)) == DenseVector(11,  14), "Failed> sliceMatrix(2, ::) = " + sliceMatrix(2, Seq(0, 2)))
-    assert(sliceMatrix(3, Seq(0, 2)) == DenseVector(21,  24), "Failed> sliceMatrix(3, ::) = " + sliceMatrix(3, Seq(0, 2)))
+    assert(sliceMatrix(0, Seq(0, 2)) == DenseVector( 1,  4).t, "Failed> sliceMatrix(0, ::) = " + sliceMatrix(0, Seq(0, 2)))
+    assert(sliceMatrix(1, Seq(0, 2)) == DenseVector( 6,  9).t, "Failed> sliceMatrix(1, ::) = " + sliceMatrix(1, Seq(0, 2)))
+    assert(sliceMatrix(2, Seq(0, 2)) == DenseVector(11,  14).t, "Failed> sliceMatrix(2, ::) = " + sliceMatrix(2, Seq(0, 2)))
+    assert(sliceMatrix(3, Seq(0, 2)) == DenseVector(21,  24).t, "Failed> sliceMatrix(3, ::) = " + sliceMatrix(3, Seq(0, 2)))
   }
 
   test("canSliceCol") {
@@ -111,9 +111,9 @@ class SliceMatrixTest extends FunSuite {
     assert(sliceMatrix(booleanTensor, 2) == DenseVector(4, 14))
     assert(sliceMatrix(booleanTensor, 3) == DenseVector(5, 15))
 
-    assert(sliceMatrix(0, booleanTensor) == DenseVector(1, 4))
-    assert(sliceMatrix(1, booleanTensor) == DenseVector(6, 9))
-    assert(sliceMatrix(2, booleanTensor) == DenseVector(11, 14))
-    assert(sliceMatrix(3, booleanTensor) == DenseVector(21, 24))
+    assert(sliceMatrix(0, booleanTensor) == DenseVector(1, 4).t)
+    assert(sliceMatrix(1, booleanTensor) == DenseVector(6, 9).t)
+    assert(sliceMatrix(2, booleanTensor) == DenseVector(11, 14).t)
+    assert(sliceMatrix(3, booleanTensor) == DenseVector(21, 24).t)
   }
  }
