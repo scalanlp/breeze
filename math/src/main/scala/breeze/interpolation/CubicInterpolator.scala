@@ -56,9 +56,9 @@ class CubicInterpolator
     }
   }
 }
-//
-//object CubicInterpolator {
-//  def apply(
-//     x_coords: Vector[Double],
-//     y_coords: Vector[Double]) = new CubicInterpolator(x_coords, y_coords)
-//}
+
+object CubicInterpolator {
+  def apply(
+     x_coords: Vector[Double],
+     y_coords: Vector[Double]) = new CubicInterpolator(x_coords, y_coords)
+}
