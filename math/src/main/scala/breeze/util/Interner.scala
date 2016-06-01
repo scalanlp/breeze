@@ -2,18 +2,18 @@ package breeze.util;
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
- 
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
- You may obtain a copy of the License at 
- 
+ You may obtain a copy of the License at
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
- limitations under the License. 
+ limitations under the License.
 */
 
 
@@ -32,6 +32,7 @@ import java.io.{ObjectInputStream, ObjectOutputStream}
  *
  * @author dlwh
  */
+@SerialVersionUID(1L)
 class Interner[T] extends (T=>T) with Serializable {
   override def apply(t :T) = intern(t);
 
@@ -75,7 +76,7 @@ object Interner {
   private val typedInterners = new scala.collection.mutable.HashMap[Class[_],Interner[_]] {
     override def default(c: Class[_]) = getOrElseUpdate(c,new Interner[Any]);
   }
-  
+
   def apply[T](implicit m: scala.reflect.Manifest[T]) = forClass[T](m.runtimeClass.asInstanceOf[Class[T]]);
 
   def forClass[T](c: Class[T]) = typedInterners(c).asInstanceOf[Interner[T]];
