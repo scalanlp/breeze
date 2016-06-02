@@ -2,18 +2,18 @@ package breeze.util
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
- 
+
  Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
- You may obtain a copy of the License at 
- 
+ You may obtain a copy of the License at
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
- limitations under the License. 
+ limitations under the License.
 */
 
 import collection.{mutable, IterableProxy}
@@ -30,7 +30,7 @@ import java.util
  * vector space mappings for strings.  The methods in this trait do not mutate
  * the underlying index.  Use either a MutableIndex or one of the companion
  * object constructor methods to build an index.
- * 
+ *
  * @author dlwh, dramage
  */
 @SerialVersionUID(1L)
@@ -101,6 +101,7 @@ trait Index[T] extends Iterable[T] with (T=>Int) with Serializable {
  *
  * @author dramage
  */
+@SerialVersionUID(1L)
 trait SynchronizedIndex[T] extends Index[T] {
   abstract override def size = this synchronized super.size
   abstract override def apply(t : T) = this synchronized super.apply(t)
@@ -120,6 +121,7 @@ trait SynchronizedIndex[T] extends Index[T] {
  *
  * @author dramage
  */
+@SerialVersionUID(1L)
 trait MutableIndex[T] extends Index[T] {
   /**
    * Returns an integer index for the given object, adding it to the
@@ -141,7 +143,7 @@ trait SynchronizedMutableIndex[T] extends MutableIndex[T] with SynchronizedIndex
 /**
  * Class that builds a 1-to-1 mapping between Ints and T's, which
  * is very useful for efficiency concerns.
- * 
+ *
  * Two extra views are provided: the index.synchronized view
  * enables threadsafe access and the index.immutable view keeps
  * prevents the (view) from being updated.
@@ -154,22 +156,22 @@ class HashIndex[T] extends MutableIndex[T] with Serializable {
   private val objects = new ArrayBuffer[T]
 
   /** Map from object back to int index */
-  private val indices = new util.HashMap[T, Int]().asScala
+  private val indices = new util.HashMap[T, Int]()
 
   override def size =
     indices.size
 
   override def apply(t : T) : Int =
-    indices.getOrElse(t,-1)
+    Option(indices.get(t)).getOrElse(-1)
 
   override def unapply(pos : Int) : Option[T] =
     if (pos >= 0 && pos < objects.length) Some(objects(pos)) else None
 
   override def contains(t : T) =
-    indices contains t
+    indices containsKey t
 
   override def indexOpt(t : T): Option[Int] =
-    indices.get(t)
+    Option(indices.get(t))
 
   override def get(pos : Int) =
     objects(pos); // throws IndexOutOfBoundsException as required
@@ -179,17 +181,17 @@ class HashIndex[T] extends MutableIndex[T] with Serializable {
 
   /** Returns the position of T, adding it to the index if it's not there. */
   override def index(t: T) = {
-    if(!indices.contains(t)) {
+    if(!indices.containsKey(t)) {
       val ind = objects.size
       objects += t
       indices.put(t, ind)
       ind
     } else {
-      indices(t)
+      indices.get(t)
     }
   }
 
-  def pairs = indices.iterator
+  def pairs = indices.asScala.iterator
 }
 
 /**
@@ -198,6 +200,7 @@ class HashIndex[T] extends MutableIndex[T] with Serializable {
 *
 * @author dlwh, dramage
 */
+@SerialVersionUID(1L)
 class DenseIntIndex(beg: Int, end: Int) extends Index[Int] {
   def this(end: Int) = this(0, end)
 
@@ -233,9 +236,9 @@ object Index {
   import scala.reflect.ClassTag.{Char=>MChar}
   import scala.reflect.OptManifest
   def apply[T:OptManifest]() : MutableIndex[T] = implicitly[OptManifest[T]] match {
-    case _ => new HashIndex[T]; 
+    case _ => new HashIndex[T];
   }
-  
+
   /** Constructs an Index from some iterator. */
   def apply[T:OptManifest](iterator : Iterator[T]) : Index[T] = {
     val index = Index[T]()
@@ -273,6 +276,7 @@ object Index {
  *
  * @author dlwh
  */
+@SerialVersionUID(1L)
 class EitherIndex[L,R](left: Index[L], right: Index[R]) extends Index[Either[L,R]] {
   def apply(t: Either[L, R]) = t match {
     case Left(l) => left(l)
@@ -303,6 +307,7 @@ class EitherIndex[L,R](left: Index[L], right: Index[R]) extends Index[Either[L,R
  *
  * @author dlwh
  */
+@SerialVersionUID(1L)
 class OptionIndex[T](inner: Index[T]) extends Index[Option[T]] {
   def apply(t: Option[T]) = t match {
     case Some(l) => inner(l)
@@ -335,6 +340,7 @@ class OptionIndex[T](inner: Index[T]) extends Index[Option[T]] {
  *
  * @author dlwh
  */
+@SerialVersionUID(1L)
 final class CompositeIndex[U](indices: Index[_ <:U]*) extends Index[(Int,U)] {
   private val offsets:Array[Int] = indices.unfold(0){ (n,i) => n + i.size}.toArray
 
