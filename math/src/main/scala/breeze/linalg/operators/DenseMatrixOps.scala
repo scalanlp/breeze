@@ -36,7 +36,7 @@ trait DenseMatrixPowerStuff extends DenseMatrixOps
       h * h
     }
   }
-  
+
 
 
 implicit object implOpPow_DMD_Deq_DMD

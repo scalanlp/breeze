@@ -699,7 +699,7 @@ trait VectorOps { this: Vector.type =>
     }
 
   }
-  
+
 
 
   implicit def vAddIntoSField[T](implicit field: Semiring[T], zero: Zero[T], ct: ClassTag[T]):OpAdd.InPlaceImpl2[Vector[T], T] = {
@@ -753,7 +753,7 @@ trait VectorOps { this: Vector.type =>
       }
     }
   }
- 
+
   implicit def dotField[T](implicit field: Semiring[T]):OpMulInner.Impl2[Vector[T], Vector[T], T] = {
     new OpMulInner.Impl2[Vector[T], Vector[T], T] {
       override def apply(v: Vector[T], v2: Vector[T]): T = {
