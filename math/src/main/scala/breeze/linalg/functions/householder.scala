@@ -41,15 +41,21 @@ object householder extends UFunc {
     private val beta = Array.ofDim[Double](size)
     private val essential = Array.ofDim[DenseVector[Complex]](size)
 
-    //returns Householder object (Householder matrix and tau)
+    //returns Householder object (Householder matrix and householder coeffs)
 
-       /*A1 = Q1AQ1 */
-    /*A2 = Q2A1Q2*/
+
 
     def generateFullHouseholder() =
     {
       for (icnt <- 0 to matrixH.rows - 2)
         applyHouseholder(icnt).applyHouseholderRight(icnt).applyHouseholderBottom(icnt)
+this
+    }
+
+    def generateFullHouseholder(cnt:Int) =
+    {
+      for (icnt <- 0 to cnt)
+        applyHouseholder(cnt).applyHouseholderRight(cnt).applyHouseholderBottom(cnt)
 this
     }
 
@@ -61,7 +67,7 @@ this
    *    [e]    [   bott  ]
    */
     def applyHouseholder(cnt: Int) = {
-
+//compute A = H A H'
       essential(cnt) = matrixH((cnt + 2) to matrixH.rows - 1, cnt)
 
       val eNorm = if (essential(cnt).length == 0) 0.0 else sum(essential(cnt).map(x => scala.math.pow(x.real, 2) + scala.math.pow(x.imag, 2))) // Does Complex component need squaring?
@@ -91,7 +97,7 @@ this
      *    [e]    [c0]    [Right]
      */
     def applyHouseholderRight(cnt: Int) = {
-
+  // A = H A
       if (matrixH.cols == 1) {
         matrixH *= 1 - coeffs(cnt)
         this
@@ -115,7 +121,7 @@ this
 
 
     def applyHouseholderBottom(cnt: Int) = {
-
+    // A = A H'
       if (matrixH.cols == 1) {
         matrixH *= 1 - coeffs(cnt)
         this
