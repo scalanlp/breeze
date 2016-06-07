@@ -126,25 +126,22 @@ import DenseMatrix.canMapValues
   House.tau  the scaling factor of the Householder transformation
   House.beta the result of H * M
  */
+
+
+//Both DenseVector [Double] and [Int] functions  need to be simplified to return real matrices only...
   object hessenberg extends UFunc {
 
-  implicit object DMC_IMPL_HeCHo extends Impl[DenseMatrix[Complex],  (Hessenberg[Complex],Householder)] {
-    def apply(M: DenseMatrix[Complex]):  (Hessenberg[Complex],Householder) = {
+  implicit object DMC_IMPL_HeCHo extends Impl[DenseMatrix[Complex],  (DenseMatrix[Complex],DenseMatrix[Complex], Householder)] {
+    def apply(M: DenseMatrix[Complex]):  (DenseMatrix[Complex],DenseMatrix[Complex],Householder) = {
       new Hessenberg[Complex](M) {
-        override val House = {
-          val H = new Householder(M.copy, DenseVector.zeros[Complex](M.cols - 1))
-          val icnt = 0
+        override val House =   new Householder(M.copy).generateFullHouseholder()
           //LAPACK misses this step
-          for (icnt <- 0 to M.rows - 2)
-            H.makeHouseholder(icnt).applyHouseholderRight(icnt).applyHouseholderBottom(icnt)
-          H
-        }
       }.decompose()
     }
   }
 
-  implicit object DMD_IMPL_HeDHo extends Impl[DenseMatrix[Double], (Hessenberg[Double],Householder)] {
-    def apply(M: DenseMatrix[Double]): (Hessenberg[Double],Householder) = {
+  implicit object DMD_IMPL_HeDHo extends  Impl[DenseMatrix[Double],  (DenseMatrix[Complex],DenseMatrix[Complex], Householder)] {
+    def apply(M: DenseMatrix[Double]): (DenseMatrix[Complex],DenseMatrix[Complex],Householder) = {
       new Hessenberg[Double](M) {
         override val House = {
           val (h, hLO, hHI, tau) = getHessenbergLAPACK(M)
@@ -154,8 +151,8 @@ import DenseMatrix.canMapValues
     }
   }
 
-  implicit object DMD_IMPL_HeIHo extends  Impl[DenseMatrix[Int], (Hessenberg[Int],Householder)] {
-    def apply(M: DenseMatrix[Int]): (Hessenberg[Int],Householder) = {
+  implicit object DMD_IMPL_DMI_DMI_Ho extends  Impl[DenseMatrix[Int],(DenseMatrix[Complex],DenseMatrix[Complex], Householder)] {
+    def apply(M: DenseMatrix[Int]): (DenseMatrix[Complex],DenseMatrix[Complex],Householder) = {
           new Hessenberg[Int](M) {
         override val House = {
       val (h, hLO, hHI, tau) = getHessenbergLAPACK(M.mapValues(_.toDouble))
@@ -168,21 +165,21 @@ import DenseMatrix.canMapValues
    abstract class Hessenberg[T]( M: DenseMatrix[T]) {
 
     val House: Householder
-    def decompose() = (this, House)
+    def decompose() = (P,H, House)
     /*  4 x 4 example of the form
      *  1    0    0     0   ^  ------- order
      *   0    1    0    0   v
      *   0    0     x    x
      *   0    0     x    x
      */
-    def MatrixP(): DenseMatrix[Complex] = householder.householderTransformation(House.matrixH.mapValues(_.real), House.tau.mapValues(_.real), 1).mapValues(Complex(_, 0.0))
+    def P: DenseMatrix[Complex] = householder.householderTransformation(House.matrixH.mapValues(_.real), House.coeffs.mapValues(_.real), 1).mapValues(Complex(_, 0.0))
     /*  4 x 4 example
      *   x    x    x     x
      *   x    x    x    x
      *   0    x     x    x
      *   0    0     x    x
      */
-    def MatrixH(): DenseMatrix[Complex] = DenseMatrix.tabulate(House.matrixH.rows, House.matrixH.rows)((i, j) => if (j >= i - 1) House.matrixH(i, j) else Complex(0, 0))
+    def H: DenseMatrix[Complex] = DenseMatrix.tabulate(House.matrixH.rows, House.matrixH.rows)((i, j) => if (j >= i - 1) House.matrixH(i, j) else Complex(0, 0))
   }
    def getHessenbergLAPACK(X: DenseMatrix[Double]): (DenseMatrix[Double], Int, Int, Array[Double]) = {
 
@@ -216,8 +213,6 @@ import DenseMatrix.canMapValues
       throw new IllegalArgumentException()
 
     var workcnt = Array.ofDim[Double](1)
-
-    //lapack.dgehrd(N, iLO.`val`, iHI.`val`, Y.data, scala.math.max(1, N), tau, work, scala.math.max(1, N), info)
 
     lapack.dgehrd(N, iLO.`val`, iHI.`val`, y.data, scala.math.max(1, N), tau, workcnt, -1, info)
     lapack.dgehrd(N, iLO.`val`, iHI.`val`, y.data, scala.math.max(1, N), tau, Array.ofDim[Double](workcnt(0).toInt), workcnt(0).toInt, info)

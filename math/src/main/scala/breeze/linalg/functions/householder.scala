@@ -21,24 +21,46 @@ import DenseMatrix.canMapValues
 
 object householder extends UFunc {
 
-  implicit object DMD_IMPL_D_DMC extends Impl2[DenseMatrix[Complex], DenseVector[Complex], Householder] {
+  implicit object DMC_DVC_IMPL_H extends Impl2[DenseMatrix[Complex], DenseVector[Complex], Householder] {
     def apply(M: DenseMatrix[Complex], tau: DenseVector[Complex]): Householder = {
       new Householder(M, tau)
     }
   }
 
-  class Householder(val matrixH: DenseMatrix[Complex], val tau: DenseVector[Complex]) {
-    val size = matrixH.cols - 1
-    val beta = Array.ofDim[Double](size)
-    val essential = Array.ofDim[DenseVector[Complex]](size)
-  /*
+  implicit object DMC_IMPL_H extends Impl[DenseMatrix[Complex], Householder] {
+    def apply(M: DenseMatrix[Complex]): Householder = {
+      new Householder(M)
+    }
+  }
+
+  class Householder(val matrixH: DenseMatrix[Complex], val coeffs: DenseVector[Complex]) {
+
+    def this(matrixH: DenseMatrix[Complex]) = this(matrixH, DenseVector.zeros[Complex](matrixH.cols - 1))
+
+    private val size = matrixH.cols - 1
+    private val beta = Array.ofDim[Double](size)
+    private val essential = Array.ofDim[DenseVector[Complex]](size)
+
+    //returns Householder object (Householder matrix and tau)
+
+       /*A1 = Q1AQ1 */
+    /*A2 = Q2A1Q2*/
+
+    def generateFullHouseholder() =
+    {
+      for (icnt <- 0 to matrixH.rows - 2)
+        applyHouseholder(icnt).applyHouseholderRight(icnt).applyHouseholderBottom(icnt)
+this
+    }
+
+    /*
    *  4 x 4 example
    *    x    x    x    x
    *    x    [ Row0 ]
-   *    e    [  bott   ]
-   *    e    [   bott  ]
+   *    [e]    [  bott   ]
+   *    [e]    [   bott  ]
    */
-    def makeHouseholder(cnt: Int) = {
+    def applyHouseholder(cnt: Int) = {
 
       essential(cnt) = matrixH((cnt + 2) to matrixH.rows - 1, cnt)
 
@@ -47,11 +69,11 @@ object householder extends UFunc {
       (eNorm, c0.imag) match {
         case (0, 0) =>
           beta(cnt) = c0.real
-          tau(cnt) = Complex(0, 0)
+          coeffs(cnt) = Complex(0, 0)
         case _ =>
           val c0norm = scala.math.pow(c0.real, 2) + scala.math.pow(c0.imag, 2)
           beta(cnt) = if (c0.real >= 0) -Math.sqrt(c0norm + eNorm) else Math.sqrt(c0norm + eNorm)
-          tau(cnt) = ((beta(cnt) - c0) / beta(cnt))
+          coeffs(cnt) = ((beta(cnt) - c0) / beta(cnt))
           essential(cnt) = (essential(cnt) / (c0 - beta(cnt)))
       }
 
@@ -63,22 +85,22 @@ object householder extends UFunc {
     }
     /*
      *  4 x 4 example
-     *    x    c0    Right
-     *    x    c0    Right
-     *    e    c0    Right
-     *    e    c0    Right
+     *    x    [c0]   [Right]
+     *    x    [c0]   [Right]
+     *    [e]    [c0]   [Right]
+     *    [e]    [c0]    [Right]
      */
     def applyHouseholderRight(cnt: Int) = {
 
       if (matrixH.cols == 1) {
-        matrixH *= 1 - tau(cnt)
+        matrixH *= 1 - coeffs(cnt)
         this
       } else {
         var c0 = matrixH(::, (cnt + 1) to (cnt + 1))
         var right = matrixH(::, (cnt + 2) to matrixH.cols - 1)
         val tmp = (right * (essential(cnt).toDenseMatrix.map(x => Complex(x.real, -x.imag))).t) + c0
-        c0 -= tmp * tau(cnt)
-        right -= tmp * tau(cnt) * essential(cnt).toDenseMatrix
+        c0 -= tmp * coeffs(cnt)
+        right -= tmp * coeffs(cnt) * essential(cnt).toDenseMatrix
 
         this
       }
@@ -86,21 +108,23 @@ object householder extends UFunc {
     /*
      *  4 x 4 example
      *    x    x    x    x
-     *    x    r0  r0  r0
-     *    e     Bottom
-     *    e     Bottom
+     *    x    [     r0    ]
+     *    [e]     [Bottom]
+     *    [e]    [Bottom]
      */
+
+
     def applyHouseholderBottom(cnt: Int) = {
 
       if (matrixH.cols == 1) {
-        matrixH *= 1 - tau(cnt)
+        matrixH *= 1 - coeffs(cnt)
         this
       } else {
         var r0 = matrixH((cnt + 1), (cnt + 1) to matrixH.cols - 1).t
         var bottom = matrixH((cnt + 2) to matrixH.rows - 1, (cnt + 1) to matrixH.cols - 1)
         val tmp = (bottom.t * essential(cnt).map(x => Complex(x.real, -x.imag))) + r0
-        r0 -= (tmp.toDenseMatrix * tau(cnt)).toDenseVector
-        bottom -= (essential(cnt).toDenseMatrix.t * tmp.toDenseMatrix) * tau(cnt)
+        r0 -= (tmp.toDenseMatrix * coeffs(cnt)).toDenseVector
+        bottom -= (essential(cnt).toDenseMatrix.t * tmp.toDenseMatrix) * coeffs(cnt)
 
         this
       }
@@ -114,8 +138,8 @@ object householder extends UFunc {
    *    e    x    x    x
    */
   //def apply(m_matrix: DenseMatrix[Complex]): householder = new householder(m_matrix)
-
-  def householderTransformation(hMatrix: DenseMatrix[Double], tau: DenseVector[Double], order: Int): DenseMatrix[Double] = {
+//does householder require Complex coefficients? .....
+  def householderTransformation(hMatrix: DenseMatrix[Double], coeffs: DenseVector[Double], order: Int): DenseMatrix[Double] = {
     //householderTransformation shifted 1 with size -1
     /*  4 x 4 example of the form
        *  1    0    0     0   ^  ------- order (wrapper)
@@ -123,7 +147,7 @@ object householder extends UFunc {
        *   0    0     x    x
        *   0    0     x    x
        */
-    if ((hMatrix.rows - order) != tau.length)
+    if ((hMatrix.rows - order) != coeffs.length)
       throw new MatrixNotSquareException // change to correct exception
 
     val matHS = hMatrix(order to (hMatrix.cols - 1), 0 to (hMatrix.rows - order - 1))
@@ -135,7 +159,7 @@ object householder extends UFunc {
     val sum2 = (new ((Int, Int, DenseMatrix[Double]) => DenseMatrix[Double]) {
       @tailrec def apply(from: Int, to: Int, s: DenseMatrix[Double]): DenseMatrix[Double] = {
         if (from == to) return s;
-        apply(from + 1, to, s * -(tau(from) * hhMv(from, ::).t * hhMv(from, ::).t.toDenseMatrix - I))
+        apply(from + 1, to, s * -(coeffs(from) * hhMv(from, ::).t * hhMv(from, ::).t.toDenseMatrix - I))
       }
     })(0, matHS.cols - 1, I)
 
