@@ -700,8 +700,6 @@ trait VectorOps { this: Vector.type =>
 
   }
 
-
-
   implicit def vAddIntoSField[T](implicit field: Semiring[T], zero: Zero[T], ct: ClassTag[T]):OpAdd.InPlaceImpl2[Vector[T], T] = {
     new OpAdd.InPlaceImpl2[Vector[T], T] {
       override def apply(v: Vector[T], v2: T) = {

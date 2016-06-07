@@ -68,12 +68,10 @@ pomExtra := (
 publishMavenStyle := true
 
 
- credentials  ++= Seq(Credentials(Path.userHome / ".sbt" / ".credentials"))
-
-publishTo <<= version { v: String =>
-      val nexus = "http://think-station:8081/nexus/"
-      if (v.trim.endsWith("SNAPSHOT"))
-        Some("snapshots" at nexus + "content/repositories/snapshots")
-      else
-        Some("releases" at nexus + "content/repositories/releases")
-    }
+  publishTo <<= version { (v: String) =>
+    val nexus = "https://oss.sonatype.org/"
+    if (v.trim.endsWith("SNAPSHOT"))
+      Some("snapshots" at nexus + "content/repositories/snapshots")
+    else
+      Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+  }
