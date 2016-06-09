@@ -241,7 +241,10 @@ trait MatrixConstructors[Mat[T]<:Matrix[T]] {
   def apply[@specialized(/* Don't remove until SI-8886 is closed*/) R,
             @spec(Double, Int, Float, Long) V](rows : R*)(implicit rl : LiteralRow[R,V], man : ClassTag[V], zero: Zero[V]) = {
     val nRows = rows.length
-    val ns = rl.length(rows(0))
+    val ns = rows.headOption match {
+      case None => 0
+      case Some(firstRow) => rl.length(firstRow)
+    }
     val rv = zeros(nRows, ns)
     finishLiteral(rv, rl, rows)
     rv
@@ -297,12 +300,12 @@ trait LowPriorityMatrix {
     }
   }
 
-  implicit def canSliceRowAndTensorBooleanCols[V: Semiring : ClassTag]: CanSlice2[Matrix[V], Int, Tensor[Int, Boolean], SliceVector[(Int, Int), V]] = {
-    new CanSlice2[Matrix[V], Int, Tensor[Int, Boolean], SliceVector[(Int, Int), V]] {
-      def apply(from: Matrix[V], sliceRow: Int, sliceCols: Tensor[Int, Boolean]): SliceVector[(Int, Int), V] = {
+  implicit def canSliceRowAndTensorBooleanCols[V: Semiring : ClassTag]: CanSlice2[Matrix[V], Int, Tensor[Int, Boolean], Transpose[SliceVector[(Int, Int), V]]] = {
+    new CanSlice2[Matrix[V], Int, Tensor[Int, Boolean], Transpose[SliceVector[(Int, Int), V]]] {
+      def apply(from: Matrix[V], sliceRow: Int, sliceCols: Tensor[Int, Boolean]): Transpose[SliceVector[(Int, Int), V]] = {
         val row = SliceUtils.mapRow(sliceRow, from.rows)
         val cols = SliceUtils.mapColumnSeq(sliceCols.findAll(_ == true), from.cols)
-        new SliceVector(from, slices = cols.map(col => (row, col)))
+        new SliceVector(from, slices = cols.map(col => (row, col))).t
       }
     }
   }
