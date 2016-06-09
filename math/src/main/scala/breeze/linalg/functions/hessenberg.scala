@@ -16,7 +16,6 @@ package breeze.linalg
 */
 import org.netlib.util.intW
 import com.github.fommil.netlib.LAPACK.{ getInstance => lapack }
-import breeze.linalg.operators.{ OpMulMatrix, OpSolveMatrixBy }
 import breeze.generic.UFunc
 import breeze.math._
 import breeze.linalg.householder._
@@ -103,9 +102,7 @@ import DenseMatrix.canMapValues
 
  */
 
-
-
-  /*
+/*
   PHP^(H)=A,
 
   A Hessenberg decomposition is a matrix decomposition of a matrix A into a unitary matrix P and a Hessenberg matrix H such that
@@ -127,21 +124,20 @@ import DenseMatrix.canMapValues
   House.beta the result of H * M
  */
 
-
 //Both DenseVector [Double] and [Int] functions  need to be simplified to return real matrices only...
-  object hessenberg extends UFunc {
+object hessenberg extends UFunc {
 
-  implicit object DMC_IMPL_HeCHo extends Impl[DenseMatrix[Complex],  (DenseMatrix[Complex],DenseMatrix[Complex], Householder)] {
-    def apply(M: DenseMatrix[Complex]):  (DenseMatrix[Complex],DenseMatrix[Complex],Householder) = {
+  implicit object DMC_IMPL_HeCHo extends Impl[DenseMatrix[Complex], (DenseMatrix[Complex], DenseMatrix[Complex], Householder)] {
+    def apply(M: DenseMatrix[Complex]): (DenseMatrix[Complex], DenseMatrix[Complex], Householder) = {
       new Hessenberg[Complex](M) {
-        override val House =   new Householder(M.copy).generateFullHouseholder()
-          //LAPACK misses this step
+        override val House = new Householder(M.copy).generateFullHouseholder()
+        //LAPACK misses this step
       }.decompose()
     }
   }
 
-  implicit object DMD_IMPL_HeDHo extends  Impl[DenseMatrix[Double],  (DenseMatrix[Complex],DenseMatrix[Complex], Householder)] {
-    def apply(M: DenseMatrix[Double]): (DenseMatrix[Complex],DenseMatrix[Complex],Householder) = {
+  implicit object DMD_IMPL_HeDHo extends Impl[DenseMatrix[Double], (DenseMatrix[Complex], DenseMatrix[Complex], Householder)] {
+    def apply(M: DenseMatrix[Double]): (DenseMatrix[Complex], DenseMatrix[Complex], Householder) = {
       new Hessenberg[Double](M) {
         override val House = {
           val (h, hLO, hHI, tau) = getHessenbergLAPACK(M)
@@ -151,21 +147,21 @@ import DenseMatrix.canMapValues
     }
   }
 
-  implicit object DMD_IMPL_DMI_DMI_Ho extends  Impl[DenseMatrix[Int],(DenseMatrix[Complex],DenseMatrix[Complex], Householder)] {
-    def apply(M: DenseMatrix[Int]): (DenseMatrix[Complex],DenseMatrix[Complex],Householder) = {
-          new Hessenberg[Int](M) {
+  implicit object DMD_IMPL_DMI_DMI_Ho extends Impl[DenseMatrix[Int], (DenseMatrix[Complex], DenseMatrix[Complex], Householder)] {
+    def apply(M: DenseMatrix[Int]): (DenseMatrix[Complex], DenseMatrix[Complex], Householder) = {
+      new Hessenberg[Int](M) {
         override val House = {
-      val (h, hLO, hHI, tau) = getHessenbergLAPACK(M.mapValues(_.toDouble))
+          val (h, hLO, hHI, tau) = getHessenbergLAPACK(M.mapValues(_.toDouble))
           new Householder(h.mapValues(Complex(_, 0.0)), DenseVector.tabulate[Complex](M.cols - 1)(i => Complex(tau(i), 0.0)))
         }
       }.decompose()
     }
   }
 
-   abstract class Hessenberg[T]( M: DenseMatrix[T]) {
+  abstract class Hessenberg[T](M: DenseMatrix[T]) {
 
     val House: Householder
-    def decompose() = (P,H, House)
+    def decompose() = (P, H, House)
     /*  4 x 4 example of the form
      *  1    0    0     0   ^  ------- order
      *   0    1    0    0   v
@@ -181,7 +177,7 @@ import DenseMatrix.canMapValues
      */
     def H: DenseMatrix[Complex] = DenseMatrix.tabulate(House.matrixH.rows, House.matrixH.rows)((i, j) => if (j >= i - 1) House.matrixH(i, j) else Complex(0, 0))
   }
-   def getHessenbergLAPACK(X: DenseMatrix[Double]): (DenseMatrix[Double], Int, Int, Array[Double]) = {
+  def getHessenbergLAPACK(X: DenseMatrix[Double]): (DenseMatrix[Double], Int, Int, Array[Double]) = {
 
     val M = X.rows
     val N = X.cols

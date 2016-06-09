@@ -17,9 +17,9 @@
 package breeze.linalg
 
 import org.netlib.util.intW
-import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
+import com.github.fommil.netlib.LAPACK.{ getInstance => lapack }
 import breeze.generic.UFunc
-import breeze.linalg.operators.{OpMulMatrix, OpSolveMatrixBy}
+import breeze.linalg.operators.{ OpMulMatrix, OpSolveMatrixBy }
 import breeze.linalg.hessenberg._
 import breeze.linalg.householder._
 import breeze.linalg.jacobi._
@@ -65,13 +65,13 @@ object schur extends UFunc {
      * Computations</i>).
      */
 
-//return signature (Q,T,Householder tau, Householder  H)
-  implicit object DMD_IMPL_SD extends Impl[DenseMatrix[Double], (DenseMatrix[Complex], DenseMatrix[Complex], DenseVector[Complex], DenseMatrix[Complex])]{
-    def apply(M: DenseMatrix[Double]):(DenseMatrix[Complex], DenseMatrix[Complex], DenseVector[Complex], DenseMatrix[Complex]) = {
+  //return signature (Q,T,Householder tau, Householder  H)
+  implicit object DMD_IMPL_SD extends Impl[DenseMatrix[Double], (DenseMatrix[Complex], DenseMatrix[Complex], DenseVector[Complex], DenseMatrix[Complex])] {
+    def apply(M: DenseMatrix[Double]): (DenseMatrix[Complex], DenseMatrix[Complex], DenseVector[Complex], DenseMatrix[Complex]) = {
 
       new Schur[Double](M) {
 
-        override   val  hess  = hessenberg(M)
+        override val hess = hessenberg(M)
         val (s, z, y2, wR, wI, sLO, sHI) = getSchur(M) //LAPACK
         lazy override val T = DenseMatrix.tabulate[Complex](M.cols, M.rows)((i, j) => Complex(s(i, j), 0.0))
         lazy override val Q = hess._1 * DenseMatrix.tabulate[Complex](M.cols, M.rows)((i, j) => Complex(z(i, j), 0.0))
@@ -79,13 +79,13 @@ object schur extends UFunc {
     }
   }
 
-  implicit object DMD_IMPL_SI extends Impl[DenseMatrix[Int], (DenseMatrix[Complex], DenseMatrix[Complex], DenseVector[Complex], DenseMatrix[Complex])]{
-    def apply(M: DenseMatrix[Int]):(DenseMatrix[Complex], DenseMatrix[Complex], DenseVector[Complex], DenseMatrix[Complex]) = {
+  implicit object DMD_IMPL_SI extends Impl[DenseMatrix[Int], (DenseMatrix[Complex], DenseMatrix[Complex], DenseVector[Complex], DenseMatrix[Complex])] {
+    def apply(M: DenseMatrix[Int]): (DenseMatrix[Complex], DenseMatrix[Complex], DenseVector[Complex], DenseMatrix[Complex]) = {
 
       val MD = M.mapValues(_.toDouble)
       new Schur[Double](MD) {
 
-        override   val  hess  = hessenberg(MD)
+        override val hess = hessenberg(MD)
         val (s, z, y2, wR, wI, sLO, sHI) = getSchur(MD) //LAPACK
         lazy override val T = DenseMatrix.tabulate[Complex](M.cols, M.rows)((i, j) => Complex(s(i, j), 0.0))
         lazy override val Q = hess._1 * DenseMatrix.tabulate[Complex](M.cols, M.rows)((i, j) => Complex(z(i, j), 0.0))
@@ -93,12 +93,12 @@ object schur extends UFunc {
     }
   }
 
-  implicit object DMCD_IMPL_SC extends Impl[DenseMatrix[Complex], (DenseMatrix[Complex], DenseMatrix[Complex], DenseVector[Complex], DenseMatrix[Complex])]{
+  implicit object DMCD_IMPL_SC extends Impl[DenseMatrix[Complex], (DenseMatrix[Complex], DenseMatrix[Complex], DenseVector[Complex], DenseMatrix[Complex])] {
     def apply(M: DenseMatrix[Complex]): (DenseMatrix[Complex], DenseMatrix[Complex], DenseVector[Complex], DenseMatrix[Complex]) = {
 
       new Schur[Complex](M) {
 
-        override   val  hess  = hessenberg(M)
+        override val hess = hessenberg(M)
         val m_maxIterationsPerRow = 30
         val maxIters = m_maxIterationsPerRow * hess._1.rows
 
@@ -200,18 +200,18 @@ object schur extends UFunc {
 	   *bulge is chased down to the bottom of the active submatrix.
 	   */
               val givrot1 = makeGivens(T(il, il) - computeShift(iu, iter), T(il + 1, il))
-              jacobi(T(il to il + 1, ::) ).rotateL (givrot1)
-              jacobi(  T(0 to (min(il + 2, iu)), il to il + 1)) rotateR (givrot1)
-              jacobi(   Q(::, il to il + 1) )rotateR (givrot1)
+              jacobi(T(il to il + 1, ::)).rotateL(givrot1)
+              jacobi(T(0 to (min(il + 2, iu)), il to il + 1)) rotateR (givrot1)
+              jacobi(Q(::, il to il + 1)) rotateR (givrot1)
 
               val idx: Int = 0
 
               for (idx <- ((il + 1) to iu - 1)) {
                 val givrot2 = makeGivens(T(idx, idx - 1), T(idx + 1, idx - 1))
                 T(idx, idx - 1) = givrot2.rot
-                   T(idx + 1, idx - 1) = Complex(0.0, 0.0)
-                jacobi(   T(idx to idx + 1, idx to T.cols - 1)) rotateL (givrot2)
-                jacobi(   T(0 to (min(idx + 2, iu)), idx to idx + 1)) rotateR (givrot2)
+                T(idx + 1, idx - 1) = Complex(0.0, 0.0)
+                jacobi(T(idx to idx + 1, idx to T.cols - 1)) rotateL (givrot2)
+                jacobi(T(0 to (min(idx + 2, iu)), idx to idx + 1)) rotateR (givrot2)
                 jacobi(Q(::, idx to idx + 1)) rotateR (givrot2)
               }
             }
@@ -224,15 +224,14 @@ object schur extends UFunc {
     if (M.rows != M.cols)
       throw new MatrixNotSquareException
 
-       val   hess :  (DenseMatrix[Complex], DenseMatrix[Complex], Householder)
-
+    val hess: (DenseMatrix[Complex], DenseMatrix[Complex], Householder)
 
     lazy val T = hess._2 //matT is  is an Upper Triangle
     lazy val Q = hess._1
 
     def decompose() = (T, Q, hess._3.coeffs, hess._3.matrixH)
   }
-//tau =  the householder coeffs
+  //tau =  the householder coeffs
   object getSchur extends Impl[DenseMatrix[Double], (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double], Array[Double], Array[Double], Int, Int)] {
     def apply(X: DenseMatrix[Double]): (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double], Array[Double], Array[Double], Int, Int) = {
 
