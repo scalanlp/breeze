@@ -48,21 +48,19 @@ trait ConfigurableDefault[@specialized V] extends Serializable { outer =>
   }
 }
 
-
-
 trait LowPriorityConfigurableImplicits {
-  implicit def default[V]: ConfigurableDefault[V] = {
-    new ConfigurableDefault[V] {
-      def value(implicit default: Zero[V]) = default.zero
-    }
-  }
+  implicit def default[V]: ConfigurableDefault[V] =
+    LowPriorityConfigurableImplicits.DefaultConfigurableDefault[V]()
+}
 
+object LowPriorityConfigurableImplicits {
+  @SerialVersionUID(1L)
+  protected[storage] case class DefaultConfigurableDefault[V]() extends ConfigurableDefault[V] {
+    def value(implicit default: Zero[V]) = default.zero
+  }
 }
 
 object ConfigurableDefault extends LowPriorityConfigurableImplicits {
-  implicit def fromV[V](v: V):ConfigurableDefault[V] = {
-    new ConfigurableDefault[V] {
-      def value(implicit default: Zero[V]) = v
-    }
-  }
+  implicit def fromV[V](v: V): ConfigurableDefault[V] =
+    LowPriorityConfigurableImplicits.DefaultConfigurableDefault[V]()
 }
