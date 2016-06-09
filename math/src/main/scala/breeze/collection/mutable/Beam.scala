@@ -16,7 +16,10 @@ package breeze.collection.mutable
  limitations under the License. 
 */
 
+import java.util.Comparator
+
 import breeze.collection.mutable.Beam.{ BeamResult, NotAdded }
+import breeze.linalg.clip
 
 import scala.collection.{ mutable, _ }
 import scala.collection.generic._
@@ -48,12 +51,12 @@ trait IBeam[T] extends Iterable[T] with IterableLike[T, IBeam[T]] with mutable.B
   * @author dlwh
   */
 @SerialVersionUID(1L)
-class Beam[T](val maxSize:Int)(implicit ord: Ordering[T]) extends AbstractIterable[T]
+class Beam[T](val maxSize:Int)(implicit ord: Ordering[T]) extends Iterable[T]
   with IBeam[T]
   with IterableLike[T, Beam[T]]
   with Serializable {
   assert(maxSize >= 0)
-  protected val queue = new java.util.PriorityQueue[T](ord)
+  protected val queue = new java.util.PriorityQueue[T](clip(maxSize, 1, 16), ord: Comparator[T])
 
   override def size = queue.size
 
