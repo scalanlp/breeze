@@ -76,25 +76,18 @@ object matrixPow extends UFunc {
     degree
   }
 
-  private  def padePower(IminusT: DenseMatrix[Complex], m_p: Double) = {
+   private  def padePower(IminusT: DenseMatrix[Complex], m_p: Double) = {
 
     val _degree = degree(m_p)
-    val i = _degree << 1
-    val res = IminusT.map(_ * (m_p - _degree.toDouble) / ((i - 1) << 1))
-    val index = 0
-    val M: DenseMatrix[Complex] = DenseMatrix.tabulate[Complex](res.rows, res.cols) { (x, y) => if (x == y) Complex(1.0, 0) else res(x, y) }
-    val T1 = -1.0 * Complex(m_p, 0)
-    val T = IminusT * T1
-      (M.mapValues(_.real) \ T.mapValues(_.real)).mapValues(Complex(_, 0.0)) :+ DenseMatrix.eye[Complex](IminusT.rows) // BIG PROBLEMMMO
+    val res = IminusT.map(_ * (m_p - _degree.toDouble) / ((( _degree << 1) - 1) << 1))
+    val M = DenseMatrix.tabulate[Complex](res.rows, res.cols) { (x, y) => if (x == y) Complex(1.0, 0) else res(x, y) }
+    (M.mapValues(_.real) \ ( IminusT * ( -1.0 * Complex(m_p, 0))).mapValues(_.real)).mapValues(Complex(_, 0.0)) :+ DenseMatrix.eye[Complex](IminusT.rows) // BIG PROBLEMMMO
 
   }
 
-  private  def sqrtTriangular(m_A: DenseMatrix[Complex]) = {
+ private  def sqrtTriangular(m_A: DenseMatrix[Complex]) = {
 
-    val result = DenseMatrix.zeros[Complex](m_A.cols, m_A.rows)
-    var i = 0
-    for (i <- 0 to m_A.cols - 1)
-      result(i, i) = breeze.numerics.pow(m_A(i, i), 0.5)
+    val result = DenseMatrix.tabulate[Complex](m_A.cols, m_A.rows) { (i, j) => if (i==j) breeze.numerics.pow(m_A(i, i), 0.5) else Complex(0.0,0.0) }
     var j = 1
     for (j <- 1 until m_A.cols) {
       for (i <- (j - 1) to 0 by -1) {
@@ -109,7 +102,7 @@ object matrixPow extends UFunc {
   private def getIMinusT(T: DenseMatrix[Complex], numSquareRoots: Int = 0, deg1: Double = 10.0, deg2: Double = 0.0): (DenseMatrix[Complex], Int) = {
 
     val IminusT = DenseMatrix.eye[Complex](T.rows) - T
-    val normIminusT = norm1(sum(IminusT(::, *)).t.reduceLeft((x, y) => if (norm1(x) > norm1(y)) x else y))
+       val normIminusT = max(IminusT(::,*).map( _.foldLeft(Complex(0.0,0.0))( _ +  _)).t.map(norm1(_)))
 
     if (normIminusT < maxNormForPade) {
       val rdeg1 = degree(normIminusT)
@@ -180,7 +173,7 @@ object matrixPow extends UFunc {
       val fpow = pow % 1
 
       if (abs(fpow) > 0) {
-        val (iminusT, noOfSqRts) = getIMinusT(upperTriangular(M))
+              val (iminusT, noOfSqRts) = getIMinusT(upperTriangular(sT))
         val pP = padePower(iminusT, fpow)
         val pT = computeFracPower(pP, sT, fpow, noOfSqRts)
         (Some(pT), sQ)
@@ -196,7 +189,7 @@ object matrixPow extends UFunc {
       val fpow = pow % 1
 
       if (abs(fpow) > 0) {
-        val (iminusT, noOfSqRts) = getIMinusT(upperTriangular(M))
+        val (iminusT, noOfSqRts) = getIMinusT(upperTriangular(sT))
         val pP = padePower(iminusT, fpow)
         val pT = computeFracPower(pP, sT, fpow, noOfSqRts)
 

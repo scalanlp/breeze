@@ -1,9 +1,0 @@
-diff a/natives/build.sbt b/natives/build.sbt	(rejected hunks)
-@@ -71,6 +71,7 @@
-     Some("snapshots" at nexus + "content/repositories/snapshots")
-   else
-     Some("releases"  at nexus + "service/local/staging/deploy/maven2")
-+}
- 
- publishArtifact in Test := false
- 
