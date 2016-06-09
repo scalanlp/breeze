@@ -15,15 +15,13 @@ package breeze.linalg
  limitations under the License.
  */
 
-
-
 import breeze.numerics._
 import breeze.math._
 import breeze.linalg.Helper._
 import scala.annotation.tailrec
 import breeze.generic.UFunc
 import DenseMatrix.canMapValues
-import  breeze.linalg.revertSchur._
+import breeze.linalg.revertSchur._
 
 /*
  * Based on:
@@ -76,18 +74,18 @@ object matrixPow extends UFunc {
     degree
   }
 
-   private  def padePower(IminusT: DenseMatrix[Complex], m_p: Double) = {
+  private def padePower(IminusT: DenseMatrix[Complex], m_p: Double) = {
 
     val _degree = degree(m_p)
-    val res = IminusT.map(_ * (m_p - _degree.toDouble) / ((( _degree << 1) - 1) << 1))
+    val res = IminusT.map(_ * (m_p - _degree.toDouble) / (((_degree << 1) - 1) << 1))
     val M = DenseMatrix.tabulate[Complex](res.rows, res.cols) { (x, y) => if (x == y) Complex(1.0, 0) else res(x, y) }
-    (M.mapValues(_.real) \ ( IminusT * ( -1.0 * Complex(m_p, 0))).mapValues(_.real)).mapValues(Complex(_, 0.0)) :+ DenseMatrix.eye[Complex](IminusT.rows) // BIG PROBLEMMMO
+    (M.mapValues(_.real) \ (IminusT * (-1.0 * Complex(m_p, 0))).mapValues(_.real)).mapValues(Complex(_, 0.0)) :+ DenseMatrix.eye[Complex](IminusT.rows) // BIG PROBLEMMMO
 
   }
 
- private  def sqrtTriangular(m_A: DenseMatrix[Complex]) = {
+  private def sqrtTriangular(m_A: DenseMatrix[Complex]) = {
 
-    val result = DenseMatrix.tabulate[Complex](m_A.cols, m_A.rows) { (i, j) => if (i==j) breeze.numerics.pow(m_A(i, i), 0.5) else Complex(0.0,0.0) }
+    val result = DenseMatrix.tabulate[Complex](m_A.cols, m_A.rows) { (i, j) => if (i == j) breeze.numerics.pow(m_A(i, i), 0.5) else Complex(0.0, 0.0) }
     var j = 1
     for (j <- 1 until m_A.cols) {
       for (i <- (j - 1) to 0 by -1) {
@@ -102,15 +100,15 @@ object matrixPow extends UFunc {
   private def getIMinusT(T: DenseMatrix[Complex], numSquareRoots: Int = 0, deg1: Double = 10.0, deg2: Double = 0.0): (DenseMatrix[Complex], Int) = {
 
     val IminusT = DenseMatrix.eye[Complex](T.rows) - T
-       val normIminusT = max(IminusT(::,*).map( _.foldLeft(Complex(0.0,0.0))( _ +  _)).t.map(norm1(_)))
+    val normIminusT = max(IminusT(::, *).map(_.foldLeft(Complex(0.0, 0.0))(_ + _)).t.map(norm1(_)))
 
     if (normIminusT < maxNormForPade) {
       val rdeg1 = degree(normIminusT)
       val rdeg2 = degree(normIminusT / 2)
       if (rdeg1 - rdeg2 <= 1.0) return (IminusT, numSquareRoots) else getIMinusT(upperTriangular(sqrtTriangular(T)), numSquareRoots + 1, rdeg1, rdeg2)
-       }
-    getIMinusT(upperTriangular(sqrtTriangular(T)), numSquareRoots + 1, deg1, deg2)
     }
+    getIMinusT(upperTriangular(sqrtTriangular(T)), numSquareRoots + 1, deg1, deg2)
+  }
 
   private def computeSuperDiag(curr: Complex, prev: Complex, p: Double): Complex = {
 
@@ -138,9 +136,9 @@ object matrixPow extends UFunc {
         res(i - 1, i) = computeSuperDiag(m_A(i, i), m_A(i - 1, i - 1), p)
       }
       res(i - 1, i) *= m_A(i - 1, i)
-  }
-    res
     }
+    res
+  }
 
   private def computeIntPowerD(exp: Double, value: DenseMatrix[Double]): DenseMatrix[Double] = {
     if (exp == 1) value
@@ -170,10 +168,10 @@ object matrixPow extends UFunc {
   private def cFracPart(M: DenseMatrix[Complex], pow: Double): (Option[DenseMatrix[Complex]], DenseMatrix[Complex]) =
     {
       val (sT, sQ, tau, house) = schur(M)
-      val fpow = pow % 1
+      val fpow = pow - floor(pow)
 
       if (abs(fpow) > 0) {
-              val (iminusT, noOfSqRts) = getIMinusT(upperTriangular(sT))
+        val (iminusT, noOfSqRts) = getIMinusT(upperTriangular(sT))
         val pP = padePower(iminusT, fpow)
         val pT = computeFracPower(pP, sT, fpow, noOfSqRts)
         (Some(pT), sQ)
@@ -186,7 +184,7 @@ object matrixPow extends UFunc {
     {
       val (sT, sQ, tau, house) = schur(MD)
       val M = MD.mapValues(Complex(_, 0.0))
-      val fpow = pow % 1
+      val fpow = pow - floor(pow)
 
       if (abs(fpow) > 0) {
         val (iminusT, noOfSqRts) = getIMinusT(upperTriangular(sT))
@@ -206,7 +204,7 @@ object matrixPow extends UFunc {
 
     return cFracPart(M, pow) match {
       case (None, _) => computeIntPowerC(ipower, M)
-      case (pT, sQ) => if (ipower > 0) revertSchur (pT.get,sQ) * computeIntPowerC(ipower, M) else revertSchur (pT.get ,sQ)
+      case (pT, sQ) => if (ipower > 0) revertSchur(pT.get, sQ) * computeIntPowerC(ipower, M) else revertSchur(pT.get, sQ)
   }
     }
 
@@ -217,7 +215,7 @@ object matrixPow extends UFunc {
     val intPow = if (pow < 0.0) inv(M) else M
     return dFracPart(M, pow) match {
       case (None, _) => computeIntPowerD(ipower, intPow).mapValues(Complex(_, 0.0))
-      case (pT, sQ) => if (ipower > 0) revertSchur (pT.get,sQ) * computeIntPowerD(ipower, intPow).mapValues(Complex(_, 0.0)) else revertSchur (pT.get,sQ)
+      case (pT, sQ) => if (ipower > 0) revertSchur(pT.get, sQ) * computeIntPowerD(ipower, intPow).mapValues(Complex(_, 0.0)) else revertSchur(pT.get, sQ)
     }
 }
   }
