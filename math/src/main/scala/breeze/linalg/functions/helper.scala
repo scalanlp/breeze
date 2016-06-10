@@ -1,6 +1,6 @@
 package breeze.linalg
 /*
- Copyright 2016 @claydonkey (Anthony Campbell)
+ Copyright 2016 @author claydonkey (Anthony Campbell)
 
  Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
@@ -19,8 +19,48 @@ import breeze.numerics._
 import breeze.math._
 import DenseMatrix.canMapValues
 import DenseMatrix._
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileWriter
+import reflect.runtime.universe._
+import scala.io._
+import java.text.DecimalFormat
+import scala.Console._
+
 object GlobalConsts {
+
+  implicit class MutableInt(var value: Int) {
+    def inc() = { value += 1 }
+  }
+  object printType extends Enumeration {
+    type printType = Value
+    val REAL, IMAG, BOTH = Value
+  }
+  def function(s: MutableInt): Boolean = {
+    s.inc() // parentheses here to denote that method has side effects
+    true
+  }
+  var Off = false
+  var showHouseholder = false
+  var showCompute2x2 = false
+  var matnum1 = MutableInt(0)
+  var matnum2 = MutableInt(0)
+  var showSchur = false
+  var showCalculator = false
+  var showComplex = false
+  var showTitles = false
+  var showLines = false
+  var fileOutput = false
+  var showRevertSchur = false
+  var showIMinusT = false
+  //  val formatter = new DecimalFormat("#0.###E0")
+  var formatter = new DecimalFormat("#0.######")
+  val printEnabled = Array(Off, showRevertSchur, showCalculator, showCompute2x2, showIMinusT, false, showHouseholder, showSchur) //0,1 for debugging last part
   val EPSILON: Double = 2.22045e-016
+  var currentPrintType = printType.BOTH
+  var file = new File("schurBT.dat")
+  var bw: Option[BufferedWriter] = if (fileOutput == true) { Some(new BufferedWriter(new FileWriter(file))) } else { None }
+
 }
 
 object Helper {
@@ -60,4 +100,73 @@ object Helper {
   def UTadj(A: DenseMatrix[Complex]) = invU(A) * diag(A).reduce(_ * _)
   def Tadj(A: DenseMatrix[Complex]) = A.t.mapValues(i => Complex(i.real, -i.imag))
 
+  def printcount2(name: String) = {
+
+    function(matnum1)
+    val count = matnum1.value
+    "************************************************************** " + count + " *** " + name + "**************************************************************\n"
+  }
+  implicit def enrichString2(stuff: String) =
+    new {
+      def showTitle(name: String) = { if (showTitles) printcount2(name) + stuff else stuff }
+    }
+
+  implicit def enrichString(stuff: String) =
+    new {
+      def oneLiner = { if (showLines) stuff.filter(_ >= ' ') else stuff }
+    }
+
+  def output(str: String) = { if (fileOutput) bw.get.write(str) else print(str) }
+  def adder(x: Double) = { if (x > 0) { "+" } else { "" } }
+  def debugPrint[T: TypeTag](M: T, name: String = "", loglevel: Int = 0) =
+
+    typeTag[T].tpe match {
+      case b if b =:= typeOf[DenseMatrix[Double]] => if (printEnabled(loglevel)) {
+        currentPrintType match {
+
+          case _ => output(("" + M.asInstanceOf[DenseMatrix[Double]].mapValues { (x) => formatter.format(x) }).oneLiner.showTitle(name) + "\n")
+        }
+
+      }
+      case b if b =:= typeOf[DenseVector[Double]] => if (printEnabled(loglevel)) {
+        currentPrintType match {
+
+          case _ => output(("" + M.asInstanceOf[DenseVector[Double]].mapValues { (x) => formatter.format(x) }).oneLiner.showTitle(name) + "\n")
+        }
+      }
+
+      case b if b =:= typeOf[DenseVector[Complex]] => if (printEnabled(loglevel)) {
+        currentPrintType match {
+          case printType.REAL => output(("" + M.asInstanceOf[DenseVector[Complex]].mapValues { (x) => formatter.format(x.real) }).oneLiner.showTitle(name) + "\n")
+          case printType.IMAG => output(("" + M.asInstanceOf[DenseVector[Complex]].mapValues { (x) => formatter.format(x.imag) }).oneLiner.showTitle(name) + "\n")
+          case _ => output(("" + M.asInstanceOf[DenseVector[Complex]].mapValues { (x) => formatter.format(x.real) + "," + formatter.format(x.imag) }).oneLiner.showTitle(name) + "\n")
+        }
+      }
+      case b if b =:= typeOf[DenseMatrix[Complex]] => if (printEnabled(loglevel)) {
+        currentPrintType match {
+          case printType.REAL => output(("" + M.asInstanceOf[DenseMatrix[Complex]].mapValues { (x) => formatter.format(x.real) }).oneLiner.showTitle(name) + "\n")
+          case printType.IMAG => output(("" + M.asInstanceOf[DenseMatrix[Complex]].mapValues { (x) => formatter.format(x.imag) }).oneLiner.showTitle(name) + "\n")
+          case _ => output(("" + M.asInstanceOf[DenseMatrix[Complex]].mapValues { (x) => "(" + formatter.format(x.real) + "," + formatter.format(x.imag) + ")" }).oneLiner.showTitle(name) + "\n")
+        }
+      }
+
+      case b if b =:= typeOf[Array[Double]] => if (printEnabled(loglevel)) {
+        currentPrintType match {
+          case _ => output("" + M.asInstanceOf[Array[Double]].deep.mkString("\n").oneLiner.showTitle(name) + "\n")
+        }
+      }
+
+      case b if b =:= typeOf[Array[DenseVector[Complex]]] => if (printEnabled(loglevel)) {
+        currentPrintType match {
+          case _ => output("" + M.asInstanceOf[Array[DenseVector[Complex]]].deep.mkString("\n").oneLiner.showTitle(name) + "\n")
+        }
+      }
+      case _ => if (printEnabled(loglevel)) {
+        currentPrintType match {
+          case printType.REAL => output(M.toString.oneLiner.showTitle(name) + "\n")
+          case printType.IMAG => output(M.toString.oneLiner.showTitle(name) + "\n")
+          case _ => output(M.toString.oneLiner.showTitle(name) + "\n")
+        }
+      }
+    }
 }

@@ -1,6 +1,6 @@
 package breeze.linalg
 /*
- Copyright 2016 @claydonkey (Anthony Campbell)
+ Copyright 2016 @author claydonkey (Anthony Campbell)
 
  Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
@@ -64,22 +64,24 @@ object matrixPow extends UFunc {
     }
   }
 
-  private def degree = (normIminusT: Double) => {
-
-    val maxNormForPade = Array(2.8064004e-1f /* degree = 3 */ , 4.3386528e-1f)
-    var degree = 3
-    for (degree <- 3 to 4)
-      if (normIminusT <= maxNormForPade(degree - 3))
-        degree
-    degree
+  private def padeDegree(normIminusT: Double): Int = {
+    return List(0.01884160592658218, 0.06038881904059573, 0.1239917516308172, 0.1999045567181744, 0.2789358995219730).indexWhere(normIminusT <= _.self) match {
+      case r if r > 0 => r + 3
+      case _ => 7
+    }
   }
-
+  @deprecated("Finding way to  implement LU for complex numbers","0.1")
   private def padePower(IminusT: DenseMatrix[Complex], m_p: Double) = {
 
-    val _degree = degree(m_p)
+    debugPrint(IminusT, "Before padePower", 2)
+    val _degree = padeDegree(m_p)
     val res = IminusT.map(_ * (m_p - _degree.toDouble) / (((_degree << 1) - 1) << 1))
     val M = DenseMatrix.tabulate[Complex](res.rows, res.cols) { (x, y) => if (x == y) Complex(1.0, 0) else res(x, y) }
-    (M.mapValues(_.real) \ (IminusT * (-1.0 * Complex(m_p, 0))).mapValues(_.real)).mapValues(Complex(_, 0.0)) :+ DenseMatrix.eye[Complex](IminusT.rows) // BIG PROBLEMMMO
+    val T1 = -1.0 * Complex(m_p, 0)
+    val T = IminusT * T1
+    val r = (M.mapValues(_.real) \ T.mapValues(_.real)).mapValues(Complex(_, 0.0)) +:+ DenseMatrix.eye[Complex](IminusT.rows) // BIG PROBLEMMMO
+    debugPrint(r, "After padePower", 2)
+    r
 
   }
 
@@ -95,17 +97,28 @@ object matrixPow extends UFunc {
     }
     result
   }
-  val maxNormForPade: Double = 2.789358995219730e-1;
+  val maxNormForPade: Double = 2.789358995219730e-1
 
   private def getIMinusT(T: DenseMatrix[Complex], numSquareRoots: Int = 0, deg1: Double = 10.0, deg2: Double = 0.0): (DenseMatrix[Complex], Int) = {
 
     val IminusT = DenseMatrix.eye[Complex](T.rows) - T
-    val normIminusT = max(IminusT(::, *).map(_.foldLeft(Complex(0.0, 0.0))(_ + _)).t.map(norm1(_)))
+    val cols = IminusT(::, *).map(_.foldLeft(Complex(0.0, 0.0))((j, k) => Complex((pow(pow(abs(j.real), 2) + pow(abs(j.imag), 2), 0.5) + pow(pow(abs(k.real), 2) + pow(abs(k.imag), 2), 0.5)), 0.0))).t.mapValues(_.real)
+    val normIminusT = max(cols)
+
+    debugPrint(IminusT, "IminusT", 4)
+    debugPrint(normIminusT, "normIminusT", 4)
+    debugPrint(numSquareRoots, "numSquareRoots", 4)
 
     if (normIminusT < maxNormForPade) {
-      val rdeg1 = degree(normIminusT)
-      val rdeg2 = degree(normIminusT / 2)
-      if (rdeg1 - rdeg2 <= 1.0) return (IminusT, numSquareRoots) else getIMinusT(upperTriangular(sqrtTriangular(T)), numSquareRoots + 1, rdeg1, rdeg2)
+      val rdeg1 = padeDegree(normIminusT)
+      val rdeg2 = padeDegree(normIminusT / 2)
+
+      debugPrint(rdeg1, "rdeg1", 4)
+      debugPrint(rdeg2, "rdeg2", 4)
+
+      if (rdeg1 - rdeg2 <= 1.0)
+        return (IminusT, numSquareRoots) else
+	  getIMinusT(upperTriangular(sqrtTriangular(T)), numSquareRoots, rdeg1, rdeg2)
     }
     getIMinusT(upperTriangular(sqrtTriangular(T)), numSquareRoots + 1, deg1, deg2)
   }
@@ -160,20 +173,19 @@ object matrixPow extends UFunc {
 
   @tailrec
   private def computeFracPower(value: DenseMatrix[Complex], sT: DenseMatrix[Complex], frac_power: Double, noOfSqRts: Int): DenseMatrix[Complex] = {
-    if (noOfSqRts == 0) return upperTriangular(compute2x2(value, sT, frac_power * scala.math.pow(2, -noOfSqRts)))
+    if (noOfSqRts == 1)
+      return value * upperTriangular(compute2x2(value, sT, frac_power * scala.math.pow(2, -noOfSqRts)))
     else
-      computeFracPower(upperTriangular(compute2x2(value, sT, frac_power * scala.math.pow(2, -noOfSqRts))), sT, frac_power, noOfSqRts - 1)
+      computeFracPower(value * upperTriangular(compute2x2(value, sT, frac_power * scala.math.pow(2, -noOfSqRts))), sT, frac_power, noOfSqRts - 1)
   }
 
   private def cFracPart(M: DenseMatrix[Complex], pow: Double): (Option[DenseMatrix[Complex]], DenseMatrix[Complex]) =
     {
       val (sT, sQ, tau, house) = schur(M)
       val fpow = pow - floor(pow)
-
       if (abs(fpow) > 0) {
         val (iminusT, noOfSqRts) = getIMinusT(upperTriangular(sT))
-        val pP = padePower(iminusT, fpow)
-        val pT = computeFracPower(pP, sT, fpow, noOfSqRts)
+        val pT = computeFracPower(padePower(iminusT, fpow), sT, fpow, noOfSqRts)
         (Some(pT), sQ)
       } else {
         (None, sQ)
@@ -188,9 +200,7 @@ object matrixPow extends UFunc {
 
       if (abs(fpow) > 0) {
         val (iminusT, noOfSqRts) = getIMinusT(upperTriangular(sT))
-        val pP = padePower(iminusT, fpow)
-        val pT = computeFracPower(pP, sT, fpow, noOfSqRts)
-
+        val pT = computeFracPower(padePower(iminusT, fpow), sT, fpow, noOfSqRts)
         (Some(pT), sQ)
       } else
         (None, sQ)
