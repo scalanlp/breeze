@@ -53,9 +53,10 @@ object GlobalConsts {
   var fileOutput = false
   var showRevertSchur = false
   var showIMinusT = false
+    var showPadePower = true
   //  val formatter = new DecimalFormat("#0.###E0")
   var formatter = new DecimalFormat("#0.######")
-  val printEnabled = Array(Off, showRevertSchur, showCalculator, showCompute2x2, showIMinusT, false, showHouseholder, showSchur) //0,1 for debugging last part
+  val printEnabled = Array(Off, showRevertSchur, showCalculator, showCompute2x2, showPadePower, false, showHouseholder, showSchur) //0,1 for debugging last part
   val EPSILON: Double = 2.22045e-016
   var currentPrintType = printType.BOTH
   var file = new File("schurBT.dat")
@@ -97,6 +98,26 @@ object Helper {
       }
       U
     }
+
+  def invL(M: DenseMatrix[Complex]): DenseMatrix[Complex] =
+    { // All lower must be non zero
+      // Ax = b -> LUx = b. Then y is defined to be Ux
+      val n = M.cols
+      val L = DenseMatrix.zeros[Complex](n, n)
+      // Forward solve Lx = y
+      var k = 0
+      var j = 0
+      var i = 0
+      for (j <- 0 to n) {
+        L(j, j) = 1.0 / M(j, j)
+        for (i <- 0 to j) {
+          for (k <- j to i)
+            L(i, j) -= 1 / M(i, i) * M(i, k) * L(k, j)
+        }
+      }
+      L
+    }
+
   def UTadj(A: DenseMatrix[Complex]) = invU(A) * diag(A).reduce(_ * _)
   def Tadj(A: DenseMatrix[Complex]) = A.t.mapValues(i => Complex(i.real, -i.imag))
 
