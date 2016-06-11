@@ -20,87 +20,6 @@ import breeze.generic.UFunc
 import breeze.math._
 import breeze.linalg.householder._
 import DenseMatrix.canMapValues
-/*
- * [in]	N
-          N is INTEGER
-          The order of the matrix A.  N >= 0.
-[in]	ILO
-          ILO is INTEGER
-[in]	IHI
-          IHI is INTEGER
-
-          It is assumed that A is already upper triangular in rows
-          and columns 1:ILO-1 and IHI+1:N. ILO and IHI are normally
-          set by a previous call to DGEBAL; otherwise they should be
-          set to 1 and N respectively. See Further Details.
-          1 <= ILO <= IHI <= N, if N > 0; ILO=1 and IHI=0, if N=0.
-[in,out]	A
-          A is DOUBLE PRECISION array, dimension (LDA,N)
-          On entry, the N-by-N general matrix to be reduced.
-          On exit, the upper triangle and the first subdiagonal of A
-          are overwritten with the upper Hessenberg matrix H, and the
-          elements below the first subdiagonal, with the array TAU,
-          represent the orthogonal matrix Q as a product of elementary
-          reflectors. See Further Details.
-[in]	LDA
-          LDA is INTEGER
-          The leading dimension of the array A.  LDA >= max(1,N).
-[out]	TAU
-          TAU is DOUBLE PRECISION array, dimension (N-1)
-          The scalar factors of the elementary reflectors (see Further
-          Details). Elements 1:ILO-1 and IHI:N-1 of TAU are set to
-          zero.
-[out]	WORK
-          WORK is DOUBLE PRECISION array, dimension (LWORK)
-          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
-[in]	LWORK
-          LWORK is INTEGER
-          The length of the array WORK.  LWORK >= max(1,N).
-          For good performance, LWORK should generally be larger.
-
-          If LWORK = -1, then a workspace query is assumed; the routine
-          only calculates the optimal size of the WORK array, returns
-          this value as the first entry of the WORK array, and no error
-          message related to LWORK is issued by XERBLA.
-[out]	INFO
-          INFO is INTEGER
-          = 0:  successful exit
-          < 0:  if INFO = -i, the i-th argument had an illegal value.
-	  The matrix Q is represented as a product of (ihi-ilo) elementary
-  reflectors
-
-     Q = H(ilo) H(ilo+1) . . . H(ihi-1).
-
-  Each H(i) has the form
-
-     H(i) = I - tau * v * v**T
-
-  where tau is a real scalar, and v is a real vector with
-  v(1:i) = 0, v(i+1) = 1 and v(ihi+1:n) = 0; v(i+2:ihi) is stored on
-  exit in A(i+2:ihi,i), and tau in TAU(i).
-
-  The contents of A are illustrated by the following example, with
-  n = 7, ilo = 2 and ihi = 6:
-
-  on entry,                        on exit,
-
-  ( a   a   a   a   a   a   a )    (  a   a   h   h   h   h   a )
-  (     a   a   a   a   a   a )    (      a   h   h   h   h   a )
-  (     a   a   a   a   a   a )    (      h   h   h   h   h   h )
-  (     a   a   a   a   a   a )    (      v2  h   h   h   h   h )
-  (     a   a   a   a   a   a )    (      v2  v3  h   h   h   h )
-  (     a   a   a   a   a   a )    (      v2  v3  v4  h   h   h )
-  (                         a )    (                          a )
-
-  where a denotes an element of the original matrix A, h denotes a
-  modified element of the upper Hessenberg matrix H, and vi denotes an
-  element of the vector defining H(i).
-
-  This file is a slight modification of LAPACK-3.0's DGEHRD
-  subroutine incorporating improvements proposed by Quintana-Orti and
-  Van de Geijn (2006). (See DLAHR2.)
-
- */
 
 /*
   PHP^(H)=A,
@@ -129,38 +48,26 @@ object hessenberg extends UFunc {
 
   implicit object DMC_IMPL_HeCHo extends Impl[DenseMatrix[Complex], (DenseMatrix[Complex], DenseMatrix[Complex], Householder)] {
     def apply(M: DenseMatrix[Complex]): (DenseMatrix[Complex], DenseMatrix[Complex], Householder) = {
-      new Hessenberg[Complex](M) {
-        override val House = new Householder(M.copy).generateFullHouseholder()
-        //LAPACK misses this step
-      }.decompose()
+      new Hessenberg[Complex](M, new Householder(M.copy).generateFullHouseholder()).decompose
     }
+    //LAPACK misses this step
   }
 
   implicit object DMD_IMPL_HeDHo extends Impl[DenseMatrix[Double], (DenseMatrix[Complex], DenseMatrix[Complex], Householder)] {
     def apply(M: DenseMatrix[Double]): (DenseMatrix[Complex], DenseMatrix[Complex], Householder) = {
-      new Hessenberg[Double](M) {
-        override val House = {
-          val (h, hLO, hHI, tau) = getHessenbergLAPACK(M)
-          new Householder(h.mapValues(Complex(_, 0.0)), DenseVector.tabulate[Complex](M.cols - 1)(i => Complex(tau(i), 0.0)))
-        }
-      }.decompose()
+      val (h, hLO, hHI, tau) = getHessenbergLAPACK(M)
+      new Hessenberg[Double](M, new Householder(h.mapValues(Complex(_, 0.0)), DenseVector.tabulate[Complex](M.cols - 1)(i => Complex(tau(i), 0.0)))).decompose()
     }
   }
 
   implicit object DMD_IMPL_DMI_DMI_Ho extends Impl[DenseMatrix[Int], (DenseMatrix[Complex], DenseMatrix[Complex], Householder)] {
     def apply(M: DenseMatrix[Int]): (DenseMatrix[Complex], DenseMatrix[Complex], Householder) = {
-      new Hessenberg[Int](M) {
-        override val House = {
-          val (h, hLO, hHI, tau) = getHessenbergLAPACK(M.mapValues(_.toDouble))
-          new Householder(h.mapValues(Complex(_, 0.0)), DenseVector.tabulate[Complex](M.cols - 1)(i => Complex(tau(i), 0.0)))
-        }
-      }.decompose()
+      val (h, hLO, hHI, tau) = getHessenbergLAPACK(M.mapValues(_.toDouble))
+      new Hessenberg[Int](M, new Householder(h.mapValues(Complex(_, 0.0)), DenseVector.tabulate[Complex](M.cols - 1)(i => Complex(tau(i), 0.0)))).decompose()
     }
   }
+  class Hessenberg[T](M: DenseMatrix[T], val House: Householder) {
 
-  abstract class Hessenberg[T](M: DenseMatrix[T]) {
-
-    val House: Householder
     def decompose() = (P, H, House)
     /*  4 x 4 example of the form
      *  1    0    0     0   ^  ------- order
@@ -189,14 +96,10 @@ object hessenberg extends UFunc {
     var info = new intW(0)
 
     lapack.dgebal(
-      "P", //'B':  both permute and scale. 'P':  permute only;
-      N, //N is INTEGER     The order of the matrix A.  N >= 0
-
-      y.data, /*	  A is DOUBLE array, dimension (LDA,N)
-		 On entry, the input matrix A.
-		On exit,  A is overwritten by the balanced matrix.
-		If JOB = 'N', A is not referenced.         See Further Details. */
-      scala.math.max(1, M), /* LDA is INTEGER       The leading dimension of the array A.  LDA >= max(1,N). */
+      "P",
+      N,
+      y.data,
+      scala.math.max(1, M),
       iLO,
       iHI,
       iScale,

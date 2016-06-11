@@ -30,21 +30,21 @@ import breeze.generic.UFunc
 
 object jacobi extends UFunc {
 
-  implicit object DMC_IMPL_Jacobi  extends Impl[DenseMatrix[Complex],Jacobi] {
-    def apply(M: DenseMatrix[Complex]):Jacobi = {
+  implicit object DMC_IMPL_Jacobi extends Impl[DenseMatrix[Complex], Jacobi] {
+    def apply(M: DenseMatrix[Complex]): Jacobi = {
       new Jacobi(M)
     }
   }
-   class Jacobi(val M: DenseMatrix[Complex]) {
+  class Jacobi(val M: DenseMatrix[Complex]) {
 
-    def rotateL(jrot: jRotation) = jacobi.applyRotationinPlane(M(0, ::).t, M(1, ::).t, new jRotation(conj(jrot.m_c), -(jrot.m_s), jrot.rot))
-    def rotateR(jrot: jRotation) = jacobi.applyRotationinPlane(M(::, 0), M(::, 1), new jRotation((jrot.m_c), -conj(jrot.m_s), jrot.rot))
+    def rotateL(jrot: JRotation) = jacobi.applyRotationinPlane(M(0, ::).t, M(1, ::).t, new JRotation(conj(jrot.m_c), -(jrot.m_s), jrot.rot))
+    def rotateR(jrot: JRotation) = jacobi.applyRotationinPlane(M(::, 0), M(::, 1), new JRotation((jrot.m_c), -conj(jrot.m_s), jrot.rot))
 
     //Need to fix these...
-   // def rotateL(jrot: jRotation) = jacobi.getRotationLeft(M(0, ::).t, M(1, ::).t, new jRotation(conj(jrot.m_c), -(jrot.m_s), jrot.rot))
+    // def rotateL(jrot: jRotation) = jacobi.getRotationLeft(M(0, ::).t, M(1, ::).t, new jRotation(conj(jrot.m_c), -(jrot.m_s), jrot.rot))
     //def rotateR(jrot: jRotation) = jacobi.getRotationRight(M(::, 0), M(::, 1), new jRotation((jrot.m_c), -conj(jrot.m_s), jrot.rot))
   }
-/*
+  /*
    def getRotationLeft(_x: DenseVector[Complex], _y: DenseVector[Complex], j: jRotation) = {
     val x1 = DenseVector.tabulate[Complex](_x.length) { (i) => j.m_c * _x(i) + conj(j.m_s) * _y(i) }
     val y1 = DenseVector.tabulate[Complex](_y.length) { (i) => -j.m_s * _x(i) + conj(j.m_c) * _y(i) }
@@ -57,7 +57,7 @@ object jacobi extends UFunc {
     DenseVector.horzcat(x1, y1)
   }
 */
-  private  def applyRotationinPlane(_x: DenseVector[Complex], _y: DenseVector[Complex], j: jRotation) = {
+  private def applyRotationinPlane(_x: DenseVector[Complex], _y: DenseVector[Complex], j: JRotation) = {
 
     if (j.m_c == 1 && j.m_s == 0)
       DenseMatrix.zeros[Complex](_x.size, 2)
@@ -82,7 +82,7 @@ object jacobi extends UFunc {
  *Discontinuous Plane Rotations and the Symmetric Eigenvalue Problem.
  *LAPACK Working Note 150, University of Tennessee, UT-CS-00-454, December 4, 2000. */
 
-  def makeGivens(p: Complex, q: Complex) = {
+  def makeGivens(p: Complex, q: Complex): JRotation = {
 
     (p, q) match {
       case (_, Complex(0.0, 0.0)) =>
@@ -90,13 +90,13 @@ object jacobi extends UFunc {
         val m_s = Complex(0.0, 0.0)
         val r = m_c * p;
 
-        new jRotation(m_c, m_s, r)
+        new JRotation(m_c, m_s, r)
       case (Complex(0.0, 0.0), _) =>
         val m_c = Complex(0.0, 0.0)
         val m_s = -q / abs(q)
         val r = Complex(abs(q), 0.0)
 
-        new jRotation(m_c, m_s, r)
+        new JRotation(m_c, m_s, r)
       case _ =>
         val p1 = norm1(p)
         val q1 = norm1(q)
@@ -114,7 +114,7 @@ object jacobi extends UFunc {
           val m_s = -qs * conj(ps) * (m_c / p2)
           val r = p * u
 
-          new jRotation(m_c, m_s, r)
+          new JRotation(m_c, m_s, r)
         } else {
 
           val p2 = abs2(p / q1)
@@ -131,10 +131,10 @@ object jacobi extends UFunc {
           val m_c = Complex(p1 / u, 0.0)
           val m_s = -conj(ps2) * (q / u)
           val r = ps2 * u
-          new jRotation(m_c, m_s, r)
+          new JRotation(m_c, m_s, r)
         }
     }
   }
 
-  class jRotation(val m_c: Complex, val m_s: Complex, val rot: Complex) {}
+  class JRotation(val m_c: Complex, val m_s: Complex, val rot: Complex) {}
 }

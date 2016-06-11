@@ -154,7 +154,7 @@ this
        *   0    0     x    x
        */
     if ((hMatrix.rows - order) != coeffs.length)
-      throw new MatrixNotSquareException // change to correct exception
+      throw new IllegalArgumentException // change to correct exception
 
     val matHS = hMatrix(order to (hMatrix.cols - 1), 0 to (hMatrix.rows - order - 1))
 

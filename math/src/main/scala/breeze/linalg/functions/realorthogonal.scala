@@ -72,7 +72,7 @@ Parameters
           < 0:  if INFO = -i, the i-th argument had an illegal value
 */
 
-object realorthogonal extends UFunc {
+object realOrthogonal extends UFunc {
   implicit object RealOrthogonal_DMIIAD_Impl_DM_Int_Int_AD extends Impl4[DenseMatrix[Double],Int, Int, Array[Double], (DenseMatrix[Double], Int, Int, Array[Double])] {
     def apply(X: DenseMatrix[Double],   LO : Int , Hi : Int, tau: Array[Double]) : (DenseMatrix[Double], Int, Int, Array[Double]) = {
 
