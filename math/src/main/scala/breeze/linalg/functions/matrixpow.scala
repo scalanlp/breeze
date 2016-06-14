@@ -70,30 +70,32 @@ object matrixPow extends UFunc {
       case _ => 7
     }
   }
-  @deprecated("Finding way to  implement LU for complex numbers", "0.1")
-  private def padePower(IminusT: DenseMatrix[Complex], m_p: Double, degree: Int) = {
 
-    debugPrint(IminusT, "Before padePower", 4)
-    debugPrint(degree, "_degree in pade Solver", 4)
+  private def solveUpperTrisC(U1: DenseMatrix[Complex], U2: DenseMatrix[Complex]) =
+    {
+      var j = -1
+      var res = DenseMatrix.zeros[Complex](U1.cols, U1.rows)
+      res(*, ::).map(v => { j = j + 1; v := backwardSubC(U1, U2(::, j)); }).t.map(c => Complex(c.real, -1 * c.imag))
+    }
+
+  private def padePower(IminusT: DenseMatrix[Complex], m_p: Double, degree: Int) = {
     val utl = degree << 1
 
     val eye = DenseMatrix.eye[Complex](IminusT.rows)
     var res = IminusT.map(_ * (m_p - degree.toDouble) / ((utl - 1) << 1))
 
-    debugPrint(res, "start res  in pade Solver", 4)
     val i = utl - 1
     for (i <- i to 1 by -1) {
-      debugPrint(i, "i in pade Solver", 4)
+
       val T1 = if (i == 1) -m_p else if ((1 & i) == 1) (-m_p - (i >> 1)) / (i << 1) else (m_p - (i >> 1)) / ((i - 1) << 1)
       val T = IminusT * Complex(T1, 0)
-      debugPrint(T, "T in pade Solver", 4)
-      res = ((eye + res).mapValues(_.real) \ T.mapValues(_.real)).mapValues(Complex(_, 0.0)) // BIG PROBLEMMMO
-      debugPrint(res, "M in pade Solver", 4)
-      res = res + eye
-       }
-   debugPrint(res, "After padePower", 4)
-   res
-    }
+      val L = (eye + res)
+      val U = T
+      res = solveUpperTrisC(L, U)
+    };
+    res = res + eye
+    res
+  }
 
   private def sqrtTriangular(m_A: DenseMatrix[Complex]) = {
     val result = DenseMatrix.zeros[Complex](m_A.cols, m_A.rows)
@@ -106,7 +108,7 @@ object matrixPow extends UFunc {
         val tmp = result(i, (i + 1) to (j - i)) * result((i + 1) to (j - i), j)
         result(i, j) = (m_A(i, j) - tmp) / (result(i, i) + result(j, j))
       }
-    }
+    };
     result
   }
 
@@ -115,19 +117,11 @@ object matrixPow extends UFunc {
   private def getIMinusT(T: DenseMatrix[Complex], numSquareRoots: Int = 0, deg1: Double = 10.0, deg2: Double = 0.0): (DenseMatrix[Complex], Int, Int) = {
 
     val IminusT = DenseMatrix.eye[Complex](T.rows) - T
-    val cols = IminusT(::, *).map(_.foldLeft(Complex(0.0, 0.0))((j, k) => Complex((pow(pow(abs(j.real), 2) + pow(abs(j.imag), 2), 0.5) + pow(pow(abs(k.real), 2) + pow(abs(k.imag), 2), 0.5)), 0.0))).t.mapValues(_.real)
-    val normIminusT = max(cols)
+     val normIminusT = max(IminusT(::, *).map(_.map(_.abs).sum))
 
-    debugPrint(IminusT, "IminusT", 5)
-    debugPrint(normIminusT, "normIminusT", 5)
-    debugPrint(numSquareRoots, "numSquareRoots", 5)
     if (normIminusT < maxNormForPade) {
       val rdeg1 = padeDegree(normIminusT)
       val rdeg2 = padeDegree(normIminusT / 2)
-
-      debugPrint(rdeg1, "rdeg1", 5)
-      debugPrint(rdeg2, "rdeg2", 5)
-
       if (rdeg1 - rdeg2 <= 1.0)
         return (IminusT, numSquareRoots, rdeg1)
       else
@@ -161,7 +155,7 @@ object matrixPow extends UFunc {
         res(i - 1, i) = computeSuperDiag(m_A(i, i), m_A(i - 1, i - 1), p)
       }
       res(i - 1, i) *= m_A(i - 1, i)
-    }
+    };
     res
   }
 
@@ -185,8 +179,8 @@ object matrixPow extends UFunc {
 
   @tailrec
   private def computeFracPower(value: DenseMatrix[Complex], sT: DenseMatrix[Complex], frac_power: Double, noOfSqRts: Int): DenseMatrix[Complex] = {
-    if (noOfSqRts == 1)
-      return value * upperTriangular(compute2x2(value, sT, frac_power * scala.math.pow(2, -noOfSqRts)))
+    if (noOfSqRts == 0)
+      compute2x2(value, sT, frac_power)
     else
       computeFracPower(value * upperTriangular(compute2x2(value, sT, frac_power * scala.math.pow(2, -noOfSqRts))), sT, frac_power, noOfSqRts - 1)
   }
@@ -228,6 +222,7 @@ object matrixPow extends UFunc {
     }
 
   private def fractI(pow: Double, M: DenseMatrix[Int]): DenseMatrix[Complex] = fractD(pow, M.mapValues(_.toDouble))
+
   private def fractD(pow: Double, M: DenseMatrix[Double]): DenseMatrix[Complex] = {
     val ipower = abs(floor(pow))
     val intPow = if (pow < 0.0) inv(M) else M

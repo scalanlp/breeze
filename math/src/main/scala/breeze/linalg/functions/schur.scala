@@ -19,7 +19,6 @@ package breeze.linalg
 import org.netlib.util.intW
 import com.github.fommil.netlib.LAPACK.{ getInstance => lapack }
 import breeze.generic.UFunc
-import breeze.linalg.operators.{ OpMulMatrix, OpSolveMatrixBy }
 import breeze.linalg.hessenberg._
 import breeze.linalg.householder._
 import breeze.linalg.jacobi._
@@ -39,7 +38,7 @@ object revertSchur extends UFunc {
 
   implicit object DMC_IMPL_DMC extends Impl2[DenseMatrix[Complex], DenseMatrix[Complex], DenseMatrix[Complex]] {
     def apply(M: DenseMatrix[Complex], T: DenseMatrix[Complex]): DenseMatrix[Complex] = {
-      return T * upperTriangular(M) * Tadj(T)
+      return T * upperTriangular(M) *  conj(T.t)
     }
   }
 }
@@ -108,7 +107,7 @@ object schur extends UFunc {
          * compared to matT(i,i) and matT(j,j), then set it to zero and
          * return true, else return false.
          */
-        def subdiagonalEntryIsNeglegible(i: Int) =
+    private    def subdiagonalEntryIsNeglegible(i: Int) =
           {
             val d = norm1(T(i, i)) + norm1(T(i + 1, i + 1))
             val sd = norm1(T(i + 1, i))
@@ -120,7 +119,7 @@ object schur extends UFunc {
           }
 
         /** Compute the shift in the current QR iteration. */
-        def computeShift(iu: Int, iter: Int) = {
+      private  def computeShift(iu: Int, iter: Int) = {
           if (iter == 10 || iter == 20) {
             // exceptional shift, taken from http://www.netlib.org/eispack/comqr.f
             abs(T(iu, iu - 1).real) + abs(T(iu - 1, iu - 2).real)
@@ -156,7 +155,7 @@ object schur extends UFunc {
         // Rows 0,...,il-1 are decoupled from the rest because matT(il,il-1) is zero.
         // Rows il,...,iu is the part we are working on (the active submatrix).
         // Rows iu+1,...,end are already brought in triangular form.
-        def reduceToTriangularForm() = {
+   private     def reduceToTriangularForm() = {
 
           var matnum = 0
           var matnum2 = 0
@@ -227,10 +226,10 @@ object schur extends UFunc {
     val hess: (DenseMatrix[Complex], DenseMatrix[Complex], Householder)
 
     lazy val Q = hess._1
-    lazy val T = hess._2 //matT is  is an Upper Triangle
+    lazy val T = hess._2
 
 
-    def decompose() = (T, Q, hess._3.coeffs, hess._3.matrixH)
+    def decompose() = (T, Q, hess._3.tau, hess._3.matrixH)
   }
   //tau =  the householder coeffs
   object getSchur extends Impl[DenseMatrix[Double], (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double], Array[Double], Array[Double], Int, Int)] {
@@ -342,10 +341,10 @@ object schur extends UFunc {
 	    If INFO .GT. 0 and COMPZ = 'V', then on exit  (final value of Z)  =  (initial value of Z)*U       where U is the orthogonal matrix in (*) (regardless of the value of JOB.)
 	    If INFO .GT. 0 and COMPZ = 'I', then on exit (final value of Z)  = U where U is the orthogonal matrix in (*) (regardless of the value of JOB
 	    If INFO .GT. 0 and COMPZ = 'N', then Z is not accessed.*/
-      )
-
+      )  ;
       (h, z, Q, wR, wI, iLO2, iHI2)
     }
+
   }
 
 }

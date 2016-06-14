@@ -19,12 +19,7 @@ import breeze.numerics._
 import breeze.math._
 import DenseMatrix.canMapValues
 import DenseMatrix._
-import java.io.BufferedWriter
-import java.io.File
-import java.io.FileWriter
-import reflect.runtime.universe._
 import scala.io._
-import java.text.DecimalFormat
 import scala.Console._
 
 object GlobalConsts {
@@ -40,27 +35,8 @@ object GlobalConsts {
     s.inc() // parentheses here to denote that method has side effects
     true
   }
-  var Off = false
-  var showHouseholder = false
-  var showCompute2x2 = false
-  var matnum1 = MutableInt(0)
-  var matnum2 = MutableInt(0)
-  var showSchur = false
-  var showCalculator = false
-  var showComplex = false
-  var showTitles = false
-  var showLines = false
-  var fileOutput = false
-  var showRevertSchur = false
-  var showIMinusT = false
-    var showPadePower = true
-  //  val formatter = new DecimalFormat("#0.###E0")
-  var formatter = new DecimalFormat("#0.######")
-  val printEnabled = Array(Off, showRevertSchur, showCalculator, showCompute2x2, showPadePower, false, showHouseholder, showSchur) //0,1 for debugging last part
   val EPSILON: Double = 2.22045e-016
-  var currentPrintType = printType.BOTH
-  var file = new File("schurBT.dat")
-  var bw: Option[BufferedWriter] = if (fileOutput == true) { Some(new BufferedWriter(new FileWriter(file))) } else { None }
+
 
 }
 
@@ -68,7 +44,8 @@ object Helper {
   import GlobalConsts._
 
   def abs2(n: Complex): Double = { (n.real * n.real) + (n.imag * n.imag) }
-  def conj(n: Complex) = { Complex(n.real, -n.imag) }
+  def conj(n: Complex): Complex = { Complex(n.real, -n.imag) }
+  def conj(n: DenseMatrix[Complex]): DenseMatrix[Complex] = (n.mapValues(c => conj(c)))
   def norm1(n: Complex): Double = { abs(n.real) + abs(n.imag) }
   def biggest(M: DenseMatrix[Complex]) = norm1(sum(M(::, *)).t.reduceLeft((x, y) => if (norm1(x) > norm1(y)) x else y))
   val M_PI = 3.14159265358979323846
@@ -79,8 +56,8 @@ object Helper {
   def Y[A, B](f: (A => B) => (A => B)): A => B = f(Y(f))(_)
   def atan2h(x: Complex, y: Complex): Complex = { val z = x / y; if ((y == 0) || (abs2(z) > pow(GlobalConsts.EPSILON, 0.5))) (0.5) * log((y + x) / (y - x)) else z + z * z * z / 3 }
 
-  //this is not used  ...  for inverting Upper Triangle form
-  def invU(M: DenseMatrix[Complex]): DenseMatrix[Complex] =
+/*from https://en.wikipedia.org/wiki/Triangular_matrix */
+  def UEvaluate(M: DenseMatrix[Complex]): DenseMatrix[Complex] =
     { // All upper must be non zero
       // Ax = b -> LUx = b. Then y is defined to be Ux
       val n = M.cols
@@ -98,9 +75,10 @@ object Helper {
       }
       U
     }
-
-  def invL(M: DenseMatrix[Complex]): DenseMatrix[Complex] =
+/*from https://en.wikipedia.org/wiki/Triangular_matrix */
+  def LEvaluate(M: DenseMatrix[Complex]): DenseMatrix[Complex] =
     { // All lower must be non zero
+      // Forward solve Ly = b//
       // Ax = b -> LUx = b. Then y is defined to be Ux
       val n = M.cols
       val L = DenseMatrix.zeros[Complex](n, n)
@@ -118,76 +96,42 @@ object Helper {
       L
     }
 
-  def UTadj(A: DenseMatrix[Complex]) = invU(A) * diag(A).reduce(_ * _)
+  def UTadj(A: DenseMatrix[Complex]) = UEvaluate(A) * diag(A).reduce(_ * _)
   def Tadj(A: DenseMatrix[Complex]) = A.t.mapValues(i => Complex(i.real, -i.imag))
 
-  def printcount2(name: String) = {
-
-    function(matnum1)
-    val count = matnum1.value
-    "************************************************************** " + count + " *** " + name + "**************************************************************\n"
+  def forwardSubC(L: DenseMatrix[Complex], B: DenseVector[Complex]) = {
+    val n = B.size
+    val x = DenseVector.zeros[Complex](n)
+    var i = 0
+    for (i <- 0 until n)
+      x(i) = ((B(i) - L(i, ::) * x) / L(i, i))
+    x
   }
-  implicit def enrichString2(stuff: String) =
-    new {
-      def showTitle(name: String) = { if (showTitles) printcount2(name) + stuff else stuff }
-    }
 
-  implicit def enrichString(stuff: String) =
-    new {
-      def oneLiner = { if (showLines) stuff.filter(_ >= ' ') else stuff }
-    }
+  def backwardSubC(U: DenseMatrix[Complex], B: DenseVector[Complex]) = {
+    val n = B.size
+    val x = DenseVector.zeros[Complex](n)
+    var i = 0
+    for (i <- (n - 1) to 0 by -1)
+      x(i) = (B(i) - U(i, ::) * x) / U(i, i)
+    x
+  }
 
-  def output(str: String) = { if (fileOutput) bw.get.write(str) else print(str) }
-  def adder(x: Double) = { if (x > 0) { "+" } else { "" } }
-  def debugPrint[T: TypeTag](M: T, name: String = "", loglevel: Int = 0) =
+  def backwardSubD(U: DenseMatrix[Double], B: DenseVector[Double]) = {
+    val n = B.size
+    val x = DenseVector.zeros[Double](n)
+    var i = 0
+    for (i <- (n - 1) to 0 by -1)
+      x(i) = (B(i) - U(i, ::) * x) / U(i, i)
+    x
+  }
+  private def forwardSubD(L: DenseMatrix[Double], B: DenseVector[Double]) = {
+    val n = B.size
+    val x = DenseVector.zeros[Double](n)
+    var i = 0
+    for (i <- 0 until n)
+      x(i) = (B(i) - L(i, ::) * x) / L(i, i)
+    x
+  }
 
-    typeTag[T].tpe match {
-      case b if b =:= typeOf[DenseMatrix[Double]] => if (printEnabled(loglevel)) {
-        currentPrintType match {
-
-          case _ => output(("" + M.asInstanceOf[DenseMatrix[Double]].mapValues { (x) => formatter.format(x) }).oneLiner.showTitle(name) + "\n")
-        }
-
-      }
-      case b if b =:= typeOf[DenseVector[Double]] => if (printEnabled(loglevel)) {
-        currentPrintType match {
-
-          case _ => output(("" + M.asInstanceOf[DenseVector[Double]].mapValues { (x) => formatter.format(x) }).oneLiner.showTitle(name) + "\n")
-        }
-      }
-
-      case b if b =:= typeOf[DenseVector[Complex]] => if (printEnabled(loglevel)) {
-        currentPrintType match {
-          case printType.REAL => output(("" + M.asInstanceOf[DenseVector[Complex]].mapValues { (x) => formatter.format(x.real) }).oneLiner.showTitle(name) + "\n")
-          case printType.IMAG => output(("" + M.asInstanceOf[DenseVector[Complex]].mapValues { (x) => formatter.format(x.imag) }).oneLiner.showTitle(name) + "\n")
-          case _ => output(("" + M.asInstanceOf[DenseVector[Complex]].mapValues { (x) => formatter.format(x.real) + "," + formatter.format(x.imag) }).oneLiner.showTitle(name) + "\n")
-        }
-      }
-      case b if b =:= typeOf[DenseMatrix[Complex]] => if (printEnabled(loglevel)) {
-        currentPrintType match {
-          case printType.REAL => output(("" + M.asInstanceOf[DenseMatrix[Complex]].mapValues { (x) => formatter.format(x.real) }).oneLiner.showTitle(name) + "\n")
-          case printType.IMAG => output(("" + M.asInstanceOf[DenseMatrix[Complex]].mapValues { (x) => formatter.format(x.imag) }).oneLiner.showTitle(name) + "\n")
-          case _ => output(("" + M.asInstanceOf[DenseMatrix[Complex]].mapValues { (x) => "(" + formatter.format(x.real) + "," + formatter.format(x.imag) + ")" }).oneLiner.showTitle(name) + "\n")
-        }
-      }
-
-      case b if b =:= typeOf[Array[Double]] => if (printEnabled(loglevel)) {
-        currentPrintType match {
-          case _ => output("" + M.asInstanceOf[Array[Double]].deep.mkString("\n").oneLiner.showTitle(name) + "\n")
-        }
-      }
-
-      case b if b =:= typeOf[Array[DenseVector[Complex]]] => if (printEnabled(loglevel)) {
-        currentPrintType match {
-          case _ => output("" + M.asInstanceOf[Array[DenseVector[Complex]]].deep.mkString("\n").oneLiner.showTitle(name) + "\n")
-        }
-      }
-      case _ => if (printEnabled(loglevel)) {
-        currentPrintType match {
-          case printType.REAL => output(M.toString.oneLiner.showTitle(name) + "\n")
-          case printType.IMAG => output(M.toString.oneLiner.showTitle(name) + "\n")
-          case _ => output(M.toString.oneLiner.showTitle(name) + "\n")
-        }
-      }
-    }
 }

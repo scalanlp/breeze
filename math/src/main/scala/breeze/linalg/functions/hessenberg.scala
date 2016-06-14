@@ -20,7 +20,7 @@ import breeze.generic.UFunc
 import breeze.math._
 import breeze.linalg.householder._
 import DenseMatrix.canMapValues
-
+import reflect.runtime.universe._
 /*
   PHP^(H)=A,
 
@@ -42,8 +42,6 @@ import DenseMatrix.canMapValues
   House.tau  the scaling factor of the Householder transformation
   House.beta the result of H * M
  */
-
-//Both DenseVector [Double] and [Int] functions  need to be simplified to return real matrices only...
 object hessenberg extends UFunc {
 
   implicit object DMC_IMPL_HeCHo extends Impl[DenseMatrix[Complex], (DenseMatrix[Complex], DenseMatrix[Complex], Householder)] {
@@ -66,7 +64,7 @@ object hessenberg extends UFunc {
       new Hessenberg[Int](M, new Householder(h.mapValues(Complex(_, 0.0)), DenseVector.tabulate[Complex](M.cols - 1)(i => Complex(tau(i), 0.0)))).decompose()
     }
   }
-  class Hessenberg[T](M: DenseMatrix[T], val House: Householder) {
+  class Hessenberg[T : TypeTag](M: DenseMatrix[T], val House: Householder) {
 
     def decompose() = (P, H, House)
     /*  4 x 4 example of the form
@@ -75,17 +73,26 @@ object hessenberg extends UFunc {
      *   0    0     x    x
      *   0    0     x    x
      */
-    def P: DenseMatrix[Complex] = householder.householderTransformation(House.matrixH.mapValues(_.real), House.coeffs.mapValues(_.real), 1).mapValues(Complex(_, 0.0))
+   def P =
+      {
+        typeTag[T].tpe match {
+          case b if b =:= typeOf[Complex] => householder.householderTransformationC(House, 1)
+          case b if b =:= typeOf[Double] => householder.householderTransformationD(House, 1).mapValues(Complex(_, 0.0))
+        }
+      }
     /*  4 x 4 example
      *   x    x    x     x
      *   x    x    x    x
      *   0    x     x    x
      *   0    0     x    x
      */
-    def H: DenseMatrix[Complex] = DenseMatrix.tabulate(House.matrixH.rows, House.matrixH.rows)((i, j) => if (j >= i - 1) House.matrixH(i, j) else Complex(0, 0))
+    def H =
+      {
+	DenseMatrix.tabulate(House.matrixH.rows, House.matrixH.rows)((i, j) => if (j >= i - 1) House.matrixH(i, j) else Complex(0, 0))
+      }
   }
 
-  private def getHessenbergLAPACK(X: DenseMatrix[Double]): (DenseMatrix[Double], Int, Int, Array[Double]) = {
+   def getHessenbergLAPACK(X: DenseMatrix[Double]): (DenseMatrix[Double], Int, Int, Array[Double]) = {
 
     val M = X.rows
     val N = X.cols
