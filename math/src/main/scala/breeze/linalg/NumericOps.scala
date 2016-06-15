@@ -144,6 +144,12 @@ trait ImmutableNumericOps[+This] extends Any {
     /*
    * Matrix-y ops
    */
+
+    /** Matrix power (follows standard order of operations) */
+  final def **[TT >: This, B, That](b: B)(implicit op: OpPowerMatrix.Impl2[TT, B, That]) = {
+    op(repr, b)
+  }
+
   /** Matrix multiplication (and scalar multiplication that follows standard order of operations) */
   final def *[TT >: This, B, That](b: B)(implicit op: OpMulMatrix.Impl2[TT, B, That]) = {
     op(repr, b)

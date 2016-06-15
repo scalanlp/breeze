@@ -48,19 +48,58 @@ import breeze.linalg.revertSchur._
 
 object matrixPow extends UFunc {
 
-  implicit object DMD_IMPL_D_DMC extends Impl2[DenseMatrix[Double], Double, DenseMatrix[Complex]] {
+  implicit object DMD_D_IMPL_DMC extends Impl2[DenseMatrix[Double], Double, DenseMatrix[Complex]] {
     def apply(M: DenseMatrix[Double], exp: Double): DenseMatrix[Complex] = {
-      fractD(exp, M)
+      if ((M.cols == 1) && (M.rows == 1))
+        DenseMatrix(pow(M(0, 0), exp)).mapValues(Complex(_, 0.0))
+      else
+        fractD(exp, M)
     }
   }
-  implicit object DMI_IMPL_D_DMC extends Impl2[DenseMatrix[Int], Double, DenseMatrix[Complex]] {
+  implicit object DMI_D_IMPL_DMC extends Impl2[DenseMatrix[Int], Double, DenseMatrix[Complex]] {
     def apply(M: DenseMatrix[Int], exp: Double): DenseMatrix[Complex] = {
-      fractI(exp, M)
+      if ((M.cols == 1) && (M.rows == 1))
+        DenseMatrix(pow(M(0, 0), exp)).mapValues(Complex(_, 0.0))
+      else
+        fractI(exp, M)
     }
   }
-  implicit object DMC_IMPL_D_DMC extends Impl2[DenseMatrix[Complex], Double, DenseMatrix[Complex]] {
+  implicit object DMC_D_IMPL_DMC extends Impl2[DenseMatrix[Complex], Double, DenseMatrix[Complex]] {
     def apply(M: DenseMatrix[Complex], exp: Double): DenseMatrix[Complex] = {
-      fractC(exp, M)
+      if ((M.cols == 1) && (M.rows == 1)) {
+        val c = DenseMatrix.zeros[Complex](1, 1)
+        c(0, 0) = Complex.PowCD(M(0, 0), exp)
+        c
+      } else
+        fractC(exp, M)
+    }
+  }
+  implicit object DMD_I_IMPL_D_DMC extends Impl2[DenseMatrix[Double], Int, DenseMatrix[Complex]] {
+    def apply(M: DenseMatrix[Double], exp: Int): DenseMatrix[Complex] = {
+      if ((M.cols == 1) && (M.rows == 1))
+        DenseMatrix(pow(M(0, 0), exp)).mapValues(Complex(_, 0.0))
+      else
+        fractDi(exp, M)
+    }
+  }
+
+  implicit object DMI_I_IMPL_DMC extends Impl2[DenseMatrix[Int], Int, DenseMatrix[Complex]] {
+    def apply(M: DenseMatrix[Int], exp: Int): DenseMatrix[Complex] = {
+      if ((M.cols == 1) && (M.rows == 1))
+        DenseMatrix(pow(M(0, 0), exp)).mapValues(Complex(_, 0.0))
+      else
+        fractIi(exp, M)
+    }
+  }
+
+  implicit object DMC_I_IMPL_DMC extends Impl2[DenseMatrix[Complex], Int, DenseMatrix[Complex]] {
+    def apply(M: DenseMatrix[Complex], exp: Int): DenseMatrix[Complex] = {
+      if ((M.cols == 1) && (M.rows == 1)) {
+        val c = DenseMatrix.zeros[Complex](1, 1)
+        c(0, 0) = Complex.PowCD(M(0, 0), exp)
+        c
+      } else
+        fractCi(exp, M)
     }
   }
 
@@ -117,7 +156,7 @@ object matrixPow extends UFunc {
   private def getIMinusT(T: DenseMatrix[Complex], numSquareRoots: Int = 0, deg1: Double = 10.0, deg2: Double = 0.0): (DenseMatrix[Complex], Int, Int) = {
 
     val IminusT = DenseMatrix.eye[Complex](T.rows) - T
-     val normIminusT = max(IminusT(::, *).map(_.map(_.abs).sum))
+    val normIminusT = max(IminusT(::, *).map(_.map(_.abs).sum))
 
     if (normIminusT < maxNormForPade) {
       val rdeg1 = padeDegree(normIminusT)
@@ -229,6 +268,10 @@ object matrixPow extends UFunc {
     return dFracPart(M, pow) match {
       case (None, _) => computeIntPowerD(ipower, intPow).mapValues(Complex(_, 0.0))
       case (pT, sQ) => if (ipower > 0) revertSchur(pT.get, sQ) * computeIntPowerD(ipower, intPow).mapValues(Complex(_, 0.0)) else revertSchur(pT.get, sQ)
-  }
     }
+  }
+
+  private def fractCi(pow: Int, M: DenseMatrix[Complex]): DenseMatrix[Complex] = fractC(pow.toDouble, M)
+  private def fractIi(pow: Int, M: DenseMatrix[Int]): DenseMatrix[Complex] = fractI(pow.toDouble, M)
+  private def fractDi(pow: Int, M: DenseMatrix[Double]): DenseMatrix[Complex] = fractD(pow.toDouble, M)
 }

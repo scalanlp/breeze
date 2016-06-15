@@ -290,3 +290,16 @@ object OpMulMatrix extends OpMulMatrix with UFunc {
   }
 }
 
+
+  /**
+ * Type marker for inner  power of A and p.
+ *
+ * @author claydonkey
+ */
+sealed trait OpPowerMatrix extends OpType
+object OpPowerMatrix extends OpPowerMatrix with UFunc {
+  implicit def opPowMatrixFromSemiring[S:Semiring]: Impl2[S, S, S] = new Impl2[S, S, S] {
+    def apply(v: S, v2: S): S = implicitly[Semiring[S]].*(v, v2)
+  }
+}
+
