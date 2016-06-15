@@ -30,6 +30,26 @@ package object util {
       oin.close()
     }
   }
+
+  def serializeToBytes[T](obj: T): Array[Byte] = {
+    val out = new ByteArrayOutputStream()
+    val objOut = new ObjectOutputStream(out)
+    objOut.writeObject(obj)
+    objOut.close()
+    out.close()
+    out.toByteArray
+  }
+
+  def deserializeFromBytes[T](bytes: Array[Byte]): T = {
+    val in = new ByteArrayInputStream(bytes)
+    val objIn = new ObjectInputStream(in)
+    try {
+      objIn.readObject().asInstanceOf[T]
+    } finally {
+      objIn.close()
+    }
+  }
+
   /**
    * For reasons that are best described as asinine, ObjectInputStream does not take into account
    * Thread.currentThread.getContextClassLoader. This fixes that.

@@ -16,10 +16,9 @@ package breeze.util
  limitations under the License.
 */
 
-import collection.{mutable, IterableProxy}
+import java.io.{ IOException, ObjectStreamException }
 import collection.JavaConverters._
-
-import scala.collection.mutable.{ArrayBuffer,HashMap}
+import scala.collection.mutable.{ ArrayBuffer, HashMap }
 import java.util.Arrays
 import java.util
 
@@ -130,16 +129,6 @@ trait MutableIndex[T] extends Index[T] {
   def index(t : T) : Int
 }
 
-
-/**
- * A synchronized view of a MutableIndex.
- *
- * @author dramage
- */
-trait SynchronizedMutableIndex[T] extends MutableIndex[T] with SynchronizedIndex[T] {
-  abstract override def index(t : T) = this synchronized super.index(t)
-}
-
 /**
  * Class that builds a 1-to-1 mapping between Ints and T's, which
  * is very useful for efficiency concerns.
@@ -192,6 +181,25 @@ class HashIndex[T] extends MutableIndex[T] with Serializable {
   }
 
   def pairs = indices.asScala.iterator
+
+  @throws(classOf[ObjectStreamException])
+  private def writeReplace(): Object = {
+    new HashIndex.SerializedForm(objects)
+  }
+
+}
+
+object HashIndex {
+  @SerialVersionUID(1L)
+  private case class SerializedForm[T](objects: IndexedSeq[T]) {
+    @throws(classOf[ObjectStreamException])
+    private def readResolve(): Object = {
+      val ind = new HashIndex[T]()
+      objects foreach ind.index
+      ind
+    }
+  }
+
 }
 
 /**

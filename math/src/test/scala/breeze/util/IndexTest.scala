@@ -59,4 +59,14 @@ class IndexTest extends FunSuite with Checkers {
     assert(index.get(1) === E.B)
     assert(index(E.A) === 0)
   }
+
+  test("HashIndex serialization") {
+    val index = new HashIndex[String]()
+    for(x <- Seq("a", "b", "c", "de")) {
+      index.index(x)
+    }
+    import breeze.util._
+    val bytes = serializeToBytes(index)
+    assert(deserializeFromBytes[HashIndex[String]](bytes) == index)
+  }
 }
