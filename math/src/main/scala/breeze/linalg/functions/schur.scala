@@ -33,7 +33,6 @@ import DenseMatrix.canMapValues
         y is  upper quasi-triangular matrix T from the Schur decomposition
       z  contains Q*Z. where
 */
-
 object revertSchur extends UFunc {
 
   implicit object DMC_IMPL_DMC extends Impl2[DenseMatrix[Complex], DenseMatrix[Complex], DenseMatrix[Complex]] {
@@ -209,7 +208,7 @@ object schur extends UFunc {
                 val givrot2 = makeGivens(T(idx, idx - 1), T(idx + 1, idx - 1))
                 T(idx, idx - 1) = givrot2.rot
                 T(idx + 1, idx - 1) = Complex(0.0, 0.0)
-                jacobi(T(idx to idx + 1, idx to T.cols - 1)) rotateL (givrot2)
+                jacobi(T(idx to idx + 1, ::)) rotateL (givrot2)
                 jacobi(T(0 to (min(idx + 2, iu)), idx to idx + 1)) rotateR (givrot2)
                 jacobi(Q(::, idx to idx + 1)) rotateR (givrot2)
               }
