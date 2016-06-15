@@ -139,7 +139,7 @@ object matrixPow extends UFunc {
   private def sqrtTriangular(m_A: DenseMatrix[Complex]) = {
     val result = DenseMatrix.zeros[Complex](m_A.cols, m_A.rows)
     var i = 0
-    for (i <- 0 to m_A.cols - 1)
+    for (i <- 0 until m_A.cols )
       result(i, i) = breeze.numerics.pow(m_A(i, i), 0.5)
     var j = 1
     for (j <- 1 until m_A.cols) {

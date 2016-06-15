@@ -86,10 +86,10 @@ object Helper {
       var k = 0
       var j = 0
       var i = 0
-      for (j <- 0 to n) {
+      for (j <- 0 to n -1) {
         L(j, j) = 1.0 / M(j, j)
-        for (i <- 0 to j) {
-          for (k <- j to i)
+        for (i <- 0 to j -1) {
+          for (k <- j to i -1)
             L(i, j) -= 1 / M(i, i) * M(i, k) * L(k, j)
         }
       }
@@ -97,7 +97,7 @@ object Helper {
     }
 
   def UTadj(A: DenseMatrix[Complex]) = UEvaluate(A) * diag(A).reduce(_ * _)
-  def Tadj(A: DenseMatrix[Complex]) = A.t.mapValues(i => Complex(i.real, -i.imag))
+  //def Tadj(A: DenseMatrix[Complex]) = A.t.mapValues(i => Complex(i.real, -i.imag))
 
   def forwardSubC(L: DenseMatrix[Complex], B: DenseVector[Complex]) = {
     val n = B.size

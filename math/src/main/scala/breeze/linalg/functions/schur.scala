@@ -36,9 +36,9 @@ import DenseMatrix.canMapValues
 object revertSchur extends UFunc {
 
   implicit object DMC_IMPL_DMC extends Impl2[DenseMatrix[Complex], DenseMatrix[Complex], DenseMatrix[Complex]] {
-    def apply(M: DenseMatrix[Complex], T: DenseMatrix[Complex]): DenseMatrix[Complex] = {
-      return T * upperTriangular(M) *  conj(T.t)
-    }
+    def apply(M: DenseMatrix[Complex], U: DenseMatrix[Complex]): DenseMatrix[Complex] = {
+   U * upperTriangular(M) * U.t
+     }
   }
 }
 
