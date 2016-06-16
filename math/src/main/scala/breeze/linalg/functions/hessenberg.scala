@@ -72,7 +72,7 @@ object hessenberg extends UFunc {
       {
         typeTag[T].tpe match {
           case b if b =:= typeOf[Complex] => householder.householderTransformationC(House, 1)
-          case b if b =:= typeOf[Double] => householder.householderTransformationD(House, 1).mapValues(Complex(_, 0.0))
+          case b if ((b =:= typeOf[Double]) ||  (b =:=  typeOf[Int])) => householder.householderTransformationD(House, 1).mapValues(Complex(_, 0.0))
         }
       }
     /*  4 x 4 example
