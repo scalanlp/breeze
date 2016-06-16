@@ -31,6 +31,35 @@ import breeze.linalg.Helper._
  */
 object householder extends UFunc {
 
+    /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
+  implicit object DMI_DVC_IMPL_H extends Impl3[DenseMatrix[Int], DenseVector[Complex], Boolean, Householder] {
+    def apply(M: DenseMatrix[Int], tau: DenseVector[Complex], generate: Boolean = true): Householder = {
+      new Householder(M.mapValues(Complex(_,0)), tau, generate)
+    }
+  }
+
+ /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
+  implicit object DMI_IMPL_H extends Impl2[DenseMatrix[Int], Boolean, Householder] {
+    def apply(M: DenseMatrix[Int], generate: Boolean = true): Householder = {
+      new Householder(M.mapValues(Complex(_,0)), generate)
+    }
+  }
+
+  /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
+  implicit object DMD_DVC_IMPL_H extends Impl3[DenseMatrix[Double], DenseVector[Complex], Boolean, Householder] {
+
+    def apply(M: DenseMatrix[Double], tau: DenseVector[Complex], generate: Boolean = true): Householder = {
+      new Householder(M.mapValues(Complex(_,0.0)), tau, generate)
+    }
+  }
+
+ /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
+  implicit object DMD_IMPL_H extends Impl2[DenseMatrix[Double], Boolean, Householder] {
+    def apply(M: DenseMatrix[Double], generate: Boolean = true): Householder = {
+      new Householder(M.mapValues(Complex(_,0.0)), generate)
+    }
+  }
+
   /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
   implicit object DMC_DVC_IMPL_H extends Impl3[DenseMatrix[Complex], DenseVector[Complex], Boolean, Householder] {
     def apply(M: DenseMatrix[Complex], tau: DenseVector[Complex], generate: Boolean = true): Householder = {
