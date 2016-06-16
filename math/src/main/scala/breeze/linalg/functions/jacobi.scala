@@ -44,7 +44,7 @@ object jacobi extends UFunc {
     var hPos: Int = 0
     var typeRot: GivensType.EnumVal = GivensType.Undefined
 
-//mutating (speedier)
+    //mutating (speedier)
     def rotateL(jrot: JRotation) = { cRot = new JRotation(conj(jrot.m_c), -(jrot.m_s), jrot.rot); jacobi.applyRotationinPlane(M(0, ::).t, M(1, ::).t, cRot) }
     def rotateR(jrot: JRotation) = { cRot = new JRotation((jrot.m_c), -conj(jrot.m_s), jrot.rot); jacobi.applyRotationinPlane(M(::, 0), M(::, 1), cRot) }
 
@@ -89,14 +89,14 @@ object jacobi extends UFunc {
     [0 0 1  0]
     [0 0 0 1]
 */
-    def rotateL(vpos: Int = 0, hpos: Int = 0) :DenseMatrix[Complex] = { typeRot = GivensType.Left; vPos = vpos; hPos = hpos; cRot = makeGivens(M(vPos, hPos), M(vPos + 1, hPos)); getGivens(cRot, vPos, hPos) * M }
-    def rotateR(vpos: Int = 0, hpos: Int = 0)  :DenseMatrix[Complex]  = { typeRot = GivensType.Right; vPos = vpos; hPos = hpos; cRot = makeGivens(M(M.rows - (vPos + 2), hPos), M(M.rows - (vpos + 1), hPos)); getGivens(cRot, vPos, hPos) * M }
+    def rotateL(vpos: Int = 0, hpos: Int = 0): DenseMatrix[Complex] = { typeRot = GivensType.Left; vPos = vpos; hPos = hpos; cRot = makeGivens(M(vPos, hPos), M(vPos + 1, hPos)); getGivens(cRot, vPos, hPos) * M }
+    def rotateR(vpos: Int = 0, hpos: Int = 0): DenseMatrix[Complex] = { typeRot = GivensType.Right; vPos = vpos; hPos = hpos; cRot = makeGivens(M(M.rows - (vPos + 2), hPos), M(M.rows - (vpos + 1), hPos)); getGivens(cRot, vPos, hPos) * M }
+    /*returns tuple of Matrix A transformed and Givens Rotation Matrix (useful for QR decomp) */
+    def rotate2L(vpos: Int = 0, hpos: Int = 0): (DenseMatrix[Complex], DenseMatrix[Complex]) = { typeRot = GivensType.Left; vPos = vpos; hPos = hpos; cRot = makeGivens(M(vPos, hPos), M(vPos + 1, hPos)); (getGivens(cRot, vPos, hPos) * M, getGivens(cRot, vPos, hPos)) }
+    /*returns tuple of Matrix A transformed and Givens Rotation Matrix (useful for QR decomp) */
+    def rotate2R(vpos: Int = 0, hpos: Int = 0): (DenseMatrix[Complex], DenseMatrix[Complex]) = { typeRot = GivensType.Right; vPos = vpos; hPos = hpos; cRot = makeGivens(M(M.rows - (vPos + 2), hPos), M(M.rows - (vpos + 1), hPos)); (getGivens(cRot, vPos, hPos) * M, getGivens(cRot, vPos, hPos)) }
 
-       def rotate2L(vpos: Int = 0, hpos: Int = 0) : ( DenseMatrix[Complex] ,DenseMatrix[Complex] ) = { typeRot = GivensType.Left; vPos = vpos; hPos = hpos; cRot = makeGivens(M(vPos, hPos), M(vPos + 1, hPos)); (getGivens(cRot, vPos, hPos) * M, getGivens(cRot, vPos, hPos) )}
-    def rotate2R(vpos: Int = 0, hpos: Int = 0)  : ( DenseMatrix[Complex] ,DenseMatrix[Complex] ) = { typeRot = GivensType.Right; vPos = vpos; hPos = hpos; cRot = makeGivens(M(M.rows - (vPos + 2), hPos), M(M.rows - (vpos + 1), hPos)); getGivens(cRot, vPos, hPos) * M }
-
-
-//semi static method
+    //semi static method
     /* returns the Givens Matrix G used in Rotation */
     def getGivens(jrot: JRotation, vpos: Int, hpos: Int): DenseMatrix[Complex] = {
 
@@ -116,6 +116,9 @@ object jacobi extends UFunc {
         case _ => throw new IllegalArgumentException("Rotation Type not defined")
     }
       }
+
+    def getGivens(vpos: Int, hpos: Int): DenseMatrix[Complex] = getGivens(cRot, vpos, hpos)
+    def getGivens: DenseMatrix[Complex] = getGivens(cRot, vPos, hPos)
   }
 
   private def applyRotationinPlane(_x: DenseVector[Complex], _y: DenseVector[Complex], j: JRotation) = {
