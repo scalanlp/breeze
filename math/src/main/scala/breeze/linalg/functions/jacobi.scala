@@ -32,51 +32,90 @@ object jacobi extends UFunc {
   def apply(M: DenseMatrix[Complex]): Jacobi = new Jacobi(M)
 
   class Jacobi(val M: DenseMatrix[Complex]) {
+    object GivensType {
+      sealed trait EnumVal
+      case object Undefined extends EnumVal
+      case object Right extends EnumVal
+      case object Left extends EnumVal
+      val givensType = Seq(Right, Left)
+    }
     var cRot: JRotation = new JRotation(null, null, null)
-    var cPos: Int = 0
-    //mutating (for speed)
+    var vPos: Int = 0
+    var hPos: Int = 0
+    var typeRot: GivensType.EnumVal = GivensType.Undefined
+
+//mutating (speedier)
     def rotateL(jrot: JRotation) = { cRot = new JRotation(conj(jrot.m_c), -(jrot.m_s), jrot.rot); jacobi.applyRotationinPlane(M(0, ::).t, M(1, ::).t, cRot) }
     def rotateR(jrot: JRotation) = { cRot = new JRotation((jrot.m_c), -conj(jrot.m_s), jrot.rot); jacobi.applyRotationinPlane(M(::, 0), M(::, 1), cRot) }
 
     //non-mutating
-    def rotateL(jrot: JRotation, pos: Int) = { cPos = pos; cRot = jrot; getRotationMatrixL(cRot, cPos) * M }
-    def rotateR(jrot: JRotation, pos: Int) = { cPos = pos; cRot = jrot; getRotationMatrixR(cRot, cPos) * M }
+    def rotateL(jrot: JRotation, vpos: Int, hpos: Int) = { typeRot = GivensType.Left; vPos = vpos; hPos = hpos; cRot = jrot; getGivens(cRot, vPos, hPos) * M }
+    def rotateR(jrot: JRotation, vpos: Int, hpos: Int) = { typeRot = GivensType.Right; vPos = vpos; hPos = hpos; cRot = jrot; getGivens(cRot, vPos, hPos) * M }
 
     //non-mutating using Givens (p,q)
-    def rotateL(p: Complex, q: Complex, pos: Int): DenseMatrix[Complex] = rotateL(makeGivens(p, q), pos)
-    def rotateR(p: Complex, q: Complex, pos: Int): DenseMatrix[Complex] = rotateR(makeGivens(p, q), pos)
-    def rotateL(pos: Int = 0) = { cPos = pos; cRot = makeGivens(M(pos, pos), M(pos + 1, pos)); getRotationMatrixL(cRot, pos) * M }
-    def rotateR(pos: Int = 0) = { cPos = pos; cRot = makeGivens(M(M.cols - (pos + 2), M.cols - (pos + 2)), M(M.cols - (pos + 1), M.cols - (pos + 2))); getRotationMatrixR(cRot, pos) * M }
+    def rotateL(p: Complex, q: Complex, vPos: Int, hPos: Int): DenseMatrix[Complex] = rotateL(makeGivens(p, q), vPos, hPos)
+    def rotateR(p: Complex, q: Complex, vPos: Int, hPos: Int): DenseMatrix[Complex] = rotateR(makeGivens(p, q), vPos, hPos)
 
-    //semi static method
-    def getRotationMatrixL(jrot: JRotation, pos: Int): DenseMatrix[Complex] = {
-      cPos = pos
+    /* Method fo Givens QR decomposition
+
+    hPos defines the column where the Givens is extracted from
+    vPos defines both the diag the Givens rotation is placed, and the row the Givens is extracted from
+
+    RotateR
+    Example 1:
+
+    [x x x x]
+    [x x x x]
+    [i x x x]
+    [j x x x]   <= index = (0,0)
+
+    Gives Givens:
+    [1 0 0 0]
+    [0 1 0 0]
+    [0 0 c -s]
+    [0 0 s c]
+
+    RotateR
+    Example 2:
+
+    [x i x x]
+    [x j x x]
+    [x x x x]
+    [x x x x]   <= index = (2,1)
+
+    Gives Givens:
+    [c -s 0 0]
+    [s c -s 0]
+    [0 0 1  0]
+    [0 0 0 1]
+*/
+    def rotateL(vpos: Int = 0, hpos: Int = 0) :DenseMatrix[Complex] = { typeRot = GivensType.Left; vPos = vpos; hPos = hpos; cRot = makeGivens(M(vPos, hPos), M(vPos + 1, hPos)); getGivens(cRot, vPos, hPos) * M }
+    def rotateR(vpos: Int = 0, hpos: Int = 0)  :DenseMatrix[Complex]  = { typeRot = GivensType.Right; vPos = vpos; hPos = hpos; cRot = makeGivens(M(M.rows - (vPos + 2), hPos), M(M.rows - (vpos + 1), hPos)); getGivens(cRot, vPos, hPos) * M }
+
+       def rotate2L(vpos: Int = 0, hpos: Int = 0) : ( DenseMatrix[Complex] ,DenseMatrix[Complex] ) = { typeRot = GivensType.Left; vPos = vpos; hPos = hpos; cRot = makeGivens(M(vPos, hPos), M(vPos + 1, hPos)); (getGivens(cRot, vPos, hPos) * M, getGivens(cRot, vPos, hPos) )}
+    def rotate2R(vpos: Int = 0, hpos: Int = 0)  : ( DenseMatrix[Complex] ,DenseMatrix[Complex] ) = { typeRot = GivensType.Right; vPos = vpos; hPos = hpos; cRot = makeGivens(M(M.rows - (vPos + 2), hPos), M(M.rows - (vpos + 1), hPos)); getGivens(cRot, vPos, hPos) * M }
+
+
+//semi static method
+    /* returns the Givens Matrix G used in Rotation */
+    def getGivens(jrot: JRotation, vpos: Int, hpos: Int): DenseMatrix[Complex] = {
+
+      vPos = vpos
+      hPos = hpos
       cRot = jrot
-      if ((pos + 1) < M.cols) {
-        val m = DenseMatrix.eye[Complex](M.cols)
-        m(pos to (pos + 1), pos to (pos + 1)) := DenseMatrix((jrot.m_c, -conj(jrot.m_s)), (jrot.m_s, jrot.m_c))
-        m
-      } else
-        throw new IllegalArgumentException("Position over extends Matrix")
-    }
-    //semi static method
-    def getRotationMatrixR(jrot: JRotation, pos: Int): DenseMatrix[Complex] = {
-      cPos = pos
-      cRot = jrot
-      if ((pos + 1) < M.cols) {
-        val m = DenseMatrix.eye[Complex](M.cols)
-        m((m.cols - (pos + 2)) to (m.cols - (pos + 1)), (m.cols - (pos + 2)) to (m.cols - (pos + 1))) := DenseMatrix((jrot.m_c, -conj(jrot.m_s)), (jrot.m_s, jrot.m_c))
-        m
-      } else
-        throw new IllegalArgumentException("Position over extends Matrix")
-    }
-    def getRotationMatrixL(pos: Int): DenseMatrix[Complex] = getRotationMatrixL(cRot, pos)
-    def getRotationMatrixR(pos: Int): DenseMatrix[Complex] = getRotationMatrixR(cRot, pos)
 
-    //proper class methods
-    def getRotationMatrixL: DenseMatrix[Complex] = getRotationMatrixL(cRot, cPos)
-    def getRotationMatrixR: DenseMatrix[Complex] = getRotationMatrixR(cRot, cPos)
-
+      typeRot match {
+        case GivensType.Right =>
+          val m = DenseMatrix.eye[Complex](M.rows)
+          m((m.cols - (vPos + 2)) to (m.cols - (vPos + 1)), (m.cols - (vPos + 2)) to (m.cols - (vPos + 1))) := DenseMatrix((jrot.m_c, -conj(jrot.m_s)), (jrot.m_s, jrot.m_c))
+          m
+        case GivensType.Left =>
+          val m = DenseMatrix.eye[Complex](M.cols)
+          m(vPos to (vPos + 1), vPos to (vPos + 1)) := DenseMatrix((jrot.m_c, -conj(jrot.m_s)), (jrot.m_s, jrot.m_c))
+          m
+        case _ => throw new IllegalArgumentException("Rotation Type not defined")
+    }
+      }
   }
 
   private def applyRotationinPlane(_x: DenseVector[Complex], _y: DenseVector[Complex], j: JRotation) = {

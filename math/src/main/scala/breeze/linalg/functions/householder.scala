@@ -129,10 +129,10 @@ object householder extends UFunc {
         //    if (ess.length != 0) {
         var c1 = matrixH(::, shift + 1).toDenseMatrix
         var right = matrixH(::, (shift + 2) to matrixH.cols - 1)
-        val essadj = essential(shift).t
-        val tmp2 = conj((essadj * right.t) + conj(c1))
+        val essTrans= essential(shift).t
+        val tmp2 = conj((essTrans * right.t) + conj(c1))
         matrixH(0 until matrixH.cols, (shift + 1)) -= (tmp2.toDenseMatrix * conj(tau(shift))).toDenseVector
-        right -= conj(tmp2.t * conj(essadj) * tau(shift))
+        right -= conj(tmp2.t * conj(essTrans) * tau(shift))
 
         //   } else { return this }
       } catch { case e: Exception =>  }
