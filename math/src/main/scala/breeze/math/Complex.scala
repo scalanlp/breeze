@@ -115,6 +115,42 @@ case class Complex(real : Double, imag : Double) {
   def %(that : Float): Complex = %(Complex(that,0))
   def %(that : Double): Complex = %(Complex(that,0))
 
+ private val EPSILON: Double = 2.22045e-016
+
+  def atan2h(that: Complex) = {
+    import breeze.numerics.pow
+    import breeze.numerics.log
+    val z = this / that
+    if ((that == 0) || ((z.abs2) > scala.math.pow(EPSILON, 0.5)))
+      0.5 * ((that + this) / (that - this)).log
+    else
+      z + z * z * z / 3
+  }
+
+  def abs2: Double =
+    (real * real) + (imag * imag)
+
+  def norm1: Double =
+    math.abs(real) + math.abs(imag)
+
+  def abs2(a: Complex): Double =
+    (a.real * a.real) + (a.imag * a.imag)
+  def norm1(a: Complex): Double =
+    math.abs(a.real) + math.abs(a.imag)
+
+  def sinh2(c: Complex) = Complex(math.sinh(c.real) * math.cos(c.imag), math.cosh(c.real) * math.sin(c.imag))
+
+  def sinh2 =
+    Complex(math.sinh(real) * math.cos(imag), math.cosh(real) * math.sin(imag))
+
+ def atan2h(x: Complex, y: Complex) = {
+    val z = x / y
+    if ((y == 0) || ((z.abs2) >scala.math.pow(EPSILON, 0.5)))
+      0.5 * ((y + x) / (y - x)).log
+    else
+      z + z * z * z / 3
+  }
+
   def unary_- =
     Complex(-real, -imag)
 
@@ -123,8 +159,8 @@ case class Complex(real : Double, imag : Double) {
 
   def conjugate =
     Complex(real, -imag)
-    
-  def log = 
+
+  def log =
     Complex(math.log(abs), math.atan2(imag, real))
 
   def exp = {
@@ -133,7 +169,7 @@ case class Complex(real : Double, imag : Double) {
   }
 
   def pow(b: Double): Complex = pow(Complex(b, 0))
-  
+
   def pow(b: Complex): Complex = {
     if (b == Complex.zero) Complex.one
     else if (this == Complex.zero) {
@@ -237,7 +273,7 @@ object Complex { outer =>
   implicit val complexNorm: norm.Impl[Complex, Double] = new norm.Impl[Complex, Double] {
     def apply(v1: Complex): Double = v1.abs
   }
-  
+
   implicit object ComplexZero extends Zero[Complex] {
     val zero = Complex(0, 0)
   }

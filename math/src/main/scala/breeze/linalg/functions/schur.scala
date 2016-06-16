@@ -25,7 +25,6 @@ import breeze.linalg.jacobi._
 import breeze.math._
 import breeze.numerics._
 import scala.util.control.Breaks._
-import breeze.linalg.Helper._
 import DenseMatrix.canMapValues
 
 /* returns tuple
@@ -108,8 +107,8 @@ object schur extends UFunc {
          */
     private    def subdiagonalEntryIsNeglegible(i: Int) =
           {
-            val d = norm1(T(i, i)) + norm1(T(i + 1, i + 1))
-            val sd = norm1(T(i + 1, i))
+            val d = (T(i, i)).norm1 + (T(i + 1, i + 1)).norm1
+            val sd = (T(i + 1, i)).norm1
             if (isMuchSmallerThan(sd, d)) {
               T(i + 1, i) = Complex(0.0, 0.0)
               true
@@ -138,12 +137,12 @@ object schur extends UFunc {
           var eival1 = (trace + disc) / 2.0
           var eival2 = (trace - disc) / 2.0
 
-          if (norm1(eival1) > norm1(eival2))
+          if (eival1.norm1 > eival2.norm1)
             eival2 = det / eival1
           else
             eival1 = det / eival2
           // choose the eigenvalue closest to the bottom entry of the diagonal
-          if (norm1(eival1 - t(1, 1)) < norm1(eival2 - t(1, 1)))
+          if ((eival1 - t(1, 1)).norm1 < (eival2 - t(1, 1)).norm1)
             normt * eival1
           else
             normt * eival2
@@ -230,7 +229,9 @@ object schur extends UFunc {
 
     def decompose() = (T, Q)
   }
-  //tau =  the householder coeffs
+  val EPSILON: Double = 2.22045e-016
+    def isMuchSmallerThan(x: Double, y: Double) = { abs(x) <= abs(y) * EPSILON }
+
   object getSchur extends Impl[DenseMatrix[Double], (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double], Array[Double], Array[Double], Int, Int)] {
     def apply(X: DenseMatrix[Double]): (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double], Array[Double], Array[Double], Int, Int) = {
 

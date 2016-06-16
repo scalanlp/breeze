@@ -17,7 +17,6 @@ package breeze.linalg
 
 import breeze.numerics._
 import breeze.math._
-import breeze.linalg.Helper._
 import scala.annotation.tailrec
 import breeze.generic.UFunc
 import DenseMatrix.canMapValues
@@ -139,7 +138,7 @@ object matrixPow extends UFunc {
   private def sqrtTriangular(m_A: DenseMatrix[Complex]) = {
     val result = DenseMatrix.zeros[Complex](m_A.cols, m_A.rows)
     var i = 0
-    for (i <- 0 until m_A.cols )
+    for (i <- 0 until m_A.cols)
       result(i, i) = breeze.numerics.pow(m_A(i, i), 0.5)
     var j = 1
     for (j <- 1 until m_A.cols) {
@@ -152,6 +151,7 @@ object matrixPow extends UFunc {
   }
 
   private val maxNormForPade: Double = 2.789358995219730e-1
+ 
 
   private def getIMinusT(T: DenseMatrix[Complex], numSquareRoots: Int = 0, deg1: Double = 10.0, deg2: Double = 0.0): (DenseMatrix[Complex], Int, Int) = {
 
@@ -169,13 +169,23 @@ object matrixPow extends UFunc {
     getIMinusT(upperTriangular(sqrtTriangular(T)), numSquareRoots + 1, deg1, deg2)
   }
 
+
   private def computeSuperDiag(curr: Complex, prev: Complex, p: Double): Complex = {
 
     val logCurr: Complex = log(curr)
     val logPrev: Complex = log(prev)
-    val unwindingNumber = ceil(((logCurr - logPrev).imag - M_PI) / (2 * M_PI))
-    val w = atan2h(curr - prev, curr + prev) + Complex(0.0, M_PI * unwindingNumber)
-    (2.0 * exp(0.5 * p * (logCurr + logPrev)) * sinh2(p * w) / (curr - prev))
+    val unwindingNumber = ceil(((logCurr - logPrev).imag - math.Pi) / (2 * math.Pi))
+    val w = ((curr - prev) atan2h (curr + prev)) + Complex(0.0, math.Pi * unwindingNumber)
+    (2.0 * exp(0.5 * p * (logCurr + logPrev)) * (p * w).sinh2 / (curr - prev))
+  }
+
+  private def backwardSubC(U: DenseMatrix[Complex], B: DenseVector[Complex]) = {
+    val n = B.size
+    val x = DenseVector.zeros[Complex](n)
+    var i = 0
+    for (i <- (n - 1) to 0 by -1)
+      x(i) = (B(i) - U(i, ::) * x) / U(i, i)
+    x
   }
 
   private def compute2x2(r: DenseMatrix[Complex], m_A: DenseMatrix[Complex], p: Double) = {

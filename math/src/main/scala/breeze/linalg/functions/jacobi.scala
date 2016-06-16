@@ -13,11 +13,11 @@ package breeze.linalg
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
-import breeze.numerics._
+ */
 import breeze.math._
-import breeze.linalg.Helper._
 import breeze.generic.UFunc
+import DenseMatrix.canMapValues
+import breeze.numerics._
 
 /* This class represents a Jacobi or Givens rotation.
  * This is a 2D rotation in the plane \c J of angle \f$ \theta \f$ defined by
@@ -29,7 +29,27 @@ import breeze.generic.UFunc
  */
 object jacobi extends UFunc {
 
-  def apply(M: DenseMatrix[Complex]): Jacobi = new Jacobi(M)
+  implicit def DMT_Cast_Impl_J[T](implicit cast: T => Double): Impl[DenseMatrix[T], Jacobi] = {
+    new Impl[DenseMatrix[T], Jacobi] {
+      def apply(M: DenseMatrix[T]): Jacobi = {
+        import DenseMatrix.canMapValues
+        DMD_IMPL_J(M.mapValues(cast))
+      }
+    }
+  }
+
+  implicit object DMC_IMPL_J extends Impl[DenseMatrix[Complex], Jacobi] {
+    def apply(M: DenseMatrix[Complex]): Jacobi =
+      {
+        new Jacobi(M)
+      }
+  }
+
+  implicit object DMD_IMPL_J extends Impl[DenseMatrix[Double], Jacobi] {
+    def apply(M: DenseMatrix[Double]): Jacobi = {
+      new Jacobi(M.mapValues(Complex(_, 0.0)))
+    }
+  }
 
   class Jacobi(val M: DenseMatrix[Complex]) {
     object GivensType {
@@ -45,8 +65,8 @@ object jacobi extends UFunc {
     var typeRot: GivensType.EnumVal = GivensType.Undefined
 
     //mutating (speedier)
-    def rotateMutateL(jrot: JRotation) = { cRot = new JRotation(conj(jrot.m_c), -(jrot.m_s), jrot.rot); jacobi.applyRotationinPlane(M(0, ::).t, M(1, ::).t, cRot) }
-    def rotateMutateR(jrot: JRotation) = { cRot = new JRotation((jrot.m_c), -conj(jrot.m_s), jrot.rot); jacobi.applyRotationinPlane(M(::, 0), M(::, 1), cRot) }
+    def rotateMutateL(jrot: JRotation) = { cRot = new JRotation((jrot.m_c).conjugate, -(jrot.m_s), jrot.rot); jacobi.applyRotationinPlane(M(0, ::).t, M(1, ::).t, cRot) }
+    def rotateMutateR(jrot: JRotation) = { cRot = new JRotation((jrot.m_c), -(jrot.m_s).conjugate, jrot.rot); jacobi.applyRotationinPlane(M(::, 0), M(::, 1), cRot) }
 
     //non-mutating
     def rotateL(jrot: JRotation, vpos: Int = 0, hpos: Int = 0) = { typeRot = GivensType.Left; vPos = vpos; hPos = hpos; cRot = jrot; getGivens(cRot, vPos, hPos) * M }
@@ -58,37 +78,37 @@ object jacobi extends UFunc {
 
     /* Method fo Givens QR decomposition
 
-    hPos defines the column where the Givens is extracted from
-    vPos defines both the diag the Givens rotation is placed, and the row the Givens is extracted from
+     hPos defines the column where the Givens is extracted from
+     vPos defines both the diag the Givens rotation is placed, and the row the Givens is extracted from
 
-    RotateR
-    Example 1:
+     RotateR
+     Example 1:
 
-    [x x x x]
-    [x x x x]
-    [i x x x]
-    [j x x x]   <= index = (0,0)
+     [x x x x]
+     [x x x x]
+     [i x x x]
+     [j x x x]   <= index = (0,0)
 
-    Gives Givens:
-    [1 0 0 0]
-    [0 1 0 0]
-    [0 0 c -s]
-    [0 0 s c]
+     Gives Givens:
+     [1 0 0 0]
+     [0 1 0 0]
+     [0 0 c -s]
+     [0 0 s c]
 
-    RotateR
-    Example 2:
+     RotateR
+     Example 2:
 
-    [x i x x]
-    [x j x x]
-    [x x x x]
-    [x x x x]   <= index = (2,1)
+     [x i x x]
+     [x j x x]
+     [x x x x]
+     [x x x x]   <= index = (2,1)
 
-    Gives Givens:
-    [c -s 0 0]
-    [s c -s 0]
-    [0 0 1  0]
-    [0 0 0 1]
-*/
+     Gives Givens:
+     [c -s 0 0]
+     [s c -s 0]
+     [0 0 1  0]
+     [0 0 0 1]
+     */
     def rotateL(vpos: Int, hpos: Int): DenseMatrix[Complex] = { typeRot = GivensType.Left; vPos = vpos; hPos = hpos; cRot = makeGivens(M(vPos, hPos), M(vPos + 1, hPos)); getGivens(cRot, vPos, hPos) * M }
     def rotateR(vpos: Int, hpos: Int): DenseMatrix[Complex] = { typeRot = GivensType.Right; vPos = vpos; hPos = hpos; cRot = makeGivens(M(M.rows - (vPos + 2), hPos), M(M.rows - (vPos + 1), hPos)); getGivens(cRot, vPos, hPos) * M }
     /*returns tuple of Matrix A transformed and Givens Rotation Matrix (useful for QR decomp) */
@@ -107,15 +127,15 @@ object jacobi extends UFunc {
       typeRot match {
         case GivensType.Right =>
           val m = DenseMatrix.eye[Complex](M.rows)
-          m((m.cols - (vPos + 2)) to (m.cols - (vPos + 1)), (m.cols - (vPos + 2)) to (m.cols - (vPos + 1))) := DenseMatrix((jrot.m_c, -conj(jrot.m_s)), (jrot.m_s, jrot.m_c))
+          m((m.cols - (vPos + 2)) to (m.cols - (vPos + 1)), (m.cols - (vPos + 2)) to (m.cols - (vPos + 1))) := DenseMatrix((jrot.m_c, -jrot.m_s.conjugate), (jrot.m_s, jrot.m_c))
           m
         case GivensType.Left =>
           val m = DenseMatrix.eye[Complex](M.cols)
-          m(vPos to (vPos + 1), vPos to (vPos + 1)) := DenseMatrix((jrot.m_c, -conj(jrot.m_s)), (jrot.m_s, jrot.m_c))
+          m(vPos to (vPos + 1), vPos to (vPos + 1)) := DenseMatrix((jrot.m_c, -(jrot.m_s).conjugate), (jrot.m_s, jrot.m_c))
           m
         case _ => throw new IllegalArgumentException("Rotation Type not defined")
-    }
       }
+    }
 
     def getGivens(vpos: Int, hpos: Int): DenseMatrix[Complex] = getGivens(cRot, vpos, hpos)
     def getGivens: DenseMatrix[Complex] = getGivens(cRot, vPos, hPos)
@@ -126,8 +146,8 @@ object jacobi extends UFunc {
     if (j.m_c == 1 && j.m_s == 0)
       DenseMatrix.zeros[Complex](_x.size, 2)
 
-    val x1 = DenseVector.tabulate[Complex](_x.length) { (i) => j.m_c * _x(i) + conj(j.m_s) * _y(i) }
-    val y1 = DenseVector.tabulate[Complex](_y.length) { (i) => -j.m_s * _x(i) + conj(j.m_c) * _y(i) }
+    val x1 = DenseVector.tabulate[Complex](_x.length) { (i) => j.m_c * _x(i) + j.m_s.conjugate * _y(i) }
+    val y1 = DenseVector.tabulate[Complex](_y.length) { (i) => -j.m_s * _x(i) + j.m_c.conjugate * _y(i) }
     val res = DenseMatrix.vertcat(x1.t, y1.t)
     val res1 = DenseVector.horzcat(x1, y1)
 
@@ -136,11 +156,13 @@ object jacobi extends UFunc {
     for (i <- 0 to _x.length - 1) {
       val xi = _x(i)
       val yi = _y(i)
-      _x(i) = j.m_c * xi + conj(j.m_s) * yi
-      _y(i) = -j.m_s * xi + conj(j.m_c) * yi
+      _x(i) = j.m_c * xi + j.m_s.conjugate * yi
+      _y(i) = -j.m_s * xi + j.m_c.conjugate * yi
     }
   }
 
+  def makeGivens(p: Int, q: Int): JRotation = makeGivens(Complex(p, 0.0), Complex(q, 0.0))
+  def makeGivens(p: Double, q: Double): JRotation = makeGivens(Complex(p, 0.0), Complex(q, 0.0))
   /*This function implements the continuous Givens rotation
  *generation algorithm found in Anderson (2000),
  *Discontinuous Plane Rotations and the Symmetric Eigenvalue Problem.
@@ -161,28 +183,28 @@ object jacobi extends UFunc {
 
         new JRotation(m_c, m_s, r)
       case _ =>
-        val p1 = norm1(p)
-        val q1 = norm1(q)
+        val p1 = p.norm1
+        val q1 = q.norm1
         if (p1 >= q1) {
           val ps = p / p1
-          val p2 = abs2(ps)
+          val p2 = ps.abs2
           val qs = q / p1
-          val q2 = abs2(qs)
+          val q2 = qs.abs2
 
           var u = pow(1.0 + (q2 / p2), 0.5)
           if (p.real < 0)
             u = -u
 
           val m_c = Complex(1.0, 0) / u
-          val m_s = -qs * conj(ps) * (m_c / p2)
+          val m_s = -qs * ps.conjugate * (m_c / p2)
           val r = p * u
 
           new JRotation(m_c, m_s, r)
         } else {
 
-          val p2 = abs2(p / q1)
+          val p2 = (p / q1).abs2
           val qs = q / q1
-          val q2 = abs2(qs);
+          val q2 = (qs).abs2
 
           var u = q1 * pow((p2 + q2), 0.5)
 
@@ -192,7 +214,7 @@ object jacobi extends UFunc {
           val p1 = abs(p)
           val ps2 = p / p1
           val m_c = Complex(p1 / u, 0.0)
-          val m_s = -conj(ps2) * (q / u)
+          val m_s = -ps2.conjugate * (q / u)
           val r = ps2 * u
           new JRotation(m_c, m_s, r)
         }
