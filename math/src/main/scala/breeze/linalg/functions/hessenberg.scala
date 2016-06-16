@@ -36,44 +36,39 @@ import reflect.runtime.universe._
   H = I - tau v v^*
   and the vector v is:
   v^T = [1 essential^T]
-
-  Householder obj variables:
-  essential the essential part of the vector  v
-  House.tau  the scaling factor of the Householder transformation
-  House.beta the result of H * M
- */
+*/
 object hessenberg extends UFunc {
 
-  implicit object DMC_IMPL_HeCHo extends Impl[DenseMatrix[Complex], (DenseMatrix[Complex], DenseMatrix[Complex], Householder)] {
-    def apply(M: DenseMatrix[Complex]): (DenseMatrix[Complex], DenseMatrix[Complex], Householder) = {
-      new Hessenberg[Complex](M, new Householder(M.copy).generateFullHouseholder()).decompose
+  implicit object DMC_IMPL_HeCHo extends Impl[DenseMatrix[Complex], (DenseMatrix[Complex], DenseMatrix[Complex])] {
+    def apply(M: DenseMatrix[Complex]): (DenseMatrix[Complex], DenseMatrix[Complex]) = {
+      new Hessenberg[Complex](M, new Householder(M.copy, true)).decompose
     }
     //LAPACK misses this step
   }
 
-  implicit object DMD_IMPL_HeDHo extends Impl[DenseMatrix[Double], (DenseMatrix[Complex], DenseMatrix[Complex], Householder)] {
-    def apply(M: DenseMatrix[Double]): (DenseMatrix[Complex], DenseMatrix[Complex], Householder) = {
+  implicit object DMD_IMPL_HeDHo extends Impl[DenseMatrix[Double], (DenseMatrix[Complex], DenseMatrix[Complex])] {
+    def apply(M: DenseMatrix[Double]): (DenseMatrix[Complex], DenseMatrix[Complex]) = {
       val (h, hLO, hHI, tau) = getHessenbergLAPACK(M)
-      new Hessenberg[Double](M, new Householder(h.mapValues(Complex(_, 0.0)), DenseVector.tabulate[Complex](M.cols - 1)(i => Complex(tau(i), 0.0)))).decompose()
+      new Hessenberg[Double](M, new Householder(h.mapValues(Complex(_, 0.0)), DenseVector.tabulate[Complex](M.cols - 1)(i => Complex(tau(i), 0.0)),false)).decompose()
     }
   }
 
-  implicit object DMD_IMPL_DMI_DMI_Ho extends Impl[DenseMatrix[Int], (DenseMatrix[Complex], DenseMatrix[Complex], Householder)] {
-    def apply(M: DenseMatrix[Int]): (DenseMatrix[Complex], DenseMatrix[Complex], Householder) = {
+  implicit object DMD_IMPL_DMI_DMI_Ho extends Impl[DenseMatrix[Int], (DenseMatrix[Complex], DenseMatrix[Complex])] {
+    def apply(M: DenseMatrix[Int]): (DenseMatrix[Complex], DenseMatrix[Complex]) = {
       val (h, hLO, hHI, tau) = getHessenbergLAPACK(M.mapValues(_.toDouble))
-      new Hessenberg[Int](M, new Householder(h.mapValues(Complex(_, 0.0)), DenseVector.tabulate[Complex](M.cols - 1)(i => Complex(tau(i), 0.0)))).decompose()
+      new Hessenberg[Int](M, new Householder(h.mapValues(Complex(_, 0.0)), DenseVector.tabulate[Complex](M.cols - 1)(i => Complex(tau(i), 0.0)),false)).decompose()
     }
   }
-  class Hessenberg[T : TypeTag](M: DenseMatrix[T], val House: Householder) {
+  class Hessenberg[T: TypeTag](M: DenseMatrix[T], val House: Householder) {
 
-    def decompose() = (P, H, House)
+    def decompose() = (P, H)
     /*  4 x 4 example of the form
      *  1    0    0     0   ^  ------- order
      *   0    1    0    0   v
      *   0    0     x    x
      *   0    0     x    x
      */
-   def P =
+    def P =
       {
         typeTag[T].tpe match {
           case b if b =:= typeOf[Complex] => householder.householderTransformationC(House, 1)
@@ -88,11 +83,11 @@ object hessenberg extends UFunc {
      */
     def H =
       {
-	DenseMatrix.tabulate(House.matrixH.rows, House.matrixH.rows)((i, j) => if (j >= i - 1) House.matrixH(i, j) else Complex(0, 0))
+        DenseMatrix.tabulate(House.matrixH.rows, House.matrixH.rows)((i, j) => if (j >= i - 1) House.matrixH(i, j) else Complex(0, 0))
       }
   }
 
-   def getHessenbergLAPACK(X: DenseMatrix[Double]): (DenseMatrix[Double], Int, Int, Array[Double]) = {
+  def getHessenbergLAPACK(X: DenseMatrix[Double]): (DenseMatrix[Double], Int, Int, Array[Double]) = {
 
     val M = X.rows
     val N = X.cols

@@ -64,8 +64,8 @@ object schur extends UFunc {
      */
 
   //return signature (Q,T,Householder tau, Householder  H)
-  implicit object DMD_IMPL_SD extends Impl[DenseMatrix[Double], (DenseMatrix[Complex], DenseMatrix[Complex], DenseVector[Complex], DenseMatrix[Complex])] {
-    def apply(M: DenseMatrix[Double]): (DenseMatrix[Complex], DenseMatrix[Complex], DenseVector[Complex], DenseMatrix[Complex]) = {
+  implicit object DMD_IMPL_SD extends Impl[DenseMatrix[Double], (DenseMatrix[Complex], DenseMatrix[Complex])] {
+    def apply(M: DenseMatrix[Double]): (DenseMatrix[Complex], DenseMatrix[Complex]) = {
 
       new Schur[Double](M) {
 
@@ -77,8 +77,8 @@ object schur extends UFunc {
     }
   }
 
-  implicit object DMD_IMPL_SI extends Impl[DenseMatrix[Int], (DenseMatrix[Complex], DenseMatrix[Complex], DenseVector[Complex], DenseMatrix[Complex])] {
-    def apply(M: DenseMatrix[Int]): (DenseMatrix[Complex], DenseMatrix[Complex], DenseVector[Complex], DenseMatrix[Complex]) = {
+  implicit object DMD_IMPL_SI extends Impl[DenseMatrix[Int], (DenseMatrix[Complex], DenseMatrix[Complex])] {
+    def apply(M: DenseMatrix[Int]): (DenseMatrix[Complex], DenseMatrix[Complex]) = {
 
       val MD = M.mapValues(_.toDouble)
       new Schur[Double](MD) {
@@ -91,8 +91,8 @@ object schur extends UFunc {
     }
   }
 
-  implicit object DMCD_IMPL_SC extends Impl[DenseMatrix[Complex], (DenseMatrix[Complex], DenseMatrix[Complex], DenseVector[Complex], DenseMatrix[Complex])] {
-    def apply(M: DenseMatrix[Complex]): (DenseMatrix[Complex], DenseMatrix[Complex], DenseVector[Complex], DenseMatrix[Complex]) = {
+  implicit object DMCD_IMPL_SC extends Impl[DenseMatrix[Complex], (DenseMatrix[Complex], DenseMatrix[Complex])] {
+    def apply(M: DenseMatrix[Complex]): (DenseMatrix[Complex], DenseMatrix[Complex]) = {
 
       new Schur[Complex](M) {
 
@@ -198,9 +198,9 @@ object schur extends UFunc {
 	   *bulge is chased down to the bottom of the active submatrix.
 	   */
               val givrot1 = makeGivens(T(il, il) - computeShift(iu, iter), T(il + 1, il))
-              jacobi(T(il to il + 1, ::)).rotateL(givrot1)
-              jacobi(T(0 to (min(il + 2, iu)), il to il + 1)) rotateR (givrot1)
-              jacobi(Q(::, il to il + 1)) rotateR (givrot1)
+              jacobi(T(il to il + 1, ::)).rotateMutateL(givrot1)
+              jacobi(T(0 to (min(il + 2, iu)), il to il + 1)) rotateMutateR (givrot1)
+              jacobi(Q(::, il to il + 1)) rotateMutateR (givrot1)
 
               val idx: Int = 0
 
@@ -208,9 +208,9 @@ object schur extends UFunc {
                 val givrot2 = makeGivens(T(idx, idx - 1), T(idx + 1, idx - 1))
                 T(idx, idx - 1) = givrot2.rot
                 T(idx + 1, idx - 1) = Complex(0.0, 0.0)
-                jacobi(T(idx to idx + 1, idx to T.cols - 1)) rotateL (givrot2)
-                jacobi(T(0 to (min(idx + 2, iu)), idx to idx + 1)) rotateR (givrot2)
-                jacobi(Q(::, idx to idx + 1)) rotateR (givrot2)
+                jacobi(T(idx to idx + 1, idx to T.cols - 1)) rotateMutateL (givrot2)
+                jacobi(T(0 to (min(idx + 2, iu)), idx to idx + 1)) rotateMutateR (givrot2)
+                jacobi(Q(::, idx to idx + 1)) rotateMutateR (givrot2)
               }
             }
           }
@@ -222,13 +222,13 @@ object schur extends UFunc {
     if (M.rows != M.cols)
       throw new MatrixNotSquareException
 
-    val hess: (DenseMatrix[Complex], DenseMatrix[Complex], Householder)
+    val hess: (DenseMatrix[Complex], DenseMatrix[Complex])
 
     lazy val Q = hess._1
     lazy val T = hess._2
 
 
-    def decompose() = (T, Q, hess._3.tau, hess._3.matrixH)
+    def decompose() = (T, Q)
   }
   //tau =  the householder coeffs
   object getSchur extends Impl[DenseMatrix[Double], (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double], Array[Double], Array[Double], Int, Int)] {

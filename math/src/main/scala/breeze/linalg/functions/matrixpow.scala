@@ -225,7 +225,7 @@ object matrixPow extends UFunc {
   }
 
   private def cFracPart(M: DenseMatrix[Complex], pow: Double): (Option[DenseMatrix[Complex]], DenseMatrix[Complex]) = {
-    val (sT, sQ, tau, house) = schur(M)
+    val (sT, sQ) = schur(M)
     val fpow = pow - floor(pow)
     if (abs(fpow) > 0) {
       val (iminusT, noOfSqRts, degree) = getIMinusT(upperTriangular(sT))
@@ -237,7 +237,7 @@ object matrixPow extends UFunc {
     }
 
   private def dFracPart(MD: DenseMatrix[Double], pow: Double): (Option[DenseMatrix[Complex]], DenseMatrix[Complex]) = {
-    val (sT, sQ, tau, house) = schur(MD)
+    val (sT, sQ) = schur(MD)
     val M = MD.mapValues(Complex(_, 0.0))
     val fpow = pow - floor(pow)
 
