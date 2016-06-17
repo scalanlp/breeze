@@ -192,10 +192,10 @@ class HashIndex[T] extends MutableIndex[T] with Serializable {
   @throws(classOf[ClassNotFoundException])
   private def readObject(stream: ObjectInputStream): Unit = {
     HashIndex.logError("Deserializing an old-style HashIndex. Taking counter measures")
-    val objects = stream.readObject()
+    val fields = stream.readFields()
+    val objects = fields.get("objects", null)
     this.objects = objects.asInstanceOf[ArrayBuffer[T]]
     this.indices = new util.HashMap()
-    stream.readObject()
     for ( (x, i) <- this.objects.zipWithIndex) {
       indices.put(x, i)
     }

@@ -1,4 +1,4 @@
-git.baseVersion := "0.14"
+git.baseVersion := "0.13"
 // git.useGitDescribe := true
 
 val VersionRegex = "v([0-9]+.[0-9]+.[0-9]+)-?(.*)?".r
