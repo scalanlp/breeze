@@ -1,6 +1,9 @@
+enablePlugins(GitVersioning)
+
 organization := "org.scalanlp"
 
 name := "breeze-parent"
+
 
 lazy val root = project.in( file(".") )
     .aggregate(math, natives, viz, macros).dependsOn(math, viz)
@@ -54,4 +57,4 @@ pomExtra := (
       <name>David Hall</name>
       <url>http://www.dlwh.org/</url>
     </developer>
-  </developers>)
+    </developers>)
