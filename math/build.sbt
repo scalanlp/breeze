@@ -1,51 +1,9 @@
-organization := "org.scalanlp"
-
 name := "breeze"
 
-scalaVersion := Common.scalaVersion
-
-crossScalaVersions  := Common.crossScalaVersions
+Common.commonSettings
 
 addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.full)
 
-publishMavenStyle := true
-
-publishTo <<= version { (v: String) =>
-  val nexus = "https://oss.sonatype.org/"
-  if (v.trim.endsWith("SNAPSHOT"))
-    Some("snapshots" at nexus + "content/repositories/snapshots")
-  else
-    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
-}
-
-publishArtifact in Test := false
-
-pomIncludeRepository := { _ => false }
-
-pomExtra := (
-  <url>http://scalanlp.org/</url>
-  <licenses>
-    <license>
-      <name>Apache 2</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-  <scm>
-    <url>git@github.com:scalanlp/breeze.git</url>
-    <connection>scm:git:git@github.com:scalanlp/breeze.git</connection>
-  </scm>
-  <developers>
-    <developer>
-      <id>dlwh</id>
-      <name>David Hall</name>
-      <url>http://cs.berkeley.edu/~dlwh/</url>
-    </developer>
-  </developers>)
-
-scalacOptions ++= Seq("-deprecation","-language:_")//, "-no-specialization")
-
-javacOptions ++= Seq("-target", "1.6", "-source","1.6")
 
 libraryDependencies ++= Seq(
   "com.github.fommil.netlib" % "core" % "1.1.2",
@@ -89,14 +47,6 @@ try {
     }
 )
 
-resolvers ++= Seq(
-    Resolver.mavenLocal,
-    Resolver.sonatypeRepo("snapshots"),
-    Resolver.sonatypeRepo("releases"),
-    Resolver.typesafeRepo("releases")
-    )
-
-testOptions in Test += Tests.Argument("-oDF")
-
 //fork in Test := true
 javaOptions := Seq("-Xmx4g")
+
