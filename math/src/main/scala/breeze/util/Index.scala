@@ -16,7 +16,7 @@ package breeze.util
  limitations under the License.
 */
 
-import java.io.{ IOException, ObjectStreamException }
+import java.io.{ IOException, ObjectInputStream, ObjectStreamException }
 import collection.JavaConverters._
 import scala.collection.mutable.{ ArrayBuffer, HashMap }
 import java.util.Arrays
@@ -142,10 +142,10 @@ trait MutableIndex[T] extends Index[T] {
 @SerialVersionUID(-7655100457525569617L)
 class HashIndex[T] extends MutableIndex[T] with Serializable {
   /** Forward map from int to object */
-  private val objects = new ArrayBuffer[T]
+  private var objects = new ArrayBuffer[T]
 
   /** Map from object back to int index */
-  private val indices = new util.HashMap[T, Int]()
+  private var indices = new util.HashMap[T, Int]()
 
   override def size =
     indices.size
@@ -187,9 +187,23 @@ class HashIndex[T] extends MutableIndex[T] with Serializable {
     new HashIndex.SerializedForm(objects)
   }
 
+  // for backwards compatibility
+  @throws(classOf[IOException])
+  @throws(classOf[ClassNotFoundException])
+  private def readObject(stream: ObjectInputStream): Unit = {
+    HashIndex.logError("Deserializing an old-style HashIndex. Taking counter measures")
+    val objects = stream.readObject()
+    this.objects = objects.asInstanceOf[ArrayBuffer[T]]
+    this.indices = new util.HashMap()
+    stream.readObject()
+    for ( (x, i) <- this.objects.zipWithIndex) {
+      indices.put(x, i)
+    }
+  }
+
 }
 
-object HashIndex {
+object HashIndex extends SerializableLogging {
   @SerialVersionUID(1L)
   private case class SerializedForm[T](objects: IndexedSeq[T]) {
     @throws(classOf[ObjectStreamException])
@@ -199,6 +213,8 @@ object HashIndex {
       ind
     }
   }
+
+  private def logError(str: =>String) = logger.error(str)
 
 }
 
