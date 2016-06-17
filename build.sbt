@@ -4,7 +4,6 @@ organization := "org.scalanlp"
 
 name := "breeze-parent"
 
-
 lazy val root = project.in( file(".") )
     .aggregate(math, natives, viz, macros).dependsOn(math, viz)
 
@@ -26,9 +25,9 @@ addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.f
 
 publishMavenStyle := true
 
-publishTo <<= version { (v: String) =>
+publishTo <<= isSnapshot { (yes: Boolean) =>
   val nexus = "https://oss.sonatype.org/"
-  if (v.trim.endsWith("SNAPSHOT"))
+  if (yes)
     Some("snapshots" at nexus + "content/repositories/snapshots")
   else
     Some("releases"  at nexus + "service/local/staging/deploy/maven2")
