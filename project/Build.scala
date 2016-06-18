@@ -49,6 +49,7 @@ object Common {
 
     publishTo <<= isSnapshot { (yes: Boolean) =>
       val nexus = "https://oss.sonatype.org/"
+      assert(yes)
       if (yes)
         Some("snapshots" at nexus + "content/repositories/snapshots")
       else
