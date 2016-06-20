@@ -23,80 +23,126 @@ import breeze.numerics._
 /*
  * The Householder linear transformation. Describes a reflection about a plane or hyperplane containing the origin.
  * The reflection hyperplane can be defined by a unit vector v (a vector with length 1) which is orthogonal to the hyperplane. The reflection of a point x about this hyperplane is:
-* x-2<x,v> v=x-2v( v^H * x)
-* where v is given as a column unit vector with Hermitian transpose vH. This is a linear transformation given by the Householder matrix:
-* P=I-2vv^H, where I is the identity matrix.
-*
-* Widely used for tridiagonalization of symmetric matrices and for transforming non-symmetric matrices to a Hessenberg form.
-* (https://en.wikipedia.org/wiki/Householder_transformation)
+ * x-2<x,v> v=x-2v( v^H * x)
+ * where v is given as a column unit vector with Hermitian transpose vH. This is a linear transformation given by the Householder matrix:
+ * P=I-2vv^H, where I is the identity matrix.
+ *
+ * Widely used for tridiagonalization of symmetric matrices and for transforming non-symmetric matrices to a Hessenberg form.
+ * (https://en.wikipedia.org/wiki/Householder_transformation)
  */
 object householder extends UFunc {
 
   /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
-  implicit def DMT_DVC_B_Cast_Impl_H[T](implicit cast: T => Double): Impl3[DenseMatrix[T], DenseVector[Complex], Boolean, Householder] = {
-    new Impl3[DenseMatrix[T], DenseVector[Complex], Boolean, Householder] {
-      def apply(M: DenseMatrix[T], tau: DenseVector[Complex], generate: Boolean = true): Householder = {
+  // implicit def DMT_DVC_B_Cast_Impl_H[T](implicit cast: T => Double): Impl2[DenseMatrix[T], DenseVector[Complex], Householder] = {
+  //   new Impl2[DenseMatrix[T], DenseVector[Complex], Householder] {
+  //   def apply(M: DenseMatrix[T], tau: DenseVector[Complex]): Householder = {
+  //    import DenseMatrix.canMapValues
+  //    DMD_DVC_B_IMPL_H(M.mapValues(cast), tau)
+  //  }
+  //  }
+  // }
+  //
+  //
+  /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
+  implicit def DMT_Cast_Impl_H[T](implicit cast: T => Double): Impl[DenseMatrix[T], Householder] = {
+    new Impl[DenseMatrix[T], Householder] {
+      def apply(M: DenseMatrix[T]): Householder = {
         import DenseMatrix.canMapValues
-        DMD_DVC_B_IMPL_H(M.mapValues(cast), tau, generate)
+        DMD_IMPL_H(M.mapValues(cast))
       }
     }
   }
 
   /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
-  implicit def DMT_B_Cast_Impl_H[T](implicit cast: T => Double): Impl2[DenseMatrix[T], Boolean, Householder] = {
-    new Impl2[DenseMatrix[T], Boolean, Householder] {
-      def apply(M: DenseMatrix[T], generate: Boolean = true): Householder = {
+  implicit object DMD_IMPL_H extends Impl[DenseMatrix[Double], Householder] {
+    def apply(M: DenseMatrix[Double]): Householder = {
+      new Householder(M.mapValues(Complex(_, 0.0)))
+    }
+  }
+
+  /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
+  implicit object DMC_IMPL_H extends Impl[DenseMatrix[Complex], Householder] {
+    def apply(M: DenseMatrix[Complex]): Householder = {
+      new Householder(M)
+    }
+  }
+
+  /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
+  implicit def DMT_B_Cast_Impl_H[T](implicit cast: T => Double): Impl2[DenseMatrix[T], Int, Householder] = {
+    new Impl2[DenseMatrix[T], Int, Householder] {
+      def apply(M: DenseMatrix[T], shift: Int): Householder = {
         import DenseMatrix.canMapValues
-        DMD_B_IMPL_H(M.mapValues(cast), generate)
+        DMD_B_IMPL_H(M.mapValues(cast), shift)
       }
     }
   }
 
   /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
-  implicit object DMD_B_IMPL_H extends Impl2[DenseMatrix[Double], Boolean, Householder] {
-    def apply(M: DenseMatrix[Double], generate: Boolean = true): Householder = {
-      new Householder(M.mapValues(Complex(_, 0.0)), generate)
+  implicit object DMD_B_IMPL_H extends Impl2[DenseMatrix[Double], Int, Householder] {
+    def apply(M: DenseMatrix[Double], shift: Int): Householder = {
+      new Householder(M.mapValues(Complex(_, 0.0)), shift)
     }
   }
 
   /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
-  implicit object DMD_DVC_B_IMPL_H extends Impl3[DenseMatrix[Double], DenseVector[Complex], Boolean, Householder] {
-    def apply(M: DenseMatrix[Double], tau: DenseVector[Complex], generate: Boolean = true): Householder = {
-      new Householder(M.mapValues(Complex(_, 0.0)), tau, generate)
-    }
-  }
+  //implicit object DMD_DVC_B_IMPL_H extends Impl2[DenseMatrix[Double], DenseVector[Complex], Householder] {
+  //    def apply(M: DenseMatrix[Double], tau: DenseVector[Complex]): Householder = {
+  //    new Householder(M.mapValues(Complex(_, 0.0)), tau)
+  //  }
+  // }
 
   /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
-  implicit object DMC_DVC_B_IMPL_H extends Impl3[DenseMatrix[Complex], DenseVector[Complex], Boolean, Householder] {
-    def apply(M: DenseMatrix[Complex], tau: DenseVector[Complex], generate: Boolean = true): Householder = {
-      new Householder(M, tau, generate)
-    }
-  }
+  // implicit object DMC_DVC_B_IMPL_H extends Impl2[DenseMatrix[Complex], DenseVector[Complex], Householder] {
+  //   def apply(M: DenseMatrix[Complex], tau: DenseVector[Complex]): Householder = {
+  //    new Householder(M, tau)
+  //  }
+  //}
 
   /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
-  implicit object DMC_B_IMPL_H extends Impl2[DenseMatrix[Complex], Boolean, Householder] {
-    def apply(M: DenseMatrix[Complex], generate: Boolean = true): Householder = {
-      new Householder(M, generate)
+  implicit object DMC_B_IMPL_H extends Impl2[DenseMatrix[Complex], Int, Householder] {
+    def apply(M: DenseMatrix[Complex], shift: Int): Householder = {
+      new Householder(M, shift)
     }
   }
 
-  class Householder(val M: DenseMatrix[Complex], val tau: DenseVector[Complex], val essential: Array[DenseVector[Complex]], generate: Boolean = false) {
+  class Householder(val M: DenseMatrix[Complex], val tau: DenseVector[Complex], val essential: Array[DenseVector[Complex]]) {
 
-    def this(M: DenseMatrix[Complex], tau: DenseVector[Complex], gen: Boolean) = this(M, tau, Array.ofDim[DenseVector[Complex]](M.cols - 1), gen)
-    def this(M: DenseMatrix[Complex], gen: Boolean) = this(M, DenseVector.zeros[Complex](M.cols - 1), Array.ofDim[DenseVector[Complex]](M.cols - 1), gen)
+    var cShift = -1
+    def this(M: DenseMatrix[Complex], tau: DenseVector[Complex]) = this(M, tau, Array.ofDim[DenseVector[Complex]](M.cols - 1))
+    def this(M: DenseMatrix[Complex], shift: Int) = {
+
+      this(M, DenseVector.zeros[Complex](M.cols - 1), Array.ofDim[DenseVector[Complex]](M.cols - 1))
+      cShift = shift
+      makeHouseholder(cShift)
+    }
+
+    def this(M: DenseMatrix[Complex]) = this(M, 0)
 
     val size: Int = M.cols - 1
     val beta: Array[Double] = Array.ofDim[Double](size)
     val matrixH = M.copy
 
-    if (generate) {
+    def generate() = {
       for (icnt <- 0 to matrixH.rows - 2) {
-        makeHouseholder(icnt)
+
+        if (!(icnt == 0)) makeHouseholder(icnt)
+        cShift = icnt
         applyHouseholderOnTheLeft(icnt)
         applyHouseholderOnTheRight(icnt)
-    }
       }
-private   def conj(n: DenseMatrix[Complex]): DenseMatrix[Complex] = (n.mapValues(c => (c.conjugate)))
+      this
+    }
+
+    def triDiagonalize() =
+      {
+        var A = matrixH.copy
+        for (icnt <- 0 to matrixH.rows - 2) {
+          var P: DenseMatrix[Complex] = householder(A,icnt).P
+          A = P * A * P
+        }
+        A
+      }
+    private def conj(n: DenseMatrix[Complex]): DenseMatrix[Complex] = (n.mapValues(c => (c.conjugate)))
     /*
      *  4 x 4 example
      *    x    x    x    x
@@ -105,7 +151,7 @@ private   def conj(n: DenseMatrix[Complex]): DenseMatrix[Complex] = (n.mapValues
      *    [e]    [   bott  ]
      *  compute A = H A H'
      */
-    def makeHouseholder(shift: Int) = {
+    private def makeHouseholder(shift: Int) = {
       essential(shift) = matrixH((shift + 2) to matrixH.rows - 1, shift)
       val eNorm = if (essential(shift).length == 0) 0.0 else sum(essential(shift).map(x => scala.math.pow(x.real, 2) + scala.math.pow(x.imag, 2))) // Does Complex component need squaring?
 
@@ -181,24 +227,88 @@ private   def conj(n: DenseMatrix[Complex]): DenseMatrix[Complex] = (n.mapValues
       } catch { case e: Exception => }
 
     }
-  }
 
-  //householderTransformation shifted 1 with size -1
-  /*  4 x 4 example of the form
-     *  1    0    0     0   ^  ------- order (wrapper)
+    //householderTransformation shifted 1 with size -1
+    /*  4 x 4 example of the form
+     *  1    0    0     0   ^  ------- shift
      *   0    1    0    0   v
      *   0    0     x    x
      *   0    0     x    x
      */
-  def householderTransformationD(House: Householder, order: Int): DenseMatrix[Double] = {
+    def P(shift: Int): DenseMatrix[Complex] = {
+      var M = DenseMatrix.eye[Complex](matrixH.cols)
+      for (k <- (matrixH.rows - 2) to 0 by -1) {
+        val corner = M((k + 1) to (M.cols) - 1, (k + 1) to (M.cols - 1))
+        try {
+          corner :=
+            {
+              new Householder(corner, tau.mapValues(i => Complex(i.real, -1 * i.imag)), essential) {
+                applyHouseholderOnTheLeft(k, false)
+              }.matrixH
+            }
+        } catch { case e: Exception => }
+      }
+      M
+    }
+
+    def P: DenseMatrix[Complex] = if (!(cShift == -1)) P(cShift) else matrixH
+
+    //householderTransformation shifted 1 with size -1
+    /*  4 x 4 example of the form
+   *  1    0    0     0   ^  ------- shift (wrapper)
+   *   0    1    0    0   v
+   *   0    0     x    x
+   *   0    0     x    x
+   */
+    def PD(shift: Int): DenseMatrix[Complex] = {
+
+      val hMatrix = matrixH.mapValues(_.real)
+      val ctau = tau.mapValues(_.real)
+
+      if ((hMatrix.rows - shift) != ctau.length)
+        throw new MatrixNotSquareException // change to correct exception
+
+      val matHS = hMatrix(shift to (hMatrix.cols - 1), 0 to (hMatrix.rows - shift - 1))
+      val I = DenseMatrix.eye[Double](matHS.cols)
+      val hhMv = (upperTriangular(matHS.t) *:* -(I - 1.0)) +:+ I
+
+      val sum2 = (new ((Int, Int, DenseMatrix[Double]) => DenseMatrix[Double]) {
+        @tailrec def apply(from: Int, to: Int, s: DenseMatrix[Double]): DenseMatrix[Double] = {
+          if (from == to) return s;
+          apply(from + 1, to, s * -(ctau(from) * hhMv(from, ::).t * hhMv(from, ::).t.toDenseMatrix - I))
+        }
+      })(0, matHS.cols - 1, I)
+
+      if (shift != 0) {
+        val wrapper = DenseMatrix.zeros[Double](hMatrix.cols, hMatrix.cols)
+        wrapper(shift to wrapper.cols - 1, shift to wrapper.cols - 1) := sum2
+        for (cnt <- 0 to shift - 1) {
+          wrapper(cnt, cnt) = 1.0;
+        }
+        wrapper.mapValues(Complex(_, 0.0))
+      } else
+        sum2.mapValues(Complex(_, 0.0))
+    }
+
+    def PD: DenseMatrix[Complex] = if (!(cShift == -1)) PD(cShift) else matrixH
+  }
+  //householderTransformation shifted 1 with size -1
+  /*  4 x 4 example of the form
+   *  1    0    0     0   ^  ------- shift (wrapper)
+   *   0    1    0    0   v
+   *   0    0     x    x
+   *   0    0     x    x
+   */
+  /*
+  def householderTransformationD(House: Householder, shift: Int): DenseMatrix[Double] = {
 
     val hMatrix = House.matrixH.mapValues(_.real)
     val tau = House.tau.mapValues(_.real)
 
-    if ((hMatrix.rows - order) != tau.length)
+    if ((hMatrix.rows - shift) != tau.length)
       throw new MatrixNotSquareException // change to correct exception
 
-    val matHS = hMatrix(order to (hMatrix.cols - 1), 0 to (hMatrix.rows - order - 1))
+    val matHS = hMatrix(shift to (hMatrix.cols - 1), 0 to (hMatrix.rows - shift - 1))
 
     val I = DenseMatrix.eye[Double](matHS.cols)
     val hhMv = (upperTriangular(matHS.t) *:* -(I - 1.0)) +:+ I
@@ -211,23 +321,24 @@ private   def conj(n: DenseMatrix[Complex]): DenseMatrix[Complex] = (n.mapValues
       }
     })(0, matHS.cols - 1, I)
 
-    if (order != 0) {
+    if (shift != 0) {
       val wrapper = DenseMatrix.zeros[Double](hMatrix.cols, hMatrix.cols)
-      wrapper(order to wrapper.cols - 1, order to wrapper.cols - 1) := sum2
-      for (cnt <- 0 to order - 1) {
+      wrapper(shift to wrapper.cols - 1, shift to wrapper.cols - 1) := sum2
+      for (cnt <- 0 to shift - 1) {
         wrapper(cnt, cnt) = 1.0;
       }
       wrapper
     } else
+
       sum2
   }
   //householderTransformation shifted 1 with size -1
   /*  4 x 4 example of the form
-     *  1    0    0     0   ^  ------- order (wrapper)
-     *   0    1    0    0   v
-     *   0    0     x    x
-     *   0    0     x    x
-     */
+   *  1    0    0     0   ^  ------- shift (wrapper)
+   *   0    1    0    0   v
+   *   0    0     x    x
+   *   0    0     x    x
+   */
   def householderTransformationC(house: Householder, shift: Int): DenseMatrix[Complex] = {
 
     var M = DenseMatrix.eye[Complex](house.matrixH.cols)
@@ -238,7 +349,7 @@ private   def conj(n: DenseMatrix[Complex]): DenseMatrix[Complex] = (n.mapValues
       try {
         corner :=
           {
-            new Householder(corner, house.tau.mapValues(i => Complex(i.real, -1 * i.imag)), house.essential, false) {
+            new Householder(corner, house.tau.mapValues(i => Complex(i.real, -1 * i.imag)), house.essential) {
               applyHouseholderOnTheLeft(k, false)
             }.matrixH
           }
@@ -246,5 +357,16 @@ private   def conj(n: DenseMatrix[Complex]): DenseMatrix[Complex] = (n.mapValues
     }
     M
   }
+*/
+
+     def triDiagonalize(M : DenseMatrix[Complex] ) =
+      {
+        var A = M.copy
+        for (icnt <- 0 to M.rows - 2) {
+          var P: DenseMatrix[Complex] = householder(A,icnt).P
+          A = P * A * P
+        }
+        A
+      }
 }
 

@@ -41,7 +41,7 @@ object hessenberg extends UFunc {
 
   implicit object DMC_IMPL_HeCHo extends Impl[DenseMatrix[Complex], (DenseMatrix[Complex], DenseMatrix[Complex])] {
     def apply(M: DenseMatrix[Complex]): (DenseMatrix[Complex], DenseMatrix[Complex]) = {
-      new Hessenberg[Complex](M, new Householder(M.copy, true)).decompose
+      new Hessenberg[Complex](M, new Householder(M.copy).generate()).decompose
     }
     //LAPACK misses this step
   }
@@ -49,14 +49,14 @@ object hessenberg extends UFunc {
   implicit object DMD_IMPL_HeDHo extends Impl[DenseMatrix[Double], (DenseMatrix[Complex], DenseMatrix[Complex])] {
     def apply(M: DenseMatrix[Double]): (DenseMatrix[Complex], DenseMatrix[Complex]) = {
       val (h, hLO, hHI, tau) = getHessenbergLAPACK(M)
-      new Hessenberg[Double](M, new Householder(h.mapValues(Complex(_, 0.0)), DenseVector.tabulate[Complex](M.cols - 1)(i => Complex(tau(i), 0.0)),false)).decompose()
+      new Hessenberg[Double](M, new Householder(h.mapValues(Complex(_, 0.0)), DenseVector.tabulate[Complex](M.cols - 1)(i => Complex(tau(i), 0.0)))).decompose()
     }
   }
 
   implicit object DMD_IMPL_DMI_DMI_Ho extends Impl[DenseMatrix[Int], (DenseMatrix[Complex], DenseMatrix[Complex])] {
     def apply(M: DenseMatrix[Int]): (DenseMatrix[Complex], DenseMatrix[Complex]) = {
       val (h, hLO, hHI, tau) = getHessenbergLAPACK(M.mapValues(_.toDouble))
-      new Hessenberg[Int](M, new Householder(h.mapValues(Complex(_, 0.0)), DenseVector.tabulate[Complex](M.cols - 1)(i => Complex(tau(i), 0.0)),false)).decompose()
+      new Hessenberg[Int](M, new Householder(h.mapValues(Complex(_, 0.0)), DenseVector.tabulate[Complex](M.cols - 1)(i => Complex(tau(i), 0.0)))).decompose()
     }
   }
   class Hessenberg[T: TypeTag](M: DenseMatrix[T], val House: Householder) {
@@ -68,19 +68,21 @@ object hessenberg extends UFunc {
      *   0    0     x    x
      *   0    0     x    x
      */
+    //i.e P = householder.triDiagonalize(M)
     def P =
       {
         typeTag[T].tpe match {
-          case b if b =:= typeOf[Complex] => householder.householderTransformationC(House, 1)
-          case b if ((b =:= typeOf[Double]) ||  (b =:=  typeOf[Int])) => householder.householderTransformationD(House, 1).mapValues(Complex(_, 0.0))
+          case b if b =:= typeOf[Complex] =>House.P(1)
+          case b if ((b =:= typeOf[Double]) ||  (b =:=  typeOf[Int])) =>   House.PD(1)// householder.householderTransformationD(House, 1).mapValues(Complex(_, 0.0))
         }
       }
-    /*  4 x 4 example
-     *   x    x    x     x
-     *   x    x    x    x
+    /*  4 x 4 example tridiagonal matrix
+     *   x    x    0     0
+     *   x    x    x    0
      *   0    x     x    x
      *   0    0     x    x
      */
+    //This does nothing except 0's the corners
     def H =
       {
         DenseMatrix.tabulate(House.matrixH.rows, House.matrixH.rows)((i, j) => if (j >= i - 1) House.matrixH(i, j) else Complex(0, 0))
