@@ -36,8 +36,8 @@ object revertSchur extends UFunc {
 
   implicit object DMC_IMPL_DMC extends Impl2[DenseMatrix[Complex], DenseMatrix[Complex], DenseMatrix[Complex]] {
     def apply(M: DenseMatrix[Complex], U: DenseMatrix[Complex]): DenseMatrix[Complex] = {
-   U * upperTriangular(M) * U.t
-     }
+      U * upperTriangular(M) * U.t
+    }
   }
 }
 
@@ -105,7 +105,7 @@ object schur extends UFunc {
          * compared to matT(i,i) and matT(j,j), then set it to zero and
          * return true, else return false.
          */
-    private    def subdiagonalEntryIsNeglegible(i: Int) =
+        private def subdiagonalEntryIsNeglegible(i: Int) =
           {
             val d = (T(i, i)).norm1 + (T(i + 1, i + 1)).norm1
             val sd = (T(i + 1, i)).norm1
@@ -117,7 +117,7 @@ object schur extends UFunc {
           }
 
         /** Compute the shift in the current QR iteration. */
-      private  def computeShift(iu: Int, iter: Int) = {
+        private def computeShift(iu: Int, iter: Int) = {
           if (iter == 10 || iter == 20) {
             // exceptional shift, taken from http://www.netlib.org/eispack/comqr.f
             abs(T(iu, iu - 1).real) + abs(T(iu - 1, iu - 2).real)
@@ -153,7 +153,7 @@ object schur extends UFunc {
         // Rows 0,...,il-1 are decoupled from the rest because matT(il,il-1) is zero.
         // Rows il,...,iu is the part we are working on (the active submatrix).
         // Rows iu+1,...,end are already brought in triangular form.
-   private     def reduceToTriangularForm() = {
+        private def reduceToTriangularForm() = {
 
           var matnum = 0
           var matnum2 = 0
@@ -226,11 +226,10 @@ object schur extends UFunc {
     lazy val Q = hess._1
     lazy val T = hess._2
 
-
     def decompose() = (T, Q)
   }
-  val EPSILON: Double = 2.22045e-016
-    def isMuchSmallerThan(x: Double, y: Double) = { abs(x) <= abs(y) * EPSILON }
+  private val EPSILON: Double = 2.22045e-016
+  private def isMuchSmallerThan(x: Double, y: Double) = { abs(x) <= abs(y) * EPSILON }
 
   object getSchur extends Impl[DenseMatrix[Double], (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double], Array[Double], Array[Double], Int, Int)] {
     def apply(X: DenseMatrix[Double]): (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double], Array[Double], Array[Double], Int, Int) = {
@@ -341,7 +340,7 @@ object schur extends UFunc {
 	    If INFO .GT. 0 and COMPZ = 'V', then on exit  (final value of Z)  =  (initial value of Z)*U       where U is the orthogonal matrix in (*) (regardless of the value of JOB.)
 	    If INFO .GT. 0 and COMPZ = 'I', then on exit (final value of Z)  = U where U is the orthogonal matrix in (*) (regardless of the value of JOB
 	    If INFO .GT. 0 and COMPZ = 'N', then Z is not accessed.*/
-      )  ;
+      );
       (h, z, Q, wR, wI, iLO2, iHI2)
     }
 
