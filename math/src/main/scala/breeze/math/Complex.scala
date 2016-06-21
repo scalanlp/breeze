@@ -22,6 +22,7 @@ import breeze.storage.Zero
 import scala.reflect.ClassTag
 import breeze.linalg.norm
 
+
 /**
  * Immutable complex number representation backed by doubles
  * for the real and imaginary parts.

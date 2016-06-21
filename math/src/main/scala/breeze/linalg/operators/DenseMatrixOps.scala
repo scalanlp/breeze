@@ -13,9 +13,7 @@ import org.netlib.util.intW
 import com.github.fommil.netlib.BLAS.{getInstance=>blas}
 import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 
-
 import spire.syntax.cfor._
-
 import scala.{specialized=>spec}
 import scala.reflect.ClassTag
 import scalaxy.debug._
