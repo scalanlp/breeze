@@ -2,7 +2,7 @@
 
 Breeze is a library for numerical processing. It aims to be generic, clean, and powerful without sacrificing (much) efficiency.
 
-The current snapshot version is 0.13-0598e003cfa7f00f76919aa556009ad6d4fc1332. The latest release is 0.12.
+The current version is 0.12. The latest release is 0.12.
 
 ## Documentation
 
@@ -35,16 +35,11 @@ libraryDependencies  ++= Seq(
   // the visualization library is distributed separately as well. 
   // It depends on LGPL code.
     "org.scalanlp" %% "breeze-viz" % "0.12"
-    
-    // To depend on snapshot versions, use:
-      "org.scalanlp" %% "breeze" % "latest.integration",
 )
-
-
 
 resolvers ++= Seq(
   // other resolvers here
-  // if you want to use snapshot builds (currently 0.13-0598e003cfa7f00f76919aa556009ad6d4fc1332-SNAPSHOT), use this.
+  // if you want to use snapshot builds (currently 0.12-SNAPSHOT), use this.
   "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
   "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 )
@@ -113,4 +108,4 @@ Corporate (Code) Contributors:
 * [crealytics GmbH, Berlin/Passau, Germany](https://crealytics.com/)
 
 
-And others (contact David Hall if you've contributed and aren't listed).
+And others (contact David Hall if you've contributed code and aren't listed).
