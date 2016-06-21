@@ -152,11 +152,13 @@ object matrixPow extends UFunc {
 
   private val maxNormForPade: Double = 2.789358995219730e-1
 
-
   private def getIMinusT(T: DenseMatrix[Complex], numSquareRoots: Int = 0, deg1: Double = 10.0, deg2: Double = 0.0): (DenseMatrix[Complex], Int, Int) = {
 
     val IminusT = DenseMatrix.eye[Complex](T.rows) - T
-    val normIminusT = (IminusT(::, *).map(_.map(_.abs).sum)).t.max
+    val normIminusT = breeze.linalg.max(IminusT(::, *).map(_.map(_.abs).sum).t)
+
+    if (normIminusT == 1)
+      return (IminusT, numSquareRoots,  padeDegree(normIminusT))
 
     if (normIminusT < maxNormForPade) {
       val rdeg1 = padeDegree(normIminusT)
@@ -168,7 +170,6 @@ object matrixPow extends UFunc {
     }
     getIMinusT(upperTriangular(sqrtTriangular(T)), numSquareRoots + 1, deg1, deg2)
   }
-
 
   private def computeSuperDiag(curr: Complex, prev: Complex, p: Double): Complex = {
 

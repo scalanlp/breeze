@@ -69,7 +69,7 @@ object schur extends UFunc {
       new Schur[Double](M) {
 
         override val hess = hessenberg(M)
-        val (s, z, y2, wR, wI, sLO, sHI) = getSchur(M) //LAPACK
+        val (s, z, y2, wR, wI, sLO, sHI) = getSchurLAPACK(M) //LAPACK
         lazy override val T = DenseMatrix.tabulate[Complex](M.cols, M.rows)((i, j) => Complex(s(i, j), 0.0))
         lazy override val Q = hess._1 * DenseMatrix.tabulate[Complex](M.cols, M.rows)((i, j) => Complex(z(i, j), 0.0))
       }.decompose()
@@ -83,7 +83,7 @@ object schur extends UFunc {
       new Schur[Double](MD) {
 
         override val hess = hessenberg(MD)
-        val (s, z, y2, wR, wI, sLO, sHI) = getSchur(MD) //LAPACK
+        val (s, z, y2, wR, wI, sLO, sHI) = getSchurLAPACK(MD) //LAPACK
         lazy override val T = DenseMatrix.tabulate[Complex](M.cols, M.rows)((i, j) => Complex(s(i, j), 0.0))
         lazy override val Q = hess._1 * DenseMatrix.tabulate[Complex](M.cols, M.rows)((i, j) => Complex(z(i, j), 0.0))
       }.decompose()
@@ -231,7 +231,7 @@ object schur extends UFunc {
   private val EPSILON: Double = 2.22045e-016
   private def isMuchSmallerThan(x: Double, y: Double) = { abs(x) <= abs(y) * EPSILON }
 
-  object getSchur extends Impl[DenseMatrix[Double], (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double], Array[Double], Array[Double], Int, Int)] {
+  object getSchurLAPACK extends Impl[DenseMatrix[Double], (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double], Array[Double], Array[Double], Int, Int)] {
     def apply(X: DenseMatrix[Double]): (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double], Array[Double], Array[Double], Int, Int) = {
 
       val Y = X.copy

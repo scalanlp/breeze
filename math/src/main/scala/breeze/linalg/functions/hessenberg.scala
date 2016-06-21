@@ -59,7 +59,7 @@ object hessenberg extends UFunc {
       new Hessenberg[Int](M, new Householder(h.mapValues(Complex(_, 0.0)), DenseVector.tabulate[Complex](M.cols - 1)(i => Complex(tau(i), 0.0)))).decompose()
     }
   }
-  class Hessenberg[T: TypeTag](M: DenseMatrix[T], val House: Householder) {
+  class Hessenberg[T: TypeTag](M: DenseMatrix[T], val House: Householder[T]) {
 
     def decompose() = (P, H)
     /*  4 x 4 example of the form
@@ -69,13 +69,8 @@ object hessenberg extends UFunc {
      *   0    0     x    x
      */
 
-    def P =
-      {
-        typeTag[T].tpe match {
-          case b if b =:= typeOf[Complex] =>House.P(1)
-          case b if ((b =:= typeOf[Double]) ||  (b =:=  typeOf[Int])) =>   House.PD(1)// householder.householderTransformationD(House, 1).mapValues(Complex(_, 0.0))
-        }
-      }
+    def P = House.P(1)
+
     /*  4 x 4 example tridiagonal matrix
      *   x    x    0     0
      *   x    x    x    0
@@ -83,10 +78,8 @@ object hessenberg extends UFunc {
      *   0    0     x    x
      */
     //This does nothing except zero the corners     i.e H = householder.triDiagonalize(M)
-    def H =
-      {
-        DenseMatrix.tabulate(House.matrixH.rows, House.matrixH.rows)((i, j) => if (j >= i - 1) House.matrixH(i, j) else Complex(0, 0))
-      }
+    def H = DenseMatrix.tabulate(House.matrixH.rows, House.matrixH.rows)((i, j) => if (j >= i - 1) House.matrixH(i, j) else Complex(0, 0))
+
   }
 
   def getHessenbergLAPACK(X: DenseMatrix[Double]): (DenseMatrix[Double], Int, Int, Array[Double]) = {
