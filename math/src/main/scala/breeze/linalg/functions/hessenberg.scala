@@ -68,7 +68,7 @@ object hessenberg extends UFunc {
      *   0    0     x    x
      *   0    0     x    x
      */
-    //i.e P = householder.triDiagonalize(M)
+
     def P =
       {
         typeTag[T].tpe match {
@@ -82,7 +82,7 @@ object hessenberg extends UFunc {
      *   0    x     x    x
      *   0    0     x    x
      */
-    //This does nothing except 0's the corners
+    //This does nothing except zero the corners     i.e H = householder.triDiagonalize(M)
     def H =
       {
         DenseMatrix.tabulate(House.matrixH.rows, House.matrixH.rows)((i, j) => if (j >= i - 1) House.matrixH(i, j) else Complex(0, 0))

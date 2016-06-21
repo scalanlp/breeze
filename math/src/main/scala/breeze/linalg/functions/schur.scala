@@ -196,7 +196,7 @@ object schur extends UFunc {
 	   *creates a bulge; the (il+2,il) element becomes nonzero. This
 	   *bulge is chased down to the bottom of the active submatrix.
 	   */
-              val givrot1 = makeGivens(T(il, il) - computeShift(iu, iter), T(il + 1, il))
+              val givrot1 = Givens(T(il, il) - computeShift(iu, iter), T(il + 1, il))
               jacobi(T(il to il + 1, ::)).rotateMutateL(givrot1)
               jacobi(T(0 to (min(il + 2, iu)), il to il + 1)) rotateMutateR (givrot1)
               jacobi(Q(::, il to il + 1)) rotateMutateR (givrot1)
@@ -204,7 +204,7 @@ object schur extends UFunc {
               val idx: Int = 0
 
               for (idx <- ((il + 1) to iu - 1)) {
-                val givrot2 = makeGivens(T(idx, idx - 1), T(idx + 1, idx - 1))
+                val givrot2 = Givens(T(idx, idx - 1), T(idx + 1, idx - 1))
                 T(idx, idx - 1) = givrot2.rot
                 T(idx + 1, idx - 1) = Complex(0.0, 0.0)
                 jacobi(T(idx to idx + 1, idx to T.cols - 1)) rotateMutateL (givrot2)

@@ -14,6 +14,7 @@ package breeze.linalg
  See the License for the specific language governing permissions and
  limitations under the License.
  */
+import breeze.linalg.jacobi.Givens.GivensType
 import breeze.math._
 import breeze.generic.UFunc
 import DenseMatrix.canMapValues
@@ -52,29 +53,23 @@ object jacobi extends UFunc {
   }
 
   class Jacobi(val M: DenseMatrix[Complex]) {
-    object GivensType {
-      sealed trait EnumVal
-      case object Undefined extends EnumVal
-      case object Right extends EnumVal
-      case object Left extends EnumVal
-      val givensType = Seq(Right, Left)
-    }
-    var cRot: JRotation = new JRotation(null, null, null)
+
+    var cGivens: Givens = new Givens(null, null, null)
     var vPos: Int = 0
     var hPos: Int = 0
     var typeRot: GivensType.EnumVal = GivensType.Undefined
 
     //mutating (speedier)
-    def rotateMutateL(jrot: JRotation) = { cRot = new JRotation((jrot.m_c).conjugate, -(jrot.m_s), jrot.rot); jacobi.applyRotationinPlane(M(0, ::).t, M(1, ::).t, cRot) }
-    def rotateMutateR(jrot: JRotation) = { cRot = new JRotation((jrot.m_c), -(jrot.m_s).conjugate, jrot.rot); jacobi.applyRotationinPlane(M(::, 0), M(::, 1), cRot) }
+    def rotateMutateL(g: Givens) = { cGivens = new Givens((g.m_c).conjugate, -(g.m_s), g.rot); jacobi.applyRotationinPlane(M(0, ::).t, M(1, ::).t, cGivens) }
+    def rotateMutateR(g: Givens) = { cGivens = new Givens((g.m_c), -(g.m_s).conjugate, g.rot); jacobi.applyRotationinPlane(M(::, 0), M(::, 1), cGivens) }
 
     //non-mutating
-    def rotateL(jrot: JRotation, vpos: Int = 0, hpos: Int = 0) = { typeRot = GivensType.Left; vPos = vpos; hPos = hpos; cRot = jrot; getGivens(cRot, vPos, hPos) * M }
-    def rotateR(jrot: JRotation, vpos: Int = 0, hpos: Int = 0) = { typeRot = GivensType.Right; vPos = vpos; hPos = hpos; cRot = jrot; getGivens(cRot, vPos, hPos) * M }
+    def rotateL(g: Givens, vpos: Int = 0, hpos: Int = 0) = { typeRot = GivensType.Left; vPos = vpos; hPos = hpos; cGivens = g; getGivens(cGivens, vPos, hPos) * M }
+    def rotateR(g: Givens, vpos: Int = 0, hpos: Int = 0) = { typeRot = GivensType.Right; vPos = vpos; hPos = hpos; cGivens = g; getGivens(cGivens, vPos, hPos) * M }
 
     //non-mutating using Givens (p,q)
-    def rotateL(p: Complex, q: Complex, vpos: Int, hpos: Int): DenseMatrix[Complex] = rotateL(makeGivens(p, q), vpos, hpos)
-    def rotateR(p: Complex, q: Complex, vpos: Int, hpos: Int): DenseMatrix[Complex] = rotateR(makeGivens(p, q), vpos, hpos)
+    def rotateL(p: Complex, q: Complex, vpos: Int, hpos: Int): DenseMatrix[Complex] = rotateL(Givens(p, q), vpos, hpos)
+    def rotateR(p: Complex, q: Complex, vpos: Int, hpos: Int): DenseMatrix[Complex] = rotateR(Givens(p, q), vpos, hpos)
 
     /* Method fo Givens QR decomposition
 
@@ -109,45 +104,45 @@ object jacobi extends UFunc {
      [0 0 1  0]
      [0 0 0 1]
      */
-    def rotateL(vpos: Int, hpos: Int): DenseMatrix[Complex] = { typeRot = GivensType.Left; vPos = vpos; hPos = hpos; cRot = makeGivens(M(vPos, hPos), M(vPos + 1, hPos)); getGivens(cRot, vPos, hPos) * M }
-    def rotateR(vpos: Int, hpos: Int): DenseMatrix[Complex] = { typeRot = GivensType.Right; vPos = vpos; hPos = hpos; cRot = makeGivens(M(M.rows - (vPos + 2), hPos), M(M.rows - (vPos + 1), hPos)); getGivens(cRot, vPos, hPos) * M }
+    def rotateL(vpos: Int, hpos: Int): DenseMatrix[Complex] = { typeRot = GivensType.Left; vPos = vpos; hPos = hpos; cGivens = Givens(M(vPos, hPos), M(vPos + 1, hPos)); getGivens(cGivens, vPos, hPos) * M }
+    def rotateR(vpos: Int, hpos: Int): DenseMatrix[Complex] = { typeRot = GivensType.Right; vPos = vpos; hPos = hpos; cGivens = Givens(M(M.rows - (vPos + 2), hPos), M(M.rows - (vPos + 1), hPos)); getGivens(cGivens, vPos, hPos) * M }
     /*returns tuple of Matrix A transformed and Givens Rotation Matrix (useful for QR decomp) */
-    def rotate2L(vpos: Int, hpos: Int): (DenseMatrix[Complex], DenseMatrix[Complex]) = { typeRot = GivensType.Left; vPos = vpos; hPos = hpos; cRot = makeGivens(M(vPos, hPos), M(vPos + 1, hPos)); (getGivens(cRot, vPos, hPos) * M, getGivens(cRot, vPos, hPos)) }
+    def rotate2L(vpos: Int, hpos: Int): (DenseMatrix[Complex], DenseMatrix[Complex]) = { typeRot = GivensType.Left; vPos = vpos; hPos = hpos; cGivens = Givens(M(vPos, hPos), M(vPos + 1, hPos)); (getGivens(cGivens, vPos, hPos) * M, getGivens(cGivens, vPos, hPos)) }
     /*returns tuple of Matrix A transformed and Givens Rotation Matrix (useful for QR decomp) */
-    def rotate2R(vpos: Int, hpos: Int): (DenseMatrix[Complex], DenseMatrix[Complex]) = { typeRot = GivensType.Right; vPos = vpos; hPos = hpos; cRot = makeGivens(M(M.rows - (vPos + 2), hPos), M(M.rows - (vpos + 1), hPos)); (getGivens(cRot, vPos, hPos) * M, getGivens(cRot, vPos, hPos)) }
+    def rotate2R(vpos: Int, hpos: Int): (DenseMatrix[Complex], DenseMatrix[Complex]) = { typeRot = GivensType.Right; vPos = vpos; hPos = hpos; cGivens = Givens(M(M.rows - (vPos + 2), hPos), M(M.rows - (vpos + 1), hPos)); (getGivens(cGivens, vPos, hPos) * M, getGivens(cGivens, vPos, hPos)) }
 
     //semi static method
     /* returns the Givens Matrix G used in Rotation */
-    def getGivens(jrot: JRotation, vpos: Int, hpos: Int): DenseMatrix[Complex] = {
+    def getGivens(g: Givens, vpos: Int, hpos: Int): DenseMatrix[Complex] = {
 
       vPos = vpos
       hPos = hpos
-      cRot = jrot
+      cGivens = g
 
       typeRot match {
         case GivensType.Right =>
           val m = DenseMatrix.eye[Complex](M.rows)
-          m((m.cols - (vPos + 2)) to (m.cols - (vPos + 1)), (m.cols - (vPos + 2)) to (m.cols - (vPos + 1))) := DenseMatrix((jrot.m_c, -jrot.m_s.conjugate), (jrot.m_s, jrot.m_c))
+          m((m.cols - (vPos + 2)) to (m.cols - (vPos + 1)), (m.cols - (vPos + 2)) to (m.cols - (vPos + 1))) := g.G
           m
         case GivensType.Left =>
           val m = DenseMatrix.eye[Complex](M.cols)
-          m(vPos to (vPos + 1), vPos to (vPos + 1)) := DenseMatrix((jrot.m_c, -(jrot.m_s).conjugate), (jrot.m_s, jrot.m_c))
+          m(vPos to (vPos + 1), vPos to (vPos + 1)) := g.G
           m
         case _ => throw new IllegalArgumentException("Rotation Type not defined")
       }
     }
 
-    def getGivens(vpos: Int, hpos: Int): DenseMatrix[Complex] = getGivens(cRot, vpos, hpos)
-    def getGivens: DenseMatrix[Complex] = getGivens(cRot, vPos, hPos)
+    def getGivens(vpos: Int, hpos: Int): DenseMatrix[Complex] = getGivens(cGivens, vpos, hpos)
+    def getGivens: DenseMatrix[Complex] = getGivens(cGivens, vPos, hPos)
   }
 
-  private def applyRotationinPlane(_x: DenseVector[Complex], _y: DenseVector[Complex], j: JRotation) = {
+  private def applyRotationinPlane(_x: DenseVector[Complex], _y: DenseVector[Complex], g: Givens) = {
 
-    if (j.m_c == 1 && j.m_s == 0)
+    if (g.m_c == 1 && g.m_s == 0)
       DenseMatrix.zeros[Complex](_x.size, 2)
 
-    val x1 = DenseVector.tabulate[Complex](_x.length) { (i) => j.m_c * _x(i) + j.m_s.conjugate * _y(i) }
-    val y1 = DenseVector.tabulate[Complex](_y.length) { (i) => -j.m_s * _x(i) + j.m_c.conjugate * _y(i) }
+    val x1 = DenseVector.tabulate[Complex](_x.length) { (i) => g.m_c * _x(i) + g.m_s.conjugate * _y(i) }
+    val y1 = DenseVector.tabulate[Complex](_y.length) { (i) => -g.m_s * _x(i) + g.m_c.conjugate * _y(i) }
     val res = DenseMatrix.vertcat(x1.t, y1.t)
     val res1 = DenseVector.horzcat(x1, y1)
 
@@ -156,70 +151,84 @@ object jacobi extends UFunc {
     for (i <- 0 to _x.length - 1) {
       val xi = _x(i)
       val yi = _y(i)
-      _x(i) = j.m_c * xi + j.m_s.conjugate * yi
-      _y(i) = -j.m_s * xi + j.m_c.conjugate * yi
+      _x(i) = g.m_c * xi + g.m_s.conjugate * yi
+      _y(i) = -g.m_s * xi + g.m_c.conjugate * yi
     }
   }
 
-  def makeGivens(p: Int, q: Int): JRotation = makeGivens(Complex(p, 0.0), Complex(q, 0.0))
-  def makeGivens(p: Double, q: Double): JRotation = makeGivens(Complex(p, 0.0), Complex(q, 0.0))
-  /*This function implements the continuous Givens rotation
+  case class Givens(val m_c: Complex, val m_s: Complex, val rot: Complex) {
+
+    def G = DenseMatrix((m_c, -m_s.conjugate), (m_s, m_c))
+    def y = rot
+    def planerot: (DenseMatrix[Complex], Complex) = (G, rot)
+  }
+  object Givens {
+    object GivensType {
+      sealed trait EnumVal
+      case object Undefined extends EnumVal
+      case object Right extends EnumVal
+      case object Left extends EnumVal
+      val givensType = Seq(Right, Left)
+    }
+
+    def apply(p: Int, q: Int): Givens = this(Complex(p, 0.0), Complex(q, 0.0))
+    def apply(p: Double, q: Double): Givens = this(Complex(p, 0.0), Complex(q, 0.0))
+    /*This function implements the continuous Givens rotation
  *generation algorithm found in Anderson (2000),
  *Discontinuous Plane Rotations and the Symmetric Eigenvalue Problem.
  *LAPACK Working Note 150, University of Tennessee, UT-CS-00-454, December 4, 2000. */
-  def makeGivens(p: Complex, q: Complex): JRotation = {
+    def apply(p: Complex, q: Complex): Givens = {
 
-    (p, q) match {
-      case (_, Complex(0.0, 0.0)) =>
-        val m_c = if (p.real < 0) Complex(-1.0, 0.0) else Complex(1.0, 0.0)
-        val m_s = Complex(0.0, 0.0)
-        val r = m_c * p;
-        new JRotation(m_c, m_s, r)
+      (p, q) match {
+        case (_, Complex(0.0, 0.0)) =>
+          val m_c = if (p.real < 0) Complex(-1.0, 0.0) else Complex(1.0, 0.0)
+          val m_s = Complex(0.0, 0.0)
+          val r = m_c * p;
+          new Givens(m_c, m_s, r)
 
-      case (Complex(0.0, 0.0), _) =>
-        val m_c = Complex(0.0, 0.0)
-        val m_s = -q / abs(q)
-        val r = Complex(abs(q), 0.0)
+        case (Complex(0.0, 0.0), _) =>
+          val m_c = Complex(0.0, 0.0)
+          val m_s = -q / abs(q)
+          val r = Complex(abs(q), 0.0)
 
-        new JRotation(m_c, m_s, r)
-      case _ =>
-        val p1 = p.norm1
-        val q1 = q.norm1
-        if (p1 >= q1) {
-          val ps = p / p1
-          val p2 = ps.abs2
-          val qs = q / p1
-          val q2 = qs.abs2
+          new Givens(m_c, m_s, r)
+        case _ =>
+          val p1 = p.norm1
+          val q1 = q.norm1
+          if (p1 >= q1) {
+            val ps = p / p1
+            val p2 = ps.abs2
+            val qs = q / p1
+            val q2 = qs.abs2
 
-          var u = pow(1.0 + (q2 / p2), 0.5)
-          if (p.real < 0)
-            u = -u
+            var u = pow(1.0 + (q2 / p2), 0.5)
+            if (p.real < 0)
+              u = -u
 
-          val m_c = Complex(1.0, 0) / u
-          val m_s = -qs * ps.conjugate * (m_c / p2)
-          val r = p * u
+            val m_c = Complex(1.0, 0) / u
+            val m_s = -qs * ps.conjugate * (m_c / p2)
+            val r = p * u
 
-          new JRotation(m_c, m_s, r)
-        } else {
+            new Givens(m_c, m_s, r)
+          } else {
 
-          val p2 = (p / q1).abs2
-          val qs = q / q1
-          val q2 = (qs).abs2
+            val p2 = (p / q1).abs2
+            val qs = q / q1
+            val q2 = (qs).abs2
 
-          var u = q1 * pow((p2 + q2), 0.5)
+            var u = q1 * pow((p2 + q2), 0.5)
 
-          if (p.real < 0)
-            u = -u
+            if (p.real < 0)
+              u = -u
 
-          val p1 = abs(p)
-          val ps2 = p / p1
-          val m_c = Complex(p1 / u, 0.0)
-          val m_s = -ps2.conjugate * (q / u)
-          val r = ps2 * u
-          new JRotation(m_c, m_s, r)
-        }
+            val p1 = abs(p)
+            val ps2 = p / p1
+            val m_c = Complex(p1 / u, 0.0)
+            val m_s = -ps2.conjugate * (q / u)
+            val r = ps2 * u
+            new Givens(m_c, m_s, r)
+          }
+      }
     }
   }
-
-  class JRotation(val m_c: Complex, val m_s: Complex, val rot: Complex) {}
 }
