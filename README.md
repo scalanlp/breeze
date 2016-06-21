@@ -2,7 +2,7 @@
 
 Breeze is a library for numerical processing. It aims to be generic, clean, and powerful without sacrificing (much) efficiency.
 
-The current snapshot version is 0.13-0598e003cfa7f00f76919aa556009ad6d4fc1332. The latest release is 0.12.
+The current version is 0.12. The latest release is 0.12.
 
 ## Documentation
 

@@ -151,7 +151,7 @@ object matrixPow extends UFunc {
   }
 
   private val maxNormForPade: Double = 2.789358995219730e-1
- 
+
 
   private def getIMinusT(T: DenseMatrix[Complex], numSquareRoots: Int = 0, deg1: Double = 10.0, deg2: Double = 0.0): (DenseMatrix[Complex], Int, Int) = {
 
