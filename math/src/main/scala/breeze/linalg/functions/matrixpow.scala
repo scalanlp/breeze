@@ -152,13 +152,13 @@ object matrixPow extends UFunc {
 
   private val maxNormForPade: Double = 2.789358995219730e-1
 
-  private def getIMinusT(T: DenseMatrix[Complex], numSquareRoots: Int = 0, deg1: Double = 10.0, deg2: Double = 0.0): (DenseMatrix[Complex], Int, Int) = {
+  private def eyeMinusT(T: DenseMatrix[Complex], numSquareRoots: Int = 0, deg1: Double = 10.0, deg2: Double = 0.0): (DenseMatrix[Complex], Int, Int) = {
 
     val IminusT = DenseMatrix.eye[Complex](T.rows) - T
     val normIminusT = breeze.linalg.max(IminusT(::, *).map(_.map(_.abs).sum).t)
 
-    if (normIminusT == 1)
-      return (IminusT, numSquareRoots,  padeDegree(normIminusT))
+    if (normIminusT == 1 || normIminusT == NaN || normIminusT.isNaN || normIminusT.isInfinity) //cannot root these
+      return (IminusT, numSquareRoots, padeDegree(normIminusT))
 
     if (normIminusT < maxNormForPade) {
       val rdeg1 = padeDegree(normIminusT)
@@ -166,9 +166,9 @@ object matrixPow extends UFunc {
       if (rdeg1 - rdeg2 <= 1.0)
         return (IminusT, numSquareRoots, rdeg1)
       else
-        getIMinusT(upperTriangular(sqrtTriangular(T)), numSquareRoots, rdeg1, rdeg2)
+        eyeMinusT(upperTriangular(sqrtTriangular(T)), numSquareRoots, rdeg1, rdeg2)
     }
-    getIMinusT(upperTriangular(sqrtTriangular(T)), numSquareRoots + 1, deg1, deg2)
+    eyeMinusT(upperTriangular(sqrtTriangular(T)), numSquareRoots + 1, deg1, deg2)
   }
 
   private def computeSuperDiag(curr: Complex, prev: Complex, p: Double): Complex = {
@@ -237,9 +237,13 @@ object matrixPow extends UFunc {
 
   private def cFracPart(M: DenseMatrix[Complex], pow: Double): (Option[DenseMatrix[Complex]], DenseMatrix[Complex]) = {
     val (sT, sQ) = schur(M)
+
+    for (i <- 0 until sT.cols)
+      if (sT(i, i) == 0.0) throw new MatrixSingularException
+
     val fpow = pow - floor(pow)
     if (abs(fpow) > 0) {
-      val (iminusT, noOfSqRts, degree) = getIMinusT(upperTriangular(sT))
+      val (iminusT, noOfSqRts, degree) = eyeMinusT(upperTriangular(sT))
       val pT = computeFracPower(padePower(iminusT, fpow, degree), sT, fpow, noOfSqRts)
       (Some(pT), sQ)
     } else {
@@ -249,11 +253,15 @@ object matrixPow extends UFunc {
 
   private def dFracPart(MD: DenseMatrix[Double], pow: Double): (Option[DenseMatrix[Complex]], DenseMatrix[Complex]) = {
     val (sT, sQ) = schur(MD)
+
+    for (i <- 0 until sT.cols)
+      if (sT(i, i) == 0.0) throw new MatrixSingularException
+
     val M = MD.mapValues(Complex(_, 0.0))
     val fpow = pow - floor(pow)
 
     if (abs(fpow) > 0) {
-      val (iminusT, noOfSqRts, degree) = getIMinusT(upperTriangular(sT))
+      val (iminusT, noOfSqRts, degree) = eyeMinusT(upperTriangular(sT))
       val pT = computeFracPower(padePower(iminusT, fpow, degree), sT, fpow, noOfSqRts)
       (Some(pT), sQ)
     } else

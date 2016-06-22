@@ -51,7 +51,7 @@ object householder extends UFunc {
     new Impl[DenseMatrix[T], Householder[Double]] {
       def apply(M: DenseMatrix[T]): Householder[Double] = {
         import DenseMatrix.canMapValues
-        DMD_IMPL_H(M.mapValues(cast))
+        DMD_IMPL_HD(M.mapValues(cast))
       }
     }
   }
