@@ -10,13 +10,13 @@ addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.f
 
 publishMavenStyle := true
 
-publishTo <<= version { (v: String) =>		 + credentials  ++= Seq(Credentials(Path.userHome / ".sbt" / ".credentials"))
-   val nexus = "https://oss.sonatype.org/"		 +
-   if (v.trim.endsWith("SNAPSHOT"))		 +  publishTo <<= version { v: String =>
-     Some("snapshots" at nexus + "content/repositories/snapshots")		 +         val nexus = "http://think-station:8081/nexus/"
-   else		 +          if (v.trim.endsWith("SNAPSHOT"))
-     Some("releases"  at nexus + "service/local/staging/deploy/maven2")		 +           Some("snapshots" at nexus + "content/repositories/snapshots")
- }
+publishTo <<= version { (v: String) =>
+  val nexus = "https://oss.sonatype.org/"
+  if (v.trim.endsWith("SNAPSHOT"))
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+}
 
 publishArtifact in Test := false
 
