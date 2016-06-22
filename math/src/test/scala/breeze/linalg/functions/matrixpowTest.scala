@@ -50,8 +50,8 @@ class matrixpowTest extends FunSuite {
       (Complex(-3.973367, -76.4725), Complex(-103.3028, 8.502425), Complex(-19.32138, 73.56532), Complex(7.523441, -34.40238)),
       (Complex(-14.14099, 41.26098), Complex(5.029781, 14.54831), Complex(37.6544, -49.56061), Complex(-24.46144, 55.50666))
     )
-    val e = expectedResult.mapValues((i) => Complex((((i.real * 10000.0).round) / 10000.0), (((i.imag * 10000.0).round) / 10000.0)))
-    val t = testingResult.mapValues((i) => Complex((((i.real * 10000.0).round) / 10000.0), (((i.imag * 10000.0).round) / 10000.0)))
+    val e = expectedResult.mapValues((i) => Complex((((i.real * 1000.0).round) / 1000.0), (((i.imag * 1000.0).round) / 1000.0)))
+    val t = testingResult.mapValues((i) => Complex((((i.real * 1000.0).round) / 1000.0), (((i.imag * 1000.0).round) / 1000.0)))
     assert(e == t)
   }
 
