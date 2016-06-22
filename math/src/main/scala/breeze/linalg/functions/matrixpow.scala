@@ -215,8 +215,8 @@ object matrixPow extends UFunc {
     else {
       val half = computeIntPowerD(exp / 2, value)
       half * half
-  }
     }
+  }
 
   private def computeIntPowerC(exp: Double, value: DenseMatrix[Complex]): DenseMatrix[Complex] = {
     if (exp == 1) value
@@ -224,8 +224,8 @@ object matrixPow extends UFunc {
     else {
       val half = computeIntPowerC(exp / 2, value)
       half * half
-  }
     }
+  }
 
   @tailrec
   private def computeFracPower(value: DenseMatrix[Complex], sT: DenseMatrix[Complex], frac_power: Double, noOfSqRts: Int): DenseMatrix[Complex] = {
@@ -238,46 +238,47 @@ object matrixPow extends UFunc {
   private def cFracPart(M: DenseMatrix[Complex], pow: Double): (Option[DenseMatrix[Complex]], DenseMatrix[Complex]) = {
     val (sT, sQ) = schur(M)
 
-    for (i <- 0 until sT.cols)
-      if (sT(i, i) == 0.0) throw new MatrixSingularException
-
     val fpow = pow - floor(pow)
     if (abs(fpow) > 0) {
+      for (i <- 0 until sT.cols) if (sT(i, i) == 0.0) throw new MatrixSingularException
       val (iminusT, noOfSqRts, degree) = eyeMinusT(upperTriangular(sT))
       val pT = computeFracPower(padePower(iminusT, fpow, degree), sT, fpow, noOfSqRts)
       (Some(pT), sQ)
     } else {
       (None, sQ)
-  }
     }
+  }
 
   private def dFracPart(MD: DenseMatrix[Double], pow: Double): (Option[DenseMatrix[Complex]], DenseMatrix[Complex]) = {
-    val (sT, sQ) = schur(MD)
-
-    for (i <- 0 until sT.cols)
-      if (sT(i, i) == 0.0) throw new MatrixSingularException
 
     val M = MD.mapValues(Complex(_, 0.0))
+    val (t1, t2) = schur(MD)
+    var schLapack = true
+    for (i <- 0 until t1.cols) if (t1(i, i) == 0.0) schLapack = false //hack. falls back to non LAPACK solution
+
+    val (sT, sQ) = if (!schLapack) schur(M) else (t1, t2)
     val fpow = pow - floor(pow)
 
     if (abs(fpow) > 0) {
+      for (i <- 0 until t1.cols) if (sT(i, i) == 0.0) throw new MatrixSingularException
+
       val (iminusT, noOfSqRts, degree) = eyeMinusT(upperTriangular(sT))
       val pT = computeFracPower(padePower(iminusT, fpow, degree), sT, fpow, noOfSqRts)
       (Some(pT), sQ)
     } else
       (None, sQ)
   }
-
   private def fractC(pow: Double, M: DenseMatrix[Complex]): DenseMatrix[Complex] = {
     val ipower = abs(floor(pow))
     val intPow = if (pow < 0.0)
       throw new IllegalArgumentException("Cannot currently invert complex matrices.")
 
+
     return cFracPart(M, pow) match {
       case (None, _) => computeIntPowerC(ipower, M)
       case (pT, sQ) => if (ipower > 0) revertSchur(pT.get, sQ) * computeIntPowerC(ipower, M) else revertSchur(pT.get, sQ)
-  }
     }
+  }
 
   private def fractI(pow: Double, M: DenseMatrix[Int]): DenseMatrix[Complex] = fractD(pow, M.mapValues(_.toDouble))
 

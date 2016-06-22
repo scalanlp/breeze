@@ -35,17 +35,7 @@ object householder extends UFunc {
 
   private val EPSILON: Double = 2.22045e-016
   private def isMuchSmallerThan(x: Double, y: Double) = { abs(x) <= abs(y) * EPSILON }
-  /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
-  // implicit def DMT_DVC_B_Cast_Impl_H[T](implicit cast: T => Double): Impl2[DenseMatrix[T], DenseVector[Complex], Householder] = {
-  //   new Impl2[DenseMatrix[T], DenseVector[Complex], Householder] {
-  //   def apply(M: DenseMatrix[T], tau: DenseVector[Complex]): Householder = {
-  //    import DenseMatrix.canMapValues
-  //    DMD_DVC_B_IMPL_H(M.mapValues(cast), tau)
-  //  }
-  //  }
-  // }
-  //
-  //
+
   /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
   implicit def DMT_Cast_Impl_HT[T](implicit cast: T => Double): Impl[DenseMatrix[T], Householder[Double]] = {
     new Impl[DenseMatrix[T], Householder[Double]] {
@@ -94,17 +84,12 @@ object householder extends UFunc {
   }
 
 
-
-
-
   /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
   implicit object DMD_B_IMPL_H extends Impl2[DenseMatrix[Double], Int, Householder[Double]] {
     def apply(M: DenseMatrix[Double], shift: Int): Householder[Double] = {
       new Householder[Double](M.mapValues(Complex(_, 0.0)), shift)
     }
   }
-
-
 
 
   class Householder[T: TypeTag](val M: DenseMatrix[Complex], val tau: DenseVector[Complex], val essential: Array[DenseVector[Complex]]) {
