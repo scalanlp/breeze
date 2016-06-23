@@ -46,7 +46,7 @@ object householder extends UFunc {
     }
   }
 
-    /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
+  /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
   implicit def DMT_I_Cast_Impl_HT[T](implicit cast: T => Double): Impl2[DenseMatrix[T], Int, Householder[Double]] = {
     new Impl2[DenseMatrix[T], Int, Householder[Double]] {
       def apply(M: DenseMatrix[T], shift: Int): Householder[Double] = {
@@ -63,12 +63,11 @@ object householder extends UFunc {
     }
   }
 
-    implicit object DMC_I_IMPL_HD extends Impl2[DenseMatrix[Double], Int, Householder[Double]] {
+  implicit object DMC_I_IMPL_HD extends Impl2[DenseMatrix[Double], Int, Householder[Double]] {
     def apply(M: DenseMatrix[Double], shift: Int): Householder[Double] = {
       new Householder[Double](M.mapValues(Complex(_, 0.0)), shift)
     }
   }
-
 
   /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
   implicit object DMC_IMPL_HC extends Impl[DenseMatrix[Complex], Householder[Complex]] {
@@ -83,14 +82,12 @@ object householder extends UFunc {
     }
   }
 
-
   /* takes a Matrix and optional computes a householder Transform. Creates householder class for further householder transformations. The result is stored in matrixH */
   implicit object DMD_B_IMPL_H extends Impl2[DenseMatrix[Double], Int, Householder[Double]] {
     def apply(M: DenseMatrix[Double], shift: Int): Householder[Double] = {
       new Householder[Double](M.mapValues(Complex(_, 0.0)), shift)
     }
   }
-
 
   class Householder[T: TypeTag](val M: DenseMatrix[Complex], val tau: DenseVector[Complex], val essential: Array[DenseVector[Complex]]) {
 
@@ -130,7 +127,7 @@ object householder extends UFunc {
      *    [e]    [   bott  ]
      *  compute A = H A H'
      */
-    def makeHouseholder(shift: Int) = {
+    private def makeHouseholder(shift: Int) = {
       cShift = shift;
       essential(cShift) = matrixH((cShift + 2) to matrixH.rows - 1, shift)
       val eNorm = if (essential(cShift).length == 0) 0.0 else sum(essential(cShift).map(x => scala.math.pow(x.real, 2) + scala.math.pow(x.imag, 2))) // Does Complex component need squaring?
@@ -162,7 +159,7 @@ object householder extends UFunc {
      *    e     Bottom
      *    e     Bottom
      */
-    def applyHouseholderOnTheLeft(shift: Int, matShift: Boolean = true): Householder[T] = {
+    private def applyHouseholderOnTheLeft(shift: Int, matShift: Boolean = true): Householder[T] = {
       cShift = shift
       val matshift = if (matShift) cShift else -1
 
@@ -181,7 +178,7 @@ object householder extends UFunc {
       this
     }
 
-    def applyHouseholderOnTheLeft(): Householder[T] = applyHouseholderOnTheLeft(cShift)
+    private def applyHouseholderOnTheLeft(): Householder[T] = applyHouseholderOnTheLeft(cShift)
 
     /*
      * Apply the elementary reflector H given by
@@ -195,11 +192,10 @@ object householder extends UFunc {
      *    e    c0    Right
      *    e    c0    Right
      */
-    def applyHouseholderOnTheRight(shift: Int): Householder[T] = {
+    private def applyHouseholderOnTheRight(shift: Int): Householder[T] = {
       cShift = shift
       try {
         val ess = essential(cShift)
-        //    if (ess.length != 0) {
         var c1 = matrixH(::, cShift + 1).toDenseMatrix
         var right = matrixH(::, (cShift + 2) to matrixH.cols - 1)
         val essTrans = essential(cShift).t
@@ -207,11 +203,10 @@ object householder extends UFunc {
         matrixH(0 until matrixH.cols, (cShift + 1)) -= (tmp2.toDenseMatrix * tau(cShift).conjugate).toDenseVector
         right -= conj(tmp2.t * conj(essTrans) * tau(cShift))
 
-        //   } else { return this }
       } catch { case e: Exception => }
       this
     }
-    def applyHouseholderOnTheRight(): Householder[T] = applyHouseholderOnTheRight(cShift)
+    private def applyHouseholderOnTheRight(): Householder[T] = applyHouseholderOnTheRight(cShift)
     //householderTransformation shifted 1 with size -1
     /*  4 x 4 example of the form
      *  1    0    0     0   ^  ------- shift

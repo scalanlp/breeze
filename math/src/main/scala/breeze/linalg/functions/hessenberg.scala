@@ -21,21 +21,14 @@ import breeze.math._
 import breeze.linalg.householder._
 import DenseMatrix.canMapValues
 import reflect.runtime.universe._
+
 /*
-  PHP^(H)=A,
-
-  A Hessenberg decomposition is a matrix decomposition of a matrix A into a unitary matrix P and a Hessenberg matrix H such that
-  PHP^(H)=A,
-  where P^(H) denotes the conjugate transpose.
-  Hessenberg decomposition is implemented in the Wolfram Language as HessenbergDecomposition[m].
-  Hessenberg decomposition is the first step in Schur decomposition. Hessenberg decomposition on an n×n matrix requires 14n^3/3 arithmetic operations.
-
-  Computes the elementary reflector H such that:
-  H * M = [ beta 0 ... 0]^T
-  where the transformation H is:
-  H = I - tau v v^*
-  and the vector v is:
-  v^T = [1 essential^T]
+ * A Hessenberg decomposition is a matrix decomposition of a matrix A into a unitary matrix P and a Hessenberg matrix H
+ * such that PHP^H=A,  where P^H denotes the conjugate transpose.
+ * Hessenberg decomposition is the first step in Schur decomposition.
+ * the factory method "hessenberg" returns a tuple from hessenberg  decomposition where
+* p is a unitary matrix
+* h is an Hessenberg  matrix,
 */
 object hessenberg extends UFunc {
 
@@ -43,7 +36,6 @@ object hessenberg extends UFunc {
     def apply(M: DenseMatrix[Complex]): (DenseMatrix[Complex], DenseMatrix[Complex]) = {
       new Hessenberg[Complex](M, new Householder(M.copy).generate()).decompose
     }
-    //LAPACK misses this step
   }
 
   implicit object DMD_IMPL_HeDHo extends Impl[DenseMatrix[Double], (DenseMatrix[Complex], DenseMatrix[Complex])] {
@@ -62,13 +54,13 @@ object hessenberg extends UFunc {
   class Hessenberg[T: TypeTag](M: DenseMatrix[T], val House: Householder[T]) {
 
     def decompose() = (P, H)
+
     /*  4 x 4 example of the form
      *  1    0    0     0   ^  ------- order
      *   0    1    0    0   v
      *   0    0     x    x
      *   0    0     x    x
      */
-
     def P = House.P(1)
 
     /*  4 x 4 example tridiagonal matrix

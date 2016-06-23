@@ -27,11 +27,7 @@ import breeze.numerics._
 import scala.util.control.Breaks._
 import DenseMatrix.canMapValues
 
-/* returns tuple
-      (y, z, Q, wR, wI, iLO2, iHI2) where
-        y is  upper quasi-triangular matrix T from the Schur decomposition
-      z  contains Q*Z. where
-*/
+
 object revertSchur extends UFunc {
 
   implicit object DMC_IMPL_DMC extends Impl2[DenseMatrix[Complex], DenseMatrix[Complex], DenseMatrix[Complex]] {
@@ -40,34 +36,27 @@ object revertSchur extends UFunc {
     }
   }
 }
-
+/*The Schur decomposition of a complex square matrix A is a matrix decomposition of the form
+* Q^(H)AQ=T=D+N, where Q is a unitary matrix, Q^H is its conjugate transpose, and T is an upper
+*  triangular matrix which is the sum of a D=diag(lambda_1,lambda_2,...,lambda_n)
+* (i.e., a diagonal matrix consisting of eigenvalues lambda_i of A) and a strictly upper triangular matrix N.
+* the factory method "schur "returns a tuple from schur decomposition where
+* q is a unitary matrix (inverse q−1 is also the conjugate transpose q* of q)
+* t is an upper triangular matrix, (Schur form of A)
+* The decomposition is computed by first reducing the matrix to Hessenberg form using the class
+ * Hessenberg. The Hessenberg matrix is then reduced  to triangular form by performing QR
+ * iterations with a singleshift.
+* The Hessenberg decomposition is computed by bringing the columns of the
+ * matrix successively in the required form using Householder reflections
+* (see, e.g., Algorithm 7.4.2 in Golub \& Van Loan, <i>%Matrix
+* Computations</i>).
+*/
 object schur extends UFunc {
 
-  /* Schur decomposition  -computed by first reducing the
- * matrix to Hessenberg form using the class
- * HessenbergDecomposition. The Hessenberg matrix is then reduced
- * to triangular form by performing QR iterations with a single
- * shift. The cost of computing the Schur decomposition depends
- * on the number of iterations; as a rough guide, it may be taken
- * on the number of iterations; as a rough guide, it may be taken
- * to be \f$25n^3\f$ complex flops, or \f$10n^3\f$ complex flops
- * if \a computeU is false.*/
-
-  /*
-     *  Hessenberg decomposition of given matrix.
-     *
-     * The Hessenberg decomposition is computed by bringing the columns of the
-     * matrix successively in the required form using Householder reflections
-     * (see, e.g., Algorithm 7.4.2 in Golub \& Van Loan, <i>%Matrix
-     * Computations</i>).
-     */
-
-  //return signature (Q,T,Householder tau, Householder  H)
   implicit object DMD_IMPL_SD extends Impl[DenseMatrix[Double], (DenseMatrix[Complex], DenseMatrix[Complex])] {
     def apply(M: DenseMatrix[Double]): (DenseMatrix[Complex], DenseMatrix[Complex]) = {
 
       new Schur[Double](M) {
-
         override val hess = hessenberg(M)
         val (s, z, y2, wR, wI, sLO, sHI) = getSchurLAPACK(M) //LAPACK
         lazy override val T = DenseMatrix.tabulate[Complex](M.cols, M.rows)((i, j) => Complex(s(i, j), 0.0))
@@ -100,11 +89,7 @@ object schur extends UFunc {
         val maxIters = m_maxIterationsPerRow * hess._1.rows
 
         reduceToTriangularForm()
-        /**
-         * If matT(i+1,i) is neglegible in floating point arithmetic
-         * compared to matT(i,i) and matT(j,j), then set it to zero and
-         * return true, else return false.
-         */
+        /*If matT(i+1,i) is neglegible in floating point arithmetic compared to matT(i,i) and matT(j,j), then set it to zero */
         private def subdiagonalEntryIsNeglegible(i: Int) =
           {
             val d = (T(i, i)).norm1 + (T(i + 1, i + 1)).norm1
@@ -122,9 +107,7 @@ object schur extends UFunc {
             // exceptional shift, taken from http://www.netlib.org/eispack/comqr.f
             abs(T(iu, iu - 1).real) + abs(T(iu - 1, iu - 2).real)
           }
-          // compute the shift as one of the eigenvalues of t, the 2x2
-          // diagonal block on the bottom of the active submatrix
-
+          // compute the shift as one of the eigenvalues of t, the 2x2 diagonal block on the bottom of the active submatrix
           var t = T((iu - 1) to iu, (iu - 1) to iu) // Complex(NormT, 0)
           val normt = Complex(sum(t.mapValues(abs(_))), 0)
 
@@ -148,7 +131,7 @@ object schur extends UFunc {
             normt * eival2
 
         }
-        /**A horrbly disFunctional implementation using breaks, iterations  and mutations BLEUURRGGH will change... **/
+
         // The matrix matT is divided in three parts.
         // Rows 0,...,il-1 are decoupled from the rest because matT(il,il-1) is zero.
         // Rows il,...,iu is the part we are working on (the active submatrix).
@@ -192,10 +175,11 @@ object schur extends UFunc {
               while (il > 0 && !subdiagonalEntryIsNeglegible(il - 1)) {
                 il = il - 1
               }
-              /* perform the QR step using Givens rotations. The first rotation
-	   *creates a bulge; the (il+2,il) element becomes nonzero. This
-	   *bulge is chased down to the bottom of the active submatrix.
-	   */
+	/* perform the QR step using Givens rotations. The first rotation creates a bulge;
+	 *  the (il+2,il) element becomes nonzero.
+	 *  This bulge is chased down to the bottom of the active submatrix.
+	 */
+
               val givrot1 = Givens(T(il, il) - computeShift(iu, iter), T(il + 1, il))
               jacobi(T(il to il + 1, ::)).rotateMutateL(givrot1)
               jacobi(T(0 to (min(il + 2, iu)), il to il + 1)) rotateMutateR (givrot1)
@@ -217,6 +201,7 @@ object schur extends UFunc {
       }.decompose()
     }
   }
+
   abstract class Schur[T](val M: DenseMatrix[T]) {
     if (M.rows != M.cols)
       throw new MatrixNotSquareException
@@ -231,14 +216,18 @@ object schur extends UFunc {
   private val EPSILON: Double = 2.22045e-016
   private def isMuchSmallerThan(x: Double, y: Double) = { abs(x) <= abs(y) * EPSILON }
 
+ /* returns tuple (y, z, Q, wR, wI, iLO2, iHI2) where
+ *   y is  upper quasi-triangular matrix T from the Schur decomposition
+ *    entry z must contains an N-by-N matrix Q, which is assumed to be equal to the unit
+ *    matrix except for the submatrix Z(ILO:IHI,ILO:IHI). On exit,
+ *     z contains Q*Z.
+*/
   object getSchurLAPACK extends Impl[DenseMatrix[Double], (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double], Array[Double], Array[Double], Int, Int)] {
     def apply(X: DenseMatrix[Double]): (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double], Array[Double], Array[Double], Int, Int) = {
 
       val Y = X.copy
 
       val (h, iLO, iHI, tau) = getHessenbergLAPACK(Y)
-
-      // y contains h the upper Hessenberg matrix H
       val M = h.rows
       val N = h.cols
       val Q = h.copy
@@ -347,3 +336,4 @@ object schur extends UFunc {
   }
 
 }
+
