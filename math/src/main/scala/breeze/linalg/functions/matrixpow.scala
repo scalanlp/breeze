@@ -103,8 +103,8 @@ object matrixPow extends UFunc {
   }
 
   private def padeDegree(normIminusT: Double): Int = {
-    return List[Double](0.01884160592658218, 0.06038881904059573, 0.1239917516308172, 0.1999045567181744, 0.2789358995219730).indexWhere(normIminusT <= _.self) match {
-      case r if r > 0 => r + 3
+    return List[Double](0.01884160592658218, 0.06038881904059573, 0.1239917516308172, 0.1999045567181744, 0.2789358995219730).indexWhere(normIminusT <= _) match {
+      case r if (r >= 0) => r + 3
       case _ => 7
     }
   }

@@ -127,7 +127,7 @@ object householder extends UFunc {
      *    [e]    [   bott  ]
      *  compute A = H A H'
      */
-    private def makeHouseholder(shift: Int) = {
+     def makeHouseholder(shift: Int) = {
       cShift = shift;
       essential(cShift) = matrixH((cShift + 2) to matrixH.rows - 1, shift)
       val eNorm = if (essential(cShift).length == 0) 0.0 else sum(essential(cShift).map(x => scala.math.pow(x.real, 2) + scala.math.pow(x.imag, 2))) // Does Complex component need squaring?
@@ -159,7 +159,7 @@ object householder extends UFunc {
      *    e     Bottom
      *    e     Bottom
      */
-    private def applyHouseholderOnTheLeft(shift: Int, matShift: Boolean = true): Householder[T] = {
+     def applyHouseholderOnTheLeft(shift: Int, matShift: Boolean = true): Householder[T] = {
       cShift = shift
       val matshift = if (matShift) cShift else -1
 
@@ -178,7 +178,7 @@ object householder extends UFunc {
       this
     }
 
-    private def applyHouseholderOnTheLeft(): Householder[T] = applyHouseholderOnTheLeft(cShift)
+     def applyHouseholderOnTheLeft(): Householder[T] = applyHouseholderOnTheLeft(cShift)
 
     /*
      * Apply the elementary reflector H given by
@@ -192,7 +192,7 @@ object householder extends UFunc {
      *    e    c0    Right
      *    e    c0    Right
      */
-    private def applyHouseholderOnTheRight(shift: Int): Householder[T] = {
+     def applyHouseholderOnTheRight(shift: Int): Householder[T] = {
       cShift = shift
       try {
         val ess = essential(cShift)
@@ -206,7 +206,7 @@ object householder extends UFunc {
       } catch { case e: Exception => }
       this
     }
-    private def applyHouseholderOnTheRight(): Householder[T] = applyHouseholderOnTheRight(cShift)
+     def applyHouseholderOnTheRight(): Householder[T] = applyHouseholderOnTheRight(cShift)
     //householderTransformation shifted 1 with size -1
     /*  4 x 4 example of the form
      *  1    0    0     0   ^  ------- shift

@@ -33,6 +33,13 @@ import DenseMatrix.canMapValues
 
 class householderTest extends FunSuite {
 
+  val requiredresult = DenseMatrix(
+    (4.0, -3.0, 0.0, 0.0),
+    (-3.0, 3.333333333333, -1.666666666667, 0.0),
+    (0.0, -1.666666666667, -1.32, 0.906666666667),
+    (0.0, 0.0, 0.906666666667, 1.986666666667)
+  )
+
   test("Householder from Numerical Analysis Book") {
     /*Example 4. This example is taken from the book "Numerical Analysis" by Richard L. Burden (Author), J. Douglas Faires.
      *In this example, the given matrix is transformed to the similar tridiagonal matrix A2 by using the Householder method.
@@ -42,9 +49,9 @@ class householderTest extends FunSuite {
     val P = householder(A, 0).P
     val A1 = P * A * P
     //shifted 1
-    val P1 = householder(A, 1).P
+    val P1 = householder(A1, 1).P
     val ans = P1 * A1 * P1
-
+    assert(ans.mapValues((i) => ((i.real * 10000.0).round) / 10000.0) == requiredresult.mapValues((i) => ((i * 10000.0).round) / 10000.0))
   }
 
   test("Householder from Numerical Analysis Book 2") {
@@ -52,6 +59,7 @@ class householderTest extends FunSuite {
     //this is equivalent to ... ( if you simply want the tridiagonal)
     val A = DenseMatrix((4, 1, -2, 2), (1, 2, 0, 1), (-2, 0, 3, -2), (2, 1, -2, -1)).mapValues(Complex(_, 0))
     val ans = householder.triDiagonalize(A)
+    assert(ans.mapValues((i) => ((i.real * 10000.0).round) / 10000.0) == requiredresult.mapValues((i) => ((i * 10000.0).round) / 10000.0))
   }
 }
 
