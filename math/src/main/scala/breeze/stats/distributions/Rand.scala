@@ -30,7 +30,7 @@ import spire.implicits.cfor
  * A trait for monadic distributions. Provides support for use in for-comprehensions
  * @author dlwh
  */
-trait Rand[@specialized(Int, Double) +T] { outer =>
+trait Rand[@specialized(Int, Double) +T] extends Serializable { outer =>
   /**
    * Gets one sample from the distribution. Equivalent to sample()
    */
@@ -180,7 +180,7 @@ private final case class MultiplePredicatesRand[@specialized(Int, Double) T](ran
 * Provides standard combinators and such to use
 * to compose new Rands.
 */
-class RandBasis(val generator: RandomGenerator) {
+class RandBasis(val generator: RandomGenerator) extends Serializable {
 
   /**
    * Chooses an element from a collection.
