@@ -1,16 +1,17 @@
 package breeze.stats.distributions
 
+import breeze.numerics.log
+import breeze.optimize.DiffFunction
 import org.apache.commons.math3.distribution.ExponentialDistribution
 
-import runtime.ScalaRunTime
-import breeze.optimize.DiffFunction
+import scala.runtime.ScalaRunTime
 
 /**
  *
  * @author dlwh
  */
 
-case class Exponential(rate: Double)(implicit basis: RandBasis=Rand) extends ContinuousDistr[Double] with HasCdf with HasInverseCdf {
+case class Exponential(rate: Double)(implicit basis: RandBasis = Rand) extends ContinuousDistr[Double] with Moments[Double, Double] with HasCdf with HasInverseCdf {
   override def toString() = ScalaRunTime._toString(this)
   require(rate > 0)
 
@@ -32,6 +33,14 @@ case class Exponential(rate: Double)(implicit basis: RandBasis=Rand) extends Con
   override def cdf(x: Double): Double = {
     new ExponentialDistribution(rate).cumulativeProbability(x)
   }
+
+  override def mean: Double = 1 / rate
+
+  override def variance: Double = 1 / (rate * rate)
+
+  override def mode: Double = 0
+
+  override def entropy: Double = 1 - log(rate)
 }
 
 object Exponential extends ExponentialFamily[Exponential,Double] with ContinuousDistributionUFuncProvider[Double,Exponential] {
