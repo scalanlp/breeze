@@ -26,7 +26,7 @@ object argsort extends UFunc with LowPriorityArgSort {
 
 
 /**
- * Returns a sequence of keys sorted by value
+ * Returns the top k indices with maximum value
  *
  * @author dlwh
  **/
@@ -37,7 +37,9 @@ object argtopk extends UFunc with LowPriorityArgTopK {
       override def apply(v: DenseVector[T], k: Int): IndexedSeq[Int] = {
         implicit val orderingInt: Ordering[Int] = Ordering[T].on((x: Int) => v(x)).reverse
         val ints = VectorBuilder.range(v.length)
-        quickSelect.implFromOrdering[Int, collection.mutable.IndexedSeq[Int]].apply(ints:collection.mutable.IndexedSeq[Int], k)
+        if (k != 0) {
+          quickSelect.implFromOrdering[Int, collection.mutable.IndexedSeq[Int]].apply(ints:collection.mutable.IndexedSeq[Int], k - 1)
+        }
         ints.take(k)
       }
     }
