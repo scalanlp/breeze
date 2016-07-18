@@ -94,7 +94,7 @@ object BroadcastedRows {
   // This is a more memory efficient representation if the sequence is long-lived but rarely accessed.
   @SerialVersionUID(1L)
   class BroadcastedDMRowsISeq[T](val underlying: DenseMatrix[T]) extends IndexedSeq[Transpose[DenseVector[T]]] with Serializable {
-    override def length: Int = underlying.cols
+    override def length: Int = underlying.rows
 
     override def apply(idx: Int): Transpose[DenseVector[T]] = underlying(idx, ::)
   }
