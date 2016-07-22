@@ -295,7 +295,7 @@ class LBFGSB(lowerBounds: DenseVector[Double],
 
 object LBFGSB {
   def defaultConvergenceCheck(lowerBounds: DenseVector[Double], upperBounds: DenseVector[Double], tolerance: Double, maxIter: Int) = {
-    bfgsbConvergenceTest(lowerBounds, upperBounds) || FirstOrderMinimizer.functionValuesConverged(tolerance) || FirstOrderMinimizer.maxIterationsReached(maxIter)
+    bfgsbConvergenceTest(lowerBounds, upperBounds) || FirstOrderMinimizer.defaultConvergenceCheck(maxIter, tolerance)
   }
 
   protected val PROJ_GRADIENT_EPS = 1E-5
