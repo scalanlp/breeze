@@ -45,5 +45,4 @@ class shuffleTest extends FunSuite with Matchers{
     assert(result1 sameElements result2)
     assert(testArr sameElements result3)
   }
-
 }
