@@ -39,10 +39,11 @@ class shuffleTest extends FunSuite with Matchers{
     // shuffles randomly
     val result1 = shuffle(testArr, testIndex)
     // also shuffles randomly
-    val result2 = shuffle(testArr, testIndex, 0)
+    val result2 = shuffle(testArr, testIndex, false)
     // inverse shuffles
-    val result3 = shuffle(result2, testIndex, 1)
+    val result3 = shuffle(result2, testIndex, true)
     assert(result1 sameElements result2)
     assert(testArr sameElements result3)
   }
+
 }

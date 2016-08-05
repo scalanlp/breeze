@@ -57,9 +57,9 @@ object shuffle extends UFunc {
     }
   }
 
-  implicit def implShuffle_Arr_Arr_Int_eq_Arr[T](implicit ct: ClassTag[T]):
-  Impl3[Array[T], Array[Int], Int, Array[T]] = {
-    new Impl3[Array[T], Array[Int], Int, Array[T]] {
+  implicit def implShuffle_Arr_Arr_Boolean_eq_Arr[T](implicit ct: ClassTag[T]):
+  Impl3[Array[T], Array[Int], Boolean, Array[T]] = {
+    new Impl3[Array[T], Array[Int], Boolean, Array[T]] {
       /**
         * shuffle the given [[Array[T]]] according to the given
         * permutation [[Array[Int]]] if [[Int]] indicator is zero;
@@ -71,13 +71,13 @@ object shuffle extends UFunc {
         * @return a shuffled array stored as [[Array[T]]]
         */
       def apply(arr: Array[T], arrIndex: Array[Int],
-                isInverse: Int): Array[T] = {
+                isInverse: Boolean): Array[T] = {
         require(arr.length == arrIndex.length,
           "The two input arrays should have the same length!")
         // Make a copy of the input.
         val tempret = new Array[T](arr.length)
 
-        if (isInverse == 0) {
+        if (!isInverse) {
           // Shuffle tempret via given permutation.
           for (i <- arr.indices) {
             tempret(i) = arr(arrIndex(i))
@@ -105,7 +105,7 @@ object shuffle extends UFunc {
         */
       def apply(arr: Array[T], arrIndex: Array[Int]): Array[T] = {
         // Shuffle the input via given permutation.
-        shuffle(arr, arrIndex, 0)
+        shuffle(arr, arrIndex, false)
       }
     }
   }
