@@ -60,9 +60,9 @@ object StochasticGradientDescent {
     new SimpleSGD(initialStepSize,maxIter)
   }
 
-  class SimpleSGD[T](eta: Double=4,
+  class SimpleSGD[T](initialStepSize: Double=4,
                      maxIter: Int=100)
-                    (implicit vs: NormedModule[T, Double]) extends StochasticGradientDescent[T](eta,maxIter) {
+                    (implicit vs: NormedModule[T, Double]) extends StochasticGradientDescent[T](initialStepSize,maxIter) {
     type History = Unit
     def initialHistory(f: StochasticDiffFunction[T],init: T)= ()
     def updateHistory(newX: T, newGrad: T, newValue: Double, f: StochasticDiffFunction[T], oldState: State) = ()
