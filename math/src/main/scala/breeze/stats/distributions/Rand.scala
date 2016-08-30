@@ -199,7 +199,7 @@ class RandBasis(val generator: RandomGenerator) extends Serializable {
     }
   }
 
-  def choose[T](c : Seq[T]) = Rand.randInt(c.size).map( c(_))
+  def choose[T](c : Seq[T]) = randInt(c.size).map( c(_))
 
   /**
    * The trivial random generator: always returns the argument

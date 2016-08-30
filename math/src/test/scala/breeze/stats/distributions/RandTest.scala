@@ -62,4 +62,21 @@ class RandTest extends FunSuite {
     }
   }
 
+  test("RandBasis.choose honors specified random seed") {
+    val items = 'a' to 'z'
+
+    {
+      val a = RandBasis.withSeed(0).choose(items).sample(100)
+      val b = RandBasis.withSeed(0).choose(items).sample(100)
+      assert(a == b)
+    }
+
+    {
+      val items = 'a' to 'z'
+      val a = RandBasis.withSeed(0).choose(items).sample(100)
+      val b = RandBasis.withSeed(1).choose(items).sample(100)
+      assert(a != b)
+    }
+  }
+
 }
