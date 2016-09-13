@@ -30,6 +30,9 @@ trait CanCreateZerosLike[From, +To] {
 }
 
 object CanCreateZerosLike {
+  implicit def canCreateScalarZeroes[@specialized(Int,Short,Long,Float,Double) V:Semiring] = new CanCreateZerosLike[V, V] {
+    def apply(d: V): V = implicitly[Semiring[V]].zero
+  }
 
   class OpArray[@specialized V:ClassTag:Semiring]
   extends CanCreateZerosLike[Array[V],Array[V]] {
