@@ -21,7 +21,6 @@ import org.scalatest.prop._
 import org.junit.runner.RunWith
 import breeze.math.Complex
 import breeze.numerics._
-import org.scalatest.matchers.ShouldMatchers
 import breeze.util.DoubleImplicits
 
 @RunWith(classOf[JUnitRunner])
