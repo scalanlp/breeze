@@ -28,7 +28,7 @@ libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
           "com.chuusai" %% "shapeless" % "2.3.1",
           compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
           )
-    case x if x.startsWith("2.11") =>
+    case x if x.startsWith("2.11") || x.startsWith("2.12") =>
       (deps :+ ("com.chuusai" %% "shapeless" % "2.3.1" ))
     case _ =>
       deps
