@@ -36,6 +36,20 @@ class BloomFilterTest extends FunSuite with Checkers {
     }}
   }
 
+  test("add single value and it's there") {
+    check { (value:Long, _numBuckets: Int, _numHashes: Int) => 
+      val numHashes = _numHashes.abs % 1000 + 1
+      val numBuckets = (_numBuckets/1000).abs % 1000 + 1
+      
+      assert(numBuckets >= 0, numBuckets + " " +  _numBuckets)
+
+      val bloomFilter = new BloomFilter[Long](numBuckets,numHashes.abs)
+      bloomFilter += value
+
+      bloomFilter.contains(value)
+    }
+  }
+
   test("union with empty is a copy") {
     check { (strings: List[String], _numBuckets: Int, _numHashes: Int) => {
       val numHashes = _numHashes.abs % 1000 + 1
@@ -61,6 +75,17 @@ class BloomFilterTest extends FunSuite with Checkers {
         )
     }}
   }
+
+
+
+  test("bloom filter works with objects with Int.MinValue hash") {
+    val bloomFilter = BloomFilter.optimallySized[Int](100, 0.003)
+    val value = Int.MinValue
+    bloomFilter += value
+    assert(bloomFilter.contains(value))
+  }
+
+
 
   def attempt1(numBuckets: Int, numHashes: Int, strings: Set[String], strings2: Set[String]): Boolean = {
     val bf = new BloomFilter[String](numBuckets, numHashes.abs)

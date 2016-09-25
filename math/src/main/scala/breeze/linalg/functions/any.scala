@@ -1,71 +1,63 @@
 package breeze.linalg
 
 import breeze.linalg.support.CanTraverseValues
-import breeze.math.Semiring
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.generic.UFunc
+import breeze.storage.Zero
+
+import scala.util.control.ControlThrowable
 
 /**
- * Returns true if any element is non-zero
- *
- * @author dlwh
- **/
+  * any(t) true if any element of t is non-zero
+  * any(f, t) returns true if any element of t satisfies f
+  *
+  *
+  * @author dlwh
+  **/
 object any extends UFunc {
-  private case object Done extends Exception
-  implicit def reduceSemiring[T, S](implicit iter: CanTraverseValues[T, S], semiring: Semiring[S]): Impl[T, Boolean] = new Impl[T, Boolean] {
-    def apply(v: T): Boolean = {
-      class SumVisitor extends ValuesVisitor[S] {
-        val zero = semiring.zero
-        def visit(a: S): Unit = {
-          if(a != zero) throw Done
+  private case object Found extends ControlThrowable
+
+  implicit def reduceUFunc[F, T, S](implicit impl2: Impl2[S => Boolean, T, Boolean],
+                                    base: UFunc.UImpl[F, S, Boolean]): Impl2[F, T, Boolean] = {
+    new Impl2[F, T, Boolean]  {
+      override def apply(v: F, v2: T): Boolean = {
+        any((x: S) => base(x), v2)
+      }
+    }
+  }
+
+  implicit def reduceFun[T, S](implicit ctv: CanTraverseValues[T, S]): Impl2[S=>Boolean, T, Boolean] = {
+    new Impl2[S=>Boolean, T, Boolean] {
+      override def apply(f: S=>Boolean, v2: T): Boolean = {
+
+        object Visitor extends ValuesVisitor[S] {
+          def visit(a: S): Unit = {
+            if (f(a)) throw Found
+          }
+
+          def zeros(numZero: Int, zeroValue: S): Unit = {
+            if (numZero != 0 && f(zeroValue)) throw Found
+          }
+
         }
 
-        def zeros(numZero: Int, zeroValue: S): Unit = {
+        try {
+          ctv.traverse(v2, Visitor)
+          false
+        } catch {
+          case Found => true
         }
 
       }
-      val visit = new SumVisitor
-      try {
-        iter.traverse(v, visit)
-        false
-      } catch {
-        case Done => true
-      }
+    }
+  }
+
+  implicit def reduceZero[T, S](implicit impl2: Impl2[S=> Boolean, T, Boolean], z: Zero[S]): Impl[T, Boolean] = new Impl[T, Boolean] {
+    override def apply(v: T): Boolean = {
+      any((_: S) != z.zero, v)
     }
   }
 
 }
 
-/**
- * Returns true if all elements are non-zero
- *
- * @author dlwh
- **/
-object all extends UFunc {
-  private case object Done extends Exception
-
-  implicit def reduceSemiring[T, S](implicit iter: CanTraverseValues[T, S], semiring: Semiring[S]): Impl[T, Boolean] = new Impl[T, Boolean] {
-    def apply(v: T): Boolean = {
-      class SumVisitor extends ValuesVisitor[S] {
-        val zero = semiring.zero
-        def visit(a: S): Unit = {
-          if(a == zero) throw Done
-        }
-
-        def zeros(numZero: Int, zeroValue: S): Unit = {
-          if(numZero != 0) throw Done
-        }
-
-      }
-      val visit = new SumVisitor
-      try {
-        iter.traverse(v, visit)
-        true
-      } catch {
-        case Done => false
-      }
-    }
-  }
-
-}
 

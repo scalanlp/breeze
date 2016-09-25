@@ -2,7 +2,7 @@ package breeze.linalg
 
 import breeze.linalg.operators._
 import breeze.macros.expand
-import breeze.linalg.support.CanTranspose
+import breeze.linalg.support.{CanSlice, CanTranspose}
 import breeze.generic.UFunc
 
 /**
@@ -65,6 +65,15 @@ trait TransposeLowPrio {
 
   implicit class LiftApply[K, T](_trans: Transpose[Tensor[K, T]]) {
     def apply(i: K):T = _trans.inner(i)
+  }
+
+  // TODO: make CanSlice a UFunc
+  implicit def liftSlice[Op, T, S, U, UT](implicit op: CanSlice[T, S, U], trans: CanTranspose[U, UT]): CanSlice[Transpose[T], S, UT] = {
+    new CanSlice[Transpose[T], S, UT] {
+      override def apply(from: Transpose[T], slice: S): UT = {
+        op(from.inner, slice).t
+      }
+    }
   }
 
   implicit def liftUFunc[Op, T, U, UT](implicit op: UFunc.UImpl[Op, T, U], trans: CanTranspose[U, UT]):UFunc.UImpl[Op, Transpose[T], UT] = {

@@ -1,8 +1,8 @@
 package breeze.linalg.operators
 
-import breeze.generic.{MappingUFunc, UFunc}
+import breeze.generic.{ MappingUFunc, UFunc }
 import breeze.generic.UFunc.UImpl
-import breeze.math.{Field, Ring, Semiring}
+import breeze.math.{ Field, Ring, Semiring }
 
 /*
  Copyright 2012 Daniel Ramage
@@ -284,5 +284,9 @@ object OpSolveMatrixBy extends OpSolveMatrixBy with UFunc
  * @author dramage
  */
 sealed trait OpMulMatrix extends OpType
-object OpMulMatrix extends OpMulMatrix with UFunc
+object OpMulMatrix extends OpMulMatrix with UFunc {
+  implicit def opMulMatrixFromSemiring[S:Semiring]: Impl2[S, S, S] = new Impl2[S, S, S] {
+    def apply(v: S, v2: S): S = implicitly[Semiring[S]].*(v, v2)
+  }
+}
 

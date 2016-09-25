@@ -30,6 +30,26 @@ package object util {
       oin.close()
     }
   }
+
+  def serializeToBytes[T](obj: T): Array[Byte] = {
+    val out = new ByteArrayOutputStream()
+    val objOut = new ObjectOutputStream(out)
+    objOut.writeObject(obj)
+    objOut.close()
+    out.close()
+    out.toByteArray
+  }
+
+  def deserializeFromBytes[T](bytes: Array[Byte]): T = {
+    val in = new ByteArrayInputStream(bytes)
+    val objIn = new ObjectInputStream(in)
+    try {
+      objIn.readObject().asInstanceOf[T]
+    } finally {
+      objIn.close()
+    }
+  }
+
   /**
    * For reasons that are best described as asinine, ObjectInputStream does not take into account
    * Thread.currentThread.getContextClassLoader. This fixes that.
@@ -68,15 +88,16 @@ package object util {
           }
 
           val localClassDescriptor = ObjectStreamClass.lookup(localClass)
-          if (localClassDescriptor != null) { // only if class implements serializable
-          val localSUID = localClassDescriptor.getSerialVersionUID
+           // only if class implements serializable
+          if (localClassDescriptor != null) {
+            val localSUID = localClassDescriptor.getSerialVersionUID
             val streamSUID = resultClassDescriptor.getSerialVersionUID
-            if (streamSUID != localSUID) { // check for serialVersionUID mismatch.
-            val s = new StringBuffer("Overriding serialized class version mismatch: ")
+            if (streamSUID != localSUID) {
+              val s = new StringBuffer("Overriding serialized class version mismatch: ")
               s.append("local serialVersionUID = ").append(localSUID)
               s.append(" stream serialVersionUID = ").append(streamSUID)
               val e = new InvalidClassException(s.toString())
-              logger.error("Potentially Fatal Deserialization Operation.", e);
+              logger.error(s"Potentially Fatal Deserialization Operation while deserializing $localClass", e);
               resultClassDescriptor = localClassDescriptor; // Use local class descriptor for deserialization
             }
 
@@ -87,7 +108,10 @@ package object util {
     }
   }
 
+  implicit class FileUtil(val sc: StringContext) extends AnyVal {
 
+    def file(args: Any*): File = new File(sc.s(args: _*))
+  }
 
   /**
    * Serializes an object using java serialization

@@ -4,6 +4,7 @@ import breeze.generic.UFunc
 import breeze.linalg.support.{ScalarOf, CanTransformValues, CanMapValues, CanTraverseValues}
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.macros.expand
+import spire.syntax.cfor._
 
 object max extends UFunc /*with VectorizedReduceUFunc <-- doesn't work with 2.10, because god knows */{
   type Op = this.type
@@ -44,14 +45,29 @@ object max extends UFunc /*with VectorizedReduceUFunc <-- doesn't work with 2.10
         }
 
         override def visitArray(arr: Array[S], offset: Int, length: Int, stride: Int): Unit = {
-          var i = 0
-          var off = offset
-          while(i < length) {
+          if (length >= 0) {
             visitedOne = true
-            max = scala.math.max(max, arr(off))
-            i += 1
-            off += stride
           }
+
+          if (stride == 1) {
+            var m = max
+
+            cforRange(offset until (offset + length)) { i =>
+              m = scala.math.max(m, arr(i))
+            }
+            max = m
+          } else {
+            var off = offset
+            var m = max
+            cforRange(0 until length) { i =>
+              m = scala.math.max(m, arr(off))
+              off += stride
+            }
+            max = m
+          }
+
+
+
         }
       }
 

@@ -1,5 +1,6 @@
 package breeze.optimize
 
+import breeze.linalg.NumericOps
 import breeze.util.Isomorphism
 
 /**
@@ -7,8 +8,10 @@ import breeze.util.Isomorphism
  * across consecutive invocations.
  * @author dlwh
  */
-trait StochasticDiffFunction[T] extends (T=>Double) { outer =>
-   /** calculates the gradient at a point */
+trait StochasticDiffFunction[T] extends (T=>Double) with NumericOps[StochasticDiffFunction[T]] { outer =>
+  override def repr: StochasticDiffFunction[T] = this
+
+  /** calculates the gradient at a point */
   def gradientAt(x: T): T = calculate(x)._2
   /** calculates the value at a point */
   def valueAt(x:T): Double = calculate(x)._1

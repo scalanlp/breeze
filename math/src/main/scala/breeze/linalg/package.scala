@@ -17,14 +17,14 @@ package breeze
 
 import breeze.linalg.DenseMatrix
 import breeze.numerics.abs
-import io.{CSVWriter, CSVReader}
+import breeze.io.{FileStreams, CSVWriter, CSVReader}
 import linalg.operators._
 import breeze.linalg.support.{RangeExtender, CanCopy}
 import math.Semiring
 import storage.Zero
-import java.io.{File, FileReader}
+import java.io.{PrintWriter, File, FileReader}
 import scala.reflect.ClassTag
-import DenseMatrix.canMapValues
+import spire.syntax.cfor._
 
 
 /**
@@ -63,6 +63,13 @@ package object linalg {
 
   // <editor-fold defaultstate="collapsed" desc=" io stuff ">
 
+  /**
+    * Add methods to the string class in order to make file reading easier
+    * @param s
+    */
+  implicit class String2File(s: String) {
+    def toFile:File = new File(s)
+  }
 
   /**
    * Reads in a DenseMatrix from a CSV File
@@ -91,6 +98,28 @@ package object linalg {
     CSVWriter.writeFile(file, IndexedSeq.tabulate(mat.rows,mat.cols)(mat(_,_).toString), separator, quote, escape)
   }
 
+  def mmwrite[T:Numeric](file: File, mat: Matrix[T]): Unit = {
+    if (mat.activeSize == mat.size) {
+      val out = new PrintWriter(FileStreams.output(file))
+      out.println("%%MatrixMarket matrix array real general")
+      out.println(s"% produced by ${getClass}")
+      out.println(s"${mat.rows} ${mat.cols}")
+      cforRange2(0 until mat.cols, 0 until mat.rows){(j, i) =>
+        out.println(mat(i, j))
+      }
+      out.close()
+    } else {
+      val out = new PrintWriter(FileStreams.output(file))
+      out.println("%%MatrixMarket matrix coordinate real general")
+      out.println(s"% produced by ${getClass}")
+      out.println(s"${mat.rows} ${mat.cols} ${mat.activeSize}")
+      mat.activeIterator foreach { case ((i, j), v) =>
+          out.println(s"${i + 1} ${j + 1} $v")
+      }
+      out.close()
+    }
+  }
+
   // </editor-fold>
 
 
@@ -98,7 +127,6 @@ package object linalg {
 
 
   import math.Ring
-  import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
 
   // implicits for lifting scalars with appropriate operators
   implicit class InjectNumericOps[T](val repr: T) extends AnyVal with ImmutableNumericOps[T]
@@ -253,12 +281,12 @@ package object linalg {
     if (center) {
       val xc = x(*,::) - mean(x, Axis._0).t
       if (scale)
-        xc(*,::) :/ stddev(x(::, *)).t
+        xc(*,::) /:/ stddev(x(::, *)).t
       else
         xc
     } else {
       if (scale)
-        x(*,::) :/ columnRMS(x)
+        x(*,::) /:/ columnRMS(x)
       else
         x
     }
@@ -303,7 +331,7 @@ package object linalg {
    * matrix. Feel free to make this more general.
    */
   private def columnRMS(x: DenseMatrix[Double]): DenseVector[Double] =
-    (sum(x:*x,Axis._0) / (x.rows-1.0)).t.map( scala.math.sqrt _ )
+    (sum(x *:* x, Axis._0) / (x.rows - 1.0)).t.map( scala.math.sqrt _ )
 
 
   /** Alias for randomDouble */

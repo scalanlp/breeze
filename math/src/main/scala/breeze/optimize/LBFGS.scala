@@ -19,6 +19,7 @@ package breeze.optimize
 import breeze.linalg._
 import breeze.linalg.operators.OpMulMatrix
 import breeze.math.MutableInnerProductModule
+import breeze.optimize.FirstOrderMinimizer.{ConvergenceCheck, ConvergenceReason}
 import breeze.optimize.linear.PowerMethod
 import breeze.util.SerializableLogging
 
@@ -32,30 +33,28 @@ import breeze.util.SerializableLogging
  *  * D.C. Liu and J. Nocedal. On the  Limited  mem  Method  for  Large
  *    Scale  Optimization  (1989),  Mathematical  Programming  B,  45,  3,
  *    pp. 503-528.
- *  * 
- * 
- * @param maxIter: maximum number of iterations, or <= 0 for unlimited
+ *
  * @param m: The memory of the search. 3 to 7 is usually sufficient.
  */
-class LBFGS[T](maxIter: Int = -1, m: Int=10, tolerance: Double=1E-9)
-              (implicit space: MutableInnerProductModule[T, Double]) extends FirstOrderMinimizer[T, DiffFunction[T]](maxIter, tolerance, tolerance) with SerializableLogging {
+class LBFGS[T](convergenceCheck: ConvergenceCheck[T], m: Int)(implicit space: MutableInnerProductModule[T, Double]) extends FirstOrderMinimizer[T, DiffFunction[T]](convergenceCheck) with SerializableLogging {
 
+  def this(maxIter: Int = -1, m: Int=7, tolerance: Double=1E-9)
+          (implicit space: MutableInnerProductModule[T, Double]) = this(FirstOrderMinimizer.defaultConvergenceCheck(maxIter, tolerance), m )
   import space._
   require(m > 0)
 
   type History = LBFGS.ApproximateInverseHessian[T]
 
-
   override protected def adjustFunction(f: DiffFunction[T]): DiffFunction[T] = f.cached
 
   protected def takeStep(state: State, dir: T, stepSize: Double) = state.x + dir * stepSize
-  protected def initialHistory(f: DiffFunction[T], x: T):History = new LBFGS.ApproximateInverseHessian(m)
+  protected def initialHistory(f: DiffFunction[T], x: T): History = new LBFGS.ApproximateInverseHessian(m)
   protected def chooseDescentDirection(state: State, fn: DiffFunction[T]):T = {
     state.history * state.grad
   }
 
   protected def updateHistory(newX: T, newGrad: T, newVal: Double,  f: DiffFunction[T], oldState: State): History = {
-    oldState.history.updated(newX - oldState.x, newGrad :- oldState.grad)
+    oldState.history.updated(newX - oldState.x, newGrad -:- oldState.grad)
   }
 
   /**

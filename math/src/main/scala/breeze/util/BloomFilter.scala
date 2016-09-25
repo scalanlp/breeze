@@ -32,15 +32,21 @@ class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFun
   def this(numBuckets: Int, numHashFunctions: Int) = this(numBuckets, numHashFunctions, new util.BitSet(numBuckets))
   def this(numBuckets: Int) = this(numBuckets, 3)
 
-  def apply(o: T): Boolean = {
-    var h = 0
-    val hi = o.##
-    while(h < numHashFunctions) {
-      val hash = computeHash(h, hi)
-      if(!bits.get(hash % numBuckets)) return false
-      h+= 1
+  def activeBuckets(key: T) = {
+    val hash1 = key.##
+    val hash2 = math.abs(MurmurHash3.mixLast(0, hash1))
+
+    for {
+      i <- 0 to numHashFunctions
+    } yield {
+      val h = hash1 + i * hash2
+      val nextHash = if (h < 0) ~h else h
+      nextHash % numBuckets
     }
-    true
+  }
+
+  def apply(o: T): Boolean = {
+    activeBuckets(o).forall(i => bits.get(i))
   }
 
   def contains(o: T) = apply(o)
@@ -60,13 +66,7 @@ class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFun
   }
 
   def +=(o: T): this.type = {
-    var h = 0
-    val hi = o.hashCode()
-    while(h < numHashFunctions) {
-      val hash = computeHash(h, hi)
-      bits.set(hash % numBuckets)
-      h+= 1
-    }
+    activeBuckets(o).foreach(i => bits.set(i))
     this
   }
 
@@ -107,11 +107,6 @@ class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFun
   def &~(that: BloomFilter[T]) = {
     checkCompatibility(that)
     new BloomFilter[T](this.numBuckets, this.numHashFunctions, this.bits &~ that.bits)
-  }
-
-
-  private def computeHash(h: Int, o: Int) = {
-    math.abs(MurmurHash3.mixLast(o, h))
   }
 
 }

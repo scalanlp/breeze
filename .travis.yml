@@ -3,7 +3,6 @@ scala:
   - 2.10.3
 jdk:
    - oraclejdk7
-   - openjdk7
 before_install:
  - sudo apt-get update -qq
  - sudo apt-get install -qq libatlas3gf-base libopenblas-base

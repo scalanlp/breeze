@@ -3,11 +3,12 @@ package breeze.linalg
 import breeze.generic.UFunc
 import org.netlib.util.intW
 import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
+import spire.implicits.{cforRange, cforRange2}
 
 
-sealed trait QRMode
-case object CompleteQR extends QRMode  // Q and R have dimensions (m, m), (m, n)
-case object ReducedQR extends QRMode   // Q and R have dimensions (m, k), (k, n) with k = min(m, n)
+sealed private[this] trait QRMode
+private[this] case object CompleteQR extends QRMode  // Q and R have dimensions (m, m), (m, n)
+private[this] case object ReducedQR extends QRMode   // Q and R have dimensions (m, k), (k, n) with k = min(m, n)
 
 
 /**
@@ -198,11 +199,11 @@ object qr extends UFunc {
         throw new IllegalArgumentException()
 
       // Upper triangle
-      for {
-        i <- 0 until mc
-        j <- 0 until A.cols
-        if j < i
-      } A(i, j) = 0.0
+      cforRange(0 until mc){ i =>
+        cforRange(0 until min(i, A.cols)){ j =>
+          A(i, j) = 0.0
+        }
+      }
 
       (Q(::, 0 until mc), A(0 until mc, ::))
     }
@@ -260,11 +261,11 @@ object qr extends UFunc {
         throw new IllegalArgumentException()
 
       // Upper triangle
-      for {
-        i <- 0 until mc
-        j <- 0 until A.cols
-        if j < i
-      } A(i, j) = 0.0f
+      cforRange(0 until mc){ i =>
+        cforRange(0 until min(i, A.cols)){ j =>
+          A(i, j) = 0.0f
+        }
+      }
 
       (Q(::, 0 until mc), A(0 until mc, ::))
     }
@@ -308,7 +309,11 @@ object qrp extends UFunc {
       val AFact = DenseMatrix.zeros[Double](m,maxd)
       val pvt = new Array[Int](n)
       val tau = new Array[Double](scala.math.min(m,n))
-      for(r <- 0 until m; c <- 0 until n) AFact(r,c) = A(r,c)
+
+      cforRange2(0 until m, 0 until n){
+        (r, c) => AFact(r,c) = A(r,c)
+      }
+
       lapack.dgeqp3(m, n, AFact.data, m, pvt, tau, workspace, workspace.length, info)
 
       //Error check
@@ -320,14 +325,19 @@ object qrp extends UFunc {
       //Get R
       val R = DenseMatrix.zeros[Double](m,n)
 
-      for(c <- 0 until maxd if(c < n); r <- 0 until m if(r <= c))
-        R(r,c) = AFact(r,c)
+      cforRange(0 until min(n, maxd)){ c =>
+        cforRange(0 to min(m, c)){ r =>
+          R(r,c) = AFact(r,c)
+        }
+      }
 
       //Get Q from the matrix returned by dgep3
       val Q = DenseMatrix.zeros[Double](m,m)
       lapack.dorgqr(m, m, scala.math.min(m,n), AFact.data, m, tau, workspace, workspace.length, info)
-      for(r <- 0 until m; c <- 0 until maxd if(c < m))
-        Q(r,c) = AFact(r,c)
+
+      cforRange2(0 until m, 0 until min(m, maxd)){
+        (r, c) => Q(r,c) = AFact(r,c)
+      }
 
       //Error check
       if (info.`val` > 0)
@@ -339,8 +349,10 @@ object qrp extends UFunc {
       import NumericOps.Arrays._
       pvt -= 1
       val P = DenseMatrix.zeros[Int](n,n)
-      for(i <- 0 until n)
+
+      cforRange(0 until n){ i =>
         P(pvt(i), i) = 1
+      }
 
       QRP(Q,R,P,pvt)
     }

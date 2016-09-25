@@ -16,11 +16,13 @@ package breeze.linalg
 */
 import breeze.linalg.Counter2.Curried
 import breeze.linalg.operators.Counter2Ops
+import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 import breeze.storage.Zero
 import collection.mutable.HashMap
 import breeze.math.Semiring
 import breeze.linalg.support._
 import scala.collection.Set
+import scala.collection.parallel.mutable
 import scala.reflect.ClassTag
 import CanTraverseValues.ValuesVisitor
 
@@ -122,17 +124,18 @@ object Counter2 extends LowPriorityCounter2 with Counter2Ops {
   }
 
   /** Returns a new empty counter. */
-  def apply[K1,K2,V:Zero:Semiring]() : Counter2[K1,K2,V] = {
-    val map = new HashMap[K1,Counter[K2,V]] {
-      override def default(k: K1) = Counter[K2,V]()
-    }
-    new Impl[K1,K2,V](map)
+  def apply[K1,K2,V:Zero](): Counter2[K1,K2,V] = {
+    new Impl(new CounterHashMap)
   }
 
+  @SerialVersionUID(1L)
+  private class CounterHashMap[K1, K2, V:Zero] extends HashMap[K1, Counter[K2, V]] with Serializable {
+    override def default(k: K1) = Counter[K2,V]()
+  }
 
   /** Aggregates the counts in the given items. */
   def apply[K1,K2,V:Semiring:Zero](values : (K1,K2,V)*) : Counter2[K1,K2,V] =
-    apply(values)
+    apply(values.iterator)
 
   /** Aggregates the counts in the given items. */
   def apply[K1,K2,V:Semiring:Zero](values : TraversableOnce[(K1,K2,V)]) : Counter2[K1,K2,V] = {
@@ -181,6 +184,19 @@ object Counter2 extends LowPriorityCounter2 with Counter2Ops {
       for( v <- from.valuesIterator) {
         fn.visit(v)
       }
+    }
+  }
+
+  implicit def canTraverseKeyValuePairs[K1, K2, V]: CanTraverseKeyValuePairs[Counter2[K1, K2, V], (K1, K2), V] = {
+    new CanTraverseKeyValuePairs[Counter2[K1, K2, V], (K1, K2), V] {
+      /** Traverses all values from the given collection. */
+      override def traverse(from: Counter2[K1, K2, V], fn: KeyValuePairsVisitor[(K1, K2), V]): Unit = {
+        for ((k,v) <- from.activeIterator) {
+          fn.visit(k,v)
+        }
+      }
+
+      override def isTraversableAgain(from: Counter2[K1, K2, V]): Boolean = true
     }
   }
 

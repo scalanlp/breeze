@@ -1,5 +1,9 @@
 package breeze.linalg.operators
 
+import breeze.generic.UFunc
+import breeze.generic.UFunc.UImpl2
+import shapeless.=:!=
+
 import scala.reflect.ClassTag
 import breeze.linalg.support.{LiteralRow, CanCopy}
 import breeze.storage.Zero
@@ -100,6 +104,18 @@ trait MatrixGenericOps { this: Matrix.type =>
       }
 
     }
+  }
+
+  implicit def castOps[M1, M2, T, Op, MR](implicit v1ev: M1<:<Matrix[T], v1ne: M1 =:!= Matrix[T],
+                                          v2ev: M2<:<Matrix[T], v2ne: M2 =:!= Matrix[T],
+                                          op: UImpl2[Op, Matrix[T], Matrix[T], MR]): UImpl2[Op, M1, M2, MR] = {
+    op.asInstanceOf[UFunc.UImpl2[Op, M1, M2, MR]]
+  }
+
+  implicit def castUpdateOps[M1, M2, T, Op <: OpType](implicit v1ev: M1<:<Matrix[T],
+                                                      v2ev: M2<:<Matrix[T],
+                                                      op: UFunc.InPlaceImpl2[Op, Matrix[T], Matrix[T]]): UFunc.InPlaceImpl2[Op, M1, M2] = {
+    op.asInstanceOf[UFunc.InPlaceImpl2[Op, M1, M2]]
   }
 }
 
@@ -410,5 +426,4 @@ trait MatrixMultOps extends MatrixOps with MatrixOpsLowPrio { this: Matrix.type 
       res
     }
   }
-
 }

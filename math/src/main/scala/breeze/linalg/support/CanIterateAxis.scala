@@ -27,6 +27,5 @@ package breeze.linalg.support
  * @tparam ColType the type of the "column" (or row or...) being collapsed.
  */
 trait CanIterateAxis[From, Axis, ColType] {
-  def apply[A](from: From, axis: Axis)(f: ColType=>A)
-
+  def apply[A](from: From, axis: Axis):Iterator[ColType]
 }

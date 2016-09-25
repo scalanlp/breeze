@@ -17,11 +17,9 @@ package breeze.optimize
 
 import breeze.linalg.{DenseMatrix, DenseVector}
 import breeze.linalg._
-import breeze.optimize.FirstOrderMinimizer.{State, ProjectedStepConverged, ConvergenceCheck, ConvergenceReason}
+import breeze.optimize.FirstOrderMinimizer.{State, ProjectedStepConverged, ConvergenceCheck}
 import breeze.util.SerializableLogging
 import breeze.util.Implicits._
-
-import FirstOrderMinimizer.RichConvergenceCheck
 
 /**
  * This algorithm is refered the paper
@@ -29,13 +27,13 @@ import FirstOrderMinimizer.RichConvergenceCheck
  * Richard H.Byrd   Peihuang Lu   Jorge Nocedal  and Ciyou Zhu
  * Created by fanming.chen on 2015/3/7 0007.
  * If StrongWolfeLineSearch(maxZoomIter,maxLineSearchIter) is small, the wolfeRuleSearch.minimize may throw FirstOrderException,
- * it should increase the two varialbes to appropriate value
+ * it should increase the two variables to appropriate value
  */
 class LBFGSB(lowerBounds: DenseVector[Double],
              upperBounds: DenseVector[Double],
              maxIter:Int = 100, m:Int = 5, tolerance:Double = 1E-8,
              maxZoomIter:Int = 64, maxLineSearchIter:Int = 64) extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]](
-LBFGSB.defaultConvergenceCheck(lowerBounds, upperBounds, tolerance, maxIter), tolerance, 10, -1) with SerializableLogging {
+      LBFGSB.defaultConvergenceCheck(lowerBounds, upperBounds, tolerance, maxIter)) with SerializableLogging {
   protected val EPS = 2.2E-16
 
   /**
@@ -58,7 +56,7 @@ LBFGSB.defaultConvergenceCheck(lowerBounds, upperBounds, tolerance, maxIter), to
   }
 
   override protected def updateHistory(newX: DenseVector[Double], newGrad: DenseVector[Double], newVal: Double, f: DiffFunction[DenseVector[Double]], oldState: State): History =  {
-    updateSkYkHessianApproxMat(oldState.history, newX - oldState.x, newGrad :- oldState.grad)
+    updateSkYkHessianApproxMat(oldState.history, newX - oldState.x, newGrad -:- oldState.grad)
   }
 
   override protected def chooseDescentDirection(state: State, f: DiffFunction[DenseVector[Double]]): DenseVector[Double] = {
@@ -86,7 +84,7 @@ LBFGSB.defaultConvergenceCheck(lowerBounds, upperBounds, tolerance, maxIter), to
   }
 
   override protected def takeStep(state: State, dir: DenseVector[Double], stepSize: Double) = {
-    state.x + (dir :* stepSize)
+    state.x + (dir *:* stepSize)
   }
 
   private def initialize(f: DiffFunction[DenseVector[Double]], x0: DenseVector[Double]) = {
@@ -147,12 +145,12 @@ LBFGSB.defaultConvergenceCheck(lowerBounds, upperBounds, tolerance, maxIter), to
       xCauchy(b) = if (0 < d(b)) upperBounds(b) else lowerBounds(b)
 
       val zb = xCauchy(b) - x(b)
-      c = c + p :* deltaT
+      c = c + p *:* deltaT
 
       val bRowOfW:DenseVector[Double] = W(b, ::).t
-      fDerivative += deltaT*fSecondDerivative + g(b)*g(b) + theta*g(b)*zb - (bRowOfW.t :* g(b))*(M*c)
+      fDerivative += deltaT*fSecondDerivative + g(b)*g(b) + theta*g(b)*zb - (bRowOfW.t *:* g(b))*(M*c)
       fSecondDerivative += -1.0*theta*g(b)*g(b) - 2.0*(g(b) * (bRowOfW.dot(M*p))) - g(b)*g(b) * (bRowOfW.t*(M*bRowOfW))
-      p +=  (bRowOfW :* g(b));
+      p +=  (bRowOfW *:* g(b));
       d(b) = 0.0
       dtMin = -fDerivative/fSecondDerivative
       oldT = minT
@@ -171,7 +169,7 @@ LBFGSB.defaultConvergenceCheck(lowerBounds, upperBounds, tolerance, maxIter), to
       xCauchy(sortedIndeces(sortIdx)) = x(sortedIndeces(sortIdx)) + oldT * d(sortedIndeces(sortIdx))
     }
 
-    c += p :* dtMin
+    c += p *:* dtMin
 
     (xCauchy, c)
   }
@@ -216,7 +214,7 @@ LBFGSB.defaultConvergenceCheck(lowerBounds, upperBounds, tolerance, maxIter), to
     }
 
     // r=(g+theta*(x_cauchy-x)-W*(M*c));
-    val dirTheta:DenseVector[Double] = (xCauchy - x) :* theta;
+    val dirTheta:DenseVector[Double] = (xCauchy - x) *:* theta;
     val fullR = g + dirTheta -  W*(M*c)
     val rc = fullR(freeVariableIndexes)
 
@@ -224,20 +222,20 @@ LBFGSB.defaultConvergenceCheck(lowerBounds, upperBounds, tolerance, maxIter), to
     var v:DenseVector[Double] = M*(WZ * rc)
     //step4 N = 1/theta * W^T*Z * (W^T*Z)^T
     var N:DenseMatrix[Double] = WZ*WZ.t;
-    N = N:*invTheta
+    N = N *:* invTheta
     N = DenseMatrix.eye[Double](N.rows) - M*N;
     //step5:v = N^(-1) * v
     val invN = inv(N)
     val invNv = invN*v
     v = N \ v
     //step6
-    val wzv:DenseVector[Double] = WZ.t*v :* (invTheta * invTheta)
-    val thetaRC = rc:*invTheta
-    val du = (thetaRC + wzv) :* (-1.0)
+    val wzv:DenseVector[Double] = WZ.t*v *:* (invTheta * invTheta)
+    val thetaRC = rc *:* invTheta
+    val du = (thetaRC + wzv) *:* (-1.0)
     //step7 find star alpha
     val starAlpha = findAlpha(xCauchy, du, freeVariableIndexes.toArray)
 
-    val dStar = du :* starAlpha
+    val dStar = du *:* starAlpha
 
     val subspaceMinX = xCauchy.copy
     for((freeVarIdx, i) <- freeVariableIndexes.zipWithIndex) {
@@ -276,14 +274,14 @@ LBFGSB.defaultConvergenceCheck(lowerBounds, upperBounds, tolerance, maxIter), to
     if (EPS*norm(newY, 2) < curvatureTest) {
       //step7:update Sk'Sk, Yk'Yk, Lk and Rk, and set theta = yk'*yk/yk'*sk
       val newTheta =  newY.t*newY / (newY.t*newS)
-      val newW = DenseMatrix.horzcat(yHistory, sHistory :* newTheta)
+      val newW = DenseMatrix.horzcat(yHistory, sHistory *:* newTheta)
       val A:DenseMatrix[Double] = sHistory.t * yHistory
       val L = strictlyLowerTriangular(A)
-      val D:DenseMatrix[Double] = diag(diag(A)) :* (-1.0)
+      val D:DenseMatrix[Double] = diag(diag(A)) *:* (-1.0)
 
       val STS:DenseMatrix[Double] = sHistory.t*sHistory
       val MM = DenseMatrix.vertcat(DenseMatrix.horzcat(D, L.t) ,
-        DenseMatrix.horzcat(L, STS :* newTheta))
+        DenseMatrix.horzcat(L, STS *:* newTheta))
       val newM = inv(MM)//MM-1 M is defined at formula 3.4
       newHistory.copy(newTheta, newW, newM)
     } else {
@@ -297,16 +295,16 @@ LBFGSB.defaultConvergenceCheck(lowerBounds, upperBounds, tolerance, maxIter), to
 
 object LBFGSB {
   def defaultConvergenceCheck(lowerBounds: DenseVector[Double], upperBounds: DenseVector[Double], tolerance: Double, maxIter: Int) = {
-    bfgsbConvergenceTest(lowerBounds, upperBounds) || FirstOrderMinimizer.functionValuesConverged(tolerance) || FirstOrderMinimizer.maxIterationsReached(maxIter)
-  }.lift
+    bfgsbConvergenceTest(lowerBounds, upperBounds) || FirstOrderMinimizer.defaultConvergenceCheck(maxIter, tolerance)
+  }
 
   protected val PROJ_GRADIENT_EPS = 1E-5
-  protected def bfgsbConvergenceTest[H](lowerBounds: DenseVector[Double],
-                                     upperBounds: DenseVector[Double]):ConvergenceCheck[DenseVector[Double], H] = {
+  protected def bfgsbConvergenceTest(lowerBounds: DenseVector[Double],
+                                     upperBounds: DenseVector[Double]):ConvergenceCheck[DenseVector[Double]] = ConvergenceCheck.fromPartialFunction {
     case state if boundedConvCheck(state, lowerBounds, upperBounds) => ProjectedStepConverged
   }
 
-  private def boundedConvCheck[H](state: State[DenseVector[Double], H], lowerBounds: DenseVector[Double], upperBounds: DenseVector[Double]): Boolean = {
+  private def boundedConvCheck[H](state: State[DenseVector[Double], _, H], lowerBounds: DenseVector[Double], upperBounds: DenseVector[Double]): Boolean = {
     val x = state.x
     val g = state.grad
     val pMinusX = (x - g).mapPairs { (i, v) =>

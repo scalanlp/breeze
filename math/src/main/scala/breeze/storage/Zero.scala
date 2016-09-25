@@ -46,40 +46,54 @@ object Zero extends ZeroLowPriority {
     def zero = v
   }
 
+  @SerialVersionUID(1l)
   implicit object IntZero extends Zero[Int] {
     override def zero = 0
   }
 
+  @SerialVersionUID(1l)
   implicit object ShortZero extends Zero[Short] {
     override def zero = 0.toShort
   }
 
+  @SerialVersionUID(1l)
   implicit object LongZero extends Zero[Long] {
     override def zero = 0l
   }
 
+  @SerialVersionUID(1l)
   implicit object ByteZero extends Zero[Byte] {
     override def zero = 0.toByte
   }
 
+  @SerialVersionUID(1l)
   implicit object CharZero extends Zero[Char] {
     override def zero = 0.toChar
   }
 
+  @SerialVersionUID(1l)
   implicit object FloatZero extends Zero[Float] {
     override def zero = 0.0f
   }
 
+  @SerialVersionUID(1l)
   implicit object DoubleZero extends Zero[Double] {
     override def zero = 0.0
   }
 
+  @SerialVersionUID(1l)
   implicit object BooleanZero extends Zero[Boolean] {
     override def zero = false
   }
 
+  @SerialVersionUID(1l)
   implicit object BigIntZero extends Zero[BigInt] {
     override def zero = BigInt(0)
+  }
+
+  @SerialVersionUID(1l)
+  implicit object BigDecimalZero extends Zero[BigDecimal] {
+    override def zero = BigDecimal(0L)
   }
 
 

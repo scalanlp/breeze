@@ -195,7 +195,13 @@ class NumericsTest extends FunSuite with Checkers with Matchers {
     assert( log(3d, 81d) == 4d )
   }
 
-  test("log with sink") {
-    assert( log.withSink(DenseVector(0.0))(DenseVector(4.0)) == DenseVector(log(4.0)) )
+  test("pow"){
+    assert( pow(2d, 4d) == 16 )
+    assert( pow.inPlace(DenseVector(2d, 3d), 4d) == DenseVector(16d, 81d) )
   }
+
+//  test("with sink") {
+//    assert( log.withSink(DenseVector(0.0))(DenseVector(4d)) == 2d )
+//
+//  }
 }

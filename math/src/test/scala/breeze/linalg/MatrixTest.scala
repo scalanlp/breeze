@@ -117,6 +117,39 @@ class MatrixTest extends FunSuite with Checkers {
       (Complex(4,4), Complex(5,5), Complex(6,6))))
   }
 
+  test("hashcode") {
+    val v: DenseMatrix[Int] = DenseMatrix(1, 2, 0, 0, 3)
+    val v2: CSCMatrix[Int] = {
+      val mt = new CSCMatrix.Builder[Int](5, 1)
+      mt.add(0,0,1)
+      mt.add(1,0,2)
+      mt.add(4,0,3)
+      mt.result
+    }
+    assert(v === v2)
+    assert(v.hashCode == v2.hashCode)
+  }
+
+  test("Sparse equality") {
+    val v: CSCMatrix[Int] = {
+      val mt = new CSCMatrix.Builder[Int](5, 1)
+      mt.add(1, 0, 2)
+      mt.add(4, 0, 3)
+      mt.result
+    }
+    val v2: CSCMatrix[Int] = CSCMatrix(0, 2, 0, 0, 3)
+    val diff = v - v2
+    val zeros = CSCMatrix.zeros[Int](5, 1)
+    val v4 = v2.copy
+    v4.update(1, 0, 0)
+    v4.update(4, 0, 0)
+    assert(v == v2) // similar matrices are same
+    assert(diff == zeros) // automatic removal of explicit zeros
+    assert(diff.activeSize == 0)
+    assert(zeros == v4) // implicit vs explicit
+    assert(v4 == zeros) // explicit vs implicit
+    assert(zeros != v)
+  }
 
 //  test("MapValues") {
 //    val a : Matrix[Int] = Matrix((1,0,0),(2,3,-1))

@@ -149,6 +149,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   op: Op.Impl2[T, T, T]):Op.Impl2[DenseVector[T], DenseVector[T], DenseVector[T]] = {
     new Op.Impl2[DenseVector[T], DenseVector[T], DenseVector[T]] {
       def apply(a: DenseVector[T], b: DenseVector[T]): DenseVector[T] = {
+        require(a.length == b.length, "Lengths must match!")
         val ad = a.data
         val bd = b.data
         var aoff = a.offset
@@ -322,6 +323,20 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
         val n = v1.length
         new ZippedValues[T, T] {
           def foreach(fn: (T, T) => Unit) {
+            if (v1.stride == 1 && v2.stride == 1) {
+              val data1 = v1.data
+              val offset1 = v1.offset
+              val data2 = v2.data
+              val offset2 = v2.offset
+              cforRange(0 until v1.length) { i =>
+                fn(data1(offset1 + i), data2(offset2 + i))
+              }
+            } else {
+              slowPath(fn)
+            }
+          }
+
+          def slowPath(fn: (T, T) => Unit): Unit = {
             val data1 = v1.data
             val stride1 = v1.stride
             var offset1 = v1.offset
@@ -510,46 +525,81 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
  **/
 trait DenseVector_SpecialOps extends DenseVectorOps { this: DenseVector.type =>
 
+
+  implicit val canAddIntoF: OpAdd.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] = {
+    new OpAdd.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] {
+      def apply(a: DenseVector[Float], b: DenseVector[Float]) = {
+        canSaxpy(a, 1.0f, b)
+      }
+      implicitly[BinaryUpdateRegistry[Vector[Float], Vector[Float], OpAdd.type]].register(this)
+    }
+  }
+
+  implicit object canSaxpy extends scaleAdd.InPlaceImpl3[DenseVector[Float], Float, DenseVector[Float]] with Serializable {
+    def apply(y: DenseVector[Float], a: Float, x: DenseVector[Float]) {
+      require(x.length == y.length, s"Vectors must have same length")
+      // using blas here is always a bad idea.
+      if (x.noOffsetOrStride && y.noOffsetOrStride) {
+        val ad = x.data
+        val bd = y.data
+
+        cforRange(0 until x.length) { i =>
+          bd(i) += ad(i) * a
+        }
+
+      } else {
+        slowPath(y, a, x)
+      }
+    }
+
+    private def slowPath(y: DenseVector[Float], a: Float, x: DenseVector[Float]): Unit = {
+      cforRange(0 until x.length) { i =>
+        y(i) += x(i) * a
+      }
+    }
+  }
+  implicitly[TernaryUpdateRegistry[Vector[Float], Float, Vector[Float], scaleAdd.type]].register(canSaxpy)
+
+  implicit val canAddF: OpAdd.Impl2[DenseVector[Float], DenseVector[Float], DenseVector[Float]] = {
+    pureFromUpdate_Float(canAddIntoF)
+  }
+  implicitly[BinaryRegistry[Vector[Float], Vector[Float], OpAdd.type, Vector[Float]]].register(canAddF)
+
+  implicit val canSubIntoF: OpSub.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] = {
+    new OpSub.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] {
+      def apply(a: DenseVector[Float], b: DenseVector[Float]) = {
+        canSaxpy(a, -1.0f, b)
+      }
+      implicitly[BinaryUpdateRegistry[Vector[Float], Vector[Float], OpSub.type]].register(this)
+    }
+
+  }
+  implicit val canSubF: OpSub.Impl2[DenseVector[Float], DenseVector[Float], DenseVector[Float]] = {
+    pureFromUpdate_Float(canSubIntoF)
+  }
+
   implicit val canDot_DV_DV_Float: breeze.linalg.operators.OpMulInner.Impl2[DenseVector[Float], DenseVector[Float], Float] = {
     new breeze.linalg.operators.OpMulInner.Impl2[DenseVector[Float], DenseVector[Float], Float] {
       def apply(a: DenseVector[Float], b: DenseVector[Float]) = {
         require(a.length == b.length, s"Vectors must have same length")
         if (a.noOffsetOrStride && b.noOffsetOrStride && a.length < DenseVectorSupportMethods.MAX_SMALL_DOT_PRODUCT_LENGTH) {
           DenseVectorSupportMethods.smallDotProduct_Float(a.data, b.data, a.length)
-        } else if (a.length < 200) { // benchmarks suggest break-even point is around length 200
-          if (a.noOffsetOrStride && b.noOffsetOrStride) {
-            fastMediumSizePath(a, b)
-          } else {
-            slowMediumSizePath(a, b)
-          }
         } else {
           blasPath(a, b)
         }
       }
 
+      val UNROLL_FACTOR = 6
+
       private def blasPath(a: DenseVector[Float], b: DenseVector[Float]): Float = {
-        val boff = if (b.stride >= 0) b.offset else (b.offset + b.stride * (b.length - 1))
-        val aoff = if (a.stride >= 0) a.offset else (a.offset + a.stride * (a.length - 1))
-        blas.sdot(
-          a.length, b.data, boff, b.stride, a.data, aoff, a.stride)
-      }
-
-      private def slowMediumSizePath(a: DenseVector[Float], b: DenseVector[Float]): Float = {
-        var sum = 0.0f
-        cforRange(0 until a.length) { i =>
-          sum += a(i) * b(i)
+        if ((a.length <= 300 || !usingNatives) && a.stride == 1 && b.stride == 1) {
+          DenseVectorSupportMethods.dotProduct_Float(a.data, a.offset, b.data, b.offset, a.length)
+        } else  {
+          val boff = if (b.stride >= 0) b.offset else (b.offset + b.stride * (b.length - 1))
+          val aoff = if (a.stride >= 0) a.offset else (a.offset + a.stride * (a.length - 1))
+          blas.sdot(
+            a.length, b.data, boff, b.stride, a.data, aoff, a.stride)
         }
-        sum
-      }
-
-      private def fastMediumSizePath(a: DenseVector[Float], b: DenseVector[Float]): Float = {
-        var sum = 0.0f
-        val ad = a.data
-        val bd = b.data
-        cforRange(0 until a.length) { i =>
-          sum += ad(i) * bd(i)
-        }
-        sum
       }
       implicitly[BinaryRegistry[Vector[Float], Vector[Float], OpMulInner.type, Float]].register(this)
     }
@@ -593,6 +643,7 @@ trait DenseVector_OrderingOps extends DenseVectorOps { this: DenseVector.type =>
   (implicit @expand.sequence[Op]({_ > _},  {_ >= _}, {_ <= _}, {_ < _}, { _ == _}, {_ != _})
   op: Op.Impl2[T, T, Boolean]):Op.Impl2[DenseVector[T], Vector[T], BitVector] = new Op.Impl2[DenseVector[T], Vector[T], BitVector] {
     def apply(a: DenseVector[T], b: Vector[T]): BitVector = {
+      require(a.length == b.length, "Vector lengths must match!")
       val ad = a.data
       var aoff = a.offset
       val result = BitVector.zeros(a.length)
@@ -774,7 +825,7 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
     new UFunc.UImpl2[Tag, LHS, Transpose[DenseVector[V]], R] {
       def apply(v: LHS, v2: Transpose[DenseVector[V]]): R = {
         val dv: DenseVector[V] = v2.inner
-        val dm: DenseMatrix[V] = new DenseMatrix(data = dv.data, offset = dv.offset, cols = dv.length, rows = 1, majorStride = dv.stride)
+        val dm: DenseMatrix[V] = DenseMatrix.create(data = dv.data, offset = dv.offset, cols = dv.length, rows = 1, majorStride = dv.stride)
         op(v, dm)
       }
     }

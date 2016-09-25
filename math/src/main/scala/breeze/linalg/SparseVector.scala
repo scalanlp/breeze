@@ -22,6 +22,7 @@ import operators._
 import breeze.math._
 import breeze.storage.Zero
 import breeze.util.ArrayUtil
+import spire.syntax.cfor._
 
 import scala.{specialized=>spec}
 import scala.collection.mutable
@@ -149,16 +150,31 @@ class SparseVector[@spec(Double, Int, Float, Long) V](val array: SparseArray[V])
    */
   def allVisitableIndicesActive: Boolean = true
 
-  def asCSCMatrix()(implicit man: ClassTag[V]): CSCMatrix[V] = {
+  @deprecated("Used asCSCRow instead", "0.12")
+  def asCSCMatrix(implicit man: ClassTag[V]): CSCMatrix[V] = {
+    asCscRow
+  }
+
+  def asCscRow(implicit man: ClassTag[V]): CSCMatrix[V] = {
     // zero SV
     if (index.length == 0)
       CSCMatrix.zeros[V](1, length)
     else {
       var ii = 0
       val nIndex = Array.tabulate[Int](length + 1)( (cp: Int) =>
-        if (cp < length && cp == index(ii)) {ii += 1; ii - 1}
+        if (ii < used && cp == index(ii)) {ii += 1; ii - 1}
         else ii )
+      assert(ii == used)
       new CSCMatrix[V](data, 1, length, nIndex, activeSize, Array.fill[Int](data.length)(0))
+    }
+  }
+
+  def asCscColumn(implicit man: ClassTag[V]): CSCMatrix[V] = {
+    // zero SV
+    if (index.length == 0)
+      CSCMatrix.zeros[V](length, 1)
+    else {
+      new CSCMatrix[V](data.clone(), length, 1, Array(0, used), activeSize, index)
     }
   }
 }

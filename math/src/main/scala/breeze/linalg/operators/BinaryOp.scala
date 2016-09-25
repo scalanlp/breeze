@@ -15,6 +15,7 @@ package breeze.linalg.operators
  limitations under the License.
 */
 
+import breeze.generic.UFunc.UImpl2
 import breeze.generic.{UFunc, MMRegistry2/*, Multimethod2*/}
 import breeze.linalg.support.CanCopy
 
@@ -44,23 +45,44 @@ object BinaryOp {
 // because we don't need BinaryOp's to inherit from Function2, which has a lot of @specialzied cruft.
 trait BinaryRegistry[A, B, Op, +R] extends UFunc.UImpl2[Op, A, B, R] with MMRegistry2[UFunc.UImpl2[Op, _ <: A, _ <: B, _ <: (R @uncheckedVariance)]] {
   protected def bindingMissing(a: A, b: B):R = throw new UnsupportedOperationException("Types not found!" + a + b + " " + ops)
-  protected def multipleOptions(a: A, b: B, m: Map[(Class[_],Class[_]),UFunc.UImpl2[Op, _ <: A, _ <: B, _ <: R @uncheckedVariance]]) = {
+
+  protected def multipleOptions(a: A, b: B, m: Map[(Class[_],Class[_]),UImpl2[Op, _ <: A, _ <: B, _ <: R @uncheckedVariance]]) = {
     throw new RuntimeException("Multiple bindings for method: " + m)
+  }
+
+  private val l1cache: ThreadLocal[((Class[_], Class[_]), Option[UImpl2[Op, _ <: A, _ <: B, _ <: R @uncheckedVariance]])] = {
+    new ThreadLocal[((Class[_], Class[_]), Option[UImpl2[Op, _ <: A, _ <: B, _ <: R]])]
   }
 
   def apply(a: A, b: B): R = {
     val ac = a.asInstanceOf[AnyRef].getClass
     val bc = b.asInstanceOf[AnyRef].getClass
+    val pair = (ac, bc)
 
-    val cached = cache.get(ac -> bc)
-    if(cached != null) {
-      cached match {
+    val firstLevelCached = l1cache.get()
+    if (firstLevelCached != null && pair == firstLevelCached._1) {
+      firstLevelCached._2 match {
         case None => bindingMissing(a, b)
-        case Some(m) =>
-          m.asInstanceOf[UFunc.UImpl2[Op,A, B, R]].apply(a, b)
+        case some@Some(m) =>
+          m.asInstanceOf[UImpl2[Op, A, B, R]].apply(a, b)
       }
     } else {
-      val options = resolve(ac, bc.asInstanceOf[Class[_<:B]])
+      slowPath(a, b, ac, bc, pair)
+    }
+
+  }
+
+  private def slowPath(a: A, b: B, ac: Class[_ <: AnyRef], bc: Class[_ <: AnyRef], pair: (Class[_ <: AnyRef], Class[_ <: AnyRef])): R = {
+    val cached: Option[UImpl2[Op, _ <: A, _ <: B, _ <: R@uncheckedVariance]] = cache.get(pair)
+    if (cached != null) {
+      cached match {
+        case None => bindingMissing(a, b)
+        case some@Some(m) =>
+          l1cache.set(pair -> some)
+          m.asInstanceOf[UImpl2[Op, A, B, R]].apply(a, b)
+      }
+    } else {
+      val options = resolve(ac, bc.asInstanceOf[Class[_ <: B]])
 
       options.size match {
         case 0 =>
@@ -69,21 +91,23 @@ trait BinaryRegistry[A, B, Op, +R] extends UFunc.UImpl2[Op, A, B, R] with MMRegi
         case 1 =>
           val method = options.values.head
           cache.put(ac -> bc, Some(method))
-          method.asInstanceOf[UFunc.UImpl2[Op,A, B, R]].apply(a, b)
+          method.asInstanceOf[UImpl2[Op, A, B, R]].apply(a, b)
         case _ =>
           val selected = selectBestOption(options)
-          if(selected.size != 1)
+          if (selected.size != 1)
             multipleOptions(a, b, options)
           else {
             val method = selected.values.head
-            cache.put(ac -> bc, Some(method))
-            method.asInstanceOf[UFunc.UImpl2[Op,A, B, R]].apply(a, b)
+            val some = Some(method)
+            l1cache.set(pair -> some)
+            cache.put(pair, some)
+            method.asInstanceOf[UImpl2[Op, A, B, R]].apply(a, b)
           }
       }
     }
   }
 
-  def register[AA<:A, BB<:B](op: UFunc.UImpl2[Op,AA, BB, R @uncheckedVariance])(implicit cA: ClassTag[AA], cB: ClassTag[BB]) = {
+  def register[AA<:A, BB<:B](op: UImpl2[Op, AA, BB, _ <: R @uncheckedVariance])(implicit cA: ClassTag[AA], cB: ClassTag[BB]) = {
     super.register(cA.runtimeClass, cB.runtimeClass, op)
     op
   }

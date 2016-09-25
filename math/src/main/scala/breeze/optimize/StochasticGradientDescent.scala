@@ -27,10 +27,9 @@ import breeze.util._
 abstract class StochasticGradientDescent[T](val defaultStepSize: Double,
                                             val maxIter: Int,
                                             tolerance: Double=1E-5,
-                                            improvementTol: Double=1E-4,
-                                            minImprovementWindow: Int = 50)
+                                            fvalMemory: Int = 100)
                                             (implicit protected val vspace: NormedModule[T, Double])
-  extends FirstOrderMinimizer[T, StochasticDiffFunction[T]](maxIter, tolerance, improvementTol, minImprovementWindow, 2) with SerializableLogging {
+  extends FirstOrderMinimizer[T, StochasticDiffFunction[T]](maxIter, tolerance, fvalMemory, relativeTolerance = true) with SerializableLogging {
 
   import vspace._
 
@@ -43,17 +42,6 @@ abstract class StochasticGradientDescent[T](val defaultStepSize: Double,
    */
   protected def takeStep(state: State, dir: T, stepSize: Double) = state.x + dir * stepSize
   protected def chooseDescentDirection(state: State, fn: StochasticDiffFunction[T]) = state.grad * -1.0
-
-
-  override protected def updateFValWindow(oldState: State, newAdjVal: Double) = {
-    if(oldState.fVals.isEmpty) IndexedSeq(newAdjVal)
-    else {
-      // weighted average. less sensitive to outliers
-      val interm = oldState.fVals :+ ((oldState.fVals.last * 3 + newAdjVal)/4.0)
-      if(interm.length > minImprovementWindow) interm.drop(1)
-      else interm
-    }
-  }
 
   /**
    * Choose a step size scale for this iteration.
@@ -72,9 +60,9 @@ object StochasticGradientDescent {
     new SimpleSGD(initialStepSize,maxIter)
   }
 
-  class SimpleSGD[T](eta: Double=4,
+  class SimpleSGD[T](initialStepSize: Double=4,
                      maxIter: Int=100)
-                    (implicit vs: NormedModule[T, Double]) extends StochasticGradientDescent[T](eta,maxIter) {
+                    (implicit vs: NormedModule[T, Double]) extends StochasticGradientDescent[T](initialStepSize,maxIter) {
     type History = Unit
     def initialHistory(f: StochasticDiffFunction[T],init: T)= ()
     def updateHistory(newX: T, newGrad: T, newValue: Double, f: StochasticDiffFunction[T], oldState: State) = ()

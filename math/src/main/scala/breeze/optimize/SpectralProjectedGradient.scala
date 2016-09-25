@@ -35,19 +35,18 @@ import breeze.util.SerializableLogging
  * @param projection projection operations
  * @param curvilinear if curvilinear true, do the projection inside line search in place of doing it in chooseDescentDirection
  */
-class SpectralProjectedGradient[T](
-  val projection: T => T = { (t: T) => t },
-  tolerance: Double = 1e-6,
-  suffDec: Double = 1e-4,
-  minImprovementWindow: Int = 30,
-  alphaMax: Double = 1e10,
-  alphaMin: Double = 1e-10,
-  bbMemory: Int = 10,
-  maxIter: Int = -1,
-  val initFeas: Boolean = false,
-  val curvilinear: Boolean = false,
-  val bbType: Int = 1,
-  val maxSrcht: Int = 30)(implicit space: MutableVectorField[T, Double]) extends FirstOrderMinimizer[T, DiffFunction[T]](minImprovementWindow = minImprovementWindow, maxIter = maxIter, tolerance = tolerance, improvementTol = tolerance) with Projecting[T] with SerializableLogging {
+class SpectralProjectedGradient[T](val projection: T => T = { (t: T) => t },
+                                   tolerance: Double = 1e-6,
+                                   suffDec: Double = 1e-4,
+                                   fvalMemory: Int = 30,
+                                   alphaMax: Double = 1e10,
+                                   alphaMin: Double = 1e-10,
+                                   bbMemory: Int = 10,
+                                   maxIter: Int = -1,
+                                   val initFeas: Boolean = false,
+                                   val curvilinear: Boolean = false,
+                                   val bbType: Int = 1,
+                                   val maxSrcht: Int = 30)(implicit space: MutableVectorField[T, Double]) extends FirstOrderMinimizer[T, DiffFunction[T]](fvalMemory = fvalMemory, maxIter = maxIter, tolerance = tolerance) with Projecting[T] with SerializableLogging {
   import space._
   case class History(alphaBB: Double, fvals: IndexedSeq[Double])
 

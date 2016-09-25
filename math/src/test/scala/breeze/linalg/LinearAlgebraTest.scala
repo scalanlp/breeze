@@ -420,6 +420,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     assert(v === diag(DenseVector(1.0, 1.0, 1.0)))
   }
 
+
   test("complex eig test") {
     // complex, get it?
     val Eig(w, wi, v) = eig(DenseMatrix((1.0, -1.0), (1.0, 1.0)))
@@ -427,6 +428,12 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     assert(wi === DenseVector(1.0, -1.0))
     assert(max(abs(v - diag(DenseVector(0.7071067811865475, -0.7071067811865475)))) < 1E-7)
     // TODO, we seem to throw out VI... these seems bad...
+  }
+
+  test("eig nans") {
+    intercept[IllegalArgumentException] {
+       eig(diag(DenseVector(Double.NaN, 2.0, 3.0)))
+    }
   }
 
   test("svd A(m, n), m > n") {

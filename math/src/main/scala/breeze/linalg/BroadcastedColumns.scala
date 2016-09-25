@@ -27,12 +27,27 @@ import breeze.linalg.support._
  * @param underlying the tensor (or equivalent) being broadcasted
  * @tparam T the type of the tensor
  */
-case class BroadcastedColumns[T, B](underlying: T) extends BroadcastedLike[T, B, BroadcastedColumns[T, B]] {
+case class BroadcastedColumns[T, ColType](underlying: T) extends BroadcastedLike[T, ColType, BroadcastedColumns[T, ColType]] {
   def repr = this
+
+  def iterator(implicit canIterateAxis: CanIterateAxis[T, Axis._0.type, ColType]) = canIterateAxis(underlying, Axis._0)
+
+  def foldLeft[B](z: B)(f: (B,ColType)=>B)(implicit canTraverseAxis: CanTraverseAxis[T, Axis._0.type, ColType]):B = {
+    var acc = z
+    canTraverseAxis(underlying, Axis._0){c => acc = f(acc, c)}
+    acc
+  }
+
+
 
 }
 
 object BroadcastedColumns {
+
+  implicit class BroadcastColumnsDMToIndexedSeq[T](bc: BroadcastedColumns[DenseMatrix[T], DenseVector[T]]) {
+    def toIndexedSeq: IndexedSeq[DenseVector[T]] = new BroadcastedDMColsISeq(bc.underlying)
+  }
+
 
   implicit def canMapValues[T, ColumnType, ResultColumn, Result]
                             (implicit cc: CanCollapseAxis[T, Axis._0.type, ColumnType, ResultColumn, Result])
@@ -43,6 +58,7 @@ object BroadcastedColumns {
       }
     }
   }
+
 
   implicit def scalarOf[T, ColumnType]: ScalarOf[BroadcastedColumns[T, ColumnType], ColumnType] = ScalarOf.dummy
 
@@ -59,7 +75,7 @@ object BroadcastedColumns {
 
   implicit def broadcastInplaceOp[Op, T, ColumnType, RHS, OpResult](implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, ColumnType],
                                                                      op: InPlaceImpl[Op, ColumnType],
-                                                                     cc: CanIterateAxis[T, Axis._0.type, ColumnType]):InPlaceImpl[Op, BroadcastedColumns[T, ColumnType]] = {
+                                                                     cc: CanTraverseAxis[T, Axis._0.type, ColumnType]):InPlaceImpl[Op, BroadcastedColumns[T, ColumnType]] = {
     new InPlaceImpl[Op, BroadcastedColumns[T, ColumnType]] {
       def apply(v: BroadcastedColumns[T, ColumnType]) {
         cc(v.underlying, Axis._0){op(_)}
@@ -79,7 +95,7 @@ object BroadcastedColumns {
 
   implicit def broadcastInplaceOp2[Op, T, ColumnType, RHS, OpResult](implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, ColumnType],
                                                                     op: InPlaceImpl2[Op, ColumnType, RHS],
-                                                                    cc: CanIterateAxis[T, Axis._0.type, ColumnType]):InPlaceImpl2[Op, BroadcastedColumns[T, ColumnType], RHS] = {
+                                                                    cc: CanTraverseAxis[T, Axis._0.type, ColumnType]):InPlaceImpl2[Op, BroadcastedColumns[T, ColumnType], RHS] = {
     new InPlaceImpl2[Op, BroadcastedColumns[T, ColumnType], RHS] {
       def apply(v: BroadcastedColumns[T, ColumnType], v2: RHS) {
         cc(v.underlying, Axis._0){op(_, v2)}
@@ -89,7 +105,7 @@ object BroadcastedColumns {
 
 
   implicit def canForeachColumns[T, ColumnType, ResultColumn, Result]
-  (implicit iter: CanIterateAxis[T, Axis._0.type, ColumnType]):CanForeachValues[BroadcastedColumns[T, ColumnType], ColumnType] = {
+  (implicit iter: CanTraverseAxis[T, Axis._0.type, ColumnType]):CanForeachValues[BroadcastedColumns[T, ColumnType], ColumnType] = {
     new CanForeachValues[BroadcastedColumns[T, ColumnType], ColumnType] {
       /** Maps all key-value pairs from the given collection. */
       override def foreach[U](from: BroadcastedColumns[T, ColumnType], fn: (ColumnType) => U): Unit = {
@@ -99,5 +115,13 @@ object BroadcastedColumns {
 
   }
 
+  // This is a more memory efficient representation if the sequence is long-lived but rarely accessed.
+  @SerialVersionUID(1L)
+  class BroadcastedDMColsISeq[T](val underlying: DenseMatrix[T]) extends IndexedSeq[DenseVector[T]] with Serializable {
+    override def length: Int = underlying.cols
+
+    override def apply(idx: Int): DenseVector[T] = underlying(::, idx)
+  }
 }
+
 

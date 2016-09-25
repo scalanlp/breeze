@@ -18,8 +18,6 @@ package breeze
 
 import breeze.generic.{MappingUFunc, UFunc}
 import breeze.math.Semiring
-import breeze.storage.Zero
-import com.sun.istack.internal.Pool.Impl
 import scala.math._
 import org.apache.commons.math3.special.{Gamma => G, Erf}
 import breeze.linalg.support.CanTraverseValues
@@ -238,6 +236,12 @@ package object numerics {
     implicit object tanFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.tanh(v).toFloat}
   }
 
+  object sech extends UFunc with MappingUFunc {
+    implicit object tanIntImpl extends Impl[Int, Double] { def apply(v: Int) = 1.0/m.cosh(v.toDouble)}
+    implicit object tanDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = 1.0/m.cosh(v)}
+    implicit object tanFloatImpl extends Impl[Float, Float] { def apply(v: Float) = 1.0f/m.cosh(v).toFloat}
+  }
+
   object asin extends UFunc with MappingUFunc {
     implicit object asinIntImpl extends Impl[Int, Double] { def apply(v: Int) = m.asin(v.toDouble)}
     implicit object asinDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.asin(v)}
@@ -358,6 +362,32 @@ package object numerics {
 
   val inf, Inf = Double.PositiveInfinity
   val nan, NaN = Double.NaN
+
+  object isNonfinite extends UFunc with MappingUFunc {
+    @expand
+    @expand.valify
+    implicit def isNonfiniteImpl[@expand.args(Double, Float) T]: Impl[T, Boolean] = {
+      new Impl[T, Boolean] {
+        override def apply(v: T): Boolean = {
+          // TODO: only in Java 8
+//          !java.lang.Double.isFinite(v)
+          !isFinite(v)
+        }
+      }
+    }
+  }
+
+  object isFinite extends UFunc with MappingUFunc {
+    @expand
+    @expand.valify
+    implicit def isFiniteImpl[@expand.args(Double, Float) T]: Impl[T, Boolean] = {
+      new Impl[T, Boolean] {
+        override def apply(v: T): Boolean = {
+          m.abs(v) <= Double.MaxValue
+        }
+      }
+    }
+  }
 
   /**
    * Computes the log of the gamma function. The two parameter version
@@ -624,6 +654,26 @@ package object numerics {
     implicit object sigmoidImplDouble extends Impl[Double, Double] {
       def apply(x:Double) = 1d/(1d+scala.math.exp(-x))
     }
+
+    implicit object sigmoidImplFloat extends Impl[Float, Float] {
+      def apply(x:Float) = 1f/(1f+scala.math.exp(-x).toFloat)
+    }
+  }
+
+  /**
+    * The Relu function: max(0, x)
+    *
+    * @see https://en.wikipedia.org/wiki/Rectifier_(neural_networks)
+    *
+    */
+  object relu extends UFunc with MappingUFunc {
+
+    implicit object reluImplDouble extends Impl[Double, Double] {
+      def apply(x: Double) = max(0d, x)
+    }
+    implicit object reluImplInt extends Impl[Int, Int] {
+      def apply(x: Int) = max(0, x)
+    }
   }
 
   /**
@@ -648,7 +698,6 @@ package object numerics {
     a == b || (scala.math.abs(a-b) < scala.math.max(scala.math.max(scala.math.abs(a),scala.math.abs(b)) ,1) * relDiff)
   }
 
-
   /**
    * The indicator function. 1.0 iff b, else 0.0
    * For non-boolean arguments, 1.0 iff b != 0, else 0.0
@@ -669,7 +718,7 @@ package object numerics {
    */
   object logI extends UFunc with breeze.generic.MappingUFunc {
     implicit object logIBoolImpl extends Impl[Boolean, Double] {
-      def apply(b: Boolean) = if (b) 0.0 else Double.NegativeInfinity
+      def apply(b: Boolean) = if (b) 0.0 else -inf
     }
   }
 

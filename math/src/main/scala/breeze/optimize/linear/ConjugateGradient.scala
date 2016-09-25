@@ -67,12 +67,12 @@ class ConjugateGradient[T,M](maxNormValue: Double = Double.PositiveInfinity,
 
       assert(!alphaNext.isNaN, xtd +" " + normSquare + " " + xtx + "  " + xtd + " " + radius + " " +  dtd)
       axpy(alphaNext, d, x)
-      axpy(-alphaNext, Bd + (d :* normSquaredPenalty), r)
+      axpy(-alphaNext, Bd + (d *:* normSquaredPenalty), r)
 
       State(x, r, d, iter + 1, converged = true)
     } else {
       x := nextX
-      r -= (Bd + (d :* normSquaredPenalty)) :* alpha
+      r -= (Bd + (d *:* normSquaredPenalty)) *:* alpha
       val newrtr = r dot r
       val beta = newrtr / rtr
       d :*= beta
@@ -95,7 +95,7 @@ class ConjugateGradient[T,M](maxNormValue: Double = Double.PositiveInfinity,
   }.takeUpToWhere(_.converged)
 
   private def initialState(a: T, B: M, initX: T) = {
-    val r = a - mult(B, initX) - (initX :* normSquaredPenalty)
+    val r = a - mult(B, initX) - (initX *:* normSquaredPenalty)
     val d = copy(r)
     val rnorm = norm(r)
     State(initX, r, d, 0, rnorm <= tolerance)

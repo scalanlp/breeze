@@ -30,7 +30,7 @@ import spire.implicits.cfor
  * A trait for monadic distributions. Provides support for use in for-comprehensions
  * @author dlwh
  */
-trait Rand[@specialized(Int, Double) +T] { outer =>
+trait Rand[@specialized(Int, Double) +T] extends Serializable { outer =>
   /**
    * Gets one sample from the distribution. Equivalent to sample()
    */
@@ -180,7 +180,7 @@ private final case class MultiplePredicatesRand[@specialized(Int, Double) T](ran
 * Provides standard combinators and such to use
 * to compose new Rands.
 */
-class RandBasis(val generator: RandomGenerator) {
+class RandBasis(val generator: RandomGenerator) extends Serializable {
 
   /**
    * Chooses an element from a collection.
@@ -199,7 +199,7 @@ class RandBasis(val generator: RandomGenerator) {
     }
   }
 
-  def choose[T](c : Seq[T]) = Rand.randInt(c.size).map( c(_))
+  def choose[T](c : Seq[T]) = randInt(c.size).map( c(_))
 
   /**
    * The trivial random generator: always returns the argument
@@ -353,6 +353,14 @@ object RandBasis {
     */
   def mt0 = {
     val int = new AtomicInteger()
+    new RandBasis(new ThreadLocalRandomGenerator(new MersenneTwister(int.getAndIncrement())))
+  }
+
+  /**
+   * Returns a new MersenneTwister backed rand basis with seed set to a specific value
+   */
+  def withSeed(seed: Int) = {
+    val int = new AtomicInteger(seed)
     new RandBasis(new ThreadLocalRandomGenerator(new MersenneTwister(int.getAndIncrement())))
   }
 

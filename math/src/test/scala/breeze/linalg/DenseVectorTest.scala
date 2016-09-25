@@ -1,5 +1,6 @@
 package breeze.linalg
 
+import breeze.numerics.isNonfinite
 import org.netlib.blas.Ddot
 import org.scalacheck._
 import org.scalatest._
@@ -108,7 +109,8 @@ class DenseVectorTest extends FunSuite with Checkers {
   test("Topk") {
     val v = DenseVector(2, 0, 3, 4, -1)
 
-    assert(argtopk(v, 3) === IndexedSeq(3,2,0))
+    // order doesn't matter
+    assert(argtopk(v, 3).toSet === Set(3,2,0))
   }
 
 
@@ -398,8 +400,29 @@ class DenseVectorTest extends FunSuite with Checkers {
       a(3)
       assert(false, "Shouldn't be here!")
     }
+  }
 
-
+  test("Vector <op> Vector should ensure vectors are same size") {
+    {
+      val a = Vector[Double](1D, 2D, 3D)
+      val b = Vector[Double](1D, 2D, 3D, 4D)
+      intercept[IllegalArgumentException] {
+        a + b
+      }
+      intercept[IllegalArgumentException] {
+        b + a
+      }
+    }
+    {
+      val a = Vector[Int](1, 2, 3)
+      val b = Vector[Int](1, 2, 3, 4)
+      intercept[IllegalArgumentException] {
+        a + b
+      }
+      intercept[IllegalArgumentException] {
+        b + a
+      }
+    }
   }
 
   test("Complex OpSet") {
@@ -508,6 +531,27 @@ class DenseVectorTest extends FunSuite with Checkers {
     fy := fneg
     assert(fy === DenseVector(4.0, 3.0, 2.0, 1.0))
   }
+
+  implicit def genTriple: Arbitrary[DenseVector[Double]] = Arbitrary {
+    Arbitrary.arbitrary[Double].map(DenseVector.rand[Double](30) * _)
+  }
+
+
+  test("isClose") {
+    check((a: DenseVector[Double]) => isClose(a, a))
+    check((a: DenseVector[Double], b: DenseVector[Double]) => isClose(a,b) == zipValues(a, b).forall((a, b) => (a - b).abs < 1E-8))
+  }
+
+  test("nonfinite") {
+    check((a: DenseVector[Double]) => any(isNonfinite, a) == a.exists(isNonfinite(_)))
+    check((a: DenseVector[Double]) => all(isNonfinite, a) == a.forall(isNonfinite(_)))
+    assert(all(isNonfinite, DenseVector[Double]())(all.reduceUFunc))
+    assert(!any(isNonfinite, DenseVector[Double]()))
+  }
+
+  test("#467 can slice transpose") {
+    assert(DenseVector(3, 4).t(0 until 1) == DenseVector(3).t)
+  }
 }
 
 /**
@@ -586,6 +630,8 @@ class DenseVectorOps_ComplexTest extends TensorSpaceTestBase[DenseVector[Complex
 @RunWith(classOf[JUnitRunner])
 class DenseVectorOps_FloatTest extends TensorSpaceTestBase[DenseVector[Float], Int, Float] {
  val space = DenseVector.space[Float]
+
+  override val TOL: Double = 1E-3
 
   val N = 30
   implicit def genTriple: Arbitrary[(DenseVector[Float], DenseVector[Float], DenseVector[Float])] = {

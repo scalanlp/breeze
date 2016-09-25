@@ -29,6 +29,7 @@ object eig extends UFunc {
     def apply(m: DenseMatrix[Double]): DenseEig = {
       requireNonEmptyMatrix(m)
       requireSquareMatrix(m)
+      require(!m.valuesIterator.exists(_.isNaN))
 
       val n = m.rows
 

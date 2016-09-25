@@ -1,5 +1,6 @@
 package breeze.linalg.support
 
+import breeze.linalg.DenseVector
 import breeze.macros.arityize
 
 /*
@@ -37,6 +38,16 @@ object LiteralRow {
     }
 
     def length(arr : Array[V]) = arr.length
+  }
+
+  implicit def dv[V] : LiteralRow[DenseVector[V],V] = new LiteralRow[DenseVector[V],V] {
+    def foreach[X](arr : DenseVector[V], fn : ((Int,V) => X)) = {
+      for (i <- 0 until arr.length) {
+        fn(i, arr(i))
+      }
+    }
+
+    def length(arr : DenseVector[V]) = arr.length
   }
 
   implicit def seq[V, S](implicit ev: S <:< Seq[V]) : LiteralRow[S, V] = new LiteralRow[S, V] {

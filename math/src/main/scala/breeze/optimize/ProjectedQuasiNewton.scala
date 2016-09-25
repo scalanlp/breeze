@@ -19,7 +19,7 @@ package breeze.optimize
 import breeze.linalg._
 import breeze.collection.mutable.RingBuffer
 import breeze.math.MutableInnerProductModule
-import breeze.optimize.FirstOrderMinimizer.ConvergenceReason
+import breeze.optimize.FirstOrderMinimizer.{ConvergenceCheck, ConvergenceReason}
 import breeze.util.SerializableLogging
 
 // Compact representation of an n x n Hessian, maintained via L-BFGS updates
@@ -79,7 +79,7 @@ class CompactHessian(M: DenseMatrix[Double], Y: RingBuffer[DenseVector[Double]],
   lazy val N = DenseMatrix.horzcat(collectionOfVectorsToMatrix(S).t * sigma, collectionOfVectorsToMatrix(Y).t)
 }
 
-class ProjectedQuasiNewton(convergenceCheck: FirstOrderMinimizer.State[DenseVector[Double], FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]]#History] => Option[ConvergenceReason],
+class ProjectedQuasiNewton(convergenceCheck: ConvergenceCheck[DenseVector[Double]],
                            val innerOptimizer: SpectralProjectedGradient[DenseVector[Double]],
                            val m: Int,
                            val initFeas: Boolean,
@@ -88,7 +88,7 @@ class ProjectedQuasiNewton(convergenceCheck: FirstOrderMinimizer.State[DenseVect
                            val gamma: Double,
                            val projection: DenseVector[Double] => DenseVector[Double])
                           (implicit space: MutableInnerProductModule[DenseVector[Double],Double])
-  extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]](convergenceCheck, 1E-3, 10, 1) with Projecting[DenseVector[Double]] with SerializableLogging {
+  extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]](convergenceCheck) with Projecting[DenseVector[Double]] with SerializableLogging {
   type BDV = DenseVector[Double]
   def this(tolerance: Double = 1e-6,
     m: Int = 10,
@@ -100,7 +100,7 @@ class ProjectedQuasiNewton(convergenceCheck: FirstOrderMinimizer.State[DenseVect
     projection: DenseVector[Double] => DenseVector[Double] = identity,
     relativeTolerance: Boolean = true)
     (implicit space: MutableInnerProductModule[DenseVector[Double],Double]) = this(
-      convergenceCheck = FirstOrderMinimizer.defaultConvergenceCheck[DenseVector[Double], FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]]#History](maxIter, tolerance, relativeTolerance).lift,
+      convergenceCheck = FirstOrderMinimizer.defaultConvergenceCheck[DenseVector[Double]](maxIter, tolerance, relativeTolerance),
       m = m,
       initFeas = initFeas,
       testOpt = testOpt,
@@ -112,7 +112,7 @@ class ProjectedQuasiNewton(convergenceCheck: FirstOrderMinimizer.State[DenseVect
         maxIter = 50,
         bbMemory = 5,
         initFeas = true,
-        minImprovementWindow = 10,
+        fvalMemory = 10,
         projection = projection
       )
     )

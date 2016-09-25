@@ -3,6 +3,7 @@ package breeze.linalg
 import breeze.benchmark.{MyRunner, BreezeBenchmark}
 import breeze.linalg.operators.DenseVectorSupportMethods
 import breeze.numerics._
+import breeze.stats.distributions.Rand
 import spire.syntax.cfor._
 
 /**
@@ -11,6 +12,41 @@ import spire.syntax.cfor._
 class DenseDotProductBenchmark extends BreezeBenchmark {
 
   val dv, dv2 = DenseVector.rand(5)
+  val dvBig, dv2Big = DenseVector.rand(300)
+  val fv, fv2 = DenseVector.rand(5, Rand.uniform.map(_.toFloat))
+  val fvBig, fv2Big = DenseVector.rand(3000, Rand.uniform.map(_.toFloat))
+
+  def timeBigDVDotMasked(reps: Int) = {
+    var sum = 0.0
+    cforRange(0 until reps) { rep =>
+      sum += (dvBig: Vector[Double]) dot (dv2Big: Vector[Double])
+    }
+    sum
+  }
+
+  def timeDirectBigDV(reps: Int) = {
+    var sum = 0.0
+    cforRange(0 until reps) { rep =>
+      sum += DenseVectorSupportMethods.dotProduct_Double(dvBig.data, 0, dv2Big.data, 0, dvBig.length)
+    }
+    sum
+  }
+
+  def timeBigDVZip(reps: Int) = {
+    var sum = 0.0
+    cforRange(0 until reps) { rep =>
+      zipValues(dvBig, dv2Big).foreach { (x, y) => sum += x * y}
+    }
+    sum
+  }
+
+  def timeBigDVDot(reps: Int) = {
+    var sum = 0.0
+    cforRange(0 until reps) { rep =>
+      sum += dvBig dot dv2Big
+    }
+    sum
+  }
 
   def timeSmallDVDot(reps: Int) = {
     var sum = 0.0
@@ -32,38 +68,28 @@ class DenseDotProductBenchmark extends BreezeBenchmark {
     sum
   }
 
-  /*
-  overhead is negligible.
 
-  def timeSmallSupport(reps: Int) = {
+  def timeDirectBigFV(reps: Int) = {
     var sum = 0.0
     cforRange(0 until reps) { rep =>
-      sum += DenseVectorSupportMethods.smallDotProduct_Double(dv.data, dv2.data, dv.length)
+      sum += DenseVectorSupportMethods.dotProduct_Float(fvBig.data, 0, fv2Big.data, 0, fvBig.length)
     }
     sum
   }
 
-  def timeSmallOverhead(reps: Int) = {
+  def timeBigFVDot(reps: Int) = {
     var sum = 0.0
     cforRange(0 until reps) { rep =>
-      sum += DenseVector.canDotD(dv, dv2)
+      sum += fvBig dot fv2Big
     }
     sum
   }
-  */
 
-
-  def timeSmallDVDotInline(reps: Int) = {
-    var sum = 0.0
-    cforRange(0 until reps) ( rep =>
-      sum += dv(0) * dv2(0)
-        + dv(1) * dv2(1)
-        + dv(2) * dv2(2)
-        + dv(3) * dv2(3)
-        + dv(4) * dv2(4)
-    )
-    sum
-  }
 }
 
 object DenseDotProductBenchmark extends MyRunner(classOf[DenseDotProductBenchmark])
+
+object DenseDotProductX extends App {
+  println((new DenseDotProductBenchmark).timeBigDVDotMasked(100000000))
+  //  (new DenseDotProductBenchmark).timeVectorizedCopyX1(10000)
+}

@@ -60,8 +60,6 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
   def this(length: Int)(implicit man: ClassTag[V]) = this(new Array[V](length), 0, 1, length)
 
 
-  // uncomment to get all the ridiculous places where specialization fails.
- // if(data.isInstanceOf[Array[Double]] && getClass.getName() == "breeze.linalg.DenseVector") throw new Exception("...")
 
   // ensure that operators are all loaded.
   DenseVector.init()
@@ -94,6 +92,13 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
   @deprecated("This isn't actually any faster any more", "0.12-SNAPSHOT")
   def unsafeUpdate(i: Int, v: V): Unit = if (noOffsetOrStride) data(i) = v else data(offset+i*stride) = v
 
+  private def checkIfSpecialized(): Unit = {
+    if(data.isInstanceOf[Array[Double]] && getClass.getName() == "breeze.linalg.DenseVector") throw new Exception("...")
+  }
+  // uncomment to debug places where specialization fails
+  //  checkIfSpecialized()
+
+
   def activeIterator: Iterator[(Int, V)] = iterator
 
   def activeValuesIterator: Iterator[V] = valuesIterator
@@ -106,6 +111,10 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
     case _ => super.equals(p1)
   }
 
+
+  // TODO: this is only consistent if the hashcode of inactive elements is 0!!!
+  override def hashCode(): Int = ArrayUtil.zeroSkippingHashCode(data, offset, stride, length)
+
   override def toString = {
     valuesIterator.mkString("DenseVector(",", ", ")")
   }
@@ -115,10 +124,15 @@ class DenseVector[@spec(Double, Int, Float, Long) V](val data: Array[V],
    * @return
    */
   def copy: DenseVector[V] = {
-    implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
-    val r = new DenseVector(new Array[V](length))
-    r := this
-    r
+    if (stride == 1) {
+      val newData = ArrayUtil.copyOfRange(data, offset, offset + length)
+      new DenseVector(newData)
+    } else {
+      implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+      val r = new DenseVector(new Array[V](length))
+      r := this
+      r
+    }
   }
 
   /**
@@ -237,14 +251,45 @@ object DenseVector extends VectorConstructors[DenseVector]
                       with DenseVector_OrderingOps
                       with DenseVector_SpecialOps {
 
+
   def zeros[@spec(Double, Int, Float, Long) V: ClassTag : Zero](size: Int): DenseVector[V] = {
     val data = new Array[V](size)
     if(size != 0 && data(0) != implicitly[Zero[V]].zero)
       ArrayUtil.fill(data, 0, data.length, implicitly[Zero[V]].zero)
-    new DenseVector(data)
+    apply(data)
   }
 
-  def apply[@spec(Double, Int, Float, Long) V](values: Array[V]): DenseVector[V] = new DenseVector(values)
+  def apply[@spec(Double, Int, Float, Long) V](values: Array[V]): DenseVector[V] = {
+    // ensure we get specialized implementations even from non-specialized calls
+    (values:AnyRef) match {
+      case v: Array[Double] => new DenseVector(v).asInstanceOf[DenseVector[V]]
+      case v: Array[Float] => new DenseVector(v).asInstanceOf[DenseVector[V]]
+      case v: Array[Int] => new DenseVector(v).asInstanceOf[DenseVector[V]]
+      case v: Array[Long] => new DenseVector(v).asInstanceOf[DenseVector[V]]
+      case _ => new DenseVector(values)
+    }
+  }
+
+  /**
+   *
+   * Creates a new DenseVector using the provided array (not making a copy!). In generic contexts, prefer to
+   * use this (or apply) instead of `new DenseVector[V](data, offset, stride, length)`, which in general
+   * won't give specialized implementations.
+   * @param rows
+   * @param cols
+   * @param data
+   * @tparam V
+   * @return
+   */
+  def create[V](data: Array[V], offset: Int, stride: Int, length: Int): DenseVector[V] = {
+    (data:AnyRef) match {
+      case v: Array[Double] => new DenseVector(v, offset = offset, stride = stride, length = length).asInstanceOf[DenseVector[V]]
+      case v: Array[Float] => new DenseVector(v, offset = offset, stride = stride, length = length).asInstanceOf[DenseVector[V]]
+      case v: Array[Int] => new DenseVector(v, offset = offset, stride = stride, length = length).asInstanceOf[DenseVector[V]]
+      case v: Array[Long] => new DenseVector(v, offset = offset, stride = stride, length = length).asInstanceOf[DenseVector[V]]
+      case _ => new DenseVector(data, offset = offset, stride = stride, length = length)
+    }
+  }
 
   def ones[@spec(Double, Int, Float, Long) V: ClassTag:Semiring](size: Int): DenseVector[V] = fill[V](size, implicitly[Semiring[V]].one)
 
@@ -327,7 +372,7 @@ object DenseVector extends VectorConstructors[DenseVector]
         } else {
           slowPath(out, fn, from.data, from.offset, from.stride)
         }
-        new DenseVector[V2](out)
+        DenseVector[V2](out)
       }
 
       private def mediumPath(out: Array[V2], fn: (V) => V2, data: Array[V], off: Int): Unit = {
@@ -434,7 +479,6 @@ object DenseVector extends VectorConstructors[DenseVector]
     new CanTraverseKeyValuePairs[DenseVector[V], Int, V] {
       def isTraversableAgain(from: DenseVector[V]): Boolean = true
 
-      /** Iterates all key-value pairs from the given collection. */
       def traverse(from: DenseVector[V], fn: CanTraverseKeyValuePairs.KeyValuePairsVisitor[Int, V]): Unit = {
         import from._
 
@@ -495,7 +539,7 @@ object DenseVector extends VectorConstructors[DenseVector]
           i += 1
           j += stride
         }
-        new DenseVector[V2](arr)
+        DenseVector[V2](arr)
       }
 
       /**Maps all active key-value pairs from the given collection. */
@@ -506,7 +550,7 @@ object DenseVector extends VectorConstructors[DenseVector]
 
   // slicing
   // specialize to get the good class
-  implicit def canSlice[@specialized(Int, Float, Double) V]: CanSlice[DenseVector[V], Range, DenseVector[V]] = {
+  implicit def canSlice[V]: CanSlice[DenseVector[V], Range, DenseVector[V]] = {
     new CanSlice[DenseVector[V], Range, DenseVector[V]] {
       def apply(v: DenseVector[V], re: Range): DenseVector[V] = {
 
@@ -514,7 +558,7 @@ object DenseVector extends VectorConstructors[DenseVector]
 
         require(range.isEmpty || range.last < v.length)
         require(range.isEmpty || range.start >= 0)
-        new DenseVector(v.data, offset = v.offset + v.stride * range.start, stride = v.stride * range.step, length = range.length)
+        DenseVector.create(v.data, offset = v.offset + v.stride * range.start, stride = v.stride * range.step, length = range.length)
       }
     }
   }
@@ -532,7 +576,7 @@ object DenseVector extends VectorConstructors[DenseVector]
   }
 
   class CanZipMapValuesDenseVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag] extends CanZipMapValues[DenseVector[V],V,RV,DenseVector[RV]] {
-    def create(length : Int) = new DenseVector(new Array[RV](length))
+    def create(length : Int) = DenseVector(new Array[RV](length))
 
     /**Maps all corresponding values from the two collection. */
     def map(from: DenseVector[V], from2: DenseVector[V], fn: (V, V) => RV): DenseVector[RV] = {
@@ -554,7 +598,7 @@ object DenseVector extends VectorConstructors[DenseVector]
   implicit val zipMap_i: CanZipMapValuesDenseVector[Int, Int] = new CanZipMapValuesDenseVector[Int, Int]
 
   class CanZipMapKeyValuesDenseVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag] extends CanZipMapKeyValues[DenseVector[V],Int, V,RV,DenseVector[RV]] {
-    def create(length : Int) = new DenseVector(new Array[RV](length))
+    def create(length : Int) = DenseVector(new Array[RV](length))
 
     /**Maps all corresponding values from the two collection. */
     def map(from: DenseVector[V], from2: DenseVector[V], fn: (Int, V, V) => RV): DenseVector[RV] = {
@@ -630,41 +674,24 @@ object DenseVector extends VectorConstructors[DenseVector]
       require(a.length == b.length, s"Vectors must have same length")
       if (a.noOffsetOrStride && b.noOffsetOrStride && a.length < DenseVectorSupportMethods.MAX_SMALL_DOT_PRODUCT_LENGTH) {
         DenseVectorSupportMethods.smallDotProduct_Double(a.data, b.data, a.length)
-      } else if (a.length < 200) { // benchmarks suggest break-even point is around length 200
-        if (a.noOffsetOrStride && b.noOffsetOrStride) {
-          fastMediumSizePath(a, b)
-        } else {
-          slowMediumSizePath(a, b)
-        }
       } else {
         blasPath(a, b)
       }
     }
 
+    val UNROLL_FACTOR = 6
+
     private def blasPath(a: DenseVector[Double], b: DenseVector[Double]): Double = {
-      val boff = if (b.stride >= 0) b.offset else (b.offset + b.stride * (b.length - 1))
-      val aoff = if (a.stride >= 0) a.offset else (a.offset + a.stride * (a.length - 1))
-      blas.ddot(
-        a.length, b.data, boff, b.stride, a.data, aoff, a.stride)
+      if ((a.length <= 300 || !usingNatives) && a.stride == 1 && b.stride == 1) {
+        DenseVectorSupportMethods.dotProduct_Double(a.data, a.offset, b.data, b.offset, a.length)
+      } else  {
+        val boff = if (b.stride >= 0) b.offset else (b.offset + b.stride * (b.length - 1))
+        val aoff = if (a.stride >= 0) a.offset else (a.offset + a.stride * (a.length - 1))
+        blas.ddot(
+          a.length, b.data, boff, b.stride, a.data, aoff, a.stride)
+      }
     }
 
-    private def slowMediumSizePath(a: DenseVector[Double], b: DenseVector[Double]): Double = {
-      var sum = 0.0
-      cforRange(0 until a.length) { i =>
-        sum += a(i) * b(i)
-      }
-      sum
-    }
-
-    private def fastMediumSizePath(a: DenseVector[Double], b: DenseVector[Double]): Double = {
-      var sum = 0.0
-      val ad = a.data
-      val bd = b.data
-      cforRange(0 until a.length) { i =>
-        sum += ad(i) * bd(i)
-      }
-      sum
-    }
   }
   implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpMulInner.type, Double]].register(canDotD)
 

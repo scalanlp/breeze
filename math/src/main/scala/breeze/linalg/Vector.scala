@@ -39,8 +39,6 @@ trait VectorLike[@spec V, +Self <: Vector[V]] extends Tensor[Int, V] with Tensor
   def map[V2, That](fn: V=>V2)(implicit canMapValues: CanMapValues[Self  @uncheckedVariance, V, V2, That]):That = values map fn
 
   def foreach[U](fn: V=>U): Unit = { values foreach fn }
-
-  def copy: Self
 }
 
 
@@ -64,6 +62,7 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]]{
 
   def keysIterator = Iterator.range(0, size)
 
+  def copy: Vector[V]
 
   override def equals(p1: Any) = p1 match {
     case x: Vector[_] =>
@@ -72,20 +71,10 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]]{
     case _ => false
   }
 
-  // TODO: this is only consistent if the hashcode of inactive elements is 0!!!
-  override def hashCode() = {
-    var hash = 43
-    for(v <- activeValuesIterator) {
-      val hh = v.##
-      if (hh != 0)
-        hash = MurmurHash3.mix(hash, hh)
-    }
 
-    hash
-  }
 
   def toDenseVector(implicit cm: ClassTag[V]) = {
-    new DenseVector(toArray)
+    DenseVector(toArray)
   }
 
   /**Returns copy of this [[breeze.linalg.Vector]] as a [[scala.Array]]*/
@@ -110,45 +99,49 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]]{
     */
   def padTo(len: Int, elem: V)(implicit cm: ClassTag[V]): Vector[V] = Vector[V]( toArray.padTo(len, elem) )
 
+  def exists(f: V=>Boolean) = valuesIterator.exists(f)
+  override def forall(f: V=>Boolean) = valuesIterator.forall(f)
+
   /** See [[scala.collection.mutable.ArrayOps.fold]].
     */
-  def fold[E1 >: V](z: E1)(op: (E1, E1) => E1 )(implicit cm: ClassTag[V]): E1 = toArray.fold(z)( op )
+  def fold[E1 >: V](z: E1)(op: (E1, E1) => E1 ): E1 = valuesIterator.fold(z)( op )
   /** See [[scala.collection.mutable.ArrayOps.foldLeft]].
     */
-  def foldLeft[B >: V](z: B)(op: (B, V) => B )(implicit cm: ClassTag[V]): B = {
-    val it = valuesIterator
-    it.foldLeft(z)( op )
-  }
+  def foldLeft[B >: V](z: B)(op: (B, V) => B ): B = valuesIterator.foldLeft(z)( op )
+
   /** See [[scala.collection.mutable.ArrayOps.foldRight]].
     */
-  def foldRight[B >: V](z: B)(op: (V, B) => B )(implicit cm: ClassTag[V]): B = toArray.foldRight(z)( op )
+  def foldRight[B >: V](z: B)(op: (V, B) => B ): B = valuesIterator.foldRight(z)( op )
 
   /** See [[scala.collection.mutable.ArrayOps.reduce]].
     */
-  def reduce[E1 >: V](op: (E1, E1) => E1 )(implicit cm: ClassTag[V], cm1: ClassTag[E1]): E1 = valuesIterator.reduce( op )
+  def reduce[E1 >: V](op: (E1, E1) => E1 ): E1 = valuesIterator.reduce( op )
   /** See [[scala.collection.mutable.ArrayOps.reduceLeft]].
     */
-  def reduceLeft[B >: V](op: (B, V) => B )(implicit cm: ClassTag[V]): B = {
+  def reduceLeft[B >: V](op: (B, V) => B ): B = {
     valuesIterator.reduceLeft( op )
   }
   /** See [[scala.collection.mutable.ArrayOps.reduceRight]].
     */
-  def reduceRight[B >: V](op: (V, B) => B )(implicit cm: ClassTag[V]): B = {
+  def reduceRight[B >: V](op: (V, B) => B ): B = {
     valuesIterator.reduceRight( op )
   }
 
   /** See [[scala.collection.mutable.ArrayOps.scan]].
     */
-  def scan[E1 >: V](z: E1)(op: (E1, E1) => E1 )(implicit cm: ClassTag[V], cm1: ClassTag[E1]): Vector[E1] = Vector[E1]( toArray.scan(z)( op ))
+  def scan[E1 >: V](z: E1)(op: (E1, E1) => E1 )(implicit cm: ClassTag[V], cm1: ClassTag[E1]): Vector[E1] = {
+    Vector[E1]( toArray.scan(z)( op ))
+  }
+
   /** See [[scala.collection.mutable.ArrayOps.scanLeft]].
     */
-  def scanLeft[B >: V](z: B)(op: (B, V) => B )(implicit cm: ClassTag[V], cm1: ClassTag[B]): Vector[B] = {
-    val it = valuesIterator
-    Vector[B]( it.scanLeft(z)( op ).toArray )
+  def scanLeft[B >: V](z: B)(op: (B, V) => B )(implicit cm1: ClassTag[B]): Vector[B] = {
+    Vector[B]( valuesIterator.scanLeft(z)( op ).toArray )
   }
+
   /** See [[scala.collection.mutable.ArrayOps.scanRight]].
     */
-  def scanRight[B >: V](z: B)(op: (V, B) => B )(implicit cm: ClassTag[V], cm1: ClassTag[B]): Vector[B] = Vector[B]( toArray.scanRight(z)( op ) )
+  def scanRight[B >: V](z: B)(op: (V, B) => B )(implicit cm1: ClassTag[B]): Vector[B] = Vector[B]( valuesIterator.scanRight(z)( op ).toArray )
 
   // </editor-fold>
 
@@ -181,7 +174,7 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
 
   // There's a bizarre error specializing float's here.
   class CanZipMapValuesVector[@spec(Int, Double) V, @spec(Int, Double) RV:ClassTag] extends CanZipMapValues[Vector[V],V,RV,Vector[RV]] {
-    def create(length : Int) = new DenseVector(new Array[RV](length))
+    def create(length : Int) = DenseVector(new Array[RV](length))
 
     /**Maps all corresponding values from the two collection. */
     def map(from: Vector[V], from2: Vector[V], fn: (V, V) => RV) = {
@@ -231,7 +224,7 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
   implicit val zipMap_i = new CanZipMapValuesVector[Int, Int]
 
   class CanZipMapKeyValuesVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag] extends CanZipMapKeyValues[Vector[V],Int, V,RV,Vector[RV]] {
-    def create(length : Int) = new DenseVector(new Array[RV](length))
+    def create(length : Int) = DenseVector(new Array[RV](length))
 
     /**Maps all corresponding values from the two collection. */
     def map(from: Vector[V], from2: Vector[V], fn: (Int, V, V) => RV): Vector[RV] = {
@@ -285,7 +278,6 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
 
     def isTraversableAgain(from: Vector[V]): Boolean = true
 
-    /** Iterates all values from the given collection. */
     def traverse(from: Vector[V], fn: ValuesVisitor[V]): Unit = {
       for( v <- from.valuesIterator) {
         fn.visit(v)
@@ -293,6 +285,18 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
     }
 
   }
+
+  implicit def canTraverseKeyValuePairs[V]: CanTraverseKeyValuePairs[Vector[V], Int, V] =
+
+    new CanTraverseKeyValuePairs[Vector[V], Int, V] {
+      def isTraversableAgain(from: Vector[V]): Boolean = true
+
+      def traverse(from: Vector[V], fn: CanTraverseKeyValuePairs.KeyValuePairsVisitor[Int, V]): Unit = {
+        for(i <- 0 until from.length)
+          fn.visit(i, from(i))
+      }
+
+    }
 
 
 
@@ -491,16 +495,33 @@ trait VectorOps { this: Vector.type =>
     }
   }
 
-  implicit def castUpdateOps[V1, V2, T, Op <: OpType](implicit v1ev: V1<:<Vector[T],
-                                                V2ev: V2<:<Vector[T],
-                                                op: UFunc.InPlaceImpl2[Op, Vector[T], Vector[T]]): InPlaceImpl2[Op, V1, V2] = {
+  implicit def castUpdateOps[V1, V2, T, Op](implicit v1ev: V1<:<Vector[T],
+                                            V2ev: V2<:<Vector[T],
+                                            op: UFunc.InPlaceImpl2[Op, Vector[T], Vector[T]]): InPlaceImpl2[Op, V1, V2] = {
     op.asInstanceOf[UFunc.InPlaceImpl2[Op, V1, V2]]
   }
 
-  implicit def castOps[V1, V2, T, Op <: OpType, VR](implicit v1ev: V1<:<Vector[T],
-                                                    V2ev: V2<:<Vector[T],
-                                                    op: UImpl2[Op, Vector[T], Vector[T], VR]): UImpl2[Op, V1, V2, VR] = {
+  implicit def castOps[V1, V2, T, Op, VR](implicit v1ev: V1<:<Vector[T],
+                                          V2ev: V2<:<Vector[T],
+                                          op: UImpl2[Op, Vector[T], Vector[T], VR]): UImpl2[Op, V1, V2, VR] = {
     op.asInstanceOf[UFunc.UImpl2[Op, V1, V2, VR]]
+  }
+
+//  implicit def castScalarOps[V1, T, Op, VR](implicit v1ev: V1<:<Vector[T],
+//                                            op: UImpl2[Op, Vector[T], T, VR]): UImpl2[Op, V1, T, VR] = {
+//    op.asInstanceOf[UFunc.UImpl2[Op, V1, T, VR]]
+//  }
+//
+//  implicit def castScalarLhsOps[V1, T, Op, VR](implicit v1ev: V1<:<Vector[T],
+//                                               op: UImpl2[Op, T, Vector[T], VR]): UImpl2[Op, T, V1, VR] = {
+//    op.asInstanceOf[UFunc.UImpl2[Op, T, V1, VR]]
+//  }
+
+  import shapeless._
+
+  implicit def castFunc[V1, T, Op, VR](implicit v1ev: V1<:<Vector[T], v1ne: V1 =:!= Vector[T],
+                                       op: UImpl[Op, Vector[T], VR]): UImpl[Op, V1, VR] = {
+    op.asInstanceOf[UFunc.UImpl[Op, V1, VR]]
   }
 
   @expand

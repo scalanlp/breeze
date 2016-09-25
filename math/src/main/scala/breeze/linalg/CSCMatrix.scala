@@ -28,6 +28,8 @@ import scala.collection.mutable
 import scala.reflect.ClassTag
 import scala.{specialized=>spec}
 
+import scalaxy.debug._
+
 /**
  * A compressed sparse column matrix, as used in Matlab and CSparse, etc.
  *
@@ -36,17 +38,17 @@ import scala.{specialized=>spec}
  * @author dlwh
  */
 // TODO: maybe put columns in own array of sparse vectors, making slicing easier?
-class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero] private[linalg] (private var _data: Array[V],
-                                                                               val rows: Int,
-                                                                               val cols: Int,
-                                                                               val colPtrs: Array[Int], // len cols + 1
-                                                                               private var used : Int,
-                                                                               private var _rowIndices: Array[Int]) // len >= used
+class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero](private var _data: Array[V],
+                                                         val rows: Int,
+                                                         val cols: Int,
+                                                         val colPtrs: Array[Int], // len cols + 1
+                                                         private var used : Int,
+                                                         private var _rowIndices: Array[Int]) // len >= used
   extends Matrix[V] with MatrixLike[V, CSCMatrix[V]] with Serializable {
 
   /**
    * Constructs a [[CSCMatrix]] instance. We don't validate the input data for performance reasons.
-   * So make sure you understand the [[http://en.wikipedia.org/wiki/Sparse_matrix CSC format]] correctly.
+   * So make sure you understand the [[https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29]] correctly.
    * Otherwise, please use the factory methods under [[CSCMatrix]] and [[CSCMatrix#Builder]] to construct CSC matrices.
    * @param data active values
    * @param rows number of rows
@@ -163,11 +165,6 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero] private[linalg] (privat
   }
 
 
-  override def equals(p1: Any): Boolean = p1 match {
-    case m:Matrix[V] if m.rows == rows && m.cols == cols => valuesIterator.sameElements(m.valuesIterator)
-    case _ => false
-  }
-
   override def toString: String = toString(maxLines = Terminal.terminalHeight - 3)
 
 
@@ -246,6 +243,37 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero] private[linalg] (privat
     }
     res
   }
+
+  override def equals(p1 : Any) : Boolean = p1 match {
+    case y: CSCMatrix[_] =>
+      if(this.rows != y.rows || this.cols != y.cols){
+        return false
+      } else {
+        val xIter = this.activeIterator
+        val yIter = y.activeIterator
+
+        while(xIter.hasNext && yIter.hasNext){
+          var xkeyval = xIter.next()
+          var ykeyval = yIter.next()
+          while(xkeyval._2 == 0 && xIter.hasNext) xkeyval = xIter.next()
+          while(ykeyval._2 == 0 && yIter.hasNext) ykeyval = yIter.next()
+          if(xkeyval != ykeyval) return false
+        }
+        if(xIter.hasNext && !yIter.hasNext){
+          while(xIter.hasNext) if(xIter.next()._2 != 0) return false
+        }
+
+        if(!xIter.hasNext && yIter.hasNext){
+          while(yIter.hasNext) if(yIter.next()._2 != 0) return false
+        }
+      }
+      return true
+    case y: Matrix[_] =>
+      return y == this
+    case _ =>
+      return false
+  }
+
 }
 
 object CSCMatrix extends MatrixConstructors[CSCMatrix]
@@ -343,7 +371,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
   implicit def scalarOf[T]: ScalarOf[CSCMatrix[T], T] = ScalarOf.dummy
 
   implicit def canIterateValues[V]:CanTraverseValues[CSCMatrix[V], V] = {
-    new CanTraverseValues[CSCMatrix[V],V] {
+    new CanTraverseValues[CSCMatrix[V], V] {
 
       def isTraversableAgain(from: CSCMatrix[V]): Boolean = true
 
@@ -355,8 +383,20 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
     }
   }
 
+  implicit def canIterateKeysValues[V:Zero]:CanTraverseKeyValuePairs[CSCMatrix[V], (Int, Int), V] = {
+    new CanTraverseKeyValuePairs[CSCMatrix[V], (Int, Int), V] {
 
+      def isTraversableAgain(from: CSCMatrix[V]): Boolean = true
 
+      /** Iterates all key-value pairs from the given collection. */
+      def traverse(from: CSCMatrix[V], fn: CanTraverseKeyValuePairs.KeyValuePairsVisitor[(Int, Int), V]): Unit = {
+        val zero = implicitly[Zero[V]].zero
+        fn.zeros(from.size - from.activeSize, from.iterator.collect { case (k, v) if v != zero => k}, zero)
+        // TODO: I can use visitArray if I want to be clever
+        from.activeIterator.foreach((fn.visit _).tupled)
+      }
+    }
+  }
 
   implicit def canTranspose[V:ClassTag:Zero:Semiring]: CanTranspose[CSCMatrix[V], CSCMatrix[V]] = {
     new CanTranspose[CSCMatrix[V], CSCMatrix[V]] {
@@ -404,11 +444,12 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
 
   /**
    * This is basically an unsorted coordinate matrix.
+   * @param rows if negative, result will automatically infer size
+   * @param cols if negative, result will automatically infer size
    * @param initNnz initial number of nonzero entries
    */
-  class Builder[@spec(Double, Int, Float, Long) T:ClassTag:Semiring:Zero](rows: Int, cols: Int, initNnz: Int = 16) {
+  class Builder[@spec(Double, Int, Float, Long) T:ClassTag:Semiring:Zero](val rows: Int, val cols: Int, initNnz: Int = 16) {
     private def ring = implicitly[Semiring[T]]
-    private def zero = implicitly[Zero[T]]
 
     def add(r: Int, c: Int, v: T) {
       if(v != 0) {
@@ -440,10 +481,15 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
       val vs = this.vs.result()
       // at most this many nnz
       val nnz = indices.length
-      val outCols = new Array[Int](cols+1)
+
+
+      val _rows = if (rows >= 0) rows else indices.map(i => (i & 0xFFFFFFFFL).toInt).foldLeft(0)(_ max _) + 1
+      val _cols = if (cols >= 0) cols else indices.map(i => (i >> 32).toInt).foldLeft(0)(_ max _) + 1
+
+      val outCols = new Array[Int](_cols+1)
 
       if(nnz == 0) {
-        return new CSCMatrix(vs, rows, cols, outCols, 0, Array())
+        return new CSCMatrix(vs, _rows,  _cols, outCols, 0, Array())
       }
 
       val order: Array[Int] = if(keysAlreadySorted) {
@@ -467,6 +513,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
         val colsEqual = col == lastCol
         val row = rowFromIndex(index)
         if (colsEqual && row == rowFromIndex(indices(order(i-1)))) {
+          assert(!keysAlreadyUnique)
           // TODO: might need to codegen to make this fast.
           outData(outDataIndex) = ring.+(outData(outDataIndex), vs(order(i)))
         } else {
@@ -487,12 +534,16 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
       }
       outDataIndex += 1
 
-      while(lastCol < cols) {
+      if (keysAlreadyUnique) {
+        assert(outDataIndex == nnz)
+      }
+
+      while(lastCol < _cols) {
         outCols(lastCol+1) = outDataIndex
         lastCol += 1
       }
 
-      val out = new CSCMatrix[T](outData, rows, cols, outCols, outDataIndex, outRows)
+      val out = new CSCMatrix[T](outData, _rows, _cols, outCols, outDataIndex, outRows)
       if(!keysAlreadyUnique)
         out.compact()
       out

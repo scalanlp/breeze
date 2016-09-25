@@ -384,6 +384,28 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     assert(b.t * c === DenseVector(Complex(72,-72), Complex(-18,18), Complex(65,-65)))
   }
 
+  test("Multiply BigDecimal") {
+    val a = DenseMatrix((1, 2, 3),(4, 5, 6)).mapValues(BigDecimal(_))
+    val b = DenseMatrix((7, -2, 8),(-3, -3, 1),(12, 0, 5)).mapValues(BigDecimal(_))
+    val c = DenseVector(6,2,3).mapValues(BigDecimal(_))
+    assert(a.*(b)(DenseMatrix.op_DM_DM_Semiring[BigDecimal]) === DenseMatrix((37, -8, 25), (85, -23, 67)).mapValues(BigDecimal(_)))
+    assert(a * c === DenseVector(19,52).mapValues(BigDecimal(_)))
+    assert(b * c === DenseVector(62, -21, 87).mapValues(BigDecimal(_)))
+    assert(b.t * c === DenseVector(72, -18, 65).mapValues(BigDecimal(_)))
+    assert(a.t * DenseVector(4, 3).mapValues(BigDecimal(_)) === DenseVector(16, 23, 30).mapValues(BigDecimal(_)))
+
+    // should be dense
+    val x = a * a.t
+    assert(x === DenseMatrix((14,32),(32,77)).mapValues(BigDecimal(_)))
+
+    // should be dense
+    val y = a.t * a
+    assert(y === DenseMatrix((17,22,27),(22,29,36),(27,36,45)).mapValues(BigDecimal(_)))
+
+    val z : DenseMatrix[BigDecimal] = b * ((b + BigDecimal(1)):DenseMatrix[BigDecimal])
+    assert(z === DenseMatrix((164,5,107),(-5,10,-27),(161,-7,138)).mapValues(BigDecimal(_)))
+  }
+
   test("toDenseVector")  {
   	val a = DenseMatrix((1,2,3), (4,5,6))
   	val b = a(0 to 1, 1 to 2)
@@ -709,6 +731,35 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     assert(explicit == r)
   }
 
+  test("#449") {
+
+    val m = DenseMatrix.rand(10, 10)
+
+    m(List(1, 2, 3), 0 to 0) := 5d //WORKS FINE
+    m(List(1, 2, 3), 0) := 5d //NOT WORKING
+    m(1 to 3, 0) := 5d //WORKING
+
+    m(List(1, 2, 3), 0 to 0) := m(List(1, 2, 3), 0 to 0) //WORKS FINE
+    m(List(1, 2, 3), 0) := m(List(1, 2, 3), 0) //NOT WORKING
+    m(1 to 3, 0) := m(1 to 3, 0) //WORKS FINE
+
+  }
+
+  test("#476: DM * DV when rows == 0") {
+    val m = DenseMatrix.zeros[Double](0, 10)
+    val v = DenseVector.zeros[Double](10)
+    assert(m * v == DenseVector.zeros[Double](0))
+    val m2 = DenseMatrix.zeros[Double](10, 0)
+    val v2 = DenseVector.zeros[Double](0)
+    assert(m2 * v2 == DenseVector.zeros[Double](10))
+  }
+
+  test("#534: DenseMatrix construction from empty row sequence") {
+    val rows = Seq.empty[Seq[Double]]
+    val matrix = DenseMatrix(rows: _*)
+    assert(matrix.rows == 0)
+    assert(matrix.cols == 0)
+  }
 
 
 }

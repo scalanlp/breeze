@@ -108,18 +108,18 @@ class SparseVectorTest extends FunSuite {
     val c = CSCMatrix.zeros[Double](1,5)
 
     // Test full
-    assert(a.asCSCMatrix() === CSCMatrix((1.0,2.0,3.0,4.0)))
+    assert(a.asCscRow === CSCMatrix((1.0,2.0,3.0,4.0)))
     // Test zero
-    assert(b.asCSCMatrix() === c)
+    assert(b.asCscRow === c)
     // Test middle
     b(2) = 2.0; c(0,2) = 2.0
-    assert(b.asCSCMatrix() === c)
+    assert(b.asCscRow === c)
     // Test end
     b(4) = 4.0; c(0,4) = 4.0
-    assert(b.asCSCMatrix() === c)
+    assert(b.asCscRow === c)
     // Test beginning
     b(0) = 0.1; c(0,0) = 0.1
-    assert(b.asCSCMatrix() === c)
+    assert(b.asCscRow === c)
   }
 
   test("MapPairs Double") {
@@ -345,6 +345,37 @@ class SparseVectorTest extends FunSuite {
     val answer1 = vec :/ n
     val answer2 = vec.toDenseVector :/ n
     assert(answer1.toDenseVector === answer2)
+  }
+
+  test("#446") {
+    val x = SparseVector.zeros[Float](10)
+
+    x.reserve(1)
+    x(0) = 1
+    x.asCscRow
+  }
+
+  test("#320 as CSCMatrix powers of two") {
+
+    def foo(fill: Int) {
+      val vb = new VectorBuilder[Int](421337)
+
+      for (i ← 0 to fill) {
+        vb.add(i,i)
+      }
+
+      val sv = vb.toSparseVector
+
+      sv.asCscColumn
+      sv.asCscRow
+    }
+
+
+    foo(1)
+    foo(2)
+    foo(4)
+    foo(32)
+    foo(64)
   }
 }
 
