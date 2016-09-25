@@ -15,13 +15,13 @@ package breeze.linalg
  See the License for the specific language governing permissions and
  limitations under the License.
 */
+
 import org.scalatest._
 import org.scalatest.junit._
 import org.scalatest.prop._
 import org.junit.runner.RunWith
 import breeze.math.Complex
 import breeze.numerics._
-import org.scalatest.matchers.ShouldMatchers
 import breeze.util.DoubleImplicits
 
 @RunWith(classOf[JUnitRunner])

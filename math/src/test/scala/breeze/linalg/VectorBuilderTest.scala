@@ -4,7 +4,7 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
 import breeze.math._
-import org.scalacheck.{Prop, Arbitrary}
+import org.scalacheck.{Arbitrary, Gen, Prop}
 import org.scalatest.prop.Checkers
 import breeze.numerics.closeTo
 
@@ -77,25 +77,24 @@ class VectorBuilderTest extends FunSuite with Checkers {
 class VectorBuilderOpsTest extends MutableModuleTestBase[VectorBuilder[Double], Double] {
  val space: MutableModule[VectorBuilder[Double], Double] = VectorBuilder.space[Double]
 
-
   override val TOL: Double = 1E-4
 
   val N = 3
   implicit def genTriple: Arbitrary[(VectorBuilder[Double], VectorBuilder[Double], VectorBuilder[Double])] = {
     Arbitrary {
-      for{x <- Arbitrary.arbitrary[Double].map { _  % 1E3}
-          xl <- Arbitrary.arbitrary[List[Int]]
-          y <- Arbitrary.arbitrary[Double].map { _ % 1E3 }
-          yl <- Arbitrary.arbitrary[List[Int]]
-          z <- Arbitrary.arbitrary[Double].map { _ % 1E3 }
-          zl <- Arbitrary.arbitrary[List[Int]]
-      } yield {
-        (VectorBuilder(N)( xl.take(4).map(i => (i % N).abs -> math.random * x):_*),
-          VectorBuilder(N)( yl.take(4).map(i => (i % N).abs -> math.random * y):_* ),
-          VectorBuilder(N)( zl.take(4).map(i => (i % N).abs -> math.random * z):_* ))
+      Gen.choose(1, 10).flatMap { n =>
+        for {
+          x <- RandomInstanceSupport.genVectorBuilder(n, genScalar.arbitrary)
+          y <- RandomInstanceSupport.genVectorBuilder(n, genScalar.arbitrary)
+          z <- RandomInstanceSupport.genVectorBuilder(n, genScalar.arbitrary)
+        } yield (x, y, z)
       }
     }
   }
 
-  def genScalar: Arbitrary[Double] = Arbitrary(Arbitrary.arbitrary[Double].map{ _ % 1E3 })
+  def genScalar: Arbitrary[Double] = RandomInstanceSupport.genReasonableDouble
+
+  override implicit def genSingle: Arbitrary[VectorBuilder[Double]] = Arbitrary {
+    Gen.choose(1, 10).flatMap(RandomInstanceSupport.genVectorBuilder(_, genScalar.arbitrary))
+  }
 }

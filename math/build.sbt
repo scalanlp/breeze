@@ -11,10 +11,9 @@ libraryDependencies ++= Seq(
   "net.sf.opencsv" % "opencsv" % "2.3",
   "com.github.rwl" % "jtransforms" % "2.4.0",
   "org.apache.commons" % "commons-math3" % "3.2",
-  "org.spire-math" %% "spire" % "0.11.0",
+  "org.spire-math" %% "spire" % "0.12.0",
+  "com.chuusai" %% "shapeless" % "2.3.2",
   "org.slf4j" % "slf4j-api" % "1.7.5",
-  "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
-  "org.scalatest" %% "scalatest" % "2.1.3" % "test",
   "org.scala-lang.modules" % "scala-xml_2.11" % "1.0.1" % "test",
   "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.0-beta9" % "test",
   "org.apache.logging.log4j" % "log4j-core" % "2.0-beta9" % "test",
@@ -24,12 +23,7 @@ libraryDependencies ++= Seq(
 libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
   sv match {
     case x if x startsWith "2.10" =>
-      deps ++ Seq(
-          "com.chuusai" %% "shapeless" % "2.3.1",
-          compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
-          )
-    case x if x.startsWith("2.11") =>
-      (deps :+ ("com.chuusai" %% "shapeless" % "2.3.1" ))
+      deps :+ compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
     case _ =>
       deps
   }

@@ -54,7 +54,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
     check(Prop.forAll{ (trip: (M, M, M)) =>
       val (a, b, c) = trip
       val z = zeroLikeM(a)
-      closeM(a :+ z, a, TOL)
+      closeM(a +:+ z, a, TOL)
     })
     check(Prop.forAll{ (trip: (M, M, M)) =>
       val (a, b, _) = trip
@@ -90,7 +90,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
     check(Prop.forAll{ (trip: (M, M, M)) =>
       val (a, b, _) = trip
       val z = zeroLikeM(a)
-      val ab = a :- b
+      val ab = a -:- b
       a -= b
       closeM(a, ab, TOL)
     })
@@ -99,7 +99,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
   test("Scalar mult distributes over vector addition - Matrix") {
     check(Prop.forAll{ (trip: (M, M, M), s: S) =>
       val (a, b, _) = trip
-      closeM( (a + b) :* s, (b :* s) + (a :* s), TOL)
+      closeM( (a + b) *:* s, (b *:* s) + (a *:* s), TOL)
     })
 
     //    check(Prop.forAll{ (trip: (M, M, M), s: S) =>
@@ -112,8 +112,8 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
       val ab = copyM(a)
       ab += b
       ab *= s
-      val ba = copyM(a) :* s
-      ba += (b :* s)
+      val ba = copyM(a) *:* s
+      ba += (b *:* s)
       closeM(ab, ba, TOL)
     })
   }
@@ -122,7 +122,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
     check(Prop.forAll{ (trip: (M, M, M), s: S) =>
       val (a, b, _) = trip
       val ac = copyM(a)
-      val prod = a + (b :* s)
+      val prod = a + (b *:* s)
       breeze.linalg.axpy(s, b, ac)
       closeM( prod, ac, TOL)
     })
@@ -132,14 +132,14 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
   test("Scalar mult distributes over field addition - Matrix") {
     check(Prop.forAll{ (trip: (M, M, M), s: S, t: S) =>
       val (a, _, _) = trip
-      closeM( (a) :* scalars.+(s,t), (a :* s) + (a :* t), 1E-4)
+      closeM( (a) *:* scalars.+(s,t), (a *:* s) + (a *:* t), 1E-4)
     })
 
     check(Prop.forAll{ (trip: (M, M, M), s: S, t: S) =>
       val (a, _, _) = trip
       val ab = copyM(a)
       ab *= s
-      ab += (a :* t)
+      ab += (a *:* t)
       val ba = copyM(a)
       ba *= scalars.+(s,t)
       closeM(ab, ba, 1e-4)
@@ -149,7 +149,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
   test("Compatibility of scalar multiplication with field multiplication - Matrix") {
     check(Prop.forAll{ (trip: (M, M, M), s: S, t: S) =>
       val (a, _, _) = trip
-      closeM( (a) :* scalars.*(s,t), a :* s :* t, TOL)
+      closeM( (a) *:* scalars.*(s,t), a *:* s *:* t, TOL)
     })
 
     check(Prop.forAll{ (trip: (M, M, M), s: S, t: S) =>
@@ -189,7 +189,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
   test("1 is 1 - Matrix") {
     check(Prop.forAll{ (trip: (M, M, M)) =>
       val (a, b, c) = trip
-      closeM(a :* scalars.one, a, TOL)
+      closeM(a *:* scalars.one, a, TOL)
     })
 
     check(Prop.forAll{ (trip: (M, M, M)) =>
@@ -220,7 +220,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
     check(Prop.forAll{ (trip: (M,M,M)) =>
       val (a, b, c) = trip
       val z = zeroLikeM(a)
-      norm(z) == 0.0 && ( (z == a) || norm(a) != 0.0)
+      norm(z) == 0.0 && ( closeM(z, a, TOL) || norm(a) != 0.0)
     })
   }
 
@@ -236,8 +236,8 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
 
     check(Prop.forAll{ (trip: (M, M, M), s: S) =>
       val (a, b, c) = trip
-      scalars.close(scalars.*(a dot b,s),(a dot (b :* s)) )
-      scalars.close(scalars.*(s, a dot b),( (a :* s) dot (b)) )
+      scalars.close(scalars.*(a dot b,s),(a dot (b *:* s)) )
+      scalars.close(scalars.*(s, a dot b),( (a *:* s) dot (b)) )
     })
   }
 
@@ -256,8 +256,8 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
       val ab = copyM(a)
       ab += b
       ab :*= c
-      val ba = copyM(a) :* c
-      ba :+= (b :* c)
+      val ba = copyM(a) *:* c
+      ba :+= (b *:* c)
       closeM(ab, ba, TOL)
     })
   }
@@ -265,7 +265,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
   test("Vector element-wise mult distributes over vector addition - Matrix") {
     check(Prop.forAll{ (trip: (M, M, M)) =>
       val (a, b, c) = trip
-      closeM( (a + b) :* c, (b :* c) + (a :* c), TOL)
+      closeM( (a + b) *:* c, (b *:* c) + (a *:* c), TOL)
     })
 
 
@@ -279,23 +279,23 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
       val ab = copyM(a)
       ab += b
       ab :*= c
-      val ba = copyM(a) :* c
-      ba += (b :* c)
+      val ba = copyM(a) *:* c
+      ba += (b *:* c)
       closeM(ab, ba, TOL)
     })
   }
 }
 
-class DenseOptimizationSpaceTest_Double extends OptimizationSpaceTest[DenseMatrix[Double],DenseVector[Double],Double] {
+class DenseOptimizationSpaceTest_Double extends DenseVectorPropertyTestBase[Double] with OptimizationSpaceTest[DenseMatrix[Double], DenseVector[Double], Double] {
   override implicit val space: MutableOptimizationSpace[DenseMatrix[Double], DenseVector[Double], Double] =
     MutableOptimizationSpace.DenseDoubleOptimizationSpace.denseDoubleOptSpace
 
   val N = 30
   override implicit def genTripleM: Arbitrary[(DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double])] = {
     Arbitrary {
-      for{x <- Arbitrary.arbitrary[Double].map { _  % 1E100}
-          y <- Arbitrary.arbitrary[Double].map { _ % 1E100 }
-          z <- Arbitrary.arbitrary[Double].map { _ % 1E100 }
+      for{x <- RandomInstanceSupport.genReasonableDouble.arbitrary
+          y <- RandomInstanceSupport.genReasonableDouble.arbitrary
+          z <- RandomInstanceSupport.genReasonableDouble.arbitrary
       } yield {
         (DenseMatrix.fill(N,N)(math.random * x),
           DenseMatrix.fill(N,N)(math.random * y),
@@ -304,23 +304,10 @@ class DenseOptimizationSpaceTest_Double extends OptimizationSpaceTest[DenseMatri
     }
   }
 
-  implicit def genTriple: Arbitrary[(DenseVector[Double], DenseVector[Double], DenseVector[Double])] = {
-    Arbitrary {
-      for{x <- Arbitrary.arbitrary[Double].map { _  % 1E100}
-          y <- Arbitrary.arbitrary[Double].map { _ % 1E100 }
-          z <- Arbitrary.arbitrary[Double].map { _ % 1E100 }
-      } yield {
-        (DenseVector.fill(N)(math.random * x),
-          DenseVector.fill(N)(math.random * y),
-          DenseVector.fill(N)(math.random * z))
-      }
-    }
-  }
-
-  def genScalar: Arbitrary[Double] = Arbitrary(Arbitrary.arbitrary[Double].map{ _ % 1E10 })
+  def genScalar: Arbitrary[Double] = RandomInstanceSupport.genReasonableDouble
 }
 
-class SparseOptimizationSpaceTest_Double extends OptimizationSpaceTest[CSCMatrix[Double],SparseVector[Double],Double] {
+class SparseOptimizationSpaceTest_Double extends SparseVectorPropertyTestBase[Double] with OptimizationSpaceTest[CSCMatrix[Double],SparseVector[Double],Double] {
   override implicit val space: MutableOptimizationSpace[CSCMatrix[Double], SparseVector[Double], Double] =
     MutableOptimizationSpace.SparseDoubleOptimizationSpace.sparseDoubleOptSpace
 
@@ -328,13 +315,12 @@ class SparseOptimizationSpaceTest_Double extends OptimizationSpaceTest[CSCMatrix
   val N = 30
   val M = 30
 
-  def genScalar: Arbitrary[Double] = Arbitrary(Arbitrary.arbitrary[Double].map{ _ % 1E10 })
+  def genScalar: Arbitrary[Double] = RandomInstanceSupport.genReasonableDouble
 
   val arbColIndex = Arbitrary(Gen.choose[Int](0,N-1))
   val arbRowIndex = Arbitrary(Gen.choose[Int](0,M-1))
   val genAS = Gen.chooseNum(0, pow(N, 2))
-  implicit val arbEntry = Arbitrary.arbTuple3[Int,Int,Double](arbRowIndex, arbColIndex,
-    Arbitrary(Arbitrary.arbitrary[Double].map(_ % 1E100)))
+  implicit val arbEntry = Arbitrary.arbTuple3[Int,Int,Double](arbRowIndex, arbColIndex, genScalar)
   implicit val arbVals = Arbitrary(genAS flatMap( activeSize => Gen.listOfN[(Int,Int,Double)](activeSize,Arbitrary.arbitrary[(Int,Int,Double)])))
   def addToBuilder(bldr: CSCMatrix.Builder[Double],v: (Int,Int,Double)) = bldr.add(v._1,v._2,v._3)
   override implicit def genTripleM: Arbitrary[(CSCMatrix[Double], CSCMatrix[Double], CSCMatrix[Double])] = {
@@ -357,27 +343,6 @@ class SparseOptimizationSpaceTest_Double extends OptimizationSpaceTest[CSCMatrix
         zb.result()
       })
 
-    }
-  }
-
-  val indices = Seq.range[Int](0,N-1)
-  override implicit def genTriple: Arbitrary[(SparseVector[Double], SparseVector[Double], SparseVector[Double])] = {
-    Arbitrary {
-      for{
-        xAS <- Gen.chooseNum[Int](0,N)
-        xi <- Gen.pick(xAS,indices)
-        xv <- Gen.listOfN(xAS,Arbitrary.arbitrary[Double].map( _ % 1E100))
-        yAS <- Gen.chooseNum[Int](0,N)
-        yi <- Gen.pick(yAS,indices)
-        yv <- Gen.listOfN(yAS,Arbitrary.arbitrary[Double].map(_ % 1E100))
-        zAS <- Gen.chooseNum[Int](0,N)
-        zi <- Gen.pick(zAS,indices)
-        zv <- Gen.listOfN(zAS,Arbitrary.arbitrary[Double].map(_ % 1E100))
-      } yield {
-        (SparseVector(N)(xi.zip(xv.map(_ * math.random)): _*),
-          SparseVector(N)(yi.zip(yv.map(_ * math.random)): _*),
-          SparseVector(N)(zi.zip(zv.map(_ * math.random)): _*))
-      }
     }
   }
 }

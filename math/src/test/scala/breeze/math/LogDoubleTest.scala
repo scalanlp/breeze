@@ -16,30 +16,23 @@ package breeze.math
  limitations under the License.
 */
 
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.scalacheck._;
+import org.scalatest._
+import org.scalatest.junit._
+import org.scalatest.prop._
+import org.scalacheck._
 import org.junit.runner.RunWith
-
-import LogDouble._;
+import LogDouble._
+import breeze.linalg.RandomInstanceSupport
 
 @RunWith(classOf[JUnitRunner])
 class LogDoubleTest extends FunSuite with Checkers {
 
-  import Arbitrary.arbitrary;
-  implicit val ad: Arbitrary[Double] = Arbitrary(for {
-    d <- arbitrary[Double](Arbitrary.arbDouble) map {
-      _ % 1000 abs
-    } suchThat {
-      _ > 0
-    }
-  } yield {
-    d
-  });
+  implicit val ad: Arbitrary[Double] = Arbitrary(
+    RandomInstanceSupport.genReasonableDouble.arbitrary.map(_.abs)
+  )
 
-  implicit def ae(x: Double) = new {
-    def =~=(y: Double) = math.abs(x - y) / x < 1E-6;
+  implicit class ae(x: Double) {
+    def =~=(y: Double) = math.abs(x - y) / x < 1E-6
   }
 
   test("addition") {

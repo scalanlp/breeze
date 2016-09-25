@@ -8,9 +8,6 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-    "junit" % "junit" % "4.5" % "test",
-  "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
-  "org.scalatest" %% "scalatest" % "2.1.3" % "test",
     "jfree" % "jcommon" % "1.0.16",
     "jfree" % "jfreechart" % "1.0.13",
     "org.apache.xmlgraphics" % "xmlgraphics-commons" % "1.3.1", // for eps gen

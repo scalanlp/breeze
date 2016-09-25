@@ -15,18 +15,17 @@ package breeze.linalg
  limitations under the License.
 */
 
-import support._
-import support.CanTraverseValues.ValuesVisitor
 import breeze.collection.mutable.SparseArray
-import operators._
+import breeze.linalg.operators._
+import breeze.linalg.support.CanTraverseValues.ValuesVisitor
+import breeze.linalg.support._
 import breeze.math._
 import breeze.storage.Zero
 import breeze.util.ArrayUtil
-import spire.syntax.cfor._
 
-import scala.{specialized=>spec}
 import scala.collection.mutable
 import scala.reflect.ClassTag
+import scala.{specialized => spec}
 
 
 /**
@@ -101,7 +100,7 @@ class SparseVector[@spec(Double, Int, Float, Long) V](val array: SparseArray[V])
   def isActive(rawIndex: Int) = array.isActive(rawIndex)
 
   override def toString = {
-    activeIterator.mkString("SparseVector(",", ", ")")
+    activeIterator.mkString(s"SparseVector($length)(",", ", ")")
   }
 
   def copy: SparseVector[V] = {

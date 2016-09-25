@@ -11,6 +11,10 @@ import breeze.math._
 import breeze.stats.mean
 import java.util
 
+import breeze.stats.distributions.RandBasis
+
+import scala.reflect.ClassTag
+
 /**
  *
  * @author dlwh
@@ -39,40 +43,27 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(v.valueAt(3) == 12)
   }
 
-  test("unsafeUpdate/unsafeValueAt properly works") {
-    val v = DenseVector(2f, 0f, 3f, 2f, -1f)
-    v.unsafeUpdate(3, 12f)
-    assert(v.unsafeValueAt(3) == 12f)
-  }
-
-  test("unsafeUpdate/unsafeValueAt properly works with stride, offset") {
-    val data = new Array[Double](5+3*5)
-    val v = new DenseVector(data, 5, 3, 5)
-    v.unsafeUpdate(3, 12)
-    assert(v.unsafeValueAt(3) == 12)
-  }
-
   test("Can raise IntegerVector by Integer") {
     val v = DenseVector(2, 0, 3, 2, -1)
-    val w = v :^ 2
+    val w = v ^:^ 2
     assert(w == DenseVector(4, 0, 9, 4, 1))
   }
 
   test("Can raise DoubleVector by Double") {
     val v = DenseVector(2d, 0d, 3d, 2d, -1d)
-    val w = v :^ 2d
+    val w = v ^:^ 2d
     assert(w == DenseVector(4d, 0d, 9d, 4d, 1d))
   }
 
   test("Can raise FloatVector by Float") {
     val v = DenseVector(2f, 0f, 3f, 2f, -1f)
-    val w = v :^ 2f
+    val w = v ^:^ 2f
     assert(w == DenseVector(4f, 0f, 9f, 4f, 1f))
   }
 
   test("Can raise ComplexVector by Complex") {
     val v = DenseVector(Complex(0,0), Complex(1,1), Complex(2,2), Complex(-1,-1))
-    val w = v :^ Complex(2,0)
+    val w = v ^:^ Complex(2,0)
     assertClose(w(0), Complex(0,0))
     assertClose(w(1), Complex(0,2))
     assertClose(w(2), Complex(0,8))
@@ -99,10 +90,10 @@ class DenseVectorTest extends FunSuite with Checkers {
 
   test("Scalars on the LHS") {
     val v = DenseVector(2, 1, 3, 2, -1)
-    assert(1 :+ v == v + 1)
-    assert(1 :- v == -v + 1)
-    assert(6 :/ v == v.mapValues(6 / _) )
-    assert(6 :* v == v.mapValues(6 * _) )
+    assert(1 +:+ v == v + 1)
+    assert(1 -:- v == -v + 1)
+    assert(6 /:/ v == v.mapValues(6 / _) )
+    assert(6 *:* v == v.mapValues(6 * _) )
 
   }
 
@@ -461,10 +452,10 @@ class DenseVectorTest extends FunSuite with Checkers {
     val b = DenseVector(1, 4, 1)
     assert( (a :== b) === BitVector(true, false, false))
     assert( (a :!= b) === BitVector(false, true, true))
-    assert( (a :<= b) === BitVector(true, true, false))
-    assert( (a :>= b) === BitVector(true, false, true))
-    assert( (a :< b) === BitVector(false, true, false))
-    assert( (a :> b) === BitVector(false, false, true))
+    assert( (a <:= b) === BitVector(true, true, false))
+    assert( (a >:= b) === BitVector(true, false, true))
+    assert( (a <:< b) === BitVector(false, true, false))
+    assert( (a >:> b) === BitVector(false, false, true))
   }
 
   test("clip") {
@@ -495,9 +486,9 @@ class DenseVectorTest extends FunSuite with Checkers {
     val a = DenseVector(true, false, false)
     val b = DenseVector(true, true, false)
 
-    assert(a :& b === DenseVector(true, false, false))
-    assert(a :| b === DenseVector(true, true, false))
-    assert(a :^^ b === DenseVector(false, true, false))
+    assert( (a &:& b) === DenseVector(true, false, false))
+    assert((a |:| b) === DenseVector(true, true, false))
+    assert((a ^^:^^ b) === DenseVector(false, true, false))
     assert(!a === DenseVector(false, true, true))
   }
 
@@ -554,101 +545,56 @@ class DenseVectorTest extends FunSuite with Checkers {
   }
 }
 
+abstract class DenseVectorPropertyTestBase[T: ClassTag] extends TensorSpaceTestBase[DenseVector[T], Int, T] {
+  def genScalar: Arbitrary[T]
+
+  override implicit def genSingle: Arbitrary[DenseVector[T]] = Arbitrary {
+    Gen.choose(1, 10).flatMap(RandomInstanceSupport.genDenseVector(_, genScalar.arbitrary))
+  }
+
+  implicit def genTriple: Arbitrary[(DenseVector[T], DenseVector[T], DenseVector[T])] = Arbitrary {
+    Gen.choose(1, 10).flatMap { n =>
+      for {
+        x <- RandomInstanceSupport.genDenseVector(n, genScalar.arbitrary)
+        y <- RandomInstanceSupport.genDenseVector(n, genScalar.arbitrary)
+        z <- RandomInstanceSupport.genDenseVector(n, genScalar.arbitrary)
+      } yield (x, y, z)
+    }
+  }
+}
+
 /**
  *
  * @author dlwh
  */
 @RunWith(classOf[JUnitRunner])
-class DenseVectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[DenseVector[Double], Int] {
- val space = DenseVector.space[Double]
-
-  implicit def genTriple: Arbitrary[(DenseVector[Double], DenseVector[Double], DenseVector[Double])] = {
-    val N = 30
-    Arbitrary {
-      for{x <- Arbitrary.arbitrary[Double].map { _  % 1E100}
-          y <- Arbitrary.arbitrary[Double].map { _ % 1E100 }
-          z <- Arbitrary.arbitrary[Double].map { _ % 1E100 }
-          n <- Gen.choose(1, N)
-          stride <- Gen.choose(1, 4)
-          offset <- Gen.choose(0, 5)
-      } yield {
-        (DenseVector.fill(n * stride + offset)(math.random * x),//.apply(offset until (n * stride + offset) by stride),
-          DenseVector.fill(n * stride + offset)(math.random * y),//.apply(offset until (n * stride + offset) by stride),
-          DenseVector.fill(n * stride + offset)(math.random * z)//.apply(offset until (n * stride + offset) by stride)
-          )
-      }
-    }
-  }
-
-  def genScalar: Arbitrary[Double] = Arbitrary(Arbitrary.arbitrary[Double].map{ _ % 1E10 })
+class DenseVectorOps_DoubleTest extends DenseVectorPropertyTestBase[Double] with DoubleValuedTensorSpaceTestBase[DenseVector[Double], Int] {
+  val space = DenseVector.space[Double]
+  def genScalar: Arbitrary[Double] = RandomInstanceSupport.genReasonableDouble
 }
 
 @RunWith(classOf[JUnitRunner])
-class DenseVectorOps_IntTest extends TensorSpaceTestBase[DenseVector[Int], Int, Int] {
+class DenseVectorOps_IntTest extends DenseVectorPropertyTestBase[Int] {
  val space = DenseVector.space[Int]
 
-  val N = 30
-  implicit def genTriple: Arbitrary[(DenseVector[Int], DenseVector[Int], DenseVector[Int])] = {
-    Arbitrary {
-      for{x <- Arbitrary.arbitrary[Int].map { _  % 1000}
-          y <- Arbitrary.arbitrary[Int].map { _ % 1000}
-          z <- Arbitrary.arbitrary[Int].map { _ % 1000}
-          n <- Gen.choose(1, N)
-      } yield {
-        (DenseVector.fill(n)(math.random * x toInt),
-          DenseVector.fill(n)(math.random * y toInt),
-          DenseVector.fill(n)(math.random * z toInt))
-      }
-    }
-  }
-
-  def genScalar: Arbitrary[Int] = Arbitrary(Arbitrary.arbitrary[Int].map{ _ % 1000 })
+  def genScalar: Arbitrary[Int] = Arbitrary { Gen.Choose.chooseInt.choose(-1000, 1000) }
 }
 
 @RunWith(classOf[JUnitRunner])
-class DenseVectorOps_ComplexTest extends TensorSpaceTestBase[DenseVector[Complex], Int, Complex] {
+class DenseVectorOps_ComplexTest extends DenseVectorPropertyTestBase[Complex] {
   val space = DenseVector.space[Complex]
-
-  val N = 30
-  implicit def genTriple: Arbitrary[(DenseVector[Complex], DenseVector[Complex], DenseVector[Complex])] = {
-    Arbitrary {
-      for{x <- Arbitrary.arbitrary[Complex]
-          y <- Arbitrary.arbitrary[Complex]
-          z <- Arbitrary.arbitrary[Complex]
-          n <- Gen.choose(1, N)
-      } yield {
-        (DenseVector.fill(n)(math.random * x),
-          DenseVector.fill(n)(math.random * y),
-          DenseVector.fill(n)(math.random * z))
-      }
-    }
+  def genScalar: Arbitrary[Complex] = Arbitrary {
+    for {
+      r <- RandomInstanceSupport.genReasonableDouble.arbitrary
+      i <- RandomInstanceSupport.genReasonableDouble.arbitrary
+    } yield Complex(r, i)
   }
-
-  implicit def genScalar: Arbitrary[Complex] = Arbitrary{for(r  <- Arbitrary.arbitrary[Double]; i <- Arbitrary.arbitrary[Double]) yield Complex(r % 100,i % 100)}
 }
 
 @RunWith(classOf[JUnitRunner])
-class DenseVectorOps_FloatTest extends TensorSpaceTestBase[DenseVector[Float], Int, Float] {
+class DenseVectorOps_FloatTest extends DenseVectorPropertyTestBase[Float] {
  val space = DenseVector.space[Float]
 
   override val TOL: Double = 1E-3
-
-  val N = 30
-  implicit def genTriple: Arbitrary[(DenseVector[Float], DenseVector[Float], DenseVector[Float])] = {
-    Arbitrary {
-      for{x <- Arbitrary.arbitrary[Float].map { _  % 1000}
-          y <- Arbitrary.arbitrary[Float].map { _ % 1000}
-          z <- Arbitrary.arbitrary[Float].map { _ % 1000}
-          n <- Gen.choose(1, N)
-          stride <- Gen.choose(1, 4)
-          offset <- Gen.choose(0, 5)
-      } yield {
-        (DenseVector.fill(n * stride + offset)(math.random * x toFloat).apply(offset until (n * stride + offset) by stride),
-          DenseVector.fill(n * stride + offset)(math.random * y toFloat).apply(offset until (n * stride + offset) by stride),
-          DenseVector.fill(n * stride + offset)(math.random * z toFloat).apply(offset until (n * stride + offset) by stride))
-      }
-    }
-  }
-
-  def genScalar: Arbitrary[Float] = Arbitrary(Arbitrary.arbitrary[Float].map{ _ % 1000 })
+  def genScalar: Arbitrary[Float] = RandomInstanceSupport.genReasonableFloat
 }

@@ -4,8 +4,11 @@ import org.scalatest._
 import org.scalatest.junit._
 import org.junit.runner.RunWith
 import breeze.math._
-import org.scalacheck.Arbitrary
+import org.scalacheck.{Arbitrary, Gen}
 import breeze.stats.mean
+import breeze.storage.Zero
+
+import scala.reflect.ClassTag
 
 /**
  *
@@ -67,7 +70,7 @@ class SparseVectorTest extends FunSuite {
 
     val dv = DenseVector(1, 2, 0, 4)
 
-    val res: SparseVector[Int] = sv :* dv
+    val res: SparseVector[Int] = sv *:* dv
 
     assert(res === SparseVector(0,2,0,0))
     assert(res.activeSize == 1)
@@ -285,7 +288,7 @@ class SparseVectorTest extends FunSuite {
     val b = SparseVector(3)((1,1))
     assert(a.dot(b) === 2)
     assert(a + b === DenseVector(1,3,3))
-    assert(a :* b === DenseVector(0, 2, 0))
+    assert(a *:* b === DenseVector(0, 2, 0))
 
     axpy(4, b, a)
     assert( a === DenseVector(1, 6, 3))
@@ -297,7 +300,7 @@ class SparseVectorTest extends FunSuite {
     val b = SparseVector(3)((1,1))
     assert(b.dot(a) === 2)
     assert(b + a === DenseVector(1,3,3))
-    assert(b :* a === DenseVector(0, 2, 0))
+    assert(b *:* a === DenseVector(0, 2, 0))
     b += a
     assert(b === SparseVector(1,3,3))
   }
@@ -342,8 +345,8 @@ class SparseVectorTest extends FunSuite {
   test("#382: dividing a sparse vector") {
     val vec = SparseVector(5)(0 -> 0.0, 3 -> 60.0, 4 -> 80.0)
     val n = 60.0
-    val answer1 = vec :/ n
-    val answer2 = vec.toDenseVector :/ n
+    val answer1 = vec /:/ n
+    val answer2 = vec.toDenseVector /:/ n
     assert(answer1.toDenseVector === answer2)
   }
 
@@ -379,88 +382,41 @@ class SparseVectorTest extends FunSuite {
   }
 }
 
-/**
- *
- * @author dlwh
- */
-@RunWith(classOf[JUnitRunner])
-class SparseVectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[SparseVector[Double], Int] {
- val space = SparseVector.space[Double]
+abstract class SparseVectorPropertyTestBase[T: ClassTag: Zero] extends TensorSpaceTestBase[SparseVector[T], Int, T] {
+  def genScalar: Arbitrary[T]
 
-  val N = 30
-  implicit def genTriple: Arbitrary[(SparseVector[Double], SparseVector[Double], SparseVector[Double])] = {
-    Arbitrary {
-      for{x <- Arbitrary.arbitrary[Double].map { _  % 1E100}
-          xl <- Arbitrary.arbitrary[List[Int]]
-          y <- Arbitrary.arbitrary[Double].map { _ % 1E100 }
-          yl <- Arbitrary.arbitrary[List[Int]]
-          z <- Arbitrary.arbitrary[Double].map { _ % 1E100 }
-          zl <- Arbitrary.arbitrary[List[Int]]
-      } yield {
-        (SparseVector(N)( xl.map(i => (i % N).abs -> math.random * x):_*),
-          SparseVector(N)( yl.map(i => (i % N).abs -> math.random * y):_* ),
-          SparseVector(N)( zl.map(i => (i % N).abs -> math.random * z):_* ))
-      }
-    }
+  override implicit def genSingle: Arbitrary[SparseVector[T]] = Arbitrary {
+    Gen.choose(1, 10).flatMap(RandomInstanceSupport.genSparseVector(_, genScalar.arbitrary))
   }
 
-  def genScalar: Arbitrary[Double] = Arbitrary(Arbitrary.arbitrary[Double].map{ _ % 1E10 })
+  implicit def genTriple: Arbitrary[(SparseVector[T], SparseVector[T], SparseVector[T])] = Arbitrary {
+    Gen.choose(1, 10).flatMap { n =>
+      for {
+        x <- RandomInstanceSupport.genSparseVector(n, genScalar.arbitrary)
+        y <- RandomInstanceSupport.genSparseVector(n, genScalar.arbitrary)
+        z <- RandomInstanceSupport.genSparseVector(n, genScalar.arbitrary)
+      } yield (x, y, z)
+    }
+  }
 }
 
-/**
- *
- * @author dlwh
- */
 @RunWith(classOf[JUnitRunner])
-class SparseVectorOps_FloatTest extends TensorSpaceTestBase[SparseVector[Float], Int, Float] {
+class SparseVectorOps_DoubleTest extends SparseVectorPropertyTestBase[Double] with DoubleValuedTensorSpaceTestBase[SparseVector[Double], Int] {
+ val space = SparseVector.space[Double]
+  def genScalar: Arbitrary[Double] = RandomInstanceSupport.genReasonableDouble
+}
+
+@RunWith(classOf[JUnitRunner])
+class SparseVectorOps_FloatTest extends SparseVectorPropertyTestBase[Float] {
  val space = SparseVector.space[Float]
 
   override val TOL: Double = 1E-2
-  val N = 30
-  implicit def genTriple: Arbitrary[(SparseVector[Float], SparseVector[Float], SparseVector[Float])] = {
-    Arbitrary {
-      for{x <- Arbitrary.arbitrary[Float].map { _  % 100 }
-          xl <- Arbitrary.arbitrary[List[Int]]
-          y <- Arbitrary.arbitrary[Float].map { _ % 100  }
-          yl <- Arbitrary.arbitrary[List[Int]]
-          z <- Arbitrary.arbitrary[Float].map { _ % 100 }
-          zl <- Arbitrary.arbitrary[List[Int]]
-      } yield {
-        (SparseVector(N)( xl.map(i => (i % N).abs -> math.random.toFloat * x ):_*),
-          SparseVector(N)( yl.map(i => (i % N).abs -> math.random.toFloat * y ):_* ),
-          SparseVector(N)( zl.map(i => (i % N).abs -> math.random.toFloat * z ):_* ))
-      }
-    }
-  }
-
-  def genScalar: Arbitrary[Float] = Arbitrary(Arbitrary.arbitrary[Float].map{ _ % 1000 })
+  def genScalar: Arbitrary[Float] = Arbitrary { RandomInstanceSupport.genReasonableDouble.arbitrary.map(_.toFloat) }
 
 }
 
-/**
- *
- * @author dlwh
- */
 @RunWith(classOf[JUnitRunner])
-class SparseVectorOps_IntTest extends TensorSpaceTestBase[SparseVector[Int], Int, Int] {
+class SparseVectorOps_IntTest extends SparseVectorPropertyTestBase[Int] {
  val space = SparseVector.space[Int]
-
-  val N = 100
-  implicit def genTriple: Arbitrary[(SparseVector[Int], SparseVector[Int], SparseVector[Int])] = {
-    Arbitrary {
-      for{x <- Arbitrary.arbitrary[Int].map { _  % 100 }
-          xl <- Arbitrary.arbitrary[List[Int]]
-          y <- Arbitrary.arbitrary[Int].map { _ % 100  }
-          yl <- Arbitrary.arbitrary[List[Int]]
-          z <- Arbitrary.arbitrary[Int].map { _ % 100 }
-          zl <- Arbitrary.arbitrary[List[Int]]
-      } yield {
-        (SparseVector(N)( xl.map(i => (i % N).abs -> (math.random* x ).toInt ):_*),
-          SparseVector(N)( yl.map(i => (i % N).abs -> (math.random * y).toInt ):_* ),
-          SparseVector(N)( zl.map(i => (i % N).abs -> (math.random * z).toInt ):_* ))
-      }
-    }
-  }
-
-  def genScalar: Arbitrary[Int] = Arbitrary(Arbitrary.arbitrary[Int].map{ _ % 1000 })
+  def genScalar: Arbitrary[Int] = Arbitrary { Gen.Choose.chooseInt.choose(-1000, 1000) }
 }

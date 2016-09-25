@@ -86,7 +86,9 @@ trait MutableModule[V, S] extends Module[V, S] {
 
 trait NormedModule[V, S] extends Module[V, S] with Normed[V] {
   implicit def scalarNorm: norm.Impl[S, Double] = scalars.normImpl
-  def close(a: V, b: V, tolerance: Double): Boolean = norm(subVV(a, b)) <= tolerance * math.max(norm(a), norm(b))
+  def close(a: V, b: V, tolerance: Double): Boolean = {
+    norm(subVV(a, b)) <= tolerance * math.max(1.0, math.max(norm(a), norm(b)))
+  }
 }
 
 trait MutableNormedModule[V, S] extends MutableModule[V, S] with NormedModule[V, S]

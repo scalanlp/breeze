@@ -1,8 +1,8 @@
+import sbt.Keys._
 import sbt._
-import Keys._
 
 object Common {
-  val crossScalaVersions = Seq("2.11.8", "2.10.6")
+  val crossScalaVersions = Seq("2.11.8", /*"2.12.0-RC1",*/ "2.10.6")
   val scalaVersion = crossScalaVersions.head
 
   val commonSettings = Seq (
@@ -12,9 +12,15 @@ object Common {
 
     scalacOptions ++= Seq("-deprecation","-language:_"),
 
-    javacOptions ++= Seq("-target", "1.6", "-source","1.6"),
+    javacOptions ++= Seq("-target", "1.7", "-source","1.7"),
 
     credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
+
+    libraryDependencies ++= Seq(
+      "junit" % "junit" % "4.12" % "test",
+      "org.scalacheck" %% "scalacheck" % "1.13.2" % "test",
+      "org.scalatest"  %% "scalatest"  % "3.0.0"  % "test"
+    ),
 
     resolvers ++= Seq(
       Resolver.mavenLocal,

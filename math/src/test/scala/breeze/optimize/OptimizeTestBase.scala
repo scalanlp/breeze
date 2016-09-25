@@ -23,21 +23,12 @@ import org.scalatest.prop._
 
 trait OptimizeTestBaseTrait {
   import org.scalacheck.Arbitrary._
-  implicit val arbVector : Arbitrary[DenseVector[Double]] = Arbitrary(for {
-    n <- arbitrary[Int] suchThat { _ > 0 }
-    d <- arbitrary[Double] map { _ % 10 }
-  } yield ( DenseVector.tabulate(n%3 + 1)(i => scala.math.random *d )))
+  implicit val arbVector : Arbitrary[DenseVector[Double]] = Arbitrary {
+    RandomInstanceSupport.genDenseVector[Double](10, RandomInstanceSupport.genReasonableDouble.arbitrary.map(_ % 10 + 1E-2))
+  }
 
-  implicit def arbSV: Arbitrary[SparseVector[Double]] = {
-    val N = 100
-    Arbitrary {
-      for {
-        x <- Arbitrary.arbitrary[Double].map { _  % 10}
-        xl <- Arbitrary.arbitrary[List[Int]]
-      } yield {
-        SparseVector(N)( xl.map(i => (i % N).abs -> math.random * x):_*)
-      }
-    }
+  implicit def arbSV: Arbitrary[SparseVector[Double]] = Arbitrary {
+    RandomInstanceSupport.genSparseVector[Double](10, RandomInstanceSupport.genReasonableDouble.arbitrary.map(_ % 10 + 1E-2))
   }
 
 

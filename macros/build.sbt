@@ -2,11 +2,7 @@ Common.commonSettings
 
 name := "breeze-macros"
 
-libraryDependencies ++= Seq(
-  "junit" % "junit" % "4.5" % "test",
-  "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
-  "org.scalatest"  %% "scalatest"  % "2.1.3"  % "test"
-)
+
 
 libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
   sv match {

@@ -95,7 +95,7 @@ class CounterOps_IntTest extends TensorSpaceTestBase[Counter[Int, Int], Int, Int
     implicitly
   }
 
-  implicit def genS: Arbitrary[Counter[Int, Int]] = {
+  implicit def genSingle: Arbitrary[Counter[Int, Int]] = {
     Arbitrary {
       for{l <- Arbitrary.arbitrary[List[Int]] } yield {
         Counter.count(l:_*)
@@ -103,5 +103,5 @@ class CounterOps_IntTest extends TensorSpaceTestBase[Counter[Int, Int], Int, Int
     }
   }
 
-  def genScalar: Arbitrary[Int] = Arbitrary(Arbitrary.arbitrary[Int].map{ _ % 1000 })
+  def genScalar: Arbitrary[Int] = RandomInstanceSupport.genReasonableInt
 }
