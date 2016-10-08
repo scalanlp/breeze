@@ -761,5 +761,12 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     assert(matrix.cols == 0)
   }
 
+   test("#577: Empty DenseMatrix can be transposed") {
+    val m = new DenseMatrix(0, 0, Array.empty[Double])
+    val mt = m.t
+    assert(mt.rows == 0)
+    assert(mt.cols == 0)
+    assert(m === mt)
+  }
 
 }
