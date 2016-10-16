@@ -1,18 +1,20 @@
 package breeze.stats.regression
 
-import org.scalatest.{FunSuite, WordSpec}
+import org.scalatest.WordSpec
 import org.scalatest.Matchers
-import scala.util.Random
 import breeze.linalg._
+import breeze.numerics._
 import spire.implicits.cfor
 
 class LeastSquaresTest extends WordSpec with Matchers {
   "Least squares" should {
     "handle simple case" in {
-      val a = DenseMatrix((1.0,1.0), (2.0, -2.0),(3.0, 3.0), (4.0, 5.0))
+      val a = DenseMatrix((1.0,1.0), (2.0, -2.0), (3.0, 3.0), (4.0, 5.0))
       val b = DenseVector(2.0, 0.0, 6.0, 9.0)
       val result = leastSquares(a,b)
+      val residual = sum(pow(b-result(a), 2))
       assert(norm(result.coefficients - DenseVector(1.0, 1.0)) < 1e-7)
+      assert(math.abs(result.rSquared - residual) < 1e-7)
       assert(result.rSquared < 1e-7)
     }
     "handle trickier case" in {
@@ -24,14 +26,18 @@ class LeastSquaresTest extends WordSpec with Matchers {
         b.update(i,2*i+5+math.random*0.01)
       })
       val result = leastSquares(a,b)
+      val residual = sum(pow(b-result(a), 2))
       assert(norm(result.coefficients - DenseVector(2.0, 5.0)) < 1e-2, "norm is too large")
+      assert(math.abs(result.rSquared - residual) < 1e-7)
       assert(result.rSquared < 1e-2, "rsquared too large")
     }
     "handle transpose" in {
       val a = DenseMatrix((1.0, 2.0, 3.0, 4.0), (1.0, -2.0, 3.0, 5.0)).t
       val b = DenseVector(2.0, 0.0, 6.0, 9.0)
       val result = leastSquares(a,b)
+      val residual = sum(pow(b-result(a), 2))
       assert(norm(result.coefficients - DenseVector(1.0, 1.0)) < 1e-7)
+      assert(math.abs(result.rSquared - residual) < 1e-7)
       assert(result.rSquared < 1e-7)
     }
     "preserve original arrays" in {
@@ -39,9 +45,17 @@ class LeastSquaresTest extends WordSpec with Matchers {
       val aCopy = a.copy
       val b = DenseVector(2.0, 0.0, 6.0, 9.0)
       val bCopy = b.copy
-      val result = leastSquares(a,b)
+      leastSquares(a,b)
       assert(a == aCopy)
       assert(b == bCopy)
+    }
+    "correctly compute rSquared" in {
+      val a = DenseMatrix(1.0, 2.0, -1.0, -2.0, 1.0, 2.0, -1.0, -2.0)
+      val b = DenseVector(1.0, 2.0, 1.0, 2.0, -1.0, -2.0, -1.0, -2.0)
+      val result = leastSquares(a,b)
+      val residual = sum(pow(b-result(a), 2))
+      assert(norm(result.coefficients - DenseVector(0.0)) < 1e-7)
+      assert(math.abs(result.rSquared - residual) < 1e-7)
     }
   }
 }
