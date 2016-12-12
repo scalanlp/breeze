@@ -2,9 +2,9 @@ Common.commonSettings
 
 name := "breeze-macros"
 
-
-
-libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
+libraryDependencies := {
+  val sv = scalaVersion.value
+  val deps = libraryDependencies.value
   sv match {
     case x if x.startsWith("2.10") =>
       deps :+ ("org.scalamacros" %% "quasiquotes" % "2.1.0")
@@ -12,7 +12,7 @@ libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
   }
 }
 
-libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _)
+libraryDependencies += "org.scala-lang" % "scala-reflect" % s"${scalaVersion.value}"
 
 addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.full)
 
