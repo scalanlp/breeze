@@ -2,9 +2,9 @@ language: scala
 scala:
   - 2.10.6
   - 2.11.8
+  - 2.12.1
 jdk:
-  - oraclejdk7
-  - oraclejdk8
+   - oraclejdk8
 before_install:
  - sudo apt-get update -qq
  - sudo apt-get install -qq libatlas3gf-base libopenblas-base
