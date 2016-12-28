@@ -8,22 +8,19 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-    "junit" % "junit" % "4.5" % "test",
-  "org.scalacheck" %% "scalacheck" % "1.11.3" % "test",
-  "org.scalatest" %% "scalatest" % "2.1.3" % "test",
-    "jfree" % "jcommon" % "1.0.16",
-    "jfree" % "jfreechart" % "1.0.13",
-    "org.apache.xmlgraphics" % "xmlgraphics-commons" % "1.3.1", // for eps gen
-    // "org.apache.xmlgraphics" % "batik-dom" % "1.7",    // for svg gen
-    // "org.apache.xmlgraphics" % "batik-svggen" % "1.7", // for svg gen
-    "com.lowagie" % "itext" % "2.1.5" intransitive()  // for pdf gen
+  "jfree" % "jcommon" % "1.0.16",
+  "jfree" % "jfreechart" % "1.0.13",
+  "org.apache.xmlgraphics" % "xmlgraphics-commons" % "1.3.1", // for eps gen
+  // "org.apache.xmlgraphics" % "batik-dom" % "1.7",    // for svg gen
+  // "org.apache.xmlgraphics" % "batik-svggen" % "1.7", // for svg gen
+  "com.lowagie" % "itext" % "2.1.5" intransitive() // for pdf gen
 )
 
 scalaVersion := Common.scalaVersion
 
-crossScalaVersions  := Common.crossScalaVersions
+crossScalaVersions := Common.crossScalaVersions
 
-libraryDependencies <+= (scalaVersion)("org.scala-lang" % "scala-reflect" % _)
+libraryDependencies += "org.scala-lang" % "scala-reflect" % s"${scalaVersion.value}"
 
 credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
 
@@ -31,8 +28,8 @@ scalacOptions ++= Seq("-deprecation", "-language:_", "-optimize")
 
 javaOptions += "-Xmx2g"
 
-pomExtra := (
-    <url>http://scalanlp.org/</url>
+pomExtra :=
+  <url>http://scalanlp.org/</url>
     <licenses>
       <license>
         <name>Apache 2</name>
@@ -50,20 +47,17 @@ pomExtra := (
         <name>David Hall</name>
         <url>http://cs.berkeley.edu/~dlwh/</url>
       </developer>
-    </developers>)
+    </developers>
 
-
-
-  pomIncludeRepository := { _ => false }
+pomIncludeRepository := { _ => false }
 
 publishMavenStyle := true
 
-
-  publishTo <<= version { (v: String) =>
-    val nexus = "https://oss.sonatype.org/"
-    if (v.trim.endsWith("SNAPSHOT"))
-      Some("snapshots" at nexus + "content/repositories/snapshots")
-    else
-      Some("releases"  at nexus + "service/local/staging/deploy/maven2")
-  }
+publishTo := {
+  val nexus = "https://oss.sonatype.org/"
+  if (version.value.trim.endsWith("SNAPSHOT"))
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases" at nexus + "service/local/staging/deploy/maven2")
+}
 

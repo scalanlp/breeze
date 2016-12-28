@@ -32,7 +32,7 @@ class ProjectedQuasiNewtonTest extends PropSpec with PropertyChecks with Optimiz
     forAll { init: DenseVector[Double] =>
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
-          (sum((x - 3.0) :^ 2.0), (x * 2.0) - 6.0)
+          (sum((x - 3.0) ^:^ 2.0), (x * 2.0) - 6.0)
         }
       }
 
@@ -48,7 +48,7 @@ class ProjectedQuasiNewtonTest extends PropSpec with PropertyChecks with Optimiz
       init := clip(init, Double.NegativeInfinity, 2.0)
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
-          (sum((x - 3.0) :^ 4.0), (x - 3.0) :^ 3.0 :* 4.0)
+          (sum((x - 3.0) ^:^ 4.0), ((x - 3.0) ^:^ 3.0) *:* 4.0)
         }
       }
 
@@ -63,7 +63,7 @@ class ProjectedQuasiNewtonTest extends PropSpec with PropertyChecks with Optimiz
     forAll { init: DenseVector[Double] =>
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
-          (norm((x - 3.0) :^ 2.0, 1), (x * 2.0) - 6.0)
+          (norm((x - 3.0) ^:^ 2.0, 1), (x * 2.0) - 6.0)
         }
       }
 
@@ -77,18 +77,16 @@ class ProjectedQuasiNewtonTest extends PropSpec with PropertyChecks with Optimiz
     val optimizer = new ProjectedQuasiNewton(tolerance = 1.0E-5)
 
     forAll { a: DenseVector[Double] =>
-      whenever(min(a) >= -3.0 && max(a) <= 3.0) {
-        val init = DenseVector.rand(a.size)
-        val f = new DiffFunction[DenseVector[Double]] {
-          def calculate(x: DenseVector[Double]) = {
-            (sum(exp((x :^ 2.0) :- (a :* x))), (x * 2.0 :- a) :* exp(x :^ 2.0 :- a :* x))
-          }
+      val init = DenseVector.rand(a.size)
+      val f = new DiffFunction[DenseVector[Double]] {
+        def calculate(x: DenseVector[Double]) = {
+          (sum(exp((x ^:^ 2.0) -:- (a *:* x))), (x * 2.0 -:- a) *:* exp( (x ^:^ 2.0) -:- (a *:* x)))
         }
-
-        val result = optimizer.minimize(f, init)
-        val minimum = f(a / 2.0)
-        f(result) should be(minimum +- abs(minimum) * 1E-2)
       }
+
+      val result = optimizer.minimize(f, init)
+      val minimum = f(a / 2.0)
+      f(result) should be(minimum +- abs(minimum) * 1E-2)
     }
   }
 
@@ -101,7 +99,7 @@ class ProjectedQuasiNewtonTest extends PropSpec with PropertyChecks with Optimiz
         -3.675310432634351,-0.40639564652095117,2.29625304115155,-5.574220233644466,12.21329172136971))
     val f = DenseVector(-1.2320199653150048, -0.14220655875869606, 0.38477404739124765, -0.3480575854151014, -0.4729810900829228)
 
-    val cost = QuadraticMinimizer.Cost(H, f:*(-1.0))
+    val cost = QuadraticMinimizer.Cost(H, f * -1.0)
     val init = DenseVector.zeros[Double](n)
 
     init := 0.0

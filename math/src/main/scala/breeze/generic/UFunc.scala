@@ -1,7 +1,7 @@
 package breeze.generic
 
-import breeze.linalg.Axis
 import breeze.linalg.support._
+import breeze.linalg.{Axis, mapValues}
 
 /*
  Copyright 2012 David Hall
@@ -222,6 +222,13 @@ object UFunc {
     }
   }
 
+  implicit def canMapToSinkValuesUFunc[Tag, S, T, V, V2](implicit scalar: ScalarOf[T, V],
+                                                         canMapToSink: mapValues.SinkImpl2[S, T, V=>V2],
+                                                         impl: UImpl[Tag, V, V2]): SinkImpl[Tag, S, T] = {
+    new SinkImpl[Tag, S, T] {
+      def apply(sink: S, v: T) = { canMapToSink(sink, v, impl.apply) }
+    }
+  }
 
   implicit def collapseUred[Tag, V1, AxisT<:Axis, TA, VR, Result](implicit handhold: CanCollapseAxis.HandHold[V1, AxisT, TA],
                                                                   impl: UImpl[Tag, TA, VR],

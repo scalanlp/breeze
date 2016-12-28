@@ -5,7 +5,10 @@ import org.scalatest.junit._
 import org.junit.runner.RunWith
 import breeze.math._
 import breeze.stats.mean
-import org.scalacheck.Arbitrary
+import breeze.storage.Zero
+import org.scalacheck.{Arbitrary, Gen}
+
+import scala.reflect.ClassTag
 
 /**
  *
@@ -200,7 +203,7 @@ class HashVectorTest extends FunSuite {
     val b = HashVector(3)((1,1))
     assert(a.dot(b) === 2)
     assert(a + b === DenseVector(1,3,3))
-    assert(a :* b === DenseVector(0, 2, 0))
+    assert(a *:* b === DenseVector(0, 2, 0))
   }
 
   test("HV/DV ops") {
@@ -208,7 +211,7 @@ class HashVectorTest extends FunSuite {
     val b = HashVector(3)((1,1))
     assert(b.dot(a) === 2)
     assert(b + a === DenseVector(1,3,3))
-    assert(b :* a === DenseVector(0, 2, 0))
+    assert(b *:* a === DenseVector(0, 2, 0))
     b += a
     assert(b === HashVector(1,3,3))
   }
@@ -218,7 +221,7 @@ class HashVectorTest extends FunSuite {
     val b = HashVector(3)((1,1))
     assert(b.dot(a) === 2)
     assert(b + a === HashVector(0,3,3))
-    assert(b :* a === HashVector(0, 2, 0))
+    assert(b *:* a === HashVector(0, 2, 0))
     b += a
     assert(b === HashVector(0,3,3))
   }
@@ -228,118 +231,46 @@ class HashVectorTest extends FunSuite {
     val b = HashVector(3)((1,1))
     assert(a.dot(b) === 2)
     assert(a + b === SparseVector(0,3,3))
-    assert(a :* b === SparseVector(0, 2, 0))
+    assert(a *:* b === SparseVector(0, 2, 0))
     a += b
     assert(a === SparseVector(0,3,3))
   }
 }
 
-/**
- *
- * @author dlwh
- */
-@RunWith(classOf[JUnitRunner])
-class HashVectorOps_DoubleTest extends DoubleValuedTensorSpaceTestBase[HashVector[Double], Int] {
- val space = HashVector.space[Double]
+abstract class HashVectorPropertyTestBase[T: ClassTag: Zero] extends TensorSpaceTestBase[HashVector[T], Int, T] {
+  def genScalar: Arbitrary[T]
 
-  val N = 30
-  implicit def genTriple: Arbitrary[(HashVector[Double], HashVector[Double], HashVector[Double])] = {
-    Arbitrary {
-      for{x <- Arbitrary.arbitrary[Double].map { _  % 1E100}
-          xl <- Arbitrary.arbitrary[List[Int]]
-          y <- Arbitrary.arbitrary[Double].map { _ % 1E100 }
-          yl <- Arbitrary.arbitrary[List[Int]]
-          z <- Arbitrary.arbitrary[Double].map { _ % 1E100 }
-          zl <- Arbitrary.arbitrary[List[Int]]
-      } yield {
-        (HashVector(N)( xl.map(i => (i % N).abs -> math.random * x):_*),
-          HashVector(N)( yl.map(i => (i % N).abs -> math.random * y):_* ),
-          HashVector(N)( zl.map(i => (i % N).abs -> math.random * z):_* ))
-      }
-    }
+  override implicit def genSingle: Arbitrary[HashVector[T]] = Arbitrary {
+    Gen.choose(1, 10).flatMap(RandomInstanceSupport.genHashVector(_, genScalar.arbitrary))
   }
 
-  def genScalar: Arbitrary[Double] = Arbitrary(Arbitrary.arbitrary[Double].map{ _ % 1E10 })
+  implicit def genTriple: Arbitrary[(HashVector[T], HashVector[T], HashVector[T])] = Arbitrary {
+    Gen.choose(1, 10).flatMap { n =>
+      for {
+        x <- RandomInstanceSupport.genHashVector(n, genScalar.arbitrary)
+        y <- RandomInstanceSupport.genHashVector(n, genScalar.arbitrary)
+        z <- RandomInstanceSupport.genHashVector(n, genScalar.arbitrary)
+      } yield (x, y, z)
+    }
+  }
 }
 
-/**
- *
- * @author dlwh
- */
 @RunWith(classOf[JUnitRunner])
-class HashVectorOps_FloatTest extends TensorSpaceTestBase[HashVector[Float], Int, Float] {
- val space = HashVector.space[Float]
+class HashVectorOps_DoubleTest extends HashVectorPropertyTestBase[Double] with DoubleValuedTensorSpaceTestBase[HashVector[Double], Int] {
+  val space = HashVector.space[Double]
+  def genScalar: Arbitrary[Double] = RandomInstanceSupport.genReasonableDouble
+}
+
+@RunWith(classOf[JUnitRunner])
+class HashVectorOps_FloatTest extends HashVectorPropertyTestBase[Float] {
+  val space = HashVector.space[Float]
 
   override val TOL: Double = 1E-2
-  val N = 30
-  implicit def genTriple: Arbitrary[(HashVector[Float], HashVector[Float], HashVector[Float])] = {
-    Arbitrary {
-      for{x <- Arbitrary.arbitrary[Float].map { _  % 100 }
-          xl <- Arbitrary.arbitrary[List[Int]]
-          y <- Arbitrary.arbitrary[Float].map { _ % 100  }
-          yl <- Arbitrary.arbitrary[List[Int]]
-          z <- Arbitrary.arbitrary[Float].map { _ % 100 }
-          zl <- Arbitrary.arbitrary[List[Int]]
-      } yield {
-        (HashVector(N)( xl.map(i => (i % N).abs -> math.random.toFloat * x ):_*),
-          HashVector(N)( yl.map(i => (i % N).abs -> math.random.toFloat * y ):_* ),
-          HashVector(N)( zl.map(i => (i % N).abs -> math.random.toFloat * z ):_* ))
-      }
-    }
-  }
-
-  def genScalar: Arbitrary[Float] = Arbitrary(Arbitrary.arbitrary[Float].map{ _ % 1000 })
-}
-
-/**
- *
- * @author dlwh
- */
-@RunWith(classOf[JUnitRunner])
-class HashVectorOps_IntTest extends TensorSpaceTestBase[HashVector[Int], Int, Int] {
- val space = HashVector.space[Int]
-
-  val N = 100
-  implicit def genTriple: Arbitrary[(HashVector[Int], HashVector[Int], HashVector[Int])] = {
-    Arbitrary {
-      for{x <- Arbitrary.arbitrary[Int].map { _  % 100 }
-          xl <- Arbitrary.arbitrary[List[Int]]
-          y <- Arbitrary.arbitrary[Int].map { _ % 100  }
-          yl <- Arbitrary.arbitrary[List[Int]]
-          z <- Arbitrary.arbitrary[Int].map { _ % 100 }
-          zl <- Arbitrary.arbitrary[List[Int]]
-      } yield {
-        (HashVector(N)( xl.map(i => (i % N).abs -> (math.random* x ).toInt ):_*),
-          HashVector(N)( yl.map(i => (i % N).abs -> (math.random * y).toInt ):_* ),
-          HashVector(N)( zl.map(i => (i % N).abs -> (math.random * z).toInt ):_* ))
-      }
-    }
-  }
-
-  def genScalar: Arbitrary[Int] = Arbitrary(Arbitrary.arbitrary[Int].map{ _ % 1000 })
+  def genScalar: Arbitrary[Float] = Arbitrary { RandomInstanceSupport.genReasonableDouble.arbitrary.map(_.toFloat) }
 }
 
 @RunWith(classOf[JUnitRunner])
-class HashVectorOps_ComplexTest extends TensorSpaceTestBase[HashVector[Complex], Int, Complex] {
-  val space = HashVector.space[Complex]
-
-
-  val N = 30
-  implicit def genTriple: Arbitrary[(HashVector[Complex], HashVector[Complex], HashVector[Complex])] = {
-    Arbitrary {
-      for{x <- Arbitrary.arbitrary[Complex]
-          xl <- Arbitrary.arbitrary[List[Int]]
-          y <- Arbitrary.arbitrary[Complex]
-          yl <- Arbitrary.arbitrary[List[Int]]
-          z <- Arbitrary.arbitrary[Complex]
-          zl <- Arbitrary.arbitrary[List[Int]]
-      } yield {
-        ( HashVector(N)( xl.map(i => (i % N).abs -> (math.random * x )):_*),
-          HashVector(N)( yl.map(i => (i % N).abs -> (math.random * y )):_*),
-          HashVector(N)( zl.map(i => (i % N).abs ->(math.random * z )):_*))
-      }
-    }
-  }
-
-  implicit def genScalar: Arbitrary[Complex] = Arbitrary{for(r  <- Arbitrary.arbitrary[Double]; i <- Arbitrary.arbitrary[Double]) yield Complex(r % 100,i % 100)}
+class HashVectorOps_IntTest extends HashVectorPropertyTestBase[Int] {
+  val space = HashVector.space[Int]
+  def genScalar: Arbitrary[Int] = Arbitrary { Gen.Choose.chooseInt.choose(-1000, 1000) }
 }

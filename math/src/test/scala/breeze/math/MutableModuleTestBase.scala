@@ -1,8 +1,9 @@
 package breeze.math
 
-import org.scalacheck.{Arbitrary, Prop}
+import org.scalacheck._
 import org.scalatest.FunSuite
 import org.scalatest.prop.Checkers
+import org.scalacheck.Prop.BooleanOperators
 
 /**
  * 
@@ -13,10 +14,11 @@ trait MutableModuleTestBase[V, S] extends FunSuite with Checkers {
   import space._
 
 
+  implicit def genSingle: Arbitrary[V]
   implicit def genTriple: Arbitrary[(V, V, V)]
   implicit def genScalar: Arbitrary[S]
 
-  val TOL = 1E-6
+  val TOL = 1E-3
 
   test("Addition is Associative") {
      check(Prop.forAll{ (trip: (V, V, V)) =>
@@ -51,14 +53,12 @@ trait MutableModuleTestBase[V, S] extends FunSuite with Checkers {
    }
 
    test("Zero is Zero") {
-     check(Prop.forAll{ (trip: (V, V, V)) =>
-       val (a, b, c) = trip
+     check(Prop.forAll{ (a: V) =>
        val z = zeroLike(a)
-       close(a :+ z, a, TOL)
+       close(a +:+ z, a, TOL)
      })
 
-     check(Prop.forAll{ (trip: (V, V, V)) =>
-       val (a, b, _) = trip
+     check(Prop.forAll{ (a: V) =>
        val ab = copy(a)
        val z = zeroLike(a)
        ab :+= z
@@ -67,21 +67,18 @@ trait MutableModuleTestBase[V, S] extends FunSuite with Checkers {
    }
 
    test("a - a == 0") {
-     check(Prop.forAll{ (trip: (V, V, V)) =>
-       val (a, b, c) = trip
+     check(Prop.forAll{ (a: V) =>
        val z = zeroLike(a)
        close(a - a, z, TOL)
      })
 
-     check(Prop.forAll{ (trip: (V, V, V)) =>
-       val (a, b, _) = trip
+     check(Prop.forAll{ (a: V) =>
        val z = zeroLike(a)
        a -= a
        close(a, z, TOL)
      })
 
-     check(Prop.forAll{ (trip: (V, V, V)) =>
-       val (a, b, _) = trip
+     check(Prop.forAll{ (a: V) =>
        val z = zeroLike(a)
        a :-= a
        close(a, z, TOL)
@@ -90,7 +87,7 @@ trait MutableModuleTestBase[V, S] extends FunSuite with Checkers {
      check(Prop.forAll{ (trip: (V, V, V)) =>
        val (a, b, _) = trip
        val z = zeroLike(a)
-       val ab = a :- b
+       val ab = a -:- b
        a -= b
        close(a, ab, TOL)
      })
@@ -99,65 +96,55 @@ trait MutableModuleTestBase[V, S] extends FunSuite with Checkers {
    test("Scalar mult distributes over vector addition") {
      check(Prop.forAll{ (trip: (V, V, V), s: S) =>
        val (a, b, _) = trip
-       close( (a + b) :* s, (b :* s) + (a :* s), TOL)
+       close( (a + b) *:* s, (b *:* s) + (a *:* s), TOL)
      })
-
- //    check(Prop.forAll{ (trip: (V, V, V), s: S) =>
- //      val (a, b, _) = trip
- //      s == 0 || close( (a + b)/ s, (b / s +a / s), TOL)
- //    })
 
      check(Prop.forAll{ (trip: (V, V, V), s: S) =>
        val (a, b, _) = trip
        val ab = copy(a)
        ab += b
        ab *= s
-       val ba = copy(a) :* s
-       ba += (b :* s)
+       val ba = copy(a) *:* s
+       ba += (b *:* s)
        close(ab, ba, TOL)
      })
-
-
-
    }
 
-  test("daxpy is consistent") {
+  test("axpy is consistent") {
     check(Prop.forAll{ (trip: (V, V, V), s: S) =>
       val (a, b, _) = trip
       val ac = copy(a)
-      val prod = a + (b :* s)
+      val prod = a + (b *:* s)
       breeze.linalg.axpy(s, b, ac)
-      close( prod, ac, TOL)
+      close(prod, ac, TOL)
     })
 
   }
 
 
    test("Scalar mult distributes over field addition") {
-     check(Prop.forAll{ (trip: (V, V, V), s: S, t: S) =>
-       val (a, _, _) = trip
-       close( (a) :* scalars.+(s,t), (a :* s) + (a :* t), 1E-4)
+     check(Prop.forAll{ (a: V, s: S, t: S) =>
+       val left =  a *:* scalars.+(s,t)
+       val right = (a *:* s) + (a *:* t)
+       s"$left != $right" |: close( left, right, TOL)
      })
 
-     check(Prop.forAll{ (trip: (V, V, V), s: S, t: S) =>
-       val (a, _, _) = trip
+     check(Prop.forAll{ (a: V, s: S, t: S) =>
        val ab = copy(a)
        ab *= s
-       ab += (a :* t)
+       ab += a *:* t
        val ba = copy(a)
        ba *= scalars.+(s,t)
-       close(ab, ba, 1e-4)
+       close(ab, ba, TOL)
      })
    }
 
    test("Compatibility of scalar multiplication with field multiplication") {
-     check(Prop.forAll{ (trip: (V, V, V), s: S, t: S) =>
-       val (a, _, _) = trip
-       close( (a) :* scalars.*(s,t), a :* s :* t, TOL)
+     check(Prop.forAll{ (a: V, s: S, t: S) =>
+       close( a *:* scalars.*(s,t), a *:* s *:* t, TOL)
      })
 
-     check(Prop.forAll{ (trip: (V, V, V), s: S, t: S) =>
-       val (a, _, _) = trip
+     check(Prop.forAll{ (a: V, s: S, t: S) =>
        val ab = copy(a)
        ab *= s
        ab *= t
@@ -179,7 +166,6 @@ trait MutableModuleTestBase[V, S] extends FunSuite with Checkers {
 //     })
    }
 
-  // op set
   test("op set works") {
     check(Prop.forAll{ (trip: (V, V, V)) =>
       val (a, b, _) = trip
@@ -187,18 +173,15 @@ trait MutableModuleTestBase[V, S] extends FunSuite with Checkers {
       ab := b
       a + b == (a + ab)
     })
-
   }
 
 
   test("1 is 1") {
-    check(Prop.forAll{ (trip: (V, V, V)) =>
-      val (a, b, c) = trip
-      close(a :* scalars.one, a, TOL)
+    check(Prop.forAll{ (a: V) =>
+      close(a *:* scalars.one, a, TOL)
     })
 
-    check(Prop.forAll{ (trip: (V, V, V)) =>
-      val (a, b, _) = trip
+    check(Prop.forAll{ (a: V) =>
       val ab = copy(a)
       ab *= scalars.one
       close(a, ab, TOL)

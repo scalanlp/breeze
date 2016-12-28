@@ -26,7 +26,6 @@ object shuffle extends UFunc {
     new Impl[Array[T], Array[T]] {
       /**
         * Shuffle the given [[Array[T]]].
-        *
         * @param arr the given array stored as [[Array[T]]]
         * @return a shuffled array stored as [[Array[T]]]
         */
@@ -44,7 +43,7 @@ object shuffle extends UFunc {
       }
 
       /**
-        * Swap two elements of [[Array[T]]] with specified indices [[Int]]
+        * Swap two elements of [[Array[T]]] with specified indices [[Int]].
         * @param arr the given array stored as [[Array[T]]]
         * @param indexA the first given [[Int]] index
         * @param indexB the second given [[Int]] index
@@ -61,10 +60,11 @@ object shuffle extends UFunc {
   Impl3[Array[T], Array[Int], Boolean, Array[T]] = {
     new Impl3[Array[T], Array[Int], Boolean, Array[T]] {
       /**
-        * shuffle the given [[Array[T]]] according to the given
-        * permutation [[Array[Int]]] if [[Int]] indicator is zero;
-        * shuffle the given [[Array[T]]] according to the inverse of the given
-        * permutation [[Array[Int]]] if [[Int]] indicator is nonzero.
+        * shuffle the given [[Array[T]]] arr according to the given
+        * permutation [[Array[Int]]] arrIndex if [[Boolean]] isInverse is
+        * false; shuffle the given [[Array[T]]] arr according to the inverse of
+        * the given permutation [[Array[Int]]] arrIndex if [[Boolean]]
+        * isInverse is true.
         * @param arr the given array stored as [[Array[T]]]
         * @param arrIndex the given permutation array stored as [[Array[Int]]]
         * @param isInverse the indicator whether perform inverse shuffle
@@ -97,8 +97,8 @@ object shuffle extends UFunc {
   Impl2[Array[T], Array[Int], Array[T]] = {
     new Impl2[Array[T], Array[Int], Array[T]] {
       /**
-        * Shuffle the given [[Array[T]] according to the given
-        * permutation [[Array[Int]]].
+        * Shuffle the given [[Array[T]] arr according to the given
+        * permutation [[Array[Int]]] arrIndex.
         * @param arr the given array stored as [[Array[T]]]
         * @param arrIndex the given permutation array stored as [[Array[Int]]]
         * @return a shuffled array stored as [[Array[T]]]

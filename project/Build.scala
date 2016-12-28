@@ -1,20 +1,26 @@
+import sbt.Keys._
 import sbt._
-import Keys._
 
 object Common {
-  val crossScalaVersions = Seq("2.11.8", "2.10.6")
+  val crossScalaVersions = Seq("2.12.1", "2.11.8", "2.10.6")
   val scalaVersion = crossScalaVersions.head
 
-  val commonSettings = Seq (
+  val commonSettings = Seq(
     organization := "org.scalanlp",
     Keys.scalaVersion := Common.scalaVersion,
-    Keys.crossScalaVersions  := Common.crossScalaVersions,
+    Keys.crossScalaVersions := Common.crossScalaVersions,
 
-    scalacOptions ++= Seq("-deprecation","-language:_"),
+    scalacOptions ++= Seq("-deprecation", "-language:_"),
 
-    javacOptions ++= Seq("-target", "1.6", "-source","1.6"),
+    javacOptions ++= Seq("-target", "1.7", "-source", "1.7"),
 
     credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
+
+    libraryDependencies ++= Seq(
+      "junit" % "junit" % "4.12" % "test",
+      "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
+      "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+    ),
 
     resolvers ++= Seq(
       Resolver.mavenLocal,
@@ -26,33 +32,34 @@ object Common {
     testOptions in Test += Tests.Argument("-oDF"),
 
     pomExtra :=
-  <url>http://scalanlp.org/</url>
-  <licenses>
-    <license>
-      <name>Apache 2</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-  <scm>
-    <url>git@github.com:scalanlp/breeze.git</url>
-    <connection>scm:git:git@github.com:scalanlp/breeze.git</connection>
-  </scm>
-  <developers>
-    <developer>
-      <id>dlwh</id>
-      <name>David Hall</name>
-      <url>http://www.dlwh.org/</url>
-    </developer>
-  </developers>,
+      <url>http://scalanlp.org/</url>
+        <licenses>
+          <license>
+            <name>Apache 2</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+            <distribution>repo</distribution>
+          </license>
+        </licenses>
+        <scm>
+          <url>git@github.com:scalanlp/breeze.git</url>
+          <connection>scm:git:git@github.com:scalanlp/breeze.git</connection>
+        </scm>
+        <developers>
+          <developer>
+            <id>dlwh</id>
+            <name>David Hall</name>
+            <url>http://www.dlwh.org/</url>
+          </developer>
+        </developers>,
     publishMavenStyle := true,
 
-    publishTo <<= isSnapshot { (yes: Boolean) =>
+    publishTo := {
+      val yes = isSnapshot.value
       val nexus = "https://oss.sonatype.org/"
       if (yes)
         Some("snapshots" at nexus + "content/repositories/snapshots")
       else
-        Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+        Some("releases" at nexus + "service/local/staging/deploy/maven2")
     },
 
     publishArtifact in Test := false,

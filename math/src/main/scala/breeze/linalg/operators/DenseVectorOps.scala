@@ -837,15 +837,19 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
         import v._
         if (n == 1) {
           var sum = 0.0
-          foreach (v => sum += f.sNorm(v) )
+          foreach(v => sum += f.sNorm(v))
           sum
         } else if (n == 2) {
           var sum = 0.0
-          foreach (v => { val nn = f.sNorm(v); sum += nn * nn })
+          foreach(v => {
+            val nn = f.sNorm(v); sum += nn * nn
+          })
           math.sqrt(sum)
         } else if (n == Double.PositiveInfinity) {
           var max = 0.0
-          foreach (v => { val nn = f.sNorm(v); if (nn > max) max = nn })
+          foreach(v => {
+            val nn = f.sNorm(v); if (nn > max) max = nn
+          })
           max
         } else {
           var sum = 0.0

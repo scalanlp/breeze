@@ -15,6 +15,8 @@ package breeze.linalg
  limitations under the License.
 */
 
+import breeze.generic.UFunc.SinkImpl2
+
 import scala.{specialized=>spec}
 import breeze.generic._
 import breeze.linalg.support._
@@ -386,6 +388,50 @@ object DenseVector extends VectorConstructors[DenseVector]
       }
 
       final private def slowPath(out: Array[V2], fn: (V) => V2, data: Array[V], off: Int, stride: Int): Unit = {
+        var i = 0
+        var j = off
+        while (i < out.length) {
+          out(i) = fn(data(j))
+          i += 1
+          j += stride
+        }
+      }
+    }
+  }
+
+  implicit def canMapValuesToSink[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) V2]: mapValues.SinkImpl2[DenseVector[V2], DenseVector[V], V =>V2] = {
+    new mapValues.SinkImpl2[DenseVector[V2], DenseVector[V], V=>V2] {
+      /**Maps all key-value pairs from the given collection. */
+      def apply(sink: DenseVector[V2], from: DenseVector[V], fn: (V) => V2) = {
+        require(sink.length == from.length)
+
+        // threeway fork, following benchmarks and hotspot docs on Array Bounds Check Elimination (ABCE)
+        // https://wikis.oracle.com/display/HotSpotInternals/RangeCheckElimination
+        if (sink.noOffsetOrStride && from.noOffsetOrStride) {
+          fastestPath(sink, fn, from.data)
+        } else if (sink.stride == 1 && from.stride == 1) {
+          mediumPath(sink, fn, from.data, from.offset)
+        } else {
+          slowPath(sink, fn, from.data, from.offset, from.stride)
+        }
+      }
+
+      private def mediumPath(sink: DenseVector[V2], fn: (V) => V2, data: Array[V], off: Int): Unit = {
+        val out = sink.data
+        val ooff = sink.offset
+        cforRange(0 until sink.length) { j =>
+          out(j + ooff) = fn(data(j + off))
+        }
+      }
+
+      private def fastestPath(sink: DenseVector[V2], fn: (V) => V2, data: Array[V]): Unit = {
+        val out = sink.data
+        cforRange(0 until sink.length) { j =>
+          out(j) = fn(data(j))
+        }
+      }
+
+      final private def slowPath(out: DenseVector[V2], fn: (V) => V2, data: Array[V], off: Int, stride: Int): Unit = {
         var i = 0
         var j = off
         while (i < out.length) {

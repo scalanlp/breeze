@@ -31,8 +31,7 @@ trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
 
   // norm
   test("norm positive homogeneity") {
-    check(Prop.forAll{ (trip: (V, V, V), s: S) =>
-      val (a, b, c) = trip
+    check(Prop.forAll{ (a: V, s: S) =>
       (norm(a * s) - norm(s) * norm(a)) <= TOL * norm(a * s)
     })
   }
@@ -45,28 +44,27 @@ trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
   }
 
   test("norm(v) == 0 iff v == 0") {
-    check(Prop.forAll{ (trip: (V, V, V)) =>
-      val (a, b, c) = trip
+    check(Prop.forAll{ (a: V) =>
       val z = zeroLike(a)
-      norm(z) == 0.0 && ( (z == a) || norm(a) != 0.0)
+      norm(z) == 0.0 && ( close(z, a, TOL) || norm(a) != 0.0)
     })
   }
 
-
-  // dot product distributes
-  test("dot product distributes") {
-    check(Prop.forAll{ (trip: (V, V, V)) =>
+  test("dot product distributes over vector addition") {
+    check(Prop.forAll { (trip: (V, V, V)) =>
       val (a, b, c) = trip
-      val res = scalars.close(scalars.+(a dot b,a dot c),(a dot (b + c)), 1E-3 )
-      if(!res)
-        println(scalars.+(a dot b,a dot c) + " " + (a dot (b + c)))
+      val res = scalars.close(scalars.+(a dot b, a dot c), a dot (b + c), TOL)
+      if (!res)
+        println(scalars.+(a dot b, a dot c) + " " + (a dot (b + c)))
       res
     })
+  }
 
+  test("dot product associates with scalar multiplication") {
     check(Prop.forAll{ (trip: (V, V, V), s: S) =>
       val (a, b, c) = trip
-      scalars.close(scalars.*(a dot b,s),(a dot (b :* s)) )
-      scalars.close(scalars.*(s, a dot b),( (a :* s) dot (b)) )
+      scalars.close(scalars.*(a dot b,s),(a dot (b *:* s)) ) &&
+      scalars.close(scalars.*(s, a dot b),( (a *:* s) dot (b)) )
     })
   }
 
@@ -85,8 +83,8 @@ trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
       val ab = copy(a)
       ab += b
       ab :*= c
-      val ba = copy(a) :* c
-      ba :+= (b :* c)
+      val ba = copy(a) *:* c
+      ba :+= (b *:* c)
       close(ab, ba, TOL)
     })
   }
@@ -94,7 +92,7 @@ trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
   test("Vector element-wise mult distributes over vector addition") {
     check(Prop.forAll{ (trip: (V, V, V)) =>
       val (a, b, c) = trip
-      close( (a + b) :* c, (b :* c) + (a :* c), TOL)
+      close( (a + b) *:* c, (b *:* c) + (a *:* c), TOL)
     })
 
 
@@ -108,21 +106,20 @@ trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
       val ab = copy(a)
       ab += b
       ab :*= c
-      val ba = copy(a) :* c
-      ba += (b :* c)
+      val ba = copy(a) *:* c
+      ba += (b *:* c)
       close(ab, ba, TOL)
     })
   }
 }
 
 trait DoubleValuedTensorSpaceTestBase[V, I] extends TensorSpaceTestBase[V, I, Double] {
-    // normalization
   import space._
-  
+
+  // normalization
   test("normalization sets appropriate norm to 1") {
-    check(Prop.forAll{ (trip: (V, V, V), n: Double) =>
-      val (a, b, c) = trip
-      val nn = n.abs % 100 + 1.0
+    check(Prop.forAll{ (a: V, n: Double) =>
+      val nn = n.abs % 10 + 1.0
       val normalized = breeze.linalg.normalize(a, nn)
       val v = breeze.linalg.norm(normalized, nn)
       (v - 1.0).abs <= TOL || norm(normalized) == 0.0
@@ -131,9 +128,9 @@ trait DoubleValuedTensorSpaceTestBase[V, I] extends TensorSpaceTestBase[V, I, Do
 
 
   test("normalize") {
-    check(Prop.forAll{ (trip: (V, V, V)) =>
-      val aNorm = normalize(trip._1)
-      (norm(aNorm) - 1.0)<=TOL || norm(aNorm) == 0.0
+    check(Prop.forAll{ (v: V) =>
+      val aNorm = normalize(v)
+      (norm(aNorm) - 1.0) <=TOL || norm(aNorm) == 0.0
     })
   }
 

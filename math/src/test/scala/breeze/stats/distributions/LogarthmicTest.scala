@@ -28,9 +28,11 @@ class LogarthmicTest extends FunSuite with Checkers with MomentsTestBase[Int]  {
 
   val expFam = Logarthmic
 
-  override val numSamples = 10000
+  override val numSamples = 50000
 
-  override val VARIANCE_TOLERANCE: Double = 1E-1
+  override val VARIANCE_TOLERANCE: Double = 2E-1
+
+  override def numFailures: Int = 4
 
   def paramsClose(p: Double, q: Double) = {
      (p - q).abs / (p.abs / 2 + q.abs / 2+ 1)  < 1E-1
