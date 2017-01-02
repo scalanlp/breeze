@@ -28,7 +28,8 @@ trait MetropolisHastings[T] extends Rand[T] {
   def proposalDraw(x: T): T // This is a random function, which returns a random y given a deterministic x
 
   def likelihood(x:T): Double = math.exp(logLikelihood(x))
-  def likelihoodRatio(start: T, end: T): Double = math.exp(logLikelihood(start) - logLikelihood(end) + logTransitionProbability(start, end) - logTransitionProbability(end, start))
+  def likelihoodRatio(start: T, end: T): Double = math.exp(logLikelihoodRatio(start,end))
+  def logLikelihoodRatio(start: T, end: T): Double = (logLikelihood(end) - logLikelihood(start) - logTransitionProbability(start, end) + logTransitionProbability(end, start))
   def rand:RandBasis
 
   protected def nextDouble: Double = this.rand.generator.nextDouble //uniform random variable
@@ -36,7 +37,7 @@ trait MetropolisHastings[T] extends Rand[T] {
 
 trait SymmetricMetropolisHastings[T] extends MetropolisHastings[T] {
   def logTransitionProbability(start: T, end: T): Double = 0.0
-  override def likelihoodRatio(start: T, end: T): Double = math.exp(logLikelihood(end) - logLikelihood(start))
+  override def logLikelihoodRatio(start: T, end: T): Double = (logLikelihood(end) - logLikelihood(start))
 }
 
 trait TracksStatistics { self:MetropolisHastings[_] =>
@@ -70,13 +71,13 @@ abstract class BaseMetropolisHastings[T](logLikelihoodFunc: T => Double, init: T
   private def getNext(): T = {
     totalCount += 1
     val maybeNext = proposalDraw(last)
-    val acceptanceRatio = likelihoodRatio(maybeNext, last)
-    if (acceptanceRatio > 1.0) { //This is logically unnecessary, but allows us to skip a call to nextDouble
+    val logAcceptanceRatio = logLikelihoodRatio(last, maybeNext)
+    if (logAcceptanceRatio > 0.0) { //This is logically unnecessary, but allows us to skip a call to nextDouble
       last = maybeNext
       acceptanceAboveOne += 1
       maybeNext
     } else {
-      if (nextDouble < acceptanceRatio) {
+      if (math.log(nextDouble) < logAcceptanceRatio) {
         last = maybeNext
         acceptances += 1
         maybeNext

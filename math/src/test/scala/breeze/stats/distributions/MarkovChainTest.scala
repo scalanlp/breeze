@@ -22,6 +22,10 @@ import org.scalatest._
 import org.scalatest.junit._
 import org.scalatest.prop._
 
+/**Tests for MarkovChain
+ * @author darrenjw
+ * @date 2/1/17
+ */
 @RunWith(classOf[JUnitRunner])
 class MarkovChainTest extends FunSuite with Checkers {
   type Distr = Gamma
