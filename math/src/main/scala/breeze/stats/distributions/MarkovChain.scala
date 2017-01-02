@@ -192,9 +192,9 @@ object MarkovChain {
       for(next <- proposal(t);
           newLL = logMeasure(next);
           oldLL = logMeasure(t);
-          a = min(1,exp(newLL - oldLL));
+          a = newLL - oldLL;
           u <- rand.uniform) 
-        yield if(u < a) next else t;
+        yield if(log(u) < a) next else t;
     }
 
     /**
@@ -207,14 +207,12 @@ object MarkovChain {
       val prop = proposal(t);
       for(next <- prop;
         newLL = logMeasure(next);
-        //newP = prop.logApply(next);
         newP = prop.logPdf(next);
         oldLL = logMeasure(t);
-        //oldP = proposal(next).logApply(t);
         oldP = proposal(next).logPdf(t);
-        a = min(1,exp(newLL - newP - oldLL + oldP));
+        a = newLL - newP - oldLL + oldP;
         u <- rand.uniform)
-      yield if(u < a) next else t;
+      yield if(log(u) < a) next else t;
     }
 
     /**
