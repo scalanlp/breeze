@@ -1,7 +1,7 @@
 package breeze.stats.distributions;
 
 /*
- Copyright 2009 David Hall, Daniel Ramage
+ Copyright 2017 David Hall, Daniel Ramage
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
