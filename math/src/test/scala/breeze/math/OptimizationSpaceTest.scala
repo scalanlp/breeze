@@ -201,7 +201,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
   }
 
   // norm
-  val TOLM = 1E-3
+  val TOLM = 1E-2
   test("norm positive homogeneity - Matrix") {
     check(Prop.forAll{ (trip: (M,M,M), s: S) =>
       val (a, b, c) = trip
@@ -289,6 +289,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
 class DenseOptimizationSpaceTest_Double extends DenseVectorPropertyTestBase[Double] with OptimizationSpaceTest[DenseMatrix[Double], DenseVector[Double], Double] {
   override implicit val space: MutableOptimizationSpace[DenseMatrix[Double], DenseVector[Double], Double] =
     MutableOptimizationSpace.DenseDoubleOptimizationSpace.denseDoubleOptSpace
+
 
   val N = 30
   override implicit def genTripleM: Arbitrary[(DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double])] = {

@@ -1,8 +1,10 @@
 package breeze.stats
 
+import breeze.linalg.operators.{ OpLT, OpLTE }
+
 import scala.reflect.ClassTag
 import util.Sorting
-import breeze.util.{quickSelectImpl, quickSelect}
+import breeze.util.{ quickSelect, quickSelectImpl }
 
 
 /*
@@ -28,7 +30,7 @@ import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.macros.expand
 import breeze.math.Complex
 import breeze.numerics.isOdd
-import spire.implicits.cfor
+import spire.implicits.{cfor, cforRange}
 import scala.collection.mutable
 
 case class MeanAndVariance(mean: Double, variance: Double, count: Long) {
@@ -220,7 +222,7 @@ trait DescriptiveStats {
             if (mean.size != x.size) {
               throw new IllegalArgumentException("Attempting to compute covariance of dataset where elements have different sizes")
             }
-            cfor(0)(i => i < firstRow.size, i => i + 1)(i => {
+            cforRange(0 until firstRow.size)(i => {
               mean(i) = mean(i) + x(i)
             })
 
@@ -230,9 +232,9 @@ trait DescriptiveStats {
 
           //Second compute the covariance
           data.foreach { x =>
-            cfor(0)(i => i < dataSize, i => i + 1)(i => {
+            cforRange(0 until dataSize)(i => {
               val a = x(i) - mean(i)
-              cfor(0)(j => j < dataSize, j => j + 1)(j => {
+              cforRange(0 until dataSize)(j => {
                 val b = x(j) - mean(j)
                 result(i, j) = result(i, j) + (a * b / (numRowsD - 1)) //Use
               })
@@ -250,12 +252,12 @@ trait DescriptiveStats {
       def apply(data: T) = {
         val covariance = covarianceCalculator(data)
         val d = new Array[Double](covariance.rows)
-        cfor(0)(i => i < covariance.rows, i => i + 1)(i => {
+        cforRange(0 until covariance.rows)(i => {
           d(i) = math.sqrt(covariance(i, i))
         })
 
-        cfor(0)(i => i < covariance.rows, i => i + 1)(i => {
-          cfor(0)(j => j < covariance.rows, j => j + 1)(j => {
+        cforRange(0 until covariance.rows)(i => {
+          cforRange(0 until covariance.rows)(j => {
             if (i != j) {
               covariance(i, j) /= (d(i) * d(j))
             } else {
@@ -315,14 +317,38 @@ trait DescriptiveStats {
     */
   object digitize extends UFunc {
 
-    @expand
-    implicit def arrayVersion[@expand.args(Int, Long, Double, Float) T]: Impl2[Array[T], Array[Double], Array[Int]] =
-      new Impl2[Array[T], Array[Double], Array[Int]] {
-        def apply(x: Array[T], bins: Array[Double]): Array[Int] = {
-          val vecResult = digitize(DenseVector(x), DenseVector(bins))
+    implicit def arrayVersion[T, U](implicit base: Impl2[DenseVector[T], DenseVector[U], DenseVector[Int]]): Impl2[Array[T], Array[U], Array[Int]] = {
+      new Impl2[Array[T], Array[U], Array[Int]] {
+        def apply(x: Array[T], bins: Array[U]): Array[Int] = {
+          val vecResult: DenseVector[Int] = digitize(new DenseVector(x), new DenseVector(bins))
           vecResult.data
         }
       }
+    }
+
+    implicit def fromComparison[T, U](implicit lte: OpLTE.Impl2[T, U, Boolean], ltUU: OpLT.Impl2[U, U, Boolean]): Impl2[DenseVector[T], DenseVector[U], DenseVector[Int]] = {
+      new Impl2[DenseVector[T], DenseVector[U], DenseVector[Int]] {
+        def apply(x: DenseVector[T], bins: DenseVector[U]): DenseVector[Int] = {
+          errorCheckBins(bins)
+          val result = new DenseVector[Int](x.length)
+          cforRange(0 until x.length) { i =>
+            result(i) = bins.length
+            var j = bins.length - 1
+            while (j >= 0) {
+              if (lte(x(i), bins(j))) {
+                result(i) = j
+              } else {
+                j = -1
+              }
+              j -= 1
+            }
+          }
+          result
+
+        }
+      }
+    }
+
 
     @expand
     implicit def vecVersion[@expand.args(Int, Long, Double, Float) T]: Impl2[DenseVector[T], DenseVector[Double], DenseVector[Int]] =
@@ -330,9 +356,9 @@ trait DescriptiveStats {
         def apply(x: DenseVector[T], bins: DenseVector[Double]): DenseVector[Int] = {
           errorCheckBins(bins)
           val result = new DenseVector[Int](x.length)
-          cfor(0)(i => i < x.length, i => i+1)(i => {
+          cforRange(0 until x.length) { i =>
             result(i) = bins.length
-            var j=bins.length-1
+            var j = bins.length - 1
             while (j >= 0) {
               if (x(i) <= bins(j)) {
                 result(i) = j
@@ -341,15 +367,15 @@ trait DescriptiveStats {
               }
               j -= 1
             }
-          })
+          }
           result
         }
       }
 
-    private def errorCheckBins(bins: DenseVector[Double]) {
-      cfor(0)(i => i < bins.length-1, i => i+1)(i => {
-        require( bins(i) < bins(i+1) )
-      })
+    private def errorCheckBins[U](bins: DenseVector[U])(implicit lt: OpLT.Impl2[U, U, Boolean]) = {
+      cforRange(0 until bins.length - 1) { i =>
+        require( lt(bins(i), bins(i + 1)) )
+      }
     }
   }
 

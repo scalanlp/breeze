@@ -90,6 +90,14 @@ class DescriptiveStatsTest extends WordSpec with Matchers {
       assert(result == desiredResult)
     }
 
+    "digitize should support other types for bins" in {
+      val x = DenseVector[Double](-0.5, 0.5, 1.5, 2,0, 2.5)
+      val bins = DenseVector(0, 1, 2)
+      val result = digitize(x, bins)
+      val desiredResult = DenseVector[Int](0, 1, 2, 2, 0, 3)
+      assert(result == desiredResult)
+    }
+
     "bincount should compute bins for DenseVector" in {
       val x = DenseVector[Int](0,1,2,3,1)
       val result = DenseVector[Int](1,2,1,1)
