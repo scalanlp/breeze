@@ -28,7 +28,7 @@ class LaplaceTest extends FunSuite with Checkers with UnivariateContinuousDistrT
   import Arbitrary.arbitrary
 
 
-  override val numSamples = 40000
+  override val numSamples = 50000
 
   def asDouble(x: Double) = x
 
