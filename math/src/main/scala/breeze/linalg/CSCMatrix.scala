@@ -507,8 +507,10 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
       while (i < nnz) {
         val index = indices(order(i))
         val col = colFromIndex(index)
+        require(cols < 0 || col < cols, s"Column index $col is out of bounds for number of columns $cols!")
         val colsEqual = col == lastCol
         val row = rowFromIndex(index)
+        require(rows < 0 || row < rows, s"Row index $row is out of bounds for number of rows $rows!")
         if (colsEqual && row == rowFromIndex(indices(order(i-1)))) {
           assert(!keysAlreadyUnique)
           // TODO: might need to codegen to make this fast.

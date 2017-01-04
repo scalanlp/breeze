@@ -425,5 +425,6 @@ class CSCMatrixTest extends FunSuite with Checkers {
     import breeze.numerics.inf
     assert( norm(r2 - DenseVector(0.1813186813186811, -0.3131868131868131, 0.43956043956043944), inf) < 1E-5)
   }
+
 }
 

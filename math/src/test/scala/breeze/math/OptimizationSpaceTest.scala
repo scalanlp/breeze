@@ -317,6 +317,8 @@ class SparseOptimizationSpaceTest_Double extends SparseVectorPropertyTestBase[Do
   val M = 30
 
 
+  override val TOLM = 1E-2
+
   def genScalar: Arbitrary[Double] = RandomInstanceSupport.genReasonableDouble
 
   val arbColIndex = Arbitrary(Gen.choose[Int](0,N-1))
