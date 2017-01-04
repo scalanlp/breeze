@@ -5,6 +5,7 @@ import java.util
 import breeze.linalg.operators.BitVectorOps
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
+import breeze.storage.Zero
 
 import scala.reflect.ClassTag
 
@@ -68,7 +69,7 @@ class BitVector(val data: java.util.BitSet, val length: Int, val enforceLength: 
 
   def activeIterator: Iterator[(Int, Boolean)] = activeKeysIterator.map(_ -> true)
 
-  def lengthsMatch(other: Vector[_]) = {
+  def lengthsMatch(other: Vector[_]): Boolean = {
     if(!enforceLength) true
     else other match {
       case x: BitVector => !x.enforceLength || x.length == length
@@ -142,7 +143,6 @@ object BitVector extends BitVectorOps {
         for(i <- 0 until from.length) {
           fn.visit(from(i))
         }
-//        fn.visitArray(from.data, from.offset, from.length, from.stride)
       }
 
     }
@@ -178,17 +178,21 @@ object BitVector extends BitVectorOps {
     }
 
 
-  implicit def canMapPairs[V2](implicit man: ClassTag[V2]):CanMapKeyValuePairs[BitVector, Int, Boolean, V2, DenseVector[V2]] =
+  implicit def canMapPairs[V2](implicit man: ClassTag[V2],
+                               zero: Zero[V2]):CanMapKeyValuePairs[BitVector, Int, Boolean, V2, DenseVector[V2]] =
 
     new CanMapKeyValuePairs[BitVector, Int, Boolean, V2, DenseVector[V2]] {
-      /**Maps all key-value pairs from the given collection. */
       def map(from: BitVector, fn: (Int, Boolean) => V2): DenseVector[V2] = {
         DenseVector.tabulate(from.length)(i => fn(i, from(i)))
       }
 
       /**Maps all active key-value pairs from the given collection. */
       def mapActive(from: BitVector, fn: (Int, Boolean) => V2): DenseVector[V2] = {
-        map(from, fn)
+        val result = DenseVector.zeros[V2](from.length)
+        for (i <- from.activeKeysIterator) {
+          result(i) = fn(i, true)
+        }
+        result
       }
     }
 
