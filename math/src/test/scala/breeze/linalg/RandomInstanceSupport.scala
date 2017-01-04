@@ -51,7 +51,7 @@ object RandomInstanceSupport {
     Gen.Choose.chooseInt.choose(-1000, 1000)
   }
 
-  def genVector[T: ClassTag: Zero](len: Int, gen: Gen[T]): Gen[Vector[T]] = {
+  def genVector[T: ClassTag: Zero: Semiring](len: Int, gen: Gen[T]): Gen[Vector[T]] = {
     Gen.oneOf(genDenseVector(len, gen), genSparseVector(len, gen), genHashVector(len, gen))
   }
 
@@ -63,7 +63,7 @@ object RandomInstanceSupport {
     DenseVector(list:_*).apply(offset until (len * stride + offset) by stride)
   }
 
-  def genSparseVector[T: ClassTag: Zero](len: Int, gen: Gen[T]): Gen[SparseVector[T]] = for {
+  def genSparseVector[T: ClassTag: Zero: Semiring](len: Int, gen: Gen[T]): Gen[SparseVector[T]] = for {
     nnz <- Gen.choose(0, len)
     il <- Gen.listOfN(nnz, Gen.choose(0, len - 1))
     list <- Gen.listOfN(nnz, gen)

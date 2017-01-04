@@ -33,6 +33,18 @@ import scalaxy.debug._
 /**
  * A compressed sparse column matrix, as used in Matlab and CSparse, etc.
  *
+ * In general, you should probably NOT use the class's constructors unless you know what you are doing.
+ * We don't validate the input data for performance reasons.
+ * So make sure you understand the [[https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29]] correctly.
+ * Otherwise, please use the factory methods under [[CSCMatrix]] and [[CSCMatrix#Builder]] to construct CSC matrices.
+ *
+ *
+ *  @param _data active values
+  * @param rows number of rows
+  * @param cols number of columns
+  * @param colPtrs the locations in `data` that start a column
+  * @param _rowIndices row indices of the elements in `data`
+ *
  * Most implementations based on "Direct Methods for Sparse Linear Systems"
  * by Timothy A. Davis
  * @author dlwh
@@ -48,13 +60,7 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero](private var _data: Arra
 
   /**
    * Constructs a [[CSCMatrix]] instance. We don't validate the input data for performance reasons.
-   * So make sure you understand the [[https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29]] correctly.
-   * Otherwise, please use the factory methods under [[CSCMatrix]] and [[CSCMatrix#Builder]] to construct CSC matrices.
-   * @param data active values
-   * @param rows number of rows
-   * @param cols number of columns
-   * @param colPtrs the locations in `data` that start a column
-   * @param rowIndices row indices of the elements in `data`
+
    */
   def this(data: Array[V], rows: Int, cols: Int, colPtrs: Array[Int], rowIndices: Array[Int]) =
     this(data, rows, cols, colPtrs, data.length, rowIndices)
@@ -285,19 +291,10 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
   def zeros[@spec(Double, Int, Float, Long) V: ClassTag : Zero](rows: Int, cols: Int): CSCMatrix[V] = zeros(rows, cols, 0)
 
   def create[@spec(Double, Int, Float, Long) V: Zero](rows: Int, cols: Int, data: Array[V]): CSCMatrix[V] = {
-    val z = implicitly[Zero[V]].zero
     implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
-    val res = zeros(rows, cols, data.length)
-    var i = 0
-    for(c <- 0 until cols; r <- 0 until rows) {
-      val v = data(i)
-      i += 1
-      if ( v != z) {
-        res(r, c) = v
-      }
-    }
-    // TODO: res.compact()
-    res
+    new CSCMatrix(
+      data, rows, cols, Array.tabulate(cols + 1)(_ * rows), Array.fill(cols)(0 until rows).flatten
+    )
   }
 
   class CanCopyCSCMatrix[@spec(Double, Int, Float, Long) V:ClassTag:Zero] extends CanCopy[CSCMatrix[V]] {

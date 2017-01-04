@@ -77,7 +77,7 @@ class VectorBuilderTest extends FunSuite with Checkers {
 class VectorBuilderOpsTest extends MutableModuleTestBase[VectorBuilder[Double], Double] {
  val space: MutableModule[VectorBuilder[Double], Double] = VectorBuilder.space[Double]
 
-  override val TOL: Double = 1E-4
+  override val TOL: Double = 1E-3
 
   val N = 3
   implicit def genTriple: Arbitrary[(VectorBuilder[Double], VectorBuilder[Double], VectorBuilder[Double])] = {

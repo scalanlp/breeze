@@ -76,7 +76,7 @@ class VectorTest extends FunSuite {
 }
 
 
-abstract class VectorPropertyTestBase[T: ClassTag: Zero] extends TensorSpaceTestBase[Vector[T], Int, T] {
+abstract class VectorPropertyTestBase[T: ClassTag: Zero: Semiring] extends TensorSpaceTestBase[Vector[T], Int, T] {
   def genScalar: Arbitrary[T]
 
   override implicit def genSingle: Arbitrary[Vector[T]] = Arbitrary {

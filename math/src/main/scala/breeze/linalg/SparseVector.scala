@@ -25,7 +25,7 @@ import breeze.util.ArrayUtil
 
 import scala.collection.mutable
 import scala.reflect.ClassTag
-import scala.{specialized => spec}
+import scala.{ specialized => spec }
 
 
 /**
@@ -190,12 +190,12 @@ object SparseVector extends SparseVectorOps
   def fill[@spec(Double, Int, Float, Long) V:ClassTag:Zero](size: Int)(v: =>V):SparseVector[V] = apply(Array.fill(size)(v))
   def tabulate[@spec(Double, Int, Float, Long) V:ClassTag:Zero](size: Int)(f: Int=>V):SparseVector[V]= apply(Array.tabulate(size)(f))
 
-  def apply[V:ClassTag:Zero](length: Int)(values: (Int, V)*): SparseVector[V] = {
-    val r = zeros[V](length)
+  def apply[V:ClassTag:Zero: Semiring](length: Int)(values: (Int, V)*): SparseVector[V] = {
+    val b = new VectorBuilder[V](length)
     for( (i, v) <- values) {
-      r(i) = v
+      b.add(i, v)
     }
-    r
+    b.toSparseVector
   }
 
   def vertcat[V:Zero:ClassTag](vectors: SparseVector[V]*): SparseVector[V] = {

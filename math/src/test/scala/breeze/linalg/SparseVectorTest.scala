@@ -382,7 +382,7 @@ class SparseVectorTest extends FunSuite {
   }
 }
 
-abstract class SparseVectorPropertyTestBase[T: ClassTag: Zero] extends TensorSpaceTestBase[SparseVector[T], Int, T] {
+abstract class SparseVectorPropertyTestBase[T: ClassTag: Zero: Semiring] extends TensorSpaceTestBase[SparseVector[T], Int, T] {
   def genScalar: Arbitrary[T]
 
   override implicit def genSingle: Arbitrary[SparseVector[T]] = Arbitrary {
