@@ -192,9 +192,9 @@ object MarkovChain {
       for(next <- proposal(t);
           newLL = logMeasure(next);
           oldLL = logMeasure(t);
-          a = min(1,exp(newLL - oldLL));
+          a = newLL - oldLL;
           u <- rand.uniform) 
-        yield if(u < a) next else t;
+        yield if(log(u) < a) next else t;
     }
 
     /**
@@ -202,17 +202,17 @@ object MarkovChain {
     * @param proposal the proposal distribution generator
     *
     */
-    def metropolisHastings[T](proposal: T =>(Density[T] with Rand[T]))
+    def metropolisHastings[T](proposal: T =>ContinuousDistr[T])
                              (logMeasure: T=>Double)(implicit rand:RandBasis=Rand)= { t:T =>
       val prop = proposal(t);
       for(next <- prop;
         newLL = logMeasure(next);
-        newP = prop.logApply(next);
+        newP = prop.logPdf(next);
         oldLL = logMeasure(t);
-        oldP = prop.logApply(t);
-        a = min(1,exp(newLL + newP - oldLL - oldP));
+        oldP = proposal(next).logPdf(t);
+        a = newLL - newP - oldLL + oldP;
         u <- rand.uniform)
-      yield if(u < a) next else t;
+      yield if(log(u) < a) next else t;
     }
 
     /**
@@ -291,8 +291,8 @@ object MarkovChain {
   * @param proposal the proposal distribution generator
   *
   */
-  def metropolisHastings[T](init : T, proposal : T =>(Density[T] with Rand[T]))(logMeasure: T=>Double) = {
-    MarkovChain(init) { Kernels.metropolisHastings(proposal){logMeasure}};
+  def metropolisHastings[T](init : T, proposal : T =>ContinuousDistr[T])(logMeasure: T=>Double) = {
+    MarkovChain(init)(Kernels.metropolisHastings(proposal)(logMeasure))
   }
 
    
