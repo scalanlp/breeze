@@ -1,21 +1,20 @@
 package breeze.linalg.operators
 
+import breeze.generic.UFunc
 import breeze.linalg._
-import breeze.linalg.support.{CanCollapseAxis, CanSlice2}
+import breeze.linalg.support.{ CanCollapseAxis, CanSlice2 }
 import breeze.macros.expand
-import breeze.math.{Field, Semiring}
+import breeze.math.{ Field, Semiring }
 import breeze.numerics.Bessel.i1
 import breeze.numerics.pow
 import breeze.storage.Zero
 import breeze.util.ArrayUtil
-
 import org.netlib.util.intW
-import com.github.fommil.netlib.BLAS.{getInstance=>blas}
-import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
-
+import com.github.fommil.netlib.BLAS.{ getInstance => blas }
+import com.github.fommil.netlib.LAPACK.{ getInstance => lapack }
 import spire.syntax.cfor._
 
-import scala.{specialized=>spec}
+import scala.{ specialized => spec }
 import scala.reflect.ClassTag
 import scalaxy.debug._
 
@@ -655,6 +654,32 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
     }
 
     implicitly[BinaryRegistry[T, Matrix[T], Op.type, Matrix[T]]].register(this)
+  }
+
+  implicit def s_dm_op[T, Op <: OpType, U](implicit opScalar: UFunc.UImpl2[Op, T, T, U],
+                                           ct: ClassTag[U],
+                                           zero: Zero[U]): UFunc.UImpl2[Op, T, DenseMatrix[T], DenseMatrix[U]] = {
+    new UFunc.UImpl2[Op, T, DenseMatrix[T], DenseMatrix[U]] {
+      def apply(b: T, a: DenseMatrix[T]): DenseMatrix[U] = {
+        val res: DenseMatrix[U] = DenseMatrix.zeros[U](a.rows, a.cols)
+        val resd: Array[U] = res.data
+        val ad: Array[T] = a.data
+        var c = 0
+
+        var off = 0
+        while(c < a.cols) {
+          var r = 0
+          while(r < a.rows) {
+            resd(off) = opScalar(b, ad(a.linearIndex(r,c)))
+            r += 1
+            off += 1
+          }
+          c += 1
+        }
+
+        res
+      }
+    }
   }
 
   // </editor-fold>
