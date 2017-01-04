@@ -17,7 +17,6 @@ package breeze.util
 */
 
 
-import scala.util.hashing.MurmurHash3
 import java.util
 
 /**
@@ -32,16 +31,17 @@ class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFun
   def this(numBuckets: Int, numHashFunctions: Int) = this(numBuckets, numHashFunctions, new util.BitSet(numBuckets))
   def this(numBuckets: Int) = this(numBuckets, 3)
 
-  def activeBuckets(key: T) = {
-    val hash1 = key.##
-    val hash2 = math.abs(MurmurHash3.mixLast(0, hash1))
+  private def activeBuckets(key: T) = {
+    val baseHash = key.##
+    // we only get 16 bits for each hash code, but we combine them in fun ways
+    val hash1 = baseHash & 0xFFFF
+    val hash2 = baseHash >> 16
 
     for {
       i <- 0 to numHashFunctions
     } yield {
-      val h = hash1 + i * hash2
-      val nextHash = if (h < 0) ~h else h
-      nextHash % numBuckets
+      val h = (hash1 + i * hash2) % numBuckets
+      if (h < 0) ~h else h
     }
   }
 
@@ -49,7 +49,7 @@ class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFun
     activeBuckets(o).forall(i => bits.get(i))
   }
 
-  def contains(o: T) = apply(o)
+  def contains(o: T): Boolean = apply(o)
 
   /**
    *
@@ -59,7 +59,11 @@ class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFun
    */
   def load: Double = bits.cardinality().toDouble / numBuckets
 
-  override def equals(other: Any) = other match {
+  override def hashCode(): Int = {
+    this.bits.hashCode()
+  }
+
+  override def equals(other: Any): Boolean = other match {
     case that: BloomFilter[_] =>
       this.numBuckets == that.numBuckets && this.numHashFunctions == that.numHashFunctions && this.bits == that.bits
     case _ => false
@@ -70,29 +74,28 @@ class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFun
     this
   }
 
-  def &(that: BloomFilter[T]) = {
+  def &(that: BloomFilter[T]): BloomFilter[T] = {
     checkCompatibility(that)
     new BloomFilter[T](this.numBuckets, this.numHashFunctions, this.bits & that.bits)
   }
-
 
   private def checkCompatibility(that: BloomFilter[T]) {
     require(that.numBuckets == this.numBuckets, "Must have the same number of buckets to intersect")
     require(that.numHashFunctions == this.numHashFunctions, "Must have the same number of hash functions to intersect")
   }
 
-  def |(that: BloomFilter[T]) = {
+  def |(that: BloomFilter[T]): BloomFilter[T] = {
     checkCompatibility(that)
     new BloomFilter[T](this.numBuckets, this.numHashFunctions, this.bits | that.bits)
   }
 
-  def |=(that: BloomFilter[T]):this.type = {
+  def |=(that: BloomFilter[T]): this.type = {
     checkCompatibility(that)
     this.bits |= that.bits
     this
   }
 
-  def &=(that: BloomFilter[T]):this.type = {
+  def &=(that: BloomFilter[T]): this.type = {
     checkCompatibility(that)
     this.bits &= that.bits
     this
@@ -104,7 +107,7 @@ class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFun
     this
   }
 
-  def &~(that: BloomFilter[T]) = {
+  def &~(that: BloomFilter[T]): BloomFilter[T] = {
     checkCompatibility(that)
     new BloomFilter[T](this.numBuckets, this.numHashFunctions, this.bits &~ that.bits)
   }
