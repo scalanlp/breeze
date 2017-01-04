@@ -67,8 +67,8 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
   /** Creates a matrix with the specified data array and rows. columns inferred automatically */
   def this(rows: Int, data: Array[V], offset: Int) = this(rows, {assert(data.length % rows == 0); data.length/rows}, data, offset)
 
-  if (isTranspose && (math.abs(majorStride) < cols)) { throw new IndexOutOfBoundsException("MajorStride == " + majorStride + " is smaller than cols == " + cols + ", which is impossible") }
-  if ((!isTranspose) && (math.abs(majorStride) < rows)) { throw new IndexOutOfBoundsException("MajorStride == " + majorStride + " is smaller than rows == " + rows + ", which is impossible") }
+  if (isTranspose && (math.abs(majorStride) < cols) && majorStride != 0) { throw new IndexOutOfBoundsException("MajorStride == " + majorStride + " is smaller than cols == " + cols + ", which is impossible") }
+  if (!isTranspose && (math.abs(majorStride) < rows) && majorStride != 0) { throw new IndexOutOfBoundsException("MajorStride == " + majorStride + " is smaller than rows == " + rows + ", which is impossible") }
   if (rows < 0) { throw new IndexOutOfBoundsException("Rows must be larger than zero. It was " + rows) }
   if (cols < 0) { throw new IndexOutOfBoundsException("Cols must be larger than zero. It was " + cols) }
   if (offset < 0) { throw new IndexOutOfBoundsException("Offset must be larger than zero. It was " + offset) }
@@ -527,7 +527,7 @@ with MatrixConstructors[DenseMatrix] {
         val rows = rowsWNegative.getRangeWithoutNegativeIndexes(m.rows)
         val cols = colsWNegative.getRangeWithoutNegativeIndexes(m.cols)
 
-        if(rows.isEmpty || cols.isEmpty) DenseMatrix.create(rows.size, cols.size, m.data, 0, 1)
+        if(rows.isEmpty || cols.isEmpty) DenseMatrix.create(rows.size, cols.size, m.data, 0, 0)
         else if(!m.isTranspose) {
           require(rows.step == 1, "Sorry, we can't support row ranges with step sizes other than 1 for non transposed matrices")
           val first = cols.head
@@ -1065,13 +1065,13 @@ with MatrixConstructors[DenseMatrix] {
     }
   }
 
-  implicit def canDim[E] = new dim.Impl[DenseMatrix[E],(Int,Int)] {
+  implicit def canDim[E]: dim.Impl[DenseMatrix[E], (Int, Int)] = new dim.Impl[DenseMatrix[E],(Int,Int)] {
     def apply(v: DenseMatrix[E]): (Int, Int) = (v.rows,v.cols)
   }
 
   object FrobeniusInnerProductDenseMatrixSpace {
 
-    implicit def space[S:Field:Zero:ClassTag] = {
+    implicit def space[S:Field:Zero:ClassTag]: MutableFiniteCoordinateField[DenseMatrix[S], (Int, Int), S] = {
       val norms = EntrywiseMatrixNorms.make[DenseMatrix[S],S]
       import norms._
       MutableFiniteCoordinateField.make[DenseMatrix[S],(Int,Int),S]

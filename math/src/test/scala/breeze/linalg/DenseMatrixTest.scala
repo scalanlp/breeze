@@ -769,4 +769,10 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     assert(m === mt)
   }
 
+  test("#592: can take an empty column or row slice") {
+    val m = DenseMatrix.fill(5,5)(0)
+    m(4 until 4, 0 until 5 )
+    m(0 until 5, 4 until 4 )
+  }
+
 }
