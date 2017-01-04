@@ -132,7 +132,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
   test("Scalar mult distributes over field addition - Matrix") {
     check(Prop.forAll{ (trip: (M, M, M), s: S, t: S) =>
       val (a, _, _) = trip
-      closeM( (a) *:* scalars.+(s,t), (a *:* s) + (a *:* t), 1E-4)
+      closeM( (a) *:* scalars.+(s,t), (a *:* s) + (a *:* t), TOLM)
     })
 
     check(Prop.forAll{ (trip: (M, M, M), s: S, t: S) =>
@@ -142,7 +142,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
       ab += (a *:* t)
       val ba = copyM(a)
       ba *= scalars.+(s,t)
-      closeM(ab, ba, 1e-4)
+      closeM(ab, ba, TOLM)
     })
   }
 
@@ -315,6 +315,7 @@ class SparseOptimizationSpaceTest_Double extends SparseVectorPropertyTestBase[Do
   // TODO: generate arbitrarily dimensioned matrices
   val N = 30
   val M = 30
+
 
   def genScalar: Arbitrary[Double] = RandomInstanceSupport.genReasonableDouble
 

@@ -32,7 +32,7 @@ import scala.reflect.ClassTag
 object RandomInstanceSupport {
 
   // relative errors get really screwy for small and big values
-  def reasonableClamp(v: Double, lower: Double = 1E-6, upper: Double = 1E5): Double = {
+  def reasonableClamp(v: Double, lower: Double = 1E-4, upper: Double = 1E5): Double = {
     if (v == 0) 0
     else if (v.abs < lower) v + math.signum(v) * lower
     else if (v.abs > upper) reasonableClamp(v % upper)
