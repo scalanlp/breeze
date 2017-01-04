@@ -1,5 +1,7 @@
 package breeze.linalg
 
+import scala.collection.immutable.IndexedSeq
+
 /**
   * Utility class that handles negative row/column indicies and OOB checking
   *
@@ -18,7 +20,7 @@ private object SliceUtils {
     case _                    => col
   }
 
-  def mapRowSeq[V](rows: Seq[Int], nRows: Int) = rows match {
+  def mapRowSeq[V](rows: Seq[Int], nRows: Int): IndexedSeq[Int] = rows match {
     case range: Range => range.getRangeWithoutNegativeIndexes(nRows).map(row => mapRow(row, nRows))
     case _ => rows.map(row => mapRow(row, nRows)).toIndexedSeq
   }

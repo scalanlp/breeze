@@ -116,4 +116,12 @@ class SliceMatrixTest extends FunSuite {
     assert(sliceMatrix(2, booleanTensor) == DenseVector(11, 14).t)
     assert(sliceMatrix(3, booleanTensor) == DenseVector(21, 24).t)
   }
+
+  test("#605 slice matrix broadcast sum") {
+    val m = DenseMatrix((1,2,3,4),(5,6,7,8),(9,10,11,12))
+    val indices = List(1,3)
+    val m_sliced = m(::,indices)
+    assert(sum(m_sliced) == 42)
+    assert(sum(m_sliced(::, *)) == Vector(18, 24).t)
+  }
  }
