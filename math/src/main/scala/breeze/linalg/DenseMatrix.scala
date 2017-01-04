@@ -164,15 +164,15 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
   }
 
 
-  private def canFlattenView = if(isTranspose) majorStride == cols else majorStride == rows
-  private def canReshapeView = if(isTranspose) majorStride == cols else majorStride == rows
+  private def canFlattenView = !isTranspose && majorStride == rows
+  private def canReshapeView = canFlattenView
 
   /** Reshapes this matrix to have the given number of rows and columns
     * If view = true (or View.Require), throws an exception if we cannot return a view. otherwise returns a view.
     * If view == false (or View.Copy) returns a copy
     * If view == View.Prefer (the default), returns a view if possible, otherwise returns a copy.
     *
-    * Views are only possible (if(isTranspose) majorStride == cols else majorStride == rows) == true
+    * Views are only possible if (!isTranspose && majorStride == rows)
     *
     * rows * cols must equal size, or cols < 0 && (size / rows * rows == size)
     * @param rows the number of rows
@@ -184,7 +184,7 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
 
     view match {
       case View.Require =>
-        if(!canFlattenView)
+        if(!canReshapeView)
           throw new UnsupportedOperationException("Cannot make a view of this matrix.")
         else
           new DenseMatrix(rows, _cols, data, offset, if(isTranspose) cols else rows, isTranspose)
