@@ -1,4 +1,4 @@
-enablePlugins(GitVersioning)
+//enablePlugins(GitVersioning)
 
 Common.commonSettings
 
