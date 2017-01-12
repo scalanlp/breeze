@@ -35,9 +35,18 @@ case class Gaussian(mu: Double, sigma: Double)(implicit rand: RandBasis = Rand)
 
   override def toString() =  "Gaussian(" + mu + ", " + sigma + ")"
 
+  /**
+    * Computes the probability that a Gaussian variable Z is within the interval [x, y].
+    * This probaility is computed as P[Z < y] - P[Z < x].
+    * @param x lower-end of the interval
+    * @param y upper-end of the interval
+    * @return probability that the Gaussian random variable Z lies in the interval [x, y]
+    */
+  override def probability(x: Double, y: Double): Double = {
+    require(x <= y, "Undefined probability: lower-end of the interval should be smaller than its upper-end")
+    cdf(y) - cdf(x)
+  }
 
-  // obviously could be more efficient, but eh.
-  override def probability(x: Double, y: Double): Double = cdf(y) - cdf(x)
 
   /**
   * Computes the inverse cdf of the p-value for this gaussian.
