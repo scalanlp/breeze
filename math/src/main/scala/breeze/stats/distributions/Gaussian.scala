@@ -37,7 +37,7 @@ case class Gaussian(mu: Double, sigma: Double)(implicit rand: RandBasis = Rand)
 
   /**
     * Computes the probability that a Gaussian variable Z is within the interval [x, y].
-    * This probaility is computed as P[Z < y] - P[Z < x].
+    * This probability is computed as P[Z < y] - P[Z < x].
     * @param x lower-end of the interval
     * @param y upper-end of the interval
     * @return probability that the Gaussian random variable Z lies in the interval [x, y]
