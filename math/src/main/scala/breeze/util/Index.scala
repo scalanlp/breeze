@@ -170,14 +170,11 @@ class HashIndex[T] extends MutableIndex[T] with Serializable {
 
   /** Returns the position of T, adding it to the index if it's not there. */
   override def index(t: T) = {
-    if(!indices.containsKey(t)) {
+    indices.computeIfAbsent(t, k => {
       val ind = objects.size
-      objects += t
-      indices.put(t, ind)
+      objects += k
       ind
-    } else {
-      indices.get(t)
-    }
+    })
   }
 
   def pairs = indices.asScala.iterator
