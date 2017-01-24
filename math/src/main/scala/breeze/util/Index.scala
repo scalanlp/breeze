@@ -170,7 +170,7 @@ class HashIndex[T] extends MutableIndex[T] with Serializable {
 
   /** Returns the position of T, adding it to the index if it's not there. */
   override def index(t: T) = {
-    indices.computeIfAbsent(t, new Function[T, Int] {
+    indices.computeIfAbsent(t, new java.util.function.Function[T, Int] {
       def apply(k: T): Int = {
         val ind = objects.size
         objects += k
