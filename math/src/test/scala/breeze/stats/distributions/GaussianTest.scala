@@ -57,6 +57,12 @@ class GaussianTest extends FunSuite with Checkers with UnivariateContinuousDistr
     assert(new Gaussian(0,1).unnormalizedLogPdf(1.0) === -0.5)
   }
 
+  test ("Gaussian.probability throws an exception when evaluating 1.0 < N(0, 1) < 0.0") {
+    val thrown = intercept[IllegalArgumentException] {
+      new Gaussian(0, 1).probability(1.0, 0.0)
+    }
+  }
+
   override val VARIANCE_TOLERANCE: Double = 9E-2
 
   implicit def arbDistr: Arbitrary[Distr] = Arbitrary {
