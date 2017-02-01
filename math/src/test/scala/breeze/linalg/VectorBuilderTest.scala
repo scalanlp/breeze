@@ -14,6 +14,11 @@ import breeze.numerics.closeTo
  */
 @RunWith(classOf[JUnitRunner])
 class VectorBuilderTest extends FunSuite with Checkers {
+  test("VectorBuilder respects initialNonZero") {
+    val vb = new VectorBuilder[Double](32, initialNonZero = 4)
+    assert(vb.index.length === 4)
+    assert(vb.data.length === 4)
+  }
 
   test("Basic VectorBuilder result tests") {
     val vb = VectorBuilder[Double](0.0, 1.0, 3.0)
