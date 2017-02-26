@@ -43,7 +43,7 @@ libraryDependencies  ++= Seq(
 resolvers += "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 ```
 
-For SBT 0.13.x and last snapshot (currently 0.13-0598e003cfa7f00f76919aa556009ad6d4fc1332), add these lines to your SBT project definition:
+For SBT 0.13.x and last snapshot (currently 0.13-0598e003cfa7f00f76919aa556009ad6d4fc1332-SNAPSHOT), add these lines to your SBT project definition:
 
 ```scala
 libraryDependencies  ++= Seq(
