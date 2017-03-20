@@ -16,6 +16,7 @@ package breeze.collection.mutable
  limitations under the License.
 */
 
+import breeze.linalg.SparseVector
 import org.scalatest._
 import org.scalatest.junit._
 import org.scalatest.prop._
@@ -50,5 +51,20 @@ class SparseArrayTest extends FunSuite with Checkers {
     assert(y.filter(_ > 0).toList === List(1))
     assert(y.filter(_ >= 0).toList === List(0,1,0,0))
   }
-}
 
+  test("equals") {
+    val x = SparseArray.create(1024)(42 -> 100500, 24 -> 500100)
+    assert(x === x)
+    assert(x === SparseArray.create(1024)(42 -> 100500, 24 -> 500100))
+
+    assert(x !== OpenAddressHashArray[Int](x.toArray:_*))
+    assert(x !== SparseArray.create(128)(42 -> 100500, 24 -> 500100))
+    assert(x !== SparseArray.create(1024)(42 -> 42, 24 -> 24))
+  }
+
+  test("equals is O(activeSize)") {
+    val v = SparseVector(Int.MaxValue)(42 -> 100500)
+    val u = SparseVector(Int.MaxValue)(42 -> 100500)
+    assert(u === v)
+  }
+}
