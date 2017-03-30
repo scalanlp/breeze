@@ -58,12 +58,18 @@ class StrongWolfeLineSearch(maxZoomIter: Int, maxLineSearchIter: Int) extends Cu
   val c1 = 1e-4
   val c2 = 0.9
 
+  def minimize(f: DiffFunction[Double], init: Double = 1.0): Double = {
+    minimizeWithBound(f, init = 1.0, bound = Double.PositiveInfinity)
+  }
+
   /**
    * Performs a line search on the function f, returning a point satisfying
    * the Strong Wolfe conditions. Based on the line search detailed in
    * Nocedal & Wright Numerical Optimization p58.
    */
-  def minimize(f: DiffFunction[Double], init: Double = 1.0):Double = {
+  def minimizeWithBound(f: DiffFunction[Double], init: Double = 1.0, bound: Double = 1.0): Double = {
+
+    require(init <= bound, "init value should <= bound")
 
     def phi(t: Double): Bracket = {
       val (pval, pdd) = f.calculate(t)
@@ -171,8 +177,17 @@ class StrongWolfeLineSearch(maxZoomIter: Int, maxLineSearchIter: Int) extends Cu
         }
 
         low = c
-        t *= 1.5
-        logger.debug("Sufficent Decrease condition but not curvature condition satisfied. Increased t to: " + t)
+        if (t == bound) {
+          logger.debug("Reach bound, satisfy sufficent decrease condition," +
+            " but not curvature condition satisfied.")
+          return bound
+        } else {
+          t *= 1.5
+          if (t > bound) {
+            t = bound
+          }
+          logger.debug("Sufficent Decrease condition but not curvature condition satisfied. Increased t to: " + t)
+        }
       }
     }
 

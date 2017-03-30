@@ -77,14 +77,46 @@ class LBFGSB(lowerBounds: DenseVector[Double],
 
 
   override protected def determineStepSize(state: State, f: DiffFunction[DenseVector[Double]], direction: DenseVector[Double]): Double =  {
-    val x = state.x
-    val ff = LineSearch.functionFromSearchDirection(f, x, direction)
+    val ff = new DiffFunction[Double] {
+      def calculate(alpha: Double) = {
+        val newX = takeStep(state, direction, alpha)
+        val (ff, grad) = f.calculate(newX)
+        ff -> (grad dot direction)
+      }
+    }
     val wolfeRuleSearch = new StrongWolfeLineSearch(maxZoomIter, maxLineSearchIter) // TODO: Need good default values here.
-    wolfeRuleSearch.minimize(ff, 1.0)
+
+    var minStepBound = Double.PositiveInfinity
+    var i = 0
+    while (i < lowerBounds.length) {
+      val dir = direction(i)
+      if (dir != 0.0) {
+        val bound = if (dir < 0.0) lowerBounds(i) else upperBounds(i)
+        val stepBound = (bound - state.x(i)) / dir
+        assert(stepBound >= 0.0)
+        if (stepBound < minStepBound) {
+          minStepBound = stepBound
+        }
+      }
+      i += 1
+    }
+
+    wolfeRuleSearch.minimizeWithBound(ff, 1.0, minStepBound)
   }
 
   override protected def takeStep(state: State, dir: DenseVector[Double], stepSize: Double) = {
-    state.x + (dir *:* stepSize)
+    val newX = state.x + (dir :* stepSize)
+    var i = 0
+    while (i < newX.length) {
+      if (newX(i) > upperBounds(i)) {
+        newX(i) = upperBounds(i)
+      }
+      if (newX(i) < lowerBounds(i)) {
+        newX(i) = lowerBounds(i)
+      }
+      i += 1
+    }
+    newX
   }
 
   private def initialize(f: DiffFunction[DenseVector[Double]], x0: DenseVector[Double]) = {
