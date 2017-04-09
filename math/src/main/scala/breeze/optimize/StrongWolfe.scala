@@ -63,9 +63,10 @@ class StrongWolfeLineSearch(maxZoomIter: Int, maxLineSearchIter: Int) extends Cu
   }
 
   /**
-   * Performs a line search on the function f, returning a point satisfying
-   * the Strong Wolfe conditions. Based on the line search detailed in
-   * Nocedal & Wright Numerical Optimization p58.
+   * Performs a line search on the function f with bound, returning a point satisfying
+   * the Strong Wolfe conditions OR satisfying sufficient decrease condition and hit bound.
+   * Based on the line search detailed in Nocedal & Wright Numerical Optimization p58.
+   * BUT add some modification for bound checking.
    */
   def minimizeWithBound(f: DiffFunction[Double], init: Double = 1.0, bound: Double = 1.0): Double = {
 

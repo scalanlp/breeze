@@ -101,7 +101,8 @@ class LBFGSB(lowerBounds: DenseVector[Double],
       i += 1
     }
 
-    wolfeRuleSearch.minimizeWithBound(ff, 1.0, minStepBound)
+    val initStep = if (minStepBound < 1.0) minStepBound else 1.0
+    wolfeRuleSearch.minimizeWithBound(ff, initStep, minStepBound)
   }
 
   override protected def takeStep(state: State, dir: DenseVector[Double], stepSize: Double) = {
