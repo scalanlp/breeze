@@ -53,7 +53,9 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
 
   def this(length: Int, initialNonZero: Int = 0)(implicit ring: Semiring[E],
                                                  man: ClassTag[E],
-                                                 zero: Zero[E]) = this(new Array[Int](0), new Array[E](0), 0, length)
+                                                 zero: Zero[E]) = {
+    this(new Array[Int](initialNonZero), new Array[E](initialNonZero), 0, length)
+  }
 
   def this()(implicit ring: Semiring[E],
              man: ClassTag[E],
@@ -311,7 +313,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
 
 object VectorBuilder extends VectorBuilderOps {
 
-  def zeros[@spec(Double, Int, Float, Long) V: ClassTag:Semiring:Zero](size: Int, initialNonzero: Int = 16) = new VectorBuilder(size, initialNonzero)
+  def zeros[@spec(Double, Int, Float, Long) V: ClassTag:Semiring:Zero](size: Int, initialNonZero: Int = 16) = new VectorBuilder(size, initialNonZero)
   def apply[@spec(Double, Int, Float, Long) V:Semiring:Zero](values: Array[V]) = new VectorBuilder(Array.range(0,values.length), values, values.length, values.length)
 
   def apply[V:ClassTag:Semiring:Zero](values: V*):VectorBuilder[V] = apply(values.toArray)
