@@ -878,7 +878,15 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
    * @return
    */
   def tabulate[@spec(Double, Int, Float, Long) V:ClassTag](size: Int)(f: Int=>V): Vec[V] = {
-    apply(Array.tabulate(size)(f))
+    val b = ArrayBuilder.make[V]()
+    b.sizeHint(size)
+    var i = 0
+    while (i < size) {
+      b += f(i)
+      i += 1
+    }
+
+    apply(b.result)
   }
 
   /**
