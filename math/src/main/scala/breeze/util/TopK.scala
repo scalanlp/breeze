@@ -22,11 +22,11 @@ import scala.collection.JavaConverters._
  * A Top-K queue keeps a list of the top K elements seen so far as ordered
  * by the given comparator.
  */
-class TopK[T](k : Int)(implicit ord : Ordering[T]) extends Iterable[T] {
+class TopK[T](k: Int)(implicit ord: Ordering[T]) extends Iterable[T] {
 
   private val keys = new TreeSet[T](ord)
 
-  def +=(e : T) = {
+  def +=(e: T) = {
     if (keys.size < k) {
       keys.add(e)
     } else if (keys.size > 0 && ord.lt(keys.first, e) && !keys.contains(e)) {
@@ -35,7 +35,7 @@ class TopK[T](k : Int)(implicit ord : Ordering[T]) extends Iterable[T] {
     }
   }
 
-  override def iterator : Iterator[T] =
+  override def iterator: Iterator[T] =
     keys.descendingIterator.asScala
 
   override def size =
@@ -43,16 +43,15 @@ class TopK[T](k : Int)(implicit ord : Ordering[T]) extends Iterable[T] {
 }
 
 object TopK {
-  def apply[T](k : Int, items : TraversableOnce[T])(implicit ord : Ordering[T]) : TopK[T] = {
+  def apply[T](k: Int, items: TraversableOnce[T])(implicit ord: Ordering[T]): TopK[T] = {
     val topk = new TopK[T](k)(ord)
     items.foreach(topk += _)
     topk
   }
 
-  def apply[T,U](k : Int, items : TraversableOnce[T], scoreFn : (T => U))
-  (implicit uord : Ordering[U]) : TopK[T] = {
+  def apply[T, U](k: Int, items: TraversableOnce[T], scoreFn: T => U)(implicit uord: Ordering[U]): TopK[T] = {
     implicit val ord = new Ordering[T] {
-      override def compare(x : T, y : T) = uord.compare(scoreFn(x), scoreFn(y))
+      override def compare(x: T, y: T) = uord.compare(scoreFn(x), scoreFn(y))
     }
     apply(k, items)(ord)
   }
@@ -61,26 +60,26 @@ object TopK {
 /**
  * A rich iterable extension that adds the topk method.
  */
-class TopKIterable[T](val self : Iterable[T]) {
-  def topk(k : Int)(implicit ord : Ordering[T]) : TopK[T] =
+class TopKIterable[T](val self: Iterable[T]) {
+  def topk(k: Int)(implicit ord: Ordering[T]): TopK[T] =
     TopK(k, self)
 
-  def topk[U](k : Int, scoreFn : (T => U))(implicit uord : Ordering[U]) : TopK[T] =
+  def topk[U](k: Int, scoreFn: T => U)(implicit uord: Ordering[U]): TopK[T] =
     TopK(k, self, scoreFn)(uord)
 }
 
-class TopKIterator[T](val self : Iterator[T]) {
-  def topk(k : Int)(implicit ord : Ordering[T]) : TopK[T] =
+class TopKIterator[T](val self: Iterator[T]) {
+  def topk(k: Int)(implicit ord: Ordering[T]): TopK[T] =
     TopK(k, self)
 
-  def topk[U](k : Int, scoreFn : (T => U))(implicit uord : Ordering[U]) : TopK[T] =
+  def topk[U](k: Int, scoreFn: T => U)(implicit uord: Ordering[U]): TopK[T] =
     TopK(k, self, scoreFn)(uord)
 }
 
 object TopKImplicits {
-  implicit def iTopKIterable[T](iterable : Iterable[T]) =
+  implicit def iTopKIterable[T](iterable: Iterable[T]) =
     new TopKIterable(iterable)
 
-  implicit def iTopKIterator[T](iterator : Iterator[T]) =
+  implicit def iTopKIterator[T](iterator: Iterator[T]) =
     new TopKIterator(iterator)
 }
