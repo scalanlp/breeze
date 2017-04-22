@@ -26,7 +26,7 @@ class TopK[T](k: Int)(implicit ord: Ordering[T]) extends Iterable[T] {
 
   private val keys = new TreeSet[T](ord)
 
-  def +=(e: T) = {
+  def +=(e: T): AnyVal = {
     if (keys.size < k) {
       keys.add(e)
     } else if (keys.size > 0 && ord.lt(keys.first, e) && !keys.contains(e)) {
@@ -38,7 +38,7 @@ class TopK[T](k: Int)(implicit ord: Ordering[T]) extends Iterable[T] {
   override def iterator: Iterator[T] =
     keys.descendingIterator.asScala
 
-  override def size =
+  override def size: Int =
     keys.size
 }
 
@@ -51,7 +51,7 @@ object TopK {
 
   def apply[T, U](k: Int, items: TraversableOnce[T], scoreFn: T => U)(implicit uord: Ordering[U]): TopK[T] = {
     implicit val ord = new Ordering[T] {
-      override def compare(x: T, y: T) = uord.compare(scoreFn(x), scoreFn(y))
+      override def compare(x: T, y: T): Int = uord.compare(scoreFn(x), scoreFn(y))
     }
     apply(k, items)(ord)
   }
@@ -77,9 +77,9 @@ class TopKIterator[T](val self: Iterator[T]) {
 }
 
 object TopKImplicits {
-  implicit def iTopKIterable[T](iterable: Iterable[T]) =
+  implicit def iTopKIterable[T](iterable: Iterable[T]): TopKIterable[T] =
     new TopKIterable(iterable)
 
-  implicit def iTopKIterator[T](iterator: Iterator[T]) =
+  implicit def iTopKIterator[T](iterator: Iterator[T]): TopKIterator[T] =
     new TopKIterator(iterator)
 }
