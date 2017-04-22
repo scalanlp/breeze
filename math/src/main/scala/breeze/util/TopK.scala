@@ -16,7 +16,7 @@
 package breeze.util;
 
 import java.util.TreeSet;
-import scala.collection.JavaConversions._;
+import scala.collection.JavaConverters._;
 
 /**
  * A Top-K queue keeps a list of the top K elements seen so far as ordered
@@ -36,7 +36,7 @@ class TopK[T](k : Int)(implicit ord : Ordering[T]) extends Iterable[T] {
   }
 
   override def iterator : Iterator[T] =
-    keys.descendingIterator;
+    keys.descendingIterator.asScala;
 
   override def size =
     keys.size;
