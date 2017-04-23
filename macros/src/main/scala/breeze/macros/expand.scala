@@ -48,9 +48,8 @@ import scala.annotation.{Annotation, StaticAnnotation}
  *@author dlwh
  **/
 class expand extends Annotation with StaticAnnotation {
-  def macroTransform(annottees: Any*):Any = macro expand.expandImpl
+  def macroTransform(annottees: Any*): Any = macro expand.expandImpl
 }
-
 
 object expand {
 
@@ -66,7 +65,6 @@ object expand {
   class valify extends Annotation with StaticAnnotation
   /** \@sequence[T](args) associates the term parameter's values with the type argument indicated. */
   class sequence[T](args: Any*) extends Annotation with StaticAnnotation
-
 
   def expandImpl(c: Context)(annottees: c.Expr[Any]*):c.Expr[Any] = {
     import c.mirror.universe._
@@ -157,8 +155,6 @@ object expand {
     } transform rhs
   }
 
-
-
   /** for a valdef with a [[breeze.macros.expand.sequence]] annotation, converts the sequence of associations to a Map */
   private def solveSequence(context: Context)(v: context.mirror.universe.ValDef, typeMappings: Map[context.Name, List[context.Type]]):(context.Name, Map[context.Type, context.Tree]) = {
     import context.mirror.universe._
@@ -214,7 +210,7 @@ object expand {
     }.flatten.toSeq
   }
 
-    private def checkValify(c: Context)(mods: c.Modifiers) = {
+  private def checkValify(c: Context)(mods: c.Modifiers) = {
     import c.mirror.universe._
     mods.annotations.collectFirst {
         case q"new expand.valify" => true
