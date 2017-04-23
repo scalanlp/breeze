@@ -24,7 +24,7 @@ import scala.language.experimental.macros
 
 import scala.reflect.ClassTag
 import scala.reflect.NameTransformer.encode
-import scala.reflect.macros.Context
+import scala.reflect.macros.whitebox.Context
 
 package object debug
 {
