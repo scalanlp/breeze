@@ -94,7 +94,7 @@ object expand {
           val grounded = substitute(c)(typeMap, valExpansions, rhs)
           val newvargs = valsToLeave.filterNot(_.isEmpty).map(_.map(substitute(c)(typeMap, valExpansions, _).asInstanceOf[ValDef]))
           val newtpt = substitute(c)(typeMap, valExpansions, tpt)
-          val newName = newTermName(mkName(c)(name, typeMap))
+          val newName = TermName(mkName(c)(name, typeMap))
           if(shouldValify) {
             if(typesLeftAbstract.nonEmpty)
               c.error(tree.pos, "Can't valify: Not all types were grounded: " + typesLeftAbstract.mkString(", "))
@@ -168,7 +168,7 @@ object expand {
           context.error(x.pos, s"@sequence arguments list does not match the expand.args for $nme2")
         }
         val predef = context.mirror.staticModule("scala.Predef").asModule
-        val missing = Select(Ident(predef), newTermName("???"))
+        val missing = Select(Ident(predef), TermName("???"))
         nme2 -> (typeMappings(nme2) zip args.flatten).toMap.withDefaultValue(missing)
     }
     x.get

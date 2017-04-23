@@ -28,7 +28,7 @@ object arityize {
           val bindings = Map(name.encodedName.toString -> order)
           val newTemplate = Template(impl.parents, impl.self, impl.body.flatMap(x => expandArity(c, order, bindings)(x)))
           val newTargs = targs.flatMap(arg => expandTypeDef(c, order, bindings)(arg))
-          ClassDef(mods, newTypeName(name.encodedName.toString + order), newTargs, newTemplate)
+          ClassDef(mods, TypeName(name.encodedName.toString + order), newTargs, newTemplate)
         }
 
         val ret = c.Expr(Block(results.toList, Literal(Constant(()))))
@@ -43,7 +43,7 @@ object arityize {
           val newVargs = vargs.map(_.flatMap(arg => expandValDef(c, order, bindings)(arg)))
           val newTargs = targs.flatMap(arg => expandTypeDef(c, order, bindings)(arg))
           val newRet = expandArity(c, order, bindings)(tpt).head
-          DefDef(mods, newTermName(name.encodedName.toString + order), newTargs, newVargs, newRet, newImpl)
+          DefDef(mods, TermName(name.encodedName.toString + order), newTargs, newVargs, newRet, newImpl)
         }
 
         val ret = c.Expr(Block(results.toList, Literal(Constant(()))))
@@ -77,10 +77,10 @@ object arityize {
         ann match {
           case q"new arityize.relative($sym)" =>
             tree match {
-              case Ident(nme) if nme.isTypeName => Seq(Ident(newTypeName(nme.encodedName.toString + bindings(sym.toString))))
-              case Ident(nme) if nme.isTermName => Seq(Ident(newTermName(nme.encodedName.toString + bindings(sym.toString))))
+              case Ident(nme) if nme.isTypeName => Seq(Ident(TypeName(nme.encodedName.toString + bindings(sym.toString))))
+              case Ident(nme) if nme.isTermName => Seq(Ident(TermName(nme.encodedName.toString + bindings(sym.toString))))
               case AppliedTypeTree(Ident(nme), targs) =>
-                val newName = Ident(newTypeName(nme.encodedName.toString + bindings(sym.toString)))
+                val newName = Ident(TypeName(nme.encodedName.toString + bindings(sym.toString)))
                 val newTargs = targs.flatMap(arg => expandArity(c, order, bindings)(arg))
                 Seq(AppliedTypeTree(newName, newTargs))
               case _ =>
@@ -90,9 +90,9 @@ object arityize {
           case q"new arityize.replicate()" =>
             tree match {
               case Ident(nme) if nme.isTypeName =>
-                List.tabulate(order){i => Ident(newTypeName(nme.encodedName.toString + (i + 1))) }
+                List.tabulate(order){i => Ident(TypeName(nme.encodedName.toString + (i + 1))) }
               case Ident(nme) if nme.isTermName =>
-                List.tabulate(order){i => Ident(newTermName(nme.encodedName.toString + (i + 1))) }
+                List.tabulate(order){i => Ident(TermName(nme.encodedName.toString + (i + 1))) }
               case _ => ???
             }
           case q"new arityize.repeat()" =>
@@ -140,14 +140,14 @@ object arityize {
       List.tabulate(order){i =>
         val newBindings = bindings + (vdef.name.encodedName.toString -> (i + 1))
 //        println(vdef.tpt + " " + expandArity(c, order, newBindings)(vdef.tpt).head)
-        ValDef(vdef.mods, newTermName(vdef.name.encodedName.toString + (i + 1)), expandArity(c, order, newBindings)(vdef.tpt).head, vdef.rhs)
+        ValDef(vdef.mods, TermName(vdef.name.encodedName.toString + (i + 1)), expandArity(c, order, newBindings)(vdef.tpt).head, vdef.rhs)
       }
     } else {
       shouldRelativize(c)(vdef.mods) match {
         case Some(x) =>
           val newBindings = bindings + (vdef.name.encodedName.toString -> bindings(x))
           val newTpt = expandArity(c, order, newBindings)(vdef.tpt).head
-          List(ValDef(vdef.mods, newTermName(vdef.name.encodedName.toString + bindings(x)), newTpt, vdef.rhs))
+          List(ValDef(vdef.mods, TermName(vdef.name.encodedName.toString + bindings(x)), newTpt, vdef.rhs))
         case _ =>
           val newTpt = expandArity(c, order, bindings)(vdef.tpt).head
           List(ValDef(vdef.mods, vdef.name, newTpt, vdef.rhs))
@@ -159,13 +159,13 @@ object arityize {
   def expandTypeDef(c: Context, order: Int, bindings: Map[String, Int])(vdef: c.universe.TypeDef):List[c.universe.TypeDef] = {
     import c.mirror.universe._
     if(shouldExpand(c)(vdef.mods)) {
-      List.tabulate(order)(i => TypeDef(vdef.mods, newTypeName(vdef.name.encodedName.toString + (i + 1)), vdef.tparams, vdef.rhs))
+      List.tabulate(order)(i => TypeDef(vdef.mods, TypeName(vdef.name.encodedName.toString + (i + 1)), vdef.tparams, vdef.rhs))
     } else if(shouldRepeat(c)(vdef.mods)) {
         List.fill(order)(vdef)
     } else {
       shouldRelativize(c)(vdef.mods) match {
         case Some(x) =>
-          List(TypeDef(vdef.mods, newTypeName(vdef.name.encodedName.toString + bindings(x)), vdef.tparams, vdef.rhs))
+          List(TypeDef(vdef.mods, TypeName(vdef.name.encodedName.toString + bindings(x)), vdef.tparams, vdef.rhs))
         case _ =>
           List(vdef)
       }
