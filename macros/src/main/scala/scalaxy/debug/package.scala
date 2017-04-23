@@ -22,7 +22,6 @@ package scalaxy
 import scala.language.dynamics
 import scala.language.experimental.macros
 
-import scala.reflect.ClassTag
 import scala.reflect.NameTransformer.encode
 import scala.reflect.macros.whitebox.Context
 
