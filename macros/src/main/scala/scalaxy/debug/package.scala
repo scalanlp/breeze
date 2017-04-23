@@ -131,7 +131,7 @@ object impl
       case _ => false
     }
 
-    val typedCondition = c.typeCheck(condition.tree)//, typeOf[Boolean])
+    val typedCondition = c.typecheck(condition.tree)//, typeOf[Boolean])
     c.Expr[Unit](
       typedCondition match
       {

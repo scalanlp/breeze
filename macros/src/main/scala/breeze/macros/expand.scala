@@ -185,7 +185,7 @@ object expand {
 
     val mods = td.mods.annotations.collect{ case tree@q"new expand.args(...$args)" =>
       val flatArgs:Seq[Tree] = args.flatten
-      flatArgs.map(c.typeCheck(_)).map{ tree =>
+      flatArgs.map(c.typecheck(_)).map{ tree =>
         try {
           tree.symbol.asModule.companionSymbol.asType.toType
         }  catch {
@@ -210,7 +210,7 @@ object expand {
           for(aa <- args)
             if(aa.length != targs.length)
               c.error(t.pos, "arguments to @exclude does not have the same arity as the type symbols!")
-          args.map(aa => (targs zip aa.map(c.typeCheck(_)).map(_.symbol.asModule.companionSymbol.asType.toType)).toMap)
+          args.map(aa => (targs zip aa.map(c.typecheck(_)).map(_.symbol.asModule.companionSymbol.asType.toType)).toMap)
     }.flatten.toSeq
   }
 
