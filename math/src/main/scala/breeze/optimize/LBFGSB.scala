@@ -17,9 +17,10 @@ package breeze.optimize
 
 import breeze.linalg.{DenseMatrix, DenseVector}
 import breeze.linalg._
-import breeze.optimize.FirstOrderMinimizer.{State, ProjectedStepConverged, ConvergenceCheck}
+import breeze.optimize.FirstOrderMinimizer.{ConvergenceCheck, ProjectedStepConverged, State}
 import breeze.util.SerializableLogging
 import breeze.util.Implicits._
+import spire.syntax.cfor._
 
 /**
  * This algorithm is refered the paper
@@ -65,10 +66,12 @@ class LBFGSB(lowerBounds: DenseVector[Double],
 
     //step2:compute the cauchy point by algorithm CP
     val (cauchyPoint, c) = getGeneralizedCauchyPoint(state.history, x, g)
+    adjustWithinBound(cauchyPoint)
 
     val dirk = if(0 == state.iter) cauchyPoint - x else  {
       //step3:compute a search direction d_k by the primal method
       val subspaceMin = subspaceMinimization(state.history, cauchyPoint, x, c, g)
+      adjustWithinBound(subspaceMin)
       subspaceMin - x
     };
 
@@ -77,14 +80,48 @@ class LBFGSB(lowerBounds: DenseVector[Double],
 
 
   override protected def determineStepSize(state: State, f: DiffFunction[DenseVector[Double]], direction: DenseVector[Double]): Double =  {
-    val x = state.x
-    val ff = LineSearch.functionFromSearchDirection(f, x, direction)
+    val ff = new DiffFunction[Double] {
+      def calculate(alpha: Double) = {
+        val newX = takeStep(state, direction, alpha)
+        val (ff, grad) = f.calculate(newX)
+        ff -> (grad dot direction)
+      }
+    }
     val wolfeRuleSearch = new StrongWolfeLineSearch(maxZoomIter, maxLineSearchIter) // TODO: Need good default values here.
-    wolfeRuleSearch.minimize(ff, 1.0)
+
+    var minStepBound = Double.PositiveInfinity
+    var i = 0
+    while (i < lowerBounds.length) {
+      val dir = direction(i)
+      if (dir != 0.0) {
+        val bound = if (dir < 0.0) lowerBounds(i) else upperBounds(i)
+        val stepBound = (bound - state.x(i)) / dir
+        assert(stepBound > 0.0)
+        if (stepBound < minStepBound) {
+          minStepBound = stepBound
+        }
+      }
+      i += 1
+    }
+
+    wolfeRuleSearch.minimizeWithBound(ff, 1.0, minStepBound)
   }
 
   override protected def takeStep(state: State, dir: DenseVector[Double], stepSize: Double) = {
-    state.x + (dir *:* stepSize)
+    val newX = state.x + (dir :* stepSize)
+    adjustWithinBound(newX)
+    newX
+  }
+
+  def adjustWithinBound(point: DenseVector[Double]): Unit = {
+    cforRange(0 until point.length) { i =>
+      if (point(i) > upperBounds(i)) {
+        point(i) = upperBounds(i)
+      }
+      if (point(i) < lowerBounds(i)) {
+        point(i) = lowerBounds(i)
+      }
+    }
   }
 
   private def initialize(f: DiffFunction[DenseVector[Double]], x0: DenseVector[Double]) = {
@@ -181,16 +218,17 @@ class LBFGSB(lowerBounds: DenseVector[Double],
    * @param freeVarIndex
    * @return starAlpha = max{a : a <= 1 and  l_i-xc_i <= a*d_i <= u_i-xc_i}
    */
-  protected def findAlpha(xCauchy:DenseVector[Double], du:Vector[Double], freeVarIndex:Array[Int]) = {
+  protected def findAlpha(xCauchy: DenseVector[Double], du: Vector[Double],
+                                   freeVarIndex: Array[Int]) = {
     var starAlpha = 1.0
-    for((vIdx, i) <- freeVarIndex.zipWithIndex) {
-      starAlpha = if (0 < du(i)) {
-        math.max(starAlpha, math.min(upperBounds(vIdx) - xCauchy(vIdx) / du(i), 1.0))
-      } else {
-        math.max(starAlpha, math.min(lowerBounds(vIdx) - xCauchy(vIdx) / du(i), 1.0))
+    for ((vIdx, i) <- freeVarIndex.zipWithIndex) {
+      if (0 < du(i)) {
+        starAlpha = math.min(starAlpha, (upperBounds(vIdx) - xCauchy(vIdx)) / du(i))
+      } else if (0 > du(i)) {
+        starAlpha = math.min(starAlpha, (lowerBounds(vIdx) - xCauchy(vIdx)) / du(i))
       }
     }
-
+    assert(starAlpha >= 0.0 && starAlpha <= 1.0)
     starAlpha
   }
 

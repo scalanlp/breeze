@@ -97,4 +97,23 @@ class LBFGSBTest extends OptimizeTestBase{
     assert(ures.value < res.value)
   }
 
+  test("issue 572") {
+    val solver = new LBFGSB(DenseVector[Double](1E-12), DenseVector[Double](Double.MaxValue))
+
+    val f = new DiffFunction[DenseVector[Double]] {
+      override def calculate(x: DenseVector[Double]): (Double, DenseVector[Double]) = {
+        val cost = x(0) + 1.0/x(0)
+        val grad = DenseVector(1.0 - 1.0/(x(0)*x(0)))
+        (cost, grad)
+      }
+    }
+
+    val nearX0 = DenseVector[Double](1.5)
+    val nearRes = solver.minimizeAndReturnState(f, nearX0)
+    assert(abs(nearRes.x(0) - 1.0) < EPS)
+
+    val farX0 = DenseVector[Double](1500)
+    val farRes = solver.minimizeAndReturnState(f, farX0)
+    assert(abs(farRes.x(0) - 1.0) < EPS)
+  }
 }
