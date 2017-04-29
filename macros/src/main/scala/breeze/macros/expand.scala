@@ -1,6 +1,6 @@
 package breeze.macros
 
-import scala.reflect.macros.Context
+import scala.reflect.macros.blackbox.Context
 import scala.language.experimental.macros
 import scala.annotation.{Annotation, StaticAnnotation}
 
@@ -94,7 +94,7 @@ object expand {
           val grounded = substitute(c)(typeMap, valExpansions, rhs)
           val newvargs = valsToLeave.filterNot(_.isEmpty).map(_.map(substitute(c)(typeMap, valExpansions, _).asInstanceOf[ValDef]))
           val newtpt = substitute(c)(typeMap, valExpansions, tpt)
-          val newName = newTermName(mkName(c)(name, typeMap))
+          val newName = TermName(mkName(c)(name, typeMap))
           if(shouldValify) {
             if(typesLeftAbstract.nonEmpty)
               c.error(tree.pos, "Can't valify: Not all types were grounded: " + typesLeftAbstract.mkString(", "))
@@ -168,7 +168,7 @@ object expand {
           context.error(x.pos, s"@sequence arguments list does not match the expand.args for $nme2")
         }
         val predef = context.mirror.staticModule("scala.Predef").asModule
-        val missing = Select(Ident(predef), newTermName("???"))
+        val missing = Select(Ident(predef), TermName("???"))
         nme2 -> (typeMappings(nme2) zip args.flatten).toMap.withDefaultValue(missing)
     }
     x.get
@@ -185,9 +185,9 @@ object expand {
 
     val mods = td.mods.annotations.collect{ case tree@q"new expand.args(...$args)" =>
       val flatArgs:Seq[Tree] = args.flatten
-      flatArgs.map(c.typeCheck(_)).map{ tree =>
+      flatArgs.map(c.typecheck(_)).map{ tree =>
         try {
-          tree.symbol.asModule.companionSymbol.asType.toType
+          tree.symbol.asModule.companion.asType.toType
         }  catch {
           case ex: Exception => c.abort(tree.pos, s"${tree.symbol} does not have a companion. Is it maybe an alias?")
         }
@@ -210,7 +210,7 @@ object expand {
           for(aa <- args)
             if(aa.length != targs.length)
               c.error(t.pos, "arguments to @exclude does not have the same arity as the type symbols!")
-          args.map(aa => (targs zip aa.map(c.typeCheck(_)).map(_.symbol.asModule.companionSymbol.asType.toType)).toMap)
+          args.map(aa => (targs zip aa.map(c.typecheck(_)).map(_.symbol.asModule.companion.asType.toType)).toMap)
     }.flatten.toSeq
   }
 
