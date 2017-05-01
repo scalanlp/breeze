@@ -111,7 +111,7 @@ object impl
     def newValDef(name: String, rhs: Tree, tpe: Type = null) = {
       ValDef(
         NoMods,
-        TermName(c.fresh(name)),
+        TermName(c.freshName(name)),
         TypeTree(Option(tpe).getOrElse(rhs.tpe.normalize)),
         rhs
       )
