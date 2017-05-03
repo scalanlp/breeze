@@ -1,6 +1,6 @@
 package breeze.macros
 
-import scala.reflect.macros.Context
+import scala.reflect.macros.whitebox.Context
 import scala.language.experimental.macros
 import scala.annotation.{Annotation, StaticAnnotation}
 
@@ -48,9 +48,8 @@ import scala.annotation.{Annotation, StaticAnnotation}
  *@author dlwh
  **/
 class expand extends Annotation with StaticAnnotation {
-  def macroTransform(annottees: Any*):Any = macro expand.expandImpl
+  def macroTransform(annottees: Any*): Any = macro expand.expandImpl
 }
-
 
 object expand {
 
@@ -66,7 +65,6 @@ object expand {
   class valify extends Annotation with StaticAnnotation
   /** \@sequence[T](args) associates the term parameter's values with the type argument indicated. */
   class sequence[T](args: Any*) extends Annotation with StaticAnnotation
-
 
   def expandImpl(c: Context)(annottees: c.Expr[Any]*):c.Expr[Any] = {
     import c.mirror.universe._
@@ -94,7 +92,7 @@ object expand {
           val grounded = substitute(c)(typeMap, valExpansions, rhs)
           val newvargs = valsToLeave.filterNot(_.isEmpty).map(_.map(substitute(c)(typeMap, valExpansions, _).asInstanceOf[ValDef]))
           val newtpt = substitute(c)(typeMap, valExpansions, tpt)
-          val newName = newTermName(mkName(c)(name, typeMap))
+          val newName = TermName(mkName(c)(name, typeMap))
           if(shouldValify) {
             if(typesLeftAbstract.nonEmpty)
               c.error(tree.pos, "Can't valify: Not all types were grounded: " + typesLeftAbstract.mkString(", "))
@@ -157,8 +155,6 @@ object expand {
     } transform rhs
   }
 
-
-
   /** for a valdef with a [[breeze.macros.expand.sequence]] annotation, converts the sequence of associations to a Map */
   private def solveSequence(context: Context)(v: context.mirror.universe.ValDef, typeMappings: Map[context.Name, List[context.Type]]):(context.Name, Map[context.Type, context.Tree]) = {
     import context.mirror.universe._
@@ -168,7 +164,7 @@ object expand {
           context.error(x.pos, s"@sequence arguments list does not match the expand.args for $nme2")
         }
         val predef = context.mirror.staticModule("scala.Predef").asModule
-        val missing = Select(Ident(predef), newTermName("???"))
+        val missing = Select(Ident(predef), TermName("???"))
         nme2 -> (typeMappings(nme2) zip args.flatten).toMap.withDefaultValue(missing)
     }
     x.get
@@ -185,7 +181,7 @@ object expand {
 
     val mods = td.mods.annotations.collect{ case tree@q"new expand.args(...$args)" =>
       val flatArgs:Seq[Tree] = args.flatten
-      flatArgs.map(c.typeCheck(_)).map{ tree =>
+      flatArgs.map(c.typecheck(_)).map{ tree =>
         try {
           tree.symbol.asModule.companionSymbol.asType.toType
         }  catch {
@@ -210,11 +206,11 @@ object expand {
           for(aa <- args)
             if(aa.length != targs.length)
               c.error(t.pos, "arguments to @exclude does not have the same arity as the type symbols!")
-          args.map(aa => (targs zip aa.map(c.typeCheck(_)).map(_.symbol.asModule.companionSymbol.asType.toType)).toMap)
+          args.map(aa => (targs zip aa.map(c.typecheck(_)).map(_.symbol.asModule.companionSymbol.asType.toType)).toMap)
     }.flatten.toSeq
   }
 
-    private def checkValify(c: Context)(mods: c.Modifiers) = {
+  private def checkValify(c: Context)(mods: c.Modifiers) = {
     import c.mirror.universe._
     mods.annotations.collectFirst {
         case q"new expand.valify" => true

@@ -22,9 +22,8 @@ package scalaxy
 import scala.language.dynamics
 import scala.language.experimental.macros
 
-import scala.reflect.ClassTag
 import scala.reflect.NameTransformer.encode
-import scala.reflect.macros.Context
+import scala.reflect.macros.whitebox.Context
 
 package object debug
 {
@@ -112,7 +111,7 @@ object impl
     def newValDef(name: String, rhs: Tree, tpe: Type = null) = {
       ValDef(
         NoMods,
-        newTermName(c.fresh(name)),
+        TermName(c.freshName(name)),
         TypeTree(Option(tpe).getOrElse(rhs.tpe.normalize)),
         rhs
       )
@@ -132,7 +131,7 @@ object impl
       case _ => false
     }
 
-    val typedCondition = c.typeCheck(condition.tree)//, typeOf[Boolean])
+    val typedCondition = c.typecheck(condition.tree)//, typeOf[Boolean])
     c.Expr[Unit](
       typedCondition match
       {
