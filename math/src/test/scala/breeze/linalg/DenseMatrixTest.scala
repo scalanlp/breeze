@@ -24,6 +24,8 @@ import breeze.math.Complex
 import breeze.numerics._
 import breeze.util.DoubleImplicits
 
+import scala.reflect.ClassTag
+
 @RunWith(classOf[JUnitRunner])
 class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleImplicits {
 
@@ -774,4 +776,43 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     assert(a == b.t)
     assert(a.reshape(9,1) == b.t.reshape(9,1))
   }
+
+
+  private abstract class TrackableMatrixPopulator(r: Int, c: Int) extends FunctionMatrixPopulator[Double](r, c) {
+    // Test class which records whether the data was generated. Used to verify that under many circumstances, data is NOT generated.
+    var dataGenerated: Boolean = false
+    override def data = {
+      dataGenerated = true
+      super.data
+    }
+  }
+
+  test("MatrixPopulator is not called when matrix.data is not written") {
+    val p = new TrackableMatrixPopulator(3, 3) {
+      def apply(i: Int, j: Int): Double = i + j
+    }
+
+    val m = new DenseMatrix(p)
+    assert(m(1,1) == 2)
+    assert(m(1,2) == 3)
+    assert(!p.dataGenerated)
+  }
+
+  test("MatrixPopulator is called when matrix.data is written") {
+    val p = new TrackableMatrixPopulator(3, 3) {
+      def apply(i: Int, j: Int): Double = i + j
+    }
+
+    val m = new DenseMatrix(p)
+    assert(m(1,1) == 2)
+    assert(m(1,2) == 3)
+    assert(!p.dataGenerated)
+    m.update(2, 0, 5.0)
+    assert(p.dataGenerated)
+    assert(m(2,0) == 5.0)
+    assert(m(1,2) == 3.0)
+
+  }
+
+
 }

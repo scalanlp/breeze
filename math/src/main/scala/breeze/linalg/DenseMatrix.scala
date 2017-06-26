@@ -31,6 +31,73 @@ import scala.reflect.ClassTag
 import scala.{specialized => spec}
 import scalaxy.debug._
 
+trait CalculatesLinearIndex {
+  def offset: Int
+  def rows: Int
+  def cols: Int
+  def majorStride: Int
+  def isTranspose: Boolean
+
+  /** Calculates the index into the data array for row and column */
+  def linearIndex(row: Int, col: Int): Int = {
+    if(isTranspose)
+      offset + col + row * majorStride
+    else
+      offset + row + col * majorStride
+  }
+}
+
+trait MatrixPopulator[V] extends CalculatesLinearIndex {
+  def rows: Int
+  def cols: Int
+  def offset: Int
+  def majorStride: Int
+  def isTranspose: Boolean
+  def apply(i: Int, j: Int): V
+  def data: Array[V]
+
+  def checkDimensions = {
+    if (isTranspose && (math.abs(majorStride) < cols) && majorStride != 0) { throw new IndexOutOfBoundsException("MajorStride == " + majorStride + " is smaller than cols == " + cols + ", which is impossible") }
+    if (!isTranspose && (math.abs(majorStride) < rows) && majorStride != 0) { throw new IndexOutOfBoundsException("MajorStride == " + majorStride + " is smaller than rows == " + rows + ", which is impossible") }
+    if (rows < 0) { throw new IndexOutOfBoundsException("Rows must be larger than zero. It was " + rows) }
+    if (cols < 0) { throw new IndexOutOfBoundsException("Cols must be larger than zero. It was " + cols) }
+    if (offset < 0) { throw new IndexOutOfBoundsException("Offset must be larger than zero. It was " + offset) }
+    if ((majorStride < 0) && (linearIndex(0, cols-1) < 0)) {
+      throw new IndexOutOfBoundsException("Storage array has negative stride " + majorStride + " and offset " + offset + " which can result in negative indices.")
+    }
+  }
+}
+
+case class SimpleMatrixPopulator[V](val rows: Int, val cols: Int, val offset: Int, val majorStride: Int, val isTranspose: Boolean, val data: Array[V]) extends MatrixPopulator[V] {
+  override def apply(i: Int, j: Int): V = data(linearIndex(i, j))
+
+  override def checkDimensions = {
+    super.checkDimensions
+
+    if (majorStride > 0) { //This is only necessary when the data array is provided.
+      if (data.length < linearIndex(rows-1, cols-1)) { throw new IndexOutOfBoundsException("Storage array has size " + data.size + " but indices can grow as large as " + linearIndex(rows-1,cols-1)) }
+    } else if (majorStride < 0) {
+      if (data.length< linearIndex(rows-1,0)) { throw new IndexOutOfBoundsException("Storage array has size " + data.size + " but indices can grow as large as " + linearIndex(rows-1,cols-1)) }
+    }
+  }
+}
+
+abstract class FunctionMatrixPopulator[V](val rows: Int, val cols: Int)(implicit val tag: ClassTag[V]) extends MatrixPopulator[V] {
+  val offset = 0
+  val majorStride = rows
+  val isTranspose = false
+
+  def data: Array[V] = {
+    val result = new Array[V](rows*cols)
+    cforRange(0 until rows)(i => {
+      cforRange(0 until cols)(j => {
+        result(linearIndex(i,j)) = apply(i,j)
+      })
+    })
+    result
+  }
+}
+
 /**
  * A DenseMatrix is a matrix with all elements found in an array. It is column major unless isTranspose is true,
  * It is designed to be fast: Double- (and potentially Float-)valued DenseMatrices
@@ -49,15 +116,24 @@ import scalaxy.debug._
  * @param isTranspose if true, then the matrix is considered to be "transposed" (that is, row major)
  */
 @SerialVersionUID(1L)
-final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
-                                                            val cols: Int,
-                                                            val data: Array[V],
-                                                            val offset: Int,
-                                                            val majorStride: Int,
-                                                            val isTranspose: Boolean = false)
-  extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with Serializable {
+final class DenseMatrix[@spec(Double, Int, Float, Long) V](private var populator: MatrixPopulator[V])
+  extends Matrix[V] with MatrixLike[V, DenseMatrix[V]] with CalculatesLinearIndex with Serializable {
 
+  lazy val rows = populator.rows
+  lazy val cols = populator.cols
+  lazy val offset = populator.offset
+  lazy val majorStride = populator.majorStride
+  lazy val isTranspose = populator.isTranspose
+  populator.checkDimensions
+  private def initializeData = {
+    rows
+    cols
+    offset
+    majorStride
+    isTranspose
+  }
 
+  def this(rows: Int, cols: Int, data: Array[V], offset: Int, majorStride: Int, isTranspose: Boolean = false) = this(SimpleMatrixPopulator(rows, cols, offset, majorStride, isTranspose, data))
   /** Creates a matrix with the specified data array, rows, and columns. */
   def this(rows: Int, cols: Int)(implicit man: ClassTag[V]) = this(rows, cols, new Array[V](rows * cols), 0, rows)
   /** Creates a matrix with the specified data array, rows, and columns. Data must be column major */
@@ -67,18 +143,12 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
   /** Creates a matrix with the specified data array and rows. columns inferred automatically */
   def this(rows: Int, data: Array[V], offset: Int) = this(rows, {assert(data.length % rows == 0); data.length/rows}, data, offset)
 
-  if (isTranspose && (math.abs(majorStride) < cols) && majorStride != 0) { throw new IndexOutOfBoundsException("MajorStride == " + majorStride + " is smaller than cols == " + cols + ", which is impossible") }
-  if (!isTranspose && (math.abs(majorStride) < rows) && majorStride != 0) { throw new IndexOutOfBoundsException("MajorStride == " + majorStride + " is smaller than rows == " + rows + ", which is impossible") }
-  if (rows < 0) { throw new IndexOutOfBoundsException("Rows must be larger than zero. It was " + rows) }
-  if (cols < 0) { throw new IndexOutOfBoundsException("Cols must be larger than zero. It was " + cols) }
-  if (offset < 0) { throw new IndexOutOfBoundsException("Offset must be larger than zero. It was " + offset) }
-  if (majorStride > 0) {
-    if (data.length < linearIndex(rows-1, cols-1)) { throw new IndexOutOfBoundsException("Storage array has size " + data.size + " but indices can grow as large as " + linearIndex(rows-1,cols-1)) }
-  } else if (majorStride < 0) {
-    if (data.length< linearIndex(rows-1,0)) { throw new IndexOutOfBoundsException("Storage array has size " + data.size + " but indices can grow as large as " + linearIndex(rows-1,cols-1)) }
-    if (linearIndex(0, cols-1) < 0) { throw new IndexOutOfBoundsException("Storage array has negative stride " + majorStride + " and offset " + offset + " which can result in negative indices.") }
+  lazy val data: Array[V] = {
+    val r = populator.data
+    initializeData
+    populator = null
+    r
   }
-
 
 
   def apply(row: Int, col: Int) = {
@@ -86,19 +156,15 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
     if(col < - cols || col >= cols) throw new IndexOutOfBoundsException((row,col) + " not in [-"+rows+","+rows+") x [-"+cols+"," + cols+")")
     val trueRow = if(row<0) row + rows else row
     val trueCol = if(col<0) col + cols else col
-    data(linearIndex(trueRow, trueCol))
+    if (populator == null) {
+      data(linearIndex(trueRow, trueCol))
+    } else {
+      populator.apply(trueRow, trueCol)
+    }
   }
 
   // don't delete
   DenseMatrix.init()
-
-  /** Calculates the index into the data array for row and column */
-  def linearIndex(row: Int, col: Int): Int = {
-    if(isTranspose)
-      offset + col + row * majorStride
-    else
-      offset + row + col * majorStride
-  }
 
   def rowColumnFromLinearIndex(index: Int): (Int, Int) = {
     val r = (index - offset)%majorStride
@@ -399,13 +465,22 @@ with MatrixConstructors[DenseMatrix] {
     DenseMatrix.create(rows, cols, data)
   }
 
+  private class IdentityMatrixPopulator[@spec(Double, Int, Float, Long) V: ClassTag:Zero:Semiring](dim: Int) extends FunctionMatrixPopulator[V](dim, dim) {
+      override def apply(i: Int, j: Int): V = if (i == j) { implicitly[Semiring[V]].one } else { implicitly[Semiring[V]].zero }
+      override def data = {
+        val result = new Array[V](dim*dim)
+        cforRange(0 until dim)(i => {
+          result(linearIndex(i,i)) = implicitly[Semiring[V]].one
+        })
+        result
+      }
+    }
+
   /**
    * Creates a square diagonal array of size dim x dim, with 1's along the diagonal.
    */
   def eye[@spec(Double, Int, Float, Long) V: ClassTag:Zero:Semiring](dim: Int): DenseMatrix[V] = {
-    val r = zeros[V](dim, dim)
-    breeze.linalg.diag.diagDMDVImpl.apply(r) := implicitly[Semiring[V]].one
-    r
+    new DenseMatrix(populator = new IdentityMatrixPopulator(dim))
   }
 
   /** Horizontally tiles some matrices. They must have the same number of rows */
