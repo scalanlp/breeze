@@ -14,11 +14,19 @@ import breeze.storage.Zero
  */
 object diag extends UFunc with diagLowPrio2 {
 
+  private class VectorDiagonalMatrixPopulator[V:ClassTag:Zero](t: DenseVector[V]) extends DiagonalMatrixPopulator[V](t.size) {
+    override def apply(i: Int, j: Int): V = {
+      if (i == j) {
+        t(i)
+      } else {
+        implicitly[Zero[V]].zero
+      }
+    }
+  }
+
   implicit def diagDVDMImpl[V:ClassTag:Zero]:diag.Impl[DenseVector[V], DenseMatrix[V]] = new diag.Impl[DenseVector[V], DenseMatrix[V]] {
     def apply(t: DenseVector[V]): DenseMatrix[V] = {
-      val r = DenseMatrix.zeros[V](t.length, t.length)
-      diag(r) := t
-      r
+      new DenseMatrix(new VectorDiagonalMatrixPopulator(t))
     }
   }
 

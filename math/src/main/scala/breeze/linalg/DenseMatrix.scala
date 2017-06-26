@@ -98,6 +98,22 @@ abstract class FunctionMatrixPopulator[V](val rows: Int, val cols: Int)(implicit
   }
 }
 
+abstract class DiagonalMatrixPopulator[V:ClassTag:Zero](dim: Int) extends MatrixPopulator[V] {
+  val rows = dim
+  val cols = dim
+  val offset = 0
+  val majorStride = rows
+  val isTranspose = false
+
+  def data: Array[V] = {
+    val result = new Array[V](rows*cols)
+    cforRange(0 until rows)(i => {
+      result(linearIndex(i,i)) = apply(i,i)
+    })
+    result
+  }
+}
+
 /**
  * A DenseMatrix is a matrix with all elements found in an array. It is column major unless isTranspose is true,
  * It is designed to be fast: Double- (and potentially Float-)valued DenseMatrices
@@ -465,16 +481,9 @@ with MatrixConstructors[DenseMatrix] {
     DenseMatrix.create(rows, cols, data)
   }
 
-  private class IdentityMatrixPopulator[@spec(Double, Int, Float, Long) V: ClassTag:Zero:Semiring](dim: Int) extends FunctionMatrixPopulator[V](dim, dim) {
-      override def apply(i: Int, j: Int): V = if (i == j) { implicitly[Semiring[V]].one } else { implicitly[Semiring[V]].zero }
-      override def data = {
-        val result = new Array[V](dim*dim)
-        cforRange(0 until dim)(i => {
-          result(linearIndex(i,i)) = implicitly[Semiring[V]].one
-        })
-        result
-      }
-    }
+  private class IdentityMatrixPopulator[@spec(Double, Int, Float, Long) V: ClassTag:Zero:Semiring](dim: Int) extends DiagonalMatrixPopulator[V](dim) {
+    override def apply(i: Int, j: Int): V = if (i == j) { implicitly[Semiring[V]].one } else { implicitly[Semiring[V]].zero }
+  }
 
   /**
    * Creates a square diagonal array of size dim x dim, with 1's along the diagonal.
