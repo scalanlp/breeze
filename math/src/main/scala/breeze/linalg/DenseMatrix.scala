@@ -141,7 +141,7 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](private var populator
   lazy val majorStride = populator.majorStride
   lazy val isTranspose = populator.isTranspose
   populator.checkDimensions
-  private def initializeData = {
+  private def initializeDimensions = {
     rows
     cols
     offset
@@ -159,11 +159,18 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](private var populator
   /** Creates a matrix with the specified data array and rows. columns inferred automatically */
   def this(rows: Int, data: Array[V], offset: Int) = this(rows, {assert(data.length % rows == 0); data.length/rows}, data, offset)
 
-  lazy val data: Array[V] = {
-    val r = populator.data
-    initializeData
-    populator = null
-    r
+  private var myData: Array[V] = null
+  lazy val data: Array[V] = if (populator == null) {
+    myData
+  } else {
+    this.synchronized {
+      if (populator != null) {
+        myData = populator.data
+        initializeDimensions
+        populator = null
+      }
+    }
+    myData
   }
 
 
