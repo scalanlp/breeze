@@ -59,7 +59,7 @@ class StrongWolfeLineSearch(maxZoomIter: Int, maxLineSearchIter: Int) extends Cu
   val c2 = 0.9
 
   def minimize(f: DiffFunction[Double], init: Double = 1.0): Double = {
-    minimizeWithBound(f, init = 1.0, bound = Double.PositiveInfinity)
+    minimizeWithBound(f, init, bound = Double.PositiveInfinity)
   }
 
   /**
