@@ -90,7 +90,8 @@ class SparseVector[@spec(Double, Int, Float, Long) V](val array: SparseArray[V])
   /** This is always assumed to be equal to 0, for now. */
   def default: V = zero.zero
 
-  override def equals(p1: Any) = p1 match {
+  override def equals(other: Any) = other match {
+    case x: SparseVector[_] => this.array == x.array
     case x: Vector[_] =>
         this.length == x.length &&
           (valuesIterator sameElements x.valuesIterator)
