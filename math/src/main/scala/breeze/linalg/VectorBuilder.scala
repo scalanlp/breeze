@@ -112,8 +112,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
     boundsCheck(i)
 
     if(_data.length <= used) {
-      _data = ArrayUtil.copyOf(_data, math.max(_data.length * 2, 1))
-      _index = ArrayUtil.copyOf(_index, math.max(_index.length * 2, 1))
+      reallocate(math.max(_data.length * 2, 1))
     }
 
     _data(used) = v
@@ -147,9 +146,13 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
 
   def reserve(nnz: Int) {
     if(nnz < _data.length) {
-      _data = ArrayUtil.copyOf(_data, nnz)
-      _index = ArrayUtil.copyOf(_index, nnz)
+      reallocate(nnz)
     }
+  }
+
+  private def reallocate(nnz: Int) {
+    _index = ArrayUtil.copyOf(_index, nnz)
+    _data = ArrayUtil.copyOf(data, nnz)
   }
 
   def toHashVector: HashVector[E] = {
@@ -241,22 +244,11 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
 
 
   def compact() {
-    val ah = toSparseVector
-    clear()
-    reserve(ah.activeSize)
-    var i = 0
-    while(i < ah.iterableSize) {
-      if(ah.isActive(i)) {
-        add(ah.index(i), ah.data(i))
-      }
-      i += 1
-    }
+    reallocate(used)
   }
 
   def clear() {
     used = 0
-    _index = new Array[Int](0)
-    _data = ArrayUtil.newArrayLike(data, 0)
   }
 
 
