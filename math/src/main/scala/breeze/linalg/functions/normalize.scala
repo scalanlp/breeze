@@ -7,7 +7,7 @@ import breeze.linalg.operators.OpDiv
  * Normalizes the argument such that its norm is 1.0 (with respect to the argument n).
  * Returns value if value's norm is 0.
  */
-object normalize extends UFunc {
+object normalize extends UFunc with normalizeLowPrio {
   implicit def normalizeDoubleImpl[T, U>:T](implicit div: OpDiv.Impl2[T, Double, U], canNorm: norm.Impl2[T, Double, Double]):Impl2[T, Double, U] = {
     new Impl2[T, Double, U] {
       def apply(t: T, n: Double): U = {
@@ -18,12 +18,12 @@ object normalize extends UFunc {
     }
   }
 
-  implicit def normalizeFloatImpl[T, U>:T](implicit div: OpDiv.Impl2[T, Float, U], canNorm: norm.Impl2[T, Float, Float]):Impl2[T, Float, U] = {
+  implicit def normalizeFloatImpl[T, U>:T](implicit div: OpDiv.Impl2[T, Float, U], canNorm: norm.Impl2[T, Double, Double]):Impl2[T, Float, U] = {
     new Impl2[T, Float, U] {
       def apply(t: T, n: Float): U = {
         val norm = canNorm(t, n)
         if(norm == 0) t
-        else div(t,norm)
+        else div(t,norm.toFloat)
       }
     }
   }
@@ -61,5 +61,13 @@ object normalize extends UFunc {
       def apply(v: T, n: Int): U = impl(v, n)
     }
 
+  }
+}
+
+sealed trait normalizeLowPrio { this: normalize.type =>
+  implicit def normalizeImplForFloat[T, U>:T](implicit impl: Impl2[T, Float, U]):Impl[T, U] = {
+    new Impl[T, U] {
+      def apply(v: T): U = impl(v, 2.0f)
+    }
   }
 }

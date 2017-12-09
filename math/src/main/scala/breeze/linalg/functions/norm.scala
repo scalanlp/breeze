@@ -33,9 +33,4 @@ object norm extends UFunc {
     }
   }
 
-  implicit def fromCanNormFloat[T](implicit impl: Impl2[T, Double, Double]):Impl2[T, Float, Float] = {
-    new Impl2[T, Float, Float] {
-      def apply(v: T, v2: Float): Float = impl(v, v2).toFloat
-    }
-  }
 }
