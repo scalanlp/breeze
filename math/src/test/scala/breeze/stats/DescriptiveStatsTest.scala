@@ -2,9 +2,11 @@ package breeze.stats
 
 import org.scalatest.{FunSuite, WordSpec}
 import org.scalatest.Matchers
+
 import scala.util.Random
-import breeze.linalg.{SparseVector, DenseVector, DenseMatrix}
+import breeze.linalg.{DenseMatrix, DenseVector, SparseVector}
 import breeze.math.Complex
+import breeze.stats.meanAndVariance.MeanAndVariance
 
 class DescriptiveStatsTest extends WordSpec with Matchers {
   "DescriptiveStats" should {

@@ -266,7 +266,7 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
       def apply(a: VectorBuilder[V], b: Vec) {
         require(a.length < 0 || a.length == b.length, "Dimension mismatch!")
         b match {
-          case b: StorageVector[V] =>
+          case b: StorageVector[V @unchecked] =>
             var i = 0
             val bd = b.data
             while(i < b.iterableSize) {

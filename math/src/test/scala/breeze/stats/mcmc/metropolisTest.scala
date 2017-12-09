@@ -35,7 +35,7 @@ class metropolisTest extends FunSuite {
 
   val proposal = rand.choose(Seq(A,B,C))
 
-  val TOLERANCE = 0.05
+  val TOLERANCE = 0.10
 
   test("stupidly simple mcmc") {
     val mh = ArbitraryMetropolisHastings(logLikelihood _, (_:State) => proposal, (_:State,_:State) => 0.0, A, burnIn = 10000, dropCount=DROP_COUNT)

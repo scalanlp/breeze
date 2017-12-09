@@ -496,7 +496,6 @@ class DenseVectorTest extends FunSuite with Checkers {
   test("negative step sizes and dot -- Double") {
     val foo = DenseVector(1.0, 2.0, 3.0, 4.0)
     val fneg = foo(3 to 0 by -1)
-    println(fneg, fneg.offset, fneg.data, fneg.length, fneg.stride)
     assert((foo dot foo(3 to 0 by -1)) === 20.0)
   }
 
@@ -542,6 +541,25 @@ class DenseVectorTest extends FunSuite with Checkers {
 
   test("#467 can slice transpose") {
     assert(DenseVector(3, 4).t(0 until 1) == DenseVector(3).t)
+  }
+
+  test("#669 rangeD off by one") {
+    assert(DenseVector.rangeD(0.0, 10.0, 3.0) == DenseVector(0.0, 3.0, 6.0, 9.0))
+    check { (_a: Int, _b: Int, _step: Int) =>
+      val a = clipInt(_a)
+      val b = clipInt(_b)
+      val step = clipInt(_step) + 1
+      try {
+        DenseVector((a until b by step).map(_.toDouble): _*) == DenseVector.rangeD(a, b, step)
+      } catch {
+        // don't want to deal with the requirements
+        case ex: IllegalArgumentException => true
+      }
+    }
+  }
+
+  private def clipInt(a: Int): Int = {
+    if (a == Int.MaxValue) 0 else (a + 1).abs % 20
   }
 }
 

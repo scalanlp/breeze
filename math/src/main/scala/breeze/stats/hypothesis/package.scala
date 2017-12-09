@@ -4,6 +4,7 @@ import scala.math.sqrt
 import breeze.stats.distributions._
 import breeze.linalg.support._
 import CanTraverseValues._
+import breeze.stats.meanAndVariance.MeanAndVariance
 
 /**
  * This package contains hypothesis tests.
