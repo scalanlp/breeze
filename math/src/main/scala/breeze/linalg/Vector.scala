@@ -46,7 +46,7 @@ trait VectorLike[@spec V, +Self <: Vector[V]] extends Tensor[Int, V] with Tensor
  * A Vector represents the mathematical concept of a vector in math.
  * @tparam V
  */
-trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]]{
+trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]] {
 
   /**
    * @return the set of keys in this vector (0 until length)
@@ -71,7 +71,7 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]]{
     case _ => false
   }
 
-
+  override def hashCode(): Int = throw new UnsupportedOperationException("hashCode has to be overridden for Vectors")
 
   def toDenseVector(implicit cm: ClassTag[V]) = {
     DenseVector(toArray)

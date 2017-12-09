@@ -322,7 +322,6 @@ object ArrayUtil {
       case x: Array[Boolean] => zeroSkippingHashCodeImpl_Boolean(x, offset, stride, length)
       case _ => zeroSkippingHashCodeImplSlow(data, offset, stride, length)
     }
-
   }
 
   @expand

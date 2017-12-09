@@ -15,11 +15,16 @@ package breeze.collection.mutable
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import breeze.storage.{Storage, Zero, ConfigurableDefault}
+import breeze.storage.{ConfigurableDefault, Storage, Zero}
+
 import collection.mutable.BitSet
 import breeze.util.ArrayUtil
 import java.util
+
+import scalaxy.debug._
+
 import scala.reflect.ClassTag
+import spire.syntax.cfor._
 
 
 /**
@@ -41,7 +46,7 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
 
 
   def this(size: Int, default: V)(implicit manElem: ClassTag[V]) = {
-    this(Array.empty,Array.empty,0, size, default)
+    this(Array.empty, Array.empty, 0, size, default)
   }
 
   def this(size: Int)(implicit manElem: ClassTag[V], zero: Zero[V]) = {
@@ -49,7 +54,7 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
   }
 
   @inline
-  final def apply(i: Int):V = {
+  final def apply(i: Int): V = {
     val offset = findOffset(i)
     if (offset >= 0) data(offset) else default
   }
@@ -57,25 +62,25 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
   /**
    * Only iterates "active" elements
    */
-  def valuesIterator = data.iterator.take(used)
+  def valuesIterator: Iterator[V] = data.iterator.take(used)
 
   /**
    * Only iterates "active" keys
    */
-  def keysIterator = index.iterator.take(used)
+  def keysIterator: Iterator[Int] = index.iterator.take(used)
 
 
-  def get(i: Int) : Option[V] = {
+  def get(i: Int): Option[V] = {
     val offset = findOffset(i)
     if (offset >= 0) Some(data(offset)) else None
   }
 
-  def getOrElse(i : Int, value : =>V) : V = {
+  def getOrElse(i: Int, value: =>V): V = {
     val offset = findOffset(i)
     if (offset >= 0) data(offset) else value
   }
 
-  def getOrElseUpdate(i : Int, value : =>V) : V = {
+  def getOrElseUpdate(i: Int, value: =>V): V = {
     val offset = findOffset(i)
     if (offset >= 0) data(offset)
     else {
@@ -91,7 +96,7 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
    * value, the result may be an efficiently dense (or almost dense) paired
    * array.
    */
-  def map[B:ClassTag:Zero](f : V=>B) : SparseArray[B] = {
+  def map[B:ClassTag:Zero](f: V=>B): SparseArray[B] = {
     val newZero = implicitly[Zero[B]].zero
     if (used <= length && f(default) == newZero) {
       // some default values but f(default) is still default
@@ -141,7 +146,7 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
   /**
    * Filter's the array by removing all values for which f is false.
    */
-  def filter(f : V=>Boolean) : SparseArray[V] = {
+  def filter(f: V=>Boolean): SparseArray[V] = {
     val newIndex = new Array[Int](used)
     val newData = ArrayUtil.copyOf(data, used)
     var i = 0; var o = 0
@@ -175,16 +180,16 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
     }
   }
 
-  override def toString = iterator.mkString("SparseArray(", ", ", ")")
+  override def toString: String = iterator.mkString("SparseArray(", ", ", ")")
 
 
-  def activeSize = used
+  def activeSize: Int = used
 
-  final def valueAt(i: Int) = data(i)
+  final def valueAt(i: Int): V = data(i)
 
-  final def indexAt(i: Int) = index(i)
+  final def indexAt(i: Int): Int = index(i)
 
-  def contains(i: Int) = findOffset(i) >= 0
+  def contains(i: Int): Boolean = findOffset(i) >= 0
 
   private var lastReturnedPos = -1
 
@@ -193,7 +198,7 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
    * index.  If the requested index is not found, the  value is
    * negative and can be converted into an insertion point with ~rv.
    */
-  protected final def findOffset(i : Int) : Int = {
+  protected final def findOffset(i: Int): Int = {
     if (i < 0 || i >= size)
       throw new IndexOutOfBoundsException("Index "+i+" out of bounds [0,"+used+")")
 
@@ -311,7 +316,7 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
    * new arrays.
    */
   @inline
-  final def update(i : Int, value : V) {
+  final def update(i: Int, value: V) {
     val offset = findOffset(i)
     if (offset >= 0) {
       // found at offset
@@ -402,7 +407,7 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
     this.used = used
   }
 
-  def reserve(nnz: Int) {
+  def reserve(nnz: Int): Unit = {
     if(nnz >= used && nnz != index.length)  {
       index = util.Arrays.copyOf(index, nnz)
       data = ArrayUtil.copyOf(data, nnz)
@@ -412,22 +417,70 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
   /**
    * Like compact, but doesn't look for defaultValues that can be removed.
    */
-  def quickCompact() {
+  def quickCompact(): Unit = {
     reserve(used)
   }
 
-  def concatenate(that:SparseArray[V])(implicit man :ClassTag[V]):SparseArray[V]={
-    if(this.default!=that.default) throw new IllegalArgumentException("default values should be equal")
+  def concatenate(that: SparseArray[V])(implicit man: ClassTag[V]): SparseArray[V] = {
+    require(this.default == that.default, "default values should be equal")
     new SparseArray((this.index.slice(0,this.used) union that.index.slice(0,that.used).map(_ + this.size)).toArray,
 		    (this.data.slice(0,this.used) union that.data.slice(0,that.used)).toArray,
 		    this.used+that.used,
 		    this.size+that.size,
 		    this.default)
   }
+
+  override def hashCode: Int = ArrayUtil.zeroSkippingHashCode(data, 0, 1, used)
+
+  override def equals(o: Any): Boolean = o match {
+    case z: SparseArray[V @unchecked] =>
+      if (z.length != length) {
+        false
+      } else if (z.default != default) {
+        // we could make this faster, but eh
+        cforRange(0 until length) { i =>
+          if (z(i) != this(i)) {
+            return false
+          }
+        }
+        true
+      } else if (z.used < used) {
+        z == this
+      } else {
+        // z is bigger
+        var off: Int = 0
+        var zoff: Int = 0
+        val size = used
+        val zsize = z.used
+
+        while (off < size && zoff < zsize) {
+          if (indexAt(off) < z.indexAt(zoff)) {
+            if (valueAt(off) != default) {
+              return false
+            }
+            off += 1
+          } else if (z.indexAt(zoff) < indexAt(off)) {
+            if (z.valueAt(zoff) != default) {
+              return false
+            }
+            zoff += 1
+          } else {
+            if (z.valueAt(zoff) != valueAt(off)) {
+              return false
+            }
+            off += 1
+            zoff += 1
+          }
+        }
+
+        true
+      }
+    case _ => false
+  }
 }
 
 object SparseArray {
-  def apply[@specialized(Int, Float, Double) T:ClassTag:Zero](values : T*) = {
+  def apply[@specialized(Int, Float, Double) T:ClassTag:Zero](values: T*) = {
     val rv = new SparseArray[T](Array.range(0, values.length), values.toArray, values.length, values.length, implicitly[Zero[T]].zero)
     rv.compact()
     rv
@@ -442,7 +495,7 @@ object SparseArray {
    *
    * @author dramage
    */
-  def fill[@specialized(Int, Float, Double) T:ClassTag:Zero](length : Int)(value : =>T) : SparseArray[T] = {
+  def fill[@specialized(Int, Float, Double) T:ClassTag:Zero](length: Int)(value: =>T): SparseArray[T] = {
     if (value != implicitly[Zero[T]].zero) {
       val rv = new SparseArray[T](size = length)
       var i = 0
@@ -456,7 +509,7 @@ object SparseArray {
     }
   }
 
-  def create[@specialized(Int, Float, Double) T:ClassTag:Zero](length : Int)(values : (Int,T)*) = {
+  def create[@specialized(Int, Float, Double) T:ClassTag:Zero](length: Int)(values: (Int,T)*) = {
     val rv = new SparseArray[T](length)
     for ((k,v) <- values) {
       rv(k) = v
@@ -464,7 +517,7 @@ object SparseArray {
     rv
   }
 
-  def tabulate[@specialized(Int, Float, Double) T:ClassTag:Zero](length : Int)(fn : (Int => T)) = {
+  def tabulate[@specialized(Int, Float, Double) T:ClassTag:Zero](length: Int)(fn: (Int => T)) = {
     val rv = new SparseArray[T](length)
     var i = 0
     while (i < length) {

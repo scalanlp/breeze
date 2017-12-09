@@ -18,4 +18,3 @@ lazy val viz = project.in(file("viz")).dependsOn(math)
 lazy val benchmark = project.in(file("benchmark")).dependsOn(math, natives)
 addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.full)
 
-

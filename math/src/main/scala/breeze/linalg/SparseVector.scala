@@ -98,6 +98,8 @@ class SparseVector[@spec(Double, Int, Float, Long) V](val array: SparseArray[V])
     case _ => false
   }
 
+  override def hashCode = array.hashCode
+
   def isActive(rawIndex: Int) = array.isActive(rawIndex)
 
   override def toString = {

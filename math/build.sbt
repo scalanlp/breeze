@@ -56,7 +56,7 @@ testOptions in Test += Tests.Setup(classLoader =>
   }
 )
 
-fork in Compile := true
+fork := true
 
 javaOptions := Seq("-Xmx4g")
 
