@@ -17,14 +17,13 @@ package breeze.linalg
 import operators._
 import support._
 import support.CanTraverseValues.ValuesVisitor
-import breeze.generic.{UFunc}
+import breeze.generic.UFunc
 import breeze.generic.UFunc.{UImpl2, UImpl, InPlaceImpl2}
 import breeze.macros.expand
 import breeze.math._
 import breeze.stats.distributions.Rand
 import breeze.storage.{Zero, Storage}
 
-import scala.util.hashing.MurmurHash3
 import scala.{specialized=>spec}
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.mutable.ArrayBuilder
@@ -939,26 +938,26 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
   def range(start:Int, end: Int, step: Int): Vec[Int] = apply[Int](Array.range(start,end,step))
 
   def rangeF(start: Float, end: Float, step: Float = 1.0f): Vec[Float] = {
-    import spire.implicits.cfor
+    import spire.implicits.cforRange
     require(end > start)
     require(end-start > step)
     val size: Int = math.floor((end - start)/step).toInt
     val data = new Array[Float](size)
-    cfor(0)(i => i < size, i => i+1)(i => {
-      data(i) = (start+i*step)
-    })
+    cforRange(0 until size) { i =>
+      data(i) = start + i * step
+    }
     apply(data)
   }
 
   def rangeD(start: Double, end: Double, step: Double = 1.0): Vec[Double] = {
-    import spire.implicits.cfor
+    import spire.implicits.cforRange
     require(end > start)
-    require(end-start > step)
-    val size: Int = math.floor((end - start)/step).toInt
+    require(end - start > step)
+    val size: Int = math.ceil((end - start)/step).toInt
     val data = new Array[Double](size)
-    cfor(0)(i => i < size, i => i+1)(i => {
-      data(i) = (start+i*step)
-    })
+    cforRange(0 until size) { i =>
+      data(i) = start + i * step
+    }
     apply(data)
   }
 }
