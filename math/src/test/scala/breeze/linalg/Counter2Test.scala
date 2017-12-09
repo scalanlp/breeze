@@ -82,8 +82,8 @@ class Counter2Test extends FunSuite with Checkers {
   }
 
   test("Multiplication") {
-    assert(Counter2(("a","a",1),("b","b",2)) :* Counter2(("a","a",3)) === Counter2(("a","a",3)))
-    assert(Counter2(("a","a",3)) :* Counter2(("a","a",1),("b","b",2)) === Counter2(("a","a",3)))
+    assert(Counter2(("a","a",1),("b","b",2)) *:*Counter2(("a","a",3)) === Counter2(("a","a",3)))
+    assert(Counter2(("a","a",3)) *:*Counter2(("a","a",1),("b","b",2)) === Counter2(("a","a",3)))
   }
 
   test("Shaped Multiplication: C2/C2") {

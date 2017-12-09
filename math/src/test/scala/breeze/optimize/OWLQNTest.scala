@@ -16,13 +16,10 @@ package breeze.optimize
  limitations under the License.
 */
 
-import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
-import org.scalacheck._
-import org.junit.runner.RunWith
-
 import breeze.linalg._
+import org.junit.runner.RunWith
+import org.scalacheck._
+import org.scalatest.junit._
 
 
 @RunWith(classOf[JUnitRunner])
@@ -33,7 +30,7 @@ class OWLQNTest extends OptimizeTestBase {
     def optimizeThis(init: DenseVector[Double]) = {
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
-          (norm((x - 3.0) :^ 2.0, 1), (x * 2.0) - 6.0)
+          (norm((x - 3.0) ^:^2.0, 1), (x * 2.0) - 6.0)
         }
       }
 

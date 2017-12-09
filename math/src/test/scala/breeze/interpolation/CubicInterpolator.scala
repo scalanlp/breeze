@@ -58,6 +58,6 @@ class CubicInterpolatorTest extends FunSuite {
     assert(closeTo(f(1.75), 4.4921875))
   }
 
-  def equal(v1: Vector[Double], v2: Vector[Double]): Boolean = sum((v1 - v2) :^ 2.0) < 1e-9
-  def equal(m1: DenseMatrix[Double], m2: DenseMatrix[Double]): Boolean = sum((m1 - m2) :^ 2.0) < 1e-9
+  def equal(v1: Vector[Double], v2: Vector[Double]): Boolean = sum((v1 - v2) ^:^2.0) < 1e-9
+  def equal(m1: DenseMatrix[Double], m2: DenseMatrix[Double]): Boolean = sum((m1 - m2) ^:^2.0) < 1e-9
 }

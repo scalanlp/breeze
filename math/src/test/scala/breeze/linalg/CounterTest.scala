@@ -42,8 +42,8 @@ class CounterTest extends FunSuite with Checkers {
   }
 
   test("Multiplication") {
-    assert(Counter("a"->1,"b"->2) :* Counter("a"->3) === Counter("a"->3))
-    assert(Counter("a"->3) :* Counter("a"->1,"b"->2) === Counter("a"->3))
+    assert(Counter("a"->1,"b"->2) *:*Counter("a"->3) === Counter("a"->3))
+    assert(Counter("a"->3) *:*Counter("a"->1,"b"->2) === Counter("a"->3))
   }
 
   test("MulInner") {

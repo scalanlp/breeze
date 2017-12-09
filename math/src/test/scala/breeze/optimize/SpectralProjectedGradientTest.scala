@@ -52,7 +52,7 @@ class SpectralProjectedGradientTest extends PropSpec with PropertyChecks with Op
     forAll { init: DenseVector[Double] =>
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
-          (sum((x - 3.0) :^ 2.0), (x * 2.0) - 6.0)
+          (sum((x - 3.0) ^:^ 2.0), (x * 2.0) - 6.0)
         }
       }
 
@@ -68,7 +68,7 @@ class SpectralProjectedGradientTest extends PropSpec with PropertyChecks with Op
       init := clip(init, Double.NegativeInfinity, 2.0)
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
-          (sum((x - 3.0) :^ 4.0), (x - 3.0) :^ 3.0 :* 4.0)
+          (sum((x - 3.0) ^:^ 4.0), (x - 3.0) ^:^ 3.0 *:* 4.0)
         }
       }
 
@@ -82,7 +82,7 @@ class SpectralProjectedGradientTest extends PropSpec with PropertyChecks with Op
     val H = new DenseMatrix(n, n, Array(1.8984250861699135,0.5955576666769438,-1.484430453342902,-1.0434994471390804,-3.675310432634351,0.5955576666769438,0.9090751938470876,-2.146380947361661,-0.13037609428980368,-0.40639564652095117,-1.484430453342902,-2.146380947361661,10.262733520770384,-6.097698907163584,2.29625304115155,-1.0434994471390804,-0.13037609428980368,-6.097698907163584,27.775920405610677,-5.574220233644466,-3.675310432634351,-0.40639564652095117,2.29625304115155,-5.574220233644466,12.21329172136971))
     val f = DenseVector(-1.2320199653150048, -0.14220655875869606, 0.38477404739124765, -0.3480575854151014, -0.4729810900829228)
 
-    val cost = QuadraticMinimizer.Cost(H, f:*(-1.0))
+    val cost = QuadraticMinimizer.Cost(H, f *:*(-1.0))
     val init = DenseVector.zeros[Double](n)
 
     init := 0.0
