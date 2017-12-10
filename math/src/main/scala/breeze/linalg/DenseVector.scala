@@ -17,21 +17,25 @@ package breeze.linalg
 
 import breeze.generic.UFunc.SinkImpl2
 
-import scala.{specialized=>spec}
+import scala.{specialized => spec}
 import breeze.generic._
 import breeze.linalg.support._
 import breeze.linalg.operators._
 import breeze.math._
 import breeze.util.{ArrayUtil, Isomorphism}
 import breeze.storage.Zero
+
 import scala.reflect.ClassTag
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import breeze.macros.expand
+
 import scala.math.BigInt
 import spire.syntax.cfor._
 import CanTraverseValues.ValuesVisitor
 import CanZipAndTraverseValues.PairValuesVisitor
 import java.io.ObjectStreamException
+
+import scala.collection.mutable.ArrayBuilder
 import scalaxy.debug._
 
 /**
@@ -268,6 +272,54 @@ object DenseVector extends VectorConstructors[DenseVector]
       case v: Array[Long] => new DenseVector(v).asInstanceOf[DenseVector[V]]
       case _ => new DenseVector(values)
     }
+  }
+
+
+  /**
+    * Analogous to Array.tabulate
+    * @param size
+    * @param f
+    * @tparam V
+    * @return
+    */
+  def tabulate[@spec(Double, Int, Float, Long) V:ClassTag](size: Int)(f: Int=>V): DenseVector[V] = {
+    val b = ArrayBuilder.make[V]()
+    b.sizeHint(size)
+    var i = 0
+    while (i < size) {
+      b += f(i)
+      i += 1
+    }
+
+    apply(b.result)
+  }
+
+  /**
+    * Analogous to Array.tabulate, but taking a scala.Range to iterate over, instead of an index.
+    * @param f
+    * @tparam V
+    * @return
+    */
+  def tabulate[@spec(Double, Int, Float, Long) V:ClassTag](range: Range)(f: Int=>V): DenseVector[V]= {
+    val b = ArrayBuilder.make[V]()
+    b.sizeHint(range.length)
+    var i = 0
+    while (i < range.length) {
+      b += f( range(i) )
+      i += 1
+    }
+    apply(b.result)
+  }
+
+  /**
+    * Analogous to Array.fill
+    * @param size
+    * @param v
+    * @tparam V
+    * @return
+    */
+  def fill[@spec(Double, Int, Float, Long) V:ClassTag](size: Int)(v: =>V): DenseVector[V] = {
+    apply(Array.fill(size)(v))
   }
 
   /**

@@ -207,7 +207,6 @@ trait MutableEnumeratedCoordinateField[V, I, S] extends EnumeratedCoordinateFiel
 trait FiniteCoordinateField[V, I, S] extends EnumeratedCoordinateField[V, I, S] {
   implicit def zero: CanCreateZeros[V, I]
   implicit def canDim: dim.Impl[V,I]
-  implicit def tabulateTensor: CanTabulate[I,V,S]
 
 
   implicit def addVS: OpAdd.Impl2[V, S, V]   // Implicitly Broadcast scalars to vector-space
@@ -233,7 +232,6 @@ trait MutableOptimizationSpace[M,V,S] extends MutableFiniteCoordinateField[V,Int
   implicit def mulVTM: OpMulMatrix.Impl2[V,Transpose[V],M]
   implicit def canTrans: CanTranspose[V,Transpose[V]]
   implicit def negM: OpNeg.Impl[M,M]
-  implicit def tabulateTensorM: CanTabulate[(Int,Int), M, S]
   implicit def zeroM: CanCreateZeros[M, (Int,Int)]
   implicit def canDimM: dim.Impl[M, (Int,Int)]
   implicit def hasMOps(v: M): NumericOps[M] with QuasiTensor[(Int,Int), S]
@@ -588,7 +586,6 @@ object MutableFiniteCoordinateField {
                     _addVV: OpAdd.Impl2[V, V, V],
                     _subVV: OpSub.Impl2[V, V, V],
                     _neg: OpNeg.Impl[V, V],
-                    _tabulate: CanTabulate[I,V,S],
                     _ops: V <:< NumericOps[V] with QuasiTensor[I, S],
                     _dotVV: OpMulInner.Impl2[V, V, S],
                     _zipMapVals: CanZipMapValues[V, S, S, V],
@@ -634,7 +631,6 @@ object MutableFiniteCoordinateField {
     override implicit def iterateValues: CanTraverseValues[V, S] = _traverseVals
     override implicit def zero: CanCreateZeros[V, I] = _zero
     override implicit def canDim: dim.Impl[V, I] = _dim
-    override implicit def tabulateTensor: CanTabulate[I, V, S] = _tabulate
   }
 }
 
@@ -768,7 +764,6 @@ object MutableOptimizationSpace {
                   _addVV: OpAdd.Impl2[V, V, V],
                   _subVV: OpSub.Impl2[V, V, V],
                   _neg: OpNeg.Impl[V, V],
-                  _tabulate: CanTabulate[Int,V,S],
                   _ops: V <:< NumericOps[V] with QuasiTensor[Int, S],
                   _dotVV: OpMulInner.Impl2[V, V, S],
                   _zipMapVals: CanZipMapValues[V, S, S, V],
@@ -802,7 +797,6 @@ object MutableOptimizationSpace {
                   _addMM: OpAdd.Impl2[M, M, M],
                   _subMM: OpSub.Impl2[M, M, M],
                   _negM: OpNeg.Impl[M, M],
-                  _tabulateM: CanTabulate[(Int,Int),M,S],
                   _opsM: M <:< NumericOps[M] with QuasiTensor[(Int,Int), S],
                   _dotMM: OpMulInner.Impl2[M, M, S],
                   _zipMapValsM: CanZipMapValues[M, S, S, M],
@@ -831,7 +825,6 @@ object MutableOptimizationSpace {
     implicit def zeroLikeM: CanCreateZerosLike[M, M] = _zeroLikeM
     implicit def scaleAddMM: scaleAdd.InPlaceImpl3[M, S, M] = _scaleAddMSM
     implicit def addIntoMS: OpAdd.InPlaceImpl2[M, S] = _addIntoMS
-    implicit def tabulateTensorM: CanTabulate[(Int, Int), M, S] = _tabulateM
     implicit def negM: OpNeg.Impl[M, M] = _negM
     implicit def subIntoMS: OpSub.InPlaceImpl2[M, S] = _subIntoMS
     implicit def addIntoMM: OpAdd.InPlaceImpl2[M, M] = _addIntoMM
@@ -855,7 +848,6 @@ object MutableOptimizationSpace {
     implicit def hasOps(v: V): NumericOps[V] with QuasiTensor[Int, S] = _ops(v)
     implicit def neg: OpNeg.Impl[V, V] = _neg
     implicit def mulVV: OpMulScalar.Impl2[V, V, V] = _mulVV
-    implicit def tabulateTensor: CanTabulate[Int, V, S] = _tabulate
     implicit def canDim: dim.Impl[V, Int] = _dim
     implicit def zero: CanCreateZeros[V, Int] = _zero
     implicit def normImpl2: norm.Impl2[V, Double, Double] = _norm2

@@ -257,11 +257,6 @@ trait MatrixConstructors[Mat[T]<:Matrix[T]] {
       }
     }
 
-  implicit def canTabulate[T:ClassTag:Zero] = new CanTabulate[(Int,Int),Mat[T],T] {
-    def apply(d: (Int, Int), f: ((Int, Int)) => T): Mat[T] = tabulate[T](d._1,d._2)((r: Int, c: Int) => f((r,c)))
-  }
-
-
   // This method only exists because of trouble in Scala-specialization land.
   // basically, we turn off specialization for this loop, since it's not going to be fast anyway.
   private def finishLiteral[V, R](rv: Matrix[V], rl : LiteralRow[R,V], rows: Seq[R]) {

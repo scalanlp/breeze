@@ -400,10 +400,6 @@ object SparseVector extends SparseVectorOps
     def apply(v: SparseVector[E]): Int = v.size
   }
 
-  implicit def canTabulate[E:ClassTag:Zero]: CanTabulate[Int, SparseVector[E], E] = new CanTabulate[Int,SparseVector[E],E] {
-    def apply(d: Int, f: (Int) => E): SparseVector[E] = tabulate[E](d)(f)
-  }
-
   implicit def space[E: Field : ClassTag : Zero]: MutableFiniteCoordinateField[SparseVector[E], Int, E] = {
     MutableFiniteCoordinateField.make[SparseVector[E], Int, E]
   }

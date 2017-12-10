@@ -148,7 +148,6 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]] {
 
 object Vector extends VectorConstructors[Vector] with VectorOps {
 
-
   /**
    * Creates a Vector of size size.
    * @param size
@@ -857,64 +856,12 @@ trait VectorConstructors[Vec[T]<:Vector[T]] {
   }
 
   //ToDo 2: I'm not sure fill/tabulate are really useful outside of the context of a DenseVector?
-  /**
-   * Analogous to Array.fill
-   * @param size
-   * @param v
-   * @tparam V
-   * @return
-   */
-  def fill[@spec(Double, Int, Float, Long) V:ClassTag](size: Int)(v: =>V): Vec[V] = {
-    apply(Array.fill(size)(v))
-  }
-
-
-  /**
-   * Analogous to Array.tabulate
-   * @param size
-   * @param f
-   * @tparam V
-   * @return
-   */
-  def tabulate[@spec(Double, Int, Float, Long) V:ClassTag](size: Int)(f: Int=>V): Vec[V] = {
-    val b = ArrayBuilder.make[V]()
-    b.sizeHint(size)
-    var i = 0
-    while (i < size) {
-      b += f(i)
-      i += 1
-    }
-
-    apply(b.result)
-  }
-
-  /**
-   * Analogous to Array.tabulate, but taking a scala.Range to iterate over, instead of an index.
-   * @param f
-   * @tparam V
-   * @return
-   */
-  def tabulate[@spec(Double, Int, Float, Long) V:ClassTag](range: Range)(f: Int=>V):Vec[V]= {
-    val b = ArrayBuilder.make[V]()
-    b.sizeHint(range.length)
-    var i = 0
-    while (i < range.length) {
-      b += f( range(i) )
-      i += 1
-    }
-    apply(b.result )
-  }
-
   implicit def canCreateZeros[V:ClassTag:Zero]: CanCreateZeros[Vec[V], Int] =
     new CanCreateZeros[Vec[V], Int] {
       def apply(d: Int): Vec[V] = {
         zeros[V](d)
       }
     }
-
-  implicit def canTabulate[V:ClassTag:Zero]: CanTabulate[Int, Vec[V], V] = new CanTabulate[Int,Vec[V],V] {
-    def apply(d: Int, f: (Int) => V): Vec[V] = tabulate(d)(f)
-  }
 
   /**
    * Creates a Vector of uniform random numbers in (0,1)
