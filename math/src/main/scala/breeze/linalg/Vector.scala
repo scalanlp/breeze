@@ -187,10 +187,10 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
     }
   }
 
-  implicit def canMapValues[V, V2](implicit man: ClassTag[V2]):CanMapValues[Vector[V], V, V2, Vector[V2]] = {
+  implicit def canMapValues[V, V2: Zero](implicit man: ClassTag[V2]):CanMapValues[Vector[V], V, V2, Vector[V2]] = {
     new CanMapValues[Vector[V], V, V2, Vector[V2]] {
       /**Maps all key-value pairs from the given collection. */
-      def apply(from: Vector[V], fn: (V) => V2) = {
+      def apply(from: Vector[V], fn: (V) => V2): Vector[V2] = from match {
         case sv: SparseVector[V] => sv.mapValues(fn)
         case hv: HashVector[V] => hv.mapValues(fn)
         case dv: DenseVector[V] => dv.mapValues(fn)
@@ -200,10 +200,10 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
   }
 
   // TODO: probably should have just made this virtual and not ufunced
-  implicit def canMapActiveValues[V, V2](implicit man: ClassTag[V2]):CanMapActiveValues[Vector[V], V, V2, Vector[V2]] = {
+  implicit def canMapActiveValues[V, V2: Zero](implicit man: ClassTag[V2]):CanMapActiveValues[Vector[V], V, V2, Vector[V2]] = {
     new CanMapActiveValues[Vector[V], V, V2, Vector[V2]] {
       /**Maps all key-value pairs from the given collection. */
-      def apply(from: Vector[V], fn: (V) => V2): DenseVector[V2] = from match {
+      def apply(from: Vector[V], fn: (V) => V2): Vector[V2] = from match {
         case sv: SparseVector[V] => sv.mapActiveValues(fn)
         case hv: HashVector[V] => hv.mapActiveValues(fn)
         case dv: DenseVector[V] => dv.mapActiveValues(fn)
