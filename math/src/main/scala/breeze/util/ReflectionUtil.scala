@@ -1,5 +1,7 @@
 package breeze.util
 
+import scala.reflect.ClassTag
+
 /*
  Copyright 2012 David Hall
 
@@ -35,6 +37,10 @@ object ReflectionUtil {
     else if(c == Boolean.TYPE) classOf[java.lang.Boolean]
     else if(c == Void.TYPE) classOf[java.lang.Void]
     else sys.error("Shouldn't be here...")
+  }
+
+  def elemClassTagFromArray[T](array: Array[T]): ClassTag[T] = {
+    ClassTag(array.getClass.getComponentType.asInstanceOf[Class[T]])
   }
 
 }

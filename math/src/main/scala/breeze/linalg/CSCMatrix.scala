@@ -22,12 +22,11 @@ import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
 import breeze.math._
 import breeze.storage.Zero
-import breeze.util.{ArrayUtil, SerializableLogging, Sorting, Terminal}
+import breeze.util.{ArrayUtil, ReflectionUtil, SerializableLogging, Sorting, Terminal}
 
 import scala.collection.mutable
 import scala.reflect.ClassTag
-import scala.{specialized=>spec}
-
+import scala.{specialized => spec}
 import scalaxy.debug._
 
 /**
@@ -236,7 +235,7 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero](private var _data: Arra
   }
 
   def toDense:DenseMatrix[V] = {
-    implicit val ctg = ClassTag(data.getClass.getComponentType).asInstanceOf[ClassTag[V]]
+    implicit val ctg = ReflectionUtil.elemClassTagFromArray(data)
     val res = DenseMatrix.zeros[V](rows, cols)
     var i = 0
     while (i < cols) {
