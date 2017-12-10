@@ -16,12 +16,14 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
 
   import space._
 
+  def tolRefM(refs: M*): Double = refs.map(norm(_)).max
+
   implicit def genTripleM: Arbitrary[(M,M,M)]
 
   test("Addition is Associative - Matrix") {
     check(Prop.forAll{ (trip: (M, M, M)) =>
       val (a, b, c) = trip
-      closeM((a + b) + c, a + (b + c), TOL)
+      closeM((a + b) + c, a + (b + c), TOL * tolRefM(a, b, c))
     })
 
     check(Prop.forAll{ (trip: (M, M, M)) =>
@@ -30,14 +32,14 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
       val bc = b + c
       ab += c
       bc += a
-      closeM(ab, bc, TOL)
+      closeM(ab, bc, TOL * tolRefM(a, b, c))
     })
   }
 
   test("Addition Commutes - Matrix") {
     check(Prop.forAll{ (trip: (M, M, M)) =>
       val (a, b, _) = trip
-      closeM(a + b, b + a, TOL)
+      closeM(a + b, b + a, TOL * tolRefM(a, b))
     })
 
     check(Prop.forAll{ (trip: (M, M, M)) =>
@@ -46,13 +48,13 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
       ab += b
       val ba = copyM(b)
       ba += a
-      closeM(ab, ba, TOL)
+      closeM(ab, ba, TOL * tolRefM(a, b))
     })
   }
 
   test("Zero is Zero - Matrix") {
     check(Prop.forAll{ (trip: (M, M, M)) =>
-      val (a, b, c) = trip
+      val (a, _, _) = trip
       val z = zeroLikeM(a)
       closeM(a +:+ z, a, TOL)
     })
@@ -99,7 +101,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
   test("Scalar mult distributes over vector addition - Matrix") {
     check(Prop.forAll{ (trip: (M, M, M), s: S) =>
       val (a, b, _) = trip
-      closeM( (a + b) *:* s, (b *:* s) + (a *:* s), TOL)
+      closeM( (a + b) *:* s, (b *:* s) + (a *:* s), TOL * math.max(tolRefM(a, b), norm(s).abs))
     })
 
     //    check(Prop.forAll{ (trip: (M, M, M), s: S) =>
@@ -114,7 +116,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
       ab *= s
       val ba = copyM(a) *:* s
       ba += (b *:* s)
-      closeM(ab, ba, TOL)
+      closeM(ab, ba, TOL * math.max(tolRefM(a, b), norm(s)).abs)
     })
   }
 
@@ -124,7 +126,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
       val ac = copyM(a)
       val prod = a + (b *:* s)
       breeze.linalg.axpy(s, b, ac)
-      closeM( prod, ac, TOL)
+      closeM( prod, ac, TOL * math.max(tolRefM(a, b), norm(s)).abs)
     })
   }
 
@@ -132,7 +134,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
   test("Scalar mult distributes over field addition - Matrix") {
     check(Prop.forAll{ (trip: (M, M, M), s: S, t: S) =>
       val (a, _, _) = trip
-      closeM( (a) *:* scalars.+(s,t), (a *:* s) + (a *:* t), TOLM)
+      closeM( (a) *:* scalars.+(s,t), (a *:* s) + (a *:* t), TOLM  * math.max(tolRefM(a), norm(s)).abs)
     })
 
     check(Prop.forAll{ (trip: (M, M, M), s: S, t: S) =>
@@ -142,14 +144,14 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
       ab += (a *:* t)
       val ba = copyM(a)
       ba *= scalars.+(s,t)
-      closeM(ab, ba, TOLM)
+      closeM(ab, ba, TOLM  * math.max(tolRefM(a), norm(s)).abs)
     })
   }
 
   test("Compatibility of scalar multiplication with field multiplication - Matrix") {
     check(Prop.forAll{ (trip: (M, M, M), s: S, t: S) =>
       val (a, _, _) = trip
-      closeM( (a) *:* scalars.*(s,t), a *:* s *:* t, TOL)
+      closeM( (a) *:* scalars.*(s,t), a *:* s *:* t, TOL  * math.max(tolRefM(a), norm(s)).abs)
     })
 
     check(Prop.forAll{ (trip: (M, M, M), s: S, t: S) =>
@@ -159,7 +161,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
       ab *= t
       val ba = copyM(a)
       ba *= scalars.*(s, t)
-      closeM(ab, ba, TOL)
+      closeM(ab, ba, TOL * max(tolRefM(a), norm(s).abs, norm(t).abs))
     })
 
     //     check(Prop.forAll{ (trip: (M, M, M), s: S, t: S) =>
@@ -205,14 +207,14 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
   test("norm positive homogeneity - Matrix") {
     check(Prop.forAll{ (trip: (M,M,M), s: S) =>
       val (a, b, c) = trip
-      norm(a * s) - norm(s) * norm(a) <= TOL * norm(a * s)
+      norm(a * s) - norm(s) * norm(a) <= TOLM * norm(a * s)
     })
   }
 
   test("norm triangle inequality - Matrix") {
     check(Prop.forAll{ (trip: (M,M,M)) =>
       val (a, b, c) = trip
-      ((1.0 - TOL) * norm(a + b) <= norm(b) + norm(a))
+      ((1.0 - TOLM) * norm(a + b) <= norm(b) + norm(a))
     })
   }
 
@@ -220,7 +222,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
     check(Prop.forAll{ (trip: (M,M,M)) =>
       val (a, b, c) = trip
       val z = zeroLikeM(a)
-      norm(z) == 0.0 && ( closeM(z, a, TOL) || norm(a) != 0.0)
+      norm(z) == 0.0 && ( closeM(z, a, TOLM) || norm(a) != 0.0)
     })
   }
 
@@ -228,7 +230,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
   test("dot product distributes - Matrix") {
     check(Prop.forAll{ (trip: (M, M, M)) =>
       val (a, b, c) = trip
-      val res = scalars.close(scalars.+(a dot b,a dot c),(a dot (b + c)), 1E-3 )
+      val res = scalars.close(scalars.+(a dot b,a dot c),(a dot (b + c)), TOLM * tolRefM(a, b, c) )
       if(!res)
         println(scalars.+(a dot b,a dot c) + " " + (a dot (b + c)))
       res

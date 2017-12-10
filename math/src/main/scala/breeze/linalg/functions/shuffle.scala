@@ -1,10 +1,11 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
+
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
-import breeze.stats.distributions.Rand
+import breeze.stats.distributions.{Rand, RandBasis}
 
 /**
   * Return the given DenseVector, Array, or DenseMatrix as a shuffled copy
@@ -21,7 +22,7 @@ import breeze.stats.distributions.Rand
   */
 object shuffle extends UFunc {
 
-  implicit def implShuffle_Arr_eq_Arr[T](implicit ct: ClassTag[T]):
+  implicit def implShuffle_Arr_eq_Arr[T](implicit ct: ClassTag[T], rb: RandBasis = Rand):
   Impl[Array[T], Array[T]] = {
     new Impl[Array[T], Array[T]] {
       /**
@@ -36,7 +37,7 @@ object shuffle extends UFunc {
         // Shuffle tempret via Fisher-Yates method.
         var count = tempret.length - 1
         while(count > 0) {
-          swap(tempret, count, Rand.randInt(count + 1).get())
+          swap(tempret, count, rb.randInt(count + 1).get())
           count -= 1
         }
         tempret
@@ -111,7 +112,7 @@ object shuffle extends UFunc {
   }
 
   implicit def implShuffle_Coll_eq_Coll[Coll, T, CollRes](implicit view:
-  Coll <:< IndexedSeq[T], cbf: CanBuildFrom[Coll, T, CollRes]) :
+  Coll <:< IndexedSeq[T], cbf: CanBuildFrom[Coll, T, CollRes], rb: RandBasis = Rand) :
   Impl[Coll, CollRes] = {
     new Impl[Coll, CollRes] {
       /**
@@ -127,7 +128,7 @@ object shuffle extends UFunc {
         // Shuffle tempret via Fisher-Yates method.
         var count = copy.length - 1
         while (count > 0) {
-          swap(copy, count, Rand.randInt(count + 1).get())
+          swap(copy, count, rb.randInt(count + 1).get())
           count -= 1
         }
         builder ++= copy
@@ -150,7 +151,7 @@ object shuffle extends UFunc {
   }
 
   implicit def implShuffle_DV_eq_DV[T](implicit arrImpl:
-  Impl[Array[T], Array[T]], ct: ClassTag[T]):
+  Impl[Array[T], Array[T]], ct: ClassTag[T], rb: RandBasis = Rand):
   Impl[DenseVector[T], DenseVector[T]] = {
     new Impl[DenseVector[T], DenseVector[T]] {
       /**
@@ -165,7 +166,7 @@ object shuffle extends UFunc {
   }
 
   implicit def implShuffle_DM_eq_DM[T](implicit arrImpl:
-  Impl[Array[T], Array[T]], ct: ClassTag[T]):
+  Impl[Array[T], Array[T]], ct: ClassTag[T], rb: RandBasis = Rand):
   Impl[DenseMatrix[T], DenseMatrix[T]] = {
     new Impl[DenseMatrix[T], DenseMatrix[T]] {
       /**
