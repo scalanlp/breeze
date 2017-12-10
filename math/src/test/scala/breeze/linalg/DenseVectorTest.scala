@@ -565,7 +565,7 @@ class DenseVectorTest extends FunSuite with Checkers {
       val b = clipInt(_b)
       val step = clipInt(_step) + 1
       try {
-        DenseVector((a until b by step).map(_.toDouble): _*) == DenseVector.rangeF(a, b, step)
+        DenseVector((a until b by step).map(_.toFloat): _*) == DenseVector.rangeF(a, b, step)
       } catch {
         // don't want to deal with the requirements
         case ex: IllegalArgumentException => true
