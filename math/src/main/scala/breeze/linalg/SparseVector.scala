@@ -239,7 +239,7 @@ object SparseVector extends SparseVectorOps
 
   implicit def canCopySparse[@spec(Double, Int, Float, Long) V: ClassTag: Zero] = new CanCopySparseVector[V]
 
-  implicit def canMapValues[V, V2: ClassTag: Zero]:CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] = {
+  implicit def canMapValues[V, V2: ClassTag: Zero]: CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] = {
     new CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] {
       /**Maps all key-value pairs from the given collection. */
       override def apply(from: SparseVector[V], fn: (V) => V2): SparseVector[V2] = {

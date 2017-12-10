@@ -146,6 +146,36 @@ sealed trait MappingUFuncLowPrio { this: UFunc =>
 
 }
 
+trait ActiveMappingUFunc extends MappingUFuncLowPrio { this: UFunc =>
+  implicit def fromLowOrderCanMapActiveValues[T, V, V2, U](implicit handhold: ScalarOf[T, V],
+                                                     impl: Impl[V, V2],
+                                                     canMapValues: CanMapActiveValues[T, V, V2, U]): Impl[T, U] = {
+    new Impl[T, U] {
+      def apply(v: T): U = canMapValues(v, impl.apply)
+    }
+  }
+
+
+
+  implicit def canMapV1DV[T, V1, V2, VR, U](implicit handhold: ScalarOf[T, V1],
+                                            impl: Impl2[V1, V2, VR],
+                                            canMapValues: CanMapActiveValues[T, V1, VR, U]): Impl2[T, V2, U] = {
+    new Impl2[T, V2, U] {
+      def apply(v1: T, v2: V2): U = canMapValues(v1, impl.apply(_, v2))
+    }
+  }
+
+}
+
+sealed trait ActiveMappingUFuncLowPrio { this: UFunc =>
+  implicit def canMapV2Values[T, V1, V2, VR, U](implicit handhold: ScalarOf[T, V2], impl: Impl2[V1, V2, VR], canMapValues: CanMapActiveValues[T, V2, VR, U]): Impl2[V1, T, U] = {
+    new Impl2[V1, T, U] {
+      def apply(v1: V1, v2: T): U = canMapValues(v2, impl.apply(v1, _))
+    }
+  }
+
+}
+
 object UFunc {
   def apply[A1, R](f: A1=>R) = new WrappedUFunc1(f)
   def apply[A1, A2, R](f: (A1, A2)=>R) = new WrappedUFunc2(f)

@@ -4,6 +4,7 @@ import org.scalatest._
 import org.scalatest.junit._
 import org.junit.runner.RunWith
 import breeze.math._
+import breeze.numerics.{log, sin}
 import org.scalacheck.{Arbitrary, Gen}
 import breeze.stats.mean
 import breeze.storage.Zero
@@ -379,6 +380,15 @@ class SparseVectorTest extends FunSuite {
     foo(4)
     foo(32)
     foo(64)
+  }
+
+  test("#665 0-preserving functions") {
+    val sv = SparseVector.zeros[Double](10)
+    import breeze.numerics._
+    assert(sin(sv).activeSize == 0)
+    assert(abs(sv).activeSize == 0)
+    assert(tan(sv).activeSize == 0)
+    assert(isOdd(sv).activeSize == 0)
   }
 }
 

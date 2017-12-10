@@ -16,10 +16,11 @@ package breeze
  limitations under the License.
 */
 
-import breeze.generic.{MappingUFunc, UFunc}
+import breeze.generic.{ActiveMappingUFunc, MappingUFunc, UFunc}
 import breeze.math.Semiring
+
 import scala.math._
-import org.apache.commons.math3.special.{Gamma => G, Erf}
+import org.apache.commons.math3.special.{Erf, Gamma => G}
 import breeze.linalg.support.CanTraverseValues
 import CanTraverseValues.ValuesVisitor
 import org.apache.commons.math3.util.FastMath
@@ -42,7 +43,7 @@ package object numerics {
     implicit object expFloatImpl extends Impl[Float, Float] { def apply(v: Float) = java.lang.Math.exp(v).toFloat}
   }
 
-  object expm1 extends UFunc with MappingUFunc {
+  object expm1 extends UFunc with ActiveMappingUFunc {
     implicit object expm1DoubleImpl extends Impl[Double, Double] { def apply(v: Double) = java.lang.Math.expm1(v)}
     implicit object expm1FloatImpl extends Impl[Float, Float] { def apply(v: Float) = java.lang.Math.expm1(v).toFloat}
   }
@@ -151,24 +152,20 @@ package object numerics {
     implicit object nextPower10FloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.pow(10d, nextExponent10(v.toDouble)).toFloat }
   }
 
-
-
-
-
-  object sqrt extends UFunc with MappingUFunc {
+  object sqrt extends UFunc with ActiveMappingUFunc {
     implicit object sqrtDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.sqrt(v)}
     implicit object sqrtFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.sqrt(v).toFloat}
     implicit object sqrtIntImpl extends Impl[Int, Double] { def apply(v: Int) = m.sqrt(v.toDouble) }
     implicit object sqrtLongImpl extends Impl[Long, Double] { def apply(v: Long) = m.sqrt(v.toDouble) }
   }
 
-  object cbrt extends UFunc with MappingUFunc {
+  object cbrt extends UFunc with ActiveMappingUFunc {
     implicit object cbrtIntImpl extends Impl[Int, Double] { def apply(v: Int) = m.cbrt(v.toDouble)}
     implicit object cbrtDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.cbrt(v)}
     implicit object cbrtFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.cbrt(v).toFloat}
   }
 
-  object sin extends UFunc with MappingUFunc {
+  object sin extends UFunc with ActiveMappingUFunc {
     implicit object sinIntImpl extends Impl[Int, Double] { def apply(v: Int) = m.sin(v.toDouble)}
     implicit object sinDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.sin(v)}
     implicit object sinFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.sin(v).toFloat}
@@ -212,13 +209,13 @@ package object numerics {
     implicit object cosFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.cos(v).toFloat}
   }
 
-  object tan extends UFunc with MappingUFunc {
+  object tan extends UFunc with ActiveMappingUFunc {
     implicit object tanIntImpl extends Impl[Int, Double] { def apply(v: Int) = m.tan(v.toDouble)}
     implicit object tanDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.tan(v)}
     implicit object tanFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.tan(v).toFloat}
   }
 
-  object sinh extends UFunc with MappingUFunc {
+  object sinh extends UFunc with ActiveMappingUFunc {
     implicit object sinIntImpl extends Impl[Int, Double] { def apply(v: Int) = m.sinh(v.toDouble)}
     implicit object sinDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.sinh(v)}
     implicit object sinFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.sinh(v).toFloat}
@@ -230,7 +227,7 @@ package object numerics {
     implicit object cosFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.cosh(v).toFloat}
   }
 
-  object tanh extends UFunc with MappingUFunc {
+  object tanh extends UFunc with ActiveMappingUFunc {
     implicit object tanIntImpl extends Impl[Int, Double] { def apply(v: Int) = m.tanh(v.toDouble)}
     implicit object tanDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.tanh(v)}
     implicit object tanFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.tanh(v).toFloat}
@@ -242,7 +239,7 @@ package object numerics {
     implicit object tanFloatImpl extends Impl[Float, Float] { def apply(v: Float) = 1.0f/m.cosh(v).toFloat}
   }
 
-  object asin extends UFunc with MappingUFunc {
+  object asin extends UFunc with ActiveMappingUFunc {
     implicit object asinIntImpl extends Impl[Int, Double] { def apply(v: Int) = m.asin(v.toDouble)}
     implicit object asinDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.asin(v)}
     implicit object asinFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.asin(v).toFloat}
@@ -254,12 +251,11 @@ package object numerics {
     implicit object acosFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.acos(v).toFloat}
   }
 
-  object atan extends UFunc with MappingUFunc {
+  object atan extends UFunc with ActiveMappingUFunc {
     implicit object atanIntImpl extends Impl[Int, Double] { def apply(v: Int) = m.atan(v.toDouble)}
     implicit object atanDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.atan(v)}
     implicit object atanFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.atan(v).toFloat}
   }
-
 
   object atan2 extends UFunc with MappingUFunc {
     implicit object atan2IntImpl extends Impl2[Int, Int, Double] { def apply(v: Int, v2: Int) = m.atan2(v.toDouble, v2.toDouble)}
@@ -267,7 +263,7 @@ package object numerics {
     implicit object atan2FloatImpl extends Impl2[Float, Float, Float] { def apply(v: Float, v2: Float) = m.atan2(v, v2).toFloat}
   }
 
-  object asinh extends UFunc with MappingUFunc {
+  object asinh extends UFunc with ActiveMappingUFunc {
     implicit object asinIntImpl extends Impl[Int, Double] { def apply(v: Int) = FastMath.asinh(v.toDouble)}
     implicit object asinDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = FastMath.asinh(v)}
     implicit object asinFloatImpl extends Impl[Float, Float] { def apply(v: Float) = FastMath.asinh(v).toFloat}
@@ -279,55 +275,55 @@ package object numerics {
     implicit object acosFloatImpl extends Impl[Float, Float] { def apply(v: Float) = FastMath.acosh(v).toFloat}
   }
 
-  object atanh extends UFunc with MappingUFunc {
+  object atanh extends UFunc with ActiveMappingUFunc {
     implicit object atanIntImpl extends Impl[Int, Double] { def apply(v: Int) = FastMath.atanh(v.toDouble)}
     implicit object atanDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = FastMath.atanh(v)}
     implicit object atanFloatImpl extends Impl[Float, Float] { def apply(v: Float) = FastMath.atanh(v).toFloat}
   }
 
-  object toDegrees extends UFunc with MappingUFunc {
+  object toDegrees extends UFunc with ActiveMappingUFunc {
     implicit object toDegreesIntImpl extends Impl[Int, Double] { def apply(v: Int) = m.toDegrees(v.toDouble)}
     implicit object toDegreesDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.toDegrees(v)}
     implicit object toDegreesFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.toDegrees(v).toFloat}
   }
 
-  object toRadians extends UFunc with MappingUFunc {
+  object toRadians extends UFunc with ActiveMappingUFunc {
     implicit object toRadiansIntImpl extends Impl[Int, Double] { def apply(v: Int) = m.toRadians(v.toDouble)}
     implicit object toRadiansDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.toRadians(v)}
     implicit object toRadiansFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.toRadians(v).toFloat}
   }
 
-  object floor extends UFunc with MappingUFunc {
+  object floor extends UFunc with ActiveMappingUFunc {
     implicit object floorIntImpl extends Impl[Int, Int] { def apply(v: Int) = v}
     implicit object floorDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.floor(v)}
     implicit object floorFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.floor(v).toFloat}
   }
 
-  object ceil extends UFunc with MappingUFunc {
+  object ceil extends UFunc with ActiveMappingUFunc {
     implicit object ceilIntImpl extends Impl[Int, Int] { def apply(v: Int) = v}
     implicit object ceilDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.ceil(v)}
     implicit object ceilFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.ceil(v).toFloat}
   }
 
-  object round extends UFunc with MappingUFunc {
+  object round extends UFunc with ActiveMappingUFunc {
     implicit object roundIntImpl extends Impl[Int, Int] { def apply(v: Int) = v}
     implicit object roundDoubleImpl extends Impl[Double, Long] { def apply(v: Double) = m.round(v)}
     implicit object roundFloatImpl extends Impl[Float, Int] { def apply(v: Float) = m.round(v)}
   }
 
-  object rint extends UFunc with MappingUFunc {
+  object rint extends UFunc with ActiveMappingUFunc {
     implicit object rintIntImpl extends Impl[Int, Int] { def apply(v: Int) = v}
     implicit object rintDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.rint(v)}
     implicit object rintFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.rint(v).toFloat}
   }
 
-  object signum extends UFunc with MappingUFunc {
+  object signum extends UFunc with ActiveMappingUFunc {
     implicit object signumIntImpl extends Impl[Int, Double] { def apply(v: Int) = m.signum(v.toDouble)}
     implicit object signumDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.signum(v)}
     implicit object signumFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.signum(v)}
   }
 
-  object abs extends UFunc with MappingUFunc {
+  object abs extends UFunc with ActiveMappingUFunc {
     implicit object absDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = m.abs(v)}
     implicit object absFloatImpl extends Impl[Float, Float] { def apply(v: Float) = m.abs(v)}
     implicit object absIntImpl extends Impl[Int, Int] { def apply(v: Int) = m.abs(v)}
@@ -337,7 +333,7 @@ package object numerics {
   /** Whether a number is odd. For Double and Float, isOdd also implies that the number is an integer,
     * and therefore does not necessarily equal !isEven for fractional input.
     */
-  object isOdd extends UFunc with MappingUFunc {
+  object isOdd extends UFunc with ActiveMappingUFunc {
     @expand
     @expand.valify
     implicit def isOddImpl[@expand.args(Int, Double, Float, Long) T]: Impl[T, Boolean] = {
@@ -363,7 +359,7 @@ package object numerics {
   val inf, Inf = Double.PositiveInfinity
   val nan, NaN = Double.NaN
 
-  object isNonfinite extends UFunc with MappingUFunc {
+  object isNonfinite extends UFunc with ActiveMappingUFunc {
     @expand
     @expand.valify
     implicit def isNonfiniteImpl[@expand.args(Double, Float) T]: Impl[T, Boolean] = {
@@ -528,7 +524,7 @@ package object numerics {
   /**
    * An approximation to the error function
    */
-  object erf extends UFunc with MappingUFunc {
+  object erf extends UFunc with ActiveMappingUFunc {
     implicit object erfImplInt extends Impl[Int, Double] {
       def apply(v: Int): Double = Erf.erf(v.toDouble)
     }
@@ -682,7 +678,7 @@ package object numerics {
     * @see https://en.wikipedia.org/wiki/Rectifier_(neural_networks)
     *
     */
-  object relu extends UFunc with MappingUFunc {
+  object relu extends UFunc with ActiveMappingUFunc {
 
     implicit object reluImplDouble extends Impl[Double, Double] {
       def apply(x: Double) = max(0d, x)
@@ -718,7 +714,7 @@ package object numerics {
    * The indicator function. 1.0 iff b, else 0.0
    * For non-boolean arguments, 1.0 iff b != 0, else 0.0
    */
-  object I extends UFunc with MappingUFunc {
+  object I extends UFunc with ActiveMappingUFunc {
     implicit object iBoolImpl extends Impl[Boolean, Double] {
       def apply(b: Boolean) = if (b) 1.0 else 0.0
     }
