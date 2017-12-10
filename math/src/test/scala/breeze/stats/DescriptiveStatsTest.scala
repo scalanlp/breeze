@@ -173,7 +173,6 @@ class DescriptiveStatsTest2 extends FunSuite {
     assert(mavSum.count == mavTotal.count)
   }
 
-
   test("median") {
     val dataOdd =  DenseVector(0,1,2,3,400000)
     val dataOddDuplicate =  DenseVector(0,0,0,1,2,2,2,3,400000)

@@ -2,6 +2,9 @@ package breeze.stats
 
 import breeze.linalg.operators.{OpLT, OpLTE}
 import breeze.stats.meanAndVariance.MeanAndVariance
+import breeze.stats.stddev.Impl
+import breeze.stats.stddev.population.Impl
+import breeze.stats.variance.Impl
 
 import scala.reflect.ClassTag
 import util.Sorting
@@ -93,7 +96,7 @@ object mean extends UFunc {
 }
 
 /**
-  * A [[breeze.generic.UFunc]] for computing the mean and variance of objects.
+  * A [[breeze.generic.UFunc]] for computing the mean and sample variance of objects.
   * This uses an efficient, numerically stable, one pass algorithm for computing both
   * the mean and the variance.
   */
@@ -129,6 +132,7 @@ object meanAndVariance extends UFunc {
 
   case class MeanAndVariance(mean: Double, variance: Double, count: Long) {
     def stdDev: Double = math.sqrt(variance)
+    def populationVariance: Double = if (count == 0) 0 else (count - 1).toDouble / count * variance
 
     def +(other: MeanAndVariance): MeanAndVariance = {
       val d = other.mean - this.mean
@@ -148,21 +152,37 @@ object meanAndVariance extends UFunc {
 }
 
 /**
-  * A [[breeze.generic.UFunc]] for computing the variance of objects.
+  * A [[breeze.generic.UFunc]] for computing the *sample* variance of objects.
   * The method just calls meanAndVariance and returns the second result.
+  *
+  * Call variance.population if you want population variance
   */
 object variance extends UFunc {
   implicit def reduceDouble[T](implicit mv: meanAndVariance.Impl[T, meanAndVariance.MeanAndVariance]): Impl[T, Double] = new Impl[T, Double] {
     def apply(v: T): Double = mv(v).variance
   }
+
+  object population extends UFunc {
+    implicit def reduceDouble[T](implicit mv: meanAndVariance.Impl[T, meanAndVariance.MeanAndVariance]): Impl[T, Double] = new Impl[T, Double] {
+      def apply(v: T): Double = mv(v).populationVariance
+    }
+  }
 }
 
 /**
-  * Computes the standard deviation by calling variance and then sqrt'ing
+  * Computes the *sample* standard deviation by calling variance and then sqrt'ing. Note that this is different from Excel, numpy, etc.
+  *
+  * Call stddev.population if you want that.
   */
 object stddev extends UFunc {
   implicit def reduceDouble[T](implicit vari: variance.Impl[T, Double]): Impl[T, Double] = new Impl[T, Double] {
     def apply(v: T): Double = scala.math.sqrt(vari(v))
+  }
+
+  object population extends UFunc {
+    implicit def reduceDouble[T](implicit vari: variance.population.Impl[T, Double]): Impl[T, Double] = new Impl[T, Double] {
+      def apply(v: T): Double = scala.math.sqrt(vari(v))
+    }
   }
 }
 
