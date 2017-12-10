@@ -15,7 +15,7 @@ package breeze.math
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import breeze.linalg.{normalize, norm}
+import breeze.linalg.{norm, normalize}
 import org.scalacheck.Prop
 
 /**
@@ -28,6 +28,8 @@ trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
 
   import space._
 
+  // For computing the comparison point of relative tolerances. returns the max of the norms of the refs
+  def tolRef(refs: V*): Double = refs.map(norm(_)).max
 
   // norm
   test("norm positive homogeneity") {
@@ -50,10 +52,11 @@ trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
     })
   }
 
+
   test("dot product distributes over vector addition") {
     check(Prop.forAll { (trip: (V, V, V)) =>
       val (a, b, c) = trip
-      val res = scalars.close(scalars.+(a dot b, a dot c), a dot (b + c), TOL)
+      val res = scalars.close(scalars.+(a dot b, a dot c), a dot (b + c), TOL * tolRef(a, b, c))
       if (!res)
         println(scalars.+(a dot b, a dot c) + " " + (a dot (b + c)))
       res
@@ -92,7 +95,7 @@ trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
   test("Vector element-wise mult distributes over vector addition") {
     check(Prop.forAll{ (trip: (V, V, V)) =>
       val (a, b, c) = trip
-      close( (a + b) *:* c, (b *:* c) + (a *:* c), TOL)
+      close( (a + b) *:* c, (b *:* c) + (a *:* c), TOL * tolRef(a, b, c))
     })
 
 
@@ -108,7 +111,7 @@ trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
       ab :*= c
       val ba = copy(a) *:* c
       ba += (b *:* c)
-      close(ab, ba, TOL)
+      close(ab, ba, TOL * tolRef(a, b, c))
     })
   }
 }
