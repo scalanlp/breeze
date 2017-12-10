@@ -68,7 +68,7 @@ class SpectralProjectedGradientTest extends PropSpec with PropertyChecks with Op
       init := clip(init, Double.NegativeInfinity, 2.0)
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
-          (sum((x - 3.0) ^:^ 4.0), (x - 3.0) ^:^ 3.0 *:* 4.0)
+          (sum((x - 3.0) ^:^ 4.0), ((x - 3.0) ^:^ 3.0) *:* 4.0)
         }
       }
 
