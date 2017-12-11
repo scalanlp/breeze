@@ -26,7 +26,6 @@ import org.scalatest.prop._
 class RayleighTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase with MomentsTestBase[Double] with HasCdfTestBase {
   import org.scalacheck.Arbitrary.arbitrary
 
-
   override val numSamples = 40000
 
   def asDouble(x: Double) = x
@@ -38,4 +37,9 @@ class RayleighTest extends FunSuite with Checkers with UnivariateContinuousDistr
   }
 
   override type Distr = Rayleigh
+
+  test("#647: 0 outside of support") {
+    assert(Rayleigh(1).pdf(0) == 0.0)
+    assert(Rayleigh(1).pdf(-1) == 0.0)
+  }
 }

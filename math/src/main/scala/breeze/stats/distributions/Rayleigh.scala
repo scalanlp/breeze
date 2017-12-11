@@ -19,15 +19,13 @@ case class Rayleigh(scale: Double)(implicit rand: RandBasis = Rand) extends Cont
 
   def logNormalizer: Double = 2 * math.log(scale)
 
-  /**
-   * Gets one sample from the distribution. Equivalent to sample()
-   */
   def draw(): Double = {
     // from numpy
     math.sqrt(2 * new Exponential(1).draw() * scale * scale)
   }
 
   def unnormalizedLogPdf(x: Double): Double = {
+    if (x <= 0.0) return Double.NegativeInfinity
     log(x) - x * x / (2 * scale * scale)
   }
 
