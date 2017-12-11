@@ -7,7 +7,8 @@ import org.apache.commons.math3.random.RandomGenerator
  *
  * @author dlwh
  **/
-class ThreadLocalRandomGenerator(genThunk: =>RandomGenerator) extends RandomGenerator{
+@SerialVersionUID(1L)
+class ThreadLocalRandomGenerator(genThunk: =>RandomGenerator) extends RandomGenerator with Serializable {
   private val genTL = new ThreadLocal[RandomGenerator] {
     override def initialValue(): RandomGenerator = genThunk
   }
