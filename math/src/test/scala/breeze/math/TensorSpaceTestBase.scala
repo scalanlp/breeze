@@ -65,9 +65,10 @@ trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
 
   test("dot product associates with scalar multiplication") {
     check(Prop.forAll{ (trip: (V, V, V), s: S) =>
-      val (a, b, c) = trip
-      scalars.close(scalars.*(a dot b,s),(a dot (b *:* s)) ) &&
-      scalars.close(scalars.*(s, a dot b),( (a *:* s) dot (b)) )
+      val (a, b, _) = trip
+      val tol = TOL * tolRef(a, b)
+      scalars.close(scalars.*(a dot b,s), a dot (b *:* s), tol ) &&
+      scalars.close(scalars.*(s, a dot b), (a *:* s) dot (b), tol )
     })
   }
 
