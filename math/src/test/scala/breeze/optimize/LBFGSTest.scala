@@ -144,6 +144,23 @@ class LBFGSTest extends OptimizeTestBase {
    }
 
 
+  test("LBFGS for float vectors") {
+    val lbfgs = new LBFGS[DenseVector[Float]](100,4)
+
+    def optimizeThis(init: DenseVector[Float]) = {
+      val f = new DiffFunction[DenseVector[Float]] {
+        def calculate(x: DenseVector[Float])  = {
+          (norm((x - 3.0f) ^:^ 2.0f, 1), (x *:* 2.0f) - 6.0f)
+        }
+      }
+
+      val result = lbfgs.minimize(f,init)
+      norm(result - 3.0f, 2) < 1E-10
+    }
+
+    check(Prop.forAll(optimizeThis _))
+  }
+
 
 
 }

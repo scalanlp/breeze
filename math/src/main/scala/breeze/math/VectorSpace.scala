@@ -16,9 +16,12 @@ package breeze.math
  limitations under the License.
 */
 
-import breeze.linalg._
+import breeze.generic.UFunc
+import breeze.generic.UFunc.{InPlaceImpl2, InPlaceImpl3, UImpl2}
 import breeze.linalg.operators._
 import breeze.linalg.support._
+import breeze.linalg.{dim, norm, scaleAdd, _}
+import breeze.math.FloatDoubleOperatorAdaptors._
 import breeze.storage._
 
 import scala.reflect.ClassTag
@@ -293,6 +296,7 @@ object VectorField {
     override implicit def subVV: OpSub.Impl2[V, V, V] = _subVV
     override implicit def neg: OpNeg.Impl[V, V] = _neg
   }
+
 }
 
 object MutableModule {
@@ -392,6 +396,30 @@ object MutableInnerProductModule {
     override implicit def subIntoVV: OpSub.InPlaceImpl2[V, V] = _subIntoVV
     override implicit def setIntoVV: OpSet.InPlaceImpl2[V, V] = _setIntoVV
     override implicit def scaleAddVV: scaleAdd.InPlaceImpl3[V, S, V] = _scaleAddVSV
+  }
+
+  implicit def liftFloat[V](implicit vs: MutableInnerProductModule[V, Float]): MutableInnerProductModule[V, Double] = new MutableInnerProductModule[V, Double] {
+    override def scalars: Field[Double] = Field.fieldDouble
+
+    override def zeroLike: CanCreateZerosLike[V, V] = vs.zeroLike
+
+    override def mulVS: OpMulScalar.Impl2[V, Double, V] = vs.mulVS
+
+    override def hasOps(v: V): NumericOps[V] = vs.hasOps(v)
+
+    override def close(a: V, b: V, tolerance: Double): Boolean = vs.close(a, b, tolerance)
+
+
+    override def subVV: OpSub.Impl2[V, V, V] = vs.subVV
+    override def addVV: OpAdd.Impl2[V, V, V] = vs.addVV
+    override def dotVV: OpMulInner.Impl2[V, V, Double] = vs.dotVV
+
+    override def copy: CanCopy[V] = vs.copy
+    override def addIntoVV: OpAdd.InPlaceImpl2[V, V] = vs.addIntoVV
+    override def subIntoVV: OpSub.InPlaceImpl2[V, V] = vs.subIntoVV
+    override def setIntoVV: OpSet.InPlaceImpl2[V, V] = vs.setIntoVV
+    override def mulIntoVS: OpMulScalar.InPlaceImpl2[V, Double] = vs.mulIntoVS
+    override def scaleAddVV: scaleAdd.InPlaceImpl3[V, Double, V] = vs.scaleAddVV
   }
 }
 
@@ -632,6 +660,78 @@ object MutableFiniteCoordinateField {
     override implicit def zero: CanCreateZeros[V, I] = _zero
     override implicit def canDim: dim.Impl[V, I] = _dim
   }
+
+  implicit def liftFloat[K, V](implicit vs: MutableFiniteCoordinateField[V, K, Float]): MutableFiniteCoordinateField[V, K, Double] = new MutableFiniteCoordinateField[V, K, Double] {
+    override def scalars: Field[Double] = Field.fieldDouble
+
+    override def zeroLike: CanCreateZerosLike[V, V] = vs.zeroLike
+
+    override def mulVS: OpMulScalar.Impl2[V, Double, V] = ???
+
+    // TODO: this might cause problems??
+    override implicit def hasOps(v: V): NumericOps[V] with QuasiTensor[K, Double] = vs.hasOps(v).asInstanceOf[NumericOps[V] with QuasiTensor[K, Double]]
+
+    override def close(a: V, b: V, tolerance: Double): Boolean = vs.close(a, b, tolerance)
+
+    override def subVV: OpSub.Impl2[V, V, V] = vs.subVV
+    override def addVV: OpAdd.Impl2[V, V, V] = vs.addVV
+    override def dotVV: OpMulInner.Impl2[V, V, Double] = vs.dotVV
+
+    override def copy: CanCopy[V] = vs.copy
+    override def addIntoVV: OpAdd.InPlaceImpl2[V, V] = vs.addIntoVV
+    override def subIntoVV: OpSub.InPlaceImpl2[V, V] = vs.subIntoVV
+    override def setIntoVV: OpSet.InPlaceImpl2[V, V] = vs.setIntoVV
+    override def mulIntoVS: OpMulScalar.InPlaceImpl2[V, Double] = vs.mulIntoVS
+    override def scaleAddVV: scaleAdd.InPlaceImpl3[V, Double, V] = vs.scaleAddVV
+    override def addIntoVS:OpAdd.InPlaceImpl2[V, Double] = vs.addIntoVS
+    override def subIntoVS:OpSub.InPlaceImpl2[V, Double] = vs.subIntoVS
+    override def setIntoVS:OpSet.InPlaceImpl2[V, Double] = vs.setIntoVS
+    override def divVV:OpDiv.Impl2[V, V, V] = vs.divVV
+    override def divVS:OpDiv.Impl2[V, Double, V] = vs.divVS
+    override def mulVV:OpMulScalar.Impl2[V, V, V] = vs.mulVV
+    override def neg:OpNeg.Impl[V, V] = vs.neg
+    override def normImpl2: norm.Impl2[V, Double, Double] = vs.normImpl2
+    override def divIntoVV:OpDiv.InPlaceImpl2[V, V] = vs.divIntoVV
+    override def zero: CanCreateZeros[V, K] = vs.zero
+    override def canDim: dim.Impl[V, K] = vs.canDim
+    override def addVS:OpAdd.Impl2[V, Double, V] = vs.addVS
+    override def subVS:OpSub.Impl2[V, Double, V] = vs.subVS
+    override def divIntoVS:OpDiv.InPlaceImpl2[V, Double] = vs.divIntoVS
+
+    override implicit def scalarOf: ScalarOf[V, Double] = ScalarOf.dummy
+
+    override implicit def mapActiveValues: CanMapActiveValues[V, Double, Double, V] = new CanMapActiveValues[V, Double, Double, V] {
+      override def apply(v: V, v2: Double => Double): V = vs.mapActiveValues(v, a => v2(a).toFloat)
+    }
+
+    override implicit def mapValues: CanMapValues[V, Double, Double, V] = new CanMapValues[V, Double, Double, V] {
+      override def apply(v: V, v2: Double => Double): V = vs.mapValues(v, a => v2(a).toFloat)
+    }
+
+    override implicit def zipMapValues: CanZipMapValues[V, Double, Double, V] = new CanZipMapValues[V, Double, Double, V] {
+      override def map(from: V, from2: V, fn: (Double, Double) => Double): V = vs.zipMapValues.map(from, from2, (a, b) => fn(a, b).toFloat)
+    }
+
+    override def zipMapKeyValues: CanZipMapKeyValues[V, K, Double, Double, V] = new CanZipMapKeyValues[V, K, Double, Double, V] {
+      override def map(from: V, from2: V, fn: (K, Double, Double) => Double): V = vs.zipMapKeyValues.map(from, from2, (k, a, b) => fn(k, a, b).toFloat)
+
+      override def mapActive(from: V, from2: V, fn: (K, Double, Double) => Double): V = vs.zipMapKeyValues.mapActive(from, from2, (k, a, b) => fn(k, a, b).toFloat)
+    }
+
+    override implicit def iterateValues: CanTraverseValues[V, Double] = new CanTraverseValues[V, Double] {
+      /** Traverses all values from the given collection. */
+      override def traverse(from: V, fn: CanTraverseValues.ValuesVisitor[Double]): Unit = vs.iterateValues.traverse(from,
+        new CanTraverseValues.ValuesVisitor[Float] {
+          override def visit(a: Float): Unit = fn.visit(a)
+
+          override def zeros(numZero: Int, zeroValue: Float): Unit = fn.visit(zeroValue)
+        })
+
+      override def isTraversableAgain(from: V): Boolean = vs.iterateValues.isTraversableAgain(from)
+    }
+
+    override implicit def mulIntoVV:OpMulScalar.InPlaceImpl2[V, V] = vs.mulIntoVV
+  }
 }
 
 object MutableEnumeratedCoordinateField {
@@ -710,8 +810,8 @@ object MutableOptimizationSpace {
   object DenseFieldOptimizationSpace {
     implicit def denseOptSpace[S:Field:ClassTag]: MutableOptimizationSpace[DenseMatrix[S], DenseVector[S], S] = {
       val norms = EntrywiseMatrixNorms.make[DenseMatrix[S],S]
-      import norms._
       import DenseMatrix.canMapValues
+      import norms._
       make[DenseMatrix[S],DenseVector[S],S](_.asDenseMatrix,_.flatten())
     }
   }
@@ -719,8 +819,8 @@ object MutableOptimizationSpace {
   object DenseDoubleOptimizationSpace {
     implicit def denseDoubleOptSpace: MutableOptimizationSpace[DenseMatrix[Double], DenseVector[Double], Double] = {
       val norms = EntrywiseMatrixNorms.make[DenseMatrix[Double],Double]
-      import norms.{canInnerProduct, canNorm_Double}
       import DenseMatrix.canMapValues
+      import norms.{canInnerProduct, canNorm_Double}
       make[DenseMatrix[Double], DenseVector[Double], Double](_.asDenseMatrix,_.flatten())
     }
   }
@@ -893,5 +993,31 @@ object MutableOptimizationSpace {
     override implicit def scalarOfM: ScalarOf[M, S] = _scalarOfM
 
     override implicit def scalarOf: ScalarOf[V, S] = _scalarOf
+  }
+}
+
+private object FloatDoubleOperatorAdaptors {
+  implicit def liftOp2[Op <: UFunc, V, R](op: UImpl2[Op, V, Float, R]): UImpl2[Op, V, Double, R] = {
+    new UImpl2[Op, V, Double, R] {
+      override def apply(v: V, v2: Double): R = op(v, v2.toFloat)
+    }
+  }
+
+  implicit def liftInPlaceOp2[Op <: UFunc, V](op: InPlaceImpl2[Op, V, Float]): InPlaceImpl2[Op, V, Double] = {
+    new InPlaceImpl2[Op, V, Double] {
+      override def apply(v: V, v2: Double): Unit = op(v, v2.toFloat)
+    }
+  }
+
+  implicit def liftInPlaceOp3[Op <: UFunc, V, V3](op: InPlaceImpl3[Op, V, Float, V3]): InPlaceImpl3[Op, V, Double, V3] = {
+    new InPlaceImpl3[Op, V, Double, V3] {
+      override def apply(v: V, v2: Double, v3: V3): Unit = op(v, v2.toFloat, v3)
+    }
+  }
+
+  implicit def liftOpReturnFloat[Op <: UFunc, V](op: UImpl2[Op, V, V, Float]): UImpl2[Op, V, V, Double] = {
+    new UImpl2[Op, V, V, Double] {
+      override def apply(v: V, v2: V): Double = op(v, v2)
+    }
   }
 }
