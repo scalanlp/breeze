@@ -223,7 +223,7 @@ object FirstOrderMinimizer {
 
 
     override def apply(state: State[T, _, _], info: IndexedSeq[Double]): Option[ConvergenceReason] = {
-      if(info.length >= 2 && (state.adjustedValue - info.max).abs <= tolerance * (if (relative) state.initialAdjVal else 1.0)) {
+      if(info.length >= 2 && (state.adjustedValue - info.max).abs <= tolerance * (if (relative) state.initialAdjVal.abs else 1.0)) {
         Some(FunctionValuesConverged)
       } else {
         None
