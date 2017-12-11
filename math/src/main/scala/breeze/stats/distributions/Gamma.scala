@@ -201,15 +201,17 @@ object Gamma extends ExponentialFamily[Gamma,Double] with ContinuousDistribution
     (3 - s + math.sqrt( math.pow((s-3),2) + 24*s )) / (12 * s)
   }
 
-  def Nwt_Rph_iter_for_k(k:Double, s:Double ): Double = {
+  private val MaxIter = 50
+
+  private def Nwt_Rph_iter_for_k(k:Double, s: Double, iter: Int = 0): Double = {
     /*
      * For a more precise estimate, use Newton-Raphson updates
      */
     val k_new = k - (math.log(k) - digamma(k) - s)/( 1.0/k - trigamma(k) )
-    if (math.abs(k - k_new)/math.abs(k_new) < 1.0e-4)
+    if (closeTo(k, k_new) || iter >= MaxIter)
       k_new
     else
-      Nwt_Rph_iter_for_k(k_new,s)
+      Nwt_Rph_iter_for_k(k_new,s, iter + 1)
   }
 
 

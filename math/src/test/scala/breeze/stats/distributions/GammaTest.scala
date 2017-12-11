@@ -78,4 +78,9 @@ class GammaTest extends FunSuite with Checkers with UnivariateContinuousDistrTes
     val g = new Gamma(0.8, 1)
     assert(g.pdf(0.0) == Double.PositiveInfinity)
   }
+
+  test("#631 infinite loop") {
+    val ss = Gamma.SufficientStatistic(2.0,6.170967121146477,478.64879368949363)
+    Gamma.mle(ss)
+  }
 }
