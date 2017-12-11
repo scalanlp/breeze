@@ -15,11 +15,9 @@ package breeze.optimize
  limitations under the License.
 */
 
-import breeze.linalg.{DenseMatrix, DenseVector}
-import breeze.linalg._
+import breeze.linalg.{DenseMatrix, DenseVector, _}
 import breeze.optimize.FirstOrderMinimizer.{ConvergenceCheck, ProjectedStepConverged, State}
 import breeze.util.SerializableLogging
-import breeze.util.Implicits._
 import spire.syntax.cfor._
 
 /**
@@ -108,7 +106,7 @@ class LBFGSB(lowerBounds: DenseVector[Double],
   }
 
   override protected def takeStep(state: State, dir: DenseVector[Double], stepSize: Double) = {
-    val newX = state.x + (dir :* stepSize)
+    val newX = state.x + dir *:* stepSize
     adjustWithinBound(newX)
     newX
   }

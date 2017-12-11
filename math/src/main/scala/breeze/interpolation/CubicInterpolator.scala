@@ -44,6 +44,7 @@ class CubicInterpolator
     case (k, 1) => d(k) - h(k)/6 * (2*m(k) + m(k+1))
     case (k, 2) => m(k)/2
     case (k, 3) => (m(k+1) - m(k))/6/h(k)
+    case _ => assert(false, "unreachable"); ???
   }
 
   override protected def interpolate(x: Double): Double = {
