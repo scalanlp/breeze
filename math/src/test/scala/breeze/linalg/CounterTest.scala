@@ -14,13 +14,13 @@ package breeze.linalg
  See the License for the specific language governing permissions and
  limitations under the License.
 */
+import breeze.math.TensorSpaceTestBase
+import breeze.stats.mean
+import org.junit.runner.RunWith
+import org.scalacheck.Arbitrary
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-import org.junit.runner.RunWith
 import org.scalatest.prop.Checkers
-import breeze.math.{MutableCoordinateField, MutableVectorField, VectorField, TensorSpaceTestBase}
-import org.scalacheck.Arbitrary
-import breeze.stats.mean
 
 /**
  * @author dlwh

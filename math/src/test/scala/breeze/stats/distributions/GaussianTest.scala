@@ -16,6 +16,7 @@ package breeze.stats.distributions;
  limitations under the License.
 */
 
+import breeze.linalg.RandomInstanceSupport
 import org.junit.runner.RunWith
 import org.scalacheck._
 import org.scalatest._
@@ -29,9 +30,10 @@ class GaussianTest extends FunSuite with Checkers with UnivariateContinuousDistr
   import org.scalacheck.Arbitrary.arbitrary;
 
   def arbParameter = Arbitrary{
-    for( mean <- arbitrary[Double].map{_ % 10000.0};
-      std <- arbitrary[Double].map{x => math.abs(x) % 8.0 + .1}
-    ) yield (mean,std)
+    for{
+      mean <- RandomInstanceSupport.genReasonableDouble.arbitrary
+      std <- RandomInstanceSupport.genReasonableDouble.arbitrary.map{x => math.abs(x) % 8.0 + .1}
+    } yield (mean,std)
   }
 
   def paramsClose(p: (Double,Double), b: (Double,Double)) = {

@@ -27,6 +27,10 @@ trait OptimizeTestBaseTrait {
     RandomInstanceSupport.genDenseVector[Double](10, RandomInstanceSupport.genReasonableDouble.arbitrary.map(_ % 10 + 1E-2))
   }
 
+  implicit val arbVectorFloat : Arbitrary[DenseVector[Float]] = Arbitrary {
+    RandomInstanceSupport.genDenseVector[Float](10, RandomInstanceSupport.genReasonableFloat.arbitrary.map(_ % 10 + 1E-2f))
+  }
+
   implicit def arbSV: Arbitrary[SparseVector[Double]] = Arbitrary {
     RandomInstanceSupport.genSparseVector[Double](10, RandomInstanceSupport.genReasonableDouble.arbitrary.map(_ % 10 + 1E-2))
   }

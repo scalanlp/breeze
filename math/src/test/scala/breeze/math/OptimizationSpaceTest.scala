@@ -134,7 +134,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
   test("Scalar mult distributes over field addition - Matrix") {
     check(Prop.forAll{ (trip: (M, M, M), s: S, t: S) =>
       val (a, _, _) = trip
-      closeM( (a) *:* scalars.+(s,t), (a *:* s) + (a *:* t), TOLM  * math.max(tolRefM(a), norm(s)).abs)
+      closeM( (a) *:* scalars.+(s,t), (a *:* s) + (a *:* t), TOLM  * max(tolRefM(a), norm(s), norm(t)).abs)
     })
 
     check(Prop.forAll{ (trip: (M, M, M), s: S, t: S) =>
@@ -293,7 +293,7 @@ class DenseOptimizationSpaceTest_Double extends DenseVectorPropertyTestBase[Doub
     MutableOptimizationSpace.DenseDoubleOptimizationSpace.denseDoubleOptSpace
 
 
-  val N = 30
+  val N = 5
   override implicit def genTripleM: Arbitrary[(DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double])] = {
     Arbitrary {
       for{x <- RandomInstanceSupport.genReasonableDouble.arbitrary
