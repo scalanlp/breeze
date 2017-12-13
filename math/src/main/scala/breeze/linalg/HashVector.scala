@@ -49,6 +49,8 @@ class HashVector[@spec(Double, Int, Float, Long) E](val array: OpenAddressHashAr
   final def index = array.index
   final def isActive(i: Int) = array.isActive(i)
 
+  def clear() = array.clear()
+
 
   override def toString = {
     activeIterator.mkString("HashVector(",", ", ")")

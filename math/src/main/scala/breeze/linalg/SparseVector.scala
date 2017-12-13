@@ -80,6 +80,11 @@ class SparseVector[@spec(Double, Int, Float, Long) V](val array: SparseArray[V])
     array(i) = v
   }
 
+  /** Sometimes we get specialization assertion failures during compile. We can use this to avoid them. */
+  final def otherApply(i: Int): V = {
+    apply(i)
+  }
+
   def activeIterator: Iterator[(Int, V)] = activeKeysIterator zip activeValuesIterator
 
   def activeValuesIterator: Iterator[V] = data.iterator.take(activeSize)

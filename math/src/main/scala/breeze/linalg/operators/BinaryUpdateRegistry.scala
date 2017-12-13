@@ -67,7 +67,8 @@ trait BinaryUpdateRegistry[A<:AnyRef, B, Op<:OpType] extends UFunc.InPlaceImpl2[
     }
   }
 
-  def register[AA<:A, BB<:B](op: InPlaceImpl2[Op, AA, BB])(implicit cA: ClassTag[AA], cB: ClassTag[BB]) {
+  def register[AA<:A, BB<:B](op: InPlaceImpl2[Op, AA, BB])(implicit cA: ClassTag[AA], cB: ClassTag[BB]) = {
     super.register(cA.runtimeClass, cB.runtimeClass, op)
+    op
   }
 }

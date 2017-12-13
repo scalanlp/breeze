@@ -16,8 +16,10 @@ package breeze.collection.mutable
  limitations under the License.
 */
 
-import breeze.storage.{Storage, ConfigurableDefault, Zero}
 import java.util
+
+import breeze.storage.{ConfigurableDefault, Storage, Zero}
+
 import scala.reflect.ClassTag
 import scala.util.hashing.MurmurHash3
 
@@ -35,6 +37,7 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) V] priva
                                  val default: ConfigurableDefault[V] = ConfigurableDefault.default[V])
                                 (implicit protected val manElem: ClassTag[V],
                                  val zero: Zero[V]) extends Storage[V] with ArrayLike[V] with Serializable {
+
   require(size > 0, "Size must be positive, but got " + size)
 
   def this(size: Int, default: ConfigurableDefault[V],
@@ -165,6 +168,12 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) V] priva
       breeze.util.ArrayUtil.copyOf(_data, _data.length),
       load, size, default
     )
+  }
+
+  def clear(): Unit = {
+    _data = default.makeArray(16)
+    _index = OpenAddressHashArray.emptyIndexArray(16)
+    load = 0
   }
 
   // This hash code must be symmetric in the contents but ought not
