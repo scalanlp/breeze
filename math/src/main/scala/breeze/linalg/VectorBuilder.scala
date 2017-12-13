@@ -244,7 +244,16 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
 
 
   def compact() {
-    reallocate(used)
+    val ah = toSparseVector
+    clear()
+    reallocate(ah.activeSize)
+    var i = 0
+    while(i < ah.iterableSize) {
+      if(ah.isActive(i)) {
+        add(ah.index(i), ah.data(i))
+      }
+      i += 1
+    }
   }
 
   def clear() {
