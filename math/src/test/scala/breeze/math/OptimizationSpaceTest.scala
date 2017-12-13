@@ -144,7 +144,7 @@ trait OptimizationSpaceTest[M,V,S] extends TensorSpaceTestBase[V,Int,S] {
       ab += (a *:* t)
       val ba = copyM(a)
       ba *= scalars.+(s,t)
-      closeM(ab, ba, TOLM  * math.max(tolRefM(a), norm(s)).abs)
+      closeM(ab, ba, TOLM  * max(tolRefM(a), norm(s), norm(t)).abs)
     })
   }
 
