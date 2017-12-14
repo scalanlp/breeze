@@ -18,6 +18,7 @@ trait DenseVector_HashVector_Ops { this: HashVector.type =>
   import breeze.math.PowImplicits._
 
   @expand
+  @expand.valify
   implicit def dv_hv_Update_Zero_Idempotent[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _})
@@ -37,10 +38,12 @@ trait DenseVector_HashVector_Ops { this: HashVector.type =>
         i += 1
       }
     }
+    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
   }
 
 
   @expand
+  @expand.valify
   implicit def canDot_DV_HV[@expand.args(Int, Double, Float, Long) T](implicit @expand.sequence[T](0, 0.0, 0f, 0l) zero: T): breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], HashVector[T], T] = {
     new breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], HashVector[T], T] {
       def apply(a: DenseVector[T], b: HashVector[T]) = {
@@ -62,9 +65,10 @@ trait DenseVector_HashVector_Ops { this: HashVector.type =>
         }
         result
       }
+
+      implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulInner.type, T]].register(this)
     }
   }
-
 
 }
 
@@ -73,6 +77,7 @@ trait HashVector_DenseVector_Ops extends DenseVector_HashVector_Ops { this: Hash
 
 
   @expand
+  @expand.valify
   implicit def hv_dv_UpdateOp[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _}, {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
@@ -86,10 +91,12 @@ trait HashVector_DenseVector_Ops extends DenseVector_HashVector_Ops { this: Hash
         i += 1
       }
     }
+    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
   }
 
 
   @expand
+  @expand.valify
   implicit def hv_dv_op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _}, {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
@@ -107,6 +114,8 @@ trait HashVector_DenseVector_Ops extends DenseVector_HashVector_Ops { this: Hash
 
         result
       }
+
+      implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
     }
   }
 
@@ -129,6 +138,7 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
 
 
   @expand
+  @expand.valify
   implicit def hv_hv_RHS_Idempotent_Op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _}, {_ - _})
@@ -148,10 +158,13 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
       }
       result
     }
+
+    implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
   }
 
 
   @expand
+  @expand.valify
   implicit def hv_hv_nilpotent_Op[@expand.args(Int, Double, Float, Long) T]
   (implicit @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T):OpMulScalar.Impl2[HashVector[T], HashVector[T], HashVector[T]] = new OpMulScalar.Impl2[HashVector[T], HashVector[T], HashVector[T]] {
     def apply(a: HashVector[T], b: HashVector[T]): HashVector[T] = {
@@ -168,9 +181,11 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
       }
       builder.toHashVector
     }
+    implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulScalar.type, Vector[T]]].register(this)
   }
 
   @expand
+  @expand.valify
   implicit def hv_hv_LHS_Nilpotent_Op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpDiv, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ / _}, {_ % _}, {_ pow _})
@@ -193,11 +208,13 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
 
       result
     }
+    implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
   }
 
 
 
   @expand
+  @expand.valify
   implicit def hv_v_Op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
@@ -214,9 +231,11 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
       }
       result
     }
+    implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
   }
 
   @expand
+  @expand.valify
   implicit def hv_s_rhs_idempotent_Op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _})
@@ -237,9 +256,11 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
       }
       result
     }
+    implicitly[BinaryRegistry[Vector[T], T, Op.type, Vector[T]]].register(this)
   }
 
   @expand
+  @expand.valify
   implicit def hv_s_LHS_Nilpotent_Op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpMulScalar, OpMulMatrix, OpDiv, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ * _}, {_ * _}, {_ / _}, {_ % _}, {_ pow _})
@@ -267,9 +288,11 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
 
       result
     }
+    implicitly[BinaryRegistry[Vector[T], T, Op.type, Vector[T]]].register(this)
   }
 
   @expand
+  @expand.valify
   implicit def hv_hv_UpdateOp[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
@@ -282,9 +305,11 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
         i += 1
       }
     }
+    implicitly[BinaryUpdateRegistry[Vector[T],Vector[T], Op.type]].register(this)
   }
 
   @expand
+  @expand.valify
   implicit def hv_hv_Idempotent_UpdateOp[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _}, {_ - _})
@@ -295,9 +320,12 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
         a(k) = op(a(k), v)
       }
     }
+
+    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
   }
 
   @expand
+  @expand.valify
   implicit def hv_s_RHS_idempotent_UpdateOp[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _},  {_ - _})
@@ -311,9 +339,11 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
         i += 1
       }
     }
+    implicitly[BinaryUpdateRegistry[Vector[T], T, Op.type]].register(this)
   }
 
   @expand
+  @expand.valify
   implicit def hv_s_nilpotent_UpdateOp[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpMulScalar) Op <: OpType]
   (implicit @expand.sequence[Op]({_ * _})
@@ -328,9 +358,11 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
         a(k) = op(v, b)
       }
     }
+    implicitly[BinaryUpdateRegistry[Vector[T], T, Op.type]].register(this)
   }
 
   @expand
+  @expand.valify
   implicit def hv_s_SetOp[@expand.args(Int, Double, Float, Long) T]:OpSet.InPlaceImpl2[HashVector[T], T] = new OpSet.InPlaceImpl2[HashVector[T], T] {
     def apply(a: HashVector[T], b: T):Unit = {
       if (b == 0) {
@@ -344,9 +376,11 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
         i += 1
       }
     }
+    implicitly[BinaryUpdateRegistry[Vector[T], T, OpSet.type]].register(this)
   }
 
   @expand
+  @expand.valify
   implicit def hv_s_LHS_nilpotent_UpdateOp[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpDiv, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ / _}, {_ % _}, { _ pow _})
@@ -365,11 +399,11 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
         }
       }
     }
+    implicitly[BinaryUpdateRegistry[Vector[T], T, Op.type]].register(this)
   }
 
-
-
   @expand
+  @expand.valify
   implicit def canDot_HV_HV[@expand.args(Int, Long, Double, Float) T](implicit @expand.sequence[T](0, 0l, 0.0, 0f) zero: T): breeze.linalg.operators.OpMulInner.Impl2[HashVector[T], HashVector[T], T] = {
     new breeze.linalg.operators.OpMulInner.Impl2[HashVector[T], HashVector[T], T] {
       def apply(a: HashVector[T], b: HashVector[T]):T = {
@@ -385,12 +419,11 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
           result
         }
       }
-      //      Vector.canDotProductV_T.register(this)
+      implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulInner.type, T]].register(this)
     }
   }
 
   @expand
-  @expand.valify
   implicit def canNorm[@expand.args(Int, Double, Float, Long) T]: norm.Impl2[HashVector[T], Double, Double] = {
 
     new norm.Impl2[HashVector[T], Double, Double] {
@@ -453,6 +486,7 @@ trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type 
 
 
   @expand
+  @expand.valify
   implicit def hv_sv_lhs_nilpotent_Op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
   (implicit @expand.sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
@@ -476,10 +510,12 @@ trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type 
       }
       builder.toHashVector
     }
+    implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
   }
 
 
   @expand
+  @expand.valify
   implicit def hv_sv_nilpotent_Op[@expand.args(Int, Double, Float, Long) T]
   (implicit @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T):OpMulScalar.Impl2[HashVector[T], SparseVector[T], HashVector[T]] = new OpMulScalar.Impl2[HashVector[T], SparseVector[T], HashVector[T]] {
     def apply(a: HashVector[T], b: SparseVector[T]): HashVector[T] = {
@@ -496,10 +532,12 @@ trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type 
       }
       builder.toHashVector
     }
+    implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulScalar.type, Vector[T]]].register(this)
   }
 
 
   @expand
+  @expand.valify
   implicit def hv_sv_Idempotent_Op[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpAdd, OpSub) Op <: OpType]
   (implicit @expand.sequence[Op]({_ + _}, {_ - _})
@@ -517,10 +555,12 @@ trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type 
       }
       result
     }
+    implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
   }
 
 
   @expand
+  @expand.valify
   implicit def canDot_HV_SV[@expand.args(Int, Long, Float, Double) T](implicit @expand.sequence[T](0, 0l, 0f, 0.0) zero: T): breeze.linalg.operators.OpMulInner.Impl2[HashVector[T], SparseVector[T], T] = {
     new breeze.linalg.operators.OpMulInner.Impl2[HashVector[T], SparseVector[T], T] {
       def apply(a: HashVector[T], b: SparseVector[T]) = {
@@ -538,7 +578,7 @@ trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type 
 
         result
       }
-      //      Vector.canDotProductV_T.register(this)
+      implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulInner.type, T]].register(this)
     }
   }
 
