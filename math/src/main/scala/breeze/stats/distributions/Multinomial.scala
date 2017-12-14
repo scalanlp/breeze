@@ -95,7 +95,11 @@ case class Multinomial[T,I](params: T)(implicit ev: T=>QuasiTensor[I, Double], s
     AliasTable(probs, aliases, outcomes, rand)
   }
 
-  def probabilityOf(e : I) = params(e) / sum
+  def probabilityOf(e : I) = {
+    // this deals with the fact that DenseVectors support negative indexing
+    if (!params.keySet.contains(e)) 0.0
+    else params(e) / sum
+  }
   override def unnormalizedProbabilityOf(e:I) = params(e)
 
   override def toString = ev(params).activeIterator.mkString("Multinomial{",",","}")

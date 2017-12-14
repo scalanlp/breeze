@@ -45,4 +45,9 @@ class MultinomialTest extends FunSuite with Checkers with Matchers {
     accumAlias /= NSamples.toDouble
     accumAlias(2) should be (TestDist(2) +- 1e-3)
   }
+
+  test("multinomial negative indexes") {
+    val mult = new Multinomial[DenseVector[Double],Int](TestParams)
+    assert(mult.probabilityOf(-1) == 0.0)
+  }
 }
