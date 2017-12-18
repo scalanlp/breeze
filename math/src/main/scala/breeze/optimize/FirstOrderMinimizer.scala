@@ -90,6 +90,7 @@ abstract class FirstOrderMinimizer[T, DF<:StochasticDiffFunction[T]](val converg
       convergenceCheck.apply(s, s.convergenceInfo) match {
         case Some(converged) =>
           logger.info(s"Converged because ${converged.reason}")
+          s.convergenceReason = Some(converged)
           true
         case None =>
           false
@@ -127,6 +128,7 @@ object FirstOrderMinimizer {
    * @param initialAdjVal f(x_0) + r(x_0), used for checking convergence
    * @param history any information needed by the optimizer to do updates.
    * @param searchFailed did the line search fail?
+   * @param convergenceReason the convergence reason
    */
   case class State[+T, +ConvergenceInfo, +History](x: T,
                                                    value: Double, grad: T,
@@ -135,7 +137,8 @@ object FirstOrderMinimizer {
                                                    initialAdjVal: Double,
                                                    history: History,
                                                    convergenceInfo: ConvergenceInfo,
-                                                   searchFailed: Boolean = false) {
+                                                   searchFailed: Boolean = false,
+                                                   var convergenceReason: Option[ConvergenceReason] = None) {
   }
 
   trait ConvergenceCheck[T] {
