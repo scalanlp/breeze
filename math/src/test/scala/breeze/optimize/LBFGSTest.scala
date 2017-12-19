@@ -161,7 +161,25 @@ class LBFGSTest extends OptimizeTestBase {
     check(Prop.forAll(optimizeThis _))
   }
 
+  test("return convergence reason") {
+    val lbfgs = new LBFGS[DenseVector[Double]](100,4)
 
+    def optimizeThis(init: DenseVector[Double]) = {
+      val f = new DiffFunction[DenseVector[Double]] {
+        def calculate(x: DenseVector[Double]) = {
+          (norm((x - 3.0) ^:^ 2.0, 1), (x *:* 2.0) - 6.0)
+        }
+      }
+
+      val reason = lbfgs.minimizeAndReturnState(f,init).convergenceReason
+      reason.map(r => r.isInstanceOf[MaxIterations] ||
+        r.isInstanceOf[FirstOrderMinimizer.FunctionValuesConverged.type] ||
+        r.isInstanceOf[FirstOrderMinimizer.GradientConverged.type] ||
+        r.isInstanceOf[LineSearchFailed]).getOrElse(false)
+    }
+
+    check(Prop.forAll(optimizeThis _))
+  }
 
 }
 
