@@ -4,6 +4,7 @@ import breeze.util._
 import breeze.linalg._
 import breeze.numerics._
 import breeze.math._
+import breeze.optimize.FirstOrderMinimizer.ConvergenceCheck
 
 
 /**
@@ -14,11 +15,13 @@ import breeze.math._
  *
  * @author dlwh
  */
-class OWLQN[K, T](maxIter: Int, m: Int, l1reg: K => Double, tolerance: Double)(implicit space: MutableEnumeratedCoordinateField[T, K, Double]) extends LBFGS[T](maxIter, m, tolerance=tolerance) with SerializableLogging {
+class OWLQN[K, T](convergenceCheck: ConvergenceCheck[T], m: Int, l1reg: K => Double)(implicit space: MutableEnumeratedCoordinateField[T, K, Double]) extends LBFGS[T](convergenceCheck, m) with SerializableLogging {
+
+  def this(maxIter: Int, m: Int, l1reg: K => Double, tolerance: Double)(implicit space: MutableEnumeratedCoordinateField[T, K, Double]) = this(FirstOrderMinimizer.defaultConvergenceCheck(maxIter, tolerance), m, l1reg)
 
   def this(maxIter: Int, m: Int, l1reg: K => Double)(implicit space: MutableEnumeratedCoordinateField[T, K, Double]) = this(maxIter, m, l1reg, 1E-8)
 
-  def this(maxIter: Int, m: Int, l1reg: Double, tolerance: Double = 1E-8)(implicit space:MutableEnumeratedCoordinateField[T, K, Double]) = this(maxIter, m, (_: K) => l1reg, tolerance)
+  def this(maxIter: Int, m: Int, l1reg: Double, tolerance: Double = 1E-8)(implicit space: MutableEnumeratedCoordinateField[T, K, Double]) = this(maxIter, m, (_: K) => l1reg, tolerance)
 
   def this(maxIter: Int, m: Int, l1reg: Double)(implicit space: MutableEnumeratedCoordinateField[T, K, Double]) = this(maxIter, m, (_: K) => l1reg, 1E-8)
 
