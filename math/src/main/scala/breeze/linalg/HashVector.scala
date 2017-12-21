@@ -17,7 +17,11 @@ import scala.util.hashing.MurmurHash3
  * A HashVector is a sparse vector backed by an OpenAddressHashArray
  * @author dlwh
  */
-class HashVector[@spec(Double, Int, Float, Long) E](val array: OpenAddressHashArray[E]) extends Vector[E] with VectorLike[E, HashVector[E]] {
+class HashVector[@spec(Double, Int, Float, Long) E](
+  val array: OpenAddressHashArray[E])
+  extends Vector[E]
+    with VectorLike[E, HashVector[E]]
+    with Serializable {
 
   // don't delete
   HashVector.init()
