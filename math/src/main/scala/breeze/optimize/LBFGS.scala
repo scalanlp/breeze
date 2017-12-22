@@ -59,8 +59,7 @@ class LBFGS[T](convergenceCheck: ConvergenceCheck[T], m: Int)(implicit space: Mu
 
   /**
    * Given a direction, perform a line search to find 
-   * a direction to descend. At the moment, this just executes
-   * backtracking, so it does not fulfill the wolfe conditions.
+   * a step size to descend. The result fulfills the wolfe conditions.
    *
    * @param state the current state
    * @param f The objective
