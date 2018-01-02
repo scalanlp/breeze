@@ -1,6 +1,6 @@
 package breeze.optimize
 
-import breeze.math.InnerProductModule
+import breeze.math.MutableInnerProductModule
 import breeze.util.Implicits._
 
 trait MinimizingLineSearch {
@@ -27,18 +27,28 @@ trait ApproximateLineSearch extends MinimizingLineSearch {
 }
 
 object LineSearch {
-  def functionFromSearchDirection[T, I](f: DiffFunction[T], x: T, direction: T)(implicit prod: InnerProductModule[T, Double]):DiffFunction[Double] = new DiffFunction[Double] {
+  def functionFromSearchDirection[T, I](f: DiffFunction[T], x: T, direction: T)(implicit prod: MutableInnerProductModule[T, Double]): DiffFunction[Double] = new DiffFunction[Double] {
     import prod._
 
     /** calculates the value at a point */
-    override def valueAt(alpha: Double): Double = f.valueAt(x + direction * alpha)
+    override def valueAt(alpha: Double): Double = {
+      val newX = direction * alpha
+      newX :+= x
+      f.valueAt(newX)
+    }
 
     /** calculates the gradient at a point */
-    override def gradientAt(alpha: Double): Double = f.gradientAt(x + direction * alpha) dot direction
+    override def gradientAt(alpha: Double): Double = {
+      val newX = direction * alpha
+      newX :+= x
+      f.gradientAt(newX) dot direction
+    }
 
     /** Calculates both the value and the gradient at a point */
     def calculate(alpha: Double): (Double, Double) = {
-      val (ff, grad) = f.calculate(x + direction * alpha)
+      val newX = direction * alpha
+      newX :+= x
+      val (ff, grad) = f.calculate(newX)
       ff -> (grad dot direction)
     }
   }

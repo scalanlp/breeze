@@ -19,8 +19,7 @@ package breeze.optimize
 import breeze.linalg._
 import breeze.linalg.operators.OpMulMatrix
 import breeze.math.MutableInnerProductModule
-import breeze.optimize.FirstOrderMinimizer.{ConvergenceCheck, ConvergenceReason}
-import breeze.optimize.linear.PowerMethod
+import breeze.optimize.FirstOrderMinimizer.ConvergenceCheck
 import breeze.util.SerializableLogging
 
 /**
@@ -47,7 +46,12 @@ class LBFGS[T](convergenceCheck: ConvergenceCheck[T], m: Int)(implicit space: Mu
 
   override protected def adjustFunction(f: DiffFunction[T]): DiffFunction[T] = f.cached
 
-  protected def takeStep(state: State, dir: T, stepSize: Double) = state.x + dir * stepSize
+  protected def takeStep(state: State, dir: T, stepSize: Double): T = {
+    val newX = dir * stepSize
+    newX :+= state.x
+    newX
+  }
+
   protected def initialHistory(f: DiffFunction[T], x: T): History = new LBFGS.ApproximateInverseHessian(m)
   protected def chooseDescentDirection(state: State, fn: DiffFunction[T]):T = {
     state.history * state.grad
