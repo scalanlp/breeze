@@ -12,6 +12,7 @@ import breeze.util.SerializableLogging
 import scala.reflect.ClassTag
 import java.util
 import scalaxy.debug._
+import spire.syntax.cfor._
 
 /**
  * TODO
@@ -691,37 +692,56 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring {  this: CSCMatrix.type =>
   @expand.valify
   implicit def canMulM_M[@expand.args(Int, Float, Double, Long) T]: breeze.linalg.operators.OpMulMatrix.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] = new breeze.linalg.operators.OpMulMatrix.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] {
     def apply(a: CSCMatrix[T], b: CSCMatrix[T]) = {
-
       require(a.cols == b.rows, "Dimension Mismatch")
 
-      var numnz = 0
-      var i = 0
-      while (i < b.cols) {
-        var j = b.colPtrs(i)
-        while (j < b.colPtrs(i+1)) {
-          numnz += a.colPtrs(b.rowIndices(j)+1) - a.colPtrs(b.rowIndices(j))
-          j += 1
-        }
-        i += 1
-      }
-      val res = new CSCMatrix.Builder[T](a.rows, b.cols, numnz)
-      i = 0
-      while (i < b.cols) {
-        var j = b.colPtrs(i)
-        while (j < b.colPtrs(i+1)) {
-          val dval = b.data(j)
-          var k = a.colPtrs(b.rowIndices(j))
-          while (k < a.colPtrs(b.rowIndices(j)+1)) {
-            res.add(a.rowIndices(k), i, a.data(k) * dval)
-            k += 1
+      // we do one column of the result at a time.
+      // while doing that column, it is stored densely in workData
+      // we then copy it in to the result matrix
+      val workData = new Array[T](a.rows)
+      // rather than having to zero out workData, we maintain a version number for
+      // each index to know whether or not we need to add or zero out
+      // the version number is going to be the current column + 1
+      val workIndex = new Array[Int](a.rows)
+
+      val res = CSCMatrix.zeros[T](a.rows, b.cols)
+      res.reserve(a.activeSize + b.activeSize)
+
+      cforRange(0 until b.cols) { col =>
+        // TODO: should we grow more aggressively than this?
+        res.reserve(res.activeSize + res.rows)
+        val version = col + 1
+
+        var nnz = res.used
+        cforRange(b.colPtrs(col) until b.colPtrs(col + 1)) { bOff =>
+          val bRow = b.rowIndices(bOff)
+          val bVal = b.data(bOff)
+
+          cforRange(a.colPtrs(bRow) until a.colPtrs(bRow + 1)) { aOff =>
+            val aRow = a.rowIndices(aOff)
+            val aVal = a.data(aOff)
+
+            if (workIndex(aRow) < version) {
+              workData(aRow) = 0
+              workIndex(aRow) = version
+              res.rowIndices(nnz) = aRow
+              nnz += 1
+            }
+            workData(aRow) += aVal * bVal
+
           }
-          j += 1
         }
-        i += 1
+
+        // finished this column, so copy the relevant values from the dense array to the sparse
+        res.colPtrs(col + 1) = nnz
+        res.used = nnz
+        cforRange(res.colPtrs(col) until res.colPtrs(col + 1)) { resOff =>
+          val row = res.rowIndices(resOff)
+          res.data(resOff) = workData(row)
+        }
       }
 
-
-      res.result()
+      res.compact()
+      res
     }
     implicitly[BinaryRegistry[Matrix[T], Matrix[T], OpMulMatrix.type, Matrix[T]]].register(this)
   }
