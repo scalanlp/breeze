@@ -18,7 +18,7 @@
 
 package breeze.linalg
 
-import breeze.generic.UFunc.{InPlaceImpl, InPlaceImpl2, UImpl, UImpl2}
+import breeze.generic.UFunc.{InPlaceImpl, InPlaceImpl2, InPlaceImpl3, UImpl, UImpl2, UImpl3}
 import breeze.linalg.support._
 
 /**
@@ -99,6 +99,27 @@ object BroadcastedColumns {
     new InPlaceImpl2[Op, BroadcastedColumns[T, ColumnType], RHS] {
       def apply(v: BroadcastedColumns[T, ColumnType], v2: RHS) {
         cc(v.underlying, Axis._0){op(_, v2)}
+      }
+    }
+  }
+
+  implicit def broadcastOp3_1[Op, T, A1, ColumnType, RHS, OpResult, Result](implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, ColumnType],
+                                                                      op: UImpl3[Op, A1, ColumnType, RHS, OpResult],
+                                                                      cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result]):UImpl3[Op, A1, BroadcastedColumns[T, ColumnType], RHS, Result] = {
+    new UImpl3[Op, A1, BroadcastedColumns[T, ColumnType], RHS, Result] {
+      def apply(v: A1, v2: BroadcastedColumns[T, ColumnType], v3: RHS): Result = {
+        cc(v2.underlying, Axis._0){op(v, _, v3)}
+      }
+    }
+  }
+
+  implicit def broadcastInplaceOp3_1[Op, A1, T, ColumnType, RHS, OpResult](implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, ColumnType],
+                                                                       op: InPlaceImpl3[Op, A1, ColumnType, RHS],
+                                                                       cc: CanTraverseAxis[T, Axis._0.type, ColumnType]):InPlaceImpl3[Op, A1, BroadcastedColumns[T, ColumnType], RHS] = {
+    new InPlaceImpl3[Op, A1, BroadcastedColumns[T, ColumnType], RHS] {
+
+      override def apply(v: A1, v2: BroadcastedColumns[T, ColumnType], v3: RHS): Unit = {
+        cc(v2.underlying, Axis._0){op(v, _, v3)}
       }
     }
   }
