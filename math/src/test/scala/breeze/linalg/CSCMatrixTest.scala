@@ -225,16 +225,16 @@ class CSCMatrixTest extends FunSuite with Checkers {
     assert(a === CSCMatrix((7.0,-4.0,24.0),(-12.0,-15.0,6.0)))
 
     a = CSCMatrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
-    a :/= b
+    a /:/= b
     assert(a === CSCMatrix((1.0/7.0,-1.0,3.0/8.0),(4.0/(-3.0),5.0/(-3.0),6.0)))
   }
 
   test("csc scalar \"bad\" ops") {
     val a : CSCMatrix[Int] = CSCMatrix((1,0,0),(2,3,-1))
-    assert(a :/ 3 === CSCMatrix((0, 0, 0), (0, 1, 0)))
+    assert(a /:/ 3 === CSCMatrix((0, 0, 0), (0, 1, 0)))
 
     val b : CSCMatrix[Complex] = CSCMatrix((Complex(1,0), Complex(0, 0), Complex(0, 0)), (Complex(2, 0), Complex(3, 0), Complex(-1, 0)))
-    assert(b :/ Complex(3, 0) === CSCMatrix((Complex(1.0 / 3.0, 0), Complex(0, 0), Complex(0, 0)), (Complex(2.0 / 3.0, 0), Complex(1, 0), Complex(-1.0 / 3.0, 0))))
+    assert(b /:/ Complex(3, 0) === CSCMatrix((Complex(1.0 / 3.0, 0), Complex(0, 0), Complex(0, 0)), (Complex(2.0 / 3.0, 0), Complex(1, 0), Complex(-1.0 / 3.0, 0))))
   }
 
   test("csc scalar \"bad\" pow ops") {
@@ -424,6 +424,11 @@ class CSCMatrixTest extends FunSuite with Checkers {
     val r2 : DenseVector[Double] = CSCMatrix((1.0,3.0,4.0),(2.0,0.0,6.0)) \ DenseVector(1.0,3.0)
     import breeze.numerics.inf
     assert( norm(r2 - DenseVector(0.1813186813186811, -0.3131868131868131, 0.43956043956043944), inf) < 1E-5)
+  }
+
+  test("CSCMatrix solve #644") {
+    assert(CSCMatrix(1.0) \ DenseVector(0.0) == DenseVector(0.0))
+    assert(CSCMatrix( (0.0, 1.0), (0.0, 0.0)) \ DenseVector(0.0, 0.0) == DenseVector(0.0, 0.0))
   }
 
 }

@@ -98,15 +98,15 @@ object LSMR extends SerializableLogging {
       // Construct rotation Qhat_{k,2k+1}.
 
       val alphahat = norm(DenseVector(alphabar, lambda))
-      val chat     = alphabar/alphahat
-      val shat     = lambda/alphahat
+      val chat     = alphabar /? alphahat
+      val shat     = lambda /? alphahat
 
       // Use a plane rotation (Q_i) to turn B_i to R_i.
 
       val rhoold   = rho
       rho          = norm(DenseVector(alphahat, beta))
-      val c        = alphahat/rho
-      val s        = beta/rho
+      val c        = alphahat /? rho
+      val s        = beta /? rho
       val thetanew = s*alpha
       alphabar = c*alpha
 
@@ -117,8 +117,8 @@ object LSMR extends SerializableLogging {
       val thetabar  = sbar*rho
       val rhotemp   = cbar*rho
       rhobar    = norm(DenseVector(cbar*rho, thetanew))
-      cbar      = cbar*rho/rhobar
-      sbar      = thetanew/rhobar
+      cbar      = cbar*rho /? rhobar
+      sbar      = thetanew /? rhobar
       zeta      =   cbar*zetabar
       zetabar   = - sbar*zetabar
 
@@ -126,8 +126,8 @@ object LSMR extends SerializableLogging {
       // Update h, h_hat, x.
 
       hbar = h - hbar * (thetabar*rho/(rhoold*rhobarold))
-      x = x + hbar * (zeta/(rho*rhobar))
-      h = v - h * (thetanew/rho)
+      x = x + hbar * (zeta/?(rho*rhobar))
+      h = v - h * (thetanew/?rho)
 
       // Estimate of ||r||.
 
@@ -144,8 +144,8 @@ object LSMR extends SerializableLogging {
 
       val thetatildeold = thetatilde
       val rhotildeold   = norm(DenseVector(rhodold, thetabar))
-      val ctildeold     = rhodold/rhotildeold
-      val stildeold     = thetabar/rhotildeold
+      val ctildeold     = rhodold/?rhotildeold
+      val stildeold     = thetabar/?rhotildeold
       thetatilde    = stildeold* rhobar
       rhodold       =   ctildeold* rhobar
       betad         = - stildeold*betad + ctildeold*betahat
@@ -153,8 +153,8 @@ object LSMR extends SerializableLogging {
       // betad   = betad_k here.
       // rhodold = rhod_k  here.
 
-      tautildeold   = (zetaold - thetatildeold*tautildeold)/rhotildeold
-      val taud      = (zeta - thetatilde*tautildeold)/rhodold
+      tautildeold   = (zetaold - thetatildeold*tautildeold)/?rhotildeold
+      val taud      = (zeta - thetatilde*tautildeold)/?rhodold
       d             = d + sqr(betacheck)
       val normr     = sqrt(d + sqr(betad - taud) + sqr(betadd))
 
@@ -169,7 +169,7 @@ object LSMR extends SerializableLogging {
         minrbar = min(minrbar, rhobarold)
       }
 
-      var condA     = max(maxrbar,rhotemp)/min(minrbar,rhotemp)
+      var condA     = max(maxrbar,rhotemp)/?min(minrbar,rhotemp)
 
 
       // Estimate cond(A).
@@ -177,7 +177,7 @@ object LSMR extends SerializableLogging {
       if (iter > 1) {
         minrbar     = min(minrbar,rhobarold)
       }
-      condA         = max(maxrbar,rhotemp)/min(minrbar,rhotemp)
+      condA         = max(maxrbar,rhotemp)/?min(minrbar,rhotemp)
 
       // Test for convergence.
 
@@ -188,8 +188,8 @@ object LSMR extends SerializableLogging {
       // Now use these norms to estimate certain other quantities,
       // some of which will be small near a solution.
 
-      val test1   = normr / normb
-      val test2   = normAr/(normA*normr)
+      val test1   = normr /? normb
+      val test2   = normAr/? (normA*normr)
       val rtol    = btol + atol*normA*normx/normb
 
 
@@ -201,6 +201,10 @@ object LSMR extends SerializableLogging {
     }
 
     x
+  }
+
+  private implicit class SafeDiv(val __x: Double) extends AnyVal {
+    def /?(y: Double): Double = if (y == 0) __x else __x / y
   }
 
 }
