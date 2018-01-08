@@ -161,15 +161,7 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
 
     if (f(default)) {
       // if default values are accepted, assume we're full length.
-      var newLength = length - (i - o)
-
-      // ... and subtract from that length how many defined tail elements
-      // were filtered ...
-      var ii = used - 1
-      while (ii >= 0 && index(ii) > newIndex(o) && index(ii) == newLength - 1) {
-        ii -= 1
-        newLength -= 1
-      }
+      val newLength = length - (i - o)
       new SparseArray[V](newIndex, newData, o, newLength, default)
     } else {
       // if default values are not accepted, return a "dense" array by

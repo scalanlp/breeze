@@ -67,4 +67,12 @@ class SparseArrayTest extends FunSuite with Checkers {
     val u = SparseVector(Int.MaxValue)(42 -> 100500)
     assert(u === v)
   }
+
+  test("#674 filter") {
+    val arr = SparseArray(1,2,3)
+    assert(arr.filter(_ => true) == arr)
+    val arr2 = SparseArray(1, 0, 3, 0).filter(a => a != 3)
+    assert(arr2 == SparseArray(1, 0, 0))
+    assert(arr2.activeSize == 1)
+  }
 }
