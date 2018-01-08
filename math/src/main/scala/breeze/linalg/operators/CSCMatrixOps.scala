@@ -691,7 +691,9 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring {  this: CSCMatrix.type =>
   @expand
   @expand.valify
   implicit def canMulM_M[@expand.args(Int, Float, Double, Long) T]: breeze.linalg.operators.OpMulMatrix.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] = new breeze.linalg.operators.OpMulMatrix.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] {
-    def apply(a: CSCMatrix[T], b: CSCMatrix[T]) = {
+
+
+    def apply(a: CSCMatrix[T], b: CSCMatrix[T]): CSCMatrix[T] = {
       require(a.cols == b.rows, "Dimension Mismatch")
 
       // we do one column of the result at a time.
@@ -700,30 +702,36 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring {  this: CSCMatrix.type =>
       val workData = new Array[T](a.rows)
       // rather than having to zero out workData, we maintain a version number for
       // each index to know whether or not we need to add or zero out
-      // the version number is going to be the current column + 1
+      // the version number is going to be the current column
       val workIndex = new Array[Int](a.rows)
+      util.Arrays.fill(workIndex, -1)
+
+      val totalNnz = computeNnz(a, b, workIndex)
+      util.Arrays.fill(workIndex, -1)
 
       val res = CSCMatrix.zeros[T](a.rows, b.cols)
-      res.reserve(a.activeSize + b.activeSize)
+      res.reserve(totalNnz)
+
+      val resRows = res.rowIndices
+      val resData = res.data
+      val aRows = a.rowIndices
+      val aData = a.data
+      val aPtrs = a.colPtrs
 
       cforRange(0 until b.cols) { col =>
-        // TODO: should we grow more aggressively than this?
-        res.reserve(res.activeSize + res.rows)
-        val version = col + 1
-
         var nnz = res.used
         cforRange(b.colPtrs(col) until b.colPtrs(col + 1)) { bOff =>
           val bRow = b.rowIndices(bOff)
           val bVal = b.data(bOff)
 
-          cforRange(a.colPtrs(bRow) until a.colPtrs(bRow + 1)) { aOff =>
-            val aRow = a.rowIndices(aOff)
-            val aVal = a.data(aOff)
+          cforRange(aPtrs(bRow) until aPtrs(bRow + 1)) { aOff =>
+            val aRow = aRows(aOff)
+            val aVal = aData(aOff)
 
-            if (workIndex(aRow) < version) {
+            if (workIndex(aRow) < col) {
               workData(aRow) = 0
-              workIndex(aRow) = version
-              res.rowIndices(nnz) = aRow
+              workIndex(aRow) = col
+              resRows(nnz) = aRow
               nnz += 1
             }
             workData(aRow) += aVal * bVal
@@ -735,15 +743,39 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring {  this: CSCMatrix.type =>
         res.colPtrs(col + 1) = nnz
         res.used = nnz
         cforRange(res.colPtrs(col) until res.colPtrs(col + 1)) { resOff =>
-          val row = res.rowIndices(resOff)
-          res.data(resOff) = workData(row)
+          val row = resRows(resOff)
+          resData(resOff) = workData(row)
         }
+        assert(nnz <= totalNnz)
       }
 
       res.compact()
       res
     }
+
+
+    private def computeNnz(a: CSCMatrix[T], b: CSCMatrix[T], workIndex: Array[Int]) = {
+      var nnz = 0
+
+      cforRange(0 until b.cols) { col =>
+        cforRange(b.colPtrs(col) until b.colPtrs(col + 1)) { bOff =>
+          val bRow = b.rowIndices(bOff)
+          cforRange(a.colPtrs(bRow) until a.colPtrs(bRow + 1)) { aOff =>
+            val aRow = a.rowIndices(aOff)
+
+            if (workIndex(aRow) < col) {
+              workIndex(aRow) = col
+              nnz += 1
+            }
+          }
+        }
+      }
+
+      nnz
+    }
+
     implicitly[BinaryRegistry[Matrix[T], Matrix[T], OpMulMatrix.type, Matrix[T]]].register(this)
+
   }
 
   // Update Ops
