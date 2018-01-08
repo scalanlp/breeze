@@ -15,7 +15,7 @@ import breeze.generic.UFunc
  * all equal to 1.
  *
  * For 0 <= i < M, each element P(i) denotes whether row i of the matrix X
- * was exchanged with row P(i-1) during computation (the offset is caused by
+ * was exchanged with row P(i) - 1 during computation (the offset is caused by
  * the internal call to LAPACK).
  */
 object LU extends UFunc {
