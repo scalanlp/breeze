@@ -28,6 +28,7 @@ import scala.collection.mutable
 import scala.reflect.ClassTag
 import scala.{specialized => spec}
 import scalaxy.debug._
+import spire.syntax.cfor._
 
 /**
  * A compressed sparse column matrix, as used in Matlab and CSparse, etc.
@@ -53,7 +54,7 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero](private var _data: Arra
                                                          val rows: Int,
                                                          val cols: Int,
                                                          val colPtrs: Array[Int], // len cols + 1
-                                                         private var used : Int,
+                                                         private[linalg] var used : Int,
                                                          private var _rowIndices: Array[Int]) // len >= used
   extends Matrix[V] with MatrixLike[V, CSCMatrix[V]] with Serializable {
 
@@ -107,7 +108,6 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero](private var _data: Arra
         System.arraycopy(_rowIndices, insertPos, newIndex, insertPos + 1, used - insertPos - 1)
         System.arraycopy(data,  insertPos, newData,  insertPos + 1, used - insertPos - 1)
 
-        // update pointers
         _rowIndices = newIndex
         _data = newData
       } else if (used - insertPos > 1) {
@@ -119,7 +119,7 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero](private var _data: Arra
       // assign new value
       rowIndices(insertPos) = row
       data(insertPos) = v
-      for(c <- (col+1) to cols) {
+      cforRange((col+1) to cols) { c =>
         colPtrs(c) += 1
       }
     }
@@ -212,7 +212,7 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero](private var _data: Arra
         }
         new SparseVector[V](indices,data,activeSize,rows * cols)
       case View.Copy =>
-        implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+        implicit val man: ClassTag[V] = ReflectionUtil.elemClassTagFromArray(data)
         val sv = SparseVector.zeros[V](rows * cols)
         var j = 0
         while (j < cols) {

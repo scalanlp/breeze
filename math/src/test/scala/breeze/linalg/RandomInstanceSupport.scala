@@ -65,7 +65,13 @@ object RandomInstanceSupport {
 
   def genSparseVector[T: ClassTag: Zero: Semiring](len: Int, gen: Gen[T]): Gen[SparseVector[T]] = genVectorBuilder(len, gen).map(_.toSparseVector)
 
-  def genHashVector[T: ClassTag: Zero](len: Int, gen: Gen[T]): Gen[HashVector[T]] = genVectorBuilder(len, gen).map(_.toHashVector)
+  def genHashVector[T: ClassTag: Zero](len: Int, gen: Gen[T]): Gen[HashVector[T]] = for {
+    nnz <- Gen.choose(0, len)
+    il <- Gen.listOfN(nnz, Gen.choose(0, len - 1))
+    list <- Gen.listOfN(nnz, gen)
+  } yield {
+    HashVector(len)(il zip list:_*)
+  }
 
   def genVectorBuilder[T: ClassTag: Semiring](len: Int, gen: Gen[T]): Gen[VectorBuilder[T]] = for {
     nnz <- Gen.choose(0, len)
