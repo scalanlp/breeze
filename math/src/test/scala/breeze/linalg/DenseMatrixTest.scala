@@ -22,6 +22,7 @@ import org.scalatest.prop._
 import org.junit.runner.RunWith
 import breeze.math.Complex
 import breeze.numerics._
+import breeze.stats.distributions.RandBasis
 import breeze.util.DoubleImplicits
 
 @RunWith(classOf[JUnitRunner])
@@ -454,14 +455,10 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
       (-0.3131868131868131, -0.1978021978021977),
       (0.43956043956043944,  0.5934065934065933)))
 
-    println(DenseMatrix((1.0,3.0,4.0),(2.0,0.0,6.0))  *  r3)
-
     // tall matrix solve
     val r4 : DenseMatrix[Double] = DenseMatrix((1.0,3.0),(2.0,0.0),(4.0,6.0)) \ DenseMatrix((1.0,4.0),(2.0,5.0),(3.0,6.0))
     assert( max(abs(r4 - DenseMatrix((0.9166666666666667,    1.9166666666666672),
                              (-0.08333333333333352, -0.08333333333333436)))) < 1E-5)
-    println("")
-    println( DenseMatrix((1.0,3.0),(2.0,0.0),(4.0,6.0))  *  r4)
   }
 
   test("Solve Float") {
@@ -779,21 +776,29 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     assert(a.reshape(9,1) == b.t.reshape(9,1))
   }
 
-  test("#620 solving transposed matrices") {
-    val numData = 50
-    val numFeatures = 30
+  test("#620 solving transposed matrices, tall.t") {
+    val W: DenseMatrix[Double] = DenseMatrix((1.0, 3.0), (2.0, 0.0), (4.0, 6.0)).t
+    val y = DenseVector(1.0, 2.0)
 
-    val W = DenseMatrix.rand(numFeatures, numData).t
-    val y = DenseVector.rand(numData)
+    val target = DenseVector(0.166667, -0.083333, 0.250000)
 
+    solveCompare(W, y, target)
+  }
+
+  test("#620 solving transposed matrices, wide.t") {
+    val W: DenseMatrix[Double] = DenseMatrix((1.0, 2.0, 4.0), (3.0, 0.0, 6.0)).t
+    val y = DenseVector(1.0, 2.0, 3.0)
+
+    val target = DenseVector(0.916667, -0.083333)
+
+    solveCompare(W, y, target)
+  }
+
+  private def solveCompare(W: DenseMatrix[Double], y: DenseVector[Double], target: DenseVector[Double]) = {
     val WcopyY = W.copy \ y.copy
     val Wy = W \ y.copy
-    println(Wy )
-    println(WcopyY )
 
-    println(norm(y - W * Wy))
-    println(norm(y - W * WcopyY))
-
-    assert( norm( Wy - WcopyY) < 1e-3)
+    assert(norm(Wy - WcopyY) < 1e-3)
+    assert(norm(Wy - target) < 1e-3)
   }
 }

@@ -170,14 +170,13 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps
       require(V.offset == 0)
       require(X.rows == A.cols, "Wrong number of rows in return value")
       require(X.cols == V.cols, "Wrong number of rows in return value")
-      val transpose: Boolean = X.isTranspose
+      val transpose: Boolean = A.isTranspose
 
       val nrhs = V.cols
 
       // allocate temporary solution matrix
       val Xtmp = DenseMatrix.zeros[Double](math.max(A.rows, A.cols), nrhs)
-      val M: Int = if (!transpose) A.rows else A.cols
-      Xtmp(0 until M,0 until nrhs) := V(0 until M, 0 until nrhs)
+      Xtmp(0 until A.rows,0 until nrhs) := V(0 until A.rows, 0 until nrhs)
 
       val newData: Array[Double] = A.data.clone()
 
@@ -186,7 +185,9 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps
       val queryInfo = new intW(0)
       lapack.dgels(
         if (!transpose) "N" else "T",
-        A.rows, A.cols, nrhs,
+        if (!transpose) A.rows else A.cols,
+        if (!transpose) A.cols else A.rows,
+        nrhs,
         newData, A.majorStride,
         Xtmp.data, math.max(1,math.max(A.rows,A.cols)),
         queryWork, -1, queryInfo)
@@ -206,7 +207,9 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps
       val info = new intW(0)
       lapack.dgels(
         if (!transpose) "N" else "T",
-        A.rows, A.cols, nrhs,
+        if (!transpose) A.rows else A.cols,
+        if (!transpose) A.cols else A.rows,
+        nrhs,
         newData, A.majorStride,
         Xtmp.data, math.max(1,math.max(A.rows,A.cols)),
         work, work.length, info)
@@ -215,8 +218,7 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps
         throw new IllegalArgumentException
 
       // extract solution
-      val N = if (!transpose) A.cols else A.rows
-      X(0 until N, 0 until nrhs) := Xtmp(0 until N, 0 until nrhs)
+      X := Xtmp(0 until X.rows, 0 until nrhs)
 
       X
     }
