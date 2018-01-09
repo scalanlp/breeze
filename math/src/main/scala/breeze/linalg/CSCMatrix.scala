@@ -489,7 +489,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
       }
 
       val order: Array[Int] = if(keysAlreadySorted) {
-        VectorBuilder.range(nnz)
+        ArrayUtil.range(0, nnz)
       } else {
         sortedIndices(indices)
       }

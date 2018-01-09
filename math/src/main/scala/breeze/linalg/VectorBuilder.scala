@@ -198,7 +198,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
     val outIndex = new Array[Int](index.length)
     val outValues = ArrayUtil.newArrayLike(values, values.length)
 
-    val ord = if(!alreadySorted) sortedIndices(index) else VectorBuilder.range(used)
+    val ord = if(!alreadySorted) sortedIndices(index) else ArrayUtil.range(0, used)
     if(ord.length > 0) {
       outIndex(0) = index(ord(0))
       outValues(0) = values(ord(0))
@@ -364,20 +364,6 @@ object VectorBuilder extends VectorBuilderOps {
     }
   }
 
-
-  // private stuff
-
-
-  // Sigh, Array.range is slow.
-  private[linalg] def range(length: Int) = {
-    val result = new Array[Int](length)
-    var i = 0
-    while(i < length) {
-      result(i) = i
-      i += 1
-    }
-    result
-  }
 
 }
 
