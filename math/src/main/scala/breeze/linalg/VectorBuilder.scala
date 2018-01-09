@@ -237,9 +237,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
   }
 
   private def sortedIndices(indices: Array[Int]) = {
-    val arr = VectorBuilder.range(used)
-    Sorting.indexSort(arr, 0, used, indices)
-    arr
+    Sorting.indexSort(indices, 0, used)
   }
 
 

@@ -16,29 +16,45 @@ object Sorting {
   //**                          |/                                          **
   //\*                                                                      */
 
-
-  def indexSort(x: Array[Int], off: Int, len: Int, order: Array[Int]): Array[Int] = {
-    indexSort_Int(x, off, len, order)
+  def indexSort(elems: Array[Int], off: Int, length: Int): Array[Int] = {
+    indexSort_Int(elems, off, length)
   }
 
-  def indexSort(x: Array[Int], off: Int, len: Int, order: Array[Long]): Array[Int] = {
-    indexSort_Long(x, off, len, order)
-  }
-  
-  def indexSort(x: Array[Int], off: Int, len: Int, order: Array[Float]): Array[Int] = {
-    indexSort_Float(x, off, len, order)
+  def indexSort(elems: Array[Long], off: Int, length: Int): Array[Int] = {
+    indexSort_Long(elems, off, length)
   }
 
-  def indexSort(x: Array[Int], off: Int, len: Int, order: Array[Double]): Array[Int] = {
-    indexSort_Double(x, off, len, order)
+  def indexSort(elems: Array[Float], off: Int, length: Int): Array[Int] = {
+    indexSort_Float(elems, off, length)
+  }
+
+  def indexSort(elems: Array[Double], off: Int, length: Int): Array[Int] = {
+    indexSort_Double(elems, 0, elems.length)
+  }
+
+  def indexSort(elems: Array[Int]): Array[Int] = {
+    indexSort(elems, 0, elems.length)
+  }
+
+  def indexSort(elems: Array[Long]): Array[Int] = {
+    indexSort(elems, 0, elems.length)
+  }
+
+  def indexSort(elems: Array[Float]): Array[Int] = {
+    indexSort(elems, 0, elems.length)
+  }
+
+  def indexSort(elems: Array[Double]): Array[Int] = {
+    indexSort(elems, 0, elems.length)
   }
 
   @expand
-  def indexSort[@expand.args(Int, Long, Float, Double) T](x: Array[Int], off: Int, len: Int, order: Array[T]): Array[Int] = {
+  def indexSort[@expand.args(Int, Long, Float, Double) T](elems: Array[T], elemsOff: Int, elemsLength: Int): Array[Int] = {
+    val idx = ArrayUtil.range(0, elemsLength)
     def swap(a: Int, b: Int) {
-      val t = x(a)
-      x(a) = x(b)
-      x(b) = t
+      val t = idx(a)
+      idx(a) = idx(b)
+      idx(b) = t
     }
     def vecswap(_a: Int, _b: Int, n: Int) {
       var a = _a
@@ -52,10 +68,10 @@ object Sorting {
       }
     }
     def med3(a: Int, b: Int, c: Int) = {
-      if (order(x(a)) < order(x(b))) {
-        if (order(x(b)) < order(x(c))) b else if (order(x(a)) < order(x(c))) c else a
+      if (elems(elemsOff + idx(a)) < elems(elemsOff + idx(b))) {
+        if (elems(elemsOff + idx(b)) < elems(elemsOff + idx(c))) b else if (elems(elemsOff + idx(a)) < elems(elemsOff + idx(c))) c else a
       } else {
-        if (order(x(b)) > order(x(c))) b else if (order(x(a)) > order(x(c))) c else a
+        if (elems(elemsOff + idx(b)) > elems(elemsOff + idx(c))) b else if (elems(elemsOff + idx(a)) > elems(elemsOff + idx(c))) c else a
       }
     }
     def sort2(off: Int, len: Int) {
@@ -64,7 +80,7 @@ object Sorting {
         var i = off
         while (i < len + off) {
           var j = i
-          while (j>off && order(x(j-1)) > order(x(j))) {
+          while (j>off && elems(elemsOff + idx(j-1)) > elems(elemsOff + idx(j))) {
             swap(j, j-1)
             j -= 1
           }
@@ -84,7 +100,7 @@ object Sorting {
           }
           m = med3(l, m, n) // Mid-size, med of 3
         }
-        val v = order(x(m))
+        val v = elems(elemsOff + idx(m))
 
         // Establish Invariant: v* (<v)* (>v)* v*
         var a = off
@@ -93,15 +109,15 @@ object Sorting {
         var d = c
         var done = false
         while (!done) {
-          while (b <= c && order(x(b)) <= v) {
-            if (order(x(b)) == v) {
+          while (b <= c && elems(elemsOff + idx(b)) <= v) {
+            if (elems(elemsOff + idx(b)) == v) {
               swap(a, b)
               a += 1
             }
             b += 1
           }
-          while (c >= b && order(x(c)) >= v) {
-            if (order(x(c)) == v) {
+          while (c >= b && elems(elemsOff + idx(c)) >= v) {
+            if (elems(elemsOff + idx(c)) == v) {
               swap(c, d)
               d -= 1
             }
@@ -132,9 +148,9 @@ object Sorting {
           sort2(n-s, s)
       }
     }
-    sort2(off, len)
+    sort2(0, idx.length)
 
-    x
+    idx
   }
 
 

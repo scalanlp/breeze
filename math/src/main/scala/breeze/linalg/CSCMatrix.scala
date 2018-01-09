@@ -547,16 +547,9 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
       out
     }
 
-    // returns indices of a lexicgraphic sort of the indices (columns major, rows minor)
+    // returns indices of a lexicographic sort of the indices (columns major, rows minor)
     private def sortedIndices(indices: Array[Long]) = {
-      val sortedOffsets = Sorting.indexSort(VectorBuilder.range(indices.length), 0, indices.length, indices)
-//      val qq = Array.range(0, rs.length).sortWith { (i, j) =>
-//        (cs(i) < cs(j))  || (cs(i) == cs(j) && rs(i) < rs(j))
-//      }
-//
-//      assert(util.Arrays.equals(qq.map(indices), sortedOffsets.map(indices)), qq.map(indices).deep + " " + sortedOffsets.map(indices).deep)
-
-      sortedOffsets
+      Sorting.indexSort(indices)
     }
   }
 

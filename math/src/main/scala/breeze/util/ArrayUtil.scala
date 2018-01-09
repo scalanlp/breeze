@@ -17,8 +17,10 @@ package breeze.util
 */
 
 import java.util.Arrays
+
 import breeze.linalg.diff
 import breeze.macros.expand
+import spire.implicits.cforRange
 import spire.std.float
 
 import scala.reflect.ClassTag
@@ -349,6 +351,22 @@ object ArrayUtil {
       i += stride
     }
     hash
+  }
+
+  def range(start: Int, end: Int, stride: Int = 1): Array[Int] = {
+    // round up
+    val length = (end - start + stride - 1) / stride
+
+    if (length <= 0) return new Array[Int](0)
+
+    val result = new Array[Int](length)
+
+    var x = start
+    cforRange(0 until length) { i =>
+      result(i) = x
+      x += stride
+    }
+    result
   }
 
 
