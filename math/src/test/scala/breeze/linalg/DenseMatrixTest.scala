@@ -454,10 +454,14 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
       (-0.3131868131868131, -0.1978021978021977),
       (0.43956043956043944,  0.5934065934065933)))
 
+    println(DenseMatrix((1.0,3.0,4.0),(2.0,0.0,6.0))  *  r3)
+
     // tall matrix solve
     val r4 : DenseMatrix[Double] = DenseMatrix((1.0,3.0),(2.0,0.0),(4.0,6.0)) \ DenseMatrix((1.0,4.0),(2.0,5.0),(3.0,6.0))
     assert( max(abs(r4 - DenseMatrix((0.9166666666666667,    1.9166666666666672),
                              (-0.08333333333333352, -0.08333333333333436)))) < 1E-5)
+    println("")
+    println( DenseMatrix((1.0,3.0),(2.0,0.0),(4.0,6.0))  *  r4)
   }
 
   test("Solve Float") {
@@ -596,7 +600,7 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
   test("comparisons") {
     val one = DenseMatrix.ones[Double](5, 6)
     val zero = DenseMatrix.zeros[Double](5, 6)
-    assert( (one :> zero) === DenseMatrix.ones[Boolean](5, 6))
+    assert( (one >:> zero) === DenseMatrix.ones[Boolean](5, 6))
   }
 
   test("Some ill-typedness") {
@@ -669,7 +673,7 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
 
   test("#283: slice of dm by dm boolean") {
     val dm = DenseMatrix( (0, 1, 2), (3, 4, 5))
-    dm(dm :>= 2) := 3
+    dm(dm >:= 2) := 3
     assert(dm === DenseMatrix( (0, 1, 3), (3, 3, 3)))
   }
 
@@ -701,8 +705,8 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
   }
 
   test("lhs scalars") {
-    assert(1.0 :/ (DenseMatrix.fill(2,2)(10.0)) === DenseMatrix.fill(2,2)(1/10.0))
-    assert(1.0 :- (DenseMatrix.fill(2,2)(10.0)) === DenseMatrix.fill(2,2)(-9.0))
+    assert(1.0 /:/ (DenseMatrix.fill(2,2)(10.0)) === DenseMatrix.fill(2,2)(1/10.0))
+    assert(1.0 -:- (DenseMatrix.fill(2,2)(10.0)) === DenseMatrix.fill(2,2)(-9.0))
   }
 
   test("mapping ufunc") {
@@ -773,5 +777,23 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     assert(a != b)
     assert(a == b.t)
     assert(a.reshape(9,1) == b.t.reshape(9,1))
+  }
+
+  test("#620 solving transposed matrices") {
+    val numData = 50
+    val numFeatures = 30
+
+    val W = DenseMatrix.rand(numFeatures, numData).t
+    val y = DenseVector.rand(numData)
+
+    val WcopyY = W.copy \ y.copy
+    val Wy = W \ y.copy
+    println(Wy )
+    println(WcopyY )
+
+    println(norm(y - W * Wy))
+    println(norm(y - W * WcopyY))
+
+    assert( norm( Wy - WcopyY) < 1e-3)
   }
 }
