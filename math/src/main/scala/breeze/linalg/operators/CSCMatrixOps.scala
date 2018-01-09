@@ -2,15 +2,17 @@ package breeze.linalg
 package operators
 
 import breeze.generic.UFunc
-import breeze.linalg.support.{CanTranspose, CanZipMapKeyValues, CanZipMapValues}
+import breeze.linalg.support.{ CanTranspose, CanZipMapKeyValues, CanZipMapValues }
 import breeze.macros.expand
-import breeze.linalg.{DenseMatrix, SparseVector}
+import breeze.linalg.{ DenseMatrix, SparseVector }
 import breeze.math._
 import breeze.numerics.pow
 import breeze.storage.Zero
-import breeze.util.SerializableLogging
+import breeze.util.{ ArrayUtil, SerializableLogging, Sorting }
+
 import scala.reflect.ClassTag
 import java.util
+
 import scalaxy.debug._
 import spire.syntax.cfor._
 
@@ -742,10 +744,15 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring {  this: CSCMatrix.type =>
         // finished this column, so copy the relevant values from the dense array to the sparse
         res.colPtrs(col + 1) = nnz
         res.used = nnz
+
+        // the indices in the columns come out unsorted, so we need to re-sort.
+        util.Arrays.sort(resRows, res.colPtrs(col), res.colPtrs(col + 1))
+
         cforRange(res.colPtrs(col) until res.colPtrs(col + 1)) { resOff =>
           val row = resRows(resOff)
           resData(resOff) = workData(row)
         }
+
         assert(nnz <= totalNnz)
       }
 
