@@ -132,4 +132,14 @@ class BroadcastedTest extends FunSuite {
 
   }
 
+  test("broadcasted min/max") {
+    val b=DenseMatrix.rand(3, 3);
+    val b2 =  DenseVector.rand(3);
+
+    val c = max(b(*,::), b2) // doesnot work
+    val d = min(b(::,*), b2) // doesnot work
+
+    val e = b(::, *) - b(::,2) // works
+  }
+
 }
