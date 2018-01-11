@@ -98,7 +98,7 @@ object LU extends UFunc {
     }
 
     // Create permutation matrix
-    var pm: BDM[Double] = BDM.eye[Double](rows)
+    var pm: DenseMatrix[Double] = DenseMatrix.eye[Double](rows)
     for( r1 <- ipiv_dim - 1 to 0 by -1) {
       val r2: Int = ipiv(r1) - 1
       if (r1 != r2) {
@@ -132,7 +132,7 @@ object LU extends UFunc {
     * Differs from Breeze's currently implemented method in that it works on non-square matrices
    */
   private def lowerTriangular(X: DenseMatrix[Double]): DenseMatrix[Double] = {
-    BDM.tabulate(X.rows, X.cols)( (i, j) =>
+    DenseMatrix.tabulate(X.rows, X.cols)( (i, j) =>
       if (j == i) {
         1
       }else if (j < i) {
@@ -148,7 +148,7 @@ object LU extends UFunc {
     * Differs from Breeze's currently implemented method in that it works on non-square matrices
    */
   private def upperTriangular(X: DenseMatrix[Double]): DenseMatrix[Double] = {
-    BDM.tabulate(X.rows, X.cols)( (i, j) =>
+    DenseMatrix.tabulate(X.rows, X.cols)( (i, j) =>
       if (j == i) {
         X(i, j) // Keep values on the diagonal (unlike in lower triangular)
       } else if (j > i) {
