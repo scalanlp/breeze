@@ -1,8 +1,9 @@
 package breeze.linalg
 
 import org.netlib.util.intW
-import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
+import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
 import breeze.generic.UFunc
+import breeze.math.Semiring
 
 /**
  * Computes the LU factorization of the given real M-by-N matrix X such that
@@ -121,7 +122,7 @@ object LU extends UFunc {
     * i.e X, ipiv = LU(A), P, L, U = decompose(X, ipiv), P * L * U = A
   */
   def decompose(X: DenseMatrix[Double], ipiv: Array[Int]): (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double]) = {
-    val P: DenseMatrix[Double] = createPermutationMatrix(ipiv, X.row.toInt, X.cols.toInt)
+    val P: DenseMatrix[Double] = createPermutationMatrix(ipiv, X.rows.toInt, X.cols.toInt)
     val L: DenseMatrix[Double] = lowerTriangular(X)
     val U: DenseMatrix[Double] = upperTriangular(X)
     (P, L, U)
