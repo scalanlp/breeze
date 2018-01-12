@@ -304,7 +304,8 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](val rows: Int,
     }
   }
 
-  private def majorSize = if(isTranspose) rows else cols
+  private[linalg] def majorSize = if(isTranspose) rows else cols
+  private[linalg] def minorSize = if(isTranspose) cols else rows
   private def footprint = majorSize * majorStride
   /** Returns true if this dense matrix takes up a contiguous segment of the array */
   def isContiguous: Boolean = (isTranspose && cols == majorStride) || (!isTranspose && rows == majorStride)

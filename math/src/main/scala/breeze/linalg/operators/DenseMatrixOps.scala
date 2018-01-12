@@ -968,27 +968,30 @@ trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
       require(a.rows == b.rows, "Matrixs must have same number of rows")
       require(a.cols == b.cols, "Matrixs must have same number of columns")
 
-      if(a.data.length - a.offset == a.rows * a.cols
-        && b.data.length - b.offset == a.rows * a.cols
-        && a.majorStride == b.majorStride
-        && a.isTranspose == b.isTranspose) {
-
+      if(a.isTranspose == b.isTranspose && a.isContiguous && b.isContiguous) {
         System.arraycopy(b.data, b.offset, a.data, a.offset, a.size)
-
-      } else {
-
-        // slow path when we don't have a trivial matrix
-        val ad = a.data
-        val bd = b.data
-        var c = 0
-        while (c < a.cols) {
-          var r = 0
-          while (r < a.rows) {
-            ad(a.linearIndex(r, c)) = bd(b.linearIndex(r, c))
-            r += 1
-          }
-          c += 1
+      } else if (a.isTranspose == b.isTranspose) {
+        cforRange(0 until a.majorSize) { j =>
+          System.arraycopy(b.data, b.offset + j * b.majorStride, a.data, a.offset + j * a.majorStride, a.minorSize)
         }
+      } else {
+        cacheObliviousTranspose(0, a.majorSize, 0, b.majorSize, a.data, a.majorStride, b.data, b.majorStride)
+      }
+    }
+
+    def cacheObliviousTranspose(rBegin: Int, rEnd: Int, cBegin: Int, cEnd: Int, dst: Array[V], aMajorStride: Int, src: Array[V], bMajorStride: Int): Unit = {
+      val r = rEnd - rBegin
+      val c = cEnd - cBegin
+      if (r <= 16 && c <= 16) {
+        cforRange2(rBegin until rEnd, cBegin until cEnd) { (j, i) =>
+          dst(j * aMajorStride + i) = src(i * bMajorStride + j)
+        }
+      } else if (r >= c) {
+        cacheObliviousTranspose(rBegin, rBegin + (r / 2), cBegin, cEnd, dst, aMajorStride, src, bMajorStride)
+        cacheObliviousTranspose(rBegin + (r / 2), rEnd, cBegin, cEnd, dst, aMajorStride, src, bMajorStride)
+      } else {
+        cacheObliviousTranspose(rBegin, rEnd, cBegin, cBegin + (c / 2), dst, aMajorStride, src, bMajorStride)
+        cacheObliviousTranspose(rBegin, rEnd, cBegin + (c / 2), cEnd, dst, aMajorStride, src, bMajorStride)
       }
     }
   }
