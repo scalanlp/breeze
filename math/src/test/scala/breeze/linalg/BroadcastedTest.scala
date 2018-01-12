@@ -17,7 +17,7 @@ class BroadcastedTest extends FunSuite {
     assert(res === DenseMatrix((4.0, 5.0, 6.0), (8.0, 9.0, 10.0)))
 
 
-    val comp = dm(::, *) :< DenseVector(3.0, 4.0)
+    val comp = dm(::, *) <:< DenseVector(3.0, 4.0)
     assert(comp === DenseMatrix((true, true, false), (false, false, false)) )
 
     res(::, *) := DenseVector(3.0, 4.0)
@@ -66,7 +66,7 @@ class BroadcastedTest extends FunSuite {
     val res = dm(*, ::) + DenseVector(3.0, 4.0)
     assert(res === DenseMatrix((4.0, 5.0, 6.0), (8.0, 9.0, 10.0)).t)
 
-    val comp = dm(*, ::) :< DenseVector(3.0, 4.0)
+    val comp = dm(*, ::) <:< DenseVector(3.0, 4.0)
     assert(comp === DenseMatrix((true, true, false), (false, false, false)).t )
 
 
@@ -133,13 +133,18 @@ class BroadcastedTest extends FunSuite {
   }
 
   test("broadcasted min/max") {
-    val b=DenseMatrix.rand(3, 3);
-    val b2 =  DenseVector.rand(3);
+    val b = DenseMatrix.rand(3, 3);
+    val b2 =  DenseVector(3.0, 4.0, 5.0)
 
-    val c = max(b(*,::), b2) // doesnot work
-    val d = min(b(::,*), b2) // doesnot work
+    val c = max(b(*,::), b2)
+    assert(c == DenseMatrix.vertcat(b2.toDenseMatrix, b2.toDenseMatrix, b2.toDenseMatrix))
+    val c2 = max(b(::, *), b2)
+    assert(c2 == DenseVector.horzcat(b2, b2, b2))
 
-    val e = b(::, *) - b(::,2) // works
+    val d = min(b(*, ::), -b2)
+    assert(d == DenseMatrix.vertcat(-b2.toDenseMatrix, -b2.toDenseMatrix, -b2.toDenseMatrix))
+    val d2 = min(b(::, *), -b2)
+    assert(d2 == DenseVector.horzcat(-b2, -b2, -b2))
   }
 
 }

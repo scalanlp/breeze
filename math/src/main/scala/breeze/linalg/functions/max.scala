@@ -1,12 +1,12 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
-import breeze.linalg.support.{ScalarOf, CanTransformValues, CanMapValues, CanTraverseValues}
+import breeze.linalg.support.{ CanMapValues, CanTransformValues, CanTraverseValues, ScalarOf }
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.macros.expand
 import spire.syntax.cfor._
 
-object max extends UFunc /*with VectorizedReduceUFunc <-- doesn't work with 2.10, because god knows */{
+object max extends UFunc with maxLowPrio with VectorizedReduceUFunc {
   type Op = this.type
 
   @expand
@@ -82,15 +82,6 @@ object max extends UFunc /*with VectorizedReduceUFunc <-- doesn't work with 2.10
   }
 
 
-  implicit def maxVS[T, U, LHS, RHS, RV](implicit cmvH: ScalarOf[T, LHS],
-                                         maxImpl: max.Impl2[LHS, RHS, LHS],
-                                         cmv: CanMapValues[T, LHS, LHS, U]):Impl2[T, RHS, U] = {
-    new Impl2[T, RHS, U] {
-      override def apply(v: T, v2: RHS): U = cmv(v, maxImpl(_, v2))
-    }
-  }
-
-  /*
   @expand
   implicit def helper[@expand.args(Int, Float, Long, Double) T]
                      (implicit @expand.sequence[T](Int.MinValue, Float.NegativeInfinity, Long.MinValue, Double.NegativeInfinity)
@@ -103,7 +94,6 @@ object max extends UFunc /*with VectorizedReduceUFunc <-- doesn't work with 2.10
 
     override def combine(x: T, y: T): T = java.lang.Math.max(x, y)
   }
-  */
 
   /**
    * Method for computing the max of the first length elements of an array. Arrays
@@ -112,7 +102,7 @@ object max extends UFunc /*with VectorizedReduceUFunc <-- doesn't work with 2.10
    * @param length
    * @return
    */
-  def array(arr: Array[Double], length: Int) = {
+  def array(arr: Array[Double], length: Int): Double = {
     var accum = Double.NegativeInfinity
     var i = 0
     while(i < length) {
@@ -124,13 +114,23 @@ object max extends UFunc /*with VectorizedReduceUFunc <-- doesn't work with 2.10
 
 }
 
+sealed trait maxLowPrio { this: max.type =>
 
+  implicit def maxVS[T, U, LHS, RHS, RV](implicit cmvH: ScalarOf[T, LHS],
+      maxImpl: max.Impl2[LHS, RHS, LHS],
+      cmv: CanMapValues[T, LHS, LHS, U]):max.Impl2[T, RHS, U] = {
+    new max.Impl2[T, RHS, U] {
+      override def apply(v: T, v2: RHS): U = cmv(v, maxImpl(_, v2))
+    }
+  }
+
+}
 
 
 /**
  * Computes the minimum.
  */
-object min extends UFunc {
+object min extends UFunc with minLowPrio with VectorizedReduceUFunc {
 
   @expand
   @expand.valify
@@ -190,13 +190,29 @@ object min extends UFunc {
 
   }
 
+  @expand
+  implicit def helper[@expand.args(Int, Float, Long, Double) T]
+  (implicit @expand.sequence[T](Int.MaxValue, Float.PositiveInfinity, Long.MaxValue, Double.PositiveInfinity) init: T):VectorizeHelper[T] = new VectorizeHelper[T] {
+    override def zerosLike(len: Int): DenseVector[T] = {
+      val r = DenseVector.zeros[T](len)
+      r := init
+      r
+    }
+
+    override def combine(x: T, y: T): T = java.lang.Math.min(x, y)
+  }
+}
+
+sealed trait minLowPrio { this: min.type =>
+
   implicit def minVS[T, U, LHS, RHS, RV](implicit cmvH: ScalarOf[T, LHS],
-                                         maxImpl: min.Impl2[LHS, RHS, LHS],
-                                         cmv: mapValues.Impl2[T, LHS => LHS, U]):Impl2[T, RHS, U] = {
-    new Impl2[T, RHS, U] {
-      override def apply(v: T, v2: RHS): U = cmv(v, maxImpl(_, v2))
+      minImpl: min.Impl2[LHS, RHS, LHS],
+      cmv: CanMapValues[T, LHS, LHS, U]):min.Impl2[T, RHS, U] = {
+    new min.Impl2[T, RHS, U] {
+      override def apply(v: T, v2: RHS): U = cmv(v, minImpl(_, v2))
     }
   }
+
 }
 
 
@@ -225,7 +241,7 @@ object clip extends UFunc {
   @expand
   implicit def clipInPlace[Vec,
                            @expand.args(Double, Float, Int, Long)
-                           T](cmv: CanTransformValues[Vec, T]):InPlaceImpl3[Vec, T, T] = {
+                           T](implicit cmv: CanTransformValues[Vec, T]):InPlaceImpl3[Vec, T, T] = {
     new InPlaceImpl3[Vec, T, T] {
       def apply(v: Vec, v2: T, v3: T):Unit = {
         cmv.transform(v, x => if(x < v2) v2 else if (x > v3) v3 else x)

@@ -1,6 +1,7 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
+import breeze.generic.UFunc.UImpl2
 import breeze.linalg.operators.OpAdd
 import breeze.macros.expand
 import breeze.linalg.support.CanTraverseValues
@@ -79,8 +80,34 @@ trait VectorizedReduceUFunc extends UFunc {
         cforRange(0 until mat.cols) { i =>
           baseOp(result, mat(::, i))
         }
-//        helper.finish(result)
         result
+      }
+    }
+  }
+
+  implicit def vectorizeRows2[@specialized(Double, Float, Long, Int) T:ClassTag: Zero](implicit baseOp: Impl2[T, T, T]): Impl2[BroadcastedRows[DenseMatrix[T], DenseVector[T]], DenseVector[T], DenseMatrix[T]] = {
+    new Impl2[BroadcastedRows[DenseMatrix[T], DenseVector[T]], DenseVector[T],  DenseMatrix[T]] {
+      override def apply(v: BroadcastedRows[DenseMatrix[T], DenseVector[T]], dv: DenseVector[T]): DenseMatrix[T] = {
+        val mat = v.underlying
+        require(dv.length == mat.cols, "Vector length must be same as number of columns!")
+        if (!mat.isTranspose) {
+          val res = DenseMatrix.zeros[T](mat.rows, mat.cols)
+          cforRange(0 until mat.cols) { j =>
+            val b = dv(j)
+            cforRange(0 until mat.rows) { i =>
+              res(i, j) = baseOp(mat(i, j), b)
+            }
+          }
+
+          res
+        } else {
+          // starts out transposed
+          val res = DenseMatrix.zeros[T](mat.cols, mat.rows).t
+          cforRange2(0 until mat.rows, 0 until mat.cols) { (i, j) =>
+            res(i, j) = baseOp(mat(i, j), dv(j))
+          }
+          res
+        }
       }
     }
   }
@@ -94,24 +121,57 @@ trait VectorizedReduceUFunc extends UFunc {
 
         if (!mat.isTranspose) {
           val d = mat.data
-          cforRange(0 until mat.cols) { i =>
-            var r = res(i)
-            val baseOff = mat.offset + i * mat.rows
-            cforRange(0 until mat.rows) { j =>
-              r = helper.combine(r, d(baseOff + j))
+          cforRange(0 until mat.cols) { j =>
+            var r = res(j)
+            val baseOff = mat.offset + j * mat.majorStride
+            cforRange(0 until mat.rows) { i =>
+              r = helper.combine(r, d(baseOff + i))
             }
-            res(i) = r
+            res(j) = r
           }
         } else {
-          cforRange(0 until mat.cols) { i =>
-            var r = res(i)
-            cforRange(0 until mat.rows) { j =>
-              r = helper.combine(r, mat(j, i))
+          cforRange(0 until mat.rows) { i =>
+            cforRange(0 until mat.cols) { j =>
+              res(j) = helper.combine(res(j), mat(i, j))
             }
-            res(i) = r
           }
         }
         res.t
+      }
+    }
+  }
+
+  @expand
+  implicit def vectorizeCols2[@expand.args(Double, Float, Int, Long) T:ClassTag:Zero](implicit impl2: Impl2[T, T, T]): Impl2[BroadcastedColumns[DenseMatrix[T], DenseVector[T]], DenseVector[T], DenseMatrix[T]] = {
+    new Impl2[BroadcastedColumns[DenseMatrix[T], DenseVector[T]], DenseVector[T], DenseMatrix[T]] {
+      override def apply(v: BroadcastedColumns[DenseMatrix[T], DenseVector[T]], dv: DenseVector[T]): DenseMatrix[T] = {
+        val mat = v.underlying
+        require(dv.length == mat.rows, "Vector length must be same as number of rows!")
+
+        if (!mat.isTranspose) {
+          val res = DenseMatrix.zeros[T](mat.rows, mat.cols)
+          val d = mat.data
+          val rd = res.data
+          cforRange(0 until mat.cols) { j =>
+            val baseOff = mat.offset + j * mat.majorStride
+            val rBaseOff = j * mat.majorStride
+            cforRange(0 until mat.rows) { i =>
+              rd(rBaseOff + i) = impl2(d(baseOff + i), dv(i))
+            }
+          }
+          res
+        } else {
+          // note this starts out row major (aka isTranspose) so it has the same shape as the input
+          val res = DenseMatrix.zeros[T](mat.cols, mat.rows).t
+          cforRange(0 until mat.rows) { i =>
+            val cmp = dv(i)
+            cforRange(0 until mat.cols) { j =>
+              res(i, j) = impl2(mat(i, j), cmp)
+            }
+          }
+          // we fix it here
+          res.t.copy
+        }
       }
     }
   }
