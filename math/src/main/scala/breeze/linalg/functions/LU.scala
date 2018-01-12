@@ -4,7 +4,6 @@ import org.netlib.util.intW
 import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
 import breeze.generic.UFunc
 import breeze.math.Semiring
-
 /**
  * Computes the LU factorization of the given real M-by-N matrix X such that
  * X = P * L * U where P is a permutation matrix (row exchanges).
@@ -81,31 +80,20 @@ object LU extends UFunc {
     * @param ipiv - The pivot vector returned from LAPACK
     * @param rows - The number of rows in the original matrix
     * @param cols - The number of columns in the original matrix
-    * @returns The permutation matrix, P from the LU decomposition of the form (P * L * U) 
+    * @return The permutation matrix, P from the LU decomposition of the form (P * L * U)
      */
-  private def createPermutationMatrix(ipiv: Array[Int], rows:Int, cols: Int): DenseMatrix[Double] = {
-    val ipiv_dim: Int = min(rows, cols).toInt
-    var parr: Array[Int] = new Array(rows)
-
-    // Create perm vector
-    for (x <- 0 to rows-1) {
-      parr(x) = x + 1
-    }
-    for(i <- 0 to ipiv_dim-1) {
-      val i2: Int = ipiv(i) - 1
-      var tmp: Int = parr(i)
-      parr(i) = parr(i2)
-      parr(i2) = tmp
-    }
+  def createPermutationMatrix(ipiv: Array[Int], rows:Int, cols: Int): DenseMatrix[Double] = {
+    val ipiv_dim: Int = scala.math.min(rows, cols)
 
     // Create permutation matrix
-    var pm: DenseMatrix[Double] = DenseMatrix.eye[Double](rows)
-    for( r1 <- ipiv_dim - 1 to 0 by -1) {
+    val pm: DenseMatrix[Double] = DenseMatrix.eye[Double](rows)
+    var tmp: Double = 0.0
+    for ( r1 <- ipiv_dim - 1 to 0 by -1) {
       val r2: Int = ipiv(r1) - 1
       if (r1 != r2) {
-        for (col <- 0 to rows - 1) {
+        for (col <- 0 until rows) {
           // Swap pm(r1, col) with pm(row2, col)
-          val tmp: Double = pm(r1, col)
+          tmp = pm(r1, col)
           pm(r1, col) = pm(r2, col)
           pm(r2, col) = tmp
         }
@@ -122,7 +110,7 @@ object LU extends UFunc {
     * i.e X, ipiv = LU(A), P, L, U = decompose(X, ipiv), P * L * U = A
   */
   def decompose(X: DenseMatrix[Double], ipiv: Array[Int]): (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double]) = {
-    val P: DenseMatrix[Double] = createPermutationMatrix(ipiv, X.rows.toInt, X.cols.toInt)
+    val P: DenseMatrix[Double] = createPermutationMatrix(ipiv, X.rows, X.cols)
     val L: DenseMatrix[Double] = lowerTriangular(X)
     val U: DenseMatrix[Double] = upperTriangular(X)
     (P, L, U)
@@ -131,6 +119,7 @@ object LU extends UFunc {
   /** 
     * Returns the lower triangular matrix from X.
     * Differs from Breeze's currently implemented method in that it works on non-square matrices
+    * Returns 1 on the diagonal
    */
   private def lowerTriangular(X: DenseMatrix[Double]): DenseMatrix[Double] = {
     DenseMatrix.tabulate(X.rows, X.cols)( (i, j) =>
@@ -147,6 +136,7 @@ object LU extends UFunc {
   /** 
     * Returns the upper triangular matrix from X.
     * Differs from Breeze's currently implemented method in that it works on non-square matrices
+    * Returns current values on the diagonal.
    */
   private def upperTriangular(X: DenseMatrix[Double]): DenseMatrix[Double] = {
     DenseMatrix.tabulate(X.rows, X.cols)( (i, j) =>
