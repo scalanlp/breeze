@@ -32,7 +32,7 @@ class BitVector(val data: java.util.BitSet, val length: Int, val enforceLength: 
 
   def activeSize: Int = data.cardinality()
 
-  def copy = new BitVector(data, length)
+  def copy = new BitVector(data.clone().asInstanceOf[util.BitSet], length)
 
   def repr: BitVector = this
 
