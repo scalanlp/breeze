@@ -1,7 +1,6 @@
 package breeze.util
 
 import breeze.macros.expand
-import breeze.stats.distributions.Rand
 import breeze.generic.UFunc
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -39,10 +38,18 @@ object quickSelect extends UFunc  {
           require(position >= left && position <= right, "Invalid position specification: " + position + " with array length: " + x.length)
 
           while (pivotIndex != position && right >= left) {
-            val rand = Rand.randInt(right - left + 1)
-            pivotIndex = partition(x, left, right, rand.get() + left)
+            val pvt = med3(left, right, ((left.toLong + right) / 2).toInt)
+            pivotIndex = partition(x, left, right, pvt)
             if (pivotIndex < position) left = pivotIndex + 1
             else if (pivotIndex > position) right = pivotIndex - 1
+          }
+        }
+
+        def med3(p1: Int, p2: Int, p3: Int) = {
+          if (x(p1) < x(p2)) {
+            if (x(p2) < x(p3)) p2 else if (x(p1) < x(p3)) p3 else p1
+          } else {
+            if (x(p2) > x(p3)) p2 else if (x(p1) > x(p3)) p3 else p1
           }
         }
 
@@ -91,6 +98,7 @@ object quickSelect extends UFunc  {
 
   implicit def implFromOrdering[T, Coll](implicit view: Coll <:< mutable.IndexedSeq[T], ordering: Ordering[T]): InPlaceImpl2[Coll, Int]  = {
     new InPlaceImpl2[Coll, Int] {
+      import ordering.mkOrderingOps
 
       def apply(rawx: Coll, position: Int): Unit = {
 
@@ -103,10 +111,18 @@ object quickSelect extends UFunc  {
           require(position >= left && position <= right, "Invalid position specification: " + position + " with coll length: " + x.length)
 
           while (pivotIndex != position && right >= left) {
-            val rand = Rand.randInt(right - left + 1)
-            pivotIndex = partition(x, left, right, rand.get() + left)
+            val pvt = med3(left, right, ((left.toLong + right) / 2).toInt)
+            pivotIndex = partition(x, left, right, pvt)
             if (pivotIndex < position) left = pivotIndex + 1
             else if (pivotIndex > position) right = pivotIndex - 1
+          }
+
+          def med3(p1: Int, p2: Int, p3: Int) = {
+            if (x(p1) < x(p2)) {
+              if (x(p2) < x(p3)) p2 else if (x(p1) < x(p3)) p3 else p1
+            } else {
+              if (x(p2) > x(p3)) p2 else if (x(p1) > x(p3)) p3 else p1
+            }
           }
         }
 
@@ -174,10 +190,18 @@ object quickSelectImpl extends UFunc {
           require(position >= left && position <= right, "Invalid position specification: " + position + " with array length: " + x.length)
 
           while (pivotIndex != position && right >= left) {
-            val rand = Rand.randInt(right - left + 1)
-            pivotIndex = partition(x, left, right, rand.get() + left)
+            val pvt = med3(left, right, ((left.toLong + right) / 2).toInt)
+            pivotIndex = partition(x, left, right, pvt)
             if (pivotIndex < position) left = pivotIndex + 1
             else if (pivotIndex > position) right = pivotIndex - 1
+          }
+        }
+
+        def med3(p1: Int, p2: Int, p3: Int) = {
+          if (x(p1) < x(p2)) {
+            if (x(p2) < x(p3)) p2 else if (x(p1) < x(p3)) p3 else p1
+          } else {
+            if (x(p2) > x(p3)) p2 else if (x(p1) > x(p3)) p3 else p1
           }
         }
 

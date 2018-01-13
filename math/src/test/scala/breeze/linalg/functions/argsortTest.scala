@@ -1,6 +1,6 @@
 package breeze.linalg.functions
 
-import breeze.linalg.{DenseVector, SparseVector, argsort, argtopk}
+import breeze.linalg.{ DenseMatrix, DenseVector, SparseVector, argsort, argtopk }
 import org.scalacheck.Prop
 import org.scalatest.FunSuite
 import org.scalatest.prop.Checkers
@@ -32,5 +32,11 @@ class argtopkTest extends FunSuite {
     assert(argtopk(sv, 1) === Seq(2))
     assert(argtopk(sv, 3).toSet === Set(0, 2, 3))
     assert(argtopk(sv, 5).toSet === Set(0, 1, 2, 3, 4))
+  }
+
+  test("#679") {
+    var a = DenseMatrix((3,1),(-1,-2),(2,2),(5,5))
+    for ( i <- 0 until 10)
+      assert(argtopk(a(::,0), 4).toIndexedSeq == argtopk(a(::,0), 4).toIndexedSeq)
   }
 }
