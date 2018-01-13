@@ -16,9 +16,10 @@ package breeze.linalg
 */
 
 import breeze.generic.UFunc
-import breeze.linalg.operators.{OpAdd, OpType}
+import breeze.linalg.operators.{ OpAdd, OpType }
 import breeze.math.MutableOptimizationSpace.SparseFieldOptimizationSpace
-import breeze.math.{Field, Complex}
+import breeze.math.{ Complex, Field }
+import breeze.numerics.{ abs, inf }
 import breeze.storage.Zero
 import org.scalatest._
 import org.scalatest.junit._
@@ -28,7 +29,7 @@ import org.junit.runner.RunWith
 import scala.reflect.ClassTag
 
 @RunWith(classOf[JUnitRunner])
-class CSCMatrixTest extends FunSuite with Checkers {
+class CSCMatrixTest extends FunSuite with Checkers with MatrixTestUtils {
   test("Multiply") {
     val a = CSCMatrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
     val ad = DenseMatrix((1.0, 2.0, 3.0),(4.0, 5.0, 6.0))
@@ -429,6 +430,31 @@ class CSCMatrixTest extends FunSuite with Checkers {
   test("CSCMatrix solve #644") {
     assert(CSCMatrix(1.0) \ DenseVector(0.0) == DenseVector(0.0))
     assert(CSCMatrix( (0.0, 1.0), (0.0, 0.0)) \ DenseVector(0.0, 0.0) == DenseVector(0.0, 0.0))
+  }
+
+  test("CSCMatrix solve CSCMatrix #536") {
+    val r1 : CSCMatrix[Double] = CSCMatrix((1.0,3.0),(2.0,0.0)) \ CSCMatrix((1.0,2.0),(3.0,4.0))
+    matricesNearlyEqual(r1, CSCMatrix((1.5, 2.0), (-1.0/6, 0.0)))
+
+    // wide matrix solve
+    val r3 : CSCMatrix[Double] = CSCMatrix((1.0,3.0,4.0),(2.0,0.0,6.0)) \ CSCMatrix((1.0,2.0),(3.0,4.0))
+    matricesNearlyEqual(r3,
+      CSCMatrix((0.1813186813186811,   0.2197802197802196),
+        (-0.3131868131868131, -0.1978021978021977),
+        (0.43956043956043944,  0.5934065934065933)))
+
+    // tall matrix solve
+    val r4 : CSCMatrix[Double] = CSCMatrix((1.0,3.0),(2.0,0.0),(4.0,6.0)) \ CSCMatrix((1.0,4.0),(2.0,5.0),(3.0,6.0))
+    assert( max(abs(r4 - CSCMatrix((0.9166666666666667,    1.9166666666666672),
+      (-0.08333333333333352, -0.08333333333333436)))) < 1E-5)
+
+    val largeMatrix = CSCMatrix.rand(70, 70)
+    // make sure it's PD
+    for (i <- 0 until largeMatrix.rows)
+      largeMatrix(i, i) += 2.0
+
+   matricesNearlyEqual(largeMatrix \ largeMatrix, largeMatrix.toDense \ largeMatrix.toDense)
+
   }
 
 }

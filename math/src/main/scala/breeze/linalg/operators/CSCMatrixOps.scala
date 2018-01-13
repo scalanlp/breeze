@@ -13,6 +13,8 @@ import breeze.util.{ ArrayUtil, SerializableLogging, Sorting }
 import scala.reflect.ClassTag
 import java.util
 
+import breeze.linalg
+
 import scalaxy.debug._
 import spire.syntax.cfor._
 
@@ -1541,6 +1543,68 @@ trait CSCMatrixOps_Ring extends CSCMatrixOpsLowPrio with SerializableLogging {
     new OpSolveMatrixBy.Impl2[CSCMatrix[Double], V, V] {
       override def apply(a : CSCMatrix[Double], b : V): V = {
         LSMR.solve(a, b, quiet = true)
+      }
+    }
+  }
+
+  implicit val implOpSolveMatrixBy_CSC_CSC_eq_CSC: OpSolveMatrixBy.Impl2[CSCMatrix[Double], CSCMatrix[Double], CSCMatrix[Double]] = {
+    new OpSolveMatrixBy.Impl2[CSCMatrix[Double], CSCMatrix[Double], CSCMatrix[Double]] {
+      override def apply(a : CSCMatrix[Double], b : CSCMatrix[Double]): CSCMatrix[Double] = {
+        implicit val fakeDot = FrobeniusCSCProduct
+        implicit val mip: MutableInnerProductVectorSpace[CSCMatrix[Double], Double] = MutableInnerProductVectorSpace.make[CSCMatrix[Double], Double]
+        LSMR.solve(a, b, quiet = true)
+      }
+    }
+  }
+
+  object FrobeniusCSCProduct extends OpMulInner.Impl2[CSCMatrix[Double], CSCMatrix[Double], Double] {
+      override def apply(v: CSCMatrix[Double], v2: CSCMatrix[Double]): Double = {
+        require(v.cols == v2.cols && v.rows == v2.rows, "dimensions must match!")
+        if (v.activeSize > v2.activeSize) {
+          apply(v2, v)
+        } else {
+          var result = 0.0
+          cforRange(0 until v.cols) { j =>
+            val vBegin = v.colPtrs(j)
+            val vEnd = v.colPtrs(j + 1)
+
+            val v2Begin = v2.colPtrs(j)
+            val v2End = v2.colPtrs(j + 1)
+
+            result += dpRange(v, vBegin, vEnd, v2, v2Begin, v2End)
+          }
+          result
+        }
+      }
+
+    /** does the sparse dot product over the colum slice offsets [sBegin, sEnd) and [tBegin, tEnd) */
+    private def dpRange(s: CSCMatrix[Double], sBegin: Int, sEnd: Int, t: CSCMatrix[Double], tBegin: Int, tEnd: Int): Double = {
+      val sLength = sEnd - sBegin
+      val tLength = tEnd - tBegin
+      if (tLength < sLength) {
+        dpRange(t, tBegin, tEnd, s, sBegin, sEnd)
+      } else if (tLength < 32) {
+        var result = 0.0
+        var tOff = tBegin
+        cforRange(sBegin until sEnd) { sOff =>
+          val sRow = s.rowIndices(sOff)
+          val newTOff = ArrayUtil.gallopSearch(t.rowIndices, tOff, tEnd, sRow)
+          if (newTOff < 0) {
+            tOff = ~newTOff + 1
+          } else {
+            result += s.data(sOff) * t.data(newTOff)
+            tOff = newTOff + 1
+          }
+        }
+        result
+      } else {
+        val sMid = ((sBegin.toLong + sEnd) / 2).toInt
+        val sRow = s.rowIndices(sMid)
+        var tOff = util.Arrays.binarySearch(t.rowIndices, tBegin, tEnd, sRow)
+        if (tOff < 0) {
+          tOff = ~tOff
+        }
+        dpRange(s, sBegin, sMid, t, tBegin, tOff) + dpRange(s, sMid, sEnd, t, tOff, tEnd)
       }
     }
   }

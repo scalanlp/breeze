@@ -22,11 +22,10 @@ import org.scalatest.prop._
 import org.junit.runner.RunWith
 import breeze.math.Complex
 import breeze.numerics._
-import breeze.stats.distributions.RandBasis
 import breeze.util.DoubleImplicits
 
 @RunWith(classOf[JUnitRunner])
-class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleImplicits {
+class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleImplicits with MatrixTestUtils {
 
   test("Slicing") {
     val m = DenseMatrix((0,1,2),
@@ -686,14 +685,6 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     assert(sigmoid(m(::,3 to 5)) === DenseMatrix.fill(10, 3)(0.5))
   }
 
-
-
-  def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6) {
-    for(i <- 0 until A.rows; j <- 0 until A.cols)
-      A(i,j) should be (B(i, j) +- threshold)
-
-  }
-
   test("#336 argmax for Dense Matrices") {
     val m = DenseMatrix.zeros[Double](3, 3)
     m(2, ::) := DenseVector(1.0, 2.0, 3.0).t
@@ -800,5 +791,13 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
 
     assert(norm(Wy - WcopyY) < 1e-3)
     assert(norm(Wy - target) < 1e-3)
+  }
+}
+
+trait MatrixTestUtils extends Matchers {
+  def matricesNearlyEqual(A: Matrix[Double], B: Matrix[Double], threshold: Double = 1E-6) {
+    for(i <- 0 until A.rows; j <- 0 until A.cols)
+      A(i,j) should be (B(i, j) +- threshold)
+
   }
 }
