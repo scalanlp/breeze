@@ -97,6 +97,6 @@ class BloomFilterTest extends FunSuite with Checkers {
     val numBad = (strings2 -- strings).count {
       bf2 contains _
     }
-    numBad <= ((strings2 -- strings).size / 100) + 1
+    numBad <= ((strings2 -- strings).size / 100) + 5
   }
 }
