@@ -1,14 +1,17 @@
 package breeze.linalg
 
-import breeze.linalg.operators.{OpMulScalar, OpSet}
+import breeze.linalg.operators._
 import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
-import breeze.math.{Semiring}
+import breeze.macros.expand
+import breeze.math.Semiring
 import breeze.storage.Zero
 
 import scala.reflect.ClassTag
-import scala.{specialized => spec}
+import scala.{ specialized => spec }
+
+import spire.syntax.cfor._
 
 /**
  * A SliceVector is a vector that is a view of another underlying tensor. For instance:
@@ -128,32 +131,59 @@ object SliceVector extends SliceVectorOps {
 }
 
 trait SliceVectorOps {
-  // todo: all all the other ops (can this be done with some macro magic?
-  implicit def opSetInPlace[K, V]: OpSet.InPlaceImpl2[SliceVector[K, V], V] = new SVOpSetInPlace[K, V]
+  import breeze.math.PowImplicits._
 
-  implicit def opMulScalar[K, V : ClassTag : Semiring]: OpMulScalar.Impl2[SliceVector[K, V], V, DenseVector[V]] = new SVOpMulScalar[K, V]
+  @expand
+  implicit def slv_v_Op[K, @expand.args(Int, Double, Float, Long) T,
+  @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: Op.Impl2[T, T, T]):BinaryRegistry[SliceVector[K, T], Vector[T], Op.type, DenseVector[T]] = new BinaryRegistry[SliceVector[K, T], Vector[T], Op.type, DenseVector[T]] {
 
-  implicit def opMulScalarInPlace[K, V : ClassTag : Semiring]: OpMulScalar.InPlaceImpl2[SliceVector[K, V], V] = new SVOpMulScalarInPlace[K, V]
-
-  class SVOpSetInPlace[@specialized(Int) K, @specialized(Double, Int, Float, Long) V] extends OpSet.InPlaceImpl2[SliceVector[K, V], V] {
-    def apply(a: SliceVector[K, V], b: V): Unit = a.keysIterator.foreach(k => a.update(k, b))
+    override protected def bindingMissing(a: SliceVector[K, T], b: Vector[T]): DenseVector[T] = {
+      require(a.length == b.length)
+      DenseVector.tabulate(a.length)(i => op(a(i), b(i)))
+    }
+    implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
   }
 
-  class SVOpMulScalar[@specialized(Int) K, @specialized(Double, Int, Float, Long) V: ClassTag : Semiring] extends OpMulScalar.Impl2[SliceVector[K, V], V, DenseVector[V]] {
-    val semiring = implicitly[Semiring[V]]
+  @expand
+  implicit def slv_s_Op[K, @expand.args(Int, Double, Float, Long) T,
+  @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: Op.Impl2[T, T, T]):BinaryRegistry[SliceVector[K, T], T, Op.type, DenseVector[T]] = new BinaryRegistry[SliceVector[K, T], T, Op.type, DenseVector[T]] {
 
-    def apply(a: SliceVector[K, V], b: V): DenseVector[V] = a.iterator.foldLeft(new VectorBuilder[V](a.length))({
-      case (builder, (k, v)) =>
-        builder.add(k, semiring.*(v, b))
-        builder
-    }).toDenseVector
+    override protected def bindingMissing(a: SliceVector[K, T], b: T): DenseVector[T] = {
+      DenseVector.tabulate(a.length)(i => op(a(i), b))
+    }
+    implicitly[BinaryRegistry[Vector[T], T, Op.type, Vector[T]]].register(this)
   }
 
-  class SVOpMulScalarInPlace[@specialized(Int) K, @specialized(Double, Int, Float, Long) V: ClassTag : Semiring] extends OpMulScalar.InPlaceImpl2[SliceVector[K, V], V] {
-    val semiring = implicitly[Semiring[V]]
+  @expand
+  implicit def slv_v_InPlaceOp[K, @expand.args(Int, Double, Float, Long) T,
+  @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: Op.Impl2[T, T, T]):BinaryUpdateRegistry[SliceVector[K, T], Vector[T], Op.type] = new BinaryUpdateRegistry[SliceVector[K, T], Vector[T], Op.type] {
 
-    def apply(a: SliceVector[K, V], b: V): Unit = a.iterator.foreach({
-      case (k, v) => a(k) = semiring.*(v, b)
-    })
+    override protected def bindingMissing(a: SliceVector[K, T], b: Vector[T]): Unit = {
+      cforRange(0 until a.length) { i =>
+        a(i) = op(a(i), b(i))
+      }
+    }
+    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
   }
+
+  @expand
+  implicit def slv_s_InPlaceOp[K, @expand.args(Int, Double, Float, Long) T,
+  @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+  (implicit @expand.sequence[Op]({_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
+  op: Op.Impl2[T, T, T]):BinaryUpdateRegistry[SliceVector[K, T], T, Op.type] = new BinaryUpdateRegistry[SliceVector[K, T], T, Op.type] {
+
+    override protected def bindingMissing(a: SliceVector[K, T], b: T): Unit = {
+      cforRange(0 until a.length) { i =>
+        a(i) = op(a(i), b)
+      }
+    }
+    implicitly[BinaryUpdateRegistry[Vector[T], T, Op.type]].register(this)
+  }
+
 }

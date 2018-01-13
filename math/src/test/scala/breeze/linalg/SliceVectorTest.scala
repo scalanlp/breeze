@@ -44,5 +44,14 @@ class SliceVectorTest extends FunSuite {
 
   }
 
+  test("#621 missing implicits") {
+    val m = new DenseMatrix(2, 2, Array(1.0, 2.0, 3.0, 4.0))
+    val mm = m((0, 0), (1, 1)) / 2.0
+    m((0, 0), (1, 1)) /= 2.0
+    assert(m((0, 0), (1, 1)) == mm)
+//    m((0, 0), (1, 1)) *= 2.0
+//    m((0, 0), (1, 1)) *:* 2.0
+  }
+
 
 }

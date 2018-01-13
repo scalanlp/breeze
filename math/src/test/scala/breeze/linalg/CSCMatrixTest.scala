@@ -448,12 +448,14 @@ class CSCMatrixTest extends FunSuite with Checkers with MatrixTestUtils {
     assert( max(abs(r4 - CSCMatrix((0.9166666666666667,    1.9166666666666672),
       (-0.08333333333333352, -0.08333333333333436)))) < 1E-5)
 
-    val largeMatrix = CSCMatrix.rand(70, 70)
+    val dim = 70
+    val largeMatrix = CSCMatrix.rand(dim, dim)
+    val largeMatrix2 = CSCMatrix.rand(dim, dim)
     // make sure it's PD
     for (i <- 0 until largeMatrix.rows)
       largeMatrix(i, i) += 2.0
 
-   matricesNearlyEqual(largeMatrix \ largeMatrix, largeMatrix.toDense \ largeMatrix.toDense)
+   matricesNearlyEqual(largeMatrix \ largeMatrix2, largeMatrix.toDense \ largeMatrix2.toDense, 1E-3)
 
   }
 
