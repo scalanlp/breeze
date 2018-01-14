@@ -792,6 +792,15 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     assert(norm(Wy - WcopyY) < 1e-3)
     assert(norm(Wy - target) < 1e-3)
   }
+
+  test("#682 bug in slice outer product") {
+    val c = DenseVector(3, 1)
+    val a = DenseMatrix((3,1),(-1,-2))
+
+    val rr = c * c.t
+    val yy = a(0, ::).t * a(0, ::)
+    assert(rr == yy)
+  }
 }
 
 trait MatrixTestUtils extends Matchers {

@@ -38,8 +38,8 @@ trait DenseMatrixMultiplyStuff extends DenseMatrixOps
     new OpMulMatrix.Impl2[DenseVector[T],DenseMatrix[T],DenseMatrix[T]] {
       def apply(v: DenseVector[T], v2: DenseMatrix[T]): DenseMatrix[T] = {
         require(v2.rows == 1)
-        val dm = new DenseMatrix[T](v.length,1,v.data,v.offset,v.length)
-        op(dm,v2)
+        // as DenseMatrix comes out as a row, but we want a column
+        op(v.asDenseMatrix.t,v2)
       }
     }
 
