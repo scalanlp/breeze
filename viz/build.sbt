@@ -37,10 +37,6 @@ pomExtra :=
         <distribution>repo</distribution>
       </license>
     </licenses>
-    <scm>
-      <url>git@github.com:scalanlp/breeze.git</url>
-      <connection>scm:git:git@github.com:scalanlp/breeze-viz.git</connection>
-    </scm>
     <developers>
       <developer>
         <id>dlwh</id>
