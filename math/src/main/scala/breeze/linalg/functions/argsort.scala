@@ -19,7 +19,7 @@ object argsort extends UFunc with LowPriorityArgSort {
           Sorting.indexSort(v.data, v.offset, v.length)
         } else {
           val data = v.toArray
-          Sorting.indexSort(data)
+          Sorting.indexSort(data, 0, data.length)
         }
       }
     }
