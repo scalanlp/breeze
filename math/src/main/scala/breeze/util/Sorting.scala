@@ -18,30 +18,54 @@ object Sorting {
 
   def indexSort(elems: Array[Int], off: Int, length: Int): Array[Int] = {
     val idx = ArrayUtil.range(0, length)
-    indirectSort_Int_Int(elems.clone(), idx, off, length)
+    indirectSort(elems.clone(), idx, off, length)
     idx
   }
 
   def indexSort(elems: Array[Long], off: Int, length: Int): Array[Int] = {
     val idx = ArrayUtil.range(0, length)
-    indirectSort_Long_Int(elems.clone(), idx, off, length)
+    indirectSort(elems.clone(), idx, off, length)
     idx
   }
 
   def indexSort(elems: Array[Float], off: Int, length: Int): Array[Int] = {
     val idx = ArrayUtil.range(0, length)
-    indirectSort_Float_Int(elems.clone(), idx, off, length)
+    indirectSort(elems.clone(), idx, off, length)
     idx
   }
 
   def indexSort(elems: Array[Double], off: Int, length: Int): Array[Int] = {
     val idx = ArrayUtil.range(0, length)
-    indirectSort_Double_Int(elems.clone(), idx, 0, elems.length)
+    indirectSort(elems.clone(), idx, 0, elems.length)
     idx
   }
 
+  def indirectSort[@specialized(Int, Long, Float, Double) E](
+    keys: Array[Int],
+    elems: Array[E],
+    off: Int,
+    length: Int): Unit = indirectSort_Int(keys, elems, off, length)
+
+  def indirectSort[@specialized(Int, Long, Float, Double) E](
+    keys: Array[Long],
+    elems: Array[E],
+    off: Int,
+    length: Int): Unit = indirectSort_Long(keys, elems, off, length)
+
+  def indirectSort[@specialized(Int, Long, Float, Double) E](
+    keys: Array[Float],
+    elems: Array[E],
+    off: Int,
+    length: Int): Unit = indirectSort_Float(keys, elems, off, length)
+
+  def indirectSort[@specialized(Int, Long, Float, Double) E](
+    keys: Array[Double],
+    elems: Array[E],
+    off: Int,
+    length: Int): Unit = indirectSort_Double(keys, elems, off, length)
+
   @expand
-  def indirectSort[@expand.args(Int, Long, Float, Double) K, @expand.args(Int, Long, Float, Double) E](
+  def indirectSort[@expand.args(Int, Long, Float, Double) K, @specialized(Int, Long, Float, Double) E](
     keys: Array[K],
     elems: Array[E],
     off: Int,

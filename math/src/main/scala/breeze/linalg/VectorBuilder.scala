@@ -14,15 +14,15 @@ package breeze.linalg
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-import scala.reflect.ClassTag
-import scala.{specialized => spec}
-
-import breeze.linalg.operators._
-import breeze.linalg.support._
-import breeze.math.{Ring, Semiring}
+import operators._
+import scala.{specialized=>spec}
+import support._
+import breeze.util.{Sorting, ArrayUtil}
+import breeze.math.{Field, MutableVectorSpace, Semiring, Ring}
 import breeze.storage.Zero
-import breeze.util.{ArrayUtil, Sorting}
-
+import scala.reflect.ClassTag
+import breeze.macros.expand
+import breeze.generic.UFunc.{UImpl2, InPlaceImpl2}
 
 /**
  * A VectorBuilder is basically an unsorted Sparse Vector. Two parallel
