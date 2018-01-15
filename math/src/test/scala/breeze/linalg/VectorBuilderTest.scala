@@ -20,7 +20,15 @@ class VectorBuilderTest extends FunSuite with Checkers {
     assert(vb.data.length === 4)
   }
 
-  test("Basic VectorBuilder result tests") {
+  test("toSparseVector on empty") {
+    assert(VectorBuilder[Double]().toSparseVector === SparseVector[Double]())
+  }
+
+  test("toSparseVector on singleton") {
+    assert(VectorBuilder[Double](1.0).toSparseVector === SparseVector[Double](1.0))
+  }
+
+  test("toSparseVector/toHashVector on multiple") {
     val vb = VectorBuilder[Double](0.0, 1.0, 3.0)
 
     assert(vb.toSparseVector === SparseVector[Double](0.0, 1.0, 3.0))
@@ -47,13 +55,12 @@ class VectorBuilderTest extends FunSuite with Checkers {
     }
   }
 
-  test("Dot product is consistent") {
+  test("dot is consistent") {
     check(Prop.forAll{ (pair: (VectorBuilder[Double], VectorBuilder[Double])) =>
       val (vb1,vb2) = pair
       val (hv1, hv2) = (vb1.toHashVector, vb2.toHashVector)
        closeTo(vb1 dot hv2, hv1 dot vb2) && closeTo(vb1 dot hv2, hv1 dot hv2)
     })
-
   }
 
   test("+ for VB's and V's is consistent") {
