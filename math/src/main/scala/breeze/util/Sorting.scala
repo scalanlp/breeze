@@ -1,5 +1,7 @@
 package breeze.util
 
+import scala.{specialized => spec}
+
 import breeze.macros.expand
 
 /**
@@ -40,25 +42,25 @@ object Sorting {
     idx
   }
 
-  def indirectSort[@specialized(Int, Long, Float, Double) E](
+  def indirectSort[@spec(Int, Long, Float, Double) E](
     keys: Array[Int],
     elems: Array[E],
     off: Int,
     length: Int): Unit = indirectSort_Int(keys, elems, off, length)
 
-  def indirectSort[@specialized(Int, Long, Float, Double) E](
+  def indirectSort[@spec(Int, Long, Float, Double) E](
     keys: Array[Long],
     elems: Array[E],
     off: Int,
     length: Int): Unit = indirectSort_Long(keys, elems, off, length)
 
-  def indirectSort[@specialized(Int, Long, Float, Double) E](
+  def indirectSort[@spec(Int, Long, Float, Double) E](
     keys: Array[Float],
     elems: Array[E],
     off: Int,
     length: Int): Unit = indirectSort_Float(keys, elems, off, length)
 
-  def indirectSort[@specialized(Int, Long, Float, Double) E](
+  def indirectSort[@spec(Int, Long, Float, Double) E](
     keys: Array[Double],
     elems: Array[E],
     off: Int,
@@ -75,7 +77,7 @@ object Sorting {
    * The implementation is not stable.
    */
   @expand
-  def indirectSort[@expand.args(Int, Long, Float, Double) K, @specialized(Int, Long, Float, Double) E](
+  def indirectSort[@expand.args(Int, Long, Float, Double) K, @spec(Int, Long, Float, Double) E](
     keys: Array[K],
     elems: Array[E],
     off: Int,
