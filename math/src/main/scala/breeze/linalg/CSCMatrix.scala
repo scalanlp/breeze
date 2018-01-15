@@ -479,8 +479,8 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
       val nnz = indices.length
 
 
-      val _rows = if (rows >= 0) rows else indices.map(i => (i & 0xFFFFFFFFL).toInt).foldLeft(0)(_ max _) + 1
-      val _cols = if (cols >= 0) cols else indices.map(i => (i >> 32).toInt).foldLeft(0)(_ max _) + 1
+      val _rows = if (rows >= 0) rows else indices.map(rowFromIndex).foldLeft(0)(_ max _) + 1
+      val _cols = if (cols >= 0) cols else indices.map(colFromIndex).foldLeft(0)(_ max _) + 1
 
       val outCols = new Array[Int](_cols+1)
 
@@ -488,36 +488,34 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
         return new CSCMatrix(vs, _rows,  _cols, outCols, 0, Array())
       }
 
-      val order: Array[Int] = if(keysAlreadySorted) {
-        ArrayUtil.range(0, nnz)
-      } else {
-        sortedIndices(indices)
-      }
+      // This would reorder indices/vs, but it's OK because sorting
+      // is idempotent.
+      Sorting.indirectSort(indices, vs, 0, nnz)
 
       val outRows = new Array[Int](nnz)
       val outData = new Array[T](nnz)
 
-      outRows(0) = rowFromIndex(indices(order(0)))
-      outData(0) = vs(order(0))
+      outRows(0) = rowFromIndex(indices(0))
+      outData(0) = vs(0)
 
       var outDataIndex = 0
       var i = 1
-      var lastCol = colFromIndex(indices(order(0)))
+      var lastCol = colFromIndex(indices(0))
       while (i < nnz) {
-        val index = indices(order(i))
+        val index = indices(i)
         val col = colFromIndex(index)
         require(cols < 0 || col < cols, s"Column index $col is out of bounds for number of columns $cols!")
         val colsEqual = col == lastCol
         val row = rowFromIndex(index)
         require(rows < 0 || row < rows, s"Row index $row is out of bounds for number of rows $rows!")
-        if (colsEqual && row == rowFromIndex(indices(order(i-1)))) {
+        if (colsEqual && row == rowFromIndex(indices(i-1))) {
           assert(!keysAlreadyUnique)
           // TODO: might need to codegen to make this fast.
-          outData(outDataIndex) = ring.+(outData(outDataIndex), vs(order(i)))
+          outData(outDataIndex) = ring.+(outData(outDataIndex), vs(i))
         } else {
           outDataIndex += 1
           outRows(outDataIndex) = row
-          outData(outDataIndex) = vs(order(i))
+          outData(outDataIndex) = vs(i)
         }
 
         // we need to pad the outCols array with zeros until we reach the next non-zero column

@@ -147,6 +147,14 @@ class CSCMatrixTest extends FunSuite with Checkers with MatrixTestUtils {
     builder.add(1, 1, 2.0)
   }
 
+  test("Builder idempotency") {
+    val builder = new CSCMatrix.Builder[Double](3, 3)
+    builder.add(1, 1, 2.0)
+    val r1 = builder.result
+    val r2 = builder.result
+    assert(r1 === r2)
+  }
+
   test("Builder, full") {
     val builder = new CSCMatrix.Builder[Double](2, 3)
     builder.add(0, 1, 2.0)
