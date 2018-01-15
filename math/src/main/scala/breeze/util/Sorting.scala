@@ -64,12 +64,23 @@ object Sorting {
     off: Int,
     length: Int): Unit = indirectSort_Double(keys, elems, off, length)
 
+  /**
+   * Jointly sorts `keys`/`elems` in-place based on the items in the
+   * `keys` array.
+   *
+   * If `off` is non-zero or `length` is less than the length of the arrays,
+   * then only the subarrays specified by these arguments are modified. All
+   * other items remain unchanged.
+   *
+   * The implementation is not stable.
+   */
   @expand
   def indirectSort[@expand.args(Int, Long, Float, Double) K, @specialized(Int, Long, Float, Double) E](
     keys: Array[K],
     elems: Array[E],
     off: Int,
     length: Int): Unit = {
+    require(keys.length == elems.length, "arrays must have the same length")
     def swap(a: Int, b: Int) {
       val t0 = keys(a)
       keys(a) = keys(b)
