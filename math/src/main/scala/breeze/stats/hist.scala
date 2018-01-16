@@ -17,9 +17,7 @@ object hist extends UFunc {
     lazy val binEdges = DenseVector.rangeD(start, end + ((end-start)/bins), step=((end-start)/bins))
   }
 
-  @expand
-  implicit def defaultHist[T, @expand.args(Int, Double, Float, Long) S](implicit iter: CanTraverseValues[T, S]): Impl[T, Histogram[S]] = new Impl[T,Histogram[S]] {
-    private val innerImpl = implicitly[Impl2[T, Int,Histogram[S]]]
+  implicit def defaultHist[T, S](implicit iter: CanTraverseValues[T, S], innerImpl: Impl2[T, Int, Histogram[S]]): Impl[T, Histogram[S]] = new Impl[T,Histogram[S]] {
     def apply(v: T) = innerImpl.apply(v, 10)
   }
 

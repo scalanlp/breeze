@@ -35,9 +35,6 @@ import spire.syntax.cfor._
 
 object ArrayUtil {
 
-
-
-
   def fill[V](a: Array[V], offset: Int, length: Int, v: V) {
     a match {
       case x: Array[Double] => Arrays.fill(x, offset, offset + length, v.asInstanceOf[Double])
@@ -98,6 +95,20 @@ object ArrayUtil {
       case x: Array[_] =>
         implicit val man = ClassTag[V](x.getClass.getComponentType.asInstanceOf[Class[V]])
         new Array[V](length)
+      case _ => throw new RuntimeException("shouldn't be here!")
+    }
+  }
+
+  def sort[V](a: Array[V]) {
+    a match {
+      case x: Array[Double] => Arrays.sort(x)
+      case x: Array[Int] => Arrays.sort(x)
+      case x: Array[Float] => Arrays.sort(x)
+      case x: Array[Long] => Arrays.sort(x)
+      case x: Array[Short] => Arrays.sort(x)
+      case x: Array[Char] => Arrays.sort(x)
+      case x: Array[Byte] => Arrays.sort(x)
+      case x: Array[_] => Arrays.sort(x.asInstanceOf[Array[AnyRef]])
       case _ => throw new RuntimeException("shouldn't be here!")
     }
   }

@@ -431,8 +431,6 @@ trait DenseMatrixFloatMultiplyStuff extends DenseMatrixOps
   // </editor-fold>
 }
 
-
-
 trait DenseMatrixOps { this: DenseMatrix.type =>
 
   // <editor-fold defaultstate="collapsed" desc=" implicit implementations for OpXXX.InPlaceImpl2[DenseMatrix[T], DenseMatrix[T]] ">
@@ -711,7 +709,6 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
 }
 
 
-
 trait DenseMatrixOpsLowPrio { this: DenseMatrixOps =>
   // LOL, if we explicitly annotate the type, then the implicit resolution thing will load this recursively.
   // If we don't, then everything works ok.
@@ -727,10 +724,6 @@ trait DenseMatrixOpsLowPrio { this: DenseMatrixOps =>
     )
 
 }
-
-
-
-
 
 trait DenseMatrixMultOps extends DenseMatrixOps
                          with DenseMatrixOpsLowPrio { this: DenseMatrix.type =>
@@ -845,14 +838,12 @@ trait DenseMatrixMultOps extends DenseMatrixOps
       }
       res
     }
-
   }
 
   @expand
   @expand.valify
   implicit def op_DM_DM[@expand.args(Int, Long, Float, Double) T]:
   OpMulMatrix.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]] =
-
 
   new OpMulMatrix.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]] {
     // amazingly, the bigger these are, the better.
@@ -874,7 +865,6 @@ trait DenseMatrixMultOps extends DenseMatrixOps
         }
         rd(rOff + i + k * res.majorStride) = sum
       }
-
     }
 
     override def apply(a: DenseMatrix[T], b: DenseMatrix[T]): DenseMatrix[T] = {
@@ -924,8 +914,6 @@ trait DenseMatrixMultOps extends DenseMatrixOps
   // </editor-fold>
 
 }
-
-
 
 trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
 
@@ -1207,10 +1195,6 @@ trait DenseMatrix_OrderingOps extends DenseMatrixOps { this: DenseMatrix.type =>
     }
   }
 
-
-
-
-
   @expand
   implicit def dm_s_CompOp[@expand.args(Int, Double, Float, Long) T,
   @expand.args(OpGT, OpGTE, OpLTE, OpLT, OpEq, OpNe) Op <: OpType]
@@ -1230,9 +1214,5 @@ trait DenseMatrix_OrderingOps extends DenseMatrixOps { this: DenseMatrix.type =>
       }
     }
   }
-
-
-
-
 
 }

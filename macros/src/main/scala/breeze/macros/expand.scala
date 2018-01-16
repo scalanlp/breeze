@@ -52,7 +52,6 @@ class expand extends Annotation with StaticAnnotation {
   def macroTransform(annottees: Any*):Any = macro expand.expandImpl
 }
 
-
 object expand {
 
   /** Args are put on type arguments, and the cross product of all types that are so annotated
@@ -69,6 +68,18 @@ object expand {
   class sequence[T](args: Any*) extends Annotation with StaticAnnotation
 
 
+  def stripOurAnnotations(c: Context)(mods: c.Modifiers):c.Modifiers = {
+    import c.mirror.universe._
+
+    mods.mapAnnotations(_.filter {
+      case q"new expand.args(...$args)" => false
+      case q"new expand.$x[..$targs](...$args)" => false
+      case q"new expand.$x(...$args)" => false
+      case q"new expand.$x" => false
+      case _ => true
+    })
+  }
+
   def expandImpl(c: Context)(annottees: c.Expr[Any]*):c.Expr[Any] = {
     import c.mirror.universe._
     annottees.head.tree match {
@@ -83,11 +94,9 @@ object expand {
           (td.name: Name) -> typeMappings(c)(td)
         }
 
-
         val (valsToExpand, valsToLeave) = vargs.map(_.partition(shouldExpandVarg(c)(_))).unzip
 
         val valsToExpand2 = valsToExpand.flatten
-
 
         val configurations = makeTypeMaps(c)(typesToUnrollAs).filterNot(exclusions.toSet)
         val valExpansions = valsToExpand2.map{v => v.name -> solveSequence(c)(v, typesToUnrollAs)}.asInstanceOf[List[(c.Name, (c.Name, Map[c.Type, c.Tree]))]].toMap
@@ -97,15 +106,16 @@ object expand {
           val newvargs = valsToLeave.filterNot(_.isEmpty).map(_.map(substitute(c)(typeMap, valExpansions, _).asInstanceOf[ValDef]))
           val newtpt = substitute(c)(typeMap, valExpansions, tpt)
           val newName = newTermName(mkName(c)(name, typesToExpand.map(t => typeMap(t.name).toString)))
+          val newMods = stripOurAnnotations(c)(mods)
           if(shouldValify) {
             if(typesLeftAbstract.nonEmpty)
               c.error(tree.pos, "Can't valify: Not all types were grounded: " + typesLeftAbstract.mkString(", "))
             if(newvargs.exists(_.nonEmpty))
               c.error(tree.pos, "Can't valify: Not all arguments were grounded: " + newvargs.map(_.mkString(", ")).mkString("(",")(",")"))
-            ValDef(mods, newName, newtpt, grounded)
+            ValDef(newMods, newName, newtpt, grounded)
           } else {
             val newTargs = typesLeftAbstract.map(substitute(c)(typeMap, valExpansions, _)).asInstanceOf[List[TypeDef]]
-            DefDef(mods, newName, newTargs, newvargs, newtpt, grounded)
+            DefDef(newMods, newName, newTargs, newvargs, newtpt, grounded)
           }
         }
         val ret = c.Expr(Block(newDefs.toList, Literal(Constant(()))))
@@ -164,7 +174,7 @@ object expand {
     import context.mirror.universe._
     val x = v.mods.annotations.collectFirst{
       case x@q"new expand.sequence[${Ident(nme2)}](...$args)"  =>
-        if( args.flatten.length != typeMappings(nme2).length) {
+        if (args.flatten.length != typeMappings(nme2).length) {
           context.error(x.pos, s"@sequence arguments list does not match the expand.args for $nme2")
         }
         val predef = context.mirror.staticModule("scala.Predef").asModule

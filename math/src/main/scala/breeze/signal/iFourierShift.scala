@@ -5,6 +5,9 @@ import breeze.macros.expand
 import breeze.linalg.DenseVector
 import breeze.numerics._
 import breeze.math.Complex
+import breeze.storage.Zero
+
+import scala.reflect.ClassTag
 
 //ToDo: 2D fourierShift/iFourierShift, make horz/vert join function first
 
@@ -16,9 +19,7 @@ import breeze.math.Complex
   */
 object iFourierShift extends UFunc {
 
-  @expand
-  @expand.valify
-  implicit def implIFourierShift[@expand.args(Int, Long, Float, Double, Complex) T]: Impl[DenseVector[T], DenseVector[T]] = {
+  implicit def implIFourierShift[T: Zero:ClassTag]: Impl[DenseVector[T], DenseVector[T]] = {
     new Impl[DenseVector[T], DenseVector[T]] {
       def apply(dft: DenseVector[T]): DenseVector[T] = {
         if( isEven(dft.length) ) DenseVector.vertcat( dft( dft.length/2 to -1 ), dft( 0 to dft.length/2 -1 ) )
