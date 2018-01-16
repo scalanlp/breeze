@@ -17,31 +17,7 @@ object Sorting {
   //** /____/\___/_/ |_/____/_/ | |                                         **
   //**                          |/                                          **
   //\*                                                                      */
-
-  def indexSort(elems: Array[Int], off: Int, length: Int): Array[Int] = {
-    val idx = ArrayUtil.range(0, length)
-    indirectSort(elems.clone(), idx, off, length)
-    idx
-  }
-
-  def indexSort(elems: Array[Long], off: Int, length: Int): Array[Int] = {
-    val idx = ArrayUtil.range(0, length)
-    indirectSort(elems.clone(), idx, off, length)
-    idx
-  }
-
-  def indexSort(elems: Array[Float], off: Int, length: Int): Array[Int] = {
-    val idx = ArrayUtil.range(0, length)
-    indirectSort(elems.clone(), idx, off, length)
-    idx
-  }
-
-  def indexSort(elems: Array[Double], off: Int, length: Int): Array[Int] = {
-    val idx = ArrayUtil.range(0, length)
-    indirectSort(elems.clone(), idx, 0, elems.length)
-    idx
-  }
-
+  
   def indirectSort[@spec(Int, Long, Float, Double) E](
     keys: Array[Int],
     elems: Array[E],

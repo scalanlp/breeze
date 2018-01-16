@@ -544,11 +544,6 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix]
         out.compact()
       out
     }
-
-    // returns indices of a lexicographic sort of the indices (columns major, rows minor)
-    private def sortedIndices(indices: Array[Long]) = {
-      Sorting.indexSort(indices, 0, indices.length)
-    }
   }
 
   object Builder {
