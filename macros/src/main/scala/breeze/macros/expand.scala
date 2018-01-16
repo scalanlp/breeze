@@ -2,7 +2,8 @@ package breeze.macros
 
 import scala.reflect.macros.Context
 import scala.language.experimental.macros
-import scala.annotation.{Annotation, StaticAnnotation}
+import scala.annotation.{ Annotation, StaticAnnotation }
+import scala.collection.immutable.ListMap
 
 /**
  * expand is a macro annotation that is kind of like @specialized, but it's more of a templating mechanism.
@@ -78,9 +79,10 @@ object expand {
         val exclusions = getExclusions(c)(mods, targs.map(_.name))
         val shouldValify = checkValify(c)(mods)
 
-        val typesToUnrollAs: Map[c.Name, List[c.Type]] = typesToExpand.map{ td =>
-          (td.name:Name) -> typeMappings(c)(td)
-        }.toMap
+        val typesToUnrollAs = ListMap.empty ++ typesToExpand.map { td =>
+          (td.name: Name) -> typeMappings(c)(td)
+        }
+
 
         val (valsToExpand, valsToLeave) = vargs.map(_.partition(shouldExpandVarg(c)(_))).unzip
 
@@ -94,7 +96,7 @@ object expand {
           val grounded = substitute(c)(typeMap, valExpansions, rhs)
           val newvargs = valsToLeave.filterNot(_.isEmpty).map(_.map(substitute(c)(typeMap, valExpansions, _).asInstanceOf[ValDef]))
           val newtpt = substitute(c)(typeMap, valExpansions, tpt)
-          val newName = newTermName(mkName(c)(name, typeMap))
+          val newName = newTermName(mkName(c)(name, typesToExpand.map(t => typeMap(t.name).toString)))
           if(shouldValify) {
             if(typesLeftAbstract.nonEmpty)
               c.error(tree.pos, "Can't valify: Not all types were grounded: " + typesLeftAbstract.mkString(", "))
@@ -112,10 +114,8 @@ object expand {
     }
   }
 
-  private def mkName(c: Context)(name: c.Name, typeMap: Map[c.Name, c.Type]): String = {
-    name.toString + "_" + typeMap.map {
-      case (k, v) => v.toString.reverse.takeWhile(_ != '.').reverse
-    }.mkString("_")
+  private def mkName(c: Context)(name: c.Name, groundedTypes: Seq[String]): String = {
+    groundedTypes.map {_.reverse.takeWhile(_ != '.').reverse }.mkString(name.toString + "_", "_", "")
   }
 
   // valExpansions is a [value identifier -> (
@@ -196,7 +196,7 @@ object expand {
     mods
   }
 
-  private def makeTypeMaps(c: Context)(types: Map[c.Name, Seq[c.Type]]):Seq[Map[c.Name, c.Type]] = {
+  private def makeTypeMaps(c: Context)(types: ListMap[c.Name, Seq[c.Type]]):Seq[Map[c.Name, c.Type]] = {
     types.foldLeft(Seq(Map.empty[c.Name, c.Type])){ (acc, pair) =>
       val (nme, types) = pair
       for(t <- types; map <- acc) yield map + (nme -> t)
