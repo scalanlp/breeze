@@ -429,7 +429,6 @@ trait DenseMatrixFloatMultiplyStuff extends DenseMatrixOps
   }
 
   // </editor-fold>
-
 }
 
 
@@ -453,6 +452,7 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
       def apply(a: DenseMatrix[T], b: DenseMatrix[T]): Unit = {
         require(a.rows == b.rows, "Row dimension mismatch!")
         require(a.cols == b.cols, "Col dimension mismatch!")
+
 
         if ((a ne b) && a.overlaps(b)) {
           val ac = a.copy
@@ -698,6 +698,7 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
       override def apply(a : DenseMatrix[T], b: DenseMatrix[T]): DenseMatrix[T] = {
         val c = copy(a)
         uop(c, b)
+
         c
       }
 

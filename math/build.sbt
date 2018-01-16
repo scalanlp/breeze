@@ -8,7 +8,7 @@ libraryDependencies ++= Seq(
   "com.github.fommil.netlib" % "core" % "1.1.2",
   "net.sourceforge.f2j" % "arpack_combined_all" % "0.1",
   "net.sf.opencsv" % "opencsv" % "2.3",
-  "com.github.rwl" % "jtransforms" % "2.4.0",
+  "com.github.wendykierp" % "JTransforms" % "3.1",
   "org.apache.commons" % "commons-math3" % "3.2",
   "org.spire-math" %% "spire" % "0.13.0",
   "com.chuusai" %% "shapeless" % "2.3.2",

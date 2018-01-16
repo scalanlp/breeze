@@ -1,9 +1,9 @@
 package breeze.signal.support
 
-import edu.emory.mathcs.jtransforms.fft.{DoubleFFT_1D, DoubleFFT_2D}
 import spire.syntax.cfor._
-import breeze.linalg.{DenseVector, DenseMatrix}
+import breeze.linalg.{ DenseMatrix, DenseVector }
 import breeze.math.Complex
+import org.jtransforms.fft.{ DoubleFFT_1D, DoubleFFT_2D }
 
 /** This class encapsulates convenience methods to use the JTransforms package.
  *
