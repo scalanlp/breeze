@@ -20,6 +20,11 @@ import breeze.math.Semiring
  */
 object LU extends UFunc {
 
+  case class LU[M](P: M, L: M, U: M)
+
+  type DenseLU = LU[DenseMatrix[Double]]
+  type SDenseLU = LU[DenseMatrix[Float]]
+
   implicit object LU_DM_Impl_Double extends Impl[DenseMatrix[Double], (DenseMatrix[Double], Array[Int])] {
     def apply( X: DenseMatrix[Double]): (DenseMatrix[Double], Array[Int]) = {
 
@@ -109,11 +114,11 @@ object LU extends UFunc {
     * @return (DenseMatrix, DenseMatrix, DenseMatrix) - Three matrices P, L, and U which give the original matrix when multiplied together
     * i.e X, ipiv = LU(A), P, L, U = decompose(X, ipiv), P * L * U = A
   */
-  def decompose(X: DenseMatrix[Double], ipiv: Array[Int]): (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double]) = {
+  def decompose(X: DenseMatrix[Double], ipiv: Array[Int]): DenseLU = {
     val P: DenseMatrix[Double] = createPermutationMatrix(ipiv, X.rows, X.cols)
     val L: DenseMatrix[Double] = lowerTriangular(X)
     val U: DenseMatrix[Double] = upperTriangular(X)
-    (P, L, U)
+    LU(P, L, U)
   }
 
   /** 
