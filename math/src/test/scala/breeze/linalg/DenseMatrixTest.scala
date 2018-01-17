@@ -22,6 +22,7 @@ import org.scalatest.prop._
 import org.junit.runner.RunWith
 import breeze.math.Complex
 import breeze.numerics._
+import breeze.stats.distributions.Rand
 import breeze.util.DoubleImplicits
 
 @RunWith(classOf[JUnitRunner])
@@ -801,12 +802,19 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     val yy = a(0, ::).t * a(0, ::)
     assert(rr == yy)
   }
+
+  test("simple matrix multiply, int") {
+    val rI = DenseMatrix.rand[Int](2002, 2002, Rand.randInt(-3, 3))
+    val rD = convert(rI, Double)
+    assert( (rI * rI).mapValues(_.toDouble) === (rD * rD))
+  }
+
 }
 
 trait MatrixTestUtils extends Matchers {
   def matricesNearlyEqual(A: Matrix[Double], B: Matrix[Double], threshold: Double = 1E-6) {
     for(i <- 0 until A.rows; j <- 0 until A.cols)
       A(i,j) should be (B(i, j) +- threshold)
-
   }
 }
+

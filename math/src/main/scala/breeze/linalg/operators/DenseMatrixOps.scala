@@ -863,7 +863,7 @@ trait DenseMatrixMultOps extends DenseMatrixOps
         cforRange(0 until N) { (j) =>
           sum += aTrans(i * N + j) * b(k * N + j)
         }
-        rd(rOff + i + k * res.majorStride) = sum
+        rd(rOff + i + k * res.majorStride) += sum
       }
     }
 
@@ -886,8 +886,15 @@ trait DenseMatrixMultOps extends DenseMatrixOps
           val nBegin = i * blockSizeInner
           val nEnd = math.min(nBegin + blockSizeInner, a.cols)
           val N = nEnd - nBegin
-          cforRange2(0 until N, 0 until M) { (n, m) =>
-            aTrans(m * N + n) = a(m + mBegin, n + nBegin)
+
+          if (a.isTranspose) {
+            cforRange(0 until M) { m =>
+              System.arraycopy(a.data, a.offset + (m + mBegin) * a.majorStride + nBegin, aTrans, m * N, N)
+            }
+          } else {
+            cforRange2(0 until N, 0 until M) { (n, m) =>
+              aTrans(m * N + n) = a(m + mBegin, n + nBegin)
+            }
           }
 
           cforRange(0 until numColBlocks) { c =>
