@@ -13,7 +13,7 @@ package breeze.linalg
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 /**
  * This trait is commonly used for [[breeze.linalg.sum]] and its kin for summing along
@@ -26,5 +26,3 @@ object Axis {
   case object _0 extends Axis
   case object _1 extends Axis
 }
-
-

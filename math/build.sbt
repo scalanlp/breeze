@@ -2,7 +2,7 @@ name := "breeze"
 
 Common.commonSettings
 
-addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.full)
+addCompilerPlugin(("org.scalamacros" %% "paradise" % "2.1.0").cross(CrossVersion.full))
 
 libraryDependencies ++= Seq(
   "com.github.fommil.netlib" % "core" % "1.1.2",
@@ -22,8 +22,8 @@ libraryDependencies := {
   val sv = scalaVersion.value
   val deps = libraryDependencies.value
   sv match {
-    case x if x startsWith "2.10" =>
-      deps :+ compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
+    case x if x.startsWith("2.10") =>
+      deps :+ compilerPlugin(("org.scalamacros" % "paradise" % "2.1.0").cross(CrossVersion.full))
     case _ =>
       deps
   }
@@ -53,10 +53,8 @@ testOptions in Test += Tests.Setup(classLoader =>
       .invoke(null, "ROOT")
   } catch {
     case _: Exception =>
-  }
-)
+})
 
 fork := true
 
 javaOptions := Seq("-Xmx4g")
-

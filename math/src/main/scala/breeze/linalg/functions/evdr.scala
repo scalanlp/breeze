@@ -1,6 +1,5 @@
 package breeze.linalg.functions
 
-
 import breeze.generic.UFunc
 import breeze.linalg._
 import breeze.linalg.eig.Eig
@@ -8,7 +7,6 @@ import breeze.linalg.eigSym.{DenseEigSym, EigSym}
 import breeze.numerics._
 import breeze.stats.distributions.Rand
 import spire.implicits.cforRange
-
 
 /**
  * Approximate truncated randomized EVD
@@ -47,12 +45,11 @@ object evdr extends UFunc {
    * approximate matrix decompositions
    * Halko, et al., 2009 [[http://arxiv.org/abs/arXiv:0909.4061]]
    */
-  private def doEigSymDouble(M: DenseMatrix[Double],
-                             s: Int,
-                             nOversamples: Int = 10,
-                             nIter: Int = 0): DenseEigSym = {
+  private def doEigSymDouble(M: DenseMatrix[Double], s: Int, nOversamples: Int = 10, nIter: Int = 0): DenseEigSym = {
 
-    require(s <= (M.rows min M.cols), "Number of columns in orthonormal matrix should be less than min(M.rows, M.cols)")
+    require(
+      s <= (M.rows.min(M.cols)),
+      "Number of columns in orthonormal matrix should be less than min(M.rows, M.cols)")
     require(s >= 1, "Sketch size should be greater than 1")
 
     val nRandom = s + nOversamples
@@ -84,12 +81,10 @@ object evdr extends UFunc {
    * Stochastic algorithms for constructing approximate matrix decompositions"
    * Halko, et al., 2009 (arXiv:909) [[http://arxiv.org/pdf/0909.4061]]
    */
-  private def randomizedStateFinder(M: DenseMatrix[Double],
-                                    size: Int,
-                                    nIter: Int): DenseMatrix[Double] = {
+  private def randomizedStateFinder(M: DenseMatrix[Double], size: Int, nIter: Int): DenseMatrix[Double] = {
     val R = DenseMatrix.rand(M.cols, size, rand = Rand.gaussian)
     val Y = M * R
-    cforRange(0 until nIter){ _ =>
+    cforRange(0 until nIter) { _ =>
       Y := M * (M.t * Y)
     }
     val q = qr.reduced.justQ(Y)
@@ -113,4 +108,3 @@ object evdr extends UFunc {
     u
   }
 }
-

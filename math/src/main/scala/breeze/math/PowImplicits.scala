@@ -11,11 +11,11 @@ object PowImplicits {
   // just to make some unrolling less terrible
   // TODO: move this somewhere sensible
   implicit class DoublePow(x: Double) {
-    def pow(y: Double) = math.pow(x,y)
+    def pow(y: Double) = math.pow(x, y)
   }
 
   implicit class FloatPow(x: Float) {
-    def pow(y: Float) = math.pow(x,y).toFloat
+    def pow(y: Float) = math.pow(x, y).toFloat
   }
 
   implicit class IntPow(x: Int) {

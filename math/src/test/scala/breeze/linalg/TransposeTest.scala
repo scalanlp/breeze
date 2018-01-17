@@ -11,7 +11,7 @@ class TransposeTest extends FunSuite {
   test("Counter1 inner product") {
 
     val c = Counter('a -> 1.0)
-    assert((c dot c) === c.t * c)
+    assert((c.dot(c)) === c.t * c)
 
   }
 

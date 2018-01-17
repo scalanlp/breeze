@@ -14,7 +14,7 @@ package breeze.linalg.operators
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 import breeze.generic.{MMRegistry3, UFunc, MMRegistry2}
 import breeze.generic.UFunc.InPlaceImpl3
@@ -28,9 +28,16 @@ import scala.reflect.ClassTag
  */
 // This trait could reuse code from Multimethod2, but not doing so allows us to reduce code size a lot
 // because we don't need BinaryOp's to inherit from Function2, which has a lot of @specialzied cruft.
-trait TernaryUpdateRegistry[A, B, C, Op] extends UFunc.InPlaceImpl3[Op, A, B, C] with MMRegistry3[UFunc.InPlaceImpl3[Op, _ <: A, _ <: B, _ <: C]] {
-  protected def bindingMissing(a: A, b: B, c: C):Unit = throw new UnsupportedOperationException("Types not found!" + a + b + " " + ops)
-  protected def multipleOptions(a: A, b: B, c: C, m: Map[(Class[_],Class[_], Class[_]),UFunc.InPlaceImpl3[Op, _ <: A, _ <: B, _ <: C]]):Unit = {
+trait TernaryUpdateRegistry[A, B, C, Op]
+    extends UFunc.InPlaceImpl3[Op, A, B, C]
+    with MMRegistry3[UFunc.InPlaceImpl3[Op, _ <: A, _ <: B, _ <: C]] {
+  protected def bindingMissing(a: A, b: B, c: C): Unit =
+    throw new UnsupportedOperationException("Types not found!" + a + b + " " + ops)
+  protected def multipleOptions(
+      a: A,
+      b: B,
+      c: C,
+      m: Map[(Class[_], Class[_], Class[_]), UFunc.InPlaceImpl3[Op, _ <: A, _ <: B, _ <: C]]): Unit = {
     throw new RuntimeException("Multiple bindings for method: " + m)
   }
 
@@ -39,8 +46,8 @@ trait TernaryUpdateRegistry[A, B, C, Op] extends UFunc.InPlaceImpl3[Op, A, B, C]
     val bc = b.asInstanceOf[AnyRef].getClass
     val cc = c.asInstanceOf[AnyRef].getClass
 
-    val cached = cache.get((ac,bc,cc))
-    if(cached != null) {
+    val cached = cache.get((ac, bc, cc))
+    if (cached != null) {
       cached match {
         case None => bindingMissing(a, b, c)
         case Some(m) =>
@@ -50,15 +57,15 @@ trait TernaryUpdateRegistry[A, B, C, Op] extends UFunc.InPlaceImpl3[Op, A, B, C]
       val options = resolve(ac, bc, cc)
       options.size match {
         case 0 =>
-          cache.put( (ac, bc, cc), None)
+          cache.put((ac, bc, cc), None)
           bindingMissing(a, b, c)
         case 1 =>
           val method = options.values.head
-          cache.put( (ac, bc, cc), Some(method))
+          cache.put((ac, bc, cc), Some(method))
           method.asInstanceOf[InPlaceImpl3[Op, A, B, C]].apply(a, b, c)
         case _ =>
           val selected = selectBestOption(options)
-          if(selected.size != 1) {
+          if (selected.size != 1) {
             multipleOptions(a, b, c, options)
           } else {
             val method = selected.values.head
@@ -69,7 +76,8 @@ trait TernaryUpdateRegistry[A, B, C, Op] extends UFunc.InPlaceImpl3[Op, A, B, C]
     }
   }
 
-  def register[AA<:A, BB<:B, CC <: C](op: InPlaceImpl3[Op, AA, BB, CC])(implicit manA: ClassTag[AA], manB: ClassTag[BB], manC: ClassTag[CC]) {
+  def register[AA <: A, BB <: B, CC <: C](
+      op: InPlaceImpl3[Op, AA, BB, CC])(implicit manA: ClassTag[AA], manB: ClassTag[BB], manC: ClassTag[CC]) {
     super.register(manA.runtimeClass, manB.runtimeClass, manC.runtimeClass, op)
   }
 }

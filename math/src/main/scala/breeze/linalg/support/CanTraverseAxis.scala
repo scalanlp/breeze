@@ -14,7 +14,7 @@ package breeze.linalg.support
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 /**
  *
  * This trait is for multi-dimensional tensors that can logically have one of their
@@ -27,6 +27,6 @@ package breeze.linalg.support
  * @tparam ColType the type of the "column" (or row or...) being collapsed.
  */
 trait CanTraverseAxis[From, Axis, ColType] {
-  def apply[A](from: From, axis: Axis)(f: ColType=>A)
+  def apply[A](from: From, axis: Axis)(f: ColType => A)
 
 }

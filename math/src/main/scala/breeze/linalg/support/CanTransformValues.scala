@@ -16,7 +16,7 @@ import breeze.math.Complex
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 /**
  * Marker for being able to transform the keys and values in a value collection
@@ -26,14 +26,13 @@ import breeze.math.Complex
  * @author dlwh
  */
 trait CanTransformValues[From, @specialized(Double, Int, Float) A] {
+
   /**Transforms all key-value pairs from the given collection. */
   def transform(from: From, fn: (A => A))
 
   /**Transforms all active key-value pairs from the given collection. */
   def transformActive(from: From, fn: (A => A))
 }
-
-
 
 object CanTransformValues {
   type Op[From, A] = CanTransformValues[From, A]
@@ -42,8 +41,7 @@ object CanTransformValues {
   // Arrays
   //
 
-  class OpArray[@specialized(Double, Int, Float, Long) A]
-    extends Op[Array[A], A] {
+  class OpArray[@specialized(Double, Int, Float, Long) A] extends Op[Array[A], A] {
 
     /**Transforms all values from the given collection. */
     def transform(from: Array[A], fn: (A) => A) {
@@ -54,9 +52,8 @@ object CanTransformValues {
     }
 
     /**Transforms all active key-value pairs from the given collection. */
-    def transformActive(from: Array[A], fn: (A) => A) { transform(from, fn)}
+    def transformActive(from: Array[A], fn: (A) => A) { transform(from, fn) }
   }
-
 
   implicit def opArray[@specialized A] =
     new OpArray[A]

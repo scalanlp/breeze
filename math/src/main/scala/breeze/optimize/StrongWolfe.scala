@@ -6,10 +6,10 @@ abstract class CubicLineSearch extends SerializableLogging with MinimizingLineSe
   import scala.math._
 
   case class Bracket(
-    t: Double, // 1d line search parameter
-    dd: Double, // Directional Derivative at t
-    fval: Double // Function value at t
-    )
+      t: Double, // 1d line search parameter
+      dd: Double, // Directional Derivative at t
+      fval: Double // Function value at t
+  )
 
   /*
    * Invoke line search, returning stepsize
@@ -109,8 +109,9 @@ class StrongWolfeLineSearch(maxZoomIter: Int, maxLineSearchIter: Int) extends Cu
         // Evaluate objective at t, and build bracket
         val c = phi(t)
         //logger.debug("ZOOM:\n c: " + c + " \n l: " + low + " \nr: " + hi)
-        logger.info("Line search t: " + t + " fval: " + c.fval +
-          " rhs: " + (fval + c1 * c.t * dd) + " cdd: " + c.dd)
+        logger.info(
+          "Line search t: " + t + " fval: " + c.fval +
+            " rhs: " + (fval + c1 * c.t * dd) + " cdd: " + c.dd)
 
         ///////////////
         /// Update left or right bracket, or both
@@ -172,15 +173,17 @@ class StrongWolfeLineSearch(maxZoomIter: Int, maxLineSearchIter: Int) extends Cu
         // Occurs if we skipped over the nearest local minimum
         // over to the next one.
         if (c.dd >= 0) {
-          logger.debug("Line search t: " + t + " fval: " + c.fval +
-            " rhs: " + (fval + c1 * t * dd) + " cdd: " + c.dd)
+          logger.debug(
+            "Line search t: " + t + " fval: " + c.fval +
+              " rhs: " + (fval + c1 * t * dd) + " cdd: " + c.dd)
           return zoom(c, low)
         }
 
         low = c
         if (t == bound) {
-          logger.debug("Reach bound, satisfy sufficent decrease condition," +
-            " but not curvature condition satisfied.")
+          logger.debug(
+            "Reach bound, satisfy sufficent decrease condition," +
+              " but not curvature condition satisfied.")
           return bound
         } else {
           t *= 1.5

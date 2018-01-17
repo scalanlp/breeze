@@ -20,14 +20,14 @@ import org.scalatest.prop.Checkers
  * @author Amit Kumar kumaramit01@gmail.com
  */
 @RunWith(classOf[JUnitRunner])
-class UsingNativesTest extends FunSuite with Checkers{
+class UsingNativesTest extends FunSuite with Checkers {
 
-import breeze.linalg._
+  import breeze.linalg._
 
   test("Using natives") {
-    if(!usingNatives){
+    if (!usingNatives) {
       assert(com.github.fommil.netlib.BLAS.getInstance.getClass.getName == "com.github.fommil.netlib.F2jBLAS")
-    }else{
+    } else {
       assert(com.github.fommil.netlib.BLAS.getInstance.getClass.getName != "com.github.fommil.netlib.F2jBLAS")
     }
   }

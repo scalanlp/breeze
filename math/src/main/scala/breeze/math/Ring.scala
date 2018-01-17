@@ -16,19 +16,18 @@ import breeze.linalg
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 /**
  *
  * @author dlwh
  */
+trait Ring[@specialized(Int, Short, Long, Float, Double) V] extends Semiring[V] {
 
-trait Ring[@specialized(Int,Short,Long,Float,Double) V] extends Semiring[V]  {
-
-  def -(a : V, b : V) : V
+  def -(a: V, b: V): V
   def negate(s: V): V = this.-(zero, s)
   def %(a: V, b: V): V
 
-  implicit val normImpl: linalg.norm.Impl[V,Double]
+  implicit val normImpl: linalg.norm.Impl[V, Double]
   def sNorm(a: V): Double = linalg.norm(a)
 }
 

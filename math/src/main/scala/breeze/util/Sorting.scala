@@ -17,30 +17,24 @@ object Sorting {
   //** /____/\___/_/ |_/____/_/ | |                                         **
   //**                          |/                                          **
   //\*                                                                      */
-  
-  def indirectSort[@spec(Int, Long, Float, Double) E](
-    keys: Array[Int],
-    elems: Array[E],
-    off: Int,
-    length: Int): Unit = indirectSort_Int(keys, elems, off, length)
+
+  def indirectSort[@spec(Int, Long, Float, Double) E](keys: Array[Int], elems: Array[E], off: Int, length: Int): Unit =
+    indirectSort_Int(keys, elems, off, length)
+
+  def indirectSort[@spec(Int, Long, Float, Double) E](keys: Array[Long], elems: Array[E], off: Int, length: Int): Unit =
+    indirectSort_Long(keys, elems, off, length)
 
   def indirectSort[@spec(Int, Long, Float, Double) E](
-    keys: Array[Long],
-    elems: Array[E],
-    off: Int,
-    length: Int): Unit = indirectSort_Long(keys, elems, off, length)
+      keys: Array[Float],
+      elems: Array[E],
+      off: Int,
+      length: Int): Unit = indirectSort_Float(keys, elems, off, length)
 
   def indirectSort[@spec(Int, Long, Float, Double) E](
-    keys: Array[Float],
-    elems: Array[E],
-    off: Int,
-    length: Int): Unit = indirectSort_Float(keys, elems, off, length)
-
-  def indirectSort[@spec(Int, Long, Float, Double) E](
-    keys: Array[Double],
-    elems: Array[E],
-    off: Int,
-    length: Int): Unit = indirectSort_Double(keys, elems, off, length)
+      keys: Array[Double],
+      elems: Array[E],
+      off: Int,
+      length: Int): Unit = indirectSort_Double(keys, elems, off, length)
 
   /**
    * Jointly sorts `keys`/`elems` in-place based on the items in the
@@ -54,10 +48,10 @@ object Sorting {
    */
   @expand
   def indirectSort[@expand.args(Int, Long, Float, Double) K, @spec(Int, Long, Float, Double) E](
-    keys: Array[K],
-    elems: Array[E],
-    off: Int,
-    length: Int): Unit = {
+      keys: Array[K],
+      elems: Array[E],
+      off: Int,
+      length: Int): Unit = {
     require(keys.length == elems.length, "arrays must have the same length")
     def swap(a: Int, b: Int) {
       val t0 = keys(a)
@@ -91,23 +85,23 @@ object Sorting {
         var i = off
         while (i < length + off) {
           var j = i
-          while (j>off && keys(j-1) > keys(j)) {
-            swap(j, j-1)
+          while (j > off && keys(j - 1) > keys(j)) {
+            swap(j, j - 1)
             j -= 1
           }
           i += 1
         }
       } else {
         // Choose a partition element, v
-        var m = off + (length >> 1)        // Small arrays, middle element
+        var m = off + (length >> 1) // Small arrays, middle element
         if (length > 7) {
           var l = off
           var n = off + length - 1
-          if (length > 40) {        // Big arrays, pseudomedian of 9
+          if (length > 40) { // Big arrays, pseudomedian of 9
             val s = length / 8
-            l = med3(l, l+s, l+2*s)
-            m = med3(m-s, m, m+s)
-            n = med3(n-2*s, n-s, n)
+            l = med3(l, l + s, l + 2 * s)
+            m = med3(m - s, m, m + s)
+            n = med3(n - 2 * s, n - s, n)
           }
           m = med3(l, m, n) // Mid-size, med of 3
         }
@@ -145,10 +139,10 @@ object Sorting {
 
         // Swap partition elements back to middle
         val n = off + length
-        var s = math.min(a-off, b-a)
-        vecswap(off, b-s, s)
-        s = math.min(d-c, n-d-1)
-        vecswap(b,   n-s, s)
+        var s = math.min(a - off, b - a)
+        vecswap(off, b - s, s)
+        s = math.min(d - c, n - d - 1)
+        vecswap(b, n - s, s)
 
         // Recursively sort non-partition-elements
         s = b - a
@@ -156,7 +150,7 @@ object Sorting {
           sort2(off, s)
         s = d - c
         if (s > 1)
-          sort2(n-s, s)
+          sort2(n - s, s)
       }
     }
     sort2(off, length)

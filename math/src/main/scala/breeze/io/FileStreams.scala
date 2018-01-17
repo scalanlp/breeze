@@ -12,15 +12,15 @@
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 package breeze;
 package io;
 
 import java.io.File;
-import java.io.{InputStream,OutputStream};
-import java.io.{FileInputStream,FileOutputStream};
-import java.io.{BufferedInputStream,BufferedOutputStream};
-import java.util.zip.{GZIPInputStream,GZIPOutputStream};
+import java.io.{InputStream, OutputStream};
+import java.io.{FileInputStream, FileOutputStream};
+import java.io.{BufferedInputStream, BufferedOutputStream};
+import java.util.zip.{GZIPInputStream, GZIPOutputStream};
 
 /**
  * Gets input and output streams to a file, wrapping them in
@@ -29,14 +29,15 @@ import java.util.zip.{GZIPInputStream,GZIPOutputStream};
  * @author dramage
  */
 object FileStreams {
+
   /** Use a 16k buffer size. */
   val BUFFER_SIZE = 16 * 1024;
-  
+
   /**
    * Gets an input stream with proper buffering (minimum 16k) for the given
    * file, automatically gunziping if the file name ends in .gz.
    */
-  def input(path : File) : InputStream = {
+  def input(path: File): InputStream = {
     val fis = new FileInputStream(path);
     try {
       if (path.getName.endsWith(".gz")) {
@@ -45,9 +46,9 @@ object FileStreams {
         new BufferedInputStream(fis, BUFFER_SIZE);
       }
     } catch {
-      case ex : Throwable =>
+      case ex: Throwable =>
         fis.close();
-        throw(ex);
+        throw (ex);
     }
   }
 
@@ -55,7 +56,7 @@ object FileStreams {
    * Gets an output stream writing to the given file with proper buffering
    * (minimum 16k), automatically gziping if the file name ends in .gz.
    */
-  def output(path : File) : OutputStream = {
+  def output(path: File): OutputStream = {
     val fos = new FileOutputStream(path);
     try {
       if (path.getName.endsWith(".gz")) {
@@ -64,10 +65,9 @@ object FileStreams {
         new BufferedOutputStream(fos, BUFFER_SIZE);
       }
     } catch {
-      case ex : Throwable =>
+      case ex: Throwable =>
         fos.close();
-        throw(ex);
+        throw (ex);
     }
   }
 }
-

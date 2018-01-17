@@ -21,23 +21,27 @@ abstract class FilterKernel[T] {
 //  def toFloat(): FilterKernel[Float]
 }
 
-abstract class FilterKernel1D[T] extends FilterKernel[T]{
+abstract class FilterKernel1D[T] extends FilterKernel[T] {
   val multiplier: Double
 }
 
 object FIRKernel1D {
 
-  def apply[T](kernel: DenseVector[T], multiplier: Double, designText: String) = new FIRKernel1D[T](kernel, multiplier, designText)
+  def apply[T](kernel: DenseVector[T], multiplier: Double, designText: String) =
+    new FIRKernel1D[T](kernel, multiplier, designText)
 
 }
 
 /**This immutable class encapsulates 1D FIR filter kernels. It also internally stores the kernel Fourier transform for
-  * multiple applications of fft convolution.*/
-class FIRKernel1D[T](val kernel: DenseVector[T], override val multiplier: Double, override val designText: String) extends FilterKernel1D[T] {
+ * multiple applications of fft convolution.*/
+class FIRKernel1D[T](val kernel: DenseVector[T], override val multiplier: Double, override val designText: String)
+    extends FilterKernel1D[T] {
   //lazy val kernelFourier: DenseVector[Complex] = fourierTr( kernel )
   lazy val length = kernel.length
+
   /**Amount of overhang to prepend for convolution, to conserve output length.*/
-  lazy val overhangPre = (length - 1)/2
+  lazy val overhangPre = (length - 1) / 2
+
   /**Amount of overhang to append for convolution, to conserve output length.*/
   lazy val overhangPost = length - 1 - overhangPre
 
@@ -50,5 +54,9 @@ class FIRKernel1D[T](val kernel: DenseVector[T], override val multiplier: Double
 }
 
 /**This immutable class will encapsulate 1D IIR kernels. Not implemented yet.*/
-class IIRKernel1D[T](val kernelA: DenseVector[T], val kernelB: DenseVector[T], override val multiplier: Double, override val designText: String) extends FilterKernel1D[T] {
-}
+class IIRKernel1D[T](
+    val kernelA: DenseVector[T],
+    val kernelB: DenseVector[T],
+    override val multiplier: Double,
+    override val designText: String)
+    extends FilterKernel1D[T] {}

@@ -1,13 +1,11 @@
 package breeze.linalg.functions
 
-
 import breeze.generic.UFunc
 import breeze.linalg._
 import breeze.linalg.svd.{DenseSVD, SVD}
 import breeze.numerics.{abs, signum}
 import breeze.stats.distributions.Rand
 import spire.implicits.cforRange
-
 
 /**
  * Approximate truncated randomized SVD
@@ -48,12 +46,9 @@ object svdr extends UFunc {
    * approximate matrix decompositions
    * Halko, et al., 2009 [[http://arxiv.org/abs/arXiv:0909.4061]]
    */
-  private def doSVDR_Double(M: DenseMatrix[Double],
-                            k: Int,
-                            nOversamples: Int = 10,
-                            nIter: Int = 0): DenseSVD = {
+  private def doSVDR_Double(M: DenseMatrix[Double], k: Int, nOversamples: Int = 10, nIter: Int = 0): DenseSVD = {
 
-    require(k <= (M.rows min M.cols), "Number of singular values should be less than min(M.rows, M.cols)")
+    require(k <= (M.rows.min(M.cols)), "Number of singular values should be less than min(M.rows, M.cols)")
 
     val nRandom = k + nOversamples
 
@@ -84,9 +79,7 @@ object svdr extends UFunc {
    * Stochastic algorithms for constructing approximate matrix decompositions"
    * Halko, et al., 2009 (arXiv:909) [[http://arxiv.org/pdf/0909.4061]]
    */
-  private def randomizedStateFinder(M: DenseMatrix[Double],
-                                    size: Int,
-                                    nIter: Int): DenseMatrix[Double] = {
+  private def randomizedStateFinder(M: DenseMatrix[Double], size: Int, nIter: Int): DenseMatrix[Double] = {
     val R = DenseMatrix.rand(M.cols, size, rand = Rand.gaussian)
     val Y = M * R
     cforRange(0 until nIter) { _ =>
@@ -103,8 +96,9 @@ object svdr extends UFunc {
    * @param v right singular vectors
    * @return left and right singular vectors with resolved sign ambiguity
    */
-  private def flipSVDSigns(u: DenseMatrix[Double],
-                           v: DenseMatrix[Double]): (DenseMatrix[Double], DenseMatrix[Double]) = {
+  private def flipSVDSigns(
+      u: DenseMatrix[Double],
+      v: DenseMatrix[Double]): (DenseMatrix[Double], DenseMatrix[Double]) = {
     import DenseMatrix.canMapValues
     val abs_u = abs(u)
     val max_abs_cols = (0 until u.cols).map(c => argmax(abs_u(::, c)))

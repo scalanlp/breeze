@@ -13,7 +13,7 @@ package breeze.linalg.support
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 import breeze.math.Complex
 import scala.{specialized => spec}
 import scala.reflect.ClassTag
@@ -26,13 +26,14 @@ import scala.reflect.ClassTag
 trait CanZipMapValues[From, @spec(Double, Int, Float, Long) V, @spec(Double, Int, Float, Long) RV, +To] {
 
   /** Maps all corresponding values from the two collections. */
-  def map(from: From, from2: From, fn : (V,V)=>RV): To
+  def map(from: From, from2: From, fn: (V, V) => RV): To
 
 }
 
 object CanZipMapValues {
 
   def canZipMapSelf[S]: CanZipMapValues[S, S, S, S] = new CanZipMapValues[S, S, S, S] {
+
     /** Maps all corresponding values from the two collections. */
     def map(from: S, from2: S, fn: (S, S) => S): S = fn(from, from2)
   }
@@ -44,13 +45,13 @@ object CanZipMapValues {
   //
 
   class OpArray[@spec(Double, Int, Float, Long) V, @spec(Double, Int, Float, Long) RV: ClassTag]
-    extends Op[Array[V], V, RV, Array[RV]] {
+      extends Op[Array[V], V, RV, Array[RV]] {
 
     /**Maps all values from the given collection. */
     def map(from: Array[V], from2: Array[V], fn: (V, V) => RV) = {
       require(from.length == from2.length, "Array lengths don't match!")
       val arr = new Array[RV](from.length)
-      for(i <- 0 until from.length) {
+      for (i <- 0 until from.length) {
         arr(i) = fn(from(i), from2(i))
       }
       arr

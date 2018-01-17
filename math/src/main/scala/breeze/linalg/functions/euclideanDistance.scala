@@ -6,4 +6,3 @@ package breeze.linalg.functions
 object euclideanDistance extends NormBasedDistance {
   override protected def normConstant: Double = 2.0
 }
-

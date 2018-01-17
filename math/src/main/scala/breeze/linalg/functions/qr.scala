@@ -2,14 +2,12 @@ package breeze.linalg
 
 import breeze.generic.UFunc
 import org.netlib.util.intW
-import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
+import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
 import spire.implicits.{cforRange, cforRange2}
 
-
 sealed private[this] trait QRMode
-private[this] case object CompleteQR extends QRMode  // Q and R have dimensions (m, m), (m, n)
-private[this] case object ReducedQR extends QRMode   // Q and R have dimensions (m, k), (k, n) with k = min(m, n)
-
+private[this] case object CompleteQR extends QRMode // Q and R have dimensions (m, m), (m, n)
+private[this] case object ReducedQR extends QRMode // Q and R have dimensions (m, k), (k, n) with k = min(m, n)
 
 /**
  * QR Factorization
@@ -90,7 +88,6 @@ object qr extends UFunc {
     }
   }
 
-
   /**
    * QR Factorization that returns Q and R with dimensions (m, k), (k, n) where k = min(m, n)
    */
@@ -147,8 +144,7 @@ object qr extends UFunc {
 
   }
 
-  private def doQr(M: DenseMatrix[Double], skipQ: Boolean)
-                  (mode: QRMode): (DenseMatrix[Double], DenseMatrix[Double]) = {
+  private def doQr(M: DenseMatrix[Double], skipQ: Boolean)(mode: QRMode): (DenseMatrix[Double], DenseMatrix[Double]) = {
 
     val A = M.copy
 
@@ -178,8 +174,9 @@ object qr extends UFunc {
     // Handle mode that don't return Q
     if (skipQ) (null, upperTriangular(A(0 until mn, ::)))
     else {
-      val Q = if (mode == CompleteQR && m > n) DenseMatrix.zeros[Double](m, m)
-      else DenseMatrix.zeros[Double](m, n)
+      val Q =
+        if (mode == CompleteQR && m > n) DenseMatrix.zeros[Double](m, m)
+        else DenseMatrix.zeros[Double](m, n)
 
       val mc = if (mode == CompleteQR && m > n) m else mn
 
@@ -199,8 +196,8 @@ object qr extends UFunc {
         throw new IllegalArgumentException()
 
       // Upper triangle
-      cforRange(0 until mc){ i =>
-        cforRange(0 until min(i, A.cols)){ j =>
+      cforRange(0 until mc) { i =>
+        cforRange(0 until min(i, A.cols)) { j =>
           A(i, j) = 0.0
         }
       }
@@ -209,8 +206,8 @@ object qr extends UFunc {
     }
   }
 
-  private def doQr_Float(M: DenseMatrix[Float], skipQ: Boolean)
-                        (mode: QRMode): (DenseMatrix[Float], DenseMatrix[Float]) = {
+  private def doQr_Float(M: DenseMatrix[Float], skipQ: Boolean)(
+      mode: QRMode): (DenseMatrix[Float], DenseMatrix[Float]) = {
 
     val A = M.copy
 
@@ -240,8 +237,9 @@ object qr extends UFunc {
     // Handle mode that don't return Q
     if (skipQ) (null, upperTriangular(A(0 until mn, ::)))
     else {
-      val Q = if (mode == CompleteQR && m > n) DenseMatrix.zeros[Float](m, m)
-      else DenseMatrix.zeros[Float](m, n)
+      val Q =
+        if (mode == CompleteQR && m > n) DenseMatrix.zeros[Float](m, m)
+        else DenseMatrix.zeros[Float](m, n)
 
       val mc = if (mode == CompleteQR && m > n) m else mn
 
@@ -261,8 +259,8 @@ object qr extends UFunc {
         throw new IllegalArgumentException()
 
       // Upper triangle
-      cforRange(0 until mc){ i =>
-        cforRange(0 until min(i, A.cols)){ j =>
+      cforRange(0 until mc) { i =>
+        cforRange(0 until min(i, A.cols)) { j =>
           A(i, j) = 0.0f
         }
       }
@@ -271,7 +269,6 @@ object qr extends UFunc {
     }
   }
 }
-
 
 /**
  * QR Factorization with pivoting
@@ -298,20 +295,20 @@ object qrp extends UFunc {
       val scratch, work = new Array[Double](1)
       var info = new intW(0)
       lapack.dgeqrf(m, n, scratch, m, scratch, work, -1, info)
-      val lwork1 = if(info.`val` != 0) n else work(0).toInt
-      lapack.dorgqr(m, m, scala.math.min(m,n), scratch, m, scratch, work, -1, info)
-      val lwork2 = if(info.`val` != 0) n else work(0).toInt
+      val lwork1 = if (info.`val` != 0) n else work(0).toInt
+      lapack.dorgqr(m, m, scala.math.min(m, n), scratch, m, scratch, work, -1, info)
+      val lwork2 = if (info.`val` != 0) n else work(0).toInt
       //allocate workspace mem. as max of lwork1 and lwork3
       val workspace = new Array[Double](scala.math.max(lwork1, lwork2))
 
       //Perform the QR factorization with dgep3
-      val maxd = scala.math.max(m,n)
-      val AFact = DenseMatrix.zeros[Double](m,maxd)
+      val maxd = scala.math.max(m, n)
+      val AFact = DenseMatrix.zeros[Double](m, maxd)
       val pvt = new Array[Int](n)
-      val tau = new Array[Double](scala.math.min(m,n))
+      val tau = new Array[Double](scala.math.min(m, n))
 
-      cforRange2(0 until m, 0 until n){
-        (r, c) => AFact(r,c) = A(r,c)
+      cforRange2(0 until m, 0 until n) { (r, c) =>
+        AFact(r, c) = A(r, c)
       }
 
       lapack.dgeqp3(m, n, AFact.data, m, pvt, tau, workspace, workspace.length, info)
@@ -323,20 +320,20 @@ object qrp extends UFunc {
         throw new IllegalArgumentException()
 
       //Get R
-      val R = DenseMatrix.zeros[Double](m,n)
+      val R = DenseMatrix.zeros[Double](m, n)
 
-      cforRange(0 until min(n, maxd)){ c =>
-        cforRange(0 to min(m, c)){ r =>
-          R(r,c) = AFact(r,c)
+      cforRange(0 until min(n, maxd)) { c =>
+        cforRange(0 to min(m, c)) { r =>
+          R(r, c) = AFact(r, c)
         }
       }
 
       //Get Q from the matrix returned by dgep3
-      val Q = DenseMatrix.zeros[Double](m,m)
-      lapack.dorgqr(m, m, scala.math.min(m,n), AFact.data, m, tau, workspace, workspace.length, info)
+      val Q = DenseMatrix.zeros[Double](m, m)
+      lapack.dorgqr(m, m, scala.math.min(m, n), AFact.data, m, tau, workspace, workspace.length, info)
 
-      cforRange2(0 until m, 0 until min(m, maxd)){
-        (r, c) => Q(r,c) = AFact(r,c)
+      cforRange2(0 until m, 0 until min(m, maxd)) { (r, c) =>
+        Q(r, c) = AFact(r, c)
       }
 
       //Error check
@@ -348,13 +345,13 @@ object qrp extends UFunc {
       //Get P
       import NumericOps.Arrays._
       pvt -= 1
-      val P = DenseMatrix.zeros[Int](n,n)
+      val P = DenseMatrix.zeros[Int](n, n)
 
-      cforRange(0 until n){ i =>
+      cforRange(0 until n) { i =>
         P(pvt(i), i) = 1
       }
 
-      QRP(Q,R,P,pvt)
+      QRP(Q, R, P, pvt)
     }
   }
 }

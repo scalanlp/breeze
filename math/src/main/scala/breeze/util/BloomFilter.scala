@@ -14,8 +14,7 @@ package breeze.util
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
-
+ */
 
 import java.util
 
@@ -27,7 +26,9 @@ import java.util
  * @author dlwh
  */
 @SerialVersionUID(1L)
-class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFunctions: Int, val bits: util.BitSet) extends (T=>Boolean) with Serializable {
+class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFunctions: Int, val bits: util.BitSet)
+    extends (T => Boolean)
+    with Serializable {
   def this(numBuckets: Int, numHashFunctions: Int) = this(numBuckets, numHashFunctions, new util.BitSet(numBuckets))
   def this(numBuckets: Int) = this(numBuckets, 3)
 
@@ -101,7 +102,7 @@ class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFun
     this
   }
 
-  def &~=(that: BloomFilter[T]):this.type = {
+  def &~=(that: BloomFilter[T]): this.type = {
     checkCompatibility(that)
     this.bits &~= that.bits
     this
@@ -114,8 +115,8 @@ class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFun
 
 }
 
-
 object BloomFilter {
+
   /**
    * Returns the optimal number of buckets  (m) and hash functions (k)
    *

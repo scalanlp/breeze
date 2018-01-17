@@ -16,11 +16,9 @@ trait PaintScaleFactory[T] extends (Traversable[T] => PaintScale[T])
  *
  * @author dramage
  */
-case class GradientPaintScaleFactory[T]
-(gradient : Array[Color] = PaintScale.WhiteToBlack)
-(implicit view : T=>Double)
-extends PaintScaleFactory[T] {
-  override def apply(items : Traversable[T]) : PaintScale[T] = {
+case class GradientPaintScaleFactory[T](gradient: Array[Color] = PaintScale.WhiteToBlack)(implicit view: T => Double)
+    extends PaintScaleFactory[T] {
+  override def apply(items: Traversable[T]): PaintScale[T] = {
     var min = items.head
     var max = items.head
     for (item <- items) {
@@ -43,9 +41,9 @@ extends PaintScaleFactory[T] {
  * @author dramage
  */
 case class CategoricalPaintScaleFactory[T]() extends PaintScaleFactory[T] {
-  override def apply(items : Traversable[T]) : PaintScale[T] = {
+  override def apply(items: Traversable[T]): PaintScale[T] = {
     val distinct = items.toList.distinct
-    CategoricalPaintScale[T](Map() ++ (distinct zip Stream.continually(PaintScale.Category20.values.toList).flatten))
+    CategoricalPaintScale[T](Map() ++ (distinct.zip(Stream.continually(PaintScale.Category20.values.toList).flatten)))
   }
 }
 
@@ -55,10 +53,8 @@ object PaintScaleFactory {
    * Ignores incoming data, instead returns the provided PaintScale when
    * queried as a PaintScaleFactory.
    */
-  implicit def singletonFactoryForPaintScale[S,T](paintScale : S)
-  (implicit view : S=>PaintScale[T])
-  : PaintScaleFactory[T] = new PaintScaleFactory[T] {
-    def apply(items : Traversable[T]) = view(paintScale)
+  implicit def singletonFactoryForPaintScale[S, T](paintScale: S)(
+      implicit view: S => PaintScale[T]): PaintScaleFactory[T] = new PaintScaleFactory[T] {
+    def apply(items: Traversable[T]) = view(paintScale)
   }
 }
-

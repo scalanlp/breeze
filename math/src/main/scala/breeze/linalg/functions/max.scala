@@ -1,7 +1,7 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
-import breeze.linalg.support.{ CanMapValues, CanTransformValues, CanTraverseValues, ScalarOf }
+import breeze.linalg.support.{CanMapValues, CanTransformValues, CanTraverseValues, ScalarOf}
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.macros.expand
 import spire.syntax.cfor._
@@ -20,13 +20,14 @@ object max extends UFunc with maxLowPrio with VectorizedReduceUFunc {
   @expand.valify
   implicit def maxImpl3[@expand.args(Int, Double, Float, Long) T]: Impl3[T, T, T, T] =
     new Impl3[T, T, T, T] {
-      def apply(t1: T, t2: T, t3: T): T = scala.math.max( scala.math.max(t1, t2), t3 )
+      def apply(t1: T, t2: T, t3: T): T = scala.math.max(scala.math.max(t1, t2), t3)
     }
 
   @expand
-  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S]
-            (implicit iter: CanTraverseValues[T, S],
-             @expand.sequence[S](Int.MinValue, Double.NegativeInfinity, Float.NegativeInfinity, Long.MinValue) init: S): Impl[T, S] = new Impl[T, S] {
+  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S](
+      implicit iter: CanTraverseValues[T, S],
+      @expand.sequence[S](Int.MinValue, Double.NegativeInfinity, Float.NegativeInfinity, Long.MinValue) init: S)
+    : Impl[T, S] = new Impl[T, S] {
 
     def apply(v: T): S = {
       class SumVisitor extends ValuesVisitor[S] {
@@ -38,7 +39,7 @@ object max extends UFunc with maxLowPrio with VectorizedReduceUFunc {
         }
 
         def zeros(numZero: Int, zeroValue: S): Unit = {
-          if(numZero != 0) {
+          if (numZero != 0) {
             visitedOne = true
             max = scala.math.max(zeroValue, max)
           }
@@ -66,26 +67,22 @@ object max extends UFunc with maxLowPrio with VectorizedReduceUFunc {
             max = m
           }
 
-
-
         }
       }
 
       val visit = new SumVisitor
 
       iter.traverse(v, visit)
-      if(!visit.visitedOne) throw new IllegalArgumentException(s"No values in $v!")
+      if (!visit.visitedOne) throw new IllegalArgumentException(s"No values in $v!")
 
       visit.max
     }
 
   }
-
-
   @expand
-  implicit def helper[@expand.args(Int, Float, Long, Double) T]
-                     (implicit @expand.sequence[T](Int.MinValue, Float.NegativeInfinity, Long.MinValue, Double.NegativeInfinity)
-                     init: T):VectorizeHelper[T] = new VectorizeHelper[T] {
+  implicit def helper[@expand.args(Int, Float, Long, Double) T](
+      implicit @expand.sequence[T](Int.MinValue, Float.NegativeInfinity, Long.MinValue, Double.NegativeInfinity)
+      init: T): VectorizeHelper[T] = new VectorizeHelper[T] {
     override def zerosLike(len: Int): DenseVector[T] = {
       val r = DenseVector.zeros[T](len)
       r := init
@@ -105,7 +102,7 @@ object max extends UFunc with maxLowPrio with VectorizedReduceUFunc {
   def array(arr: Array[Double], length: Int): Double = {
     var accum = Double.NegativeInfinity
     var i = 0
-    while(i < length) {
+    while (i < length) {
       accum = scala.math.max(arr(i), accum)
       i += 1
     }
@@ -116,16 +113,16 @@ object max extends UFunc with maxLowPrio with VectorizedReduceUFunc {
 
 sealed trait maxLowPrio { this: max.type =>
 
-  implicit def maxVS[T, U, LHS, RHS, RV](implicit cmvH: ScalarOf[T, LHS],
+  implicit def maxVS[T, U, LHS, RHS, RV](
+      implicit cmvH: ScalarOf[T, LHS],
       maxImpl: max.Impl2[LHS, RHS, LHS],
-      cmv: CanMapValues[T, LHS, LHS, U]):max.Impl2[T, RHS, U] = {
+      cmv: CanMapValues[T, LHS, LHS, U]): max.Impl2[T, RHS, U] = {
     new max.Impl2[T, RHS, U] {
       override def apply(v: T, v2: RHS): U = cmv(v, maxImpl(_, v2))
     }
   }
 
 }
-
 
 /**
  * Computes the minimum.
@@ -135,21 +132,22 @@ object min extends UFunc with minLowPrio with VectorizedReduceUFunc {
   @expand
   @expand.valify
   implicit def minImpl2[@expand.args(Int, Double, Float, Long) T]: Impl2[T, T, T] =
-  new Impl2[T, T, T] {
-    def apply(t1: T, t2: T): T = scala.math.min(t1, t2)
-  }
+    new Impl2[T, T, T] {
+      def apply(t1: T, t2: T): T = scala.math.min(t1, t2)
+    }
 
   @expand
   @expand.valify
   implicit def minImpl3[@expand.args(Int, Double, Float, Long) T]: Impl3[T, T, T, T] =
     new Impl3[T, T, T, T] {
-      def apply(t1: T, t2: T, t3: T): T = scala.math.min( scala.math.min(t1, t2), t3 )
+      def apply(t1: T, t2: T, t3: T): T = scala.math.min(scala.math.min(t1, t2), t3)
     }
 
   @expand
-  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S]
-            (implicit iter: CanTraverseValues[T, S],
-             @expand.sequence[S](Int.MaxValue, Double.PositiveInfinity, Float.PositiveInfinity, Long.MaxValue) init: S): Impl[T, S] = new Impl[T, S] {
+  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S](
+      implicit iter: CanTraverseValues[T, S],
+      @expand.sequence[S](Int.MaxValue, Double.PositiveInfinity, Float.PositiveInfinity, Long.MaxValue) init: S)
+    : Impl[T, S] = new Impl[T, S] {
 
     def apply(v: T): S = {
       class MinVisitor extends ValuesVisitor[S] {
@@ -162,7 +160,7 @@ object min extends UFunc with minLowPrio with VectorizedReduceUFunc {
         }
 
         def zeros(numZero: Int, zeroValue: S): Unit = {
-          if(numZero != 0) {
+          if (numZero != 0) {
             visitedOne = true
             min = scala.math.min(zeroValue, min)
           }
@@ -171,7 +169,7 @@ object min extends UFunc with minLowPrio with VectorizedReduceUFunc {
         override def visitArray(arr: Array[S], offset: Int, length: Int, stride: Int): Unit = {
           var i = 0
           var off = offset
-          while(i < length) {
+          while (i < length) {
             visitedOne = true
             min = scala.math.min(min, arr(off))
             i += 1
@@ -183,7 +181,7 @@ object min extends UFunc with minLowPrio with VectorizedReduceUFunc {
       val visit = new MinVisitor
 
       iter.traverse(v, visit)
-      if(!visit.visitedOne) throw new IllegalArgumentException(s"No values in $v!")
+      if (!visit.visitedOne) throw new IllegalArgumentException(s"No values in $v!")
 
       visit.min
     }
@@ -191,8 +189,11 @@ object min extends UFunc with minLowPrio with VectorizedReduceUFunc {
   }
 
   @expand
-  implicit def helper[@expand.args(Int, Float, Long, Double) T]
-  (implicit @expand.sequence[T](Int.MaxValue, Float.PositiveInfinity, Long.MaxValue, Double.PositiveInfinity) init: T):VectorizeHelper[T] = new VectorizeHelper[T] {
+  implicit def helper[@expand.args(Int, Float, Long, Double) T](implicit @expand.sequence[T](
+    Int.MaxValue,
+    Float.PositiveInfinity,
+    Long.MaxValue,
+    Double.PositiveInfinity) init: T): VectorizeHelper[T] = new VectorizeHelper[T] {
     override def zerosLike(len: Int): DenseVector[T] = {
       val r = DenseVector.zeros[T](len)
       r := init
@@ -205,9 +206,10 @@ object min extends UFunc with minLowPrio with VectorizedReduceUFunc {
 
 sealed trait minLowPrio { this: min.type =>
 
-  implicit def minVS[T, U, LHS, RHS, RV](implicit cmvH: ScalarOf[T, LHS],
+  implicit def minVS[T, U, LHS, RHS, RV](
+      implicit cmvH: ScalarOf[T, LHS],
       minImpl: min.Impl2[LHS, RHS, LHS],
-      cmv: CanMapValues[T, LHS, LHS, U]):min.Impl2[T, RHS, U] = {
+      cmv: CanMapValues[T, LHS, LHS, U]): min.Impl2[T, RHS, U] = {
     new min.Impl2[T, RHS, U] {
       override def apply(v: T, v2: RHS): U = cmv(v, minImpl(_, v2))
     }
@@ -215,53 +217,53 @@ sealed trait minLowPrio { this: min.type =>
 
 }
 
-
 /**
  * clip(a, lower, upper) returns an array such that all elements are "clipped" at the range (lower, upper)
  */
 object clip extends UFunc {
-  implicit def clipOrdering[T,V](implicit ordering: Ordering[V], cmv: CanMapValues[T, V, V, T]):Impl3[T, V, V, T] = {
+  implicit def clipOrdering[T, V](implicit ordering: Ordering[V], cmv: CanMapValues[T, V, V, T]): Impl3[T, V, V, T] = {
     new Impl3[T, V, V, T] {
       import ordering.mkOrderingOps
       def apply(v: T, v2: V, v3: V): T = {
-        cmv(v, x => if(x < v2) v2 else if (x > v3) v3 else x)
+        cmv(v, x => if (x < v2) v2 else if (x > v3) v3 else x)
       }
     }
   }
 
-  implicit def clipInPlaceOrdering[T, V](implicit ordering: Ordering[V], cmv: CanTransformValues[T, V]):InPlaceImpl3[T, V, V] = {
+  implicit def clipInPlaceOrdering[T, V](
+      implicit ordering: Ordering[V],
+      cmv: CanTransformValues[T, V]): InPlaceImpl3[T, V, V] = {
     import ordering.mkOrderingOps
     new InPlaceImpl3[T, V, V] {
-      def apply(v: T, v2: V, v3: V):Unit = {
-        cmv.transform(v, x => if(x < v2) v2 else if (x > v3) v3 else x)
+      def apply(v: T, v2: V, v3: V): Unit = {
+        cmv.transform(v, x => if (x < v2) v2 else if (x > v3) v3 else x)
       }
     }
   }
 
   @expand
-  implicit def clipInPlace[Vec,
-                           @expand.args(Double, Float, Int, Long)
-                           T](implicit cmv: CanTransformValues[Vec, T]):InPlaceImpl3[Vec, T, T] = {
+  implicit def clipInPlace[Vec, @expand.args(Double, Float, Int, Long) T](
+      implicit cmv: CanTransformValues[Vec, T]): InPlaceImpl3[Vec, T, T] = {
     new InPlaceImpl3[Vec, T, T] {
-      def apply(v: Vec, v2: T, v3: T):Unit = {
-        cmv.transform(v, x => if(x < v2) v2 else if (x > v3) v3 else x)
+      def apply(v: Vec, v2: T, v3: T): Unit = {
+        cmv.transform(v, x => if (x < v2) v2 else if (x > v3) v3 else x)
       }
     }
   }
 }
 
-
 /** Peak-to-peak, ie the Range of values (maximum - minimum) along an axis.
-  */
+ */
 object ptp extends UFunc {
   @expand
-  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S]
-  (implicit iter: CanTraverseValues[T, S],
-   @expand.sequence[S](Int.MaxValue, Double.PositiveInfinity, Float.PositiveInfinity, Long.MaxValue) init: S): Impl[T, S] = new Impl[T, S] {
+  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S](
+      implicit iter: CanTraverseValues[T, S],
+      @expand.sequence[S](Int.MaxValue, Double.PositiveInfinity, Float.PositiveInfinity, Long.MaxValue) init: S)
+    : Impl[T, S] = new Impl[T, S] {
 
     def apply(v: T): S = {
       class SumVisitor extends ValuesVisitor[S] {
-        var max = - init
+        var max = -init
         var min = init
         var visitedOne = false
 
@@ -272,7 +274,7 @@ object ptp extends UFunc {
         }
 
         def zeros(numZero: Int, zeroValue: S): Unit = {
-          if(numZero != 0) {
+          if (numZero != 0) {
             visitedOne = true
             max = scala.math.max(zeroValue, max)
             min = scala.math.min(zeroValue, min)
@@ -282,7 +284,7 @@ object ptp extends UFunc {
         override def visitArray(arr: Array[S], offset: Int, length: Int, stride: Int): Unit = {
           var i = 0
           var off = offset
-          while(i < length) {
+          while (i < length) {
             visitedOne = true
             max = scala.math.max(max, arr(off))
             min = scala.math.min(min, arr(off))
@@ -295,7 +297,7 @@ object ptp extends UFunc {
       val visit = new SumVisitor
 
       iter.traverse(v, visit)
-      if(!visit.visitedOne) throw new IllegalArgumentException(s"No values in $v!")
+      if (!visit.visitedOne) throw new IllegalArgumentException(s"No values in $v!")
 
       visit.max - visit.min
     }
@@ -304,17 +306,18 @@ object ptp extends UFunc {
 }
 
 /** Minimum and maximum in one traversal, along an axis.
-  */
+ */
 object minMax extends UFunc {
   @expand
-  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S]
-  (implicit iter: CanTraverseValues[T, S],
-   @expand.sequence[S](Int.MaxValue, Double.PositiveInfinity, Float.PositiveInfinity, Long.MaxValue) init: S): Impl[T, (S, S)] = new Impl[T, (S, S)] {
+  implicit def reduce[T, @expand.args(Int, Double, Float, Long) S](
+      implicit iter: CanTraverseValues[T, S],
+      @expand.sequence[S](Int.MaxValue, Double.PositiveInfinity, Float.PositiveInfinity, Long.MaxValue) init: S)
+    : Impl[T, (S, S)] = new Impl[T, (S, S)] {
 
     def apply(v: T): (S, S) = {
       //the next 30 lines are common with "object ptp extends UFunc"
       class SumVisitor extends ValuesVisitor[S] {
-        var max = - init
+        var max = -init
         var min = init
         var visitedOne = false
         def visit(a: S): Unit = {
@@ -324,7 +327,7 @@ object minMax extends UFunc {
         }
 
         def zeros(numZero: Int, zeroValue: S): Unit = {
-          if(numZero != 0) {
+          if (numZero != 0) {
             visitedOne = true
             max = scala.math.max(zeroValue, max)
             min = scala.math.min(zeroValue, min)
@@ -334,7 +337,7 @@ object minMax extends UFunc {
         override def visitArray(arr: Array[S], offset: Int, length: Int, stride: Int): Unit = {
           var i = 0
           var off = offset
-          while(i < length) {
+          while (i < length) {
             visitedOne = true
             max = scala.math.max(max, arr(off))
             min = scala.math.min(min, arr(off))
@@ -347,7 +350,7 @@ object minMax extends UFunc {
       val visit = new SumVisitor
 
       iter.traverse(v, visit)
-      if(!visit.visitedOne) throw new IllegalArgumentException(s"No values in $v!")
+      if (!visit.visitedOne) throw new IllegalArgumentException(s"No values in $v!")
 
       (visit.min, visit.max)
 

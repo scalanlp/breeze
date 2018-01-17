@@ -14,7 +14,7 @@ package breeze.stats.distributions;
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 import org.junit.runner.RunWith
 import org.scalacheck._
@@ -39,38 +39,33 @@ class MarkovChainTest extends FunSuite with Checkers {
   val tol = 0.01
 
   test("metropolis for a Gamma") {
-    val mc = metropolis(1.0,(x: Double) =>
-      Gaussian(x, 1.0))(x => Gamma(2.0, 1.0/3).logPdf(x))
+    val mc = metropolis(1.0, (x: Double) => Gaussian(x, 1.0))(x => Gamma(2.0, 1.0 / 3).logPdf(x))
     val it = mc.steps
     val its = it.take(numSamples).toArray
     val itsv = DenseVector[Double](its)
     val mav = breeze.stats.meanAndVariance(itsv)
-    assert(abs(mav.mean-2.0/3) < tol)
-    assert(abs(mav.variance-2.0/9) < tol)
+    assert(abs(mav.mean - 2.0 / 3) < tol)
+    assert(abs(mav.variance - 2.0 / 9) < tol)
   }
 
   test("metropolisHastings for a Gamma with a symmetric proposal") {
-    val mc = metropolisHastings(1.0,(x: Double) =>
-      Gaussian(x, 1.0))(x => Gamma(2.0, 1.0/3).logPdf(x))
+    val mc = metropolisHastings(1.0, (x: Double) => Gaussian(x, 1.0))(x => Gamma(2.0, 1.0 / 3).logPdf(x))
     val it = mc.steps
     val its = it.take(numSamples).toArray
     val itsv = DenseVector[Double](its)
     val mav = breeze.stats.meanAndVariance(itsv)
-    assert(abs(mav.mean-2.0/3) < tol)
-    assert(abs(mav.variance-2.0/9) < tol)
+    assert(abs(mav.mean - 2.0 / 3) < tol)
+    assert(abs(mav.variance - 2.0 / 9) < tol)
   }
 
   test("metropolisHastings for a Gamma with a non-symmetric proposal") {
-    val mc = metropolisHastings(1.0,(x: Double) =>
-      Gaussian(x, 1.0+x))(x => Gamma(2.0, 1.0/3).logPdf(x))
+    val mc = metropolisHastings(1.0, (x: Double) => Gaussian(x, 1.0 + x))(x => Gamma(2.0, 1.0 / 3).logPdf(x))
     val it = mc.steps
     val its = it.take(numSamples).toArray
     val itsv = DenseVector[Double](its)
     val mav = breeze.stats.meanAndVariance(itsv)
-    assert(abs(mav.mean-2.0/3) < tol)
-    assert(abs(mav.variance-2.0/9) < tol)
+    assert(abs(mav.mean - 2.0 / 3) < tol)
+    assert(abs(mav.variance - 2.0 / 9) < tol)
   }
-
-
 
 }

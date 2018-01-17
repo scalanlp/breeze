@@ -10,7 +10,6 @@ import breeze.numerics._
  *
  * @author chrismedrela
  **/
-
 class CubicInterpolatorTest extends FunSuite {
   val x = DenseVector(1.0, 2.0, 3.0, 5.0)
   val y = DenseVector(1.0, 5.0, 3.0, 7.0)
@@ -58,6 +57,6 @@ class CubicInterpolatorTest extends FunSuite {
     assert(closeTo(f(1.75), 4.4921875))
   }
 
-  def equal(v1: Vector[Double], v2: Vector[Double]): Boolean = sum((v1 - v2) ^:^2.0) < 1e-9
-  def equal(m1: DenseMatrix[Double], m2: DenseMatrix[Double]): Boolean = sum((m1 - m2) ^:^2.0) < 1e-9
+  def equal(v1: Vector[Double], v2: Vector[Double]): Boolean = sum((v1 - v2) ^:^ 2.0) < 1e-9
+  def equal(m1: DenseMatrix[Double], m2: DenseMatrix[Double]): Boolean = sum((m1 - m2) ^:^ 2.0) < 1e-9
 }

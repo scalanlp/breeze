@@ -2,7 +2,7 @@ package breeze.linalg
 
 import breeze.generic.UFunc
 import org.netlib.util.intW
-import com.github.fommil.netlib.LAPACK.{getInstance=>lapack}
+import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
 import breeze.linalg._
 
 /**
@@ -24,7 +24,6 @@ object cholesky extends UFunc {
       // check for symmetry).
       requireSymmetricMatrix(X)
 
-
       // Copy the lower triangular part of X. LAPACK will store the result in A
       val A: DenseMatrix[Double] = lowerTriangular(X)
 
@@ -32,7 +31,9 @@ object cholesky extends UFunc {
       val info = new intW(0)
       lapack.dpotrf(
         "L" /* lower triangular */,
-        N /* number of rows */, A.data, scala.math.max(1, N) /* LDA */,
+        N /* number of rows */,
+        A.data,
+        scala.math.max(1, N) /* LDA */,
         info
       )
       // A value of info.`val` < 0 would tell us that the i-th argument

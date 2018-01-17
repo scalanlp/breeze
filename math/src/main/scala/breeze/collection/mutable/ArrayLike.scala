@@ -16,7 +16,7 @@ import scala.reflect.ClassTag
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 /**
  * An ArrayLike is something that can behave kind of like an Array, but isn't.
@@ -38,14 +38,13 @@ trait ArrayLike[V] {
    */
   def valuesIterator: Iterator[V]
 
-
   /**
    * Only iterates "active" keys
    */
   def keysIterator: Iterator[Int]
 
   /** Mainly for marking the underlying data array extent in SparseVector/SparseArray
-    */
+   */
   def activeSize: Int
 
   def size: Int
@@ -60,19 +59,18 @@ trait ArrayLike[V] {
    * @tparam U
    */
   // TODO: maybe make this iterate all elements?
-  def foreach[U](f: (V) => U) = valuesIterator foreach f
-
+  def foreach[U](f: (V) => U) = valuesIterator.foreach(f)
 
   /**
    * Only iterates "active" elements
    */
-  def iterator = keysIterator zip valuesIterator
+  def iterator = keysIterator.zip(valuesIterator)
 
-  def toArray[U>:V:ClassTag] = Array.tabulate[U](length)(apply)
+  def toArray[U >: V: ClassTag] = Array.tabulate[U](length)(apply)
 
   def toList = List.tabulate(length)(apply)
 
   def toIndexedSeq = List.tabulate(length)(apply)
 
-  def toMap = (keysIterator zip valuesIterator).toMap
+  def toMap = keysIterator.zip(valuesIterator).toMap
 }

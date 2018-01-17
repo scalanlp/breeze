@@ -8,10 +8,10 @@ import spire.implicits._
 
 package object polynomial {
   object densePolyval extends UFunc {
-    implicit object doubleImpl extends Impl2[PolyDenseUFuncWrapper,Double,Double] {
+    implicit object doubleImpl extends Impl2[PolyDenseUFuncWrapper, Double, Double] {
       def apply(k: PolyDenseUFuncWrapper, v: Double) = k.p(v)
     }
-    implicit object denseVectorImpl extends Impl2[PolyDenseUFuncWrapper,DenseVector[Double],DenseVector[Double]] {
+    implicit object denseVectorImpl extends Impl2[PolyDenseUFuncWrapper, DenseVector[Double], DenseVector[Double]] {
       /* This implementation uses Horner's Algorithm:
        *  http://en.wikipedia.org/wiki/Horner's_method
        *
@@ -26,14 +26,14 @@ package object polynomial {
         while (i > 0) {
           i -= 1
           val c = coeffs(i)
-          cfor(0)(j => j < result.size, j => j+1)( j => {
-            result(j) = result(j)*v(j)+c
+          cfor(0)(j => j < result.size, j => j + 1)(j => {
+            result(j) = result(j) * v(j) + c
           })
         }
         result
       }
     }
-    implicit object denseMatrixImpl extends Impl2[PolyDenseUFuncWrapper,DenseMatrix[Double],DenseMatrix[Double]] {
+    implicit object denseMatrixImpl extends Impl2[PolyDenseUFuncWrapper, DenseMatrix[Double], DenseMatrix[Double]] {
       /* This implementation uses Horner's Algorithm:
        *  http://en.wikipedia.org/wiki/Horner's_method
        *
@@ -51,10 +51,10 @@ package object polynomial {
         var result = DenseMatrix.eye[Double](n) * coeffs(i)
         while (i > 0) {
           i -= 1
-          result = result*v //WILDLY INEFFICIENT, FIGURE OUT IN PLACE MULTIPLY
+          result = result * v //WILDLY INEFFICIENT, FIGURE OUT IN PLACE MULTIPLY
           val c = coeffs(i)
-          cfor(0)(i => i < n, i => i+1)(i => {
-            result.update(i,i, result(i,i)+c)
+          cfor(0)(i => i < n, i => i + 1)(i => {
+            result.update(i, i, result(i, i) + c)
           })
         }
         result
@@ -63,5 +63,6 @@ package object polynomial {
 
   }
 
-  implicit class PolyDenseUFuncWrapper(val p: PolyDense[Double]) extends VariableUFunc[densePolyval.type,PolyDenseUFuncWrapper]
+  implicit class PolyDenseUFuncWrapper(val p: PolyDense[Double])
+      extends VariableUFunc[densePolyval.type, PolyDenseUFuncWrapper]
 }

@@ -14,7 +14,7 @@ package breeze
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 /**
  *
  * @author dlwh
@@ -22,25 +22,24 @@ package breeze
 package object math {
   val i = Complex.i
 
-  class RichField(value : Double) {
-    def + (c : Complex) : Complex = Complex(value,0) + c
-    def - (c : Complex) : Complex = Complex(value,0) - c
-    def * (c : Complex) : Complex = Complex(value,0) * c
-    def / (c : Complex) : Complex = Complex(value,0) / c
-    def % (c : Complex) : Complex = Complex(value,0) % c
-    def pow(c : Complex) : Complex = Complex(value,0) pow c
+  class RichField(value: Double) {
+    def +(c: Complex): Complex = Complex(value, 0) + c
+    def -(c: Complex): Complex = Complex(value, 0) - c
+    def *(c: Complex): Complex = Complex(value, 0) * c
+    def /(c: Complex): Complex = Complex(value, 0) / c
+    def %(c: Complex): Complex = Complex(value, 0) % c
+    def pow(c: Complex): Complex = Complex(value, 0).pow(c)
   }
 
-  implicit def richInt(value : Int) =
+  implicit def richInt(value: Int) =
     new RichField(value)
 
-  implicit def richLong(value : Long) =
+  implicit def richLong(value: Long) =
     new RichField(value)
 
-  implicit def richFloat(value : Float) =
+  implicit def richFloat(value: Float) =
     new RichField(value)
 
-  implicit def richDouble(value : Double) =
+  implicit def richDouble(value: Double) =
     new RichField(value)
 }
-

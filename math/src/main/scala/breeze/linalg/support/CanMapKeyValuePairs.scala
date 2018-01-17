@@ -13,7 +13,7 @@ package breeze.linalg.support
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 /**
  * Marker for being able to map the keys and values in a value collection
@@ -23,9 +23,10 @@ package breeze.linalg.support
  * @author dlwh
  */
 trait CanMapKeyValuePairs[-From, +K, +A, -B, +To] {
+
   /** Maps all key-value pairs from the given collection. */
-  def map(from : From, fn : ((K,A) => B)) : To
+  def map(from: From, fn: ((K, A) => B)): To
 
   /** Maps all active key-value pairs from the given collection. */
-  def mapActive(from : From, fn : ((K,A) => B)) : To
+  def mapActive(from: From, fn: ((K, A) => B)): To
 }

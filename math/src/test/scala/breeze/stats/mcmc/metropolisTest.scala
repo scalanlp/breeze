@@ -33,12 +33,18 @@ class metropolisTest extends FunSuite {
     case C => l1
   }
 
-  val proposal = rand.choose(Seq(A,B,C))
+  val proposal = rand.choose(Seq(A, B, C))
 
   val TOLERANCE = 0.10
 
   test("stupidly simple mcmc") {
-    val mh = ArbitraryMetropolisHastings(logLikelihood _, (_:State) => proposal, (_:State,_:State) => 0.0, A, burnIn = 10000, dropCount=DROP_COUNT)
+    val mh = ArbitraryMetropolisHastings(
+      logLikelihood _,
+      (_: State) => proposal,
+      (_: State, _: State) => 0.0,
+      A,
+      burnIn = 10000,
+      dropCount = DROP_COUNT)
     var aCount: Double = 0
     var bCount: Double = 0
     var cCount: Double = 0
@@ -54,17 +60,23 @@ class metropolisTest extends FunSuite {
     assert(math.abs(bCount / cCount - 2) < TOLERANCE)
   }
 
-  def skewedProposal(x: State) = rand.choose(Seq(A,A,B,C).filter(_ != x) )
+  def skewedProposal(x: State) = rand.choose(Seq(A, A, B, C).filter(_ != x))
 
-  def logSkewedTransitionProbability(start: State, end: State) = (start,end) match {
-    case (a,b) if (a == b) => ???
-    case (A,_) => math.log(0.5)
-    case (_,A) => math.log(2.0/3.0)
-    case (_,_) => math.log(1.0/3.0)
+  def logSkewedTransitionProbability(start: State, end: State) = (start, end) match {
+    case (a, b) if (a == b) => ???
+    case (A, _) => math.log(0.5)
+    case (_, A) => math.log(2.0 / 3.0)
+    case (_, _) => math.log(1.0 / 3.0)
   }
 
   test("stupidly simple mcmc, anisotropic") {
-    val mh = ArbitraryMetropolisHastings(logLikelihood _, skewedProposal _, logSkewedTransitionProbability _, A, burnIn = 30000, dropCount=DROP_COUNT)
+    val mh = ArbitraryMetropolisHastings(
+      logLikelihood _,
+      skewedProposal _,
+      logSkewedTransitionProbability _,
+      A,
+      burnIn = 30000,
+      dropCount = DROP_COUNT)
     var aCount: Double = 0
     var bCount: Double = 0
     var cCount: Double = 0
@@ -83,31 +95,33 @@ class metropolisTest extends FunSuite {
   test("ArbitraryMetropolisHastings for a Gamma with a symmetric proposal") {
     import breeze.numerics._
     import breeze.linalg._
-    val mh = ArbitraryMetropolisHastings(Gamma(2.0, 1.0/3).logPdf, 
-      (x: Double) => Gaussian(x, 1.0), 
-      (x: Double, xp: Double) => Gaussian(x, 1.0).logPdf(xp), 1.0)
+    val mh = ArbitraryMetropolisHastings(
+      Gamma(2.0, 1.0 / 3).logPdf,
+      (x: Double) => Gaussian(x, 1.0),
+      (x: Double, xp: Double) => Gaussian(x, 1.0).logPdf(xp),
+      1.0)
     val sit = mh.samples
-    val its=sit.take(NUM_TESTS).toArray
-    val itsv=DenseVector[Double](its)
+    val its = sit.take(NUM_TESTS).toArray
+    val itsv = DenseVector[Double](its)
     val mav = breeze.stats.meanAndVariance(itsv)
-    assert(abs(mav.mean-2.0/3) < TOLERANCE)
-    assert(abs(mav.variance-2.0/9) < TOLERANCE)
+    assert(abs(mav.mean - 2.0 / 3) < TOLERANCE)
+    assert(abs(mav.variance - 2.0 / 9) < TOLERANCE)
   }
 
   test("ArbitraryMetropolisHastings for a Gamma with a non-symmetric proposal") {
     import breeze.numerics._
     import breeze.linalg._
-    val mh = ArbitraryMetropolisHastings(Gamma(2.0, 1.0/3).logPdf, 
-      (x: Double) => Gaussian(x, 1.0+x), 
-      (x: Double, xp: Double) => Gaussian(x, 1.0+x).logPdf(xp), 1.0)
+    val mh = ArbitraryMetropolisHastings(
+      Gamma(2.0, 1.0 / 3).logPdf,
+      (x: Double) => Gaussian(x, 1.0 + x),
+      (x: Double, xp: Double) => Gaussian(x, 1.0 + x).logPdf(xp),
+      1.0)
     val sit = mh.samples
-    val its=sit.take(NUM_TESTS).toArray
-    val itsv=DenseVector[Double](its)
+    val its = sit.take(NUM_TESTS).toArray
+    val itsv = DenseVector[Double](its)
     val mav = breeze.stats.meanAndVariance(itsv)
-    assert(abs(mav.mean-2.0/3) < TOLERANCE)
-    assert(abs(mav.variance-2.0/9) < TOLERANCE)
+    assert(abs(mav.mean - 2.0 / 3) < TOLERANCE)
+    assert(abs(mav.variance - 2.0 / 9) < TOLERANCE)
   }
-
-
 
 }
