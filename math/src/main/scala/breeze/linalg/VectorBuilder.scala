@@ -24,7 +24,6 @@ import scala.reflect.ClassTag
 import breeze.macros.expand
 import breeze.generic.UFunc.{UImpl2, InPlaceImpl2}
 
-
 /**
  * A VectorBuilder is basically an unsorted Sparse Vector. Two parallel
  * arrays are maintained, one of indices, and another of values.
@@ -185,61 +184,51 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
     hv
   }
 
-  def toSparseVector:SparseVector[E] = toSparseVector(alreadySorted=false)
+  def toSparseVector: SparseVector[E] = toSparseVector()
 
   def toSparseVector(alreadySorted: Boolean = false, keysAlreadyUnique: Boolean = false): SparseVector[E] = {
     requirePositiveLength()
     val index = this.index
     val values = this.data
-    if(alreadySorted && keysAlreadyUnique) {
+    if (alreadySorted && keysAlreadyUnique) {
       return new SparseVector(index, values, used, length)
     }
 
-    val outIndex = new Array[Int](index.length)
-    val outValues = ArrayUtil.newArrayLike(values, values.length)
+    val outIndex = ArrayUtil.copyOf(index, used)
+    val outValues = ArrayUtil.copyOf(values, used)
+    if (!alreadySorted) {
+      Sorting.indirectSort(outIndex, outValues, 0, used)
+    }
 
-    val ord = if(!alreadySorted) sortedIndices(index) else ArrayUtil.range(0, used)
-    if(ord.length > 0) {
-      outIndex(0) = index(ord(0))
-      outValues(0) = values(ord(0))
-      if(index(ord.last) >= length)
-        throw new RuntimeException("Index " + index(ord.last) + " exceeds dimension " + length)
-      else if (outIndex(0) < 0)
-        throw new RuntimeException("Index " + outIndex(0) + " is less than 0!")
+    if (outIndex.length > 0) {
+      if (outIndex(used - 1) >= length) {
+        throw new IndexOutOfBoundsException("Index " + index(used - 1) + " exceeds dimension " + length)
+      } else if (outIndex(0) < 0) {
+        throw new IndexOutOfBoundsException("Index " + outIndex(0) + " is less than 0")
+      }
     }
     var i   = 1
     var out = 0
-    if(keysAlreadyUnique) {
-      while(i < ord.length) {
-        out += 1
-        outIndex(out) = index(ord(i))
-        outValues(out) = values(ord(i))
-        i += 1
-      }
-    } else {
-      while(i < ord.length) {
-        if(outIndex(out) == index(ord(i))) {
-          outValues(out) = ring.+(outValues(out), values(ord(i)))
+    if (!keysAlreadyUnique) {
+      while (i < used) {
+        if (outIndex(out) == outIndex(i)) {
+          outValues(out) = ring.+(outValues(out), outValues(i))
         } else {
           out += 1
-          outIndex(out) = index(ord(i))
-          outValues(out) = values(ord(i))
+          outIndex(out) = outIndex(i)
+          outValues(out) = outValues(i)
         }
         i += 1
       }
+    } else {
+      out = used
     }
 
-    if(ord.length > 0)
+    if (outIndex.length > 0)
       out += 1
 
-    require(ord.length == 0 || length > outIndex.last, "Index out of bounds in constructing sparse vector.")
     new SparseVector(outIndex, outValues, out, length)
   }
-
-  private def sortedIndices(indices: Array[Int]) = {
-    Sorting.indexSort(indices, 0, used)
-  }
-
 
   def compact() {
     val ah = toSparseVector
