@@ -18,8 +18,7 @@ class EmpiricalHessianTest extends OptimizeTestBase with Matchers with DoubleImp
       def calculate(x: DenseVector[Double]) = {
         val n = x.length
         val value = 100 * Math.pow(x(1) - x(0) * x(0), 2) + Math.pow(1 - x(0), 2)
-        val grad = DenseVector(-400 * x(0) * (x(1) - x(0) * x(0)) - 2 * (1 - x(0)),
-          200 * (x(1) - x(0) * x(0)))
+        val grad = DenseVector(-400 * x(0) * (x(1) - x(0) * x(0)) - 2 * (1 - x(0)), 200 * (x(1) - x(0) * x(0)))
         (value, grad)
       }
     }
@@ -34,7 +33,8 @@ class EmpiricalHessianTest extends OptimizeTestBase with Matchers with DoubleImp
 
   test("hessian matrix of an exponential function") {
     val x = DenseVector(3.56, -1.09, -0.31, 1.12, -1.52)
-    val A = DenseMatrix((35.1632d, 0d, 0d, 0d, 0d),
+    val A = DenseMatrix(
+      (35.1632d, 0d, 0d, 0d, 0d),
       (0d, 0.3362165d, 0d, 0d, 0d),
       (0d, 0d, 0.733447d, 0d, 0d),
       (0d, 0d, 0d, 3.064854d, 0d),

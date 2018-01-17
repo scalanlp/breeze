@@ -13,7 +13,7 @@ package breeze
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 import breeze.linalg.DenseMatrix
 import breeze.numerics.abs
@@ -25,7 +25,6 @@ import storage.Zero
 import java.io.{PrintWriter, File, FileReader}
 import scala.reflect.ClassTag
 import spire.syntax.cfor._
-
 
 /**
  * This package contains everything relating to Vectors, Matrices, Tensors, etc.
@@ -49,7 +48,7 @@ package object linalg {
    * Generates a vector of linearly spaced values between a and b (inclusive).
    * The returned vector will have length elements, defaulting to 100.
    */
-  def linspace(a : Double, b : Double, length : Int = 100) : DenseVector[Double] = {
+  def linspace(a: Double, b: Double, length: Int = 100): DenseVector[Double] = {
     val increment = (b - a) / (length - 1)
     DenseVector.tabulate(length)(i => a + increment * i)
   }
@@ -59,52 +58,53 @@ package object linalg {
    */
   def copy[T](t: T)(implicit canCopy: CanCopy[T]): T = canCopy(t)
 
-
-
   // <editor-fold defaultstate="collapsed" desc=" io stuff ">
 
   /**
-    * Add methods to the string class in order to make file reading easier
-    * @param s
-    */
+   * Add methods to the string class in order to make file reading easier
+   * @param s
+   */
   implicit class String2File(s: String) {
-    def toFile:File = new File(s)
+    def toFile: File = new File(s)
   }
 
   /**
    * Reads in a DenseMatrix from a CSV File
    */
-  def csvread(file: File,
-             separator: Char=',',
-             quote: Char='"',
-             escape: Char='\\',
-             skipLines: Int = 0): DenseMatrix[Double] = {
+  def csvread(
+      file: File,
+      separator: Char = ',',
+      quote: Char = '"',
+      escape: Char = '\\',
+      skipLines: Int = 0): DenseMatrix[Double] = {
     val input = new FileReader(file)
     var mat = CSVReader.read(input, separator, quote, escape, skipLines)
     mat = mat.takeWhile(line => line.length != 0 && line.head.nonEmpty) // empty lines at the end
     input.close()
-    if(mat.length == 0) {
-      DenseMatrix.zeros[Double](0,0)
+    if (mat.length == 0) {
+      DenseMatrix.zeros[Double](0, 0)
     } else {
-      DenseMatrix.tabulate(mat.length,mat.head.length)((i,j)=>mat(i)(j).toDouble)
+      DenseMatrix.tabulate(mat.length, mat.head.length)((i, j) => mat(i)(j).toDouble)
     }
   }
 
-  def csvwrite(file: File, mat: Matrix[Double],
-               separator: Char=',',
-               quote: Char='\u0000',
-               escape: Char='\\',
-               skipLines: Int = 0): Unit = {
-    CSVWriter.writeFile(file, IndexedSeq.tabulate(mat.rows,mat.cols)(mat(_,_).toString), separator, quote, escape)
+  def csvwrite(
+      file: File,
+      mat: Matrix[Double],
+      separator: Char = ',',
+      quote: Char = '\u0000',
+      escape: Char = '\\',
+      skipLines: Int = 0): Unit = {
+    CSVWriter.writeFile(file, IndexedSeq.tabulate(mat.rows, mat.cols)(mat(_, _).toString), separator, quote, escape)
   }
 
-  def mmwrite[T:Numeric](file: File, mat: Matrix[T]): Unit = {
+  def mmwrite[T: Numeric](file: File, mat: Matrix[T]): Unit = {
     if (mat.activeSize == mat.size) {
       val out = new PrintWriter(FileStreams.output(file))
       out.println("%%MatrixMarket matrix array real general")
       out.println(s"% produced by ${getClass}")
       out.println(s"${mat.rows} ${mat.cols}")
-      cforRange2(0 until mat.cols, 0 until mat.rows){(j, i) =>
+      cforRange2(0 until mat.cols, 0 until mat.rows) { (j, i) =>
         out.println(mat(i, j))
       }
       out.close()
@@ -113,7 +113,8 @@ package object linalg {
       out.println("%%MatrixMarket matrix coordinate real general")
       out.println(s"% produced by ${getClass}")
       out.println(s"${mat.rows} ${mat.cols} ${mat.activeSize}")
-      mat.activeIterator foreach { case ((i, j), v) =>
+      mat.activeIterator.foreach {
+        case ((i, j), v) =>
           out.println(s"${i + 1} ${j + 1} $v")
       }
       out.close()
@@ -122,21 +123,18 @@ package object linalg {
 
   // </editor-fold>
 
-
-  implicit def RangeToRangeExtender(re: Range):RangeExtender = new support.RangeExtender(re)
-
+  implicit def RangeToRangeExtender(re: Range): RangeExtender = new support.RangeExtender(re)
 
   import math.Ring
 
   // implicits for lifting scalars with appropriate operators
   implicit class InjectNumericOps[T](val repr: T) extends AnyVal with ImmutableNumericOps[T]
 
-/**
- * Basic linear algebraic operations.
- *
- * @author dlwh,dramage,retronym,afwlehmann,lancelet
- */
-
+  /**
+   * Basic linear algebraic operations.
+   *
+   * @author dlwh,dramage,retronym,afwlehmann,lancelet
+   */
   private[linalg] def requireNonEmptyMatrix[V](mat: Matrix[V]): Unit =
     if (mat.cols == 0 || mat.rows == 0)
       throw new MatrixEmptyException
@@ -149,7 +147,7 @@ package object linalg {
     requireSquareMatrix(mat)
 
     for (i <- 0 until mat.rows; j <- 0 until i)
-      if (abs(mat(i,j) -  mat(j,i)) > abs(mat(i,j)) * tol )
+      if (abs(mat(i, j) - mat(j, i)) > abs(mat(i, j)) * tol)
         throw new MatrixNotSymmetricException
   }
 
@@ -170,7 +168,7 @@ package object linalg {
    * Returns the rank of each element in the given vector, adjusting for
    * ties.
    */
-  def ranks[V:Ordering](x : Vector[V]): Array[Double] = {
+  def ranks[V: Ordering](x: Vector[V]): Array[Double] = {
     val a = x
     val as = argsort(a)
     val rv = new Array[Double](as.length)
@@ -200,24 +198,24 @@ package object linalg {
    * The lower triangular portion of the given real quadratic matrix X. Note
    * that no check will be performed regarding the symmetry of X.
    */
-  def lowerTriangular[T: Semiring: ClassTag:Zero](X: Matrix[T]): DenseMatrix[T] = {
+  def lowerTriangular[T: Semiring: ClassTag: Zero](X: Matrix[T]): DenseMatrix[T] = {
     val N = X.rows
-    DenseMatrix.tabulate(N, N)( (i, j) =>
-      if(j <= i) X(i,j)
-      else implicitly[Semiring[T]].zero
-    )
+    DenseMatrix.tabulate(N, N)(
+      (i, j) =>
+        if (j <= i) X(i, j)
+        else implicitly[Semiring[T]].zero)
   }
 
   /**
    * The lower triangular portion of the given real quadratic matrix X with
    * the diagnal elements is zero!
    */
-  def strictlyLowerTriangular[T: Semiring: ClassTag:Zero](X: Matrix[T]): DenseMatrix[T] = {
+  def strictlyLowerTriangular[T: Semiring: ClassTag: Zero](X: Matrix[T]): DenseMatrix[T] = {
     val N = X.rows
-    DenseMatrix.tabulate(N, N)( (i, j) =>
-      if(j < i) X(i,j)
-      else implicitly[Semiring[T]].zero
-    )
+    DenseMatrix.tabulate(N, N)(
+      (i, j) =>
+        if (j < i) X(i, j)
+        else implicitly[Semiring[T]].zero)
   }
 
   /**
@@ -226,22 +224,22 @@ package object linalg {
    */
   def upperTriangular[T: Semiring: ClassTag: Zero](X: Matrix[T]): DenseMatrix[T] = {
     val N = X.rows
-    DenseMatrix.tabulate(N, N)( (i, j) =>
-      if(j >= i) X(i,j)
-      else implicitly[Semiring[T]].zero
-    )
+    DenseMatrix.tabulate(N, N)(
+      (i, j) =>
+        if (j >= i) X(i, j)
+        else implicitly[Semiring[T]].zero)
   }
 
   /**
    * The upper triangular portion of the given real quadratic matrix X with
    * the diagnal elements is zero!
    */
-  def strictlyUpperTriangular[T: Semiring: ClassTag:Zero](X: Matrix[T]): DenseMatrix[T] = {
+  def strictlyUpperTriangular[T: Semiring: ClassTag: Zero](X: Matrix[T]): DenseMatrix[T] = {
     val N = X.rows
-    DenseMatrix.tabulate(N, N)( (i, j) =>
-      if(j > i) X(i,j)
-      else implicitly[Semiring[T]].zero
-    )
+    DenseMatrix.tabulate(N, N)(
+      (i, j) =>
+        if (j > i) X(i, j)
+        else implicitly[Semiring[T]].zero)
   }
 
   /**
@@ -252,16 +250,14 @@ package object linalg {
    * data is used.
    */
   def princomp(
-    x: DenseMatrix[Double],
-    covmatOpt: Option[DenseMatrix[Double]] = None
+      x: DenseMatrix[Double],
+      covmatOpt: Option[DenseMatrix[Double]] = None
   ): PCA = {
     covmatOpt match {
       case Some(covmat) => new PCA(x, covmat)
       case None => new PCA(x, cov(x))
     }
   }
-
-
 
   /**
    * A generic function (based on the R function of the same name) whose
@@ -273,20 +269,20 @@ package object linalg {
    * done.
    */
   def scale(
-             x: DenseMatrix[Double],
-             center: Boolean = true,
-             scale: Boolean = false
-             ): DenseMatrix[Double] = {
+      x: DenseMatrix[Double],
+      center: Boolean = true,
+      scale: Boolean = false
+  ): DenseMatrix[Double] = {
     import breeze.stats.{mean, stddev}
     if (center) {
-      val xc = x(*,::) - mean(x, Axis._0).t
+      val xc = x(*, ::) - mean(x, Axis._0).t
       if (scale)
-        xc(*,::) /:/ stddev(x(::, *)).t
+        xc(*, ::) /:/ stddev(x(::, *)).t
       else
         xc
     } else {
       if (scale)
-        x(*,::) /:/ columnRMS(x)
+        x(*, ::) /:/ columnRMS(x)
       else
         x
     }
@@ -297,53 +293,53 @@ package object linalg {
    * if necessary. Very simple, just does the basic thing.
    */
   def cov(x: DenseMatrix[Double], center: Boolean = true): DenseMatrix[Double] = {
-    val xc = scale(x,center,false)
+    val xc = scale(x, center, false)
     (xc.t * xc) /= xc.rows - 1.0
   }
 
   // <editor-fold defaultstate="collapsed" desc=" functions declared using the CanXXX idiom (this allows calling parameters by name, etc.) ">
 
   import breeze.linalg.Options.{Zero => OZero, _}
-  def padRight[T]( v: DenseVector[T], dimensions: Dimensions1)
-                 (implicit canPad: CanPadRight[DenseVector[T], Dimensions1, DenseVector[T]]): DenseVector[T] =  canPad(v, dimensions, OZero)
-  def padRight[T]( v: DenseVector[T], dimensions: Dimensions1, mode: OptPadMode)
-                 (implicit canPad: CanPadRight[DenseVector[T], Dimensions1, DenseVector[T]]): DenseVector[T] =  canPad(v, dimensions, mode)
-  def padRight[T]( v: DenseMatrix[T], dimensions: Dimensions1)
-                 (implicit canPad: CanPadRight[DenseMatrix[T], Dimensions1, DenseMatrix[T]]): DenseMatrix[T] =  canPad(v, dimensions, OZero)
-  def padRight[T]( v: DenseMatrix[T], dimensions: Dimensions2, mode: OptPadMode)
-                 (implicit canPad: CanPadRight[DenseMatrix[T], Dimensions2, DenseMatrix[T]]): DenseMatrix[T] =  canPad(v, dimensions, mode)
-  def padLeft[T]( v: DenseVector[T], dimensions: Dimensions1)
-                 (implicit canPad: CanPadLeft[DenseVector[T], Dimensions1, DenseVector[T]]): DenseVector[T] =  canPad(v, dimensions, OZero)
-  def padLeft[T]( v: DenseVector[T], dimensions: Dimensions1, mode: OptPadMode)
-                 (implicit canPad: CanPadLeft[DenseVector[T], Dimensions1, DenseVector[T]]): DenseVector[T] =  canPad(v, dimensions, mode)
-  def padLeft[T]( v: DenseMatrix[T], dimensions: Dimensions1)
-                 (implicit canPad: CanPadLeft[DenseMatrix[T], Dimensions1, DenseMatrix[T]]): DenseMatrix[T] =  canPad(v, dimensions, OZero)
-  def padLeft[T]( v: DenseMatrix[T], dimensions: Dimensions2, mode: OptPadMode)
-                 (implicit canPad: CanPadLeft[DenseMatrix[T], Dimensions2, DenseMatrix[T]]): DenseMatrix[T] =  canPad(v, dimensions, mode)
-
+  def padRight[T](v: DenseVector[T], dimensions: Dimensions1)(
+      implicit canPad: CanPadRight[DenseVector[T], Dimensions1, DenseVector[T]]): DenseVector[T] =
+    canPad(v, dimensions, OZero)
+  def padRight[T](v: DenseVector[T], dimensions: Dimensions1, mode: OptPadMode)(
+      implicit canPad: CanPadRight[DenseVector[T], Dimensions1, DenseVector[T]]): DenseVector[T] =
+    canPad(v, dimensions, mode)
+  def padRight[T](v: DenseMatrix[T], dimensions: Dimensions1)(
+      implicit canPad: CanPadRight[DenseMatrix[T], Dimensions1, DenseMatrix[T]]): DenseMatrix[T] =
+    canPad(v, dimensions, OZero)
+  def padRight[T](v: DenseMatrix[T], dimensions: Dimensions2, mode: OptPadMode)(
+      implicit canPad: CanPadRight[DenseMatrix[T], Dimensions2, DenseMatrix[T]]): DenseMatrix[T] =
+    canPad(v, dimensions, mode)
+  def padLeft[T](v: DenseVector[T], dimensions: Dimensions1)(
+      implicit canPad: CanPadLeft[DenseVector[T], Dimensions1, DenseVector[T]]): DenseVector[T] =
+    canPad(v, dimensions, OZero)
+  def padLeft[T](v: DenseVector[T], dimensions: Dimensions1, mode: OptPadMode)(
+      implicit canPad: CanPadLeft[DenseVector[T], Dimensions1, DenseVector[T]]): DenseVector[T] =
+    canPad(v, dimensions, mode)
+  def padLeft[T](v: DenseMatrix[T], dimensions: Dimensions1)(
+      implicit canPad: CanPadLeft[DenseMatrix[T], Dimensions1, DenseMatrix[T]]): DenseMatrix[T] =
+    canPad(v, dimensions, OZero)
+  def padLeft[T](v: DenseMatrix[T], dimensions: Dimensions2, mode: OptPadMode)(
+      implicit canPad: CanPadLeft[DenseMatrix[T], Dimensions2, DenseMatrix[T]]): DenseMatrix[T] =
+    canPad(v, dimensions, mode)
 
   // </editor-fold>
-
-
 
   /**
    * Helper function to compute the root-mean-square of the columns of a
    * matrix. Feel free to make this more general.
    */
   private def columnRMS(x: DenseMatrix[Double]): DenseVector[Double] =
-    (sum(x *:* x, Axis._0) / (x.rows - 1.0)).t.map( scala.math.sqrt _ )
-
+    (sum(x *:* x, Axis._0) / (x.rows - 1.0)).t.map(scala.math.sqrt _)
 
   /** Alias for randomDouble */
   val rand: randomDouble.type = randomDouble
-
 
   /**
    * val to determine if breeze is using natives or f2jblas
    */
   lazy val usingNatives = com.github.fommil.netlib.BLAS.getInstance.getClass.getName != "com.github.fommil.netlib.F2jBLAS"
 
-
-
 }
-

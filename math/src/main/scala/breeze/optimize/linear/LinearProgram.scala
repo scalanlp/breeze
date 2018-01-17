@@ -36,7 +36,7 @@ class LinearProgram {
     def objective: Expression
     def constraints: IndexedSeq[Constraint]
 
-    def subjectTo(constraints : Constraint*):Problem = {
+    def subjectTo(constraints: Constraint*): Problem = {
       val cons = constraints
       new Problem {
         def objective = outer.objective
@@ -46,7 +46,7 @@ class LinearProgram {
 
     override def toString = (
       "maximize    " + objective + {
-        if(constraints.nonEmpty) {
+        if (constraints.nonEmpty) {
           "\nsubject to  " + constraints.mkString("\n" + " " * "subject to  ".length)
         } else ""
       }
@@ -64,20 +64,20 @@ class LinearProgram {
     def constraints: IndexedSeq[Constraint] = IndexedSeq.empty
 
     def +(other: Expression): Expression = new Expression {
-       def coefficients: Vector[Double] = outer.coefficients + other.coefficients
-       override def scalarComponent: Double = outer.scalarComponent + other.scalarComponent
+      def coefficients: Vector[Double] = outer.coefficients + other.coefficients
+      override def scalarComponent: Double = outer.scalarComponent + other.scalarComponent
       override def toString = outer.toString + " + " + other
     }
 
     def +(other: Double): Expression = new Expression {
-       def coefficients: Vector[Double] = outer.coefficients
-       override def scalarComponent: Double = outer.scalarComponent + other
+      def coefficients: Vector[Double] = outer.coefficients
+      override def scalarComponent: Double = outer.scalarComponent + other
       override def toString = outer.toString + " + " + other
     }
 
     def -(other: Expression): Expression = new Expression {
-       def coefficients: Vector[Double] = outer.coefficients - other.coefficients
-       override def scalarComponent: Double = outer.scalarComponent - other.scalarComponent
+      def coefficients: Vector[Double] = outer.coefficients - other.coefficients
+      override def scalarComponent: Double = outer.scalarComponent - other.scalarComponent
       override def toString = outer.toString + " - " + other
     }
 
@@ -195,7 +195,7 @@ class LinearProgram {
 
   sealed trait Variable extends Expression {
     def name: String
-    def id : Int
+    def id: Int
     def size: Int = 1
 
     override def toString = name
@@ -207,7 +207,7 @@ class LinearProgram {
 
     def coefficients = {
       val v = SparseVector.zeros[Double](variables.length)
-      for(i <- 0 until size) v(id + i) = 1.0
+      for (i <- 0 until size) v(id + i) = 1.0
       v
     }
   }
@@ -218,7 +218,7 @@ class LinearProgram {
 
     def coefficients = {
       val v = SparseVector.zeros[Double](variables.length)
-      for(i <- 0 until size) v(id + i) = 1.0
+      for (i <- 0 until size) v(id + i) = 1.0
       v
     }
   }
@@ -229,7 +229,7 @@ class LinearProgram {
 
     def coefficients = {
       val v = SparseVector.zeros[Double](variables.length)
-      for(i <- 0 until size) v(id + i) = 1.0
+      for (i <- 0 until size) v(id + i) = 1.0
       v
     }
   }
@@ -247,10 +247,10 @@ class LinearProgram {
       v
     }
   }
-  */
+   */
 
   case class Result(result: DenseVector[Double], problem: Problem) {
-    def valueOf(x: Expression):Double =  {(result dot x.coefficients) + x.scalarComponent}
+    def valueOf(x: Expression): Double = { (result.dot(x.coefficients)) + x.scalarComponent }
     def value = valueOf(problem.objective)
   }
 
@@ -259,8 +259,6 @@ class LinearProgram {
   def minimize(objective: Problem)(implicit solver: LinearProgram.Solver) =
     solver.minimize(this)(objective)
 }
-
-
 
 object LinearProgram {
   trait Solver {
@@ -272,7 +270,7 @@ object LinearProgram {
 //    NativeLPSolver
 //  } catch {
 //    case ex: SecurityException =>
-      ApacheSimplexSolver
+    ApacheSimplexSolver
 //    case ex: UnsatisfiedLinkError =>
 //      ApacheSimplexSolver
   }
@@ -306,8 +304,7 @@ object LinearProgram {
       Result(new DenseVector(sol.getPoint), objective)
     }
 
-    private def buildConstraints(lp: LinearProgram)(objective: lp.Problem)
-        : LinearConstraintSet = {
+    private def buildConstraints(lp: LinearProgram)(objective: lp.Problem): LinearConstraintSet = {
       import lp._
 
       def relationToConstraintType(r: Relation) = r match {
@@ -318,13 +315,14 @@ object LinearProgram {
 
       for (v <- variables)
         if (!v.isInstanceOf[lp.Variable])
-          throw new UnsupportedOperationException(
-            "Apache Solver can only handle real-valued linear programs.")
+          throw new UnsupportedOperationException("Apache Solver can only handle real-valued linear programs.")
 
       val constraints = for (c: Constraint <- objective.constraints) yield {
         val cs = c.standardize
-        new LinearConstraint(cs.lhs.coefficients.toDenseVector.data,
-          relationToConstraintType(c.relation), cs.rhs.scalarComponent)
+        new LinearConstraint(
+          cs.lhs.coefficients.toDenseVector.data,
+          relationToConstraintType(c.relation),
+          cs.rhs.scalarComponent)
       }
       new LinearConstraintSet(constraints.asJava)
     }
@@ -401,7 +399,7 @@ object LinearProgram {
       case _ => "Unknown"
     }
   }
-  */
+ */
 }
 
 case class InfeasibleProblem(prob: LinearProgram#Problem) extends RuntimeException

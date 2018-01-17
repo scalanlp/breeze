@@ -15,8 +15,7 @@ package math
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
-
+ */
 
 import scala.math._
 import breeze.linalg.{softmax, logDiff}
@@ -38,7 +37,6 @@ class LogDouble(val logValue: Double) {
 
   def -(other: LogDouble) = new LogDouble(logDiff(logValue, other.logValue))
 
-
   def *(d: Double) = new LogDouble(logValue + log(d))
 
   def /(d: Double) = new LogDouble(logValue - log(d))
@@ -59,6 +57,7 @@ class LogDouble(val logValue: Double) {
 
 object LogDouble {
   implicit def doubleExtra(d: Double) = new {
+
     /**
      * Assumes the double is already logged.
      */

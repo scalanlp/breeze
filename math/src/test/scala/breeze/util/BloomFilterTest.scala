@@ -12,7 +12,7 @@
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 package breeze.util
 
@@ -26,24 +26,26 @@ import TopKImplicits._
 @RunWith(classOf[JUnitRunner])
 class BloomFilterTest extends FunSuite with Checkers {
   test("add a bunch of strings and they're all there") {
-    check { (strings: List[String], _numBuckets: Int, _numHashes: Int) => {
-      val numHashes = _numHashes.abs % 1000 + 1
-      val numBuckets = (_numBuckets/1000).abs % 1000 + 1
-      assert(numBuckets >= 0, numBuckets + " " +  _numBuckets)
-        val bf = new BloomFilter[String](numBuckets,numHashes.abs)
-        strings foreach { bf += _ }
-        strings forall { bf contains _ }
-    }}
+    check { (strings: List[String], _numBuckets: Int, _numHashes: Int) =>
+      {
+        val numHashes = _numHashes.abs % 1000 + 1
+        val numBuckets = (_numBuckets / 1000).abs % 1000 + 1
+        assert(numBuckets >= 0, numBuckets + " " + _numBuckets)
+        val bf = new BloomFilter[String](numBuckets, numHashes.abs)
+        strings.foreach { bf += _ }
+        strings.forall { bf contains _ }
+      }
+    }
   }
 
   test("add single value and it's there") {
-    check { (value:Long, _numBuckets: Int, _numHashes: Int) => 
+    check { (value: Long, _numBuckets: Int, _numHashes: Int) =>
       val numHashes = _numHashes.abs % 1000 + 1
-      val numBuckets = (_numBuckets/1000).abs % 1000 + 1
-      
-      assert(numBuckets >= 0, numBuckets + " " +  _numBuckets)
+      val numBuckets = (_numBuckets / 1000).abs % 1000 + 1
 
-      val bloomFilter = new BloomFilter[Long](numBuckets,numHashes.abs)
+      assert(numBuckets >= 0, numBuckets + " " + _numBuckets)
+
+      val bloomFilter = new BloomFilter[Long](numBuckets, numHashes.abs)
       bloomFilter += value
 
       bloomFilter.contains(value)
@@ -51,32 +53,33 @@ class BloomFilterTest extends FunSuite with Checkers {
   }
 
   test("union with empty is a copy") {
-    check { (strings: List[String], _numBuckets: Int, _numHashes: Int) => {
-      val numHashes = _numHashes.abs % 1000 + 1
-      val numBuckets = (_numBuckets/1000).abs % 1000 + 1
-      assert(numBuckets >= 0, numBuckets + " " +  _numBuckets)
-      val bf = new BloomFilter[String](numBuckets,numHashes.abs)
-      val bf2 = new BloomFilter[String](numBuckets,numHashes.abs)
-      strings foreach { bf += _ }
-      bf2 |=  bf
-      strings forall { bf2 contains _ }
-    }}
+    check { (strings: List[String], _numBuckets: Int, _numHashes: Int) =>
+      {
+        val numHashes = _numHashes.abs % 1000 + 1
+        val numBuckets = (_numBuckets / 1000).abs % 1000 + 1
+        assert(numBuckets >= 0, numBuckets + " " + _numBuckets)
+        val bf = new BloomFilter[String](numBuckets, numHashes.abs)
+        val bf2 = new BloomFilter[String](numBuckets, numHashes.abs)
+        strings.foreach { bf += _ }
+        bf2 |= bf
+        strings.forall { bf2 contains _ }
+      }
+    }
   }
-
 
   test("bloom filter mostly returns false for missing things") {
-    check { (strings: Set[String], strings2: Set[String], _numBuckets: Int, _numHashes: Int) => {
-      val numHashes =  5
-      val numBuckets = 1000
-      assert(numBuckets >= 0, numBuckets + " " +  _numBuckets)
-      (
-        attempt1(numBuckets, numHashes, strings, strings2)
-        || attempt1(numBuckets + 1, numHashes + 1, strings, strings2)
+    check { (strings: Set[String], strings2: Set[String], _numBuckets: Int, _numHashes: Int) =>
+      {
+        val numHashes = 5
+        val numBuckets = 1000
+        assert(numBuckets >= 0, numBuckets + " " + _numBuckets)
+        (
+          attempt1(numBuckets, numHashes, strings, strings2)
+          || attempt1(numBuckets + 1, numHashes + 1, strings, strings2)
         )
-    }}
+      }
+    }
   }
-
-
 
   test("bloom filter works with objects with Int.MinValue hash") {
     val bloomFilter = BloomFilter.optimallySized[Int](100, 0.003)
@@ -85,12 +88,10 @@ class BloomFilterTest extends FunSuite with Checkers {
     assert(bloomFilter.contains(value))
   }
 
-
-
   def attempt1(numBuckets: Int, numHashes: Int, strings: Set[String], strings2: Set[String]): Boolean = {
     val bf = new BloomFilter[String](numBuckets, numHashes.abs)
     val bf2 = new BloomFilter[String](numBuckets, numHashes.abs)
-    strings foreach {
+    strings.foreach {
       bf += _
     }
     bf2 |= bf

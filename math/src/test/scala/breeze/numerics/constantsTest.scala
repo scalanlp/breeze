@@ -14,7 +14,7 @@ class constantsTest extends FunSuite {
 
   test("constants test") {
     assert(Database.unit("atomic mass constant energy equivalent") == "J")
-    assert(Database.unit( """.*Planck.*""".r).size == 12)
+    assert(Database.unit(""".*Planck.*""".r).size == 12)
   }
 
 }

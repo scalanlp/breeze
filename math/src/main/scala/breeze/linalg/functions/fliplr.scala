@@ -11,8 +11,8 @@ object fliplr extends UFunc {
 
   implicit def implDM[T]: Impl[DenseMatrix[T], DenseMatrix[T]] = new Impl[DenseMatrix[T], DenseMatrix[T]] {
     def apply(v: DenseMatrix[T]): DenseMatrix[T] = {
-      if(!v.isTranspose) {
-        v(::, v.cols-1 to 0 by -1).copy
+      if (!v.isTranspose) {
+        v(::, v.cols - 1 to 0 by -1).copy
       } else { // we can't deal with strides on the minor axis, so, copy to make it column major
         apply(v.copy)
       }
@@ -20,7 +20,6 @@ object fliplr extends UFunc {
   }
 
 }
-
 
 /**
  * mirrors the rows (up down)
@@ -31,8 +30,8 @@ object flipud extends UFunc {
 
   implicit def implDM[T]: Impl[DenseMatrix[T], DenseMatrix[T]] = new Impl[DenseMatrix[T], DenseMatrix[T]] {
     def apply(v: DenseMatrix[T]): DenseMatrix[T] = {
-      if(v.isTranspose) {
-        v(v.cols-1 to 0 by -1, ::).copy
+      if (v.isTranspose) {
+        v(v.cols - 1 to 0 by -1, ::).copy
       } else { // we can't deal with strides on the minor axis, so, copy to make it column major
         fliplr(v.t).t.copy
       }
@@ -41,7 +40,7 @@ object flipud extends UFunc {
 
   implicit def implDV[T]: Impl[DenseVector[T], DenseVector[T]] = new Impl[DenseVector[T], DenseVector[T]] {
     def apply(v: DenseVector[T]): DenseVector[T] = {
-      v(v.length -1 to 0 by -1).copy
+      v(v.length - 1 to 0 by -1).copy
     }
   }
 
@@ -53,7 +52,6 @@ object flipud extends UFunc {
  * @author dlwh
  */
 object rot90 extends UFunc {
-
 
   implicit def implDM[T]: Impl2[DenseMatrix[T], Int, DenseMatrix[T]] = new Impl2[DenseMatrix[T], Int, DenseMatrix[T]] {
     def apply(v: DenseMatrix[T], k: Int): DenseMatrix[T] = {
@@ -67,7 +65,7 @@ object rot90 extends UFunc {
     }
   }
 
-  implicit def impl1fromImpl2[T, R](implicit impl2: Impl2[T, Int, R]):Impl[T, R] = new Impl[T, R] {
+  implicit def impl1fromImpl2[T, R](implicit impl2: Impl2[T, Int, R]): Impl[T, R] = new Impl[T, R] {
     def apply(v: T): R = impl2(v, 1)
   }
 }

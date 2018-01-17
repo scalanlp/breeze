@@ -76,6 +76,4 @@ class DenseMulScalarBenchmark extends BreezeBenchmark {
 
 }
 
-
-
 object DenseMulScalarBenchmark extends MyRunner(classOf[DenseMulScalarBenchmark])

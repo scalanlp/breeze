@@ -14,7 +14,7 @@ package breeze.collection.mutable
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 import breeze.storage.{ConfigurableDefault, Storage, Zero}
 
 import collection.mutable.BitSet
@@ -26,7 +26,6 @@ import scalaxy.debug._
 import scala.reflect.ClassTag
 import spire.syntax.cfor._
 
-
 /**
  * A SparseArray is a sparse representation of an array using a two-array binary-search approach.
  * There are two arrays: index and data, which together are pairs (i, v) of indices into the array
@@ -37,13 +36,15 @@ import spire.syntax.cfor._
  * @author dlwh, dramage
  */
 @SerialVersionUID(1L)
-final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Array[Int],
-                        var data: Array[V],
-                        private var used: Int,
-                        val size: Int,
-                        val default: V) extends ArrayLike[V] with Storage[V] with Serializable {
-
-
+final class SparseArray[@specialized(Double, Int, Float, Long) V](
+    var index: Array[Int],
+    var data: Array[V],
+    private var used: Int,
+    val size: Int,
+    val default: V)
+    extends ArrayLike[V]
+    with Storage[V]
+    with Serializable {
 
   def this(size: Int, default: V)(implicit manElem: ClassTag[V]) = {
     this(Array.empty, Array.empty, 0, size, default)
@@ -69,34 +70,32 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
    */
   def keysIterator: Iterator[Int] = index.iterator.take(used)
 
-
   def get(i: Int): Option[V] = {
     val offset = findOffset(i)
     if (offset >= 0) Some(data(offset)) else None
   }
 
-  def getOrElse(i: Int, value: =>V): V = {
+  def getOrElse(i: Int, value: => V): V = {
     val offset = findOffset(i)
     if (offset >= 0) data(offset) else value
   }
 
-  def getOrElseUpdate(i: Int, value: =>V): V = {
+  def getOrElseUpdate(i: Int, value: => V): V = {
     val offset = findOffset(i)
     if (offset >= 0) data(offset)
     else {
       val v = value
-      update(i,v)
+      update(i, v)
       v
     }
   }
-
 
   /**
    * Maps all values.  If f(this.default) is not equal to the new default
    * value, the result may be an efficiently dense (or almost dense) paired
    * array.
    */
-  def map[B:ClassTag:Zero](f: V=>B): SparseArray[B] = {
+  def map[B: ClassTag: Zero](f: V => B): SparseArray[B] = {
     val newZero = implicitly[Zero[B]].zero
     if (used <= length && f(default) == newZero) {
       // some default values but f(default) is still default
@@ -146,7 +145,7 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
   /**
    * Filter's the array by removing all values for which f is false.
    */
-  def filter(f: V=>Boolean): SparseArray[V] = {
+  def filter(f: V => Boolean): SparseArray[V] = {
     val newIndex = new Array[Int](used)
     val newData = ArrayUtil.copyOf(data, used)
     var i = 0; var o = 0
@@ -168,12 +167,11 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
       // setting each position in newIndex consecutively to forget missing
       // values
       val newLength = o
-      new SparseArray[V](Array.range(0,newLength), newData.take(newLength), newLength, newLength, default)
+      new SparseArray[V](Array.range(0, newLength), newData.take(newLength), newLength, newLength, default)
     }
   }
 
   override def toString: String = iterator.mkString("SparseArray(", ", ", ")")
-
 
   def activeSize: Int = used
 
@@ -192,7 +190,7 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
    */
   protected final def findOffset(i: Int): Int = {
     if (i < 0 || i >= size)
-      throw new IndexOutOfBoundsException("Index "+i+" out of bounds [0,"+used+")")
+      throw new IndexOutOfBoundsException("Index " + i + " out of bounds [0," + used + ")")
 
     if (used == 0) {
       // empty list do nothing
@@ -256,35 +254,31 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
             begin = mid + 2
           }
         }
-        if(!found)
+        if (!found)
           mid = (end + begin) >> 1
-
 
         // pick up search.
         while (!found && begin <= end) {
           if (index(mid) < i) {
             begin = mid + 1
             mid = (end + begin) >> 1
-          }
-          else if (index(mid) > i) {
+          } else if (index(mid) > i) {
             end = mid - 1
             mid = (end + begin) >> 1
-          }
-          else
+          } else
             found = true
         }
 
-
-
         // note: hold onto a local variable
         // because multithreading
-        val result = if (found || mid < 0)
-          mid
-        // no match found,  insertion point
-        else if (i <= index(mid))
-          ~mid // Insert here (before mid)
-        else
-          ~(mid + 1) // Insert after mid
+        val result =
+          if (found || mid < 0)
+            mid
+          // no match found,  insertion point
+          else if (i <= index(mid))
+            ~mid // Insert here (before mid)
+          else
+            ~(mid + 1) // Insert after mid
 
         lastReturnedPos = result
 
@@ -322,22 +316,20 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
       if (used > data.length) {
         // need to grow array
         val newLength = {
-          if      (data.length == 0)     { 4 }
-          else if (data.length < 0x0400) { data.length * 2 }
-          else if (data.length < 0x0800) { data.length + 0x0400 }
-          else if (data.length < 0x1000) { data.length + 0x0800 }
-          else if (data.length < 0x2000) { data.length + 0x1000 }
-          else if (data.length < 0x4000) { data.length + 0x2000 }
-          else { data.length + 0x4000 }
+          if (data.length == 0) { 4 } else if (data.length < 0x0400) { data.length * 2 } else if (data.length < 0x0800) {
+            data.length + 0x0400
+          } else if (data.length < 0x1000) { data.length + 0x0800 } else if (data.length < 0x2000) {
+            data.length + 0x1000
+          } else if (data.length < 0x4000) { data.length + 0x2000 } else { data.length + 0x4000 }
         }
 
         // allocate new arrays
         val newIndex = util.Arrays.copyOf(index, newLength)
-        val newData  = ArrayUtil.copyOf(data, newLength)
+        val newData = ArrayUtil.copyOf(data, newLength)
 
         // copy existing data into new arrays
         System.arraycopy(index, insertPos, newIndex, insertPos + 1, used - insertPos - 1)
-        System.arraycopy(data,  insertPos, newData,  insertPos + 1, used - insertPos - 1)
+        System.arraycopy(data, insertPos, newData, insertPos + 1, used - insertPos - 1)
 
         // update pointers
         index = newIndex
@@ -345,7 +337,7 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
       } else if (used - insertPos > 1) {
         // need to make room for new element mid-array
         System.arraycopy(index, insertPos, index, insertPos + 1, used - insertPos - 1)
-        System.arraycopy(data,  insertPos, data,  insertPos + 1, used - insertPos - 1)
+        System.arraycopy(data, insertPos, data, insertPos + 1, used - insertPos - 1)
       }
 
       // assign new value
@@ -373,7 +365,7 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
       _nz
     }
 
-    val newData  = ClassTag[V](data.getClass.getComponentType).newArray(nz)
+    val newData = ClassTag[V](data.getClass.getComponentType).newArray(nz)
     val newIndex = new Array[Int](nz)
 
     var i = 0
@@ -392,7 +384,6 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
     used = nz
   }
 
-
   def use(index: Array[Int], data: Array[V], used: Int) {
     this.index = index
     this.data = data
@@ -400,7 +391,7 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
   }
 
   def reserve(nnz: Int): Unit = {
-    if(nnz >= used && nnz != index.length)  {
+    if (nnz >= used && nnz != index.length) {
       index = util.Arrays.copyOf(index, nnz)
       data = ArrayUtil.copyOf(data, nnz)
     }
@@ -415,11 +406,13 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
 
   def concatenate(that: SparseArray[V])(implicit man: ClassTag[V]): SparseArray[V] = {
     require(this.default == that.default, "default values should be equal")
-    new SparseArray((this.index.slice(0,this.used) union that.index.slice(0,that.used).map(_ + this.size)).toArray,
-		    (this.data.slice(0,this.used) union that.data.slice(0,that.used)).toArray,
-		    this.used+that.used,
-		    this.size+that.size,
-		    this.default)
+    new SparseArray(
+      this.index.slice(0, this.used).union(that.index.slice(0, that.used).map(_ + this.size)).toArray,
+      this.data.slice(0, this.used).union(that.data.slice(0, that.used)).toArray,
+      this.used + that.used,
+      this.size + that.size,
+      this.default
+    )
   }
 
   override def hashCode: Int = ArrayUtil.zeroSkippingHashCode(data, 0, 1, used)
@@ -472,8 +465,13 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](var index: Arr
 }
 
 object SparseArray {
-  def apply[@specialized(Int, Float, Double) T:ClassTag:Zero](values: T*) = {
-    val rv = new SparseArray[T](Array.range(0, values.length), values.toArray, values.length, values.length, implicitly[Zero[T]].zero)
+  def apply[@specialized(Int, Float, Double) T: ClassTag: Zero](values: T*) = {
+    val rv = new SparseArray[T](
+      Array.range(0, values.length),
+      values.toArray,
+      values.length,
+      values.length,
+      implicitly[Zero[T]].zero)
     rv.compact()
     rv
   }
@@ -487,7 +485,7 @@ object SparseArray {
    *
    * @author dramage
    */
-  def fill[@specialized(Int, Float, Double) T:ClassTag:Zero](length: Int)(value: =>T): SparseArray[T] = {
+  def fill[@specialized(Int, Float, Double) T: ClassTag: Zero](length: Int)(value: => T): SparseArray[T] = {
     if (value != implicitly[Zero[T]].zero) {
       val rv = new SparseArray[T](size = length)
       var i = 0
@@ -501,15 +499,15 @@ object SparseArray {
     }
   }
 
-  def create[@specialized(Int, Float, Double) T:ClassTag:Zero](length: Int)(values: (Int,T)*) = {
+  def create[@specialized(Int, Float, Double) T: ClassTag: Zero](length: Int)(values: (Int, T)*) = {
     val rv = new SparseArray[T](length)
-    for ((k,v) <- values) {
+    for ((k, v) <- values) {
       rv(k) = v
     }
     rv
   }
 
-  def tabulate[@specialized(Int, Float, Double) T:ClassTag:Zero](length: Int)(fn: (Int => T)) = {
+  def tabulate[@specialized(Int, Float, Double) T: ClassTag: Zero](length: Int)(fn: (Int => T)) = {
     val rv = new SparseArray[T](length)
     var i = 0
     while (i < length) {
@@ -522,7 +520,5 @@ object SparseArray {
     rv.compact()
     rv
   }
-
-
 
 }

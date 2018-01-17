@@ -7,7 +7,10 @@ import breeze.numerics.{exp, log}
  *
  * @author dlwh
  **/
-case class Laplace(location: Double, scale: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double] with Moments[Double, Double] with HasCdf {
+case class Laplace(location: Double, scale: Double)(implicit rand: RandBasis = Rand)
+    extends ContinuousDistr[Double]
+    with Moments[Double, Double]
+    with HasCdf {
   def mean: Double = location
 
   def mode: Double = location
@@ -24,15 +27,15 @@ case class Laplace(location: Double, scale: Double)(implicit rand: RandBasis = R
   def draw(): Double = {
     // from numpy
     val u = rand.uniform.draw()
-    if(u < 0.5) {
+    if (u < 0.5) {
       location + scale * log(2 * u)
     } else {
-      location - scale * log(2 *(1 - u))
+      location - scale * log(2 * (1 - u))
     }
   }
 
   def unnormalizedLogPdf(x: Double): Double = {
-    -math.abs(x-location)/scale
+    -math.abs(x - location) / scale
   }
 
   def probability(x: Double, y: Double): Double = {

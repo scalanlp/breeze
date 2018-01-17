@@ -12,7 +12,7 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class ScalingTest extends FunSuite {
   test("Simple Test, big") {
-    val array = Array(math.pow(2,300), math.pow(2, 301), math.pow(2, 150))
+    val array = Array(math.pow(2, 300), math.pow(2, 301), math.pow(2, 150))
     val target = Array(math.pow(2, 10), math.pow(2, 11), math.pow(2, 150 - 290))
     val newScale = Scaling.scaleArray(array, 0)
     assert(newScale === 290)
@@ -23,7 +23,7 @@ class ScalingTest extends FunSuite {
 
   test("Convert back to 0 scale, big") {
     val array = Array(math.pow(2, 10), math.pow(2, 11), math.pow(2, 150 - 290))
-    val target = Array(math.pow(2,300), math.pow(2, 301), math.pow(2, 150))
+    val target = Array(math.pow(2, 300), math.pow(2, 301), math.pow(2, 150))
     Scaling.scaleArrayToScale(array, 290, 0)
     assert(array(0) === target(0))
     assert(array(1) === target(1))
@@ -31,7 +31,7 @@ class ScalingTest extends FunSuite {
   }
 
   test("Simple Test, small") {
-    val array = Array(math.pow(2,-300), math.pow(2, -301), math.pow(2, -150))
+    val array = Array(math.pow(2, -300), math.pow(2, -301), math.pow(2, -150))
     val target = Array(math.pow(2, -155), math.pow(2, -156), math.pow(2, -5))
     val newScale = Scaling.scaleArray(array, 0)
     assert(newScale === -145)
@@ -44,7 +44,7 @@ class ScalingTest extends FunSuite {
 
   test("Convert back to 0 scale, small") {
     val array = Array(math.pow(2, -155), math.pow(2, -156), math.pow(2, -5))
-    val target = Array(math.pow(2,-300), math.pow(2, -301), math.pow(2, -150))
+    val target = Array(math.pow(2, -300), math.pow(2, -301), math.pow(2, -150))
     Scaling.scaleArrayToScale(array, -145, 0)
     assert(array(0) === target(0))
     assert(array(1) === target(1))
@@ -58,13 +58,12 @@ class ScalingTest extends FunSuite {
   }
 
   test("Unscale value") {
-    assert(Scaling.unscaleValue(math.pow(2,10), 290) === math.pow(2, 300))
-    assert(Scaling.toLogSpace(math.pow(2,10), 290) === math.log(2) * 300)
+    assert(Scaling.unscaleValue(math.pow(2, 10), 290) === math.pow(2, 300))
+    assert(Scaling.toLogSpace(math.pow(2, 10), 290) === math.log(2) * 300)
   }
 
-
   test("Don't scale mixed values past the max") {
-    val array = Array(math.pow(2,-300), math.pow(2, -301), math.pow(2, 100))
+    val array = Array(math.pow(2, -300), math.pow(2, -301), math.pow(2, 100))
     val target = array.toIndexedSeq.toArray
     val newScale = Scaling.scaleArray(array, 0)
     assert(newScale === 0)
@@ -74,8 +73,8 @@ class ScalingTest extends FunSuite {
   }
 
   test("Addition of arrays of vastly different scales is a noop or a clobber") {
-    val arr1 = Array(3.0,4.0,5.0)
-    val arr2 = Array(1.0,2.0,3.0)
+    val arr1 = Array(3.0, 4.0, 5.0)
+    val arr2 = Array(1.0, 2.0, 3.0)
     val newScale1 = Scaling.sumArrays(arr1, 0, arr2, 500)
     assert(newScale1 == 500)
     assert(arr2.toIndexedSeq === IndexedSeq(1.0, 2.0, 3.0))
@@ -84,10 +83,9 @@ class ScalingTest extends FunSuite {
     assert(arr2.toIndexedSeq === IndexedSeq(3.0, 4.0, 5.0))
   }
 
-
   test("Addition of arrays of slightly different scales works as expected") {
-    val arr1 = Array(3.0,4.0,5.0)
-    val arr2,arr3 = Array(1.0,2.0,3.0)
+    val arr1 = Array(3.0, 4.0, 5.0)
+    val arr2, arr3 = Array(1.0, 2.0, 3.0)
     val newScale1 = Scaling.sumArrays(arr1, 0, arr2, 2)
     assert(newScale1 == 2)
     Scaling.scaleArrayToScale(arr1, 0, 2)

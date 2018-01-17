@@ -8,14 +8,17 @@ import breeze.numerics.{expm1, log, sqrt}
  *
  * @author dlwh
  **/
-case class Rayleigh(scale: Double)(implicit rand: RandBasis = Rand) extends ContinuousDistr[Double] with Moments[Double, Double] with HasCdf {
-  def mean: Double = scale * sqrt(Pi/2)
+case class Rayleigh(scale: Double)(implicit rand: RandBasis = Rand)
+    extends ContinuousDistr[Double]
+    with Moments[Double, Double]
+    with HasCdf {
+  def mean: Double = scale * sqrt(Pi / 2)
 
   def mode: Double = scale
 
-  def variance: Double = (4 - Pi)/2 * scale * scale
+  def variance: Double = (4 - Pi) / 2 * scale * scale
 
-  def entropy: Double = log(scale/sqrt(2)) + γ/2 + 1
+  def entropy: Double = log(scale / sqrt(2)) + γ / 2 + 1
 
   def logNormalizer: Double = 2 * math.log(scale)
 
@@ -30,8 +33,8 @@ case class Rayleigh(scale: Double)(implicit rand: RandBasis = Rand) extends Cont
   }
 
   def cdf(x: Double): Double = {
-    val xs = x/scale
-    -expm1(-(xs * xs)/2)
+    val xs = x / scale
+    -expm1(-(xs * xs) / 2)
   }
 
   override def probability(x: Double, y: Double): Double = {

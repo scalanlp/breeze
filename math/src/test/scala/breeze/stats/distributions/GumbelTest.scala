@@ -14,7 +14,7 @@ package breeze.stats.distributions
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 import org.junit.runner.RunWith
 import org.scalacheck._
@@ -23,10 +23,14 @@ import org.scalatest.junit._
 import org.scalatest.prop._
 
 @RunWith(classOf[JUnitRunner])
-class GumbelTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase with MomentsTestBase[Double] with HasCdfTestBase {
+class GumbelTest
+    extends FunSuite
+    with Checkers
+    with UnivariateContinuousDistrTestBase
+    with MomentsTestBase[Double]
+    with HasCdfTestBase {
   type Distr = Gumbel
   import org.scalacheck.Arbitrary.arbitrary
-
 
   override val numSamples = 40000
 
@@ -35,9 +39,12 @@ class GumbelTest extends FunSuite with Checkers with UnivariateContinuousDistrTe
   def fromDouble(x: Double) = x
 
   implicit def arbDistr = Arbitrary {
-    for(location <- arbitrary[Double].map{x => math.abs(x) % 1000.0 + 1.1}; // Gumbel pdf at 0 not defined when location == 1
-        scale <- arbitrary[Double].map {x => math.abs(x) % 8.0 + 1.0}) yield new Gumbel(location,scale)(RandBasis.mt0)
+    for (location <- arbitrary[Double].map { x =>
+        math.abs(x) % 1000.0 + 1.1
+      }; // Gumbel pdf at 0 not defined when location == 1
+      scale <- arbitrary[Double].map { x =>
+        math.abs(x) % 8.0 + 1.0
+      }) yield new Gumbel(location, scale)(RandBasis.mt0)
   }
-
 
 }

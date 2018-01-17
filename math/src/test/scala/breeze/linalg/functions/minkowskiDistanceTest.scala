@@ -39,5 +39,5 @@ class minkowskiDistanceTest extends FunSuite {
     assert((outBig - outSmall) <= 2 * (outSmall - in + 1), s"too slow! ${outBig - outSmall} ms vs ${outSmall - in} ms")
 
   }
-  */
+ */
 }

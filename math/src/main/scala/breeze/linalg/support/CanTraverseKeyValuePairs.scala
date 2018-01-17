@@ -14,7 +14,7 @@ package breeze.linalg.support
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 import breeze.math.Complex
 import scala.reflect.ClassTag
 import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
@@ -26,22 +26,21 @@ import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
  * @author dlwh
  */
 trait CanTraverseKeyValuePairs[From, K, A] {
+
   /**Traverses all values from the given collection. */
   def traverse(from: From, fn: KeyValuePairsVisitor[K, A]): Unit
-  def isTraversableAgain(from: From):Boolean
+  def isTraversableAgain(from: From): Boolean
 }
-
-
 
 object CanTraverseKeyValuePairs {
 
   trait KeyValuePairsVisitor[@specialized(Int) K, @specialized A] {
     def visit(k: K, a: A)
-    def visitArray(indices: Int=>K, arr: Array[A]):Unit = visitArray(indices, arr, 0, arr.length, 1)
+    def visitArray(indices: Int => K, arr: Array[A]): Unit = visitArray(indices, arr, 0, arr.length, 1)
 
-    def visitArray(indices: Int=>K, arr: Array[A], offset: Int, length: Int, stride: Int):Unit = {
+    def visitArray(indices: Int => K, arr: Array[A], offset: Int, length: Int, stride: Int): Unit = {
       var i = 0
-      while(i < length) {
+      while (i < length) {
         visit(indices(i * stride + offset), arr(i * stride + offset))
         i += 1
       }
@@ -49,13 +48,12 @@ object CanTraverseKeyValuePairs {
     def zeros(numZero: Int, zeroKeys: Iterator[K], zeroValue: A)
   }
 
-
   //
   // Arrays
   //
 
-  class OpArray[@specialized(Double, Int, Float, Long) A]
-    extends CanTraverseKeyValuePairs[Array[A], Int, A] {
+  class OpArray[@specialized(Double, Int, Float, Long) A] extends CanTraverseKeyValuePairs[Array[A], Int, A] {
+
     /** Traverses all values from the given collection. */
     def traverse(from: Array[A], fn: KeyValuePairsVisitor[Int, A]): Unit = {
       fn.visitArray(0 until from.length, from)
@@ -63,7 +61,6 @@ object CanTraverseKeyValuePairs {
 
     def isTraversableAgain(from: Array[A]): Boolean = true
   }
-
 
   implicit def opArray[@specialized A] =
     new OpArray[A]
@@ -80,4 +77,3 @@ object CanTraverseKeyValuePairs {
 
   implicit object OpArrayCC extends OpArray[Complex]
 }
-

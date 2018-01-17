@@ -14,11 +14,10 @@ package breeze.stats.distributions
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
-
+ */
 
 import breeze.numerics._
-import math.{Pi,log1p}
+import math.{Pi, log1p}
 import breeze.linalg._
 import scala.runtime.ScalaRunTime
 
@@ -27,23 +26,24 @@ import scala.runtime.ScalaRunTime
  *
  * @author dlwh
  */
-case class MultivariateGaussian(mean: DenseVector[Double],
-                                covariance : DenseMatrix[Double])(implicit rand: RandBasis = Rand)
-    extends ContinuousDistr[DenseVector[Double]] with Moments[DenseVector[Double], DenseMatrix[Double]] {
+case class MultivariateGaussian(mean: DenseVector[Double], covariance: DenseMatrix[Double])(
+    implicit rand: RandBasis = Rand)
+    extends ContinuousDistr[DenseVector[Double]]
+    with Moments[DenseVector[Double], DenseMatrix[Double]] {
   def draw() = {
     val z: DenseVector[Double] = DenseVector.rand(mean.length, rand.gaussian(0, 1))
     root * z += mean
   }
 
-  private val root:DenseMatrix[Double] = cholesky(covariance)
+  private val root: DenseMatrix[Double] = cholesky(covariance)
 
-  override def toString() =  ScalaRunTime._toString(this)
+  override def toString() = ScalaRunTime._toString(this)
 
   override def unnormalizedLogPdf(t: DenseVector[Double]) = {
     val centered = t - mean
     val slv = covariance \ centered
 
-    -(slv dot centered) / 2.0
+    -slv.dot(centered) / 2.0
 
   }
 
@@ -51,7 +51,7 @@ case class MultivariateGaussian(mean: DenseVector[Double],
     // determinant of the cholesky decomp is the sqrt of the determinant of the cov matrix
     // this is the log det of the cholesky decomp
     val det = sum(log(diag(root)))
-    mean.length/2.0 *  log(2 * Pi) + det
+    mean.length / 2.0 * log(2 * Pi) + det
   }
 
   def variance = covariance
@@ -60,5 +60,3 @@ case class MultivariateGaussian(mean: DenseVector[Double],
     mean.length * log1p(2 * Pi) + sum(log(diag(root)))
   }
 }
-
-

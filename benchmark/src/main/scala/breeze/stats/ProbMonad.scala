@@ -10,13 +10,13 @@ object ProbMonadRunner extends MyRunner(classOf[ProbMonadBenchmark])
 
 class ProbMonadBenchmark extends BreezeBenchmark {
 
-  val f: Double => Double = x => math.exp(-x*x)
-  val f2: Double => Double = x => x*x
+  val f: Double => Double = x => math.exp(-x * x)
+  val f2: Double => Double = x => x * x
   val f3: Double => Double = x => math.log(x)
-  val fm: Double => Rand[Double] = (x => Uniform(min(x,2*x), max(x,2*x)))
-  val gaussian = Gaussian(0,1)
+  val fm: Double => Rand[Double] = (x => Uniform(min(x, 2 * x), max(x, 2 * x)))
+  val gaussian = Gaussian(0, 1)
 
-  val size = 1024*1024
+  val size = 1024 * 1024
 
   def timeMonad(reps: Int) = run(reps) {
     /* The purpose of this benchmark is to compare monadic usage of rand to non-monadic usage (see timeRaw).
@@ -24,7 +24,7 @@ class ProbMonadBenchmark extends BreezeBenchmark {
     val monadic = for {
       x <- gaussian
       y <- gaussian
-    } yield (x+y)
+    } yield (x + y)
     monadic.samplesVector(size)
   }
 
@@ -70,7 +70,7 @@ class ProbMonadBenchmark extends BreezeBenchmark {
   def timeDrawOpt(reps: Int) = run(reps) {
     val mg = gaussian.condition(x => x > 0)
     val result = new Array[Option[Double]](size)
-    cfor(0)(i => i<size, i=>i+1)(i => {
+    cfor(0)(i => i < size, i => i + 1)(i => {
       result(i) = mg.drawOpt()
     })
     result
@@ -78,7 +78,7 @@ class ProbMonadBenchmark extends BreezeBenchmark {
   def timeDrawOptMultipleCondition(reps: Int) = run(reps) {
     val mg = gaussian.condition(x => x > 0).condition(x => x < 1).condition(x => x > -1)
     val result = new Array[Option[Double]](size)
-    cfor(0)(i => i<size, i=>i+1)(i => {
+    cfor(0)(i => i < size, i => i + 1)(i => {
       result(i) = mg.drawOpt()
     })
     result

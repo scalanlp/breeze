@@ -142,7 +142,7 @@ class SqDistBenchmark extends BreezeBenchmark {
       }
     }
   }
-  */
+   */
 
   def timeVectorSquaredDistance(reps: Int) = {
     var sum = 0.0
@@ -165,7 +165,6 @@ class SqDistBenchmark extends BreezeBenchmark {
   }
 
 }
-
 
 object SqDistBenchmark extends MyRunner(classOf[SqDistBenchmark])
 

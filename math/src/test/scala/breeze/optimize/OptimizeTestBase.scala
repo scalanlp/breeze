@@ -14,7 +14,7 @@ package breeze.optimize
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 import breeze.linalg._
 import org.scalacheck._
@@ -23,24 +23,26 @@ import org.scalatest.prop._
 
 trait OptimizeTestBaseTrait {
   import org.scalacheck.Arbitrary._
-  implicit val arbVector : Arbitrary[DenseVector[Double]] = Arbitrary {
-    RandomInstanceSupport.genDenseVector[Double](10, RandomInstanceSupport.genReasonableDouble.arbitrary.map(_ % 10 + 1E-2))
+  implicit val arbVector: Arbitrary[DenseVector[Double]] = Arbitrary {
+    RandomInstanceSupport
+      .genDenseVector[Double](10, RandomInstanceSupport.genReasonableDouble.arbitrary.map(_ % 10 + 1E-2))
   }
 
-  implicit val arbVectorFloat : Arbitrary[DenseVector[Float]] = Arbitrary {
-    RandomInstanceSupport.genDenseVector[Float](10, RandomInstanceSupport.genReasonableFloat.arbitrary.map(_ % 10 + 1E-2f))
+  implicit val arbVectorFloat: Arbitrary[DenseVector[Float]] = Arbitrary {
+    RandomInstanceSupport
+      .genDenseVector[Float](10, RandomInstanceSupport.genReasonableFloat.arbitrary.map(_ % 10 + 1E-2f))
   }
 
   implicit def arbSV: Arbitrary[SparseVector[Double]] = Arbitrary {
-    RandomInstanceSupport.genSparseVector[Double](10, RandomInstanceSupport.genReasonableDouble.arbitrary.map(_ % 10 + 1E-2))
+    RandomInstanceSupport
+      .genSparseVector[Double](10, RandomInstanceSupport.genReasonableDouble.arbitrary.map(_ % 10 + 1E-2))
   }
 
-
-  implicit val arbDoubleCounter: Arbitrary[Counter[String,Double]] = Arbitrary(for {
+  implicit val arbDoubleCounter: Arbitrary[Counter[String, Double]] = Arbitrary(for {
     v <- arbitrary[DenseVector[Double]]
   } yield {
-    val c = Counter[String,Double]()
-    for(i <- 0 until v.size) {
+    val c = Counter[String, Double]()
+    for (i <- 0 until v.size) {
       c(i + "") = v(i)
     }
     c

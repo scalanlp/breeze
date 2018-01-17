@@ -8,10 +8,14 @@ class HighamHall54Integrator(
     maxStep: Double,
     relTol: DenseVector[Double] = null,
     absTol: DenseVector[Double] = null)
-  extends ApacheAdaptiveStepIntegrator(relTol, absTol) {
+    extends ApacheAdaptiveStepIntegrator(relTol, absTol) {
 
   type T = ApacheHighamHall54Integrator
 
   protected final def create: ApacheHighamHall54Integrator =
-    new ApacheHighamHall54Integrator(minStep, maxStep, ApacheAdaptiveStepIntegrator.defaultAbsTol, ApacheAdaptiveStepIntegrator.defaultRelTol)
+    new ApacheHighamHall54Integrator(
+      minStep,
+      maxStep,
+      ApacheAdaptiveStepIntegrator.defaultAbsTol,
+      ApacheAdaptiveStepIntegrator.defaultRelTol)
 }

@@ -4,11 +4,9 @@ import breeze.linalg.DenseVector
 import breeze.util.Opt
 
 /**Specifies all possible option objects for the breeze.signal package
-  *
+ *
  * @author ktakagaki
  */
-
-
 ///General options-related
 
 //Generic options with implicit specialization cannot be employed for case objects
@@ -28,33 +26,31 @@ import breeze.util.Opt
 //  implicit def optNoneSpecialize_ConvolveMethod(x: breeze.signal.Automatic) = OptMethod.Automatic
 //}
 
-
 ///Individual Options
 
 /**Option values: window function for filter design.*/
 abstract class OptWindowFunction extends Opt
 object OptWindowFunction {
   case class Hamming(alpha: Double = 0.54, beta: Double = 0.46) extends OptWindowFunction {
-    override def toString = "Hamming window ("+ alpha + ", " + beta + ")"
+    override def toString = "Hamming window (" + alpha + ", " + beta + ")"
   }
   case class Hanning(alpha: Double = 0.5, beta: Double = 0.5) extends OptWindowFunction {
-    override def toString = "Hanning window ("+ alpha + "," + beta + ")"
+    override def toString = "Hanning window (" + alpha + "," + beta + ")"
   }
-  case class Blackman(a0: Double = 0.42, a1: Double  = 0.5, a2: Double = 0.08) extends OptWindowFunction {
-    override def toString = "Blackman window ("+ a0 + a1 + a2 + ")"
+  case class Blackman(a0: Double = 0.42, a1: Double = 0.5, a2: Double = 0.08) extends OptWindowFunction {
+    override def toString = "Blackman window (" + a0 + a1 + a2 + ")"
   }
   case class User(dv: DenseVector[Double]) extends OptWindowFunction {
     override def toString = "user-specified window"
   }
-  case object None extends OptWindowFunction{
+  case object None extends OptWindowFunction {
     override def toString = "no window"
   }
 }
 
-
 /**Option values: how to deal with convolution overhangs.*/
 abstract class OptOverhang extends Opt
-object OptOverhang{
+object OptOverhang {
 //  /** THIS OPTION REMOVED FOR NOW, DUE TO AMBIGUITY WITH KERNEL DIRECTION (IE CONVOLVE VS CORRELATE)
 //   * Option value: Forms the cyclic convolution whose first element contains data(0)*kernel(k0),
 //    * and the last element contains data(-1)*kernel(k1).
@@ -68,8 +64,10 @@ object OptOverhang{
 //  case class Sequence(k0: Int, k1: Int) extends OptOverhang
   /**Option value: Default, no overhangs, equivalent to Sequence(-1, 1).*/
   case object None extends OptOverhang
+
   /**Option value: maximal overhangs, equivalent to MatLab conv default ('full'), equivalent to Sequence(1, -1).*/
   case object Full extends OptOverhang
+
   /**Option value: maximal overhangs, equivalent to MatLab conv default ('full'), equivalent to Sequence(1, -1).*/
   case object PreserveLength extends OptOverhang
 //  /**Option value: Forms the cyclic convolution where the kth kernel element is aligned with each data element.*/
@@ -78,22 +76,28 @@ object OptOverhang{
 
 /**Option values: how to deal with convolution and filter padding.*/
 abstract class OptPadding extends Opt
-object OptPadding{
+object OptPadding {
+
   /**Option value: Performs cyclical convolutions (ie no padding)*/
   case object Cyclical extends OptPadding
+
   /**Option value: Pads with the first and last components of the data*/
   case object Boundary extends OptPadding
+
   /**Option value: Pads with a specific value, eg 0.*/
   case class ValueOpt[T](value: T) extends OptPadding
+
   /**Option value: Pads with 0.*/
   case object Zero extends OptPadding
 }
 
 /**Option values: how to deal with convolution and filter padding.*/
 abstract class OptMethod extends Opt
-object OptMethod{
+object OptMethod {
+
   /**Option value: Decides on the fastest convolve method based on data size and type.*/
   case object Automatic extends OptMethod
+
   /**Option value: Convolve using FFT.*/
   case object FFT extends OptMethod
   /**Option value: Convolve using for loop.*/
@@ -101,6 +105,7 @@ object OptMethod{
 
 abstract class OptDesignMethod extends Opt
 object OptDesignMethod {
+
   /**Option value: use firwin() to design FIR kernel using window method.*/
   case object Firwin extends OptDesignMethod
   case object Cheby1 extends OptDesignMethod
@@ -119,11 +124,11 @@ object OptRange {
     override def toString() = "OptRange.All"
   }
   case class RangeOpt(r: Range) extends OptRange {
-    override def toString() = "OptRange.RangeOpt( "+ r.start + ", "+ r.end+", "+r.step +"), isInclusive=" + r.isInclusive
+    override def toString() =
+      "OptRange.RangeOpt( " + r.start + ", " + r.end + ", " + r.step + "), isInclusive=" + r.isInclusive
   }
 //  case class Single(i: Int) extends OptRange {
 //    override def toString() = "OptRange.Single("+ i +")"
 //  }
-  implicit def rangeToRangeOpt(r: Range) = OptRange.RangeOpt( r )
+  implicit def rangeToRangeOpt(r: Range) = OptRange.RangeOpt(r)
 }
-

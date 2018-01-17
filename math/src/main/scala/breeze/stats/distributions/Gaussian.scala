@@ -15,12 +15,11 @@ package distributions
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
-
+ */
 
 import breeze.numerics._
 import breeze.optimize.DiffFunction
-import math.{Pi,log1p}
+import math.{Pi, log1p}
 
 /**
  * Represents a Gaussian distribution over a single real variable.
@@ -28,50 +27,51 @@ import math.{Pi,log1p}
  * @author dlwh
  */
 case class Gaussian(mu: Double, sigma: Double)(implicit rand: RandBasis = Rand)
-    extends ContinuousDistr[Double] with Moments[Double, Double] with HasCdf with HasInverseCdf {
-  private val inner = rand.gaussian(mu,sigma)
+    extends ContinuousDistr[Double]
+    with Moments[Double, Double]
+    with HasCdf
+    with HasInverseCdf {
+  private val inner = rand.gaussian(mu, sigma)
   def draw() = inner.get()
 
-
-  override def toString() =  "Gaussian(" + mu + ", " + sigma + ")"
+  override def toString() = "Gaussian(" + mu + ", " + sigma + ")"
 
   /**
-    * Computes the probability that a Gaussian variable Z is within the interval [x, y].
-    * This probability is computed as P[Z < y] - P[Z < x].
-    * @param x lower-end of the interval
-    * @param y upper-end of the interval
-    * @return probability that the Gaussian random variable Z lies in the interval [x, y]
-    */
+   * Computes the probability that a Gaussian variable Z is within the interval [x, y].
+   * This probability is computed as P[Z < y] - P[Z < x].
+   * @param x lower-end of the interval
+   * @param y upper-end of the interval
+   * @return probability that the Gaussian random variable Z lies in the interval [x, y]
+   */
   override def probability(x: Double, y: Double): Double = {
     require(x <= y, "Undefined probability: lower-end of the interval should be smaller than its upper-end")
     cdf(y) - cdf(x)
   }
 
-
   /**
-  * Computes the inverse cdf of the p-value for this gaussian.
-  *
-  * @param p: a probability in [0,1]
-  * @return x s.t. cdf(x) = numYes
-  */
+   * Computes the inverse cdf of the p-value for this gaussian.
+   *
+   * @param p: a probability in [0,1]
+   * @return x s.t. cdf(x) = numYes
+   */
   def inverseCdf(p: Double) = {
-    require( p >= 0 )
-    require( p <= 1 )
+    require(p >= 0)
+    require(p <= 1)
 
     mu + sigma * Gaussian.sqrt2 * erfinv(2 * p - 1)
   }
 
   /**
-  * Computes the cumulative density function of the value x.
-  */
-  def cdf(x: Double) = .5 * (1 + erf( (x - mu)/ (Gaussian.sqrt2 * sigma)))
+   * Computes the cumulative density function of the value x.
+   */
+  def cdf(x: Double) = .5 * (1 + erf((x - mu) / (Gaussian.sqrt2 * sigma)))
 
   override def unnormalizedLogPdf(t: Double) = {
-    val d = (t - mu)/sigma
-    -d *d / 2.0
+    val d = (t - mu) / sigma
+    -d * d / 2.0
   }
 
-  override lazy val normalizer = 1.0/sqrt(2 * Pi) / sigma
+  override lazy val normalizer = 1.0 / sqrt(2 * Pi) / sigma
   lazy val logNormalizer = log(sqrt(2 * Pi)) + log(sigma)
 
   def mean = mu
@@ -80,11 +80,11 @@ case class Gaussian(mu: Double, sigma: Double)(implicit rand: RandBasis = Rand)
   def entropy = log(sigma) + .5 * log1p(log(math.Pi * 2))
 }
 
-object Gaussian extends ExponentialFamily[Gaussian,Double] with ContinuousDistributionUFuncProvider[Double,Gaussian] {
+object Gaussian extends ExponentialFamily[Gaussian, Double] with ContinuousDistributionUFuncProvider[Double, Gaussian] {
   private val sqrt2 = math.sqrt(2.0)
 
-  type Parameter = (Double,Double)
-  import breeze.stats.distributions.{SufficientStatistic=>BaseSuffStat}
+  type Parameter = (Double, Double)
+  import breeze.stats.distributions.{SufficientStatistic => BaseSuffStat}
 
   /**
    * @param n running total of examples
@@ -103,39 +103,37 @@ object Gaussian extends ExponentialFamily[Gaussian,Double] with ContinuousDistri
       SufficientStatistic(t.n + n, newMean, newM2)
     }
 
-    def variance = M2/ n
+    def variance = M2 / n
   }
 
-  val emptySufficientStatistic = SufficientStatistic(0,0,0)
+  val emptySufficientStatistic = SufficientStatistic(0, 0, 0)
 
   def sufficientStatisticFor(t: Double) = {
-    SufficientStatistic(1,t,0)
+    SufficientStatistic(1, t, 0)
   }
 
-  def mle(stats: SufficientStatistic) = (stats.mean,stats.variance)
+  def mle(stats: SufficientStatistic) = (stats.mean, stats.variance)
 
-  def distribution(p: (Double, Double)) = new Gaussian(p._1,math.sqrt(p._2))
+  def distribution(p: (Double, Double)) = new Gaussian(p._1, math.sqrt(p._2))
 
-  def likelihoodFunction(stats: SufficientStatistic):DiffFunction[(Double,Double)] = new DiffFunction[Parameter] {
+  def likelihoodFunction(stats: SufficientStatistic): DiffFunction[(Double, Double)] = new DiffFunction[Parameter] {
     val normPiece = math.log(2 * Pi)
     def calculate(x: (Double, Double)) = {
-      val (mu,sigma2) = x
-      val SufficientStatistic(n,mean,_) = stats
+      val (mu, sigma2) = x
+      val SufficientStatistic(n, mean, _) = stats
       val variance = stats.variance
-      if(sigma2 <=0 ) (Double.PositiveInfinity,(Double.NaN,Double.NaN))
-      else  {
-        val objective = n * (
-          (variance + mean * mean)/sigma2/2
+      if (sigma2 <= 0) (Double.PositiveInfinity, (Double.NaN, Double.NaN))
+      else {
+        val objective = n * ((variance + mean * mean) / sigma2 / 2
           - mean * mu / sigma2
-          + mu*mu/sigma2/2
+          + mu * mu / sigma2 / 2
           + .5 * (math.log(sigma2) + normPiece))
-        val gradientMu = n * (-mean /sigma2 + mu/sigma2)
-        val gradientSig = n * (
-          -(variance + mean * mean)/sigma2/sigma2/2
-          +mean * mu / sigma2 / sigma2
-          - mu * mu /sigma2 /sigma2/2
+        val gradientMu = n * (-mean / sigma2 + mu / sigma2)
+        val gradientSig = n * (-(variance + mean * mean) / sigma2 / sigma2 / 2
+          + mean * mu / sigma2 / sigma2
+          - mu * mu / sigma2 / sigma2 / 2
           + .5 / (sigma2))
-        (objective,(gradientMu,gradientSig))
+        (objective, (gradientMu, gradientSig))
       }
     }
   }

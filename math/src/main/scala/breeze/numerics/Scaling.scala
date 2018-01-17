@@ -15,6 +15,7 @@ import breeze.linalg.axpy
  * @author dlwh
  */
 trait Scaling {
+
   /**
    *
    * the largest (log) power of two we want to deal with
@@ -28,12 +29,12 @@ trait Scaling {
    * @param currentScale
    * @return newScale
    */
-  def scaleArray(scores: Array[Double], currentScale: Int):Int = {
+  def scaleArray(scores: Array[Double], currentScale: Int): Int = {
     val scaleDelta = computeScaleDelta(scores)
 
-    if(scaleDelta != 0) {
+    if (scaleDelta != 0) {
       var i = 0
-      while(i < scores.length) {
+      while (i < scores.length) {
         scores(i) = java.lang.Math.scalb(scores(i), -scaleDelta)
         i += 1
       }
@@ -49,12 +50,12 @@ trait Scaling {
    * @param scores
    * @return
    */
-  def computeScaleDelta(scores: Array[Double]):Int = {
+  def computeScaleDelta(scores: Array[Double]): Int = {
     var maxScale = -10000
     var i = 0
-    while(i < scores.length) {
+    while (i < scores.length) {
       val score = scores(i)
-      if(score != 0.0) {
+      if (score != 0.0) {
         val exp = java.lang.Math.getExponent(score)
         maxScale = math.max(maxScale, exp)
       }
@@ -63,18 +64,18 @@ trait Scaling {
 
     // if we scalb by -value, then all doubles will be in the range we want.
     // note that minScale < 0 in general
-    if(maxScale == -10000) 0
-    else if(maxScale > scaleConstant) scaleConstant * (maxScale / scaleConstant)
-    else if(maxScale < -scaleConstant) scaleConstant * (maxScale / scaleConstant)
+    if (maxScale == -10000) 0
+    else if (maxScale > scaleConstant) scaleConstant * (maxScale / scaleConstant)
+    else if (maxScale < -scaleConstant) scaleConstant * (maxScale / scaleConstant)
     else 0
   }
 
-  def determineScale(score: Double, oldScale: Int):Int = {
-    if(score != 0.0) {
+  def determineScale(score: Double, oldScale: Int): Int = {
+    if (score != 0.0) {
       val maxScale = java.lang.Math.getExponent(score)
-      if(maxScale == -10000) oldScale
-      else if(maxScale > scaleConstant) oldScale + scaleConstant * (maxScale / scaleConstant)
-      else if(maxScale < -scaleConstant) oldScale + scaleConstant * (maxScale / scaleConstant)
+      if (maxScale == -10000) oldScale
+      else if (maxScale > scaleConstant) oldScale + scaleConstant * (maxScale / scaleConstant)
+      else if (maxScale < -scaleConstant) oldScale + scaleConstant * (maxScale / scaleConstant)
       else oldScale
     } else {
       Int.MinValue
@@ -84,9 +85,9 @@ trait Scaling {
   def scaleArrayToScale(scores: Array[Double], currentScale: Int, targetScale: Int) {
     val scaleDelta = targetScale - currentScale
 
-    if(scaleDelta != 0) {
+    if (scaleDelta != 0) {
       var i = 0
-      while(i < scores.length) {
+      while (i < scores.length) {
         scores(i) = java.lang.Math.scalb(scores(i), -scaleDelta)
         i += 1
       }
@@ -107,18 +108,18 @@ trait Scaling {
     if (destScale == srcScale) {
       axpy(1.0, src, dest)
       destScale
-    // minValue in dest is 2**(-145+destScale), max in src is 2**(145 + srcScale)
-    // if (-145-145) + (destScale-srcScale) > 53
-    // then this is a noop.
+      // minValue in dest is 2**(-145+destScale), max in src is 2**(145 + srcScale)
+      // if (-145-145) + (destScale-srcScale) > 53
+      // then this is a noop.
     } else if (destScale - srcScale > 53 + 2 * scaleConstant) {
       destScale
     } else if (srcScale - destScale > 53 + 2 * scaleConstant) {
-      System.arraycopy(src,0,dest,0,dest.length)
+      System.arraycopy(src, 0, dest, 0, dest.length)
       srcScale
     } else if (srcScale > destScale) {
       scaleArrayToScale(dest, destScale, srcScale)
       var i = 0
-      while(i < dest.length) {
+      while (i < dest.length) {
         dest(i) += src(i)
         i += 1
       }
@@ -127,7 +128,7 @@ trait Scaling {
       // hybrid axpy/scale
       val scaleDelta = destScale - srcScale
       var i = 0
-      while(i < dest.length) {
+      while (i < dest.length) {
         dest(i) += java.lang.Math.scalb(src(i), -scaleDelta)
         i += 1
       }
@@ -158,4 +159,3 @@ trait Scaling {
 object Scaling extends Scaling {
   val scaleConstant = 145 // 10^63 more or less
 }
-

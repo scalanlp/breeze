@@ -14,23 +14,23 @@ package breeze.math
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 /**
  *
  * @author dlwh
  */
-trait Semiring[@specialized(Int,Short,Long,Float,Double) V] extends Serializable {
-  def zero : V
+trait Semiring[@specialized(Int, Short, Long, Float, Double) V] extends Serializable {
+  def zero: V
 
-  def one : V
+  def one: V
 
-  def +(a : V, b : V) : V
-  def *(a : V, b : V) : V
+  def +(a: V, b: V): V
+  def *(a: V, b: V): V
 
-  def ==(a : V, b : V) : Boolean
-  def !=(a : V, b : V) : Boolean
-  def close(a: V, b: V, tolerance: Double=1E-4):Boolean = a == b
+  def ==(a: V, b: V): Boolean
+  def !=(a: V, b: V): Boolean
+  def close(a: V, b: V, tolerance: Double = 1E-4): Boolean = a == b
 
 }
 
@@ -50,9 +50,9 @@ object Semiring {
   implicit object fieldB extends Semiring[Boolean] {
     def zero = false
     def one = true
-    def ==(a : Boolean, b : Boolean) = a == b
-    def !=(a : Boolean, b : Boolean) = a != b
-    def +(a : Boolean, b : Boolean) = a || b
-    def *(a : Boolean, b : Boolean) = a && b
- }
+    def ==(a: Boolean, b: Boolean) = a == b
+    def !=(a: Boolean, b: Boolean) = a != b
+    def +(a: Boolean, b: Boolean) = a || b
+    def *(a: Boolean, b: Boolean) = a && b
+  }
 }

@@ -2,7 +2,7 @@ package breeze.linalg
 
 import breeze.generic.UFunc
 import breeze.macros.expand
-import breeze.util.{ ArrayUtil, ReflectionUtil }
+import breeze.util.{ArrayUtil, ReflectionUtil}
 import spire.implicits._
 
 /**

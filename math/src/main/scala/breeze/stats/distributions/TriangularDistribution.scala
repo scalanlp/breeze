@@ -14,19 +14,21 @@ package distributions
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 import org.apache.commons.math3.distribution.{TriangularDistribution => ApacheTriangularDistribution}
+
 /**
  * The Triangular-distribution - ratio of two scaled chi^2 variables
  *
  * @author stucchio
-*/
-
-class TriangularDistribution(a: Double, c: Double, b: Double) extends ApacheContinuousDistribution with Moments[Double,Double]  {
-  protected final val inner = new ApacheTriangularDistribution(a,c,b)
+ */
+class TriangularDistribution(a: Double, c: Double, b: Double)
+    extends ApacheContinuousDistribution
+    with Moments[Double, Double] {
+  protected final val inner = new ApacheTriangularDistribution(a, c, b)
   def mode = c
-  def entropy = 0.5+math.log((b-a)/2)
+  def entropy = 0.5 + math.log((b - a) / 2)
 }
 
-object TriangularDistribution extends ContinuousDistributionUFuncProvider[Double,TriangularDistribution]
+object TriangularDistribution extends ContinuousDistributionUFuncProvider[Double, TriangularDistribution]

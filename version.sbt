@@ -14,4 +14,4 @@ git.gitTagToVersionNumber := {
   case VersionRegex(v, s) => Some(s"$v-$s-SNAPSHOT")
   case _ => None
 }
-*/
+ */

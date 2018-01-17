@@ -22,14 +22,14 @@ import breeze.linalg.{DenseVector, normalize}
 import org.scalatest.FunSuite
 
 /**
-  * TODO
-  *
-  * @author dlwh
+ * TODO
+ *
+ * @author dlwh
   **/
 class normalizeTest extends FunSuite {
 
   test("#667 normalize float") {
-    assert(normalize(DenseVector(3.0f, 4.0f)) == DenseVector(3.0f/5.0f, 4.0f/5.0f))
+    assert(normalize(DenseVector(3.0f, 4.0f)) == DenseVector(3.0f / 5.0f, 4.0f / 5.0f))
   }
 
 }

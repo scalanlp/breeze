@@ -2,7 +2,7 @@ package breeze.linalg
 
 import org.scalatest._
 import org.scalatest.junit._
-import org.scalatest.prop._/**
+import org.scalatest.prop._ /**
  *
  *
  * @author dlwh

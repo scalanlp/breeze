@@ -14,7 +14,7 @@ package breeze.stats.distributions
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 import org.junit.runner.RunWith
 import org.scalacheck._
@@ -23,7 +23,12 @@ import org.scalatest.junit._
 import org.scalatest.prop._
 
 @RunWith(classOf[JUnitRunner])
-class RayleighTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase with MomentsTestBase[Double] with HasCdfTestBase {
+class RayleighTest
+    extends FunSuite
+    with Checkers
+    with UnivariateContinuousDistrTestBase
+    with MomentsTestBase[Double]
+    with HasCdfTestBase {
   import org.scalacheck.Arbitrary.arbitrary
 
   override val numSamples = 40000
@@ -33,7 +38,9 @@ class RayleighTest extends FunSuite with Checkers with UnivariateContinuousDistr
   def fromDouble(x: Double) = x
 
   implicit def arbDistr = Arbitrary {
-    for(scale <- arbitrary[Double].map {x => math.abs(x) % 8.0 + 1.0}) yield new Rayleigh(scale)(RandBasis.mt0)
+    for (scale <- arbitrary[Double].map { x =>
+        math.abs(x) % 8.0 + 1.0
+      }) yield new Rayleigh(scale)(RandBasis.mt0)
   }
 
   override type Distr = Rayleigh

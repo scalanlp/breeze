@@ -22,17 +22,17 @@ object JavaArrayOps {
   def dmIToArray2(data: DenseMatrix[Int]): Array[Array[Int]] = dmToArray2(data)
   def dmLToArray2(data: DenseMatrix[Long]): Array[Array[Long]] = dmToArray2(data)
 
-  def arrayCToDv(array: Array[Complex]): DenseVector[Complex] = arrayToDv( array )
-  def arrayDToDv(array: Array[Double]): DenseVector[Double] = arrayToDv( array )
-  def arrayFToDv(array: Array[Float]): DenseVector[Float] = arrayToDv( array )
-  def arrayIToDv(array: Array[Int]): DenseVector[Int] = arrayToDv( array )
-  def arrayLToDv(array: Array[Long]): DenseVector[Long] = arrayToDv( array )
+  def arrayCToDv(array: Array[Complex]): DenseVector[Complex] = arrayToDv(array)
+  def arrayDToDv(array: Array[Double]): DenseVector[Double] = arrayToDv(array)
+  def arrayFToDv(array: Array[Float]): DenseVector[Float] = arrayToDv(array)
+  def arrayIToDv(array: Array[Int]): DenseVector[Int] = arrayToDv(array)
+  def arrayLToDv(array: Array[Long]): DenseVector[Long] = arrayToDv(array)
 
-  def array2CToDm(array: Array[Array[Complex]]): DenseMatrix[Complex] = array2ToDm( array )
-  def array2DToDm(array: Array[Array[Double]]): DenseMatrix[Double] = array2ToDm( array )
-  def array2FToDm(array: Array[Array[Float]]): DenseMatrix[Float] = array2ToDm( array )
-  def array2IToDm(array: Array[Array[Int]]): DenseMatrix[Int] = array2ToDm( array )
-  def array2LToDm(array: Array[Array[Long]]): DenseMatrix[Long] = array2ToDm( array )
+  def array2CToDm(array: Array[Array[Complex]]): DenseMatrix[Complex] = array2ToDm(array)
+  def array2DToDm(array: Array[Array[Double]]): DenseMatrix[Double] = array2ToDm(array)
+  def array2FToDm(array: Array[Array[Float]]): DenseMatrix[Float] = array2ToDm(array)
+  def array2IToDm(array: Array[Array[Int]]): DenseMatrix[Int] = array2ToDm(array)
+  def array2LToDm(array: Array[Array[Long]]): DenseMatrix[Long] = array2ToDm(array)
 
   // <editor-fold defaultstate="collapsed" desc=" implementations ">
 
@@ -44,7 +44,7 @@ object JavaArrayOps {
     while (rowI < dm.rows) {
       ret(rowI) = new Array[V](dm.cols)
       var colI = 0
-      while(colI < dm.cols) {
+      while (colI < dm.cols) {
         ret(rowI)(colI) = dm(rowI, colI)
         colI += 1
       }
@@ -54,30 +54,31 @@ object JavaArrayOps {
     ret
   }
 
-  def arrayToDv[@specialized(Int, Double, Long, Float) V: ClassTag](array: Array[V]): DenseVector[V] = new DenseVector(array)
+  def arrayToDv[@specialized(Int, Double, Long, Float) V: ClassTag](array: Array[V]): DenseVector[V] =
+    new DenseVector(array)
 
   /** Constructs DenseMatrix from Array[Array[V]] input. Input is in row-major like
-    * format, similar to DenseMatrix( (1,2 3), (4,5,6),... ) syntax, which is defined in [[breeze.linalg.Matrix]].
-    * This constructor was written for JavaCompatible.
-    * @param values
-    * @return
-    */
+   * format, similar to DenseMatrix( (1,2 3), (4,5,6),... ) syntax, which is defined in [[breeze.linalg.Matrix]].
+   * This constructor was written for JavaCompatible.
+   * @param values
+   * @return
+   */
   def array2ToDm[@specialized(Int, Double, Long, Float) V: ClassTag](values: Array[Array[V]]): DenseMatrix[V] = {
 
-    val tempRows= values.length
+    val tempRows = values.length
     val tempCols = values(0).length
-    val tempret = new Array[V]( tempRows*tempCols )
+    val tempret = new Array[V](tempRows * tempCols)
 
     var rowIndex = 0
     var tempretIndex = 0
-    while(rowIndex < tempRows) {
+    while (rowIndex < tempRows) {
       //raggedness check
       require(values(rowIndex).length == tempCols, "Input Array[Array[V]] is ragged!")
       rowIndex += 1
     }
 
     var colIndex = 0
-    while(colIndex < tempCols) {
+    while (colIndex < tempCols) {
       rowIndex = 0
       while (rowIndex < tempRows) {
         tempret(tempretIndex) = values(rowIndex)(colIndex)

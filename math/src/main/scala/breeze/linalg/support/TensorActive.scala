@@ -14,13 +14,13 @@ package support
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 /**
  * Class that is kind of like a collection view of the active pairs (non-zero pairs, for now) in a tensor.
  * @author dlwh
  */
-class TensorActive[K, V, +This](private val tensor: This)(implicit ev: This <:< Tensor[K, V])  {
+class TensorActive[K, V, +This](private val tensor: This)(implicit ev: This <:< Tensor[K, V]) {
   def iterator = tensor.activeIterator
   def keys = new TensorKeys[K, V, This](tensor, true)(ev)
   def values = new TensorValues[K, V, This](tensor, true)(ev)

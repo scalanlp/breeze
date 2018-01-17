@@ -14,13 +14,14 @@ package breeze.util
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 /**
  *
  * @author dlwh, dramage
  */
 object Terminal {
+
   /** The width of the console, or 80 if it can't be discovered. */
 //  lazy val (terminalWidth: Int, terminalHeight : Int) = {
 //    try {

@@ -9,28 +9,21 @@ object Common {
     organization := "org.scalanlp",
     Keys.scalaVersion := Common.scalaVersion,
     Keys.crossScalaVersions := Common.crossScalaVersions,
-
     scalacOptions ++= Seq("-deprecation", "-language:_"),
-
     javacOptions ++= Seq("-target", "1.7", "-source", "1.7"),
-
     credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
-
     libraryDependencies ++= Seq(
       "junit" % "junit" % "4.12" % "test",
       "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
       "org.scalatest" %% "scalatest" % "3.0.1" % "test"
     ),
-
     resolvers ++= Seq(
       Resolver.mavenLocal,
       Resolver.sonatypeRepo("snapshots"),
       Resolver.sonatypeRepo("releases"),
       Resolver.typesafeRepo("releases")
     ),
-
     testOptions in Test += Tests.Argument("-oDF"),
-
     pomExtra :=
       <url>http://scalanlp.org/</url>
         <licenses>
@@ -48,18 +41,17 @@ object Common {
           </developer>
         </developers>,
     publishMavenStyle := true,
-
     publishTo := {
       val yes = isSnapshot.value
       val nexus = "https://oss.sonatype.org/"
       if (yes)
-        Some("snapshots" at nexus + "content/repositories/snapshots")
+        Some("snapshots".at(nexus + "content/repositories/snapshots"))
       else
-        Some("releases" at nexus + "service/local/staging/deploy/maven2")
+        Some("releases".at(nexus + "service/local/staging/deploy/maven2"))
     },
-
     publishArtifact in Test := false,
-
-    pomIncludeRepository := { _ => false }
+    pomIncludeRepository := { _ =>
+      false
+    }
   )
 }

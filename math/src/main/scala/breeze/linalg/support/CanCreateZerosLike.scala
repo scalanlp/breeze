@@ -13,10 +13,9 @@ package breeze.linalg.support
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 import breeze.math.{Semiring, Field}
 import scala.reflect.ClassTag
-
 
 /**
  * Marker for being able to create a collection of the same shape as
@@ -26,26 +25,27 @@ import scala.reflect.ClassTag
  */
 trait CanCreateZerosLike[From, +To] {
   // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
-  def apply(from: From):To
+  def apply(from: From): To
 }
 
 object CanCreateZerosLike {
 
-  class OpArray[@specialized V:ClassTag:Semiring]
-  extends CanCreateZerosLike[Array[V],Array[V]] {
-    override def apply(from : Array[V]) = {
+  class OpArray[@specialized V: ClassTag: Semiring] extends CanCreateZerosLike[Array[V], Array[V]] {
+    override def apply(from: Array[V]) = {
       Array.fill(from.length)(implicitly[Semiring[V]].zero)
     }
   }
 
-  class OpMapValues[From,A,To](implicit op : Semiring[A], map : CanMapValues[From,A,A,To]) extends CanCreateZerosLike[From,To] {
-    def apply(v : From) = map(v, _ => op.zero)
+  class OpMapValues[From, A, To](implicit op: Semiring[A], map: CanMapValues[From, A, A, To])
+      extends CanCreateZerosLike[From, To] {
+    def apply(v: From) = map(v, _ => op.zero)
   }
 
-  implicit def opMapValues[From,A,To](implicit map : CanMapValues[From,A,A,To], op : Field[A])
-  : CanCreateZerosLike[From,To] = new OpMapValues[From,A,To]()(op, map)
+  implicit def opMapValues[From, A, To](
+      implicit map: CanMapValues[From, A, A, To],
+      op: Field[A]): CanCreateZerosLike[From, To] = new OpMapValues[From, A, To]()(op, map)
 
-  implicit def OpArrayAny[V:ClassTag:Semiring] : OpArray[V] =
+  implicit def OpArrayAny[V: ClassTag: Semiring]: OpArray[V] =
     new OpArray[V]
 
   implicit object OpArrayI extends OpArray[Int]
@@ -54,4 +54,3 @@ object CanCreateZerosLike {
   implicit object OpArrayF extends OpArray[Float]
   implicit object OpArrayD extends OpArray[Double]
 }
-

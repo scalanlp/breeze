@@ -8,9 +8,9 @@ import breeze.stats.hist
 import scala.util.Random
 
 /**
-  * Created by huaminli on 7/25/16.
-  */
-class shuffleTest extends FunSuite with Matchers{
+ * Created by huaminli on 7/25/16.
+ */
+class shuffleTest extends FunSuite with Matchers {
   test("The shuffle is uniformly random") {
     implicit val rb = RandBasis.mt0
     // Create a histogram to record the first entry of array that has been
@@ -37,7 +37,7 @@ class shuffleTest extends FunSuite with Matchers{
     // and should be able to shuffle it back to its original state.
     val n = 10
     val testIndex = shuffle(Array.tabulate(n)(i => i))
-    val testArr = Array.fill[Double](n) {Random.nextGaussian()}
+    val testArr = Array.fill[Double](n) { Random.nextGaussian() }
 
     // shuffles randomly
     val result1 = shuffle(testArr, testIndex)
@@ -45,8 +45,8 @@ class shuffleTest extends FunSuite with Matchers{
     val result2 = shuffle(testArr, testIndex, false)
     // inverse shuffles
     val result3 = shuffle(result2, testIndex, true)
-    assert(result1 sameElements result2)
-    assert(testArr sameElements result3)
+    assert(result1.sameElements(result2))
+    assert(testArr.sameElements(result3))
   }
 
 }

@@ -13,14 +13,14 @@ package breeze.linalg.support
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 /**
  * Capability trait for slices like denseVector(0 until 5)
  * @author dlwh
  */
 trait CanSlice[-From, -Slice, +To] {
- def apply(from: From, slice: Slice):To
+  def apply(from: From, slice: Slice): To
 }
 
 /**
@@ -28,5 +28,5 @@ trait CanSlice[-From, -Slice, +To] {
  * @author dlwh
  */
 trait CanSlice2[-From, -Slice1, -Slice2, +To] {
-  def apply(from: From, slice: Slice1, slice2: Slice2):To
+  def apply(from: From, slice: Slice1, slice2: Slice2): To
 }

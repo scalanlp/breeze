@@ -12,7 +12,7 @@ import breeze.plot.Plot.Listener
  *
  * @author dlwh, dramage
  */
-class Figure(name: String, private var rows_ : Int  = 1, private var cols_ :Int = 1) {
+class Figure(name: String, private var rows_ : Int = 1, private var cols_ : Int = 1) {
 
   protected val plots = ArrayBuffer[Option[Plot]]()
 
@@ -23,13 +23,12 @@ class Figure(name: String, private var rows_ : Int  = 1, private var cols_ :Int 
   def subplot(i: Int) = selectPlot(i)
 
   def clearPlot(i: Int) {
-    if(i < plots.length) plots(i) = None
+    if (i < plots.length) plots(i) = None
     refresh()
   }
 
-
   /** Selects the given subplot.  Note that select is 0-based, and is therefore incompatible with matlab and Scalala */
-  def subplot(rows:Int,cols:Int,select:Int) : Plot  = {
+  def subplot(rows: Int, cols: Int, select: Int): Plot = {
     this.rows = rows
     this.cols = cols
 
@@ -39,41 +38,39 @@ class Figure(name: String, private var rows_ : Int  = 1, private var cols_ :Int 
 
   /** Width of figure on screen (or in image) */
   def width = width_
-  def width_=(newwidth : Int) : Unit  = {
+  def width_=(newwidth: Int): Unit = {
     width_ = newwidth
     refresh()
   }
 
   /** Height of figure on screen (or in image) */
   def height = height_
-  def height_=(newheight : Int) : Unit  = {
+  def height_=(newheight: Int): Unit = {
     height_ = newheight
     refresh()
   }
 
   /** How many rows of plots are in the figure */
   def rows = rows_
-  def rows_=(newrows : Int) : Unit  = {
+  def rows_=(newrows: Int): Unit = {
     rows_ = newrows
     refresh()
   }
 
   /** How many cols of plots are in the figure */
   def cols = cols_
-  def cols_=(newcols : Int) : Unit  = {
+  def cols_=(newcols: Int): Unit = {
     cols_ = newcols
     refresh()
   }
 
-
   /** Visibility state of the plot */
   private var visible_ = true
   def visible = visible_
-  def visible_=(newvis : Boolean) : Unit = {
+  def visible_=(newvis: Boolean): Unit = {
     visible_ = newvis
     frame.setVisible(visible_)
   }
-
 
   /** JPanel holding for drawing subplots in this figure. */
   private val contents = {
@@ -82,9 +79,8 @@ class Figure(name: String, private var rows_ : Int  = 1, private var cols_ :Int 
     _c
   }
 
-
   /** The Swing frame for this plot */
-  private lazy val frame : JFrame = {
+  private lazy val frame: JFrame = {
     val f = new JFrame(name)
     f.setSize(width_, height_)
     f.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE)
@@ -108,19 +104,19 @@ class Figure(name: String, private var rows_ : Int  = 1, private var cols_ :Int 
   }
 
   /** Redraws the figure */
-  def refresh()  = {
+  def refresh() = {
     while (plots.length < rows * cols) {
       plots += None
     }
     while (plots.length > rows * cols) {
-      plots.remove(plots.length-1)
+      plots.remove(plots.length - 1)
     }
 
     SwingUtilities.invokeLater(new Runnable {
       def run() {
         contents.removeAll()
         contents.setSize(width_, height_)
-        contents.setLayout(new java.awt.GridLayout(rows,cols))
+        contents.setLayout(new java.awt.GridLayout(rows, cols))
         for (plot <- plots) {
           contents.add(plot match { case Some(plot) => plot.panel; case None => new JPanel() })
         }
@@ -132,23 +128,23 @@ class Figure(name: String, private var rows_ : Int  = 1, private var cols_ :Int 
     frame.repaint()
   }
 
-  def drawPlots(g2d : Graphics2D) {
-    val plotWidth  = contents.getWidth / cols
+  def drawPlots(g2d: Graphics2D) {
+    val plotWidth = contents.getWidth / cols
     val plotHeight = contents.getHeight / rows
     var px = 0; var py = 0
     for (opt <- plots) {
       opt match {
         case Some(plot) =>
-          plot.chart.draw(g2d, new java.awt.Rectangle(px*plotWidth, py*plotHeight, plotWidth, plotHeight))
+          plot.chart.draw(g2d, new java.awt.Rectangle(px * plotWidth, py * plotHeight, plotWidth, plotHeight))
         case None => {}
       }
-      px = (px +1)%cols
-      if(px == 0) py = (py + 1)%rows
+      px = (px + 1) % cols
+      if (px == 0) py = (py + 1) % rows
     }
   }
 
   /** Saves the current figure at the requested dpi to the given filename. */
-  def saveas(filename : String, dpi : Int = 72) {
+  def saveas(filename: String, dpi: Int = 72) {
     // make sure figure is visible or saved image will come up empty
     refresh()
 
@@ -160,27 +156,27 @@ class Figure(name: String, private var rows_ : Int  = 1, private var cols_ :Int 
       dpi = dpi)
   }
 
-  private def selectPlot(i: Int)  = {
+  private def selectPlot(i: Int) = {
     var j = plots.length
-    while(j < i) {
+    while (j < i) {
       plots += None
       j += 1
     }
-    val plot = if(i >= plots.length) {
+    val plot = if (i >= plots.length) {
       plots += Some(new Plot)
       plots.last.get
     } else {
-      if(plots(i) == None) {
+      if (plots(i) == None) {
         plots(i) = Some(new Plot)
       }
       plots(i).get
     }
 
-    plot listen new Plot.Listener {
+    plot.listen(new Plot.Listener {
       def refresh(pl: Plot) {
         Figure.this.refresh()
       }
-    }
+    })
 
     plot
 
@@ -190,10 +186,8 @@ class Figure(name: String, private var rows_ : Int  = 1, private var cols_ :Int 
 
 object Figure {
 
-  def apply(name: String):Figure = new Figure(name)
-  def apply():Figure = apply("Figure " + figureNumber.getAndIncrement)
+  def apply(name: String): Figure = new Figure(name)
+  def apply(): Figure = apply("Figure " + figureNumber.getAndIncrement)
 
   private val figureNumber = new AtomicInteger(0)
 }
-
-
