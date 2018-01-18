@@ -20,10 +20,10 @@ import breeze.math.Semiring
  */
 object LU extends UFunc {
 
-  case class LU[M](P: M, L: M, U: M)
+  case class lu[M](P: M, L: M, U: M)
 
-  type DenseLU = LU[DenseMatrix[Double]]
-  type SDenseLU = LU[DenseMatrix[Float]]
+  type DenseLU = lu[DenseMatrix[Double]]
+  type SDenseLU = lu[DenseMatrix[Float]]
 
   implicit object LU_DM_Impl_Double extends Impl[DenseMatrix[Double], (DenseMatrix[Double], Array[Int])] {
     def apply( X: DenseMatrix[Double]): (DenseMatrix[Double], Array[Int]) = {
@@ -78,31 +78,37 @@ object LU extends UFunc {
     }
   }
 
-  // Note: Not sure if this method could be faster or not, but after hours of searching how to 
-  // convert from the vector to the matrix, this is what I came up with.
   /**
-    * Creates the permutation matrix from a pivot vector (result from LAPACK)
+    * Creates the permutation matrix from the IPIV (pivot) vector result from LAPACK
+    * Traditionally, the decomposition is represented as P * X = L * U
+    * Thus for a matrix with R rows and C columns, the matrix P should be of size
+    * RxR in order to preserve the original dimension of the matrix X.
+    *
     * @param ipiv - The pivot vector returned from LAPACK
-    * @param rows - The number of rows in the original matrix
-    * @param cols - The number of columns in the original matrix
-    * @return The permutation matrix, P from the LU decomposition of the form (P * L * U)
+    * @param rows - The number of rows in the X matrix
+    * @param cols - The number of columns in the X matrix
+    * @return The permutation matrix, P from the LU decomposition of the form (P * X = L * U)
+    *         size RxR
      */
   def createPermutationMatrix(ipiv: Array[Int], rows:Int, cols: Int): DenseMatrix[Double] = {
-    val ipiv_dim: Int = scala.math.min(rows, cols)
+    val ipiv_dim: Int = scala.math.max(rows, cols)
 
     // Create permutation matrix
-    val pm: DenseMatrix[Double] = DenseMatrix.eye[Double](rows)
-    var tmp: Double = 0.0
-    for ( r1 <- ipiv_dim - 1 to 0 by -1) {
-      val r2: Int = ipiv(r1) - 1
-      if (r1 != r2) {
-        for (col <- 0 until rows) {
-          // Swap pm(r1, col) with pm(row2, col)
-          tmp = pm(r1, col)
-          pm(r1, col) = pm(r2, col)
-          pm(r2, col) = tmp
-        }
-      }
+    val indices: Array[Int] = new Array[Int](rows)
+    for(i <- 0 until rows) {
+      indices(i) = i
+    }
+
+    for(i <- 0 until ipiv.length) {
+      val j = ipiv(i) - 1
+      val t = indices(i)
+      indices(i) = indices(j)
+      indices(j) = t
+    }
+
+    val pm: DenseMatrix[Double] = DenseMatrix.zeros[Double](rows, rows)
+    for(i <- 0 until rows) {
+      pm(indices(i), i) = 1
     }
     pm
   }
@@ -118,7 +124,7 @@ object LU extends UFunc {
     val P: DenseMatrix[Double] = createPermutationMatrix(ipiv, X.rows, X.cols)
     val L: DenseMatrix[Double] = lowerTriangular(X)
     val U: DenseMatrix[Double] = upperTriangular(X)
-    LU(P, L, U)
+    lu(P, L, U)
   }
 
   /** 
