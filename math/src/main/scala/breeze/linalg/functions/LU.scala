@@ -91,9 +91,6 @@ object LU extends UFunc {
     *         size RxR
      */
   def createPermutationMatrix(ipiv: Array[Int], rows:Int, cols: Int): DenseMatrix[Double] = {
-    val ipiv_dim: Int = scala.math.max(rows, cols)
-
-    // Create permutation matrix
     val indices: Array[Int] = new Array[Int](rows)
     for(i <- 0 until rows) {
       indices(i) = i
