@@ -24,7 +24,7 @@ import scala.language.experimental.macros
 import scala.reflect.NameTransformer.encode
 import scala.reflect.macros.Context
 
-class impl {
+object impl {
   def assertImpl(c: Context)(condition: c.Expr[Boolean]): c.Expr[Unit] = {
     import c.universe._
 
