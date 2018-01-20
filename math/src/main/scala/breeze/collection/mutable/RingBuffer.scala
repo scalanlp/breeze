@@ -8,14 +8,15 @@ import scala.collection.mutable
 import scala.reflect.ClassTag
 
 // https://en.wikipedia.org/wiki/Circular_buffer
-class RingBuffer[A](private val buf: Array[A]) extends Buffer[A] with BufferLike[A, RingBuffer[A]] with mutable.Builder[A, scala.Seq[A]] {
+class RingBuffer[A](private val buf: Array[A])
+    extends Buffer[A]
+    with BufferLike[A, RingBuffer[A]]
+    with mutable.Builder[A, scala.Seq[A]] {
   def this(capacity: Int)(implicit ct: ClassTag[A]) = this(new Array[A](capacity))
-
 
   def capacity: Int = buf.length
   // if the buffer is full, we set endPos = -1
   def isFull: Boolean = endPos < 0
-
 
   private var startPos = 0
   private var endPos = 0
@@ -56,7 +57,6 @@ class RingBuffer[A](private val buf: Array[A]) extends Buffer[A] with BufferLike
     this
   }
 
-
   def clear(): Unit = {
     startPos = 0; endPos = 0
   }
@@ -69,12 +69,11 @@ class RingBuffer[A](private val buf: Array[A]) extends Buffer[A] with BufferLike
     this
   }
 
-
   /**
-    * Note that we treat the semantics of this operation as "truncate to length n,
-    * add elems, then add the 'old' elements after n," erasing elements as necessary.
-    * Note that it's entirely possible that some or even all of the inserted elements
-    * will be overwritten by current elements.
+   * Note that we treat the semantics of this operation as "truncate to length n,
+   * add elems, then add the 'old' elements after n," erasing elements as necessary.
+   * Note that it's entirely possible that some or even all of the inserted elements
+   * will be overwritten by current elements.
     **/
   override def insertAll(n: Int, elems: scala.Traversable[A]): Unit = {
     if (n == length) {
@@ -113,7 +112,6 @@ class RingBuffer[A](private val buf: Array[A]) extends Buffer[A] with BufferLike
       this ++= elements
     }
   }
-
 
   def remove(n: Int): A = {
     val v = apply(n)
@@ -175,7 +173,8 @@ object RingBuffer {
         new GrowingBuilder[A, RingBuffer[A]](new RingBuffer[A](from.capacity))
       }
 
-      override def apply(): mutable.Builder[A, RingBuffer[A]] = throw new UnsupportedOperationException("Sorry, need a capacity")
+      override def apply(): mutable.Builder[A, RingBuffer[A]] =
+        throw new UnsupportedOperationException("Sorry, need a capacity")
     }
   }
 }

@@ -14,7 +14,7 @@ package breeze.optimize
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 import breeze.math.{InnerProductModule, MutableVectorField}
 import breeze.linalg.norm
@@ -35,18 +35,13 @@ import breeze.util.SerializableLogging
  * @param projection projection operations
  * @param curvilinear if curvilinear true, do the projection inside line search in place of doing it in chooseDescentDirection
  */
-class SpectralProjectedGradient[T](val projection: T => T = { (t: T) => t },
-                                   tolerance: Double = 1e-6,
-                                   suffDec: Double = 1e-4,
-                                   fvalMemory: Int = 30,
-                                   alphaMax: Double = 1e10,
-                                   alphaMin: Double = 1e-10,
-                                   bbMemory: Int = 10,
-                                   maxIter: Int = -1,
-                                   val initFeas: Boolean = false,
-                                   val curvilinear: Boolean = false,
-                                   val bbType: Int = 1,
-                                   val maxSrcht: Int = 30)(implicit space: MutableVectorField[T, Double]) extends FirstOrderMinimizer[T, DiffFunction[T]](fvalMemory = fvalMemory, maxIter = maxIter, tolerance = tolerance) with Projecting[T] with SerializableLogging {
+class SpectralProjectedGradient[T](val projection: T => T = { (t: T) =>
+  t
+}, tolerance: Double = 1e-6, suffDec: Double = 1e-4, fvalMemory: Int = 30, alphaMax: Double = 1e10, alphaMin: Double = 1e-10, bbMemory: Int = 10, maxIter: Int = -1, val initFeas: Boolean = false, val curvilinear: Boolean = false, val bbType: Int = 1, val maxSrcht: Int = 30)(
+    implicit space: MutableVectorField[T, Double])
+    extends FirstOrderMinimizer[T, DiffFunction[T]](fvalMemory = fvalMemory, maxIter = maxIter, tolerance = tolerance)
+    with Projecting[T]
+    with SerializableLogging {
   import space._
   case class History(alphaBB: Double, fvals: IndexedSeq[Double])
 
@@ -61,16 +56,21 @@ class SpectralProjectedGradient[T](val projection: T => T = { (t: T) => t },
    * else
    *  alpha = (s'*y)/(y'*y);
    */
-  protected def bbAlpha(s: T, y: T) : Double = {
+  protected def bbAlpha(s: T, y: T): Double = {
     var alpha =
-      if (bbType == 1) (s dot s) / (s dot y)
-      else (s dot y) / (y dot y)
+      if (bbType == 1)(s.dot(s)) / (s.dot(y))
+      else (s.dot(y)) / (y.dot(y))
     if (alpha <= alphaMin || alpha > alphaMax) alpha = 1.0
     if (alpha.isNaN) alpha = 1.0
     alpha
   }
 
-  override protected def updateHistory(newX: T, newGrad: T, newVal: Double, f: DiffFunction[T], oldState: State): History = {
+  override protected def updateHistory(
+      newX: T,
+      newGrad: T,
+      newVal: Double,
+      f: DiffFunction[T],
+      oldState: State): History = {
     val s = newX - oldState.x
     val y = newGrad - oldState.grad
     History(bbAlpha(s, y), (newVal +: oldState.history.fvals).take(bbMemory))
@@ -88,8 +88,8 @@ class SpectralProjectedGradient[T](val projection: T => T = { (t: T) => t },
   }
 
   override protected def determineStepSize(state: State, f: DiffFunction[T], direction: T): Double = {
-    val fb = if (state.history.fvals.isEmpty) state.value else state.value max state.history.fvals.max
-    val normGradInDir = state.grad dot direction
+    val fb = if (state.history.fvals.isEmpty) state.value else state.value.max(state.history.fvals.max)
+    val normGradInDir = state.grad.dot(direction)
 
     var gamma =
       if (state.iter == 0) scala.math.min(1.0, 1.0 / norm(state.grad))
@@ -101,7 +101,7 @@ class SpectralProjectedGradient[T](val projection: T => T = { (t: T) => t },
 
     //TO DO :
     // 1. Add cubic interpolation and see it's performance. Bisection did not work for L1 projection
-    val search = new BacktrackingLineSearch(fb, maxIterations=maxSrcht)
+    val search = new BacktrackingLineSearch(fb, maxIterations = maxSrcht)
     gamma = search.minimize(searchFun, gamma)
 
     if (gamma < 1e-10) {
@@ -112,19 +112,20 @@ class SpectralProjectedGradient[T](val projection: T => T = { (t: T) => t },
   }
 
   // because of the projection, we have to do our own verstion
-  private def functionFromSearchDirection[T, I](f: DiffFunction[T], x: T, direction: T, project: T=>T)(implicit prod: InnerProductModule[T, Double]):DiffFunction[Double] = new DiffFunction[Double] {
+  private def functionFromSearchDirection[T, I](f: DiffFunction[T], x: T, direction: T, project: T => T)(
+      implicit prod: InnerProductModule[T, Double]): DiffFunction[Double] = new DiffFunction[Double] {
     import prod._
 
     /** calculates the value at a point */
     override def valueAt(alpha: Double): Double = f.valueAt(project(x + direction * alpha))
 
     /** calculates the gradient at a point */
-    override def gradientAt(alpha: Double): Double = f.gradientAt(project(x + direction * alpha)) dot direction
+    override def gradientAt(alpha: Double): Double = f.gradientAt(project(x + direction * alpha)).dot(direction)
 
     /** Calculates both the value and the gradient at a point */
     def calculate(alpha: Double): (Double, Double) = {
       val (ff, grad) = f.calculate(x + direction * alpha)
-      ff -> (grad dot direction)
+      ff -> (grad.dot(direction))
     }
   }
 }

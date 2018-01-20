@@ -25,9 +25,9 @@ import org.scalacheck.{Arbitrary, Gen}
 import scala.reflect.ClassTag
 
 /**
-  * Code for generating test examples for use with scalacheck etc
-  *
-  * @author dlwh
+ * Code for generating test examples for use with scalacheck etc
+ *
+ * @author dlwh
   **/
 object RandomInstanceSupport {
 
@@ -55,29 +55,33 @@ object RandomInstanceSupport {
     Gen.oneOf(genDenseVector(len, gen), genSparseVector(len, gen), genHashVector(len, gen))
   }
 
-  def genDenseVector[T: ClassTag](len: Int, gen: Gen[T]): Gen[DenseVector[T]] = for {
-    offset <- Gen.choose(0, 10)
-    stride <- Gen.choose(1, 4)
-    list <- Gen.listOfN(len * stride + offset, gen)
-  } yield {
-    DenseVector(list:_*).apply(offset until (len * stride + offset) by stride)
-  }
+  def genDenseVector[T: ClassTag](len: Int, gen: Gen[T]): Gen[DenseVector[T]] =
+    for {
+      offset <- Gen.choose(0, 10)
+      stride <- Gen.choose(1, 4)
+      list <- Gen.listOfN(len * stride + offset, gen)
+    } yield {
+      DenseVector(list: _*).apply(offset until (len * stride + offset) by stride)
+    }
 
-  def genSparseVector[T: ClassTag: Zero: Semiring](len: Int, gen: Gen[T]): Gen[SparseVector[T]] = genVectorBuilder(len, gen).map(_.toSparseVector)
+  def genSparseVector[T: ClassTag: Zero: Semiring](len: Int, gen: Gen[T]): Gen[SparseVector[T]] =
+    genVectorBuilder(len, gen).map(_.toSparseVector)
 
-  def genHashVector[T: ClassTag: Zero](len: Int, gen: Gen[T]): Gen[HashVector[T]] = for {
-    nnz <- Gen.choose(0, len)
-    il <- Gen.listOfN(nnz, Gen.choose(0, len - 1))
-    list <- Gen.listOfN(nnz, gen)
-  } yield {
-    HashVector(len)(il zip list:_*)
-  }
+  def genHashVector[T: ClassTag: Zero](len: Int, gen: Gen[T]): Gen[HashVector[T]] =
+    for {
+      nnz <- Gen.choose(0, len)
+      il <- Gen.listOfN(nnz, Gen.choose(0, len - 1))
+      list <- Gen.listOfN(nnz, gen)
+    } yield {
+      HashVector(len)(il.zip(list): _*)
+    }
 
-  def genVectorBuilder[T: ClassTag: Semiring](len: Int, gen: Gen[T]): Gen[VectorBuilder[T]] = for {
-    nnz <- Gen.choose(0, len)
-    il <- Gen.listOfN(nnz, Gen.choose(0, len - 1))
-    list <- Gen.listOfN(nnz, gen)
-  } yield {
-    VectorBuilder(len)(il zip list:_*)
-  }
+  def genVectorBuilder[T: ClassTag: Semiring](len: Int, gen: Gen[T]): Gen[VectorBuilder[T]] =
+    for {
+      nnz <- Gen.choose(0, len)
+      il <- Gen.listOfN(nnz, Gen.choose(0, len - 1))
+      list <- Gen.listOfN(nnz, gen)
+    } yield {
+      VectorBuilder(len)(il.zip(list): _*)
+    }
 }

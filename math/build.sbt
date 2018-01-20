@@ -2,13 +2,13 @@ name := "breeze"
 
 Common.commonSettings
 
-addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.full)
+addCompilerPlugin(("org.scalamacros" %% "paradise" % "2.1.0").cross(CrossVersion.full))
 
 libraryDependencies ++= Seq(
   "com.github.fommil.netlib" % "core" % "1.1.2",
   "net.sourceforge.f2j" % "arpack_combined_all" % "0.1",
   "net.sf.opencsv" % "opencsv" % "2.3",
-  "com.github.rwl" % "jtransforms" % "2.4.0",
+  "com.github.wendykierp" % "JTransforms" % "3.1",
   "org.apache.commons" % "commons-math3" % "3.2",
   "org.spire-math" %% "spire" % "0.13.0",
   "com.chuusai" %% "shapeless" % "2.3.2",
@@ -22,8 +22,8 @@ libraryDependencies := {
   val sv = scalaVersion.value
   val deps = libraryDependencies.value
   sv match {
-    case x if x startsWith "2.10" =>
-      deps :+ compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
+    case x if x.startsWith("2.10") =>
+      deps :+ compilerPlugin(("org.scalamacros" % "paradise" % "2.1.0").cross(CrossVersion.full))
     case _ =>
       deps
   }
@@ -53,10 +53,8 @@ testOptions in Test += Tests.Setup(classLoader =>
       .invoke(null, "ROOT")
   } catch {
     case _: Exception =>
-  }
-)
+})
 
 fork := true
 
 javaOptions := Seq("-Xmx4g")
-

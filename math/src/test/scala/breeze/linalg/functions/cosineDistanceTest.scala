@@ -4,7 +4,7 @@ import breeze.linalg.{SparseVector, DenseVector}
 import org.scalatest.FunSuite
 
 class cosineDistanceTest extends FunSuite {
-  
+
   test("it should be correct with dense vectors") {
     val v1 = DenseVector(1.0, 2.0)
     val v2 = DenseVector(3.0, 4.0)

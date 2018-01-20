@@ -30,18 +30,17 @@ trait UnivariateContinuousDistrTestBase extends FunSuite with Checkers {
   type Distr <: ContinuousDistr[Double]
   implicit def arbDistr: Arbitrary[Distr]
 
-
   test("pdf gets the same fraction of things as the sampler") {
     check(Prop.forAll { (distr: Distr) =>
       val samples = distr.sample(10000)
       val (low, high) = {
-        if(samples(0) < samples(1)) (samples(0), samples(1))
+        if (samples(0) < samples(1)) (samples(0), samples(1))
         else (samples(1), samples(0))
       }
 
       val inRange = samples.count(x => x >= low && x <= high) / (samples.length * 1.0)
       val prob = trapezoid(distr.pdf _, low, high, 2000)
-      if(prob >= 0 && math.abs(inRange - prob) <= 4E-2) {
+      if (prob >= 0 && math.abs(inRange - prob) <= 4E-2) {
         true
       } else {
         info(s"low: $low, high: $high")

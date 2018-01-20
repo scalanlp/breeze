@@ -13,9 +13,9 @@ package breeze.linalg
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 import operators._
-import scala.{specialized=>spec}
+import scala.{specialized => spec}
 import support._
 import breeze.util.{Sorting, ArrayUtil}
 import breeze.math.{Field, MutableVectorSpace, Semiring, Ring}
@@ -23,7 +23,6 @@ import breeze.storage.Zero
 import scala.reflect.ClassTag
 import breeze.macros.expand
 import breeze.generic.UFunc.{UImpl2, InPlaceImpl2}
-
 
 /**
  * A VectorBuilder is basically an unsorted Sparse Vector. Two parallel
@@ -43,32 +42,25 @@ import breeze.generic.UFunc.{UImpl2, InPlaceImpl2}
  * @author dlwh
  */
 @SerialVersionUID(1)
-class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array[Int],
-                                                private var _data: Array[E],
-                                                private var used: Int,
-                                                var length: Int)
-                                               (implicit ring: Semiring[E],
-                                                zero: Zero[E]) extends NumericOps[VectorBuilder[E]] with Serializable {
+class VectorBuilder[@spec(Double, Int, Float, Long) E](
+    private var _index: Array[Int],
+    private var _data: Array[E],
+    private var used: Int,
+    var length: Int)(implicit ring: Semiring[E], zero: Zero[E])
+    extends NumericOps[VectorBuilder[E]]
+    with Serializable {
 
-
-  def this(length: Int, initialNonZero: Int = 0)(implicit ring: Semiring[E],
-                                                 man: ClassTag[E],
-                                                 zero: Zero[E]) = {
+  def this(length: Int, initialNonZero: Int = 0)(implicit ring: Semiring[E], man: ClassTag[E], zero: Zero[E]) = {
     this(new Array[Int](initialNonZero), new Array[E](initialNonZero), 0, length)
   }
 
-  def this()(implicit ring: Semiring[E],
-             man: ClassTag[E],
-             zero: Zero[E]) = this(-1)
-
+  def this()(implicit ring: Semiring[E], man: ClassTag[E], zero: Zero[E]) = this(-1)
 
   def size = length
 
-
-  def data  = _data
+  def data = _data
   def index = _index
   def activeSize = used
-
 
   def repr = this
 
@@ -79,8 +71,8 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
 
     var off = 0
     var acc = ring.zero
-    while(off < used) {
-      if(_index(off) == i) acc = ring.+(acc, _data(off))
+    while (off < used) {
+      if (_index(off) == i) acc = ring.+(acc, _data(off))
       off += 1
     }
 
@@ -96,9 +88,9 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
     boundsCheck(i)
     var marked = false
     var off = 0
-    while(off < used) {
-      if(_index(off) == i) {
-        if(!marked)
+    while (off < used) {
+      if (_index(off) == i) {
+        if (!marked)
           _data(off) = v
         else _data(off) = ring.zero
         marked = true
@@ -111,7 +103,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
   def add(i: Int, v: E) {
     boundsCheck(i)
 
-    if(_data.length <= used) {
+    if (_data.length <= used) {
       reallocate(math.max(_data.length * 2, 1))
     }
 
@@ -133,7 +125,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
   def isActive(rawIndex: Int) = rawIndex < used && rawIndex > 0
 
   override def toString = {
-   (index.iterator zip data.iterator).take(used).mkString(s"VectorBuilder($length)(",", ", ")")
+    index.iterator.zip(data.iterator).take(used).mkString(s"VectorBuilder($length)(", ", ", ")")
   }
 
   def copy: VectorBuilder[E] = {
@@ -145,7 +137,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
   }
 
   def reserve(nnz: Int) {
-    if(nnz < _data.length) {
+    if (nnz < _data.length) {
       reallocate(nnz)
     }
   }
@@ -160,8 +152,8 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
     implicit val man = ClassTag[E](_data.getClass.getComponentType.asInstanceOf[Class[E]])
     val hv = HashVector.zeros[E](length)
     var i = 0
-    while(i < used) {
-      hv(index(i)) = ring.+(hv(index(i)),data(i))
+    while (i < used) {
+      hv(index(i)) = ring.+(hv(index(i)), data(i))
       i += 1
     }
     hv
@@ -178,76 +170,66 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
     implicit val man = ClassTag[E](_data.getClass.getComponentType.asInstanceOf[Class[E]])
     val hv = DenseVector.zeros[E](length)
     var i = 0
-    while(i < used) {
-      hv(index(i)) = ring.+(hv(index(i)),data(i))
+    while (i < used) {
+      hv(index(i)) = ring.+(hv(index(i)), data(i))
       i += 1
     }
     hv
   }
 
-  def toSparseVector:SparseVector[E] = toSparseVector(alreadySorted=false)
+  def toSparseVector: SparseVector[E] = toSparseVector()
 
   def toSparseVector(alreadySorted: Boolean = false, keysAlreadyUnique: Boolean = false): SparseVector[E] = {
     requirePositiveLength()
     val index = this.index
     val values = this.data
-    if(alreadySorted && keysAlreadyUnique) {
+    if (alreadySorted && keysAlreadyUnique) {
       return new SparseVector(index, values, used, length)
     }
 
-    val outIndex = new Array[Int](index.length)
-    val outValues = ArrayUtil.newArrayLike(values, values.length)
-
-    val ord = if(!alreadySorted) sortedIndices(index) else ArrayUtil.range(0, used)
-    if(ord.length > 0) {
-      outIndex(0) = index(ord(0))
-      outValues(0) = values(ord(0))
-      if(index(ord.last) >= length)
-        throw new RuntimeException("Index " + index(ord.last) + " exceeds dimension " + length)
-      else if (outIndex(0) < 0)
-        throw new RuntimeException("Index " + outIndex(0) + " is less than 0!")
+    val outIndex = ArrayUtil.copyOf(index, used)
+    val outValues = ArrayUtil.copyOf(values, used)
+    if (!alreadySorted) {
+      Sorting.indirectSort(outIndex, outValues, 0, used)
     }
-    var i   = 1
-    var out = 0
-    if(keysAlreadyUnique) {
-      while(i < ord.length) {
-        out += 1
-        outIndex(out) = index(ord(i))
-        outValues(out) = values(ord(i))
-        i += 1
+
+    if (outIndex.length > 0) {
+      if (outIndex(used - 1) >= length) {
+        throw new IndexOutOfBoundsException("Index " + index(used - 1) + " exceeds dimension " + length)
+      } else if (outIndex(0) < 0) {
+        throw new IndexOutOfBoundsException("Index " + outIndex(0) + " is less than 0")
       }
-    } else {
-      while(i < ord.length) {
-        if(outIndex(out) == index(ord(i))) {
-          outValues(out) = ring.+(outValues(out), values(ord(i)))
+    }
+    var i = 1
+    var out = 0
+    if (!keysAlreadyUnique) {
+      while (i < used) {
+        if (outIndex(out) == outIndex(i)) {
+          outValues(out) = ring.+(outValues(out), outValues(i))
         } else {
           out += 1
-          outIndex(out) = index(ord(i))
-          outValues(out) = values(ord(i))
+          outIndex(out) = outIndex(i)
+          outValues(out) = outValues(i)
         }
         i += 1
       }
+    } else {
+      out = used
     }
 
-    if(ord.length > 0)
+    if (outIndex.length > 0)
       out += 1
 
-    require(ord.length == 0 || length > outIndex.last, "Index out of bounds in constructing sparse vector.")
     new SparseVector(outIndex, outValues, out, length)
   }
-
-  private def sortedIndices(indices: Array[Int]) = {
-    Sorting.indexSort(indices, 0, used)
-  }
-
 
   def compact() {
     val ah = toSparseVector
     clear()
     reallocate(ah.activeSize)
     var i = 0
-    while(i < ah.iterableSize) {
-      if(ah.isActive(i)) {
+    while (i < ah.iterableSize) {
+      if (ah.isActive(i)) {
         add(ah.index(i), ah.data(i))
       }
       i += 1
@@ -258,12 +240,12 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
     used = 0
   }
 
-
-  override def equals(p1: Any): Boolean = (this eq p1.asInstanceOf[AnyRef]) || (p1 match {
-    case vb: VectorBuilder[_] =>
-      this.length == vb.length && vb.toHashVector == this.toHashVector
-    case _ => false
-  })
+  override def equals(p1: Any): Boolean =
+    (this eq p1.asInstanceOf[AnyRef]) || (p1 match {
+      case vb: VectorBuilder[_] =>
+        this.length == vb.length && vb.toHashVector == this.toHashVector
+      case _ => false
+    })
 
   /**
    * Sets the underlying sparse array to use this data
@@ -301,7 +283,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
 
   def toVector = {
     requirePositiveLength()
-    if(size < 40 || activeSize > size / 2) {
+    if (size < 40 || activeSize > size / 2) {
       toDenseVector
     } else {
       toSparseVector
@@ -312,59 +294,61 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](private var _index: Array
 
 object VectorBuilder extends VectorBuilderOps {
 
-  def zeros[@spec(Double, Int, Float, Long) V: ClassTag:Semiring:Zero](size: Int, initialNonZero: Int = 16) = new VectorBuilder(size, initialNonZero)
-  def apply[@spec(Double, Int, Float, Long) V:Semiring:Zero](values: Array[V]) = new VectorBuilder(Array.range(0,values.length), values, values.length, values.length)
+  def zeros[@spec(Double, Int, Float, Long) V: ClassTag: Semiring: Zero](size: Int, initialNonZero: Int = 16) =
+    new VectorBuilder(size, initialNonZero)
+  def apply[@spec(Double, Int, Float, Long) V: Semiring: Zero](values: Array[V]) =
+    new VectorBuilder(Array.range(0, values.length), values, values.length, values.length)
 
-  def apply[V:ClassTag:Semiring:Zero](values: V*):VectorBuilder[V] = apply(values.toArray)
-  def fill[@spec(Double, Int, Float, Long) V:ClassTag:Semiring:Zero](size: Int)(v: =>V):VectorBuilder[V] = apply(Array.fill(size)(v))
-  def tabulate[@spec(Double, Int, Float, Long) V:ClassTag:Semiring:Zero](size: Int)(f: Int=>V):VectorBuilder[V]= apply(Array.tabulate(size)(f))
+  def apply[V: ClassTag: Semiring: Zero](values: V*): VectorBuilder[V] = apply(values.toArray)
+  def fill[@spec(Double, Int, Float, Long) V: ClassTag: Semiring: Zero](size: Int)(v: => V): VectorBuilder[V] =
+    apply(Array.fill(size)(v))
+  def tabulate[@spec(Double, Int, Float, Long) V: ClassTag: Semiring: Zero](size: Int)(f: Int => V): VectorBuilder[V] =
+    apply(Array.tabulate(size)(f))
 
-  def apply[V:ClassTag:Semiring:Zero](length: Int)(values: (Int, V)*) = {
+  def apply[V: ClassTag: Semiring: Zero](length: Int)(values: (Int, V)*) = {
     val r = zeros[V](length)
-    for( (i, v) <- values) {
+    for ((i, v) <- values) {
       r.add(i, v)
     }
     r
   }
 
-
   // implicits
-  class CanCopyBuilder[@spec(Double, Int, Float, Long) V:ClassTag:Semiring:Zero] extends CanCopy[VectorBuilder[V]] {
+  class CanCopyBuilder[@spec(Double, Int, Float, Long) V: ClassTag: Semiring: Zero] extends CanCopy[VectorBuilder[V]] {
     def apply(v1: VectorBuilder[V]) = {
       v1.copy
     }
   }
 
-  class CanZerosBuilder[@spec(Double, Int, Float, Long) V:ClassTag:Semiring:Zero] extends CanCreateZerosLike[VectorBuilder[V], VectorBuilder[V]] {
+  class CanZerosBuilder[@spec(Double, Int, Float, Long) V: ClassTag: Semiring: Zero]
+      extends CanCreateZerosLike[VectorBuilder[V], VectorBuilder[V]] {
     def apply(v1: VectorBuilder[V]) = {
       v1.zerosLike
     }
   }
 
-  implicit def canCopyBuilder[@spec(Double, Int, Float, Long) V: ClassTag: Semiring:Zero]: CanCopyBuilder[V] = {
+  implicit def canCopyBuilder[@spec(Double, Int, Float, Long) V: ClassTag: Semiring: Zero]: CanCopyBuilder[V] = {
     new CanCopyBuilder[V]
   }
-  implicit def canZerosBuilder[@spec(Double, Int, Float, Long) V: ClassTag: Semiring:Zero]: CanZerosBuilder[V] = {
+  implicit def canZerosBuilder[@spec(Double, Int, Float, Long) V: ClassTag: Semiring: Zero]: CanZerosBuilder[V] = {
     new CanZerosBuilder[V]
   }
 
-  implicit def canZeroBuilder[@spec(Double, Int, Float, Long) V:Semiring:Zero:ClassTag]: CanCreateZeros[VectorBuilder[V], Int] = {
-    new CanCreateZeros[VectorBuilder[V],Int] {
+  implicit def canZeroBuilder[@spec(Double, Int, Float, Long) V: Semiring: Zero: ClassTag]
+    : CanCreateZeros[VectorBuilder[V], Int] = {
+    new CanCreateZeros[VectorBuilder[V], Int] {
       def apply(d: Int): VectorBuilder[V] = zeros(d)
     }
   }
 
-  implicit def negFromScale[@spec(Double, Int, Float, Long)  V]
-            (implicit scale: OpMulScalar.Impl2[VectorBuilder[V], V, VectorBuilder[V]],
-             field: Ring[V]):OpNeg.Impl[VectorBuilder[V], VectorBuilder[V]] = {
+  implicit def negFromScale[@spec(Double, Int, Float, Long) V](
+      implicit scale: OpMulScalar.Impl2[VectorBuilder[V], V, VectorBuilder[V]],
+      field: Ring[V]): OpNeg.Impl[VectorBuilder[V], VectorBuilder[V]] = {
     new OpNeg.Impl[VectorBuilder[V], VectorBuilder[V]] {
-      override def apply(a : VectorBuilder[V]) = {
+      override def apply(a: VectorBuilder[V]) = {
         scale(a, field.negate(field.one))
       }
     }
   }
 
-
 }
-
-

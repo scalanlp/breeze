@@ -26,16 +26,18 @@ object LU extends UFunc {
   type SDenseLU = lu[DenseMatrix[Float]]
 
   implicit object LU_DM_Impl_Double extends Impl[DenseMatrix[Double], (DenseMatrix[Double], Array[Int])] {
-    def apply( X: DenseMatrix[Double]): (DenseMatrix[Double], Array[Int]) = {
+    def apply(X: DenseMatrix[Double]): (DenseMatrix[Double], Array[Int]) = {
 
-      val M    = X.rows
-      val N    = X.cols
-      val Y    = X.copy
-      val ipiv = Array.ofDim[Int](scala.math.min(M,N))
+      val M = X.rows
+      val N = X.cols
+      val Y = X.copy
+      val ipiv = Array.ofDim[Int](scala.math.min(M, N))
       val info = new intW(0)
       lapack.dgetrf(
-        M /* rows */, N /* cols */,
-        Y.data, scala.math.max(1,M) /* LDA */,
+        M /* rows */,
+        N /* cols */,
+        Y.data,
+        scala.math.max(1, M) /* LDA */,
         ipiv /* pivot indices */,
         info
       )
@@ -48,7 +50,8 @@ object LU extends UFunc {
 
   }
 
-  implicit def LU_DM_Cast_Impl_Double[T](implicit cast: T=>Double):Impl[DenseMatrix[T], (DenseMatrix[Double], Array[Int])] = {
+  implicit def LU_DM_Cast_Impl_Double[T](
+      implicit cast: T => Double): Impl[DenseMatrix[T], (DenseMatrix[Double], Array[Int])] = {
     new Impl[DenseMatrix[T], (DenseMatrix[Double], Array[Int])] {
       def apply(v: DenseMatrix[T]): (DenseMatrix[Double], Array[Int]) = {
         import DenseMatrix.canMapValues
@@ -59,14 +62,16 @@ object LU extends UFunc {
 
   implicit object LU_DM_Impl_Float extends Impl[DenseMatrix[Float], (DenseMatrix[Float], Array[Int])] {
     def apply(X: DenseMatrix[Float]): (DenseMatrix[Float], Array[Int]) = {
-      val M    = X.rows
-      val N    = X.cols
-      val Y    = X.copy
-      val ipiv = Array.ofDim[Int](scala.math.min(M,N))
+      val M = X.rows
+      val N = X.cols
+      val Y = X.copy
+      val ipiv = Array.ofDim[Int](scala.math.min(M, N))
       val info = new intW(0)
       lapack.sgetrf(
-        M /* rows */, N /* cols */,
-        Y.data, scala.math.max(1,M) /* LDA */,
+        M /* rows */,
+        N /* cols */,
+        Y.data,
+        scala.math.max(1, M) /* LDA */,
         ipiv /* pivot indices */,
         info
       )

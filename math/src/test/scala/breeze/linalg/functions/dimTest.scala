@@ -13,16 +13,12 @@ import org.scalatest.FunSuite
 class dimTest extends FunSuite {
 
   test("dim ( DenseMatrix )") {
-    val mbig = DenseMatrix(
-      (0,1,2,3,4,5),
-      (3,4,5,6,7,8),
-      (3,4,5,6,7,8),
-      (5,4,5,9,7,8))
-    assert(dim(mbig) == (4,6))
+    val mbig = DenseMatrix((0, 1, 2, 3, 4, 5), (3, 4, 5, 6, 7, 8), (3, 4, 5, 6, 7, 8), (5, 4, 5, 9, 7, 8))
+    assert(dim(mbig) == (4, 6))
   }
 
   test("dim ( DenseVector )") {
-    val dv = DenseVector(1,2,3,4,5,6,7,8)
+    val dv = DenseVector(1, 2, 3, 4, 5, 6, 7, 8)
     assert(dim(dv) == 8)
   }
 }

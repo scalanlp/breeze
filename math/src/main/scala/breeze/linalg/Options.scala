@@ -29,17 +29,17 @@ object Options {
   // <editor-fold defaultstate="collapsed" desc=" OptPadMode ">
 
   sealed abstract class OptPadMode extends Opt
-  case object Zero    extends OptPadMode
-  case object Max     extends OptPadMode
-  case object Min     extends OptPadMode
-  case object Mean    extends OptPadMode
-  case object Median  extends OptPadMode
+  case object Zero extends OptPadMode
+  case object Max extends OptPadMode
+  case object Min extends OptPadMode
+  case object Mean extends OptPadMode
+  case object Median extends OptPadMode
   case class Value[T](n: T) extends OptPadMode
   //  case class ValueInt(n: Int) extends OptPadMode
   //  case class ValueLong(n: Long) extends OptPadMode
   //  case class ValueFloat(n: Float) extends OptPadMode
   //  case class ValueDouble(n: Double) extends OptPadMode
-  case object Wrap    extends OptPadMode
+  case object Wrap extends OptPadMode
   case object Reflect extends OptPadMode
 
   implicit def tToOptModeValue[T](n: T): OptPadMode = Value(n)

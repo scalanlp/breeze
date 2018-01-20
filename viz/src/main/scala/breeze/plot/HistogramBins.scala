@@ -1,6 +1,5 @@
 package breeze.plot
 
-
 /**
  * Bins for a histogram.  These can be implicitly constructed from:
  * <pre>
@@ -18,10 +17,10 @@ sealed trait HistogramBins
  *
  * @author dramage
  */
-case class StaticHistogramBins(splits : Array[Double])
-extends HistogramBins {
+case class StaticHistogramBins(splits: Array[Double]) extends HistogramBins {
+
   /** Returns the bin for the given value, between 0 and splits.length inclusive. */
-  def bin(value : Double) = {
+  def bin(value: Double) = {
     var i = 0
     while (i < splits.length && value > splits(i)) {
       i += 1
@@ -36,10 +35,9 @@ extends HistogramBins {
  *
  * @author dramage
  */
-case class DynamicHistogramBins(number : Int = 10)
-extends HistogramBins {
-  def apply(lower : Double, upper : Double) =
-    StaticHistogramBins(Array.tabulate(number-1)(i => lower + ((i + 1.0) / (number)) * (upper - lower)))
+case class DynamicHistogramBins(number: Int = 10) extends HistogramBins {
+  def apply(lower: Double, upper: Double) =
+    StaticHistogramBins(Array.tabulate(number - 1)(i => lower + ((i + 1.0) / (number)) * (upper - lower)))
 }
 
 /**
@@ -48,12 +46,12 @@ extends HistogramBins {
  * @author dramage
  */
 object HistogramBins {
-  implicit def fromNumber(number : Int) : HistogramBins =
+  implicit def fromNumber(number: Int): HistogramBins =
     DynamicHistogramBins(number)
 
 //  implicit def fromSplits[S,K,V](splits : S)(implicit tt : CanViewAsTensor1[S,K,V], v : V=>Double) : HistogramBins =
 //    StaticHistogramBins(t.domain(splits).map(d => v(t.get(splits, d))).toArray)
 
-  implicit def fromRange(minMaxCount : (Double,Double,Int)) : HistogramBins =
+  implicit def fromRange(minMaxCount: (Double, Double, Int)): HistogramBins =
     DynamicHistogramBins(minMaxCount._3)(minMaxCount._1, minMaxCount._2)
 }

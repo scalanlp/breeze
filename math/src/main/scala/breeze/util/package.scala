@@ -17,7 +17,6 @@ package object util {
    */
   def readObject[T](loc: File): T = readObject(loc, false)
 
-
   /**
    * Deserializes an object using java serialization
    */
@@ -58,7 +57,7 @@ package object util {
    * @param ignoreSerialVersionUID this is not a safe thing to do, but sometimes...
    * @return
    */
-  def nonstupidObjectInputStream(stream: InputStream, ignoreSerialVersionUID: Boolean = false):ObjectInputStream =  {
+  def nonstupidObjectInputStream(stream: InputStream, ignoreSerialVersionUID: Boolean = false): ObjectInputStream = {
     new ObjectInputStream(stream) with SerializableLogging {
       @throws[IOException]
       @throws[ClassNotFoundException]
@@ -72,11 +71,10 @@ package object util {
         }
       }
 
-
       // from http://stackoverflow.com/questions/1816559/make-java-runtime-ignore-serialversionuids
       override protected def readClassDescriptor(): ObjectStreamClass = {
         var resultClassDescriptor = super.readClassDescriptor(); // initially streams descriptor
-        if(ignoreSerialVersionUID) {
+        if (ignoreSerialVersionUID) {
 
           var localClass: Class[_] = null; // the class in the local JVM that this descriptor represents.
           try {
@@ -88,7 +86,7 @@ package object util {
           }
 
           val localClassDescriptor = ObjectStreamClass.lookup(localClass)
-           // only if class implements serializable
+          // only if class implements serializable
           if (localClassDescriptor != null) {
             val localSUID = localClassDescriptor.getSerialVersionUID
             val streamSUID = resultClassDescriptor.getSerialVersionUID
@@ -131,6 +129,7 @@ package object util {
    * You can write XXX in your code and get an exception at runtime for any expression.
    */
   def XXX = sys.error("XXX Not Implemented")
+
   /**
    * Similar to the TODO expression, except this one is for types.
    */
@@ -148,8 +147,8 @@ package object util {
    * Computes the source file location of the nth parent.
    * 0 is equivalent to LOCATION
    */
-  @noinline def CALLER(nth : Int) = {
-    val e = new Exception().getStackTrace()(nth+1)
+  @noinline def CALLER(nth: Int) = {
+    val e = new Exception().getStackTrace()(nth + 1)
     e.getFileName() + ":" + e.getLineNumber()
   }
 
@@ -160,30 +159,30 @@ package object util {
     val r = Runtime.getRuntime
     val free = r.freeMemory / (1024 * 1024)
     val total = r.totalMemory / (1024 * 1024)
-    ((total - free) + "M used; " + free  + "M free; " + total  + "M total")
+    ((total - free) + "M used; " + free + "M free; " + total + "M total")
   }
 
   /**
    * prints a and returns it.
    */
-  def trace[T](a: T) = {println(a); a}
+  def trace[T](a: T) = { println(a); a }
 
   // this should be a separate trait but Scala is freaking out
   class SeqExtras[T](s: Seq[T]) {
     def argmax(implicit ordering: Ordering[T]) = {
-      s.zipWithIndex.reduceLeft( (a,b) => if(ordering.gt(a._1,b._1)) a else b)._2
+      s.zipWithIndex.reduceLeft((a, b) => if (ordering.gt(a._1, b._1)) a else b)._2
     }
     def argmin(implicit ordering: Ordering[T]) = {
-      s.zipWithIndex.reduceLeft( (a,b) => if(ordering.lt(a._1,b._1)) a else b)._2
+      s.zipWithIndex.reduceLeft((a, b) => if (ordering.lt(a._1, b._1)) a else b)._2
     }
 
-    def unfold[U,To](init: U)(f: (U,T)=>U)(implicit cbf: CanBuildFrom[Seq[T], U, To]) = {
+    def unfold[U, To](init: U)(f: (U, T) => U)(implicit cbf: CanBuildFrom[Seq[T], U, To]) = {
       val builder = cbf.apply(s)
       builder.sizeHint(s.size + 1)
       var u = init
       builder += u
-      for( t <- s) {
-        u = f(u,t)
+      for (t <- s) {
+        u = f(u, t)
         builder += u
       }
       builder.result()
@@ -194,51 +193,47 @@ package object util {
 
   implicit def arraySeqExtras[T](s: Array[T]) = new SeqExtras(s)
 
-
   implicit class AwesomeBitSet(val bs: java.util.BitSet) extends AnyVal {
     def apply(r: Int) = bs.get(r)
 
-    def iterator:Iterator[Int] = new BSIterator(bs)
+    def iterator: Iterator[Int] = new BSIterator(bs)
 
-    def map[U, C](f: Int=>U)(implicit cbf: CanBuildFrom[java.util.BitSet, U, C]) = {
+    def map[U, C](f: Int => U)(implicit cbf: CanBuildFrom[java.util.BitSet, U, C]) = {
       val r: mutable.Builder[U, C] = cbf(bs)
       r.sizeHint(bs.size)
-      iterator foreach { i =>
+      iterator.foreach { i =>
         r += f(i)
       }
 
       r.result()
     }
 
-    def foreach[U](f: Int=>U) {
+    def foreach[U](f: Int => U) {
       var i = bs.nextSetBit(0)
-      while(i != -1) {
+      while (i != -1) {
         f(i)
-        i = bs.nextSetBit(i+1)
+        i = bs.nextSetBit(i + 1)
       }
 
     }
 
     def &=(other: BitSet) = {
-      bs and other
+      bs.and(other)
       bs
     }
-
 
     def &~=(other: BitSet) = {
-      bs andNot other
+      bs.andNot(other)
       bs
     }
 
-
-    def |=(other: BitSet)= {
-      bs or other
+    def |=(other: BitSet) = {
+      bs.or(other)
       bs
     }
-
 
     def ^=(other: BitSet) = {
-      bs xor other
+      bs.xor(other)
       bs
     }
 
@@ -275,16 +270,16 @@ package object util {
     def next() = {
       assert(currentBit != -1)
       val cur = currentBit
-      currentBit = bs.nextSetBit(cur+1)
+      currentBit = bs.nextSetBit(cur + 1)
       cur
     }
   }
 
-  implicit def _bitsetcbf[U]:CanBuildFrom[java.util.BitSet, U, Set[U]] = new CanBuildFrom[java.util.BitSet, U, Set[U]] {
-    def apply(from: BitSet): mutable.Builder[U, Set[U]] = Set.newBuilder[U]
-    def apply(): mutable.Builder[U, Set[U]] = Set.newBuilder[U]
-  }
-
+  implicit def _bitsetcbf[U]: CanBuildFrom[java.util.BitSet, U, Set[U]] =
+    new CanBuildFrom[java.util.BitSet, U, Set[U]] {
+      def apply(from: BitSet): mutable.Builder[U, Set[U]] = Set.newBuilder[U]
+      def apply(): mutable.Builder[U, Set[U]] = Set.newBuilder[U]
+    }
 
   implicit class AwesomeScalaBitSet(val bs: scala.collection.BitSet) extends AnyVal {
     def toJavaBitSet = {
@@ -295,4 +290,3 @@ package object util {
   }
 
 }
-

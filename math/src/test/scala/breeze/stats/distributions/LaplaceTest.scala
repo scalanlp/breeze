@@ -14,7 +14,7 @@ package breeze.stats.distributions
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 import org.scalatest._;
 import org.scalatest.junit._;
@@ -24,9 +24,13 @@ import org.junit.runner.RunWith
 import org.apache.commons.math3.random.MersenneTwister
 
 @RunWith(classOf[JUnitRunner])
-class LaplaceTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase with MomentsTestBase[Double] with HasCdfTestBase {
+class LaplaceTest
+    extends FunSuite
+    with Checkers
+    with UnivariateContinuousDistrTestBase
+    with MomentsTestBase[Double]
+    with HasCdfTestBase {
   import Arbitrary.arbitrary
-
 
   override val numSamples = 50000
 
@@ -35,8 +39,12 @@ class LaplaceTest extends FunSuite with Checkers with UnivariateContinuousDistrT
   def fromDouble(x: Double) = x
 
   implicit def arbDistr = Arbitrary {
-    for(location <- arbitrary[Double].map{x => math.abs(x) % 1000.0 + 1.1}; // Laplace pdf at 0 not defined when location == 1
-        scale <- arbitrary[Double].map {x => math.abs(x) % 8.0 + 1.0}) yield new Laplace(location,scale)(new RandBasis(new MersenneTwister(0)))
+    for (location <- arbitrary[Double].map { x =>
+        math.abs(x) % 1000.0 + 1.1
+      }; // Laplace pdf at 0 not defined when location == 1
+      scale <- arbitrary[Double].map { x =>
+        math.abs(x) % 8.0 + 1.0
+      }) yield new Laplace(location, scale)(new RandBasis(new MersenneTwister(0)))
   }
 
   override type Distr = Laplace

@@ -3,15 +3,15 @@ package breeze.stats.distributions
 import breeze.numerics.constants.{γ, Pi}
 import breeze.numerics.{exp, log}
 
-
 /**
  * TODO
  *
  * @author dlwh
  **/
-case class Gumbel(location: Double, scale: Double)
-                 (implicit rand: RandBasis = Rand)
-  extends ContinuousDistr[Double] with Moments[Double, Double] with HasCdf {
+case class Gumbel(location: Double, scale: Double)(implicit rand: RandBasis = Rand)
+    extends ContinuousDistr[Double]
+    with Moments[Double, Double]
+    with HasCdf {
   def mean: Double = location + scale * γ
 
   def mode: Double = location
@@ -32,12 +32,12 @@ case class Gumbel(location: Double, scale: Double)
   }
 
   def unnormalizedLogPdf(x: Double): Double = {
-    val z = (x-location)/scale
+    val z = (x - location) / scale
     -(z + exp(-z))
   }
 
-  def cdf(x: Double):Double = {
-    math.exp(-math.exp(-(x-location)/scale))
+  def cdf(x: Double): Double = {
+    math.exp(-math.exp(-(x - location) / scale))
   }
 
   override def probability(x: Double, y: Double): Double = {

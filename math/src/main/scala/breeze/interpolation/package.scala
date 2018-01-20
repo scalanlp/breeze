@@ -17,9 +17,7 @@ package object interpolation {
     def apply(x: T): T
   }
 
-  abstract class HandyUnivariateInterpolator[T:ClassTag:Field:Ordering]
-      (x_coords: Vector[T],
-       y_coords: Vector[T])
+  abstract class HandyUnivariateInterpolator[T: ClassTag: Field: Ordering](x_coords: Vector[T], y_coords: Vector[T])
       extends UnivariateInterpolator[T] {
 
     if (x_coords.size != x_coords.toArray.toSet.size)
@@ -29,9 +27,15 @@ package object interpolation {
     if (x_coords.size == 0)
       throw new Exception("need to provide at least one pair of coordinates")
 
-    private val nodes = x_coords.toArray zip y_coords.toArray sortBy {n => n._1}
-    protected val X: Array[T] = nodes map {n => n._1}
-    protected val Y: Array[T] = nodes map {n => n._2}
+    private val nodes = x_coords.toArray.zip(y_coords.toArray).sortBy { n =>
+      n._1
+    }
+    protected val X: Array[T] = nodes.map { n =>
+      n._1
+    }
+    protected val Y: Array[T] = nodes.map { n =>
+      n._2
+    }
 
     private val ord = implicitly[Ordering[T]]
     import ord.mkOrderingOps
@@ -46,14 +50,14 @@ package object interpolation {
     protected def interpolate(x: T): T
 
     protected def extrapolate(x: T): T = {
-      throw new IndexOutOfBoundsException("Out of the domain [" + X(0) + "," + X(X.size-1) + "]")
+      throw new IndexOutOfBoundsException("Out of the domain [" + X(0) + "," + X(X.size - 1) + "]")
     }
 
-    protected def bisearch(x: T): Int = bisearch(0, X.length-1, x)
+    protected def bisearch(x: T): Int = bisearch(0, X.length - 1, x)
 
-    private def bisearch(low: Int, high: Int, x: T): Int = (low+high)/2 match {
+    private def bisearch(low: Int, high: Int, x: T): Int = (low + high) / 2 match {
       case mid if low == high => mid
-      case mid if X(mid) < x => bisearch(mid+1, high, x)
+      case mid if X(mid) < x => bisearch(mid + 1, high, x)
       case mid => bisearch(low, mid, x)
     }
   }

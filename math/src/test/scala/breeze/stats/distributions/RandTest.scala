@@ -27,8 +27,8 @@ import org.scalatest.FunSuite
  **/
 class RandTest extends FunSuite {
   test("randInt is always non-negative") {
-    assert( RandBasis.mt0.randInt.sample(10000).forall(_ >= 0) )
-    assert( RandBasis.mt0.randLong.sample(10000).forall(_ >= 0) )
+    assert(RandBasis.mt0.randInt.sample(10000).forall(_ >= 0))
+    assert(RandBasis.mt0.randLong.sample(10000).forall(_ >= 0))
   }
 
   test("RandBasis.withSeed ensures distinct seeds in different threads") {
@@ -36,13 +36,15 @@ class RandTest extends FunSuite {
     var t2 = new Gaussian(0, 1).sample(10)
     var t3 = new Gaussian(0, 1).sample(10)
 
-    assert { t2 != t3 }  // sanity check
+    assert { t2 != t3 } // sanity check
 
-    val threads = for (i <- 1 to 2) yield new Thread {
-      override def run() { t2 = new Gaussian(0, 1).sample(10) }
-    }
-    threads map(_.start)
-    threads map(_.join)
+    val threads = for (i <- 1 to 2)
+      yield
+        new Thread {
+          override def run() { t2 = new Gaussian(0, 1).sample(10) }
+        }
+    threads.map(_.start)
+    threads.map(_.join)
 
     // ensure that both threads use different seeds
     assert { t2 != t3 }

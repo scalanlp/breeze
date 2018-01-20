@@ -14,9 +14,9 @@ package breeze.storage
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
-import scala.{specialized=>spec}
+import scala.{specialized => spec}
 
 /**
  * Interface for an unboxed iterable, of sorts, for
@@ -25,6 +25,7 @@ import scala.{specialized=>spec}
  * @author dlwh
  */
 trait Storage[@spec(Double, Int, Float, Long) V] {
+
   /**
    * Returns the actual flat array of elements used.
    * @return
@@ -74,11 +75,11 @@ trait Storage[@spec(Double, Int, Float, Long) V] {
    * @param i index into index/data arrays
    * @return
    */
-  def isActive(i: Int):Boolean
+  def isActive(i: Int): Boolean
 
   /**
    * Only gives true if isActive would return true for all i. (May be false anyway)
    * @return
    */
-  def allVisitableIndicesActive:Boolean
+  def allVisitableIndicesActive: Boolean
 }

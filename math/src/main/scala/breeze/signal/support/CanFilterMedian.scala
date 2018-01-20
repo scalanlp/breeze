@@ -21,26 +21,29 @@ object CanFilterMedian {
   //Int, Long and Float will calculate in Double (see algorithm, needs infinitesimal small numbers for ordering)
   @expand
   implicit def dvFilterMedianT[@expand.args(Int, Long, Double, Float) T]: CanFilterMedian[T] =
-
     new CanFilterMedian[T] {
       def apply(data: DenseVector[T], windowLength: Int, overhang: OptOverhang): DenseVector[T] = {
 
-        require(isOdd(windowLength), "median filter can only take odd windowLength values, since even values will cause a half-frame time shift")
+        require(
+          isOdd(windowLength),
+          "median filter can only take odd windowLength values, since even values will cause a half-frame time shift")
         require(data.length >= 3, "data must be longer than 3")
         require(windowLength >= 1, "window length must be longer than 1")
 
-        if( windowLength == 1 ) data.copy
+        if (windowLength == 1) data.copy
         else {
 
           var tempret = new Array[T](data.length)
-          val halfWindow = (windowLength-1)/2
+          val halfWindow = (windowLength - 1) / 2
           var index = halfWindow
 
-          overhang match{
+          overhang match {
             case OptOverhang.PreserveLength => {
               //calculate beginning and end separately, for partial-windows (no overhang)
-              for( indexFromBeginning <- 0 until halfWindow ) tempret(indexFromBeginning) = median( data(0 to indexFromBeginning*2) )
-              for( indexToEnd <- 0 until halfWindow ) tempret(data.length-indexToEnd-1) = median( data(data.length-2*indexToEnd-1 until data.length) )
+              for (indexFromBeginning <- 0 until halfWindow)
+                tempret(indexFromBeginning) = median(data(0 to indexFromBeginning * 2))
+              for (indexToEnd <- 0 until halfWindow)
+                tempret(data.length - indexToEnd - 1) = median(data(data.length - 2 * indexToEnd - 1 until data.length))
             }
             case OptOverhang.None => {}
             case opt: OptOverhang => throw new IllegalArgumentException("Option " + opt + " is invalid here.")
@@ -53,18 +56,18 @@ object CanFilterMedian {
           tempret(index) = currentMedian
           index += 1
 
-          while( index < data.length - halfWindow ){
+          while (index < data.length - halfWindow) {
             //data value which the window has passed by
-            val nowObsoleteWindowValue: T = data(index-halfWindow-1)
-            val newWindowValue: T = data(index+halfWindow)
+            val nowObsoleteWindowValue: T = data(index - halfWindow - 1)
+            val newWindowValue: T = data(index + halfWindow)
 
             //if the obsolete value is not equal to the new value...
-            if( nowObsoleteWindowValue != newWindowValue ) {
+            if (nowObsoleteWindowValue != newWindowValue) {
               //replace now obsolete value with new data value within temporary array
               findAndReplaceInstanceInPlace(tempDataExtract, nowObsoleteWindowValue, newWindowValue, halfWindow)
               //if the new value and old value lie on different sides of the current Median,
-              if( (nowObsoleteWindowValue >= currentMedian || newWindowValue >= currentMedian)
-                    && (nowObsoleteWindowValue <= currentMedian || newWindowValue <= currentMedian) ){
+              if ((nowObsoleteWindowValue >= currentMedian || newWindowValue >= currentMedian)
+                && (nowObsoleteWindowValue <= currentMedian || newWindowValue <= currentMedian)) {
                 //then the median needs to be recalculated
                 currentMedian = quickSelectImpl(tempDataExtract, halfWindow)
               }
@@ -83,32 +86,32 @@ object CanFilterMedian {
 
       }
 
-      def findAndReplaceInstanceInPlace( arr: Array[T], fromValue: T, toValue: T, pivotPoint: Int): Unit = {
+      def findAndReplaceInstanceInPlace(arr: Array[T], fromValue: T, toValue: T, pivotPoint: Int): Unit = {
         val pivotValue: T = arr(pivotPoint)
         var found = false
 
-        if( fromValue == pivotValue ) {
+        if (fromValue == pivotValue) {
           arr(pivotPoint) = toValue
           found = true
-        } else if( fromValue < pivotValue ){
+        } else if (fromValue < pivotValue) {
           var count = pivotPoint - 1
-          while( count >= 0 ){
-            if( arr(count) == fromValue ) {
+          while (count >= 0) {
+            if (arr(count) == fromValue) {
               arr(count) = toValue
               count = Int.MinValue
               found = true
-            }else {
+            } else {
               count -= 1
             }
           }
         } else { //if( fromValue > pivotValue ){
           var count = pivotPoint + 1
-          while( count < arr.length ){
-            if( arr(count) == fromValue ){
+          while (count < arr.length) {
+            if (arr(count) == fromValue) {
               arr(count) = toValue
               count = Int.MaxValue
               found = true
-            }else {
+            } else {
               count += 1
             }
           }
@@ -118,7 +121,5 @@ object CanFilterMedian {
       }
 
     }
-
-
 
 }

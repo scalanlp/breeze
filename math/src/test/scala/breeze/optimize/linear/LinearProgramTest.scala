@@ -26,7 +26,6 @@ class LinearProgramTest extends FunSuite {
     assert(result.valueOf(x2) === 78)
   }*/
 
-
   test("maximize") {
     //    http://www.tu-chemnitz.de/mathematik/discrete/manuals/cplex/doc/getstart/html/cpxGSilocplex13.0html
     val lp = new LinearProgram()
@@ -35,11 +34,10 @@ class LinearProgramTest extends FunSuite {
     val x1 = Real()
     val x2 = Real()
 
-    val lpp =  ( ( x0 + x1 * 2 + x2 * 3 )
-      subjectTo ( x0 * -1 + x1 + x2 <= 20 )
-      subjectTo ( x0 - x1 * 3 + x2 <= 30 )
-      subjectTo ( x0 <= 40 )
-      )
+    val lpp = (x0 + x1 * 2 + x2 * 3)
+      .subjectTo(x0 * -1 + x1 + x2 <= 20)
+      .subjectTo(x0 - x1 * 3 + x2 <= 30)
+      .subjectTo(x0 <= 40)
 
     val result = maximize(lpp)
 
@@ -54,12 +52,11 @@ class LinearProgramTest extends FunSuite {
     val x2 = Real()
     val x3 = Real()
 
-    val lpp = ( (x0 * 0.5 + x1 * 3 + x2 + x3 * 4 )
-      subjectTo ( x0 + x1 + x2 + x3 <= 40 )
-      subjectTo ( x0 * 2 + x1 - x2 - x3 >= 10 )
-      subjectTo ( x3 - x1 >= 10 )
-      subjectTo ( List(x0, x1, x2, x3).map(x => x >= 0): _* )
-      )
+    val lpp = (x0 * 0.5 + x1 * 3 + x2 + x3 * 4)
+      .subjectTo(x0 + x1 + x2 + x3 <= 40)
+      .subjectTo(x0 * 2 + x1 - x2 - x3 >= 10)
+      .subjectTo(x3 - x1 >= 10)
+      .subjectTo(List(x0, x1, x2, x3).map(x => x >= 0): _*)
 
     val res = minimize(lpp)
     println(res.result)
@@ -81,6 +78,6 @@ class LinearProgramTest extends FunSuite {
     assert(result.valueOf(x1) === 1)
     assert(result.valueOf(x2) === 1)
   }
-  */
+ */
 
 }

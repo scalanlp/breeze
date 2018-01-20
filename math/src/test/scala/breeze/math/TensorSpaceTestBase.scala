@@ -14,7 +14,7 @@ package breeze.math
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 import breeze.linalg.{norm, normalize}
 import org.scalacheck.Prop
 
@@ -22,7 +22,6 @@ import org.scalacheck.Prop
  *
  * @author dlwh
  */
-
 trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
   implicit val space: MutableEnumeratedCoordinateField[V, I, S]
 
@@ -33,56 +32,55 @@ trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
 
   // norm
   test("norm positive homogeneity") {
-    check(Prop.forAll{ (a: V, s: S) =>
+    check(Prop.forAll { (a: V, s: S) =>
       (norm(a * s) - norm(s) * norm(a)) <= TOL * norm(a * s)
     })
   }
 
   test("norm triangle inequality") {
-    check(Prop.forAll{ (trip: (V, V, V)) =>
+    check(Prop.forAll { (trip: (V, V, V)) =>
       val (a, b, c) = trip
       ((1.0 - TOL) * norm(a + b) <= norm(b) + norm(a))
     })
   }
 
   test("norm(v) == 0 iff v == 0") {
-    check(Prop.forAll{ (a: V) =>
+    check(Prop.forAll { (a: V) =>
       val z = zeroLike(a)
-      norm(z) == 0.0 && ( close(z, a, TOL) || norm(a) != 0.0)
+      norm(z) == 0.0 && (close(z, a, TOL) || norm(a) != 0.0)
     })
   }
-
 
   test("dot product distributes over vector addition") {
     check(Prop.forAll { (trip: (V, V, V)) =>
       val (a, b, c) = trip
-      val res = scalars.close(scalars.+(a dot b, a dot c), a dot (b + c), TOL * tolRef(a, b, c))
+      val res = scalars.close(scalars.+(a.dot(b), a.dot(c)), a.dot(b + c), TOL * tolRef(a, b, c))
       if (!res)
-        println(scalars.+(a dot b, a dot c) + " " + (a dot (b + c)))
+        println(scalars.+(a.dot(b), a.dot(c)) + " " + (a.dot(b + c)))
       res
     })
   }
 
   test("dot product associates with scalar multiplication") {
-    check(Prop.forAll{ (trip: (V, V, V), s: S) =>
+    check(Prop.forAll { (trip: (V, V, V), s: S) =>
       val (a, b, _) = trip
       val tol = TOL * tolRef(a, b)
-      scalars.close(scalars.*(a dot b,s), a dot (b *:* s), tol ) &&
-      scalars.close(scalars.*(s, a dot b), (a *:* s) dot (b), tol )
+      scalars.close(scalars.*(a.dot(b), s), a.dot(b *:* s), tol) &&
+      scalars.close(scalars.*(s, a.dot(b)), (a *:* s).dot(b), tol)
     })
   }
 
   // zip map values
   test("zip map of + is the same as +") {
-    check(Prop.forAll{ (trip: (V, V, V)) =>
+    check(Prop.forAll { (trip: (V, V, V)) =>
       val (a, b, _) = trip
-      zipMapValues.map(a,b,{scalars.+(_:S,_:S)}) == (a + b)
+      zipMapValues.map(a, b, { scalars.+(_: S, _: S) }) == (a + b)
     })
 
   }
 
   test("Elementwise mult of vectors distributes over vector addition") {
-    check(Prop.forAll{ (trip: (V, V, V)) =>
+    check(Prop.forAll { (trip: (V, V, V)) =>
       val (a, b, c) = trip
       val ab = copy(a)
       ab += b
@@ -94,18 +92,17 @@ trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
   }
 
   test("Vector element-wise mult distributes over vector addition") {
-    check(Prop.forAll{ (trip: (V, V, V)) =>
+    check(Prop.forAll { (trip: (V, V, V)) =>
       val (a, b, c) = trip
-      close( (a + b) *:* c, (b *:* c) + (a *:* c), TOL * tolRef(a, b, c))
+      close((a + b) *:* c, (b *:* c) + (a *:* c), TOL * tolRef(a, b, c))
     })
-
 
 //    check(Prop.forAll{ (trip: (V, V, V), s: S) =>
 //      val (a, b, _) = trip
 //      s == 0 || close( (a + b)/ s, (b / s +a / s), TOL)
 //    })
 
-    check(Prop.forAll{ (trip: (V, V, V)) =>
+    check(Prop.forAll { (trip: (V, V, V)) =>
       val (a, b, c) = trip
       val ab = copy(a)
       ab += b
@@ -122,7 +119,7 @@ trait DoubleValuedTensorSpaceTestBase[V, I] extends TensorSpaceTestBase[V, I, Do
 
   // normalization
   test("normalization sets appropriate norm to 1") {
-    check(Prop.forAll{ (a: V, n: Double) =>
+    check(Prop.forAll { (a: V, n: Double) =>
       val nn = n.abs % 10 + 1.0
       val normalized = breeze.linalg.normalize(a, nn)
       val v = breeze.linalg.norm(normalized, nn)
@@ -130,11 +127,10 @@ trait DoubleValuedTensorSpaceTestBase[V, I] extends TensorSpaceTestBase[V, I, Do
     })
   }
 
-
   test("normalize") {
-    check(Prop.forAll{ (v: V) =>
+    check(Prop.forAll { (v: V) =>
       val aNorm = normalize(v)
-      (norm(aNorm) - 1.0) <=TOL || norm(aNorm) == 0.0
+      (norm(aNorm) - 1.0) <= TOL || norm(aNorm) == 0.0
     })
   }
 

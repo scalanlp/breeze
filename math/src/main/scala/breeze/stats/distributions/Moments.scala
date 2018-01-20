@@ -11,4 +11,3 @@ trait Moments[Mean, Variance] {
   def entropy: Double
   def mode: Mean
 }
-

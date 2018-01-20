@@ -14,7 +14,7 @@ package breeze.util
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 import java.util.Arrays
 
@@ -32,11 +32,7 @@ import spire.syntax.cfor._
  * Array operations on generic arrays, a little faster in general, I hope.
  * @author dlwh
  */
-
 object ArrayUtil {
-
-
-
 
   def fill[V](a: Array[V], offset: Int, length: Int, v: V) {
     a match {
@@ -53,7 +49,6 @@ object ArrayUtil {
     }
   }
 
-
   def copyOf[V](a: Array[V], length: Int): Array[V] = {
     a match {
       case x: Array[Double] => Arrays.copyOf(x, length).asInstanceOf[Array[V]]
@@ -69,8 +64,7 @@ object ArrayUtil {
     }
   }
 
-
-  def copyOfRange[V, VU>:V](a: Array[V], from: Int, to: Int): Array[V] = {
+  def copyOfRange[V, VU >: V](a: Array[V], from: Int, to: Int): Array[V] = {
     a match {
       case x: Array[Double] => Arrays.copyOfRange(x, from, to).asInstanceOf[Array[V]]
       case x: Array[Int] => Arrays.copyOfRange(x, from, to).asInstanceOf[Array[V]]
@@ -102,15 +96,36 @@ object ArrayUtil {
     }
   }
 
+  def sort[V](a: Array[V]) {
+    a match {
+      case x: Array[Double] => Arrays.sort(x)
+      case x: Array[Int] => Arrays.sort(x)
+      case x: Array[Float] => Arrays.sort(x)
+      case x: Array[Long] => Arrays.sort(x)
+      case x: Array[Short] => Arrays.sort(x)
+      case x: Array[Char] => Arrays.sort(x)
+      case x: Array[Byte] => Arrays.sort(x)
+      case x: Array[_] => Arrays.sort(x.asInstanceOf[Array[AnyRef]])
+      case _ => throw new RuntimeException("shouldn't be here!")
+    }
+  }
+
   /**
    * For reasons that I cannot explain java.util.Arrays.equals(Array(0.0), Array(-0.0)) == false
    * This method fixes that for floats and doubles
    */
-  def nonstupidEquals(a: Array[_], aoffset: Int, astride: Int, alength: Int,
-             b: Array[_], boffset: Int, bstride: Int, blength: Int):Boolean = {
+  def nonstupidEquals(
+      a: Array[_],
+      aoffset: Int,
+      astride: Int,
+      alength: Int,
+      b: Array[_],
+      boffset: Int,
+      bstride: Int,
+      blength: Int): Boolean = {
     val ac = a.getClass
-        val bc = b.getClass
-    if(ac != bc || alength != blength) {
+    val bc = b.getClass
+    if (ac != bc || alength != blength) {
       false
     } else {
       a match {
@@ -119,8 +134,8 @@ object ArrayUtil {
           var ai = aoffset
           var bi = boffset
           var i = 0
-          while(i < alength) {
-            if(x(ai) != y(bi)) return false
+          while (i < alength) {
+            if (x(ai) != y(bi)) return false
             ai += astride
             bi += bstride
             i += 1
@@ -131,8 +146,8 @@ object ArrayUtil {
           var ai = aoffset
           var bi = boffset
           var i = 0
-          while(i < alength) {
-            if(x(ai) != y(bi)) return false
+          while (i < alength) {
+            if (x(ai) != y(bi)) return false
             ai += astride
             bi += bstride
             i += 1
@@ -143,10 +158,10 @@ object ArrayUtil {
     }
   }
 
-  def equals(a: Array[_], b: Array[_]) :Boolean = {
+  def equals(a: Array[_], b: Array[_]): Boolean = {
     val ac = a.getClass
     val bc = b.getClass
-    if(ac != bc) false
+    if (ac != bc) false
     else {
       a match {
         case x: Array[Double] => Arrays.equals(a.asInstanceOf[Array[Double]], b.asInstanceOf[Array[Double]])
@@ -162,25 +177,31 @@ object ArrayUtil {
       }
     }
 
-
   }
 
-  def equals(a: Array[_], aoffset: Int, astride: Int, alength: Int,
-             b: Array[_], boffset: Int, bstride: Int, blength: Int):Boolean = {
+  def equals(
+      a: Array[_],
+      aoffset: Int,
+      astride: Int,
+      alength: Int,
+      b: Array[_],
+      boffset: Int,
+      bstride: Int,
+      blength: Int): Boolean = {
     val ac = a.getClass
     val bc = b.getClass
-    if(ac != bc || alength != blength) false
-    else if(aoffset == 0 && astride == 1 && alength == a.length && boffset == 0 && bstride == 1 && blength == b.length) {
-      ArrayUtil.equals(a,b)
-    }else {
+    if (ac != bc || alength != blength) false
+    else if (aoffset == 0 && astride == 1 && alength == a.length && boffset == 0 && bstride == 1 && blength == b.length) {
+      ArrayUtil.equals(a, b)
+    } else {
       a match {
         case x: Array[Double] =>
           val y = b.asInstanceOf[Array[Double]]
           var ai = aoffset
           var bi = boffset
           var i = 0
-          while(i < alength) {
-            if(x(ai) != y(bi)) return false
+          while (i < alength) {
+            if (x(ai) != y(bi)) return false
             ai += astride
             bi += bstride
             i += 1
@@ -191,8 +212,8 @@ object ArrayUtil {
           var ai = aoffset
           var bi = boffset
           var i = 0
-          while(i < alength) {
-            if(x(ai) != y(bi)) return false
+          while (i < alength) {
+            if (x(ai) != y(bi)) return false
             ai += astride
             bi += bstride
             i += 1
@@ -203,8 +224,8 @@ object ArrayUtil {
           var ai = aoffset
           var bi = boffset
           var i = 0
-          while(i < alength) {
-            if(x(ai) != y(bi)) return false
+          while (i < alength) {
+            if (x(ai) != y(bi)) return false
             ai += astride
             bi += bstride
             i += 1
@@ -215,8 +236,8 @@ object ArrayUtil {
           var ai = aoffset
           var bi = boffset
           var i = 0
-          while(i < alength) {
-            if(x(ai) != y(bi)) return false
+          while (i < alength) {
+            if (x(ai) != y(bi)) return false
             ai += astride
             bi += bstride
             i += 1
@@ -227,8 +248,8 @@ object ArrayUtil {
           var ai = aoffset
           var bi = boffset
           var i = 0
-          while(i < alength) {
-            if(x(ai) != y(bi)) return false
+          while (i < alength) {
+            if (x(ai) != y(bi)) return false
             ai += astride
             bi += bstride
             i += 1
@@ -239,8 +260,8 @@ object ArrayUtil {
           var ai = aoffset
           var bi = boffset
           var i = 0
-          while(i < alength) {
-            if(x(ai) != y(bi)) return false
+          while (i < alength) {
+            if (x(ai) != y(bi)) return false
             ai += astride
             bi += bstride
             i += 1
@@ -251,8 +272,8 @@ object ArrayUtil {
           var ai = aoffset
           var bi = boffset
           var i = 0
-          while(i < alength) {
-            if(x(ai) != y(bi)) return false
+          while (i < alength) {
+            if (x(ai) != y(bi)) return false
             ai += astride
             bi += bstride
             i += 1
@@ -263,8 +284,8 @@ object ArrayUtil {
           var ai = aoffset
           var bi = boffset
           var i = 0
-          while(i < alength) {
-            if(x(ai) != y(bi)) return false
+          while (i < alength) {
+            if (x(ai) != y(bi)) return false
             ai += astride
             bi += bstride
             i += 1
@@ -275,8 +296,8 @@ object ArrayUtil {
           var ai = aoffset
           var bi = boffset
           var i = 0
-          while(i < alength) {
-            if(x(ai) != y(bi)) return false
+          while (i < alength) {
+            if (x(ai) != y(bi)) return false
             ai += astride
             bi += bstride
             i += 1
@@ -286,11 +307,10 @@ object ArrayUtil {
       }
     }
 
-
   }
 
-  def gallopSearch(objs: Array[Int], fromIndex: Int, toIndex: Int, toFind: Int):Int = {
-    if(objs.length == 0) return ~0
+  def gallopSearch(objs: Array[Int], fromIndex: Int, toIndex: Int, toFind: Int): Int = {
+    if (objs.length == 0) return ~0
 
 //    if(toIndex - fromIndex <= 16) return linearSearch(objs, fromIndex, toIndex, toFind)
 
@@ -313,7 +333,7 @@ object ArrayUtil {
   }
 
   def zeroSkippingHashCode[V](data: Array[V], offset: Int, stride: Int, length: Int): Int = {
-    (data:Any) match {
+    (data: Any) match {
       case x: Array[Double] => zeroSkippingHashCodeImpl_Double(x, offset, stride, length)
       case x: Array[Float] => zeroSkippingHashCodeImpl_Float(x, offset, stride, length)
       case x: Array[Int] => zeroSkippingHashCodeImpl_Int(x, offset, stride, length)
@@ -327,7 +347,11 @@ object ArrayUtil {
   }
 
   @expand
-  private def zeroSkippingHashCodeImpl[@expand.args(Int, Float, Double, Long, Byte, Short, Char, Boolean) V](data: Array[V], offset: Int, stride: Int, length: Int):Int = {
+  private def zeroSkippingHashCodeImpl[@expand.args(Int, Float, Double, Long, Byte, Short, Char, Boolean) V](
+      data: Array[V],
+      offset: Int,
+      stride: Int,
+      length: Int): Int = {
     var hash = 43
     var i = offset
     cforRange(0 until length) { _ =>
@@ -340,7 +364,7 @@ object ArrayUtil {
     hash
   }
 
-  private def zeroSkippingHashCodeImplSlow[V](data: Array[V], offset: Int, stride: Int, length: Int):Int = {
+  private def zeroSkippingHashCodeImplSlow[V](data: Array[V], offset: Int, stride: Int, length: Int): Int = {
     var hash = 43
     var i = offset
     cforRange(0 until length) { _ =>
@@ -368,6 +392,5 @@ object ArrayUtil {
     }
     result
   }
-
 
 }

@@ -5,45 +5,45 @@ import org.slf4j.Logger
 /**
  * A logger that only evaluates parameters lazily if the corresponding log level is enabled.
  */
-class LazyLogger(log: Logger) extends Serializable {
+class LazyLogger(val logger: Logger) extends Serializable {
 
   def info(msg: => String) {
-    if (log.isInfoEnabled) log.info(msg)
+    if (logger.isInfoEnabled) logger.info(msg)
   }
 
   def debug(msg: => String) {
-    if (log.isDebugEnabled) log.debug(msg)
+    if (logger.isDebugEnabled) logger.debug(msg)
   }
 
   def trace(msg: => String) {
-    if (log.isTraceEnabled) log.trace(msg)
+    if (logger.isTraceEnabled) logger.trace(msg)
   }
 
   def warn(msg: => String) {
-    if (log.isWarnEnabled) log.warn(msg)
+    if (logger.isWarnEnabled) logger.warn(msg)
   }
 
   def error(msg: => String) {
-    if (log.isErrorEnabled) log.error(msg)
+    if (logger.isErrorEnabled) logger.error(msg)
   }
 
   def info(msg: => String, throwable: Throwable) {
-    if (log.isInfoEnabled) log.info(msg, throwable)
+    if (logger.isInfoEnabled) logger.info(msg, throwable)
   }
 
   def debug(msg: => String, throwable: Throwable) {
-    if (log.isDebugEnabled) log.debug(msg, throwable)
+    if (logger.isDebugEnabled) logger.debug(msg, throwable)
   }
 
   def trace(msg: => String, throwable: Throwable) {
-    if (log.isTraceEnabled) log.trace(msg, throwable)
+    if (logger.isTraceEnabled) logger.trace(msg, throwable)
   }
 
   def warn(msg: => String, throwable: Throwable) {
-    if (log.isWarnEnabled) log.warn(msg, throwable)
+    if (logger.isWarnEnabled) logger.warn(msg, throwable)
   }
 
   def error(msg: => String, throwable: Throwable) {
-    if (log.isErrorEnabled) log.error(msg, throwable)
+    if (logger.isErrorEnabled) logger.error(msg, throwable)
   }
 }

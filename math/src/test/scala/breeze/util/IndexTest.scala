@@ -12,7 +12,7 @@
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 package breeze.util
 
@@ -25,25 +25,24 @@ import org.junit.runner.RunWith
 class IndexTest extends FunSuite with Checkers {
 
   test("CompositeIndex") {
-    val index = Index(List("a","b","c","d"))
-    val index2 = Index(List("e","f","g","h"))
+    val index = Index(List("a", "b", "c", "d"))
+    val index2 = Index(List("e", "f", "g", "h"))
     val comp = new CompositeIndex(index, index2)
     assert(comp(1 -> "e") === 4)
     assert(comp(0 -> "e") === -1)
   }
 
   test("PairIndex") {
-    val index = Index(List("a","b","c","d"))
-    val index2 = Index(List("e","f","g","h"))
+    val index = Index(List("a", "b", "c", "d"))
+    val index2 = Index(List("e", "f", "g", "h"))
     val comp = new PairIndex(index, index2)
     assert(comp("a" -> "e") === 0)
     assert(comp("e" -> "e") === -1)
   }
 
-
   test("EitherIndex") {
-    val index = Index(List("a","b","c","d"))
-    val index2 = Index(List("e","f","g","h"))
+    val index = Index(List("a", "b", "c", "d"))
+    val index2 = Index(List("e", "f", "g", "h"))
     val comp = new EitherIndex(index, index2)
     assert(comp(Right("e")) === 4)
     assert(comp(Left("e")) === -1)
@@ -53,7 +52,7 @@ class IndexTest extends FunSuite with Checkers {
     object E extends Enumeration {
       val A, B, C, D = Value
     }
-    val index:Index[E.Value] = EnumerationIndex(E)
+    val index: Index[E.Value] = EnumerationIndex(E)
 
     assert(index.get(0) === E.A)
     assert(index.get(1) === E.B)
@@ -62,7 +61,7 @@ class IndexTest extends FunSuite with Checkers {
 
   test("HashIndex serialization") {
     val index = new HashIndex[String]()
-    for(x <- Seq("a", "b", "c", "de")) {
+    for (x <- Seq("a", "b", "c", "de")) {
       index.index(x)
     }
     import breeze.util._

@@ -1,3 +1,3 @@
 package breeze.stats.regression
 
-trait RegressionResult[T,U] extends (T => U)
+trait RegressionResult[T, U] extends (T => U)

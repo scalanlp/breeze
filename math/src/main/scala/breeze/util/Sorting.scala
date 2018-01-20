@@ -1,5 +1,7 @@
 package breeze.util
 
+import scala.{specialized => spec}
+
 import breeze.macros.expand
 
 /**
@@ -16,45 +18,48 @@ object Sorting {
   //**                          |/                                          **
   //\*                                                                      */
 
-  def indexSort(elems: Array[Int], off: Int, length: Int): Array[Int] = {
-    indexSort_Int(elems, off, length)
-  }
+  def indirectSort[@spec(Int, Long, Float, Double) E](keys: Array[Int], elems: Array[E], off: Int, length: Int): Unit =
+    indirectSort_Int(keys, elems, off, length)
 
-  def indexSort(elems: Array[Long], off: Int, length: Int): Array[Int] = {
-    indexSort_Long(elems, off, length)
-  }
+  def indirectSort[@spec(Int, Long, Float, Double) E](keys: Array[Long], elems: Array[E], off: Int, length: Int): Unit =
+    indirectSort_Long(keys, elems, off, length)
 
-  def indexSort(elems: Array[Float], off: Int, length: Int): Array[Int] = {
-    indexSort_Float(elems, off, length)
-  }
+  def indirectSort[@spec(Int, Long, Float, Double) E](
+      keys: Array[Float],
+      elems: Array[E],
+      off: Int,
+      length: Int): Unit = indirectSort_Float(keys, elems, off, length)
 
-  def indexSort(elems: Array[Double], off: Int, length: Int): Array[Int] = {
-    indexSort_Double(elems, 0, elems.length)
-  }
+  def indirectSort[@spec(Int, Long, Float, Double) E](
+      keys: Array[Double],
+      elems: Array[E],
+      off: Int,
+      length: Int): Unit = indirectSort_Double(keys, elems, off, length)
 
-  def indexSort(elems: Array[Int]): Array[Int] = {
-    indexSort(elems, 0, elems.length)
-  }
-
-  def indexSort(elems: Array[Long]): Array[Int] = {
-    indexSort(elems, 0, elems.length)
-  }
-
-  def indexSort(elems: Array[Float]): Array[Int] = {
-    indexSort(elems, 0, elems.length)
-  }
-
-  def indexSort(elems: Array[Double]): Array[Int] = {
-    indexSort(elems, 0, elems.length)
-  }
-
+  /**
+   * Jointly sorts `keys`/`elems` in-place based on the items in the
+   * `keys` array.
+   *
+   * If `off` is non-zero or `length` is less than the length of the arrays,
+   * then only the subarrays specified by these arguments are modified. All
+   * other items remain unchanged.
+   *
+   * The implementation is not stable.
+   */
   @expand
-  def indexSort[@expand.args(Int, Long, Float, Double) T](elems: Array[T], elemsOff: Int, elemsLength: Int): Array[Int] = {
-    val idx = ArrayUtil.range(0, elemsLength)
+  def indirectSort[@expand.args(Int, Long, Float, Double) K, @spec(Int, Long, Float, Double) E](
+      keys: Array[K],
+      elems: Array[E],
+      off: Int,
+      length: Int): Unit = {
+    require(keys.length == elems.length, "arrays must have the same length")
     def swap(a: Int, b: Int) {
-      val t = idx(a)
-      idx(a) = idx(b)
-      idx(b) = t
+      val t0 = keys(a)
+      keys(a) = keys(b)
+      keys(b) = t0
+      val t1 = elems(a)
+      elems(a) = elems(b)
+      elems(b) = t1
     }
     def vecswap(_a: Int, _b: Int, n: Int) {
       var a = _a
@@ -68,56 +73,56 @@ object Sorting {
       }
     }
     def med3(a: Int, b: Int, c: Int) = {
-      if (elems(elemsOff + idx(a)) < elems(elemsOff + idx(b))) {
-        if (elems(elemsOff + idx(b)) < elems(elemsOff + idx(c))) b else if (elems(elemsOff + idx(a)) < elems(elemsOff + idx(c))) c else a
+      if (keys(a) < keys(b)) {
+        if (keys(b) < keys(c)) b else if (keys(a) < keys(c)) c else a
       } else {
-        if (elems(elemsOff + idx(b)) > elems(elemsOff + idx(c))) b else if (elems(elemsOff + idx(a)) > elems(elemsOff + idx(c))) c else a
+        if (keys(b) > keys(c)) b else if (keys(a) > keys(c)) c else a
       }
     }
-    def sort2(off: Int, len: Int) {
+    def sort2(off: Int, length: Int) {
       // Insertion sort on smallest arrays
-      if (len < 7) {
+      if (length < 7) {
         var i = off
-        while (i < len + off) {
+        while (i < length + off) {
           var j = i
-          while (j>off && elems(elemsOff + idx(j-1)) > elems(elemsOff + idx(j))) {
-            swap(j, j-1)
+          while (j > off && keys(j - 1) > keys(j)) {
+            swap(j, j - 1)
             j -= 1
           }
           i += 1
         }
       } else {
         // Choose a partition element, v
-        var m = off + (len >> 1)        // Small arrays, middle element
-        if (len > 7) {
+        var m = off + (length >> 1) // Small arrays, middle element
+        if (length > 7) {
           var l = off
-          var n = off + len - 1
-          if (len > 40) {        // Big arrays, pseudomedian of 9
-            val s = len / 8
-            l = med3(l, l+s, l+2*s)
-            m = med3(m-s, m, m+s)
-            n = med3(n-2*s, n-s, n)
+          var n = off + length - 1
+          if (length > 40) { // Big arrays, pseudomedian of 9
+            val s = length / 8
+            l = med3(l, l + s, l + 2 * s)
+            m = med3(m - s, m, m + s)
+            n = med3(n - 2 * s, n - s, n)
           }
           m = med3(l, m, n) // Mid-size, med of 3
         }
-        val v = elems(elemsOff + idx(m))
+        val v = keys(m)
 
         // Establish Invariant: v* (<v)* (>v)* v*
         var a = off
         var b = a
-        var c = off + len - 1
+        var c = off + length - 1
         var d = c
         var done = false
         while (!done) {
-          while (b <= c && elems(elemsOff + idx(b)) <= v) {
-            if (elems(elemsOff + idx(b)) == v) {
+          while (b <= c && keys(b) <= v) {
+            if (keys(b) == v) {
               swap(a, b)
               a += 1
             }
             b += 1
           }
-          while (c >= b && elems(elemsOff + idx(c)) >= v) {
-            if (elems(elemsOff + idx(c)) == v) {
+          while (c >= b && keys(c) >= v) {
+            if (keys(c) == v) {
               swap(c, d)
               d -= 1
             }
@@ -133,11 +138,11 @@ object Sorting {
         }
 
         // Swap partition elements back to middle
-        val n = off + len
-        var s = math.min(a-off, b-a)
-        vecswap(off, b-s, s)
-        s = math.min(d-c, n-d-1)
-        vecswap(b,   n-s, s)
+        val n = off + length
+        var s = math.min(a - off, b - a)
+        vecswap(off, b - s, s)
+        s = math.min(d - c, n - d - 1)
+        vecswap(b, n - s, s)
 
         // Recursively sort non-partition-elements
         s = b - a
@@ -145,13 +150,9 @@ object Sorting {
           sort2(off, s)
         s = d - c
         if (s > 1)
-          sort2(n-s, s)
+          sort2(n - s, s)
       }
     }
-    sort2(0, idx.length)
-
-    idx
+    sort2(off, length)
   }
-
-
 }

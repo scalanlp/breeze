@@ -14,17 +14,17 @@ package distributions
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 import org.apache.commons.math3.distribution.{WeibullDistribution => ApacheWeibullDistribution}
+
 /**
  * The Weibull-distribution - ratio of two scaled chi^2 variables
  *
  * @author stucchio
-*/
-
+ */
 class WeibullDistribution(alpha: Double, beta: Double) extends ApacheContinuousDistribution {
   protected final val inner = new ApacheWeibullDistribution(alpha, beta)
 }
 
-object WeibullDistribution extends ContinuousDistributionUFuncProvider[Double,WeibullDistribution]
+object WeibullDistribution extends ContinuousDistributionUFuncProvider[Double, WeibullDistribution]

@@ -12,15 +12,15 @@ trait ApacheOdeIntegrator extends OdeIntegrator {
   protected final val inner: T = create
 
   override def integrate(
-    f: (DenseVector[Double], Double) => DenseVector[Double],
-    y0: DenseVector[Double],
-    t: Array[Double]): Array[DenseVector[Double]] = {
+      f: (DenseVector[Double], Double) => DenseVector[Double],
+      y0: DenseVector[Double],
+      t: Array[Double]): Array[DenseVector[Double]] = {
 
     object equations extends FirstOrderDifferentialEquations {
 
       override val getDimension = y0.length
 
-      override def computeDerivatives(t: Double, y: Array[Double], yDot: Array[Double]) : Unit =
+      override def computeDerivatives(t: Double, y: Array[Double], yDot: Array[Double]): Unit =
         f(DenseVector(y), t).toArray.copyToArray(yDot)
     }
 

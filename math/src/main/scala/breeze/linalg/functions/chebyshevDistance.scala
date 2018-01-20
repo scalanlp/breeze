@@ -6,5 +6,3 @@ package breeze.linalg.functions
 object chebyshevDistance extends NormBasedDistance {
   override protected def normConstant: Double = Double.PositiveInfinity
 }
-
-

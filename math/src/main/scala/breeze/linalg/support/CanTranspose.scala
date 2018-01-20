@@ -14,7 +14,7 @@ package breeze.linalg.support
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 /**
  * Capability trait for the transpose of a shaped value.
@@ -24,11 +24,11 @@ package breeze.linalg.support
  */
 // Don't inherit Function1 or you will make kittens cry.
 trait CanTranspose[From, +To] {
-  def apply(from: From):To
+  def apply(from: From): To
 }
 
 object CanTranspose {
- implicit def transposeOfScalarIsScalar[T <: AnyVal]:CanTranspose[T, T] = new CanTranspose[T, T] {
-  override def apply(from: T): T = from
- }
+  implicit def transposeOfScalarIsScalar[T <: AnyVal]: CanTranspose[T, T] = new CanTranspose[T, T] {
+    override def apply(from: T): T = from
+  }
 }

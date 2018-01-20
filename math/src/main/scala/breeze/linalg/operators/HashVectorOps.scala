@@ -19,32 +19,34 @@ trait DenseVector_HashVector_Ops { this: HashVector.type =>
 
   @expand
   @expand.valify
-  implicit def dv_hv_Update_Zero_Idempotent[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpAdd, OpSub) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ + _},  {_ - _})
-  op: Op.Impl2[T, T, T]):Op.InPlaceImpl2[DenseVector[T], HashVector[T]] = new Op.InPlaceImpl2[DenseVector[T], HashVector[T]] {
-    def apply(a: DenseVector[T], b: HashVector[T]):Unit = {
-      require(a.length == b.length, "Vectors must have the same length")
-      val ad = a.data
-      val bd = b.data
-      val bi = b.index
-      val bsize = b.iterableSize
+  implicit def dv_hv_Update_Zero_Idempotent[
+      @expand.args(Int, Double, Float, Long) T,
+      @expand.args(OpAdd, OpSub) Op <: OpType](
+      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ })
+      op: Op.Impl2[T, T, T]): Op.InPlaceImpl2[DenseVector[T], HashVector[T]] =
+    new Op.InPlaceImpl2[DenseVector[T], HashVector[T]] {
+      def apply(a: DenseVector[T], b: HashVector[T]): Unit = {
+        require(a.length == b.length, "Vectors must have the same length")
+        val ad = a.data
+        val bd = b.data
+        val bi = b.index
+        val bsize = b.iterableSize
 
-      var i = 0
-      while(i < bsize) {
-        val aoff = a.offset + bi(i) * a.stride
-        if(b.isActive(i))
-          ad(aoff) = op(ad(aoff), bd(i))
-        i += 1
+        var i = 0
+        while (i < bsize) {
+          val aoff = a.offset + bi(i) * a.stride
+          if (b.isActive(i))
+            ad(aoff) = op(ad(aoff), bd(i))
+          i += 1
+        }
       }
+      implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
     }
-    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
-  }
-
-
   @expand
   @expand.valify
-  implicit def canDot_DV_HV[@expand.args(Int, Double, Float, Long) T](implicit @expand.sequence[T](0, 0.0, 0f, 0l) zero: T): breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], HashVector[T], T] = {
+  implicit def canDot_DV_HV[@expand.args(Int, Double, Float, Long) T](
+      implicit @expand.sequence[T](0, 0.0, 0f, 0l) zero: T)
+    : breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], HashVector[T], T] = {
     new breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], HashVector[T], T] {
       def apply(a: DenseVector[T], b: HashVector[T]) = {
         var result: T = zero
@@ -58,8 +60,8 @@ trait DenseVector_HashVector_Ops { this: HashVector.type =>
         val stride = a.stride
 
         var i = 0
-        while(i < bsize) {
-          if(b.isActive(i))
+        while (i < bsize) {
+          if (b.isActive(i))
             result += adata(aoff + bi(i) * stride) * bd(i)
           i += 1
         }
@@ -74,40 +76,43 @@ trait DenseVector_HashVector_Ops { this: HashVector.type =>
 
 trait HashVector_DenseVector_Ops extends DenseVector_HashVector_Ops { this: HashVector.type =>
   import breeze.math.PowImplicits._
-
-
   @expand
   @expand.valify
-  implicit def hv_dv_UpdateOp[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ + _}, {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
-  op: Op.Impl2[T, T, T]):Op.InPlaceImpl2[HashVector[T], DenseVector[T]] = new Op.InPlaceImpl2[HashVector[T], DenseVector[T]] {
-    def apply(a: HashVector[T], b: DenseVector[T]):Unit = {
-      require(a.length == b.length, "Vectors must have the same length")
+  implicit def hv_dv_UpdateOp[
+      @expand.args(Int, Double, Float, Long) T,
+      @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
+      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ / _ }, { (a, b) =>
+        b
+      }, { _ % _ }, { _.pow(_) })
+      op: Op.Impl2[T, T, T]): Op.InPlaceImpl2[HashVector[T], DenseVector[T]] =
+    new Op.InPlaceImpl2[HashVector[T], DenseVector[T]] {
+      def apply(a: HashVector[T], b: DenseVector[T]): Unit = {
+        require(a.length == b.length, "Vectors must have the same length")
 
-      var i = 0
-      while(i < b.length) {
-        a(i) = op(a(i), b(i))
-        i += 1
+        var i = 0
+        while (i < b.length) {
+          a(i) = op(a(i), b(i))
+          i += 1
+        }
       }
+      implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
     }
-    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
-  }
-
-
   @expand
   @expand.valify
-  implicit def hv_dv_op[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ + _}, {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
-  op: Op.Impl2[T, T, T]):Op.Impl2[HashVector[T], DenseVector[T], DenseVector[T]] = {
+  implicit def hv_dv_op[
+      @expand.args(Int, Double, Float, Long) T,
+      @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
+      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ / _ }, { (a, b) =>
+        b
+      }, { _ % _ }, { _.pow(_) })
+      op: Op.Impl2[T, T, T]): Op.Impl2[HashVector[T], DenseVector[T], DenseVector[T]] = {
     new Op.Impl2[HashVector[T], DenseVector[T], DenseVector[T]] {
       def apply(a: HashVector[T], b: DenseVector[T]) = {
         require(a.length == b.length, "Vectors must have the same length")
         val result = DenseVector.zeros[T](a.length)
 
         var i = 0
-        while(i < b.length) {
+        while (i < b.length) {
           result(i) = op(a(i), b(i))
           i += 1
         }
@@ -120,128 +125,131 @@ trait HashVector_DenseVector_Ops extends DenseVector_HashVector_Ops { this: Hash
   }
 
   @expand
-  implicit def canDot_HV_DV[@expand.args(Int, Float, Double, Long) T]: breeze.linalg.operators.OpMulInner.Impl2[HashVector[T], DenseVector[T], T] = {
+  implicit def canDot_HV_DV[@expand.args(Int, Float, Double, Long) T]
+    : breeze.linalg.operators.OpMulInner.Impl2[HashVector[T], DenseVector[T], T] = {
     new breeze.linalg.operators.OpMulInner.Impl2[HashVector[T], DenseVector[T], T] {
       def apply(a: HashVector[T], b: DenseVector[T]) = {
         require(b.length == a.length, "Vectors must be the same length!")
-        b dot a
+        b.dot(a)
       }
     }
     //      Vector.canDotProductV_T.register(this)
   }
 
-
 }
 
 trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
   import breeze.math.PowImplicits._
-
-
   @expand
   @expand.valify
-  implicit def hv_hv_RHS_Idempotent_Op[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpAdd, OpSub) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ + _}, {_ - _})
-  op: Op.Impl2[T, T, T]):Op.Impl2[HashVector[T], HashVector[T], HashVector[T]] = new Op.Impl2[HashVector[T], HashVector[T], HashVector[T]] {
-    def apply(a: HashVector[T], b: HashVector[T]): HashVector[T] = {
-      require(b.length == a.length, "Vectors must be the same length!")
+  implicit def hv_hv_RHS_Idempotent_Op[
+      @expand.args(Int, Double, Float, Long) T,
+      @expand.args(OpAdd, OpSub) Op <: OpType](
+      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ })
+      op: Op.Impl2[T, T, T]): Op.Impl2[HashVector[T], HashVector[T], HashVector[T]] =
+    new Op.Impl2[HashVector[T], HashVector[T], HashVector[T]] {
+      def apply(a: HashVector[T], b: HashVector[T]): HashVector[T] = {
+        require(b.length == a.length, "Vectors must be the same length!")
 
-      // if we're adding, we can do it the other way
-      // upcast to prevent warning when Op = OpSub
-      if ( (Op: Any) == OpAdd && a.activeSize < b.activeSize) {
-        return apply(b, a)
-      }
-
-      val result = a.copy
-      for((k,v) <- b.activeIterator) {
-        result(k) = op(a(k), v)
-      }
-      result
-    }
-
-    implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
-  }
-
-
-  @expand
-  @expand.valify
-  implicit def hv_hv_nilpotent_Op[@expand.args(Int, Double, Float, Long) T]
-  (implicit @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T):OpMulScalar.Impl2[HashVector[T], HashVector[T], HashVector[T]] = new OpMulScalar.Impl2[HashVector[T], HashVector[T], HashVector[T]] {
-    def apply(a: HashVector[T], b: HashVector[T]): HashVector[T] = {
-      require(b.length == a.length, "Vectors must be the same length!")
-
-      // this op has the property that if either lhs or rhs is 0, then the result is 0
-      if (a.activeSize < b.activeSize) return apply(b, a)
-
-      val builder = new VectorBuilder[T](a.length)
-      for((k,v) <- b.activeIterator) {
-        val r = a(k) * v
-        if(r != zero)
-          builder.add(k, r)
-      }
-      builder.toHashVector
-    }
-    implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulScalar.type, Vector[T]]].register(this)
-  }
-
-  @expand
-  @expand.valify
-  implicit def hv_hv_LHS_Nilpotent_Op[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpDiv, OpMod, OpPow) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ / _}, {_ % _}, {_ pow _})
-  op: Op.Impl2[T, T, T]): Op.Impl2[HashVector[T], HashVector[T], HashVector[T]] = new Op.Impl2[HashVector[T], HashVector[T], HashVector[T]] {
-    def apply(a: HashVector[T], b: HashVector[T]): HashVector[T] = {
-      require(b.length == a.length, "Vectors must be the same length!")
-
-      val result = new HashVector[T](new OpenAddressHashArray[T](a.length, default = 0, initialSize = a.array.iterableSize))
-
-      if (b.activeSize !=  b.size) {
-        // have 0s in RHS, will produce non-zero results with LHS 0s (NaN or throw)
-        for ( (k, v) <- a.iterator) {
-          result(k) = op(v, b(k))
+        // if we're adding, we can do it the other way
+        // upcast to prevent warning when Op = OpSub
+        if ((Op: Any) == OpAdd && a.activeSize < b.activeSize) {
+          return apply(b, a)
         }
-      } else {
-        for ( (k, v) <- a.activeIterator) {
-          result(k) = op(v, b(k))
+
+        val result = a.copy
+        for ((k, v) <- b.activeIterator) {
+          result(k) = op(a(k), v)
         }
+        result
       }
 
-      result
+      implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
     }
-    implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
-  }
+  @expand
+  @expand.valify
+  implicit def hv_hv_nilpotent_Op[@expand.args(Int, Double, Float, Long) T](
+      implicit @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T)
+    : OpMulScalar.Impl2[HashVector[T], HashVector[T], HashVector[T]] =
+    new OpMulScalar.Impl2[HashVector[T], HashVector[T], HashVector[T]] {
+      def apply(a: HashVector[T], b: HashVector[T]): HashVector[T] = {
+        require(b.length == a.length, "Vectors must be the same length!")
 
+        // this op has the property that if either lhs or rhs is 0, then the result is 0
+        if (a.activeSize < b.activeSize) return apply(b, a)
 
+        val builder = new VectorBuilder[T](a.length)
+        for ((k, v) <- b.activeIterator) {
+          val r = a(k) * v
+          if (r != zero)
+            builder.add(k, r)
+        }
+        builder.toHashVector
+      }
+      implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulScalar.type, Vector[T]]].register(this)
+    }
 
   @expand
   @expand.valify
-  implicit def hv_v_Op[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ + _},  {_ - _}, {_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
-  op: Op.Impl2[T, T, T]):Op.Impl2[HashVector[T], Vector[T], HashVector[T]] = new Op.Impl2[HashVector[T], Vector[T], HashVector[T]] {
-    def apply(a: HashVector[T], b: Vector[T]): HashVector[T] = {
+  implicit def hv_hv_LHS_Nilpotent_Op[
+      @expand.args(Int, Double, Float, Long) T,
+      @expand.args(OpDiv, OpMod, OpPow) Op <: OpType](
+      implicit @expand.sequence[Op]({ _ / _ }, { _ % _ }, { _.pow(_) })
+      op: Op.Impl2[T, T, T]): Op.Impl2[HashVector[T], HashVector[T], HashVector[T]] =
+    new Op.Impl2[HashVector[T], HashVector[T], HashVector[T]] {
+      def apply(a: HashVector[T], b: HashVector[T]): HashVector[T] = {
+        require(b.length == a.length, "Vectors must be the same length!")
 
-      require(b.length == a.length, "Vectors must be the same length!")
-      val result = HashVector.zeros[T](a.length)
+        val result =
+          new HashVector[T](new OpenAddressHashArray[T](a.length, default = 0, initialSize = a.array.iterableSize))
 
-      var i = 0
-      while(i < a.length) {
-        result(i) = op(a(i), b(i))
-        i += 1
+        if (b.activeSize != b.size) {
+          // have 0s in RHS, will produce non-zero results with LHS 0s (NaN or throw)
+          for ((k, v) <- a.iterator) {
+            result(k) = op(v, b(k))
+          }
+        } else {
+          for ((k, v) <- a.activeIterator) {
+            result(k) = op(v, b(k))
+          }
+        }
+
+        result
       }
-      result
+      implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
     }
-    implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
-  }
+  @expand
+  @expand.valify
+  implicit def hv_v_Op[
+      @expand.args(Int, Double, Float, Long) T,
+      @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
+      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ / _ }, { (a, b) =>
+        b
+      }, { _ % _ }, { _.pow(_) })
+      op: Op.Impl2[T, T, T]): Op.Impl2[HashVector[T], Vector[T], HashVector[T]] =
+    new Op.Impl2[HashVector[T], Vector[T], HashVector[T]] {
+      def apply(a: HashVector[T], b: Vector[T]): HashVector[T] = {
+
+        require(b.length == a.length, "Vectors must be the same length!")
+        val result = HashVector.zeros[T](a.length)
+
+        var i = 0
+        while (i < a.length) {
+          result(i) = op(a(i), b(i))
+          i += 1
+        }
+        result
+      }
+      implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
+    }
 
   @expand
   @expand.valify
-  implicit def hv_s_rhs_idempotent_Op[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpAdd, OpSub) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ + _},  {_ - _})
-  op: Op.Impl2[T, T, T],
-   @expand.sequence[T](0, 0.0, 0.0f, 0l)
-   zero: T):Op.Impl2[HashVector[T], T, HashVector[T]] = new Op.Impl2[HashVector[T], T, HashVector[T]] {
+  implicit def hv_s_rhs_idempotent_Op[@expand.args(Int, Double, Float, Long) T, @expand.args(OpAdd, OpSub) Op <: OpType](
+      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ })
+      op: Op.Impl2[T, T, T],
+      @expand.sequence[T](0, 0.0, 0.0f, 0l)
+      zero: T): Op.Impl2[HashVector[T], T, HashVector[T]] = new Op.Impl2[HashVector[T], T, HashVector[T]] {
     def apply(a: HashVector[T], b: T): HashVector[T] = {
 
       if (b == 0) {
@@ -250,7 +258,7 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
 
       val result = HashVector.zeros[T](a.length)
       var i = 0
-      while(i < a.length) {
+      while (i < a.length) {
         result(i) = op(a(i), b)
         i += 1
       }
@@ -261,12 +269,13 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
 
   @expand
   @expand.valify
-  implicit def hv_s_LHS_Nilpotent_Op[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpMulScalar, OpMulMatrix, OpDiv, OpMod, OpPow) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ * _}, {_ * _}, {_ / _}, {_ % _}, {_ pow _})
-  op: Op.Impl2[T, T, T],
-   @expand.sequence[T](0, 0.0, 0.0f, 0l)
-   zero: T):Op.Impl2[HashVector[T], T, HashVector[T]] = new Op.Impl2[HashVector[T], T, HashVector[T]] {
+  implicit def hv_s_LHS_Nilpotent_Op[
+      @expand.args(Int, Double, Float, Long) T,
+      @expand.args(OpMulScalar, OpMulMatrix, OpDiv, OpMod, OpPow) Op <: OpType](
+      implicit @expand.sequence[Op]({ _ * _ }, { _ * _ }, { _ / _ }, { _ % _ }, { _.pow(_) })
+      op: Op.Impl2[T, T, T],
+      @expand.sequence[T](0, 0.0, 0.0f, 0l)
+      zero: T): Op.Impl2[HashVector[T], T, HashVector[T]] = new Op.Impl2[HashVector[T], T, HashVector[T]] {
     def apply(a: HashVector[T], b: T): HashVector[T] = {
       val result = HashVector.zeros[T](a.length)
 
@@ -277,11 +286,11 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
       }
 
       if (b == 0) { // in a degenerate case, need to iterate all
-        for( (k, v) <- a.iterator) {
+        for ((k, v) <- a.iterator) {
           result(k) = op(v, b)
         }
       } else {
-        for( (k, v) <- a.activeIterator) {
+        for ((k, v) <- a.activeIterator) {
           result(k) = op(v, b)
         }
       }
@@ -293,48 +302,55 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
 
   @expand
   @expand.valify
-  implicit def hv_hv_UpdateOp[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ * _}, {_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
-  op: Op.Impl2[T, T, T]):Op.InPlaceImpl2[HashVector[T], HashVector[T]] = new Op.InPlaceImpl2[HashVector[T], HashVector[T]] {
-    def apply(a: HashVector[T], b: HashVector[T]):Unit = {
-      require(b.length == a.length, "Vectors must be the same length!")
-      var i = 0
-      while(i < a.length) {
-        a(i) = op(a(i), b(i))
-        i += 1
+  implicit def hv_hv_UpdateOp[
+      @expand.args(Int, Double, Float, Long) T,
+      @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
+      implicit @expand.sequence[Op]({ _ * _ }, { _ / _ }, { (a, b) =>
+        b
+      }, { _ % _ }, { _.pow(_) })
+      op: Op.Impl2[T, T, T]): Op.InPlaceImpl2[HashVector[T], HashVector[T]] =
+    new Op.InPlaceImpl2[HashVector[T], HashVector[T]] {
+      def apply(a: HashVector[T], b: HashVector[T]): Unit = {
+        require(b.length == a.length, "Vectors must be the same length!")
+        var i = 0
+        while (i < a.length) {
+          a(i) = op(a(i), b(i))
+          i += 1
+        }
       }
+      implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
     }
-    implicitly[BinaryUpdateRegistry[Vector[T],Vector[T], Op.type]].register(this)
-  }
 
   @expand
   @expand.valify
-  implicit def hv_hv_Idempotent_UpdateOp[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpAdd, OpSub) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ + _}, {_ - _})
-  op: Op.Impl2[T, T, T]):Op.InPlaceImpl2[HashVector[T], HashVector[T]] = new Op.InPlaceImpl2[HashVector[T], HashVector[T]] {
-    def apply(a: HashVector[T], b: HashVector[T]):Unit = {
-      require(b.length == a.length, "Vectors must be the same length!")
-      for( (k,v) <- b.activeIterator) {
-        a(k) = op(a(k), v)
+  implicit def hv_hv_Idempotent_UpdateOp[
+      @expand.args(Int, Double, Float, Long) T,
+      @expand.args(OpAdd, OpSub) Op <: OpType](
+      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ })
+      op: Op.Impl2[T, T, T]): Op.InPlaceImpl2[HashVector[T], HashVector[T]] =
+    new Op.InPlaceImpl2[HashVector[T], HashVector[T]] {
+      def apply(a: HashVector[T], b: HashVector[T]): Unit = {
+        require(b.length == a.length, "Vectors must be the same length!")
+        for ((k, v) <- b.activeIterator) {
+          a(k) = op(a(k), v)
+        }
       }
-    }
 
-    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
-  }
+      implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
+    }
 
   @expand
   @expand.valify
-  implicit def hv_s_RHS_idempotent_UpdateOp[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpAdd, OpSub) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ + _},  {_ - _})
-  op: Op.Impl2[T, T, T]):Op.InPlaceImpl2[HashVector[T], T] = new Op.InPlaceImpl2[HashVector[T], T] {
-    def apply(a: HashVector[T], b: T):Unit = {
+  implicit def hv_s_RHS_idempotent_UpdateOp[
+      @expand.args(Int, Double, Float, Long) T,
+      @expand.args(OpAdd, OpSub) Op <: OpType](
+      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ })
+      op: Op.Impl2[T, T, T]): Op.InPlaceImpl2[HashVector[T], T] = new Op.InPlaceImpl2[HashVector[T], T] {
+    def apply(a: HashVector[T], b: T): Unit = {
       if (b == 0) return
 
       var i = 0
-      while(i < a.length) {
+      while (i < a.length) {
         a(i) = op(a(i), b)
         i += 1
       }
@@ -344,17 +360,16 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
 
   @expand
   @expand.valify
-  implicit def hv_s_nilpotent_UpdateOp[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpMulScalar) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ * _})
-  op: Op.Impl2[T, T, T]): Op.InPlaceImpl2[HashVector[T], T] = new Op.InPlaceImpl2[HashVector[T], T] {
-    def apply(a: HashVector[T], b: T):Unit = {
+  implicit def hv_s_nilpotent_UpdateOp[@expand.args(Int, Double, Float, Long) T, @expand.args(OpMulScalar) Op <: OpType](
+      implicit @expand.sequence[Op]({ _ * _ })
+      op: Op.Impl2[T, T, T]): Op.InPlaceImpl2[HashVector[T], T] = new Op.InPlaceImpl2[HashVector[T], T] {
+    def apply(a: HashVector[T], b: T): Unit = {
       if (b == 0) {
         a.clear()
         return
       }
 
-      for ( (k, v) <- a.activeIterator) {
+      for ((k, v) <- a.activeIterator) {
         a(k) = op(v, b)
       }
     }
@@ -363,38 +378,40 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
 
   @expand
   @expand.valify
-  implicit def hv_s_SetOp[@expand.args(Int, Double, Float, Long) T]:OpSet.InPlaceImpl2[HashVector[T], T] = new OpSet.InPlaceImpl2[HashVector[T], T] {
-    def apply(a: HashVector[T], b: T):Unit = {
-      if (b == 0) {
-        a.clear()
-        return
-      }
+  implicit def hv_s_SetOp[@expand.args(Int, Double, Float, Long) T]: OpSet.InPlaceImpl2[HashVector[T], T] =
+    new OpSet.InPlaceImpl2[HashVector[T], T] {
+      def apply(a: HashVector[T], b: T): Unit = {
+        if (b == 0) {
+          a.clear()
+          return
+        }
 
-      var i = 0
-      while(i < a.length) {
-        a(i) = b
-        i += 1
+        var i = 0
+        while (i < a.length) {
+          a(i) = b
+          i += 1
+        }
       }
+      implicitly[BinaryUpdateRegistry[Vector[T], T, OpSet.type]].register(this)
     }
-    implicitly[BinaryUpdateRegistry[Vector[T], T, OpSet.type]].register(this)
-  }
 
   @expand
   @expand.valify
-  implicit def hv_s_LHS_nilpotent_UpdateOp[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpDiv, OpMod, OpPow) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ / _}, {_ % _}, { _ pow _})
-  op: Op.Impl2[T, T, T]):Op.InPlaceImpl2[HashVector[T], T] = new Op.InPlaceImpl2[HashVector[T], T] {
-    def apply(a: HashVector[T], b: T):Unit = {
+  implicit def hv_s_LHS_nilpotent_UpdateOp[
+      @expand.args(Int, Double, Float, Long) T,
+      @expand.args(OpDiv, OpMod, OpPow) Op <: OpType](
+      implicit @expand.sequence[Op]({ _ / _ }, { _ % _ }, { _.pow(_) })
+      op: Op.Impl2[T, T, T]): Op.InPlaceImpl2[HashVector[T], T] = new Op.InPlaceImpl2[HashVector[T], T] {
+    def apply(a: HashVector[T], b: T): Unit = {
       if (b == 0) {
         // scalar 0 does bad things with these ops
         var i = 0
-        while(i < a.length) {
+        while (i < a.length) {
           a(i) = op(a(i), b)
           i += 1
         }
       } else {
-        for ( (k, v) <- a.activeIterator) {
+        for ((k, v) <- a.activeIterator) {
           a(k) = op(v, b)
         }
       }
@@ -404,16 +421,18 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
 
   @expand
   @expand.valify
-  implicit def canDot_HV_HV[@expand.args(Int, Long, Double, Float) T](implicit @expand.sequence[T](0, 0l, 0.0, 0f) zero: T): breeze.linalg.operators.OpMulInner.Impl2[HashVector[T], HashVector[T], T] = {
+  implicit def canDot_HV_HV[@expand.args(Int, Long, Double, Float) T](
+      implicit @expand.sequence[T](0, 0l, 0.0, 0f) zero: T)
+    : breeze.linalg.operators.OpMulInner.Impl2[HashVector[T], HashVector[T], T] = {
     new breeze.linalg.operators.OpMulInner.Impl2[HashVector[T], HashVector[T], T] {
-      def apply(a: HashVector[T], b: HashVector[T]):T = {
+      def apply(a: HashVector[T], b: HashVector[T]): T = {
         require(b.length == a.length, "Vectors must be the same length!")
 
         if (a.iterableSize > b.iterableSize) {
           apply(b, a)
         } else {
-          var result : T = zero
-          for( (k,v) <- a.activeIterator) {
+          var result: T = zero
+          for ((k, v) <- a.activeIterator) {
             result += v * b(k)
           }
           result
@@ -431,26 +450,26 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
         import v._
         if (n == 1) {
           var sum = 0.0
-          activeValuesIterator foreach (v => sum += v.abs.toDouble )
+          activeValuesIterator.foreach(v => sum += v.abs.toDouble)
           sum
         } else if (n == 2) {
           var sum = 0.0
-          activeValuesIterator  foreach (v => { val nn = v.abs.toDouble; sum += nn * nn })
+          activeValuesIterator.foreach(v => { val nn = v.abs.toDouble; sum += nn * nn })
           math.sqrt(sum)
         } else if (n == Double.PositiveInfinity) {
           var max = 0.0
-          activeValuesIterator foreach (v => { val nn = v.abs.toDouble; if (nn > max) max = nn })
+          activeValuesIterator.foreach(v => { val nn = v.abs.toDouble; if (nn > max) max = nn })
           max
         } else {
           var sum = 0.0
-          activeValuesIterator foreach (v => { val nn = v.abs.toDouble; sum += math.pow(nn,n) })
+          activeValuesIterator.foreach(v => { val nn = v.abs.toDouble; sum += math.pow(nn, n) })
           math.pow(sum, 1.0 / n)
         }
       }
     }
   }
 
-  implicit def canNorm[T:Field:ClassTag]: norm.Impl2[HashVector[T], Double, Double] = {
+  implicit def canNorm[T: Field: ClassTag]: norm.Impl2[HashVector[T], Double, Double] = {
 
     new norm.Impl2[HashVector[T], Double, Double] {
       val f = implicitly[Field[T]]
@@ -458,19 +477,19 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
         import v._
         if (n == 1) {
           var sum = 0.0
-          activeValuesIterator foreach (v => sum += f.sNorm(v) )
+          activeValuesIterator.foreach(v => sum += f.sNorm(v))
           sum
         } else if (n == 2) {
           var sum = 0.0
-          activeValuesIterator  foreach (v => { val nn = f.sNorm(v); sum += nn * nn })
+          activeValuesIterator.foreach(v => { val nn = f.sNorm(v); sum += nn * nn })
           math.sqrt(sum)
         } else if (n == Double.PositiveInfinity) {
           var max = 0.0
-          activeValuesIterator foreach (v => { val nn = f.sNorm(v); if (nn > max) max = nn })
+          activeValuesIterator.foreach(v => { val nn = f.sNorm(v); if (nn > max) max = nn })
           max
         } else {
           var sum = 0.0
-          activeValuesIterator foreach (v => { val nn = f.sNorm(v); sum += math.pow(nn,n) })
+          activeValuesIterator.foreach(v => { val nn = f.sNorm(v); sum += math.pow(nn, n) })
           math.pow(sum, 1.0 / n)
         }
       }
@@ -479,89 +498,87 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
 
 }
 
-
-
 trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type =>
   import breeze.math.PowImplicits._
-
-
   @expand
   @expand.valify
-  implicit def hv_sv_lhs_nilpotent_Op[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
-  op: Op.Impl2[T, T, T],
-   @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T):Op.Impl2[HashVector[T], SparseVector[T], HashVector[T]] = new Op.Impl2[HashVector[T], SparseVector[T], HashVector[T]] {
-    def apply(a: HashVector[T], b: SparseVector[T]): HashVector[T] = {
-      require(b.length == a.length, "Vectors must be the same length!")
-      val builder = new VectorBuilder[T](a.length)
-      if ( (Op: Any) == OpSet || b.activeSize != b.length) {
-        cforRange(0 until b.length) { k =>
-          val r = op(a(k), b.otherApply(k))
-          if(r != zero)
-            builder.add(k, r)
+  implicit def hv_sv_lhs_nilpotent_Op[
+      @expand.args(Int, Double, Float, Long) T,
+      @expand.args(OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
+      implicit @expand.sequence[Op]({ _ / _ }, { (a, b) =>
+        b
+      }, { _ % _ }, { _.pow(_) })
+      op: Op.Impl2[T, T, T],
+      @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T): Op.Impl2[HashVector[T], SparseVector[T], HashVector[T]] =
+    new Op.Impl2[HashVector[T], SparseVector[T], HashVector[T]] {
+      def apply(a: HashVector[T], b: SparseVector[T]): HashVector[T] = {
+        require(b.length == a.length, "Vectors must be the same length!")
+        val builder = new VectorBuilder[T](a.length)
+        if ((Op: Any) == OpSet || b.activeSize != b.length) {
+          cforRange(0 until b.length) { k =>
+            val r = op(a(k), b.otherApply(k))
+            if (r != zero)
+              builder.add(k, r)
+          }
+        } else {
+          for ((k, v) <- a.activeIterator) {
+            val r = op(v, b.otherApply(k))
+            if (r != zero)
+              builder.add(k, r)
+          }
         }
-      } else {
-        for((k,v) <- a.activeIterator) {
-          val r = op(v, b.otherApply(k))
-          if(r != zero)
-            builder.add(k, r)
+        builder.toHashVector
+      }
+      implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
+    }
+  @expand
+  @expand.valify
+  implicit def hv_sv_nilpotent_Op[@expand.args(Int, Double, Float, Long) T](
+      implicit @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T)
+    : OpMulScalar.Impl2[HashVector[T], SparseVector[T], HashVector[T]] =
+    new OpMulScalar.Impl2[HashVector[T], SparseVector[T], HashVector[T]] {
+      def apply(a: HashVector[T], b: SparseVector[T]): HashVector[T] = {
+        require(b.length == a.length, "Vectors must be the same length!")
+        // TODO: if a is enough shorter than b, we should loop over it instead
+        val builder = new VectorBuilder[T](a.length)
+        cforRange(0 until b.activeSize) { boff =>
+          val i = b.indexAt(boff)
+          val v = b.valueAt(boff)
+          val r = a(i) * v
+
+          if (r != zero)
+            builder.add(i, r)
         }
+        builder.toHashVector
       }
-      builder.toHashVector
+      implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulScalar.type, Vector[T]]].register(this)
     }
-    implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
-  }
-
-
   @expand
   @expand.valify
-  implicit def hv_sv_nilpotent_Op[@expand.args(Int, Double, Float, Long) T]
-  (implicit @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T):OpMulScalar.Impl2[HashVector[T], SparseVector[T], HashVector[T]] = new OpMulScalar.Impl2[HashVector[T], SparseVector[T], HashVector[T]] {
-    def apply(a: HashVector[T], b: SparseVector[T]): HashVector[T] = {
-      require(b.length == a.length, "Vectors must be the same length!")
-      // TODO: if a is enough shorter than b, we should loop over it instead
-      val builder = new VectorBuilder[T](a.length)
-      cforRange(0 until b.activeSize) { boff =>
-        val i = b.indexAt(boff)
-        val v = b.valueAt(boff)
-        val r = a(i) * v
+  implicit def hv_sv_Idempotent_Op[@expand.args(Int, Double, Float, Long) T, @expand.args(OpAdd, OpSub) Op <: OpType](
+      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ })
+      op: Op.Impl2[T, T, T]): Op.Impl2[HashVector[T], SparseVector[T], HashVector[T]] =
+    new Op.Impl2[HashVector[T], SparseVector[T], HashVector[T]] {
+      def apply(a: HashVector[T], b: SparseVector[T]): HashVector[T] = {
+        require(b.length == a.length, "Vectors must be the same length!")
+        val result = a.copy
+        var boff = 0
 
-        if (r != zero)
-          builder.add(i, r)
+        while (boff < b.activeSize) {
+          val k = b.indexAt(boff)
+          val v = b.valueAt(boff)
+          result(k) = op(a(k), v)
+          boff += 1
+        }
+        result
       }
-      builder.toHashVector
+      implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
     }
-    implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulScalar.type, Vector[T]]].register(this)
-  }
-
-
   @expand
   @expand.valify
-  implicit def hv_sv_Idempotent_Op[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpAdd, OpSub) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ + _}, {_ - _})
-  op: Op.Impl2[T, T, T]):Op.Impl2[HashVector[T], SparseVector[T], HashVector[T]] = new Op.Impl2[HashVector[T], SparseVector[T], HashVector[T]] {
-    def apply(a: HashVector[T], b: SparseVector[T]): HashVector[T] = {
-      require(b.length == a.length, "Vectors must be the same length!")
-      val result = a.copy
-      var boff = 0
-
-      while(boff < b.activeSize) {
-        val k = b.indexAt(boff)
-        val v = b.valueAt(boff)
-        result(k) = op(a(k), v)
-        boff += 1
-      }
-      result
-    }
-    implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
-  }
-
-
-  @expand
-  @expand.valify
-  implicit def canDot_HV_SV[@expand.args(Int, Long, Float, Double) T](implicit @expand.sequence[T](0, 0l, 0f, 0.0) zero: T): breeze.linalg.operators.OpMulInner.Impl2[HashVector[T], SparseVector[T], T] = {
+  implicit def canDot_HV_SV[@expand.args(Int, Long, Float, Double) T](
+      implicit @expand.sequence[T](0, 0l, 0f, 0.0) zero: T)
+    : breeze.linalg.operators.OpMulInner.Impl2[HashVector[T], SparseVector[T], T] = {
     new breeze.linalg.operators.OpMulInner.Impl2[HashVector[T], SparseVector[T], T] {
       def apply(a: HashVector[T], b: SparseVector[T]) = {
         require(b.length == a.length, "Vectors must be the same length!")
@@ -571,7 +588,7 @@ trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type 
         // but iterating over b is faster than iterating over a and indexing into a is faster than indexing into b
         var boff = 0
 
-        while(boff < b.activeSize) {
+        while (boff < b.activeSize) {
           result += a(b.indexAt(boff)) * b.valueAt(boff)
           boff += 1
         }
@@ -582,10 +599,9 @@ trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type 
     }
   }
 
-
-
-  protected def updateFromPure[T, Op, Other](implicit op: UFunc.UImpl2[Op, HashVector[T], Other, HashVector[T]],
-                                             set: OpSet.InPlaceImpl2[HashVector[T], HashVector[T]]): UFunc.InPlaceImpl2[Op, HashVector[T], Other] = {
+  protected def updateFromPure[T, Op, Other](
+      implicit op: UFunc.UImpl2[Op, HashVector[T], Other, HashVector[T]],
+      set: OpSet.InPlaceImpl2[HashVector[T], HashVector[T]]): UFunc.InPlaceImpl2[Op, HashVector[T], Other] = {
     new UFunc.InPlaceImpl2[Op, HashVector[T], Other] {
       def apply(a: HashVector[T], b: Other) {
         val result = op(a, b)
@@ -596,9 +612,10 @@ trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type 
 
   @expand.valify
   @expand
-  implicit def hv_sv_UpdateOp[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  :Op.InPlaceImpl2[HashVector[T], SparseVector[T]] = {
+  implicit def hv_sv_UpdateOp[
+      @expand.args(Int, Double, Float, Long) T,
+      @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+    : Op.InPlaceImpl2[HashVector[T], SparseVector[T]] = {
     implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(
       updateFromPure[T, Op.type, SparseVector[T]](
         implicitly[Op.Impl2[HashVector[T], SparseVector[T], HashVector[T]]],
@@ -608,101 +625,104 @@ trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type 
 
 }
 
-
 trait SparseVector_HashVector_Ops extends HashVectorOps with HashVector_SparseVector_Ops { this: HashVector.type =>
   import breeze.math.PowImplicits._
-
+  @expand.valify
+  @expand
+  implicit def sv_hv_lhs_nilpotent_Op[
+      @expand.args(Int, Double, Float, Long) T,
+      @expand.args(OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
+      implicit @expand.sequence[Op]({ _ / _ }, { (a, b) =>
+        b
+      }, { _ % _ }, { _.pow(_) })
+      op: Op.Impl2[T, T, T],
+      @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T): Op.Impl2[SparseVector[T], HashVector[T], SparseVector[T]] =
+    new Op.Impl2[SparseVector[T], HashVector[T], SparseVector[T]] {
+      def apply(a: SparseVector[T], b: HashVector[T]): SparseVector[T] = {
+        require(b.length == a.length, "Vectors must be the same length!")
+        val builder = new VectorBuilder[T](a.length)
+        if ((Op: Any) == OpSet || b.activeSize != b.length) {
+          cforRange(0 until a.length) { k =>
+            val r: T = op(a.otherApply(k), b(k))
+            if (r != zero)
+              builder.add(k, r)
+          }
+        } else {
+          var aoff = 0
+          while (aoff < a.activeSize) {
+            val k = a.indexAt(aoff)
+            val v = a.valueAt(aoff)
+            val r = op(v, b(k))
+            if (r != zero)
+              builder.add(k, r)
+            aoff += 1
+          }
+        }
+        builder.toSparseVector(alreadySorted = true, keysAlreadyUnique = true)
+      }
+      implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
+    }
 
   @expand.valify
   @expand
-  implicit def sv_hv_lhs_nilpotent_Op[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ / _}, {(a,b) => b}, {_ % _}, {_ pow _})
-  op: Op.Impl2[T, T, T],
-   @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T):Op.Impl2[SparseVector[T], HashVector[T], SparseVector[T]] = new Op.Impl2[SparseVector[T], HashVector[T], SparseVector[T]] {
-    def apply(a: SparseVector[T], b: HashVector[T]): SparseVector[T] = {
-      require(b.length == a.length, "Vectors must be the same length!")
-      val builder = new VectorBuilder[T](a.length)
-      if ( (Op: Any) == OpSet || b.activeSize != b.length) {
-        cforRange(0 until a.length) { k =>
-          val r :T = op(a.otherApply(k), b(k))
-          if (r != zero)
-            builder.add(k, r)
-        }
-      } else {
+  implicit def sv_hv_nilpotent_Op[@expand.args(Int, Double, Float, Long) T](
+      implicit @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T)
+    : OpMulScalar.Impl2[SparseVector[T], HashVector[T], SparseVector[T]] =
+    new OpMulScalar.Impl2[SparseVector[T], HashVector[T], SparseVector[T]] {
+      def apply(a: SparseVector[T], b: HashVector[T]): SparseVector[T] = {
+        require(b.length == a.length, "Vectors must be the same length!")
+        val builder = new VectorBuilder[T](a.length)
         var aoff = 0
-        while(aoff < a.activeSize) {
+        while (aoff < a.activeSize) {
           val k = a.indexAt(aoff)
           val v = a.valueAt(aoff)
-          val r = op(v, b(k))
+          val r = v * b(k)
           if (r != zero)
             builder.add(k, r)
           aoff += 1
         }
+        builder.toSparseVector(alreadySorted = true, keysAlreadyUnique = true)
       }
-      builder.toSparseVector(alreadySorted = true, keysAlreadyUnique = true)
+      implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulScalar.type, Vector[T]]].register(this)
     }
-    implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
-  }
-
-  @expand.valify
-  @expand
-  implicit def sv_hv_nilpotent_Op[@expand.args(Int, Double, Float, Long) T]
-  (implicit @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T):OpMulScalar.Impl2[SparseVector[T], HashVector[T], SparseVector[T]] = new OpMulScalar.Impl2[SparseVector[T], HashVector[T], SparseVector[T]] {
-    def apply(a: SparseVector[T], b: HashVector[T]): SparseVector[T] = {
-      require(b.length == a.length, "Vectors must be the same length!")
-      val builder = new VectorBuilder[T](a.length)
-      var aoff = 0
-      while(aoff < a.activeSize) {
-        val k = a.indexAt(aoff)
-        val v = a.valueAt(aoff)
-        val r = v * b(k)
-        if (r != zero)
-          builder.add(k, r)
-        aoff += 1
-      }
-      builder.toSparseVector(alreadySorted = true, keysAlreadyUnique = true)
-    }
-    implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulScalar.type, Vector[T]]].register(this)
-  }
-
-
   @expand
   @expand.valify
-  implicit def sv_hv_Idempotent_Op[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpAdd, OpSub) Op <: OpType]
-  (implicit @expand.sequence[Op]({_ + _}, {_ - _})
-  op: Op.Impl2[T, T, T]):Op.Impl2[SparseVector[T], HashVector[T], SparseVector[T]] = new Op.Impl2[SparseVector[T], HashVector[T], SparseVector[T]] {
-    def apply(a: SparseVector[T], b: HashVector[T]): SparseVector[T] = {
-      require(b.length == a.length, "Vectors must be the same length!")
-      val builder = new VectorBuilder[T](a.length)
-      var aoff = 0
-      while(aoff < a.activeSize) {
-        val k = a.indexAt(aoff)
-        val v = a.valueAt(aoff)
-        builder.add(k,v)
-        aoff += 1
-      }
+  implicit def sv_hv_Idempotent_Op[@expand.args(Int, Double, Float, Long) T, @expand.args(OpAdd, OpSub) Op <: OpType](
+      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ })
+      op: Op.Impl2[T, T, T]): Op.Impl2[SparseVector[T], HashVector[T], SparseVector[T]] =
+    new Op.Impl2[SparseVector[T], HashVector[T], SparseVector[T]] {
+      def apply(a: SparseVector[T], b: HashVector[T]): SparseVector[T] = {
+        require(b.length == a.length, "Vectors must be the same length!")
+        val builder = new VectorBuilder[T](a.length)
+        var aoff = 0
+        while (aoff < a.activeSize) {
+          val k = a.indexAt(aoff)
+          val v = a.valueAt(aoff)
+          builder.add(k, v)
+          aoff += 1
+        }
 
-      for((k,v) <- b.activeIterator) {
-        builder.add(k, v)
-      }
+        for ((k, v) <- b.activeIterator) {
+          builder.add(k, v)
+        }
 
-      builder.toSparseVector
+        builder.toSparseVector
+      }
+      implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
     }
-    implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
-  }
 
-  implicit def canDot_SV_HV[T](implicit op: OpMulInner.Impl2[HashVector[T], SparseVector[T], T]): breeze.linalg.operators.OpMulInner.Impl2[SparseVector[T], HashVector[T], T] = {
+  implicit def canDot_SV_HV[T](implicit op: OpMulInner.Impl2[HashVector[T], SparseVector[T], T])
+    : breeze.linalg.operators.OpMulInner.Impl2[SparseVector[T], HashVector[T], T] = {
     new breeze.linalg.operators.OpMulInner.Impl2[SparseVector[T], HashVector[T], T] {
       def apply(a: SparseVector[T], b: HashVector[T]) = {
-        b dot a
+        b.dot(a)
       }
     }
   }
 
-  protected def updateFromPureS[T, Op, Other](implicit op: UFunc.UImpl2[Op, SparseVector[T], Other, SparseVector[T]],
-                                              set: OpSet.InPlaceImpl2[SparseVector[T], SparseVector[T]]): UFunc.InPlaceImpl2[Op, SparseVector[T], Other] = {
+  protected def updateFromPureS[T, Op, Other](
+      implicit op: UFunc.UImpl2[Op, SparseVector[T], Other, SparseVector[T]],
+      set: OpSet.InPlaceImpl2[SparseVector[T], SparseVector[T]]): UFunc.InPlaceImpl2[Op, SparseVector[T], Other] = {
     new UFunc.InPlaceImpl2[Op, SparseVector[T], Other] {
       def apply(a: SparseVector[T], b: Other) {
         val result = op(a, b)
@@ -713,9 +733,10 @@ trait SparseVector_HashVector_Ops extends HashVectorOps with HashVector_SparseVe
 
   @expand.valify
   @expand
-  implicit def sv_hv_update[@expand.args(Int, Double, Float, Long) T,
-  @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-  :Op.InPlaceImpl2[SparseVector[T], HashVector[T]] = {
+  implicit def sv_hv_update[
+      @expand.args(Int, Double, Float, Long) T,
+      @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+    : Op.InPlaceImpl2[SparseVector[T], HashVector[T]] = {
     implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(updateFromPureS)
   }
 }
@@ -723,9 +744,11 @@ trait SparseVector_HashVector_Ops extends HashVectorOps with HashVector_SparseVe
 trait HashVector_GenericOps { this: HashVector.type =>
   import breeze.math.PowImplicits._
   @expand
-  implicit def pureFromUpdate[@expand.args(Int, Double, Float, Long) T, Other,Op<:OpType](op: UFunc.InPlaceImpl2[Op, HashVector[T], Other])(implicit copy: CanCopy[HashVector[T]]):UFunc.UImpl2[Op, HashVector[T], Other, HashVector[T]] = {
+  implicit def pureFromUpdate[@expand.args(Int, Double, Float, Long) T, Other, Op <: OpType](
+      op: UFunc.InPlaceImpl2[Op, HashVector[T], Other])(
+      implicit copy: CanCopy[HashVector[T]]): UFunc.UImpl2[Op, HashVector[T], Other, HashVector[T]] = {
     new UImpl2[Op, HashVector[T], Other, HashVector[T]] {
-      override def apply(a : HashVector[T], b : Other) = {
+      override def apply(a: HashVector[T], b: Other) = {
         val c = copy(a)
         op(c, b)
         c
@@ -733,9 +756,10 @@ trait HashVector_GenericOps { this: HashVector.type =>
     }
   }
 
-  implicit def pureFromUpdate[T, Other,Op<:OpType](op: UFunc.InPlaceImpl2[Op, HashVector[T], Other])(implicit copy: CanCopy[HashVector[T]]):UFunc.UImpl2[Op, HashVector[T], Other, HashVector[T]] = {
+  implicit def pureFromUpdate[T, Other, Op <: OpType](op: UFunc.InPlaceImpl2[Op, HashVector[T], Other])(
+      implicit copy: CanCopy[HashVector[T]]): UFunc.UImpl2[Op, HashVector[T], Other, HashVector[T]] = {
     new UFunc.UImpl2[Op, HashVector[T], Other, HashVector[T]] {
-      override def apply(a : HashVector[T], b : Other) = {
+      override def apply(a: HashVector[T], b: Other) = {
         val c = copy(a)
         op(c, b)
         c
@@ -747,7 +771,7 @@ trait HashVector_GenericOps { this: HashVector.type =>
     new OpSet.InPlaceImpl2[HashVector[V], V] {
       def apply(a: HashVector[V], b: V) {
         var i = 0
-        while(i < a.length) {
+        while (i < a.length) {
           a(i) = b
           i += 1
         }
@@ -761,29 +785,29 @@ trait HashVector_GenericOps { this: HashVector.type =>
       def apply(a: HashVector[V], b: Vector[V]) {
         require(b.length == a.length, "Vectors must be the same length!")
         a.clear()
-        for ( (k, v) <- b.activeIterator) {
+        for ((k, v) <- b.activeIterator) {
           a(k) = v
         }
       }
     }
   }
 
-  implicit def canGaxpy[V:Semiring]: scaleAdd.InPlaceImpl3[HashVector[V], V, HashVector[V]] = {
+  implicit def canGaxpy[V: Semiring]: scaleAdd.InPlaceImpl3[HashVector[V], V, HashVector[V]] = {
     new scaleAdd.InPlaceImpl3[HashVector[V], V, HashVector[V]] {
       val ring = implicitly[Semiring[V]]
       def apply(a: HashVector[V], s: V, b: HashVector[V]) {
         require(b.length == a.length, "Vectors must be the same length!")
 
-        for( (k,v) <- b.activeIterator)
-          a(k) = ring.+(a(k),ring.*(s, v))
+        for ((k, v) <- b.activeIterator)
+          a(k) = ring.+(a(k), ring.*(s, v))
       }
     }
   }
 
-  class CanZipMapValuesHashVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag:Zero]
-    extends CanZipMapValues[HashVector[V],V,RV,HashVector[RV]] {
+  class CanZipMapValuesHashVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV: ClassTag: Zero]
+      extends CanZipMapValues[HashVector[V], V, RV, HashVector[RV]] {
 
-    def create(length : Int) = zeros(length)
+    def create(length: Int) = zeros(length)
 
     /**Maps all corresponding values from the two collections. */
     def map(from: HashVector[V], from2: HashVector[V], fn: (V, V) => RV) = {
@@ -801,17 +825,16 @@ trait HashVector_GenericOps { this: HashVector.type =>
       map(from, from2, fn)
     }
 
-
   }
-  implicit def zipMap[V, R:ClassTag:Zero] = new CanZipMapValuesHashVector[V, R]
+  implicit def zipMap[V, R: ClassTag: Zero] = new CanZipMapValuesHashVector[V, R]
   implicit val zipMap_d: CanZipMapValuesHashVector[Double, Double] = new CanZipMapValuesHashVector[Double, Double]
   implicit val zipMap_f: CanZipMapValuesHashVector[Float, Float] = new CanZipMapValuesHashVector[Float, Float]
   implicit val zipMap_i: CanZipMapValuesHashVector[Int, Int] = new CanZipMapValuesHashVector[Int, Int]
 
-  class CanZipMapKeyValuesHashVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV:ClassTag:Zero]
-    extends CanZipMapKeyValues[HashVector[V], Int, V,RV,HashVector[RV]] {
+  class CanZipMapKeyValuesHashVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV: ClassTag: Zero]
+      extends CanZipMapKeyValues[HashVector[V], Int, V, RV, HashVector[RV]] {
 
-    def create(length : Int) = zeros(length)
+    def create(length: Int) = zeros(length)
 
     /**Maps all corresponding values from the two collections. */
     def map(from: HashVector[V], from2: HashVector[V], fn: (Int, V, V) => RV) = {
@@ -826,123 +849,146 @@ trait HashVector_GenericOps { this: HashVector.type =>
     }
 
     override def mapActive(from: HashVector[V], from2: HashVector[V], fn: (Int, V, V) => RV): HashVector[RV] = {
-        map(from, from2, fn)
+      map(from, from2, fn)
     }
   }
-  implicit def zipMapKV[V, R:ClassTag:Zero] = new CanZipMapKeyValuesHashVector[V, R]
+  implicit def zipMapKV[V, R: ClassTag: Zero] = new CanZipMapKeyValuesHashVector[V, R]
 
-
-  implicit def negFromScale[V](implicit scale: OpMulScalar.Impl2[HashVector[V], V, HashVector[V]], field: Ring[V]): OpNeg.Impl[HashVector[V], HashVector[V]] = {
+  implicit def negFromScale[V](
+      implicit scale: OpMulScalar.Impl2[HashVector[V], V, HashVector[V]],
+      field: Ring[V]): OpNeg.Impl[HashVector[V], HashVector[V]] = {
     new OpNeg.Impl[HashVector[V], HashVector[V]] {
-      override def apply(a : HashVector[V]) = {
+      override def apply(a: HashVector[V]) = {
         scale(a, field.negate(field.one))
       }
     }
   }
 
-  implicit def vAddIntoField[T](implicit field: Field[T], ct: ClassTag[T]):OpAdd.InPlaceImpl2[HashVector[T], HashVector[T]] = {
+  implicit def vAddIntoField[T](
+      implicit field: Field[T],
+      ct: ClassTag[T]): OpAdd.InPlaceImpl2[HashVector[T], HashVector[T]] = {
     new OpAdd.InPlaceImpl2[HashVector[T], HashVector[T]] {
       override def apply(v: HashVector[T], v2: HashVector[T]) = {
-        for(i <- 0 until v.length) v(i) = field.+(v(i), v2(i))
+        for (i <- 0 until v.length) v(i) = field.+(v(i), v2(i))
       }
     }
 
   }
 
-  implicit def vSubIntoField[T](implicit field: Field[T], ct: ClassTag[T]):OpSub.InPlaceImpl2[HashVector[T], HashVector[T]] = {
+  implicit def vSubIntoField[T](
+      implicit field: Field[T],
+      ct: ClassTag[T]): OpSub.InPlaceImpl2[HashVector[T], HashVector[T]] = {
     new OpSub.InPlaceImpl2[HashVector[T], HashVector[T]] {
       override def apply(v: HashVector[T], v2: HashVector[T]) = {
-        for(i <- 0 until v.length) v(i) = field.-(v(i), v2(i))
+        for (i <- 0 until v.length) v(i) = field.-(v(i), v2(i))
       }
     }
 
   }
 
-  implicit def vMulIntoField[T](implicit field: Field[T], ct: ClassTag[T]):OpMulScalar.InPlaceImpl2[HashVector[T], HashVector[T]] = {
+  implicit def vMulIntoField[T](
+      implicit field: Field[T],
+      ct: ClassTag[T]): OpMulScalar.InPlaceImpl2[HashVector[T], HashVector[T]] = {
     new OpMulScalar.InPlaceImpl2[HashVector[T], HashVector[T]] {
       override def apply(v: HashVector[T], v2: HashVector[T]) = {
-        for(i <- 0 until v.length) v(i) = field.*(v(i), v2(i))
+        for (i <- 0 until v.length) v(i) = field.*(v(i), v2(i))
       }
     }
 
   }
 
-  implicit def vDivIntoField[T](implicit field: Field[T], ct: ClassTag[T]):OpDiv.InPlaceImpl2[HashVector[T], HashVector[T]] = {
+  implicit def vDivIntoField[T](
+      implicit field: Field[T],
+      ct: ClassTag[T]): OpDiv.InPlaceImpl2[HashVector[T], HashVector[T]] = {
     new OpDiv.InPlaceImpl2[HashVector[T], HashVector[T]] {
       override def apply(v: HashVector[T], v2: HashVector[T]) = {
-        for(i <- 0 until v.length) v(i) = field./(v(i), v2(i))
+        for (i <- 0 until v.length) v(i) = field./(v(i), v2(i))
       }
     }
 
   }
 
-
-  implicit def vPowInto[T](implicit pow: OpPow.Impl2[T, T, T], ct: ClassTag[T]):OpPow.InPlaceImpl2[HashVector[T], HashVector[T]] = {
+  implicit def vPowInto[T](
+      implicit pow: OpPow.Impl2[T, T, T],
+      ct: ClassTag[T]): OpPow.InPlaceImpl2[HashVector[T], HashVector[T]] = {
     new OpPow.InPlaceImpl2[HashVector[T], HashVector[T]] {
       override def apply(v: HashVector[T], v2: HashVector[T]) = {
-        for(i <- 0 until v.length) v(i) = pow(v(i), v2(i))
+        for (i <- 0 until v.length) v(i) = pow(v(i), v2(i))
       }
     }
 
   }
 
-  implicit def vAddIntoSField[T](implicit field: Semiring[T], ct: ClassTag[T]):OpAdd.InPlaceImpl2[HashVector[T], T] = {
+  implicit def vAddIntoSField[T](implicit field: Semiring[T], ct: ClassTag[T]): OpAdd.InPlaceImpl2[HashVector[T], T] = {
     new OpAdd.InPlaceImpl2[HashVector[T], T] {
       override def apply(v: HashVector[T], v2: T) = {
-        for(i <- 0 until v.length) v(i) = field.+(v(i), v2)
+        for (i <- 0 until v.length) v(i) = field.+(v(i), v2)
       }
     }
 
   }
 
-  implicit def vAddSField[T](implicit field: Semiring[T], ct: ClassTag[T]):OpAdd.Impl2[HashVector[T], T, HashVector[T]] = {
+  implicit def vAddSField[T](
+      implicit field: Semiring[T],
+      ct: ClassTag[T]): OpAdd.Impl2[HashVector[T], T, HashVector[T]] = {
     binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vAddIntoSField, ct)
   }
-  implicit def vSubSField[T](implicit field: Ring[T], ct: ClassTag[T]):OpSub.Impl2[HashVector[T], T, HashVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vSubIntoSField, ct)
-  implicit def vMulScalarSField[T](implicit field: Semiring[T], ct: ClassTag[T]):OpMulScalar.Impl2[HashVector[T], T, HashVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vMulScalarIntoSField, ct)
-  implicit def vDivSField[T](implicit field: Field[T], ct: ClassTag[T]):OpDiv.Impl2[HashVector[T], T, HashVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vDivIntoSField, ct)
-  implicit def vPowS[T](implicit pow: OpPow.Impl2[T, T, T], ct: ClassTag[T], zero: Zero[T]):OpPow.Impl2[HashVector[T], T, HashVector[T]]  = binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vPowIntoS, ct)
+  implicit def vSubSField[T](implicit field: Ring[T], ct: ClassTag[T]): OpSub.Impl2[HashVector[T], T, HashVector[T]] =
+    binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vSubIntoSField, ct)
+  implicit def vMulScalarSField[T](
+      implicit field: Semiring[T],
+      ct: ClassTag[T]): OpMulScalar.Impl2[HashVector[T], T, HashVector[T]] =
+    binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vMulScalarIntoSField, ct)
+  implicit def vDivSField[T](implicit field: Field[T], ct: ClassTag[T]): OpDiv.Impl2[HashVector[T], T, HashVector[T]] =
+    binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vDivIntoSField, ct)
+  implicit def vPowS[T](
+      implicit pow: OpPow.Impl2[T, T, T],
+      ct: ClassTag[T],
+      zero: Zero[T]): OpPow.Impl2[HashVector[T], T, HashVector[T]] =
+    binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vPowIntoS, ct)
 
-
-  implicit def vSubIntoSField[T](implicit field: Ring[T], ct: ClassTag[T]):OpSub.InPlaceImpl2[HashVector[T], T] = {
+  implicit def vSubIntoSField[T](implicit field: Ring[T], ct: ClassTag[T]): OpSub.InPlaceImpl2[HashVector[T], T] = {
     new OpSub.InPlaceImpl2[HashVector[T], T] {
       override def apply(v: HashVector[T], v2: T) = {
-        for(i <- 0 until v.length) v(i) = field.-(v(i), v2)
+        for (i <- 0 until v.length) v(i) = field.-(v(i), v2)
       }
     }
 
   }
 
-
-  implicit def vMulScalarIntoSField[T](implicit field: Semiring[T], ct: ClassTag[T]):OpMulScalar.InPlaceImpl2[HashVector[T], T] = {
+  implicit def vMulScalarIntoSField[T](
+      implicit field: Semiring[T],
+      ct: ClassTag[T]): OpMulScalar.InPlaceImpl2[HashVector[T], T] = {
     new OpMulScalar.InPlaceImpl2[HashVector[T], T] {
       override def apply(v: HashVector[T], v2: T) = {
-        for(i <- 0 until v.length) v(i) = field.*(v(i), v2)
+        for (i <- 0 until v.length) v(i) = field.*(v(i), v2)
       }
     }
   }
 
-  implicit def vDivIntoSField[T](implicit field: Field[T], ct: ClassTag[T]):OpDiv.InPlaceImpl2[HashVector[T], T] = {
+  implicit def vDivIntoSField[T](implicit field: Field[T], ct: ClassTag[T]): OpDiv.InPlaceImpl2[HashVector[T], T] = {
     new OpDiv.InPlaceImpl2[HashVector[T], T] {
       override def apply(v: HashVector[T], v2: T) = {
-        for(i <- 0 until v.length) v(i) = field./(v(i), v2)
+        for (i <- 0 until v.length) v(i) = field./(v(i), v2)
       }
     }
   }
 
-  implicit def vPowIntoS[T](implicit pow: OpPow.Impl2[T, T, T], ct: ClassTag[T]):OpPow.InPlaceImpl2[HashVector[T], T] = {
+  implicit def vPowIntoS[T](
+      implicit pow: OpPow.Impl2[T, T, T],
+      ct: ClassTag[T]): OpPow.InPlaceImpl2[HashVector[T], T] = {
     new OpPow.InPlaceImpl2[HashVector[T], T] {
       override def apply(v: HashVector[T], v2: T) = {
-        for(i <- 0 until v.length) v(i) = pow(v(i), v2)
+        for (i <- 0 until v.length) v(i) = pow(v(i), v2)
       }
     }
   }
 
-  implicit def dotField[T](implicit field: Semiring[T]):OpMulInner.Impl2[HashVector[T], HashVector[T], T] = {
+  implicit def dotField[T](implicit field: Semiring[T]): OpMulInner.Impl2[HashVector[T], HashVector[T], T] = {
     new OpMulInner.Impl2[HashVector[T], HashVector[T], T] {
       override def apply(v: HashVector[T], v2: HashVector[T]): T = {
         var acc = field.zero
-        for(i <- 0 until v.length) {
+        for (i <- 0 until v.length) {
           acc = field.+(acc, field.*(v(i), v2(i)))
         }
         acc
@@ -950,12 +996,12 @@ trait HashVector_GenericOps { this: HashVector.type =>
     }
   }
 
-
-  def binaryOpFromUpdateOp[Op<:OpType, V, Other]
-  (implicit copy: CanCopy[HashVector[V]], op: UFunc.InPlaceImpl2[Op, HashVector[V], Other], man: ClassTag[V]):
-  UFunc.UImpl2[Op, HashVector[V], Other, HashVector[V]] = {
+  def binaryOpFromUpdateOp[Op <: OpType, V, Other](
+      implicit copy: CanCopy[HashVector[V]],
+      op: UFunc.InPlaceImpl2[Op, HashVector[V], Other],
+      man: ClassTag[V]): UFunc.UImpl2[Op, HashVector[V], Other, HashVector[V]] = {
     new UFunc.UImpl2[Op, HashVector[V], Other, HashVector[V]] {
-      override def apply(a : HashVector[V], b : Other): HashVector[V] = {
+      override def apply(a: HashVector[V], b: Other): HashVector[V] = {
         val c = copy(a)
         op(c, b)
         c
@@ -983,19 +1029,19 @@ trait HashVector_GenericOps { this: HashVector.type =>
         import v._
         if (n == 1) {
           var sum = 0.0
-          activeValuesIterator foreach (v => sum += canNormS(v) )
+          activeValuesIterator.foreach(v => sum += canNormS(v))
           sum
         } else if (n == 2) {
           var sum = 0.0
-          activeValuesIterator foreach (v => { val nn = canNormS(v); sum += nn * nn })
+          activeValuesIterator.foreach(v => { val nn = canNormS(v); sum += nn * nn })
           math.sqrt(sum)
         } else if (n == Double.PositiveInfinity) {
           var max = 0.0
-          activeValuesIterator foreach (v => { val nn = canNormS(v); if (nn > max) max = nn })
+          activeValuesIterator.foreach(v => { val nn = canNormS(v); if (nn > max) max = nn })
           max
         } else {
           var sum = 0.0
-          activeValuesIterator foreach (v => { val nn = canNormS(v); sum += math.pow(nn,n) })
+          activeValuesIterator.foreach(v => { val nn = canNormS(v); sum += math.pow(nn, n) })
           math.pow(sum, 1.0 / n)
         }
       }

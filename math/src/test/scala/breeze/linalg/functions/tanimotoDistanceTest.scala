@@ -3,7 +3,6 @@ package breeze.linalg.functions
 import breeze.linalg.{SparseVector, DenseVector}
 import org.scalatest.FunSuite
 
-
 class tanimotoDistanceTest extends FunSuite {
 
   test("it should be correct") {

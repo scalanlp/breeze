@@ -14,20 +14,21 @@ package distributions
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
-*/
+ */
 
 import org.apache.commons.math3.distribution.{CauchyDistribution => ApacheCauchyDistribution}
 import org.apache.commons.math3.random.RandomGenerator
+
 /**
  * The Cauchy-distribution
  *
  * @author stucchio
-*/
-
-class CauchyDistribution(median: Double, scale: Double)(implicit rand: RandBasis = Rand) extends ApacheContinuousDistribution {
-  val rng:RandomGenerator = rand.generator
-  val inverseCumAccuracy:Double = ApacheCauchyDistribution.DEFAULT_INVERSE_ABSOLUTE_ACCURACY
+ */
+class CauchyDistribution(median: Double, scale: Double)(implicit rand: RandBasis = Rand)
+    extends ApacheContinuousDistribution {
+  val rng: RandomGenerator = rand.generator
+  val inverseCumAccuracy: Double = ApacheCauchyDistribution.DEFAULT_INVERSE_ABSOLUTE_ACCURACY
   protected final val inner = new ApacheCauchyDistribution(rng, median, scale, inverseCumAccuracy)
 }
 
-object CauchyDistribution extends ContinuousDistributionUFuncProvider[Double,CauchyDistribution]
+object CauchyDistribution extends ContinuousDistributionUFuncProvider[Double, CauchyDistribution]

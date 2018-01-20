@@ -8,28 +8,29 @@ import breeze.util.Isomorphism
  * across consecutive invocations.
  * @author dlwh
  */
-trait StochasticDiffFunction[T] extends (T=>Double) with NumericOps[StochasticDiffFunction[T]] { outer =>
+trait StochasticDiffFunction[T] extends (T => Double) with NumericOps[StochasticDiffFunction[T]] { outer =>
   override def repr: StochasticDiffFunction[T] = this
 
   /** calculates the gradient at a point */
   def gradientAt(x: T): T = calculate(x)._2
-  /** calculates the value at a point */
-  def valueAt(x:T): Double = calculate(x)._1
 
-  final def apply(x:T) = valueAt(x)
+  /** calculates the value at a point */
+  def valueAt(x: T): Double = calculate(x)._1
+
+  final def apply(x: T) = valueAt(x)
 
   /** Calculates both the value and the gradient at a point */
-  def calculate(x:T):(Double,T)
+  def calculate(x: T): (Double, T)
 
   /**
    * Lenses provide a way of mapping between two types, which we typically
    * use to convert something to a DenseVector or other Tensor for optimization purposes.
    */
-  def throughLens[U](implicit l: Isomorphism[T,U]):StochasticDiffFunction[U] = new StochasticDiffFunction[U] {
+  def throughLens[U](implicit l: Isomorphism[T, U]): StochasticDiffFunction[U] = new StochasticDiffFunction[U] {
     override def calculate(u: U) = {
       val t = l.backward(u)
-      val (obj,gu) = outer.calculate(t)
-      (obj,l.forward(gu))
+      val (obj, gu) = outer.calculate(t)
+      (obj, l.forward(gu))
     }
   }
 }

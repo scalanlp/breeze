@@ -2,6 +2,7 @@ package breeze.optimize.proximal
 
 import breeze.linalg.{DenseVector, DenseMatrix}
 import breeze.stats.distributions.Rand
+
 /**
  * PDCO dense quadratic program generator
  *

@@ -7,12 +7,12 @@ import spire.syntax.cfor._
 object DenseVectorBenchmark extends MyRunner(classOf[DenseVectorBenchmark])
 
 trait BuildsRandomVectors {
-  private val uniform = Uniform(0,1)
+  private val uniform = Uniform(0, 1)
   def randomArray(size: Int, offset: Int = 0, stride: Int = 1): DenseVector[Double] = {
     require(offset >= 0)
     require(stride >= 1)
-    val result = new DenseVector(new Array[Double](offset+stride*size), offset, stride, size)
-    var i=0
+    val result = new DenseVector(new Array[Double](offset + stride * size), offset, stride, size)
+    var i = 0
     while (i < size) {
       result.unsafeUpdate(i, uniform.draw())
       i += 1
@@ -23,9 +23,9 @@ trait BuildsRandomVectors {
   def randomMatrix(m: Int, n: Int): DenseMatrix[Double] = {
     require(m > 0)
     require(n > 0)
-    val d = new Array[Double](m*n)
+    val d = new Array[Double](m * n)
     var i = 0
-    while (i < m*n) {
+    while (i < m * n) {
       d(i) = uniform.draw()
       i += 1
     }
@@ -69,54 +69,60 @@ class DenseVectorBenchmark extends BreezeBenchmark with BuildsRandomVectors {
     sum
   }
 
-  def valueAtBench(reps: Int, size: Int, stride: Int) = runWith(reps, {randomArray(size, stride=stride)})(arr => {
-    var i=0
-    var t: Double = 0
-    while (i < arr.size) {
-      t += arr.valueAt(i) //This is not strictly part of the benchmark, but done so that the JIT doensn't eliminate everything
-      i += 1
-    }
-    t
-  })
+  def valueAtBench(reps: Int, size: Int, stride: Int) =
+    runWith(reps, { randomArray(size, stride = stride) })(arr => {
+      var i = 0
+      var t: Double = 0
+      while (i < arr.size) {
+        t += arr
+          .valueAt(i) //This is not strictly part of the benchmark, but done so that the JIT doensn't eliminate everything
+        i += 1
+      }
+      t
+    })
 
-  def timeValueAt(reps: Int) = valueAtBench(reps, 1024*8, 1)
-  def timeValueAtStride4(reps: Int) = valueAtBench(reps, 1024*8, 4)
+  def timeValueAt(reps: Int) = valueAtBench(reps, 1024 * 8, 1)
+  def timeValueAtStride4(reps: Int) = valueAtBench(reps, 1024 * 8, 4)
 
-  def unsafeValueAtBench(reps: Int, size: Int, stride: Int) = runWith(reps, {randomArray(size, stride=stride)})(arr => {
-    var i=0
-    var t: Double = 0
-    while (i < arr.size) {
-      t += arr.unsafeValueAt(i) //This is not strictly part of the benchmark, but done so that the JIT doensn't eliminate everything
-      i += 1
-    }
-    t
-  })
+  def unsafeValueAtBench(reps: Int, size: Int, stride: Int) =
+    runWith(reps, { randomArray(size, stride = stride) })(arr => {
+      var i = 0
+      var t: Double = 0
+      while (i < arr.size) {
+        t += arr
+          .unsafeValueAt(i) //This is not strictly part of the benchmark, but done so that the JIT doensn't eliminate everything
+        i += 1
+      }
+      t
+    })
 
-  def timeUnsafeValueAt(reps: Int) = unsafeValueAtBench(reps, 1024*8, 1)
-  def timeUnsafeValueAtStride4(reps: Int) = unsafeValueAtBench(reps, 1024*8, 4)
+  def timeUnsafeValueAt(reps: Int) = unsafeValueAtBench(reps, 1024 * 8, 1)
+  def timeUnsafeValueAtStride4(reps: Int) = unsafeValueAtBench(reps, 1024 * 8, 4)
 
-  def updateBench(reps: Int, size: Int, stride: Int) = runWith(reps, {randomArray(size, stride=stride)})(arr => {
-    var i=0
-    while (i < arr.size) {
-      arr.update(i, i.toDouble)
-      i += 1
-    }
-    arr
-  })
+  def updateBench(reps: Int, size: Int, stride: Int) =
+    runWith(reps, { randomArray(size, stride = stride) })(arr => {
+      var i = 0
+      while (i < arr.size) {
+        arr.update(i, i.toDouble)
+        i += 1
+      }
+      arr
+    })
 
-  def timeUpdate(reps: Int) = updateBench(reps, 1024*8, 1)
-  def timeUpdateStride4(reps: Int) = updateBench(reps, 1024*8, 4)
+  def timeUpdate(reps: Int) = updateBench(reps, 1024 * 8, 1)
+  def timeUpdateStride4(reps: Int) = updateBench(reps, 1024 * 8, 4)
 
-  def unsafeUpdateBench(reps: Int, size: Int, stride: Int) = runWith(reps, {randomArray(size, stride=stride)})(arr => {
-    var i=0
-    while (i < arr.size) {
-      arr.unsafeUpdate(i, i.toDouble)
-      i += 1
-    }
-    arr
-  })
+  def unsafeUpdateBench(reps: Int, size: Int, stride: Int) =
+    runWith(reps, { randomArray(size, stride = stride) })(arr => {
+      var i = 0
+      while (i < arr.size) {
+        arr.unsafeUpdate(i, i.toDouble)
+        i += 1
+      }
+      arr
+    })
 
-  def timeUnsafeUpdate(reps: Int) = unsafeUpdateBench(reps, 1024*8, 1)
-  def timeUnsafeUpdateStride4(reps: Int) = unsafeUpdateBench(reps, 1024*8, 4)
+  def timeUnsafeUpdate(reps: Int) = unsafeUpdateBench(reps, 1024 * 8, 1)
+  def timeUnsafeUpdateStride4(reps: Int) = unsafeUpdateBench(reps, 1024 * 8, 4)
 
 }

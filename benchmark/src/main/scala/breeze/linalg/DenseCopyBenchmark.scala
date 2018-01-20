@@ -52,7 +52,4 @@ class DenseCopyBenchmark extends BreezeBenchmark {
 
 }
 
-
-
-
 object DenseCopyBenchmark extends MyRunner(classOf[DenseCopyBenchmark])

@@ -7,13 +7,12 @@ import breeze.stats.distributions.{Rand, RandBasis}
 /**
  * Created by jda on 3/17/15.
  */
-class AdaDeltaGradientDescent[T](rho: Double,
-                                 maxIter: Int,
-                                 tolerance: Double = 1e-5,
-                                 improvementTolerance: Double = 1e-4,
-                                 minImprovementWindow: Int = 50)
-                                (implicit vspace: MutableFiniteCoordinateField[T, _, Double],
-                                 rand: RandBasis = Rand)
+class AdaDeltaGradientDescent[T](
+    rho: Double,
+    maxIter: Int,
+    tolerance: Double = 1e-5,
+    improvementTolerance: Double = 1e-4,
+    minImprovementWindow: Int = 50)(implicit vspace: MutableFiniteCoordinateField[T, _, Double], rand: RandBasis = Rand)
     extends StochasticGradientDescent[T](1d, maxIter, tolerance, minImprovementWindow) {
 
   val epsilon = 1e-6
@@ -25,7 +24,12 @@ class AdaDeltaGradientDescent[T](rho: Double,
     History(zeroLike(init), zeroLike(init))
   }
 
-  override protected def updateHistory(newX: T, newGrad: T, newVal: Double, f: StochasticDiffFunction[T], oldState: State): History = {
+  override protected def updateHistory(
+      newX: T,
+      newGrad: T,
+      newVal: Double,
+      f: StochasticDiffFunction[T],
+      oldState: State): History = {
     val oldAvgSqGradient = oldState.history.avgSqGradient
     val newAvgSqGradient = (oldAvgSqGradient * rho) + ((newGrad *:* newGrad) * (1 - rho))
 

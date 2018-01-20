@@ -3,8 +3,8 @@ name := "breeze-viz"
 organization := "org.scalanlp"
 
 resolvers ++= Seq(
-  "ScalaNLP Maven2" at "http://repo.scalanlp.org/repo",
-  "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
+  "ScalaNLP Maven2".at("http://repo.scalanlp.org/repo"),
+  "Sonatype Snapshots".at("https://oss.sonatype.org/content/repositories/snapshots/")
 )
 
 libraryDependencies ++= Seq(
@@ -13,7 +13,7 @@ libraryDependencies ++= Seq(
   "org.apache.xmlgraphics" % "xmlgraphics-commons" % "1.3.1", // for eps gen
   // "org.apache.xmlgraphics" % "batik-dom" % "1.7",    // for svg gen
   // "org.apache.xmlgraphics" % "batik-svggen" % "1.7", // for svg gen
-  "com.lowagie" % "itext" % "2.1.5" intransitive() // for pdf gen
+  ("com.lowagie" % "itext" % "2.1.5").intransitive() // for pdf gen
 )
 
 scalaVersion := Common.scalaVersion
@@ -37,10 +37,6 @@ pomExtra :=
         <distribution>repo</distribution>
       </license>
     </licenses>
-    <scm>
-      <url>git@github.com:scalanlp/breeze.git</url>
-      <connection>scm:git:git@github.com:scalanlp/breeze-viz.git</connection>
-    </scm>
     <developers>
       <developer>
         <id>dlwh</id>
@@ -49,15 +45,16 @@ pomExtra :=
       </developer>
     </developers>
 
-pomIncludeRepository := { _ => false }
+pomIncludeRepository := { _ =>
+  false
+}
 
 publishMavenStyle := true
 
 publishTo := {
   val nexus = "https://oss.sonatype.org/"
   if (version.value.trim.endsWith("SNAPSHOT"))
-    Some("snapshots" at nexus + "content/repositories/snapshots")
+    Some("snapshots".at(nexus + "content/repositories/snapshots"))
   else
-    Some("releases" at nexus + "service/local/staging/deploy/maven2")
+    Some("releases".at(nexus + "service/local/staging/deploy/maven2"))
 }
-

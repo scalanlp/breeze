@@ -82,14 +82,13 @@ class DenseAxpyBenchmark extends BreezeBenchmark {
       largeDV += largeDV2
     }
   }
-  */
+ */
 
 }
 
-
 object DenseAxpyBenchmark extends MyRunner(classOf[DenseAxpyBenchmark])
 object DenseAxpyX {
-  def main(args: Array[String]):Unit = {
+  def main(args: Array[String]): Unit = {
 //    (new DenseAxpyBenchmark).timeSmallDVScaleAddInline(44400000)
   }
 }
