@@ -623,6 +623,6 @@ class DenseVectorOps_ComplexTest extends DenseVectorPropertyTestBase[Complex] {
 class DenseVectorOps_FloatTest extends DenseVectorPropertyTestBase[Float] {
   val space = DenseVector.space[Float]
 
-  override val TOL: Double = 1E-3
+  override val TOL: Double = 5E-3
   def genScalar: Arbitrary[Float] = RandomInstanceSupport.genReasonableFloat
 }
