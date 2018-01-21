@@ -81,7 +81,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
   }
 
   test("LUfactorization") {
-    val (m, _) = LU(DenseMatrix((29, 42, -4, 50, 1), (20, -31, 32, 21, 2), (-47, -20, 24, -22, 3), (3, 17, -45, 23, 4)))
+    val (m, _) = LU.primitive(DenseMatrix((29, 42, -4, 50, 1), (20, -31, 32, 21, 2), (-47, -20, 24, -22, 3), (3, 17, -45, 23, 4)))
     val aux = DenseMatrix(
       (-47.0000, -20.0000, 24.0000, -22.0000, 3.0000),
       (-0.4255, -39.5106, 42.2127, 11.6382, 3.2765),

@@ -7,7 +7,7 @@ import spire.implicits.cforRange
  * Computes the determinant of the given real matrix.
  */
 object det extends UFunc {
-  implicit def canDetUsingLU[T](implicit luImpl: LU.Impl[T, (DenseMatrix[Double], Array[Int])]): Impl[T, Double] = {
+  implicit def canDetUsingLU[T](implicit luImpl: LU.primitive.Impl[T, (DenseMatrix[Double], Array[Int])]): Impl[T, Double] = {
     new Impl[T, Double] {
       def apply(X: T): Double = {
 
@@ -15,7 +15,7 @@ object det extends UFunc {
         // of the diagonal elements X(i,i) where 0 <= i < N.
         // Since det(AB) = det(A) * det(B), the LU factorization is well-suited for
         // the computation of the determinant of general N-by-N matrices.
-        val (m: DenseMatrix[Double], ipiv: Array[Int]) = LU(X)
+        val (m: DenseMatrix[Double], ipiv: Array[Int]) = LU.primitive(X)
 
         // Count the number of exchanged rows.  ipiv contains an array of swapped indices,
         //  but it also contains indices that weren't swapped.  To count the swapped

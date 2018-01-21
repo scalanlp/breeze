@@ -15,11 +15,11 @@ import breeze.linalg.support.CanTranspose
  */
 object inv extends UFunc {
   implicit def canInvUsingLU_Double[T](
-      implicit luImpl: LU.Impl[T, (DenseMatrix[Double], Array[Int])]): Impl[T, DenseMatrix[Double]] = {
+      implicit luImpl: LU.primitive.Impl[T, (DenseMatrix[Double], Array[Int])]): Impl[T, DenseMatrix[Double]] = {
     new Impl[T, DenseMatrix[Double]] {
       def apply(X: T): DenseMatrix[Double] = {
         // Should these type hints be necessary?
-        val (m: DenseMatrix[Double], ipiv: Array[Int]) = LU(X)
+        val (m: DenseMatrix[Double], ipiv: Array[Int]) = LU.primitive(X)
         val N = m.rows
         val lwork = scala.math.max(1, N)
         val work = Array.ofDim[Double](lwork)
@@ -44,11 +44,11 @@ object inv extends UFunc {
   }
 
   implicit def canInvUsingLU_Float[T](
-      implicit luImpl: LU.Impl[T, (DenseMatrix[Float], Array[Int])]): Impl[T, DenseMatrix[Float]] = {
+      implicit luImpl: LU.primitive.Impl[T, (DenseMatrix[Float], Array[Int])]): Impl[T, DenseMatrix[Float]] = {
     new Impl[T, DenseMatrix[Float]] {
       def apply(X: T): DenseMatrix[Float] = {
         // Should these type hints be necessary?
-        val (m: DenseMatrix[Float], ipiv: Array[Int]) = LU(X)
+        val (m: DenseMatrix[Float], ipiv: Array[Int]) = LU.primitive(X)
         val N = m.rows
         val lwork = scala.math.max(1, N)
         val work = Array.ofDim[Float](lwork)

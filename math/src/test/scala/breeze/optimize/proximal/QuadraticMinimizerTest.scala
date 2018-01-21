@@ -40,7 +40,7 @@ class QuadraticMinimizerTest extends OptimizeTestBase with Matchers {
 
   test("lu factorization based forward-backward solve") {
     val H = QpGenerator.getGram(5)
-    val lu = LU(H)
+    val lu = LU.primitive(H)
     val q = DenseVector.rand[Double](5)
     val x = copy(q)
     QuadraticMinimizer.dgetrs(lu._1, lu._2, x)
