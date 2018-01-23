@@ -37,7 +37,7 @@ class StochasticGradientDescentTest extends OptimizeTestBase {
       }
 
       val result = sgd.minimize(f, init)
-      norm(result :- DenseVector.ones[Double](init.size) * 3.0, 2) < 1E-10
+      norm(result -:- DenseVector.ones[Double](init.size) * 3.0, 2) < 1E-10
     }
 
     check(Prop.forAll(optimizeThis _))

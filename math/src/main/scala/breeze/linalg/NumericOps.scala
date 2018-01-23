@@ -29,17 +29,9 @@ trait ImmutableNumericOps[+This] extends Any {
   // Immutable
   /** Element-wise sum of this and b. */
   final def +:+[TT >: This, B, That](b: B)(implicit op: OpAdd.Impl2[TT, B, That]) = op(repr, b)
-  @deprecated(
-    "This operator has confusing and often surprising precedence that leads to bugs. Use +:+ instead.",
-    "0.13")
-  final def :+[TT >: This, B, That](b: B)(implicit op: OpAdd.Impl2[TT, B, That]) = op(repr, b)
 
   /** Element-wise product of this and b. */
   final def *:*[TT >: This, B, That](b: B)(implicit op: OpMulScalar.Impl2[TT, B, That]) = op(repr, b)
-  @deprecated(
-    "This operator has confusing and often surprising precedence that leads to bugs. Use *:* instead.",
-    "0.13")
-  final def :*[TT >: This, B, That](b: B)(implicit op: OpMulScalar.Impl2[TT, B, That]) = op(repr, b)
 
   /** Element-wise equality comparator of this and b. */
   final def :==[TT >: This, B, That](b: B)(implicit op: OpEq.Impl2[TT, B, That]) = op(repr, b)
@@ -55,22 +47,14 @@ trait ImmutableNumericOps[+This] extends Any {
 
   /** Element-wise difference of this and b. */
   final def -:-[TT >: This, B, That](b: B)(implicit op: OpSub.Impl2[TT, B, That]) = op(repr, b)
-  @deprecated(
-    "This operator has confusing and often surprising precedence that leads to bugs. Use -:- instead.",
-    "0.13")
-  final def :-[TT >: This, B, That](b: B)(implicit op: OpSub.Impl2[TT, B, That]) = op(repr, b)
 
-  /** Alias for :-(b) for all b. */
+  /** Alias for -:-(b) for all b. */
   final def -[TT >: This, B, That](b: B)(implicit op: OpSub.Impl2[TT, B, That]) = {
     op(repr, b)
   }
 
   /** Element-wise modulo of this and b. */
   final def %:%[TT >: This, B, That](b: B)(implicit op: OpMod.Impl2[TT, B, That]) = op(repr, b)
-  @deprecated(
-    "This operator has confusing and often surprising precedence that leads to bugs. Use %:% instead.",
-    "0.13")
-  final def :%[TT >: This, B, That](b: B)(implicit op: OpMod.Impl2[TT, B, That]) = op(repr, b)
 
   /** Alias for :%(b) when b is a scalar. */
   final def %[TT >: This, B, That](b: B)(implicit op: OpMod.Impl2[TT, B, That]) = {
@@ -84,10 +68,6 @@ trait ImmutableNumericOps[+This] extends Any {
   // Immutable
   /** Element-wise quotient of this and b. */
   final def /:/[TT >: This, B, That](b: B)(implicit op: OpDiv.Impl2[TT, B, That]) = op(repr, b)
-  @deprecated(
-    "This operator has confusing and often surprising precedence that leads to bugs. Use /:/ instead.",
-    "0.13")
-  final def :/[TT >: This, B, That](b: B)(implicit op: OpDiv.Impl2[TT, B, That]) = op(repr, b)
 
   /** Alias for :/(b) when b is a scalar. */
   final def /[TT >: This, B, That](b: B)(implicit op: OpDiv.Impl2[TT, B, That]) = {
@@ -96,10 +76,6 @@ trait ImmutableNumericOps[+This] extends Any {
 
   /** Element-wise exponentiation of this and b. */
   final def ^:^[TT >: This, B, That](b: B)(implicit op: OpPow.Impl2[TT, B, That]) = op(repr, b)
-  @deprecated(
-    "This operator has confusing and often surprising precedence that leads to bugs. Use ^:^ instead.",
-    "0.13")
-  final def :^[TT >: This, B, That](b: B)(implicit op: OpPow.Impl2[TT, B, That]) = op(repr, b)
 
   /** Inner product of this and b. */
   final def dot[TT >: This, B, BB >: B, That](b: B)(implicit op: OpMulInner.Impl2[TT, BB, That]) = op(repr, b)
@@ -112,26 +88,14 @@ trait ImmutableNumericOps[+This] extends Any {
 
   /** Element-wise logical "and" operator -- returns true if corresponding elements are non-zero. */
   final def &:&[TT >: This, B, That](b: B)(implicit op: OpAnd.Impl2[TT, B, That]) = op(repr, b)
-  @deprecated(
-    "This operator has confusing and often surprising precedence that leads to bugs. Use &:& instead.",
-    "0.13")
-  final def :&[TT >: This, B, That](b: B)(implicit op: OpAnd.Impl2[TT, B, That]) = op(repr, b)
 
   /** Element-wise logical "or" operator -- returns true if either element is non-zero. */
   final def |:|[TT >: This, B, That](b: B)(implicit op: OpOr.Impl2[TT, B, That]) = op(repr, b)
-  @deprecated(
-    "This operator has confusing and often surprising precedence that leads to bugs. Use |:| instead.",
-    "0.13")
-  final def :|[TT >: This, B, That](b: B)(implicit op: OpOr.Impl2[TT, B, That]) = op(repr, b)
 
   /** Element-wise logical "xor" operator -- returns true if only one of the corresponding elements is non-zero. */
   final def ^^:^^[TT >: This, B, That](b: B)(implicit op: OpXor.Impl2[TT, B, That]) = op(repr, b)
-  @deprecated(
-    "This operator has confusing and often surprising precedence that leads to bugs. Use ^^:^^ instead.",
-    "0.13")
-  final def :^^[TT >: This, B, That](b: B)(implicit op: OpXor.Impl2[TT, B, That]) = op(repr, b)
 
-  /** Alias for :&&(b) for all b. */
+  /** Alias for &:&(b) for all b. */
   final def &[TT >: This, B, That](b: B)(implicit op: OpAnd.Impl2[TT, B, That]) = {
     op(repr, b)
   }
@@ -149,7 +113,7 @@ trait ImmutableNumericOps[+This] extends Any {
   /*
    * Matrix-y ops
    */
-  /** Matrix multiplication (and scalar multiplication that follows standard order of operations) */
+  /** Matrix multiplication */
   final def *[TT >: This, B, That](b: B)(implicit op: OpMulMatrix.Impl2[TT, B, That]) = {
     op(repr, b)
   }
@@ -260,31 +224,15 @@ trait NumericOps[+This] extends ImmutableNumericOps[This] {
 
   /** Element-wise less=than comparator of this and b. */
   final def <:<[TT >: This, B, That](b: B)(implicit op: OpLT.Impl2[TT, B, That]) = op(repr, b)
-  @deprecated(
-    "This operator has confusing and often surprising precedence that leads to bugs. Use <:< instead.",
-    "0.13")
-  final def :<[TT >: This, B, That](b: B)(implicit op: OpLT.Impl2[TT, B, That]) = op(repr, b)
 
   /** Element-wise less-than-or-equal-to comparator of this and b. */
   final def <:=[TT >: This, B, That](b: B)(implicit op: OpLTE.Impl2[TT, B, That]) = op(repr, b)
-  @deprecated(
-    "This operator has confusing and often surprising precedence that leads to bugs. Use <:= instead.",
-    "0.13")
-  final def :<=[TT >: This, B, That](b: B)(implicit op: OpLTE.Impl2[TT, B, That]) = op(repr, b)
 
   /** Element-wise greater-than comparator of this and b. */
   final def >:>[TT >: This, B, That](b: B)(implicit op: OpGT.Impl2[TT, B, That]) = op(repr, b)
-  @deprecated(
-    "This operator has confusing and often surprising precedence that leads to bugs. Use >:> instead.",
-    "0.13")
-  final def :>[TT >: This, B, That](b: B)(implicit op: OpGT.Impl2[TT, B, That]) = op(repr, b)
 
   /** Element-wise greater-than-or-equal-to comparator of this and b. */
   final def >:=[TT >: This, B, That](b: B)(implicit op: OpGTE.Impl2[TT, B, That]) = op(repr, b)
-  @deprecated(
-    "This operator has confusing and often surprising precedence that leads to bugs. Use >:= instead.",
-    "0.13")
-  final def :>=[TT >: This, B, That](b: B)(implicit op: OpGTE.Impl2[TT, B, That]) = op(repr, b)
 
   /** Mutates this by element-wise and of this and b. */
   final def :&=[TT >: This, B](b: B)(implicit op: OpAnd.InPlaceImpl2[TT, B]): This = {

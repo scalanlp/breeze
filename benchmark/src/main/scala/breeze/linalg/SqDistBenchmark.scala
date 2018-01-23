@@ -17,9 +17,9 @@ class SqDistBenchmark extends BreezeBenchmark {
     cforRange(0 until reps) { i =>
       val t1 = -2.0 * (x1.t * x2)
 
-      val t2 = t1(*, ::) + sum(x2 :* x2, Axis._0).t
+      val t2 = t1(*, ::) + sum(x2 *:* x2, Axis._0).t
 
-      t2(::, *) + sum(x1 :* x1, Axis._0).t
+      t2(::, *) + sum(x1 *:* x1, Axis._0).t
     }
   }
 
@@ -31,7 +31,7 @@ class SqDistBenchmark extends BreezeBenchmark {
       val x1OnesT = DenseMatrix.ones[Double](M, D)
       val x2Ones = DenseMatrix.ones[Double](D, N)
       // (M x D) * D x N  -= M X N += (D x M).t * (D X N)
-      (x1 :* x1).t * x2Ones -= (x1.t * x2 *= 2.0) += x1OnesT * (x2 :* x2)
+      (x1 *:* x1).t * x2Ones -= (x1.t * x2 *= 2.0) += x1OnesT * (x2 *:* x2)
     }
   }
 
@@ -76,9 +76,9 @@ class SqDistBenchmark extends BreezeBenchmark {
     cforRange(0 until reps) { i =>
       val t1 = (x1.t * x2) *= -2.0
 
-      t1(*, ::) += sum(x2 :* x2, Axis._0).t
+      t1(*, ::) += sum(x2 *:* x2, Axis._0).t
 
-      t1(::, *) += sum(x1 :* x1, Axis._0).t
+      t1(::, *) += sum(x1 *:* x1, Axis._0).t
     }
   }
 
@@ -91,7 +91,7 @@ class SqDistBenchmark extends BreezeBenchmark {
     cforRange(0 until reps) { i =>
       val t1 = (x1.t * x2) *= -2.0
 
-      t1(*, ::) += sum(x2 :* x2, Axis._0).t
+      t1(*, ::) += sum(x2 *:* x2, Axis._0).t
     }
   }
 
@@ -99,14 +99,14 @@ class SqDistBenchmark extends BreezeBenchmark {
     cforRange(0 until reps) { i =>
       val t1 = (x1.t * x2) *= -2.0
 
-            t1(::, *) += sum(x1 :* x1, Axis._0).t
+            t1(::, *) += sum(x1 *:* x1, Axis._0).t
     }
   }
 
   def timeSumNoAdd(reps: Int) = {
     cforRange(0 until reps) { i =>
 
-      sum(x2 :* x2, Axis._0).t
+      sum(x2 *:* x2, Axis._0).t
 
     }
   }

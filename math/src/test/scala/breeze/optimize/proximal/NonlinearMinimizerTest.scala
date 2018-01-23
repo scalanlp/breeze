@@ -28,7 +28,7 @@ class NonlinearMinimizerTest extends OptimizeTestBase with Matchers {
     -0.3480575854151014,
     -0.4729810900829228)
 
-  val cost = QuadraticMinimizer.Cost(H, f :* (-1.0))
+  val cost = QuadraticMinimizer.Cost(H, f *:* (-1.0))
   val init = DenseVector.zeros[Double](n)
 
   test("Nonlinear Minimization with Identity constraint compared to BFGS") {
@@ -51,7 +51,7 @@ class NonlinearMinimizerTest extends OptimizeTestBase with Matchers {
     val atb = DenseVector(-1.632, 2.115, 1.094, -1.025, -0.636)
     val goodx = DenseVector(0.13025, 0.54506, 0.2874, 0.0, 0.028628)
     val nlResult = NonlinearMinimizer(n, POSITIVE, 0.0)
-      .minimizeAndReturnState(QuadraticMinimizer.Cost(ata, atb :* (-1.0)), DenseVector.zeros[Double](n))
+      .minimizeAndReturnState(QuadraticMinimizer.Cost(ata, atb *:* -1.0), DenseVector.zeros[Double](n))
     println(s"Positivity projection iter ${nlResult.iter}")
     assert(norm(nlResult.x - goodx, 2) < 1E-3)
   }
@@ -67,14 +67,14 @@ class NonlinearMinimizerTest extends OptimizeTestBase with Matchers {
     val atb = DenseVector(-1.632, 2.115, 1.094, -1.025, -0.636)
     val goodx = DenseVector(0.13025, 0.54506, 0.2874, 0.0, 0.028628)
     val nlResult = new NonlinearMinimizer(ProjectPos())
-      .minimizeAndReturnState(QuadraticMinimizer.Cost(ata, atb :* (-1.0)), DenseVector.zeros[Double](n))
+      .minimizeAndReturnState(QuadraticMinimizer.Cost(ata, atb *:* (-1.0)), DenseVector.zeros[Double](n))
     println(s"Positivity proximal iter ${nlResult.iter}")
     assert(norm(nlResult.z - goodx, 2) < 1E-3)
   }
 
   test("Nonlinear Minimization with bounds constraint compared to QuadraticMinimizer") {
     init := 0.0
-    val gold = QuadraticMinimizer(n, BOX).minimize(H, f :* (-1.0))
+    val gold = QuadraticMinimizer(n, BOX).minimize(H, f *:* (-1.0))
     val nlResult = NonlinearMinimizer(n, BOX, 0.0).minimizeAndReturnState(cost, init)
     println(s"Bounds projection iter ${nlResult.iter}")
     assert(norm(nlResult.x - gold) < 1E-4)
@@ -82,7 +82,7 @@ class NonlinearMinimizerTest extends OptimizeTestBase with Matchers {
 
   test("Nonlinear Minimization with bounds proximal compared to QuadraticMinimizer") {
     init := 0.0
-    val gold = QuadraticMinimizer(n, BOX).minimize(H, f :* (-1.0))
+    val gold = QuadraticMinimizer(n, BOX).minimize(H, f *:* (-1.0))
     val lb = DenseVector.zeros[Double](n)
     val ub = DenseVector.ones[Double](n)
     val nlResult = new NonlinearMinimizer(ProjectBox(lb, ub)).minimizeAndReturnState(cost, init)

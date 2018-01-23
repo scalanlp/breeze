@@ -153,7 +153,7 @@ object CanConvolve extends SerializableLogging {
 //                method: OptMethod): T = {
 //        require(overhang == OptOverhang.None, "Overhang must equal OptOverhang.none to return scalar from convolution.")
 //        require(data.length == kernel.length, "Data and kernel must have same length to return scalar from convolution. ")
-//        if(correlate) sum(data :* kernel) else sum(data :* reverse(kernel))
+//        if(correlate) sum(data *:* kernel) else sum(data *:* reverse(kernel))
 //      }
 //    }
 //  }

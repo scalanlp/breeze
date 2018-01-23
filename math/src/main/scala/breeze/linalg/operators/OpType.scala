@@ -43,7 +43,7 @@ object OpAdd extends OpAdd with UFunc {
 }
 
 /**
- * Type marker for BinaryOp A :- B and BinaryUpdateOp A :-= B.
+ * Type marker for BinaryOp A -:- B and BinaryUpdateOp A :-= B.
  *
  * @author dramage
  */
@@ -55,7 +55,7 @@ object OpSub extends OpSub with UFunc {
 }
 
 /**
- * Type marker for BinaryOp A :* B and BinaryUpdateOp A :*= B.
+ * Type marker for BinaryOp A *:* B and BinaryUpdateOp A :*= B.
  *
  * @author dramage
  */

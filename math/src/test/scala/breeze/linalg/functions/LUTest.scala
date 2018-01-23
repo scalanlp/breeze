@@ -14,9 +14,7 @@ class LUTest extends FunSuite {
     val recon = p * l * u
     val diff = abs(a - recon)
     assert(norm(sum(diff)) <= 1E-10)
-
   }
-
 
   test("Square LU decompose results in original matrix - float") {
     implicit val basis = RandBasis.mt0
@@ -25,7 +23,6 @@ class LUTest extends FunSuite {
     val recon = p * l * u
     val diff = abs(a - recon)
     assert(norm(sum(diff)) <= 1E-3)
-
   }
 
 }
