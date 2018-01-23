@@ -97,6 +97,18 @@ object BroadcastedColumns {
     }
   }
 
+  implicit def broadcastOp2_2[Op, T, ColumnType, LHS, OpResult, Result](
+      implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, ColumnType],
+      op: UImpl2[Op, LHS, ColumnType, OpResult],
+      cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result])
+  : UImpl2[Op, LHS, BroadcastedColumns[T, ColumnType], Result] = {
+    new UImpl2[Op, LHS, BroadcastedColumns[T, ColumnType], Result] {
+      def apply(v: LHS, v2: BroadcastedColumns[T, ColumnType]): Result = {
+        cc(v2.underlying, Axis._0) { op(v, _) }
+      }
+    }
+  }
+
   implicit def broadcastInplaceOp2[Op, T, ColumnType, RHS, OpResult](
       implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, ColumnType],
       op: InPlaceImpl2[Op, ColumnType, RHS],

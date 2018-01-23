@@ -1,5 +1,6 @@
 package breeze.linalg
 
+import breeze.linalg.operators.OpMulInner
 import org.scalatest.FunSuite
 import breeze.stats.mean
 
@@ -75,7 +76,8 @@ class BroadcastedTest extends FunSuite {
     val dm = DenseMatrix((-1.0, -2.0, -3.0), (1.0, 2.0, 3.0), (4.0, 5.0, 6.0))
 
     import breeze.features._
-    val r = dm(*, ::).dot(new FeatureVector(Array(1, 2)))
+//    implicit val bc = BroadcastedRows.broadcastOp2[OpMulInner.type, DenseMatrix[Double], DenseVector[Double], FeatureVector, Double, DenseVector[Double]]
+    val r = new FeatureVector(Array(1, 2)).dot(dm(*, ::))
     assert(r === DenseVector(-5.0, 5.0, 11.0))
   }
 
@@ -109,7 +111,6 @@ class BroadcastedTest extends FunSuite {
 
     assert(dm(::, *).toIndexedSeq == dm(::, *).iterator.toIndexedSeq)
     assert(dm(*, ::).toIndexedSeq.map(_.t) == dm(*, ::).iterator.toIndexedSeq)
-
   }
 
   test("broadcasted min/max") {
@@ -125,6 +126,12 @@ class BroadcastedTest extends FunSuite {
     assert(d == DenseMatrix.vertcat(-b2.toDenseMatrix, -b2.toDenseMatrix, -b2.toDenseMatrix))
     val d2 = min(b(::, *), -b2)
     assert(d2 == DenseVector.horzcat(-b2, -b2, -b2))
+  }
+
+  test("broadcasted RHS") {
+    val v = DenseVector.rand(3)
+    val m = DenseMatrix.rand(3, 4)
+    v /:/ m(::, *)
   }
 
 }
