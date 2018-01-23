@@ -122,6 +122,7 @@ Contributions from:
 * @qilab
 * Weichen Xu (@WeichenXu123)
 * Sergei Lebedev (@superbobry)
+* Zac Blanco (@ZacBlanco)
 
 Corporate (Code) Contributors:
 * [Semantic Machines](http://www.semanticmachines.com/) (@semanticmachines)
