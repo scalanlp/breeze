@@ -25,7 +25,8 @@ import breeze.linalg.support.CanCopy
  *
  * Creates a copy of the array with its elements rearranged in such a way that the value of the element
  * in kth position is in the position it would be in a sorted array. All elements smaller than the kth element
- * are moved before this element and all equal or greater are moved behind it.
+ * are moved to the start of the array, all greater are moved to the end. Equal elements will be on the
+ * immeditate left or right.
  * The ordering of the elements in the two partitions is undefined.
  *
  * Based on the numpy method of the same name. Docs lifted from numpy
