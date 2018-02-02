@@ -30,8 +30,6 @@ object quickSelect extends UFunc {
 
       def apply(x: Array[T], position: Int): Unit = {
 
-        var pivotIndex = -1
-
         def implQuickSelectSort(x: Array[T], position: Int): Unit = {
           var left = 0
           var right = x.length - 1
@@ -39,11 +37,12 @@ object quickSelect extends UFunc {
             position >= left && position <= right,
             "Invalid position specification: " + position + " with array length: " + x.length)
 
-          while (pivotIndex != position && right >= left) {
+          while (right > left) {
             val pvt = med3(left, right, ((left.toLong + right) / 2).toInt)
-            pivotIndex = partition(x, left, right, pvt)
-            if (pivotIndex < position) left = pivotIndex + 1
-            else if (pivotIndex > position) right = pivotIndex - 1
+            val (lt, gt) = partition3Ways(x, left, right, pvt)
+            if (lt <= position && position <= gt) { left = right }
+            else if (position < lt) { right = lt - 1 }
+            else if (position > gt) { left = gt + 1 }
           }
         }
 
@@ -55,22 +54,20 @@ object quickSelect extends UFunc {
           }
         }
 
-        def partition(x: Array[T], left: Int, right: Int, pivot: Int): Int = {
+        def partition3Ways(x: Array[T], left: Int, right: Int, pivot: Int): (Int, Int) = {
           val pivotVal = x(pivot)
-          swap(pivot, right)
-          var storeIndex = left
+          swap(pivot, left)
+          var i = left
+          var lt = left
+          var gt = right
 
-          var index = left
-          while (index < right) {
-            if (x(index) < pivotVal) {
-              swap(index, storeIndex)
-              storeIndex += 1
-            }
-            index += 1
+          while (i <= gt) {
+            if (x(i) < pivotVal) { swap(lt, i); lt += 1; i += 1 }
+            else if (x(i) > pivotVal) { swap(gt, i); gt -= 1 }
+            else if (x(i) == pivotVal) { i += 1 }
           }
-          swap(right, storeIndex)
 
-          storeIndex
+          (lt, gt)
         }
 
         def swap(a: Int, b: Int) {
@@ -115,11 +112,12 @@ object quickSelect extends UFunc {
             position >= left && position <= right,
             "Invalid position specification: " + position + " with coll length: " + x.length)
 
-          while (pivotIndex != position && right >= left) {
+          while (right > left) {
             val pvt = med3(left, right, ((left.toLong + right) / 2).toInt)
-            pivotIndex = partition(x, left, right, pvt)
-            if (pivotIndex < position) left = pivotIndex + 1
-            else if (pivotIndex > position) right = pivotIndex - 1
+            val (lt, gt) = partition3Ways(x, left, right, pvt)
+            if (lt <= position && position <= gt) { left = right }
+            else if (position < lt) { right = lt - 1 }
+            else if (position > gt) { left = gt + 1 }
           }
 
           def med3(p1: Int, p2: Int, p3: Int) = {
@@ -131,22 +129,20 @@ object quickSelect extends UFunc {
           }
         }
 
-        def partition(x: mutable.IndexedSeq[T], left: Int, right: Int, pivot: Int): Int = {
+        def partition3Ways(x: mutable.IndexedSeq[T], left: Int, right: Int, pivot: Int): (Int, Int) = {
           val pivotVal = x(pivot)
-          swap(pivot, right)
-          var storeIndex = left
+          swap(pivot, left)
+          var i = left
+          var lt = left
+          var gt = right
 
-          var index = left
-          while (index < right) {
-            if (ordering.lt(x(index), pivotVal)) {
-              swap(index, storeIndex)
-              storeIndex += 1
-            }
-            index += 1
+          while (i <= gt) {
+            if (ordering.lt(x(i), pivotVal)) { swap(lt, i); lt += 1; i += 1 }
+            else if (ordering.gt(x(i), pivotVal)) { swap(gt, i); gt -= 1 }
+            else if (ordering.equiv(x(i), pivotVal)) { i += 1 }
           }
-          swap(right, storeIndex)
 
-          storeIndex
+          (lt, gt)
         }
 
         def swap(a: Int, b: Int) {
@@ -186,8 +182,6 @@ object quickSelectImpl extends UFunc {
 
       def apply(x: Array[T], position: Int): T = {
 
-        var pivotIndex = -1
-
         def implQuickSelectSort(x: Array[T], position: Int): Unit = {
           var left = 0
           var right = x.length - 1
@@ -195,11 +189,12 @@ object quickSelectImpl extends UFunc {
             position >= left && position <= right,
             "Invalid position specification: " + position + " with array length: " + x.length)
 
-          while (pivotIndex != position && right >= left) {
+          while (right > left) {
             val pvt = med3(left, right, ((left.toLong + right) / 2).toInt)
-            pivotIndex = partition(x, left, right, pvt)
-            if (pivotIndex < position) left = pivotIndex + 1
-            else if (pivotIndex > position) right = pivotIndex - 1
+            val (lt, gt) = partition3Ways(x, left, right, pvt)
+            if (lt <= position && position <= gt) { left = right }
+            else if (position < lt) { right = lt - 1 }
+            else if (position > gt) { left = gt + 1 }
           }
         }
 
@@ -211,22 +206,20 @@ object quickSelectImpl extends UFunc {
           }
         }
 
-        def partition(x: Array[T], left: Int, right: Int, pivot: Int): Int = {
+        def partition3Ways(x: Array[T], left: Int, right: Int, pivot: Int): (Int, Int) = {
           val pivotVal = x(pivot)
-          swap(pivot, right)
-          var storeIndex = left
+          swap(pivot, left)
+          var i = left
+          var lt = left
+          var gt = right
 
-          var index = left
-          while (index < right) {
-            if (x(index) < pivotVal) {
-              swap(index, storeIndex)
-              storeIndex += 1
-            }
-            index += 1
+          while (i <= gt) {
+            if (x(i) < pivotVal) { swap(lt, i); lt += 1; i += 1 }
+            else if (x(i) > pivotVal) { swap(gt, i); gt -= 1 }
+            else if (x(i) == pivotVal) { i += 1 }
           }
-          swap(right, storeIndex)
 
-          storeIndex
+          (lt, gt)
         }
 
         def swap(a: Int, b: Int) {
@@ -236,8 +229,7 @@ object quickSelectImpl extends UFunc {
         }
 
         implQuickSelectSort(x, position)
-        x(pivotIndex) // return
-
+        x(position) // return
       }
     }
 
