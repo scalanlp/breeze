@@ -78,8 +78,13 @@ class OpenAddressHashArrayTest extends FunSuite with Checkers {
     assert(oah(0) == -1.0)
     assert(oah(1) == -1.0)
     assert(oah.activeSize == 0)
+
     oah(0) = -1.0
     assert(oah(0) == -1.0)
     assert(oah.activeSize == 0)
+
+    oah(1) = 1.0
+    oah(1) = -1.0
+    assert(oah(1) == -1.0)
   }
 }
