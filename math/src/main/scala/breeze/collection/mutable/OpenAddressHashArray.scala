@@ -94,8 +94,9 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) V] priva
   final def update(i: Int, v: V) {
     if (i < 0 || i >= size) throw new IndexOutOfBoundsException(i + " is out of bounds for size " + size)
     val pos = locate(i)
+
     _data(pos) = v
-    if (_index(pos) != i) {
+    if (_index(pos) != i && v != defaultValue.value) {
       load += 1
       if (load * 4 > _index.length * 3) {
         rehash()
