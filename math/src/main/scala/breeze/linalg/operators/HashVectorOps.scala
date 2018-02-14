@@ -8,10 +8,10 @@ import breeze.linalg.support.{CanCopy, CanZipMapKeyValues, CanZipMapValues}
 import breeze.macros.expand
 import breeze.math.{Field, Ring, Semiring}
 import breeze.storage.Zero
-
 import scala.reflect.ClassTag
 import scala.{specialized => spec}
 import scalaxy.debug._
+
 import spire.syntax.cfor._
 
 trait DenseVector_HashVector_Ops { this: HashVector.type =>
@@ -245,7 +245,9 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
 
   @expand
   @expand.valify
-  implicit def hv_s_rhs_idempotent_Op[@expand.args(Int, Double, Float, Long) T, @expand.args(OpAdd, OpSub) Op <: OpType](
+  implicit def hv_s_rhs_idempotent_Op[
+      @expand.args(Int, Double, Float, Long) T,
+      @expand.args(OpAdd, OpSub) Op <: OpType](
       implicit @expand.sequence[Op]({ _ + _ }, { _ - _ })
       op: Op.Impl2[T, T, T],
       @expand.sequence[T](0, 0.0, 0.0f, 0l)
@@ -360,7 +362,9 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
 
   @expand
   @expand.valify
-  implicit def hv_s_nilpotent_UpdateOp[@expand.args(Int, Double, Float, Long) T, @expand.args(OpMulScalar) Op <: OpType](
+  implicit def hv_s_nilpotent_UpdateOp[
+      @expand.args(Int, Double, Float, Long) T,
+      @expand.args(OpMulScalar) Op <: OpType](
       implicit @expand.sequence[Op]({ _ * _ })
       op: Op.Impl2[T, T, T]): Op.InPlaceImpl2[HashVector[T], T] = new Op.InPlaceImpl2[HashVector[T], T] {
     def apply(a: HashVector[T], b: T): Unit = {
@@ -500,14 +504,13 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
 
 trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type =>
   import breeze.math.PowImplicits._
+
   @expand
   @expand.valify
   implicit def hv_sv_lhs_nilpotent_Op[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
-      implicit @expand.sequence[Op]({ _ / _ }, { (a, b) =>
-        b
-      }, { _ % _ }, { _.pow(_) })
+      implicit @expand.sequence[Op]({ _ / _ }, { (a, b) => b }, { _ % _ }, { _.pow(_) })
       op: Op.Impl2[T, T, T],
       @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T): Op.Impl2[HashVector[T], SparseVector[T], HashVector[T]] =
     new Op.Impl2[HashVector[T], SparseVector[T], HashVector[T]] {
@@ -531,6 +534,7 @@ trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type 
       }
       implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
     }
+
   @expand
   @expand.valify
   implicit def hv_sv_nilpotent_Op[@expand.args(Int, Double, Float, Long) T](
@@ -553,27 +557,47 @@ trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type 
       }
       implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulScalar.type, Vector[T]]].register(this)
     }
+
   @expand
   @expand.valify
-  implicit def hv_sv_Idempotent_Op[@expand.args(Int, Double, Float, Long) T, @expand.args(OpAdd, OpSub) Op <: OpType](
-      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ })
-      op: Op.Impl2[T, T, T]): Op.Impl2[HashVector[T], SparseVector[T], HashVector[T]] =
+  implicit def hv_sv_Idempotent_Op[
+      @expand.args(Int, Double, Float, Long) T,
+      @expand.args(OpAdd, OpSub, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+    : Op.Impl2[HashVector[T], SparseVector[T], HashVector[T]] = {
     new Op.Impl2[HashVector[T], SparseVector[T], HashVector[T]] {
       def apply(a: HashVector[T], b: SparseVector[T]): HashVector[T] = {
-        require(b.length == a.length, "Vectors must be the same length!")
         val result = a.copy
+        val updateOp = implicitly[Op.InPlaceImpl2[HashVector[T], SparseVector[T]]]
+        updateOp(result, b)
+        result
+      }
+
+      implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]]
+        .register(this)
+    }
+  }
+
+  @expand.valify
+  @expand
+  implicit def hv_sv_UpdateOp[@expand.args(Int, Double, Float, Long) T, @expand.args(OpAdd, OpSub) Op <: OpType](
+      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }) op: Op.Impl2[T, T, T]
+  ): Op.InPlaceImpl2[HashVector[T], SparseVector[T]] = {
+    new Op.InPlaceImpl2[HashVector[T], SparseVector[T]] {
+      def apply(a: HashVector[T], b: SparseVector[T]): Unit = {
+        require(b.length == a.length, "Vectors must be the same length!")
         var boff = 0
 
         while (boff < b.activeSize) {
           val k = b.indexAt(boff)
           val v = b.valueAt(boff)
-          result(k) = op(a(k), v)
+          a(k) = op(a(k), v)
           boff += 1
         }
-        result
       }
-      implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
+      implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
     }
+  }
+
   @expand
   @expand.valify
   implicit def canDot_HV_SV[@expand.args(Int, Long, Float, Double) T](
@@ -598,31 +622,6 @@ trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type 
       implicitly[BinaryRegistry[Vector[T], Vector[T], OpMulInner.type, T]].register(this)
     }
   }
-
-  protected def updateFromPure[T, Op, Other](
-      implicit op: UFunc.UImpl2[Op, HashVector[T], Other, HashVector[T]],
-      set: OpSet.InPlaceImpl2[HashVector[T], HashVector[T]]): UFunc.InPlaceImpl2[Op, HashVector[T], Other] = {
-    new UFunc.InPlaceImpl2[Op, HashVector[T], Other] {
-      def apply(a: HashVector[T], b: Other) {
-        val result = op(a, b)
-        a := result
-      }
-    }
-  }
-
-  @expand.valify
-  @expand
-  implicit def hv_sv_UpdateOp[
-      @expand.args(Int, Double, Float, Long) T,
-      @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-    : Op.InPlaceImpl2[HashVector[T], SparseVector[T]] = {
-    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(
-      updateFromPure[T, Op.type, SparseVector[T]](
-        implicitly[Op.Impl2[HashVector[T], SparseVector[T], HashVector[T]]],
-        implicitly[OpSet.InPlaceImpl2[HashVector[T], HashVector[T]]]
-      ))
-  }
-
 }
 
 trait SparseVector_HashVector_Ops extends HashVectorOps with HashVector_SparseVector_Ops { this: HashVector.type =>
