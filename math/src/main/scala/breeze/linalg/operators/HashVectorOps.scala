@@ -12,6 +12,7 @@ import scala.reflect.ClassTag
 import scala.{specialized => spec}
 import scalaxy.debug._
 
+import breeze.util.ArrayUtil
 import spire.syntax.cfor._
 
 trait DenseVector_HashVector_Ops { this: HashVector.type =>
@@ -306,10 +307,8 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
   @expand.valify
   implicit def hv_hv_UpdateOp[
       @expand.args(Int, Double, Float, Long) T,
-      @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
-      implicit @expand.sequence[Op]({ _ * _ }, { _ / _ }, { (a, b) =>
-        b
-      }, { _ % _ }, { _.pow(_) })
+      @expand.args(OpMulScalar, OpDiv, OpMod, OpPow) Op <: OpType](
+      implicit @expand.sequence[Op]({ _ * _ }, { _ / _ }, { _ % _ }, { _.pow(_) })
       op: Op.Impl2[T, T, T]): Op.InPlaceImpl2[HashVector[T], HashVector[T]] =
     new Op.InPlaceImpl2[HashVector[T], HashVector[T]] {
       def apply(a: HashVector[T], b: HashVector[T]): Unit = {
@@ -321,6 +320,17 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
         }
       }
       implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
+    }
+
+  @expand
+  @expand.valify
+  implicit def hv_hv_Set[@expand.args(Int, Double, Float, Long) T]: OpSet.InPlaceImpl2[HashVector[T], HashVector[T]] =
+    new OpSet.InPlaceImpl2[HashVector[T], HashVector[T]] {
+      def apply(a: HashVector[T], b: HashVector[T]): Unit = {
+        require(b.length == a.length, "Vectors must be the same length!")
+        b.array.copyTo(a.array)
+      }
+      implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], OpSet.type]].register(this)
     }
 
   @expand
@@ -534,7 +544,6 @@ trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type 
       }
       implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
     }
-
   @expand
   @expand.valify
   implicit def hv_sv_nilpotent_Op[@expand.args(Int, Double, Float, Long) T](

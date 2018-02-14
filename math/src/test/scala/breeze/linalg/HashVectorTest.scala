@@ -60,6 +60,13 @@ class HashVectorTest extends FunSuite {
     assertClose(norm(bss, 2), norm(bd, 2))
   }
 
+  test("Set") {
+    val a = HashVector.zeros[Double](1024)
+    val b = HashVector(1024)(42 -> 0.5)
+    a := b
+    assert(a.activeSize == 1)
+  }
+
   test("Norm") {
     val v = HashVector(-0.4326, -1.6656, 0.1253, 0.2877, -1.1465)
     assertClose(norm(v, 1), 3.6577)
