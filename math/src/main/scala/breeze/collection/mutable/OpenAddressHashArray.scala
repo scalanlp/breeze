@@ -18,10 +18,10 @@ package breeze.collection.mutable
 
 import java.util
 
-import breeze.storage.{ConfigurableDefault, Storage, Zero}
-
 import scala.reflect.ClassTag
 import scala.util.hashing.MurmurHash3
+
+import breeze.storage.{ConfigurableDefault, Storage, Zero}
 
 /**
  * This is a Sparse Array implementation backed by a linear-probing
@@ -31,9 +31,9 @@ import scala.util.hashing.MurmurHash3
  */
 @SerialVersionUID(1L)
 final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) V] private[mutable] (
-    protected var _index: Array[Int],
-    protected var _data: Array[V],
-    protected var load: Int,
+    private[mutable] var _index: Array[Int],
+    private[mutable] var _data: Array[V],
+    private[mutable] var load: Int,
     val size: Int,
     val default: ConfigurableDefault[V] = ConfigurableDefault.default[V])(
     implicit protected val manElem: ClassTag[V],
@@ -169,6 +169,14 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) V] priva
       load,
       size,
       default)
+  }
+
+  def copyTo(other: OpenAddressHashArray[V]): Unit = {
+    require(other.length == other.length, "vectors must have the same length")
+    require(defaultValue == other.defaultValue, "vectors must have the same default")
+    other._index = _index.clone()
+    other._data = _data.clone()
+    other.load = load
   }
 
   def clear(): Unit = {

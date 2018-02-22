@@ -7,7 +7,6 @@ import breeze.math._
 import breeze.stats.mean
 import breeze.storage.Zero
 import org.scalacheck.{Arbitrary, Gen}
-
 import scala.reflect.ClassTag
 
 /**
@@ -59,6 +58,13 @@ class HashVectorTest extends FunSuite {
     assertClose(norm(b, 2), norm(bd, 2))
     assertClose(norm(bdd, 2), norm(bd, 2))
     assertClose(norm(bss, 2), norm(bd, 2))
+  }
+
+  test("Set") {
+    val a = HashVector.zeros[Double](1024)
+    val b = HashVector(1024)(42 -> 0.5)
+    a := b
+    assert(a.activeSize == 1)
   }
 
   test("Norm") {
@@ -212,23 +218,25 @@ class HashVectorTest extends FunSuite {
   }
 
   test("HV/SV ops") {
-    val a = SparseVector(3)((1, 2), (2, 3))
-    val b = HashVector(3)((1, 1))
+    val size = 3
+    val a = SparseVector(size)(1 -> 2, 2 -> 3)
+    val b = HashVector(size)(1 -> 1)
     assert(b.dot(a) === 2)
-    assert(b + a === HashVector(0, 3, 3))
-    assert(b *:* a === HashVector(0, 2, 0))
+    assert(b + a === HashVector(size)(1 -> 3, 2 -> 3))
+    assert(b *:* a === HashVector(size)(1 -> 2))
     b += a
-    assert(b === HashVector(0, 3, 3))
+    assert(b === HashVector(size)(1 -> 3, 2 -> 3))
   }
 
   test("SV/HV ops") {
-    val a = SparseVector(3)((1, 2), (2, 3))
-    val b = HashVector(3)((1, 1))
+    val size = 3
+    val a = SparseVector(size)(1 -> 2, 2 -> 3)
+    val b = HashVector(size)(1 -> 1)
     assert(a.dot(b) === 2)
-    assert(a + b === SparseVector(0, 3, 3))
-    assert(a *:* b === SparseVector(0, 2, 0))
+    assert(a + b === HashVector(size)(1 -> 3, 2 -> 3))
+    assert(a *:* b === HashVector(size)(1 -> 2))
     a += b
-    assert(a === SparseVector(0, 3, 3))
+    assert(a === HashVector(size)(1 -> 3, 2 -> 3))
   }
 }
 
