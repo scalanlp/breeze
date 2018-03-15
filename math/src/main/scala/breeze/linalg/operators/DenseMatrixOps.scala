@@ -16,7 +16,6 @@ import spire.syntax.cfor._
 
 import scala.{specialized => spec}
 import scala.reflect.ClassTag
-import scalaxy.debug._
 
 trait DenseMatrixMultiplyStuff extends DenseMatrixOps with DenseMatrixMultOps with LowPriorityDenseMatrix {
   this: DenseMatrix.type =>

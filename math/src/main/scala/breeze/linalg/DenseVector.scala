@@ -36,7 +36,6 @@ import CanZipAndTraverseValues.PairValuesVisitor
 import java.io.ObjectStreamException
 
 import scala.collection.mutable.ArrayBuilder
-import scalaxy.debug._
 
 /**
  * A DenseVector is the "obvious" implementation of a Vector, with one twist.

@@ -17,11 +17,8 @@ package breeze.collection.mutable
  */
 import breeze.storage.{ConfigurableDefault, Storage, Zero}
 
-import collection.mutable.BitSet
 import breeze.util.ArrayUtil
 import java.util
-
-import scalaxy.debug._
 
 import scala.reflect.ClassTag
 import spire.syntax.cfor._

@@ -12,7 +12,6 @@ import breeze.math.PowImplicits._
 import breeze.storage.Zero
 import spire.syntax.cfor._
 import scala.reflect.ClassTag
-import scalaxy.debug._
 
 trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 

@@ -10,7 +10,6 @@ import breeze.math.{Field, Ring, Semiring}
 import breeze.storage.Zero
 import scala.reflect.ClassTag
 import scala.{specialized => spec}
-import scalaxy.debug._
 
 import breeze.util.ArrayUtil
 import spire.syntax.cfor._

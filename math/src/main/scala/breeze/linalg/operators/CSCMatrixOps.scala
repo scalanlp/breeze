@@ -15,7 +15,6 @@ import java.util
 
 import breeze.linalg
 
-import scalaxy.debug._
 import spire.syntax.cfor._
 
 /**

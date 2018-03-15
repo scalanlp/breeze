@@ -27,7 +27,6 @@ import breeze.util.{ArrayUtil, ReflectionUtil, SerializableLogging, Sorting, Ter
 import scala.collection.mutable
 import scala.reflect.ClassTag
 import scala.{specialized => spec}
-import scalaxy.debug._
 import spire.syntax.cfor._
 
 /**

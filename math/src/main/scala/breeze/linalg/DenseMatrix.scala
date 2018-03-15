@@ -29,7 +29,6 @@ import spire.syntax.cfor._
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 import scala.{specialized => spec}
-import scalaxy.debug._
 
 /**
  * A DenseMatrix is a matrix with all elements found in an array. It is column major unless isTranspose is true,
