@@ -73,4 +73,18 @@ class OpenAddressHashArrayTest extends FunSuite with Checkers {
     assert(oah(1) == -1.0)
   }
 
+  test("adding default value doesn't do anything") {
+    val oah = new OpenAddressHashArray[Double](10, -1.0, 3)
+    assert(oah(0) == -1.0)
+    assert(oah(1) == -1.0)
+    assert(oah.activeSize == 0)
+
+    oah(0) = -1.0
+    assert(oah(0) == -1.0)
+    assert(oah.activeSize == 0)
+
+    oah(1) = 1.0
+    oah(1) = -1.0
+    assert(oah(1) == -1.0)
+  }
 }
