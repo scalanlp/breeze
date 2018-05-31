@@ -222,7 +222,7 @@ object SparseVector
         "vector lengths must be equal, but got: " + vectors.map(_.length).mkString(", "))
     val rows = vectors(0).length
     val cols = vectors.length
-    val data = new Array[V](vectors.map(_.data.length).sum)
+    val data = new Array[V](vectors.map(_.activeSize).sum)
     val rowIndices = new Array[Int](data.length)
     val colPtrs = new Array[Int](vectors.length + 1)
     val used = data.length
