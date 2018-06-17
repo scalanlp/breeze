@@ -733,6 +733,9 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val X = DenseMatrix((.7, .2), (.3, .8))
     assert(mpow(X, 1) === X)
     assert(max(abs(mpow(X, .5) - DenseMatrix((.82426, 0.11716), (.17574, 0.88284)))) < 1E-5, mpow(X, .5))
+    // Test for matrix with complex eigenvalues
+    val X_complex_eig = DenseMatrix((2.0, 1.0), (-1.0, 2.0))
+    assert(mpow(X_complex_eig, 2) === DenseMatrix((3.0, 4.0), (-4.0, 3.0)))
   }
 
   test("diff test") {

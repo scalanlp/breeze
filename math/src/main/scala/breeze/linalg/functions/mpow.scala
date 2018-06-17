@@ -35,7 +35,6 @@ object mpow extends UFunc {
 
   implicit object implDM_Double_Double extends Impl2[DenseMatrix[Double], Double, DenseMatrix[Double]] {
     def apply(m: DenseMatrix[Double], exp: Double): DenseMatrix[Double] = {
-      // Unclear if the answer makes mathematical sense if exp isn't integer. Maybe raise warning?
       requireSquareMatrix(m)
       val Eig(real, imag, evectors) = eig(m)
       if (norm(imag, 1.0) == 0.0) {
@@ -43,7 +42,7 @@ object mpow extends UFunc {
 
         (evectors.t \ (evectors * diag(exped)).t).t
       } else {
-        require(exp % 1 == 0, "If m has complex eigenvalues exp need to be Int")
+        require(exp % 1 == 0, "If m has complex eigenvalues exp need to be integer")
         powBySquaring(m, exp.toInt)
       }
     }
