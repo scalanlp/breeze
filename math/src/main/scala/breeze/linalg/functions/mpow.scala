@@ -14,7 +14,7 @@ object mpow extends UFunc {
     if (exp == 0) {
       DenseMatrix.eye[Double](m.rows)
     } else if (exp < 0) {
-      powM(inv(m), -exp)
+      powBySquaring(inv(m), -exp)
     } else {
       var res_odds = DenseMatrix.eye[Double](m.rows)
       var res = m
