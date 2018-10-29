@@ -1,0 +1,92 @@
+package breeze.optimize
+
+import scala.annotation.tailrec
+
+/**
+  * Root finding algorithms
+  * @author abertout
+  */
+
+object RootFinding {
+  lazy val eps = math.ulp(1d)
+
+  /**
+    * Generic method to compute a root approximation x of a function f such that f(x) = 0
+    * @param fn function
+    * @param x0 first root estimate
+    * @param x1 optional second root estimate
+    * @param method root finding algorithm used (Brent's one by default)
+    * @return
+    */
+  def find(fn: Double => Double, x0: Double, x1: Option[Double] = None,
+           method: (Double => Double, Double, Double) => Double = brent): Double = {
+    //Generate a second estimation if needed
+    val xx1 = x1 match {
+      case Some(x) => x
+      case None =>  //search in an ever-widening range around the initial point (taken from octave fzero)
+        val search = Seq(-.01,.025, -.05, .1, -.25, .5, -1, 2.5, -5, 10, -50, 100, -500, 1000)
+        val ff = search.map(s => x0 + x0 * s).find(b => fn(x0) * fn(b) <= 0)
+        ff match {
+          case Some(b) => b
+          case None => throw new IllegalArgumentException("Search of second bracketing value failed")
+        }
+    }
+    method(fn, x0, xx1)
+  }
+
+  /**
+    * Implementation of Brent root-finding algorithm Brent, R.,
+    * Algorithms for Minimization Without Derivatives, Prentice-Hall, 1973.
+    */
+  def brent(fn: Double => Double, x0: Double, x1: Double): Double = {
+    val (a, b) = (x0,x1)
+    val (fa, fb) = (fn(a), fn(b))
+    require(fb * fa < 0, "The root is not bracketed by the given interval")
+
+
+    @tailrec
+    def brentAux(aa: Double, bb: Double, cc: Double, dd: Double, ee: Double,
+                 ffa: Double, ffb: Double, ffc : Double): Double = {
+      var (a,b,c,d,e) = (aa,bb,cc,dd,ee)
+      var (fa,fb,fc) = (ffa,ffb,ffc)
+
+      if (fb == 0) return b
+
+      if (fc.signum == fb.signum) // if necessary rearrange points
+        c = a; fc = fa; d = b - a; e = d
+
+      if (fc.abs < fb.abs){ // swap values to have |f(b)| <= |f(c)|
+        a = b;b = c;c = a
+        fa = fb;fb = fc; fc = fa
+      }
+      val m = .5 * (c - b)
+      val tol = 2 * eps * math.max(b.abs,1)// b + t with t positive tolerance in the original article
+      if(m.abs <= tol || fb == 0)
+        return b
+      // bisection is needed otherwise...
+      if(e.abs < tol && fa.abs <= fb.abs){
+        e = m;d = m
+      }else{
+        var s = fb / fa
+        val (p1, q1) =  if (a == c) {
+          (2 * m * s, 1 - s) //secant method (linear interpolation)
+        } else {
+          val q0 = fa / fc
+          val r = fb / fc
+          //inverse quadratic interpolation
+          (s * (2*m*q0*(q0-r) - (b-a) * (r-1)), (q0-1) * (r-1) * (s-1))
+        }
+        val (q, p) = if (p1 > 0) (-q1, p1) else (q1, -p1)
+        s = e;e = d
+        val (td,te) = if ((2*p < 3*m*q - (tol*q).abs) && (p < (.5*s*q).abs)) (p/q,e) else (m,m)
+        d = td;e = te
+      }
+      a = b;fa = fb
+      b += (if (d.abs > tol) d else if (m > 0) tol else -tol)
+      fb = fn(b)
+      brentAux(a,b,c,d,e,fa,fb,fc)
+    }
+    brentAux(a,b,a,b-a, b-a,fa,fb,fa)
+  }
+
+}
