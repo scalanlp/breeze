@@ -3,6 +3,7 @@ package breeze.optimize
 import org.scalatest.FunSuite
 import breeze.numerics.closeTo
 
+
 /**
   * Tests for the RootFinding object
   * @author abertout
@@ -20,7 +21,6 @@ class RootFindingTest extends FunSuite {
     val  found = RootFinding.find(f3,x0 = -4,x1 = Some(4/3d))
     assert(closeTo(found,1d) || closeTo(found,-3d))
     assert(closeTo(RootFinding.find(f2, 3),3.1416))
-    //assert(closeTo(RootFinding.brent(f, -1,1),0))
   }
 
   test("incorrect initial interval") {
@@ -55,8 +55,6 @@ class RootFindingTest extends FunSuite {
     assert(!closeTo(RootFinding.secant(f2,0, 3, maxIter = 20),3.1416)) //Divergence
     assert(closeTo(RootFinding.secant(f2,4, 3),3.1416))
   }
-
-
 
 
 }

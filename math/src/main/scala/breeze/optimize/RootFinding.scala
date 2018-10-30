@@ -8,32 +8,33 @@ import scala.annotation.tailrec
   */
 
 object RootFinding {
-  lazy val eps = math.ulp(1d)
+  lazy val eps: Double = math.ulp(1d)
   lazy val defaultMaxIter: Int = 10000
 
   /**
     * Generic method to compute a root approximation x of a function f such that f(x) = 0
+    * Wrapper for Brent's method
     * @param fn function
     * @param x0 first root estimate
     * @param x1 optional second root estimate
-    * @param method root finding algorithm used (Brent's one by default)
     * @return
     */
-  def find(fn: Double => Double, x0: Double, x1: Option[Double] = None,
-           method: (Double => Double, Double, Double) => Double = brent): Double = {
+  def find(fn: Double => Double, x0: Double, x1: Option[Double] = None): Double = {
     //Generate a second estimation if needed
     val xx1 = x1 match {
       case Some(x) => x
       case None =>  //search in an ever-widening range around the initial point (taken from octave fzero)
         val search = Seq(-.01,.025, -.05, .1, -.25, .5, -1, 2.5, -5, 10, -50, 100, -500, 1000)
-        val ff = search.map(s => x0 + x0 * s).find(b => fn(x0) * fn(b) <= 0)
+        val ff = search.view.map(s => x0 + x0 * s).find(b => fn(x0) * fn(b) <= 0)
         ff match {
           case Some(b) => b
           case None => throw new IllegalArgumentException("Search of second bracketing value failed")
         }
     }
-    method(fn, x0, xx1)
+    brent(fn, x0, xx1)
   }
+
+
 
   /**
     * Implementation of Brent root-finding algorithm Brent, R.,
@@ -140,3 +141,4 @@ object RootFinding {
     se(x0,x1, 0)
   }
 }
+
