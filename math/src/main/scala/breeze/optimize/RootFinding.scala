@@ -91,7 +91,7 @@ object RootFinding {
   }
 
   /**
-    * Bisection bracketing method
+    * Bisection bracketing method with linear convergence
     */
   def bisection(fn: Double => Double, a: Double, b: Double): Double = {
     val fa = fn(a)
@@ -112,7 +112,7 @@ object RootFinding {
   }
 
   /**
-    * Newton-Raphson's open method (requires the derivative and a limited number of iterations to cope with divergence)
+    * Newton-Raphson's open method with quadratic convergence (requires the derivative and a limited number of iterations to cope with divergence)
     */
 
   def newtonRaphson(fn: Double => Double, fd: Double => Double, x0: Double, maxIter: Int = defaultMaxIter ): Double = {
@@ -123,5 +123,20 @@ object RootFinding {
       nr(x - fn(x)/fd(x),iter + 1)
     }
     nr(x0,0)
+  }
+
+  /**
+    * Secant method (based on a linear approximation of the derivative between successive pair of points)
+    */
+
+  def secant(fn: Double => Double, x0: Double, x1: Double, maxIter: Int = defaultMaxIter ): Double = {
+    @tailrec
+    def se(x0: Double, x1: Double, iter: Int): Double = {
+      if(fn(x1).abs < 2 * eps || iter == maxIter)
+        return x1
+      val fx1 = fn(x1)
+      se(x1,x1 - (x1 - x0)/(fx1 - fn(x0))*fx1,iter + 1)
+    }
+    se(x0,x1, 0)
   }
 }

@@ -49,6 +49,13 @@ class RootFindingTest extends FunSuite {
     assert(closeTo(RootFinding.newtonRaphson(f2,f2d, 3, maxIter = 20),3.1416))
   }
 
+  test("secant method"){
+    val  found = RootFinding.secant(f3,5, -4)
+    assert(closeTo(found,1d) || closeTo(found,-3d))
+    assert(!closeTo(RootFinding.secant(f2,0, 3, maxIter = 20),3.1416)) //Divergence
+    assert(closeTo(RootFinding.secant(f2,4, 3),3.1416))
+  }
+
 
 
 
