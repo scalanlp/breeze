@@ -9,6 +9,7 @@ import scala.annotation.tailrec
 
 object RootFinding {
   lazy val eps = math.ulp(1d)
+  lazy val defaultMaxIter: Int = 10000
 
   /**
     * Generic method to compute a root approximation x of a function f such that f(x) = 0
@@ -90,7 +91,7 @@ object RootFinding {
   }
 
   /**
-    * Bisection method
+    * Bisection bracketing method
     */
   def bisection(fn: Double => Double, a: Double, b: Double): Double = {
     val fa = fn(a)
@@ -108,5 +109,19 @@ object RootFinding {
       else bis(m,b)
     }
     bis(a,b)
+  }
+
+  /**
+    * Newton-Raphson's open method (requires the derivative and a limited number of iterations to cope with divergence)
+    */
+
+  def newtonRaphson(fn: Double => Double, fd: Double => Double, x0: Double, maxIter: Int = defaultMaxIter ): Double = {
+    @tailrec
+    def nr(x: Double, iter: Int): Double = {
+      if(fn(x).abs < 2 * eps || iter == maxIter)
+        return x
+      nr(x - fn(x)/fd(x),iter + 1)
+    }
+    nr(x0,0)
   }
 }
