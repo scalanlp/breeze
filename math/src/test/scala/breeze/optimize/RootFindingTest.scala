@@ -15,7 +15,7 @@ class RootFindingTest extends FunSuite {
 
 
   test("root finding") {
-    val  found = RootFinding.find(f3,x0 = -4,x1 = Some(4/3.0))
+    val  found = RootFinding.find(f3,x0 = -4,x1 = Some(4/3d))
     assert(closeTo(found,1d) || closeTo(found,-3d))
     assert(closeTo(RootFinding.find(f2, 3),3.1416))
     //assert(closeTo(RootFinding.brent(f, -1,1),0))
@@ -28,6 +28,13 @@ class RootFindingTest extends FunSuite {
       RootFinding.find(f, 0.1)
     }
   }
+
+  test("bisection method"){
+    val  found = RootFinding.bisection(f3,-4, 4/3d)
+    assert(closeTo(found,1d) || closeTo(found,-3d))
+    assert(closeTo(RootFinding.bisection(f2, 3, 4),3.1416))
+  }
+
 
 
 

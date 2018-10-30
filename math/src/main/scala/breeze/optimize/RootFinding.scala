@@ -41,7 +41,7 @@ object RootFinding {
   def brent(fn: Double => Double, x0: Double, x1: Double): Double = {
     val (a, b) = (x0,x1)
     val (fa, fb) = (fn(a), fn(b))
-    require(fb * fa < 0, "The root is not bracketed by the given interval")
+    require(a.signum != fb.signum, "The root is not bracketed by the given interval")
 
 
     @tailrec
@@ -89,4 +89,24 @@ object RootFinding {
     brentAux(a,b,a,b-a, b-a,fa,fb,fa)
   }
 
+  /**
+    * Bisection method
+    */
+  def bisection(fn: Double => Double, a: Double, b: Double): Double = {
+    val fa = fn(a)
+    val fb = fn(b)
+    require(fa.signum != fb.signum , "The root is not bracketed by the given interval")
+
+    @tailrec
+    def bis(a: Double, b: Double): Double = {
+      val m = (a+b)/2
+      val fm = fn(m)
+      if(fm.abs < 2 * eps)
+        return m
+      if(fm.signum != fa.signum)
+        bis(a,m)
+      else bis(m,b)
+    }
+    bis(a,b)
+  }
 }
