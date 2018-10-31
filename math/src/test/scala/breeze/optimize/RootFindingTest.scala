@@ -31,11 +31,13 @@ class RootFindingTest extends FunSuite {
   }
 
   test("Brent's method") {
-    val  found = RootFinding.brent(f3,x0 = -4,x1 = 4/3d)
+    val  found = RootFinding.brent(f3,a = -4,b = 4/3d)
     assert(closeTo(found,1d) || closeTo(found,-3d))
     assert(closeTo(RootFinding.brent(f2, 3,3.7),3.1416))
-    //assert(closeTo(RootFinding.brent(f, -1,1),0))
+    assert(closeTo(RootFinding.brent((x: Double) => x*x - 1, -2,0),-1))
+    assert(closeTo(RootFinding.brent((x: Double) => x*x - 1, 0,2),1))
   }
+
 
   test("bisection method"){
     val  found = RootFinding.bisection(f3,-4, 4/3d)
