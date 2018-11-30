@@ -172,7 +172,15 @@ object qr extends UFunc {
       throw new IllegalArgumentException()
 
     // Handle mode that don't return Q
-    if (skipQ) (null, upperTriangular(A(0 until mn, ::)))
+    if (skipQ) {
+      // Upper triangle
+      cforRange(0 until mn) { i =>
+        cforRange(0 until min(i, A.cols)) { j =>
+          A(i, j) = 0.0
+        }
+      }
+      (null, A(0 until mn, ::))
+    }
     else {
       val Q =
         if (mode == CompleteQR && m > n) DenseMatrix.zeros[Double](m, m)
@@ -235,7 +243,15 @@ object qr extends UFunc {
       throw new IllegalArgumentException()
 
     // Handle mode that don't return Q
-    if (skipQ) (null, upperTriangular(A(0 until mn, ::)))
+    if (skipQ) {
+      // Upper triangle
+      cforRange(0 until mn) { i =>
+        cforRange(0 until min(i, A.cols)) { j =>
+          A(i, j) = 0.0f
+        }
+      }
+      (null, A(0 until mn, ::))
+    }
     else {
       val Q =
         if (mode == CompleteQR && m > n) DenseMatrix.zeros[Float](m, m)
