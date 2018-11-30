@@ -8,7 +8,6 @@ import breeze.linalg.support.CanTraverseValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.math.Semiring
 import breeze.storage.Zero
-import com.sun.istack.internal.Pool.Impl
 
 import scala.collection.TraversableOnce
 import scala.reflect.ClassTag
