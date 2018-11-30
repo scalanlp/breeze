@@ -518,12 +518,24 @@ object bincount extends UFunc {
 object DescriptiveStats {
 
   /**
-   * returns the estimate of the data at p * it.size, where p in [0,1]
+   * Returns the estimate of the data at p * it.size after copying and sorting, where p in [0,1].
    */
   def percentile(it: TraversableOnce[Double], p: Double) = {
     if (p > 1 || p < 0) throw new IllegalArgumentException("p must be in [0,1]")
     val arr = it.toArray
     Sorting.quickSort(arr)
+    percentileInPlace(arr, p)
+  }
+
+  /**
+    * Returns the estimate of a pre-sorted array at p * it.size, where p in [0,1].
+    * <p>
+    * Note:
+    * Result is invalid if the input array is not already sorted.
+    * </p>
+    */
+  def percentileInPlace(arr: Array[Double], p: Double) = {
+    if (p > 1 || p < 0) throw new IllegalArgumentException("p must be in [0,1]")
     // +1 so that the .5 == mean for even number of elements.
     val f = (arr.length + 1) * p
     val i = f.toInt
