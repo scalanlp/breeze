@@ -111,11 +111,11 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]] {
 
   /** See [[scala.collection.mutable.ArrayOps.foldLeft]].
    */
-  def foldLeft[B >: V](z: B)(op: (B, V) => B): B = valuesIterator.foldLeft(z)(op)
+  def foldLeft[B](z: B)(op: (B, V) => B): B = valuesIterator.foldLeft(z)(op)
 
   /** See [[scala.collection.mutable.ArrayOps.foldRight]].
    */
-  def foldRight[B >: V](z: B)(op: (V, B) => B): B = valuesIterator.foldRight(z)(op)
+  def foldRight[B](z: B)(op: (V, B) => B): B = valuesIterator.foldRight(z)(op)
 
   /** See [[scala.collection.mutable.ArrayOps.reduce]].
    */
@@ -141,13 +141,13 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]] {
 
   /** See [[scala.collection.mutable.ArrayOps.scanLeft]].
    */
-  def scanLeft[B >: V](z: B)(op: (B, V) => B)(implicit cm1: ClassTag[B]): Vector[B] = {
+  def scanLeft[B](z: B)(op: (B, V) => B)(implicit cm1: ClassTag[B]): Vector[B] = {
     Vector[B](valuesIterator.scanLeft(z)(op).toArray)
   }
 
   /** See [[scala.collection.mutable.ArrayOps.scanRight]].
    */
-  def scanRight[B >: V](z: B)(op: (V, B) => B)(implicit cm1: ClassTag[B]): Vector[B] =
+  def scanRight[B](z: B)(op: (V, B) => B)(implicit cm1: ClassTag[B]): Vector[B] =
     Vector[B](valuesIterator.scanRight(z)(op).toArray)
 
   // </editor-fold>
