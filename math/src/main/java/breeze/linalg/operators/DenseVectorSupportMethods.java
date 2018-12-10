@@ -10,7 +10,7 @@ final public class DenseVectorSupportMethods {
     public static final int MAX_SMALL_DOT_PRODUCT_LENGTH = 8;
 
     /**
-     * WARNING: only returns the right answer for vectors of length MAX_SMALL_DOT_PRODUCT_LENGTH or less
+     * WARNING: only returns the right answer for vectors of length < MAX_SMALL_DOT_PRODUCT_LENGTH
      * @param a
      * @param b
      * @param length
@@ -20,12 +20,10 @@ final public class DenseVectorSupportMethods {
         double sumA = 0.0;
         double sumB = 0.0;
         switch (length) {
-            case 8:
-                sumB = a[7] * b[7];
             case 7:
                 sumA = a[6] * b[6];
             case 6:
-                sumB += a[5] * b[5];
+                sumB = a[5] * b[5];
             case 5:
                 sumA += a[4] * b[4];
             case 4:
@@ -78,30 +76,33 @@ final public class DenseVectorSupportMethods {
 
 
     /**
-     * WARNING: only returns the right answer for vectors of length MAX_SMALL_DOT_PRODUCT_LENGTH or less
+     * WARNING: only returns the right answer for vectors of length < MAX_SMALL_DOT_PRODUCT_LENGTH
      * @param a
      * @param b
      * @param length
      * @return
      */
     public static float smallDotProduct_Float(float[] a, float[] b, int length) {
-        float sum = 0.0f;
+        float sumA = 0.0f;
+        float sumB = 0.0f;
         switch (length) {
+            case 7:
+                sumA = a[6] * b[6];
             case 6:
-                sum += a[5] * b[5];
+                sumB = a[5] * b[5];
             case 5:
-                sum += a[4] * b[4];
+                sumA += a[4] * b[4];
             case 4:
-                sum += a[3] * b[3];
+                sumB += a[3] * b[3];
             case 3:
-                sum += a[2] * b[2];
+                sumA += a[2] * b[2];
             case 2:
-                sum += a[1] * b[1];
+                sumB += a[1] * b[1];
             case 1:
-                sum += a[0] * b[0];
+                sumA += a[0] * b[0];
             case 0:
             default:
-                return sum;
+                return sumA + sumB;
         }
     }
 
