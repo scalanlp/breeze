@@ -514,6 +514,24 @@ package object numerics {
   }
 
   /**
+   * Multivariate Digamma
+   */
+  object multidigamma extends UFunc with MappingUFunc {
+    implicit object multidigammaImplDoubleInt extends Impl2[Double, Int, Double] {
+      def apply(a: Double, d: Int): Double = (1 to d).map(i => digamma(a + (1 - i).toDouble / 2)).sum
+    }
+  }
+
+  /**
+    * Multivariate digamma log
+    */
+  object multidigammalog extends UFunc with MappingUFunc {
+    implicit object multidigammalogImplDoubleInt extends Impl2[Double, Int, Double] {
+      def apply(a: Double, d: Int): Double = log(multidigamma(a, d))
+    }
+  }
+
+  /**
    * The second derivative of the log gamma function
    */
   object trigamma extends UFunc with MappingUFunc {
@@ -522,6 +540,12 @@ package object numerics {
     }
     implicit object trigammaImplDouble extends Impl[Double, Double] {
       def apply(v: Double): Double = G.trigamma(v)
+    }
+  }
+
+  object multiloggamma extends UFunc with MappingUFunc {
+    implicit object multigammalogDoubleInt extends Impl2[Double, Int, Double] {
+      def apply(a:Double, d: Int): Double = log(constants.Pi) * (d * (d-1).toDouble / 4) + (1 to d).map(j => lgamma(a + (1 - j).toDouble / 2)).sum
     }
   }
 
