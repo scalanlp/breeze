@@ -21,16 +21,13 @@ object RootFinding {
     */
   def find(fn: Double => Double, x0: Double, x1: Option[Double] = None): Double = {
     //Generate a second estimation if needed
-    val xx1 = x1 match {
-      case Some(x) => x
-      case None =>  //search in an ever-widening range around the initial point (taken from octave fzero)
-        val search = Seq(-.01,.025, -.05, .1, -.25, .5, -1, 2.5, -5, 10, -50, 100, -500, 1000)
-        val ff = search.view.map(s => x0 + x0 * s).find(b => fn(x0) * fn(b) <= 0)
-        ff match {
-          case Some(estimate) => estimate
-          case None => throw new IllegalArgumentException("Search of second bracketing value failed")
-        }
+    def findSecondEstimate(x0: Double): Option[Double] = {
+      //search in an ever-widening range around the initial point (taken from octave fzero)
+      val search = Seq(-.01,.025, -.05, .1, -.25, .5, -1, 2.5, -5, 10, -50, 100, -500, 1000)
+      search.view.map(s => x0 + x0 * s).find(b => fn(x0) * fn(b) <= 0)
     }
+    val xx1 = x1.orElse(findSecondEstimate(x0)).getOrElse(
+      throw new RuntimeException("Automatic search of a second bracketing value failed"))
     brent(fn, x0, xx1)
   }
 
