@@ -12,10 +12,7 @@ object Common {
     scalaVersion := buildScalaVersion,
     crossScalaVersions := buildCrossScalaVersions,
     scalacOptions ++= Seq("-deprecation", "-language:_"),
-    javacOptions ++= {
-      val javaVersion = sys.props.getOrElse("java.version", "1.7")
-      Seq("-target", javaVersion, "-source", javaVersion)
-    },
+    javacOptions ++= Seq("-target", "1.7", "-source", "1.7"),
     credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     libraryDependencies ++= Seq(
       "junit" % "junit" % "4.12" % "test",
