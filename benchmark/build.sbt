@@ -21,8 +21,8 @@ libraryDependencies ++= Seq(
 
 fork := true
 
-publish := ()
+publish := {}
 
-publishLocal := ()
+publishLocal := {}
 
 publishArtifact := false

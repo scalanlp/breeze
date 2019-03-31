@@ -2,15 +2,20 @@ import sbt.Keys._
 import sbt._
 
 object Common {
-  val crossScalaVersions = Seq("2.12.1", "2.11.8", "2.10.6")
-  val scalaVersion = crossScalaVersions.head
+
+  val buildCrossScalaVersions = Seq("2.12.8", "2.11.8", "2.10.6")
+
+  lazy val buildScalaVersion = sys.props.getOrElse("nak.build.scalaVersion", buildCrossScalaVersions.head)
 
   val commonSettings = Seq(
     organization := "org.scalanlp",
-    Keys.scalaVersion := Common.scalaVersion,
-    Keys.crossScalaVersions := Common.crossScalaVersions,
+    scalaVersion := buildScalaVersion,
+    crossScalaVersions := buildCrossScalaVersions,
     scalacOptions ++= Seq("-deprecation", "-language:_"),
-    javacOptions ++= Seq("-target", "1.7", "-source", "1.7"),
+    javacOptions ++= {
+      val javaVersion = sys.props.getOrElse("java.version", "1.7")
+      Seq("-target", javaVersion, "-source", javaVersion)
+    },
     credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     libraryDependencies ++= Seq(
       "junit" % "junit" % "4.12" % "test",
