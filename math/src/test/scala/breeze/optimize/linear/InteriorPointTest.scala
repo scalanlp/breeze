@@ -17,16 +17,7 @@ package breeze.optimize.linear
  */
 
 import org.scalatest._
-import org.scalatest.junit._
-
-import org.junit.runner.RunWith
-
 import breeze.linalg._
-
-/**
- *
- * @author dlwh
- */
 
 class InteriorPointTest extends FunSuite {
   // from: http://en.wikipedia.org/wiki/Karmarkar's_algorithm

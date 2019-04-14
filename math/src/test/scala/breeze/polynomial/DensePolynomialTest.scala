@@ -16,19 +16,12 @@ package breeze.polynomial
  limitations under the License.
  */
 
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
 import breeze.linalg.{DenseVector, DenseMatrix, norm}
 import spire.math._
 import spire.math.poly._
 import spire.algebra._
 import spire.implicits._
-
-/**
- *
- * @author dlw
- */
 
 class DensePolynomialTest extends FunSuite {
 

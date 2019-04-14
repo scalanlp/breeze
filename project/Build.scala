@@ -22,7 +22,6 @@ object Common {
     javacOptions ++= Seq("-target", "1.7", "-source", "1.7"),
     credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     libraryDependencies ++= Seq(
-      "junit" % "junit" % "4.12" % "test",
       "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
       "org.scalatest" %% "scalatest" % "3.0.8-RC2" % "test"
     ),

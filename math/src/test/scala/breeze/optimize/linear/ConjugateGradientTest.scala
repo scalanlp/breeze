@@ -1,14 +1,7 @@
 package breeze.optimize.linear
 
 import breeze.linalg._
-import org.junit.runner.RunWith
 import org.scalatest._
-import org.scalatest.junit._
-
-/**
- *
- * @author dlwh
- */
 
 class ConjugateGradientTest extends FunSuite {
 

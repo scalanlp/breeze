@@ -1,16 +1,6 @@
 package breeze.optimize.flow
 
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatestplus.scalacheck._;
-import org.scalacheck._;
-import org.junit.runner.RunWith
-
-/**
- *
- * @author dlwh
- */
-
+import org.scalatest._
 
 class LPMaxFlowTest extends FunSuite {
 

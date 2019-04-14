@@ -3,12 +3,9 @@ package breeze.optimize.proximal
 import breeze.linalg.{sum, DenseMatrix, norm, DenseVector}
 import breeze.optimize.proximal.Constraint._
 import breeze.optimize.OptimizeTestBase
-import org.scalatest.junit.JUnitRunner
-import org.junit.runner.RunWith
 import breeze.numerics._
 
 import org.scalatest.Matchers
-
 
 class NonlinearMinimizerTest extends OptimizeTestBase with Matchers {
   val n = 5
