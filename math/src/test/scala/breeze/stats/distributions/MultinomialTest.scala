@@ -17,12 +17,9 @@ package breeze.stats.distributions
  */
 
 import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
-import org.junit.runner.RunWith
+import org.scalatestplus.scalacheck._
 import breeze.linalg.DenseVector
 
-@RunWith(classOf[JUnitRunner])
 class MultinomialTest extends FunSuite with Checkers with Matchers {
   // can't use the standard moment tester tools for a categorial distribution, so let's just roll our ownkj
 

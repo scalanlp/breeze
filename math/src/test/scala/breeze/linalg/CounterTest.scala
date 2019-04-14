@@ -16,16 +16,13 @@ package breeze.linalg
  */
 import breeze.math.TensorSpaceTestBase
 import breeze.stats.mean
-import org.junit.runner.RunWith
 import org.scalacheck.Arbitrary
 import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.prop.Checkers
+import org.scalatestplus.scalacheck.Checkers
 
 /**
  * @author dlwh
  */
-@RunWith(classOf[JUnitRunner])
 class CounterTest extends FunSuite with Checkers {
   val TOLERANCE = 1e-4
   def assertClose(a: Double, b: Double) =
@@ -84,7 +81,7 @@ class CounterTest extends FunSuite with Checkers {
     assert(x === Counter(1 -> log(1.0), 2 -> log(2.0)))
   }
 }
-@RunWith(classOf[JUnitRunner])
+
 class CounterOps_IntTest extends TensorSpaceTestBase[Counter[Int, Int], Int, Int] {
   val space = Counter.space[Int, Int]
 

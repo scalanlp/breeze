@@ -1,18 +1,15 @@
 package breeze.linalg
 
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
 import breeze.math._
 import org.scalacheck.{Arbitrary, Gen, Prop}
-import org.scalatest.prop.Checkers
+import org.scalatestplus.scalacheck.Checkers
 import breeze.numerics.closeTo
 
 /**
  *
  * @author dlwh
  */
-@RunWith(classOf[JUnitRunner])
 class VectorBuilderTest extends FunSuite with Checkers {
   test("VectorBuilder respects initialNonZero") {
     val vb = new VectorBuilder[Double](32, initialNonZero = 4)
@@ -86,7 +83,6 @@ class VectorBuilderTest extends FunSuite with Checkers {
  *
  * @author dlwh
  */
-@RunWith(classOf[JUnitRunner])
 class VectorBuilderOpsTest extends MutableModuleTestBase[VectorBuilder[Double], Double] {
   val space: MutableModule[VectorBuilder[Double], Double] = VectorBuilder.space[Double]
 

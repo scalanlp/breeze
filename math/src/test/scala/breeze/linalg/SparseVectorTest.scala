@@ -1,8 +1,6 @@
 package breeze.linalg
 
 import org.scalatest._
-import org.scalatest.junit._
-import org.junit.runner.RunWith
 import breeze.math._
 import breeze.numerics.{log, sin}
 import org.scalacheck.{Arbitrary, Gen}
@@ -15,7 +13,6 @@ import scala.reflect.ClassTag
  *
  * @author dlwh
  */
-@RunWith(classOf[JUnitRunner])
 class SparseVectorTest extends FunSuite {
 
   val TOLERANCE = 1e-4
@@ -404,7 +401,7 @@ abstract class SparseVectorPropertyTestBase[T: ClassTag: Zero: Semiring]
   }
 }
 
-@RunWith(classOf[JUnitRunner])
+
 class SparseVectorOps_DoubleTest
     extends SparseVectorPropertyTestBase[Double]
     with DoubleValuedTensorSpaceTestBase[SparseVector[Double], Int] {
@@ -412,7 +409,7 @@ class SparseVectorOps_DoubleTest
   def genScalar: Arbitrary[Double] = RandomInstanceSupport.genReasonableDouble
 }
 
-@RunWith(classOf[JUnitRunner])
+
 class SparseVectorOps_FloatTest extends SparseVectorPropertyTestBase[Float] {
   val space = SparseVector.space[Float]
 
@@ -421,7 +418,7 @@ class SparseVectorOps_FloatTest extends SparseVectorPropertyTestBase[Float] {
 
 }
 
-@RunWith(classOf[JUnitRunner])
+
 class SparseVectorOps_IntTest extends SparseVectorPropertyTestBase[Int] {
   val space = SparseVector.space[Int]
   def genScalar: Arbitrary[Int] = Arbitrary { Gen.Choose.chooseInt.choose(-1000, 1000) }

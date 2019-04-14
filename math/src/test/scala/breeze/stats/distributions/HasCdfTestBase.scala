@@ -20,7 +20,7 @@ package breeze.stats.distributions
 
 import org.scalacheck.{Arbitrary, Prop}
 import org.scalatest.FunSuite
-import org.scalatest.prop.Checkers
+import org.scalatestplus.scalacheck.Checkers
 
 /**
  * TODO

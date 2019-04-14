@@ -1,8 +1,6 @@
 package breeze.linalg.constructors
 
 import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
-import org.junit.runner.RunWith
 import breeze.linalg._
 import breeze.stats.mean
 import breeze.numerics.abs
@@ -12,7 +10,6 @@ import breeze.stats.distributions.RandBasis
  * @author ktakagaki
  * @date 04/30/2014.
  */
-@RunWith(classOf[JUnitRunner])
 class randomTest extends FunSuite {
 
   implicit val basis = RandBasis.mt0

@@ -1,14 +1,11 @@
 package breeze.linalg
 
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
 
 /**
  * @author ktakagaki
  * @date 04/16/2014.
  */
-@RunWith(classOf[JUnitRunner])
 class padTest extends FunSuite {
 
   val testDVI = DenseVector(1, 2, 3, 4, 5)

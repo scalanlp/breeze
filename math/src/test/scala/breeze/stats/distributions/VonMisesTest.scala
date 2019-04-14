@@ -16,26 +16,24 @@ package breeze.stats.distributions
  limitations under the License.
  */
 
-import org.junit.runner.RunWith
 import org.scalacheck._
 import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._;
+import org.scalatestplus.scalacheck._
 
 // VonMises variance depends on some reasonable handling of % 2 * pi, so we'll not include it.
-@RunWith(classOf[JUnitRunner])
 class VonMisesTest
     extends FunSuite
     with Checkers
     with UnivariateContinuousDistrTestBase
     with ExpFamTest[VonMises, Double] {
-  import Arbitrary.arbitrary;
+  import Arbitrary.arbitrary
 
   val expFam = VonMises
 
   implicit def arbParameter = Arbitrary {
     for (mu <- arbitrary[Double].map { _.abs % (2 * math.Pi) }; // Gamma pdf at 0 not defined when shape == 1
-      k <- arbitrary[Double].map { _.abs % 3.0 + 1.5 }) yield (mu, k);
+      k <- arbitrary[Double].map { _.abs % 3.0 + 1.5 })
+      yield (mu, k)
   }
 
   def paramsClose(p: (Double, Double), b: (Double, Double)) = {

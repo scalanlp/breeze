@@ -16,30 +16,25 @@ package breeze.stats.distributions
  limitations under the License.
  */
 
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.scalacheck._;
-import org.junit.runner.RunWith
+import org.scalatest._
+import org.scalatestplus.scalacheck._
+import org.scalacheck._
 import breeze.numerics._
 import breeze.linalg._
 import breeze.stats._
-@RunWith(classOf[JUnitRunner])
+
 class MultivariateGaussianTest extends FunSuite with Checkers {
-  import Arbitrary.arbitrary
 
   val N = 5
 
-  implicit def genVector: Arbitrary[DenseVector[Double]] = {
-    Arbitrary { Gen.wrap(DenseVector.rand(N)) }
+  implicit def genVector: Arbitrary[DenseVector[Double]] = Arbitrary {
+    RandomInstanceSupport.genDenseVector(N, Gen.choose(0.0, 1.0))
   }
 
   implicit def genMatrix: Arbitrary[DenseMatrix[Double]] = {
     Arbitrary {
-      Gen.wrap {
-        // needs to be positive semidefinite
-        val a = DenseMatrix.rand(N, N) / 10.0
-        a + a.t + DenseMatrix.eye[Double](N)
+      RandomInstanceSupport.genDenseMatrix(N, N, Gen.choose(0.0, 0.2)).map{ m =>
+        m + m.t + DenseMatrix.eye[Double](N)
       }
     }
   }
@@ -47,7 +42,7 @@ class MultivariateGaussianTest extends FunSuite with Checkers {
   test("Probability of mean") {
     check(Prop.forAll { (m: DenseVector[Double], s: DenseMatrix[Double]) =>
       {
-        val b = new MultivariateGaussian(m, s)
+        val b = MultivariateGaussian(m, s)
         b.unnormalizedLogPdf(m) == 0.0
       }
     })
@@ -55,11 +50,11 @@ class MultivariateGaussianTest extends FunSuite with Checkers {
 
   test("Probability of N(0,1)(1) propto exp(-.5))") {
     assert(
-      new MultivariateGaussian(DenseVector(0.0), DenseMatrix.ones(1, 1)).unnormalizedLogPdf(DenseVector(1.0)) === -0.5)
+      MultivariateGaussian(DenseVector(0.0), DenseMatrix.ones(1, 1)).unnormalizedLogPdf(DenseVector(1.0)) === -0.5)
   }
 
-  implicit def arbDistr = Arbitrary {
-    for (mean <- genVector.arbitrary; std <- genMatrix.arbitrary) yield new MultivariateGaussian(mean, std);
+  implicit def arbDistr: Arbitrary[MultivariateGaussian] = Arbitrary {
+    for (mean <- genVector.arbitrary; std <- genMatrix.arbitrary) yield MultivariateGaussian(mean, std);
   }
 
   val numSamples = 5000

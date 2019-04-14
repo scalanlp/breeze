@@ -2,15 +2,12 @@ package breeze.stats
 
 import org.scalatest.FunSuite
 import breeze.linalg._
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
 /**Tests for breeze.linalg.max.scala
  * Test for clip is currently located in "DenseVectorTest.scala"
  * @author ktakagaki
  * @date 3/13/14.
  */
-@RunWith(classOf[JUnitRunner])
 class histogramTest extends FunSuite {
 
   val testDV = DenseVector(0.0, 0.1, 2.8, 2.9, 5)

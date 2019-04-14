@@ -20,12 +20,9 @@
 package breeze.math
 
 import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
-import org.junit.runner.RunWith
+import org.scalatestplus.scalacheck._
 import breeze.linalg.DenseVector
 
-@RunWith(classOf[JUnitRunner])
 class ComplexTest extends FunSuite with Checkers {
 
   test("Add") {

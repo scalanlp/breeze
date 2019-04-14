@@ -1,15 +1,11 @@
 package breeze.numerics
 
 import org.scalatest.FunSuite
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
 /**
  *
  * @author dlwh
  */
-
-@RunWith(classOf[JUnitRunner])
 class ScalingTest extends FunSuite {
   test("Simple Test, big") {
     val array = Array(math.pow(2, 300), math.pow(2, 301), math.pow(2, 150))

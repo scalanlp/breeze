@@ -15,11 +15,8 @@ package breeze.linalg
  limitations under the License.
  */
 import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
-import org.junit.runner.RunWith
+import org.scalatestplus.scalacheck._
 
-@RunWith(classOf[JUnitRunner])
 class Counter2Test extends FunSuite with Checkers {
   test("Getting and setting") {
     val x = Counter2[String, Int, Double]()

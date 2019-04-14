@@ -3,8 +3,6 @@ Common.commonSettings
 // lazy val breeze = project in file("core")
 name := "breeze-benchmark"
 
-addCompilerPlugin(("org.scalamacros" %% "paradise" % "2.1.0").cross(CrossVersion.full))
-
 libraryDependencies ++= Seq(
   "org.apfloat" % "apfloat" % "1.6.3",
   "org.jscience" % "jscience" % "4.3.1",

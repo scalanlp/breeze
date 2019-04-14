@@ -2,10 +2,8 @@ package breeze.linalg
 
 import breeze.math._
 import breeze.storage.Zero
-import org.junit.runner.RunWith
 import org.scalacheck._
 import org.scalatest._
-import org.scalatest.junit._
 
 import scala.reflect.ClassTag
 
@@ -13,8 +11,6 @@ import scala.reflect.ClassTag
  *
  * @author Boleyn Su
  */
-
-@RunWith(classOf[JUnitRunner])
 class SmallVectorTest extends FunSuite {
 
   test("smallDotProductFloat") {

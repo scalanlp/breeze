@@ -16,15 +16,12 @@ package breeze.numerics
  limitations under the License.
  */
 
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
 
 /**
  *
  * @author dlwh
  */
-@RunWith(classOf[JUnitRunner])
 class IntMathTest extends FunSuite {
   test("ipow") {
     import IntMath._

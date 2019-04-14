@@ -2,11 +2,11 @@ package breeze.optimize.linear
 
 import org.scalatest._;
 import org.scalatest.junit._;
-import org.scalatest.prop._;
+import org.scalatestplus.scalacheck._;
 import org.scalacheck._;
 import org.junit.runner.RunWith
 
-@RunWith(classOf[JUnitRunner])
+
 class KuhnMunkresTest extends FunSuite with Checkers {
 
   test("sanity check") {

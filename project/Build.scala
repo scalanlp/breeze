@@ -3,9 +3,16 @@ import sbt._
 
 object Common {
 
-  val buildCrossScalaVersions = Seq("2.12.8", "2.11.8", "2.10.6")
+  def priorTo2_13(scalaVersion: String): Boolean = {
+    CrossVersion.partialVersion(scalaVersion) match {
+      case Some((2, minor)) if minor < 13 => true
+      case _ => false
+    }
+  }
 
-  lazy val buildScalaVersion = sys.props.getOrElse("nak.build.scalaVersion", buildCrossScalaVersions.head)
+  val buildCrossScalaVersions = Seq("2.12.8", "2.11.8")//, "2.13.0-RC1")
+
+  lazy val buildScalaVersion = buildCrossScalaVersions.head
 
   val commonSettings = Seq(
     organization := "org.scalanlp",
@@ -16,8 +23,8 @@ object Common {
     credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     libraryDependencies ++= Seq(
       "junit" % "junit" % "4.12" % "test",
-      "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
-      "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+      "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
+      "org.scalatest" %% "scalatest" % "3.0.8-RC2" % "test"
     ),
     resolvers ++= Seq(
       Resolver.mavenLocal,
@@ -54,6 +61,20 @@ object Common {
     publishArtifact in Test := false,
     pomIncludeRepository := { _ =>
       false
+    },
+    libraryDependencies ++= {
+      if (priorTo2_13(scalaVersion.value)) {
+        Seq(compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.patch))
+      } else {
+        Seq.empty
+      }
+    },
+    scalacOptions ++= {
+      if (priorTo2_13(scalaVersion.value)) {
+        Seq.empty
+      } else {
+        Seq("-Ymacro-annotations")
+      }
     }
   )
 }

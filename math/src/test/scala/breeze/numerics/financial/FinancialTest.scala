@@ -16,8 +16,6 @@ package breeze.numerics.financial
  limitations under the License.
  */
 
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
 
 import breeze.linalg._
@@ -26,7 +24,6 @@ import breeze.linalg._
  *
  * @author stucchio
  */
-@RunWith(classOf[JUnitRunner])
 class FinancialTest extends FunSuite {
 
   val DOUBLE_ROUND5_MIN = 1E-5;

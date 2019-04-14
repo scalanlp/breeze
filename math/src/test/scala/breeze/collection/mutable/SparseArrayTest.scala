@@ -18,11 +18,8 @@ package breeze.collection.mutable
 
 import breeze.linalg.SparseVector
 import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
-import org.junit.runner.RunWith
+import org.scalatestplus.scalacheck._
 
-@RunWith(classOf[JUnitRunner])
 class SparseArrayTest extends FunSuite with Checkers {
   test("Map") {
     val x = SparseArray(1, 0, 2, 0, 3, 0, -1, -2, -3)

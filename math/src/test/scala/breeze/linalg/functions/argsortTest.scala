@@ -3,7 +3,7 @@ package breeze.linalg.functions
 import breeze.linalg.{DenseMatrix, DenseVector, SparseVector, argsort, argtopk}
 import org.scalacheck.Prop
 import org.scalatest.FunSuite
-import org.scalatest.prop.Checkers
+import org.scalatestplus.scalacheck.Checkers
 
 /**
  * Created by dlwh on 9/18/15.

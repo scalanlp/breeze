@@ -2,10 +2,8 @@ package breeze.linalg
 
 import breeze.math._
 import breeze.storage.Zero
-import org.junit.runner.RunWith
 import org.scalacheck._
 import org.scalatest._
-import org.scalatest.junit._
 
 import scala.reflect.ClassTag
 
@@ -13,8 +11,6 @@ import scala.reflect.ClassTag
  *
  * @author dlwh
  */
-
-@RunWith(classOf[JUnitRunner])
 class VectorTest extends FunSuite {
 
   val dvTest = DenseVector(1, 2, 3, 4)
@@ -92,7 +88,7 @@ abstract class VectorPropertyTestBase[T: ClassTag: Zero: Semiring] extends Tenso
   }
 }
 
-@RunWith(classOf[JUnitRunner])
+
 class VectorOps_DoubleTest
     extends VectorPropertyTestBase[Double]
     with DoubleValuedTensorSpaceTestBase[Vector[Double], Int] {
@@ -100,7 +96,7 @@ class VectorOps_DoubleTest
   def genScalar: Arbitrary[Double] = RandomInstanceSupport.genReasonableDouble
 }
 
-@RunWith(classOf[JUnitRunner])
+
 class VectorOps_FloatTest extends VectorPropertyTestBase[Float] {
   val space = Vector.space[Float]
 
@@ -109,7 +105,7 @@ class VectorOps_FloatTest extends VectorPropertyTestBase[Float] {
 
 }
 
-@RunWith(classOf[JUnitRunner])
+
 class VectorOps_IntTest extends VectorPropertyTestBase[Int] {
   val space = Vector.space[Int]
   def genScalar: Arbitrary[Int] = RandomInstanceSupport.genReasonableInt

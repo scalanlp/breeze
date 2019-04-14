@@ -2,8 +2,6 @@ Common.commonSettings
 
 name := "breeze-natives"
 
-addCompilerPlugin(("org.scalamacros" %% "paradise" % "2.1.0").cross(CrossVersion.full))
-
 libraryDependencies ++= Seq(
   ("com.github.fommil.netlib" % "all" % "1.1.2").pomOnly()
 )

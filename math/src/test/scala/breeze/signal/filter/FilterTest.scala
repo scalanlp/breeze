@@ -1,16 +1,12 @@
 package breeze.signal
 
 import org.scalatest.FunSuite
-import breeze.signal._
 import breeze.linalg.{norm, DenseVector}
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
 /**
  * @author ktakagaki
  * @date 2/11/14.
  */
-@RunWith(classOf[JUnitRunner])
 class FilterTest extends FunSuite {
 
   test("BP filtering tested against output from scipy.signal.firwin/ifilter (0.13.2-1)") {

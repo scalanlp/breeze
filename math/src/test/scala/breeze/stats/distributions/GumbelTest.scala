@@ -16,13 +16,10 @@ package breeze.stats.distributions
  limitations under the License.
  */
 
-import org.junit.runner.RunWith
 import org.scalacheck._
 import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
+import org.scalatestplus.scalacheck._
 
-@RunWith(classOf[JUnitRunner])
 class GumbelTest
     extends FunSuite
     with Checkers
@@ -44,7 +41,7 @@ class GumbelTest
       }; // Gumbel pdf at 0 not defined when location == 1
       scale <- arbitrary[Double].map { x =>
         math.abs(x) % 8.0 + 1.0
-      }) yield new Gumbel(location, scale)(RandBasis.mt0)
+      }) yield Gumbel(location, scale)(RandBasis.mt0)
   }
 
 }

@@ -3,7 +3,7 @@ package breeze.math
 import org.scalacheck.Prop.BooleanOperators
 import org.scalacheck._
 import org.scalatest.FunSuite
-import org.scalatest.prop.Checkers
+import org.scalatestplus.scalacheck.Checkers
 
 /**
  *

@@ -2,15 +2,11 @@ package breeze.signal
 
 import org.scalatest.FunSuite
 import breeze.linalg.DenseVector
-import breeze.signal
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
 /**
  * @author ktakagaki
  * @date 2/18/14.
  */
-@RunWith(classOf[JUnitRunner])
 class rootMeanSquareTest extends FunSuite {
 
   test("rootMeanSquare Double") {

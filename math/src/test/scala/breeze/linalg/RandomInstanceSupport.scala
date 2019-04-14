@@ -32,7 +32,7 @@ import scala.reflect.ClassTag
 object RandomInstanceSupport {
 
   // relative errors get really screwy for small and big values
-  def reasonableClamp(v: Double, lower: Double = 1E-4, upper: Double = 1E5): Double = {
+  def reasonableClamp(v: Double, lower: Double = 1E-4, upper: Double = 1E3): Double = {
     if (v == 0) 0
     else if (v.abs < lower) v + math.signum(v) * lower
     else if (v.abs > upper) reasonableClamp(v % upper)
@@ -84,4 +84,12 @@ object RandomInstanceSupport {
     } yield {
       VectorBuilder(len)(il.zip(list): _*)
     }
+
+  def genDenseMatrix[T: ClassTag](r: Int, c: Int, gen: Gen[T]): Gen[DenseMatrix[T]] =
+    for {
+      list <- Gen.listOfN(r * c, gen)
+    } yield {
+      new DenseMatrix(r, c, list.toArray)
+    }
+
 }

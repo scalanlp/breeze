@@ -17,14 +17,11 @@ package breeze.optimize
  */
 
 import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
+import org.scalatestplus.scalacheck._
 import org.scalacheck._
-import org.junit.runner.RunWith
 
 import breeze.linalg._
 
-@RunWith(classOf[JUnitRunner])
 class StochasticAveragedGradientTest extends OptimizeTestBase {
   test("optimize a simple multivariate gaussian") {
     val lbfgs = new StochasticAveragedGradient[DenseVector[Double]](100)

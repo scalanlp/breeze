@@ -17,7 +17,7 @@ package breeze.optimize.linear
 
 import org.scalatest._
 import org.scalatest.junit._
-import org.scalatest.prop._
+import org.scalatestplus.scalacheck._
 import org.scalacheck._
 import org.junit.runner.RunWith
 
@@ -27,7 +27,7 @@ import breeze.linalg._
  *
  * @author dlwh
  */
-@RunWith(classOf[JUnitRunner])
+
 class AffineScalingTest extends FunSuite {
   // from: http://en.wikipedia.org/wiki/Karmarkar's_algorithm
   test("Small example") {

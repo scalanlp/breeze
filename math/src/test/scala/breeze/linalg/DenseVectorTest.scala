@@ -4,9 +4,7 @@ import breeze.numerics.isNonfinite
 import org.netlib.blas.Ddot
 import org.scalacheck._
 import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
-import org.junit.runner.RunWith
+import org.scalatestplus.scalacheck._
 import breeze.math._
 import breeze.stats.mean
 import java.util
@@ -19,7 +17,6 @@ import scala.reflect.ClassTag
  *
  * @author dlwh
  */
-@RunWith(classOf[JUnitRunner])
 class DenseVectorTest extends FunSuite with Checkers {
 
   val TOLERANCE = 1e-4
@@ -593,7 +590,7 @@ abstract class DenseVectorPropertyTestBase[T: ClassTag] extends TensorSpaceTestB
  *
  * @author dlwh
  */
-@RunWith(classOf[JUnitRunner])
+
 class DenseVectorOps_DoubleTest
     extends DenseVectorPropertyTestBase[Double]
     with DoubleValuedTensorSpaceTestBase[DenseVector[Double], Int] {
@@ -601,14 +598,14 @@ class DenseVectorOps_DoubleTest
   def genScalar: Arbitrary[Double] = RandomInstanceSupport.genReasonableDouble
 }
 
-@RunWith(classOf[JUnitRunner])
+
 class DenseVectorOps_IntTest extends DenseVectorPropertyTestBase[Int] {
   val space = DenseVector.space[Int]
 
   def genScalar: Arbitrary[Int] = Arbitrary { Gen.Choose.chooseInt.choose(-1000, 1000) }
 }
 
-@RunWith(classOf[JUnitRunner])
+
 class DenseVectorOps_ComplexTest extends DenseVectorPropertyTestBase[Complex] {
   val space = DenseVector.space[Complex]
   def genScalar: Arbitrary[Complex] = Arbitrary {
@@ -619,7 +616,7 @@ class DenseVectorOps_ComplexTest extends DenseVectorPropertyTestBase[Complex] {
   }
 }
 
-@RunWith(classOf[JUnitRunner])
+
 class DenseVectorOps_FloatTest extends DenseVectorPropertyTestBase[Float] {
   val space = DenseVector.space[Float]
 

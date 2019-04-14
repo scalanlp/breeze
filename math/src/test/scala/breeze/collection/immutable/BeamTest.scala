@@ -19,10 +19,10 @@ package breeze.collection.immutable
 import org.scalacheck._
 import org.scalatest._;
 import org.scalatest.junit._;
-import org.scalatest.prop._;
+import org.scalatestplus.scalacheck._;
 import org.junit.runner.RunWith
 
-@RunWith(classOf[JUnitRunner])
+
 class BeamTest extends FunSuite with Checkers {
   test("creation doesn't go over size") {
     check(Prop.forAll { (size: Int, cl: List[Int]) =>

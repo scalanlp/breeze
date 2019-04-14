@@ -17,15 +17,12 @@ package breeze.linalg
  */
 
 import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
-import org.junit.runner.RunWith
+import org.scalatestplus.scalacheck._
 import breeze.math.Complex
 import breeze.numerics._
 import breeze.stats.distributions.Rand
 import breeze.util.DoubleImplicits
 
-@RunWith(classOf[JUnitRunner])
 class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleImplicits with MatrixTestUtils {
 
   test("Slicing") {

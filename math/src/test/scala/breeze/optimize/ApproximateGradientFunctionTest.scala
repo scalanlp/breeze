@@ -1,10 +1,6 @@
 package breeze.optimize
 
-import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
 import org.scalacheck._
-import org.junit.runner.RunWith
 
 import breeze.linalg._
 
@@ -12,7 +8,6 @@ import breeze.linalg._
  *
  * @author dlwh
  */
-@RunWith(classOf[JUnitRunner])
 class ApproximateGradientFunctionTest extends OptimizeTestBase {
 
   test("simple quadratic function") {

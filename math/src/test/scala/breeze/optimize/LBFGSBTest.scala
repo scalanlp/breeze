@@ -16,13 +16,10 @@ package breeze.optimize
  */
 import breeze.linalg.{DenseVector, norm}
 import breeze.numerics.pow
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
 /**
  * Created by fanming.chen on 2015/3/14 0014.
  */
-@RunWith(classOf[JUnitRunner])
 class LBFGSBTest extends OptimizeTestBase {
   val EPS = 1E-4;
 

@@ -15,18 +15,14 @@ package breeze.collection.mutable
  See the License for the specific language governing permissions and
  limitations under the License.
  */
-import org.scalatest.prop.Checkers
+import org.scalatestplus.scalacheck.Checkers
 import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
-import org.junit.runner.RunWith
 import org.scalacheck.{Arbitrary, Prop}
 
 /**
  *
  * @author dlwh
  */
-
-@RunWith(classOf[JUnitRunner])
 class OpenAddressHashArrayTest extends FunSuite with Checkers {
   test("add stuff, make sure it and only it is there") {
     implicit val arbInt: Arbitrary[Int] = Arbitrary { Arbitrary.arbInt.arbitrary.map(_.abs % 1000) }

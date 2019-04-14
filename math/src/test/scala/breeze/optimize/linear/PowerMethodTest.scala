@@ -6,7 +6,7 @@ import org.scalatest._
 import org.scalatest.junit._
 import breeze.linalg._
 
-@RunWith(classOf[JUnitRunner])
+
 class PowerMethodTest extends FunSuite {
   val n = 5
   val gram = new DenseMatrix[Double](

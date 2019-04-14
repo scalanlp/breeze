@@ -13,5 +13,3 @@ libraryDependencies := {
 }
 
 libraryDependencies += "org.scala-lang" % "scala-reflect" % s"${scalaVersion.value}"
-
-addCompilerPlugin(("org.scalamacros" %% "paradise" % "2.1.0").cross(CrossVersion.full))

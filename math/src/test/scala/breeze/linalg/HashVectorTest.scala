@@ -1,8 +1,6 @@
 package breeze.linalg
 
 import org.scalatest._
-import org.scalatest.junit._
-import org.junit.runner.RunWith
 import breeze.math._
 import breeze.stats.mean
 import breeze.storage.Zero
@@ -13,7 +11,6 @@ import scala.reflect.ClassTag
  *
  * @author dlwh
  */
-@RunWith(classOf[JUnitRunner])
 class HashVectorTest extends FunSuite {
 
   val TOLERANCE = 1e-4
@@ -258,7 +255,7 @@ abstract class HashVectorPropertyTestBase[T: ClassTag: Zero] extends TensorSpace
   }
 }
 
-@RunWith(classOf[JUnitRunner])
+
 class HashVectorOps_DoubleTest
     extends HashVectorPropertyTestBase[Double]
     with DoubleValuedTensorSpaceTestBase[HashVector[Double], Int] {
@@ -266,7 +263,7 @@ class HashVectorOps_DoubleTest
   def genScalar: Arbitrary[Double] = RandomInstanceSupport.genReasonableDouble
 }
 
-@RunWith(classOf[JUnitRunner])
+
 class HashVectorOps_FloatTest extends HashVectorPropertyTestBase[Float] {
   val space = HashVector.space[Float]
 
@@ -274,7 +271,7 @@ class HashVectorOps_FloatTest extends HashVectorPropertyTestBase[Float] {
   def genScalar: Arbitrary[Float] = Arbitrary { RandomInstanceSupport.genReasonableDouble.arbitrary.map(_.toFloat) }
 }
 
-@RunWith(classOf[JUnitRunner])
+
 class HashVectorOps_IntTest extends HashVectorPropertyTestBase[Int] {
   val space = HashVector.space[Int]
   def genScalar: Arbitrary[Int] = Arbitrary { Gen.Choose.chooseInt.choose(-1000, 1000) }

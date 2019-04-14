@@ -15,11 +15,8 @@ package breeze.generic
  limitations under the License.
  */
 import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
-import org.junit.runner.RunWith
+import org.scalatestplus.scalacheck._
 
-@RunWith(classOf[JUnitRunner])
 class MultimethodTest extends FunSuite with Checkers {
   trait T
   trait V extends T

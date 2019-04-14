@@ -1,12 +1,7 @@
 package breeze.stats.hypothesis
 
 import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
-import org.scalacheck._
-import org.junit.runner.RunWith
 
-@RunWith(classOf[JUnitRunner])
 class chi2TestTest extends FunSuite with Matchers {
   val threshold = 0.01
   test("Chi2 test single comparisons") {

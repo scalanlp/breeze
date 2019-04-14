@@ -18,13 +18,10 @@ package breeze.numerics
 
 import breeze.linalg._
 import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
-import org.junit.runner.RunWith
+import org.scalatestplus.scalacheck._
 import org.scalacheck.{Prop, Arbitrary}
 import breeze.math.Complex
 
-@RunWith(classOf[JUnitRunner])
 class NumericsTest extends FunSuite with Checkers with Matchers {
 
   test("softmax") {

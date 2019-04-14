@@ -1,8 +1,6 @@
 package breeze.linalg
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
-import org.scalatest.prop.Checkers
+import org.scalatestplus.scalacheck.Checkers
 
 /**
  * Licensed under the Apache License, Version 2.0 (the "License")
@@ -19,10 +17,7 @@ import org.scalatest.prop.Checkers
  *
  * @author Amit Kumar kumaramit01@gmail.com
  */
-@RunWith(classOf[JUnitRunner])
 class UsingNativesTest extends FunSuite with Checkers {
-
-  import breeze.linalg._
 
   test("Using natives") {
     if (!usingNatives) {

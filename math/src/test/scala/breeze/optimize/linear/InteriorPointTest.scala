@@ -27,7 +27,7 @@ import breeze.linalg._
  *
  * @author dlwh
  */
-@RunWith(classOf[JUnitRunner])
+
 class InteriorPointTest extends FunSuite {
   // from: http://en.wikipedia.org/wiki/Karmarkar's_algorithm
   test("Small example") {

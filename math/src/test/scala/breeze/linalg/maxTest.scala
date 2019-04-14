@@ -1,15 +1,12 @@
 package breeze.linalg
 
 import org.scalatest.FunSuite
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
 /**Tests for breeze.linalg.max.scala
  * Test for clip is currently located in "DenseVectorTest.scala"
  * @author ktakagaki
  * @date 3/13/14.
  */
-@RunWith(classOf[JUnitRunner])
 class maxTest extends FunSuite {
 
   val testDV = DenseVector(1, 10000000, 30, -500, 6)

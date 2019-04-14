@@ -1,7 +1,5 @@
 package breeze.util
 
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
 import breeze.util.JavaArrayOps._
 import breeze.linalg.{DenseMatrix, DenseVector}
@@ -11,7 +9,6 @@ import breeze.math.Complex
  * @author ktakagaki
  * @date 03/31/2014.
  */
-@RunWith(classOf[JUnitRunner])
 class JavaArrayOpsTest extends FunSuite {
 
   test("JavaOpts 1D conversions") {

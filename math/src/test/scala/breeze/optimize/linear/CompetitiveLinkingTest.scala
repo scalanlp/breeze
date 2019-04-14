@@ -2,11 +2,11 @@ package breeze.optimize.linear
 
 import org.scalatest._;
 import org.scalatest.junit._;
-import org.scalatest.prop._;
+import org.scalatestplus.scalacheck._;
 
 import org.junit.runner.RunWith
 
-@RunWith(classOf[JUnitRunner])
+
 class CompetitiveLinkingTest extends FunSuite with Checkers {
   test("sanity check") {
     val arr = Array(Seq(2.0, 4.0, 7.0, 9.0), Seq(3.0, 9.0, 5.0, 1.0), Seq(8.0, 2.0, 9.0, 7.0));

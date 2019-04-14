@@ -1,15 +1,12 @@
 package breeze.stats.distributions
 
-import org.junit.runner.RunWith
 import org.scalacheck.Arbitrary
 import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.prop.Checkers
+import org.scalatestplus.scalacheck.Checkers
 
 /**
  * Created by kokorins
  */
-@RunWith(classOf[JUnitRunner])
 class ExponentialTest
     extends FunSuite
     with Checkers

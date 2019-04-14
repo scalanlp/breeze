@@ -16,12 +16,10 @@ package breeze.linalg
  limitations under the License.
  */
 import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
-import org.junit.runner.RunWith
+import org.scalatestplus.scalacheck._
 import breeze.math.Complex
 
-@RunWith(classOf[JUnitRunner])
+
 class MatrixTest extends FunSuite with Checkers {
   test("Multiply") {
     val a = Matrix((1.0, 2.0, 3.0), (4.0, 5.0, 6.0))

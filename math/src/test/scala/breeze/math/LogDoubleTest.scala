@@ -17,14 +17,11 @@ package breeze.math
  */
 
 import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
+import org.scalatestplus.scalacheck._
 import org.scalacheck._
-import org.junit.runner.RunWith
 import LogDouble._
 import breeze.linalg.RandomInstanceSupport
 
-@RunWith(classOf[JUnitRunner])
 class LogDoubleTest extends FunSuite with Checkers {
 
   implicit val ad: Arbitrary[Double] = Arbitrary(

@@ -3,7 +3,7 @@ package breeze.stats.distributions
 /*
  Copyright 2009 David Hall, Daniel Ramage
 
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
 
@@ -16,13 +16,10 @@ package breeze.stats.distributions
  limitations under the License.
  */
 
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.scalacheck._;
-import org.junit.runner.RunWith
+import org.scalatest._
+import org.scalatestplus.scalacheck._
+import org.scalacheck._
 
-@RunWith(classOf[JUnitRunner])
 class WaldTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase with MomentsTestBase[Double] {
   type Distr = Wald
   import Arbitrary.arbitrary

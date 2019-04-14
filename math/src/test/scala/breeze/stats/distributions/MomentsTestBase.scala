@@ -1,14 +1,9 @@
 package breeze.stats
 package distributions
 
-import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.Before
-import org.scalatest.prop._
+import org.scalatestplus.scalacheck._
 import org.scalacheck._
-import java.util.zip.DeflaterInputStream
 
 /**
  * @author dlwh
@@ -59,8 +54,6 @@ trait MomentsTestBase[T] extends FunSuite with Checkers {
     check(Prop.forAll { (distr: Distr) =>
       val sample = distr.sample(40)
       val probMode = distr(fromDouble(distr.mode))
-//      if(distr.isInstanceOf[Poisson])
-//        println(distr,probMode,sample.map{ distr },sample)
       sample.find(x => probMode < distr(x) - 1E-4) match {
         case Some(x) => println(s"$x has higher prob (${distr(x)}) than mode ${distr.mode} ($probMode)"); false
         case None => true

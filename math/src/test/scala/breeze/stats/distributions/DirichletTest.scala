@@ -16,14 +16,11 @@ package breeze.stats.distributions
  limitations under the License.
  */
 
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.scalacheck._;
-import org.junit.runner.RunWith
+import org.scalatest._
+import org.scalatestplus.scalacheck._
 import breeze.linalg.{softmax, DenseVector, SparseVector}
 import math.{abs, exp}
-@RunWith(classOf[JUnitRunner])
+
 class DirichletTest extends FunSuite with Checkers {
 
   test("logDraw for small values") {

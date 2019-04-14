@@ -17,10 +17,8 @@ package breeze.optimize
  */
 
 import breeze.linalg._
-import org.junit.runner.RunWith
 import org.scalacheck._
-import org.scalatest.junit._
-@RunWith(classOf[JUnitRunner])
+
 class OWLQNTest extends OptimizeTestBase {
   test("super simple") {
     val lbfgs = new OWLQN[Int, DenseVector[Double]](100, 4)

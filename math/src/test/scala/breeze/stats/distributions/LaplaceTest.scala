@@ -16,14 +16,11 @@ package breeze.stats.distributions
  limitations under the License.
  */
 
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.scalacheck._;
-import org.junit.runner.RunWith
+import org.scalatest._
+import org.scalatestplus.scalacheck._
+import org.scalacheck._
 import org.apache.commons.math3.random.MersenneTwister
 
-@RunWith(classOf[JUnitRunner])
 class LaplaceTest
     extends FunSuite
     with Checkers

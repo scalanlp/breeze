@@ -9,7 +9,7 @@ import org.scalatest.junit._
  *
  * @author dlwh
  */
-@RunWith(classOf[JUnitRunner])
+
 class ConjugateGradientTest extends FunSuite {
 
   test("we can recover the same matrix as inversion, more or less") {

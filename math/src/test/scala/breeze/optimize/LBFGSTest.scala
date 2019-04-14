@@ -15,13 +15,10 @@ package breeze.optimize
  limitations under the License.
  */
 
-import org.scalatest.junit._
 import org.scalacheck._
-import org.junit.runner.RunWith
 
 import breeze.linalg._
 
-@RunWith(classOf[JUnitRunner])
 class LBFGSTest extends OptimizeTestBase {
 
   test("optimize a simple multivariate gaussian") {

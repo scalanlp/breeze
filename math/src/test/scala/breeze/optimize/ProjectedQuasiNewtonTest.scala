@@ -17,17 +17,14 @@ package breeze.optimize
 
 import breeze.optimize.proximal.{ProjectL1, QuadraticMinimizer}
 import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
-import org.junit.runner.RunWith
+import org.scalatestplus.scalacheck._
 import breeze.linalg._
 import breeze.numerics._
 import breeze.optimize.proximal.NonlinearMinimizer.Projection
 
-@RunWith(classOf[JUnitRunner])
 class ProjectedQuasiNewtonTest
     extends PropSpec
-    with PropertyChecks
+    with ScalaCheckPropertyChecks
     with OptimizeTestBaseTrait
     with VectorMatchers
     with Matchers {

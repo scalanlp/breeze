@@ -1,10 +1,7 @@
 package breeze.linalg
 
 import org.scalatest.FunSuite
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
 class whereTest extends FunSuite {
   test("DenseVector") {
     assert(where(DenseVector(1, 2, 0, 4, 5, 0)) === IndexedSeq(0, 1, 3, 4))

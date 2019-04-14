@@ -1,12 +1,10 @@
 package breeze.linalg
 
 import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
+import org.scalatestplus.scalacheck._
 import spire.implicits._
 
 /**
- *
  *
  * @author stucchio
  */

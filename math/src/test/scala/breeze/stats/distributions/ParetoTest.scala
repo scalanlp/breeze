@@ -16,14 +16,10 @@ package breeze.stats.distributions
  limitations under the License.
  */
 
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.scalacheck._;
-import org.junit.runner.RunWith
-import org.apache.commons.math3.random.MersenneTwister
+import org.scalatest._
+import org.scalatestplus.scalacheck._
+import org.scalacheck._
 
-@RunWith(classOf[JUnitRunner])
 class ParetoTest
     extends FunSuite
     with Checkers
@@ -44,7 +40,7 @@ class ParetoTest
       }; // Pareto pdf at 0 not defined when location == 1
       scale <- arbitrary[Double].map { x =>
         math.abs(x) % 8.0 + 4.0
-      }) yield new Pareto(location, scale)(new RandBasis(new MersenneTwister(0)))
+      }) yield Pareto(location, scale)(RandBasis.withSeed(0))
   }
 
   override type Distr = Pareto

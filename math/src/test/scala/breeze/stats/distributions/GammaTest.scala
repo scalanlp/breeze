@@ -16,13 +16,10 @@ package breeze.stats.distributions;
  limitations under the License.
  */
 
-import org.junit.runner.RunWith
 import org.scalacheck._
 import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
+import org.scalatestplus.scalacheck._
 
-@RunWith(classOf[JUnitRunner])
 class GammaTest
     extends FunSuite
     with Checkers

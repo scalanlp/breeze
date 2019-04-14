@@ -2,7 +2,7 @@ package breeze.optimize.flow
 
 import org.scalatest._;
 import org.scalatest.junit._;
-import org.scalatest.prop._;
+import org.scalatestplus.scalacheck._;
 import org.scalacheck._;
 import org.junit.runner.RunWith
 
@@ -11,7 +11,7 @@ import org.junit.runner.RunWith
  * @author dlwh
  */
 
-@RunWith(classOf[JUnitRunner])
+
 class LPMaxFlowTest extends FunSuite {
 
   test("LPMaxFlowTest") {

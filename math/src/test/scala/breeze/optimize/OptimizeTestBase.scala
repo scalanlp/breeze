@@ -19,7 +19,7 @@ package breeze.optimize
 import breeze.linalg._
 import org.scalacheck._
 import org.scalatest._
-import org.scalatest.prop._
+import org.scalatestplus.scalacheck._
 
 trait OptimizeTestBaseTrait {
   import org.scalacheck.Arbitrary._

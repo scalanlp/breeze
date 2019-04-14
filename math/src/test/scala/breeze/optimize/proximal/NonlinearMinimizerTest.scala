@@ -9,7 +9,7 @@ import breeze.numerics._
 
 import org.scalatest.Matchers
 
-@RunWith(classOf[JUnitRunner])
+
 class NonlinearMinimizerTest extends OptimizeTestBase with Matchers {
   val n = 5
   val H = new DenseMatrix(

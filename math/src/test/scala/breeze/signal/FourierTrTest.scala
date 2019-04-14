@@ -1,8 +1,6 @@
 package breeze.signal
 
-import org.junit.runner.RunWith
 import org.scalatest._
-import org.scalatest.junit._
 import breeze.linalg.{*, DenseVector, DenseMatrix, norm}
 import breeze.math.Complex
 
@@ -13,7 +11,6 @@ import breeze.math.Complex
  * Time: 02:31
  * To change this template use File | Settings | File Templates.
  */
-@RunWith(classOf[JUnitRunner])
 class FourierTrTest extends FunSuite {
 
   // <editor-fold desc="FourierTr">

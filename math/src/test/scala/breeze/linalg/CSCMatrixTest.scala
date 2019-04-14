@@ -15,20 +15,15 @@ package breeze.linalg
  limitations under the License.
  */
 
-import breeze.generic.UFunc
-import breeze.linalg.operators.{OpAdd, OpType}
 import breeze.math.MutableOptimizationSpace.SparseFieldOptimizationSpace
 import breeze.math.{Complex, Field}
 import breeze.numerics.{abs, inf}
 import breeze.storage.Zero
 import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
-import org.junit.runner.RunWith
+import org.scalatestplus.scalacheck.Checkers
 
 import scala.reflect.ClassTag
 
-@RunWith(classOf[JUnitRunner])
 class CSCMatrixTest extends FunSuite with Checkers with MatrixTestUtils {
   test("Multiply") {
     val a = CSCMatrix((1.0, 2.0, 3.0), (4.0, 5.0, 6.0))

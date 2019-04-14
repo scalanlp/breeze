@@ -29,7 +29,7 @@ import spire.implicits._
  *
  * @author dlw
  */
-@RunWith(classOf[JUnitRunner])
+
 class DensePolynomialTest extends FunSuite {
 
   test("PolyDenseUfuncWrapper applied to doubles") {

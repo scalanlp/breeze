@@ -16,20 +16,16 @@ package breeze.stats.distributions;
  limitations under the License.
  */
 
-import org.junit.runner.RunWith
-import org.scalacheck._
 import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
+import org.scalatestplus.scalacheck._
 
 /**Tests for MarkovChain
  * @author darrenjw
  * @date 2/1/17
  */
-@RunWith(classOf[JUnitRunner])
+
 class MarkovChainTest extends FunSuite with Checkers {
   type Distr = Gamma
-  import org.scalacheck.Arbitrary.arbitrary
 
   import breeze.numerics._
   import breeze.linalg._

@@ -1,15 +1,12 @@
 package breeze.signal
 
-import org.junit.runner.RunWith
 import org.scalatest._
-import org.scalatest.junit._
-import breeze.linalg.{DenseVector, DenseMatrix, norm}
-import breeze.signal.support.{CanHaarTr, CanIHaarTr}
+import breeze.linalg.{DenseVector, norm}
 
 /**
  * Test for correctness of the haar transform
  */
-@RunWith(classOf[JUnitRunner])
+
 class HaarTrTest extends FunSuite {
 
   test("haarTr 1d of DenseVector[Double]") {

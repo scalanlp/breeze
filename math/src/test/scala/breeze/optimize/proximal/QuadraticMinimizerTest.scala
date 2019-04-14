@@ -10,7 +10,7 @@ import breeze.optimize._
 import breeze.optimize.proximal.Constraint._
 import breeze.numerics._
 
-@RunWith(classOf[JUnitRunner])
+
 class QuadraticMinimizerTest extends OptimizeTestBase with Matchers {
   def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6) {
     for (i <- 0 until A.rows; j <- 0 until A.cols)

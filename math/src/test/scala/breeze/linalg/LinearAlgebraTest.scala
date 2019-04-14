@@ -24,9 +24,7 @@ import breeze.linalg.svd.SVD
 import breeze.stats.distributions.{RandBasis, MultivariateGaussian}
 import org.scalacheck.{Arbitrary, Gen, Prop}
 import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
-import org.junit.runner.RunWith
+import org.scalatestplus.scalacheck._
 import breeze.util.DoubleImplicits
 import breeze.numerics._
 import breeze.stats.{mean, median, meanAndVariance}
@@ -36,8 +34,6 @@ import breeze.{math => bmath}
  *
  * @author dlwh
  */
-
-@RunWith(classOf[JUnitRunner])
 class LinearAlgebraTest extends FunSuite with Checkers with Matchers with DoubleImplicits {
   test("kron") {
     val a = DenseMatrix((1, 2), (3, 4))
