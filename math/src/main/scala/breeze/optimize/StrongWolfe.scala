@@ -113,6 +113,8 @@ class StrongWolfeLineSearch(maxZoomIter: Int, maxLineSearchIter: Int) extends Cu
           "Line search t: " + t + " fval: " + c.fval +
             " rhs: " + (fval + c1 * c.t * dd) + " cdd: " + c.dd)
 
+        if (t.isNaN) throw new FirstOrderException(s"Line search zoom failed")
+
         ///////////////
         /// Update left or right bracket, or both
 
