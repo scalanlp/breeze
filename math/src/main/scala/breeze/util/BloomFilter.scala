@@ -80,7 +80,7 @@ class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFun
     new BloomFilter[T](this.numBuckets, this.numHashFunctions, this.bits & that.bits)
   }
 
-  private def checkCompatibility(that: BloomFilter[T]) {
+  private def checkCompatibility(that: BloomFilter[T]): Unit = {
     require(that.numBuckets == this.numBuckets, "Must have the same number of buckets to intersect")
     require(that.numHashFunctions == this.numHashFunctions, "Must have the same number of hash functions to intersect")
   }

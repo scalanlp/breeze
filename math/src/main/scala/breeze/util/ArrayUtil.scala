@@ -34,7 +34,7 @@ import spire.syntax.cfor._
  */
 object ArrayUtil {
 
-  def fill[V](a: Array[V], offset: Int, length: Int, v: V) {
+  def fill[V](a: Array[V], offset: Int, length: Int, v: V): Unit = {
     a match {
       case x: Array[Double] => Arrays.fill(x, offset, offset + length, v.asInstanceOf[Double])
       case x: Array[Int] => Arrays.fill(x, offset, offset + length, v.asInstanceOf[Int])
@@ -96,7 +96,7 @@ object ArrayUtil {
     }
   }
 
-  def sort[V](a: Array[V]) {
+  def sort[V](a: Array[V]): Unit = {
     a match {
       case x: Array[Double] => Arrays.sort(x)
       case x: Array[Int] => Arrays.sort(x)

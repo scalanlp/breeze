@@ -331,8 +331,8 @@ object SparseVector
 
       /**Transforms all key-value pairs from the given collection. */
       def transform(from: SparseVector[V], fn: (V) => V): Unit = {
-        val newData = mutable.ArrayBuilder.make[V]()
-        val newIndex = mutable.ArrayBuilder.make[Int]()
+        val newData = mutable.ArrayBuilder.make[V]
+        val newIndex = mutable.ArrayBuilder.make[Int]
         var used = 0
         var i = 0
         while (i < from.length) {

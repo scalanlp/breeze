@@ -22,7 +22,7 @@ class SliceMatrix[
 
   def apply(i: Int, j: Int): V = tensor(slice1(i) -> slice2(j))
 
-  def update(i: Int, j: Int, e: V) { tensor(slice1(i) -> slice2(j)) = e }
+  def update(i: Int, j: Int, e: V): Unit = { tensor(slice1(i) -> slice2(j)) = e }
 
   def rows: Int = slice1.length
 
@@ -132,13 +132,13 @@ object SliceMatrix extends LowPrioritySliceMatrix with SliceMatrixOps {
 
   implicit def canTransformValues[K1, K2, V]: CanTransformValues[SliceMatrix[K1, K2, V], V] = {
     new CanTransformValues[SliceMatrix[K1, K2, V], V] {
-      def transform(from: SliceMatrix[K1, K2, V], fn: (V) => V) {
+      def transform(from: SliceMatrix[K1, K2, V], fn: (V) => V): Unit = {
         for (j <- 0 until from.cols; i <- 0 until from.rows) {
           from(i, j) = fn(from(i, j))
         }
       }
 
-      def transformActive(from: SliceMatrix[K1, K2, V], fn: (V) => V) {
+      def transformActive(from: SliceMatrix[K1, K2, V], fn: (V) => V): Unit = {
         transform(from, fn)
       }
     }

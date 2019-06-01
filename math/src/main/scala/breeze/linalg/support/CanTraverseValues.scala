@@ -15,6 +15,8 @@ package breeze.linalg.support
  See the License for the specific language governing permissions and
  limitations under the License.
  */
+import scala.collection.compat.IterableOnce
+
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.math.Complex
 
@@ -55,7 +57,7 @@ trait CanTraverseValues[From, A] {
 object CanTraverseValues {
 
   trait ValuesVisitor[@specialized A] {
-    def visit(a: A)
+    def visit(a: A): Unit
     def visitArray(arr: Array[A]): Unit = visitArray(arr, 0, arr.length, 1)
 
     def visitArray(arr: Array[A], offset: Int, length: Int, stride: Int): Unit = {
@@ -71,7 +73,7 @@ object CanTraverseValues {
         }
       }
     }
-    def zeros(numZero: Int, zeroValue: A)
+    def zeros(numZero: Int, zeroValue: A): Unit
   }
 
   //
@@ -102,7 +104,7 @@ object CanTraverseValues {
   implicit object OpArrayDD extends OpArray[Double]
 
   implicit object OpArrayCC extends OpArray[Complex]
-  implicit def canTraverseTraversable[V, X <: TraversableOnce[V]]: CanTraverseValues[X, V] = {
+  implicit def canTraverseTraversable[V, X <: IterableOnce[V]]: CanTraverseValues[X, V] = {
     new CanTraverseValues[X, V] {
 
       /** Traverses all values from the given collection. */
@@ -112,7 +114,7 @@ object CanTraverseValues {
         }
       }
 
-      def isTraversableAgain(from: X): Boolean = from.isTraversableAgain
+      def isTraversableAgain(from: X): Boolean = from.isInstanceOf[Iterable[V]]
     }
   }
 }
@@ -129,5 +131,4 @@ trait LowPrioCanTraverseValues { this: CanTraverseValues.type =>
       def isTraversableAgain(from: V): Boolean = true
     }
   }
-
 }

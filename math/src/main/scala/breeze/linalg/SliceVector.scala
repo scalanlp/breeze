@@ -32,7 +32,7 @@ class SliceVector[@spec(Int) K, @spec(Double, Int, Float, Long) V: ClassTag](
 
   def apply(i: Int): V = tensor(slices(i))
 
-  def update(i: Int, v: V) { tensor(slices(i)) = v }
+  def update(i: Int, v: V): Unit = { tensor(slices(i)) = v }
 
   def copy: DenseVector[V] = DenseVector(slices.map(tensor.apply _): _*)
 
@@ -118,13 +118,13 @@ object SliceVector extends SliceVectorOps {
 
   implicit def canTransformValues[K, V]: CanTransformValues[SliceVector[K, V], V] = {
     new CanTransformValues[SliceVector[K, V], V] {
-      def transform(from: SliceVector[K, V], fn: (V) => V) {
+      def transform(from: SliceVector[K, V], fn: (V) => V): Unit = {
         for (i <- 0 until from.length) {
           from(i) = fn(from(i))
         }
       }
 
-      def transformActive(from: SliceVector[K, V], fn: (V) => V) {
+      def transformActive(from: SliceVector[K, V], fn: (V) => V): Unit = {
         transform(from, fn)
       }
     }

@@ -158,7 +158,7 @@ case class ThreadedBufferedRand[T](wrapped: Rand[T], bufferSize: Int = 1024 * 8)
   @volatile private var stopWorker = false
 
   private val worker = new Thread {
-    override def run() {
+    override def run(): Unit = {
       while (!stopWorker) {
         val buff = usedArrayQueue.poll(1, java.util.concurrent.TimeUnit.SECONDS)
         if (buff != null) {

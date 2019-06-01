@@ -10,7 +10,7 @@ object zipValues extends UFunc {}
  * @tparam V2
  */
 trait ZippedValues[@specialized(Double) V1, @specialized(Double) V2] {
-  def foreach(f: (V1, V2) => Unit)
+  def foreach(f: (V1, V2) => Unit): Unit
 
   def exists(f: (V1, V2) => Boolean): Boolean = {
     foreach((a, b) => if (f(a, b)) return true)

@@ -18,12 +18,12 @@ import spire.syntax.cfor._
 import breeze.linalg.norm
 
 trait Proximal {
-  def prox(x: DenseVector[Double], rho: Double = 1.0)
+  def prox(x: DenseVector[Double], rho: Double = 1.0): Unit
   def valueAt(x: DenseVector[Double]) = 0.0
 }
 
 case class ProjectIdentity() extends Proximal {
-  def prox(x: DenseVector[Double], rho: Double = 1.0) {}
+  def prox(x: DenseVector[Double], rho: Double = 1.0): Unit = {}
 }
 
 //TO DO:

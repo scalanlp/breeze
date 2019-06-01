@@ -335,7 +335,7 @@ object NumericOps {
     implicit def binaryUpdateOpFromDVDVOp[V, Op <: OpType](
         implicit op: UFunc.InPlaceImpl2[Op, DenseVector[V], DenseVector[V]]) = {
       new UFunc.InPlaceImpl2[Op, Array[V], Array[V]] {
-        def apply(a: Array[V], b: Array[V]) {
+        def apply(a: Array[V], b: Array[V]): Unit = {
           op(DenseVector(a), DenseVector(b))
         }
       }
@@ -362,7 +362,7 @@ object NumericOps {
         implicit op: UFunc.InPlaceImpl2[Op, DenseVector[V], Other],
         man: ClassTag[U]) = {
       new UFunc.InPlaceImpl2[Op, Array[V], Other] {
-        def apply(a: Array[V], b: Other) {
+        def apply(a: Array[V], b: Other): Unit = {
           op(DenseVector(a), b)
         }
       }
@@ -391,7 +391,7 @@ object NumericOps {
       implicit op: UFunc.InPlaceImpl2[Op, DenseVector[V], U],
       man: ClassTag[U]) = {
     new UFunc.InPlaceImpl2[Op, Array[V], U] {
-      def apply(a: Array[V], b: U) {
+      def apply(a: Array[V], b: U): Unit = {
         op(DenseVector(a), b)
       }
     }

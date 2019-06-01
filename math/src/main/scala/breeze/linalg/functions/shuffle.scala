@@ -2,6 +2,7 @@ package breeze.linalg
 
 import breeze.generic.UFunc
 
+import scala.collection.compat._
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
@@ -124,7 +125,7 @@ object shuffle extends UFunc {
       override def apply(v: Coll): CollRes = {
         // Make a copy of the input.
         val builder = cbf(v)
-        val copy = v.to[ArrayBuffer]
+        val copy = v.to(ArrayBuffer)
 
         // Shuffle tempret via Fisher-Yates method.
         var count = copy.length - 1

@@ -79,7 +79,7 @@ object BroadcastedColumns {
       op: InPlaceImpl[Op, ColumnType],
       cc: CanTraverseAxis[T, Axis._0.type, ColumnType]): InPlaceImpl[Op, BroadcastedColumns[T, ColumnType]] = {
     new InPlaceImpl[Op, BroadcastedColumns[T, ColumnType]] {
-      def apply(v: BroadcastedColumns[T, ColumnType]) {
+      def apply(v: BroadcastedColumns[T, ColumnType]): Unit = {
         cc(v.underlying, Axis._0) { op(_) }
       }
     }
@@ -114,7 +114,7 @@ object BroadcastedColumns {
       op: InPlaceImpl2[Op, ColumnType, RHS],
       cc: CanTraverseAxis[T, Axis._0.type, ColumnType]): InPlaceImpl2[Op, BroadcastedColumns[T, ColumnType], RHS] = {
     new InPlaceImpl2[Op, BroadcastedColumns[T, ColumnType], RHS] {
-      def apply(v: BroadcastedColumns[T, ColumnType], v2: RHS) {
+      def apply(v: BroadcastedColumns[T, ColumnType], v2: RHS): Unit = {
         cc(v.underlying, Axis._0) { op(_, v2) }
       }
     }

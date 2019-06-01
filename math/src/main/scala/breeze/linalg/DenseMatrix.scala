@@ -757,7 +757,7 @@ object DenseMatrix
 
   implicit def canTransformValues[@specialized(Int, Float, Double) V]: CanTransformValues[DenseMatrix[V], V] = {
     new CanTransformValues[DenseMatrix[V], V] {
-      def transform(from: DenseMatrix[V], fn: (V) => V) {
+      def transform(from: DenseMatrix[V], fn: (V) => V): Unit = {
         if (from.isContiguous) {
           val d = from.data
           cforRange(from.offset until from.offset + from.size) { j =>
@@ -780,7 +780,7 @@ object DenseMatrix
         }
       }
 
-      def transformActive(from: DenseMatrix[V], fn: (V) => V) {
+      def transformActive(from: DenseMatrix[V], fn: (V) => V): Unit = {
         transform(from, fn)
       }
     }
@@ -990,7 +990,7 @@ object DenseMatrix
    */
   implicit def canTraverseCols[V]: CanTraverseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]] = {
     new CanTraverseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]] {
-      def apply[A](from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => A) {
+      def apply[A](from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => A): Unit = {
         cforRange(0 until from.cols) { c =>
           f(from(::, c))
         }
@@ -1005,7 +1005,7 @@ object DenseMatrix
    */
   implicit def canTraverseRows[V]: CanTraverseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]] = {
     new CanTraverseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]] {
-      def apply[A](from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => A) {
+      def apply[A](from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => A): Unit = {
         val t = from.t
         cforRange(0 until from.rows) { r =>
           f(t(::, r))
@@ -1114,7 +1114,7 @@ object DenseMatrix
   implicit def canGaxpy[V: Semiring]: scaleAdd.InPlaceImpl3[DenseMatrix[V], V, DenseMatrix[V]] = {
     new scaleAdd.InPlaceImpl3[DenseMatrix[V], V, DenseMatrix[V]] {
       val ring = implicitly[Semiring[V]]
-      def apply(a: DenseMatrix[V], s: V, b: DenseMatrix[V]) {
+      def apply(a: DenseMatrix[V], s: V, b: DenseMatrix[V]): Unit = {
         require(a.rows == b.rows, "Vector row dimensions must match!")
         require(a.cols == b.cols, "Vector col dimensions must match!")
 

@@ -29,7 +29,6 @@ class MarkovChainTest extends FunSuite with Checkers {
 
   import breeze.numerics._
   import breeze.linalg._
-  import MarkovChain._
 
   val numSamples = 1000000
   val tol = 0.01

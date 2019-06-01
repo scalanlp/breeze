@@ -4,6 +4,7 @@ import breeze.macros.expand
 import breeze.generic.UFunc
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.compat._
 
 /**Quickselect for linear-time medians, etc.
  * See [[scala.util.Sorting]] and [[breeze.util.Sorting]]
@@ -70,7 +71,7 @@ object quickSelect extends UFunc {
           (lt, gt)
         }
 
-        def swap(a: Int, b: Int) {
+        def swap(a: Int, b: Int): Unit = {
           val t = x(a)
           x(a) = x(b)
           x(b) = t
@@ -87,7 +88,7 @@ object quickSelect extends UFunc {
       ordering: Ordering[T]): Impl2[Coll, Int, T] = {
     new Impl2[Coll, Int, T] {
       def apply(a: Coll, position: Int): T = {
-        val copy = view(a).to[ArrayBuffer]
+        val copy = view(a).to(ArrayBuffer)
         inPlace(copy, position)
         copy(position)
       }
@@ -145,7 +146,7 @@ object quickSelect extends UFunc {
           (lt, gt)
         }
 
-        def swap(a: Int, b: Int) {
+        def swap(a: Int, b: Int): Unit = {
           val t = coll(a)
           coll(a) = coll(b)
           coll(b) = t
@@ -222,7 +223,7 @@ object quickSelectImpl extends UFunc {
           (lt, gt)
         }
 
-        def swap(a: Int, b: Int) {
+        def swap(a: Int, b: Int): Unit = {
           val t = x(a)
           x(a) = x(b)
           x(b) = t

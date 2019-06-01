@@ -817,7 +817,7 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
 }
 
 trait MatrixTestUtils extends Matchers {
-  def matricesNearlyEqual(A: Matrix[Double], B: Matrix[Double], threshold: Double = 1E-6) {
+  def matricesNearlyEqual(A: Matrix[Double], B: Matrix[Double], threshold: Double = 1E-6): Unit = {
     for (i <- 0 until A.rows; j <- 0 until A.cols)
       A(i, j) should be(B(i, j) +- threshold)
   }

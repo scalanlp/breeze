@@ -22,8 +22,11 @@ import collection.generic.CanBuildFrom
 import breeze.linalg.DenseVector
 import org.apache.commons.math3.random.{MersenneTwister, RandomGenerator}
 import java.util.concurrent.atomic.AtomicInteger
+
 import scala.reflect.ClassTag
 import spire.implicits.cfor
+
+import scala.collection.compat.immutable.ArraySeq
 
 /**
  * A trait for monadic distributions. Provides support for use in for-comprehensions
@@ -343,7 +346,7 @@ class RandBasis(val generator: RandomGenerator) extends Serializable {
         arr(k) = temp
         i += 1
       }
-      arr.take(n).map(set)
+      arr.take(n).toIndexedSeq.map(set)
     }
   }
 }

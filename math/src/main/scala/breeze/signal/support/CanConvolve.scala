@@ -82,17 +82,17 @@ object CanConvolve extends SerializableLogging {
             DenseVector.vertcat(
               padding match {
                 case OptPadding.Cyclical => data(dl - (kl - 1) to dl - 1)
-                case OptPadding.Boundary => DenseVector.ones[T](kernel.length - 1) * data(0)
+                case OptPadding.Boundary => DenseVector.fill(kernel.length - 1, data.valueAt(0))
                 case OptPadding.Zero => DenseVector.zeros[T](kernel.length - 1)
-                case OptPadding.ValueOpt(v: T) => DenseVector.ones[T](kernel.length - 1) * v
+                case OptPadding.ValueOpt(v: T) => DenseVector.fill(kernel.length - 1, v)
                 case op => require(false, "cannot handle OptPadding value " + op); DenseVector[T]()
               },
               data,
               padding match {
                 case OptPadding.Cyclical => data(0 to kl - 1)
-                case OptPadding.Boundary => DenseVector.ones[T](kernel.length - 1) * data(dl - 1)
+                case OptPadding.Boundary => DenseVector.fill(kernel.length - 1, data.valueAt(dl - 1))
                 case OptPadding.Zero => DenseVector.zeros[T](kernel.length - 1)
-                case OptPadding.ValueOpt(v: T) => DenseVector.ones[T](kernel.length - 1) * v
+                case OptPadding.ValueOpt(v: T) => DenseVector.fill(kernel.length - 1, v)
                 case op => require(false, "cannot handle OptPadding value " + op); DenseVector[T]()
               }
             )
@@ -202,10 +202,9 @@ object CanConvolve extends SerializableLogging {
 
         val dataVect = data.toScalaVector() //make immutable
         val kernelVect = kernel.toScalaVector()
-        val tempRange = range.par
         val zero = 0.asInstanceOf[T]
 
-        val tempArr = tempRange
+        val tempArr = range
           .map(
             (count: Int) => {
               var ki: Int = 0

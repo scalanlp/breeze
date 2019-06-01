@@ -16,17 +16,19 @@ package breeze.collection.immutable
  limitations under the License.
  */
 
-import collection.mutable.{Builder, GrowingBuilder}
-import collection.{GenTraversableOnce, IterableLike}
-import collection.generic.{CanBuildFrom, Growable}
 import breeze.util.Iterators
+
+import scala.collection.IterableLike
+import scala.collection.generic.CanBuildFrom
+import scala.collection.mutable.Builder
 
 /**
  * From Okasaki's Functional Data Structures. Represents a functional heap
  *
  * @author dlwh
  */
-class BinomialHeap[T <% Ordered[T]] extends Iterable[T] with IterableLike[T, BinomialHeap[T]] with Serializable {
+class BinomialHeap[T]()(implicit ord: Ordering[T]) extends Iterable[T] with IterableLike[T, BinomialHeap[T]] with Serializable {
+  import ord.mkOrderingOps
   import BinomialHeap._
   protected val trees: List[Node[T]] = Nil
   override val size = 0
@@ -90,37 +92,35 @@ class BinomialHeap[T <% Ordered[T]] extends Iterable[T] with IterableLike[T, Bin
     }
   }
 
-  private val comp = { (x: T, y: T) =>
-    x.compare(y)
-  }
-  def iterator: Iterator[T] = Iterators.merge(trees.map(treeIterator): _*)(comp)
+  def iterator: Iterator[T] = Iterators.merge(trees.map(treeIterator): _*)(ord.compare)
 
   private def treeIterator(n: Node[T]): Iterator[T] = {
-    Iterators.merge((Iterator.single(n.x) :: (n.children.map(treeIterator))): _*)(comp)
+    Iterators.merge((Iterator.single(n.x) :: (n.children.map(treeIterator))): _*)(ord.compare)
   }
 
   override def toString() = iterator.mkString("Heap(", ",", ")")
 }
 
 object BinomialHeap {
-  protected case class Node[T <% Ordered[T]](rank: Int, x: T, children: List[Node[T]]) {
+  protected case class Node[T](rank: Int, x: T, children: List[Node[T]])(implicit ord: Ordering[T]) {
+    import ord.mkOrderingOps
     def link(n: Node[T]) = {
       if (x <= n.x) Node(rank + 1, x, n :: children) else Node(rank + 1, n.x, this :: n.children)
     }
   }
 
-  def empty[T <% Ordered[T]]: BinomialHeap[T] = new BinomialHeap[T] {
+  def empty[T: Ordering]: BinomialHeap[T] = new BinomialHeap[T] {
     override val trees = Nil
   }
 
-  private def mkHeap[T <% Ordered[T]](ns: List[Node[T]], sz: Int) = new BinomialHeap[T] {
+  private def mkHeap[T: Ordering](ns: List[Node[T]], sz: Int) = new BinomialHeap[T] {
     override val trees = ns
     override val size = sz
   }
 
-  def apply[T <% Ordered[T]](t: T*): BinomialHeap[T] = empty[T] ++ t
+  def apply[T: Ordering](t: T*): BinomialHeap[T] = empty[T] ++ t
 
-  implicit def cbfForBinomialHeap[T <: B, B <% Ordered[B]]: CanBuildFrom[BinomialHeap[T], B, BinomialHeap[B]] =
+  implicit def cbfForBinomialHeap[T <: B, B: Ordering]: CanBuildFrom[BinomialHeap[T], B, BinomialHeap[B]] =
     new CanBuildFrom[BinomialHeap[T], B, BinomialHeap[B]] {
       def apply(): Builder[B, BinomialHeap[B]] = {
         empty[B].newBuilder

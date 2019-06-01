@@ -208,7 +208,7 @@ package object util {
       r.result()
     }
 
-    def foreach[U](f: Int => U) {
+    def foreach[U](f: Int => U): Unit = {
       var i = bs.nextSetBit(0)
       while (i != -1) {
         f(i)

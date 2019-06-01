@@ -84,7 +84,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](
       throw new scala.IndexOutOfBoundsException(i + " not in [0," + size + ")")
   }
 
-  def update(i: Int, v: E) {
+  def update(i: Int, v: E): Unit = {
     boundsCheck(i)
     var marked = false
     var off = 0
@@ -100,7 +100,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](
     }
   }
 
-  def add(i: Int, v: E) {
+  def add(i: Int, v: E): Unit = {
     boundsCheck(i)
 
     if (_data.length <= used) {
@@ -136,13 +136,13 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](
     new VectorBuilder[E](new Array[Int](0), ArrayUtil.newArrayLike(data, 0), 0, size)
   }
 
-  def reserve(nnz: Int) {
+  def reserve(nnz: Int): Unit = {
     if (nnz < _data.length) {
       reallocate(nnz)
     }
   }
 
-  private def reallocate(nnz: Int) {
+  private def reallocate(nnz: Int): Unit = {
     _index = ArrayUtil.copyOf(_index, nnz)
     _data = ArrayUtil.copyOf(data, nnz)
   }
@@ -223,7 +223,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](
     new SparseVector(outIndex, outValues, out, length)
   }
 
-  def compact() {
+  def compact(): Unit = {
     val ah = toSparseVector
     clear()
     reallocate(ah.activeSize)
@@ -236,7 +236,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](
     }
   }
 
-  def clear() {
+  def clear(): Unit = {
     used = 0
   }
 
@@ -253,7 +253,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](
    * @param data values corresponding to the index
    * @param activeSize number of active elements. The first activeSize will be used.
    */
-  def use(index: Array[Int], data: Array[E], activeSize: Int) {
+  def use(index: Array[Int], data: Array[E], activeSize: Int): Unit = {
     require(activeSize >= 0, "activeSize must be non-negative")
     require(data.length >= activeSize, "activeSize must be no greater than array length...")
     _data = data

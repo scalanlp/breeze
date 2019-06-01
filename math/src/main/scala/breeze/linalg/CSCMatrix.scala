@@ -82,7 +82,7 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero](
     else data(ind)
   }
 
-  def update(row: Int, col: Int, v: V) {
+  def update(row: Int, col: Int, v: V): Unit = {
     if (row >= rows || col >= cols || row < 0 || col < 0)
       throw new IndexOutOfBoundsException()
     val ind = locate(row, col)
@@ -126,14 +126,14 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero](
     }
   }
 
-  def reserve(nnz: Int) {
+  def reserve(nnz: Int): Unit = {
     if (nnz >= used && nnz != rowIndices.length) {
       _rowIndices = util.Arrays.copyOf(rowIndices, nnz)
       _data = ArrayUtil.copyOf(data, nnz)
     }
   }
 
-  def compact() {
+  def compact(): Unit = {
     reserve(used)
   }
 
@@ -454,7 +454,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps with Se
       initNnz: Int = 16) {
     private def ring = implicitly[Semiring[T]]
 
-    def add(r: Int, c: Int, v: T) {
+    def add(r: Int, c: Int, v: T): Unit = {
       if (v != 0) {
         numAdded += 1
         vs += v

@@ -17,7 +17,6 @@ package breeze.collection.mutable
  */
 import breeze.storage.{ConfigurableDefault, Storage, Zero}
 
-import collection.mutable.BitSet
 import breeze.util.ArrayUtil
 import java.util
 
@@ -25,6 +24,7 @@ import scalaxy.debug._
 
 import scala.reflect.ClassTag
 import spire.syntax.cfor._
+import java.io.Serializable
 
 /**
  * A SparseArray is a sparse representation of an array using a two-array binary-search approach.
@@ -302,7 +302,7 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](
    * new arrays.
    */
   @inline
-  final def update(i: Int, value: V) {
+  final def update(i: Int, value: V): Unit = {
     val offset = findOffset(i)
     if (offset >= 0) {
       // found at offset
@@ -351,7 +351,7 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](
   def allVisitableIndicesActive = true
 
   /** Compacts the array by removing all stored default values. */
-  def compact() {
+  def compact(): Unit = {
     //ToDo 3: will require changes if non-zero defaults are implemented
     val nz = { // number of non-zeros
       var _nz = 0
@@ -384,7 +384,7 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](
     used = nz
   }
 
-  def use(index: Array[Int], data: Array[V], used: Int) {
+  def use(index: Array[Int], data: Array[V], used: Int): Unit = {
     this.index = index
     this.data = data
     this.used = used

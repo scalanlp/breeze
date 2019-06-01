@@ -14,7 +14,7 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
   implicit def canOpInto_V_S[@expand.args(OpMulScalar, OpDiv) Op, @expand.args(Double, Long, Float, Int) T](
       implicit @expand.sequence[Op]((_ * _), (_ / _)) op: Q): Op.InPlaceImpl2[VectorBuilder[T], T] = {
     new Op.InPlaceImpl2[VectorBuilder[T], T] {
-      def apply(a: VectorBuilder[T], b: T) {
+      def apply(a: VectorBuilder[T], b: T): Unit = {
         var i = 0
         while (i < a.activeSize) {
           a.data(i) = op(a.data(i), b)
@@ -28,7 +28,7 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
   implicit def canMulInto_V_S[T: Semiring: ClassTag]: OpMulScalar.InPlaceImpl2[VectorBuilder[T], T] = {
     new OpMulScalar.InPlaceImpl2[VectorBuilder[T], T] {
       val sr = implicitly[Semiring[T]]
-      def apply(a: VectorBuilder[T], b: T) {
+      def apply(a: VectorBuilder[T], b: T): Unit = {
         var i = 0
         while (i < a.activeSize) {
           a.data(i) = sr.*(a.data(i), b)
@@ -41,7 +41,7 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
   implicit def canDivInto_V_S[T: Field: ClassTag]: OpDiv.InPlaceImpl2[VectorBuilder[T], T] = {
     new OpDiv.InPlaceImpl2[VectorBuilder[T], T] {
       val f = implicitly[Field[T]]
-      def apply(a: VectorBuilder[T], b: T) {
+      def apply(a: VectorBuilder[T], b: T): Unit = {
         var i = 0
         while (i < a.activeSize) {
           a.data(i) = f./(a.data(i), b)
@@ -56,7 +56,7 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
   implicit def canOpInto_V_V[@expand.args(OpAdd, OpSub) Op, @expand.args(Double, Long, Float, Int) T](
       implicit @expand.sequence[Op]((x => x), (-_)) op: Q): Op.InPlaceImpl2[VectorBuilder[T], VectorBuilder[T]] = {
     new Op.InPlaceImpl2[VectorBuilder[T], VectorBuilder[T]] {
-      def apply(a: VectorBuilder[T], b: VectorBuilder[T]) {
+      def apply(a: VectorBuilder[T], b: VectorBuilder[T]): Unit = {
         require(a.length < 0 || b.length < 0 || a.length == b.length, "Dimension mismatch!")
         a.reserve(a.activeSize + b.activeSize)
         var i = 0
@@ -76,7 +76,7 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
   }) op: Q): Op.InPlaceImpl2[VectorBuilder[T], VectorBuilder[T]] = {
     new Op.InPlaceImpl2[VectorBuilder[T], VectorBuilder[T]] {
       val r = implicitly[Ring[T]]
-      def apply(a: VectorBuilder[T], b: VectorBuilder[T]) {
+      def apply(a: VectorBuilder[T], b: VectorBuilder[T]): Unit = {
         require(a.length < 0 || b.length < 0 || a.length == b.length, "Dimension mismatch!")
         a.reserve(a.activeSize + b.activeSize)
         var i = 0
@@ -96,7 +96,7 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
   }) op: Q): Op.InPlaceImpl2[VectorBuilder[T], T] = {
     new Op.InPlaceImpl2[VectorBuilder[T], T] {
       val r = implicitly[Ring[T]]
-      def apply(a: VectorBuilder[T], b: T) {
+      def apply(a: VectorBuilder[T], b: T): Unit = {
         var i = 0
         // read once here in case we're doing a += a
         while (i < a.activeSize) {
@@ -111,7 +111,7 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
   implicit def canSet[@expand.args(Double, Long, Float, Int) T]
     : OpSet.InPlaceImpl2[VectorBuilder[T], VectorBuilder[T]] = {
     new OpSet.InPlaceImpl2[VectorBuilder[T], VectorBuilder[T]] {
-      def apply(a: VectorBuilder[T], b: VectorBuilder[T]) {
+      def apply(a: VectorBuilder[T], b: VectorBuilder[T]): Unit = {
         if (a eq b) return
         a.clear()
         a.reserve(b.activeSize)
@@ -126,7 +126,7 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
 
   implicit def canSet[T]: OpSet.InPlaceImpl2[VectorBuilder[T], VectorBuilder[T]] = {
     new OpSet.InPlaceImpl2[VectorBuilder[T], VectorBuilder[T]] {
-      def apply(a: VectorBuilder[T], b: VectorBuilder[T]) {
+      def apply(a: VectorBuilder[T], b: VectorBuilder[T]): Unit = {
         if (a eq b) return
         a.clear()
         a.reserve(b.activeSize)
@@ -151,7 +151,7 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
   implicit def canAxpy[@expand.args(Double, Long, Float, Int) T]
     : scaleAdd.InPlaceImpl3[VectorBuilder[T], T, VectorBuilder[T]] = {
     new scaleAdd.InPlaceImpl3[VectorBuilder[T], T, VectorBuilder[T]] {
-      def apply(a: VectorBuilder[T], s: T, b: VectorBuilder[T]) {
+      def apply(a: VectorBuilder[T], s: T, b: VectorBuilder[T]): Unit = {
         require(a.length < 0 || b.length < 0 || a.length == b.length, "Dimension mismatch!")
         if (a eq b) {
           a :*= (1 + s)
@@ -172,7 +172,7 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
   implicit def canAxpy[T: Semiring: ClassTag]: scaleAdd.InPlaceImpl3[VectorBuilder[T], T, VectorBuilder[T]] = {
     new scaleAdd.InPlaceImpl3[VectorBuilder[T], T, VectorBuilder[T]] {
       val sr = implicitly[Semiring[T]]
-      def apply(a: VectorBuilder[T], s: T, b: VectorBuilder[T]) {
+      def apply(a: VectorBuilder[T], s: T, b: VectorBuilder[T]): Unit = {
         require(a.length < 0 || b.length < 0 || a.length == b.length, "Dimension mismatch!")
 
         if (a eq b) {
@@ -207,7 +207,7 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
       implicit ev: Vec <:< Vector[V],
       semi: Semiring[V]): OpAdd.InPlaceImpl2[Vec, VectorBuilder[V]] = {
     new OpAdd.InPlaceImpl2[Vec, VectorBuilder[V]] {
-      def apply(a: Vec, b: VectorBuilder[V]) {
+      def apply(a: Vec, b: VectorBuilder[V]): Unit = {
         require(b.length < 0 || a.length == b.length, "Dimension mismatch!")
         var i = 0
         val bd = b.data
@@ -224,7 +224,7 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
       implicit ev: Vec <:< Vector[V],
       semi: Ring[V]): OpSub.InPlaceImpl2[Vec, VectorBuilder[V]] = {
     new OpSub.InPlaceImpl2[Vec, VectorBuilder[V]] {
-      def apply(a: Vec, b: VectorBuilder[V]) {
+      def apply(a: Vec, b: VectorBuilder[V]): Unit = {
         require(b.length < 0 || a.length == b.length, "Dimension mismatch!")
         var i = 0
         val bd = b.data
@@ -239,7 +239,7 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
 
   implicit def canAddInto_VV_V[V, Vec](implicit ev: Vec <:< Vector[V]): OpAdd.InPlaceImpl2[VectorBuilder[V], Vec] = {
     new OpAdd.InPlaceImpl2[VectorBuilder[V], Vec] {
-      def apply(a: VectorBuilder[V], b: Vec) {
+      def apply(a: VectorBuilder[V], b: Vec): Unit = {
         require(a.length < 0 || a.length == b.length, "Dimension mismatch!")
         ev(b) match {
           case b: StorageVector[V] =>
@@ -268,7 +268,7 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
       implicit ev: Vec <:< Vector[V],
       ring: Ring[V]): OpSub.InPlaceImpl2[VectorBuilder[V], Vec] = {
     new OpSub.InPlaceImpl2[VectorBuilder[V], Vec] {
-      def apply(a: VectorBuilder[V], b: Vec) {
+      def apply(a: VectorBuilder[V], b: Vec): Unit = {
         require(a.length < 0 || a.length == b.length, "Dimension mismatch!")
         b match {
           case b: StorageVector[V @unchecked] =>
@@ -315,7 +315,7 @@ trait VectorBuilderOps { this: VectorBuilder.type =>
       implicit ev: Vec <:< Vector[V],
       semi: Semiring[V]): scaleAdd.InPlaceImpl3[Vec, V, VectorBuilder[V]] = {
     new scaleAdd.InPlaceImpl3[Vec, V, VectorBuilder[V]] {
-      def apply(a: Vec, s: V, b: VectorBuilder[V]) {
+      def apply(a: Vec, s: V, b: VectorBuilder[V]): Unit = {
         require(b.length < 0 || a.length == b.length, "Dimension mismatch!")
         var i = 0
         val bd = b.data

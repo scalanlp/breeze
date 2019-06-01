@@ -63,7 +63,7 @@ trait Multimethod[Method, A <: AnyRef, R] extends MMRegistry1[Method] { this: Me
     }
   }
 
-  def register[AA <: A](op: Method)(implicit manA: Manifest[AA]) {
+  def register[AA <: A](op: Method)(implicit manA: Manifest[AA]): Unit = {
     super.register(manA.runtimeClass.asInstanceOf[Class[AA]], op)
   }
 }
@@ -120,7 +120,7 @@ trait Multimethod2[Method[AA, BB, RR] <: Function2[AA, BB, RR], A, B, R]
     }
   }
 
-  def register[AA <: A, BB <: B](op: Method[AA, BB, _ <: R])(implicit manA: Manifest[AA], manB: Manifest[BB]) {
+  def register[AA <: A, BB <: B](op: Method[AA, BB, _ <: R])(implicit manA: Manifest[AA], manB: Manifest[BB]): Unit = {
     super.register(manA.runtimeClass.asInstanceOf[Class[_]], manB.runtimeClass.asInstanceOf[Class[_]], op)
   }
 
@@ -172,7 +172,7 @@ trait Multiproc2[Method[AA, BB] <: (AA, BB) => Unit, A <: AnyRef, B]
     }
   }
 
-  def register[AA <: A, BB <: B](op: Method[AA, BB])(implicit manA: Manifest[AA], manB: Manifest[BB]) {
+  def register[AA <: A, BB <: B](op: Method[AA, BB])(implicit manA: Manifest[AA], manB: Manifest[BB]): Unit = {
     super.register(manA.runtimeClass.asInstanceOf[Class[AA]], manB.runtimeClass.asInstanceOf[Class[BB]], op)
   }
 
@@ -183,7 +183,7 @@ trait MMRegistry2[R] {
   protected val ops = HashMap[(Class[_], Class[_]), R]()
   protected val cache = new ConcurrentHashMap[(Class[_], Class[_]), Option[R]]()
 
-  def register(a: Class[_], b: Class[_], op: R) {
+  def register(a: Class[_], b: Class[_], op: R): Unit = {
     ops(a -> b) = op
     if (b.isPrimitive) {
       ops(a -> ReflectionUtil.boxedFromPrimitive(b)) = op
@@ -254,7 +254,7 @@ trait MMRegistry3[R] {
   protected val ops = HashMap[(Class[_], Class[_], Class[_]), R]()
   protected val cache = new ConcurrentHashMap[(Class[_], Class[_], Class[_]), Option[R]]()
 
-  def register(a: Class[_], b: Class[_], c: Class[_], op: R) {
+  def register(a: Class[_], b: Class[_], c: Class[_], op: R): Unit = {
     ops((a, b, c)) = op
 
     def choicesFor(a: Class[_]) = if (a.isPrimitive) Seq(a, ReflectionUtil.boxedFromPrimitive(a)) else Seq(a)
@@ -326,7 +326,7 @@ trait MMRegistry1[M] {
   protected val ops = HashMap[Class[_], M]()
   protected val cache = new ConcurrentHashMap[Class[_], M]()
 
-  def register(a: Class[_], op: M) {
+  def register(a: Class[_], op: M): Unit = {
     ops(a) = op
     if (a.isPrimitive) {
       ops(ReflectionUtil.boxedFromPrimitive(a)) = op

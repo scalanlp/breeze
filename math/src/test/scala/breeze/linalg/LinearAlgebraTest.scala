@@ -902,17 +902,17 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
 
   }
 
-  def vectorsNearlyEqual(A: DenseVector[Double], B: DenseVector[Double], threshold: Double = 1E-6) {
+  def vectorsNearlyEqual(A: DenseVector[Double], B: DenseVector[Double], threshold: Double = 1E-6): Unit = {
     for (i <- 0 until A.length)
       A(i) should be(B(i) +- threshold)
   }
 
-  def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6) {
+  def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6): Unit = {
     for (i <- 0 until A.rows; j <- 0 until A.cols)
       A(i, j) should be(B(i, j) +- threshold)
   }
 
-  def matricesNearlyEqual_Float(A: DenseMatrix[Float], B: DenseMatrix[Float], threshold: Float = 1E-6f) {
+  def matricesNearlyEqual_Float(A: DenseMatrix[Float], B: DenseMatrix[Float], threshold: Float = 1E-6f): Unit = {
     for (i <- 0 until A.rows; j <- 0 until A.cols)
       A(i, j) should be(B(i, j) +- threshold)
   }

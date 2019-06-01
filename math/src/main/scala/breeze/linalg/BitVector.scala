@@ -26,7 +26,7 @@ class BitVector(val data: java.util.BitSet, val length: Int, val enforceLength: 
     data.get(i)
   }
 
-  def update(i: Int, v: Boolean) {
+  def update(i: Int, v: Boolean): Unit = {
     if (i < 0 || (i >= length))
       throw new IndexOutOfBoundsException(s"$i is not in the range [0, $length)")
     data.set(i, v)
@@ -166,13 +166,13 @@ object BitVector extends BitVectorOps {
 
   implicit def canTransformValues: CanTransformValues[BitVector, Boolean] =
     new CanTransformValues[BitVector, Boolean] {
-      def transform(from: BitVector, fn: (Boolean) => Boolean) {
+      def transform(from: BitVector, fn: (Boolean) => Boolean): Unit = {
         for (i <- 0 until from.length) {
           from(i) = fn(from(i))
         }
       }
 
-      def transformActive(from: BitVector, fn: (Boolean) => Boolean) {
+      def transformActive(from: BitVector, fn: (Boolean) => Boolean): Unit = {
         transform(from, fn)
       }
     }

@@ -10,7 +10,7 @@ object Common {
     }
   }
 
-  val buildCrossScalaVersions = Seq("2.12.8", "2.11.8")//, "2.13.0-RC1")
+  val buildCrossScalaVersions = Seq("2.12.8", "2.11.8", "2.13.0-RC1")
 
   lazy val buildScalaVersion = buildCrossScalaVersions.head
 
@@ -23,7 +23,8 @@ object Common {
     credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     libraryDependencies ++= Seq(
       "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
-      "org.scalatest" %% "scalatest" % "3.0.8-RC2" % "test"
+      "org.scalatest" %% "scalatest" % "3.0.8-RC2" % "test",
+   //   "org.scala-lang.modules" %% "scala-collection-compat" % "1.0.0"
     ),
     resolvers ++= Seq(
       Resolver.mavenLocal,

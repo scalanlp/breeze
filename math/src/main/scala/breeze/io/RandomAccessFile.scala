@@ -1064,7 +1064,7 @@ object ByteConverterBigEndian extends ByteConverter {
 //    require(value <= uInt64Max, s"Value $value is out of range of 8-byte unsigned array.")
 
     val tempret = new Array[Byte](8)
-    val longValue = value.longValue()
+    val longValue = value.longValue
 
     tempret(0) = ((longValue >> 56) & 0xFF).toByte
     tempret(1) = ((longValue >> 48) & 0xFF).toByte
@@ -1174,7 +1174,7 @@ object ByteConverterLittleEndian extends ByteConverter {
 //    require(value <= uInt64Max, s"Value $value is out of range of 8-byte unsigned array.")
 
     val tempret = new Array[Byte](8)
-    val longValue = value.longValue()
+    val longValue = value.longValue
     tempret(7) = ((longValue >> 56) & 0xFF).toByte
     tempret(6) = ((longValue >> 48) & 0xFF).toByte
     tempret(5) = ((longValue >> 40) & 0xFF).toByte

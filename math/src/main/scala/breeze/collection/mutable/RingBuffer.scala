@@ -5,6 +5,7 @@ import breeze.util.ReflectionUtil
 import scala.collection.mutable._
 import scala.collection.generic._
 import scala.collection.mutable
+import scala.collection.compat._
 import scala.reflect.ClassTag
 
 // https://en.wikipedia.org/wiki/Circular_buffer
@@ -106,7 +107,7 @@ class RingBuffer[A](private val buf: Array[A])
     } else {
       // this case is trickier, since we're removing from the middle
       // we punt on doing this "well" and just get it done
-      val elements = to[ArrayBuffer]
+      val elements = to(ArrayBuffer)
       elements.remove(n, count)
       clear()
       this ++= elements

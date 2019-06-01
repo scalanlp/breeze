@@ -59,7 +59,7 @@ trait TransposeLowPrio {
   implicit def liftInPlaceOps[Op, T, U](
       implicit op: UFunc.InPlaceImpl2[Op, T, U]): UFunc.InPlaceImpl2[Op, Transpose[T], Transpose[U]] = {
     new UFunc.InPlaceImpl2[Op, Transpose[T], Transpose[U]] {
-      def apply(a: Transpose[T], b: Transpose[U]) {
+      def apply(a: Transpose[T], b: Transpose[U]): Unit = {
         op(a.inner, b.inner)
       }
     }

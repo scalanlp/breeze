@@ -41,7 +41,7 @@ trait TernaryUpdateRegistry[A, B, C, Op]
     throw new RuntimeException("Multiple bindings for method: " + m)
   }
 
-  def apply(a: A, b: B, c: C) {
+  def apply(a: A, b: B, c: C): Unit = {
     val ac = a.asInstanceOf[AnyRef].getClass
     val bc = b.asInstanceOf[AnyRef].getClass
     val cc = c.asInstanceOf[AnyRef].getClass
@@ -77,7 +77,7 @@ trait TernaryUpdateRegistry[A, B, C, Op]
   }
 
   def register[AA <: A, BB <: B, CC <: C](
-      op: InPlaceImpl3[Op, AA, BB, CC])(implicit manA: ClassTag[AA], manB: ClassTag[BB], manC: ClassTag[CC]) {
+      op: InPlaceImpl3[Op, AA, BB, CC])(implicit manA: ClassTag[AA], manB: ClassTag[BB], manC: ClassTag[CC]): Unit = {
     super.register(manA.runtimeClass, manB.runtimeClass, manC.runtimeClass, op)
   }
 }

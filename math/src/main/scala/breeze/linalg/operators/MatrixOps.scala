@@ -17,7 +17,7 @@ import breeze.linalg._
 trait MatrixGenericOps { this: Matrix.type =>
   class SetMMOp[@specialized(Double, Int, Float, Long) V, MM](implicit subtype: MM <:< Matrix[V])
       extends OpSet.InPlaceImpl2[Matrix[V], MM] {
-    def apply(a: Matrix[V], b: MM) {
+    def apply(a: Matrix[V], b: MM): Unit = {
       require(a.rows == b.rows, "Row dimension mismatch!")
       require(a.cols == b.cols, "Col dimension mismatch!")
       val bb = subtype(b)

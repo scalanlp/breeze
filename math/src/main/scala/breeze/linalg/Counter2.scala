@@ -22,7 +22,6 @@ import collection.mutable.HashMap
 import breeze.math.Semiring
 import breeze.linalg.support._
 import scala.collection.Set
-import scala.collection.parallel.mutable
 import scala.reflect.ClassTag
 import CanTraverseValues.ValuesVisitor
 
@@ -65,7 +64,7 @@ trait Counter2Like[
 
   def contains(k1: K1, k2: K2) = data.contains(k1) && data(k1).contains(k2)
 
-  def update(i: (K1, K2), v: V) { update(i._1, i._2, v) }
+  def update(i: (K1, K2), v: V): Unit = { update(i._1, i._2, v) }
 
   def update(k1: K1, k2: K2, v: V) =
     innerGetOrElseUpdate(k1, data)(k2) = v

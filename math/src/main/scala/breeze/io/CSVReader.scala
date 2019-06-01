@@ -27,7 +27,7 @@ object CSVReader {
 
   }
 
-  def iterator(input: Reader, separator: Char = ',', quote: Char = '"', escape: Char = '\\', skipLines: Int = 0) = {
+  def iterator(input: Reader, separator: Char = ',', quote: Char = '"', escape: Char = '\\', skipLines: Int = 0): Iterator[IndexedSeq[String]] = {
     val rdr = new OpenCSVReader(input, separator, quote, escape, skipLines)
     new Iterator[IndexedSeq[String]] {
       var _next = rdr.readNext()
@@ -59,7 +59,7 @@ object CSVWriter {
       mat: TraversableOnce[IndexedSeq[String]],
       separator: Char = ',',
       quote: Char = '"',
-      escape: Char = '\\') {
+      escape: Char = '\\'): Unit = {
     val writer = new OpenCSVWriter(output, separator, quote, escape)
     import scala.collection.JavaConverters._
     mat match {
@@ -77,7 +77,7 @@ object CSVWriter {
       mat: IndexedSeq[IndexedSeq[String]],
       separator: Char = ',',
       quote: Char = '"',
-      escape: Char = '\\') {
+      escape: Char = '\\'): Unit = {
     val out = new FileWriter(file)
     write(out, mat, separator, quote, escape)
     out.close()

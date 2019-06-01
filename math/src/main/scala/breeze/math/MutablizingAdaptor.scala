@@ -152,14 +152,14 @@ object MutablizingAdaptor {
 
       def liftUpdate[Op <: OpType](implicit op: UFunc.UImpl2[Op, V, S, V]): UFunc.InPlaceImpl2[Op, Wrapper, S] =
         new UFunc.InPlaceImpl2[Op, Wrapper, S] {
-          def apply(a: Wrapper, b: S) {
+          def apply(a: Wrapper, b: S): Unit = {
             a.value = op(a.value, b)
           }
         }
 
       def liftUpdateV[Op <: OpType](implicit op: UFunc.UImpl2[Op, V, V, V]): UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] =
         new UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] {
-          def apply(a: Wrapper, b: Wrapper) {
+          def apply(a: Wrapper, b: Wrapper): Unit = {
             a.value = op(a.value, b.value)
           }
         }
@@ -195,14 +195,14 @@ object MutablizingAdaptor {
 //      override implicit def subVS: OpSub.Impl2[Wrapper, S, Wrapper] = liftOp(u.subVS)
 
       implicit def setIntoVV: OpSet.InPlaceImpl2[Wrapper, Wrapper] = new OpSet.InPlaceImpl2[Wrapper, Wrapper] {
-        def apply(a: Wrapper, b: Wrapper) {
+        def apply(a: Wrapper, b: Wrapper): Unit = {
           a.value = b.value
         }
       }
 
       implicit def scaleAddVV: scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] = {
         new scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] {
-          def apply(y: Wrapper, a: S, x: Wrapper) { y += x * a }
+          def apply(y: Wrapper, a: S, x: Wrapper): Unit = { y += x * a }
         }
       }
 
@@ -281,14 +281,14 @@ object MutablizingAdaptor {
 
         def liftUpdate[Op <: OpType](implicit op: UImpl2[Op, V, S, V]): UFunc.InPlaceImpl2[Op, Wrapper, S] =
           new UFunc.InPlaceImpl2[Op, Wrapper, S] {
-            def apply(a: Wrapper, b: S) {
+            def apply(a: Wrapper, b: S): Unit = {
               a.value = op(a.value, b)
             }
           }
 
         def liftUpdateV[Op <: OpType](implicit op: UImpl2[Op, V, V, V]): UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] =
           new UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] {
-            def apply(a: Wrapper, b: Wrapper) {
+            def apply(a: Wrapper, b: Wrapper): Unit = {
               a.value = op(a.value, b.value)
             }
           }
@@ -316,14 +316,14 @@ object MutablizingAdaptor {
         implicit def subIntoVV: OpSub.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.subVV)
 
         implicit def setIntoVV: OpSet.InPlaceImpl2[Wrapper, Wrapper] = new OpSet.InPlaceImpl2[Wrapper, Wrapper] {
-          def apply(a: Wrapper, b: Wrapper) {
+          def apply(a: Wrapper, b: Wrapper): Unit = {
             a.value = b.value
           }
         }
 
         implicit def scaleAddVV: scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] = {
           new scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] {
-            def apply(y: Wrapper, a: S, x: Wrapper) { y += x * a }
+            def apply(y: Wrapper, a: S, x: Wrapper): Unit = { y += x * a }
           }
         }
 
@@ -417,14 +417,14 @@ object MutablizingAdaptor {
 
       def liftUpdate[Op <: OpType](implicit op: UImpl2[Op, V, S, V]): UFunc.InPlaceImpl2[Op, Wrapper, S] =
         new UFunc.InPlaceImpl2[Op, Wrapper, S] {
-          def apply(a: Wrapper, b: S) {
+          def apply(a: Wrapper, b: S): Unit = {
             a.value = op(a.value, b)
           }
         }
 
       def liftUpdateV[Op <: OpType](implicit op: UImpl2[Op, V, V, V]): UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] =
         new UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] {
-          def apply(a: Wrapper, b: Wrapper) {
+          def apply(a: Wrapper, b: Wrapper): Unit = {
             a.value = op(a.value, b.value)
           }
         }
@@ -452,7 +452,7 @@ object MutablizingAdaptor {
       implicit def subIntoVV: OpSub.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.subVV)
 
       implicit def setIntoVV: OpSet.InPlaceImpl2[Wrapper, Wrapper] = new OpSet.InPlaceImpl2[Wrapper, Wrapper] {
-        def apply(a: Wrapper, b: Wrapper) {
+        def apply(a: Wrapper, b: Wrapper): Unit = {
           a.value = b.value
         }
       }
@@ -480,7 +480,7 @@ object MutablizingAdaptor {
 
       implicit def scaleAddVV: scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] = {
         new scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] {
-          def apply(y: Wrapper, a: S, x: Wrapper) { y += x * a }
+          def apply(y: Wrapper, a: S, x: Wrapper): Unit = { y += x * a }
         }
       }
 
@@ -571,14 +571,14 @@ object MutablizingAdaptor {
 
       def liftUpdate[Op <: OpType](implicit op: UImpl2[Op, V, S, V]): UFunc.InPlaceImpl2[Op, Wrapper, S] =
         new UFunc.InPlaceImpl2[Op, Wrapper, S] {
-          def apply(a: Wrapper, b: S) {
+          def apply(a: Wrapper, b: S): Unit = {
             a.value = op(a.value, b)
           }
         }
 
       def liftUpdateV[Op <: OpType](implicit op: UImpl2[Op, V, V, V]): UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] =
         new UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] {
-          def apply(a: Wrapper, b: Wrapper) {
+          def apply(a: Wrapper, b: Wrapper): Unit = {
             a.value = op(a.value, b.value)
           }
         }
@@ -604,7 +604,7 @@ object MutablizingAdaptor {
       implicit def subIntoVV: OpSub.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.subVV)
 
       implicit def setIntoVV: OpSet.InPlaceImpl2[Wrapper, Wrapper] = new OpSet.InPlaceImpl2[Wrapper, Wrapper] {
-        def apply(a: Wrapper, b: Wrapper) {
+        def apply(a: Wrapper, b: Wrapper): Unit = {
           a.value = b.value
         }
       }
@@ -628,7 +628,7 @@ object MutablizingAdaptor {
 
       implicit def scaleAddVV: scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] = {
         new scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] {
-          def apply(y: Wrapper, a: S, x: Wrapper) { y += x * a }
+          def apply(y: Wrapper, a: S, x: Wrapper): Unit = { y += x * a }
         }
       }
 
@@ -716,14 +716,14 @@ object MutablizingAdaptor {
 
       def liftUpdate[Op <: OpType](implicit op: UImpl2[Op, V, S, V]): UFunc.InPlaceImpl2[Op, Wrapper, S] =
         new UFunc.InPlaceImpl2[Op, Wrapper, S] {
-          def apply(a: Wrapper, b: S) {
+          def apply(a: Wrapper, b: S): Unit = {
             a.value = op(a.value, b)
           }
         }
 
       def liftUpdateV[Op <: OpType](implicit op: UImpl2[Op, V, V, V]): UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] =
         new UFunc.InPlaceImpl2[Op, Wrapper, Wrapper] {
-          def apply(a: Wrapper, b: Wrapper) {
+          def apply(a: Wrapper, b: Wrapper): Unit = {
             a.value = op(a.value, b.value)
           }
         }
@@ -749,7 +749,7 @@ object MutablizingAdaptor {
       implicit def subIntoVV: OpSub.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.subVV)
 
       implicit def setIntoVV: OpSet.InPlaceImpl2[Wrapper, Wrapper] = new OpSet.InPlaceImpl2[Wrapper, Wrapper] {
-        def apply(a: Wrapper, b: Wrapper) {
+        def apply(a: Wrapper, b: Wrapper): Unit = {
           a.value = b.value
         }
       }
@@ -760,7 +760,7 @@ object MutablizingAdaptor {
 
       implicit def scaleAddVV: scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] = {
         new scaleAdd.InPlaceImpl3[Wrapper, S, Wrapper] {
-          def apply(y: Wrapper, a: S, x: Wrapper) { y += x * a }
+          def apply(y: Wrapper, a: S, x: Wrapper): Unit = { y += x * a }
         }
       }
 

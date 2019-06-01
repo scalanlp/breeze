@@ -227,32 +227,32 @@ object UFunc {
 
 //  @implicitNotFound("Could not find an implicit inplace implementation for ${Tag} with arguments ${V}")
   trait InPlaceImpl[Tag, V] extends Serializable {
-    def apply(v: V)
+    def apply(v: V): Unit
   }
 
 //  @implicitNotFound("Could not find an implicit inplace implementation for ${Tag} with arguments ${V}, ${V2}")
   trait InPlaceImpl2[Tag, V, @specialized(Int, Double, Float) V2] extends Serializable {
-    def apply(v: V, v2: V2)
+    def apply(v: V, v2: V2): Unit
   }
 
 //  @implicitNotFound("Could not find an implicit inplace implementation for ${Tag} with arguments ${V}, ${V2}, ${V3}")
   trait InPlaceImpl3[Tag, V, V2, V3] extends Serializable {
-    def apply(v: V, v2: V2, v3: V3)
+    def apply(v: V, v2: V2, v3: V3): Unit
   }
 
 //  @implicitNotFound("Could not find an implicit inplace implementation for ${Tag} with arguments ${V}")
   trait SinkImpl[Tag, S, V] extends Serializable {
-    def apply(sink: S, v: V)
+    def apply(sink: S, v: V): Unit
   }
 
 //  @implicitNotFound("Could not find an implicit inplace implementation for ${Tag} with arguments ${V}, ${V2}")
   trait SinkImpl2[Tag, S, V, @specialized(Int, Double, Float) V2] extends Serializable {
-    def apply(sink: S, v: V, v2: V2)
+    def apply(sink: S, v: V, v2: V2): Unit
   }
 
 //  @implicitNotFound("Could not find an implicit inplace implementation for ${Tag} with arguments ${V}, ${V2}, ${V3}")
   trait SinkImpl3[Tag, S, V, V2, V3] extends Serializable {
-    def apply(sink: S, v: V, v2: V2, v3: V3)
+    def apply(sink: S, v: V, v2: V2, v3: V3): Unit
   }
 
   implicit def canTransformValuesUFunc[Tag, T, V](

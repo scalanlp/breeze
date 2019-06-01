@@ -82,7 +82,7 @@ trait Scaling {
     }
   }
 
-  def scaleArrayToScale(scores: Array[Double], currentScale: Int, targetScale: Int) {
+  def scaleArrayToScale(scores: Array[Double], currentScale: Int, targetScale: Int): Unit = {
     val scaleDelta = targetScale - currentScale
 
     if (scaleDelta != 0) {

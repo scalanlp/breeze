@@ -39,7 +39,7 @@ trait BinaryUpdateRegistry[A <: AnyRef, B, Op <: OpType]
     throw new RuntimeException("Multiple bindings for method: " + m)
   }
 
-  def apply(a: A, b: B) {
+  def apply(a: A, b: B): Unit = {
     val ac = a.asInstanceOf[AnyRef].getClass
     val bc = b.asInstanceOf[AnyRef].getClass
 

@@ -45,7 +45,7 @@ class Plot() {
     this
   }
 
-  def refresh() {
+  def refresh(): Unit = {
     var series = 0
     for ((d, r) <- datasets.zip(renderers); s <- 0 until d.getSeriesCount) {
       plot.setDataset(series, d)
@@ -57,40 +57,40 @@ class Plot() {
   }
 
   // Sigh, I hate the listener pattern
-  def listen(l: Plot.Listener) {
+  def listen(l: Plot.Listener): Unit = {
     listeners += (l -> ())
   }
 
-  def unlisten(l: Plot.Listener) {
+  def unlisten(l: Plot.Listener): Unit = {
     listeners -= (l)
   }
 
   def xlabel = xaxis.getLabel
-  def xlabel_=(label: String) {
+  def xlabel_=(label: String): Unit = {
     xaxis.setLabel(label)
   }
 
   def ylabel = yaxis.getLabel
-  def ylabel_=(label: String) {
+  def ylabel_=(label: String): Unit = {
     yaxis.setLabel(label)
   }
 
-  def xlim_=(lowerUpper: (Double, Double)) {
+  def xlim_=(lowerUpper: (Double, Double)): Unit = {
     xlim(lowerUpper._1, lowerUpper._2)
   }
   def xlim = plot.getDomainAxis.getLowerBound -> plot.getDomainAxis.getUpperBound()
 
   /** Sets the lower and upper bounds of the current plot. */
-  def xlim(lower: Double, upper: Double) {
+  def xlim(lower: Double, upper: Double): Unit = {
     plot.getDomainAxis.setLowerBound(lower)
     plot.getDomainAxis.setUpperBound(upper)
   }
 
-  def ylim_=(lowerUpper: (Double, Double)) {
+  def ylim_=(lowerUpper: (Double, Double)): Unit = {
     ylim(lowerUpper._1, lowerUpper._2)
   }
   def ylim = plot.getRangeAxis.getLowerBound -> plot.getRangeAxis.getUpperBound()
-  def ylim(lower: Double, upper: Double) {
+  def ylim(lower: Double, upper: Double): Unit = {
     plot.getRangeAxis.setLowerBound(lower)
     plot.getRangeAxis.setUpperBound(upper)
   }
@@ -104,7 +104,7 @@ class Plot() {
   def logScaleX = xaxis.isInstanceOf[LogarithmicAxis]
   def logScaleY = yaxis.isInstanceOf[LogarithmicAxis]
 
-  def logScaleX_=(value: Boolean) {
+  def logScaleX_=(value: Boolean): Unit = {
     if (value != logScaleX) {
       // TODO this is such a pain. There has to be a better way.
       val oldAxis = _xaxis
@@ -116,7 +116,7 @@ class Plot() {
     }
   }
 
-  def logScaleY_=(value: Boolean) {
+  def logScaleY_=(value: Boolean): Unit = {
     if (value != logScaleY) {
       // TODO this is such a pain. There has to be a better way.
       val oldAxis = _yaxis
@@ -129,7 +129,7 @@ class Plot() {
   }
 
   /** The plot title */
-  def title_=(str: String) {
+  def title_=(str: String): Unit = {
     chart.setTitle(str)
   }
   def title: String = chart.getTitle.getText
@@ -138,16 +138,16 @@ class Plot() {
   private val xaxisDefaultTickUnits = xaxis.getStandardTickUnits
   private val yaxisDefaultTickUnits = yaxis.getStandardTickUnits
 
-  def setXAxisIntegerTickUnits() {
+  def setXAxisIntegerTickUnits(): Unit = {
     xaxis.setStandardTickUnits(Plot.integerTickUnits)
   }
-  def setYAxisIntegerTickUnits() {
+  def setYAxisIntegerTickUnits(): Unit = {
     yaxis.setStandardTickUnits(Plot.integerTickUnits)
   }
-  def setXAxisDecimalTickUnits() {
+  def setXAxisDecimalTickUnits(): Unit = {
     xaxis.setStandardTickUnits(xaxisDefaultTickUnits)
   }
-  def setYAxisDecimalTickUnits() {
+  def setYAxisDecimalTickUnits(): Unit = {
     yaxis.setStandardTickUnits(yaxisDefaultTickUnits)
   }
 
@@ -282,14 +282,14 @@ object Plot {
       f(datasets(seriesDelegates(series)), series - datasetSeriesOffsets(seriesDelegates(series)))
     }
 
-    def clear() {
+    def clear(): Unit = {
       datasets.clear()
       datasetSeriesOffsets.clear()
       datasetSeriesOffsets += 0
       seriesDelegates.clear()
     }
 
-    def +=(d: xy.XYDataset) {
+    def +=(d: xy.XYDataset): Unit = {
       datasets += d
       for (i <- 0 until d.getSeriesCount) {
         seriesDelegates += (datasets.size - 1)
@@ -327,14 +327,14 @@ object Plot {
       f(renderers(seriesDelegates(series)), series - datasetSeriesOffsets(seriesDelegates(series)))
     }
 
-    def clear() {
+    def clear(): Unit = {
       renderers.clear()
       datasetSeriesOffsets.clear()
       datasetSeriesOffsets += 0
       seriesDelegates.clear()
     }
 
-    def +=(d: xy.XYItemRenderer, numSeries: Int, autocolor: Boolean, autostroke: Boolean) {
+    def +=(d: xy.XYItemRenderer, numSeries: Int, autocolor: Boolean, autostroke: Boolean): Unit = {
       renderers += d
       for (i <- 0 until numSeries) {
         seriesDelegates += (renderers.size - 1)
@@ -369,11 +369,11 @@ object Plot {
 
     override def getSeriesVisible(series: Int): lang.Boolean = delegate(series)(_.isSeriesVisible(_))
 
-    override def setSeriesVisible(series: Int, visible: lang.Boolean) {
+    override def setSeriesVisible(series: Int, visible: lang.Boolean): Unit = {
       delegate(series)(_.setSeriesVisible(_, visible))
     }
 
-    override def setSeriesVisible(series: Int, visible: lang.Boolean, notify: Boolean) {
+    override def setSeriesVisible(series: Int, visible: lang.Boolean, notify: Boolean): Unit = {
       delegate(series)(_.setSeriesVisible(_, visible, notify))
     }
 
@@ -390,11 +390,11 @@ object Plot {
       delegate(series)(_.getSeriesVisibleInLegend(_))
     }
 
-    override def setSeriesVisibleInLegend(series: Int, visible: lang.Boolean) {
+    override def setSeriesVisibleInLegend(series: Int, visible: lang.Boolean): Unit = {
       delegate(series)(_.setSeriesVisibleInLegend(_, visible))
     }
 
-    override def setSeriesVisibleInLegend(series: Int, visible: lang.Boolean, notify: Boolean) {
+    override def setSeriesVisibleInLegend(series: Int, visible: lang.Boolean, notify: Boolean): Unit = {
       delegate(series)(_.setSeriesVisibleInLegend(_, visible, notify))
     }
 
@@ -403,7 +403,7 @@ object Plot {
       else delegate(series)(_.getSeriesPaint(_))
     }
 
-    override def setSeriesPaint(series: Int, paint: Paint) {
+    override def setSeriesPaint(series: Int, paint: Paint): Unit = {
       delegate(series)(_.setSeriesPaint(_, paint))
       autopaint(series) = false
     }
@@ -413,7 +413,7 @@ object Plot {
       else delegate(series)(_.getItemOutlinePaint(_, column))
     }
 
-    override def setSeriesOutlinePaint(series: Int, paint: Paint) {
+    override def setSeriesOutlinePaint(series: Int, paint: Paint): Unit = {
       delegate(series)(_.setSeriesOutlinePaint(_, paint))
     }
 
@@ -436,7 +436,7 @@ object Plot {
       else delegate(series)(_.getSeriesStroke(_))
     }
 
-    override def setSeriesStroke(series: Int, stroke: Stroke) {
+    override def setSeriesStroke(series: Int, stroke: Stroke): Unit = {
       delegate(series)(_.setSeriesStroke(_, stroke))
     }
 
@@ -445,7 +445,7 @@ object Plot {
       else delegate(series)(_.getItemOutlineStroke(_, column))
     }
 
-    override def setSeriesOutlineStroke(series: Int, stroke: Stroke) {
+    override def setSeriesOutlineStroke(series: Int, stroke: Stroke): Unit = {
       delegate(series)(_.setSeriesOutlineStroke(_, stroke))
     }
 
@@ -459,7 +459,7 @@ object Plot {
       else delegate(series)(_.getSeriesShape(_))
     }
 
-    override def setSeriesShape(series: Int, shape: Shape) {
+    override def setSeriesShape(series: Int, shape: Shape): Unit = {
       delegate(series)(_.setSeriesShape(_, shape))
     }
 

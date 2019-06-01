@@ -101,7 +101,7 @@ trait TensorLike[@spec(Int) K, @spec(Double, Int, Float, Long) V, +This <: Tenso
     with NumericOps[This] {
 
   def apply(i: K): V
-  def update(i: K, v: V)
+  def update(i: K, v: V): Unit
 
   def size: Int
   def activeSize: Int
@@ -224,7 +224,7 @@ object Tensor {
       implicit ev: T <:< Tensor[K, V],
       op: UFunc.InPlaceImpl2[Op, T, V]): UFunc.InPlaceImpl2[Op, Transpose[T], V] = {
     new UFunc.InPlaceImpl2[Op, Transpose[T], V] {
-      def apply(a: Transpose[T], b: V) {
+      def apply(a: Transpose[T], b: V): Unit = {
         op(a.inner, b)
       }
     }

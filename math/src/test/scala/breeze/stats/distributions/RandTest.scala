@@ -41,7 +41,7 @@ class RandTest extends FunSuite {
     val threads = for (i <- 1 to 2)
       yield
         new Thread {
-          override def run() { t2 = new Gaussian(0, 1).sample(10) }
+          override def run(): Unit = { t2 = new Gaussian(0, 1).sample(10) }
         }
     threads.map(_.start)
     threads.map(_.join)

@@ -52,7 +52,7 @@ trait CounterLike[K, V, +M <: scala.collection.mutable.Map[K, V], +This <: Count
     data.get(k).getOrElse(default)
   }
 
-  def update(k: K, v: V) { data(k) = v }
+  def update(k: K, v: V): Unit = { data(k) = v }
 
   def get(k: K) = data.get(k)
 

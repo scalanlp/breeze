@@ -281,7 +281,7 @@ object DenseVector
    * @return
    */
   def tabulate[@spec(Double, Int, Float, Long) V: ClassTag](size: Int)(f: Int => V): DenseVector[V] = {
-    val b = ArrayBuilder.make[V]()
+    val b = ArrayBuilder.make[V]
     b.sizeHint(size)
     var i = 0
     while (i < size) {
@@ -299,7 +299,7 @@ object DenseVector
    * @return
    */
   def tabulate[@spec(Double, Int, Float, Long) V: ClassTag](range: Range)(f: Int => V): DenseVector[V] = {
-    val b = ArrayBuilder.make[V]()
+    val b = ArrayBuilder.make[V]
     b.sizeHint(range.length)
     var i = 0
     while (i < range.length) {
@@ -544,7 +544,7 @@ object DenseVector
 
   implicit def canTransformValues[@specialized(Int, Float, Double) V]: CanTransformValues[DenseVector[V], V] =
     new CanTransformValues[DenseVector[V], V] {
-      def transform(from: DenseVector[V], fn: (V) => V) {
+      def transform(from: DenseVector[V], fn: (V) => V): Unit = {
         val data = from.data
         val length = from.length
         val stride = from.stride
@@ -568,7 +568,7 @@ object DenseVector
         }
       }
 
-      def transformActive(from: DenseVector[V], fn: (V) => V) {
+      def transformActive(from: DenseVector[V], fn: (V) => V): Unit = {
         transform(from, fn)
       }
     }
@@ -690,7 +690,7 @@ object DenseVector
   implicit object canDaxpy
       extends scaleAdd.InPlaceImpl3[DenseVector[Double], Double, DenseVector[Double]]
       with Serializable {
-    def apply(y: DenseVector[Double], a: Double, x: DenseVector[Double]) {
+    def apply(y: DenseVector[Double], a: Double, x: DenseVector[Double]): Unit = {
       require(x.length == y.length, s"Vectors must have same length")
       // using blas here is always a bad idea.
       if (x.noOffsetOrStride && y.noOffsetOrStride) {

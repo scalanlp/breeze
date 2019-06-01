@@ -1264,7 +1264,7 @@ trait LowPriorityDenseMatrix1 {
   }
 
   class SetDMVOp[@spec(Double, Int, Float, Long) V] extends OpSet.InPlaceImpl2[DenseMatrix[V], Vector[V]] {
-    def apply(a: DenseMatrix[V], b: Vector[V]) {
+    def apply(a: DenseMatrix[V], b: Vector[V]): Unit = {
       require(
         a.rows == b.length && a.cols == 1 || a.cols == b.length && a.rows == 1,
         "DenseMatrix must have same number of rows, or same number of columns, as DenseVector, and the other dim must be 1."
