@@ -260,12 +260,10 @@ class LBFGSB(
     import history._
     val invTheta = 1.0 / theta
 
-    var freeVariableIndexes = collection.mutable.ArrayBuffer[Int]()
-    xCauchy.mapPairs { (i, v) =>
-      if (v != upperBounds(i) && v != lowerBounds(i)) {
-        freeVariableIndexes += i
-      }
-    }
+    val freeVariableIndexes = xCauchy.iterator.collect {
+      case (i, v) if (v != upperBounds(i) && v != lowerBounds(i)) => i
+
+    }.toIndexedSeq
     val freeVarCount = freeVariableIndexes.length
     //WZ = W^T*Z
     val WZ = DenseMatrix.zeros[Double](W.cols, freeVarCount)
@@ -274,16 +272,16 @@ class LBFGSB(
     }
 
     // r=(g+theta*(x_cauchy-x)-W*(M*c));
-    val dirTheta: DenseVector[Double] = (xCauchy - x) *:* theta;
+    val dirTheta: DenseVector[Double] = (xCauchy - x) *:* theta
     val fullR = g + dirTheta - W * (M * c)
     val rc = fullR(freeVariableIndexes)
 
     //step2 && step3 v=M*W^T*Z*rc
     var v: DenseVector[Double] = M * (WZ * rc)
     //step4 N = 1/theta * W^T*Z * (W^T*Z)^T
-    var N: DenseMatrix[Double] = WZ * WZ.t;
+    var N: DenseMatrix[Double] = WZ * WZ.t
     N = N *:* invTheta
-    N = DenseMatrix.eye[Double](N.rows) - M * N;
+    N = DenseMatrix.eye[Double](N.rows) - M * N
     //step5:v = N^(-1) * v
     val invN = inv(N)
     val invNv = invN * v

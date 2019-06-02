@@ -187,10 +187,17 @@ trait VectorizedReduceUFunc extends UFunc {
 
 sealed trait sumLowPrio { this: sum.type =>
   implicit def sumSummableThings[CC, T](
-      implicit view: CC <:< IterableOnce[T],
+      implicit view: CC <:< Iterable[T],
       tSum: OpAdd.Impl2[T, T, T]): Impl[CC, T] = {
     new Impl[CC, T] {
       override def apply(v: CC): T = v.reduceLeft(tSum(_, _))
+    }
+  }
+
+  implicit def sumIterator[T](
+      tSum: OpAdd.Impl2[T, T, T]): Impl[Iterator[T], T] = {
+    new Impl[Iterator[T], T] {
+      override def apply(v: Iterator[T]): T = v.reduce(tSum(_, _))
     }
   }
 }

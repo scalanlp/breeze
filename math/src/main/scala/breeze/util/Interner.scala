@@ -16,13 +16,12 @@ package breeze.util
  limitations under the License.
  */
 
-import scala.collection.mutable.WeakHashMap
-import scala.collection.generic._
-import scala.collection._
-import scala.collection.Traversable
-import scala.collection.TraversableLike
-import java.lang.ref.WeakReference
 import java.io.{ObjectInputStream, ObjectOutputStream}
+import java.lang.ref.WeakReference
+
+import scala.collection._
+import scala.collection.mutable.WeakHashMap
+import scala.reflect.ClassTag
 
 /**
  * Class that mimics Java's string interner, but for anything.
@@ -41,10 +40,8 @@ class Interner[T] extends (T => T) with Serializable {
   def clear() = inner.clear()
   def size = inner.size
 
-  def internAll[C <: TraversableLike[T, C] with Traversable[T], That](c: C)(implicit bf: CanBuildFrom[T, That, C]) =
-    c.map(apply)
   def internAll(c: List[T]) = c.map(apply)
-  def internAll(c: Array[T]) = c.map(apply)
+  def internAll(c: Array[T])(implicit ct: ClassTag[T]) = c.map(apply)
   def internAll(c: Set[T]) = c.map(apply)
 
   def internKeys[V](c: scala.collection.Map[T, V]) = {

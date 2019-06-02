@@ -25,7 +25,7 @@ object split extends UFunc {
         require(v.size % n == 0)
 
         val individualVectorSize = v.size / n
-        val result = mutable.ArrayBuilder.make[DenseVector[T]]()
+        val result = mutable.ArrayBuilder.make[DenseVector[T]]
 
         cforRange(0 until n) { k =>
           val offsetInOriginalVector = k * individualVectorSize

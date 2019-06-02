@@ -51,7 +51,7 @@ class RandomizationTest[L](val numSamples: Int, val errorMeasure: Seq[L] => Doub
           l2 += a
         }
       }
-      if (baseDiff < diff(l1, l2)) {
+      if (baseDiff < diff(l1.toSeq, l2.toSeq)) {
         numBetter += 1
       }
     }

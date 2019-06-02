@@ -23,7 +23,7 @@ import breeze.linalg.support._
 import breeze.math._
 import breeze.storage.Zero
 import breeze.storage.Zero._
-import breeze.util.ArrayUtil
+import breeze.util.{ArrayUtil, ReflectionUtil}
 import spire.syntax.cfor._
 
 import scala.collection.mutable.ArrayBuffer
@@ -268,7 +268,7 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](
   private implicit def dontNeedZero[V]: Zero[V] = null.asInstanceOf[Zero[V]]
 
   def delete(row: Int, axis: Axis._0.type): DenseMatrix[V] = {
-    implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+    implicit val man = ReflectionUtil.elemClassTagFromArray(data)
     require(row >= 0 && row < rows, s"row $row is not in bounds: [0, $rows)")
     if (row == 0) this(1 until rows, ::).copy
     else if (row == rows - 1) this(0 until rows - 1, ::).copy
@@ -276,7 +276,7 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](
   }
 
   def delete(col: Int, axis: Axis._1.type): DenseMatrix[V] = {
-    implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+    implicit val man = ReflectionUtil.elemClassTagFromArray(data)
     require(col >= 0 && col < cols, s"col $col is not in bounds: [0, $cols)")
     if (col == 0) this(::, 1 until cols).copy
     else if (col == cols - 1) this(::, 0 until cols - 1).copy
@@ -284,14 +284,14 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](
   }
 
   def delete(rows: Seq[Int], axis: Axis._0.type): DenseMatrix[V] = {
-    implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+    implicit val man = ReflectionUtil.elemClassTagFromArray(data)
     if (rows.isEmpty) copy
     else if (rows.size == 1) delete(rows(0), axis)
     else {
       val sorted = rows.sorted
       require(sorted.head >= 0 && sorted.last < this.rows, s"row $rows are not in bounds: [0, ${this.rows})")
       var last = 0
-      val matrices = ArrayBuffer[DenseMatrix[V]]()
+      val matrices = breeze.collection.compat.arraySeqBuilder[DenseMatrix[V]]
       for (index <- sorted) {
         assert(index >= last)
         if (index != last) {
@@ -302,19 +302,19 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](
       if (last != this.rows) {
         matrices += this(last until this.rows, ::)
       }
-      DenseMatrix.vertcat(matrices: _*)
+      DenseMatrix.vertcat(matrices.result(): _*)
     }
   }
 
   def delete(cols: Seq[Int], axis: Axis._1.type): DenseMatrix[V] = {
-    implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+    implicit val man = ReflectionUtil.elemClassTagFromArray(data)
     if (cols.isEmpty) copy
     else if (cols.size == 1) delete(cols(0), axis)
     else {
       val sorted = cols.sorted
       require(sorted.head >= 0 && sorted.last < this.cols, s"col $cols are not in bounds: [0, ${this.cols})")
       var last = 0
-      val matrices = ArrayBuffer[DenseMatrix[V]]()
+      val matrices = breeze.collection.compat.arraySeqBuilder[DenseMatrix[V]]
       for (index <- sorted) {
         assert(index >= last)
         if (index != last) {
@@ -325,7 +325,7 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](
       if (last != this.cols) {
         matrices += this(::, last until this.cols)
       }
-      DenseMatrix.horzcat(matrices: _*)
+      DenseMatrix.horzcat(matrices.result(): _*)
     }
   }
 

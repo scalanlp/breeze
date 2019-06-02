@@ -184,7 +184,7 @@ class HashIndex[T] extends MutableIndex[T] with Serializable {
 
   @throws(classOf[ObjectStreamException])
   private def writeReplace(): Object = {
-    new HashIndex.SerializedForm(objects)
+    HashIndex.SerializedForm(objects)
   }
 
   // for backwards compatibility
@@ -205,7 +205,7 @@ class HashIndex[T] extends MutableIndex[T] with Serializable {
 
 object HashIndex extends SerializableLogging {
   @SerialVersionUID(1L)
-  private case class SerializedForm[T](objects: IndexedSeq[T]) {
+  private case class SerializedForm[T](objects: scala.collection.IndexedSeq[T]) {
     @throws(classOf[ObjectStreamException])
     private def readResolve(): Object = {
       val ind = new HashIndex[T]()

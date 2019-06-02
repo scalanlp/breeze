@@ -464,7 +464,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps with Se
 
     // we pack rows and columns into a single long. (most significant bits get the column, so columns are the major axis)
     private val indices = new mutable.ArrayBuilder.ofLong()
-    private val vs = mutable.ArrayBuilder.make[T]()
+    private val vs = mutable.ArrayBuilder.make[T]
     private var numAdded = 0
     def activeSize = numAdded
 

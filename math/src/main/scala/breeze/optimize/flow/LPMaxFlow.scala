@@ -17,7 +17,7 @@ class LPMaxFlow[N](val g: FlowGraph[N]) {
     val lp = new LinearProgram
     import lp._
 
-    val constraints = new ArrayBuffer[Constraint]()
+    val constraints = breeze.collection.compat.arraySeqBuilder[lp.Constraint]
     val incoming = new collection.mutable.HashMap[N, ArrayBuffer[Expression]]() {
       override def default(k: N) = {
         val a = new ArrayBuffer[Expression]()
@@ -59,7 +59,7 @@ class LPMaxFlow[N](val g: FlowGraph[N]) {
     }
 
     val total = incoming(sink).reduceLeft(_ + _)
-    val solution = maximize { total.subjectTo(constraints: _*) }
+    val solution = maximize { total.subjectTo(constraints.result(): _*) }
 
     (Map.empty ++ edgeMap.mapValues(solution.valueOf(_)), solution.value)
   }
@@ -76,7 +76,7 @@ class LPMaxFlow[N](val g: FlowGraph[N]) {
 
     val costs = new ArrayBuffer[Expression]()
 
-    val constraints = new ArrayBuffer[Constraint]()
+    val constraints = breeze.collection.compat.arraySeqBuilder[lp.Constraint]
     val incoming = new collection.mutable.HashMap[N, ArrayBuffer[Expression]]() {
       override def default(k: N) = {
         val a = new ArrayBuffer[Expression]()
@@ -123,7 +123,7 @@ class LPMaxFlow[N](val g: FlowGraph[N]) {
     constraints += (flowTotal >= mf)
 
     val total = costs.reduceLeft(_ + _)
-    val solution = maximize { (total * -1.0).subjectTo(constraints: _*) }
+    val solution = maximize { (total * -1.0).subjectTo(constraints.result(): _*) }
 
     (Map.empty ++ edgeMap.mapValues(solution.valueOf(_)), -solution.value)
   }

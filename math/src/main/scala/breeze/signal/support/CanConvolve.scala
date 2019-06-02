@@ -237,21 +237,15 @@ object CanConvolve extends SerializableLogging {
         val dataL = convert(data, Long).toScalaVector() //make immutable
         val kernelL = convert(kernel, Long).toScalaVector()
 
-        val tempRange = range.par
-        val tempArr = tempRange
-          .map(
-            (count: Int) => {
-              var ki: Int = 0
-              var sum = 0L
-              while (ki < kernel.length) {
-                sum = sum + dataL(count + ki) * kernelL(ki)
-                ki = ki + 1
-              }
-              sum.toInt
-            }
-          )
-          .toArray
-        DenseVector[Int](tempArr)
+        DenseVector.tabulate(range) { count =>
+          var ki: Int = 0
+          var sum = 0L
+          while (ki < kernel.length) {
+            sum = sum + dataL(count + ki) * kernelL(ki)
+            ki = ki + 1
+          }
+          sum.toInt
+        }
 //        val tempRangeVect = range.toVector
 //        val tempArr = Array[Int](tempRangeVect.length)
 //
