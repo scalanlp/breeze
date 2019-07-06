@@ -25,7 +25,8 @@ class SelectTest extends FunSuite {
 
   test("quickSelect, collection") {
     var testArray = ArrayBuffer(7, 3, 2, 5, 1, 4, 2, -1)
-    assert(DenseVector(Range(0, 6).map(quickSelect(testArray, _)).toArray) == DenseVector(-1, 1, 2, 2, 3, 4))
+    val impl =quickSelect.implFromQSInPlaceColl[ArrayBuffer[Int], Int]
+    assert(DenseVector(Range(0, 6).map(quickSelect(testArray, _)(impl)).toArray) == DenseVector(-1, 1, 2, 2, 3, 4))
 
     testArray = shuffle(testArray)
     quickSelect.inPlace(testArray, 3)

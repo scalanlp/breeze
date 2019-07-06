@@ -84,7 +84,7 @@ object quickSelect extends UFunc {
   }
 
   implicit def implFromQSInPlaceColl[Coll, T](
-      implicit view: Coll <:< Seq[T],
+      implicit view: Coll <:< scala.collection.Seq[T],
       ordering: Ordering[T]): Impl2[Coll, Int, T] = {
     new Impl2[Coll, Int, T] {
       def apply(a: Coll, position: Int): T = {

@@ -111,7 +111,7 @@ object shuffle extends UFunc {
   }
 
   implicit def implShuffle_Coll_eq_Coll[Coll, T, CollRes](
-      implicit view: Coll <:< IndexedSeq[T],
+      implicit view: Coll <:< scala.collection.IndexedSeq[T],
       cbf: BuildFrom[Coll, T, CollRes],
       rb: RandBasis = Rand): Impl[Coll, CollRes] = {
     new Impl[Coll, CollRes] {

@@ -129,8 +129,8 @@ trait TensorLike[@spec(Int) K, @spec(Double, Int, Float, Long) V, +This <: Tenso
    * @tparam Result
    * @return
    */
-  def apply[Result](a: K, slice: K*)(implicit canSlice: CanSlice[This, Seq[K], Result]) = {
-    canSlice(repr, a +: slice)
+  def apply[Result](a: K, b: K, c: K, slice: K*)(implicit canSlice: CanSlice[This, Seq[K], Result]) = {
+    canSlice(repr, a +: b +: c +: slice)
   }
 
   /**
@@ -206,7 +206,7 @@ trait TensorLike[@spec(Int) K, @spec(Double, Int, Float, Long) V, +This <: Tenso
  */
 trait Tensor[@spec(Int) K, @spec(Double, Int, Float, Long) V] extends TensorLike[K, V, Tensor[K, V]]
 
-object Tensor {
+object Tensor extends TensorLowPrio {
 
   implicit def liftTransposeOps[Op, K, V, T, R, RT](
       implicit ev: T <:< Tensor[K, V],
@@ -273,6 +273,16 @@ object Tensor {
     new CanSlice2[Tensor[(K1, K2), V], K1, Seq[K2], Transpose[SliceVector[(K1, K2), V]]] {
       def apply(from: Tensor[(K1, K2), V], slice: K1, slice2: Seq[K2]): Transpose[SliceVector[(K1, K2), V]] = {
         new SliceVector(from, slice2.map(k2 => (slice, k2)).toIndexedSeq).t
+      }
+    }
+  }
+}
+
+sealed trait TensorLowPrio {
+  implicit def canSliceTensor_Seq_to_2[K, V, Res](implicit seqSlice: CanSlice[Tensor[K, V], Seq[K], Res]): CanSlice2[Tensor[K, V], K, K, Res] = {
+    new CanSlice2[Tensor[K, V], K, K, Res] {
+      def apply(from: Tensor[K, V], slice: K, slice2: K): Res = {
+        seqSlice(from, Seq(slice, slice2))
       }
     }
   }
