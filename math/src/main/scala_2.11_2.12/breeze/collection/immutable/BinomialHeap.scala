@@ -28,8 +28,8 @@ import scala.collection.mutable.Builder
  * @author dlwh
  */
 class BinomialHeap[T]()(implicit ord: Ordering[T]) extends Iterable[T] with IterableLike[T, BinomialHeap[T]] with Serializable {
-  import ord.mkOrderingOps
   import BinomialHeap._
+  import ord.mkOrderingOps
   protected val trees: List[Node[T]] = Nil
   override val size = 0
 

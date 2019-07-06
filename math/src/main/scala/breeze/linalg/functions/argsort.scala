@@ -5,6 +5,9 @@ import breeze.generic.UFunc
 import breeze.macros.expand
 import breeze.util.{ArrayUtil, Sorting, quickSelect}
 
+import scala.collection.compat.immutable.ArraySeq
+import scala.collection.mutable
+
 /**
  * Returns a sequence of keys sorted by value
  *
@@ -18,7 +21,7 @@ object argsort extends UFunc with LowPriorityArgSort {
         val data = v.toArray
         val index = ArrayUtil.range(0, data.length)
         Sorting.indirectSort(data, index, 0, data.length)
-        index
+        ArraySeq.unsafeWrapArray(index)
       }
     }
   }

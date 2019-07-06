@@ -15,10 +15,13 @@ package breeze.math
  limitations under the License.
  */
 
+import java.util.regex.Pattern
+
 import breeze.linalg
 import breeze.linalg.operators._
 import breeze.numerics.floor
 import breeze.storage.Zero
+
 import scala.reflect.ClassTag
 import breeze.linalg.norm
 
@@ -32,7 +35,7 @@ import breeze.linalg.norm
  * @author dramage, lancelet
  */
 case class Complex(real: Double, imag: Double) {
-  override def toString = real + " + " + imag + "i"
+  override def toString: String = s"$real + ${imag}i"
 
   /** Redundant accessor method, placed for transparent interlink with MATLAB/Mathematica.
    */
@@ -412,7 +415,49 @@ object Complex { outer =>
    * Although complex numbers have no natural ordering, some kind of
    * `Ordering` is required because `Numeric` extends `Ordering`.  Hence,
    * an ordering based upon the real then imaginary components is used. */
-  implicit object ComplexIsFractional extends ComplexIsFractional with ComplexOrdering
+  implicit object ComplexIsFractional extends ComplexIsFractional with ComplexOrdering {
+    def parseString(str: String): Option[Complex] = {
+      val m = regex.matcher(str)
+      if (!m.matches()) {
+        None
+      } else {
+        def toDouble(g: String) = if (g.isEmpty) 0.0 else g.toDouble
+        Some(Complex(toDouble(m.group(1)), toDouble(m.group(2))))
+      }
+    }
+
+    // https://stackoverflow.com/questions/50425322/c-regex-for-reading-complex-numbers
+    private lazy val regex = Pattern.compile(
+      """
+        |^
+        | (?= [iI.\d+-] )               # Assertion that keeps it from matching empty string
+        | (                             # (1 start), Real
+        |      [+-]?
+        |      (?:
+        |           \d+
+        |           (?: \. \d* )?
+        |        |  \. \d+
+        |      )
+        |      (?: [eE] [+-]? \d+ )?
+        |      (?! [iI.\d] )            # Assertion that separates real/imaginary
+        | )?                            # (1 end)
+        | (                             # (2 start), Imaginary
+        |      \w*[+-]?\w*
+        |      (?:
+        |           (?:
+        |                \d+
+        |                (?: \. \d* )?
+        |             |  \. \d+
+        |           )
+        |           (?: [eE] [+-]? \d+ )?
+        |      )?
+        |      [iI]
+        | )?                            # (2 end)
+        | $
+      """.stripMargin,
+      Pattern.COMMENTS
+    )
+  }
 
   implicit object logComplexImpl extends breeze.numerics.log.Impl[Complex, Complex] { def apply(v: Complex) = v.log }
   implicit object expComplexImpl extends breeze.numerics.exp.Impl[Complex, Complex] { def apply(v: Complex) = v.exp }

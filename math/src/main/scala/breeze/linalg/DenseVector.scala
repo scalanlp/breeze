@@ -74,7 +74,7 @@ class DenseVector[@spec(Double, Int, Float, Long) V](
   def activeSize = length
 
   def apply(i: Int): V = {
-    if (i < -size || i >= size) throw new IndexOutOfBoundsException(i + " not in [-" + size + "," + size + ")")
+    if (i < -size || i >= size) throw new IndexOutOfBoundsException(s"$i not in [-$size,$size)")
     val trueI = if (i < 0) i + size else i
     if (noOffsetOrStride) {
       data(trueI)
@@ -84,7 +84,7 @@ class DenseVector[@spec(Double, Int, Float, Long) V](
   }
 
   def update(i: Int, v: V): Unit = {
-    if (i < -size || i >= size) throw new IndexOutOfBoundsException(i + " not in [-" + size + "," + size + ")")
+    if (i < -size || i >= size) throw new IndexOutOfBoundsException(s"$i not in [-$size,$size)")
     val trueI = if (i < 0) i + size else i
     if (noOffsetOrStride) {
       data(trueI) = v

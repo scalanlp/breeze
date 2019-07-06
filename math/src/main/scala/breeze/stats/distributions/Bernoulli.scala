@@ -1,6 +1,8 @@
 package breeze.stats
 package distributions
 
+import scala.collection.compat._
+import breeze.linalg.Axis._1
 import breeze.linalg.Counter
 import breeze.numerics._
 import breeze.optimize.DiffFunction
@@ -52,7 +54,7 @@ object Bernoulli extends ExponentialFamily[Bernoulli, Boolean] with HasConjugate
 
   def predictive(parameter: Beta.Parameter) = new Polya(Counter(true -> parameter._1, false -> parameter._2))
 
-  def posterior(prior: Beta.Parameter, evidence: TraversableOnce[Boolean]) = {
+  def posterior(prior: Beta.Parameter, evidence: IterableOnce[Boolean]) = {
     evidence.foldLeft(prior) { (acc, ev) =>
       if (ev) acc.copy(_1 = acc._1 + 1)
       else acc.copy(_2 = acc._2 + 1)

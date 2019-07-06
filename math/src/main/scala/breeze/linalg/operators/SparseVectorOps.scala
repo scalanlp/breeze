@@ -626,7 +626,7 @@ trait SparseVectorOps { this: SparseVector.type =>
                 }
                 assert(
                   newAoff > aoff,
-                  bind + " " + aoff + " " + newAoff + " " + a.index(aoff) + " " + a.index(newAoff) + " " + a + " " + b)
+                  s"$bind $aoff $newAoff ${a.index(aoff)} ${a.index(newAoff)} $a $b")
                 aoff = newAoff
               }
             } else {
@@ -1011,7 +1011,7 @@ trait SparseVectorOps { this: SparseVector.type =>
                   newAoff = ~newAoff
                   boff += 1
                 }
-                assert(newAoff > aoff, aoff + " " + newAoff)
+                assert(newAoff > aoff, s"$aoff $newAoff")
                 aoff = newAoff
               }
             } else {

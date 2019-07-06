@@ -7,25 +7,25 @@ import scala.collection.mutable._
  * @author dlwh
  */
 class AutoUpdater[M, K, V](val theMap: M, default: => V)(implicit ev: M <:< Map[K, V]) extends Map[K, V] {
-  override def apply(k: K) = theMap.getOrElseUpdate(k, default);
-  override def update(k: K, v: V) = theMap.update(k, v);
+  override def apply(k: K) = theMap.getOrElseUpdate(k, default)
+  override def update(k: K, v: V) = theMap.update(k, v)
 
-  def +=(kv: (K, V)): this.type = { theMap += kv; this };
+  def +=(kv: (K, V)): this.type = { theMap += kv; this }
 
-  def get(key: K) = theMap.get(key);
+  def get(key: K) = theMap.get(key)
 
   def iterator = theMap.iterator
 
   def -=(key: K): this.type = { theMap -= key; this }
 
-  override def size = theMap.size;
+  override def size = theMap.size
 }
 
 object AutoUpdater {
   def apply[M, K, V](map: M, default: => V)(implicit ev: M <:< Map[K, V]): AutoUpdater[M, K, V] =
-    new AutoUpdater[M, K, V](map, default);
-  def apply[K, V](default: => V): AutoUpdater[Map[K, V], K, V] = apply(Map[K, V](), default);
+    new AutoUpdater[M, K, V](map, default)
+  def apply[K, V](default: => V): AutoUpdater[Map[K, V], K, V] = apply(HashMap[K, V](), default)
   def ofKeys[K] = new {
-    def andValues[V](v: => V) = apply[K, V](v);
+    def andValues[V](v: => V) = apply[K, V](v)
   }
 }

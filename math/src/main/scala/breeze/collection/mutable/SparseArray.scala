@@ -407,8 +407,8 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](
   def concatenate(that: SparseArray[V])(implicit man: ClassTag[V]): SparseArray[V] = {
     require(this.default == that.default, "default values should be equal")
     new SparseArray(
-      this.index.slice(0, this.used).union(that.index.slice(0, that.used).map(_ + this.size)).toArray,
-      this.data.slice(0, this.used).union(that.data.slice(0, that.used)).toArray,
+      this.index.slice(0, this.used).++(that.index.slice(0, that.used).map(_ + this.size)).toArray,
+      this.data.slice(0, this.used).++(that.data.slice(0, that.used)).toArray,
       this.used + that.used,
       this.size + that.size,
       this.default

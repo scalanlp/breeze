@@ -92,7 +92,7 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) V] priva
   }
 
   final def update(i: Int, v: V): Unit = {
-    if (i < 0 || i >= size) throw new IndexOutOfBoundsException(i + " is out of bounds for size " + size)
+    if (i < 0 || i >= size) throw new IndexOutOfBoundsException(s"$i is out of bounds for size $size")
     val pos = locate(i)
     _data(pos) = v
     if (_index(pos) != i && v != defaultValue) {
@@ -112,8 +112,8 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) V] priva
   def activeIterator = index.iterator.zip(data.iterator).filter(_._1 >= 0)
 
   private def locate(i: Int) = {
-    if (i >= size) throw new IndexOutOfBoundsException(i + " greater than size of " + size)
-    if (i < 0) throw new IndexOutOfBoundsException(i + " less than 0")
+    if (i >= size) throw new IndexOutOfBoundsException(s"$i greater than size of $size")
+    if (i < 0) throw new IndexOutOfBoundsException(s"$i less than 0")
     val index = this.index
     val len = index.length
     var hash = hashCodeFor(i) & (len - 1)

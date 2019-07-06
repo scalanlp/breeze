@@ -1,6 +1,8 @@
 package breeze.optimize.flow
 
+import breeze.collection.mutable.AutoUpdater
 import breeze.optimize.linear.LinearProgram
+
 import collection.mutable.ArrayBuffer
 
 /**
@@ -18,20 +20,8 @@ class LPMaxFlow[N](val g: FlowGraph[N]) {
     import lp._
 
     val constraints = breeze.collection.compat.arraySeqBuilder[lp.Constraint]
-    val incoming = new collection.mutable.HashMap[N, ArrayBuffer[Expression]]() {
-      override def default(k: N) = {
-        val a = new ArrayBuffer[Expression]()
-        update(k, a)
-        a
-      }
-    }
-    val outgoing = new collection.mutable.HashMap[N, ArrayBuffer[Expression]]() {
-      override def default(k: N) = {
-        val a = new ArrayBuffer[Expression]()
-        update(k, a)
-        a
-      }
-    }
+    val incoming = AutoUpdater[N, ArrayBuffer[Expression]](new ArrayBuffer[Expression]())
+    val outgoing = AutoUpdater[N, ArrayBuffer[Expression]](new ArrayBuffer[Expression]())
 
     val edgeMap = collection.mutable.Map[Edge, Variable]()
 
@@ -41,7 +31,7 @@ class LPMaxFlow[N](val g: FlowGraph[N]) {
         visited += n
         if (n != sink)
           for (e <- edgesFrom(n)) {
-            val f_e = Real(e.head + "->" + e.tail)
+            val f_e = Real(s"${e.head}->${e.tail}")
             edgeMap += (e -> f_e)
             constraints += (f_e <= e.capacity)
             constraints += (f_e >= 0.0)
@@ -77,20 +67,9 @@ class LPMaxFlow[N](val g: FlowGraph[N]) {
     val costs = new ArrayBuffer[Expression]()
 
     val constraints = breeze.collection.compat.arraySeqBuilder[lp.Constraint]
-    val incoming = new collection.mutable.HashMap[N, ArrayBuffer[Expression]]() {
-      override def default(k: N) = {
-        val a = new ArrayBuffer[Expression]()
-        update(k, a)
-        a
-      }
-    }
-    val outgoing = new collection.mutable.HashMap[N, ArrayBuffer[Expression]]() {
-      override def default(k: N) = {
-        val a = new ArrayBuffer[Expression]()
-        update(k, a)
-        a
-      }
-    }
+
+    val incoming = AutoUpdater[N, ArrayBuffer[Expression]](ArrayBuffer[Expression]())
+    val outgoing = AutoUpdater[N, ArrayBuffer[Expression]](ArrayBuffer[Expression]())
 
     val edgeMap = collection.mutable.Map[Edge, Variable]()
 
@@ -100,7 +79,7 @@ class LPMaxFlow[N](val g: FlowGraph[N]) {
         visited += n
         if (n != sink)
           for (e <- edgesFrom(n)) {
-            val f_e = Real(e.head + "->" + e.tail)
+            val f_e = Real(s"${e.head}->${e.tail}")
             edgeMap += (e -> f_e)
             constraints += (f_e <= e.capacity)
             constraints += (f_e >= 0.0)

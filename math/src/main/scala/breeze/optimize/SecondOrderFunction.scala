@@ -148,7 +148,7 @@ class FisherDiffFunction[T](df: BatchDiffFunction[T], gradientsToKeep: Int = 100
   /** Calculates the value, the gradient, and an approximation to the Fisher approximation to the Hessian */
   def calculate2(x: T): (Double, T, FisherMatrix[T]) = {
     val subset = Rand.subsetsOfSize(df.fullRange, gradientsToKeep).draw()
-    val toKeep = subset.map(i => df.calculate(x, IndexedSeq(i))).seq
+    val toKeep = subset.map(i => df.calculate(x, IndexedSeq(i)))
     val (v, otherGradient) = df.calculate(x)
 
     //    val fullGrad = toKeep.view.map(_._2).foldLeft(otherGradient * (df.fullRange.size - subset.size).toDouble )(_ += _ ) /df.fullRange.size.toDouble

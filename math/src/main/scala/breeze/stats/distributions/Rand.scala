@@ -22,8 +22,6 @@ import breeze.linalg.DenseVector
 import org.apache.commons.math3.random.{MersenneTwister, RandomGenerator}
 import spire.implicits.cfor
 
-import scala.collection.TraversableLike
-import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 

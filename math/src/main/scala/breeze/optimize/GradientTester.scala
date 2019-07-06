@@ -49,9 +49,9 @@ object GradientTester extends SerializableLogging {
   def testIndices[T, K](
       f: DiffFunction[T],
       x: T,
-      indices: Traversable[K],
+      indices: Iterable[K],
       skipZeros: Boolean = false,
-      toString: (K) => String = { (_: K).toString },
+      toString: K => String = { (_: K).toString },
       epsilon: Double = 1e-8,
       tolerance: Double = 1E-3)(
       implicit view2: T <:< NumericOps[T],

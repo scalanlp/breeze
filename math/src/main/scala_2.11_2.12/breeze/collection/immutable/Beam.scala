@@ -17,8 +17,8 @@ package breeze.collection.immutable
  */
 
 import scala.collection._
-import mutable.{Builder, PriorityQueue}
 import scala.collection.generic._
+import scala.collection.mutable.Builder
 
 /**
  * Represents a beam, which is essentially a priority queue

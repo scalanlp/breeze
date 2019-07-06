@@ -19,6 +19,8 @@ package breeze.util
 import java.io.{ObjectInputStream, ObjectOutputStream}
 import java.lang.ref.WeakReference
 
+import breeze.collection.mutable.AutoUpdater
+
 import scala.collection._
 import scala.collection.mutable.WeakHashMap
 import scala.reflect.ClassTag
@@ -69,11 +71,9 @@ class Interner[T] extends (T => T) with Serializable {
 }
 
 object Interner {
-  private val typedInterners = new scala.collection.mutable.HashMap[Class[_], Interner[_]] {
-    override def default(c: Class[_]) = getOrElseUpdate(c, new Interner[Any])
-  }
+  private val typedInterners = AutoUpdater[Class[_], Interner[_]](new Interner[Any]())
 
-  def apply[T](implicit m: scala.reflect.Manifest[T]) = forClass[T](m.runtimeClass.asInstanceOf[Class[T]])
+  def apply[T: ClassTag] = forClass[T](implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[T]])
 
   def forClass[T](c: Class[T]) = typedInterners(c).asInstanceOf[Interner[T]]
 }
