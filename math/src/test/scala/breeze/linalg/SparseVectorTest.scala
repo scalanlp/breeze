@@ -355,7 +355,7 @@ class SparseVectorTest extends FunSuite {
     def foo(fill: Int): Unit = {
       val vb = new VectorBuilder[Int](421337)
 
-      for (i ← 0 to fill) {
+      for (i <- 0 to fill) {
         vb.add(i, i)
       }
 

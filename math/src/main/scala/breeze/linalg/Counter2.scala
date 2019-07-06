@@ -115,14 +115,7 @@ object Counter2 extends LowPriorityCounter2 with Counter2Ops {
       with Serializable {
     def default = scalar.zero
 
-    def keySet: Set[(K1, K2)] = new Set[(K1, K2)] {
-      def contains(k: (K1, K2)): Boolean = data.contains(k._1) && data(k._1).contains(k._2)
-
-      def +(elem: (K1, K2)): Set[(K1, K2)] = immutable.Set.empty ++ iterator + elem
-      def -(elem: (K1, K2)): Set[(K1, K2)] = immutable.Set.empty ++ iterator - elem
-
-      def iterator: Iterator[(K1, K2)] = for ((k1, m) <- data.iterator; k2 <- m.keysIterator) yield (k1, k2)
-    }
+    def keySet: Set[(K1, K2)] = new Counter2KeySet(data)
   }
 
   /** Returns a new empty counter. */
@@ -217,33 +210,7 @@ object Counter2 extends LowPriorityCounter2 with Counter2Ops {
       def apply(from: Counter2[K1, K2, V], x: ::.type, col: K2) = new Counter[K1, V] {
         def default = from.default
 
-        override val data = new scala.collection.mutable.Map[K1, V] {
-          override def apply(k1: K1) =
-            from(k1, col)
-
-          override def update(k1: K1, v: V) =
-            from(k1, col) = v
-
-          override def -=(k1: K1) = {
-            from.data(k1)(col) = from.default
-            this
-          }
-
-          override def +=(tup: (K1, V)) = {
-            from.data(tup._1)(col) = (tup._2)
-            this
-          }
-
-          override def iterator =
-            for ((k1, map) <- from.data.iterator; v <- map.get(col)) yield (k1, v)
-
-          override def get(k1: K1) =
-            from.data.get(k1).map(_(col))
-
-          override def keySet = from.data.keySet
-
-          override def size = from.data.size
-        }
+        override val data = new Counter2ProjectionMap(from, col)
       }
     }
 

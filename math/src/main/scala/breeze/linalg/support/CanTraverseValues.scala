@@ -117,6 +117,20 @@ object CanTraverseValues {
       def isTraversableAgain(from: X): Boolean = from.isInstanceOf[Iterable[V]]
     }
   }
+
+  implicit def canTraverseIterator[V]: CanTraverseValues[Iterator[V], V] = {
+    new CanTraverseValues[Iterator[V], V] {
+
+      /** Traverses all values from the given collection. */
+      override def traverse(from: Iterator[V], fn: CanTraverseValues.ValuesVisitor[V]): Unit = {
+        for (v <- from) {
+          fn.visit(v)
+        }
+      }
+
+      def isTraversableAgain(from: Iterator[V]): Boolean = from.isInstanceOf[Iterable[V]]
+    }
+  }
 }
 
 trait LowPrioCanTraverseValues { this: CanTraverseValues.type =>

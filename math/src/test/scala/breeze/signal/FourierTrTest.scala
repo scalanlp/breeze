@@ -231,8 +231,8 @@ class FourierTrTest extends FunSuite {
     assert(fourierFreq(4, dt = 0.1) == DenseVector(0.0, 2.5, -5.0, -2.5))
   }
 
-  test("#588 multithreading woes?") {
-    Array.tabulate(100)(i => DenseVector.rand(i + 1)).par.map { fourierTr(_) }
-  }
+//  test("#588 multithreading woes?") {
+//    Array.tabulate(100)(i => DenseVector.rand(i + 1)).par.map { fourierTr(_) }
+//  }
 
 }
