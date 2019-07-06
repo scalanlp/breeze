@@ -8,16 +8,15 @@ import scala.collection.mutable._
 import scala.reflect.ClassTag
 
 // https://en.wikipedia.org/wiki/Circular_buffer
-class RingBuffer[A](private val buf: ArrayBuffer[A])
+class RingBuffer[A](val capacity: Int)
   extends AbstractBuffer[A]
     with IndexedBuffer[A]
     with IndexedSeqOps[A, RingBuffer, RingBuffer[A]]
     with StrictOptimizedSeqOps[A, RingBuffer, RingBuffer[A]]
     with DefaultSerializable
     with Builder[A, scala.Seq[A]] {
-  def this(capacity: Int) = this(new ArrayBuffer[A](capacity))
+  private val buf = ArrayBuffer.fill[A](capacity)(null.asInstanceOf[A])
 
-  def capacity: Int = buf.length
   // if the buffer is full, we set endPos = -1
   def isFull: Boolean = endPos < 0
 
@@ -170,7 +169,7 @@ class RingBuffer[A](private val buf: ArrayBuffer[A])
   override def result(): scala.Seq[A] = iterator.toIndexedSeq
 
   override protected def fromSpecific(coll: IterableOnce[A]): RingBuffer[A] = {
-    new RingBuffer(coll.iterator.to(ArrayBuffer))
+    new RingBuffer(this.capacity) ++= coll.iterator.to(ArrayBuffer)
   }
 
   override protected def newSpecificBuilder: Builder[A, RingBuffer[A]] = {
