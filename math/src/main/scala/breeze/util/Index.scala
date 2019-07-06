@@ -82,7 +82,7 @@ trait Index[T] extends Iterable[T] with (T => Int) with Serializable {
   }
 
   protected lazy val defaultHashCode =
-    (17 /: this)(_ * 41 + _.hashCode)
+    foldLeft(17)(_ * 41 + _.hashCode())
 
   override def hashCode = defaultHashCode
 

@@ -37,9 +37,7 @@ case class ProjectProbabilitySimplex(s: Double) extends Proximal {
     val cs = DenseVector(cum.zipWithIndex.map { elem =>
       (elem._1 - s) / (elem._2 + 1)
     })
-    val ndx = (DenseVector(sorted) - cs).data.filter { elem =>
-      elem >= 0.0
-    }.length - 1
+    val ndx = (DenseVector(sorted) - cs).data.count(_ >= 0.0) - 1
     cforRange(0 until x.length) { i =>
       x.update(i, max(x(i) - cs(ndx), 0.0))
     }

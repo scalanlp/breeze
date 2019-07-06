@@ -34,13 +34,13 @@ import scala.collection._
  * @author dlwh
  */
 @SerialVersionUID(1L)
-class Beam[T](val maxSize: Int)(implicit ord: Ordering[T])
+class Beam[T](val maxSize: Int)(implicit override protected val ordering: Ordering[T])
     extends Iterable[T]
     with IBeam[T]
     with IterableOps[T, Iterable, Beam[T]]
     with Serializable {
   assert(maxSize >= 0)
-  protected val queue = new java.util.PriorityQueue[T](clip(maxSize, 1, 16), ord: Comparator[T])
+  protected val queue = new java.util.PriorityQueue[T](clip(maxSize, 1, 16), ordering: Comparator[T])
 
   override def size = queue.size
 
@@ -55,7 +55,7 @@ class Beam[T](val maxSize: Int)(implicit ord: Ordering[T])
   override def addOne(x: T): this.type = {
     if (queue.size < maxSize) {
       queue.add(x)
-    } else if (maxSize > 0 && ord.compare(min, x) < 0) {
+    } else if (maxSize > 0 && ordering.compare(min, x) < 0) {
       queue.poll()
       queue.add(x)
     }
@@ -72,7 +72,7 @@ class Beam[T](val maxSize: Int)(implicit ord: Ordering[T])
     if (queue.size < maxSize) {
       queue.add(x)
       Beam.NothingEvicted
-    } else if (maxSize > 0 && ord.compare(min, x) < 0) {
+    } else if (maxSize > 0 && ordering.compare(min, x) < 0) {
       val r = queue.poll()
       queue.add(x)
       Beam.Added(Iterable(r))

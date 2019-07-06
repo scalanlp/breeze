@@ -2,8 +2,12 @@ package breeze.optimize
 
 import breeze.stats.distributions.Rand
 import breeze.util.Isomorphism
+
 import scala.collection.immutable
 import breeze.linalg.support.CanCopy
+
+import scala.collection.compat.immutable.ArraySeq
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * A diff function that supports subsets of the data. By default it evaluates on all the data
@@ -51,11 +55,11 @@ trait BatchDiffFunction[T] extends DiffFunction[T] with ((T, IndexedSeq[Int]) =>
 
   def withScanningBatches(size: Int): StochasticDiffFunction[T] = new StochasticDiffFunction[T] {
     var lastStop = 0
-    def nextBatch = synchronized {
+    def nextBatch: ArraySeq[Int] = synchronized {
       val start = lastStop
       lastStop += size
       lastStop %= fullRange.size
-      Array.tabulate(size)(i => fullRange((i + start) % fullRange.size))
+      ArraySeq.unsafeWrapArray(Array.tabulate(size)(i => fullRange((i + start) % fullRange.size)))
     }
 
     def calculate(x: T) = outer.calculate(x, nextBatch)

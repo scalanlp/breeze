@@ -8,27 +8,26 @@ import scala.collection.mutable._
 import scala.reflect.ClassTag
 
 // https://en.wikipedia.org/wiki/Circular_buffer
-class RingBuffer[A](private val buf: Array[A])
+class RingBuffer[A](private val buf: ArrayBuffer[A])
   extends AbstractBuffer[A]
     with IndexedBuffer[A]
     with IndexedSeqOps[A, RingBuffer, RingBuffer[A]]
-    with StrictOptimizedSeqOps[A, Buffer, RingBuffer[A]]
+    with StrictOptimizedSeqOps[A, RingBuffer, RingBuffer[A]]
     with DefaultSerializable
     with Builder[A, scala.Seq[A]] {
-  def this(capacity: Int)(implicit ct: ClassTag[A]) = this(new Array[A](capacity))
+  def this(capacity: Int) = this(new ArrayBuffer[A](capacity))
 
   def capacity: Int = buf.length
   // if the buffer is full, we set endPos = -1
   def isFull: Boolean = endPos < 0
 
+  override def knownSize = length
 
   private var startPos = 0
   private var endPos = 0
   private def trueEnd = if (isFull) startPos else endPos
 
   override def apply(n: Int): A = buf(index(n))
-
-  private implicit def tag: ClassTag[A] = ReflectionUtil.elemClassTagFromArray(buf)
 
   def length: Int = {
     if (isFull) capacity else if (endPos < startPos) capacity + endPos - startPos else endPos - startPos
@@ -93,6 +92,8 @@ class RingBuffer[A](private val buf: Array[A])
       this ++= toInsertAfter
     }
   }
+
+  def insert(idx: Int, elem: A): Unit = insertAll(idx, Iterator.single(elem))
 
   override def remove(n: Int, count: Int): Unit = {
     boundsCheck(n, inclusiveEnd = true)
@@ -169,7 +170,7 @@ class RingBuffer[A](private val buf: Array[A])
   override def result(): scala.Seq[A] = iterator.toIndexedSeq
 
   override protected def fromSpecific(coll: IterableOnce[A]): RingBuffer[A] = {
-    new RingBuffer(coll.iterator.toArray)
+    new RingBuffer(coll.iterator.to(ArrayBuffer))
   }
 
   override protected def newSpecificBuilder: Builder[A, RingBuffer[A]] = {
@@ -177,12 +178,19 @@ class RingBuffer[A](private val buf: Array[A])
   }
 
   override def empty: RingBuffer[A] = new RingBuffer(capacity)
+
+  override def iterableFactory: SeqFactory[RingBuffer] = new SeqFactory[RingBuffer] {
+    override def newBuilder[T]: mutable.Builder[T, RingBuffer[T]] = RingBuffer.canBuildFrom[A, T].newBuilder(RingBuffer.this)
+
+    override def empty[A]: RingBuffer[A] = newBuilder[A].result()
+    override def from[T](f: IterableOnce[T]): RingBuffer[T] = (newBuilder[T] ++= f).result()
+  }
 }
 
 object RingBuffer {
-  def apply[A: ClassTag](capacity: Int)(elems: A*): RingBuffer[A] = new RingBuffer[A](capacity) ++= elems
+  def apply[A](capacity: Int)(elems: A*): RingBuffer[A] = new RingBuffer[A](capacity) ++= elems
 
-  implicit def canBuildFrom[A, B: ClassTag]: BuildFrom[RingBuffer[A], B, RingBuffer[B]] = {
+  implicit def canBuildFrom[A, B]: BuildFrom[RingBuffer[A], B, RingBuffer[B]] = {
     new BuildFrom[RingBuffer[A], B, RingBuffer[B]] {
       override def newBuilder(from: RingBuffer[A]): mutable.Builder[B, RingBuffer[B]] = {
         new GrowableBuilder(new RingBuffer[B](from.capacity))

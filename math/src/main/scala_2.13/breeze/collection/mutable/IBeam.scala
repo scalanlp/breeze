@@ -12,6 +12,8 @@ trait IBeam[T]
 
   override def knownSize: Int = size
 
+  protected def ordering: Ordering[T]
+
   /**
    * Returns information on whether or not it made it onto the beam, and also what got
    * evicted
@@ -24,4 +26,10 @@ trait IBeam[T]
     checkedAdd(x)
     this
   }
+
+  protected override def fromSpecific(coll: IterableOnce[T]): IBeam[T] = ???
+
+  protected override def newSpecificBuilder: scala.collection.mutable.Builder[T, IBeam[T]] = ???
+
+  override def empty: IBeam[T] = ???
 }

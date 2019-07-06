@@ -9,6 +9,7 @@ import scala.collection.mutable
 import java.util.BitSet
 
 import scala.collection.compat._
+import scala.collection.compat.immutable.ArraySeq
 
 /**
  *
@@ -195,7 +196,7 @@ package object util {
 
   implicit def seqExtras[T](s: Seq[T]) = new SeqExtras(s)
 
-  implicit def arraySeqExtras[T](s: Array[T]) = new SeqExtras(s)
+  implicit def arraySeqExtras[T](s: Array[T]) = new SeqExtras(ArraySeq.unsafeWrapArray(s))
 
   implicit class AwesomeBitSet(val bs: java.util.BitSet) extends AnyVal {
     def apply(r: Int) = bs.get(r)

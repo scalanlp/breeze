@@ -101,6 +101,6 @@ object Beam {
   implicit def canBuildFrom[T, U: Ordering]: BuildFrom[Beam[T], U, Beam[U]] = new BuildFrom[Beam[T], U, Beam[U]] {
     def fromSpecific(from: Beam[T])(it: IterableOnce[U]): Beam[U] = (newBuilder(from) ++= it).result()
     def newBuilder(from: Beam[T]): mutable.Builder[U, Beam[U]] =
-      new mutable.GrowingBuilder(new breeze.collection.mutable.Beam[U](from.maxSize)).mapResult(b => new Beam[U](b.maxSize) ++ b)
+      new mutable.GrowableBuilder(new breeze.collection.mutable.Beam[U](from.maxSize)).mapResult(b => new Beam[U](b.maxSize) ++ b)
   }
 }
