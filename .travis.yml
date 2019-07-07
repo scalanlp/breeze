@@ -2,6 +2,7 @@ language: scala
 scala:
   - 2.11.8
   - 2.12.8
+  - 2.13.0
 jdk:
    - openjdk8
 before_install:
