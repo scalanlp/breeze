@@ -1,16 +1,19 @@
 package breeze.plot
 
 import org.jfree.chart.JFreeChart
-import org.jfree.chart.plot.{CrosshairState, PlotRenderingInfo, DefaultDrawingSupplier}
+import org.jfree.chart.plot.{CrosshairState, DefaultDrawingSupplier, PlotRenderingInfo}
 import org.jfree.chart.axis._
 import java.awt._
+
 import collection.mutable.ArrayBuffer
 import collection.mutable
-import org.jfree.chart.renderer.xy.{XYItemRendererState, XYItemRenderer, AbstractXYItemRenderer}
+import org.jfree.chart.renderer.xy.{AbstractXYItemRenderer, XYItemRenderer, XYItemRendererState}
 import java.awt.geom.Rectangle2D
+
 import org.jfree.data.xy
 import java.lang
-import scala.List
+
+import org.jfree.chart.ui.{RectangleEdge, RectangleInsets}
 
 /**
  * Maintains a set of series (or more strictly, the data from those series)
@@ -58,7 +61,7 @@ class Plot() {
 
   // Sigh, I hate the listener pattern
   def listen(l: Plot.Listener): Unit = {
-    listeners += (l -> ())
+    listeners += (l -> (()))
   }
 
   def unlisten(l: Plot.Listener): Unit = {
@@ -181,7 +184,6 @@ class Plot() {
     chart.removeLegend()
     if (show) {
       import org.jfree.chart.title._
-      import org.jfree.ui._
       import org.jfree.chart.block._
       import java.awt.Color
       val legend = new LegendTitle(this.plot)
@@ -200,7 +202,7 @@ class Plot() {
   lazy val chart = {
     val rv = new JFreeChart(null, JFreeChart.DEFAULT_TITLE_FONT, plot, false)
     rv.setBackgroundPaint(Plot.transparent)
-    rv.setPadding(new org.jfree.ui.RectangleInsets(5, 0, 0, 0))
+    rv.setPadding(new RectangleInsets(5, 0, 0, 0))
     rv
   }
 
@@ -219,7 +221,7 @@ object Plot {
   val integerTickUnits = {
     val units = new TickUnits()
     val df = new java.text.DecimalFormat("0")
-    for (b <- List(1, 2, 5); e <- List(0, 1, 2, 3, 4, 5, 6, 7, 8)) {
+    for (b <- Seq(1, 2, 5); e <- Seq(0, 1, 2, 3, 4, 5, 6, 7, 8)) {
       units.add(new NumberTickUnit(b * math.pow(10, e).toInt, df))
     }
     units

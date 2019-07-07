@@ -8,8 +8,7 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "jfree" % "jcommon" % "1.0.16",
-  "jfree" % "jfreechart" % "1.0.13",
+  "org.jfree" % "jfreechart" % "1.5.0",
   "org.apache.xmlgraphics" % "xmlgraphics-commons" % "1.3.1", // for eps gen
   // "org.apache.xmlgraphics" % "batik-dom" % "1.7",    // for svg gen
   // "org.apache.xmlgraphics" % "batik-svggen" % "1.7", // for svg gen
