@@ -971,7 +971,11 @@ trait VectorConstructors[Vec[T] <: Vector[T]] {
     import spire.implicits.cforRange
     require(end > start)
     require(end - start > step)
-    val size: Int = math.ceil((end - start) / step).toInt
+    var size: Int = math.ceil((end - start) / step).toInt
+    // #751: floating point shenanigans
+    if (size > 0 && start + step * (size - 1) >= end) {
+      size -= 1
+    }
     val data = new Array[Float](size)
     cforRange(0 until size) { i =>
       data(i) = start + i * step
@@ -983,7 +987,11 @@ trait VectorConstructors[Vec[T] <: Vector[T]] {
     import spire.implicits.cforRange
     require(end > start)
     require(end - start > step)
-    val size: Int = math.ceil((end - start) / step).toInt
+    var size: Int = math.ceil((end - start) / step).toInt
+    // #751: floating point shenanigans
+    if (size > 0 && start + step * (size - 1) >= end) {
+      size -= 1
+    }
     val data = new Array[Double](size)
     cforRange(0 until size) { i =>
       data(i) = start + i * step
