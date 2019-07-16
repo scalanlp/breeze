@@ -22,7 +22,7 @@ import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
 import breeze.math._
 import breeze.storage.Zero
-import breeze.util.{ArrayUtil, ReflectionUtil, SerializableLogging, Sorting, Terminal}
+import breeze.util.{ArrayUtil, ReflectionUtil, ScalaVersion, SerializableLogging, Sorting, Terminal}
 
 import scala.collection.mutable
 import scala.reflect.ClassTag
@@ -472,7 +472,9 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps with Se
       indices.sizeHint(nnz)
       vs.sizeHint(nnz)
     }
-    sizeHint(initNnz)
+
+    if (!ScalaVersion.is213) // TODO: this causes nondeterministic NPEs that I can't minimize in 2.13
+      sizeHint(initNnz)
 
     def result: CSCMatrix[T] = result(false, false)
 
