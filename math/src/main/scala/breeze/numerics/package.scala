@@ -748,6 +748,24 @@ package object numerics {
   }
 
   /**
+    * The Step function: if (x > 0) 1 else 0
+    *
+    * @see https://en.wikipedia.org/wiki/Step_function
+    */
+  object step extends UFunc with MappingUFunc {
+    implicit object stepImplInt extends Impl[Int, Int] {
+      def apply(x: Int) = if (x > 0) 1 else 0
+    }
+    implicit object stepImplDouble extends Impl[Double, Int] {
+      def apply(x: Double) = if (x > 0d) 1 else 0
+    }
+
+    implicit object stepImplFloat extends Impl[Float, Int] {
+      def apply(x: Float) = if (x > 0f) 1 else 0
+    }
+  }
+
+  /**
    * Computes the polynomial P(x) with coefficients given in the passed in array.
    * coefs(i) is the coef for the x_i term.
    */
