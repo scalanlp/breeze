@@ -561,7 +561,7 @@ object QuadraticMinimizer {
     state.x
   }
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     if (args.length < 4) {
       println("Usage: QpSolver n m lambda beta")
       println(

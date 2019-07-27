@@ -238,7 +238,7 @@ object svd extends UFunc {
           k: Int,
           work: Array[Double],
           input_offset: Int,
-          output_offset: Int) {
+          output_offset: Int): Unit = {
         val w = DenseVector(work)
         val x = w(input_offset until input_offset + n)
         val y = w(output_offset until output_offset + n)

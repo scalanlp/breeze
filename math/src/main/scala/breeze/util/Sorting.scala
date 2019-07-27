@@ -53,7 +53,7 @@ object Sorting {
       off: Int,
       length: Int): Unit = {
     require(keys.length == elems.length, "arrays must have the same length")
-    def swap(a: Int, b: Int) {
+    def swap(a: Int, b: Int): Unit = {
       val t0 = keys(a)
       keys(a) = keys(b)
       keys(b) = t0
@@ -61,7 +61,7 @@ object Sorting {
       elems(a) = elems(b)
       elems(b) = t1
     }
-    def vecswap(_a: Int, _b: Int, n: Int) {
+    def vecswap(_a: Int, _b: Int, n: Int): Unit = {
       var a = _a
       var b = _b
       var i = 0
@@ -79,7 +79,7 @@ object Sorting {
         if (keys(b) > keys(c)) b else if (keys(a) > keys(c)) c else a
       }
     }
-    def sort2(off: Int, length: Int) {
+    def sort2(off: Int, length: Int): Unit = {
       // Insertion sort on smallest arrays
       if (length < 7) {
         var i = off

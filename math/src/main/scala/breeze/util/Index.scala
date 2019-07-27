@@ -17,7 +17,7 @@ package breeze.util
  */
 
 import java.io.{IOException, ObjectInputStream, ObjectStreamException}
-import collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.mutable.{ArrayBuffer, HashMap}
 import java.util.Arrays
 import java.util
@@ -82,7 +82,7 @@ trait Index[T] extends Iterable[T] with (T => Int) with Serializable {
   }
 
   protected lazy val defaultHashCode =
-    (17 /: this)(_ * 41 + _.hashCode)
+    foldLeft(17)(_ * 41 + _.hashCode())
 
   override def hashCode = defaultHashCode
 
@@ -184,7 +184,7 @@ class HashIndex[T] extends MutableIndex[T] with Serializable {
 
   @throws(classOf[ObjectStreamException])
   private def writeReplace(): Object = {
-    new HashIndex.SerializedForm(objects)
+    HashIndex.SerializedForm(objects)
   }
 
   // for backwards compatibility
@@ -205,7 +205,7 @@ class HashIndex[T] extends MutableIndex[T] with Serializable {
 
 object HashIndex extends SerializableLogging {
   @SerialVersionUID(1L)
-  private case class SerializedForm[T](objects: IndexedSeq[T]) {
+  private case class SerializedForm[T](objects: scala.collection.IndexedSeq[T]) {
     @throws(classOf[ObjectStreamException])
     private def readResolve(): Object = {
       val ind = new HashIndex[T]()

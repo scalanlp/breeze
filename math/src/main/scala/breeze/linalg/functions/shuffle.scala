@@ -2,7 +2,7 @@ package breeze.linalg
 
 import breeze.generic.UFunc
 
-import scala.collection.generic.CanBuildFrom
+import scala.collection.compat._
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 import breeze.stats.distributions.{Rand, RandBasis}
@@ -111,8 +111,8 @@ object shuffle extends UFunc {
   }
 
   implicit def implShuffle_Coll_eq_Coll[Coll, T, CollRes](
-      implicit view: Coll <:< IndexedSeq[T],
-      cbf: CanBuildFrom[Coll, T, CollRes],
+      implicit view: Coll <:< scala.collection.IndexedSeq[T],
+      cbf: BuildFrom[Coll, T, CollRes],
       rb: RandBasis = Rand): Impl[Coll, CollRes] = {
     new Impl[Coll, CollRes] {
 
@@ -124,7 +124,7 @@ object shuffle extends UFunc {
       override def apply(v: Coll): CollRes = {
         // Make a copy of the input.
         val builder = cbf(v)
-        val copy = v.to[ArrayBuffer]
+        val copy = v.to(ArrayBuffer)
 
         // Shuffle tempret via Fisher-Yates method.
         var count = copy.length - 1

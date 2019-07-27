@@ -51,7 +51,7 @@ object Profiling {
     r
   }
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     val n = 1000000;
 
     def loop1 = {

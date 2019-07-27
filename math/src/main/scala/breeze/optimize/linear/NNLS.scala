@@ -200,7 +200,7 @@ object NNLS {
 
   def apply(iters: Int) = new NNLS(iters)
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     if (args.length < 2) {
       println("Usage: NNLS n s")
       println("Test NNLS with quadratic function of dimension n for s consecutive solves")

@@ -1,7 +1,7 @@
 package breeze.linalg.support
 
 object RangeExtender {
-  val All = new Range(0, -1, 1)
+  val All = Range(0, -1, 1)
 }
 
 class RangeExtender(val re: Range) extends AnyVal {

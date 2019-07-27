@@ -1,8 +1,10 @@
 package breeze
 
-import java.awt.{Color, Stroke, Paint}
+import java.awt.{Color, Paint, Stroke}
+
 import linalg.Matrix
 import org.jfree.chart.renderer.xy.XYItemRenderer
+import org.jfree.chart.ui.RectangleAnchor
 import org.jfree.data.xy
 
 /**
@@ -321,7 +323,7 @@ package object plot {
         }
 
         renderer.setPaintScale(paintScale)
-        renderer.setBlockAnchor(org.jfree.ui.RectangleAnchor.BOTTOM_LEFT)
+        renderer.setBlockAnchor(RectangleAnchor.BOTTOM_LEFT)
         renderer.setBlockWidth(1)
         renderer.setBlockHeight(1)
 

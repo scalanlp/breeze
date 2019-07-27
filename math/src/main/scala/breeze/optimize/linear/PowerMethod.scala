@@ -81,28 +81,30 @@ object PowerMethod {
   type BDV = DenseVector[Double]
   type BDM = DenseMatrix[Double]
 
-  def inverse(maxIters: Int = 10, tolerance: Double = 1E-5): PowerMethod = new PowerMethod(maxIters, tolerance) {
-    override def reset(A: BDM, y: BDV, init: State): State = {
-      import init._
-      require(eigenVector.length == y.length, s"InversePowerMethod:reset mismatch in state dimension")
-      normalize(eigenVector, y)
-      ay := eigenVector
-      QuadraticMinimizer.dpotrs(A, ay)
-      val lambda = nextEigen(eigenVector, ay)
-      State(lambda, eigenVector, ay, 0, false)
-    }
+  def inverse(maxIters: Int = 10, tolerance: Double = 1E-5): PowerMethod = {
+    new PowerMethod(maxIters, tolerance) {
+      override def reset(A: BDM, y: BDV, init: State): State = {
+        import init._
+        require(eigenVector.length == y.length, s"InversePowerMethod:reset mismatch in state dimension")
+        normalize(eigenVector, y)
+        ay := eigenVector
+        QuadraticMinimizer.dpotrs(A, ay)
+        val lambda = nextEigen(eigenVector, ay)
+        State(lambda, eigenVector, ay, 0, false)
+      }
 
-    override def iterations(A: BDM, y: BDV, initialState: State): Iterator[State] =
-      Iterator
-        .iterate(reset(A, y, initialState)) { state =>
-          import state._
-          ay := eigenVector
-          QuadraticMinimizer.dpotrs(A, ay)
-          val lambda = nextEigen(eigenVector, ay)
-          val val_dif = abs(lambda - eigenValue)
-          if (val_dif <= tolerance || iter > maxIters) State(lambda, eigenVector, ay, iter + 1, true)
-          else State(lambda, eigenVector, ay, iter + 1, false)
-        }
-        .takeUpToWhere(_.converged)
+      override def iterations(A: BDM, y: BDV, initialState: State): Iterator[State] =
+        Iterator
+          .iterate(reset(A, y, initialState)) { state =>
+            import state._
+            ay := eigenVector
+            QuadraticMinimizer.dpotrs(A, ay)
+            val lambda = nextEigen(eigenVector, ay)
+            val val_dif = abs(lambda - eigenValue)
+            if (val_dif <= tolerance || iter > maxIters) State(lambda, eigenVector, ay, iter + 1, true)
+            else State(lambda, eigenVector, ay, iter + 1, false)
+          }
+          .takeUpToWhere(_.converged)
+    }
   }
 }

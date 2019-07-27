@@ -63,7 +63,7 @@ object FeatureVector {
   implicit def FVScaleAddIntoV[@expand.args(Int, Float, Double) T]
     : TernaryUpdateRegistry[Vector[T], T, FeatureVector, scaleAdd.type] = {
     new TernaryUpdateRegistry[Vector[T], T, FeatureVector, scaleAdd.type] {
-      override def bindingMissing(y: Vector[T], a: T, x: FeatureVector) {
+      override def bindingMissing(y: Vector[T], a: T, x: FeatureVector): Unit = {
         if (a != 0.0) {
           var i = 0
           while (i < x.activeLength) {
@@ -79,7 +79,7 @@ object FeatureVector {
   implicit def FVScaleAddIntoDV[@expand.args(Int, Float, Double) T]
     : scaleAdd.InPlaceImpl3[DenseVector[T], T, FeatureVector] = {
     new scaleAdd.InPlaceImpl3[DenseVector[T], T, FeatureVector] {
-      def apply(y: DenseVector[T], a: T, x: FeatureVector) {
+      def apply(y: DenseVector[T], a: T, x: FeatureVector): Unit = {
         var i = 0
         while (i < x.activeLength) {
           y(x(i)) += a
@@ -97,7 +97,7 @@ object FeatureVector {
   implicit def FVCanDaxpyIntoVB[@expand.args(Float, Double) T]
     : InPlaceImpl3[scaleAdd.type, VectorBuilder[T], T, FeatureVector] = {
     new scaleAdd.InPlaceImpl3[VectorBuilder[T], T, FeatureVector] {
-      def apply(y: VectorBuilder[T], a: T, x: FeatureVector) {
+      def apply(y: VectorBuilder[T], a: T, x: FeatureVector): Unit = {
         if (a != 0.0) {
           var i = 0
           while (i < x.activeLength) {
@@ -111,7 +111,7 @@ object FeatureVector {
 
   implicit def FVCanDaxpyIntoVB_Generic[T]: InPlaceImpl3[scaleAdd.type, VectorBuilder[T], T, FeatureVector] = {
     new scaleAdd.InPlaceImpl3[VectorBuilder[T], T, FeatureVector] {
-      def apply(y: VectorBuilder[T], a: T, x: FeatureVector) {
+      def apply(y: VectorBuilder[T], a: T, x: FeatureVector): Unit = {
         if (a != 0.0) {
           var i = 0
           while (i < x.activeLength) {
@@ -128,7 +128,7 @@ object FeatureVector {
   implicit def FVScaleAddIntoSV[@expand.args(Int, Float, Double) T]
     : scaleAdd.InPlaceImpl3[SparseVector[T], T, FeatureVector] = {
     new scaleAdd.InPlaceImpl3[SparseVector[T], T, FeatureVector] {
-      def apply(y: SparseVector[T], a: T, x: FeatureVector) {
+      def apply(y: SparseVector[T], a: T, x: FeatureVector): Unit = {
         if (a != 0.0) {
           var i = 0
           while (i < x.activeLength) {

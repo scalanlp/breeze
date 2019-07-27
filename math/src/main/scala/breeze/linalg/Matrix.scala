@@ -53,14 +53,7 @@ trait Matrix[@spec(Double, Int, Float, Long) V] extends MatrixLike[V, Matrix[V]]
   def rows: Int
   def cols: Int
 
-  def keySet: Set[(Int, Int)] = new Set[(Int, Int)] {
-    def contains(elem: (Int, Int)): Boolean = elem._1 >= 0 && elem._1 < rows && elem._2 >= 0 && elem._2 < cols
-
-    def +(elem: (Int, Int)): Set[(Int, Int)] = Set() ++ iterator + elem
-    def -(elem: (Int, Int)): Set[(Int, Int)] = Set() ++ iterator - elem
-
-    def iterator: Iterator[(Int, Int)] = for { j <- Iterator.range(0, cols); i <- Iterator.range(0, rows) } yield (i, j)
-  }
+  def keySet: Set[(Int, Int)] = new MatrixKeySet(rows, cols)
 
   def iterator = for (i <- Iterator.range(0, rows); j <- Iterator.range(0, cols)) yield (i -> j) -> apply(i, j)
 
@@ -173,7 +166,7 @@ object Matrix
 
     def apply(i: Int, j: Int): V = throw new IndexOutOfBoundsException("Empty matrix!")
 
-    def update(i: Int, j: Int, e: V) {
+    def update(i: Int, j: Int, e: V): Unit = {
       throw new IndexOutOfBoundsException("Empty matrix!")
     }
 
@@ -265,7 +258,7 @@ trait MatrixConstructors[Mat[T] <: Matrix[T]] {
 
   // This method only exists because of trouble in Scala-specialization land.
   // basically, we turn off specialization for this loop, since it's not going to be fast anyway.
-  private def finishLiteral[V, R](rv: Matrix[V], rl: LiteralRow[R, V], rows: Seq[R]) {
+  private def finishLiteral[V, R](rv: Matrix[V], rl: LiteralRow[R, V], rows: Seq[R]): Unit = {
     for ((row, i) <- rows.zipWithIndex) {
       rl.foreach(row, { (j, v) =>
         rv(i, j) = v

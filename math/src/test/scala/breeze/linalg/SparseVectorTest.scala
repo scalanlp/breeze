@@ -352,10 +352,10 @@ class SparseVectorTest extends FunSuite {
 
   test("#320 as CSCMatrix powers of two") {
 
-    def foo(fill: Int) {
+    def foo(fill: Int): Unit = {
       val vb = new VectorBuilder[Int](421337)
 
-      for (i ← 0 to fill) {
+      for (i <- 0 to fill) {
         vb.add(i, i)
       }
 

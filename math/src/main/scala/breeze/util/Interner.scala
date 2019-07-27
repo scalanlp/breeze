@@ -1,9 +1,9 @@
-package breeze.util;
+package breeze.util
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
 
- Licensed under the Apache License, Version 2.0 (the "License");
+ Licensed under the Apache License, Version 2.0 (the "License")
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
 
@@ -16,13 +16,14 @@ package breeze.util;
  limitations under the License.
  */
 
-import scala.collection.mutable.WeakHashMap;
-import scala.collection.generic._;
-import scala.collection._;
-import scala.collection.Traversable;
-import scala.collection.TraversableLike;
+import java.io.{ObjectInputStream, ObjectOutputStream}
 import java.lang.ref.WeakReference
-import java.io.{ObjectInputStream, ObjectOutputStream};
+
+import breeze.collection.mutable.AutoUpdater
+
+import scala.collection._
+import scala.collection.mutable.WeakHashMap
+import scala.reflect.ClassTag
 
 /**
  * Class that mimics Java's string interner, but for anything.
@@ -32,19 +33,17 @@ import java.io.{ObjectInputStream, ObjectOutputStream};
  */
 @SerialVersionUID(1L)
 class Interner[T] extends (T => T) with Serializable {
-  override def apply(t: T) = intern(t);
+  override def apply(t: T) = intern(t)
 
   def intern(t: T): T = synchronized {
-    inner.getOrElseUpdate(t, new WeakReference[T](t)).get;
+    inner.getOrElseUpdate(t, new WeakReference[T](t)).get
   }
 
-  def clear() = inner.clear();
-  def size = inner.size;
+  def clear() = inner.clear()
+  def size = inner.size
 
-  def internAll[C <: TraversableLike[T, C] with Traversable[T], That](c: C)(implicit bf: CanBuildFrom[T, That, C]) =
-    c.map(apply)
   def internAll(c: List[T]) = c.map(apply)
-  def internAll(c: Array[T]) = c.map(apply)
+  def internAll(c: Array[T])(implicit ct: ClassTag[T]) = c.map(apply)
   def internAll(c: Set[T]) = c.map(apply)
 
   def internKeys[V](c: scala.collection.Map[T, V]) = {
@@ -55,28 +54,26 @@ class Interner[T] extends (T => T) with Serializable {
     Map[K, T]() ++ c.map { case (k, v) => (k, intern(v)) }
   }
 
-  @transient private var inner = new WeakHashMap[T, WeakReference[T]];
+  @transient private var inner = new WeakHashMap[T, WeakReference[T]]
 
   @throws(classOf[java.io.IOException])
-  private def writeObject(oos: ObjectOutputStream) {
-    oos.defaultWriteObject();
+  private def writeObject(oos: ObjectOutputStream): Unit = {
+    oos.defaultWriteObject()
   }
 
   @throws(classOf[java.io.IOException])
   @throws(classOf[ClassNotFoundException])
-  private def readObject(ois: ObjectInputStream) {
-    ois.defaultReadObject();
+  private def readObject(ois: ObjectInputStream): Unit = {
+    ois.defaultReadObject()
     inner = new WeakHashMap[T, WeakReference[T]]
   }
 
 }
 
 object Interner {
-  private val typedInterners = new scala.collection.mutable.HashMap[Class[_], Interner[_]] {
-    override def default(c: Class[_]) = getOrElseUpdate(c, new Interner[Any]);
-  }
+  private val typedInterners = AutoUpdater[Class[_], Interner[_]](new Interner[Any]())
 
-  def apply[T](implicit m: scala.reflect.Manifest[T]) = forClass[T](m.runtimeClass.asInstanceOf[Class[T]]);
+  def apply[T: ClassTag] = forClass[T](implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[T]])
 
-  def forClass[T](c: Class[T]) = typedInterners(c).asInstanceOf[Interner[T]];
+  def forClass[T](c: Class[T]) = typedInterners(c).asInstanceOf[Interner[T]]
 }

@@ -21,34 +21,11 @@ import java.util.Comparator
 import breeze.collection.mutable.Beam.{BeamResult, NotAdded}
 import breeze.linalg.clip
 
-import scala.collection.{mutable, _}
+import scala.jdk.CollectionConverters._
 import scala.collection.generic._
-import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
+import scala.collection._
 
-trait IBeam[T]
-    extends Iterable[T]
-    with IterableLike[T, IBeam[T]]
-    with mutable.Builder[T, IndexedSeq[T]]
-    with Shrinkable[T]
-    with mutable.Cloneable[IBeam[T]] {
-  override protected[this] def newBuilder: mutable.Builder[T, IBeam[T]] =
-    throw new NotImplementedError("This should have been overridden")
-  def freshEmpty: IBeam[T] = newBuilder.result()
-
-  /**
-   * Returns information on whether or not it made it onto the beam, and also what got
-   * evicted
-   * @param x
-   * @return
-   */
-  def checkedAdd(x: T): Beam.BeamResult[T]
-
-  def +=(x: T): this.type = {
-    checkedAdd(x)
-    this
-  }
-}
 
 /**
  * Represents a beam, which is essentially a priority queue
@@ -57,13 +34,13 @@ trait IBeam[T]
  * @author dlwh
  */
 @SerialVersionUID(1L)
-class Beam[T](val maxSize: Int)(implicit ord: Ordering[T])
+class Beam[T](val maxSize: Int)(implicit override protected val ordering: Ordering[T])
     extends Iterable[T]
     with IBeam[T]
-    with IterableLike[T, Beam[T]]
+    with IterableOps[T, Iterable, Beam[T]]
     with Serializable {
   assert(maxSize >= 0)
-  protected val queue = new java.util.PriorityQueue[T](clip(maxSize, 1, 16), ord: Comparator[T])
+  protected val queue = new java.util.PriorityQueue[T](clip(maxSize, 1, 16), ordering: Comparator[T])
 
   override def size = queue.size
 
@@ -75,10 +52,10 @@ class Beam[T](val maxSize: Int)(implicit ord: Ordering[T])
     }
   }
 
-  override def +=(x: T): this.type = {
+  override def addOne(x: T): this.type = {
     if (queue.size < maxSize) {
       queue.add(x)
-    } else if (maxSize > 0 && ord.compare(min, x) < 0) {
+    } else if (maxSize > 0 && ordering.compare(min, x) < 0) {
       queue.poll()
       queue.add(x)
     }
@@ -86,7 +63,7 @@ class Beam[T](val maxSize: Int)(implicit ord: Ordering[T])
   }
 
   /** O(n) */
-  override def -=(elem: T): this.type = {
+  override def subtractOne(elem: T): this.type = {
     queue.remove(elem)
     this
   }
@@ -95,7 +72,7 @@ class Beam[T](val maxSize: Int)(implicit ord: Ordering[T])
     if (queue.size < maxSize) {
       queue.add(x)
       Beam.NothingEvicted
-    } else if (maxSize > 0 && ord.compare(min, x) < 0) {
+    } else if (maxSize > 0 && ordering.compare(min, x) < 0) {
       val r = queue.poll()
       queue.add(x)
       Beam.Added(Iterable(r))
@@ -107,8 +84,6 @@ class Beam[T](val maxSize: Int)(implicit ord: Ordering[T])
   def iterator: Iterator[T] = queue.iterator.asScala
   override def toString(): String = iterator.mkString("Beam(", ",", ")")
   override def clear(): Unit = queue.clear()
-
-  override protected def newBuilder: mutable.Builder[T, Beam[T]] = new mutable.GrowingBuilder(new Beam[T](maxSize))
 
   /**
    * Drains the beam and returns the items in biggest-first order
@@ -129,6 +104,16 @@ class Beam[T](val maxSize: Int)(implicit ord: Ordering[T])
   }
 
   override def clone(): Beam[T] = new Beam[T](maxSize) ++= this.iterator
+
+  override def newSpecificBuilder: scala.collection.mutable.Builder[T, Beam[T]] = {
+    Beam.canBuildFrom[T, T].newBuilder(this)
+  }
+
+  protected override def fromSpecific(coll: IterableOnce[T]): Beam[T] = {
+    Beam.canBuildFrom[T, T].fromSpecific(this)(coll)
+  }
+
+  override def empty: Beam[T] = Beam(maxSize)()
 }
 
 object Beam {
@@ -143,10 +128,9 @@ object Beam {
 
   val NothingEvicted: BeamResult[Nothing] = Added(Iterable.empty)
 
-  implicit def canBuildFrom[T: Ordering]: CanBuildFrom[Beam[T], T, Beam[T]] = new CanBuildFrom[Beam[T], T, Beam[T]] {
-    def apply() = sys.error("Sorry, need a max size")
-
-    def apply(from: Beam[T]) = from.newBuilder
+  implicit def canBuildFrom[T, U: Ordering]: BuildFrom[Beam[T], U, Beam[U]] = new BuildFrom[Beam[T], U, Beam[U]] {
+    def fromSpecific(from: Beam[T])(it: IterableOnce[U]): Beam[U] = (newBuilder(from) ++= it).result()
+    def newBuilder(from: Beam[T]): mutable.Builder[U, Beam[U]] = new mutable.GrowableBuilder(new Beam[U](from.maxSize))
   }
   def apply[T: Ordering](maxSize: Int)(xs: T*): Beam[T] = new Beam[T](maxSize) ++= xs
 }

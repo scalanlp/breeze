@@ -32,13 +32,13 @@ trait CanZipAndTraverseValues[From, From2, A, B] {
 
 object CanZipAndTraverseValues {
   trait PairValuesVisitor[A, B] {
-    def visit(a: A, b: B)
+    def visit(a: A, b: B): Unit
     def visitArray(arr: Array[A], arr2: Array[B]): Unit = {
       var i = 0
-      if (arr.size != arr2.size) {
+      if (arr.length != arr2.length) {
         throw new IllegalArgumentException("Arrays to be visited must have same size")
       }
-      while (i < arr.size) {
+      while (i < arr.length) {
         visit(arr(i), arr2(i))
         i += 1
       }

@@ -82,8 +82,8 @@ class BroadcastedTest extends FunSuite {
   }
 
   test("Counter sum") {
-    val ctr = Counter2(('a, 1, 2.0), ('b, 1, 3.0), ('b, 4, 5.0))
-    assert(sum(ctr(*, ::)) === Counter('b -> 8.0, 'a -> 2.0))
+    val ctr = Counter2(("a", 1, 2.0), ("b", 1, 3.0), ("b", 4, 5.0))
+    assert(sum(ctr(*, ::)) === Counter("b" -> 8.0, "a" -> 2.0))
     assert(sum(ctr(::, *)) === Counter(1 -> 5.0, 4 -> 5.0))
   }
 

@@ -269,7 +269,7 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
   @expand
   @expand.valify
   implicit def implOpMulInner_DVT_SVT_eq_T[@expand.args(Int, Double, Float, Long) T](
-      implicit @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T): OpMulInner.Impl2[DenseVector[T], SparseVector[T], T] =
+      implicit @expand.sequence[T](0, 0.0, 0.0f, 0L) zero: T): OpMulInner.Impl2[DenseVector[T], SparseVector[T], T] =
     new OpMulInner.Impl2[DenseVector[T], SparseVector[T], T] {
       def apply(a: DenseVector[T], b: SparseVector[T]): T = {
         var result: T = zero
@@ -302,7 +302,7 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
   @expand
   @expand.valify
   implicit def implZipValues_DVT_SVT_eq_ZVTT[@expand.args(Int, Double, Float, Long) T](
-      implicit @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T)
+      implicit @expand.sequence[T](0, 0.0, 0.0f, 0L) zero: T)
     : zipValues.Impl2[DenseVector[T], SparseVector[T], ZippedValues[T, T]] =
     new zipValues.Impl2[DenseVector[T], SparseVector[T], ZippedValues[T, T]] {
 
@@ -350,7 +350,7 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
   @expand
   @expand.valify
   implicit def implScaleAdd_DVT_T_SVT_InPlace[@expand.args(Int, Double, Float, Long) T](
-      implicit @expand.sequence[T](0, 0.0, 0f, 0l) zero: T): scaleAdd.InPlaceImpl3[DenseVector[T], T, SparseVector[T]] =
+      implicit @expand.sequence[T](0, 0.0, 0f, 0L) zero: T): scaleAdd.InPlaceImpl3[DenseVector[T], T, SparseVector[T]] =
     new scaleAdd.InPlaceImpl3[DenseVector[T], T, SparseVector[T]] {
       def apply(y: DenseVector[T], a: T, x: SparseVector[T]): Unit = {
         require(x.length == y.length, "Vectors must be the same length!")
@@ -401,7 +401,7 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand.valify
   implicit def implOps_SVT_SVT_eq_SVT[@expand.args(Int, Double, Float, Long) T, @expand.args(OpAdd, OpSub) Op <: OpType](
       implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }) op: Op.Impl2[T, T, T],
-      @expand.sequence[T](0, 0.0, 0f, 0l) zero: T): Op.Impl2[SparseVector[T], SparseVector[T], SparseVector[T]] =
+      @expand.sequence[T](0, 0.0, 0f, 0L) zero: T): Op.Impl2[SparseVector[T], SparseVector[T], SparseVector[T]] =
     new Op.Impl2[SparseVector[T], SparseVector[T], SparseVector[T]] {
       def apply(a: SparseVector[T], b: SparseVector[T]): SparseVector[T] = {
         require(b.length == a.length, "Vectors must be the same length!")
@@ -584,7 +584,7 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand
   @expand.valify
   implicit def implOpMulScalar_SVT_SVT_eq_SVT[@expand.args(Int, Double, Float, Long) T](
-      implicit @expand.sequence[T](0, 0.0, 0f, 0l) zero: T)
+      implicit @expand.sequence[T](0, 0.0, 0f, 0L) zero: T)
     : OpMulScalar.Impl2[SparseVector[T], SparseVector[T], SparseVector[T]] =
     new OpMulScalar.Impl2[SparseVector[T], SparseVector[T], SparseVector[T]] {
       def apply(a: SparseVector[T], b: SparseVector[T]): SparseVector[T] = {
@@ -626,7 +626,7 @@ trait SparseVectorOps { this: SparseVector.type =>
                 }
                 assert(
                   newAoff > aoff,
-                  bind + " " + aoff + " " + newAoff + " " + a.index(aoff) + " " + a.index(newAoff) + " " + a + " " + b)
+                  s"$bind $aoff $newAoff ${a.index(aoff)} ${a.index(newAoff)} $a $b")
                 aoff = newAoff
               }
             } else {
@@ -743,7 +743,7 @@ trait SparseVectorOps { this: SparseVector.type =>
       implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }, { (a, b) =>
         b
       }, { _.pow(_) }) op: Op.Impl2[T, T, T],
-      @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T): Op.Impl2[SparseVector[T], T, SparseVector[T]] =
+      @expand.sequence[T](0, 0.0, 0.0f, 0L) zero: T): Op.Impl2[SparseVector[T], T, SparseVector[T]] =
     new Op.Impl2[SparseVector[T], T, SparseVector[T]] {
       def apply(a: SparseVector[T], b: T): SparseVector[T] = {
         val result: VectorBuilder[T] = new VectorBuilder[T](a.length)
@@ -764,7 +764,7 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand.valify
   implicit def implOps_SVT_T_eq_SVT[@expand.args(Int, Double, Float, Long) T, @expand.args(OpDiv, OpMod) Op <: OpType](
       implicit @expand.sequence[Op]({ _ / _ }, { _ % _ }) op: Op.Impl2[T, T, T],
-      @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T): Op.Impl2[SparseVector[T], T, SparseVector[T]] =
+      @expand.sequence[T](0, 0.0, 0.0f, 0L) zero: T): Op.Impl2[SparseVector[T], T, SparseVector[T]] =
     new Op.Impl2[SparseVector[T], T, SparseVector[T]] {
       def apply(a: SparseVector[T], b: T): SparseVector[T] = {
         val result: VectorBuilder[T] = new VectorBuilder[T](a.length)
@@ -793,7 +793,7 @@ trait SparseVectorOps { this: SparseVector.type =>
   implicit def implOps_SVT_T_eq_SVT[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpMulScalar, OpMulMatrix) Op <: OpType](
-      implicit @expand.sequence[T](0, 0.0, 0.0f, 0l)
+      implicit @expand.sequence[T](0, 0.0, 0.0f, 0L)
       zero: T): Op.Impl2[SparseVector[T], T, SparseVector[T]] =
     new Op.Impl2[SparseVector[T], T, SparseVector[T]] {
       def apply(a: SparseVector[T], b: T): SparseVector[T] = {
@@ -813,7 +813,7 @@ trait SparseVectorOps { this: SparseVector.type =>
       implicit op: UFunc.UImpl2[Op, SparseVector[T], Other, SparseVector[T]])
     : UFunc.InPlaceImpl2[Op, SparseVector[T], Other] = {
     new UFunc.InPlaceImpl2[Op, SparseVector[T], Other] {
-      def apply(a: SparseVector[T], b: Other) {
+      def apply(a: SparseVector[T], b: Other): Unit = {
         val result = op(a, b)
         a.use(result.index, result.data, result.activeSize)
       }
@@ -822,7 +822,7 @@ trait SparseVectorOps { this: SparseVector.type =>
 
   implicit def implOpSet_SVT_SVT_InPlace[T]: OpSet.InPlaceImpl2[SparseVector[T], SparseVector[T]] = {
     new OpSet.InPlaceImpl2[SparseVector[T], SparseVector[T]] {
-      def apply(a: SparseVector[T], b: SparseVector[T]) {
+      def apply(a: SparseVector[T], b: SparseVector[T]): Unit = {
         val result = b.copy
         a.use(result.index, result.data, result.activeSize)
       }
@@ -832,7 +832,7 @@ trait SparseVectorOps { this: SparseVector.type =>
   implicit def implOpSet_SVT_T_InPlace[T: Semiring: ClassTag]: OpSet.InPlaceImpl2[SparseVector[T], T] = {
     val zero = implicitly[Semiring[T]].zero
     new OpSet.InPlaceImpl2[SparseVector[T], T] {
-      def apply(a: SparseVector[T], b: T) {
+      def apply(a: SparseVector[T], b: T): Unit = {
         if (b == zero) {
           a.use(new Array[Int](2), new Array[T](2), 0)
           return
@@ -879,7 +879,7 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand
   @expand.valify
   implicit def implOpMulInner_SVT_SVT_eq_T[@expand.args(Int, Double, Float, Long) T](
-      implicit @expand.sequence[T](0, 0.0, 0f, 0l) zero: T): OpMulInner.Impl2[SparseVector[T], SparseVector[T], T] =
+      implicit @expand.sequence[T](0, 0.0, 0f, 0L) zero: T): OpMulInner.Impl2[SparseVector[T], SparseVector[T], T] =
     new OpMulInner.Impl2[SparseVector[T], SparseVector[T], T] {
       def apply(a: SparseVector[T], b: SparseVector[T]): T = {
         require(b.length == a.length, "Vectors must be the same length!")
@@ -1011,7 +1011,7 @@ trait SparseVectorOps { this: SparseVector.type =>
                   newAoff = ~newAoff
                   boff += 1
                 }
-                assert(newAoff > aoff, aoff + " " + newAoff)
+                assert(newAoff > aoff, s"$aoff $newAoff")
                 aoff = newAoff
               }
             } else {
@@ -1029,7 +1029,7 @@ trait SparseVectorOps { this: SparseVector.type =>
   @expand
   @expand.valify
   implicit def implScaleAdd_SVT_T_SVT_InPlace[@expand.args(Int, Double, Float, Long) T](
-      implicit @expand.sequence[T](0, 0.0, 0f, 0l) zero: T)
+      implicit @expand.sequence[T](0, 0.0, 0f, 0L) zero: T)
     : scaleAdd.InPlaceImpl3[SparseVector[T], T, SparseVector[T]] =
     new scaleAdd.InPlaceImpl3[SparseVector[T], T, SparseVector[T]] {
       def apply(y: SparseVector[T], a: T, x: SparseVector[T]): Unit = {

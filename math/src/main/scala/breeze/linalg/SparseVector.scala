@@ -72,12 +72,12 @@ class SparseVector[@spec(Double, Int, Float, Long) V](val array: SparseArray[V])
   def contains(i: Int) = array.contains(i)
 
   def apply(i: Int): V = {
-    if (i < 0 || i >= size) throw new IndexOutOfBoundsException(i + " not in [0," + size + ")")
+    if (i < 0 || i >= size) throw new IndexOutOfBoundsException(s"$i not in [0,$size)")
     array(i)
   }
 
   def update(i: Int, v: V): Unit = {
-    if (i < 0 || i >= size) throw new IndexOutOfBoundsException(i + " not in [0," + size + ")")
+    if (i < 0 || i >= size) throw new IndexOutOfBoundsException(s"$i not in [0,$size)")
     array(i) = v
   }
 
@@ -331,8 +331,8 @@ object SparseVector
 
       /**Transforms all key-value pairs from the given collection. */
       def transform(from: SparseVector[V], fn: (V) => V): Unit = {
-        val newData = mutable.ArrayBuilder.make[V]()
-        val newIndex = mutable.ArrayBuilder.make[Int]()
+        val newData = mutable.ArrayBuilder.make[V]
+        val newIndex = mutable.ArrayBuilder.make[Int]
         var used = 0
         var i = 0
         while (i < from.length) {

@@ -16,7 +16,8 @@
 package breeze.util
 
 import java.util.TreeSet
-import scala.collection.JavaConverters._
+import scala.collection.compat._
+import scala.jdk.CollectionConverters._
 
 /**
  * A Top-K queue keeps a list of the top K elements seen so far as ordered
@@ -44,13 +45,13 @@ class TopK[T](k: Int)(implicit ord: Ordering[T]) extends Iterable[T] {
 }
 
 object TopK {
-  def apply[T](k: Int, items: TraversableOnce[T])(implicit ord: Ordering[T]): TopK[T] = {
+  def apply[T](k: Int, items: IterableOnce[T])(implicit ord: Ordering[T]): TopK[T] = {
     val topk = new TopK[T](k)(ord)
     items.foreach(topk += _)
     topk
   }
 
-  def apply[T, U](k: Int, items: TraversableOnce[T], scoreFn: T => U)(implicit uord: Ordering[U]): TopK[T] = {
+  def apply[T, U](k: Int, items: IterableOnce[T], scoreFn: T => U)(implicit uord: Ordering[U]): TopK[T] = {
     implicit val ord = new Ordering[T] {
       override def compare(x: T, y: T): Int = uord.compare(scoreFn(x), scoreFn(y))
     }

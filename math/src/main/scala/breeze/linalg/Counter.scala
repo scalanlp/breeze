@@ -49,10 +49,10 @@ trait CounterLike[K, V, +M <: scala.collection.mutable.Map[K, V], +This <: Count
   def contains(k: K) = data.contains(k)
 
   override def apply(k: K) = {
-    data.get(k).getOrElse(default)
+    data.getOrElse(k, default)
   }
 
-  def update(k: K, v: V) { data(k) = v }
+  def update(k: K, v: V): Unit = { data(k) = v }
 
   def get(k: K) = data.get(k)
 

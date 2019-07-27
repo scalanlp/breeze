@@ -22,7 +22,7 @@ import breeze.math.Semiring
  *
  * @author dlwh
  */
-@SerialVersionUID(1l)
+@SerialVersionUID(1L)
 trait Zero[@specialized T] extends Serializable {
   def zero: T
 }
@@ -43,52 +43,52 @@ object Zero extends ZeroLowPriority {
     def zero = v
   }
 
-  @SerialVersionUID(1l)
+  @SerialVersionUID(1L)
   implicit object IntZero extends Zero[Int] {
     override def zero = 0
   }
 
-  @SerialVersionUID(1l)
+  @SerialVersionUID(1L)
   implicit object ShortZero extends Zero[Short] {
     override def zero = 0.toShort
   }
 
-  @SerialVersionUID(1l)
+  @SerialVersionUID(1L)
   implicit object LongZero extends Zero[Long] {
-    override def zero = 0l
+    override def zero = 0L
   }
 
-  @SerialVersionUID(1l)
+  @SerialVersionUID(1L)
   implicit object ByteZero extends Zero[Byte] {
     override def zero = 0.toByte
   }
 
-  @SerialVersionUID(1l)
+  @SerialVersionUID(1L)
   implicit object CharZero extends Zero[Char] {
     override def zero = 0.toChar
   }
 
-  @SerialVersionUID(1l)
+  @SerialVersionUID(1L)
   implicit object FloatZero extends Zero[Float] {
     override def zero = 0.0f
   }
 
-  @SerialVersionUID(1l)
+  @SerialVersionUID(1L)
   implicit object DoubleZero extends Zero[Double] {
     override def zero = 0.0
   }
 
-  @SerialVersionUID(1l)
+  @SerialVersionUID(1L)
   implicit object BooleanZero extends Zero[Boolean] {
     override def zero = false
   }
 
-  @SerialVersionUID(1l)
+  @SerialVersionUID(1L)
   implicit object BigIntZero extends Zero[BigInt] {
     override def zero = BigInt(0)
   }
 
-  @SerialVersionUID(1l)
+  @SerialVersionUID(1L)
   implicit object BigDecimalZero extends Zero[BigDecimal] {
     override def zero = BigDecimal(0L)
   }

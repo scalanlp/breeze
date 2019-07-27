@@ -1,9 +1,14 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
+
 import scala.reflect.ClassTag
 import spire.implicits._
 import breeze.storage.Zero
+
+import scala.collection.compat.immutable.ArraySeq
+import breeze.collection.compat._
+import scala.collection.mutable
 
 /**
  * split the array
@@ -20,17 +25,15 @@ object split extends UFunc {
         require(v.size % n == 0)
 
         val individualVectorSize = v.size / n
-        val result = new collection.mutable.ArrayBuffer[DenseVector[T]]()
+        val result = mutable.ArrayBuilder.make[DenseVector[T]]
 
         cforRange(0 until n) { k =>
           val offsetInOriginalVector = k * individualVectorSize
-          val chunk = new Array[T](individualVectorSize)
-          cforRange(0 until individualVectorSize) { i =>
-            chunk(i) = v(offsetInOriginalVector + i)
-          }
-          result += DenseVector[T](chunk)
+          val chunk = new DenseVector(new Array[T](individualVectorSize))
+          chunk :=  v(offsetInOriginalVector until (offsetInOriginalVector + individualVectorSize))
+          result += chunk
         }
-        result
+        ArraySeq.unsafeWrapArray(result.result())
       }
     }
   }
@@ -40,7 +43,7 @@ object split extends UFunc {
       def apply(v: DenseVector[T], nSeq: Seq[Int]): IndexedSeq[DenseVector[T]] = {
         require(nSeq.size < v.size)
 
-        val result = new collection.mutable.ArrayBuffer[DenseVector[T]]()
+        val result = arraySeqBuilder[DenseVector[T]]
         var lastN: Int = 0
         nSeq.foreach { n =>
           val chunk = new Array[T](n - lastN)
@@ -57,7 +60,7 @@ object split extends UFunc {
           }
           result += DenseVector[T](chunk)
         }
-        result
+        result.result()
       }
     }
 
@@ -90,7 +93,7 @@ object hsplit extends UFunc {
         require(n <= v.cols)
         require(v.cols % n == 0)
 
-        val result = new collection.mutable.ArrayBuffer[DenseMatrix[T]]()
+        val result = arraySeqBuilder[DenseMatrix[T]]
         val newCols = v.cols / n
         val newSize = v.rows * newCols
 
@@ -102,7 +105,7 @@ object hsplit extends UFunc {
           }
           result += chunk
         }
-        result
+        result.result()
       }
     }
 }
@@ -115,7 +118,7 @@ object vsplit extends UFunc {
         require(n <= v.cols)
         require(v.cols % n == 0)
 
-        val result = new collection.mutable.ArrayBuffer[DenseMatrix[T]]()
+        val result = arraySeqBuilder[DenseMatrix[T]]
         val newRows = v.rows / n
 
         cforRange(0 until n) { k =>
@@ -126,7 +129,7 @@ object vsplit extends UFunc {
           }
           result += chunk
         }
-        result
+        result.result()
       }
     }
 }

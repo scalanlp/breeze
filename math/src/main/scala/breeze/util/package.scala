@@ -2,9 +2,14 @@ package breeze
 
 import java.util.zip._
 import java.io._
+import java.util
+
 import scala.collection.generic._
 import scala.collection.mutable
 import java.util.BitSet
+
+import scala.collection.compat._
+import scala.collection.compat.immutable.ArraySeq
 
 /**
  *
@@ -159,7 +164,7 @@ package object util {
     val r = Runtime.getRuntime
     val free = r.freeMemory / (1024 * 1024)
     val total = r.totalMemory / (1024 * 1024)
-    ((total - free) + "M used; " + free + "M free; " + total + "M total")
+    s"${(total - free)}M used; ${free}M free; ${total}M total"
   }
 
   /**
@@ -176,8 +181,8 @@ package object util {
       s.zipWithIndex.reduceLeft((a, b) => if (ordering.lt(a._1, b._1)) a else b)._2
     }
 
-    def unfold[U, To](init: U)(f: (U, T) => U)(implicit cbf: CanBuildFrom[Seq[T], U, To]) = {
-      val builder = cbf.apply(s)
+    def unfold[U, To](init: U)(f: (U, T) => U)(implicit cbf: BuildFrom[Seq[T], U, To]) = {
+      val builder = cbf.newBuilder(s)
       builder.sizeHint(s.size + 1)
       var u = init
       builder += u
@@ -191,15 +196,15 @@ package object util {
 
   implicit def seqExtras[T](s: Seq[T]) = new SeqExtras(s)
 
-  implicit def arraySeqExtras[T](s: Array[T]) = new SeqExtras(s)
+  implicit def arraySeqExtras[T](s: Array[T]) = new SeqExtras(ArraySeq.unsafeWrapArray(s))
 
   implicit class AwesomeBitSet(val bs: java.util.BitSet) extends AnyVal {
     def apply(r: Int) = bs.get(r)
 
     def iterator: Iterator[Int] = new BSIterator(bs)
 
-    def map[U, C](f: Int => U)(implicit cbf: CanBuildFrom[java.util.BitSet, U, C]) = {
-      val r: mutable.Builder[U, C] = cbf(bs)
+    def map[U, C](f: Int => U)(implicit cbf: BuildFrom[java.util.BitSet, U, C]) = {
+      val r: mutable.Builder[U, C] = cbf.newBuilder(bs)
       r.sizeHint(bs.size)
       iterator.foreach { i =>
         r += f(i)
@@ -208,7 +213,7 @@ package object util {
       r.result()
     }
 
-    def foreach[U](f: Int => U) {
+    def foreach[U](f: Int => U): Unit = {
       var i = bs.nextSetBit(0)
       while (i != -1) {
         f(i)
@@ -275,14 +280,16 @@ package object util {
     }
   }
 
-  implicit def _bitsetcbf[U]: CanBuildFrom[java.util.BitSet, U, Set[U]] =
-    new CanBuildFrom[java.util.BitSet, U, Set[U]] {
-      def apply(from: BitSet): mutable.Builder[U, Set[U]] = Set.newBuilder[U]
+  implicit def _bitsetcbf[U]: BuildFrom[java.util.BitSet, U, Set[U]] =
+    new BuildFrom[java.util.BitSet, U, Set[U]] {
+      override def fromSpecific(from: java.util.BitSet)(it: IterableOnce[U]): Set[U] = Set.empty[U] ++ it
+      override def newBuilder(from: java.util.BitSet): mutable.Builder[U, Set[U]] = Set.newBuilder
+
       def apply(): mutable.Builder[U, Set[U]] = Set.newBuilder[U]
     }
 
   implicit class AwesomeScalaBitSet(val bs: scala.collection.BitSet) extends AnyVal {
-    def toJavaBitSet = {
+    def toJavaBitSet: java.util.BitSet = {
       val jbs = new java.util.BitSet(bs.lastOption.getOrElse(0) + 1)
       bs.foreach(jbs.set(_))
       jbs

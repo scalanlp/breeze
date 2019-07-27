@@ -33,7 +33,7 @@ class HashVector[@spec(Double, Int, Float, Long) E](val array: OpenAddressHashAr
 
   def apply(i: Int): E = array(i)
 
-  def update(i: Int, v: E) {
+  def update(i: Int, v: E): Unit = {
     array(i) = v
   }
 

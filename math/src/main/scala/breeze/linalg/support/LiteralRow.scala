@@ -25,13 +25,13 @@ import breeze.macros.arityize
  * @author dramage
  */
 trait LiteralRow[R, @specialized V] {
-  def foreach[X](row: R, fn: ((Int, V) => X))
+  def foreach[X](row: R, fn: (Int, V) => X): Unit
   def length(row: R): Int
 }
 
 object LiteralRow {
   implicit def array[V]: LiteralRow[Array[V], V] = new LiteralRow[Array[V], V] {
-    def foreach[X](arr: Array[V], fn: ((Int, V) => X)) = {
+    def foreach[X](arr: Array[V], fn: (Int, V) => X): Unit = {
       for (i <- 0 until arr.length) {
         fn(i, arr(i))
       }
@@ -41,7 +41,7 @@ object LiteralRow {
   }
 
   implicit def dv[V]: LiteralRow[DenseVector[V], V] = new LiteralRow[DenseVector[V], V] {
-    def foreach[X](arr: DenseVector[V], fn: ((Int, V) => X)) = {
+    def foreach[X](arr: DenseVector[V], fn: (Int, V) => X): Unit = {
       for (i <- 0 until arr.length) {
         fn(i, arr(i))
       }
@@ -51,7 +51,7 @@ object LiteralRow {
   }
 
   implicit def seq[V, S](implicit ev: S <:< Seq[V]): LiteralRow[S, V] = new LiteralRow[S, V] {
-    def foreach[X](arr: S, fn: ((Int, V) => X)) = {
+    def foreach[X](arr: S, fn: ((Int, V) => X)): Unit = {
       for (i <- 0 until arr.length) {
         fn(i, arr(i))
       }

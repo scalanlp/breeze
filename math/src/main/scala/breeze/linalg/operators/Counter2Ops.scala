@@ -28,7 +28,7 @@ trait Counter2Ops {
   implicit def addIntoVV[K1, K2, V: Semiring]: OpAdd.InPlaceImpl2[Counter2[K1, K2, V], Counter2[K1, K2, V]] = {
     new OpAdd.InPlaceImpl2[Counter2[K1, K2, V], Counter2[K1, K2, V]] {
       val field = implicitly[Semiring[V]]
-      def apply(a: Counter2[K1, K2, V], b: Counter2[K1, K2, V]) {
+      def apply(a: Counter2[K1, K2, V], b: Counter2[K1, K2, V]): Unit = {
         for ((k, v) <- b.activeIterator) {
           a(k) = field.+(a(k), v)
         }
@@ -39,7 +39,7 @@ trait Counter2Ops {
   implicit def canAxpy[K1, K2, V: Semiring]: scaleAdd.InPlaceImpl3[Counter2[K1, K2, V], V, Counter2[K1, K2, V]] = {
     new scaleAdd.InPlaceImpl3[Counter2[K1, K2, V], V, Counter2[K1, K2, V]] {
       val field = implicitly[Semiring[V]]
-      def apply(a: Counter2[K1, K2, V], s: V, b: Counter2[K1, K2, V]) {
+      def apply(a: Counter2[K1, K2, V], s: V, b: Counter2[K1, K2, V]): Unit = {
         for ((k, v) <- b.activeIterator) {
           a(k) = field.+(a(k), field.*(s, v))
         }
@@ -55,7 +55,7 @@ trait Counter2Ops {
   implicit def addIntoVS[K1, K2, V: Semiring]: OpAdd.InPlaceImpl2[Counter2[K1, K2, V], V] =
     new OpAdd.InPlaceImpl2[Counter2[K1, K2, V], V] {
       val field = implicitly[Semiring[V]]
-      def apply(a: Counter2[K1, K2, V], b: V) {
+      def apply(a: Counter2[K1, K2, V], b: V): Unit = {
         for ((k, v) <- a.activeIterator) {
           a(k) = field.+(v, b)
         }
@@ -69,7 +69,7 @@ trait Counter2Ops {
   implicit def subIntoVV[K1, K2, V: Ring]: OpSub.InPlaceImpl2[Counter2[K1, K2, V], Counter2[K1, K2, V]] =
     new OpSub.InPlaceImpl2[Counter2[K1, K2, V], Counter2[K1, K2, V]] {
       val field = implicitly[Ring[V]]
-      def apply(a: Counter2[K1, K2, V], b: Counter2[K1, K2, V]) {
+      def apply(a: Counter2[K1, K2, V], b: Counter2[K1, K2, V]): Unit = {
         for ((k, v) <- b.activeIterator) {
           a(k) = field.-(a(k), v)
         }
@@ -84,7 +84,7 @@ trait Counter2Ops {
   implicit def subIntoVS[K1, K2, V: Ring]: OpSub.InPlaceImpl2[Counter2[K1, K2, V], V] =
     new OpSub.InPlaceImpl2[Counter2[K1, K2, V], V] {
       val field = implicitly[Ring[V]]
-      def apply(a: Counter2[K1, K2, V], b: V) {
+      def apply(a: Counter2[K1, K2, V], b: V): Unit = {
         for ((k, v) <- a.activeIterator) {
           a(k) = field.-(v, b)
         }
@@ -98,7 +98,7 @@ trait Counter2Ops {
   implicit def canMulIntoVV[K1, K2, V: Semiring]: OpMulScalar.InPlaceImpl2[Counter2[K1, K2, V], Counter2[K1, K2, V]] =
     new OpMulScalar.InPlaceImpl2[Counter2[K1, K2, V], Counter2[K1, K2, V]] {
       val field = implicitly[Semiring[V]]
-      def apply(a: Counter2[K1, K2, V], b: Counter2[K1, K2, V]) {
+      def apply(a: Counter2[K1, K2, V], b: Counter2[K1, K2, V]): Unit = {
         for ((k, v) <- a.activeIterator) {
           a(k) = field.*(v, b(k))
         }
@@ -123,7 +123,7 @@ trait Counter2Ops {
   implicit def canMulIntoVS[K1, K2, V: Semiring]: OpMulScalar.InPlaceImpl2[Counter2[K1, K2, V], V] =
     new OpMulScalar.InPlaceImpl2[Counter2[K1, K2, V], V] {
       val field = implicitly[Semiring[V]]
-      def apply(a: Counter2[K1, K2, V], b: V) {
+      def apply(a: Counter2[K1, K2, V], b: V): Unit = {
         for ((k, v) <- a.activeIterator) {
           a(k) = field.*(v, b)
         }
@@ -133,7 +133,7 @@ trait Counter2Ops {
   implicit def canMulIntoVS_M[K1, K2, V: Semiring]: OpMulMatrix.InPlaceImpl2[Counter2[K1, K2, V], V] =
     new OpMulMatrix.InPlaceImpl2[Counter2[K1, K2, V], V] {
       val field = implicitly[Semiring[V]]
-      def apply(a: Counter2[K1, K2, V], b: V) {
+      def apply(a: Counter2[K1, K2, V], b: V): Unit = {
         for ((k, v) <- a.activeIterator) {
           a(k) = field.*(v, b)
         }
@@ -171,7 +171,7 @@ trait Counter2Ops {
   implicit def canDivIntoVV[K1, K2, V: Field]: OpDiv.InPlaceImpl2[Counter2[K1, K2, V], Counter2[K1, K2, V]] = {
     new OpDiv.InPlaceImpl2[Counter2[K1, K2, V], Counter2[K1, K2, V]] {
       val field = implicitly[Field[V]]
-      def apply(a: Counter2[K1, K2, V], b: Counter2[K1, K2, V]) {
+      def apply(a: Counter2[K1, K2, V], b: Counter2[K1, K2, V]): Unit = {
         for ((k, v) <- a.activeIterator) {
           a(k) = field./(v, b(k))
         }
@@ -212,7 +212,7 @@ trait Counter2Ops {
   implicit def canDivIntoVS[K1, K2, V: Field]: OpDiv.InPlaceImpl2[Counter2[K1, K2, V], V] =
     new OpDiv.InPlaceImpl2[Counter2[K1, K2, V], V] {
       val field = implicitly[Field[V]]
-      def apply(a: Counter2[K1, K2, V], b: V) {
+      def apply(a: Counter2[K1, K2, V], b: V): Unit = {
         for ((k, v) <- a.activeIterator) {
           a(k) = field./(v, b)
         }
@@ -221,7 +221,7 @@ trait Counter2Ops {
 
   implicit def canSetIntoVV[K1, K2, V]: OpSet.InPlaceImpl2[Counter2[K1, K2, V], Counter2[K1, K2, V]] =
     new OpSet.InPlaceImpl2[Counter2[K1, K2, V], Counter2[K1, K2, V]] {
-      def apply(a: Counter2[K1, K2, V], b: Counter2[K1, K2, V]) {
+      def apply(a: Counter2[K1, K2, V], b: Counter2[K1, K2, V]): Unit = {
         a.data.clear()
         for ((k, v) <- b.activeIterator) {
           a(k) = v
@@ -231,7 +231,7 @@ trait Counter2Ops {
 
   implicit def canSetIntoVS[K1, K2, V]: OpSet.InPlaceImpl2[Counter2[K1, K2, V], V] =
     new OpSet.InPlaceImpl2[Counter2[K1, K2, V], V] {
-      def apply(a: Counter2[K1, K2, V], b: V) {
+      def apply(a: Counter2[K1, K2, V], b: V): Unit = {
         for (k <- a.keysIterator) {
           a(k) = b
         }

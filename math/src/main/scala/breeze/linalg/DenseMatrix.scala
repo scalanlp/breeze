@@ -23,7 +23,7 @@ import breeze.linalg.support._
 import breeze.math._
 import breeze.storage.Zero
 import breeze.storage.Zero._
-import breeze.util.ArrayUtil
+import breeze.util.{ArrayUtil, ReflectionUtil}
 import spire.syntax.cfor._
 
 import scala.collection.mutable.ArrayBuffer
@@ -103,10 +103,10 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](
   def apply(row: Int, col: Int) = {
     if (row < -rows || row >= rows)
       throw new IndexOutOfBoundsException(
-        (row, col) + " not in [-" + rows + "," + rows + ") x [-" + cols + "," + cols + ")")
+        s"${(row, col)} not in [-$rows,$rows) x [-$cols,$cols)")
     if (col < -cols || col >= cols)
       throw new IndexOutOfBoundsException(
-        (row, col) + " not in [-" + rows + "," + rows + ") x [-" + cols + "," + cols + ")")
+        s"${(row, col)} not in [-$rows,$rows) x [-$cols,$cols)")
     val trueRow = if (row < 0) row + rows else row
     val trueCol = if (col < 0) col + cols else col
     data(linearIndex(trueRow, trueCol))
@@ -136,10 +136,10 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](
   def update(row: Int, col: Int, v: V): Unit = {
     if (row < -rows || row >= rows)
       throw new IndexOutOfBoundsException(
-        (row, col) + " not in [-" + rows + "," + rows + ") x [-" + cols + "," + cols + ")")
+        s"${(row, col)} not in [-$rows,$rows) x [-$cols,$cols)")
     if (col < -cols || col >= cols)
       throw new IndexOutOfBoundsException(
-        (row, col) + " not in [-" + rows + "," + rows + ") x [-" + cols + "," + cols + ")")
+        s"${(row, col)} not in [-$rows,$rows) x [-$cols,$cols)")
     val trueRow = if (row < 0) row + rows else row
     val trueCol = if (col < 0) col + cols else col
     data(linearIndex(trueRow, trueCol)) = v
@@ -268,7 +268,7 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](
   private implicit def dontNeedZero[V]: Zero[V] = null.asInstanceOf[Zero[V]]
 
   def delete(row: Int, axis: Axis._0.type): DenseMatrix[V] = {
-    implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+    implicit val man = ReflectionUtil.elemClassTagFromArray(data)
     require(row >= 0 && row < rows, s"row $row is not in bounds: [0, $rows)")
     if (row == 0) this(1 until rows, ::).copy
     else if (row == rows - 1) this(0 until rows - 1, ::).copy
@@ -276,7 +276,7 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](
   }
 
   def delete(col: Int, axis: Axis._1.type): DenseMatrix[V] = {
-    implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+    implicit val man = ReflectionUtil.elemClassTagFromArray(data)
     require(col >= 0 && col < cols, s"col $col is not in bounds: [0, $cols)")
     if (col == 0) this(::, 1 until cols).copy
     else if (col == cols - 1) this(::, 0 until cols - 1).copy
@@ -284,14 +284,14 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](
   }
 
   def delete(rows: Seq[Int], axis: Axis._0.type): DenseMatrix[V] = {
-    implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+    implicit val man = ReflectionUtil.elemClassTagFromArray(data)
     if (rows.isEmpty) copy
     else if (rows.size == 1) delete(rows(0), axis)
     else {
       val sorted = rows.sorted
       require(sorted.head >= 0 && sorted.last < this.rows, s"row $rows are not in bounds: [0, ${this.rows})")
       var last = 0
-      val matrices = ArrayBuffer[DenseMatrix[V]]()
+      val matrices = breeze.collection.compat.arraySeqBuilder[DenseMatrix[V]]
       for (index <- sorted) {
         assert(index >= last)
         if (index != last) {
@@ -302,19 +302,19 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](
       if (last != this.rows) {
         matrices += this(last until this.rows, ::)
       }
-      DenseMatrix.vertcat(matrices: _*)
+      DenseMatrix.vertcat(matrices.result(): _*)
     }
   }
 
   def delete(cols: Seq[Int], axis: Axis._1.type): DenseMatrix[V] = {
-    implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+    implicit val man = ReflectionUtil.elemClassTagFromArray(data)
     if (cols.isEmpty) copy
     else if (cols.size == 1) delete(cols(0), axis)
     else {
       val sorted = cols.sorted
       require(sorted.head >= 0 && sorted.last < this.cols, s"col $cols are not in bounds: [0, ${this.cols})")
       var last = 0
-      val matrices = ArrayBuffer[DenseMatrix[V]]()
+      val matrices = breeze.collection.compat.arraySeqBuilder[DenseMatrix[V]]
       for (index <- sorted) {
         assert(index >= last)
         if (index != last) {
@@ -325,7 +325,7 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](
       if (last != this.cols) {
         matrices += this(::, last until this.cols)
       }
-      DenseMatrix.horzcat(matrices: _*)
+      DenseMatrix.horzcat(matrices.result(): _*)
     }
   }
 
@@ -757,7 +757,7 @@ object DenseMatrix
 
   implicit def canTransformValues[@specialized(Int, Float, Double) V]: CanTransformValues[DenseMatrix[V], V] = {
     new CanTransformValues[DenseMatrix[V], V] {
-      def transform(from: DenseMatrix[V], fn: (V) => V) {
+      def transform(from: DenseMatrix[V], fn: (V) => V): Unit = {
         if (from.isContiguous) {
           val d = from.data
           cforRange(from.offset until from.offset + from.size) { j =>
@@ -780,7 +780,7 @@ object DenseMatrix
         }
       }
 
-      def transformActive(from: DenseMatrix[V], fn: (V) => V) {
+      def transformActive(from: DenseMatrix[V], fn: (V) => V): Unit = {
         transform(from, fn)
       }
     }
@@ -990,7 +990,7 @@ object DenseMatrix
    */
   implicit def canTraverseCols[V]: CanTraverseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]] = {
     new CanTraverseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]] {
-      def apply[A](from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => A) {
+      def apply[A](from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => A): Unit = {
         cforRange(0 until from.cols) { c =>
           f(from(::, c))
         }
@@ -1005,7 +1005,7 @@ object DenseMatrix
    */
   implicit def canTraverseRows[V]: CanTraverseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]] = {
     new CanTraverseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]] {
-      def apply[A](from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => A) {
+      def apply[A](from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => A): Unit = {
         val t = from.t
         cforRange(0 until from.rows) { r =>
           f(t(::, r))
@@ -1114,7 +1114,7 @@ object DenseMatrix
   implicit def canGaxpy[V: Semiring]: scaleAdd.InPlaceImpl3[DenseMatrix[V], V, DenseMatrix[V]] = {
     new scaleAdd.InPlaceImpl3[DenseMatrix[V], V, DenseMatrix[V]] {
       val ring = implicitly[Semiring[V]]
-      def apply(a: DenseMatrix[V], s: V, b: DenseMatrix[V]) {
+      def apply(a: DenseMatrix[V], s: V, b: DenseMatrix[V]): Unit = {
         require(a.rows == b.rows, "Vector row dimensions must match!")
         require(a.cols == b.cols, "Vector col dimensions must match!")
 

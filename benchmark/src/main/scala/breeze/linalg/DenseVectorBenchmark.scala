@@ -47,20 +47,20 @@ trait BuildsRandomVectors {
 }
 
 class DenseVectorBenchmark extends BreezeBenchmark with BuildsRandomVectors {
-  def timeAllocate(reps: Int) = run(reps) {
+  def timeAllocate(reps: Int) = run(reps): Unit = {
     DenseVector.zeros[Double](1024)
   }
-  def timeFill(reps: Int) = run(reps) {
+  def timeFill(reps: Int) = run(reps): Unit = {
     DenseVector.fill[Double](1024, 23)
   }
 
-  def timeForeach(reps: Int) = runWith(reps, randomArray(4000)) { arr =>
+  def timeForeach(reps: Int) = runWith(reps, randomArray(4000)): Unit = { arr =>
     var sum = 0.0
     arr.foreach(sum += _)
     sum
   }
 
-  def timeLoop(reps: Int) = runWith(reps, randomArray(4000)) { arr =>
+  def timeLoop(reps: Int) = runWith(reps, randomArray(4000)): Unit = { arr =>
     var sum = 0.0
     val d = arr.data
     cforRange(0 until arr.length) { i =>

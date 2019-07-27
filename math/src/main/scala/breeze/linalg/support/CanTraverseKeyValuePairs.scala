@@ -35,7 +35,7 @@ trait CanTraverseKeyValuePairs[From, K, A] {
 object CanTraverseKeyValuePairs {
 
   trait KeyValuePairsVisitor[@specialized(Int) K, @specialized A] {
-    def visit(k: K, a: A)
+    def visit(k: K, a: A): Unit
     def visitArray(indices: Int => K, arr: Array[A]): Unit = visitArray(indices, arr, 0, arr.length, 1)
 
     def visitArray(indices: Int => K, arr: Array[A], offset: Int, length: Int, stride: Int): Unit = {
@@ -45,7 +45,7 @@ object CanTraverseKeyValuePairs {
         i += 1
       }
     }
-    def zeros(numZero: Int, zeroKeys: Iterator[K], zeroValue: A)
+    def zeros(numZero: Int, zeroKeys: Iterator[K], zeroValue: A): Unit
   }
 
   //

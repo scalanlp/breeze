@@ -250,7 +250,7 @@ object NonlinearMinimizer {
     }
   }
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     if (args.length < 3) {
       println("Usage: ProjectedQuasiNewton n lambda beta")
       println(

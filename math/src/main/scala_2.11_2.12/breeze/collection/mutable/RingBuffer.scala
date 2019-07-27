@@ -2,9 +2,9 @@ package breeze.collection.mutable
 
 import breeze.util.ReflectionUtil
 
-import scala.collection.mutable._
 import scala.collection.generic._
 import scala.collection.mutable
+import scala.collection.mutable._
 import scala.reflect.ClassTag
 
 // https://en.wikipedia.org/wiki/Circular_buffer

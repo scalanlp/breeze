@@ -103,20 +103,22 @@ object CanHaarTr {
   implicit val dmDouble1FHT: CanHaarTr[DenseMatrix[Double], DenseMatrix[Double]] = {
     new CanHaarTr[DenseMatrix[Double], DenseMatrix[Double]] {
       def apply(m: DenseMatrix[Double]) = {
-        def _fht(m: DenseMatrix[Double], limit: Int): Unit = if (limit > 1) {
-          for (c <- 0 until limit) {
-            val p = m(::, c).slice(0, limit).toArray.grouped(2).toArray
-            val v = p.map(e => (e(0) + e(1)) * nFactor) ++ p.map(e => (e(0) - e(1)) * nFactor)
-            for (r <- 0 until limit) m(r, c) = v(r)
+        def _fht(m: DenseMatrix[Double], limit: Int): Unit = {
+          if (limit > 1) {
+            for (c <- 0 until limit) {
+              val p = m(::, c).slice(0, limit).toArray.grouped(2).toArray
+              val v = p.map(e => (e(0) + e(1)) * nFactor) ++ p.map(e => (e(0) - e(1)) * nFactor)
+              for (r <- 0 until limit) m(r, c) = v(r)
+            }
+            for (r <- 0 until limit) {
+              // m(r, ::).t(::, 0) is the same as m.t(::, r)
+              // dv.slice(0,limit) is the same as dv(0 until limit)
+              val p = m.t(0 until limit, r).toArray.grouped(2).toArray
+              val v = p.map(e => (e(0) + e(1)) * nFactor) ++ p.map(e => (e(0) - e(1)) * nFactor)
+              for (c <- 0 until limit) m(r, c) = v(c)
+            }
+            _fht(m, limit / 2)
           }
-          for (r <- 0 until limit) {
-            // m(r, ::).t(::, 0) is the same as m.t(::, r)
-            // dv.slice(0,limit) is the same as dv(0 until limit)
-            val p = m.t(0 until limit, r).toArray.grouped(2).toArray
-            val v = p.map(e => (e(0) + e(1)) * nFactor) ++ p.map(e => (e(0) - e(1)) * nFactor)
-            for (c <- 0 until limit) m(r, c) = v(c)
-          }
-          _fht(m, limit / 2)
         }
 
         val v = squareMatrix(m)

@@ -54,7 +54,7 @@ object ExportGraphics {
    * Writes the given drawable to the given OutputStream at the given dpi,
    * formatted as png.
    */
-  def writePNG(out: OutputStream, draw: Drawable, width: Int, height: Int, dpi: Int = 72) {
+  def writePNG(out: OutputStream, draw: Drawable, width: Int, height: Int, dpi: Int = 72): Unit = {
     import javax.imageio.ImageIO
     import java.awt.image.BufferedImage
 
@@ -75,7 +75,7 @@ object ExportGraphics {
   /**
    * Writes the given drawable to the given OutputStream formatted as eps.
    */
-  def writeEPS(out: OutputStream, draw: Drawable, width: Int, height: Int) {
+  def writeEPS(out: OutputStream, draw: Drawable, width: Int, height: Int): Unit = {
     import org.apache.xmlgraphics.java2d.ps.EPSDocumentGraphics2D
     import org.apache.xmlgraphics.java2d.GraphicContext
 
@@ -90,7 +90,7 @@ object ExportGraphics {
    * Writes the given drawable to the given OutputStream formatted as pdf.
    * Contributed by Robby McKilliam.
    */
-  def writePDF(out: OutputStream, draw: Drawable, width: Int, height: Int) {
+  def writePDF(out: OutputStream, draw: Drawable, width: Int, height: Int): Unit = {
     import com.lowagie.text.Document
     import com.lowagie.text.Rectangle
     import com.lowagie.text.pdf.PdfWriter
@@ -119,7 +119,7 @@ object ExportGraphics {
 //  /**
 //   * Writes the given drawable to the given OutputStream formatted as svg.
 //   */
-//  def writeSVG(out : OutputStream, draw : Drawable, width : Int, height : Int) {
+//  def writeSVG(out : OutputStream, draw : Drawable, width : Int, height : Int): Unit = {
 //    import org.apache.batik.svggen.SVGGraphics2D
 //    import org.apache.batik.dom.GenericDOMImplementation
 //    import org.w3c.dom.Document

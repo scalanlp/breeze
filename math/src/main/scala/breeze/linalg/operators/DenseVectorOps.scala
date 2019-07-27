@@ -291,7 +291,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 
   @expand
   @expand.valify
-  implicit def canDot_DV_DV[@expand.args(Int, Long) T](implicit @expand.sequence[T](0, 0l) zero: T)
+  implicit def canDot_DV_DV[@expand.args(Int, Long) T](implicit @expand.sequence[T](0, 0L) zero: T)
     : breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], DenseVector[T], T] = {
     new breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], DenseVector[T], T] {
       def apply(a: DenseVector[T], b: DenseVector[T]) = {
@@ -320,7 +320,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   @expand
   @expand.valify
   implicit def canDot_DV_V[@expand.args(Int, Double, Float, Long) T](
-      implicit @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T)
+      implicit @expand.sequence[T](0, 0.0, 0.0f, 0L) zero: T)
     : breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], Vector[T], T] = {
     new breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], Vector[T], T] {
       def apply(a: DenseVector[T], b: Vector[T]) = {
@@ -353,7 +353,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
         require(v2.length == v1.length, "vector length mismatch")
         val n = v1.length
         new ZippedValues[T, T] {
-          def foreach(fn: (T, T) => Unit) {
+          def foreach(fn: (T, T) => Unit): Unit = {
             if (v1.stride == 1 && v2.stride == 1) {
               val data1 = v1.data
               val offset1 = v1.offset
@@ -394,7 +394,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   implicit def axpy[V: Semiring: ClassTag]: scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] = {
     new scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] {
       val sr = implicitly[Semiring[V]]
-      def apply(a: DenseVector[V], s: V, b: DenseVector[V]) {
+      def apply(a: DenseVector[V], s: V, b: DenseVector[V]): Unit = {
         require(b.length == a.length, "Vectors must be the same length!")
         val ad = a.data
         val bd = b.data
@@ -418,7 +418,7 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   implicit def axpy[@expand.args(Int, Double, Float, Long) V]
     : scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] = {
     new scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] {
-      def apply(y: DenseVector[V], s: V, x: DenseVector[V]) {
+      def apply(y: DenseVector[V], s: V, x: DenseVector[V]): Unit = {
         require(x.length == y.length, "Vectors must be the same length!")
         if (x.noOffsetOrStride && y.noOffsetOrStride) {
           val ad = x.data
@@ -594,7 +594,7 @@ trait DenseVector_SpecialOps extends DenseVectorOps { this: DenseVector.type =>
   implicit object canSaxpy
       extends scaleAdd.InPlaceImpl3[DenseVector[Float], Float, DenseVector[Float]]
       with Serializable {
-    def apply(y: DenseVector[Float], a: Float, x: DenseVector[Float]) {
+    def apply(y: DenseVector[Float], a: Float, x: DenseVector[Float]): Unit = {
       require(x.length == y.length, s"Vectors must have same length")
       // using blas here is always a bad idea.
       if (x.noOffsetOrStride && y.noOffsetOrStride) {

@@ -136,9 +136,9 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring { this: CSCMatrix.type =>
   @expand.valify
   implicit def csc_csc_BadOps[@expand.args(Int, Double, Float, Long) T, @expand.args(OpPow, OpDiv, OpMod) Op <: OpType](
       implicit @expand.sequence[Op]({ _.pow(_) }, { _ / _ }, { _ % _ }) op: Op.Impl2[T, T, T],
-      @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T): Op.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] = {
+      @expand.sequence[T](0, 0.0, 0.0f, 0L) zero: T): Op.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] = {
     val mZero = implicitly[T](zero)
-    def computeZeroOpOnRange(arr: Array[T], start: Int, end: Int) {
+    def computeZeroOpOnRange(arr: Array[T], start: Int, end: Int): Unit = {
       var i = start
       while (i < end) {
         arr(i) = op(arr(i), mZero)
@@ -203,7 +203,7 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring { this: CSCMatrix.type =>
   @expand
   @expand.valify
   implicit def csc_csc_OpAdd[@expand.args(Int, Double, Float, Long) T](
-      implicit @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T): OpAdd.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] = {
+      implicit @expand.sequence[T](0, 0.0, 0.0f, 0L) zero: T): OpAdd.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] = {
     new OpAdd.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] {
       def apply(a: CSCMatrix[T], b: CSCMatrix[T]): CSCMatrix[T] = {
         require(a.rows == b.rows, "Matrix dimensions must match")
@@ -434,7 +434,7 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring { this: CSCMatrix.type =>
   @expand
   @expand.valify
   implicit def csc_csc_OpMulScalar[@expand.args(Int, Double, Float, Long) T](
-      implicit @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T)
+      implicit @expand.sequence[T](0, 0.0, 0.0f, 0L) zero: T)
     : OpMulScalar.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] = {
     new OpMulScalar.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] {
       def apply(a: CSCMatrix[T], b: CSCMatrix[T]): CSCMatrix[T] = {
@@ -486,7 +486,7 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring { this: CSCMatrix.type =>
   @expand
   @expand.valify
   implicit def csc_csc_OpSub[@expand.args(Int, Double, Float, Long) T](
-      implicit @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T): OpSub.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] = {
+      implicit @expand.sequence[T](0, 0.0, 0.0f, 0L) zero: T): OpSub.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] = {
     new OpSub.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] {
       def apply(a: CSCMatrix[T], b: CSCMatrix[T]): CSCMatrix[T] = {
         require(a.rows == b.rows, "Matrix dimensions must match")
@@ -544,7 +544,7 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring { this: CSCMatrix.type =>
   implicit def implOps_CSCT_T_eq_CSCT[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpMulScalar, OpMulMatrix) Op <: OpType](
-      implicit @expand.sequence[T](0, 0.0, 0.0f, 0l) zero: T): Op.Impl2[CSCMatrix[T], T, CSCMatrix[T]] = {
+      implicit @expand.sequence[T](0, 0.0, 0.0f, 0L) zero: T): Op.Impl2[CSCMatrix[T], T, CSCMatrix[T]] = {
     new Op.Impl2[CSCMatrix[T], T, CSCMatrix[T]] {
       def apply(a: CSCMatrix[T], b: T): CSCMatrix[T] = {
         if (b == zero)
@@ -809,7 +809,7 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring { this: CSCMatrix.type =>
   protected def updateFromPure[T, Op <: OpType, Other](
       implicit op: UFunc.UImpl2[Op, CSCMatrix[T], Other, CSCMatrix[T]]): UFunc.InPlaceImpl2[Op, CSCMatrix[T], Other] = {
     new UFunc.InPlaceImpl2[Op, CSCMatrix[T], Other] {
-      def apply(a: CSCMatrix[T], b: Other) {
+      def apply(a: CSCMatrix[T], b: Other): Unit = {
         val result = op(a, b)
         a.use(result.data, result.colPtrs, result.rowIndices, result.activeSize)
       }
@@ -1472,7 +1472,7 @@ trait CSCMatrixOps_Ring extends CSCMatrixOpsLowPrio with SerializableLogging {
       implicit @expand.sequence[Op]({ f./(_, _) }, { f.%(_, _) }, { f.pow(_, _) }) op: Op.Impl2[T, T, T])
     : Op.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]] = {
     val f = implicitly[Field[T]]
-    def computeZeroOpOnRange(arr: Array[T], start: Int, end: Int) {
+    def computeZeroOpOnRange(arr: Array[T], start: Int, end: Int): Unit = {
       var i = start
       while (i < end) {
         arr(i) = op(arr(i), f.zero)
@@ -1551,7 +1551,7 @@ trait CSCMatrixOps_Ring extends CSCMatrixOpsLowPrio with SerializableLogging {
   protected def updateFromPure_CSC_T[T, Op <: OpType, Other](
       implicit op: UFunc.UImpl2[Op, CSCMatrix[T], Other, CSCMatrix[T]]): UFunc.InPlaceImpl2[Op, CSCMatrix[T], Other] = {
     new UFunc.InPlaceImpl2[Op, CSCMatrix[T], Other] {
-      def apply(a: CSCMatrix[T], b: Other) {
+      def apply(a: CSCMatrix[T], b: Other): Unit = {
         val result = op(a, b)
         a.use(result.data, result.colPtrs, result.rowIndices, result.activeSize)
       }
@@ -1561,7 +1561,7 @@ trait CSCMatrixOps_Ring extends CSCMatrixOpsLowPrio with SerializableLogging {
       implicit op: UFunc.UImpl2[Op, CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]])
     : UFunc.InPlaceImpl2[Op, CSCMatrix[T], CSCMatrix[T]] = {
     new UFunc.InPlaceImpl2[Op, CSCMatrix[T], CSCMatrix[T]] {
-      def apply(a: CSCMatrix[T], b: CSCMatrix[T]) {
+      def apply(a: CSCMatrix[T], b: CSCMatrix[T]): Unit = {
         val result = op(a, b)
         a.use(result.data, result.colPtrs, result.rowIndices, result.activeSize)
       }

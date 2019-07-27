@@ -47,21 +47,23 @@ object CanIHaarTr {
   implicit val dmDouble2IFHT: CanIHaarTr[DenseMatrix[Double], DenseMatrix[Double]] = {
     new CanIHaarTr[DenseMatrix[Double], DenseMatrix[Double]] {
       def apply(m: DenseMatrix[Double]) = {
-        def _ifht(m: DenseMatrix[Double], limit: Int): Unit = if (limit > 1) {
-          // inverse the upper left first
-          val hs = limit / 2
-          _ifht(m, hs)
-          for (r <- 0 until limit) {
-            val rv = m.t(0 until limit, r).toArray
-            val x = rv.slice(0, hs).zip(rv.slice(hs, limit)).toList
-            val v = x.map(e => List((e._1 + e._2) * nFactor, (e._1 - e._2) * nFactor)).flatten.toArray
-            for (c <- 0 until limit) m(r, c) = v(c)
-          }
-          for (c <- 0 until limit) {
-            val cv = m(0 until limit, c).toArray
-            val x = cv.slice(0, hs).zip(cv.slice(hs, limit)).toList
-            val v = x.map(e => List((e._1 + e._2) * nFactor, (e._1 - e._2) * nFactor)).flatten.toArray
-            for (r <- 0 until limit) m(r, c) = v(r)
+        def _ifht(m: DenseMatrix[Double], limit: Int): Unit = {
+          if (limit > 1) {
+            // inverse the upper left first
+            val hs = limit / 2
+            _ifht(m, hs)
+            for (r <- 0 until limit) {
+              val rv = m.t(0 until limit, r).toArray
+              val x = rv.slice(0, hs).zip(rv.slice(hs, limit)).toList
+              val v = x.map(e => List((e._1 + e._2) * nFactor, (e._1 - e._2) * nFactor)).flatten.toArray
+              for (c <- 0 until limit) m(r, c) = v(c)
+            }
+            for (c <- 0 until limit) {
+              val cv = m(0 until limit, c).toArray
+              val x = cv.slice(0, hs).zip(cv.slice(hs, limit)).toList
+              val v = x.map(e => List((e._1 + e._2) * nFactor, (e._1 - e._2) * nFactor)).flatten.toArray
+              for (r <- 0 until limit) m(r, c) = v(r)
+            }
           }
         }
         val r = m.copy

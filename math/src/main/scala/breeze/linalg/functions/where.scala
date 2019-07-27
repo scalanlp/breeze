@@ -34,7 +34,7 @@ object where extends UFunc {
           }
         )
 
-        result
+        result.toIndexedSeq
       }
     }
   }

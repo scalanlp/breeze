@@ -16,14 +16,14 @@ package breeze.stats.distributions
  limitations under the License.
  */
 
-import scala.collection.mutable.ArrayBuffer
-import collection.TraversableLike
-import collection.generic.CanBuildFrom
+import java.util.concurrent.atomic.AtomicInteger
+
 import breeze.linalg.DenseVector
 import org.apache.commons.math3.random.{MersenneTwister, RandomGenerator}
-import java.util.concurrent.atomic.AtomicInteger
-import scala.reflect.ClassTag
 import spire.implicits.cfor
+
+import scala.collection.mutable.ArrayBuffer
+import scala.reflect.ClassTag
 
 /**
  * A trait for monadic distributions. Provides support for use in for-comprehensions
@@ -226,12 +226,6 @@ class RandBasis(val generator: RandomGenerator) extends Serializable {
   }
 
   /**
-   * Convert a Collection of Rand[T] into a Rand[Collection[T]]
-   */
-  def promote[T, CC[X] <: Traversable[X] with TraversableLike[X, CC[X]]](col: CC[Rand[T]])(
-      implicit cbf: CanBuildFrom[CC[Rand[T]], T, CC[T]]): Rand[CC[T]] = fromBody(col.map(_.get))
-
-  /**
    * Convert an Seq of Rand[T] into a Rand[Seq[T]]
    */
   def promote[U](col: Seq[Rand[U]]) = fromBody(col.map(_.get))
@@ -325,7 +319,7 @@ class RandBasis(val generator: RandomGenerator) extends Serializable {
         arr(i) = arr(k)
         arr(k) = tmp
       }
-      arr
+      arr.toIndexedSeq
     }
   }
 
@@ -343,7 +337,7 @@ class RandBasis(val generator: RandomGenerator) extends Serializable {
         arr(k) = temp
         i += 1
       }
-      arr.take(n).map(set)
+      arr.take(n).toIndexedSeq.map(set)
     }
   }
 }
