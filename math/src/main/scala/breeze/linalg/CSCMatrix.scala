@@ -473,8 +473,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps with Se
       vs.sizeHint(nnz)
     }
 
-    if (!ScalaVersion.is213) // TODO: this causes nondeterministic NPEs that I can't minimize in 2.13
-      sizeHint(initNnz)
+    sizeHint(initNnz)
 
     def result: CSCMatrix[T] = result(false, false)
 
