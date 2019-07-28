@@ -2,8 +2,7 @@
 
 Breeze is a library for numerical processing. It aims to be generic, clean, and powerful without sacrificing (much) efficiency.
 
-The current snapshot version is 0.13-0598e003cfa7f00f76919aa556009ad6d4fc1332. The latest release is 0.13.2, which is cross-built against Scala 2.10.x, 2.11.x and 2.12.x.
-
+The latest release is 1.0, which is cross-built against Scala 2.11, 2.12, and 2.13.
 
 ## Documentation
 
@@ -17,52 +16,29 @@ The current snapshot version is 0.13-0598e003cfa7f00f76919aa556009ad6d4fc1332. T
 
 ### Building it yourself
 
-This project can be built with SBT 0.13.x.
+This project can be built with SBT 1.2+
 
 ### SBT
 
-For SBT 0.13.x and last stable release 0.13.2, add these lines to your SBT project definition:
+For SBT, add these lines to your SBT project definition:
 
 ```scala
 libraryDependencies  ++= Seq(
   // Last stable release
-  "org.scalanlp" %% "breeze" % "0.13.2",
+  "org.scalanlp" %% "breeze" % "1.0",
   
-  // Native libraries are not included by default. add this if you want them (as of 0.7)
+  // Native libraries are not included by default. add this if you want them
   // Native libraries greatly improve performance, but increase jar sizes. 
   // It also packages various blas implementations, which have licenses that may or may not
   // be compatible with the Apache License. No GPL code, as best I know.
-  "org.scalanlp" %% "breeze-natives" % "0.13.2",
+  "org.scalanlp" %% "breeze-natives" % "1.0",
   
   // The visualization library is distributed separately as well.
   // It depends on LGPL code
-  "org.scalanlp" %% "breeze-viz" % "0.13.2"
+  "org.scalanlp" %% "breeze-viz" % "1.0"
 )
 
 
-resolvers += "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/"
-```
-
-For SBT 0.13.x and last snapshot (currently 0.13-0598e003cfa7f00f76919aa556009ad6d4fc1332-SNAPSHOT), add these lines to your SBT project definition:
-
-```scala
-libraryDependencies  ++= Seq(
-  // Last snapshot
-  "org.scalanlp" %% "breeze" % "latest.integration",
-  
-  // Native libraries are not included by default. add this if you want them (as of 0.7)
-  // Native libraries greatly improve performance, but increase jar sizes. 
-  // It also packages various blas implementations, which have licenses that may or may not
-  // be compatible with the Apache License. No GPL code, as best I know.
-  "org.scalanlp" %% "breeze-natives" % "0.13-0598e003cfa7f00f76919aa556009ad6d4fc1332",
-  
-  // The visualization library is distributed separately as well. 
-  // It depends on LGPL code.
-  "org.scalanlp" %% "breeze-viz" % "0.13-0598e003cfa7f00f76919aa556009ad6d4fc1332"
-)
-
-
-resolvers += "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
 ```
 
 For more details on the optional `breeze-natives` module, please watch Sam Halliday's talk at Scala eXchange 2014 [High Performance Linear Algebra in Scala](https://skillsmatter.com/skillscasts/5849-high-performance-linear-algebra-in-scala) ([follow along with high-res slides](http://fommil.github.io/scalax14/#/)).
@@ -75,13 +51,13 @@ Maven looks like this:
 ```xml
 <dependency>
   <groupId>org.scalanlp</groupId>
-  <artifactId>breeze_2.10</artifactId> <!-- or 2.11 -->
-  <version>0.13.2</version>
+  <artifactId>breeze_2.13</artifactId>
+  <version>1.0</version>
 </dependency>
 ```
 
 ### Other build tools
-http://mvnrepository.com/artifact/org.scalanlp/breeze_2.12/0.13.2 (as an example) is a great resource for finding other configuration examples for other build tools.
+[http://mvnrepository.com/artifact/org.scalanlp/breeze_2.12/1.0] (as an example) is a great resource for finding other configuration examples for other build tools.
 
 See documentation (linked above!) for more information on using Breeze.
 

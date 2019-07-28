@@ -1,11 +1,11 @@
-git.baseVersion := "0.13"
+git.baseVersion := "1.0"
 // append -SNAPSHOT unless we're on a branch
 //git.gitUncommittedChanges := git.gitCurrentTags.value.isEmpty
 // git.useGitDescribe := true
 
 val VersionRegex = "v([0-9]+.[0-9]+.[0-9]+)-?(.*)?".r
 
-version in ThisBuild := "1.0-RC4"
+version in ThisBuild := "1.0"
 
 /*
 git.gitTagToVersionNumber := {
