@@ -27,9 +27,9 @@ class Plot() {
   private var series = 0
   private val listeners = new mutable.WeakHashMap[Plot.Listener, Unit]()
 
-  def +=(pl: Series) = {
+  def +=(pl: Series, name: Option[String] = None) = {
     val (d, r) = pl.getChartStuff({ i =>
-      "Series " + (series + i)
+    name.getOrElse("Series " + (series + i))    
     }, { i =>
       Plot.fillPaint(series + i)
     }, { i =>
