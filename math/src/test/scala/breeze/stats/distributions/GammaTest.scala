@@ -92,4 +92,10 @@ class GammaTest
     val ss = Gamma.SufficientStatistic(2.0, 6.170967121146477, 478.64879368949363)
     Gamma.mle(ss)
   }
+
+  test("#762: Gamma") {
+    val g = Gamma(1.0,0.1)
+    assert(g.pdf(-1.0) == 0.0)
+    assert(g.pdf(-1E-6) == 0.0)
+  }
 }

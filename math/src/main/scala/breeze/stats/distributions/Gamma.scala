@@ -38,8 +38,10 @@ case class Gamma(shape: Double, scale: Double)(implicit rand: RandBasis = Rand)
   if (shape <= 0.0 || scale <= 0.0)
     throw new IllegalArgumentException("Shape and scale must be positive")
 
-  override def pdf(x: Double) =
-    if (x > 0) {
+  override def pdf(x: Double): Double = {
+    if (x < 0) {
+      0.0
+    } else if (x > 0) {
       math.exp(logPdf(x))
     } else {
       if (shape > 1.0) {
@@ -50,6 +52,7 @@ case class Gamma(shape: Double, scale: Double)(implicit rand: RandBasis = Rand)
         Double.PositiveInfinity
       }
     }
+  }
 
   lazy val logNormalizer: Double = lgamma(shape) + shape * log(scale)
 
