@@ -26,7 +26,7 @@ import org.apache.commons.math3.distribution.{
  *
  * @author stucchio
  */
-class FDistribution(numeratorDegreesOfFreedom: Double, denominatorDegreesOfFreedom: Double)
+case class FDistribution(numeratorDegreesOfFreedom: Double, denominatorDegreesOfFreedom: Double)
     extends ApacheContinuousDistribution /* with Moments[Double,Double] */ {
   //Moments not implemented cause I can't find the entropy of it
   protected final val inner = new ApacheFDistribution(numeratorDegreesOfFreedom, denominatorDegreesOfFreedom)

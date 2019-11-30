@@ -23,7 +23,7 @@ import org.apache.commons.math3.distribution.{WeibullDistribution => ApacheWeibu
  *
  * @author stucchio
  */
-class WeibullDistribution(alpha: Double, beta: Double) extends ApacheContinuousDistribution {
+case class WeibullDistribution(alpha: Double, beta: Double) extends ApacheContinuousDistribution {
   protected final val inner = new ApacheWeibullDistribution(alpha, beta)
 }
 

@@ -23,13 +23,13 @@ import breeze.optimize.DiffFunction
  limitations under the License.
  */
 
-/*
- * A Bernoulli distribution represents a distribution over weighted coin flips, with numYes(true) = numYes, the
+/**
+ * A Bernoulli distribution represents a distribution over weighted coin flips
  *
  * @author dlwh
- * @param numYes the probability of true
+ * @param p the probability of true
  */
-class Bernoulli(p: Double)(implicit rand: RandBasis = Rand)
+case class Bernoulli(p: Double)(implicit rand: RandBasis = Rand)
     extends DiscreteDistr[Boolean]
     with Moments[Double, Double] {
   require(p >= 0.0)

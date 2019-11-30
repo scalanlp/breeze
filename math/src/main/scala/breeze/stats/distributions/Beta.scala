@@ -30,7 +30,7 @@ import scala.math._
  * @param a the number of pseudo-observations for true
  * @param b the number of pseudo-observations for false
  */
-class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand)
+case class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand)
     extends ContinuousDistr[Double]
     with Moments[Double, Double]
     with HasCdf

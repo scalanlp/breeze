@@ -24,7 +24,7 @@ import org.apache.commons.math3.random.RandomGenerator
  *
  * @author stucchio
  */
-class CauchyDistribution(median: Double, scale: Double)(implicit rand: RandBasis = Rand)
+case class CauchyDistribution(median: Double, scale: Double)(implicit rand: RandBasis = Rand)
     extends ApacheContinuousDistribution {
   val rng: RandomGenerator = rand.generator
   val inverseCumAccuracy: Double = ApacheCauchyDistribution.DEFAULT_INVERSE_ABSOLUTE_ACCURACY

@@ -18,6 +18,6 @@ package distributions
 
 import org.apache.commons.math3.distribution.{ZipfDistribution => ApacheZipfDistribution}
 
-class ZipfDistribution(numberOfElements: Int, exponent: Double) extends ApacheDiscreteDistribution {
+case class ZipfDistribution(numberOfElements: Int, exponent: Double) extends ApacheDiscreteDistribution {
   protected final val inner = new ApacheZipfDistribution(numberOfElements, exponent)
 }
