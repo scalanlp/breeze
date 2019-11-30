@@ -2,12 +2,11 @@ package breeze.optimize
 
 import breeze.linalg.norm
 import breeze.math.{MutableEnumeratedCoordinateField, MutableFiniteCoordinateField, NormedModule}
-import breeze.optimize.FirstOrderMinimizer.ConvergenceReason
+import breeze.optimize.FirstOrderMinimizer.ConvergenceCheck
 import breeze.stats.distributions.{RandBasis, ThreadLocalRandomGenerator}
 import breeze.util.Implicits._
 import breeze.util.SerializableLogging
 import org.apache.commons.math3.random.MersenneTwister
-import FirstOrderMinimizer.ConvergenceCheck
 
 /**
  *
@@ -254,7 +253,7 @@ object FirstOrderMinimizer {
     import space.normImpl
     ConvergenceCheck.fromPartialFunction[T] {
       case s: State[T, _, _]
-          if (norm(s.adjustedGradient) <= math.max(tolerance * (if (relative) s.adjustedValue else 1.0), 1E-8)) =>
+          if norm(s.adjustedGradient) <= math.max(tolerance * (if (relative) s.adjustedValue.abs else 1.0), 1E-8) =>
         GradientConverged
     }
   }
