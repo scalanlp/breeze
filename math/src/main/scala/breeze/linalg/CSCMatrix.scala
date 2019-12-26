@@ -466,9 +466,9 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps with Se
     private val indices = new mutable.ArrayBuilder.ofLong()
     private val vs = mutable.ArrayBuilder.make[T]
     private var numAdded = 0
-    def activeSize = numAdded
+    def activeSize: Int = numAdded
 
-    def sizeHint(nnz: Int) = {
+    def sizeHint(nnz: Int): Unit = {
       indices.sizeHint(nnz)
       vs.sizeHint(nnz)
     }

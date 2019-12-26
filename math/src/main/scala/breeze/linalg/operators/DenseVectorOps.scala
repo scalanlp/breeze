@@ -221,7 +221,9 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
         val bstride = b.stride
         val length = a.length
 
-        if (a.noOffsetOrStride && b.noOffsetOrStride) {
+        if (a.overlaps(b)) {
+          apply(a, b.copy)
+        } else if (a.noOffsetOrStride && b.noOffsetOrStride) {
           cforRange(0 until length) { j =>
             ad(j) = op(ad(j), bd(j))
           }
@@ -401,12 +403,16 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
         var aoff = a.offset
         var boff = b.offset
 
-        var i = 0
-        while (i < a.length) {
-          ad(aoff) = sr.+(ad(aoff), sr.*(s, bd(boff)))
-          aoff += a.stride
-          boff += b.stride
-          i += 1
+        if (a.overlaps(b)) {
+          apply(a, s, b.copy)
+        } else {
+          var i = 0
+          while (i < a.length) {
+            ad(aoff) = sr.+(ad(aoff), sr.*(s, bd(boff)))
+            aoff += a.stride
+            boff += b.stride
+            i += 1
+          }
         }
       }
       implicitly[TernaryUpdateRegistry[Vector[V], V, Vector[V], scaleAdd.type]].register(this)
@@ -420,7 +426,9 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
     new scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] {
       def apply(y: DenseVector[V], s: V, x: DenseVector[V]): Unit = {
         require(x.length == y.length, "Vectors must be the same length!")
-        if (x.noOffsetOrStride && y.noOffsetOrStride) {
+        if (y.overlaps(x)) {
+          apply(y, s, x.copy)
+        } else if (x.noOffsetOrStride && y.noOffsetOrStride) {
           val ad = x.data
           val bd = y.data
           cforRange(0 until x.length) { i =>
@@ -437,33 +445,44 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
   }
 
   implicit def dvAddIntoField[T](
-      implicit field: Field[T],
+      implicit field: Semiring[T],
       ct: ClassTag[T]): OpAdd.InPlaceImpl2[DenseVector[T], DenseVector[T]] = {
     new OpAdd.InPlaceImpl2[DenseVector[T], DenseVector[T]] {
       override def apply(v: DenseVector[T], v2: DenseVector[T]) = {
-        for (i <- 0 until v.length) v(i) = field.+(v(i), v2(i))
+        if (v.overlaps(v2)) {
+          apply(v, v2.copy)
+        } else {
+          for (i <- 0 until v.length) v(i) = field.+(v(i), v2(i))
+        }
       }
     }
-
   }
 
   implicit def dvSubIntoField[T](
-      implicit field: Field[T],
+      implicit field: Ring[T],
       ct: ClassTag[T]): OpSub.InPlaceImpl2[DenseVector[T], DenseVector[T]] = {
     new OpSub.InPlaceImpl2[DenseVector[T], DenseVector[T]] {
       override def apply(v: DenseVector[T], v2: DenseVector[T]) = {
-        for (i <- 0 until v.length) v(i) = field.-(v(i), v2(i))
+        if (v.overlaps(v2)) {
+          apply(v, v2.copy)
+        } else {
+          for (i <- 0 until v.length) v(i) = field.-(v(i), v2(i))
+        }
       }
     }
 
   }
 
   implicit def dvMulIntoField[T](
-      implicit field: Field[T],
+      implicit field: Semiring[T],
       ct: ClassTag[T]): OpMulScalar.InPlaceImpl2[DenseVector[T], DenseVector[T]] = {
     new OpMulScalar.InPlaceImpl2[DenseVector[T], DenseVector[T]] {
       override def apply(v: DenseVector[T], v2: DenseVector[T]) = {
-        for (i <- 0 until v.length) v(i) = field.*(v(i), v2(i))
+        if (v.overlaps(v2)) {
+          apply(v, v2.copy)
+        } else {
+          for (i <- 0 until v.length) v(i) = field.*(v(i), v2(i))
+        }
       }
     }
 
@@ -474,7 +493,11 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
       ct: ClassTag[T]): OpDiv.InPlaceImpl2[DenseVector[T], DenseVector[T]] = {
     new OpDiv.InPlaceImpl2[DenseVector[T], DenseVector[T]] {
       override def apply(v: DenseVector[T], v2: DenseVector[T]) = {
-        for (i <- 0 until v.length) v(i) = field./(v(i), v2(i))
+        if (v.overlaps(v2)) {
+          apply(v, v2.copy)
+        } else {
+          for (i <- 0 until v.length) v(i) = field./(v(i), v2(i))
+        }
       }
     }
 
@@ -485,7 +508,11 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
       ct: ClassTag[T]): OpPow.InPlaceImpl2[DenseVector[T], DenseVector[T]] = {
     new OpPow.InPlaceImpl2[DenseVector[T], DenseVector[T]] {
       override def apply(v: DenseVector[T], v2: DenseVector[T]) = {
-        for (i <- 0 until v.length) v(i) = pow(v(i), v2(i))
+        if (v.overlaps(v2)) {
+          apply(v, v2.copy)
+        } else {
+          for (i <- 0 until v.length) v(i) = pow(v(i), v2(i))
+        }
       }
     }
 
@@ -596,8 +623,10 @@ trait DenseVector_SpecialOps extends DenseVectorOps { this: DenseVector.type =>
       with Serializable {
     def apply(y: DenseVector[Float], a: Float, x: DenseVector[Float]): Unit = {
       require(x.length == y.length, s"Vectors must have same length")
-      // using blas here is always a bad idea.
-      if (x.noOffsetOrStride && y.noOffsetOrStride) {
+      if (y.overlaps(x)) {
+        apply(y, a, x.copy)
+      } else if (x.noOffsetOrStride && y.noOffsetOrStride) {
+        // using blas here is always a bad idea.
         val ad = x.data
         val bd = y.data
 
@@ -808,22 +837,23 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
     new OpSet.InPlaceImpl2[DenseVector[V], DenseVector[V]] {
       def apply(a: DenseVector[V], b: DenseVector[V]): Unit = {
         require(b.length == a.length, "Vectors must be the same length!")
-        if (a.stride == b.stride && a.stride == 1) {
+        if (a.overlaps(b)) {
+          apply(a, b.copy)
+        } else if (a.stride == b.stride && a.stride == 1) {
           System.arraycopy(b.data, b.offset, a.data, a.offset, a.length)
-          return
-        }
+        } else {
+          val ad: Array[V] = a.data
+          val bd: Array[V] = b.data
+          var aoff = a.offset
+          var boff = b.offset
 
-        val ad: Array[V] = a.data
-        val bd: Array[V] = b.data
-        var aoff = a.offset
-        var boff = b.offset
-
-        var i = 0
-        while (i < a.length) {
-          ad(aoff) = bd(boff)
-          aoff += a.stride
-          boff += b.stride
-          i += 1
+          var i = 0
+          while (i < a.length) {
+            ad(aoff) = bd(boff)
+            aoff += a.stride
+            boff += b.stride
+            i += 1
+          }
         }
 
       }
@@ -833,18 +863,22 @@ trait DenseVector_GenericOps { this: DenseVector.type =>
     new scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] {
       val ring = implicitly[Semiring[V]]
       def apply(a: DenseVector[V], s: V, b: DenseVector[V]): Unit = {
-        require(b.length == a.length, "Vectors must be the same length!")
-        val ad: Array[V] = a.data
-        val bd: Array[V] = b.data
-        var aoff = a.offset
-        var boff = b.offset
+        if (a.overlaps(b)) {
+          apply(a, s, b.copy)
+        } else {
+          require(b.length == a.length, "Vectors must be the same length!")
+          val ad: Array[V] = a.data
+          val bd: Array[V] = b.data
+          var aoff = a.offset
+          var boff = b.offset
 
-        var i = 0
-        while (i < a.length) {
-          ad(aoff) = ring.+(ad(aoff), ring.*(s, bd(boff)))
-          aoff += a.stride
-          boff += b.stride
-          i += 1
+          var i = 0
+          while (i < a.length) {
+            ad(aoff) = ring.+(ad(aoff), ring.*(s, bd(boff)))
+            aoff += a.stride
+            boff += b.stride
+            i += 1
+          }
         }
       }
     }

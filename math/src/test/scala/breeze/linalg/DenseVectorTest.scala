@@ -573,6 +573,12 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(dvd == DenseVector(0.9, 1.0))
     assert(dvf == DenseVector(0.9f, 1.0f))
   }
+
+  test("#765 overlapping spans") {
+    val a = DenseVector(1,2,3,4)
+    a(1 to 3) := a(0 to 2)
+    assert(a == DenseVector(1, 1, 2, 3))
+  }
 }
 
 abstract class DenseVectorPropertyTestBase[T: ClassTag] extends TensorSpaceTestBase[DenseVector[T], Int, T] {

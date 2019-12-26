@@ -15,14 +15,13 @@ package breeze.linalg
  limitations under the License.
  */
 
-import breeze.generic.UFunc.SinkImpl2
 
 import scala.{specialized => spec}
 import breeze.generic._
 import breeze.linalg.support._
 import breeze.linalg.operators._
 import breeze.math._
-import breeze.util.{ArrayUtil, Isomorphism}
+import breeze.util._
 import breeze.storage.Zero
 
 import scala.reflect.ClassTag
@@ -246,6 +245,21 @@ class DenseVector[@spec(Double, Int, Float, Long) V](
     new DenseVector.SerializedForm(data, offset, stride, length)
   }
 
+  /** Returns true if this overlaps any content with the other vector */
+  private[linalg] def overlaps(other: DenseVector[V]): Boolean = (this.data eq other.data) && RangeUtils.overlaps(footprint, other.footprint)
+
+  private def footprint: Range = {
+    if (length == 0) {
+      Range(offset, offset)
+    } else {
+      val r = offset.to(offset + stride * (length - 1), stride)
+      if (stride < 0) {
+        r.reverse
+      } else {
+        r
+      }
+    }
+  }
 }
 
 object DenseVector
