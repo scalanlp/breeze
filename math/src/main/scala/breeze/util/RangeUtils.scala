@@ -14,11 +14,12 @@ object RangeUtils {
       // x * a.step + a.start == y * b.step + b.start
       // <=> x * a.step + y * (-b.step) == b.start - a.start
       // i.e. a linear diophantine equation
+      // cf https://link.springer.com/chapter/10.1007/11792086_14
+      // https://en.wikipedia.org/wiki/B%C3%A9zout%27s_identity
       // since y is an arbitrary integer, we invert the sign, which allows us to guarantee positivity, which
       // makes bookkeeping easier.
-      // cf https://link.springer.com/chapter/10.1007/11792086_14
       val (x0_, y0_, gcd) = extendedEuclideanAlgorithm(a.step, b.step)
-      // from here, we have a.step * x0 + b.step * y0 == gcd
+      // from here, we have:
       assert(a.step * x0_ + b.step * y0_ == gcd)
       val target = b.start - a.start
       val q = target/gcd
@@ -43,9 +44,6 @@ object RangeUtils {
 //        for ( k <- -10 to 10) {
 //          val x = (x0 + k * t)
 //          val y = (y0 - k * s)
-//          println(x, s, y, t, q)
-//          println(x* s, y * t, q)
-//          println(k, x, a.length, x < a.length && x >= 0, y, b.length, y < b.length && y >= 0)
 //          assert (x * s + y * t == q)
 //          assert(x * a.step + a.start == -y * b.step + b.start)
 //        }
@@ -67,6 +65,7 @@ object RangeUtils {
   }
 
   // returns (s, t, d) s.t. a * s + b * t == (d = gcd(a, b))
+  // https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
   def extendedEuclideanAlgorithm(a: Int, b: Int): (Int, Int, Int) = {
     var s = 0L
     var old_s = 1L
