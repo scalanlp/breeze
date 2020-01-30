@@ -807,24 +807,22 @@ object DenseVector
     new norm.Impl2[DenseVector[Double], Double, Double] {
       def apply(v: DenseVector[Double], p: Double): Double = {
         if (p == 2) {
-          var sq = 0.0
-          v.foreach(x => sq += x * x)
-          math.sqrt(sq)
+          math.sqrt(v dot v)
         } else if (p == 1) {
           var sum = 0.0
-          v.foreach(x => sum += math.abs(x))
+          cforRange(0 until v.length)(i => sum += math.abs(v(i)))
           sum
         } else if (p == Double.PositiveInfinity) {
           var max = 0.0
-          v.foreach(x => max = math.max(max, math.abs(x)))
+          cforRange(0 until v.length)(i => max = math.max(max, math.abs(v(i))))
           max
         } else if (p == 0) {
-          var nnz = 0
-          v.foreach(x => if (x != 0) nnz += 1)
+          var nnz = 0.0
+          cforRange(0 until v.length)(i => if (v(i) != 0) nnz += 1)
           nnz
         } else {
           var sum = 0.0
-          v.foreach(x => sum += math.pow(math.abs(x), p))
+          cforRange(0 until v.length)(i => sum += math.pow(math.abs(v(i)), p))
           math.pow(sum, 1.0 / p)
         }
       }
