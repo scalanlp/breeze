@@ -777,24 +777,25 @@ object DenseVector
     : norm.Impl2[DenseVector[T], Double, Double] = {
 
     new norm.Impl2[DenseVector[T], Double, Double] {
-      def apply(v: DenseVector[T], n: Double): Double = {
-        import v._
-        if (n == 1) {
+      def apply(v: DenseVector[T], p: Double): Double = {
+        if (p == 2) {
+          math.sqrt( (v dot v).abs.toDouble)
+        } else if (p == 1) {
           var sum = 0.0
-          foreach(v => sum += v.abs.toDouble)
+          cforRange(0 until v.length)(i => sum += v(i).abs.toDouble)
           sum
-        } else if (n == 2) {
-          var sum = 0.0
-          foreach(v => { val nn = v.abs.toDouble; sum += nn * nn })
-          math.sqrt(sum)
-        } else if (n == Double.PositiveInfinity) {
+        } else if (p == Double.PositiveInfinity) {
           var max = 0.0
-          foreach(v => { val nn = v.abs.toDouble; if (nn > max) max = nn })
+          cforRange(0 until v.length)(i => max = math.max(max, v(i).abs.toDouble))
           max
+        } else if (p == 0) {
+          var nnz = 0.0
+          cforRange(0 until v.length)(i => if (v(i) != 0) nnz += 1)
+          nnz
         } else {
           var sum = 0.0
-          foreach(v => { val nn = v.abs.toDouble; sum += math.pow(nn, n) })
-          math.pow(sum, 1.0 / n)
+          cforRange(0 until v.length)(i => sum += math.pow(v(i).abs.toDouble, p))
+          math.pow(sum, 1.0 / p)
         }
       }
     }
