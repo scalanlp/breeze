@@ -17,7 +17,8 @@ import scala.collection.mutable._
 
 import scala.reflect.ClassTag
 
-/** A builder class for arrays. this is more or less a direct
+/** A builder class for arrays. this is more or less a direct copy from scala, but included here with `@specialized`
+ * and for 2.13 compat
  *
  *  @since 2.8
  *
@@ -527,16 +528,16 @@ object ArrayBuilder {
       newelems
     }
 
-    private def resize(size: Int) {
+    private def resize(size: Int): Unit = {
       elems = mkArray(size)
       capacity = size
     }
 
-    override def sizeHint(size: Int) {
+    override def sizeHint(size: Int): Unit = {
       if (capacity < size) resize(size)
     }
 
-    private def ensureSize(size: Int) {
+    private def ensureSize(size: Int): Unit = {
       if (capacity < size || capacity == 0) {
         var newsize = if (capacity == 0) 16 else capacity * 2
         while (newsize < size) newsize *= 2
@@ -661,7 +662,7 @@ object ArrayBuilder {
 
     def clear() { size = 0 }
 
-    def result() = {
+    def result(): Array[Unit] = {
       val ans = new Array[Unit](size)
       var i = 0
       while (i < size) { ans(i) = (); i += 1 }

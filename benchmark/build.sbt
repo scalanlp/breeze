@@ -12,8 +12,7 @@ libraryDependencies ++= Seq(
   // caliper stuff
   "com.google.guava" % "guava" % "r09",
   "com.google.code.java-allocation-instrumenter" % "java-allocation-instrumenter" % "2.0",
-  ("com.google.code.caliper" % "caliper" % "1.0-SNAPSHOT")
-    .from("http://plastic-idolatry.com/jars/caliper-1.0-SNAPSHOT.jar"),
+  ("com.google.caliper" % "caliper" % "1.0-beta-2"),
   "com.google.code.gson" % "gson" % "1.7.1"
 )
 
