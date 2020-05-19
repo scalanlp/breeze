@@ -248,6 +248,25 @@ class SparseVectorTest extends FunSuite {
 
   }
 
+  test("SparseVector * DenseVector Transposed OpMulMatrix") {
+    val sv = SparseVector(3)(0 -> 1, 1 -> 2, 2 -> 3)
+
+    val dv = DenseVector(5, 7, 11)
+
+    val expected = CSCMatrix.zeros[Int](3, 3)
+    expected(0, 0) = 5
+    expected(0, 1) = 7
+    expected(0, 2) = 11
+    expected(1, 0) = 10
+    expected(1, 1) = 14
+    expected(1, 2) = 22
+    expected(2, 0) = 15
+    expected(2, 1) = 21
+    expected(2, 2) = 33
+
+    assert(sv * dv.t === expected)
+  }
+
   test("Transpose Complex") {
     val a = SparseVector.zeros[Complex](4)
     a(1) = Complex(1, 1)
@@ -401,14 +420,12 @@ abstract class SparseVectorPropertyTestBase[T: ClassTag: Zero: Semiring]
   }
 }
 
-
 class SparseVectorOps_DoubleTest
     extends SparseVectorPropertyTestBase[Double]
     with DoubleValuedTensorSpaceTestBase[SparseVector[Double], Int] {
   val space = SparseVector.space[Double]
   def genScalar: Arbitrary[Double] = RandomInstanceSupport.genReasonableDouble
 }
-
 
 class SparseVectorOps_FloatTest extends SparseVectorPropertyTestBase[Float] {
   val space = SparseVector.space[Float]
@@ -417,7 +434,6 @@ class SparseVectorOps_FloatTest extends SparseVectorPropertyTestBase[Float] {
   def genScalar: Arbitrary[Float] = Arbitrary { RandomInstanceSupport.genReasonableDouble.arbitrary.map(_.toFloat) }
 
 }
-
 
 class SparseVectorOps_IntTest extends SparseVectorPropertyTestBase[Int] {
   val space = SparseVector.space[Int]
