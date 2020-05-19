@@ -267,6 +267,25 @@ class SparseVectorTest extends FunSuite {
     assert(sv * dv.t === expected)
   }
 
+  test("DenseVector * SparseVector Transposed OpMulMatrix") {
+    val sv = SparseVector(3)(0 -> 1, 1 -> 2, 2 -> 3)
+
+    val dv = DenseVector(5, 7, 11)
+
+    val expected = CSCMatrix.zeros[Int](3, 3)
+    expected(0, 0) = 5
+    expected(0, 1) = 10
+    expected(0, 2) = 15
+    expected(1, 0) = 7
+    expected(1, 1) = 14
+    expected(1, 2) = 21
+    expected(2, 0) = 11
+    expected(2, 1) = 22
+    expected(2, 2) = 33
+
+    assert(dv * sv.t === expected)
+  }
+
   test("Transpose Complex") {
     val a = SparseVector.zeros[Complex](4)
     a(1) = Complex(1, 1)

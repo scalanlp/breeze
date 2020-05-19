@@ -400,6 +400,25 @@ trait DenseVector_SparseVector_Ops { this: SparseVector.type =>
     implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(op)
     op
   }
+
+  @expand
+  @expand.valify
+  implicit def implOpMulMatrix_DVT_SVTt_eq_SMT[@expand.args(Int, Double, Float, Long, Complex) T](
+    implicit @expand.sequence[T](0, 0.0, 0.0f, 0L, Complex.zero) zero: T)
+    : OpMulMatrix.Impl2[DenseVector[T], Transpose[SparseVector[T]], CSCMatrix[T]] = {
+    new OpMulMatrix.Impl2[DenseVector[T], Transpose[SparseVector[T]], CSCMatrix[T]] {
+      def apply(a: DenseVector[T], b: Transpose[SparseVector[T]]): CSCMatrix[T] = {
+        val sizeHint = a.size * b.inner.activeSize
+        val res = new CSCMatrix.Builder[T](a.size, b.inner.size, sizeHint)
+
+          for {(j, bValue) <- b.inner.activeIterator}
+            for {(i, aValue) <- a.activeIterator}
+              res.add(i, j, aValue * bValue)
+
+        res.result(keysAlreadyUnique = true, keysAlreadySorted = true)
+      }
+    }
+  }
 }
 
 trait SparseVectorOps { this: SparseVector.type =>
