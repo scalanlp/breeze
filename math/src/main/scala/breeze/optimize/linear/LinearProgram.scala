@@ -25,6 +25,7 @@ import scala.collection.JavaConverters._
  * @author dlwh
  */
 class LinearProgram {
+  self =>
   private var _nextId = 0
   private def nextId = {
     _nextId += 1
@@ -32,25 +33,62 @@ class LinearProgram {
   }
   private val variables = new ArrayBuffer[Variable]()
 
-  sealed trait Problem { outer =>
+  def minimize(expression: Expression): Problem = {
+    new Problem {
+      override def goal: Option[GoalType] = Option(GoalType.MINIMIZE)
+      override def objective: Expression = expression.objective
+      override def constraints: IndexedSeq[Constraint] = expression.constraints
+    }
+  }
+
+  def maximize(expression: Expression): Problem = {
+    new Problem {
+      override def goal: Option[GoalType] = Option(GoalType.MAXIMIZE)
+      override def objective: Expression = expression.objective
+      override def constraints: IndexedSeq[Constraint] = expression.constraints
+    }
+  }
+
+  sealed trait Problem {
+    outer =>
+    def goal: Option[GoalType] = None
     def objective: Expression
     def constraints: IndexedSeq[Constraint]
 
     def subjectTo(constraints: Constraint*): Problem = {
       val cons = constraints
       new Problem {
-        def objective = outer.objective
-        def constraints = outer.constraints ++ cons
+        override def goal: Option[GoalType] = outer.goal
+        override def objective: Expression = outer.objective
+        override def constraints: IndexedSeq[Constraint] = outer.constraints ++ cons
       }
     }
 
-    override def toString = (
-      "maximize    " + objective + {
+    def solve(implicit solver: LinearProgram.Solver) = {
+      val _goal = goal.getOrElse(throw new IllegalArgumentException("Goal is not defined."))
+
+      if (_goal == GoalType.MAXIMIZE) {
+        solver.maximize(self)(this)
+      } else if (_goal == GoalType.MINIMIZE) {
+        solver.minimize(self)(this)
+      } else {
+        throw new IllegalArgumentException(s"Unknown goal ${_goal.name()}")
+      }
+    }
+
+    override def toString: String = {
+      val _goal = goal match {
+        case Some(g) => g.name().toLowerCase()
+        case _ => "problem "
+      }
+
+      s"${_goal}    " + objective + {
         if (constraints.nonEmpty) {
           "\nsubject to  " + constraints.mkString("\n" + " " * "subject to  ".length)
         } else ""
       }
-    )
+    }
+
   }
 
   /**
@@ -254,10 +292,15 @@ class LinearProgram {
     def value = valueOf(problem.objective)
   }
 
-  def maximize(objective: Problem)(implicit solver: LinearProgram.Solver) =
+  def maximize(objective: Problem)(implicit solver: LinearProgram.Solver) = {
+    assume(!objective.goal.contains(GoalType.MINIMIZE), "Cannot call maximize on a minimization problem")
     solver.maximize(this)(objective)
-  def minimize(objective: Problem)(implicit solver: LinearProgram.Solver) =
+  }
+
+  def minimize(objective: Problem)(implicit solver: LinearProgram.Solver) = {
+    assume(!objective.goal.contains(GoalType.MAXIMIZE), "Cannot call minimize on a maximization problem")
     solver.minimize(this)(objective)
+  }
 }
 
 object LinearProgram {

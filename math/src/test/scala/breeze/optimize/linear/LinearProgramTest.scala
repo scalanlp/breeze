@@ -80,4 +80,43 @@ class LinearProgramTest extends FunSuite {
   }
  */
 
+  test("maximize with solve method") {
+    val lp = new LinearProgram
+    import lp._
+    val x0 = Real()
+    val x1 = Real()
+
+    val max = maximize(x0 + x1)
+      .subjectTo(x0  <= 20)
+      .subjectTo(x1 <= 30)
+
+    val res = max.solve
+    println(max)
+    println(res.result)
+    assert(norm(res.result - DenseVector(20.0, 30.0), 2) < 1E-4)
+
+    assertThrows[AssertionError](minimize(max))
+
+  }
+
+  test("minimize with solve method") {
+    val lp = new LinearProgram
+    import lp._
+    val x0 = Real()
+    val x1 = Real()
+
+    val min = minimize(x0 + x1)
+      .subjectTo(x0  >= 20)
+      .subjectTo(x1 >= 30)
+
+    val res = min.solve
+    println(min)
+    println(res.result)
+
+    assert(norm(res.result - DenseVector(20.0, 30.0), 2) < 1E-4)
+
+    assertThrows[AssertionError](maximize(min))
+
+  }
+
 }
