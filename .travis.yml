@@ -5,6 +5,8 @@ scala:
   - 2.13.1
 jdk:
    - oraclejdk11
+script:
+  - sbt scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
 dist: trusty
    - openjdk11
 before_install:
