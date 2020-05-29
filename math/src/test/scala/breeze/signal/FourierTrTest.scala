@@ -55,7 +55,7 @@ class FourierTrTest extends FunSuite {
   // </editor-fold>
   // <editor-fold desc="Test Values">
 
-  val testNormThreshold = 1E-12
+  val testNormThreshold = 1e-12
 
   val test16 = DenseVector[Double](0.814723686393179, 0.905791937075619, 0.126986816293506, 0.913375856139019,
     0.63235924622541, 0.0975404049994095, 0.278498218867048, 0.546881519204984, 0.957506835434298, 0.964888535199277,

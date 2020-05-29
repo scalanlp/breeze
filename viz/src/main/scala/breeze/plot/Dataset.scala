@@ -63,7 +63,8 @@ object XYDataset {
       x: Item => Number,
       y: Item => Number,
       label: Item => String,
-      tip: Item => String): XYDataset[Item] = {
+      tip: Item => String
+  ): XYDataset[Item] = {
     val rv = new XYDataset(x, y, label, tip);
     rv.names += name;
     rv.items += items;
@@ -83,8 +84,8 @@ class XYZDataset[Item](
     y: Item => Number,
     z: Item => Number,
     label: Item => String,
-    tip: Item => String)
-    extends org.jfree.data.xy.AbstractXYZDataset {
+    tip: Item => String
+) extends org.jfree.data.xy.AbstractXYZDataset {
   val names = ArrayBuffer[String]();
   val items = ArrayBuffer[IndexedSeq[Item]]();
 
@@ -121,7 +122,8 @@ object XYZDataset {
       y: Item => Number,
       z: Item => Number,
       label: Item => String,
-      tip: Item => String): XYZDataset[Item] = {
+      tip: Item => String
+  ): XYZDataset[Item] = {
     val rv = new XYZDataset(x, y, z, label, tip);
     rv.names += name;
     rv.items += items;

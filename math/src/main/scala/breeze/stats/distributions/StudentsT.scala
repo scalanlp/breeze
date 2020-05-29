@@ -41,18 +41,19 @@ case class StudentsT(degreesOfFreedom: Double)(implicit randBasis: RandBasis = R
 
   def unnormalizedLogPdf(x: Double): Double = -(degreesOfFreedom + 1) / 2 * math.log(1 + (x * x) / degreesOfFreedom)
 
-  lazy val logNormalizer: Double = 0.5 * math.log(math.Pi * degreesOfFreedom) + lgamma(degreesOfFreedom / 2) - lgamma(
-    (degreesOfFreedom + 1) / 2)
+  lazy val logNormalizer: Double =
+    0.5 * math.log(math.Pi * degreesOfFreedom) + lgamma(degreesOfFreedom / 2) - lgamma((degreesOfFreedom + 1) / 2)
 
   def mean: Double = innerInstance.getNumericalMean
 
   def variance: Double = innerInstance.getNumericalVariance
 
-  def entropy: Double = (
-    (degreesOfFreedom + 1) / 2 * (digamma((degreesOfFreedom + 1) / 2) - digamma(degreesOfFreedom))
-      - .5 * log(degreesOfFreedom)
-      + lbeta(degreesOfFreedom / 2, 0.5)
-  )
+  def entropy: Double =
+    (
+      (degreesOfFreedom + 1) / 2 * (digamma((degreesOfFreedom + 1) / 2) - digamma(degreesOfFreedom))
+        - .5 * log(degreesOfFreedom)
+        + lbeta(degreesOfFreedom / 2, 0.5)
+    )
 
   def mode: Double = mean
 }

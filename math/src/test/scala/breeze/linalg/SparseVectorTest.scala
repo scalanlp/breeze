@@ -348,7 +348,8 @@ class SparseVectorTest extends FunSuite {
 
     assert(
       (m * x) ===
-        m * xd)
+        m * xd
+    )
 
   }
 
@@ -424,19 +425,21 @@ abstract class SparseVectorPropertyTestBase[T: ClassTag: Zero: Semiring]
     extends TensorSpaceTestBase[SparseVector[T], Int, T] {
   def genScalar: Arbitrary[T]
 
-  override implicit def genSingle: Arbitrary[SparseVector[T]] = Arbitrary {
-    Gen.choose(1, 10).flatMap(RandomInstanceSupport.genSparseVector(_, genScalar.arbitrary))
-  }
-
-  implicit def genTriple: Arbitrary[(SparseVector[T], SparseVector[T], SparseVector[T])] = Arbitrary {
-    Gen.choose(1, 10).flatMap { n =>
-      for {
-        x <- RandomInstanceSupport.genSparseVector(n, genScalar.arbitrary)
-        y <- RandomInstanceSupport.genSparseVector(n, genScalar.arbitrary)
-        z <- RandomInstanceSupport.genSparseVector(n, genScalar.arbitrary)
-      } yield (x, y, z)
+  override implicit def genSingle: Arbitrary[SparseVector[T]] =
+    Arbitrary {
+      Gen.choose(1, 10).flatMap(RandomInstanceSupport.genSparseVector(_, genScalar.arbitrary))
     }
-  }
+
+  implicit def genTriple: Arbitrary[(SparseVector[T], SparseVector[T], SparseVector[T])] =
+    Arbitrary {
+      Gen.choose(1, 10).flatMap { n =>
+        for {
+          x <- RandomInstanceSupport.genSparseVector(n, genScalar.arbitrary)
+          y <- RandomInstanceSupport.genSparseVector(n, genScalar.arbitrary)
+          z <- RandomInstanceSupport.genSparseVector(n, genScalar.arbitrary)
+        } yield (x, y, z)
+      }
+    }
 }
 
 class SparseVectorOps_DoubleTest
@@ -449,7 +452,7 @@ class SparseVectorOps_DoubleTest
 class SparseVectorOps_FloatTest extends SparseVectorPropertyTestBase[Float] {
   val space = SparseVector.space[Float]
 
-  override val TOL: Double = 1E-2
+  override val TOL: Double = 1e-2
   def genScalar: Arbitrary[Float] = Arbitrary { RandomInstanceSupport.genReasonableDouble.arbitrary.map(_.toFloat) }
 
 }

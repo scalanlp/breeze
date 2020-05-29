@@ -17,14 +17,20 @@ class whereTest extends FunSuite {
 
   test("DenseVector 3 arg") {
     assert(
-      where(DenseVector(1, 2, 0, 4, 5, 0), DenseVector(1, 2, 3, 4, 5, 6), DenseVector(-1, -2, -3, -4, -5, -6)) === DenseVector(
-          1, 2, -3, 4, 5, -6))
+      where(
+        DenseVector(1, 2, 0, 4, 5, 0),
+        DenseVector(1, 2, 3, 4, 5, 6),
+        DenseVector(-1, -2, -3, -4, -5, -6)
+      ) === DenseVector(1, 2, -3, 4, 5, -6)
+    )
   }
 
   test("BitVector 3 arg") {
     assert(
       where(DenseVector(1, 2, 0, 4, 5, 0) :!= 0, DenseVector(1, 2, 3, 4, 5, 6), DenseVector(-1, -2, -3, -4, -5, -6))(
-        where.where3ArgFromTraverseKeyValuePairs) === DenseVector(1, 2, -3, 4, 5, -6))
+        where.where3ArgFromTraverseKeyValuePairs
+      ) === DenseVector(1, 2, -3, 4, 5, -6)
+    )
   }
 
 }

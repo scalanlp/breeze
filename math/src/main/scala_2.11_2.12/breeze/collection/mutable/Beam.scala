@@ -26,7 +26,6 @@ import scala.collection.generic._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.{mutable, _}
 
-
 /**
  * Represents a beam, which is essentially a priority queue
  * with a maximum size.
@@ -100,10 +99,11 @@ class Beam[T](val maxSize: Int)(implicit ord: Ordering[T])
     r.reverse
   }
 
-  override def equals(obj: Any): Boolean = obj match {
-    case x: Beam[T @unchecked] => maxSize == x.maxSize && iterator.sameElements(x.iterator)
-    case _ => false
-  }
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case x: Beam[T @unchecked] => maxSize == x.maxSize && iterator.sameElements(x.iterator)
+      case _ => false
+    }
 
   override def clone(): Beam[T] = new Beam[T](maxSize) ++= this.iterator
 }
@@ -120,10 +120,11 @@ object Beam {
 
   val NothingEvicted: BeamResult[Nothing] = Added(Iterable.empty)
 
-  implicit def canBuildFrom[T: Ordering]: CanBuildFrom[Beam[T], T, Beam[T]] = new CanBuildFrom[Beam[T], T, Beam[T]] {
-    def apply() = sys.error("Sorry, need a max size")
+  implicit def canBuildFrom[T: Ordering]: CanBuildFrom[Beam[T], T, Beam[T]] =
+    new CanBuildFrom[Beam[T], T, Beam[T]] {
+      def apply() = sys.error("Sorry, need a max size")
 
-    def apply(from: Beam[T]) = from.newBuilder
-  }
+      def apply(from: Beam[T]) = from.newBuilder
+    }
   def apply[T: Ordering](maxSize: Int)(xs: T*): Beam[T] = new Beam[T](maxSize) ++= xs
 }

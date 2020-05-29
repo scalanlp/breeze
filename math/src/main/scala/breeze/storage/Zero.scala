@@ -39,9 +39,10 @@ object Zero extends ZeroLowPriority {
     else refDefault
   }
 
-  def apply[T](v: T): Zero[T] = new Zero[T] {
-    def zero = v
-  }
+  def apply[T](v: T): Zero[T] =
+    new Zero[T] {
+      def zero = v
+    }
 
   @SerialVersionUID(1L)
   implicit object IntZero extends Zero[Int] {

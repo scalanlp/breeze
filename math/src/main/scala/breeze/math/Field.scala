@@ -146,7 +146,10 @@ object Field {
     // http://floating-point-gui.de/errors/comparison/
     override def close(a: Float, b: Float, tolerance: Double) = {
       val diff = math.abs(a - b)
-      a == b || (diff <= math.max(a.abs, b.abs) * tolerance) || ((a == 0 || b == 0 || diff < java.lang.Float.MIN_NORMAL) && diff < tolerance * 10 * java.lang.Float.MIN_NORMAL)
+      a == b || (diff <= math.max(
+        a.abs,
+        b.abs
+      ) * tolerance) || ((a == 0 || b == 0 || diff < java.lang.Float.MIN_NORMAL) && diff < tolerance * 10 * java.lang.Float.MIN_NORMAL)
     }
 
     implicit val normImpl: norm.Impl[Float, Double] = new norm.Impl[Float, Double] {
@@ -169,7 +172,10 @@ object Field {
 
     override def close(a: Double, b: Double, tolerance: Double) = {
       val diff = math.abs(a - b)
-      a == b || (diff <= math.max(a.abs, b.abs) * tolerance) || ((a == 0 || b == 0 || diff < java.lang.Double.MIN_NORMAL) && diff < tolerance * 10 * java.lang.Double.MIN_NORMAL)
+      a == b || (diff <= math.max(
+        a.abs,
+        b.abs
+      ) * tolerance) || ((a == 0 || b == 0 || diff < java.lang.Double.MIN_NORMAL) && diff < tolerance * 10 * java.lang.Double.MIN_NORMAL)
     }
 
     implicit val normImpl: norm.Impl[Double, Double] = new norm.Impl[Double, Double] {

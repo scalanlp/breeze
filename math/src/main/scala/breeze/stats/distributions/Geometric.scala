@@ -28,7 +28,7 @@ case class Geometric(p: Double)(implicit rand: RandBasis = Rand)
 
   def probabilityOf(x: Int) = math.pow((1 - p), x) * p
 
-  def mean = (1) / p
+  def mean = 1 / p
 
   def variance = (1 - p) / (p * p)
 
@@ -53,14 +53,15 @@ object Geometric extends ExponentialFamily[Geometric, Int] with HasConjugatePrio
 
   def mle(stats: SufficientStatistic) = stats.n / stats.sum
 
-  def likelihoodFunction(stats: SufficientStatistic) = new DiffFunction[Geometric.Parameter] {
-    def calculate(p: Geometric.Parameter) = {
-      val obj = stats.n * math.log(p) + stats.sum * math.log(1 - p)
-      val grad = stats.n / p - stats.sum / (1 - p)
-      (-obj, -grad)
+  def likelihoodFunction(stats: SufficientStatistic) =
+    new DiffFunction[Geometric.Parameter] {
+      def calculate(p: Geometric.Parameter) = {
+        val obj = stats.n * math.log(p) + stats.sum * math.log(1 - p)
+        val grad = stats.n / p - stats.sum / (1 - p)
+        (-obj, -grad)
 
+      }
     }
-  }
 
   def distribution(p: Geometric.Parameter) = new Geometric(p)
 

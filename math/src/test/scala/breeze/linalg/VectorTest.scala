@@ -58,8 +58,8 @@ class VectorTest extends FunSuite {
   }
 
   test("assert operations of different size fail") {
-    val a = Vector[Double](1D, 2D, 3D)
-    val b = Vector[Double](1D, 2D, 3D, 4D)
+    val a = Vector[Double](1d, 2d, 3d)
+    val b = Vector[Double](1d, 2d, 3d, 4d)
     intercept[IllegalArgumentException] {
       a + b
     }
@@ -73,21 +73,22 @@ class VectorTest extends FunSuite {
 abstract class VectorPropertyTestBase[T: ClassTag: Zero: Semiring] extends TensorSpaceTestBase[Vector[T], Int, T] {
   def genScalar: Arbitrary[T]
 
-  override implicit def genSingle: Arbitrary[Vector[T]] = Arbitrary {
-    Gen.choose(1, 10).flatMap(RandomInstanceSupport.genVector(_, genScalar.arbitrary))
-  }
-
-  implicit def genTriple: Arbitrary[(Vector[T], Vector[T], Vector[T])] = Arbitrary {
-    Gen.choose(1, 10).flatMap { n =>
-      for {
-        x <- RandomInstanceSupport.genVector(n, genScalar.arbitrary)
-        y <- RandomInstanceSupport.genVector(n, genScalar.arbitrary)
-        z <- RandomInstanceSupport.genVector(n, genScalar.arbitrary)
-      } yield (x, y, z)
+  override implicit def genSingle: Arbitrary[Vector[T]] =
+    Arbitrary {
+      Gen.choose(1, 10).flatMap(RandomInstanceSupport.genVector(_, genScalar.arbitrary))
     }
-  }
-}
 
+  implicit def genTriple: Arbitrary[(Vector[T], Vector[T], Vector[T])] =
+    Arbitrary {
+      Gen.choose(1, 10).flatMap { n =>
+        for {
+          x <- RandomInstanceSupport.genVector(n, genScalar.arbitrary)
+          y <- RandomInstanceSupport.genVector(n, genScalar.arbitrary)
+          z <- RandomInstanceSupport.genVector(n, genScalar.arbitrary)
+        } yield (x, y, z)
+      }
+    }
+}
 
 class VectorOps_DoubleTest
     extends VectorPropertyTestBase[Double]
@@ -96,15 +97,13 @@ class VectorOps_DoubleTest
   def genScalar: Arbitrary[Double] = RandomInstanceSupport.genReasonableDouble
 }
 
-
 class VectorOps_FloatTest extends VectorPropertyTestBase[Float] {
   val space = Vector.space[Float]
 
-  override val TOL: Double = 1E-2
+  override val TOL: Double = 1e-2
   def genScalar: Arbitrary[Float] = RandomInstanceSupport.genReasonableFloat
 
 }
-
 
 class VectorOps_IntTest extends VectorPropertyTestBase[Int] {
   val space = Vector.space[Int]

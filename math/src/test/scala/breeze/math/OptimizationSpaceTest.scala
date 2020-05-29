@@ -133,7 +133,7 @@ trait OptimizationSpaceTest[M, V, S] extends TensorSpaceTestBase[V, Int, S] {
   test("Scalar mult distributes over field addition - Matrix") {
     check(Prop.forAll { (trip: (M, M, M), s: S, t: S) =>
       val (a, _, _) = trip
-      closeM((a) *:* scalars.+(s, t), (a *:* s) + (a *:* t), TOLM * max(tolRefM(a), norm(s), norm(t)).abs)
+      closeM(a *:* scalars.+(s, t), (a *:* s) + (a *:* t), TOLM * max(tolRefM(a), norm(s), norm(t)).abs)
     })
 
     check(Prop.forAll { (trip: (M, M, M), s: S, t: S) =>
@@ -150,7 +150,7 @@ trait OptimizationSpaceTest[M, V, S] extends TensorSpaceTestBase[V, Int, S] {
   test("Compatibility of scalar multiplication with field multiplication - Matrix") {
     check(Prop.forAll { (trip: (M, M, M), s: S, t: S) =>
       val (a, _, _) = trip
-      closeM((a) *:* scalars.*(s, t), a *:* s *:* t, TOL * math.max(tolRefM(a), norm(s)).abs)
+      closeM(a *:* scalars.*(s, t), a *:* s *:* t, TOL * math.max(tolRefM(a), norm(s)).abs)
     })
 
     check(Prop.forAll { (trip: (M, M, M), s: S, t: S) =>
@@ -201,7 +201,7 @@ trait OptimizationSpaceTest[M, V, S] extends TensorSpaceTestBase[V, Int, S] {
   }
 
   // norm
-  val TOLM = 1E-2
+  val TOLM = 1e-2
   test("norm positive homogeneity - Matrix") {
     check(Prop.forAll { (trip: (M, M, M), s: S) =>
       val (a, b, c) = trip
@@ -302,7 +302,8 @@ class DenseOptimizationSpaceTest_Double
         (
           DenseMatrix.fill(N, N)(math.random * x),
           DenseMatrix.fill(N, N)(math.random * y),
-          DenseMatrix.fill(N, N)(math.random * z))
+          DenseMatrix.fill(N, N)(math.random * z)
+        )
       }
     }
   }
@@ -320,7 +321,7 @@ class SparseOptimizationSpaceTest_Double
   val N = 30
   val M = 30
 
-  override val TOLM = 1E-2
+  override val TOLM = 1e-2
 
   def genScalar: Arbitrary[Double] = RandomInstanceSupport.genReasonableDouble
 
@@ -329,7 +330,8 @@ class SparseOptimizationSpaceTest_Double
   val genAS = Gen.chooseNum(0, pow(N, 2))
   implicit val arbEntry = Arbitrary.arbTuple3[Int, Int, Double](arbRowIndex, arbColIndex, genScalar)
   implicit val arbVals = Arbitrary(
-    genAS.flatMap(activeSize => Gen.listOfN[(Int, Int, Double)](activeSize, Arbitrary.arbitrary[(Int, Int, Double)])))
+    genAS.flatMap(activeSize => Gen.listOfN[(Int, Int, Double)](activeSize, Arbitrary.arbitrary[(Int, Int, Double)]))
+  )
   def addToBuilder(bldr: CSCMatrix.Builder[Double], v: (Int, Int, Double)) = bldr.add(v._1, v._2, v._3)
   override implicit def genTripleM: Arbitrary[(CSCMatrix[Double], CSCMatrix[Double], CSCMatrix[Double])] = {
     Arbitrary {
@@ -341,16 +343,18 @@ class SparseOptimizationSpaceTest_Double
         val xb = new CSCMatrix.Builder[Double](N, N)
         val yb = new CSCMatrix.Builder[Double](N, N)
         val zb = new CSCMatrix.Builder[Double](N, N)
-        ({
-          xvs.foreach(v => addToBuilder(xb, v))
-          xb.result()
-        }, {
-          yvs.foreach(v => addToBuilder(yb, v))
-          yb.result()
-        }, {
-          zvs.foreach(v => addToBuilder(zb, v))
-          zb.result()
-        })
+        (
+          {
+            xvs.foreach(v => addToBuilder(xb, v))
+            xb.result()
+          }, {
+            yvs.foreach(v => addToBuilder(yb, v))
+            yb.result()
+          }, {
+            zvs.foreach(v => addToBuilder(zb, v))
+            zb.result()
+          }
+        )
       }
 
     }

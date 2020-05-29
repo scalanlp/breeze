@@ -35,14 +35,17 @@ class LaplaceTest
 
   def fromDouble(x: Double) = x
 
-  implicit def arbDistr = Arbitrary {
-    for (location <- arbitrary[Double].map { x =>
-        math.abs(x) % 1000.0 + 1.1
-      }; // Laplace pdf at 0 not defined when location == 1
-      scale <- arbitrary[Double].map { x =>
-        math.abs(x) % 8.0 + 1.0
-      }) yield new Laplace(location, scale)(new RandBasis(new MersenneTwister(0)))
-  }
+  implicit def arbDistr =
+    Arbitrary {
+      for (
+        location <- arbitrary[Double].map { x =>
+          math.abs(x) % 1000.0 + 1.1
+        }; // Laplace pdf at 0 not defined when location == 1
+        scale <- arbitrary[Double].map { x =>
+          math.abs(x) % 8.0 + 1.0
+        }
+      ) yield new Laplace(location, scale)(new RandBasis(new MersenneTwister(0)))
+    }
 
   override type Distr = Laplace
 }

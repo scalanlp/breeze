@@ -18,7 +18,8 @@ package object financial {
       numPeriods: Int,
       payment: Double,
       presentValue: Double,
-      when: PaymentTime = End): Double = {
+      when: PaymentTime = End
+  ): Double = {
     require(numPeriods >= 0)
     if (rate == 0) {
       -1 * (presentValue + payment * numPeriods)
@@ -34,7 +35,8 @@ package object financial {
       numPeriods: Int,
       payment: Double,
       futureValue: Double,
-      when: PaymentTime = End): Double = {
+      when: PaymentTime = End
+  ): Double = {
     require(numPeriods >= 0)
     if (rate == 0) {
       -1 * (futureValue + payment * numPeriods)
@@ -47,29 +49,31 @@ package object financial {
 
   object netPresentValue extends UFunc {
     @expand
-    implicit def reduce[@expand.args(Double, Float, Int) Scalar, T](
-        implicit iter: CanTraverseValues[T, Scalar],
-        @expand.sequence[Scalar](0.0, 0.0f, 0) zero: Scalar): Impl2[Double, T, Double] = new Impl2[Double, T, Double] {
-      def apply(rate: Double, revenueStream: T): Double = {
+    implicit def reduce[@expand.args(Double, Float, Int) Scalar, T](implicit
+        iter: CanTraverseValues[T, Scalar],
+        @expand.sequence[Scalar](0.0, 0.0f, 0) zero: Scalar
+    ): Impl2[Double, T, Double] =
+      new Impl2[Double, T, Double] {
+        def apply(rate: Double, revenueStream: T): Double = {
 
-        val visit = new ValuesVisitor[Scalar] {
-          final val decayConst: Double = 1.0 / (1.0 + rate)
-          var decayUntilNow: Double = 1.0
-          var sum: Double = 0.0
+          val visit = new ValuesVisitor[Scalar] {
+            final val decayConst: Double = 1.0 / (1.0 + rate)
+            var decayUntilNow: Double = 1.0
+            var sum: Double = 0.0
 
-          def visit(a: Scalar): Unit = {
-            sum += decayUntilNow * a
-            decayUntilNow *= decayConst
+            def visit(a: Scalar): Unit = {
+              sum += decayUntilNow * a
+              decayUntilNow *= decayConst
+            }
+
+            def zeros(numZero: Int, zeroValue: Scalar): Unit = ()
           }
 
-          def zeros(numZero: Int, zeroValue: Scalar): Unit = ()
+          iter.traverse(revenueStream, visit)
+
+          visit.sum
         }
-
-        iter.traverse(revenueStream, visit)
-
-        visit.sum
       }
-    }
   }
 
   def payment(
@@ -77,7 +81,8 @@ package object financial {
       numPeriods: Int,
       presentValue: Double,
       futureValue: Double = 0.0,
-      when: PaymentTime = End): Double = {
+      when: PaymentTime = End
+  ): Double = {
     if (rate == 0) {
       -1 * (futureValue + presentValue) / numPeriods
     } else {
@@ -91,7 +96,8 @@ package object financial {
       numPeriods: Int,
       presentValue: Double,
       futureValue: Double = 0.0,
-      when: PaymentTime = End): (DenseVector[Double], DenseVector[Double], DenseVector[Double]) = {
+      when: PaymentTime = End
+  ): (DenseVector[Double], DenseVector[Double], DenseVector[Double]) = {
     if (when == Start) {
       throw new IllegalArgumentException("This method is broken for payment at the start of the period!")
     }
@@ -118,7 +124,8 @@ package object financial {
       numPeriods: Int,
       presentValue: Double,
       futureValue: Double = 0.0,
-      when: PaymentTime = End): DenseVector[Double] =
+      when: PaymentTime = End
+  ): DenseVector[Double] =
     principalInterest(rate, numPeriods, presentValue, futureValue, when)._1
 
   def principalPayments(
@@ -126,7 +133,8 @@ package object financial {
       numPeriods: Int,
       presentValue: Double,
       futureValue: Double = 0.0,
-      when: PaymentTime = End): DenseVector[Double] =
+      when: PaymentTime = End
+  ): DenseVector[Double] =
     principalInterest(rate, numPeriods, presentValue, futureValue, when)._2
 
   def principalRemaining(
@@ -134,7 +142,8 @@ package object financial {
       numPeriods: Int,
       presentValue: Double,
       futureValue: Double = 0.0,
-      when: PaymentTime = End): DenseVector[Double] =
+      when: PaymentTime = End
+  ): DenseVector[Double] =
     principalInterest(rate, numPeriods, presentValue, futureValue, when)._3
 
   private def roots(coeffs: DenseVector[Double]) = {
@@ -174,13 +183,16 @@ package object financial {
   def interalRateReturn(cashflow: DenseVector[Double]): Option[Double] = {
     require(
       cashflow(0) < 0,
-      "Input cash flows per time period. The cashflow(0) represent the initial invesment which should be negative!")
+      "Input cash flows per time period. The cashflow(0) represent the initial invesment which should be negative!"
+    )
 
     val res = roots(reverse(cashflow))
 
     val realRes = DenseVector[Double](
-      for (c: Complex <- res.toArray
-        if c.im() == 0 && c.re() > 0)
+      for (
+        c: Complex <- res.toArray
+        if c.im() == 0 && c.re() > 0
+      )
         yield c.re()
     )
     val rates = realRes.mapValues(v => 1.0 / v - 1.0)
@@ -205,7 +217,7 @@ package object financial {
 
     val inflowNPV: Double = netPresentValue(reinvestRate, positives)
     val outflowNPV: Double = netPresentValue(financeRate, negatives)
-    val mirr = (pow(math.abs(inflowNPV / outflowNPV), (1.0 / (n - 1))) * (1.0 + reinvestRate) - 1.0)
+    val mirr = pow(math.abs(inflowNPV / outflowNPV), (1.0 / (n - 1))) * (1.0 + reinvestRate) - 1.0
     mirr
   }
 
@@ -228,8 +240,9 @@ package object financial {
       fv: Double,
       when: PaymentTime = End,
       guess: Double = 0.1,
-      tol: Double = 1E-06,
-      maxiter: Int = 100) = {
+      tol: Double = 1e-06,
+      maxiter: Int = 100
+  ) = {
     var rate = guess;
     var iter = 0
     var close = false

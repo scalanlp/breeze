@@ -27,8 +27,9 @@ import breeze.util._
 abstract class StochasticGradientDescent[T](
     val defaultStepSize: Double,
     val maxIter: Int,
-    tolerance: Double = 1E-5,
-    fvalMemory: Int = 100)(implicit protected val vspace: NormedModule[T, Double])
+    tolerance: Double = 1e-5,
+    fvalMemory: Int = 100
+)(implicit protected val vspace: NormedModule[T, Double])
     extends FirstOrderMinimizer[T, StochasticDiffFunction[T]](maxIter, tolerance, fvalMemory, relativeTolerance = true)
     with SerializableLogging {
 
@@ -56,8 +57,9 @@ abstract class StochasticGradientDescent[T](
 }
 
 object StochasticGradientDescent {
-  def apply[T](initialStepSize: Double = 4, maxIter: Int = 100)(
-      implicit vs: NormedModule[T, Double]): StochasticGradientDescent[T] = {
+  def apply[T](initialStepSize: Double = 4, maxIter: Int = 100)(implicit
+      vs: NormedModule[T, Double]
+  ): StochasticGradientDescent[T] = {
     new SimpleSGD(initialStepSize, maxIter)
   }
 

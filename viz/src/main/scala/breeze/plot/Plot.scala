@@ -27,20 +27,23 @@ class Plot() {
   private var series = 0
   private val listeners = new mutable.WeakHashMap[Plot.Listener, Unit]()
 
-    
-  def +=(pl:  Series): Plot = {
+  def +=(pl: Series): Plot = {
     +=("Series " + series, pl)
     this
   }
-             
+
   def +=(nameSeries: (String, Series)): Plot = {
-      val (d,r) = nameSeries._2.getChartStuff( {i =>
-      nameSeries._1
-      }, { i =>
-      Plot.fillPaint(series + i)
-    }, { i =>
-      Plot.stroke(series + i)
-    })
+    val (d, r) = nameSeries._2.getChartStuff(
+      { i =>
+        nameSeries._1
+      },
+      { i =>
+        Plot.fillPaint(series + i)
+      },
+      { i =>
+        Plot.stroke(series + i)
+      }
+    )
     datasets += d
     renderers += r
     series += d.getSeriesCount
@@ -179,7 +182,9 @@ class Plot() {
         Plot.outlinePaints,
         Plot.strokes,
         Plot.outlineStrokes,
-        Plot.shapes))
+        Plot.shapes
+      )
+    )
 
     rv
   }
@@ -364,7 +369,8 @@ object Plot {
         series: Int,
         item: Int,
         p11: CrosshairState,
-        p12: Int) {
+        p12: Int
+    ) {
       delegate(series)(_.drawItem(p1, p2, p3, p4, p5, p6, p7, p8, _, item, p11, p12))
 
     }

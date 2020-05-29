@@ -13,7 +13,8 @@ class StochasticAveragedGradient[T](
     maxIter: Int = -1,
     initialStepSize: Double = 0.25,
     tuneStepFrequency: Int = 10,
-    l2Regularization: Double = 0.0)(implicit vs: MutableInnerProductModule[T, Double])
+    l2Regularization: Double = 0.0
+)(implicit vs: MutableInnerProductModule[T, Double])
     extends FirstOrderMinimizer[T, BatchDiffFunction[T]](maxIter) {
   import vs._
 
@@ -22,7 +23,8 @@ class StochasticAveragedGradient[T](
       range: IndexedSeq[Int],
       currentSum: T,
       previousGradients: IndexedSeq[T],
-      nextPos: Int)
+      nextPos: Int
+  )
 
   protected def initialHistory(f: BatchDiffFunction[T], init: T): History = {
     val zero = zeroLike(init)
@@ -56,13 +58,18 @@ class StochasticAveragedGradient[T](
       newGrad: T,
       newVal: Double,
       f: BatchDiffFunction[T],
-      oldState: State): History = {
+      oldState: State
+  ): History = {
     import oldState.history._
     val d = currentSum - previousGradients(nextPos)
     val newStepSize = if (tuneStepFrequency > 0 && (oldState.iter % tuneStepFrequency) == 0) {
       val xdiff = newX - oldState.x
-      if ((f.valueAt(newX, IndexedSeq(nextPos)) + l2Regularization / 2 * norm(newX) - oldState.adjustedValue) > (oldState.adjustedGradient
-          .dot(xdiff)) + (xdiff.dot(xdiff)) / (2 * stepSize)) {
+      if (
+        (f.valueAt(newX, IndexedSeq(nextPos)) + l2Regularization / 2 * norm(
+          newX
+        ) - oldState.adjustedValue) > (oldState.adjustedGradient
+          .dot(xdiff)) + (xdiff.dot(xdiff)) / (2 * stepSize)
+      ) {
         stepSize / 2
       } else {
         stepSize * 1.5

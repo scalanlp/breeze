@@ -240,21 +240,22 @@ class HashVectorTest extends FunSuite {
 abstract class HashVectorPropertyTestBase[T: ClassTag: Zero] extends TensorSpaceTestBase[HashVector[T], Int, T] {
   def genScalar: Arbitrary[T]
 
-  override implicit def genSingle: Arbitrary[HashVector[T]] = Arbitrary {
-    Gen.choose(1, 10).flatMap(RandomInstanceSupport.genHashVector(_, genScalar.arbitrary))
-  }
-
-  implicit def genTriple: Arbitrary[(HashVector[T], HashVector[T], HashVector[T])] = Arbitrary {
-    Gen.choose(1, 10).flatMap { n =>
-      for {
-        x <- RandomInstanceSupport.genHashVector(n, genScalar.arbitrary)
-        y <- RandomInstanceSupport.genHashVector(n, genScalar.arbitrary)
-        z <- RandomInstanceSupport.genHashVector(n, genScalar.arbitrary)
-      } yield (x, y, z)
+  override implicit def genSingle: Arbitrary[HashVector[T]] =
+    Arbitrary {
+      Gen.choose(1, 10).flatMap(RandomInstanceSupport.genHashVector(_, genScalar.arbitrary))
     }
-  }
-}
 
+  implicit def genTriple: Arbitrary[(HashVector[T], HashVector[T], HashVector[T])] =
+    Arbitrary {
+      Gen.choose(1, 10).flatMap { n =>
+        for {
+          x <- RandomInstanceSupport.genHashVector(n, genScalar.arbitrary)
+          y <- RandomInstanceSupport.genHashVector(n, genScalar.arbitrary)
+          z <- RandomInstanceSupport.genHashVector(n, genScalar.arbitrary)
+        } yield (x, y, z)
+      }
+    }
+}
 
 class HashVectorOps_DoubleTest
     extends HashVectorPropertyTestBase[Double]
@@ -263,14 +264,12 @@ class HashVectorOps_DoubleTest
   def genScalar: Arbitrary[Double] = RandomInstanceSupport.genReasonableDouble
 }
 
-
 class HashVectorOps_FloatTest extends HashVectorPropertyTestBase[Float] {
   val space = HashVector.space[Float]
 
-  override val TOL: Double = 1E-2
+  override val TOL: Double = 1e-2
   def genScalar: Arbitrary[Float] = Arbitrary { RandomInstanceSupport.genReasonableDouble.arbitrary.map(_.toFloat) }
 }
-
 
 class HashVectorOps_IntTest extends HashVectorPropertyTestBase[Int] {
   val space = HashVector.space[Int]

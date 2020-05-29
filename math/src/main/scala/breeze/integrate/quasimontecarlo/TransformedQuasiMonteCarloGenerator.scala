@@ -98,10 +98,11 @@ trait ProvidesTransformedQuasiMonteCarlo {
       val exp_minus_x_over_two = math.exp(-0.5 * x)
       v <= (math.pow(x, alpha - 1) * exp_minus_x_over_two) / (two_to_alpha_minus_one * math.pow(
         1 - exp_minus_x_over_two,
-        alpha - 1))
+        alpha - 1
+      ))
     }
 
-    def compute(rvs: Array[Double], position: Int): Double = (theta * x)
+    def compute(rvs: Array[Double], position: Int): Double = theta * x
 
     def copy = GammaQuasiRandomVariableSpecAlphaLeq1(alpha, theta)
   }

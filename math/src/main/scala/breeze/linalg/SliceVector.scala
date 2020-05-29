@@ -26,8 +26,8 @@ import spire.syntax.cfor._
  */
 class SliceVector[@spec(Int) K, @spec(Double, Int, Float, Long) V: ClassTag](
     val tensor: Tensor[K, V],
-    val slices: IndexedSeq[K])
-    extends Vector[V]
+    val slices: IndexedSeq[K]
+) extends Vector[V]
     with VectorLike[V, SliceVector[K, V]] {
 
   def apply(i: Int): V = tensor(slices(i))
@@ -57,7 +57,7 @@ object SliceVector extends SliceVectorOps {
   implicit def scalarOf[K, T]: ScalarOf[SliceVector[K, T], T] = ScalarOf.dummy
 
   implicit def canMapKeyValuePairs[K, V, V2: ClassTag]
-    : CanMapKeyValuePairs[SliceVector[K, V], Int, V, V2, DenseVector[V2]] = {
+      : CanMapKeyValuePairs[SliceVector[K, V], Int, V, V2, DenseVector[V2]] = {
     new CanMapKeyValuePairs[SliceVector[K, V], Int, V, V2, DenseVector[V2]] {
       override def map(from: SliceVector[K, V], fn: (Int, V) => V2): DenseVector[V2] = {
         DenseVector.tabulate(from.length)(i => fn(i, from(i)))
@@ -138,11 +138,21 @@ trait SliceVectorOps {
   implicit def slv_v_Op[
       K,
       @expand.args(Int, Double, Float, Long) T,
-      @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
-      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ / _ }, { (a, b) =>
-        b
-      }, { _ % _ }, { _.pow(_) })
-      op: Op.Impl2[T, T, T]): BinaryRegistry[SliceVector[K, T], Vector[T], Op.type, DenseVector[T]] =
+      @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType
+  ](implicit
+      @expand.sequence[Op](
+        { _ + _ },
+        { _ - _ },
+        { _ * _ },
+        { _ / _ },
+        { (a, b) =>
+          b
+        },
+        { _ % _ },
+        { _.pow(_) }
+      )
+      op: Op.Impl2[T, T, T]
+  ): BinaryRegistry[SliceVector[K, T], Vector[T], Op.type, DenseVector[T]] =
     new BinaryRegistry[SliceVector[K, T], Vector[T], Op.type, DenseVector[T]] {
 
       override protected def bindingMissing(a: SliceVector[K, T], b: Vector[T]): DenseVector[T] = {
@@ -156,11 +166,21 @@ trait SliceVectorOps {
   implicit def slv_s_Op[
       K,
       @expand.args(Int, Double, Float, Long) T,
-      @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
-      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ / _ }, { (a, b) =>
-        b
-      }, { _ % _ }, { _.pow(_) })
-      op: Op.Impl2[T, T, T]): BinaryRegistry[SliceVector[K, T], T, Op.type, DenseVector[T]] =
+      @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType
+  ](implicit
+      @expand.sequence[Op](
+        { _ + _ },
+        { _ - _ },
+        { _ * _ },
+        { _ / _ },
+        { (a, b) =>
+          b
+        },
+        { _ % _ },
+        { _.pow(_) }
+      )
+      op: Op.Impl2[T, T, T]
+  ): BinaryRegistry[SliceVector[K, T], T, Op.type, DenseVector[T]] =
     new BinaryRegistry[SliceVector[K, T], T, Op.type, DenseVector[T]] {
 
       override protected def bindingMissing(a: SliceVector[K, T], b: T): DenseVector[T] = {
@@ -173,11 +193,19 @@ trait SliceVectorOps {
   implicit def slv_v_InPlaceOp[
       K,
       @expand.args(Int, Double, Float, Long) T,
-      @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
-      implicit @expand.sequence[Op]({ _ * _ }, { _ / _ }, { (a, b) =>
-        b
-      }, { _ % _ }, { _.pow(_) })
-      op: Op.Impl2[T, T, T]): BinaryUpdateRegistry[SliceVector[K, T], Vector[T], Op.type] =
+      @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType
+  ](implicit
+      @expand.sequence[Op](
+        { _ * _ },
+        { _ / _ },
+        { (a, b) =>
+          b
+        },
+        { _ % _ },
+        { _.pow(_) }
+      )
+      op: Op.Impl2[T, T, T]
+  ): BinaryUpdateRegistry[SliceVector[K, T], Vector[T], Op.type] =
     new BinaryUpdateRegistry[SliceVector[K, T], Vector[T], Op.type] {
 
       override protected def bindingMissing(a: SliceVector[K, T], b: Vector[T]): Unit = {
@@ -192,11 +220,19 @@ trait SliceVectorOps {
   implicit def slv_s_InPlaceOp[
       K,
       @expand.args(Int, Double, Float, Long) T,
-      @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
-      implicit @expand.sequence[Op]({ _ * _ }, { _ / _ }, { (a, b) =>
-        b
-      }, { _ % _ }, { _.pow(_) })
-      op: Op.Impl2[T, T, T]): BinaryUpdateRegistry[SliceVector[K, T], T, Op.type] =
+      @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType
+  ](implicit
+      @expand.sequence[Op](
+        { _ * _ },
+        { _ / _ },
+        { (a, b) =>
+          b
+        },
+        { _ % _ },
+        { _.pow(_) }
+      )
+      op: Op.Impl2[T, T, T]
+  ): BinaryUpdateRegistry[SliceVector[K, T], T, Op.type] =
     new BinaryUpdateRegistry[SliceVector[K, T], T, Op.type] {
 
       override protected def bindingMissing(a: SliceVector[K, T], b: T): Unit = {

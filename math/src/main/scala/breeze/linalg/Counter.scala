@@ -70,10 +70,11 @@ trait CounterLike[K, V, +M <: scala.collection.mutable.Map[K, V], +This <: Count
 
   override def toString: String = data.mkString("Counter(", ", ", ")")
 
-  override def equals(p1: Any): Boolean = p1 match {
-    case x: Counter[K, V] => x.data == this.data
-    case _ => false
-  }
+  override def equals(p1: Any): Boolean =
+    p1 match {
+      case x: Counter[K, V] => x.data == this.data
+      case _ => false
+    }
 
   override def hashCode(): Int = data.hashCode()
 
@@ -139,18 +140,19 @@ object Counter extends CounterOps {
     }
   }
 
-  implicit def canIterateValues[K, V]: CanTraverseValues[Counter[K, V], V] = new CanTraverseValues[Counter[K, V], V] {
+  implicit def canIterateValues[K, V]: CanTraverseValues[Counter[K, V], V] =
+    new CanTraverseValues[Counter[K, V], V] {
 
-    def isTraversableAgain(from: Counter[K, V]): Boolean = true
+      def isTraversableAgain(from: Counter[K, V]): Boolean = true
 
-    /** Iterates all values from the given collection. */
-    def traverse(from: Counter[K, V], fn: ValuesVisitor[V]): Unit = {
-      for (v <- from.valuesIterator) {
-        fn.visit(v)
+      /** Iterates all values from the given collection. */
+      def traverse(from: Counter[K, V], fn: ValuesVisitor[V]): Unit = {
+        for (v <- from.valuesIterator) {
+          fn.visit(v)
+        }
       }
-    }
 
-  }
+    }
 
   implicit def scalarOf[K, V]: ScalarOf[Counter[K, V], V] = ScalarOf.dummy
 

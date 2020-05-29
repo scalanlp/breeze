@@ -98,7 +98,7 @@ case class Poisson(mean: Double)(implicit rand: RandBasis = Rand)
       correction = meanmean * ln_k_! / exp(ln_k_!)
       extra += correction
       k += 1
-    } while (correction > 1E-6)
+    } while (correction > 1e-6)
 
     entr + exp(-mean) * extra
   }
@@ -120,13 +120,14 @@ object Poisson extends ExponentialFamily[Poisson, Int] {
 
   def mle(stats: SufficientStatistic) = stats.sum / stats.n
 
-  def likelihoodFunction(stats: SufficientStatistic) = new DiffFunction[Double] {
-    def calculate(x: Double) = {
-      val obj = math.log(x) * stats.sum - x * stats.n
-      val grad = stats.sum / x - stats.n
-      (-obj, -grad)
+  def likelihoodFunction(stats: SufficientStatistic) =
+    new DiffFunction[Double] {
+      def calculate(x: Double) = {
+        val obj = math.log(x) * stats.sum - x * stats.n
+        val grad = stats.sum / x - stats.n
+        (-obj, -grad)
+      }
     }
-  }
 
   def distribution(p: Poisson.Parameter) = new Poisson(p)
 }

@@ -35,7 +35,8 @@ class EmpiricalHessianTest extends OptimizeTestBase with Matchers with DoubleImp
       (0d, 0.3362165d, 0d, 0d, 0d),
       (0d, 0d, 0.733447d, 0d, 0d),
       (0d, 0d, 0d, 3.064854d, 0d),
-      (0d, 0d, 0d, 0d, 0.2187119d))
+      (0d, 0d, 0d, 0d, 0.2187119d)
+    )
 
     val f = new DiffFunction[DenseVector[Double]] {
       def calculate(x: DenseVector[Double]) = {

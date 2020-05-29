@@ -64,7 +64,8 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
         (3, 5),
         (3, 5),
         (5, 5)
-      ))
+      )
+    )
 
     // slice columns
     val s5 = m(::, 1 to 2)
@@ -367,14 +368,17 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     val b = DenseMatrix(
       (Complex(7, 7), Complex(-2, -2), Complex(8, 8)),
       (Complex(-3, -3), Complex(-3, -3), Complex(1, 1)),
-      (Complex(12, 12), Complex(0, 0), Complex(5, 5)))
+      (Complex(12, 12), Complex(0, 0), Complex(5, 5))
+    )
     val c = DenseVector(Complex(6, 0), Complex(2, 0), Complex(3, 0))
     val cs = SparseVector(Complex(6, 0), Complex(2, 0), Complex(3, 0))
     val value: DenseMatrix[Complex] = a * b
     assert(
       value === DenseMatrix(
         (Complex(0, 74), Complex(0, -16), Complex(0, 50)),
-        (Complex(0, 170), Complex(0, -46), Complex(0, 134))))
+        (Complex(0, 170), Complex(0, -46), Complex(0, 134))
+      )
+    )
     assert(b * c === DenseVector(Complex(62, 62), Complex(-21, -21), Complex(87, 87)))
     assert(b * cs === DenseVector(Complex(62, 62), Complex(-21, -21), Complex(87, 87)))
     assert(b.t * c === DenseVector(Complex(72, -72), Complex(-18, 18), Complex(65, -65)))
@@ -386,7 +390,8 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     val c = DenseVector(6, 2, 3).mapValues(BigDecimal(_))
     assert(
       a.*(b)(DenseMatrix.op_DM_DM_Semiring[BigDecimal]) === DenseMatrix((37, -8, 25), (85, -23, 67))
-        .mapValues(BigDecimal(_)))
+        .mapValues(BigDecimal(_))
+    )
     assert(a * c === DenseVector(19, 52).mapValues(BigDecimal(_)))
     assert(b * c === DenseVector(62, -21, 87).mapValues(BigDecimal(_)))
     assert(b.t * c === DenseVector(72, -18, 65).mapValues(BigDecimal(_)))
@@ -441,7 +446,7 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
 
     // matrix-vector solve
     val r2: DenseVector[Double] = DenseMatrix((1.0, 3.0, 4.0), (2.0, 0.0, 6.0)) \ DenseVector(1.0, 3.0)
-    assert(norm(r2 - DenseVector(0.1813186813186811, -0.3131868131868131, 0.43956043956043944), inf) < 1E-5)
+    assert(norm(r2 - DenseVector(0.1813186813186811, -0.3131868131868131, 0.43956043956043944), inf) < 1e-5)
 
     // wide matrix solve
     val r3: DenseMatrix[Double] = DenseMatrix((1.0, 3.0, 4.0), (2.0, 0.0, 6.0)) \ DenseMatrix((1.0, 2.0), (3.0, 4.0))
@@ -450,15 +455,18 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
       DenseMatrix(
         (0.1813186813186811, 0.2197802197802196),
         (-0.3131868131868131, -0.1978021978021977),
-        (0.43956043956043944, 0.5934065934065933)))
+        (0.43956043956043944, 0.5934065934065933)
+      )
+    )
 
     // tall matrix solve
-    val r4: DenseMatrix[Double] = DenseMatrix((1.0, 3.0), (2.0, 0.0), (4.0, 6.0)) \ DenseMatrix(
-      (1.0, 4.0),
-      (2.0, 5.0),
-      (3.0, 6.0))
-    assert(max(abs(
-      r4 - DenseMatrix((0.9166666666666667, 1.9166666666666672), (-0.08333333333333352, -0.08333333333333436)))) < 1E-5)
+    val r4: DenseMatrix[Double] =
+      DenseMatrix((1.0, 3.0), (2.0, 0.0), (4.0, 6.0)) \ DenseMatrix((1.0, 4.0), (2.0, 5.0), (3.0, 6.0))
+    assert(
+      max(
+        abs(r4 - DenseMatrix((0.9166666666666667, 1.9166666666666672), (-0.08333333333333352, -0.08333333333333436)))
+      ) < 1e-5
+    )
   }
 
   test("Solve Float") {
@@ -468,30 +476,33 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
 
     // matrix-vector solve
     val r2: DenseVector[Float] = DenseMatrix((1.0f, 3.0f, 4.0f), (2.0f, 0.0f, 6.0f)) \ DenseVector(1.0f, 3.0f)
-    assert(norm(r2 - DenseVector(0.1813186813186811f, -0.3131868131868131f, 0.43956043956043944f)) < 1E-5)
+    assert(norm(r2 - DenseVector(0.1813186813186811f, -0.3131868131868131f, 0.43956043956043944f)) < 1e-5)
 
     // wide matrix solve
-    val r3: DenseMatrix[Float] = DenseMatrix((1.0f, 3.0f, 4.0f), (2.0f, 0.0f, 6.0f)) \ DenseMatrix(
-      (1.0f, 2.0f),
-      (3.0f, 4.0f))
+    val r3: DenseMatrix[Float] =
+      DenseMatrix((1.0f, 3.0f, 4.0f), (2.0f, 0.0f, 6.0f)) \ DenseMatrix((1.0f, 2.0f), (3.0f, 4.0f))
     assert(
       max(
         abs(
           r3 - DenseMatrix(
             (0.1813186813186811f, 0.2197802197802196f),
             (-0.3131868131868131f, -0.1978021978021977f),
-            (0.43956043956043944f, 0.5934065934065933f)))) < 1E-5)
+            (0.43956043956043944f, 0.5934065934065933f)
+          )
+        )
+      ) < 1e-5
+    )
 
     // tall matrix solve
-    val r4: DenseMatrix[Float] = DenseMatrix((1.0f, 3.0f), (2.0f, 0.0f), (4.0f, 6.0f)) \ DenseMatrix(
-      (1.0f, 4.0f),
-      (2.0f, 5.0f),
-      (3.0f, 6.0f))
+    val r4: DenseMatrix[Float] =
+      DenseMatrix((1.0f, 3.0f), (2.0f, 0.0f), (4.0f, 6.0f)) \ DenseMatrix((1.0f, 4.0f), (2.0f, 5.0f), (3.0f, 6.0f))
     assert(
       max(
-        abs(r4 - DenseMatrix(
-          (0.9166666666666667f, 1.9166666666666672f),
-          (-0.08333333333333352f, -0.08333333333333436f)))) < 1E-5)
+        abs(
+          r4 - DenseMatrix((0.9166666666666667f, 1.9166666666666672f), (-0.08333333333333352f, -0.08333333333333436f))
+        )
+      ) < 1e-5
+    )
   }
 
   test("GH#29 transpose solve is broken") {
@@ -523,7 +534,7 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     // handle odd sized matrices (test for a bug.)
     val dm = DenseMatrix.tabulate(2, 5)((i, j) => i * j * 1.0 + 1)
     dm := normalize(dm, Axis._1, 2)
-    assert(abs(sum(dm(0, ::).t.map(x => x * x)) - 1.0) < 1E-4, dm.toString + " not normalized!")
+    assert(abs(sum(dm(0, ::).t.map(x => x * x)) - 1.0) < 1e-4, dm.toString + " not normalized!")
   }
 
   test("Generic Dense ops") {
@@ -649,7 +660,8 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     val sl2t = area.t(0 until area.cols, 1 until area.rows)
     assert(
       sl2t.offset === area.offset + area.majorStride,
-      sl2t.data(area.offset + area.majorStride) + " " + area.offset)
+      sl2t.data(area.offset + area.majorStride) + " " + area.offset
+    )
     assert(sl2t.t === DenseMatrix((3, 4, 5, 6, 7), (3, 4, 5, 6, 7)))
 
     val sl2 = area(1 until area.rows, 0 until area.cols)
@@ -658,7 +670,8 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
 
   test("DenseMatrix construction with list of lists") {
     val dm = DenseMatrix(
-      List(List(1, 2, 3, 0, 0, 0, 0, 0, 0), List(0, 0, 0, 1, 2, 3, 0, 0, 0), List(0, 0, 0, 0, 0, 0, 1, 2, 3)): _*)
+      List(List(1, 2, 3, 0, 0, 0, 0, 0, 0), List(0, 0, 0, 1, 2, 3, 0, 0, 0), List(0, 0, 0, 0, 0, 0, 1, 2, 3)): _*
+    )
   }
 
   test("#265: slices of :: and IndexedSeq") {
@@ -681,7 +694,7 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
   }
 
   test("#286: argsort diverging implicit") {
-    val dm = DenseMatrix((0.1f), (0.0f))
+    val dm = DenseMatrix(0.1f, 0.0f)
 
     assert(argsort(dm) === IndexedSeq((1, 0), (0, 0)))
   }
@@ -817,7 +830,7 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
 }
 
 trait MatrixTestUtils extends Matchers {
-  def matricesNearlyEqual(A: Matrix[Double], B: Matrix[Double], threshold: Double = 1E-6): Unit = {
+  def matricesNearlyEqual(A: Matrix[Double], B: Matrix[Double], threshold: Double = 1e-6): Unit = {
     for (i <- 0 until A.rows; j <- 0 until A.cols)
       A(i, j) should be(B(i, j) +- threshold)
   }

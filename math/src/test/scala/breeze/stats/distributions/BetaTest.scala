@@ -32,18 +32,21 @@ class BetaTest
   val expFam = Beta
   import org.scalacheck.Arbitrary.arbitrary;
 
-  def arbParameter = Arbitrary {
-    for (mean <- arbitrary[Double].map { x =>
-        math.abs(x) % 100.0 + 1E-4
-      };
-      std <- arbitrary[Double].map { x =>
-        math.abs(x) % 100 + 1E-4
-      }) yield (mean, std)
-  }
+  def arbParameter =
+    Arbitrary {
+      for (
+        mean <- arbitrary[Double].map { x =>
+          math.abs(x) % 100.0 + 1e-4
+        };
+        std <- arbitrary[Double].map { x =>
+          math.abs(x) % 100 + 1e-4
+        }
+      ) yield (mean, std)
+    }
 
   def paramsClose(p: (Double, Double), b: (Double, Double)) = {
-    val y1 = (p._1 - b._1).abs / (p._1.abs / 2 + b._1.abs / 2 + 1) < 1E-1
-    val y2 = (p._2 - b._2).abs / (p._2.abs / 2 + b._2.abs / 2 + 1) < 1E-1
+    val y1 = (p._1 - b._1).abs / (p._1.abs / 2 + b._1.abs / 2 + 1) < 1e-1
+    val y2 = (p._2 - b._2).abs / (p._2.abs / 2 + b._2.abs / 2 + 1) < 1e-1
     y1 && y2
   }
 
@@ -53,14 +56,17 @@ class BetaTest
 
   def fromDouble(x: Double) = x
 
-  implicit def arbDistr = Arbitrary {
-    for (a <- arbitrary[Double].map { x =>
-        math.abs(x) % 10000.0 + 1.1
-      };
-      b <- arbitrary[Double].map { x =>
-        math.abs(x) % 8.0 + 1.1
-      }) yield new Beta(a, b);
-  }
+  implicit def arbDistr =
+    Arbitrary {
+      for (
+        a <- arbitrary[Double].map { x =>
+          math.abs(x) % 10000.0 + 1.1
+        };
+        b <- arbitrary[Double].map { x =>
+          math.abs(x) % 8.0 + 1.1
+        }
+      ) yield new Beta(a, b);
+    }
 
   test("#15 test 1: Small a and b") {
     val a = 0.0014364182264741652
@@ -73,7 +79,7 @@ class BetaTest
   }
 
   test("#15 test 2: Smaller a and b") {
-    val a = 7.672385302336129E-4
+    val a = 7.672385302336129e-4
     val b = 0.5028709732819038
     val n = 100000
     val samples = new Beta(a, b).sample(n)

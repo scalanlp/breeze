@@ -72,20 +72,21 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val idx = argsort(lambda)
 
     idx.zipWithIndex.map { i =>
-      lambda(i._1) should be(eigVals(i._2) +- 1E-6)
-      vectorsNearlyEqual(evs(::, i._1), eigVect(::, i._2), 1E-6)
+      lambda(i._1) should be(eigVals(i._2) +- 1e-6)
+      vectorsNearlyEqual(evs(::, i._1), eigVect(::, i._2), 1e-6)
     }
   }
 
   test("LUfactorization") {
-    val (m, _) = LU.primitive(DenseMatrix((29, 42, -4, 50, 1), (20, -31, 32, 21, 2), (-47, -20, 24, -22, 3), (3, 17, -45, 23, 4)))
+    val (m, _) =
+      LU.primitive(DenseMatrix((29, 42, -4, 50, 1), (20, -31, 32, 21, 2), (-47, -20, 24, -22, 3), (3, 17, -45, 23, 4)))
     val aux = DenseMatrix(
       (-47.0000, -20.0000, 24.0000, -22.0000, 3.0000),
       (-0.4255, -39.5106, 42.2127, 11.6382, 3.2765),
       (-0.6170, -0.7506, 42.4964, 45.1620, 5.3107),
       (-0.0638, -0.3979, -0.6275, 54.5694, 8.8282)
     )
-    matricesNearlyEqual(m, aux, 1E-4)
+    matricesNearlyEqual(m, aux, 1e-4)
   }
 
   test("det") {
@@ -99,7 +100,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     det(C) should be(0.0 +- 1e-6)
 
     val D = DenseMatrix((-1, 1, -1), (1, 2, 3), (3, -10, 1))
-    det(D) should be(-8.0 +- 1E-6)
+    det(D) should be(-8.0 +- 1e-6)
   }
 
   test("logdet") {
@@ -126,7 +127,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
 
   test("cond") {
     val A = DenseMatrix((1.0, 0.0, -1.0), (0.0, 1.0, 0.0), (1.0, 0.0, 1.0))
-    assert((cond(A) - math.sqrt(2)).abs < 1E-6, cond(A))
+    assert((cond(A) - math.sqrt(2)).abs < 1e-6, cond(A))
 
     A(0, 0) = -1.0 // row 0 and row 2 are linearly dependent now
     assert(cond(A) === Double.PositiveInfinity)
@@ -138,7 +139,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
       (29.0, 42.0, -4.0, 50.0),
       (20.0, -31.0, 32.0, 21.0),
       (-47.0, -20.0, 24.0, -22.0),
-      (3.0, 17.0, -45.0, 23.0))
+      (3.0, 17.0, -45.0, 23.0)
+    )
     val I = DenseMatrix.eye[Double](4)
     matricesNearlyEqual(inv(X) * X, I)
   }
@@ -164,11 +166,12 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     assert(cross(v2, v1) === r * -1)
 
     // test using a re-write of the cross-product equation and a scalacheck arbitrary generator
-    implicit def arb3DVector: Arbitrary[DenseVector[Double]] = Arbitrary {
-      for {
-        els <- Gen.containerOfN[Array, Double](3, Gen.chooseNum[Double](-100.0, 100.0))
-      } yield DenseVector(els(0), els(1), els(2))
-    }
+    implicit def arb3DVector: Arbitrary[DenseVector[Double]] =
+      Arbitrary {
+        for {
+          els <- Gen.containerOfN[Array, Double](3, Gen.chooseNum[Double](-100.0, 100.0))
+        } yield DenseVector(els(0), els(1), els(2))
+      }
     check { (a: DenseVector[Double], b: DenseVector[Double]) =>
       val r = DenseVector(a(1) * b(2) - a(2) * b(1), a(2) * b(0) - a(0) * b(2), a(0) * b(1) - a(1) * b(0))
       cross(a, b) == r
@@ -289,7 +292,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val A = DenseMatrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
     val QRP(_QQ, _RR, _P, _) = qrp(A)
     val ap = A * convert(_P, Double)
-    assert(max(abs(_QQ * _RR - ap)) < 1E-8)
+    assert(max(abs(_QQ * _RR - ap)) < 1e-8)
   }
 
   test("qr reduced A[m, n], m < n") {
@@ -415,7 +418,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val Eig(w, wi, v) = eig(DenseMatrix((1.0, -1.0), (1.0, 1.0)))
     assert(w === DenseVector(1.0, 1.0))
     assert(wi === DenseVector(1.0, -1.0))
-    assert(max(abs(v - diag(DenseVector(0.7071067811865475, -0.7071067811865475)))) < 1E-7)
+    assert(max(abs(v - diag(DenseVector(0.7071067811865475, -0.7071067811865475)))) < 1e-7)
     // TODO, we seem to throw out VI... these seems bad...
   }
 
@@ -430,8 +433,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val SVD(u, s, vt) = svd(m)
 
     // u and vt are unitary
-    trace(u.t * u) should be(u.rows.toDouble +- 1E-5)
-    trace(vt * vt.t) should be(vt.rows.toDouble +- 1E-5)
+    trace(u.t * u) should be(u.rows.toDouble +- 1e-5)
+    trace(vt * vt.t) should be(vt.rows.toDouble +- 1e-5)
 
     // s is sorted by size of singular value, and be nonnegative
     for (i <- 1 until s.length) {
@@ -450,8 +453,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val SVD(u, s, vt) = svd(m)
 
     // u and vt are unitary
-    trace(u.t * u) should be(u.rows.toDouble +- 1E-5)
-    trace(vt * vt.t) should be(vt.rows.toDouble +- 1E-5)
+    trace(u.t * u) should be(u.rows.toDouble +- 1e-5)
+    trace(vt * vt.t) should be(vt.rows.toDouble +- 1e-5)
 
     // s is sorted by size of singular value, and be nonnegative
     for (i <- 1 until s.length) {
@@ -470,8 +473,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val SVD(u, s, vt) = svd(m)
 
     // u and vt are unitary
-    trace(u.t * u) should be(u.rows.toFloat +- 1E-5f)
-    trace(vt * vt.t) should be(vt.rows.toFloat +- 1E-5f)
+    trace(u.t * u) should be(u.rows.toFloat +- 1e-5f)
+    trace(vt * vt.t) should be(vt.rows.toFloat +- 1e-5f)
 
     // s is sorted by size of singular value, and be nonnegative
     for (i <- 1 until s.length) {
@@ -484,7 +487,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val reM: DenseMatrix[Float] = u * ss * vt
     // matricesNearlyEqual(reM, m)
     for (i <- 0 until reM.rows; j <- 0 until reM.cols)
-      reM(i, j) should be(m(i, j) +- 1E-6f)
+      reM(i, j) should be(m(i, j) +- 1e-6f)
   }
 
   test("svd float A(m, n), m < n") {
@@ -492,8 +495,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val SVD(u, s, vt) = svd(m)
 
     // u and vt are unitary
-    trace(u.t * u) should be(u.rows.toFloat +- 1E-5f)
-    trace(vt * vt.t) should be(vt.rows.toFloat +- 1E-5f)
+    trace(u.t * u) should be(u.rows.toFloat +- 1e-5f)
+    trace(vt * vt.t) should be(vt.rows.toFloat +- 1e-5f)
 
     // s is sorted by size of singular value, and be nonnegative
     for (i <- 1 until s.length) {
@@ -506,7 +509,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val reM: DenseMatrix[Float] = u * ss * vt
     // matricesNearlyEqual(reM, m)
     for (i <- 0 until reM.rows; j <- 0 until reM.cols)
-      reM(i, j) should be(m(i, j) +- 1E-5f)
+      reM(i, j) should be(m(i, j) +- 1e-5f)
   }
 
   test("svd reduced A(m, n), m > n") {
@@ -514,8 +517,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val SVD(u, s, vt) = svd.reduced(m)
 
     // u and vt are unitary
-    trace(u.t * u) should be(u.cols.toDouble +- 1E-5)
-    trace(vt * vt.t) should be(vt.rows.toDouble +- 1E-5)
+    trace(u.t * u) should be(u.cols.toDouble +- 1e-5)
+    trace(vt * vt.t) should be(vt.rows.toDouble +- 1e-5)
 
     // s is sorted by size of singular value, and be nonnegative
     for (i <- 1 until s.length) {
@@ -534,8 +537,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val SVD(u, s, vt) = svd.reduced(m)
 
     // u and vt are unitary
-    trace(u.t * u) should be(u.cols.toDouble +- 1E-5)
-    trace(vt * vt.t) should be(vt.rows.toDouble +- 1E-5)
+    trace(u.t * u) should be(u.cols.toDouble +- 1e-5)
+    trace(vt * vt.t) should be(vt.rows.toDouble +- 1e-5)
 
     // s is sorted by size of singular value, and be nonnegative
     for (i <- 1 until s.length) {
@@ -554,8 +557,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val SVD(u, s, vt) = svd.reduced(m)
 
     // u and vt are unitary
-    trace(u.t * u) should be(u.cols.toDouble +- 1E-5)
-    trace(vt * vt.t) should be(vt.rows.toDouble +- 1E-5)
+    trace(u.t * u) should be(u.cols.toDouble +- 1e-5)
+    trace(vt * vt.t) should be(vt.rows.toDouble +- 1e-5)
 
     // s is sorted by size of singular value, and be nonnegative
     for (i <- 1 until s.length) {
@@ -574,8 +577,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val SVD(u, s, vt) = svd.reduced(m)
 
     // u and vt are unitary
-    trace(u.t * u) should be(u.cols.toFloat +- 1E-5f)
-    trace(vt * vt.t) should be(vt.rows.toFloat +- 1E-5f)
+    trace(u.t * u) should be(u.cols.toFloat +- 1e-5f)
+    trace(vt * vt.t) should be(vt.rows.toFloat +- 1e-5f)
 
     // s is sorted by size of singular value, and be nonnegative
     for (i <- 1 until s.length) {
@@ -588,7 +591,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val reM: DenseMatrix[Float] = u * ss * vt
     // matricesNearlyEqual(reM, m)
     for (i <- 0 until reM.rows; j <- 0 until reM.cols)
-      reM(i, j) should be(m(i, j) +- 1E-6f)
+      reM(i, j) should be(m(i, j) +- 1e-6f)
   }
 
   test("svd reduced float A(m, n), m = n") {
@@ -596,8 +599,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val SVD(u, s, vt) = svd.reduced(m)
 
     // u and vt are unitary
-    trace(u.t * u) should be(u.cols.toFloat +- 1E-5f)
-    trace(vt * vt.t) should be(vt.rows.toFloat +- 1E-5f)
+    trace(u.t * u) should be(u.cols.toFloat +- 1e-5f)
+    trace(vt * vt.t) should be(vt.rows.toFloat +- 1e-5f)
 
     // s is sorted by size of singular value, and be nonnegative
     for (i <- 1 until s.length) {
@@ -610,7 +613,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val reM: DenseMatrix[Float] = u * ss * vt
     // matricesNearlyEqual(reM, m)
     for (i <- 0 until reM.rows; j <- 0 until reM.cols)
-      reM(i, j) should be(m(i, j) +- 1E-5f)
+      reM(i, j) should be(m(i, j) +- 1e-5f)
   }
 
   test("svd reduced float A(m, n), m < n") {
@@ -618,8 +621,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val SVD(u, s, vt) = svd.reduced(m)
 
     // u and vt are unitary
-    trace(u.t * u) should be(u.cols.toFloat +- 1E-5f)
-    trace(vt * vt.t) should be(vt.rows.toFloat +- 1E-5f)
+    trace(u.t * u) should be(u.cols.toFloat +- 1e-5f)
+    trace(vt * vt.t) should be(vt.rows.toFloat +- 1e-5f)
 
     // s is sorted by size of singular value, and be nonnegative
     for (i <- 1 until s.length) {
@@ -632,7 +635,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     val reM: DenseMatrix[Float] = u * ss * vt
     // matricesNearlyEqual(reM, m)
     for (i <- 0 until reM.rows; j <- 0 until reM.cols)
-      reM(i, j) should be(m(i, j) +- 1E-5f)
+      reM(i, j) should be(m(i, j) +- 1e-5f)
   }
 
   test("svd and svdr singular values are equal") {
@@ -694,34 +697,36 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
       (1.0, 3.0, 2.0, 1.0, 9.0),
       (0.0, 0.0, 2.0, 0.0, 5.0),
       (0.0, 1.5, 0.0, 0.0, 5.0),
-      (1.5, 0.0, 2.0, 0.0, 5.0))
+      (1.5, 0.0, 2.0, 0.0, 5.0)
+    )
     val m2 = CSCMatrix(
       (2.0, 4.0, 0.0, 1.0, 2.0),
       (1.0, 0.0, 2.0, 1.0, 0.0),
       (1.0, 3.0, 2.0, 1.0, 9.0),
       (0.0, 0.0, 2.0, 0.0, 5.0),
       (0.0, 1.5, 0.0, 0.0, 5.0),
-      (1.5, 0.0, 2.0, 0.0, 5.0))
+      (1.5, 0.0, 2.0, 0.0, 5.0)
+    )
 
     def checkCols(m1: DenseMatrix[Double], m2: DenseMatrix[Double]) = {
       for (i <- 0 until m1.cols) {
         val v1 = if (m1(::, i).valueAt(0) > 0) m1(::, i) else -m1(::, i)
         val v2 = if (m2(::, i).valueAt(0) > 0) m2(::, i) else -m2(::, i)
-        assert(max(abs(v1 - v2)) < 1E-5)
-        assert(abs(norm(v1) - 1.0) < 1E-5)
-        assert(abs(norm(v2) - 1.0) < 1E-5)
+        assert(max(abs(v1 - v2)) < 1e-5)
+        assert(abs(norm(v1) - 1.0) < 1e-5)
+        assert(abs(norm(v2) - 1.0) < 1e-5)
       }
     }
 
     val SVD(u1, s1, vt1) = svd(m1)
     val SVD(u2, s2, vt2) = svd(m2, 2)
-    assert(max(abs(s1.slice(0, 2) - s2)) < 1E-5)
+    assert(max(abs(s1.slice(0, 2) - s2)) < 1e-5)
     checkCols(u1(::, 0 until 2), u2)
     checkCols(vt1(0 until 2, ::).t, vt2.t)
 
     val SVD(u1t, s1t, vt1t) = svd(m1.t)
     val SVD(u2t, s2t, vt2t) = svd(m2.t, 2)
-    assert(max(abs(s1t.slice(0, 2) - s2t)) < 1E-5)
+    assert(max(abs(s1t.slice(0, 2) - s2t)) < 1e-5)
     checkCols(u1t(::, 0 until 2), u2t)
     checkCols(vt1t(0 until 2, ::).t, vt2t.t)
   }
@@ -729,14 +734,14 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
   test("small pow test") {
     val X = DenseMatrix((.7, .2), (.3, .8))
     assert(mpow(X, 1) === X)
-    assert(max(abs(mpow(X, .5) - DenseMatrix((.82426, 0.11716), (.17574, 0.88284)))) < 1E-5, mpow(X, .5))
+    assert(max(abs(mpow(X, .5) - DenseMatrix((.82426, 0.11716), (.17574, 0.88284)))) < 1e-5, mpow(X, .5))
     // Test for matrix with complex eigenvalues
     val X_complex_eig = DenseMatrix((2.0, 1.0), (-1.0, 2.0))
     assert(mpow(X_complex_eig, 2) === DenseMatrix((3.0, 4.0), (-4.0, 3.0)))
   }
 
   test("diff test") {
-    val testThreshold = 1.0E-15
+    val testThreshold = 1.0e-15
     val xDouble = DenseVector(.7, .2, .3, .8)
     assert(norm(diff(xDouble) - DenseVector(-0.5, 0.1, 0.5)) < testThreshold)
     assert(norm(diff(xDouble, 2) - DenseVector(0.6, 0.4)) < testThreshold)
@@ -747,7 +752,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
   }
 
   test("diff slice vector test") {
-    val testThreshold = 1.0E-15
+    val testThreshold = 1.0e-15
     val xDouble = {
       val temp = DenseVector(.7, .2, .3, .8)
       temp(IndexedSeq(0, 1, 2, 3))
@@ -827,9 +832,9 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
 
   test("accumulate test") {
     val xDouble = DenseVector(.7, .2, .3, .8)
-    assert(norm(accumulate(xDouble) - DenseVector(.7, .9, 1.2, 2.0)) < 1.0E-15)
+    assert(norm(accumulate(xDouble) - DenseVector(.7, .9, 1.2, 2.0)) < 1.0e-15)
     val xInt = DenseVector(7, 2, 3, 8)
-    assert(norm(accumulate(xInt) - DenseVector(7, 9, 12, 20)) < 1.0E-15)
+    assert(norm(accumulate(xInt) - DenseVector(7, 9, 12, 20)) < 1.0e-15)
     val xEmpty = DenseVector[Long]()
     assert(accumulate(xEmpty) == DenseVector[Long]())
   }
@@ -852,7 +857,8 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
       (2.0, 1.6),
       (1.0, 1.1),
       (1.5, 1.6),
-      (1.1, 0.9))
+      (1.1, 0.9)
+    )
 
     // The correct answers bundled up.
     object smithTruth {
@@ -903,17 +909,17 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
 
   }
 
-  def vectorsNearlyEqual(A: DenseVector[Double], B: DenseVector[Double], threshold: Double = 1E-6): Unit = {
+  def vectorsNearlyEqual(A: DenseVector[Double], B: DenseVector[Double], threshold: Double = 1e-6): Unit = {
     for (i <- 0 until A.length)
       A(i) should be(B(i) +- threshold)
   }
 
-  def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6): Unit = {
+  def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1e-6): Unit = {
     for (i <- 0 until A.rows; j <- 0 until A.cols)
       A(i, j) should be(B(i, j) +- threshold)
   }
 
-  def matricesNearlyEqual_Float(A: DenseMatrix[Float], B: DenseMatrix[Float], threshold: Float = 1E-6f): Unit = {
+  def matricesNearlyEqual_Float(A: DenseMatrix[Float], B: DenseMatrix[Float], threshold: Float = 1e-6f): Unit = {
     for (i <- 0 until A.rows; j <- 0 until A.cols)
       A(i, j) should be(B(i, j) +- threshold)
   }

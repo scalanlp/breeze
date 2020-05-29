@@ -8,9 +8,10 @@ import breeze.linalg.Vector
 package object interpolation {
 
   object UnivariateInterpolatorImpl extends UFunc with MappingUFunc {
-    implicit def impl[T]: Impl2[UnivariateInterpolator[T], T, T] = new Impl2[UnivariateInterpolator[T], T, T] {
-      def apply(k: UnivariateInterpolator[T], v: T): T = k(v)
-    }
+    implicit def impl[T]: Impl2[UnivariateInterpolator[T], T, T] =
+      new Impl2[UnivariateInterpolator[T], T, T] {
+        def apply(k: UnivariateInterpolator[T], v: T): T = k(v)
+      }
   }
 
   trait UnivariateInterpolator[T] extends VariableUFunc[UnivariateInterpolatorImpl.type, UnivariateInterpolator[T]] {
@@ -55,11 +56,12 @@ package object interpolation {
 
     protected def bisearch(x: T): Int = bisearch(0, X.length - 1, x)
 
-    private def bisearch(low: Int, high: Int, x: T): Int = (low + high) / 2 match {
-      case mid if low == high => mid
-      case mid if X(mid) < x => bisearch(mid + 1, high, x)
-      case mid => bisearch(low, mid, x)
-    }
+    private def bisearch(low: Int, high: Int, x: T): Int =
+      (low + high) / 2 match {
+        case mid if low == high => mid
+        case mid if X(mid) < x => bisearch(mid + 1, high, x)
+        case mid => bisearch(low, mid, x)
+      }
   }
 
 }

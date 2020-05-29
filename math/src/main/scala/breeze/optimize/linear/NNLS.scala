@@ -28,7 +28,8 @@ class NNLS(val maxIters: Int = -1) extends SerializableLogging {
       lastNorm: Double,
       lastWall: Int,
       iter: Int,
-      converged: Boolean)
+      converged: Boolean
+  )
 
   // find the optimal unconstrained step
   private def steplen(ata: BDM, dir: BDV, res: BDV, tmp: BDV): Double = {
@@ -102,7 +103,8 @@ class NNLS(val maxIters: Int = -1) extends SerializableLogging {
       ata: DenseMatrix[Double],
       atb: DenseVector[Double],
       initialState: State,
-      resetState: Boolean = true): State = {
+      resetState: Boolean = true
+  ): State = {
     val startState = if (resetState) reset(ata, atb, initialState) else initialState
     import startState._
     val n = atb.length

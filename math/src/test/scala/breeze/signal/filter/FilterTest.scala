@@ -11,9 +11,9 @@ class FilterTest extends FunSuite {
 
   test("BP filtering tested against output from scipy.signal.firwin/ifilter (0.13.2-1)") {
 
-    val testNormThreshold = 1.0E-6
-    val spFirwin1 = DenseVector(1.40718797E-02, -7.94274374E-18, -1.16636001E-01, -1.75719493E-01, 1.37640418E-01,
-      4.04633024E-01, 1.37640418E-01, -1.75719493E-01, -1.16636001E-01, -7.94274374E-18, 1.40718797E-02)
+    val testNormThreshold = 1.0e-6
+    val spFirwin1 = DenseVector(1.40718797e-02, -7.94274374e-18, -1.16636001e-01, -1.75719493e-01, 1.37640418e-01,
+      4.04633024e-01, 1.37640418e-01, -1.75719493e-01, -1.16636001e-01, -7.94274374e-18, 1.40718797e-02)
 
     val testSignal = DenseVector(-1.27168894, -1.48442932, -0.5481519, -0.53087595, 1.55426056, 1.30248503, 0.06143029,
       0.69251918, 0.68418296, 0.00401513, -0.52352089, 0.07456588, -0.68864501, 1.24677189, 0.48492816, -1.10078968,
@@ -29,7 +29,8 @@ class FilterTest extends FunSuite {
       filterBP(testSignal, (0.25, 0.5), 2d, 11, overhang = OptOverhang.PreserveLength, padding = OptPadding.Zero)
     assert(
       norm(filtered1(0 to -6) - spTestSignalFiltered1(5 to -1)) < testNormThreshold,
-      "filtered result is incorrect!")
+      "filtered result is incorrect!"
+    )
 
   }
 
@@ -42,20 +43,24 @@ class FilterTest extends FunSuite {
     println(result2)
     assert(
       result1 == Array.tabulate[Int](11)(_ + 2).toVector,
-      "median filter failed for small data and OptOverhang.None")
+      "median filter failed for small data and OptOverhang.None"
+    )
     assert(
       result2 == (Array(0, 1) ++ result1 ++ Array(13, 14)).toVector,
-      "median filter failed for small data and OptOverhang.PreserveLength")
+      "median filter failed for small data and OptOverhang.PreserveLength"
+    )
 
     val dataLarge = DenseVector.tabulate[Float](100000)(p => p.toFloat)
     val result3 = filterMedian(dataLarge, 5, OptOverhang.None).toScalaVector
     val result4 = filterMedian(dataLarge, 5, OptOverhang.PreserveLength).toScalaVector
     assert(
       result3 == Array.tabulate[Float](100000 - 4)(_ + 2).toVector,
-      "median filter failed for large data and OptOverhang.None")
+      "median filter failed for large data and OptOverhang.None"
+    )
     assert(
       result4 == (Array(0f, 1f) ++ result3 ++ Array(99998f, 99999f)).toVector,
-      "median filter failed for large data and OptOverhang.PreserveLength")
+      "median filter failed for large data and OptOverhang.PreserveLength"
+    )
 
   }
 

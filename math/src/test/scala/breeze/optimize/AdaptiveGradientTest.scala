@@ -26,7 +26,7 @@ class AdaptiveGradientTest extends OptimizeTestBase {
 
     def optimizeThis(init2: DenseVector[Double], reg: Double) = {
       val init = init2 % 100.0
-      val sgd = new AdaptiveGradientDescent.L2Regularization[DenseVector[Double]](reg % 1E3 abs, 1, 1000)
+      val sgd = new AdaptiveGradientDescent.L2Regularization[DenseVector[Double]](reg % 1e3 abs, 1, 1000)
       val f = new BatchDiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double], r: IndexedSeq[Int]) = {
           (sum((x - 3.0) ^:^ 2.0), (x * 2.0) - 6.0)
@@ -36,10 +36,11 @@ class AdaptiveGradientTest extends OptimizeTestBase {
 
       val result = sgd.minimize(f, init)
       val targetValue = 3 / (sgd.regularizationConstant / 2 + 1)
-      val ok = norm(result -:- DenseVector.ones[Double](init.size) * targetValue, 2) / result.size < 2E-3
+      val ok = norm(result -:- DenseVector.ones[Double](init.size) * targetValue, 2) / result.size < 2e-3
       if (!ok) {
         sys.error(
-          "min " + init + " with reg: " + sgd.regularizationConstant + "gives " + result + " should be " + targetValue)
+          "min " + init + " with reg: " + sgd.regularizationConstant + "gives " + result + " should be " + targetValue
+        )
       }
       ok
     }
@@ -52,7 +53,7 @@ class AdaptiveGradientTest extends OptimizeTestBase {
 
     def optimizeThis(init2: DenseVector[Double], reg: Double) = {
       val init = init2 % 100.0
-      val sgd = new AdaptiveGradientDescent.L1Regularization[DenseVector[Double]](reg.abs % 10, 1E-7, 1, 600)
+      val sgd = new AdaptiveGradientDescent.L1Regularization[DenseVector[Double]](reg.abs % 10, 1e-7, 1, 600)
       val f = new BatchDiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double], r: IndexedSeq[Int]) = {
           (sum((x - 3.0) ^:^ 2.0), (x * 2.0) - 6.0)
@@ -62,7 +63,7 @@ class AdaptiveGradientTest extends OptimizeTestBase {
 
       val result = sgd.minimize(f, init)
       val targetValue = if (sgd.lambda / 2 > 3) 0.0 else 3 - sgd.lambda / 2
-      val ok = norm(result -:- DenseVector.ones[Double](init.size) * targetValue, 2) / result.size < 1E-2
+      val ok = norm(result -:- DenseVector.ones[Double](init.size) * targetValue, 2) / result.size < 1e-2
       if (!ok) {
         sys.error(s"min $init with reg: ${sgd.lambda} gives $result should be $targetValue")
       }

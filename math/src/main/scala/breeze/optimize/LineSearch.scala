@@ -27,30 +27,32 @@ trait ApproximateLineSearch extends MinimizingLineSearch {
 }
 
 object LineSearch {
-  def functionFromSearchDirection[T, I](f: DiffFunction[T], x: T, direction: T)(
-      implicit prod: MutableInnerProductModule[T, Double]): DiffFunction[Double] = new DiffFunction[Double] {
-    import prod._
+  def functionFromSearchDirection[T, I](f: DiffFunction[T], x: T, direction: T)(implicit
+      prod: MutableInnerProductModule[T, Double]
+  ): DiffFunction[Double] =
+    new DiffFunction[Double] {
+      import prod._
 
-    /** calculates the value at a point */
-    override def valueAt(alpha: Double): Double = {
-      val newX = direction * alpha
-      newX :+= x
-      f.valueAt(newX)
-    }
+      /** calculates the value at a point */
+      override def valueAt(alpha: Double): Double = {
+        val newX = direction * alpha
+        newX :+= x
+        f.valueAt(newX)
+      }
 
-    /** calculates the gradient at a point */
-    override def gradientAt(alpha: Double): Double = {
-      val newX = direction * alpha
-      newX :+= x
-      f.gradientAt(newX).dot(direction)
-    }
+      /** calculates the gradient at a point */
+      override def gradientAt(alpha: Double): Double = {
+        val newX = direction * alpha
+        newX :+= x
+        f.gradientAt(newX).dot(direction)
+      }
 
-    /** Calculates both the value and the gradient at a point */
-    def calculate(alpha: Double): (Double, Double) = {
-      val newX = direction * alpha
-      newX :+= x
-      val (ff, grad) = f.calculate(newX)
-      ff -> (grad.dot(direction))
+      /** Calculates both the value and the gradient at a point */
+      def calculate(alpha: Double): (Double, Double) = {
+        val newX = direction * alpha
+        newX :+= x
+        val (ff, grad) = f.calculate(newX)
+        ff -> (grad.dot(direction))
+      }
     }
-  }
 }

@@ -12,7 +12,8 @@ class AdaDeltaGradientDescent[T](
     maxIter: Int,
     tolerance: Double = 1e-5,
     improvementTolerance: Double = 1e-4,
-    minImprovementWindow: Int = 50)(implicit vspace: MutableFiniteCoordinateField[T, _, Double], rand: RandBasis = Rand)
+    minImprovementWindow: Int = 50
+)(implicit vspace: MutableFiniteCoordinateField[T, _, Double], rand: RandBasis = Rand)
     extends StochasticGradientDescent[T](1d, maxIter, tolerance, minImprovementWindow) {
 
   val epsilon = 1e-6
@@ -29,7 +30,8 @@ class AdaDeltaGradientDescent[T](
       newGrad: T,
       newVal: Double,
       f: StochasticDiffFunction[T],
-      oldState: State): History = {
+      oldState: State
+  ): History = {
     val oldAvgSqGradient = oldState.history.avgSqGradient
     val newAvgSqGradient = (oldAvgSqGradient * rho) + ((newGrad *:* newGrad) * (1 - rho))
 

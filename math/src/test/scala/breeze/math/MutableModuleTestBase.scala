@@ -17,7 +17,7 @@ trait MutableModuleTestBase[V, S] extends FunSuite with Checkers {
   implicit def genTriple: Arbitrary[(V, V, V)]
   implicit def genScalar: Arbitrary[S]
 
-  val TOL = 1E-3
+  val TOL = 1e-3
 
   test("Addition is Associative") {
     check(Prop.forAll { (trip: (V, V, V)) =>

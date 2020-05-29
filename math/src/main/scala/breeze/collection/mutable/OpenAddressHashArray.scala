@@ -35,16 +35,19 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) V] priva
     private[mutable] var _data: Array[V],
     private[mutable] var load: Int,
     val size: Int,
-    val default: ConfigurableDefault[V] = ConfigurableDefault.default[V])(
-    implicit protected val manElem: ClassTag[V],
-    val zero: Zero[V])
+    val default: ConfigurableDefault[V] = ConfigurableDefault.default[V]
+)(implicit protected val manElem: ClassTag[V], val zero: Zero[V])
     extends Storage[V]
     with ArrayLike[V]
     with Serializable {
 
   require(size > 0, "Size must be positive, but got " + size)
 
-  def this(size: Int, default: ConfigurableDefault[V], initialSize: Int)(implicit manElem: ClassTag[V], zero: Zero[V]) = {
+  def this(
+      size: Int,
+      default: ConfigurableDefault[V],
+      initialSize: Int
+  )(implicit manElem: ClassTag[V], zero: Zero[V]) = {
     this(
       OpenAddressHashArray.emptyIndexArray(OpenAddressHashArray.calculateSize(initialSize)),
       default.makeArray(OpenAddressHashArray.calculateSize(initialSize)),
@@ -169,7 +172,8 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) V] priva
       breeze.util.ArrayUtil.copyOf(_data, _data.length),
       load,
       size,
-      default)
+      default
+    )
   }
 
   def copyTo(other: OpenAddressHashArray[V]): Unit = {
@@ -190,27 +194,28 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) V] priva
   // collide trivially. based on hashmap.hashcode
   override def hashCode() = MurmurHash3.unorderedHash(iterator.filter(_._2 != default.value), 43)
 
-  override def equals(that: Any): Boolean = that match {
-    case that: OpenAddressHashArray[V] =>
-      (this eq that) ||
-        (this.size == that.size) && {
-          try {
-            this.iterator.forall {
-              case (k, v) =>
-                that(k) match {
-                  case `v` =>
-                    true
-                  case _ => false
-                }
+  override def equals(that: Any): Boolean =
+    that match {
+      case that: OpenAddressHashArray[V] =>
+        (this eq that) ||
+          (this.size == that.size) && {
+            try {
+              this.iterator.forall {
+                case (k, v) =>
+                  that(k) match {
+                    case `v` =>
+                      true
+                    case _ => false
+                  }
+              }
+            } catch {
+              case ex: ClassCastException =>
+                false
             }
-          } catch {
-            case ex: ClassCastException =>
-              false
           }
-        }
-    case _ =>
-      false
-  }
+      case _ =>
+        false
+    }
 
 }
 

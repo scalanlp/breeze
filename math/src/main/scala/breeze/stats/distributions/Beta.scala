@@ -48,8 +48,14 @@ case class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand)
     require(x >= 0)
     require(x <= 1)
     x match {
-      case 0.0 => if (a > 1) { 0 } else if (a == 1) { normalizer } else { Double.PositiveInfinity }
-      case 1.0 => if (b > 1) { 0 } else if (b == 1) { normalizer } else { Double.PositiveInfinity }
+      case 0.0 =>
+        if (a > 1) { 0 }
+        else if (a == 1) { normalizer }
+        else { Double.PositiveInfinity }
+      case 1.0 =>
+        if (b > 1) { 0 }
+        else if (b == 1) { normalizer }
+        else { Double.PositiveInfinity }
       case x => math.exp(logPdf(x))
     }
   }

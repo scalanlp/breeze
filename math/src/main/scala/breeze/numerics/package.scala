@@ -465,7 +465,7 @@ package object numerics {
             ap += 1
             del *= x / ap
             sum += del
-            if (scala.math.abs(del) < scala.math.abs(sum) * 1E-7) {
+            if (scala.math.abs(del) < scala.math.abs(sum) * 1e-7) {
               result = -x + a * m.log(x) + m.log(sum)
               n = 100
             }
@@ -485,13 +485,13 @@ package object numerics {
             val an = -n * (n - a)
             b += 2.0
             d = an * d + b
-            if (scala.math.abs(d) < 1E-30) d = 1E-30
+            if (scala.math.abs(d) < 1e-30) d = 1e-30
             c = b + an / c
-            if (scala.math.abs(c) < 1E-30) c = 1E-30
+            if (scala.math.abs(c) < 1e-30) c = 1e-30
             d = 1.0 / d
             val del = d * c
             h *= del
-            if (scala.math.abs(del - 1.0) < 1E-7) n = 101
+            if (scala.math.abs(del - 1.0) < 1e-7) n = 101
           }
 
           if (n == 100) throw new ArithmeticException("Convergence failed")
@@ -523,8 +523,8 @@ package object numerics {
   }
 
   /**
-    * Multivariate digamma log
-    */
+   * Multivariate digamma log
+   */
   object multidigammalog extends UFunc with MappingUFunc {
     implicit object multidigammalogImplDoubleInt extends Impl2[Double, Int, Double] {
       def apply(a: Double, d: Int): Double = log(multidigamma(a, d))
@@ -545,7 +545,8 @@ package object numerics {
 
   object multiloggamma extends UFunc with MappingUFunc {
     implicit object multigammalogDoubleInt extends Impl2[Double, Int, Double] {
-      def apply(a:Double, d: Int): Double = log(constants.Pi) * (d * (d-1).toDouble / 4) + (1 to d).map(j => lgamma(a + (1 - j).toDouble / 2)).sum
+      def apply(a: Double, d: Int): Double =
+        log(constants.Pi) * (d * (d - 1).toDouble / 4) + (1 to d).map(j => lgamma(a + (1 - j).toDouble / 2)).sum
     }
   }
 
@@ -560,28 +561,29 @@ package object numerics {
       }
     }
 
-    implicit def reduceDouble[T](implicit iter: CanTraverseValues[T, Double]): Impl[T, Double] = new Impl[T, Double] {
-      def apply(v: T): Double = {
-        val visit = new ValuesVisitor[Double] {
-          var sum = 0.0
-          var lgSum = 0.0
-          def visit(a: Double): Unit = {
-            sum += a
-            lgSum += lgamma(a)
+    implicit def reduceDouble[T](implicit iter: CanTraverseValues[T, Double]): Impl[T, Double] =
+      new Impl[T, Double] {
+        def apply(v: T): Double = {
+          val visit = new ValuesVisitor[Double] {
+            var sum = 0.0
+            var lgSum = 0.0
+            def visit(a: Double): Unit = {
+              sum += a
+              lgSum += lgamma(a)
+            }
+
+            def zeros(numZero: Int, zeroValue: Double): Unit = {
+              sum += numZero * zeroValue
+              lgSum += lgamma(zeroValue)
+            }
           }
 
-          def zeros(numZero: Int, zeroValue: Double): Unit = {
-            sum += numZero * zeroValue
-            lgSum += lgamma(zeroValue)
-          }
+          iter.traverse(v, visit)
+
+          visit.lgSum - lgamma(visit.sum)
         }
 
-        iter.traverse(v, visit)
-
-        visit.lgSum - lgamma(visit.sum)
       }
-
-    }
   }
 
   /**
@@ -635,7 +637,7 @@ package object numerics {
             f /= n
             xx *= x2
             val del = f * xx / (2 * n + 1)
-            if (del < 1E-8) n = 101
+            if (del < 1e-8) n = 101
             y += del
           }
           y = y * 2 / m.sqrt(Pi)
@@ -748,10 +750,10 @@ package object numerics {
   }
 
   /**
-    * The Step function: if (x > 0) 1 else 0
-    *
+   * The Step function: if (x > 0) 1 else 0
+   *
     * @see https://en.wikipedia.org/wiki/Step_function
-    */
+   */
   object step extends UFunc with MappingUFunc {
     implicit object stepImplInt extends Impl[Int, Int] {
       def apply(x: Int) = if (x > 0) 1 else 0
@@ -782,7 +784,7 @@ package object numerics {
   /**
    * closeTo for Doubles.
    */
-  def closeTo(a: Double, b: Double, relDiff: Double = 1E-4) = {
+  def closeTo(a: Double, b: Double, relDiff: Double = 1e-4) = {
     a == b || (scala.math.abs(a - b) < scala.math
       .max(scala.math.max(scala.math.abs(a), scala.math.abs(b)), 1) * relDiff)
   }
@@ -796,9 +798,10 @@ package object numerics {
       def apply(b: Boolean) = if (b) 1.0 else 0.0
     }
 
-    implicit def vImpl[V: Semiring]: Impl[V, Double] = new Impl[V, Double] {
-      def apply(b: V) = if (b != implicitly[Semiring[V]].zero) 1.0 else 0.0
-    }
+    implicit def vImpl[V: Semiring]: Impl[V, Double] =
+      new Impl[V, Double] {
+        def apply(b: V) = if (b != implicitly[Semiring[V]].zero) 1.0 else 0.0
+      }
   }
 
   /**

@@ -14,26 +14,28 @@ import breeze.optimize.FirstOrderMinimizer.ConvergenceCheck
  *
  * @author dlwh
  */
-class OWLQN[K, T](convergenceCheck: ConvergenceCheck[T], m: Int, l1reg: K => Double)(
-    implicit space: MutableEnumeratedCoordinateField[T, K, Double])
-    extends LBFGS[T](convergenceCheck, m)
+class OWLQN[K, T](convergenceCheck: ConvergenceCheck[T], m: Int, l1reg: K => Double)(implicit
+    space: MutableEnumeratedCoordinateField[T, K, Double]
+) extends LBFGS[T](convergenceCheck, m)
     with SerializableLogging {
 
-  def this(maxIter: Int, m: Int, l1reg: K => Double, tolerance: Double)(
-      implicit space: MutableEnumeratedCoordinateField[T, K, Double]) =
+  def this(maxIter: Int, m: Int, l1reg: K => Double, tolerance: Double)(implicit
+      space: MutableEnumeratedCoordinateField[T, K, Double]
+  ) =
     this(FirstOrderMinimizer.defaultConvergenceCheck(maxIter, tolerance), m, l1reg)
 
   def this(maxIter: Int, m: Int, l1reg: K => Double)(implicit space: MutableEnumeratedCoordinateField[T, K, Double]) =
-    this(maxIter, m, l1reg, 1E-8)
+    this(maxIter, m, l1reg, 1e-8)
 
-  def this(maxIter: Int, m: Int, l1reg: Double, tolerance: Double = 1E-8)(
-      implicit space: MutableEnumeratedCoordinateField[T, K, Double]) = this(maxIter, m, (_: K) => l1reg, tolerance)
+  def this(maxIter: Int, m: Int, l1reg: Double, tolerance: Double = 1e-8)(implicit
+      space: MutableEnumeratedCoordinateField[T, K, Double]
+  ) = this(maxIter, m, (_: K) => l1reg, tolerance)
 
   def this(maxIter: Int, m: Int, l1reg: Double)(implicit space: MutableEnumeratedCoordinateField[T, K, Double]) =
-    this(maxIter, m, (_: K) => l1reg, 1E-8)
+    this(maxIter, m, (_: K) => l1reg, 1e-8)
 
   def this(maxIter: Int, m: Int)(implicit space: MutableEnumeratedCoordinateField[T, K, Double]) =
-    this(maxIter, m, (_: K) => 1.0, 1E-8)
+    this(maxIter, m, (_: K) => 1.0, 1e-8)
 
   require(m > 0)
 
@@ -46,9 +48,13 @@ class OWLQN[K, T](convergenceCheck: ConvergenceCheck[T], m: Int, l1reg: K => Dou
     // in the same directional (within the same hypercube) as the adjusted gradient for proof.
     // Although this doesn't seem to affect the outcome that much in most of cases, there are some cases
     // where the algorithm won't converge (confirmed with the author, Galen Andrew).
-    val correctedDir = space.zipMapValues.map(descentDir, state.adjustedGradient, {
-      case (d, g) => if (d * g < 0) d else 0.0
-    })
+    val correctedDir = space.zipMapValues.map(
+      descentDir,
+      state.adjustedGradient,
+      {
+        case (d, g) => if (d * g < 0) d else 0.0
+      }
+    )
 
     correctedDir
   }
@@ -95,10 +101,14 @@ class OWLQN[K, T](convergenceCheck: ConvergenceCheck[T], m: Int, l1reg: K => Dou
   override protected def takeStep(state: State, dir: T, stepSize: Double) = {
     val stepped = state.x + dir * stepSize
     val orthant = computeOrthant(state.x, state.adjustedGradient)
-    space.zipMapValues.map(stepped, orthant, {
-      case (v, ov) =>
-        v * I(math.signum(v) == math.signum(ov))
-    })
+    space.zipMapValues.map(
+      stepped,
+      orthant,
+      {
+        case (v, ov) =>
+          v * I(math.signum(v) == math.signum(ov))
+      }
+    )
   }
 
   // Adds in the regularization stuff to the gradient
@@ -106,7 +116,8 @@ class OWLQN[K, T](convergenceCheck: ConvergenceCheck[T], m: Int, l1reg: K => Dou
     var adjValue = newVal
     val res = space.zipMapKeyValues.mapActive(
       newX,
-      newGrad, {
+      newGrad,
+      {
         case (i, xv, v) =>
           val l1regValue = l1reg(i)
           require(l1regValue >= 0.0)
@@ -130,11 +141,15 @@ class OWLQN[K, T](convergenceCheck: ConvergenceCheck[T], m: Int, l1reg: K => Dou
   }
 
   private def computeOrthant(x: T, grad: T) = {
-    val orth = space.zipMapValues.map(x, grad, {
-      case (v, gv) =>
-        if (v != 0) math.signum(v)
-        else math.signum(-gv)
-    })
+    val orth = space.zipMapValues.map(
+      x,
+      grad,
+      {
+        case (v, gv) =>
+          if (v != 0) math.signum(v)
+          else math.signum(-gv)
+      }
+    )
     orth
   }
 

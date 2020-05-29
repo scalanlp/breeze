@@ -143,8 +143,10 @@ case class Gamma(shape: Double, scale: Double)(implicit rand: RandBasis = Rand)
         v = v * v * v
         val x2 = x * x
         val u = rand.uniform.draw()
-        if (u < 1.0 - 0.0331 * (x2 * x2)
-          || log(u) < 0.5 * x2 + d * (1.0 - v + log(v))) {
+        if (
+          u < 1.0 - 0.0331 * (x2 * x2)
+          || log(u) < 0.5 * x2 + d * (1.0 - v + log(v))
+        ) {
           r = (scale * d * v)
           ok = true
         }
@@ -224,14 +226,15 @@ object Gamma extends ExponentialFamily[Gamma, Double] with ContinuousDistributio
 
   def distribution(p: Parameter) = new Gamma(p._1, p._2)
 
-  def likelihoodFunction(stats: SufficientStatistic) = new DiffFunction[(Double, Double)] {
-    val SufficientStatistic(n, meanOfLogs, mean) = stats
-    def calculate(x: (Double, Double)) = {
-      val (a, b) = x
-      val obj = -n * ((a - 1) * meanOfLogs - lgamma(a) - a * log(b) - mean / b)
-      val gradA = -n * (meanOfLogs - digamma(a) - log(b))
-      val gradB = -n * (-a / b + mean / b / b)
-      (obj, (gradA, gradB))
+  def likelihoodFunction(stats: SufficientStatistic) =
+    new DiffFunction[(Double, Double)] {
+      val SufficientStatistic(n, meanOfLogs, mean) = stats
+      def calculate(x: (Double, Double)) = {
+        val (a, b) = x
+        val obj = -n * ((a - 1) * meanOfLogs - lgamma(a) - a * log(b) - mean / b)
+        val gradA = -n * (meanOfLogs - digamma(a) - log(b))
+        val gradB = -n * (-a / b + mean / b / b)
+        (obj, (gradA, gradB))
+      }
     }
-  }
 }

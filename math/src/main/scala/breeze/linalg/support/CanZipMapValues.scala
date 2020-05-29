@@ -32,11 +32,12 @@ trait CanZipMapValues[From, @spec(Double, Int, Float, Long) V, @spec(Double, Int
 
 object CanZipMapValues {
 
-  def canZipMapSelf[S]: CanZipMapValues[S, S, S, S] = new CanZipMapValues[S, S, S, S] {
+  def canZipMapSelf[S]: CanZipMapValues[S, S, S, S] =
+    new CanZipMapValues[S, S, S, S] {
 
-    /** Maps all corresponding values from the two collections. */
-    def map(from: S, from2: S, fn: (S, S) => S): S = fn(from, from2)
-  }
+      /** Maps all corresponding values from the two collections. */
+      def map(from: S, from2: S, fn: (S, S) => S): S = fn(from, from2)
+    }
 
   type Op[From, V, RV, To] = CanZipMapValues[From, V, RV, To]
 

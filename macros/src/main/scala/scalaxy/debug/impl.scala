@@ -28,27 +28,37 @@ object impl {
   def assertImpl(c: Context)(condition: c.Expr[Boolean]): c.Expr[Unit] = {
     import c.universe._
 
-    assertLikeImpl(c)(condition, (condExpr, messageExpr) => {
-      reify(if (!condExpr.splice) throw new AssertionError("assertion failed: " + messageExpr.splice))
-    })
+    assertLikeImpl(c)(
+      condition,
+      (condExpr, messageExpr) => {
+        reify(if (!condExpr.splice) throw new AssertionError("assertion failed: " + messageExpr.splice))
+      }
+    )
   }
 
   def assertMsgImpl(c: Context)(condition: c.Expr[Boolean], message: c.Expr[String]): c.Expr[Unit] = {
     import c.universe._
 
-    assertLikeImpl(c)(condition, (condExpr, messageExpr) => {
-      reify(
-        if (!condExpr.splice)
-          throw new AssertionError("assertion failed: " + message.splice + ": " + messageExpr.splice))
-    })
+    assertLikeImpl(c)(
+      condition,
+      (condExpr, messageExpr) => {
+        reify(
+          if (!condExpr.splice)
+            throw new AssertionError("assertion failed: " + message.splice + ": " + messageExpr.splice)
+        )
+      }
+    )
   }
 
   def requireImpl(c: Context)(condition: c.Expr[Boolean]): c.Expr[Unit] = {
     import c.universe._
 
-    assertLikeImpl(c)(condition, (condExpr, messageExpr) => {
-      reify(if (!condExpr.splice) throw new IllegalArgumentException("requirement failed: " + messageExpr.splice))
-    })
+    assertLikeImpl(c)(
+      condition,
+      (condExpr, messageExpr) => {
+        reify(if (!condExpr.splice) throw new IllegalArgumentException("requirement failed: " + messageExpr.splice))
+      }
+    )
   }
 
   def requireMsgImpl(c: Context)(condition: c.Expr[Boolean], message: c.Expr[String]): c.Expr[Unit] = {
@@ -59,7 +69,8 @@ object impl {
       (condExpr, messageExpr) => {
         reify(
           if (!condExpr.splice)
-            throw new IllegalArgumentException("requirement failed: " + message.splice + ": " + messageExpr.splice))
+            throw new IllegalArgumentException("requirement failed: " + message.splice + ": " + messageExpr.splice)
+        )
       }
     )
   }
@@ -67,19 +78,26 @@ object impl {
   def assumeImpl(c: Context)(condition: c.Expr[Boolean]): c.Expr[Unit] = {
     import c.universe._
 
-    assertLikeImpl(c)(condition, (condExpr, messageExpr) => {
-      reify(if (!condExpr.splice) throw new AssertionError("assumption failed: " + messageExpr.splice))
-    })
+    assertLikeImpl(c)(
+      condition,
+      (condExpr, messageExpr) => {
+        reify(if (!condExpr.splice) throw new AssertionError("assumption failed: " + messageExpr.splice))
+      }
+    )
   }
 
   def assumeMsgImpl(c: Context)(condition: c.Expr[Boolean], message: c.Expr[String]): c.Expr[Unit] = {
     import c.universe._
 
-    assertLikeImpl(c)(condition, (condExpr, messageExpr) => {
-      reify(
-        if (!condExpr.splice)
-          throw new AssertionError("assumption failed: " + message.splice + ": " + messageExpr.splice))
-    })
+    assertLikeImpl(c)(
+      condition,
+      (condExpr, messageExpr) => {
+        reify(
+          if (!condExpr.splice)
+            throw new AssertionError("assumption failed: " + message.splice + ": " + messageExpr.splice)
+        )
+      }
+    )
   }
 
   def assertLikeImpl(c: Context)(
@@ -106,10 +124,11 @@ object impl {
       }
     }
 
-    def isConstant(tree: Tree) = tree match {
-      case Literal(Constant(_)) => true
-      case _ => false
-    }
+    def isConstant(tree: Tree) =
+      tree match {
+        case Literal(Constant(_)) => true
+        case _ => false
+      }
 
     val typedCondition = c.typeCheck(condition.tree) //, typeOf[Boolean])
     c.Expr[Unit](

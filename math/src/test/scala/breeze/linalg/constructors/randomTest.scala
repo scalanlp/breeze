@@ -36,7 +36,8 @@ class randomTest extends FunSuite {
     val minRI1000: Int = min(randI1000)
     assert(
       maxRI1000 > 8 && maxRI1000 <= 9 && minRI1000 < 6 && minRI1000 >= 5,
-      maxRI1000 + " " + maxRI1000 + " " + minRI1000 + " " + minRI1000)
+      maxRI1000 + " " + maxRI1000 + " " + minRI1000 + " " + minRI1000
+    )
     assert(randI1000.rows == 17 && randI1000.cols == 202)
   }
 

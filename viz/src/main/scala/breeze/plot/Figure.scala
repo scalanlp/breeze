@@ -153,7 +153,8 @@ class Figure(name: String, private var rows_ : Int = 1, private var cols_ : Int 
       draw = drawPlots _,
       width = contents.getWidth,
       height = contents.getHeight,
-      dpi = dpi)
+      dpi = dpi
+    )
   }
 
   private def selectPlot(i: Int) = {

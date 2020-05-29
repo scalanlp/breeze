@@ -8,7 +8,7 @@ import breeze.linalg._
  * @author dlwh
  */
 object InteriorPoint {
-  val TOLERANCE = 1E-18
+  val TOLERANCE = 1e-18
 
   /**
    *
@@ -27,7 +27,8 @@ object InteriorPoint {
       b: DenseVector[Double],
       c: DenseVector[Double],
       x0: DenseVector[Double],
-      tol: Double = TOLERANCE): DenseVector[Double] = {
+      tol: Double = TOLERANCE
+  ): DenseVector[Double] = {
     val m = A.rows
     val n = A.cols
     val x = DenseVector.zeros[Double](n)
@@ -82,8 +83,9 @@ object InteriorPoint {
       A: DenseMatrix[Double],
       b: DenseVector[Double],
       c: DenseVector[Double],
-      x0: DenseVector[Double]) = {
-    val s = max(A * x0 - b) + 1E-7
+      x0: DenseVector[Double]
+  ) = {
+    val s = max(A * x0 - b) + 1e-7
     val newA = DenseMatrix.zeros[Double](A.rows + 1, A.cols + 1)
     newA(0 until A.rows, 0 until A.cols) := A
     newA(0 until A.rows + 1, A.cols) := -1.0
@@ -96,7 +98,7 @@ object InteriorPoint {
       throw new RuntimeException("Problem seems to be infeasible!")
     }
     val r = minimize(newA, newB, newC, newX)
-    if (r(x0.size) > 1E-8)
+    if (r(x0.size) > 1e-8)
       println("Problem appears to be infeasible: " + r(x0.size))
     r.slice(0, x0.size)
   }
@@ -113,7 +115,8 @@ object InteriorPoint {
       c: DenseVector[Double],
       x: DenseVector[Double],
       s: DenseVector[Double],
-      z: DenseVector[Double]): (DenseVector[Double], DenseVector[Double], DenseVector[Double]) = {
+      z: DenseVector[Double]
+  ): (DenseVector[Double], DenseVector[Double], DenseVector[Double]) = {
     val XiZ = diag(z /:/ s)
 
     val AtXiZ = (A.t * XiZ).asInstanceOf[DenseMatrix[Double]]
@@ -123,7 +126,7 @@ object InteriorPoint {
 
     val mat = AtXiZ * A
 
-    val dx = (mat) \ (A.t * z - rz - AtXiZ * rx)
+    val dx = mat \ (A.t * z - rz - AtXiZ * rx)
     val ds = -rx - A * dx
     val dz = -z - XiZ * ds
     (dz, dx, ds)
@@ -138,16 +141,18 @@ object InteriorPoint {
       z: DenseVector[Double],
       dsaff: DenseVector[Double],
       dzaff: DenseVector[Double],
-      sigma: Double) = {
+      sigma: Double
+  ) = {
     val n = A.cols
     val m = A.rows
     import DenseMatrix._
     val mat = vertcat[Double](
       horzcat(zeros[Double](m, m), A, eye[Double](m)),
       horzcat(A.t, zeros[Double](n, n + m)),
-      horzcat(diag(s), zeros[Double](m, n), diag(z)))
+      horzcat(diag(s), zeros[Double](m, n), diag(z))
+    )
 
-    diag(mat) += 1E-20
+    diag(mat) += 1e-20
 
     val r = DenseVector.zeros[Double](m + n + m)
     r.slice((m + n), (m + n + m)) -= (dsaff *:* dzaff - sigma / m * (s.dot(z)))

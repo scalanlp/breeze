@@ -35,10 +35,22 @@ import breeze.util.SerializableLogging
  * @param projection projection operations
  * @param curvilinear if curvilinear true, do the projection inside line search in place of doing it in chooseDescentDirection
  */
-class SpectralProjectedGradient[T](val projection: T => T = { (t: T) =>
-  t
-}, tolerance: Double = 1e-6, suffDec: Double = 1e-4, fvalMemory: Int = 30, alphaMax: Double = 1e10, alphaMin: Double = 1e-10, bbMemory: Int = 10, maxIter: Int = -1, val initFeas: Boolean = false, val curvilinear: Boolean = false, val bbType: Int = 1, val maxSrcht: Int = 30)(
-    implicit space: MutableVectorField[T, Double])
+class SpectralProjectedGradient[T](
+    val projection: T => T = { (t: T) =>
+      t
+    },
+    tolerance: Double = 1e-6,
+    suffDec: Double = 1e-4,
+    fvalMemory: Int = 30,
+    alphaMax: Double = 1e10,
+    alphaMin: Double = 1e-10,
+    bbMemory: Int = 10,
+    maxIter: Int = -1,
+    val initFeas: Boolean = false,
+    val curvilinear: Boolean = false,
+    val bbType: Int = 1,
+    val maxSrcht: Int = 30
+)(implicit space: MutableVectorField[T, Double])
     extends FirstOrderMinimizer[T, DiffFunction[T]](fvalMemory = fvalMemory, maxIter = maxIter, tolerance = tolerance)
     with Projecting[T]
     with SerializableLogging {
@@ -70,7 +82,8 @@ class SpectralProjectedGradient[T](val projection: T => T = { (t: T) =>
       newGrad: T,
       newVal: Double,
       f: DiffFunction[T],
-      oldState: State): History = {
+      oldState: State
+  ): History = {
     val s = newX - oldState.x
     val y = newGrad - oldState.grad
     History(bbAlpha(s, y), (newVal +: oldState.history.fvals).take(bbMemory))
@@ -112,20 +125,22 @@ class SpectralProjectedGradient[T](val projection: T => T = { (t: T) =>
   }
 
   // because of the projection, we have to do our own verstion
-  private def functionFromSearchDirection[T, I](f: DiffFunction[T], x: T, direction: T, project: T => T)(
-      implicit prod: InnerProductModule[T, Double]): DiffFunction[Double] = new DiffFunction[Double] {
-    import prod._
+  private def functionFromSearchDirection[T, I](f: DiffFunction[T], x: T, direction: T, project: T => T)(implicit
+      prod: InnerProductModule[T, Double]
+  ): DiffFunction[Double] =
+    new DiffFunction[Double] {
+      import prod._
 
-    /** calculates the value at a point */
-    override def valueAt(alpha: Double): Double = f.valueAt(project(x + direction * alpha))
+      /** calculates the value at a point */
+      override def valueAt(alpha: Double): Double = f.valueAt(project(x + direction * alpha))
 
-    /** calculates the gradient at a point */
-    override def gradientAt(alpha: Double): Double = f.gradientAt(project(x + direction * alpha)).dot(direction)
+      /** calculates the gradient at a point */
+      override def gradientAt(alpha: Double): Double = f.gradientAt(project(x + direction * alpha)).dot(direction)
 
-    /** Calculates both the value and the gradient at a point */
-    def calculate(alpha: Double): (Double, Double) = {
-      val (ff, grad) = f.calculate(x + direction * alpha)
-      ff -> (grad.dot(direction))
+      /** Calculates both the value and the gradient at a point */
+      def calculate(alpha: Double): (Double, Double) = {
+        val (ff, grad) = f.calculate(x + direction * alpha)
+        ff -> (grad.dot(direction))
+      }
     }
-  }
 }

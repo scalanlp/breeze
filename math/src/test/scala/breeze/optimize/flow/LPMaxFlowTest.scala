@@ -18,13 +18,14 @@ class LPMaxFlowTest extends FunSuite {
         1 -> Seq(E(1, 3, 2, 1), E(1, 4, 2, 1)),
         2 -> Seq(E(2, 3, 1, 4), E(2, 4, 2, 2)),
         3 -> Seq(E(3, 5, 2, 2)),
-        4 -> Seq(E(4, 5, 2, 1)))
+        4 -> Seq(E(4, 5, 2, 1))
+      )
 
       def edgesFrom(n: Int) = edges(n).iterator
     }
 
     val lpm = new LPMaxFlow(g)
-    assert((lpm.maxFlow._2 - 4).abs < 1E-5, lpm)
-    assert((lpm.minCostFlow()._2 - 20).abs < 1E-5, lpm)
+    assert((lpm.maxFlow._2 - 4).abs < 1e-5, lpm)
+    assert((lpm.minCostFlow()._2 - 20).abs < 1e-5, lpm)
   }
 }

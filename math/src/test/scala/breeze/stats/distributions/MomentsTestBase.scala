@@ -23,7 +23,7 @@ trait MomentsTestBase[T] extends FunSuite with Checkers {
     check(Prop.forAll { (distr: Distr) =>
       val sample = distr.sample(numSamples).map(asDouble _)
       val m = mean(sample)
-      if ((m - distr.mean).abs / (m.abs.max(1)) > 1E-1) {
+      if ((m - distr.mean).abs / (m.abs.max(1)) > 1e-1) {
         println("MExpected " + distr.mean + " but got " + m)
         false
       } else {
@@ -33,7 +33,7 @@ trait MomentsTestBase[T] extends FunSuite with Checkers {
     })
   }
 
-  val VARIANCE_TOLERANCE = 5E-2
+  val VARIANCE_TOLERANCE = 5e-2
   test("variance") {
     check(Prop.forAll { (distr: Distr) =>
       // try twice, and only fail if both fail.
@@ -54,7 +54,7 @@ trait MomentsTestBase[T] extends FunSuite with Checkers {
     check(Prop.forAll { (distr: Distr) =>
       val sample = distr.sample(40)
       val probMode = distr(fromDouble(distr.mode))
-      sample.find(x => probMode < distr(x) - 1E-4) match {
+      sample.find(x => probMode < distr(x) - 1e-4) match {
         case Some(x) => println(s"$x has higher prob (${distr(x)}) than mode ${distr.mode} ($probMode)"); false
         case None => true
       }

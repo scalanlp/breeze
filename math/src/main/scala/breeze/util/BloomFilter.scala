@@ -35,7 +35,7 @@ class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFun
   private def activeBuckets(key: T) = {
     val baseHash = key.##
     // we only get 16 bits for each hash code, but we combine them in fun ways
-    val hash1 = baseHash & 0xFFFF
+    val hash1 = baseHash & 0xffff
     val hash2 = baseHash >> 16
 
     for {
@@ -64,11 +64,12 @@ class BloomFilter[@specialized(Int, Long) T](val numBuckets: Int, val numHashFun
     this.bits.hashCode()
   }
 
-  override def equals(other: Any): Boolean = other match {
-    case that: BloomFilter[_] =>
-      this.numBuckets == that.numBuckets && this.numHashFunctions == that.numHashFunctions && this.bits == that.bits
-    case _ => false
-  }
+  override def equals(other: Any): Boolean =
+    other match {
+      case that: BloomFilter[_] =>
+        this.numBuckets == that.numBuckets && this.numHashFunctions == that.numHashFunctions && this.bits == that.bits
+      case _ => false
+    }
 
   def +=(o: T): this.type = {
     activeBuckets(o).foreach(i => bits.set(i))

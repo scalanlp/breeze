@@ -177,9 +177,10 @@ object BitVector extends BitVectorOps {
       }
     }
 
-  implicit def canMapPairs[V2](
-      implicit man: ClassTag[V2],
-      zero: Zero[V2]): CanMapKeyValuePairs[BitVector, Int, Boolean, V2, DenseVector[V2]] =
+  implicit def canMapPairs[V2](implicit
+      man: ClassTag[V2],
+      zero: Zero[V2]
+  ): CanMapKeyValuePairs[BitVector, Int, Boolean, V2, DenseVector[V2]] =
     new CanMapKeyValuePairs[BitVector, Int, Boolean, V2, DenseVector[V2]] {
       def map(from: BitVector, fn: (Int, Boolean) => V2): DenseVector[V2] = {
         DenseVector.tabulate(from.length)(i => fn(i, from(i)))

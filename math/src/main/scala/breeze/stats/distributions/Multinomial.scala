@@ -34,11 +34,11 @@ import scala.collection.mutable
  *
  * @author dlwh
  */
-case class Multinomial[T, I](params: T)(
-    implicit ev: T => QuasiTensor[I, Double],
+case class Multinomial[T, I](params: T)(implicit
+    ev: T => QuasiTensor[I, Double],
     sumImpl: breeze.linalg.sum.Impl[T, Double],
-    rand: RandBasis = Rand)
-    extends DiscreteDistr[I] {
+    rand: RandBasis = Rand
+) extends DiscreteDistr[I] {
   val sum = breeze.linalg.sum(params)
   require(sum != 0.0, "There's no mass!")
 
@@ -130,7 +130,8 @@ case class AliasTable[I](
     probs: DenseVector[Double],
     aliases: DenseVector[Int],
     outcomes: IndexedSeq[I],
-    rand: RandBasis) {
+    rand: RandBasis
+) {
   def draw(): I = {
     val roll = rand.randInt(outcomes.length).get()
     val toss = rand.uniform.get()
@@ -183,19 +184,20 @@ object Multinomial {
 
     def mle(stats: SufficientStatistic) = log(stats.counts)
 
-    def likelihoodFunction(stats: SufficientStatistic) = new DiffFunction[T] {
-      def calculate(x: T) = {
-        val nn: T = logNormalize(x)
-        val lp = nn.dot(stats.counts)
+    def likelihoodFunction(stats: SufficientStatistic) =
+      new DiffFunction[T] {
+        def calculate(x: T) = {
+          val nn: T = logNormalize(x)
+          val lp = nn.dot(stats.counts)
 
-        val mysum = sum(stats.counts)
+          val mysum = sum(stats.counts)
 
-        val exped = numerics.exp(nn)
-        val grad = exped * mysum - stats.counts
+          val exped = numerics.exp(nn)
+          val grad = exped * mysum - stats.counts
 
-        (-lp, grad)
+          (-lp, grad)
+        }
       }
-    }
 
     def distribution(p: Parameter) = {
       new Multinomial(numerics.exp(p))

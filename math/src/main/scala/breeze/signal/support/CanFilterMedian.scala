@@ -26,7 +26,8 @@ object CanFilterMedian {
 
         require(
           isOdd(windowLength),
-          "median filter can only take odd windowLength values, since even values will cause a half-frame time shift")
+          "median filter can only take odd windowLength values, since even values will cause a half-frame time shift"
+        )
         require(data.length >= 3, "data must be longer than 3")
         require(windowLength >= 1, "window length must be longer than 1")
 
@@ -66,8 +67,10 @@ object CanFilterMedian {
               //replace now obsolete value with new data value within temporary array
               findAndReplaceInstanceInPlace(tempDataExtract, nowObsoleteWindowValue, newWindowValue, halfWindow)
               //if the new value and old value lie on different sides of the current Median,
-              if ((nowObsoleteWindowValue >= currentMedian || newWindowValue >= currentMedian)
-                && (nowObsoleteWindowValue <= currentMedian || newWindowValue <= currentMedian)) {
+              if (
+                (nowObsoleteWindowValue >= currentMedian || newWindowValue >= currentMedian)
+                && (nowObsoleteWindowValue <= currentMedian || newWindowValue <= currentMedian)
+              ) {
                 //then the median needs to be recalculated
                 currentMedian = quickSelectImpl(tempDataExtract, halfWindow)
               }

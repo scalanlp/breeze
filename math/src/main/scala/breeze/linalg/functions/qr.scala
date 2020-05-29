@@ -180,8 +180,7 @@ object qr extends UFunc {
         }
       }
       (null, A(0 until mn, ::))
-    }
-    else {
+    } else {
       val Q =
         if (mode == CompleteQR && m > n) DenseMatrix.zeros[Double](m, m)
         else DenseMatrix.zeros[Double](m, n)
@@ -215,7 +214,8 @@ object qr extends UFunc {
   }
 
   private def doQr_Float(M: DenseMatrix[Float], skipQ: Boolean)(
-      mode: QRMode): (DenseMatrix[Float], DenseMatrix[Float]) = {
+      mode: QRMode
+  ): (DenseMatrix[Float], DenseMatrix[Float]) = {
 
     val A = M.copy
 
@@ -251,8 +251,7 @@ object qr extends UFunc {
         }
       }
       (null, A(0 until mn, ::))
-    }
-    else {
+    } else {
       val Q =
         if (mode == CompleteQR && m > n) DenseMatrix.zeros[Float](m, m)
         else DenseMatrix.zeros[Float](m, n)

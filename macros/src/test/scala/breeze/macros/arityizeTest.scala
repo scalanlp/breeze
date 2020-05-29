@@ -21,7 +21,7 @@ class arityizeTest extends FunSuite {
 
   test("Compiles defs?") {
     @arityize(5)
-    def foo[@arityize.replicate T](@arityize.replicate x: T @arityize.relative(x)) = (x: @arityize.relative(foo))
+    def foo[@arityize.replicate T](@arityize.replicate x: T @arityize.relative(x)) = x: @arityize.relative(foo)
 
     assert(foo2(1, 2) === 2)
 
@@ -35,7 +35,8 @@ class arityizeTest extends FunSuite {
     @arityize(10)
     class CuKernel[@arityize.replicate T](fn: Any, blockDims: Array[Int]) {
       def apply(workSize1: Int = 1, workSize2: Int = 1, workSize3: Int = 1)(
-          @arityize.replicate t: T @arityize.relative(t)): Unit = {
+          @arityize.replicate t: T @arityize.relative(t)
+      ): Unit = {
         Whatever.invoke(Array(workSize1, workSize2, workSize3), blockDims, fn)((t: @arityize.replicate))
       }
     }
@@ -54,7 +55,8 @@ class arityizeTest extends FunSuite {
     @arityize(2)
     def getKernel[@arityize.replicate T](
         name: String,
-        blockDims: Array[Int] = Array(32, 1, 1)): (CuKernel[T @arityize.replicate] @arityize.relative(getKernel)) = {
+        blockDims: Array[Int] = Array(32, 1, 1)
+    ): (CuKernel[T @arityize.replicate] @arityize.relative(getKernel)) = {
       new (CuKernel[T @arityize.replicate] @arityize.relative(getKernel))(name, blockDims)
     }
   }

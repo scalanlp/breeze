@@ -100,6 +100,7 @@ object OptMethod {
 
   /**Option value: Convolve using FFT.*/
   case object FFT extends OptMethod
+
   /**Option value: Convolve using for loop.*/
 }
 

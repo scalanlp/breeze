@@ -26,7 +26,7 @@ import breeze.linalg._
  */
 class FinancialTest extends FunSuite {
 
-  val DOUBLE_ROUND5_MIN = 1E-5;
+  val DOUBLE_ROUND5_MIN = 1e-5;
 
   test("NetPresentValue") {
     assert(netPresentValue(1.0, Seq(1)) == 1.0)

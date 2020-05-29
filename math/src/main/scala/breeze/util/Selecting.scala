@@ -36,7 +36,8 @@ object quickSelect extends UFunc {
           var right = x.length - 1
           require(
             position >= left && position <= right,
-            "Invalid position specification: " + position + " with array length: " + x.length)
+            "Invalid position specification: " + position + " with array length: " + x.length
+          )
 
           while (right > left) {
             val pvt = med3(left, right, ((left.toLong + right) / 2).toInt)
@@ -83,9 +84,10 @@ object quickSelect extends UFunc {
 
   }
 
-  implicit def implFromQSInPlaceColl[Coll, T](
-      implicit view: Coll <:< scala.collection.Seq[T],
-      ordering: Ordering[T]): Impl2[Coll, Int, T] = {
+  implicit def implFromQSInPlaceColl[Coll, T](implicit
+      view: Coll <:< scala.collection.Seq[T],
+      ordering: Ordering[T]
+  ): Impl2[Coll, Int, T] = {
     new Impl2[Coll, Int, T] {
       def apply(a: Coll, position: Int): T = {
         val copy = view(a).to(ArrayBuffer)
@@ -95,9 +97,10 @@ object quickSelect extends UFunc {
     }
   }
 
-  implicit def implFromOrdering[T, Coll](
-      implicit view: Coll <:< mutable.IndexedSeq[T],
-      ordering: Ordering[T]): InPlaceImpl2[Coll, Int] = {
+  implicit def implFromOrdering[T, Coll](implicit
+      view: Coll <:< mutable.IndexedSeq[T],
+      ordering: Ordering[T]
+  ): InPlaceImpl2[Coll, Int] = {
     new InPlaceImpl2[Coll, Int] {
       import ordering.mkOrderingOps
 
@@ -111,7 +114,8 @@ object quickSelect extends UFunc {
           var right = x.length - 1
           require(
             position >= left && position <= right,
-            "Invalid position specification: " + position + " with coll length: " + x.length)
+            "Invalid position specification: " + position + " with coll length: " + x.length
+          )
 
           while (right > left) {
             val pvt = med3(left, right, ((left.toLong + right) / 2).toInt)
@@ -188,7 +192,8 @@ object quickSelectImpl extends UFunc {
           var right = x.length - 1
           require(
             position >= left && position <= right,
-            "Invalid position specification: " + position + " with array length: " + x.length)
+            "Invalid position specification: " + position + " with array length: " + x.length
+          )
 
           while (right > left) {
             val pvt = med3(left, right, ((left.toLong + right) / 2).toInt)

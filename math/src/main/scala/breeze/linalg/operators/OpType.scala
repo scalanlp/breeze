@@ -37,9 +37,10 @@ sealed trait OpType
  */
 sealed trait OpAdd extends OpType
 object OpAdd extends OpAdd with UFunc {
-  implicit def opAddFromSemiring[S: Semiring]: Impl2[S, S, S] = new Impl2[S, S, S] {
-    def apply(v: S, v2: S): S = implicitly[Semiring[S]].+(v, v2)
-  }
+  implicit def opAddFromSemiring[S: Semiring]: Impl2[S, S, S] =
+    new Impl2[S, S, S] {
+      def apply(v: S, v2: S): S = implicitly[Semiring[S]].+(v, v2)
+    }
 }
 
 /**
@@ -49,9 +50,10 @@ object OpAdd extends OpAdd with UFunc {
  */
 sealed trait OpSub extends OpType
 object OpSub extends OpSub with UFunc {
-  implicit def opSubFromRing[S: Ring]: Impl2[S, S, S] = new Impl2[S, S, S] {
-    def apply(v: S, v2: S): S = implicitly[Ring[S]].-(v, v2)
-  }
+  implicit def opSubFromRing[S: Ring]: Impl2[S, S, S] =
+    new Impl2[S, S, S] {
+      def apply(v: S, v2: S): S = implicitly[Ring[S]].-(v, v2)
+    }
 }
 
 /**
@@ -61,9 +63,10 @@ object OpSub extends OpSub with UFunc {
  */
 sealed trait OpMulScalar extends OpType
 object OpMulScalar extends OpMulScalar with UFunc {
-  implicit def opMulScalarFromSemiring[S: Semiring]: Impl2[S, S, S] = new Impl2[S, S, S] {
-    def apply(v: S, v2: S): S = implicitly[Semiring[S]].*(v, v2)
-  }
+  implicit def opMulScalarFromSemiring[S: Semiring]: Impl2[S, S, S] =
+    new Impl2[S, S, S] {
+      def apply(v: S, v2: S): S = implicitly[Semiring[S]].*(v, v2)
+    }
 }
 
 /**
@@ -73,9 +76,10 @@ object OpMulScalar extends OpMulScalar with UFunc {
  */
 sealed trait OpDiv extends OpType
 object OpDiv extends OpDiv with UFunc {
-  implicit def opDivFromField[S: Field]: Impl2[S, S, S] = new Impl2[S, S, S] {
-    def apply(v: S, v2: S): S = implicitly[Field[S]]./(v, v2)
-  }
+  implicit def opDivFromField[S: Field]: Impl2[S, S, S] =
+    new Impl2[S, S, S] {
+      def apply(v: S, v2: S): S = implicitly[Field[S]]./(v, v2)
+    }
 }
 
 /**
@@ -109,7 +113,7 @@ object OpLT extends OpLT with UFunc {
   }
   @expand
   implicit def impl2[@expand.args(Int, Float, Long, Double) T, @expand.args(Int, Float, Long, Double) U]
-    : Impl2[T, U, Boolean] = {
+      : Impl2[T, U, Boolean] = {
     new Impl2[T, U, Boolean] {
       def apply(v: T, v2: U): Boolean = v < v2
     }
@@ -132,7 +136,7 @@ object OpLTE extends OpLTE with UFunc {
 
   @expand
   implicit def impl2[@expand.args(Int, Float, Long, Double) T, @expand.args(Int, Float, Long, Double) U]
-    : Impl2[T, U, Boolean] = {
+      : Impl2[T, U, Boolean] = {
     new Impl2[T, U, Boolean] {
       def apply(v: T, v2: U): Boolean = v <= v2
     }
@@ -154,7 +158,7 @@ object OpGT extends OpGT with UFunc {
   }
   @expand
   implicit def impl2[@expand.args(Int, Float, Long, Double) T, @expand.args(Int, Float, Long, Double) U]
-    : Impl2[T, U, Boolean] = {
+      : Impl2[T, U, Boolean] = {
     new Impl2[T, U, Boolean] {
       def apply(v: T, v2: U): Boolean = v > v2
     }
@@ -177,7 +181,7 @@ object OpGTE extends OpGTE with UFunc {
 
   @expand
   implicit def impl2[@expand.args(Int, Float, Long, Double) T, @expand.args(Int, Float, Long, Double) U]
-    : Impl2[T, U, Boolean] = {
+      : Impl2[T, U, Boolean] = {
     new Impl2[T, U, Boolean] {
       def apply(v: T, v2: U): Boolean = v >= v2
     }
@@ -200,7 +204,7 @@ object OpEq extends OpEq with UFunc {
 
   @expand
   implicit def impl2[@expand.args(Int, Float, Long, Double) T, @expand.args(Int, Float, Long, Double) U]
-    : Impl2[T, U, Boolean] = {
+      : Impl2[T, U, Boolean] = {
     new Impl2[T, U, Boolean] {
       def apply(v: T, v2: U): Boolean = v == v2
     }
@@ -276,9 +280,10 @@ object OpXor extends OpXor with UFunc {
  */
 sealed trait OpNeg extends OpType
 object OpNeg extends OpNeg with UFunc {
-  implicit def ringNegation[S: Ring]: UImpl[OpNeg.this.type, S, S] = new Impl[S, S] {
-    def apply(v: S): S = implicitly[Ring[S]].negate(v)
-  }
+  implicit def ringNegation[S: Ring]: UImpl[OpNeg.this.type, S, S] =
+    new Impl[S, S] {
+      def apply(v: S): S = implicitly[Ring[S]].negate(v)
+    }
 }
 
 /**
@@ -301,9 +306,10 @@ object OpNot extends OpNot with UFunc with MappingUFunc {
  */
 sealed trait OpMulInner extends OpType
 object OpMulInner extends OpMulInner with UFunc {
-  def opMulInnerFromSemiring[S: Semiring]: OpMulInner.Impl2[S, S, S] = new Impl2[S, S, S] {
-    def apply(v: S, v2: S): S = implicitly[Semiring[S]].*(v, v2)
-  }
+  def opMulInnerFromSemiring[S: Semiring]: OpMulInner.Impl2[S, S, S] =
+    new Impl2[S, S, S] {
+      def apply(v: S, v2: S): S = implicitly[Semiring[S]].*(v, v2)
+    }
 }
 
 /**
@@ -321,7 +327,8 @@ object OpSolveMatrixBy extends OpSolveMatrixBy with UFunc
  */
 sealed trait OpMulMatrix extends OpType
 object OpMulMatrix extends OpMulMatrix with UFunc {
-  implicit def opMulMatrixFromSemiring[S: Semiring]: Impl2[S, S, S] = new Impl2[S, S, S] {
-    def apply(v: S, v2: S): S = implicitly[Semiring[S]].*(v, v2)
-  }
+  implicit def opMulMatrixFromSemiring[S: Semiring]: Impl2[S, S, S] =
+    new Impl2[S, S, S] {
+      def apply(v: S, v2: S): S = implicitly[Semiring[S]].*(v, v2)
+    }
 }

@@ -21,7 +21,7 @@ import breeze.numerics.pow
  * Created by fanming.chen on 2015/3/14 0014.
  */
 class LBFGSBTest extends OptimizeTestBase {
-  val EPS = 1E-4;
+  val EPS = 1e-4;
 
   test("L-BFGS-B should solve with bound constraint") {
     val solver = new LBFGSB(DenseVector[Double](-100, -100), DenseVector[Double](1200, 100))
@@ -95,7 +95,7 @@ class LBFGSBTest extends OptimizeTestBase {
   }
 
   test("issue 572") {
-    val solver = new LBFGSB(DenseVector[Double](1E-12), DenseVector[Double](Double.MaxValue))
+    val solver = new LBFGSB(DenseVector[Double](1e-12), DenseVector[Double](Double.MaxValue))
 
     val f = new DiffFunction[DenseVector[Double]] {
       override def calculate(x: DenseVector[Double]): (Double, DenseVector[Double]) = {

@@ -5,7 +5,7 @@ import org.scalatest._
 class TTestTest extends FunSuite with Matchers {
   val threshold = 0.01
   test("T Test two sample") {
-    tTest(List(1.0, 1, 2, 3), List(9.0, 9, 8, 9)) should be(4.29E-5 +- threshold)
+    tTest(List(1.0, 1, 2, 3), List(9.0, 9, 8, 9)) should be(4.29e-5 +- threshold)
   }
   test("T Test one sample") {
     tTest(Array(1.0, 1, 2, 3)) should be(0.0336 +- threshold)

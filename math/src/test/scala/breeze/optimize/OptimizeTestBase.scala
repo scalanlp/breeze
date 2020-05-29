@@ -25,18 +25,19 @@ trait OptimizeTestBaseTrait {
   import org.scalacheck.Arbitrary._
   implicit val arbVector: Arbitrary[DenseVector[Double]] = Arbitrary {
     RandomInstanceSupport
-      .genDenseVector[Double](10, RandomInstanceSupport.genReasonableDouble.arbitrary.map(_ % 10 + 1E-2))
+      .genDenseVector[Double](10, RandomInstanceSupport.genReasonableDouble.arbitrary.map(_ % 10 + 1e-2))
   }
 
   implicit val arbVectorFloat: Arbitrary[DenseVector[Float]] = Arbitrary {
     RandomInstanceSupport
-      .genDenseVector[Float](10, RandomInstanceSupport.genReasonableFloat.arbitrary.map(_ % 10 + 1E-2f))
+      .genDenseVector[Float](10, RandomInstanceSupport.genReasonableFloat.arbitrary.map(_ % 10 + 1e-2f))
   }
 
-  implicit def arbSV: Arbitrary[SparseVector[Double]] = Arbitrary {
-    RandomInstanceSupport
-      .genSparseVector[Double](10, RandomInstanceSupport.genReasonableDouble.arbitrary.map(_ % 10 + 1E-2))
-  }
+  implicit def arbSV: Arbitrary[SparseVector[Double]] =
+    Arbitrary {
+      RandomInstanceSupport
+        .genSparseVector[Double](10, RandomInstanceSupport.genReasonableDouble.arbitrary.map(_ % 10 + 1e-2))
+    }
 
   implicit val arbDoubleCounter: Arbitrary[Counter[String, Double]] = Arbitrary(for {
     v <- arbitrary[DenseVector[Double]]

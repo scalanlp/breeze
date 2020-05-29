@@ -27,13 +27,15 @@ object LSMR extends SerializableLogging {
       A: M,
       b: V,
       regularization: Double = 0.0,
-      tolerance: Double = 1E-9,
+      tolerance: Double = 1e-9,
       maxIter: Int = 1000,
-      quiet: Boolean = false)(
-      implicit multMV: OpMulMatrix.Impl2[M, V, V],
+      quiet: Boolean = false
+  )(implicit
+      multMV: OpMulMatrix.Impl2[M, V, V],
       transA: CanTranspose[M, MT],
       multMTV: OpMulMatrix.Impl2[MT, V, V],
-      ispace: MutableInnerProductVectorSpace[V, Double]): V = {
+      ispace: MutableInnerProductVectorSpace[V, Double]
+  ): V = {
     import ispace._
 
     val lambda = math.sqrt(regularization)
@@ -78,7 +80,7 @@ object LSMR extends SerializableLogging {
 
     var normA2 = sqr(alpha)
     var maxrbar = 0.0
-    var minrbar = 1E100
+    var minrbar = 1e100
 
     var converged = false
     var iter = 0
@@ -193,7 +195,8 @@ object LSMR extends SerializableLogging {
       if (!quiet)
         logger.info(
           f"Residual: $normr%.2g $normAr%.2g " +
-            f":: convtest1: $test1%.2g <? $rtol%.2g :: convtest2: $test2%.2g <? $atol%.2g")
+            f":: convtest1: $test1%.2g <? $rtol%.2g :: convtest2: $test2%.2g <? $atol%.2g"
+        )
 
       converged = normr == 0.0 || (iter >= maxIter) || (test1 < rtol) || (test2 < atol)
     }

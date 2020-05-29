@@ -7,8 +7,8 @@ class DormandPrince853Integrator(
     minStep: Double,
     maxStep: Double,
     relTol: DenseVector[Double] = null,
-    absTol: DenseVector[Double] = null)
-    extends ApacheAdaptiveStepIntegrator(relTol, absTol) {
+    absTol: DenseVector[Double] = null
+) extends ApacheAdaptiveStepIntegrator(relTol, absTol) {
 
   type T = ApacheDormandPrince853Integrator
 
@@ -17,5 +17,6 @@ class DormandPrince853Integrator(
       minStep,
       maxStep,
       ApacheAdaptiveStepIntegrator.defaultAbsTol,
-      ApacheAdaptiveStepIntegrator.defaultRelTol)
+      ApacheAdaptiveStepIntegrator.defaultRelTol
+    )
 }

@@ -28,7 +28,8 @@ trait CanTranspose[From, +To] {
 }
 
 object CanTranspose {
-  implicit def transposeOfScalarIsScalar[T <: AnyVal]: CanTranspose[T, T] = new CanTranspose[T, T] {
-    override def apply(from: T): T = from
-  }
+  implicit def transposeOfScalarIsScalar[T <: AnyVal]: CanTranspose[T, T] =
+    new CanTranspose[T, T] {
+      override def apply(from: T): T = from
+    }
 }

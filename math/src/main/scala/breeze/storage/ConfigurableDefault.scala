@@ -25,17 +25,18 @@ import scala.reflect.ClassTag
 trait ConfigurableDefault[@specialized V] extends Serializable { outer =>
   def value(implicit zero: Zero[V]): V
 
-  def fillArray(arr: Array[V], v: V) = arr.asInstanceOf[AnyRef] match {
-    case x: Array[Int] => Arrays.fill(arr.asInstanceOf[Array[Int]], v.asInstanceOf[Int])
-    case x: Array[Long] => Arrays.fill(arr.asInstanceOf[Array[Long]], v.asInstanceOf[Long])
-    case x: Array[Short] => Arrays.fill(arr.asInstanceOf[Array[Short]], v.asInstanceOf[Short])
-    case x: Array[Double] => Arrays.fill(arr.asInstanceOf[Array[Double]], v.asInstanceOf[Double])
-    case x: Array[Float] => Arrays.fill(arr.asInstanceOf[Array[Float]], v.asInstanceOf[Float])
-    case x: Array[Char] => Arrays.fill(arr.asInstanceOf[Array[Char]], v.asInstanceOf[Char])
-    case x: Array[Byte] => Arrays.fill(arr.asInstanceOf[Array[Byte]], v.asInstanceOf[Byte])
-    case x: Array[_] => Arrays.fill(arr.asInstanceOf[Array[AnyRef]], v.asInstanceOf[AnyRef])
-    case _ => throw new RuntimeException("shouldn't be here!")
-  }
+  def fillArray(arr: Array[V], v: V) =
+    arr.asInstanceOf[AnyRef] match {
+      case x: Array[Int] => Arrays.fill(arr.asInstanceOf[Array[Int]], v.asInstanceOf[Int])
+      case x: Array[Long] => Arrays.fill(arr.asInstanceOf[Array[Long]], v.asInstanceOf[Long])
+      case x: Array[Short] => Arrays.fill(arr.asInstanceOf[Array[Short]], v.asInstanceOf[Short])
+      case x: Array[Double] => Arrays.fill(arr.asInstanceOf[Array[Double]], v.asInstanceOf[Double])
+      case x: Array[Float] => Arrays.fill(arr.asInstanceOf[Array[Float]], v.asInstanceOf[Float])
+      case x: Array[Char] => Arrays.fill(arr.asInstanceOf[Array[Char]], v.asInstanceOf[Char])
+      case x: Array[Byte] => Arrays.fill(arr.asInstanceOf[Array[Byte]], v.asInstanceOf[Byte])
+      case x: Array[_] => Arrays.fill(arr.asInstanceOf[Array[AnyRef]], v.asInstanceOf[AnyRef])
+      case _ => throw new RuntimeException("shouldn't be here!")
+    }
 
   def makeArray(size: Int)(implicit zero: Zero[V], man: ClassTag[V]) = {
     val arr = new Array[V](size)
@@ -43,9 +44,10 @@ trait ConfigurableDefault[@specialized V] extends Serializable { outer =>
     arr
   }
 
-  def map[U](f: V => U)(implicit zero: Zero[V]) = new ConfigurableDefault[U] {
-    def value(implicit default: Zero[U]) = f(outer.value(zero))
-  }
+  def map[U](f: V => U)(implicit zero: Zero[V]) =
+    new ConfigurableDefault[U] {
+      def value(implicit default: Zero[U]) = f(outer.value(zero))
+    }
 }
 
 sealed trait LowPriorityConfigurableImplicits { this: ConfigurableDefault.type =>

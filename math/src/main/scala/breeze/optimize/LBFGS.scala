@@ -39,8 +39,9 @@ class LBFGS[T](convergenceCheck: ConvergenceCheck[T], m: Int)(implicit space: Mu
     extends FirstOrderMinimizer[T, DiffFunction[T]](convergenceCheck)
     with SerializableLogging {
 
-  def this(maxIter: Int = -1, m: Int = 7, tolerance: Double = 1E-9)(
-      implicit space: MutableInnerProductModule[T, Double]) =
+  def this(maxIter: Int = -1, m: Int = 7, tolerance: Double = 1e-9)(implicit
+      space: MutableInnerProductModule[T, Double]
+  ) =
     this(FirstOrderMinimizer.defaultConvergenceCheck(maxIter, tolerance), m)
   import space._
   require(m > 0)
@@ -78,10 +79,11 @@ class LBFGS[T](convergenceCheck: ConvergenceCheck[T], m: Int)(implicit space: Mu
     val grad = state.grad
 
     val ff = LineSearch.functionFromSearchDirection(f, x, dir)
-    val search = new StrongWolfeLineSearch(maxZoomIter = 10, maxLineSearchIter = 10) // TODO: Need good default values here.
+    val search =
+      new StrongWolfeLineSearch(maxZoomIter = 10, maxLineSearchIter = 10) // TODO: Need good default values here.
     val alpha = search.minimize(ff, if (state.iter == 0.0) 1.0 / norm(dir) else 1.0)
 
-    if (alpha * norm(grad) < 1E-10)
+    if (alpha * norm(grad) < 1e-10)
       throw new StepSizeUnderflow
     alpha
   }
@@ -91,8 +93,8 @@ object LBFGS {
   case class ApproximateInverseHessian[T](
       m: Int,
       private[LBFGS] val memStep: IndexedSeq[T] = IndexedSeq.empty,
-      private[LBFGS] val memGradDelta: IndexedSeq[T] = IndexedSeq.empty)(
-      implicit space: MutableInnerProductModule[T, Double])
+      private[LBFGS] val memGradDelta: IndexedSeq[T] = IndexedSeq.empty
+  )(implicit space: MutableInnerProductModule[T, Double])
       extends NumericOps[ApproximateInverseHessian[T]] {
 
     import space._
@@ -145,8 +147,9 @@ object LBFGS {
     }
   }
 
-  implicit def multiplyInverseHessian[T](
-      implicit vspace: MutableInnerProductModule[T, Double]): OpMulMatrix.Impl2[ApproximateInverseHessian[T], T, T] = {
+  implicit def multiplyInverseHessian[T](implicit
+      vspace: MutableInnerProductModule[T, Double]
+  ): OpMulMatrix.Impl2[ApproximateInverseHessian[T], T, T] = {
     new OpMulMatrix.Impl2[ApproximateInverseHessian[T], T, T] {
       def apply(a: ApproximateInverseHessian[T], b: T): T = a * b
     }

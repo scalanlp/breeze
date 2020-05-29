@@ -19,7 +19,8 @@ class AffineScaling extends SerializableLogging {
       c: DenseVector[Double],
       x0: DenseVector[Double],
       gamma: Double = 0.5,
-      eps: Double = 1E-5) = {
+      eps: Double = 1e-5
+  ) = {
     var converged = false
     var x = x0
     var cv = x.dot(c)
@@ -30,7 +31,7 @@ class AffineScaling extends SerializableLogging {
       val hv: DenseVector[Double] = A * hx * -1.0
       if (hv.values.exists(_ >= 0)) throw UnboundedProblem
 
-      val constraints = (for (i <- 0 until hv.length if hv(i) < 0) yield (-vk(i) / hv(i)))
+      val constraints = for (i <- 0 until hv.length if hv(i) < 0) yield (-vk(i) / hv(i))
       val alpha = if (constraints.size > 1) constraints.min * gamma else 0.0
       val xn = x + hx * alpha
       val cvn = xn.dot(c)

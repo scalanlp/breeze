@@ -20,5 +20,6 @@ trait Series {
   def getChartStuff(
       defaultName: Int => String,
       defaultColor: Int => Paint,
-      defaultStroke: Int => Stroke): (org.jfree.data.xy.XYDataset, XYItemRenderer)
+      defaultStroke: Int => Stroke
+  ): (org.jfree.data.xy.XYDataset, XYItemRenderer)
 }

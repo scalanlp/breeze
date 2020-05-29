@@ -86,14 +86,17 @@ class CSCMatrixTest extends FunSuite with Checkers with MatrixTestUtils {
     val b = CSCMatrix(
       (Complex(7, 7), Complex(-2, -2), Complex(8, 8)),
       (Complex(-3, -3), Complex(-3, -3), Complex(1, 1)),
-      (Complex(12, 12), Complex(0, 0), Complex(5, 5)))
+      (Complex(12, 12), Complex(0, 0), Complex(5, 5))
+    )
     val c = DenseVector(Complex(6, 0), Complex(2, 0), Complex(3, 0))
     val cs = SparseVector(Complex(6, 0), Complex(2, 0), Complex(3, 0))
     val value: CSCMatrix[Complex] = a * b
     assert(
       value === CSCMatrix(
         (Complex(0, 74), Complex(0, -16), Complex(0, 50)),
-        (Complex(0, 170), Complex(0, -46), Complex(0, 134))))
+        (Complex(0, 170), Complex(0, -46), Complex(0, 134))
+      )
+    )
     assert(b * c === DenseVector(Complex(62, 62), Complex(-21, -21), Complex(87, 87)))
     assert(b * cs === DenseVector(Complex(62, 62), Complex(-21, -21), Complex(87, 87)))
     assert(b.t * c === DenseVector(Complex(72, -72), Complex(-18, 18), Complex(65, -65)))
@@ -244,7 +247,9 @@ class CSCMatrixTest extends FunSuite with Checkers with MatrixTestUtils {
     assert(
       b /:/ Complex(3, 0) === CSCMatrix(
         (Complex(1.0 / 3.0, 0), Complex(0, 0), Complex(0, 0)),
-        (Complex(2.0 / 3.0, 0), Complex(1, 0), Complex(-1.0 / 3.0, 0))))
+        (Complex(2.0 / 3.0, 0), Complex(1, 0), Complex(-1.0 / 3.0, 0))
+      )
+    )
   }
 
   test("csc scalar \"bad\" pow ops") {
@@ -433,7 +438,7 @@ class CSCMatrixTest extends FunSuite with Checkers with MatrixTestUtils {
   test("CSCMatrix Solve") {
     val r2: DenseVector[Double] = CSCMatrix((1.0, 3.0, 4.0), (2.0, 0.0, 6.0)) \ DenseVector(1.0, 3.0)
     import breeze.numerics.inf
-    assert(norm(r2 - DenseVector(0.1813186813186811, -0.3131868131868131, 0.43956043956043944), inf) < 1E-5)
+    assert(norm(r2 - DenseVector(0.1813186813186811, -0.3131868131868131, 0.43956043956043944), inf) < 1e-5)
   }
 
   test("CSCMatrix solve #644") {
@@ -452,15 +457,18 @@ class CSCMatrixTest extends FunSuite with Checkers with MatrixTestUtils {
       CSCMatrix(
         (0.1813186813186811, 0.2197802197802196),
         (-0.3131868131868131, -0.1978021978021977),
-        (0.43956043956043944, 0.5934065934065933)))
+        (0.43956043956043944, 0.5934065934065933)
+      )
+    )
 
     // tall matrix solve
-    val r4: CSCMatrix[Double] = CSCMatrix((1.0, 3.0), (2.0, 0.0), (4.0, 6.0)) \ CSCMatrix(
-      (1.0, 4.0),
-      (2.0, 5.0),
-      (3.0, 6.0))
-    assert(max(abs(
-      r4 - CSCMatrix((0.9166666666666667, 1.9166666666666672), (-0.08333333333333352, -0.08333333333333436)))) < 1E-5)
+    val r4: CSCMatrix[Double] =
+      CSCMatrix((1.0, 3.0), (2.0, 0.0), (4.0, 6.0)) \ CSCMatrix((1.0, 4.0), (2.0, 5.0), (3.0, 6.0))
+    assert(
+      max(
+        abs(r4 - CSCMatrix((0.9166666666666667, 1.9166666666666672), (-0.08333333333333352, -0.08333333333333436)))
+      ) < 1e-5
+    )
 
     val dim = 70
     val largeMatrix = CSCMatrix.rand(dim, dim)
@@ -469,7 +477,7 @@ class CSCMatrixTest extends FunSuite with Checkers with MatrixTestUtils {
     for (i <- 0 until largeMatrix.rows)
       largeMatrix(i, i) += 2.0
 
-    matricesNearlyEqual(largeMatrix \ largeMatrix2, largeMatrix.toDense \ largeMatrix2.toDense, 1E-3)
+    matricesNearlyEqual(largeMatrix \ largeMatrix2, largeMatrix.toDense \ largeMatrix2.toDense, 1e-3)
 
   }
 

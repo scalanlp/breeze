@@ -50,8 +50,8 @@ class QuadraticMinimizer(
     maxIters: Int = -1,
     abstol: Double = 1e-6,
     reltol: Double = 1e-4,
-    alpha: Double = 1.0)
-    extends SerializableLogging {
+    alpha: Double = 1.0
+) extends SerializableLogging {
 
   type BDM = DenseMatrix[Double]
   type BDV = DenseVector[Double]
@@ -68,7 +68,8 @@ class QuadraticMinimizer(
       residual: BDV,
       s: BDV,
       iter: Int,
-      converged: Boolean) {}
+      converged: Boolean
+  ) {}
 
   val linearEquality = if (Aeq != null) Aeq.rows else 0
 
@@ -203,7 +204,8 @@ class QuadraticMinimizer(
       val equality = nlinear + beq.length
       require(
         wsH.rows == equality && wsH.cols == equality,
-        s"QuadraticMinimizer:reset quasi definite and linear size mismatch")
+        s"QuadraticMinimizer:reset quasi definite and linear size mismatch"
+      )
       // TO DO : Use LDL' for symmetric quasi definite matrix lapack.dsytrf
       lapack.dgetrf(n, n, wsH.data, scala.math.max(1, n), pivot, info)
     } else {
@@ -260,7 +262,8 @@ class QuadraticMinimizer(
       q: DenseVector[Double],
       rho: Double,
       initialState: State,
-      resetState: Boolean = true): State = {
+      resetState: Boolean = true
+  ): State = {
     val startState = if (resetState) reset(q, initialState) else initialState
     import startState._
 
@@ -452,7 +455,8 @@ object QuadraticMinimizer {
       A: DenseMatrix[Double],
       x: DenseVector[Double],
       beta: Double,
-      y: DenseVector[Double]): Unit = {
+      y: DenseVector[Double]
+  ): Unit = {
     val tStrA = if (A.isTranspose) "T" else "N"
     val mA = if (!A.isTranspose) A.rows else A.cols
     val nA = if (!A.isTranspose) A.rows else A.cols
@@ -565,7 +569,8 @@ object QuadraticMinimizer {
     if (args.length < 4) {
       println("Usage: QpSolver n m lambda beta")
       println(
-        "Test QpSolver with a simple quadratic function of dimension n and m equalities lambda beta for elasticNet")
+        "Test QpSolver with a simple quadratic function of dimension n and m equalities lambda beta for elasticNet"
+      )
       sys.exit(1)
     }
 
@@ -579,7 +584,8 @@ object QuadraticMinimizer {
     val (aeq, b, bl, bu, q, h) = QpGenerator(problemSize, nequalities)
 
     println(
-      s"Test QuadraticMinimizer, CG , BFGS and OWLQN with $problemSize variables and $nequalities equality constraints")
+      s"Test QuadraticMinimizer, CG , BFGS and OWLQN with $problemSize variables and $nequalities equality constraints"
+    )
 
     val luStart = System.nanoTime()
     val luResult = h \ q *:* (-1.0)
@@ -611,7 +617,8 @@ object QuadraticMinimizer {
     println(s"Objective lu $luObj bfgs $bfgsObj qp $qpObj")
 
     println(
-      s"dim ${problemSize} lu ${luTime / 1e6} ms qp ${qpTime / 1e6} ms cg ${cgTime / 1e6} ms bfgs ${bfgsTime / 1e6} ms")
+      s"dim ${problemSize} lu ${luTime / 1e6} ms qp ${qpTime / 1e6} ms cg ${cgTime / 1e6} ms bfgs ${bfgsTime / 1e6} ms"
+    )
 
     val lambdaL1 = lambda * beta
     val lambdaL2 = lambda * (1 - beta)
@@ -630,9 +637,11 @@ object QuadraticMinimizer {
     val owlqnTime = System.nanoTime() - startOWLQN
 
     println(
-      s"||owlqn - sparseqp|| norm ${norm(owlqnResult.x - sparseQpResult.x, 2)} inf-norm ${norm(owlqnResult.x - sparseQpResult.x, inf)}")
+      s"||owlqn - sparseqp|| norm ${norm(owlqnResult.x - sparseQpResult.x, 2)} inf-norm ${norm(owlqnResult.x - sparseQpResult.x, inf)}"
+    )
     println(
-      s"sparseQp ${sparseQpTime / 1e6} ms iters ${sparseQpResult.iter} owlqn ${owlqnTime / 1e6} ms iters ${owlqnResult.iter}")
+      s"sparseQp ${sparseQpTime / 1e6} ms iters ${sparseQpResult.iter} owlqn ${owlqnTime / 1e6} ms iters ${owlqnResult.iter}"
+    )
 
     val posQp = QuadraticMinimizer(h.rows, POSITIVE, 0.0)
     val posQpStart = System.nanoTime()
@@ -659,6 +668,7 @@ object QuadraticMinimizer {
     val qpEqualityTime = System.nanoTime() - qpEqualityStart
 
     println(
-      s"Qp Equality ${qpEqualityTime / 1e6} ms iters ${qpEqualityResult.iter} converged ${qpEqualityResult.converged}")
+      s"Qp Equality ${qpEqualityTime / 1e6} ms iters ${qpEqualityResult.iter} converged ${qpEqualityResult.converged}"
+    )
   }
 }

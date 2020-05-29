@@ -28,8 +28,8 @@ class CompactHessian(
     Y: RingBuffer[DenseVector[Double]],
     S: RingBuffer[DenseVector[Double]],
     sigma: Double,
-    m: Int)
-    extends NumericOps[CompactHessian] {
+    m: Int
+) extends NumericOps[CompactHessian] {
   def this(m: Int) = this(null, new RingBuffer(m), new RingBuffer(m), 1.0, m)
   def repr: CompactHessian = this
   implicit def collectionOfVectorsToMatrix(coll: scala.collection.Seq[DenseVector[Double]]) =
@@ -92,8 +92,8 @@ class ProjectedQuasiNewton(
     val testOpt: Boolean,
     val maxSrchIt: Int,
     val gamma: Double,
-    val projection: DenseVector[Double] => DenseVector[Double])(
-    implicit space: MutableInnerProductModule[DenseVector[Double], Double])
+    val projection: DenseVector[Double] => DenseVector[Double]
+)(implicit space: MutableInnerProductModule[DenseVector[Double], Double])
     extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]](convergenceCheck)
     with Projecting[DenseVector[Double]]
     with SerializableLogging {
@@ -107,24 +107,26 @@ class ProjectedQuasiNewton(
       maxSrchIt: Int = 50,
       gamma: Double = 1e-4,
       projection: DenseVector[Double] => DenseVector[Double] = identity,
-      relativeTolerance: Boolean = true)(implicit space: MutableInnerProductModule[DenseVector[Double], Double]) = this(
-    convergenceCheck =
-      FirstOrderMinimizer.defaultConvergenceCheck[DenseVector[Double]](maxIter, tolerance, relativeTolerance),
-    m = m,
-    initFeas = initFeas,
-    testOpt = testOpt,
-    maxSrchIt = maxSrchIt,
-    gamma = gamma,
-    projection = projection,
-    innerOptimizer = new SpectralProjectedGradient[DenseVector[Double]](
-      tolerance = tolerance,
-      maxIter = 50,
-      bbMemory = 5,
-      initFeas = true,
-      fvalMemory = 10,
-      projection = projection
+      relativeTolerance: Boolean = true
+  )(implicit space: MutableInnerProductModule[DenseVector[Double], Double]) =
+    this(
+      convergenceCheck =
+        FirstOrderMinimizer.defaultConvergenceCheck[DenseVector[Double]](maxIter, tolerance, relativeTolerance),
+      m = m,
+      initFeas = initFeas,
+      testOpt = testOpt,
+      maxSrchIt = maxSrchIt,
+      gamma = gamma,
+      projection = projection,
+      innerOptimizer = new SpectralProjectedGradient[DenseVector[Double]](
+        tolerance = tolerance,
+        maxIter = 50,
+        bbMemory = 5,
+        initFeas = true,
+        fvalMemory = 10,
+        projection = projection
+      )
     )
-  )
 
   type History = CompactHessian
 
@@ -135,7 +137,8 @@ class ProjectedQuasiNewton(
   override protected def adjust(
       newX: DenseVector[Double],
       newGrad: DenseVector[Double],
-      newVal: Double): (Double, DenseVector[Double]) = (newVal, projectedVector(newX, -newGrad))
+      newVal: Double
+  ): (Double, DenseVector[Double]) = (newVal, projectedVector(newX, -newGrad))
 
   private def computeGradient(x: DenseVector[Double], g: DenseVector[Double]): DenseVector[Double] =
     projectedVector(x, -g)
@@ -176,7 +179,7 @@ class ProjectedQuasiNewton(
     var alpha = if (state.iter == 0.0) min(1.0, 1.0 / norm(dir)) else 1.0
     alpha = search.minimize(ff, alpha)
 
-    if (alpha * norm(grad) < 1E-10) throw new StepSizeUnderflow
+    if (alpha * norm(grad) < 1e-10) throw new StepSizeUnderflow
 
     alpha
   }
@@ -190,7 +193,8 @@ class ProjectedQuasiNewton(
       newGrad: DenseVector[Double],
       newVal: Double,
       f: DiffFunction[DenseVector[Double]],
-      oldState: State): History = {
+      oldState: State
+  ): History = {
     import oldState._
     val s = newX - x
     val y = newGrad - grad

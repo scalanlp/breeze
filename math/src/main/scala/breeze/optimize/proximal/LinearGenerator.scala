@@ -32,7 +32,7 @@ object LinearGenerator {
     }
     //||ax - b||_2^{2} = x'a'ax - 2*x'a'*b + c
     val h = (data.t * data) * 2.0
-    val q = (data.t * labels)
+    val q = data.t * labels
     q *= -2.0
     (Cost(data, labels), h, q)
   }

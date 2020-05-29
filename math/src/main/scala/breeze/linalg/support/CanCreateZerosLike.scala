@@ -41,9 +41,10 @@ object CanCreateZerosLike {
     def apply(v: From) = map(v, _ => op.zero)
   }
 
-  implicit def opMapValues[From, A, To](
-      implicit map: CanMapValues[From, A, A, To],
-      op: Field[A]): CanCreateZerosLike[From, To] = new OpMapValues[From, A, To]()(op, map)
+  implicit def opMapValues[From, A, To](implicit
+      map: CanMapValues[From, A, A, To],
+      op: Field[A]
+  ): CanCreateZerosLike[From, To] = new OpMapValues[From, A, To]()(op, map)
 
   implicit def OpArrayAny[V: ClassTag: Semiring]: OpArray[V] =
     new OpArray[V]

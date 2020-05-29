@@ -36,7 +36,7 @@ class AffineScalingTest extends FunSuite {
 
     val x = AffineScaling.maximize(A = A, b = b, c = c, x0 = x0)
     assert((A * x - b).activeValuesIterator.forall(_ < 0), (A * x))
-    assert((x(0) - 0.5).abs < 1E-3, x(0))
-    assert((x(1) - 0.75).abs < 1E-3, x(1))
+    assert((x(0) - 0.5).abs < 1e-3, x(0))
+    assert((x(1) - 0.75).abs < 1e-3, x(1))
   }
 }

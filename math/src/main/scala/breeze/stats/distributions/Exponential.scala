@@ -65,13 +65,14 @@ object Exponential
     stats.n / stats.v
   }
 
-  def likelihoodFunction(stats: SufficientStatistic) = new DiffFunction[Double] {
-    def calculate(x: Double) = {
-      val obj = x * stats.v - stats.n * math.log(x)
-      val deriv = stats.v - stats.n / x
-      (obj, deriv)
+  def likelihoodFunction(stats: SufficientStatistic) =
+    new DiffFunction[Double] {
+      def calculate(x: Double) = {
+        val obj = x * stats.v - stats.n * math.log(x)
+        val deriv = stats.v - stats.n / x
+        (obj, deriv)
+      }
     }
-  }
 
   def distribution(p: Double) = new Exponential(p)
 }

@@ -35,7 +35,9 @@ class padTest extends FunSuite {
         (4, 0, 0),
         (5, 0, 0),
         (0, 0, 0),
-        (0, 0, 0)))
+        (0, 0, 0)
+      )
+    )
     assert(padRight(testDMI, dimensions = (3, 3), 0) == DenseMatrix((1, 0, 0), (2, 0, 0), (3, 0, 0)))
 
     assert(padLeft(testDVI, dimensions = 3) == DenseVector(3, 4, 5))
@@ -57,7 +59,9 @@ class padTest extends FunSuite {
         (0, 0, 2),
         (0, 0, 3),
         (0, 0, 4),
-        (0, 0, 5)))
+        (0, 0, 5)
+      )
+    )
     assert(padLeft(testDMI, dimensions = (3, 3), 0) == DenseMatrix((0, 0, 3), (0, 0, 4), (0, 0, 5)))
 
   }

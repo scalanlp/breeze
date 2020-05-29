@@ -55,8 +55,8 @@ class NonlinearMinimizer(
     rho: Double = 1.0,
     alpha: Double = 1.0,
     abstol: Double = 1e-6,
-    reltol: Double = 1e-4)
-    extends SerializableLogging {
+    reltol: Double = 1e-4
+) extends SerializableLogging {
   import NonlinearMinimizer.BDV
 
   val lbfgs = new LBFGS[BDV](m = bfgsMemory, tolerance = abstol, maxIter = innerIters)
@@ -71,7 +71,8 @@ class NonlinearMinimizer(
       s: BDV,
       admmIters: Int,
       iter: Int,
-      converged: Boolean)
+      converged: Boolean
+  )
 
   private def initialState(primal: DiffFunction[BDV], init: BDV) = {
     val z = init.copy
@@ -173,9 +174,9 @@ object NonlinearMinimizer {
    * AdmmObj(x, u, z) = f(x) + rho/2*||x - z + u||2
    * dAdmmObj/dx = df/dx + rho*(x - z + u)
    */
-  case class ProximalPrimal[T](primal: DiffFunction[T], u: T, z: T, rho: Double)(
-      implicit space: MutableInnerProductModule[T, Double])
-      extends DiffFunction[T] {
+  case class ProximalPrimal[T](primal: DiffFunction[T], u: T, z: T, rho: Double)(implicit
+      space: MutableInnerProductModule[T, Double]
+  ) extends DiffFunction[T] {
 
     import space._
 
@@ -208,7 +209,8 @@ object NonlinearMinimizer {
       maxIter: Int = -1,
       m: Int = 10,
       tolerance: Double = 1e-6,
-      usePQN: Boolean = false): FirstOrderMinimizer[BDV, DiffFunction[BDV]] = {
+      usePQN: Boolean = false
+  ): FirstOrderMinimizer[BDV, DiffFunction[BDV]] = {
     val projectionOp = Projection(proximal)
     if (usePQN) new ProjectedQuasiNewton(projection = projectionOp.project, tolerance = 1e-6, maxIter = maxIter, m = m)
     else
@@ -216,7 +218,8 @@ object NonlinearMinimizer {
         projection = projectionOp.project,
         tolerance = tolerance,
         maxIter = maxIter,
-        bbMemory = m)
+        bbMemory = m
+      )
   }
 
   /**
@@ -231,7 +234,8 @@ object NonlinearMinimizer {
       ndim: Int,
       constraint: Constraint,
       lambda: Double,
-      usePQN: Boolean = false): FirstOrderMinimizer[BDV, DiffFunction[BDV]] = {
+      usePQN: Boolean = false
+  ): FirstOrderMinimizer[BDV, DiffFunction[BDV]] = {
     constraint match {
       case IDENTITY => project(ProjectIdentity())
       case POSITIVE => project(ProjectPos())
@@ -254,7 +258,8 @@ object NonlinearMinimizer {
     if (args.length < 3) {
       println("Usage: ProjectedQuasiNewton n lambda beta")
       println(
-        "Test NonlinearMinimizer with a quadratic function of dimenion n and m equalities with lambda beta for elasticNet")
+        "Test NonlinearMinimizer with a quadratic function of dimenion n and m equalities with lambda beta for elasticNet"
+      )
       sys.exit(1)
     }
 
@@ -294,7 +299,8 @@ object NonlinearMinimizer {
     val sparseQpL1Obj = sparseQpResult.x.foldLeft(0.0) { (agg, entry) =>
       agg + abs(entry)
     }
-    val sparseQpObj = QuadraticMinimizer.computeObjective(regularizedGram, q, sparseQpResult.x) + lambdaL1 * sparseQpL1Obj
+    val sparseQpObj =
+      QuadraticMinimizer.computeObjective(regularizedGram, q, sparseQpResult.x) + lambdaL1 * sparseQpL1Obj
     val quadraticCostWithL2 = QuadraticMinimizer.Cost(regularizedGram, q)
 
     init := 0.0
@@ -305,7 +311,8 @@ object NonlinearMinimizer {
     val nlSparseL1Obj = nlSparseResult.x.foldLeft(0.0) { (agg, entry) =>
       agg + abs(entry)
     }
-    val nlSparseObj = QuadraticMinimizer.computeObjective(regularizedGram, q, nlSparseResult.x) + lambdaL1 * nlSparseL1Obj
+    val nlSparseObj =
+      QuadraticMinimizer.computeObjective(regularizedGram, q, nlSparseResult.x) + lambdaL1 * nlSparseL1Obj
 
     init := 0.0
     val nlProx = new NonlinearMinimizer(proximal = ProximalL1(lambdaL1))
@@ -318,7 +325,8 @@ object NonlinearMinimizer {
       }
 
     println(
-      s"owlqn ${owlqnTime / 1e6} ms iters ${owlqnResult.iter} sparseQp ${sparseQpTime / 1e6} ms iters ${sparseQpResult.iter}")
+      s"owlqn ${owlqnTime / 1e6} ms iters ${owlqnResult.iter} sparseQp ${sparseQpTime / 1e6} ms iters ${sparseQpResult.iter}"
+    )
     println(s"nlSparseTime ${nlSparseTime / 1e6} ms iters ${nlSparseResult.iter}")
     println(s"nlProxTime ${nlProxTime / 1e6} ms iters ${nlProxResult.iter}")
     println(s"owlqnObj $owlqnObj sparseQpObj $sparseQpObj nlSparseObj $nlSparseObj nlProxObj $nlProxObj")
@@ -420,6 +428,7 @@ object NonlinearMinimizer {
 
     println(s"Objective proximalL1 $proximalL1Obj projectL1 $projectL1Obj owlqn $owlqnLogisticObj")
     println(
-      s"time proximalL1 ${nlLogisticProximalL1Time / 1e6} ms projectL1 ${nlLogisticProjectL1Time / 1e6} ms owlqn ${owlqnLogisticTime / 1e6} ms")
+      s"time proximalL1 ${nlLogisticProximalL1Time / 1e6} ms projectL1 ${nlLogisticProjectL1Time / 1e6} ms owlqn ${owlqnLogisticTime / 1e6} ms"
+    )
   }
 }

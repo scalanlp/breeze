@@ -19,7 +19,7 @@ object mpow extends UFunc {
       var res_odds = DenseMatrix.eye[Double](m.rows)
       var res = m
       var n = exp
-      while( n > 1) {
+      while (n > 1) {
         if (n % 2 == 0) {
           res = res * res
           n = n / 2

@@ -42,7 +42,13 @@ import scala.reflect.ClassTag
  *
  * @author dlwh
  */
-trait CanZipMapKeyValues[From, @spec(Int) K, @spec(Double, Int, Float, Long) V, @spec(Double, Int, Float, Long) RV, +To] {
+trait CanZipMapKeyValues[
+    From,
+    @spec(Int) K,
+    @spec(Double, Int, Float, Long) V,
+    @spec(Double, Int, Float, Long) RV,
+    +To
+] {
 
   /** Maps all corresponding values from the two collections. */
   def map(from: From, from2: From, fn: (K, V, V) => RV): To
@@ -53,14 +59,15 @@ trait CanZipMapKeyValues[From, @spec(Int) K, @spec(Double, Int, Float, Long) V, 
 
 object CanZipMapKeyValues {
 
-  def canZipMapSelf[S]: CanZipMapKeyValues[S, Unit, S, S, S] = new CanZipMapKeyValues[S, Unit, S, S, S] {
+  def canZipMapSelf[S]: CanZipMapKeyValues[S, Unit, S, S, S] =
+    new CanZipMapKeyValues[S, Unit, S, S, S] {
 
-    /** Maps all corresponding values from the two collections. */
-    /** Maps all corresponding values from the two collections. */
-    override def map(from: S, from2: S, fn: (Unit, S, S) => S): S = fn((), from, from2)
+      /** Maps all corresponding values from the two collections. */
+      /** Maps all corresponding values from the two collections. */
+      override def map(from: S, from2: S, fn: (Unit, S, S) => S): S = fn((), from, from2)
 
-    override def mapActive(from: S, from2: S, fn: (Unit, S, S) => S): S = fn((), from, from2)
-  }
+      override def mapActive(from: S, from2: S, fn: (Unit, S, S) => S): S = fn((), from, from2)
+    }
 
   //
   // Arrays

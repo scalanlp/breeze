@@ -3,9 +3,10 @@ package distributions
 
 import breeze.numerics.{digamma, lgamma}
 
-case class InvGamma(shape: Double, scale: Double) extends ContinuousDistr[Double]
-  with Moments[Double, Double]
-  with HasCdf {
+case class InvGamma(shape: Double, scale: Double)
+    extends ContinuousDistr[Double]
+    with Moments[Double, Double]
+    with HasCdf {
 
   def unnormalizedLogPdf(x: Double): Double = {
     math.log(x) * (-shape - 1) - scale / x

@@ -38,9 +38,10 @@ import scala.collection.mutable
 
 object accumulateAndCount extends UFunc {
   @expand
-  implicit def reduce[T, @expand.args(Double, Complex, Float) Scalar](
-      implicit iter: CanTraverseValues[T, Scalar],
-      @expand.sequence[Scalar](0.0, Complex.zero, 0.0f) zero: Scalar): Impl[T, (Scalar, Int)] =
+  implicit def reduce[T, @expand.args(Double, Complex, Float) Scalar](implicit
+      iter: CanTraverseValues[T, Scalar],
+      @expand.sequence[Scalar](0.0, Complex.zero, 0.0f) zero: Scalar
+  ): Impl[T, (Scalar, Int)] =
     new Impl[T, (Scalar, Int)] {
       def apply(v: T): (Scalar, Int) = {
         val visit = new ValuesVisitor[Scalar] {
@@ -68,31 +69,33 @@ object accumulateAndCount extends UFunc {
  */
 object mean extends UFunc {
   @expand
-  implicit def reduce[@expand.args(Float, Double, Complex) S, T](
-      implicit iter: CanTraverseValues[T, S],
-      @expand.sequence[S](0f, 0d, Complex.zero) z: S): Impl[T, S] = new Impl[T, S] {
-    def apply(v: T): S = {
-      val visit = new ValuesVisitor[S] {
-        var mu: S = z
-        var n: Long = 0
+  implicit def reduce[@expand.args(Float, Double, Complex) S, T](implicit
+      iter: CanTraverseValues[T, S],
+      @expand.sequence[S](0f, 0d, Complex.zero) z: S
+  ): Impl[T, S] =
+    new Impl[T, S] {
+      def apply(v: T): S = {
+        val visit = new ValuesVisitor[S] {
+          var mu: S = z
+          var n: Long = 0
 
-        def visit(y: S): Unit = {
-          n += 1
-          val d = y - mu
-          mu = mu + d / n
-        }
+          def visit(y: S): Unit = {
+            n += 1
+            val d = y - mu
+            mu = mu + d / n
+          }
 
-        def zeros(numZero: Int, zeroValue: S): Unit = {
-          if (numZero != 0)
-            mu = mu * n / (n + numZero)
-          n += numZero
+          def zeros(numZero: Int, zeroValue: S): Unit = {
+            if (numZero != 0)
+              mu = mu * n / (n + numZero)
+            n += numZero
+          }
         }
+        iter.traverse(v, visit)
+        import visit._
+        mu
       }
-      iter.traverse(v, visit)
-      import visit._
-      mu
     }
-  }
 
 }
 
@@ -103,34 +106,36 @@ object mean extends UFunc {
  */
 object meanAndVariance extends UFunc {
   @expand
-  implicit def reduce[@expand.args(Float, Double) S, T](
-      implicit iter: CanTraverseValues[T, S]): Impl[T, MeanAndVariance] = new Impl[T, MeanAndVariance] {
-    def apply(v: T): MeanAndVariance = {
-      val visit = new ValuesVisitor[S] {
-        var mu: S = 0
-        var s: S = 0
-        var n: Long = 0
+  implicit def reduce[@expand.args(Float, Double) S, T](implicit
+      iter: CanTraverseValues[T, S]
+  ): Impl[T, MeanAndVariance] =
+    new Impl[T, MeanAndVariance] {
+      def apply(v: T): MeanAndVariance = {
+        val visit = new ValuesVisitor[S] {
+          var mu: S = 0
+          var s: S = 0
+          var n: Long = 0
 
-        def visit(y: S): Unit = {
-          n += 1
-          val d = y - mu
-          mu = mu + d / n
-          s = s + (n - 1) * d / n * d
-        }
+          def visit(y: S): Unit = {
+            n += 1
+            val d = y - mu
+            mu = mu + d / n
+            s = s + (n - 1) * d / n * d
+          }
 
-        def zeros(numZero: Int, zeroValue: S): Unit = {
-          for (i <- 0 until numZero) visit(zeroValue)
+          def zeros(numZero: Int, zeroValue: S): Unit = {
+            for (i <- 0 until numZero) visit(zeroValue)
+          }
         }
-      }
-      iter.traverse(v, visit)
-      import visit._
-      if (n > 1) {
-        MeanAndVariance(mu, s / (n - 1), n)
-      } else {
-        MeanAndVariance(mu, 0, n)
+        iter.traverse(v, visit)
+        import visit._
+        if (n > 1) {
+          MeanAndVariance(mu, s / (n - 1), n)
+        } else {
+          MeanAndVariance(mu, 0, n)
+        }
       }
     }
-  }
 
   case class MeanAndVariance(mean: Double, variance: Double, count: Long) {
     def stdDev: Double = math.sqrt(variance)
@@ -166,10 +171,12 @@ object variance extends UFunc {
     }
 
   object population extends UFunc {
-    implicit def reduceDouble[T](
-        implicit mv: meanAndVariance.Impl[T, meanAndVariance.MeanAndVariance]): Impl[T, Double] = new Impl[T, Double] {
-      def apply(v: T): Double = mv(v).populationVariance
-    }
+    implicit def reduceDouble[T](implicit
+        mv: meanAndVariance.Impl[T, meanAndVariance.MeanAndVariance]
+    ): Impl[T, Double] =
+      new Impl[T, Double] {
+        def apply(v: T): Double = mv(v).populationVariance
+      }
   }
 }
 
@@ -179,9 +186,10 @@ object variance extends UFunc {
  * Call stddev.population if you want that.
  */
 object stddev extends UFunc {
-  implicit def reduceDouble[T](implicit vari: variance.Impl[T, Double]): Impl[T, Double] = new Impl[T, Double] {
-    def apply(v: T): Double = scala.math.sqrt(vari(v))
-  }
+  implicit def reduceDouble[T](implicit vari: variance.Impl[T, Double]): Impl[T, Double] =
+    new Impl[T, Double] {
+      def apply(v: T): Double = scala.math.sqrt(vari(v))
+    }
 
   object population extends UFunc {
     implicit def reduceDouble[T](implicit vari: variance.population.Impl[T, Double]): Impl[T, Double] =
@@ -250,7 +258,8 @@ object covmat extends UFunc {
               numRows += 1
               if (mean.size != x.size) {
                 throw new IllegalArgumentException(
-                  "Attempting to compute covariance of dataset where elements have different sizes")
+                  "Attempting to compute covariance of dataset where elements have different sizes"
+                )
               }
               cforRange(0 until firstRow.size)(i => {
                 mean(i) = mean(i) + x(i)
@@ -279,8 +288,9 @@ object covmat extends UFunc {
 }
 
 object corrcoeff extends UFunc {
-  implicit def matrixCorrelation[T](
-      implicit covarianceCalculator: covmat.Impl[T, DenseMatrix[Double]]): Impl[T, DenseMatrix[Double]] =
+  implicit def matrixCorrelation[T](implicit
+      covarianceCalculator: covmat.Impl[T, DenseMatrix[Double]]
+  ): Impl[T, DenseMatrix[Double]] =
     new Impl[T, DenseMatrix[Double]] {
       def apply(data: T) = {
         val covariance = covarianceCalculator(data)
@@ -305,9 +315,10 @@ object corrcoeff extends UFunc {
 
 object mode extends UFunc {
   @expand
-  implicit def reduce[T, @expand.args(Double, Complex, Float, Int) Scalar](
-      implicit iter: CanTraverseValues[T, Scalar],
-      @expand.sequence[Scalar](Double.NaN, Complex.nan, 0.0f, 0) initialValue: Scalar): Impl[T, ModeResult[Scalar]] =
+  implicit def reduce[T, @expand.args(Double, Complex, Float, Int) Scalar](implicit
+      iter: CanTraverseValues[T, Scalar],
+      @expand.sequence[Scalar](Double.NaN, Complex.nan, 0.0f, 0) initialValue: Scalar
+  ): Impl[T, ModeResult[Scalar]] =
     new Impl[T, ModeResult[Scalar]] {
       def apply(v: T): ModeResult[Scalar] = {
         val visitor = new ModeVisitor[Scalar](initialValue)
@@ -350,8 +361,9 @@ private class ModeVisitor[@expand.args(Double, Complex, Float, Int) Scalar](init
  */
 object digitize extends UFunc {
 
-  implicit def arrayVersion[T, U](
-      implicit base: Impl2[DenseVector[T], DenseVector[U], DenseVector[Int]]): Impl2[Array[T], Array[U], Array[Int]] = {
+  implicit def arrayVersion[T, U](implicit
+      base: Impl2[DenseVector[T], DenseVector[U], DenseVector[Int]]
+  ): Impl2[Array[T], Array[U], Array[Int]] = {
     new Impl2[Array[T], Array[U], Array[Int]] {
       def apply(x: Array[T], bins: Array[U]): Array[Int] = {
         val vecResult: DenseVector[Int] = digitize(new DenseVector(x), new DenseVector(bins))
@@ -360,9 +372,10 @@ object digitize extends UFunc {
     }
   }
 
-  implicit def fromComparison[T, U](
-      implicit lte: OpLTE.Impl2[T, U, Boolean],
-      ltUU: OpLT.Impl2[U, U, Boolean]): Impl2[DenseVector[T], DenseVector[U], DenseVector[Int]] = {
+  implicit def fromComparison[T, U](implicit
+      lte: OpLTE.Impl2[T, U, Boolean],
+      ltUU: OpLT.Impl2[U, U, Boolean]
+  ): Impl2[DenseVector[T], DenseVector[U], DenseVector[Int]] = {
     new Impl2[DenseVector[T], DenseVector[U], DenseVector[Int]] {
       def apply(x: DenseVector[T], bins: DenseVector[U]): DenseVector[Int] = {
         errorCheckBins(bins)
@@ -386,7 +399,7 @@ object digitize extends UFunc {
   }
   @expand
   implicit def vecVersion[@expand.args(Int, Long, Double, Float) T]
-    : Impl2[DenseVector[T], DenseVector[Double], DenseVector[Int]] =
+      : Impl2[DenseVector[T], DenseVector[Double], DenseVector[Int]] =
     new Impl2[DenseVector[T], DenseVector[Double], DenseVector[Int]] {
       def apply(x: DenseVector[T], bins: DenseVector[Double]): DenseVector[Int] = {
         errorCheckBins(bins)
@@ -433,7 +446,7 @@ object bincount extends UFunc {
 
   @expand
   implicit def vecVersion[@expand.args(Double, Complex, Float) T]
-    : Impl2[DenseVector[Int], DenseVector[T], DenseVector[T]] =
+      : Impl2[DenseVector[Int], DenseVector[T], DenseVector[T]] =
     new Impl2[DenseVector[Int], DenseVector[T], DenseVector[T]] {
       def apply(x: DenseVector[Int], weights: DenseVector[T]): DenseVector[T] = {
         require(min(x) >= 0)
@@ -476,7 +489,7 @@ object bincount extends UFunc {
 
     @expand
     implicit def vecVersion[@expand.args(Double, Complex, Float) T]
-      : Impl2[DenseVector[Int], DenseVector[T], SparseVector[T]] =
+        : Impl2[DenseVector[Int], DenseVector[T], SparseVector[T]] =
       new Impl2[DenseVector[Int], DenseVector[T], SparseVector[T]] {
         def apply(x: DenseVector[Int], weights: DenseVector[T]): SparseVector[T] = {
           require(min(x) >= 0)
@@ -528,12 +541,12 @@ object DescriptiveStats {
   }
 
   /**
-    * Returns the estimate of a pre-sorted array at p * it.size, where p in [0,1].
-    * <p>
-    * Note:
-    * Result is invalid if the input array is not already sorted.
-    * </p>
-    */
+   * Returns the estimate of a pre-sorted array at p * it.size, where p in [0,1].
+   * <p>
+   * Note:
+   * Result is invalid if the input array is not already sorted.
+   * </p>
+   */
   def percentileInPlace(arr: Array[Double], p: Double) = {
     if (p > 1 || p < 0) throw new IllegalArgumentException("p must be in [0,1]")
     // +1 so that the .5 == mean for even number of elements.

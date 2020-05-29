@@ -45,47 +45,49 @@ object softmax extends UFunc {
     }
   }
 
-  implicit def reduceDouble[T](
-      implicit iter: CanTraverseValues[T, Double],
-      maxImpl: max.Impl[T, Double]): Impl[T, Double] = new Impl[T, Double] {
-    def apply(v: T): Double = {
+  implicit def reduceDouble[T](implicit
+      iter: CanTraverseValues[T, Double],
+      maxImpl: max.Impl[T, Double]
+  ): Impl[T, Double] =
+    new Impl[T, Double] {
+      def apply(v: T): Double = {
 
-      val max = if (!iter.isTraversableAgain(v)) 0.0 else maxImpl(v)
+        val max = if (!iter.isTraversableAgain(v)) 0.0 else maxImpl(v)
 
-      if (max.isInfinite) {
-        return Double.NegativeInfinity
-      }
-
-      val visit = new ValuesVisitor[Double] {
-        var accum = 0.0
-        def visit(a: Double): Unit = {
-          accum += scala.math.exp(a - max)
+        if (max.isInfinite) {
+          return Double.NegativeInfinity
         }
 
-        def zeros(numZero: Int, zeroValue: Double): Unit = {
-          if (numZero != 0) {
-            accum += (numZero * scala.math.exp(zeroValue - max))
+        val visit = new ValuesVisitor[Double] {
+          var accum = 0.0
+          def visit(a: Double): Unit = {
+            accum += scala.math.exp(a - max)
+          }
+
+          def zeros(numZero: Int, zeroValue: Double): Unit = {
+            if (numZero != 0) {
+              accum += (numZero * scala.math.exp(zeroValue - max))
+            }
+          }
+
+          override def visitArray(arr: Array[Double], offset: Int, length: Int, stride: Int): Unit = {
+            var i = 0
+            var off = offset
+            while (i < length) {
+              accum += scala.math.exp(arr(off) - max)
+              i += 1
+              off += stride
+            }
+
           }
         }
 
-        override def visitArray(arr: Array[Double], offset: Int, length: Int, stride: Int): Unit = {
-          var i = 0
-          var off = offset
-          while (i < length) {
-            accum += scala.math.exp(arr(off) - max)
-            i += 1
-            off += stride
-          }
+        iter.traverse(v, visit)
 
-        }
+        max + scala.math.log(visit.accum)
       }
 
-      iter.traverse(v, visit)
-
-      max + scala.math.log(visit.accum)
     }
-
-  }
 
   implicit def reduceFloat[T](implicit iter: CanTraverseValues[T, Float], maxImpl: max.Impl[T, Float]): Impl[T, Float] =
     new Impl[T, Float] {

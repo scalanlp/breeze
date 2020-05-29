@@ -11,7 +11,8 @@ private case class LassoCalculator(
     lambda: Double,
     workArray: Array[Double],
     MAX_ITER: Int = 100,
-    IMPROVE_THRESHOLD: Double = 1e-8) {
+    IMPROVE_THRESHOLD: Double = 1e-8
+) {
   /*
    * The main purpose of this complicated calculator object is to recycle all the assorted work arrays.
    * If we didn't write it this way, we'd have to manually thread all the work arrays
@@ -115,13 +116,14 @@ object lasso extends UFunc {
    * Download at: ftp://ftp.math.ucla.edu/pub/camreport/cam09-17.pdf
    */
   implicit val matrixVectorWithWorkArray
-    : Impl4[DenseMatrix[Double], DenseVector[Double], Double, Array[Double], LassoResult] =
+      : Impl4[DenseMatrix[Double], DenseVector[Double], Double, Array[Double], LassoResult] =
     new Impl4[DenseMatrix[Double], DenseVector[Double], Double, Array[Double], LassoResult] {
       def apply(
           data: DenseMatrix[Double],
           outputs: DenseVector[Double],
           lambda: Double,
-          workArray: Array[Double]): LassoResult = LassoCalculator(data, outputs, lambda, workArray).result
+          workArray: Array[Double]
+      ): LassoResult = LassoCalculator(data, outputs, lambda, workArray).result
     }
 
   implicit val matrixVectorSpecifiedWork: Impl4[DenseMatrix[Double], DenseVector[Double], Double, Int, LassoResult] =
@@ -133,6 +135,11 @@ object lasso extends UFunc {
   implicit val matrixVector: Impl3[DenseMatrix[Double], DenseVector[Double], Double, LassoResult] =
     new Impl3[DenseMatrix[Double], DenseVector[Double], Double, LassoResult] {
       def apply(data: DenseMatrix[Double], outputs: DenseVector[Double], lambda: Double): LassoResult =
-        LassoCalculator(data.copy, outputs.copy, lambda, new Array[Double](math.max(1, data.rows * data.cols * 2))).result
+        LassoCalculator(
+          data.copy,
+          outputs.copy,
+          lambda,
+          new Array[Double](math.max(1, data.rows * data.cols * 2))
+        ).result
     }
 }

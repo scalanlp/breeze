@@ -25,8 +25,9 @@ object Transpose extends TransposeLowPrio {
 
   }
 
-  implicit def transTimesNormalFromDot[T, U, R](
-      implicit dot: OpMulInner.Impl2[T, U, R]): OpMulMatrix.Impl2[Transpose[T], U, R] = {
+  implicit def transTimesNormalFromDot[T, U, R](implicit
+      dot: OpMulInner.Impl2[T, U, R]
+  ): OpMulMatrix.Impl2[Transpose[T], U, R] = {
     new OpMulMatrix.Impl2[Transpose[T], U, R] {
       def apply(v: Transpose[T], v2: U): R = {
         dot(v.inner, v2)
@@ -34,9 +35,10 @@ object Transpose extends TransposeLowPrio {
     }
   }
 
-  implicit def transMulMatrix[T, U, R, RT](
-      implicit op: OpMulMatrix.Impl2[T, U, R],
-      canTranspose: CanTranspose[R, RT]): OpMulMatrix.Impl2[Transpose[U], Transpose[T], RT] = {
+  implicit def transMulMatrix[T, U, R, RT](implicit
+      op: OpMulMatrix.Impl2[T, U, R],
+      canTranspose: CanTranspose[R, RT]
+  ): OpMulMatrix.Impl2[Transpose[U], Transpose[T], RT] = {
     new OpMulMatrix.Impl2[Transpose[U], Transpose[T], RT] {
       def apply(v: Transpose[U], v2: Transpose[T]): RT = canTranspose(op(v2.inner, v.inner))
     }
@@ -45,9 +47,10 @@ object Transpose extends TransposeLowPrio {
 }
 
 trait TransposeLowPrio {
-  implicit def liftOps[Op, T, U, R, RT](
-      implicit op: UFunc.UImpl2[Op, T, U, R],
-      canTranspose: CanTranspose[R, RT]): UFunc.UImpl2[Op, Transpose[T], Transpose[U], RT] = {
+  implicit def liftOps[Op, T, U, R, RT](implicit
+      op: UFunc.UImpl2[Op, T, U, R],
+      canTranspose: CanTranspose[R, RT]
+  ): UFunc.UImpl2[Op, Transpose[T], Transpose[U], RT] = {
     new UFunc.UImpl2[Op, Transpose[T], Transpose[U], RT] {
       def apply(a: Transpose[T], b: Transpose[U]) = {
         canTranspose(op(a.inner, b.inner))
@@ -56,8 +59,9 @@ trait TransposeLowPrio {
 
   }
 
-  implicit def liftInPlaceOps[Op, T, U](
-      implicit op: UFunc.InPlaceImpl2[Op, T, U]): UFunc.InPlaceImpl2[Op, Transpose[T], Transpose[U]] = {
+  implicit def liftInPlaceOps[Op, T, U](implicit
+      op: UFunc.InPlaceImpl2[Op, T, U]
+  ): UFunc.InPlaceImpl2[Op, Transpose[T], Transpose[U]] = {
     new UFunc.InPlaceImpl2[Op, Transpose[T], Transpose[U]] {
       def apply(a: Transpose[T], b: Transpose[U]): Unit = {
         op(a.inner, b.inner)
@@ -71,9 +75,10 @@ trait TransposeLowPrio {
   }
 
   // TODO: make CanSlice a UFunc
-  implicit def liftSlice[Op, T, S, U, UT](
-      implicit op: CanSlice[T, S, U],
-      trans: CanTranspose[U, UT]): CanSlice[Transpose[T], S, UT] = {
+  implicit def liftSlice[Op, T, S, U, UT](implicit
+      op: CanSlice[T, S, U],
+      trans: CanTranspose[U, UT]
+  ): CanSlice[Transpose[T], S, UT] = {
     new CanSlice[Transpose[T], S, UT] {
       override def apply(from: Transpose[T], slice: S): UT = {
         op(from.inner, slice).t
@@ -81,9 +86,10 @@ trait TransposeLowPrio {
     }
   }
 
-  implicit def liftUFunc[Op, T, U, UT](
-      implicit op: UFunc.UImpl[Op, T, U],
-      trans: CanTranspose[U, UT]): UFunc.UImpl[Op, Transpose[T], UT] = {
+  implicit def liftUFunc[Op, T, U, UT](implicit
+      op: UFunc.UImpl[Op, T, U],
+      trans: CanTranspose[U, UT]
+  ): UFunc.UImpl[Op, Transpose[T], UT] = {
     new UFunc.UImpl[Op, Transpose[T], UT] {
       override def apply(v: Transpose[T]): UT = trans(op(v.inner))
     }
@@ -95,9 +101,10 @@ trait TransposeLowPrio {
     }
   }
 
-  implicit def liftUFunc3_1[Op, T, T2, T3, U, UT](
-      implicit op: UFunc.UImpl3[Op, T, T2, T3, U],
-      trans: CanTranspose[U, UT]): UFunc.UImpl3[Op, Transpose[T], T2, T3, UT] = {
+  implicit def liftUFunc3_1[Op, T, T2, T3, U, UT](implicit
+      op: UFunc.UImpl3[Op, T, T2, T3, U],
+      trans: CanTranspose[U, UT]
+  ): UFunc.UImpl3[Op, Transpose[T], T2, T3, UT] = {
     new UFunc.UImpl3[Op, Transpose[T], T2, T3, UT] {
 
       override def apply(v: Transpose[T], v2: T2, v3: T3): UT = {
@@ -106,8 +113,9 @@ trait TransposeLowPrio {
     }
   }
 
-  implicit def liftUFuncInplace3_1[Op, T, T2, T3](
-      implicit op: UFunc.InPlaceImpl3[Op, T, T2, T3]): UFunc.InPlaceImpl3[Op, Transpose[T], T2, T3] = {
+  implicit def liftUFuncInplace3_1[Op, T, T2, T3](implicit
+      op: UFunc.InPlaceImpl3[Op, T, T2, T3]
+  ): UFunc.InPlaceImpl3[Op, Transpose[T], T2, T3] = {
     new UFunc.InPlaceImpl3[Op, Transpose[T], T2, T3] {
 
       override def apply(v: Transpose[T], v2: T2, v3: T3) = {

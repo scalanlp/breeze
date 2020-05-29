@@ -96,13 +96,14 @@ class SparseVector[@spec(Double, Int, Float, Long) V](val array: SparseArray[V])
   /** This is always assumed to be equal to 0, for now. */
   def default: V = zero.zero
 
-  override def equals(other: Any) = other match {
-    case x: SparseVector[_] => this.array == x.array
-    case x: Vector[_] =>
-      this.length == x.length &&
-        (valuesIterator.sameElements(x.valuesIterator))
-    case _ => false
-  }
+  override def equals(other: Any) =
+    other match {
+      case x: SparseVector[_] => this.array == x.array
+      case x: Vector[_] =>
+        this.length == x.length &&
+          (valuesIterator.sameElements(x.valuesIterator))
+      case _ => false
+    }
 
   override def hashCode = array.hashCode
 
@@ -170,7 +171,10 @@ class SparseVector[@spec(Double, Int, Float, Long) V](val array: SparseArray[V])
     else {
       var ii = 0
       val nIndex =
-        Array.tabulate[Int](length + 1)((cp: Int) => if (ii < used && cp == index(ii)) { ii += 1; ii - 1 } else ii)
+        Array.tabulate[Int](length + 1)((cp: Int) =>
+          if (ii < used && cp == index(ii)) { ii += 1; ii - 1 }
+          else ii
+        )
       assert(ii == used)
       new CSCMatrix[V](data, 1, length, nIndex, activeSize, Array.fill[Int](data.length)(0))
     }
@@ -219,7 +223,8 @@ object SparseVector
   def horzcat[V: Zero: ClassTag](vectors: SparseVector[V]*): CSCMatrix[V] = {
     if (!vectors.forall(_.size == vectors(0).size))
       throw new IllegalArgumentException(
-        "vector lengths must be equal, but got: " + vectors.map(_.length).mkString(", "))
+        "vector lengths must be equal, but got: " + vectors.map(_.length).mkString(", ")
+      )
     val rows = vectors(0).length
     val cols = vectors.length
     val data = new Array[V](vectors.map(_.activeSize).sum)
@@ -261,7 +266,7 @@ object SparseVector
   }
 
   implicit def canMapActiveValues[V, V2: ClassTag: Zero]
-    : CanMapActiveValues[SparseVector[V], V, V2, SparseVector[V2]] = {
+      : CanMapActiveValues[SparseVector[V], V, V2, SparseVector[V2]] = {
     new CanMapActiveValues[SparseVector[V], V, V2, SparseVector[V2]] {
 
       /**Maps all active key-value pairs from the given collection. */
@@ -359,7 +364,7 @@ object SparseVector
   }
 
   implicit def canMapPairs[V, V2: ClassTag: Zero]
-    : CanMapKeyValuePairs[SparseVector[V], Int, V, V2, SparseVector[V2]] = {
+      : CanMapKeyValuePairs[SparseVector[V], Int, V, V2, SparseVector[V2]] = {
     new CanMapKeyValuePairs[SparseVector[V], Int, V, V2, SparseVector[V2]] {
 
       /**Maps all key-value pairs from the given collection. */
@@ -410,9 +415,10 @@ object SparseVector
     }
   }
 
-  implicit def canDim[E]: dim.Impl[SparseVector[E], Int] = new dim.Impl[SparseVector[E], Int] {
-    def apply(v: SparseVector[E]): Int = v.size
-  }
+  implicit def canDim[E]: dim.Impl[SparseVector[E], Int] =
+    new dim.Impl[SparseVector[E], Int] {
+      def apply(v: SparseVector[E]): Int = v.size
+    }
 
   implicit def space[E: Field: ClassTag: Zero]: MutableFiniteCoordinateField[SparseVector[E], Int, E] = {
     MutableFiniteCoordinateField.make[SparseVector[E], Int, E]

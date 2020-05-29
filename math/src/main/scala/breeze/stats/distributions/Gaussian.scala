@@ -116,25 +116,26 @@ object Gaussian extends ExponentialFamily[Gaussian, Double] with ContinuousDistr
 
   def distribution(p: (Double, Double)) = new Gaussian(p._1, math.sqrt(p._2))
 
-  def likelihoodFunction(stats: SufficientStatistic): DiffFunction[(Double, Double)] = new DiffFunction[Parameter] {
-    val normPiece = math.log(2 * Pi)
-    def calculate(x: (Double, Double)) = {
-      val (mu, sigma2) = x
-      val SufficientStatistic(n, mean, _) = stats
-      val variance = stats.variance
-      if (sigma2 <= 0) (Double.PositiveInfinity, (Double.NaN, Double.NaN))
-      else {
-        val objective = n * ((variance + mean * mean) / sigma2 / 2
-          - mean * mu / sigma2
-          + mu * mu / sigma2 / 2
-          + .5 * (math.log(sigma2) + normPiece))
-        val gradientMu = n * (-mean / sigma2 + mu / sigma2)
-        val gradientSig = n * (-(variance + mean * mean) / sigma2 / sigma2 / 2
-          + mean * mu / sigma2 / sigma2
-          - mu * mu / sigma2 / sigma2 / 2
-          + .5 / (sigma2))
-        (objective, (gradientMu, gradientSig))
+  def likelihoodFunction(stats: SufficientStatistic): DiffFunction[(Double, Double)] =
+    new DiffFunction[Parameter] {
+      val normPiece = math.log(2 * Pi)
+      def calculate(x: (Double, Double)) = {
+        val (mu, sigma2) = x
+        val SufficientStatistic(n, mean, _) = stats
+        val variance = stats.variance
+        if (sigma2 <= 0) (Double.PositiveInfinity, (Double.NaN, Double.NaN))
+        else {
+          val objective = n * ((variance + mean * mean) / sigma2 / 2
+            - mean * mu / sigma2
+            + mu * mu / sigma2 / 2
+            + .5 * (math.log(sigma2) + normPiece))
+          val gradientMu = n * (-mean / sigma2 + mu / sigma2)
+          val gradientSig = n * (-(variance + mean * mean) / sigma2 / sigma2 / 2
+            + mean * mu / sigma2 / sigma2
+            - mu * mu / sigma2 / sigma2 / 2
+            + .5 / (sigma2))
+          (objective, (gradientMu, gradientSig))
+        }
       }
     }
-  }
 }

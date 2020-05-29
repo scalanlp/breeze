@@ -30,43 +30,47 @@ trait LiteralRow[R, @specialized V] {
 }
 
 object LiteralRow {
-  implicit def array[V]: LiteralRow[Array[V], V] = new LiteralRow[Array[V], V] {
-    def foreach[X](arr: Array[V], fn: (Int, V) => X): Unit = {
-      for (i <- 0 until arr.length) {
-        fn(i, arr(i))
+  implicit def array[V]: LiteralRow[Array[V], V] =
+    new LiteralRow[Array[V], V] {
+      def foreach[X](arr: Array[V], fn: (Int, V) => X): Unit = {
+        for (i <- 0 until arr.length) {
+          fn(i, arr(i))
+        }
       }
+
+      def length(arr: Array[V]) = arr.length
     }
 
-    def length(arr: Array[V]) = arr.length
-  }
-
-  implicit def dv[V]: LiteralRow[DenseVector[V], V] = new LiteralRow[DenseVector[V], V] {
-    def foreach[X](arr: DenseVector[V], fn: (Int, V) => X): Unit = {
-      for (i <- 0 until arr.length) {
-        fn(i, arr(i))
+  implicit def dv[V]: LiteralRow[DenseVector[V], V] =
+    new LiteralRow[DenseVector[V], V] {
+      def foreach[X](arr: DenseVector[V], fn: (Int, V) => X): Unit = {
+        for (i <- 0 until arr.length) {
+          fn(i, arr(i))
+        }
       }
+
+      def length(arr: DenseVector[V]) = arr.length
     }
 
-    def length(arr: DenseVector[V]) = arr.length
-  }
-
-  implicit def seq[V, S](implicit ev: S <:< Seq[V]): LiteralRow[S, V] = new LiteralRow[S, V] {
-    def foreach[X](arr: S, fn: ((Int, V) => X)): Unit = {
-      for (i <- 0 until arr.length) {
-        fn(i, arr(i))
+  implicit def seq[V, S](implicit ev: S <:< Seq[V]): LiteralRow[S, V] =
+    new LiteralRow[S, V] {
+      def foreach[X](arr: S, fn: ((Int, V) => X)): Unit = {
+        for (i <- 0 until arr.length) {
+          fn(i, arr(i))
+        }
       }
+
+      def length(arr: S) = arr.length
     }
 
-    def length(arr: S) = arr.length
-  }
+  implicit def vLiteral[V <: AnyVal]: LiteralRow[V, V] =
+    new LiteralRow[V, V] {
+      def foreach[X](tup: V, fn: ((Int, V) => X)) = {
+        fn(0, tup)
+      }
 
-  implicit def vLiteral[V <: AnyVal]: LiteralRow[V, V] = new LiteralRow[V, V] {
-    def foreach[X](tup: V, fn: ((Int, V) => X)) = {
-      fn(0, tup)
+      def length(tup: V) = 1
     }
-
-    def length(tup: V) = 1
-  }
 
   @arityize(22)
   implicit def tuple[V]: LiteralRow[Tuple[V @arityize.repeat] @arityize.relative(tuple), V] =

@@ -27,10 +27,10 @@ import breeze.numerics._
  *
  * @author dlwh
  */
-class Polya[T, @specialized(Int) I](params: T)(
-    implicit space: MutableEnumeratedCoordinateField[T, I, Double],
-    rand: RandBasis = Rand)
-    extends DiscreteDistr[I] {
+class Polya[T, @specialized(Int) I](params: T)(implicit
+    space: MutableEnumeratedCoordinateField[T, I, Double],
+    rand: RandBasis = Rand
+) extends DiscreteDistr[I] {
   import space._
   private val innerDirichlet = new Dirichlet(params)
   def draw() = {

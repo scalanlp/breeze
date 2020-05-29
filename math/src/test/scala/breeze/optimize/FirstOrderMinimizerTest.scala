@@ -7,8 +7,8 @@ class FirstOrderMinimizerTest extends FunSuite {
 
   test("default relative gradient convergence check for negative function values") {
     val value = -10
-    val gradient = DenseVector.fill(5){1E-7}
-    val convergenceCheck = FirstOrderMinimizer.defaultConvergenceCheck[DenseVector[Double]](100, 1E-5, relative = true)
+    val gradient = DenseVector.fill(5) { 1e-7 }
+    val convergenceCheck = FirstOrderMinimizer.defaultConvergenceCheck[DenseVector[Double]](100, 1e-5, relative = true)
     val state = FirstOrderMinimizer.State[DenseVector[Double], Any, Any](
       DenseVector.ones(5),
       value,

@@ -29,8 +29,9 @@ class TruncatedNewtonMinimizerTest extends OptimizeTestBase {
       val targetValue = 3 / (reg / 2 + 1)
       val lbfgs = new TruncatedNewtonMinimizer[DenseVector[Double], EmpiricalHessian[DenseVector[Double]]](
         100,
-        tolerance = 1E-8,
-        l2Regularization = reg)
+        tolerance = 1e-8,
+        l2Regularization = reg
+      )
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
           (norm((x - 3.0) ^:^ 2.0, 1), (x * 2.0) - 6.0)
@@ -39,7 +40,7 @@ class TruncatedNewtonMinimizerTest extends OptimizeTestBase {
 
       val empF = SecondOrderFunction.empirical(f)
       val result = lbfgs.minimize(empF, init)
-      if (norm(result - targetValue, 2) < 1E-7) {
+      if (norm(result - targetValue, 2) < 1e-7) {
         true
       } else {
         println("Bad result " + result + " for " + init)
@@ -63,7 +64,7 @@ class TruncatedNewtonMinimizerTest extends OptimizeTestBase {
 
       val empF = SecondOrderFunction.empirical(f)
       val result = lbfgs.minimize(empF, init)
-      norm(result - 3.0, 2) < 1E-5
+      norm(result - 3.0, 2) < 1e-5
     }
 
     check(Prop.forAll(optimizeThis _))

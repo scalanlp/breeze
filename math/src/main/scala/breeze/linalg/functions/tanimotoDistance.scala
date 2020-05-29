@@ -4,10 +4,11 @@ import breeze.generic.UFunc
 import breeze.linalg.operators.OpMulInner
 
 object tanimotoDistance extends UFunc {
-  implicit def tanimotoDistanceFromDotProduct[T, U](
-      implicit dotTU: OpMulInner.Impl2[T, U, Double],
+  implicit def tanimotoDistanceFromDotProduct[T, U](implicit
+      dotTU: OpMulInner.Impl2[T, U, Double],
       dotTT: OpMulInner.Impl2[T, T, Double],
-      dotUU: OpMulInner.Impl2[U, U, Double]): Impl2[T, U, Double] = {
+      dotUU: OpMulInner.Impl2[U, U, Double]
+  ): Impl2[T, U, Double] = {
     new Impl2[T, U, Double] {
       override def apply(v: T, v2: U): Double = {
         val dotProduct = dotTU(v, v2)

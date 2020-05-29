@@ -86,7 +86,8 @@ object eig extends UFunc {
         scala.math.max(1, n),
         work,
         work.length,
-        info)
+        info
+      )
 
       if (info.`val` > 0)
         throw new NotConvergedException(NotConvergedException.Iterations)
@@ -127,7 +128,8 @@ object eigSym extends UFunc {
 
   private def doEigSym(
       X: Matrix[Double],
-      rightEigenvectors: Boolean): (DenseVector[Double], Option[DenseMatrix[Double]]) = {
+      rightEigenvectors: Boolean
+  ): (DenseVector[Double], Option[DenseMatrix[Double]]) = {
     requireNonEmptyMatrix(X)
 
     // As LAPACK doesn't check if the given matrix is in fact symmetric,

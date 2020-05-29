@@ -20,22 +20,22 @@ import org.scalacheck._
 import org.scalatest._
 import org.scalatestplus.scalacheck._
 
-
 class PoissonTest extends FunSuite with Checkers with MomentsTestBase[Int] with ExpFamTest[Poisson, Int] {
   import org.scalacheck.Arbitrary.arbitrary
   val expFam = Poisson
 
-  implicit def arbDistr: Arbitrary[Poisson] = Arbitrary {
-    for (p <- arbitrary[Double].map { _.abs % 5 + 1 }) yield new Poisson(p)(RandBasis.mt0)
-  }
+  implicit def arbDistr: Arbitrary[Poisson] =
+    Arbitrary {
+      for (p <- arbitrary[Double].map { _.abs % 5 + 1 }) yield new Poisson(p)(RandBasis.mt0)
+    }
   def arbParameter = Arbitrary(arbitrary[Double].map(x => math.abs(x) % 5 + 0.5))
-  def paramsClose(p: Double, b: Double) = if (b == 0.0) p < 1E-4 else (p - b).abs / b.abs.max(1E-4) < 1E-1
+  def paramsClose(p: Double, b: Double) = if (b == 0.0) p < 1e-4 else (p - b).abs / b.abs.max(1e-4) < 1e-1
 
   def asDouble(x: Int) = x.toDouble
   def fromDouble(x: Double) = x.toInt
 
-  override val VARIANCE_TOLERANCE: Double = 1E-1
-  val TOL = 1E-1
+  override val VARIANCE_TOLERANCE: Double = 1e-1
+  val TOL = 1e-1
 
   test("cdf") {
     val mean = 5.0

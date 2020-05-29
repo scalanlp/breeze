@@ -76,14 +76,15 @@ object Bernoulli extends ExponentialFamily[Bernoulli, Boolean] with HasConjugate
 
   def distribution(p: Double) = new Bernoulli(p)
 
-  def likelihoodFunction(stats: SufficientStatistic) = new DiffFunction[Double] {
-    val SufficientStatistic(yes, num) = stats
-    val no = num - yes
-    def calculate(p: Double) = {
-      import math._
-      val obj = yes * log(p) + no * log1p(-p)
-      val grad = yes / p - no / (1 - p)
-      (-obj, -grad)
+  def likelihoodFunction(stats: SufficientStatistic) =
+    new DiffFunction[Double] {
+      val SufficientStatistic(yes, num) = stats
+      val no = num - yes
+      def calculate(p: Double) = {
+        import math._
+        val obj = yes * log(p) + no * log1p(-p)
+        val grad = yes / p - no / (1 - p)
+        (-obj, -grad)
+      }
     }
-  }
 }

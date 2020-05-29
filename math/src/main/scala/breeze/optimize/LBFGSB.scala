@@ -33,13 +33,14 @@ class LBFGSB(
     upperBounds: DenseVector[Double],
     maxIter: Int = 100,
     m: Int = 5,
-    tolerance: Double = 1E-8,
+    tolerance: Double = 1e-8,
     maxZoomIter: Int = 64,
-    maxLineSearchIter: Int = 64)
-    extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]](
-      LBFGSB.defaultConvergenceCheck(lowerBounds, upperBounds, tolerance, maxIter))
+    maxLineSearchIter: Int = 64
+) extends FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]](
+      LBFGSB.defaultConvergenceCheck(lowerBounds, upperBounds, tolerance, maxIter)
+    )
     with SerializableLogging {
-  protected val EPS = 2.2E-16
+  protected val EPS = 2.2e-16
 
   /**
    *
@@ -54,7 +55,8 @@ class LBFGSB(
       W: DenseMatrix[Double],
       M: DenseMatrix[Double],
       yHistory: DenseMatrix[Double],
-      sHistory: DenseMatrix[Double])
+      sHistory: DenseMatrix[Double]
+  )
 
   //initialize only is called once, so it can be used to init some arguments
   override protected def initialHistory(f: DiffFunction[DenseVector[Double]], init: DenseVector[Double]): History = {
@@ -66,13 +68,15 @@ class LBFGSB(
       newGrad: DenseVector[Double],
       newVal: Double,
       f: DiffFunction[DenseVector[Double]],
-      oldState: State): History = {
+      oldState: State
+  ): History = {
     updateSkYkHessianApproxMat(oldState.history, newX - oldState.x, newGrad -:- oldState.grad)
   }
 
   override protected def chooseDescentDirection(
       state: State,
-      f: DiffFunction[DenseVector[Double]]): DenseVector[Double] = {
+      f: DiffFunction[DenseVector[Double]]
+  ): DenseVector[Double] = {
     val x = state.x
     val g = state.grad
 
@@ -95,7 +99,8 @@ class LBFGSB(
   override protected def determineStepSize(
       state: State,
       f: DiffFunction[DenseVector[Double]],
-      direction: DenseVector[Double]): Double = {
+      direction: DenseVector[Double]
+  ): Double = {
     val ff = new DiffFunction[Double] {
       def calculate(alpha: Double) = {
         val newX = takeStep(state, direction, alpha)
@@ -103,7 +108,8 @@ class LBFGSB(
         ff -> (grad.dot(direction))
       }
     }
-    val wolfeRuleSearch = new StrongWolfeLineSearch(maxZoomIter, maxLineSearchIter) // TODO: Need good default values here.
+    val wolfeRuleSearch =
+      new StrongWolfeLineSearch(maxZoomIter, maxLineSearchIter) // TODO: Need good default values here.
 
     var minStepBound = Double.PositiveInfinity
     var i = 0
@@ -144,13 +150,16 @@ class LBFGSB(
     val DIM = x0.length
     require(
       lowerBounds.length == x0.length,
-      s"Mismatch between x0 length (${x0.length}) and lowerBounds length ${lowerBounds.length}")
+      s"Mismatch between x0 length (${x0.length}) and lowerBounds length ${lowerBounds.length}"
+    )
     require(
       upperBounds.length == x0.length,
-      s"Mismatch between x0 length (${x0.length}) and upperBounds length ${upperBounds.length}")
+      s"Mismatch between x0 length (${x0.length}) and upperBounds length ${upperBounds.length}"
+    )
     require(
       x0.forall((i, v) => (lowerBounds(i) <= v && v <= upperBounds(i))),
-      "seed is not feasible (violates lower bound or upperBounds)")
+      "seed is not feasible (violates lower bound or upperBounds)"
+    )
 
     History(
       theta = 1.0,
@@ -256,12 +265,13 @@ class LBFGSB(
       xCauchy: DenseVector[Double],
       x: DenseVector[Double],
       c: DenseVector[Double],
-      g: DenseVector[Double]) = {
+      g: DenseVector[Double]
+  ) = {
     import history._
     val invTheta = 1.0 / theta
 
     val freeVariableIndexes = xCauchy.iterator.collect {
-      case (i, v) if (v != upperBounds(i) && v != lowerBounds(i)) => i
+      case (i, v) if v != upperBounds(i) && v != lowerBounds(i) => i
 
     }.toIndexedSeq
     val freeVarCount = freeVariableIndexes.length
@@ -354,21 +364,25 @@ object LBFGSB {
       lowerBounds: DenseVector[Double],
       upperBounds: DenseVector[Double],
       tolerance: Double,
-      maxIter: Int) = {
+      maxIter: Int
+  ) = {
     bfgsbConvergenceTest(lowerBounds, upperBounds) || FirstOrderMinimizer.defaultConvergenceCheck(maxIter, tolerance)
   }
 
-  protected val PROJ_GRADIENT_EPS = 1E-5
+  protected val PROJ_GRADIENT_EPS = 1e-5
   protected def bfgsbConvergenceTest(
       lowerBounds: DenseVector[Double],
-      upperBounds: DenseVector[Double]): ConvergenceCheck[DenseVector[Double]] = ConvergenceCheck.fromPartialFunction {
-    case state if boundedConvCheck(state, lowerBounds, upperBounds) => ProjectedStepConverged
-  }
+      upperBounds: DenseVector[Double]
+  ): ConvergenceCheck[DenseVector[Double]] =
+    ConvergenceCheck.fromPartialFunction {
+      case state if boundedConvCheck(state, lowerBounds, upperBounds) => ProjectedStepConverged
+    }
 
   private def boundedConvCheck[H](
       state: State[DenseVector[Double], _, H],
       lowerBounds: DenseVector[Double],
-      upperBounds: DenseVector[Double]): Boolean = {
+      upperBounds: DenseVector[Double]
+  ): Boolean = {
     val x = state.x
     val g = state.grad
     val pMinusX = (x - g).mapPairs { (i, v) =>

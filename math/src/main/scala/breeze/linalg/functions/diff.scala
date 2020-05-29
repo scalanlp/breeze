@@ -13,7 +13,7 @@ object diff extends UFunc with diffLowPrio {
   @expand
   @expand.valify
   implicit def implDV_Double_DV[@expand.args(Int, Long, Float, Double) T]
-    : Impl2[DenseVector[T], Int, DenseVector[T]] = {
+      : Impl2[DenseVector[T], Int, DenseVector[T]] = {
     new Impl2[DenseVector[T], Int, DenseVector[T]] {
       def apply(v: DenseVector[T], n: Int): DenseVector[T] = {
         if (n <= 0) v else this.apply(diff(v), n - 1)
@@ -37,10 +37,11 @@ object diff extends UFunc with diffLowPrio {
 }
 
 sealed trait diffLowPrio { this: diff.type =>
-  implicit def implVec[T, Vec](
-      implicit vec: Vec <:< Vector[T],
+  implicit def implVec[T, Vec](implicit
+      vec: Vec <:< Vector[T],
       ct: ClassTag[T],
-      ring: Ring[T]): Impl[Vec, DenseVector[T]] = {
+      ring: Ring[T]
+  ): Impl[Vec, DenseVector[T]] = {
     new Impl[Vec, DenseVector[T]] {
       override def apply(v: Vec): DenseVector[T] = {
         if (v.length <= 1) DenseVector[T]()

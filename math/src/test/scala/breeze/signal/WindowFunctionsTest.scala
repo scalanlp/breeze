@@ -16,7 +16,7 @@ import WindowFunctions.hammingWindow
 
 class WindowFunctionsTest extends FunSuite {
 
-  val testThreshold = 1.0E-15
+  val testThreshold = 1.0e-15
 
   // <editor-fold desc="hammingWindow">
 

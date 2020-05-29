@@ -137,8 +137,9 @@ trait TensorLike[@spec(Int) K, @spec(Double, Int, Float, Long) V, +This <: Tenso
    * Method for slicing that is tuned for Matrices.
    * @return
    */
-  def apply[Slice1, Slice2, Result](slice1: Slice1, slice2: Slice2)(
-      implicit canSlice: CanSlice2[This, Slice1, Slice2, Result]) = {
+  def apply[Slice1, Slice2, Result](slice1: Slice1, slice2: Slice2)(implicit
+      canSlice: CanSlice2[This, Slice1, Slice2, Result]
+  ) = {
     canSlice(repr, slice1, slice2)
   }
 
@@ -188,7 +189,8 @@ trait TensorLike[@spec(Int) K, @spec(Double, Int, Float, Long) V, +This <: Tenso
   /** Returns true if and only if the given predicate is true for all elements. */
   @deprecated(
     "Please use 'forall' with the same arguments, which is more in accordance with scala.collections syntax",
-    "0.8")
+    "0.8"
+  )
   def forallValues(fn: V => Boolean): Boolean = forall(fn)
 
   /** Returns true if and only if the given predicate is true for all elements. */
@@ -208,10 +210,11 @@ trait Tensor[@spec(Int) K, @spec(Double, Int, Float, Long) V] extends TensorLike
 
 object Tensor extends TensorLowPrio {
 
-  implicit def liftTransposeOps[Op, K, V, T, R, RT](
-      implicit ev: T <:< Tensor[K, V],
+  implicit def liftTransposeOps[Op, K, V, T, R, RT](implicit
+      ev: T <:< Tensor[K, V],
       op: UFunc.UImpl2[Op, T, V, R],
-      canTranspose: CanTranspose[R, RT]): UFunc.UImpl2[Op, Transpose[T], V, RT] = {
+      canTranspose: CanTranspose[R, RT]
+  ): UFunc.UImpl2[Op, Transpose[T], V, RT] = {
     new UFunc.UImpl2[Op, Transpose[T], V, RT] {
       def apply(a: Transpose[T], b: V) = {
         canTranspose(op(a.inner, b))
@@ -220,9 +223,10 @@ object Tensor extends TensorLowPrio {
 
   }
 
-  implicit def liftTransposeInPlaceOps[Op, K, V, T](
-      implicit ev: T <:< Tensor[K, V],
-      op: UFunc.InPlaceImpl2[Op, T, V]): UFunc.InPlaceImpl2[Op, Transpose[T], V] = {
+  implicit def liftTransposeInPlaceOps[Op, K, V, T](implicit
+      ev: T <:< Tensor[K, V],
+      op: UFunc.InPlaceImpl2[Op, T, V]
+  ): UFunc.InPlaceImpl2[Op, Transpose[T], V] = {
     new UFunc.InPlaceImpl2[Op, Transpose[T], V] {
       def apply(a: Transpose[T], b: V): Unit = {
         op(a.inner, b)
@@ -251,7 +255,7 @@ object Tensor extends TensorLowPrio {
     }
 
   implicit def canSliceTensor2[K1, K2, V: Semiring: ClassTag]
-    : CanSlice2[Tensor[(K1, K2), V], Seq[K1], Seq[K2], SliceMatrix[K1, K2, V]] = {
+      : CanSlice2[Tensor[(K1, K2), V], Seq[K1], Seq[K2], SliceMatrix[K1, K2, V]] = {
     new CanSlice2[Tensor[(K1, K2), V], Seq[K1], Seq[K2], SliceMatrix[K1, K2, V]] {
       def apply(from: Tensor[(K1, K2), V], slice: Seq[K1], slice2: Seq[K2]): SliceMatrix[K1, K2, V] = {
         new SliceMatrix(from, slice.toIndexedSeq, slice2.toIndexedSeq)
@@ -260,7 +264,7 @@ object Tensor extends TensorLowPrio {
   }
 
   implicit def canSliceTensor2_CRs[K1, K2, V: Semiring: ClassTag]
-    : CanSlice2[Tensor[(K1, K2), V], Seq[K1], K2, SliceVector[(K1, K2), V]] = {
+      : CanSlice2[Tensor[(K1, K2), V], Seq[K1], K2, SliceVector[(K1, K2), V]] = {
     new CanSlice2[Tensor[(K1, K2), V], Seq[K1], K2, SliceVector[(K1, K2), V]] {
       def apply(from: Tensor[(K1, K2), V], slice: Seq[K1], slice2: K2): SliceVector[(K1, K2), V] = {
         new SliceVector(from, slice.map(k1 => (k1, slice2)).toIndexedSeq)
@@ -269,7 +273,7 @@ object Tensor extends TensorLowPrio {
   }
 
   implicit def canSliceTensor2_CsR[K1, K2, V: Semiring: ClassTag]
-    : CanSlice2[Tensor[(K1, K2), V], K1, Seq[K2], Transpose[SliceVector[(K1, K2), V]]] = {
+      : CanSlice2[Tensor[(K1, K2), V], K1, Seq[K2], Transpose[SliceVector[(K1, K2), V]]] = {
     new CanSlice2[Tensor[(K1, K2), V], K1, Seq[K2], Transpose[SliceVector[(K1, K2), V]]] {
       def apply(from: Tensor[(K1, K2), V], slice: K1, slice2: Seq[K2]): Transpose[SliceVector[(K1, K2), V]] = {
         new SliceVector(from, slice2.map(k2 => (slice, k2)).toIndexedSeq).t
@@ -279,7 +283,9 @@ object Tensor extends TensorLowPrio {
 }
 
 sealed trait TensorLowPrio {
-  implicit def canSliceTensor_Seq_to_2[K, V, Res](implicit seqSlice: CanSlice[Tensor[K, V], Seq[K], Res]): CanSlice2[Tensor[K, V], K, K, Res] = {
+  implicit def canSliceTensor_Seq_to_2[K, V, Res](implicit
+      seqSlice: CanSlice[Tensor[K, V], Seq[K], Res]
+  ): CanSlice2[Tensor[K, V], K, K, Res] = {
     new CanSlice2[Tensor[K, V], K, K, Res] {
       def apply(from: Tensor[K, V], slice: K, slice2: K): Res = {
         seqSlice(from, Seq(slice, slice2))

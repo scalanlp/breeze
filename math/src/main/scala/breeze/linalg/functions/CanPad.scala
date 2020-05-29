@@ -23,7 +23,7 @@ object CanPadRight {
 
   @expand
   implicit def implDV_OptPadDim[@expand.args(Int, Long, Float, Double) T: ClassTag: Semiring]
-    : CanPadRight[DenseVector[T], Dimensions1, DenseVector[T]] =
+      : CanPadRight[DenseVector[T], Dimensions1, DenseVector[T]] =
     new CanPadRight[DenseVector[T], Dimensions1, DenseVector[T]] {
       def apply(v: DenseVector[T], optDim: Dimensions1, optMode: OptPadMode): DenseVector[T] = {
         optMode match {
@@ -31,9 +31,17 @@ object CanPadRight {
           case Max => padRight1ImplFixed(v, optDim, max(v))
           case Min => padRight1ImplFixed(v, optDim, min(v))
           case Mean =>
-            padRight1ImplFixed(v, optDim, convert(mean(convert(v, Double)), T)) //option "Mean" with Int will return approximate Int mean for padding....
+            padRight1ImplFixed(
+              v,
+              optDim,
+              convert(mean(convert(v, Double)), T)
+            ) //option "Mean" with Int will return approximate Int mean for padding....
           case Median =>
-            padRight1ImplFixed(v, optDim, convert(median(v), T)) //option "Median" with Int will return approximate Int median for padding....
+            padRight1ImplFixed(
+              v,
+              optDim,
+              convert(median(v), T)
+            ) //option "Median" with Int will return approximate Int median for padding....
           case Value(n: T) => padRight1ImplFixed(v, optDim, n)
 
           case Wrap => padRight1ImplDV(v, optDim, v)
@@ -80,7 +88,7 @@ object CanPadRight {
 
   @expand
   implicit def implDM_OptPadDim_OptPadMode[@expand.args(Int, Long, Float, Double) T: ClassTag: Semiring]
-    : CanPadRight[DenseMatrix[T], Dimensions2, DenseMatrix[T]] =
+      : CanPadRight[DenseMatrix[T], Dimensions2, DenseMatrix[T]] =
     new CanPadRight[DenseMatrix[T], Dimensions2, DenseMatrix[T]] {
       def apply(m: DenseMatrix[T], optDim: Dimensions2, optMode: OptPadMode): DenseMatrix[T] = {
         optMode match {
@@ -127,7 +135,7 @@ object CanPadLeft {
 
   @expand
   implicit def implDV_OptPadDim[@expand.args(Int, Long, Float, Double) T: ClassTag: Semiring]
-    : CanPadLeft[DenseVector[T], Dimensions1, DenseVector[T]] =
+      : CanPadLeft[DenseVector[T], Dimensions1, DenseVector[T]] =
     new CanPadLeft[DenseVector[T], Dimensions1, DenseVector[T]] {
       def apply(v: DenseVector[T], optDim: Dimensions1, optMode: OptPadMode): DenseVector[T] = {
         optMode match {
@@ -135,9 +143,17 @@ object CanPadLeft {
           case Max => padLeft1ImplFixed(v, optDim, max(v))
           case Min => padLeft1ImplFixed(v, optDim, min(v))
           case Mean =>
-            padLeft1ImplFixed(v, optDim, convert(mean(convert(v, Double)), T)) //option "Mean" with Int will return approximate Int mean for padding....
+            padLeft1ImplFixed(
+              v,
+              optDim,
+              convert(mean(convert(v, Double)), T)
+            ) //option "Mean" with Int will return approximate Int mean for padding....
           case Median =>
-            padLeft1ImplFixed(v, optDim, convert(median(v), T)) //option "Median" with Int will return approximate Int median for padding....
+            padLeft1ImplFixed(
+              v,
+              optDim,
+              convert(median(v), T)
+            ) //option "Median" with Int will return approximate Int median for padding....
           case Value(n: T) => padLeft1ImplFixed(v, optDim, n)
 
           case Wrap => padLeft1ImplDV(v, optDim, v)
@@ -187,7 +203,7 @@ object CanPadLeft {
 
   @expand
   implicit def implDM_OptPadDim_OptPadMode[@expand.args(Int, Long, Float, Double) T: ClassTag: Semiring]
-    : CanPadLeft[DenseMatrix[T], Dimensions2, DenseMatrix[T]] =
+      : CanPadLeft[DenseMatrix[T], Dimensions2, DenseMatrix[T]] =
     new CanPadLeft[DenseMatrix[T], Dimensions2, DenseMatrix[T]] {
       def apply(m: DenseMatrix[T], optDim: Dimensions2, optMode: OptPadMode): DenseMatrix[T] = {
         optMode match {

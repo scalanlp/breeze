@@ -23,8 +23,8 @@ object Common {
     credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
     libraryDependencies ++= Seq(
       "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
-      "org.scalatest" %% "scalatest" % "3.0.8" % "test",
-   //   "org.scala-lang.modules" %% "scala-collection-compat" % "1.0.0"
+      "org.scalatest" %% "scalatest" % "3.0.8" % "test"
+      //   "org.scala-lang.modules" %% "scala-collection-compat" % "1.0.0"
     ),
     resolvers ++= Seq(
       Resolver.mavenLocal,
@@ -64,7 +64,7 @@ object Common {
     },
     libraryDependencies ++= {
       if (priorTo2_13(scalaVersion.value)) {
-        Seq(compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.patch))
+        Seq(compilerPlugin(("org.scalamacros" % "paradise" % "2.1.0").cross(CrossVersion.patch)))
       } else {
         Seq.empty
       }

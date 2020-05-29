@@ -76,7 +76,8 @@ package object linalg {
       separator: Char = ',',
       quote: Char = '"',
       escape: Char = '\\',
-      skipLines: Int = 0): DenseMatrix[Double] = {
+      skipLines: Int = 0
+  ): DenseMatrix[Double] = {
     val input = new FileReader(file)
     var mat = CSVReader.read(input, separator, quote, escape, skipLines)
     mat = mat.takeWhile(line => line.length != 0 && line.head.nonEmpty) // empty lines at the end
@@ -94,7 +95,8 @@ package object linalg {
       separator: Char = ',',
       quote: Char = '\u0000',
       escape: Char = '\\',
-      skipLines: Int = 0): Unit = {
+      skipLines: Int = 0
+  ): Unit = {
     CSVWriter.writeFile(file, IndexedSeq.tabulate(mat.rows, mat.cols)(mat(_, _).toString), separator, quote, escape)
   }
 
@@ -200,10 +202,10 @@ package object linalg {
    */
   def lowerTriangular[T: Semiring: ClassTag: Zero](X: Matrix[T]): DenseMatrix[T] = {
     val N = X.rows
-    DenseMatrix.tabulate(N, N)(
-      (i, j) =>
-        if (j <= i) X(i, j)
-        else implicitly[Semiring[T]].zero)
+    DenseMatrix.tabulate(N, N)((i, j) =>
+      if (j <= i) X(i, j)
+      else implicitly[Semiring[T]].zero
+    )
   }
 
   /**
@@ -212,10 +214,10 @@ package object linalg {
    */
   def strictlyLowerTriangular[T: Semiring: ClassTag: Zero](X: Matrix[T]): DenseMatrix[T] = {
     val N = X.rows
-    DenseMatrix.tabulate(N, N)(
-      (i, j) =>
-        if (j < i) X(i, j)
-        else implicitly[Semiring[T]].zero)
+    DenseMatrix.tabulate(N, N)((i, j) =>
+      if (j < i) X(i, j)
+      else implicitly[Semiring[T]].zero
+    )
   }
 
   /**
@@ -224,10 +226,10 @@ package object linalg {
    */
   def upperTriangular[T: Semiring: ClassTag: Zero](X: Matrix[T]): DenseMatrix[T] = {
     val N = X.rows
-    DenseMatrix.tabulate(N, N)(
-      (i, j) =>
-        if (j >= i) X(i, j)
-        else implicitly[Semiring[T]].zero)
+    DenseMatrix.tabulate(N, N)((i, j) =>
+      if (j >= i) X(i, j)
+      else implicitly[Semiring[T]].zero
+    )
   }
 
   /**
@@ -236,10 +238,10 @@ package object linalg {
    */
   def strictlyUpperTriangular[T: Semiring: ClassTag: Zero](X: Matrix[T]): DenseMatrix[T] = {
     val N = X.rows
-    DenseMatrix.tabulate(N, N)(
-      (i, j) =>
-        if (j > i) X(i, j)
-        else implicitly[Semiring[T]].zero)
+    DenseMatrix.tabulate(N, N)((i, j) =>
+      if (j > i) X(i, j)
+      else implicitly[Semiring[T]].zero
+    )
   }
 
   /**
@@ -300,29 +302,37 @@ package object linalg {
   // <editor-fold defaultstate="collapsed" desc=" functions declared using the CanXXX idiom (this allows calling parameters by name, etc.) ">
 
   import breeze.linalg.Options.{Zero => OZero, _}
-  def padRight[T](v: DenseVector[T], dimensions: Dimensions1)(
-      implicit canPad: CanPadRight[DenseVector[T], Dimensions1, DenseVector[T]]): DenseVector[T] =
+  def padRight[T](v: DenseVector[T], dimensions: Dimensions1)(implicit
+      canPad: CanPadRight[DenseVector[T], Dimensions1, DenseVector[T]]
+  ): DenseVector[T] =
     canPad(v, dimensions, OZero)
-  def padRight[T](v: DenseVector[T], dimensions: Dimensions1, mode: OptPadMode)(
-      implicit canPad: CanPadRight[DenseVector[T], Dimensions1, DenseVector[T]]): DenseVector[T] =
+  def padRight[T](v: DenseVector[T], dimensions: Dimensions1, mode: OptPadMode)(implicit
+      canPad: CanPadRight[DenseVector[T], Dimensions1, DenseVector[T]]
+  ): DenseVector[T] =
     canPad(v, dimensions, mode)
-  def padRight[T](v: DenseMatrix[T], dimensions: Dimensions1)(
-      implicit canPad: CanPadRight[DenseMatrix[T], Dimensions1, DenseMatrix[T]]): DenseMatrix[T] =
+  def padRight[T](v: DenseMatrix[T], dimensions: Dimensions1)(implicit
+      canPad: CanPadRight[DenseMatrix[T], Dimensions1, DenseMatrix[T]]
+  ): DenseMatrix[T] =
     canPad(v, dimensions, OZero)
-  def padRight[T](v: DenseMatrix[T], dimensions: Dimensions2, mode: OptPadMode)(
-      implicit canPad: CanPadRight[DenseMatrix[T], Dimensions2, DenseMatrix[T]]): DenseMatrix[T] =
+  def padRight[T](v: DenseMatrix[T], dimensions: Dimensions2, mode: OptPadMode)(implicit
+      canPad: CanPadRight[DenseMatrix[T], Dimensions2, DenseMatrix[T]]
+  ): DenseMatrix[T] =
     canPad(v, dimensions, mode)
-  def padLeft[T](v: DenseVector[T], dimensions: Dimensions1)(
-      implicit canPad: CanPadLeft[DenseVector[T], Dimensions1, DenseVector[T]]): DenseVector[T] =
+  def padLeft[T](v: DenseVector[T], dimensions: Dimensions1)(implicit
+      canPad: CanPadLeft[DenseVector[T], Dimensions1, DenseVector[T]]
+  ): DenseVector[T] =
     canPad(v, dimensions, OZero)
-  def padLeft[T](v: DenseVector[T], dimensions: Dimensions1, mode: OptPadMode)(
-      implicit canPad: CanPadLeft[DenseVector[T], Dimensions1, DenseVector[T]]): DenseVector[T] =
+  def padLeft[T](v: DenseVector[T], dimensions: Dimensions1, mode: OptPadMode)(implicit
+      canPad: CanPadLeft[DenseVector[T], Dimensions1, DenseVector[T]]
+  ): DenseVector[T] =
     canPad(v, dimensions, mode)
-  def padLeft[T](v: DenseMatrix[T], dimensions: Dimensions1)(
-      implicit canPad: CanPadLeft[DenseMatrix[T], Dimensions1, DenseMatrix[T]]): DenseMatrix[T] =
+  def padLeft[T](v: DenseMatrix[T], dimensions: Dimensions1)(implicit
+      canPad: CanPadLeft[DenseMatrix[T], Dimensions1, DenseMatrix[T]]
+  ): DenseMatrix[T] =
     canPad(v, dimensions, OZero)
-  def padLeft[T](v: DenseMatrix[T], dimensions: Dimensions2, mode: OptPadMode)(
-      implicit canPad: CanPadLeft[DenseMatrix[T], Dimensions2, DenseMatrix[T]]): DenseMatrix[T] =
+  def padLeft[T](v: DenseMatrix[T], dimensions: Dimensions2, mode: OptPadMode)(implicit
+      canPad: CanPadLeft[DenseMatrix[T], Dimensions2, DenseMatrix[T]]
+  ): DenseMatrix[T] =
     canPad(v, dimensions, mode)
 
   // </editor-fold>
@@ -340,6 +350,7 @@ package object linalg {
   /**
    * val to determine if breeze is using natives or f2jblas
    */
-  lazy val usingNatives = com.github.fommil.netlib.BLAS.getInstance.getClass.getName != "com.github.fommil.netlib.F2jBLAS"
+  lazy val usingNatives =
+    com.github.fommil.netlib.BLAS.getInstance.getClass.getName != "com.github.fommil.netlib.F2jBLAS"
 
 }

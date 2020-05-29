@@ -5,9 +5,8 @@ import breeze.linalg._
 import breeze.numerics._
 
 case class Wishart(df: Int, scale: DenseMatrix[Double])(implicit randBasis: RandBasis = Rand)
-  extends ContinuousDistr[DenseMatrix[Double]]
-  with Moments[DenseMatrix[Double], DenseMatrix[Double]]
-{
+    extends ContinuousDistr[DenseMatrix[Double]]
+    with Moments[DenseMatrix[Double], DenseMatrix[Double]] {
   private val dims = scale.rows
 
   require(dims == scale.cols, "Scale must be a square matrix")
@@ -22,15 +21,15 @@ case class Wishart(df: Int, scale: DenseMatrix[Double])(implicit randBasis: Rand
 
   def logNormalizer: Double = {
     (math.log(2) * dims * 0.5 * df
-    + math.log(det(scale)) * 0.5 * df
-    + multidigammalog(0.5 * df, dims))
+      + math.log(det(scale)) * 0.5 * df
+      + multidigammalog(0.5 * df, dims))
   }
 
   def mean: DenseMatrix[Double] = scale *:* df.toDouble
 
   def variance: DenseMatrix[Double] = {
     val t = diag(scale).toDenseMatrix
-    (mpow(scale, 2) +  t * t.t) *:* df.toDouble
+    (mpow(scale, 2) + t * t.t) *:* df.toDouble
   }
 
   def entropy: Double = {

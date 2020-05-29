@@ -111,7 +111,8 @@ class StrongWolfeLineSearch(maxZoomIter: Int, maxLineSearchIter: Int) extends Cu
         //logger.debug("ZOOM:\n c: " + c + " \n l: " + low + " \nr: " + hi)
         logger.info(
           "Line search t: " + t + " fval: " + c.fval +
-            " rhs: " + (fval + c1 * c.t * dd) + " cdd: " + c.dd)
+            " rhs: " + (fval + c1 * c.t * dd) + " cdd: " + c.dd
+        )
 
         if (t.isNaN) throw new FirstOrderException(s"Line search zoom failed")
 
@@ -159,8 +160,10 @@ class StrongWolfeLineSearch(maxZoomIter: Int, maxLineSearchIter: Int) extends Cu
       } else {
 
         // Zoom if "sufficient decrease" condition is not satisfied
-        if ((c.fval > fval + c1 * t * dd) ||
-          (c.fval >= low.fval && i > 0)) {
+        if (
+          (c.fval > fval + c1 * t * dd) ||
+          (c.fval >= low.fval && i > 0)
+        ) {
           logger.debug("Line search t: " + t + " fval: " + c.fval + " cdd: " + c.dd)
           return zoom(low, c)
         }
@@ -177,7 +180,8 @@ class StrongWolfeLineSearch(maxZoomIter: Int, maxLineSearchIter: Int) extends Cu
         if (c.dd >= 0) {
           logger.debug(
             "Line search t: " + t + " fval: " + c.fval +
-              " rhs: " + (fval + c1 * t * dd) + " cdd: " + c.dd)
+              " rhs: " + (fval + c1 * t * dd) + " cdd: " + c.dd
+          )
           return zoom(c, low)
         }
 
@@ -185,7 +189,8 @@ class StrongWolfeLineSearch(maxZoomIter: Int, maxLineSearchIter: Int) extends Cu
         if (t == bound) {
           logger.debug(
             "Reach bound, satisfy sufficent decrease condition," +
-              " but not curvature condition satisfied.")
+              " but not curvature condition satisfied."
+          )
           return bound
         } else {
           t *= 1.5

@@ -9,9 +9,10 @@ import breeze.optimize.FirstOrderMinimizer.OptParams
 sealed trait OptimizationOption extends (OptParams => OptParams)
 
 object OptimizationOption {
-  implicit def fromOptParams(optParams: OptParams): OptimizationOption = new OptimizationOption {
-    def apply(v1: OptParams): OptParams = optParams
-  }
+  implicit def fromOptParams(optParams: OptParams): OptimizationOption =
+    new OptimizationOption {
+      def apply(v1: OptParams): OptParams = optParams
+    }
 
 }
 
@@ -47,7 +48,7 @@ case class StepSizeScale(alpha: Double = 1.0) extends OptimizationOption {
   }
 }
 
-case class Tolerance(fvalTolerance: Double = 1E-5, gvalTolerance: Double = 1e-6) extends OptimizationOption {
+case class Tolerance(fvalTolerance: Double = 1e-5, gvalTolerance: Double = 1e-6) extends OptimizationOption {
   def apply(params: OptParams): OptParams = {
     // TODO: gvaltolerance
     params.copy(tolerance = fvalTolerance)

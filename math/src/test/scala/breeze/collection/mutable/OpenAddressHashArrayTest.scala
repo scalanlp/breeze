@@ -36,7 +36,8 @@ class OpenAddressHashArrayTest extends FunSuite with Checkers {
             arr(i) = i
           }
           mdata.forall(i => arr(i) == i) && !(0 until size).filterNot(mdata).exists(arr(_) != 0)
-      })
+        }
+      )
     }
   }
 
@@ -56,7 +57,8 @@ class OpenAddressHashArrayTest extends FunSuite with Checkers {
           }
           (arr == arr.copy && arr.hashCode == arr.copy.hashCode
           && arr2 == arr && arr2.copy.hashCode == arr.copy.hashCode)
-      })
+        }
+      )
     }
   }
 

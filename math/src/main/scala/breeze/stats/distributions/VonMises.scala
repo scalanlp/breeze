@@ -111,7 +111,7 @@ object VonMises extends ExponentialFamily[VonMises, Double] {
 
     val kx = {
       if (t < 0.53) t * (2 + t * t * (1 + 5 * t * t / 6))
-      else if (t < 0.85) -0.4 + 1.39 * t + (0.43) / (1 - t)
+      else if (t < 0.85) -0.4 + 1.39 * t + 0.43 / (1 - t)
       else 1 / (t * (3 + t * (-4 + t)))
     }
     val result = minimize(lensed, DenseVector(mu, kx))
@@ -119,30 +119,31 @@ object VonMises extends ExponentialFamily[VonMises, Double] {
     res
   }
 
-  def likelihoodFunction(stats: SufficientStatistic) = new DiffFunction[(Double, Double)] {
-    def calculate(x: (Double, Double)) = {
-      val DELTA = 1E-5
-      val (mu, k) = x
-      if (mu < 0 || mu > 2 * Pi || k < 0) (Double.PositiveInfinity, (0.0, 0.0))
-      else {
-        val (sinx, cosx) = (sin(mu), cos(mu))
-        val bessel_k = Bessel.i0(k)
-        val logprob = stats.n * math.log(bessel_k * 2 * Pi) - (stats.sines * sinx + stats.cosines * cosx) * k
-        val mugrad = -k * (stats.sines * cos(mu) - stats.cosines * sin(mu))
-        val kgrad = stats.n * (Bessel.i1(k) / bessel_k) - (stats.sines * sinx + stats.cosines * cosx)
+  def likelihoodFunction(stats: SufficientStatistic) =
+    new DiffFunction[(Double, Double)] {
+      def calculate(x: (Double, Double)) = {
+        val DELTA = 1e-5
+        val (mu, k) = x
+        if (mu < 0 || mu > 2 * Pi || k < 0) (Double.PositiveInfinity, (0.0, 0.0))
+        else {
+          val (sinx, cosx) = (sin(mu), cos(mu))
+          val bessel_k = Bessel.i0(k)
+          val logprob = stats.n * math.log(bessel_k * 2 * Pi) - (stats.sines * sinx + stats.cosines * cosx) * k
+          val mugrad = -k * (stats.sines * cos(mu) - stats.cosines * sin(mu))
+          val kgrad = stats.n * (Bessel.i1(k) / bessel_k) - (stats.sines * sinx + stats.cosines * cosx)
 
-        (logprob, (mugrad, kgrad))
+          (logprob, (mugrad, kgrad))
+
+        }
 
       }
-
     }
-  }
   /*
 
   /**
- * Returns the maximum likelihood estimate of this distribution
- * For the given observations with (possibly pseudo-)counts
- */
+   * Returns the maximum likelihood estimate of this distribution
+   * For the given observations with (possibly pseudo-)counts
+   */
 
   def mle(obs: Counter[Double,Double]) = {
     val sufStats = for {
@@ -170,5 +171,5 @@ object VonMises extends ExponentialFamily[VonMises, Double] {
     } */
     VonMises(mu,k)
   }
- */
+   */
 }

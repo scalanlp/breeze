@@ -15,7 +15,7 @@ class ConjugateGradientTest extends FunSuite {
     val cg = new ConjugateGradient[DenseVector[Double], DenseMatrix[Double]]()
     val result = cg.minimize(a, b, DenseVector.zeros[Double](2))
 
-    assert(norm(answer - result) <= 1E-4)
+    assert(norm(answer - result) <= 1e-4)
   }
 
   test("norm constraint is obeyed") {

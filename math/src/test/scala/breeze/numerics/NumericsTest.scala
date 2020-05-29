@@ -55,25 +55,26 @@ class NumericsTest extends FunSuite with Checkers with Matchers {
 
   import Arbitrary._
 
-  implicit def ae(x: Double) = new {
-    def =~=(y: Double) = breeze.numerics.closeTo(x, y, 1E-6)
-  }
+  implicit def ae(x: Double) =
+    new {
+      def =~=(y: Double) = breeze.numerics.closeTo(x, y, 1e-6)
+    }
 
   // TODO 2.9 filter out Double.MaxValue.
   test("softmax is approximately associative") {
     check(Prop.forAll { (a: Double, b: Double, c: Double) =>
-      Seq(a, b, c).exists(x => x > 1E300 || x < -1E300) ||
+      Seq(a, b, c).exists(x => x > 1e300 || x < -1e300) ||
       softmax(a, softmax(b, c)) =~= softmax(softmax(a, b), c)
     })
     check(Prop.forAll { (a: Double, b: Double, c: Double) =>
-      Seq(a, b, c).exists(x => x > 1E300 || x < -1E300) ||
+      Seq(a, b, c).exists(x => x > 1e300 || x < -1e300) ||
       softmax(a, softmax(b, c)) =~= softmax(Array(a, b, c))
     })
   }
 
   test("sum distributes over softmax") {
     check(Prop.forAll { (a: Double, b: Double, c: Double) =>
-      Seq(a, b, c).exists(x => x > 1E300 || x < -1E300) ||
+      Seq(a, b, c).exists(x => x > 1e300 || x < -1e300) ||
       (a + softmax(b, c)) =~= (softmax(a + b, a + c))
     })
   }
@@ -86,7 +87,7 @@ class NumericsTest extends FunSuite with Checkers with Matchers {
 
   test("lgamma") {
     import breeze.numerics.{lgamma => lg}
-    lg(10) should be(12.8018274801 +- 1E-8)
+    lg(10) should be(12.8018274801 +- 1e-8)
   }
 
   test("lbeta") {
@@ -96,24 +97,24 @@ class NumericsTest extends FunSuite with Checkers with Matchers {
   test("incomplete gamma") {
     import breeze.numerics.{lgamma => lg}
     import breeze.numerics.gammp
-    lg(3.0, 4.0) should be(0.4212028764812177 +- 1E-8)
-    lg(3.0, 1.0) should be(-1.828821079471455 +- 1E-8)
+    lg(3.0, 4.0) should be(0.4212028764812177 +- 1e-8)
+    lg(3.0, 1.0) should be(-1.828821079471455 +- 1e-8)
     assert(lg(3.0, DenseVector(4.0, 1.0)) === DenseVector(lg(3.0, 4.0), lg(3.0, 1.0)))
     assert(lg(DenseVector(3.0, 3.0), 4.0) === DenseVector(lg(3.0, 4.0), lg(3.0, 4.0)))
     assert(lg(DenseVector(3.0, 3.0), DenseVector(4.0, 1.0)) === DenseVector(lg(3.0, 4.0), lg(3.0, 1.0)))
-    gammp(3.0, 1.0) should be(0.08030139707139419 +- 1E-8)
-    gammp(3.0, 4.0) should be(0.7618966944464557 +- 1E-8)
-    gammp(3.0, 10.0) should be(0.9972306042844884 +- 1E-8)
+    gammp(3.0, 1.0) should be(0.08030139707139419 +- 1e-8)
+    gammp(3.0, 4.0) should be(0.7618966944464557 +- 1e-8)
+    gammp(3.0, 10.0) should be(0.9972306042844884 +- 1e-8)
   }
 
   test("erf") {
     import breeze.numerics.{erf, erfi}
-    erf(3.0) should be(.9999779095030014 +- 1E-8)
-    erf(-3.0) should be(-.9999779095030014 +- 1E-8)
-    erf(1E-4) should be(0.00011283791633342489 +- 1E-8)
-    erfi(3.0) should be(1629.994622601567 +- 1E-4)
-    erfi(-3.0) should be(-1629.994622601567 +- 1E-4)
-    erf(1E-4) should be(0.00011283791708567767 +- 1E-8)
+    erf(3.0) should be(.9999779095030014 +- 1e-8)
+    erf(-3.0) should be(-.9999779095030014 +- 1e-8)
+    erf(1e-4) should be(0.00011283791633342489 +- 1e-8)
+    erfi(3.0) should be(1629.994622601567 +- 1e-4)
+    erfi(-3.0) should be(-1629.994622601567 +- 1e-4)
+    erf(1e-4) should be(0.00011283791708567767 +- 1e-8)
   }
 
   test("basic ufunc tests") {
@@ -152,34 +153,36 @@ class NumericsTest extends FunSuite with Checkers with Matchers {
   }
 
   test("sinc") {
-    val testThreshold = 1.0E-15
+    val testThreshold = 1.0e-15
     assert(abs(sinc(1d) - 0.8414709848078965) < testThreshold)
-    assert(abs(sinc(1f) - 0.8414709848078965) < testThreshold * 1.0E8)
+    assert(abs(sinc(1f) - 0.8414709848078965) < testThreshold * 1.0e8)
     assert(sinc(0d) == 1d)
 
     val testDV = DenseVector(-10d, -7d, -4d, -1d)
     assert(
-      norm(sinc(testDV) - DenseVector(
-        -0.05440211108893698,
-        0.09385522838839844,
-        -0.18920062382698205,
-        0.8414709848078965)) < testThreshold)
+      norm(
+        sinc(testDV) - DenseVector(-0.05440211108893698, 0.09385522838839844, -0.18920062382698205, 0.8414709848078965)
+      ) < testThreshold
+    )
   }
 
   test("sincpi") {
-    val testThreshold = 1.0E-15
-    assert(abs(sincpi(1d) - 3.898171832519376E-17) < testThreshold)
-    assert(abs(sincpi(1f) - 3.898171832519376E-17) < testThreshold * 1.0E8)
+    val testThreshold = 1.0e-15
+    assert(abs(sincpi(1d) - 3.898171832519376e-17) < testThreshold)
+    assert(abs(sincpi(1f) - 3.898171832519376e-17) < testThreshold * 1.0e8)
     assert(sincpi(0d) == 1d)
 
     val testDV = DenseVector(-3d, -2.5, -2d, -1.5)
     assert(
       norm(
         sincpi(testDV) - DenseVector(
-          3.898171832519376E-17,
+          3.898171832519376e-17,
           0.127323954473516,
-          -3.898171832519376E-17,
-          -0.212206590789194)) < testThreshold)
+          -3.898171832519376e-17,
+          -0.212206590789194
+        )
+      ) < testThreshold
+    )
   }
 
   test("nextPower") {

@@ -17,6 +17,7 @@ object BranchAndBound {
       b: DenseVector[Double],
       c: DenseVector[Double],
       x0: DenseVector[Double],
-      integers: Seq[Int]) = {}
+      integers: Seq[Int]
+  ) = {}
 
 }

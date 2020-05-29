@@ -11,7 +11,7 @@ import breeze.util.Implicits._
  * compute minimum eigen value through inverse power iterations
  * @author debasish83
  */
-class PowerMethod(maxIters: Int = 10, tolerance: Double = 1E-5) extends SerializableLogging {
+class PowerMethod(maxIters: Int = 10, tolerance: Double = 1e-5) extends SerializableLogging {
 
   import PowerMethod.BDM
   import PowerMethod.BDV
@@ -81,7 +81,7 @@ object PowerMethod {
   type BDV = DenseVector[Double]
   type BDM = DenseMatrix[Double]
 
-  def inverse(maxIters: Int = 10, tolerance: Double = 1E-5): PowerMethod = {
+  def inverse(maxIters: Int = 10, tolerance: Double = 1e-5): PowerMethod = {
     new PowerMethod(maxIters, tolerance) {
       override def reset(A: BDM, y: BDV, init: State): State = {
         import init._

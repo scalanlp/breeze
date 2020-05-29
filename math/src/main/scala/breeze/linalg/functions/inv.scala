@@ -14,8 +14,9 @@ import breeze.linalg.support.CanTranspose
  * A \ B.
  */
 object inv extends UFunc {
-  implicit def canInvUsingLU_Double[T](
-      implicit luImpl: LU.primitive.Impl[T, (DenseMatrix[Double], Array[Int])]): Impl[T, DenseMatrix[Double]] = {
+  implicit def canInvUsingLU_Double[T](implicit
+      luImpl: LU.primitive.Impl[T, (DenseMatrix[Double], Array[Int])]
+  ): Impl[T, DenseMatrix[Double]] = {
     new Impl[T, DenseMatrix[Double]] {
       def apply(X: T): DenseMatrix[Double] = {
         // Should these type hints be necessary?
@@ -43,8 +44,9 @@ object inv extends UFunc {
     }
   }
 
-  implicit def canInvUsingLU_Float[T](
-      implicit luImpl: LU.primitive.Impl[T, (DenseMatrix[Float], Array[Int])]): Impl[T, DenseMatrix[Float]] = {
+  implicit def canInvUsingLU_Float[T](implicit
+      luImpl: LU.primitive.Impl[T, (DenseMatrix[Float], Array[Int])]
+  ): Impl[T, DenseMatrix[Float]] = {
     new Impl[T, DenseMatrix[Float]] {
       def apply(X: T): DenseMatrix[Float] = {
         // Should these type hints be necessary?
@@ -126,13 +128,14 @@ trait pinvLowPrio { this: pinv.type =>
    * @tparam Result the result of MulRes \ TransT
    * @return
    */
-  implicit def implFromTransposeAndSolve[T, TransT, MulRes, Result](
-      implicit numericT: T => NumericOps[T],
+  implicit def implFromTransposeAndSolve[T, TransT, MulRes, Result](implicit
+      numericT: T => NumericOps[T],
       trans: CanTranspose[T, TransT],
       numericTrans: TransT => NumericOps[TransT],
       mul: OpMulMatrix.Impl2[TransT, T, MulRes],
       numericMulRes: MulRes => NumericOps[MulRes],
-      solve: OpSolveMatrixBy.Impl2[MulRes, TransT, Result]): Impl[T, Result] = {
+      solve: OpSolveMatrixBy.Impl2[MulRes, TransT, Result]
+  ): Impl[T, Result] = {
     new Impl[T, Result] {
       def apply(X: T): Result = {
         (X.t * X) \ X.t

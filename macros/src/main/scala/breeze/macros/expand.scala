@@ -119,7 +119,8 @@ object expand {
                 tree.pos,
                 "Can't valify: Not all arguments were grounded: " + newvargs
                   .map(_.mkString(", "))
-                  .mkString("(", ")(", ")"))
+                  .mkString("(", ")(", ")")
+              )
             ValDef(newMods, newName, newtpt, grounded)
           } else {
             val newTargs = typesLeftAbstract.map(substitute(c)(typeMap, valExpansions, _)).asInstanceOf[List[TypeDef]]
@@ -140,14 +141,16 @@ object expand {
   def substitute(c: Context)(
       typeMap: Map[c.Name, c.Type],
       valExpansions: Map[c.Name, (c.Name, Map[c.Type, c.Tree])],
-      rhs: c.mirror.universe.Tree): c.mirror.universe.Tree = {
+      rhs: c.mirror.universe.Tree
+  ): c.mirror.universe.Tree = {
     import c.mirror.universe._
 
     class InlineTerm(name: TermName, value: Tree) extends Transformer {
-      override def transform(tree: Tree): Tree = tree match {
-        case Ident(`name`) => value
-        case _ => super.transform(tree)
-      }
+      override def transform(tree: Tree): Tree =
+        tree match {
+          case Ident(`name`) => value
+          case _ => super.transform(tree)
+        }
     }
 
     val termTypeMap = typeMap.map {
@@ -155,35 +158,37 @@ object expand {
     }
 
     new Transformer() {
-      override def transform(tree: Tree): Tree = tree match {
-        case Ident(x) if typeMap.contains(x) =>
-          TypeTree(typeMap(x))
-        case Ident(x) if termTypeMap.contains(x) =>
-          termTypeMap(x)
-        case Apply(aa @ Ident(x), args) if valExpansions.contains(x) =>
-          val (tname, tmap) = valExpansions(x)
-          val mappedTree = tmap(typeMap(tname))
-          mappedTree match {
-            case fn @ Function(fargs, body) =>
-              fargs.zip(args).foldLeft(body) { (currentBody, pair) =>
-                val (fa, a) = pair
-                new InlineTerm(fa.name, a).transform(currentBody)
-              }
-            case x => x
-          }
-        case Ident(x) if valExpansions.contains(x) =>
-          val (tname, tmap) = valExpansions(x)
-          tmap(typeMap(tname))
-        case _ =>
-          super.transform(tree)
-      }
+      override def transform(tree: Tree): Tree =
+        tree match {
+          case Ident(x) if typeMap.contains(x) =>
+            TypeTree(typeMap(x))
+          case Ident(x) if termTypeMap.contains(x) =>
+            termTypeMap(x)
+          case Apply(aa @ Ident(x), args) if valExpansions.contains(x) =>
+            val (tname, tmap) = valExpansions(x)
+            val mappedTree = tmap(typeMap(tname))
+            mappedTree match {
+              case fn @ Function(fargs, body) =>
+                fargs.zip(args).foldLeft(body) { (currentBody, pair) =>
+                  val (fa, a) = pair
+                  new InlineTerm(fa.name, a).transform(currentBody)
+                }
+              case x => x
+            }
+          case Ident(x) if valExpansions.contains(x) =>
+            val (tname, tmap) = valExpansions(x)
+            tmap(typeMap(tname))
+          case _ =>
+            super.transform(tree)
+        }
     }.transform(rhs)
   }
 
   /** for a valdef with a [[breeze.macros.expand.sequence]] annotation, converts the sequence of associations to a Map */
   private def solveSequence(context: Context)(
       v: context.mirror.universe.ValDef,
-      typeMappings: Map[context.Name, List[context.Type]]): (context.Name, Map[context.Type, context.Tree]) = {
+      typeMappings: Map[context.Name, List[context.Type]]
+  ): (context.Name, Map[context.Type, context.Tree]) = {
     import context.mirror.universe._
     val x = v.mods.annotations.collectFirst {
       case x @ q"new expand.sequence[${Ident(nme2)}](...$args)" =>

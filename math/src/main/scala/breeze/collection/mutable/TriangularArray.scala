@@ -42,12 +42,13 @@ final class TriangularArray[T: ClassTag](val dimension: Int) extends Serializabl
   @inline
   def apply(r: Int) = slice(r)
 
-  private def slice(r: Int): Seq[T] = new Seq[T] {
-    def apply(c: Int) = outer.apply(r, c)
-    def update(c: Int, t: T) = outer.update(r, c, t)
-    def length = (dimension - r)
-    def iterator = Iterator.range(r, dimension).map(apply _)
-  }
+  private def slice(r: Int): Seq[T] =
+    new Seq[T] {
+      def apply(c: Int) = outer.apply(r, c)
+      def update(c: Int, t: T) = outer.update(r, c, t)
+      def length = dimension - r
+      def iterator = Iterator.range(r, dimension).map(apply _)
+    }
 
   def iterator = Iterator.range(0, numElems).map(slice)
   def foreach(f: T => Unit): Unit = { data.foreach(f) }

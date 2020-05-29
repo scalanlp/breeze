@@ -49,7 +49,8 @@ object evdr extends UFunc {
 
     require(
       s <= (M.rows.min(M.cols)),
-      "Number of columns in orthonormal matrix should be less than min(M.rows, M.cols)")
+      "Number of columns in orthonormal matrix should be less than min(M.rows, M.cols)"
+    )
     require(s >= 1, "Sketch size should be greater than 1")
 
     val nRandom = s + nOversamples

@@ -48,7 +48,7 @@ class ComplexTest extends FunSuite with Checkers {
 
   test("Abs/Conj") {
     assert((3 + 4 * i).abs === 5)
-    val c = (1.7 + 2.1 * i)
+    val c = 1.7 + 2.1 * i
     assert(c * c.conjugate === 7.3)
   }
 

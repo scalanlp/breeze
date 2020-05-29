@@ -31,7 +31,8 @@ abstract class ApacheAdaptiveStepIntegrator(relTol: DenseVector[Double] = null, 
       inner.getMinStep,
       inner.getMaxStep,
       ApacheAdaptiveStepIntegrator.defaultAbsTol,
-      ApacheAdaptiveStepIntegrator.defaultRelTol)
+      ApacheAdaptiveStepIntegrator.defaultRelTol
+    )
 }
 
 object ApacheAdaptiveStepIntegrator {

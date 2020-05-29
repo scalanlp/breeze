@@ -8,9 +8,10 @@ import scala.collection.mutable
  */
 object Implicits extends DoubleImplicits with IteratorImplicits {
   implicit class scEnrichColl[Coll <: Traversable[(_, _)]](val __this: Coll) extends AnyVal {
-    def toMultiMap[Result, A, B](
-        implicit view: Coll <:< Traversable[(A, B)],
-        cbf: CanBuildFrom[Coll, B, Result]): Map[A, Result] = {
+    def toMultiMap[Result, A, B](implicit
+        view: Coll <:< Traversable[(A, B)],
+        cbf: CanBuildFrom[Coll, B, Result]
+    ): Map[A, Result] = {
       var result = collection.mutable.Map[A, mutable.Builder[B, Result]]()
       result = result.withDefault { a =>
         val r = cbf(__this); result.update(a, r); r
@@ -44,7 +45,7 @@ object Implicits extends DoubleImplicits with IteratorImplicits {
 
 trait DoubleImplicits {
   class RichDouble(x: Double) {
-    def closeTo(y: Double, tol: Double = 1E-5) = {
+    def closeTo(y: Double, tol: Double = 1e-5) = {
       (math.abs(x - y) / (math.abs(x) + math.abs(y) + 1e-10) < tol);
     }
     def isDangerous = x.isNaN || x.isInfinite
@@ -55,31 +56,33 @@ trait DoubleImplicits {
 
 trait IteratorImplicits {
   class RichIterator[T](iter: Iterator[T]) {
-    def tee(f: T => Unit): Iterator[T] = new Iterator[T] {
-      def next = {
-        val n = iter.next;
-        f(n);
-        n
+    def tee(f: T => Unit): Iterator[T] =
+      new Iterator[T] {
+        def next = {
+          val n = iter.next;
+          f(n);
+          n
+        }
+
+        def hasNext = {
+          iter.hasNext;
+        }
       }
 
-      def hasNext = {
-        iter.hasNext;
-      }
-    }
+    def takeUpToWhere(f: T => Boolean): Iterator[T] =
+      new Iterator[T] {
+        var done = false
+        def next = {
+          if (done) throw new NoSuchElementException()
+          val n = iter.next;
+          done = f(n)
+          n
+        }
 
-    def takeUpToWhere(f: T => Boolean): Iterator[T] = new Iterator[T] {
-      var done = false
-      def next = {
-        if (done) throw new NoSuchElementException()
-        val n = iter.next;
-        done = f(n)
-        n
+        def hasNext = {
+          !done && iter.hasNext;
+        }
       }
-
-      def hasNext = {
-        !done && iter.hasNext;
-      }
-    }
 
     def last = {
       var x = iter.next()

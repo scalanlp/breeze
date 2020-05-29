@@ -118,8 +118,10 @@ object arityize {
       case t @ Ident(x) => Seq(t)
       case t @ Literal(x) => Seq(t)
       case Apply(who, args) =>
-        for (w2 <- expandArity(c, order, bindings)(who);
-          args2 = args.flatMap(arg => expandArity(c, order, bindings)(arg))) yield {
+        for (
+          w2 <- expandArity(c, order, bindings)(who);
+          args2 = args.flatMap(arg => expandArity(c, order, bindings)(arg))
+        ) yield {
           Apply(w2, args2)
         }
       case Select(lhs, name) =>
@@ -140,7 +142,8 @@ object arityize {
   }
 
   def expandValDef(c: Context, order: Int, bindings: Map[String, Int])(
-      vdef: c.universe.ValDef): List[c.universe.ValDef] = {
+      vdef: c.universe.ValDef
+  ): List[c.universe.ValDef] = {
     import c.mirror.universe._
     if (shouldExpand(c)(vdef.mods)) {
       List.tabulate(order) { i =>
@@ -150,7 +153,8 @@ object arityize {
           vdef.mods,
           newTermName(vdef.name.encoded + (i + 1)),
           expandArity(c, order, newBindings)(vdef.tpt).head,
-          vdef.rhs)
+          vdef.rhs
+        )
       }
     } else {
       shouldRelativize(c)(vdef.mods) match {
@@ -167,7 +171,8 @@ object arityize {
   }
 
   def expandTypeDef(c: Context, order: Int, bindings: Map[String, Int])(
-      vdef: c.universe.TypeDef): List[c.universe.TypeDef] = {
+      vdef: c.universe.TypeDef
+  ): List[c.universe.TypeDef] = {
     import c.mirror.universe._
     if (shouldExpand(c)(vdef.mods)) {
       List.tabulate(order)(i => TypeDef(vdef.mods, newTypeName(vdef.name.encoded + (i + 1)), vdef.tparams, vdef.rhs))

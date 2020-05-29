@@ -53,12 +53,14 @@ package object signal {
       windowLength: Int,
       fs: Double = -1,
       dt: Double = -1,
-      shifted: Boolean = false): DenseVector[Double] = {
+      shifted: Boolean = false
+  ): DenseVector[Double] = {
     require(fs > 0 || dt > 0, "Must specify either a valid fs or a valid dt argument.")
     if (fs > 0 && dt > 0)
       require(
         fs == 1d / dt,
-        "If fs and dt are both specified, fs == 1.0/dt must be true. Otherwise, they are incompatible")
+        "If fs and dt are both specified, fs == 1.0/dt must be true. Otherwise, they are incompatible"
+      )
     val realFs = if (fs < 0 && dt > 0) 1d / dt else fs
 
     val shiftedFreq = if (isEven(windowLength)) {
@@ -127,7 +129,8 @@ package object signal {
       data: Input,
       kernel: Kernel,
       overhang: OptOverhang = OptOverhang.PreserveLength,
-      padding: OptPadding = OptPadding.Zero)(implicit canFilter: CanFilter[Input, Kernel, Output]): Output =
+      padding: OptPadding = OptPadding.Zero
+  )(implicit canFilter: CanFilter[Input, Kernel, Output]): Output =
     canFilter(data, kernel, overhang, padding)
 
   // </editor-fold>
@@ -154,7 +157,8 @@ package object signal {
       taps: Int = 512,
       kernelDesign: OptDesignMethod = OptDesignMethod.Firwin,
       overhang: OptOverhang = OptOverhang.None,
-      padding: OptPadding = OptPadding.Boundary)(implicit canFilterBPBS: CanFilterBPBS[Input, Output]): Output =
+      padding: OptPadding = OptPadding.Boundary
+  )(implicit canFilterBPBS: CanFilterBPBS[Input, Output]): Output =
     canFilterBPBS(data, omegas, sampleRate, taps, bandStop = false, kernelDesign, overhang, padding)
 
   /** Bandstop filter the input data.
@@ -177,7 +181,8 @@ package object signal {
       taps: Int = 512,
       kernelDesign: OptDesignMethod = OptDesignMethod.Firwin,
       overhang: OptOverhang = OptOverhang.None,
-      padding: OptPadding = OptPadding.Boundary)(implicit canFilterBPBS: CanFilterBPBS[Input, Output]): Output =
+      padding: OptPadding = OptPadding.Boundary
+  )(implicit canFilterBPBS: CanFilterBPBS[Input, Output]): Output =
     canFilterBPBS(data, omegas, sampleRate, taps, bandStop = true, kernelDesign, overhang, padding)
 
   // </editor-fold>
@@ -204,7 +209,8 @@ package object signal {
       taps: Int = 512,
       kernelDesign: OptDesignMethod = OptDesignMethod.Firwin,
       overhang: OptOverhang = OptOverhang.None,
-      padding: OptPadding = OptPadding.Boundary)(implicit canFilterLPHP: CanFilterLPHP[Input, Output]): Output =
+      padding: OptPadding = OptPadding.Boundary
+  )(implicit canFilterLPHP: CanFilterLPHP[Input, Output]): Output =
     canFilterLPHP(data, omega, sampleRate, taps, lowPass = true, kernelDesign, overhang, padding)
 
   /** Highpass filter the input data.
@@ -227,7 +233,8 @@ package object signal {
       taps: Int = 512,
       kernelDesign: OptDesignMethod = OptDesignMethod.Firwin,
       overhang: OptOverhang = OptOverhang.None,
-      padding: OptPadding = OptPadding.Boundary)(implicit canFilterLPHP: CanFilterLPHP[Input, Output]): Output =
+      padding: OptPadding = OptPadding.Boundary
+  )(implicit canFilterLPHP: CanFilterLPHP[Input, Output]): Output =
     canFilterLPHP(data, omega, sampleRate, taps, lowPass = false, kernelDesign, overhang, padding)
 
   // </editor-fold>
@@ -266,8 +273,8 @@ package object signal {
       zeroPass: Boolean = true,
       scale: Boolean = true,
       multiplier: Double = 1d,
-      optWindow: OptWindowFunction = OptWindowFunction.Hamming())(
-      implicit canFirwin: CanFirwin[Output]): FIRKernel1D[Output] =
+      optWindow: OptWindowFunction = OptWindowFunction.Hamming()
+  )(implicit canFirwin: CanFirwin[Output]): FIRKernel1D[Output] =
     canFirwin(taps, omegas, nyquist, zeroPass, scale, multiplier, optWindow)
 
   def designFilterDecimation[Output](
@@ -275,8 +282,8 @@ package object signal {
       multiplier: Double = 1d,
       optDesignMethod: OptDesignMethod = OptDesignMethod.Firwin,
       optWindow: OptWindowFunction = OptWindowFunction.Hamming(),
-      optFilterOrder: OptFilterTaps = OptFilterTaps.Automatic)(
-      implicit canDesignFilterDecimation: CanDesignFilterDecimation[Output]): Output =
+      optFilterOrder: OptFilterTaps = OptFilterTaps.Automatic
+  )(implicit canDesignFilterDecimation: CanDesignFilterDecimation[Output]): Output =
     canDesignFilterDecimation(factor, multiplier, optDesignMethod, optWindow, optFilterOrder)
 
   // </editor-fold>
@@ -293,11 +300,12 @@ package object signal {
   def filterMedian[Input](
       data: DenseVector[Input],
       windowLength: Int,
-      overhang: OptOverhang = OptOverhang.PreserveLength)(
-      implicit canFilterMedian: CanFilterMedian[Input]): DenseVector[Input] =
+      overhang: OptOverhang = OptOverhang.PreserveLength
+  )(implicit canFilterMedian: CanFilterMedian[Input]): DenseVector[Input] =
     canFilterMedian(data, windowLength, overhang)
-  def filterMedian[Input](data: DenseVector[Input], windowLength: Int)(
-      implicit canFilterMedian: CanFilterMedian[Input]): DenseVector[Input] =
+  def filterMedian[Input](data: DenseVector[Input], windowLength: Int)(implicit
+      canFilterMedian: CanFilterMedian[Input]
+  ): DenseVector[Input] =
     canFilterMedian(data, windowLength, OptOverhang.PreserveLength)
 
   // </editor-fold>
@@ -328,8 +336,9 @@ package object signal {
     canInverseHaarTransform(v)
 
   @deprecated("use iHaarTr", "v.0.6")
-  def inverseHaarTransform[Input, Output](v: Input)(
-      implicit canInverseHaarTransform: CanIHaarTr[Input, Output]): Output =
+  def inverseHaarTransform[Input, Output](
+      v: Input
+  )(implicit canInverseHaarTransform: CanIHaarTr[Input, Output]): Output =
     canInverseHaarTransform(v)
 
 }

@@ -49,17 +49,13 @@ object diag extends UFunc with diagLowPrio2 {
     new diag.Impl[SparseVector[V], CSCMatrix[V]] {
       def apply(t: SparseVector[V]): CSCMatrix[V] = {
         val r = new CSCMatrix.Builder[V](t.length, t.length)
-        t.activeIterator.foreach((iv) => r.add(iv._1, iv._1, iv._2))
+        t.activeIterator.foreach(iv => r.add(iv._1, iv._1, iv._2))
         r.result(true, true)
       }
     }
 
 }
 
-trait diagLowPrio extends UFunc { this: UFunc =>
+trait diagLowPrio extends UFunc { this: UFunc => }
 
-}
-
-trait diagLowPrio2 extends UFunc with diagLowPrio { this: UFunc =>
-
-}
+trait diagLowPrio2 extends UFunc with diagLowPrio { this: UFunc => }

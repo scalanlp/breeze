@@ -17,9 +17,10 @@ import scala.util.control.ControlThrowable
 object any extends UFunc {
   private case object Found extends ControlThrowable
 
-  implicit def reduceUFunc[F, T, S](
-      implicit impl2: Impl2[S => Boolean, T, Boolean],
-      base: UFunc.UImpl[F, S, Boolean]): Impl2[F, T, Boolean] = {
+  implicit def reduceUFunc[F, T, S](implicit
+      impl2: Impl2[S => Boolean, T, Boolean],
+      base: UFunc.UImpl[F, S, Boolean]
+  ): Impl2[F, T, Boolean] = {
     new Impl2[F, T, Boolean] {
       override def apply(v: F, v2: T): Boolean = {
         any((x: S) => base(x), v2)

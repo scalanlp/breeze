@@ -48,26 +48,29 @@ class Beam[T](val maxSize: Int, xs: T*)(implicit o: Ordering[T]) extends Iterabl
     else h
   }
 
-  override protected def newBuilder = new Builder[T, Beam[T]] {
-    var beam: Beam[T] = new Beam(maxSize)
-    def result() = beam
+  override protected def newBuilder =
+    new Builder[T, Beam[T]] {
+      var beam: Beam[T] = new Beam(maxSize)
+      def result() = beam
 
-    def clear() = beam = new Beam(maxSize)
+      def clear() = beam = new Beam(maxSize)
 
-    def +=(elem: T) = { beam += elem; this }
-  }
+      def +=(elem: T) = { beam += elem; this }
+    }
 
-  def +(x: T) = new Beam[T](maxSize) {
-    override val heap = cat(outer.heap, x)
-  }
+  def +(x: T) =
+    new Beam[T](maxSize) {
+      override val heap = cat(outer.heap, x)
+    }
 
   def iterator = heap.iterator
   override def toString() = iterator.mkString("Beam(", ",", ")")
 
-  override def equals(other: Any) = other match {
-    case b: Beam[T @unchecked] => (maxSize == b.maxSize) && this.iterator.sameElements(b.iterator)
-    case _ => false
-  }
+  override def equals(other: Any) =
+    other match {
+      case b: Beam[T @unchecked] => (maxSize == b.maxSize) && this.iterator.sameElements(b.iterator)
+      case _ => false
+    }
 
   def min = heap.head
   def best = heap.reduceOption(o.max(_, _))
@@ -76,9 +79,10 @@ class Beam[T](val maxSize: Int, xs: T*)(implicit o: Ordering[T]) extends Iterabl
 object Beam {
   def apply[T: Ordering](maxSize: Int)(items: T*): Beam[T] = new Beam(maxSize, items: _*)
 
-  implicit def canBuildFrom[T: Ordering]: CanBuildFrom[Beam[T], T, Beam[T]] = new CanBuildFrom[Beam[T], T, Beam[T]] {
-    def apply() = sys.error("Sorry, need a max size")
+  implicit def canBuildFrom[T: Ordering]: CanBuildFrom[Beam[T], T, Beam[T]] =
+    new CanBuildFrom[Beam[T], T, Beam[T]] {
+      def apply() = sys.error("Sorry, need a max size")
 
-    def apply(from: Beam[T]) = from.newBuilder
-  }
+      def apply(from: Beam[T]) = from.newBuilder
+    }
 }

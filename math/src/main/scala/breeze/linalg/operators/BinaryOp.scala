@@ -24,9 +24,10 @@ import scala.reflect.ClassTag
 
 object BinaryOp {
 
-  def fromCopyAndUpdate[A, B, Op](
-      implicit op: UFunc.InPlaceImpl2[Op, A, B],
-      copy: CanCopy[A]): UFunc.UImpl2[Op, A, B, A] = {
+  def fromCopyAndUpdate[A, B, Op](implicit
+      op: UFunc.InPlaceImpl2[Op, A, B],
+      copy: CanCopy[A]
+  ): UFunc.UImpl2[Op, A, B, A] = {
     new UFunc.UImpl2[Op, A, B, A] {
       def apply(a: A, b: B): A = {
         val c = copy(a)
@@ -54,12 +55,13 @@ trait BinaryRegistry[A, B, Op, +R]
   protected def multipleOptions(
       a: A,
       b: B,
-      m: Map[(Class[_], Class[_]), UImpl2[Op, _ <: A, _ <: B, _ <: R @uncheckedVariance]]) = {
+      m: Map[(Class[_], Class[_]), UImpl2[Op, _ <: A, _ <: B, _ <: R @uncheckedVariance]]
+  ) = {
     throw new RuntimeException("Multiple bindings for method: " + m)
   }
 
   private val l1cache
-    : ThreadLocal[((Class[_], Class[_]), Option[UImpl2[Op, _ <: A, _ <: B, _ <: R @uncheckedVariance]])] = {
+      : ThreadLocal[((Class[_], Class[_]), Option[UImpl2[Op, _ <: A, _ <: B, _ <: R @uncheckedVariance]])] = {
     new ThreadLocal[((Class[_], Class[_]), Option[UImpl2[Op, _ <: A, _ <: B, _ <: R]])]
   }
 
@@ -86,7 +88,8 @@ trait BinaryRegistry[A, B, Op, +R]
       b: B,
       ac: Class[_ <: AnyRef],
       bc: Class[_ <: AnyRef],
-      pair: (Class[_ <: AnyRef], Class[_ <: AnyRef])): R = {
+      pair: (Class[_ <: AnyRef], Class[_ <: AnyRef])
+  ): R = {
     val cached: Option[UImpl2[Op, _ <: A, _ <: B, _ <: R @uncheckedVariance]] = cache.get(pair)
     if (cached != null) {
       cached match {
@@ -122,7 +125,8 @@ trait BinaryRegistry[A, B, Op, +R]
   }
 
   def register[AA <: A, BB <: B](
-      op: UImpl2[Op, AA, BB, _ <: R @uncheckedVariance])(implicit cA: ClassTag[AA], cB: ClassTag[BB]) = {
+      op: UImpl2[Op, AA, BB, _ <: R @uncheckedVariance]
+  )(implicit cA: ClassTag[AA], cB: ClassTag[BB]) = {
     super.register(cA.runtimeClass, cB.runtimeClass, op)
     op
   }

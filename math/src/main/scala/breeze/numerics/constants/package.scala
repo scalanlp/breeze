@@ -40,7 +40,7 @@ package object constants {
   /** [N / A2]
    *@see <a href="http://physics.nist.gov/cgi-bin/cuu/Value?mu0">http://physics.nist.gov/cgi-bin/cuu/Value?mu0</a>
    */
-  val MagneticConstant: Double = 4.0E-7 * Pi
+  val MagneticConstant: Double = 4.0e-7 * Pi
 
   /** Alias for [[MagneticConstant]]
    */
@@ -49,7 +49,7 @@ package object constants {
   /** [F / m]
    *@see <a href="http://physics.nist.gov/cgi-bin/cuu/Value?ep0">http://physics.nist.gov/cgi-bin/cuu/Value?ep0</a>
    */
-  val ElectricConstant: Double = 8.854187817E-12
+  val ElectricConstant: Double = 8.854187817e-12
 
   /** Alias for [[ElectricConstant]]
    */
@@ -58,7 +58,7 @@ package object constants {
   /** []
    *@see <a href="http://physics.nist.gov/cgi-bin/cuu/Value?alph">http://physics.nist.gov/cgi-bin/cuu/Value?alph</a>
    */
-  val FineStructureConstant: Double = 7.2973525698E-3
+  val FineStructureConstant: Double = 7.2973525698e-3
 
   /** Alias for [[FineStructureConstant]]
    */
@@ -71,7 +71,7 @@ package object constants {
   /** [m3 /kg /s]
    * @see <a href="http://physics.nist.gov/cgi-bin/cuu/Value?bg">http://physics.nist.gov/cgi-bin/cuu/Value?bg</a>
    */
-  val GravitationConstant: Double = 6.67384E-11
+  val GravitationConstant: Double = 6.67384e-11
 
   /** [m /s2]
    * @see <a href="http://physics.nist.gov/cgi-bin/cuu/Value?gn">http://physics.nist.gov/cgi-bin/cuu/Value?gn</a>
@@ -89,7 +89,7 @@ package object constants {
   /** [ /mol]
    * @see <a href="http://physics.nist.gov/cgi-bin/cuu/Value?na">http://physics.nist.gov/cgi-bin/cuu/Value?na</a>
    */
-  val AvogadroNumber: Double = 6.02214129E23
+  val AvogadroNumber: Double = 6.02214129e23
 
   /** ALIAS FOR [[AvogadroNumber]]
    */
@@ -107,7 +107,7 @@ package object constants {
   /** [J /K]
    * @see <a href="http://physics.nist.gov/cgi-bin/cuu/Value?k">http://physics.nist.gov/cgi-bin/cuu/Value?k</a>
    */
-  val BoltzmannConstant: Double = 1.3806488E-23
+  val BoltzmannConstant: Double = 1.3806488e-23
 
   /** ALIAS FOR [[BoltzmannConstant]]
    */
@@ -119,7 +119,7 @@ package object constants {
   /** [m/s]
    * @see <a href="http://en.wikipedia.org/wiki/Light_speed">http://en.wikipedia.org/wiki/Light_speed</a>
    */
-  val LightSpeed: Double = 2.99792458E8
+  val LightSpeed: Double = 2.99792458e8
 
   /** ALIAS FOR [[LightSpeed]]
    */
@@ -128,7 +128,7 @@ package object constants {
   /** [J * s]
    * @see <a href="http://physics.nist.gov/cgi-bin/cuu/Value?h">http://physics.nist.gov/cgi-bin/cuu/Value?h</a>
    */
-  val PlanckConstant: Double = 6.62606957E-34
+  val PlanckConstant: Double = 6.62606957e-34
 
   /** ALIAS FOR [[PlanckConstant]]
    */
@@ -141,7 +141,7 @@ package object constants {
   /** [C]
    * @see <a href="http://physics.nist.gov/cgi-bin/cuu/Value?e">http://physics.nist.gov/cgi-bin/cuu/Value?e</a>
    */
-  val ElementaryCharge: Double = 1.602176565E-19
+  val ElementaryCharge: Double = 1.602176565e-19
 
   /** ALIAS FOR [[ElementaryCharge]]
    */
@@ -150,17 +150,17 @@ package object constants {
   /** [kg]
    * @see <a href="http://physics.nist.gov/cgi-bin/cuu/Value?me">http://physics.nist.gov/cgi-bin/cuu/Value?me</a>
    */
-  val ElectronMass: Double = 9.10938291E-31
+  val ElectronMass: Double = 9.10938291e-31
 
   /** [kg]
    * @see <a href="http://physics.nist.gov/cgi-bin/cuu/Value?mp">http://physics.nist.gov/cgi-bin/cuu/Value?mp</a>
    */
-  val ProtonMass: Double = 1.672621777E-27
+  val ProtonMass: Double = 1.672621777e-27
 
   /** [kg]
    * @see <a href="http://physics.nist.gov/cgi-bin/cuu/Value?mn">http://physics.nist.gov/cgi-bin/cuu/Value?mn</a>
    */
-  val NeutronMass: Double = 1.674927351E-27
+  val NeutronMass: Double = 1.674927351e-27
 
   /** [/m]
    * @see <a href="http://physics.nist.gov/cgi-bin/cuu/Value?ryd">http://physics.nist.gov/cgi-bin/cuu/Value?ryd</a>
@@ -170,7 +170,7 @@ package object constants {
   /** [m K]
    * @see <a href="http://physics.nist.gov/cgi-bin/cuu/Value?bwien">http://physics.nist.gov/cgi-bin/cuu/Value?bwien</a>
    */
-  val WienDisplacementLawConstant: Double = 2.8977721E-3
+  val WienDisplacementLawConstant: Double = 2.8977721e-3
 
   /** ALIAS FOR [[WienDisplacementLawConstant]]
    */
@@ -179,7 +179,7 @@ package object constants {
   /** [W /m2 /K4]
    * @see <a href="http://physics.nist.gov/cgi-bin/cuu/Value?sigma">http://physics.nist.gov/cgi-bin/cuu/Value?sigma</a>
    */
-  val StefanBoltzmannConstant: Double = 5.670373E-8
+  val StefanBoltzmannConstant: Double = 5.670373e-8
 
   /** ALIAS FOR [[StefanBoltzmannConstant]]
    */
@@ -190,64 +190,64 @@ package object constants {
   // <editor-fold defaultstate="collapsed" desc=" SI Prefixes ">
 
   /**SI prefix for 1.0E24*/
-  val yotta = 1.0E24
+  val yotta = 1.0e24
 
   /**SI prefix for 1.0E21*/
-  val zetta = 1.0E21
+  val zetta = 1.0e21
 
   /**SI prefix for 1.0E18*/
-  val exa = 1.0E18
+  val exa = 1.0e18
 
   /**SI prefix for 1.0E15*/
-  val peta = 1.0E15
+  val peta = 1.0e15
 
   /**SI prefix for 1.0E12*/
-  val tera = 1.0E12
+  val tera = 1.0e12
 
   /**SI prefix for 1.0E9*/
-  val giga = 1.0E9
+  val giga = 1.0e9
 
   /**SI prefix for 1.0E6*/
-  val mega = 1.0E6
+  val mega = 1.0e6
 
   /**SI prefix for 1.0E3*/
-  val kilo = 1.0E3
+  val kilo = 1.0e3
 
   /**SI prefix for 1.0E2*/
-  val hecto = 1.0E2
+  val hecto = 1.0e2
 
   /**SI prefix for 1.0E1*/
-  val deca = 1.0E1
+  val deca = 1.0e1
 
   /**SI prefix for 1.0E-1*/
-  val deci = 1.0E-1
+  val deci = 1.0e-1
 
   /**SI prefix for 1.0E-2*/
-  val centi = 1.0E-2
+  val centi = 1.0e-2
 
   /**SI prefix for 1.0E-3*/
-  val milli = 1.0E-3
+  val milli = 1.0e-3
 
   /**SI prefix for 1.0E-6*/
-  val micro = 1.0E-6
+  val micro = 1.0e-6
 
   /**SI prefix for 1.0E-9*/
-  val nano = 1.0E-9
+  val nano = 1.0e-9
 
   /**SI prefix for 1.0E-12*/
-  val pico = 1.0E-12
+  val pico = 1.0e-12
 
   /**SI prefix for 1.0E-15*/
-  val femto = 1.0E-15
+  val femto = 1.0e-15
 
   /**SI prefix for 1.0E-18*/
-  val atto = 1.0E-18
+  val atto = 1.0e-18
 
   /**SI prefix for 1.0E-21*/
-  val zepto = 1.0E-21
+  val zepto = 1.0e-21
 
   /**SI prefix for 1.0E-24*/
-  val yocto = 1.0E-24
+  val yocto = 1.0e-24
 
   // </editor-fold>
   // <editor-fold defaultstate="collapsed" desc=" Binary Prefixes ">

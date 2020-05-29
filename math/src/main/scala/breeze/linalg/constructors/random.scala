@@ -19,7 +19,7 @@ object randomDouble extends RandomGeneratorUFunc[Double] {
   protected def gen(implicit basis: RandBasis = Rand): Rand[Double] = basis.uniform
   protected def genRange(low: Double, high: Double)(implicit basis: RandBasis = Rand): Rand[Double] = {
     require(high >= low, s"High term must be greater than low term. ($low, $high)")
-    val range = (high - low)
+    val range = high - low
     basis.uniform.map(_ * range + low)
   }
 

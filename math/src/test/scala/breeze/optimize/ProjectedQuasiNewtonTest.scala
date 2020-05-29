@@ -30,7 +30,7 @@ class ProjectedQuasiNewtonTest
     with Matchers {
 
   property("optimize a simple multivariate gaussian") {
-    val optimizer = new ProjectedQuasiNewton(tolerance = 1.0E-9)
+    val optimizer = new ProjectedQuasiNewton(tolerance = 1.0e-9)
     forAll { init: DenseVector[Double] =>
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
@@ -39,12 +39,12 @@ class ProjectedQuasiNewtonTest
       }
 
       val result = optimizer.minimize(f, init)
-      result should beSimilarTo(DenseVector.fill(result.size)(3.0), allowedDeviation = 1E-5)
+      result should beSimilarTo(DenseVector.fill(result.size)(3.0), allowedDeviation = 1e-5)
     }
   }
 
   property("optimize a simple multivariate gaussian with projection") {
-    val optimizer = new ProjectedQuasiNewton(tolerance = 1.0E-5, projection = _.map(scala.math.min(_, 2.0)))
+    val optimizer = new ProjectedQuasiNewton(tolerance = 1.0e-5, projection = _.map(scala.math.min(_, 2.0)))
 
     forAll { init: DenseVector[Double] =>
       init := clip(init, Double.NegativeInfinity, 2.0)
@@ -55,12 +55,12 @@ class ProjectedQuasiNewtonTest
       }
 
       val result = optimizer.minimize(f, init)
-      result should beSimilarTo(DenseVector.fill(result.size)(2.0), allowedDeviation = 1E-10)
+      result should beSimilarTo(DenseVector.fill(result.size)(2.0), allowedDeviation = 1e-10)
     }
   }
 
   property("optimize a simple multivariate gaussian with l2 regularization") {
-    val optimizer = new ProjectedQuasiNewton(tolerance = 1.0E-5)
+    val optimizer = new ProjectedQuasiNewton(tolerance = 1.0e-5)
 
     forAll { init: DenseVector[Double] =>
       val f = new DiffFunction[DenseVector[Double]] {
@@ -73,12 +73,13 @@ class ProjectedQuasiNewtonTest
       val result = optimizer.minimize(DiffFunction.withL2Regularization(f, 1.0), init)
       result should beSimilarTo(
         DenseVector.ones[Double](init.size) * targetValue,
-        allowedDeviation = 3E-3 * result.size)
+        allowedDeviation = 3e-3 * result.size
+      )
     }
   }
 
   property("optimize a complicated function without projection") {
-    val optimizer = new ProjectedQuasiNewton(tolerance = 1.0E-5)
+    val optimizer = new ProjectedQuasiNewton(tolerance = 1.0e-5)
 
     forAll { a: DenseVector[Double] =>
       val init = DenseVector.rand(a.size)
@@ -90,7 +91,7 @@ class ProjectedQuasiNewtonTest
 
       val result = optimizer.minimize(f, init)
       val minimum = f(a / 2.0)
-      f(result) should be(minimum +- abs(minimum) * 1E-2)
+      f(result) should be(minimum +- abs(minimum) * 1e-2)
     }
   }
 
@@ -110,7 +111,8 @@ class ProjectedQuasiNewtonTest
       -0.14220655875869606,
       0.38477404739124765,
       -0.3480575854151014,
-      -0.4729810900829228)
+      -0.4729810900829228
+    )
 
     val cost = QuadraticMinimizer.Cost(H, f * -1.0)
     val init = DenseVector.zeros[Double](n)

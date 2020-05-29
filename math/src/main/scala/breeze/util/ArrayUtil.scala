@@ -122,7 +122,8 @@ object ArrayUtil {
       b: Array[_],
       boffset: Int,
       bstride: Int,
-      blength: Int): Boolean = {
+      blength: Int
+  ): Boolean = {
     val ac = a.getClass
     val bc = b.getClass
     if (ac != bc || alength != blength) {
@@ -187,11 +188,14 @@ object ArrayUtil {
       b: Array[_],
       boffset: Int,
       bstride: Int,
-      blength: Int): Boolean = {
+      blength: Int
+  ): Boolean = {
     val ac = a.getClass
     val bc = b.getClass
     if (ac != bc || alength != blength) false
-    else if (aoffset == 0 && astride == 1 && alength == a.length && boffset == 0 && bstride == 1 && blength == b.length) {
+    else if (
+      aoffset == 0 && astride == 1 && alength == a.length && boffset == 0 && bstride == 1 && blength == b.length
+    ) {
       ArrayUtil.equals(a, b)
     } else {
       a match {
@@ -351,7 +355,8 @@ object ArrayUtil {
       data: Array[V],
       offset: Int,
       stride: Int,
-      length: Int): Int = {
+      length: Int
+  ): Int = {
     var hash = 43
     var i = offset
     cforRange(0 until length) { _ =>

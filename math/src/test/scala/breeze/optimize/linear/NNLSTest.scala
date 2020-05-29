@@ -52,7 +52,7 @@ class NNLSTest extends OptimizeTestBase {
     val nnls = new NNLS()
     val x = nnls.minimize(ata, atb)
     for (i <- 0 until n) {
-      assert(abs(x(i) - goodx(i)) < 1E-3)
+      assert(abs(x(i) - goodx(i)) < 1e-3)
       assert(x(i) >= 0)
     }
   }
@@ -78,6 +78,6 @@ class NNLSTest extends OptimizeTestBase {
     val x = nnls.minimize(ata, atb)
     val obj = NNLS.computeObjectiveValue(ata, atb, x)
 
-    assert(obj < refObj + 1E-5)
+    assert(obj < refObj + 1e-5)
   }
 }

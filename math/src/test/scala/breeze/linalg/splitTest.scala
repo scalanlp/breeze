@@ -48,7 +48,8 @@ class splitTest extends FunSuite {
         (6, 7, 8),
         (6, 7, 8),
         (9, 7, 8)
-      ))
+      )
+    )
     assert(hsplit(mbig, 2) == expectedResult)
   }
   test("vsplit works on dense matrix") {
@@ -66,7 +67,8 @@ class splitTest extends FunSuite {
       DenseMatrix(
         (3, 4, 5, 6, 7, 8),
         (5, 4, 5, 9, 7, 8)
-      ))
+      )
+    )
     assert(vsplit(mbig, 2) == expectedResult)
   }
 

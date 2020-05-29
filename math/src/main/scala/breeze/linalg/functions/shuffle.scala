@@ -57,8 +57,9 @@ object shuffle extends UFunc {
     }
   }
 
-  implicit def implShuffle_Arr_Arr_Boolean_eq_Arr[T](
-      implicit ct: ClassTag[T]): Impl3[Array[T], Array[Int], Boolean, Array[T]] = {
+  implicit def implShuffle_Arr_Arr_Boolean_eq_Arr[T](implicit
+      ct: ClassTag[T]
+  ): Impl3[Array[T], Array[Int], Boolean, Array[T]] = {
     new Impl3[Array[T], Array[Int], Boolean, Array[T]] {
 
       /**
@@ -110,10 +111,11 @@ object shuffle extends UFunc {
     }
   }
 
-  implicit def implShuffle_Coll_eq_Coll[Coll, T, CollRes](
-      implicit view: Coll <:< scala.collection.IndexedSeq[T],
+  implicit def implShuffle_Coll_eq_Coll[Coll, T, CollRes](implicit
+      view: Coll <:< scala.collection.IndexedSeq[T],
       cbf: BuildFrom[Coll, T, CollRes],
-      rb: RandBasis = Rand): Impl[Coll, CollRes] = {
+      rb: RandBasis = Rand
+  ): Impl[Coll, CollRes] = {
     new Impl[Coll, CollRes] {
 
       /**
@@ -151,10 +153,11 @@ object shuffle extends UFunc {
     }
   }
 
-  implicit def implShuffle_DV_eq_DV[T](
-      implicit arrImpl: Impl[Array[T], Array[T]],
+  implicit def implShuffle_DV_eq_DV[T](implicit
+      arrImpl: Impl[Array[T], Array[T]],
       ct: ClassTag[T],
-      rb: RandBasis = Rand): Impl[DenseVector[T], DenseVector[T]] = {
+      rb: RandBasis = Rand
+  ): Impl[DenseVector[T], DenseVector[T]] = {
     new Impl[DenseVector[T], DenseVector[T]] {
 
       /**
@@ -168,10 +171,11 @@ object shuffle extends UFunc {
     }
   }
 
-  implicit def implShuffle_DM_eq_DM[T](
-      implicit arrImpl: Impl[Array[T], Array[T]],
+  implicit def implShuffle_DM_eq_DM[T](implicit
+      arrImpl: Impl[Array[T], Array[T]],
       ct: ClassTag[T],
-      rb: RandBasis = Rand): Impl[DenseMatrix[T], DenseMatrix[T]] = {
+      rb: RandBasis = Rand
+  ): Impl[DenseMatrix[T], DenseMatrix[T]] = {
     new Impl[DenseMatrix[T], DenseMatrix[T]] {
 
       /**

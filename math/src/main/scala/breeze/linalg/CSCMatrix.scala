@@ -56,7 +56,8 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero](
     val cols: Int,
     val colPtrs: Array[Int], // len cols + 1
     private[linalg] var used: Int,
-    private var _rowIndices: Array[Int]) // len >= used
+    private var _rowIndices: Array[Int]
+) // len >= used
     extends Matrix[V]
     with MatrixLike[V, CSCMatrix[V]]
     with Serializable {
@@ -94,11 +95,15 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero](
       if (used > data.length) {
         // need to grow array
         val newLength = {
-          if (data.length == 0) { 4 } else if (data.length < 0x0400) { data.length * 2 } else if (data.length < 0x0800) {
+          if (data.length == 0) { 4 }
+          else if (data.length < 0x0400) { data.length * 2 }
+          else if (data.length < 0x0800) {
             data.length + 0x0400
-          } else if (data.length < 0x1000) { data.length + 0x0800 } else if (data.length < 0x2000) {
+          } else if (data.length < 0x1000) { data.length + 0x0800 }
+          else if (data.length < 0x2000) {
             data.length + 0x1000
-          } else if (data.length < 0x4000) { data.length + 0x2000 } else { data.length + 0x4000 }
+          } else if (data.length < 0x4000) { data.length + 0x2000 }
+          else { data.length + 0x4000 }
         }
 
         // allocate new arrays
@@ -249,35 +254,36 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero](
     res
   }
 
-  override def equals(p1: Any): Boolean = p1 match {
-    case y: CSCMatrix[_] =>
-      if (this.rows != y.rows || this.cols != y.cols) {
+  override def equals(p1: Any): Boolean =
+    p1 match {
+      case y: CSCMatrix[_] =>
+        if (this.rows != y.rows || this.cols != y.cols) {
+          return false
+        } else {
+          val xIter = this.activeIterator
+          val yIter = y.activeIterator
+
+          while (xIter.hasNext && yIter.hasNext) {
+            var xkeyval = xIter.next()
+            var ykeyval = yIter.next()
+            while (xkeyval._2 == 0 && xIter.hasNext) xkeyval = xIter.next()
+            while (ykeyval._2 == 0 && yIter.hasNext) ykeyval = yIter.next()
+            if (xkeyval != ykeyval) return false
+          }
+          if (xIter.hasNext && !yIter.hasNext) {
+            while (xIter.hasNext) if (xIter.next()._2 != 0) return false
+          }
+
+          if (!xIter.hasNext && yIter.hasNext) {
+            while (yIter.hasNext) if (yIter.next()._2 != 0) return false
+          }
+        }
+        return true
+      case y: Matrix[_] =>
+        return y == this
+      case _ =>
         return false
-      } else {
-        val xIter = this.activeIterator
-        val yIter = y.activeIterator
-
-        while (xIter.hasNext && yIter.hasNext) {
-          var xkeyval = xIter.next()
-          var ykeyval = yIter.next()
-          while (xkeyval._2 == 0 && xIter.hasNext) xkeyval = xIter.next()
-          while (ykeyval._2 == 0 && yIter.hasNext) ykeyval = yIter.next()
-          if (xkeyval != ykeyval) return false
-        }
-        if (xIter.hasNext && !yIter.hasNext) {
-          while (xIter.hasNext) if (xIter.next()._2 != 0) return false
-        }
-
-        if (!xIter.hasNext && yIter.hasNext) {
-          while (yIter.hasNext) if (yIter.next()._2 != 0) return false
-        }
-      }
-      return true
-    case y: Matrix[_] =>
-      return y == this
-    case _ =>
-      return false
-  }
+    }
 
 }
 
@@ -354,7 +360,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps with Se
   }
 
   implicit def canMapActiveValues[V, R: ClassTag: Zero: Semiring]
-    : CanMapActiveValues[CSCMatrix[V], V, R, CSCMatrix[R]] = {
+      : CanMapActiveValues[CSCMatrix[V], V, R, CSCMatrix[R]] = {
     val z = implicitly[Zero[R]].zero
     new CanMapActiveValues[CSCMatrix[V], V, R, CSCMatrix[R]] {
       override def apply(from: CSCMatrix[V], fn: (V => R)) = {
@@ -451,14 +457,15 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps with Se
   class Builder[@spec(Double, Int, Float, Long) T: ClassTag: Semiring: Zero](
       val rows: Int,
       val cols: Int,
-      initNnz: Int = 16) {
+      initNnz: Int = 16
+  ) {
     private def ring = implicitly[Semiring[T]]
 
     def add(r: Int, c: Int, v: T): Unit = {
       if (v != 0) {
         numAdded += 1
         vs += v
-        indices += (c.toLong << 32) | (r & 0xFFFFFFFFL)
+        indices += (c.toLong << 32) | (r & 0xffffffffL)
       }
     }
 
@@ -472,7 +479,6 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps with Se
       indices.sizeHint(nnz)
       vs.sizeHint(nnz)
     }
-
 
     def result: CSCMatrix[T] = result(false, false)
 
@@ -571,9 +577,10 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps with Se
     }
   }
 
-  implicit def canDim[E] = new dim.Impl[CSCMatrix[E], (Int, Int)] {
-    def apply(v: CSCMatrix[E]): (Int, Int) = (v.rows, v.cols)
-  }
+  implicit def canDim[E] =
+    new dim.Impl[CSCMatrix[E], (Int, Int)] {
+      def apply(v: CSCMatrix[E]): (Int, Int) = (v.rows, v.cols)
+    }
 
   object FrobeniusInnerProductCSCMatrixSpace {
     implicit def space[S: Field: ClassTag] = {

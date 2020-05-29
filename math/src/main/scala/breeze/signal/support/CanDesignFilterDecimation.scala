@@ -13,7 +13,8 @@ trait CanDesignFilterDecimation[Output] {
       multiplier: Double,
       optDesignMethod: OptDesignMethod,
       optWindow: OptWindowFunction,
-      optFilterOrder: OptFilterTaps): Output
+      optFilterOrder: OptFilterTaps
+  ): Output
 }
 
 /**
@@ -36,7 +37,8 @@ object CanDesignFilterDecimation {
           multiplier: Double,
           optDesignMethod: OptDesignMethod,
           optWindow: OptWindowFunction,
-          optFilterOrder: OptFilterTaps): FIRKernel1D[Double] = {
+          optFilterOrder: OptFilterTaps
+      ): FIRKernel1D[Double] = {
 
         optDesignMethod match {
           case OptDesignMethod.Firwin => {
@@ -53,7 +55,8 @@ object CanDesignFilterDecimation {
               zeroPass = true,
               scale = true,
               multiplier,
-              optWindow)
+              optWindow
+            )
           }
           case meth: OptDesignMethod =>
             throw new IllegalArgumentException("Design method " + meth + "is not supported yet!")
@@ -72,7 +75,8 @@ object CanDesignFilterDecimation {
           multiplier: Double,
           optDesignMethod: OptDesignMethod,
           optWindow: OptWindowFunction,
-          optFilterOrder: OptFilterTaps): FIRKernel1D[Long] = {
+          optFilterOrder: OptFilterTaps
+      ): FIRKernel1D[Long] = {
         val temp =
           designFilterDecimation[FIRKernel1D[Double]](factor, multiplier, optDesignMethod, optWindow, optFilterOrder)
         temp match {

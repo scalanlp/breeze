@@ -37,7 +37,8 @@ testOptions in Test += Tests.Setup(classLoader =>
       .invoke(null, "ROOT")
   } catch {
     case _: Exception =>
-})
+  }
+)
 
 fork := true
 
@@ -45,7 +46,7 @@ javaOptions := Seq("-Xmx4g")
 
 unmanagedSourceDirectories in Compile += {
   CrossVersion.partialVersion(scalaVersion.value) match {
-    case Some((2, 11|12)) => baseDirectory.value / "src" / "main" / "scala_2.11_2.12"
+    case Some((2, 11 | 12)) => baseDirectory.value / "src" / "main" / "scala_2.11_2.12"
     case Some((2, 13)) => baseDirectory.value / "src" / "main" / "scala_2.13"
     case _ => ???
   }

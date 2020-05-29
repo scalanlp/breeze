@@ -30,7 +30,7 @@ object split extends UFunc {
         cforRange(0 until n) { k =>
           val offsetInOriginalVector = k * individualVectorSize
           val chunk = new DenseVector(new Array[T](individualVectorSize))
-          chunk :=  v(offsetInOriginalVector until (offsetInOriginalVector + individualVectorSize))
+          chunk := v(offsetInOriginalVector until (offsetInOriginalVector + individualVectorSize))
           result += chunk
         }
         ArraySeq.unsafeWrapArray(result.result())
@@ -64,14 +64,16 @@ object split extends UFunc {
       }
     }
 
-  implicit def implIntMatrix[T: ClassTag](
-      implicit zero: Zero[T]): Impl3[DenseMatrix[T], Int, Int, IndexedSeq[DenseMatrix[T]]] =
+  implicit def implIntMatrix[T: ClassTag](implicit
+      zero: Zero[T]
+  ): Impl3[DenseMatrix[T], Int, Int, IndexedSeq[DenseMatrix[T]]] =
     new Impl3[DenseMatrix[T], Int, Int, IndexedSeq[DenseMatrix[T]]] {
-      def apply(v: DenseMatrix[T], n: Int, axis: Int): IndexedSeq[DenseMatrix[T]] = axis match {
-        case 0 => vsplit(v, n)
-        case 1 => hsplit(v, n)
-        case _ => throw new IllegalArgumentException("Matrices have only two axes.")
-      }
+      def apply(v: DenseMatrix[T], n: Int, axis: Int): IndexedSeq[DenseMatrix[T]] =
+        axis match {
+          case 0 => vsplit(v, n)
+          case 1 => hsplit(v, n)
+          case _ => throw new IllegalArgumentException("Matrices have only two axes.")
+        }
     }
 }
 

@@ -30,9 +30,10 @@ trait MetropolisHastings[T] extends Rand[T] {
   def likelihood(x: T): Double = math.exp(logLikelihood(x))
   def likelihoodRatio(start: T, end: T): Double = math.exp(logLikelihoodRatio(start, end))
   def logLikelihoodRatio(start: T, end: T): Double =
-    (logLikelihood(end) - logLikelihood(start) - logTransitionProbability(start, end) + logTransitionProbability(
+    logLikelihood(end) - logLikelihood(start) - logTransitionProbability(start, end) + logTransitionProbability(
       end,
-      start))
+      start
+    )
   def rand: RandBasis
 
   protected def nextDouble: Double = this.rand.generator.nextDouble //uniform random variable
@@ -40,7 +41,7 @@ trait MetropolisHastings[T] extends Rand[T] {
 
 trait SymmetricMetropolisHastings[T] extends MetropolisHastings[T] {
   def logTransitionProbability(start: T, end: T): Double = 0.0
-  override def logLikelihoodRatio(start: T, end: T): Double = (logLikelihood(end) - logLikelihood(start))
+  override def logLikelihoodRatio(start: T, end: T): Double = logLikelihood(end) - logLikelihood(start)
 }
 
 trait TracksStatistics { self: MetropolisHastings[_] =>
@@ -58,8 +59,8 @@ trait TracksStatistics { self: MetropolisHastings[_] =>
 }
 
 abstract class BaseMetropolisHastings[T](logLikelihoodFunc: T => Double, init: T, burnIn: Long = 0, dropCount: Int = 0)(
-    implicit val rand: RandBasis = Rand)
-    extends MetropolisHastings[T]
+    implicit val rand: RandBasis = Rand
+) extends MetropolisHastings[T]
     with Process[T]
     with TracksStatistics {
   //Everything but the proposalDraw is implemented
@@ -118,7 +119,8 @@ case class ArbitraryMetropolisHastings[T](
     val logProposalDensity: (T, T) => Double,
     init: T,
     burnIn: Long = 0,
-    dropCount: Int = 0)(implicit rand: RandBasis = Rand)
+    dropCount: Int = 0
+)(implicit rand: RandBasis = Rand)
     extends BaseMetropolisHastings[T](logLikelihood, init, burnIn, dropCount)(rand) {
   def proposalDraw(x: T) = proposal(x).draw()
   def logTransitionProbability(start: T, end: T): Double = logProposalDensity(start, end)
@@ -131,7 +133,8 @@ case class AffineStepMetropolisHastings[T](
     val proposalStep: Rand[T],
     init: T,
     burnIn: Long = 0,
-    dropCount: Int = 0)(implicit rand: RandBasis = Rand, vectorSpace: VectorSpace[T, _])
+    dropCount: Int = 0
+)(implicit rand: RandBasis = Rand, vectorSpace: VectorSpace[T, _])
     extends BaseMetropolisHastings[T](logLikelihood, init, burnIn, dropCount)(rand)
     with SymmetricMetropolisHastings[T] {
   /*

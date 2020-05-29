@@ -23,7 +23,8 @@ class NonlinearMinimizerTest extends OptimizeTestBase with Matchers {
     -0.14220655875869606,
     0.38477404739124765,
     -0.3480575854151014,
-    -0.4729810900829228)
+    -0.4729810900829228
+  )
 
   val cost = QuadraticMinimizer.Cost(H, f *:* (-1.0))
   val init = DenseVector.zeros[Double](n)
@@ -50,7 +51,7 @@ class NonlinearMinimizerTest extends OptimizeTestBase with Matchers {
     val nlResult = NonlinearMinimizer(n, POSITIVE, 0.0)
       .minimizeAndReturnState(QuadraticMinimizer.Cost(ata, atb *:* -1.0), DenseVector.zeros[Double](n))
     println(s"Positivity projection iter ${nlResult.iter}")
-    assert(norm(nlResult.x - goodx, 2) < 1E-3)
+    assert(norm(nlResult.x - goodx, 2) < 1e-3)
   }
 
   test("Nonlinear Minimization with positivity proximal compared to Octave") {
@@ -66,7 +67,7 @@ class NonlinearMinimizerTest extends OptimizeTestBase with Matchers {
     val nlResult = new NonlinearMinimizer(ProjectPos())
       .minimizeAndReturnState(QuadraticMinimizer.Cost(ata, atb *:* (-1.0)), DenseVector.zeros[Double](n))
     println(s"Positivity proximal iter ${nlResult.iter}")
-    assert(norm(nlResult.z - goodx, 2) < 1E-3)
+    assert(norm(nlResult.z - goodx, 2) < 1e-3)
   }
 
   test("Nonlinear Minimization with bounds constraint compared to QuadraticMinimizer") {
@@ -74,7 +75,7 @@ class NonlinearMinimizerTest extends OptimizeTestBase with Matchers {
     val gold = QuadraticMinimizer(n, BOX).minimize(H, f *:* (-1.0))
     val nlResult = NonlinearMinimizer(n, BOX, 0.0).minimizeAndReturnState(cost, init)
     println(s"Bounds projection iter ${nlResult.iter}")
-    assert(norm(nlResult.x - gold) < 1E-4)
+    assert(norm(nlResult.x - gold) < 1e-4)
   }
 
   test("Nonlinear Minimization with bounds proximal compared to QuadraticMinimizer") {
@@ -84,7 +85,7 @@ class NonlinearMinimizerTest extends OptimizeTestBase with Matchers {
     val ub = DenseVector.ones[Double](n)
     val nlResult = new NonlinearMinimizer(ProjectBox(lb, ub)).minimizeAndReturnState(cost, init)
     println(s"Bounds proximal iter ${nlResult.iter}")
-    assert(norm(nlResult.z - gold) < 1E-4)
+    assert(norm(nlResult.z - gold) < 1e-4)
   }
 
   test("Nonlinear Minimization with probability simplex compared to Octave") {

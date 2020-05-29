@@ -3,7 +3,7 @@ package breeze.stats.distributions
 import org.scalatest.Matchers
 
 class InvGammaTest extends org.scalatest.FunSpec with Matchers {
-  private val eps = 1E-9
+  private val eps = 1e-9
 
   describe("Inverse Gamma Distribution") {
     it("should have expect values for shape=19.31, scale=1") {
@@ -14,7 +14,7 @@ class InvGammaTest extends org.scalatest.FunSpec with Matchers {
 
     it("should have expect values for multiple shapes") {
       val means = Seq(10.0, 0.476190476, 0.2173913043)
-      val vars = Seq(Double.NaN,  0.2061430632, 0.01312749422)
+      val vars = Seq(Double.NaN, 0.2061430632, 0.01312749422)
       val shapes = Seq(1.1, 3.1, 5.6)
 
       {
@@ -22,10 +22,11 @@ class InvGammaTest extends org.scalatest.FunSpec with Matchers {
         g.mean shouldBe means.head +- eps
       }
 
-      shapes.zipWithIndex.tail.foreach({ case (shape, i) =>
-        val g = InvGamma(shape, 1)
-        g.mean shouldBe means(i) +- eps
-        g.variance shouldBe vars(i) +- eps
+      shapes.zipWithIndex.tail.foreach({
+        case (shape, i) =>
+          val g = InvGamma(shape, 1)
+          g.mean shouldBe means(i) +- eps
+          g.variance shouldBe vars(i) +- eps
       })
     }
   }

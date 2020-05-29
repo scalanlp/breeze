@@ -9,8 +9,9 @@ import spire.implicits.cforRange
  * if det is very small.
  */
 object logdet extends UFunc {
-  implicit def canDetUsingLU[T](
-      implicit luImpl: LU.primitive.Impl[T, (DenseMatrix[Double], Array[Int])]): Impl[T, (Double, Double)] = {
+  implicit def canDetUsingLU[T](implicit
+      luImpl: LU.primitive.Impl[T, (DenseMatrix[Double], Array[Int])]
+  ): Impl[T, (Double, Double)] = {
     new Impl[T, (Double, Double)] {
       def apply(X: T): (Double, Double) = {
 

@@ -33,7 +33,8 @@ trait CanConvolve[Input, KernelType, Output] {
       correlate: Boolean,
       overhang: OptOverhang,
       padding: OptPadding,
-      method: OptMethod): Output
+      method: OptMethod
+  ): Output
 }
 
 /**
@@ -49,7 +50,7 @@ object CanConvolve extends SerializableLogging {
   @expand
   @expand.valify
   implicit def dvT1DConvolve[@expand.args(Int, Long, Float, Double) T]
-    : CanConvolve[DenseVector[T], DenseVector[T], DenseVector[T]] = {
+      : CanConvolve[DenseVector[T], DenseVector[T], DenseVector[T]] = {
     new CanConvolve[DenseVector[T], DenseVector[T], DenseVector[T]] {
       def apply(
           data: DenseVector[T],
@@ -58,7 +59,8 @@ object CanConvolve extends SerializableLogging {
           correlate: Boolean,
           overhang: OptOverhang,
           padding: OptPadding,
-          method: OptMethod): DenseVector[T] = {
+          method: OptMethod
+      ): DenseVector[T] = {
 
         //val parsedOptMethod =
         method match {
@@ -161,7 +163,7 @@ object CanConvolve extends SerializableLogging {
   @expand
   @expand.valify
   implicit def dvTKernel1DConvolve[@expand.args(Int, Long, Float, Double) T]
-    : CanConvolve[DenseVector[T], FIRKernel1D[T], DenseVector[T]] = {
+      : CanConvolve[DenseVector[T], FIRKernel1D[T], DenseVector[T]] = {
     new CanConvolve[DenseVector[T], FIRKernel1D[T], DenseVector[T]] {
       def apply(
           data: DenseVector[T],
@@ -170,7 +172,8 @@ object CanConvolve extends SerializableLogging {
           correlateVal: Boolean,
           overhang: OptOverhang,
           padding: OptPadding,
-          method: OptMethod): DenseVector[T] =
+          method: OptMethod
+      ): DenseVector[T] =
         //this is to be expanded to use the fft results within the FIRKernel1D, when using fft convolution
         if (correlateVal) correlate(data, kernel.kernel, range, overhang, padding, method)
         else convolve(data, kernel.kernel, range, overhang, padding, method)
@@ -181,23 +184,26 @@ object CanConvolve extends SerializableLogging {
     def apply(data: Input, kernel: KernelType, range: Range): Output
   }
 
-  def correlateLoopNoOverhang[Input, KernelType, Output](data: Input, kernel: KernelType, range: Range)(
-      implicit canCorrelateNoOverhang: CanCorrelateNoOverhang[Input, KernelType, Output]): Output =
+  def correlateLoopNoOverhang[Input, KernelType, Output](data: Input, kernel: KernelType, range: Range)(implicit
+      canCorrelateNoOverhang: CanCorrelateNoOverhang[Input, KernelType, Output]
+  ): Output =
     canCorrelateNoOverhang(data, kernel, range)
   @expand
   @expand.valify
   implicit def correlateLoopNoOverhangRangeT[@expand.args(Double, Float, Long) T]
-    : CanCorrelateNoOverhang[DenseVector[T], DenseVector[T], DenseVector[T]] =
+      : CanCorrelateNoOverhang[DenseVector[T], DenseVector[T], DenseVector[T]] =
     new CanCorrelateNoOverhang[DenseVector[T], DenseVector[T], DenseVector[T]] {
       def apply(data: DenseVector[T], kernel: DenseVector[T], range: Range): DenseVector[T] = {
         require(data.length * kernel.length != 0, "data and kernel must be non-empty DenseVectors")
         require(
           data.length >= kernel.length,
-          "kernel (" + kernel.length + ") cannot be longer than data(" + data.length + ") to be convolved/correlated!")
+          "kernel (" + kernel.length + ") cannot be longer than data(" + data.length + ") to be convolved/correlated!"
+        )
         require(
           range.start >= 0 && range.last <= (data.length - kernel.length + 1),
           logger.error(
-            s"range (start ${range.start}, end ${range.end}, step ${range.step}, inclusive ${range.isInclusive}) is OOB for data (length ${data.length}) and kernel (length ${kernel.length})!")
+            s"range (start ${range.start}, end ${range.end}, step ${range.step}, inclusive ${range.isInclusive}) is OOB for data (length ${data.length}) and kernel (length ${kernel.length})!"
+          )
         )
 
         val dataVect = data.toScalaVector() //make immutable
@@ -205,17 +211,15 @@ object CanConvolve extends SerializableLogging {
         val zero = 0.asInstanceOf[T]
 
         val tempArr = range
-          .map(
-            (count: Int) => {
-              var ki: Int = 0
-              var sum = zero
-              while (ki < kernel.length) {
-                sum = sum + dataVect(count + ki) * kernelVect(ki)
-                ki = ki + 1
-              }
-              sum
+          .map((count: Int) => {
+            var ki: Int = 0
+            var sum = zero
+            while (ki < kernel.length) {
+              sum = sum + dataVect(count + ki) * kernelVect(ki)
+              ki = ki + 1
             }
-          )
+            sum
+          })
           .toArray
 
         DenseVector(tempArr)
@@ -223,7 +227,7 @@ object CanConvolve extends SerializableLogging {
     }
 
   implicit val correlateLoopNoOverhangRangeInt
-    : CanCorrelateNoOverhang[DenseVector[Int], DenseVector[Int], DenseVector[Int]] =
+      : CanCorrelateNoOverhang[DenseVector[Int], DenseVector[Int], DenseVector[Int]] =
     new CanCorrelateNoOverhang[DenseVector[Int], DenseVector[Int], DenseVector[Int]] {
       def apply(data: DenseVector[Int], kernel: DenseVector[Int], range: Range): DenseVector[Int] = {
         require(data.length * kernel.length != 0, "data and kernel must be non-empty DenseVectors")
@@ -231,7 +235,8 @@ object CanConvolve extends SerializableLogging {
         require(
           range.start >= 0 && range.last <= (data.length - kernel.length + 1),
           logger.error(
-            s"range (start ${range.start}, end ${range.end}, step ${range.step}, inclusive ${range.isInclusive}) is OOB for data (length ${data.length}) and kernel (length ${kernel.length})!")
+            s"range (start ${range.start}, end ${range.end}, step ${range.step}, inclusive ${range.isInclusive}) is OOB for data (length ${data.length}) and kernel (length ${kernel.length})!"
+          )
         )
 
         val dataL = convert(data, Long).toScalaVector() //make immutable

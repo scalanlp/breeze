@@ -155,8 +155,8 @@ class DescriptiveStatsTest2 extends FunSuite {
     val data = Array.fill(100000)(r.nextGaussian)
     val mav = meanAndVariance(data)
     val mav2 = meanAndVariance(data.iterator)
-    assert(breeze.numerics.closeTo(mav.mean, 0.0, 1E-2), mav.mean + " should be 0")
-    assert(breeze.numerics.closeTo(mav.variance, 1.0, 1E-2), mav.variance + " should be 1")
+    assert(breeze.numerics.closeTo(mav.mean, 0.0, 1e-2), mav.mean + " should be 0")
+    assert(breeze.numerics.closeTo(mav.variance, 1.0, 1e-2), mav.variance + " should be 1")
     assert(mav == mav2)
   }
 
@@ -168,8 +168,8 @@ class DescriptiveStatsTest2 extends FunSuite {
     val mav2 = meanAndVariance(data2)
     val mavTotal = meanAndVariance(data ++ data2)
     val mavSum = mav + mav2
-    assert(breeze.numerics.closeTo(mavTotal.mean, mavSum.mean, 1E-5))
-    assert(breeze.numerics.closeTo(mavTotal.variance, mavSum.variance, 1E-5))
+    assert(breeze.numerics.closeTo(mavTotal.mean, mavSum.mean, 1e-5))
+    assert(breeze.numerics.closeTo(mavTotal.variance, mavSum.variance, 1e-5))
     assert(mavSum.count == mavTotal.count)
   }
 
@@ -190,30 +190,36 @@ class DescriptiveStatsTest2 extends FunSuite {
     assert(
       median(dataOddDuplicate) == 2,
       "median (odd length with duplicate) should be 2 instead of "
-        + median(dataOddDuplicate))
+        + median(dataOddDuplicate)
+    )
     assert(median(dataEven) == 1.5f, "median (even length) should be 1.5f instead of " + median(dataEven))
     assert(
       median(dataEvenDuplicate) == 250,
       "median (even length with duplicate) should be 250 instead of "
-        + median(dataEvenDuplicate))
+        + median(dataEvenDuplicate)
+    )
     assert(
       median(dataEvenDuplicate2) == 450,
       "median (even length with duplicate) should be 450 instead of "
-        + median(dataEvenDuplicate2))
+        + median(dataEvenDuplicate2)
+    )
 
     assert(median(dataOddSeq) == 2, "median (odd length) should be 2 instead of " + median(dataOddSeq))
     assert(
       median(dataOddDuplicateSeq) == 2,
       "median (odd length with duplicate) should be 2 instead of "
-        + median(dataOddDuplicateSeq))
+        + median(dataOddDuplicateSeq)
+    )
     assert(median(dataEvenSeq) == 1.5f, "median (even length) should be 1.5f instead of " + median(dataEvenSeq))
     assert(
       median(dataEvenDuplicateSeq) == 250,
       "median (even length with duplicate) should be 250 instead of "
-        + median(dataEvenDuplicate))
+        + median(dataEvenDuplicate)
+    )
     assert(
       median(dataEvenDuplicate2Seq) == 450,
       "median (even length with duplicate) should be 450 instead of "
-        + median(dataEvenDuplicate2))
+        + median(dataEvenDuplicate2)
+    )
   }
 }

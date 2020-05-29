@@ -130,13 +130,14 @@ trait Matrix[@spec(Double, Int, Float, Long) V] extends MatrixLike[V, Matrix[V]]
 
   def flatten(view: View = View.Prefer): Vector[V]
 
-  override def equals(p1: Any): Boolean = p1 match {
-    case x: Matrix[_] =>
-      this.rows == x.rows && this.cols == x.cols &&
-        keysIterator.forall(k => this(k) == x(k))
-    case _ =>
-      return false
-  }
+  override def equals(p1: Any): Boolean =
+    p1 match {
+      case x: Matrix[_] =>
+        this.rows == x.rows && this.cols == x.cols &&
+          keysIterator.forall(k => this(k) == x(k))
+      case _ =>
+        return false
+    }
 
 }
 
@@ -157,31 +158,32 @@ object Matrix
   private[linalg] def zeroRows[V: ClassTag](cols: Int): Matrix[V] = emptyMatrix(0, cols)
   private[linalg] def zeroCols[V: ClassTag](rows: Int): Matrix[V] = emptyMatrix(rows, 0)
 
-  private[linalg] def emptyMatrix[V: ClassTag](_rows: Int, _cols: Int): Matrix[V] = new Matrix[V] {
-    def activeIterator: Iterator[((Int, Int), V)] = Iterator.empty
+  private[linalg] def emptyMatrix[V: ClassTag](_rows: Int, _cols: Int): Matrix[V] =
+    new Matrix[V] {
+      def activeIterator: Iterator[((Int, Int), V)] = Iterator.empty
 
-    def activeValuesIterator: Iterator[V] = Iterator.empty
+      def activeValuesIterator: Iterator[V] = Iterator.empty
 
-    def activeKeysIterator: Iterator[(Int, Int)] = Iterator.empty
+      def activeKeysIterator: Iterator[(Int, Int)] = Iterator.empty
 
-    def apply(i: Int, j: Int): V = throw new IndexOutOfBoundsException("Empty matrix!")
+      def apply(i: Int, j: Int): V = throw new IndexOutOfBoundsException("Empty matrix!")
 
-    def update(i: Int, j: Int, e: V): Unit = {
-      throw new IndexOutOfBoundsException("Empty matrix!")
+      def update(i: Int, j: Int, e: V): Unit = {
+        throw new IndexOutOfBoundsException("Empty matrix!")
+      }
+
+      def rows: Int = _rows
+
+      def cols: Int = _cols
+
+      def copy: Matrix[V] = this
+
+      def activeSize: Int = 0
+
+      def repr: Matrix[V] = this
+
+      def flatten(view: View) = Vector[V]()
     }
-
-    def rows: Int = _rows
-
-    def cols: Int = _cols
-
-    def copy: Matrix[V] = this
-
-    def activeSize: Int = 0
-
-    def repr: Matrix[V] = this
-
-    def flatten(view: View) = Vector[V]()
-  }
 
   implicit def canTraverseKeyValuePairs[V]: CanTraverseKeyValuePairs[Matrix[V], (Int, Int), V] = {
     new CanTraverseKeyValuePairs[Matrix[V], (Int, Int), V] {
@@ -238,7 +240,8 @@ trait MatrixConstructors[Mat[T] <: Matrix[T]] {
 
   /** Static constructor for a literal matrix. */
   def apply[R, @spec(Double, Int, Float, Long) V](
-      rows: R*)(implicit rl: LiteralRow[R, V], man: ClassTag[V], zero: Zero[V]): Mat[V] = {
+      rows: R*
+  )(implicit rl: LiteralRow[R, V], man: ClassTag[V], zero: Zero[V]): Mat[V] = {
     val nRows = rows.length
     val ns = rows.headOption match {
       case None => 0
@@ -260,16 +263,19 @@ trait MatrixConstructors[Mat[T] <: Matrix[T]] {
   // basically, we turn off specialization for this loop, since it's not going to be fast anyway.
   private def finishLiteral[V, R](rv: Matrix[V], rl: LiteralRow[R, V], rows: Seq[R]): Unit = {
     for ((row, i) <- rows.zipWithIndex) {
-      rl.foreach(row, { (j, v) =>
-        rv(i, j) = v
-      })
+      rl.foreach(
+        row,
+        { (j, v) =>
+          rv(i, j) = v
+        }
+      )
     }
   }
 }
 
 trait LowPriorityMatrix {
   implicit def canSliceTensorBooleanRows[V: Semiring: ClassTag]
-    : CanSlice2[Matrix[V], Tensor[Int, Boolean], ::.type, SliceMatrix[Int, Int, V]] = {
+      : CanSlice2[Matrix[V], Tensor[Int, Boolean], ::.type, SliceMatrix[Int, Int, V]] = {
     new CanSlice2[Matrix[V], Tensor[Int, Boolean], ::.type, SliceMatrix[Int, Int, V]] {
       def apply(from: Matrix[V], rows: Tensor[Int, Boolean], cols: ::.type): SliceMatrix[Int, Int, V] = {
         val cols = 0 until from.cols
@@ -279,7 +285,7 @@ trait LowPriorityMatrix {
   }
 
   implicit def canSliceTensorBooleanCols[V: Semiring: ClassTag]
-    : CanSlice2[Matrix[V], ::.type, Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] = {
+      : CanSlice2[Matrix[V], ::.type, Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] = {
     new CanSlice2[Matrix[V], ::.type, Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] {
       def apply(from: Matrix[V], rows: ::.type, cols: Tensor[Int, Boolean]): SliceMatrix[Int, Int, V] = {
         val rows = 0 until from.rows
@@ -289,7 +295,7 @@ trait LowPriorityMatrix {
   }
 
   implicit def canSliceTensorBooleanRowsAndCol[V: Semiring: ClassTag]
-    : CanSlice2[Matrix[V], Tensor[Int, Boolean], Int, SliceVector[(Int, Int), V]] = {
+      : CanSlice2[Matrix[V], Tensor[Int, Boolean], Int, SliceVector[(Int, Int), V]] = {
     new CanSlice2[Matrix[V], Tensor[Int, Boolean], Int, SliceVector[(Int, Int), V]] {
       def apply(from: Matrix[V], sliceRows: Tensor[Int, Boolean], sliceCol: Int): SliceVector[(Int, Int), V] = {
         val rows = SliceUtils.mapRowSeq(sliceRows.findAll(_ == true), from.rows)
@@ -300,12 +306,13 @@ trait LowPriorityMatrix {
   }
 
   implicit def canSliceRowAndTensorBooleanCols[V: Semiring: ClassTag]
-    : CanSlice2[Matrix[V], Int, Tensor[Int, Boolean], Transpose[SliceVector[(Int, Int), V]]] = {
+      : CanSlice2[Matrix[V], Int, Tensor[Int, Boolean], Transpose[SliceVector[(Int, Int), V]]] = {
     new CanSlice2[Matrix[V], Int, Tensor[Int, Boolean], Transpose[SliceVector[(Int, Int), V]]] {
       def apply(
           from: Matrix[V],
           sliceRow: Int,
-          sliceCols: Tensor[Int, Boolean]): Transpose[SliceVector[(Int, Int), V]] = {
+          sliceCols: Tensor[Int, Boolean]
+      ): Transpose[SliceVector[(Int, Int), V]] = {
         val row = SliceUtils.mapRow(sliceRow, from.rows)
         val cols = SliceUtils.mapColumnSeq(sliceCols.findAll(_ == true), from.cols)
         new SliceVector(from, slices = cols.map(col => (row, col))).t
@@ -314,12 +321,13 @@ trait LowPriorityMatrix {
   }
 
   implicit def canSliceTensorBooleanRowsAndCols[V: Semiring: ClassTag]
-    : CanSlice2[Matrix[V], Tensor[Int, Boolean], Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] = {
+      : CanSlice2[Matrix[V], Tensor[Int, Boolean], Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] = {
     new CanSlice2[Matrix[V], Tensor[Int, Boolean], Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] {
       def apply(
           from: Matrix[V],
           sliceRows: Tensor[Int, Boolean],
-          sliceCols: Tensor[Int, Boolean]): SliceMatrix[Int, Int, V] = {
+          sliceCols: Tensor[Int, Boolean]
+      ): SliceMatrix[Int, Int, V] = {
         val rows = SliceUtils.mapRowSeq(sliceRows.findAll(_ == true), from.rows)
         val cols = SliceUtils.mapColumnSeq(sliceCols.findAll(_ == true), from.cols)
         new SliceMatrix(from, rows, cols)
@@ -328,7 +336,7 @@ trait LowPriorityMatrix {
   }
 
   implicit def canSliceTensorBooleanRowsAndWeirdCols[V: Semiring: ClassTag]
-    : CanSlice2[Matrix[V], Tensor[Int, Boolean], Seq[Int], SliceMatrix[Int, Int, V]] = {
+      : CanSlice2[Matrix[V], Tensor[Int, Boolean], Seq[Int], SliceMatrix[Int, Int, V]] = {
     new CanSlice2[Matrix[V], Tensor[Int, Boolean], Seq[Int], SliceMatrix[Int, Int, V]] {
       def apply(from: Matrix[V], sliceRows: Tensor[Int, Boolean], sliceCols: Seq[Int]): SliceMatrix[Int, Int, V] = {
         val rows = SliceUtils.mapRowSeq(sliceRows.findAll(_ == true), from.rows)
@@ -339,7 +347,7 @@ trait LowPriorityMatrix {
   }
 
   implicit def canSliceWeirdRowsAndTensorBooleanCols[V: Semiring: ClassTag]
-    : CanSlice2[Matrix[V], Seq[Int], Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] = {
+      : CanSlice2[Matrix[V], Seq[Int], Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] = {
     new CanSlice2[Matrix[V], Seq[Int], Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] {
       def apply(from: Matrix[V], sliceRows: Seq[Int], sliceCols: Tensor[Int, Boolean]): SliceMatrix[Int, Int, V] = {
         val rows = SliceUtils.mapRowSeq(sliceRows, from.rows)

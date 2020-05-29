@@ -48,7 +48,7 @@ object FileStreams {
     } catch {
       case ex: Throwable =>
         fis.close();
-        throw (ex);
+        throw ex;
     }
   }
 
@@ -67,7 +67,7 @@ object FileStreams {
     } catch {
       case ex: Throwable =>
         fos.close();
-        throw (ex);
+        throw ex;
     }
   }
 }

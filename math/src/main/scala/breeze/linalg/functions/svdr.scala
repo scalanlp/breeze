@@ -98,7 +98,8 @@ object svdr extends UFunc {
    */
   private def flipSVDSigns(
       u: DenseMatrix[Double],
-      v: DenseMatrix[Double]): (DenseMatrix[Double], DenseMatrix[Double]) = {
+      v: DenseMatrix[Double]
+  ): (DenseMatrix[Double], DenseMatrix[Double]) = {
     import DenseMatrix.canMapValues
     val abs_u = abs(u)
     val max_abs_cols = (0 until u.cols).map(c => argmax(abs_u(::, c)))

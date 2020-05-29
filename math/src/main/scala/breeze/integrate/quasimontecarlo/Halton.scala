@@ -62,7 +62,7 @@ class BaseUniformHaltonGenerator(val dimension: Int) extends QuasiMonteCarloGene
   private val bases = java.util.Arrays.copyOfRange(Halton.PRIMES, 0, dimension)
 
   private var count: Long = 0
-  private val counters: Array[UnboxedIntVector] = List.fill(dimension)({ new UnboxedIntVector(16) }).toArray
+  private val counters: Array[UnboxedIntVector] = List.fill(dimension) { new UnboxedIntVector(16) }.toArray
   val permutations: Array[Array[Long]] =
     (0 to dimension)
       .map(i => {

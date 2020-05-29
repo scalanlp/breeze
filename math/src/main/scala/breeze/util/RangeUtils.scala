@@ -22,7 +22,7 @@ object RangeUtils {
       // from here, we have:
       assert(a.step * x0_ + b.step * y0_ == gcd)
       val target = b.start - a.start
-      val q = target/gcd
+      val q = target / gcd
       val x0 = x0_ * q
       val y0 = y0_ * q
       val s = a.step / gcd
@@ -56,8 +56,8 @@ object RangeUtils {
         // max((0 - x0)/t, (y0 - 0)/s) <= m <= min( (a.length - 1 - x0)/t, (y0 + b.length -1) /s)
         val x0d = x0.toDouble
         val y0d = y0.toDouble
-        val minK = math.max( -x0d/t, y0d/s)
-        val maxK = math.min( (a.length - 1 - x0d)/t, (b.length - 1 + y0d)/s)
+        val minK = math.max(-x0d / t, y0d / s)
+        val maxK = math.min((a.length - 1 - x0d) / t, (b.length - 1 + y0d) / s)
         // need to check there's an integer in this range
         math.ceil(minK) <= math.floor(maxK)
       }

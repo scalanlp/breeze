@@ -51,9 +51,10 @@ object CanCopy {
   implicit object OpArrayF extends OpArray[Float]
   implicit object OpArrayD extends OpArray[Double]
 
-  implicit def canCopyField[V: Field]: CanCopy[V] = new CanCopy[V] {
-    def apply(v1: V) = v1
-  }
+  implicit def canCopyField[V: Field]: CanCopy[V] =
+    new CanCopy[V] {
+      def apply(v1: V) = v1
+    }
 
   // </editor-fold>
 }

@@ -12,8 +12,14 @@ class LassoTest extends WordSpec with Matchers {
       val a = DenseMatrix((1.0, 1.0), (2.0, -2.0), (3.0, 3.0), (4.0, 5.0))
       val b = DenseVector(1.01, 1.98, 3.03, 4.05)
       val result = lasso(a, b, 0.05)
-      assert(norm(result.coefficients - DenseVector(0.9553, 0.0)) < 1e-2, "coefficients disagreed") //Agrees with numpy to 2 decimal places
-      assert(result.coefficients(1) == 0, "failed to be sparse") //Small coefficient on second coefficient should be thresholded away
+      assert(
+        norm(result.coefficients - DenseVector(0.9553, 0.0)) < 1e-2,
+        "coefficients disagreed"
+      ) //Agrees with numpy to 2 decimal places
+      assert(
+        result.coefficients(1) == 0,
+        "failed to be sparse"
+      ) //Small coefficient on second coefficient should be thresholded away
       assert(0 < result.rSquared, "rsquared will not be zero, that's crazy")
     }
     "handle trickier case" in {

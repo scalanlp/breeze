@@ -28,8 +28,8 @@ sealed trait RandomAccessFileTest extends FunSuite {
     val file = getResource(fileHead + "Double")
     val stream = new RAF(file, "rw")
     stream.writeDouble(0.0)
-    stream.writeDouble(Array[Double](3.141592653589793, 2.718281828459045, 6.02214E23))
-    stream.writeDouble(1.6726231000000002E-24)
+    stream.writeDouble(Array[Double](3.141592653589793, 2.718281828459045, 6.02214e23))
+    stream.writeDouble(1.6726231000000002e-24)
     stream.close
 
     val stream2 = new RAF(file, "r")
@@ -38,26 +38,26 @@ sealed trait RandomAccessFileTest extends FunSuite {
     assert(result2(0) === 0.0)
     assert(result2(1) === 3.141592653589793)
     assert(result2(2) === 2.718281828459045)
-    assert(stream2.readDouble === 6.02214E23)
-    assert(stream2.readDouble === 1.6726231000000002E-24)
+    assert(stream2.readDouble === 6.02214e23)
+    assert(stream2.readDouble === 1.6726231000000002e-24)
     stream2.close
   }
 
   test("writeFloat") {
     val file = getResource(fileHead + "Float")
     val stream = new RAF(file, "rw")
-    stream.writeFloat(0.0F)
-    stream.writeFloat(Array[Float](3.1415927F, 2.7182817F, 6.02214E23F))
-    stream.writeFloat(1.6726232E-24F)
+    stream.writeFloat(0.0f)
+    stream.writeFloat(Array[Float](3.1415927f, 2.7182817f, 6.02214e23f))
+    stream.writeFloat(1.6726232e-24f)
     stream.close
 
     val stream2 = new RAF(file, "r")
     val result2 = stream2.readFloat(3)
-    assert(result2(0) === 0.0F)
-    assert(result2(1) === 3.1415927F)
-    assert(result2(2) === 2.7182817F)
-    assert(stream2.readFloat === 6.02214E23F)
-    assert(stream2.readFloat === 1.6726232E-24F)
+    assert(result2(0) === 0.0f)
+    assert(result2(1) === 3.1415927f)
+    assert(result2(2) === 2.7182817f)
+    assert(stream2.readFloat === 6.02214e23f)
+    assert(stream2.readFloat === 1.6726232e-24f)
     stream2.close
   }
 
@@ -65,7 +65,7 @@ sealed trait RandomAccessFileTest extends FunSuite {
     val file = getResource(fileHead + "Float")
     val stream = new RAF(file, "rw")
     stream.writeInt8(0.toByte)
-    stream.writeInt8(Array[Byte](1.toByte, (-1).toByte, (-128).toByte))
+    stream.writeInt8(Array[Byte](1.toByte, -1.toByte, -128.toByte))
     stream.write(127.toByte)
     stream.close
 
@@ -73,8 +73,8 @@ sealed trait RandomAccessFileTest extends FunSuite {
     val result2 = stream2.readInt8(3)
     assert(result2(0) === 0.toByte)
     assert(result2(1) === 1.toByte)
-    assert(result2(2) === (-1).toByte)
-    assert(stream2.readInt8 === (-128).toByte)
+    assert(result2(2) === -1.toByte)
+    assert(stream2.readInt8 === -128.toByte)
     assert(stream2.readInt8 === 127.toByte)
     stream2.close
   }
@@ -101,7 +101,7 @@ sealed trait RandomAccessFileTest extends FunSuite {
     val file = getResource(fileHead + "Float")
     val stream = new RAF(file, "rw")
     stream.writeInt16(0.toShort)
-    stream.writeInt16(Array[Short](1.toShort, (-1).toShort, (-32768).toShort))
+    stream.writeInt16(Array[Short](1.toShort, -1.toShort, -32768.toShort))
     stream.writeShort(32767.toShort)
     stream.close
 
@@ -110,8 +110,8 @@ sealed trait RandomAccessFileTest extends FunSuite {
 
     assert(result2(0) === 0.toShort)
     assert(result2(1) === 1.toShort)
-    assert(result2(2) === (-1).toShort)
-    assert(stream2.readShort === (-32768).toShort)
+    assert(result2(2) === -1.toShort)
+    assert(stream2.readShort === -32768.toShort)
     assert(stream2.readInt16 === 32767.toShort)
     stream2.close
   }
@@ -133,7 +133,7 @@ sealed trait RandomAccessFileTest extends FunSuite {
     assert(result2(2) === 32767)
     assert(stream2.readUInt16 === 65535)
     assert(stream2.readUInt16 === 65535)
-    assert(stream2.readUInt8(2).forall(_ == 0xFF))
+    assert(stream2.readUInt8(2).forall(_ == 0xff))
     stream2.close
   }
 
@@ -159,9 +159,9 @@ sealed trait RandomAccessFileTest extends FunSuite {
 
     //Tests for maximum and minimum value byte codes
     val tempMaxRead = stream2.readUInt8(4)
-    assert(tempMaxRead.drop(1).dropRight(1).forall(_ == 0xFF))
+    assert(tempMaxRead.drop(1).dropRight(1).forall(_ == 0xff))
     //Allows same test to be used for BigEndian or LittleEndian
-    assert((tempMaxRead(0) == 0x7F && tempMaxRead(3) == 0xFF) || (tempMaxRead(0) == 0xFF && tempMaxRead(3) == 0x7F))
+    assert((tempMaxRead(0) == 0x7f && tempMaxRead(3) == 0xff) || (tempMaxRead(0) == 0xff && tempMaxRead(3) == 0x7f))
     val tempMinRead = stream2.readUInt8(4)
     assert(tempMinRead.drop(1).dropRight(1).forall(_ == 0x00))
     //Allows same test to be used for BigEndian or LittleEndian
@@ -186,7 +186,7 @@ sealed trait RandomAccessFileTest extends FunSuite {
     assert(result2(2) === 32767L)
     assert(stream2.readUInt32 === 4294967295L)
     assert(stream2.readUInt32 === 4294967295L)
-    assert(stream2.readUInt8(4).forall(_ == 0xFF))
+    assert(stream2.readUInt8(4).forall(_ == 0xff))
     stream2.close
   }
 
@@ -213,9 +213,9 @@ sealed trait RandomAccessFileTest extends FunSuite {
 
     //Tests for maximum and minimum value byte codes
     val tempMaxRead = stream2.readUInt8(8)
-    assert(tempMaxRead.drop(1).dropRight(1).forall(_ == 0xFF))
+    assert(tempMaxRead.drop(1).dropRight(1).forall(_ == 0xff))
     //Allows same test to be used for BigEndian or LittleEndian
-    assert((tempMaxRead(0) == 0x7F && tempMaxRead(7) == 0xFF) || (tempMaxRead(0) == 0xFF && tempMaxRead(7) == 0x7F))
+    assert((tempMaxRead(0) == 0x7f && tempMaxRead(7) == 0xff) || (tempMaxRead(0) == 0xff && tempMaxRead(7) == 0x7f))
     val tempMinRead = stream2.readUInt8(8)
     assert(tempMinRead.drop(1).dropRight(1).forall(_ == 0x00))
     //Allows same test to be used for BigEndian or LittleEndian
@@ -246,7 +246,7 @@ sealed trait RandomAccessFileTest extends FunSuite {
     assert(stream2.readUInt64.toLong === 9223372036854775807L)
     assert(stream2.readUInt64.toLong === 9223372036854775807L)
     //println( stream2.readUInt8(8).toList )
-    assert(stream2.readUInt8(8).forall(_ == 0xFF))
+    assert(stream2.readUInt8(8).forall(_ == 0xff))
     assert(stream2.readUInt64 == UInt64Max)
     stream2.close
   }

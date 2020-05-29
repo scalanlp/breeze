@@ -56,11 +56,12 @@ object sum extends UFunc with sumLowPrio with VectorizedReduceUFunc {
     }
 
   @expand
-  implicit def helper[@expand.args(Int, Float, Long, Double) T]: VectorizeHelper[T] = new VectorizeHelper[T] {
-    override def zerosLike(len: Int): DenseVector[T] = DenseVector.zeros[T](len)
+  implicit def helper[@expand.args(Int, Float, Long, Double) T]: VectorizeHelper[T] =
+    new VectorizeHelper[T] {
+      override def zerosLike(len: Int): DenseVector[T] = DenseVector.zeros[T](len)
 
-    override def combine(x: T, y: T): T = x + y
-  }
+      override def combine(x: T, y: T): T = x + y
+    }
 }
 
 /** Reducing UFunc that provides implementations for Broadcasted Dense stuff */
@@ -72,10 +73,10 @@ trait VectorizedReduceUFunc extends UFunc {
     def combine(x: T, y: T): T
   }
 
-  implicit def vectorizeRows[T: ClassTag](
-      implicit helper: VectorizeHelper[T],
-      baseOp: UFunc.InPlaceImpl2[Op, DenseVector[T], DenseVector[T]])
-    : Impl[BroadcastedRows[DenseMatrix[T], DenseVector[T]], DenseVector[T]] = {
+  implicit def vectorizeRows[T: ClassTag](implicit
+      helper: VectorizeHelper[T],
+      baseOp: UFunc.InPlaceImpl2[Op, DenseVector[T], DenseVector[T]]
+  ): Impl[BroadcastedRows[DenseMatrix[T], DenseVector[T]], DenseVector[T]] = {
     new Impl[BroadcastedRows[DenseMatrix[T], DenseVector[T]], DenseVector[T]] {
       override def apply(v: BroadcastedRows[DenseMatrix[T], DenseVector[T]]): DenseVector[T] = {
         val mat = v.underlying
@@ -88,8 +89,9 @@ trait VectorizedReduceUFunc extends UFunc {
     }
   }
 
-  implicit def vectorizeRows2[@specialized(Double, Float, Long, Int) T: ClassTag: Zero](implicit baseOp: Impl2[T, T, T])
-    : Impl2[BroadcastedRows[DenseMatrix[T], DenseVector[T]], DenseVector[T], DenseMatrix[T]] = {
+  implicit def vectorizeRows2[@specialized(Double, Float, Long, Int) T: ClassTag: Zero](implicit
+      baseOp: Impl2[T, T, T]
+  ): Impl2[BroadcastedRows[DenseMatrix[T], DenseVector[T]], DenseVector[T], DenseMatrix[T]] = {
     new Impl2[BroadcastedRows[DenseMatrix[T], DenseVector[T]], DenseVector[T], DenseMatrix[T]] {
       override def apply(v: BroadcastedRows[DenseMatrix[T], DenseVector[T]], dv: DenseVector[T]): DenseMatrix[T] = {
         val mat = v.underlying
@@ -117,9 +119,9 @@ trait VectorizedReduceUFunc extends UFunc {
   }
 
   @expand
-  implicit def vectorizeCols[@expand.args(Double, Float, Int, Long) T: ClassTag: Zero](
-      implicit helper: VectorizeHelper[T])
-    : Impl[BroadcastedColumns[DenseMatrix[T], DenseVector[T]], Transpose[DenseVector[T]]] = {
+  implicit def vectorizeCols[@expand.args(Double, Float, Int, Long) T: ClassTag: Zero](implicit
+      helper: VectorizeHelper[T]
+  ): Impl[BroadcastedColumns[DenseMatrix[T], DenseVector[T]], Transpose[DenseVector[T]]] = {
     new Impl[BroadcastedColumns[DenseMatrix[T], DenseVector[T]], Transpose[DenseVector[T]]] {
       override def apply(v: BroadcastedColumns[DenseMatrix[T], DenseVector[T]]): Transpose[DenseVector[T]] = {
         val mat = v.underlying
@@ -148,8 +150,9 @@ trait VectorizedReduceUFunc extends UFunc {
   }
 
   @expand
-  implicit def vectorizeCols2[@expand.args(Double, Float, Int, Long) T: ClassTag: Zero](implicit impl2: Impl2[T, T, T])
-    : Impl2[BroadcastedColumns[DenseMatrix[T], DenseVector[T]], DenseVector[T], DenseMatrix[T]] = {
+  implicit def vectorizeCols2[@expand.args(Double, Float, Int, Long) T: ClassTag: Zero](implicit
+      impl2: Impl2[T, T, T]
+  ): Impl2[BroadcastedColumns[DenseMatrix[T], DenseVector[T]], DenseVector[T], DenseMatrix[T]] = {
     new Impl2[BroadcastedColumns[DenseMatrix[T], DenseVector[T]], DenseVector[T], DenseMatrix[T]] {
       override def apply(v: BroadcastedColumns[DenseMatrix[T], DenseVector[T]], dv: DenseVector[T]): DenseMatrix[T] = {
         val mat = v.underlying

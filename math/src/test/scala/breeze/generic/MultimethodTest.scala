@@ -47,9 +47,9 @@ class MultimethodTest extends FunSuite with Checkers {
       }
     }
 
-    mm.register({ (a: DV, b: DV) =>
+    mm.register { (a: DV, b: DV) =>
       "Woo"
-    })
+    }
     for (a <- all; b <- all if a != dv && b != dv) {
       intercept[UnsupportedOperationException] {
         mm(a, b)
@@ -61,53 +61,53 @@ class MultimethodTest extends FunSuite with Checkers {
   test("basics") {
     val mm = new MM
 
-    mm.register({ (a: DV, b: DV) =>
+    mm.register { (a: DV, b: DV) =>
       "Woo"
-    })
+    }
     assert(mm(dv, dv) === "Woo")
 
-    mm.register({ (a: DV, b: SV) =>
+    mm.register { (a: DV, b: SV) =>
       "Yay"
-    })
+    }
     assert(mm(dv, sv) === "Yay")
 
-    mm.register({ (a: DV, b: M) =>
+    mm.register { (a: DV, b: M) =>
       "Ok"
-    })
+    }
     assert(mm(dv, m) === "Ok")
   }
 
   test("inheritance") {
     val mm = new MM
 
-    mm.register({ (a: V, b: V) =>
+    mm.register { (a: V, b: V) =>
       "Woo"
-    })
+    }
     assert(mm(dv, dv) === "Woo")
 
-    mm.register({ (a: DV, b: SV) =>
+    mm.register { (a: DV, b: SV) =>
       "Yay"
-    })
+    }
     assert(mm(dv, sv) === "Yay")
     assert(mm(dv, dv) === "Woo")
 
-    mm.register({ (a: V, b: M) =>
+    mm.register { (a: V, b: M) =>
       "Ok"
-    })
+    }
     assert(mm(dv, m) === "Ok")
   }
 
   test("primitives on second type") {
     val mm = new MMPrim
 
-    mm.register({ (a: V, b: Double) =>
+    mm.register { (a: V, b: Double) =>
       "Woo"
-    })
+    }
     assert(mm(dv, 4.0) === "Woo")
 
-    mm.register({ (a: DV, b: Double) =>
+    mm.register { (a: DV, b: Double) =>
       "Yay"
-    })
+    }
     assert(mm(dv, 4.0) === "Yay")
     assert(mm(sv, 3.0) === "Woo")
   }

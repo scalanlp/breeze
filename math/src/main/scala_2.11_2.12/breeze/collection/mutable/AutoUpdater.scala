@@ -25,7 +25,8 @@ object AutoUpdater {
   def apply[M, K, V](map: M, default: => V)(implicit ev: M <:< Map[K, V]): AutoUpdater[M, K, V] =
     new AutoUpdater[M, K, V](map, default)
   def apply[K, V](default: => V): AutoUpdater[Map[K, V], K, V] = apply(HashMap[K, V](), default)
-  def ofKeys[K] = new {
-    def andValues[V](v: => V) = apply[K, V](v)
-  }
+  def ofKeys[K] =
+    new {
+      def andValues[V](v: => V) = apply[K, V](v)
+    }
 }

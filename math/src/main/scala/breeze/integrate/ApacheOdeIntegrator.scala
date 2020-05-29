@@ -14,7 +14,8 @@ trait ApacheOdeIntegrator extends OdeIntegrator {
   override def integrate(
       f: (DenseVector[Double], Double) => DenseVector[Double],
       y0: DenseVector[Double],
-      t: Array[Double]): Array[DenseVector[Double]] = {
+      t: Array[Double]
+  ): Array[DenseVector[Double]] = {
 
     object equations extends FirstOrderDifferentialEquations {
 

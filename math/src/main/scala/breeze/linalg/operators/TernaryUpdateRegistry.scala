@@ -37,7 +37,8 @@ trait TernaryUpdateRegistry[A, B, C, Op]
       a: A,
       b: B,
       c: C,
-      m: Map[(Class[_], Class[_], Class[_]), UFunc.InPlaceImpl3[Op, _ <: A, _ <: B, _ <: C]]): Unit = {
+      m: Map[(Class[_], Class[_], Class[_]), UFunc.InPlaceImpl3[Op, _ <: A, _ <: B, _ <: C]]
+  ): Unit = {
     throw new RuntimeException("Multiple bindings for method: " + m)
   }
 
@@ -77,7 +78,8 @@ trait TernaryUpdateRegistry[A, B, C, Op]
   }
 
   def register[AA <: A, BB <: B, CC <: C](
-      op: InPlaceImpl3[Op, AA, BB, CC])(implicit manA: ClassTag[AA], manB: ClassTag[BB], manC: ClassTag[CC]): Unit = {
+      op: InPlaceImpl3[Op, AA, BB, CC]
+  )(implicit manA: ClassTag[AA], manB: ClassTag[BB], manC: ClassTag[CC]): Unit = {
     super.register(manA.runtimeClass, manB.runtimeClass, manC.runtimeClass, op)
   }
 }

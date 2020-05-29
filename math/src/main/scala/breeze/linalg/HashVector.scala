@@ -182,7 +182,8 @@ object HashVector
         fn.zeros(
           from.size - from.activeSize,
           Iterator.range(0, from.size).filterNot(from.index contains _),
-          from.default)
+          from.default
+        )
         var i = 0
         while (i < from.iterableSize) {
           if (from.isActive(i))
@@ -228,11 +229,19 @@ object HashVector
   @expand
   implicit def dv_hv_UpdateOp[
       @expand.args(Int, Double, Float, Long) T,
-      @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
-      implicit @expand.sequence[Op]({ _ * _ }, { _ / _ }, { (a, b) =>
-        b
-      }, { _ % _ }, { _.pow(_) })
-      op: Op.Impl2[T, T, T]): Op.InPlaceImpl2[DenseVector[T], HashVector[T]] =
+      @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType
+  ](implicit
+      @expand.sequence[Op](
+        { _ * _ },
+        { _ / _ },
+        { (a, b) =>
+          b
+        },
+        { _ % _ },
+        { _.pow(_) }
+      )
+      op: Op.Impl2[T, T, T]
+  ): Op.InPlaceImpl2[DenseVector[T], HashVector[T]] =
     new Op.InPlaceImpl2[DenseVector[T], HashVector[T]] {
       def apply(a: DenseVector[T], b: HashVector[T]): Unit = {
         require(a.length == b.length, "Vectors must have the same length")
@@ -254,7 +263,8 @@ object HashVector
   @expand
   implicit def dv_hv_op[
       @expand.args(Int, Double, Float, Long) T,
-      @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType] = {
+      @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType
+  ] = {
     DenseVector.pureFromUpdate(implicitly[Op.InPlaceImpl2[DenseVector[T], HashVector[T]]])
   }
   @noinline

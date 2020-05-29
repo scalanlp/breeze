@@ -22,7 +22,8 @@ trait CanFirwin[Output] {
       zeroPass: Boolean,
       scale: Boolean,
       multiplier: Double,
-      optWindow: OptWindowFunction): FIRKernel1D[Output]
+      optWindow: OptWindowFunction
+  ): FIRKernel1D[Output]
 }
 
 /**
@@ -47,11 +48,13 @@ object CanFirwin {
           zeroPass: Boolean,
           scale: Boolean,
           multiplier: Double,
-          optWindow: OptWindowFunction): FIRKernel1D[Double] = new FIRKernel1D[Double](
-        firwinDoubleImpl(taps, omegas, nyquist, zeroPass, scale, optWindow) * multiplier,
-        multiplier,
-        "FIRKernel1D(firwin): " + taps + " taps, " + omegas + ", " + optWindow + ", zeroPass=" + zeroPass + ", nyquist=" + nyquist + ", scale=" + scale
-      )
+          optWindow: OptWindowFunction
+      ): FIRKernel1D[Double] =
+        new FIRKernel1D[Double](
+          firwinDoubleImpl(taps, omegas, nyquist, zeroPass, scale, optWindow) * multiplier,
+          multiplier,
+          "FIRKernel1D(firwin): " + taps + " taps, " + omegas + ", " + optWindow + ", zeroPass=" + zeroPass + ", nyquist=" + nyquist + ", scale=" + scale
+        )
 
     }
   }
@@ -66,11 +69,13 @@ object CanFirwin {
           zeroPass: Boolean,
           scale: Boolean,
           multiplier: Double,
-          optWindow: OptWindowFunction): FIRKernel1D[T] = new FIRKernel1D[T](
-        convert(firwinDoubleImpl(taps, omegas, nyquist, zeroPass, scale, optWindow) * multiplier, T),
-        multiplier,
-        "FIRKernel1D(firwin): " + taps + " taps, " + omegas + ", " + optWindow + ", zeroPass=" + zeroPass + ", nyquist=" + nyquist + ", scale=" + scale
-      )
+          optWindow: OptWindowFunction
+      ): FIRKernel1D[T] =
+        new FIRKernel1D[T](
+          convert(firwinDoubleImpl(taps, omegas, nyquist, zeroPass, scale, optWindow) * multiplier, T),
+          multiplier,
+          "FIRKernel1D(firwin): " + taps + " taps, " + omegas + ", " + optWindow + ", zeroPass=" + zeroPass + ", nyquist=" + nyquist + ", scale=" + scale
+        )
 
     }
   }
@@ -81,7 +86,8 @@ object CanFirwin {
       nyquist: Double,
       zeroPass: Boolean,
       scale: Boolean,
-      optWindow: OptWindowFunction): DenseVector[Double] = {
+      optWindow: OptWindowFunction
+  ): DenseVector[Double] = {
     //various variable conditions which must be met
     require(omegas.length > 0, "At least one cutoff frequency must be given!")
     require(min(omegas) >= 0, "The cutoff frequencies must be bigger than zero!")
@@ -90,7 +96,7 @@ object CanFirwin {
       require(min(diff(omegas)) > 0, "The cutoff frequency must be monotonically increasing.")
     }
 
-    val nyquistPass = (zeroPass != isOdd(omegas.length))
+    val nyquistPass = zeroPass != isOdd(omegas.length)
     var tempCutoff = (omegas / nyquist).toArray
     if (zeroPass) tempCutoff = tempCutoff.+:(0d)
     if (nyquistPass) tempCutoff = tempCutoff.:+(1d)
@@ -100,7 +106,8 @@ object CanFirwin {
     //https://github.com/scipy/scipy/blob/v0.13.0/scipy/signal/fir_filter_design.py#L138
     require(
       !(nyquistPass && isEven(taps)),
-      "A filter with an even number of taps must have zero response at the Nyquist rate.")
+      "A filter with an even number of taps must have zero response at the Nyquist rate."
+    )
 
     //val bands = scaledCutoff.reshape(-1, 2)
     val alpha = 0.5 * (taps - 1)

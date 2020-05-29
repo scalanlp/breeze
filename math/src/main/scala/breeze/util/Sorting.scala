@@ -28,13 +28,15 @@ object Sorting {
       keys: Array[Float],
       elems: Array[E],
       off: Int,
-      length: Int): Unit = indirectSort_Float(keys, elems, off, length)
+      length: Int
+  ): Unit = indirectSort_Float(keys, elems, off, length)
 
   def indirectSort[@spec(Int, Long, Float, Double) E](
       keys: Array[Double],
       elems: Array[E],
       off: Int,
-      length: Int): Unit = indirectSort_Double(keys, elems, off, length)
+      length: Int
+  ): Unit = indirectSort_Double(keys, elems, off, length)
 
   /**
    * Jointly sorts `keys`/`elems` in-place based on the items in the
@@ -51,7 +53,8 @@ object Sorting {
       keys: Array[K],
       elems: Array[E],
       off: Int,
-      length: Int): Unit = {
+      length: Int
+  ): Unit = {
     require(keys.length == elems.length, "arrays must have the same length")
     def swap(a: Int, b: Int): Unit = {
       val t0 = keys(a)

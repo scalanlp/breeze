@@ -15,7 +15,6 @@ package breeze.linalg
  limitations under the License.
  */
 
-
 import scala.{specialized => spec}
 import breeze.generic._
 import breeze.linalg.support._
@@ -57,8 +56,8 @@ class DenseVector[@spec(Double, Int, Float, Long) V](
     val data: Array[V],
     val offset: Int,
     val stride: Int,
-    val length: Int)
-    extends StorageVector[V]
+    val length: Int
+) extends StorageVector[V]
     with VectorLike[V, DenseVector[V]]
     with Serializable {
   def this(data: Array[V]) = this(data, 0, 1, data.length)
@@ -109,12 +108,13 @@ class DenseVector[@spec(Double, Int, Float, Long) V](
 
   def activeKeysIterator: Iterator[Int] = keysIterator
 
-  override def equals(p1: Any) = p1 match {
-    case y: DenseVector[_] =>
-      y.length == length && ArrayUtil
-        .nonstupidEquals(data, offset, stride, length, y.data, y.offset, y.stride, y.length)
-    case _ => super.equals(p1)
-  }
+  override def equals(p1: Any) =
+    p1 match {
+      case y: DenseVector[_] =>
+        y.length == length && ArrayUtil
+          .nonstupidEquals(data, offset, stride, length, y.data, y.offset, y.stride, y.length)
+      case _ => super.equals(p1)
+    }
 
   // TODO: this is only consistent if the hashcode of inactive elements is 0!!!
   override def hashCode(): Int = ArrayUtil.zeroSkippingHashCode(data, offset, stride, length)
@@ -246,7 +246,8 @@ class DenseVector[@spec(Double, Int, Float, Long) V](
   }
 
   /** Returns true if this overlaps any content with the other vector */
-  private[linalg] def overlaps(other: DenseVector[V]): Boolean = (this.data eq other.data) && RangeUtils.overlaps(footprint, other.footprint)
+  private[linalg] def overlaps(other: DenseVector[V]): Boolean =
+    (this.data eq other.data) && RangeUtils.overlaps(footprint, other.footprint)
 
   private def footprint: Range = {
     if (length == 0) {
@@ -387,10 +388,11 @@ object DenseVector
   /**
    * Vertical concatenation of two or more column vectors into one large vector.
    */
-  def vertcat[V](vectors: DenseVector[V]*)(
-      implicit canSet: OpSet.InPlaceImpl2[DenseVector[V], DenseVector[V]],
+  def vertcat[V](vectors: DenseVector[V]*)(implicit
+      canSet: OpSet.InPlaceImpl2[DenseVector[V], DenseVector[V]],
       vman: ClassTag[V],
-      zero: Zero[V]): DenseVector[V] = {
+      zero: Zero[V]
+  ): DenseVector[V] = {
     val size = vectors.foldLeft(0)(_ + _.size)
     val result = zeros[V](size)
     var offset = 0
@@ -426,8 +428,9 @@ object DenseVector
     }
   }
 
-  implicit def canMapValues[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) V2](
-      implicit man: ClassTag[V2]): CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] = {
+  implicit def canMapValues[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) V2](implicit
+      man: ClassTag[V2]
+  ): CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] = {
     new CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] {
 
       /**Maps all key-value pairs from the given collection. */
@@ -471,7 +474,7 @@ object DenseVector
   }
 
   implicit def canMapValuesToSink[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) V2]
-    : mapValues.SinkImpl2[DenseVector[V2], DenseVector[V], V => V2] = {
+      : mapValues.SinkImpl2[DenseVector[V2], DenseVector[V], V => V2] = {
     new mapValues.SinkImpl2[DenseVector[V2], DenseVector[V], V => V2] {
 
       /**Maps all key-value pairs from the given collection. */
@@ -587,8 +590,9 @@ object DenseVector
       }
     }
 
-  implicit def canMapPairs[V, V2](
-      implicit man: ClassTag[V2]): CanMapKeyValuePairs[DenseVector[V], Int, V, V2, DenseVector[V2]] =
+  implicit def canMapPairs[V, V2](implicit
+      man: ClassTag[V2]
+  ): CanMapKeyValuePairs[DenseVector[V], Int, V, V2, DenseVector[V2]] =
     new CanMapKeyValuePairs[DenseVector[V], Int, V, V2, DenseVector[V2]] {
 
       /**Maps all key-value pairs from the given collection. */
@@ -629,7 +633,8 @@ object DenseVector
           v.data,
           offset = v.offset + v.stride * range.start,
           stride = v.stride * range.step,
-          length = range.length)
+          length = range.length
+        )
       }
     }
   }
@@ -642,7 +647,8 @@ object DenseVector
           offset = from.offset,
           cols = from.length,
           rows = 1,
-          majorStride = from.stride)
+          majorStride = from.stride
+        )
       }
     }
   }
@@ -745,7 +751,9 @@ object DenseVector
   implicit object canDotD extends OpMulInner.Impl2[DenseVector[Double], DenseVector[Double], Double] {
     def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
       require(a.length == b.length, s"Vectors must have same length")
-      if (a.noOffsetOrStride && b.noOffsetOrStride && a.length < DenseVectorSupportMethods.MAX_SMALL_DOT_PRODUCT_LENGTH) {
+      if (
+        a.noOffsetOrStride && b.noOffsetOrStride && a.length < DenseVectorSupportMethods.MAX_SMALL_DOT_PRODUCT_LENGTH
+      ) {
         DenseVectorSupportMethods.smallDotProduct_Double(a.data, b.data, a.length)
       } else {
         blasPath(a, b)
@@ -774,12 +782,12 @@ object DenseVector
   @expand
   @expand.valify
   implicit def canNorm[@expand.args(Int, Float, Long, BigInt, Complex) T]
-    : norm.Impl2[DenseVector[T], Double, Double] = {
+      : norm.Impl2[DenseVector[T], Double, Double] = {
 
     new norm.Impl2[DenseVector[T], Double, Double] {
       def apply(v: DenseVector[T], p: Double): Double = {
         if (p == 2) {
-          math.sqrt( (v dot v).abs.toDouble)
+          math.sqrt(v.dot(v).abs.toDouble)
         } else if (p == 1) {
           var sum = 0.0
           cforRange(0 until v.length)(i => sum += v(i).abs.toDouble)
@@ -808,7 +816,7 @@ object DenseVector
     new norm.Impl2[DenseVector[Double], Double, Double] {
       def apply(v: DenseVector[Double], p: Double): Double = {
         if (p == 2) {
-          math.sqrt(v dot v)
+          math.sqrt(v.dot(v))
         } else if (p == 1) {
           var sum = 0.0
           cforRange(0 until v.length)(i => sum += math.abs(v(i)))
@@ -830,14 +838,16 @@ object DenseVector
     }
   }
 
-  implicit def canDim[E]: dim.Impl[DenseVector[E], Int] = new dim.Impl[DenseVector[E], Int] {
-    def apply(v: DenseVector[E]): Int = v.length
-  }
+  implicit def canDim[E]: dim.Impl[DenseVector[E], Int] =
+    new dim.Impl[DenseVector[E], Int] {
+      def apply(v: DenseVector[E]): Int = v.length
+    }
 
   // this produces bad spaces for builtins (inefficient because of bad implicit lookup)
-  implicit def space[E](
-      implicit field: Field[E],
-      man: ClassTag[E]): MutableFiniteCoordinateField[DenseVector[E], Int, E] = {
+  implicit def space[E](implicit
+      field: Field[E],
+      man: ClassTag[E]
+  ): MutableFiniteCoordinateField[DenseVector[E], Int, E] = {
     import field._
     implicit val cmv = canMapValues[E, E]
     MutableFiniteCoordinateField.make[DenseVector[E], Int, E]

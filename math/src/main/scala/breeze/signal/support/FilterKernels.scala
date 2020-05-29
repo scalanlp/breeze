@@ -58,5 +58,5 @@ class IIRKernel1D[T](
     val kernelA: DenseVector[T],
     val kernelB: DenseVector[T],
     override val multiplier: Double,
-    override val designText: String)
-    extends FilterKernel1D[T] {}
+    override val designText: String
+) extends FilterKernel1D[T] {}

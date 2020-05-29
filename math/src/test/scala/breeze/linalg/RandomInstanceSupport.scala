@@ -32,7 +32,7 @@ import scala.reflect.ClassTag
 object RandomInstanceSupport {
 
   // relative errors get really screwy for small and big values
-  def reasonableClamp(v: Double, lower: Double = 1E-4, upper: Double = 1E3): Double = {
+  def reasonableClamp(v: Double, lower: Double = 1e-4, upper: Double = 1e3): Double = {
     if (v == 0) 0
     else if (v.abs < lower) v + math.signum(v) * lower
     else if (v.abs > upper) reasonableClamp(v % upper)
@@ -44,7 +44,7 @@ object RandomInstanceSupport {
   }
 
   val genReasonableFloat: Arbitrary[Float] = Arbitrary {
-    Arbitrary.arbitrary[Double].map(reasonableClamp(_, 1E-4, 1E4).toFloat)
+    Arbitrary.arbitrary[Double].map(reasonableClamp(_, 1e-4, 1e4).toFloat)
   }
 
   val genReasonableInt: Arbitrary[Int] = Arbitrary {

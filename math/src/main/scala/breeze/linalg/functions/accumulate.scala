@@ -12,9 +12,10 @@ import breeze.util.ReflectionUtil
  */
 object accumulate extends UFunc {
 
-  implicit def dvAccumulate[T](
-      implicit zero: Zero[T],
-      add: OpAdd.Impl2[T, T, T]): Impl[DenseVector[T], DenseVector[T]] =
+  implicit def dvAccumulate[T](implicit
+      zero: Zero[T],
+      add: OpAdd.Impl2[T, T, T]
+  ): Impl[DenseVector[T], DenseVector[T]] =
     new Impl[DenseVector[T], DenseVector[T]] {
       def apply(dv: DenseVector[T]): DenseVector[T] = {
         implicit val ct = ReflectionUtil.elemClassTagFromArray(dv.data)

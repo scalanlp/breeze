@@ -11,8 +11,12 @@ import spire.implicits.cforRange
 
 //  Options fot the singular value decomposition (SVD) of a real M-by-N matrix
 sealed private[this] abstract class SVDMode(val JOBZ: String)
-private[this] case object CompleteSVD extends SVDMode("A") // all M columns of U and all N rows of V**T are returned in the arrays U and VT
-private[this] case object ReducedSVD extends SVDMode("S") // the first min(M,N) columns of U and the first min(M,N) rows of V**T are returned in the arrays U and VT
+private[this] case object CompleteSVD
+    extends SVDMode("A") // all M columns of U and all N rows of V**T are returned in the arrays U and VT
+private[this] case object ReducedSVD
+    extends SVDMode(
+      "S"
+    ) // the first min(M,N) columns of U and the first min(M,N) rows of V**T are returned in the arrays U and VT
 
 /**
  * Computes the SVD of a M-by-N matrix
@@ -84,12 +88,14 @@ object svd extends UFunc {
       + scala.math.max(
         scala.math.max(m, n),
         4L * scala.math.min(m, n)
-          * scala.math.min(m, n) + 4L * scala.math.min(m, n)))
+          * scala.math.min(m, n) + 4L * scala.math.min(m, n)
+      ))
     if (workSize >= Int.MaxValue) {
       throw new RuntimeException(
         "The param k and numFeatures is too large for SVD computation. " +
           "Try reducing the parameter k for PCA, or reduce the input feature " +
-          "vector dimension to make this tractable.")
+          "vector dimension to make this tractable."
+      )
     }
     val work = new Array[Double](workSize.toInt)
     val info = new intW(0)
@@ -114,7 +120,8 @@ object svd extends UFunc {
       work,
       work.length,
       iwork,
-      info)
+      info
+    )
 
     if (info.`val` > 0)
       throw new NotConvergedException(NotConvergedException.Iterations)
@@ -152,7 +159,8 @@ object svd extends UFunc {
       + scala.math.max(
         scala.math.max(m, n),
         4 * scala.math.min(m, n)
-          * scala.math.min(m, n) + 4 * scala.math.min(m, n)))
+          * scala.math.min(m, n) + 4 * scala.math.min(m, n)
+      ))
     val work = new Array[Float](workSize)
     val info = new intW(0)
     val cm = copy(mat)
@@ -176,7 +184,8 @@ object svd extends UFunc {
       work,
       work.length,
       iwork,
-      info)
+      info
+    )
 
     if (info.`val` > 0)
       throw new NotConvergedException(NotConvergedException.Iterations)
@@ -222,11 +231,12 @@ object svd extends UFunc {
    * @return Left singular vectors matrix of size n*k, singular value vector of length k, and
    *         transpose of right singular vectors matrix of size k*m.
    */
-  implicit def Svd_Sparse_Impl[Mat, MatTranspose](
-      implicit mul: OpMulMatrixDenseVector[Mat],
+  implicit def Svd_Sparse_Impl[Mat, MatTranspose](implicit
+      mul: OpMulMatrixDenseVector[Mat],
       trans: CanTranspose[Mat, MatTranspose],
       mulTrans: OpMulMatrixDenseVector[MatTranspose],
-      dimImpl: dim.Impl[Mat, (Int, Int)]): Impl3[Mat, Int, Double, DenseSVD] = {
+      dimImpl: dim.Impl[Mat, (Int, Int)]
+  ): Impl3[Mat, Int, Double, DenseSVD] = {
 
     class Svd_Sparse_Impl_Instance extends Impl3[Mat, Int, Double, DenseSVD] {
       val arpack = ARPACK.getInstance()
@@ -238,7 +248,8 @@ object svd extends UFunc {
           k: Int,
           work: Array[Double],
           input_offset: Int,
-          output_offset: Int): Unit = {
+          output_offset: Int
+      ): Unit = {
         val w = DenseVector(work)
         val x = w(input_offset until input_offset + n)
         val y = w(output_offset until output_offset + n)
@@ -247,7 +258,8 @@ object svd extends UFunc {
         if (z.length <= k)
           throw new IllegalArgumentException(
             "The number of rows or columns " +
-              "should be bigger than k.")
+              "should be bigger than k."
+          )
         y := mul(mat, z)
       }
 
@@ -306,7 +318,8 @@ object svd extends UFunc {
           workd,
           workl,
           workl.length,
-          info)
+          info
+        )
 
         while (ido.`val` != 99) {
           if (ido.`val` != -1 && ido.`val` != 1)
@@ -328,7 +341,8 @@ object svd extends UFunc {
             workd,
             workl,
             workl.length,
-            info)
+            info
+          )
         }
 
         if (info.`val` != 0) throw new IllegalStateException("info = " + info.`val`)
@@ -359,7 +373,8 @@ object svd extends UFunc {
           workd,
           workl,
           workl.length,
-          info)
+          info
+        )
 
         val computed = iparam(4)
         val eigenVectors = new DenseVector(z)
@@ -371,7 +386,8 @@ object svd extends UFunc {
           if (eigenVal < 0.0)
             throw new IllegalStateException(
               "encountered negative eigenvalue, " +
-                "please make sure your multiplication operators are applied to the same matrix.")
+                "please make sure your multiplication operators are applied to the same matrix."
+            )
           val eigenVec = eigenVectors(i * n until i * n + n)
           mp(i) = (scala.math.sqrt(eigenVal), eigenVec)
         }
@@ -408,7 +424,8 @@ object svd extends UFunc {
       if (k >= mt.cols || k >= mt.rows) {
         throw new IllegalArgumentException(
           "The desired number of singular values is greater " +
-            "than or equal to min(mt.cols, mt.rows). Please use the full svd.")
+            "than or equal to min(mt.cols, mt.rows). Please use the full svd."
+        )
       }
 
       val svdImpl = svd.Svd_Sparse_Impl[CSCMatrix[Double], CSCMatrix[Double]]

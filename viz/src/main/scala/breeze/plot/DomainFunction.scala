@@ -30,7 +30,7 @@ object DomainFunction {
 
   implicit def seqIsDomainFunction[T, V](implicit ev: T <:< collection.Seq[V]): DomainFunction[T, Int, V] = {
     new DomainFunction[T, Int, V] {
-      def domain(t: T): IndexedSeq[Int] = (0 until t.length)
+      def domain(t: T): IndexedSeq[Int] = 0 until t.length
 
       def apply(t: T, k: Int): V = {
         t(k)

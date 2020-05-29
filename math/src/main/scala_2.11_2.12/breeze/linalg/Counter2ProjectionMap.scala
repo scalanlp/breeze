@@ -1,6 +1,7 @@
 package breeze.linalg
 
-private class Counter2ProjectionMap[K1, K2, V](counter: Counter2[K1, K2, V], col: K2) extends scala.collection.mutable.Map[K1, V] {
+private class Counter2ProjectionMap[K1, K2, V](counter: Counter2[K1, K2, V], col: K2)
+    extends scala.collection.mutable.Map[K1, V] {
   override def apply(k1: K1) =
     counter(k1, col)
 

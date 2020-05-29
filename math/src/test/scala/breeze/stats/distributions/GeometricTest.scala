@@ -27,23 +27,29 @@ class GeometricTest extends FunSuite with Checkers with MomentsTestBase[Int] wit
 
   override val numSamples = 10000
 
-  override val VARIANCE_TOLERANCE: Double = 1E-1
+  override val VARIANCE_TOLERANCE: Double = 1e-1
 
   def paramsClose(p: Double, q: Double) = {
-    (p - q).abs / (p.abs / 2 + q.abs / 2 + 1) < 1E-1
+    (p - q).abs / (p.abs / 2 + q.abs / 2 + 1) < 1e-1
   }
 
-  def arbParameter = Arbitrary {
-    for (p <- arbitrary[Double].map { m =>
-        (math.abs(m) % 1.0) + 1E-3
-      }) yield p
-  }
+  def arbParameter =
+    Arbitrary {
+      for (
+        p <- arbitrary[Double].map { m =>
+          (math.abs(m) % 1.0) + 1e-3
+        }
+      ) yield p
+    }
 
-  def arbDistr = Arbitrary {
-    for (p <- arbitrary[Double].map { m =>
-        (math.abs(m) % 1.0) + 1E-3
-      }) yield new Geometric(p)(RandBasis.mt0)
-  }
+  def arbDistr =
+    Arbitrary {
+      for (
+        p <- arbitrary[Double].map { m =>
+          (math.abs(m) % 1.0) + 1e-3
+        }
+      ) yield new Geometric(p)(RandBasis.mt0)
+    }
 
   def asDouble(x: Int) = x.toDouble
   def fromDouble(x: Double) = x.toInt

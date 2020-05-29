@@ -41,8 +41,8 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](
     var data: Array[V],
     private var used: Int,
     val size: Int,
-    val default: V)
-    extends ArrayLike[V]
+    val default: V
+) extends ArrayLike[V]
     with Storage[V]
     with Serializable {
 
@@ -316,11 +316,15 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](
       if (used > data.length) {
         // need to grow array
         val newLength = {
-          if (data.length == 0) { 4 } else if (data.length < 0x0400) { data.length * 2 } else if (data.length < 0x0800) {
+          if (data.length == 0) { 4 }
+          else if (data.length < 0x0400) { data.length * 2 }
+          else if (data.length < 0x0800) {
             data.length + 0x0400
-          } else if (data.length < 0x1000) { data.length + 0x0800 } else if (data.length < 0x2000) {
+          } else if (data.length < 0x1000) { data.length + 0x0800 }
+          else if (data.length < 0x2000) {
             data.length + 0x1000
-          } else if (data.length < 0x4000) { data.length + 0x2000 } else { data.length + 0x4000 }
+          } else if (data.length < 0x4000) { data.length + 0x2000 }
+          else { data.length + 0x4000 }
         }
 
         // allocate new arrays
@@ -417,51 +421,52 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](
 
   override def hashCode: Int = ArrayUtil.zeroSkippingHashCode(data, 0, 1, used)
 
-  override def equals(o: Any): Boolean = o match {
-    case z: SparseArray[V @unchecked] =>
-      if (z.length != length) {
-        false
-      } else if (z.default != default) {
-        // we could make this faster, but eh
-        cforRange(0 until length) { i =>
-          if (z(i) != this(i)) {
-            return false
+  override def equals(o: Any): Boolean =
+    o match {
+      case z: SparseArray[V @unchecked] =>
+        if (z.length != length) {
+          false
+        } else if (z.default != default) {
+          // we could make this faster, but eh
+          cforRange(0 until length) { i =>
+            if (z(i) != this(i)) {
+              return false
+            }
           }
-        }
-        true
-      } else if (z.used < used) {
-        z == this
-      } else {
-        // z is bigger
-        var off: Int = 0
-        var zoff: Int = 0
-        val size = used
-        val zsize = z.used
+          true
+        } else if (z.used < used) {
+          z == this
+        } else {
+          // z is bigger
+          var off: Int = 0
+          var zoff: Int = 0
+          val size = used
+          val zsize = z.used
 
-        while (off < size && zoff < zsize) {
-          if (indexAt(off) < z.indexAt(zoff)) {
-            if (valueAt(off) != default) {
-              return false
+          while (off < size && zoff < zsize) {
+            if (indexAt(off) < z.indexAt(zoff)) {
+              if (valueAt(off) != default) {
+                return false
+              }
+              off += 1
+            } else if (z.indexAt(zoff) < indexAt(off)) {
+              if (z.valueAt(zoff) != default) {
+                return false
+              }
+              zoff += 1
+            } else {
+              if (z.valueAt(zoff) != valueAt(off)) {
+                return false
+              }
+              off += 1
+              zoff += 1
             }
-            off += 1
-          } else if (z.indexAt(zoff) < indexAt(off)) {
-            if (z.valueAt(zoff) != default) {
-              return false
-            }
-            zoff += 1
-          } else {
-            if (z.valueAt(zoff) != valueAt(off)) {
-              return false
-            }
-            off += 1
-            zoff += 1
           }
-        }
 
-        true
-      }
-    case _ => false
-  }
+          true
+        }
+      case _ => false
+    }
 }
 
 object SparseArray {
@@ -471,7 +476,8 @@ object SparseArray {
       values.toArray,
       values.length,
       values.length,
-      implicitly[Zero[T]].zero)
+      implicitly[Zero[T]].zero
+    )
     rv.compact()
     rv
   }
