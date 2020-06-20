@@ -67,7 +67,7 @@ abstract class FirstOrderMinimizer[T, DF <: StochasticDiffFunction[T]](val conve
           .max(1E-6 * state.initialAdjVal.abs))
         logger.info(f"Val and Grad Norm: $adjValue%.6g (rel: $oneOffImprovement%.3g) ${norm(adjGrad)}%.6g")
         val history = updateHistory(x, grad, value, adjustedFun, state)
-        val newCInfo = convergenceCheck.update(x, grad, value, state, state.convergenceInfo)
+        val newCInfo = convergenceCheck.update(x, adjGrad, adjValue, state, state.convergenceInfo)
         failedOnce = false
         FirstOrderMinimizer.State(
           x,
