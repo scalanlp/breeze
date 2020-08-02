@@ -24,7 +24,7 @@ import scala.reflect.ClassTag
  *
  *  @tparam T    the type of the elements for the builder.
  */
-abstract class ArrayBuilder[@specialized T] extends ReusableBuilder[T, Array[T]] with Serializable {
+abstract class ArrayBuilder[@specialized T] extends Builder[T, Array[T]] with Serializable {
   def +=(elem: T): this.type
 }
 
