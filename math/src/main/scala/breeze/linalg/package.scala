@@ -147,7 +147,7 @@ package object linalg {
     requireSquareMatrix(mat)
 
     for (i <- 0 until mat.rows; j <- 0 until i)
-      if (abs(mat(i, j) - mat(j, i)) > abs(mat(i, j)) * tol)
+      if (!numerics.closeTo(mat(i, j), mat(j, i), tol))
         throw new MatrixNotSymmetricException
   }
 
