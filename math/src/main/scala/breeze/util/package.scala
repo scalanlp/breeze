@@ -2,7 +2,6 @@ package breeze
 
 import java.util.zip._
 import java.io._
-import java.util
 
 import scala.collection.generic._
 import scala.collection.mutable
