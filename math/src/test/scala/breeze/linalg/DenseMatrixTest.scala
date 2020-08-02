@@ -814,6 +814,15 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     assert((rI * rI).mapValues(_.toDouble) === (rD * rD))
   }
 
+  test("#772 - weird copy bug") {
+    val rows = 3
+    val cols = 4
+    val data = Array[Double](1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+    val dm = new DenseMatrix(rows, cols, data, 0, cols, isTranspose = true)
+    val sm = dm(2 until 3, 0 until 2)
+    assert(sm == sm.copy)
+  }
+
 }
 
 trait MatrixTestUtils extends Matchers {

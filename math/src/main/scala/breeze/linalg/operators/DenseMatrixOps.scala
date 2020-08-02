@@ -550,13 +550,11 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
   @expand.valify
   implicit def dm_dm_UpdateOp[
       @expand.args(Int, Double, Float, Long) T,
-      @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](implicit @expand.sequence[Op]({
-    _ + _
-  }, { _ - _ }, { _ * _ }, { _ / _ }, { (a, b) =>
-    b
-  }, { _ % _ }, { _.pow(_) }) op: Op.Impl2[T, T, T], @expand.sequence[Op]({ _ += _ }, { _ -= _ }, { _ :*= _ }, {
-    _ :/= _
-  }, { _ := _ }, { _ %= _ }, { _ :^= _ }) vecOp: Op.Impl2[T, T, T]): Op.InPlaceImpl2[DenseMatrix[T], DenseMatrix[T]] = {
+      @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](implicit
+          @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ / _ }, { (a, b) => b }, { _ % _ }, { _.pow(_) })
+          op: Op.Impl2[T, T, T],
+          @expand.sequence[Op]({ _ += _ }, { _ -= _ }, { _ :*= _ }, { _ :/= _ }, { _ := _ }, { _ %= _ }, { _ :^= _ })
+          vecOp: Op.Impl2[T, T, T]): Op.InPlaceImpl2[DenseMatrix[T], DenseMatrix[T]] = {
 
     new Op.InPlaceImpl2[DenseMatrix[T], DenseMatrix[T]] {
       def apply(a: DenseMatrix[T], b: DenseMatrix[T]): Unit = {
@@ -1098,7 +1096,7 @@ trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
           System.arraycopy(b.data, b.offset + j * b.majorStride, a.data, a.offset + j * a.majorStride, a.minorSize)
         }
       } else {
-        cacheObliviousTranspose(0, a.majorSize, 0, b.majorSize, a.data, a.majorStride, b.data, b.majorStride)
+        cacheObliviousTranspose(0, a.majorSize, 0, b.majorSize, a.data, a.offset, a.majorStride, b.data, b.offset, b.majorStride)
       }
     }
 
@@ -1108,21 +1106,23 @@ trait LowPriorityDenseMatrix extends LowPriorityDenseMatrix1 {
         cBegin: Int,
         cEnd: Int,
         dst: Array[V],
+        dstOff: Int,
         aMajorStride: Int,
         src: Array[V],
+        srcOff: Int,
         bMajorStride: Int): Unit = {
       val r = rEnd - rBegin
       val c = cEnd - cBegin
       if (r <= 16 && c <= 16) {
         cforRange2(rBegin until rEnd, cBegin until cEnd) { (j, i) =>
-          dst(j * aMajorStride + i) = src(i * bMajorStride + j)
+          dst(dstOff + j * aMajorStride + i) = src(srcOff + i * bMajorStride + j)
         }
       } else if (r >= c) {
-        cacheObliviousTranspose(rBegin, rBegin + (r / 2), cBegin, cEnd, dst, aMajorStride, src, bMajorStride)
-        cacheObliviousTranspose(rBegin + (r / 2), rEnd, cBegin, cEnd, dst, aMajorStride, src, bMajorStride)
+        cacheObliviousTranspose(rBegin, rBegin + (r / 2), cBegin, cEnd, dst, dstOff, aMajorStride, src, srcOff, bMajorStride)
+        cacheObliviousTranspose(rBegin + (r / 2), rEnd, cBegin, cEnd, dst, dstOff,aMajorStride, src, srcOff,bMajorStride)
       } else {
-        cacheObliviousTranspose(rBegin, rEnd, cBegin, cBegin + (c / 2), dst, aMajorStride, src, bMajorStride)
-        cacheObliviousTranspose(rBegin, rEnd, cBegin + (c / 2), cEnd, dst, aMajorStride, src, bMajorStride)
+        cacheObliviousTranspose(rBegin, rEnd, cBegin, cBegin + (c / 2), dst, dstOff,aMajorStride, src, srcOff,bMajorStride)
+        cacheObliviousTranspose(rBegin, rEnd, cBegin + (c / 2), cEnd, dst, dstOff,aMajorStride, src, srcOff,bMajorStride)
       }
     }
   }
