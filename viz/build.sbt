@@ -23,7 +23,7 @@ libraryDependencies += "org.scala-lang" % "scala-reflect" % s"${scalaVersion.val
 
 credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
 
-scalacOptions ++= Seq("-deprecation", "-language:_", "-optimize")
+scalacOptions ++= Seq("-deprecation", "-language:_")
 
 javaOptions += "-Xmx2g"
 
