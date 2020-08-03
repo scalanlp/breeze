@@ -17,17 +17,6 @@ libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.1"
 )
 
-/*libraryDependencies ++= {
-  CrossVersion.partialVersion(scalaVersion.value) match {
-    case Some((2, 10)) =>
-      Seq()
-    case _ =>
-      Seq(
-        "org.scala-lang.modules" %% "scala-xml" % "1.0.6" % "test"
-      )
-  }
-}*/
-
 // see https://github.com/typesafehub/scalalogging/issues/23
 testOptions in Test += Tests.Setup(classLoader =>
   try {
