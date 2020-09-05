@@ -2,7 +2,7 @@
 
 Breeze is a library for numerical processing. It aims to be generic, clean, and powerful without sacrificing (much) efficiency.
 
-The latest release is 1.1, which is cross-built against Scala 2.11, 2.12, and 2.13.
+The latest release is 1.1, which is cross-built against Scala 2.12 and 2.13.
 
 ## Documentation
 
