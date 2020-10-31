@@ -38,6 +38,52 @@ class VectorBuilderTest extends FunSuite with Checkers {
     assert(vb.toHashVector === HashVector[Double](7.0, 1.0, 3.0))
   }
 
+  test("toSparseVector with data having unique keys") {
+    val uniqueGen = Arbitrary {
+      for {
+        activeSize <- Gen.chooseNum[Int](20, 100)
+        actives <- Gen.listOfN(activeSize, Gen.chooseNum[Int](0, 200))
+      } yield actives.distinct
+    }
+
+    check(Prop.forAll(uniqueGen.arbitrary) { vs: List[Int] =>
+      val vb = new VectorBuilder[Int](300)
+
+      vs.foreach { v =>
+        vb.add(v, v)
+      }
+
+      val result = vb.toSparseVector(keysAlreadyUnique = true)
+
+      result.activeSize === vs.length &&
+        result === SparseVector[Int](300)(vs.sorted.map(v => (v, v)):_*)
+    })
+  }
+
+  test("toSparseVector with duplicated keys") {
+    val inputGen = Arbitrary {
+      for {
+        activeSize <- Gen.chooseNum[Int](300, 3000)
+        actives <- Gen.listOfN(activeSize, Gen.chooseNum[Int](0, 200))
+      } yield actives
+    }
+
+    check(Prop.forAll(inputGen.arbitrary) { vs: List[Int] =>
+      val vb = new VectorBuilder[Int](300)
+
+      vs.foreach { v =>
+        vb.add(v, v)
+      }
+
+      val result = vb.toSparseVector
+
+      val expectedKVs = vs.groupBy(identity).map(p => p._1 -> p._2.sum).toList.sortBy(_._1)
+      
+      result.activeSize === vs.distinct.length &&
+        result === SparseVector[Int](300)(expectedKVs:_*)
+    })
+  }
+
   implicit def genPair: Arbitrary[(VectorBuilder[Double], VectorBuilder[Double])] = {
     Arbitrary {
       for {

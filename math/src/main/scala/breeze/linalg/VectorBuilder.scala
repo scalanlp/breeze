@@ -213,12 +213,11 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](
         }
         i += 1
       }
+      if (outIndex.length > 0)
+        out += 1
     } else {
       out = used
     }
-
-    if (outIndex.length > 0)
-      out += 1
 
     new SparseVector(outIndex, outValues, out, length)
   }
