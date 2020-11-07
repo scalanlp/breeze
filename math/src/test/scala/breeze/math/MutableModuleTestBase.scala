@@ -1,6 +1,6 @@
 package breeze.math
 
-import org.scalacheck.Prop.BooleanOperators
+import org.scalacheck.Prop.propBoolean
 import org.scalacheck._
 import org.scalatest.FunSuite
 import org.scalatestplus.scalacheck.Checkers
