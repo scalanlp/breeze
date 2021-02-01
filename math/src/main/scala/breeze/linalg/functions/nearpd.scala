@@ -1,4 +1,5 @@
 // WIP file holder for a find nearest positive definite matrix function
+<<<<<<< HEAD
 
 package breeze.linalg.functions
 
@@ -274,3 +275,5 @@ class NearPD(matA: DenseMatrix[Double], corrBool: Boolean = false, keepDiag: Boo
 //                Array(0.651, 0.682, 0.581, 0.741, 1,     0.798),
 //                Array(0.826, 0.75,  0.742, 0.8,   0.798, 1)):_*
 // )
+=======
+>>>>>>> 694c019cb53517fbaa1b06197ad2ca476772a26f
