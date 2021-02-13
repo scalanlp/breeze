@@ -199,8 +199,8 @@ class NumericsTest extends FunSuite with Checkers with Matchers {
   }
 
   test("log") {
-    assert(log(2d, 4d) == 2d)
-    assert(log(3d, 81d) == 4d)
+    (log(2d, 4d) should be(2d +- 1e-7))
+    (log(3d, 81d) should be(4d +- 1e-7))
   }
 
   test("pow") {
