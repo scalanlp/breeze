@@ -18,7 +18,7 @@ crossScalaVersions := Common.buildCrossScalaVersions
 
 scalaVersion := Common.buildScalaVersion
 
-libraryDependencies += "org.scala-lang" % "scala-reflect" % s"${scalaVersion.value}"
+//libraryDependencies += "org.scala-lang" % "scala-reflect" % s"${scalaVersion.value}"
 
 credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
 

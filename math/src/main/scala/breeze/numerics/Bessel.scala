@@ -75,13 +75,13 @@ object Bessel {
     b1 = 0.0
     i = N - 1
 
-    do {
+    while (i > 0) {
       b2 = b1
       b1 = b0
       b0 = x * b1 - b2 + coef(p)
       p += 1
       i -= 1
-    } while (i > 0)
+    }
 
     (0.5 * (b0 - b2))
   }

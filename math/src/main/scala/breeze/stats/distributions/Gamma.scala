@@ -135,10 +135,13 @@ case class Gamma(shape: Double, scale: Double)(implicit rand: RandBasis = Rand)
       while (!ok) {
         var v = 0.0
         var x = 0.0
-        do {
+
+        var continue = true
+        while (continue) {
           x = rand.generator.nextGaussian
           v = 1.0 + c * x
-        } while (v <= 0)
+          continue = v <= 0
+        }
 
         v = v * v * v
         val x2 = x * x

@@ -12,7 +12,7 @@ object Common {
     }
   }
 
-  val buildCrossScalaVersions = Seq("2.12.10", "2.13.3", "3.0.0-M3")
+  val buildCrossScalaVersions = Seq("3.0.0-M3", "2.12.10", "2.13.3")
 
   lazy val buildScalaVersion = buildCrossScalaVersions.head
 
@@ -70,19 +70,18 @@ object Common {
         ),
       } else {
         Seq(
-          "org.scalatest" %% "scalatest" % "3.1.1" % "test",
+          "org.scalatest" % "scalatest_2.13" % "3.2.3" % "test",
           ("org.scalatestplus" % "scalacheck-1-14_2.13" % "3.1.1.1" % "test")
-            .intransitive()
-            .withDottyCompat(scalaVersion.value),
-          ("org.scalacheck" % "scalacheck_2.13" % "1.14.3" % "test").withDottyCompat(scalaVersion.value)
-        )
+            .intransitive(),
+          "org.scalacheck" % "scalacheck_2.13" % "1.14.3" % "test"
+        ).map(_.withDottyCompat(scalaVersion.value))
       }
     },
     scalacOptions ++= {
       if (priorTo2_13(scalaVersion.value)) {
         Seq.empty
       } else {
-        Seq("-Ymacro-annotations")
+        Seq("-Ymacro-annotations", "-language:implicitConversions")
       }
     }
   )

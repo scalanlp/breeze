@@ -69,19 +69,25 @@ case class Binomial(n: Int, p: Double)(implicit rand: RandBasis = Rand)
     } else {
       var y = 1.0
       var t = 1.0
-      do {
-        do {
+      var continueOuter = true
+      while (continueOuter) {
+        var continueInner = true
+        while(continueInner) {
           val angle = math.Pi * rand.uniform.draw()
           y = tan(angle)
           bnl = sq * y + np
-        } while (bnl < 0.0 || bnl >= (n + 1.0))
+        }
+        continueInner = bnl < 0.0 || bnl >= (n + 1.0)
+
         bnl = floor(bnl)
         t = 1.2 * sq * (1.0 + y * y) * exp(
           nfact - breeze.numerics.lgamma(bnl + 1.0)
             - breeze.numerics.lgamma(n - bnl + 1.0)
             + bnl * plog + (n - bnl) * pclog
         )
-      } while (rand.uniform.get > t)
+
+        continueOuter = (rand.uniform.get > t)
+      }
     }
     if (p != pp) bnl = n - bnl
     bnl.toInt

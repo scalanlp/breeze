@@ -9,8 +9,8 @@ libraryDependencies ++= Seq(
   "org.apfloat" % "apfloat" % "1.6.3",
   "org.jscience" % "jscience" % "4.3.1",
   "org.apache.commons" % "commons-math3" % "3.2",
-  // thyme
-  "com.github.ichoran" %% "thyme" % "0.1.2-SNAPSHOT",
+//   thyme
+//  "com.github.ichoran" %% "thyme" % "0.1.2-SNAPSHOT",
   // caliper stuff
   "com.google.guava" % "guava" % "r09",
   "com.google.code.java-allocation-instrumenter" % "java-allocation-instrumenter" % "2.0",
