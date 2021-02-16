@@ -23,7 +23,7 @@ import java.util
 import scalaxy.debug._
 
 import scala.reflect.ClassTag
-import spire.syntax.cfor._
+import breeze.macros.cforRange
 import java.io.Serializable
 
 /**

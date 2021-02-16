@@ -69,8 +69,9 @@ object Common {
           ("org.scalacheck" %% "scalacheck" % "1.14.3" % "test")
         ),
       } else {
+        ("org.scalatest" %% "scalatest" % "3.2.3" % "test") +:
         Seq(
-          "org.scalatest" % "scalatest_2.13" % "3.2.3" % "test",
+          
           ("org.scalatestplus" % "scalacheck-1-14_2.13" % "3.1.1.1" % "test")
             .intransitive(),
           "org.scalacheck" % "scalacheck_2.13" % "1.14.3" % "test"
