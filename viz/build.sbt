@@ -3,7 +3,6 @@ name := "breeze-viz"
 organization := "org.scalanlp"
 
 resolvers ++= Seq(
-  "ScalaNLP Maven2".at("http://repo.scalanlp.org/repo"),
   "Sonatype Snapshots".at("https://oss.sonatype.org/content/repositories/snapshots/")
 )
 

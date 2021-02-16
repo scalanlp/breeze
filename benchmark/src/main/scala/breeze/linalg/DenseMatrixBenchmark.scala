@@ -105,27 +105,17 @@ class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
       })
       mat
     })
-  def timeUnsafeUpdateColRow(reps: Int) =
-    runWith(reps, { randomMatrix(2048, 2048) })((mat: DenseMatrix[Double]) => {
-      val size = 2048
-      cfor(0)(j => j < size, j => j + 1)(j => {
-        cfor(0)(i => i < size, i => i + 1)(i => {
-          mat.unsafeUpdate(i, j, i + j)
-        })
-      })
-      mat
-    })
 
-  def timeMapPairs(reps: Int) =
+  def timeMapPairs(reps: Int): DenseMatrix[Double] =
     runWith(reps, { randomMatrix(2048, 2048) })((mat: DenseMatrix[Double]) => {
       mat.mapPairs((x: (Int, Int), v: Double) => (x._1 * x._2 * v))
     })
-  def timeMapPairsTranspose(reps: Int) =
+  def timeMapPairsTranspose(reps: Int): DenseMatrix[Double] =
     runWith(reps, { randomMatrix(2048, 2048, true) })((mat: DenseMatrix[Double]) => {
       mat.mapPairs((x: (Int, Int), v: Double) => (x._1 * x._2 * v))
     })
 
-  def timeSinMatrix(reps: Int) = runWith(reps, randomMatrix(2500, 2500)): Unit = { dm =>
+  def timeSinMatrix(reps: Int): DenseMatrix[Double] = runWith(reps, randomMatrix(2500, 2500)) { dm =>
     sin(dm)
   }
 

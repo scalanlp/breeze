@@ -47,20 +47,20 @@ trait BuildsRandomVectors {
 }
 
 class DenseVectorBenchmark extends BreezeBenchmark with BuildsRandomVectors {
-  def timeAllocate(reps: Int) = run(reps): Unit = {
+  def timeAllocate(reps: Int): Unit = run(reps) {
     DenseVector.zeros[Double](1024)
   }
-  def timeFill(reps: Int) = run(reps): Unit = {
+  def timeFill(reps: Int): Unit = run(reps) {
     DenseVector.fill[Double](1024, 23)
   }
 
-  def timeForeach(reps: Int) = runWith(reps, randomArray(4000)): Unit = { arr =>
+  def timeForeach(reps: Int): Unit = runWith(reps, randomArray(4000)) { arr =>
     var sum = 0.0
     arr.foreach(sum += _)
     sum
   }
 
-  def timeLoop(reps: Int) = runWith(reps, randomArray(4000)): Unit = { arr =>
+  def timeLoop(reps: Int): Unit = runWith(reps, randomArray(4000)) { arr =>
     var sum = 0.0
     val d = arr.data
     cforRange(0 until arr.length) { i =>
@@ -74,8 +74,8 @@ class DenseVectorBenchmark extends BreezeBenchmark with BuildsRandomVectors {
       var i = 0
       var t: Double = 0
       while (i < arr.size) {
-        t += arr
-          .valueAt(i) //This is not strictly part of the benchmark, but done so that the JIT doensn't eliminate everything
+        t += arr.valueAt(i)
+        //This is not strictly part of the benchmark, but done so that the JIT doensn't eliminate everything
         i += 1
       }
       t
