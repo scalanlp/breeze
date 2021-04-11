@@ -1,5 +1,6 @@
 import sbt.Keys._
 import sbt._
+import breeze.codegen.plugin.SbtBreezeCodegenPlugin.breezeCodegenSettings
 
 object Common {
 
@@ -76,5 +77,5 @@ object Common {
         Seq("-Ymacro-annotations")
       }
     }
-  )
+  ) ++ breezeCodegenSettings
 }

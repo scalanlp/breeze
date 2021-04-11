@@ -40,11 +40,11 @@ object accumulateAndCount extends UFunc {
   @expand
   implicit def reduce[T, @expand.args(Double, Complex, Float) Scalar](
       implicit iter: CanTraverseValues[T, Scalar],
-      @expand.sequence[Scalar](0.0, Complex.zero, 0.0f) zero: Scalar): Impl[T, (Scalar, Int)] =
+      @expand.sequence[Scalar](0.0, Complex.zero, 0.0f) _zero: Scalar): Impl[T, (Scalar, Int)] =
     new Impl[T, (Scalar, Int)] {
       def apply(v: T): (Scalar, Int) = {
         val visit = new ValuesVisitor[Scalar] {
-          var sum = zero
+          var sum = _zero
           var n = 0
           def visit(a: Scalar): Unit = {
             sum += a

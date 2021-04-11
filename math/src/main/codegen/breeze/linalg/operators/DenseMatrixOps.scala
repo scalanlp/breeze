@@ -5,18 +5,17 @@ import breeze.linalg._
 import breeze.linalg.support.{CanCollapseAxis, CanSlice2}
 import breeze.macros.expand
 import breeze.math.{Field, Semiring}
-import breeze.numerics.Bessel.i1
-import breeze.numerics.pow
 import breeze.storage.Zero
 import breeze.util.ArrayUtil
-import org.netlib.util.intW
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
-import spire.syntax.cfor._
-
-import scala.{specialized => spec}
-import scala.reflect.ClassTag
+import org.netlib.util.intW
 import scalaxy.debug._
+import spire.syntax.cfor._
+import breeze.math.PowImplicits._
+
+import scala.reflect.ClassTag
+import scala.{specialized => spec}
 
 trait DenseMatrixMultiplyStuff extends DenseMatrixOps with DenseMatrixMultOps with LowPriorityDenseMatrix {
   this: DenseMatrix.type =>
@@ -544,14 +543,13 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
 
   // <editor-fold defaultstate="collapsed" desc=" implicit implementations for OpXXX.InPlaceImpl2[DenseMatrix[T], DenseMatrix[T]] ">
   // don't remove
-  import breeze.math.PowImplicits._
 
   @expand
   @expand.valify
   implicit def dm_dm_UpdateOp[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](implicit
-          @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ / _ }, { (a, b) => b }, { _ % _ }, { _.pow(_) })
+          @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ / _ }, {  (__x, __y) => __y }, { _ % _ }, { _.pow(_) })
           op: Op.Impl2[T, T, T],
           @expand.sequence[Op]({ _ += _ }, { _ -= _ }, { _ :*= _ }, { _ :/= _ }, { _ := _ }, { _ %= _ }, { _ :^= _ })
           vecOp: Op.Impl2[T, T, T]): Op.InPlaceImpl2[DenseMatrix[T], DenseMatrix[T]] = {
@@ -640,9 +638,7 @@ trait DenseMatrixOps { this: DenseMatrix.type =>
   implicit def dm_s_UpdateOp[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
-      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ * _ }, { _ / _ }, { (a, b) =>
-        b
-      }, { _ % _ }, { _.pow(_) }) op: Op.Impl2[T, T, T]): Op.InPlaceImpl2[DenseMatrix[T], T] =
+      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ * _ }, { _ / _ }, {  (__x, __y) => __y }, { _ % _ }, { _.pow(_) }) op: Op.Impl2[T, T, T]): Op.InPlaceImpl2[DenseMatrix[T], T] =
     new Op.InPlaceImpl2[DenseMatrix[T], T] {
       def apply(a: DenseMatrix[T], b: T): Unit = {
 

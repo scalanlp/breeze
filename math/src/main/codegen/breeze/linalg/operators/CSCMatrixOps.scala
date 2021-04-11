@@ -2,21 +2,17 @@ package breeze.linalg
 package operators
 
 import breeze.generic.UFunc
-import breeze.linalg.support.{CanTranspose, CanZipMapKeyValues, CanZipMapValues}
+import breeze.linalg.support.{CanZipMapKeyValues, CanZipMapValues}
 import breeze.macros.expand
-import breeze.linalg.{DenseMatrix, SparseVector}
 import breeze.math._
-import breeze.numerics.pow
 import breeze.storage.Zero
-import breeze.util.{ArrayUtil, SerializableLogging, Sorting}
-
-import scala.reflect.ClassTag
-import java.util
-
-import breeze.linalg
-
+import breeze.util.{ArrayUtil, SerializableLogging}
 import scalaxy.debug._
 import spire.syntax.cfor._
+import breeze.math.PowImplicits._
+
+import java.util
+import scala.reflect.ClassTag
 
 /**
  * TODO
@@ -25,7 +21,6 @@ import spire.syntax.cfor._
  **/
 trait CSCMatrixOps extends CSCMatrixOps_Ring { this: CSCMatrix.type =>
   // don't remove
-  import breeze.math.PowImplicits._
 
   implicit def canMulSV_CSC_eq_CSC[T](
       implicit op: OpMulMatrix.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]],

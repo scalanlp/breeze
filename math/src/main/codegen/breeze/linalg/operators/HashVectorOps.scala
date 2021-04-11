@@ -3,20 +3,19 @@ package breeze.linalg.operators
 import breeze.collection.mutable.OpenAddressHashArray
 import breeze.generic.UFunc
 import breeze.generic.UFunc.UImpl2
-import breeze.linalg._
 import breeze.linalg.support.{CanCopy, CanZipMapKeyValues, CanZipMapValues}
+import breeze.linalg.{Vector, _}
 import breeze.macros.expand
 import breeze.math.{Field, Ring, Semiring}
 import breeze.storage.Zero
+import scalaxy.debug._
+import spire.syntax.cfor._
+import breeze.math.PowImplicits._
+
 import scala.reflect.ClassTag
 import scala.{specialized => spec}
-import scalaxy.debug._
-
-import breeze.util.ArrayUtil
-import spire.syntax.cfor._
 
 trait DenseVector_HashVector_Ops { this: HashVector.type =>
-  import breeze.math.PowImplicits._
 
   @expand
   @expand.valify
@@ -76,15 +75,12 @@ trait DenseVector_HashVector_Ops { this: HashVector.type =>
 }
 
 trait HashVector_DenseVector_Ops extends DenseVector_HashVector_Ops { this: HashVector.type =>
-  import breeze.math.PowImplicits._
   @expand
   @expand.valify
   implicit def hv_dv_UpdateOp[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
-      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ / _ }, { (a, b) =>
-        b
-      }, { _ % _ }, { _.pow(_) })
+      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ / _ }, {  (__x, __y) => __y }, { _ % _ }, { _.pow(_) })
       op: Op.Impl2[T, T, T]): Op.InPlaceImpl2[HashVector[T], DenseVector[T]] =
     new Op.InPlaceImpl2[HashVector[T], DenseVector[T]] {
       def apply(a: HashVector[T], b: DenseVector[T]): Unit = {
@@ -103,9 +99,7 @@ trait HashVector_DenseVector_Ops extends DenseVector_HashVector_Ops { this: Hash
   implicit def hv_dv_op[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
-      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ / _ }, { (a, b) =>
-        b
-      }, { _ % _ }, { _.pow(_) })
+      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ / _ }, {  (__x, __y) => __y }, { _ % _ }, { _.pow(_) })
       op: Op.Impl2[T, T, T]): Op.Impl2[HashVector[T], DenseVector[T], DenseVector[T]] = {
     new Op.Impl2[HashVector[T], DenseVector[T], DenseVector[T]] {
       def apply(a: HashVector[T], b: DenseVector[T]) = {
@@ -140,7 +134,6 @@ trait HashVector_DenseVector_Ops extends DenseVector_HashVector_Ops { this: Hash
 }
 
 trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
-  import breeze.math.PowImplicits._
   @expand
   @expand.valify
   implicit def hv_hv_RHS_Idempotent_Op[
@@ -224,9 +217,7 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
   implicit def hv_v_Op[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
-      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ / _ }, { (a, b) =>
-        b
-      }, { _ % _ }, { _.pow(_) })
+      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ / _ }, {  (__x, __y) => __y }, { _ % _ }, { _.pow(_) })
       op: Op.Impl2[T, T, T]): Op.Impl2[HashVector[T], Vector[T], HashVector[T]] =
     new Op.Impl2[HashVector[T], Vector[T], HashVector[T]] {
       def apply(a: HashVector[T], b: Vector[T]): HashVector[T] = {
@@ -513,14 +504,13 @@ trait HashVectorOps extends HashVector_GenericOps { this: HashVector.type =>
 }
 
 trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type =>
-  import breeze.math.PowImplicits._
 
   @expand
   @expand.valify
   implicit def hv_sv_lhs_nilpotent_Op[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
-      implicit @expand.sequence[Op]({ _ / _ }, { (a, b) => b }, { _ % _ }, { _.pow(_) })
+      implicit @expand.sequence[Op]({ _ / _ }, {  (__x, __y) => __y }, { _ % _ }, { _.pow(_) })
       op: Op.Impl2[T, T, T],
       @expand.sequence[T](0, 0.0, 0.0f, 0L) zero: T): Op.Impl2[HashVector[T], SparseVector[T], HashVector[T]] =
     new Op.Impl2[HashVector[T], SparseVector[T], HashVector[T]] {
@@ -634,15 +624,12 @@ trait HashVector_SparseVector_Ops extends HashVectorOps { this: HashVector.type 
 }
 
 trait SparseVector_HashVector_Ops extends HashVectorOps with HashVector_SparseVector_Ops { this: HashVector.type =>
-  import breeze.math.PowImplicits._
   @expand.valify
   @expand
   implicit def sv_hv_lhs_nilpotent_Op[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
-      implicit @expand.sequence[Op]({ _ / _ }, { (a, b) =>
-        b
-      }, { _ % _ }, { _.pow(_) })
+      implicit @expand.sequence[Op]({ _ / _ }, {  (__x, __y) => __y }, { _ % _ }, { _.pow(_) })
       op: Op.Impl2[T, T, T],
       @expand.sequence[T](0, 0.0, 0.0f, 0L) zero: T): Op.Impl2[SparseVector[T], HashVector[T], SparseVector[T]] =
     new Op.Impl2[SparseVector[T], HashVector[T], SparseVector[T]] {
@@ -750,7 +737,6 @@ trait SparseVector_HashVector_Ops extends HashVectorOps with HashVector_SparseVe
 }
 
 trait HashVector_GenericOps { this: HashVector.type =>
-  import breeze.math.PowImplicits._
   @expand
   implicit def pureFromUpdate[@expand.args(Int, Double, Float, Long) T, Other, Op <: OpType](
       op: UFunc.InPlaceImpl2[Op, HashVector[T], Other])(
