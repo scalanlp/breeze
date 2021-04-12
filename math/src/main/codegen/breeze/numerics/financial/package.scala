@@ -1,24 +1,26 @@
 package breeze.numerics
 
 import breeze.generic.UFunc
-import breeze.linalg._
 import breeze.linalg.support.CanTraverseValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
+import breeze.linalg.{DenseMatrix, DenseVector, argmin, eig, reverse}
 import breeze.macros.expand
-import breeze.math._
-import spire.implicits._
+import breeze.math.Complex
+import spire.implicits.cfor
 
 package object financial {
   sealed class PaymentTime(val t: Int)
+
   case object Start extends PaymentTime(1)
+
   case object End extends PaymentTime(0)
 
   def futureValue(
-      rate: Double,
-      numPeriods: Int,
-      payment: Double,
-      presentValue: Double,
-      when: PaymentTime = End): Double = {
+                   rate: Double,
+                   numPeriods: Int,
+                   payment: Double,
+                   presentValue: Double,
+                   when: PaymentTime = End): Double = {
     require(numPeriods >= 0)
     if (rate == 0) {
       -1 * (presentValue + payment * numPeriods)
@@ -30,11 +32,11 @@ package object financial {
   }
 
   def presentValue(
-      rate: Double,
-      numPeriods: Int,
-      payment: Double,
-      futureValue: Double,
-      when: PaymentTime = End): Double = {
+                    rate: Double,
+                    numPeriods: Int,
+                    payment: Double,
+                    futureValue: Double,
+                    when: PaymentTime = End): Double = {
     require(numPeriods >= 0)
     if (rate == 0) {
       -1 * (futureValue + payment * numPeriods)
@@ -48,8 +50,8 @@ package object financial {
   object netPresentValue extends UFunc {
     @expand
     implicit def reduce[@expand.args(Double, Float, Int) Scalar, T](
-        implicit iter: CanTraverseValues[T, Scalar],
-        @expand.sequence[Scalar](0.0, 0.0f, 0) zero: Scalar): Impl2[Double, T, Double] = new Impl2[Double, T, Double] {
+                                                                     implicit iter: CanTraverseValues[T, Scalar],
+                                                                     @expand.sequence[Scalar](0.0, 0.0f, 0) zero: Scalar): Impl2[Double, T, Double] = new Impl2[Double, T, Double] {
       def apply(rate: Double, revenueStream: T): Double = {
 
         val visit = new ValuesVisitor[Scalar] {
@@ -73,11 +75,11 @@ package object financial {
   }
 
   def payment(
-      rate: Double,
-      numPeriods: Int,
-      presentValue: Double,
-      futureValue: Double = 0.0,
-      when: PaymentTime = End): Double = {
+               rate: Double,
+               numPeriods: Int,
+               presentValue: Double,
+               futureValue: Double = 0.0,
+               when: PaymentTime = End): Double = {
     if (rate == 0) {
       -1 * (futureValue + presentValue) / numPeriods
     } else {
@@ -87,11 +89,11 @@ package object financial {
   }
 
   def principalInterest(
-      rate: Double,
-      numPeriods: Int,
-      presentValue: Double,
-      futureValue: Double = 0.0,
-      when: PaymentTime = End): (DenseVector[Double], DenseVector[Double], DenseVector[Double]) = {
+                         rate: Double,
+                         numPeriods: Int,
+                         presentValue: Double,
+                         futureValue: Double = 0.0,
+                         when: PaymentTime = End): (DenseVector[Double], DenseVector[Double], DenseVector[Double]) = {
     if (when == Start) {
       throw new IllegalArgumentException("This method is broken for payment at the start of the period!")
     }
@@ -114,27 +116,27 @@ package object financial {
   }
 
   def interestPayments(
-      rate: Double,
-      numPeriods: Int,
-      presentValue: Double,
-      futureValue: Double = 0.0,
-      when: PaymentTime = End): DenseVector[Double] =
+                        rate: Double,
+                        numPeriods: Int,
+                        presentValue: Double,
+                        futureValue: Double = 0.0,
+                        when: PaymentTime = End): DenseVector[Double] =
     principalInterest(rate, numPeriods, presentValue, futureValue, when)._1
 
   def principalPayments(
-      rate: Double,
-      numPeriods: Int,
-      presentValue: Double,
-      futureValue: Double = 0.0,
-      when: PaymentTime = End): DenseVector[Double] =
+                         rate: Double,
+                         numPeriods: Int,
+                         presentValue: Double,
+                         futureValue: Double = 0.0,
+                         when: PaymentTime = End): DenseVector[Double] =
     principalInterest(rate, numPeriods, presentValue, futureValue, when)._2
 
   def principalRemaining(
-      rate: Double,
-      numPeriods: Int,
-      presentValue: Double,
-      futureValue: Double = 0.0,
-      when: PaymentTime = End): DenseVector[Double] =
+                          rate: Double,
+                          numPeriods: Int,
+                          presentValue: Double,
+                          futureValue: Double = 0.0,
+                          when: PaymentTime = End): DenseVector[Double] =
     principalInterest(rate, numPeriods, presentValue, futureValue, when)._3
 
   private def roots(coeffs: DenseVector[Double]) = {
@@ -180,8 +182,8 @@ package object financial {
 
     val realRes = DenseVector[Double](
       for (c: Complex <- res.toArray
-        if c.im() == 0 && c.re() > 0)
-        yield c.re()
+           if c.im() == 0 && c.re() > 0)
+      yield c.re()
     )
     val rates = realRes.mapValues(v => 1.0 / v - 1.0)
 
@@ -222,14 +224,14 @@ package object financial {
   }
 
   def ratePeriodicPayments(
-      nper: Double,
-      pmt: Double,
-      pv: Double,
-      fv: Double,
-      when: PaymentTime = End,
-      guess: Double = 0.1,
-      tol: Double = 1E-06,
-      maxiter: Int = 100) = {
+                            nper: Double,
+                            pmt: Double,
+                            pv: Double,
+                            fv: Double,
+                            when: PaymentTime = End,
+                            guess: Double = 0.1,
+                            tol: Double = 1E-06,
+                            maxiter: Int = 100) = {
     var rate = guess;
     var iter = 0
     var close = false
@@ -243,6 +245,7 @@ package object financial {
 
     if (close) Option[Double](rate) else None
   }
+
   //f(annuity)/f'(annuity)
   private def annuityFDivGradf(nper: Double, pmt: Double, pv: Double, fv: Double, when: PaymentTime, rate: Double) = {
     val t1 = pow(1.0 + rate, nper)

@@ -1,8 +1,8 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
-import breeze.linalg.support.{CanMapValues, CanTransformValues, CanTraverseValues, ScalarOf}
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
+import breeze.linalg.support.{CanMapValues, CanTransformValues, CanTraverseValues, ScalarOf}
 import breeze.macros.expand
 import spire.syntax.cfor._
 

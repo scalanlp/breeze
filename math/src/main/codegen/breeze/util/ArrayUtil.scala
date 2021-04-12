@@ -1,35 +1,15 @@
 package breeze.util
 
-/*
- Copyright 2012 David Hall
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+import breeze.macros.expand
+import spire.syntax.cfor.cforRange
 
 import java.util.Arrays
-
-import breeze.linalg.diff
-import breeze.macros.expand
-import spire.implicits.cforRange
-import spire.std.float
-
 import scala.reflect.ClassTag
-import scala.collection.mutable
 import scala.util.hashing.MurmurHash3
-import spire.syntax.cfor._
 
 /**
  * Array operations on generic arrays, a little faster in general, I hope.
+ *
  * @author dlwh
  */
 object ArrayUtil {
@@ -115,14 +95,14 @@ object ArrayUtil {
    * This method fixes that for floats and doubles
    */
   def nonstupidEquals(
-      a: Array[_],
-      aoffset: Int,
-      astride: Int,
-      alength: Int,
-      b: Array[_],
-      boffset: Int,
-      bstride: Int,
-      blength: Int): Boolean = {
+                       a: Array[_],
+                       aoffset: Int,
+                       astride: Int,
+                       alength: Int,
+                       b: Array[_],
+                       boffset: Int,
+                       bstride: Int,
+                       blength: Int): Boolean = {
     val ac = a.getClass
     val bc = b.getClass
     if (ac != bc || alength != blength) {
@@ -180,14 +160,14 @@ object ArrayUtil {
   }
 
   def equals(
-      a: Array[_],
-      aoffset: Int,
-      astride: Int,
-      alength: Int,
-      b: Array[_],
-      boffset: Int,
-      bstride: Int,
-      blength: Int): Boolean = {
+              a: Array[_],
+              aoffset: Int,
+              astride: Int,
+              alength: Int,
+              b: Array[_],
+              boffset: Int,
+              bstride: Int,
+              blength: Int): Boolean = {
     val ac = a.getClass
     val bc = b.getClass
     if (ac != bc || alength != blength) false
@@ -312,7 +292,7 @@ object ArrayUtil {
   def gallopSearch(objs: Array[Int], fromIndex: Int, toIndex: Int, toFind: Int): Int = {
     if (objs.length == 0) return ~0
 
-//    if(toIndex - fromIndex <= 16) return linearSearch(objs, fromIndex, toIndex, toFind)
+    //    if(toIndex - fromIndex <= 16) return linearSearch(objs, fromIndex, toIndex, toFind)
 
     var low = fromIndex
 
@@ -348,10 +328,10 @@ object ArrayUtil {
 
   @expand
   private def zeroSkippingHashCodeImpl[@expand.args(Int, Float, Double, Long, Byte, Short, Char, Boolean) V](
-      data: Array[V],
-      offset: Int,
-      stride: Int,
-      length: Int): Int = {
+                                                                                                              data: Array[V],
+                                                                                                              offset: Int,
+                                                                                                              stride: Int,
+                                                                                                              length: Int): Int = {
     var hash = 43
     var i = offset
     cforRange(0 until length) { _ =>

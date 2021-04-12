@@ -18,6 +18,37 @@ import scala.{specialized => spec}
 trait DenseVector_HashVector_Ops { this: HashVector.type =>
 
   @expand
+  implicit def dv_hv_UpdateOp[
+    @expand.args(Int, Double, Float, Long) T,
+    @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+    ( implicit @expand.sequence[Op]({ _ * _ }, { _ / _ }, {  (__x, __y) => __y }, { _ % _ }, { _.pow(_) })
+  op: Op.Impl1[T, T, T]): Op.InPlaceImpl2[DenseVector[T], HashVector[T]] =
+    new Op.InPlaceImpl2[DenseVector[T], HashVector[T]] {
+      def apply(a: DenseVector[T], b: HashVector[T]): Unit = {
+        require(a.length == b.length, "Vectors must have the same length")
+        val ad = a.data
+        var aoff = a.offset
+        val astride = a.stride
+
+        var i = 0
+        while (i < a.length) {
+          ad(aoff) = op(ad(aoff), b(i))
+          aoff += astride
+          i += 1
+        }
+
+      }
+    }
+
+  // this shouldn't be necessary but it is:
+  @expand
+  implicit def dv_hv_op[
+    @expand.args(Int, Double, Float, Long) T,
+    @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType] = {
+    DenseVector.pureFromUpdate(implicitly[Op.InPlaceImpl2[DenseVector[T], HashVector[T]]])
+  }
+
+  @expand
   @expand.valify
   implicit def dv_hv_Update_Zero_Idempotent[
       @expand.args(Int, Double, Float, Long) T,

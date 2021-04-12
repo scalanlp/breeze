@@ -1,8 +1,8 @@
 package breeze.util
 
-import scala.{specialized => spec}
-
 import breeze.macros.expand
+
+import scala.{specialized => spec}
 
 /**
  *
@@ -25,16 +25,16 @@ object Sorting {
     indirectSort_Long(keys, elems, off, length)
 
   def indirectSort[@spec(Int, Long, Float, Double) E](
-      keys: Array[Float],
-      elems: Array[E],
-      off: Int,
-      length: Int): Unit = indirectSort_Float(keys, elems, off, length)
+                                                       keys: Array[Float],
+                                                       elems: Array[E],
+                                                       off: Int,
+                                                       length: Int): Unit = indirectSort_Float(keys, elems, off, length)
 
   def indirectSort[@spec(Int, Long, Float, Double) E](
-      keys: Array[Double],
-      elems: Array[E],
-      off: Int,
-      length: Int): Unit = indirectSort_Double(keys, elems, off, length)
+                                                       keys: Array[Double],
+                                                       elems: Array[E],
+                                                       off: Int,
+                                                       length: Int): Unit = indirectSort_Double(keys, elems, off, length)
 
   /**
    * Jointly sorts `keys`/`elems` in-place based on the items in the
@@ -48,11 +48,12 @@ object Sorting {
    */
   @expand
   def indirectSort[@expand.args(Int, Long, Float, Double) K, @spec(Int, Long, Float, Double) E](
-      keys: Array[K],
-      elems: Array[E],
-      off: Int,
-      length: Int): Unit = {
+                                                                                                 keys: Array[K],
+                                                                                                 elems: Array[E],
+                                                                                                 off: Int,
+                                                                                                 length: Int): Unit = {
     require(keys.length == elems.length, "arrays must have the same length")
+
     def swap(a: Int, b: Int): Unit = {
       val t0 = keys(a)
       keys(a) = keys(b)
@@ -61,6 +62,7 @@ object Sorting {
       elems(a) = elems(b)
       elems(b) = t1
     }
+
     def vecswap(_a: Int, _b: Int, n: Int): Unit = {
       var a = _a
       var b = _b
@@ -72,6 +74,7 @@ object Sorting {
         b += 1
       }
     }
+
     def med3(a: Int, b: Int, c: Int) = {
       if (keys(a) < keys(b)) {
         if (keys(b) < keys(c)) b else if (keys(a) < keys(c)) c else a
@@ -79,6 +82,7 @@ object Sorting {
         if (keys(b) > keys(c)) b else if (keys(a) > keys(c)) c else a
       }
     }
+
     def sort2(off: Int, length: Int): Unit = {
       // Insertion sort on smallest arrays
       if (length < 7) {
@@ -153,6 +157,7 @@ object Sorting {
           sort2(n - s, s)
       }
     }
+
     sort2(off, length)
   }
 }

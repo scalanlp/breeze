@@ -1,9 +1,9 @@
 package breeze.linalg
 
-import breeze.macros.expand
 import breeze.generic.UFunc
 import breeze.linalg.support.CanTraverseKeyValuePairs
 import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
+import breeze.macros.expand
 
 /**
  * Returns the key that has maximum value

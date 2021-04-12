@@ -1,13 +1,13 @@
 package breeze.signal
 
 import breeze.generic.UFunc
-import breeze.linalg._
-import breeze.numerics._
+import breeze.linalg.{DenseVector, convert, sum}
 import breeze.macros.expand
-import breeze.math.Complex
+import breeze.numerics.sqrt
 import breeze.stats.mean
 
-/**Root mean square of a vector.
+/** Root mean square of a vector.
+ *
  * @author ktakagaki
  * @date 2/17/14.
  */
@@ -33,6 +33,7 @@ object rootMeanSquare extends UFunc {
         sqrt(sum(convert(v, Double).map(elem => elem * elem)) / v.length.toDouble)
     }
   }
+
   implicit def rms1DLong: rootMeanSquare.Impl[DenseVector[Long], Double] = {
     new rootMeanSquare.Impl[DenseVector[Long], Double] {
       def apply(v: DenseVector[Long]): Double =

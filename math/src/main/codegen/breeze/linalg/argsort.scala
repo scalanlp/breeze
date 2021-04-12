@@ -1,12 +1,11 @@
 package breeze.linalg
 
-import breeze.linalg.support.{LowPriorityArgSort, LowPriorityArgTopK}
 import breeze.generic.UFunc
+import breeze.linalg.support.{LowPriorityArgSort, LowPriorityArgTopK}
 import breeze.macros.expand
 import breeze.util.{ArrayUtil, Sorting, quickSelect}
 
 import scala.collection.compat.immutable.ArraySeq
-import scala.collection.mutable
 
 /**
  * Returns a sequence of keys sorted by value

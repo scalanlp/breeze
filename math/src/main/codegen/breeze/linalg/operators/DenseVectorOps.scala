@@ -4,12 +4,13 @@ import breeze.generic._
 import breeze.linalg._
 import breeze.linalg.support._
 import breeze.macros.expand
-import breeze.math.{Field, Ring, Semiring}
+import breeze.math.{Complex, Field, Ring, Semiring}
 import breeze.util.ArrayUtil
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import scalaxy.debug._
 import spire.syntax.cfor._
 
+import scala.math.BigInt
 import scala.reflect.ClassTag
 
 trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
@@ -587,12 +588,40 @@ trait DenseVectorOps extends DenseVector_GenericOps { this: DenseVector.type =>
 
 }
 
-/**
- * TODO
- *
- * @author dlwh
- **/
 trait DenseVector_SpecialOps extends DenseVectorOps { this: DenseVector.type =>
+
+  /*
+   Returns the k-norm of this Vector.
+    */
+  @expand
+  @expand.valify
+  implicit def canNorm[@expand.args(Int, Float, Long, BigInt, Complex) T]
+  : norm.Impl2[DenseVector[T], Double, Double] = {
+
+    new norm.Impl2[DenseVector[T], Double, Double] {
+      def apply(v: DenseVector[T], p: Double): Double = {
+        if (p == 2) {
+          math.sqrt( (v dot v).abs.toDouble)
+        } else if (p == 1) {
+          var sum = 0.0
+          cforRange(0 until v.length)(i => sum += v(i).abs.toDouble)
+          sum
+        } else if (p == Double.PositiveInfinity) {
+          var max = 0.0
+          cforRange(0 until v.length)(i => max = math.max(max, v(i).abs.toDouble))
+          max
+        } else if (p == 0) {
+          var nnz = 0.0
+          cforRange(0 until v.length)(i => if (v(i) != 0) nnz += 1)
+          nnz
+        } else {
+          var sum = 0.0
+          cforRange(0 until v.length)(i => sum += math.pow(v(i).abs.toDouble, p))
+          math.pow(sum, 1.0 / p)
+        }
+      }
+    }
+  }
 
   implicit val canAddIntoF: OpAdd.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] = {
     new OpAdd.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] {

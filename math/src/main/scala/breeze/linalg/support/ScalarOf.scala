@@ -31,6 +31,4 @@ object ScalarOf {
 
   implicit def scalarOfArray[T]: ScalarOf[Array[T], T] = dummy
 
-//  @expand
-//  implicit def scalarOf[@expand.args(Int, Float, Long, Double, Complex, Short) T]:ScalarOf[T, T] = dummy
 }

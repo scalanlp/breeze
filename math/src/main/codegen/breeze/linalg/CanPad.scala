@@ -1,13 +1,13 @@
 package breeze.linalg
 
-import java.util
-
-import breeze.macros.expand
 import breeze.linalg.Options._
-import breeze.stats.{median, mean}
-import scala.reflect.ClassTag
+import breeze.macros.expand
 import breeze.math.Semiring
-import spire.implicits.{cforRange, cforRange2}
+import breeze.stats.{mean, median}
+import spire.syntax.cfor._
+
+import java.util
+import scala.reflect.ClassTag
 
 /**
  * @author ktakagaki
@@ -43,11 +43,11 @@ object CanPadRight {
         }
       }
 
-      def padRight1ImplZero[T](v: DenseVector[T], optDim: Dimensions1): DenseVector[T] = {
+      def padRight1ImplZero(v: DenseVector[T], optDim: Dimensions1): DenseVector[T] = {
         padRight1ImplFixed(v, optDim, implicitly[Semiring[T]].zero)
       }
 
-      def padRight1ImplFixed[T](v: DenseVector[T], optDim: Dimensions1, padValue: T): DenseVector[T] = {
+      def padRight1ImplFixed(v: DenseVector[T], optDim: Dimensions1, padValue: T): DenseVector[T] = {
         require(optDim.n1 > 0, "Cannot pad to zero or negative length!")
         v.length match {
           case optDim.n1 => v.copy
@@ -59,7 +59,7 @@ object CanPadRight {
         }
       }
 
-      def padRight1ImplDV[T](v: DenseVector[T], optDim: Dimensions1, padDV: DenseVector[T]): DenseVector[T] = {
+      def padRight1ImplDV(v: DenseVector[T], optDim: Dimensions1, padDV: DenseVector[T]): DenseVector[T] = {
         require(optDim.n1 > 0, "Cannot pad to zero or negative length!")
         require(optDim.n1 - v.length <= padDV.length, "Cannot pad beyond specified padding DenseVector!")
         v.length match {
@@ -98,11 +98,11 @@ object CanPadRight {
         }
       }
 
-      def padRight2ImplZero[T](v: DenseMatrix[T], optDim: Dimensions2): DenseMatrix[T] = {
+      def padRight2ImplZero(v: DenseMatrix[T], optDim: Dimensions2): DenseMatrix[T] = {
         padRight2ImplFixed(v, optDim, implicitly[Semiring[T]].zero)
       }
 
-      def padRight2ImplFixed[T](m: DenseMatrix[T], optDim: Dimensions2, padValue: T): DenseMatrix[T] = {
+      def padRight2ImplFixed(m: DenseMatrix[T], optDim: Dimensions2, padValue: T): DenseMatrix[T] = {
         require(optDim.n1 > 0 && optDim.n2 > 0, "Cannot pad to zero or negative length!")
 
         val tempret = DenseMatrix.zeros[T](optDim.n1, optDim.n2)
@@ -167,7 +167,7 @@ object CanPadLeft {
         }
       }
 
-      def padLeft1ImplDV[T](v: DenseVector[T], optDim: Dimensions1, padDV: DenseVector[T]): DenseVector[T] = {
+      def padLeft1ImplDV(v: DenseVector[T], optDim: Dimensions1, padDV: DenseVector[T]): DenseVector[T] = {
         require(optDim.n1 > 0, "Cannot pad to zero or negative length!")
         require(optDim.n1 - v.length <= padDV.length, "Cannot pad beyond specified padding DenseVector!")
         v.length match {
@@ -205,11 +205,11 @@ object CanPadLeft {
         }
       }
 
-      def padLeft2ImplZero[T](v: DenseMatrix[T], optDim: Dimensions2): DenseMatrix[T] = {
+      def padLeft2ImplZero(v: DenseMatrix[T], optDim: Dimensions2): DenseMatrix[T] = {
         padLeft2ImplFixed(v, optDim, implicitly[Semiring[T]].zero)
       }
 
-      def padLeft2ImplFixed[T](m: DenseMatrix[T], optDim: Dimensions2, padValue: T): DenseMatrix[T] = {
+      def padLeft2ImplFixed(m: DenseMatrix[T], optDim: Dimensions2, padValue: T): DenseMatrix[T] = {
         require(optDim.n1 > 0 && optDim.n2 > 0, "Cannot pad to zero or negative length!")
 
         val tempret = DenseMatrix.zeros[T](optDim.n1, optDim.n2)

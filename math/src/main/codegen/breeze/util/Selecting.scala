@@ -1,7 +1,8 @@
 package breeze.util
 
-import breeze.macros.expand
 import breeze.generic.UFunc
+import breeze.macros.expand
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.compat._
@@ -174,7 +175,6 @@ object quickSelect extends UFunc {
  * will be faster than applying quickSelectImpl de-novo to the original unsorted array.
  *
  */
-@deprecated("use quickSelect.inPlace instead", "0.12")
 object quickSelectImpl extends UFunc {
 
   @expand

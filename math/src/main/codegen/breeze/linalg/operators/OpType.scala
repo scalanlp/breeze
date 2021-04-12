@@ -1,7 +1,7 @@
 package breeze.linalg.operators
 
-import breeze.generic.{MappingUFunc, UFunc}
 import breeze.generic.UFunc.UImpl
+import breeze.generic.{MappingUFunc, UFunc}
 import breeze.macros.expand
 import breeze.math.{Field, Ring, Semiring}
 

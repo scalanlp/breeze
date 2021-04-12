@@ -3,15 +3,12 @@ package breeze.signal.support
 /**
  * @author ktakagaki
  */
-import breeze.generic.UFunc
-import breeze.macros.expand
 import breeze.linalg._
+import breeze.macros.expand
+import breeze.signal.OptRange.RangeOpt
 import breeze.signal._
-import breeze.signal.OptRange.RangeOpt
-import breeze.numerics.isOdd
-import breeze.signal.OptRange.RangeOpt
-import scala.reflect.ClassTag
 import breeze.util.SerializableLogging
+import breeze.numerics._
 
 //ToDo 1: provide convolve of Integer and other DenseVectors
 //ToDo 1: provide convolve of DenseMatrix

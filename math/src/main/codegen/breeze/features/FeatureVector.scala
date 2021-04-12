@@ -2,12 +2,13 @@ package breeze.features
 
 import breeze.generic.UFunc.InPlaceImpl3
 import breeze.linalg._
-import java.util
 import breeze.linalg.operators._
 import breeze.linalg.support.CanTranspose
 import breeze.macros.expand
 import breeze.math.Semiring
 import spire.syntax.cfor._
+
+import java.util
 
 /**
  * Represents a feature vector of indicator (i.e. binary) features.

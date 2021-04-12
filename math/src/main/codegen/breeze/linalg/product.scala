@@ -1,9 +1,9 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
-import breeze.macros.expand
 import breeze.linalg.support.CanTraverseValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
+import breeze.macros.expand
 import breeze.math.Semiring
 
 /** Computes the product */
@@ -15,6 +15,7 @@ object product extends UFunc {
       def apply(v: T): S = {
         class ProductVisitor extends ValuesVisitor[S] {
           var product: S = 1
+
           def visit(a: S): Unit = {
             product *= a
           }
@@ -35,6 +36,7 @@ object product extends UFunc {
       def apply(v: T): S = {
         class ProductVisitor extends ValuesVisitor[S] {
           var product: S = semiring.one
+
           def visit(a: S): Unit = {
             product = semiring.*(product, a)
           }

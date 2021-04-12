@@ -1,10 +1,11 @@
 package breeze.signal.support
 
-import breeze.signal.{OptWindowFunction}
 import breeze.linalg._
-import breeze.numerics.{cos, isOdd, isEven, sincpi}
-import scala.math.Pi
 import breeze.macros.expand
+import breeze.signal.OptWindowFunction
+import breeze.numerics._
+
+import scala.math.Pi
 
 /**
  * Construction delegate trait for convolving type InputType.</p>

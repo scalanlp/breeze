@@ -1,6 +1,6 @@
 package breeze.linalg
 
-import breeze.generic.{UFunc, MappingUFunc}
+import breeze.generic.{MappingUFunc, UFunc}
 import breeze.macros.expand
 import breeze.math.Complex
 
@@ -11,14 +11,15 @@ import breeze.math.Complex
  * {{{
  * convert(DenseVector(0.1, 1.0, 1.5), Int) == DenseVector(0, 1, 1)
  * }}}
+ *
  * @author dlwh
  */
 object convert extends UFunc with MappingUFunc {
   @expand
   @expand.valify
   implicit def impl2[
-      @expand.args(Int, Double, Float, Long, Char, Short) From,
-      @expand.args(Int, Double, Float, Long, Char, Short, Complex) To](implicit @expand.sequence[To](
+    @expand.args(Int, Double, Float, Long, Char, Short) From,
+    @expand.args(Int, Double, Float, Long, Char, Short, Complex) To](implicit @expand.sequence[To](
     _.toInt,
     _.toDouble,
     _.toFloat,
