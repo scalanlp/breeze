@@ -21,7 +21,10 @@ import org.scalatestplus.scalacheck._
 import breeze.math.Complex
 import breeze.numerics._
 import breeze.stats.distributions.Rand
+import breeze.storage.Zero
 import breeze.util.DoubleImplicits
+
+import scala.reflect.ClassTag
 
 class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleImplicits with MatrixTestUtils {
 
@@ -153,6 +156,22 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
       assert(s3.t === t3)
       assert(s3 === t3.t)
     }
+  }
+
+  test("#759 - slice assignment broken for transpose matrices") {
+    def okay(x: DenseMatrix[Double]) = {
+      val res = DenseMatrix.zeros[Double](5, 2)
+      res(::, 1 until 2) := x
+      res
+    }
+    def problem[T: ClassTag: Zero](x: DenseMatrix[T]) ={
+      val res = DenseMatrix.zeros[T](5, 2)
+      res(::, 1 until 2) := x
+      res
+    }
+
+    val x = DenseMatrix.ones[Double](1, 5).t
+    assert(okay(x) == problem(x))
   }
 
   test("Min/Max") {
