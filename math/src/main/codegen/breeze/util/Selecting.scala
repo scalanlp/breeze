@@ -67,6 +67,10 @@ object quickSelect extends UFunc {
             if (x(i) < pivotVal) { swap(lt, i); lt += 1; i += 1 }
             else if (x(i) > pivotVal) { swap(gt, i); gt -= 1 }
             else if (x(i) == pivotVal) { i += 1 }
+            else {
+              assert(x(i) != x(i))
+              throw new IllegalArgumentException("Nan element detected")
+            }
           }
 
           (lt, gt)
@@ -142,6 +146,10 @@ object quickSelect extends UFunc {
             if (ordering.lt(x(i), pivotVal)) { swap(lt, i); lt += 1; i += 1 }
             else if (ordering.gt(x(i), pivotVal)) { swap(gt, i); gt -= 1 }
             else if (ordering.equiv(x(i), pivotVal)) { i += 1 }
+            else {
+              assert(x(i) != x(i))
+              throw new IllegalArgumentException("Nan element detected")
+            }
           }
 
           (lt, gt)
@@ -218,6 +226,10 @@ object quickSelectImpl extends UFunc {
             if (x(i) < pivotVal) { swap(lt, i); lt += 1; i += 1 }
             else if (x(i) > pivotVal) { swap(gt, i); gt -= 1 }
             else if (x(i) == pivotVal) { i += 1 }
+            else {
+              assert(x(i) != x(i))
+              throw new IllegalArgumentException("Nan element detected")
+            }
           }
 
           (lt, gt)

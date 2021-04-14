@@ -216,4 +216,9 @@ class DescriptiveStatsTest2 extends FunSuite {
       "median (even length with duplicate) should be 450 instead of "
         + median(dataEvenDuplicate2))
   }
+
+  test("throw exception for nans") {
+    assertThrows[IllegalArgumentException](median(DenseVector(0.0, 1.0, 2.0, Double.NaN)))
+    assertThrows[IllegalArgumentException](median(DenseVector(0.0f, 1.0f, 2.0f, Float.NaN)))
+  }
 }
