@@ -3,6 +3,7 @@ package breeze.stats.distributions
 import org.scalacheck.Arbitrary
 import org.scalatest.FunSuite
 import org.scalatestplus.scalacheck.Checkers
+import breeze.linalg.isClose
 
 /**
  * Created by kokorins
@@ -31,5 +32,12 @@ class ExponentialTest
   override implicit def arbDistr = Arbitrary {
     for (rate <- arbitrary[Double].map(x => math.abs(x) % 1000.0 + Double.MinPositiveValue))
       yield new Exponential(rate)(RandBasis.mt0)
+  }
+
+  test("#799 - exponential rate/mean mixup") {
+    val exp = Exponential(1.0/4)
+
+    val cdfAt5 = exp.cdf(5)
+    assert(isClose(cdfAt5, 0.713495, 1E-5), cdfAt5.toString)
   }
 }
