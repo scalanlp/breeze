@@ -206,7 +206,7 @@ class DenseVector[@spec(Double, Int, Float, Long) V](
       throw new IllegalArgumentException("Slice arguments " + start + ", " + end + " invalid.")
     if (end > length || end < 0)
       throw new IllegalArgumentException("End " + end + "is out of bounds for slice of DenseVector of length " + length)
-    var len = (end - start + stride - 1) / stride
+    val len = (end - start + stride - 1) / stride
     new DenseVector(data, start * this.stride + offset, stride * this.stride, len)
   }
 
