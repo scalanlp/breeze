@@ -1,6 +1,8 @@
 import sbt.Keys._
 import sbt._
 import breeze.codegen.plugin.SbtBreezeCodegenPlugin.breezeCodegenSettings
+import xerial.sbt.Sonatype.autoImport.{sonatypeProfileName, sonatypeProjectHosting, sonatypePublishTo}
+import xerial.sbt.Sonatype._
 
 object Common {
 
@@ -34,31 +36,6 @@ object Common {
       Resolver.typesafeRepo("releases")
     ),
     testOptions in Test += Tests.Argument("-oDF"),
-    pomExtra :=
-      <url>http://scalanlp.org/</url>
-        <licenses>
-          <license>
-            <name>Apache 2</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
-            <distribution>repo</distribution>
-          </license>
-        </licenses>
-        <developers>
-          <developer>
-            <id>dlwh</id>
-            <name>David Hall</name>
-            <url>http://www.dlwh.org/</url>
-          </developer>
-        </developers>,
-    publishMavenStyle := true,
-    publishTo := {
-      val yes = isSnapshot.value
-      val nexus = "https://oss.sonatype.org/"
-      if (yes)
-        Some("snapshots".at(nexus + "content/repositories/snapshots"))
-      else
-        Some("releases".at(nexus + "service/local/staging/deploy/maven2"))
-    },
     publishArtifact in Test := false,
     pomIncludeRepository := { _ =>
       false
@@ -76,6 +53,15 @@ object Common {
       } else {
         Seq("-Ymacro-annotations")
       }
-    }
+    },
+
+    sonatypeProfileName := "org.scalanlp",
+    publishMavenStyle := true,
+    licenses := Seq("Apache Publich License 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.html")),
+    publishTo := sonatypePublishTo.value,
+
+    // Where is the source code hosted: GitHub or GitLab?
+    sonatypeProjectHosting := Some(GitHubHosting("dlwh", "sbt-breeze-expand-codegen", "david.lw.hall@gmail.com"))
+
   ) ++ breezeCodegenSettings
 }
