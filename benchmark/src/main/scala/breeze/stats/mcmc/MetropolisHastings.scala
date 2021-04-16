@@ -4,7 +4,7 @@ import breeze.benchmark._
 import breeze.stats.distributions._
 import breeze.stats.mcmc._
 
-import breeze.macros.cfor
+import breeze.macros.cforRange
 
 object MetropolisHastingsRunner extends MyRunner(classOf[MetropolisHastingsBenchmark])
 
@@ -33,12 +33,12 @@ class MetropolisHastingsBenchmark extends BreezeBenchmark {
 
   def pullAllSamplesWithWork(m: Rand[Double]) = {
     var result = 0.0
-    cfor(0)(i => i < numSamples / 4, i => i + 1)(i => {
+    cforRange(0 until numSamples / 4) { i =>
       val x = m.draw()
-      cforRange(0 until 400)(j => {
+      cforRange(0 until 400) { j =>
         result += math.log(math.exp(x)) / (1 + x * x)
-      })
-    })
+      }
+    }
     result
   }
 

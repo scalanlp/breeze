@@ -1,7 +1,7 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
-import breeze.macros.expand
+import breeze.macros.{cforRange, expand}
 import spire.syntax.cfor.cfor
 
 /**
@@ -18,7 +18,7 @@ object scaleAdd extends UFunc {
     new InPlaceImpl3[Array[T], T, Array[T]] {
       def apply(v: Array[T], v2: T, v3: Array[T]): Unit = {
         require(v.length == v3.length, "Arrays must have the same length!")
-        cfor(0)(_ < v.length, _ + 1) { i =>
+        cforRange(0 until v.length) { i =>
           v(i) += v2 * v3(i)
         }
       }
