@@ -248,7 +248,7 @@ object SparseVector
     }
   }
 
-  implicit def canCopySparse[@spec(Double, Int, Float, Long) V: ClassTag: Zero] = new CanCopySparseVector[V]
+  implicit def canCopySparse[@spec(Double, Int, Float, Long) V: ClassTag: Zero]: CanCopySparseVector[V] = new CanCopySparseVector[V]
 
   implicit def canMapValues[V, V2: ClassTag: Zero]: CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] = {
     new CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] {

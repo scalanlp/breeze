@@ -3,7 +3,7 @@ package breeze.numerics
 import breeze.benchmark.{MyRunner, BreezeBenchmark}
 import breeze.linalg.{softmax, DenseVector}
 import breeze.stats.distributions.Rand
-import spire.syntax.cfor._
+import breeze.macros._
 
 /**
  * Created by dlwh on 10/3/15.

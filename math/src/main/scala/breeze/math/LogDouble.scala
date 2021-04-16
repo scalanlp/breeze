@@ -56,7 +56,7 @@ class LogDouble(val logValue: Double) {
 }
 
 object LogDouble {
-  implicit def doubleExtra(d: Double) = new {
+  implicit class DoubleExtra(d: Double) {
 
     /**
      * Assumes the double is already logged.
@@ -80,7 +80,7 @@ object LogDouble {
     def -(o: LogDouble) = new LogDouble(logDiff(scala.math.log(d), o.logValue))
   }
 
-  implicit def logDoubleToDouble(d: LogDouble) = d.value
+  implicit def logDoubleToDouble(d: LogDouble): Double = d.value
 
   def log(d: LogDouble) = new LogDouble(scala.math.log(d.logValue))
 

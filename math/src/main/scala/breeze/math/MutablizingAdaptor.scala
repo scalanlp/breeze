@@ -138,7 +138,7 @@ object MutablizingAdaptor {
 //      }
 
       implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
-        def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike apply)
+        def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike.apply)
       }
 
 //      implicit def zero: CanCreateZeros[Wrapper,I] = new CanCreateZeros[Wrapper,I] {
@@ -235,7 +235,7 @@ object MutablizingAdaptor {
 
         implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
           // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
-          def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike apply)
+          def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike.apply)
         }
 
 //      implicit def zero: CanCreateZeros[Wrapper,I] = new CanCreateZeros[Wrapper,I] {
@@ -372,7 +372,7 @@ object MutablizingAdaptor {
 
       implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
-        def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike apply)
+        def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike.apply)
       }
 
       implicit def copy: CanCopy[Wrapper] = new CanCopy[Wrapper] {
@@ -496,7 +496,7 @@ object MutablizingAdaptor {
 
       // default implementations
       implicit def neg: OpNeg.Impl[Wrapper, Wrapper] = new OpNeg.Impl[Wrapper, Wrapper] {
-        def apply(a: Wrapper): Wrapper = a.map(u.neg apply)
+        def apply(a: Wrapper): Wrapper = a.map(u.neg.apply)
       }
 
       implicit def dotVV: OpMulInner.Impl2[Wrapper, Wrapper, S] = new OpMulInner.Impl2[Wrapper, Wrapper, S] {
@@ -531,7 +531,7 @@ object MutablizingAdaptor {
 
       implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
-        def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike apply)
+        def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike.apply)
       }
 
       implicit def copy: CanCopy[Wrapper] = new CanCopy[Wrapper] {
@@ -642,7 +642,7 @@ object MutablizingAdaptor {
 
       // default implementations
       implicit def neg: OpNeg.Impl[Wrapper, Wrapper] = new OpNeg.Impl[Wrapper, Wrapper] {
-        def apply(a: Wrapper): Wrapper = a.map(u.neg apply)
+        def apply(a: Wrapper): Wrapper = a.map(u.neg.apply)
       }
 
       implicit def dotVV: OpMulInner.Impl2[Wrapper, Wrapper, S] = new OpMulInner.Impl2[Wrapper, Wrapper, S] {
@@ -673,7 +673,7 @@ object MutablizingAdaptor {
 
       implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
-        def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike apply)
+        def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike.apply)
       }
 
       implicit def copy: CanCopy[Wrapper] = new CanCopy[Wrapper] {
@@ -774,7 +774,7 @@ object MutablizingAdaptor {
 
       // default implementations
       implicit def neg: OpNeg.Impl[Wrapper, Wrapper] = new OpNeg.Impl[Wrapper, Wrapper] {
-        def apply(a: Wrapper): Wrapper = a.map(u.neg apply)
+        def apply(a: Wrapper): Wrapper = a.map(u.neg.apply)
       }
 
       implicit def dotVV: OpMulInner.Impl2[Wrapper, Wrapper, S] = new OpMulInner.Impl2[Wrapper, Wrapper, S] {

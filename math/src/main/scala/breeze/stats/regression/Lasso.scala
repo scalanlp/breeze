@@ -3,7 +3,7 @@ package breeze.stats.regression
 import breeze.generic.UFunc
 import breeze.linalg._
 import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
-import spire.implicits.cfor
+import breeze.macros.cfor
 
 private case class LassoCalculator(
     data: DenseMatrix[Double],
@@ -34,7 +34,7 @@ private case class LassoCalculator(
     while (improvedResult && (iter < MAX_ITER)) {
       iter += 1
       improvedResult = false
-      cfor(0)(i => i < data.cols, i => i + 1)(i => {
+      cforRange(0 until data.cols)(i => {
         val eoc = estimateOneColumn(i)
         val oldCoefficient = resultVec(i)
         resultVec(i) = shrink(eoc.coefficients(0))
@@ -66,11 +66,11 @@ private case class LassoCalculator(
      */
     require(column < data.cols)
     require(column >= 0)
-    cfor(0)(i => i < outputs.size, i => i + 1)(i => {
+    cforRange(0 until outputs.size)(i => {
       singleColumnMatrix(i, 0) = data(i, column)
 
       var o = outputs(i)
-      cfor(0)(j => j < data.cols, j => j + 1)(j => {
+      cforRange(0 until data.cols)(j => {
         if (j != column) {
           o -= data(i, j) * resultVec(j)
         }
@@ -81,9 +81,9 @@ private case class LassoCalculator(
 
   private def computeRsquared = {
     var r2 = 0.0
-    cfor(0)(i => i < outputs.size, i => i + 1)(i => {
+    cforRange(0 until outputs.size)(i => {
       var o = outputs(i)
-      cfor(0)(j => j < data.cols, j => j + 1)(j => {
+      cforRange(0 until data.cols)(j => {
         o -= data(i, j) * resultVec(j)
       })
       r2 += o * o

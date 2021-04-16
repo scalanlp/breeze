@@ -4,7 +4,7 @@ import breeze.benchmark.{MyRunner, BreezeBenchmark}
 import breeze.linalg.operators.DenseVectorSupportMethods
 import breeze.numerics._
 import breeze.stats.distributions.Rand
-import spire.syntax.cfor._
+import breeze.macros._
 
 /**
  * Created by dlwh on 8/14/15.

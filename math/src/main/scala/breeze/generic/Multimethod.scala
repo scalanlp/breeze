@@ -27,7 +27,7 @@ import collection.mutable
  *
  * @author dlwh
  */
-trait Multimethod[Method, A <: AnyRef, R] extends MMRegistry1[Method] { this: Method =>
+trait Multimethod[Method, A <: AnyRef, R] extends MMRegistry1[Method] {  self: Method =>
 
   protected def bindingMissing(a: A): R = throw new UnsupportedOperationException("Types not found!")
   protected def multipleOptions(a: A, m: Map[Class[_], Method]) = {
@@ -79,7 +79,7 @@ trait MethodImpl[A, +R] {
 
 trait Multimethod2[Method[AA, BB, RR] <: Function2[AA, BB, RR], A, B, R]
     extends ((A, B) => R)
-    with MMRegistry2[Method[_ <: A, _ <: B, _ <: R]] { this: Method[A, B, R] =>
+    with MMRegistry2[Method[_ <: A, _ <: B, _ <: R]] { self: Method[A, B, R] =>
   protected def bindingMissing(a: A, b: B): R =
     throw new UnsupportedOperationException("Types not found!" + a + b + " " + ops)
   protected def multipleOptions(a: A, b: B, m: Map[(Class[_], Class[_]), Method[_ <: A, _ <: B, _ <: R]]) = {
@@ -132,7 +132,7 @@ trait Multimethod2[Method[AA, BB, RR] <: Function2[AA, BB, RR], A, B, R]
  */
 trait Multiproc2[Method[AA, BB] <: (AA, BB) => Unit, A <: AnyRef, B]
     extends ((A, B) => Unit)
-    with MMRegistry2[Method[_ <: A, _ <: B]] { this: Method[A, B] =>
+    with MMRegistry2[Method[_ <: A, _ <: B]] { self: Method[A, B] =>
   protected def bindingMissing(a: A, b: B): Unit = throw new UnsupportedOperationException("Types not found!")
   protected def multipleOptions(a: A, b: B, m: Map[(Class[_], Class[_]), Method[_ <: A, _ <: B]]) = {
     throw new RuntimeException("Multiple bindings for method: " + m)

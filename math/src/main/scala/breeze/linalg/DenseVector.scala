@@ -29,7 +29,7 @@ import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import breeze.macros.expand
 
 import scala.math.BigInt
-import spire.syntax.cfor._
+import breeze.macros._
 import CanTraverseValues.ValuesVisitor
 import CanZipAndTraverseValues.PairValuesVisitor
 import java.io.ObjectStreamException
@@ -206,7 +206,8 @@ class DenseVector[@spec(Double, Int, Float, Long) V](
       throw new IllegalArgumentException("Slice arguments " + start + ", " + end + " invalid.")
     if (end > length || end < 0)
       throw new IllegalArgumentException("End " + end + "is out of bounds for slice of DenseVector of length " + length)
-    new DenseVector(data, start * this.stride + offset, stride * this.stride, (end - start) / stride)
+    val len = (end - start + stride - 1) / stride
+    new DenseVector(data, start * this.stride + offset, stride * this.stride, len)
   }
 
   // <editor-fold defaultstate="collapsed" desc=" Conversions (DenseMatrix, Array, Scala Vector) ">
@@ -418,7 +419,7 @@ object DenseVector
     }
   }
 
-  implicit def negFromScale[V](implicit scale: OpMulScalar.Impl2[DenseVector[V], V, DenseVector[V]], field: Ring[V]) = {
+  implicit def negFromScale[V](implicit scale: OpMulScalar.Impl2[DenseVector[V], V, DenseVector[V]], field: Ring[V]): OpNeg.Impl[DenseVector[V], DenseVector[V]] = {
     new OpNeg.Impl[DenseVector[V], DenseVector[V]] {
       override def apply(a: DenseVector[V]): DenseVector[V] = {
         scale(a, field.negate(field.one))
@@ -538,9 +539,9 @@ object DenseVector
         if (from1.size != from2.size) {
           throw new IllegalArgumentException("Vectors to be zipped must have same size")
         }
-        cfor(0)(i => i < from1.size, i => i + 1)(i => {
+        cforRange(0 until from1.size) { i =>
           fn.visit(from1(i), from2(i))
-        })
+        }
       }
     }
 
@@ -767,39 +768,7 @@ object DenseVector
   }
   implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpMulInner.type, Double]].register(canDotD)
 
-  /*
-  TODO: scaladoc crashes on this. I don't know why. It makes me want to die a little.
-  Returns the k-norm of this Vector.
-   */
-  @expand
-  @expand.valify
-  implicit def canNorm[@expand.args(Int, Float, Long, BigInt, Complex) T]
-    : norm.Impl2[DenseVector[T], Double, Double] = {
 
-    new norm.Impl2[DenseVector[T], Double, Double] {
-      def apply(v: DenseVector[T], p: Double): Double = {
-        if (p == 2) {
-          math.sqrt( (v dot v).abs.toDouble)
-        } else if (p == 1) {
-          var sum = 0.0
-          cforRange(0 until v.length)(i => sum += v(i).abs.toDouble)
-          sum
-        } else if (p == Double.PositiveInfinity) {
-          var max = 0.0
-          cforRange(0 until v.length)(i => max = math.max(max, v(i).abs.toDouble))
-          max
-        } else if (p == 0) {
-          var nnz = 0.0
-          cforRange(0 until v.length)(i => if (v(i) != 0) nnz += 1)
-          nnz
-        } else {
-          var sum = 0.0
-          cforRange(0 until v.length)(i => sum += math.pow(v(i).abs.toDouble, p))
-          math.pow(sum, 1.0 / p)
-        }
-      }
-    }
-  }
 
   /**
    *  Returns the p-norm of this Vector (specialized for Double).
@@ -839,7 +808,7 @@ object DenseVector
       implicit field: Field[E],
       man: ClassTag[E]): MutableFiniteCoordinateField[DenseVector[E], Int, E] = {
     import field._
-    implicit val cmv = canMapValues[E, E]
+    implicit val cmv: CanMapValues[DenseVector[E], E, E, DenseVector[E]] = canMapValues[E, E]
     MutableFiniteCoordinateField.make[DenseVector[E], Int, E]
   }
 

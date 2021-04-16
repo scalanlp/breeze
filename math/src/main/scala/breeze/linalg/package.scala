@@ -24,7 +24,7 @@ import math.Semiring
 import storage.Zero
 import java.io.{PrintWriter, File, FileReader}
 import scala.reflect.ClassTag
-import spire.syntax.cfor._
+import breeze.macros._
 
 /**
  * This package contains everything relating to Vectors, Matrices, Tensors, etc.

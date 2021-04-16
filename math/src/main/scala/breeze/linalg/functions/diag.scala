@@ -56,10 +56,10 @@ object diag extends UFunc with diagLowPrio2 {
 
 }
 
-trait diagLowPrio extends UFunc { this: UFunc =>
+trait diagLowPrio extends UFunc {  self: UFunc =>
 
 }
 
-trait diagLowPrio2 extends UFunc with diagLowPrio { this: UFunc =>
+trait diagLowPrio2 extends UFunc with diagLowPrio {  self: UFunc =>
 
 }

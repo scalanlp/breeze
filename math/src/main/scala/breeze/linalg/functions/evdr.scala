@@ -6,7 +6,7 @@ import breeze.linalg.eig.Eig
 import breeze.linalg.eigSym.{DenseEigSym, EigSym}
 import breeze.numerics._
 import breeze.stats.distributions.Rand
-import spire.implicits.cforRange
+import breeze.macros.cforRange
 
 /**
  * Approximate truncated randomized EVD

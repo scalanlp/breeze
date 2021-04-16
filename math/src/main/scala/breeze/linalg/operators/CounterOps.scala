@@ -379,7 +379,7 @@ trait CounterOps {
 
   }
 
-  implicit def zipMap[K, V, R: Zero: Semiring] = new CanZipMapValuesCounter[K, V, R]
+  implicit def zipMap[K, V, R: Zero: Semiring]: CanZipMapValuesCounter[K, V, R] = new CanZipMapValuesCounter[K, V, R]
 
   class CanZipMapKeyValuesCounter[K, V, RV: Zero: Semiring]
       extends CanZipMapKeyValues[Counter[K, V], K, V, RV, Counter[K, RV]] {
@@ -398,7 +398,7 @@ trait CounterOps {
     }
   }
 
-  implicit def zipMapKeyValues[K, V, R: Zero: Semiring] = new CanZipMapKeyValuesCounter[K, V, R]
+  implicit def zipMapKeyValues[K, V, R: Zero: Semiring]: CanZipMapKeyValuesCounter[K, V, R] = new CanZipMapKeyValuesCounter[K, V, R]
 
   implicit def canTransformValues[L, V]: CanTransformValues[Counter[L, V], V] = {
     new CanTransformValues[Counter[L, V], V] {

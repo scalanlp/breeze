@@ -3,7 +3,7 @@ package breeze.linalg
 import breeze.benchmark._
 import breeze.numerics.sin
 import breeze.stats.distributions._
-import spire.implicits._
+import breeze.macros._
 
 object DenseMatrixBenchmark extends MyRunner(classOf[DenseMatrixBenchmark])
 
@@ -31,8 +31,8 @@ class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
     runWith(reps, { randomMatrix(2048, 2048) })((mat: DenseMatrix[Double]) => {
       val size = 2048
       var t: Double = 0
-      cfor(0)(i => i < size, i => i + 1)(i => {
-        cfor(0)(j => j < size, j => j + 1)(j => {
+      cforRange(0 until size)(i => {
+        cforRange(0 until size)(j => {
           t += mat(i, j)
         })
       })
@@ -43,8 +43,8 @@ class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
     runWith(reps, { randomMatrix(2048, 2048) })((mat: DenseMatrix[Double]) => {
       val size = 2048
       var t: Double = 0
-      cfor(0)(i => i < size, i => i + 1)(i => {
-        cfor(0)(j => j < size, j => j + 1)(j => {
+      cforRange(0 until size)(i => {
+        cforRange(0 until size)(j => {
           t += mat.unsafeValueAt(i, j)
         })
       })
@@ -55,8 +55,8 @@ class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
     runWith(reps, { randomMatrix(2048, 2048) })((mat: DenseMatrix[Double]) => {
       val size = 2048
       var t: Double = 0
-      cfor(0)(j => j < size, j => j + 1)(j => {
-        cfor(0)(i => i < size, i => i + 1)(i => {
+      cforRange(0 until size)(j => {
+        cforRange(0 until size)(i => {
           t += mat(i, j)
         })
       })
@@ -67,8 +67,8 @@ class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
     runWith(reps, { randomMatrix(2048, 2048) })((mat: DenseMatrix[Double]) => {
       val size = 2048
       var t: Double = 0
-      cfor(0)(j => j < size, j => j + 1)(j => {
-        cfor(0)(i => i < size, i => i + 1)(i => {
+      cforRange(0 until size)(j => {
+        cforRange(0 until size)(i => {
           t += mat.unsafeValueAt(i, j)
         })
       })
@@ -78,8 +78,8 @@ class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
   def timeUpdateRowCol(reps: Int) =
     runWith(reps, { randomMatrix(2048, 2048) })((mat: DenseMatrix[Double]) => {
       val size = 2048
-      cfor(0)(i => i < size, i => i + 1)(i => {
-        cfor(0)(j => j < size, j => j + 1)(j => {
+      cforRange(0 until size)(i => {
+        cforRange(0 until size)(j => {
           mat.update(i, j, i + j)
         })
       })
@@ -88,8 +88,8 @@ class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
   def timeUnsafeUpdateRowCol(reps: Int) =
     runWith(reps, { randomMatrix(2048, 2048) })((mat: DenseMatrix[Double]) => {
       val size = 2048
-      cfor(0)(i => i < size, i => i + 1)(i => {
-        cfor(0)(j => j < size, j => j + 1)(j => {
+      cforRange(0 until size)(i => {
+        cforRange(0 until size)(j => {
           mat.unsafeUpdate(i, j, i + j)
         })
       })
@@ -98,8 +98,8 @@ class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
   def timeUpdateColRow(reps: Int) =
     runWith(reps, { randomMatrix(2048, 2048) })((mat: DenseMatrix[Double]) => {
       val size = 2048
-      cfor(0)(j => j < size, j => j + 1)(j => {
-        cfor(0)(i => i < size, i => i + 1)(i => {
+      cforRange(0 until size)(j => {
+        cforRange(0 until size)(i => {
           mat.update(i, j, i + j)
         })
       })

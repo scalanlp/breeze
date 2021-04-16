@@ -130,5 +130,5 @@ object OptRange {
 //  case class Single(i: Int) extends OptRange {
 //    override def toString() = "OptRange.Single("+ i +")"
 //  }
-  implicit def rangeToRangeOpt(r: Range) = OptRange.RangeOpt(r)
+  implicit def rangeToRangeOpt(r: Range): RangeOpt = OptRange.RangeOpt(r)
 }

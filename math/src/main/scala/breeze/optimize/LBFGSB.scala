@@ -18,7 +18,7 @@ package breeze.optimize
 import breeze.linalg.{DenseMatrix, DenseVector, _}
 import breeze.optimize.FirstOrderMinimizer.{ConvergenceCheck, ProjectedStepConverged, State}
 import breeze.util.SerializableLogging
-import spire.syntax.cfor._
+import breeze.macros._
 
 /**
  * This algorithm is refered the paper

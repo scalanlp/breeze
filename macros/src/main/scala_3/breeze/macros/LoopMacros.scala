@@ -23,7 +23,7 @@ object LoopMacros {
       i += $step
   }
   
-  def loopCondition(loopVar: Expr[Int], exclusive: Boolean, end: Expr[Int], stride: Expr[Int])(using q: Quotes): Expr[Boolean] = {
+  private def loopCondition(loopVar: Expr[Int], exclusive: Boolean, end: Expr[Int], stride: Expr[Int])(using q: Quotes): Expr[Boolean] = {
     stride.value match {
       case Some(x) if x > 0 => 
         if exclusive then '{ $loopVar < $end}

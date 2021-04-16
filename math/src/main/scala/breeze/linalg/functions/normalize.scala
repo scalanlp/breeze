@@ -71,7 +71,7 @@ object normalize extends UFunc with normalizeLowPrio {
   }
 }
 
-sealed trait normalizeLowPrio { this: normalize.type =>
+sealed trait normalizeLowPrio {  self: normalize.type =>
   implicit def normalizeImplForFloat[T, U >: T](implicit impl: Impl2[T, Float, U]): Impl[T, U] = {
     new Impl[T, U] {
       def apply(v: T): U = impl(v, 2.0f)

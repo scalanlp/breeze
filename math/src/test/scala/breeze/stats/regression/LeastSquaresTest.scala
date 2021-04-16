@@ -4,7 +4,7 @@ import org.scalatest.WordSpec
 import org.scalatest.Matchers
 import breeze.linalg._
 import breeze.numerics._
-import spire.implicits.cfor
+import breeze.macros.cfor
 
 class LeastSquaresTest extends WordSpec with Matchers {
   "Least squares" should {
@@ -20,7 +20,7 @@ class LeastSquaresTest extends WordSpec with Matchers {
     "handle trickier case" in {
       val a = new DenseMatrix[Double](100, 2)
       val b = new DenseVector(new Array[Double](100))
-      cfor(0)(i => i < 100, i => i + 1)(i => {
+      cforRange(0 until 100)(i => {
         a.update(i, 0, i)
         a.update(i, 1, 1)
         b.update(i, 2 * i + 5 + math.random * 0.01)

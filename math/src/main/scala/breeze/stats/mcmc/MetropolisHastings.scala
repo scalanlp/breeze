@@ -18,7 +18,7 @@ package breeze.stats.mcmc
 
 import breeze.stats.distributions._
 import breeze.math._
-import spire.implicits.cfor
+import breeze.macros.cfor
 import scala.reflect.ClassTag
 
 trait MetropolisHastings[T] extends Rand[T] {
@@ -95,7 +95,7 @@ abstract class BaseMetropolisHastings[T](logLikelihoodFunc: T => Double, init: T
   }
 
   // Burn in
-  cfor(0)(i => i < burnIn, i => i + 1)(i => {
+  cforRange(0 until burnIn)(i => {
     getNext()
   })
   // end burn in
@@ -104,7 +104,7 @@ abstract class BaseMetropolisHastings[T](logLikelihoodFunc: T => Double, init: T
     if (dropCount == 0) {
       getNext()
     } else {
-      cfor(0)(i => i < dropCount, i => i + 1)(i => {
+      cforRange(0 until dropCount)(i => {
         getNext()
       })
       getNext()
@@ -162,7 +162,7 @@ case class ThreadedBufferedRand[T](wrapped: Rand[T], bufferSize: Int = 1024 * 8)
       while (!stopWorker) {
         val buff = usedArrayQueue.poll(1, java.util.concurrent.TimeUnit.SECONDS)
         if (buff != null) {
-          cfor(0)(i => i < bufferSize, i => i + 1)(i => {
+          cforRange(0 until bufferSize)(i => {
             buff(i) = wrapped.draw()
           })
           newArrayQueue.put(buff)

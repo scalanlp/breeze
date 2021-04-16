@@ -1,5 +1,8 @@
 import sbt.Keys._
 import sbt._
+import breeze.codegen.plugin.SbtBreezeCodegenPlugin.breezeCodegenSettings
+import xerial.sbt.Sonatype.autoImport.{sonatypeProfileName, sonatypeProjectHosting, sonatypePublishTo}
+import xerial.sbt.Sonatype._
 
 import dotty.tools.sbtplugin.DottyPlugin.autoImport._
 
@@ -12,7 +15,7 @@ object Common {
     }
   }
 
-  val buildCrossScalaVersions = Seq("3.0.0-M3", "2.12.10", "2.13.3")
+  val buildCrossScalaVersions = Seq("3.0.0-RC2", "2.12.10", "2.13.3")
 
   lazy val buildScalaVersion = buildCrossScalaVersions.head
 
@@ -31,31 +34,6 @@ object Common {
       Resolver.typesafeRepo("releases")
     ),
     testOptions in Test += Tests.Argument("-oDF"),
-    pomExtra :=
-      <url>http://scalanlp.org/</url>
-        <licenses>
-          <license>
-            <name>Apache 2</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
-            <distribution>repo</distribution>
-          </license>
-        </licenses>
-        <developers>
-          <developer>
-            <id>dlwh</id>
-            <name>David Hall</name>
-            <url>http://www.dlwh.org/</url>
-          </developer>
-        </developers>,
-    publishMavenStyle := true,
-    publishTo := {
-      val yes = isSnapshot.value
-      val nexus = "https://oss.sonatype.org/"
-      if (yes)
-        Some("snapshots".at(nexus + "content/repositories/snapshots"))
-      else
-        Some("releases".at(nexus + "service/local/staging/deploy/maven2"))
-    },
     publishArtifact in Test := false,
     pomIncludeRepository := { _ =>
       false
@@ -64,12 +42,12 @@ object Common {
       if (priorTo2_13(scalaVersion.value)) {
         Seq(
           compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.patch),
-          "org.scalatest" %% "scalatest" % "3.1.1" % "test",
+          "org.scalatest" %% "scalatest" % "3.2.7" % "test",
           ("org.scalatestplus" %% "scalacheck-1-14" % "3.1.1.1" % "test"),
           ("org.scalacheck" %% "scalacheck" % "1.14.3" % "test")
         ),
       } else {
-        ("org.scalatest" %% "scalatest" % "3.2.3" % "test") +:
+        ("org.scalatest" %% "scalatest" % "3.2.7" % "test") +:
         Seq(
           
           ("org.scalatestplus" % "scalacheck-1-14_2.13" % "3.1.1.1" % "test")
@@ -84,6 +62,15 @@ object Common {
       } else {
         Seq("-Ymacro-annotations", "-language:implicitConversions")
       }
-    }
-  )
+    },
+
+    sonatypeProfileName := "org.scalanlp",
+    publishMavenStyle := true,
+    licenses := Seq("Apache Public License 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.html")),
+    publishTo := sonatypePublishTo.value,
+
+    // Where is the source code hosted: GitHub or GitLab?
+    sonatypeProjectHosting := Some(GitHubHosting("dlwh", "sbt-breeze-expand-codegen", "david.lw.hall@gmail.com"))
+
+  ) ++ breezeCodegenSettings
 }

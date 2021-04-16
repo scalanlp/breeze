@@ -3,7 +3,7 @@ package breeze.linalg
 import breeze.generic.UFunc
 import breeze.macros.expand
 import breeze.util.{ArrayUtil, ReflectionUtil}
-import spire.implicits._
+import breeze.macros._
 
 /**
  * deduplicates the array

@@ -4,7 +4,7 @@ import org.scalatest.{FunSuite, WordSpec}
 import org.scalatest.Matchers
 import scala.util.Random
 import breeze.linalg._
-import spire.implicits.cfor
+import breeze.macros.cfor
 
 class LassoTest extends WordSpec with Matchers {
   "Lasso least squares" should {
@@ -19,7 +19,7 @@ class LassoTest extends WordSpec with Matchers {
     "handle trickier case" in {
       val a = new DenseMatrix[Double](100, 5)
       val b = new DenseVector(new Array[Double](100))
-      cfor(0)(i => i < 100, i => i + 1)(i => {
+      cforRange(0 until 100)(i => {
         a.update(i, 0, 1)
         a.update(i, 1, i)
         a.update(i, 2, i * i)

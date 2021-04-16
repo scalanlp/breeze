@@ -67,7 +67,7 @@ trait ProvidesTransformedQuasiMonteCarlo {
       require(alpha > 0)
       require(beta > 0)
       if (alpha == 1.0) {
-        breeze.stats.distributions.Exponential(beta)
+        breeze.stats.distributions.Exponential(1/beta)
       } else if (alpha > 1) {
         GammaQuasiRandomVariableSpecAlphaGeq1(alpha, beta)
       } else {

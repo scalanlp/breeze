@@ -2,7 +2,7 @@ package breeze.linalg
 
 import org.scalatest._
 import org.scalatestplus.scalacheck._
-import spire.implicits._
+import breeze.macros._
 
 /**
  *

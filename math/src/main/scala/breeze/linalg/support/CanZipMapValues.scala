@@ -61,7 +61,7 @@ object CanZipMapValues {
 
   // <editor-fold defaultstate="collapsed" desc=" implicit CanZipMapValues[V, RV] implementations ">
 
-  implicit def opArray[@spec V, @spec RV: ClassTag] = new OpArray[V, RV]
+  implicit def opArray[@spec V, @spec RV: ClassTag]: OpArray[V, RV] = new OpArray[V, RV]
 
   implicit object OpArrayII extends OpArray[Int, Int]
 

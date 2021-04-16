@@ -7,7 +7,7 @@ import org.netlib.util.intW
 import org.netlib.util.doubleW
 import breeze.linalg.operators.OpMulMatrix
 import breeze.linalg.support.CanTranspose
-import spire.implicits.cforRange
+import breeze.macros.cforRange
 
 //  Options fot the singular value decomposition (SVD) of a real M-by-N matrix
 sealed private[this] abstract class SVDMode(val JOBZ: String)

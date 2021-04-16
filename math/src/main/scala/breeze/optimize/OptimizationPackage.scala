@@ -45,7 +45,7 @@ object OptimizationPackage extends OptimizationPackageLowPriority {
 
   implicit def secondOrderPackage[Vector, Hessian](
       implicit space: MutableFiniteCoordinateField[Vector, _, Double],
-      mult: OpMulMatrix.Impl2[Hessian, Vector, Vector]) = new SecondOrderOptimizationPackage[Vector, Hessian]()
+      mult: OpMulMatrix.Impl2[Hessian, Vector, Vector]): SecondOrderOptimizationPackage[Vector, Hessian] = new SecondOrderOptimizationPackage[Vector, Hessian]()
 
   class FirstOrderStochasticOptimizationPackage[Vector]()(
       implicit space: MutableFiniteCoordinateField[Vector, _, Double])

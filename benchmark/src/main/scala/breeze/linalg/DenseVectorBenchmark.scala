@@ -2,7 +2,7 @@ package breeze.linalg
 
 import breeze.benchmark._
 import breeze.stats.distributions._
-import spire.syntax.cfor._
+import breeze.macros._
 
 object DenseVectorBenchmark extends MyRunner(classOf[DenseVectorBenchmark])
 

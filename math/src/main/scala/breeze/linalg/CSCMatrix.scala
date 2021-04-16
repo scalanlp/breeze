@@ -15,8 +15,9 @@ package breeze.linalg
  limitations under the License.
  */
 
-import java.util
+import breeze.generic.UFunc
 
+import java.util
 import breeze.linalg.operators._
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
@@ -28,7 +29,7 @@ import scala.collection.mutable
 import scala.reflect.ClassTag
 import scala.{specialized => spec}
 import scalaxy.debug._
-import spire.syntax.cfor._
+import breeze.macros._
 
 /**
  * A compressed sparse column matrix, as used in Matlab and CSparse, etc.
@@ -306,7 +307,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps with Se
     }
   }
 
-  implicit def canCopySparse[@spec(Double, Int, Float, Long) V: ClassTag: Zero] = new CanCopyCSCMatrix[V]
+  implicit def canCopySparse[@spec(Double, Int, Float, Long) V: ClassTag: Zero]: CanCopyCSCMatrix[V] = new CanCopyCSCMatrix[V]
 
   implicit def canCreateZerosLike[V: ClassTag: Zero]: CanCreateZerosLike[CSCMatrix[V], CSCMatrix[V]] =
     new CanCreateZerosLike[CSCMatrix[V], CSCMatrix[V]] {
@@ -571,12 +572,12 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] with CSCMatrixOps with Se
     }
   }
 
-  implicit def canDim[E] = new dim.Impl[CSCMatrix[E], (Int, Int)] {
+  implicit def canDim[E]: dim.Impl[CSCMatrix[E], (Int, Int)] = new dim.Impl[CSCMatrix[E], (Int, Int)] {
     def apply(v: CSCMatrix[E]): (Int, Int) = (v.rows, v.cols)
   }
 
   object FrobeniusInnerProductCSCMatrixSpace {
-    implicit def space[S: Field: ClassTag] = {
+    implicit def space[S: Field: ClassTag]: MutableFiniteCoordinateField[CSCMatrix[S], (Int, Int), S] = {
       val norms = EntrywiseMatrixNorms.make[CSCMatrix[S], S]
       import norms._
       MutableFiniteCoordinateField.make[CSCMatrix[S], (Int, Int), S]

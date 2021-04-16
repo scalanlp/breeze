@@ -63,7 +63,7 @@ object CSVWriter {
     val writer = new OpenCSVWriter(output, separator, quote, escape)
     import scala.collection.JavaConverters._
     mat match {
-      case Seq(x @ _*) => writer.writeAll(x.map(_.toArray).asJava)
+      case x: Seq[Seq[String]] => writer.writeAll(x.map(_.toArray).asJava)
       case _ =>
         for (l <- mat) {
           writer.writeNext(l.toArray)

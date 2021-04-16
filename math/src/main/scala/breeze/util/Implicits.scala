@@ -50,7 +50,7 @@ trait DoubleImplicits {
     def isDangerous = x.isNaN || x.isInfinite
   }
 
-  implicit def scEnrichDouble(x: Double) = new RichDouble(x);
+  implicit def scEnrichDouble(x: Double): RichDouble = new RichDouble(x)
 }
 
 trait IteratorImplicits {
@@ -90,5 +90,5 @@ trait IteratorImplicits {
     }
   }
 
-  implicit def scEnrichIterator[T](iter: Iterator[T]) = new RichIterator[T](iter);
+  implicit def scEnrichIterator[T](iter: Iterator[T]): RichIterator[T] = new RichIterator[T](iter)
 }

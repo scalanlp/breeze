@@ -2,10 +2,6 @@ name := "breeze-viz"
 
 organization := "org.scalanlp"
 
-resolvers ++= Seq(
-  "Sonatype Snapshots".at("https://oss.sonatype.org/content/repositories/snapshots/")
-)
-
 libraryDependencies ++= Seq(
   "org.jfree" % "jfreechart" % "1.5.0",
   "org.apache.xmlgraphics" % "xmlgraphics-commons" % "1.3.1", // for eps gen

@@ -21,7 +21,7 @@ import breeze.linalg.{DenseVector, DenseMatrix, norm}
 import spire.math._
 import spire.math.poly._
 import spire.algebra._
-import spire.implicits._
+import breeze.macros._
 
 class DensePolynomialTest extends FunSuite {
 
@@ -38,7 +38,7 @@ class DensePolynomialTest extends FunSuite {
     val p = Polynomial.dense(Array[Double](1, 2, 4, 1, 2))
     val x = DenseVector.zeros[Double](M)
     val result = DenseVector.zeros[Double](M)
-    cfor(0)(j => j < M, j => j + 1)(j => {
+    cforRange(0 until M)(j => {
       val t = j / M.toDouble
       x.update(j, t)
       result.update(j, 1 + 2 * t + 4 * t * t + 1 * t * t * t + 2 * t * t * t * t)
@@ -57,8 +57,8 @@ class DensePolynomialTest extends FunSuite {
     var M = 100
 
     val x = DenseMatrix.zeros[Double](M, M)
-    cfor(0)(i => i < M, i => i + 1)(i => { //   x is matrix with 1's just below the diagonal
-      cfor(0)(j => j < M, j => j + 1)(j => { // so x*x is matrix with row of 1's 2 below the diagonal, etc
+    cforRange(0 until M)(i => { //   x is matrix with 1's just below the diagonal
+      cforRange(0 until M)(j => { // so x*x is matrix with row of 1's 2 below the diagonal, etc
         if (j == i - 1) {
           x.update(i, j, 1.0)
         }
@@ -66,8 +66,8 @@ class DensePolynomialTest extends FunSuite {
     })
 
     val expectedResult = DenseMatrix.zeros[Double](M, M) // expected result easy to compute
-    cfor(0)(i => i < M, i => i + 1)(i => {
-      cfor(0)(j => j < M, j => j + 1)(j => {
+    cforRange(0 until M)(i => {
+      cforRange(0 until M)(j => {
         if (j == i) { expectedResult.update(i, j, 1.0) }
         if (j == i - 1) { expectedResult.update(i, j, 2.0) }
         if (j == i - 2) { expectedResult.update(i, j, 4.0) }

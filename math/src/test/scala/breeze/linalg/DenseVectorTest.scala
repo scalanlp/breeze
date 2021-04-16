@@ -579,6 +579,16 @@ class DenseVectorTest extends FunSuite with Checkers {
     a(1 to 3) := a(0 to 2)
     assert(a == DenseVector(1, 1, 2, 3))
   }
+
+  test("#723 - non-unit stride slices") {
+    val array=Array.range(0,16)
+    val dv = new DenseVector[Int](array)
+    for (i <- 0 until 4) {
+      val fromNew = new DenseVector[Int](array, i, 4, 4)
+      val slice = dv.slice(i, dv.length, 4)
+      assert(fromNew === slice)
+    }
+  }
 }
 
 abstract class DenseVectorPropertyTestBase[T: ClassTag] extends TensorSpaceTestBase[DenseVector[T], Int, T] {

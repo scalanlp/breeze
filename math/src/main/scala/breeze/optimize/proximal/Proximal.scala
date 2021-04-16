@@ -14,7 +14,7 @@ import scala.math.abs
 import scala.Double.NegativeInfinity
 import scala.Double.PositiveInfinity
 import breeze.linalg._
-import spire.syntax.cfor._
+import breeze.macros._
 import breeze.linalg.norm
 
 trait Proximal {

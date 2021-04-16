@@ -6,7 +6,7 @@ import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
 import breeze.math.Semiring
 import breeze.storage.Zero
-import spire.syntax.cfor.cforRange
+import breeze.macros._
 
 import scala.reflect.ClassTag
 
@@ -168,7 +168,7 @@ object SliceMatrix extends LowPrioritySliceMatrix with SliceMatrixOps {
   }
 }
 
-trait LowPrioritySliceMatrix { this: SliceMatrix.type =>
+trait LowPrioritySliceMatrix {  self: SliceMatrix.type =>
   // Note: can't have a separate implicit for Range and Seq since they will be ambiguous as both will return a
   // SliceMatrix which differs from dense matrix where a Range will return another DenseMatrix and only a seq will
   // return a SliceMatrix

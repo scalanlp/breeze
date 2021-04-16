@@ -50,7 +50,7 @@ trait BatchDiffFunction[T] extends DiffFunction[T] with ((T, IndexedSeq[Int]) =>
 
   def withRandomBatches(size: Int): StochasticDiffFunction[T] = new StochasticDiffFunction[T] {
     val rand = Rand.subsetsOfSize(fullRange, size)
-    def calculate(x: T) = outer.calculate(x, rand.get)
+    def calculate(x: T) = outer.calculate(x, rand.draw())
   }
 
   def withScanningBatches(size: Int): StochasticDiffFunction[T] = new StochasticDiffFunction[T] {

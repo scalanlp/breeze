@@ -5,7 +5,7 @@ import breeze.linalg._
 import breeze.linalg.svd.{DenseSVD, SVD}
 import breeze.numerics.{abs, signum}
 import breeze.stats.distributions.Rand
-import spire.implicits.cforRange
+import breeze.macros._
 
 /**
  * Approximate truncated randomized SVD

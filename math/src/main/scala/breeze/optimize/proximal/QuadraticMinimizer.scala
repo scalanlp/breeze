@@ -12,7 +12,7 @@ import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import breeze.optimize.linear.{PowerMethod, NNLS, ConjugateGradient}
 import breeze.stats.distributions.Rand
-import spire.syntax.cfor._
+import breeze.macros._
 
 /**
  * Proximal operators and ADMM based Primal-Dual QP Solver

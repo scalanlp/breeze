@@ -24,11 +24,11 @@ trait MatrixNorms[M, S] {
 trait MatrixInnerProduct[M, S] extends MatrixNorms[M, S] {
   def innerProduct(m1: M, m2: M): S
 
-  implicit val canInnerProduct = new OpMulInner.Impl2[M, M, S] {
+  implicit val canInnerProduct: OpMulInner.Impl2[M, M, S] = new OpMulInner.Impl2[M, M, S] {
     override def apply(v: M, v2: M): S = innerProduct(v, v2)
   }
 
-  implicit def canInnerProductNorm_Ring(implicit ring: Ring[S]) = new norm.Impl[M, Double] {
+  implicit def canInnerProductNorm_Ring(implicit ring: Ring[S]): norm.Impl[M, Double] = new norm.Impl[M, Double] {
     override def apply(v: M): Double = sqrt(implicitly[Ring[S]].sNorm(canInnerProduct(v, v)))
   }
 }

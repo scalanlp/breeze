@@ -92,7 +92,7 @@ trait Counter2Like[
   def repr = this.asInstanceOf[This]
 
   override def toString: String = {
-    data.iterator.map { case (k1, c) => k1 + " -> " + c.toString }.mkString("Counter2(", ",\n", ")")
+    data.iterator.map { case (k1, c) => s"$k1 -> ${c.toString}" }.mkString("Counter2(", ",\n", ")")
   }
 
   override def equals(p1: Any): Boolean = p1 match {

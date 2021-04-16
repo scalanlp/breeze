@@ -16,7 +16,7 @@ package breeze.integrate.quasimontecarlo
  limitations under the License.
  */
 
-import spire.implicits.cfor
+import breeze.macros._
 import breeze.linalg._
 
 object Halton {
@@ -39,9 +39,9 @@ object Halton {
   def integrate(func: Array[Double] => Double)(dimension: Int, numSamples: Long): Double = {
     val gen = new BaseUniformHaltonGenerator(dimension)
     var result: Double = 0
-    cfor(0)(i => i < numSamples, i => i + 1)(i => {
+    cforRange(0 until numSamples) { _ =>
       result += func(gen.getNextUnsafe)
-    })
+    }
     result / numSamples
   }
 }
@@ -67,9 +67,9 @@ class BaseUniformHaltonGenerator(val dimension: Int) extends QuasiMonteCarloGene
     (0 to dimension)
       .map(i => {
         val vv = new Array[Long](Halton.PRIMES(i))
-        cfor(0)(j => j < Halton.PRIMES(i), j => j + 1)(j => {
+        cforRange(0 until Halton.PRIMES(i)) {j =>
           vv(j) = j
-        })
+        }
         shuffle(vv)
         vv
       })
@@ -81,7 +81,7 @@ class BaseUniformHaltonGenerator(val dimension: Int) extends QuasiMonteCarloGene
   def numGenerated: Long = generatedCount
 
   def getNextUnsafe = {
-    cfor(0)(j => j < dimension, j => j + 1)(j => {
+    cforRange(0 until dimension) { j =>
       var lIndex: Int = 0
       while ((lIndex < counters(j).size()) && (counters(j).get(lIndex) == (bases(j) - 1))) {
         counters(j).set(lIndex, 0)
@@ -97,13 +97,13 @@ class BaseUniformHaltonGenerator(val dimension: Int) extends QuasiMonteCarloGene
       var lCountSizeI: Int = counters(j).size()
       var lBasesPow: Long = bases(j)
       var lValue: Double = permutations(j)(counters(j).get(lCountSizeI - 1))
-      cfor(lCountSizeI - 1)(k => k >= 1, k => k - 1)(k => {
+      cforRange(lCountSizeI until 0 by -1) { k =>
         lValue += permutations(j)(counters(j).get(k - 1)) * lBasesPow
         lBasesPow *= bases(j)
-      })
+      }
 
       currentValue(j) = lValue.toDouble / lBasesPow.toDouble
-    })
+    }
     generatedCount += 1
     currentValue
   }

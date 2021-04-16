@@ -110,12 +110,6 @@ class ProjectedQuasiNewton(
       relativeTolerance: Boolean = true)(implicit space: MutableInnerProductModule[DenseVector[Double], Double]) = this(
     convergenceCheck =
       FirstOrderMinimizer.defaultConvergenceCheck[DenseVector[Double]](maxIter, tolerance, relativeTolerance),
-    m = m,
-    initFeas = initFeas,
-    testOpt = testOpt,
-    maxSrchIt = maxSrchIt,
-    gamma = gamma,
-    projection = projection,
     innerOptimizer = new SpectralProjectedGradient[DenseVector[Double]](
       tolerance = tolerance,
       maxIter = 50,
@@ -123,7 +117,14 @@ class ProjectedQuasiNewton(
       initFeas = true,
       fvalMemory = 10,
       projection = projection
-    )
+    ),
+    m = m,
+    initFeas = initFeas,
+    testOpt = testOpt,
+    maxSrchIt = maxSrchIt,
+    gamma = gamma,
+    projection = projection,
+
   )
 
   type History = CompactHessian

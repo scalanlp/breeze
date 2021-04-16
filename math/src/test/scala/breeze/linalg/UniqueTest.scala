@@ -1,7 +1,7 @@
 package breeze.linalg
 
 import org.scalatest._
-import spire.implicits._
+import breeze.macros._
 
 /**
  * @author stucchio

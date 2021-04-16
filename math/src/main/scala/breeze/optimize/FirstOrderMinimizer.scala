@@ -7,6 +7,7 @@ import breeze.stats.distributions.{RandBasis, ThreadLocalRandomGenerator}
 import breeze.util.Implicits._
 import breeze.util.SerializableLogging
 import org.apache.commons.math3.random.MersenneTwister
+import breeze.macros._
 
 /**
  *
@@ -180,11 +181,17 @@ object FirstOrderMinimizer {
   case class SequenceConvergenceCheck[T](checks: IndexedSeq[ConvergenceCheck[T]]) extends ConvergenceCheck[T] {
     type Info = IndexedSeq[ConvergenceCheck[T]#Info]
 
-    override def initialInfo: IndexedSeq[ConvergenceCheck[T]#Info] = checks.map(_.initialInfo)
+    override def initialInfo: IndexedSeq[ConvergenceCheck[T]#Info] = checks.map(_.initialInfo: ConvergenceCheck[T]#Info)
 
-    override def update(newX: T, newGrad: T, newVal: Double, oldState: State[T, _, _], oldInfo: Info): Info = {
+    override def update[X, Y](newX: T, newGrad: T, newVal: Double, oldState: State[T, X, Y], oldInfo: Info): Info = {
       require(oldInfo.length == checks.length)
-      checks.zip(oldInfo).map { case (c, i) => c.update(newX, newGrad, newVal, oldState, i.asInstanceOf[c.Info]) }
+      val out = ArrayBuffer[Info]()
+      cforRange(0 until checks.length) { j =>
+        val c = checks(j)
+        val i = oldInfo(j)
+        out += c.update(newX, newGrad, newVal, oldState, i.asInstanceOf[c.Info])
+      }
+      out
     }
 
     override def apply(state: State[T, _, _], info: IndexedSeq[ConvergenceCheck[T]#Info]): Option[ConvergenceReason] = {
@@ -351,7 +358,7 @@ object FirstOrderMinimizer {
       tolerance: Double = 1E-5,
       useStochastic: Boolean = false,
       randomSeed: Int = 0) {
-    private implicit val random = new RandBasis(new ThreadLocalRandomGenerator(new MersenneTwister(randomSeed)))
+    private implicit val random: RandBasis = RandBasis.withSeed(randomSeed)
 
     @deprecated("Use breeze.optimize.minimize(f, init, params) instead.", "0.10")
     def minimize[T](f: BatchDiffFunction[T], init: T)(implicit space: MutableFiniteCoordinateField[T, _, Double]): T = {
@@ -378,14 +385,14 @@ object FirstOrderMinimizer {
     @deprecated("Use breeze.optimize.iterations(f, init, params) instead.", "0.10")
     def iterations[T](f: StochasticDiffFunction[T], init: T)(implicit space: MutableFiniteCoordinateField[T, _, Double])
       : Iterator[FirstOrderMinimizer[T, StochasticDiffFunction[T]]#State] = {
-      val r = if (useL1) {
+      val r: StochasticGradientDescent[T] = if (useL1) {
         new AdaptiveGradientDescent.L1Regularization[T](regularization, eta = alpha, maxIter = maxIterations)(
           space,
           random)
       } else { // L2
         new AdaptiveGradientDescent.L2Regularization[T](regularization, alpha, maxIterations)(space, random)
       }
-      r.iterations(f, init)
+      r.iterations(f, init).map(x => x: FirstOrderMinimizer[T, StochasticDiffFunction[T]]#State)
     }
 
     @deprecated("Use breeze.optimize.iterations(f, init, params) instead.", "0.10")

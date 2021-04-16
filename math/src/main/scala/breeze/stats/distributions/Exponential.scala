@@ -25,16 +25,16 @@ case class Exponential(rate: Double)(implicit basis: RandBasis = Rand)
   def draw() = -math.log(basis.uniform.draw()) / rate
 
   override def probability(x: Double, y: Double): Double = {
-    new ExponentialDistribution(rate).probability(x, y)
+    new ExponentialDistribution(mean).probability(x, y)
   }
 
   override def inverseCdf(p: Double): Double = {
-    new ExponentialDistribution(rate).inverseCumulativeProbability(p)
+    new ExponentialDistribution(mean).inverseCumulativeProbability(p)
   }
 
   // Probability that x < a <= Y
   override def cdf(x: Double): Double = {
-    new ExponentialDistribution(rate).cumulativeProbability(x)
+    new ExponentialDistribution(mean).cumulativeProbability(x)
   }
 
   override def mean: Double = 1 / rate

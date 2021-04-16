@@ -24,7 +24,7 @@ import breeze.math._
 import breeze.storage.Zero
 import breeze.storage.Zero._
 import breeze.util.{ArrayUtil, ReflectionUtil}
-import spire.syntax.cfor._
+import breeze.macros._
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
@@ -600,7 +600,7 @@ object DenseMatrix
     }
   }
 
-  implicit def negFromScale[V](implicit scale: OpMulScalar.Impl2[DenseMatrix[V], V, DenseMatrix[V]], field: Ring[V]) = {
+  implicit def negFromScale[V](implicit scale: OpMulScalar.Impl2[DenseMatrix[V], V, DenseMatrix[V]], field: Ring[V]): OpNeg.Impl[DenseMatrix[V], DenseMatrix[V]] = {
     new OpNeg.Impl[DenseMatrix[V], DenseMatrix[V]] {
       override def apply(a: DenseMatrix[V]) = {
         scale(a, field.negate(field.one))
@@ -786,7 +786,7 @@ object DenseMatrix
     }
   }
 
-  implicit def canMapKeyValuePairs[V, R: ClassTag] = {
+  implicit def canMapKeyValuePairs[V, R: ClassTag]: CanMapKeyValuePairs[DenseMatrix[V], (Int, Int), V, R, DenseMatrix[R]] = {
     new CanMapKeyValuePairs[DenseMatrix[V], (Int, Int), V, R, DenseMatrix[R]] {
       override def map(from: DenseMatrix[V], fn: (((Int, Int), V) => R)) = {
         val data = new Array[R](from.data.length)
@@ -837,7 +837,7 @@ object DenseMatrix
     }
   }
 
-  implicit def canCopyDenseMatrix[V: ClassTag] = new CanCopy[DenseMatrix[V]] {
+  implicit def canCopyDenseMatrix[V: ClassTag]: CanCopy[DenseMatrix[V]] = new CanCopy[DenseMatrix[V]] {
     def apply(v1: DenseMatrix[V]) = {
       v1.copy
     }
@@ -956,7 +956,7 @@ object DenseMatrix
   implicit def handholdCanMapCols[V]: CanCollapseAxis.HandHold[DenseMatrix[V], Axis._1.type, DenseVector[V]] =
     new CanCollapseAxis.HandHold[DenseMatrix[V], Axis._1.type, DenseVector[V]]()
 
-  implicit def canMapColsBitVector[V: ClassTag: Zero] =
+  implicit def canMapColsBitVector[V: ClassTag: Zero]: CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], BitVector, DenseMatrix[Boolean]] =
     new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], BitVector, DenseMatrix[Boolean]] {
       def apply(from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => BitVector): DenseMatrix[Boolean] = {
         var result: DenseMatrix[Boolean] = null

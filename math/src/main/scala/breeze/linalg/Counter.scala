@@ -15,6 +15,7 @@ package breeze.linalg
  limitations under the License.
  */
 
+import breeze.linalg
 import breeze.linalg.operators._
 import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
@@ -206,7 +207,7 @@ object Counter extends CounterOps {
   }
 
   implicit def space[K, V](implicit field: Field[V]): MutableEnumeratedCoordinateField[Counter[K, V], K, V] = {
-    implicit def zipMap = Counter.zipMap[K, V, V]
+    implicit def zipMap: Counter.CanZipMapValuesCounter[K, V, V] = Counter.zipMap[K, V, V]
     MutableEnumeratedCoordinateField.make[Counter[K, V], K, V]
   }
 }

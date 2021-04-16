@@ -1,7 +1,7 @@
 package breeze.stats.mcmc
 
 import breeze.stats.distributions._
-import spire.syntax.cfor._
+import breeze.macros._
 import org.scalatest.FunSuite
 
 /**Tests for breeze.stats.mcmc.MetropolisHastings

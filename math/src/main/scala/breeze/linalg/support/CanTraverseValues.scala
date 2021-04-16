@@ -61,7 +61,7 @@ object CanTraverseValues {
     def visitArray(arr: Array[A]): Unit = visitArray(arr, 0, arr.length, 1)
 
     def visitArray(arr: Array[A], offset: Int, length: Int, stride: Int): Unit = {
-      import spire.syntax.cfor._
+      import breeze.macros._
       // Standard array bounds check stuff
       if (stride == 1) {
         cforRange(offset until length + offset) { i =>
@@ -90,8 +90,7 @@ object CanTraverseValues {
     def isTraversableAgain(from: Array[A]): Boolean = true
   }
 
-  implicit def opArray[@specialized A] =
-    new OpArray[A]
+  implicit def opArray[@specialized A]: OpArray[A] = new OpArray[A]
 
   implicit object OpArrayII extends OpArray[Int]
 
@@ -133,7 +132,7 @@ object CanTraverseValues {
   }
 }
 
-trait LowPrioCanTraverseValues { this: CanTraverseValues.type =>
+trait LowPrioCanTraverseValues {  self: CanTraverseValues.type =>
   implicit def canTraverseSelf[V, V2]: CanTraverseValues[V, V] = {
     new CanTraverseValues[V, V] {
 

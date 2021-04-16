@@ -309,7 +309,7 @@ object LinearProgram {
     def minimize(lp: LinearProgram)(obj: lp.Problem): lp.Result
   }
 
-  implicit val mySolver = {
+  implicit val mySolver: Solver = {
 //    NativeLPSolver
 //  } catch {
 //    case ex: SecurityException =>
