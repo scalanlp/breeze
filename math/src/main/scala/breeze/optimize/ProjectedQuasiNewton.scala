@@ -32,7 +32,7 @@ class CompactHessian(
     extends NumericOps[CompactHessian] {
   def this(m: Int) = this(null, new RingBuffer(m), new RingBuffer(m), 1.0, m)
   def repr: CompactHessian = this
-  implicit def collectionOfVectorsToMatrix(coll: scala.collection.Seq[DenseVector[Double]]) =
+  implicit def collectionOfVectorsToMatrix(coll: scala.collection.Seq[DenseVector[Double]]): DenseMatrix[Double] =
     DenseMatrix.tabulate(coll.size, coll.headOption.map(_.size).getOrElse(0)) { case (i, j) => coll(i)(j) }
   def updated(y: DenseVector[Double], s: DenseVector[Double]): CompactHessian = {
     // Compute scaling factor for initial Hessian, which we choose as

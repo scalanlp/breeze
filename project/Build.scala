@@ -70,7 +70,24 @@ object Common {
     publishTo := sonatypePublishTo.value,
 
     // Where is the source code hosted: GitHub or GitLab?
-    sonatypeProjectHosting := Some(GitHubHosting("dlwh", "sbt-breeze-expand-codegen", "david.lw.hall@gmail.com"))
+    sonatypeProjectHosting := Some(GitHubHosting("dlwh", "sbt-breeze-expand-codegen", "david.lw.hall@gmail.com")),
 
+    unmanagedSourceDirectories in Compile ++= {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, 11|12)) => Seq(
+          baseDirectory.value / "src" / "main" / "scala_2.11_2.12",
+          baseDirectory.value / "src" / "main" / "scala_2",
+        )
+        case Some((2, 13)) => Seq(
+          baseDirectory.value / "src" / "main" / "scala_2",
+          baseDirectory.value / "src" / "main" / "scala_2.13"
+        )
+        case Some( (3, _)) => Seq(
+          baseDirectory.value / "src" / "main" / "scala_2.13",
+          baseDirectory.value / "src" / "main" / "scala_3"
+        )
+        case _ => ???
+      }
+    }
   ) ++ breezeCodegenSettings
 }

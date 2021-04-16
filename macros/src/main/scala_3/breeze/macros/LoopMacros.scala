@@ -1,7 +1,8 @@
 package breeze.macros
 
+import scala.collection.immutable.NumericRange
 import scala.quoted._
-import scala.compiletime.{constValue}
+import scala.compiletime.constValue
 
 object LoopMacros {
   def cforRangeImpl(range: Expr[Range], body: Expr[Int=>Any])(using quotes: Quotes): Expr[Unit] = range match {
@@ -14,7 +15,7 @@ object LoopMacros {
       quotes.reflect.report.warning("Nonliteral range, so can't simplify", range)
       '{ $range.foreach($body) }
   }
-  
+
   private def loopBody(exclusive: Boolean, begin: Expr[Int], end: Expr[Int], step: Expr[Int], body: Expr[Int=>Any])(using Quotes) = '{
     var i: Int = $begin
     val yy = $end

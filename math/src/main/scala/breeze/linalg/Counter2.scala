@@ -19,6 +19,7 @@ import breeze.linalg.operators.Counter2Ops
 import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 import breeze.storage.Zero
 
+import collection.mutable
 import collection.mutable.HashMap
 import breeze.math.Semiring
 import breeze.linalg.support._
@@ -43,12 +44,11 @@ trait Counter2Like[
     K1,
     K2,
     V,
-    +M1[VV] <: Curried[scala.collection.mutable.Map, K1]#Result[VV],
     +T <: Counter[K2, V],
     +This <: Counter2[K1, K2, V]]
     extends TensorLike[(K1, K2), V, This] { self =>
 
-  def data: M1[_ <: T]
+  def data: mutable.Map[K1, T]
 
   def default: V
 
@@ -105,7 +105,7 @@ trait Counter2Like[
 
 trait Counter2[K1, K2, V]
     extends Tensor[(K1, K2), V]
-    with Counter2Like[K1, K2, V, Curried[scala.collection.mutable.Map, K1]#Result, Counter[K2, V], Counter2[K1, K2, V]]
+    with Counter2Like[K1, K2, V, Counter[K2, V], Counter2[K1, K2, V]]
 
 object Counter2 extends LowPriorityCounter2 with Counter2Ops {
 

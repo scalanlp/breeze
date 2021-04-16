@@ -9,6 +9,8 @@ import breeze.util.SerializableLogging
 import org.apache.commons.math3.random.MersenneTwister
 import breeze.macros._
 
+import scala.collection.mutable.ArrayBuffer
+
 /**
  *
  * @author dlwh
@@ -185,13 +187,13 @@ object FirstOrderMinimizer {
 
     override def update[X, Y](newX: T, newGrad: T, newVal: Double, oldState: State[T, X, Y], oldInfo: Info): Info = {
       require(oldInfo.length == checks.length)
-      val out = ArrayBuffer[Info]()
+      val out = ArrayBuffer[ConvergenceCheck[T]#Info]()
       cforRange(0 until checks.length) { j =>
         val c = checks(j)
         val i = oldInfo(j)
         out += c.update(newX, newGrad, newVal, oldState, i.asInstanceOf[c.Info])
       }
-      out
+      out.toIndexedSeq
     }
 
     override def apply(state: State[T, _, _], info: IndexedSeq[ConvergenceCheck[T]#Info]): Option[ConvergenceReason] = {
@@ -384,7 +386,7 @@ object FirstOrderMinimizer {
 
     @deprecated("Use breeze.optimize.iterations(f, init, params) instead.", "0.10")
     def iterations[T](f: StochasticDiffFunction[T], init: T)(implicit space: MutableFiniteCoordinateField[T, _, Double])
-      : Iterator[FirstOrderMinimizer[T, StochasticDiffFunction[T]]#State] = {
+      : Iterator[FirstOrderMinimizer.State[T, _, _]] = {
       val r: StochasticGradientDescent[T] = if (useL1) {
         new AdaptiveGradientDescent.L1Regularization[T](regularization, eta = alpha, maxIter = maxIterations)(
           space,
@@ -392,7 +394,7 @@ object FirstOrderMinimizer {
       } else { // L2
         new AdaptiveGradientDescent.L2Regularization[T](regularization, alpha, maxIterations)(space, random)
       }
-      r.iterations(f, init).map(x => x: FirstOrderMinimizer[T, StochasticDiffFunction[T]]#State)
+      r.iterations(f, init)
     }
 
     @deprecated("Use breeze.optimize.iterations(f, init, params) instead.", "0.10")

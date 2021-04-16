@@ -4,7 +4,9 @@ import collection.mutable.ArrayBuffer
 import breeze.linalg._
 import org.apache.commons.math3.optim.linear._
 import org.apache.commons.math3.optim.nonlinear.scalar._
+
 import scala.collection.JavaConverters._
+import scala.collection.StringOps
 
 /**
  * DSL for LinearPrograms. Not thread-safe per instance. Make multiple instances
@@ -84,7 +86,7 @@ class LinearProgram {
 
       s"${_goal}    " + objective + {
         if (constraints.nonEmpty) {
-          "\nsubject to  " + constraints.mkString("\n" + " " * "subject to  ".length)
+          "\nsubject to  " + constraints.mkString("\n" + new StringOps(" ") * "subject to  ".length)
         } else ""
       }
     }

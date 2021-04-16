@@ -39,7 +39,7 @@ object Halton {
   def integrate(func: Array[Double] => Double)(dimension: Int, numSamples: Long): Double = {
     val gen = new BaseUniformHaltonGenerator(dimension)
     var result: Double = 0
-    cforRange(0 until numSamples) { _ =>
+    for ( _ <- 0L until numSamples) {
       result += func(gen.getNextUnsafe)
     }
     result / numSamples

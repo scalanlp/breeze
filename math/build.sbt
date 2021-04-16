@@ -32,12 +32,5 @@ fork := true
 
 javaOptions := Seq("-Xmx4g")
 
-unmanagedSourceDirectories in Compile += {
-  CrossVersion.partialVersion(scalaVersion.value) match {
-    case Some((2, 11|12)) => baseDirectory.value / "src" / "main" / "scala_2.11_2.12"
-    case Some((2, 13)) => baseDirectory.value / "src" / "main" / "scala_2.13"
-    case Some( (3, _)) =>baseDirectory.value / "src" / "main" / "scala_2.13"
-    case _ => ???
-  }
-}
+
 
