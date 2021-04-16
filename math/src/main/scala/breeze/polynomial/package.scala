@@ -2,7 +2,7 @@ package breeze
 
 import breeze.generic.{UFunc, VariableUFunc}
 import breeze.linalg.{DenseMatrix, DenseVector}
-import breeze.macros.cfor
+import breeze.macros.cforRange
 import spire.math.poly.PolyDense
 import breeze.macros._
 

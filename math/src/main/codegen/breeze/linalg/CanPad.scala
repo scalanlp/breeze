@@ -1,10 +1,9 @@
 package breeze.linalg
 
 import breeze.linalg.Options._
-import breeze.macros.expand
+import breeze.macros._
 import breeze.math.Semiring
 import breeze.stats.{mean, median}
-import spire.syntax.cfor._
 
 import java.util
 import scala.reflect.ClassTag

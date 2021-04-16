@@ -1,8 +1,7 @@
 package breeze.linalg
 
 import breeze.linalg.operators._
-import breeze.macros.expand
-import spire.syntax.cfor.cforRange
+import breeze.macros._
 
 trait SliceVectorOps {
   import breeze.math.PowImplicits._

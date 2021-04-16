@@ -4,7 +4,7 @@ import org.scalatest.{FunSuite, WordSpec}
 import org.scalatest.Matchers
 import scala.util.Random
 import breeze.linalg._
-import breeze.macros.cfor
+import breeze.macros.cforRange
 
 class LassoTest extends WordSpec with Matchers {
   "Lasso least squares" should {

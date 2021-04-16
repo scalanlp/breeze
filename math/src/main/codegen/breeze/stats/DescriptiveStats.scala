@@ -33,7 +33,7 @@ import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.macros.expand
 import breeze.math.Complex
 import breeze.numerics.isOdd
-import breeze.macros.{cfor, cforRange}
+import breeze.macros.{cforRange}
 import scala.collection.mutable
 
 object accumulateAndCount extends UFunc {

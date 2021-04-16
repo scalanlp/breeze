@@ -18,7 +18,7 @@ package breeze.stats.mcmc
 
 import breeze.stats.distributions._
 import breeze.math._
-import breeze.macros.cfor
+import breeze.macros.cforRange
 import scala.reflect.ClassTag
 
 trait MetropolisHastings[T] extends Rand[T] {

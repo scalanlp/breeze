@@ -4,7 +4,7 @@ import org.scalatest.WordSpec
 import org.scalatest.Matchers
 import breeze.linalg._
 import breeze.numerics._
-import breeze.macros.cfor
+import breeze.macros.cforRange
 
 class LeastSquaresTest extends WordSpec with Matchers {
   "Least squares" should {

@@ -2,10 +2,9 @@ package breeze.linalg.operators
 
 import breeze.generic.UFunc.{InPlaceImpl2, UImpl2}
 import breeze.linalg.{DenseMatrix, DenseVector, HashVector, StorageVector, Vector, VectorBuilder, axpy, norm, scaleAdd}
-import breeze.macros.expand
+import breeze.macros._
 import breeze.math.{Field, MutableModule, MutableVectorField, Ring, Semiring}
 import breeze.storage.Zero
-import spire.syntax.cfor.cforRange
 import breeze.math.PowImplicits._
 
 import scala.reflect.ClassTag

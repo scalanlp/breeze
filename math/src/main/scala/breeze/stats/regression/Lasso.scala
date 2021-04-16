@@ -3,7 +3,7 @@ package breeze.stats.regression
 import breeze.generic.UFunc
 import breeze.linalg._
 import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
-import breeze.macros.cfor
+import breeze.macros.cforRange
 
 private case class LassoCalculator(
     data: DenseMatrix[Double],

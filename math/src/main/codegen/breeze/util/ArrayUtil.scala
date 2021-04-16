@@ -1,7 +1,6 @@
 package breeze.util
 
-import breeze.macros.expand
-import spire.syntax.cfor.cforRange
+import breeze.macros._
 
 import java.util.Arrays
 import scala.reflect.ClassTag

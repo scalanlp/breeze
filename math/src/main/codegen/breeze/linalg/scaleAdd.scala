@@ -2,7 +2,6 @@ package breeze.linalg
 
 import breeze.generic.UFunc
 import breeze.macros.{cforRange, expand}
-import spire.syntax.cfor.cfor
 
 /**
  * method for representing scaleAdd(y, a, x) == y + a * x

@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import breeze.linalg.DenseVector
 import org.apache.commons.math3.random.{MersenneTwister, RandomGenerator}
-import breeze.macros.cfor
+import breeze.macros.cforRange
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
