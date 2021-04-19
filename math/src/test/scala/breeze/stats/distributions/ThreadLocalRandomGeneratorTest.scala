@@ -1,6 +1,5 @@
 package breeze.stats.distributions
 
-import com.sun.xml.internal.ws.encoding.soap.SerializationException
 import org.apache.commons.math3.random.MersenneTwister
 import org.scalatest.{FunSuite, Matchers}
 
@@ -35,7 +34,7 @@ class ThreadLocalRandomGeneratorTest extends FunSuite with Matchers {
       out.writeObject(generator)
       outputStream.toByteArray
     } catch {
-      case ex: IOException => throw new SerializationException(ex)
+      case _: IOException => fail("cannot serialize")
     } finally {
       if (out != null) out.close()
     }
@@ -46,7 +45,7 @@ class ThreadLocalRandomGeneratorTest extends FunSuite with Matchers {
     try {
       in.readObject().asInstanceOf[ThreadLocalRandomGenerator]
     } catch {
-      case ex: IOException => throw new SerializationException(ex)
+      case _: IOException => fail("cannot deserialize")
     } finally {
       if (in != null) in.close()
     }
