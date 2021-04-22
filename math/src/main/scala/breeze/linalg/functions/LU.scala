@@ -82,7 +82,7 @@ object LU extends UFunc {
         implicit cast: T => Double): Impl[DenseMatrix[T], (DenseMatrix[Double], Array[Int])] = {
       new Impl[DenseMatrix[T], (DenseMatrix[Double], Array[Int])] {
         def apply(v: DenseMatrix[T]): (DenseMatrix[Double], Array[Int]) = {
-          import DenseMatrix.canMapValues
+//          import DenseMatrix.canMapValues
           LU_DM_Impl_Double(v.mapValues(cast))
         }
       }

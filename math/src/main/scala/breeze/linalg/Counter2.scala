@@ -30,10 +30,8 @@ import CanTraverseValues.ValuesVisitor
 
 import scala.collection.immutable
 
-/**
- *
- * @author dlwh
- */
+
+// TODO: remove the Like stuff.
 /**
  * A map-like tensor that acts like a collection of key-value pairs where
  * the set of values may grow arbitrarily.
@@ -44,7 +42,7 @@ trait Counter2Like[
     K1,
     K2,
     V,
-    +T <: Counter[K2, V],
+    T <: Counter[K2, V],
     +This <: Counter2[K1, K2, V]]
     extends TensorLike[(K1, K2), V, This] { self =>
 

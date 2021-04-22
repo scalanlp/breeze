@@ -836,7 +836,7 @@ object MutableOptimizationSpace {
   object DenseFieldOptimizationSpace {
     implicit def denseOptSpace[S: Field: ClassTag]: MutableOptimizationSpace[DenseMatrix[S], DenseVector[S], S] = {
       val norms = EntrywiseMatrixNorms.make[DenseMatrix[S], S]
-      import DenseMatrix.canMapValues
+//      import DenseMatrix.canMapValues
       import norms._
       make[DenseMatrix[S], DenseVector[S], S](_.asDenseMatrix, _.flatten())
     }
@@ -845,7 +845,7 @@ object MutableOptimizationSpace {
   object DenseDoubleOptimizationSpace {
     implicit def denseDoubleOptSpace: MutableOptimizationSpace[DenseMatrix[Double], DenseVector[Double], Double] = {
       val norms = EntrywiseMatrixNorms.make[DenseMatrix[Double], Double]
-      import DenseMatrix.canMapValues
+//      import DenseMatrix.canMapValues
       import norms.{canInnerProduct, canNorm_Double}
       make[DenseMatrix[Double], DenseVector[Double], Double](_.asDenseMatrix, _.flatten())
     }

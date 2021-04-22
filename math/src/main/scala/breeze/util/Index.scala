@@ -95,24 +95,6 @@ trait Index[T] extends Iterable[T] with (T => Int) with Serializable {
 }
 
 /**
- * Synchronized view of an Index for thread-safe access.
- *
- * @author dramage
- */
-@SerialVersionUID(1L)
-trait SynchronizedIndex[T] extends Index[T] {
-  abstract override def size = this synchronized super.size
-  abstract override def apply(t: T) = this synchronized super.apply(t)
-  abstract override def unapply(pos: Int) = this synchronized super.unapply(pos)
-  abstract override def contains(t: T) = this synchronized super.contains(t)
-  abstract override def indexOpt(t: T) = this synchronized super.indexOpt(t)
-  abstract override def indexOf(t: T) = this synchronized super.indexOf(t)
-  abstract override def get(pos: Int) = this synchronized super.get(pos)
-  abstract override def equals(other: Any) = this synchronized super.equals(other)
-  abstract override def hashCode = this synchronized super.hashCode
-}
-
-/**
  * An Index that contains an extra method: <em>index</em> that adds the
  * given element (if necessary), returning its (possibly new) position in
  * the index.

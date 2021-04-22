@@ -19,7 +19,7 @@ import support._
 import breeze.collection.mutable.Beam
 import breeze.generic.UFunc
 import breeze.math.Semiring
-import breeze.linalg.operators.{HasOps, TensorLowPrio, TheOps}
+import breeze.linalg.operators.{HasOps, TensorLowPrio}
 
 import scala.util.hashing.MurmurHash3
 import scala.{specialized => spec}
