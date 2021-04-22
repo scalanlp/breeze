@@ -7,6 +7,7 @@ import breeze.linalg.operators._
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
 import breeze.util.Isomorphism
+import breeze.compat.Scala3Compat._
 
 /**
  *
@@ -107,7 +108,7 @@ object MutablizingAdaptor {
       val u = underlying
       def scalars: Field[S] = underlying.scalars
 
-      implicit def hasOps(v: Wrapper): NumericOps[Wrapper] = v
+      implicit val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = implicitly
 
 //      implicit def mapValues: CanMapValues[Wrapper, S, S, Wrapper] = new CanMapValues[Wrapper, S, S, Wrapper] {
 //        /** Maps all key-value pairs from the given collection. */
@@ -231,7 +232,7 @@ object MutablizingAdaptor {
         val u = underlying
         def scalars: Field[S] = underlying.scalars
 
-        implicit def hasOps(v: Wrapper) = v
+        implicit val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = implicitly
 
         implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
           // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
@@ -368,7 +369,8 @@ object MutablizingAdaptor {
       val u = underlying
       def scalars: Field[S] = underlying.scalars
 
-      implicit def hasOps(v: Wrapper) = v
+      implicit val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = implicitly
+
 
       implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
@@ -527,7 +529,7 @@ object MutablizingAdaptor {
       val u = underlying
       def scalars: Ring[S] = underlying.scalars
 
-      implicit def hasOps(v: Wrapper) = v
+      implicit val hasOps : Conversion[Wrapper, NumericOps[Wrapper]] = implicitly
 
       implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
@@ -669,7 +671,7 @@ object MutablizingAdaptor {
       val u = underlying
       def scalars = underlying.scalars
 
-      implicit def hasOps(v: Wrapper) = v
+      implicit val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = implicitly
 
       implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.

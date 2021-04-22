@@ -54,9 +54,10 @@ class BinomialHeap[T]()(implicit ord: Ordering[T])
       else insertTree(n1.link(n2), merge(r1, r2, acc))
   }
 
-  def min = get.get
+  def min = minOpt.get
 
-  lazy val get = if (trees.isEmpty) None else Some(findMin(trees))
+  lazy val minOpt = if (trees.isEmpty) None else Some(findMin(trees))
+
   private def findMin(trees: List[Node[T]]): T = {
     trees match {
       case (t :: Nil) => t.x
@@ -68,7 +69,7 @@ class BinomialHeap[T]()(implicit ord: Ordering[T])
     }
   }
 
-  def delMin() = {
+  def delMin: BinomialHeap[T] = {
     if (trees.isEmpty) this
     else {
       def getMin(t: List[Node[T]]): (Node[T], List[Node[T]]) = t match {

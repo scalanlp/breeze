@@ -52,7 +52,7 @@ object accumulateAndCount extends UFunc {
           }
 
           def zeros(numZero: Int, zeroValue: Scalar): Unit = {
-            sum += (numZero * zeroValue)
+            this.sum = this.sum + zeroValue * numZero
             n += numZero
           }
         }
@@ -195,9 +195,10 @@ object stddev extends UFunc {
  * A [[breeze.generic.UFunc]] for computing the median of objects
  */
 object median extends UFunc {
+  // todo: make array be the basic op for median
 
   @expand
-  implicit def reduce[@expand.args(Int, Long, Double, Float) T]: Impl[DenseVector[T], T] =
+  implicit def reduce[@expand.args(Int, Long, Double, Float) T]: median.Impl[DenseVector[T], T] =
     new Impl[DenseVector[T], T] {
       def apply(v: DenseVector[T]): T = {
         if (isOdd(v.length)) {
@@ -219,10 +220,7 @@ object median extends UFunc {
     }
 
   @expand
-  implicit def reduceM[@expand.args(Int, Long, Double) T]: Impl[DenseMatrix[T], Double] =
-    new Impl[DenseMatrix[T], Double] {
-      def apply(m: DenseMatrix[T]) = median(m.toDenseVector)
-    }
+  implicit def reduceM[@expand.args(Int, Long, Double) T]: Impl[DenseMatrix[T], T] = m => median(m.toDenseVector)
 
 }
 
@@ -555,7 +553,7 @@ object DescriptiveStats {
    * </p>
    */
   def meanAndCov[T](it1: TraversableOnce[T], it2: TraversableOnce[T])(implicit frac: Fractional[T]) = {
-    implicit def t(it: TraversableOnce[T]) = it.toIterable //convert to an iterable for zip operation
+    implicit def t(it: TraversableOnce[T]): Iterable[T] = it.toIterable //convert to an iterable for zip operation
     import frac.mkNumericOps
     //mu1(n-1), mu2(n-1), Cov(n-1), n-1
     val (mu1, mu2, c, n) = (it1, it2).zipped.foldLeft((frac.zero, frac.zero, frac.zero, frac.zero)) { (acc, y) =>

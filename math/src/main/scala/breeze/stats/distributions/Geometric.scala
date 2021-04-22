@@ -67,7 +67,7 @@ object Geometric extends ExponentialFamily[Geometric, Int] with HasConjugatePrio
   def distribution(p: Geometric.Parameter) = new Geometric(p)
 
   type ConjugatePrior = Beta
-  val conjugateFamily = Beta
+  val conjugateFamily: Beta.type = Beta
 
   def predictive(parameter: conjugateFamily.Parameter) = TODO
 

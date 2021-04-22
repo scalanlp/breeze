@@ -197,7 +197,7 @@ class RandBasis(val generator: RandomGenerator) extends Serializable {
    */
   def choose[T](c: Iterable[T]): Rand[T] = new Rand[T] {
     def draw() = {
-      val sz = uniform.get * c.size
+      val sz = uniform.draw() * c.size
       val elems = c.iterator
       var i = 1
       var e = elems.next()
@@ -228,12 +228,12 @@ class RandBasis(val generator: RandomGenerator) extends Serializable {
   /**
    * Convert an Seq of Rand[T] into a Rand[Seq[T]]
    */
-  def promote[U](col: Seq[Rand[U]]) = fromBody(col.map(_.get))
+  def promote[U](col: Seq[Rand[U]]) = fromBody(col.map(_.draw()))
 
-  def promote[T1, T2](t: (Rand[T1], Rand[T2])) = fromBody((t._1.get, t._2.get))
-  def promote[T1, T2, T3](t: (Rand[T1], Rand[T2], Rand[T3])) = fromBody((t._1.get, t._2.get, t._3.get))
+  def promote[T1, T2](t: (Rand[T1], Rand[T2])) = fromBody((t._1.draw(), t._2.draw()))
+  def promote[T1, T2, T3](t: (Rand[T1], Rand[T2], Rand[T3])) = fromBody((t._1.draw(), t._2.draw(), t._3.draw()))
   def promote[T1, T2, T3, T4](t: (Rand[T1], Rand[T2], Rand[T3], Rand[T4])) =
-    fromBody((t._1.get, t._2.get, t._3.get, t._4.get))
+    fromBody((t._1.draw(), t._2.draw(), t._3.draw(), t._4.draw()))
 
   /**
    * Uniformly samples in [0,1]
@@ -301,7 +301,7 @@ class RandBasis(val generator: RandomGenerator) extends Serializable {
    * Samples a gaussian with m mean and s std
    */
   def gaussian(m: Double, s: Double): Rand[Double] = new Rand[Double] {
-    def draw = m + s * gaussian.get
+    def draw = m + s * gaussian.draw()
   }
 
   /**

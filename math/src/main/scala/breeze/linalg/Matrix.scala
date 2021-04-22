@@ -145,11 +145,7 @@ trait Matrix[@spec(Double, Int, Float, Long) V] extends MatrixLike[V, Matrix[V]]
 
 object Matrix
     extends MatrixConstructors[Matrix]
-    with LowPriorityMatrix
-    with MatrixGenericOps
-    with MatrixOpsLowPrio
-    with MatrixOps
-    with MatrixMultOps {
+    with LowPriorityMatrix {
 
   def zeros[@spec(Double, Int, Float, Long) V: ClassTag: Zero](rows: Int, cols: Int): Matrix[V] =
     DenseMatrix.zeros(rows, cols)

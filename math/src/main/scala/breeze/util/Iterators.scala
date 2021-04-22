@@ -23,7 +23,7 @@ package breeze.util
  */
 object Iterators {
 
-  def fromProducer[E](prod: => Option[E]): Iterator[E] = Iterator.continually(prod).takeWhile(None !=).map(_.get)
+  def fromProducer[E](prod: => Option[E]): Iterator[E] = Iterator.continually(prod).takeWhile(_.nonEmpty).map(_.get)
 
   /**
    * Merges (ordered) iterators by returning the lesser element at the

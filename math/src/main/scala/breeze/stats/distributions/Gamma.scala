@@ -81,7 +81,9 @@ case class Gamma(shape: Double, scale: Double)(implicit rand: RandBasis = Rand)
         }
       }
       rec + math.log(scale)
-    } else math.log(draw)
+    } else {
+      math.log(draw())
+    }
 
   def draw() = {
     if (shape == 1.0) {

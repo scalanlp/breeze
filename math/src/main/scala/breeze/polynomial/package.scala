@@ -5,6 +5,7 @@ import breeze.linalg.{DenseMatrix, DenseVector}
 import breeze.macros.cforRange
 import spire.math.poly.PolyDense
 import breeze.macros._
+import spire.implicits.DoubleAlgebra
 
 package object polynomial {
   object densePolyval extends UFunc {

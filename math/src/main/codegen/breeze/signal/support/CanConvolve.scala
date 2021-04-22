@@ -109,7 +109,7 @@ object CanConvolve extends SerializableLogging {
                 case OptPadding.Cyclical => data(dl - leftPadding to dl - 1)
                 case OptPadding.Boundary => DenseVector.ones[T](leftPadding /*kernel.length-1*/ ) * data(0)
                 case OptPadding.Zero => DenseVector.zeros[T](leftPadding)
-                case OptPadding.ValueOpt(v: T) => DenseVector.ones[T](leftPadding) * v
+                case OptPadding.ValueOpt(v: T) => DenseVector.ones[T](leftPadding) * (v: T)
                 case op => require(false, "cannot handle OptPadding value " + op); DenseVector[T]()
               },
               data,
@@ -117,7 +117,7 @@ object CanConvolve extends SerializableLogging {
                 case OptPadding.Cyclical => data(0 to rightPadding - 1)
                 case OptPadding.Boundary => DenseVector.ones[T](rightPadding) * data(dl - 1)
                 case OptPadding.Zero => DenseVector.zeros[T](rightPadding)
-                case OptPadding.ValueOpt(v: T) => DenseVector.ones[T](rightPadding) * v
+                case OptPadding.ValueOpt(v: T) => DenseVector.ones[T](rightPadding) * (v: T)
                 case op => require(false, "cannot handle OptPadding value " + op); DenseVector[T]()
               }
             )

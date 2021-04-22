@@ -57,7 +57,7 @@ trait TracksStatistics { self: MetropolisHastings[_] =>
   def rejectionFrac: Double = rejectionCount.toDouble / total.toDouble
 }
 
-abstract class BaseMetropolisHastings[T](logLikelihoodFunc: T => Double, init: T, burnIn: Long = 0, dropCount: Int = 0)(
+abstract class BaseMetropolisHastings[T](logLikelihoodFunc: T => Double, init: T, burnIn: Int = 0, dropCount: Int = 0)(
     implicit val rand: RandBasis = Rand)
     extends MetropolisHastings[T]
     with Process[T]
@@ -117,7 +117,7 @@ case class ArbitraryMetropolisHastings[T](
     val proposal: T => Rand[T],
     val logProposalDensity: (T, T) => Double,
     init: T,
-    burnIn: Long = 0,
+    burnIn: Int = 0,
     dropCount: Int = 0)(implicit rand: RandBasis = Rand)
     extends BaseMetropolisHastings[T](logLikelihood, init, burnIn, dropCount)(rand) {
   def proposalDraw(x: T) = proposal(x).draw()
@@ -130,7 +130,7 @@ case class AffineStepMetropolisHastings[T](
     logLikelihood: T => Double,
     val proposalStep: Rand[T],
     init: T,
-    burnIn: Long = 0,
+    burnIn: Int = 0,
     dropCount: Int = 0)(implicit rand: RandBasis = Rand, vectorSpace: VectorSpace[T, _])
     extends BaseMetropolisHastings[T](logLikelihood, init, burnIn, dropCount)(rand)
     with SymmetricMetropolisHastings[T] {

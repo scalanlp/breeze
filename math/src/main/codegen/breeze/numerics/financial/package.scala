@@ -4,7 +4,7 @@ import breeze.generic.UFunc
 import breeze.linalg.support.CanTraverseValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.{DenseMatrix, DenseVector, argmin, eig, reverse}
-import breeze.macros.expand
+import breeze.macros._
 import breeze.math.Complex
 import spire.implicits.cfor
 
@@ -54,7 +54,7 @@ package object financial {
                                                                      @expand.sequence[Scalar](0.0, 0.0f, 0) zero: Scalar): Impl2[Double, T, Double] = new Impl2[Double, T, Double] {
       def apply(rate: Double, revenueStream: T): Double = {
 
-        val visit = new ValuesVisitor[Scalar] {
+        object visit extends ValuesVisitor[Scalar] {
           final val decayConst: Double = 1.0 / (1.0 + rate)
           var decayUntilNow: Double = 1.0
           var sum: Double = 0.0
@@ -185,7 +185,7 @@ package object financial {
            if c.im() == 0 && c.re() > 0)
       yield c.re()
     )
-    val rates = realRes.mapValues(v => 1.0 / v - 1.0)
+    val rates = realRes.mapValues( (v: Double) => 1.0 / v - 1.0)
 
     val rate = if (rates.length <= 0) {
       None

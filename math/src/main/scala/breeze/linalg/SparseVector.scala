@@ -187,10 +187,7 @@ class SparseVector[@spec(Double, Int, Float, Long) V](val array: SparseArray[V])
 }
 
 object SparseVector
-    extends SparseVectorOps
-    with DenseVector_SparseVector_Ops
-    with SparseVector_DenseMatrixOps
-    with SparseVector_DenseVector_Ops {
+    {
 
   def zeros[@spec(Double, Int, Float, Long) V: ClassTag: Zero](size: Int) =
     new SparseVector(Array.empty, Array.empty[V], 0, size)

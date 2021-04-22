@@ -217,7 +217,7 @@ package object numerics {
     }
 
     implicit object nextPowerFloatImpl extends Impl[Float, Float] {
-      def apply(v: Float) = m.exp(nextExponent(v)).toFloat
+      def apply(v: Float) = m.exp(nextExponent.nextExponentFloatImpl(v)).toFloat
     }
 
     implicit object nextPowerIntImpl2 extends Impl2[Int, Int, Double] {
@@ -229,7 +229,7 @@ package object numerics {
     }
 
     implicit object nextPowerFloatImpl2 extends Impl2[Float, Float, Float] {
-      def apply(base: Float, v: Float) = m.pow(base, nextExponent(v)).toFloat
+      def apply(base: Float, v: Float) = m.pow(base, nextExponent(v).toDouble).toFloat
     }
   }
 

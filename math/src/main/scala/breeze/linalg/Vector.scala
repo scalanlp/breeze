@@ -154,7 +154,7 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]] {
 
 }
 
-object Vector extends VectorConstructors[Vector] with VectorOps {
+object Vector extends VectorConstructors[Vector] {
 
   /**
    * Creates a Vector of size size.
@@ -224,16 +224,6 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
   }
 
   implicit def scalarOf[T]: ScalarOf[Vector[T], T] = ScalarOf.dummy
-
-  implicit def negFromScale[@spec(Double, Int, Float, Long) V, Double](
-      implicit scale: OpMulScalar.Impl2[Vector[V], V, Vector[V]],
-      ring: Ring[V]): OpNeg.Impl[Vector[V], Vector[V]] = {
-    new OpNeg.Impl[Vector[V], Vector[V]] {
-      override def apply(a: Vector[V]) = {
-        scale(a, ring.negate(ring.one))
-      }
-    }
-  }
 
   implicit def zipMap[V, R: ClassTag]: CanZipMapValuesVector[V, R] = new CanZipMapValuesVector[V, R]
   implicit val zipMap_d: CanZipMapValuesVector[Double, Double] = new CanZipMapValuesVector[Double, Double]

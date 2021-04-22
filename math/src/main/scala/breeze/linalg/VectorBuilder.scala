@@ -46,11 +46,11 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](
     private var _index: Array[Int],
     private var _data: Array[E],
     private var used: Int,
-    var length: Int)(implicit ring: Semiring[E], zero: Zero[E])
+    var length: Int)(implicit ring: Semiring[E])
     extends NumericOps[VectorBuilder[E]]
     with Serializable {
 
-  def this(length: Int, initialNonZero: Int = 0)(implicit ring: Semiring[E], man: ClassTag[E], zero: Zero[E]) = {
+  def this(length: Int, initialNonZero: Int = 0)(implicit ring: Semiring[E], man: ClassTag[E]) = {
     this(new Array[Int](initialNonZero), new Array[E](initialNonZero), 0, length)
   }
 
@@ -339,15 +339,4 @@ object VectorBuilder extends VectorBuilderOps {
       def apply(d: Int): VectorBuilder[V] = zeros(d)
     }
   }
-
-  implicit def negFromScale[@spec(Double, Int, Float, Long) V](
-      implicit scale: OpMulScalar.Impl2[VectorBuilder[V], V, VectorBuilder[V]],
-      field: Ring[V]): OpNeg.Impl[VectorBuilder[V], VectorBuilder[V]] = {
-    new OpNeg.Impl[VectorBuilder[V], VectorBuilder[V]] {
-      override def apply(a: VectorBuilder[V]) = {
-        scale(a, field.negate(field.one))
-      }
-    }
-  }
-
 }

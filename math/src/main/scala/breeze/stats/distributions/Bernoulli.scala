@@ -37,7 +37,7 @@ case class Bernoulli(p: Double)(implicit rand: RandBasis = Rand)
   def probabilityOf(b: Boolean) = if (b) p else (1 - p)
 
   override def draw() = {
-    rand.uniform.get < p
+    rand.uniform.draw() < p
   }
 
   override def toString() = "Bernoulli(" + p + ")"

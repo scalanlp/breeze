@@ -14,7 +14,7 @@ import breeze.macros.expand
 import scala.math.BigInt
 import breeze.linalg._
 
-trait MatrixGenericOps {  self: Matrix.type =>
+trait MatrixGenericOps extends TensorLowPrio {
   class SetMMOp[@specialized(Double, Int, Float, Long) V, MM](implicit subtype: MM <:< Matrix[V])
       extends OpSet.InPlaceImpl2[Matrix[V], MM] {
     def apply(a: Matrix[V], b: MM): Unit = {
@@ -110,14 +110,14 @@ trait MatrixGenericOps {  self: Matrix.type =>
       }
     }
 
-  implicit def castOps[M1, M2, T, Op, MR](
-      implicit v1ev: M1 <:< Matrix[T],
-      v1ne: M1 =:!= Matrix[T],
-      v2ev: M2 <:< Matrix[T],
-      v2ne: M2 =:!= Matrix[T],
-      op: UImpl2[Op, Matrix[T], Matrix[T], MR]): UImpl2[Op, M1, M2, MR] = {
-    op.asInstanceOf[UFunc.UImpl2[Op, M1, M2, MR]]
-  }
+//  implicit def castOps[M1, M2, T, Op, MR](
+//      implicit v1ev: M1 <:< Matrix[T],
+//      v1ne: M1 =:!= Matrix[T],
+//      v2ev: M2 <:< Matrix[T],
+//      v2ne: M2 =:!= Matrix[T],
+//      op: UImpl2[Op, Matrix[T], Matrix[T], MR]): UImpl2[Op, M1, M2, MR] = {
+//    op.asInstanceOf[UFunc.UImpl2[Op, M1, M2, MR]]
+//  }
 
   implicit def castUpdateOps[M1, M2, T, Op <: OpType](
       implicit v1ev: M1 <:< Matrix[T],
@@ -127,7 +127,7 @@ trait MatrixGenericOps {  self: Matrix.type =>
   }
 }
 
-trait MatrixOps extends MatrixGenericOps {  self: Matrix.type =>
+trait MatrixExpandedOps extends MatrixGenericOps {
 
   import breeze.math.PowImplicits._
 
@@ -341,23 +341,24 @@ trait MatrixOps extends MatrixGenericOps {  self: Matrix.type =>
 
 }
 
-trait MatrixOpsLowPrio extends MatrixGenericOps {  self: MatrixOps with Matrix.type =>
-  implicit def canMulM_V_def[T, B <: Vector[T]](
-      implicit bb: B <:< Vector[T],
-      op: OpMulMatrix.Impl2[Matrix[T], Vector[T], Vector[T]]): OpMulMatrix.Impl2[Matrix[T], B, Vector[T]] = (
-    implicitly[OpMulMatrix.Impl2[Matrix[T], Vector[T], Vector[T]]]
-      .asInstanceOf[breeze.linalg.operators.OpMulMatrix.Impl2[Matrix[T], B, Vector[T]]]
-    )
-
-  // ibid.
-  implicit def canMulM_M_def[T, B <: Matrix[T]](
-      implicit bb: B <:< Matrix[T],
-      op: OpMulMatrix.Impl2[Matrix[T], Matrix[T], Matrix[T]]): OpMulMatrix.Impl2[Matrix[T], B, Matrix[T]] = (
-    op.asInstanceOf[OpMulMatrix.Impl2[Matrix[T], B, Matrix[T]]]
-  )
+trait MatrixExpandedOpsLowPrio extends MatrixGenericOps {
+  // TODO: rm
+//  implicit def canMulM_V_def[T, B <: Vector[T]](
+//      implicit bb: B <:< Vector[T],
+//      op: OpMulMatrix.Impl2[Matrix[T], Vector[T], Vector[T]]): OpMulMatrix.Impl2[Matrix[T], B, Vector[T]] = (
+//    implicitly[OpMulMatrix.Impl2[Matrix[T], Vector[T], Vector[T]]]
+//      .asInstanceOf[breeze.linalg.operators.OpMulMatrix.Impl2[Matrix[T], B, Vector[T]]]
+//    )
+//
+//  // ibid.
+//  implicit def canMulM_M_def[T, B <: Matrix[T]](
+//      implicit bb: B <:< Matrix[T],
+//      op: OpMulMatrix.Impl2[Matrix[T], Matrix[T], Matrix[T]]): OpMulMatrix.Impl2[Matrix[T], B, Matrix[T]] = (
+//    op.asInstanceOf[OpMulMatrix.Impl2[Matrix[T], B, Matrix[T]]]
+//  )
 }
 
-trait MatrixMultOps extends MatrixOps with MatrixOpsLowPrio {  self: Matrix.type =>
+trait MatrixMultOps extends MatrixExpandedOps with MatrixExpandedOpsLowPrio {
   @expand
   @expand.valify
   implicit def op_M_V[@expand.args(Int, Long, Float, Double, BigInt, Complex) T]
@@ -459,3 +460,5 @@ trait MatrixMultOps extends MatrixOps with MatrixOpsLowPrio {  self: Matrix.type
       }
     }
 }
+
+trait MatrixOps extends MatrixMultOps with MatrixExpandedOps with MatrixGenericOps with MatrixExpandedOpsLowPrio

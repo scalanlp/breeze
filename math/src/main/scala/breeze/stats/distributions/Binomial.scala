@@ -52,7 +52,7 @@ case class Binomial(n: Int, p: Double)(implicit rand: RandBasis = Rand)
     if (n < 25) {
       var j = 0
       while (j < n) {
-        if (rand.uniform.get < pp) bnl += 1
+        if (rand.uniform.draw() < pp) bnl += 1
         j += 1
       }
     } else if (np < 1.0) {
@@ -86,7 +86,7 @@ case class Binomial(n: Int, p: Double)(implicit rand: RandBasis = Rand)
             + bnl * plog + (n - bnl) * pclog
         )
 
-        continueOuter = (rand.uniform.get > t)
+        continueOuter = (rand.uniform.draw() > t)
       }
     }
     if (p != pp) bnl = n - bnl

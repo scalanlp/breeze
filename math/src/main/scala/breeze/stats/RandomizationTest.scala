@@ -43,7 +43,7 @@ class RandomizationTest[L](val numSamples: Int, val errorMeasure: Seq[L] => Doub
       val l1 = new ArrayBuffer[L]()
       val l2 = new ArrayBuffer[L]()
       for ((a, b) <- lpairs) {
-        if (Rand.uniform.get < .5) {
+        if (Rand.uniform.draw() < .5) {
           l1 += a
           l2 += b
         } else {

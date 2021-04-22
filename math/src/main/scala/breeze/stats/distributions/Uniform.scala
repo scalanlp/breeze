@@ -12,7 +12,7 @@ case class Uniform(low: Double, high: Double)(implicit rand: RandBasis = Rand)
     with HasCdf
     with HasInverseCdf {
   require(low <= high, "low <= high")
-  def draw() = rand.uniform.get * (high - low) + low
+  def draw() = rand.uniform.draw() * (high - low) + low
 
   def unnormalizedLogPdf(x: Double) = {
     logI(x >= low && x <= high)

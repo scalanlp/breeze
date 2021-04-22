@@ -1,5 +1,6 @@
 package breeze.generic
 
+import breeze.linalg.operators.HasOps
 import breeze.linalg.support._
 import breeze.linalg.{Axis, mapValues}
 
@@ -41,7 +42,7 @@ import breeze.linalg.{Axis, mapValues}
  *
  *@author dlwh
  */
-trait UFunc {
+trait UFunc extends HasOps {
   final def apply[@specialized(Int, Double, Float) V, @specialized(Int, Double, Float) VR](v: V)(
       implicit impl: Impl[V, VR]): VR = impl(v)
 
@@ -92,14 +93,6 @@ trait UFunc {
   //  @implicitNotFound("Could not find an implicit with-sink implementation for this UFunc with arguments ${S} ${V1}, ${V2}, ${V3}")
   type SinkImpl3[S, V1, V2, V3] = UFunc.SinkImpl3[this.type, S, V1, V2, V3]
 
-  implicit def canZipMapValuesImpl[T, V1, VR, U](
-      implicit handhold: ScalarOf[T, V1],
-      impl: Impl2[V1, V1, VR],
-      canZipMapValues: CanZipMapValues[T, V1, VR, U]): Impl2[T, T, U] = {
-    new Impl2[T, T, U] {
-      def apply(v1: T, v2: T): U = canZipMapValues.map(v1, v2, impl.apply)
-    }
-  }
 }
 
 trait VariableUFunc[U <: UFunc, T <: VariableUFunc[U, T]] { self: T =>

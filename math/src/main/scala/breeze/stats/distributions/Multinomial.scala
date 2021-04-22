@@ -23,6 +23,7 @@ import breeze.numerics._
 import breeze.optimize.DiffFunction
 
 import scala.collection.mutable
+import breeze.compat.Scala3Compat._
 
 /**
  * Represents a Multinomial distribution over elements.
@@ -35,7 +36,7 @@ import scala.collection.mutable
  * @author dlwh
  */
 case class Multinomial[T, I](params: T)(
-    implicit ev: T => QuasiTensor[I, Double],
+    implicit ev: Conversion[T, QuasiTensor[I, Double]],
     sumImpl: breeze.linalg.sum.Impl[T, Double],
     rand: RandBasis = Rand)
     extends DiscreteDistr[I] {
@@ -65,13 +66,13 @@ case class Multinomial[T, I](params: T)(
   }
 
   def drawNaive(): I = {
-    var prob = rand.uniform.get() * sum
+    var prob = rand.uniform.draw() * sum
     assert(!prob.isNaN, "NaN Probability!")
-    for ((i, w) <- params.activeIterator) {
+    for ((i, w) <- ev(params).activeIterator) {
       prob -= w
       if (prob <= 0) return i
     }
-    params.activeKeysIterator.next()
+    ev(params).activeKeysIterator.next()
   }
 
   private def buildAliasTable(): AliasTable[I] = {
@@ -132,8 +133,8 @@ case class AliasTable[I](
     outcomes: IndexedSeq[I],
     rand: RandBasis) {
   def draw(): I = {
-    val roll = rand.randInt(outcomes.length).get()
-    val toss = rand.uniform.get()
+    val roll = rand.randInt(outcomes.length).draw()
+    val toss = rand.uniform.draw()
     if (toss < probs(roll))
       outcomes(roll)
     else
@@ -153,7 +154,7 @@ object Multinomial {
 
     import space._
     type ConjugatePrior = Dirichlet[T, I]
-    val conjugateFamily = new Dirichlet.ExpFam[T, I](exemplar)
+    val conjugateFamily: Dirichlet.ExpFam[T, I] = new Dirichlet.ExpFam[T, I](exemplar)
 
     def predictive(parameter: conjugateFamily.Parameter) = new Polya(parameter)
 

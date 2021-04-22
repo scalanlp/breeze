@@ -3,7 +3,7 @@ package breeze.linalg
 import breeze.linalg.operators._
 import breeze.macros._
 
-trait SliceVectorOps {
+trait SliceVectorOps extends VectorOps {
   import breeze.math.PowImplicits._
 
   @expand

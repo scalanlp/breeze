@@ -23,7 +23,7 @@ import breeze.storage.Zero
 
 import scala.reflect.ClassTag
 
-trait ImmutableNumericOps[+This] extends Any {
+trait ImmutableNumericOps[+This] extends Any with HasOps {
   def repr: This
 
   // Immutable

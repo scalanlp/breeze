@@ -21,6 +21,7 @@ import scala.jdk.CollectionConverters._
 import scala.collection.mutable.{ArrayBuffer, HashMap}
 import java.util.Arrays
 import java.util
+import scala.io.Source
 
 /**
  * Trait that marks an O(1) bidirectional map between Ints (increasing from 0)
@@ -260,12 +261,10 @@ object Index {
   /** Constructs an empty index. */
   import scala.reflect.ClassTag.{Char => MChar}
   import scala.reflect.OptManifest
-  def apply[T: OptManifest](): MutableIndex[T] = implicitly[OptManifest[T]] match {
-    case _ => new HashIndex[T];
-  }
+  def apply[T](): MutableIndex[T] = new HashIndex[T]
 
   /** Constructs an Index from some iterator. */
-  def apply[T: OptManifest](iterator: Iterator[T]): Index[T] = {
+  def apply[T](iterator: Iterator[T]): Index[T] = {
     val index = Index[T]()
     // read through all iterator now -- don't lazily defer evaluation
     for (element <- iterator) {
@@ -288,8 +287,8 @@ object Index {
    * Loads a String index, one line per item with line
    * numbers (starting at 0) as the indices.
    */
-  def load(source: { def getLines: Iterator[String] }): Index[String] = {
-    apply(source.getLines.map(_.stripLineEnd))
+  def load(source: Source): Index[String] = {
+    apply(source.getLines().map(_.stripLineEnd))
   }
 
 }
