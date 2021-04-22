@@ -25,6 +25,7 @@ class MultimethodTest extends FunSuite with Checkers {
   trait M extends T
   trait DM extends M
 
+  // TODO: replace with registries...
   class MM extends Multimethod2[Function2, T, T, String] with ((T, T) => String)
   class MMPrim extends Multimethod2[Function2, T, Double, String] with ((T, Double) => String)
   class MMDouble extends Multimethod2[Function2, Double, Double, String] with ((Double, Double) => String)

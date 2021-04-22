@@ -21,6 +21,7 @@ import breeze.generic.UFunc
 import breeze.math.Semiring
 import breeze.linalg.operators.{HasOps, TensorLowPrio}
 
+import scala.annotation.unchecked.uncheckedVariance
 import scala.util.hashing.MurmurHash3
 import scala.{specialized => spec}
 import scala.reflect.ClassTag
@@ -153,13 +154,14 @@ trait TensorLike[@spec(Int) K, @spec(Double, Int, Float, Long) V, +This <: Tenso
     bf.mapActive(repr, f)
   }
 
+  // TODO: fix variance or just remove the multimethod stuff...
   /** Creates a new map containing a transformed copy of this map. */
-  def mapValues[O, That](f: V => O)(implicit bf: CanMapValues[This, V, O, That]): That = {
+  def mapValues[O, That](f: V => O)(implicit bf: CanMapValues[This @uncheckedVariance, V, O, That]): That = {
     bf(repr, f)
   }
 
   /** Maps all non-zero values. */
-  def mapActiveValues[O, That](f: V => O)(implicit bf: CanMapActiveValues[This, V, O, That]): That = {
+  def mapActiveValues[O, That](f: V => O)(implicit bf: CanMapActiveValues[This @uncheckedVariance, V, O, That]): That = {
     bf(repr, f)
   }
 
