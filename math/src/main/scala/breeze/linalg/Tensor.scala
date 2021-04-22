@@ -144,23 +144,23 @@ trait TensorLike[@spec(Int) K, @spec(Double, Int, Float, Long) V, +This <: Tenso
   }
 
   /** Creates a new map containing a transformed copy of this map. */
-  def mapPairs[TT >: This, O, That](f: (K, V) => O)(implicit bf: CanMapKeyValuePairs[TT, K, V, O, That]): That = {
+  def mapPairs[O, That](f: (K, V) => O)(implicit bf: CanMapKeyValuePairs[This, K, V, O, That]): That = {
     bf.map(repr, f)
   }
 
   /** Maps all active key-value pairs values. */
-  def mapActivePairs[TT >: This, O, That](f: (K, V) => O)(implicit bf: CanMapKeyValuePairs[TT, K, V, O, That]): That = {
-    bf.mapActive(repr.asInstanceOf[TT], f)
+  def mapActivePairs[O, That](f: (K, V) => O)(implicit bf: CanMapKeyValuePairs[This, K, V, O, That]): That = {
+    bf.mapActive(repr, f)
   }
 
   /** Creates a new map containing a transformed copy of this map. */
-  def mapValues[TT >: This, O, That](f: V => O)(implicit bf: CanMapValues[TT, V, O, That]): That = {
-    bf(repr.asInstanceOf[TT], f)
+  def mapValues[O, That](f: V => O)(implicit bf: CanMapValues[This, V, O, That]): That = {
+    bf(repr, f)
   }
 
   /** Maps all non-zero values. */
-  def mapActiveValues[TT >: This, O, That](f: V => O)(implicit bf: CanMapActiveValues[TT, V, O, That]): That = {
-    bf(repr.asInstanceOf[TT], f)
+  def mapActiveValues[O, That](f: V => O)(implicit bf: CanMapActiveValues[This, V, O, That]): That = {
+    bf(repr, f)
   }
 
   /** Applies the given function to each key in the tensor. */

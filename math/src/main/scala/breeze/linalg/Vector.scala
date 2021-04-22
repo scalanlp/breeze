@@ -172,86 +172,12 @@ object Vector extends VectorConstructors[Vector] {
    */
   def apply[@spec(Double, Int, Float, Long) V](values: Array[V]): Vector[V] = DenseVector(values)
 
+  implicit def scalarOf[T]: ScalarOf[Vector[T], T] = ScalarOf.dummy
+
   implicit def canCopy[E]: CanCopy[Vector[E]] = new CanCopy[Vector[E]] {
-    // Should not inherit from T=>T because those get  used by the compiler.
     def apply(t: Vector[E]): Vector[E] = t.copy
   }
 
-  // There's a bizarre error specializing float's here.
-  class CanZipMapValuesVector[@spec(Int, Double) V, @spec(Int, Double) RV: ClassTag]
-      extends CanZipMapValues[Vector[V], V, RV, Vector[RV]] {
-    def create(length: Int) = DenseVector(new Array[RV](length))
-
-    /**Maps all corresponding values from the two collection. */
-    def map(from: Vector[V], from2: Vector[V], fn: (V, V) => RV) = {
-      require(from.length == from2.length, "Vector lengths must match!")
-      val result = create(from.length)
-      var i = 0
-      while (i < from.length) {
-        result.data(i) = fn(from(i), from2(i))
-        i += 1
-      }
-      result
-    }
-  }
-
-  implicit def canMapValues[V, V2: Zero](implicit man: ClassTag[V2]): CanMapValues[Vector[V], V, V2, Vector[V2]] = {
-    new CanMapValues[Vector[V], V, V2, Vector[V2]] {
-
-      /**Maps all key-value pairs from the given collection. */
-      def apply(from: Vector[V], fn: (V) => V2): Vector[V2] = from match {
-        case sv: SparseVector[V] => sv.mapValues(fn)
-        case hv: HashVector[V] => hv.mapValues(fn)
-        case dv: DenseVector[V] => dv.mapValues(fn)
-        case _ => DenseVector.tabulate(from.length)(i => fn(from(i)))
-      }
-    }
-  }
-
-  // TODO: probably should have just made this virtual and not ufunced
-  implicit def canMapActiveValues[V, V2: Zero](
-      implicit man: ClassTag[V2]): CanMapActiveValues[Vector[V], V, V2, Vector[V2]] = {
-    new CanMapActiveValues[Vector[V], V, V2, Vector[V2]] {
-
-      /**Maps all key-value pairs from the given collection. */
-      def apply(from: Vector[V], fn: (V) => V2): Vector[V2] = from match {
-        case sv: SparseVector[V] => sv.mapActiveValues(fn)
-        case hv: HashVector[V] => hv.mapActiveValues(fn)
-        case dv: DenseVector[V] => dv.mapActiveValues(fn)
-        case _ => DenseVector.tabulate(from.length)(i => fn(from(i)))
-      }
-    }
-  }
-
-  implicit def scalarOf[T]: ScalarOf[Vector[T], T] = ScalarOf.dummy
-
-  implicit def zipMap[V, R: ClassTag]: CanZipMapValuesVector[V, R] = new CanZipMapValuesVector[V, R]
-  implicit val zipMap_d: CanZipMapValuesVector[Double, Double] = new CanZipMapValuesVector[Double, Double]
-  implicit val zipMap_f: CanZipMapValuesVector[Float, Float] = new CanZipMapValuesVector[Float, Float]
-  implicit val zipMap_i: CanZipMapValuesVector[Int, Int] = new CanZipMapValuesVector[Int, Int]
-
-  class CanZipMapKeyValuesVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV: ClassTag]
-      extends CanZipMapKeyValues[Vector[V], Int, V, RV, Vector[RV]] {
-    def create(length: Int) = DenseVector(new Array[RV](length))
-
-    /**Maps all corresponding values from the two collection. */
-    def map(from: Vector[V], from2: Vector[V], fn: (Int, V, V) => RV): Vector[RV] = {
-      require(from.length == from2.length, "Vector lengths must match!")
-      val result = create(from.length)
-      var i = 0
-      while (i < from.length) {
-        result.data(i) = fn(i, from(i), from2(i))
-        i += 1
-      }
-      result
-    }
-
-    override def mapActive(from: Vector[V], from2: Vector[V], fn: (Int, V, V) => RV): Vector[RV] = {
-      map(from, from2, fn)
-    }
-  }
-
-  implicit def zipMapKV[V, R: ClassTag]: CanZipMapKeyValuesVector[V, R] = new CanZipMapKeyValuesVector[V, R]
 
   /**Returns the k-norm of this Vector. */
   implicit def canNorm[T](implicit canNormS: norm.Impl[T, Double]): norm.Impl2[Vector[T], Double, Double] = {
@@ -280,28 +206,7 @@ object Vector extends VectorConstructors[Vector] {
     }
   }
 
-  implicit def canIterateValues[V]: CanTraverseValues[Vector[V], V] = new CanTraverseValues[Vector[V], V] {
-
-    def isTraversableAgain(from: Vector[V]): Boolean = true
-
-    def traverse(from: Vector[V], fn: ValuesVisitor[V]): Unit = {
-      for (v <- from.valuesIterator) {
-        fn.visit(v)
-      }
-    }
-
-  }
-
-  implicit def canTraverseKeyValuePairs[V]: CanTraverseKeyValuePairs[Vector[V], Int, V] =
-    new CanTraverseKeyValuePairs[Vector[V], Int, V] {
-      def isTraversableAgain(from: Vector[V]): Boolean = true
-
-      def traverse(from: Vector[V], fn: CanTraverseKeyValuePairs.KeyValuePairsVisitor[Int, V]): Unit = {
-        for (i <- 0 until from.length)
-          fn.visit(i, from(i))
-      }
-
-    }
+  
 
   implicit def space[V: Field: Zero: ClassTag]: MutableFiniteCoordinateField[Vector[V], Int, V] = {
     val f = implicitly[Field[V]]

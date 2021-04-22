@@ -2,7 +2,7 @@ package breeze.linalg
 
 import breeze.generic.UFunc
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
-import breeze.linalg.support.{CanMapValues, CanTransformValues, CanTraverseValues, ScalarOf}
+import breeze.linalg.support.{CanTransformValues, CanTraverseValues, ScalarOf}
 import breeze.macros.expand
 import breeze.macros._
 
@@ -116,7 +116,7 @@ sealed trait maxLowPrio {  self: max.type =>
   implicit def maxVS[T, U, LHS, RHS, RV](
       implicit cmvH: ScalarOf[T, LHS],
       maxImpl: max.Impl2[LHS, RHS, LHS],
-      cmv: CanMapValues[T, LHS, LHS, U]): max.Impl2[T, RHS, U] = {
+      cmv: mapValues.Impl2[T, LHS=>LHS, U]): max.Impl2[T, RHS, U] = {
     new max.Impl2[T, RHS, U] {
       override def apply(v: T, v2: RHS): U = cmv(v, maxImpl(_, v2))
     }
@@ -209,7 +209,7 @@ sealed trait minLowPrio {  self: min.type =>
   implicit def minVS[T, U, LHS, RHS, RV](
       implicit cmvH: ScalarOf[T, LHS],
       minImpl: min.Impl2[LHS, RHS, LHS],
-      cmv: CanMapValues[T, LHS, LHS, U]): min.Impl2[T, RHS, U] = {
+      cmv: mapValues.Impl2[T, LHS=>LHS, U]): min.Impl2[T, RHS, U] = {
     new min.Impl2[T, RHS, U] {
       override def apply(v: T, v2: RHS): U = cmv(v, minImpl(_, v2))
     }
@@ -221,7 +221,7 @@ sealed trait minLowPrio {  self: min.type =>
  * clip(a, lower, upper) returns an array such that all elements are "clipped" at the range (lower, upper)
  */
 object clip extends UFunc {
-  implicit def clipOrdering[T, V](implicit ordering: Ordering[V], cmv: CanMapValues[T, V, V, T]): Impl3[T, V, V, T] = {
+  implicit def clipOrdering[T, V](implicit ordering: Ordering[V], cmv: mapValues.Impl2[T, V=>V, T]): Impl3[T, V, V, T] = {
     new Impl3[T, V, V, T] {
       import ordering.mkOrderingOps
       def apply(v: T, v2: V, v3: V): T = {
