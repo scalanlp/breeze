@@ -82,12 +82,7 @@ class HashVector[@spec(Double, Int, Float, Long) E](val array: OpenAddressHashAr
   }
 }
 
-object HashVector
-    extends HashVectorOps
-    with DenseVector_HashVector_Ops
-    with HashVector_DenseVector_Ops
-    with HashVector_SparseVector_Ops
-    with SparseVector_HashVector_Ops {
+object HashVector {
   def zeros[@spec(Double, Int, Float, Long) V: ClassTag: Zero](size: Int) = {
     new HashVector(new OpenAddressHashArray[V](size))
   }
