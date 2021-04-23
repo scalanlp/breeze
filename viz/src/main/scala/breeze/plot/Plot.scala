@@ -34,7 +34,7 @@ class Plot() {
   }
              
   def +=(nameSeries: (String, Series)): Plot = {
-      val (d,r) = nameSeries._2.getChartStuff( {i =>
+    val (d,r) = nameSeries._2.getChartStuff( {i =>
       nameSeries._1
       }, { i =>
       Plot.fillPaint(series + i)
@@ -221,7 +221,7 @@ class Plot() {
 object Plot {
 
   trait Listener {
-    def refresh(pl: Plot)
+    def refresh(pl: Plot): Unit
   }
 
   val integerTickUnits = {
@@ -364,9 +364,8 @@ object Plot {
         series: Int,
         item: Int,
         p11: CrosshairState,
-        p12: Int) {
+        p12: Int): Unit = {
       delegate(series)(_.drawItem(p1, p2, p3, p4, p5, p6, p7, p8, _, item, p11, p12))
-
     }
 
     override def getItemVisible(series: Int, item: Int): Boolean = {
