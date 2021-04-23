@@ -82,7 +82,8 @@ object Field {
     def *(a: Long, b: Long) = a * b
     def /(a: Long, b: Long) = a / b
     def %(a: Long, b: Long) = a % b.toLong
-    def pow(a: Long, b: Long) = math.pow(a, b).toLong
+    // TODO: bad idea?
+    def pow(a: Long, b: Long) = math.pow(a.toDouble, b.toDouble).toLong
 
     implicit val normImpl: norm.Impl[Long, Double] = new norm.Impl[Long, Double] {
       def apply(v: Long) = math.abs(v).toDouble

@@ -81,7 +81,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](
 
   private def boundsCheck(i: Int): Unit = {
     if (length >= 0 && (i < 0 || i >= size))
-      throw new scala.IndexOutOfBoundsException(i + " not in [0," + size + ")")
+      throw new scala.IndexOutOfBoundsException(s"$i not in [0,$size)")
   }
 
   def update(i: Int, v: E): Unit = {

@@ -830,40 +830,7 @@ trait SparseVectorExpandOps extends VectorOps with SparseVector_DenseMatrixOps w
       implicitly[BinaryRegistry[Vector[T], T, Op.type, Vector[T]]].register(this)
     }
 
-  protected def updateFromPure[T, Op <: OpType, Other](
-                                                        implicit op: UFunc.UImpl2[Op, SparseVector[T], Other, SparseVector[T]])
-  : UFunc.InPlaceImpl2[Op, SparseVector[T], Other] = {
-    new UFunc.InPlaceImpl2[Op, SparseVector[T], Other] {
-      def apply(a: SparseVector[T], b: Other): Unit = {
-        val result = op(a, b)
-        a.use(result.index, result.data, result.activeSize)
-      }
-    }
-  }
 
-  implicit def implOpSet__OpSV_SV_InPlace[T]: OpSet.InPlaceImpl2[SparseVector[T], SparseVector[T]] = {
-    new OpSet.InPlaceImpl2[SparseVector[T], SparseVector[T]] {
-      def apply(a: SparseVector[T], b: SparseVector[T]): Unit = {
-        val result = b.copy
-        a.use(result.index, result.data, result.activeSize)
-      }
-    }
-  }
-
-  implicit def implOpSet_SV_T_InPlace[T: Zero : ClassTag]: OpSet.InPlaceImpl2[SparseVector[T], T] = {
-    val zero = implicitly[Zero[T]].zero
-    new OpSet.InPlaceImpl2[SparseVector[T], T] {
-      def apply(a: SparseVector[T], b: T): Unit = {
-        if (b == zero) {
-          a.use(new Array[Int](2), new Array[T](2), 0)
-          return
-        }
-        val data = Array.fill(a.length)(b)
-        val index = Array.range(0, a.length)
-        a.use(index, data, a.length)
-      }
-    }
-  }
 
   // this shouldn't be necessary but it is:
   //  @expand

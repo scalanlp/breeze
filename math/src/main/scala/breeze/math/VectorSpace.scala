@@ -16,11 +16,12 @@ package breeze.math
  limitations under the License.
  */
 
+import breeze.compat.Scala3Compat
 import breeze.generic.UFunc
 import breeze.generic.UFunc.{InPlaceImpl2, InPlaceImpl3, UImpl2}
 import breeze.linalg.operators._
 import breeze.linalg.support._
-import breeze.linalg.{dim, norm, scaleAdd, _}
+import breeze.linalg._
 import breeze.math.FloatDoubleOperatorAdaptors._
 import breeze.storage._
 
@@ -244,7 +245,7 @@ trait MutableOptimizationSpace[M, V, S] extends MutableFiniteCoordinateField[V, 
   implicit def negM: OpNeg.Impl[M, M]
   implicit def zeroM: CanCreateZeros[M, (Int, Int)]
   implicit def canDimM: dim.Impl[M, (Int, Int)]
-  implicit def hasMOps(v: M): Conversion[M, NumericOps[M] with QuasiTensor[(Int, Int), S]]
+  implicit def hasMOps: Conversion[M, NumericOps[M] with QuasiTensor[(Int, Int), S]]
   implicit def normMImpl2: norm.Impl2[M, Double, Double]
   implicit def normM: norm.Impl[M, Double]
   implicit def divMM: OpDiv.Impl2[M, M, M]
@@ -964,7 +965,7 @@ object MutableOptimizationSpace {
       implicit def subMM: OpSub.Impl2[M, M, M] = _subMM
       implicit def divIntoMM: OpDiv.InPlaceImpl2[M, M] = _divIntoMM
       implicit def mulIntoMM: OpMulScalar.InPlaceImpl2[M, M] = _mulIntoMM
-      implicit def hasMOps(v: M): NumericOps[M] with QuasiTensor[(Int, Int), S] = _opsM(v)
+      implicit def hasMOps: Conversion[M, NumericOps[M] with QuasiTensor[(Int, Int), S]] = implicitly
       implicit def zeroM: CanCreateZeros[M, (Int, Int)] = _zeroM
       implicit def addMM: OpAdd.Impl2[M, M, M] = _addMM
       implicit def divIntoMS: OpDiv.InPlaceImpl2[M, S] = _divIntoMS

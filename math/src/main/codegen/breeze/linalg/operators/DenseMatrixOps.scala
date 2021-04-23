@@ -570,47 +570,47 @@ trait DenseMatrixMultiplyOps extends DenseMatrixExpandedOps with DenseMatrixMult
 }
 
 // TODO: fix expand to allow us to remove this code duplication
-trait DenseMatrixFloatMultiplyStuff extends DenseMatrixExpandedOps with DenseMatrixMultOps { self: DenseMatrix.type =>
+// TODO: Rename/collapse trait
+trait DenseMatrixFloatMultiplyStuff extends DenseMatrixExpandedOps with DenseMatrixMultOps {
 
   // <editor-fold defaultstate="collapsed" desc=" OpMulMatrix implementations ">
 
-  implicit object implOpMulMatrix_DMF_DMF_eq_DMF
-      extends OpMulMatrix.Impl2[DenseMatrix[Float], DenseMatrix[Float], DenseMatrix[Float]] {
-
-    def apply(_a: DenseMatrix[Float], _b: DenseMatrix[Float]): DenseMatrix[Float] = {
+  implicit val impl_OpMulMatrix_DM_DM_eq_DM_Float: OpMulMatrix.Impl2[DenseMatrix[Float], DenseMatrix[Float], DenseMatrix[Float]] = {
+    (_a: DenseMatrix[Float], _b: DenseMatrix[Float]) => {
       require(_a.cols == _b.rows, "Dimension mismatch!")
       val rv = DenseMatrix.zeros[Float](_a.rows, _b.cols)
 
-      if (_a.rows == 0 || _b.rows == 0 || _a.cols == 0 || _b.cols == 0) return rv
-
-      // if we have a weird stride...
-      val a: DenseMatrix[Float] =
-        if (_a.majorStride < math.max(if (_a.isTranspose) _a.cols else _a.rows, 1)) _a.copy else _a
-      val b: DenseMatrix[Float] =
-        if (_b.majorStride < math.max(if (_b.isTranspose) _b.cols else _b.rows, 1)) _b.copy else _b
-
-      blas.sgemm(
-        transposeString(a),
-        transposeString(b),
-        rv.rows,
-        rv.cols,
-        a.cols,
-        1.0f,
-        a.data,
-        a.offset,
-        a.majorStride,
-        b.data,
-        b.offset,
-        b.majorStride,
-        0.0f,
-        rv.data,
-        0,
-        rv.rows)
+      if (_a.rows != 0 && _b.rows != 0  &&  _a.cols != 0  &&  _b.cols != 0) {
+        // if we have a weird stride...
+        val a: DenseMatrix[Float] =
+          if (_a.majorStride < math.max(if (_a.isTranspose) _a.cols else _a.rows, 1)) _a.copy else _a
+        val b: DenseMatrix[Float] =
+          if (_b.majorStride < math.max(if (_b.isTranspose) _b.cols else _b.rows, 1)) _b.copy else _b
+        blas.sgemm(
+          transposeString(a),
+          transposeString(b),
+          rv.rows,
+          rv.cols,
+          a.cols,
+          1.0f,
+          a.data,
+          a.offset,
+          a.majorStride,
+          b.data,
+          b.offset,
+          b.majorStride,
+          0.0f,
+          rv.data,
+          0,
+          rv.rows)
+      }
       rv
     }
-    implicitly[BinaryRegistry[Matrix[Float], Matrix[Float], OpMulMatrix.type, Matrix[Float]]].register(this)
-    implicitly[BinaryRegistry[DenseMatrix[Float], Matrix[Float], OpMulMatrix.type, DenseMatrix[Float]]].register(this)
   }
+  implicitly[BinaryRegistry[Matrix[Float], Matrix[Float], OpMulMatrix.type, Matrix[Float]]]
+    .register(impl_OpMulMatrix_DM_DM_eq_DM_Float)
+  implicitly[BinaryRegistry[DenseMatrix[Float], Matrix[Float], OpMulMatrix.type, DenseMatrix[Float]]]
+    .register(impl_OpMulMatrix_DM_DM_eq_DM_Float)
 
   private def transposeString(a: DenseMatrix[Float]): String = {
     if (a.isTranspose) "T" else "N"
@@ -812,7 +812,7 @@ trait DenseMatrixFloatMultiplyStuff extends DenseMatrixExpandedOps with DenseMat
   // </editor-fold>
 }
 
-trait DenseMatrixExpandedOps extends MatrixOps with DenseMatrix_GenericOps {
+trait DenseMatrixExpandedOps extends MatrixOps with DenseMatrix_GenericOps with DenseMatrix_TraversalOps {
 
   // <editor-fold defaultstate="collapsed" desc=" implicit implementations for OpXXX.InPlaceImpl2[DenseMatrix[T], DenseMatrix[T]] ">
   // don't remove
@@ -1176,7 +1176,7 @@ trait DenseMatrixMultOps extends DenseMatrixExpandedOps with DenseMatrixOpsLowPr
 
   @expand
   @expand.valify
-  implicit def impl_OpMulMatrix_DM_DM_eq_DM[@expand.args(Int, Long, Float, Double) T]
+  implicit def impl_OpMulMatrix_DM_DM_eq_DM[@expand.args(Int, Long) T]
     : OpMulMatrix.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]] =
     new OpMulMatrix.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]] {
       // amazingly, the bigger these are, the better.
@@ -1403,8 +1403,8 @@ trait LowPriorityDenseMatrix1 {
 
   // <editor-fold defaultstate="collapsed" desc=" implicit implementations for OpSet ">
 
-  class SetMMOp[@spec(Double, Int, Float, Long) V] extends OpSet.InPlaceImpl2[DenseMatrix[V], Matrix[V]] {
-    def apply(a: DenseMatrix[V], b: Matrix[V]): Unit = {
+  implicit def impl_OpSet_InPlace_DM_M[@spec(Double, Int, Float, Long) V]: OpSet.InPlaceImpl2[DenseMatrix[V], Matrix[V]] = {
+    (a: DenseMatrix[V], b: Matrix[V]) => {
       require(a.rows == b.rows, "Matrixs must have same number of rows")
       require(a.cols == b.cols, "Matrixs must have same number of columns")
 
@@ -1422,29 +1422,26 @@ trait LowPriorityDenseMatrix1 {
     }
   }
 
-  class SetDMVOp[@spec(Double, Int, Float, Long) V] extends OpSet.InPlaceImpl2[DenseMatrix[V], Vector[V]] {
-    def apply(a: DenseMatrix[V], b: Vector[V]): Unit = {
-      require(
-        a.rows == b.length && a.cols == 1 || a.cols == b.length && a.rows == 1,
-        "DenseMatrix must have same number of rows, or same number of columns, as DenseVector, and the other dim must be 1."
-      )
-      val ad = a.data
-      var i = 0
-      var c = 0
-      while (c < a.cols) {
-        var r = 0
-        while (r < a.rows) {
-          ad(a.linearIndex(r, c)) = b(i)
-          r += 1
-          i += 1
+  implicit def impl_OpSet_InPlace_DM_V[@specialized(Int, Float, Long, Double) V]: OpSet.InPlaceImpl2[DenseMatrix[V], Vector[V]] = {
+      (a: DenseMatrix[V], b: Vector[V]) => {
+        require(
+          a.rows == b.length && a.cols == 1 || a.cols == b.length && a.rows == 1,
+          "DenseMatrix must have same number of rows, or same number of columns, as DenseVector, and the other dim must be 1."
+        )
+        val ad = a.data
+        var i = 0
+        var c = 0
+        while (c < a.cols) {
+          var r = 0
+          while (r < a.rows) {
+            ad(a.linearIndex(r, c)) = b(i)
+            r += 1
+            i += 1
+          }
+          c += 1
         }
-        c += 1
       }
-    }
   }
-
-  implicit def setMM[V]: OpSet.InPlaceImpl2[DenseMatrix[V], Matrix[V]] = new SetMMOp[V]
-  implicit def setMV[V]: OpSet.InPlaceImpl2[DenseMatrix[V], Vector[V]] = new SetDMVOp[V]
 
   // </editor-fold>
 

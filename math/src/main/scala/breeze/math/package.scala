@@ -34,8 +34,8 @@ package object math {
   implicit def richInt(value: Int): RichField =
     new RichField(value)
 
-  implicit def richLong(value: Long): RichField =
-    new RichField(value)
+//  implicit def richLong(value: Long): RichField =
+//    new RichField(value)
 
   implicit def richFloat(value: Float): RichField =
     new RichField(value)

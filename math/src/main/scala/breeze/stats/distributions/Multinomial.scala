@@ -156,7 +156,7 @@ object Multinomial {
     type ConjugatePrior = Dirichlet[T, I]
     val conjugateFamily: Dirichlet.ExpFam[T, I] = new Dirichlet.ExpFam[T, I](exemplar)
 
-    def predictive(parameter: conjugateFamily.Parameter) = new Polya(parameter)
+    def predictive(parameter: conjugateFamily.Parameter)(implicit basis: RandBasis) = new Polya(parameter)
 
     def posterior(prior: conjugateFamily.Parameter, evidence: TraversableOnce[I]) = {
       val localCopy: T = space.copy(prior)

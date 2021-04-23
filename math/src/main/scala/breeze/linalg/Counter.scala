@@ -31,7 +31,6 @@ import scala.collection.Set
  *
  * @author dramage, dlwh
  */
-@SerialVersionUID(1)
 trait CounterLike[K, V, +M <: scala.collection.mutable.Map[K, V], +This <: Counter[K, V]]
     extends TensorLike[K, V, This]
     with Serializable {
@@ -97,14 +96,14 @@ object Counter extends CounterOps {
   def apply[K, V: Zero: Semiring](values: TraversableOnce[(K, V)]): Counter[K, V] = {
     val rv = apply[K, V]()
     val field = implicitly[Semiring[V]]
-    values.foreach({ case (k, v) => rv(k) = field.+(v, rv(k)) })
+    values.iterator.foreach({ case (k, v) => rv(k) = field.+(v, rv(k)) })
     rv
   }
 
   /** Counts each of the given items. */
   def countTraversable[K](items: TraversableOnce[K]): Counter[K, Int] = {
     val rv = apply[K, Int]()
-    items.foreach(rv(_) += 1)
+    items.iterator.foreach(rv(_) += 1)
     rv
   }
 

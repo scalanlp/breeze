@@ -144,7 +144,7 @@ trait MMRegistry2[R] {
       }
     }
 
-    options.filterKeys(bestCandidates)
+    options.view.filterKeys(bestCandidates)
   }
 }
 
@@ -217,7 +217,7 @@ trait MMRegistry3[R] {
       }
     }
 
-    options.filterKeys(bestCandidates)
+    options.view.filterKeys(bestCandidates)
   }
 }
 
@@ -260,6 +260,6 @@ trait MMRegistry1[M] {
       }
     }
 
-    options.filterKeys(bestCandidates)
+    options.view.filterKeys(bestCandidates)
   }
 }

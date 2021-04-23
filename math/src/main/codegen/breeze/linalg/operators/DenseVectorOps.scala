@@ -384,35 +384,9 @@ trait DenseVectorExpandOps extends VectorOps with DenseVector_Vector_ExpandOps {
     res
   }
 
-  implicit def axpy[V: Semiring: ClassTag]: scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] = {
-    new scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] {
-      val sr = implicitly[Semiring[V]]
-      def apply(a: DenseVector[V], s: V, b: DenseVector[V]): Unit = {
-        require(b.length == a.length, "Vectors must be the same length!")
-        val ad = a.data
-        val bd = b.data
-        var aoff = a.offset
-        var boff = b.offset
-
-        if (a.overlaps(b)) {
-          apply(a, s, b.copy)
-        } else {
-          var i = 0
-          while (i < a.length) {
-            ad(aoff) = sr.+(ad(aoff), sr.*(s, bd(boff)))
-            aoff += a.stride
-            boff += b.stride
-            i += 1
-          }
-        }
-      }
-      implicitly[TernaryUpdateRegistry[Vector[V], V, Vector[V], scaleAdd.type]].register(this)
-    }
-  }
-
   @expand
   @expand.valify
-  implicit def axpy[@expand.args(Int, Double, Float, Long) V]
+  implicit def impl_scaleAdd_InPlace_DV_T_DV[@expand.args(Int, Long) V]
     : scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] = {
     new scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] {
       def apply(y: DenseVector[V], s: V, x: DenseVector[V]): Unit = {
@@ -581,7 +555,7 @@ trait DenseVector_SpecialOps extends DenseVectorExpandOps {
     */
   @expand
   @expand.valify
-  implicit def canNorm[@expand.args(Int, Float, Long, BigInt, Complex) T]
+  implicit def impl_norm_DV_D_eq_D[@expand.args(Int, Float, Long, BigInt, Complex) T]
   (implicit @expand.sequence[T](0, 0.0f, 0L, BigInt(0), Complex.zero) _zero: T)
   : norm.Impl2[DenseVector[T], Double, Double] = {
 
@@ -610,7 +584,7 @@ trait DenseVector_SpecialOps extends DenseVectorExpandOps {
     }
   }
 
-  implicit val canAddIntoF: OpAdd.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] = {
+  implicit val impl_OpAdd_InPlace_DV_DV_eq_DV_Float: OpAdd.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] = {
     new OpAdd.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] {
       def apply(a: DenseVector[Float], b: DenseVector[Float]) = {
         canSaxpy(a, 1.0f, b)
@@ -777,29 +751,17 @@ trait DenseVector_OrderingOps extends DenseVectorExpandOps {
 
 
 trait DenseVector_GenericOps extends VectorOps {
+//
+//  implicit def negFromScale[V](implicit scale: OpMulScalar.Impl2[DenseVector[V], V, DenseVector[V]], field: Ring[V]): OpNeg.Impl[DenseVector[V], DenseVector[V]] = {
+//    new OpNeg.Impl[DenseVector[V], DenseVector[V]] {
+//      override def apply(a: DenseVector[V]): DenseVector[V] = {
+//        scale(a, field.negate(field.one))
+//      }
+//    }
+//  }
 
-  implicit def negFromScale[V](implicit scale: OpMulScalar.Impl2[DenseVector[V], V, DenseVector[V]], field: Ring[V]): OpNeg.Impl[DenseVector[V], DenseVector[V]] = {
-    new OpNeg.Impl[DenseVector[V], DenseVector[V]] {
-      override def apply(a: DenseVector[V]): DenseVector[V] = {
-        scale(a, field.negate(field.one))
-      }
-    }
-  }
-
-  def binaryOpFromUpdateOp[Op <: OpType, V, Other](
-      implicit copy: CanCopy[DenseVector[V]],
-      op: UFunc.InPlaceImpl2[Op, DenseVector[V], Other],
-      man: ClassTag[V]): UFunc.UImpl2[Op, DenseVector[V], Other, DenseVector[V]] = {
-    new UFunc.UImpl2[Op, DenseVector[V], Other, DenseVector[V]] {
-      override def apply(a: DenseVector[V], b: Other): DenseVector[V] = {
-        val c = copy(a)
-        op(c, b)
-        c
-      }
-    }
-  }
-
-  implicit def implOpSet_DV_V_InPlace[V]: OpSet.InPlaceImpl2[DenseVector[V], V] =
+  // TODO: handle overlaps?
+  implicit def impl_OpSet_InPlace_DV_V_Generic[V]: OpSet.InPlaceImpl2[DenseVector[V], V] =
     new OpSet.InPlaceImpl2[DenseVector[V], V] {
       def apply(a: DenseVector[V], b: V): Unit = {
         val ad: Array[V] = a.data
@@ -817,7 +779,7 @@ trait DenseVector_GenericOps extends VectorOps {
       }
     }
 
-  implicit def implOpSet_DV_DV_InPlace[V]: OpSet.InPlaceImpl2[DenseVector[V], DenseVector[V]] =
+  implicit def impl_OpSet_InPlace_DV_DV_InPlace[V]: OpSet.InPlaceImpl2[DenseVector[V], DenseVector[V]] =
     new OpSet.InPlaceImpl2[DenseVector[V], DenseVector[V]] {
       def apply(a: DenseVector[V], b: DenseVector[V]): Unit = {
         require(b.length == a.length, "Vectors must be the same length!")
@@ -843,16 +805,16 @@ trait DenseVector_GenericOps extends VectorOps {
       }
     }
 
-  implicit def DV_canGaxpy[V: Semiring]: scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] =
-    new scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] {
-      val ring = implicitly[Semiring[V]]
-      def apply(a: DenseVector[V], s: V, b: DenseVector[V]): Unit = {
+  implicit def impl_scaleAdd_InPlace_DV_T_DV[T: Semiring]: scaleAdd.InPlaceImpl3[DenseVector[T], T, DenseVector[T]] =
+    new scaleAdd.InPlaceImpl3[DenseVector[T], T, DenseVector[T]] {
+      val ring = implicitly[Semiring[T]]
+      def apply(a: DenseVector[T], s: T, b: DenseVector[T]): Unit = {
         if (a.overlaps(b)) {
           apply(a, s, b.copy)
         } else {
           require(b.length == a.length, "Vectors must be the same length!")
-          val ad: Array[V] = a.data
-          val bd: Array[V] = b.data
+          val ad: Array[T] = a.data
+          val bd: Array[T] = b.data
           var aoff = a.offset
           var boff = b.offset
 

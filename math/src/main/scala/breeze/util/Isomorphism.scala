@@ -5,7 +5,6 @@ package breeze.util
  * when one set of implicits is easily defined for some type, but not for some other type
  * @author dlwh
  */
-@SerialVersionUID(1)
 trait Isomorphism[T, U] extends Serializable { outer =>
   def forward(t: T): U
   def backward(u: U): T
@@ -27,9 +26,4 @@ object Isomorphism {
 
     def backward(u: T) = u
   }
-
-  /*
-  // Scalala lenses:
-
- */
 }

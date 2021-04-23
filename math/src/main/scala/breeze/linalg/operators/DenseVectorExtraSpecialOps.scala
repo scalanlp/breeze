@@ -5,24 +5,28 @@ import breeze.macros.cforRange
 import scalaxy.debug.require
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 
+// TODO: rename this
 trait DenseVectorExtraSpecialOps extends DenseVectorExpandOps {
 
-  implicit val canAddIntoD: OpAdd.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = {
+  // TODO: try deleting (axpy)
+  implicit val impl_OpAdd_InPlace_DV_DV_Double: OpAdd.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = {
     new OpAdd.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
       def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
-        canDaxpy(a, 1.0, b)
+        impl_scaleAdd_InPlace_DV_T_DV_Double(a, 1.0, b)
       }
       implicitly[BinaryUpdateRegistry[Vector[Double], Vector[Double], OpAdd.type]].register(this)
     }
   }
 
-  implicit object canDaxpy
+  implicit object impl_scaleAdd_InPlace_DV_T_DV_Double
       extends scaleAdd.InPlaceImpl3[DenseVector[Double], Double, DenseVector[Double]]
       with Serializable {
     def apply(y: DenseVector[Double], a: Double, x: DenseVector[Double]): Unit = {
       require(x.length == y.length, s"Vectors must have same length")
       // using blas here is always a bad idea.
-      if (x.noOffsetOrStride && y.noOffsetOrStride) {
+      if (y.overlaps(x)) {
+        apply(y, a, x.copy)
+      } else if (x.noOffsetOrStride && y.noOffsetOrStride) {
         val ad = x.data
         val bd = y.data
         cforRange(0 until x.length) { i =>
@@ -36,26 +40,29 @@ trait DenseVectorExtraSpecialOps extends DenseVectorExpandOps {
     }
 
   }
-  implicitly[TernaryUpdateRegistry[Vector[Double], Double, Vector[Double], scaleAdd.type]].register(canDaxpy)
+  implicitly[TernaryUpdateRegistry[Vector[Double], Double, Vector[Double], scaleAdd.type]].register(impl_scaleAdd_InPlace_DV_T_DV_Double)
 
-  implicit val canAddD: OpAdd.Impl2[DenseVector[Double], DenseVector[Double], DenseVector[Double]] = {
+  // TODO: try deleting? (pure)
+  implicit val impl_OpAdd_DV_DV_eq_DV_Double: OpAdd.Impl2[DenseVector[Double], DenseVector[Double], DenseVector[Double]] = {
     pureFromUpdate(implicitly, implicitly)
   }
-  implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpAdd.type, Vector[Double]]].register(canAddD)
+  implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpAdd.type, Vector[Double]]].register(impl_OpAdd_DV_DV_eq_DV_Double)
 
-  implicit val canSubIntoD: OpSub.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = {
+  implicit val impl_OpSub_InPlace_DV_DV_Double: OpSub.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = {
     new OpSub.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
       def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
-        canDaxpy(a, -1.0, b)
+        impl_scaleAdd_InPlace_DV_T_DV_Double(a, -1.0, b)
       }
       implicitly[BinaryUpdateRegistry[Vector[Double], Vector[Double], OpSub.type]].register(this)
     }
 
   }
-  implicit val dv_canSubD: OpSub.Impl2[DenseVector[Double], DenseVector[Double], DenseVector[Double]] = {
+
+  // TODO: try removing
+  implicit val impl_OpSub_DV_DV_eq_DV_Double: OpSub.Impl2[DenseVector[Double], DenseVector[Double], DenseVector[Double]] = {
     pureFromUpdate(implicitly, implicitly)
   }
-  implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpSub.type, Vector[Double]]].register(dv_canSubD)
+  implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpSub.type, Vector[Double]]].register(impl_OpSub_DV_DV_eq_DV_Double)
 
   implicit object canDotD extends OpMulInner.Impl2[DenseVector[Double], DenseVector[Double], Double] {
     def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
@@ -83,7 +90,7 @@ trait DenseVectorExtraSpecialOps extends DenseVectorExpandOps {
   /**
    *  Returns the p-norm of this Vector (specialized for Double).
    */
-  implicit def canNorm_Double: norm.Impl2[DenseVector[Double], Double, Double] = {
+  implicit def impl_norm_DV_D_eq_D_Double: norm.Impl2[DenseVector[Double], Double, Double] = {
     new norm.Impl2[DenseVector[Double], Double, Double] {
       def apply(v: DenseVector[Double], p: Double): Double = {
         if (p == 2) {
@@ -109,7 +116,5 @@ trait DenseVectorExtraSpecialOps extends DenseVectorExpandOps {
     }
   }
 
-  implicit def canDim[E]: dim.Impl[DenseVector[E], Int] = new dim.Impl[DenseVector[E], Int] {
-    def apply(v: DenseVector[E]): Int = v.length
-  }
+  implicit def impl_dim_DV_eq_I[E]: dim.Impl[DenseVector[E], Int] = _.length
 }

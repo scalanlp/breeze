@@ -29,7 +29,7 @@ trait HasConjugatePrior[Likelihood <: Density[T], T] extends ExponentialFamily[L
   /**
    * Returns a distribtution over T's after integrating out the intermediate distributions.
    */
-  def predictive(parameter: conjugateFamily.Parameter): Density[T]
+  def predictive(parameter: conjugateFamily.Parameter)(implicit basis: RandBasis): Density[T]
 
   /**
    * Gives a new parameter for this conjugate prior after observing the evidence. See Dirichlet for an example.

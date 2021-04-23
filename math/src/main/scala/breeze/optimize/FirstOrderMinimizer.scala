@@ -185,7 +185,7 @@ object FirstOrderMinimizer {
 
     override def initialInfo: IndexedSeq[ConvergenceCheck[T]#Info] = checks.map(_.initialInfo: ConvergenceCheck[T]#Info)
 
-    override def update[X, Y](newX: T, newGrad: T, newVal: Double, oldState: State[T, X, Y], oldInfo: Info): Info = {
+    override def update(newX: T, newGrad: T, newVal: Double, oldState: State[T, _, _], oldInfo: Info): Info = {
       require(oldInfo.length == checks.length)
       val out = ArrayBuffer[ConvergenceCheck[T]#Info]()
       cforRange(0 until checks.length) { j =>

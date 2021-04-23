@@ -11,7 +11,7 @@ import scala.reflect.ClassTag
 
 trait Vector_TraversalOps {
 
-  // There's a bizarre error specializing float's here.
+  // TODO There's a bizarre error specializing float's here.
   class CanZipMapValuesVector[@specialized(Int, Double) V, @specialized(Int, Double) RV: ClassTag]
     extends CanZipMapValues[Vector[V], V, RV, Vector[RV]] {
     def create(length: Int) = DenseVector(new Array[RV](length))
@@ -28,9 +28,9 @@ trait Vector_TraversalOps {
     }
   }
 
-  implicit def canMapValues[V, V2: Zero](implicit man: ClassTag[V2]): CanMapValues[Vector[V], V, V2, Vector[V2]] = {
+  // TODO: probably should have just made this virtual and not ufunced
+  implicit def canMapValues_V[V, V2: Zero](implicit man: ClassTag[V2]): CanMapValues[Vector[V], V, V2, Vector[V2]] = {
     new CanMapValues[Vector[V], V, V2, Vector[V2]] {
-
       def apply(from: Vector[V], fn: (V) => V2): Vector[V2] = from match {
         case sv: SparseVector[V] => sv.mapValues(fn)
         case hv: HashVector[V] => hv.mapValues(fn)
@@ -41,8 +41,7 @@ trait Vector_TraversalOps {
   }
 
   // TODO: probably should have just made this virtual and not ufunced
-  implicit def canMapActiveValues[V, V2: Zero](
-                                                implicit man: ClassTag[V2]): CanMapActiveValues[Vector[V], V, V2, Vector[V2]] = {
+  implicit def canMapActiveValues_V[V, V2: Zero](implicit man: ClassTag[V2]): CanMapActiveValues[Vector[V], V, V2, Vector[V2]] = {
     new CanMapActiveValues[Vector[V], V, V2, Vector[V2]] {
 
       def apply(from: Vector[V], fn: (V) => V2): Vector[V2] = from match {
@@ -55,10 +54,7 @@ trait Vector_TraversalOps {
   }
 
 
-  implicit def zipMap[V, R: ClassTag]: CanZipMapValuesVector[V, R] = new CanZipMapValuesVector[V, R]
-  implicit val zipMap_d: CanZipMapValuesVector[Double, Double] = new CanZipMapValuesVector[Double, Double]
-  implicit val zipMap_f: CanZipMapValuesVector[Float, Float] = new CanZipMapValuesVector[Float, Float]
-  implicit val zipMap_i: CanZipMapValuesVector[Int, Int] = new CanZipMapValuesVector[Int, Int]
+  implicit def canZipMapValues_V[V, R: ClassTag]: CanZipMapValuesVector[V, R] = new CanZipMapValuesVector[V, R]
 
   class CanZipMapKeyValuesVector[@specialized(Double, Int, Float, Long) V, @specialized(Int, Double) RV: ClassTag]
     extends CanZipMapKeyValues[Vector[V], Int, V, RV, Vector[RV]] {
@@ -80,9 +76,9 @@ trait Vector_TraversalOps {
     }
   }
 
-  implicit def zipMapKV[V, R: ClassTag]: CanZipMapKeyValuesVector[V, R] = new CanZipMapKeyValuesVector[V, R]
+  implicit def zipMapKV_V[V, R: ClassTag]: CanZipMapKeyValuesVector[V, R] = new CanZipMapKeyValuesVector[V, R]
 
-  implicit def canIterateValues[V]: CanTraverseValues[Vector[V], V] = new CanTraverseValues[Vector[V], V] {
+  implicit def canIterateValues_V[V]: CanTraverseValues[Vector[V], V] = new CanTraverseValues[Vector[V], V] {
 
     def isTraversableAgain(from: Vector[V]): Boolean = true
 
@@ -94,7 +90,7 @@ trait Vector_TraversalOps {
 
   }
 
-  implicit def canTraverseKeyValuePairs[V]: CanTraverseKeyValuePairs[Vector[V], Int, V] =
+  implicit def canTraverseKeyValuePairs_V[V]: CanTraverseKeyValuePairs[Vector[V], Int, V] =
     new CanTraverseKeyValuePairs[Vector[V], Int, V] {
       def isTraversableAgain(from: Vector[V]): Boolean = true
 

@@ -3,6 +3,8 @@ package breeze.io
 import java.io._
 import au.com.bytecode.opencsv.{CSVReader => OpenCSVReader, CSVWriter => OpenCSVWriter}
 
+import scala.collection.compat.immutable.ArraySeq
+
 /**
  * Just a simple wrapper for OpenCSV's csvreader.
  * @author dlwh
@@ -33,14 +35,15 @@ object CSVReader {
       var _next = rdr.readNext()
       def hasNext: Boolean = _next ne null
 
-      def next() = {
+      def next(): IndexedSeq[String] = {
         if (!hasNext) throw new NoSuchElementException("Next on empty iterator.")
         val x = _next
         _next = rdr.readNext
-        x
+
+        ArraySeq.unsafeWrapArray(x)
       }
 
-      def close() = {
+      def close(): Unit = {
         rdr.close()
         _next = null
       }
@@ -65,7 +68,7 @@ object CSVWriter {
     mat match {
       case x: Seq[Seq[String]] => writer.writeAll(x.map(_.toArray).asJava)
       case _ =>
-        for (l <- mat) {
+        for (l <- mat.iterator) {
           writer.writeNext(l.toArray)
         }
     }

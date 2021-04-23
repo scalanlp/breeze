@@ -215,14 +215,14 @@ class RandBasis(val generator: RandomGenerator) extends Serializable {
    * The trivial random generator: always returns the argument
    */
   def always[T](t: T): Rand[T] = new Rand[T] {
-    def draw = t
+    def draw() = t
   }
 
   /**
    * Simply reevaluate the body every time get is called
    */
   def fromBody[T](f: => T): Rand[T] = new Rand[T] {
-    def draw = f
+    def draw() = f
   }
 
   /**
@@ -239,42 +239,42 @@ class RandBasis(val generator: RandomGenerator) extends Serializable {
    * Uniformly samples in [0,1]
    */
   val uniform: Rand[Double] = new Rand[Double] {
-    def draw = generator.nextDouble
+    def draw() = generator.nextDouble
   }
 
   /**
    * Uniformly samples an integer in [0,MAX_INT]
    */
   val randInt: Rand[Int] = new Rand[Int] {
-    def draw = generator.nextInt & Int.MaxValue
+    def draw() = generator.nextInt & Int.MaxValue
   }
 
   /**
    * Uniformly samples an integer in [0,n)
    */
   def randInt(n: Int): Rand[Int] = new Rand[Int] {
-    def draw = generator.nextInt(n)
+    def draw() = generator.nextInt(n)
   }
 
   /**
    * Uniformly samples an integer in [n,m)
    */
   def randInt(n: Int, m: Int): Rand[Int] = new Rand[Int] {
-    def draw = generator.nextInt(m - n) + n
+    def draw() = generator.nextInt(m - n) + n
   }
 
   /**
    * Uniformly samples a long integer in [0,MAX_LONG]
    */
   val randLong: Rand[Long] = new Rand[Long] {
-    def draw = generator.nextLong & Long.MaxValue
+    def draw() = generator.nextLong & Long.MaxValue
   }
 
   /**
    * Uniformly samples a long integer in [0,n)
    */
   def randLong(n: Long): Rand[Long] = new Rand[Long] {
-    def draw = {
+    def draw() = {
       val value = generator.nextLong & Long.MaxValue
       value % n
     }
@@ -284,7 +284,7 @@ class RandBasis(val generator: RandomGenerator) extends Serializable {
    * Uniformly samples a long integer in [n,m)
    */
   def randLong(n: Long, m: Long): Rand[Long] = new Rand[Long] {
-    def draw = {
+    def draw() = {
       val value = generator.nextLong & Long.MaxValue
       value % (m - n) + n
     }
@@ -294,21 +294,21 @@ class RandBasis(val generator: RandomGenerator) extends Serializable {
    * Samples a gaussian with 0 mean and 1 std
    */
   val gaussian: Rand[Double] = new Rand[Double] {
-    def draw = generator.nextGaussian
+    def draw() = generator.nextGaussian
   }
 
   /**
    * Samples a gaussian with m mean and s std
    */
   def gaussian(m: Double, s: Double): Rand[Double] = new Rand[Double] {
-    def draw = m + s * gaussian.draw()
+    def draw() = m + s * gaussian.draw()
   }
 
   /**
    * Implements the Knuth shuffle of numbers from 0 to n.
    */
   def permutation(n: Int): Rand[IndexedSeq[Int]] = new Rand[IndexedSeq[Int]] {
-    def draw = {
+    def draw() = {
       val arr = new ArrayBuffer[Int]()
       arr ++= (0 until n)
       var i = n
@@ -327,7 +327,7 @@ class RandBasis(val generator: RandomGenerator) extends Serializable {
    * Knuth shuffle of a subset of size n from a set
    */
   def subsetsOfSize[T](set: IndexedSeq[T], n: Int): Rand[IndexedSeq[T]] = new Rand[IndexedSeq[T]] {
-    def draw = {
+    def draw() = {
       val arr = Array.range(0, set.size)
       var i = 0
       while (i < n.min(set.size)) {

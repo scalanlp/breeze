@@ -123,7 +123,7 @@ object shuffle extends UFunc {
        */
       override def apply(v: Coll): CollRes = {
         // Make a copy of the input.
-        val builder = cbf(v)
+        val builder = cbf.newBuilder(v)
         val copy = v.to(ArrayBuffer)
 
         // Shuffle tempret via Fisher-Yates method.

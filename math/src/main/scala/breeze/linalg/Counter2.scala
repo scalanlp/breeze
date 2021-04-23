@@ -133,14 +133,14 @@ object Counter2 extends LowPriorityCounter2 with Counter2Ops {
   /** Aggregates the counts in the given items. */
   def apply[K1, K2, V: Semiring: Zero](values: TraversableOnce[(K1, K2, V)]): Counter2[K1, K2, V] = {
     val rv = apply[K1, K2, V]()
-    values.foreach({ case (k1, k2, v) => rv(k1, k2) = implicitly[Semiring[V]].+(rv(k1, k2), v) })
+    values.iterator.foreach({ case (k1, k2, v) => rv(k1, k2) = implicitly[Semiring[V]].+(rv(k1, k2), v) })
     rv
   }
 
   /** Counts the given elements. */
   def count[K1, K2](values: TraversableOnce[(K1, K2)]): Counter2[K1, K2, Int] = {
     val rv = apply[K1, K2, Int]()
-    values.foreach({ case (k1, k2) => rv(k1, k2) += 1; })
+    values.iterator.foreach({ case (k1, k2) => rv(k1, k2) += 1; })
     rv
   }
 

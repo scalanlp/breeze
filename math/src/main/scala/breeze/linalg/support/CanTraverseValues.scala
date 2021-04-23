@@ -104,7 +104,7 @@ object CanTraverseValues extends LowPrioCanTraverseValues {
 
 }
 
-trait LowPrioCanTraverseValues2 { self: CanTraverseValues.type =>
+trait LowPrioCanTraverseValues2 {
 //  implicit def canTraverseSelf[V, V2]: CanTraverseValues[V, V] = {
 //    new CanTraverseValues[V, V] {
 //

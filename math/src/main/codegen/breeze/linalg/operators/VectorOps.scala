@@ -315,10 +315,10 @@ trait VectorOps extends GenericOps with Vector_TraversalOps {
   }
   @expand
   @expand.valify
-  implicit def axpy[@expand.args(Int, Double, Float, Long) V]
-    : TernaryUpdateRegistry[Vector[V], V, Vector[V], scaleAdd.type] = {
-    new TernaryUpdateRegistry[Vector[V], V, Vector[V], scaleAdd.type] {
-      override def bindingMissing(a: Vector[V], s: V, b: Vector[V]): Unit = {
+  implicit def impl_scaleAdd_InPlace_V_T_V[@expand.args(Int, Double, Float, Long) T]
+    : TernaryUpdateRegistry[Vector[T], T, Vector[T], scaleAdd.type] = {
+    new TernaryUpdateRegistry[Vector[T], T, Vector[T], scaleAdd.type] {
+      override def bindingMissing(a: Vector[T], s: T, b: Vector[T]): Unit = {
         require(b.length == a.length, "Vectors must be the same length!")
         if (s == 0) return
 
@@ -331,21 +331,6 @@ trait VectorOps extends GenericOps with Vector_TraversalOps {
     }
   }
 
-  implicit def axpy[V: Semiring: ClassTag]: TernaryUpdateRegistry[Vector[V], V, Vector[V], scaleAdd.type] = {
-    new TernaryUpdateRegistry[Vector[V], V, Vector[V], scaleAdd.type] {
-      val sr = implicitly[Semiring[V]]
-      override def bindingMissing(a: Vector[V], s: V, b: Vector[V]): Unit = {
-        require(b.length == a.length, "Vectors must be the same length!")
-        if (s == 0) return
-
-        var i = 0
-        for ((k, v) <- b.activeIterator) {
-          a(k) = sr.+(a(k), sr.*(s, v))
-          i += 1
-        }
-      }
-    }
-  }
 
   @expand
   @expand.valify
@@ -522,28 +507,28 @@ trait VectorOps extends GenericOps with Vector_TraversalOps {
     }
   }
 
-  implicit def implOpSet_V_S_InPlace[V]: OpSet.InPlaceImpl2[Vector[V], V] = {
-
+  implicit def impl_OpSet_V_S_InPlace[V]: OpSet.InPlaceImpl2[Vector[V], V] = {
     new OpSet.InPlaceImpl2[Vector[V], V] {
       def apply(a: Vector[V], b: V): Unit = {
         for (i <- 0 until a.length) {
           a(i) = b
         }
-
       }
     }
   }
 
-  implicit def V_canGaxpy[V: Semiring]: scaleAdd.InPlaceImpl3[Vector[V], V, Vector[V]] =
-    new scaleAdd.InPlaceImpl3[Vector[V], V, Vector[V]] {
-      val ring = implicitly[Semiring[V]]
-      def apply(a: Vector[V], s: V, b: Vector[V]): Unit = {
-        require(b.length == a.length, "Vectors must be the same length!")
-        for (i <- 0 until a.length) {
-          a(i) = ring.+(a(i), ring.*(s, b(i)))
+  // TODO: handle overlaps
+  implicit def impl_scaleAdd_InPlace_V_T_V_Generic[T: Semiring]: scaleAdd.InPlaceImpl3[Vector[T], T, Vector[T]] = {
+    (a: Vector[T], s: T, b: Vector[T]) => {
+      val sr = implicitly[Semiring[T]]
+      require(b.length == a.length, "Vectors must be the same length!")
+      if (s != 0) {
+        var i = 0
+        for ((k, v) <- b.activeIterator) {
+          a(k) = sr.+(a(k), sr.*(s, v))
+          i += 1
         }
-
       }
     }
-
+  }
 }

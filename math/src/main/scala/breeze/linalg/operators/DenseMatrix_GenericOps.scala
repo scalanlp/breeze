@@ -43,7 +43,7 @@ trait DenseMatrix_GenericOps extends MatrixOps {
     }
 
 
-  implicit def impl_OpMulMatrix_DM_V_eq_DV_Semiring[T, Vec<:Vector[T]](
+  implicit def impl_OpMulMatrix_DM_V_eq_DV_Generic[T, Vec<:Vector[T]](
                                                         implicit ring: Semiring[T]): OpMulMatrix.Impl2[DenseMatrix[T], Vec, DenseVector[T]] =
       (a: DenseMatrix[T], b: Vec) => {
         implicit val ct: ClassTag[T] = ReflectionUtil.elemClassTagFromArray(a.data)
@@ -62,9 +62,5 @@ trait DenseMatrix_GenericOps extends MatrixOps {
 
         res
       }
-
-  def foo[T: Semiring] = {
-    implicitly[OpMulMatrix.Impl2[DenseMatrix[T], DenseVector[T], DenseVector[T]]]
-  }
 
 }

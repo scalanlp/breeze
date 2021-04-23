@@ -53,12 +53,21 @@ trait GenericOps {
     scaleAdd.inPlace(t, ring.negate(ring.one), v)
   }
 
-
   implicit def negFromScale[T, U, V](implicit scalarOf: ScalarOf[T, V], ring: Ring[V], scale: OpMulScalar.Impl2[T, V, U]): OpNeg.Impl[T, U] = {
     new OpNeg.Impl[T, U] {
       override def apply(a: T): U = {
         scale(a, ring.negate(ring.one))
       }
     }
+  }
+}
+
+object GenericOps {
+  def updateFromPure[Op, T, Other, R](implicit op: UFunc.UImpl2[Op, T, Other, R],
+                                   set: OpSet.InPlaceImpl2[T, R]): UFunc.InPlaceImpl2[Op, T, Other] = {
+      (a: T, b: Other) => {
+        val result = op(a, b)
+        set(a, result)
+      }
   }
 }

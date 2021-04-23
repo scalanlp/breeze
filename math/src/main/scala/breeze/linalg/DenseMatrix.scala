@@ -474,6 +474,8 @@ object DenseMatrix extends MatrixConstructors[DenseMatrix] {
     }
   }
 
+  implicit def scalarOf[T]: ScalarOf[DenseMatrix[T], T] = ScalarOf.dummy
+
   // zerosLike
   implicit def canCreateZerosLike[V: ClassTag: Zero]: CanCreateZerosLike[DenseMatrix[V], DenseMatrix[V]] =
     new CanCreateZerosLike[DenseMatrix[V], DenseMatrix[V]] {
@@ -623,91 +625,8 @@ object DenseMatrix extends MatrixConstructors[DenseMatrix] {
   private def init() = {}
 }
 
-trait DenseMatrix_SliceOps_LowPrio extends LowPriorityDenseMatrix1 {
+trait DenseMatrix_TraversalOps {
 
-  implicit def canSliceWeirdRows[V: Semiring: ClassTag]
-  : CanSlice2[DenseMatrix[V], Seq[Int], ::.type, SliceMatrix[Int, Int, V]] = {
-    new CanSlice2[DenseMatrix[V], Seq[Int], ::.type, SliceMatrix[Int, Int, V]] {
-      def apply(from: DenseMatrix[V], slice: Seq[Int], slice2: ::.type): SliceMatrix[Int, Int, V] = {
-        new SliceMatrix(from, slice.toIndexedSeq, (0 until from.cols))
-      }
-    }
-  }
-
-  implicit def canSliceWeirdCols[V: Semiring: ClassTag]
-  : CanSlice2[DenseMatrix[V], ::.type, Seq[Int], SliceMatrix[Int, Int, V]] = {
-    new CanSlice2[DenseMatrix[V], ::.type, Seq[Int], SliceMatrix[Int, Int, V]] {
-      def apply(from: DenseMatrix[V], slice2: ::.type, slice: Seq[Int]): SliceMatrix[Int, Int, V] = {
-        new SliceMatrix(from, (0 until from.rows), slice.toIndexedSeq)
-      }
-    }
-  }
-
-  implicit def canSliceTensorBooleanRows[V: Semiring: ClassTag]
-  : CanSlice2[DenseMatrix[V], Tensor[Int, Boolean], ::.type, SliceMatrix[Int, Int, V]] = {
-    new CanSlice2[DenseMatrix[V], Tensor[Int, Boolean], ::.type, SliceMatrix[Int, Int, V]] {
-      def apply(from: DenseMatrix[V], rows: Tensor[Int, Boolean], cols: ::.type): SliceMatrix[Int, Int, V] = {
-        new SliceMatrix(from, rows.findAll(_ == true), (0 until from.cols))
-      }
-    }
-  }
-
-  implicit def canSliceTensorBooleanCols[V: Semiring: ClassTag]
-  : CanSlice2[DenseMatrix[V], ::.type, Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] = {
-    new CanSlice2[DenseMatrix[V], ::.type, Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] {
-      def apply(from: DenseMatrix[V], rows: ::.type, cols: Tensor[Int, Boolean]): SliceMatrix[Int, Int, V] = {
-        new SliceMatrix(from, (0 until from.rows), cols.findAll(_ == true))
-      }
-    }
-  }
-
-  implicit def canMapValues[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) R](
-      implicit r: ClassTag[R]): CanMapValues[DenseMatrix[V], V, R, DenseMatrix[R]] = {
-    new CanMapValues[DenseMatrix[V], V, R, DenseMatrix[R]] {
-
-      override def apply(from: DenseMatrix[V], fn: (V => R)): DenseMatrix[R] = {
-        if (from.isContiguous) {
-          val data = new Array[R](from.size)
-          val isTranspose = from.isTranspose
-          val off = from.offset
-          val fd = from.data
-          if (off == 0) {
-            var i = 0
-            val iMax = data.length
-            while (i < iMax) {
-              data(i) = fn(fd(i))
-              i += 1
-            }
-          } else {
-            var i = 0
-            val iMax = data.length
-            while (i < iMax) {
-              data(i) = fn(fd(i + off))
-              i += 1
-            }
-          }
-          DenseMatrix.create(from.rows, from.cols, data, 0, if (isTranspose) from.cols else from.rows, isTranspose)
-        } else {
-          val data = new Array[R](from.size)
-          var j = 0
-          var off = 0
-          while (j < from.cols) {
-            var i = 0
-            while (i < from.rows) {
-              data(off) = fn(from(i, j))
-              off += 1
-              i += 1
-            }
-            j += 1
-          }
-          DenseMatrix.create[R](from.rows, from.cols, data, 0, from.rows)
-        }
-      }
-
-    }
-  }
-
-  implicit def scalarOf[T]: ScalarOf[DenseMatrix[T], T] = ScalarOf.dummy
 
   implicit def canTraverseValues[V]: CanTraverseValues[DenseMatrix[V], V] = {
     new CanTraverseValues[DenseMatrix[V], V] {
@@ -829,6 +748,93 @@ trait DenseMatrix_SliceOps_LowPrio extends LowPriorityDenseMatrix1 {
     }
   }
 
+  implicit def canMapValues[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) R](
+                                                                                                     implicit r: ClassTag[R]): CanMapValues[DenseMatrix[V], V, R, DenseMatrix[R]] = {
+    new CanMapValues[DenseMatrix[V], V, R, DenseMatrix[R]] {
+
+      override def apply(from: DenseMatrix[V], fn: (V => R)): DenseMatrix[R] = {
+        if (from.isContiguous) {
+          val data = new Array[R](from.size)
+          val isTranspose = from.isTranspose
+          val off = from.offset
+          val fd = from.data
+          if (off == 0) {
+            var i = 0
+            val iMax = data.length
+            while (i < iMax) {
+              data(i) = fn(fd(i))
+              i += 1
+            }
+          } else {
+            var i = 0
+            val iMax = data.length
+            while (i < iMax) {
+              data(i) = fn(fd(i + off))
+              i += 1
+            }
+          }
+          DenseMatrix.create(from.rows, from.cols, data, 0, if (isTranspose) from.cols else from.rows, isTranspose)
+        } else {
+          val data = new Array[R](from.size)
+          var j = 0
+          var off = 0
+          while (j < from.cols) {
+            var i = 0
+            while (i < from.rows) {
+              data(off) = fn(from(i, j))
+              off += 1
+              i += 1
+            }
+            j += 1
+          }
+          DenseMatrix.create[R](from.rows, from.cols, data, 0, from.rows)
+        }
+      }
+
+    }
+  }
+}
+
+trait DenseMatrix_SliceOps_LowPrio extends LowPriorityDenseMatrix1 {
+
+  implicit def canSliceWeirdRows[V: Semiring: ClassTag]
+  : CanSlice2[DenseMatrix[V], Seq[Int], ::.type, SliceMatrix[Int, Int, V]] = {
+    new CanSlice2[DenseMatrix[V], Seq[Int], ::.type, SliceMatrix[Int, Int, V]] {
+      def apply(from: DenseMatrix[V], slice: Seq[Int], slice2: ::.type): SliceMatrix[Int, Int, V] = {
+        new SliceMatrix(from, slice.toIndexedSeq, (0 until from.cols))
+      }
+    }
+  }
+
+  implicit def canSliceWeirdCols[V: Semiring: ClassTag]
+  : CanSlice2[DenseMatrix[V], ::.type, Seq[Int], SliceMatrix[Int, Int, V]] = {
+    new CanSlice2[DenseMatrix[V], ::.type, Seq[Int], SliceMatrix[Int, Int, V]] {
+      def apply(from: DenseMatrix[V], slice2: ::.type, slice: Seq[Int]): SliceMatrix[Int, Int, V] = {
+        new SliceMatrix(from, (0 until from.rows), slice.toIndexedSeq)
+      }
+    }
+  }
+
+  implicit def canSliceTensorBooleanRows[V: Semiring: ClassTag]
+  : CanSlice2[DenseMatrix[V], Tensor[Int, Boolean], ::.type, SliceMatrix[Int, Int, V]] = {
+    new CanSlice2[DenseMatrix[V], Tensor[Int, Boolean], ::.type, SliceMatrix[Int, Int, V]] {
+      def apply(from: DenseMatrix[V], rows: Tensor[Int, Boolean], cols: ::.type): SliceMatrix[Int, Int, V] = {
+        new SliceMatrix(from, rows.findAll(_ == true), (0 until from.cols))
+      }
+    }
+  }
+
+  implicit def canSliceTensorBooleanCols[V: Semiring: ClassTag]
+  : CanSlice2[DenseMatrix[V], ::.type, Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] = {
+    new CanSlice2[DenseMatrix[V], ::.type, Tensor[Int, Boolean], SliceMatrix[Int, Int, V]] {
+      def apply(from: DenseMatrix[V], rows: ::.type, cols: Tensor[Int, Boolean]): SliceMatrix[Int, Int, V] = {
+        new SliceMatrix(from, (0 until from.rows), cols.findAll(_ == true))
+      }
+    }
+  }
+
+
+
   implicit def canTranspose[V]: CanTranspose[DenseMatrix[V], DenseMatrix[V]] = {
     new CanTranspose[DenseMatrix[V], DenseMatrix[V]] {
       def apply(from: DenseMatrix[V]) = {
@@ -874,8 +880,5 @@ trait DenseMatrix_SliceOps_LowPrio extends LowPriorityDenseMatrix1 {
       MutableFiniteCoordinateField.make[DenseMatrix[S], (Int, Int), S]
     }
   }
-
-
-
 
 }

@@ -4,6 +4,7 @@ import breeze.generic.UFunc
 import breeze.linalg._
 import breeze.macros.expand
 import breeze.math.{Field, Semiring}
+import breeze.storage.Zero
 import breeze.util.{ArrayUtil, ReflectionUtil}
 import scalaxy.debug.{assert, require}
 
@@ -11,6 +12,31 @@ import java.util
 import scala.reflect.ClassTag
 
 trait SparseVector_GenericOps extends GenericOps {
+  implicit def impl_OpSet_InPlace_SV_SV_Generic[T]: OpSet.InPlaceImpl2[SparseVector[T], SparseVector[T]] = {
+    new OpSet.InPlaceImpl2[SparseVector[T], SparseVector[T]] {
+      def apply(a: SparseVector[T], b: SparseVector[T]): Unit = {
+        val result = b.copy
+        a.use(result.index, result.data, result.activeSize)
+      }
+    }
+  }
+
+  // TODO(2): remove need for CT
+  implicit def impl_OpSet_InPlace_SV_T_Generic[T: Zero : ClassTag]: OpSet.InPlaceImpl2[SparseVector[T], T] = {
+    val zero = implicitly[Zero[T]].zero
+    new OpSet.InPlaceImpl2[SparseVector[T], T] {
+      def apply(a: SparseVector[T], b: T): Unit = {
+        if (b == zero) {
+          a.use(new Array[Int](2), new Array[T](2), 0)
+          return
+        }
+        val data = Array.fill(a.length)(b)
+        val index = Array.range(0, a.length)
+        a.use(index, data, a.length)
+      }
+    }
+  }
+  
   implicit def impl_Op_SV_SV_InPlace_liftFromPure[Op, T, U, V](
       implicit
       pureOp: UFunc.UImpl2[Op, SparseVector[T], U, V],

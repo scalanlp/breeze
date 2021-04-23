@@ -69,7 +69,7 @@ object Geometric extends ExponentialFamily[Geometric, Int] with HasConjugatePrio
   type ConjugatePrior = Beta
   val conjugateFamily: Beta.type = Beta
 
-  def predictive(parameter: conjugateFamily.Parameter) = TODO
+  def predictive(parameter: conjugateFamily.Parameter)(implicit basis: RandBasis) = ???
 
   def posterior(prior: conjugateFamily.Parameter, evidence: TraversableOnce[Int]) = {
     evidence.foldLeft(prior) { (acc, x) =>

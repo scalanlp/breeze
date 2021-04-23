@@ -52,7 +52,7 @@ object OptimizationPackage extends OptimizationPackageLowPriority {
       extends IterableOptimizationPackage[
         StochasticDiffFunction[Vector],
         Vector,
-        FirstOrderMinimizer[Vector, StochasticDiffFunction[Vector]]#State] {
+        FirstOrderMinimizer.State[Vector, _, _]] {
     def minimize(fn: StochasticDiffFunction[Vector], init: Vector, options: OptimizationOption*): Vector = {
       iterations(fn, init, options: _*).last.x
     }

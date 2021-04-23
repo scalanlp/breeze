@@ -23,7 +23,7 @@ package breeze.linalg.support
  *
  * @author dlwh
  **/
-trait ScalarOf[V, S] {}
+trait ScalarOf[-V, S] {}
 
 object ScalarOf {
   object DummyInstance extends ScalarOf[Any, Any]

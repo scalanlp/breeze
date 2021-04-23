@@ -32,7 +32,6 @@ import scala.io.Source
  *
  * @author dlwh, dramage
  */
-@SerialVersionUID(1L)
 trait Index[T] extends Iterable[T] with (T => Int) with Serializable {
 
   /** Number of elements in this index. */
@@ -101,7 +100,6 @@ trait Index[T] extends Iterable[T] with (T => Int) with Serializable {
  *
  * @author dramage
  */
-@SerialVersionUID(1L)
 trait MutableIndex[T] extends Index[T] {
 
   /**
