@@ -5,7 +5,7 @@ import breeze.numerics.exp
 import breeze.util.DoubleImplicits
 import org.scalatest.Matchers
 
-class EmpiricalHessianTest extends OptimizeTestBase with Matchers with DoubleImplicits {
+class EmpiricalHessianTest extends OptimizeTestBase with DoubleImplicits {
 
   test("hessian matrix of rosenbrook function") {
     val x = DenseVector(1d, 1d)

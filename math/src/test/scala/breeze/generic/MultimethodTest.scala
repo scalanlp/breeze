@@ -15,9 +15,10 @@ package breeze.generic
  limitations under the License.
  */
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 
-class MultimethodTest extends FunSuite with Checkers {
+class MultimethodTest extends AnyFunSuite with Checkers {
   trait T
   trait V extends T
   trait DV extends V

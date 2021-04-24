@@ -4,6 +4,7 @@ import breeze.math._
 import breeze.storage.Zero
 import org.scalacheck._
 import org.scalatest._
+import org.scalatest.funsuite._
 
 import scala.reflect.ClassTag
 
@@ -11,7 +12,7 @@ import scala.reflect.ClassTag
  *
  * @author dlwh
  */
-class VectorTest extends FunSuite {
+class VectorTest extends AnyFunSuite {
 
   val dvTest = DenseVector(1, 2, 3, 4)
   //val dmTest = DenseMatrix((1,2,3,4), (5,6,7,8))

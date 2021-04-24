@@ -16,14 +16,15 @@ package breeze.polynomial
  limitations under the License.
  */
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import breeze.linalg.{DenseVector, DenseMatrix, norm}
 import spire.math._
 import spire.math.poly._
 import spire.algebra._
 import breeze.macros._
+import spire.implicits.DoubleAlgebra
 
-class DensePolynomialTest extends FunSuite {
+class DensePolynomialTest extends AnyFunSuite {
 
   test("PolyDenseUfuncWrapper applied to doubles") {
     // Since polynomial has it's own .apply method, this is not very interesting.

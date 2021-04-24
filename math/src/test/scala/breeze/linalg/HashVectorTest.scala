@@ -1,6 +1,7 @@
 package breeze.linalg
 
 import org.scalatest._
+import org.scalatest.funsuite._
 import breeze.math._
 import breeze.stats.mean
 import breeze.storage.Zero
@@ -11,7 +12,7 @@ import scala.reflect.ClassTag
  *
  * @author dlwh
  */
-class HashVectorTest extends FunSuite {
+class HashVectorTest extends AnyFunSuite {
 
   val TOLERANCE = 1e-4
   def assertClose(a: Double, b: Double) =

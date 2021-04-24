@@ -1,12 +1,12 @@
 package breeze.linalg
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  *
  * @author dlwh
  */
-class SliceVectorTest extends FunSuite {
+class SliceVectorTest extends AnyFunSuite {
 
   test("basic slices of a counter") {
     val ctr = Counter("a" -> 1, "b" -> 2, "c" -> 42)

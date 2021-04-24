@@ -56,7 +56,7 @@ trait TensorSpaceTestBase[V, I, S] extends MutableModuleTestBase[V, S] {
       val (a, b, c) = trip
       val res = scalars.close(scalars.+(a.dot(b), a.dot(c)), a.dot(b + c), TOL * tolRef(a, b, c))
       if (!res)
-        println(scalars.+(a.dot(b), a.dot(c)) + " " + (a.dot(b + c)))
+        println(s"${scalars.+(a.dot(b), a.dot(c))} ${a.dot(b + c)}")
       res
     })
   }

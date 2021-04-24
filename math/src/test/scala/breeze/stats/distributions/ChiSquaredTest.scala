@@ -17,12 +17,13 @@ package breeze.stats.distributions
  */
 
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 import org.scalacheck._
 import org.apache.commons.math3.random.MersenneTwister
 
 class ChiSquaredTest
-    extends FunSuite
+    extends AnyFunSuite
     with Checkers
     with UnivariateContinuousDistrTestBase
     with MomentsTestBase[Double]
@@ -31,11 +32,11 @@ class ChiSquaredTest
   type Distr = ChiSquared
   import Arbitrary.arbitrary
 
-  val expFam = ChiSquared
+  val expFam: ChiSquared.type = ChiSquared
 
   override val numSamples = 40000
 
-  def arbParameter = Arbitrary {
+  def arbParameter: Arbitrary[Double] = Arbitrary {
     for (shape <- arbitrary[Double].map { _.abs % 200.0 + 4.2 }) yield shape
   }
 

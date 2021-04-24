@@ -1,6 +1,6 @@
 package breeze.stats.distributions
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers
 import org.scalacheck.{Prop, Arbitrary}
 import scala.reflect.ClassTag
@@ -9,7 +9,7 @@ import scala.reflect.ClassTag
  *
  * @author dlwh
  */
-trait ExpFamTest[D <: Density[T] with Rand[T], T] extends FunSuite with Checkers {
+trait ExpFamTest[D <: Density[T] with Rand[T], T] extends AnyFunSuite with Checkers {
   val expFam: ExponentialFamily[D, T]
   import expFam._
 

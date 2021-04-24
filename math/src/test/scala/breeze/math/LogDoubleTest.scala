@@ -17,12 +17,13 @@ package breeze.math
  */
 
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 import org.scalacheck._
 import LogDouble._
 import breeze.linalg.RandomInstanceSupport
 
-class LogDoubleTest extends FunSuite with Checkers {
+class LogDoubleTest extends AnyFunSuite with Checkers {
 
   implicit val ad: Arbitrary[Double] = Arbitrary(
     RandomInstanceSupport.genReasonableDouble.arbitrary.map(_.abs)

@@ -18,11 +18,13 @@ package breeze.numerics
 
 import breeze.linalg._
 import org.scalatest._
+import matchers.should.Matchers._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 import org.scalacheck.{Prop, Arbitrary}
 import breeze.math.Complex
 
-class NumericsTest extends FunSuite with Checkers with Matchers {
+class NumericsTest extends AnyFunSuite with Checkers {
 
   test("softmax") {
     import math.{log => mlog}
@@ -55,7 +57,7 @@ class NumericsTest extends FunSuite with Checkers with Matchers {
 
   import Arbitrary._
 
-  implicit def ae(x: Double) = new {
+  implicit class ae(x: Double) {
     def =~=(y: Double) = breeze.numerics.closeTo(x, y, 1E-6)
   }
 

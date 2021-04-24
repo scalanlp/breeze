@@ -1,7 +1,7 @@
 package breeze.linalg
 
 import breeze.linalg.operators.OpMulInner
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import breeze.stats.mean
 
 /**
@@ -9,7 +9,7 @@ import breeze.stats.mean
  *
  * @author dlwh
  **/
-class BroadcastedTest extends FunSuite {
+class BroadcastedTest extends AnyFunSuite {
   test("broadcast DenseMatrix along columns") {
     val dm = DenseMatrix((1.0, 2.0, 3.0), (4.0, 5.0, 6.0))
 

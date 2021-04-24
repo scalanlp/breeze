@@ -18,12 +18,13 @@ package breeze.stats.distributions
 
 import org.scalacheck._
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 
 
-class PoissonTest extends FunSuite with Checkers with MomentsTestBase[Int] with ExpFamTest[Poisson, Int] {
+class PoissonTest extends AnyFunSuite with Checkers with MomentsTestBase[Int] with ExpFamTest[Poisson, Int] {
   import org.scalacheck.Arbitrary.arbitrary
-  val expFam = Poisson
+  val expFam: Poisson.type = Poisson
 
   implicit def arbDistr: Arbitrary[Poisson] = Arbitrary {
     for (p <- arbitrary[Double].map { _.abs % 5 + 1 }) yield new Poisson(p)(RandBasis.mt0)

@@ -17,10 +17,11 @@ package breeze.integrate.quasimontecarlo
  */
 
 import breeze.stats.distributions._
-import org.scalatest.{FunSuite, WordSpec}
-import org.scalatest.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest._
+import matchers.should.Matchers._
 
-class QuasiMonteCarloTest extends WordSpec with Matchers {
+class QuasiMonteCarloTest extends AnyWordSpec {
   def identityFunc(x: Array[Double]): Double = x(0)
 
   def productFunc(x: Array[Double]): Double = x(0) * x(1)

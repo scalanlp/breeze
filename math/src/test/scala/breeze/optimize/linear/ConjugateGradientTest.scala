@@ -2,8 +2,9 @@ package breeze.optimize.linear
 
 import breeze.linalg._
 import org.scalatest._
+import org.scalatest.funsuite._
 
-class ConjugateGradientTest extends FunSuite {
+class ConjugateGradientTest extends AnyFunSuite {
 
   test("we can recover the same matrix as inversion, more or less") {
 

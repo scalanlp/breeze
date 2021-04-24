@@ -1,12 +1,13 @@
 package breeze.stats.regression
 
-import org.scalatest.{FunSuite, WordSpec}
+import org.scalatest.{FunSuite}
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.Matchers
 import scala.util.Random
 import breeze.linalg._
 import breeze.macros.cforRange
 
-class LassoTest extends WordSpec with Matchers {
+class LassoTest extends AnyWordSpec {
   "Lasso least squares" should {
     "handle simple case" in {
       val a = DenseMatrix((1.0, 1.0), (2.0, -2.0), (3.0, 3.0), (4.0, 5.0))

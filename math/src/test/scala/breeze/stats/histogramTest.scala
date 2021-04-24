@@ -1,6 +1,6 @@
 package breeze.stats
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import breeze.linalg._
 
 /**Tests for breeze.linalg.max.scala
@@ -8,7 +8,7 @@ import breeze.linalg._
  * @author ktakagaki
  * @date 3/13/14.
  */
-class histogramTest extends FunSuite {
+class histogramTest extends AnyFunSuite {
 
   val testDV = DenseVector(0.0, 0.1, 2.8, 2.9, 5)
   val testWeights = DenseVector(0.5, 0.5, 1.0, 3.0, 7.0)

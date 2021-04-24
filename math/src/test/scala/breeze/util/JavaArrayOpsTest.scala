@@ -1,19 +1,19 @@
 package breeze.util
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import breeze.util.JavaArrayOps._
 import breeze.linalg.{DenseMatrix, DenseVector}
-import breeze.math.Complex
+import breeze.math._
 
 /**
  * @author ktakagaki
  * @date 03/31/2014.
  */
-class JavaArrayOpsTest extends FunSuite {
+class JavaArrayOpsTest extends AnyFunSuite {
 
   test("JavaOpts 1D conversions") {
     val dvI = DenseVector(0, 1, 2, 3, 4, 5)
-    val dvC = DenseVector[Complex](-1d * breeze.math.i, 0d * breeze.math.i, 2d * breeze.math.i)
+    val dvC = DenseVector[Complex](-1d * i, 0d * i, 2d * breeze.math.i)
     assert(dvI == arrayIToDv(dvIToArray(dvI)))
     assert(arrayIToDv(dvIToArray(dvI)).length == 6)
     assert(dvC == arrayCToDv(dvCToArray(dvC)))

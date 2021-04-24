@@ -4,9 +4,9 @@ import breeze.linalg.operators.OpMulMatrix
 import breeze.linalg.support.CanTranspose
 import breeze.optimize.{DiffFunction, GradientTester, LBFGS}
 import breeze.stats.distributions.RandBasis
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class LSMRTest extends FunSuite {
+class LSMRTest extends AnyFunSuite {
 
   test("simple dense solve") {
     val matrix = DenseMatrix(

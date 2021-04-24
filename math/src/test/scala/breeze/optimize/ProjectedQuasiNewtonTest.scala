@@ -17,21 +17,25 @@ package breeze.optimize
 
 import breeze.optimize.proximal.{ProjectL1, QuadraticMinimizer}
 import org.scalatest._
+import org.scalatest.funsuite._
+import org.scalatest.propspec._
 import org.scalatestplus.scalacheck._
 import breeze.linalg._
 import breeze.numerics._
 import breeze.optimize.proximal.NonlinearMinimizer.Projection
 
+import matchers.should.Matchers._
+
 class ProjectedQuasiNewtonTest
-    extends PropSpec
+    extends AnyPropSpec
     with ScalaCheckPropertyChecks
     with OptimizeTestBaseTrait
     with VectorMatchers
-    with Matchers {
+    {
 
   property("optimize a simple multivariate gaussian") {
     val optimizer = new ProjectedQuasiNewton(tolerance = 1.0E-9)
-    forAll { init: DenseVector[Double] =>
+    forAll { (init: DenseVector[Double]) =>
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
           (sum((x - 3.0) ^:^ 2.0), (x * 2.0) - 6.0)
@@ -46,7 +50,7 @@ class ProjectedQuasiNewtonTest
   property("optimize a simple multivariate gaussian with projection") {
     val optimizer = new ProjectedQuasiNewton(tolerance = 1.0E-5, projection = _.map(scala.math.min(_, 2.0)))
 
-    forAll { init: DenseVector[Double] =>
+    forAll { (init: DenseVector[Double]) =>
       init := clip(init, Double.NegativeInfinity, 2.0)
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {

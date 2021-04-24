@@ -19,14 +19,14 @@
 package breeze.stats.distributions
 
 import org.scalacheck.{Arbitrary, Prop}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers
 import breeze.integrate.trapezoid
 
 /**
  * @author jrj-d
  **/
-trait UnivariateContinuousDistrTestBase extends FunSuite with Checkers {
+trait UnivariateContinuousDistrTestBase extends AnyFunSuite with Checkers {
   type Distr <: ContinuousDistr[Double]
   implicit def arbDistr: Arbitrary[Distr]
 

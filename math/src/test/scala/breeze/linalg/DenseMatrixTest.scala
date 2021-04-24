@@ -17,6 +17,8 @@ package breeze.linalg
  */
 
 import org.scalatest._
+import org.scalatest.funsuite._
+import matchers.should.Matchers._
 import org.scalatestplus.scalacheck._
 import breeze.math.Complex
 import breeze.numerics._
@@ -26,7 +28,7 @@ import breeze.util.DoubleImplicits
 
 import scala.reflect.ClassTag
 
-class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleImplicits with MatrixTestUtils {
+class DenseMatrixTest extends AnyFunSuite with Checkers with DoubleImplicits with MatrixTestUtils {
 
   test("Slicing") {
     val m = DenseMatrix((0, 1, 2), (3, 4, 5))
@@ -404,7 +406,7 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
     val b = DenseMatrix((7, -2, 8), (-3, -3, 1), (12, 0, 5)).mapValues(BigDecimal(_))
     val c = DenseVector(6, 2, 3).mapValues(BigDecimal(_))
     assert(
-      a.*(b)(DenseMatrix.op_DM_DM_Semiring[BigDecimal]) === DenseMatrix((37, -8, 25), (85, -23, 67))
+      a.*(b) === DenseMatrix((37, -8, 25), (85, -23, 67))
         .mapValues(BigDecimal(_)))
     assert(a * c === DenseVector(19, 52).mapValues(BigDecimal(_)))
     assert(b * c === DenseVector(62, -21, 87).mapValues(BigDecimal(_)))
@@ -844,7 +846,7 @@ class DenseMatrixTest extends FunSuite with Checkers with Matchers with DoubleIm
 
 }
 
-trait MatrixTestUtils extends Matchers {
+trait MatrixTestUtils {
   def matricesNearlyEqual(A: Matrix[Double], B: Matrix[Double], threshold: Double = 1E-6): Unit = {
     for (i <- 0 until A.rows; j <- 0 until A.cols)
       A(i, j) should be(B(i, j) +- threshold)

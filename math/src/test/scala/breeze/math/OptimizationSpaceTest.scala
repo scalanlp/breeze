@@ -230,7 +230,7 @@ trait OptimizationSpaceTest[M, V, S] extends TensorSpaceTestBase[V, Int, S] {
       val (a, b, c) = trip
       val res = scalars.close(scalars.+(a.dot(b), a.dot(c)), a.dot(b + c), TOLM * tolRefM(a, b, c))
       if (!res)
-        println(scalars.+(a.dot(b), a.dot(c)) + " " + (a.dot(b + c)))
+        println(s"${scalars.+(a.dot(b), a.dot(c))} ${a.dot(b + c)}")
       res
     })
 
@@ -326,9 +326,9 @@ class SparseOptimizationSpaceTest_Double
 
   val arbColIndex = Arbitrary(Gen.choose[Int](0, N - 1))
   val arbRowIndex = Arbitrary(Gen.choose[Int](0, M - 1))
-  val genAS = Gen.chooseNum(0, pow(N, 2))
-  implicit val arbEntry = Arbitrary.arbTuple3[Int, Int, Double](arbRowIndex, arbColIndex, genScalar)
-  implicit val arbVals = Arbitrary(
+  val genAS: Gen[Int] = Gen.chooseNum(0, pow(N, 2))
+  implicit val arbEntry: Arbitrary[(Int, Int, Double)] = Arbitrary.arbTuple3[Int, Int, Double](arbRowIndex, arbColIndex, genScalar)
+  implicit val arbVals: Arbitrary[List[(Int, Int, Double)]] = Arbitrary(
     genAS.flatMap(activeSize => Gen.listOfN[(Int, Int, Double)](activeSize, Arbitrary.arbitrary[(Int, Int, Double)])))
   def addToBuilder(bldr: CSCMatrix.Builder[Double], v: (Int, Int, Double)) = bldr.add(v._1, v._2, v._3)
   override implicit def genTripleM: Arbitrary[(CSCMatrix[Double], CSCMatrix[Double], CSCMatrix[Double])] = {

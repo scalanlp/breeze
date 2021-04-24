@@ -1,12 +1,12 @@
 package breeze.generic
 
-import breeze.linalg.{*, DenseMatrix, DenseVector}
-import org.scalatest.FunSuite
+import breeze.linalg._
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  * Created by dlwh on 10/21/15.
  */
-class UFuncTest extends FunSuite {
+class UFuncTest extends AnyFunSuite {
 
   test("WrappedUFunc") {
     val f = UFunc(math.exp _)

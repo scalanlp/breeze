@@ -20,10 +20,11 @@
 package breeze.math
 
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 import breeze.linalg.DenseVector
 
-class ComplexTest extends FunSuite with Checkers {
+class ComplexTest extends AnyFunSuite with Checkers {
 
   test("Add") {
     assert((1 + 2 * i) + (2 + 3 * i) === (3 + 5 * i))

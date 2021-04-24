@@ -1,6 +1,7 @@
 package breeze.linalg
 
 import org.scalatest._
+import org.scalatest.funsuite._
 import breeze.macros._
 
 /**
@@ -8,7 +9,7 @@ import breeze.macros._
  *
  * @author stucchio
  */
-class rollTest extends FunSuite {
+class rollTest extends AnyFunSuite {
   test("roll works") {
     val M = 12
     val v = DenseVector.zeros[Double](M)

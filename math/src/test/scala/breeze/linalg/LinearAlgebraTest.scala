@@ -24,18 +24,21 @@ import breeze.linalg.support.CanTraverseValues
 import breeze.linalg.svd.SVD
 import breeze.stats.distributions.{MultivariateGaussian, RandBasis}
 import org.scalacheck.{Arbitrary, Gen, Prop}
-import org.scalatest._
-import org.scalatestplus.scalacheck._
 import breeze.util.DoubleImplicits
 import breeze.numerics._
 import breeze.stats.{mean, meanAndVariance, median}
 import breeze.{math => bmath}
 
+import org.scalatest._
+import org.scalatest.funsuite._
+import org.scalatestplus.scalacheck._
+import matchers.should.Matchers._
+
 /**
  *
  * @author dlwh
  */
-class LinearAlgebraTest extends FunSuite with Checkers with Matchers with DoubleImplicits {
+class LinearAlgebraTest extends AnyFunSuite with Checkers with DoubleImplicits {
   test("kron") {
     val a = DenseMatrix((1, 2), (3, 4))
     val b = DenseMatrix((0, 5), (6, 7))
@@ -212,7 +215,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     assert((_Q.rows, _Q.cols) == (A.rows, A.rows))
     assert((_R.rows, _R.cols) == (A.rows, A.cols))
 
-    assert(trace(_Q.t * _Q).closeTo(min(A.rows, A.cols)))
+    assert(trace(_Q.t * _Q).toDouble.closeTo(min(A.rows, A.cols)))
     for (i <- 0 until _R.rows; j <- 0 until i) {
       assert(_R(i, j) === 0.0)
     }
@@ -252,7 +255,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     assert((_Q.rows, _Q.cols) == (A.rows, A.rows))
     assert((_R.rows, _R.cols) == (A.rows, A.cols))
 
-    assert(trace(_Q.t * _Q).closeTo(min(A.rows, A.cols)))
+    assert(trace(_Q.t * _Q).toDouble.closeTo(min(A.rows, A.cols)))
     for (i <- 0 until _R.rows; j <- 0 until i) {
       assert(_R(i, j) === 0.0f)
     }
@@ -268,7 +271,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with Matchers with Double
     assert((_Q.rows, _Q.cols) == (A.rows, A.rows))
     assert((_R.rows, _R.cols) == (A.rows, A.cols))
 
-    assert(trace(_Q.t * _Q).closeTo(max(A.rows, A.cols)))
+    assert(trace(_Q.t * _Q).toDouble.closeTo(max(A.rows, A.cols)))
     for (i <- 0 until _R.rows; j <- 0 until i) {
       assert(_R(i, j) === 0.0f)
     }

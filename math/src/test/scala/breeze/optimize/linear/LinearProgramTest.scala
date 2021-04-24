@@ -1,6 +1,6 @@
 package breeze.optimize.linear
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import breeze.linalg.{norm, DenseVector}
 
 /**
@@ -8,7 +8,7 @@ import breeze.linalg.{norm, DenseVector}
  *
  * @author dlwh
  **/
-class LinearProgramTest extends FunSuite {
+class LinearProgramTest extends AnyFunSuite {
 
   /*
   test("ILP Test") {

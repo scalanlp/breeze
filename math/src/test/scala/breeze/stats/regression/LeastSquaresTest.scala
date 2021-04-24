@@ -1,12 +1,12 @@
 package breeze.stats.regression
 
-import org.scalatest.WordSpec
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.Matchers
 import breeze.linalg._
 import breeze.numerics._
 import breeze.macros.cforRange
 
-class LeastSquaresTest extends WordSpec with Matchers {
+class LeastSquaresTest extends AnyWordSpec {
   "Least squares" should {
     "handle simple case" in {
       val a = DenseMatrix((1.0, 1.0), (2.0, -2.0), (3.0, 3.0), (4.0, 5.0))

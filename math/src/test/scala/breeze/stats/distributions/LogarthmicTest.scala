@@ -18,12 +18,13 @@ package breeze.stats.distributions
 
 import org.scalacheck._
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 
-class LogarthmicTest extends FunSuite with Checkers with MomentsTestBase[Int] {
+class LogarthmicTest extends AnyFunSuite with Checkers with MomentsTestBase[Int] {
   import org.scalacheck.Arbitrary.arbitrary
 
-  val expFam = Logarthmic
+  val expFam: Logarthmic.type = Logarthmic
 
   override val numSamples = 50000
 
@@ -35,7 +36,7 @@ class LogarthmicTest extends FunSuite with Checkers with MomentsTestBase[Int] {
     (p - q).abs / (p.abs / 2 + q.abs / 2 + 1) < 1E-1
   }
 
-  implicit def arbParameter = Arbitrary {
+  implicit def arbParameter: Arbitrary[Double] = Arbitrary {
     for (p <- arbitrary[Double].map { m =>
         (math.abs(m) % 1.0) + 1E-3
       }) yield p

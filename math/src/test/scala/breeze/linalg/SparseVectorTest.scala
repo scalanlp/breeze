@@ -1,6 +1,7 @@
 package breeze.linalg
 
 import org.scalatest._
+import org.scalatest.funsuite._
 import breeze.math._
 import breeze.numerics.{log, sin}
 import org.scalacheck.{Arbitrary, Gen}
@@ -13,7 +14,7 @@ import scala.reflect.ClassTag
  *
  * @author dlwh
  */
-class SparseVectorTest extends FunSuite {
+class SparseVectorTest extends AnyFunSuite {
 
   val TOLERANCE = 1e-4
   def assertClose(a: Double, b: Double) =

@@ -1,6 +1,6 @@
 package breeze.integrate
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 import breeze.integrate
 import breeze.linalg._
@@ -10,7 +10,7 @@ import breeze.numerics._
  *
  * @author chrismedrela
  **/
-class SimpsonIntegrationTest extends FunSuite {
+class SimpsonIntegrationTest extends AnyFunSuite {
   val f = (x: Double) => 2 * x
   val f2 = (x: Double) => x * x
 

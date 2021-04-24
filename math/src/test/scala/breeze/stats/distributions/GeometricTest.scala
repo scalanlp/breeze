@@ -18,12 +18,12 @@ package breeze.stats.distributions
 
 import org.scalacheck._
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 
-class GeometricTest extends FunSuite with Checkers with MomentsTestBase[Int] with ExpFamTest[Geometric, Int] {
+class GeometricTest extends AnyFunSuite with Checkers with MomentsTestBase[Int] with ExpFamTest[Geometric, Int] {
   import org.scalacheck.Arbitrary.arbitrary
-
-  val expFam = Geometric
+  val expFam: Geometric.type = Geometric
 
   override val numSamples = 10000
 

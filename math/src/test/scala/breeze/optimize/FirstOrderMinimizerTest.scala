@@ -1,9 +1,9 @@
 package breeze.optimize
 
 import breeze.linalg.DenseVector
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class FirstOrderMinimizerTest extends FunSuite {
+class FirstOrderMinimizerTest extends AnyFunSuite {
 
   test("default relative gradient convergence check for negative function values") {
     val value = -10

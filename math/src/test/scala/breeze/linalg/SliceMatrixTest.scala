@@ -1,12 +1,12 @@
 package breeze.linalg
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  *
  * @author dlwh
  */
-class SliceMatrixTest extends FunSuite {
+class SliceMatrixTest extends AnyFunSuite {
   val originalMatrix = DenseMatrix.tabulate[Int](5, 5) { (i, j) =>
     5 * i + j + 1
   }

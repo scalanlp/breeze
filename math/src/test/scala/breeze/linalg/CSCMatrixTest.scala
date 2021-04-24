@@ -20,11 +20,12 @@ import breeze.math.{Complex, Field}
 import breeze.numerics.{abs, inf}
 import breeze.storage.Zero
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck.Checkers
 
 import scala.reflect.ClassTag
 
-class CSCMatrixTest extends FunSuite with Checkers with MatrixTestUtils {
+class CSCMatrixTest extends AnyFunSuite with Checkers with MatrixTestUtils {
   test("Multiply") {
     val a = CSCMatrix((1.0, 2.0, 3.0), (4.0, 5.0, 6.0))
     val ad = DenseMatrix((1.0, 2.0, 3.0), (4.0, 5.0, 6.0))

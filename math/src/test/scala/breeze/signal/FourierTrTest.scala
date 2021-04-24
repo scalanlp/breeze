@@ -1,7 +1,8 @@
 package breeze.signal
 
 import org.scalatest._
-import breeze.linalg.{*, DenseVector, DenseMatrix, norm}
+import org.scalatest.funsuite._
+import breeze.linalg._
 import breeze.math.Complex
 
 /**
@@ -11,7 +12,7 @@ import breeze.math.Complex
  * Time: 02:31
  * To change this template use File | Settings | File Templates.
  */
-class FourierTrTest extends FunSuite {
+class FourierTrTest extends AnyFunSuite {
 
   // <editor-fold desc="FourierTr">
   test("fft 1D of DenseVector[Complex]") {

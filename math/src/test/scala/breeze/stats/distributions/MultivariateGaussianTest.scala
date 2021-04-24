@@ -17,13 +17,14 @@ package breeze.stats.distributions
  */
 
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 import org.scalacheck._
 import breeze.numerics._
 import breeze.linalg._
 import breeze.stats._
 
-class MultivariateGaussianTest extends FunSuite with Checkers {
+class MultivariateGaussianTest extends AnyFunSuite with Checkers {
 
   val N = 5
 

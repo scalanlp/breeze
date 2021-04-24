@@ -43,13 +43,18 @@ object Common {
         Seq(
           compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.patch),
           "org.scalatest" %% "scalatest" % "3.2.7" % "test",
+          "org.scalatest" %% "scalatest-funsuite" % "3.2.7" % "test",
+          "org.scalatest" %% "scalatest-wordspec" % "3.2.7" % "test",
           ("org.scalatestplus" %% "scalacheck-1-14" % "3.1.1.1" % "test"),
           ("org.scalacheck" %% "scalacheck" % "1.14.3" % "test")
         ),
       } else {
-        ("org.scalatest" %% "scalatest" % "3.2.7" % "test") +:
         Seq(
-          
+          "org.scalatest" %% "scalatest" % "3.2.7" % "test",
+          "org.scalatest" %% "scalatest-funsuite" % "3.2.7" % "test",
+          "org.scalatest" %% "scalatest-wordspec" % "3.2.7" % "test",
+        ) ++
+        Seq(
           ("org.scalatestplus" % "scalacheck-1-14_2.13" % "3.1.1.1" % "test")
             .intransitive(),
           "org.scalacheck" % "scalacheck_2.13" % "1.14.3" % "test"

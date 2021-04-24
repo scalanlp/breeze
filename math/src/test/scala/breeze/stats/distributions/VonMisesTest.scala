@@ -18,17 +18,18 @@ package breeze.stats.distributions
 
 import org.scalacheck._
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 
 // VonMises variance depends on some reasonable handling of % 2 * pi, so we'll not include it.
 class VonMisesTest
-    extends FunSuite
+    extends AnyFunSuite
     with Checkers
     with UnivariateContinuousDistrTestBase
     with ExpFamTest[VonMises, Double] {
   import Arbitrary.arbitrary
 
-  val expFam = VonMises
+  val expFam: VonMises.type = VonMises
 
   implicit def arbParameter = Arbitrary {
     for (mu <- arbitrary[Double].map { _.abs % (2 * math.Pi) }; // Gamma pdf at 0 not defined when shape == 1

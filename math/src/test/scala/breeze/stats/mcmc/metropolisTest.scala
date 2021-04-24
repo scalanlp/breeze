@@ -2,14 +2,14 @@ package breeze.stats.mcmc
 
 import breeze.stats.distributions._
 import breeze.macros._
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 /**Tests for breeze.stats.mcmc.MetropolisHastings
  * Test for clip is currently located in "DenseVectorTest.scala"
  * @author stucchio
  * @date 3/13/14.
  */
-class metropolisTest extends FunSuite {
+class metropolisTest extends AnyFunSuite {
 
   val rand: RandBasis = RandBasis.mt0
 

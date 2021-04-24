@@ -4,6 +4,7 @@ import breeze.numerics.isNonfinite
 import org.netlib.blas.Ddot
 import org.scalacheck._
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 import breeze.math._
 import breeze.stats.mean
@@ -17,7 +18,7 @@ import scala.reflect.ClassTag
  *
  * @author dlwh
  */
-class DenseVectorTest extends FunSuite with Checkers {
+class DenseVectorTest extends AnyFunSuite with Checkers {
 
   val TOLERANCE = 1e-4
 

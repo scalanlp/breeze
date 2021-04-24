@@ -17,10 +17,11 @@ package breeze.stats.distributions
  */
 
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 import org.scalacheck._
 
-class WaldTest extends FunSuite with Checkers with UnivariateContinuousDistrTestBase with MomentsTestBase[Double] {
+class WaldTest extends AnyFunSuite with Checkers with UnivariateContinuousDistrTestBase with MomentsTestBase[Double] {
   type Distr = Wald
   import Arbitrary.arbitrary
   override val numSamples = 40000

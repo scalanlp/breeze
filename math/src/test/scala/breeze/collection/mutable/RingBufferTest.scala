@@ -18,14 +18,14 @@
 
 package breeze.collection.mutable
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  * TODO
  *
  * @author dlwh
   **/
-class RingBufferTest extends FunSuite {
+class RingBufferTest extends AnyFunSuite {
 
   test("#666 RingBuffer problems") {
     val rb = RingBuffer(3)(1, 2, 3)

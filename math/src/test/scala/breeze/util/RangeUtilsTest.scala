@@ -1,11 +1,11 @@
 package breeze.util
 
 import breeze.linalg.RandomInstanceSupport
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers
 import org.scalacheck.{Arbitrary, Prop}
 
-class RangeUtilsTest extends FunSuite with Checkers {
+class RangeUtilsTest extends AnyFunSuite with Checkers {
   implicit def arbRange: Arbitrary[Range] = Arbitrary{
     for {
       a <- RandomInstanceSupport.genReasonableInt.arbitrary.map(_.abs)

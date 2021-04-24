@@ -18,10 +18,11 @@ package breeze.stats.distributions
 
 import org.scalacheck._
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 
 class StudentsTTest
-    extends FunSuite
+    extends AnyFunSuite
     with Checkers
     with UnivariateContinuousDistrTestBase
     with MomentsTestBase[Double]

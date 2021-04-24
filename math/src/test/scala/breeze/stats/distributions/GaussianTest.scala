@@ -19,17 +19,18 @@ package breeze.stats.distributions;
 import breeze.linalg.RandomInstanceSupport
 import org.scalacheck._
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 
 class GaussianTest
-    extends FunSuite
+    extends AnyFunSuite
     with Checkers
     with UnivariateContinuousDistrTestBase
     with MomentsTestBase[Double]
     with ExpFamTest[Gaussian, Double]
     with HasCdfTestBase {
   override type Distr = Gaussian
-  val expFam = Gaussian
+  val expFam: Gaussian.type = Gaussian
   import org.scalacheck.Arbitrary.arbitrary;
 
   def arbParameter = Arbitrary {

@@ -1,6 +1,6 @@
 package breeze.util
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import breeze.linalg.{min, max, shuffle, DenseVector}
 
 import scala.collection.mutable.ArrayBuffer
@@ -9,7 +9,7 @@ import scala.collection.mutable.ArrayBuffer
  * @author ktakagaki
  * @date 05/10/2014.
  */
-class SelectTest extends FunSuite {
+class SelectTest extends AnyFunSuite {
 
   test("quickSelect") {
     var testArray = Array(7, 3, 2, 5, 1, 4, 2, -1)

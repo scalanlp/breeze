@@ -18,7 +18,7 @@
 
 package breeze.util
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.compat._
@@ -28,7 +28,7 @@ import scala.collection.compat._
  *
  * @author dlwh
  **/
-class ImplicitsTest extends FunSuite {
+class ImplicitsTest extends AnyFunSuite {
 
   import Implicits._
   test("Set#toMultiMap") {

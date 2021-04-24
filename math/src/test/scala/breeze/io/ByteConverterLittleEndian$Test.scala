@@ -1,13 +1,13 @@
 package breeze.io
 
 import breeze.io.ByteConverterLittleEndian._
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import spire.math.ULong
 
 /**
  * Created by Kenta on 12/10/13.
  */
-class ByteConverterLittleEndian$Test extends FunSuite {
+class ByteConverterLittleEndian$Test extends AnyFunSuite {
 
   test("Int16") {
     var valueS: Short = -32768

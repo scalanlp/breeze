@@ -1,6 +1,6 @@
 package breeze.optimize
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import breeze.numerics.closeTo
 
 
@@ -8,7 +8,7 @@ import breeze.numerics.closeTo
   * Tests for the RootFinding object
   * @author abertout
   **/
-class RootFindingTest extends FunSuite {
+class RootFindingTest extends AnyFunSuite {
   val f = (x: Double) => x*x
   val f2 = (x: Double) => math.sin(x)
   val f2d = (x: Double) => math.cos(x)

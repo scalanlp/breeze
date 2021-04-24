@@ -1,13 +1,13 @@
 package breeze.linalg
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  * TODO
  *
  * @author dlwh
  **/
-class TransposeTest extends FunSuite {
+class TransposeTest extends AnyFunSuite {
   test("Counter1 inner product") {
 
     val c = Counter("a" -> 1.0)

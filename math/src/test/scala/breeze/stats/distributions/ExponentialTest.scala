@@ -1,7 +1,7 @@
 package breeze.stats.distributions
 
 import org.scalacheck.Arbitrary
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers
 import breeze.linalg.isClose
 
@@ -9,21 +9,21 @@ import breeze.linalg.isClose
  * Created by kokorins
  */
 class ExponentialTest
-    extends FunSuite
+    extends AnyFunSuite
     with Checkers
     with MomentsTestBase[Double] /*with UnivariateContinuousDistrTestBase with ExpFamTest[Exponential, Double] with HasCdfTestBase*/ {
   type Distr = Exponential
 
   import org.scalacheck.Arbitrary.arbitrary
 
-  val expFam = Exponential
+  val expFam: Exponential.type = Exponential
   override val numSamples = 40000
 
   def asDouble(x: Double) = x
 
   def fromDouble(x: Double) = x
 
-  implicit def arbParameter = Arbitrary {
+  implicit def arbParameter: Arbitrary[Double] = Arbitrary {
     for (rate <- arbitrary[Double].map(_.abs % 200.0 + Double.MinPositiveValue)) yield rate
   }
 

@@ -1,14 +1,15 @@
 package breeze.stats
 
-import org.scalatest.{FunSuite, WordSpec}
-import org.scalatest.Matchers
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.should.Matchers._
 
 import scala.util.Random
-import breeze.linalg.{DenseMatrix, DenseVector, SparseVector}
-import breeze.math.Complex
+import breeze.linalg._
+import breeze.math._
 import breeze.stats.meanAndVariance.MeanAndVariance
 
-class DescriptiveStatsTest extends WordSpec with Matchers {
+class DescriptiveStatsTest extends AnyWordSpec {
   "DescriptiveStats" should {
     "percentile should not explode when p = 1" in {
       val a = List.fill(100)(1.0)
@@ -140,7 +141,7 @@ class DescriptiveStatsTest extends WordSpec with Matchers {
   }
 }
 
-class DescriptiveStatsTest2 extends FunSuite {
+class DescriptiveStatsTest2 extends AnyFunSuite {
   //Tests copied over from LinearAlgebraTests.scala
 
   test("complex mean") {

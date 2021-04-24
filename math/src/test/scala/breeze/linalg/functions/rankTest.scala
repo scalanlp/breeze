@@ -18,14 +18,14 @@
 
 package breeze.linalg
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  * TODO
  *
  * @author dlwh
   **/
-class rankTest extends FunSuite {
+class rankTest extends AnyFunSuite {
 
   test("Double Eye") {
     val dm = DenseMatrix.eye[Double](10)

@@ -1,6 +1,7 @@
 package breeze.signal
 
 import org.scalatest._
+import org.scalatest.funsuite._
 import breeze.linalg.DenseVector
 
 /**
@@ -10,7 +11,7 @@ import breeze.linalg.DenseVector
  * Time: 02:31
  * To change this template use File | Settings | File Templates.
  */
-class ConvolveTest extends FunSuite {
+class ConvolveTest extends AnyFunSuite {
 
   test("convolve/correlate double") {
     val kernelEven = DenseVector(1.0, 2.0)

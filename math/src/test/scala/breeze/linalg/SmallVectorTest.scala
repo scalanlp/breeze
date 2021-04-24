@@ -4,6 +4,7 @@ import breeze.math._
 import breeze.storage.Zero
 import org.scalacheck._
 import org.scalatest._
+import org.scalatest.funsuite._
 
 import scala.reflect.ClassTag
 
@@ -11,7 +12,7 @@ import scala.reflect.ClassTag
  *
  * @author Boleyn Su
  */
-class SmallVectorTest extends FunSuite {
+class SmallVectorTest extends AnyFunSuite {
 
   test("smallDotProductFloat") {
     val v = new DenseVector(Array(.1f,.2f,.3f,.4f,.5f,.6f,.7f))

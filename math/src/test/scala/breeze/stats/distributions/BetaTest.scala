@@ -19,18 +19,19 @@ package breeze.stats.distributions;
 import breeze.linalg.{DenseVector, norm}
 import org.scalacheck._
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 
 class BetaTest
-    extends FunSuite
+    extends AnyFunSuite
     with Checkers
     with UnivariateContinuousDistrTestBase
     with MomentsTestBase[Double]
     with HasCdfTestBase {
   type Distr = Beta
 
-  val expFam = Beta
-  import org.scalacheck.Arbitrary.arbitrary;
+  val expFam: Beta.type = Beta
+  import org.scalacheck.Arbitrary.arbitrary
 
   def arbParameter = Arbitrary {
     for (mean <- arbitrary[Double].map { x =>

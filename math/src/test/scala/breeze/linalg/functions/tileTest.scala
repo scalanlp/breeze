@@ -1,13 +1,13 @@
 package breeze.linalg.functions
 
 import breeze.linalg.{DenseVector, tile, DenseMatrix}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  * 2/21/15.
  * @author Rakesh Chalasani
  */
-class tileTest extends FunSuite {
+class tileTest extends AnyFunSuite {
   test("tile ( DenseMatrix , Int)") {
     val m = new DenseMatrix(2, 2, Array.range(0, 4))
     assert(tile(m, 2) == new DenseMatrix[Int](4, 2, Array(0, 1, 0, 1, 2, 3, 2, 3)))
