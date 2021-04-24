@@ -8,6 +8,7 @@ import breeze.collection.mutable.OpenAddressHashArray
 import breeze.storage.Zero
 import breeze.macros.expand
 import breeze.math._
+import breeze.util.ReflectionUtil
 
 import scala.{specialized => spec}
 import scala.reflect.ClassTag
@@ -87,7 +88,7 @@ object HashVector {
     new HashVector(new OpenAddressHashArray[V](size))
   }
   def apply[@spec(Double, Int, Float, Long) V: Zero](values: Array[V]) = {
-    implicit val man = ClassTag[V](values.getClass.getComponentType.asInstanceOf[Class[V]])
+    implicit val ctg: ClassTag[V] = ReflectionUtil.elemClassTagFromArray(values)
     val oah = new OpenAddressHashArray[V](values.length)
     for ((v, i) <- values.zipWithIndex) oah(i) = v
     new HashVector(oah)

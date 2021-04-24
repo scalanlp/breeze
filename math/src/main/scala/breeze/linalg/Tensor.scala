@@ -59,7 +59,7 @@ trait QuasiTensor[@spec(Int) K, @spec(Double, Int, Float, Long) V] extends HasOp
    */
   @deprecated("Use argtopk(t, k) instead of t.argtopk(k)", "0.6")
   def argtopk(k: Int)(implicit ordering: Ordering[V]) = {
-    implicit val ordK = ordering.on(apply _)
+    implicit val ordK: Ordering[K] = ordering.on(apply _)
     val queue = new Beam[K](k)
     queue ++= keysIterator
     queue.toIndexedSeq.reverse

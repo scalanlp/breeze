@@ -236,7 +236,7 @@ class CSCMatrix[@spec(Double, Int, Float, Long) V: Zero](
   }
 
   def toDense: DenseMatrix[V] = {
-    implicit val ctg = ReflectionUtil.elemClassTagFromArray(data)
+    implicit val ctg: ClassTag[V] = ReflectionUtil.elemClassTagFromArray(data)
     val res = DenseMatrix.zeros[V](rows, cols)
     var i = 0
     while (i < cols) {
@@ -291,7 +291,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] {
     zeros(rows, cols, 0)
 
   def create[@spec(Double, Int, Float, Long) V: Zero](rows: Int, cols: Int, data: Array[V]): CSCMatrix[V] = {
-    implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+    implicit val man: ClassTag[V] = ReflectionUtil.elemClassTagFromArray(data)
     new CSCMatrix(
       data,
       rows,

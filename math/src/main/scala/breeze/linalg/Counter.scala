@@ -71,7 +71,7 @@ trait CounterLike[K, V, +M <: scala.collection.mutable.Map[K, V], +This <: Count
   override def toString: String = data.mkString("Counter(", ", ", ")")
 
   override def equals(p1: Any): Boolean = p1 match {
-    case x: Counter[K, V] => x.data == this.data
+    case x: Counter[K, V] @unchecked => x.data == this.data
     case _ => false
   }
 

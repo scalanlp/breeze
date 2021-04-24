@@ -11,6 +11,7 @@ import breeze.storage.Zero
 import scala.reflect.ClassTag
 
 trait VectorOps extends GenericOps with Vector_TraversalOps {
+ 
   import breeze.math.PowImplicits._
   @expand.valify
   @expand

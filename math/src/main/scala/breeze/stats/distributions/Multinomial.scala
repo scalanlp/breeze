@@ -160,7 +160,7 @@ object Multinomial {
 
     def posterior(prior: conjugateFamily.Parameter, evidence: TraversableOnce[I]) = {
       val localCopy: T = space.copy(prior)
-      for (e <- evidence) {
+      for (e <- evidence.iterator) {
         localCopy(e) += 1.0
       }
       localCopy

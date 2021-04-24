@@ -250,7 +250,7 @@ object OpAnd extends OpAnd with UFunc {
  */
 sealed trait OpOr extends OpType
 object OpOr extends OpOr with UFunc {
-  implicit object opOrBoolean extends Impl2[Boolean, Boolean, Boolean] {
+  implicit object impl_OpOr_B_B_eq_B extends Impl2[Boolean, Boolean, Boolean] {
     override def apply(v: Boolean, v2: Boolean): Boolean = v || v2
   }
 

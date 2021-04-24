@@ -132,7 +132,7 @@ class DenseVector[@spec(Double, Int, Float, Long) V](
       val newData = ArrayUtil.copyOfRange(data, offset, offset + length)
       new DenseVector(newData)
     } else {
-      implicit val man = ClassTag[V](data.getClass.getComponentType.asInstanceOf[Class[V]])
+      implicit val man: ClassTag[V] = ReflectionUtil.elemClassTagFromArray(data)
       val r = new DenseVector(new Array[V](length))
       r := this
       r
@@ -238,7 +238,7 @@ class DenseVector[@spec(Double, Int, Float, Long) V](
     }
 
   /**Returns copy of this [[breeze.linalg.DenseVector]] as a [[scala.Vector]]*/
-  def toScalaVector()(implicit cm: ClassTag[V]): scala.Vector[V] = this.toArray.toVector
+  def toScalaVector(implicit cm: ClassTag[V]): scala.Vector[V] = this.toArray.toVector
   // </editor-fold>
 
   @throws(classOf[ObjectStreamException])

@@ -69,7 +69,7 @@ object ArrayUtil {
       case x: Array[Byte] => new Array[Byte](length).asInstanceOf[Array[V]]
       case x: Array[Boolean] => new Array[Boolean](length).asInstanceOf[Array[V]]
       case x: Array[_] =>
-        implicit val man = ClassTag[V](x.getClass.getComponentType.asInstanceOf[Class[V]])
+        implicit val man: ClassTag[V] = ReflectionUtil.elemClassTagFromArray(a)
         new Array[V](length)
       case _ => throw new RuntimeException("shouldn't be here!")
     }

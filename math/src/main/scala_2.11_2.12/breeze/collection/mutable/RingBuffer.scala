@@ -169,7 +169,7 @@ object RingBuffer {
   implicit def canBuildFrom[A]: CanBuildFrom[RingBuffer[A], A, RingBuffer[A]] = {
     new CanBuildFrom[RingBuffer[A], A, RingBuffer[A]] {
       override def apply(from: RingBuffer[A]): mutable.Builder[A, RingBuffer[A]] = {
-        implicit val ct = ReflectionUtil.elemClassTagFromArray(from.buf)
+        implicit val ct: ClassTag[A] = ReflectionUtil.elemClassTagFromArray(from.buf)
         new GrowingBuilder[A, RingBuffer[A]](new RingBuffer[A](from.capacity))
       }
 

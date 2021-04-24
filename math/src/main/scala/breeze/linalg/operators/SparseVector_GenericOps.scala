@@ -36,7 +36,7 @@ trait SparseVector_GenericOps extends GenericOps {
       }
     }
   }
-  
+
   implicit def impl_Op_SV_SV_InPlace_liftFromPure[Op, T, U, V](
       implicit
       pureOp: UFunc.UImpl2[Op, SparseVector[T], U, V],
@@ -51,7 +51,7 @@ trait SparseVector_GenericOps extends GenericOps {
       implicit op: UFunc.UImpl2[Op, T, T, T]): UFunc.UImpl2[Op, SparseVector[T], T, SparseVector[T]] = {
     (a: SparseVector[T], b: T) =>
       {
-        implicit val ct = ReflectionUtil.elemClassTagFromArray(a.data)
+        implicit val ct: ClassTag[T] = ReflectionUtil.elemClassTagFromArray(a.data)
         val result: VectorBuilder[T] = new VectorBuilder[T](a.length)
         val f = implicitly[Semiring[T]]
         var i: Int = 0
@@ -99,8 +99,8 @@ trait SparseVector_GenericOps extends GenericOps {
     : OpMulScalar.Impl2[SparseVector[T], SparseVector[T], SparseVector[T]] =
     new OpMulScalar.Impl2[SparseVector[T], SparseVector[T], SparseVector[T]] {
       def apply(a: SparseVector[T], b: SparseVector[T]) = {
-        implicit val ct = ReflectionUtil.elemClassTagFromArray(a.data)
-        val ring = implicitly[Semiring[T]]
+        implicit val ct: ClassTag[T] = ReflectionUtil.elemClassTagFromArray(a.data)
+        val ring: Semiring[T] = implicitly[Semiring[T]]
         if (b.activeSize < a.activeSize) {
           apply(b, a)
         } else {

@@ -15,14 +15,16 @@ package breeze.linalg
  limitations under the License.
  */
 import operators._
+
 import scala.{specialized => spec}
 import support._
-import breeze.util.{Sorting, ArrayUtil}
-import breeze.math.{Field, MutableVectorSpace, Semiring, Ring}
+import breeze.util.{ArrayUtil, ReflectionUtil, Sorting}
+import breeze.math.{Field, MutableVectorSpace, Ring, Semiring}
 import breeze.storage.Zero
+
 import scala.reflect.ClassTag
 import breeze.macros.expand
-import breeze.generic.UFunc.{UImpl2, InPlaceImpl2}
+import breeze.generic.UFunc.{InPlaceImpl2, UImpl2}
 
 /**
  * A VectorBuilder is basically an unsorted Sparse Vector. Two parallel
@@ -149,7 +151,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](
 
   def toHashVector: HashVector[E] = {
     requirePositiveLength()
-    implicit val man = ClassTag[E](_data.getClass.getComponentType.asInstanceOf[Class[E]])
+    implicit val man: ClassTag[E] = ReflectionUtil.elemClassTagFromArray(data)
     val hv = HashVector.zeros[E](length)
     var i = 0
     while (i < used) {
@@ -167,7 +169,7 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](
 
   def toDenseVector: DenseVector[E] = {
     requirePositiveLength()
-    implicit val man = ClassTag[E](_data.getClass.getComponentType.asInstanceOf[Class[E]])
+    implicit val man: ClassTag[E] = ReflectionUtil.elemClassTagFromArray(data)
     val hv = DenseVector.zeros[E](length)
     var i = 0
     while (i < used) {
