@@ -22,7 +22,7 @@ trait HashVectorOps
     with HashVector_SparseVector_Ops
     with SparseVector_HashVector_Ops
 
-trait DenseVector_HashVector_Ops extends GenericOps {
+trait DenseVector_HashVector_Ops extends GenericOps with DenseVectorOps with HashVectorExpandOps {
 
   @expand
   implicit def dv_hv_UpdateOp[
@@ -169,7 +169,7 @@ trait HashVector_DenseVector_Ops extends DenseVector_HashVector_Ops {
 
 }
 
-trait HashVectorExpandOps extends HashVector_GenericOps {
+trait HashVectorExpandOps extends VectorOps with HashVector_GenericOps {
   @expand
   @expand.valify
   implicit def hv_hv_RHS_Idempotent_Op[
