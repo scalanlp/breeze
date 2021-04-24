@@ -85,7 +85,7 @@ class BitVector(val data: java.util.BitSet, val length: Int, val enforceLength: 
 
 }
 
-object BitVector extends BitVectorOps {
+object BitVector {
 
   def apply(bools: Boolean*) = {
     val bs = new util.BitSet

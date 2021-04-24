@@ -12,4 +12,5 @@ object HasOps extends GenericOps with VectorOps
   with MatrixOps
   with DenseMatrixOps
   with CSCMatrixOps
-  with SliceVectorOps {}
+  with SliceVectorOps
+  with BitVectorOps {}
