@@ -2,6 +2,7 @@ package breeze.linalg
 
 import breeze.linalg.support._
 import breeze.generic.UFunc.{InPlaceImpl, UImpl, InPlaceImpl2, UImpl2}
+import breeze.linalg.operators._
 
 /**
  * Class for classes that are broadcasting their rows.

@@ -20,6 +20,7 @@ package breeze.linalg
 
 import breeze.generic.UFunc.{InPlaceImpl, InPlaceImpl2, InPlaceImpl3, UImpl, UImpl2, UImpl3}
 import breeze.linalg.support._
+import breeze.linalg.operators._
 
 /**
  * Class for classes that are broadcasting their columns.
