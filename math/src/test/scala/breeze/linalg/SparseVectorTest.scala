@@ -19,7 +19,7 @@ class SparseVectorTest extends AnyFunSuite {
 
   val TOLERANCE = 1e-4
   def assertClose(a: Double, b: Double) =
-    assert(math.abs(a - b) < TOLERANCE, a + " vs. " + b)
+    assert(math.abs(a - b) < TOLERANCE, s"$a vs. $b")
 
   test("Min/Max") {
     val v = SparseVector(5)(0 -> 2, 2 -> 3, 3 -> 2)

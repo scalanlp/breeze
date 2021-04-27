@@ -28,9 +28,10 @@ trait DenseMatrix_GenericOps extends MatrixOps {
   implicit def impl_OpMulMatrix_DM_DM_eq_DM_Generic[T: Semiring]
   : OpMulMatrix.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]] =
     new OpMulMatrix.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]] {
-      implicit val ring: Semiring[T] = implicitly[Semiring[T]]
+      val ring: Semiring[T] = implicitly[Semiring[T]]
       override def apply(a: DenseMatrix[T], b: DenseMatrix[T]): DenseMatrix[T] = {
         implicit val ct: ClassTag[T] = ReflectionUtil.elemClassTagFromArray(a.data)
+        implicit val r: Semiring[T] = ring
 
         val res: DenseMatrix[T] = DenseMatrix.zeros[T](a.rows, b.cols)
         require(a.cols == b.rows)

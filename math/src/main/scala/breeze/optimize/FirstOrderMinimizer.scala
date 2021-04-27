@@ -397,7 +397,6 @@ object FirstOrderMinimizer {
       r.iterations(f, init)
     }
 
-    @deprecated("Use breeze.optimize.iterations(f, init, params) instead.", "0.10")
     def iterations[T, K](f: DiffFunction[T], init: T)(
         implicit space: MutableEnumeratedCoordinateField[T, K, Double]): Iterator[LBFGS[T]#State] = {
       if (useL1) new OWLQN[K, T](maxIterations, 5, regularization, tolerance)(space).iterations(f, init)

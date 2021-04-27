@@ -135,7 +135,7 @@ trait MappingUFuncOps extends MappingUFuncLowPrio with GenericOps {
 
 }
 
-sealed trait MappingUFuncLowPrio {
+sealed trait MappingUFuncLowPrio extends GenericOps {
   implicit def canMapV2Values[Op <: MappingUFunc, T, V1, V2, VR, U](
       implicit handhold: ScalarOf[T, V2],
       impl: UFunc.UImpl2[Op, V1, V2, VR],

@@ -28,12 +28,12 @@ class QuasiMonteCarloTest extends AnyWordSpec {
 
   "quasiMonteCarloIntegrate" should {
     "approximate the mean of a normal distribution" in {
-      val integrationResult = quasiMonteCarloIntegrate(identityFunc _)(Gaussian(3, 5).toQuasi)(32 * 1024)
+      val integrationResult = quasiMonteCarloIntegrate(identityFunc _)(Gaussian(3, 5).toQuasi)(128 * 1024)
       math.abs(integrationResult - 3) should be < 0.001
     }
     "approximate the mean of a gamma distribution, alpha == 1" in {
       val integrationResult =
-        quasiMonteCarloIntegrate(identityFunc _)(RejectionSampledGammaQuasiRandomVariable(1, 4))(32 * 1024)
+        quasiMonteCarloIntegrate(identityFunc _)(RejectionSampledGammaQuasiRandomVariable(1, 4))(128 * 1024)
       math.abs(integrationResult - 4) should be < 0.001
     }
     "approximate the mean of a gamma distribution, alpha > 1" in {

@@ -15,7 +15,7 @@ object Common {
     }
   }
 
-  val buildCrossScalaVersions = Seq("3.0.0-RC2", "2.12.10", "2.13.3")
+  val buildCrossScalaVersions = Seq("3.0.0-RC3", "2.12.10", "2.13.3")
 
   lazy val buildScalaVersion = buildCrossScalaVersions.head
 
@@ -37,10 +37,10 @@ object Common {
 
     // test dependencies
     libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % "3.2.7" % "test",
-      "org.scalatest" %% "scalatest-funsuite" % "3.2.7" % "test",
-      "org.scalatest" %% "scalatest-wordspec" % "3.2.7" % "test",
-      "org.scalatestplus" %% "scalacheck-1-15" % "3.2.7.0" % "test",
+      "org.scalatest" %% "scalatest" % "3.2.8" % "test",
+      "org.scalatest" %% "scalatest-funsuite" % "3.2.8" % "test",
+      "org.scalatest" %% "scalatest-wordspec" % "3.2.8" % "test",
+      "org.scalatestplus" %% "scalacheck-1-15" % "3.2.8.0" % "test",
       "org.scalacheck" %% "scalacheck" % "1.15.3" % "test"
   ),
     libraryDependencies ++= {

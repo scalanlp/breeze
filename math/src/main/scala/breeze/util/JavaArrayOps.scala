@@ -1,6 +1,6 @@
 package breeze.util
 
-import breeze.linalg.{DenseVector, DenseMatrix}
+import breeze.linalg._
 import scala.reflect.ClassTag
 import breeze.math.Complex
 
@@ -36,22 +36,19 @@ object JavaArrayOps {
 
   // <editor-fold defaultstate="collapsed" desc=" implementations ">
 
-  def dvToArray[@specialized(Int, Double, Long, Float) V: ClassTag](dv: DenseVector[V]): Array[V] = dv.toArray
-
-  def dmToArray2[@specialized(Int, Double, Long, Float) V: ClassTag](dm: DenseMatrix[V]): Array[Array[V]] = {
-    val ret = new Array[Array[V]](dm.rows)
-    var rowI = 0
-    while (rowI < dm.rows) {
-      ret(rowI) = new Array[V](dm.cols)
-      var colI = 0
-      while (colI < dm.cols) {
-        ret(rowI)(colI) = dm(rowI, colI)
-        colI += 1
-      }
-      //ret(i) = dm( i, :: ).toArray //How else to circumvent Transpose[] wrapper?
-      rowI += 1
-    }
-    ret
+  def dvToArray[@specialized(Int, Double, Long, Float) V](dv: DenseVector[V]): Array[V] = {
+    dv.copy.data
+  }
+  def dmToArray2[@specialized(Int, Double, Long, Float) V](dm: DenseMatrix[V]): Array[Array[V]] = {
+    implicit val ct = ReflectionUtil.elemClassTagFromArray(dm.data)
+    dm(*, ::).toIndexedSeq.map(_.t.toArray).toArray
+//    val ret = new Array[Array[V]](dm.rows)
+//    var rowI = 0
+//    while (rowI < dm.rows) {
+//      ret(rowI) = dm( rowI, :: ).t.toArray
+//      rowI += 1
+//    }
+//    ret
   }
 
   def arrayToDv[@specialized(Int, Double, Long, Float) V: ClassTag](array: Array[V]): DenseVector[V] =

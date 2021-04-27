@@ -46,7 +46,7 @@ object Zero {
   implicit val DoubleZero: Zero[Double] = Zero(0.0)
   implicit val BooleanZero: Zero[Boolean] = Zero(false)
   implicit val BigIntZero: Zero[BigInt] = Zero(BigInt(0))
-  implicit val BigDecimalZero: Zero[BigDecimal] = Zero(BigDecimal(0L))
+  implicit lazy val BigDecimalZero: Zero[BigDecimal] = Zero(BigDecimal(java.math.BigDecimal.ZERO))
   // TODO: we could either add a multiplicative monoid type and put strings there
   // ... or go with the String semiring with concat as multiplication and longest common prefix as addition
   implicit val StringZero: Zero[String] = Zero("")

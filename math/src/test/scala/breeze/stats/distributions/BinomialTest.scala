@@ -29,8 +29,8 @@ class BinomialTest extends AnyFunSuite with Checkers with MomentsTestBase[Int] {
   override val VARIANCE_TOLERANCE: Double = 1E-1
 
   def arbDistr: Arbitrary[Binomial] = Arbitrary {
-    for (n <- arbitrary[Int].map { _.abs % 10000 + 1 };
-      p <- arbitrary[Double].map { _.abs % 1.0 + 1E-4 }) yield new Binomial(n.abs + 1, p)
+    for (n <- arbitrary[Int].map { _.abs % 100};
+      p <- arbitrary[Double].map { x => math.max(x.abs % 1.0, 1E-2)}) yield new Binomial(math.max(n, 1), p)
   }
 
   def asDouble(x: Int): Double = x.toDouble

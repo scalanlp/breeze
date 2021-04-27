@@ -90,7 +90,7 @@ object ExportGraphics {
    * Writes the given drawable to the given OutputStream formatted as pdf.
    * Contributed by Robby McKilliam.
    */
-  def writePDF(out: OutputStream, draw: Drawable, width: Int, height: Int): Unit = {
+  def writePDF(out: OutputStream, draw: Drawable, width: Float, height: Float): Unit = {
     import com.lowagie.text.Document
     import com.lowagie.text.Rectangle
     import com.lowagie.text.pdf.PdfWriter
