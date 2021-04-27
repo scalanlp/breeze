@@ -25,17 +25,17 @@ import breeze.math.Semiring
 @SerialVersionUID(1L)
 case class Zero[@specialized T](zero: T) extends Serializable
 
-object Zero extends ZeroLowPriority {
-  def forClass(clazz: Class[_]): Zero[_] = {
-    if (clazz == Integer.TYPE) IntZero
-    else if (clazz == java.lang.Float.TYPE) FloatZero
-    else if (clazz == java.lang.Double.TYPE) DoubleZero
-    else if (clazz == java.lang.Short.TYPE) ShortZero
-    else if (clazz == java.lang.Byte.TYPE) ByteZero
-    else if (clazz == java.lang.Boolean.TYPE) BooleanZero
-    else if (clazz == java.lang.Character.TYPE) CharZero
-    else refDefault
-  }
+object Zero {
+//  def forClass(clazz: Class[_]): Zero[_] = {
+//    if (clazz == Integer.TYPE) IntZero
+//    else if (clazz == java.lang.Float.TYPE) FloatZero
+//    else if (clazz == java.lang.Double.TYPE) DoubleZero
+//    else if (clazz == java.lang.Short.TYPE) ShortZero
+//    else if (clazz == java.lang.Byte.TYPE) ByteZero
+//    else if (clazz == java.lang.Boolean.TYPE) BooleanZero
+//    else if (clazz == java.lang.Character.TYPE) CharZero
+//    else refDefault
+//  }
 
   implicit val IntZero: Zero[Int] = Zero(0)
   implicit val ShortZero: Zero[Short] = Zero(0.toShort)
@@ -46,18 +46,13 @@ object Zero extends ZeroLowPriority {
   implicit val DoubleZero: Zero[Double] = Zero(0.0)
   implicit val BooleanZero: Zero[Boolean] = Zero(false)
   implicit val BigIntZero: Zero[BigInt] = Zero(BigInt(0))
-  implicit val BigDecimalZero:  Zero[BigDecimal] = Zero(BigDecimal(0L))
+  implicit val BigDecimalZero: Zero[BigDecimal] = Zero(BigDecimal(0L))
+  // TODO: we could either add a multiplicative monoid type and put strings there
+  // ... or go with the String semiring with concat as multiplication and longest common prefix as addition
+  implicit val StringZero: Zero[String] = Zero("")
 
-}
+  implicit def zeroFromSemiring[T](implicit ring: Semiring[T]): Zero[T] = Zero(ring.zero)
 
-trait ZeroVeryLowPriority {  self: Zero.type =>
-  implicit def ObjectZero[T <: AnyRef]: Zero[T] = {
-    refDefault.asInstanceOf[Zero[T]]
-  }
+  val refDefault: Zero[Null] = Zero(null)
 
-  protected val refDefault: Zero[AnyRef] = new Zero[AnyRef](null)
-}
-
-trait ZeroLowPriority extends ZeroVeryLowPriority { self: Zero.type =>
-  implicit def zeroFromSemiring[T: Semiring]: Zero[T] = Zero(implicitly[Semiring[T]].zero)
 }

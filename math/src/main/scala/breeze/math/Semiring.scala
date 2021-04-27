@@ -36,13 +36,13 @@ trait Semiring[@specialized(Int, Short, Long, Float, Double) V] extends Serializ
 
 object Semiring {
   import breeze.math.Ring._
-  implicit val semiringD: Semiring[Double] = ringD
-  implicit val semiringFloat: Semiring[Float] = ringFloat
-  implicit val semiringInt: Semiring[Int] = ringInt
-  implicit val semiringLong: Semiring[Long] = ringLong
-  implicit val semiringBigInt: Semiring[BigInt] = ringBigInt
-  implicit val semiringShort: Semiring[Short] = ringShort
-  implicit val semiringCmplx: Semiring[Complex] = ringComplex
+  implicit def semiringD: Semiring[Double] = ringD
+  implicit def semiringFloat: Semiring[Float] = ringFloat
+  implicit def semiringInt: Semiring[Int] = ringInt
+  implicit def semiringLong: Semiring[Long] = ringLong
+  implicit def semiringBigInt: Semiring[BigInt] = ringBigInt
+  implicit def semiringShort: Semiring[Short] = ringShort
+  implicit def semiringCmplx: Semiring[Complex] = ringComplex
 
   implicit def semiringFromRing[T](implicit ring: Ring[T]): Semiring[T] = ring
 

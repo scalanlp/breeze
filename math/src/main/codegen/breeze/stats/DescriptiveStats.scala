@@ -553,10 +553,9 @@ object DescriptiveStats {
    * </p>
    */
   def meanAndCov[T](it1: TraversableOnce[T], it2: TraversableOnce[T])(implicit frac: Fractional[T]) = {
-    implicit def t(it: TraversableOnce[T]): Iterable[T] = it.toIterable //convert to an iterable for zip operation
     import frac.mkNumericOps
     //mu1(n-1), mu2(n-1), Cov(n-1), n-1
-    val (mu1, mu2, c, n) = (it1, it2).zipped.foldLeft((frac.zero, frac.zero, frac.zero, frac.zero)) { (acc, y) =>
+    val (mu1, mu2, c, n) = (it1.iterator.to(Iterable), it2.iterator.to(Iterable)).zipped.foldLeft((frac.zero, frac.zero, frac.zero, frac.zero)) { (acc, y) =>
       val (oldMu1, oldMu2, oldC, oldN) = acc
       val newN = oldN + frac.fromInt(1)
       val newMu1 = oldMu1 + ((y._1 - oldMu1) / newN)

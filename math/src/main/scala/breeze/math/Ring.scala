@@ -33,13 +33,13 @@ trait Ring[@specialized(Int, Short, Long, Float, Double) V] extends Semiring[V] 
 
 object Ring {
   import Field._
-  implicit val ringD: Ring[Double] = fieldDouble
-  implicit val ringFloat: Ring[Float] = fieldFloat
-  implicit val ringInt: Ring[Int] = fieldInt
-  implicit val ringLong: Ring[Long] = fieldLong
-  implicit val ringBigInt: Ring[BigInt] = fieldBigInt
-  implicit val ringShort: Ring[Short] = fieldShort
-  implicit val ringComplex: Ring[Complex] = Complex.scalar
+  implicit def ringD: Ring[Double] = fieldDouble
+  implicit def ringFloat: Ring[Float] = fieldFloat
+  implicit def ringInt: Ring[Int] = fieldInt
+  implicit def ringLong: Ring[Long] = fieldLong
+  implicit def ringBigInt: Ring[BigInt] = fieldBigInt
+  implicit def ringShort: Ring[Short] = fieldShort
+  implicit def ringComplex: Ring[Complex] = Complex.scalar
 
   implicit def ringFromField[T](implicit field: Field[T]): Ring[T] = field
 }

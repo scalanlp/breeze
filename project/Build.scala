@@ -24,7 +24,7 @@ object Common {
     scalaVersion := buildScalaVersion,
     crossScalaVersions := buildCrossScalaVersions,
     scalacOptions ++= Seq("-deprecation", "-language:_"),
-    javacOptions ++= Seq("-target", "1.7", "-source", "1.7"),
+    javacOptions ++= Seq("-target", "1.8", "-source", "1.8"),
     credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
 
     resolvers ++= Seq(
@@ -34,48 +34,46 @@ object Common {
       Resolver.typesafeRepo("releases")
     ),
     testOptions in Test += Tests.Argument("-oDF"),
-    publishArtifact in Test := false,
-    pomIncludeRepository := { _ =>
-      false
-    },
+
+    // test dependencies
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % "3.2.7" % "test",
+      "org.scalatest" %% "scalatest-funsuite" % "3.2.7" % "test",
+      "org.scalatest" %% "scalatest-wordspec" % "3.2.7" % "test",
+      "org.scalatestplus" %% "scalacheck-1-15" % "3.2.7.0" % "test",
+      "org.scalacheck" %% "scalacheck" % "1.15.3" % "test"
+  ),
     libraryDependencies ++= {
       if (priorTo2_13(scalaVersion.value)) {
         Seq(
           compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.patch),
-          "org.scalatest" %% "scalatest" % "3.2.7" % "test",
-          "org.scalatest" %% "scalatest-funsuite" % "3.2.7" % "test",
-          "org.scalatest" %% "scalatest-wordspec" % "3.2.7" % "test",
-          ("org.scalatestplus" %% "scalacheck-1-14" % "3.1.1.1" % "test"),
-          ("org.scalacheck" %% "scalacheck" % "1.14.3" % "test")
-        ),
+        )
       } else {
         Seq(
-          "org.scalatest" %% "scalatest" % "3.2.7" % "test",
-          "org.scalatest" %% "scalatest-funsuite" % "3.2.7" % "test",
-          "org.scalatest" %% "scalatest-wordspec" % "3.2.7" % "test",
-        ) ++
-        Seq(
-          ("org.scalatestplus" % "scalacheck-1-14_2.13" % "3.1.1.1" % "test")
-            .intransitive(),
-          "org.scalacheck" % "scalacheck_2.13" % "1.14.3" % "test"
-        ).map(_.withDottyCompat(scalaVersion.value))
+
+        )
       }
     },
     scalacOptions ++= {
-      if (priorTo2_13(scalaVersion.value)) {
-        Seq.empty
-      } else {
-        Seq("-Ymacro-annotations", "-language:implicitConversions")
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, minor)) if minor < 13 => Seq.empty
+        case Some((2, 13)) =>
+          Seq("-Ymacro-annotations", "-language:implicitConversions")
+        case _ =>
+          Seq("-language:implicitConversions")
       }
     },
 
+    // stuff related to publishing
+    publishArtifact in Test := false,
+    pomIncludeRepository := { _ =>
+      false
+    },
     sonatypeProfileName := "org.scalanlp",
     publishMavenStyle := true,
     licenses := Seq("Apache Public License 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.html")),
     publishTo := sonatypePublishTo.value,
-
-    // Where is the source code hosted: GitHub or GitLab?
-    sonatypeProjectHosting := Some(GitHubHosting("dlwh", "sbt-breeze-expand-codegen", "david.lw.hall@gmail.com")),
+    sonatypeProjectHosting := Some(GitHubHosting("scalanlp", "breeze", "David Hall", "david.lw.hall@gmail.com")),
 
     unmanagedSourceDirectories in Compile ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {

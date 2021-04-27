@@ -33,7 +33,7 @@ class GaussianTest
   val expFam: Gaussian.type = Gaussian
   import org.scalacheck.Arbitrary.arbitrary;
 
-  def arbParameter = Arbitrary {
+  def arbParameter: Arbitrary[(Double, Double)] = Arbitrary {
     for {
       mean <- RandomInstanceSupport.genReasonableDouble.arbitrary
       std <- RandomInstanceSupport.genReasonableDouble.arbitrary.map { x =>

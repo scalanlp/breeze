@@ -83,7 +83,7 @@ class BitVectorTest extends AnyFunSuite {
 
   test("mapActivePairs doesn't touch false entries") {
     val a = BitVector(10)(1, 3, 5, 7)
-    a.mapActivePairs((k, v) => assert(v))
+    a.mapActivePairs((k, v) => if (!v) throw new IllegalArgumentException else v)
   }
 
 }

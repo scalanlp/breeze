@@ -82,7 +82,7 @@ object LiteralRow {
       def foreach[X](tup: (V, V, V), fn: ((Int, V) => X)) = {
         fn(0, tup._1)
         fn(1, tup._2)
-        fn(2, tup._2)
+        fn(2, tup._3)
       }
       def length(tup: Tuple3[V, V, V]) = 3
     }
@@ -92,7 +92,7 @@ object LiteralRow {
       def foreach[X](tup: (V, V, V, V), fn: ((Int, V) => X)) = {
         fn(0, tup._1)
         fn(1, tup._2)
-        fn(2, tup._2)
+        fn(2, tup._3)
         fn(3, tup._4)
       }
       def length(tup: Tuple4[V, V, V, V]) = 4
@@ -103,7 +103,7 @@ object LiteralRow {
       def foreach[X](tup: (V, V, V, V, V), fn: ((Int, V) => X)) = {
         fn(0, tup._1)
         fn(1, tup._2)
-        fn(2, tup._2)
+        fn(2, tup._3)
         fn(3, tup._4)
         fn(4, tup._5)
       }
@@ -115,7 +115,7 @@ object LiteralRow {
       def foreach[X](tup: (V, V, V, V, V, V), fn: ((Int, V) => X)) = {
         fn(0, tup._1)
         fn(1, tup._2)
-        fn(2, tup._2)
+        fn(2, tup._3)
         fn(3, tup._4)
         fn(4, tup._5)
         fn(5, tup._6)
@@ -128,7 +128,7 @@ object LiteralRow {
       def foreach[X](tup: (V, V, V, V, V, V, V), fn: ((Int, V) => X)) = {
         fn(0, tup._1)
         fn(1, tup._2)
-        fn(2, tup._2)
+        fn(2, tup._3)
         fn(3, tup._4)
         fn(4, tup._5)
         fn(5, tup._6)
@@ -142,7 +142,7 @@ object LiteralRow {
       def foreach[X](tup: (V, V, V, V, V, V, V, V), fn: ((Int, V) => X)) = {
         fn(0, tup._1)
         fn(1, tup._2)
-        fn(2, tup._2)
+        fn(2, tup._3)
         fn(3, tup._4)
         fn(4, tup._5)
         fn(5, tup._6)
@@ -157,7 +157,7 @@ object LiteralRow {
       def foreach[X](tup: (V, V, V, V, V, V, V, V, V), fn: ((Int, V) => X)) = {
         fn(0, tup._1)
         fn(1, tup._2)
-        fn(2, tup._2)
+        fn(2, tup._3)
         fn(3, tup._4)
         fn(4, tup._5)
         fn(5, tup._6)
@@ -173,7 +173,7 @@ object LiteralRow {
       def foreach[X](tup: (V, V, V, V, V, V, V, V, V, V), fn: ((Int, V) => X)) = {
         fn(0, tup._1)
         fn(1, tup._2)
-        fn(2, tup._2)
+        fn(2, tup._3)
         fn(3, tup._4)
         fn(4, tup._5)
         fn(5, tup._6)
@@ -190,7 +190,7 @@ object LiteralRow {
       def foreach[X](tup: (V, V, V, V, V, V, V, V, V, V, V), fn: ((Int, V) => X)) = {
         fn(0, tup._1)
         fn(1, tup._2)
-        fn(2, tup._2)
+        fn(2, tup._3)
         fn(3, tup._4)
         fn(4, tup._5)
         fn(5, tup._6)
@@ -208,7 +208,7 @@ object LiteralRow {
       def foreach[X](tup: (V, V, V, V, V, V, V, V, V, V, V, V), fn: ((Int, V) => X)) = {
         fn(0, tup._1)
         fn(1, tup._2)
-        fn(2, tup._2)
+        fn(2, tup._3)
         fn(3, tup._4)
         fn(4, tup._5)
         fn(5, tup._6)
@@ -227,7 +227,7 @@ object LiteralRow {
       def foreach[X](tup: (V, V, V, V, V, V, V, V, V, V, V, V, V), fn: ((Int, V) => X)) = {
         fn(0, tup._1)
         fn(1, tup._2)
-        fn(2, tup._2)
+        fn(2, tup._3)
         fn(3, tup._4)
         fn(4, tup._5)
         fn(5, tup._6)
@@ -247,7 +247,7 @@ object LiteralRow {
       def foreach[X](tup: (V, V, V, V, V, V, V, V, V, V, V, V, V, V), fn: ((Int, V) => X)) = {
         fn(0, tup._1)
         fn(1, tup._2)
-        fn(2, tup._2)
+        fn(2, tup._3)
         fn(3, tup._4)
         fn(4, tup._5)
         fn(5, tup._6)
@@ -268,7 +268,7 @@ object LiteralRow {
       def foreach[X](tup: (V, V, V, V, V, V, V, V, V, V, V, V, V, V, V), fn: ((Int, V) => X)) = {
         fn(0, tup._1)
         fn(1, tup._2)
-        fn(2, tup._2)
+        fn(2, tup._3)
         fn(3, tup._4)
         fn(4, tup._5)
         fn(5, tup._6)
@@ -290,7 +290,7 @@ object LiteralRow {
       def foreach[X](tup: (V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V), fn: ((Int, V) => X)) = {
         fn(0, tup._1)
         fn(1, tup._2)
-        fn(2, tup._2)
+        fn(2, tup._3)
         fn(3, tup._4)
         fn(4, tup._5)
         fn(5, tup._6)
@@ -313,7 +313,7 @@ object LiteralRow {
       def foreach[X](tup: (V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V), fn: ((Int, V) => X)) = {
         fn(0, tup._1)
         fn(1, tup._2)
-        fn(2, tup._2)
+        fn(2, tup._3)
         fn(3, tup._4)
         fn(4, tup._5)
         fn(5, tup._6)
@@ -337,7 +337,7 @@ object LiteralRow {
       def foreach[X](tup: (V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V), fn: ((Int, V) => X)) = {
         fn(0, tup._1)
         fn(1, tup._2)
-        fn(2, tup._2)
+        fn(2, tup._3)
         fn(3, tup._4)
         fn(4, tup._5)
         fn(5, tup._6)
@@ -362,7 +362,7 @@ object LiteralRow {
       def foreach[X](tup: (V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V), fn: ((Int, V) => X)) = {
         fn(0, tup._1)
         fn(1, tup._2)
-        fn(2, tup._2)
+        fn(2, tup._3)
         fn(3, tup._4)
         fn(4, tup._5)
         fn(5, tup._6)
@@ -388,7 +388,7 @@ object LiteralRow {
       def foreach[X](tup: (V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V), fn: ((Int, V) => X)) = {
         fn(0, tup._1)
         fn(1, tup._2)
-        fn(2, tup._2)
+        fn(2, tup._3)
         fn(3, tup._4)
         fn(4, tup._5)
         fn(5, tup._6)
@@ -415,7 +415,7 @@ object LiteralRow {
       def foreach[X](tup: (V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V, V), fn: ((Int, V) => X)) = {
         fn(0, tup._1)
         fn(1, tup._2)
-        fn(2, tup._2)
+        fn(2, tup._3)
         fn(3, tup._4)
         fn(4, tup._5)
         fn(5, tup._6)

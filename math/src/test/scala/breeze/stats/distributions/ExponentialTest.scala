@@ -23,13 +23,13 @@ class ExponentialTest
 
   def fromDouble(x: Double) = x
 
-  implicit def arbParameter: Arbitrary[Double] = Arbitrary {
+  def arbParameter: Arbitrary[Double] = Arbitrary {
     for (rate <- arbitrary[Double].map(_.abs % 200.0 + Double.MinPositiveValue)) yield rate
   }
 
 //  override def paramsClose(p: Double, b: Double): Boolean = (p - b).abs / (p.abs / 2 + b.abs / 2 + 1) < 2E-1
 
-  override implicit def arbDistr = Arbitrary {
+  override def arbDistr: Arbitrary[Exponential] = Arbitrary {
     for (rate <- arbitrary[Double].map(x => math.abs(x) % 1000.0 + Double.MinPositiveValue))
       yield new Exponential(rate)(RandBasis.mt0)
   }

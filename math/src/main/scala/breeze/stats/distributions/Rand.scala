@@ -17,11 +17,11 @@ package breeze.stats.distributions
  */
 
 import java.util.concurrent.atomic.AtomicInteger
-
 import breeze.linalg.DenseVector
 import org.apache.commons.math3.random.{MersenneTwister, RandomGenerator}
 import breeze.macros.cforRange
 
+import scala.collection.compat.immutable.ArraySeq
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
@@ -49,16 +49,13 @@ trait Rand[@specialized(Int, Double) +T] extends Serializable { outer =>
   /**
    * Gets n samples from the distribution.
    */
-  def sample(n: Int) = IndexedSeq.fill(n)(draw())
+  def sample(n: Int): IndexedSeq[T] = IndexedSeq.fill(n)(draw())
 
   /**
    * An infinitely long iterator that samples repeatedly from the Rand
    * @return an iterator that repeatedly samples
    */
-  def samples: Iterator[T] = new Iterator[T] {
-    def hasNext = true
-    def next() = get()
-  }
+  def samples: Iterator[T] = Iterator.continually(draw())
 
   /**
    * Return a vector of samples.
