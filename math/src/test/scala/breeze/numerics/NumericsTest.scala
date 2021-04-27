@@ -215,3 +215,15 @@ class NumericsTest extends AnyFunSuite with Checkers {
 //
 //  }
 }
+
+
+class AAA {
+
+  def foo() = {
+    import breeze.numerics.{lgamma => lg}
+    val a1 = lg(DenseVector(3.0, 3.0), 4.0)
+    val a2 = DenseVector(lg(3.0, 4.0), lg(3.0, 4.0))
+    val b1 = lg(DenseVector(3.0, 3.0), DenseVector(4.0, 1.0))
+    val b2 = DenseVector(lg(3.0, 4.0), lg(3.0, 1.0))
+  }
+}

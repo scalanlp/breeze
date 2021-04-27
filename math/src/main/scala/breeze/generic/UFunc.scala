@@ -1,5 +1,6 @@
 package breeze.generic
 
+import breeze.generic.UFunc.{InPlaceImpl, InPlaceImpl2, UImpl, UImpl2}
 import breeze.linalg.operators.{GenericOps, GenericOpsLowPrio3, HasOps}
 import breeze.linalg.support._
 import breeze.linalg.{Axis, mapValues}
@@ -115,6 +116,29 @@ trait MappingUFunc extends UFunc
 trait ActiveMappingUFunc extends MappingUFunc
 
 trait MappingUFuncOps extends MappingUFuncLowPrio with GenericOps {
+
+  implicit def canZipMapValuesImpl_T[Tag <: MappingUFunc, T, V1, VR, U](implicit handhold: ScalarOf[T, V1],
+                                                      impl: UFunc.UImpl2[Tag, V1, V1, VR],
+                                                      canZipMapValues: CanZipMapValues[T, V1, VR, U]): UFunc.UImpl2[Tag, T, T, U] = {
+    (v1: T, v2: T) => canZipMapValues.map(v1, v2, impl.apply)
+  }
+
+  implicit def canTransformValuesUFunc_T[Tag<:MappingUFunc, T, V](
+                                                   implicit canTransform: CanTransformValues[T, V],
+                                                   impl: UImpl[Tag, V, V]): InPlaceImpl[Tag, T] = {
+    new InPlaceImpl[Tag, T] {
+      def apply(v: T) = { canTransform.transform(v, impl.apply) }
+    }
+  }
+
+  implicit def canTransformValuesUFunc2_T[Tag <: MappingUFunc, T, V, V2](
+                                                        implicit canTransform: CanTransformValues[T, V],
+                                                        impl: UImpl2[Tag, V, V2, V]): InPlaceImpl2[Tag, T, V2] = {
+    new InPlaceImpl2[Tag, T, V2] {
+      def apply(v: T, v2: V2) = { canTransform.transform(v, impl.apply(_, v2)) }
+    }
+  }
+
   implicit def fromLowOrderCanMapValues[Op <: MappingUFunc, T, V, V2, U](
                                                       implicit handhold: ScalarOf[T, V],
                                                       impl: UFunc.UImpl[Op, V, V2],
