@@ -1,8 +1,6 @@
 package breeze.stats.regression
 
-import org.scalatest.{FunSuite}
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.Matchers
 import scala.util.Random
 import breeze.linalg._
 import breeze.macros.cforRange

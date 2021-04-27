@@ -1,6 +1,7 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
+import breeze.linalg.operators.GenericOpsLowPrio
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support.{CanTransformValues, CanTraverseValues, ScalarOf}
 import breeze.macros.expand

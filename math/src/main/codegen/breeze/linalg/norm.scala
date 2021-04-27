@@ -1,6 +1,8 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
+import breeze.linalg.support.CanTraverseValues.ValuesVisitor
+import breeze.linalg.support.{CanTraverseValues, ScalarOf}
 import breeze.macros.expand
 
 /**
@@ -28,6 +30,51 @@ object norm extends UFunc {
   implicit def fromCanNormInt[T](implicit impl: Impl2[T, Double, Double]): Impl2[T, Int, Double] = {
     new Impl2[T, Int, Double] {
       def apply(v: T, v2: Int): Double = impl(v, v2)
+    }
+  }
+
+  implicit def canNorm[Vec, T](implicit canTraverseValues: CanTraverseValues[Vec, T],
+                               canNormS: norm.Impl[T, Double]): norm.Impl2[Vec, Double, Double] = {
+
+    new norm.Impl2[Vec, Double, Double] {
+      def apply(vec: Vec, n: Double): Double = {
+        // TODO: 0 norm, maybe faster 2 norm?
+        if (n == Double.PositiveInfinity) {
+          object infiniteNormVisitor extends ValuesVisitor[T] {
+            var sum = 0.0
+
+            override def visit(a: T): Unit = {
+              val nn = canNormS(a)
+              sum = scala.math.max(nn, sum)
+            }
+
+            override def zeros(numZero: Int, zeroValue: T): Unit = {
+              val ns = canNormS(zeroValue)
+              sum = scala.math.max(ns, sum)
+            }
+          }
+          canTraverseValues.traverse(vec, infiniteNormVisitor)
+          math.pow(infiniteNormVisitor.sum, 1.0 / n)
+        } else {
+          object finiteNormVisitor extends ValuesVisitor[T] {
+            var sum = 0.0
+
+            override def visit(a: T): Unit = {
+              val nn = canNormS(a)
+              sum += math.pow(nn, n)
+            }
+
+            override def zeros(numZero: Int, zeroValue: T): Unit = {
+              val ns = canNormS(zeroValue)
+              if (numZero != 0 && ns != 0.0) {
+                this.sum += numZero * math.pow(ns, n)
+              }
+            }
+          }
+          canTraverseValues.traverse(vec, finiteNormVisitor)
+          math.pow(finiteNormVisitor.sum, 1.0 / n)
+        }
+      }
     }
   }
 

@@ -631,16 +631,16 @@ class DenseMatrixTest extends AnyFunSuite with Checkers with DoubleImplicits wit
     assert((one >:> zero) === DenseMatrix.ones[Boolean](5, 6))
   }
 
-  test("Some ill-typedness") {
-    import shapeless.test.illTyped
-    illTyped {
-      """
-        val one = DenseMatrix.ones[Double](5, 6)
-        val z = DenseVector.zeros[Double](5)
-        (z + one)
-      """
-    }
-  }
+//  test("Some ill-typedness") {
+//    import shapeless.test.illTyped
+//    illTyped {
+//      """
+//        val one = DenseMatrix.ones[Double](5, 6)
+//        val z = DenseVector.zeros[Double](5)
+//        (z + one)
+//      """
+//    }
+//  }
 
   test("ensure we don't crash on weird strides") {
     val dm = DenseMatrix.zeros[Double](3, 3)

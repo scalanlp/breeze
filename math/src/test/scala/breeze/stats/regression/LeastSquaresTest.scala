@@ -1,7 +1,6 @@
 package breeze.stats.regression
 
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.Matchers
 import breeze.linalg._
 import breeze.numerics._
 import breeze.macros.cforRange

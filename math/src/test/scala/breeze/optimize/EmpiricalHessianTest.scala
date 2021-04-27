@@ -3,7 +3,7 @@ package breeze.optimize
 import breeze.linalg.{DenseMatrix, DenseVector, sum}
 import breeze.numerics.exp
 import breeze.util.DoubleImplicits
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers._
 
 class EmpiricalHessianTest extends OptimizeTestBase with DoubleImplicits {
 

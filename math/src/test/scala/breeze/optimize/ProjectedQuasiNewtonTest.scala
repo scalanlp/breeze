@@ -66,7 +66,7 @@ class ProjectedQuasiNewtonTest
   property("optimize a simple multivariate gaussian with l2 regularization") {
     val optimizer = new ProjectedQuasiNewton(tolerance = 1.0E-5)
 
-    forAll { init: DenseVector[Double] =>
+    forAll { (init: DenseVector[Double]) =>
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {
           (norm((x - 3.0) ^:^ 2.0, 1), (x * 2.0) - 6.0)
@@ -84,7 +84,7 @@ class ProjectedQuasiNewtonTest
   property("optimize a complicated function without projection") {
     val optimizer = new ProjectedQuasiNewton(tolerance = 1.0E-5)
 
-    forAll { a: DenseVector[Double] =>
+    forAll { (a: DenseVector[Double]) =>
       val init = DenseVector.rand(a.size)
       val f = new DiffFunction[DenseVector[Double]] {
         def calculate(x: DenseVector[Double]) = {

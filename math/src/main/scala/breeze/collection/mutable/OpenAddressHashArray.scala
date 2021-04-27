@@ -191,7 +191,7 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) V] priva
   override def hashCode() = MurmurHash3.unorderedHash(iterator.filter(_._2 != default.value), 43)
 
   override def equals(that: Any): Boolean = that match {
-    case that: OpenAddressHashArray[V] =>
+    case that: OpenAddressHashArray[V @unchecked] =>
       (this eq that) ||
         (this.size == that.size) && {
           try {

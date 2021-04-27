@@ -86,7 +86,7 @@ class RingBuffer[A](val capacity: Int)
       boundsCheck(n)
       // this is for the ones that we have to shift in later
       val toInsertAfter = slice(n, length)
-      trimEnd(length - n)
+      dropRightInPlace(length - n)
       this ++= elems
       this ++= toInsertAfter
     }

@@ -266,26 +266,6 @@ trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMat
 
   implicit def DM_zipMapKV[V, R: ClassTag]: CanZipMapKeyValuesDenseMatrix[V, R] = new CanZipMapKeyValuesDenseMatrix[V, R]
 
-  implicit def DM_canGaxpy[V: Semiring]: scaleAdd.InPlaceImpl3[DenseMatrix[V], V, DenseMatrix[V]] = {
-    new scaleAdd.InPlaceImpl3[DenseMatrix[V], V, DenseMatrix[V]] {
-      val ring = implicitly[Semiring[V]]
-      def apply(a: DenseMatrix[V], s: V, b: DenseMatrix[V]): Unit = {
-        require(a.rows == b.rows, "Vector row dimensions must match!")
-        require(a.cols == b.cols, "Vector col dimensions must match!")
-
-        var i = 0
-        while (i < a.rows) {
-          var j = 0
-          while (j < a.cols) {
-            a(i, j) = ring.+(a(i, j), ring.*(s, b(i, j)))
-            j += 1
-          }
-          i += 1
-        }
-      }
-    }
-  }
-
   implicit def DM_canDim[E]: dim.Impl[DenseMatrix[E], (Int, Int)] = new dim.Impl[DenseMatrix[E], (Int, Int)] {
     def apply(v: DenseMatrix[E]): (Int, Int) = (v.rows, v.cols)
   }

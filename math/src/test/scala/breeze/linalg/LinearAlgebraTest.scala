@@ -215,7 +215,7 @@ class LinearAlgebraTest extends AnyFunSuite with Checkers with DoubleImplicits {
     assert((_Q.rows, _Q.cols) == (A.rows, A.rows))
     assert((_R.rows, _R.cols) == (A.rows, A.cols))
 
-    assert(trace(_Q.t * _Q).toDouble.closeTo(min(A.rows, A.cols)))
+    assert(trace(_Q.t * _Q).toDouble.closeTo(min(A.rows, A.cols): Int))
     for (i <- 0 until _R.rows; j <- 0 until i) {
       assert(_R(i, j) === 0.0)
     }
@@ -231,7 +231,8 @@ class LinearAlgebraTest extends AnyFunSuite with Checkers with DoubleImplicits {
     assert((_Q.rows, _Q.cols) == (A.rows, A.rows))
     assert((_R.rows, _R.cols) == (A.rows, A.cols))
 
-    assert(trace(_Q.t * _Q).closeTo(max(A.rows, A.cols)))
+    // TODO(widening conversions) remove necessity of this
+    assert(trace(_Q.t * _Q).closeTo(max(A.rows, A.cols): Int))
     for (i <- 0 until _R.rows; j <- 0 until i) {
       assert(_R(i, j) === 0.0)
     }
@@ -255,7 +256,7 @@ class LinearAlgebraTest extends AnyFunSuite with Checkers with DoubleImplicits {
     assert((_Q.rows, _Q.cols) == (A.rows, A.rows))
     assert((_R.rows, _R.cols) == (A.rows, A.cols))
 
-    assert(trace(_Q.t * _Q).toDouble.closeTo(min(A.rows, A.cols)))
+    assert(trace(_Q.t * _Q).toDouble.closeTo(min(A.rows, A.cols): Int))
     for (i <- 0 until _R.rows; j <- 0 until i) {
       assert(_R(i, j) === 0.0f)
     }
@@ -271,7 +272,7 @@ class LinearAlgebraTest extends AnyFunSuite with Checkers with DoubleImplicits {
     assert((_Q.rows, _Q.cols) == (A.rows, A.rows))
     assert((_R.rows, _R.cols) == (A.rows, A.cols))
 
-    assert(trace(_Q.t * _Q).toDouble.closeTo(max(A.rows, A.cols)))
+    assert(trace(_Q.t * _Q).toDouble.closeTo(max(A.rows, A.cols): Int))
     for (i <- 0 until _R.rows; j <- 0 until i) {
       assert(_R(i, j) === 0.0f)
     }
@@ -302,7 +303,7 @@ class LinearAlgebraTest extends AnyFunSuite with Checkers with DoubleImplicits {
     assert((_Q.rows, _Q.cols) == (A.rows, min(A.rows, A.cols)))
     assert((_R.rows, _R.cols) == (min(A.rows, A.cols), A.cols))
 
-    assert(trace(_Q.t * _Q).closeTo(min(A.rows, A.cols)))
+    assert(trace(_Q.t * _Q).closeTo(min(A.rows, A.cols): Int))
     for (i <- 0 until _R.rows; j <- 0 until i) {
       assert(_R(i, j) === 0.0)
     }
@@ -318,7 +319,7 @@ class LinearAlgebraTest extends AnyFunSuite with Checkers with DoubleImplicits {
     assert((_Q.rows, _Q.cols) == (A.rows, min(A.rows, A.cols)))
     assert((_R.rows, _R.cols) == (min(A.rows, A.cols), A.cols))
 
-    assert(trace(_Q.t * _Q).closeTo(min(A.rows, A.cols)))
+    assert(trace(_Q.t * _Q).closeTo(min(A.rows, A.cols):Int))
     for (i <- 0 until _R.rows; j <- 0 until i) {
       assert(_R(i, j) === 0.0)
     }
@@ -334,7 +335,7 @@ class LinearAlgebraTest extends AnyFunSuite with Checkers with DoubleImplicits {
     assert((_Q.rows, _Q.cols) == (A.rows, min(A.rows, A.cols)))
     assert((_R.rows, _R.cols) == (min(A.rows, A.cols), A.cols))
 
-    assert(trace(_Q.t * _Q).closeTo(min(A.rows, A.cols)))
+    assert(trace(_Q.t * _Q).closeTo(min(A.rows, A.cols): Int))
     for (i <- 0 until _R.rows; j <- 0 until i) {
       assert(_R(i, j) === 0.0)
     }
@@ -358,7 +359,7 @@ class LinearAlgebraTest extends AnyFunSuite with Checkers with DoubleImplicits {
     assert((_Q.rows, _Q.cols) == (A.rows, min(A.rows, A.cols)))
     assert((_R.rows, _R.cols) == (min(A.rows, A.cols), A.cols))
 
-    assert(trace(_Q.t * _Q).closeTo(min(A.rows, A.cols)))
+    assert(trace(_Q.t * _Q).closeTo(min(A.rows, A.cols): Int))
     for (i <- 0 until _R.rows; j <- 0 until i) {
       assert(_R(i, j) === 0.0f)
     }
@@ -374,7 +375,7 @@ class LinearAlgebraTest extends AnyFunSuite with Checkers with DoubleImplicits {
     assert((_Q.rows, _Q.cols) == (A.rows, min(A.rows, A.cols)))
     assert((_R.rows, _R.cols) == (min(A.rows, A.cols), A.cols))
 
-    assert(trace(_Q.t * _Q).closeTo(min(A.rows, A.cols)))
+    assert(trace(_Q.t * _Q).closeTo(min(A.rows, A.cols): Int))
     for (i <- 0 until _R.rows; j <- 0 until i) {
       assert(_R(i, j) === 0.0f)
     }
@@ -390,7 +391,7 @@ class LinearAlgebraTest extends AnyFunSuite with Checkers with DoubleImplicits {
     assert((_Q.rows, _Q.cols) == (A.rows, min(A.rows, A.cols)))
     assert((_R.rows, _R.cols) == (min(A.rows, A.cols), A.cols))
 
-    assert(trace(_Q.t * _Q).closeTo(min(A.rows, A.cols)))
+    assert(trace(_Q.t * _Q).closeTo(min(A.rows, A.cols): Int))
     for (i <- 0 until _R.rows; j <- 0 until i) {
       assert(_R(i, j) === 0.0f)
     }

@@ -7,7 +7,7 @@ package object macros {
     ${LoopMacros.cforRangeImpl('range, 'body)}
   }
 
-  inline def cforRange2(inline range1: Range, range2: Range)(inline body: (Int, Int)=>Any): Unit = {
+  inline def cforRange2(inline range1: Range, inline range2: Range)(inline body: (Int, Int)=>Any): Unit = {
     cforRange(range1)(i => cforRange(range2)(j => body(i, j)) )
   }
 

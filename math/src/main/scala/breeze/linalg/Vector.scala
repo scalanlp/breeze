@@ -23,6 +23,7 @@ import breeze.macros.expand
 import breeze.math._
 import breeze.stats.distributions.Rand
 import breeze.storage.{Storage, Zero}
+import breeze.util.ReflectionUtil
 
 import scala.{specialized => spec}
 import scala.annotation.unchecked.uncheckedVariance
@@ -79,6 +80,10 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]] {
   def toDenseVector(implicit cm: ClassTag[V]) = {
     DenseVector(toArray)
   }
+
+
+  /**Returns copy of this [[breeze.linalg.Vector]] as a [[scala.Vector]]*/
+  def toScalaVector: scala.Vector[V] = scala.Vector.empty ++ valuesIterator
 
   /**Returns copy of this [[breeze.linalg.Vector]] as a [[scala.Array]]*/
   def toArray(implicit cm: ClassTag[V]) = {
@@ -148,7 +153,7 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]] {
   /** See [[scala.collection.mutable.ArrayOps.scanRight]].
    */
   def scanRight[B](z: B)(op: (V, B) => B)(implicit cm1: ClassTag[B]): Vector[B] =
-    Vector[B](valuesIterator.scanRight(z)(op).toArray)
+    Vector[B](toScalaVector.scanRight(z)(op).toArray)
 
   // </editor-fold>
 

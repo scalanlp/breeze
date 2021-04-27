@@ -145,13 +145,13 @@ trait VectorBuilderOps { self: VectorBuilder.type =>
     }
   }
 
-  implicit def opFromCopyAndUpdate[Op, V, Other](
-                                                  implicit op: InPlaceImpl2[Op, VectorBuilder[V], Other],
-                                                  semi: Semiring[V],
-                                                  dev: Zero[V],
-                                                  classTag: ClassTag[V]): UImpl2[Op, VectorBuilder[V], Other, VectorBuilder[V]] = {
-    BinaryOp.fromCopyAndUpdate[VectorBuilder[V], Other, Op](op, canCopyBuilder[V])
-  }
+//  implicit def opFromCopyAndUpdate[Op, V, Other](
+//                                                  implicit op: InPlaceImpl2[Op, VectorBuilder[V], Other],
+//                                                  semi: Semiring[V],
+//                                                  dev: Zero[V],
+//                                                  classTag: ClassTag[V]): UImpl2[Op, VectorBuilder[V], Other, VectorBuilder[V]] = {
+//    BinaryOp.fromCopyAndUpdate[VectorBuilder[V], Other, Op](op, canCopyBuilder[V])
+//  }
 
   @expand
   @expand.valify

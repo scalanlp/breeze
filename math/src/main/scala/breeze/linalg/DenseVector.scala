@@ -222,7 +222,8 @@ class DenseVector[@spec(Double, Int, Float, Long) V](
     new DenseMatrix[V](1, length, data, offset, stride)
   }
 
-  override def toArray(implicit cm: ClassTag[V]): Array[V] =
+  override def toArray(implicit ct: ClassTag[V]): Array[V] = {
+//    implicit val ct: ClassTag[V] = ReflectionUtil.elemClassTagFromArray(data)
     if (stride == 1) {
       ArrayUtil.copyOfRange(data, offset, offset + length)
     } else {
@@ -236,9 +237,13 @@ class DenseVector[@spec(Double, Int, Float, Long) V](
       }
       arr
     }
+  }
 
-  /**Returns copy of this [[breeze.linalg.DenseVector]] as a [[scala.Vector]]*/
-  def toScalaVector(implicit cm: ClassTag[V]): scala.Vector[V] = this.toArray.toVector
+  /**Returns copy of this [[breeze.linalg.Vector]] as a [[scala.Vector]]*/
+  override def toScalaVector: scala.Vector[V] = {
+    implicit val ct: ClassTag[V] = ReflectionUtil.elemClassTagFromArray(data)
+    this.toArray.toVector
+  }
   // </editor-fold>
 
   @throws(classOf[ObjectStreamException])

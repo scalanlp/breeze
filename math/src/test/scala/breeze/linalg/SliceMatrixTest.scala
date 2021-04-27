@@ -1,6 +1,9 @@
 package breeze.linalg
 
+import breeze.generic.UFunc
+import breeze.linalg.operators.{HasOps, OpAdd}
 import org.scalatest.funsuite.AnyFunSuite
+import breeze.gymnastics._
 
 /**
  *
@@ -50,9 +53,12 @@ class SliceMatrixTest extends AnyFunSuite {
       expected(row, col) += 1
     }
 
-    val as = a(indices, indices)
-    val bs = b(indices, indices)
+    (a: Matrix[Double]) += (b: Matrix[Double])
+//    implicit val op: UFunc.InPlaceImpl2[OpAdd, Matrix[Double], Matrix[Double]] = implicitly
+//    implicit val op: UFunc.InPlaceImpl2[OpAdd.type, Matrix[Double], Matrix[Double]] = HasOps.m_m_UpdateOp_Double_OpAdd
 
+    val as = a(indices, indices)
+    val bs: SliceMatrix[Int, Int, Double] = b(indices, indices)
     as += bs
 
     assert(expected.equals(a), "Failed to execute the addition on the slices")

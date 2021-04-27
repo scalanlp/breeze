@@ -139,7 +139,7 @@ trait LowPrioCanTraverseValues extends LowPrioCanTraverseValues2 {
         }
       }
 
-      def isTraversableAgain(from: Iterator[V]): Boolean = from.isInstanceOf[Iterable[V]]
+      def isTraversableAgain(from: Iterator[V]): Boolean = from.isInstanceOf[Iterable[_]]
     }
   }
 }

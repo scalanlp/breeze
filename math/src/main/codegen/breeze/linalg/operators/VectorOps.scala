@@ -2,16 +2,19 @@ package breeze.linalg.operators
 
 import breeze.generic.UFunc
 import breeze.generic.UFunc.{InPlaceImpl2, UImpl, UImpl2}
+import breeze.gymnastics.&:&
 import breeze.linalg.support.CanCopy
-import breeze.linalg.{Vector, VectorBuilder, ZippedValues, scaleAdd, zipValues}
+import breeze.linalg.{Matrix, Vector, VectorBuilder, ZippedValues, scaleAdd, zipValues}
 import breeze.macros.expand
 import breeze.math.{Field, Ring, Semiring}
 import breeze.storage.Zero
 
 import scala.reflect.ClassTag
+import scala.util.NotGiven
 
 trait VectorOps extends GenericOps with Vector_TraversalOps {
- 
+
+
   import breeze.math.PowImplicits._
   @expand.valify
   @expand

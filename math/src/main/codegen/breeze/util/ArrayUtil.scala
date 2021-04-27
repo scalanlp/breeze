@@ -24,7 +24,7 @@ object ArrayUtil {
       case x: Array[Byte] => Arrays.fill(x, offset, offset + length, v.asInstanceOf[Byte])
       case x: Array[Boolean] => Arrays.fill(x, offset, offset + length, v.asInstanceOf[Boolean])
       case x: Array[_] => Arrays.fill(x.asInstanceOf[Array[AnyRef]], offset, offset + length, v.asInstanceOf[AnyRef])
-      case _ => throw new RuntimeException("shouldn't be here!")
+//      case _ => throw new RuntimeException("shouldn't be here!")
     }
   }
 
@@ -39,7 +39,7 @@ object ArrayUtil {
       case x: Array[Byte] => Arrays.copyOf(x, length).asInstanceOf[Array[V]]
       case x: Array[Boolean] => Arrays.copyOf(x, length).asInstanceOf[Array[V]]
       case x: Array[_] => Arrays.copyOf(x.asInstanceOf[Array[AnyRef]], length).asInstanceOf[Array[V]]
-      case _ => throw new RuntimeException("shouldn't be here!")
+//      case _ => throw new RuntimeException("shouldn't be here!")
     }
   }
 
@@ -54,7 +54,7 @@ object ArrayUtil {
       case x: Array[Byte] => Arrays.copyOfRange(x, from, to).asInstanceOf[Array[V]]
       case x: Array[Boolean] => Arrays.copyOfRange(x, from, to).asInstanceOf[Array[V]]
       case x: Array[_] => Arrays.copyOfRange(x.asInstanceOf[Array[AnyRef]], from, to).asInstanceOf[Array[V]]
-      case _ => throw new RuntimeException("shouldn't be here!")
+//      case _ => throw new RuntimeException("shouldn't be here!")
     }
   }
 
@@ -71,7 +71,7 @@ object ArrayUtil {
       case x: Array[_] =>
         implicit val man: ClassTag[V] = ReflectionUtil.elemClassTagFromArray(a)
         new Array[V](length)
-      case _ => throw new RuntimeException("shouldn't be here!")
+//      case _ => throw new RuntimeException("shouldn't be here!")
     }
   }
 
@@ -85,7 +85,7 @@ object ArrayUtil {
       case x: Array[Char] => Arrays.sort(x)
       case x: Array[Byte] => Arrays.sort(x)
       case x: Array[_] => Arrays.sort(x.asInstanceOf[Array[AnyRef]])
-      case _ => throw new RuntimeException("shouldn't be here!")
+//      case _ => throw new RuntimeException("shouldn't be here!")
     }
   }
 
@@ -152,7 +152,7 @@ object ArrayUtil {
         case x: Array[Char] => Arrays.equals(a.asInstanceOf[Array[Char]], b.asInstanceOf[Array[Char]])
         case x: Array[Byte] => Arrays.equals(a.asInstanceOf[Array[Byte]], b.asInstanceOf[Array[Byte]])
         case x: Array[_] => Arrays.equals(a.asInstanceOf[Array[AnyRef]], b.asInstanceOf[Array[AnyRef]])
-        case _ => throw new RuntimeException("shouldn't be here!")
+//        case _ => throw new RuntimeException("shouldn't be here!")
       }
     }
 
@@ -282,7 +282,7 @@ object ArrayUtil {
             i += 1
           }
           true
-        case _ => throw new RuntimeException("shouldn't be here!")
+//        case _ => throw new RuntimeException("shouldn't be here!")
       }
     }
 

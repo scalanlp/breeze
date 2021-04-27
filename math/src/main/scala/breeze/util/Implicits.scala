@@ -35,7 +35,7 @@ object Implicits extends DoubleImplicits with IteratorImplicits {
         result(a) += b
       }
 
-      result.mapValues(_.result()).toMap
+      result.view.mapValues(_.result()).toMap
     }
 
   }

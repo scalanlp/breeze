@@ -47,7 +47,7 @@ class TopK[T](k: Int)(implicit ord: Ordering[T]) extends Iterable[T] {
 object TopK {
   def apply[T](k: Int, items: IterableOnce[T])(implicit ord: Ordering[T]): TopK[T] = {
     val topk = new TopK[T](k)(ord)
-    items.foreach(topk += _)
+    items.iterator.foreach(topk += _)
     topk
   }
 

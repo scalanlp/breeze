@@ -191,6 +191,7 @@ trait CSCMatrixExpandedOps extends MatrixOps with CSCMatrixOps_Ring {
 
         if (cols == 0 || rows == 0) return
 
+        val mm = max(a.activeSize, b.activeSize)
         val bldr = new CSCMatrix.Builder[T](rows, cols, max(a.activeSize, b.activeSize))
         var ci = 0 // column index [0 ... cols)
         var apStop = a.colPtrs(0) // pointer into row indices and data
@@ -802,7 +803,7 @@ trait CSCMatrixExpandedOps extends MatrixOps with CSCMatrixOps_Ring {
         res
       }
       implicitly[BinaryRegistry[Matrix[T], Matrix[T], OpMulMatrix.type, Matrix[T]]].register(this)
-      implicitly[BinaryRegistry[DenseMatrix[T], Matrix[T], OpMulMatrix.type, Matrix[T]]].register(this)
+      implicitly[BinaryRegistry[DenseMatrix[T], Matrix[T], OpMulMatrix.type, DenseMatrix[T]]].register(this)
     }
 
   @expand

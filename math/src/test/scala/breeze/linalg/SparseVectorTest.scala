@@ -1,5 +1,6 @@
 package breeze.linalg
 
+import breeze.linalg.operators.HasOps
 import org.scalatest._
 import org.scalatest.funsuite._
 import breeze.math._
@@ -358,7 +359,7 @@ class SparseVectorTest extends AnyFunSuite {
     val v2 = SparseVector(0, 1, 0, 0)
 
     // do in two stages to ensure that telling the return type doesn't change type inference
-    val r = v1 + v2 //type mismatch; found : breeze.linalg.Vector[Int] required: breeze.linalg.DenseVector[Int]
+    val r = v1.+(v2) //type mismatch; found : breeze.linalg.Vector[Int] required: breeze.linalg.DenseVector[Int]
     val q = r: DenseVector[Int]
     assert(q == DenseVector(0, 1, 0, 0))
   }

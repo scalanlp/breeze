@@ -1,6 +1,6 @@
 package breeze.generic
 
-import breeze.linalg.operators.HasOps
+import breeze.linalg.operators.{GenericOps, GenericOpsLowPrio3, HasOps}
 import breeze.linalg.support._
 import breeze.linalg.{Axis, mapValues}
 
@@ -110,33 +110,37 @@ trait VariableUFunc[U <: UFunc, T <: VariableUFunc[U, T]] { self: T =>
   }
 }
 
-trait MappingUFunc extends MappingUFuncLowPrio {  self: UFunc =>
-  implicit def fromLowOrderCanMapValues[T, V, V2, U](
-      implicit handhold: ScalarOf[T, V],
-      impl: Impl[V, V2],
-      canMapValues: CanMapValues[T, V, V2, U]): Impl[T, U] = {
-    new Impl[T, U] {
+trait MappingUFunc extends UFunc {
+
+}
+
+trait MappingUFuncOps extends MappingUFuncLowPrio with GenericOps {
+  implicit def fromLowOrderCanMapValues[Op <: MappingUFunc, T, V, V2, U](
+                                                      implicit handhold: ScalarOf[T, V],
+                                                      impl: UFunc.UImpl[Op, V, V2],
+                                                      canMapValues: CanMapValues[T, V, V2, U]): UFunc.UImpl[Op, T, U] = {
+    new UFunc.UImpl[Op, T, U] {
       def apply(v: T): U = canMapValues(v, impl.apply)
     }
   }
 
-  implicit def canMapV1DV[T, V1, V2, VR, U](
-      implicit handhold: ScalarOf[T, V1],
-      impl: Impl2[V1, V2, VR],
-      canMapValues: CanMapValues[T, V1, VR, U]): Impl2[T, V2, U] = {
-    new Impl2[T, V2, U] {
+  implicit def canMapV1DV[Op <: MappingUFunc, T, V1, V2, VR, U](
+                                             implicit handhold: ScalarOf[T, V1],
+                                             impl: UFunc.UImpl2[Op,V1, V2, VR],
+                                             canMapValues: CanMapValues[T, V1, VR, U]): UFunc.UImpl2[Op, T, V2, U] = {
+    new UFunc.UImpl2[Op, T, V2, U] {
       def apply(v1: T, v2: V2): U = canMapValues(v1, impl.apply(_, v2))
     }
   }
 
 }
 
-sealed trait MappingUFuncLowPrio {  self: UFunc =>
-  implicit def canMapV2Values[T, V1, V2, VR, U](
+sealed trait MappingUFuncLowPrio {
+  implicit def canMapV2Values[Op <: MappingUFunc, T, V1, V2, VR, U](
       implicit handhold: ScalarOf[T, V2],
-      impl: Impl2[V1, V2, VR],
-      canMapValues: CanMapValues[T, V2, VR, U]): Impl2[V1, T, U] = {
-    new Impl2[V1, T, U] {
+      impl: UFunc.UImpl2[Op, V1, V2, VR],
+      canMapValues: CanMapValues[T, V2, VR, U]): UFunc.UImpl2[Op, V1, T, U] = {
+    new UFunc.UImpl2[Op, V1, T, U] {
       def apply(v1: V1, v2: T): U = canMapValues(v2, impl.apply(v1, _))
     }
   }
@@ -248,21 +252,6 @@ object UFunc {
     def apply(sink: S, v: V, v2: V2, v3: V3): Unit
   }
 
-  implicit def canTransformValuesUFunc[Tag, T, V](
-      implicit canTransform: CanTransformValues[T, V],
-      impl: UImpl[Tag, V, V]): InPlaceImpl[Tag, T] = {
-    new InPlaceImpl[Tag, T] {
-      def apply(v: T) = { canTransform.transform(v, impl.apply) }
-    }
-  }
-
-  implicit def canTransformValuesUFunc2[Tag, T, V, V2](
-      implicit canTransform: CanTransformValues[T, V],
-      impl: UImpl2[Tag, V, V2, V]): InPlaceImpl2[Tag, T, V2] = {
-    new InPlaceImpl2[Tag, T, V2] {
-      def apply(v: T, v2: V2) = { canTransform.transform(v, impl.apply(_, v2)) }
-    }
-  }
 
   implicit def canMapToSinkValuesUFunc[Tag, S, T, V, V2](
       implicit scalar: ScalarOf[T, V],
