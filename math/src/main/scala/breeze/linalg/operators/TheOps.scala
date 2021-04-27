@@ -1,6 +1,6 @@
 package breeze.linalg.operators
 
-import breeze.generic.MappingUFuncOps
+import breeze.generic.{ActiveMappingUFuncOps, MappingUFuncOps}
 import breeze.linalg.SliceVectorOps
 
 trait HasOps extends Any
@@ -15,4 +15,5 @@ object HasOps extends GenericOps with VectorOps
   with CSCMatrixOps
   with SliceVectorOps
   with BitVectorOps
-  with MappingUFuncOps {}
+  with MappingUFuncOps
+  with ActiveMappingUFuncOps {}

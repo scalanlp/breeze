@@ -110,9 +110,9 @@ trait VariableUFunc[U <: UFunc, T <: VariableUFunc[U, T]] { self: T =>
   }
 }
 
-trait MappingUFunc extends UFunc {
-
-}
+// TODO: docs
+trait MappingUFunc extends UFunc
+trait ActiveMappingUFunc extends MappingUFunc
 
 trait MappingUFuncOps extends MappingUFuncLowPrio with GenericOps {
   implicit def fromLowOrderCanMapValues[Op <: MappingUFunc, T, V, V2, U](
@@ -147,33 +147,34 @@ sealed trait MappingUFuncLowPrio extends GenericOps {
 
 }
 
-trait ActiveMappingUFunc extends MappingUFuncLowPrio {  self: UFunc =>
-  implicit def fromLowOrderCanMapActiveValues[T, V, V2, U](
+
+trait ActiveMappingUFuncOps extends MappingUFuncOps {
+  implicit def fromLowOrderCanMapActiveValues[Op <: ActiveMappingUFunc, T, V, V2, U](
       implicit handhold: ScalarOf[T, V],
-      impl: Impl[V, V2],
-      canMapValues: CanMapActiveValues[T, V, V2, U]): Impl[T, U] = {
-    new Impl[T, U] {
+      impl: UFunc.UImpl[Op, V, V2],
+      canMapValues: CanMapActiveValues[T, V, V2, U]): UFunc.UImpl[Op, T, U] = {
+    new UFunc.UImpl[Op, T, U] {
       def apply(v: T): U = canMapValues(v, impl.apply)
     }
   }
 
-  implicit def canMapV1DV[T, V1, V2, VR, U](
+  implicit def canMapActiveV1DV[Op <: ActiveMappingUFunc, T, V1, V2, VR, U](
       implicit handhold: ScalarOf[T, V1],
-      impl: Impl2[V1, V2, VR],
-      canMapValues: CanMapActiveValues[T, V1, VR, U]): Impl2[T, V2, U] = {
-    new Impl2[T, V2, U] {
+      impl: UFunc.UImpl2[Op, V1, V2, VR],
+      canMapValues: CanMapActiveValues[T, V1, VR, U]): UFunc.UImpl2[Op, T, V2, U] = {
+    new UFunc.UImpl2[Op, T, V2, U] {
       def apply(v1: T, v2: V2): U = canMapValues(v1, impl.apply(_, v2))
     }
   }
 
 }
 
-sealed trait ActiveMappingUFuncLowPrio {  self: UFunc =>
-  implicit def canMapV2Values[T, V1, V2, VR, U](
+sealed trait ActiveMappingUFuncLowPrio extends MappingUFuncOps {
+  implicit def canMapV2ActiveValues[Op <: ActiveMappingUFunc, T, V1, V2, VR, U](
       implicit handhold: ScalarOf[T, V2],
-      impl: Impl2[V1, V2, VR],
-      canMapValues: CanMapActiveValues[T, V2, VR, U]): Impl2[V1, T, U] = {
-    new Impl2[V1, T, U] {
+      impl: UFunc.UImpl2[Op, V1, V2, VR],
+      canMapValues: CanMapActiveValues[T, V2, VR, U]): UFunc.UImpl2[Op, V1, T, U] = {
+    new UFunc.UImpl2[Op, V1, T, U] {
       def apply(v1: V1, v2: T): U = canMapValues(v2, impl.apply(v1, _))
     }
   }
