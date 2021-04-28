@@ -17,34 +17,11 @@ trait GenericOpsLowPrio3 {
     (v1: T, v2: T) => canZipMapValues.map(v1, v2, impl.apply)
   }
 
-  implicit def canTransformValuesUFunc[Tag, T, V](
-                                                   implicit canTransform: CanTransformValues[T, V],
-                                                   impl: UImpl[Tag, V, V]): InPlaceImpl[Tag, T] = {
-    new InPlaceImpl[Tag, T] {
-      def apply(v: T) = { canTransform.transform(v, impl.apply) }
-    }
-  }
-
-  implicit def canTransformValuesUFunc2[Tag, T, V, V2](
-                                                        implicit canTransform: CanTransformValues[T, V],
-                                                        impl: UImpl2[Tag, V, V2, V]): InPlaceImpl2[Tag, T, V2] = {
-    new InPlaceImpl2[Tag, T, V2] {
-      def apply(v: T, v2: V2) = { canTransform.transform(v, impl.apply(_, v2)) }
-    }
-  }
 
 
 }
 
 trait GenericOpsLowPrio2 extends GenericOpsLowPrio3 {
-
-//  implicit def castOps_V[M1 <: Vector[T], T, Op <: OpType, MR](implicit v1lt: M1 <:< Vector[T],
-//                                                     v1ne: NotGiven[ (M1 =:= Vector[T]) ],
-//                                                     //                                                                        v1ne: NotGiven[M1 =:= Vector[T]],
-//                                                     //                                                                           v2ne: NotGiven[M2 =:= Vector[T]],
-//                                                     op: UImpl[Op, Vector[T], MR]): UImpl[Op, M1, MR] = {
-//    op.asInstanceOf[UFunc.UImpl[Op, M1, MR]]
-//  }
 
   implicit def castOps_V_V[M1 <: Vector[T], M2 <: Vector[T], T, Op <: OpType, MR](implicit
                                                                                   v1lt: M1 <:< Vector[T],
@@ -66,14 +43,6 @@ trait GenericOpsLowPrio2 extends GenericOpsLowPrio3 {
     op.asInstanceOf[UFunc.InPlaceImpl2[Op, M1, M2]]
   }
 
-  //  implicit def castOps[M1, M2, T, Op, MR](
-  //      implicit v1ev: M1 <:< Matrix[T],
-  //      v1ne: M1 =:!= Matrix[T],
-  //      v2ev: M2 <:< Matrix[T],
-  //      v2ne: M2 =:!= Matrix[T],
-  //      op: UImpl2[Op, Matrix[T], Matrix[T], MR]): UImpl2[Op, M1, M2, MR] = {
-  //    op.asInstanceOf[UFunc.UImpl2[Op, M1, M2, MR]]
-  //  }
   implicit def castOps_M_M[M1 <: Matrix[T], M2 <: Matrix[T], T, Op<: OpType, MR](implicit
                                                                                  v1lt: M1 <:< Matrix[T],
                                                                                  v2lt: M2 <:< Matrix[T],
@@ -142,8 +111,6 @@ trait GenericOpsLowPrio2 extends GenericOpsLowPrio3 {
   //    op.asInstanceOf[UFunc.UImpl2[Op, T, U, R]]
   //  }
 
-
-
 }
 
 trait GenericOpsLowPrio extends GenericOpsLowPrio2 {
@@ -159,18 +126,6 @@ trait GenericOpsLowPrio extends GenericOpsLowPrio2 {
 }
 
 trait GenericOps extends GenericOpsLowPrio {
-
-  def binaryOpFromUpdateOp[Op <: OpType, T, Other](
-      implicit copy: CanCopy[T],
-      op: UFunc.InPlaceImpl2[Op, T, Other]): UFunc.UImpl2[Op, T, Other, T] = {
-    new UFunc.UImpl2[Op, T, Other, T] {
-      override def apply(a: T, b: Other): T = {
-        val c = copy(a)
-        op(c, b)
-        c
-      }
-    }
-  }
 
 
   implicit def addIntoFromScaleAdd[T, U, V](

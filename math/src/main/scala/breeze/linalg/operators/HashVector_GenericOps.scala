@@ -152,24 +152,7 @@ trait HashVector_GenericOps {
 
   }
 
-  //  implicit def hv_addSField[T](
-  //      implicit field: Semiring[T],
-  //      ct: ClassTag[T]): OpAdd.Impl2[HashVector[T], T, HashVector[T]] = {
-  //    binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vAddIntoSField, ct)
-  //  }
-  //  implicit def vSubSField[T](implicit field: Ring[T], ct: ClassTag[T]): OpSub.Impl2[HashVector[T], T, HashVector[T]] =
-  //    binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vSubIntoSField, ct)
-  //  implicit def vMulScalarSField[T](
-  //      implicit field: Semiring[T],
-  //      ct: ClassTag[T]): OpMulScalar.Impl2[HashVector[T], T, HashVector[T]] =
-  //    binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vMulScalarIntoSField, ct)
-  //  implicit def vDivSField[T](implicit field: Field[T], ct: ClassTag[T]): OpDiv.Impl2[HashVector[T], T, HashVector[T]] =
-  //    binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vDivIntoSField, ct)
-  //  implicit def vPowS[T](
-  //      implicit pow: OpPow.Impl2[T, T, T],
-  //      ct: ClassTag[T],
-  //      zero: Zero[T]): OpPow.Impl2[HashVector[T], T, HashVector[T]] =
-  //    binaryOpFromUpdateOp(implicitly[CanCopy[HashVector[T]]], vPowIntoS, ct)
+
 
   implicit def HV_S_subIntoField[T](implicit field: Ring[T], ct: ClassTag[T]): OpSub.InPlaceImpl2[HashVector[T], T] = {
     new OpSub.InPlaceImpl2[HashVector[T], T] {
@@ -230,28 +213,13 @@ trait HashVector_GenericOps {
     }
   }
 
-  // TODO(2): rm
-//  def binaryOpFromUpdateOp[Op <: OpType, V, Other](
-//                                                    implicit copy: CanCopy[HashVector[V]],
-//                                                    op: UFunc.InPlaceImpl2[Op, HashVector[V], Other],
-//                                                    man: ClassTag[V]): UFunc.UImpl2[Op, HashVector[V], Other, HashVector[V]] = {
-//    new UFunc.UImpl2[Op, HashVector[V], Other, HashVector[V]] {
-//      override def apply(a: HashVector[V], b: Other): HashVector[V] = {
-//        val c = copy(a)
-//        op(c, b)
-//        c
-//      }
-//    }
-//  }
-
   implicit def impl_OpSet_InPlace_HV_HV_Generic[V]: OpSet.InPlaceImpl2[HashVector[V], HashVector[V]] = {
 
     new OpSet.InPlaceImpl2[HashVector[V], HashVector[V]] {
       def apply(a: HashVector[V], b: HashVector[V]): Unit = {
         require(b.length == a.length, "HashVectors must be the same length!")
-        for (i <- 0 until a.length) {
-          a(i) = b(i)
-        }
+        a.clear()
+        b.array.copyTo(a.array)
       }
     }
   }
