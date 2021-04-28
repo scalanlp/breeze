@@ -36,9 +36,14 @@ object norm extends UFunc {
 
   implicit def scalarNorm[T](implicit field: Field[T]): norm.Impl[T, Double] = field.normImpl
 
-  implicit def canNorm[Vec, T](implicit canTraverseValues: CanTraverseValues[Vec, T],
-                               canNormS: norm.Impl[T, Double]): norm.Impl2[Vec, Double, Double] = {
+  // only autoinstantiate for Vector likes
+  implicit def canNorm[Vec <: Vector[T], T](implicit canTraverseValues: CanTraverseValues[Vec, T],
+                                            canNormS: norm.Impl[T, Double]): norm.Impl2[Vec, Double, Double] = {
+    fromTraverseValues(canTraverseValues, canNormS)
+  }
 
+  def fromTraverseValues[Vec, T](implicit canTraverseValues: CanTraverseValues[Vec, T],
+                                 canNormS: norm.Impl[T, Double]) = {
     new norm.Impl2[Vec, Double, Double] {
       def apply(vec: Vec, n: Double): Double = {
         // TODO: 0 norm, maybe faster 2 norm?
@@ -57,7 +62,7 @@ object norm extends UFunc {
             }
           }
           canTraverseValues.traverse(vec, infiniteNormVisitor)
-         infiniteNormVisitor.max
+          infiniteNormVisitor.max
         } else {
           object finiteNormVisitor extends ValuesVisitor[T] {
             var sum = 0.0

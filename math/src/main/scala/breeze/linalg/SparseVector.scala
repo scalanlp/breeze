@@ -276,18 +276,6 @@ object SparseVector
 
   implicit def scalarOf[T]: ScalarOf[SparseVector[T], T] = ScalarOf.dummy
 
-  implicit def canIterateValues[V]: CanTraverseValues[SparseVector[V], V] = {
-    new CanTraverseValues[SparseVector[V], V] {
-
-      def isTraversableAgain(from: SparseVector[V]): Boolean = true
-
-      /** Iterates all key-value pairs from the given collection. */
-      def traverse(from: SparseVector[V], fn: ValuesVisitor[V]): Unit = {
-        fn.zeros(from.size - from.activeSize, from.default)
-        fn.visitArray(from.data, 0, from.activeSize, 1)
-      }
-    }
-  }
 
   implicit def canTraverseKeyValuePairs[V]: CanTraverseKeyValuePairs[SparseVector[V], Int, V] = {
     new CanTraverseKeyValuePairs[SparseVector[V], Int, V] {

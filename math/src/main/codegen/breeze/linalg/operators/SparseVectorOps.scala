@@ -20,7 +20,7 @@ trait SparseVectorOps extends SparseVectorExpandOps
   with SparseVector_DenseMatrixOps
   with SparseVector_DenseVector_Ops
 
-trait SparseVector_DenseVector_Ops extends VectorOps with GenericOps {
+trait SparseVector_DenseVector_Ops extends VectorOps with GenericOps with SparseVector_TraversalOps {
 
   @expand
   @expand.valify

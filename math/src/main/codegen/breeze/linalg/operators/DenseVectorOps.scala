@@ -550,39 +550,39 @@ trait DenseVectorExpandOps extends VectorOps with DenseVector_Vector_ExpandOps {
 
 trait DenseVector_SpecialOps extends DenseVectorExpandOps {
 
-  /*
-   Returns the k-norm of this Vector.
-    */
-  @expand
-  @expand.valify
-  implicit def impl_norm_DV_D_eq_D[@expand.args(Int, Float, Long, BigInt, Complex) T]
-  (implicit @expand.sequence[T](0, 0.0f, 0L, BigInt(0), Complex.zero) _zero: T)
-  : norm.Impl2[DenseVector[T], Double, Double] = {
-
-    new norm.Impl2[DenseVector[T], Double, Double] {
-      def apply(v: DenseVector[T], p: Double): Double = {
-        if (p == 2) {
-          math.sqrt( (v dot v).abs.toDouble)
-        } else if (p == 1) {
-          var sum = 0.0
-          cforRange(0 until v.length)(i => sum += v(i).abs.toDouble)
-          sum
-        } else if (p == Double.PositiveInfinity) {
-          var max = 0.0
-          cforRange(0 until v.length)(i => max = math.max(max, v(i).abs.toDouble))
-          max
-        } else if (p == 0) {
-          var nnz = 0.0
-          cforRange(0 until v.length)(i => if (v(i) != _zero) nnz += 1)
-          nnz
-        } else {
-          var sum = 0.0
-          cforRange(0 until v.length)(i => sum += math.pow(v(i).abs.toDouble, p))
-          math.pow(sum, 1.0 / p)
-        }
-      }
-    }
-  }
+//  /*
+//   Returns the k-norm of this Vector.
+//    */
+//  @expand
+//  @expand.valify
+//  implicit def impl_norm_DV_D_eq_D[@expand.args(Int, Float, Long, BigInt, Complex) T]
+//  (implicit @expand.sequence[T](0, 0.0f, 0L, BigInt(0), Complex.zero) _zero: T)
+//  : norm.Impl2[DenseVector[T], Double, Double] = {
+//
+//    new norm.Impl2[DenseVector[T], Double, Double] {
+//      def apply(v: DenseVector[T], p: Double): Double = {
+//        if (p == 2) {
+//          math.sqrt( (v dot v).abs.toDouble)
+//        } else if (p == 1) {
+//          var sum = 0.0
+//          cforRange(0 until v.length)(i => sum += v(i).abs.toDouble)
+//          sum
+//        } else if (p == Double.PositiveInfinity) {
+//          var max = 0.0
+//          cforRange(0 until v.length)(i => max = math.max(max, v(i).abs.toDouble))
+//          max
+//        } else if (p == 0) {
+//          var nnz = 0.0
+//          cforRange(0 until v.length)(i => if (v(i) != _zero) nnz += 1)
+//          nnz
+//        } else {
+//          var sum = 0.0
+//          cforRange(0 until v.length)(i => sum += math.pow(v(i).abs.toDouble, p))
+//          math.pow(sum, 1.0 / p)
+//        }
+//      }
+//    }
+//  }
 
   implicit val impl_OpAdd_InPlace_DV_DV_eq_DV_Float: OpAdd.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] = {
     new OpAdd.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] {
