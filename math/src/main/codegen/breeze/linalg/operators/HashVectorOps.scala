@@ -196,8 +196,13 @@ trait HashVectorExpandOps extends VectorOps with HashVector_GenericOps {
         }
 
         val result = a.copy
-        for ((k, v) <- b.activeIterator) {
-          result(k) = op(a(k), v)
+        cforRange(0 until b.iterableSize) { boff =>
+          if (b.isActive(boff)) {
+            val k = b.index(boff)
+            val v = b.data(boff)
+            result(k) = op(a(k), v)
+          }
+
         }
         result
       }
@@ -341,25 +346,6 @@ trait HashVectorExpandOps extends VectorOps with HashVector_GenericOps {
     implicitly[BinaryRegistry[Vector[T], T, Op.type, Vector[T]]].register(this)
   }
 
-//  @expand
-//  @expand.valify
-//  implicit def hv_hv_UpdateOp[
-//      @expand.args(Int, Double, Float, Long) T,
-//      @expand.args(OpMulScalar, OpDiv, OpMod, OpPow) Op <: OpType](
-//      implicit @expand.sequence[Op]({ _ * _ }, { _ / _ }, { _ % _ }, { _.pow(_) })
-//      op: Op.Impl2[T, T, T]): Op.InPlaceImpl2[HashVector[T], HashVector[T]] =
-//    new Op.InPlaceImpl2[HashVector[T], HashVector[T]] {
-//      def apply(a: HashVector[T], b: HashVector[T]): Unit = {
-//        require(b.length == a.length, "Vectors must be the same length!")
-//        var i = 0
-//        while (i < a.length) {
-//          a(i) = op(a(i), b(i))
-//          i += 1
-//        }
-//      }
-//      implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
-//    }
-
   @expand
   @expand.valify
   implicit def impl_OpSet_InPlace_HV_HV[@expand.args(Int, Double, Float, Long) T]: OpSet.InPlaceImpl2[HashVector[T], HashVector[T]] =
@@ -370,24 +356,6 @@ trait HashVectorExpandOps extends VectorOps with HashVector_GenericOps {
       }
       implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], OpSet.type]].register(this)
     }
-
-//  @expand
-//  @expand.valify
-//  implicit def impl_Op_InPlace_HV_HV_idempotent[
-//      @expand.args(Int, Double, Float, Long) T,
-//      @expand.args(OpAdd, OpSub) Op <: OpType](
-//      implicit @expand.sequence[Op]({ _ + _ }, { _ - _ })
-//      op: Op.Impl2[T, T, T]): Op.InPlaceImpl2[HashVector[T], HashVector[T]] =
-//    new Op.InPlaceImpl2[HashVector[T], HashVector[T]] {
-//      def apply(a: HashVector[T], b: HashVector[T]): Unit = {
-//        require(b.length == a.length, "Vectors must be the same length!")
-//        for ((k, v) <- b.activeIterator) {
-//          a(k) = op(a(k), v)
-//        }
-//      }
-//
-//      implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
-//    }
 
   @expand
   @expand.valify
