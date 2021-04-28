@@ -217,6 +217,7 @@ object HashVector {
 
   implicit def space[E: Field: ClassTag: Zero]: MutableFiniteCoordinateField[HashVector[E], Int, E] = {
     implicit val _dim: dim.Impl[HashVector[E], Int] = dim.implVDim[E, HashVector[E]]
+    implicit val n: norm.Impl2[HashVector[E], Double, Double] = norm.canNorm(HasOps.impl_CanTraverseValues_HV_Generic, implicitly[Field[E]].normImpl)
     MutableFiniteCoordinateField.make[HashVector[E], Int, E]
   }
 
