@@ -224,31 +224,5 @@ trait HashVector_GenericOps {
     }
   }
 
-  /**Returns the k-norm of this HashVector. */
-  implicit def canNorm[T](implicit canNormS: norm.Impl[T, Double]): norm.Impl2[HashVector[T], Double, Double] = {
-
-    new norm.Impl2[HashVector[T], Double, Double] {
-      def apply(v: HashVector[T], n: Double): Double = {
-        import v._
-        if (n == 1) {
-          var sum = 0.0
-          activeValuesIterator.foreach(v => sum += canNormS(v))
-          sum
-        } else if (n == 2) {
-          var sum = 0.0
-          activeValuesIterator.foreach(v => { val nn = canNormS(v); sum += nn * nn })
-          math.sqrt(sum)
-        } else if (n == Double.PositiveInfinity) {
-          var max = 0.0
-          activeValuesIterator.foreach(v => { val nn = canNormS(v); if (nn > max) max = nn })
-          max
-        } else {
-          var sum = 0.0
-          activeValuesIterator.foreach(v => { val nn = canNormS(v); sum += math.pow(nn, n) })
-          math.pow(sum, 1.0 / n)
-        }
-      }
-    }
-  }
 
 }
