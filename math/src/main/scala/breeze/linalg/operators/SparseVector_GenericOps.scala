@@ -237,35 +237,35 @@ trait SparseVector_GenericOps extends GenericOps {
       result.toSparseVector(true, true)
     }
 
-  // TODO: try removing
-  implicit def implNorm_SV_D_eq_D_Field[T](implicit f: Field[T]): norm.Impl2[SparseVector[T], Double, Double] =
-    (v: SparseVector[T], n: Double) => {
-      import v._
-      if (n == 1) {
-        var sum: Double = 0.0
-        activeValuesIterator.foreach(v => sum += f.sNorm(v))
-        sum
-      } else if (n == 2) {
-        var sum: Double = 0.0
-        activeValuesIterator.foreach(v => {
-          val nn = f.sNorm(v);
-          sum += nn * nn
-        })
-        math.sqrt(sum)
-      } else if (n == Double.PositiveInfinity) {
-        var max: Double = 0.0
-        activeValuesIterator.foreach(v => {
-          val nn = f.sNorm(v);
-          if (nn > max) max = nn
-        })
-        max
-      } else {
-        var sum: Double = 0.0
-        activeValuesIterator.foreach(v => {
-          val nn = f.sNorm(v);
-          sum += math.pow(nn, n)
-        })
-        math.pow(sum, 1.0 / n)
-      }
-    }
+//  // TODO: try removing
+//  implicit def implNorm_SV_D_eq_D_Field[T](implicit f: Field[T]): norm.Impl2[SparseVector[T], Double, Double] =
+//    (v: SparseVector[T], n: Double) => {
+//      import v._
+//      if (n == 1) {
+//        var sum: Double = 0.0
+//        activeValuesIterator.foreach(v => sum += f.sNorm(v))
+//        sum
+//      } else if (n == 2) {
+//        var sum: Double = 0.0
+//        activeValuesIterator.foreach(v => {
+//          val nn = f.sNorm(v);
+//          sum += nn * nn
+//        })
+//        math.sqrt(sum)
+//      } else if (n == Double.PositiveInfinity) {
+//        var max: Double = 0.0
+//        activeValuesIterator.foreach(v => {
+//          val nn = f.sNorm(v);
+//          if (nn > max) max = nn
+//        })
+//        max
+//      } else {
+//        var sum: Double = 0.0
+//        activeValuesIterator.foreach(v => {
+//          val nn = f.sNorm(v);
+//          sum += math.pow(nn, n)
+//        })
+//        math.pow(sum, 1.0 / n)
+//      }
+//    }
 }
