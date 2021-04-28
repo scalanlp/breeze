@@ -183,36 +183,6 @@ object Vector extends VectorConstructors[Vector] {
     def apply(t: Vector[E]): Vector[E] = t.copy
   }
 
-//
-//  /**Returns the k-norm of this Vector. */
-//  implicit def canNorm[T](implicit canNormS: norm.Impl[T, Double]): norm.Impl2[Vector[T], Double, Double] = {
-//
-//    new norm.Impl2[Vector[T], Double, Double] {
-//      def apply(v: Vector[T], n: Double): Double = {
-//        import v._
-//        if (n == 1) {
-//          var sum = 0.0
-//          activeValuesIterator.foreach(v => sum += canNormS(v))
-//          sum
-//        } else if (n == 2) {
-//          var sum = 0.0
-//          activeValuesIterator.foreach(v => { val nn = canNormS(v); sum += nn * nn })
-//          math.sqrt(sum)
-//        } else if (n == Double.PositiveInfinity) {
-//          var max = 0.0
-//          activeValuesIterator.foreach(v => { val nn = canNormS(v); if (nn > max) max = nn })
-//          max
-//        } else {
-//          var sum = 0.0
-//          activeValuesIterator.foreach(v => { val nn = canNormS(v); sum += math.pow(nn, n) })
-//          math.pow(sum, 1.0 / n)
-//        }
-//      }
-//    }
-//  }
-
-  
-
   implicit def space[V: Field: Zero: ClassTag]: MutableFiniteCoordinateField[Vector[V], Int, V] = {
     val f = implicitly[Field[V]]
     import f.normImpl

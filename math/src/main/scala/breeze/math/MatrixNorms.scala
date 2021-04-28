@@ -33,20 +33,6 @@ trait MatrixInnerProduct[M, S] extends MatrixNorms[M, S] {
   }
 }
 
-//object OperatorNorms {
-//  def make[M,S](implicit field: Field[S]) = new MatrixNorms[M,S] {
-//    override implicit def canNorm_Float(implicit iter: CanTraverseValues[M, Float]): norm.Impl2[M, Float, Double] = ???
-//
-//    override implicit def canNorm_Double(implicit iter: CanTraverseValues[M, Double]): norm.Impl2[M, Double, Double] = ???
-//
-//    override implicit def canNorm_Field(implicit iter: CanTraverseValues[M, S], field: Field[S]): norm.Impl2[M, Double, Double] = {
-//
-//    }
-//
-//    override implicit def canNorm_Int(implicit iter: CanTraverseValues[M, Int]): norm.Impl2[M, Int, Double] = ???
-//  }
-//}
-
 object EntrywiseMatrixNorms {
   def make[M, S](implicit field: Field[S], hadamard: OpMulScalar.Impl2[M, M, M], iter: CanTraverseValues[M, S]) =
     new MatrixInnerProduct[M, S] {
