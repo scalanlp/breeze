@@ -751,14 +751,6 @@ trait DenseVector_OrderingOps extends DenseVectorExpandOps {
 
 
 trait DenseVector_GenericOps extends VectorOps {
-//
-//  implicit def negFromScale[V](implicit scale: OpMulScalar.Impl2[DenseVector[V], V, DenseVector[V]], field: Ring[V]): OpNeg.Impl[DenseVector[V], DenseVector[V]] = {
-//    new OpNeg.Impl[DenseVector[V], DenseVector[V]] {
-//      override def apply(a: DenseVector[V]): DenseVector[V] = {
-//        scale(a, field.negate(field.one))
-//      }
-//    }
-//  }
 
   // TODO: handle overlaps?
   implicit def impl_OpSet_InPlace_DV_V_Generic[V]: OpSet.InPlaceImpl2[DenseVector[V], V] =
@@ -779,7 +771,7 @@ trait DenseVector_GenericOps extends VectorOps {
       }
     }
 
-  implicit def impl_OpSet_InPlace_DV_DV_InPlace[V]: OpSet.InPlaceImpl2[DenseVector[V], DenseVector[V]] =
+  implicit def impl_OpSet_InPlace_DV_DV[V]: OpSet.InPlaceImpl2[DenseVector[V], DenseVector[V]] =
     new OpSet.InPlaceImpl2[DenseVector[V], DenseVector[V]] {
       def apply(a: DenseVector[V], b: DenseVector[V]): Unit = {
         require(b.length == a.length, "Vectors must be the same length!")
@@ -805,7 +797,7 @@ trait DenseVector_GenericOps extends VectorOps {
       }
     }
 
-  implicit def impl_scaleAdd_InPlace_DV_T_DV[T: Semiring]: scaleAdd.InPlaceImpl3[DenseVector[T], T, DenseVector[T]] =
+  implicit def impl_scaleAdd_InPlace_DV_S_DV[T: Semiring]: scaleAdd.InPlaceImpl3[DenseVector[T], T, DenseVector[T]] =
     new scaleAdd.InPlaceImpl3[DenseVector[T], T, DenseVector[T]] {
       val ring = implicitly[Semiring[T]]
       def apply(a: DenseVector[T], s: T, b: DenseVector[T]): Unit = {
@@ -829,7 +821,7 @@ trait DenseVector_GenericOps extends VectorOps {
       }
     }
 
-  implicit def implOpSet_DV_Vector_InPlace[T, Vec](
+  implicit def impl_OpSet_InPlace_DV_V[T, Vec](
       implicit ev: Vec <:< Vector[T]): OpSet.InPlaceImpl2[DenseVector[T], Vec] =
     new OpSet.InPlaceImpl2[DenseVector[T], Vec] {
       def apply(a: DenseVector[T], b: Vec): Unit = {
@@ -846,7 +838,7 @@ trait DenseVector_GenericOps extends VectorOps {
       //    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], OpSet.type]].register(this)
     }
 
-  implicit def liftDMOpToDVTransposeOp[Tag, V, LHS, R](
+  implicit def impl_Op_LHS_DVt_eq_R_cast[Tag, V, LHS, R](
       implicit op: UFunc.UImpl2[Tag, LHS, DenseMatrix[V], R]): UFunc.UImpl2[Tag, LHS, Transpose[DenseVector[V]], R] =
     new UFunc.UImpl2[Tag, LHS, Transpose[DenseVector[V]], R] {
       def apply(v: LHS, v2: Transpose[DenseVector[V]]): R = {
@@ -856,47 +848,47 @@ trait DenseVector_GenericOps extends VectorOps {
         op(v, dm)
       }
     }
-
-  implicit def canNormField[T: Field]: norm.Impl2[DenseVector[T], Double, Double] = {
-    val f = implicitly[Field[T]]
-    new norm.Impl2[DenseVector[T], Double, Double] {
-      def apply(v: DenseVector[T], n: Double) = {
-        import v._
-        if (n == 1) {
-          var sum = 0.0
-          foreach(v => sum += f.sNorm(v))
-          sum
-        } else if (n == 2) {
-          var sum = 0.0
-          foreach(v => {
-            val nn = f.sNorm(v); sum += nn * nn
-          })
-          math.sqrt(sum)
-        } else if (n == Double.PositiveInfinity) {
-          var max = 0.0
-          foreach(v => {
-            val nn = f.sNorm(v); if (nn > max) max = nn
-          })
-          max
-        } else {
-          var sum = 0.0
-          foreach(v => { val nn = f.sNorm(v); sum += math.pow(nn, n) })
-          math.pow(sum, 1.0 / n)
-        }
-      }
-    }
-  }
-
-  implicit def canNorm[T: Field]: norm.Impl[DenseVector[T], Double] = {
-    val f = implicitly[Field[T]]
-    new norm.Impl[DenseVector[T], Double] {
-      override def apply(v: DenseVector[T]): Double = {
-        import v._
-        var sum = 0.0
-        foreach(v => { val nn = f.sNorm(v); sum += nn * nn })
-        math.sqrt(sum)
-      }
-    }
-  }
+//
+//  implicit def canNormField[T: Field]: norm.Impl2[DenseVector[T], Double, Double] = {
+//    val f = implicitly[Field[T]]
+//    new norm.Impl2[DenseVector[T], Double, Double] {
+//      def apply(v: DenseVector[T], n: Double) = {
+//        import v._
+//        if (n == 1) {
+//          var sum = 0.0
+//          foreach(v => sum += f.sNorm(v))
+//          sum
+//        } else if (n == 2) {
+//          var sum = 0.0
+//          foreach(v => {
+//            val nn = f.sNorm(v); sum += nn * nn
+//          })
+//          math.sqrt(sum)
+//        } else if (n == Double.PositiveInfinity) {
+//          var max = 0.0
+//          foreach(v => {
+//            val nn = f.sNorm(v); if (nn > max) max = nn
+//          })
+//          max
+//        } else {
+//          var sum = 0.0
+//          foreach(v => { val nn = f.sNorm(v); sum += math.pow(nn, n) })
+//          math.pow(sum, 1.0 / n)
+//        }
+//      }
+//    }
+//  }
+//
+//  implicit def canNorm[T: Field]: norm.Impl[DenseVector[T], Double] = {
+//    val f = implicitly[Field[T]]
+//    new norm.Impl[DenseVector[T], Double] {
+//      override def apply(v: DenseVector[T]): Double = {
+//        import v._
+//        var sum = 0.0
+//        foreach(v => { val nn = f.sNorm(v); sum += nn * nn })
+//        math.sqrt(sum)
+//      }
+//    }
+//  }
 
 }

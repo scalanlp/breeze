@@ -829,7 +829,9 @@ class DenseMatrixTest extends AnyFunSuite with Checkers with DoubleImplicits wit
     assert(rr == yy)
   }
 
-  test("simple matrix multiply, int") {
+  // TODO: we should profile just copying to Double if we have BLAS (and even if we don't...)
+  // this is hilariously slow somehow.
+  test("large matrix multiply, int") {
     val rI = DenseMatrix.rand[Int](2002, 2002, Rand.randInt(-3, 3))
     val rD = convert(rI, Double)
     assert((rI * rI).mapValues(_.toDouble) === (rD * rD))

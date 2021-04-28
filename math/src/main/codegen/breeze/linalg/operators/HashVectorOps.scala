@@ -51,20 +51,25 @@ trait DenseVector_HashVector_Ops extends GenericOps with DenseVectorOps with Has
   @expand
   @expand.valify
   implicit def impl_scaleAdd_InPlace_DV_T_HV[@expand.args(Int, Double, Float, Long) T]
-    : scaleAdd.InPlaceImpl3[DenseVector[T], T, HashVector[T]] = { (dv, scalar, hv) =>
-    require(dv.length == hv.length, "Vectors must have the same length")
-    val ad = dv.data
-    val bd = hv.data
-    val bi = hv.index
-    val bsize = hv.iterableSize
+  : scaleAdd.InPlaceImpl3[DenseVector[T], T, HashVector[T]] =
+    new scaleAdd.InPlaceImpl3[DenseVector[T], T, HashVector[T]] {
+      def apply(dv: DenseVector[T], scalar: T, hv: HashVector[T]) = {
 
-    if (scalar != 0)
-      cforRange(0 until bsize) { i =>
-        val aoff = dv.offset + bi(i) * dv.stride
-        if (hv.isActive(i))
-          ad(aoff) += scalar * bd(i)
+        require(dv.length == hv.length, "Vectors must have the same length")
+        val ad = dv.data
+        val bd = hv.data
+        val bi = hv.index
+        val bsize = hv.iterableSize
+
+        if (scalar != 0)
+          cforRange(0 until bsize) { i =>
+            val aoff = dv.offset + bi(i) * dv.stride
+            if (hv.isActive(i))
+              ad(aoff) += scalar * bd(i)
+          }
       }
-  }
+      implicitly[TernaryUpdateRegistry[Vector[T], T, Vector[T], scaleAdd.type]].register(this)
+    }
 
   @expand
   @expand.valify
@@ -163,18 +168,23 @@ trait HashVector_DenseVector_Ops extends DenseVector_HashVector_Ops {
 trait HashVectorExpandOps extends VectorOps with HashVector_GenericOps {
   @expand
   @expand.valify
-  implicit def impl_scaleAdd_InPlace_HV_HV_HV[@expand.args(Int, Double, Float, Long) T]
-  : scaleAdd.InPlaceImpl3[HashVector[T], T, HashVector[T]] = { (dest, scalar, source) =>
-    require(dest.length == source.length, "Vectors must have the same length")
-    val bsize = source.iterableSize
+  implicit def impl_scaleAdd_InPlace_HV_S_HV[@expand.args(Int, Double, Float, Long) T]
+  : scaleAdd.InPlaceImpl3[HashVector[T], T, HashVector[T]] = {
+    new scaleAdd.InPlaceImpl3[HashVector[T], T, HashVector[T]] {
+      def apply(dest: HashVector[T], scalar: T, source: HashVector[T]) = {
+        require(dest.length == source.length, "Vectors must have the same length")
+        val bsize = source.iterableSize
 
-    if (scalar != 0) {
-      val bd = source.data
-      val bi = source.index
-      cforRange(0 until bsize) { i =>
-        if (source.isActive(i))
-          dest(bi(i)) += scalar * bd(i)
+        if (scalar != 0) {
+          val bd = source.data
+          val bi = source.index
+          cforRange(0 until bsize) { i =>
+            if (source.isActive(i))
+              dest(bi(i)) += scalar * bd(i)
+          }
+        }
       }
+      implicitly[TernaryUpdateRegistry[Vector[T], T, Vector[T], scaleAdd.type]].register(this)
     }
   }
 
@@ -583,8 +593,7 @@ trait HashVector_SparseVector_Ops extends HashVectorExpandOps {
           }
         }
       }
-      // TODO: scaleAdd registry
-//      implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
+      implicitly[TernaryUpdateRegistry[Vector[T], T, Vector[T], scaleAdd.type]].register(this)
     }
   }
 
