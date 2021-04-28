@@ -25,7 +25,7 @@ trait HashVectorOps
 trait DenseVector_HashVector_Ops extends GenericOps with DenseVectorOps with HashVectorExpandOps {
 
   @expand
-  implicit def dv_hv_UpdateOp[
+  implicit def impl_Op_InPlace_DV_HV[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
       implicit @expand.sequence[Op]({ _ * _ }, { _ / _ }, { (__x, __y) =>
@@ -39,27 +39,18 @@ trait DenseVector_HashVector_Ops extends GenericOps with DenseVectorOps with Has
         var aoff = a.offset
         val astride = a.stride
 
-        var i = 0
-        while (i < a.length) {
+        // TODO: replace OpMulScalar with faster variant for common cases?
+        cforRange(0 until a.length) { i =>
           ad(aoff) = op(ad(aoff), b(i))
           aoff += astride
-          i += 1
         }
 
       }
     }
 
-//  // this shouldn't be necessary but it is:
-//  @expand
-//  implicit def dv_hv_op[
-//    @expand.args(Int, Double, Float, Long) T,
-//    @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-//  : UFunc.UImpl2[Op, DenseVector[T], HashVector[T], DenseVector[T]]= {
-//    pureFromUpdate(implicitly[Op.InPlaceImpl2[DenseVector[T], HashVector[T]]])
-//  }
   @expand
   @expand.valify
-  implicit def dv_hv_ScaleAddInto[@expand.args(Int, Double, Float, Long) T]
+  implicit def impl_scaleAdd_InPlace_DV_T_HV[@expand.args(Int, Double, Float, Long) T]
     : scaleAdd.InPlaceImpl3[DenseVector[T], T, HashVector[T]] = { (dv, scalar, hv) =>
     require(dv.length == hv.length, "Vectors must have the same length")
     val ad = dv.data
@@ -67,16 +58,17 @@ trait DenseVector_HashVector_Ops extends GenericOps with DenseVectorOps with Has
     val bi = hv.index
     val bsize = hv.iterableSize
 
-    cforRange(0 until bsize) { i =>
-      val aoff = dv.offset + bi(i) * dv.stride
-      if (hv.isActive(i))
-        ad(aoff) += scalar * bd(i)
-    }
+    if (scalar != 0)
+      cforRange(0 until bsize) { i =>
+        val aoff = dv.offset + bi(i) * dv.stride
+        if (hv.isActive(i))
+          ad(aoff) += scalar * bd(i)
+      }
   }
 
   @expand
   @expand.valify
-  implicit def canDot_DV_HV[@expand.args(Int, Double, Float, Long) T](
+  implicit def impl_OpMulInner_DV_HV_eq_S[@expand.args(Int, Double, Float, Long) T](
       implicit @expand.sequence[T](0, 0.0, 0f, 0L) zero: T)
     : breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], HashVector[T], T] = {
     new breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], HashVector[T], T] {
@@ -91,11 +83,9 @@ trait DenseVector_HashVector_Ops extends GenericOps with DenseVectorOps with Has
         val aoff = a.offset
         val stride = a.stride
 
-        var i = 0
-        while (i < bsize) {
+        cforRange(0 until bsize) { i =>
           if (b.isActive(i))
             result += adata(aoff + bi(i) * stride) * bd(i)
-          i += 1
         }
         result
       }
@@ -128,6 +118,7 @@ trait HashVector_DenseVector_Ops extends DenseVector_HashVector_Ops {
       }
       implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
     }
+
   @expand
   @expand.valify
   implicit def hv_dv_op[
@@ -172,6 +163,23 @@ trait HashVector_DenseVector_Ops extends DenseVector_HashVector_Ops {
 trait HashVectorExpandOps extends VectorOps with HashVector_GenericOps {
   @expand
   @expand.valify
+  implicit def impl_scaleAdd_InPlace_HV_HV_HV[@expand.args(Int, Double, Float, Long) T]
+  : scaleAdd.InPlaceImpl3[HashVector[T], T, HashVector[T]] = { (dest, scalar, source) =>
+    require(dest.length == source.length, "Vectors must have the same length")
+    val bsize = source.iterableSize
+
+    if (scalar != 0) {
+      val bd = source.data
+      val bi = source.index
+      cforRange(0 until bsize) { i =>
+        if (source.isActive(i))
+          dest(bi(i)) += scalar * bd(i)
+      }
+    }
+  }
+
+  @expand
+  @expand.valify
   implicit def hv_hv_RHS_Idempotent_Op[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpAdd, OpSub) Op <: OpType](
@@ -196,9 +204,10 @@ trait HashVectorExpandOps extends VectorOps with HashVector_GenericOps {
 
       implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(this)
     }
+
   @expand
   @expand.valify
-  implicit def hv_hv_nilpotent_Op[@expand.args(Int, Double, Float, Long) T](
+  implicit def impl_OpMulScalar_HV_HV_eq_HV[@expand.args(Int, Double, Float, Long) T](
       implicit @expand.sequence[T](0, 0.0, 0.0f, 0L) zero: T)
     : OpMulScalar.Impl2[HashVector[T], HashVector[T], HashVector[T]] =
     new OpMulScalar.Impl2[HashVector[T], HashVector[T], HashVector[T]] {

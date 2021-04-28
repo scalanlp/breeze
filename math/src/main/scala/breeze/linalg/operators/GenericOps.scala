@@ -27,8 +27,6 @@ trait GenericOpsLowPrio2 extends GenericOpsLowPrio3 {
                                                                                   v1lt: M1 <:< Vector[T],
                                                                                   v2lt: M2 <:< Vector[T],
                                                                                   v1ne: NotGiven[ (M1 =:= Vector[T]) &:& (M2 =:= Vector[T])],
-                                                                                  //                                                                        v1ne: NotGiven[M1 =:= Vector[T]],
-                                                                                  //                                                                           v2ne: NotGiven[M2 =:= Vector[T]],
                                                                                   op: UImpl2[Op, Vector[T], Vector[T], MR]): UImpl2[Op, M1, M2, MR] = {
     op.asInstanceOf[UFunc.UImpl2[Op, M1, M2, MR]]
   }
@@ -37,10 +35,24 @@ trait GenericOpsLowPrio2 extends GenericOpsLowPrio3 {
                                                                                     v1lt: M1 <:< Vector[T],
                                                                                     v2lt: M2 <:< Vector[T],
                                                                                     v1ne: NotGiven[ (M1 =:= Vector[T]) &:& (M2 =:= Vector[T])],
-                                                                                    //                                                                                       v1ne: NotGiven[M1 =:= Vector[T]],
-                                                                                    //                                                                                       v2ne: NotGiven[M2 =:= Vector[T]],
                                                                                     op: UFunc.InPlaceImpl2[Op, Vector[T], Vector[T]]): UFunc.InPlaceImpl2[Op, M1, M2] = {
     op.asInstanceOf[UFunc.InPlaceImpl2[Op, M1, M2]]
+  }
+
+
+  implicit def castOps_V_S[M1 <: Vector[T], T, Op <: OpType, MR](implicit v1lt: M1 <:< Vector[T],
+                                                                 v2: ScalarOf[M1, T],
+                                                                 v1ne: NotGiven[ (M1 =:= Vector[T])],
+                                                                 op: UImpl2[Op, Vector[T], T, MR]): UImpl2[Op, M1, T, MR] = {
+    op.asInstanceOf[UFunc.UImpl2[Op, M1, T, MR]]
+  }
+
+  implicit def castUpdateOps_V_S[M1 <: Vector[T], T, Op <: OpType](implicit
+                                                                   v1lt: M1 <:< Vector[T],
+                                                                   v2: ScalarOf[M1, T],
+                                                                   v1ne: NotGiven[ (M1 =:= Vector[T])],
+                                                                   op: UFunc.InPlaceImpl2[Op, Vector[T], T]): UFunc.InPlaceImpl2[Op, M1, T] = {
+    op.asInstanceOf[UFunc.InPlaceImpl2[Op, M1, T]]
   }
 
   implicit def castOps_M_M[M1 <: Matrix[T], M2 <: Matrix[T], T, Op<: OpType, MR](implicit
