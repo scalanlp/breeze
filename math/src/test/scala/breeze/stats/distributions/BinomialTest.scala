@@ -31,7 +31,7 @@ class BinomialTest extends AnyFunSuite with Checkers with MomentsTestBase[Int] {
   def arbDistr: Arbitrary[Binomial] = Arbitrary {
     for {
       n <- Gen.choose(1, 100)
-      p <- arbitrary[Double].map { x => math.max(x.abs % 1.0, 1E-2)}
+      p <- Gen.choose(1e-4, 0.9999)
     } yield new Binomial(n, p)
   }
 

@@ -55,8 +55,8 @@ case class Binomial(n: Int, p: Double)(implicit rand: RandBasis = Rand)
         if (rand.uniform.draw() < pp) bnl += 1
         j += 1
       }
-    } else if (np < 1.0) {
-      val g = exp(-np)
+    } else if (n * pp < 1.0) {
+      val g = exp(-n * pp)
       var t = 1.0
       var j = 0
       var ok = true
@@ -75,9 +75,9 @@ case class Binomial(n: Int, p: Double)(implicit rand: RandBasis = Rand)
         while(continueInner) {
           val angle = math.Pi * rand.uniform.draw()
           y = tan(angle)
-          bnl = sq * y + np
+          bnl = sq * y + n * pp
+          continueInner = bnl < 0.0 || bnl >= (n + 1.0)
         }
-        continueInner = bnl < 0.0 || bnl >= (n + 1.0)
 
         bnl = floor(bnl)
         t = 1.2 * sq * (1.0 + y * y) * exp(
@@ -94,7 +94,6 @@ case class Binomial(n: Int, p: Double)(implicit rand: RandBasis = Rand)
   }
 
   private val pp = if (p <= 0.5) p else 1.0 - p
-  private val np = n * pp
   // data for the generator {
   private val nfact = breeze.numerics.lgamma(n + 1.0)
 
@@ -102,7 +101,7 @@ case class Binomial(n: Int, p: Double)(implicit rand: RandBasis = Rand)
   private val plog = log(pp)
   private val pclog = log(pc)
 
-  private val sq = sqrt(2.0 * np * pc)
+  private val sq = sqrt(2.0 * (n * pp) * pc)
   //}
 
   def mean = n * p
