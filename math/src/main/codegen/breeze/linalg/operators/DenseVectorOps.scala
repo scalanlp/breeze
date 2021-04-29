@@ -112,7 +112,7 @@ trait DenseVector_Vector_ExpandOps extends VectorOps with DenseVector_TraversalO
 trait DenseVectorExpandOps extends VectorOps with DenseVector_Vector_ExpandOps {
   @expand
   @expand.valify
-  implicit def dv_s_Op[
+  implicit def impl_Op_DV_S_eq_DV[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
       implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ * _ }, { _ / _ }, {  (__x, __y) => __y }, { _ % _ }, { _.pow(_) })
@@ -151,7 +151,7 @@ trait DenseVectorExpandOps extends VectorOps with DenseVector_Vector_ExpandOps {
 
   @expand
   @expand.valify
-  implicit def s_dv_Op[
+  implicit def impl_Op_S_DV_eq_DV[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
       implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ * _ }, { _ / _ }, {  (__x, __y) => __y }, { _ % _ }, { _.pow(_) })
@@ -174,7 +174,7 @@ trait DenseVectorExpandOps extends VectorOps with DenseVector_Vector_ExpandOps {
 
   @expand
   @expand.valify
-  implicit def dv_dv_Op[
+  implicit def impl_Op_DV_DV_eq_DV[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
       implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ / _ }, {  (__x, __y) => __y }, { _ % _ }, { _.pow(_) })
@@ -249,7 +249,7 @@ trait DenseVectorExpandOps extends VectorOps with DenseVector_Vector_ExpandOps {
 
   @expand
   @expand.valify
-  implicit def dv_s_UpdateOp[
+  implicit def impl_Op_InPlace_DV_S[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpAdd, OpSub, OpMulScalar, OpMulMatrix, OpDiv, OpSet, OpMod) Op <: OpType](
       implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ * _ }, { _ / _ }, {  (__x, __y) => __y }, { _ % _ })
@@ -296,7 +296,7 @@ trait DenseVectorExpandOps extends VectorOps with DenseVector_Vector_ExpandOps {
 
   @expand
   @expand.valify
-  implicit def canDot_DV_DV[@expand.args(Int, Long) T](implicit @expand.sequence[T](0, 0L) zero: T)
+  implicit def impl_Op_DV_DV_eq_S[@expand.args(Int, Long) T](implicit @expand.sequence[T](0, 0L) zero: T)
     : breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], DenseVector[T], T] = {
     new breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], DenseVector[T], T] {
       def apply(a: DenseVector[T], b: DenseVector[T]) = {
@@ -368,8 +368,8 @@ trait DenseVectorExpandOps extends VectorOps with DenseVector_Vector_ExpandOps {
 
   @expand
   @expand.valify
-  implicit def impl_scaleAdd_InPlace_DV_T_DV[@expand.args(Int, Long) V]
-    : scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] = {
+  implicit def impl_scaleAdd_InPlace_DV_S_DV[@expand.args(Int, Long) V]
+    : scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V] = {
     new scaleAdd.InPlaceImpl3[DenseVector[V], V, DenseVector[V]] {
       def apply(y: DenseVector[V], s: V, x: DenseVector[V]): Unit = {
         require(x.length == y.length, "Vectors must be the same length!")
