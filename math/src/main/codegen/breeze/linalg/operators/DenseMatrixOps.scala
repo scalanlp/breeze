@@ -36,7 +36,7 @@ trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMat
     new CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], DenseVector[R], DenseMatrix[R]] {
       def apply(from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => DenseVector[R]): DenseMatrix[R] = {
         var result: DenseMatrix[R] = null
-        for (c <- 0 until from.cols) {
+        cforRange (0 until from.cols) { c =>
           val col = f(from(::, c))
           if (result eq null) {
             result = DenseMatrix.zeros[R](col.length, from.cols)
@@ -60,7 +60,7 @@ trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMat
     new CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], BitVector, DenseMatrix[Boolean]] {
       def apply(from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => BitVector): DenseMatrix[Boolean] = {
         var result: DenseMatrix[Boolean] = null
-        for (c <- 0 until from.cols) {
+        cforRange(0 until from.cols) { c =>
           val col = f(from(::, c))
           if (result eq null) {
             result = DenseMatrix.zeros[Boolean](col.length, from.cols)
@@ -89,7 +89,7 @@ trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMat
         var result: DenseMatrix[Res] = null
         import from.rows
         val t = from.t
-        for (r <- 0 until from.rows) {
+        cforRange(0 until from.rows) { r =>
           val row = f(t(::, r))
           if (result eq null) {
             // scala has decided this method is overloaded, and needs a result type.
@@ -121,7 +121,7 @@ trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMat
         var result: DenseMatrix[Boolean] = null
         import from.rows
         val t = from.t
-        for (r <- 0 until from.rows) {
+        cforRange(0 until from.rows) { r =>
           val row = f(t(::, r))
           if (result eq null) {
             // scala has decided this method is overloaded, and needs a result type.
@@ -216,14 +216,8 @@ trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMat
       require(from.rows == from2.rows, "Vector row dimensions must match!")
       require(from.cols == from2.cols, "Vector col dimensions must match!")
       val result = create(from.rows, from.cols)
-      var i = 0
-      while (i < from.rows) {
-        var j = 0
-        while (j < from.cols) {
-          result(i, j) = fn(from(i, j), from2(i, j))
-          j += 1
-        }
-        i += 1
+      cforRange2 (0 until from.cols, 0 until from.rows) { (j, i) =>
+        result(i, j) = fn(from(i, j), from2(i, j))
       }
       result
     }
@@ -251,14 +245,8 @@ trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMat
       require(from.rows == from2.rows, "Vector row dimensions must match!")
       require(from.cols == from2.cols, "Vector col dimensions must match!")
       val result = create(from.rows, from.cols)
-      var i = 0
-      while (i < from.rows) {
-        var j = 0
-        while (j < from.cols) {
-          result(i, j) = fn((i, j), from(i, j), from2(i, j))
-          j += 1
-        }
-        i += 1
+      cforRange2 (0 until from.cols, 0 until from.rows) { (j, i) =>
+        result(i, j) = fn((i, j), from(i, j), from2(i, j))
       }
       result
     }
@@ -832,14 +820,8 @@ trait DenseMatrixExpandedOps extends MatrixOps with DenseMatrix_GenericOps with 
         } else {
           val ad = a.data
           val bd = b.data
-          var c = 0
-          while (c < a.cols) {
-            var r = 0
-            while (r < a.rows) {
-              ad(a.linearIndex(r, c)) = op(ad(a.linearIndex(r, c)), bd(b.linearIndex(r, c)))
-              r += 1
-            }
-            c += 1
+          cforRange2 (0 until a.cols, 0 until a.rows) { (c, r) =>
+            ad(a.linearIndex(r, c)) = op(ad(a.linearIndex(r, c)), bd(b.linearIndex(r, c)))
           }
         }
       }
@@ -860,20 +842,14 @@ trait DenseMatrixExpandedOps extends MatrixOps with DenseMatrix_GenericOps with 
       def apply(a: DenseMatrix[T], b: DenseMatrix[T]): Unit = {
         val ad = a.data
         val bd = b.data
-        var c = 0
 
         if ((a ne b) && a.overlaps(b)) {
           val ac = a.copy
           apply(ac, b)
           a := ac
         } else {
-          while (c < a.cols) {
-            var r = 0
-            while (r < a.rows) {
-              ad(a.linearIndex(r, c)) = op(ad(a.linearIndex(r, c)), bd(b.linearIndex(r, c)))
-              r += 1
-            }
-            c += 1
+          cforRange2 (0 until a.cols, 0 until a.rows) { (c, r) =>
+            ad(a.linearIndex(r, c)) = op(ad(a.linearIndex(r, c)), bd(b.linearIndex(r, c)))
           }
         }
 
@@ -937,15 +913,9 @@ trait DenseMatrixExpandedOps extends MatrixOps with DenseMatrix_GenericOps with 
     new Op.InPlaceImpl2[DenseMatrix[T], T] {
       override def apply(a: DenseMatrix[T], b: T) = {
         val ad: Array[T] = a.data
-        var c = 0
 
-        while (c < a.cols) {
-          var r = 0
-          while (r < a.rows) {
-            ad(a.linearIndex(r, c)) = op(ad(a.linearIndex(r, c)), b)
-            r += 1
-          }
-          c += 1
+        cforRange2 (0 until a.cols, 0 until a.rows) { (c, r) =>
+          ad(a.linearIndex(r, c)) = op(ad(a.linearIndex(r, c)), b)
         }
       }
       implicitly[BinaryUpdateRegistry[Matrix[T], T, Op.type]].register(this)
@@ -1005,17 +975,11 @@ trait DenseMatrixExpandedOps extends MatrixOps with DenseMatrix_GenericOps with 
         val res: DenseMatrix[T] = DenseMatrix.zeros[T](a.rows, a.cols)
         val resd: Array[T] = res.data
         val ad: Array[T] = a.data
-        var c = 0
-
         var off = 0
-        while (c < a.cols) {
-          var r = 0
-          while (r < a.rows) {
-            resd(off) = op(b, ad(a.linearIndex(r, c)))
-            r += 1
-            off += 1
-          }
-          c += 1
+
+        cforRange2 (0 until a.cols, 0 until a.rows) { (c, r) =>
+          resd(off) = op(b, ad(a.linearIndex(r, c)))
+          off += 1
         }
 
         res
@@ -1033,17 +997,11 @@ trait DenseMatrixExpandedOps extends MatrixOps with DenseMatrix_GenericOps with 
         val res: DenseMatrix[U] = DenseMatrix.zeros[U](a.rows, a.cols)
         val resd: Array[U] = res.data
         val ad: Array[T] = a.data
-        var c = 0
-
         var off = 0
-        while (c < a.cols) {
-          var r = 0
-          while (r < a.rows) {
-            resd(off) = opScalar(b, ad(a.linearIndex(r, c)))
-            r += 1
-            off += 1
-          }
-          c += 1
+
+        cforRange2 (0 until a.cols, 0 until a.rows) { (c,r) =>
+          resd(off) = opScalar(b, ad(a.linearIndex(r, c)))
+          off += 1
         }
 
         res
@@ -1094,15 +1052,9 @@ trait DenseMatrixMultOps extends DenseMatrixExpandedOps with DenseMatrixOpsLowPr
         // TODO: this could probably be much faster?
         require(a.cols == b.length)
         val res: DenseVector[T] = DenseVector.zeros[T](a.rows)
-        var c = 0
-        while (c < a.cols) {
-          var r = 0
-          while (r < a.rows) {
-            val v = a(r, c)
-            res(r) += v * b(c)
-            r += 1
-          }
-          c += 1
+        cforRange2 (0 until a.cols, 0 until a.rows) { (c, r) =>
+          val v = a(r, c)
+          res(r) += v * b(c)
         }
 
         res
@@ -1110,6 +1062,7 @@ trait DenseMatrixMultOps extends DenseMatrixExpandedOps with DenseMatrixOpsLowPr
 
       implicitly[BinaryRegistry[Matrix[T], Vector[T], OpMulMatrix.type, Vector[T]]].register(this)
     }
+
   @expand
   @expand.valify
   implicit def impl_OpMulMatrix_DM_M_eq_DM[@expand.args(Int, Long, Float, Double) T]
@@ -1129,8 +1082,7 @@ trait DenseMatrixMultOps extends DenseMatrixExpandedOps with DenseMatrixOpsLowPr
         val colsA = a.cols
         val rowsA = a.rows
 
-        var j = 0
-        while (j < colsB) {
+        cforRange (0 until colsB) { j =>
           var l = 0;
           while (l < colsA) {
 
@@ -1142,7 +1094,6 @@ trait DenseMatrixMultOps extends DenseMatrixExpandedOps with DenseMatrixOpsLowPr
             }
             l += 1
           }
-          j += 1
         }
         res
       }
@@ -1305,8 +1256,8 @@ trait DenseMatrix_SliceOps extends DenseMatrix_SliceOps_LowPrio {
         var r = 0
         while (r < a.rows) {
           ad(a.linearIndex(r, c)) = bd(boff)
-          r += 1
           boff += b.stride
+          r += 1
         }
         c += 1
       }
@@ -1374,7 +1325,7 @@ trait LowPriorityDenseMatrix1 {
       def apply(from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => R): DenseVector[R] = {
         val result = DenseVector.zeros[R](from.rows)
         val t = from.t
-        for (r <- 0 until from.rows) {
+        cforRange(0 until from.rows) { r =>
           result(r) = f(t(::, r))
         }
         result
@@ -1428,14 +1379,14 @@ trait LowPriorityDenseMatrix1 {
 }
 
 /**
- * TODO
+ * Operators for comparisons among elements of a DenseMatrix
  *
  * @author dlwh
  **/
 trait DenseMatrix_OrderingOps extends DenseMatrixExpandedOps {
 
   @expand
-  implicit def dm_dm_Op[
+  implicit def impl_Op_DM_DM_eq_DMBool[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpGT, OpGTE, OpLTE, OpLT, OpEq, OpNe) Op <: OpType](
       implicit @expand.sequence[Op]({ _ > _ }, { _ >= _ }, { _ <= _ }, { _ < _ }, { _ == _ }, { _ != _ })
@@ -1461,7 +1412,7 @@ trait DenseMatrix_OrderingOps extends DenseMatrixExpandedOps {
     }
 
   @expand
-  implicit def dm_v_Op[
+  implicit def impl_Op_DM_M_eq_DMBool_Comparison[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpGT, OpGTE, OpLTE, OpLT, OpEq, OpNe) Op <: OpType](
       implicit @expand.sequence[Op]({ _ > _ }, { _ >= _ }, { _ <= _ }, { _ < _ }, { _ == _ }, { _ != _ })
@@ -1483,7 +1434,7 @@ trait DenseMatrix_OrderingOps extends DenseMatrixExpandedOps {
     }
 
   @expand
-  implicit def dm_s_CompOp[
+  implicit def impl_Op_DM_S_eq_DMBool_Comparison[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpGT, OpGTE, OpLTE, OpLT, OpEq, OpNe) Op <: OpType](
       implicit @expand.sequence[Op]({ _ > _ }, { _ >= _ }, { _ <= _ }, { _ < _ }, { _ == _ }, { _ != _ })
@@ -1495,7 +1446,7 @@ trait DenseMatrix_OrderingOps extends DenseMatrixExpandedOps {
         } else {
           val result = DenseMatrix.zeros[Boolean](a.rows, a.cols)
 
-          cforRange2(0 until a.cols, 0 until a.rows) { (j, i) =>
+          cforRange2 (0 until a.cols, 0 until a.rows) { (j, i) =>
             result(i, j) = op(a(i, j), b)
           }
 

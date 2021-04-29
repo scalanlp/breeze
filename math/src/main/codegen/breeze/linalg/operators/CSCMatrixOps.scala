@@ -1747,11 +1747,6 @@ trait CSCMatrixOps_Ring extends CSCMatrixOpsLowPrio with SerializableLogging {
   }
 }
 
-/**
- * TODO
- *
- * @author dlwh
- **/
 trait CSCMatrixOpsLowPrio extends CSCMatrixOps_Generic with SerializableLogging {
 //  implicit def canMulM_V_def[T, A, B <: Vector[T]](
 //      implicit bb: B <:< Vector[T],

@@ -20,11 +20,6 @@ package breeze.collection.mutable
 
 import org.scalatest.funsuite.AnyFunSuite
 
-/**
- * TODO
- *
- * @author dlwh
-  **/
 class RingBufferTest extends AnyFunSuite {
 
   test("#666 RingBuffer problems") {
