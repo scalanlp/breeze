@@ -231,7 +231,6 @@ trait VectorConstructors[Vec[T] <: Vector[T]] {
 //     apply(values.toArray)
   }
 
-  //ToDo 2: I'm not sure fill/tabulate are really useful outside of the context of a DenseVector?
   implicit def canCreateZeros[V: ClassTag: Zero]: CanCreateZeros[Vec[V], Int] =
     new CanCreateZeros[Vec[V], Int] {
       def apply(d: Int): Vec[V] = {

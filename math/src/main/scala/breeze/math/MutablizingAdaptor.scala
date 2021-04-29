@@ -95,41 +95,9 @@ object MutablizingAdaptor {
 
       val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = Conversion(identity)
 
-//      implicit def mapValues: CanMapValues[Wrapper, S, S, Wrapper] = new CanMapValues[Wrapper, S, S, Wrapper] {
-//        /** Maps all key-value pairs from the given collection. */
-//        def map(from: Wrapper, fn: (S) => S): Wrapper = {
-//          from.map(u.mapValues.map(_, fn))
-//        }
-//
-//        /** Maps all active key-value pairs from the given collection. */
-//        def mapActive(from: Wrapper, fn: (S) => S): Wrapper = {
-//          from.map(u.mapValues.mapActive(_, fn))
-//        }
-//      }
-//
-//      implicit def zipMapValues: CanZipMapValues[Wrapper, S, S, Wrapper] = new CanZipMapValues[Wrapper, S, S, Wrapper] {
-//        /** Maps all corresponding values from the two collections. */
-//        def map(from: Wrapper, from2: Wrapper, fn: (S, S) => S): Wrapper = {
-//          from.map(u.zipMapValues.map(_, from2.value, fn))
-//        }
-//      }
-//
-//      implicit def iterateValues: CanTraverseValues[Wrapper, S] = new CanTraverseValues[Wrapper,S] {
-//        /** Traverses all values from the given collection. */
-//        override def traverse(from: Wrapper, fn: ValuesVisitor[S]): Unit = {
-//          from.map(u.iterateValues.traverse(_,fn))
-//        }
-//
-//        override def isTraversableAgain(from: Wrapper): Boolean = u.iterateValues.isTraversableAgain(from.value)
-//      }
-
       implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
         def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike.apply)
       }
-
-//      implicit def zero: CanCreateZeros[Wrapper,I] = new CanCreateZeros[Wrapper,I] {
-//        override def apply(dw: I): Wrapper = wrap(u.z(dw))
-//      }
 
       implicit def copy: CanCopy[Wrapper] = new CanCopy[Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
@@ -168,17 +136,10 @@ object MutablizingAdaptor {
 
       implicit def divIntoVS: OpDiv.InPlaceImpl2[Wrapper, S] = liftUpdate(u.divVS)
 
+      // TODO: we should be able to get rid of these...
       implicit def addIntoVV: OpAdd.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.addVV)
 
       implicit def subIntoVV: OpSub.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.subVV)
-
-//      override implicit def addVS: OpAdd.Impl2[Wrapper, S, Wrapper] = liftOp(u.addVS)
-
-//      override implicit def addIntoVS: OpAdd.InPlaceImpl2[Wrapper, S] = liftUpdate(u.addVS)
-
-//      override implicit def subIntoVS: OpSub.InPlaceImpl2[Wrapper, S] = liftUpdate(u.subVS)
-
-//      override implicit def subVS: OpSub.Impl2[Wrapper, S, Wrapper] = liftOp(u.subVS)
 
       implicit def setIntoVV: OpSet.InPlaceImpl2[Wrapper, Wrapper] = new OpSet.InPlaceImpl2[Wrapper, Wrapper] {
         def apply(a: Wrapper, b: Wrapper): Unit = {

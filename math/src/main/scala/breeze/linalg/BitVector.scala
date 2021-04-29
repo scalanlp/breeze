@@ -10,7 +10,8 @@ import breeze.storage.Zero
 import scala.reflect.ClassTag
 
 /**
- * TODO
+ * A BitVector is a Vector of Booleans backed by a [[java.util.Bitset]]. Much better memory usage
+ * and sometimes faster.
  *
  * @param enforceLength if false, then the BitVector won't throw exceptions if it's used in
  *                      operations with vectors longer than it.

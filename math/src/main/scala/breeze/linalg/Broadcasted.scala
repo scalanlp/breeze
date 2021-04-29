@@ -3,7 +3,11 @@ package breeze.linalg
 import breeze.linalg.support._
 
 /**
- * TODO
+ * A Broadcasted is a type that represents "broadcasting" (a la numpy).
+ *
+ * Unlike Numpy, broadcasting in Breeze is explicit:
+ *   matrix(*, ::) lifts UFuncs and operators so that they apply over each row
+ *   matrix(::, *) is the same, but for columns
  *
  * @author dlwh
  **/

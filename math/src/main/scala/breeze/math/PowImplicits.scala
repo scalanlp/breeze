@@ -8,8 +8,6 @@ import breeze.numerics.IntMath
  * @author dlwh
  **/
 object PowImplicits {
-  // just to make some unrolling less terrible
-  // TODO: move this somewhere sensible
   implicit class DoublePow(x: Double) {
     def pow(y: Double) = math.pow(x, y)
   }
