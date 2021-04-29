@@ -2,11 +2,6 @@ package breeze.linalg
 
 import org.scalatest.funsuite.AnyFunSuite
 
-/**
- * TODO
- *
- * @author dlwh
- **/
 class convertTest extends AnyFunSuite {
   test("Int -> {Double, Short}") {
     assert(convert(Array(1, 2, 3), Double).toIndexedSeq == IndexedSeq(1.0, 2.0, 3.0))

@@ -6,7 +6,6 @@ package breeze.linalg
  */
 sealed trait View
 
-//ToDo 3: Could View be made part of the Opts hierarchy for options?
 object View {
   implicit def viewPreferenceFromBoolean(b: Boolean): View = if (b) Require else Copy
 
