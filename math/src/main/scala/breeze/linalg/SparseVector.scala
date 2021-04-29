@@ -104,6 +104,9 @@ class SparseVector[@spec(Double, Int, Float, Long) V](val array: SparseArray[V])
     case _ => false
   }
 
+  /**
+   * This hashcode is consistent with over [[breeze.linalg.Vector]] hashcodes so long as the hashcode of "0" is 0.
+   **/
   override def hashCode = array.hashCode
 
   def isActive(rawIndex: Int) = array.isActive(rawIndex)

@@ -52,7 +52,7 @@ import scalaxy.debug._
  * @param stride separation between elements
  * @param length number of elements
  */
-@SerialVersionUID(1L) // TODO: scala doesn't propagate this to specialized subclasses. Sigh.
+@SerialVersionUID(1L)
 class DenseVector[@spec(Double, Int, Float, Long) V](
     val data: Array[V],
     val offset: Int,
@@ -116,7 +116,9 @@ class DenseVector[@spec(Double, Int, Float, Long) V](
     case _ => super.equals(p1)
   }
 
-  // TODO: this is only consistent if the hashcode of inactive elements is 0!!!
+  /**
+   * This hashcode is consistent with over [[breeze.linalg.Vector]] hashcodes so long as the hashcode of "0" is 0.
+   **/
   override def hashCode(): Int = ArrayUtil.zeroSkippingHashCode(data, offset, stride, length)
 
   override def toString = {

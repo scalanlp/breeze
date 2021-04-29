@@ -153,17 +153,16 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](
   /** Converts this matrix to a flat Array (column-major) */
   def toArray: Array[V] = {
     implicit val man: ClassTag[V] = ReflectionUtil.elemClassTagFromArray(data)
-    val ret = new Array[V](rows * cols)
-    var i = 0
-    while (i < cols) {
-      var j = 0
-      while (j < rows) {
+    if (isContiguous && !isTranspose) {
+      ArrayUtil.copyOfRange(data, offset, offset + size)
+    } else {
+      // TODO: consider using cache oblivious transpose here?
+      val ret = new Array[V](rows * cols)
+      cforRange2(0 until cols, 0 until rows) { (i,j) =>
         ret(i * rows + j) = data(linearIndex(j, i))
-        j += 1
       }
-      i += 1
+      ret
     }
-    ret
   }
 
   /** Converts this matrix to a DenseVector (column-major) */
@@ -257,7 +256,6 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](
     result
   }
 
-  // TODO: HACK!
   private implicit def dontNeedZero[V]: Zero[V] = null.asInstanceOf[Zero[V]]
 
   def delete(row: Int, axis: Axis._0.type): DenseMatrix[V] = {
@@ -327,7 +325,7 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](
   private def footprint = majorSize * majorStride
 
   /** Returns true if this dense matrix takes up a contiguous segment of the array */
-  def isContiguous: Boolean = (isTranspose && cols == majorStride) || (!isTranspose && rows == majorStride)
+  def isContiguous: Boolean = majorSize == majorStride
 
   /** Returns true if this dense matrix overlaps any content with the other matrix */
   private[linalg] def overlaps(other: DenseMatrix[V]): Boolean = (this.data eq other.data) && {
@@ -639,23 +637,22 @@ trait DenseMatrix_TraversalOps {
 
         if (majorStride == idealMajorStride) {
           fn.visitArray(data, offset, rows * cols, 1)
-        } else if (!from.isTranspose) {
-          var j = 0
-          while (j < from.cols) {
-            fn.visitArray(data, offset + j * majorStride, rows, 1)
-            j += 1
-          }
         } else {
-          var j = 0
-          while (j < from.cols) {
-            var i = 0
-            while (i < from.rows) {
-              fn.visit(from(i, j))
-              i += 1
-            }
-            j += 1
+          cforRange (0 until from.majorSize) { j =>
+            fn.visitArray(data, offset + j * majorStride, minorSize, 1)
           }
         }
+//        else {
+//          var j = 0
+//          while (j < from.cols) {
+//            var i = 0
+//            while (i < from.rows) {
+//              fn.visit(from(i, j))
+//              i += 1
+//            }
+//            j += 1
+//          }
+//        }
       }
 
     }
@@ -673,20 +670,13 @@ trait DenseMatrix_TraversalOps {
         if (majorStride == idealMajorStride) {
           fn.visitArray(from.rowColumnFromLinearIndex, data, offset, rows * cols, 1)
         } else if (!from.isTranspose) {
-          var j = 0
-          while (j < from.cols) {
+          // TODO: make this work for isTranspose too
+          cforRange (0 until from.cols) { j =>
             fn.visitArray(from.rowColumnFromLinearIndex, data, offset + j * majorStride, rows, 1)
-            j += 1
           }
         } else {
-          var j = 0
-          while (j < from.cols) {
-            var i = 0
-            while (i < from.rows) {
-              fn.visit((i, j), from(i, j))
-              i += 1
-            }
-            j += 1
+          cforRange2 (0 until from.rows, 0 until from.cols) { (i, j) =>
+            fn.visit((i, j), from(i, j))
           }
         }
       }
@@ -708,14 +698,13 @@ trait DenseMatrix_TraversalOps {
       }
 
       private def slowPath(from: DenseMatrix[V], fn: (V) => V): Unit = {
-        var j = 0
-        while (j < from.cols) {
-          var i = 0
-          while (i < from.rows) {
-            from(i, j) = fn(from(i, j))
-            i += 1
+        var off = from.offset
+        val d = from.data
+        cforRange (0 until from.majorSize) { big =>
+          cforRange (off until off + from.minorSize) { pos =>
+            d(pos) = fn(d(pos))
           }
-          j += 1
+          off += from.majorStride
         }
       }
 
@@ -729,16 +718,12 @@ trait DenseMatrix_TraversalOps {
     new CanMapKeyValuePairs[DenseMatrix[V], (Int, Int), V, R, DenseMatrix[R]] {
       override def map(from: DenseMatrix[V], fn: (((Int, Int), V) => R)) = {
         val data = new Array[R](from.data.length)
-        var j = 0
         var off = 0
-        while (j < from.cols) {
-          var i = 0
-          while (i < from.rows) {
+        cforRange (0 until from.cols) { j =>
+          cforRange (0 until from.rows) { i =>
             data(off) = fn(i -> j, from(i, j))
             off += 1
-            i += 1
           }
-          j += 1
         }
         DenseMatrix.create(from.rows, from.cols, data, 0, from.rows)
       }
@@ -758,23 +743,12 @@ trait DenseMatrix_TraversalOps {
           val isTranspose = from.isTranspose
           val off = from.offset
           val fd = from.data
-          if (off == 0) {
-            var i = 0
-            val iMax = data.length
-            while (i < iMax) {
-              data(i) = fn(fd(i))
-              i += 1
-            }
-          } else {
-            var i = 0
-            val iMax = data.length
-            while (i < iMax) {
-              data(i) = fn(fd(i + off))
-              i += 1
-            }
+          cforRange (0 until data.length) { i =>
+            data(i) = fn(fd(i + off))
           }
           DenseMatrix.create(from.rows, from.cols, data, 0, if (isTranspose) from.cols else from.rows, isTranspose)
         } else {
+          // TODO: convert to majorsize etc
           val data = new Array[R](from.size)
           var j = 0
           var off = 0

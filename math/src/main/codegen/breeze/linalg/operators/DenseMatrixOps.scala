@@ -1081,18 +1081,15 @@ trait DenseMatrixMultOps extends DenseMatrixExpandedOps with DenseMatrixOpsLowPr
         val colsB = b.cols
         val colsA = a.cols
         val rowsA = a.rows
+        // TODO: optimize in the case of isTranspose
+        // TODO: consider a block impl
 
         cforRange (0 until colsB) { j =>
-          var l = 0;
-          while (l < colsA) {
-
+          cforRange (0 until colsA) { l =>
             val v = b(l, j)
-            var i = 0
-            while (i < rowsA) {
+            cforRange (0 until rowsA) { i =>
               res(i, j) += v * a(i, l)
-              i += 1
             }
-            l += 1
           }
         }
         res
@@ -1250,16 +1247,10 @@ trait DenseMatrix_SliceOps extends DenseMatrix_SliceOps_LowPrio {
 
       val ad: Array[V] = a.data
       val bd: Array[V] = b.data
-      var c = 0
       var boff = b.offset
-      while (c < a.cols) {
-        var r = 0
-        while (r < a.rows) {
-          ad(a.linearIndex(r, c)) = bd(boff)
-          boff += b.stride
-          r += 1
-        }
-        c += 1
+      cforRange2 (0 until a.cols, 0 until a.rows) { (c, r) =>
+        ad(a.linearIndex(r, c)) = bd(boff)
+        boff += b.stride
       }
     }
   }
@@ -1267,21 +1258,22 @@ trait DenseMatrix_SliceOps extends DenseMatrix_SliceOps_LowPrio {
   class SetMSOp[@spec(Double, Int, Float, Long) V] extends OpSet.InPlaceImpl2[DenseMatrix[V], V] {
 
     def apply(a: DenseMatrix[V], b: V): Unit = {
-      if (a.data.length - a.offset == a.rows * a.cols) {
+      if (a.isContiguous) {
         ArrayUtil.fill(a.data, a.offset, a.size, b)
       } else {
+        slowPath(a, b)
+      }
+    }
 
-        // slow path when we don't have a trivial matrix
-        val ad: Array[V] = a.data
-        var c = 0
-        while (c < a.cols) {
-          var r = 0
-          while (r < a.rows) {
-            ad(a.linearIndex(r, c)) = b
-            r += 1
-          }
-          c += 1
+    private def slowPath(a: DenseMatrix[V], b: V): Unit = {
+      // slow path when we don't have a trivial matrix
+      val ad: Array[V] = a.data
+      var aoff = a.offset
+      cforRange(0 until a.majorSize) { big =>
+        cforRange(0 until a.minorSize) { little =>
+          ad(aoff + little) = b
         }
+        aoff += a.majorStride
       }
     }
   }
@@ -1339,20 +1331,19 @@ trait LowPriorityDenseMatrix1 {
       require(a.rows == b.rows, "Matrixs must have same number of rows")
       require(a.cols == b.cols, "Matrixs must have same number of columns")
 
-      // slow path when we don't have a trivial matrix
+      // TODO: detect b is a DM and dispatch
+      // TODO: check isTranspose?
+
       val ad = a.data
-      var c = 0
-      while (c < a.cols) {
-        var r = 0
-        while (r < a.rows) {
+      cforRange (0 until a.cols) { c =>
+        cforRange (0 until a.rows) { r =>
           ad(a.linearIndex(r, c)) = b(r, c)
-          r += 1
         }
-        c += 1
       }
     }
   }
 
+  // TODO: I don't like this op. remove?
   implicit def impl_OpSet_InPlace_DM_V[@specialized(Int, Float, Long, Double) V]: OpSet.InPlaceImpl2[DenseMatrix[V], Vector[V]] = {
       (a: DenseMatrix[V], b: Vector[V]) => {
         require(

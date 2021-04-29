@@ -61,6 +61,7 @@ class HashVector[@spec(Double, Int, Float, Long) E](val array: OpenAddressHashAr
 
   def allVisitableIndicesActive: Boolean = false
 
+  // TODO: needs to be consistent with Sparse/Dense (meaning it just has to be the slow dense thing)
   override def hashCode() = {
     var hash = 47
     // we make the hash code based on index * value, so that zeros don't affect the hashcode.
