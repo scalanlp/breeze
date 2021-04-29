@@ -589,6 +589,23 @@ class DenseVectorTest extends FunSuite with Checkers {
       assert(fromNew === slice)
     }
   }
+
+  test("#715 - transpose DV * CSCMatrix") {
+   val dv = DenseVector(1,2,3,4)
+
+    val csc = CSCMatrix.zeros[Int](4, 4)
+    csc(1, 1) = 1
+    csc(1, 2) = 2
+    csc(2, 1) = 2
+    csc(2, 2) = 4
+
+    val multiplied = dv.t * csc
+
+    val expected = DenseVector(0,8,16,0).t
+
+    assert(multiplied == expected)
+  }
+
 }
 
 abstract class DenseVectorPropertyTestBase[T: ClassTag] extends TensorSpaceTestBase[DenseVector[T], Int, T] {
