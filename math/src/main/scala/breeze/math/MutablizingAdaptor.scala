@@ -73,21 +73,6 @@ object MutablizingAdaptor {
     else CoordinateFieldAdaptor(vs)
   }
 
-  trait Lambda2[Fun[_, _, _], Second] {
-    type Result[A, B] = Fun[A, Second, B]
-  }
-
-  /*
-  def ensureMutable[V, I, S](vs: MutableRestrictedDomainTensorField[V, I, S])(implicit canIterate: CanTraverseValues[V,S],
-                                                 canMap: CanMapValues[V,S,S,V],
-                                                 canZipMap: CanZipMapValues[V,S,S,V])
-  : MutablizingAdaptor[Lambda2[RestrictedDomainTensorField, I]#Result, Lambda2[MutableRestrictedDomainTensorField, I]#Result, V, S] = {
-    if(vs.isInstanceOf[MutableRestrictedDomainTensorField[_, _, _]])
-      IdentityWrapper[Lambda2[MutableRestrictedDomainTensorField, I]#Result,V,S](vs.asInstanceOf[MutableRestrictedDomainTensorField[V, I, S]])
-    else RestrictedTensorFieldAdaptor(vs)
-  }
-   */
-
   case class IdentityWrapper[VS[_, _], V, S](underlying: VS[V, S]) extends MutablizingAdaptor[VS, VS, V, S] {
     type Wrapper = V
     implicit val mutaVspace: VS[Wrapper, S] = underlying
@@ -108,7 +93,7 @@ object MutablizingAdaptor {
       val u = underlying
       def scalars: Field[S] = underlying.scalars
 
-      implicit val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = implicitly
+      val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = Conversion(identity)
 
 //      implicit def mapValues: CanMapValues[Wrapper, S, S, Wrapper] = new CanMapValues[Wrapper, S, S, Wrapper] {
 //        /** Maps all key-value pairs from the given collection. */
@@ -232,7 +217,7 @@ object MutablizingAdaptor {
         val u = underlying
         def scalars: Field[S] = underlying.scalars
 
-        implicit val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = implicitly
+        val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = Conversion(identity)
 
         implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
           // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
@@ -369,8 +354,7 @@ object MutablizingAdaptor {
       val u = underlying
       def scalars: Field[S] = underlying.scalars
 
-      implicit val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = implicitly
-
+      val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = Conversion(identity)
 
       implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
@@ -529,7 +513,7 @@ object MutablizingAdaptor {
       val u = underlying
       def scalars: Ring[S] = underlying.scalars
 
-      implicit val hasOps : Conversion[Wrapper, NumericOps[Wrapper]] = implicitly
+      val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = Conversion(identity)
 
       implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
@@ -671,7 +655,7 @@ object MutablizingAdaptor {
       val u = underlying
       def scalars = underlying.scalars
 
-      implicit val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = implicitly
+      val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = Conversion(identity)
 
       implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
