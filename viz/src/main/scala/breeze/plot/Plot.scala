@@ -115,7 +115,6 @@ class Plot() {
 
   def logScaleX_=(value: Boolean): Unit = {
     if (value != logScaleX) {
-      // TODO this is such a pain. There has to be a better way.
       val oldAxis = _xaxis
       _xaxis = if (value) new LogarithmicAxis(xlabel) else new NumberAxis(xlabel)
       plot.setDomainAxis(_xaxis)
@@ -127,7 +126,6 @@ class Plot() {
 
   def logScaleY_=(value: Boolean): Unit = {
     if (value != logScaleY) {
-      // TODO this is such a pain. There has to be a better way.
       val oldAxis = _yaxis
       _yaxis = if (value) new LogarithmicAxis(ylabel) else new NumberAxis(ylabel)
       plot.setRangeAxis(_yaxis)

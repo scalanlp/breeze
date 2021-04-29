@@ -20,11 +20,6 @@ package breeze.util
 
 import org.scalatest.funsuite.AnyFunSuite
 
-/**
- * TODO
- *
- * @author dlwh
- **/
 class partitionTest extends AnyFunSuite {
 
   test("partition array in place") {

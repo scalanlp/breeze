@@ -3,7 +3,8 @@ package breeze.stats.distributions
 import org.apache.commons.math3.random.RandomGenerator
 
 /**
- * TODO
+ * An Apache-compatible [[RandomGenerator]] that creates a new RandomGenerator per thread. The thunk should
+ * be thread-safe, using atomics or something.
  *
  * @author dlwh
  **/

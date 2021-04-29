@@ -10,8 +10,6 @@ import scala.math.sqrt
 /**
  * A log normal distribution is distributed such that log X ~ Normal(\mu, \sigma)
  *
- * TODO: it should be possible to specify distributions like this by using an [[breeze.util.Isomorphism]]
- * instances.
  *
  * @author dlwh
  **/

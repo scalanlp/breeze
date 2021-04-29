@@ -23,11 +23,6 @@ import org.scalatest.funsuite.AnyFunSuite
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.compat._
 
-/**
- * TODO
- *
- * @author dlwh
- **/
 class ImplicitsTest extends AnyFunSuite {
 
   import Implicits._

@@ -27,7 +27,6 @@ class MultimethodTest extends AnyFunSuite with Checkers {
   trait M extends T
   trait DM extends M
 
-  // TODO: replace with registries...
   trait Tag
   class MM extends BinaryRegistry[T, T, Tag, String]
   class MMPrim extends BinaryRegistry[T, Double, Tag, String]

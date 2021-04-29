@@ -22,11 +22,6 @@ import org.scalacheck.{Arbitrary, Prop}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers
 
-/**
- * TODO
- *
- * @author dlwh
- **/
 trait HasCdfTestBase extends AnyFunSuite with Checkers {
   type Distr <: Density[Double] with Rand[Double] with HasCdf
   implicit def arbDistr: Arbitrary[Distr]

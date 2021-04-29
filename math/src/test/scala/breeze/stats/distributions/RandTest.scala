@@ -20,11 +20,6 @@ package breeze.stats.distributions
 
 import org.scalatest.funsuite.AnyFunSuite
 
-/**
- * TODO
- *
- * @author dlwh
- **/
 class RandTest extends AnyFunSuite {
   test("randInt is always non-negative") {
     assert(RandBasis.mt0.randInt.sample(10000).forall(_ >= 0))

@@ -2,11 +2,6 @@ package breeze.linalg
 
 import org.scalatest.funsuite.AnyFunSuite
 
-/**
- * TODO
- *
- * @author dlwh
- **/
 class BitVectorTest extends AnyFunSuite {
   test("Ones") {
     val as = BitVector.ones(5)

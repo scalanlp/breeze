@@ -27,7 +27,6 @@ import distributions._
  *
  * @author dlwh
  */
-// TODO: use quasi-random bit sequence.
 class RandomizationTest[L](val numSamples: Int, val errorMeasure: Seq[L] => Double)
     extends ((Seq[L], Seq[L]) => Double) {
   def this(errorMeasure: Seq[L] => Double) = this(5000, errorMeasure)
