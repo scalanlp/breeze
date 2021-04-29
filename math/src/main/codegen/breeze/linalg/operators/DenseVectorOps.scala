@@ -15,7 +15,7 @@ import breeze.math.PowImplicits._
 import scala.math.BigInt
 import scala.reflect.ClassTag
 
-trait DenseVectorOps extends VectorOps with DenseVector_GenericOps with DenseVector_OrderingOps with DenseVector_SpecialOps with DenseVectorExtraSpecialOps
+trait DenseVectorOps extends VectorOps with DenseVector_GenericOps with DenseVector_ComparisonOps with DenseVector_SpecialOps with DenseVectorExtraSpecialOps
 
 trait DenseVector_Vector_ExpandOps extends VectorOps with DenseVector_TraversalOps {
 
@@ -635,14 +635,14 @@ trait DenseVector_SpecialOps extends DenseVectorExpandOps {
 }
 
 /**
- * TODO
+ * Operators for comparisons
  *
  * @author dlwh
  **/
-trait DenseVector_OrderingOps extends DenseVectorExpandOps {
+trait DenseVector_ComparisonOps extends DenseVectorExpandOps {
 
   @expand
-  implicit def dv_dv_Op[
+  implicit def impl_Op_DV_DV_eq_BV_comparison[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpGT, OpGTE, OpLTE, OpLT, OpEq, OpNe) Op <: OpType](
       implicit @expand.sequence[Op]({ _ > _ }, { _ >= _ }, { _ <= _ }, { _ < _ }, { _ == _ }, { _ != _ })
@@ -669,7 +669,7 @@ trait DenseVector_OrderingOps extends DenseVectorExpandOps {
     }
 
   @expand
-  implicit def dv_v_Op[
+  implicit def impl_Op_DV_V_eq_BV_Comparison[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpGT, OpGTE, OpLTE, OpLT, OpEq, OpNe) Op <: OpType](
       implicit @expand.sequence[Op]({ _ > _ }, { _ >= _ }, { _ <= _ }, { _ < _ }, { _ == _ }, { _ != _ })
@@ -692,7 +692,7 @@ trait DenseVector_OrderingOps extends DenseVectorExpandOps {
     }
 
   @expand
-  implicit def dv_s_CompOp[
+  implicit def impl_Op_DV_S_eq_BV_comparison[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpGT, OpGTE, OpLTE, OpLT, OpEq, OpNe) Op <: OpType](
       implicit @expand.sequence[Op]({ _ > _ }, { _ >= _ }, { _ <= _ }, { _ < _ }, { _ == _ }, { _ != _ })
@@ -710,108 +710,6 @@ trait DenseVector_OrderingOps extends DenseVectorExpandOps {
           i += 1
         }
         result
-      }
-    }
-
-}
-
-
-trait DenseVector_GenericOps extends VectorOps {
-
-  // TODO: handle overlaps?
-  implicit def impl_OpSet_InPlace_DV_V_Generic[V]: OpSet.InPlaceImpl2[DenseVector[V], V] =
-    new OpSet.InPlaceImpl2[DenseVector[V], V] {
-      def apply(a: DenseVector[V], b: V): Unit = {
-        val ad: Array[V] = a.data
-        if (a.stride == 1) {
-          ArrayUtil.fill(ad, a.offset, a.length, b)
-        } else {
-          var i = 0
-          var aoff = a.offset
-          while (i < a.length) {
-            ad(aoff) = b
-            aoff += a.stride
-            i += 1
-          }
-        }
-      }
-    }
-
-  implicit def impl_OpSet_InPlace_DV_DV[V]: OpSet.InPlaceImpl2[DenseVector[V], DenseVector[V]] =
-    new OpSet.InPlaceImpl2[DenseVector[V], DenseVector[V]] {
-      def apply(a: DenseVector[V], b: DenseVector[V]): Unit = {
-        require(b.length == a.length, "Vectors must be the same length!")
-        if (a.overlaps(b)) {
-          apply(a, b.copy)
-        } else if (a.stride == b.stride && a.stride == 1) {
-          System.arraycopy(b.data, b.offset, a.data, a.offset, a.length)
-        } else {
-          val ad: Array[V] = a.data
-          val bd: Array[V] = b.data
-          var aoff = a.offset
-          var boff = b.offset
-
-          var i = 0
-          while (i < a.length) {
-            ad(aoff) = bd(boff)
-            aoff += a.stride
-            boff += b.stride
-            i += 1
-          }
-        }
-
-      }
-    }
-
-  implicit def impl_scaleAdd_InPlace_DV_S_DV[T: Semiring]: scaleAdd.InPlaceImpl3[DenseVector[T], T, DenseVector[T]] =
-    new scaleAdd.InPlaceImpl3[DenseVector[T], T, DenseVector[T]] {
-      val ring = implicitly[Semiring[T]]
-      def apply(a: DenseVector[T], s: T, b: DenseVector[T]): Unit = {
-        if (a.overlaps(b)) {
-          apply(a, s, b.copy)
-        } else {
-          require(b.length == a.length, "Vectors must be the same length!")
-          val ad: Array[T] = a.data
-          val bd: Array[T] = b.data
-          var aoff = a.offset
-          var boff = b.offset
-
-          var i = 0
-          while (i < a.length) {
-            ad(aoff) = ring.+(ad(aoff), ring.*(s, bd(boff)))
-            aoff += a.stride
-            boff += b.stride
-            i += 1
-          }
-        }
-      }
-    }
-
-  implicit def impl_OpSet_InPlace_DV_V[T, Vec](
-      implicit ev: Vec <:< Vector[T]): OpSet.InPlaceImpl2[DenseVector[T], Vec] =
-    new OpSet.InPlaceImpl2[DenseVector[T], Vec] {
-      def apply(a: DenseVector[T], b: Vec): Unit = {
-        val ad: Array[T] = a.data
-        var aoff: Int = a.offset
-
-        var i = 0
-        while (i < a.length) {
-          ad(aoff) = b(i)
-          aoff += a.stride
-          i += 1
-        }
-      }
-      //    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], OpSet.type]].register(this)
-    }
-
-  implicit def impl_Op_LHS_DVt_eq_R_cast[Tag, V, LHS, R](
-      implicit op: UFunc.UImpl2[Tag, LHS, DenseMatrix[V], R]): UFunc.UImpl2[Tag, LHS, Transpose[DenseVector[V]], R] =
-    new UFunc.UImpl2[Tag, LHS, Transpose[DenseVector[V]], R] {
-      def apply(v: LHS, v2: Transpose[DenseVector[V]]): R = {
-        val dv: DenseVector[V] = v2.inner
-        val dm: DenseMatrix[V] =
-          DenseMatrix.create(data = dv.data, offset = dv.offset, cols = dv.length, rows = 1, majorStride = dv.stride)
-        op(v, dm)
       }
     }
 

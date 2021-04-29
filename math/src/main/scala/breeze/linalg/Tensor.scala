@@ -85,7 +85,6 @@ trait QuasiTensor[@spec(Int) K, @spec(Double, Int, Float, Long) V] extends HasOp
   @deprecated("Use breeze.linalg.any instead", "0.6")
   def any(implicit semi: Semiring[V]) = valuesIterator.exists(_ != semi.zero)
 
-  // TODO: this is only consistent if the hashcode of inactive elements is 0!!!
   override def hashCode() = {
     var hash = 43
     for (v <- activeValuesIterator) {
@@ -154,7 +153,6 @@ trait TensorLike[@spec(Int) K, @spec(Double, Int, Float, Long) V, +This <: Tenso
     bf.mapActive(repr, f)
   }
 
-  // TODO: fix variance or just remove the multimethod stuff...
   /** Creates a new map containing a transformed copy of this map. */
   def mapValues[O, That](f: V => O)(implicit bf: CanMapValues[This @uncheckedVariance, V, O, That]): That = {
     bf(repr, f)

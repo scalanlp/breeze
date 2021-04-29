@@ -637,7 +637,7 @@ trait CSCMatrixExpandedOps extends MatrixOps with CSCMatrixOps_Ring {
 
   @expand
   @expand.valify
-  implicit def implOps_CSCT_T_eq_CSCT[
+  implicit def impl_Op_CSCT_T_eq_CSCT[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpMulScalar, OpMulMatrix) Op <: OpType](
       implicit @expand.sequence[T](0, 0.0, 0.0f, 0L) zero: T): Op.Impl2[CSCMatrix[T], T, CSCMatrix[T]] = {
@@ -1016,10 +1016,11 @@ trait CSCMatrixOps_Ring extends CSCMatrixOpsLowPrio with SerializableLogging {
     }
   }
 
+  // TODO: remove registry
   implicit def canMulM_V_Semiring[T: Semiring: Zero: ClassTag]
     : BinaryRegistry[CSCMatrix[T], Vector[T], OpMulMatrix.type, Vector[T]] =
     new BinaryRegistry[CSCMatrix[T], Vector[T], OpMulMatrix.type, Vector[T]] {
-      implicit val ring: Semiring[T] = implicitly[Semiring[T]]
+      val ring: Semiring[T] = implicitly[Semiring[T]]
 
       override def bindingMissing(a: CSCMatrix[T], b: Vector[T]) = {
         require(a.cols == b.length, "Dimension Mismatch!")

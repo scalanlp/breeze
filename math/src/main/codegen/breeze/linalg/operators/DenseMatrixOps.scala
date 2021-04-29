@@ -19,7 +19,7 @@ import breeze.math.PowImplicits._
 import scala.reflect.ClassTag
 import scala.{specialized => spec}
 
-trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMatrix_OrderingOps
+trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMatrix_ComparisonOps
   with DenseMatrixMultOps with DenseMatrixMultiplyOps with DenseMatrixFloatMultiplyStuff with DenseMatrix_SliceOps {
   implicit val setMV_D: OpSet.InPlaceImpl2[DenseMatrix[Double], DenseVector[Double]] = new SetDMDVOp[Double]();
   implicit val setMV_F: OpSet.InPlaceImpl2[DenseMatrix[Float], DenseVector[Float]] = new SetDMDVOp[Float]();
@@ -1374,7 +1374,7 @@ trait LowPriorityDenseMatrix1 {
  *
  * @author dlwh
  **/
-trait DenseMatrix_OrderingOps extends DenseMatrixExpandedOps {
+trait DenseMatrix_ComparisonOps extends DenseMatrixExpandedOps {
 
   @expand
   implicit def impl_Op_DM_DM_eq_DMBool[
