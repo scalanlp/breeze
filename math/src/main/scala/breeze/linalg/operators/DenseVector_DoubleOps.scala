@@ -6,7 +6,7 @@ import scalaxy.debug.require
 import com.github.fommil.netlib.BLAS.{getInstance => blas}
 
 // TODO: rename this
-trait DenseVectorExtraSpecialOps extends DenseVectorExpandOps {
+trait DenseVector_DoubleOps extends DenseVectorExpandOps {
 
   // TODO: try deleting (axpy)
   implicit val impl_OpAdd_InPlace_DV_DV_Double: OpAdd.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = {
@@ -117,4 +117,92 @@ trait DenseVectorExtraSpecialOps extends DenseVectorExpandOps {
   }
 
   implicit def impl_dim_DV_eq_I[E]: dim.Impl[DenseVector[E], Int] = _.length
+}
+
+trait DenseVector_FloatOps extends DenseVectorExpandOps {
+
+  implicit object impl_scaledAdd_InPlace_DV_S_DV_Float
+    extends scaleAdd.InPlaceImpl3[DenseVector[Float], Float, DenseVector[Float]]
+      with Serializable {
+    def apply(y: DenseVector[Float], a: Float, x: DenseVector[Float]): Unit = {
+      require(x.length == y.length, s"Vectors must have same length")
+      if (y.overlaps(x)) {
+        apply(y, a, x.copy)
+      } else if (x.noOffsetOrStride && y.noOffsetOrStride) {
+        // using blas here is always a bad idea.
+        val ad = x.data
+        val bd = y.data
+
+        cforRange(0 until x.length) { i =>
+          bd(i) += ad(i) * a
+        }
+
+      } else {
+        slowPath(y, a, x)
+      }
+    }
+
+    private def slowPath(y: DenseVector[Float], a: Float, x: DenseVector[Float]): Unit = {
+      cforRange(0 until x.length) { i =>
+        y(i) += x(i) * a
+      }
+    }
+  }
+  implicitly[TernaryUpdateRegistry[Vector[Float], Float, Vector[Float], scaleAdd.type]]
+    .register(impl_scaledAdd_InPlace_DV_S_DV_Float)
+
+  implicit val impl_OpAdd_InPlace_DV_DV_Float: OpAdd.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] = {
+    new OpAdd.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] {
+      def apply(a: DenseVector[Float], b: DenseVector[Float]) = {
+        scaleAdd.inPlace(a, 1.0f, b)
+      }
+      implicitly[BinaryUpdateRegistry[Vector[Float], Vector[Float], OpAdd.type]].register(this)
+    }
+  }
+
+  implicit val impl_OpAdd_DV_DV_eq_DV_Float: OpAdd.Impl2[DenseVector[Float], DenseVector[Float], DenseVector[Float]] = {
+    pureFromUpdate(implicitly, implicitly)
+  }
+  implicitly[BinaryRegistry[Vector[Float], Vector[Float], OpAdd.type, Vector[Float]]].register(impl_OpAdd_DV_DV_eq_DV_Float)
+
+  implicit val impl_OpSub_InPlace_DV_DV_Float: OpSub.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] = {
+    new OpSub.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] {
+      def apply(a: DenseVector[Float], b: DenseVector[Float]) = {
+        scaleAdd.inPlace(a, -1.0f, b)
+      }
+      implicitly[BinaryUpdateRegistry[Vector[Float], Vector[Float], OpSub.type]].register(this)
+    }
+
+  }
+  implicit val impl_OpSub_DV_DV_eq_DV_Float: OpSub.Impl2[DenseVector[Float], DenseVector[Float], DenseVector[Float]] = {
+    pureFromUpdate(implicitly, implicitly)
+  }
+  implicitly[BinaryRegistry[Vector[Float], Vector[Float], OpSub.type, Vector[Float]]].register(impl_OpSub_DV_DV_eq_DV_Float)
+
+  implicit val impl_OpMulInner_DV_DV_eq_S_Float
+  : breeze.linalg.operators.OpMulInner.Impl2[DenseVector[Float], DenseVector[Float], Float] = {
+    new breeze.linalg.operators.OpMulInner.Impl2[DenseVector[Float], DenseVector[Float], Float] {
+      def apply(a: DenseVector[Float], b: DenseVector[Float]) = {
+        require(a.length == b.length, s"Vectors must have same length")
+        if (a.noOffsetOrStride && b.noOffsetOrStride && a.length < DenseVectorSupportMethods.MAX_SMALL_DOT_PRODUCT_LENGTH) {
+          DenseVectorSupportMethods.smallDotProduct_Float(a.data, b.data, a.length)
+        } else {
+          blasPath(a, b)
+        }
+      }
+
+      val UNROLL_FACTOR = 6
+
+      private def blasPath(a: DenseVector[Float], b: DenseVector[Float]): Float = {
+        if ((a.length <= 300 || !usingNatives) && a.stride == 1 && b.stride == 1) {
+          DenseVectorSupportMethods.dotProduct_Float(a.data, a.offset, b.data, b.offset, a.length)
+        } else {
+          val boff = if (b.stride >= 0) b.offset else (b.offset + b.stride * (b.length - 1))
+          val aoff = if (a.stride >= 0) a.offset else (a.offset + a.stride * (a.length - 1))
+          blas.sdot(a.length, b.data, boff, b.stride, a.data, aoff, a.stride)
+        }
+      }
+      implicitly[BinaryRegistry[Vector[Float], Vector[Float], OpMulInner.type, Float]].register(this)
+    }
+  }
 }
