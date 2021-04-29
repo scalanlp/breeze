@@ -32,11 +32,9 @@ trait DenseVector_Vector_ExpandOps extends VectorOps with DenseVector_TraversalO
         var aoff = a.offset
         var result: T = zero
 
-        var i = 0
-        while (i < a.length) {
+        cforRange (0 until a.length) { i =>
           result += ad(aoff) * b(i)
           aoff += a.stride
-          i += 1
         }
         result
 
@@ -60,11 +58,9 @@ trait DenseVector_Vector_ExpandOps extends VectorOps with DenseVector_TraversalO
         val result = DenseVector.zeros[T](a.length)
         val rd = result.data
 
-        var i = 0
-        while (i < a.length) {
+        cforRange (0 until a.length) { i =>
           rd(i) = op(ad(aoff), b(i))
           aoff += a.stride
-          i += 1
         }
         result
       }
@@ -84,11 +80,9 @@ trait DenseVector_Vector_ExpandOps extends VectorOps with DenseVector_TraversalO
         val ad = a.data
         var aoff = a.offset
 
-        var i = 0
-        while (i < a.length) {
+        cforRange (0 until a.length) { i =>
           ad(aoff) = op(ad(aoff), b(i))
           aoff += a.stride
-          i += 1
         }
       }
       implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
@@ -143,11 +137,9 @@ trait DenseVectorExpandOps extends VectorOps with DenseVector_Vector_ExpandOps {
             }
           }
         } else {
-          var i = 0
           var j = aoff
-          while (i < rd.length) {
+          cforRange (0 until rd.length) { i =>
             rd(i) = op(ad(j), b)
-            i += 1
             j += stride
           }
         }
@@ -171,11 +163,9 @@ trait DenseVectorExpandOps extends VectorOps with DenseVector_Vector_ExpandOps {
         val result = DenseVector.zeros[T](b.length)
         val rd = result.data
 
-        var i = 0
-        while (i < b.length) {
+        cforRange (0 until b.length) { i =>
           rd(i) = op(a, bd(boff))
           boff += b.stride
-          i += 1
         }
         result
       }
@@ -208,12 +198,10 @@ trait DenseVectorExpandOps extends VectorOps with DenseVector_Vector_ExpandOps {
             rd(j) = op(ad(j + aoff), bd(j + boff))
           }
         } else {
-          var i = 0
-          while (i < a.length) {
+          cforRange (0 until a.length) { i =>
             rd(i) = op(ad(aoff), bd(boff))
             aoff += a.stride
             boff += b.stride
-            i += 1
           }
         }
         result
@@ -296,11 +284,9 @@ trait DenseVectorExpandOps extends VectorOps with DenseVector_Vector_ExpandOps {
     }
 
     private def slowPath(ad: Array[T], aoff: Int, stride: Int, b: T, length: Int): Unit = {
-      var i = 0
       var j = aoff
-      while (i < length) {
+      cforRange (0 until length) { i =>
         ad(j) = op(ad(j), b)
-        i += 1
         j += stride
       }
     }
@@ -322,12 +308,10 @@ trait DenseVectorExpandOps extends VectorOps with DenseVector_Vector_ExpandOps {
         var boff = b.offset
         var result: T = zero
 
-        var i = 0
-        while (i < a.length) {
+        cforRange (0 until a.length) { i =>
           result += ad(aoff) * bd(boff)
           aoff += a.stride
           boff += b.stride
-          i += 1
         }
         result
 
@@ -367,10 +351,8 @@ trait DenseVectorExpandOps extends VectorOps with DenseVector_Vector_ExpandOps {
             val data2 = v2.data
             val stride2 = v2.stride
             var offset2 = v2.offset
-            var i = 0
-            while (i < n) {
+            cforRange (0 until n) { i =>
               fn(data1(offset1), data2(offset2))
-              i += 1
               offset1 += stride1
               offset2 += stride2
             }
@@ -657,12 +639,10 @@ trait DenseVector_ComparisonOps extends DenseVectorExpandOps {
         var boff = b.offset
         val result = BitVector.zeros(a.length)
 
-        var i = 0
-        while (i < a.length) {
+        cforRange (0 until a.length) { i =>
           result(i) = op(ad(aoff), bd(boff))
           aoff += a.stride
           boff += b.stride
-          i += 1
         }
         result
       }
@@ -681,11 +661,9 @@ trait DenseVector_ComparisonOps extends DenseVectorExpandOps {
         var aoff = a.offset
         val result = BitVector.zeros(a.length)
 
-        var i = 0
-        while (i < a.length) {
+        cforRange (0 until a.length) { i =>
           result(i) = op(ad(aoff), b(i))
           aoff += a.stride
-          i += 1
         }
         result
       }
@@ -703,11 +681,9 @@ trait DenseVector_ComparisonOps extends DenseVectorExpandOps {
         var aoff = a.offset
         val result = BitVector.zeros(a.length)
 
-        var i = 0
-        while (i < a.length) {
+        cforRange (0 until a.length) { i =>
           result(i) = op(ad(aoff), b)
           aoff += a.stride
-          i += 1
         }
         result
       }
