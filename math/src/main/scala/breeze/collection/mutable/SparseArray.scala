@@ -42,7 +42,7 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](
     private var used: Int,
     val size: Int,
     val default: V)
-    extends ArrayLike[V]
+    extends SparseArrayLike[V]
     with Storage[V]
     with Serializable {
 

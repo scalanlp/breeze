@@ -34,6 +34,8 @@ class BinomialHeap[T]()(implicit ord: Ordering[T]) extends Iterable[T] with Iter
   override val size = 0
 
   def +(x: T) = mkHeap(insertTree(Node(0, x, Nil), trees), size + 1)
+
+  @tailrec
   private def insertTree(n: Node[T], t: List[Node[T]]): List[Node[T]] = {
     if (t.isEmpty) List(n)
     else if (n.rank < t.head.rank) n :: t

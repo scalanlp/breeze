@@ -39,7 +39,7 @@ final class OpenAddressHashArray[@specialized(Int, Float, Long, Double) V] priva
     implicit protected val manElem: ClassTag[V],
     val zero: Zero[V])
     extends Storage[V]
-    with ArrayLike[V]
+    with SparseArrayLike[V]
     with Serializable {
 
   require(size > 0, "Size must be positive, but got " + size)

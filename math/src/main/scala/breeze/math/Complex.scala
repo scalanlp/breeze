@@ -331,11 +331,8 @@ object Complex { outer =>
 
   implicit object PowCC extends OpPow.Impl2[Complex, Complex, Complex] { def apply(a: Complex, b: Complex) = a.pow(b) }
 
-  //
   // scala.math.Numeric and scala.math.Fractional
-  //
-  // TODO: Implement scala.math.Integral trait, if this is ever required
-  //       for some reason.
+
 
   /** `Complex` as `scala.math.Numeric` trait.
    * Conversions to `Int`, `Float` and `Double` are only performed

@@ -28,8 +28,7 @@ import scala.reflect.ClassTag
  *
  * @author dlwh
  */
-// TODO: perhaps these should be called sparse Arrays
-trait ArrayLike[V] {
+trait SparseArrayLike[V] {
   def apply(i: Int): V
   def update(i: Int, t: V): Unit
 

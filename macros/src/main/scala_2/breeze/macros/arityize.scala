@@ -5,7 +5,7 @@ import scala.reflect.macros.whitebox.Context
 import scala.language.experimental.macros
 
 /**
- * TODO
+ * An annotation for code generating up to 22 replicas a la Tuples.
  *
  * @author dlwh
  **/

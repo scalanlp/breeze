@@ -2,11 +2,6 @@ package breeze.macros
 
 import org.scalatest.FunSuite
 
-/**
- * TODO
- *
- * @author dlwh
- **/
 class arityizeTest extends FunSuite {
 
   test("Compiles?") {
