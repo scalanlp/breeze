@@ -82,10 +82,11 @@ trait Vector_TraversalOps {
 
     def isTraversableAgain(from: Vector[V]): Boolean = true
 
-    def traverse(from: Vector[V], fn: ValuesVisitor[V]): Unit = {
+    def traverse(from: Vector[V], fn: ValuesVisitor[V]): fn.type = {
       for (v <- from.valuesIterator) {
         fn.visit(v)
       }
+      fn
     }
 
   }
@@ -109,8 +110,9 @@ trait DenseVector_TraversalOps extends Vector_TraversalOps {
 
       def isTraversableAgain(from: DenseVector[V]): Boolean = true
 
-      def traverse(from: DenseVector[V], fn: ValuesVisitor[V]): Unit = {
+      def traverse(from: DenseVector[V], fn: ValuesVisitor[V]): fn.type = {
         fn.visitArray(from.data, from.offset, from.length, from.stride)
+        fn
       }
 
     }
@@ -208,9 +210,10 @@ trait SparseVector_TraversalOps extends Vector_TraversalOps {
       def isTraversableAgain(from: SparseVector[V]): Boolean = true
 
       /** Iterates all key-value pairs from the given collection. */
-      def traverse(from: SparseVector[V], fn: ValuesVisitor[V]): Unit = {
+      def traverse(from: SparseVector[V], fn: ValuesVisitor[V]): fn.type = {
         fn.zeros(from.size - from.activeSize, from.default)
         fn.visitArray(from.data, 0, from.activeSize, 1)
+        fn
       }
     }
   }

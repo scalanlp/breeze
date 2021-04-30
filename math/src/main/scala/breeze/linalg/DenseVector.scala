@@ -514,25 +514,6 @@ object DenseVector extends VectorConstructors[DenseVector] {
 
   implicit def DV_scalarOf[T]: ScalarOf[DenseVector[T], T] = ScalarOf.dummy
 
-  // slicing
-  // specialize to get the good class
-  implicit def canSlice[V]: CanSlice[DenseVector[V], Range, DenseVector[V]] = {
-    new CanSlice[DenseVector[V], Range, DenseVector[V]] {
-      def apply(v: DenseVector[V], re: Range): DenseVector[V] = {
-
-        val range: Range = re.getRangeWithoutNegativeIndexes(v.length)
-
-        require(range.isEmpty || range.last < v.length)
-        require(range.isEmpty || range.start >= 0)
-        DenseVector.create(
-          v.data,
-          offset = v.offset + v.stride * range.start,
-          stride = v.stride * range.step,
-          length = range.length)
-      }
-    }
-  }
-
   implicit def canTransposeComplex: CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] = {
     new CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] {
       def apply(from: DenseVector[Complex]): DenseMatrix[Complex] = {

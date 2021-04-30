@@ -42,11 +42,11 @@ object norm extends UFunc {
     fromTraverseValues(canTraverseValues, canNormS)
   }
 
+  // TODO: make a registry, make efficient 0 and 2 norm variants for core vector types
   def fromTraverseValues[Vec, T](implicit canTraverseValues: CanTraverseValues[Vec, T],
                                  canNormS: norm.Impl[T, Double]) = {
     new norm.Impl2[Vec, Double, Double] {
       def apply(vec: Vec, n: Double): Double = {
-        // TODO: 0 norm, maybe faster 2 norm?
         if (n == Double.PositiveInfinity) {
           object infiniteNormVisitor extends ValuesVisitor[T] {
             var max = 0.0
@@ -61,9 +61,24 @@ object norm extends UFunc {
               max = scala.math.max(ns, max)
             }
           }
-          canTraverseValues.traverse(vec, infiniteNormVisitor)
-          infiniteNormVisitor.max
+          canTraverseValues.traverse(vec, infiniteNormVisitor).max
+        } else if (n == 0) {
+          object zeroNormVisitor extends ValuesVisitor[T] {
+            var nnz = 0.0
+
+            override def visit(a: T): Unit = {
+              val nn = canNormS(a)
+              if (nn != 0) {
+                nnz += 1
+              }
+            }
+
+            override def zeros(numZero: Int, zeroValue: T): Unit = {
+            }
+          }
+          canTraverseValues.traverse(vec, zeroNormVisitor).nnz
         } else {
+          // TODO: does this need to be more stable?
           object finiteNormVisitor extends ValuesVisitor[T] {
             var sum = 0.0
 
@@ -79,8 +94,8 @@ object norm extends UFunc {
               }
             }
           }
-          canTraverseValues.traverse(vec, finiteNormVisitor)
-          math.pow(finiteNormVisitor.sum, 1.0 / n)
+          val sum = canTraverseValues.traverse(vec, finiteNormVisitor).sum
+          math.pow(sum, 1.0 / n)
         }
       }
     }

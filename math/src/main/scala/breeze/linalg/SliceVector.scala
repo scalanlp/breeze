@@ -92,10 +92,11 @@ object SliceVector {
       def isTraversableAgain(from: SliceVector[K, V]): Boolean = true
 
       /** Iterates all key-value pairs from the given collection. */
-      def traverse(from: SliceVector[K, V], fn: ValuesVisitor[V]): Unit = {
+      def traverse(from: SliceVector[K, V], fn: ValuesVisitor[V]): fn.type = {
         from.valuesIterator.foreach {
           fn.visit(_)
         }
+        fn
       }
 
     }

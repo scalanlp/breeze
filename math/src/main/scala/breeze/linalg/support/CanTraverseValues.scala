@@ -29,7 +29,7 @@ import breeze.math.Complex
 trait CanTraverseValues[From, A] {
 
   /**Traverses all values from the given collection. */
-  def traverse(from: From, fn: ValuesVisitor[A]): Unit
+  def traverse(from: From, fn: ValuesVisitor[A]): fn.type
   def isTraversableAgain(from: From): Boolean
 
   def foldLeft[B](from: From, b: B)(fn: (B, A) => B): B = {
@@ -81,8 +81,9 @@ object CanTraverseValues extends LowPrioCanTraverseValues {
   //
 
   class OpArray[@specialized(Double, Int, Float, Long) A] extends CanTraverseValues[Array[A], A] {
-    def traverse(from: Array[A], fn: ValuesVisitor[A]): Unit = {
+    def traverse(from: Array[A], fn: ValuesVisitor[A]): fn.type = {
       fn.visitArray(from)
+      fn
     }
 
     def isTraversableAgain(from: Array[A]): Boolean = true
@@ -120,10 +121,11 @@ trait LowPrioCanTraverseValues2 {
 trait LowPrioCanTraverseValues extends LowPrioCanTraverseValues2 {
   implicit def canTraverseTraversable[V, X <: IterableOnce[V]]: CanTraverseValues[X, V] = {
     new CanTraverseValues[X, V] {
-      override def traverse(from: X, fn: CanTraverseValues.ValuesVisitor[V]): Unit = {
+      override def traverse(from: X, fn: CanTraverseValues.ValuesVisitor[V]): fn.type = {
         for (v <- from) {
           fn.visit(v)
         }
+        fn
       }
 
       def isTraversableAgain(from: X): Boolean = from.isInstanceOf[Iterable[V]]
@@ -133,10 +135,11 @@ trait LowPrioCanTraverseValues extends LowPrioCanTraverseValues2 {
   implicit def canTraverseIterator[V]: CanTraverseValues[Iterator[V], V] = {
     new CanTraverseValues[Iterator[V], V] {
 
-      override def traverse(from: Iterator[V], fn: CanTraverseValues.ValuesVisitor[V]): Unit = {
+      override def traverse(from: Iterator[V], fn: CanTraverseValues.ValuesVisitor[V]): fn.type = {
         for (v <- from) {
           fn.visit(v)
         }
+        fn
       }
 
       def isTraversableAgain(from: Iterator[V]): Boolean = from.isInstanceOf[Iterable[_]]

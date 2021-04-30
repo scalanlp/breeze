@@ -475,7 +475,7 @@ trait HashVectorExpandOps extends VectorOps with HashVector_GenericOps {
   implicit def impl_CanTraverseValues_HV[@expand.args(Int, Double, Float, Long) T]: CanTraverseValues[HashVector[T], T] = {
     new CanTraverseValues[HashVector[T], T] {
       /**   Traverses all values from the given collection. */
-      override def traverse(from: HashVector[T], fn: CanTraverseValues.ValuesVisitor[T]): Unit = {
+      override def traverse(from: HashVector[T], fn: CanTraverseValues.ValuesVisitor[T]): fn.type = {
         cforRange(0 until from.iterableSize) { i =>
           if (from.isActive(i)) {
             fn.visit(from.data(i))
@@ -483,6 +483,7 @@ trait HashVectorExpandOps extends VectorOps with HashVector_GenericOps {
         }
 
         fn.zeros(from.size - from.activeSize, 0)
+        fn
       }
 
       override def isTraversableAgain(from: HashVector[T]): Boolean = true
@@ -492,7 +493,7 @@ trait HashVectorExpandOps extends VectorOps with HashVector_GenericOps {
   implicit def impl_CanTraverseValues_HV_Generic[T]: CanTraverseValues[HashVector[T], T] = {
     new CanTraverseValues[HashVector[T], T] {
       /**   Traverses all values from the given collection. */
-      override def traverse(from: HashVector[T], fn: CanTraverseValues.ValuesVisitor[T]): Unit = {
+      override def traverse(from: HashVector[T], fn: CanTraverseValues.ValuesVisitor[T]): fn.type = {
         cforRange(0 until from.iterableSize) { i =>
           if (from.isActive(i)) {
             fn.visit(from.data(i))
@@ -500,6 +501,7 @@ trait HashVectorExpandOps extends VectorOps with HashVector_GenericOps {
         }
 
         fn.zeros(from.size - from.activeSize, from.default)
+        fn
       }
 
       override def isTraversableAgain(from: HashVector[T]): Boolean = true

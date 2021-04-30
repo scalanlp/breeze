@@ -95,9 +95,10 @@ trait CSCMatrixOps extends CSCMatrixExpandedOps with CSCMatrixOps_Ring {
       def isTraversableAgain(from: CSCMatrix[V]): Boolean = true
 
       /** Iterates all key-value pairs from the given collection. */
-      def traverse(from: CSCMatrix[V], fn: ValuesVisitor[V]): Unit = {
+      def traverse(from: CSCMatrix[V], fn: ValuesVisitor[V]): fn.type = {
         fn.zeros(from.size - from.activeSize, from.zero)
         fn.visitArray(from.data, 0, from.activeSize, 1)
+        fn
       }
     }
   }

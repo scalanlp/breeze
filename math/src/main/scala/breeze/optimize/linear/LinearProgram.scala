@@ -6,7 +6,6 @@ import org.apache.commons.math3.optim.linear._
 import org.apache.commons.math3.optim.nonlinear.scalar._
 
 import scala.collection.JavaConverters._
-import scala.collection.StringOps
 
 /**
  * DSL for LinearPrograms. Not thread-safe per instance. Make multiple instances
@@ -84,9 +83,12 @@ class LinearProgram {
         case _ => "problem "
       }
 
+      val beg = "\nsubject to"
+      val sep = "\n          "
+
       s"${_goal}    " + objective + {
         if (constraints.nonEmpty) {
-          "\nsubject to  " + constraints.mkString("\n" + new StringOps(" ") * "subject to  ".length)
+          constraints.mkString(beg, sep, "")
         } else ""
       }
     }

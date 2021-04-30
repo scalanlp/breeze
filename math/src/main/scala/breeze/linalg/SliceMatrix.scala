@@ -105,11 +105,11 @@ object SliceMatrix extends LowPrioritySliceMatrix with SliceMatrixOps {
 
       def isTraversableAgain(from: SliceMatrix[K1, K2, V]): Boolean = true
 
-      /** Iterates all key-value pairs from the given collection. */
-      def traverse(from: SliceMatrix[K1, K2, V], fn: ValuesVisitor[V]): Unit = {
-        from.activeValuesIterator.foreach {
+      def traverse(from: SliceMatrix[K1, K2, V], fn: ValuesVisitor[V]): fn.type = {
+        from.valuesIterator.foreach {
           fn.visit(_)
         }
+        fn
       }
 
     }

@@ -224,9 +224,9 @@ trait VectorConstructors[Vec[T] <: Vector[T]] {
   def apply[V: ClassTag](values: V*): Vec[V] = {
     // manual specialization so that we create the right DenseVector specialization... @specialized doesn't work here
     val man = implicitly[ClassTag[V]]
-    if (man == ClassTag[Double]) apply(values.toArray.asInstanceOf[Array[Double]]).asInstanceOf[Vec[V]]
-    else if (man == ClassTag[Float]) apply(values.toArray.asInstanceOf[Array[Float]]).asInstanceOf[Vec[V]]
-    else if (man == ClassTag[Int]) apply(values.toArray.asInstanceOf[Array[Int]]).asInstanceOf[Vec[V]]
+    if (man == implicitly[ClassTag[Double]]) apply(values.toArray.asInstanceOf[Array[Double]]).asInstanceOf[Vec[V]]
+    else if (man == implicitly[ClassTag[Float]]) apply(values.toArray.asInstanceOf[Array[Float]]).asInstanceOf[Vec[V]]
+    else if (man == implicitly[ClassTag[Int]]) apply(values.toArray.asInstanceOf[Array[Int]]).asInstanceOf[Vec[V]]
     else apply(values.toArray)
 //     apply(values.toArray)
   }

@@ -19,7 +19,9 @@ package breeze.generic
 import collection.mutable.{ArrayBuffer, HashMap}
 import java.util.concurrent.ConcurrentHashMap
 import breeze.util.ReflectionUtil
+
 import collection.mutable
+import scala.collection.compat._
 
 /**
  * A Multimethod is basically a glorified registry that uses dynamic reflection (and subtyping) to determine which
@@ -144,7 +146,7 @@ trait MMRegistry2[R] {
       }
     }
 
-    options.view.filterKeys(bestCandidates)
+    options.filterKeys(bestCandidates)
   }
 }
 
@@ -217,7 +219,7 @@ trait MMRegistry3[R] {
       }
     }
 
-    options.view.filterKeys(bestCandidates)
+    options.filterKeys(bestCandidates)
   }
 }
 
@@ -250,7 +252,7 @@ trait MMRegistry1[M] {
   /** This selects based on the partial order induced by the inheritance hierarchy.
    *  If there is ambiguity, all are returned.
    **/
-  protected def selectBestOption(options: Map[Class[_], M]) = {
+  protected def selectBestOption(options: Map[Class[_], M]): Map[Class[_], M] = {
     var bestCandidates = Set[Class[_]]()
     for (aa <- options.keys) {
       // if there is no option (aaa,bbb) s.t. aaa <: aa && bbb <: bb, then add it to the list
@@ -260,6 +262,6 @@ trait MMRegistry1[M] {
       }
     }
 
-    options.view.filterKeys(bestCandidates)
+    options.filterKeys(bestCandidates)
   }
 }

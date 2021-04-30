@@ -334,8 +334,9 @@ object MutablizingAdaptor {
       implicit def iterateValues: CanTraverseValues[Wrapper, S] = new CanTraverseValues[Wrapper, S] {
 
         /** Traverses all values from the given collection. */
-        override def traverse(from: Wrapper, fn: ValuesVisitor[S]): Unit = {
+        override def traverse(from: Wrapper, fn: ValuesVisitor[S]): fn.type = {
           from.map(canIterate.traverse(_, fn))
+          fn
         }
 
         override def isTraversableAgain(from: Wrapper): Boolean = canIterate.isTraversableAgain(from.value)
@@ -493,8 +494,9 @@ object MutablizingAdaptor {
       implicit def iterateValues: CanTraverseValues[Wrapper, S] = new CanTraverseValues[Wrapper, S] {
 
         /** Traverses all values from the given collection. */
-        override def traverse(from: Wrapper, fn: ValuesVisitor[S]): Unit = {
+        override def traverse(from: Wrapper, fn: ValuesVisitor[S]): fn.type = {
           from.map(canIterate.traverse(_, fn))
+          fn
         }
 
         override def isTraversableAgain(from: Wrapper): Boolean = canIterate.isTraversableAgain(from.value)
@@ -633,8 +635,9 @@ object MutablizingAdaptor {
 //      }
 
       implicit def iterateValues: CanTraverseValues[Wrapper, S] = new CanTraverseValues[Wrapper, S] {
-        override def traverse(from: Wrapper, fn: ValuesVisitor[S]): Unit = {
+        override def traverse(from: Wrapper, fn: ValuesVisitor[S]): fn.type = {
           from.map(canIterate.traverse(_, fn))
+          fn
         }
 
         override def isTraversableAgain(from: Wrapper): Boolean = canIterate.isTraversableAgain(from.value)

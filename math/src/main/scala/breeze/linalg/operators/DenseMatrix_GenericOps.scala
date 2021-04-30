@@ -3,6 +3,7 @@ package breeze.linalg.operators
 import breeze.linalg._
 import breeze.macros.{cforRange, cforRange2}
 import breeze.math.Semiring
+import breeze.storage.Zero
 import breeze.util.ReflectionUtil
 import scalaxy.debug.require
 
@@ -32,6 +33,7 @@ trait DenseMatrix_GenericOps extends MatrixOps {
       override def apply(a: DenseMatrix[T], b: DenseMatrix[T]): DenseMatrix[T] = {
         implicit val ct: ClassTag[T] = ReflectionUtil.elemClassTagFromArray(a.data)
         implicit val r: Semiring[T] = ring
+        implicit val z: Zero[T] = Zero.zeroFromSemiring(r)
 
         val res: DenseMatrix[T] = DenseMatrix.zeros[T](a.rows, b.cols)
         require(a.cols == b.rows)

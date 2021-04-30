@@ -160,14 +160,13 @@ object HashVector {
 
       def isTraversableAgain(from: HashVector[V]): Boolean = true
 
-      def traverse(from: HashVector[V], fn: ValuesVisitor[V]): Unit = {
+      def traverse(from: HashVector[V], fn: ValuesVisitor[V]): fn.type = {
         fn.zeros(from.size - from.activeSize, from.default)
-        var i = 0
-        while (i < from.iterableSize) {
+        cforRange (0 until from.iterableSize) { i =>
           if (from.isActive(i))
             fn.visit(from.data(i))
-          i += 1
         }
+        fn
       }
     }
   }

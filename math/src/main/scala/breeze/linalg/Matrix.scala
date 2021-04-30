@@ -199,8 +199,9 @@ object Matrix
       def isTraversableAgain(from: Matrix[V]): Boolean = true
 
       /** Iterates all key-value pairs from the given collection. */
-      def traverse(from: Matrix[V], fn: ValuesVisitor[V]): Unit = {
+      def traverse(from: Matrix[V], fn: ValuesVisitor[V]): fn.type = {
         from.valuesIterator.foreach(fn.visit)
+        fn
       }
     }
   }

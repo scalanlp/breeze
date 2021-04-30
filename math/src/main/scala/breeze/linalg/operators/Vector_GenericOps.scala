@@ -780,7 +780,7 @@ trait HashVector_GenericOps {
 
   implicit def impl_OpMulScalar_InPlace_HV_S_Generic[T](implicit field: Semiring[T]): OpMulScalar.InPlaceImpl2[HashVector[T], T] = {
     new OpMulScalar.InPlaceImpl2[HashVector[T], T] {
-      override def apply(v: HashVector[T], v2: T) = {
+      override def apply(v: HashVector[T], v2: T): Unit = {
         if (v2 == field.zero) {
           v.clear()
         } else if (v2 == field.one) {

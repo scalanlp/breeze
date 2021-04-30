@@ -394,8 +394,9 @@ trait CounterOps {
 
   implicit def canTraverseValues[L, V]: CanTraverseValues[Counter[L, V], V] = {
     new CanTraverseValues[Counter[L, V], V] {
-      override def traverse(from: Counter[L, V], fn: CanTraverseValues.ValuesVisitor[V]): Unit = {
+      override def traverse(from: Counter[L, V], fn: CanTraverseValues.ValuesVisitor[V]): fn.type = {
         from.activeValuesIterator.foreach(fn.visit)
+        fn
       }
 
       override def isTraversableAgain(from: Counter[L, V]): Boolean = true

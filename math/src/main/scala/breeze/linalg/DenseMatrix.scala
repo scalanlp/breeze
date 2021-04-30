@@ -631,7 +631,7 @@ trait DenseMatrix_TraversalOps {
       def isTraversableAgain(from: DenseMatrix[V]): Boolean = true
 
       /** Iterates all key-value pairs from the given collection. */
-      def traverse(from: DenseMatrix[V], fn: ValuesVisitor[V]): Unit = {
+      def traverse(from: DenseMatrix[V], fn: ValuesVisitor[V]): fn.type = {
         import from._
         val idealMajorStride = if (isTranspose) cols else rows
 
@@ -653,6 +653,7 @@ trait DenseMatrix_TraversalOps {
 //            j += 1
 //          }
 //        }
+        fn
       }
 
     }
@@ -769,7 +770,7 @@ trait DenseMatrix_TraversalOps {
   }
 }
 
-trait DenseMatrix_SliceOps_LowPrio extends LowPriorityDenseMatrix1 {
+trait DenseMatrix_SliceOps_LowPrio extends LowPriorityDenseMatrix1 with TensorLowPrio {
 
   implicit def canSliceWeirdRows[V: Semiring: ClassTag]
   : CanSlice2[DenseMatrix[V], Seq[Int], ::.type, SliceMatrix[Int, Int, V]] = {

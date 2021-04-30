@@ -29,6 +29,7 @@ import scala.reflect.ClassTag
 import CanTraverseValues.ValuesVisitor
 
 import scala.collection.immutable
+import scala.collection.compat._
 
 
 // TODO: remove the Like stuff.
@@ -174,10 +175,11 @@ object Counter2 extends LowPriorityCounter2 with Counter2Ops {
     new CanTraverseValues[Counter2[K1, K2, V], V] {
       def isTraversableAgain(from: Counter2[K1, K2, V]): Boolean = true
 
-      def traverse(from: Counter2[K1, K2, V], fn: ValuesVisitor[V]): Unit = {
+      def traverse(from: Counter2[K1, K2, V], fn: ValuesVisitor[V]): fn.type = {
         for (v <- from.valuesIterator) {
           fn.visit(v)
         }
+        fn
       }
     }
 

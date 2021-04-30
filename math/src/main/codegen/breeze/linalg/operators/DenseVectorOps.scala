@@ -17,7 +17,7 @@ import scala.reflect.ClassTag
 
 trait DenseVectorOps extends VectorOps with DenseVector_GenericOps with DenseVector_ComparisonOps with DenseVector_FloatOps with DenseVector_DoubleOps
 
-trait DenseVector_Vector_ExpandOps extends VectorOps with DenseVector_TraversalOps {
+trait DenseVector_Vector_ExpandOps extends VectorOps with DenseVector_TraversalOps with DenseVector_SlicingOps {
 
   @expand
   @expand.valify

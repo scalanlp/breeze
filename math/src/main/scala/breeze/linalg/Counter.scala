@@ -24,6 +24,7 @@ import breeze.math._
 import breeze.storage.Zero
 
 import scala.collection.Set
+import scala.collection.compat._
 
 /**
  * A map-like tensor that acts like a collection of key-value pairs where
@@ -144,10 +145,11 @@ object Counter extends CounterOps {
     def isTraversableAgain(from: Counter[K, V]): Boolean = true
 
     /** Iterates all values from the given collection. */
-    def traverse(from: Counter[K, V], fn: ValuesVisitor[V]): Unit = {
+    def traverse(from: Counter[K, V], fn: ValuesVisitor[V]): fn.type = {
       for (v <- from.valuesIterator) {
         fn.visit(v)
       }
+      fn
     }
 
   }

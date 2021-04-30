@@ -4,6 +4,7 @@ import java.io._
 import au.com.bytecode.opencsv.{CSVReader => OpenCSVReader, CSVWriter => OpenCSVWriter}
 
 import scala.collection.compat.immutable.ArraySeq
+import scala.collection.compat._
 
 /**
  * Just a simple wrapper for OpenCSV's csvreader.

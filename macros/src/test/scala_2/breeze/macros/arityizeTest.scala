@@ -1,8 +1,8 @@
 package breeze.macros
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class arityizeTest extends FunSuite {
+class arityizeTest extends AnyFunSuite {
 
   test("Compiles?") {
     @arityize(5)

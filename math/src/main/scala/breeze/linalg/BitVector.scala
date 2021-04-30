@@ -116,16 +116,6 @@ object BitVector {
     new BitVector(bs, length, enforceLength)
   }
 
-  implicit object traverseBitVector extends CanTraverseValues[BitVector, Boolean] {
-
-    /** Traverses all values from the given collection. */
-    def traverse(from: BitVector, fn: ValuesVisitor[Boolean]): Unit = {
-      for (i <- from.valuesIterator) fn.visit(i)
-    }
-
-    def isTraversableAgain(from: BitVector): Boolean = true
-  }
-
   implicit def canMapValues[V2](implicit man: ClassTag[V2]): CanMapValues[BitVector, Boolean, V2, DenseVector[V2]] = {
     new CanMapValues[BitVector, Boolean, V2, DenseVector[V2]] {
 
@@ -144,10 +134,11 @@ object BitVector {
       def isTraversableAgain(from: BitVector): Boolean = true
 
       /** Iterates all key-value pairs from the given collection. */
-      def traverse(from: BitVector, fn: ValuesVisitor[Boolean]): Unit = {
+      def traverse(from: BitVector, fn: ValuesVisitor[Boolean]): fn.type = {
         for (i <- 0 until from.length) {
           fn.visit(from(i))
         }
+        fn
       }
 
     }

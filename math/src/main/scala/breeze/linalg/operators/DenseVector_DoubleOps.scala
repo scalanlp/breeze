@@ -87,34 +87,34 @@ trait DenseVector_DoubleOps extends DenseVectorExpandOps {
   }
   implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpMulInner.type, Double]].register(canDotD)
 
-  /**
-   *  Returns the p-norm of this Vector (specialized for Double).
-   */
-  implicit def impl_norm_DV_D_eq_D_Double: norm.Impl2[DenseVector[Double], Double, Double] = {
-    new norm.Impl2[DenseVector[Double], Double, Double] {
-      def apply(v: DenseVector[Double], p: Double): Double = {
-        if (p == 2) {
-          math.sqrt(v.dot(v))
-        } else if (p == 1) {
-          var sum = 0.0
-          cforRange(0 until v.length)(i => sum += math.abs(v(i)))
-          sum
-        } else if (p == Double.PositiveInfinity) {
-          var max = 0.0
-          cforRange(0 until v.length)(i => max = math.max(max, math.abs(v(i))))
-          max
-        } else if (p == 0) {
-          var nnz = 0.0
-          cforRange(0 until v.length)(i => if (v(i) != 0) nnz += 1)
-          nnz
-        } else {
-          var sum = 0.0
-          cforRange(0 until v.length)(i => sum += math.pow(math.abs(v(i)), p))
-          math.pow(sum, 1.0 / p)
-        }
-      }
-    }
-  }
+//  /**
+//   *  Returns the p-norm of this Vector (specialized for Double).
+//   */
+//  implicit val impl_norm_DV_D_eq_D_Double: norm.Impl2[DenseVector[Double], Double, Double] = {
+//    new norm.Impl2[DenseVector[Double], Double, Double] {
+//      def apply(v: DenseVector[Double], p: Double): Double = {
+//        if (p == 2) {
+//          math.sqrt(v.dot(v))
+//        } else if (p == 1) {
+//          var sum = 0.0
+//          cforRange(0 until v.length)(i => sum += math.abs(v(i)))
+//          sum
+//        } else if (p == Double.PositiveInfinity) {
+//          var max = 0.0
+//          cforRange(0 until v.length)(i => max = math.max(max, math.abs(v(i))))
+//          max
+//        } else if (p == 0) {
+//          var nnz = 0.0
+//          cforRange(0 until v.length)(i => if (v(i) != 0) nnz += 1)
+//          nnz
+//        } else {
+//          var sum = 0.0
+//          cforRange(0 until v.length)(i => sum += math.pow(math.abs(v(i)), p))
+//          math.pow(sum, 1.0 / p)
+//        }
+//      }
+//    }
+//  }
 
   implicit def impl_dim_DV_eq_I[E]: dim.Impl[DenseVector[E], Int] = _.length
 }

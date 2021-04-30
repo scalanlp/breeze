@@ -26,7 +26,7 @@ import breeze.math.FloatDoubleOperatorAdaptors._
 import breeze.storage._
 
 import scala.reflect.ClassTag
-import breeze.compat.Scala3Compat.given_Conversion_T_U
+import breeze.compat.Scala3Compat._
 
 /**
  * Used for those vector-types that are "coordinated", meaning that t. (Possibly the coordinates
