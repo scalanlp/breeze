@@ -15,7 +15,7 @@ object Common {
     }
   }
 
-  val buildCrossScalaVersions = Seq("3.0.0-RC3", "2.12.10", "2.13.3")
+  val buildCrossScalaVersions = Seq("3.0.0-RC3", "2.12.13", "2.13.5")
 
   lazy val buildScalaVersion = buildCrossScalaVersions.head
 
@@ -46,7 +46,7 @@ object Common {
     libraryDependencies ++= {
       if (priorTo2_13(scalaVersion.value)) {
         Seq(
-          compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.patch),
+          compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.patch),
         )
       } else {
         Seq(
