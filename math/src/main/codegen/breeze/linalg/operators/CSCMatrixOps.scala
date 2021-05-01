@@ -57,16 +57,17 @@ trait CSCMatrixOps extends CSCMatrixOps_Ring { this: CSCMatrix.type =>
     }
 
   implicit def canMulDVt_CSC_eq_DVt[T](
-      implicit op: OpMulMatrix.Impl2[CSCMatrix[T], CSCMatrix[T], CSCMatrix[T]],
+      implicit op: OpMulMatrix.Impl2[DenseMatrix[T], CSCMatrix[T], DenseMatrix[T]],
       zero: Zero[T],
       ct: ClassTag[T]): OpMulMatrix.Impl2[Transpose[DenseVector[T]], CSCMatrix[T], Transpose[DenseVector[T]]] =
     new OpMulMatrix.Impl2[Transpose[DenseVector[T]], CSCMatrix[T], Transpose[DenseVector[T]]] {
       def apply(v: Transpose[DenseVector[T]], v2: CSCMatrix[T]): Transpose[DenseVector[T]] = {
         require(v2.rows == v.inner.length)
-        val csc = v.inner.asCscRow
-        val cscr = op(csc, v2)
 
-        new Transpose[DenseVector[T]](DenseVector.fromCSCMatrix(cscr))
+        val dm = v.inner.toDenseMatrix
+        val multiplied = op(dm, v2)
+
+        new Transpose[DenseVector[T]](multiplied.toDenseVector)
 
       }
     }
