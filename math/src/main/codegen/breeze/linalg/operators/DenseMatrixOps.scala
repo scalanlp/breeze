@@ -7,8 +7,8 @@ import breeze.macros.expand
 import breeze.math.{Field, Semiring}
 import breeze.storage.Zero
 import breeze.util.ArrayUtil
-import com.github.fommil.netlib.BLAS.{getInstance => blas}
-import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
+import dev.ludovic.netlib.BLAS.{getInstance => blas}
+import dev.ludovic.netlib.LAPACK.{getInstance => lapack}
 import org.netlib.util.intW
 import scalaxy.debug._
 import spire.syntax.cfor._
