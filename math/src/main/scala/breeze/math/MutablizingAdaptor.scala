@@ -9,6 +9,8 @@ import breeze.linalg.support._
 import breeze.util.Isomorphism
 import breeze.compat.Scala3Compat._
 
+import scala.language.{higherKinds, implicitConversions}
+
 /**
  *
  *
@@ -67,6 +69,7 @@ object MutablizingAdaptor {
   def ensureMutable[V, S](vs: CoordinateField[V, S])(
       implicit canIterate: CanTraverseValues[V, S],
       canMap: CanMapValues[V, S, S, V],
+      canMapActive: CanMapActiveValues[V, S, S, V],
       canZipMap: CanZipMapValues[V, S, S, V]): MutablizingAdaptor[CoordinateField, MutableCoordinateField, V, S] = {
     if (vs.isInstanceOf[MutableCoordinateField[_, _]])
       IdentityWrapper[MutableCoordinateField, V, S](vs.asInstanceOf[MutableCoordinateField[V, S]])

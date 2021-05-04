@@ -177,8 +177,6 @@ object Vector extends VectorConstructors[Vector] {
    */
   def apply[@spec(Double, Int, Float, Long) V](values: Array[V]): Vector[V] = DenseVector(values)
 
-  implicit def scalarOf[T]: ScalarOf[Vector[T], T] = ScalarOf.dummy
-
   implicit def canCopy[E]: CanCopy[Vector[E]] = new CanCopy[Vector[E]] {
     def apply(t: Vector[E]): Vector[E] = t.copy
   }
@@ -189,6 +187,8 @@ object Vector extends VectorConstructors[Vector] {
     implicit val _dim: dim.Impl[Vector[V], Int] = dim.implVDim[V, Vector[V]]
     MutableFiniteCoordinateField.make[Vector[V], Int, V]
   }
+
+  implicit def scalarOf[T]: ScalarOf[Vector[T], T] = ScalarOf.dummy
 }
 
 

@@ -33,7 +33,7 @@ trait CSCMatrixOps extends CSCMatrixExpandedOps with CSCMatrixOps_Ring {
       }
     }
 
-  implicit def CSC_canMapValues[V, R: ClassTag: Zero: Semiring]: CanMapValues[CSCMatrix[V], V, R, CSCMatrix[R]] = {
+  implicit def CSC_canMapValues[V, R: ClassTag: Semiring]: CanMapValues[CSCMatrix[V], V, R, CSCMatrix[R]] = {
     val z = implicitly[Zero[R]].zero
     new CanMapValues[CSCMatrix[V], V, R, CSCMatrix[R]] {
       override def apply(from: CSCMatrix[V], fn: (V => R)) = {
@@ -689,9 +689,9 @@ trait CSCMatrixExpandedOps extends MatrixOps with CSCMatrixOps_Ring {
   @expand
   @expand.valify
   implicit def canMulM_DV[@expand.args(Int, Float, Double, Long) T]
-    : BinaryRegistry[CSCMatrix[T], DenseVector[T], OpMulMatrix.type, DenseVector[T]] =
-    new BinaryRegistry[CSCMatrix[T], DenseVector[T], OpMulMatrix.type, DenseVector[T]] {
-      override def bindingMissing(a: CSCMatrix[T], b: DenseVector[T]) = {
+    : OpMulMatrix.Impl2[CSCMatrix[T], DenseVector[T], DenseVector[T]] =
+    new OpMulMatrix.Impl2[CSCMatrix[T], DenseVector[T], DenseVector[T]] {
+      override def apply(a: CSCMatrix[T], b: DenseVector[T]) = {
         require(a.cols == b.length, "Dimension Mismatch!")
 
         val res = DenseVector.zeros[T](a.rows)
@@ -710,6 +710,7 @@ trait CSCMatrixExpandedOps extends MatrixOps with CSCMatrixOps_Ring {
         res
       }
       implicitly[BinaryRegistry[Matrix[T], Vector[T], OpMulMatrix.type, Vector[T]]].register(this)
+      implicitly[BinaryRegistry[CSCMatrix[T], Vector[T], OpMulMatrix.type, Vector[T]]].register(this)
     }
 
   @expand
@@ -1668,7 +1669,7 @@ trait CSCMatrixOps_Ring extends CSCMatrixOpsLowPrio with SerializableLogging {
     updateFromPure_CSC(implicitly[Op.Impl2[CSCMatrix[T], T, CSCMatrix[T]]])
   }
 
-  implicit def implOpSolveMatrixBy_CSCD_DVD_eq_DVD[V](
+  implicit def impl_OpSolveMatrixBy_CSCD_DVD_eq_DVD[V](
       implicit multMV: OpMulMatrix.Impl2[CSCMatrix[Double], V, V],
       ispace: MutableInnerProductVectorSpace[V, Double]): OpSolveMatrixBy.Impl2[CSCMatrix[Double], V, V] = {
     new OpSolveMatrixBy.Impl2[CSCMatrix[Double], V, V] {
@@ -1678,7 +1679,7 @@ trait CSCMatrixOps_Ring extends CSCMatrixOpsLowPrio with SerializableLogging {
     }
   }
 
-  implicit val implOpSolveMatrixBy_CSC_CSC_eq_CSC
+  implicit val impl_OpSolveMatrixBy_CSC_CSC_eq_CSC
     : OpSolveMatrixBy.Impl2[CSCMatrix[Double], CSCMatrix[Double], CSCMatrix[Double]] = {
     new OpSolveMatrixBy.Impl2[CSCMatrix[Double], CSCMatrix[Double], CSCMatrix[Double]] {
       override def apply(a: CSCMatrix[Double], b: CSCMatrix[Double]): CSCMatrix[Double] = {

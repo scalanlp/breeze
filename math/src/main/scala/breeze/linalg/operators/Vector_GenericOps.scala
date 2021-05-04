@@ -158,7 +158,7 @@ trait Vector_GenericOps extends GenericOps with Vector_TraversalOps {
     }
   }
 
-  implicit def implOpSet_V_V_InPlace[V]: OpSet.InPlaceImpl2[Vector[V], Vector[V]] = {
+  implicit def impl_OpSet_V_V_InPlace[V]: OpSet.InPlaceImpl2[Vector[V], Vector[V]] = {
 
     new OpSet.InPlaceImpl2[Vector[V], Vector[V]] {
       def apply(a: Vector[V], b: Vector[V]): Unit = {
@@ -233,9 +233,8 @@ trait SparseVector_GenericOps extends GenericOps {
     opSet(sv, r)
   }
 
-
   // TODO: this may not be necessary?
-  implicit def implOp_SV_S_eq_SV_Generic[Op <: OpType, T: Semiring](
+  implicit def impl_Op_SV_S_eq_SV_Generic[Op <: OpType, T: Semiring](
       implicit op: UFunc.UImpl2[Op, T, T, T]): UFunc.UImpl2[Op, SparseVector[T], T, SparseVector[T]] = {
     (a: SparseVector[T], b: T) => {
       implicit val ct: ClassTag[T] = ReflectionUtil.elemClassTagFromArray(a.data)
@@ -247,6 +246,42 @@ trait SparseVector_GenericOps extends GenericOps {
           result.add(i, r)
       }
       result.toSparseVector(true, true)
+    }
+  }
+
+  implicit def impl_OpAdd_SV_S_eq_SV_Generic[T: Semiring]: OpAdd.Impl2[SparseVector[T], T, SparseVector[T]] = {
+    (a: SparseVector[T], b: T) => {
+      val f = implicitly[Semiring[T]]
+      if (b == f.zero) {
+        a.copy
+      } else {
+        implicit val ct: ClassTag[T] = ReflectionUtil.elemClassTagFromArray(a.data)
+        val result: VectorBuilder[T] = new VectorBuilder[T](a.length)
+        cforRange(0 until a.length) { i =>
+          val r = f.+(a(i), b)
+          if (r != f.zero)
+            result.add(i, r)
+        }
+        result.toSparseVector(true, true)
+      }
+    }
+  }
+
+  implicit def impl_OpSub_SV_S_eq_SV_Generic[T: Ring]: OpSub.Impl2[SparseVector[T], T, SparseVector[T]] = {
+    (a: SparseVector[T], b: T) => {
+      val f = implicitly[Ring[T]]
+      if (b == f.zero) {
+        a.copy
+      } else {
+        implicit val ct: ClassTag[T] = ReflectionUtil.elemClassTagFromArray(a.data)
+        val result: VectorBuilder[T] = new VectorBuilder[T](a.length)
+        cforRange(0 until a.length) { i =>
+          val r = f.-(a(i), b)
+          if (r != f.zero)
+            result.add(i, r)
+        }
+        result.toSparseVector(true, true)
+      }
     }
   }
 
@@ -343,7 +378,6 @@ trait SparseVector_GenericOps extends GenericOps {
       }
     }
 
-  @expand
   implicit def impl_scaleAdd_SV_S_SV_InPlace_Generic[T: Semiring: ClassTag]
     : scaleAdd.InPlaceImpl3[SparseVector[T], T, SparseVector[T]] =
     (dest: SparseVector[T], scale: T, source: SparseVector[T]) => {
@@ -656,7 +690,7 @@ trait DenseVector_GenericOps extends VectorOps {
   }
 }
 
-trait HashVector_GenericOps {
+trait HashVector_GenericOps extends GenericOps {
 
   implicit def impl_OpSet_InPlace_HV_S_Generic[V]: OpSet.InPlaceImpl2[HashVector[V], V] = {
     new OpSet.InPlaceImpl2[HashVector[V], V] {
@@ -704,6 +738,40 @@ trait HashVector_GenericOps {
 
         for ((k, v) <- b.activeIterator)
           a(k) = ring.+(a(k), ring.*(s, v))
+      }
+    }
+  }
+
+  implicit def impl_OpAdd_HV_S_eq_HV_Generic[T](implicit semi: Semiring[T]): OpAdd.Impl2[HashVector[T], T, HashVector[T]] = {
+    new OpAdd.Impl2[HashVector[T], T, HashVector[T]] {
+      def apply(a: HashVector[T], b: T): HashVector[T] = {
+        implicit val ct: ClassTag[T] = ReflectionUtil.elemClassTagFromArray(a.array.data)
+        if (b == semi.zero) {
+          return a.copy
+        }
+
+        val result = HashVector.zeros[T](a.length)
+        cforRange (0 until a.length) { i =>
+          result(i) = semi.+(a(i), b)
+        }
+        result
+      }
+    }
+  }
+
+  implicit def impl_OpSub_HV_S_eq_HV_Generic[T](implicit ring: Ring[T]): OpSub.Impl2[HashVector[T], T, HashVector[T]] = {
+    new OpSub.Impl2[HashVector[T], T, HashVector[T]] {
+      def apply(a: HashVector[T], b: T): HashVector[T] = {
+        implicit val ct: ClassTag[T] = ReflectionUtil.elemClassTagFromArray(a.array.data)
+        if (b == ring.zero) {
+          return a.copy
+        }
+
+        val result = HashVector.zeros[T](a.length)
+        cforRange (0 until a.length) { i =>
+          result(i) = ring.-(a(i), b)
+        }
+        result
       }
     }
   }

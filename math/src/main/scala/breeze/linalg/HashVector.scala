@@ -6,7 +6,7 @@ import support.CanTraverseValues.ValuesVisitor
 import support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 import breeze.collection.mutable.OpenAddressHashArray
 import breeze.storage.Zero
-import breeze.macros.expand
+import breeze.macros._
 import breeze.math._
 import breeze.util.ReflectionUtil
 
@@ -188,21 +188,17 @@ object HashVector {
       }
 
       def isTraversableAgain(from: HashVector[V]): Boolean = true
-
-      def traverse(from: HashVector[V], fn: ValuesVisitor[V]): Unit = {}
     }
   }
 
   implicit def canMapPairs[V, V2: ClassTag: Zero]: CanMapKeyValuePairs[HashVector[V], Int, V, V2, HashVector[V2]] = {
     new CanMapKeyValuePairs[HashVector[V], Int, V, V2, HashVector[V2]] {
 
-      /**Maps all key-value pairs from the given collection. */
-      def map(from: HashVector[V], fn: (Int, V) => V2) = {
+      def map(from: HashVector[V], fn: (Int, V) => V2): HashVector[V2] = {
         HashVector.tabulate(from.length)(i => fn(i, from(i)))
       }
 
-      /**Maps all active key-value pairs from the given collection. */
-      def mapActive(from: HashVector[V], fn: (Int, V) => V2) = {
+      def mapActive(from: HashVector[V], fn: (Int, V) => V2): HashVector[V2] = {
         val out = new OpenAddressHashArray[V2](from.length)
         var i = 0
         while (i < from.iterableSize) {
@@ -218,6 +214,7 @@ object HashVector {
   implicit def space[E: Field: ClassTag: Zero]: MutableFiniteCoordinateField[HashVector[E], Int, E] = {
     implicit val _dim: dim.Impl[HashVector[E], Int] = dim.implVDim[E, HashVector[E]]
     implicit val n: norm.Impl2[HashVector[E], Double, Double] = norm.canNorm(HasOps.impl_CanTraverseValues_HV_Generic, implicitly[Field[E]].normImpl)
+    implicit val add: OpAdd.InPlaceImpl2[breeze.linalg.HashVector[E],E] = HasOps.castUpdateOps_V_S
     MutableFiniteCoordinateField.make[HashVector[E], Int, E]
   }
 

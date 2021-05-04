@@ -189,8 +189,7 @@ class SparseVector[@spec(Double, Int, Float, Long) V](val array: SparseArray[V])
   }
 }
 
-object SparseVector
-    {
+object SparseVector {
 
   def zeros[@spec(Double, Int, Float, Long) V: ClassTag: Zero](size: Int) =
     new SparseVector(Array.empty, Array.empty[V], 0, size)
@@ -276,9 +275,6 @@ object SparseVector
       }
     }
   }
-
-  implicit def scalarOf[T]: ScalarOf[SparseVector[T], T] = ScalarOf.dummy
-
 
   implicit def canTraverseKeyValuePairs[V]: CanTraverseKeyValuePairs[SparseVector[V], Int, V] = {
     new CanTraverseKeyValuePairs[SparseVector[V], Int, V] {
@@ -405,6 +401,8 @@ object SparseVector
   implicit def space[E: Field: ClassTag: Zero]: MutableFiniteCoordinateField[SparseVector[E], Int, E] = {
     MutableFiniteCoordinateField.make[SparseVector[E], Int, E]
   }
+
+  implicit def scalarOf[T]: ScalarOf[SparseVector[T], T] = ScalarOf.dummy
 
   @noinline
   private def init() = {}

@@ -282,9 +282,10 @@ class VectorBuilder[@spec(Double, Int, Float, Long) E](
    */
   def allVisitableIndicesActive: Boolean = true
 
-  def toVector = {
+  // TODO: profile threshold
+  def toVector: Vector[E] = {
     requirePositiveLength()
-    if (size < 40 || activeSize > size / 2) {
+    if (size < 40 || activeSize > size / 4) {
       toDenseVector
     } else {
       toSparseVector

@@ -5,12 +5,12 @@ import breeze.generic.UFunc.UImpl2
 import breeze.gymnastics.&:&
 import breeze.linalg
 
-import scala.util.NotGiven
+import scala.util._
 import scala.reflect.ClassTag
 import breeze.linalg.support.{CanCopy, LiteralRow}
 import breeze.storage.Zero
 import breeze.math.{Complex, Field, Ring, Semiring}
-import breeze.macros.expand
+import breeze.macros._
 
 import scala.math.BigInt
 import breeze.linalg._

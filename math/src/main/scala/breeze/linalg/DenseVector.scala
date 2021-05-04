@@ -421,6 +421,12 @@ object DenseVector extends VectorConstructors[DenseVector] {
     }
   }
 
+  implicit def DV_canMapActiveValues[V, V2](implicit man: ClassTag[V2]): CanMapActiveValues[DenseVector[V], V, V2, DenseVector[V2]] = {
+    val act = DV_canMapValues[V, V2]
+    (from: DenseVector[V], fn: (V) => V2) => {
+      act(from, fn)
+    }
+  }
 
   implicit def DV_canMapValues[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) V2](
       implicit man: ClassTag[V2]): CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] = {

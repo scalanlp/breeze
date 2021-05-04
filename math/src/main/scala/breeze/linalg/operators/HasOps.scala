@@ -16,4 +16,5 @@ object HasOps extends GenericOps with VectorOps
   with SliceVectorOps
   with BitVectorOps
   with MappingUFuncOps
-  with ActiveMappingUFuncOps {}
+  with ActiveMappingUFuncOps
+  {}

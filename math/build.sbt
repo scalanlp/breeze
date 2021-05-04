@@ -28,7 +28,7 @@ testOptions in Test += Tests.Setup(classLoader =>
     case _: Exception =>
 })
 
-fork := true
+fork in Test := true
 
 javaOptions := Seq("-Xmx4g")
 

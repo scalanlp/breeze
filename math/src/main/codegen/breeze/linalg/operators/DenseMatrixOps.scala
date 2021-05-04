@@ -20,7 +20,7 @@ import scala.reflect.ClassTag
 import scala.{specialized => spec}
 
 trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMatrix_ComparisonOps
-  with DenseMatrixMultOps with DenseMatrixMultiplyOps with DenseMatrixFloatMultiplyStuff with DenseMatrix_SliceOps {
+  with DenseMatrixMultOps with DenseMatrixMultiplyOps with DenseMatrixFloatMultiplyStuff with DenseMatrix_SetOps {
   implicit val setMV_D: OpSet.InPlaceImpl2[DenseMatrix[Double], DenseVector[Double]] = new SetDMDVOp[Double]();
   implicit val setMV_F: OpSet.InPlaceImpl2[DenseMatrix[Float], DenseVector[Float]] = new SetDMDVOp[Float]();
   implicit val setMV_I: OpSet.InPlaceImpl2[DenseMatrix[Int], DenseVector[Int]] = new SetDMDVOp[Int]();
@@ -41,7 +41,8 @@ trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMat
           if (result eq null) {
             result = DenseMatrix.zeros[R](col.length, from.cols)
           }
-          result(::, c) := col
+          // Scala 2.12 needs this
+          implSet(result(::, c), col)
         }
 
         if (result eq null) {
@@ -98,7 +99,8 @@ trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMat
             val data = new Array[Res](rows * row.length)
             result = DenseMatrix.create(rows, row.length, data)
           }
-          result.t.apply(::, r) := row
+          // 2.12 requires direct invocation here...
+          implSet(result.t.apply(::, r), row)
         }
 
         if (result ne null) {
@@ -259,11 +261,11 @@ trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMat
   }
 }
 
-trait DenseMatrixMultiplyOps extends DenseMatrixExpandedOps with DenseMatrixMultOps with DenseMatrix_SliceOps {
+trait DenseMatrixMultiplyOps extends DenseMatrixExpandedOps with DenseMatrixMultOps with DenseMatrix_SetOps {
 
   // <editor-fold defaultstate="collapsed" desc=" OpMulMatrix implementations ">
 
-  implicit def implOpMulMatrix_DVTt_DMT_eq_DMT[T](
+  implicit def impl_OpMulMatrix_DVTt_DMT_eq_DMT[T](
       implicit op: OpMulMatrix.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]])
     : OpMulMatrix.Impl2[Transpose[DenseVector[T]], DenseMatrix[T], Transpose[DenseVector[T]]] =
     new OpMulMatrix.Impl2[Transpose[DenseVector[T]], DenseMatrix[T], Transpose[DenseVector[T]]] {
@@ -272,7 +274,7 @@ trait DenseMatrixMultiplyOps extends DenseMatrixExpandedOps with DenseMatrixMult
       }
     }
 
-  implicit def implOpMulMatrix_DVT_DMT_eq_DMT[T](
+  implicit def impl_OpMulMatrix_DVT_DMT_eq_DMT[T](
       implicit op: OpMulMatrix.Impl2[DenseMatrix[T], DenseMatrix[T], DenseMatrix[T]])
     : OpMulMatrix.Impl2[DenseVector[T], DenseMatrix[T], DenseMatrix[T]] =
     new OpMulMatrix.Impl2[DenseVector[T], DenseMatrix[T], DenseMatrix[T]] {
@@ -286,7 +288,7 @@ trait DenseMatrixMultiplyOps extends DenseMatrixExpandedOps with DenseMatrixMult
   // for BLAS.dgemm/dgemv
   private def transposeString(a: DenseMatrix[Double]): String = if (a.isTranspose) "T" else "N"
 
-  implicit object implOpMulMatrix_DMD_DMD_eq_DMD
+  implicit object impl_OpMulMatrix_DMD_DMD_eq_DMD
       extends OpMulMatrix.Impl2[DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double]] {
 
     def apply(_a: DenseMatrix[Double], _b: DenseMatrix[Double]): DenseMatrix[Double] = {
@@ -327,7 +329,7 @@ trait DenseMatrixMultiplyOps extends DenseMatrixExpandedOps with DenseMatrixMult
       .register(this)
   }
 
-  implicit object implOpMulMatrix_DMD_DVD_eq_DVD
+  implicit object impl_OpMulMatrix_DMD_DVD_eq_DVD
       extends OpMulMatrix.Impl2[DenseMatrix[Double], DenseVector[Double], DenseVector[Double]] {
     def apply(a: DenseMatrix[Double], b: DenseVector[Double]): DenseVector[Double] = {
 
@@ -359,7 +361,7 @@ trait DenseMatrixMultiplyOps extends DenseMatrixExpandedOps with DenseMatrixMult
     }
   }
 
-  implicit val implOpMulMatrix_DVD_DMD_eq_DMD
+  implicit val impl_OpMulMatrix_DVD_DMD_eq_DMD
     : OpMulMatrix.Impl2[DenseVector[Double], DenseMatrix[Double], DenseMatrix[Double]] = {
     new OpMulMatrix.Impl2[DenseVector[Double], DenseMatrix[Double], DenseMatrix[Double]] {
       def apply(a: DenseVector[Double], b: DenseMatrix[Double]): DenseMatrix[Double] = {
@@ -399,7 +401,7 @@ trait DenseMatrixMultiplyOps extends DenseMatrixExpandedOps with DenseMatrixMult
 
   // <editor-fold defaultstate="collapsed" desc=" // <editor-fold defaultstate="collapsed" desc=" OpSolveMatrixBy implementations ">
 
-  implicit object implOpSolveMatrixBy_DMD_DMD_eq_DMD
+  implicit object impl_OpSolveMatrixBy_DMD_DMD_eq_DMD
       extends OpSolveMatrixBy.Impl2[DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double]] {
 
     override def apply(A: DenseMatrix[Double], V: DenseMatrix[Double]): DenseMatrix[Double] = {
@@ -525,7 +527,7 @@ trait DenseMatrixMultiplyOps extends DenseMatrixExpandedOps with DenseMatrixMult
     }
   }
 
-  implicit object implOpSolveMatrixBy_DMD_DVD_eq_DVD
+  implicit object impl_OpSolveMatrixBy_DMD_DVD_eq_DVD
       extends OpSolveMatrixBy.Impl2[DenseMatrix[Double], DenseVector[Double], DenseVector[Double]] {
     override def apply(a: DenseMatrix[Double], b: DenseVector[Double]): DenseVector[Double] = {
       val rv: DenseMatrix[Double] = a \ new DenseMatrix[Double](b.size, 1, b.data, b.offset, b.stride, true)
@@ -539,7 +541,7 @@ trait DenseMatrixMultiplyOps extends DenseMatrixExpandedOps with DenseMatrixMult
 
 // TODO: fix expand to allow us to remove this code duplication
 // TODO: Rename/collapse trait
-trait DenseMatrixFloatMultiplyStuff extends DenseMatrixExpandedOps with DenseMatrixMultOps {
+trait DenseMatrixFloatMultiplyStuff extends DenseMatrixExpandedOps with DenseMatrixMultOps with DenseMatrix_SlicingOps {
 
   // <editor-fold defaultstate="collapsed" desc=" OpMulMatrix implementations ">
 
@@ -584,7 +586,7 @@ trait DenseMatrixFloatMultiplyStuff extends DenseMatrixExpandedOps with DenseMat
     if (a.isTranspose) "T" else "N"
   }
 
-  implicit object implOpMulMatrix_DMF_DVF_eq_DVF
+  implicit object impl_OpMulMatrix_DMF_DVF_eq_DVF
       extends OpMulMatrix.Impl2[DenseMatrix[Float], DenseVector[Float], DenseVector[Float]] {
     def apply(a: DenseMatrix[Float], b: DenseVector[Float]): DenseVector[Float] = {
 
@@ -610,7 +612,7 @@ trait DenseMatrixFloatMultiplyStuff extends DenseMatrixExpandedOps with DenseMat
     }
   }
 
-  implicit val implOpMulMatrix_DVF_DMF_eq_DMF
+  implicit val impl_OpMulMatrix_DVF_DMF_eq_DMF
     : OpMulMatrix.Impl2[DenseVector[Float], DenseMatrix[Float], DenseMatrix[Float]] = {
     new OpMulMatrix.Impl2[DenseVector[Float], DenseMatrix[Float], DenseMatrix[Float]] {
       def apply(a: DenseVector[Float], b: DenseMatrix[Float]): DenseMatrix[Float] = {
@@ -650,7 +652,7 @@ trait DenseMatrixFloatMultiplyStuff extends DenseMatrixExpandedOps with DenseMat
 
   // <editor-fold defaultstate="collapsed" desc=" // <editor-fold defaultstate="collapsed" desc=" OpSolveMatrixBy implementations ">
 
-  implicit object implOpSolveMatrixBy_DMF_DMF_eq_DMF
+  implicit object impl_OpSolveMatrixBy_DMF_DMF_eq_DMF
       extends OpSolveMatrixBy.Impl2[DenseMatrix[Float], DenseMatrix[Float], DenseMatrix[Float]] {
 
     override def apply(A: DenseMatrix[Float], V: DenseMatrix[Float]) = {
@@ -768,7 +770,7 @@ trait DenseMatrixFloatMultiplyStuff extends DenseMatrixExpandedOps with DenseMat
     }
   }
 
-  implicit object implOpSolveMatrixBy_DMF_DVF_eq_DVF
+  implicit object impl_OpSolveMatrixBy_DMF_DVF_eq_DVF
       extends OpSolveMatrixBy.Impl2[DenseMatrix[Float], DenseVector[Float], DenseVector[Float]] {
 
     override def apply(a: DenseMatrix[Float], b: DenseVector[Float]): DenseVector[Float] = {
@@ -1188,7 +1190,7 @@ trait DenseMatrixMultOps extends DenseMatrixExpandedOps with DenseMatrixOpsLowPr
 
 }
 
-trait DenseMatrix_SliceOps extends DenseMatrix_SliceOps_LowPrio {
+trait DenseMatrix_SetOps extends DenseMatrix_SlicingOps {
 
 
   // <editor-fold defaultstate="collapsed" desc=" implicit implementations for OpSet ">

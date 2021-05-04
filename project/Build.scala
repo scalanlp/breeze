@@ -42,7 +42,7 @@ object Common {
       "org.scalatest" %% "scalatest-wordspec" % "3.2.8" % "test",
       "org.scalatestplus" %% "scalacheck-1-15" % "3.2.8.0" % "test",
       "org.scalacheck" %% "scalacheck" % "1.15.3" % "test"
-  ),
+    ),
     libraryDependencies ++= {
       if (priorTo2_13(scalaVersion.value)) {
         Seq(
@@ -83,7 +83,7 @@ object Common {
         )
         case Some((2, 13)) => Seq(
           baseDirectory.value / "src" / "main" / "scala_2",
-          baseDirectory.value / "src" / "main" / "scala_2.13"
+          baseDirectory.value / "src" / "main" / "scala_2.13+"
         )
         case Some( (3, _)) => Seq(
           baseDirectory.value / "src" / "main" / "scala_2.13",

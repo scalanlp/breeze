@@ -828,6 +828,14 @@ object MutableOptimizationSpace {
   object SparseFieldOptimizationSpace {
     implicit def sparseOptSpace[S: Field: Zero: ClassTag]
       : MutableOptimizationSpace[CSCMatrix[S], SparseVector[S], S] = {
+      implicitly[OpNeg.Impl[SparseVector[S], SparseVector[S]]]
+      implicitly[OpNeg.Impl[SparseVector[S], SparseVector[S]]]
+      type T = SparseVector[S]
+      type V = S
+      type U = SparseVector[S]
+      implicitly[ScalarOf[T, V]]
+      implicitly[Ring[V]]
+      implicitly[OpMulScalar.Impl2[T, V, U]]
       val norms = EntrywiseMatrixNorms.make[CSCMatrix[S], S]
       import norms._
       make[CSCMatrix[S], SparseVector[S], S](_.asCscRow, _.flatten())

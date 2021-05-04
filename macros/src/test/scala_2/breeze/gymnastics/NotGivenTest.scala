@@ -1,4 +1,4 @@
-package breeze.macros
+package breeze.gymnastics
 
 import org.scalatest.funsuite.AnyFunSuite
 

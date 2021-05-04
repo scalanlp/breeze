@@ -23,6 +23,7 @@ import breeze.numerics._
 import breeze.optimize.DiffFunction
 
 import scala.collection.mutable
+import scala.collection.compat._
 import breeze.compat.Scala3Compat._
 
 /**
@@ -184,7 +185,7 @@ object Multinomial {
 
     def mle(stats: SufficientStatistic) = log(stats.counts)
 
-    def likelihoodFunction(stats: SufficientStatistic) = new DiffFunction[T] {
+    def likelihoodFunction(stats: SufficientStatistic): DiffFunction[T] = new DiffFunction[T] {
       def calculate(x: T) = {
         val nn: T = logNormalize(x)
         val lp = nn.dot(stats.counts)

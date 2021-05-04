@@ -80,7 +80,8 @@ object CanTraverseValues extends LowPrioCanTraverseValues {
   // Arrays
   //
 
-  class OpArray[@specialized(Double, Int, Float, Long) A] extends CanTraverseValues[Array[A], A] {
+  // stupid scala 2.12
+  class OpArray[/*@specialized(Double, Int, Float, Long)*/ A] extends CanTraverseValues[Array[A], A] {
     def traverse(from: Array[A], fn: ValuesVisitor[A]): fn.type = {
       fn.visitArray(from)
       fn

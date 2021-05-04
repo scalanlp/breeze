@@ -1,7 +1,6 @@
-package breeze.macros
+package breeze.gymnastics
 
 import scala.language.experimental.macros
-import scala.reflect.macros.{blackbox, whitebox}
 
 /**
  * trait emulating Scala 3's not given via the shapeless trick. It's a witness that you can't find an implicit of the type

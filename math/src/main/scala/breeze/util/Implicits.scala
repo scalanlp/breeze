@@ -35,7 +35,7 @@ object Implicits extends DoubleImplicits with IteratorImplicits {
         result(a) += b
       }
 
-      result.view.mapValues(_.result()).toMap
+      Map.empty ++ result.mapValues(_.result())
     }
 
   }
@@ -54,39 +54,39 @@ trait DoubleImplicits {
     def closeTo(y: Float, tol: Double = 1E-5) = {
       (math.abs(x - y) / (math.abs(x) + math.abs(y) + 1e-10) < tol);
     }
-    def isDangerous = x.isNaN || x.isInfinite
+    def isDangerous: Boolean = x.isNaN || x.isInfinite
   }
 }
 
 trait IteratorImplicits {
   class RichIterator[T](iter: Iterator[T]) {
     def tee(f: T => Unit): Iterator[T] = new Iterator[T] {
-      def next = {
+      def next(): T = {
         val n = iter.next;
         f(n);
         n
       }
 
-      def hasNext = {
+      def hasNext: Boolean = {
         iter.hasNext;
       }
     }
 
     def takeUpToWhere(f: T => Boolean): Iterator[T] = new Iterator[T] {
       var done = false
-      def next = {
+      def next(): T = {
         if (done) throw new NoSuchElementException()
         val n = iter.next;
         done = f(n)
         n
       }
 
-      def hasNext = {
+      def hasNext: Boolean = {
         !done && iter.hasNext;
       }
     }
 
-    def last = {
+    def last: T = {
       var x = iter.next()
       while (iter.hasNext) {
         x = iter.next()

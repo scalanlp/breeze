@@ -18,6 +18,7 @@ package breeze.collection.immutable
 
 import breeze.util.Iterators
 
+import scala.annotation.tailrec
 import scala.collection.IterableLike
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable.Builder

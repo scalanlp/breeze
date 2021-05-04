@@ -2,13 +2,14 @@ package breeze.linalg.operators
 
 import breeze.generic.UFunc
 import breeze.generic.UFunc.{InPlaceImpl, InPlaceImpl2, UImpl, UImpl2}
-import breeze.gymnastics.&:&
+import breeze.gymnastics.{&:&, NotGiven}
 import breeze.linalg.{Matrix, Vector, scaleAdd}
 import breeze.linalg.support.{CanCopy, CanTransformValues, CanZipMapValues, ScalarOf}
 import breeze.math.{Ring, Semiring}
 import breeze.util.WideningConversion
 
-import scala.util.NotGiven
+import scala.util._
+import breeze.macros._
 
 trait GenericOpsLowPrio3 {
   implicit def canZipMapValuesImpl[Tag, T, V1, VR, U](implicit handhold: ScalarOf[T, V1],
@@ -17,11 +18,9 @@ trait GenericOpsLowPrio3 {
     (v1: T, v2: T) => canZipMapValues.map(v1, v2, impl.apply)
   }
 
-
-
 }
 
-trait GenericOpsLowPrio2 extends GenericOpsLowPrio3 {
+trait CastOps extends GenericOpsLowPrio3 {
 
   implicit def castOps_V_V[M1 <: Vector[T], M2 <: Vector[T], T, Op <: OpType, MR](implicit
                                                                                   v1lt: M1 <:< Vector[T],
@@ -40,16 +39,16 @@ trait GenericOpsLowPrio2 extends GenericOpsLowPrio3 {
   }
 
 
-  implicit def castOps_V_S[M1 <: Vector[T], T, Op <: OpType, MR](implicit v1lt: M1 <:< Vector[T],
-                                                                 v2: ScalarOf[M1, T],
-                                                                 v1ne: NotGiven[ (M1 =:= Vector[T])],
+  implicit def castOps_V_S[M1 <: Vector[T], T, Op <: OpType, MR](implicit v2: ScalarOf[M1, T],
+                                                                 v1lt: M1 <:< Vector[T],
+                                                                 v1ne: NotGiven[M1 =:= Vector[T]],
                                                                  op: UImpl2[Op, Vector[T], T, MR]): UImpl2[Op, M1, T, MR] = {
     op.asInstanceOf[UFunc.UImpl2[Op, M1, T, MR]]
   }
 
   implicit def castUpdateOps_V_S[M1 <: Vector[T], T, Op <: OpType](implicit
-                                                                   v1lt: M1 <:< Vector[T],
                                                                    v2: ScalarOf[M1, T],
+                                                                   v1lt: M1 <:< Vector[T],
                                                                    v1ne: NotGiven[ (M1 =:= Vector[T])],
                                                                    op: UFunc.InPlaceImpl2[Op, Vector[T], T]): UFunc.InPlaceImpl2[Op, M1, T] = {
     op.asInstanceOf[UFunc.InPlaceImpl2[Op, M1, T]]
@@ -125,11 +124,10 @@ trait GenericOpsLowPrio2 extends GenericOpsLowPrio3 {
 
 }
 
-trait GenericOpsLowPrio extends GenericOpsLowPrio2 {
+trait GenericOpsLowPrio extends CastOps {
 
-  implicit def pureFromUpdate[T, Other, Op <: OpType](
-                                                       implicit op: UFunc.InPlaceImpl2[Op, T, Other],
-                                                       copy: CanCopy[T]): UFunc.UImpl2[Op, T, Other, T] =
+  implicit def pureFromUpdate[T, Other, Op <: OpType](implicit op: UFunc.InPlaceImpl2[Op, T, Other],
+                                                      copy: CanCopy[T]): UFunc.UImpl2[Op, T, Other, T] =
     (a: T, b: Other) => {
       val c = copy(a)
       op(c, b)
@@ -138,7 +136,6 @@ trait GenericOpsLowPrio extends GenericOpsLowPrio2 {
 }
 
 trait GenericOps extends GenericOpsLowPrio {
-
 
   implicit def addIntoFromScaleAdd[T, U, V](
       implicit sa: scaleAdd.InPlaceImpl3[T, U, V],

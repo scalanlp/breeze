@@ -15,15 +15,10 @@ package breeze.linalg
  limitations under the License.
  */
 
-import breeze.generic.UFunc
-
 import java.util
-import breeze.linalg.operators._
-import breeze.linalg.support.CanTraverseValues.ValuesVisitor
-import breeze.linalg.support._
 import breeze.math._
 import breeze.storage.Zero
-import breeze.util.{ArrayUtil, ReflectionUtil, ScalaVersion, SerializableLogging, Sorting, Terminal}
+import breeze.util.{ArrayUtil, ReflectionUtil, Sorting, Terminal}
 
 import scala.collection.mutable
 import scala.reflect.ClassTag

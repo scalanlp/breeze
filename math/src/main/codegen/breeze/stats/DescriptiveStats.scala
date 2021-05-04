@@ -9,6 +9,7 @@ import breeze.stats.variance.Impl
 import scala.reflect.ClassTag
 import util.Sorting
 import breeze.util.{quickSelect, quickSelectImpl}
+import scala.collection.compat._
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
@@ -518,7 +519,7 @@ object DescriptiveStats {
   /**
    * Returns the estimate of the data at p * it.size after copying and sorting, where p in [0,1].
    */
-  def percentile(it: TraversableOnce[Double], p: Double) = {
+  def percentile(it: TraversableOnce[Double], p: Double): Double = {
     if (p > 1 || p < 0) throw new IllegalArgumentException("p must be in [0,1]")
     val arr = it.toArray
     Sorting.quickSort(arr)
@@ -532,7 +533,7 @@ object DescriptiveStats {
     * Result is invalid if the input array is not already sorted.
     * </p>
     */
-  def percentileInPlace(arr: Array[Double], p: Double) = {
+  def percentileInPlace(arr: Array[Double], p: Double): Double = {
     if (p > 1 || p < 0) throw new IllegalArgumentException("p must be in [0,1]")
     // +1 so that the .5 == mean for even number of elements.
     val f = (arr.length + 1) * p

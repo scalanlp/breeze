@@ -15,6 +15,7 @@ package breeze.optimize
  limitations under the License.
  */
 
+import breeze.linalg.operators.HasOps
 import breeze.linalg.{DenseMatrix, DenseVector, _}
 import breeze.optimize.FirstOrderMinimizer.{ConvergenceCheck, ProjectedStepConverged, State}
 import breeze.util.SerializableLogging
@@ -277,7 +278,7 @@ class LBFGSB(
     val rc = fullR(freeVariableIndexes)
 
     //step2 && step3 v=M*W^T*Z*rc
-    var v: DenseVector[Double] = M * (WZ * rc)
+    var v: DenseVector[Double] = M * (WZ.*(rc)(HasOps.castOps_M_V))
     //step4 N = 1/theta * W^T*Z * (W^T*Z)^T
     var N: DenseMatrix[Double] = WZ * WZ.t
     N = N *:* invTheta
