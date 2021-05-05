@@ -248,7 +248,7 @@ trait DenseMatrix_TraversalOps extends TensorLowPrio {
     }
   }
 
-  implicit def canTraverseKeyValuePairs[V]: CanTraverseKeyValuePairs[DenseMatrix[V], (Int, Int), V] = {
+  implicit def canTraverseKeyValuePairs_DM[V]: CanTraverseKeyValuePairs[DenseMatrix[V], (Int, Int), V] = {
     new CanTraverseKeyValuePairs[DenseMatrix[V], (Int, Int), V] {
       def isTraversableAgain(from: DenseMatrix[V]): Boolean = true
 
@@ -304,7 +304,7 @@ trait DenseMatrix_TraversalOps extends TensorLowPrio {
     }
   }
 
-  implicit def canMapKeyValuePairs[V, R: ClassTag]: CanMapKeyValuePairs[DenseMatrix[V], (Int, Int), V, R, DenseMatrix[R]] = {
+  implicit def canMapKeyValuePairs_DM[V, R: ClassTag]: CanMapKeyValuePairs[DenseMatrix[V], (Int, Int), V, R, DenseMatrix[R]] = {
     new CanMapKeyValuePairs[DenseMatrix[V], (Int, Int), V, R, DenseMatrix[R]] {
       override def map(from: DenseMatrix[V], fn: (((Int, Int), V) => R)) = {
         val data = new Array[R](from.data.length)
@@ -323,7 +323,7 @@ trait DenseMatrix_TraversalOps extends TensorLowPrio {
     }
   }
 
-  implicit def DM_canMapValues[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) R: ClassTag]: CanMapValues[DenseMatrix[V], V, R, DenseMatrix[R]] = {
+  implicit def canMapValues_DM[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) R: ClassTag]: CanMapValues[DenseMatrix[V], V, R, DenseMatrix[R]] = {
     new DenseCanMapValues[DenseMatrix[V], V, R, DenseMatrix[R]] {
 
       override def map(from: DenseMatrix[V], fn: (V => R)): DenseMatrix[R] = {
@@ -365,10 +365,6 @@ trait DenseMatrix_TraversalOps extends TensorLowPrio {
   }
 
 
-  implicit def canCopyDenseMatrix[V: ClassTag]: CanCopy[DenseMatrix[V]] = new CanCopy[DenseMatrix[V]] {
-    def apply(v1: DenseMatrix[V]) = {
-      v1.copy
-    }
-  }
+  implicit def canCopy_DM[V: ClassTag]: CanCopy[DenseMatrix[V]] = (v1: DenseMatrix[V]) => v1.copy
 
 }

@@ -71,6 +71,7 @@ object EnforceUFuncCoverage {
   EnforceUFuncCoverage.vectors1(tan)
   EnforceUFuncCoverage.vectors1(exp)
   EnforceUFuncCoverage.vectors1(lgamma)
+  EnforceUFuncCoverage.vectors1(digamma)
 
   // Ensure things work
 //  private object Q extends UFunc

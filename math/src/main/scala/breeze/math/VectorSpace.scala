@@ -16,7 +16,6 @@ package breeze.math
  limitations under the License.
  */
 
-import breeze.compat.Scala3Compat
 import breeze.generic.UFunc
 import breeze.generic.UFunc.{InPlaceImpl2, InPlaceImpl3, UImpl2}
 import breeze.linalg.operators._

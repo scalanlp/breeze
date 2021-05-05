@@ -20,7 +20,7 @@ import scala.reflect.ClassTag
 import scala.{specialized => spec}
 
 trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMatrix_ComparisonOps
-  with DenseMatrixMultOps with DenseMatrixMultiplyOps with DenseMatrixFloatMultiplyStuff with DenseMatrix_SetOps {
+  with DenseMatrixMultOps with DenseMatrixMultiplyOps with DenseMatrixOps_FloatSpecialized with DenseMatrix_SetOps {
   implicit val setMV_D: OpSet.InPlaceImpl2[DenseMatrix[Double], DenseVector[Double]] = new SetDMDVOp[Double]();
   implicit val setMV_F: OpSet.InPlaceImpl2[DenseMatrix[Float], DenseVector[Float]] = new SetDMDVOp[Float]();
   implicit val setMV_I: OpSet.InPlaceImpl2[DenseMatrix[Int], DenseVector[Int]] = new SetDMDVOp[Int]();
@@ -31,7 +31,7 @@ trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMat
    * @tparam R
    * @return
    */
-  implicit def DM_canMapRows[V, R: ClassTag: Zero](implicit implSet: OpSet.InPlaceImpl2[DenseVector[R], DenseVector[R]])
+  implicit def canMapRows_DM[V, R: ClassTag: Zero](implicit implSet: OpSet.InPlaceImpl2[DenseVector[R], DenseVector[R]])
   : CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], DenseVector[R], DenseMatrix[R]] =
     new CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], DenseVector[R], DenseMatrix[R]] {
       def apply(from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => DenseVector[R]): DenseMatrix[R] = {
@@ -53,10 +53,10 @@ trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMat
       }
     }
 
-  implicit def DM_handholdCanMapRows[V]: CanCollapseAxis.HandHold[DenseMatrix[V], Axis._0.type, DenseVector[V]] =
+  implicit def handholdCanMapRows_DM[V]: CanCollapseAxis.HandHold[DenseMatrix[V], Axis._0.type, DenseVector[V]] =
     new CanCollapseAxis.HandHold[DenseMatrix[V], Axis._0.type, DenseVector[V]]()
 
-  implicit def DM_canMapRowsBitVector[V: ClassTag: Zero]
+  implicit def canMapRowsBitVector_DM[V: ClassTag: Zero]
   : CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], BitVector, DenseMatrix[Boolean]] =
     new CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], BitVector, DenseMatrix[Boolean]] {
       def apply(from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => BitVector): DenseMatrix[Boolean] = {
@@ -82,7 +82,7 @@ trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMat
    * @tparam V value type
    * @return
    */
-  implicit def DM_canMapCols[V, Res: ClassTag: Zero](
+  implicit def canMapCols_DM[V, Res: ClassTag: Zero](
                                                    implicit implSet: OpSet.InPlaceImpl2[DenseVector[Res], DenseVector[Res]])
   : CanCollapseAxis[DenseMatrix[V], _1.type, DenseVector[V], DenseVector[Res], DenseMatrix[Res]] = {
     new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], DenseVector[Res], DenseMatrix[Res]] {
@@ -114,10 +114,10 @@ trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMat
     }
   }
 
-  implicit def DM_handholdCanMapCols[V]: CanCollapseAxis.HandHold[DenseMatrix[V], Axis._1.type, DenseVector[V]] =
+  implicit def handholdCanMapCols_DM[V]: CanCollapseAxis.HandHold[DenseMatrix[V], Axis._1.type, DenseVector[V]] =
     new CanCollapseAxis.HandHold[DenseMatrix[V], Axis._1.type, DenseVector[V]]()
 
-  implicit def DM_canMapColsBitVector[V: ClassTag: Zero]: CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], BitVector, DenseMatrix[Boolean]] =
+  implicit def canMapColsBitVector_DM[V: ClassTag: Zero]: CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], BitVector, DenseMatrix[Boolean]] =
     new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], BitVector, DenseMatrix[Boolean]] {
       def apply(from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => BitVector): DenseMatrix[Boolean] = {
         var result: DenseMatrix[Boolean] = null
@@ -149,7 +149,7 @@ trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMat
    * Iterates over each columns
    * @return
    */
-  implicit def DM_canTraverseCols[V]: CanTraverseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]] = {
+  implicit def canTraverseCols_DM[V]: CanTraverseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]] = {
     new CanTraverseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]] {
       def apply[A](from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => A): Unit = {
         cforRange(0 until from.cols) { c =>
@@ -164,7 +164,7 @@ trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMat
    * @tparam V
    * @return
    */
-  implicit def DM_canTraverseRows[V]: CanTraverseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]] = {
+  implicit def canTraverseRows_DM[V]: CanTraverseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]] = {
     new CanTraverseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]] {
       def apply[A](from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => A): Unit = {
         val t = from.t
@@ -179,7 +179,7 @@ trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMat
    * Iterates over each columns
    * @return
    */
-  implicit def DM_canIterateCols[V]: CanIterateAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]] = {
+  implicit def canIterateCols_DM[V]: CanIterateAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]] = {
     new CanIterateAxis[DenseMatrix[V], Axis._0.type, DenseVector[V]] {
 
       override def apply[A](from: DenseMatrix[V], axis: _0.type): Iterator[DenseVector[V]] = {
@@ -193,7 +193,7 @@ trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMat
    * @tparam V
    * @return
    */
-  implicit def DM_canIterateRows[V]: CanIterateAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]] = {
+  implicit def canIterateRows_DM[V]: CanIterateAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]] = {
     new CanIterateAxis[DenseMatrix[V], Axis._1.type, DenseVector[V]] {
 
       override def apply[A](from: DenseMatrix[V], axis: _1.type): Iterator[DenseVector[V]] = {
@@ -225,10 +225,10 @@ trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMat
     }
   }
 
-  implicit def DM_zipMap[V, R: ClassTag]: CanZipMapValuesDenseMatrix[V, R] = new CanZipMapValuesDenseMatrix[V, R]
-  implicit val DM_zipMap_d: CanZipMapValuesDenseMatrix[Double, Double] = new CanZipMapValuesDenseMatrix[Double, Double]
-  implicit val DM_zipMap_f: CanZipMapValuesDenseMatrix[Float, Float] = new CanZipMapValuesDenseMatrix[Float, Float]
-  implicit val DM_zipMap_i: CanZipMapValuesDenseMatrix[Int, Int] = new CanZipMapValuesDenseMatrix[Int, Int]
+  implicit def zipMap_DM[V, R: ClassTag]: CanZipMapValuesDenseMatrix[V, R] = new CanZipMapValuesDenseMatrix[V, R]
+  implicit val zipMap_DM_Double: CanZipMapValuesDenseMatrix[Double, Double] = new CanZipMapValuesDenseMatrix[Double, Double]
+  implicit val zipMap_DM_Float: CanZipMapValuesDenseMatrix[Float, Float] = new CanZipMapValuesDenseMatrix[Float, Float]
+  implicit val zipMap_DM_Int: CanZipMapValuesDenseMatrix[Int, Int] = new CanZipMapValuesDenseMatrix[Int, Int]
 
   class CanZipMapKeyValuesDenseMatrix[@spec(Double, Int, Float, Long) V, @specialized(Int, Double) RV: ClassTag]
     extends CanZipMapKeyValues[DenseMatrix[V], (Int, Int), V, RV, DenseMatrix[RV]] {
@@ -254,9 +254,9 @@ trait DenseMatrixOps extends MatrixOps with DenseMatrixExpandedOps with DenseMat
     }
   }
 
-  implicit def DM_zipMapKV[V, R: ClassTag]: CanZipMapKeyValuesDenseMatrix[V, R] = new CanZipMapKeyValuesDenseMatrix[V, R]
+  implicit def zipMapKV_DM[V, R: ClassTag]: CanZipMapKeyValuesDenseMatrix[V, R] = new CanZipMapKeyValuesDenseMatrix[V, R]
 
-  implicit def DM_canDim[E]: dim.Impl[DenseMatrix[E], (Int, Int)] = new dim.Impl[DenseMatrix[E], (Int, Int)] {
+  implicit def canDim_DM[E]: dim.Impl[DenseMatrix[E], (Int, Int)] = new dim.Impl[DenseMatrix[E], (Int, Int)] {
     def apply(v: DenseMatrix[E]): (Int, Int) = (v.rows, v.cols)
   }
 }
@@ -539,9 +539,8 @@ trait DenseMatrixMultiplyOps extends DenseMatrixExpandedOps with DenseMatrixMult
 
 }
 
-// TODO: fix expand to allow us to remove this code duplication
 // TODO: Rename/collapse trait
-trait DenseMatrixFloatMultiplyStuff extends DenseMatrixExpandedOps with DenseMatrixMultOps with DenseMatrix_SlicingOps {
+trait DenseMatrixOps_FloatSpecialized extends DenseMatrixExpandedOps with DenseMatrixMultOps with DenseMatrix_SlicingOps {
 
   // <editor-fold defaultstate="collapsed" desc=" OpMulMatrix implementations ">
 

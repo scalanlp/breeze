@@ -311,7 +311,7 @@ object CSCMatrix extends MatrixConstructors[CSCMatrix] {
     private def ring = implicitly[Semiring[T]]
 
     def add(r: Int, c: Int, v: T): Unit = {
-      if (v != 0) {
+      if (v != ring.zero) {
         numAdded += 1
         vs += v
         indices += (c.toLong << 32) | (r & 0xFFFFFFFFL)

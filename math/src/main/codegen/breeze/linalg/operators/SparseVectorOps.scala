@@ -296,16 +296,13 @@ trait DenseVector_SparseVector_Ops extends DenseVectorOps with SparseVectorExpan
         val aoff: Int = a.offset
         val stride: Int = a.stride
 
-        var i = 0
-        if (stride == 1 && aoff == 0) {
-          while (i < bsize) {
-            result += adata(bi(i)) * bd(i)
-            i += 1
+        if (stride == 1) {
+          cforRange (0 until bsize) { i =>
+            result += adata(aoff + bi(i)) * bd(i)
           }
         } else {
-          while (i < bsize) {
+          cforRange (0 until bsize) { i =>
             result += adata(aoff + bi(i) * stride) * bd(i)
-            i += 1
           }
         }
         result
@@ -315,7 +312,7 @@ trait DenseVector_SparseVector_Ops extends DenseVectorOps with SparseVectorExpan
     }
   @expand
   @expand.valify
-  implicit def implZipValues_DV_SV_eq_ZVTT[@expand.args(Int, Double, Float, Long) T](
+  implicit def impl_zipValues_DV_SV_eq_ZV[@expand.args(Int, Double, Float, Long) T](
       implicit @expand.sequence[T](0, 0.0, 0.0f, 0L) zero: T)
     : zipValues.Impl2[DenseVector[T], SparseVector[T], ZippedValues[T, T]] =
     new zipValues.Impl2[DenseVector[T], SparseVector[T], ZippedValues[T, T]] {
@@ -384,19 +381,6 @@ trait DenseVector_SparseVector_Ops extends DenseVectorOps with SparseVectorExpan
       implicitly[TernaryUpdateRegistry[Vector[T], T, Vector[T], scaleAdd.type]].register(this)
     }
 
-//  // this shouldn't be necessary but it is:
-//  @expand
-//  @expand.valify
-//  implicit def dv_sv_op[
-//      @expand.args(Int, Double, Float, Long) T,
-//      @expand.args(OpAdd, OpSub, OpSet, OpMod, OpPow) Op <: OpType]
-//    : Op.Impl2[DenseVector[T], SparseVector[T], DenseVector[T]] = {
-//    val op = DenseVector.pureFromUpdate(implicitly[Op.InPlaceImpl2[DenseVector[T], SparseVector[T]]])
-//    implicitly[BinaryRegistry[DenseVector[T], Vector[T], Op.type, Vector[T]]].register(op)
-//    implicitly[BinaryRegistry[Vector[T], Vector[T], Op.type, Vector[T]]].register(op)
-//    op
-//  }
-
   @expand
   @expand.valify
   implicit def impl_OpMulMatrix_DV_SVt_eq_CSC[@expand.args(Int, Double, Float, Long, Complex) T](
@@ -404,13 +388,15 @@ trait DenseVector_SparseVector_Ops extends DenseVectorOps with SparseVectorExpan
     : OpMulMatrix.Impl2[DenseVector[T], Transpose[SparseVector[T]], CSCMatrix[T]] = {
     new OpMulMatrix.Impl2[DenseVector[T], Transpose[SparseVector[T]], CSCMatrix[T]] {
       def apply(a: DenseVector[T], b: Transpose[SparseVector[T]]): CSCMatrix[T] = {
-        val sizeHint = a.size * b.inner.activeSize
-        val res = new CSCMatrix.Builder[T](a.size, b.inner.size, sizeHint)
+        val bInner = b.inner
+        val sizeHint = a.size * bInner.activeSize
+        val res = new CSCMatrix.Builder[T](a.size, bInner.size, sizeHint)
 
-        // TODO: replace with cfor
-          for {(j, bValue) <- b.inner.activeIterator}
-            for {(i, aValue) <- a.activeIterator}
-              res.add(i, j, aValue * bValue)
+        cforRange2(0 until bInner.activeSize, 0 until a.length) { (boff, i) =>
+          val j = bInner.indexAt(boff)
+          val bValue = bInner.valueAt(boff)
+          res.add(i, j, a(i) * bValue)
+        }
 
         res.result(keysAlreadyUnique = true, keysAlreadySorted = true)
       }

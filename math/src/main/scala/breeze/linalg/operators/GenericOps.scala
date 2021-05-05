@@ -12,9 +12,9 @@ import scala.util._
 import breeze.macros._
 
 trait GenericOpsLowPrio3 {
-  implicit def canZipMapValuesImpl[Tag, T, V1, VR, U](implicit handhold: ScalarOf[T, V1],
-                                                      impl: UFunc.UImpl2[Tag, V1, V1, VR],
-                                                      canZipMapValues: CanZipMapValues[T, V1, VR, U]): UFunc.UImpl2[Tag, T, T, U] = {
+  implicit def impl_T_S_eq_U_from_ZipMap[Tag, T, V1, VR, U](implicit handhold: ScalarOf[T, V1],
+                                                            impl: UFunc.UImpl2[Tag, V1, V1, VR],
+                                                            canZipMapValues: CanZipMapValues[T, V1, VR, U]): UFunc.UImpl2[Tag, T, T, U] = {
     (v1: T, v2: T) => canZipMapValues.map(v1, v2, impl.apply)
   }
 
@@ -137,19 +137,19 @@ trait GenericOpsLowPrio extends CastOps {
 
 trait GenericOps extends GenericOpsLowPrio {
 
-  implicit def addIntoFromScaleAdd[T, U, V](
+  implicit def impl_OpAdd_InPlace_T_U_Generic_from_scaleAdd_InPlace[T, U, V](
       implicit sa: scaleAdd.InPlaceImpl3[T, U, V],
       semi: Semiring[U]): OpAdd.InPlaceImpl2[T, V] = { (t: T, v: V) =>
     scaleAdd.inPlace(t, semi.one, v)
   }
 
-  implicit def subIntoFromScaleAdd[T, U, V](
+  implicit def impl_OpSub_InPlace_T_U_Generic_from_scaleAdd_InPlace[T, U, V](
       implicit sa: scaleAdd.InPlaceImpl3[T, U, V],
       ring: Ring[U]): OpSub.InPlaceImpl2[T, V] = { (t: T, v: V) =>
     scaleAdd.inPlace(t, ring.negate(ring.one), v)
   }
 
-  implicit def negFromScale[T, U, V](implicit scalarOf: ScalarOf[T, V], ring: Ring[V], scale: OpMulScalar.Impl2[T, V, U]): OpNeg.Impl[T, U] = {
+  implicit def impl_OpNeg_T_Generic_from_OpMulScalar[T, U, V](implicit scalarOf: ScalarOf[T, V], ring: Ring[V], scale: OpMulScalar.Impl2[T, V, U]): OpNeg.Impl[T, U] = {
     new OpNeg.Impl[T, U] {
       override def apply(a: T): U = {
         scale(a, ring.negate(ring.one))

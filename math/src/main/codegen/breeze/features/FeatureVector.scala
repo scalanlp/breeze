@@ -14,7 +14,6 @@ import java.util
  * Represents a feature vector of indicator (i.e. binary) features.
  * Not a full vector. Only supports dot and addition with a real vector.
  *
- * TODO: possibly rename to IndicatorVector?
  *
  * @author dlwh
  */

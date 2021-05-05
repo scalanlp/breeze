@@ -196,6 +196,35 @@ trait Vector_GenericOps extends GenericOps with Vector_TraversalOps {
       }
     }
   }
+
+
+  // todo: try deleting
+  implicit def impl_OpSub_V_V_eq_V_Generic[T: Ring]: OpSub.Impl2[Vector[T], Vector[T], Vector[T]] =
+    new OpSub.Impl2[Vector[T], Vector[T], Vector[T]] {
+      val r = implicitly[Ring[T]]
+      def apply(a: Vector[T], b: Vector[T]): Vector[T] = {
+        require(b.length == a.length, "Vectors must be the same length!")
+        val result = a.copy
+        for ((k, v) <- b.activeIterator) {
+          result(k) = r.-(a(k), v)
+        }
+        result
+      }
+    }
+
+  // todo: try deleting
+  implicit def impl_OpAdd_V_V_eq_V_Generic[T: Semiring]: OpAdd.Impl2[Vector[T], Vector[T], Vector[T]] =
+    new OpAdd.Impl2[Vector[T], Vector[T], Vector[T]] {
+      val r = implicitly[Semiring[T]]
+      def apply(a: Vector[T], b: Vector[T]): Vector[T] = {
+        require(b.length == a.length, "Vectors must be the same length!")
+        val result = a.copy
+        for ((k, v) <- b.activeIterator) {
+          result(k) = r.+(a(k), v)
+        }
+        result
+      }
+    }
 }
 
 trait SparseVector_GenericOps extends GenericOps {

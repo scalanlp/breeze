@@ -10,7 +10,6 @@ import scala.reflect.ClassTag
 trait VectorOps extends VectorExpandOps
 
 
-// TODO: names
 trait VectorExpandOps extends Vector_GenericOps {
 
 
@@ -27,33 +26,6 @@ trait VectorExpandOps extends Vector_GenericOps {
         val result = a.copy
         for ((k, v) <- b.activeIterator) {
           result(k) = op(a(k), v)
-        }
-        result
-      }
-    }
-
-  // todo: try deleting
-  implicit def impl_OpSub_V_V_eq_V_Generic[T: Ring]: OpSub.Impl2[Vector[T], Vector[T], Vector[T]] =
-    new OpSub.Impl2[Vector[T], Vector[T], Vector[T]] {
-      val r = implicitly[Ring[T]]
-      def apply(a: Vector[T], b: Vector[T]): Vector[T] = {
-        require(b.length == a.length, "Vectors must be the same length!")
-        val result = a.copy
-        for ((k, v) <- b.activeIterator) {
-          result(k) = r.-(a(k), v)
-        }
-        result
-      }
-    }
-
-  implicit def impl_OpAdd_V_V_eq_V_Generic[T: Semiring]: OpAdd.Impl2[Vector[T], Vector[T], Vector[T]] =
-    new OpAdd.Impl2[Vector[T], Vector[T], Vector[T]] {
-      val r = implicitly[Semiring[T]]
-      def apply(a: Vector[T], b: Vector[T]): Vector[T] = {
-        require(b.length == a.length, "Vectors must be the same length!")
-        val result = a.copy
-        for ((k, v) <- b.activeIterator) {
-          result(k) = r.+(a(k), v)
         }
         result
       }
@@ -269,6 +241,7 @@ trait VectorExpandOps extends Vector_GenericOps {
       }
     }
   }
+
   @expand
   @expand.valify
   implicit def impl_scaleAdd_InPlace_V_S_V[@expand.args(Int, Double, Float, Long) T]
@@ -278,11 +251,17 @@ trait VectorExpandOps extends Vector_GenericOps {
         require(b.length == a.length, "Vectors must be the same length!")
         if (s == 0) return
 
-        var i = 0
-        for ((k, v) <- b.activeIterator) {
-          a(k) += s * v
-          i += 1
+        // TODO: maybe profile?
+        if (b.activeSize > b.length / 2) {
+          cforRange(0 until b.length) { k =>
+            a(k) += s * b(k)
+          }
+        } else {
+          for ((k, v) <- b.activeIterator) {
+            a(k) += s * v
+          }
         }
+
       }
     }
   }
