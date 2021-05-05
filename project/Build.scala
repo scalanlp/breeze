@@ -91,6 +91,7 @@ object Common {
         )
         case _ => ???
       }
-    }
+    },
+    useScala3doc := false
   ) ++ breezeCodegenSettings
 }
