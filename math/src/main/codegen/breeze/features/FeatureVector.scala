@@ -60,23 +60,22 @@ object FeatureVector {
 
   @expand
   @expand.valify
-  implicit def FVScaleAddIntoV[@expand.args(Int, Float, Double) T]
+  implicit def impl_scaleAdd_InPlace_V_S_FV[@expand.args(Int, Float, Double) T]
     : TernaryUpdateRegistry[Vector[T], T, FeatureVector, scaleAdd.type] = {
     new TernaryUpdateRegistry[Vector[T], T, FeatureVector, scaleAdd.type] {
       override def bindingMissing(y: Vector[T], a: T, x: FeatureVector): Unit = {
         if (a != 0.0) {
-          var i = 0
-          while (i < x.activeLength) {
+          cforRange (0 until x.activeLength) { i =>
             y(x(i)) += a
-            i += 1
           }
         }
       }
     }
   }
+
   @expand
   @expand.valify
-  implicit def FVScaleAddIntoDV[@expand.args(Int, Float, Double) T]
+  implicit def impl_scaleAdd_InPlace_DV_S_FV[@expand.args(Int, Float, Double) T]
     : scaleAdd.InPlaceImpl3[DenseVector[T], T, FeatureVector] = {
     new scaleAdd.InPlaceImpl3[DenseVector[T], T, FeatureVector] {
       def apply(y: DenseVector[T], a: T, x: FeatureVector): Unit = {
@@ -94,7 +93,7 @@ object FeatureVector {
   // specialzied doesn't work here, so we're expanding
   @expand
   @expand.valify
-  implicit def FVCanDaxpyIntoVB[@expand.args(Float, Double) T]
+  implicit def impl_scaleAdd_InPlace_VB_S_FV[@expand.args(Float, Double) T]
     : InPlaceImpl3[scaleAdd.type, VectorBuilder[T], T, FeatureVector] = {
     new scaleAdd.InPlaceImpl3[VectorBuilder[T], T, FeatureVector] {
       def apply(y: VectorBuilder[T], a: T, x: FeatureVector): Unit = {
@@ -109,14 +108,12 @@ object FeatureVector {
     }
   }
 
-  implicit def FVCanDaxpyIntoVB_Generic[T]: InPlaceImpl3[scaleAdd.type, VectorBuilder[T], T, FeatureVector] = {
+  implicit def impl_scaleAdd_InPlace_VB_S_FV_Generic[T]: InPlaceImpl3[scaleAdd.type, VectorBuilder[T], T, FeatureVector] = {
     new scaleAdd.InPlaceImpl3[VectorBuilder[T], T, FeatureVector] {
       def apply(y: VectorBuilder[T], a: T, x: FeatureVector): Unit = {
         if (a != 0.0) {
-          var i = 0
-          while (i < x.activeLength) {
+          cforRange (0 until x.activeLength) { i =>
             y.add(x(i), a)
-            i += 1
           }
         }
       }
@@ -125,50 +122,27 @@ object FeatureVector {
 
   @expand
   @expand.valify
-  implicit def FVScaleAddIntoSV[@expand.args(Int, Float, Double) T]
-    : scaleAdd.InPlaceImpl3[SparseVector[T], T, FeatureVector] = {
-    new scaleAdd.InPlaceImpl3[SparseVector[T], T, FeatureVector] {
-      def apply(y: SparseVector[T], a: T, x: FeatureVector): Unit = {
-        if (a != 0.0) {
-          var i = 0
-          while (i < x.activeLength) {
-            y(x(i)) += a
-            i += 1
-          }
-        }
-      }
-      implicitly[TernaryUpdateRegistry[Vector[T], T, FeatureVector, scaleAdd.type]].register(this)
-    }
-  }
-
-  @expand
-  @expand.valify
-  implicit def DotProductFVV[@expand.args(Int, Float, Double) T]
-    : BinaryRegistry[FeatureVector, Vector[T], OpMulInner.type, T] = {
-    new BinaryRegistry[FeatureVector, Vector[T], OpMulInner.type, T] {
-      override def bindingMissing(a: FeatureVector, b: Vector[T]): T = {
+  implicit def impl_OpMulInner_FV_V_eq_S[@expand.args(Int, Float, Double) T]: OpMulInner.Impl2[FeatureVector, Vector[T], T] = {
+    new OpMulInner.Impl2[FeatureVector, Vector[T], T] {
+      override def apply(a: FeatureVector, b: Vector[T]): T = {
         var score: T = 0
-        var i = 0
-        while (i < a.activeLength) {
+        cforRange (0 until a.activeLength) { i =>
           score += b(a(i))
-          i += 1
         }
-
         score
       }
     }
   }
+
   @expand
   @expand.valify
-  implicit def DotProductFVDV[@expand.args(Int, Float, Double) T]
+  implicit def impl_OpMulInner_FV_DV_eq_S[@expand.args(Int, Float, Double) T]
     : OpMulInner.Impl2[FeatureVector, DenseVector[T], T] = {
     new OpMulInner.Impl2[FeatureVector, DenseVector[T], T] {
       def apply(a: FeatureVector, b: DenseVector[T]): T = {
         var score: T = 0
-        var i = 0
-        while (i < a.activeLength) {
+        cforRange (0 until a.activeLength) { i =>
           score += b(a(i))
-          i += 1
         }
 
         score
@@ -176,26 +150,16 @@ object FeatureVector {
     }
   }
 
-  implicit def dotProductVxFVfromFVxV[V, T](
+  implicit def impl_OpMulInner_FV_T_eq_S_from_T_FV[V, T](
       implicit op: OpMulInner.Impl2[FeatureVector, V, T]): OpMulInner.Impl2[V, FeatureVector, T] = {
     new OpMulInner.Impl2[V, FeatureVector, T] {
       def apply(b: V, a: FeatureVector): T = op(a, b)
     }
   }
 
-  implicit def opAddIntoFromAxpy[V, T](
-      implicit op: scaleAdd.InPlaceImpl3[V, T, FeatureVector],
-      semiring: Semiring[T]): OpAdd.InPlaceImpl2[V, FeatureVector] = {
-    new OpAdd.InPlaceImpl2[V, FeatureVector] {
-      override def apply(v: V, v2: FeatureVector): Unit = {
-        op(v, semiring.one, v2)
-      }
-    }
-  }
-
   @expand
   @expand.valify
-  implicit def CanMulDMFV[@expand.args(Int, Double, Float) T]
+  implicit def impl_OpMulMatrix_DM_FV_eq_DV[@expand.args(Int, Double, Float) T]
     : OpMulMatrix.Impl2[DenseMatrix[T], FeatureVector, DenseVector[T]] = {
     new OpMulMatrix.Impl2[DenseMatrix[T], FeatureVector, DenseVector[T]] {
       def apply(a: DenseMatrix[T], b: FeatureVector): DenseVector[T] = {
@@ -210,7 +174,7 @@ object FeatureVector {
 
   @expand
   @expand.valify
-  implicit def CanMulCSCFV[@expand.args(Int, Double, Float) T]
+  implicit def impl_OpMulMatrix_CSC_FV_eq_CSC[@expand.args(Int, Double, Float) T]
     : OpMulMatrix.Impl2[CSCMatrix[T], FeatureVector, SparseVector[T]] = {
     new OpMulMatrix.Impl2[CSCMatrix[T], FeatureVector, SparseVector[T]] {
       def apply(a: CSCMatrix[T], b: FeatureVector): SparseVector[T] = {
@@ -226,15 +190,16 @@ object FeatureVector {
     }
   }
 
-  implicit def mulMatrixTrans[M, MTrans, MulResult, MRTrans](
-      implicit trans: CanTranspose[M, MTrans],
-      mul: OpMulMatrix.Impl2[MTrans, FeatureVector, MulResult],
-      mrTrans: CanTranspose[MulResult, MRTrans]): OpMulMatrix.Impl2[Transpose[FeatureVector], M, MRTrans] = {
-    new OpMulMatrix.Impl2[Transpose[FeatureVector], M, MRTrans] {
-      override def apply(v: Transpose[FeatureVector], v2: M): MRTrans = {
-        mrTrans(mul(trans(v2), v.inner))
-      }
-    }
-  }
+  // TODO: shouldn't be necessary. verify
+//  implicit def mulMatrixTrans[M, MTrans, MulResult, MRTrans](
+//      implicit trans: CanTranspose[M, MTrans],
+//      mul: OpMulMatrix.Impl2[MTrans, FeatureVector, MulResult],
+//      mrTrans: CanTranspose[MulResult, MRTrans]): OpMulMatrix.Impl2[Transpose[FeatureVector], M, MRTrans] = {
+//    new OpMulMatrix.Impl2[Transpose[FeatureVector], M, MRTrans] {
+//      override def apply(v: Transpose[FeatureVector], v2: M): MRTrans = {
+//        mrTrans(mul(trans(v2), v.inner))
+//      }
+//    }
+//  }
 
 }

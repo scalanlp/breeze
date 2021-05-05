@@ -2,7 +2,7 @@ package breeze.linalg.operators
 
 import breeze.generic.UFunc
 import breeze.linalg._
-import breeze.linalg.support.{CanSlice, CanTranspose}
+import breeze.linalg.support._
 import breeze.math.{Complex, Semiring}
 import breeze.storage.Zero
 
@@ -12,53 +12,20 @@ trait TransposeOps extends TransposeOps_Generic with TransposeOps_Complex with C
 
 }
 
-trait TransposeOps_Generic extends TransposeOpsLowPrio {
+trait TransposeOps_Generic extends TransposeOps_LowPrio {
 
   implicit def canUntranspose[T]: CanTranspose[Transpose[T], T] = {
     new CanTranspose[Transpose[T], T] {
       def apply(from: Transpose[T]): T = from.inner
     }
-
   }
 
-  implicit def transTimesNormalFromDot[T, U, R](
-                                                 implicit dot: OpMulInner.Impl2[T, U, R]): OpMulMatrix.Impl2[Transpose[T], U, R] = {
+  implicit def transTimesNormalFromDot[T, U, R](implicit dot: OpMulInner.Impl2[T, U, R]): OpMulMatrix.Impl2[Transpose[T], U, R] = {
     new OpMulMatrix.Impl2[Transpose[T], U, R] {
       def apply(v: Transpose[T], v2: U): R = {
         dot(v.inner, v2)
       }
     }
-  }
-
-  implicit def transMulMatrix[T, U, R, RT](
-                                            implicit op: OpMulMatrix.Impl2[T, U, R],
-                                            canTranspose: CanTranspose[R, RT]): OpMulMatrix.Impl2[Transpose[U], Transpose[T], RT] = {
-    new OpMulMatrix.Impl2[Transpose[U], Transpose[T], RT] {
-      def apply(v: Transpose[U], v2: Transpose[T]): RT = canTranspose(op(v2.inner, v.inner))
-    }
-  }
-
-  implicit def liftTransposeOps[Op, K, V, T, R, RT](
-                                                     implicit ev: T <:< Tensor[K, V],
-                                                     op: UFunc.UImpl2[Op, T, V, R],
-                                                     canTranspose: CanTranspose[R, RT]): UFunc.UImpl2[Op, Transpose[T], V, RT] = {
-    new UFunc.UImpl2[Op, Transpose[T], V, RT] {
-      def apply(a: Transpose[T], b: V) = {
-        canTranspose(op(a.inner, b))
-      }
-    }
-
-  }
-
-  implicit def liftTransposeInPlaceOps[Op, K, V, T](
-                                                     implicit ev: T <:< Tensor[K, V],
-                                                     op: UFunc.InPlaceImpl2[Op, T, V]): UFunc.InPlaceImpl2[Op, Transpose[T], V] = {
-    new UFunc.InPlaceImpl2[Op, Transpose[T], V] {
-      def apply(a: Transpose[T], b: V): Unit = {
-        op(a.inner, b)
-      }
-    }
-
   }
 
   implicit def transposeTensor[K, V, T](implicit ev: T <:< Tensor[K, V]): CanTranspose[T, Transpose[T]] = {
@@ -69,7 +36,40 @@ trait TransposeOps_Generic extends TransposeOpsLowPrio {
 
 }
 
-trait TransposeOpsLowPrio extends GenericOps {
+trait TransposeOps_LowPrio extends TransposeOps_LowPrio2 {
+
+  implicit def transMulMatrix[T, TT, U, R, RT](implicit
+                                               transT: CanTranspose[T, TT],
+                                               op: OpMulMatrix.Impl2[TT, U, R],
+                                               canTranspose: CanTranspose[R, RT]): OpMulMatrix.Impl2[Transpose[U], T, RT] = {
+    new OpMulMatrix.Impl2[Transpose[U], T, RT] {
+      def apply(v: Transpose[U], v2: T): RT = canTranspose(op(transT(v2), v.inner))
+    }
+  }
+
+  implicit def liftTransposeOps[Op, K, V, T, R, RT](implicit ev: T <:< Tensor[K, V],
+                                                    op: UFunc.UImpl2[Op, T, V, R],
+                                                    canTranspose: CanTranspose[R, RT]): UFunc.UImpl2[Op, Transpose[T], V, RT] = {
+    new UFunc.UImpl2[Op, Transpose[T], V, RT] {
+      def apply(a: Transpose[T], b: V) = {
+        canTranspose(op(a.inner, b))
+      }
+    }
+
+  }
+
+  implicit def liftTransposeInPlaceOps[Op, K, V, T](implicit ev: ScalarOf[T, V],
+                                                    op: UFunc.InPlaceImpl2[Op, T, V]): UFunc.InPlaceImpl2[Op, Transpose[T], V] = {
+    new UFunc.InPlaceImpl2[Op, Transpose[T], V] {
+      def apply(a: Transpose[T], b: V): Unit = {
+        op(a.inner, b)
+      }
+    }
+  }
+
+}
+
+trait TransposeOps_LowPrio2 extends GenericOps {
   implicit def liftOps[Op, T, U, R, RT](
                                          implicit op: UFunc.UImpl2[Op, T, U, R],
                                          canTranspose: CanTranspose[R, RT]): UFunc.UImpl2[Op, Transpose[T], Transpose[U], RT] = {
