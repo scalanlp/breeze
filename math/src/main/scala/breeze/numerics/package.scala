@@ -16,7 +16,7 @@ package breeze
  limitations under the License.
  */
 
-import breeze.generic.{ActiveMappingUFunc, MappingUFunc, UFunc}
+import breeze.generic.{ZeroPreservingUFunc, MappingUFunc, UFunc}
 import breeze.math.Semiring
 
 import scala.math._
@@ -26,7 +26,7 @@ import CanTraverseValues.ValuesVisitor
 import org.apache.commons.math3.util.FastMath
 
 /**
- * Contains several standard numerical functions as UFunc with MappingUFuncs,
+ * Contains several standard numerical functions as MappingUFuncs,
  *
  * @author dlwh, afwlehmann
  */
@@ -36,7 +36,7 @@ package object numerics {
 
   // TODO: I should probably codegen this.
 
-  object exp extends UFunc with MappingUFunc {
+  object exp extends MappingUFunc {
     implicit object expDoubleImpl extends Impl[Double, Double] {
       def apply(v: Double) = java.lang.Math.exp(v)
     }
@@ -46,7 +46,7 @@ package object numerics {
     }
   }
 
-  object expm1 extends UFunc with ActiveMappingUFunc {
+  object expm1 extends ZeroPreservingUFunc {
     implicit object expm1DoubleImpl extends Impl[Double, Double] {
       def apply(v: Double) = java.lang.Math.expm1(v)
     }
@@ -56,7 +56,7 @@ package object numerics {
     }
   }
 
-  object pow extends UFunc with MappingUFunc {
+  object pow extends MappingUFunc {
     implicit object powDoubleDoubleImpl extends Impl2[Double, Double, Double] {
       def apply(v: Double, v2: Double) = java.lang.Math.pow(v, v2)
     }
@@ -87,7 +87,7 @@ package object numerics {
   private val log2D = m.log(2d)
   private val log10D = m.log(10d)
 
-  object log extends UFunc with MappingUFunc {
+  object log extends MappingUFunc {
     //ToDo: Clarify in documentation that log(b, x) is the log of x in base b (instead of log b in base x)
     //ToDo???: extend to negative logs (but return type Double/Complex dependent on input???)
     implicit object logIntImpl extends Impl[Int, Double] {
@@ -111,7 +111,7 @@ package object numerics {
     }
   }
 
-  object log2 extends UFunc with MappingUFunc {
+  object log2 extends MappingUFunc {
     implicit object log2IntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.log(v.toDouble) / log2D
     }
@@ -125,7 +125,7 @@ package object numerics {
     }
   }
 
-  object log10 extends UFunc with MappingUFunc {
+  object log10 extends MappingUFunc {
     implicit object log10IntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.log10(v.toDouble)
     }
@@ -139,7 +139,7 @@ package object numerics {
     }
   }
 
-  object log1p extends UFunc with MappingUFunc {
+  object log1p extends MappingUFunc {
     implicit object log1pIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.log1p(v)
     }
@@ -153,7 +153,7 @@ package object numerics {
     }
   }
 
-  object nextExponent extends UFunc with MappingUFunc {
+  object nextExponent extends MappingUFunc {
     implicit object nextExponentIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.ceil(m.log(v.toDouble))
     }
@@ -179,7 +179,7 @@ package object numerics {
     }
   }
 
-  object nextExponent2 extends UFunc with MappingUFunc {
+  object nextExponent2 extends MappingUFunc {
     implicit object nextExponent2IntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.ceil(m.log(v.toDouble) / log2D)
     }
@@ -193,7 +193,7 @@ package object numerics {
     }
   }
 
-  object nextExponent10 extends UFunc with MappingUFunc {
+  object nextExponent10 extends MappingUFunc {
     implicit object nextExponent10IntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.ceil(m.log(v.toDouble) / log10D)
     }
@@ -207,7 +207,7 @@ package object numerics {
     }
   }
 
-  object nextPower extends UFunc with MappingUFunc {
+  object nextPower extends MappingUFunc {
     implicit object nextPowerIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.exp(nextExponent(v.toDouble))
     }
@@ -233,7 +233,7 @@ package object numerics {
     }
   }
 
-  object nextPower2 extends UFunc with MappingUFunc {
+  object nextPower2 extends MappingUFunc {
     implicit object nextPower2IntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.pow(2d, nextExponent2(v.toDouble))
     }
@@ -247,7 +247,7 @@ package object numerics {
     }
   }
 
-  object nextPower10 extends UFunc with MappingUFunc {
+  object nextPower10 extends MappingUFunc {
     implicit object nextPower10IntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.pow(10d, nextExponent10(v.toDouble))
     }
@@ -261,7 +261,7 @@ package object numerics {
     }
   }
 
-  object sqrt extends UFunc with ActiveMappingUFunc {
+  object sqrt extends ZeroPreservingUFunc {
     implicit object sqrtDoubleImpl extends Impl[Double, Double] {
       def apply(v: Double) = m.sqrt(v)
     }
@@ -279,7 +279,7 @@ package object numerics {
     }
   }
 
-  object cbrt extends UFunc with ActiveMappingUFunc {
+  object cbrt extends ZeroPreservingUFunc {
     implicit object cbrtIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.cbrt(v.toDouble)
     }
@@ -293,7 +293,7 @@ package object numerics {
     }
   }
 
-  object sin extends UFunc with ActiveMappingUFunc {
+  object sin extends ZeroPreservingUFunc {
     implicit object sinIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.sin(v.toDouble)
     }
@@ -312,7 +312,7 @@ package object numerics {
    * is defined by sin(Pi*x)/(Pi*x). This variant is provided for convenience as
    * [[breeze.numerics.sincpi]]. <b><i>Use it instead when translating from numpy.sinc.</i></b>.
    */
-  object sinc extends UFunc with MappingUFunc {
+  object sinc extends MappingUFunc {
     implicit object sincIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = if (v == 0) 1d else m.sin(v.toDouble) / v.toDouble
     }
@@ -329,7 +329,7 @@ package object numerics {
   /** The pi-normalized sine cardinal (sinc) function, as defined by sinc(0)=1, sinc(n != 0)=sin(Pi*x)/(Pi*x).
    * See also [[breeze.numerics.sinc]].
    */
-  object sincpi extends UFunc with MappingUFunc {
+  object sincpi extends MappingUFunc {
     implicit object sincpiIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = if (v == 0) 1d else {
         val temp = v.toDouble * m.Pi;
@@ -352,7 +352,7 @@ package object numerics {
     }
   }
 
-  object cos extends UFunc with MappingUFunc {
+  object cos extends MappingUFunc {
     implicit object cosIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.cos(v.toDouble)
     }
@@ -366,7 +366,7 @@ package object numerics {
     }
   }
 
-  object tan extends UFunc with ActiveMappingUFunc {
+  object tan extends ZeroPreservingUFunc {
     implicit object tanIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.tan(v.toDouble)
     }
@@ -380,7 +380,7 @@ package object numerics {
     }
   }
 
-  object sinh extends UFunc with ActiveMappingUFunc {
+  object sinh extends ZeroPreservingUFunc {
     implicit object sinIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.sinh(v.toDouble)
     }
@@ -394,7 +394,7 @@ package object numerics {
     }
   }
 
-  object cosh extends UFunc with MappingUFunc {
+  object cosh extends MappingUFunc {
     implicit object cosIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.cosh(v.toDouble)
     }
@@ -408,7 +408,7 @@ package object numerics {
     }
   }
 
-  object tanh extends UFunc with ActiveMappingUFunc {
+  object tanh extends ZeroPreservingUFunc {
     implicit object tanIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.tanh(v.toDouble)
     }
@@ -422,7 +422,7 @@ package object numerics {
     }
   }
 
-  object sech extends UFunc with MappingUFunc {
+  object sech extends MappingUFunc {
     implicit object tanIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = 1.0 / m.cosh(v.toDouble)
     }
@@ -436,7 +436,7 @@ package object numerics {
     }
   }
 
-  object asin extends UFunc with ActiveMappingUFunc {
+  object asin extends ZeroPreservingUFunc {
     implicit object asinIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.asin(v.toDouble)
     }
@@ -450,7 +450,7 @@ package object numerics {
     }
   }
 
-  object acos extends UFunc with MappingUFunc {
+  object acos extends MappingUFunc {
     implicit object acosIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.acos(v.toDouble)
     }
@@ -464,7 +464,7 @@ package object numerics {
     }
   }
 
-  object atan extends UFunc with ActiveMappingUFunc {
+  object atan extends ZeroPreservingUFunc {
     implicit object atanIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.atan(v.toDouble)
     }
@@ -478,7 +478,7 @@ package object numerics {
     }
   }
 
-  object atan2 extends UFunc with MappingUFunc {
+  object atan2 extends MappingUFunc {
     implicit object atan2IntImpl extends Impl2[Int, Int, Double] {
       def apply(v: Int, v2: Int) = m.atan2(v.toDouble, v2.toDouble)
     }
@@ -492,7 +492,7 @@ package object numerics {
     }
   }
 
-  object asinh extends UFunc with ActiveMappingUFunc {
+  object asinh extends ZeroPreservingUFunc {
     implicit object asinIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = FastMath.asinh(v.toDouble)
     }
@@ -506,7 +506,7 @@ package object numerics {
     }
   }
 
-  object acosh extends UFunc with MappingUFunc {
+  object acosh extends MappingUFunc {
     implicit object acosIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = FastMath.acosh(v.toDouble)
     }
@@ -520,7 +520,7 @@ package object numerics {
     }
   }
 
-  object atanh extends UFunc with ActiveMappingUFunc {
+  object atanh extends ZeroPreservingUFunc {
     implicit object atanIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = FastMath.atanh(v.toDouble)
     }
@@ -534,7 +534,7 @@ package object numerics {
     }
   }
 
-  object toDegrees extends UFunc with ActiveMappingUFunc {
+  object toDegrees extends ZeroPreservingUFunc {
     implicit object toDegreesIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.toDegrees(v.toDouble)
     }
@@ -548,7 +548,7 @@ package object numerics {
     }
   }
 
-  object toRadians extends UFunc with ActiveMappingUFunc {
+  object toRadians extends ZeroPreservingUFunc {
     implicit object toRadiansIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.toRadians(v.toDouble)
     }
@@ -562,7 +562,7 @@ package object numerics {
     }
   }
 
-  object floor extends UFunc with ActiveMappingUFunc {
+  object floor extends ZeroPreservingUFunc {
     implicit object floorIntImpl extends Impl[Int, Int] {
       def apply(v: Int) = v
     }
@@ -576,7 +576,7 @@ package object numerics {
     }
   }
 
-  object ceil extends UFunc with ActiveMappingUFunc {
+  object ceil extends ZeroPreservingUFunc {
     implicit object ceilIntImpl extends Impl[Int, Int] {
       def apply(v: Int) = v
     }
@@ -590,7 +590,7 @@ package object numerics {
     }
   }
 
-  object round extends UFunc with ActiveMappingUFunc {
+  object round extends ZeroPreservingUFunc {
     implicit object roundIntImpl extends Impl[Int, Int] {
       def apply(v: Int) = v
     }
@@ -604,7 +604,7 @@ package object numerics {
     }
   }
 
-  object rint extends UFunc with ActiveMappingUFunc {
+  object rint extends ZeroPreservingUFunc {
     implicit object rintIntImpl extends Impl[Int, Int] {
       def apply(v: Int) = v
     }
@@ -618,7 +618,7 @@ package object numerics {
     }
   }
 
-  object signum extends UFunc with ActiveMappingUFunc {
+  object signum extends ZeroPreservingUFunc {
     implicit object signumIntImpl extends Impl[Int, Double] {
       def apply(v: Int) = m.signum(v.toDouble)
     }
@@ -632,7 +632,7 @@ package object numerics {
     }
   }
 
-  object abs extends UFunc with ActiveMappingUFunc {
+  object abs extends ZeroPreservingUFunc {
     implicit object absDoubleImpl extends Impl[Double, Double] {
       def apply(v: Double) = m.abs(v)
     }
@@ -653,7 +653,7 @@ package object numerics {
   /** Whether a number is odd. For Double and Float, isOdd also implies that the number is an integer,
    * and therefore does not necessarily equal !isEven for fractional input.
    */
-  object isOdd extends UFunc with ActiveMappingUFunc {
+  object isOdd extends ZeroPreservingUFunc {
     implicit val isOddImpl_Int: Impl[Int, Boolean] = {
       new Impl[Int, Boolean] {
         def apply(v: Int) = {
@@ -687,7 +687,7 @@ package object numerics {
   /** Whether a number is even. For Double and Float, isEven also implies that the number is an integer,
    * and therefore does not necessarily equal !isOdd for fractional input.
    */
-  object isEven extends UFunc with MappingUFunc {
+  object isEven extends MappingUFunc {
     implicit val isEvenImpl_Int: Impl[Int, Boolean] = {
       new Impl[Int, Boolean] {
         def apply(v: Int) = {
@@ -721,7 +721,7 @@ package object numerics {
   val inf, Inf = Double.PositiveInfinity
   val nan, NaN = Double.NaN
 
-  object isNonfinite extends UFunc with ActiveMappingUFunc {
+  object isNonfinite extends ZeroPreservingUFunc {
     implicit val isNonfiniteImpl_Double: Impl[Double, Boolean] = {
       new Impl[Double, Boolean] {
         override def apply(v: Double): Boolean = {
@@ -738,7 +738,7 @@ package object numerics {
     }
   }
 
-  object isFinite extends UFunc with MappingUFunc {
+  object isFinite extends MappingUFunc {
     implicit val isFiniteImpl_Double: Impl[Double, Boolean] = {
       new Impl[Double, Boolean] {
         override def apply(v: Double): Boolean = {
@@ -761,7 +761,7 @@ package object numerics {
    *
    * @return an approximation of the log of the Gamma function of x.
    */
-  object lgamma extends UFunc with MappingUFunc {
+  object lgamma extends MappingUFunc {
     implicit object lgammaImplInt extends Impl[Int, Double] {
       def apply(v: Int): Double = if (v == 0) Double.PositiveInfinity else G.logGamma(v.toDouble)
     }
@@ -831,7 +831,7 @@ package object numerics {
   /**
    * The derivative of the log gamma function
    */
-  object digamma extends UFunc with MappingUFunc {
+  object digamma extends MappingUFunc {
     implicit object digammaImplInt extends Impl[Int, Double] {
       def apply(v: Int): Double = digammaImplDouble(v.toDouble)
     }
@@ -844,7 +844,7 @@ package object numerics {
   /**
    * Multivariate Digamma
    */
-  object multidigamma extends UFunc with MappingUFunc {
+  object multidigamma extends MappingUFunc {
     implicit object multidigammaImplDoubleInt extends Impl2[Double, Int, Double] {
       def apply(a: Double, d: Int): Double = (1 to d).map(i => digamma(a + (1 - i).toDouble / 2)).sum
     }
@@ -853,7 +853,7 @@ package object numerics {
   /**
    * Multivariate digamma log
    */
-  object multidigammalog extends UFunc with MappingUFunc {
+  object multidigammalog extends MappingUFunc {
     implicit object multidigammalogImplDoubleInt extends Impl2[Double, Int, Double] {
       def apply(a: Double, d: Int): Double = log(multidigamma(a, d))
     }
@@ -862,7 +862,7 @@ package object numerics {
   /**
    * The second derivative of the log gamma function
    */
-  object trigamma extends UFunc with MappingUFunc {
+  object trigamma extends MappingUFunc {
     implicit object trigammaImplInt extends Impl[Int, Double] {
       def apply(v: Int): Double = trigammaImplDouble(v.toDouble)
     }
@@ -872,7 +872,7 @@ package object numerics {
     }
   }
 
-  object multiloggamma extends UFunc with MappingUFunc {
+  object multiloggamma extends MappingUFunc {
     implicit object multigammalogDoubleInt extends Impl2[Double, Int, Double] {
       def apply(a: Double, d: Int): Double = log(constants.Pi) * (d * (d - 1).toDouble / 4) + (1 to d).map(j => lgamma(a + (1 - j).toDouble / 2)).sum
     }
@@ -917,7 +917,7 @@ package object numerics {
   /**
    * An approximation to the error function
    */
-  object erf extends UFunc with ActiveMappingUFunc {
+  object erf extends ZeroPreservingUFunc {
     implicit object erfImplInt extends Impl[Int, Double] {
       def apply(v: Int): Double = Erf.erf(v.toDouble)
     }
@@ -930,7 +930,7 @@ package object numerics {
   /**
    * An approximation to the complementary error function: erfc(x) = 1 - erfc(x)
    */
-  object erfc extends UFunc with MappingUFunc {
+  object erfc extends MappingUFunc {
     implicit object erfcImplInt extends Impl[Int, Double] {
       def apply(v: Int): Double = Erf.erfc(v.toDouble)
     }
@@ -949,7 +949,7 @@ package object numerics {
    *
    * @return
    */
-  object erfi extends UFunc with MappingUFunc {
+  object erfi extends MappingUFunc {
     implicit object erfiImplInt extends Impl[Int, Double] {
       def apply(v: Int): Double = erfiImplDouble(v.toDouble)
     }
@@ -982,7 +982,7 @@ package object numerics {
   /**
    * Inverse erf
    */
-  object erfinv extends UFunc with MappingUFunc {
+  object erfinv extends MappingUFunc {
     implicit object erfinvImplInt extends Impl[Int, Double] {
       def apply(v: Int): Double = Erf.erfInv(v.toDouble)
     }
@@ -996,7 +996,7 @@ package object numerics {
   /**
    * Inverse erfc
    */
-  object erfcinv extends UFunc with MappingUFunc {
+  object erfcinv extends MappingUFunc {
     implicit object erfcinvImplInt extends Impl[Int, Double] {
       def apply(v: Int): Double = Erf.erfcInv(v.toDouble)
     }
@@ -1011,7 +1011,7 @@ package object numerics {
    *
    * @see http://commons.apache.org/proper/commons-math/apidocs/org/apache/commons/math3/special/Gamma.html#regularizedGammaP(double, double)
    */
-  object gammp extends UFunc with MappingUFunc {
+  object gammp extends MappingUFunc {
     implicit object gammpImplIntInt extends Impl2[Int, Int, Double] {
       def apply(v1: Int, v2: Int): Double = G.regularizedGammaP(v1.toDouble, v2.toDouble)
     }
@@ -1026,7 +1026,7 @@ package object numerics {
    *
    * @see http://commons.apache.org/proper/commons-math/apidocs/org/apache/commons/math3/special/Gamma.html#regularizedGammaP(double, double)
    */
-  object gammq extends UFunc with MappingUFunc {
+  object gammq extends MappingUFunc {
     implicit object gammqImplIntInt extends Impl2[Int, Int, Double] {
       def apply(v1: Int, v2: Int): Double = G.regularizedGammaP(v1.toDouble, v2.toDouble)
     }
@@ -1041,7 +1041,7 @@ package object numerics {
    *
    *
    */
-  object sigmoid extends UFunc with MappingUFunc {
+  object sigmoid extends MappingUFunc {
     implicit object sigmoidImplInt extends Impl[Int, Double] {
       def apply(x: Int) = 1d / (1d + scala.math.exp(-x.toDouble))
     }
@@ -1059,7 +1059,7 @@ package object numerics {
    * The logit (inverse sigmoid) function: -log((1/x) - 1)
    *
    */
-  object logit extends UFunc with MappingUFunc {
+  object logit extends MappingUFunc {
     implicit object logitImplInt extends Impl[Int, Double] {
       def apply(x: Int) = -scala.math.log((1d / (x.toDouble)) - 1d)
     }
@@ -1079,7 +1079,7 @@ package object numerics {
    * @see https://en.wikipedia.org/wiki/Rectifier_(neural_networks)
    *
    */
-  object relu extends UFunc with ActiveMappingUFunc {
+  object relu extends ZeroPreservingUFunc {
 
     implicit object reluImplDouble extends Impl[Double, Double] {
       def apply(x: Double) = max(0d, x)
@@ -1095,7 +1095,7 @@ package object numerics {
    *
    * @see https://en.wikipedia.org/wiki/Step_function
    */
-  object step extends UFunc with MappingUFunc {
+  object step extends MappingUFunc {
     implicit object stepImplInt extends Impl[Int, Int] {
       def apply(x: Int) = if (x > 0) 1 else 0
     }
@@ -1135,7 +1135,7 @@ package object numerics {
    * The indicator function. 1.0 iff b, else 0.0
    * For non-boolean arguments, 1.0 iff b != 0, else 0.0
    */
-  object I extends UFunc with ActiveMappingUFunc {
+  object I extends ZeroPreservingUFunc {
     implicit object iBoolImpl extends Impl[Boolean, Double] {
       def apply(b: Boolean) = if (b) 1.0 else 0.0
     }

@@ -14,7 +14,7 @@ import scala.reflect.ClassTag
 import breeze.macros._
 import scala.collection.compat._
 
-object sum extends UFunc with sumLowPrio with VectorizedReduceUFunc {
+object sum extends VectorizedReduceUFunc with sumLowPrio {
   override type Op = OpAdd.type
 
   @expand

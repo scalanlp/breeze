@@ -1,6 +1,6 @@
 package breeze.linalg
 
-import breeze.generic.UFunc
+import breeze.generic.{ElementwiseUFunc, UFunc}
 import breeze.linalg.operators.GenericOpsLowPrio
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support.{CanMapValues, CanTransformValues, CanTraverseValues, ScalarOf}
@@ -221,7 +221,7 @@ sealed trait minLowPrio {  self: min.type =>
 /**
  * clip(a, lower, upper) returns an array such that all elements are "clipped" at the range (lower, upper)
  */
-object clip extends UFunc {
+object clip extends ElementwiseUFunc {
   implicit def clipOrdering[T, V](implicit ordering: Ordering[V], cmv: CanMapValues[T, V, V, T]): Impl3[T, V, V, T] = {
     new Impl3[T, V, V, T] {
       import ordering.mkOrderingOps

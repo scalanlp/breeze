@@ -5,12 +5,12 @@ import breeze.generic.{MappingUFunc, UFunc}
 
 object MappingUfuncBenchmark extends MyRunner(classOf[MappingUfuncBenchmark])
 
-object addOne extends UFunc with MappingUFunc {
+object addOne extends MappingUFunc {
   //A custom stupid ufunc that is very fast to run
   implicit object expDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = v + 1 }
 }
 
-object harderUfunc extends UFunc with MappingUFunc {
+object harderUfunc extends MappingUFunc {
   //A custom stupid ufunc that is very fast to run
   implicit object expDoubleImpl extends Impl[Double, Double] { def apply(v: Double) = /*(v+1)/(1+v*v)*/ math.exp(v) }
 }

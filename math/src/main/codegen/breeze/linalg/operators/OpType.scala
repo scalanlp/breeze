@@ -1,7 +1,7 @@
 package breeze.linalg.operators
 
 import breeze.generic.UFunc.UImpl
-import breeze.generic.{MappingUFunc, UFunc}
+import breeze.generic.{ElementwiseUFunc, MappingUFunc, UFunc}
 import breeze.macros.expand
 import breeze.math.{Field, Ring, Semiring}
 
@@ -35,7 +35,7 @@ sealed trait OpType extends UFunc
  *
  * @author dramage
  */
-object OpAdd extends OpType with UFunc {
+object OpAdd extends OpType with ElementwiseUFunc {
   implicit def opAddFromSemiring[S: Semiring]: Impl2[S, S, S] = new Impl2[S, S, S] {
     def apply(v: S, v2: S): S = implicitly[Semiring[S]].+(v, v2)
   }
@@ -46,7 +46,7 @@ object OpAdd extends OpType with UFunc {
  *
  * @author dramage
  */
-object OpSub extends OpType with UFunc {
+object OpSub extends OpType with ElementwiseUFunc {
   implicit def opSubFromRing[S: Ring]: Impl2[S, S, S] = new Impl2[S, S, S] {
     def apply(v: S, v2: S): S = implicitly[Ring[S]].-(v, v2)
   }
@@ -57,7 +57,7 @@ object OpSub extends OpType with UFunc {
  *
  * @author dramage
  */
-object OpMulScalar extends OpType with UFunc {
+object OpMulScalar extends OpType with ElementwiseUFunc {
   implicit def opMulScalarFromSemiring[S: Semiring]: Impl2[S, S, S] = new Impl2[S, S, S] {
     def apply(v: S, v2: S): S = implicitly[Semiring[S]].*(v, v2)
   }
@@ -68,7 +68,7 @@ object OpMulScalar extends OpType with UFunc {
  *
  * @author dramage
  */
-object OpDiv extends OpType with UFunc {
+object OpDiv extends OpType with ElementwiseUFunc {
   implicit def opDivFromField[S: Field]: Impl2[S, S, S] = new Impl2[S, S, S] {
     def apply(v: S, v2: S): S = implicitly[Field[S]]./(v, v2)
   }
@@ -79,21 +79,21 @@ object OpDiv extends OpType with UFunc {
  *
  * @author dramage
  */
-object OpMod extends OpType with UFunc
+object OpMod extends OpType with ElementwiseUFunc
 
 /**
  * Type marker for BinaryOp A :^ B and BinaryUpdateOp A:^= B.
  *
  * @author dramage
  */
-object OpPow extends OpType with UFunc
+object OpPow extends OpType with ElementwiseUFunc
 
 /**
  * Type marker for BinaryOp A :&lt B.
  *
  * @author dramage
  */
-object OpLT extends OpType with UFunc {
+object OpLT extends OpType with ElementwiseUFunc {
   implicit def impl2FromOrdering[T: Ordering]: Impl2[T, T, Boolean] = {
     val ord = implicitly[Ordering[T]]
     new Impl2[T, T, Boolean] {
@@ -114,7 +114,7 @@ object OpLT extends OpType with UFunc {
  *
  * @author dramage
  */
-object OpLTE extends OpType with UFunc {
+object OpLTE extends OpType with ElementwiseUFunc {
   implicit def impl2FromOrdering[T: Ordering]: Impl2[T, T, Boolean] = {
     val ord = implicitly[Ordering[T]]
     new Impl2[T, T, Boolean] {
@@ -136,7 +136,7 @@ object OpLTE extends OpType with UFunc {
  *
  * @author dramage
  */
-object OpGT extends OpType with UFunc {
+object OpGT extends OpType with ElementwiseUFunc {
   implicit def impl2FromOrdering[T: Ordering]: Impl2[T, T, Boolean] = {
     val ord = implicitly[Ordering[T]]
     new Impl2[T, T, Boolean] {
@@ -157,7 +157,7 @@ object OpGT extends OpType with UFunc {
  *
  * @author dramage
  */
-object OpGTE extends OpType with UFunc {
+object OpGTE extends OpType with ElementwiseUFunc {
   implicit def impl2FromOrdering[T: Ordering]: Impl2[T, T, Boolean] = {
     val ord = implicitly[Ordering[T]]
     new Impl2[T, T, Boolean] {
@@ -179,7 +179,7 @@ object OpGTE extends OpType with UFunc {
  *
  * @author dramage
  */
-object OpEq extends OpType with UFunc {
+object OpEq extends OpType with ElementwiseUFunc {
   implicit def impl2FromOrdering[T: Ordering]: Impl2[T, T, Boolean] = {
     val ord = implicitly[Ordering[T]]
     new Impl2[T, T, Boolean] {
@@ -201,7 +201,7 @@ object OpEq extends OpType with UFunc {
  *
  * @author dramage
  */
-object OpNe extends OpType with UFunc {
+object OpNe extends OpType with ElementwiseUFunc {
   implicit def impl2FromOrdering[T: Ordering]: Impl2[T, T, Boolean] = {
     val ord = implicitly[Ordering[T]]
     new Impl2[T, T, Boolean] {
@@ -215,14 +215,14 @@ object OpNe extends OpType with UFunc {
  *
  * @author dramage
  */
-object OpSet extends OpType with UFunc
+object OpSet extends OpType with ElementwiseUFunc
 
 /**
  * Type marker for BinaryOp A :& B
  *
  * @author dramage
  */
-object OpAnd extends OpType with UFunc {
+object OpAnd extends OpType with ElementwiseUFunc {
   implicit object opAndBoolean extends Impl2[Boolean, Boolean, Boolean] {
     override def apply(v: Boolean, v2: Boolean): Boolean = v && v2
   }
@@ -234,7 +234,7 @@ object OpAnd extends OpType with UFunc {
  *
  * @author dramage
  */
-object OpOr extends OpType with UFunc {
+object OpOr extends OpType with ElementwiseUFunc {
   implicit object impl_OpOr_B_B_eq_B extends Impl2[Boolean, Boolean, Boolean] {
     override def apply(v: Boolean, v2: Boolean): Boolean = v || v2
   }
@@ -246,7 +246,7 @@ object OpOr extends OpType with UFunc {
  *
  * @author dramage
  */
-object OpXor extends OpType with UFunc {
+object OpXor extends OpType with ElementwiseUFunc {
   implicit object opXorBoolean extends Impl2[Boolean, Boolean, Boolean] {
     override def apply(v: Boolean, v2: Boolean): Boolean = v ^ v2
   }
@@ -258,7 +258,7 @@ object OpXor extends OpType with UFunc {
  *
  * @author dramage
  */
-object OpNeg extends OpType with UFunc {
+object OpNeg extends OpType with ElementwiseUFunc {
   implicit def ringNegation[S: Ring]: UImpl[OpNeg.this.type, S, S] = new Impl[S, S] {
     def apply(v: S): S = implicitly[Ring[S]].negate(v)
   }
@@ -269,7 +269,7 @@ object OpNeg extends OpType with UFunc {
  *
  * @author dramage
  */
-object OpNot extends OpType with UFunc with MappingUFunc {
+object OpNot extends OpType with MappingUFunc {
   implicit object opNotBoolean extends Impl[Boolean, Boolean] {
     override def apply(v: Boolean): Boolean = !v
   }

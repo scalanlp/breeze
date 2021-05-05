@@ -1,6 +1,6 @@
 package breeze.linalg
 
-import breeze.generic.UFunc
+import breeze.generic.{MappingUFunc, UFunc}
 import breeze.linalg.support.CanTraverseValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.macros.expand
@@ -131,7 +131,7 @@ object softmax extends UFunc {
     }
 }
 
-object logDiff extends UFunc {
+object logDiff extends MappingUFunc {
   implicit object implDoubleDouble extends Impl2[Double, Double, Double] {
     def apply(a: Double, b: Double): Double = {
       require(a >= b, s"a should be greater than b, but got $a and $b")
