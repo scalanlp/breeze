@@ -92,6 +92,13 @@ object Common {
         case _ => ???
       }
     },
-    useScala3doc := false
+    // TODO: remove when possible
+    publishArtifact in (Compile, packageDoc) := {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some( (3, _)) => false
+        case _ => true
+
+      }
+    }
   ) ++ breezeCodegenSettings
 }
