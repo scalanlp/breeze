@@ -1,6 +1,6 @@
 package breeze
 
-import java.awt.{Color, Paint, Stroke}
+import java.awt.{Paint, Stroke}
 
 import linalg.Matrix
 import org.jfree.chart.renderer.xy.XYItemRenderer
